@@ -1,4 +1,4 @@
-*! version 1.0.4  11jan2021  Ben Jann
+*! version 1.0.5  06feb2021  Ben Jann
 
 capt findfile lmoremata.mlib
 if _rc {
@@ -461,7 +461,6 @@ program Estimate_m, eclass
         vce(str) svy SVY2(str) NOSE IFgenerate(str) Replace ///
         /// display options
         Level(cilevel) noHEader noTABle * ]
-    VCE_currently_not_supported m `"`vce'`svy'`svy2'"'
     if "`k'"!="" & "`ptrim'"!="" {
         di as err "k() and ptrim() not both allowed"
         exit 198
@@ -545,7 +544,6 @@ program Estimate_s, eclass
         _mmlocation                            ///
         /// display options
         Level(cilevel) noHEader noTABle * ]
-    VCE_currently_not_supported s `"`vce'`svy'`svy2'"'
     if "`k'"!="" & "`bp'"!="" {
         di as err "k() and bp() not both allowed"
         exit 198
@@ -1330,9 +1328,7 @@ void st_classic_IF(real matrix IF, real matrix X, real matrix V,
         }
     }
     // means
-    for (i=1;i<=p;i++) {
-        IF[,++k] = X[,i] :- m[i]
-    }
+    IF[|1,++k \ .,.|] = X :- m
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1439,18 +1435,89 @@ void st_mvM()
 
 void st_mvM_IF(real matrix IF, struct mvM_struct scalar S)
 {
-    real scalar    i, j, k
+    real scalar    i, j, k, i2, j2, k2, r
+    real colvector d, u1, u2
+    real matrix    C, iC, Xt, G
+    real matrix    Z, z // containers for intermediate observation-level results
+
     
+    // derivatives of d2 (Mahalanobis distance) by t and C (looping across
+    // parameters much faster than looping across observations)
+    C  = S.V/S.c
+    iC = invsym(C)
+    Xt = S.X :- S.m
+    r  = cols(IF) // number of parameters
+    Z  = J(S.n, r, .)
     k = 0
-    // covariances
+    for (i=1;i<=S.p;i++) Z[,++k] = rowsum(iC[i,] :* Xt) // C^-1 (x-t)
     for (i=1;i<=S.p;i++) {
         for (j=i;j<=S.p;j++) {
-            IF[,++k] = J(rows(IF), 1, 0)
+            Z[,++k] = - Z[,i] :* Z[,j] // C^-1 (x-t) (x-t)' C^-1
+            if (i!=j) Z[,k] = Z[,k] * 2 // double off-diagonal derivatives
         }
     }
-    // means
-    for (i=1;i<=S.p;i++) {
-        IF[,++k] = J(rows(IF), 1, 0)
+    Z[|1,1 \ .,S.p|] = -2 * Z[|1,1 \ .,S.p|] // -2 C^-1 (x-t)
+    
+    // compute averages of derivatives of moment conditions
+    d  = sqrt(rowsum((Xt * iC) :* Xt, 1)) // sqrt(robmv_maha(S.X, S.m, S.V/S.c))
+    u1 = mm_huber_w(d, S.k)
+    Z = -S.k :/ (2*d:^3) :* (d:>S.k) :* Z // 1/2d * u1'(d) * "deriv. of d2"
+    G = J(r, r, .)
+    k = 0
+    for (i=1;i<=S.p;i++) { // derivatives of moment conditions for t
+        k++; k2 = 0
+        for (i2=1;i2<=S.p;i2++) { // derivatives by t
+            z = Z[,++k2] :* Xt[,i]
+            if (i2==i) z = z :- u1
+            G[k,k2] = mean(z, S.w)
+        }
+        for (i2=1;i2<=S.p;i2++) { // derivative by C
+            for (j2=i2;j2<=S.p;j2++) {
+                z = Z[,++k2] :* Xt[,i]
+                G[k,k2] = mean(z, S.w)
+            }
+        }
+    }
+    u2 = (S.N / (S.N-1)) * u1:^2
+    Z  = (S.N / (S.N-1)) * (2 * S.k * Z) :/ d // u2'(d2) * "deriv. of d2"
+    for (i=1;i<=S.p;i++) { // derivatives of moment conditions for C
+        for (j=i;j<=S.p;j++) {
+            k++; k2 = 0
+            for (i2=1;i2<=S.p;i2++) { // derivatives by t
+                z = Z[,++k2] :* Xt[,i] :* Xt[,j]
+                if (i==j & i2==i) z = z :- 2*u2:*Xt[,i]
+                else if (i2==i)   z = z :- u2:*Xt[,j]
+                else if (i2==j)   z = z :- u2:*Xt[,i]
+                G[k,k2] = mean(z, S.w)
+            }
+            for (i2=1;i2<=S.p;i2++) { // derivative by C
+                for (j2=i2;j2<=S.p;j2++) {
+                    z = Z[,++k2] :* Xt[,i] :* Xt[,j]
+                    if (i2==i & j2==j) z = z :- 1
+                    G[k,k2] = mean(z, S.w)
+                }
+            }
+        }
+    }
+    G = G[(S.p+1..r,1..S.p), (S.p+1..r,1..S.p)] // rearrange (t,C -> C,t)
+    
+    // compute IFs
+    k = 0
+    for (i=1;i<=S.p;i++) { // moment conditions for C
+        for (j=i;j<=S.p;j++) Z[,++k] = u2 :* (Xt[,i] :* Xt[,j]) :- C[i,j]
+    }
+    for (i=1;i<=S.p;i++) { // moment conditions for t
+        Z[,++k] = u1 :* Xt[,i]
+    }
+    IF[.,.] = Z * luinv(-G)'
+    if (S.c!=1) { // consistency correction
+        k = 0
+        for (i=1;i<=S.p;i++) {
+            for (j=i;j<=S.p;j++) {
+                k++
+                IF[,k] = IF[,k] * S.c
+            }
+        }
     }
 }
 
@@ -2775,7 +2842,8 @@ void st_mvS()
     // IFs
     if (st_local("nose")=="") {
         robmv_init_IF(IF, S.p)
-        st_mvS_IF(IF, S)
+        if (S.eff<.) st_mvMM_IF(IF, S)
+        else         st_mvS_IF(IF, S)
         if (st_local("correlation")!="") robmv_corr_IF(IF, S.V)
     }
 }
@@ -2783,18 +2851,69 @@ void st_mvS()
 void st_mvS_IF(real matrix IF, struct mcd_struct scalar S)
 {
     real scalar    i, j, k
+    real scalar    gamma, lambda, delta
+    real colvector d, d2, rho, psi, phi, a, b
+    real scalar    beta
+    real colvector u
     
     k = 0
     // covariances
+    d2     = robmv_maha(S.X, S.m, S.V)
+    d      = sqrt(d2)
+    rho    = mm_biweight_rho(d, S.c)
+    psi    = mm_biweight_psi(d, S.c)
+    phi    = mm_biweight_phi(d, S.c)
+    gamma  = mean(psi :* d, S.w)
+    lambda = mean(phi :* d2, S.w) + (S.p+1) * gamma
+    delta  = S.b // = mean(rho, S.w)
+    a = (S.p+2)*S.p / lambda :* psi :* d
+    b = 2/gamma * (rho :- delta)
     for (i=1;i<=S.p;i++) {
         for (j=i;j<=S.p;j++) {
-            IF[,++k] = J(rows(IF), 1, 0)
+            IF[,++k] =  a :* ((S.X[,i]:-S.m[i]) :* (S.X[,j]:-S.m[j]) :/ d2
+                :- S.V[i,j]/S.p) :+ b * S.V[i,j]
+        }
+    }
+    // k = (S.p^2+S.p)/2
+    // for (i=1;i<=S.n;i++) {
+    //     IF[|i,1 \ i,k|] = vech(a[i] :* ((S.X[i,]:-S.m)' * (S.X[i,]:-S.m) :/ d2[i]
+    //             :- S.V/S.p) :+ b[i] * S.V)'
+    // }
+    // means
+    u    = mm_biweight_w(d, S.c)
+    beta = mean((1-1/S.p) :* u + (1/S.p) :* phi, S.w)
+    IF[|1,++k \ .,.|] = 1 / beta * u :* (S.X :- S.m)
+}
+
+void st_mvMM_IF(real matrix IF, struct mcd_struct scalar S)
+{
+    real scalar    i, j, k
+    real scalar    gamma0, lambda1, delta0, beta1
+    real colvector d, d2, rho0, psi0, psi1, phi1, u1, a, b
+    
+    k = 0
+    // covariances
+    d2      = robmv_maha(S.X, S.m, S.V)
+    d       = sqrt(d2)
+    rho0    = mm_biweight_rho(d, S.c)
+    psi0    = mm_biweight_psi(d, S.c)
+    psi1    = mm_biweight_psi(d, S.c1)
+    phi1    = mm_biweight_phi(d, S.c1)
+    gamma0  = mean(psi0 :* d, S.w)
+    lambda1 = mean(phi1 :* d2, S.w) + (S.p+1) * mean(psi1 :* d, S.w)
+    delta0  = mean(rho0, S.w)
+    a = (S.p+2)*S.p / lambda1 :* psi1 :* d
+    b = 2/gamma0 * (rho0 :- delta0)
+    for (i=1;i<=S.p;i++) {
+        for (j=i;j<=S.p;j++) {
+            IF[,++k] =  a :* ((S.X[,i]:-S.m[i]) :* (S.X[,j]:-S.m[j]) :/ d2
+                :- S.V[i,j]/S.p) :+ b * S.V[i,j]
         }
     }
     // means
-    for (i=1;i<=S.p;i++) {
-        IF[,++k] = J(rows(IF), 1, 0)
-    }
+    u1   = mm_biweight_w(d, S.c1)
+    beta1 = mean((1-1/S.p) :* u1 + (1/S.p) :* phi1, S.w)
+    IF[|1,++k \ .,.|] = 1 / beta1 * u1 :* (S.X :- S.m)
 }
 
 // find tuning constant from breakdown point

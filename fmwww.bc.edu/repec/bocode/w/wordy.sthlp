@@ -1,7 +1,7 @@
 {smcl}
-{* *! version 1.0.0 21jan2022}{...}
-{viewerjumpto "Syntax" "bacondecomp##syntax"}{...}
-{viewerjumpto "Description" "bacondecomp##description"}{...}
+{* *! version 2.0.0 16feb2022}{...}
+{viewerjumpto "Syntax" "wordy##syntax"}{...}
+{viewerjumpto "Description" "wordy##description"}{...}
 
 {title:Title}
 
@@ -11,17 +11,22 @@
 {marker syntax}{title:Syntax}
 
 {p 8 17 2}
-{cmdab:w:ordy}
-[{cmd:,} {cmdab:use:indx(}{it:integer}{cmd:)}]
+{cmdab:w:ordy} [{it:pattern}]
+[{cmd:,} {cmdab:use:indx(}{it:integer}{cmd:)} {cmdab:sup:presscheck} ] 
 
 {marker description}{...}
 {title:Description}
 
 {pstd}
-{cmd:wordy} picks a new word every day from a list of 8,938 five-letter words legal in a popular crossword game in 1998.
+{cmd:wordy} with no argument picks a new word every day from a list of 8,938 five-letter words legal in a popular crossword game in 1998.
 You then have six guesses at the word, and every time you type a guess, a Stata graph appears showing green squares
 for letters in the right position and yellow squares for a letter that appears in the word but in the wrong position.
 This may remind you of a different game using colored pegs on an oblong brown plastic board.
+{p_end}
+
+{pstd}
+{cmd:wordy} with an optional argument {it:pattern} looks up legal five-letter words matching a pattern with letters specified and ? used as a wildcard meaning any letter. 
+For example {stata "wordy bo??e":wordy bo??e} returns 13 legal words matching that pattern.
 {p_end}
 
 {pstd}
@@ -29,6 +34,10 @@ The option {cmdab:useindx} can be used to specify a different day (measured as e
 when picking the word, thereby giving you the chance to play many distinct games on one calendar day, and waste even more time.
 {p_end}
 
+{pstd}
+The option  {cmdab:sup:presscheck} suppresses a check that the guess is a real word, thereby giving you the chance to 
+guess random strings of letter and further optimize your guesses.
+{p_end}
 
 {marker author}{...}
 {title:Authors}

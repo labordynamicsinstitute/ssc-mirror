@@ -1,5 +1,5 @@
 {smcl}
-{* 19apr2021}{...}
+{* 18sep2021}{...}
 {hi:help robreg}{...}
 {right:{browse "http://github.com/benjann/robreg/"}}
 {hline}
@@ -55,7 +55,8 @@
     {cmd:fweight}s and {cmd:pweight}s are allowed; see {help weight}.
     {p_end}
 {pmore}
-    The {helpb svy} prefix is allowed with {cmd:robreg ls}, {cmd:robreg q}, and {cmd:robreg m}.
+    The {helpb svy} prefix is allowed with {cmd:robreg ls}, {cmd:robreg q}, and {cmd:robreg m},
+    unless {cmd:ivar()} or {cmd:absorb()} is specified.
 
 {pstd}
     Refitting MM after {cmd:robreg s} or {cmd:robreg mm}
@@ -104,6 +105,8 @@
     {p_end}
 
 {syntab :Subcommand}
+{synopt :{help robreg##ls_opts:{it:ls_options}}}additional options for {cmd:robreg ls}
+    {p_end}
 {synopt :{help robreg##q_opts:{it:q_options}}}additional options for {cmd:robreg q}
     {p_end}
 {synopt :{help robreg##m_opts:{it:m_options}}}additional options for {cmd:robreg m}
@@ -160,6 +163,13 @@
 {synoptline}
 
 
+{marker ls_opts}{col 5}{it:{help robreg##ls_options:ls_options}}{col 28}description
+{synoptline}
+{synopt :{help robreg##fe_opts:{it:fe_options}}}fixed-effects options
+    {p_end}
+{synoptline}
+
+
 {marker q_opts}{col 5}{it:{help robreg##q_options:q_options}}{col 28}description
 {synoptline}
 {syntab :Main}
@@ -192,6 +202,8 @@
     {p_end}
 {synopt :{opt k(#)}}tuning constant; alternative to {cmd:efficiency()}
     {p_end}
+{synopt :{help robreg##fe_opts:{it:fe_options}}}fixed-effects options
+    {p_end}
 
 {syntab :Scale}
 {synopt :{opt s:cale(#)}}provide custom (starting) value for scale
@@ -219,6 +231,8 @@
     {p_end}
 {synopt :{cmd:m(}{varlist} [{cmd:,} {it:{help robreg##s_mopt:opts}}]{cmd:)}}variables
     to be partialled out in the subsampling algorithm
+    {p_end}
+{synopt :{help robreg##fe_opts:{it:fe_options}}}fixed-effects options
     {p_end}
 
 {syntab :Subsampling algorithm}
@@ -303,6 +317,21 @@
 {synoptline}
 
 
+{marker fe_opts}{col 5}{it:{help robreg##fe_options:fe_options}}{col 28}description
+{synoptline}
+{synopt :{opt i:var(varname)}}variable identifying the groups; VCE like {helpb xtreg:xtreg,fe}
+    {p_end}
+{synopt :{opt a:bsorb(varname)}}variable identifying the groups; VCE like {helpb areg}
+    {p_end}
+{synopt :[{ul:{cmd:no}}]{opt u:save}}whether to store fixed effects in {cmd:e()}
+    {p_end}
+{synopt :{opth ugen:erate(newvar)}}store fixed effects as a variable, rather than in {cmd:e()}
+    {p_end}
+{synopt :{opt replace}}allow overwriting existing variable
+    {p_end}
+{synoptline}
+
+
 {marker mm_refit_opts}{col 5}{it:{help robreg##mm_refit_options:mm_refit_options}}{col 28}description
 {synoptline}
 {synopt :{opt eff:iciency(#)}}gaussian efficiency, in percent; default
@@ -352,6 +381,12 @@
 {synoptline}
 {synopt:{opt xb}}linear prediction
     {p_end}
+{p2coldent :* {opt xbu}}linear prediction plus fixed effect
+    {p_end}
+{p2coldent :* {opt u}}fixed effect
+    {p_end}
+{p2coldent :* {opt ue}}fixed effect plus residual
+    {p_end}
 {synopt:{opt r:esiduals}}residuals
     {p_end}
 {synopt:{opt rs:tandard}}standardized residuals
@@ -360,17 +395,21 @@
     {p_end}
 {synopt:{opt in:lier}[{cmd:(}{it:#}{cmd:)}]}inlier indicator
     {p_end}
-{synopt:{opt w:eights}}RLS weights ({cmd:m}, {cmd:s}, and {cmd:mm} only)
+{p2coldent :§ {opt w:eights}}RLS weight
     {p_end}
-{synopt:{opt sub:set}}H-subset indicator ({cmd:lts}, {cmd:lqs}, and {cmd:lms} only)
+{p2coldent :# {opt sub:set}}H-subset indicator
     {p_end}
-{synopt:{opt sc:ores}}equation-level scores ({cmd:ls}, {cmd:q}, {cmd:m}, {cmd:s}, and {cmd:mm} only)
+{p2coldent :+ {opt sc:ores}}equation-level scores
     {p_end}
-{synopt:{opt if:s}}coefficient-level influence functions ({cmd:ls}, {cmd:q}, {cmd:m}, {cmd:s}, and {cmd:mm} only)
+{p2coldent :+ {opt if:s}}coefficient-level influence functions
     {p_end}
-{synopt:{opt rif:s}}recentered influence functions ({cmd:ls}, {cmd:q}, {cmd:m}, {cmd:s}, and {cmd:mm} only)
+{p2coldent :+ {opt rif:s}}recentered influence functions
     {p_end}
 {synoptline}
+{pstd}* only after {cmd:robreg ls}, {cmd:m}, or {cmd:s} with option {cmd:ivar()} or {cmd:absorb()}{p_end}
+{pstd}§ only after {cmd:robreg m}, {cmd:s}, or {cmd:mm}{p_end}
+{pstd}# only after {cmd:robreg lts}, {cmd:lqs}, or {cmd:lms}{p_end}
+{pstd}+ only after {cmd:robreg ls}, {cmd:q}, {cmd:m}, {cmd:s}, or {cmd:mm}{p_end}
 
 
 {marker description}{...}
@@ -449,6 +488,13 @@
     {cmd:nor2} skips the computation of the (pseudo) R-squared. Use this option to
     save computer time.
 
+{marker ls_options}{...}
+{dlgtab:Additional options for robreg ls}
+
+{phang}
+    {it:fe_options} are options to include fixed-effects in the model; see
+    {help robreg##fe_options:Fixed effects options} below.
+
 {marker q_options}{...}
 {dlgtab:Additional options for robreg q}
 
@@ -506,6 +552,10 @@
     efficiency. {cmd:k()} and {cmd:efficiency()} are not both allowed.
 
 {phang}
+    {it:fe_options} are options to include fixed-effects in the model; see
+    {help robreg##fe_options:Fixed effects options} below.
+
+{phang}
     {opt scale(#)} provides a custom (starting) value for the residual
     scale. The default is to use the MADN (normalized median absolute deviation)
     from the initial fit.
@@ -526,6 +576,12 @@
     the starting values will be taken from the first row of matrix {it:matname}
     (coefficients will be matched by name; starting values for coefficients
     without match will be set to zero).
+
+{pmore}
+    If option {cmd:ivar()} or {cmd:absorb()} is specified, the fixed-effects
+    (quasi) quantile estimator implemented in {helpb mf_mm_aqreg:mm_aqreg()} is used to
+    determine the {cmd:lad} starting values. Furthermore, {opt init(matname)}
+    is not allowed with {cmd:ivar()} or {cmd:absorb()}.
 
 {marker s_options}{...}
 {dlgtab:Additional options for robreg s}
@@ -566,6 +622,10 @@
     to generate suitable candidate estimates without falling into the
     collinearity trap; the candidates are then optimized in the same way as without
     {cmd:m()} option).
+
+{phang}
+    {it:fe_options} are options to include fixed-effects in the model; see
+    {help robreg##fe_options:Fixed effects options} below.
 
 {marker s_nsamp}{...}
 {phang}
@@ -798,6 +858,43 @@
 {phang}
     {opt nolog} suppresses the display of progress information.
 
+{marker fe_options}{...}
+{dlgtab:Fixed effects options}
+
+{phang}
+    {opt ivar(varname)} specifies a variable identifying groups for which
+    fixed effects are to be included in the model. Use 
+    {cmd:ivar()} in cases in which the number of groups increases with the
+    sample size (e.g. panel data). {cmd:ivar()} mimics
+    the behavior of {helpb xtreg:xtreg,fe} with option {cmd:robust}, that is, it
+    implies clustering on the group variable when computing standard errors (unless
+    an alternative clustering variable is specified in {cmd:vce()} or
+    {cmd:cluster()}; in any case, groups must be nested within clusters).
+
+{phang}
+    {opt absorb(varname)} is an alternative to {opt ivar()} that mimics the
+    behavior of {helpb areg} (no clustering implied; groups not required 
+    to be nested within clusters; somewhat different computation of 
+    degrees of freedom). Use {cmd:absorb()} in cases in which the number
+    of groups does not increase with the sample size. 
+
+{phang}
+    [{cmd:no}]{opt usave} decides whether a fixed-effects lookup table is stored
+    in matrix {cmd:e(u)}. For {cmd:robreg ls} the default is 
+    {cmd:nousave}, as the fixed effects can be recovered after model
+    estimation. For all other models supporting {cmd:ivar()} or 
+    {cmd:absorb()}, the default is {cmd:usave}. Typing {cmd:nousave} for these
+    models implies that {it:{help robreg##propts:predict_options}} options
+    involving fixed effects will not be available after model estimation.
+
+{phang}
+    {opt ugenerate(newvar)} stores the fixed effects as a variable in the data,
+    rather than storing a lookup table in {cmd:e(u)}. {cmd:ugenerate()} takes precedence
+    over {cmd:usave}.
+
+{phang}
+    {opt replace} allows overwriting an existing variable.
+
 {marker mm_refit_options}{...}
 {dlgtab:Refitting options for robreg mm}
 
@@ -888,6 +985,18 @@
 
 {phang}
     {opt xb} calculates linear predictions.
+
+{phang}
+    {opt xbu} calculates linear predictions plus fixed effects. {cmd:xbu} is only
+    allowed after option {cmd:ivar()} or {cmd:absorb()} has been applied.
+
+{phang}
+    {opt u} calculates fixed effects. {cmd:u} is only
+    allowed after option {cmd:ivar()} or {cmd:absorb()} has been applied.
+
+{phang}
+    {opt ue} calculates fixed effects plus residuals. {cmd:ue} is only
+    allowed after option {cmd:ivar()} or {cmd:absorb()} has been applied.
 
 {phang}
     {opt residuals} calculates residuals.
@@ -1051,6 +1160,11 @@
 {synopt:{cmd:e(hausman_chi2)}}chi-squared statistic of Hausman test ({cmd:robreg s/mm}){p_end}
 {synopt:{cmd:e(hausman_F)}}F statistic of Hausman test ({cmd:robreg s/mm}, if {cmd:ftest}){p_end}
 {synopt:{cmd:e(hausman_p)}}p value of Hausman test ({cmd:robreg s/mm}){p_end}
+{synopt:{cmd:e(N_g)}}number of groups (if relevant){p_end}
+{synopt:{cmd:e(g_avg)}}average group size (if relevant){p_end}
+{synopt:{cmd:e(g_min)}}minimum group size (if relevant){p_end}
+{synopt:{cmd:e(g_max)}}maximum group size (if relevant){p_end}
+{synopt:{cmd:e(corr)}}correlation between fixed effects and Xb (if relevant){p_end}
 {synopt:{cmd:e(df_m)}}model degrees of freedom{p_end}
 {synopt:{cmd:e(df_r)}}residual degrees of freedom{p_end}
 {synopt:{cmd:e(chi2)}}chi-squared statistic of model test (unless {cmd:nose}){p_end}
@@ -1069,6 +1183,9 @@
 {synopt:{cmd:e(indepvars)}}names of independent variables{p_end}
 {synopt:{cmd:e(m)}}variable names from {cmd:m()} option{p_end}
 {synopt:{cmd:e(noconstant)}}{cmd:noconstant} or empty{p_end}
+{synopt:{cmd:e(ivar)}}variable name from {cmd:ivar()} or empty{p_end}
+{synopt:{cmd:e(absorb)}}variable name from {cmd:absorb()} or empty{p_end}
+{synopt:{cmd:e(ugenerate)}}variable name from {cmd:ugenerate()} or empty{p_end}
 {synopt:{cmd:e(nor2)}}{cmd:nor2} or empty{p_end}
 {synopt:{cmd:e(noquad)}}{cmd:noquad} or empty{p_end}
 {synopt:{cmd:e(denmethod)}}{cmd:kernel} or {cmd:fitted} ({cmd:robreg q}){p_end}
@@ -1088,6 +1205,7 @@
 {synopt:{cmd:e(V)}}variance-covariance matrix of estimates (unless {cmd:nose}){p_end}
 {synopt:{cmd:e(omit)}}vector identifying omitted coefficients{p_end}
 {synopt:{cmd:e(V_modelbased)}}inverse of moment condition derivative matrix (unless {cmd:nose}){p_end}
+{synopt:{cmd:e(u)}}fixed-effects lookup table (if appropriate){p_end}
 {synopt:{cmd:e(b0)}}empty model fit (unless {cmd:nor2}){p_end}
 {synopt:{cmd:e(b_init)}}starting values ({cmd:robreg q/m}){p_end}
 {synopt:{cmd:e(b_lo)}}lower auxiliary fit ({cmd:robreg q}, if {cmd:fitted}){p_end}
@@ -1216,7 +1334,7 @@
 {title:Author}
 
 {pstd}
-    Ben Jann, University of Bern, ben.jann@soz.unibe.ch
+    Ben Jann, University of Bern, ben.jann@unibe.ch
 
 {pstd}
     Thanks for citing this software as follows:
@@ -1237,6 +1355,7 @@
     {p_end}
 {psee}
     SSC Archive:{space 4}
+    {helpb xtrobreg},
     {helpb robstat},
     {helpb dstat},
     {helpb robbox},

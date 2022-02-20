@@ -38,22 +38,58 @@ Consider a state space model {it:y}({it:it}) = {it:u}({it:it}) + {it:v}({it:it})
 {phang}
 {bf:tp2({it:real})} sets the scale-normalized tuning parameter for estimation of the skedastic function. The default value is {bf: tp2(2)}.
 
+
 {marker examples}{...}
 {title:Examples}
 
 {phang}
-({bf:y1} period-1 earnings, {bf:y2} period-2 earnings, {bf:y3} period-3 earnings){p_end}
+({bf:y2006}, {bf:y2008}, & {bf:y2010}: earnings in 2006, 2008, & 2010, respectively.){p_end}
 
-{phang}Estimation of the density functions of {it:u}({it:1}) and {it:v}({it:1}), using {bf:y1} and {bf:y2} as input:
+{phang}Estimation of the density functions of {it:u}({it:2006}) and {it:v}({it:2006}), using {bf:y2006} and {bf:y2008} as input:
 
-{phang}{cmd:. npss y1 y2}{p_end}
+{phang}{cmd:. use "example_2006_2008_2010.dta"}{p_end}
+{phang}{cmd:. npss y2006 y2008}{p_end}
 
-{phang}Estimation the conditional skedastic function of {it:u}({it:2}) given {it:u}({it:1}), in addition to the density functions of {it:u}({it:1}) and {it:v}({it:1}), using {bf:y1}, {bf:y2} and {bf:y3} as input:
+{phang}Estimation the conditional skedastic function of {it:u}({it:2008}) given {it:u}({it:2006}), in addition to the density functions of {it:u}({it:2006}) and {it:v}({it:2006}), using {bf:y2006}, {bf:y2008} and {bf:y2010} as input:
 
-{phang}{cmd:. npss y1 y2, skedastic(y3)}{p_end}
+{phang}{cmd:. use "example_2006_2008_2010.dta"}{p_end}
+{phang}{cmd:. npss y2006 y2008, skedastic(y2010)}{p_end}
+
+
+{marker stored}{...}
+{title:Stored results}
 
 {phang}
-(Note that it is a common practice in the earnings dynamics literature that {bf:y1}, {bf:y2} and {bf:y3} are defined as the residual of earnings on observed attributes.s){p_end}
+{bf:npss} stores the following in {bf:r()}: 
+{p_end}
+
+{phang}
+Scalars
+{p_end}
+{phang2}
+{bf:r(N)} {space 10}observations
+{p_end}
+
+{phang}
+Macros
+{p_end}
+{phang2}
+{bf:r(cmd)} {space 8}{bf:npss}
+{p_end}
+
+{phang}
+Matrices
+{p_end}
+{phang2}
+{bf:r(U)} {space 10}density f(U) of U
+{p_end}
+{phang2}
+{bf:r(V)} {space 10}density f(V) of V
+{p_end}
+{phang2}
+{bf:r(S)} {space 10}conditional skedastic function sigma(U)
+{p_end}
+
 
 {title:Reference}
 
@@ -61,11 +97,9 @@ Consider a state space model {it:y}({it:it}) = {it:u}({it:it}) + {it:v}({it:it})
 {browse "https://www.sciencedirect.com/science/article/abs/pii/S0304407617302427":Link to Paper}.
 {p_end}
 
+
 {title:Authors}
 
 {p 4 8}Irene Botosaru, University of Bristol, Bristol, UK.{p_end}
 
 {p 4 8}Yuya Sasaki, Vanderbilt University, Nashville, TN.{p_end}
-
-
-

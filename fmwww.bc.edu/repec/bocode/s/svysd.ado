@@ -1,5 +1,5 @@
 *svysd.ado
-*Version 1.0.1--May 13, 2020
+*Version 2.0--February 19, 2022
 
 
 
@@ -100,13 +100,21 @@ if !_rc { //if it's mi svyset
                             intreg `depvar' `depvar'_temp 
     scalar                  sd_m0 = exp(el(e(b_mi),1,2))
     scalar                  n_m0 = `e(N_subpop_mi)'
+	scalar					ssd_m0 = (sd_m0^2) * (n_m0 - 1)
 
+	qui	mi estimate: svy, subpop(if `mvar' == `=m_0'): mean `depvar'
+	scalar m_m0 = el(e(b_mi),1,1)
+	
     qui mi estimate, cmdok: svy, subpop(if `mvar' == `=m_1'): ///
                             intreg `depvar' `depvar'_temp   
     scalar                  sd_m1 = exp(el(e(b_mi),1,2))
     scalar                  n_m1 = `e(N_subpop_mi)'
+	scalar					ssd_m1 = (sd_m1^2) * (n_m1 - 1)
 
-    `unw' scalar pooledsd = sqrt( (sd_m0^2+sd_m1^2)/2 )
+	qui	mi estimate: svy, subpop(if `mvar' == `=m_1'): mean `depvar'
+	scalar m_m1 = el(e(b_mi),1,1)
+	
+    `unw' scalar pooledsd = sqrt( (ssd_m0+ssd_m1)/(n_m0+n_m1-2) )
     else scalar sdstar = sqrt((((n_m0-1)*(sd_m0^2)) + ((n_m1-1)*(sd_m1^2)))/(n_m0 + n_m1 - 2))
 
     restore

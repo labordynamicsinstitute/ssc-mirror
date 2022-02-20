@@ -1,4 +1,6 @@
-*! version 2.5  1/26/2021
+*! version 2.6  31/01/2022
+* This is rctable with 3 digits precision
+
 version 13.1
 cap program drop rctable
 program define rctable
@@ -8,13 +10,13 @@ pause on
 
 quiet{
 	
-if "`pvalue'"!="" & 	"`qvalue'"!="" { 
+if mi("`pvalue'")==0  & 	mi("`qvalue'")==0  { 
 	
 	dis as error  "Cannot specify both p and q values"
 			exit 100
 }
 	
-if "`keep'"=="" {
+if mi("`keep'")==1 {
 	preserve
 	foreach cvar in VAR LAB  N_ind N_clust A C COEF*  {
 	capture confirm variable `cvar'
@@ -27,7 +29,7 @@ if "`keep'"=="" {
 	quiet for any  VAR LAB  N_ind N_clust A C COEF* : cap drop X 
 }
 
-if "`qvalue'" !=""  {
+if mi("`qvalue'") ==0  {
 	cap which qqvalue
 	if _rc ssc install qqvalue
 	if   "`qvalue'" =="bky" | "`qvalue'" =="bonferroni" | "`qvalue'" =="sidak" | "`qvalue'" =="holm" | "`qvalue'" =="holland" | "`qvalue'" =="hochberg" | "`qvalue'" =="simes" | "`qvalue'" =="yekutieli"{ 
@@ -71,25 +73,25 @@ local j=1
 local k=1
 foreach i in `varlist' {
 	
-	if "`estimator'"=="" | "`estimator'"=="ITT" | "`estimator'"=="itt" {
-	if "`quiet'" =="" dis "*******"
-	if "`quiet'" =="" dis "Outcome `i'"
-	if "`quiet'" =="" dis "Intent-to-Treat estimation"
-	if "`quiet'" =="" dis "********"
+	if mi("`estimator'")==1 | "`estimator'"=="ITT" | "`estimator'"=="itt" {
+	if mi("`quiet'") ==1 dis "*******"
+	if mi("`quiet'") ==1 dis "Outcome `i'"
+	if mi("`quiet'") ==1 dis "Intent-to-Treat estimation"
+	if mi("`quiet'") ==1 dis "********"
 	
 	* if basecontrol is missing: do nothing special
-	if "`basecontrol'"=="" {
-		if "`quiet'" !="" { 
+	if mi("`basecontrol'")==1 {
+		if mi("`quiet'")==0 { 
 		quietly  reg  `i' `treatment'  `control' [`weight'`exp'] `if' , cluster(`cluster')  r
 		}
 		
-		if "`quiet'" =="" { 
+		if mi("`quiet'")==1 { 
 		reg  `i' `treatment'  `control' [`weight'`exp'] `if' , cluster(`cluster')  r
 		}
 	}
 		
 	* if basecontrol is not missing, first verify the number of baseline cont
-	if "`basecontrol'"!="" {
+	if mi("`basecontrol'")==0  {
 	cap assert wordcount("`basecontrol'") == wordcount("`varlist'")	
 		
 		if _rc!=0 {
@@ -98,39 +100,39 @@ foreach i in `varlist' {
 		}	
 	* then add the control variable that corresponds to the control
 	local cont: word `k' of `basecontrol'
-	if "`quiet'" !="" { 
+	if mi("`quiet'")==0 { 
 		quietly reg  `i' `treatment'  `control' `cont' [`weight'`exp'] `if' , cluster(`cluster')  r
 	}
-	if "`quiet'" =="" { 
+	if mi("`quiet'")==1 { 
 		reg  `i' `treatment'  `control' `cont' [`weight'`exp'] `if' , cluster(`cluster')  r
 	}
 	}
 	}
 	
-	if "`estimator'"=="LATE" | "`estimator'"=="late" | "`treated'"!="" {
-	if "`quiet'" =="" dis "*******"
-	if "`quiet'" =="" dis "Outcome `i'"
-	if "`quiet'" =="" dis "Local Average Treatment Effect estimation"
-	if "`quiet'" =="" dis "********"
-		if "`treated'"=="" {
+	if "`estimator'"=="LATE" | "`estimator'"=="late" | mi("`treated'")==0 {
+	if mi("`quiet'") ==1 dis "*******"
+	if mi("`quiet'") ==1 dis "Outcome `i'"
+	if mi("`quiet'") ==1 dis "Local Average Treatment Effect estimation"
+	if mi("`quiet'") ==1 dis "********"
+		if mi("`treated'") ==1 {
 		dis as error  "treated variable is missing"
 		exit 100
 		}
 		
 		else {
 			
-			if "`basecontrol'"=="" {
+			if mi("`basecontrol'")==1 {
 			dis "Treatment on the treated estimation"
-				if "`quiet'" !="" { 
+				if mi("`quiet'")==0 { 
 				quiet ivregress 2sls  `i'  (`treated'=`treatment')  `control' [`weight'`exp'] `if' , cluster(`cluster')  r	
 				}
-				if "`quiet'" =="" { 
+				if mi("`quiet'")==1 { 
 				ivregress 2sls  `i'  (`treated'=`treatment')  `control' [`weight'`exp'] `if' , cluster(`cluster')  r
 				}
 			
 			}
 			
-			if "`basecontrol'"!="" { 
+			if mi("`basecontrol'")==0 { 
 			 assert wordcount("`basecontrol'") == wordcount("`varlist'")
 				
 				if _rc!=0 {
@@ -138,10 +140,10 @@ foreach i in `varlist' {
 				exit 100
 				}	
 			local cont: word `k' of `basecontrol'
-				if "`quiet'" !="" { 
+				if mi("`quiet'")==0 { 
 				ivregress 2sls  `i'  (`treated'=`treatment'=)  `control' `cont' [`weight'`exp'] `if' , cluster(`cluster')  r	
 				}
-				if "`quiet'" =="" { 
+				if mi("`quiet'") ==1 { 
 				ivregress 2sls  `i'  (`treated'=`treatment')  `control' `cont' [`weight'`exp'] `if' , cluster(`cluster')  r	
 				}
 			
@@ -164,42 +166,44 @@ foreach i in `varlist' {
 	* Creation of a Control Tempvar taking value 1 when control and 0 otherwise.
 	tempvar T0
 	gen `T0' = cond(`temoin', 1, 0) if `1'!=.
-	
-	if "`if'"=="" {
+
+	if mi("`if'")==1 {
 	    quiet {
 		sum `i' [`weight'`exp'] if `T0'==1 `cond' , d
 		
-		if abs(r(mean))>=1000 &  abs(r(mean))<10000 {
+		if abs(r(mean))>=10 &  abs(r(mean))<100 {
 		quiet: replace C="`: display %7.2fc r(mean)'" if _n==`j'
 		}
-		if abs(r(mean))>=10000 &  abs(r(mean))<100000 {
+		if abs(r(mean))>=100 &  abs(r(mean))<1000 {
 		quiet: replace C="`: display %7.1fc r(mean)'" if _n==`j'
 		}
-		if abs(r(mean))>=100000 {
+		if abs(r(mean))>=1000 {
 		quiet: replace C="`: display %7.0fc r(mean)'" if _n==`j'
 		}
-		if abs(r(mean)) <1000 {
+		if abs(r(mean)) <10 {
 		quiet: replace C="`: display %7.3fc r(mean)'" if _n==`j'
 		}
 		quiet: replace C= subinstr(C," ","",.) if _n==`j'
+		quiet: replace C= "0.000" if _n==`j' & C=="-0.000"
+
 		
-		
-		if "`sd'" !="" {
+		if mi("`sd'")==0  {
 			
-		if abs(r(sd))>=1000 &  abs(r(sd))<10000 {
+		if abs(r(sd))>=10 &  abs(r(sd))<100 {
 		quiet: replace C="`: display %7.2fc r(sd)'" if _n==`j'+1
 		}
-		if abs(r(sd))>=10000 &  abs(r(sd))<100000 {
+		if abs(r(sd))>=100 & abs(r(sd))<1000 {
 		quiet: replace C="`: display %7.1fc r(sd)'" if _n==`j'+1
 		}
-		if abs(r(sd))>=100000 {
+		if abs(r(sd))>=1000 {
 		quiet: replace C="`: display %7.0fc r(sd)'" if _n==`j'+1
 		}
-		if abs(r(sd)) <1000 {
+		if abs(r(sd)) <10 {
 		quiet: replace C="`: display %7.3fc r(sd)'" if _n==`j'+1
 		}
 		
 		replace C=subinstr(C," ","",.) if _n==`j'+1
+		quiet: replace C= "0.000" if _n==`j'+1 & C=="-0.000"
 		replace C="["+C+"]" if  _n==`j'+1
 		}
 		}
@@ -207,113 +211,122 @@ foreach i in `varlist' {
 	
 		 quiet {
 		 sum `i' [`weight'`exp'] , d
-		 if abs(r(mean))>=1000 &  abs(r(mean))<10000 {
+		if abs(r(mean))>=10 &  abs(r(mean))<100 {
 		quiet: replace A="`: display %7.2fc r(mean)'" if _n==`j'
 		}
-		if abs(r(mean))>=10000 &  abs(r(mean))<100000 {
+		if abs(r(mean))>=100 &  abs(r(mean))<1000 {
 		quiet: replace A="`: display %7.1fc r(mean)'" if _n==`j'
 		}
-		if abs(r(mean))>=100000 {
+		if abs(r(mean))>=1000  {
 		quiet: replace A="`: display %7.0fc r(mean)'" if _n==`j'
 		}
-		if abs(r(mean)) <1000 {
+		if abs(r(mean)) <10 {
 		quiet: replace A="`: display %7.3fc r(mean)'" if _n==`j'
 		}
-		 replace A=subinstr(A," ","",.) if _n==`j'
-
+		quiet replace A=subinstr(A," ","",.) if _n==`j'
+		quiet: replace A= "0.000" if _n==`j' & A=="-0.000"
 		 }
-		if "`sd'" !="" {
+		if mi("`sd'")==0  {
 			quiet {
-			 if abs(r(sd))>=1000 &  abs(r(sd))<10000 {
-		quiet: replace A="`: display %7.2fc r(sd)'" if _n==`j'+1
-		}
-		if abs(r(sd))>=10000 &  abs(r(sd))<100000 {
-		quiet: replace A="`: display %7.1fc r(sd)'" if _n==`j'+1
-		}
-		if abs(r(sd))>=100000 {
-		quiet: replace A="`: display %7.0fc r(sd)'" if _n==`j'+1
-		}
-		if abs(r(sd)) <1000 {
-		quiet: replace A="`: display %7.3fc r(sd)'" if _n==`j'+1
-		}
+			if abs(r(sd))>=10 &  abs(r(sd))<100 {
+			replace A="`: display %7.2fc r(sd)'" if _n==`j'+1
+			}
+			if abs(r(sd))>=100 &  abs(r(sd))<1000 {
+			replace A="`: display %7.1fc r(sd)'" if _n==`j'+1
+			}
+			if abs(r(sd))>=1000 {
+			replace A="`: display %7.0fc r(sd)'" if _n==`j'+1
+			}
+			if abs(r(sd)) <10 {
+			replace A="`: display %7.3fc r(sd)'" if _n==`j'+1
+			}
 			replace A=subinstr(A," ","",.) if _n==`j'+1
+			replace A= "0.000" if _n==`j'+1 & A=="-0.000"
 			replace A="["+A+"]" if  _n==`j'+1
 			}
 		}
 	}
-	
+		
 	else {
+		
 		quiet {
 		sum `i' [`weight'`exp'] `if' & `T0'==1 `cond' , d
-		if abs(r(mean))>=1000 &  abs(r(mean))<10000 {
+		if abs(r(mean))>=10 &  abs(r(mean))<100 {
 		quiet: replace C="`: display %7.2fc r(mean)'" if _n==`j'
 		}
-		if abs(r(mean))>=10000 &  abs(r(mean))<100000 {
+		if abs(r(mean))>=100 & abs(r(mean))<1000 {
 		quiet: replace C="`: display %7.1fc r(mean)'" if _n==`j'
 		}
-		if abs(r(mean))>=100000 {
+		if abs(r(mean))>=1000  {
 		quiet: replace C="`: display %7.0fc r(mean)'" if _n==`j'
 		}
-		if abs(r(mean)) <1000 {
+		if abs(r(mean)) <10 {
 		quiet: replace C="`: display %7.3fc r(mean)'" if _n==`j'
 		}
 		replace C=subinstr(C," ","",.) if _n==`j'
+		quiet: replace C= "0.000" if _n==`j' & C=="-0.000"
+
 
 		}		
-		if "`sd'" !="" {
+		if mi("`sd'")==0  {
 			quiet{ 
-				if abs(r(sd))>=1000 &  abs(r(sd))<10000 {
+		if abs(r(sd))>=10 &  abs(r(sd))<100 {
 		quiet: replace C="`: display %7.2fc r(sd)'" if _n==`j'+1
 		}
-		if abs(r(sd))>=10000 &  abs(r(sd))<100000 {
+		if abs(r(sd))>=100 &  abs(r(sd))<1000 {
 		quiet: replace C="`: display %7.1fc r(sd)'" if _n==`j'+1
 		}
-		if abs(r(sd))>=100000 {
+		if abs(r(sd))>=1000 {
 		quiet: replace C="`: display %7.0fc r(sd)'" if _n==`j'+1
 		}
-		if abs(r(sd)) <1000 {
+		if abs(r(sd)) <10 {
 		quiet: replace C="`: display %7.3fc r(sd)'" if _n==`j'+1
 		}
-				replace C=subinstr(C," ","",.) if _n==`j'+1
-				replace C="["+C+"]" if  _n==`j'+1
+		replace C=subinstr(C," ","",.) if _n==`j'+1
+		quiet: replace C= "0.000" if _n==`j'+1 & C=="-0.000"
+
+		replace C="["+C+"]" if  _n==`j'+1
 			}
 		}
 	
 		quiet {
 		sum `i' [`weight'`exp'] `if' , d
 		}
-		if "`sd'" !="" {
+		if mi("`sd'")==0  {
 		quiet { 
-			 if abs(r(sd))>=1000 &  abs(r(sd))<10000 {
+		if abs(r(sd))>=10 &  abs(r(sd))<100 {
 		quiet: replace A="`: display %7.2fc r(sd)'" if _n==`j'+1
 		}
-		if abs(r(sd))>=10000 &  abs(r(sd))<100000 {
+		if abs(r(sd))>=100 &  abs(r(sd))<1000 {
 		quiet: replace A="`: display %7.1fc r(sd)'" if _n==`j'+1
 		}
-		if abs(r(sd))>=100000 {
+		if abs(r(sd))>=1000 {
 		quiet: replace A="`: display %7.0fc r(sd)'" if _n==`j'+1
 		}
-		if abs(r(sd)) <1000 {
+		if abs(r(sd)) <10 {
 		quiet: replace A="`: display %7.3fc r(sd)'" if _n==`j'+1
 		}
-			replace A=subinstr(A," ","",.) if _n==`j'+1
-			replace A="["+A+"]" if  _n==`j'+1
+		replace A=subinstr(A," ","",.) if _n==`j'+1
+		replace A= "0.000" if _n==`j'+1 & A=="-0.000"
+		replace A="["+A+"]" if  _n==`j'+1
 				}
 		}
 		quiet {
-		if abs(r(mean))>=1000 &  abs(r(mean))<10000 {
+		if abs(r(mean))>=10 &  abs(r(mean))<100 {
 		quiet: replace A="`: display %7.2fc r(mean)'" if _n==`j'
 		}
-		if abs(r(mean))>=10000 &  abs(r(mean))<100000 {
+		if abs(r(mean))>=100 &  abs(r(mean))<1000 {
 		quiet: replace A="`: display %7.1fc r(mean)'" if _n==`j'
 		}
-		if abs(r(mean))>=100000 {
+		if abs(r(mean))>=1000 {
 		quiet: replace A="`: display %7.0fc r(mean)'" if _n==`j'
 		}
-		if abs(r(mean)) <1000 {
+		if abs(r(mean)) <10 {
 		quiet: replace A="`: display %7.3fc r(mean)'" if _n==`j'
 		}
 		replace A=subinstr(A," ","",.) if _n==`j'
+		replace A= "0.000" if _n==`j' & A=="-0.000"
+
 		}
 		}
 		
@@ -326,7 +339,7 @@ quiet {
 
 	}
 	
-	if ("`estimator'"=="" & "`treated'"=="") | "`estimator'"=="ITT" | "`estimator'"=="itt" {
+	if (mi("`estimator'")==1 & mi("`treated'")==1) | "`estimator'"=="ITT" | "`estimator'"=="itt" {
 
 	forval h=1/`c' {
 		quiet{
@@ -347,6 +360,7 @@ quiet {
 		
 		
 		replace COEF`h'=subinstr(COEF`h'," ","",.) if _n==`j'
+		replace COEF`h'="0.000" if _n==`j' &  COEF`h'=="-0.000"
 		replace COEF`h'=COEF`h'+"*" if   _n==`j' & 2*ttail(e(df_r),abs(_b[``h'']/_se[``h'']))<=0.1
 		replace COEF`h'=COEF`h'+"*" if   _n==`j' & 2*ttail(e(df_r),abs(_b[``h'']/_se[``h'']))<=0.05
 		replace COEF`h'=COEF`h'+"*" if   _n==`j' & 2*ttail(e(df_r),abs(_b[``h'']/_se[``h'']))<=0.01
@@ -367,21 +381,22 @@ quiet {
 		
 		
 		replace COEF`h'=subinstr(COEF`h'," ","",.) if _n==`j'+1
+		replace COEF`h'="0.000" if _n==`j'+1 &  COEF`h'=="-0.000"
 		replace COEF`h'="("+COEF`h'+")" if  _n==`j'+1		
 		* store pvalues for qvalue calculation
-		if "`qvalue'" !="" {
+		if mi("`qvalue'") ==0 {
 			local p``h''=2 * ttail(e(df_r), abs(_b[``h'']/_se[``h'']))
 			local pvalues="`pvalues' `p``h''' "
 		}
 		}	
 	}
 
-if "`pvalue'" !="" {
+if mi("`pvalue'")==0 {
 	forval h=1/`c' {
 		quiet{
 		* cleaning
 		* third row (PV)
-		replace COEF`h'="`: display %7.3fc 2*ttail(e(df_r),abs(_b[``h'']/_se[``h'']))'" if _n==`j'+2
+		replace COEF`h'="`: display %7.2fc 2*ttail(e(df_r),abs(_b[``h'']/_se[``h'']))'" if _n==`j'+2
 		replace COEF`h'=subinstr(COEF`h'," ","",.) if _n==`j'+2
 
 		replace COEF`h'="["+ COEF`h' + "]" if _n==`j'+2
@@ -390,16 +405,16 @@ if "`pvalue'" !="" {
 	local j= `j'+3
 }
 	
-if "`qvalue'" !=""  {
+if mi("`qvalue'")==0  {
 		local j= `j'+3
 	}
-if "`qvalue'" =="" & "`pvalue'" =="" {
+if mi("`qvalue'") ==1 & mi("`pvalue'") ==1 {
 		local j= `j'+2
 	}
 local k= `k'+1
 }
 
-	if "`estimator'"=="LATE" | "`estimator'"=="late" | "`treated'"!="" {
+	if "`estimator'"=="LATE" | "`estimator'"=="late" | mi("`treated'")==0 {
 	    if `c'>1 { 
 		    dis as error  "LATE not available with multiple treatment branches"
 				exit 100
@@ -420,6 +435,7 @@ local k= `k'+1
 		
 		
 		replace COEF`h'=subinstr(COEF`h'," ","",.) if _n==`j'
+		replace COEF`h'="0.000" if _n==`j' &  COEF`h'=="-0.000"
 		replace COEF`h'=COEF`h'+"*" if   _n==`j' & 2*normal(-abs(_b[`treated']/_se[`treated']))<=0.1
 		replace COEF`h'=COEF`h'+"*" if   _n==`j' & 2*normal(-abs(_b[`treated']/_se[`treated']))<=0.05
 		replace COEF`h'=COEF`h'+"*" if   _n==`j' & 2*normal(-abs(_b[`treated']/_se[`treated']))<=0.01
@@ -440,6 +456,7 @@ local k= `k'+1
 		
 		
 		replace COEF`h'=subinstr(COEF`h'," ","",.) if _n==`j'+1
+		replace COEF`h'="0.000" if _n==`j'+1 &  COEF`h'=="-0.000"
 		replace COEF`h'="("+COEF`h'+")" if  _n==`j'+1		
 		* store pvalues for qvalue calculation
 		if "`qvalue'" !="" {
@@ -448,12 +465,12 @@ local k= `k'+1
 		}	
 		
 
-if "`pvalue'" !="" {
+if mi("`pvalue'")==0  {
 	forval h=1/`c' {
 		quiet{
 		* cleaning
 		* third row (PV)
-		replace COEF`h'="`: display %7.3fc 2*ttail(e(df_r),abs(_b[``h'']/_se[``h'']))'" if _n==`j'+2
+		replace COEF`h'="`: display %7.2fc 2*ttail(e(df_r),abs(_b[``h'']/_se[``h'']))'" if _n==`j'+2
 		replace COEF`h'=subinstr(COEF`h'," ","",.) if _n==`j'+2
 
 		replace COEF`h'="["+ COEF`h' + "]" if _n==`j'+2
@@ -462,10 +479,10 @@ if "`pvalue'" !="" {
 	local j= `j'+3
 }
 	
-if "`qvalue'" !=""  {
+if mi("`qvalue'") ==0  {
 		local j= `j'+3
 	}
-if "`qvalue'" =="" & "`pvalue'" =="" {
+if mi("`qvalue'") ==1 & mi("`pvalue'") ==1 {
 		local j= `j'+2
 	}
 local k= `k'+1
@@ -477,7 +494,7 @@ local k= `k'+1
 
 * qvalues
 
-if "`qvalue'" !="" & "`qvalue'" !="bky" {
+if mi("`qvalue'")==0  & mi("`qvalue'")==0  {
 	quietly {
 		forval h=1/`c' {
 			
@@ -499,7 +516,7 @@ if "`qvalue'" !="" & "`qvalue'" !="bky" {
 			foreach varq in `varlist' { 
 				local j= `j'+3
 				local qcount= `qcount'+1
-				replace COEF`h'="`: display %7.3fc `q`h''[`qcount']'" if _n==`j'
+				replace COEF`h'="`: display %7.2fc `q`h''[`qcount']'" if _n==`j'
 				replace COEF`h'=subinstr(COEF`h'," ","",.) if _n==`j'
 				replace COEF`h'="["+COEF`h'+"]" if  _n==`j'
 			} 
@@ -592,7 +609,7 @@ quietly {
 			foreach varq in `varlist' { 
 				local j= `j'+3
 				local qcount= `qcount'+1
-				replace COEF`h'="`: display %7.3fc `q`h''[`qcount']'" if _n==`j'
+				replace COEF`h'="`: display %7.2fc `q`h''[`qcount']'" if _n==`j'
 				replace COEF`h'=subinstr(COEF`h'," ","",.) if _n==`j'
 				replace COEF`h'="["+COEF`h'+"]" if  _n==`j'
 			} 
@@ -604,7 +621,7 @@ quietly {
 }
 * Summary variable at the bottom of the table
 quietly {
-if "`if'"=="" { 
+if mi("`if'")==1 { 
 		
 	replace VAR="Observations" if _n==`j'+1 
 	count if  `1'!=.
@@ -623,7 +640,7 @@ if "`if'"=="" {
 		local l= `l'+1
 		}
 
-	if "`cluster'"!="" { 
+	if mi("`cluster'")==0  { 
 	replace VAR="Clusters" if _n==`j'+2
 	duplicates report `cluster' 
 	replace N_ind="`: display %7.0fc r(unique_value)'" if _n==`j'+2
@@ -645,7 +662,7 @@ if "`if'"=="" {
 	}
 }
 	
-if "`if'"!="" { 
+if mi("`if'")==0 { 
 	replace VAR="Observations" if  _n==`j'+1  
 	count `if' & `1'!=.
 	replace N_ind="`: display %7.0fc r(N)'" if _n==`j'+1
@@ -663,7 +680,7 @@ if "`if'"!="" {
 		local l= `l'+1
 		}
 		
-	if "`cluster'"!="" { 
+	if mi("`cluster'")==0 { 
 	replace VAR="Clusters" if _n==`j'+2
 	duplicates report `cluster' `if'
 	replace N_ind="`: display %7.0fc r(unique_value)'" if _n==`j'+2
@@ -688,19 +705,19 @@ if "`if'"!="" {
 }
 
 * Saving in excel 
-	if `"`using'"'!="" & "`latex'" =="" {
-		if `"`sheet'"'!=""   {  
+	if mi("`using'")==0  & mi("`latex'") ==1 {
+		if mi("`sheet'")==0   {  
 			gettoken worksheet option: sheet, parse(,)
 			export excel   VAR LAB   N_ind N_clust A C COEF*   `using',   sheet(`worksheet' `option')  first(var)
 		}
-		if `"`sheet'"'==""  { 
+		if mi("`sheet'")==1  { 
 			export excel   VAR LAB   N_ind N_clust A C COEF*   `using', firstrow(var) replace
 		}	
 	}
 
 
 *** export in LATEX FORMAT
-if "`latex'" !="" { 
+if mi("`latex'")==0 { 
 cap which listtab
 if _rc ssc install listtab
 
@@ -708,8 +725,6 @@ local word= wordcount("`COEFS'")
 forval C=1/`word'{ 
 	local Cs = "`Cs' c" 
 } 
-
-
 
 #delimit ;
 listtab LAB   N_ind  N_clust C `COEFS' if COEF1!="" | LAB!=""  `using', replace rstyle(tabular) head(" 
@@ -730,12 +745,11 @@ foot(" \bottomrule \bottomrule
 \end{threeparttable}");
 #delimit cr  
 	}
-	if  "`keep'"!="" {
+	if  mi("`keep'")==0 {
 	order  VAR LAB N_ind N_clust A C COEF*, last
 	}
 	
-	if "`keep'"=="" {
+	if mi("`keep'")==1 {
 	restore
 	}
 end
-

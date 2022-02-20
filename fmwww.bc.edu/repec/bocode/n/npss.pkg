@@ -20,13 +20,14 @@ d KW: heteroskedasticity
 d
 d Requires: Stata version 14.2
 d
-d Distribution-Date: 20200426
+d Distribution-Date: 20220219
 d
 d Author:  Irene Botosaru, University of Bristol
-d Support: email NA
+d Support: email yuya.sasaki@@gmail.com
 d
 d Author: Yuya Sasaki, Department of Economics, Vanderbilt University
-d Support: email yuya.sasaki@@gmail.com
+d Support: email 
 d
 f npss.ado
 f npss.sthlp
+f ../e/example_2006_2008_2010.dta

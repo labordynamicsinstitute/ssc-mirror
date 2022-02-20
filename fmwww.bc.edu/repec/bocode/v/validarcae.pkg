@@ -1,0 +1,30 @@
+d 'VALIDARCAE': module to provide several functionalities for dealing with codes from the Portuguese Classification of Economic Activities (CAE)
+d
+d  validarcae is a Stata command that provides several
+d functionalities for dealing with codes from the Portuguese
+d Classification of Economic Activities (CAE).	The command
+d validates existing codes and descriptions, identifies possible
+d ambiguities, aggregates codes to higher levels, and provides the
+d official code description in Portuguese and English. The command
+d works with all revisions of the CAE. The ancillary file
+d caecodes.txt should be downloaded. 
+d
+d KW: meta-analysis
+d KW: treatment
+d KW: control
+d
+d Requires: Stata version 15 and savesome from SSC (q.v.)
+d
+d Distribution-Date: 20220219
+d
+d Author:   BPLIM, Banco de Portugal 
+d Support: email bplim@@bportugal.pt
+d
+f validarcae.ado
+f validarcae_div1.ado
+f validarcae_div2.ado
+f validarcae_div3.ado
+f validarcae_div21.ado
+f validarcae_solve.ado
+f validarcae.sthlp
+f ../c/caecodes.txt

@@ -1,8 +1,11 @@
 d 'MCES': module for Marginal Comparison Effect Sizes
 d
-d    -mces- computes Hedges’s g for marginal comparisons produced
-d  by -margins- or -mimrgns- with the -pwcompare- or -contrast-
-d options, including in complex samples. 
+d  -mces- computes Hedges’s g for marginal comparisons produced
+d by -margins- or -mimrgns- with the -pwcompare- option, including
+d in complex samples. In order to facilitate effect size
+d calculations with complex samples, -svysd- returns a pooled
+d standard deviation sd* that is weighted by within-group sample
+d size. 
 d
 d KW: effect size
 d KW: margins
@@ -13,7 +16,7 @@ d KW: complex samples
 d
 d Requires: Stata version 12
 d
-d Distribution-Date: 20211112
+d Distribution-Date: 20220219
 d
 d Author: Brian Shaw, Indiana University
 d Support: email bpshaw@@indiana.edu

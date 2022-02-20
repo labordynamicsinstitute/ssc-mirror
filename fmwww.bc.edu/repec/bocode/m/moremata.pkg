@@ -85,9 +85,9 @@ d KW: grid
 d KW: linear binning
 d KW: histogram
 d
-d Requires: Stata version 9
+d Requires: Stata version 11
 d
-d Distribution-Date: 20210816
+d Distribution-Date: 20220219
 d
 d Author: Ben Jann, University of Bern
 d Support: email jann@@soz.unibe.ch
@@ -167,5 +167,7 @@ f mf_mm_qr.sthlp
 f mf_mm_areg.hlp
 f mf_mm_aqreg.hlp
 f mf_mm_hdq.hlp
+f mf_mm_version.hlp
 f mf_mm_ebalance.sthlp
 f mf_mm_wbal.sthlp
+f mf_mm_crosswalk.sthlp

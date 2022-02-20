@@ -1,5 +1,5 @@
 {smcl}
-{* 11jan2021}{...}
+{* 06feb2021}{...}
 {hi:help robmv}{...}
 {right:{browse "http://github.com/benjann/robmv/"}}
 {hline}
@@ -413,9 +413,9 @@ not allow {opt fweight}s)
     bootstrap and jackknife estimation, see help {it:{help vce_option}}.
 
 {pmore}
-    Currently, {cmd:vce(analytic)} and {cmd:vce(cluster)} are only supported by
-    {cmd:robmv classic}. No standard errors will be estimated by the other
-    subcommands.
+    {cmd:vce(analytic)} and {cmd:vce(cluster)} are currently not supported by
+    {cmd:robmv mcd}, {cmd:robmv mve}, and {cmd:robmv sd}. No standard errors will
+    be estimated by these subcommands.
 
 {phang}
     {cmd:svy}[{cmd:(}{it:subpop}{cmd:)}] causes the survey design to be taken
@@ -439,9 +439,9 @@ not allow {opt fweight}s)
     prefix command.
 
 {pmore}
-    Currently, {cmd:svy()} is only supported by
-    {cmd:robmv classic}. No standard errors will be estimated by the other
-    subcommands.
+    {cmd:svy()} is currently not supported by
+    {cmd:robmv mcd}, {cmd:robmv mve}, and {cmd:robmv sd}. No standard errors will
+    be estimated by these subcommands.
 
 {phang}
     {opt nose} suppresses the computation of standard errors and confidence
@@ -1254,7 +1254,7 @@ not allow {opt fweight}s)
     la Société Française de Statistique 157(2): 90-114.
 
 
-{title:Author}
+{title:Authors}
 
 {pstd}
     Ben Jann (University of Bern),
@@ -1268,9 +1268,9 @@ not allow {opt fweight}s)
     Thanks for citing this software as follows:
 
 {pmore}
-    Jann, B., V. Verardi, C. Vermandele  (2020). robmv: Stata module for robust
+    Jann, B., V. Verardi, C. Vermandele (2021). robmv: Stata module for robust
     multivariate estimation of location and covariance. Available from
-    {browse "http://github.com/benjann/robmv/"}.
+    {browse "http://ideas.repec.org/c/boc/bocode/s458895.html"}.
 
 
 {title:Also see}

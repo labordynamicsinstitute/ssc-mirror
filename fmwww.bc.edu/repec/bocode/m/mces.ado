@@ -1,5 +1,5 @@
 *mces.ado
-*Version 2.0--November 12, 2021
+*Version 2.1--February 19, 2022
 
 capture program drop mces
 program mces, rclass
@@ -22,7 +22,7 @@ local hedges `" else if "`hedgesg'" == "hedgesg" "'
 
 if "`cohensd'" != "cohensd" & "`hedgesg'" != "hedgesg" local rmseo = 1
 else local rmseo = 0
-
+	
 `coh' local esname `"Cohen's d"'
 `hedges' local esname `"Hedges's g"'
 else {
@@ -101,6 +101,10 @@ matrix `C' = `B'
 matrix `E' = e(error_vs)
 
 
+
+
+
+
 *Confirm that matrices exist
 local er1 "Either something has cleared the stored estimation results,"
 local er2 "or your estimation command is not supported." 
@@ -143,8 +147,9 @@ while `i' < 111 {
         }
     }
 
+	
 *If -sdupdate-, make sure that there is an sdbyvar
-if "`sdupdate'" == "sdupdate" & `rmseo' == 0 {
+if "`sdupdate'" == "sdupdate" & `rmseo' == 0 & "`sdbyvar'" == "" {
 		di as error _n "Option {cmd:sdbyvar} is required for option {cmd:sdupdate}."
 		exit = 198   
 	}
@@ -182,18 +187,22 @@ local w3 "Ensure that this condition applies to each line of the {cmd:margins} r
 local w4 "You may want to run {cmd:margins, pwcompare post} followed by {cmd:mces} once per dichotomous comparison."
 local warning `"_n as error "WARNING: " as text "`w1'" _n "`w2'" _n "`w3'" _n "`w4'" _n"'
 
-local rw2 "    comparisons between groups defined by a single dichotomous variable. Otherwise, the results are invalid."
-local rwarning `"_n as error "WARNING: " as text "`w1'" _n "`rw2'" _n "`w3'" _n "`w4'" _n"'
+local rw1 "Results from {cmd:mces} only apply to ceteris paribus comparisons between groups"
+local rw2 "    defined by a single dichotomous variable. Otherwise, the results are invalid."
+local rwarning `"_n as error "WARNING: " as text "`rw1'" _n "`rw2'" _n "`w3'" _n "`w4'" _n"'
 
 local e1 "The standard deviation used for estimation only applies to ceteris"
-local e2 "    paribus comparisons between the two groups defined by {cmd:`sdbyvar'}."
+local e2 "    paribus comparisons between two groups defined by a single dichotomous variable."
 local e3 "The estimated effect sizes are invalid if the {cmd:marginlist} contains more than one variable,"
 local e4 "    or if there are too many {cmd:by/over/within/at} variables,"
 local e5 "    or if there are more than two values of a {cmd:by/over/within/at} variable."
 local e6 "You may want to run {cmd:margins, pwcompare post} followed by {cmd:mces} once per dichotomous comparison."
 local e7 "You might also try {cmd:recode, generate()} to generate dichotomous comparison variables."
 local exit_warning `"_n as error "ERROR: " as text "`e1'" _n "`e2'" _n "`e3'" _n "`e4'" _n "`e5'" _n "`e6'" _n "`e7'" _n"'
+local rexit_warning `"_n as error "WARNING: " as text "`e1'" _n "`e2'" _n "`e3'" _n "`e4'" _n "`e5'" _n "`e6'" _n "`e7'" _n"'
 	
+local warn = 0
+
 *count mvars
 tokenize "`e(cmdline)'", parse(",")
 tokenize "`1'"
@@ -231,23 +240,35 @@ else local atvars = 0
 
 *Multiple mvars or 1 mvar & 2+ byvars
 if `mvars' > 1 | (`mvars' == 1 & `byvars' > 1) {
-    di `exit_warning'
-    exit = 103
+	if `rmseo' == 0 {
+		di `exit_warning'
+		exit = 103
+		}
+	else di `rexit_warning'
     }
 *Too many byvars or values, or 3+ at values
 else if  "`e(atstats3)'" != "" | "`e(by5)'" != "" | `byvars' >= 3 {
-    di `exit_warning'
-    exit = 134
+	if `rmseo' == 0 {
+		di `exit_warning'
+		exit = 134
+		}
+	else di `rexit_warning'
     }
 *Too many values of mvar
 else if `marvals' > 2 {
-    di `exit_warning'
-    exit = 134
+	if `rmseo' == 0 {
+		di `exit_warning'
+		exit = 134
+		}
+	else di `rexit_warning'
     }
 *One mvar, one atvar (not oneat), one byvar
 else if `mvars' >= 1 & `byvars' == 1 & `atvars' == 2 {
-    di `exit_warning'
-    exit = 134
+	if `rmseo' == 0 {
+		di `exit_warning'
+		exit = 134
+		}
+	else di `rexit_warning'
     }
 *One mvar, one atvar (oneat), one byvar
 else if `mvars' == 1 & `byvars' == 1 & `atvars' == 1 {
@@ -321,10 +342,12 @@ if `rmseo' != 1 {
 		qui summ `depvar' if `sdbyvar' == `=m_0'
 		scalar sd_m0 = `r(sd)'
 		scalar n_m0 = `r(N)'
+		scalar ssd_m0 = `r(Var)' * (`r(N)' - 1)
 		qui summ `depvar' if `sdbyvar' == `=m_1'
 		scalar sd_m1 = `r(sd)'
 		scalar n_m1 = `r(N)'
-		`coh' scalar pooledsd = sqrt( (sd_m0^2+sd_m1^2)/2 )
+		scalar ssd_m1 = `r(Var)' * (`r(N)' - 1)
+		`coh' scalar pooledsd = sqrt( (ssd_m0+ssd_m1)/(n_m0+n_m1-2) )
 		else scalar sdstar = sqrt((((n_m0-1)*(sd_m0^2)) + ((n_m1-1)*(sd_m1^2)))/(n_m0 + n_m1 - 2))
 		}
 	}
@@ -412,6 +435,7 @@ else if "`nowarning'" != "nowarning" & `rmseo' == 1 {
        }
     matrix rownames `B' = d
     }
+
 
 *Hedges's g
 `hedges' {

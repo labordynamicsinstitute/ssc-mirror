@@ -1,5 +1,5 @@
 {smcl}
-{* 05dec2021}{...}
+{* 17feb2022}{...}
 {viewerjumpto "Syntax" "dstat##syntax"}{...}
 {viewerjumpto "Description" "dstat##description"}{...}
 {viewerjumpto "Summary statistics" "dstat##stats"}{...}
@@ -33,6 +33,14 @@ help for {hi:dstat}{...}
     {ifin} {weight} [{cmd:,}  {help dstat##opts:{it:options}} ]
 
 {pmore}
+    Pairwise associations (wrapper for {cmd:dstat summarize})
+
+{p 12 17 2}
+{cmd:dstat} {cmdab:pw} {varlist} {ifin} {weight} [{cmd:,}
+    {cmdab:s:tatistic}{cmd:(}{help dstat##pw:{it:stat}}{cmd:)}
+    {help dstat##opts:{it:options}} ]
+
+{pmore}
     Distribution functions
 
 {p 12 17 2}
@@ -55,7 +63,7 @@ help for {hi:dstat}{...}
 {p2col:{opt tip}}TIP curve{p_end}
 
 {pmore}
-    {it:varlist} may contain factor variables; see {help fvvarlist}.
+    {it:varlist} may contain factor variables (in most cases; an exception is {cmd:dstat pw}); see {help fvvarlist}.
     {p_end}
 {pmore}
     {cmd:fweight}s, {cmd:pweight}s, and {cmd:iweight}s are allowed; see {help weight}.
@@ -91,7 +99,8 @@ help for {hi:dstat}{...}
 {syntab:{help dstat##mainopts:Main}}
 {synopt:{opt nocase:wise}}do not perform casewise deletion of observations
     {p_end}
-{synopt:{cmdab:o:ver(}{help varname:{it:overvar}}[{cmd:,} {it:opts}]{cmd:)}}compute results for subpopulations defined by {it:overvar}
+{synopt:{cmdab:o:ver(}{help varname:{it:overvar}}[{cmd:,} {it:opts}]{cmd:)}}compute
+    results for subpopulations defined by {it:overvar}; not allowed with {cmd:dstat pw}
     {p_end}
 {synopt:{opt tot:al}}include results for total population
     {p_end}
@@ -99,12 +108,6 @@ help for {hi:dstat}{...}
     covariates using reweighting; requires {cmd:over()}
     {p_end}
 {synopt:{help dstat##repopts:{it:reporting_options}}}reporting options
-    {p_end}
-{synopt:{opt qdef(#)}}quantile definition
-    {p_end}
-{synopt:{opt hdq:uantile}}synonym for {cmd:qdef(10)} (Harrell-Davis quantiles)
-    {p_end}
-{synopt:{it:{help dstat##densopts:density_options}}}details of density estimation
     {p_end}
 {synopt:{opt noval:ues}}do not use values as coefficient names
     {p_end}
@@ -126,6 +129,20 @@ help for {hi:dstat}{...}
 {synopt:{opt r:eplace}}allow replacing existing variables
     {p_end}
 
+{syntab:{help dstat##quant:Quantile/density settings}}
+{synopt:{opt qdef(#)}}quantile definition; # in {c -(}0,...,11{c )-}
+    {p_end}
+{synopt:{opt hdq:uantile}}synonym for {cmd:qdef(10)} (Harrell-Davis quantiles)
+    {p_end}
+{synopt:{opt hdt:rim}[{cmd:(}{it:width}{cmd:)}]}apply trimming to the Harrell-Davis estimator
+    {p_end}
+{synopt:{opt mq:uantile}}synonym for {cmd:qdef(11)} (mid-quantiles)
+    {p_end}
+{synopt:{opt mqopt:s(options)}}options for mid-quantiles
+    {p_end}
+{synopt:{it:{help dstat##densopts:density_options}}}details of density estimation
+    {p_end}
+
 {syntab:{help dstat##sum:Subcommand {bf:summarize}}}
 {synopt:{opt relax}}compute a statistic even if observations are out of support
     {p_end}
@@ -134,6 +151,16 @@ help for {hi:dstat}{...}
 {synopt:{opt pl:ine(#|varname)}}default poverty line
     {p_end}
 {synopt:{opt pstr:ong}}use "strong" poverty definition
+    {p_end}
+
+{syntab:{help dstat##pw:Subcommand {bf:pw}}}
+{synopt:{opt s:tatistic(stat)}}type of association measure; default is {cmd:statistic(corr)}
+    {p_end}
+{synopt:{opt lo:wer}}lower-triangle elements only
+    {p_end}
+{synopt:{opt up:per}}upper-triangle elements only
+    {p_end}
+{synopt:{opt diag:onal}}include diagonal elements
     {p_end}
 
 {syntab:{help dstat##density:Subcommand {bf:density}}}
@@ -393,14 +420,16 @@ help for {hi:dstat}{...}
     {p_end}
 {synopt:{opt hdquantile}{cmd:(}{it:p}{cmd:)}}{it:p}/100 Harrell/Davis (1982) quantile; {it:p} in [0,100]
     {p_end}
+{synopt:{opt mquantile}{cmd:(}{it:p}{cmd:)}}{it:p}/100 mid-quantile; {it:p} in [0,100]
+    {p_end}
 {synopt:{opt density}{cmd:(}{it:x}{cmd:)}}kernel density at value {it:x}
     {p_end}
 {synopt:{opt hist}{cmd:(}{it:x1}{cmd:,}{it:x2}{cmd:)}}histogram density of data within ({it:x1},{it:x2}]
     {p_end}
-{synopt:{opt cdf}[*]{cmd:(}{it:x}{cmd:)}}cumulative distribution (CDF) at value {it:x}; suffix {it:*} is empty for default,
+{synopt:[*]{opt cdf}{cmd:(}{it:x}{cmd:)}}cumulative distribution (CDF) at value {it:x}; prefix {it:*} is empty for default,
     {cmd:m} for mid-adjusted CDF, {cmd:f} for floor CDF
     {p_end}
-{synopt:{opt ccdf}[*]{cmd:(}{it:x}{cmd:)}}complementary CDF at value {it:x}; suffix {it:*} is empty for default,
+{synopt:[*]{opt ccdf}{cmd:(}{it:x}{cmd:)}}complementary CDF at value {it:x}; prefix {it:*} is empty for default,
     {cmd:m} for mid-adjusted CCDF, {cmd:f} for floor CCDF
     {p_end}
 {synopt:{opt prop}{cmd:(}{it:x1}[{cmd:,}{it:x2}]{cmd:)}}proportion of data equal to {it:x1} or within [{it:x1},{it:x2}]
@@ -491,6 +520,8 @@ help for {hi:dstat}{...}
 {syntab:Kurtosis measures}
 {synopt:{opt kurtosis}}kurtosis
     {p_end}
+{synopt:{opt ekurtosis}}excess kurtosis; equal to {cmd:kurtosis}-3
+    {p_end}
 {synopt:{opt qw}[{cmd:(}{it:alpha}{cmd:)}]}quantile tail weight; {it:alpha}
     in [0,50]; default is {it:alpha}=25
     {p_end}
@@ -569,9 +600,13 @@ help for {hi:dstat}{...}
 {synopt:{opt gw_theil}[{cmd:(}{it:{help varname:by}}{cmd:)}]}weighted
     average of group-specific Theil indices; {it:by} as for {cmd:gw_gini}
     {p_end}
-{synopt:{opt gw_ge}[{cmd:(}{it:{help varname:by}}{cmd:)}]}weighted
+{synopt:{opt gw_ge}[{cmd:(}{it:{help varname:by}}[{cmd:,}{it:alpha}]{cmd:)}]}weighted
     average of group-specific generalized entropy; {it:by} as for {cmd:gw_gini};
     can also specify {opt gw_ge(alpha)}
+    {p_end}
+{synopt:{opt gw_vlog}[{cmd:(}{it:{help varname:by}}[{cmd:,}{it:df}]{cmd:)}]}weighted
+    average of group-specific variance of logarithm; {it:by} as for {cmd:gw_gini};
+    can also specify {opt gw_vlog(df)}
     {p_end}
 {synopt:{opt w_mld}[{cmd:(}{it:{help varname:by}}{cmd:)}]}within-group MLD (equivalent to {cmd:gw_mld});
     {it:by} as for {cmd:gw_gini}
@@ -581,6 +616,9 @@ help for {hi:dstat}{...}
     {p_end}
 {synopt:{opt w_ge}[{cmd:(}{it:{help varname:by}}[{cmd:,}{it:alpha}]{cmd:)}]}within-group generalized entropy;
     {it:by} as for {cmd:gw_gini}; can also specify {opt w_ge(alpha)}
+    {p_end}
+{synopt:{opt w_vlog}[{cmd:(}{it:{help varname:by}}[{cmd:,}{it:df}]{cmd:)}]}within-group variance of logarithm;
+    {it:by} as for {cmd:gw_gini}; can also specify {opt w_vlog(df)}; {cmd:w_vlog}={cmd:gw_vlog} if {it:df}=0
     {p_end}
 {synopt:{opt b_gini}[{cmd:(}{it:{help varname:by}}[{cmd:,}{it:df}]{cmd:)}]}between-group Gini;
     {it:by} and {it:df} as for {cmd:gw_gini}
@@ -593,6 +631,9 @@ help for {hi:dstat}{...}
     {p_end}
 {synopt:{opt b_ge}[{cmd:(}{it:{help varname:by}}[{cmd:,}{it:alpha}]{cmd:)}]}between-group generalized entropy;
     {it:by} as for {cmd:gw_gini}; can also specify {opt b_ge(alpha)}
+    {p_end}
+{synopt:{opt b_vlog}[{cmd:(}{it:{help varname:by}}[{cmd:,}{it:df}]{cmd:)}]}between-group variance of logarithm;
+    {it:by} as for {cmd:gw_gini}; can also specify {opt b_vlog(df)}
     {p_end}
 
 {syntab:Concentration measures}
@@ -657,13 +698,22 @@ help for {hi:dstat}{...}
     {it:pline} as for {cmd:hci}
     {p_end}
 
-{syntab:Association}
+{marker association}{...}
+{syntab:Association measures}
 {synopt:{opt corr}[{cmd:(}{it:{help varname:by}}{cmd:)}]}correlation coefficient;
     {it:by} specifies the secondary variable; default is as set by option {cmd:by()}
     {p_end}
-{synopt:{opt cov}[{cmd:(}{it:{help varname:by}}[{cmd:,}{it:df}]{cmd:)}]}covariance; {it:df} applies small-sample
-    adjustment; default is {it:df}=1; can also specify {opt cov(df)};
+{synopt:{opt slope}[{cmd:(}{it:{help varname:by}}{cmd:)}]}regression slope 
+    (equal to mean difference if {it:by} is dichotomous); {it:by} as for {cmd:corr}
+    {p_end}
+{synopt:{opt b}[{cmd:(}{it:{help varname:by}}{cmd:)}]}alias for {cmd:slope}
+    {p_end}
+{synopt:{opt covar}[{cmd:(}{it:{help varname:by}}[{cmd:,}{it:df}]{cmd:)}]}covariance; {it:df} applies small-sample
+    adjustment; default is {it:df}=1; can also specify {opt covar(df)};
     {it:by} as for {cmd:corr}
+    {p_end}
+{synopt:{opt rsquared}[{cmd:(}{it:{help varname:by}}{cmd:)}]}R squared, equal to {cmd:corr}^2;
+     {it:by} as for {cmd:corr}
     {p_end}
 {synopt:{opt spearman}[{cmd:(}{it:{help varname:by}}{cmd:)}]}Spearman's rank correlation;
     {it:by} as for {cmd:corr}
@@ -701,6 +751,7 @@ help for {hi:dstat}{...}
     {cmd:renyi} = {cmd:entropy}
     {p_end}
 
+{marker catbivar}{...}
 {syntab:Categorical data (bivariate)}
 {synopt:{opt mindex}[{cmd:(}{it:{help varname:by}}[{cmd:,}{it:base}]{cmd:)}]}mutual information index (M index);
     {it:by} specifies the secondary variable; default is as set by option {cmd:by()};
@@ -720,6 +771,12 @@ help for {hi:dstat}{...}
     {p_end}
 {synopt:{opt dissim}[{cmd:(}{it:{help varname:by}}{cmd:)}]}(generalized) dissimilarity index (Duncan's D);
     {it:by} as for {cmd:mindex}
+    {p_end}
+{synopt:{opt or}[{cmd:(}{it:{help varname:by}}{cmd:)}]}odds ratio; variables are
+    interpreted as true/false indicators (false if 0, else true); {it:by} as for {cmd:mindex}
+    {p_end}
+{synopt:{opt rr}[{cmd:(}{it:{help varname:by}}{cmd:)}]}risk ratio; variables are
+    interpreted as true/false indicators (false if 0, else true); {it:by} as for {cmd:mindex}
     {p_end}
 {synoptline}
 
@@ -756,8 +813,8 @@ help for {hi:dstat}{...}
 {phang}
     {cmd:over(}{help varname:{it:overvar}}[{cmd:,} {it:options}]{cmd:)}
     computes results for each subpopulation defined by the values of
-    {it:overvar}. {it:overvar} must be integer and nonnegative. {it:options} are
-    as follows:
+    {it:overvar}. {it:overvar} must be integer and nonnegative. {it:options} 
+    are as follows:
 
 {phang2}
     {opth sel:ect(numlist)} selects (and orders) subpopulations. {it:numlist}
@@ -811,6 +868,9 @@ help for {hi:dstat}{...}
 {phang2}
     {opt accum:ulate} accumulates results across subpopulations
     (running sum). Only one of {cmd:contrast} and {cmd:accumulate} is allowed.
+
+{pmore}
+    Option {cmd:over()} is not supported by {cmd:dstat pw}.
 
 {phang}
     {cmd:total} reports additional results across all subpopulations, including
@@ -925,111 +985,6 @@ help for {hi:dstat}{...}
     graph after estimation.
 
 {phang}
-    {opt qdef(#)} sets the quantile definition to be used when computing
-    quantiles, with {it:#} in {c -(}0,...,10{c )-}. The default is
-    {cmd:qdef(2)} (same as, e.g. {helpb summarize}). Definitions 1-9 are as
-    described in Hyndman and Fan (1996), definition 0 is the "high" quantile,
-    and definition 10 is the Harrell-Davis quantile (Harrell and Davis 1982); see
-    {helpb mf_mm_quantile:mm_quantile()} for more information.
-
-{phang}
-    {opt hdquantile} is a synonym for {cmd:qdef(10)} (Harrell-Davis
-    quantiles). Only one of {opt hdquantile} and {opt qdef()} is allowed.
-
-{pmore}
-    The Harrell-Davis estimator typically leads to somewhat smoother quantile
-    functions that the other quantile definitions. Furthermore, standard errors
-    for Harrell-Davis quantiles do not depend on density estimation; they thus
-    tend to be more reliable than standard errors for other quantile if there is
-    heaping in the data.
-
-{marker densopts}{...}
-{phang}
-    {it:density_options} set the details of density
-    estimation. These settings are relevant for command
-    {cmd:dstat density} and statistic {cmd:density()} as well as for
-    the computation of influence functions that involve density
-    estimation (e.g., the influence function of a quantile). For more information
-    on density estimation see {helpb mf_mm_density:mm_density()},
-    {browse "http://boris.unibe.ch/69421/2/kdens.pdf":Jann (2007)}, and
-    Wand and Jones (1995). The options are as follows:
-
-{phang2}
-    {cmdab:bw:idth(}{it:method}[{cmd:,} {opt adj:ust(#)} {cmd:rd}]{cmd:)}
-    specifies how the bandwidth of the kernel is determined. Possible choices
-    for {it:method} are:
-
-{p2colset 17 32 34 2}{...}
-{p2col:{cmdab:s:ilverman}}optimal of Silverman
-    {p_end}
-{p2col:{cmdab:n:ormalscale}}normal scale rule
-    {p_end}
-{p2col:{cmdab:o:versmoothed}}oversmoothed rule
-    {p_end}
-{p2col:{opt sj:pi}}Sheather-Jones solve-the-equation plug-in
-    {p_end}
-{p2col:{cmdab:d:pi}[{cmd:(}{it:#}{cmd:)}]}Sheather-Jones direct plug-in,
-    where {it:#} specifies the number of stages of functional estimation;
-    default is {cmd:2}
-    {p_end}
-{p2col:{opt isj}}diffusion estimator bandwidth (Botev et al. 2010)
-    {p_end}
-
-{pmore2}
-    The default is {cmd:bwidth(sjpi)}. Suboption {opt adjust(#)}, with #>0, can be
-    used to adjust the automatic bandwidth by factor {it:#}. Suboption {cmd:rd}
-    applies relative-data correction to the automatic bandwidth (Cwik and Mielniczuk 1993).
-
-{pmore2}
-    Instead of using an automatic bandwidth selector, specify {opth bwidth(numlist)}
-    to set the bandwidth to a specific value. If {it:numlist} contains multiple values,
-    the values are used one after the other across the variables and
-    subpopulations (recycling values if needed). The specified values must be larger
-    than zero.
-
-{phang2}
-    {opt k:ernel(kernel)} specifies the kernel function. {it:kernel} may
-    be {opt e:panechnikov}, {opt epan2} (alternative Epanechnikov kernel
-    function), {opt b:iweight}, {opt triw:eight}, {opt c:osine},
-    {opt g:aussian}, {opt p:arzen}, {opt r:ectangle} or {opt t:riangle}. The default
-    is {cmd:kernel(gaussian)}.
-
-{phang2}
-    {opt adapt:ive(#)} specifies the number of iterations used by the adaptive
-    kernel density estimator. The default is {cmd:adaptive(0)} (non-adaptive
-    density estimator).
-
-{phang2}
-    {cmd:exact} causes the exact kernel density estimator to be used instead
-    of the binned approximation estimator. The exact estimator can be slow in large
-    datasets if the density is evaluated at many points.
-
-{phang2}
-    {opt na:pprox(#)} specifies the grid size used by the binned approximation
-    density estimator (and by the data-driven bandwidth selectors). The default
-    is {cmd:napprox(512)}.
-
-{phang2}
-    {opt pad(#)} specifies the padding proportion of the approximation grid. Default is
-    {cmd:pad(0.1)}.
-
-{phang2}
-    {opt ll(#)} specifies the lower boundary of the support of data and causes
-    boundary-correction to be applied to the density estimate. Error will be
-    returned if the data contains values smaller than {it:#}.
-
-{phang2}
-    {opt ul(#)} specifies the upper boundary of the support of data and causes
-    boundary-correction to be applied to the density estimate. Error will be
-    returned if the data contains values larger than {it:#}.
-
-{phang2}
-    {opt bo:undary(method)} sets the type of boundary correction. Choices are
-    {opt ren:orm} (renormalization method; the default), {opt refl:ect} (reflection method), or
-    {opt lc} (linear combination technique). This is only relevant if {cmd:ll()} or {cmd:ul()}
-    has been specified.
-
-{phang}
     {opt novalues} prevents using the values of the evaluation points as
     coefficient names. This is not relevant for {cmd:dstat summarize}. If {cmd:novalues}
     is specified, the coefficients will be named as {it:stub#}, where
@@ -1133,6 +1088,156 @@ help for {hi:dstat}{...}
 {phang}
     {opt replace} allows replacing existing variables.
 
+{marker quant}{...}
+{dlgtab:Quantile/density settings}
+
+{phang}
+    {opt qdef(#)} sets the quantile definition to be used when computing
+    quantiles, with {it:#} in {c -(}0,...,11{c )-}. The default is
+    {cmd:qdef(2)} (same as, e.g. {helpb summarize}). Definitions 1-9 are as
+    described in Hyndman and Fan (1996), definition 0 is the "high" quantile,
+    definition 10 is the Harrell-Davis quantile (Harrell and Davis 1982), 
+    definition 11 is the mid-quantile (Ma et al. 2011); see
+    {helpb mf_mm_quantile:mm_quantile()} for more information. Apart from the
+    {cmd:dstat quantile} and statistic {cmd:quantile()}, option {cmd:qdef()} affects
+    all statistics that make use of quantiles (e.g. {cmd:trim}, {cmd:winsor},
+    {cmd:huber}, {cmd:biweight}, {cmd:mad}, etc.).
+
+{phang}
+    {opt hdquantile} is a synonym for {cmd:qdef(10)} (Harrell-Davis
+    quantiles). Only one of {opt hdquantile}, {opt mquantile}, and {opt qdef()}
+    is allowed. The Harrell-Davis estimator typically leads to smoother
+    quantile functions than classical quantile definitions. Furthermore,
+    standard errors do not depend on density estimation and tend to be
+    more reliable than for other quantile definitions if there is heaping in the data.
+
+{phang}
+    {opt hdtrim}[{cmd:(}{it:width}{cmd:)}] applies trimming to the Harrell-Davis
+    quantile estimator as suggested by Akinshin (2021). If {cmd:hdtrim} is specified without
+    argument, the width of evaluation interval is set to 1/sqrt(n), where n 
+    is the effective sample size. Alternatively, specify a custom {it:width}. Sensible values
+    for {it:width} lie between 0 and 1 ({it:width}>=1 uses the untrimmed estimator; 
+    {it:width}<=0 sets the width to 1/sqrt(n)).
+
+{phang}
+    {opt mquantile} is a synonym for {cmd:qdef(11)} (mid-quantiles). Only one 
+    of {opt hdquantile}, {opt mquantile}, and {opt qdef()} is allowed. The 
+    mid-quantile estimator typically leads to smoother quantile
+    functions than classical quantile definitions. Ma et al. (2011) suggest
+    using the mid-quantile estimator for discrete data.
+
+{phang}
+    {opt mqopts(options)} provides additional settings for mid-quantiles that
+    are relevant for standard error estimation. {it:options} are as follows:
+
+{phang2}
+    {opt us:mooth(#)}, with {it:#}<1, sets the degree of undersmoothing that is
+    applied when determining the sparsity function via density estimation. 
+    The default is {cmd:usmooth(0.2)}. The undersmoothing factor is computed as 
+    n^(1/5) / n^(1/(5*(1-#)), where n is the effective sample size. Set # to 0
+    to omit undersmoothing; #<0 leads to oversmoothing. Note that 
+    {help densopts:{it:density_options}} have no effect on density estimation
+    for mid-quantiles.
+
+{phang2}
+    {cmd:cdf}[{cmd:(}{it:#}{cmd:})], with {it:#}>=0, determines the sparsity
+    function by differencing the ECDF instead of employing density 
+    estimation. This may lead to somewhat more valid results in discrete data (i.e. data
+    with relatively few distinct levels), but results may be unreliable in
+    continuous data. Optional argument {it:#} sets the width of the integration
+    window that is used to interpolate across jumps in the ECDF ({it:#} is on
+    the probability scale; for example, a value of 0.01 is equivalent to a
+    window covering 1 percent of data mass). The default is {it:#} = 1 /
+    ceil(2 * n^(2/5)), where n is the effective sample size. Set {it:#}=0 to
+    omit integration (this corresponds to the formulas given in Ma et al. 2011; 
+    the sparsity function will have sharp jumps).
+
+{marker densopts}{...}
+{phang}
+    {it:density_options} set the details of density
+    estimation. These settings are relevant for command
+    {cmd:dstat density} and statistic {cmd:density()} as well as for
+    the computation of influence functions that involve density
+    estimation (e.g., the influence function of a quantile). For more information
+    on density estimation see {helpb mf_mm_density:mm_density()},
+    {browse "http://boris.unibe.ch/69421/2/kdens.pdf":Jann (2007)}, and
+    Wand and Jones (1995). The options are as follows:
+
+{phang2}
+    {cmdab:bw:idth(}{it:method}[{cmd:,} {opt adj:ust(#)} {cmd:rd}]{cmd:)}
+    specifies how the bandwidth of the kernel is determined. Possible choices
+    for {it:method} are:
+
+{p2colset 17 32 34 2}{...}
+{p2col:{cmdab:s:ilverman}}optimal of Silverman
+    {p_end}
+{p2col:{cmdab:n:ormalscale}}normal scale rule
+    {p_end}
+{p2col:{cmdab:o:versmoothed}}oversmoothed rule
+    {p_end}
+{p2col:{opt sj:pi}}Sheather-Jones solve-the-equation plug-in
+    {p_end}
+{p2col:{cmdab:d:pi}[{cmd:(}{it:#}{cmd:)}]}Sheather-Jones direct plug-in,
+    where {it:#} specifies the number of stages of functional estimation;
+    default is {cmd:2}
+    {p_end}
+{p2col:{opt isj}}diffusion estimator bandwidth (Botev et al. 2010)
+    {p_end}
+
+{pmore2}
+    The default is {cmd:bwidth(dpi(2))}. Suboption {opt adjust(#)}, with #>0, can be
+    used to adjust the automatic bandwidth by factor {it:#}. Suboption {cmd:rd}
+    applies relative-data correction to the automatic bandwidth (Cwik and Mielniczuk 1993).
+
+{pmore2}
+    Instead of using an automatic bandwidth selector, specify {opth bwidth(numlist)}
+    to set the bandwidth to a specific value. If {it:numlist} contains multiple values,
+    the values are used one after the other across the variables and
+    subpopulations (recycling values if needed). The specified values must be larger
+    than zero.
+
+{phang2}
+    {opt k:ernel(kernel)} specifies the kernel function. {it:kernel} may
+    be {opt e:panechnikov}, {opt epan2} (alternative Epanechnikov kernel
+    function), {opt b:iweight}, {opt triw:eight}, {opt c:osine},
+    {opt g:aussian}, {opt p:arzen}, {opt r:ectangle} or {opt t:riangle}. The default
+    is {cmd:kernel(gaussian)}.
+
+{phang2}
+    {opt adapt:ive(#)} specifies the number of iterations used by the adaptive
+    kernel density estimator. The default is {cmd:adaptive(0)} (non-adaptive
+    density estimator).
+
+{phang2}
+    {cmd:exact} causes the exact kernel density estimator to be used instead
+    of the binned approximation estimator. The exact estimator can be slow in large
+    datasets if the density is evaluated at many points.
+
+{phang2}
+    {opt na:pprox(#)} specifies the grid size used by the binned approximation
+    density estimator (and by the data-driven bandwidth selectors). The default
+    is {cmd:napprox(1024)}.
+
+{phang2}
+    {opt pad(#)} specifies the padding proportion of the approximation grid. Default is
+    {cmd:pad(0.1)}.
+
+{phang2}
+    {opt ll(#)} specifies the lower boundary of the support of data and causes
+    boundary-correction to be applied to the density estimate. Error will be
+    returned if the data contains values smaller than {it:#}.
+
+{phang2}
+    {opt ul(#)} specifies the upper boundary of the support of data and causes
+    boundary-correction to be applied to the density estimate. Error will be
+    returned if the data contains values larger than {it:#}.
+
+{phang2}
+    {opt bo:undary(method)} sets the type of boundary correction. Choices are
+    {opt ren:orm} (renormalization method; the default), {opt refl:ect} (reflection method), or
+    {opt lc} (linear combination technique). This is only relevant if {cmd:ll()} or {cmd:ul()}
+    has been specified.
+
 {marker sum}{...}
 {dlgtab:Subcommand summarize}
 
@@ -1162,6 +1267,43 @@ help for {hi:dstat}{...}
     outcomes equal to the poverty line as non-poor. Specify {cmd:pstrong} to treat
     these cases as poor ("strong" definition). The choice of definition is relevant
     only for some of the poverty measures.
+
+{marker pw}{...}
+{dlgtab:Subcommand pw}
+
+{phang}
+    {opt statistic(stat)} selects the association measure to be 
+    computed. {it:stat} may be any statistic listed under
+    {help dstat##association:Association measures} or 
+    {help dstat##catbivar:Categorical data (bivariate)}
+    in the above table of summary statistics (omitting argument
+    {it:by}). {cmd:statistic(corr)} is the default. Type, for example,
+    {cmd:statistic(taub)} to compute Kendall's tau-b. Arguments other than
+    {it:by} can be provided in parentheses as usual; for example, type
+    {cmd:statistic(mindex(2))} to compute the M index with base 2.
+
+{pmore}
+    Most supported statistics are symmetric in the sense that the upper and
+    lower triangles of the association matrix (i.e. the matrix of pairwise
+    associations among the variables in {it:varlist}) contain the same results
+    (i.e. the association between X and Y is the same as the association beteen
+    Y and X). For asymmetric statistics (e.g. {cmd:slope}) the column
+    (i.e. equation) variable is treated as the dependent variable.
+
+{phang}
+    {opt lower} requests that the lower-triangle elements of the association
+    matrix be computed. The default is to compute both the lower-triangle elements
+    and the upper-triangle elements.
+
+{phang}
+    {opt upper} requests that the upper-triangle elements of the association
+    matrix be computed. The default is to compute both the lower-triangle elements
+    and the upper-triangle elements.
+
+{phang}
+    {opt diagonal} includes the diagonal elements of the association
+    matrix (associations of the variables with themselves). By default,
+    diagonal elements are omitted.
 
 {marker density}{...}
 {dlgtab:Subcommand density}
@@ -1851,6 +1993,8 @@ help for {hi:dstat}{...}
 {synopt:{cmd:e(kernel)}}kernel as specified in {cmd:kernel()}{p_end}
 {synopt:{cmd:e(exact)}}{cmd:exact} or empty{p_end}
 {synopt:{cmd:e(boundary)}}boundary correction method{p_end}
+{synopt:{cmd:e(hdtrim)}}{cmd:hdtrim()} as specified{p_end}
+{synopt:{cmd:e(mqopts)}}{cmd:mqopts()} as specified{p_end}
 {synopt:{cmd:e(novalues)}}{cmd:novalues} or empty{p_end}
 {synopt:{cmd:e(vformat)}}display format specified in {cmd:vformat()}{p_end}
 {synopt:{cmd:e(stats)}}list of (unique) summary statistics{p_end}
@@ -1913,6 +2057,11 @@ help for {hi:dstat}{...}
 {marker references}{...}
 {title:References}
 
+{phang}
+    Akinshin, A. (2021). Trimmed Harrell-Davis quantile estimator based on the
+    highest density interval of the given 
+    width. {browse "http://arxiv.org/abs/2111.11776":arXiv:2111.11776} [stat.ME].
+    {p_end}
 {phang}
     Botev, Z.I., J.F. Grotowski, and D.P. Kroese (2010). Kernel density
     estimation via diffusion. Annals of Statistics
@@ -1995,6 +2144,11 @@ help for {hi:dstat}{...}
     {browse "http://ideas.repec.org/p/bss/wpaper/35.html"}.
     {p_end}
 {phang}
+    Ma, Y., M.G. Genton, E. Parzen (2011). Asymptotic properties of sample
+    quantiles of discrete distributions. Annals of the Institute of Statistical
+    Mathematics 63:227–243.
+    {p_end}
+{phang}
     Newson, R. (2006). Efficient Calculation of Jackknife Confidence
     Intervals for Rank Statistics. Journal of Statistical Software 15(1).
     {p_end}
@@ -2056,12 +2210,14 @@ help for {hi:dstat}{...}
     Online: help for
     {helpb centile},
     {helpb ci},
+    {helpb correlate},
     {helpb cumul},
     {helpb histogram},
     {helpb kdensity},
     {helpb mean},
     {helpb pctile},
     {helpb proportion},
+    {helpb spearman},
     {helpb summarize},
     {helpb table},
     {helpb tabstat},
@@ -2079,6 +2235,7 @@ help for {hi:dstat}{...}
     {helpb ci2},
     {helpb dfl},
     {helpb distplot},
+    {helpb duncan},
     {helpb eqprhistogram},
     {helpb fre},
     {helpb glcurve},
@@ -2093,6 +2250,8 @@ help for {hi:dstat}{...}
     {helpb reldist},
     {helpb rif},
     {helpb robstat},
+    {helpb seg},
+    {helpb somersd},
     {helpb sumdist},
     {helpb svygei:svygei_svyatk},
     {helpb svylorenz}

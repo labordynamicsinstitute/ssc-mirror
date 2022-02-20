@@ -1,7 +1,39 @@
-*! 1.0.2  3feb2022 Austin Nichols
-program define wordy
-version 8.2 
-syntax [anything] [, USEindx(int -1) ]
+*! 2.0  16feb2022 Austin Nichols
+program define wordy, rclass
+version 10 
+syntax [anything] [, USEindx(int -1) SUPpresscheck ]
+forv j=1/5 {
+  wordy`j'
+  mata:W`j'=W
+  }
+mata:allW=W1\W2\W3\W4\W5
+if `"`anything'"'!="" {
+ loc sw=upper(`"`anything'"')
+ cap assert length(`"`sw'"')==5
+ if _rc!=0 {
+  di as err "You did not type a five-letter word for lookup mode"
+  err 198
+  }
+ forv wi=1/5 {
+  loc li=substr(`"`sw'"',`wi',1)
+  loc nothere`wi'=1
+  foreach w in `c(ALPHA)' ? {
+   if "`li'"=="`w'" loc nothere`wi'=0
+   }
+  }
+  if inlist(1,`nothere1',`nothere2',`nothere3',`nothere4',`nothere5') {
+   di as err "You must type letters only or ? for a wildcard in a five-letter word"
+   err 198
+   }
+ di as res "Entering lookup mode to search for a 5-letter word matching" _n " the specified pattern `sw'"
+ mata:wordyinput=sort(allW,1)
+ mata:wordylookit="`sw'"
+ mata:wordyres=wordymatch()
+ mata:st_global("wordyN",strofreal(rows(wordyres)))
+ di as res `"Found `=cond($wordyN!=1,"$wordyN matches","one match")':"'
+ mata:wordyshowit()
+ }
+else {
 loc seed=trim("`c(current_date)'")
 forv m=1/12 {
  if word("`seed'",2)=="`: word `m' of `c(Mons)''" loc mon=`m'
@@ -9,39 +41,18 @@ forv m=1/12 {
 loc d=mdy(`mon',`=word("`seed'",1)',`=word("`seed'",3)')
 loc indx=mod(`d',8938)
 if `useindx'>-1 {
+ loc useindx=mod(`useindx',8938)
  if `useindx'>8937 {
-  di as err "Highest index possible is 8937"
+  di as err "Index must be between 0 and 8937 (highest index possible is 8937)"
   error 198
   }
  loc indx=`useindx'
  }
-/*
-tempname fh
-local linenum = 1
-loc pth `"`c(sysdir_plus)'w"'
-cap conf new file `pth'wordy.txt
-if _rc==0 {
- loc currdir `"`c(pwd)'"'
- cd `pth'
- net from http://fmwww.bc.edu/repec/bocode/w
- qui net describe wordy
- qui net get wordy
- cd `currdir'
- }
-file open `fh' using `"`pth'wordy.txt"', read
-file read `fh' line
-while `linenum'<=`indx' {
-* display %4.0f `linenum' _asis `"  `macval(line)'"'
- file read `fh' line
- local linenum = `linenum' + 1
- }
-file close `fh'
-loc a: di `macval(line)'
-*/
 loc indx=`indx'+1
 loc filenum=floor(`indx'/2000)+1
 loc filepos=mod(`indx'-1,2000)+1
-wordy`filenum'
+
+* initialize correct answer `a'
 mata:st_local("a",W[`filepos'])
 forv i=1/6 {
  forv j=1/5 {
@@ -52,6 +63,7 @@ forv i=1/6 {
   }
  }
 loc w_g_left=6
+mata:wordyinput=allW
 forv g=1/6 {
 loc tryagain=1
 while `tryagain'==1 {
@@ -74,6 +86,15 @@ while `tryagain'==1 {
    di as err "You must type letters only in a five-letter word"
    continue
    }
+ if "`suppresscheck'"=="" {
+  mata:wordylookit="${g`g'}"
+  mata:wordyres=wordymatch()
+  mata:st_global("wordyN",strofreal(rows(wordyres)))
+  if "$wordyN"=="0" {
+   di as err "You must guess a legal five-letter word"
+   continue
+   }
+  }
  continue, break
  }
 loc cguess "${g`g'}"
@@ -145,6 +166,37 @@ else {
  err 42000
  }
 }
+}
 end
+version 10
+mata: 
+string matrix wordymatch()
+{
+external wordylookit,wordyinput,wordypickit
+wordypickit=J(rows(wordyinput),1,0)
+for (i=1; i<=rows(wordyinput); i++) {
+  wordypickit[i,1] = strmatch(wordyinput[i,1],wordylookit)
+ }
+return(select(wordyinput,wordypickit))
+}
+void wordyshowit()
+{
+external wordyres
+for (i=1; i<=rows(wordyres); i++) {
+ wordyres[i,1] 
+ }
+}
+real scalar wordyexist()
+{
+external wordylookit,wordyinput,wordypickit
+wordypickit=J(rows(wordyinput),1,0)
+for (i=1; i<=rows(wordyinput); i++) {
+  wordypickit[i,1] = strmatch(wordyinput[i,1],wordylookit)
+ }
+return(rows(select(wordyinput,wordypickit)))
+}
+
+end
+
 exit
 

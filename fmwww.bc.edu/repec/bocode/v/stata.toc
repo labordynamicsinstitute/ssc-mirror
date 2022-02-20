@@ -1,5 +1,6 @@
 p vaf module to compute mediation effect in SEM
 p valcuofon module for downloading daily share values and assets balances of Chile's unemployment insurance funds and pension system
+p validarcae module to provide several functionalities for dealing with codes from the Portuguese Classification of Economic Activities (CAE)
 p validly module to correct Stata’s handling of missing values in logical and relational expressions
 p validscale module to assess validity and reliability of a multidimensional scale
 p vallab module to pack values and labels into a new string variable

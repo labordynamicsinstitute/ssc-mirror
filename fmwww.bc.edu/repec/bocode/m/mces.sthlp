@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0  November 12, 2021}{...}
+{* *! version 2.1  February 19, 2022}{...}
 {cmd:help mces}
 {cmd:help svysd}
 {hline}
@@ -175,7 +175,7 @@ comparisons between {cmd:union=0} and {cmd:union=1}. Accordingly, {it:g} and {it
 {pstd}Scalars:{p_end}
 {synoptset 24 tabbed}{...}
 
-{synopt:{cmd:r(rmse)}}the root mean square error of the regression (estimated by {cmd:mces} even if the regression does not report one){p_end}
+{synopt:{cmd:r(RMSE)}}the root mean square error of the regression (estimated by {cmd:mces} even if the regression does not report one){p_end}
        or
 {synopt:{cmd:r(sdstar)}}sd*, the pooled weighted standard deviation for Hedges's {it:g}{p_end}
        or
