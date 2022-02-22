@@ -6,8 +6,7 @@ d Classification of Economic Activities (CAE).	The command
 d validates existing codes and descriptions, identifies possible
 d ambiguities, aggregates codes to higher levels, and provides the
 d official code description in Portuguese and English. The command
-d works with all revisions of the CAE. The ancillary file
-d caecodes.txt should be downloaded. 
+d works with all revisions of the CAE. 
 d
 d KW: ARIMA
 d KW: seasonal time series
@@ -28,4 +27,4 @@ f validarcae_div3.ado
 f validarcae_div21.ado
 f validarcae_solve.ado
 f validarcae.sthlp
-f ../c/caecodes.txt
+F ../c/caecodes.txt
