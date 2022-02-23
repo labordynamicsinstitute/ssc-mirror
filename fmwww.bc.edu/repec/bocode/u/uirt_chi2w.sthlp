@@ -32,7 +32,7 @@ This behavior depends on whether chi2W item-fit statistics were produced by curr
 {synoptline}
 {synopt:{opt bins(#)}} number of ability intervals for computation of chi2W {p_end}
 {synopt:{opt npqm:in(#)}} minimum expected number of observations in ability intervals (NPQ); default: npqmin(20){p_end}
-{synopt:{opt npqr:eport(#)}} report information about minimum NPQ in ability intervals {synoptset 25 }{p_end}
+{synopt:{opt npqr:eport}} report information about minimum NPQ in ability intervals {synoptset 25 }{p_end}
 {synoptline}
 
 
@@ -65,7 +65,7 @@ If NPQ for a given ability bin is smaller than the value declared in {opt npqm:i
 Default value is {opt npqm:in(20)}.
 
 {phang}
-{opt npqr:eport(#)} adds a column to {cmd:r(item_fit_chi2W)} 
+{opt npqr:eport} adds a column to {cmd:r(item_fit_chi2W)} 
 with information about smallest observed NPQ value over the ability intervals used for computation of chi2W.
 
 

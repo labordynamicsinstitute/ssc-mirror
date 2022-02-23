@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1,0 2021.03.09}{...}
+{* *! version 1.1 2022.01.24}{...}
 {viewerjumpto "Syntax" "uirt_theta##syntax"}{...}
 {viewerjumpto "Description" "uirt_theta##description"}{...}
 {viewerjumpto "Options" "uirt_theta##options"}{...}
@@ -18,7 +18,11 @@
 {title:Syntax}
 
 {p 8 17 2}
-{cmd:uirt_theta}  [{it:{help uirt_theta##options:options}}]
+{cmd:uirt_theta} [{it:newvar1} {it:newvar2}] [{cmd:,}{it:{help uirt_theta##options:options}}]
+
+{pmore}
+{it:newvar1} and {it:newvar2} are optional. If specified, the expected a posteriori (EAP) estimator of theta and its standard error 
+will be added at the end of the dataset using {it:newvar1} and {it:newvar2} to name these new variables. 
 
 {synoptset 24 tabbed}{p2colset 7 32 34 4} 
 {marker options}{...}
@@ -28,7 +32,7 @@
 {synopt:{opt nip(#)}} number of GH quadrature points used when calculating EAP and its SE; default: nip(195){p_end}
 {synopt:{opt pv(#)}} number of plausible values added to the dataset, default is pv(0) (no PVs added){p_end}
 {synopt:{opt pvreg(str)}} define regression for conditioning PVs {p_end}
-{synopt:{opt n:ame(name)}} specify a suffix used in naming of EAP and PVs{p_end}
+{synopt:{opt suf:fix(name)}} specify a suffix used in naming of EAP and PVs{p_end}
 {synopt:{opt sc:ale(#,#)}} scale parameters (m,sd) of theta in reference group {p_end}
 {synopt:{opt skipn:ote}} suppress adding notes to newly created variables{p_end}
 {synoptline}
@@ -39,7 +43,7 @@
 
 {pstd}
 {cmd:uirt_theta} is a postestimation command of {helpb uirt} that allows adding EAP point estimates of theta to the dataset.
-Drawing plausible values (PVs) is also available; conditining of PVs on anciliary variables is supported.
+Drawing plausible values (PVs) is also available; conditioning of PVs on ancillary variables is supported.
 
 
 {marker options}{...}
@@ -47,7 +51,8 @@ Drawing plausible values (PVs) is also available; conditining of PVs on anciliar
 
 {phang}
 {opt eap} adds the expected {it: a posteriori} (EAP) estimator of theta and its standard error at the end of the dataset.
-These will be named "theta" and "se_theta" unless {opt n:ame()} is specified.
+These will be named "theta" and "se_theta" unless {opt suf:fix()} is specified. 
+Using {opt eap} is redundant if {it:newvar1} and {it:newvar2} are provided.
 
 {phang}
 {opt nip(#)} sets the number of Gauss-Hermite quadrature points used when calculating EAP estimator of theta and its SE.
@@ -55,9 +60,9 @@ Default value is 195 which is an obvious overkill, but it does not consume much 
 too low {opt nip()} values may lead to inadequate estimate of standard errors of EAP.
 
 {phang}
-{opt pv(#)} is used to declare the the number of plausible values that are to be added to the dataset. 
+{opt pv(#)} is used to declare the number of plausible values that are to be added to the dataset. 
 Default value is 0 (no PVs added). 
-The PVs will be named "pv_1",..., "pv_#" unless {opt n:ame()} is specified.
+The PVs will be named "pv_1",..., "pv_#" unless {opt suf:fix()} is specified.
 The PVs are generated after the estimation is completed.
 The general procedure involves two steps.
 In the first step, # random draws, b*, of model parameters are taken from MVN distribution with means vector {cmd:e(b)} and covariance matrix {cmd:e(V)}.
@@ -86,7 +91,8 @@ Note that if some observations are excluded from {cmd:xtmixed} run (for example 
 these observations will not be conditioned.
 
 {phang}
-{opt n:ame(name)} specifies a suffix used in naming new EAP and PVs variables.
+{opt suf:fix(name)} specifies a suffix used in naming new EAP and PVs variables.
+If {it:newvar1} and {it:newvar2} are provided they will take precedence in naming EAP, however {opt suf:fix()} will still apply to the PVs.
 
 {phang}
 {opt sc:ale(#,#)} is used to change the scale of the latent trait for variables that are added to the dataset.
@@ -109,13 +115,16 @@ the EAP estimates will most probably have smaller standard deviation in the refe
 {phang2}{cmd:. uirt q*} {p_end}
 
 {pstd}Add EAP point estimate of theta to data and its standard error with default names{p_end}
-{phang2}{cmd:. uirt_theta eap} {p_end}
+{phang2}{cmd:. uirt_theta , eap} {p_end}
+
+{pstd}The same as above, but with user specified variable names{p_end}
+{phang2}{cmd:. uirt_theta my_eap my_se_of_eap} {p_end}
 
 {pstd}Add 5 unconditioned plausible values to data and use suffix "uncond" when naming them{p_end}
-{phang2}{cmd:. uirt_theta pv(5) n(uncond)} {p_end}
+{phang2}{cmd:. uirt_theta , pv(5) suf(uncond)} {p_end}
 
 {pstd}Add 5 plausible values to data but condition them on the {it:female} variable, use suffix "cond", and change scale to m=500 and sd=100{p_end}
-{phang2}{cmd:. uirt_theta pv(5) pvreg(i.female) n(cond) scale(500,100)} {p_end}
+{phang2}{cmd:. uirt_theta , pv(5) pvreg(i.female) suf(cond) scale(500,100)} {p_end}
 
 {pstd}List contents of notes of newly created variables to inspect the comments that were added by {cmd:uirt_theta}{p_end}
 {phang2}{cmd:. notes list} {p_end}

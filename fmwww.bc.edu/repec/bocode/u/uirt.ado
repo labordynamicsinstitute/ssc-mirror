@@ -1,12 +1,12 @@
 *uirt.ado 
-*ver 2.1
-*2021.04.25
+*ver 2.2
+*2022.02.22
 *everythingthatcounts@gmail.com
 
 capture prog drop uirt
 program define uirt, eclass
 version 10
-syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(str) chi2w(str) sx2(str) icc(str) PRiors(str) THeta(str) fix(str) init(str) ERRors(str) TRace(numlist integer max=1 >=0 <=2) nip(numlist integer max=1 >=2 <=195) nit(numlist integer max=1 >=0) NINrf(numlist integer max=1 >=0) crit_ll(numlist max=1 >0 <1) crit_par(numlist max=1 >0 <1) NOTable NOHeader SAVingname(namelist max=1)]
+syntax [varlist] [if] [in] [, GRoup(str asis)  pcm(varlist) gpcm(varlist) GUEssing(str) chi2w(str) sx2(str) icc(str asis) esf(str asis) inf(str asis) PRiors(str) THeta(str) fix(str) init(str) ERRors(str) TRace(numlist integer max=1 >=0 <=2) nip(numlist integer max=1 >=2 <=195) nit(numlist integer max=1 >=0) NINrf(numlist integer max=1 >=0) crit_ll(numlist max=1 >0 <1) crit_par(numlist max=1 >0 <1) NOTable NOHeader SAVingname(namelist max=1)]
 
 	
 
@@ -28,23 +28,23 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 
 		marksample touse ,novarlist 
 		
-		m: eret_cmdline="uirt `0'"
-		m: eret_if="`if'"
-		m: eret_in="`in'"
+		m: eret_cmdline="uirt "+`"`0'"'
+		m: eret_if=`"`if'"'
+		m: eret_in=`"`in'"'
 				
 		unab items: `varlist'
 	
 		m: st_local("items_isnumvar",verify_isnumvar("`items'"))
 		if(strlen("`items_isnumvar'")){
-			di as err "string variables not allowed in item varlist;"
-			di as err "the following item variables are strings: `items_isnumvar'"
+			di as err "{p 0 2}string variables not allowed in item varlist;{p_end}"
+			di as err "{p 0 2}the following item variables are strings: `items_isnumvar'{p_end}"
 			exit 109
 		}
 		
 		m: st_local("items_duplicates",verify_dupvars("`items'"))
 		if(strlen("`items_duplicates'")){
-			di as err "the following item variables are entered multiple times:"
-			di as err "`items_duplicates'"
+			di as err "{p 0 2}the following item variables are entered multiple times:{p_end}"
+			di as err "{p 0 2}`items_duplicates'{p_end}"
 			exit 198
 		}
 		
@@ -53,17 +53,17 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 		if(strlen("`fix'")){
 			cap __fix_option , `fix'
 			if(_rc){
-				di as err "there seem to be something wrong with the fix() option;"
-				di as err "the proper syntax is: fix([prev from(str) used i(str) d(str) cat(str) miss])"
-				di as err char(34)+"fix(`fix')"+char(34)+" returns the following error:"
+				di as err "{p 0 2}A problem was encountered in the  fix() option;{p_end}"
+				di as err "{p 0 2}the proper syntax is: fix([prev from(str) used i(str) d(str) c(str) miss]){p_end}"
+				di as err "{p 0 2}fix(`fix') returns the following error:{p_end}"
 				qui __fix_option , `fix'
 			}
 			if(strlen("`s(fix_note)'")){
-					di "`s(fix_note)'"
+					di "{p 0 2}`s(fix_note)'{p_end}"
 			}
 			local fix_imatrix="`s(fix_imatrix)'"
 			local fix_dmatrix="`s(fix_dmatrix)'"
-			local fix_catmatrix="`s(fix_catmatrix)'"
+			local fix_cmatrix="`s(fix_cmatrix)'"
 			local fix_miss="`s(fix_miss)'"
 			local fix_V_greenlight="`s(fix_V_greenlight)'"
 			local fix_prev="`s(fix_prev)'"
@@ -71,7 +71,7 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 		else{
 			local fix_imatrix=""
 			local fix_dmatrix=""
-			local fix_catmatrix=""
+			local fix_cmatrix=""
 			local fix_miss=""
 			local fix_V_greenlight="0"
 			local fix_prev=""
@@ -91,10 +91,10 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 			}
 		}
 		
-		if(strlen("`fix_catmatrix'")){
-			cap mat l `fix_catmatrix'
+		if(strlen("`fix_cmatrix'")){
+			cap mat l `fix_cmatrix'
 			if(_rc){
-				qui mat l `fix_catmatrix'
+				qui mat l `fix_cmatrix'
 			}
 		}
 		
@@ -104,7 +104,7 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 		else{
 			local check_miss_fix=0
 		}
-		m: check_matrices("`fix_imatrix'","`fix_catmatrix'","`fix_dmatrix'",.,`check_miss_fix')
+		m: check_matrices("`fix_imatrix'","`fix_cmatrix'","`fix_dmatrix'",.,`check_miss_fix')
 
 *******************************************************
 		if(strlen("`errors'")==0){
@@ -117,18 +117,20 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 					local errors=lower("`errors'")
 					m: stored_V=J(0,0,.)
 				}
-				if(lower("`errors'")=="stored" & `fix_V_greenlight'){
-					local errors=lower("`errors'")
-					m: stored_V=st_matrix("e(V)")
-				}
 				else{
-					di as err "errors(stored) require fix(prev) or fix(form())"
-					exit 198
+					if(lower("`errors'")=="stored" & `fix_V_greenlight'){
+						local errors=lower("`errors'")
+						m: stored_V=st_matrix("e(V)")
+					}
+					else{
+						di as err "{p 0 2}errors(stored) require fix(prev) or fix(form()){p_end}"
+						exit 198
+					}
 				}
 			}
 			else{
-				di as err "`errors' is not a valid errors() value;"
-				di as err "allowed values are: cdm | rem | sem | cp"
+				di as err "{p 0 2}`errors' is not a valid errors() value;{p_end}"
+				di as err "{p 0 2}allowed values are: cdm | rem | sem | cp{p_end}"
 				exit 198
 			}
 		}
@@ -137,13 +139,13 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 		if(strlen("`init'")){
 			cap __init_option , `init'
 			if(_rc){
-				di as err "there seem to be something wrong with the init() option;"
-				di as err "the proper syntax is: init([prev from(str) used i(str) d(str) miss])"
-				di as err char(34)+"init(`init')"+char(34)+" returns the following error:"
+				di as err "{p 0 2}A problem was encountered in the init() option;{p_end}"
+				di as err "{p 0 2}the proper syntax is: init([prev from(str) used i(str) d(str) miss]){p_end}"
+				di as err "{p 0 2}init(`init') returns the following error:{p_end}"
 				qui __init_option , `init'
 			}
 			if(strlen("`s(init_note)'")){
-					di "`s(init_note)'"
+					di "{p 0 2}`s(init_note)'{p_end}"
 			}
 			local init_imatrix="`s(init_imatrix)'"
 			local init_dmatrix="`s(init_dmatrix)'"
@@ -172,7 +174,7 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 		}
 		
 		if(strlen("`init_dmatrix'") & strlen("`fix_dmatrix'")){
-			di as err "distribution parameters were declared both in fix() and init() options"
+			di as err "{p 0 2}distribution parameters were declared both in fix() and init() options{p_end}"
 			exit 198
 		}
 		
@@ -187,27 +189,27 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 					
 *************************************************
 		if(strlen("`theta'")){
-			cap __theta_option , `theta'
+			cap __theta_option `theta'
 			if(_rc){
-				di as err "there seem to be something wrong with the theta() option;"
-				di as err "the proper syntax is: theta([eap nip(#) pv(#) pvreg(str) n(str) sc(#,#) skipn])"
-				di as err char(34)+"theta(`theta')"+char(34)+" returns the following error:"
-				qui __theta_option , `theta'
+				di as err "{p 0 2}A problem was encountered in the theta() option;{p_end}"
+				di as err "{p 0 2}the proper syntax is: theta([vn1 vn2] [,eap nip(#) pv(#) pvreg(str) suf(str) sc(#,#) skipn]){p_end}"
+				di as err "{p 0 2}theta(`theta') returns the following error:{p_end}"
+				qui __theta_option `theta'
 			}
-			
 			local theta_skipnote="`s(theta_skipnote)'"
 			
-			if(strlen("`s(theta_name)'")){
-				local theta_name="`s(theta_name)'"
+			if(strlen("`s(theta_suffix)'")){
+				local theta_suffix="`s(theta_suffix)'"
 			}
 			else{
-				local theta_name="."
+				local theta_suffix="."
 			}
 			
+			
 			if(strlen("`s(theta_eap)'")){
-				m: st_local("thexistlist",verify_thetaexist("`theta_name'"))
+				m: st_local("thexistlist",verify_thetaexist(eap_names))
 				if(strlen("`thexistlist'")){
-					di as err "the following variables you asked to create are already defined: `thexistlist'"
+					di as err "{p 0 2}The following variables you asked to create are already defined: `thexistlist'{p_end}"
 					exit 110
 				}
 				local add_theta=1
@@ -218,9 +220,9 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 			
 			if(strlen("`s(theta_pv)'")){
 				local pv=`s(theta_pv)'
-				m: st_local("pvexistlist",verify_pvexist(`pv',"`theta_name'"))
+				m: st_local("pvexistlist",verify_pvexist(`pv',"`theta_suffix'"))
 				if(strlen("`pvexistlist'")){
-					di as err "the following variables you asked to create are already defined: `pvexistlist'"
+					di as err "{p 0 2}The following variables you asked to create are already defined: `pvexistlist'{p_end}"
 					exit 110
 				}
 			}
@@ -234,7 +236,7 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 			else{
 				local pvreg="`s(theta_pvreg)'"
 				if(`pv'==0){
-					di as err "you have to provide a positive number of PVs in pv() option in order to use pvreg() option"
+					di as err "{p 0 2}you have to provide a positive number of PVs in pv() option in order to use pvreg() option{p_end}"
 					exit 198
 				}
 				if(strpos("`pvreg'",",")){
@@ -254,8 +256,8 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 				}
 				cap xtmixed `verify_xtmixed' `pvreg',iter(0)
 				if(_rc){
-					di as err "there seem to be something wrong with the pvreg() option;"
-					di as err char(34)+"xtmixed depvar `pvreg'"+char(34)+" returns the following error:"
+					di as err "{p 0 2}A problem was encountered in the  pvreg() option;{p_end}"
+					di as err "{p 0 2}xtmixed depvar `pvreg' returns the following error:{p_end}"
 					qui xtmixed `verify_xtmixed' `pvreg',iter(0)
 				}
 				else{
@@ -263,7 +265,7 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 				}
 				if((`c(stata_version)'<12)&(`e(k_r)')>1){
 					if(strpos("`pvreg'","||")){
-						di as err "Multilevel syntax is not allowed in the pvreg() option if Stata version is lower than 12.0"
+						di as err "{p 0 2}Multilevel syntax is not allowed in the pvreg() option if Stata version is lower than 12.0{p_end}"
 						exit 198
 					}
 				}
@@ -302,23 +304,24 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 			
 		}
 		else{
-			local theta_name="."
+			local theta_suffix="."
 			local add_theta=0
 			local pv=0
 			local pvreg="."
 			m: theta_scale=J(0,0,.)
 			m: theta_notes=""
+			m: eap_names=""
 		}
 	
 		
 *************************************************
-		if(strlen("`group'")){
+		if(strlen(`"`group'"')){
 		
 			cap __group_option `group'
 			if(_rc){
-				di as err "there seem to be something wrong with the group() option;"
-				di as err "the proper syntax is: group(varname [, ref(#) dif(varlist) free slow ])"
-				di as err char(34)+"group(`group')"+char(34)+" returns the following error:"
+				di as err "{p 0 2}A problem was encountered in the  group() option;{p_end}"
+				di as err "{p 0 2}the proper syntax is: group(varname [, ref(#) dif(varlist) free slow ]){p_end}"
+				di as err "{p 0 2}group(`group') returns the following error:{p_end}"
 				qui __group_option `group'
 			}
 			local group="`s(group_var)'"
@@ -327,14 +330,21 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 			local noupd_quad_betw_em="`s(group_slow)'"
 			local dif="`s(group_dif)'"
 			local dif_format="`s(group_dif_format)'"
-			local dif_tw="`s(group_dif_tw)'"
+			local dif_tw=`"`s(group_dif_tw)'"'
 			local dif_colors="`s(group_dif_colors)'"
 			m: etet_grstrip="`s(group_cmdstrip)'"
 			
 			m: st_local("gr_is_item",strofreal(sum("`group'":==tokens("`items'")')))
 			if(`gr_is_item'){
-				di as err "grouping variable `group' is also declared as an item"
+				di as err "{p 0 2}grouping variable `group' is also declared as an item{p_end}"
 				exit 198
+			}
+			
+			if(strlen("`s(group_dif_cleargraphs)'")){
+				local dif_cleargraphs=1
+			}
+			else{
+				local dif_cleargraphs=0
 			}
 			
 			if("`reference'"==""){
@@ -343,14 +353,14 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 	        else{
 	        	qui tab `group' if `group'==`reference' & `touse'
 		        if(r(N)==0){
-		        	di as err "grouping variable `group' has no valid observations for ref(`reference')"
+		        	di as err "{p 0 2}grouping variable `group' has no valid observations for ref(`reference'){p_end}"
 		        	error(2000)
 		        }
 	        }
 			
 			if("`dist'"!=""){
-				if(strlen("`fiximatrix'")==0){
-					di as err "group(,free) option requires fixing parameters of at least one item"
+				if(strlen("`fix_imatrix'")==0){
+					di as err "{p 0 2}group(,free) option requires fixing parameters of at least one item{p_end}"
 					exit 198
 				}
 				else{
@@ -371,7 +381,7 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 			if (strlen("`dif'")>0){
 				qui tab `group' if `touse'
 				if(r(r)!=2){
-					di as err "grouping variable must have exactly two values in order to analyze for DIF"
+					di as err "{p 0 2}grouping variable must have exactly two values in order to analyze for DIF{p_end}"
 					exit 198
 				}
 				else{
@@ -383,9 +393,9 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 						
 						m: st_local("dif_missinall",*compare_varlist("`items'","`dif_list'")[4])
 						if(`dif_missinall'>0){
-							di as err "`dif_missinall' items in group(,dif()) are not declared in the main list of items:"
+							di as err "{p 0 2}`dif_missinall' items in group(,dif()) are not declared in the main list of items:{p_end}"
 							m: st_local("dif_misslist",*compare_varlist("`items'","`dif_list'")[3])
-							di as err "`dif_misslist'"
+							di as err "{p 0 2}`dif_misslist'{p_end}"
 							exit 198
 						}
 					}
@@ -406,7 +416,7 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 						}
 					}
 					if(`notokdif'>0){
-						di "Note: `notokdif' items for DIF analysis not responded in both groups; `okdif' items left for DIF analysis"
+						di "{p 0 2}Note: `notokdif' items for DIF analysis not responded in both groups; `okdif' items left for DIF analysis{p_end}"
 					}
 					if(`okdif'==0){
 						m: diflist=J(0,1,"")
@@ -429,6 +439,7 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 			local dif_format=""
 			local dif_tw=""
 			m: dif_colours=""
+			local dif_cleargraphs=0
 		}
 		
 		if(strlen("`dif_format'")==0){
@@ -441,8 +452,8 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 				local default_dif_format=0
 			}
 			else{
-				di as err "`dif_format' is not a valid dif(,format()) value;"
-				di as err "only: png | gph | eps entries are allowed"
+				di as err "{p 0 2}`dif_format' is not a valid dif(,format()) value;{p_end}"
+				di as err "{p 0 2}only: png | gph | eps entries are allowed{p_end}"
 				exit 198
 			}
 		}
@@ -452,9 +463,9 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 		if(strlen("`priors'")){
 			cap __priors_option `priors'
 			if(_rc){
-				di as err "there seem to be something wrong with the priors() option;"
-				di as err "the proper syntax is: priors(varlist [, a(#,#) b(#,#) c(#,#)])"
-				di as err char(34)+"priors(`priors')"+char(34)+" returns the following error:"
+				di as err "{p 0 2}A problem was encountered in the priors() option;{p_end}"
+				di as err "{p 0 2}the proper syntax is: priors(varlist [, a(#,#) b(#,#) c(#,#)]){p_end}"
+				di as err "{p 0 2}priors(`priors') returns the following error:{p_end}"
 				qui __priors_option `priors'
 			}
 			m: eret_priorstrip="`s(priors_cmdstrip)'"
@@ -462,15 +473,15 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 				unab priors_list: `s(priors_varlist)'
 				m: st_local("priors_missinall",*compare_varlist("`items'","`priors_list'")[4])
 				if(`priors_missinall'>0){
-					di as err "`priors_missinall' items in priors() are not declared in the main list of items:"
+					di as err "{p 0 2}`priors_missinall' items in priors() are not declared in the main list of items:{p_end}"
 					m: st_local("priors_misslist",*compare_varlist("`items'","`priors_list'")[3])
-					di as err "`priors_misslist'"
+					di as err "{p 0 2}`priors_misslist'{p_end}"
 					exit 198
 				}
 				m: st_local("priors_duplicates",verify_dupvars("`priors_list'"))
 				if(strlen("`priors_duplicates'")){
-					di as err "the following item variables are entered multiple times in priors():"
-					di as err "`priors_duplicates'"
+					di as err "{p 0 2}the following item variables are entered multiple times in priors():{p_end}"
+					di as err "{p 0 2}`priors_duplicates'{p_end}"
 					exit 198
 				}
 				m: priorslist=tokens("`priors_list'")'	
@@ -499,15 +510,15 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 			
 			m: st_local("pcm_missinall",*compare_varlist("`items'","`pcm_list'")[4])
 			if(`pcm_missinall'>0){
-				di as err "`pcm_missinall' items in pcm() are not declared in the main list of items:"
+				di as err "{p 0 2}`pcm_missinall' items in pcm() are not declared in the main list of items:{p_end}"
 				m: st_local("pcm_misslist",*compare_varlist("`items'","`pcm_list'")[3])
-				di as err "`pcm_misslist'"
+				di as err "{p 0 2}`pcm_misslist'{p_end}"
 				exit 198
 			}
 			m: st_local("pcm_duplicates",verify_dupvars("`pcm_list'"))
 			if(strlen("`pcm_duplicates'")){
-				di as err "the following item variables are entered multiple times in pcm():"
-				di as err "`pcm_duplicates'"
+				di as err "{p 0 2}the following item variables are entered multiple times in pcm():{p_end}"
+				di as err "{p 0 2}`pcm_duplicates'{p_end}"
 				exit 198
 			}
 			
@@ -529,15 +540,15 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 			
 			m: st_local("gpcm_missinall",*compare_varlist("`items'","`gpcm_list'")[4])
 			if(`gpcm_missinall'>0){
-				di as err "`gpcm_missinall' items in gpcm() are not declared in the main list of items:"
+				di as err "{p 0 2}`gpcm_missinall' items in gpcm() are not declared in the main list of items:{p_end}"
 				m: st_local("gpcm_misslist",*compare_varlist("`items'","`gpcm_list'")[3])
-				di as err "`gpcm_misslist'"
+				di as err "{p 0 2}`gpcm_misslist'{p_end}"
 				exit 198
 			}
 			m: st_local("gpcm_duplicates",verify_dupvars("`gpcm_list'"))
 			if(strlen("`gpcm_duplicates'")){
-				di as err "the following item variables are entered multiple times in gpcm():"
-				di as err "`gpcm_duplicates'"
+				di as err "{p 0 2}the following item variables are entered multiple times in gpcm():{p_end}"
+				di as err "{p 0 2}`gpcm_duplicates'{p_end}"
 				exit 198
 			}
 			
@@ -552,9 +563,9 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 		
 			cap __guess_option `guessing'
 			if(_rc){
-				di as err "there seem to be something wrong with the guess() option;"
-				di as err "the proper syntax is: guess(varlist [, att(#) lr(#)])"
-				di as err char(34)+"guess(`guessing')"+char(34)+" returns the following error:"
+				di as err "{p 0 2}A problem was encountered in the guess() option;{p_end}"
+				di as err "{p 0 2}the proper syntax is: guess(varlist [, att(#) lr(#)]){p_end}"
+				di as err "{p 0 2}guess(`guessing') returns the following error:{p_end}"
 				qui __guess_option `guessing'
 			}
 			
@@ -570,15 +581,15 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 				
 				m: st_local("guess_missinall",*compare_varlist("`items'","`guess_list'")[4])
 				if(`guess_missinall'>0){
-					di as err "`guess_missinall' items in guess() are not declared in the main list of items:"
+					di as err "{p 0 2}`guess_missinall' items in guess() are not declared in the main list of items:{p_end}"
 					m: st_local("guess_misslist",*compare_varlist("`items'","`guess_list'")[3])
-					di as err "`guess_misslist'"
+					di as err "{p 0 2}`guess_misslist'{p_end}"
 					exit 198
 				}
 				m: st_local("guess_duplicates",verify_dupvars("`guess_list'"))
 				if(strlen("`guess_duplicates'")){
-					di as err "the following item variables are entered multiple times in guess():"
-					di as err "`guess_duplicates'"
+					di as err "{p 0 2}the following item variables are entered multiple times in guess():{p_end}"
+					di as err "{p 0 2}`guess_duplicates'{p_end}"
 					exit 198
 				}
 					
@@ -603,7 +614,7 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 				}
 			}
 			if(`notokguess'>0){
-				di "Note: `notokguess' items specified for fitting 3PLM have more than 2 response categories; `okguess' items left for 3PLM"			
+				di "{p 0 2}Note: `notokguess' items specified for fitting 3PLM have more than 2 response categories; `okguess' items left for 3PLM{p_end}"			
 			}
 			if(`okguess'==0){
 				m: guesslist=J(0,1,"")
@@ -620,9 +631,9 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 		if(`comp_pcm_gpcm'){
 			m: st_local("common_n",*compare_varlist("`pcm_list'","`gpcm_list'")[2])
 			if(`common_n'){
-				di as err "`common_n' items are listed both in pcm() and gpcm():"
+				di as err "{p 0 2}`common_n' items are listed both in pcm() and gpcm():{p_end}"
 				m: st_local("common_list",*compare_varlist("`pcm_list'","`gpcm_list'")[1])
-				di as err "`common_list'"
+				di as err "{p 0 2}`common_list'{p_end}"
 				exit 198
 			}
 		}
@@ -631,9 +642,9 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 		if(`comp_pcm_guess'){
 			m: st_local("common_n",*compare_varlist("`pcm_list'","`guess_list'")[2])
 			if(`common_n'){
-				di as err "`common_n' items are listed both in pcm() and guessing():"
+				di as err "{p 0 2}`common_n' items are listed both in pcm() and guessing():{p_end}"
 				m: st_local("common_list",*compare_varlist("`pcm_list'","`guess_list'")[1])
-				di as err "`common_list'"
+				di as err "{p 0 2}`common_list'{p_end}"
 				exit 198
 			}
 		}
@@ -642,9 +653,9 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 		if(`comp_gpcm_guess'){
 			m: st_local("common_n",*compare_varlist("`gpcm_list'","`guess_list'")[2])
 			if(`common_n'){
-				di as err "`common_n' items are listed both in gpcm() and guessing():"
+				di as err "{p 0 2}`common_n' items are listed both in gpcm() and guessing():{p_end}"
 				m: st_local("common_list",*compare_varlist("`gpcm_list'","`guess_list'")[1])
-				di as err "`common_list'"
+				di as err "{p 0 2}`common_list'{p_end}"
 				exit 198
 			}
 		}
@@ -654,9 +665,9 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 		
 			cap __icc_option `icc'
 			if(_rc){
-				di as err "there seem to be something wrong with the icc() option;"
-				di as err "the proper syntax is: icc(varlist [, bins(#) format(str) noobs pv pvbin(#) c(str) tw(str) pref(str) suf(str)])"
-				di as err char(34)+"icc(`icc')"+char(34)+" returns the following error:"
+				di as err "{p 0 2}A problem was encountered in the  icc() option;{p_end}"
+				di as err "{p 0 2}the proper syntax is: icc(varlist [, bins(#) format(str) noobs pv pvbin(#) c(str) tw(str) pref(str) suf(str) cl]){p_end}"
+				di as err "{p 0 2}icc(`icc') returns the following error:{p_end}"
 				qui __icc_option `icc'
 			}
 
@@ -665,21 +676,28 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 			local icc_noobs="`s(icc_noobs)'"
 			local icc_pv="`s(icc_pv)'"
 			local icc_pvbin="`s(icc_pvbin)'"
-			local icc_tw="`s(icc_tw)'"
+			local icc_tw=`"`s(icc_tw)'"'
+			
+			if(strlen("`s(icc_cleargraphs)'")){
+				local icc_cleargraphs=1
+			}
+			else{
+				local icc_cleargraphs=0
+			}
 			
 			if(strlen("`s(icc_varlist)'")){
 				unab icc_list: `s(icc_varlist)'
 				m: st_local("icc_missinall",*compare_varlist("`items'","`icc_list'")[4])
 				if(`icc_missinall'>0){
-					di as err "`icc_missinall' items in icc() are not declared in the main list of items:"
+					di as err "{p 0 2}`icc_missinall' items in icc() are not declared in the main list of items:{p_end}"
 					m: st_local("icc_misslist",*compare_varlist("`items'","`icc_list'")[3])
-					di as err "`icc_misslist'"
+					di as err "{p 0 2}`icc_misslist'{p_end}"
 					exit 198
 				}
 				m: st_local("icc_duplicates",verify_dupvars("`icc_list'"))
 				if(strlen("`icc_duplicates'")){
-					di as err "the following item variables are entered multiple times in icc():"
-					di as err "`icc_duplicates'"
+					di as err "{p 0 2}the following item variables are entered multiple times in icc():{p_end}"
+					di as err "{p 0 2}`icc_duplicates'{p_end}"
 					exit 198
 				}
 				m: icclist=tokens("`icc_list'")'	
@@ -694,6 +712,7 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 			local icc_bins=""
 			local icc_format=""
 			local icc_noobs=""
+			local icc_cleargraphs=0
 			local icc_pv=""
 			local icc_pvbin=""
 			local icc_tw=""
@@ -721,15 +740,15 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 				}
 			}
 			else{
-				di as err "`icc_format' is not a valid icc(,format()) value;"
-				di as err "only: png | gph | eps entries are allowed"
+				di as err "{p 0 2}`icc_format' is not a valid icc(,format()) value;{p_end}"
+				di as err "{p 0 2}only: png | gph | eps entries are allowed{p_end}"
 				exit 198
 			}
 		}
 		
 		if(strlen("`icc_pv'")==0){
 			if(strlen("`icc_pvbin'")){
-				di "Note: icc_pvbin(`icc_pvbin') will not take effect unless you add icc_pv option; observed proportions will be computed by numerical itegration"	
+				di "{p 0 2}Note: icc_pvbin(`icc_pvbin') will not take effect unless you add icc_pv option; observed proportions will be computed by numerical itegration{p_end}"
 			}
 			local icc_pvbin=0
 		}
@@ -742,15 +761,149 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 		if(strlen("`icc_bins'")==0){
 			local icc_bins=100
 		}
+
+*******************************************************
+		if(strlen("`esf'")){
 		
+			cap __esf_option `esf'
+			if(_rc){
+				di as err "{p 0 2}A problem was encountered in the  esf() option;{p_end}"
+				di as err "{p 0 2}the proper syntax is: esf(varlist [, tesf all bins(#) noobs c(str) tw(str) format(str) pref(str) suf(str) cl]){p_end}"
+				di as err "{p 0 2}esf(`esf') returns the following error:{p_end}"
+				qui __esf_option `esf'
+			}
+
+			local esf_bins="`s(esf_bins)'"
+			local esf_format="`s(esf_format)'"
+			local esf_noobs="`s(esf_noobs)'"
+			local esf_mode=`s(esf_mode)'
+			local esf_tw=`"`s(esf_tw)'"'
+			
+			if(strlen("`s(esf_cleargraphs)'")){
+				local esf_cleargraphs=1
+			}
+			else{
+				local esf_cleargraphs=0
+			}
+			
+			if(strlen("`s(esf_varlist)'")){
+				unab esf_list: `s(esf_varlist)'
+				m: st_local("esf_missinall",*compare_varlist("`items'","`esf_list'")[4])
+				if(`esf_missinall'>0){
+					di as err "{p 0 2}`esf_missinall' items in esf() are not declared in the main list of items:{p_end}"
+					m: st_local("esf_misslist",*compare_varlist("`items'","`esf_list'")[3])
+					di as err "{p 0 2}`esf_misslist'{p_end}"
+					exit 198
+				}
+				m: st_local("esf_duplicates",verify_dupvars("`esf_list'"))
+				if(strlen("`esf_duplicates'")){
+					di as err "{p 0 2}the following item variables are entered multiple times in esf():{p_end}"
+					di as err "{p 0 2}`esf_duplicates'{p_end}"
+					exit 198
+				}
+				m: esflist=tokens("`esf_list'")'	
+			}
+			else{
+				m: esflist=tokens("`items'")'
+			}
+		}
+		else{
+			m: esflist=J(0,1,"")
+			m: esf_prefix_suffix=("","")'
+			local esf_bins=""
+			local esf_format=""
+			local esf_noobs=""
+			local esf_mode=.
+			local esf_cleargraphs=0
+			local esf_tw=""
+			m: esf_colour=""
+		}
+
+		if(strlen("`esf_noobs'")==0){
+			local esf_obs=1
+		}
+		else{
+			local esf_obs=0
+			local esf_bins=""
+		}
+		
+		if(strlen("`esf_format'")==0){
+			local esf_format="png"
+		}
+		else{
+			if("`esf_format'"=="png" | "`esf_format'"=="gph" | "`esf_format'"=="eps"){
+				local esf_format="`esf_format'"
+				if(`default_dif_format'){
+					local dif_format="`esf_format'"
+				}
+			}
+			else{
+				di as err "{p 0 2}`esf_format' is not a valid esf(,format()) value;{p_end}"
+				di as err "{p 0 2}only: png | gph | eps entries are allowed{p_end}"
+				exit 198
+			}
+		}
+				
+		if(strlen("`esf_bins'")==0){
+			local esf_bins=100
+		}
+		
+*******************************************************
+		if(strlen("`inf'")){
+		
+			cap __inf_option `inf'
+			if(_rc){
+				di as err "{p 0 2}A problem was encountered in the  inf() option;{p_end}"
+				di as err "{p 0 2}the proper syntax is: inf(varlist [, test se gr tw(str)]){p_end}"
+				di as err "{p 0 2}inf(`inf') returns the following error:{p_end}"
+				qui __inf_option `inf'
+			}
+			
+			if(strlen("`s(inf_note)'")){
+				di "{p 0 2}`s(inf_note)'{p_end}"
+			}
+
+			local inf_mode=`s(inf_mode)'
+			local inf_ifgr=`s(inf_ifgr)'
+			local inf_tw=`"`s(inf_tw)'"'
+						
+			if(strlen("`s(inf_varlist)'")){
+				unab inf_list: `s(inf_varlist)'
+				m: st_local("inf_missinall",*compare_varlist("`items'","`inf_list'")[4])
+				if(`inf_missinall'>0){
+					di as err "{p 0 2}`inf_missinall' items in inf() are not declared in the main list of items:{p_end}"
+					m: st_local("inf_misslist",*compare_varlist("`items'","`inf_list'")[3])
+					di as err "{p 0 2}`inf_misslist'{p_end}"
+					exit 198
+				}
+				m: st_local("inf_duplicates",verify_dupvars("`inf_list'"))
+				if(strlen("`inf_duplicates'")){
+					di as err "{p 0 2}the following item variables are entered multiple times in inf():{p_end}"
+					di as err "{p 0 2}`inf_duplicates'{p_end}"
+					exit 198
+				}
+				m: inflist=tokens("`inf_list'")'	
+			}
+			else{
+				m: inflist=tokens("`items'")'
+			}
+		}
+		else{
+			m: inflist=J(0,1,"")
+			local inf_mode=.
+			local inf_ifgr=.
+			local inf_tw=""
+		}
+							
+							
 *******************************************************	
 
 		if(strlen("`chi2w'")){
 			cap __chi2w_option `chi2w'
 			if(_rc){
-				di as err "there seem to be something wrong with the chi2w() option;"
-				di as err "the proper syntax is: chi2w(varlist [, bins(#) npqm(#) npqr])"
-				di as err char(34)+"chi2w(`chi2w')"+char(34)+" returns the following error:"
+				di as err "{p 0 2}A problem was encountered in the  chi2w() option;{p_end}"
+				di as err "{p 0 2}the proper syntax is: chi2w(varlist [, bins(#) npqm(#) npqr]){p_end}"
+				di as err "{p 0 2}chi2w(`chi2w') returns the following error:{p_end}"
 				qui __chi2w_option `chi2w'
 			}
 			local chi2w_bins="`s(chi2w_bins)'"
@@ -761,15 +914,15 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 				unab chi2w_list: `s(chi2w_varlist)'
 				m: st_local("chi2w_missinall",*compare_varlist("`items'","`chi2w_list'")[4])
 				if(`chi2w_missinall'>0){
-					di as err "`chi2w_missinall' items in chi2w() are not declared in the main list of items:"
+					di as err "{p 0 2} `chi2w_missinall' items in chi2w() are not declared in the main list of items:{p_end}"
 					m: st_local("chi2w_misslist",*compare_varlist("`items'","`chi2w_list'")[3])
-					di as err "`chi2w_misslist'"
+					di as err "{p 0 2} `chi2w_misslist'{p_end}"
 					exit 198
 				}
 				m: st_local("chi2w_duplicates",verify_dupvars("`chi2w_list'"))
 				if(strlen("`chi2w_duplicates'")){
-					di as err "the following item variables are entered multiple times in chi2w():"
-					di as err "`chi2w_duplicates'"
+					di as err "{p 0 2} the following item variables are entered multiple times in chi2w():{p_end}"
+					di as err "{p 0 2} `chi2w_duplicates'{p_end}"
 					exit 198
 				}
 				m: chi2wlist=tokens("`chi2w_list'")'	
@@ -812,9 +965,9 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 		if(strlen("`sx2'")){
 			cap __sx2_option `sx2'
 			if(_rc){
-				di as err "there seem to be something wrong with the sx2() option;"
-				di as err "the proper syntax is: sx2(varlist [, minf(#)])"
-				di as err char(34)+"sx2(`sx2')"+char(34)+" returns the following error:"
+				di as err "{p 0 2}A problem was encountered in the  sx2() option;{p_end}"
+				di as err "{p 0 2}the proper syntax is: sx2(varlist [, minf(#)]){p_end}"
+				di as err "{p 0 2}sx2(`sx2') returns the following error:{p_end}"
 				qui __sx2_option `sx2'
 			}
 			local sx2_minfreq="`s(sx2_minfreq)'"
@@ -823,15 +976,15 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 				unab sx2_list: `s(sx2_varlist)'
 				m: st_local("sx2_missinall",*compare_varlist("`items'","`sx2_list'")[4])
 				if(`sx2_missinall'>0){
-					di as err "`sx2_missinall' items in sx2() are not declared in the main list of items:"
+					di as err "{p 0 2}`sx2_missinall' items in sx2() are not declared in the main list of items:{p_end}"
 					m: st_local("sx2_misslist",*compare_varlist("`items'","`sx2_list'")[3])
-					di as err "`sx2_misslist'"
+					di as err "{p 0 2}`sx2_misslist'{p_end}"
 					exit 198
 				}
 				m: st_local("sx2_duplicates",verify_dupvars("`sx2_list'"))
 				if(strlen("`sx2_duplicates'")){
-					di as err "the following item variables are entered multiple times in sx2():"
-					di as err "`sx2_duplicates'"
+					di as err "{p 0 2}the following item variables are entered multiple times in sx2():{p_end}"
+					di as err "{p 0 2}`sx2_duplicates'{p_end}"
 					exit 198
 				}
 				m: sx2list=tokens("`sx2_list'")'	
@@ -883,14 +1036,14 @@ syntax [varlist] [if] [in] [, GRoup(str)  pcm(varlist) gpcm(varlist) GUEssing(st
 		}
 		
 						
-		m: uirt("`touse'", "`items'", "`group'", `reference', `estimate_dist', `upd_quad_betw_em', "`errors'",stored_V, pcmlist, gpcmlist, guesslist, `guessing_attempts',`guessing_lrcrit', diflist,`add_theta', "`theta_name'", `theta_nip', theta_scale, theta_notes, "`savingname'", "`fix_imatrix'", "`init_imatrix'", "`fix_catmatrix'", "`init_dmatrix'", "`fix_dmatrix'",`icc_obs', icclist, chi2wlist, chi2w_control, sx2list, sx2_min_freq,`trace',`nip',`nit', `ninrf', `pv', "`pvreg'", `crit_ll', `crit_par', `icc_bins', `icc_pvbin', "`icc_format'","`icc_tw'",icc_colours, icc_prefix_suffix, "`dif_format'","`dif_tw'",dif_colours, a_normal_prior, b_normal_prior, c_beta_prior, priorslist)
+		m: uirt( "`touse'", "`items'", "`group'", `reference', `estimate_dist', `upd_quad_betw_em', "`errors'",stored_V, pcmlist, gpcmlist, guesslist, `guessing_attempts',`guessing_lrcrit', diflist,`add_theta', eap_names, "`theta_suffix'", `theta_nip', theta_scale, theta_notes, "`savingname'", "`fix_imatrix'", "`init_imatrix'", "`fix_cmatrix'", "`init_dmatrix'", "`fix_dmatrix'", `icc_cleargraphs',`icc_obs', icclist, chi2wlist, chi2w_control, sx2list, sx2_min_freq,`trace',`nip',`nit', `ninrf', `pv', "`pvreg'", `crit_ll', `crit_par', `icc_bins', `icc_pvbin', "`icc_format'",st_local("icc_tw"),icc_colours, icc_prefix_suffix, "`dif_format'",st_local("dif_tw"),dif_colours,`dif_cleargraphs', a_normal_prior, b_normal_prior, c_beta_prior, priorslist,esflist, `esf_bins', "`esf_format'",st_local("esf_tw"),esf_colour, esf_prefix_suffix, `esf_cleargraphs',`esf_obs', `esf_mode', inflist,`inf_mode', st_local("inf_tw"), `inf_ifgr' )
 		
 		m: stata("ereturn local cmdline "+char(34)+eret_cmdline+char(34))
 		m: eret_cmdstrip=strtrim("uirt `e(depvar)' "+eret_if+" "+eret_in+","+etet_grstrip+" nip(`nip') ninrf(`ninrf') crit_par(`crit_par') crit_ll(`crit_ll') "+eret_priorstrip)
 		m: stata("ereturn local cmdstrip "+char(34)+eret_cmdstrip+char(34))
 		
 *clean up mata objects
-		foreach mata_obj in a_normal_prior b_normal_prior c_beta_prior chi2w_control chi2wlist diflist eret_cmdline eret_cmdstrip eret_if eret_in eret_priorstrip etet_grstrip gpcmlist guesslist icc_colours icc_prefix_suffix dif_colours icclist pcmlist priorslist stored_V sx2_min_freq sx2list theta_notes theta_scale{
+		foreach mata_obj in a_normal_prior b_normal_prior c_beta_prior chi2w_control chi2wlist diflist eret_cmdline eret_cmdstrip eret_if eret_in eret_priorstrip etet_grstrip gpcmlist guesslist icc_colours icc_prefix_suffix icclist esf_colour esf_prefix_suffix esflist dif_colours  pcmlist priorslist stored_V sx2_min_freq sx2list theta_notes theta_scale eap_names inflist{
 			cap m: mata drop `mata_obj'
 		}
 		
@@ -948,14 +1101,24 @@ end
 
 cap program drop __icc_option
 program define __icc_option, sclass
-syntax varlist [, bins(numlist integer max=1 >=1) Format(str) NOObs pv pvbin(numlist max=1 >=100 <=100000) Colors(str) tw(str) PREFix(str) SUFfix(str)] 
+syntax varlist [, bins(numlist integer max=1 >=1) Format(str) CLeargraphs NOObs pv pvbin(numlist max=1 >=100 <=100000) Colors(str) tw(str asis) PREFix(str) SUFfix(str)] 
 	unab allvars: *
-	if(strlen("`tw'")){
-		cap tw function x, `tw' nodraw
+	if(strlen(`"`tw'"')){
+		qui gr dir
+		local previous=r(list)			
+		cap tw function x, `tw' nodraw		
 		if(_rc){
-			di as err "there seem to be something wrong with the tw() option in icc();"
-			di as err char(34)+"twoway, `tw'"+char(34)+" returns the following error:"
-			tw , `tw' nodraw
+			di as err "{p 0 2}A problem was encountered in the tw() option in icc();{p_end}"
+			m: stata("di as err "+char(34)+"{p 0 2}twoway, "+`"`tw'"'+" returns the following error:{p_end}"+char(34))
+			tw function x, `tw' nodraw
+		}
+		else{
+			qui gr dir
+			local current=r(list)
+			local new : list  current - previous
+			if(strlen("`new'")){
+				gr drop `new'
+			}
 		}
 	}
 	if("`allvars'"=="`varlist'"){
@@ -964,11 +1127,12 @@ syntax varlist [, bins(numlist integer max=1 >=1) Format(str) NOObs pv pvbin(num
 	sreturn local icc_varlist="`varlist'"
 	sreturn local icc_bins="`bins'"
 	sreturn local icc_format="`format'"
+	sreturn local icc_cleargraphs="`cleargraphs'"
 	sreturn local icc_noobs="`noobs'"
 	sreturn local icc_pv="`pv'"
 	sreturn local icc_pvbin="`pvbin'"
 	m: icc_colours=tokens("`colors'")'
-	sreturn local icc_tw="`tw'"
+	sreturn local icc_tw=`"`tw'"'
 	
 	if(strlen("`prefix'")){
 		local prefix="_"+strtoname("`prefix'")
@@ -986,12 +1150,112 @@ syntax varlist [, bins(numlist integer max=1 >=1) Format(str) NOObs pv pvbin(num
 	
 end
 
+cap program drop __esf_option
+program define __esf_option, sclass
+syntax varlist [, bins(numlist integer max=1 >=1) Format(str) tesf all CLeargraphs NOObs Color(str) tw(str asis) PREFix(str) SUFfix(str)] 
+	unab allvars: *
+	if(strlen(`"`tw'"')){	
+		qui gr dir
+		local previous=r(list)			
+		cap tw function x, `tw' nodraw	
+		if(_rc){
+			di as err "{p 0 2}A problem was encountered in the tw() option in esf();{p_end}"
+			m: stata("di as err "+char(34)+"{p 0 2}twoway, "+`"`tw'"'+" returns the following error:{p_end}"+char(34))
+			tw function x, `tw' nodraw
+		}
+		else{
+			qui gr dir
+			local current=r(list)
+			local new : list  current - previous
+			if(strlen("`new'")){
+				gr drop `new'
+			}
+		}
+	}
+	if("`allvars'"=="`varlist'"){
+		local varlist=""
+	}
+	sreturn local esf_varlist="`varlist'"
+	sreturn local esf_bins="`bins'"
+	sreturn local esf_format="`format'"
+	sreturn local esf_cleargraphs="`cleargraphs'"
+	sreturn local esf_noobs="`noobs'"
+	m: esf_colour=tokens("`color'")'
+	sreturn local esf_tw=`"`tw'"'
+	
+	if(strlen("`prefix'")){
+		local prefix="_"+strtoname("`prefix'")
+		while(strpos("`prefix'","_")==1){
+			local prefix=substr("`prefix'",2,strlen("`prefix'"))
+		}
+	}
+	if(strlen("`suffix'")){
+		local suffix="_"+strtoname("`suffix'")
+		while(strpos("`suffix'","_")==1){
+			local suffix=substr("`suffix'",2,strlen("`suffix'"))
+		}	
+	}
+	m: esf_prefix_suffix=("`prefix'","`suffix'")'
+	
+	local esf_mode=2
+	if(strlen("`tesf'")){
+		local esf_mode=3
+	}
+	if(strlen("`all'")){
+		local esf_mode=4
+	}
+	sreturn local esf_mode=`esf_mode'
+	
+end
+
+cap program drop __inf_option
+program define __inf_option, sclass
+syntax varlist [, Test se GRoups tw(str asis)] 
+	unab allvars: *
+	if(strlen(`"`tw'"')){
+		qui gr dir
+		local previous=r(list)			
+		cap tw function x, `tw' nodraw	
+		if(_rc){
+			di as err "{p 0 2}A problem was encountered in the tw() option in inf();{p_end}"
+			m: stata("di as err "+char(34)+"{p 0 2}twoway, "+`"`tw'"'+" returns the following error:{p_end}"+char(34))
+			tw function x, `tw' nodraw
+		}
+		else{
+			qui gr dir
+			local current=r(list)
+			local new : list  current - previous
+			if(strlen("`new'")){
+				gr drop `new'
+			}
+		}
+	}
+	if("`allvars'"=="`varlist'"){
+		local varlist=""
+	}
+	
+	if((strlen("`test'")==0) & (strlen("`se'")>0)){
+		sreturn local inf_note= "Note: uirt_inf option -se- is applicable only together with option -test-; -se- will be ignored"
+		local se="" 
+	}
+	else{
+		sreturn local inf_note=""
+	}
+	
+	sreturn local inf_varlist = "`varlist'"
+	sreturn local inf_mode = (strlen("`test'")>0) + (strlen("`se'")>0)
+	sreturn local inf_ifgr = (strlen("`groups'")>0)
+	sreturn local inf_tw = `"`tw'"'
+		
+end
+
+
 cap program drop __group_option
 program define __group_option, sclass
-syntax varname [, REFerence(numlist max=1) dif(varlist) free slow dif_format(str) dif_colors(str) dif_tw(str)]
+syntax varname [, REFerence(numlist max=1) dif(varlist) free slow CLeargraphs dif_format(str) dif_colors(str) dif_tw(str asis) ]
 	m: st_local("gr_isnumvar",verify_isnumvar("`varlist'"))
 	if(strlen("`gr_isnumvar'")){
-		di as err "grouping variable must be numeric, `gr_isnumvar' is not"
+		di as err "{p 0 2}grouping variable must be numeric, `gr_isnumvar' is not{p_end}"
 		exit 109
 	}
 
@@ -1004,9 +1268,10 @@ syntax varname [, REFerence(numlist max=1) dif(varlist) free slow dif_format(str
 	sreturn local group_free="`free'"
 	sreturn local group_slow="`slow'"
 	sreturn local group_dif="`dif'"
+	sreturn local group_dif_cleargraphs="`cleargraphs'"
 	sreturn local group_dif_format="`dif_format'"
 	m: dif_colours=tokens("`dif_colors'")
-	sreturn local group_dif_tw="`dif_tw'"
+	sreturn local group_dif_tw=`"`dif_tw'"'
 	
 	if(strlen("`reference'`free'`slow'")){
 		if(strlen("`reference'")){
@@ -1047,13 +1312,13 @@ end
 
 cap program drop __fix_option
 program define __fix_option, sclass
-syntax [anything] [, prev from(namelist max=1) USEDist Imatrix(namelist max=1) Dmatrix(namelist max=1) CATmatrix(namelist max=1) miss ] 
+syntax [anything] [, prev from(namelist max=1) USEDist Imatrix(namelist max=1) Dmatrix(namelist max=1) Cmatrix(namelist max=1) miss ] 
 	if(strlen("`prev'") & strlen("`from'")){
-		di as err "you should use either fix(prev) or fix(from(str)) option, not both"
+		di as err "{p 0 2}you should use either fix(prev) or fix(from(str)) option, not both{p_end}"
 		exit 198
 	}
 	if( (strlen("`prev'") | strlen("`from'")) & strlen("`dmatrix'") & strlen("`usedist'") ){
-		di as err "you should use either usedist or dmatrix() option, not both"
+		di as err "{p 0 2}you should use either usedist or dmatrix() option, not both{p_end}"
 		exit 198
 	}
 	if(strlen("`prev'") | strlen("`from'")){
@@ -1063,7 +1328,7 @@ syntax [anything] [, prev from(namelist max=1) USEDist Imatrix(namelist max=1) D
 			}
 			else{
 				sreturn local fix_imatrix="e(item_par)"
-				sreturn local fix_catmatrix="e(item_cats)"
+				sreturn local fix_cmatrix="e(item_cats)"
 				sreturn local fix_V_greenlight="1"
 				if(strlen("`usedist'")){
 					sreturn local fix_dmatrix="e(group_par)"
@@ -1076,7 +1341,7 @@ syntax [anything] [, prev from(namelist max=1) USEDist Imatrix(namelist max=1) D
 		else{
 			qui estimates restore `from'
 			sreturn local fix_imatrix="e(item_par)"
-			sreturn local fix_catmatrix="e(item_cats)"
+			sreturn local fix_cmatrix="e(item_cats)"
 			sreturn local fix_V_greenlight="1"
 			if(strlen("`usedist'")){
 				sreturn local fix_dmatrix="e(group_par)"
@@ -1085,14 +1350,14 @@ syntax [anything] [, prev from(namelist max=1) USEDist Imatrix(namelist max=1) D
 				sreturn local fix_dmatrix="`dmatrix'"
 			}
 		}
-		if( strlen("`imatrix'") | strlen("`catmatrix'") | strlen("`miss'") ){
+		if( strlen("`imatrix'") | strlen("`cmatrix'") | strlen("`miss'") ){
 			sreturn local fix_note= "Note: if you use fix(prev) or fix(from(str)) these options are ignored: i(),cat() miss"
 		}
 	}
 	else{
 		sreturn local fix_imatrix="`imatrix'"
 		sreturn local fix_dmatrix="`dmatrix'"
-		sreturn local fix_catmatrix="`catmatrix'"
+		sreturn local fix_cmatrix="`cmatrix'"
 		sreturn local fix_miss="`miss'"
 		sreturn local fix_note=""
 		sreturn local fix_V_greenlight="0"
@@ -1104,11 +1369,11 @@ cap program drop __init_option
 program define __init_option, sclass
 syntax [anything] [, prev from(namelist max=1) USEDist Imatrix(namelist max=1) Dmatrix(namelist max=1) miss] 
 	if(strlen("`prev'") & strlen("`from'")){
-		di as err "you should use either init(prev) or init(from(str)) option, not both"
+		di as err "{p 0 2}you should use either init(prev) or init(from(str)) option, not both{p_end}"
 		exit 198
 	}
 	if( (strlen("`prev'") | strlen("`from'") ) & strlen("`dmatrix'") & strlen("`usedist'") ){
-		di as err "you should use either usedist or dmatrix() option, not both"
+		di as err "{p 0 2}you should use either usedist or dmatrix() option, not both{p_end}"
 		exit 198
 	}
 	if(strlen("`prev'") | strlen("`from'")){
@@ -1151,12 +1416,35 @@ end
 
 cap program drop __theta_option
 program define __theta_option, sclass
-syntax [anything] [, eap nip(numlist integer max=1 >=2 <=195) pv(numlist integer max=1 >=0) pvreg(str) Name(namelist max=1) SCale(numlist max=2 min=2) SKIPNote] 
-		sreturn local theta_eap="`eap'"
+syntax [namelist] [, eap nip(numlist integer max=1 >=2 <=195) pv(numlist integer max=1 >=0) pvreg(str) SUFfix(namelist max=1) SCale(numlist max=2 min=2) SKIPNote] 
+		
+		m: eap_names=tokens("`namelist'")
+		m: st_local("names_ncol",strofreal(cols(eap_names)))
+		if( (`names_ncol' !=0) & ((`names_ncol' !=2)) ){
+			di as err "{p 0 2}Either 0 or exactly 2 new variable names are required,{p_end}"
+			di as err "{p 0 2}uirt found `names_ncol' names: `namelist'{p_end}"
+			di as err "{p 0 2}Maybe missing comma before options?{p_end}"
+			exit 198
+		}
+		if(`names_ncol' == 0){
+			sreturn local theta_eap="`eap'"
+			if(strlen("`eap'")){
+				if(strlen("`suffix'")){
+					m: eap_names=("theta_","se_theta_"):+"`suffix'"
+				}
+				else{
+					m: eap_names=("theta","se_theta")
+				}
+			}
+		}
+		if(`names_ncol' == 2){
+			sreturn local theta_eap="eap"
+		}
+				
 		sreturn local theta_nip="`nip'"
 		sreturn local theta_pv="`pv'"
 		sreturn local theta_pvreg="`pvreg'"
-		sreturn local theta_name="`name'"
+		sreturn local theta_suffix="`suffix'"
 		sreturn local theta_skipnote="`skipnote'"
 		m: theta_scale=strtoreal(tokens("`scale'"))		
 end
@@ -1441,7 +1729,7 @@ mata:
 	}
 
 // THE UIRT
-	void uirt(string scalar touse, string scalar items, string scalar group, real scalar ref, real scalar estimate_dist, real scalar upd_quad_betw_em, string scalar errors, real matrix stored_V, string matrix pcmlist,string matrix gpcmlist, string matrix guesslist, real scalar guessing_attempts, real scalar guessing_lrcrit, string matrix diflist, real scalar add_theta, string scalar theta_name, real scalar theta_nip, real matrix theta_scale, string scalar theta_notes, string scalar savingname , string scalar fiximatrix, string scalar initimatrix, string scalar catimatrix, string scalar initdmatrix, string scalar fixdmatrix, real scalar icc_obs, string matrix icclist, string matrix fitlist, real matrix chi2w_control, string matrix sx2_fitlist, real scalar sx2_min_freq, real scalar trace, real scalar nip,real scalar nit,real scalar nnirf,real scalar pv,string scalar pvreg, real scalar crit_ll, real scalar crit_par, real scalar icc_bins, real scalar icc_pvbin,string scalar icc_format, string scalar icc_tw, string matrix icc_colours, string matrix icc_prefix_suffix, string scalar dif_format, string scalar dif_tw, string matrix dif_colours, real matrix a_normal_prior, real matrix b_normal_prior, real matrix c_beta_prior, string matrix priorslist){
+	void uirt(string scalar touse, string scalar items, string scalar group, real scalar ref, real scalar estimate_dist, real scalar upd_quad_betw_em, string scalar errors, real matrix stored_V, string matrix pcmlist,string matrix gpcmlist, string matrix guesslist, real scalar guessing_attempts, real scalar guessing_lrcrit, string matrix diflist, real scalar add_theta, string matrix eap_names, string scalar theta_suffix, real scalar theta_nip, real matrix theta_scale, string scalar theta_notes, string scalar savingname , string scalar fiximatrix, string scalar initimatrix, string scalar catimatrix, string scalar initdmatrix, string scalar fixdmatrix, real scalar icc_cleargraphs, real scalar icc_obs, string matrix icclist, string matrix fitlist, real matrix chi2w_control, string matrix sx2_fitlist, real scalar sx2_min_freq, real scalar trace, real scalar nip,real scalar nit,real scalar nnirf,real scalar pv,string scalar pvreg, real scalar crit_ll, real scalar crit_par, real scalar icc_bins, real scalar icc_pvbin,string scalar icc_format, string scalar icc_tw, string matrix icc_colours, string matrix icc_prefix_suffix, string scalar dif_format, string scalar dif_tw, string matrix dif_colours, real scalar dif_cleargraphs, real matrix a_normal_prior, real matrix b_normal_prior, real matrix c_beta_prior, string matrix priorslist, string matrix esflist, real scalar esf_bins, string scalar esf_format, string scalar esf_tw, string matrix esf_colour, string matrix esf_prefix_suffix, real scalar esf_cleargraphs, real scalar esf_obs, real scalar esf_mode, string matrix inflist, real scalar inf_mode, string scalar inf_tw, inf_ifgr ){
 	
 		N_iter		=nit
 		N_iter_NRF	=nnirf
@@ -1474,11 +1762,13 @@ mata:
 			Theta_dup		= *data_pointers[4]
 			data_pointers	= J(0,0,NULL)		
 	
-			if( sum(Q.get(Q.n_par,.):!=Q.get(Q.n_par_model,.))>0 ){
+			if( sum(Q.get(Q.n_par,.):!=Q.get(Q.n_par_model,.))>0 | sum(Q.get(Q.init_fail,.)) ){
 			
-				starting_values_logistic(Q, G, Theta_id, Theta_dup, point_Uigc, "" )
+				if( sum(Q.get(Q.n_par,.):!=Q.get(Q.n_par_model,.))>0){
+					starting_values_logistic(Q, G, Theta_id, Theta_dup, point_Uigc, "" )
+				}
 				
-				if(sum(Q.get(Q.init_fail,.))){
+				if( sum(Q.get(Q.init_fail,.)) ){
 					
 					dropped_items_range		= select((1::Q.n), Q.get(Q.init_fail,.):>0 )
 					dropped_items		= Q.get(Q.names,dropped_items_range)
@@ -1491,6 +1781,12 @@ mata:
 						}
 						if(dropped_item_whyfail[i]==2){
 							display("      failed generating starting values (a<0)        : "+dropped_items[i])
+						}
+						if(dropped_item_whyfail[i]==3){
+							display("      item has all values missing                    : "+dropped_items[i])	
+						}
+						if(dropped_item_whyfail[i]==4){
+							display("      item has zero variance                         : "+dropped_items[i])
 						}
 					}
 					
@@ -1538,12 +1834,16 @@ mata:
 		
 		
 // THE EM
-			em_results				= em(Q, G, estimate_dist, N_iter, trace, errors, crit_ll, guessing_attempts, guessing_lrcrit, add_theta, theta_name, theta_nip, theta_scale, theta_notes, Theta_id, Theta_dup, savingname, point_Uigc, point_Fg  , upd_quad_betw_em, N_iter_NRF, crit_par)
+			em_results				= em(Q, G, estimate_dist, N_iter, trace, errors, crit_ll, guessing_attempts, guessing_lrcrit, eap_names, theta_nip, theta_scale, theta_notes, Theta_id, Theta_dup, savingname, point_Uigc, point_Fg  , upd_quad_betw_em, N_iter_NRF, crit_par)
 			logL					= *em_results[1]
 			long_EMhistory_matrix	= *em_results[2]
 			if_em_converged			= *em_results[3]
 
-						
+			if(sum(Q.get(Q.init_fail,.))){
+				kept_items_range	= select((1::Q.n), Q.get(Q.init_fail,.):==0 )
+				kept_items			= Q.get(Q.names,kept_items_range)
+				Q.populate(kept_items)
+			}
 			
 			
 // ERRORS 
@@ -1588,7 +1888,7 @@ mata:
 			// giving small burn, because we have a proposition distribution fixed at the unconditioned a posteriori
 			burn					= 40
 			draw_from_chain			= 10
-			max_independent_chains	=	20
+			max_independent_chains	=	100
 			if(group!="."){
 				if(pvreg!="."){
 					pvreg= "i."+group+" "+pvreg
@@ -1597,13 +1897,13 @@ mata:
 			
 			PV 				= generate_pv(Q, G, pv, draw_from_chain, max_independent_chains, burn, Theta_dup, point_Uigc, point_Fg, pvreg, Theta_id, 1, V)
 
-			if(theta_name!="."){
-				index_temp=st_addvar("double",J(1,pv,"pv_")+strofreal((1..pv))+J(1,pv,"_"+theta_name))
+			if(theta_suffix!="."){
+				index_temp=st_addvar("double",J(1,pv,"pv_")+strofreal((1..pv))+J(1,pv,"_"+theta_suffix))
 				if(pv>1){
-					mess = "Added variables: pv_1_"+theta_name+" - pv_"+strofreal(pv)+"_"+theta_name
+					mess = "Added variables: pv_1_"+theta_suffix+" - pv_"+strofreal(pv)+"_"+theta_suffix
 				}
 				else{
-					mess = "Added variable: pv_1_"+theta_name
+					mess = "Added variable: pv_1_"+theta_suffix
 				}
 			}
 			else{
@@ -1627,8 +1927,8 @@ mata:
 			
 			if(strlen(theta_notes)){
 				for(i=1;i<=pv;i++){
-					if(theta_name!="."){
-						pvvar="pv_"+strofreal(i)+"_"+theta_name
+					if(theta_suffix!="."){
+						pvvar="pv_"+strofreal(i)+"_"+theta_suffix
 					}
 					else{
 						pvvar="pv_"+strofreal(i)
@@ -1642,6 +1942,8 @@ mata:
 		}
 
 // GRAPHS
+
+// ICC
 		if(rows(icclist)){
 		
 			if_makeicc=J(Q.n,1,0)
@@ -1661,10 +1963,36 @@ mata:
 				Pj_centile=J(0,0,.)
 			}
 	
-			icc_graph(cloneQ(Q), cloneG(G), Pj_centile,if_makeicc,icc_format, icc_tw, icc_colours, icc_prefix_suffix, point_Uigc,point_Fg, theta_name, 0)
+			icc_graph(cloneQ(Q), cloneG(G), Pj_centile,if_makeicc,icc_format, icc_tw, icc_colours, icc_prefix_suffix, point_Uigc,point_Fg, eap_names, 0, icc_cleargraphs)
 			
 		}
+// ESF		
+		if(rows(esflist)){
 		
+			if_makeesf=J(Q.n,1,0)
+			for(i=1;i<=rows(esflist);i++){
+				if_makeesf=if_makeesf+(Q.get(Q.names,.):==esflist[i])
+			}
+			
+			if(esf_obs){
+				Pj_centile = Pj_centile_integrated(Q, G , point_Uigc, esf_bins)
+			}
+			else{
+				Pj_centile=J(0,0,.)
+			}
+				
+			icc_graph(cloneQ(Q), cloneG(G), Pj_centile,if_makeesf,esf_format, esf_tw, esf_colour, esf_prefix_suffix, point_Uigc,point_Fg, eap_names, esf_mode , esf_cleargraphs)
+			
+		}
+// INF		
+		if(rows(inflist)){
+			if_makeinf=J(Q.n,1,0)
+			for(i=1;i<=rows(inflist);i++){
+				if_makeinf=if_makeinf+(Q.get(Q.names,.):==inflist[i])
+			}		
+			inf_graph(Q, G, if_makeinf, inf_tw, inf_mode, eap_names, inf_ifgr )
+		}
+				
 // FIT		
 		if(rows(fitlist)){
 
@@ -1689,12 +2017,12 @@ mata:
 			if(report_min_npq){
 				st_matrix("item_fit_chi2W",Q.get(Q.chi2W_res,fit_indx))
 				st_matrixcolstripe("item_fit_chi2W", (J(5,1,""),("chi2W","p-val","df","n_par","min_npq")'))
-				st_matrixrowstripe("item_fit_chi2W", (J(rows(fitlist),1,""),fitlist))
+				st_matrixrowstripe("item_fit_chi2W", (J(rows(fit_indx),1,""),Q.get(Q.names,fit_indx)))
 			}
 			else{
 				st_matrix("item_fit_chi2W",Q.get(Q.chi2W_res,fit_indx)[.,1..4])
 				st_matrixcolstripe("item_fit_chi2W", (J(4,1,""),("chi2W","p-val","df","n_par")'))
-				st_matrixrowstripe("item_fit_chi2W", (J(rows(fitlist),1,""),fitlist))
+				st_matrixrowstripe("item_fit_chi2W", (J(rows(fit_indx),1,""),Q.get(Q.names,fit_indx)))
 			}
 		}
 		
@@ -1717,7 +2045,7 @@ mata:
 				N_iter=100
 			}
 		
-			dif_results = dif(Q, G, diflist, logL, dif_format, dif_tw, dif_colours , N_iter, crit_ll, theta_nip, Theta_id, Theta_dup, point_Uigc, point_Fg, upd_quad_betw_em, N_iter_NRF, crit_par, theta_name)
+			dif_results = dif(Q, G, diflist, logL, dif_format, dif_tw, dif_colours , N_iter, crit_ll, theta_nip, Theta_id, Theta_dup, point_Uigc, point_Fg, upd_quad_betw_em, N_iter_NRF, crit_par, eap_names, dif_cleargraphs)
 		
 			st_matrix("dif_results",dif_results)
 			st_matrixcolstripe("dif_results", (J(8,1,""),("LR","p-value","P-DIF|GR","P-DIF|GF","E(parR,GR)","E(parF,GR)","E(parR,GF)","E(parF,GF)")'))
@@ -2371,7 +2699,7 @@ mata:
 		
 	}
 	
-	real matrix dif(_Q, _G ,string colvector diflist, real colvector logL , string scalar dif_format , string scalar dif_tw, string matrix dif_colours, real scalar N_iter, real scalar crit_ll, real scalar theta_nip, real colvector Theta_id, real colvector Theta_dup, pointer matrix point_Uigc, pointer matrix point_Fg, real scalar upd_quad_betw_em, real scalar N_iter_NRF, real scalar crit_par, string scalar theta_name){
+	real matrix dif(_Q, _G ,string colvector diflist, real colvector logL , string scalar dif_format , string scalar dif_tw, string matrix dif_colours, real scalar N_iter, real scalar crit_ll, real scalar theta_nip, real colvector Theta_id, real colvector Theta_dup, pointer matrix point_Uigc, pointer matrix point_Fg, real scalar upd_quad_betw_em, real scalar N_iter_NRF, real scalar crit_par, string matrix eap_names, real scalar dif_cleargraphs){
 		
 		class ITEMS scalar Q
 		Q=_Q
@@ -2423,7 +2751,7 @@ mata:
 									
 			Gdif=cloneG(G)
 
-			em_results				= em(Qdif, Gdif, 0, N_iter, 0, ".", crit_ll, 0 , 1 ,0, ".", theta_nip,J(0,0,.),"", Theta_id, Theta_dup, ".", point_Uigc_dif, point_Fg  , upd_quad_betw_em, N_iter_NRF, crit_par)
+			em_results				= em(Qdif, Gdif, 0, N_iter, 0, ".", crit_ll, 0 , 1 ,"", theta_nip,J(0,0,.),"", Theta_id, Theta_dup, ".", point_Uigc_dif, point_Fg  , upd_quad_betw_em, N_iter_NRF, crit_par)
 			
 			Q_DIF_GR.put(Q_DIF_GR.pars,i, Qdif.get(Qdif.pars, I))
 			Q_DIF_GR.put(Q_DIF_GR.m_curr,i, Qdif.get(Qdif.m_curr, I))
@@ -2517,7 +2845,7 @@ mata:
 			
 			Qdif=cloneQ( selectQ( Qdif, Qdif.get(Qdif.names,(I::I+1)) ) )
 			
-			icc_graph(Qdif, cloneG(Gdif), J(0,0,.),(1\1),dif_format, dif_tw, dif_colours,("","")', point_Uigc,point_Fg, theta_name, 1)			
+			icc_graph(Qdif, cloneG(Gdif), J(0,0,.),(1\1),dif_format, dif_tw, dif_colours,("","")', point_Uigc,point_Fg, eap_names, 1, dif_cleargraphs)			
 		
 		}
 		
@@ -2663,8 +2991,8 @@ mata:
 	
 	
 	
-// draws icc line for a single item parameter matrix
-	string scalar icc_graph_function(_Qi, string matrix colours_vector){
+// draws icc line for a single item parameter matrix. If last argument is if_esf==1, it will return the item response function without formatting 
+	string scalar icc_graph_function(_Qi, string matrix colours_vector, real scalar if_esf){
 	
 		class ITEMS scalar Qi
 		Qi=_Qi	
@@ -2672,46 +3000,98 @@ mata:
 		n_cat=Qi.get(Qi.n_cat,.)
 		model=Qi.get(Qi.m_curr,.)
 		pars=Qi.get(Qi.pars,.)
+		cats=*Qi.get(Qi.p_cat,.)
 		
 		stata_command=""
-		if (n_cat==2 & model=="2plm"){
-			stata_command=stata_command+"(function invlogit("+strofreal(pars[1])+"*(x-"+strofreal(pars[2])+")), range(-4 4) clcolor("+colours_vector[2]+"))"
-		}
-		if (n_cat==2 & model=="pcm"){
-			stata_command=stata_command+"(function invlogit("+strofreal(pars[1])+"*(x-"+strofreal(pars[2])+")), range(-4 4) clcolor("+colours_vector[2]+"))"
-		}
-		if (n_cat==2 & model=="3plm" ){
-			stata_command=stata_command+"(function "+strofreal(pars[3])+" +(1-"+strofreal(pars[3])+")*invlogit("+strofreal(pars[1])+"*(x-"+strofreal(pars[2])+")), range(-4 4) clcolor("+colours_vector[2]+")) || (function "+strofreal(pars[3])+", range(-4 4) clcolor("+colours_vector[1]+") clpattern(dash))"
-		}
-		if (n_cat>2 & model=="grm"){
-			start_cat = 2
-			stata_command=stata_command+"(function 1-invlogit("+strofreal(pars[1])+"*(x-"+strofreal(pars[start_cat])+")), range(-4 4) clcolor("+colours_vector[1]+")) || "
-			for(c=1;c<=n_cat-2;c++){
-				stata_command=stata_command+"(function (invlogit("+strofreal(pars[1])+"*(x-"+strofreal(pars[start_cat+c-1])+"))-invlogit("+strofreal(pars[1])+"*(x-"+strofreal(pars[start_cat+c])+"))), range(-4 4) clcolor("+colours_vector[c+1]+")) || "
+		
+		if(n_cat==2){
+		
+			if(if_esf==0){
+			
+				if (model=="2plm" | model=="pcm"){
+					stata_command=stata_command+"(function invlogit("+strofreal(pars[1])+"*(x-"+strofreal(pars[2])+")), range(-4 4) clcolor("+colours_vector[2]+"))"
+				}
+				if (model=="3plm" ){
+					stata_command=stata_command+"(function "+strofreal(pars[3])+" +(1-"+strofreal(pars[3])+")*invlogit("+strofreal(pars[1])+"*(x-"+strofreal(pars[2])+")), range(-4 4) clcolor("+colours_vector[2]+")) || (function "+strofreal(pars[3])+", range(-4 4) clcolor("+colours_vector[1]+") clpattern(dash))"
+				}
+				
 			}
-			stata_command=stata_command+"(function invlogit("+strofreal(pars[1])+"*(x-"+strofreal(pars[start_cat+c-1])+")), range(-4 4) clcolor("+colours_vector[c+1]+")) || "
-		}
-		if (n_cat>2 & model!="grm"){
-			start_cat = 2
-			expsum_all_function="(1+"
-			for(c=2;c<=n_cat;c++){
-				expsum_all_function=expsum_all_function+"exp("+strofreal(pars[1])+"*("+strofreal(c-1)+"*x-("+strofreal(sum(pars[start_cat..(start_cat+c-2)]))+")))+"
-			}
-			expsum_all_function=expsum_all_function+")"
-			expsum_all_function=subinstr(expsum_all_function,"+)",")")
-			stata_command=stata_command+"(function 1/"+expsum_all_function+", range(-4 4) clcolor(red)) || "
-			for(c=2;c<=n_cat;c++){
-				expsum_cat_function="exp("+strofreal(pars[1])+"*("+strofreal(c-1)+"*x-("+strofreal(sum(pars[start_cat..(start_cat+c-2)]))+")))"				
-				stata_command=stata_command+"(function "+expsum_cat_function+"/"+expsum_all_function+", range(-4 4) clcolor("+colours_vector[c+1]+")) || "
+			else{
+
+				if (model=="2plm" | model=="pcm"){
+					stata_command=stata_command + "( invlogit(" + strofreal(pars[1]) + "*(x-" + strofreal(pars[2]) + ")) )"
+				}
+				if (model=="3plm" ){
+					stata_command=stata_command + "( " + strofreal(pars[3]) + " + (1-" + strofreal(pars[3]) + ")*invlogit(" + strofreal(pars[1]) + "*(x-" + strofreal(pars[2]) + ")) )"
+				}
+			
+				stata_command = stata_command + "*" + strofreal(cats[2]) + " + (1 - " + stata_command + ")*" + strofreal(cats[1])
+				
 			}
 		}
 		
+		if(n_cat>2){
+		
+			if(if_esf==0){
+				if ( model=="grm"){
+					stata_command=stata_command+"(function 1-invlogit("+strofreal(pars[1])+"*(x-"+strofreal(pars[2])+")), range(-4 4) clcolor("+colours_vector[1]+")) || "
+					for(c=2;c<=n_cat-1;c++){
+						stata_command=stata_command+"(function (invlogit("+strofreal(pars[1])+"*(x-"+strofreal(pars[c])+"))-invlogit("+strofreal(pars[1])+"*(x-"+strofreal(pars[c+1])+"))), range(-4 4) clcolor("+colours_vector[c]+")) || "
+					}
+					stata_command=stata_command+"(function invlogit("+strofreal(pars[1])+"*(x-"+strofreal(pars[c])+")), range(-4 4) clcolor("+colours_vector[c]+")) || "
+				}
+				if (model!="grm"){
+					expsum_all_function="(1+"
+					for(c=2;c<=n_cat;c++){
+						expsum_all_function=expsum_all_function+"exp("+strofreal(pars[1])+"*("+strofreal(c-1)+"*x-("+strofreal(sum(pars[2..c]))+")))+"
+					}
+					expsum_all_function=expsum_all_function+")"
+					expsum_all_function=subinstr(expsum_all_function,"+)",")")
+					stata_command=stata_command+"(function 1/"+expsum_all_function+", range(-4 4) clcolor(red)) || "
+					for(c=2;c<=n_cat;c++){
+						expsum_cat_function="exp("+strofreal(pars[1])+"*("+strofreal(c-1)+"*x-("+strofreal(sum(pars[2..c]))+")))"				
+						stata_command=stata_command+"(function "+expsum_cat_function+"/"+expsum_all_function+", range(-4 4) clcolor("+colours_vector[c+1]+")) || "
+					}
+				}
+			
+			}
+			else{
+			
+				if ( model=="grm"){
+					stata_command=stata_command+"( 1-invlogit("+strofreal(pars[1])+"*(x-"+strofreal(pars[2])+")) )*" + strofreal(cats[1])
+					for(c=2;c<=n_cat-1;c++){
+						stata_command=stata_command+" + ( (invlogit("+strofreal(pars[1])+"*(x-"+strofreal(pars[c])+"))-invlogit("+strofreal(pars[1])+"*(x-"+strofreal(pars[c+1])+"))) )*" + strofreal(cats[c])
+					}
+					stata_command=stata_command+" + ( invlogit("+strofreal(pars[1])+"*(x-"+strofreal(pars[c])+")) )*" + strofreal(cats[c])
+				}
+				if (model!="grm"){
+				
+					expsum_all_function="(1+"
+					for(c=2;c<=n_cat;c++){
+						expsum_all_function=expsum_all_function+"exp("+strofreal(pars[1])+"*("+strofreal(c-1)+"*x-("+strofreal(sum(pars[2..c]))+")))+"
+					}
+					expsum_all_function=expsum_all_function+")"
+					expsum_all_function=subinstr(expsum_all_function,"+)",")")
+					
+					
+					stata_command=stata_command+"(  1/"+expsum_all_function+")*" + strofreal(cats[1])
+					for(c=2;c<=n_cat;c++){
+						expsum_cat_function="exp("+strofreal(pars[1])+"*("+strofreal(c-1)+"*x-("+strofreal(sum(pars[2..c]))+")))"				
+						stata_command=stata_command+" + ("+expsum_cat_function+"/"+expsum_all_function+")*" + strofreal(cats[c])
+					}
+				}
+			
+			
+			}
+			
+		}
+			
 		return(stata_command)
 	}
 
 	
 	
-	pointer colvector icc_graph_emppoints(_Qi, real matrix Pj_centile, pointer matrix point_Uixx, pointer matrix point_Fg, string matrix colours_vector){
+	pointer colvector icc_graph_emppoints(_Qi, real matrix Pj_centile, pointer matrix point_Uixx, pointer matrix point_Fg, string matrix colours_vector, real scalar if_esf){
 
 		class ITEMS scalar Qi
 		Qi=_Qi	
@@ -2725,13 +3105,10 @@ mata:
 		
 		stata_command=""
 		
-		X_k_icc = J(icc_intervals,1,.)
-		for(interval=1;interval<=icc_intervals;interval++){
-			X_k_icc[interval,1]=invnormal(interval/icc_intervals-0.5/icc_intervals)
-		}
+		X_k_icc = invnormal( ((1::icc_intervals):-0.5):/icc_intervals )
 
 		n_cat=Qi.get(Qi.n_cat,.)
-		if(n_cat == 2){
+		if(n_cat == 2 & if_esf==0){
 			P_item=J(icc_intervals,1,0)
 		}
 		else{
@@ -2763,7 +3140,7 @@ mata:
 				
 				denominator=colsum( Fg[nonmiss_U_ig_vector] :* Pj_centile_g[nonmiss_U_ig_vector,.] )
 				
-				if(n_cat==2){
+				if(n_cat==2 & if_esf==0){
 					P_item_ig_weight= ( colsum( Fg[*(*point_Uixx[g])[2]] :* Pj_centile_g[*(*point_Uixx[g])[2],.] ) :/ denominator  )'
 					P_item[(1::icc_intervals)]=rowsum( (P_item[(1::icc_intervals)] , P_item_ig_weight * weight_ig) )
 				}
@@ -2796,33 +3173,51 @@ mata:
 		}
 		st_store((1::icc_intervals),ThetaMode_var,X_k_icc)
 		
-		
-		if(n_cat==2){
-			ItemMean_var=st_tempname()
-			tempvarlist=tempvarlist+" "+ItemMean_var
-			index_temp=st_addvar("double",ItemMean_var)
-			st_store((1::icc_intervals),ItemMean_var,P_item[(1::icc_intervals)])
-			stata_command=stata_command+"(scatter  "+ItemMean_var+" "+ThetaMode_var+", mcolor("+substr(colours_vector[2],1,strlen(colours_vector[2])-1)+"*0.5"+char(34)+") msize(vsmall)) || "	
-		}
-		else{
-			for(c=1;c<=n_cat;c++){
+		if(if_esf==0){
+			P_sum=J(0,0,.)
+			if(n_cat==2){
 				ItemMean_var=st_tempname()
 				tempvarlist=tempvarlist+" "+ItemMean_var
 				index_temp=st_addvar("double",ItemMean_var)
-				st_store((1::icc_intervals),ItemMean_var,P_item[(1::icc_intervals),c])
-				stata_command=stata_command+"(scatter  "+ItemMean_var+" "+ThetaMode_var+", mcolor("+substr(colours_vector[c,1],1,strlen(colours_vector[c,1])-1)+"*0.5"+char(34)+") msize(vsmall)) || "
+				st_store((1::icc_intervals),ItemMean_var,P_item[(1::icc_intervals)])
+				stata_command=stata_command+"(scatter  "+ItemMean_var+" "+ThetaMode_var+", mcolor("+substr(colours_vector[2],1,strlen(colours_vector[2])-1)+"*0.5"+char(34)+") msize(vsmall)) || "	
+			}
+			else{
+				for(c=1;c<=n_cat;c++){
+					ItemMean_var=st_tempname()
+					tempvarlist=tempvarlist+" "+ItemMean_var
+					index_temp=st_addvar("double",ItemMean_var)
+					st_store((1::icc_intervals),ItemMean_var,P_item[(1::icc_intervals),c])
+					stata_command=stata_command+"(scatter  "+ItemMean_var+" "+ThetaMode_var+", mcolor("+substr(colours_vector[c],1,strlen(colours_vector[c])-1)+"*0.5"+char(34)+") msize(vsmall)) || "
+				}
 			}
 		}
+		else{
+			cats=*Qi.get(Qi.p_cat,.)
+			P_sum=J(icc_intervals,1,0)
+			for(c=1;c<=rows(cats);c++){
+				P_sum = P_sum :+ ( cats[c] :* P_item[(1::icc_intervals),c])
+			}
+			
+			ItemMean_var=st_tempname()
+			tempvarlist=tempvarlist+" "+ItemMean_var
+			index_temp=st_addvar("double",ItemMean_var)
+			st_store((1::icc_intervals),ItemMean_var,P_sum)
+			stata_command=stata_command+"(scatter  "+ItemMean_var+" "+ThetaMode_var+", mcolor("+substr(colours_vector[1],1,strlen(colours_vector[1])-1)+"*0.5"+char(34)+") msize(vsmall)) || "
+
+		}
 		
-		results = J(3,1,NULL)
+		
+		results = J(4,1,NULL)
 		results[1] = &stata_command
 		results[2] = &tempvarlist
 		results[3] = &dropaddedobs
+		results[4] = &P_sum
 		return(results)
 	}
 
-
-	void icc_graph(_Qx, _Gx, real matrix Pj_centile, real matrix if_makeicc, string scalar icc_format,string scalar icc_twoway, string matrix icc_colours, string matrix icc_prefix_suffix,  pointer matrix point_Uigc, pointer matrix point_Fg, string scalar theta_name, real scalar if_dif){
+	// icc_mode==0 -> ICC; icc_mode==1 -> DIF; icc_mode==2 -> item ESF ; icc_mode==3 -> test ESF ; icc_mode==4 -> test and item ESF
+	void icc_graph(_Qx, _Gx, real matrix Pj_centile, real matrix if_makeicc, string scalar icc_format,string scalar icc_twoway, string matrix icc_colours, string matrix icc_prefix_suffix,  pointer matrix point_Uigc, pointer matrix point_Fg, string matrix eap_names, real scalar icc_mode, real scalar cleargraphs){
 		
 		class ITEMS scalar Qx
 		Qx=_Qx
@@ -2833,12 +3228,12 @@ mata:
 		
 			I=Qx.n
 			N_gr=Gx.n
-	
-			if(theta_name!="."){
-				thetan="_"+theta_name
+
+			if(cols(eap_names)==2){
+				thetan=eap_names[1]
 			}
 			else{
-				thetan=""
+				thetan="theta"
 			}
 	
 			if(rows(Pj_centile)>0){
@@ -2849,7 +3244,7 @@ mata:
 			}
 			
 			// DIF graph
-			if(I==2 & if_dif>0){
+			if(I==2 & icc_mode==1){
 			
 				itemname=Qx.get(Qx.names,1)
 				filename=icc_prefix_suffix[1]+(strlen(icc_prefix_suffix[1])==0)*"DIF"+"_"+itemname+(strlen(icc_prefix_suffix[2])>0)*"_"+icc_prefix_suffix[2]
@@ -2874,38 +3269,28 @@ mata:
 					title_cat="cat"
 				}
 				for(g=1;g<=N_gr;g++){
-					stata_command=stata_command+icc_graph_function(selectQ(Qx,Qx.get(Qx.names,g)), colours_vector[.,g])
+					stata_command=stata_command+icc_graph_function(selectQ(Qx,Qx.get(Qx.names,g)), colours_vector[.,g],0)
 					stata_command=stata_command+ " (function normalden(x,"+strofreal(Gx.get(Gx.pars,g)[1])+","+strofreal(Gx.get(Gx.pars,g)[2])+"), range(-4 4) lcolor("+colours_vector[1,g]+"*0.5) lpattern(dash)) "
 				}
-				stata_command=stata_command+",  legend(cols(2) order(1 "+char(34)+"P(item="+title_cat+"|{&theta};GR)"+char(34)+" "+strofreal(2+shift_legend[1])+" "+char(34)+"{&psi}({&theta};GR)"+char(34)+" "+strofreal(3+shift_legend[1])+" "+char(34)+"P(item="+title_cat+"|{&theta};GF)"+char(34)+" "+strofreal(4+sum(shift_legend))+" "+char(34)+"{&psi}({&theta};GF)"+char(34)+" )) xtitle("+char(34)+"theta"+thetan+char(34)+") xscale(range(-4 4)) ytitle("+char(34)+"P("+itemname+"="+title_cat+")"+char(34)+") yscale(range(0 1)) ylabel(0(0.2)1) graphregion(color(white)) bgcolor(white) "+icc_twoway
+				stata_command=stata_command+",  legend(cols(2) order(1 "+char(34)+"P(item="+title_cat+"|{&theta};GR)"+char(34)+" "+strofreal(2+shift_legend[1])+" "+char(34)+"{&psi}({&theta};GR)"+char(34)+" "+strofreal(3+shift_legend[1])+" "+char(34)+"P(item="+title_cat+"|{&theta};GF)"+char(34)+" "+strofreal(4+sum(shift_legend))+" "+char(34)+"{&psi}({&theta};GF)"+char(34)+" )) xtitle("+char(34)+thetan+char(34)+") xscale(range(-4 4)) ytitle("+char(34)+"P("+itemname+"="+title_cat+")"+char(34)+") yscale(range(0 1)) ylabel(0(0.2)1) graphregion(color(white)) bgcolor(white) "+icc_twoway
+				
+				if( cleargraphs | strpos(icc_twoway,"name"+char(40)) ){
+					gr_name=""
+				}
+				else{
+					gr_name=" name("+filename+")"
+					stata("cap graph drop "+filename)
+				}
+				stata_command=stata_command+gr_name
+				
 				stata(stata_command)
-				if(icc_format=="gph"){
-					stata("qui graph save "+filename+", replace")
-				}
-				if(icc_format=="eps"){
-						stata("qui graph export "+filename+".eps,  mag(200)  replace")
-				}
-				if(icc_format=="png"){
-					if("`c(os)'"=="Windows"){
-						stata("qui graph export "+filename+".png, width(1244) replace")
-					}
-					if("`c(os)'"=="Unix"){
-						stata("qui graph export "+filename+".eps,  mag(200)  replace")
-						if(fileexists(filename+".png")){
-							unlink(filename+".png")
-						}
-						stata("! gs -dSAFER -dEPSCrop -r160 -sDEVICE=pngalpha -o "+filename+".png "+filename+".eps")
-						if(fileexists(filename+".png")){
-							unlink(filename+".eps")
-						}
-						else{
-							display("unable to perform: ! gs -dSAFER -dEPSCrop -r160 -sDEVICE=pngalpha -o "+filename+".png "+filename+".eps")
-						}
-					}
-				}
+				
+				graph_save(icc_format, filename)
 				
 			}
-			else{
+			
+			// ICC graph
+			if(icc_mode==0){
 				colours_vector=(char(34)+"242 0 60"+char(34) , char(34)+"248 89 0"+char(34) , char(34)+"242 136 0"+char(34) , char(34)+"242 171 0"+char(34) , char(34)+"239 204 0"+char(34) , char(34)+"240 234 0"+char(34) , char(34)+"177 215 0"+char(34) , char(34)+"0 202 36"+char(34) , char(34)+"0 168 119"+char(34) , char(34)+"0 167 138"+char(34) , char(34)+"0 165 156"+char(34) , char(34)+"0 163 172"+char(34) , char(34)+"0 147 175"+char(34) , char(34)+"0 130 178"+char(34) , char(34)+"0 110 191"+char(34) , char(34)+"125 0 248"+char(34) , char(34)+"159 0 197"+char(34) , char(34)+"185 0 166"+char(34) , char(34)+"208 0 129"+char(34) , char(34)+"226 0 100" + char(34), char(34)+"161 0 40" + char(34) , char(34)+"165 59 0" + char(34) , char(34)+"161 91 0" + char(34) , char(34)+"161 114 0" + char(34) , char(34)+"159 136 0" + char(34) , char(34)+"160 156 0" + char(34) , char(34)+"118 143 0" + char(34) , char(34)+"0 135 24" + char(34) , char(34)+"0 112 79" + char(34) , char(34)+"0 111 92" + char(34))'
 				if(sum(icc_colours:!="")){
 					colours_vector_a= char(34):+ subinstr(icc_colours,char(34),"") :+char(34)
@@ -2956,39 +3341,28 @@ mata:
 								}
 							}
 							
-							icc_graph_emppoints_res		= icc_graph_emppoints( selectQ(Qx,Qx.get(Qx.names,i)) , Pj_centile, point_Uixx, point_Fg, colours_vector)
+							icc_graph_emppoints_res		= icc_graph_emppoints( selectQ(Qx,Qx.get(Qx.names,i)) , Pj_centile, point_Uixx, point_Fg, colours_vector, 0)
 							stata_command				= stata_command+(*icc_graph_emppoints_res[1])
 						}
 
-						stata_command = stata_command+icc_graph_function(selectQ(Qx,Qx.get(Qx.names,i)), colours_vector)
+						stata_command = stata_command+icc_graph_function(selectQ(Qx,Qx.get(Qx.names,i)), colours_vector,0)
 						
-						stata_command=stata_command+", legend(off) xtitle("+char(34)+"theta"+thetan+char(34)+") xscale(range(-4 4)) ytitle("+char(34)+"P("+itemname+"="+title_cat+")"+char(34)+") yscale(range(0 1)) ylabel(0(0.2)1) graphregion(color(white)) bgcolor(white) graphregion(margin(r="+marginsize+"))"+ catcaption	+icc_twoway
+						stata_command=stata_command+", legend(off) xtitle("+char(34)+thetan+char(34)+") xscale(range(-4 4)) ytitle("+char(34)+"P("+itemname+"="+title_cat+")"+char(34)+") yscale(range(0 1)) ylabel(0(0.2)1) graphregion(color(white)) bgcolor(white) graphregion(margin(r="+marginsize+"))"+ catcaption	+icc_twoway
 		
+						if( cleargraphs | strpos(icc_twoway,"name"+char(40)) ){
+							gr_name=""
+						}
+						else{
+							gr_name=" name("+filename+")"
+							stata("cap graph drop "+filename)
+						}
+						stata_command=stata_command+gr_name
+						
+						
 						stata(stata_command)
-						if(icc_format=="gph"){
-							stata("qui graph save "+filename+", replace")
-						}
-						if(icc_format=="eps"){
-								stata("qui graph export "+filename+".eps,  mag(200)  replace")
-						}
-						if(icc_format=="png"){
-							if("`c(os)'"=="Windows"){
-								stata("qui graph export "+filename+".png, width(1244) replace")
-							}
-							if("`c(os)'"=="Unix"){
-								stata("qui graph export "+filename+".eps, mag(200) replace")
-								if(fileexists(filename+".png")){
-									unlink(filename+".png")
-								}
-								stata("! gs -dSAFER -dEPSCrop -r160 -sDEVICE=pngalpha -o "+filename+".png "+filename+".eps")
-								if(fileexists(filename+".png")){
-									unlink(filename+".eps")
-								}
-								else{
-									display("unable to perform: ! gs -dSAFER -dEPSCrop -r160 -sDEVICE=pngalpha -o "+filename+".png "+filename+".eps")
-								}
-							}
-						}
+						
+						graph_save(icc_format, filename)
+						
 						if(icc_obs==1){
 							stata( "qui drop "+(*icc_graph_emppoints_res[2]) )
 							if(*icc_graph_emppoints_res[3]!=""){
@@ -2997,11 +3371,182 @@ mata:
 						}
 					}
 				}
-			}	
+			}
+					
+			// ESF graph
+			if(icc_mode>=2){
+			
+				if(sum(icc_colours:!="")){
+					esf_colour = char(34):+ subinstr(icc_colours,char(34),"") :+char(34)	
+				}
+				else{
+					esf_colour = char(34):+ "green" :+char(34)
+				}		
+				
+				if(icc_mode>=3){
+					tau_min = 0
+					tau_max = 0
+					if(icc_obs==1){
+						E_tau = J(cols(Pj_centile),1,0)
+					}
+					tau_function=" 0 "
+				}
+				
+				for(i=1;i<=I;i++){
+					if(if_makeicc[i]){
+
+						itemname=Qx.get(Qx.names,i)
+						filename=icc_prefix_suffix[1]+(strlen(icc_prefix_suffix[1])==0)*"IESF"+"_"+itemname+(strlen(icc_prefix_suffix[2])>0)*"_"+icc_prefix_suffix[2]
+						
+						stata_command="qui twoway "
+						n_cat = Qx.get(Qx.n_cat,i)
+						
+						y_min = (*Qx.get(Qx.p_cat,i))[1]
+						y_max = (*Qx.get(Qx.p_cat,i))[n_cat]
+						
+						if(icc_mode>=3){
+							tau_min = tau_min + y_min
+							tau_max = tau_max + y_max
+						}
+						
+						y_labs_v = strofreal (( ((0::5)/5) * (y_max-y_min) ) :+ y_min)
+						y_labs = ""
+						for(v=1;v<=rows(y_labs_v);v++){
+							y_labs = y_labs + " " + y_labs_v[v]
+						}
+						y_range=strofreal(y_min) + " " + strofreal(y_max)
+						
+						if(icc_obs==1){
+							point_Uixx = J(1,N_gr,NULL)
+							for(g=1;g<=N_gr;g++){
+								if(Qx.get(Qx.g_tot,i)[g]>0){
+									i_g = sum(Qx.get(Qx.g_tot,1::i)[.,g]:>0)
+									point_Uixx[g]	= point_Uigc[i_g,g]
+								}
+								else{
+									point_Uixx[g]	= &J(0,0,.)
+								}
+							}
+							
+							icc_graph_emppoints_res		= icc_graph_emppoints( selectQ(Qx,Qx.get(Qx.names,i)) , Pj_centile, point_Uixx, point_Fg, esf_colour,1)
+							stata_command				= stata_command+(*icc_graph_emppoints_res[1])
+							
+							if(icc_mode>=3){
+								E_tau = E_tau :+ (*icc_graph_emppoints_res[4]) 
+							}
+						}
+
+						esf_curve = icc_graph_function(selectQ(Qx,Qx.get(Qx.names,i)), "" ,1)
+						
+						if(icc_mode>=3){
+							tau_function = tau_function + " + " + esf_curve
+						}
+							
+						if(icc_mode!=3){
+							stata_command = stata_command + " (function " + esf_curve + ",range(-4 4) color("+ esf_colour +"))"
+						
+							stata_command=stata_command+", legend(off) xtitle("+char(34)+thetan+char(34)+") xscale(range(-4 4)) ytitle("+char(34)+"E("+itemname+"|{&theta})"+char(34)+") yscale(range(" + y_range + ")) ylabel(" + y_labs + ") graphregion(color(white)) bgcolor(white)" + icc_twoway
+			
+							if( cleargraphs | strpos(icc_twoway,"name"+char(40)) ){
+								gr_name=""
+							}
+							else{
+								gr_name=" name("+filename+")"
+								stata("cap graph drop "+filename)
+							}
+							stata_command=stata_command+gr_name
+							
+							
+							stata(stata_command)
+							
+							graph_save(icc_format, filename)
+						}
+						
+						if(icc_obs==1){
+							stata( "qui drop "+(*icc_graph_emppoints_res[2]) )
+							if(*icc_graph_emppoints_res[3]!=""){
+								stata(*icc_graph_emppoints_res[3])
+							}
+						}
+					}
+				}
+			}
+			
+			// TRF graph
+			if(icc_mode>=3){
+			
+				filename=icc_prefix_suffix[1]+(strlen(icc_prefix_suffix[1])>0)*"_"+"TESF"+(strlen(icc_prefix_suffix[2])>0)*"_"+icc_prefix_suffix[2]
+				
+				stata_command="qui twoway "
+				
+				tempvarlist=""
+				dropaddedobs=""
+				
+				if(icc_obs==1){
+				
+					icc_intervals = rows(E_tau)
+					X_k_icc = invnormal( ((1::icc_intervals):-0.5):/icc_intervals )
+				
+					ThetaMode_var=st_tempname()
+					tempvarlist=tempvarlist+" "+ThetaMode_var
+					index_temp=st_addvar("double",ThetaMode_var)
+					nobs=st_nobs()
+					if(icc_intervals>nobs){
+						st_addobs(icc_intervals-nobs)
+						dropaddedobs=dropaddedobs+"qui drop in "+strofreal(nobs+1)+"/"+strofreal(icc_intervals)
+					}
+					st_store((1::icc_intervals),ThetaMode_var,X_k_icc)
+					
+					ItemMean_var=st_tempname()
+					tempvarlist=tempvarlist+" "+ItemMean_var
+					index_temp=st_addvar("double",ItemMean_var)
+					st_store((1::icc_intervals),ItemMean_var,E_tau)
+					
+					stata_command=stata_command+"(scatter  "+ItemMean_var+" "+ThetaMode_var+", mcolor("+substr(esf_colour,1,strlen(esf_colour)-1)+"*0.5"+char(34)+") msize(vsmall)) || "	
+					
+
+				}
+			
+				stata_command = stata_command + " (function " + tau_function + ",range(-4 4) color("+ esf_colour +"))"
+					
+				y_min = tau_min
+				y_max = tau_max
+				
+				y_labs_v = strofreal (( ((0::5)/5) * (y_max-y_min) ) :+ y_min)
+				y_labs = ""
+				for(v=1;v<=rows(y_labs_v);v++){
+					y_labs = y_labs + " " + y_labs_v[v]
+				}
+				y_range=strofreal(y_min) + " " + strofreal(y_max)
+					
+				stata_command=stata_command+", legend(off) xtitle("+char(34)+thetan+char(34)+") xscale(range(-4 4)) ytitle("+char(34)+"E(X|{&theta})"+char(34)+") yscale(range(" + y_range + ")) ylabel(" + y_labs + ") graphregion(color(white)) bgcolor(white)" + icc_twoway
+
+				if( cleargraphs | strpos(icc_twoway,"name"+char(40)) ){
+					gr_name=""
+				}
+				else{
+					gr_name=" name("+filename+")"
+					stata("cap graph drop "+filename)
+				}
+				stata_command=stata_command+gr_name
+				
+				
+				stata(stata_command)
+				
+				graph_save(icc_format, filename)
+				
+				if(icc_obs==1){
+					stata( "qui drop "+tempvarlist )
+					if(dropaddedobs==""){
+						stata(dropaddedobs)
+					}
+				}
+				
+			}		
 		}
 	}
 	
-	pointer colvector em(_Q, _G, real scalar estimate_dist, real scalar N_iter, real scalar trace, string scalar errors, real scalar crit_ll, real scalar guessing_attempts, real scalar guessing_lrcrit,real scalar add_theta, string scalar theta_name, real scalar theta_nip, real matrix theta_scale, string scalar theta_notes, real colvector Theta_id, real colvector Theta_dup, string scalar savingname, pointer matrix point_Uigc, pointer matrix point_Fg , real scalar upd_quad_betw_em, real scalar N_iter_NRF, real scalar crit_par){
+	pointer colvector em(_Q, _G, real scalar estimate_dist, real scalar N_iter, real scalar trace, string scalar errors, real scalar crit_ll, real scalar guessing_attempts, real scalar guessing_lrcrit,string matrix eap_names, real scalar theta_nip, real matrix theta_scale, string scalar theta_notes, real colvector Theta_id, real colvector Theta_dup, string scalar savingname, pointer matrix point_Uigc, pointer matrix point_Fg , real scalar upd_quad_betw_em, real scalar N_iter_NRF, real scalar crit_par){
 
 		class ITEMS scalar Q
 		Q=_Q
@@ -3139,9 +3684,41 @@ mata:
 					}
 					
 					Q.put(Q.pars,haywire_indexes,Q.get(Q.fix,haywire_indexes))
+					
 					starting_values_logistic(Q, G, Theta_id, Theta_dup, point_Uigc, X_var )
+					
+					if(sum(Q.get(Q.init_fail,.))){
+							
+						dropped_items_range		= select((1::Q.n), Q.get(Q.init_fail,.):>0 )
+						dropped_items		= Q.get(Q.names,dropped_items_range)
+						dropped_item_whyfail= Q.get(Q.init_fail,dropped_items_range)
+						display("Note: "+strofreal(rows(dropped_items))+" items are dropped from analysis:")
+						for(i=1;i<=rows(dropped_items);i++){
+							if(dropped_item_whyfail[i]==1){
+								display("      failed generating starting values (convergence): "+dropped_items[i])
+							}
+							if(dropped_item_whyfail[i]==2){
+								display("      failed generating starting values (a<0)        : "+dropped_items[i])
+							}
+						}
+						
+						kept_items_range	= select((1::Q.n), Q.get(Q.init_fail,.):==0 )
+						kept_items			= Q.get(Q.names,kept_items_range)
+						Q.populate(kept_items)
+					
+						I=Q.n
+						guesslist = select(Q.get(Q.names,.),(Q.get(Q.m_curr,.):=="2plm"):*(Q.get(Q.m_asked,.):=="3plm"))
+						I_guess = rows(guesslist)
+						
+						data_pointers	= return_data_pointers(Q,G)
+						point_Uigc		= *data_pointers[1]
+						point_Fg		= *data_pointers[2]
+						Theta_id		= *data_pointers[3]
+						Theta_dup		= *data_pointers[4]
+						data_pointers	= J(0,0,NULL)
+						
+					}
 								
-
 				}
 													
 				if(errors=="sem"){
@@ -3213,7 +3790,7 @@ mata:
 		}
 
 		if(display_logLdecrese){
-			display("Warning: logL started to decrease, this should not happen in EM algorithm, try increasing nip() or use noupd_quad_betw_em if multigroup")
+			display("Warning: logL started to decrease, this should not happen in EM algorithm, try increasing nip() or use slow if multigroup")
 			if_em_converged=0
 		}
 		
@@ -3228,18 +3805,13 @@ mata:
 		}
 
 
-// recalculate ll, obtain theta and theta_se estimates if requested			
-		ll_theta_se = return_ll_theta_se(Q, G, add_theta, theta_nip, point_Uigc, point_Fg)
-		
+// recalculate ll, obtain theta and theta_se estimates if requested		
+		add_theta = (cols(eap_names)==2)
+		ll_theta_se = return_ll_theta_se(Q, G, add_theta , theta_nip, point_Uigc, point_Fg)
+	
 		if(add_theta==1){
-			if(theta_name!="."){
-				thvar="theta_"+theta_name
-				sevar="se_theta_"+theta_name
-			}
-			else{
-				thvar="theta"
-				sevar="se_theta"
-			}
+			thvar=eap_names[1]
+			sevar=eap_names[2]
 			index_temp=st_addvar("double",(thvar,sevar))
 			if(cols(theta_scale)==2){
 				m_ref=G.get(G.pars,1)[1]
@@ -4126,6 +4698,18 @@ mata:
 		if(sum(par_labels:=="c") & rows(par_labels)>3){
 			par_labels=par_labels[1::2]\par_labels[rows(par_labels)]\par_labels[3::rows(par_labels)-1]
 		}
+		if(sum(par_labels:=="b20")){
+			pos_b2=select(1::rows(par_labels),par_labels:=="b2")
+			pos_b3=select(1::rows(par_labels),par_labels:=="b3")
+			par_labels=par_labels[1::pos_b2]\par_labels[pos_b3::rows(par_labels)]\par_labels[pos_b2+1::pos_b3-1]
+		}
+		if(sum(par_labels:=="b10")){
+			pos_b1=select(1::rows(par_labels),par_labels:=="b1")
+			pos_b2=select(1::rows(par_labels),par_labels:=="b2")
+			par_labels=par_labels[1::pos_b1]\par_labels[pos_b2::rows(par_labels)]\par_labels[pos_b1+1::pos_b2-1]
+		}
+
+
 		n_lab=rows(par_labels)
 		par_labels_err="se_":+par_labels
 		
@@ -4240,7 +4824,7 @@ mata:
 		
 		for(i=1;i<=I;i++){
 			
-			if(Q.get(Q.n_par,i):!=Q.get(Q.n_par_model,i)){
+			if(Q.get(Q.n_par,i):!=Q.get(Q.n_par_model,i) & Q.get(Q.init_fail,i)==0){
 			
 				i_name=Q.get(Q.names,i)
 				
@@ -4783,9 +5367,15 @@ mata:
 					
 					statasetversion(1000) // resetting to Stata 1000
 					
-					prior_nonmiss			= select((1::rows(current_prior_E)),current_prior_E:!=.)
-					
-					prior_mean[prior_nonmiss]= rnormal(1,1,current_prior_E[prior_nonmiss],current_prior_S[prior_nonmiss])
+					prior_ES=(current_prior_E, current_prior_S )
+					prior_ES_unique=uniqrows(prior_ES)
+					for(p=1;p<=rows(prior_ES_unique);p++){
+						if(prior_ES_unique[p,1]!=.){
+							E_perturbed = rnormal(1,1,prior_ES_unique[p,1],prior_ES_unique[p,2])
+							prior_sel	= select( (1::rows(prior_ES)),rowsum(prior_ES:==prior_ES_unique[p,.]):==2)
+							prior_mean[prior_sel] = J(rows(prior_sel),1,E_perturbed)
+						}
+					}
 					
 					residuals = theta_tt-prior_mean
 										
@@ -4823,7 +5413,7 @@ mata:
 		return(PV)
 	}
 
-		
+	
 	real colvector mcmc_step(_Qx, real matrix theta_t, real matrix sd_prop , real matrix prior_mean, real matrix prior_sd, pointer matrix point_Uigc_dup){
 
 		class ITEMS scalar Qx
@@ -4846,7 +5436,6 @@ mata:
 		return(theta_tt)
 
 	}
-	
 	
 	real colvector likelihood(_Qx, real colvector theta, pointer matrix point_Uigc_dup){
 
@@ -5110,7 +5699,7 @@ mata:
 						}
 						if(saved_init_rown[sel,2]=="3plm"){
 							Q.put(Q.init,i,saved_init_iprs[sel,1..3])
-							if(saved_init_iprs[i,3]!=.){
+							if(saved_init_iprs[sel,3]!=.){
 								Q.put(Q.m_curr,i,"3plm")
 							}
 							else{
@@ -5154,7 +5743,7 @@ mata:
 						}
 						if(saved_fix_rown[sel,2]=="3plm"){
 							Q.put(Q.fix,i,saved_fix_iprs[sel,1..3])
-							if(saved_fix_iprs[i,3]!=.){
+							if(saved_fix_iprs[sel,3]!=.){
 								Q.put(Q.m_curr,i,"3plm")
 							}
 							else{
@@ -5514,26 +6103,15 @@ mata:
 		Q.put(Q.g_tot,.,item_group_totalobs)
 		Q.put(Q.p_cat,.,point_item_cats)
 		
-		
-		dropped_items_range=select((1::N_itms),   (item_n_cat:==0)  :+  ((item_n_cat:==1):*(Q.get(Q.n_fix,.):==0))  )
-		if(rows(dropped_items_range)){
-			dropped_items		= itemlist[dropped_items_range]
-			dropped_item_n_cat	= item_n_cat[dropped_items_range]
-
-			display("Note: "+strofreal(rows(dropped_items))+" items are dropped from analysis:")
-			for(i=1;i<=rows(dropped_items);i++){
-				if(dropped_item_n_cat[i]==0){
-					display("      item has all values missing: "+dropped_items[i])	
-				}
-				if(dropped_item_n_cat[i]==1){
-					display("      item has zero variance     : "+dropped_items[i])
-				}
-			}
-			
-			kept_items		= select(Q.get(Q.names,.),  ( (item_n_cat:==0)  :+  ((item_n_cat:==1):*(Q.get(Q.n_fix,.):==0)) ):==0 )
-			Q.populate(kept_items)
+		dropped_items_miss=select((1::N_itms),   (rowsum(item_group_totalobs):==0) )
+		if(rows(dropped_items_miss)){
+			Q.put(Q.init_fail, dropped_items_miss, J(rows(dropped_items_miss),1,3) )
 		}
-
+		dropped_items_zerovar=select((1::N_itms),   (item_n_cat:==1):*(Q.get(Q.n_fix,.):==0) )
+		if(rows(dropped_items_zerovar)){
+			Q.put(Q.init_fail, dropped_items_zerovar, J(rows(dropped_items_zerovar),1,4) )
+		}
+		
 		class GROUPS scalar G		
 		
 		G.populate(group_vals)
@@ -5595,40 +6173,30 @@ mata:
 		return(duplist)
 	}
 
-	function verify_thetaexist(string scalar theta_name){
+	function verify_thetaexist(string matrix theta_names){
 		existlist=""
-		if(theta_name=="."){
-			if(_st_varindex("theta")<.){
-				existlist=existlist+" theta"
-			}
-			if(_st_varindex("se_theta")<.){
-				existlist=existlist+" se_theta"
-			}
+		if(_st_varindex(theta_names[1])<.){
+			existlist=existlist+" "+theta_names[1]
 		}
-		else{
-			if(_st_varindex("theta_"+theta_name)<.){
-				existlist=existlist+"theta_"+theta_name
-			}
-			if(_st_varindex("se_theta_"+theta_name)<.){
-				existlist=existlist+" se_theta_"+theta_name
-			}
+		if(_st_varindex(theta_names[2])<.){
+			existlist=existlist+" "+theta_names[2]
 		}
 		return(existlist)
 	}
 	
 	
-	function verify_pvexist(real scalar pv, string scalar theta_name){
+	function verify_pvexist(real scalar pv, string scalar theta_suffix){
 		existlist=""
-		if(theta_name=="."){
+		if(theta_suffix=="."){
 			s=sum(_st_varindex( ("pv_":+strofreal((1..pv))) ):<.)
 			if(s){
 				existlist=existlist+"pv_.. (x"+strofreal(s)+")"
 			}
 		}
 		else{
-			s=sum(_st_varindex( ("pv_":+strofreal((1..pv)):+"_":+theta_name) ):<.)
+			s=sum(_st_varindex( ("pv_":+strofreal((1..pv)):+"_":+theta_suffix) ):<.)
 			if(s){
-				existlist=existlist+"pv_.._"+theta_name+" (x"+strofreal(s)+")"
+				existlist=existlist+"pv_.._"+theta_suffix+" (x"+strofreal(s)+")"
 			}
 		}
 		return(existlist)
@@ -5945,6 +6513,7 @@ mata:
 		K=30
 		Pkq=J(rows(P_all),N_interv,.)
 		Ekq=J(rows(P_all),N_interv,.)
+		PQq=J(rows(P_all),N_interv,.)
 		Pkq_less_i=J(rows(P_all),N_interv,.)
 		
 		for(d=1;d<=N_interv;d++){		
@@ -5987,6 +6556,7 @@ mata:
 				}
 			}
 			Ekq[.,d]=rowsum( (*PXk_Uj_fit_results[2]) :* E_quadpts)
+			PQq[.,d]=rowsum( (*PXk_Uj_fit_results[2]) :* E_quadpts :* ((n_cat_i-1):-E_quadpts))
 		}
 	
 		Pkq_simplex=Pkq:/P_all
@@ -6001,7 +6571,7 @@ mata:
 		
 		d=(O-E)
 		
-		NPQ=exp_N:*E:*((n_cat_i-1):-E)
+		NPQ=colsum(Fg_i:*(PQq:/Pkq_less_i):*Pkq_simplex)
 		
 		W			=	d*inv_COV_D*d'
 		df_W		=	rank(inv_COV_D)-n_est_par
@@ -6100,15 +6670,20 @@ mata:
 		
 		NPQ_d_crit=NPQ_all/N_interv
 		
-		
+		if( (NPQ_all/N_interv)>1 ){
+			N_int=1000
+		}
+		else{
+			N_int=10000
+		}
 		K=11
-		N_int=1000
 		bord=-10,invnormal((1..N_int-1):/N_int),10
 		E_d=J(1,N_int,.)
 		for(d=1;d<=N_int;d++){
 			U=bord[d+1]
 			L=bord[d]
 			
+			// performed only on the refference distribution; would be better to average distributions over number of item observations within groups
 			quad_GL	= get_quad_GL(U, L, K, Gx.get(Gx.pars,1))
 			quadpts= (*quad_GL[1]')
 			P_N01_quadpts= (*quad_GL[2]')
@@ -6415,85 +6990,86 @@ mata:
 		itemlist	= Q.get(Q.names,.)
 				
 		for(i=1;i<=Q.n;i++){
+			if(Q.get(Q.init_fail,i)!=3){
 		
-			if(Q.get(Q.m_curr,i)==""){
-				if(Q.get(Q.n_cat,i)==2){
-					if(sum(guesslist:==itemlist[i])){
-						Q.put(Q.m_curr,i,"2plm")
-						Q.put(Q.m_asked,i,"3plm")
-					}
-					else{
-						Q.put(Q.m_curr,i,"2plm")
-						Q.put(Q.m_asked,i,"2plm")
-					}
-				}
-				if(sum(pcmlist:==itemlist[i])){
-					Q.put(Q.m_curr,i,"pcm")
-					Q.put(Q.m_asked,i,"pcm")
-				}
-				else{
-					if(Q.get(Q.n_cat,i)>2){
-						if(sum(gpcmlist:==itemlist[i])){
-							Q.put(Q.m_curr,i,"pcm")
-							Q.put(Q.m_asked,i,"gpcm")
+				if(Q.get(Q.m_curr,i)==""){
+					if(Q.get(Q.n_cat,i)==2){
+						if(sum(guesslist:==itemlist[i])){
+							Q.put(Q.m_curr,i,"2plm")
+							Q.put(Q.m_asked,i,"3plm")
 						}
 						else{
-							Q.put(Q.m_curr,i,"grm")
-							Q.put(Q.m_asked,i,"grm")						
+							Q.put(Q.m_curr,i,"2plm")
+							Q.put(Q.m_asked,i,"2plm")
+						}
+					}
+					if(sum(pcmlist:==itemlist[i])){
+						Q.put(Q.m_curr,i,"pcm")
+						Q.put(Q.m_asked,i,"pcm")
+					}
+					else{
+						if(Q.get(Q.n_cat,i)>2){
+							if(sum(gpcmlist:==itemlist[i])){
+								Q.put(Q.m_curr,i,"pcm")
+								Q.put(Q.m_asked,i,"gpcm")
+							}
+							else{
+								Q.put(Q.m_curr,i,"grm")
+								Q.put(Q.m_asked,i,"grm")						
+							}
 						}
 					}
 				}
-			}
-			
-			if( (Q.get(Q.m_asked,i)=="gpcm" | Q.get(Q.m_asked,i)=="grm" ) & Q.get(Q.n_cat,i)==2 ){
-				Q.put(Q.m_curr,i,"2plm")
-				Q.put(Q.m_asked,i,"2plm")
-			}
-			
-			if(Q.get(Q.m_curr,i)=="2plm" & sum(guesslist:==itemlist[i]) ){
-				Q.put(Q.m_asked,i,"3plm")
-			}
-			
-			if(Q.get(Q.m_curr,i)=="2plm"){
-				n_par_model=2
-				par_labs=("a","b")
-			}
-			if(Q.get(Q.m_curr,i)=="3plm"){
-				n_par_model=3
-				par_labs=("a","b","c")
-			}
-			if(Q.get(Q.m_curr,i)!="2plm" & Q.get(Q.m_curr,i)!="3plm"){
-				n_par_model=Q.get(Q.n_cat,i)
-				par_labs=("a"),("b":+strofreal(1..Q.get(Q.n_cat,i)-1))
-			}
-			Q.put(Q.n_par_model,i,n_par_model)
-			Q.put(Q.par_labs,i,par_labs)
-			
-			delta=n_par_model-cols(Q.get(Q.pars,i))
-			if(delta>0){
-				Q.put(Q.pars,i,(Q.get(Q.pars,i),J(1,delta,.)))
-			}
-			delta=n_par_model-cols(Q.get(Q.fix,i))
-			if(delta>0){
-				Q.put(Q.fix,i,(Q.get(Q.fix,i),J(1,delta,.)))
-			}
-			delta=n_par_model-cols(Q.get(Q.init,i))
-			if(delta>0){
-				Q.put(Q.init,i,(Q.get(Q.init,i),J(1,delta,.)))
-			}
-			
-			if(Q.get(Q.m_curr,i)=="pcm"){
-				fix_i=Q.get(Q.fix,i)
-				if(fix_i[1]==.){
-					fix_i[1]=1
-					Q.put(Q.fix,i,fix_i)
+				
+				if( (Q.get(Q.m_asked,i)=="gpcm" | Q.get(Q.m_asked,i)=="grm" ) & Q.get(Q.n_cat,i)==2 ){
+					Q.put(Q.m_curr,i,"2plm")
+					Q.put(Q.m_asked,i,"2plm")
 				}
-			}
-		
-			cns=(Q.get(Q.fix,i):!=.)
-			Q.put(Q.cns,i,cns)
-
+				
+				if(Q.get(Q.m_curr,i)=="2plm" & sum(guesslist:==itemlist[i]) ){
+					Q.put(Q.m_asked,i,"3plm")
+				}
+				
+				if(Q.get(Q.m_curr,i)=="2plm"){
+					n_par_model=2
+					par_labs=("a","b")
+				}
+				if(Q.get(Q.m_curr,i)=="3plm"){
+					n_par_model=3
+					par_labs=("a","b","c")
+				}
+				if(Q.get(Q.m_curr,i)!="2plm" & Q.get(Q.m_curr,i)!="3plm"){
+					n_par_model=Q.get(Q.n_cat,i)
+					par_labs=("a"),("b":+strofreal(1..Q.get(Q.n_cat,i)-1))
+				}
+				Q.put(Q.n_par_model,i,n_par_model)
+				Q.put(Q.par_labs,i,par_labs)
+				
+				delta=n_par_model-cols(Q.get(Q.pars,i))
+				if(delta>0){
+					Q.put(Q.pars,i,(Q.get(Q.pars,i),J(1,delta,.)))
+				}
+				delta=n_par_model-cols(Q.get(Q.fix,i))
+				if(delta>0){
+					Q.put(Q.fix,i,(Q.get(Q.fix,i),J(1,delta,.)))
+				}
+				delta=n_par_model-cols(Q.get(Q.init,i))
+				if(delta>0){
+					Q.put(Q.init,i,(Q.get(Q.init,i),J(1,delta,.)))
+				}
+				
+				if(Q.get(Q.m_curr,i)=="pcm"){
+					fix_i=Q.get(Q.fix,i)
+					if(fix_i[1]==.){
+						fix_i[1]=1
+						Q.put(Q.fix,i,fix_i)
+					}
+				}
 			
+				cns=(Q.get(Q.fix,i):!=.)
+				Q.put(Q.cns,i,cns)
+
+			}
 		}
 	}
 	
@@ -6539,7 +7115,7 @@ mata:
 				
 			}
 			else{
-				stata("di in red "+char(34)+"Warning: priors are implemented only for 2plm and 3plm items and there are no such items in varlist of priors() option; priors will not be used"+char(34))
+				stata("di in red "+char(34)+"{p 0 2}Warning: priors are implemented only for 2plm and 3plm items and there are no such items in varlist of priors() option; priors will not be used{p_end}"+char(34))
 			}
 			
 		}
@@ -6558,7 +7134,7 @@ mata:
 	
 		if(sum(Q.get(Q.n_fix,.))==0 & estimate_dist==1){
 			estimate_dist=0
-			stata("di in red "+char(34)+"Warning: parameters of reference group will remain fixed; dist requires fixing parameters of at least one item"+char(34))
+			stata("di in red "+char(34)+"{p 0 2}Warning: parameters of reference group will remain fixed; dist requires fixing parameters of at least one item{p_end}"+char(34))
 		}
 		
 		if(initdmatrix==""){
@@ -6647,7 +7223,8 @@ mata:
 
 		
 		if(checklist==.){
-			checklist=(strlen((ipar\icats\grpar)):>0)
+		//	checklist=(strlen((ipar\icats\grpar\grn\igrn)):>0)
+		checklist=(strlen((ipar\icats\grpar)):>0)
 		}
 
 		//ipar
@@ -6658,12 +7235,12 @@ mata:
 			
 			// proper size
 			if(cols(ipar_val)<2){
-				stata("di as err "+char(34)+"item parameter matrix ("+ipar+") has "+strofreal(cols(ipar_val))+" columns"+char(34))
-				_error("at least 2 columns are required to specify the simplest models")
+				stata("di as err "+char(34)+"{p 0 2}item parameter matrix ("+ipar+") has "+strofreal(cols(ipar_val))+" columns{p_end}"+char(34))
+				_error("{p 0 2}at least 2 columns are required to specify the simplest models{p_end}")
 			}
 			if(rows(ipar_val)<1){
-				stata("di as err "+char(34)+"item parameter matrix ("+ipar+") has "+strofreal(rows(ipar_val))+" rows"+char(34))
-				_error("at least 1 row is required")
+				stata("di as err "+char(34)+"{p 0 2}item parameter matrix ("+ipar+") has "+strofreal(rows(ipar_val))+" rows{p_end}"+char(34))
+				_error("{p 0 2}at least 1 row is required{p_end}")
 			}
 			
 			// if parnames are ok - general
@@ -6685,9 +7262,9 @@ mata:
 				}
 			}
 			if( sum(rowsum((ipar_coln':==proper_colnames)):==cols(ipar_val))!=1 ){
-				stata("di as err "+char(34)+"parameter names in columns of item parameter matrix ("+ipar+") are incorrect:"+char(34))
+				stata("di as err "+char(34)+"{p 0 2}parameter names in columns of item parameter matrix ("+ipar+") are incorrect:{p_end}"+char(34))
 				di_matrix_as_err(ipar_coln',J(0,cols(ipar_val),""))
-				stata("di as err "+char(34)+"for a "+strofreal(cols(ipar_val))+"-column item parameter matrix correct entries can be only one of the following.."+char(34))
+				stata("di as err "+char(34)+"{p 0 2}for a "+strofreal(cols(ipar_val))+"-column item parameter matrix correct entries can be only one of the following..{p_end}"+char(34))
 				di_matrix_as_err((firstcol,proper_colnames),J(0,1+cols(ipar_val),""))
 				_error("provide proper column names of item parameter matrix")
 			}
@@ -6696,7 +7273,7 @@ mata:
 			// if model names are ok
 			row_errors=(rowsum(J(1,5,ipar_rown[.,2]):==("2plm","3plm","grm","pcm","gpcm")):!=1)
 			if(sum(row_errors)){
-				stata("di as err "+char(34)+ strofreal(sum(row_errors)) + " rows in item parameter matrix ("+ipar+") have incorrect model specification:"+char(34))
+				stata("di as err "+char(34)+ "{p 0 2}"+strofreal(sum(row_errors)) + " rows in item parameter matrix ("+ipar+") have incorrect model specification:{p_end}"+char(34))
 				select_err=select(ipar_rown,row_errors)
 				di_matrix_as_err(select_err,("item","model"))
 				_error("allowed values are: 2plm | 3plm | grm | pcm | gpcm")
@@ -6705,14 +7282,14 @@ mata:
 			// if item names are unique
 			dup_items=rows(ipar_rown[.,1])-rows(uniqrows(ipar_rown[.,1]))
 			if(dup_items){
-				stata("di as err "+char(34)+ "duplicate item names in item parameter matrix ("+ipar+"); surplus="+strofreal(dup_items)+char(34))
+				stata("di as err "+char(34)+ "{p 0 2}duplicate item names in item parameter matrix ("+ipar+"); surplus="+strofreal(dup_items)+"{p_end}"+char(34))
 				_error("duplicate item names are not allowed")
 			}
 
 			// if discrimination values are nonnegative
 			row_errors=(ipar_val[.,1]:<=0)
 			if(sum(row_errors)){
-				stata("di as err "+char(34)+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have incorrect discrimination parameter:"+char(34))
+				stata("di as err "+char(34)+"{p 0 2}"+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have incorrect discrimination parameter:{p_end}"+char(34))
 				select_err=select(ipar_rown,row_errors),select(strofreal(ipar_val[.,1]),row_errors)
 				di_matrix_as_err(select_err,("item","model","a"))
 				_error("discrimination has to be positive")
@@ -6722,7 +7299,7 @@ mata:
 			if(check_miss){
 				row_errors=rowmissing(ipar_val[.,1])
 				if(sum(row_errors)){
-					stata("di as err "+char(34)+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have incorrect discrimination parameter:"+char(34))
+					stata("di as err "+char(34)+"{p 0 2}"+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have incorrect discrimination parameter:{p_end}"+char(34))
 					select_err=select(ipar_rown,row_errors),select(strofreal(ipar_val[.,1]),row_errors)
 					di_matrix_as_err(select_err,("item","model","a"))
 					_error("discrimination has to be nonmissing")
@@ -6734,17 +7311,17 @@ mata:
 			// if 3plm values and parnames are ok
 			if(sum(ipar_rown[.,2]:=="3plm")>0){
 				if(cols(ipar_val)<3){
-					stata("di as err "+char(34)+ "item parameter matrix ("+ipar+") has "+strofreal(cols(ipar_val))+" columns"+char(34))
+					stata("di as err "+char(34)+ "{p 0 2}item parameter matrix ("+ipar+") has "+strofreal(cols(ipar_val))+" columns{p_end}"+char(34))
 					_error("at least 3 columns are required to specify 3plm properly")
 				}
 				if(ipar_coln[1::3]!=("a"\"b"\"c")){
-					stata("di as err "+char(34)+"parameter names in columns of item parameter matrix ("+ipar+") are incorrect"+char(34))
+					stata("di as err "+char(34)+"{p 0 2}parameter names in columns of item parameter matrix ("+ipar+") are incorrect{p_end}"+char(34))
 					di_matrix_as_err(J(0,4,""),("first 3 columns are named:",(ipar_coln[1::3]')))
 					_error("if 3plm is to be used first 3 columns should be: "+char(34)+"a"+char(34)+" "+char(34)+"b"+char(34)+" "+char(34)+"c"+char(34))
 				}
 				row_errors=(ipar_rown[.,2]:=="3plm"):*(ipar_val[.,3]:<0):*(ipar_val[.,3]:>1)
 				if(sum(row_errors)){
-					stata("di as err "+char(34)+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have incorrect guessing parameter:"+char(34))
+					stata("di as err "+char(34)+"{p 0 2}"+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have incorrect guessing parameter:{p_end}"+char(34))
 					select_err=select(ipar_rown,row_errors),select(strofreal(ipar_val[.,3]),row_errors)
 					di_matrix_as_err(select_err,("item","model","c"))
 					_error("guessing has to be >0 and <1")
@@ -6752,7 +7329,7 @@ mata:
 				if(check_miss){
 					row_errors=(ipar_rown[.,2]:=="3plm"):*rowmissing(ipar_val[.,3])
 					if(sum(row_errors)){
-						stata("di as err "+char(34)+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have incorrect guessing parameter:"+char(34))
+						stata("di as err "+char(34)+"{p 0 2}"+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have incorrect guessing parameter:{p_end}"+char(34))
 						select_err=select(ipar_rown,row_errors),select(strofreal(ipar_val[.,3]),row_errors)
 						di_matrix_as_err(select_err,("item","model","c"))
 						_error("guessing has to be nonmissing")
@@ -6763,14 +7340,14 @@ mata:
 			// if difficulty parnames are ok
 			if(sum((rowsum(J(1,2,ipar_rown[.,2]):==("2plm","3plm")):==1))>0){
 				if(ipar_coln[1::2]!=("a"\"b")){
-					stata("di as err "+char(34)+"parameter names in columns of item parameter matrix ("+ipar+") are incorrect"+char(34))
+					stata("di as err "+char(34)+"{p 0 2}parameter names in columns of item parameter matrix ("+ipar+") are incorrect{p_end}"+char(34))
 					di_matrix_as_err(J(0,3,""),("first 2 columns are named:",(ipar_coln[1::2]')))
 					_error("if 2plm or 3plm is to be used first 2 columns should be: "+char(34)+"a"+char(34)+" "+char(34)+"b"+char(34))
 				}
 				if(check_miss){
 					row_errors=((rowsum(J(1,2,ipar_rown[.,2]):==("2plm","3plm")):==1)):*rowmissing(ipar_val[.,2])
 					if(sum(row_errors)){
-						stata("di as err "+char(34)+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have incorrect difficulty parameter:"+char(34))
+						stata("di as err "+char(34)+"{p 0 2}"+  strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have incorrect difficulty parameter:{p_end}"+char(34))
 						select_err=select(ipar_rown,row_errors),select(strofreal(ipar_val[.,2]),row_errors)
 						di_matrix_as_err(select_err,("item","model","2"))
 						_error("2plm and 3plm require difficulty to be nonmissing")
@@ -6784,7 +7361,7 @@ mata:
 				if(cols(ipar_val)>3 & (sum(ipar_rown[.,2]:=="3plm")>0)){
 					row_errors=(rowsum(J(1,2,ipar_rown[.,2]):==("2plm","3plm")):==1):*(rownonmissing(ipar_val[.,4..cols(ipar_val)]):>0)
 					if(sum(row_errors)){
-						stata("di as err "+char(34)+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have nonmissing b# values for 2plm|3plm:"+char(34))
+						stata("di as err "+char(34)+"{p 0 2}"+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have nonmissing b# values for 2plm|3plm:{p_end}"+char(34))
 						col_errors=colnonmissing(select(ipar_val,row_errors)[.,4..cols(ipar_val)])
 						col_errors_ind=select(4::cols(ipar_val),col_errors')'
 						select_err=select(ipar_rown,row_errors),select(strofreal(ipar_val[.,col_errors_ind]),row_errors)
@@ -6796,7 +7373,7 @@ mata:
 				if(cols(ipar_val)>2 & (sum(ipar_rown[.,2]:=="3plm")==0)){
 					row_errors=(ipar_rown[.,2]:=="2plm"):*(rownonmissing(ipar_val[.,3..cols(ipar_val)]):>0)
 					if(sum(row_errors)){
-						stata("di as err "+char(34)+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have nonmissing b# values for 2plm:"+char(34))
+						stata("di as err "+char(34)+"{p 0 2}"+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have nonmissing b# values for 2plm:{p_end}"+char(34))
 						col_errors=colnonmissing(select(ipar_val,row_errors)[.,3..cols(ipar_val)])
 						col_errors_ind=select(3::cols(ipar_val),col_errors')'
 						select_err=select(ipar_rown,row_errors),select(strofreal(ipar_val[.,col_errors_ind]),row_errors)
@@ -6813,7 +7390,7 @@ mata:
 				if(sum(ipar_coln:=="c")){
 					row_errors=(rowsum(J(1,3,ipar_rown[.,2]):==("grm","pcm","gpcm")):==1):*(rownonmissing(ipar_val[.,3]):>0)
 					if(sum(row_errors)){
-						stata("di as err "+char(34)+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have nonmissing c values for grm|pcm|gpcm model:"+char(34))
+						stata("di as err "+char(34)+"{p 0 2}"+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have nonmissing c values for grm|pcm|gpcm model:{p_end}"+char(34))
 						select_err=select(ipar_rown,row_errors),select(strofreal(ipar_val[.,3]),row_errors)
 						di_matrix_as_err(select_err,("item","model","c"))
 						_error("only "+char(34)+"a"+char(34)+" and "+char(34)+"b#"+char(34)+" entries are allowed in grm|pcm|gpcm")
@@ -6823,7 +7400,7 @@ mata:
 				if(sum(ipar_coln:=="b")){
 					row_errors=(rowsum(J(1,3,ipar_rown[.,2]):==("grm","pcm","gpcm")):==1):*(rownonmissing(ipar_val[.,2]):>0)
 					if(sum(row_errors)){
-						stata("di as err "+char(34)+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have nonmissing b values for grm|pcm|gpcm model:"+char(34))
+						stata("di as err "+char(34)+"{p 0 2}"+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have nonmissing b values for grm|pcm|gpcm model:{p_end}"+char(34))
 						select_err=select(ipar_rown,row_errors),select(strofreal(ipar_val[.,2]),row_errors)
 						di_matrix_as_err(select_err,("item","model","b"))
 						_error("only "+char(34)+"a"+char(34)+" and "+char(34)+"b#"+char(34)+" entries are allowed in grm|pcm|gpcm")
@@ -6853,7 +7430,7 @@ mata:
 					}
 				}
 				if(sum(row_errors)){
-					stata("di as err "+char(34)+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have incorrect b# parameters for grm:"+char(34))
+					stata("di as err "+char(34)+"{p 0 2}"+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have incorrect b# parameters for grm:{p_end}"+char(34))
 					select_err=select(ipar_rown,row_errors),select(strofreal(ipar_val[.,2+col_offset..cols(ipar_val)]),row_errors)
 					di_matrix_as_err(select_err,(("item","model"),ipar_coln'[2+col_offset..cols(ipar_val)]))
 					_error("b# parameters in grm have to be in increasing order starting from b1")
@@ -6875,7 +7452,7 @@ mata:
 						}
 					}
 					if(sum(row_errors)){
-						stata("di as err "+char(34)+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have incorrect b# parameters for pcm|gpcm:"+char(34))
+						stata("di as err "+char(34)+"{p 0 2}"+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have incorrect b# parameters for pcm|gpcm:{p_end}"+char(34))
 						select_err=select(ipar_rown,row_errors),select(strofreal(ipar_val[.,2+col_offset..cols(ipar_val)]),row_errors)
 						di_matrix_as_err(select_err,(("item","model"),ipar_coln'[2+col_offset..cols(ipar_val)]))
 						_error("b# parameters in pcm|gpcm have to start from b1 without missings until the last category")
@@ -6896,20 +7473,20 @@ mata:
 			
 			// proper size
 			if(cols(icats_val)<2){
-				stata("di as err "+char(34)+"item categories matrix ("+icats+") has "+strofreal(cols(icats_val))+" columns"+char(34))
+				stata("di as err "+char(34)+"{p 0 2}item categories matrix ("+icats+") has "+strofreal(cols(icats_val))+" columns{p_end}"+char(34))
 				_error("at least 2 columns are required")
 			}
 			if(rows(icats_val)<1){
-				stata("di as err "+char(34)+"item parameter matrix ("+icats+") has "+strofreal(rows(icats_val))+" rows"+char(34))
+				stata("di as err "+char(34)+"{p 0 2}item parameter matrix ("+icats+") has "+strofreal(rows(icats_val))+" rows{p_end}"+char(34))
 				_error("at least 1 row is required")
 			}
 
 			// if colnames are ok
 			proper_colnames="cat_":+strofreal((1..cols(icats_val)))
 			if( sum(rowsum((icats_coln':==proper_colnames)):==cols(icats_val))!=1 ){
-				stata("di as err "+char(34)+"category names in item categories matrix ("+icats+") are incorrect:"+char(34))
+				stata("di as err "+char(34)+"{p 0 2}category names in item categories matrix ("+icats+") are incorrect{p_end}:"+char(34))
 				di_matrix_as_err(icats_coln',J(0,cols(icats_val),""))
-				stata("di as err "+char(34)+"for a "+strofreal(cols(icats_val))+"-column item categories matrix correct entries can be only:"+char(34))
+				stata("di as err "+char(34)+"{p 0 2}for a "+strofreal(cols(icats_val))+"-column item categories matrix correct entries can be only{p_end}:"+char(34))
 				di_matrix_as_err(proper_colnames,J(0,cols(icats_val),""))
 				_error("provide proper column names of item categories matrix")
 			}
@@ -6917,7 +7494,7 @@ mata:
 			// if item names are unique
 			dup_items=rows(icats_rown)-rows(uniqrows(icats_rown))
 			if(dup_items){
-				stata("di as err "+char(34)+ "duplicate item names in item categories matrix ("+icats+"); surplus="+strofreal(dup_items)+char(34))
+				stata("di as err "+char(34)+ "{p 0 2}duplicate item names in item categories matrix ("+icats+"); surplus="+strofreal(dup_items)+"{p_end}"+char(34))
 				_error("duplicate item names are not allowed")
 			}
 			
@@ -6937,19 +7514,19 @@ mata:
 				}			
 			}
 			if(sum(row_errors_order)){
-				stata("di as err "+char(34)+ strofreal(sum(row_errors_order)) + " items in item categories matrix ("+icats+") have incorrect cat_# entries:"+char(34))
+				stata("di as err "+char(34)+"{p 0 2}"+ strofreal(sum(row_errors_order)) + " items in item categories matrix ("+icats+") have incorrect cat_# entries:{p_end}"+char(34))
 				select_err=select(icats_rown,row_errors_order),select(strofreal(icats_val),row_errors_order)
 				di_matrix_as_err(select_err,("item",icats_coln'))
 				_error("nonmissing cat_# entries have to be in increasing order starting from cat_1")
 			}
 			if(sum(row_errors_uniq)){
-				stata("di as err "+char(34)+ strofreal(sum(row_errors_uniq)) + " items in item categories matrix ("+icats+") have duplicate cat_# entries:"+char(34))
+				stata("di as err "+char(34)+"{p 0 2}"+ strofreal(sum(row_errors_uniq)) + " items in item categories matrix ("+icats+") have duplicate cat_# entries:{p_end}"+char(34))
 				select_err=select(icats_rown,row_errors_uniq),select(strofreal(icats_val),row_errors_uniq)
 				di_matrix_as_err(select_err,("item",icats_coln'))
 				_error("nonmissing cat_# entries have to be unique")
 			}
 			if(sum(row_errors_N)){
-				stata("di as err "+char(34)+ strofreal(sum(row_errors_N)) + " items in item categories matrix ("+icats+") have only a single cat_# entry:"+char(34))
+				stata("di as err "+char(34)+"{p 0 2}"+ strofreal(sum(row_errors_N)) + " items in item categories matrix ("+icats+") have only a single cat_# entry:{p_end}"+char(34))
 				select_err=select(icats_rown,row_errors_N),select(strofreal(icats_val),row_errors_N)
 				di_matrix_as_err(select_err,("item",icats_coln'))
 				_error("at least 2 cat_# entries are required for each item")
@@ -6974,7 +7551,7 @@ mata:
 				}
 				
 				if(sum(row_errors)){
-					stata("di as err "+char(34)+ strofreal(sum(row_errors)) + " items in categories matrix ("+icats+") are in conflict with model specification in item parameter matrix ("+ipar+"):"+char(34))
+					stata("di as err "+char(34)+"{p 0 2}"+ strofreal(sum(row_errors)) + " items in categories matrix ("+icats+") are in conflict with model specification in item parameter matrix ("+ipar+"):{p_end}"+char(34))
 					select_err=select(icats_rown,row_errors),model_err,select(strofreal(icats_val),row_errors)
 					di_matrix_as_err(select_err,(("item","model","conflict"),icats_coln'))
 					_error("item model name and number of parameters have to be in sync with number of item categories")
@@ -6994,30 +7571,30 @@ mata:
 			
 			// proper size
 			if(cols(grpar_val)==0){
-				stata("di as err "+char(34)+"group parameter matrix ("+grpar+") has "+strofreal(cols(grpar_val))+" columns"+char(34))
+				stata("di as err "+char(34)+"{p 0 2}group parameter matrix ("+grpar+") has "+strofreal(cols(grpar_val))+" columns{p_end}"+char(34))
 				_error("at least 1 column is required")
 			}
 			if(grpar_rown!=("mean"\"sd")){
-				stata("di as err "+char(34)+"parameter names in rows of group parameter matrix ("+grpar+") are incorrect:"+char(34))
+				stata("di as err "+char(34)+"{p 0 2}parameter names in rows of group parameter matrix ("+grpar+") are incorrect:{p_end}"+char(34))
 				di_matrix_as_err(grpar_rown,J(0,1,""))
-				stata("di as err "+char(34)+"group parameter matrix must have 2 rows that are named:"+char(34))
+				stata("di as err "+char(34)+"{p 0 2}group parameter matrix must have 2 rows that are named:{p_end}"+char(34))
 				di_matrix_as_err(("mean"\"sd"),J(0,1,""))
 				_error("provide proper row names of group parameter matrix")
 			}
 			
 			// proper group names
 			if(sum(strpos(grpar_coln,"group_"))!=rows(grpar_coln)){
-				stata("di as err "+char(34)+"column names of group parameter matrix ("+grpar+") are incorrect:"+char(34))
+				stata("di as err "+char(34)+"{p 0 2}column names of group parameter matrix ("+grpar+") are incorrect:{p_end}"+char(34))
 				di_matrix_as_err(grpar_coln',J(0,rows(grpar_coln),""))
 				_error("columns should be named "+char(34)+"group_#"+char(34)+", where "+char(34)+"#"+char(34)+" are numbers that indicate groups")
 			}
 			if(rows(uniqrows(grpar_coln))!=rows(grpar_coln)){
-				stata("di as err "+char(34)+ "duplicate group names in group parameter matrix ("+grpar+"); surplus="+strofreal(rows(grpar_coln)-rows(uniqrows(grpar_coln)))+":"+char(34))
+				stata("di as err "+char(34)+ "{p 0 2}duplicate group names in group parameter matrix ("+grpar+"); surplus="+strofreal(rows(grpar_coln)-rows(uniqrows(grpar_coln)))+":{p_end}"+char(34))
 				di_matrix_as_err(grpar_coln',J(0,rows(grpar_coln),""))
 				_error("duplicate group names are not allowed")
 			}
 			if(missing(strtoreal(subinstr(grpar_coln,"group_","")))>0){
-				stata("di as err "+char(34)+"column names of group parameter matrix ("+grpar+") are incorrect:"+char(34))
+				stata("di as err "+char(34)+"{p 0 2}column names of group parameter matrix ("+grpar+") are incorrect:{p_end}"+char(34))
 				di_matrix_as_err(grpar_coln',J(0,rows(grpar_coln),""))
 				_error("columns should be named "+char(34)+"group_#"+char(34)+", where "+char(34)+"#"+char(34)+" are numbers that indicate groups")
 			}
@@ -7025,13 +7602,13 @@ mata:
 			//if parameter values are ok
 			if(check_miss){
 				if(missing(grpar_val)){
-					stata("di as err "+char(34)+"group parameter matrix ("+grpar+") has "+strofreal(missing(grpar_val))+" missing values"+char(34))
+					stata("di as err "+char(34)+"{p 0 2}group parameter matrix ("+grpar+") has "+strofreal(missing(grpar_val))+" missing values{p_end}"+char(34))
 					_error("all group parameters must be nonmissing")
 				}
 			}
 			col_errors=(grpar_val[2,.]:<=0)
 			if(sum(col_errors)){
-				stata("di as err "+char(34)+ strofreal(sum(col_errors)) + " groups in group parameter matrix ("+grpar+") have incorrect standard deviation:"+char(34))
+				stata("di as err "+char(34)+"{p 0 2}"+ strofreal(sum(col_errors)) + " groups in group parameter matrix ("+grpar+") have incorrect standard deviation:{p_end}"+char(34))
 				col_errors_ind=select(1::cols(grpar_val),col_errors')'
 				select_err=grpar_rown[2],strofreal(grpar_val[2,col_errors_ind])
 				di_matrix_as_err(select_err,("",grpar_coln'[col_errors_ind]))
@@ -7102,10 +7679,10 @@ mata:
 			point_item_cats_g = point_item_cats[itemselectrange_g]
 			I_g = rows(itemlist_g)
 			
-			U_g=sort((Theta_id_g,st_data(Theta_id_g,itemlist_g')),(2..I_g+1))
+			U_g=sort((st_data(Theta_id_g,itemlist_g'),Theta_id_g),(1..I_g+1))
 			
-			Theta_id_sorted[ (nonmissing(Theta_id_sorted)+1) :: (nonmissing(Theta_id_sorted)+N_Theta_id_g)]=U_g[.,1]
-			U_g=U_g[.,(2..I_g+1)]
+			Theta_id_sorted[ (nonmissing(Theta_id_sorted)+1) :: (nonmissing(Theta_id_sorted)+N_Theta_id_g)]=U_g[.,I_g+1]
+			U_g=U_g[.,(1..I_g)]
 			
 			Fg=J(N_Theta_id_g,1,.)
 			unique_pattern_rows=J(N_Theta_id_g,1,0)
@@ -7153,8 +7730,6 @@ mata:
 		
 			
 	// getting rid of these huge matrices
-			Theta_id=Theta_id_sorted
-			Theta_id_sorted=J(0,0,.)
 			Theta_id_g=J(0,0,.)
 			Fg=J(0,0,.)
 			U_g=J(0,0,.)
@@ -7168,7 +7743,7 @@ mata:
 		results = J(4,1,NULL)
 		results[1] = &point_Uigc
 		results[2] = &point_Fg
-		results[3] = &Theta_id
+		results[3] = &Theta_id_sorted
 		results[4] = &Theta_dup
 		return(results)
 	}
@@ -7215,7 +7790,7 @@ mata:
 			}
 			
 			if(N_missing_or_ncat){
-				display("Note: "+strofreal(N_missing_or_ncat)+" items specified for SX2 fit statistic have either missing responses or are polytomous:")
+				display("Note: "+strofreal(N_missing_or_ncat)+" items specified for SX2 fit statistic have missing responses, are polytomous, or were discarded:")
 				display(items_missing_or_ncat)
 				if(sum(if_fit_sx2)){
 					display( "      "+ strofreal(sum(if_fit_sx2)) + " items left for SX2")
@@ -7244,5 +7819,223 @@ mata:
 		Q.put(Q.viable_sx2,.,viable_for_sx2)
 		
 	}
+	
+	void graph_save(string scalar icc_format, string scalar filename){
+		if(icc_format=="gph"){
+			stata("qui graph save "+filename+", replace")
+		}
+		if(icc_format=="eps"){
+				stata("qui graph export "+filename+".eps,  mag(200)  replace")
+		}
+		if(icc_format=="png"){
+			if("`c(os)'"=="Windows"){
+				stata("qui graph export "+filename+".png, width(1244) replace")
+			}
+			if("`c(os)'"=="Unix"){
+								
+				if(fileexists(filename+".png")){
+					unlink(filename+".png")
+				}
+				errcode = _stata("cap graph export "+filename+".png, width(1244) replace")
+				if(errcode | fileexists(filename+".png")==0 ){
+					stata("qui graph export "+filename+".eps,  mag(200)  replace")
+					stata("! gs -dSAFER -dEPSCrop -r160 -sDEVICE=pngalpha -o "+filename+".png "+filename+".eps")
+					if(fileexists(filename+".png")){
+						unlink(filename+".eps")
+					}
+					else{
+						display("unable to perform: ! gs -dSAFER -dEPSCrop -r160 -sDEVICE=pngalpha -o "+filename+".png "+filename+".eps")
+					}
+				}							
+		
+			}
+		}
+	}
+	
+	void inf_graph(_Qx, _G, real matrix if_makeinf, string scalar inf_twoway, real scalar inf_mode , string matrix eap_names , real scalar if_groups){
+		
+		class ITEMS scalar Qx
+		Qx = _Qx
+		class GROUPS scalar G
+		G=_G
+		
+		
+		
+		n_sel = sum(if_makeinf)
+	
+		if(n_sel){
+		
+			i_names		= J(n_sel,1,"")
+			i_functions	= J(n_sel,1,"")
+			
+			r=0
+			for(i=1;i<=Qx.n;i++){
+				if(if_makeinf[i]){
+					++r
+					i_name			= Qx.get(Qx.names,i)								
+					i_names[r]  	= i_name
+					i_functions[r] = item_information_function( selectQ(Qx,i_name) )
+				}
+			}
+			
+			if(cols(eap_names)==2){
+				thetan=eap_names[1]
+			}
+			else{
+				thetan="theta"
+			}
+
+			if(inf_mode==0){
+			
+				i_functions = "( function " :+ i_functions :+ ",range(-4 4) yvarlab(" :+ i_names :+ ") )"
+				
+				stata_command = "qui twoway "
+				for(i=1;i<=n_sel;i++){
+					stata_command = stata_command + i_functions[i] + " || "*(i<n_sel)
+				}
+				
+				if(n_sel>1){
+					title = " title(Item information functions) "
+					legend = "legend(c(5))"
+				}
+				else{
+					title = " title(Information function for item "+i_names[1]+") "
+					legend = " legend(off) "
+				}
+				
+				ytitle =  " ytitle("+char(34)+"I({&theta})"+char(34)+") "
+				
+			}
+			else{
+				
+				if(G.n>1 & if_groups){
+					th_sd = strofreal(G.get(G.pars,.)[.,2])
+					gr_names = G.v_name :+ "=" :+ strofreal(G.get(G.val,.))
+					legend = " legend(c(4)) "
+				}
+				else{
+					th_sd = strofreal(G.get(G.pars,1)[2])
+					gr_names = strofreal(G.get(G.val,1))
+					legend = " legend(off) "
+				}
+			
+				tif = "(  (1/" :+ th_sd :+ "^2) +"
+				for(i=1;i<=n_sel;i++){
+					tif = tif :+ " ( " :+ i_functions[i] :+ " ) " :+ " + "*(i<n_sel)
+				}
+				tif = tif :+ ")"
+				
+				stata_command = "qui twoway "
+				
+				if(inf_mode==1){
+					for(g=1;g<=rows(tif);g++){
+						stata_command =  stata_command + " ( function " + tif[g] + ", range(-4 4)  yvarlab(" + gr_names[g] + ") ) " + " || "*(g<rows(tif))
+					}				
+					ytitle =  " ytitle("+char(34)+"I({&theta})"+char(34)+") "
+					title = " title(Test information function) "
+				}
+	
+				if(inf_mode==2){
+					for(g=1;g<=rows(tif);g++){
+						stata_command =  stata_command + " ( function (1/sqrt(" + tif[g] + ")), range(-4 4)  yvarlab(" + gr_names[g] + ") ) " + " || "*(g<rows(tif)) 
+					}					
+					ytitle = " ytitle("+char(34)+"Standard error"+char(34)+") "
+					title = " title(Standard error of {&theta} estimates) "
+				}
+			
+			}
+			
+			stata_command= stata_command + ", graphregion(color(white)) bgcolor(white) xscale(range(-4 4)) xtitle("+char(34)+thetan+char(34)+") " + ytitle + title + legend + inf_twoway
+
+			
+			stata(stata_command)
+
+		}
+	}
+	
+	
+	
+	string scalar item_information_function(_Qi){
+	
+		class ITEMS scalar Qi
+		Qi=_Qi	
+	
+		n_cat=Qi.get(Qi.n_cat,.)
+		model=Qi.get(Qi.m_curr,.)
+		pars=strofreal(Qi.get(Qi.pars,.))
+		
+		stata_command=""
+		
+		if(n_cat==2){
+		
+			_a = pars[1]
+			_b = pars[2]
+				
+			if (model=="2plm" | model=="pcm"){
+				_f = "( invlogit(" + _a + "*(x-" + _b + ")) )"
+				stata_command=stata_command + _a + "^2 * " + _f + " * (1 -" + _f + ")"
+			}
+			if (model=="3plm" ){
+				_c=pars[3]
+				_f = "( " + _c + " + (1-" + _c + ")*invlogit(" + _a + "*(x-" + _b + ")) )"
+				_v =  "( (" + _f + " - " + _c + ") / (" + _f + " * (1 - " + _c + " )" + ") )"
+				stata_command=stata_command + _a + "^2 * " + _f + " * (1 -" + _f + ") * " + _v + "^2"
+			}
+							
+		}
+		
+		if(n_cat>2){
+		
+			_a=pars[1]
+					
+			if ( model=="grm"){
+			
+				_fk = "( invlogit(" :+ _a :+ "*(x-" :+ pars[2..cols(pars)]' :+ ")) )"
+				_fk = "1" \ _fk \ "0"
+				_qk = "(1 -" :+ _fk :+ ")"
+				
+				stata_command=stata_command + _a + "^2 * ("
+				for(c=2;c<=rows(_fk);c++){
+					stata_command=stata_command + (c>2)*" + " + "( ( " + _fk[c-1] + "*" + _qk[c-1] + " - " + _fk[c] + "*" + _qk[c] + " )^2 / ("+ _fk[c-1] + " - "+ _fk[c] + ") )"
+				}
+				stata_command=stata_command + ")"
+			
+			}
+			if (model!="grm"){
+			
+				pars_num=Qi.get(Qi.pars,.)
+			
+				expsum_all_function="(1 "
+				for(c=2;c<=n_cat;c++){
+					expsum_all_function=expsum_all_function + " + " + "exp(" + _a + "*(" + strofreal(c-1) + "*x-(" + strofreal(sum(pars_num[2..c])) + ")))"
+				}
+				expsum_all_function=expsum_all_function+")"
+				
+				_fk = "1"
+				for(c=2;c<=n_cat;c++){
+					_fk = _fk \ "exp(" + _a + "*(" + strofreal(c-1) + "*x-(" + strofreal(sum(pars_num[2..c])) + ")))"				
+				}
+				_fk = _fk :+ " / " :+ expsum_all_function
+				
+				_t = "("
+				for(c=1;c<=rows(_fk);c++){
+					_t = _t + (c>1)*" + " + strofreal(c-1) + " * (" + _fk[c] + ")" 
+				}
+				_t = _t+ ")"
+				
+				stata_command=stata_command + _a + "^2 * ("
+				for(c=1;c<=rows(_fk);c++){
+					stata_command=stata_command + (c>1)*" + " + "( ( " + strofreal(c-1) + " - " + _t + " )^2 * " + _fk[c] + " )"
+				}
+				stata_command=stata_command + ")"
+				
+			}
+			
+			
+		}
+			
+		return(stata_command)
+	}
+	
 		
 end

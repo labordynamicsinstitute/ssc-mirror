@@ -1,12 +1,12 @@
-*uirt_icc.ado 
-*ver 1.1
-*2022.01.24
+*uirt_inf.ado 
+*ver 1.0
+*2022.02.11
 *everythingthatcounts@gmail.com
 
-capture prog drop uirt_icc
-program define uirt_icc
+capture prog drop uirt_inf
+program define uirt_inf
 version 10
-syntax [varlist] [, bins(numlist integer max=1 >=1) Format(str) CLeargraphs NOObs pv pvbin(numlist max=1 >=100 <=100000) Colors(str) tw(str asis) PREFix(str) SUFfix(str)] 
+syntax [varlist] [, Test se GRoups tw(str asis)] 
 	
 	if("`e(cmd)'" != "uirt"){
 		error 301
@@ -14,10 +14,10 @@ syntax [varlist] [, bins(numlist integer max=1 >=1) Format(str) CLeargraphs NOOb
 	else{
 	
 		if("`0'"==""){
-			local postest="icc(*)"	
+			local postest="inf(*)"	
 		}
 		else{
-			local postest="icc("+`"`0'"'+")"
+			local postest="inf("+`"`0'"'+")"
 		}
 	
 		m: backup_e=st_tempname()
@@ -32,6 +32,7 @@ syntax [varlist] [, bins(numlist integer max=1 >=1) Format(str) CLeargraphs NOOb
 		m: stata("qui estimates drop "+backup_e)
 	
 	}
-	
+		
 end
+
 

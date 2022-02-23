@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1,0 2021.03.09}{...}
+{* *! version 1.1 2022.01.25}{...}
 {viewerjumpto "Syntax" "uirt_dif##syntax"}{...}
 {viewerjumpto "Description" "uirt_dif##description"}{...}
 {viewerjumpto "Options" "uirt_dif##options"}{...}
@@ -23,7 +23,7 @@
 {pmore}
 {it:varlist} must include only variables that were declared in the main list of items of current {cmd:uirt} run.
 If {it:varlist} is skipped or asterisk * is used, {cmd:uirt_dif} will either display the results that are currently stored in {cmd:e(dif_results)} matrix
-or it will conduct DIF analysis on all items declared in the main list of items of current {cmd:uirt} run. 
+(display mode), or it will conduct DIF analysis on all items declared in the main list of items of current {cmd:uirt} run (estimation mode). 
 This behavior depends on whether any DIF analysis was produced by current uirt run or not.
 
 {synoptset 24 tabbed}{p2colset 7 32 34 4}
@@ -33,6 +33,7 @@ This behavior depends on whether any DIF analysis was produced by current uirt r
 {synopt:{opt f:ormat(str)}} file format for DIF graphs (png|gph|eps); default: format(png) {p_end}
 {synopt:{opt c:olors(str)}} color names to override default plot colors used in DIF graphs  {p_end}
 {synopt:{opth tw(twoway_options)}} twoway graph options to override default graph layout {p_end}
+{synopt:{opt cl:eargraphs}} suppress storing of graphs in Stata memory {p_end}
 {synoptline}
 
 
@@ -51,7 +52,7 @@ Namely, P-DIF|GR=E(parR,GR)-E(parF,GR), where GR indicates that the reference gr
 and parR and parF stand for item parameters estimated in GR and GF respectively. Analogous P-DIF|GF measure is also computed.
 DIF significance and effect size information is stored in {cmd:r(dif_results)}. 
 Group-specific item parameter estimates are stored in {cmd:r(dif_item_par_GR)} and {cmd:r(dif_item_par_GF)}.
-Calling {cmd:uirt_dif} will also result in plotting graphs with group-specific ICCs and PDFs, which are saved in the working directory.
+Using {cmd:uirt_dif} in estimation mode will also result in plotting graphs with group-specific ICCs and PDFs, which are saved in the working directory.
 
 
 {marker options}{...}
@@ -70,6 +71,10 @@ The first color applies to the reference group, the second applies to the focal 
 {phang}
 {opth tw(twoway_options)} it is used to add user-defined twoway graph options to override the default graph layout,
 like: {opt xtitle()} or {opt scheme()} etc.
+
+{phang}
+{opt cl:eargraphs} is used to suppress the dafault behaviour of storing all DIF graphs in Stata memory. 
+After specifying this, all graphs are still saved in the current working directory, but only the last graph is active in Stata. 
 
 
 {marker examples}{...}

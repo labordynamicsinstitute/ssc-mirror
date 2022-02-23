@@ -213,10 +213,8 @@ rather than the default of log time.
 {p 5 12 2}
 {bf:Michael J. Crowther}{p_end}
 {p 5 12 2}
-Department of Medical Epidemiology and Biostatistics{p_end}
-{p 5 12 2}
-Karolinska Institutet{p_end}
+Red Door Analytics AB{p_end}
 {p 5 12 2}
 Stockholm, Sweden{p_end}
 {p 5 12 2}
-michael.crowther@ki.se{p_end}
+michael@reddooranalytics.se{p_end}

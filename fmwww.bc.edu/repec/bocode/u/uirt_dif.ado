@@ -1,6 +1,6 @@
 *uirt_dif.ado 
-*ver 1.0
-*2021.03.09
+*ver 1.1
+*2022.01.24
 *everythingthatcounts@gmail.com
 
 cap m: mata drop  _display_matrix_as_table()
@@ -8,7 +8,7 @@ cap m: mata drop  _display_matrix_as_table()
 capture prog drop uirt_dif
 program define uirt_dif, rclass
 version 10
-syntax [varlist] [, Format(str) Colors(str) tw(str)] 
+syntax [varlist] [, CLeargraphs Format(str) Colors(str) tw(str asis)] 
 	
 	
 	if("`e(cmd)'" != "uirt"){
@@ -50,8 +50,8 @@ syntax [varlist] [, Format(str) Colors(str) tw(str)]
 				else{
 					local dif_colors=""
 				}
-				if(strlen("`tw'")){
-					local dif_tw=" dif_tw(`tw')"
+				if(strlen(`"`tw'"')){
+					local dif_tw=" dif_tw("+`"`tw'"'+")"
 				}
 				else{
 					local dif_tw=""
@@ -65,15 +65,21 @@ syntax [varlist] [, Format(str) Colors(str) tw(str)]
 				local tocomaornottocoma= ","*(strpos(substr("`cmdstrip_b'",1,`insertpos'-1),",")==0)
 				
 				
-				local cmdstrip_b=substr("`cmdstrip_b'",1,`insertpos'-1)+"`tocomaornottocoma' dif(`varlist') `dif_format'`dif_colors'`dif_tw'"+substr("`cmdstrip_b'",`insertpos',strlen("`cmdstrip_b'"))
-				local cmdstrip="`cmdstrip_a' `cmdstrip_b'"
+				local cmdstrip_b=substr("`cmdstrip_b'",1,`insertpos'-1)+"`tocomaornottocoma' dif(`varlist') `dif_format'`dif_colors'"+`"`dif_tw'"'+substr("`cmdstrip_b'",`insertpos',strlen("`cmdstrip_b'"))
+				local cmdstrip="`cmdstrip_a' "+`"`cmdstrip_b'"'
 			}
 			
 
 			m: backup_e=st_tempname()
 			m: stata("qui estimates store "+backup_e)
 			
-			m: stata("`cmdstrip' fix(prev used) err(stored) nit(0) tr(0) not noh")
+			m: st_local("errcode",strofreal(_stata(`"`cmdstrip'"' +" fix(prev used) err(stored) nit(0) tr(0) not noh")))
+			if(`errcode'){
+				exit `errcode'
+			}
+			
+			
+			
 			mat temp_results=e(dif_results)
 			mat temp_par_GR=e(dif_item_par_GR)
 			mat temp_par_GF=e(dif_item_par_GF)

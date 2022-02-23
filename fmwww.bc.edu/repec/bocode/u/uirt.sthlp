@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.1 2021.03.11}{...}
+{* *! version 2.2 2022.02.22}{...}
 {viewerjumpto "Syntax" "uirt##syntax"}{...}
 {viewerjumpto "Postestimation commands" "uirt##postestimation"}{...}
 {viewerjumpto "Description" "uirt##description"}{...}
@@ -53,6 +53,7 @@
 {synopt:{opt f:ormat(str)}} file format for ICC graphs (png|gph|eps); default: format(png) {p_end}
 {synopt:{opt pref:ix(str)}} set the prefix of file names {p_end}
 {synopt:{opt suf:fix(str)}} set the suffix of file names {p_end}
+{synopt:{opt cl:eargraphs}} suppress storing of graphs in Stata memory {p_end}
 
 
 {syntab:Item-fit}{synoptset 25 }
@@ -60,19 +61,19 @@
 {synopt:{it:opts:}}{p_end}
 {synopt:{opt bins(#)}} number of ability intervals for computation of chi2W {p_end}
 {synopt:{opt npqm:in(#)}} minimum expected number of observations in ability intervals (NPQ); default: npqmin(20){p_end}
-{synopt:{opt npqr:eport(#)}} report information about minimum NPQ in ability intervals {synoptset 25 }{p_end}
+{synopt:{opt npqr:eport}} report information about minimum NPQ in ability intervals {synoptset 25 }{p_end}
 {synopt:{opt sx2(varlist [,opts])}} dichotomous items to compute S-X2 item-fit statistic {synoptset 25 tabbed}{p_end}
 {synopt:{it:opts:}}{p_end}
 {synopt:{opt minf:req(#)}} minimum expected number of observations in ability intervals (NP and NQ); default: minf(1){p_end}
 
 {syntab:Theta & PVs}{synoptset 25 }
-{synopt:{opt th:eta([opts])}} declare variables to be added to the datased {synoptset 25 tabbed}{p_end}
+{synopt:{opt th:eta([nv1 nv2] [,opts])}} declare variables to be added to the dataset {synoptset 25 tabbed}{p_end}
 {synopt:{it:opts:}}{p_end}
 {synopt:{opt eap}} create EAP estimator of theta and its standard error {p_end}
 {synopt:{opt nip(#)}} number of GH quadrature points used when calculating EAP and its SE; default: nip(195){p_end}
 {synopt:{opt pv(#)}} number of plausible values added to the dataset, default is pv(0) (no PVs added){p_end}
 {synopt:{opt pvreg(str)}} define regression for conditioning PVs {p_end}
-{synopt:{opt n:ame(name)}} specify a suffix used in naming of EAP, PVs and ICC graphs {p_end}
+{synopt:{opt suf:fix(name)}} specify a suffix used in naming of EAP, PVs and ICC graphs {p_end}
 {synopt:{opt sc:ale(#,#)}} scale parameters (m,sd) of theta in reference group {p_end}
 {synopt:{opt skipn:ote}} suppress adding notes to newly created variables{p_end}
 
@@ -120,7 +121,7 @@
 Several of {cmd:uirt} options are also available as separate postestimation commands, 
 so it is possible to use them after {cmd:uirt} model parameters are estimated.
 Running these postestimation commands only once after {cmd:uirt} may take more time to execute than invoking them as {cmd:uirt} options. 
-But time is surely saved if you anticipate to repeat these postestimation commands multiple times after a given uirt run.
+But time is surely saved if you anticipate repeating these postestimation commands multiple times after a given uirt run.
 
 {synopthdr :Command}
 {synoptline}
@@ -129,6 +130,8 @@ But time is surely saved if you anticipate to repeat these postestimation comman
 {synopt :{helpb uirt_dif}} perform DIF analysis (two-group models){p_end}
 {synopt :{helpb uirt_chi2w}} compute chi2W item-fit statistic{p_end}
 {synopt :{helpb uirt_sx2}} compute S-X2 item-fit statistic (dichotomous items){p_end}
+{synopt :{helpb uirt_esf}} create expected score function plots{p_end}
+{synopt :{helpb uirt_inf}} create information function plots{p_end}
 {synoptline}
 
 
@@ -166,7 +169,7 @@ When pcm(*) is typed all items declared in main list of items are fitted with PC
 
 {phang}
 {opt gpcm(varlist)} is used to provide a list of items to fit with the Generalized Partial Credit Model.
-If item is dichotomous it will be reported as 2PLM in the output (2PLM and GPCM are the same for dichotomous items).
+If item is dichotomous, it will be reported as 2PLM in the output (2PLM and GPCM are the same for dichotomous items).
 When qpcm(*) is typed all items declared in main list of items are fitted with GPCM.
 
 {phang}
@@ -237,7 +240,7 @@ Using this option requires fixing parameters of at least one item in order to id
 {opt slow} is a sub-option of {opt gr:oup()}; it suppresses a speed-up of EM for the multi-group estimation.
 By default the GH quadrature in {cmd:uirt} is updated within the EM cycle, just after iteration of group parameters is done.
 This speeds-up the convergence of the algorithm but, in some cases, may lead to log-likelihood increase. 
-Try using this option if you encounter such a problem in a muli-group model.
+Try using this option if you encounter such a problem in a multi-group model.
 
 
 {dlgtab:ICC}
@@ -302,6 +305,11 @@ Default value is prefix(ICC).
 it adds a user-defined string at the end of the names of saved files.
 Default behavior is not to add any suffix.
 
+{pmore}
+{opt cl:eargraphs} is a sub-option of {opt icc()};
+it is used to suppress the dafault behaviour of storing all ICC graphs in Stata memory. 
+After specifying this, all graphs are still saved in the current working directory, but only the last graph is active in Stata. 
+
 
 {dlgtab:Item-fit}
 
@@ -339,14 +347,14 @@ If NPQ for a given ability bin is smaller than the value declared in {opt npqm:i
 Default value is {opt npqm:in(20)}.
 
 {pmore}
-{opt npqr:eport(#)} is a sub-option of {opt chi2w()};
+{opt npqr:eport} is a sub-option of {opt chi2w()};
 it will add a column to {cmd:e(item_fit_chi2W)} with information about minimum NPQ in ability intervals.
 
 {phang}
 {opt sx2(varlist [,opts])} is used to provide a list of dichotomous items to compute S-X2 item-fit statistic, as described in Orlando and Thissen (2000).
 When sx2(*) is typed the S-X2 item-fit statistic is computed for all items declared in main list of items. S-X2 cannot be used in multigroup setting. 
 The number-correct score used for grouping is obtained from dichotomous items - if polytomous items are present, they are ignored in computation of S-X2.
-If a dichotomous item has missing responses it is also ignored in computation of S-X2. The results are stored in {cmd:e(item_fit_SX2)}.
+If a dichotomous item has missing responses, it is also ignored in computation of S-X2. The results are stored in {cmd:e(item_fit_SX2)}.
 
 {pmore}
 {opt minf:req(#)} is a sub-option of {opt sx2()};
@@ -359,13 +367,16 @@ Default value is {opt minf:req(1)}.
 {dlgtab:Theta & PVs}
 
 {phang}
-{opt th:eta([opts])} is used to provide specification on ability variables that are to be added to the dataset. 
+{opt th:eta([newvar1 newvar2] [,opts])} is used to provide specification on ability variables that are to be added to the dataset.
+{it:newvar1} and {it:newvar2} are optional. If specified, the expected a posteriori (EAP) estimator of theta and its standard error
+will be added at the end of the dataset using {it:newvar1} and {it:newvar2} to name these new variables. 
 The following sub-options are available for {opt theta()}:
 
 {pmore}
 {opt eap} is a sub-option of {opt th:eta()};
 it will add the expected {it: a posteriori} (EAP) estimator of theta and its standard error at the end of the dataset.
-These will be named "theta" and "se_theta" unless {opt n:ame()} is specified.
+These will be named "theta" and "se_theta" unless {opt suf:fix()} is specified.
+Using {opt eap} is redundant if {it:newvar1} and {it:newvar2} are provided.
 
 {pmore}
 {opt nip(#)} is a sub-option of {opt th:eta()};
@@ -377,7 +388,7 @@ too low {opt nip()} values may lead to inadequate estimate of standard errors of
 {opt pv(#)} is a sub-option of {opt th:eta()};
 it is used to declare the the number of plausible values that are to be added to the dataset. 
 Default value is 0 (no PVs added). 
-The PVs will be named "pv_1",..., "pv_#" unless {opt n:ame()} is specified.
+The PVs will be named "pv_1",..., "pv_#" unless {opt suf:fix()} is specified.
 The PVs are generated after the estimation is completed.
 The general procedure involves two steps.
 In the first step, # random draws, b*, of model parameters are taken from MVN distribution with means vector {cmd:e(b)} and covariance matrix {cmd:e(V)}.
@@ -407,8 +418,10 @@ Note that if some observations are excluded from {cmd:xtmixed} run (for example 
 these observations will not be conditioned.
 
 {pmore}
-{opt n:ame(name)} is a sub-option of {opt th:eta()};
-it specifies a suffix used in naming new EAP and PVs variables. Also influences naming of the x-axis in ICC graphs.
+{opt suf:fix(name)} is a sub-option of {opt th:eta()};
+it specifies a suffix used in naming new EAP and PVs variables. Also influences default naming of the x-axis in ICC graphs.
+If {it:newvar1} and {it:newvar2} are provided they will take precedence in naming EAP estimates and the theta scale on graphs,
+however {opt suf:fix()} will still apply to the PVs.
 
 {pmore}
 {opt sc:ale(#,#)} is a sub-option of {opt th:eta()};
@@ -610,7 +623,7 @@ also plot ICC for that item{p_end}
 {phang2}{cmd:. uirt q*,gr(female,dif(q1))} {p_end}
 
 {pstd} Fit a single-group model with all items 2PLM, generate 5 plausible values conditioned on the {it:female} variable, and ask that the scale of generated PVs to have mean=500 and sd=100{p_end}
-{phang2}{cmd:. uirt q*,theta(pv(5) pvreg(i.female) scale(500,100))} {p_end}
+{phang2}{cmd:. uirt q*,theta(,pv(5) pvreg(i.female) scale(500,100))} {p_end}
 
 
 {marker results}{...}
@@ -666,6 +679,10 @@ and Mateusz Zoltak for very helpful hints on Mata pointers which led to signific
 Many thanks to all of my colleagues at the Institute of Educational Research in Warsaw for using {cmd:uirt} at the early stages of its development
 and providing me with feedback and encouragement to continue with this endeavor. I am also grateful to numerous Stata users 
 who contacted me with ideas on how to improve the software after its first release.
+I feel especially indebted to Eric Melse, for his support in building postestimation commands 
+that allow for plotting information functions and expected score curves.
+Last but not least, I would like to thank the anonymous Reviewer at the Stata Journal,
+who had guided me on how to rewrite {cmd:uirt} to make it more user friendly and more aligned with Stata programming standards.
 
 
 {title:Funding}

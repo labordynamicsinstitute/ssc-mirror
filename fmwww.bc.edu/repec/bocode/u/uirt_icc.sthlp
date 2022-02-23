@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1,0 2021.03.09}{...}
+{* *! version 1.1 2022.01.24}{...}
 {viewerjumpto "Syntax" "uirt_icc##syntax"}{...}
 {viewerjumpto "Description" "uirt_icc##description"}{...}
 {viewerjumpto "Options" "uirt_icc##options"}{...}
@@ -36,6 +36,7 @@ If {it:varlist} is skipped or asterisk * is used, {cmd:uirt_icc} will plot ICC g
 {synopt:{opt f:ormat(str)}} file format for ICC graphs (png|gph|eps); default: format(png) {p_end}
 {synopt:{opt pref:ix(str)}} set the prefix of file names {p_end}
 {synopt:{opt suf:fix(str)}} set the suffix of file names {p_end}
+{synopt:{opt cl:eargraphs}} suppress storing of graphs in Stata memory {p_end}
 {synoptline}
 
 
@@ -45,8 +46,8 @@ If {it:varlist} is skipped or asterisk * is used, {cmd:uirt_icc} will plot ICC g
 {pstd}
 {cmd:uirt_icc} is a postestimation command of {helpb uirt} that creates ICC graphs accompanied with information that aides graphical item-fit analysis.
 The graphs are saved in current working directory. 
-Note that if ICC graphs for requested items are already saved in the working directory under default names they will be overwritten.
-If you do not want to overwrite previous ICCs change the working directory or rename the existing files.
+Note that if ICC graphs for requested items are already saved in the working directory under default names, they will be overwritten.
+If you do not want to overwrite previous ICCs, change the working directory, rename the existing files, or use {opt pref:ix(str)} or {opt suf:fix(str)} options.
 
 {pstd}
 Default behavior of {cmd:uirt_icc} is to superimpose observed proportions against the ICC curves in order to enable a graphical item-fit assessment.
@@ -98,6 +99,10 @@ Default value is prefix(ICC).
 {phang}
 {opt suf:fix(str)} adds a user-defined string at the end of the names of saved files.
 Default behavior is not to add any suffix.
+
+{phang}
+{opt cl:eargraphs} is used to suppress the dafault behaviour of storing all ICC graphs in Stata memory. 
+After specifying this, all graphs are still saved in the current working directory, but only the last graph is active in Stata. 
 
 
 {marker examples}{...}

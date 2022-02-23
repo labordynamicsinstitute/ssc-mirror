@@ -1,7 +1,10 @@
-*! version 2.1.3 22dec2021 MJC
+*! version 2.1.4 22feb2022 MJC
 
 /*
 History
+22feb2022 version 2.1.4 - bug fix; multivariate gaussian or poisson models would 
+                          show an indexing error when they had different numbers 
+                          of observations per outcome - now fixed
 22dec2021 version 2.1.3 - missed quietly on bootstrap results; now fixed
 08dec2021 version 2.1.2 - bug fix in Cox with ties and no delayed entry
 07dec2021 version 2.1.1 - improved grid search performance
