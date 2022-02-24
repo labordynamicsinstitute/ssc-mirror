@@ -18,9 +18,9 @@ d chi2W developed by the author    (Kondratek, 2020).
 d
 d KW: item response theory; differential item functioning; item fit; plausible values
 d
-d Requires: Stata version 12
+d Requires: Stata version 10
 d
-d Distribution-Date: 20210515
+d Distribution-Date: 20220222
 d
 d Author:   Bartosz Kondratek, Educational Research Institute
 d Support: email  b.kondratek@@ibe.edu.pl
@@ -31,8 +31,12 @@ f uirt_chi2w.ado
 f uirt_chi2w.sthlp
 f uirt_dif.ado
 f uirt_dif.sthlp
+f uirt_esf.ado
+f uirt_esf.sthlp
 f uirt_icc.ado
 f uirt_icc.sthlp
+f uirt_inf.ado
+f uirt_inf.sthlp
 f uirt_sx2.ado
 f uirt_sx2.sthlp
 f uirt_theta.ado

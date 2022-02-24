@@ -22,7 +22,7 @@
 {opt robust}
 {opt matrix}
 {opt boot(integer)}
-{opt sizecontrol(integer)}
+{opt size:control(integer)}
 {opt seed(integer)}
 {cmdab:graph}
 {cmdab:eps}
@@ -36,6 +36,8 @@ You must {cmd:tsset} your data before using {cmd:tvgc}; see {manhelp tsset TS}.{
 {it:varlist} contains the variables in the VAR or LA-VAR. {cmd:tvgc} tests whether the first variable in {it:varlist} is Granger-caused by the remaining variables.{p_end}
 {p 4 6 2}
 The {it:varlist} can contain time-series operators. The sample may not contain gaps.{p_end}
+{p 4 6 2}
+The {it:moremata} community-contributed package must be installed from the SSC Archive via {cmd:ssc install moremata}.
 
 {title:Description}
 
@@ -123,7 +125,7 @@ by the log of the money base (lm1), the log of the price index (lp) and the thre
 The data span January 1959 to April 2014 and can be accessed from FRED with {cmd:freduse}. 
 The three time-varying Granger causality statistics are computed using a specification with p=2 lags and d=1 lag augmented in the LA-VAR model, including a trend.											  
 The sequence of tests for the forward recursive, rolling window, and recursive evolving procedures run with 72 observations for the minimum window size; hence, we use the option win=72.
-The bootstrapped critical values are obtained with the default number of 199 repetitions and size controlled over a one-year period; this means that we can use the default value of sizecontrol which is 12.
+The bootstrapped critical values are obtained with the default number of 199 repetitions and size controlled over a one-year period; this means that we can use the dafault value of sizecontrol which is 12.
 
 {pstd}
 The prefix option is used to save the constructed test statistics as additional variables. This example should run in about 3-4 minutes.{p_end}
