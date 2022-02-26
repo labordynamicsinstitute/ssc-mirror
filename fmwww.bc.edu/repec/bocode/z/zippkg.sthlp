@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 26 March 2019}{...}
+{* *! version 1.1 24 February 2022}{...}
 {vieweralsosee "[R] net" "help net"}{...}
 {vieweralsosee "[R] ssc" "help ssc"}{...}
 {vieweralsosee "[D] checksum" "help checksum"}{...}
@@ -14,7 +14,7 @@
 {viewerjumpto "Examples" "zippkg##examples"}{...}
 {viewerjumpto "Author" "zippkg##author"}{...}
 {viewerjumpto "Also see" "zippkg##alsosee"}{...}
-help for {cmd:zippkg}{right:version 1.0 (26 March 2019)}
+help for {cmd:zippkg}{right:version 1.1 (24 February 2022)}
 {hline}
 
 

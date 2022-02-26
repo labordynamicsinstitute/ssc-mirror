@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------------
   zippkg.ado: Stata module to create ZIP archives of community-contributed content for offline distribution
 
-    Copyright (C) 2019  Daniel Bela (daniel.bela@lifbi.de)
+    Copyright (C) 2019-2022  Daniel Bela (daniel.bela@lifbi.de)
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 -------------------------------------------------------------------------------*/
 *! zippkg.ado: Stata module to create ZIP archives of community-contributed content for offline distribution
 *! Daniel Bela (daniel.bela@lifbi.de), Leibniz Institute for Educational Trajectories (LIfBi), Germany
+*! version 1.1 24 February 2022 - bugfix in handling relative ZIP file paths, so we don't create the archive inside of the temporary (and later: erased) directory
 *! version 1.0 26 March 2019 - initialized development version release
 program define zippkg , nclass
 	// version requirements (and string functions dependent on Stata version)
@@ -74,8 +75,8 @@ program define zippkg , nclass
 			}
 		}
 	}
-	if (missing(`"`glob_saving'"')) local glob_saving `"./zippkg.zip"'
-	if (!missing(`"`single'"')) local glob_saving ./zippkg\`speccounter'.zip
+	if (missing(`"`glob_saving'"')) local glob_saving `"zippkg.zip"'
+	if (!missing(`"`single'"')) local glob_saving `"zippkg\`speccounter'.zip"'
 	if (missing(`"`glob_from'"')) local glob_from `"ssc"'
 	// parse pkgspecs
 	local speccounter 0
@@ -151,10 +152,14 @@ program define zippkg , nclass
 			}
 		}
 		// create archive
-		capture : noisily _zipdir `"`tmppath'"' , saving(`"`savename'"') `targetarchive`targetarchivecounter'_zipopts' `verbose'
+		local oldpwd `"`c(pwd)'"'
+		_make_absolute_path `"`savename'"'
+		local savename_path `s(absolute_path)'
+		capture : noisily _zipdir `"`tmppath'"' , saving(`"`savename_path'"') `targetarchive`targetarchivecounter'_zipopts' `verbose'
 		if (_rc!=0) {
-			display as error in smcl `"creating ZIP archive file {input:`savename'} failed!"'
-			if (`"`verbose'"'==`"verbose"') display as error in smcl `"{tab}used syntax was: {input}_zipdir `"`tmppath'"' , saving(`"`savename'"') `targetarchive`targetarchivecounter'_zipopts' `verbose'"'
+			quietly : cd `"`oldpwd'"'
+			display as error in smcl `"creating ZIP archive file {input:`savename_path'} failed!"'
+			if (`"`verbose'"'==`"verbose"') display as error in smcl `"{tab}used syntax was: {input}_zipdir `"`tmppath'"' , saving(`"`savename_path'"') `targetarchive`targetarchivecounter'_zipopts' `verbose'"'
 		}
 		// clean up
 		if (`"`verbose'"'==`"verbose"') display as result in smcl `"{tab}{text}...erasing temporary directory {result:`tmppath'}"'
@@ -256,5 +261,12 @@ program define _create_tempsubdir , sclass
 	sreturn local tempdirname `"`subdirname'"'
 	sreturn local tempdirfullpath `"`parent'/`subdirname'"'
 	exit 0
+end
+/* subroutine: convert a given, possibly relative, filepath to an absolute filepath */
+program define _make_absolute_path , sclass
+	syntax anything(everything name=dirname id="directory name")
+	local dirname `dirname'
+	mata: st_local("absolute_path",pathresolve(`"`c(pwd)'"',`"`dirname'"'))
+	sreturn local absolute_path `"`absolute_path'"'
 end
 // EOF

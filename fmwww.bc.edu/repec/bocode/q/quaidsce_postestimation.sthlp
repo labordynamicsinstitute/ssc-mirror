@@ -126,12 +126,20 @@ uncompensated price elasticity of good {it:i} with respect to the price of good
 elasticities{p_end}
 
 
-{title:Corresponding author}
+{title:Authors}
 
 {pstd}Juan C. Caro{p_end}
 {pstd}University of Luxembourg{p_end}
 {pstd}juan.caro@uni.lu{p_end}
 
+{pstd}Juan Carlos Salgado{p_end}
+{pstd}INSP Mexico{p_end}
+
+{pstd}Grace Melo{p_end}
+{pstd}Texas A&M University{p_end}
+
+{pstd}Jose Alberto Molina{p_end}
+{pstd}Universidad de Zaragoza{p_end}
 
 {title:Also see}
 
