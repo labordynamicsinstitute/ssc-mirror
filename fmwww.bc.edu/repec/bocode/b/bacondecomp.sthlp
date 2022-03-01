@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.1 31jul2018}{...}
+{* *! version 1.0.4 26feb2022}{...}
 {viewerjumpto "Syntax" "bacondecomp##syntax"}{...}
 {viewerjumpto "Description" "bacondecomp##description"}{...}
 {viewerjumpto "Options" "bacondecomp##options"}{...}
@@ -104,11 +104,11 @@ of the {help xtreg} commands which generate estimates.
 
 
 {marker examples}{...}
-{title:Examples}
+{title:Real-World Example}
 
 {pstd}Load data that replicates Stevenson and Wolfers' (2006) analysis of 
 no-fault divorce reforms and female suicide.{p_end}
-{phang2}. {stata "use http://pped.org/bacon_example.dta": use http://pped.org/bacon_example.dta}{p_end}
+{phang2}. {stata "use http://pped.org/bacon_example.dta, clear": use http://pped.org/bacon_example.dta, clear}{p_end}
 
 {pstd}Estimate a two-way fixed effect DD model of female suicide on no-fault 
 divorce reforms.{p_end}
@@ -120,6 +120,30 @@ fixed effects DD model.{p_end}
 
 {pstd}Request the detailed decomposition of the DD model.{p_end}
 {phang2}. {stata bacondecomp asmrs post pcinc asmrh cases, ddetail}{p_end}
+
+{title:Simulated Example}
+
+{pstd}Create fake data that illustrates problems with heterogeneous time-varying treatment effects.{p_end}
+{phang2}. {stata "clear": clear}{p_end}
+{phang2}. {stata "range i 1 4 4": range i 1 4 4}{p_end}
+{phang2}. {stata "expand 10": expand 10}{p_end}
+{phang2}. {stata "sort i": sort i}{p_end}
+{phang2}. {stata "g id=_n": g id=_n}{p_end}
+{phang2}. {stata "expand 10": expand 10}{p_end}
+{phang2}. {stata "bys id: g t=_n": bys id: g t=_n}{p_end}
+{phang2}. {stata "g ttime=(i==1)*(-2)+(i==2)*3+(i==3)*5+(i==4)*15": g ttime=(i==1)*(-2)+(i==2)*3+(i==3)*5+(i==4)*15}{p_end}
+{phang2}. {stata "g d=(t>ttime)": g d=(t>ttime)}{p_end}
+{phang2}. {stata "g te=(10-i)*(t-ttime)*d": g te=(10-i)*(t-ttime)*d}{p_end}
+{phang2}. {stata "set seed 214215": set seed 214215}{p_end}
+{phang2}. {stata "drawnorm x e": drawnorm x e}{p_end}
+{phang2}. {stata "g y=te+t+x+e": g y=te+t+x+e}{p_end}
+{phang2}. {stata "xtset id t": xtset id t}{p_end}
+{phang2}. {stata "xtreg y d i.t if inlist(i,2,3) & t>3, i(id) fe": xtreg y d i.t if inlist(i,2,3) & t>3, i(id) fe}{p_end}
+{phang2}. {stata "xtreg y d i.t if inlist(i,2,3) & t<6, i(id) fe": xtreg y d i.t if inlist(i,2,3) & t<6, i(id) fe}{p_end}
+{phang2}. {stata "ba y d, stub(b_) ddetail nograph": ba y d, stub(b_) ddetail nograph}{p_end}
+{phang2}. {stata "ba y d x, stub(bx_) ddetail nograph": ba y d x, stub(bx_) ddetail nograph}{p_end}
+{phang2}. {stata "l b_T b_C b_B b_cg if !mi(b_T)": l b_T b_C b_B b_cg if !mi(b_T)}{p_end}
+{phang2}. {stata "l bx_T bx_C bx_B bx_cg if !mi(bx_T)": l bx_T bx_C bx_B bx_cg if !mi(bx_T)}{p_end}
 
 
 {marker saved_results}{...}

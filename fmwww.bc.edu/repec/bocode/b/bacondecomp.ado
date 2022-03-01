@@ -1,4 +1,10 @@
-*! 1.0.2 15sep2019 Andrew Goodman-Bacon, Thomas Goldring, Austin Nichols
+*! 1.0.4 24feb2022 Andrew Goodman-Bacon, Thomas Goldring, Austin Nichols
+* change from 1.0.3 14feb2020: multiple versions of 1.0.3 were circulating; fixed version control problems noted by Kit Baum
+* also fixes: some ddetail labeling, zero shares, and put anynever initialization to zero alongside anyalways
+* 1.0.3 14feb2020 Andrew Goodman-Bacon, Thomas Goldring, Austin Nichols
+* change from 1.0.2 15sep2019: if and in were not being passed to ddetail subroutine, pointed out by Brian Jacob
+* change from 1.0.2 15sep2019: remove ddetail subroutine, unless special option requested
+* 1.0.2 15sep2019 Andrew Goodman-Bacon, Thomas Goldring, Austin Nichols
 * changes from 1.0.1 31jul2019: 
 * fix bug pointed out by Nic Duquette, i.e. anyalways not defined to be zero with no always-treated unit in the panel
 * and fixed branching with ddetail as reported by David McLaughlin, i.e. main code executes after baconddtiming and exits with error at foreach var of varlist `x' {
@@ -16,7 +22,7 @@ if replay() {
  matlist e(sumdd), tw(20) tit(Bacon Decomposition) format(%12.0g) border(all)
 }
 else {
- syntax [varlist] [if] [in] [aw fw pw iw/] [, Msymbols(string) MColors(string) MSIZes(string) DDLine(string) noLine noNOte cvc within GROpt(string asis) noLEGend noGRaph stub(string) forcebalance(int 2) compare(string) txtformat(string) txtformat2(string) comparenox DDetail debug * ]
+ syntax [varlist] [if] [in] [aw fw pw iw/] [, Msymbols(string) MColors(string) MSIZes(string) DDLine(string) noLine noNOte cvc within GROpt(string asis) noLEGend noGRaph stub(string) forcebalance(int 2) compare(string) txtformat(string) txtformat2(string) comparenox DDetail debug OLDddtiming * ]
  marksample touse
 ******************************
 *parse the varlist into y (outcome), tr (treatment dummy), x (controls)  
@@ -39,24 +45,24 @@ else {
   di as err "Panel must be strongly balanced, i.e. each panel must have the same set of time points"
   }
 ******************************
+**** DROP THIS CALL unless oldddtiming specified
 *if no controls or weights, and ddetail option specified, do local version of ddtiming
 ******************************
- if ("`x'"=="" & "`exp'"=="") & "`ddetail'"!="" {
-  baconddtiming `y' `tr', i(`i') t(`t') ms(`msymbols') mc(`mcolors') msiz(`msizes') `line' ddli(`ddline') stub(`stub') `options' 
+ if ("`x'"=="" & "`exp'"=="") & "`ddetail'"!="" & "`oldddtiming'"!="" {
+  baconddtiming `y' `tr' `if' `in' , i(`i') t(`t') ms(`msymbols') mc(`mcolors') msiz(`msizes') `line' ddli(`ddline') stub(`stub') `options' 
   }
- if !("`x'"=="" & "`exp'"=="") & "`ddetail'"!="" {
-  di as err "ddetail option currently only works without weights and adjustment for control variables"
+ if !("`x'"=="")  & "`exp'"=="" & "`ddetail'"!="" & "`oldddtiming'"!="" {
+  di as err "ddetail with option oldddtiming only works without adjustment for control variables"
   err 198 
   }
-******************************
-* add this functionality in next release, also no-control compare option
-******************************
- if ("`x'"=="") & "`ddetail'"=="" {
-  di as err "with no control variables, must specify the ddetail option currently (only works without weights)"
+ if ("`x'"=="") & !("`exp'"=="") & "`ddetail'"!="" & "`oldddtiming'"!="" {
+  di as err "ddetail with option oldddtiming only works without weights"
   err 198 
   }
- 
-if !("`x'"=="") {
+ if ("`x'"=="" & "`exp'"=="") & "`ddetail'"!="" & "`oldddtiming'"!="" {
+  cap exit 601
+  }
+
 ******************************
 *Create variables for graph STUB option in syntax; [stub] is prepended to any variables to be saved
 ******************************
@@ -135,7 +141,7 @@ if !("`x'"=="") {
  * Create variables for onset and timing groups (for dyads), calculations
  * this is like reverse engineering the t* variable from D
 ******************************
- tempvar t1 onset never always samp
+ tempvar t1 onset never always samp tsamp dk
  qui {
   bys `touse' `i' (`t'): g `always'=(`tr'[1]==`tr'[_N]) & `tr'[1]==1 if `touse'
   bys `touse' `i' (`t'): g `never'=(`tr'[1]==`tr'[_N]) & `tr'[1]==0 if `touse'
@@ -145,19 +151,20 @@ if !("`x'"=="") {
 * Just make a consecutive variable for groups
 * to make it easier to loop through and map to observation numbers
 ******************************
-  qui egen long `g'=group(`onset'), lab
-  su `g', mean
+  qui egen long `g'=group(`onset') if `touse', lab
+  su `g' if `touse', mean
   loc ntimegps=r(max)
   loc alwaysnever=0
+  loc anyalways=0
+  loc anynever=0
 ******************************
 * put always treated units at the end of the list of groups
 ******************************
-  loc anyalways=0
-  count if `always'==1
+  count if `always'==1 & `touse'
   if r(N)>0 {
-    qui replace `g'=`ntimegps'+1 if `always'==1
+    qui replace `g'=`ntimegps'+1 if `always'==1 & `touse'
    la def `g' `=`ntimegps'+1' "Always", modify
-   su `g', mean
+   su `g' if `touse', mean
    loc ntimegps=r(max)
    loc alwaysnever=`alwaysnever'+1
    loc anyalways=1
@@ -165,11 +172,11 @@ if !("`x'"=="") {
 ******************************
 * put never treated units at the end of the list of groups (after always)
 ******************************
-  count if `never'==1
+  count if `never'==1 & `touse'
   if r(N)>0 {  
-   qui replace `g'=`ntimegps'+1 if `never'==1
+   qui replace `g'=`ntimegps'+1 if `never'==1 & `touse'
    la def `g' `=`ntimegps'+1' "Never", modify
-   su `g', mean
+   su `g' if `touse', mean
    loc ntimegps=r(max)
    loc alwaysnever=`alwaysnever'+1
    loc anynever=1
@@ -200,6 +207,9 @@ if !("`x'"=="") {
 ******************************
 * Estimate DiD model
 ******************************
+
+**BACON: need to use this code for no controls AND separately do the detailed decomp here.
+
  qui xtreg `y' `tr' `x' `timedummies' `wtexp'  if `touse', fe `options'
  tempname DDest origb origv
  scalar `DDest'=_b[`tr']
@@ -208,185 +218,448 @@ if !("`x'"=="") {
  tempvar p d sumwt sumg samp Dtilde dp ptilde pgjtilde
  tempname VD Vb Vdp Rsq finals share BD Bp Beta finals
 
- * Frisch-Waugh-Lovell Regression
- qui xtreg `tr' `x' `timedummies' `wtexp' if `touse', fe `options'
- qui predict double `p' if e(sample)
- qui predict double `d' if e(sample), ue
+ *********** *********** *********** *********** *********** *********** ***********
+ **BACON: #1 HERE'S THE BRANCH THAT EXECUTES THE UNCONTROLLED DECOMP (NO DDETAIL)
+ *********** *********** *********** *********** *********** *********** ***********
+if "`x'"=="" & "`ddetail'"=="" {
+    qui xtreg `y' `tr' `timedummies' `wtexp'  if `touse', fe `options'
+    tempname DDest origb origv
+    scalar `DDest'=_b[`tr']
+    mat `origb'=e(b)
+    mat `origv'=e(V)
+    tempvar p d sumwt sumg samp Dtilde dp ptilde pgjtilde
+    tempname VD Vb Vdp Rsq finals share BD Bp Beta finals
 
-******************************  
-* collapse  x's and p to the group/year level
-******************************  
- loc xglist
- foreach v in `x' `p' {
+   
+  ******************************
+  * comparisons across all timing groups
+  * first tell user what is happening in case the regressions take a long time
+  ******************************
+  loc index 1
+  di as txt "Computing decomposition across `ntimegps' timing groups"
+  if `alwaysnever'>0 {
+   di as txt "including " cond("`anyalways'"=="1","an always-treated group","") cond(`alwaysnever'==2," and ","") cond("`anynever'"=="1","a never-treated group","")
+   }
+  loc ncompare=`ntimegps' 
+  if `alwaysnever'>1 loc ncompare=`ntimegps'-1
+
+  * l is outer loop
+  * k loops up to l-1
+  forv it=2/`ntimegps' {
+   forv jt=1/`=`it'-1' {
+    loc itstring="`:lab `g' `jt''"
+    loc jtstring="`:lab `g' `it''"
+    if "`debug'"!="" noi di as err "Treatment `itstring' and control `jtstring' "
+    qui g byte `samp' =((`g'==`it')|(`g'==`jt'))&`touse'
+    su `samp' if `touse' [aw=`exp'], mean
+    scalar `share' = r(mean)
+
+  ******************************
+  * this is VD so it shouldn't have the x's partialled out
+  ******************************
+  if !(`alwaysnever'>1 & `it'==`ntimegps' & `jt'==`ntimegps'-1) {
+   *get dyad variance
+   qui xtreg `tr' `timedummies' `wtexp' if `samp', fe `options'
+   qui predict double `Dtilde' if e(sample), e
+   qui sum `Dtilde' [aw=`exp']
+   scalar `VD' = ((r(N)-1)/r(N))*r(Var)
+   }
+  else {
+   scalar `VD' = 0
+   }
+   
+  *XXXXXXXXX
+   scalar `finals' = (`share')^2*`VD'
+
+
+   
+  if !(`alwaysnever'>1 & `it'==`ntimegps' & `jt'==`ntimegps'-1) {
+   ****get the proper X-adjusted dyad coef
+   tempname BD Bb
+   qui xtreg `y' `tr' `timedummies' `wtexp' if `samp', fe `options'
+   scalar `Beta' = _b[`tr']
+   }
+
+   qui {
+    replace `T' = "`jtstring'" in `index'
+    replace `C' = "`itstring'" in `index'
+    replace `S' = `finals' in `index'
+    replace `B' = `Beta' in `index'
+    replace `cgroup'=1*(!inlist("`itstring'","Always","Never")&!inlist("`jtstring'","Always","Never"))+2*inlist("Always","`itstring'","`jtstring'")+3*inlist("Never","`itstring'","`jtstring'")  in `index'
+    replace `T' = "Timing" if `cgroup'==1
+    replace `C' = "Groups" if `cgroup'==1
+    loc index=`index'+1
+    }		
+   foreach name in samp Dtilde dp dk tsamp{
+     cap drop ``name''
+     }
+    }
+   }
+  lab def `cgroup' 1 "Timing groups" 2 "Always treated vs timing" 3 "Never treated vs timing" 4 "Within" 5 "Always vs never treated", modify
+  la val `cgroup' `cgroup'
+
+   tempvar omega DD wgt sg
+   tempname tb totals O
+  ******************************
+  * rescale weights
+  ******************************
+   su `S' if (`T'~="Within"), mean
+   scalar `tb'=r(sum)
+   qui gen double `sg' = `S'/scalar(`tb') if `T'~="Within"
+   su `S', mean
+   scalar `totals' = r(sum)
+   qui gen double `DD' = `B' if !mi(`S')
+   qui gen double `wgt' = `S'/`totals' if !mi(`S')
+  }
+   
+ 
+
+ 
+ *********** *********** *********** *********** *********** *********** ***********
+ **BACON: #2 HERE'S THE BRANCH THAT EXECUTES THE UNCONTROLLED DECOMP (WITH DDETAIL)
+ *********** *********** *********** *********** *********** *********** ***********
+if "`x'"=="" & "`ddetail'"!="" {
+  ******************************
+  * comparisons across all timing groups
+  * first tell user what is happening in case the regressions take a long time
+  ******************************
+  loc index 1
+  di as txt "Computing decomposition across `ntimegps' timing groups"
+  if `alwaysnever'>0 {
+   di as txt "including " cond("`anyalways'"=="1","an always-treated group","") cond(`alwaysnever'==2," and ","") cond("`anynever'"=="1","a never-treated group","")
+   }
+  loc ncompare=`ntimegps' 
+  if `alwaysnever'>1 loc ncompare=`ntimegps'-1
+
+  loc stoploop = `ncompare'-1
+
+  * l is outer loop
+  * k loops up to l-1
+  forv it=2/`ntimegps' {
+   forv jt=1/`=`it'-1' {
+    loc itstring="`:lab `g' `it''"
+    loc jtstring="`:lab `g' `jt''"
+    **BACON: THIS PART IS DIFFERENT WITH DDETAIL--SAMPLE NEEDS TO RESTRICT ON TIME, TOO, 
+    **AND INCORPORATE THE WITHIN-SUBSAMPLE SHARES OF EACH GROUP
+    **FIRST DO k vs l
+    *DUMMY FOR GROUP l's PRE-PERIOD
+    qui sum `t' if `tr'==0 & (`g'==`it')
+    qui g byte `tsamp' = inrange(`t',r(min),r(max))
+    
+    qui g byte `samp' =((`g'==`it')|(`g'==`jt')) & `tsamp' & `touse'
+    su `samp' if `touse' [aw=`exp'], mean
+    scalar `share' = r(mean)
+if `share'>0 {    
+  ******************************
+  * this is VD
+  ******************************
+  if !(`alwaysnever'>1 & `it'==`ntimegps' & `jt'==`ntimegps'-1) {
+   *get dyad variance
+   qui xtreg `tr' `timedummies' `wtexp' if `samp', fe `options'
+   qui predict double `Dtilde' if e(sample), e
+   qui sum `Dtilde' [aw=`exp']
+   scalar `VD' = ((r(N)-1)/r(N))*r(Var)
+   }
+  else {
+   scalar `VD' = 0
+   }
+   scalar `finals' = (`share')^2*`VD'
+
+*compute + post block 1
+  if !(`alwaysnever'>1 & `it'==`ntimegps' & `jt'==`ntimegps'-1) {
+   ****get the proper X-adjusted dyad coef
+   tempname BD Bb
+   qui xtreg `y' `tr' `timedummies' `wtexp' if `samp', fe `options'
+   scalar `Beta' = _b[`tr']
+   }
+
+   qui {
+if `finals'>0 {
+    replace `T' = "`jtstring'" in `index'
+    replace `C' = "`itstring'" in `index'
+    replace `S' = `finals' in `index'
+    replace `B' = `Beta' in `index'
+    replace `cgroup'=1*(!inlist("`itstring'","Always","Never")&!inlist("`jtstring'","Always","Never")&`it'<`jt')+2*(!inlist("`itstring'","Always","Never")&!inlist("`jtstring'","Always","Never")&`it'>`jt')+3*(inlist("Always","`itstring'","`jtstring'")&!inlist("Never","`itstring'","`jtstring'"))+4*(inlist("Never","`itstring'","`jtstring'")&!inlist("Always","`itstring'","`jtstring'"))+5*(inlist("Never","`itstring'","`jtstring'")&inlist("Always","`itstring'","`jtstring'"))  in `index'
+if "`debug'"!="" {
+loc cc=1*(!inlist("`itstring'","Always","Never")&!inlist("`jtstring'","Always","Never")&`it'<`jt')+2*(!inlist("`itstring'","Always","Never")&!inlist("`jtstring'","Always","Never")&`it'>`jt')+3*(inlist("Always","`itstring'","`jtstring'")&!inlist("Never","`itstring'","`jtstring'"))+4*(inlist("Never","`itstring'","`jtstring'")&!inlist("Always","`itstring'","`jtstring'"))+5*(inlist("Never","`itstring'","`jtstring'")&inlist("Always","`itstring'","`jtstring'")) 
+di as err "in comp blo 1, putting `jtstring' for T, `itstring' for C, `=`finals'' for S, `=`Beta'' for B, and `cc' for G in `index'"
+}
+ }
+    loc index=`index'+1
+    }		
+   foreach name in samp Dtilde dp tsamp{
+     cap drop ``name''
+     }
+
+
+*comp block 2
+  *only do this when the "later" group isn't one of those last non-switchers
+  if `it'<`stoploop'+1{
+  	**DO THE l vs k part
+  	  *DUMMY FOR GROUP k's POST-PERIOD
+  	  qui sum `t' if `tr'==1 & (`g'==`jt')
+  	  qui g byte `tsamp' = inrange(`t',r(min),r(max))  
+  	  
+  	  qui g byte `samp' =((`g'==`it')|(`g'==`jt')) & `tsamp' & `touse'
+  	  su `samp' if `touse' [aw=`exp'], mean
+  	  scalar `share' = r(mean)
+  	  
+  	******************************
+  	* this is VD
+  	******************************
+  	if !(`alwaysnever'>1 & `it'==`ntimegps' & `jt'==`ntimegps'-1) {
+  	 *get dyad variance
+  	 qui xtreg `tr' `timedummies' `wtexp' if `samp', fe `options'
+  	 qui predict double `Dtilde' if e(sample), e
+  	 qui sum `Dtilde' [aw=`exp']
+  	 scalar `VD' = ((r(N)-1)/r(N))*r(Var)
+  	 }
+  	else {
+  	 scalar `VD' = 0
+  	 }
+  	 scalar `finals' = (`share')^2*`VD'
+
+  	  
+  	if !(`alwaysnever'>1 & `it'==`ntimegps' & `jt'==`ntimegps'-1) {
+  	 ****get the proper X-adjusted dyad coef
+  	 tempname BD Bb
+  	 qui xtreg `y' `tr' `timedummies' `wtexp' if `samp', fe `options'
+  	 scalar `Beta' = _b[`tr']
+  	 }
+
+  	 qui {
+  	  replace `T' = "`itstring'" in `index'
+  	  replace `C' = "`jtstring'" in `index'
+  	  replace `S' = `finals' in `index'
+  	  replace `B' = `Beta' in `index'
+*  	  replace `cgroup'=1*(!inlist("`itstring'","Always","Never")&!inlist("`jtstring'","Always","Never"))+2*inlist("Always","`itstring'","`jtstring'")+3*inlist("Never","`itstring'","`jtstring'")  in `index'
+replace `cgroup'=1*(!inlist("`itstring'","Always","Never")&!inlist("`jtstring'","Always","Never")&(`it'>`jt'))+2*(!inlist("`itstring'","Always","Never")&!inlist("`jtstring'","Always","Never")&(`it'<`jt'))+3*(inlist("Always","`itstring'","`jtstring'")&!inlist("Never","`itstring'","`jtstring'"))+4*(inlist("Never","`itstring'","`jtstring'")&!inlist("Always","`itstring'","`jtstring'"))+5*(inlist("Never","`itstring'","`jtstring'")&inlist("Always","`itstring'","`jtstring'"))  in `index'
+if "`debug'"!="" {
+loc cc=1*(!inlist("`itstring'","Always","Never")&!inlist("`jtstring'","Always","Never")&(`jt'<`it'))+2*(!inlist("`itstring'","Always","Never")&!inlist("`jtstring'","Always","Never")&(`jt'>`it'))+3*(inlist("Always","`itstring'","`jtstring'")&!inlist("Never","`itstring'","`jtstring'"))+4*(inlist("Never","`itstring'","`jtstring'")&!inlist("Always","`itstring'","`jtstring'"))+5*(inlist("Never","`itstring'","`jtstring'")&inlist("Always","`itstring'","`jtstring'")) 
+di as err "in comp blo 2, putting `itstring' for T, `jtstring' for C, `=`finals'' for S, `=`Beta'' for B, and `cc' for G in `index'"
+}
+  	  loc index=`index'+1
+  	  }		
+  	 foreach name in samp Dtilde dp dk tsamp {
+  	   cap drop ``name''
+  	   }
+  }
+     
+}     
+    }
+   }
+   
+  ***Uncontrolled decomp: show EARLY v LATE, LATE v EARLY instead of just "TIMING"
+  lab def `cgroup' 1 "Late vs Early" 2 "Early vs Late"  3 "Always treated vs timing" 4 "Never treated vs timing" 5 "Always vs never treated", modify
+  la val `cgroup' `cgroup'
+
+
+   tempvar omega DD wgt sg
+   tempname tb totals O
+  ******************************
+  * rescale weights
+  ******************************
+   su `S' if (`T'~="Within"), mean
+   scalar `tb'=r(sum)
+   qui gen double `sg' = `S'/scalar(`tb') if `T'~="Within"
+   su `S', mean
+   scalar `totals' = r(sum)
+   qui gen double `DD' = `B' if !mi(`S')
+   qui gen double `wgt' = `S'/`totals' if !mi(`S')
+  }
+
+
+
+ *********** *********** *********** *********** *********** *********** ***********
+ **BACON: #3 HERE'S THE BRANCH THAT EXECUTES THE CONTROLLED DECOMP (NO DDETAIL)
+ *********** *********** *********** *********** *********** *********** ***********
+if "`x'"~=""{
+  * Frisch-Waugh-Lovell Regression
+  qui xtreg `tr' `x' `timedummies' `wtexp' if `touse', fe `options'
+  qui predict double `p' if e(sample)
+  qui predict double `d' if e(sample), ue
+
+ ******************************  
+ * collapse  x's and p to the group/year level
+ ******************************  
+  loc xglist
+  foreach v in `x' `p' {
+   qui {
+    tempvar g`v'
+    bys `touse' `g' `t':g double `sumg'=sum(`v'*`exp')
+    by `touse'  `g' `t':g double `sumwt'=sum(`exp'/(`v'<.))
+ 	by `touse'  `g' `t':g double `g`v''=`sumg'[_N]/`sumwt'[_N] if `touse'
+    cap drop `sumg' `sumwt'
+    if "`v'"!="`p'" loc xglist `xglist' `g`v''
+    }
+   }
+  
+ ******************************
+ * comparisons across all timing groups
+ * first tell user what is happening in case the regressions take a long time
+ ******************************
+ loc index 1
+ di as txt "Computing decomposition across `ntimegps' timing groups"
+ if `alwaysnever'>0 {
+  di as txt "including " cond("`anyalways'"=="1","an always-treated group","") cond(`alwaysnever'==2," and ","") cond("`anynever'"=="1","a never-treated group","")
+  }
+ loc ncompare=`ntimegps' 
+ if `alwaysnever'>1 loc ncompare=`ntimegps'-1
+
+ * l is outer loop
+ * k loops up to l-1
+ forv it=2/`ntimegps' {
+  forv jt=1/`=`it'-1' {
+   loc itstring="`:lab `g' `it''"
+   loc jtstring="`:lab `g' `jt''"
+   qui g byte `samp' =((`g'==`it')|(`g'==`jt'))&`touse'
+   su `samp' if `touse' [aw=`exp'], mean
+   scalar `share' = r(mean)
+
+ ******************************
+ * this is VD so it shouldn't have the x's partialled out
+ ******************************
+ if !(`alwaysnever'>1 & `it'==`ntimegps' & `jt'==`ntimegps'-1) {
+  *get dyad variance
+  qui xtreg `tr' `timedummies' `wtexp' if `samp', fe `options'
+  qui predict double `Dtilde' if e(sample), e
+  qui sum `Dtilde' [aw=`exp']
+  scalar `VD' = ((r(N)-1)/r(N))*r(Var)
+  }
+ else {
+  scalar `VD' = 0
+  }
+  
+ ******************************  
+ * this code partials FE out of the GROUP-level x's, not indiv-level hence `g`var''
+ ******************************
+ if !(`alwaysnever'>1 & `it'==`ntimegps' & `jt'==`ntimegps'-1) {
+  local XXlist
+  foreach var of varlist `x' {
+   qui xtreg `g`var'' `timedummies' `wtexp' if `samp', fe `options'
+   tempvar XX`var'
+   qui predict double `XX`var'' if e(sample), e
+   local XXlist `XXlist' `XX`var''
+   }
+  cap drop `pgjtilde'
+  qui reg `Dtilde' `XXlist' [aw=`exp']
+  scalar `Rsq' = e(r2)
+  qui predict double `pgjtilde' if e(sample)
+  drop `XXlist'
+  *partialled out p in the dyad
+  cap drop `ptilde'
+  qui xtreg `g`p'' `timedummies' `wtexp' if `samp', fe `options'
+  qui predict double `ptilde' if e(sample), e
+  qui gen double `dp' = `pgjtilde' - `ptilde' if `samp'
+  *get variance of "pg tilde" in the dyad
+  qui sum `dp' [aw=`exp']
+  scalar `Vdp' = ((r(N)-1)/r(N))*r(Var)		
+  *weight: this is the variance of "dtilde" in the dyad.
+  scalar `finals' = (`share')^2*((1-`Rsq')*`VD' + `Vdp')
+  }
+ else {
+  scalar `VD' = 0
+  scalar `Vdp' = 0
+  scalar `Rsq' = 0
+  cap drop `ptilde'
+  qui xtreg `g`p'' `timedummies' `wtexp' if `samp', fe `options'
+  qui predict double `ptilde' if e(sample), e
+  qui sum `ptilde' [aw=`exp']       
+  scalar `Vb' = ((r(N)-1)/r(N))*r(Var) 
+  *weight: this is the variance of "dtilde" in the dyad.
+  scalar `finals' = (`share')^2*(`Vb')
+  }
+
+ if !(`alwaysnever'>1 & `it'==`ntimegps' & `jt'==`ntimegps'-1) {
+  ****get the proper X-adjusted dyad coef
+  tempname BD Bb
+  qui xtreg `y' `tr' `xglist' `timedummies' `wtexp' if `samp', fe `options'
+  scalar `BD' = _b[`tr']
+  qui xtreg `y' `dp' `timedummies' `wtexp' if `samp', fe `options'
+  scalar `Bb' = _b[`dp']
+  *The dyad "Beta" combines the proper controlled one and a term for how wrong the "FWL" coef is
+  scalar `Beta' = ((1-`Rsq')*`VD'*`BD' + `Vdp'*`Bb')/((1-`Rsq')*`VD' + `Vdp')
+  }
+ else {
+  ****get the proper X-adjusted dyad coef
+  * tempname BD Bb
+  qui xtreg `y' `g`p'' `timedummies' `wtexp' if `samp', fe `options'
+  scalar `Beta' = -_b[`g`p'']
+  }
+
   qui {
-   tempvar g`v'
-   bys `touse' `g' `t':g double `sumg'=sum(`v'*`exp')
-   by `touse'  `g' `t':g double `sumwt'=sum(`exp'/(`v'<.))
-	by `touse'  `g' `t':g double `g`v''=`sumg'[_N]/`sumwt'[_N] if `touse'
-   cap drop `sumg' `sumwt'
-   if "`v'"!="`p'" loc xglist `xglist' `g`v''
+    replace `T' = "`jtstring'" in `index'
+    replace `C' = "`itstring'" in `index'
+    replace `S' = `finals' in `index'
+    replace `B' = `Beta' in `index'
+    replace `cgroup'=1*(!inlist("`itstring'","Always","Never")&!inlist("`jtstring'","Always","Never"))+2*inlist("Always","`itstring'","`jtstring'")+3*inlist("Never","`itstring'","`jtstring'")  in `index'
+    replace `T' = "Timing" if `cgroup'==1
+    replace `C' = "Groups" if `cgroup'==1
+
+   loc index=`index'+1
+   }		
+  foreach name in samp Dtilde dp {
+    cap drop ``name''
+    }
    }
   }
- 
-******************************
-* comparisons across all timing groups
-* first tell user what is happening in case the regressions take a long time
-******************************
-loc index 1
-di as txt "Computing decomposition across `ntimegps' timing groups"
-if `alwaysnever'>0 {
- di as txt "including " cond("`anyalways'"=="1","an always-treated group","") cond(`alwaysnever'==2," and ","") cond("`anynever'"=="1","a never-treated group","")
- }
-loc ncompare=`ntimegps' 
-if `alwaysnever'>1 loc ncompare=`ntimegps'-1
+ lab def `cgroup' 1 "Timing groups" 2 "Always treated vs timing" 3 "Never treated vs timing" 4 "Within" 5 "Always vs never treated", modify
+ la val `cgroup' `cgroup'
 
-* l is outer loop
-* k loops up to l-1
-forv it=2/`ntimegps' {
- forv jt=1/`=`it'-1' {
-  loc itstring="`:lab `g' `it''"
-  loc jtstring="`:lab `g' `jt''"
-  qui g byte `samp' =((`g'==`it')|(`g'==`jt'))&`touse'
-  su `samp' if `touse' [aw=`exp'], mean
-  scalar `share' = r(mean)
+ ******************************
+ * within part
+ ******************************
+ tempname Bw Vw
+ tempvar pw
+ if `c(matsize)'<11000 cap set matsize 11000
+ qui xtreg `y' i.`g'##(`timedummies') `p' `wtexp' if `touse', fe `options'
+ scalar `Bw' = -_b[`p']
+ qui xtreg `p' i.`g'##(`timedummies') `wtexp' if `touse', fe `options'
+ qui predict double `pw' if e(sample), e
+ qui sum `pw' [aw=`exp']
+ scalar `Vw' = ((r(N)-1)/r(N))*r(Var)
+ qui replace `T' = "Within" in `index'
+ qui replace `C' = "" in `index'
+ qui replace `S' = `Vw' in `index'
+ qui replace `B' = `Bw' in `index'
+ qui replace `cgroup'=4 in `index'
 
-******************************
-* this is VD so it shouldn't have the x's partialled out
-******************************
-if !(`alwaysnever'>1 & `it'==`ntimegps' & `jt'==`ntimegps'-1) {
- *get dyad variance
- qui xtreg `tr' `timedummies' `wtexp' if `samp', fe `options'
- qui predict double `Dtilde' if e(sample), e
- qui sum `Dtilde' [aw=`exp']
- scalar `VD' = ((r(N)-1)/r(N))*r(Var)
- }
-else {
- scalar `VD' = 0
- }
- 
-******************************  
-* this code partials FE out of the GROUP-level x's, not indiv-level hence `g`var''
-******************************
-if !(`alwaysnever'>1 & `it'==`ntimegps' & `jt'==`ntimegps'-1) {
- local XXlist
- foreach var of varlist `x' {
-  qui xtreg `g`var'' `timedummies' `wtexp' if `samp', fe `options'
-  tempvar XX`var'
-  qui predict double `XX`var'' if e(sample), e
-  local XXlist `XXlist' `XX`var''
-  }
- cap drop `pgjtilde'
- qui reg `Dtilde' `XXlist' [aw=`exp']
- scalar `Rsq' = e(r2)
- qui predict double `pgjtilde' if e(sample)
- drop `XXlist'
- *partialled out p in the dyad
- cap drop `ptilde'
- qui xtreg `g`p'' `timedummies' `wtexp' if `samp', fe `options'
- qui predict double `ptilde' if e(sample), e
- qui gen double `dp' = `pgjtilde' - `ptilde' if `samp'
- *get variance of "pg tilde" in the dyad
- qui sum `dp' [aw=`exp']
- scalar `Vdp' = ((r(N)-1)/r(N))*r(Var)		
- *weight: this is the variance of "dtilde" in the dyad.
- scalar `finals' = (`share')^2*((1-`Rsq')*`VD' + `Vdp')
- }
-else {
- scalar `VD' = 0
- scalar `Vdp' = 0
- scalar `Rsq' = 0
- cap drop `ptilde'
- qui xtreg `g`p'' `timedummies' `wtexp' if `samp', fe `options'
- qui predict double `ptilde' if e(sample), e
- qui sum `ptilde' [aw=`exp']       
- scalar `Vb' = ((r(N)-1)/r(N))*r(Var) 
- *weight: this is the variance of "dtilde" in the dyad.
- scalar `finals' = (`share')^2*(`Vb')
+  tempvar omega DD wgt sg
+  tempname tb totals O
+ ******************************
+ * rescale weights
+ ******************************
+  su `S' if (`T'~="Within"), mean
+  scalar `tb'=r(sum)
+  qui gen double `sg' = `S'/scalar(`tb') if `T'~="Within"
+  su `S', mean
+  scalar `totals' = r(sum)
+  qui g double `omega'= 1-scalar(`tb')/scalar(`totals')
+  su `omega', mean
+  scalar `O' = r(sum)
+  qui gen double `DD' = `sg'*(1-`O')*`B'*(`T'~="Within")+`O'*`B'*(`T'=="Within") if !mi(`S')
+  qui gen double `wgt' = `S'/`totals' if !mi(`S')
  }
 
-if !(`alwaysnever'>1 & `it'==`ntimegps' & `jt'==`ntimegps'-1) {
- ****get the proper X-adjusted dyad coef
- tempname BD Bb
- qui xtreg `y' `tr' `xglist' `timedummies' `wtexp' if `samp', fe `options'
- scalar `BD' = _b[`tr']
- qui xtreg `y' `dp' `timedummies' `wtexp' if `samp', fe `options'
- scalar `Bb' = _b[`dp']
- *The dyad "Beta" combines the proper controlled one and a term for how wrong the "FWL" coef is
- scalar `Beta' = ((1-`Rsq')*`VD'*`BD' + `Vdp'*`Bb')/((1-`Rsq')*`VD' + `Vdp')
- }
-else {
- ****get the proper X-adjusted dyad coef
- * tempname BD Bb
- qui xtreg `y' `g`p'' `timedummies' `wtexp' if `samp', fe `options'
- scalar `Beta' = -_b[`g`p'']
- }
-
- qui {
-  replace `T' = "`itstring'" in `index'
-  replace `C' = "`jtstring'" in `index'
-  replace `S' = `finals' in `index'
-  replace `B' = `Beta' in `index'
-  replace `R2' = `Rsq' in `index'
-  replace `cgroup'=1*(!inlist("`itstring'","Always","Never")&!inlist("`jtstring'","Always","Never"))+2*inlist("Always","`itstring'","`jtstring'")+3*inlist("Never","`itstring'","`jtstring'")  in `index'
-  loc index=`index'+1
-  }		
- foreach name in samp Dtilde dp {
-   cap drop ``name''
-   }
-  }
- }
-lab def `cgroup' 1 "Timing groups" 2 "Always treated vs timing" 3 "Never treated vs timing" 4 "Within" 5 "Always vs never treated"
-la val `cgroup' `cgroup'
-
-******************************
-* within part
-******************************
-tempname Bw Vw
-tempvar pw
-if `c(matsize)'<11000 cap set matsize 11000
-qui xtreg `y' i.`g'##(`timedummies') `p' `wtexp' if `touse', fe `options'
-scalar `Bw' = -_b[`p']
-qui xtreg `p' i.`g'##(`timedummies') `wtexp' if `touse', fe `options'
-qui predict double `pw' if e(sample), e
-qui sum `pw' [aw=`exp']
-scalar `Vw' = ((r(N)-1)/r(N))*r(Var)
-qui replace `T' = "Within" in `index'
-qui replace `C' = "" in `index'
-qui replace `S' = `Vw' in `index'
-qui replace `B' = `Bw' in `index'
-qui replace `cgroup'=4 in `index'
-
- tempvar omega DD wgt sg
- tempname tb totals O
-******************************
-* rescale weights
-******************************
- su `S' if (`T'~="Within"), mean
- scalar `tb'=r(sum)
- qui gen double `sg' = `S'/scalar(`tb') if `T'~="Within"
- su `S', mean
- scalar `totals' = r(sum)
- qui g double `omega'= 1-scalar(`tb')/scalar(`totals')
- su `omega', mean
- scalar `O' = r(sum)
- qui gen double `DD' = `sg'*(1-`O')*`B'*(`T'~="Within")+`O'*`B'*(`T'=="Within") if !mi(`S')
- qui gen double `wgt' = `S'/`totals' if !mi(`S')
 
 ******************************
  * Post estimates
+ * [ cvcwgt line once had wrong index value of 4 instead of 5 ]
 ******************************
  tempname postb postv diagv output output1 output2 sumcalc summary summary1 summary2 summary3
  forv ix=1/`index' {
-  mat `sumcalc'=nullmat(`sumcalc')\(`=`cgroup'[`ix']',`=`B'[`ix']',`=`wgt'[`ix']')
-  if (`=`cgroup'[`ix']')==4 loc winest=`=`B'[`ix']'
-  if (`=`cgroup'[`ix']')==4 loc winwgt=`=`wgt'[`ix']'
-  if (`=`cgroup'[`ix']')==5 loc cvcest=`=`B'[`ix']'
-  if (`=`cgroup'[`ix']')==4 loc cvcwgt=`=`wgt'[`ix']'
-  mat `postb'=nullmat(`postb'),`=`B'[`ix']'
-  mat `postv'=nullmat(`postv'),`=`wgt'[`ix']'
-  mat `output1'=nullmat(`output1'),`=`B'[`ix']'
-  mat `output2'=nullmat(`output2'),`=`wgt'[`ix']'
-  loc rname `rname' "`=`T'[`ix']'`=cond("`=`C'[`ix']'"=="","","_")'`=`C'[`ix']'"
+  if ~mi(`=`B'[`ix']') & (`=`wgt'[`ix']'>0 & `=`wgt'[`ix']'<.) {
+   mat `sumcalc'=nullmat(`sumcalc')\(`=`cgroup'[`ix']',`=`B'[`ix']',`=`wgt'[`ix']')
+   if (`=`cgroup'[`ix']')==4 loc winest=`=`B'[`ix']'
+   if (`=`cgroup'[`ix']')==4 loc winwgt=`=`wgt'[`ix']'
+   if (`=`cgroup'[`ix']')==5 loc cvcest=`=`B'[`ix']'
+   if (`=`cgroup'[`ix']')==5 loc cvcwgt=`=`wgt'[`ix']'
+   mat `postb'=nullmat(`postb'),`=`B'[`ix']'
+   mat `postv'=nullmat(`postv'),`=`wgt'[`ix']'
+   mat `output1'=nullmat(`output1'),`=`B'[`ix']'
+   mat `output2'=nullmat(`output2'),`=`wgt'[`ix']'
+   loc rname `rname' "`=`T'[`ix']'`=cond("`=`C'[`ix']'"=="","","_")'`=`C'[`ix']'"
+   }
   }
  if "`debug'"!="" di "sumcalc matrix"
  if "`debug'"!="" mat li `sumcalc'
@@ -396,14 +669,27 @@ qui replace `cgroup'=4 in `index'
  mat `summary'=`summary1',`summary2'
  if "`debug'"!=""  di "summary matrix"
  if "`debug'"!=""  mat li `summary'
+ if "`debug'"!=""  di "summary3 matrix"
+ if "`debug'"!=""  mat li `summary3'
  forv row=1/`=rowsof(`summary3')' {
   * T vs Never; T vs Always, Timing, Within, C vs C
-  if `summary3'[`row',1]==1 loc sumrows `sumrows' "Timing_groups"
-  if `summary3'[`row',1]==2 loc sumrows `sumrows' "Always_v_timing"
-  if `summary3'[`row',1]==3 loc sumrows `sumrows' "Never_v_timing"
-  if `summary3'[`row',1]==4 loc sumrows `sumrows' "Within"
-  if `summary3'[`row',1]==5 loc sumrows `sumrows' "Always_v_never"
+  if `summary3'[`row',1]==1 loc sumrows `"`sumrows' "Timing_groups""'
+  if `summary3'[`row',1]==2 loc sumrows `"`sumrows' "Always_v_timing""'
+  if `summary3'[`row',1]==3 loc sumrows `"`sumrows' "Never_v_timing""'
+  if `summary3'[`row',1]==4 loc sumrows `"`sumrows' "Within""'
+  if `summary3'[`row',1]==5 loc sumrows `"`sumrows' "Always_v_never""'
   }
+if "`x'"=="" & "`ddetail'"!="" {
+ loc sumrows
+ forv row=1/`=rowsof(`summary3')' {
+  * lab def `cgroup' 1 "Late vs Early" 2 "Early vs Late"  3 "Always treated vs timing" 4 "Never treated vs timing" 5 "Always vs never treated", modify
+  if `summary3'[`row',1]==1 loc sumrows `"`sumrows' "Late_v_Early""'
+  if `summary3'[`row',1]==2 loc sumrows `"`sumrows' "Early_v_Late""'
+  if `summary3'[`row',1]==3 loc sumrows `"`sumrows' "Always_v_timing""'
+  if `summary3'[`row',1]==4 loc sumrows `"`sumrows' "Never_v_timing""'
+  if `summary3'[`row',1]==5 loc sumrows `"`sumrows' "Always_v_never""'
+  }
+}
  mat rownames `summary'=`sumrows'
  mat colnames `summary'=Beta TotalWeight
  mat `output'=`output1'',`output2''
@@ -444,6 +730,8 @@ qui replace `cgroup'=4 in `index'
   
 ******************************
 * Graphs, if not suppressed with nograph option
+***BACON: NEED A DDETAIL GRAPH SYNTAX
+* currently just add gropt on the end of default options
 ******************************
 if "`graph'"=="" {
  loc opt ytitle("2x2 DD Estimate") xtitle("Weight") ylabel(, nogrid) graphregion(fcolor(white) color(white) icolor(white) ) 
@@ -487,8 +775,11 @@ if "`graph'"=="" {
  `sc', `opt' `gropt' 
  }
 }
-}
+
 end
+
+
+
 
 * adapted from ddtiming; took out save option and added stub option
 * version 0.1  11nov2018  Thomas Goldring, thomasgoldring@gmail.com
@@ -499,7 +790,7 @@ to this software to the public domain worldwide. This software is distributed wi
 This code is licensed under the CC0 1.0 Universal license.  The full legal text as well as a
 human-readable summary can be accessed at http://creativecommons.org/publicdomain/zero/1.0/
 */
-
+cap program drop baconddtiming
 program define baconddtiming, eclass sortpreserve
   version 11.2
   
@@ -924,7 +1215,7 @@ program define baconddtiming, eclass sortpreserve
   * Save data
   if "`stub'" != "" {
     * "dd_est,weight,weight_rescale,time_lower,time_upper,dd_type" columns
-    foreach v in dd_est,weight,weight_rescale,time_lower,time_upper,dd_type {
+    foreach v in dd_est weight weight_rescale time_lower time_upper dd_type {
      g `stub'`v'=.
      }
     forvalues k = 1/`= rowsof(`dd_est')' {
@@ -979,5 +1270,7 @@ program define baconddtiming, eclass sortpreserve
   }
 
 end
+
+
 
 exit

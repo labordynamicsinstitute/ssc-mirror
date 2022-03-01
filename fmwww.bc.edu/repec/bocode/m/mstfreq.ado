@@ -1,20 +1,34 @@
-*! version 1.0.9  02feb2021
+*! version 1.1.0  25feb2022
 capture program drop mstfreq
 program define mstfreq, rclass
 version 15.1
 
-syntax varlist(fv) [if] [in], INTervention(varlist fv max=1) RANdom(varlist max=1) [, NPerm(integer 0) NBoot(integer 0) SEED(integer 1020252) SHOWprogress noIsily ITERate(integer 100) ML REML *]
+syntax varlist(numeric fv) [if] [in], INTervention(varlist numeric fv max=1) RANdom(varlist numeric max=1) [, NPerm(integer 0) NBoot(integer 0) SEED(integer 1020252) noDOT noIsily ML REML CASE(numlist asc >0 max=2) RESidual PERCentile BASIC PASTE *]
 
 quietly {       
-        preserve
         
+        preserve
+		if "`paste'"!="" {
         if "`nperm'" != "0" {
         cap drop PermC_I*_W PermC_I*_T PermUnc_I*_W PermUnc_I*_T
         }
         if "`nboot'" != "0" {
         cap drop BootC_I*_W BootC_I*_T BootUnc_I*_W BootUnc_I*_T
         }
-
+		}
+		
+		if "`nboot'" == "0" & "`percentile'"!="" | "`nboot'" == "0" & "`basic'"!="" | "`nboot'" == "0" &  "`case'" != "" | "`nboot'" == "0" &  "`residual'" != "" {
+		noi disp as error "Please specify number of bootstraps"
+        error 198
+		}
+		if "`percentile'"!="" & "`basic'"!="" | "`nperm'" != "0" & "`nboot'" != "0" {
+		noi disp as error "you have included resampling options that cannot be specified at the same time"
+        error 198
+		}
+		
+		local ci percentile
+		if "`basic'"!="" local ci `basic'
+		
         tempfile Original
         save `Original'
         
@@ -52,39 +66,27 @@ quietly {
         if "`ml'" != "" {
                 local maximization
                 }
-        if "`reml'" != "" {
-                }
         
-        tempname test0 test1 Beta1 Beta Cov X UschCov schCov schRand max chk b0 id_var_col1 cluster1_variance1 res_var_col res_variance1 Nu lvl res_variance2 vcovschTrt1 varB31 ///
-        varB32 vcovschTrt2 b failtest group_max num mstNt colnumber min Max
-        tempvar  total_chk                                      /*set temporary variables/matrices/scalars to be used*/
+        tempname chk test0 test1 Beta1 Beta Cov X UschCov schCov schRand max chk b0 id_var_col1 cluster1_variance1 res_var_col res_variance1 Nu lvl res_variance2 vcovschTrt1 varB31 ///
+        varB32 vcovschTrt2 b failtest group_max mstNt colnumber min Max tot1 res_star1 res_dfl1 tot2 res_star2 res_dfl2 coef summed xrecov1 xrecov2 sumvarB21 sumvarB22 sums
+        tempvar res1 ressq1 res_refl1 res2 ressq2 res_refl2 fitted1 fitted2 EstmReff EstmReff_unc EstmReff_unc_sq1 brokn_fctor   /*set temporary variables/matrices/scalars to be used*/
 
         tempfile mst
         save `mst'
-        summ `random'
-        scalar `group_max' = r(max) /*number of groups*/
-        tab `random' `intervention', matcell(`X')
+		
+        tab `random'
+        scalar `group_max' = r(r) /*number of groups*/
+		tab `intervention'
+        scalar `max' = r(r) 
+		
+        tab `random' `intervention', matcell(`chk')
 
-        drop _all
-        svmat `X'
-        describe
-        scalar `max' = r(k) /*number of arms*/
-        
-        foreach i of numlist 1/`=`max'' {
-                tempvar r`i' 
-                gen double `r`i''=0
-                replace `r`i''=1 if `X'`i' >0
-                }
-        egen double `total_chk' = rowtotal(`r1'-`r`=`max''')
-        count if `total_chk' >1
-        scalar `chk' = `r(N)'
-        if `chk'==0 {
-                display as error "error: This is not an MST design"
-                error 459
-                }
+		mata: st_numscalar("`chk'", colsum(rowsum(st_matrix("`chk'"):>0):>1)) 
+		if `chk'==0 {
+		display as error "error: This is not an MST design"
+		error 459
+		}
 
-        clear
-        use `mst'
         
         baseset, max(`max') intervention(`intervraw')
         local refcat `r(refcat)'
@@ -97,20 +99,17 @@ quietly {
         foreach i of numlist 1/`=`max''{
                 if "`=`refcat'+0'" != "``i''" {
                         local rowname `rowname' "`intervention'``i''"
-                        local spart `spart' brokn_fctor`i'
+                        local spart `spart' `brokn_fctor'`i'
                         }
                 else {
-                local fpart `fpart' brokn_fctor`i'
+                local fpart `fpart' `brokn_fctor'`i'
                 }
                 }
         
         gettoken depvar indepvars: varlist
-        tab `intervention', gen(brokn_fctor)
+        tab `intervention', gen(`brokn_fctor')
         
-        local broken_treatment
-        foreach i of numlist 1/`=`max'' {
-                local broken_treatment `broken_treatment' brokn_fctor`i' /*store all brokn_fctors in local*/
-                }
+        unab broken_treatment : `brokn_fctor'*
         rename (`fpart' `spart') (`broken_treatment')
         gettoken baseline rest: broken_treatment /*separate between baseline(0) and rest*/
         
@@ -118,8 +117,9 @@ quietly {
         save `mst2'
         
         /*Unconditional Model*/
-        mixed `depvar' || `random':, cov(unstructured) `options' `maximization' /*NOTE: CONDITIONAL IS DENOTED WITH SUFFIX 2, UNCONDITIONAL WITH SUFFIX 1*/
+        mixed `depvar' || `random':, `options' `maximization' /*NOTE: CONDITIONAL IS DENOTED WITH SUFFIX 2, UNCONDITIONAL WITH SUFFIX 1*/
         matrix `b0' = e(b)
+		
         
         scalar `id_var_col1' = colnumb(`b0', "lns1_1_1:_cons")
         matrix `cluster1_variance1' = exp(`b0'[1, `id_var_col1'])^2  /*this gives var.B31=> cluster1..`=`max'-1'_variance1*/
@@ -129,30 +129,43 @@ quietly {
         scalar `res_variance1' = exp(`b0'[1, `res_var_col'])^2 /*this gives var.W*/
         
         scalar `Nu' = e(N)                                       /*number of obs*/
-        
+		
+        predict `fitted1'
+		predict `res1', res
+		predict `EstmReff_unc'*, reffects
         estat recovariance
         scalar `lvl' = r(relevels)
-        matrix xrecov1 = r(Cov`=`lvl'')         /*covariance matrix*/
-        scalar `vcovschTrt1' = xrecov1[1,1]
+        matrix `xrecov1' = r(Cov`=`lvl'')         /*covariance matrix*/
+        scalar `vcovschTrt1' = `xrecov1'[1,1]
         
+		
         forvalues i =1/`=`max'-1' {
-                tab `random' brokn_fctor`=`i'+1', matcell(Br_F`i')  /*for 3 arms, `=`max'-1' = 2 , broken factor is 1,2,3 but we only need 2,3*/
-                svmat Br_F`i'
-                total Br_F`i'2 /*ensures it sums the N for ones (1) not zeros (0), all matrices Br_F#1 are for zeros*/
-                matrix MSTnt`i' = e(b) /*store sum in matrix*/
+		tempname Br_F`i' MSTnt`i' sumBr_F`i'
+                tab `random' `brokn_fctor'`=`i'+1', matcell(`Br_F`i'')  /*for 3 arms, `=`max'-1' = 2 , broken factor is 1,2,3 but we only need 2,3*/
+                mata: functot("`Br_F`i''","`sumBr_F`i''") /*ensures it sums the N for ones (1) not zeros (0), all matrices Br_F#1 are for zeros*/
+				matrix `MSTnt`i'' =`sumBr_F`i''[1,2] /*store sum in matrix*/
                 }
+				
+		matrix `sums'=J(`=`max'-1',2,.)
+		forvalues i=1/`=`max'-1'{
+			forvalues k=1/2 {
+				matrix `sums'[`i',`k']=`sumBr_F`i''[1,`k'] 
+				}
+			}
                 
-        matrix `mstNt' = MSTnt1
+        matrix `mstNt' = `MSTnt1'
         matrix `varB31' = `cluster1_variance1'
         if `=`max'-1'>1 {
                 foreach i of numlist 2/`=`max'-1' {
-                        matrix `mstNt' = `mstNt' ,MSTnt`i' /*MSTnt`i' = nt`i' (MSTnt`i' is for conditional and nt`i' for the unconditional (see subprogram gUncondMST), but they are equal)*/
+                        matrix `mstNt' = `mstNt' ,`MSTnt`i'' /*MSTnt`i' = nt`i' (MSTnt`i' is for conditional and nt`i' for the unconditional (see subprogram gUncondMSTNEW)*/
                         }
                 }
-        
+		
         /*Conditional Model*/
         `isily' mixed `depvar' i.`intervention' `indepvars' || `random':`rest', cov(unstructured) `options' `maximization'
         matrix `b' = e(b)
+	    
+		
         matrix `test0' = r(table)[1...,1.."`depvar':_cons"] /*remove baseline category of intervention*/
         scalar `colnumber' = colnumb(`test0',"`=`refcat'+0'b.`intervention'")
         if "`=`colnumber''"=="1" { 
@@ -161,7 +174,7 @@ quietly {
         else {
                 matrix `test0' = `test0'[1...,1..`=`colnumber'-1'],`test0'[1...,`=`colnumber'+1'...]
                 }
-                matrix `test1' = `test0'
+        matrix `test1' = `test0'
                 forvalues i = 1/`=rowsof(`test0')' {
                         forvalues j = 1/`=colsof(`test0')' {
                                 matrix `test1'[`i',`j']= round(`test0'[`i',`j'],.01)
@@ -171,7 +184,13 @@ quietly {
         matrix `Beta1' = (`test1'["b", .] \ `test1'["ll".."ul", . ])
         matrix `Beta'=`Beta1''
         matrix colnames `Beta' = "Estimate" "95% LB" "95% UB"
-
+		
+		predict `fitted2'
+		predict `res2', res
+        predict `EstmReff'*, reffects
+		
+		tempfile beta1
+        save `beta1'
         
         forvalues i=1/`=`max'' {
         tempname id_var_col`i' cluster`i'_variance2 
@@ -185,16 +204,12 @@ quietly {
         
         estat recovariance
         scalar `lvl' = r(relevels)
-        matrix xrecov2 = r(Cov`=`lvl'')
-        matrix `vcovschTrt2' = xrecov2[`=`max'',1..`=`max'-1']
+        matrix `xrecov2' = r(Cov`=`lvl'')
+        matrix `vcovschTrt2' = `xrecov2'[`=`max'',1..`=`max'-1']
         
-        matrix `schCov' = xrecov2
-        forvalues i = 1/`=rowsof(xrecov2)' {
-                forvalues j = 1/`=colsof(xrecov2)' {
-                        matrix `schCov'[`i',`j']= round(xrecov2[`i',`j'],.01)
-                }
-        }
-                
+        matrix `schCov' = `xrecov2'
+        mata funcround("`schCov'")   
+		
         matrix rownames `schCov' = `rowname' "Intercept"
         matrix colnames `schCov' = `rowname' "Intercept"
         
@@ -206,71 +221,62 @@ quietly {
                         }
                 }
                 
-        scalar `num' = `=`max'-1'
-        mata: func1("`mstNt'", "`Nu'", "xrecov", "`varB32'", "`vcovschTrt2'") /*calls mata to produce "sumvarB2" and "summed"=sum(N.t/N*(var.B3+2*vcov.schTrt))*/
+        mata:  hfunc1("`mstNt'", "`Nu'","`varB32'", "`vcovschTrt2'","`xrecov2'","`sumvarB22'","`summed'")  /*calls mata to produce "sumvarB2" and "summed"=sum(N.t/N*(var.B3+2*vcov.schTrt))*/
         
         tempname varSch1 varSch2 varTT1 varTT2
-        scalar `varSch1' =  xrecov1[1,1] 
-        scalar `varSch2' =  xrecov2[`=`max'',`=`max'']
-        scalar `varTT2' = `varSch2' + `res_variance2' + summed /*THIS IS EQUIVALENT TO vartt in R*/
+		scalar `sumvarB21'=`xrecov1'[1,1] 
+        scalar `varSch1' =  `xrecov1'[1,1] 
+        scalar `varSch2' =  `xrecov2'[`=`max'',`=`max'']
+        scalar `varTT2' = `varSch2' + `res_variance2' + `summed' /*THIS IS EQUIVALENT TO vartt in R*/
         scalar `varTT1' = `varSch1' + `res_variance1'          /*THIS IS EQUIVALENT TO vartt1 in R*/
         forvalues s = 1/2 {
                 tempvar ICC`s'
-                scalar `ICC`s'' = sumvarB2`s' / `varTT`s''
+                scalar `ICC`s'' = `sumvarB2`s'' / `varTT`s''
                 }
-        cap matrix drop xrecov1 xrecov2 
-        cap scalar drop sumvarB21 sumvarB22 summed
+        cap scalar drop `sumvarB21' `sumvarB22' `summed'
         
                 /*ICC1 IN STATA IS EQUIVALENT TO ICC2 IN R*/
                 /*ICC2 IN STATA IS EQUIVALENT TO ICC1 IN R*/
-                 
-        predict EstmReff*, reffects
-        tempfile beta1
-        save `beta1'
         
-        matrix Coef = `b'[1,1..`=`max'']
-        mata: st_matrix("Coef", select(st_matrix("Coef"), st_matrix("Coef") :!= 0))
+        matrix `coef' = `b'[1,1..`=`max'']
+        mata: funczero("`coef'")
         
-        matrix Coef = Coef' 
+        matrix `coef' = `coef'' 
         clear
 
         use `beta1'
-        collapse EstmReff*, by(`random')
-        mkmat EstmReff* `random', matrix(`test1')
-        matrix `schRand'=`test1'
-        forvalues i = 1/`=rowsof(`test1')' {
-                forvalues j = 1/`=colsof(`test1')' {
-                        matrix `schRand'[`i',`j']= round(`test1'[`i',`j'],.01)
-                }
-        }
+        collapse `EstmReff'*, by(`random')
+        mkmat `EstmReff'* `random', matrix(`schRand')
+
+        mata funcround("`schRand'") 
         matrix colname `schRand' = `rowname' "Intercept" "School"
 
         clear
         use `mst'
 
-        
-        gCondMST, res_variance2(`res_variance2') vartt2(`varTT2') group_max(`group_max') max(`max') varb32(`varB32') num(`num') /*see sub-programs*/
-        
-        local m
-        forvalues i = 1/`=`max'' {
-                if "`=`refcat'+0'" != "``i''" {
-                local m = `m' + 1
+       local m
+		forvalues i = 1/`=`max'-1' {
+		tempname CondES`i'
+        gCondMST, res_variance2(`res_variance2') vartt2(`varTT2') group_max(`group_max') max(`max') varb32(`varB32') brf(`Br_F`i'') i(`i') coef(`coef')
+		matrix `CondES`i''=r(CondES`i')
+		}
+		forvalues i = 1/`=`max'' {
+		if "`=`refcat'+0'" != "``i''" {
+		local m = `m' + 1
+		
+		matrix CondES``i'' = `CondES`m'' 
+		local cond`m' CondES``i''
+		}
+		}
+		
                 
-                matrix CondES``i'' = r(CondES`m') 
-                local cond`m' CondES``i''
-                }
-                }
-                
-        tab `intervention', gen(brokn_fctor)
-        local broken_treatment
-        foreach i of numlist 1/`=`max'' {
-                local broken_treatment `broken_treatment' brokn_fctor`i' /*store all brokn_fctors in local*/
-                }
+        tab `intervention', gen(`brokn_fctor')
+        unab broken_treatment:`brokn_fctor'*
         rename (`fpart' `spart') (`broken_treatment') /*rename broken_factors based on new ref category (i.e. broken2 broken1 broken3 to broken1 broken2 broken3)*/
         
         
         gUncondMST, rand(`random') res_variance1(`res_variance1') res_variance2(`res_variance2') vartt2(`varTT2') vartt1(`varTT1') group_max(`group_max') ///
-        max(`max') icc1(`ICC1') icc2(`ICC2') varb31(`varB31') num(`num') /*see sub-programs*/
+        max(`max') icc1(`ICC1') icc2(`ICC2') varb31(`varB31') sums(`sums') coef(`coef') brokn_fctor(`brokn_fctor') /*see sub-programs*/
         
         local m
         forvalues i = 1/`=`max'' {
@@ -289,12 +295,12 @@ quietly {
         
         matrix `Cov' = r(Cov)
         
-        drop brokn_fctor*
-        matrix drop Coef
+        drop `brokn_fctor'*
+        matrix drop `coef'
         
         tempfile touseit
         save `touseit'
-        
+       
     //====================================================//    
    //===================                =================//
   //==================  PERMUTATIONS  ==================//
@@ -302,23 +308,35 @@ quietly {
 //====================================================//
         
         if "`nperm'" != "0"  {
-                tempname sumconv sumnotconv sumnotconv2 N_total 
+                tempname N_total from to sumnotconv sumconv
                 count
                 scalar `N_total' = `r(N)'
-                scalar `sumnotconv2' = 0 /*sumnotconv, sumnotconv2 and sumconv are to be used later for indication of supplementary permutations*/
-                scalar `sumnotconv'  = 0
-                scalar `sumconv' = 0
+               
                 levelsof `random', local(levels)
                 if `nperm'<1000 {
                         display as error "error: nPerm must be greater than 1000"
                         error 7
                         }
                 noisily di as txt "  Running Permutations..."
-                
-                forvalues j = 1/`nperm' {
-                        tempname  cluster1_`j'variance1  v`j'covschTrt1 var`j'B31 var`j'B32 v`j'covschTrt2 cluster1_`j'variance2 res_`j'variance2 ///
-                        res_`j'variance1 v`j'arSch1 v`j'arSch2 v`j'arTT2 v`j'arTT1
-                
+						scalar `sumnotconv'= 0
+						scalar `sumconv'= 0
+						scalar `from' = 1
+                        scalar `to' = `nperm'
+								
+                        while `=`sumconv''!=`nperm' {
+							
+                            if "`dot'" == "" {     
+                                noi disp as txt ""
+                                }
+								if `=`sumnotconv''!=0 {
+                                noi di " Total of `=`sumnotconv'' models failed"
+                                noi di "  Running supplementary permutations..."
+                                }
+								
+						scalar `sumnotconv'= 0
+								
+                forvalues j = `=`from''/`=`to'' {
+
                 if "`seed'" == "1020252" {
                         local defseed = `=12890*`j'+1'
                         set seed `defseed'
@@ -328,7 +346,7 @@ quietly {
                         set seed `seeds'
                         }
                         
-                        if "`showprogress'" != "" {     
+                        if "`dot'" == "" {     
                                 if !mod(`j', 100) {
                                 noi di _c "`j'"
                                 }
@@ -338,13 +356,14 @@ quietly {
                                                 }
                                         }
                                 }
+				 capture {
                         keep `random' `intervention'
                         tempvar rand1 rand2
                         gen double `rand1'=.
                         gen double `rand2'=.
                         foreach `random' in `levels' {
                                 replace `rand1' = runiform() if `random' == ``random'' /*Stata randomnization produces less combinations than R*/
-                                replace `rand2' = runiform() if `random' == ``random'' /*randomnize twice for better randomnization. */
+                                replace `rand2' = runiform() if `random' == ``random'' /*randomize twice for better randomnization. */
                                 }
                         sort `random' `rand1' `rand2'
                         drop `rand1' `rand2'
@@ -353,299 +372,129 @@ quietly {
                         merge 1:1 _n using `touseit', nogenerate
                         tempfile permES
                         save `permES'
-                        
-                        mixed `depvar' || `random':, cov(unstructured) iterate(`iterate') `options' `maximization'
+                         
+                        mixed `depvar' || `random':, `options' `maximization'
                         matrix `b0' = e(b)
                         
-                        capture {
+                       
                         
                                 scalar `id_var_col1' = colnumb(`b0', "lns1_1_1:_cons")
-                                matrix `cluster1_`j'variance1' = exp(`b0'[1, `id_var_col1'])^2  
+                                matrix `cluster1_variance1' = exp(`b0'[1, `id_var_col1'])^2  
                                 
                 
                                 scalar `res_var_col' = colnumb(`b0', "lnsig_e:_cons")
-                                scalar `res_`j'variance1' = exp(`b0'[1, `res_var_col'])^2 
+                                scalar `res_variance1' = exp(`b0'[1, `res_var_col'])^2 
                                 
                                 
                                 scalar `Nu'= e(N) 
                 
                                 estat recovariance
                                 scalar `lvl' = r(relevels)
-                                matrix x`j'recov1 = r(Cov`=`lvl'')
-                                matrix `v`j'covschTrt1' = x`j'recov1[1,1]
+                                matrix `xrecov1' = r(Cov`=`lvl'')
+                                matrix `vcovschTrt1' = `xrecov1'[1,1]
                                 
-                                tab `intervention', gen(brokn_fctor)
+                                tab `intervention', gen(`brokn_fctor')
                                 rename (`fpart' `spart') (`broken_treatment')
                 
-                                matrix `var`j'B31' = `cluster1_`j'variance1'
-                                }
-                                if _rc==1 {
-                                        exit 1
-                                        }
-                        
+                                matrix `varB31' = `cluster1_variance1'
                                 
                         
-                        capt `isily' mixed `depvar' i.`intervention' `indepvars' || `random': `rest', cov(unstructured) iterate(`iterate') `options' `maximization'
+                                
+						`isily' mixed `depvar' i.`intervention' `indepvars' || `random': `rest', cov(unstructured) `options' `maximization'
                         matrix `b' = e(b)
                 
         
-                        capture {
+                        
                                 forvalues i=1/`=`max'' {
-                                        tempname id_var_col`i' cluster`i'_`j'variance2 
+                                        tempname id_var_col`i' cluster`i'_variance2  
                                         scalar `id_var_col`i'' = colnumb(`b', "lns1_1_`i':_cons")
-                                        matrix `cluster`i'_`j'variance2' = exp(`b'[1, `id_var_col`i''])^2  
+                                        matrix `cluster`i'_variance2' = exp(`b'[1, `id_var_col`i''])^2  
                                         }
                         
                                 scalar `res_var_col' = colnumb(`b', "lnsig_e:_cons")
-                                scalar `res_`j'variance2' = exp(`b'[1, `res_var_col'])^2 /*this gives var.W*/
+                                scalar `res_variance2' = exp(`b'[1, `res_var_col'])^2 /*this gives var.W*/
                                 
                                 estat recovariance
                                 scalar `lvl' = r(relevels)
-                                matrix x`j'recov2 = r(Cov`=`lvl'')
-                                matrix `v`j'covschTrt2' = x`j'recov2[`=`max'',1..`=`max'-1']
+                                matrix `xrecov2' = r(Cov`=`lvl'')
+                                matrix `vcovschTrt2' = `xrecov2'[`=`max'',1..`=`max'-1']
 
                         
-                                matrix `var`j'B32' = `cluster1_`j'variance2'
+                                matrix `varB32' = `cluster1_variance2'
                                 if `=`max'-1'>1 {
                                         foreach i of numlist 2/`=`max'-1' {
-                                                matrix `var`j'B32' = `var`j'B32' ,`cluster`i'_`j'variance2'
+                                                matrix `varB32' = `varB32' ,`cluster`i'_variance2'
                                                 }
                                         }
-                                mata: func1("`mstNt'", "`Nu'", "x`j'recov", "`var`j'B32'", "`v`j'covschTrt2'") 
-                                scalar `v`j'arSch1' =  x`j'recov1[1,1] 
-                                scalar `v`j'arSch2' =  x`j'recov2[`=`max'',`=`max'']
-                                scalar `v`j'arTT2' = `v`j'arSch2' + `res_`j'variance2' + summed /*THIS IS EQUIVALENT TO vartt in R*/
+								mata: hfunc1("`mstNt'", "`Nu'","`varB32'", "`vcovschTrt2'","`xrecov2'","`sumvarB22'","`summed'")
+                                scalar `sumvarB21'=`xrecov1'[1,1] 
+                                scalar `varSch1' =  `xrecov1'[1,1] 
+                                scalar `varSch2' =  `xrecov2'[`=`max'',`=`max'']
+                                scalar `varTT2' = `varSch2' + `res_variance2' + `summed' /*THIS IS EQUIVALENT TO vartt in R*/
                                 
-                                scalar `v`j'arTT1' = `v`j'arSch1' + `res_`j'variance1'           /*THIS IS EQUIVALENT TO vartt1 in R*/
+                                scalar `varTT1' = `varSch1' + `res_variance1'           /*THIS IS EQUIVALENT TO vartt1 in R*/
                                 forvalues s = 1/2 {
-                                        scalar `ICC`s'' = sumvarB2`s' / `v`j'arTT`s''
+                                        scalar `ICC`s'' = `sumvarB2`s'' / `varTT`s''
                                         }
                                 
-                                cap matrix drop x`j'recov1 x`j'recov2 
-                                cap scalar drop sumvarB21 sumvarB22 summed
+                                cap matrix drop `xrecov1' `xrecov2' 
+                                cap scalar drop `sumvarB21' `sumvarB22' `summed'
                                 
                                 /*ICC1 IN STATA IS EQUIVALENT TO ICC2 IN R*/
                                 /*ICC2 IN STATA IS EQUIVALENT TO ICC1 IN R*/
                         
-                                matrix Coef = `b'[1,1..`=`max'']
-                                mata: st_matrix("Coef", select(st_matrix("Coef"), st_matrix("Coef") :!= 0))
+                                matrix `coef' = `b'[1,1..`=`max'']
+                                mata: funczero("`coef'")
         
-                                matrix Coef = Coef'
+                                matrix `coef' = `coef''
                                 
                                 clear
                                 use `permES'
                                 
-                                tab `intervention', gen(brokn_fctor)
+                                tab `intervention', gen(`brokn_fctor')
                                 rename (`fpart' `spart') (`broken_treatment')
-                                
-                                gCondUncondMST, j(`j') in(`intervention') rand(`random') res_variance1(`res_`j'variance1') res_variance2(`res_`j'variance2') ///
-                                group_max(`group_max') max(`max') vartt1(`v`j'arTT1') vartt2(`v`j'arTT2') num(`num') icc1(`ICC1')
 								
-				forvalues i = 1/`=`max'-1' {
-					tempname dwC`i'`j' dtTotalC`i'`j' dwU`i'`j' dtTotalU`i'`j'
-					scalar `dwC`i'`j'' = r(dwC`i'`j')
-					scalar `dtTotalC`i'`j'' = r(dtTotalC`i'`j')
-									
-					scalar `dwU`i'`j'' = r(dwU`i'`j')
-					scalar `dtTotalU`i'`j'' = r(dtTotalU`i'`j')
-					}
+                                forvalues i = 1/`=`max'-1' {
+									tempname dwC`i'`j' dtTotalC`i'`j' dwU`i'`j' dtTotalU`i'`j'
+								
+									gCondUncondMST, i(`i') j(`j') in(`intervention') rand(`random') res_variance1(`res_variance1') res_variance2(`res_variance2') ///
+									group_max(`group_max') max(`max') vartt1(`varTT1') vartt2(`varTT2') icc1(`ICC1') sums(`sums') coef(`coef') brokn_fctor(`brokn_fctor')
+							
+									scalar `dwC`i'`j'' = r(dwC`i'`j')
+									scalar `dtTotalC`i'`j'' = r(dtTotalC`i'`j')
+													
+									scalar `dwU`i'`j'' = r(dwU`i'`j')
+									scalar `dtTotalU`i'`j'' = r(dtTotalU`i'`j')
+									}
                         
-                                matrix drop Coef
+                                matrix drop `coef'
+								scalar `sumconv' = `sumconv' + 1
                                 }/*capture*/
-                
-                        
-                        
-                        scalar `failtest' = `res_`j'variance2'
-                        if `failtest' ==. {
-                                scalar `sumnotconv' = `sumnotconv' + 1 /*count the failed models.*/
-                                }
-                        else {
-                                scalar `sumconv' = `sumconv' + 1 /*otherwise count succesful models*/
-                                }
+								if _rc==1 {
+                                        exit 1
+                                        }
+								else if _rc!=0 {
+								  scalar `sumnotconv' = `sumnotconv' + 1 
+									   }
+								
                         clear
                         use `touseit'
                         
                         
                         } /*nperm*/
-                        
-                tempname one two diff
-                scalar `one' = 0
-                scalar `two' = 0
-                        
-		    //=====================================================//
-		   //============ SUPPLEMENTARY PERMUTATIONS =============//
-		  //=====================================================//  
-                        
-                while `=`sumconv'' < `nperm' {
-                        if "`showprogress'" != "" {     
-                                noi disp as txt ""
-                                }
-                        scalar `diff' = `sumnotconv'-`sumnotconv2'
-                        cap noi di " Total of `=`diff'' models failed"
-                        cap noi di "  Running supplementary permutations..."
-                        
-                        scalar `one' = `nperm'+`=`sumnotconv2'' + 1 /*force remaining permutations to start from where previous ended; sumnotconv2 informs the model in case supplementary perm. also fail*/
-                        scalar `two' = `nperm'+`=`sumnotconv''
-                        
-                        scalar `sumnotconv2' = `sumnotconv'
-                        
-                        forvalues j = `=`one''/`=`two'' {
-                                tempname  cluster1_`j'variance1  v`j'covschTrt1 var`j'B31 var`j'B32 v`j'covschTrt2 cluster1_`j'variance2 res_`j'variance2 ///
-                                res_`j'variance1 v`j'arSch1 v`j'arSch2 v`j'arTT2 v`j'arTT1
-                                
-                        if "`seed'" == "1020252" {
-                                local defseed = `=12890*`j'+1'
-                                set seed `defseed'
-                                }
-                        else {
-                                local seeds = `=`seed'*`j'+1'
-                                set seed `seeds'
-                                }
-                                        
-                                if "`showprogress'" != "" {     
-                                        if !mod(`j', 100) {
-                                                noi di _c "`j'"
-                                                }
-                                        else {
-                                                if !mod(`j', 10) {
-                                                        noi di _c "." 
-                                                        }
-                                                }
-                                        }
-                                keep `random' `intervention'
-                                gen double `rand1'=.
-                                gen double `rand2'=.
-                                foreach `random' in `levels' {
-                                        replace `rand1' = runiform() if `random' == ``random''
-                                        replace `rand2' = runiform() if `random' == ``random''
-                                        }
-                                sort `random' `rand1' `rand2'
-                                drop `rand1' `rand2'
-                                tempfile clust
-                                save `clust'
-                                merge 1:1 _n using `touseit', nogenerate
-                                tempfile permES
-                                save `permES'
-                        
-                                mixed `depvar' || `random':, cov(unstructured) iterate(`iterate') `options' `maximization'
-                                matrix `b0' = e(b)
-                
-                        
-                                capture {
-                                        scalar `id_var_col1' = colnumb(`b0', "lns1_1_1:_cons")
-                                        matrix `cluster1_`j'variance1' = exp(`b0'[1, `id_var_col1'])^2  
-                                
-                        
-                                        scalar `res_var_col' = colnumb(`b0', "lnsig_e:_cons")
-                                        scalar `res_`j'variance1' = exp(`b0'[1, `res_var_col'])^2 
-                        
-                                        scalar `Nu'= e(N)
-                        
-                                        estat recovariance
-                                        scalar `lvl' = r(relevels)
-                                        matrix x`j'recov1 = r(Cov`=`lvl'')
-                                        matrix `v`j'covschTrt1' = x`j'recov1[1,1]
-                                        
-                                        tab `intervention', gen(brokn_fctor)
-                                        rename (`fpart' `spart') (`broken_treatment')
-                        
-                                        matrix `var`j'B31' = `cluster1_`j'variance1'
-                                        }
-                                        
-                                capt `isily' mixed `depvar' i.`intervention' `indepvars' || `random': `rest', cov(unstructured) iterate(`iterate') `options' `maximization'
-                                matrix `b' = e(b)
-                
-        
-                                capture {
-                                        forvalues i=1/`=`max'' {
-                                                tempname cluster`i'_`j'variance2 
-                                                scalar `id_var_col`i'' = colnumb(`b', "lns1_1_`i':_cons")
-                                                matrix `cluster`i'_`j'variance2' = exp(`b'[1, `id_var_col`i''])^2  
-                                                }
-                                
-                                        scalar `res_var_col' = colnumb(`b', "lnsig_e:_cons")
-                                        scalar `res_`j'variance2' = exp(`b'[1, `res_var_col'])^2 
-                        
-                        
-                                        estat recovariance
-                                        scalar `lvl' = r(relevels)
-                                        matrix x`j'recov2 = r(Cov`=`lvl'')
-                                        matrix `v`j'covschTrt2' = x`j'recov2[`=`max'',1..`=`max'-1']
-                                
-                                        matrix `var`j'B32' = `cluster1_`j'variance2'
-                                        if `=`max'-1'>1 {
-                                                foreach i of numlist 2/`=`max'-1' {
-                                                        matrix `var`j'B32' = `var`j'B32' ,`cluster`i'_`j'variance2'
-                                                        }
-                                                }
-                                        mata: func1("`mstNt'", "`Nu'", "x`j'recov", "`var`j'B32'", "`v`j'covschTrt2'") 
-                                        tempname v`j'arSch1 v`j'arSch2 v`j'arTT1 v`j'arTT2
-                                        scalar `v`j'arSch1' =  x`j'recov1[1,1] 
-                                        scalar `v`j'arSch2' =  x`j'recov2[`=`max'',`=`max'']
-                                        scalar `v`j'arTT2' = `v`j'arSch2' + `res_`j'variance2' + summed 
-                                        scalar `v`j'arTT1' = `v`j'arSch1' + `res_`j'variance1'          
-                                        forvalues s = 1/2 {
-                                                scalar `ICC`s'' = sumvarB2`s' / `v`j'arTT`s''
-                                                }
-                                        cap matrix drop x`j'recov1 x`j'recov2 
-                                        cap scalar drop sumvarB21 sumvarB22 summed
-                                
-                                        /*ICC1 IN STATA IS EQUIVALENT TO ICC2 IN R*/
-                                        /*ICC2 IN STATA IS EQUIVALENT TO ICC1 IN R*/
-                                
-                                        matrix Coef = `b'[1,1..`=`max'']
-                                        mata: st_matrix("Coef", select(st_matrix("Coef"), st_matrix("Coef") :!= 0))
-        
-                                        matrix Coef = Coef'
-                                        
-                                        clear
-                                        use `permES'
-                        
-                                        tab `intervention', gen(brokn_fctor)
-                                        rename (`fpart' `spart') (`broken_treatment')
-
-                                        gCondUncondMST, j(`j') in(`intervention') rand(`random') res_variance1(`res_`j'variance1') res_variance2(`res_`j'variance2') ///
-                                        group_max(`group_max') max(`max') vartt1(`v`j'arTT1') vartt2(`v`j'arTT2') num(`num') icc1(`ICC1')
-										
-					forvalues i = 1/`=`max'-1' {
-						tempname dwC`i'`j' dtTotalC`i'`j' dwU`i'`j' dtTotalU`i'`j'
-						scalar `dwC`i'`j'' = r(dwC`i'`j')
-						scalar `dtTotalC`i'`j'' = r(dtTotalC`i'`j')
-											
-						scalar `dwU`i'`j'' = r(dwU`i'`j')
-						scalar `dtTotalU`i'`j'' = r(dtTotalU`i'`j')
-						}
-											
-                                        matrix drop Coef
-                                        }/*capture*/
-                                        if _rc==1 {
-                                        exit 1
-                                        }
-                
-                                scalar `failtest' = `res_`j'variance2'
-                                if `failtest' ==. {
-                                        
-                                        scalar `sumnotconv' = `sumnotconv' + 1 
-                                        }
-                                else {
-                                        scalar `sumconv' = `sumconv' + 1
-                                        }
-                                clear
-                                use `touseit'
-                
-                                } /*newnperm*/  
-                        } /*while*/ 
-                if "`showprogress'" != "" {     
+								scalar `from' = `=`to'' + 1
+								scalar `to' = `=`to''+ `=`sumnotconv''
+							} /*while*/
+                if "`dot'" == "" {     
                                 noi disp as txt ""
                                 }
                 noisily di as txt "  Permutations completed."
                 
                 tempname permutations   
-                scalar `permutations' = `nperm' + `=`sumnotconv''
-                forvalues j = 1/`=`permutations'' {
+                forvalues j = 1/`=`to'' {
                         forvalues i = 1/`=`max'-1' {
-                                if `=`permutations''>`=`N_total'' {
-                                        set obs `=`permutations''
+                                if `=`to''>`=`N_total'' {
+                                        set obs `=`to''
                                         }
                                 capture gen double PermC_I`i'_W=.
                                 capture gen double PermC_I`i'_T=.
@@ -658,6 +507,48 @@ quietly {
                                 capture replace PermUnc_I`i'_T = `dtTotalU`i'`j'' in `j'
                                 }                       
                         }
+						
+				/* Permutation Test*/
+				
+					tempname pval_C pval_U
+					
+					matrix `pval_C'=J(2,`=`max'-1',.)
+					matrix `pval_U'=J(2,`=`max'-1',.)
+					
+					matrix rownames `pval_C' = "Within ES" "Total ES"
+					matrix colnames `pval_C' = `rowname'
+					
+					matrix rownames `pval_U' = "Within ES" "Total ES"
+					matrix colnames `pval_U' = `rowname'
+					
+					forvalues j=1/`=`max'' {
+						if "`=`refcat'+0'" != "``j''" {
+						//local pcolnames `pcolnames' "Intervention``j''"
+							local i = `i' + 1
+							tempvar WpC_`i' TpC_`i' WpU_`i' TpU_`i'
+							
+							 gen `WpC_`i'' = abs(PermC_I`i'_W)>=abs(d2w`i')
+							 summarize `WpC_`i'', meanonly
+							 matrix `pval_C'[1,`i'] =round(r(mean),.01)
+					 
+							 gen `TpC_`i'' = abs(PermC_I`i'_T)>=abs(dt2Total`i')
+							 summarize `TpC_`i'', meanonly
+							 matrix `pval_C'[2,`i'] =round(r(mean),.01)
+							 
+							 gen `WpU_`i'' = abs(PermUnc_I`i'_W)>=abs(d2w`i')
+							 summarize `WpU_`i'', meanonly
+							 matrix `pval_U'[1,`i'] =round(r(mean),.01)
+					 
+							 gen `TpU_`i'' = abs(PermUnc_I`i'_T)>=abs(dt1Total`i')
+							 summarize `TpU_`i'', meanonly
+							 matrix `pval_U'[2,`i'] =round(r(mean),.01)
+					}
+				}
+			
+			
+			return matrix CondPv = `pval_C'
+			return matrix UncondPv = `pval_U'
+						if "`paste'"!="" {
                         local m
                         forvalues i = 1/`=`max''{
                                 if "`=`refcat'+0'" != "``i''" {
@@ -674,6 +565,7 @@ quietly {
                         merge 1:1 _n using `origperm', nogenerate
                         tempfile Original
                         save `Original' 
+						}
                         }/*if nperm*/
                 
         
@@ -686,14 +578,13 @@ quietly {
 		//====================================================//   
 
                 if "`nboot'" != "0" {
+					tempname N_total from to sumnotconv sumconv
                         clear
-                        use `mst'
+						//use `mst'
+                        use `beta1'
                         count
-                        tempname N_total sumnotconv2 sumnotconv sumconv
                         scalar `N_total' = `r(N)'
-                        scalar `sumnotconv2' = 0
-                        scalar `sumnotconv'  = 0
-                        scalar `sumconv' = 0
+                      
 
                         if `nboot'<1000 {
                                 display as error "error: nBoot must be greater than 1000"
@@ -701,13 +592,71 @@ quietly {
                                 }
         
                         set seed `seed'
+						
+						if "`residual'" != "" { 
+							mata: rseed(strtoreal(st_local("`seed'")))
+
+							tempname tot_reff1 EstmReff_unc_sq_star1 EstmReff_unc_sq_star_dfl1 tot_reff2 EstmReff_sq_star2 EstmReff_sq_star_dfl2
+							tempvar EstmReff_sq`=`max'' EstmReff_sq_star_refl2
+								
+								forvalues i=1/2 {
+									tempname resvar`i'
+									
+									summ `res`i'', meanonly
+									replace `res`i''=`res`i''-r(mean)
+									
+									matrix `resvar`i''=`res_variance`i''
+									mata: funcchol("`N_total'", "`resvar`i''", "`res`i''") /*reseffc local containing name(s) of residuals/reffects; covar needs to be matrix*/
+									}
+								
+								tempfile beta1
+								save `beta1'
+								
+								collapse `EstmReff_unc'* `EstmReff'*, by(`random')
+								
+								unab Estm_1Reff : `EstmReff_unc'*
+								unab Estm_2Reff : `EstmReff'*
+								
+								forvalues i=1/2 {
+									foreach v of local Estm_`i'Reff {
+									summ `v', meanonly
+									replace `v'=`v'-r(mean)
+									
+									local plusEstmReff_`i' `plusEstmReff_`i'' + `v'
+									}
+									
+									mata: funcchol("`group_max'", "`xrecov`i''", "`Estm_`i'Reff'") /*reseffc local containing name(s) of residuals/reffects; covar needs to be matrix*/
+
+									tempfile reff
+									save `reff'
+									}
+								
+								clear
+								use `beta1'
+							}/*residual*/
                                 
                         noisily di as txt "  Running Bootstraps..."
-                        forvalues j = 1/`nboot' {
-                                tempname cluster1_`j'variance1  v`j'covschTrt1 var`j'B31 var`j'B32 v`j'covschTrt2 cluster1_`j'variance2 res_`j'variance2 ///
-                                res_`j'variance1 v`j'arSch1 v`j'arSch2 v`j'arTT2 v`j'arTT1
-                                
-                                if "`showprogress'" != "" {     
+						
+						scalar `sumnotconv'= 0
+						scalar `sumconv'= 0
+						scalar `from' = 1
+                        scalar `to' = `nboot'
+								
+                        while `=`sumconv''!=`nboot' {
+							
+                            if "`dot'" == "" {     
+                                noi disp as txt ""
+                                }
+								if `=`sumnotconv''!=0 {
+                                noi di " Total of `=`sumnotconv'' models failed"
+                                noi di "  Running supplementary bootstraps..."
+                                }
+								
+								scalar `sumnotconv'= 0
+								
+                                forvalues j = `=`from''/`=`to'' {
+                                                         
+                                if "`dot'" == "" {     
                                         if !mod(`j', 100) {
                                                 noi di _c "`j'"
                                                 }
@@ -718,284 +667,152 @@ quietly {
                                                 }
                                         }
                                 gettoken depvar indepvars: varlist
-                                keep `varlist_clean' `intervention' `random'
-                                bsample, strata(`random')
-                                
-                                mixed `depvar' || `random':, cov(unstructured) iterate(`iterate') `options'
+							capture {
+								if "`residual'" == "" {
+									keep `varlist_clean' `intervention' `random'
+									local countn: word count `case'
+									if "`countn'"=="2" {
+										bsample, cluster(`random')
+										bsample, strata(`random')
+										} 
+									else if "`case'"=="2" {
+										bsample, cluster(`random')
+										} 
+									else if "`case'"=="1" | "`case'"=="" {
+										bsample, strata(`random')
+										}
+									}
+                                if "`residual'"!="" {
+								mata: funcsamp("`res1' `res2'")
+									tempfile beta2
+									save `beta2'
+									
+									clear
+									use `reff'
+
+									mata: funcsamp("`Estm_1Reff' `Estm_2Reff'")
+									
+									merge 1:m `random' using `beta2', nogenerate
+												
+									replace `depvar'=`fitted1'+ `res1'+ `Estm_1Reff'
+									}
+								
+							
+                                mixed `depvar' || `random':, `options' `maximization'
                                 matrix `b0' = e(b)
                         
-                                capture {
+                                
                                         scalar `id_var_col1' = colnumb(`b0', "lns1_1_1:_cons")
-                                        matrix `cluster1_`j'variance1' = exp(`b0'[1, `id_var_col1'])^2  /*this gives var.B3=> cluster1..`=`max'-1'_variance2, var.sch => cluster`=`max''_variance2*/
+                                        matrix `cluster1_variance1' = exp(`b0'[1, `id_var_col1'])^2
                                 
                         
                                         scalar `res_var_col' = colnumb(`b0', "lnsig_e:_cons")
-                                        scalar `res_`j'variance1' = exp(`b0'[1, `res_var_col'])^2 /*this gives var.W*/
+                                        scalar `res_variance1' = exp(`b0'[1, `res_var_col'])^2 /*this gives var.W*/
                         
                                         scalar `Nu'= e(N) /*number of obs*/
                         
                                         estat recovariance
                                         scalar `lvl' = r(relevels)
-                                        matrix x`j'recov1 = r(Cov`=`lvl'')
-                                        matrix `v`j'covschTrt1' = x`j'recov1[1,1]
+                                        matrix `xrecov1' = r(Cov`=`lvl'')
+                                        matrix `vcovschTrt1' = `xrecov1'[1,1]
                         
-                                        tab `intervention', gen(brokn_fctor)
+										capt drop `brokn_fctor'*
+                                        tab `intervention', gen(`brokn_fctor')
                                         rename (`fpart' `spart') (`broken_treatment')
-                                        forvalues i =1/`=`max'-1' {
-                                                tab `random' brokn_fctor`=`i'+1', matcell(Br_F`i')  /*because `=`max'-1' = 2 , broken factor is 1,2,3 but we need 2,3 because 1 is baseline*/
-                                                svmat Br_F`i'
-                                                total Br_F`i'2 /*ensures it captures the N for ones (1) not zeros (0), all matrices Br_F#1 are for zeros*/
-                                                matrix MSTnt`i' = e(b)
-                                                }
-                                
-                                        matrix `mstNt' = MSTnt1
-                        
-                                        matrix `var`j'B31' = `cluster1_`j'variance1'
-                                        if `=`max'-1'>1 {
-                                                foreach i of numlist 2/`=`max'-1' {
-                                                        matrix `mstNt' = `mstNt' ,MSTnt`i'
-                                                        }
-                                                }
-                        
-                                        } /*capture*/
-                                        if _rc==1 {
-                                                exit 1
-                                                }
-
-                                capt `isily' mixed `depvar' i.`intervention' `indepvars' || `random':`rest', cov(unstructured) iterate(`iterate') `options' `maximization'
+                                        matrix `mstNt' = `MSTnt1'
+										matrix `varB31' = `cluster1_variance1'
+										if `=`max'-1'>1 {
+											foreach i of numlist 2/`=`max'-1' {
+													matrix `mstNt' = `mstNt' ,`MSTnt`i''
+													}
+											}
+								
+                                if "`residual'"!="" {
+									replace `depvar'=`fitted2' + `res2' `plusEstmReff_2'
+								}
+								
+								
+								
+								`isily' mixed `depvar' i.`intervention' `indepvars' || `random':`rest', cov(unstructured) `options' `maximization'
                                 matrix `b' = e(b)
                                         
                                         
-                                capture {
+                                
                                         forvalues i=1/`=`max'' {
-                                                tempname id_var_col`i' cluster`i'_`j'variance2 
                                                 scalar `id_var_col`i'' = colnumb(`b', "lns1_1_`i':_cons")
-                                                matrix `cluster`i'_`j'variance2' = exp(`b'[1, `id_var_col`i''])^2  /*this gives var.B3=> cluster1..`=`max'-1'_variance2, var.sch => cluster`=`max''_variance2*/
+                                                matrix `cluster`i'_variance2' = exp(`b'[1, `id_var_col`i''])^2 
                                                 }
                                 
                                         scalar `res_var_col' = colnumb(`b', "lnsig_e:_cons")
-                                        scalar `res_`j'variance2' = exp(`b'[1, `res_var_col'])^2 /*this gives var.W*/
+                                        scalar `res_variance2' = exp(`b'[1, `res_var_col'])^2 /*this gives var.W*/
 
                                 
                                         estat recovariance
                                         scalar `lvl' = r(relevels)
-                                        matrix x`j'recov2 = r(Cov`=`lvl'')
-                                        matrix `v`j'covschTrt2' = x`j'recov2[`=`max'',1..`=`max'-1']
+                                        matrix `xrecov2' = r(Cov`=`lvl'')
+                                        matrix `vcovschTrt2' = `xrecov2'[`=`max'',1..`=`max'-1']
 
-                                        matrix `var`j'B32' = `cluster1_`j'variance2'
+                                        matrix `varB32' = `cluster1_variance2'
                                         if `=`max'-1'>1 {
                                                 foreach i of numlist 2/`=`max'-1' {
-                                                        matrix `var`j'B32' = `var`j'B32' ,`cluster`i'_`j'variance2'
+                                                        matrix `varB32' = `varB32' ,`cluster`i'_variance2'
                                                         }
                                                 }
                                 
-                                        mata: func1("`mstNt'", "`Nu'", "x`j'recov", "`var`j'B32'", "`v`j'covschTrt2'") 
-                                        scalar `v`j'arSch1' =  x`j'recov1[1,1] 
-                                        scalar `v`j'arSch2' =  x`j'recov2[`=`max'',`=`max'']
-                                        scalar `v`j'arTT2' = `v`j'arSch2' + `res_`j'variance2' + summed /*THIS IS EQUIVALENT TO vartt in R*/
-                                        scalar `v`j'arTT1' = `v`j'arSch1' + `res_`j'variance1'          /*THIS IS EQUIVALENT TO vartt1 in R*/
-                                        forvalues s = 1/2 {
-                                                scalar `ICC`s'' = sumvarB2`s' / `v`j'arTT`s''
-                                                }
-                                        cap matrix drop x`j'recov1 x`j'recov2 
-                                        cap scalar drop sumvarB21 sumvarB22 summed
+                                        mata: hfunc1("`mstNt'", "`Nu'","`varB32'", "`vcovschTrt2'","`xrecov2'","`sumvarB22'","`summed'")
+										scalar `sumvarB21'=`xrecov1'[1,1] 
+										scalar `varSch1' =  `xrecov1'[1,1] 
+										scalar `varSch2' =  `xrecov2'[`=`max'',`=`max'']
+										scalar `varTT2' = `varSch2' + `res_variance2' + `summed' /*THIS IS EQUIVALENT TO vartt in R*/
+										
+										scalar `varTT1' = `varSch1' + `res_variance1'           /*THIS IS EQUIVALENT TO vartt1 in R*/
+										forvalues s = 1/2 {
+												scalar `ICC`s'' = `sumvarB2`s'' / `varTT`s''
+												}
+										
+										
                                                 
-                                        matrix Coef = `b'[1,1..`=`max'']
-                                        mata: st_matrix("Coef", select(st_matrix("Coef"), st_matrix("Coef") :!= 0))
+                                        matrix `coef' = `b'[1,1..`=`max'']
+                                        mata: funczero("`coef'")
         
-                                        matrix Coef = Coef'
+                                        matrix `coef' = `coef''
                                 
-                                        clear
-                                        use `mst'
-
-                                        forvalues s = 1/2 {
-                                                forvalues i=1/`=`max'-1' {
-                                                        tempname Within`s'_`i'`j' Total`s'_`i'`j'
-                                                                scalar `Within`s'_`i'`j'' = Coef[`i',1]/sqrt(`res_`j'variance`s'')
-                                                                scalar `Total`s'_`i'`j'' = Coef[`i',1]/sqrt(`v`j'arTT`s'')
-                                                                }
-                                                        }
-                                        matrix drop Coef        
+										
+											forvalues s = 1/2 {
+													forvalues i=1/`=`max'-1' {
+															tempname Within`s'_`i'`j' Total`s'_`i'`j'
+															scalar `Within`s'_`i'`j'' = `coef'[`i',1]/sqrt(`res_variance`s'')
+															scalar `Total`s'_`i'`j'' = `coef'[`i',1]/sqrt(`varTT`s'')										
+													 	}
+													}
+											
+										
+                                      
+										scalar `sumconv' = `sumconv' + 1
                                         } /*capture*/
                                         if _rc==1 {
                                                 exit 1
                                                 }
-                                
-                                                
-                                                        
-                                scalar `failtest' = `res_`j'variance2'
-                                if `failtest' ==. {
-                                        scalar `sumnotconv' = `sumnotconv' + 1
-                                        }
-                                else {
-                                        scalar `sumconv' = `sumconv' + 1
-                                        }
+										else if _rc!=0 {
+                                           scalar `sumnotconv' = `sumnotconv' + 1 
+                                         }
+										 clear
+                                        use `beta1'
                                 } /*nboot*/
-
-                        tempname one two diff
-                        scalar `one' = 0
-                        scalar `two' = 0
-                                        
-                                        
-				    //=====================================================//
-				   //============ SUPPLEMENTARY BOOTSTRAPS ===============//
-				  //=====================================================//
-                                
-                        while `=`sumconv''<`nboot' {
-                                if "`showprogress'" != "" {     
-                                noi disp as txt ""
-                                }
-                                scalar `diff' = `sumnotconv'-`sumnotconv2'
-                                noi di " Total of `=`diff'' models failed"
-                                noi di "  Running supplementary bootstraps..."
-                                
-                                scalar `one' = `nboot'+`=`sumnotconv2'' + 1
-                                scalar `two' = `nboot'+`=`sumnotconv''
-                                
-                                scalar `sumnotconv2' = `sumnotconv'
-                                
-                                forvalues j = `=`one''/`=`two'' {
-                                        tempname  cluster1_`j'variance1  v`j'covschTrt1 var`j'B31 var`j'B32 v`j'covschTrt2 cluster1_`j'variance2 res_`j'variance2 ///
-                                        res_`j'variance1 v`j'arSch1 v`j'arSch2 v`j'arTT2 v`j'arTT1      
-                                        
-                                        if "`showprogress'" != "" {     
-                                                if !mod(`j', 100) {
-                                                noi di _c "`j'"
-                                                }
-                                        else {
-                                                if !mod(`j', 10) {
-                                                        noi di _c "." 
-                                                        }
-                                                }
-                                        }
-
-                                        gettoken depvar indepvars: varlist              
-                                        keep `varlist_clean' `intervention' `random'
-                                        bsample, strata(`random')
+						scalar `from' = `to' + 1
+                        scalar `to' = `to'+ `sumnotconv'
+						} /*while*/
                         
-                                        mixed `depvar' || `random':, cov(unstructured) iterate(`iterate') `options'
-                                        matrix `b0' = e(b)
-
-                                        capture {
-                                                scalar `id_var_col1' = colnumb(`b0', "lns1_1_1:_cons")
-                                                matrix `cluster1_`j'variance1' = exp(`b0'[1, `id_var_col1'])^2  
-                        
-
-                                                scalar `res_var_col' = colnumb(`b0', "lnsig_e:_cons")
-                                                scalar `res_`j'variance1' = exp(`b0'[1, `res_var_col'])^2 
-
-                                                scalar `Nu'= e(N) 
-
-                                                estat recovariance
-                                                scalar `lvl' = r(relevels)
-                                                matrix x`j'recov1 = r(Cov`=`lvl'')
-                                                matrix `v`j'covschTrt1' = x`j'recov1[1,1]
-                                                
-                                                tab `intervention', gen(brokn_fctor)
-                                                rename (`fpart' `spart') (`broken_treatment')
-                                                forvalues i =1/`=`max'-1' {
-                                                        tab `random' brokn_fctor`=`i'+1', matcell(Br_F`i')  
-                                                        svmat Br_F`i'
-                                                        total Br_F`i'2 
-                                                        matrix MSTnt`i' = e(b)
-                                                        }
-                        
-                                                
-                                                matrix `mstNt' = MSTnt1
-
-                                                matrix `var`j'B31' = `cluster1_`j'variance1'
-                                                if `=`max'-1'>1 {
-                                                        foreach i of numlist 2/`=`max'-1' {
-                                                                matrix `mstNt' = `mstNt' ,MSTnt`i'
-                                                                }
-                                                        }
-                                                } /*capture*/
-                                                if _rc==1 {
-                                                        exit 1
-                                                        }
-
-                                        capt `isily' mixed `depvar' i.`intervention' `indepvars' || `random':`rest', cov(unstructured) iterate(`iterate') `options' `maximization'
-                                        matrix `b' = e(b)
-
-                                        capture {
-                                                forvalues i=1/`=`max'' {
-                                                        tempname cluster`i'_`j'variance2 
-                                                        scalar `id_var_col`i'' = colnumb(`b', "lns1_1_`i':_cons")
-                                                        matrix `cluster`i'_`j'variance2' = exp(`b'[1, `id_var_col`i''])^2  
-                                                        }
-
-                                                scalar `res_var_col' = colnumb(`b', "lnsig_e:_cons")
-                                                scalar `res_`j'variance2' = exp(`b'[1, `res_var_col'])^2 
-
-
-                                                estat recovariance
-                                                scalar `lvl' = r(relevels)
-                                                matrix x`j'recov2 = r(Cov`=`lvl'')
-                                                matrix `v`j'covschTrt2' = x`j'recov2[`=`max'',1..`=`max'-1']
-                        
-                                                matrix `var`j'B32' = `cluster1_`j'variance2'
-                                                if `=`max'-1'>1 {
-                                                        foreach i of numlist 2/`=`max'-1' {
-                                                                matrix `var`j'B32' = `var`j'B32' ,`cluster`i'_`j'variance2'
-                                                                }
-                                                        }
-
-                                                mata: func1("`mstNt'", "`Nu'", "x`j'recov", "`var`j'B32'", "`v`j'covschTrt2'")  
-
-                                                scalar `v`j'arSch1' =  x`j'recov1[1,1] 
-                                                scalar `v`j'arSch2' =  x`j'recov2[`=`max'',`=`max'']
-                                                scalar `v`j'arTT2' = `v`j'arSch2' + `res_`j'variance2' + summed /*THIS IS EQUIVALENT TO vartt in R*/
-                                                scalar `v`j'arTT1' = `v`j'arSch1' + `res_`j'variance1'           /*THIS IS EQUIVALENT TO vartt1 in R*/
-                                                forvalues s = 1/2 {
-                                                        scalar `ICC`s'' = sumvarB2`s' / `v`j'arTT`s''
-                                                        }
-                                                cap matrix drop x`j'recov1 x`j'recov2 
-                                                cap scalar drop sumvarB21 sumvarB22 summed
-                                                
-                                                matrix Coef = `b'[1,1..`=`max'']
-                                                mata: st_matrix("Coef", select(st_matrix("Coef"), st_matrix("Coef") :!= 0))
-        
-                                                matrix Coef = Coef'
-                                                
-                                                clear
-                                                use `mst'
-
-                                                forvalues s = 1/2 {
-                                                        forvalues i=1/`=`max'-1' {
-                                                                tempname Within`s'_`i'`j' Total`s'_`i'`j'
-                                                                scalar `Within`s'_`i'`j'' = Coef[`i',1]/sqrt(`res_`j'variance`s'')
-                                                                scalar `Total`s'_`i'`j'' = Coef[`i',1]/sqrt(`v`j'arTT`s'')
-                                                                }
-                                                        }
-                                                matrix drop Coef                        
-                                                } /*capture*/   
-                                                        if _rc==1 {
-                                                        exit 1
-                                                        }
-                                        
-                                        
-                                        scalar `failtest' = `res_`j'variance2'
-                                                
-                                        if `failtest' ==. {
-                                                scalar `sumnotconv' = `sumnotconv' + 1 
-                                                }
-                                        else {
-                                                scalar `sumconv' = `sumconv' + 1
-                                                }
-                                        } /*newnboot*/
-                                } /*while*/
-                        if "`showprogress'" != "" {     
+					
+                        if "`dot'" == "" {     
                                 noi disp as txt ""
                                 }
                         noisily di as txt "  Bootstraps completed."
-                                                        
-                        tempname bootstraps
-                        scalar `bootstraps' = `nboot' + `=`sumnotconv''
                         forvalues s = 1/2 {
-                                forvalues j = 1/`=`bootstraps'' {       
+                                forvalues j = 1/`=`to'' {       
                                         forvalues i = 1/`=`max'-1' {
-                                                if `=`bootstraps''>`=`N_total'' {
-                                                        set obs `=`bootstraps''
+                                                if  `=`to''>`=`N_total'' {
+                                                        set obs `=`to''
                                                         }
                                                 cap gen double Boot`s'_T`i'_W=.
                                                 cap gen double Boot`s'_T`i'_T=.
@@ -1004,7 +821,11 @@ quietly {
                                                 }
                                         }
                                 }
+						
+						
                         capture {
+						
+							if "`ci'"=="percentile" { 
                                 forvalues s = 1/2 {
                                         forvalues i = 1/ `=`max'-1' {
                                                 tempname  W`s'_25_`i' W`s'_975_`i' T`s'_25_`i' T`s'_975_`i'
@@ -1019,33 +840,51 @@ quietly {
                                                 scalar `T`s'_975_`i''   =r(c_1)
                                                 }
                                         }
+									}
+										
+							if "`ci'"=="basic" { 
+                                forvalues s = 1/2 {
+                                        forvalues i = 1/ `=`max'-1' {
+                                                tempname  W`s'_25_`i' W`s'_975_`i' T`s'_25_`i' T`s'_975_`i'
+                                                centile Boot`s'_T`i'_W, centile(2.5)                                             /*quantiles*/
+                                                scalar `W`s'_975_`i''  = 2*d`s'w`i'-r(c_1) /*scalars assigned in reverse order to respect basic (Hall's) CI formula*/
+                                                centile Boot`s'_T`i'_W, centile(97.5)
+                                                scalar `W`s'_25_`i''   = 2*d`s'w`i'-r(c_1)
+
+                                                centile Boot`s'_T`i'_T, centile(2.5)
+                                                scalar `T`s'_975_`i''  = 2*dt`s'Total`i'-r(c_1)
+                                                centile Boot`s'_T`i'_T, centile(97.5)
+                                                scalar `T`s'_25_`i''   = 2*dt`s'Total`i'-r(c_1)
+                                                }
+                                        }
+										}
                                 } /*capture*/
                                 if _rc==1 {
                                         exit 1
                                         }
                         forvalues i = 1/`=`max'-1' {
                                 tempname WC_`i' TC_`i' WU_`i' TU_`i'
-                                matrix `WC_`i''                 = (round(dw`i',.01),round(`W2_25_`i'',.01),round(`W2_975_`i'',.01))
-                                matrix `TC_`i''                 = (round(dtTotal`i',.01),round(`T2_25_`i'',.01),round(`T2_975_`i'',.01))
+                                matrix `WC_`i''                 = (round(d2w`i',.01),round(`W2_25_`i'',.01),round(`W2_975_`i'',.01))
+                                matrix `TC_`i''                 = (round(dt2Total`i',.01),round(`T2_25_`i'',.01),round(`T2_975_`i'',.01))
                                 matrix CondES`i'                = `WC_`i'' \ `TC_`i''
 
                                 matrix rownames CondES`i' = "Within" "Total"
                                 matrix colnames CondES`i' = "Estimate" "95% (BT)LB" "95% (BT)UB"
                                 
-                                scalar drop dw`i' dtTotal`i'
+                                scalar drop d2w`i' dt2Total`i'
                                 }
                                                                 
                         forvalues i = 1/`=`max'-1' {
-                                matrix `WU_`i''                 = (round(dUw`i',.01),round(`W1_25_`i'',.01),round(`W1_975_`i'',.01))
-                                matrix `TU_`i''                 = (round(dtUTotal`i',.01),round(`T1_25_`i'',.01),round(`T1_975_`i'',.01))
+                                matrix `WU_`i''                 = (round(d1w`i',.01),round(`W1_25_`i'',.01),round(`W1_975_`i'',.01))
+                                matrix `TU_`i''                 = (round(dt1Total`i',.01),round(`T1_25_`i'',.01),round(`T1_975_`i'',.01))
                                 matrix UncondES`i'      = `WU_`i'' \ `TU_`i''
                                 
                                 matrix rownames UncondES`i' = "Within" "Total"
                                 matrix colnames UncondES`i' = "Estimate" "95% (BT)LB" "95% (BT)UB"
                                 
-                                scalar drop dUw`i' dtUTotal`i'
+                                scalar drop d1w`i' dt1Total`i'
                                 }
-                                
+                               if "`paste'"!="" { 
                                 local m
                                 forvalues i = 1/`=`max'' {
                                         if "`=`refcat'+0'" != "``i''" {
@@ -1068,7 +907,7 @@ quietly {
                                 merge 1:1 _n using `mst', nogenerate
                                 tempfile Original
                                 save `Original'
-
+							}
                         } /* if nboot*/
                         
                         /*TABLES*/
@@ -1094,8 +933,9 @@ quietly {
                                 }
                         }
                 }
-        restore, not
+		clear
         use `Original'
+		restore, not
         }/*quietly*/
 
 end
@@ -1107,81 +947,78 @@ end
 capture program drop gCondMST
 program define gCondMST, rclass
 version 15.1
-syntax, res_variance2(name) vartt2(name) group_max(name) max(name) varb32(name) num(name) 
+syntax, res_variance2(name) vartt2(name) group_max(name) max(name) varb32(name) brf(name) i(numlist) coef(name)
         
-forvalues i = 1/`=`max'-1' {
-        tempname M v`i'termW1 v`i'termW2 seW`i' LB_W`i' UB_W`i' gwithin`i' v`i'termT1 v`i'termT2 seT`i' LB_T`i' UB_T`i' gtotal`i' N`i'
 
-        scalar dw`i' = Coef[`i',1]/sqrt(`res_variance2')
-        matrix nt`i' = Br_F`i'[1...,2]                  /*Br_F1,2  contained in matrix.*/
-        matrix nc`i' = Br_F`i'[1...,1]
-        scalar elemvarE`i' = `varb32'[1,`i'] /*extract each element from matrix varB32 (=VarE) to use in mata for each iteration*/
-        }
-        
-scalar `M'=`group_max'
-mata: func2( "`num'", "`res_variance2'", "`vartt2'", "nt", "nc", "elemvarE")
+        tempname M vtermW1 vtermW2 seW LB_W UB_W gwithin vtermT1 vtermT2 seT LB_T UB_T gtotal N Nc Nt sumforvtermW1 sumforvtermT1 ni nt nc elemvarE CondES
 
-forvalues i = 1/`=`max'-1' {
-        tempname CondES`i'
-        scalar `N`i'' = Nt`i' + Nc`i' /* is equivalent to N in g.within.mst*/
-        scalar `v`i'termW1' = 1/sumforvtermW1`i'
-        scalar `v`i'termW2' = ((dw`i'^2)/((2*`N`i''-4*`M')))
-        scalar `seW`i'' = sqrt(`v`i'termW1' + `v`i'termW2')
-        scalar `LB_W`i'' = (dw`i'-1.96*`seW`i'')
-        scalar `UB_W`i'' = (dw`i'+1.96*`seW`i'')
-        matrix `gwithin`i'' = (round(dw`i',.01),round(`LB_W`i'',.01),round(`UB_W`i'',.01))
+        scalar d2w`i' = `coef'[`i',1]/sqrt(`res_variance2')
+        matrix `nt' = `brf'[1...,2]              /*Br_F1,2  contained in matrix.*/
+        matrix `nc' =  `brf'[1...,1]  
+        scalar `elemvarE' = `varb32'[1,`i'] /*extract each element from matrix varB32 (=VarE) to use in mata for each iteration*/
+		
+	 mata hfunc2("`res_variance2'", "`vartt2'", "`nt'", "`nc'", "`elemvarE'","`Nt'","`Nc'","`ni'","`sumforvtermW1'","`sumforvtermT1'")
+ 
         
-        scalar dtTotal`i' = Coef[`i',1]/sqrt(`vartt2')
-        scalar `v`i'termT1' = 1/sumforvtermT1`i'
-        scalar `v`i'termT2' = ((dtTotal`i'^2)/((2*`N`i''-4*`M')))
-        scalar `seT`i'' = sqrt(`v`i'termT1' + `v`i'termT2')
-        scalar `LB_T`i'' = (dtTotal`i'-1.96*`seT`i'')
-        scalar `UB_T`i'' = (dtTotal`i'+1.96*`seT`i'')
-        matrix `gtotal`i'' = (round(dtTotal`i',.01),round(`LB_T`i'',.01),round(`UB_T`i'',.01))
+		scalar `M'=`group_max'
+
+        scalar `N' = `Nt' + `Nc' /* is equivalent to N in g.within.mst*/
+        scalar `vtermW1' = 1/`sumforvtermW1'
+        scalar `vtermW2' = ((d2w`i'^2)/((2*`N'-4*`M')))
+        scalar `seW' = sqrt(`vtermW1' + `vtermW2')
+        scalar `LB_W' = (d2w`i'-1.96*`seW')
+        scalar `UB_W' = (d2w`i'+1.96*`seW')
+        matrix `gwithin' = (round(d2w`i',.01),round(`LB_W',.01),round(`UB_W',.01))
+        
+        scalar dt2Total`i' = `coef'[`i',1]/sqrt(`vartt2')
+        scalar `vtermT1' = 1/`sumforvtermT1'
+        scalar `vtermT2' = ((dt2Total`i'^2)/((2*`N'-4*`M')))
+        scalar `seT' = sqrt(`vtermT1' + `vtermT2')
+        scalar `LB_T' = (dt2Total`i'-1.96*`seT')
+        scalar `UB_T' = (dt2Total`i'+1.96*`seT')
+        matrix `gtotal' = (round(dt2Total`i',.01),round(`LB_T',.01),round(`UB_T',.01))
         
         
-        matrix `CondES`i'' = (`gwithin`i'' \ `gtotal`i'')
-        matrix rownames `CondES`i'' = "Within" "Total"
-        matrix colnames `CondES`i'' = "Estimate" "95% LB" "95% UB"
+        matrix `CondES' = (`gwithin' \ `gtotal')
+        matrix rownames `CondES' = "Within" "Total"
+        matrix colnames `CondES' = "Estimate" "95% LB" "95% UB"
         
-        return matrix CondES`i' = `CondES`i''
-        scalar drop elemvarE`i' sumforvtermW1`i' sumforvtermT1`i' Nt`i' Nc`i'
-        }
+        return matrix CondES`i' = `CondES'
+        
 end
 
 capture program drop gUncondMST
 program define gUncondMST, rclass
 version 15.1
-syntax, RANdom(varlist fv) res_variance1(name) res_variance2(name) vartt2(name) vartt1(name) group_max(name) max(name) icc1(name) icc2(name) varb31(name) num(name)
+syntax, RANdom(varlist fv) res_variance1(name) res_variance2(name) vartt2(name) vartt1(name) group_max(name) max(name) ///
+icc1(name) icc2(name) varb31(name) sums(name) coef(name) brokn_fctor(name)
 
 tempname M
 scalar `M'=`group_max'
 quietly {
         forvalues i = 1/`=`max'-1' {
                         
-                tempname MatNt`i' Nc`i' N`i' Nt`i' Mc`i' Mt`i' M`i'
+                tempname MatNt`i' Nc`i' N`i' Nt`i' Mc`i' Mt`i' M`i' nt`i' nc`i'
 
                 tempfile forloop
                 save `forloop'
 
                 /*tab `random' brokn_fctor`=`i'+1', matcell(Br_F`i')*/  /*because `=`max'-1' = 2 , broken factor is 1,2,3 but we need 2,3 because 1 is baseline*/
-                svmat Br_F`i'
+                //svmat Br_F`i'
 
-                total Br_F`i'1 /*Generate Nt`i', Nc`i' nt`i' and nc`i' again for the unconditional model */
-                matrix `MatNt`i'' = e(b) 
-                scalar `Nc`i'' = `MatNt`i''[1,1]
+               // total Br_F`i'1 /*Generate Nt`i', Nc`i' nt`i' and nc`i' again for the unconditional model */
+               // matrix `MatNt`i'' = e(b) 
+                scalar `Nc`i'' = `sums'[`i',1]
 
-                total Br_F`i'2
-                matrix `MatNt`i'' = e(b)
-                scalar `Nt`i'' = `MatNt`i''[1,1]
+                scalar `Nt`i'' = `sums'[`i',2]
                 
                 scalar `N`i'' = `Nc`i'' + `Nt`i''
                 
         
-                tab `random' brokn_fctor`=`i'+1' if brokn_fctor`=`i'+1'==1, matcell(nt`i') 
+                tab `random' `brokn_fctor'`=`i'+1' if `brokn_fctor'`=`i'+1'==1, matcell(`nt`i'') 
                 scalar `Mt`i''= r(r) 
                 
-                tab `random' brokn_fctor`=`i'+1' if brokn_fctor`=`i'+1'==0, matcell(nc`i') 
+                tab `random' `brokn_fctor'`=`i'+1' if `brokn_fctor'`=`i'+1'==0, matcell(`nc`i'') 
                 scalar `Mc`i''= r(r) 
                 
                 scalar `M`i'' = `Mc`i'' + `Mt`i''
@@ -1190,49 +1027,49 @@ quietly {
                 use `forloop'
         
                 }
-        
-        mata: func3("`num'", "nt", "nc")
                 
         forvalues i = 1/`=`max'-1' {
-        tempname UncondES`i' nsim1`i' nsim2`i' nsimTotal`i' vterm1`i' vterm2U`i' vterm3U`i' Uste`i' LUB`i' UUB`i' gUwithin`i' gUtotal`i' dtUTotal`i' B`i' ///
-        At`i' Ac`i' A`i' vterm1Tot`i' vterm2UTot`i' vterm3UTot`i' steUTot`i' LUBtot`i' UUBtot`i' nut`i' nuc`i' dtU_1`i' dtU_2`i' 
-        
-                scalar dUw`i' = Coef[`i',1]/sqrt(`res_variance1')
-                scalar `nsim1`i''     = (`Nc`i'' * sqnt`i')/(`Nt`i'' * `N`i'')
-                scalar `nsim2`i''    = (`Nt`i'' * sqnc`i')/(`Nc`i'' * `N`i'')
+        tempname UncondES`i' nsim1`i' nsim2`i' nsimTotal`i' vterm1`i' vterm2U`i' vterm3U`i' Uste`i' LUB`i' UUB`i' gUwithin`i' gUtotal`i' dt1Total`i' B`i' ///
+        At`i' Ac`i' A`i' vterm1Tot`i' vterm2UTot`i' vterm3UTot`i' steUTot`i' LUBtot`i' UUBtot`i' nut`i' nuc`i' dtU_1`i' dtU_2`i' sqnt`i' sqnc`i' qnt`i' qnc`i'
+		
+		mata: hfunc3("`nt`i''", "`nc`i''","`sqnt`i''", "`sqnc`i''","`qnt`i''", "`qnc`i''")
+       
+                scalar d1w`i'= `coef'[`i',1]/sqrt(`res_variance1')
+                scalar `nsim1`i''     = (`Nc`i'' * `sqnt`i'')/(`Nt`i'' * `N`i'')
+                scalar `nsim2`i''    = (`Nt`i'' * `sqnc`i'')/(`Nc`i'' * `N`i'')
                 scalar `nsimTotal`i'' = `nsim1`i'' + `nsim2`i''
                 scalar `vterm1`i''    = ((`Nt`i''+`Nc`i'')/(`Nt`i''*`Nc`i''))
                 scalar `vterm2U`i''    = (((1+(`nsimTotal`i''-1)*`icc1'))/(1-`icc1'))
-                scalar `vterm3U`i''    = ((dUw`i'^2)/(2*(`N`i''-`M`i'')))
+                scalar `vterm3U`i''    = ((d1w`i'^2)/(2*(`N`i''-`M`i'')))
                 scalar `Uste`i''       = sqrt(`vterm1`i''*`vterm2U`i''+`vterm3U`i'')
-                scalar `LUB`i''        = (dUw`i'-1.96*`Uste`i'')
-                scalar `UUB`i''        = (dUw`i'+1.96*`Uste`i'')
-                matrix `gUwithin`i''    = (round(dUw`i',.01), round(`LUB`i'',.01), round(`UUB`i'',.01))
+                scalar `LUB`i''        = (d1w`i'-1.96*`Uste`i'')
+                scalar `UUB`i''        = (d1w`i'+1.96*`Uste`i'')
+                matrix `gUwithin`i''    = (round(d1w`i',.01), round(`LUB`i'',.01), round(`UUB`i'',.01))
                 
                 
                 /*End of g.within*/
                 
                 /*g.total*/
                 
-                scalar `nut`i''     = ((`Nt`i''^2-sqnt`i')/(`Nt`i'' *( `Mt`i'' -1)))
-                scalar `nuc`i''     = ((`Nc`i''^2-sqnc`i')/(`Nc`i'' *( `Mc`i'' -1)))
-                scalar `dtU_1`i''  = Coef[`i',1]/sqrt(`vartt1')
+                scalar `nut`i''     = ((`Nt`i''^2-`sqnt`i'')/(`Nt`i'' *( `Mt`i'' -1)))
+                scalar `nuc`i''     = ((`Nc`i''^2-`sqnc`i'')/(`Nc`i'' *( `Mc`i'' -1)))
+                scalar `dtU_1`i''  = `coef'[`i',1]/sqrt(`vartt1')
                 scalar `dtU_2`i''  = sqrt(1-`icc1'*(((`N`i''-`nut`i''*`Mt`i''-`nuc`i''*`Mc`i'')+`nut`i''+`nuc`i''-2)/(`N`i''-2)))
-                scalar dtUTotal`i' = ( `dtU_1`i'' * `dtU_2`i'' )
+                scalar dt1Total`i' = ( `dtU_1`i'' * `dtU_2`i'' )
                 
                 scalar `B`i''  = (`nut`i''*(`Mt`i''-1)+`nuc`i''*(`Mc`i''-1))
-                scalar `At`i'' = ((`Nt`i'' ^2*sqnt`i'+(sqnt`i')^2-2* `Nt`i'' *qnt`i')/ `Nt`i'' ^2)
-                scalar `Ac`i'' = ((`Nc`i''^2*sqnc`i'+(sqnc`i')^2-2* `Nc`i'' *qnc`i')/ `Nc`i'' ^2)
+                scalar `At`i'' = ((`Nt`i'' ^2*`sqnt`i''+(`sqnt`i'')^2-2* `Nt`i'' *`qnt`i'')/ `Nt`i'' ^2)
+                scalar `Ac`i'' = ((`Nc`i''^2*`sqnc`i''+(`sqnc`i'')^2-2* `Nc`i'' *`qnc`i'')/ `Nc`i'' ^2)
         
                 scalar `A`i''  = (`At`i'' + `Ac`i'')
         
                 scalar `vterm1Tot`i'' = (((`Nt`i''+`Nc`i'')/(`Nt`i''*`Nc`i''))*(1+(`nsimTotal`i''-1)*`icc1'))
-                scalar `vterm2UTot`i'' = (((`N`i''-2)*(1-`icc1')^2+`A`i''*`icc1'^2+2*`B`i''*`icc1'*(1-`icc1'))*dtUTotal`i'^2)
+                scalar `vterm2UTot`i'' = (((`N`i''-2)*(1-`icc1')^2+`A`i''*`icc1'^2+2*`B`i''*`icc1'*(1-`icc1'))*dt1Total`i'^2)
                 scalar `vterm3UTot`i'' = (2*(`N`i''-2)*((`N`i''-2)-`icc1'*(`N`i''-2-`B`i'')))
                 scalar `steUTot`i''    = sqrt( `vterm1Tot`i'' + `vterm2UTot`i'' / `vterm3UTot`i'')
-                scalar `LUBtot`i''     = (dtUTotal`i'-1.96* `steUTot`i'' ) 
-                scalar `UUBtot`i''              = (dtUTotal`i'+1.96*`steUTot`i'')
-                matrix `gUtotal`i'' = (round(dtUTotal`i',.01), round(`LUBtot`i'',.01), round(`UUBtot`i'',.01))
+                scalar `LUBtot`i''     = (dt1Total`i'-1.96* `steUTot`i'' ) 
+                scalar `UUBtot`i''              = (dt1Total`i'+1.96*`steUTot`i'')
+                matrix `gUtotal`i'' = (round(dt1Total`i',.01), round(`LUBtot`i'',.01), round(`UUBtot`i'',.01))
                 
                 
                 
@@ -1242,7 +1079,7 @@ quietly {
                 
                 return matrix UncondES`i' = `UncondES`i''
                 
-                scalar drop sqnt`i' sqnc`i' qnt`i' qnc`i'
+                scalar drop `sqnt`i'' `sqnc`i'' `qnt`i'' `qnc`i''
                 }
 
         tempname Cov Cov1 Cov2 
@@ -1268,66 +1105,49 @@ end
 capture program drop gCondUncondMST
 program define gCondUncondMST, rclass
 version 15.1
-syntax, j(numlist) Intervention(varlist fv) RANdom(varlist fv) res_variance1(name) res_variance2(name) group_max(name) max(name) vartt1(name) ///
-vartt2(name) num(name) icc1(name)
+syntax, i(numlist) j(numlist) Intervention(varlist fv) RANdom(varlist fv) res_variance1(name) res_variance2(name) group_max(name) max(name) vartt1(name) ///
+vartt2(name) icc1(name) sums(name) coef(name) brokn_fctor(name)
 
-forvalues i = 1/`=`max'-1' {
-		tempname dwC`i'`j' dtTotalC`i'`j'
-        scalar `dwC`i'`j'' = Coef[`i',1]/sqrt(`res_variance2')
-        scalar `dtTotalC`i'`j''  = Coef[`i',1]/sqrt(`vartt2')
+
+		tempname dwC`i'`j' dtTotalC`i'`j' MatNt`i' Nc`i' N`i' Nt`i' Mc`i' Mt`i' M`i' nt`i' nc`i' nut`i' nuc`i' dt_1U`i'`j' dt_2U`i' dwU`i'`j' dtTotalU`i'`j' ///
+		sqnt`i' sqnc`i' qnt`i' qnc`i'
+		
+        scalar `dwC`i'`j'' = `coef'[`i',1]/sqrt(`res_variance2')
+        scalar `dtTotalC`i'`j''  = `coef'[`i',1]/sqrt(`vartt2')
 		
 		return scalar dwC`i'`j' = `dwC`i'`j''
 		return scalar dtTotalC`i'`j' = `dtTotalC`i'`j''
-        }
         
-        
-        forvalues i = 1/`=`max'-1' {
-        tempname MatNt`i' Nc`i' N`i' Nt`i' Mc`i' Mt`i' M`i'
-        tempfile forloop2
-        save `forloop2'
-        
-        svmat Br_F`i'
+	   scalar `Nc`i'' = `sums'[`i',1]
 
-        total Br_F`i'1 
-        matrix `MatNt`i'' = e(b) 
-        scalar `Nc`i'' = `MatNt`i''[1,1]
-
-        total Br_F`i'2
-        matrix `MatNt`i'' = e(b)
-        scalar `Nt`i'' = `MatNt`i''[1,1]
-
-        scalar `N`i'' = `Nc`i'' + `Nt`i''
+	   scalar `Nt`i'' = `sums'[`i',2]
+				
+	   scalar `N`i'' = `Nc`i'' + `Nt`i''
 
 
-        capture tab `random' brokn_fctor`=`i'+1' if brokn_fctor`=`i'+1'==1, matcell(nt`i')
+        capture tab `random' `brokn_fctor'`=`i'+1' if `brokn_fctor'`=`i'+1'==1, matcell(`nt`i'')
         scalar `Mt`i''= r(r)
 
-        capture tab `random' brokn_fctor`=`i'+1' if brokn_fctor`=`i'+1'==0, matcell(nc`i')
+        capture tab `random' `brokn_fctor'`=`i'+1' if `brokn_fctor'`=`i'+1'==0, matcell(`nc`i'')
         scalar `Mc`i''= r(r)
         
         scalar `M`i'' = `Mc`i'' + `Mt`i''
 
-        clear
-        use `forloop2'
-        }
-
-mata: func3("`num'", "nt", "nc")
-
-forvalues i = 1/`=`max'-1' {
-        tempname nut`i' nuc`i' dt_1U`i'`j' dt_2U`i' dwU`i'`j' dtTotalU`i'`j'
         
-        scalar `dwU`i'`j''  = Coef[`i',1]/sqrt(`res_variance1')
-        scalar `nut`i''     = ((`Nt`i''^2-sqnt`i')/(`Nt`i''*(`Mt`i''-1)))
-        scalar `nuc`i''     = ((`Nc`i''^2-sqnc`i')/(`Nc`i''*(`Mc`i''-1)))
-        scalar `dt_1U`i'`j''      = Coef[`i',1]/sqrt(`vartt1')
+       	mata: hfunc3("`nt`i''", "`nc`i''","`sqnt`i''", "`sqnc`i''","`qnt`i''", "`qnc`i''")
+				
+        scalar `dwU`i'`j''  = `coef'[`i',1]/sqrt(`res_variance1')
+        scalar `nut`i''     = ((`Nt`i''^2-`sqnt`i'')/(`Nt`i''*(`Mt`i''-1)))
+        scalar `nuc`i''     = ((`Nc`i''^2-`sqnc`i'')/(`Nc`i''*(`Mc`i''-1)))
+        scalar `dt_1U`i'`j''      = `coef'[`i',1]/sqrt(`vartt1')
         scalar `dt_2U`i''      = sqrt(1-`icc1'*(((`N`i''-`nut`i''*`Mt`i''-`nuc`i''*`Mc`i'')+`nut`i''+`nuc`i''-2)/(`N`i''-2)))
         scalar `dtTotalU`i'`j''  = (`dt_1U`i'`j'' * `dt_2U`i'')
         
-        scalar drop sqnt`i' sqnc`i' qnt`i' qnc`i'
+        scalar drop `sqnt`i'' `sqnc`i'' `qnt`i'' `qnc`i''
 		
 		return scalar dwU`i'`j' = `dwU`i'`j''
 		return scalar dtTotalU`i'`j' = `dtTotalU`i'`j''
-        }
+        
 		
 end
         
@@ -1371,7 +1191,7 @@ syntax, max(name) INTervention(varlist fv)
                         }
                 if "`refcat'" != "" {
                         if "`refcat'">"`=`Max''" | "`refcat'"<"`=`min''" | "`s'" == "`=`max''" {
-                        noi disp as error "{bf:Warning:} selected baseline level `refcat' is out of bounds; level `=`Max'' chosen as baseline"
+                        noi disp as error "{bf:Warning:} selected baseline level `refcat' is out of bounds; level `=`Max'' chosen instead"
                                 }
                         }
                 else {
@@ -1400,7 +1220,7 @@ syntax, max(name) INTervention(varlist fv)
                 if strpos("`refcat'","freq")>0 {
                 tempname maximum z
                 tab `intervention', matcell(`maximum')
-                mata: st_local("matr", strofreal(max(st_matrix("`maximum'"))))
+                mata funcmax("`maximum'")
                 forvalues i = 1/`=`max''{
                 scalar `z' = `maximum'[`i',1]
                 if "`matr'"== "`=`z''" local refcat = ``i''
@@ -1409,3 +1229,4 @@ syntax, max(name) INTervention(varlist fv)
                 }
                 return local refcat = `refcat'
                 end
+

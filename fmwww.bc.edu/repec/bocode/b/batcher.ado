@@ -1,7 +1,8 @@
-*! Version 1.4.0 04jan2021
+*! Version 2.0.0 04feb2022
 * Contact jesse.wursten@kuleuven.be for bug reports/inquiries.
 
 * Changelog
+** 04feb2022: Fixed bug that would occassionally break the tracker (related to modifying list currently being looped over)
 ** 04jan2021: Now a bit more robust to delayed log files creation
 ** 15dec2020: Max parallel option, timestamps
 ** 09dec2020: Now minimises new windows to save space and better delay management
@@ -20,7 +21,7 @@ cap program drop batcher_saveoption
 program define batcher
 	* Syntax parsing
 	version 8.0
-	syntax anything(name=dofileName), [Tempfolder(string)] [STataexe(string)] Iter(numlist) [notrack] [BEtweendelay(integer 10) TRackdelay(integer 60) UPdatedelay(integer 30)] [sts(string) sts_exceptsuccess] [SAVEoptions(string)] [nostop noquit] [test] [SLeepduration(integer 60)] [MAXparallel(string)] [notimestamp]
+	syntax anything(name=dofileName), [Tempfolder(string)] [STataexe(string)] Iter(numlist) [notrack] [BEtweendelay(integer 10) TRackdelay(integer 60) UPdatedelay(integer 30)] [sts(string) sts_exceptsuccess] [SAVEoptions(string)] [nostop noquit] [test debug] [SLeepduration(integer 60)] [MAXparallel(string)] [notimestamp]
 	
 	** Name of sleep duration in syntax changed to trackdelay, keeping sleepduration as internal name for backwards compatibility
 	if `trackdelay' != 60 & `sleepduration' == 60 local sleepduration = `trackdelay'
@@ -192,7 +193,10 @@ program define batcher
 		local somethingFailed = 0
 		local failures ""
 		while "`true'" != "true" {
+		    if "`debug'" == "debug" noisily di as text "-while-"
+			local restartedLoop "no"
 			foreach iteration of local iterationsCurrent {
+			    if "`debug'" == "debug" noisily di as text "Checking `iteration' of `iterationsCurrent'"
 				tempname log
 				** Try to open log
 				capture confirm file `"`tempfolderDefined'/iteration`iteration'.log"'
@@ -248,8 +252,11 @@ program define batcher
 						else 					noisily di _col(3) as text `" -starting `newIteration'- "'  _continue
 						winexec "`stataexe'" do "`middlemanPath'" "0`dofileName'0" `newIteration' "`tempfolderDefined'" "`stopDefined'" "`quitDefined'"
 						sleep `betweendelay_ms'
-						local startedNewIteration "yes"
 					}
+					
+					* Restart loop (this prevents a bug from popping up, related to changing the macro list currently being looped over)
+					local restartedLoop "yes"
+					continue, break
 				}
 				
 				* Failure
@@ -278,6 +285,10 @@ program define batcher
 						sleep `betweendelay_ms'
 						local startedNewIteration "yes"
 					}
+					
+					* Restart loop (this prevents a bug from popping up, related to changing the macro list currently being looped over)
+					local restartedLoop "yes"
+					continue, break
 				}
 				
 				if "`startedNewIteration'" == "yes" {
@@ -287,8 +298,8 @@ program define batcher
 			}
 			if "`finishedCount'" == "`numberOfIterations'" local true "true"
 			
-			if "`true'" != "true" {
-				noisily di as txt "x" _continue
+			if ("`true'" != "true") & ("`restartedLoop'" == "no"){
+			    noisily di as txt "x" _continue
 				sleep `updatedelay_ms'
 			}
 		}

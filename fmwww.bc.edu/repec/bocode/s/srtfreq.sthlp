@@ -1,5 +1,5 @@
 {smcl}
-{* January 15th 2021}{...}
+{* February 25th 2022}{...}
 {hline}
  {cmd:srtfreq} {hline 2} Effect Size calculation for Simple Randomised Trials
 {hline}
@@ -22,10 +22,13 @@
 {synopt :{opt seed(#)}}seed number; default is 1020252.{p_end}
 {synopt :{opt np:erm(#)}}number of permutations; default is NULL. {p_end}
 {synopt :{opt nb:oot(#)}}number of bootstraps; default is NULL. {p_end}
+{synopt :{opt perc:entile}}percentile confidence interval for bootstrap. {p_end}
+{synopt :{opt basic}}basic confidence interval for bootstrap; default is percentile. {p_end}
 
 {syntab:Reporting}
 {synopt :{opt noi:sily}}displays the calculation of conditional models.{p_end}
-{synopt :{opt show:progress}}displays progress of permutations/bootstraps.{p_end}
+{synopt :{opt nodot}}suppresses display of dots; default is one dot character every 10 replications.{p_end}
+{synopt :{opt paste}}attaches bootstrapped/permutated effect sizes on the existing dataset.{p_end}
 {synoptline}
 {phang}
 {it:varlist} and {cmd:intervention()} may contain factor-variable operators; see {help fvvarlist}.{p_end}
@@ -49,17 +52,18 @@ and bootstraps.
 {opt seed(#)} Sets seed number for permutations/bootstraps.
 
 {phang}
-{opt nperm(#)} Specifies number of permutations required to generate a permutated p-value. 
-When specified, a list of generated variables ({cmd:PermC_I#}, {cmd:PermUnc_I#}) attaches to the user's dataset containing the permutated estimates. 
-I# denotes number of arms of the {it:interv_var} and C/Unc denotes Conditional and Unconditional estimates. 
+{opt nperm(#)} Specifies number of permutations required to generate permutated p-values; see Stored results.  
+If specified with {cmd:paste}, a list of generated variables attaches to the user's dataset containing the permutated effect sizes. 
 
 {phang}
-{opt nboot(#)} Specifies number of bootstraps required to generate bootstrap confidence intervals. 
-When specified, a list of generated variables ({cmd:BootC_I#}, {cmd:BootUnc_I#}) attaches to the user's dataset containing the bootstrap estimates. 
-I# denotes number of arms of the {it:interv_var} and C/Unc denotes Conditional and Unconditional estimates. 
+{opt nboot(#)} Specifies number of bootstraps required to generate the bootstrap confidence intervals. 
+If specified with {cmd:paste}, a list of generated variables attaches to the user's dataset containing the bootstrapped effect sizes.
 
 {phang}
-Any attached variables from previous use of {cmd:srtfreq} will be replaced.
+{opt perc:entile} Specifies use of the percentile bootstrap confidence interval. {p_end}
+
+{phang}
+{opt basic} Specifies use of the basic (Hall's) bootstrap confidence interval; default is percentile. {p_end}
 
 
 {dlgtab:Reporting}
@@ -68,7 +72,11 @@ Any attached variables from previous use of {cmd:srtfreq} will be replaced.
 {opt noisily} Displays the permutated/bootstrapped conditional models' regression results as they occur.
  
 {phang}
-{opt showprogress} Displays progress of permutations/bootstraps using dots, counting them by blocks of 10.
+{opt nodot} Suppresses display of dots indicating progress of permutations/bootstraps. Default is one dot character displayed for every block of 10 replications. {p_end}
+
+{phang}
+{opt paste} Attaches bootstrapped or permutated effect sizes to existing dataset if nperm (PermC/Unc_I#) or nboot (BootC/Unc_I#) has been specified, 
+where I# denotes number of interventions and C/Unc denotes Conditional/Unconditional estimates. Existing variables generated from previous use are replaced. {p_end}
 
 
 
@@ -76,16 +84,16 @@ Any attached variables from previous use of {cmd:srtfreq} will be replaced.
 {title:Examples}
 
  {hline}
-{pstd}Setup{p_end}
+{pstd}Setup:{p_end}
 {phang2}{cmd:. use mstData.dta}{p_end}
 
-{pstd}Simple model{p_end}
+{pstd}Simple model:{p_end}
 {phang2}{cmd:. srtfreq Posttest Prettest, int(Intervention)}{p_end}
 
-{pstd}Model using permutations including Schools as fixed effects with base level change{p_end}
+{pstd}Model using permutations including Schools as fixed effects with base level change:{p_end}
 {phang2}{cmd:. srtfreq Posttest Prettest i.School, int(ib(#2).Intervention) nperm(3000)}{p_end}
 
-{pstd}Model using permutations and bootstraps with three-arm intervention variable{p_end}
+{pstd}Model using permutations and bootstraps with three-arm intervention variable:{p_end}
 {phang2}{cmd:. srtfreq Posttest Prettest, int(Intervention2) nperm(3000) nboot(2000) noisily}{p_end}
 
 
@@ -102,7 +110,4 @@ Any attached variables from previous use of {cmd:srtfreq} will be replaced.
 {synopt:{cmd:r(UncondES)}}unconditional effect size for the trial arm(s) in {it:interv_var}, obtained based on variance from the unconditional model (model with only the intercept as a fixed effect).{p_end}
 {synopt:{cmd:r(Beta)}}estimates and confidence intervals for variables specified in the model.{p_end}
 {synopt:{cmd:r(Sigma2)}}residual variance for conditional and unconditional models.{p_end}
-
-
-
-{p_end}
+{synopt:{cmd:r(Pv)}}conditional and unconditional two-sided within and total effect size permutation p-values (available if nperm(#) has been selected).{p_end}

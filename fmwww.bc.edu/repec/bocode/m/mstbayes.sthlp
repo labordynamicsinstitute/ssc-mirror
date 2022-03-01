@@ -1,5 +1,5 @@
 {smcl}
-{* January 15th 2021}{...}
+{* February 25th 2022}{...}
 {hline}
  {cmd:mstbayes} {hline 2} Bayesian Effect Size calculation for Multisite Randomised Trials
 {hline}
@@ -27,6 +27,8 @@
 {synopt :{opt diag:nostics}}generates convergence diagnostic graphs.{p_end}
 {synopt :{opt noi:sily}}displays regression output.{p_end}
 {synopt :{opt save}}saves the simulation output.{p_end}
+{synopt :{opt c:ond()}}wrapper for bayesian arguments specified only for the conditional model.{p_end}
+{synopt :{opt unc:ond()}}wrapper for bayesian arguments specified only for the unconditional model.{p_end}
 {synoptline}
 {phang}
 {it:varlist} and {cmd:intervention()} may contain factor-variable operators; see {help fvvarlist}.{p_end}
@@ -64,25 +66,33 @@ and unconditional model specifications.
 {opt noisily} Displays regression output for both conditional and unconditional models.{p_end}
 
 {phang}
-{opt save} Saves simulation output in two datasets {cmd:(mcmcUncMST.dta, mcmcCondMST.dta)} containing the simulation output for the conditional and unconditional models.
+{opt save} Saves simulation output in two datasets {cmd:(mcmcCondMST.dta, mcmcUncMST.dta)} for the conditional and unconditional models respectively.
 
+{phang}
+{opt cond()} Bayesian arguments are passed only to the conditional model; default is bayesian arguments are included in both models.{p_end}
+
+{phang}
+{opt uncond()} Bayesian arguments are passed only to the unconditional model; default is bayesian arguments are included in both models.{p_end}
 
 
 {marker Examples}{...}
 {title:Examples}
 
  {hline}
-{pstd}Setup{p_end}
-{phang2}{cmd:. use mstData.dta}{p_end}
+{pstd}Setup:{p_end}
+{phang2}{cmd:. use mstData.dta, clear}{p_end}
 
-{pstd}Simple model{p_end}
+{pstd}Simple model:{p_end}
 {phang2}{cmd:. mstbayes Posttest Prettest, int(Intervention) ran(School)}{p_end}
 
-{pstd}Model using custom simulation options and all diagnostic options with base level change{p_end}
+{pstd}Model using custom simulation options and all diagnostic options with base level change:{p_end}
 {phang2}{cmd:. mstbayes Posttest Prettest, int(ib(last).Intervention) ran(School) thr(0.1) mcmcsize(50000) burnin(50000) rseed(1234) nchains(4) sepch diag save}{p_end}
 
-{pstd}Model using custom simulation options with three-arm intervention variable and custom priors{p_end}
+{pstd}Model using custom simulation options with three-arm intervention variable and custom priors:{p_end}
 {phang2}{cmd:. mstbayes Posttest Prettest, int(Intervention2) ran(School) mcmcsize(50000) burnin(50000) rseed(1234) nchains(4) prior({Posttest:_cons}, uniform(-50,50))}{p_end}
+
+{pstd}Model using custom simulation options and custom conditional model prior:{p_end}
+{phang2}{cmd:. mstbayes Posttest Prettest, int(Intervention) ran(School) mcmcsize(50000) burnin(50000) rseed(1234) nchains(4) cond(prior({Posttest: 1.Intervention}, normal(0.5,1)))}{p_end}
 
 
 
@@ -104,5 +114,3 @@ and unconditional model specifications.
 {synopt:{cmd:r(UschCov)}}variance decomposition for the Unconditional model into between cluster variance (School).{p_end}
 {synopt:{cmd:r(SchEffects)}}a vector of the estimated deviation of each school from the intercept.{p_end}
 {synopt:{cmd:r(sepchains_#)}}stores summary statistics for # number of chains separately.{p_end}
-
-{p_end}

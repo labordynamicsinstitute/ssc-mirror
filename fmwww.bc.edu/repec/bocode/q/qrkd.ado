@@ -17,22 +17,30 @@ program define qrkd, rclass
     fvexpand `indepvars' 
     local cnames `r(varlist)'
  
-    tempname b V N cb
+    tempname b V N cb h q bl bu
 
 	mata: estimate_qrkd("`depvar'", "`cnames'", ///
 						`k', `bpr', `bpl', ///
 						`ql', `qh', `qn', ///
 						`bw', "`touse'", ///
 						"`b'", "`V'", "`N'", ///
-						`cover', "`cb'") 
+						`cover', "`cb'", "`h'", ///
+						"`q'", "`bl'", "`bu'") 
 
-	//matrix colnames `b' = QRKD
-	//matrix colnames `V' = QRKD
-	//matrix rownames `V' = QRKD
+	matrix colnames `b' = QRKD
+	matrix colnames `V' = QRKD
+	matrix rownames `V' = QRKD
 	
-    //ereturn post `b' `V', esample(`touse') buildfvinfo
-    //ereturn scalar N    = `N'
-    //ereturn local  cmd  "qrkd"
+	return scalar cover= `cover'
+	return scalar k    = `k'
+	return scalar h    = `h'
+    return scalar N    = `N'
+    return matrix V    = `V'
+	return matrix CBupper = `bu'
+	return matrix CBlower = `bl'
+	return matrix b    = `b'
+    return matrix q    = `q'
+    return local  cmd  "qrkd"
 end
 
 		
@@ -81,7 +89,8 @@ void estimate_qrkd( string scalar yv,      string scalar xv,
 					real scalar q_low, 	   real scalar q_high, 	   	real scalar q_num,
 					real scalar b_w,	   string scalar touse,   
 					string scalar bname,   string scalar Vname,     string scalar nname,
-					real scalar cover, 	   string scalar cbname) 
+					real scalar cover, 	   string scalar cbname,    string scalar hname,
+					string scalar qname,   string scalar blname,    string scalar buname) 
 {
 	printf("\n{hline 78}\n")
 	printf("Executing:  Chiang, H.D. & Sasaki, Y. (2019): Causal Inference by Quantile\n")
@@ -266,7 +275,11 @@ void estimate_qrkd( string scalar yv,      string scalar xv,
     st_matrix(bname, b)
     st_matrix(Vname, V)
     st_numscalar(nname, n)
+    st_numscalar(hname, h)
     st_matrix(cbname, (bbb95,qqq95))
+	st_matrix(qname, qlist)
+	st_matrix(blname, bl)
+	st_matrix(buname, bu)
 	
 	////////////////////////////////////////////////////////////////////////////
 	// Console output

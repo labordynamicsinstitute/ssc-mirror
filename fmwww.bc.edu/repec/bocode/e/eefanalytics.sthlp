@@ -1,8 +1,8 @@
 
 {smcl}
-{* February 06th 2021}{...}
+{* February 25th 2022}{...}
 {hline}
- {cmd:EEF Analytics v1.0.9}
+ {cmd:EEF Analytics v1.1.0}
 {hline}
 
 {pstd:}
@@ -27,6 +27,4 @@ The methods can also be used more widely beyond education trials. This package c
 {synopt :{help crtbayes}} ... for Cluster Randomised Trials.{p_end}
 {synopt :{help mstbayes}} ... for Multisite Randomised Trials.{p_end}
 {synoptline}
-
-{pstd:}
-Authors: Dimitris Vallis, Akansha Singh, Germaine Uwimpuhwe, Steve Higgins, ZhiMin Xiao, Ewoud De Troyer & Adetayo Kasim.
+{p_end}

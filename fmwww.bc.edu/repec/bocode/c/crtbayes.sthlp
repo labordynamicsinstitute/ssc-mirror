@@ -1,5 +1,5 @@
 {smcl}
-{* January 15th 2021}{...}
+{* February 25th 2022}{...}
 {hline}
  {cmd:crtbayes} {hline 2} Bayesian Effect Size calculation for Cluster Randomised Trials
 {hline}
@@ -27,6 +27,8 @@
 {synopt :{opt diag:nostics}}generates convergence diagnostic graphs.{p_end}
 {synopt :{opt noi:sily}}displays regression output.{p_end}
 {synopt :{opt save}}saves the simulation output.{p_end}
+{synopt :{opt c:ond()}}wrapper for bayesian arguments specified only for the conditional model.{p_end}
+{synopt :{opt unc:ond()}}wrapper for bayesian arguments specified only for the unconditional model.{p_end}
 {synoptline}
 {phang}
 {it:varlist} and {cmd:intervention()} may contain factor-variable operators; see {help fvvarlist}.{p_end}
@@ -55,35 +57,42 @@
 {opt threshold(#)} A real scalar or vector for estimating Bayesian posterior probability such that the observed effect size is greater than or equal to the threshold(s).{p_end}
 
 {phang}
-{opt sepchains} Stores summary statistics for each number of chains specified in {cmd:nchains(#)}.
+{opt sepchains} Stores summary statistics for each number of chains specified in {cmd:nchains(#)}.{p_end}
 
 {phang}
-{opt diagnostics} Generates convergence diagnostic graphs for each number of chains specified in {cmd:nchains(#)}.
+{opt diagnostics} Generates convergence diagnostic graphs for each number of chains specified in {cmd:nchains(#)}.{p_end}
 
 {phang}
 {opt noisily} Displays regression output for both conditional and unconditional models.{p_end}
 
 {phang}
-{opt save} Saves simulation output in two datasets {cmd:(mcmcUncCRT.dta, mcmcCondCRT.dta)} containing the simulation output for the conditional and unconditional models.
+{opt save} Saves simulation output in two datasets {cmd:(mcmcCondCRT.dta, mcmcUncCRT.dta)} for the conditional and unconditional models respectively.{p_end}
 
+{phang}
+{opt cond()} Bayesian arguments are passed only to the conditional model; default is bayesian arguments are included in both models.{p_end}
+
+{phang}
+{opt uncond()} Bayesian arguments are passed only to the unconditional model; default is bayesian arguments are included in both models.{p_end}
 
 
 {marker Examples}{...}
 {title:Examples}
 
  {hline}
-{pstd}Setup{p_end}
-{phang2}{cmd:. use crtData.dta}{p_end}
+{pstd}Setup:{p_end}
+{phang2}{cmd:. use crtData.dta, clear}{p_end}
 
-{pstd}Simple model{p_end}
+{pstd}Simple model:{p_end}
 {phang2}{cmd:. crtbayes Posttest Prettest, int(Intervention) ran(School)}{p_end}
 
-{pstd}Model using custom simulation options and all diagnostic options with base level change{p_end}
+{pstd}Model using custom simulation options and all diagnostic options with base level change:{p_end}
 {phang2}{cmd:. crtbayes Posttest Prettest, int(ib1.Intervention) ran(School) thr(0.1) mcmcsize(50000) burnin(50000) rseed(1234) nchains(4) sepch diag save}{p_end}
 
-{pstd}Model using custom simulation options with three-arm intervention variable and custom priors{p_end}
+{pstd}Model using custom simulation options with three-arm intervention variable and custom prior for both models:{p_end}
 {phang2}{cmd:. crtbayes Posttest Prettest, int(Intervention2) ran(School) mcmcsize(50000) burnin(50000) rseed(1234) nchains(4) prior({Posttest:_cons}, uniform(-50,50))}{p_end}
 
+{pstd}Model using custom simulation options and custom conditional model prior:{p_end}
+{phang2}{cmd:. crtbayes Posttest Prettest, int(Intervention) ran(School) mcmcsize(50000) burnin(50000) rseed(1234) nchains(4) cond(prior({Posttest: 2.Intervention}, normal(0.5,1)))}{p_end}
 
 
 {marker results}{...}

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.4.0 09dec2020}{...}
+{* *! version 2.0.0 04feb2022}{...}
 {findalias asfradohelp}{...}
 {title:batcher}
 

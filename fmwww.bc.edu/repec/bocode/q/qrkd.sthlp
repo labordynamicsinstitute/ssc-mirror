@@ -26,6 +26,10 @@
 The command takes an outcome variable {it:y} and a running variable or forcing variable {it:x}.
 The primary results consist of estimates and a {it:uniform} 95% confidence band of causal effects across multiple quantiles. In addition to these primary results, the command also conducts tests of: 1. the null hypothesis that the causal effects are zero for all the quantiles (i.e., uniformly null causal effects); and 2. the null hypothesis that the causal effects are constant across all the quantiles (i.e., homogeneous causal effects) against the alternative of heterogeneous treatment effects.
 
+{phang}
+This command works only for a continuous treatment.
+For a binary treatment, refer to {cmd:rkqte}.
+
 
 {marker options}{...}
 {title:Options}
@@ -74,6 +78,56 @@ The primary results consist of estimates and a {it:uniform} 95% confidence band 
 {phang}(The default is the inter-quartile range: 25th, 50th & 75th percentiles.)
 
 
+{marker stored}{...}
+{title:Stored results}
+
+{phang}
+{bf:qrkd} stores the following in {bf:r()}: 
+{p_end}
+
+{phang}
+Scalars
+{p_end}
+{phang2}
+{bf:r(N)} {space 10}observations
+{p_end}
+{phang2}
+{bf:r(h)} {space 10}bandwidth
+{p_end}
+{phang2}
+{bf:r(k)} {space 10}kink location
+{p_end}
+{phang2}
+{bf:r(cover)} {space 6}coverage probability
+{p_end}
+
+{phang}
+Macros
+{p_end}
+{phang2}
+{bf:r(cmd)} {space 8}{bf:qrkd}
+{p_end}
+
+{phang}
+matrices
+{p_end}
+{phang2}
+{bf:r(q)} {space 10}quantiles
+{p_end}
+{phang2}
+{bf:r(b)} {space 10}QRKD estimates
+{p_end}
+{phang2}
+{bf:r(CBlower)} {space 4}lower bounds of confidence band
+{p_end}
+{phang2}
+{bf:r(CBupper)} {space 4}upper bounds of confidence band
+{p_end}
+{phang2}
+{bf:r(V)} {space 10}variance matrix
+{p_end}
+
+
 {title:Reference}
 
 {p 4 8}Chiang, H.D. and Y. Sasaki. 2019. Causal Inference by Quantile Regression Kink Designs.
@@ -81,11 +135,9 @@ The primary results consist of estimates and a {it:uniform} 95% confidence band 
 {browse "https://www.sciencedirect.com/science/article/abs/pii/S0304407619300387":Link to Paper}.
 {p_end}
 
+
 {title:Authors}
 
 {p 4 8}Harold. D. Chiang, Vanderbilt University, Nashville, TN.{p_end}
 
 {p 4 8}Yuya Sasaki, Vanderbilt University, Nashville, TN.{p_end}
-
-
-

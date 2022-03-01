@@ -1,4 +1,5 @@
-*! 2.0  16feb2022 Austin Nichols
+*! 2.1  26feb2022 Austin Nichols
+* 2.1 adds expurgation of offensive 5-letter words by incrementing the date forward 6 years & blanking out words in the list
 program define wordy, rclass
 version 10 
 syntax [anything] [, USEindx(int -1) SUPpresscheck ]
@@ -7,6 +8,13 @@ forv j=1/5 {
   mata:W`j'=W
   }
 mata:allW=W1\W2\W3\W4\W5
+loc expurg 161 293 902 934 962 1028 1235 1597 1752 2000 2168 2208 2283 2296 2396
+loc expurg `expurg' 2734 2832 3106 3123 3159 3362 3555 3929 4663 4919 4936 4969
+loc expurg `expurg' 5355 5376 5535 5550 5898 6579 6797 6826 7095 7388 7566 7610
+loc expurg `expurg' 7667 7751 7804 7918 7954 8164 8187 8242 8314 8526 8800 8822
+foreach x of loc expurg {
+ mata:allW[`x',1]="_____"
+ }
 if `"`anything'"'!="" {
  loc sw=upper(`"`anything'"')
  cap assert length(`"`sw'"')==5
@@ -49,11 +57,18 @@ if `useindx'>-1 {
  loc indx=`useindx'
  }
 loc indx=`indx'+1
+loc expurg 161 293 902 934 962 1028 1235 1597 1752 2000 2168 2208 2283 2296 2396
+loc expurg `expurg' 2734 2832 3106 3123 3159 3362 3555 3929 4663 4919 4936 4969
+loc expurg `expurg' 5355 5376 5535 5550 5898 6579 6797 6826 7095 7388 7566 7610
+loc expurg `expurg' 7667 7751 7804 7918 7954 8164 8187 8242 8314 8526 8800 8822
+foreach xx of loc expurg { 
+ if `indx'==`xx' loc indx=mod(`indx'+365*6,8938)+1
+ }
 loc filenum=floor(`indx'/2000)+1
 loc filepos=mod(`indx'-1,2000)+1
 
 * initialize correct answer `a'
-mata:st_local("a",W[`filepos'])
+mata:st_local("a",W`filenum'[`filepos'])
 forv i=1/6 {
  forv j=1/5 {
   glo w_g`i'right`j'=0 
@@ -70,9 +85,15 @@ while `tryagain'==1 {
  di "Type a five-letter word as your guess and hit enter" _request(g`g')
 ***** check for valid guess; if not valid, return and get another entry
  glo g`g'=upper(`"${g`g'}"')
+ if upper(`"${g`g'}"')=="Q" {
+  di as err "I guess you are done guessing;"
+  di as err "I might infer you don't like word games but I have"
+  error 2001
+  }
  cap assert length(`"${g`g'}"')==5
- if _rc!=0 {
+ if _rc!=0 & upper(`"${g`g'}"')!="Q" {
   di as err "You did not type a five-letter word"
+  di as err "nor did you type q to quit"
   continue
   }
  forv wi=1/5 {
@@ -195,7 +216,6 @@ for (i=1; i<=rows(wordyinput); i++) {
  }
 return(rows(select(wordyinput,wordypickit)))
 }
-
 end
 
 exit

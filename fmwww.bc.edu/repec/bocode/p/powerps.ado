@@ -1,4 +1,4 @@
-*! Version 1.1.0 23november2020
+*! Version 2.0.0 25january2022
 
 /*
 	Syntax:
@@ -34,7 +34,7 @@ program powerps, rclass sortpreserve
 				PROGRESSbar					///
 				SEED(real 12345)			///
 				SIMulations(real 1000)		///
-				TOLerance(real 12)]
+				TOLerance(real 6)]
 
 					*******************************
 					*** Checking data structure ***
@@ -84,7 +84,7 @@ program powerps, rclass sortpreserve
 		local aei_column = 3
 		local aei_column_name "AEI"
 
-		if ("`tolerance'" == "")	local tolerance = 12
+		if ("`tolerance'" == "")	local tolerance = 6
 
 	}
 
