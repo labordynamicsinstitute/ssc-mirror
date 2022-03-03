@@ -1,6 +1,6 @@
 d 'ZIPPKG': module to create ZIP archives of community-contributed content for offline distribution
 d
-d  zippkg' is a Stata helper program to distribute
+d  zippkg is a Stata helper program to distribute
 d community-contributed content into offline environments (such as
 d data centers / secure enclaves or any other system that is not
 d connected to the internet). It enables users to download Stata
@@ -18,7 +18,7 @@ d KW: net
 d
 d Requires: Stata version 12
 d
-d Distribution-Date: 20190409
+d Distribution-Date: 20220225
 d
 d Author: Daniel Bela, Leibniz Institute for Educational Trajectories
 d Support: email daniel.bela@@lifbi.de

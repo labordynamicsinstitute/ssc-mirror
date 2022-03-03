@@ -13,7 +13,7 @@ d KW: censoring
 d
 d Requires: Stata version 12
 d
-d Distribution-Date: 20220225
+d Distribution-Date: 20220302
 d
 d Author:  Juan C. Caro,  University of Luxembourg
 d Support: email juan.caro@@uni.lu
@@ -32,5 +32,6 @@ f quaidsce_postestimation.sthlp
 f quaidsce.ado
 f quaidsce_estat.ado
 f quaidsce_p.ado
+f ../l/lquaidsce.mlib
 f ../n/nlsur__quaidsce.ado
 f ../u/utils__quaidsce.mata
