@@ -57,6 +57,7 @@ p alorenz module to produce Pen's Parade, Lorenz and Generalised Lorenz curve
 p alphawgt module to compute Cronbach's alpha for weighted data
 p alsmle module to perform Beach-Mackinnon AR(1) Autoregressive Maximum Likelihood Estimation
 p amcmc module to provide Mata functions and structures for adaptive Markov chain Monte Carlo sampling
+p ameta module to perform alternative and Bayesian meta-analysis
 p anketest module to perform diagnostic tests for spatial autocorrelation in the residuals of OLS, SAR, IV, and IV-SAR models
 p anogi module to generate Analysis of Gini 
 p anovaplot module for plots of anova fit, including interaction plots

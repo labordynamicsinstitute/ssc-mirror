@@ -1,0 +1,4 @@
+*! version 1.0.0  04feb2022
+sequence 3
+label resource "IE blue"
+set rgb "140 161 188"

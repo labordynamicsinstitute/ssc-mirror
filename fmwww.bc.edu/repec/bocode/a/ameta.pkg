@@ -1,0 +1,43 @@
+d 'AMETA': module to perform alternative and Bayesian meta-analysis
+d
+d    ameta offers a choice of two meta-analysis approaches, an
+d alternative and a bayesian. On the one hand,	  the alternative
+d method consists of eight different heterogeneity estimators for
+d the calculation of the    pooled intervention effect, its std.
+d error and CI, the between-studies variance tau-squared, as well  
+d  as other heterogeneity measures under a random-effects model and
+d with the assumption that the pooled	 intervention effect is
+d following a normal distribution. On the other hand, the bayesian
+d method offers    three Bayesian meta-analysis models for
+d calculating parameters such as the posterior variance and   
+d expected value of mu and posterior variance and expected value of
+d tau-squared of the unknown	population parameter theta along
+d with its credible interval.  All three models are of the   
+d random-effects family so they take into account both the within
+d and between study variation and    estimate it. Moreover, since a
+d Bayesian inference is used, we also assign prior probability	 
+d distribution to the parameter theta and specifically an inverse
+d gamma prior distribution with    parameters a and b which are
+d also known as shape and scale parameters of the distribution. 
+d
+d KW: meta-analysis
+d KW: Bayesian
+d
+d Requires: Stata version 13.1
+d
+d Distribution-Date: 20220304
+d
+d Author: Kalliopi K. Exarchou-Kouveli,  University of Thessaly, Lamia, Greece
+d Support: email kexarch@@uth.gr
+d
+d Author: Eleni Nikolaidou, University of Thessaly, Lamia, Greece
+d Support: email  elnikolaidou98@@gmail.com
+d
+d Author: Panagiota I. Kontou, University of Thessaly, Lamia, Greece
+d Support: email NA
+d
+d Author: Pantelis G. Bagos, University of Thessaly, Lamia, Greece
+d Support: email pbagos@@compgen.org
+d
+f ameta.ado
+f ameta.sthlp

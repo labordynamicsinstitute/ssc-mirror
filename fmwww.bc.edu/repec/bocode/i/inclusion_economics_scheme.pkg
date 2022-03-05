@@ -1,0 +1,33 @@
+d 'INCLUSION_ECONOMICS_SCHEME': module to provide a graphic scheme for Inclusion Economics branded data
+d
+d      The Inclusion Economics Stata scheme provides a quick set of
+d options for modern-looking graphs from    Stata using Inclusion
+d Economics colors.  The scheme is intended for use by the research
+d team of    Inclusion Economics when designing visualization for
+d presentations and social media.  There are no    restrictions on
+d its use. 
+d
+d KW: graphics
+d KW: schemes
+d KW: inclusion economics
+d
+d Requires: Stata version 16.1
+d
+d Distribution-Date: 20220304
+d
+d Author:  Nils Enevoldsen,  Inclusion Economics
+d Support: email  nils@@wlonk.com
+d
+ ../s/scheme-ie.scheme
+ ../s/scheme-ie2.scheme
+f iefonts.ado
+f iefonts.sthlp
+f inclusioneconomicsscheme.sthlp
+f ../c/color-iebeige.style
+f ../c/color-ieblue.style
+f ../c/color-iegreen.style
+f ../c/color-iemagenta.style
+f ../c/color-ienavy.style
+f ../c/color-ieorange.style
+f ../c/color-ieteal.style
+f ../c/color-ieyellow.style

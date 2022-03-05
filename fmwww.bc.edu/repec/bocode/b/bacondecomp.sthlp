@@ -142,8 +142,8 @@ fixed effects DD model.{p_end}
 {phang2}. {stata "xtreg y d i.t if inlist(i,2,3) & t<6, i(id) fe": xtreg y d i.t if inlist(i,2,3) & t<6, i(id) fe}{p_end}
 {phang2}. {stata "ba y d, stub(b_) ddetail nograph": ba y d, stub(b_) ddetail nograph}{p_end}
 {phang2}. {stata "ba y d x, stub(bx_) ddetail nograph": ba y d x, stub(bx_) ddetail nograph}{p_end}
-{phang2}. {stata "l b_T b_C b_B b_cg if !mi(b_T)": l b_T b_C b_B b_cg if !mi(b_T)}{p_end}
-{phang2}. {stata "l bx_T bx_C bx_B bx_cg if !mi(bx_T)": l bx_T bx_C bx_B bx_cg if !mi(bx_T)}{p_end}
+{phang2}. {stata "l b_T b_C b_B b_cgroup if !mi(b_T)": l b_T b_C b_B b_cgroup if !mi(b_T)}{p_end}
+{phang2}. {stata "l bx_T bx_C bx_B bx_cgroup if !mi(bx_T)": l bx_T bx_C bx_B bx_cgroup if !mi(bx_T)}{p_end}
 
 
 {marker saved_results}{...}
@@ -151,7 +151,7 @@ fixed effects DD model.{p_end}
 
 
 {pstd}
-{cmd:ddtiming} saves the following in {cmd:e()}:
+{cmdab:ba:condecomp} saves the following in {cmd:e()}:
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Matrix}{p_end}

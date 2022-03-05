@@ -1,5 +1,6 @@
 p iati module to import International Aid Transparency Initiative data
 p ic module to compute measures of interaction contrast (biological interaction) 
+p icalc module to compute Interaction Effects in Linear and Generalized Linear Models
 p icc23 module that computes models 2 and 3 of the intra-class correlation
 p iccconf module to compute a confidence interval for an intraclass correlation (ICC)
 p iccvar module to calculate intraclass correlation (ICC) after xtmixed
@@ -34,6 +35,7 @@ p imputerasch module to impute binary data by a Rasch model
 p imusic module to find music and enjoy while working on Stata
 p imvol module to compute Implied Volatility in Black-Scholes European Option Pricing Model
 p inccat module to concatenate one or more input files to an output file inserting additional input files
+p inclusion_economics_scheme module to provide a graphic scheme for Inclusion Economics branded data
 p indeplist module to returns lists of independent variables from the active estimation command
 p index Module to Estimate Price, Quantity, and Value Index Numbers
 p indexplot module for index plots of estimation results

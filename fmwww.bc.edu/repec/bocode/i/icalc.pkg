@@ -1,0 +1,107 @@
+d 'ICALC': module to compute Interaction Effects in Linear and Generalized Linear Models
+d
+d  This is a package of routines discussed in Kaufman (2018),
+d Interaction Effects in Linear and Generalized Linear Models:
+d Examples and Applications using Stata (Sage Publications) 
+d
+d KW: interaction effects
+d KW: linear models
+d KW: generalized linear models
+d KW: GLM
+d
+d Requires: Stata version 14.2
+d
+d Distribution-Date: 20220304
+d
+d Author:  Robert L. Kaufman,  Temple University
+d Support: email lkaufman758@@gmail.com
+d
+f icalc.sthlp
+f ../s/scmod1.ado
+f ../g/getbvarbmod.ado
+f ../d/definefm.ado
+f ../s/sigreg.ado
+f ../c/contyhat.ado
+f ../d/defdualaxislab.ado
+f ../s/solvebvquad.ado
+f ../s/scmod2.ado
+f ../f/frqfocmod1.ado
+f ../s/srform.ado
+f ../o/outdisp.ado
+f ../g/getvb.ado
+f ../c/cbplot.ado
+f ../a/atspec.ado
+f ../p/pathdiagfull.ado
+f ../b/baryhat.ado
+f ../g/getb.ado
+f ../s/scatyhat.ado
+f ../g/gfi.ado
+f ../a/axisdigit.ado
+f intspec.ado
+f ../s/stripfv.ado
+f ../p/plotcomb.ado
+f ../c/ctrstr.ado
+f ../d/defdualaxislabbar.ado
+f ../e/effdisp.ado
+f ../p/pathdiag.ado
+f ../m/mkmargvar.ado
+f ../g/getfvbase.ado
+f ../e/eqndefine.ado
+f ../p/proprstr.ado
+f ../g/getfvname.ado
+f ../c/conplot.ado
+f ../d/defaxislab.ado
+f ../e/errbplot.ado
+f ../d/dualaxislabcontour.ado
+f ../r/rcform.ado
+f ../f/frqmod.ado
+f ../g/getvallab.ado
+f ../b/barxlinedraw.ado
+f intspec.sthlp
+f ../s/sigreg.sthlp
+f ../e/effdisp.sthlp
+f icalc.sthlp
+f ../g/gfi.sthlp
+f ../o/outdisp.sthlp
+f ../s/scheme-icalc.scheme
+f ../c/Ch04_3way_Example_5.do
+f ../c/Create_stacked_area_data.do
+f ../c/Ch12_Survival.do
+f ../c/Ch05_Examples_1_and_2.do
+f ../c/Ch04_2mod.do
+f ../c/Ch10_2mods.do
+f ../c/Ch04_1mod_Example_3.do
+f ../c/Ch06_3way.do
+f ../c/Ch07_1mod.do
+f ../c/Ch06_1mod.do
+f ../c/Ch04_Fig_Examples_1_and_2.do
+f ../c/Ch06_2mods.do
+f ../c/Ch07_2mods.do
+f ../m/mcattest.do
+f ../c/Ch05_Example_3.do
+f ../c/Ch02_2mod_interval.do
+f ../c/Ch05_Example_4.do
+f ../c/Ch12_Heckman.do
+f ../c/Ch04_Fig_Example_4.do
+f ../c/Ch03_1mod.do
+f ../c/Ch02_3way.do
+f ../c/Ch03_3way.do
+f ../c/Ch02_1mod.do
+f ../c/Ch09_2mods.do
+f ../c/Ch11_3way.do
+f ../c/Ch10_1mod.do
+f ../c/Ch08_3way.do
+f ../c/Ch09_1mod.do
+f ../c/Ch05_1mod_interval.do
+f ../c/Ch03_2mod.do
+f ../c/Ch08_1mod.do
+f ../c/Ch11_1mod.do
+f ../c/Ch12_Polynomial.do
+f ../c/Ch02_2mod_mixed.do
+f ../g/GSS_1987.dta
+f ../a/AHS.dta
+f ../g/GSS_2010.dta
+f ../s/SIPP_Occ.dta
+f ../s/SIPP_Wealth.dta
+f ../u/UIS.dta
+f ../g/GSS_1998.dta

@@ -1,0 +1,83 @@
+// Inclusion Economics Graph Scheme //
+
+* Graphing scheme with colors and other tweaks for common graphs
+* Particularly designed for easier and better default plots of
+* predictions and marginal effects
+* Many options are based on the excellent plotplain scheme (Bischof 2017)
+
+* This scheme is a reproduction of Trenton Mize's very excellent cleanplots
+* scheme (https://www.trentonmize.com/software/cleanplots), with adaptations
+* for Inclusion Economics colors.
+
+* NOTE: "help scheme entries" for what each command does
+
+* Nils Enevoldsen
+* 2022-02-04
+#include ie2
+
+// Colors //
+
+* Default for all other non-specified objects					
+* NOTE: CIs in marginsplot is based on this					
+color p1					ienavy
+color p2 					ieorange
+color p3 					ieblue
+color p4 					none
+color p5 					none
+color p6 					none
+					
+* Default for lines (matching the symbols)					
+color p1line				ienavy
+color p2line				ieorange
+color p3line				ieblue
+color p4line				none
+color p5line 				none
+color p6line 				none
+					
+color p1lineplot			ienavy
+color p2lineplot			ieorange
+color p3lineplot			ieblue
+color p4lineplot			none
+color p5lineplot 			none
+color p6lineplot			none	
+					
+color p1markline			ienavy
+color p2markline			ieorange
+color p3markline			ieblue
+color p4markline			none
+color p5markline 			none
+color p6markline			none	
+					
+* Bar charts					
+color p1bar					ienavy
+color p2bar					ieorange
+color p3bar					ieblue
+color p4bar					iebeige
+color p5bar					none
+color p6bar					none
+					
+* Area plots					
+color p1area				ienavy
+color p2area				ieorange
+color p3area				ieblue
+color p4area				iebeige
+color p5area				none
+color p6area				none
+					
+color p1arealine			ienavy
+color p2arealine			ieorange
+color p3arealine			ieblue
+color p4arealine			iebeige
+color p5arealine			none
+color p6arealine			none
+					
+* Pie slices					
+color p1pie					ienavy
+color p2pie					ieorange
+color p3pie					ieblue
+color p4pie					iebeige
+color p5pie					none
+color p6pie					none
+
+color histogram      		ienavy
+color histogram_line 		ieblue
