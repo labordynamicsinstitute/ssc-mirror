@@ -3,11 +3,11 @@
 ***************************************************
 
 *! version 1.0  10march2021
-*! by Kalliopi K. Exarchou-Kouveli, Eleni Nikolaidou and Pantelis G. Bagos
+*! by Kalliopi K. Exarchou-Kouveli, Eleni Nikolaidou, Panagiota I. Kontou and Pantelis G. Bagos
 
 
 program define ameta , rclass
-version 13.1 
+version 10.0
 	syntax varlist(min=2 max=3 numeric) [if] [in], method(string) [study(string)]  [, a(real 0) b(real 2) l(real 95)] [by(string)] [graph] [eform] 
 	
 
@@ -2326,7 +2326,7 @@ di in ye "("`by'[`i'] ")" _col(1)
 }
 }
 di "number of studies in subgroup `j' = " = k_`j'
-di "ÂThe number of artificial studies is " `K'
+di "The number of artificial studies is " `K'
 di in gr _dup(21) "-" "+" _dup(17) "-" "+" _dup(33) "-" 
 	}
 	
@@ -2346,7 +2346,7 @@ di in ye "("`by'[`i'] ")" _col(1)
 }
 }
 di "number of studies in subgroup `j' = " = k_`j'
-di "ÂThe number of artificial studies is " `K'
+di "The number of artificial studies is " `K'
 di in gr _dup(21) "-" "+" _dup(17) "-" "+" _dup(33) "-" 
 }
 }

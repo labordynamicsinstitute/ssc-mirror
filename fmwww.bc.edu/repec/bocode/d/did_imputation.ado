@@ -1,15 +1,15 @@
 *! did_imputation: Treatment effect estimation and pre-trend testing in staggered adoption diff-in-diff designs with an imputation approach of Borusyak, Jaravel, and Spiess (2021)
-*! Version: May 21, 2021
+*! Version: March 1, 2022
 *! Author: Kirill Borusyak
-*! Recent updates: slightly adjusted SE in presence of estimation weights
+*! Recent updates: added leave-out standard errors, fixed a problem with minn when wtr have negative values, report coefs on controls
 *! Please check the latest version at: https://github.com/borusyak/did_imputation/
 *! Citation: Borusyak, Jaravel, and Spiess, "Revisiting Event Study Designs: Robust and Efficient Estimation" (2021)
 program define did_imputation, eclass sortpreserve
 version 13.0
-syntax varlist(min=4 max=4) [if] [in] [aw iw fw] [, wtr(varlist) sum Horizons(numlist >=0) ALLHorizons HBALance minn(integer 30) shift(integer 0) ///
+syntax varlist(min=4 max=4) [if] [in] [aw iw] [, wtr(varlist) sum Horizons(numlist >=0) ALLHorizons HBALance minn(integer 30) shift(integer 0) ///
 	AUTOSample SAVEestimates(name) SAVEWeights LOADWeights(varlist) ///
 	AVGEFFectsby(varlist) fe(string) Controls(varlist) UNITControls(varlist) TIMEControls(varlist) ///
-	CLUSter(varname) tol(real 0.000001) maxit(integer 100) verbose nose PREtrends(integer 0) delta(integer 0)]
+	CLUSter(varname) leaveout tol(real 0.000001) maxit(integer 100) verbose nose PREtrends(integer 0) delta(integer 0) alpha(real 0.05)]
 qui {
 	if ("`verbose'"!="") noi di "Starting"
 	ms_get_version reghdfe, min_version("5.7.3")
@@ -20,7 +20,7 @@ qui {
 	if ("`unitcontrols'"!="") markout `touse' `unitcontrols'
 	if ("`timecontrols'"!="") markout `touse' `timecontrols'
 //	if ("`timeinteractions'"!="") markout `touse' `timeinteractions'
-	if ("`cluster'"!="") markout `touse' `cluster'
+	if ("`cluster'"!="") markout `touse' `cluster', strok
 	if ("`saveestimates'"!="") confirm new variable `saveestimates'
 	if ("`saveweights'"!="") confirm new variable `saveweights'
 	if ("`verbose'"!="") noi di "#00"
@@ -47,7 +47,9 @@ qui {
 	local i `2'
 	local t `3'
 	local ei `4'
-	markout `touse' `Y' `i' `t' // missing `ei' is fine, indicates the never-treated group
+	markout `touse' `Y' `t' // missing `ei' is fine, indicates the never-treated group
+	markout `touse' `i', strok
+	
 	tempvar D K
 	
 	// Process FE
@@ -63,7 +65,7 @@ qui {
 			local ++fecount
 			local fecopy `fecopy' `fecurrent'
 			local fe`fecount' = subinstr("`fecurrent'","#"," ",.)
-			markout `touse' `fe`fecount''
+			markout `touse' `fe`fecount'', strok
 		}
 	}
 	local fe `fecopy'
@@ -192,10 +194,19 @@ qui {
 		}
 	}
 	
+	// Part 2A: initialize the matrices [used to be just before Part 5]
+	local tau_num : word count `wtr'
+	local ctrl_num : word count `controls'
+	if (`debugging') noi di `tau_num' 
+	if (`debugging') noi di `"`wtr' | `wtrnames' | `controls'"'
+	tempname b Nt
+	matrix `b' = J(1,`tau_num'+`pretrends'+`ctrl_num',.)
+	matrix `Nt' = J(1,`tau_num',.)
+	if (`debugging') noi di "#4.0"
+	
 	// Part 3: Run the imputation regression and impute the controls for treated obs
 	if ("`unitcontrols'"!="") local fe_i `i'##c.(`unitcontrols')
 	if ("`timecontrols'"!="") local fe_t `t'##c.(`timecontrols')
-	if (`debugging') noi di "#4: reghdfe `Y' `controls' if (`D'==0) & (`touse') `weiexp', a(`fe_i' `fe_t' `fe', savefe) nocon keepsing"
 	
 	count if (`D'==0) & (`touse')
 	if (r(N)==0) {
@@ -206,13 +217,16 @@ qui {
 		error 459
 	}
 	
-	if (`debugging') noi reghdfe `Y' `controls' if (`D'==0) & (`touse') `weiexp', a(`fe_i' `fe_t' `fe', savefe) nocon keepsing 
-		else reghdfe `Y' `controls' if (`D'==0) & (`touse') `weiexp', a(`fe_i' `fe_t' `fe', savefe) nocon keepsing verbose(-1)
+	tempvar imput_resid
+	if (`debugging') noi di "#4: reghdfe `Y' `controls' if (`D'==0) & (`touse') `weiexp', a(`fe_i' `fe_t' `fe', savefe) nocon keepsing resid(`imput_resid') cluster(`cluster')"
+	if (`debugging') noi reghdfe `Y' `controls' if (`D'==0) & (`touse') `weiexp', a(`fe_i' `fe_t' `fe', savefe) nocon keepsing resid(`imput_resid') cluster(`cluster')
+		else reghdfe `Y' `controls' if (`D'==0) & (`touse') `weiexp', a(`fe_i' `fe_t' `fe', savefe) nocon keepsing resid(`imput_resid') cluster(`cluster')verbose(-1)
 		// nocon makes the constant recorded in the first FE
 		// keepsing is important for when there are units available in only one period (e.g. treated in period 2) which are fine
 		// verbose(-1) suppresses singleton warnings
-
-	* Extrapolate the controls to the treatment group and construct Y0
+	local dof_adj = (e(N)-1)/(e(N)-e(df_m)-e(df_a)) * (e(N_clust)/(e(N_clust)-1)) // that's how regdfhe does dof adjustment with clusters, see reghdfe_common.mata line 634
+		
+	* Extrapolate the controls to the treatment group and construct Y0 (do it right away before the next reghdfe kills __hdfe*)
 	if (`debugging') noi di "#5"
 	tempvar Y0
 	gen `Y0' = 0 if `touse'
@@ -259,6 +273,49 @@ qui {
 	drop __hdfe*
 	if (`debugging') noi di "#8"
 
+	* Save control coefs and prepare weights corresponding to the controls to report them later
+	if (`ctrl_num'>0) {
+		forvalues h = 1/`ctrl_num' {
+			local ctrl_current : word `h' of `controls'
+			matrix `b'[1,`tau_num'+`pretrends'+`h'] = _b[`ctrl_current']
+			local ctrlb`h' = _b[`ctrl_current']
+			local ctrlse`h' = _se[`ctrl_current']
+		}
+		local ctrl_df = e(df_r)
+		if (`debugging') noi di "#4B"
+		local list_ctrl_weps
+		if ("`se'"!="nose") { // Construct weights behind control estimaters. [Could speed up by residualizing all relevant vars on FE first?]
+			if (`debugging') noi di "#4C3"
+			local ctrlvars "" // drop omitted vars from controls (so that residualization works correctly when computing SE?)
+			forvalues h = 1/`ctrl_num' {
+				local ctrl_current : word `h' of `controls'
+				if (`ctrlb`h''!=0 | `ctrlse`h''!=0) local ctrlvars `ctrlvars' `ctrl_current'
+			}
+			if (`debugging') noi di "#4C4 `ctrlvars'"
+			
+			tempvar ctrlweight ctrlweight_product // ctrlweight_product=ctrlweight * ctrl_current
+			forvalues h = 1/`ctrl_num' {
+				if (`debugging') noi di "#4D `h'"
+				tempvar ctrleps_w`h'
+				if (`ctrlb`h''==0 & `ctrlse`h''==0) gen `ctrleps_w`h'' = 0 // omitted
+				else {
+					local ctrl_current : word `h' of `controls'
+					local rhsvars = subinstr(" `ctrlvars' "," `ctrl_current' "," ",.) 
+					reghdfe `ctrl_current' `rhsvars' `weiexp' if `touse' & `D'==0,  a(`fe_i' `fe_t' `fe') cluster(`cluster') resid(`ctrlweight')
+					replace `ctrlweight' = `ctrlweight' * `wei'
+					gen `ctrlweight_product' = `ctrlweight' * `ctrl_current'
+					sum `ctrlweight_product' if `touse' & `D'==0 
+					replace `ctrlweight' = `ctrlweight'/r(sum)
+					egen `ctrleps_w`h'' = total(`ctrlweight' * `imput_resid') if `touse', by(`cluster')
+					replace `ctrleps_w`h'' = `ctrleps_w`h'' * sqrt(`dof_adj')
+					drop `ctrlweight' `ctrlweight_product'
+				}
+				local list_ctrl_weps `list_ctrl_weps' `ctrleps_w`h''
+			}		
+		}
+		if (`debugging') noi di "#4.75 `list_ctrl_weps'"	
+	}
+		
 	// Check if imputation was successful, and apply autosample
 	* For FE can just check they have been imputed everywhere
 	tempvar need_imputation
@@ -332,7 +389,8 @@ qui {
 		error 481
 	}
 	
-	// Part 4: Drop wtr which have an effective sample size (for absolute weights of treated obs) that is too small
+	
+	// Part 4: Suppress wtr which have an effective sample size (for absolute weights of treated obs) that is too small
 	local droplist 
 	tempvar abswei
 	gen `abswei' = .
@@ -340,9 +398,9 @@ qui {
 	foreach v of local wtr {
 		local outputname : word `j' of `wtrnames'
 		replace `abswei' = abs(`v') if (`touse') & (`D'==1)
-		sum `v' `weiexp' 
+		sum `abswei' `weiexp' 
 		if (r(sum)!=0) { // o/w dropped earlier
-			replace `abswei' = (`v'*`wei'/r(sum))^2 // !! Probably doesn't work with fw, not sure about pw; probably ok for aw
+			replace `abswei' = (`v'*`wei'/r(sum))^2  if (`touse') & (`D'==1) // !! Probably doesn't work with fw, not sure about pw; probably ok for aw
 			sum `abswei'
 			if (r(sum)>1/`minn') { // HHI is large => effective sample size is too small
 				local droplist `droplist' `outputname'
@@ -355,15 +413,6 @@ qui {
 	if ("`droplist'"!="") noi di "WARNING: suppressing the following coefficients from estimation because of insufficient effective sample size: `droplist'. To report them nevertheless, set the minn option to a smaller number or 0, but keep in mind that the estimates may be unreliable and their SE may be downward biased." 
 	
 	if (`debugging') noi di "#9.5"
-	
-	// Part 5A: initialize the matrices
-	local tau_num : word count `wtr'
-	if (`debugging') noi di `tau_num' 
-	if (`debugging') noi di `"`wtr' | `wtrnames'"'
-	tempname b Nt
-	matrix `b' = J(1,`tau_num'+`pretrends',.)
-	matrix `Nt' = J(1,`tau_num',.)
-	if (`debugging') noi di "#9.6"
 	
 	// Part 5: pre-tests
 	if (`pretrends'>0) {
@@ -403,7 +452,7 @@ qui {
 				tempvar preeps_w`h'
 				if (`preb`h''==0 & `prese`h''==0) gen `preeps_w`h'' = 0 // omitted
 				else {
-					local rhsvars = subinstr("`pretrendvars' ","`pretrendvar'`h' ","",.) // space at the end so that it works for the last var too
+					local rhsvars = subinstr(" `pretrendvars' "," `pretrendvar'`h' "," ",.) 
 					reghdfe `pretrendvar'`h' `controls' `rhsvars' `weiexp' if `touse' & `D'==0,  a(`fe_i' `fe_t' `fe') cluster(`cluster') resid(`preweight')
 					replace `preweight' = `preweight' * `wei'
 					sum `preweight' if `touse' & `D'==0 & `pretrendvar'`h'==1
@@ -420,7 +469,7 @@ qui {
 
 	// Part 6: Compute the effects 
 	count if `D'==0 & `touse'
-	local Nc = r(N)
+	local Nc = r(N)	
 	
 	count if `touse'
 	local Nall = r(N)
@@ -448,7 +497,7 @@ qui {
 	// Part 7: Report SE [can add a check that there are no conflicts in the residuals]
 	if ("`se'"!="nose") { 
 		cap drop __w_*
-		tempvar tag_clus resid
+		tempvar tag_clus resid 
 		egen `tag_clus' = tag(`cluster') if `touse'
 		gen `resid' = `Y' - `Y0' if (`touse') & (`D'==0)
 		if ("`loadweights'"=="") {
@@ -472,32 +521,44 @@ qui {
 		foreach v of local wtr { // to do: speed up by sorting for all wtr together
 			if (`debugging') noi di "#11b `v'"
 			local weightvar : word `j' of `weightvars'
-			tempvar clusterweight smartweight avgtau eps_w`j' // Need to regenerate every time in case the weights on treated are in conflict
-//			egen `sqshares' = pc(`wei'*`v'^2) if (`touse') & (`D'==1), prop by(`avgeffectsby') // Old version
+			tempvar clusterweight smartweight smartdenom avgtau eps_w`j' // Need to regenerate every time in case the weights on treated are in conflict
 			egen `clusterweight' = total(`wei'*`v') if `touse' & (`D'==1), by(`cluster' `avgeffectsby')
-			egen `smartweight' = pc(`clusterweight' * `wei' * `v') if `touse' & (`D'==1), prop by(`avgeffectsby')
+			egen `smartdenom' = total(`clusterweight' * `wei' * `v') if `touse' & (`D'==1), by(`avgeffectsby')
+			gen `smartweight' = `clusterweight' * `wei' * `v' / `smartdenom' if `touse' & (`D'==1)
 			replace `smartweight' = 0 if mi(`smartweight') & `touse' & (`D'==1) // if the denominator is zero, this avgtau won't matter
 			egen `avgtau' = sum(`effect'*`smartweight') if (`touse') & (`D'==1), by(`avgeffectsby')
 			replace `resid' = `effect'-`avgtau' if (`touse') & (`D'==1)
+			if ("`leaveout'"!="") {
+				if (`debugging') noi di "#11LO"
+				count if `smartdenom'>0 & ((`clusterweight'^2)/`smartdenom'>0.99999) & (`touse') & (`D'==1)
+				if (r(N)>0) {
+					local outputname : word `j' of `wtrnames' // is this the correct variable name when some coefs have been dropped?
+					di as error `"Cannot compute leave-out standard errors because of "' r(N) `" observations for coefficient "`outputname'""'
+					di as error "This most likely happened because there are cohorts with only one unit or cluster (and the default value for avgeffectsby  is used)."
+					di as error "Consider using the avgeffectsby option with broader observation groups. Do not address this problem by using non-leave-out standard errors, as they may be downward biased for the same reason."
+					error 498
+				}
+				replace `resid' = `resid' * `smartdenom' / (`smartdenom'-(`clusterweight'^2)) if (`touse') & (`D'==1)
+			}
 			egen `eps_w`j'' = sum(`wei'*`weightvar'*`resid') if `touse', by(`cluster')
 			
 			local list_weps `list_weps' `eps_w`j''
-			drop `clusterweight' `smartweight' `avgtau'
+			drop `clusterweight' `smartweight' `smartdenom' `avgtau'
 			local ++j
 		}
 		if (`debugging') noi di "11c"
 		tempname V
-		if (`debugging') noi di "11d `list_weps' `list_pre_weps'"
-		matrix accum `V' = `list_weps' `list_pre_weps' if `tag_clus', nocon
-		if (`debugging') noi di "11e `wtrnames' `prenames'"
-		matrix rownames `V' = `wtrnames' `prenames'
-		matrix colnames `V' = `wtrnames' `prenames'
+		if (`debugging') noi di "11d `list_weps' | `list_pre_weps' | `list_ctrl_weps'"
+		matrix accum `V' = `list_weps' `list_pre_weps' `list_ctrl_weps' if `tag_clus', nocon
+		if (`debugging') noi di "11e `wtrnames' | `prenames' | `controls'"
+		matrix rownames `V' = `wtrnames' `prenames' `controls'
+		matrix colnames `V' = `wtrnames' `prenames' `controls'
 		if ("`saveweights'"=="" & "`loadweights'"=="") drop __w_*
 	}
 	
 	// Part 8: report everything 
 	if (`debugging') noi di "#12"
-	matrix colnames `b' = `wtrnames' `prenames'
+	matrix colnames `b' = `wtrnames' `prenames' `controls'
 	matrix colnames `Nt' = `wtrnames'
 	ereturn post `b' `V', esample(`touse') depname(`Y') obs(`Nall')
 	ereturn matrix Nt = `Nt'
@@ -516,8 +577,9 @@ qui {
 	}
 }
 
+local level = 100*(1-`alpha')
 _coef_table_header
-ereturn display
+ereturn display, level(`level')
 
 end
 

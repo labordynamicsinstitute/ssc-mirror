@@ -1,4 +1,4 @@
-d 'STIPW': module to estimate Inverse probability weighted parametric survival models with variance obtained via M-estimation
+d 'STIPW': module to estimate inverse probability weighted parametric survival models with variance obtained via M-estimation
 d
 d  stipw performs an inverse probability weighted analysis on
 d survival data. It begins by using logistic regression to model
@@ -18,7 +18,7 @@ d KW: M-estimation
 d
 d Requires: Stata version 15.1, dm79 from STB-56, stpm2 and rcsgen from SSC (q.v.)
 d
-d Distribution-Date: 20220107
+d Distribution-Date: 20220118
 d
 d Author: Micki Hill, University of Leicester
 d Support: email mh594@@leicester.ac.uk

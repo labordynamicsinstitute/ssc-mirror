@@ -23,7 +23,7 @@
 
 {synoptset 8 tabbed}{...}
 {synopt : {it:Y}}outcome variable {p_end}
-{synopt : {it:i}}variable for unique unit id {p_end}
+{synopt : {it:i}}variable for unique unit id{p_end}
 {synopt : {it:t}}variable for calendar period {p_end}
 {synopt : {it:Ei}}variable for unit-specific date of treatment (missing = never-treated) {p_end}
 
@@ -56,6 +56,12 @@ but other FEs, controls, etc., are also allowed.{p_end}
 {p2col 5 8 8 0 : 2.}{ul:Extrapolate} the model from Step 1 to treated observations, {ul:imputing} non-treated potential outcomes Y_it(0),
 and obtain an estimate of the treatment effect {it: tau_it = Y_it - Y_it(0)} for each treated observation. (See {help did_imputation##impfails:What if imputation is not possible}){p_end}
 {p2col 5 8 8 0 : 3.}{ul:Take averages} of estimated treatment effects corresponding to the estimand of interest.{p_end}
+
+{pstd}
+A pre-trend test (for the assumptions of parallel trends and no anticipation) is a separate exercise 
+(see the {opt pretrends} option). Regardless of whether the pre-trend test is performed, the reference group
+for estimation is always all pre-treatment (or never-treated) observations.
+{p_end}
 
 {pstd}
 To make "event study" plots, please use the accompanying command {help event_plot}.
@@ -97,10 +103,12 @@ or {bf:fe(}{it:i{cmd:#}dow t}{bf:)} (for unit by day-of-week FE). Each member of
 {it:v1{cmd:#}v2{cmd:#}...{cmd:#}vk}. If you want no FE at all, specify {opt fe(.)}.
 {p_end}
 
-{phang}{opt c:ontrols(varlist)}: list of time-varying controls{p_end}
+{phang}{opt c:ontrols(varlist)}: list of continuous time-varying controls. (For dummy-variable controls, e.g. gender, please use the
+{opt fe} option for better convergence.){p_end}
 
 {phang}{opt unitc:ontrols(varlist)}: list of continuous controls (often unit-invariant) to be included {it:interacted} with unit dummies. 
-E.g. with {opt unitcontrols(year)} the regression includes unit-specific trends.{p_end}
+E.g. with {opt unitcontrols(year)} the regression includes unit-specific trends.
+(For binary controls interacted with unit dummies, use the {opt fe} option.) {p_end}
 
 {pmore}{it:Use with caution}: the command may not recognize that imputation is not possible for some treated observations.
 For example, a unit-specific trend is not possible to estimate if only one pre-treatment observation is available for the unit, but it is not
@@ -108,7 +116,8 @@ guaranteed that the command will throw an error.
 {p_end}
 
 {phang}{opt timec:ontrols(varlist)}} list of continuous controls (often time-invariant) to be included {it:interacted} with period dummies.
-E.g. with {opt timecontrols(population)} the regression includes {it:i.year#c.population}.{p_end}
+E.g. with {opt timecontrols(population)} the regression includes {it:i.year#c.population}.
+(For binary controls interacted with period dummies, use the {opt fe} option.){p_end}
 
 {pmore}{it:Use with caution}: the command may not recognize that imputation is not possible for some treated observations.
 {p_end}
@@ -164,23 +173,33 @@ the actual treatment, while {it:tau8} to the average effect 5 periods after the 
 {phang}{opt pre:trends(integer)}: if some value {it:k}>0 is specified, the command will performs a test for parallel trends,
 by a {bf:separate} regression on nontreated observations only: of the outcome on the dummies for 1,...,{it:k} periods before treatment,
 in addition to all the FE and controls. The coefficients are reported as {bf:pre}{it:1},...,{bf:pre}{it:k}.
-The Wald statistic, pvalue, and degrees-of-freedom as reported in {res:e(pre_chi2)}, {res:e(pre_p)}, and {res:e(pre_df)} resp.{p_end}
+The F-statistic, pvalue, and degrees-of-freedom as reported in {res:e(pre_F)}, {res:e(pre_p)}, and {res:e(pre_df)} resp.{p_end}
 {phang2}- Use a reasonable number of pre-trends, do not use all of the available ones unless you have a really large never-treated group. With too many pre-trend coefficients, the power of the joint test will be lower.{p_end}
 {phang2}- The entire sample of nontreated observations is always used for pre-trend tests, regardless of {opt hbalance} and other options that restrict the sample for post-treatment effect estimation.{p_end}
 {phang2}- The number of pretrend coefficients does not affect the post-treatment effect estimates, which are always computed under the assumption of parallel trends and no anticipation.{p_end}
+{phang2}- The reference group for the pretrend test is all periods more than {it:k} periods prior to the event date (and all never-treated
+observations, if available).{p_end}
+{phang2}- Because of this reference group, it is expected that the SE are the largest for pre1 (opposite from some conventional tests).{p_end}
 
 {dlgtab:Standard errors}
 
 {phang}{opt clus:ter(varname)}: cluster SE within groups defined by this variable. Default is {it:i}. {p_end}
 
-{phang}{opt avgeff:ectsby(varlist)}: Use this option if you have small cohorts of treated observations, and after reviewing Section 4.3
-of Borusyak et al. 2021. In brief, SE computation requires averaging the treatment effects by groups of treated observations.{p_end}
+{phang}{opt avgeff:ectsby(varlist)}: Use this option (and/or {opt leaveout}) if you have small cohorts of treated observations, and after reviewing
+Section 4.3 of Borusyak et al. (2021). In brief, SE computation requires averaging the treatment effects by groups of treated observations.{p_end}
 {phang2}- These groups should be large enough, so that there is no downward bias from overfitting. {p_end}
 {phang2}- But the larger they are, the more conservative SE will be, unless treatment effects are homogeneous within these groups. {p_end}
 {phang2}- The varlist in {opt avgeffectsby} defines these groups.{p_end}
 {phang2}- The default is cohort-years {opt avgeffectsby(Ei t)}, which is appropriate for large cohorts.{p_end}
-{phang2}- With small cohorts, specify coarser groupings; in the extreme, {opt avgeffectsby(D)}. {p_end}
+{phang2}- With small cohorts, specify coarser groupings: e.g. {opt avgeffectsby(K)} (to pool across cohorts) or 
+{opt avgeffectsby(D)} (to pool across cohorts and periods when computing the overall ATT). {p_end}
 {phang2}- The averages are computed using the "smart" formula from Section 4.3, adjusted for any clustering and any choice of {opt avgeffectsby}. {p_end}
+
+{phang}{opt leaveout}: {it:Recommended option}. In particular, use it (and/or {opt avgeffectsby}) if you have small cohorts of treated observations.
+The averages of treatment effects will be computed excluding the own unit (or, more generally, cluster).
+See Section 4.3 of Borusyak et al. (2021) for details.{p_end}
+
+{phang}{opt alpha(real)}: confidence intervals will be displayed corresponding to that significance level. Default is 0.05.{p_end}
 
 {phang}{opt nose}: do not produce standard errors (much faster).{p_end}
 
@@ -201,7 +220,7 @@ under arbitrary treatment effect heterogeneity.{p_end}
 {phang}{opt loadw:eights(varlist)}: use this to speed up the analysis of different outcome variables with an identical specification
 on an identical sample. To do so, provide the set of the weight variables (__w*, but can be renamed),
 saved using the {opt saveweights} option when running the analysis for the first outcome.
-[Warning: the validity of the weights is assumed and not double-checked.]{p_end}
+[Warning: the validity of the weights is assumed and not double-checked.] [Currently works only if the varnames are not __w*]{p_end}
 
 {phang}{opt delta(integer)}: indicates that one period should correpond to {opt delta} steps of {it:t} and {it:Ei}. 
 Default is 1, except when the time dimension of the data is set (via {help tsset} or {help xtset});
@@ -212,6 +231,7 @@ This affects the iterative procedure used to search for the weights underlying t
 Defaults are 10^-6 and 100, resp. If convergence is not achieved otherwise, try increasing them.{p_end}
 
 {phang}{opt verbose}: specify for the debugging mode.{p_end}
+
 
 {marker weights}{...}
 {title:Estimation weights}
@@ -240,17 +260,18 @@ Instead specify the estimand of your interest via {opt wtr}.{p_end}
 
 {synoptset 10 tabbed}{...}
 {p2col 5 15 15 2: Matrices}{p_end}
-{synopt:{cmd:e(b)}}A row-vector of the estimates and pre-trend coefficients:{p_end}
+{synopt:{cmd:e(b)}}A row-vector of (i) the estimates, (ii) pre-trend coefficients, and (iii) coefficients on controls from Step 1:{p_end}
 {pmore3}- If {opt horizons} is specified, the program returns {bf:tau}{it:h} for each {it:h} in the list of horizons.{p_end}
 {pmore3}- If multiple {opt wtr} are specified, the program returns {bf:tau_}{it:v} for each {it:v} in the list of {opt wtr} variables. {p_end}
 {pmore3}- Otherwise the single returned coefficient is called {bf:tau}. {p_end}
 {pmore3}- In addition, if {cmd:pretrends} is specified, the command returns {bf:pre}{it:h} for each pre-trend coefficient {it:h}=1..{opt pretrends}. {p_end}
+{pmore3}- And if {cmd:controls} is specified, the command returns the coefficients on those controls. (Estimated fixed effects, {cmd:unitcontrols}, and {cmd:timecontrols} are not reported in the {cmd:e(b)}.){p_end}
 {synopt:{cmd:e(V)}}Corresponding variance-covariance matrix {p_end}
 {synopt:{cmd:e(Nt)}}A row-vector of the number of treated observations used to compute each estimator {p_end}
 
 {p2col 5 15 15 2: Scalars}{p_end}
 {synopt:{cmd:e(Nc)}} the number of control observations used in imputation (scalar) {p_end}
-{synopt:{cmd:e(pre_chi2), e(pre_p), e(pre_df)}} if {opt pretrends} is specified, the Wald statistic, pvalue, and dof for the joint test for no pre-trends {p_end}
+{synopt:{cmd:e(pre_F), e(pre_p), e(pre_df)}} if {opt pretrends} is specified, the F-statistic, pvalue, and dof for the joint test for no pre-trends {p_end}
 {synopt:{cmd:e(Niter)}} the # of iterations to compute SE {p_end}
 
 {p2col 5 15 15 2: Macros}{p_end}
@@ -323,7 +344,6 @@ specify a variable {it:ig} identifying the {it:(i,g)} pairs as the unit identifi
 
 {title:Missing Features}
 
-{phang}- Report the coefs on continuous controls from Step 1 {p_end}
 {phang}- Save imputed Y(0) in addition to treatment effects {p_end}
 {phang}- Making {opt hbalance} work with {opt autosample} {p_end}
 {phang}- Throw an error if imputation is not possible with complicated controls {p_end}
@@ -331,6 +351,13 @@ specify a variable {it:ig} identifying the {it:(i,g)} pairs as the unit identifi
 outside the estimation sample for the current {opt wtr} {p_end}
 {phang}- Estimation when treatment switches on and off {p_end}
 {phang}- More general interactions between FEs and continuous controls than with {opt timecontrols} and {opt unitcontrols}{p_end}
+{phang}- Frequency weights{p_end}
+{phang}- Verify that the unit ID variable is numeric{p_end}
+{phang}- In Stata 13 there may be a problem with the {opt df} option of {cmd:test} {p_end}
+{phang}- {opt loadweights} doesn't work when the weights are saved with the default names {it:__w*}{p_end}
+{phang}- Allow for designs in which treatment switches on and off{p_end}
+{phang}- Allow for designs in which treatment is not binary{p_end}
+{phang}- Add a check that ranges of {opt t} and {opt Ei} match{p_end}
 
 {pstd}
 If you are interested in discussing these or others, please {help did_imputation##author:contact me}.
@@ -338,7 +365,7 @@ If you are interested in discussing these or others, please {help did_imputation
 {title:Bug reporting}
 
 {phang}If you get an error message, please:{p_end}
-{phang}- Double check that you have the most recent version of {cmd:reghdfe}{p_end}
+{phang}- Reinstall {cmd:reghdfe} and {cmd:ftools} to have the most recent version{p_end}
 {phang}- Double check the syntax: e.g. make sure that {it:Ei} is the event date and not the treatment dummy, and that 
 the treatment dummy can be obtained as {it:t>=Ei}{p_end}
 {phang}- If it's a message with an explanation, read the message carefully.{p_end}
@@ -347,7 +374,8 @@ the treatment dummy can be obtained as {it:t>=Ei}{p_end}
 {phang}- Rerun your command adding the {opt verbose} option and save the log-file{p_end}
 {phang}- If possible, create a version of the dataset in which you can replicate the error (e.g. with a fake outcome variable).{p_end}
 {phang}- If you can't share a fake dataset, summarize all the relevant variables in the log-file before calling {cmd:did_imputation}.{p_end}
-{phang}- {help did_imputation##author:Contact me} with all of this.{p_end}
+{phang}- Report this on {browse "https://github.com/borusyak/did_imputation/issues":github} or
+{help did_imputation##author:email me} with all of this.{p_end}
 
 {title:References}
 
