@@ -661,14 +661,21 @@ void survsim_msm(`PC' Phfs, `PC' Ptotalhfs)
 
 }
 
-function survsim_msm_sim(	`RC' t, `RC' logu, `RM' nodes, `RM' weights, `PS' hfunc, 	///
-							`RC' lt, `RM' time0, 										///
-							`RM' expxb, `RM' tdexb, `RM' hvars)
+function survsim_msm_sim(       `RC' t, `RC' logu,              ///
+                                `RM' nodes, `RM' weights,       ///
+                                `PS' hfunc, 	                ///
+                                `RC' lt, `RM' time0, 		///
+                                `RM' expxb, `RM' tdexb,         ///
+                                `RM' hvars)
 {
 	tnodes 		= (t :- lt) :* 0.5 :* J(rows(t),1,nodes) :+ (t :+ lt) :/ 2
 	chq 		= (*hfunc)(tnodes,expxb,tdexb,hvars,lt,time0)
 	_editmissing(chq,0)
-	return((t :- lt) :/2 :* chq * weights :+ logu)
+        if (cols(chq)==1) {
+                //no time dependency
+                return(chq :* (t :- lt) :+ logu)
+        }
+        else return((t :- lt) :/2 :* chq * weights :+ logu)
 }
 
 void ss_gq(`SS' weightsname, `SS' nodesname)
@@ -724,6 +731,7 @@ void check_transmatrix()
 	st_local("Ntrans",strofreal(trans-1))
 }
 
+//entirely based on Ben Jann's mm_root() from moremata
 `RC' survsim_mm_root(	transmorphic x,      					/// bj: will be replaced by solution
 						pointer(real matrix function) scalar f,	/// Address of the function whose zero will be sought for
 						`RC' ax,      							/// Root will be sought for within a range [ax,bx]

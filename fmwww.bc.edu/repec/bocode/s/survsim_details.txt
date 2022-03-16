@@ -6,7 +6,7 @@ multi-state model, or from an estimated -merlin- model. Baseline covariates and
 time-dependent effects can be specified when defining a data-generating model. 
 Delayed entry/left truncation is allowed.
 
-Author: Michael J. Crowther, University of Leicester
-Support: email michael.crowther@le.ac.uk
+Author: Michael J. Crowther, Red Door Analytics
+Support: email michael@reddooranalytics.se
 
 Requires: Stata version 14.2

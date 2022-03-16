@@ -1,4 +1,6 @@
-*! v2  Corrects Bug and Speeds up Clustered SE
+*! v2.2  Simultaneous Q's for model simple
+* v2.1  Corrects Bug Clustered SE and DF
+* v2  Corrects Bug and Speeds up Clustered SE
 * v1.8 adds Obs
 * v1.7 corrects e(cmd_line) to cmdline and problems with "program drop"
 * v1.6 Small improvements estimation efficiencies. I also allow for WEIGHTS!
@@ -514,7 +516,8 @@ void mmqreg_vce1x(string scalar yvar_,  string scalar xvar_,
 		fden = st_matrix(fden_)
 		qs  =cols(qth)
 		// std residuals : residuals and fitted values will be obtained with reghdfe		
-		u_hat=xvar*gama
+		// Change this to abs
+		u_hat=abs(xvar*gama)
 		u    = (yvar-xvar*beta):/u_hat
 		v    = 2*u:*((u:>=0):-mean(u:>=0,wgt)):-1
 		
@@ -598,7 +601,8 @@ void mmqreg_vce1c(string scalar yvar_, string scalar xvar_,
 		fden=st_matrix(fden_)
 		qs=cols(qth)
 		// std residuals : residuals and fitted values will be obtained with reghdfe		
-		u_hat=xvar*gama
+		// Change this to abs
+		u_hat=abs(xvar*gama)
 		u    = (yvar-xvar*beta):/u_hat
 		v    = 2*u:*((u:>=0):-mean(u:>=0,wgt)):-1
 		
@@ -660,7 +664,7 @@ void mmqreg_vce1c(string scalar yvar_, string scalar xvar_,
  
 		st_matrix("__bq",betaq)
 		st_matrix("__vq",makesymmetric(vcvq) )	
-		st_numscalar("df_r", dfr)
+		st_numscalar("df_r", nn)
 		//}		 
 }
 /// this will be another "hidden" option that will try to obtained clustered standard errors.
@@ -698,7 +702,8 @@ void mmqreg_vce1(string scalar yvar_, string scalar xvar_,
 		// std residuals : residuals and fitted values will be obtained with reghdfe		
 		
 		// Residuals
-		u_hat=xvar*gama
+		// Change this to abs
+		u_hat=abs(xvar*gama)
 		// Std Residual First regression   y = xb + u * sigma
 		u    =(yvar-xvar*beta):/(u_hat)
 		// Std Residual Second regression  abs(u * sigma) = xg + RR 
@@ -733,7 +738,7 @@ void mmqreg_vce1(string scalar yvar_, string scalar xvar_,
 		
 		euw=mean(u:*w,wgt)
 		evw=mean(v:*w,wgt)
-		ew2=mean(w:^2,wgt)
+		ew2=cross(w,wgt,w)/nobs
 		 
 		
 		// Xi and Omg
@@ -782,6 +787,9 @@ void mmqreg_vce2(string scalar yvar_, string scalar xvar_,
 		st_view(yvar=. ,.,yvar_ ,touse)
  		st_view(u=.    ,.,u_    ,touse)
 		st_view(u_hat=.,.,u_hat_,touse)
+		// Change this to abs
+		u_hat=abs(u_hat)
+		
 		wgt = st_data(.,wgt_  ,touse)
 		wgt=wgt:/mean(wgt)
 		
@@ -831,7 +839,7 @@ void mmqreg_vce2(string scalar yvar_, string scalar xvar_,
 		
 		euw=mean(u:*w,wgt)
 		evw=mean(v:*w,wgt)
-		ew2=mean(w:^2,wgt) 
+		ew2=cross(w,wgt,w)/nobs
 		
 		// Xi and Omg
 		// xi=J(qs,1,1)#iqxx,qval'#iqxx,I(qs)#( gama)  
@@ -884,6 +892,8 @@ void mmqreg_vce2x(string scalar yvar_, string scalar xvar_,
 		st_view(yvar =.,.,yvar_ ,touse)
  		st_view(u    =.,.,u_  ,touse)
 		st_view(u_hat=.,.,u_hat_  ,touse)
+		u_hat=abs(u_hat)
+		
 		wgt = st_data(.,wgt_  ,touse)
 		wgt=wgt:/mean(wgt)
 		// first load data. y may not be needed
@@ -970,6 +980,7 @@ void mmqreg_vce2c(string scalar yvar_, string scalar xvar_,
 		st_view(cvar =.,.,cvar_ ,touse)
 		st_view(u    =.,.,u_  ,touse)
 		st_view(u_hat=.,.,u_hat_  ,touse)
+		u_hat=abs(u_hat)
 		wgt = st_data(.,wgt_  ,touse)
 		wgt=wgt:/mean(wgt)
 		
@@ -1050,7 +1061,7 @@ void mmqreg_vce2c(string scalar yvar_, string scalar xvar_,
 
 		st_matrix("__bq",betaq)
 		st_matrix("__vq",makesymmetric(vcvq) )	
-		st_numscalar("df_r",dfr)
+		st_numscalar("df_r",nn)
 
 }
 end

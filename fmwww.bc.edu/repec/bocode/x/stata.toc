@@ -92,6 +92,7 @@ p xtmod module to analyze and display interactions based on time-series data
 p xtmoran module to calculate Moran's I and Moran's Ii statistics for panel data and displaying a Moran scatterplot
 p xtmrho module to calculate intra-class correlations after xtmixed
 p xtnptimevar module to estimate non-parametric time-varying coefficients panel data models with fixed effects
+p xtnumfac module to estimate the number of factors in panel data
 p xtoos module for evaluating the out-of-sample prediction performance of panel-data models
 p xtoverid module to calculate tests of overidentifying restrictions after xtreg, xtivreg, xtivreg2, xthtaylor
 p xtpattern module to generate code showing pattern of xt data

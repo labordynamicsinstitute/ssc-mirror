@@ -1,5 +1,5 @@
-*! cv2 0.1.0 2018-07-29
-*! Copyright (c) 2018 Lorenz Graf-Vlachy
+*! cv2 0.2.0 2022-03-13
+*! Copyright (c) 2022 Lorenz Graf-Vlachy
 *! mail@graf-vlachy.com
 
 * Version history at bottom
@@ -11,8 +11,15 @@ prog define cv2, rclass byable(recall)
 
 	// preliminaria
 	version 9
-	syntax varlist(min=1) [if] [in] [, warn(real 0.05)]
-	marksample touse
+	syntax varlist(min=1) [if] [in] [, warn(real 0.05) onlynomiss]
+	if ("`onlynomiss'" == "onlynomiss") {
+		marksample touse
+	}
+	else {
+		marksample touse, novarlist
+	}
+
+	if `debug' di "cv2 invoked in debug mode"
 
 	// retain user's data
 	preserve
@@ -66,7 +73,7 @@ prog define cv2, rclass byable(recall)
 			di as text _continue " (Warning: Mean is negative, coefficient of variation may be misleading)"
 		}
 		else if abs(`mean') < `warn' {
-			di as text _continue " (Warning: Mean close to zero, coefficient of variation may be misleading)"
+			di as text _continue " (Warning: Mean below `warn', coefficient of variation may be misleading)"
 		}
 		di as text ""
 	
@@ -80,3 +87,4 @@ end
 * Version history
 * 
 * 0.1.0	Initial version
+* 0.2.0	Added "onlynonmiss" option to reduce sample to only observations for which none of the specified varibales are missing, which was previously the default behavior

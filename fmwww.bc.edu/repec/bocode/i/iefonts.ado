@@ -1,6 +1,6 @@
 *! version 1.0.0  04feb2022
 program define iefonts
-    version 16.1
+    version 8
     syntax [, Serif Restore]
 
     if "`serif'" != "" & "`restore'" != "" {

@@ -432,11 +432,10 @@ Random-scale standard deviation
 {phang2}{bf:{stata "runmixregls hamdep week endog endweek, between(endog) within(week endog)":. runmixregls hamdep week endog endweek, between(endog) within(week endog)}}
 
 {pstd}Refit the model, this time retrieving the BLUPs of the standardized random-location and random-scale effects, and their associated standard errors{p_end}
-{phang2}{bf:{stata "runmixregls hamdep week endog endweek, between(endog) within(week endog) reffects(theta)":. runmixregls hamdep week endog endweek, between(endog) within(week endog) reffects(theta1 theta2)}}
+{phang2}{bf:{stata "runmixregls hamdep week endog endweek, between(endog) within(week endog) reffects(theta)":. runmixregls hamdep week endog endweek, between(endog) within(week endog) reffects(theta)}}
 
-{pstd}Examine a scatter plot of the BLUPs of the standardized random-scale effects against
-the standardized random-location effects{p_end}
-{phang2}{bf:{stata "scatter theta2 theta1":. scatter theta2 theta1}}
+{pstd}Examine a scatter plot of the BLUPs of the standardized random-scale effects against the standardized random-location effects{p_end}
+{phang2}{bf:{stata "scatter theta1 theta0":. scatter theta1 theta0}}
 
 {pstd}Refit the model removing the group-level linear association between the (log of the) within-group variance and the intercept{p_end}
 {phang2}{bf:{stata "runmixregls hamdep week endog endweek, between(endog) within(week endog) association(none)":. runmixregls hamdep week endog endweek, between(endog) within(week endog) association(none)}}

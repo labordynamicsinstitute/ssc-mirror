@@ -1,7 +1,8 @@
 *!False confirmatory/discovery risk calculations for Second Generation P-Values
 *!Author: Sven-Kristjan Bormann
 *Based on the R-code for fdisk.R  from the sgpv-package from https://github.com/weltybiostat/sgpv
-*!Version 1.1  24.12.2020 : Changed the syntax of the command to match more closely Stata standards, the old syntax still works: (dialog not changed yet) ///
+*!Version 1.2 22.02.2022 : Depreciated the old syntax. The old syntax did not work as intended after the switch to the new syntax.
+*Version 1.1  24.12.2020 : Changed the syntax of the command to match more closely Stata standards, the old syntax still works: ///
 							Option sgpval became one option 'fcr'. The default is to calculate the Fdr. ///
 							Option nullweights became 'nulltruncnormal'. The option nullweights("Point") is automatically selected if option nullspace contains only one element. If option nullspace contains two elements then the Uniform distribution is used as the default weighting distribution. ///
 							Option altweights became 'alttruncnormal'. The option altweights("Point") is automatically selected if option altspace contains only one element. If option altspace contains two elements then the Uniform distribution is used as the default weighting distribution. ///
@@ -30,12 +31,31 @@ version 12.0
 syntax, nulllo(string) nullhi(string) STDerr(real)   ///
 		NULLSpace(string asis)  ALTSpace(string asis) ///
 		[ Pi0(real 0.5) ///
-		/*Depreciated options */  NULLWeights(string)  ALTWeights(string) INTType(string) INTLevel(string) SGPVal(integer 0) ///
-		/*Newly added options to replace existing ones*/  fcr Level(cilevel) LIKelihood(numlist min=1 max=2)  NULLTruncnormal ALTTruncnormal]
+		/*Depreciated options   NULLWeights(string)  ALTWeights(string) INTType(string) INTLevel(string) SGPVal(integer 0) */ ///
+		/*Newly added options to replace existing ones*/  fcr Level(cilevel) LIKelihood(numlist min=1 max=2)  NULLTruncnormal ALTTruncnormal] ///
+		/*[mata]*/ /* Test options for Mata integration */
 *Syntax parsing
-local integrate nomataInt // Keep this macro in case I offer a Mata-based solution for the integration at some future point.
-
-
+local integrate nomataInt
+/*
+if "`mata'" == "" local integrate nomataInt
+else if "`mata'"=="mata"{
+	/*capt findfile lmoremata.mlib
+	if _rc {
+		di as error "-moremata- is required to use the -mata- option; type {stata ssc install moremata}"
+		error 499
+	}*/
+	local integrate mataInt
+} 
+*/
+*Error message when still using the old syntax
+/*
+if "`nullweights'"!="" |  "`altweights'"!="" | "`inttype'"!="" | "`intlevel'"!=""{ // Does not check for sgpval being set, because the default value will always be set, so that the following message would be always displayed.
+	disp as error "You have tried to use the old syntax for this command."
+	disp as error "Please use the new syntax as described in the help file." 
+	disp as error "The old syntax has been depreceated and does not work anymore."
+	exit 198
+}
+*/
 *New syntax(checks)---------------------------
 // The new command syntax is mapped to the old syntax so that existing code still works with new version.
 // But the new syntax should be more Stata-like than the old R-based one. 
@@ -44,7 +64,7 @@ local integrate nomataInt // Keep this macro in case I offer a Mata-based soluti
 if "`fcr'"!="" local sgpval 1
 if "`fcr'"=="" local sgpval 0
 
-*Set nullweights
+*Set nullweights -> will overwrite the settings from the nullweights-option so that the old syntax does not work as intended.
 if `:word count `nullspace''==1 local nullweights "Point"
 
 if `:word count `nullspace''==2 & "`nulltruncnormal'" =="" & "`nullweights'"==""{
@@ -60,7 +80,7 @@ if `:word count `nullspace''==2 & "`nulltruncnormal'" !=""{
 	local nullweights "TruncNormal"
 }
 
-*Set altweights
+*Set altweights -> will overwrite the settings from the altweights-option so that the old syntax does not work as intended.
 if `:word count `altspace''==1 local altweights "Point"
 
 if `:word count `altspace''==2 & "`alttruncnormal'" =="" & "`altweights'"==""{
@@ -78,7 +98,6 @@ if `:word count `altspace''==2 & "`alttruncnormal'" !=""{
 
 
 *Set inttype & intlevel only if old syntax has not been used.
-
 if "`level'"!="" & "`likelihood'"=="" & "`inttype'"=="" & "`intlevel'"==""{
 	local inttype "confidence"
 	local intlevel = 1 - 0.01*`level'
@@ -110,7 +129,6 @@ if !inlist("`altweights'", "Point", "Uniform", "TruncNormal"){
 if !(`pi0'>0 & `pi0'<1){
 	stop "Values for option 'pi0' need to lie within the exclusive 0 - 1 interval. A prior probability outside of this interval is not sensible. The default value assumes that both hypotheses are equally likely."
 }
-
 
 
 *Code taken from sgpower.ado -> in R-code things are handled directly by the sgpower() function. This would be only possible in Mata in the same way.
@@ -265,7 +283,7 @@ if "`inttype'"=="likelihood"{
     if("`altweights'" == "TruncNormal") {
       * default: mean of Normal distr at midpoint of `altspace'
       local truncNormmu = (`:word 1 of `altspace'' + `:word 2 of `altspace'')/2
-      * default: std. dev of Normal distr same as assumed for estimator
+      * default: std. dev. of Normal distr same as assumed for estimator
       local truncNormsd = `stderr'
 	  if !real("`truncNormmu'") | !real("`truncNormsd'") stop "Both elements of the option 'altspace' must be numeric or be expressions which evaluate to a number."
         local integrand `powerx' * ( normalden(x, `truncNormmu', `truncNormsd') * (normal((`=max(`:word 1 of `altspace'', `:word 2 of `altspace'')' - `truncNormmu')/`truncNormsd') - normal((`=min(`:word 1 of `altspace'', `:word 2 of `altspace'')'- `truncNormmu')/ `truncNormsd'))^(-1) ) 
@@ -303,27 +321,39 @@ end
 
 *Check if the input is valid
 program define isValid
-args valid optname i
-if real("`=`valid''")==.{
-	if "`i'"!=.{
-		disp as error "`valid' in option {cmd:`optname'} on position `i'  is not a number nor . (missing value) nor empty."
-	}
-	else{
-		disp as error "`valid' in option {cmd:`optname'}  is not a number nor . (missing value) nor empty."
-	} 
-	exit 198
+	args valid optname i
+	if real("`=`valid''")==.{
+		if "`i'"!=.{
+			disp as error "`valid' in option {cmd:`optname'} on position `i'  is not a number nor . (missing value) nor empty."
 		}
-		
+		else{
+			disp as error "`valid' in option {cmd:`optname'}  is not a number nor . (missing value) nor empty."
+		} 
+		exit 198
+			}		
 end
 
 *Shortcut to the Stata integration command, same syntax as the user-provided integrate-command.
 program define nomataInt, rclass
-syntax , Lower(real) Upper(real) Function(string) [*]
-preserve
-range x `lower' `upper' 1000
-gen y  = `function'
-integ y x
-return local integral `r(integral)'
-restore
+	syntax , Lower(real) Upper(real) Function(string)
+	preserve
+	range x `lower' `upper' 1000
+	gen y  = `function'
+	integ y x
+	return local integral `r(integral)'
+	restore
  
 end
+
+*Use Mata for integration using Ben Jann's moremata package
+/* Not yet working as intended. Needs further debugging.
+program define mataInt, rclass
+syntax , Lower(real) Upper(real) Function(string)
+	
+	mata: function myf(x) return(st_local("function"))
+	mata: st_local("integral", mm_integrate_sr(&myf(),st_local("lower"), st_local("upper"),1000,1))
+	mata: mata drop myf()
+	
+	return local integral `integral'
+end
+*/

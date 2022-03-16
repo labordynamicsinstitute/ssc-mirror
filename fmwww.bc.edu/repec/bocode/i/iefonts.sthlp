@@ -1,6 +1,6 @@
 {smcl}
 {* 04feb2022}{...}
-{vieweralsosee "Inclusion Economics scheme" "help inclusioneconomicsscheme"}{...}
+{vieweralsosee "Inclusion Economics scheme" "help iescheme"}{...}
 {cmd:help iefonts}
 {hline}
 
@@ -25,7 +25,7 @@
 {title:Description}
 
 {pstd}
-The {helpb inclusioneconomicsscheme:Inclusion Economics scheme} is intended to be used with the {bf:Inclusion Economics} brand fonts, Montserrat and Lora, which can be downloaded and installed from Google Fonts.
+The {helpb iescheme:Inclusion Economics scheme} is intended to be used with the {bf:Inclusion Economics} brand fonts, Montserrat and Lora, which can be downloaded and installed from Google Fonts.
 Fonts are specified independently of schemes.
 
 {pstd}

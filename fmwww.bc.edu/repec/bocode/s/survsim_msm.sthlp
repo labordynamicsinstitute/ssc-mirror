@@ -26,14 +26,17 @@ hazards competing risks model, or from a general multi-state model{p_end}
 Syntax for simulating survival times from a multi-state model:
 
 {phang2}
-{cmd: survsim} {it:timestub} {it:statestub} {it:eventstub} {cmd:,} {cmd:hazard1(}{help survsim cr##hazard_options:{it:haz_options}}{cmd:)} 
-{cmd:hazard2(}{help survsim cr##hazard_options:{it:haz_options}}{cmd:)} {opt maxt:ime(#|varname)} 
-[{opt transmat:rix(name)} {cmd:hazard3(}{help survsim cr##hazard_options:{it:haz_options}}{cmd:)} 
+{cmd: survsim} {it:timestub} {it:statestub} {it:eventstub} {cmd:,} {cmd:hazard1(}{help survsim msm##hazard_options:{it:haz_options}}{cmd:)} 
+{cmd:hazard2(}{help survsim msm##hazard_options:{it:haz_options}}{cmd:)} {opt maxt:ime(#|varname)} 
+[{opt transmat:rix(name)} {cmd:hazard3(}{help survsim msm##hazard_options:{it:haz_options}}{cmd:)} 
 {cmd: ...} {help survsim cr##commonopts:{it:options}}]
 
+{phang2}
+Each {cmd:hazard#({help survsim msm##hazard_options:{it:haz_options}})} represents a transition-specific hazard function, where the number {cmd:#} is used to index the transition in the transition matrix, defined in {cmd:transmatrix()}.
 
-{synoptset 36 tabbed}{...}
-{synopthdr:Transition-specific hazard options}
+
+{synoptset 38 tabbed}{...}
+{synopthdr:Transition-specific hazard#() options}
 {synoptline}
 {synopt:{cmdab:d:istribution(}{cmdab:e:xponential)}}exponential survival distribution{p_end}
 {synopt:{cmdab:d:istribution(}{cmdab:gom:pertz)}}Gompertz survival distribution{p_end}
@@ -96,7 +99,7 @@ variables are returned.
 
 {marker options}{...}
 {marker hazard_options}{...}
-{title:Transition-specific hazard options}
+{title:Transition-specific hazard#() options}
 
 {phang}{opt distribution}({it:string}) specifies the parametric survival distribution to use, including {cmd:exponential}, 
 {cmd:gompertz} or {cmd:weibull}.{p_end}

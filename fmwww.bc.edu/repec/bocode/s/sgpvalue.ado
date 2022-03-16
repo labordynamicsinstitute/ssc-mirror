@@ -1,5 +1,7 @@
 *!Second Generation P-Values Calculations
 *!Based on the R-code for sgpvalue.R from the sgpv-package from https://github.com/weltybiostat/sgpv
+*!Version 1.06  13.02.2022: Fixed a bug when variables as input with only one null-hypothesis is used, but only a few observations exist. ///
+							Fixed a bug which prevented one of the examples from the help file to run.
 *!Version 1.05  01.11.2020: Fixed a bug in an input check which made it impossible to use missing values as input for one-sided intervals. ///
 							Fixed a bug which set delta incorrectly when calculating the deltagap for one-sided intervals. 
 *Version 1.04  05.07.2020: Added/improved support matrices as inputs for options "esthi" and "estlo". Noshow-option now works expected. 
@@ -34,7 +36,7 @@ syntax, estlo(string) esthi(string)  nulllo(string) nullhi(string) [NOWARNings I
 *Parse the input : 
 *Check that the inputs are variables -> For the moment only allowed if both esthi and estlo are variables
 *Could add here parsing of new syntax for intervals which unifies the options estlo and esthi into estint (or similar name), for nulllo and nullhi
-
+/*
 	if `"`h0'"'!="" & ("`nulllo'"!=""|"`nullhi'"!="") stop "Values for intervals found both in option 'h0' and options 'nulllo' 'nullhi'. {break} Only one way of entering intervals allowed at the same time."
 	if `"`h1'"'!="" & ("`estlo'"!=""|"`esthi'"!="") stop "Values for intervals found both in option 'h1' and options 'estlo' 'esthi'. {break} Only one way of entering intervals allowed at the same time."		
 	if `"`h0'"'!=""{
@@ -48,7 +50,7 @@ syntax, estlo(string) esthi(string)  nulllo(string) nullhi(string) [NOWARNings I
 	local estlo `r(lb)'
 	local esthi `r(ub)'
 	}
-		
+*/		
 	*Check if input is matrix or variable and convert matrix into local macro
 	foreach name in esthi estlo{
 		capture confirm numeric variable ``name''
@@ -85,27 +87,30 @@ syntax, estlo(string) esthi(string)  nulllo(string) nullhi(string) [NOWARNings I
 	
 **Potential Errors
 * Not all non-sensical inputs covered yet
-if `:word count `nullhi'' != `: word count `nulllo''{
-	disp as error `"Options 'nullhi' and 'nulllo' do not contain the same number of arguments."'
-	exit 198
-}
+	if `:word count `nullhi'' != `: word count `nulllo''{
+		disp as error `"Options 'nullhi' and 'nulllo' do not contain the same number of arguments."'
+		exit 198
+	}
 
-if `:word count `esthi'' != `: word count `estlo''{
-	disp as error `"Options 'esthi' and 'estlo' do not contain the same number of arguments."'
-	exit 198
-}
+	if `:word count `esthi'' != `: word count `estlo''{
+		disp as error `"Options 'esthi' and 'estlo' do not contain the same number of arguments."'
+		exit 198
+	}
 
-if wordcount("`nulllo'") != wordcount("`estlo'") & wordcount("`nulllo'")>1{
-	disp as error `"Options 'nulllo' and 'nullhi' must only have one argument or exactly as many arguments as options 'esthi' and 'estlo'."'
-	exit 198
-}
+	if wordcount("`nulllo'") != wordcount("`estlo'") & wordcount("`nulllo'")>1{
+		disp as error `"Options 'nulllo' and 'nullhi' must only have one argument or exactly as many arguments as options 'esthi' and 'estlo'."'
+		exit 198
+	}
 
-*Expand null-interval to match the number of estimated intervals
-  if `:word count `nulllo''==1 {
-   local nulllo = "`nulllo' " * `: word count `estlo''  
-   local nullhi = "`nullhi' " * `: word count `esthi'' 
-  }
-
+*Expand null-interval to match the number of estimated intervals -> Currently leads to an error if variables used as input and number of observations < c(matsize)
+	if `:word count `nulllo''==1 & `variablefound'==0 {
+		local nulllo = "`nulllo' " * `: word count `estlo''  
+		local nullhi = "`nullhi' " * `: word count `esthi'' 
+	}
+	else if `:word count `nulllo''==1 & `variablefound'==1{ // Added new condition to account for situations if the number  number of observations < c(matsize)
+		local nulllo = "`nulllo' " * _N  
+		local nullhi = "`nullhi' " * _N
+	}	
 
 	if "`variablefound'"=="1"{
 		local estint =_N
@@ -340,10 +345,10 @@ args matname macroname
 	} 
 
 	forvalues i=1/`cnt'{
-			if `colvec'==1{
+			if "`colvec'"=="1"{
 				local matmacro `matmacro' `=el(`matname',`i',1)'
 			}
-			else if `rowvec'==1{
+			else if "`rowvec'"=="1"{
 				local matmacro `matmacro' `=el(`matname',1,`i')'
 			}
 	}	

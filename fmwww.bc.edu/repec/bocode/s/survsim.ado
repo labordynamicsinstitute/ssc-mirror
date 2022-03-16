@@ -1,7 +1,9 @@
-*! version 4.0.8 14jan2022 MJC
+*! version 4.0.9 15mar2022 MJC
 
 /*
 History
+15mar2022 version 4.0.9 - bug fix, when survsim_msm called with all exponential, NI fails - now fixed by doing integration 
+                          analytically for that special case of all CR hazards constant
 12jan2022 version 4.0.8 - build error; now fixed
 02dec2021 version 4.0.7 - bug fix with msm simulation, would occur if directory of installed files had a space in it
                         - missing .mata files in pkg file

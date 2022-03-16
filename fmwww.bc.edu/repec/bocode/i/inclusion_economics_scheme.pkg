@@ -11,17 +11,19 @@ d KW: graphics
 d KW: schemes
 d KW: inclusion economics
 d
-d Requires: Stata version 16.1
+d Requires: Stata version 8
 d
-d Distribution-Date: 20220304
+d Distribution-Date: 20220315
 d
 d Author:  Nils Enevoldsen,  Inclusion Economics
 d Support: email  nils@@wlonk.com
 d
- ../s/scheme-ie.scheme
- ../s/scheme-ie2.scheme
+f iescheme.sthlp
+f ../s/scheme-ie.scheme
+f ../s/scheme-ie2.scheme
 f iefonts.ado
 f iefonts.sthlp
+f inclusion_economics_scheme.sthlp
 f inclusioneconomicsscheme.sthlp
 f ../c/color-iebeige.style
 f ../c/color-ieblue.style

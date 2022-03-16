@@ -71,5 +71,8 @@ hazard independently.
 {marker paper2}{...}
 {phang}Crowther MJ and Lambert PC. {browse "http://onlinelibrary.wiley.com/doi/10.1002/sim.5823/abstract":Simulating biologically plausible complex survival data.} {it:Statistics in Medicine} 2013;32(23):4118-4134.{p_end}
 
+{phang}Crowther MJ. Simulating time-to-event data from parametric distributions, custom distributions, 
+competing risk models and general multi-state models. {it:The Stata Journal} 2022 (Accepted).{p_end}
+
 {phang}Jann, B. 2005. moremata: Stata module (Mata) to provide various functions. Available from http://ideas.repec.org/c/boc/bocode/s455001.html.{p_end}
 

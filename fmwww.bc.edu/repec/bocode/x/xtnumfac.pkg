@@ -1,0 +1,27 @@
+d 'XTNUMFAC': module to estimate the number of factors in panel data
+d
+d  xtnumfac estimates the number of common factors in panel
+d datasets using the methods of Bai and Ng (2002), Ahn and
+d Horenstein (2013) Onatski (2010) and Gagliardini et al. (2019).
+d The methods in Bai and Ng (2002) are based on six information
+d criteria, while Ahn and Horenstein (2013) propose two estimation
+d methods. Onatski (2010) and Gagliardini et al. (2019) contribute
+d a single estimator each. 
+d
+d KW: panel data
+d KW: common factors
+d
+d Requires: Stata version 11.2
+d
+d Distribution-Date: 20220315
+d
+d Author: Jan Ditzen, Free University of Bozen-Bolzano
+d Support: email jan.ditzen@@unibz.it
+d
+d Author: Simon Reese, Lund University
+d Support: email  simon.reese@@nek.lu.se
+d
+f xtnumfac.ado
+f xtnumfac.sthlp
+f xtnumfac_example.do
+f ../k/KPR2021_hpdata.dta

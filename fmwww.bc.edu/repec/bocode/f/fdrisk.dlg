@@ -44,7 +44,7 @@ BEGIN
 	EXP ex_nullhi	 	    @	 _ss    250      ., label("Expression") option(nullhi) ///
 													tooltip("Set upper bound of the null-hypothesis interval") error(Upper Bound null-hypothesis interval)
 	
-	CHECKBOX ck_fcr           300  -60    140  	 ., label("Calculate the FCR") option(fcr) tooltip("Calculate the False Confirmatory Risk instead of the default False Discovery Risk when the observed SGPV is 1.")
+	CHECKBOX ck_fcr           300  -40    140  	 ., label("Calculate the FCR") option(fcr) tooltip("Calculate the False Confirmatory Risk instead of the default False Discovery Risk when the observed SGPV is 1.")
 
 	TEXT tx_se			    300   _ss   80      ., label("Standard Error")
 	EDIT ed_se			    @     _ss     @     ., option(stderr) default(1) numonly error(Standard error) tooltip("Standard error of the point estimate")

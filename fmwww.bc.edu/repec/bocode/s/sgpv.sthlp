@@ -48,7 +48,7 @@
 {p_end}
 {synopt:{opt q:uietly}}  suppress the output of the estimation command.
 {p_end}
-{synopt:{opt matl:istopt(string)}}  change the options of the displayed matrix. 
+{synopt:{opth matl:istopt(matlist:options)}}  change the options of the displayed matrix. 
 {p_end}
 {synopt:{opt delta:gap}} calculate and display the delta gap.
 {p_end}
@@ -214,7 +214,7 @@ You should disable these warning messages only if using the default point 0 null
 what you want to do and you understand the consequences of doing so.
 
 {phang}
-{opt matl:istopt(string)} change the format of the displayed matrix. The same options as for {helpb matlist} can be used.
+{opth matl:istopt(matlist:options)} change the format of the displayed matrix. The same options as for {helpb matlist} can be used.
 
 {phang}
 {opt delta:gap} calculate and display the delta-gap if the SGPV is 0.

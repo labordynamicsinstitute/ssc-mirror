@@ -19,8 +19,8 @@
 {marker syntax}{...}
 {title:Syntax}
 {p 8 17 2}
-{cmdab:sgpvalue}
-{cmd:,} {opt estlo(string)} {opt esthi(string)} {opt nulllo(string)} {opt nullhi(string)}
+{cmdab:sgpvalue} {cmd:,} 
+{cmd:estlo({it:{help sgpvalue##boundlist:boundlist}})} {cmd:esthi({it:{help sgpvalue##boundlist:boundlist}})} {cmd:nulllo({it:{help sgpvalue##boundlist:boundlist}})} {cmd:nullhi({it:{help sgpvalue##boundlist:boundlist}})}
 [{it:options}]
 
 {synoptset 20 tabbed}{...}

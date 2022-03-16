@@ -19,7 +19,7 @@
 {marker syntax}{...}
 {title:Syntax}
 {p 8 17 2}
-{opt fdrisk}{cmd:,} {opt nulllo(string)} {opt nullhi(string)} {opt std:err(#)}  {opt nulls:pace(string)}  {opt alts:pace(string)} 
+{opt fdrisk}{cmd:,} {opt nulllo(lower_bound)} {opt nullhi(upper_bound)} {opt std:err(#)}  {opt nulls:pace(# #)}  {opt alts:pace(# #)} 
 [{opt fcr} {opt l:evel(#)} {opt lik:elihood(#)} {opt nullt:runcnormal} {opt altt:runcnormal} {opt p:i0(#)}]
 
 {synoptset 20 tabbed}{...}
@@ -32,9 +32,9 @@
 {synopt:{opt std:err(#)}}  standard error of the point estimate.{p_end}
 {synopt:{opt l:evel(#)}} confidence interval with the specified level was used to calculated the SGPV; default is {cmd:level(95)}.{p_end}
 {synopt:{opt lik:elihood(#)}} likelihood support interval with level 1/k was used to calculate the SGPV.{p_end}
-{synopt:{opt nulls:pace(# #)}}  support of the null probability distribution.{p_end}
+{synopt:{opt nulls:pace(# [#])}}  support of the null probability distribution.{p_end}
 {synopt:{opt nullt:runcnormal}} use Truncated-Normal-distribution as the probability distribution for the null parameter space.{p_end}
-{synopt:{opt alts:pace(# #)}}  support for the alternative probability distribution.{p_end}
+{synopt:{opt alts:pace(# [#])}}  support for the alternative probability distribution.{p_end}
 {synopt:{opt altt:runcnormal}} use Truncated-Normal-distribution as the probability distribution for the alternative parameter space.{p_end}
 {synopt:{opt p:i0(#)}}  prior probability of the null hypothesis.{p_end}
 {synoptline}
@@ -87,10 +87,10 @@ The default is to calculate the false discovery risk, when the observed second-g
 {opt l:evel(#)} confidence interval with level (1-α)100% was used to calculate the SGPV. The default is {cmd:level(95)} if option {cmd:likelihood} or no other confidence level is not set. 
 
 {phang}
-{opt lik:elihood(#)} likelihood support interval with level 1/k was used to calculated the SGPV. 
+{opt lik:elihood(#)} likelihood support interval with level 1/k was used to calculate´ the SGPV. 
 
 {phang}
-{opt nulls:pace(lower_bound upper_bound)}  support of the null probability distribution.
+{opt nulls:pace(# [#])}  support of the null probability distribution.
 The "nullspace" can contain either one or two numbers. These numbers can be also formulas which must enclosed in " ".
 If "nullspace" is one number, then no distribution for the null parameter space is used. 
 If "nullspace" contains two numbers separated by a space, then the distribution for the null parameter space are either the Uniform-distribution or the Truncated-Normal-distribution (option {cmd:nulltruncnormal}).
@@ -100,7 +100,7 @@ The Uniform-distribution is used as the default.
 {opt nullt:runcnormal} use the Truncated-Normal-distribution as the probability distribution for the null parameter space with the mean being the middlepoint of the nullspace and standard deviation given by option {cmd:stderr}.
 
 {phang}
-{opt alts:pace(lower_bound upper_bound)}  support for the alternative probability distribution. 
+{opt alts:pace(# [#])}  support for the alternative probability distribution. 
 The "altspace" can contain either one or two numbers. These numbers can be also formulas which must enclosed in " ".
 If "altspace" is one number, then no distribution for the alternative parameter space is used. 
 If "altspace" contains two numbers separated by a space, then the distribution for the alternative parameter space are either the Uniform-distribution  or the Truncated-Normal-distribution (option {cmd:alttruncnormal}).

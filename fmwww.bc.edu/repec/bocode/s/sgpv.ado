@@ -1,7 +1,10 @@
 *!Calculate the Second-Generation P-Value(s)(SGPV) and their associated diagnosis statistics after common estimation commands based on Blume et al. 2018,2019
 *!Author: Sven-Kristjan Bormann
-*!Version 1.2a 01.02.2021: Fixed a bug with the level option. Fixed a bug with regards to leading whitespaces when prefixing sgpv.
-*!Version 1.2 27.12.2020 : Changed the name of the option permament to permdialog to clarify the meaning of the option. ///
+*!Version 1.2c 14.02.2022: Fixed a bug when using the coefficient-option together with noconstant-option. ///
+							Support for Mata to calculate Fdrs has been removed, because it did not work as intended and offered no significant speed advantage. 
+*!Version 1.2b 10.06.2021: Added option to use Mata to calculate the Fdrs; requires the moremata-package by Ben Jann
+*Version 1.2a 01.02.2021: Fixed a bug with the level option. Fixed a bug with regards to leading whitespaces when prefixing sgpv.
+*Version 1.2 27.12.2020 : Changed the name of the option permament to permdialog to clarify the meaning of the option. ///
 							Fixed the format option in the Dialog box. /// 
 							Added a remove option for the menu subcommand to remove the entries in the profile.do created by the option permdialog. ///
 							Renamed the dialog tab "Display" to "Reporting". Moved the options from the dialog tab "Fdrisk" to dialog tab "Reporting". ///
@@ -51,12 +54,12 @@ To-Do(Things that I wish to implement at some point or that I think that might b
 	- Add code which removes the requirement of having the r(table) matrix existing after an estimation command -> Using only e(b) and e(V) requires a lot more manual calculations of the p-value and lower and upper bounds.
 	- Change the code which handles the inputmatrix to make use of the newly added ability of sgpvalue to use matrices as inputs -> should allow with larger than c(matsize) matrices -> requires modification of all code/commands which create new matrices like the various parsing commands for coefficients, p-values, etc.
 	- Shorten parts of the code by using the cond()-function instead if ... else if ... constructs.
-	- Write a certification script which checks all possible errors (help cscript)
+	- Write a certification script which checks all possible errors (help cscript) -> Partly done
 	- change the help file generation from makehlp to markdoc for more control over the layout of the help files -> currently requires a lot of manual tuning to get desired results.
 	- Write a subcommand to parse the Fdrisk-options or at least move the code to a different place; at the moment the code is not at the best place and the fdrisk-options are set before it is checked if they are needed at all.
 	
 	External changes (Mostly more features):
-	- Allow a mixture of case 1 & 2 for the coefficient-option -> select only some equations and variables from a multi-equation estimation -> ex. coef(((q10: q50: q90:) (mpg weight foreign)) which will then be expanded to coef(q10:mpg q10:weight ... q90:weight q90:foreign) -> requires changes in how this option is parsed
+	- Allow a mixture of case 1 & 2 for the coefficient-option -> select only some equations and variables from a multi-equation estimation -> ex. coef((q10: q50: q90:) (mpg weight foreign)) which will then be expanded to coef(q10:mpg q10:weight ... q90:weight q90:foreign) -> requires changes in how this option is parsed
 	- Unify options nulllo and nullhi into one option named "null" to make it easier for users to enter null-hypothesis -> requires rewriting the parsing of the input -> initial code written -> could rename the option to "H0" -> not sure which way to input intervals works best
 	- Add an option to not display the individual null-hypothesis if multiple null hypotheses are set.
 	- Make help-file easier to understand, especially what kind of input each option requires.
@@ -121,15 +124,25 @@ else{
 
 
 **Define here options
-syntax [anything(name=subcmd)] [,   Estimate(name)  Matrix(name)  Coefficient(string asis) NOCONStant   /// input-options
+syntax [anything(name=subcmd)] [, Estimate(name)  Matrix(name)  Coefficient(string asis) NOCONStant   /// input-options
  Quietly MATListopt(string asis)  FORmat(str) NONULLwarnings  DELTAgap FDrisk all  /// display-options
   nulllo(string) nullhi(string) Null(string)  /// null hypotheses  -> option "null" unifies nulllo and nullhi for easier entering the intervals -> not documented and a rather experimental change
-  TRUNCnormal  /*set truncated normal distribution for nullspace*/ Level(cilevel) LIKelihood(numlist min=1 max=2) Pi0(real 0.5) /// fdrisk-options
+  TRUNCnormal  /*set truncated normal distribution for nullspace*/ Level(cilevel) LIKelihood(numlist min=1 max=2) Pi0(real 0.5) /*nomata*/ /// fdrisk-options
     debug  /*Display additional debug messages: undocumented*/ ///
-	/*depreciated options*/ Bonus(string) NULLSpace(string asis) NULLWeights(string) ALTWeights(string) ALTSpace(string asis) INTLevel(string) INTType(string) 	] 
+	/*depreciated options*/ Bonus(string) /* NULLSpace(string asis) NULLWeights(string) ALTWeights(string) ALTSpace(string asis) INTLevel(string) INTType(string) */ /// 
+	/*new possible options, not implemented yet */ /*Plot*/  ] 
 
 
 ***Option parsing
+*Check Mata option for fdrisk
+if "`mata'"=="mata"{
+	capt findfile lmoremata.mlib
+	if _rc {
+		di as error "-moremata- is required to use the -mata- option; type {stata ssc install moremata}"
+		error 499
+	}
+}
+**Check for what SGPVs should be calculated for
 if "`cmd'"!="" & ("`estimate'"!="" | "`matrix'"!=""){
 	disp as error "Options 'matrix' and 'estimate' cannot be used in combination with a new estimation command."
 	exit 198
@@ -331,7 +344,7 @@ local cmd = ustrltrim("`cmd'") // Remove trailing whitespaces which could make t
 *Assuming that any estimation command will report a matrix named "r(table)" and a macro named "e(cmd)"
 if "`cmd'"!=""{
 	//Remove any level option set for the estimation command by the one for the sgpv command 
-	gettoken com opt:cmd,parse(,)
+	gettoken com opt:cmd, parse(,)
 	if "`com'"!="`cmd'"{
 		local opt:list uniq opt // assuming that options are allowed to appear only once
 		if ustrregexm("`opt'","level\(\d+\)"){
@@ -372,6 +385,7 @@ if r(level)!=`level'{
  
  ***Input processing
  mat `input' = `inputmatrix'
+ pause Display matrixes after estimation 
  return add // save existing returned results 
  
  *Coefficient selection 
@@ -379,6 +393,7 @@ if r(level)!=`level'{
  mat `input' = r(coef_mat)
  local case `r(case)'
  local coln =colsof(`input')
+ 
 
 *Hard coded values for the rows from which necessary numbers are extracted
 *The rows could be addressed by name, but then at least Stata 14 returns a matrix
@@ -417,12 +432,12 @@ if "`fdrisk_stat'"=="fdrisk"{
 	forvalues i=1/`:word count `rownames''{
 		if `=`comp'[`i',1]'==0{
 		if wordcount("`nullhi'")==1{
-			 qui fdrisk, nullhi(`nullhi') nulllo(`nulllo') stderr(`=`input_new'[2,`i']') inttype(`inttype') intlevel(`intlevel') nullspace(`nullspace') 	nullweights(`nullweights') altspace(`=`input_new'[5,`i']' `=`input_new'[6,`i']') altweights(`altweights') sgpval(0) pi0(`pi0')
+			 qui fdrisk, nullhi(`nullhi') nulllo(`nulllo') stderr(`=`input_new'[2,`i']') inttype(`inttype') intlevel(`intlevel') nullspace(`nullspace') 	nullweights(`nullweights') altspace(`=`input_new'[5,`i']' `=`input_new'[6,`i']') altweights(`altweights') pi0(`pi0') `mata'
 			}
 		else if wordcount("`nullhi'")>1{			
 			qui fdrisk, nullhi(`=word("`nullhi'",`i')') nulllo(`=word("`nulllo'",`i')') ///
 			stderr(`=`input_new'[2,`i']') inttype(`inttype') intlevel(`intlevel') ///
-			nullspace(`=word("`nulllo'",`i')' `=word("`nullhi'",`i')') 	nullweights(`nullweights') altspace(`=`input_new'[5,`i']' `=`input_new'[6,`i']') altweights(`altweights') sgpval(0) pi0(`pi0') 	
+			nullspace(`=word("`nulllo'",`i')' `=word("`nullhi'",`i')') 	nullweights(`nullweights') altspace(`=`input_new'[5,`i']' `=`input_new'[6,`i']') altweights(`altweights') pi0(`pi0') `mata'
 			}			
 			capture confirm scalar r(fdr)
 			if !_rc mat `fdrisk'[`i',1] = r(fdr)
@@ -464,7 +479,6 @@ if wordcount("`nulllo'")>1{
  if wordcount("`nulllo'")==1{
 	local interval_name = cond(`nullhi'==`nulllo',"point","interval")
 	local null_interval = cond(`nullhi'==`nulllo',"`nullhi'","[`nulllo',`nullhi']")
-	pause before matlist
 	matlist r(display_mat) , title(`"Comparison of ordinary P-Values and Second Generation P-Values for a`=cond(substr("`interval_name'",1,1)=="p","","n")'  `interval_name' Null-Hypothesis of `null_interval' based on a `=cond("`inttype'"=="confidence","`: display %6.4g 100*(1-`intlevel')'%",cond("`inttype'"=="likelihood","`intlevel'",""))' `inttype' `=cond("`inttype'"=="likelihood","support","")' interval"') rowtitle(Variables) `matlistopt'
  }
 
@@ -476,7 +490,22 @@ if "`nonullwarnings'"=="" & ("`nulllo'"=="0" & "`nullhi'"=="0"){
 	disp "The default point 0 null-hypothesis will result in having SGPVs of either 0 or 0.5."	
 }
 
-*return add
+/*STUB  for new potential plot option to allow direct plotting of the results.
+* Need to think how to avoid recalculating the SGPVs
+Steps required are:
+	1. Get lower and upper bounds of confidence intervals and put them into two matrices. 
+	2. Set twoway_opt option for plotsgpv in such a way that the legend does not overlap with the rest.
+The code works in principle but does not provide meaningful results, especially if variables are on different scales.	
+if "`plot'"!=""{
+	tempname esthi_mat estlo_mat
+	mat `esthi_mat' = `input_new'[6,1...]
+	mat `estlo_mat' = `input_new'[5,1...]
+	mat `esthi_mat' = `esthi_mat''
+	mat `estlo_mat' = `estlo_mat''
+	plotsgpv, esthi(`esthi_mat') estlo(`estlo_mat') nulllo(`nulllo') nullhi(`nullhi') nolegend
+}   
+*/
+
 *Return results
 return matrix comparison =  `comp'
 
@@ -532,18 +561,13 @@ end
 *Parse the content of the coefficient-option
 program define ParseCoef, rclass
 	syntax name(name=matrix) [, coefficient(string asis)  noconstant ] 
-	tempname coef_mat nocons_mat
+	tempname coef_mat
 	if `"`coefficient'"'==""  & "`constant'"=="" {
 		return matrix coef_mat = `matrix'
 		exit
 	}
-	 else if `"`coefficient'"'=="" & "`constant'"=="noconstant"{
-		local coefficients : colfullnames `matrix'
-		foreach coef of local coefficients{
-			if !ustrregexm("`coef'","_cons"){
-			mat `coef_mat' = (nullmat(`coef_mat'), `matrix'[1...,"`coef'"])
-			} 
-		}
+	else if `"`coefficient'"'=="" & "`constant'"=="noconstant"{ 
+		mat `coef_mat'=`matrix'[1...,1..`=colsof(`matrix')-1']	// Assuming that the constant is always the last variable in the results
 		return matrix coef_mat = `coef_mat'
 		exit
 	}
@@ -554,59 +578,59 @@ program define ParseCoef, rclass
  
  */
  * No mixtures of cases allowed yet
- foreach coef of local coefficient{
-	*Case 1
-	if !ustrregexm("`coef'",":") & !ustrregexm("`coef'",":$"){
-		local coefspec `coefspec' `coef'	
-	}
-	*Case 2
-	if ustrregexm("`coef'",":$"){
-		local eqspec `eqspec' `coef'	
-	} 
-	*Case 3
-	if ustrregexm("`coef'",":") & !ustrregexm("`coef'",":$"){	
-		local eqcoefspec `eqcoefspec' `coef'		
-	}
- }
- 
- *Make sure that only one specification/case is provided
- if (wordcount("`eqcoefspec'")>0 & wordcount("`eqspec'")>0) | (wordcount("`eqcoefspec'")>0 & wordcount("`coefspec'")>0) | (wordcount("`eqspec'")>0 & wordcount("`coefspec'")>0){ 
-	stop `"You can only specify equation-specific (XX:YYY), equations (XX:) or general coefficients(YYY) in option {it:coefficient} at the same time."'
- }
- 
- *Save specified case : 
- *Looking for the equations only needed if case 1 and set to 0 for case 2 & 3
- if (wordcount("`eqcoefspec'")>0 | wordcount("`eqspec'")>0) local coleqnumb 0
-	if wordcount(`"`coefficient'"')==wordcount("`coefspec'"){ 
-		local coleq : coleq `matrix'
-		local coleq : list uniq coleq
-		if "`coleq'"=="_" local coleqnumb 0
-		else local coleqnumb = wordcount("`coleq'")
-	}
-	
-	local coefnumb : word count `coefficient'
-	if `coleqnumb'==0{ // No equations found or only fully specified coefficient names given (eq:var) Case 3 & Case 2 (eq:) 
-		forvalues i=1/`coefnumb'{
-			capture mat `coef_mat' = (nullmat(`coef_mat'), `matrix'[1...,"`: word `i' of `coefficient''"])
-			if _rc{
-				stop "Coefficient `:word `i' of `coefficient'' not found or incorrectly written."
-			}			
-			if "`constant'"=="noconstant" & wordcount("`eqspec'")>0 { // removing constant makes only sense for case 2
-				mat `coef_mat' = `coef_mat'[1...,`=colnumb(`coef_mat',"_cons")-1']
-			}
-			
+	 foreach coef of local coefficient{
+		*Case 1
+		if !ustrregexm("`coef'",":") & !ustrregexm("`coef'",":$"){
+			local coefspec `coefspec' `coef'	
 		}
-	}
-	else if `coleqnumb'>0{ // Separate equations found and only general variables given Case 1
-		forvalues j=1/`coleqnumb'{
+		*Case 2
+		if ustrregexm("`coef'",":$"){
+			local eqspec `eqspec' `coef'	
+		} 
+		*Case 3
+		if ustrregexm("`coef'",":") & !ustrregexm("`coef'",":$"){	
+			local eqcoefspec `eqcoefspec' `coef'		
+		}
+	 }
+	 
+	 *Make sure that only one specification/case is provided
+	 if (wordcount("`eqcoefspec'")>0 & wordcount("`eqspec'")>0) | (wordcount("`eqcoefspec'")>0 & wordcount("`coefspec'")>0) | (wordcount("`eqspec'")>0 & wordcount("`coefspec'")>0){ 
+		stop `"You can only specify equation-specific (XX:YYY), equations (XX:) or general coefficients(YYY) in option {it:coefficient} at the same time."'
+	 }
+	 
+	 *Save specified case : 
+	 *Looking for the equations only needed if case 1 and set to 0 for case 2 & 3
+	 if (wordcount("`eqcoefspec'")>0 | wordcount("`eqspec'")>0) local coleqnumb 0
+		if wordcount(`"`coefficient'"')==wordcount("`coefspec'"){ 
+			local coleq : coleq `matrix'
+			local coleq : list uniq coleq
+			if "`coleq'"=="_" local coleqnumb 0
+			else local coleqnumb = wordcount("`coleq'")
+		}
+		
+		local coefnumb : word count `coefficient'
+		if `coleqnumb'==0{ // No equations found or only fully specified coefficient names given (eq:var) Case 3 & Case 2 (eq:) 
 			forvalues i=1/`coefnumb'{
-			capture mat `coef_mat' = (nullmat(`coef_mat'), `matrix'[1...,"`:word `j' of `coleq'':`: word `i' of `coefficient''"])
+				capture mat `coef_mat' = (nullmat(`coef_mat'), `matrix'[1...,"`: word `i' of `coefficient''"])
 				if _rc{
 					stop "Coefficient `:word `i' of `coefficient'' not found or incorrectly written."
+				}			
+				if "`constant'"=="noconstant" & wordcount("`eqspec'")>0 { // removing constant makes only sense for case 2
+					mat `coef_mat' = `coef_mat'[1...,1..`=colnumb(`coef_mat',"_cons")-1']
 				}
+				
 			}
-		}	
-	}
+		}
+		else if `coleqnumb'>0{ // Separate equations found and only general variables given Case 1
+			forvalues j=1/`coleqnumb'{
+				forvalues i=1/`coefnumb'{
+				capture mat `coef_mat' = (nullmat(`coef_mat'), `matrix'[1...,"`:word `j' of `coleq'':`: word `i' of `coefficient''"])
+					if _rc{
+						stop "Coefficient `:word `i' of `coefficient'' not found or incorrectly written."
+					}
+				}
+			}	
+		}
 	
 	return mat coef_mat=`coef_mat'
 	return local case = cond(`=wordcount("`eqcoefspec'")>0',"coefficient",cond(`=wordcount("`eqspec'")>0',"equation","variable")) // Return case for later processing in title in case of multiple null hypotheses
@@ -651,40 +675,40 @@ end
 *Re-format the input matrix and return a new matrix to circumvent the limitations set by matlist -> using the cspec and rspec options of matlist requires more code to get these options automatically correct -> for now probably not worth the effort.
 *Use round-function instead? Should result in easier and shorter code
 program define FormatDisplay, rclass
-syntax name(name=matrix) [, format(string)]
-	if `"`format'"'==""{
-		local format %5.4f
-		} 
-	else {
-			capture local junk : display `format' 1
-			if _rc {
-					dis as err "Invalid %format `format'"
-					dis in smcl as err "See the help file for {help format} for more information."
-					exit 120
+	syntax name(name=matrix) [, format(string)]
+		if `"`format'"'==""{
+			local format %5.4f
+			} 
+		else {
+				capture local junk : display `format' 1
+				if _rc {
+						dis as err "Invalid %format `format'"
+						dis in smcl as err "See the help file for {help format} for more information."
+						exit 120
+				}
 			}
+	tempname display_mat
+	local display_mat_coln : colfullnames `matrix'
+	local display_mat_rown : rowfullnames `matrix'
+	mat `display_mat'=J(`=rowsof(`matrix')',`=colsof(`matrix')',.)
+	forvalues i=1/`=rowsof(`matrix')'{
+		forvalues j=1/`=colsof(`matrix')'{
+			mat `display_mat'[`i',`j']= `: display `format' `matrix'[`i',`j']'
 		}
-tempname display_mat
-local display_mat_coln : colfullnames `matrix'
-local display_mat_rown : rowfullnames `matrix'
-mat `display_mat'=J(`=rowsof(`matrix')',`=colsof(`matrix')',.)
-forvalues i=1/`=rowsof(`matrix')'{
-	forvalues j=1/`=colsof(`matrix')'{
-		mat `display_mat'[`i',`j']= `: display `format' `matrix'[`i',`j']'
+
 	}
+	mat colnames `display_mat' = `display_mat_coln'
+	mat rownames `display_mat' = `display_mat_rown'
 
-}
-mat colnames `display_mat' = `display_mat_coln'
-mat rownames `display_mat' = `display_mat_rown'
-
-return matrix display_mat = `display_mat' 
+	return matrix display_mat = `display_mat' 
 
 end
 
 *Simulate the behaviour of the R-function with the same name 
 program define stop
- args text 
- disp as error `"`text'"'
- exit 198
+	args text 
+	disp as error `"`text'"'
+	exit 198
 end
 
 *Make the dialog boxes accessible from the User-menu
@@ -692,7 +716,7 @@ program define menu
  syntax [, PERMdialog remove] 
  *Error checking
  if "`permdialog'"=="permdialog" & "`remove'"=="remove"{
-		stop `"Only one option 'permanent' or 'remove' can be set at the same time."'
+		stop `"Only one option 'permdialog' or 'remove' can be set at the same time."'
 		
 	}
  
@@ -726,7 +750,7 @@ program define menu
 
  }
  
- *remove option -> Read in the profile.do and write all entries which were not written by the permdialog-option -> not finished yet
+ *remove option -> Read in the profile.do and write all entries which were not written by the permdialog-option
  if "`remove'"=="remove"{
 		capture findfile profile.do, path(STATA;.)
 		if _rc==601{
@@ -781,7 +805,7 @@ program define menu
 	window menu append item "SGPV" "False Confirmation/Discovery Risk (&fdrisk)" "db fdrisk" 
 	window menu append item "SGPV" "SGPV Plot Interval Estimates (p&lotsgpv)" "db plotsgpv"
 	window menu refresh
-	disp "Menu entries succesfully created.{break}Go to User->Statistics->SGPV to access the dialog boxes for this package."
+	disp "Menu entries successfully created.{break}Go to User->Statistics->SGPV to access the dialog boxes for this package."
 	
 end
 
@@ -791,13 +815,13 @@ mata set matastrict on
 // Split the filepath into path and filename -> convenience function to access the results of pathsplit()
 void pathreturn(string scalar pathfile){
 
-string scalar path, filename 
-pragma unset path
-pragma unset filename
+	string scalar path, filename 
+	pragma unset path
+	pragma unset filename
 
-pathsplit(pathfile,path,filename)
+	pathsplit(pathfile,path,filename)
 
-st_local("path" , path)
-st_local("filename",filename)
+	st_local("path" , path)
+	st_local("filename",filename)
 }
 end

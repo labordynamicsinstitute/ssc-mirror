@@ -1,6 +1,7 @@
 *!Plot interval estimates according to Second-Generation p-value rankings
 *!Author: Sven-Kristjan Bormann
 *Based on the R-code for plotsgpv.R from the sgpv-package from https://github.com/weltybiostat/sgpv
+*!Version 1.05 31.12.2021 : [NOT RELEASED YET, in development] Fixed/improved handling of situations with low number of observations; 
 *!Version 1.04 02.07.2020 : Fixed/improved the support for matrices as input for options "esthi" and "estlo". Removed noshow-option because it was never needed. The results of the sgpv-calculations were never shown even without this option set. Fixed non working combinations of variables as inputs and the nomata-option. Changed legend slightly to be more in line with R-code.
 *Version 1.03 18.06.2020 : Changed the order in the legend to match the order in the R-code
 *Version 1.02 05.06.2020 : nomata-option will now be set correctly if variables are used as inputs for estimated intervals
@@ -20,7 +21,10 @@
 *				Corrected minor errors in the documentation
 *Version 0.90 : Initial Github release
 
-/*To-Do List:  	- Check the result if a macro vector is used as input for esthi and estlo
+/*To-Do List:  	- Update documentation to reflect new options and possibilities to plot after estimation commands
+				- Add support for using a variable/matrix/local with labels for the x-axis like for example variable names to allow plotting of interval null hypotheses against estimated confidence intervals
+				- Fix/change the position of the legend to be under the graph if only a few values are plotted.
+				- Check the result if a macro vector is used as input for esthi and estlo
 				- Allow multiple null hypotheses to be plotted in one graph
 */
 program define plotsgpv, sortpreserve
@@ -28,19 +32,15 @@ version 12.0
 syntax [if] [in] ,  estlo(name) esthi(name) nulllo(string) nullhi(string)  /// 
 [SETOrder(string) Xshow(string) NULLCol(string asis) intcol1(string asis) intcol2(string asis) intcol3(string asis)	 ///
 	 noPLOTY_axis noPLOTX_axis	nullpt(string) noOUTlinezone Title(string) /// 
-	XTitle(string) YTitle(string) noLEGend nomata replace TWOway_opt(string asis) /* h0(string) h1(string) alternative experimental syntax */ ] 
-
+	XTitle(string) YTitle(string) noLEGend nomata replace TWOway_opt(string asis) /* XLable(string asis) */ ] 
 
 ***Some default values : Color settings -> translated R-colors into RGB for Stata -> Not sure how to install the colours in Stata for easier referencing.
 local firebrick3 205 38 38
 local cornflowerblue 100 149 237
 local darkslateblue 72 61 139
-
-
-*local intcoldefault firebrick3 cornflowerblue  darkslateblue 
 local nullcoldefault 208 216 232
 ***Input parsing
-*Need additional checks and conversions of matrix names  to work with the example in the R-code
+*Need additional checks and conversions of matrix names to work with the example in the R-code
 if `:word count `nullhi'' != `: word count `nulllo''{
 	disp as error `" Options "nullhi" and "nulllo" are of different length. "'
 	exit 198
@@ -200,16 +200,17 @@ if "`setorder'"!="" & "`setorder'"!="sgpv"{
 	local dg dg
 	preserve
 	*Prepare matrix for conversion
+	*BUG: Variable pdelta does not get generated if number of observations less than c(matsize)
 	if "`sgpvmatexist'"=="1" & "`setorder'"=="sgpv"{
 		capture confirm variable sgpvcombo // What if a variable named "sgpvcombo" already exists in the dataset?
 		if !_rc{
 			local randn = floor(runiform(1,65536)) // Add an arbitrary random number and hope that no variable with this name exists
 			mat colnames `sgpvcombo' = "sgpvcombo`randn'"
 		}
-		svmat `sgpvcombo' ,names(col)
+		svmat `sgpvcombo' ,names(col)  			
 	} 
 	
-	if `varsfound'==0{
+	if `varsfound'==0{ // Does not work as expected if variables are used as inputs but sgpvs are calculated based on locals and a matrix with results is returned instead of variables. Maybe enforce usage variable algorithm whenever variables are used as input regardless of the size.
 		capture confirm matrix `sgpvs'
 		if _rc{	
 			local pdelta pdelta
@@ -223,7 +224,7 @@ if "`setorder'"!="" & "`setorder'"!="sgpv"{
 				mat colnames `sgpvs' = pdelta`randpdelta' dg`randdg'
 			}
 			
-			svmat sgpvs, names( col ) 
+			svmat `sgpvs', names( col ) 
 			local pdelta pdelta`randpdelta'
 			local dg dg`randdg'
 		}
@@ -272,11 +273,8 @@ if "`setorder'"!="" & "`setorder'"!="sgpv"{
 		local esthi esthi1 //Name of the variable which contains the converted matrix
 		local estlo estlo1
 	}
-
-
 	
 	***Set up graphs -> works currently only when variables are there
-
 	*Null interval
 	local nullint (rarea `nlo' `nhi' `x', sort lcolor("`nullcol'") fcolor("`nullcol'"))
 	
@@ -304,7 +302,7 @@ if "`setorder'"!="" & "`setorder'"!="sgpv"{
 	
 	*Legend
 	if "`legend'"!="nolegend"{
-	 local sgpvlegend	legend(on order(1 "Interval Null"  4 "p{sub:{&delta}} = 0"   2 "0 < p{sub:{&delta}} <1" 3 "p{sub:{&delta}} = 1")  position(1) ring(0) cols(1) symy(*0.25) region(lpattern(blank))) // Not all settings in R-code are possible in Stata
+	 local sgpvlegend	legend(on order(1 "Interval Null"  4 "p{sub:{&delta}} = 0"   2 "0 < p{sub:{&delta}} <1" 3 "p{sub:{&delta}} = 1")  position(1) ring(0) cols(1) symy(*0.25) region(lpattern(blank))) // Not all settings of the R-code are possible in Stata
 	}
 	else if "`legend'"=="nolegend"{
 		local sgpvlegend legend(off)

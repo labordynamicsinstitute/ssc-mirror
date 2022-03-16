@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.1.1  29jul2018}{...}
+{* *! version 0.2.0  13mar2022}{...}
 {findalias asfradohelp}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[R] help" "help help"}{...}
@@ -20,12 +20,13 @@
 {it: varlist}
 [{helpb if}]
 [{helpb in}]
-[{cmd:,} {it:warn(warning_level)}]
+[{cmd:,} {it:warn(warning_level) onlynomiss}]
 
-{synoptset 10 tabbed}{...}
+{synoptset 12 tabbed}{...}
 {synopthdr}
 {synoptline}
 {synopt:{opt warn}} specifies below which value of the absolute mean warnings should be issued; if none is specified, {cmd:cv2} will assume .05{p_end}
+{synopt:{opt onlynomiss}} instructs {cmd:cv2} to only consider observations that have no missing values in any of the variables listed in {it:varlist}{p_end}
 {synoptline}
 {p2colreset}{...}
 
@@ -36,7 +37,7 @@
 {pstd}
 {cmd:cv2} automates the trivial task of calculating the coefficient of variation (CV) for each of a given list of variables.{p_end}
 
-{pstd}The CV is a measure of dispersion of a variable. It is defined as the variable's standard deviation divided by the mean. The CV is independent of the units of measurement and of the magnitude of the data. Consequently, it can be used to compare the variability of different variables. Of two variables, the variable with the smaller CV is less dispersed than the variable with the larger CV.
+{pstd}The CV (infrequently also referred to as the coefficient of relative variation, CRV) is a measure of dispersion of a variable. It is defined as the variable's standard deviation divided by the mean. The CV is independent of the units of measurement and of the magnitude of the data. Consequently, it can be used to compare the variability of different variables. Of two variables, the variable with the smaller CV is less dispersed than the variable with the larger CV.
 {p_end}
 
 {pstd}
@@ -44,7 +45,7 @@ Please note that the CV is only meaningful for ratio variables, i.e., variables 
 {p_end}
 
 {pstd}
-Please note that the CV is not defined for cases in which the mean is zero. The CV also takes on extreme values when the mean becomes very small. {cmd:cv2} will therefore issue warnings in such cases. Please also note that the CV can become negative if the mean value is negative. Again, {cmd:cv2} will issue a warning.
+Please note that the CV is not defined for cases in which the mean is zero. The CV also takes on extreme values when the mean becomes very small. {cmd:cv2} will therefore issue warnings in such cases. Please also note that the CV will become negative if the mean value is negative. Again, {cmd:cv2} will issue a warning.
 {p_end}
 
 {phang} {cmd:cv2} can be used with {helpb by}:{p_end}
@@ -63,6 +64,7 @@ Please note that the CV is not defined for cases in which the mean is zero. The 
 {title:References}
 
 {phang}Abdi, H. (2010). Coefficient of Variation. In N. J. Salkind (Ed.), {it: Encyclopedia of Research Design}, Vol. 1 (pp. 169-171), Thousand Oaks, CA: SAGE Publications.{p_end}
+{phang}Allison, P. D. (1978). Measures of Inequality. {it:American Sociological Review}, 43(6), 169-171.{p_end}
 
 {marker author}{...}
 {title:Author}

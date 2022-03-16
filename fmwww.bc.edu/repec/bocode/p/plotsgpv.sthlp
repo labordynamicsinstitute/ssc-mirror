@@ -21,30 +21,30 @@
 {cmdab:plotsgpv}
 [{help if}]
 [{help in}]
-{cmd:,} {opt estlo(string)} {opt esthi(string)} {opt nulllo(string)} {opt nullhi(string)}
+{cmd:,} {opt estlo(name)} {opt esthi(name)} {cmd:nulllo({it:{help plotsgpv##boundlist:boundlist}})} {cmd:nullhi({it:{help plotsgpv##boundlist:boundlist}})}
 [{it:options}]
 
 {synoptset 25 tabbed}{...}
 {synopthdr}
 {synoptline}
 {syntab:Main}
-{synopt:{opt estlo(string)}}  lower bound of interval estimate. 
+{synopt:{opt estlo(name)}}  lower bound of interval estimate. 
 {p_end}
-{synopt:{opt esthi(string)}}  upper bound of interval estimate. 
+{synopt:{opt eshi(name)}}  upper bound of interval estimate. 
 {p_end}
-{synopt:{opt nulllo(string)}}  lower bound of null interval.
+{synopt:{cmd:nulllo({it:{help plotsgpv##boundlist:boundlist}})}}  lower bound of null interval.
 {p_end}
-{synopt:{opt nullhi(string)}}  upper bound of null interval.
+{synopt:{cmd:nullhi({it:{help plotsgpv##boundlist:boundlist}})}}  upper bound of null interval.
 {p_end}
 
 {syntab:Colors}
-{synopt:{opt nullc:ol(string)}}  coloring of the null interval (indifference zone).
+{synopt:{opth nullc:ol(colorstyle:color)}}  coloring of the null interval (indifference zone).
 {p_end}
-{synopt:{opt intcol1(string)}} color of the interval according to SGPV ranking for SGPV = {it:0}. 
+{synopt:{opth intcol1:(colorstyle:color)}} color of the interval according to SGPV ranking for SGPV = {it:0}. 
 {p_end}
-{synopt:{opt intcol2(string)}} color of the interval according to SGPV ranking for {it:0} < SGPV < {it:1}. 
+{synopt:{opth intcol2:(colorstyle:color)}} color of the interval according to SGPV ranking for {it:0} < SGPV < {it:1}. 
 {p_end}
-{synopt:{opt intcol3(string)}} color  of the interval according to SGPV ranking for SGPV = {it:1}. 
+{synopt:{opth intcol3:(colorstyle:color)}} color  of the interval according to SGPV ranking for SGPV = {it:1}. 
 {p_end}
 
 {syntab:Titles}
@@ -73,7 +73,7 @@
 {p_end}
 {synopt:{opt replace}}  replace existing variables in case the nomata-option was used.
 {p_end}
-{synopt:{opt two:way_opt(string)}}  any additional options for the plotting go here. 
+{synopt:{opth two:way_opt(twoway_options:options)}}  any additional options for the plotting go here. 
 {p_end}
 {synoptline}
 {p2colreset}{...}
@@ -99,15 +99,20 @@ Typically the lower bound of a confidence interval can be used. A variable or ma
  Typically the upper bound of a confidence interval can be used. A variable or matrix containing the upper bound can be also used but then a variable/matrix containing the lower bounds must be also used for option {it:estlo}.
 
 {phang}
-{opt nulllo(string)}     lower bound of null interval.
+{cmd:nulllo({it:{help plotsgpv##boundlist:boundlist}})}     lower bound of null interval.
 
 {phang}
-{opt nullhi(string)}     upper bound of null interval.
+{cmd:nulllo({it:{help plotsgpv##boundlist:boundlist}})}     upper bound of null interval.
+
+{marker boundlist}{...}
+	A {it:boundlist} is:
+		# [# ...]
+		{help exp} [{help exp} ...]
 
 {marker colors}
 {dlgtab:Colors}
 {phang}
-{opt nullc:ol(string)}  coloring of the null interval (indifference zone). Default is the R-color "Hawkes Blue". You can see the color before plotting via 
+{opth nullc:ol(colorstyle:color)}  coloring of the null interval (indifference zone). Default is the R-color "Hawkes Blue". You can see the color before plotting via 
 {stata palette color 208 216 232 }.
 You can set the color to any other available color in Stata. See {helpb colorstyle} for more information.
 
@@ -122,13 +127,13 @@ You can see the default color(s) before plotting via:{p_end}
 {pstd}		
 {space 4}You can set the colors to any other available color in Stata. See {helpb colorstyle} for more information.{p_end}	
 {phang}
-{opt intcol1(string)}  color of the interval with the R-color "firebrick3" as the default for SGPV = {it:0}
+{opth intcol1:(colorstyle:color)}  color of the interval with the R-color "firebrick3" as the default for SGPV = {it:0}
 
 {phang}
-{opt intcol2(string)}  color of the interval with the R-color "cornflowerblue" as the default for {it:0} < SGPV < {it:1}
+{opth intcol2:(colorstyle:color)}  color of the interval with the R-color "cornflowerblue" as the default for {it:0} < SGPV < {it:1}
 
 {phang}
-{opt intcol3(string)}  color of the interval with the R-color "firebrick3" as the default for SGPV = {it:1}
+{opth intcol3:(colorstyle:color)}  color of the interval with the R-color "firebrick3" as the default for SGPV = {it:1}
 
 {dlgtab:Title options}
 {phang}
@@ -143,10 +148,10 @@ You can see the default color(s) before plotting via:{p_end}
 {marker further_options}
 {dlgtab:Further options}
 {phang}
-{opt noplotx:_axis}    deactive showing the x-axis.
+{opt noplotx:_axis}    deactivate showing the x-axis.
 
 {phang}
-{opt noploty:_axis}     deactive showing the y-axis.
+{opt noploty:_axis}     deactivate showing the y-axis.
 
 {phang}
 {opt noout:linezone}    deactivate drawing a slim white outline around the null zone. Helpful visual aid when plotting many intervals. Default is on.
@@ -178,8 +183,7 @@ Stata might become unresponsive when using Mata because it takes time to return 
 {opt replace}    replace existing variables in case the nomata-option was used.
 
 {phang}
-{opt two:way_opt(string)} any additional options for the plotting go here. 
-See {help twoway} for more information about the possible options. 
+{opth two:way_opt(twoway_opt:options)} any additional options for the plotting go here. 
 Options set here may override the values set in other options before.
 {p_end}
 
@@ -189,7 +193,7 @@ Options set here may override the values set in other options before.
 {pstd}
 {bf:Replicate the example plot from the R-code with the example dataset provided with this command:} 
 (If you did not already install the example dataset,
- then you can download it {net "describe sgpv, from(https://raw.githubusercontent.com/skbormann/stata-tools/master/)":here} together with the file {it:plotsgpv-leukemia-example.do} which helps you run the example in Stata. )
+ then you can download it {net "describe sgpv, from(https://raw.githubusercontent.com/skbormann/stata-tools/master/)":here} together with the file {it:plotsgpv-leukemia-example.do} which helps you run the example in Stata.)
 Run following the lines with the help of {stata do plotsgpv-leukemia-example.do}
 
 	{pstd}. sysuse leukstats ,clear {break}
