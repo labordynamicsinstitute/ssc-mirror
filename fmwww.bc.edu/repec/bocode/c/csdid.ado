@@ -310,7 +310,7 @@ program csdid_r, sortpreserve eclass
 							Level(int 95)			/// CI level
 							pointwise               /// with Wboot
 							from(int 0) 		    /// for aggregations
-							long                    /// to allow for "long gaps"
+							long long2              /// to allow for "long gaps"
 							dryrun					/// for testing
 							]  // This allows other estimators
 				
@@ -459,7 +459,7 @@ program csdid_r, sortpreserve eclass
 	tempvar cs_sample
 	qui:gen byte `cs_sample'=0
 ////////////////////////////////////////////////////////////////////////////////	
-	if "`long'"=="" {
+	if "`long'`long2'"=="" {
  		foreach i of local glev {		
 			local time1 = `time0'
 		    foreach j of local tlev {
@@ -479,7 +479,8 @@ program csdid_r, sortpreserve eclass
 								 & inlist(`time',`time1',`j') ///
 								 & `touse' [`weight'`exp'],   ///
 								ivar(`ivar') time(`time') treatment(`tr') ///
-								`method' stub(__) replace `dryrun'
+								`method' stub(__) replace `dryrun' binit(`bii' )
+					tempname bii
 					
 					
 					if _rc == 1 {
@@ -493,6 +494,8 @@ program csdid_r, sortpreserve eclass
 						qui:replace `cs_sample'=e(sample) if `cs_sample'==0		
 						qui:count if e(sample)==1 & `tr'==1
 						matrix `gtt'=nullmat(`gtt')\[`i',min(`time1',`j'),max(`time1',`j'),_rc,e(N),`=e(N)-r(N)',r(N)]
+						matrix `bii'=e(iptb)
+						*matrix list `bii'
 					}
 					if _rc!=0 {
 						local	bad bad
@@ -517,7 +520,7 @@ program csdid_r, sortpreserve eclass
 		}
 	}
 ////////////////////////////////////////////////////////////////////////////////	
-	if "`long'"!="" {
+	if "`long'`long2'"!="" {
 	** times goes from t0	
 	qui:levelsof `time' if `time'>=`time0' & `touse', local(tlev)
  		foreach i of local glev {		
@@ -545,8 +548,8 @@ program csdid_r, sortpreserve eclass
 								 & inlist(`time',`time1',`j') ///
 								 & `touse' [`weight'`exp'],   ///
 								ivar(`ivar') time(`time') treatment(`tr') ///
-								`method' stub(__) replace `dryrun'
-								
+								`method' stub(__) replace `dryrun' binit(`bii',skip)
+					tempname bii			
 											 
 					
 					if _rc == 1 {
@@ -560,6 +563,7 @@ program csdid_r, sortpreserve eclass
 						qui:replace `cs_sample'=e(sample) if `cs_sample'==0		
 						qui:count if e(sample)==1 & `tr'==1
 						matrix `gtt'=nullmat(`gtt')\[`i',min(`time1',`j'),max(`time1',`j'),_rc,e(N),`=e(N)-r(N)',r(N)]
+						matrix `bii'=e(iptb)
 					}
 					if _rc!=0 {
 						local	bad bad
@@ -575,8 +579,8 @@ program csdid_r, sortpreserve eclass
 						capture   confirm variable __att
 						if 	_rc==111	qui:      gen _g`i'_`time1'_`j'=.
 						else 		    ren __att     _g`i'_`time1'_`j'
-						local vlabrif `vlabrif' _g`i'_`time1'_`j'
-						local rifvar `rifvar' _g`i'_`time1'_`j'
+						local vlabrif `vlabrif'       _g`i'_`time1'_`j'
+						local rifvar `rifvar'         _g`i'_`time1'_`j'
 					}
 					else {
 						local colname `colname'  t_`j'_`time1'
@@ -584,6 +588,7 @@ program csdid_r, sortpreserve eclass
 						capture   confirm variable __att
 						if 	_rc==111	qui:      gen _g`i'_`j'_`time1'=.
 						else 		    ren __att     _g`i'_`j'_`time1'
+						if "`long2'"!="" qui:replace _g`i'_`j'_`time1'=-_g`i'_`j'_`time1'
 						local vlabrif `vlabrif' _g`i'_`j'_`time1'
 						local rifvar `rifvar' 	_g`i'_`j'_`time1'
 					}
