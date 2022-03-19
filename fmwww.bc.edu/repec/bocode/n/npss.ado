@@ -34,6 +34,14 @@ program define npss, rclass
 		
 		di "  Combining the two graphs together"
 		graph combine FU FV, name(Combined, replace)
+		
+		matrix colnames `estU' = fV U
+		matrix colnames `estV' = fV V
+	
+		return scalar N = `N'
+		return matrix V = `estV'
+		return matrix U = `estU'
+		return local cmd "npss"
 	}
 	 
 	if "`skedastic'" != "" {
@@ -58,17 +66,16 @@ program define npss, rclass
 		
 		di "  Combining the three graphs together"
 		graph combine FU FV SKED, name(Combined, replace)
+		matrix colnames `estU' = fV U
+		matrix colnames `estV' = fV V
+		matrix colnames `estS' = sigmaU U
+	
+		return scalar N = `N'
+		return matrix S = `estS'
+		return matrix V = `estV'
+		return matrix U = `estU'
+		return local cmd "npss"
 	}
-	
-	matrix colnames `estU' = fV U
-	matrix colnames `estV' = fV V
-	matrix colnames `estS' = sigmaU U
-	
-    return scalar N = `N'
-	return matrix S = `estS'
-	return matrix V = `estV'
-	return matrix U = `estU'
-    return local cmd "npss"
 end
 
 		

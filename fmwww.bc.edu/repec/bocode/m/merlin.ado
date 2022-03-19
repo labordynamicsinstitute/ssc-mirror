@@ -1,7 +1,10 @@
-*! version 2.1.4 22feb2022 MJC
+*! version 2.1.5 18mar2022 MJC
 
 /*
 History
+18mar2022 version 2.1.5 - bug fix; family(rp,...) models could error out when 
+                          element interactions were specified and the number of 
+                          basis functions created was >1. Now fixed.
 22feb2022 version 2.1.4 - bug fix; multivariate gaussian or poisson models would 
                           show an indexing error when they had different numbers 
                           of observations per outcome - now fixed

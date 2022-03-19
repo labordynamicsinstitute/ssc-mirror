@@ -1,4 +1,4 @@
-*! ivhettest 1.1.9  15Aug2013
+*! ivhettest 1.1.10 18mar2022
 *! author mes
 * Implements Pagan-Hall (1983) heteroskedasticity tests for IV plus related statistics.
 * Notation largely follows White (1982).
@@ -13,16 +13,18 @@
 * 1.1.7   Re-refined trap to catch usage of partial as well as fwl
 * 1.1.8   Fixed bug in re-refined [sic] trap
 * 1.1.9   Fixed bug in handling varnames that had "_cons" in them
+* 1.1.10  Enabled use after ivreg2h
 
 program define ivhettest, rclass
 	version 7.0
-	local version 1.1.9
+	local version 1.1.10
 
 	syntax [varlist(default=none)] [if] [in] [, ivlev ivsq ivcp fitlev fitsq /*
 		*/ ph phnorm phsym nr2 bpg all ] 
 
 	if "`e(cmd)'" != "ivreg" & "`e(cmd)'" != "ivreg2" & "`e(cmd)'" != "ivreg28" /*
-		*/ & "`e(cmd)'" != "ivreg29" & "`e(cmd)'" != "ivgmm0" & "`e(cmd)'" != "regress" {
+		*/ & "`e(cmd)'" != "ivreg29" & "`e(cmd)'" != "ivgmm0" & "`e(cmd)'" != "regress" ///
+		& "`e(cmd)'" != "ivreg2h" {
 		error 301
 	}
 	if "`e(fwl1)'`e(partial)'" != "" | "`e(fwlcons)'`e(partialcons)'"=="1" {

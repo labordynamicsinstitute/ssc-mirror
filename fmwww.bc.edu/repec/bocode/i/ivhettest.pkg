@@ -1,6 +1,6 @@
 d 'IVHETTEST': module to perform Pagan-Hall and related heteroskedasticity tests after IV 
 d
-d ivhettest performs various flavors of Pagan and Hall's (1983) 
+d  ivhettest performs various flavors of Pagan and Hall's (1983) 
 d tests of heteroskedasticity for instrumental variables (IV)
 d estimation.  It will also perform the related standard
 d heteroskedasticity tests of  Breusch-Pagan, Godfrey,
@@ -19,11 +19,10 @@ d KW: heteroskedasticity
 d
 d Requires: Stata version 7.0
 d
+d Distribution-Date: 20220318
 d
 d Author: Mark E Schaffer, Heriot-Watt University
 d Support: email m.e.schaffer@@hw.ac.uk
-d
-d Distribution-Date: 20130816
 d
 f ivhettest.ado
 f ivhettest.hlp
