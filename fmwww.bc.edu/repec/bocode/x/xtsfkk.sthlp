@@ -1,4 +1,5 @@
 {smcl}
+{* *! version 2.0.2  03mar2022}{...}
 {* *! version 2.0.1  10jun2021}{...}
 {* *! version 2.0.0  08dec2020}{...}
 {* *! version 1.1.0  12jun2019}{...}
@@ -550,7 +551,7 @@ Kutlu, Levent (2010) "Battese–Coelli Estimator with Endogenous Regressors."
 
 {title:Acknowledgments}
 
-{pstd}I would like to thank Levent Kutlu, Isabel Canette, Ben Jann, and Kit Baum for their amazing support.
+{pstd}I would like to thank Levent Kutlu, Hung-Jen Wang, Isabel Canette, Joerg Luedicke, Ben Jann, Jan Ditzen, Kit Baum, and an anonymous referee for their great support.
 
 
 {title:Disclaimer}

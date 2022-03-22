@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 3.2.3 1 June 2021}{...}
+{* *! version 4.0.0 18 March 2022}{...}
 {help boottest:boottest}
 {hline}{...}
 
@@ -67,6 +67,8 @@ individual constraint expression must conform to the syntax for {help constraint
 {synopt:{cmdab:matsize:gb(#)}}set maximum size of wild weight matrix, in gigabytes{p_end}
 {synopt:{opt qui:etly}}suppress display of null-imposed estimate; relevant after ML estimation{p_end}
 {synopt:{opt cmd:line(string)}}provide estimation command line; needed only after custom ML estimation{p_end}
+{synopt:{opt julia}}use the Julia implementation for speed in hard problems{p_end}
+{synopt:{opt float(#)}}For Julia only, override default numerical precision (32- instead of 64-bit){p_end}
 {synopt:{cmd:h0}({it:{help estimation options##constraints():constraints}}{cmd:)}}({it:deprecated}) specify linear hypotheses stored as constraints; default is "1" if {it:indeplist} empty{p_end}
 {synoptline}
 {p2colreset}{...}
@@ -104,15 +106,18 @@ hypothesis, a confidence set is derived:
 
 {title:Updates}
 
-{p 2 4 0}* Since the publication of Roodman et al. (2019), {cmd:boottest} has gained two significant features. The first is the option to perform the bootstrap-c,
+{p 2 4 0}* Since the publication of Roodman et al. (2019), {cmd:boottest} has gained three significant features. The first is the option to perform the bootstrap-c,
 which bootstraps the distribution of the {it:coefficient(s)} of interest (or linear combinations thereof) rather t/z/F/chi2 statistics. Standard theory favors the latter, 
-but Young (2019) presents evidence that the bootstrap-c (or "non-studentized" test) is more reliable, at least in instrumental variables estimation. And theory and simulation in
+but Young (2022) presents evidence that the bootstrap-c (or "non-studentized" test) is at least as reliable in instrumental variables estimation. And theory and simulation in
 Wang (2021) favors the non-studentized test when instruments are weak (but strong in at least one cluster). The option 
 {cmdab:stat:istic(c)} invokes the feature.
 
 {p 2 4 0}* The second major new feature is the {cmdab:marg:ins} option, which allows you to bootstrap results from the {cmd:margins} command. To use this feature,
 run {cmd:boottest} immediately after {cmd:margins} and do not include any hypotheses before the comma in the {cmd:boottest} command line. {cmd:boottest} will treat
 each marginal effect separately.
+
+{p 2 4 0}* The third new feature is the ability, in Stata 16 and higher, to use a faster implementation written in the free programming language Julia. Where {cmd:boottest} is already fast,
+this option is useless. But for computationally intensive applications, the {cmd:julia} option can improve performance by an order of magnitude. See {help boottest##julia:{it:Using Julia}}.
 
 {p 2 4 0}* Version 2.0.6 of {cmd:boottest}, released in May 2018, introduced two changes that can slightly affect results. The default for {opt r:eps(#)}
 is now 999 instead of 1000. And in computing percentiles in the bootstrap distribution, ties are no longer (half-)counted. 
@@ -160,14 +165,14 @@ computationally prohibitive with many ML-based estimators.
 WRE may also be used to bootstrap the Anderson-Rubin (1949) test, which is itself a Wald test based on an auxilliary OLS regression 
 (Baum, Schaffer, and Stillman 2007, p. 491). The score bootstrap, as its name suggests, is best seen as bootstrapping the Rao score/LM test.
 
-{pstd} All of these tests may be considered bootstrap-t tests in that they simulate the distribution of pivotal quantities--t, z, F, or chi2 statistics. That means that for each
+{pstd}All of these tests may be considered bootstrap-t tests in that they simulate the distribution of pivotal quantities--t, z, F, or chi2 statistics. That means that for each
 replication, the algorithm computes the numerator and denominator of the statistic of interest, then determines the quantile of the ratio from the original sample in this simulated
 distribution. In contrast, the bootstrap-c uses the same bootstrap data-generating processes to simulate only the numerators--i.e., coefficients or linear 
 combinations thereof. From the bootstrap numerators, the bootstrap-c algorithm then computes a single covariance matrix for use in all the statistics. For one-dimensional hypotheses,
 dividing the test statistic numerator and its bootstrap replications by this universal denominator has no substantive effect; but it is needed for higher-dimensional hypothesis in order
 to norm the numerators, which are vectors. Under standard asumptions, the
 bootstrap-t, unlike the bootstrap-c, offers {it:asymptotic refinement}, more-rapid convergence to the true distribution. But Young (2019) and Wang (2021) provide evidence
-that in instrumental variables estimation, the bootstrap-c is more reliable, at least, perhaps, when instruments are weak. {cmd:boottest} offers both through the {cmdab:stat:istic()} option, {cmd:stat(t)} being the default.
+that in instrumental variables estimation, the bootstrap-c is at least as reliable. {cmd:boottest} offers both through the {cmdab:stat:istic()} option, {cmd:stat(t)} being the default.
 
 {p 4 6 0}
 If one instructs {cmd:boottest} to generate zero bootstrap replications ({cmd:reps(0)}), then, depending on the bootstrap chosen and whether {cmd:ar} is specified, it will default to:
@@ -265,7 +270,7 @@ it improves theoretically on the normal, having third moment equal to 1 as well.
 
 {pstd}
 Despite the seeming superiority of the asymmetric Mammen and gamma distributions, symmetric distributions such as the Rademacher and Webb have performed better
-in Monte Carlo simulations, in the sense of yielding tests of more accurate size (Davidson and Flachaire 2008; Kline and Santos 2012; Finlay and Magnusson 2014).
+in Monte Carlo simulations, in the sense of yielding tests of more accurate size (Davidson and Flachaire 2008; Kline and Santos 2012; Finlay and Magnusson 2019).
 
 {pstd}
 The {opt r:eps(#)} option sets the number of bootstrap replications. 999 is the default but values of 9999 and higher are often feasible. Since bootstrapping
@@ -410,9 +415,54 @@ directly with Stata's {cmd:ml model} command, perhaps with a custom likelihood e
 to pass the estimation command line manually. If you run {cmd:ml} in interactive mode, with a separate {cmd:ml max} call, pass the earlier {cmd:ml model} command line;
 {cmd:boottest} will automatically append a {cmd:maximize} option to it. An example appears below.
 
+{phang}{opt julia} requests the use of the Julia implementation, which can be much faster for hard problems. See {help boottest##julia:{it:Using Julia}}.
+
+{phang}{opt float(#)} specifies the numerical precision of computation when using Julia. May be {cmd:float(32)} or the default {cmd:float(64)}. {cmd:float(32)}--single-precision--will
+often arrive at same results in less time. However, when estimation needs high precision, such as when regressors are nearly collinear, {cmd:float(32)} can cause {cmd:boottest}
+to misestimate the base regression. To check this possibility, compare the test statistic reported by {cmd:boottest} to the corresponding result from {cmd:test}.
+You may need to take the square root of an {it:F} or chi2 statistic from {cmd:test} and compare it to a {it:t} or {it:z} statistic from {cmd:boottest}.
+
 {phang}
 {cmd:h0}({it:{help estimation options##constraints():constraints}}{cmd:)} (deprecated) specifies the numbers of the stored constraints that jointly express
 the null. The argument is a {help numlist}, so it can look like "1 4" or "2/5 6 7". The default is "1". 
+
+
+{marker julia}
+{title:Using Julia}
+
+{pstd}{cmd:boottest} has two back ends: one written in Stata's Mata language, which is the default; and one written in Julia, which is requested through
+the {cmd:julia} option. Results from the two will usually not match exactly since they use different random number generators; but they should converge
+as the number of bootstrap replications rises.
+
+{pstd}The Julia implementation is usually an order of magnitude faster, once it gets going. But it comes with significant overhead. The first time it is run within a Stata session,
+or the first time run a new kind of test is run within the session, such as the WCR after OLS or the WRE after 2SLS, 15-20 seconds may pass while code is 
+compiled: Julia uses just-in-time compilation. In addition, on each invocation, data is temporarily copied from Stata to Julia. If {cmd:boottest}
+already feels fast in your applications, the {cmd:julia} option will probably not improve your life.
+
+{pstd}However, for hard problems, such as ones involving the subcluster bootstrap, or multiway clustering in which all-cluster intersections are numerous, the Julia implementation
+can be much faster.
+
+{pstd}To use the Julia back end, you need to install several things. Because there is no direct software channel between Stata and Julia, {cmd:boottest} makes the 
+connection by way of Python. The requirements list may therefore look intimidating. But set-up should be straightforward! The requirements:
+
+{p 4 6 0}
+* Stata 16 or newer.
+
+{p 4 6 0}
+* {browse "https://www.python.org/downloads/":Python} (free), with Stata {browse "https://blog.stata.com/2020/08/18/stata-python-integration-part-1-setting-up-stata-to-use-python/":configured to use it}.
+
+{p 4 6 0}
+* Julia 1.7.0 or newer (free), {browse "https://julialang.org/downloads/platform":installed so that it is accessible through the system path}.
+
+{p 4 6 0}
+* Packages {browse "https://numpy.org/install":NumPy} and
+{browse "https://pyjulia.readthedocs.io/en/stable/installation.html":PyJulia} for Python and {browse "https://github.com/JuliaRandom/StableRNGs.jl":StableRNGs} 
+and {browse "https://github.com/droodman/WildBootTests.jl":WildBootTests} for Julia (all free). {cmd:boottest} should automatically install these when needed.
+
+{pstd}The creators of Julia {browse "https://docs.julialang.org/en/v1.7/stdlib/Random/":do not guarantee} that the built-in algorithms for generating random numbers will
+remain unchanged as Julia changes. To guarantee replicability of results, {cmd:boottest} therefore relies on the 
+{browse "https://github.com/JuliaRandom/StableRNGs.jl":StableRNGs} package, which does make this guarantee. For the same reason, on each call, {cmd:boottest} initializes 
+the Julia StableRNG with a seed extracted from the Stata random-number generator (RNG), so that seeding the Stata RNG will deterministically seed the Julia one.
 
 
 {title:Stored results}
@@ -593,7 +643,8 @@ derivatives. {it:Advances in Engineering Software} 28(3): 145-49.{p_end}
 {p 4 8 2}Davidson, R., and E. Flachaire. 2008. The wild bootstrap, tamed at last. {it:Journal of Econometrics} 146: 162-69.{p_end}
 {p 4 8 2}Davidson, R., and J.G. MacKinnon. 1999. The size distortion of bootstrap tests. {it:Econometric Theory} 15: 361-76.{p_end}
 {p 4 8 2}Davidson, R., and J.G. MacKinnon. 2010. Wild bootstrap tests for IV regression. {it:Journal of Business & Economic Statistics} 28(1): 128-44.{p_end}
-{p 4 8 2}Finlay, K., and L. Magnusson. 2014. Bootstrap Methods for Inference with Cluster Sample IV Models. DOI: 10.2139/ssrn.2574521.{p_end}
+{p 4 8 2}Finlay, K., and L. Magnusson. 2019. Two applications of wild bootstrap methods to improve
+inference in cluster-IV models. DOI: 10.1002/jae.2710.{p_end}
 {p 4 8 2}Fisher, N.I., and P. Hall. 1990. On bootstrap hypothesis testing. {it:Australian Journal of Statistics} 32(2): 177-90.{p_end}
 {p 4 8 2}Kline, P., and Santos, A. 2012. A score based approach to wild bootstrap 
 inference. {it:Journal of Econometric Methods} 1(1): 23-41.{p_end}
@@ -610,4 +661,4 @@ large. {it:Transactions of the American Mathematical Society} 54: 426-82.{p_end}
 {p 4 8 2}Webb, M.D. 2014. Reworking wild bootstrap based inference for clustered errors. Queen's Economics Department Working Paper No. 1315.{p_end}
 {p 4 8 2}Wu, C.F.J. 1986. Jackknife, bootstrap and other resampling methods in regression analysis (with discussions). {it:Annals of Statistics}
 14: 1261-1350.{p_end}
-{p 4 8 2}Young, A. 2019. Consistency without inference: instrumental variables in practical applications. https://personal.lse.ac.uk/YoungA/ConsistencyWithoutInference.pdf.{p_end}
+{p 4 8 2}Young, A. 2022. Leverage, heteroskedasticity and instrumental variances in practical application. https://personal.lse.ac.uk/YoungA/Leverage&IV.pdf.{p_end}

@@ -22,10 +22,10 @@ d KW: cost frontier
 d
 d Requires: Stata version 15 and estout from SSC (q.v.)
 d
-d Distribution-Date: 20210614
+d Distribution-Date: 20220321
 d
-d Author: Mustafa Ugur Karakaplan, 	Georgetown University
-d Support: email mukarakaplan@@yahoo.com
+d Author: Mustafa Ugur Karakaplan, 	Stanford University
+d Support: email karakaplan@@stanford.edu
 d
 f xtsfkk.ado
 f xtsfkk.sthlp

@@ -1,5 +1,5 @@
-*! boottest 3.2.5 6 November 2021
-*! Copyright (C) 2015-21 David Roodman
+*! boottest 4.0.2 18 March 2022
+*! Copyright (C) 2015-22 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -15,6 +15,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 *! Version history at bottom
+
 
 cap program drop boottest
 program define boottest
@@ -41,7 +42,7 @@ cap program drop _boottest
 program define _boottest, rclass sortpreserve
 	version 11
 
-	local   cmd = cond(substr("`e(cmd)'", 1, 6)=="ivreg2", "ivreg2", "`e(cmd)'")
+	local   cmd = cond(substr("`e(cmd)'", 1, 6)=="ivreg2" | ("`e(cmd)'"=="ivreghdfe" & "`e(extended_absvars)'"==""), "ivreg2", "`e(cmd)'")
 	local ivcmd = cond(inlist("`cmd'","reghdfe","ivreghdfe"), cond("`e(model)'"=="iv", "ivreg2", ""), cond("`cmd'"=="xtivreg2", "ivreg2", "`cmd'"))
 
 	if "`e(cmd)'" == "" {
@@ -69,15 +70,16 @@ program define _boottest, rclass sortpreserve
 		exit 198
 	}
 	if inlist("`cmd'","reghdfe","ivreghdfe") {
-		if `:word count `e(extended_absvars)''>1 {
+    fvunab absvars: `e(extended_absvars)'
+		if `:word count `absvars''>1 {
 			di as err "Doesn't work after {cmd:`cmd'} with more than one set of absorbed fixed effects or with absorbed interaction terms."
 			exit 198
 		}
-		cap _fv_check_depvar `e(extended_absvars)'
-		if _rc {
-			di as err "Doesn't work after {cmd:`cmd'} with absorbed interaction terms."
+		if strpos("`absvars'", "c.") {
+			di as err "Doesn't work after {cmd:`cmd'} with absorbed interaction terms containing slopes."
 			exit 198
 		}
+    else local absvars = subinstr(subinstr("`absvars'", "#", " ", .), "i.", "", .)
 	}
 	if inlist("`cmd'", "sem", "gsem") & c(stata_version) < 14 {
 		di as err "Requires Stata version 14.0 or later to work with {cmd:`e(cmd)'}."
@@ -95,12 +97,110 @@ program define _boottest, rclass sortpreserve
 
 	tokenize `"`0'"', parse(",")
 	if `"`1'"' != "," {
-		local h0s `h0s' `1'
+		local h0s `1'
 		macro shift
 	}
 	local 0 `*'
 	syntax, [h0(numlist integer >0) Reps(integer 999) seed(string) BOOTtype(string) CLuster(string) Robust BOOTCLuster(string) noNULl QUIetly WEIGHTtype(string) Ptype(string) STATistic(string) NOCI Level(real `c(level)') NOSMall SMall SVMat ///
-						noGRaph gridmin(string) gridmax(string) gridpoints(string) graphname(string asis) graphopt(string asis) ar MADJust(string) CMDline(string) MATSIZEgb(integer 1000000) PTOLerance(real 1e-6) svv MARGins *]
+						noGRaph gridmin(string) gridmax(string) gridpoints(string) graphname(string asis) graphopt(string asis) ar MADJust(string) CMDline(string) MATSIZEgb(integer 1000000) PTOLerance(real 1e-6) svv MARGins ///
+            issorted julia float(integer 64) *]
+
+  if "`julia'" != "" & !0$boottest_julia_loaded {
+    if c(stata_version) < 16 {
+      di as err "The {cmd:julia} option requires Stata 16 or higher."
+      exit 198
+    }
+
+    if `"`c(python_exec)'"' == "" {
+      di as err "The {cmd:julia} option requires that Python be installed and Stata be configured to use it."
+      di as err `"See {browse "https://blog.stata.com/2020/08/18/stata-python-integration-part-1-setting-up-stata-to-use-python":instructions}."'
+      exit 198
+    }
+
+    qui python query
+    local pipline = "!py" +  cond(c(os)=="Windows","","thon"+substr("`r(version)'",1,1)) + " -m pip install --user"  // https://packaging.python.org/en/latest/tutorials/installing-packages/#use-pip-for-installing
+    python: from sfi import Data, Matrix, Missing, Scalar, Macro
+
+    cap python: import julia
+    if _rc {
+      di "Installing PyJulia..."
+      `pipline' julia
+      cap python: import julia; julia.install(color=False)
+    }
+    if _rc {
+      di as err _n "The {cmd:julia} option requires the Python package PyJulia. Unable to install it automatically."
+      di as err `"You can install it {browse "https://pyjulia.readthedocs.io/en/stable/installation.html":manually}."'
+      exit 198
+    }
+
+    cap python: import numpy as np
+    if _rc {
+      di "Installing NumPy..."
+      `pipline' numpy
+      cap python: import numpy as np
+      if _rc {
+        di as err _n "The {cmd:julia} option requires the Python package NumPy. Unable to install it automatically."
+        di as err `"You can install it {browse "https://numpy.org/install":manually}."'
+        exit 198
+      }
+    }
+
+    cap python: from julia import Main, Random, Pkg
+    if _rc {
+      cap python: julia.install(color=False); from julia import Main, Random, Pkg
+      if _rc {
+        di as err _n "Could not automatically initialize the PyJulia package."
+        di as err `"Perhaps {browse "https://pyjulia.readthedocs.io/en/latest/installation.html#install-pyjulia":these instructions} will help."'
+        exit 198
+      }
+    }
+    qui python: Scalar.setValue("rc", Main.eval('VERSION < v"1.7.0"')) 
+    if 0`rc' {
+      di as err _n "The {cmd:julia} option requires that Julia 1.7 or higher be installed and accessible by default through the system path."
+      di as err `"Follow {browse "https://julialang.org/downloads/platform":these instructions} for installing it and adding it to the system path."'
+      exit 198
+    }
+
+    qui python: Main.eval('using Pkg; p=[v for v in values(Pkg.dependencies()) if v.name=="WildBootTests"]')
+    python: Macro.setLocal("rc", str(Main.eval('length(p)')))
+    if `rc'==0 {
+      di "Installing WildBootTests.jl..."
+      cap python: Pkg.add("WildBootTests")
+      if _rc {
+        di as err _n "Failed to automatically install the Julia package WildBootTests.jl."
+        di as err `"You should be able to install it by running Julia and typing {cmd:using Pkg; Pkg.add("WildBootTests")}."'
+        exit 198
+      }
+    }
+    else {
+      python: Macro.setLocal("rc", str(Main.eval('p[1].version < v"0.7.8"')))
+      if "`rc'" == "True" {
+        di "Upgrading WildBootTests.jl..."
+        cap python: Pkg.update("WildBootTests")  // hard-coded version requirement
+        if _rc {
+          di as err _n "Failed to automatically update the Julia package WildBootTests.jl."
+          di as err `"You should be able to update it by running Julia and typing {cmd:using Pkg; Pkg.update("WildBootTests")}."'
+          exit 198
+        }
+      }
+    }
+
+    qui python: Main.eval('using Pkg; p=[v for v in values(Pkg.dependencies()) if v.name=="StableRNGs"]')
+    python: Macro.setLocal("rc", str(Main.eval('length(p)')))
+    if `rc'==0 {
+      di "Installing StableRNGs.jl..."
+      cap python: Pkg.add("StableRNGs")
+      if _rc {
+        di as err _n "Failed to automatically install the Julia package StableRNGs."
+        di as err `"This should be installable from within Julia by typing {cmd:using Pkg; Pkg.add("StableRNGs")}."'
+        exit 198
+      }
+    }
+// python:Main.eval('pushfirst!(LOAD_PATH,raw"D:\OneDrive\Documents\Macros\WildBootTests.jl")')
+    python: from julia import WildBootTests, StableRNGs
+    python: rng = StableRNGs.StableRNG(0)  // create now; properly seed later
+    global boottest_julia_loaded 1
+  }
 
   if "`small'" != "" & "`nosmall'" != "" {
     di as err "{cmd:small} and {cmd:nosmall} options conflict."
@@ -237,7 +337,7 @@ program define _boottest, rclass sortpreserve
 	local LIML = ("`cmd'"=="ivreg2" & "`e(model)'"=="liml") | ("`cmd'"=="ivregress" & "`e(estimator)'"=="liml")| (inlist("`cmd'","reghdfe","ivreghdfe") & strpos("`e(title)'", "LIML"))
 	local WRE = `"`boottype'"'!="score" & `IV' & `reps'
 	local small = (e(df_r) != . | "`small'" != "" | e(cmd)=="cgmreg") & "`nosmall'"==""
-  local partial = 0`e(partial_ct)' & "`e(cmd)'"=="ivreg2"
+  local partial = `:word count `e(partial1)'' & inlist("`e(cmd)'", "ivreg2", "ivreghdfe")
 	local fuller `e(fuller)'  // "" if missing
 	local K = e(kclass)  // "." if missing
 
@@ -285,22 +385,24 @@ program define _boottest, rclass sortpreserve
               cond("`cmd'"=="areg", 1+e(df_a),                            ///
                    max(0`e(K1)', 0`e(df_a_initial)'))))  // reghdfe
 
-  local _FEname = cond(inlist("`cmd'","xtreg","xtivreg","xtivreg2"), "`e(ivar)'", cond(`DID', "`e(clustvar)'", "`e(absvar)'`e(extended_absvars)'"))
+  local _FEname = cond(inlist("`cmd'","xtreg","xtivreg","xtivreg2"), "`e(ivar)'", cond(`DID', "`e(clustvar)'", "`e(absvar)'`absvars'"))
   if `"`_FEname'"' != "" {
     cap confirm numeric var `_FEname'
-    if _rc {
+    if _rc | `:word count `_FEname' > 1' {
       tempvar FEname
       qui egen long `FEname' = group(`_FEname') if e(sample)
     }
     else local FEname `_FEname'
   }
 
-  local FEdfadj = !inlist("`cmd'","xtreg","xtivreg","xtivreg2","xtdidregress")  // these commands don't count time FE in DOF adjustment
-  if "`cmd'" == "xtreg" {  // exception: xtreg, fe dfadj. https://stata.com/statalist/archive/2013-01/msg00540.html
+  if "`cmd'" == "xtreg" {
     local 0 `e(cmdline)'
     syntax [anything] [if] [in] [fw aw pw iw], [dfadj *]
-    local FEdfadj = "`dfadj'" != ""
+    local FEdfadj = ("`dfadj'" != "") * `NFE'
   }
+  else if inlist("`cmd'","xtivreg","xtivreg2","xtdidregress") local FEdfadj 0
+  else if inlist("`cmd'", "reghdfe", "ivreghdfe") local FEdfadj = 1 + e(df_a)
+  else local FEdfadj `NFE'
 
 	if `"`seed'"'!="" set seed `seed'
 
@@ -397,9 +499,12 @@ program define _boottest, rclass sortpreserve
 		if `IV' {
 			local Xnames_endog `e(instd)'
 			local Xnames_exog: list colnames - Xnames_endog
-			local cons = inlist("`cmd'`e(cons)'`e(constant)'", "ivreg21", "ivregress") | e(partialcons)
-			local ZExclnames `e(insts)'
-			local ZExclnames: list ZExclnames - Xnames_exog
+			local cons = inlist("`cmd'`e(cons)'`e(constant)'", "ivreg21", "ivregress") | e(partialcons)==1
+			if "`cmd'"=="ivreg2" | "`e(cmd)'"=="ivreghdfe" local ZExclnames `e(exexog1)'
+      else {
+        local ZExclnames `e(insts)'
+        local ZExclnames: list ZExclnames - Xnames_exog
+      }
 		}
 		else {
 			local Xnames_exog: colnames e(b)
@@ -417,13 +522,14 @@ program define _boottest, rclass sortpreserve
 		local colnames `_cons' `Xnames_exog' `Xnames_endog'
 
 		foreach varlist in Xnames_exog Ynames Xnames_endog ZExclnames {
+      fvrevar ``varlist'' if e(sample)
+      local revarlist `r(varlist)'
 			local _revarlist
 			forvalues i=1/`:word count ``varlist''' {
 				local var: word `i' of ``varlist''
-				_ms_parse_parts `var'
+        _ms_parse_parts `var'
 				if !r(omit) {
-        	fvrevar `:word `i' of ``varlist''' if e(sample)
-					local _revarlist `_revarlist' `r(varlist)'
+					local _revarlist `_revarlist' `: word `i' of `revarlist''
 					if inlist("`varlist'", "Xnames_exog", "Xnames_endog") {
 						local pos: list posof "`var'" in colnames
 						if `pos' mat `keepC' = nullmat(`keepC'), `pos'
@@ -445,8 +551,7 @@ program define _boottest, rclass sortpreserve
 		if `cons' local Xnames_exog `hold' `Xnames_exog'  // add constant term
 	}
 
-	local Nclustvars: word count `clustvars'
-
+	local NErrClustVar : word count `clustvars'
 	if `hasclust' {
 		if 0`override' {
 			cap assert !missing(`:subinstr local clustvars " " ",", all') if e(sample), `=cond(c(stata_version)>=12.1, "fast", "")'
@@ -458,16 +563,15 @@ program define _boottest, rclass sortpreserve
 
 		if `"`bootcluster'"' == "" {
 			local bootcluster `clustvars'
-			if `reps' & `Nclustvars'>1 di as txt "({cmdab:bootcl:uster(`clustvars')} assumed)"
+			if `reps' & `NErrClustVar'>1 di as txt "({cmdab:bootcl:uster(`clustvars')} assumed)"
 		}
 		local    clustvars `:list clustvars & bootcluster' `:list clustvars - bootcluster'
 		local allclustvars `:list bootcluster - clustvars' `clustvars' // put bootstrapping clusters first, error clusters last, overlap in middle
 
-		sort `clustvars' `:list bootcluster - clustvars', stable  // bootstrapping-only clusters left out of this sort. Effect is that in subcluster bootstrap, bootstrapping clusters are intersections of all clusterings
+		if "`issorted'"=="" sort `clustvars' `:list bootcluster - clustvars', stable  // bootstrapping-only clusters left out of this sort. Effect is that in subcluster bootstrap, bootstrapping clusters are intersections of all clusterings
 
 		foreach clustvar in `allclustvars' {
-			cap confirm numeric var `clustvar'
-			if _rc {
+			if !inlist("`:type `clustvar''", "byte", "int", "long") {
 				tempvar IDname
 				qui egen long `IDname' = group(`clustvar') if e(sample)
 				local _allclustvars `_allclustvars' `IDname'
@@ -476,6 +580,7 @@ program define _boottest, rclass sortpreserve
 		}
 		local allclustvars `_allclustvars'
 	}
+  local NBootClustVar: word count `bootcluster'
 
 	forvalues h=1/`N_h0s' { // loop over multiple independent constraints
     if `margins' mat `R' = `marginsH0'[`h', 1...]
@@ -554,6 +659,8 @@ program define _boottest, rclass sortpreserve
 					di as err "{cmd:`option'()} option needs " cond(`df'==1, "one entry", "two entries")
 					exit 199
 				}
+        tempname `option'vec
+        mata st_matrix("``option'vec'", strtoreal(tokens("``option''"))) 
 			}
 		}
 
@@ -624,6 +731,7 @@ program define _boottest, rclass sortpreserve
 					mat `b0' = e(b)
 					cap `=cond("`cmd'"=="tobit", "version 15:", "")' `anything' if e(sample), `=cond(inlist("`cmd'","cmp","ml"),"init(`b0')","from(`b0',skip)")' iterate(0) `options' `max'
 					local rc = _rc
+          mat drop `b0'
 				}
 				if `rc' {
 					di as err "Error imposing null. Perhaps {cmd:`cmd'} does not accept the {cmd:constraints()}, {cmd:from()}, and {cmd:iterate()} options, as needed."
@@ -693,20 +801,98 @@ program define _boottest, rclass sortpreserve
 			}
 		}
 
-		return local seed = cond("`seed'"!="", "`seed'", "`c(seed)'")
-
     cap confirm var `hold'
     if _rc {
       di as err "Sample marker for the regression not found. Perhaps the data set was cleared and reconstructed."
       exit _rc
     }
 
-		mata boottest_stata("`teststat'", "`df'", "`df_r'", "`p'", "`padj'", "`cimat'", "`plotmat'", "`peakmat'", `level', `ptolerance', ///
-                        `ML', `LIML', 0`fuller', `K', `ar', `null', `scoreBS', "`weighttype'", "`ptype'", "`statistic'", ///
-												"`madjust'", `N_h0s', "`Xnames_exog'", "`Xnames_endog'", ///
-												"`Ynames'", "`b'", "`V'", "`ZExclnames'", "`hold'", "`scnames'", `hasrobust', "`allclustvars'", `:word count `bootcluster'', `Nclustvars', ///
-												"`FEname'", 0`NFE', `FEdfadj', "`wtname'", "`wtype'", "`R1'", "`r1'", "`R'", "`r'", `reps', "`repsname'", "`repsFeasname'", `small', "`svmat'", "`dist'", ///
-												"`gridmin'", "`gridmax'", "`gridpoints'", `matsizegb', "`quietly'"!="", "`b0'", "`V0'", "`svv'", "`NBootClustname'")
+    return local seed = cond("`seed'"!="", "`seed'", "`c(seed)'")
+
+    if "`julia'"=="" {
+
+      mata boottest_stata("`teststat'", "`df'", "`df_r'", "`p'", "`padj'", "`cimat'", "`plotmat'", "`peakmat'", `level', `ptolerance', ///
+                          `ML', `LIML', 0`fuller', `K', `ar', `null', `scoreBS', "`weighttype'", "`ptype'", "`statistic'", ///
+                          "`madjust'", `N_h0s', "`Xnames_exog'", "`Xnames_endog'", ///
+                          "`Ynames'", "`b'", "`V'", "`ZExclnames'", "`hold'", "`scnames'", `hasrobust', "`allclustvars'", `NBootClustVar', `NErrClustVar', ///
+                          "`FEname'", `NFE', `FEdfadj', "`wtname'", "`wtype'", "`R1'", "`r1'", "`R'", "`r'", `reps', "`repsname'", "`repsFeasname'", `small', "`svmat'", "`dist'", ///
+                          "`gridmin'", "`gridmax'", "`gridpoints'", `matsizegb', "`quietly'"!="", "`b0'", "`V0'", "`svv'", "`NBootClustname'")
+    }
+    else {
+      foreach X in R R1 V {
+        cap python: `X' = np.asarray(Matrix.get('``X'''))
+        if _rc python: `X' = np.empty([0,0])
+      }
+      foreach X in gridminvec gridmaxvec gridpointsvec {
+        cap python: `X' = np.asarray([np.nan if x==Missing.getValue() else x for x in Matrix.get('``X''')[0]])
+        if _rc python: `X' = np.empty([`df',0])
+      }
+      foreach X in r r1 b {
+        cap python: `X' = np.asarray(Matrix.get('``X'''))
+        if _rc python: `X' = np.empty([0])
+      }
+      foreach X in Ynames Xnames_exog Xnames_endog ZExclnames scnames wtname {
+        python: `X' = np.asarray(Data.get('``X''', selectvar="`hold'"))
+      }
+      foreach X in FEname allclustvars {
+        python: `X' = np.asarray(Data.get('``X''', selectvar="`hold'"), dtype=np.int64)
+      }
+// foreach X in Ynames Xnames_exog Xnames_endog ZExclnames scnames wtname gridminvec gridmaxvec gridpointsvec R R1 V r r1 b FEname allclustvars {
+//   python:Main.`X' = `X'
+// }
+// python:Main.eval('using JLD; @save "c:/users/drood/Downloads/tmp.jld" Ynames Xnames_exog Xnames_endog ZExclnames wtname allclustvars FEname scnames R r R1 r1 gridminvec gridmaxvec gridpointsvec b V')
+      qui python: Random.seed_b(rng, `=runiformint(0, 9007199254740992)')  // chain Stata rng to Julia rng
+      python: test = WildBootTests.wildboottest(Main.Float`float', R, r, resp=Ynames, predexog=Xnames_exog, predendog=Xnames_endog, inst=ZExclnames, obswt=wtname, clustid=allclustvars, feid=FEname, scores=scnames, ///
+                                R1=R1, r1=r1, ///
+                                nbootclustvar=`NBootClustVar', nerrclustvar=`NErrClustVar', ///
+                                issorted=True, ///
+                                hetrobust=bool(`hasrobust'), ///
+                                nfe=`NFE', ///
+                                fedfadj=`FEdfadj', ///
+                                fweights = "`wtype'"=="fweight", ///
+                                maxmatsize=`=0`matsizegb'', ///
+                                ptype="`ptype'", ///
+                                bootstrapc = "`statistic'"=="c", ///
+                                LIML=bool(`LIML'), Fuller=`=0`fuller'', `=cond(`K'<.,"kappa=`K',","")' ///
+                                ARubin=bool(`ar'), small=bool(`small'), scorebs=bool(`scoreBS'), ///
+                                reps=`reps', imposenull=bool(`null'), level=`level'/100, ///
+                                auxwttype="`weighttype'", ///
+                                rtol=`ptolerance', ///
+                                madjtype="none" if "`madjust'"=="" else "`madjust'", NH0=`N_h0s', ///
+                                ML=bool(`ML'), beta=b.transpose(), A=V, ///
+                                gridmin=gridminvec, gridmax=gridmaxvec, gridpoints=gridpointsvec, ///
+                                diststat = "none" if "`svmat'"=="" else "`svmat'", ///
+                                getCI = `level'<100 and "`cimat'" != "", getplot = "`plotmat'"!="", ///
+                                getauxweights = "`svv'"!="", ///
+                                rng=rng)
+      python: Macro.setLocal("seed", str(Main.rand(rng, Main.Int32)))  // chain Julia rng back to Stata to advance it replicably
+      set seed `seed'
+      python: Main.test = test
+      if "`plotmat'"!="" {
+        if `df'==1 {
+            python: Matrix.store("`plotmat'", Main.eval("[test.plot[:X][1] test.plot[:p]]"))
+            python: Matrix.store("`peakmat'", Main.eval("[test.peak[:X][1] test.peak[:p]]"))
+        }
+        else {
+          python: Y, X = np.meshgrid(Main.eval("test.plot[:X][2]"), Main.eval("test.plot[:X][1]"))
+          python: Matrix.store("`plotmat'", np.vstack((np.reshape(X,-1), np.reshape(Y,-1), Main.eval("test.plot[:p]"))).transpose())
+        }
+      }
+      if `level'<100 & "`cimat'" != "" python: Matrix.store("`cimat'", test.CI)
+      python: Scalar.setValue("`teststat'", test.stat)
+      python: Scalar.setValue("`df'", test.dof)
+      python: Scalar.setValue("`df_r'", test.dof_r)
+      python: Scalar.setValue("`p'", test.p)
+      python: Scalar.setValue("`padj'", test.padj)
+      python: Scalar.setValue("`repsname'", test.reps)
+      python: Scalar.setValue("`repsFeasname'", test.repsfeas)
+      python: Scalar.setValue("`NBootClustname'", test.nbootclust)
+      python: Matrix.store("`b0'", test.b)
+      python: Matrix.store("`V0'", test.V)
+      if "`dist'"!="" python: Matrix.store("`dist'", test.dist)
+      if "`svv'"!="" python: Matrix.store("`svv'", test.auxweights)
+    }
+
 		_estimates unhold `hold'
 
     `quietly' if 2^`NBootClustname' < `reps' & inlist("`weighttype'", "rademacher", "mammen") {
@@ -715,11 +901,11 @@ program define _boottest, rclass sortpreserve
       di _n "Consider Webb weights instead, using {cmd:weight(webb)}."
     }
     local reps = `repsname'  // in case reduced to 2^G
-    `quietly' if ((`NBootClustname'>12 | "`weighttype'" != "rademacher") & floor(`level'/100 * (`reps'+1)) != `level'/100 * (`reps'+1)) {
+    `quietly' if `reps' & (`NBootClustname'>12 | "`weighttype'" != "rademacher") & floor(`level'/100 * (`reps'+1)) != `level'/100 * (`reps'+1) {
       di _n "Note: The bootstrap usually performs best when the confidence level (here, `level'%)" _n "      times the number of replications plus 1 (`reps'+1=" `reps'+1 ") is an integer."
     }
 
-		if !`ML' & `reps' & `Nclustvars'>1 & `teststat'<. {
+		if !`ML' & `reps' & `NErrClustVar'>1 & `teststat'<. {
 			return scalar repsFeas = `repsFeasname'
 			if `repsFeasname' < `reps' di _n "Warning: " `reps' - `repsFeasname' " replications returned an infeasible test statistic and were deleted from the bootstrap distribution."
 		}
@@ -735,7 +921,7 @@ program define _boottest, rclass sortpreserve
 		if `reps' di as txt strproper("`boottype'") " bootstrap-`statistic', null " cond(0`null', "", "not ") "imposed, " as txt `reps' as txt " replications, " _c
 		di as txt cond(`ar', "Anderson-Rubin ", "") cond(!`reps' & `null' & "`boottype'"=="score", "Rao score (Lagrange multiplier)", "Wald") " test" _c
 		if "`cluster'"!="" di ", clustering by " as res "`cluster'" _c
-		if ("`bootcluster'"!="" | `Nclustvars' > 1) & `reps' di as txt ", bootstrap clustering by " as res "`bootcluster'" _c
+		if ("`bootcluster'"!="" | `NErrClustVar' > 1) & `reps' di as txt ", bootstrap clustering by " as res "`bootcluster'" _c
 		if `reps'	di as txt ", " strproper("`weighttype'") " weights" _c
 		di as txt ":"
 		
@@ -770,7 +956,7 @@ program define _boottest, rclass sortpreserve
 			return scalar padj`_h' = `padj'
 		}
 
-		if `Nclustvars' > 1 {
+		if `NErrClustVar' > 1 {
 			cap mat `t' = syminv(`V0')
 			cap noi if diag0cnt(`t') di _n "Test statistic could not be computed. The multiway-clustered variance estimate " cond(`df'==1, "", "matrix ") "is not positive" cond(`df'==1, "", "-definite") "."
 		}
@@ -783,7 +969,6 @@ program define _boottest, rclass sortpreserve
 		cap confirm mat `plotmat'
 		if _rc == 0 {
 			tempvar X1 Y _plotmat
-			if `df'==2 tempvar X2
 			mat `_plotmat' = `plotmat'
 			return matrix plot`_h' = `plotmat'
 			mat `plotmat' = `_plotmat'
@@ -799,13 +984,15 @@ program define _boottest, rclass sortpreserve
 				else {
 					mata st_matrix("`_plotmat'", st_matrix("`plotmat'") \ ((st_matrix("`cimat'")[,1] \ st_matrix("`cimat'")[,2]), J(2*`=rowsof(`cimat')', 1, 1-`level'/100)))
 				}
+
+        if colsof(`_plotmat')==3 tempvar X2
 				mat colnames `_plotmat' = `X1' `X2' `Y'
 				local _N = _N
         qui svmat `_plotmat', names(col)
 				label var `Y' " "  // in case user turns on legend
 				if `"`graphname'"'=="Graph" cap graph drop Graph`_h'
 
-				if `df'==1 {
+				if colsof(`_plotmat')==2 {
         	cap mata st_local("nonmiss", strofreal(nonmissing(st_matrix("`cimat'"))))
           if 0`nonmiss' > 1 {
             mata _boottestm = (-min(-st_matrix("`cimat'")) - min(st_matrix("`cimat'"))) / 2 / (`nonmiss' + 1)  // margin
@@ -892,6 +1079,10 @@ program define _boottest, rclass sortpreserve
 end
 
 * Version history
+* 4.0.2 Fixed bugs in Julia installation.
+* 4.0.1 Bumped WildBootTests version to 0.7.8. Added messages about installation process.
+* 4.0.0 Added Julia support. Fixed plotting bug in artest with >1 instrument. Added sensitivity to (iv)reghdfe's e(df_a) return value.
+* 3.2.6 For tests of dimension > 2 return symmetric r(V), not upper triangle; fixed crash in WRE with matsizegb() and obs weights; added support for one-way FEs based on interactions in reghdfe
 * 3.2.5 Added nosmall option and check for missing sample marker
 * 3.2.4 Fixed bug in test statistic in no-null tests after IV/GMM. Fixed Fuller adjustment always being treated as 1. Fixed bad value in lower left corner of contour plots.
 *       Fixed crash in WRE for hypotheses involving exogenous vars
