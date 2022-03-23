@@ -6,6 +6,7 @@ p r2reg3 module to compute System R2, Adj. R2,  F-Test, and Chi2-Test after reg3
 p r2sem module to perform Overall System Structural Equation Modeling (SEM) R2, Adj. R2, F-Test, and Chi2-Test
 p r2var Module to Compute (VAR) Overall System R2, F-Test, and Chi2-Test
 p r_ml_stata module to implement machine learning regression in Stata
+p r_ml_stata_cv module to implement machine learning regression in Stata
 p r_to_d module for converting Pearson's r to Cohen's d
 p radar module to draw radar (spider) plots
 p radf module to calculate unit root tests for explosive behaviour
