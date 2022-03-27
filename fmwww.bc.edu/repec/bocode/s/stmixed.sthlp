@@ -2,6 +2,7 @@
 {* *! version 1.0.0 2012}{...}
 {vieweralsosee "stmixed postestimation" "help stmixed postestimation"}{...}
 {vieweralsosee "merlin" "help merlin"}{...}
+{vieweralsosee "stmerlin" "help stmerlin"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[ST] streg" "help streg"}{...}
 {vieweralsosee "stpm2" "help stpm2"}{...}
@@ -60,8 +61,12 @@
 {synopt:{cmdab:d:istribution(}{cmdab:e:xponential)}}exponential survival distribution{p_end}
 {synopt:{cmdab:d:istribution(}{cmdab:gom:pertz)}}Gompertz survival distribution{p_end}
 {synopt:{cmdab:d:istribution(}{cmdab:w:eibull)}}Weibull survival distribution{p_end}
+{synopt:{cmdab:d:istribution(}{cmdab:gg:amma)}}generalised gamma AFT model{p_end}
+{synopt:{cmdab:d:istribution(}{cmdab:logn:ormal)}}log normal AFT model{p_end}
+{synopt:{cmdab:d:istribution(}{cmdab:logl:ogistic)}}log logistic AFT model{p_end}
 {synopt:{cmdab:d:istribution(}{cmdab:rp)}}Royston-Parmar survival model{p_end}
 {synopt:{cmdab:d:istribution(}{cmdab:rcs)}}restricted cubic splines on the log hazard scale{p_end}
+{synopt:{cmdab:d:istribution(}{cmdab:pwe:xponential)}}piecewise-exponential survival distribution{p_end}
 {synopt:{cmdab:d:istribution(}{cmdab:user)}}a user-defined survival model; see {it:{help stmixed##user:user functions}}{p_end}
 {synopt:{cmdab:df(#)}}degrees of freedom for baseline hazard function with {bf:d(fpm)} or {bf:d(rcs)}{p_end}
 {synopt:{opt knots(numlist)}}knot locations for baseline hazard with {bf:d(fpm)} or {bf:d(rcs)}{p_end}
@@ -190,12 +195,24 @@ calculated following a model fit.
 {cmd:distribution(gompertz)} fits a Gompertz survival model.
 
 {pmore}
+{cmd:distribution(ggamma)} fits a generalised gamma AFT survival model.
+
+{pmore}
+{cmd:distribution(lognormal)} fits a log normal AFT survival model.
+
+{pmore}
+{cmd:distribution(loglogistic)} fits a log logistic AFT survival model.
+
+{pmore}
 {cmd:distribution(rp)} fits a Royston-Parmar survival model. This is a highly flexible fully parametric 
 alternative to the Cox model, modelled on the log cumulative hazard scale using restricted cubic splines. 
 
 {pmore}
 {cmd:distribution(rcs)} fits a log hazard scale flexible parametric survival model. This is a highly flexible 
 fully parametric alternative to the Cox model, modelled on the log hazard scale using restricted cubic splines. 
+
+{pmore}
+{cmd:distribution(pwexponential)} fits a piecewise-exponential survival model; requires the {cmd:knots()} option.
 
 {pmore}
 {cmd:distribution(user)} specify a user-defined survival model; see options below and 
@@ -231,11 +248,16 @@ placed at the minimum and maximum of the distribution of uncensored survival
 times. 
 
 {phang}
-{opt knots(numlist)} specifies knot locations for the baseline distribution function under a 
+{opt knots(numlist)} defines either:
+
+{pmore}the knot locations for the baseline distribution function under a 
 {cmd:rp} or {cmd:rcs} survival model, as opposed to the default 
 locations set by {cmd:df()}. Note that the locations of the knots are placed on the standard time scale. 
 However, the scale used by the restricted cubic spline 
 function is always log time. Default knot positions are determined by the {cmd:df()} option.
+
+{pmore}the knot locations (cut-points) for the piecewise-exponential distribution. {cmd:knots()} should be 
+specified in increasing order.
 
 {phang}
 {opt tvc(varlist)} gives the name of the variables that have time-varying coefficients.
@@ -398,11 +420,9 @@ and a random treatment effect.{p_end}
 {title:Author}
 
 {pstd}Michael J. Crowther{p_end}
-{pstd}Biostatistics Research Group{p_end}
-{pstd}Department of Health Sciences{p_end}
-{pstd}University of Leicester{p_end}
-{pstd}Leicester, UK{p_end}
-{pstd}E-mail: {browse "mailto:michael.crowther@le.ac.uk":michael.crowther@le.ac.uk}.{p_end}
+{pstd}Red Door Analytics AB{p_end}
+{pstd}Stockholm, Sweden{p_end}
+{pstd}E-mail: {browse "mailto:michael@reddooranalytics.se":michael@reddooranalytics.se}.{p_end}
 
 {phang}
 Please report any errors you may find.{p_end}

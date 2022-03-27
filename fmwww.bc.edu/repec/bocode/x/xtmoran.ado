@@ -1,3 +1,5 @@
+*！V1.2 Zihou,Chen etc.
+*！data: 21 Mar 2022
 *！V1.0 Zihou,Chen etc.
 *! data: 29 Apr 2021
 *! Party School of the Guangdong Provincial Committee of CPC,China
@@ -18,9 +20,13 @@ if `vvcheck' < 11{
 	di as err "it cannot run version `vvcheck' programs"
 	exit
 }
-_xt, trequired
+
+_xt, trequired 
+
 local id: char _dta[_TSpanel]
 local time: char _dta[_TStvar]
+
+
 cy using "`wname'",name(wcname) 
 capture qui matrix list wcname
 if _rc==111 {
@@ -168,7 +174,8 @@ dis ""
 di as res "{title:The results :}"
 _dispcc "`CC'" "Moran's I" "I" "`cname'" "`id'"  "`time'"  "`ncz'"   /*
 */  "`N'"  "`NVAR'" "`varlist'"
-return matrix Moran `MORAN'
+*return matrix moran `CC'
+
 di as txt "`PVL'"
 di _newline
 if "`morani'"!="" {
@@ -300,6 +307,7 @@ while `i'<=`N' {
 }
 _dispcz "`varlist'`varlistc'" "`MORAN'" "Moran's Ii" "Ii" "`N'" "`ID'"  /*
    */ "`symbol'" 
+return mat morani`varlistc' = `MORAN'
 di as txt "`PVL'"
 di _newline
 if "`graph'"!="" {
@@ -320,10 +328,10 @@ else {
    local VARLBL="`zcx`varlistc'1'"
 }
    qui regress _Wy1 `Y',noconstant
-   local I=string(_b[`Y'],"%5.4f")
+   *local I=string(_b[`Y'],"%5.4f")
    local t = _b[`Y']/_se[`Y'] 
    local pcp=2*ttail(e(df_r),abs(`t'))
-   local II=string(`pcp',"%5.4f")
+   *local II=string(`pcp',"%5.4f")
    qui summ _Wy1, mean
    local ymin=int(r(min))-1
    local ymax=int(r(max))+1
@@ -338,19 +346,27 @@ else {
 	local varnamec `symbol' 
    	local czhc2 mlabel (`varnamec') 
 	local czhc3 mlabsize(*1)
-   }  
+   }
+   local timecyc = `varlistc'-`yearz' +1
+   mat CC = r(moran)
+   local I =string(`CC'[`timecyc',1],"%5.4f")
+   local II =string(`CC'[`timecyc',5],"%5.4f")
+   *dis `timecyc'
    	`cyc'  (sc  _Wy1 `Y' ,`czhc1' `czhc2'  `czhc3')                                          /*
 */	(lfit  _Wy1 `Y',estopts(nocons)), yline(0) xline(0) xlabel(`xmin'(1)`xmax')              /*
 */	xtitle(z)  ylabel(`ymin'(1)`ymax') ytitle(Wz)                                            /*
 */	legend(off) scheme(s1mono )                                                              /*
-*/  title("Moran scatterplot (Moran's I = `I' and P-value = `II')",  /*
-*/  justification(left)  size(medium))                               /*
-*/  subtitle("`varlist'`varlistc'", pos(11))                         /*
+*/  title("Moran scatterplot (Moran's I = `I' and P-value = `II')",   /*
+*/  pos(11)  size(medium))                               /*
+*/  subtitle("`varlist'`varlistc'", pos(11))                          /*
 */  name(picture`varlistc',replace) 
 }
 }
 restore
 }
+return scalar N = 	`N'
+return scalar T = 	`tc'
+return matrix moran `CC'
 mat drop wcname
 end
 
@@ -384,7 +400,7 @@ while `k'<=`NVAR' {
 di as txt "{hline 20}{c BT}{hline 41}"
 end
 
-program define _dispcz
+program define _dispcz,rclass
 version 11.0
 args VAR MAT TITLE L N ID  id VARLBLC
 preserve
@@ -426,6 +442,7 @@ while `i'<=`N' {
 	*/ as res %8.0f `STAT'[`i',6]
 	local i=`i'+1
 }
+return mat morani = `STAT'
 di as txt "{hline 20}{c BT}{hline 50}"
 restore
 end

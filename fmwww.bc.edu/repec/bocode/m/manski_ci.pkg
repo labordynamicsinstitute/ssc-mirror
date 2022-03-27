@@ -1,0 +1,26 @@
+d 'MANSKI_CI': module to use Manski type bounds (Manski 2003) to calculate confidence intervals around a treatment variable's regression coefficient in a (covariate-adjusted) regression
+d
+d     manski_ci is designed for use in the context of randomized
+d controlled trials (RCTs) with missing outcomes (usually with	 
+d different rates of missingness across experimental arms). The
+d command infers worst case and best case values of an outcome as  
+d  described in Manski (2003). This command takes the lower bound
+d of the (covariate-adjusted) regression that assumes the worst   
+d case outcomes and the upper bound of the (covariate-adjusted)
+d regression that assumes the best case outcome. This gives the   
+d user a more conservative confidence interval around their
+d (covariate-adjusted) regression estimate of the treatment effect. d
+d KW: Manski
+d KW: confidence intervals
+d KW: RCT
+d KW: missingness
+d
+d Requires: Stata version 13.1
+d
+d Distribution-Date: 20220326
+d
+d Author: John Ternovski, Georgetown University
+d Support: email  johnt1@@gmail.com
+d
+f manski_ci.ado
+f manski_ci.sthlp

@@ -25,7 +25,7 @@
 {synopt:{opt symbol(varname)}} identification of locations in the Moran scatter plot.{p_end}
 {synoptline}
 {p2colreset}{...}
-{p 4 6 2}  1. A panel variable and a time variable must be specified; use xtset. {p_end}
+{p 4 6 2}  1. A panel variable and a time variable must be specified; use xtset (xtmoran requires balanced panel data !!!) {p_end}
 {p 4 6 2}  2. Only one variable can be calculated for the Moran's I and Moran's Ii ! {p_end}
 {p 4 6 2}  3. wname(name) : The spatial weight matrix can only be used in dta format
               and by default this matrix will be normalised. {p_end}
@@ -34,13 +34,29 @@
 
 {title:Description}
 
-{p} {cmd:xtmoran} computes the global spatial autocorrelation statistic:
-Moran's {it:I} and local spatial autocorrelation statistics: Moran's {it:Ii}. {cmd:xtmoran} computes and
-displays in tabular form the statistic itself, the expected value of the
-statistic under the null hypothesis of global spatial independence, the
-standard deviation of the statistic, the {it:z}-value, and the corresponding
- 2-tail {it:p}-value.{cmd:xtmoran} also displays a Moran scatterplot.
+{p} {cmd:xtmoran} computes the global spatial autocorrelation statistic: Moran's {it:I} and local spatial autocorrelation statistics: Moran's {it:Ii}. 
+{cmd:xtmoran} computes anddisplays in tabular form the statistic itself, the expected value of the statistic under the null hypothesis of global spatial independence, the standard deviation of the statistic, the {it:z}-value, and the corresponding 2-tail {it:p}-value.
+{cmd:xtmoran} also displays a Moran scatterplot.
 
+{title:Stored results}
+
+{pstd}
+{cmd:xtmoran} stores the following in {cmd:r()}:
+
+{synoptset 20 tabbed}{...}
+{p2col 5 20 24 2: Scalars}{p_end}
+{synopt:{cmd:r(N)}}Number of cross-sections.{p_end}
+{synopt:{cmd:r(T)}}Number of time periods.{p_end}
+
+{synoptset 20 tabbed}{...}
+{p2col 5 20 24 2: Matrices}{p_end}
+{synopt:{cmd:r(moran)}} A (T x 5) matrix containing the results of Moran's {it:I}.{p_end}
+{synopt:{cmd:r(morani{it:time})}} A (N x 6) matrix containing the results of Moran's {it:Ii}.{p_end}
+
+
+
+
+{marker Examples}{...}
 
 {title:Examples}
 
@@ -56,7 +72,7 @@ standard deviation of the statistic, the {it:z}-value, and the corresponding
 
 {phang}{cmd:. xtmoran y, wname(w.dta) morani(2012 2013 2014 2015) graph symbol(name)}
 
-{title:Author}
+{title:Authors}
 
 {p 8} Zihou,Chen {p_end}
 {p 8} Party School of the Guangdong Provincial Committee of CPC,China {p_end}

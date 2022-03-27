@@ -14,7 +14,7 @@ d KW: spatial autocorrelation
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20210903
+d Distribution-Date: 20220326
 d
 d Author: Chen  Zihou, Party School of the Guangdong Provincial Committee of CPC, China
 d Support: email econometricalc@@outlook.com
@@ -27,3 +27,5 @@ d Support: email xujiahui0106@@163.com
 d
 f xtmoran.ado
 f xtmoran.sthlp
+f ../w/w.dta
+f ../p/panel.dta
