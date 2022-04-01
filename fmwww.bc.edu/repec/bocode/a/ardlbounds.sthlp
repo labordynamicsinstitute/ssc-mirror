@@ -1,12 +1,12 @@
 {smcl}
-{* *! version 1.0.4  25aug2020}{...}
+{* *! version 1.0.5  29mar2022}{...}
 {title:Title}
 
 {phang}
 {bf:ardlbounds} {hline 2} tabulate critical values for ARDL bounds test
 
 
-{marker syntax}{...}{* * * * * * * * * * * * * * * * * * *  SYNTAX * * * * * * * * * * * * * * * * * }
+{* foldend}{* foldbeg}{* * * SYNTAX * * *}{marker syntax}{...}
 {title:Syntax}
 
 {phang}
@@ -42,7 +42,7 @@ Tabular presentation over the number of weakly exogenous model variables {it:k}
 {p 4 6 2}See {help ardl} for more information about ARDL estimation.{p_end}
 
 
-{marker description}{...}{* * * * * * * * * * * * * * * * * * *  DESCRIPTION * * * * * * * * * * * * * * * * * }
+{* foldend}{* foldbeg}{* * * DESCRIPTION * * *}{marker description}{...}
 {title:Description}
 
 {pstd}
@@ -53,20 +53,20 @@ these magnitudes are somewhat difficult to obtain since they relate to non-stand
 
 {pstd}
 Regression-based predicted critical values and approximate p-values can be obtained for any combination
-values of the sample size, the number of weakly exogenous model variables, and the model lag structure.
+of values of the sample size, the number of weakly exogenous model variables, and the model lag structure.
 
 {pstd}
 The response surface regression methodology as used by {cmd:ardlbounds} was mainly developed by {help ardl##M1991:MacKinnon (1991)} and {help ardl##M1996:MacKinnon (1996)}.
 
 
-{marker abbreviations}{...}{* * * * * * * * * * * * * * * * * ABBREVIATIONS * * * * * * * * * * * * * * * *}
+{* foldend}{* foldbeg}{* * * ABBREVIATIONS * * *}{marker abbreviations}{...}
 {title:Abbreviations and definitions used in this help entry}
 
 {pstd}
 See the {help ardl##abbreviations:abbreviations section of ardl}.
 
 
-{marker options}{...}{* * * * * * * * * * * * * * * * * OPTIONS * * * * * * * * * * * * * * * *}
+{* foldend}{* foldbeg}{* * * OPTIONS * * *}{marker options}{...}
 {title:Options}
 
 {phang}
@@ -138,7 +138,7 @@ See option {opt sr()} above.
 The number of lags (short-run coefficients) matters only for finite samples.
 
 
-{marker examples}{...}{* * * * * * * * * * * * * * * * * EXAMPLES * * * * * * * * * * * * * * * *}
+{* foldend}{* foldbeg}{* * * EXAMPLES * * *}{marker examples}{...}
 {title:Examples}
 
 {phang}
@@ -184,7 +184,7 @@ setting the number of short-run coefficients to zero (the default):
 The resulting numbers are again fairly close to what PSS report.
 
 
-{marker savedresults}{...}{* * * * * * * * * * * * * * * * * SAVEDRESULTS * * * * * * * * * * * * * * * *}
+{* foldend}{* foldbeg}{* * * STOREDRESULTS * * *}{marker storedresults}{...}
 {title:Saved results}
 
 {pstd}
@@ -208,7 +208,7 @@ The resulting numbers are again fairly close to what PSS report.
 {p2colreset}{...}
 
 
-{marker authors}{...}{* * * * * * * * * * * * * * * * * AUTHORS * * * * * * * * * * * * * * * *}
+{* foldend}{* foldbeg}{* * * AUTHORS * * *}{marker authors}{...}
 {title:Authors}
 
 {pstd}
@@ -218,9 +218,10 @@ Sebastian Kripfganz, University of Exeter Business School, S.Kripfganz@exeter.ac
 Daniel C. Schneider, Max Planck Institute for Demographic Research, schneider@demogr.mpg.de
 
 
-{marker alsosee}{...}{* * * * * * * * * * * * * * * * * ALSOSEE * * * * * * * * * * * * * * * *}
+{* foldend}{* foldbeg}{* * * ALSOSEE * * *}{marker alsosee}{...}
 {title:Also see}
 
 {psee}
 Other commands of the {cmd:ardl} package: {help ardl}
 
+{* foldend}

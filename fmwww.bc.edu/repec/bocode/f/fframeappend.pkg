@@ -1,0 +1,22 @@
+d 'FFRAMEAPPEND': module to append data frame to currently active data frame
+d
+d   fframeappend appends the variables varlist in the frame
+d framename to the current frame.  If no varlist is provided, all
+d variables in frame framename will be appended to the current
+d frame.  The new observations will be at the bottom of the current
+d frame.  Types of variables and the ordering of variables in the
+d current frame are always preserved. 
+d
+d KW: frames
+d KW: data management
+d KW: append
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20220331
+d
+d Author: Jürgen Wiemers, Research Institute of the Federal Employment Agency, Germany
+d Support: email   Juergen.Wiemers@@iab.de
+d
+f fframeappend.ado
+f fframeappend.sthlp

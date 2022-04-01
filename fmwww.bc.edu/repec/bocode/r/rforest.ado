@@ -1,7 +1,7 @@
 capture program drop rforest
 
 program define rforest, eclass
-*! version 1.9.0 Mar, 2021
+*! version 2.0.0 Mar, 2022
 	version 15.0
 	
 	syntax varlist(min=2) [if] [in] [,type(string) ITERations(int 100) ///
@@ -110,7 +110,8 @@ program define rforest, eclass
 	
 end
 // Version History
-// version 1.9.0 Mar 2020: fixed Java bug "one line of dead code"
+// version 2.0.0 Mar 2022: fixed Java bug; related to not being able to predict on unseen data
+// version 1.9.0 Mar 2021: fixed Java bug "one line of dead code"
 // version 1.8.0 Feb 2021: fixed Java bug related to reordering of variables in Stata 
 // version 1.7.2 Mar 2020: fixed bug: "predict <newvar>" gave error when y didn't have a label. (See Scalar originalValueLabel)
 // version 1.7.1 Mar 2020: added 2 error messages for "predict stub*" and "predict var1 var2" when "pr" is not specified

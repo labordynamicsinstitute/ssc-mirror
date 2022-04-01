@@ -1,5 +1,5 @@
 ﻿{smcl}
-{* *! 20oct2017}{...}
+{* *! 31mar2022}{...}
 {cmd:help xtgcause}
 {hline}
 
@@ -162,22 +162,23 @@ University of Neuchâtel, {browse "https://ideas.repec.org/p/irn/wpaper/17-03.ht
 
 {pstd}
 Luciano Lopez{break}
-University of Neuchâtel{break}
-Institute of Economic Research{break}
-Neuchâtel, Switzerland{break}
-{browse "mailto:luciano.lopez@unine.ch?subject=Question/remark about -xtgcause-&cc=sylvain.weber@unine.ch":luciano.lopez@unine.ch}
+University of Applied Sciences and Arts Western Switzerland (HES-SO){break}
+Ecole hôtelière de Lausanne (EHL){break}
+Lausanne, Switzerland{break}
+{browse "mailto:luciano.lopez@ehl.ch?subject=Question/remark about -xtgcause-&cc=sylvain.weber@hesge.ch":luciano.lopez@ehl.ch}
 
 {pstd}
 Sylvain Weber{break}
-University of Neuchâtel{break}
-Institute of Economic Research{break}
-Neuchâtel, Switzerland{break}
-{browse "mailto:sylvain.weber@unine.ch?subject=Question/remark about -xtgcause-&cc=luciano.lopez@unine.ch":sylvain.weber@unine.ch}
+University of Applied Sciences and Arts Western Switzerland (HES-SO){break}
+Haute école de gestion (HEG) de Genève{break}
+Geneva, Switzerland{break}
+{browse "mailto:sylvain.weber@hesge.ch?subject=Question/remark about -xtgcause-&cc=luciano.lopez@ehl.ch":sylvain.weber@hesge.ch}
 
 
 {title:Acknowledgement}
 
 {pstd}
+This command was implemented when both authors were at the University of Neuchâtel (Switzerland).
 We are indebted to David Ardia (University of Neuchâtel) for his valuable advice 
 on the bootstrap procedure. We also thank Gareth Thomas (IHS Markit EViews) for 
 his comments regarding the procedure to determine the optimal lag order 

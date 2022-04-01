@@ -1,6 +1,6 @@
-*! version 1.0.4  25aug2020  sk dcs
+*! version 1.0.5  29mar2022  sk dcs
 
-program ardl_estat, rclass
+program ardl_estat , sortpreserve
 
     version 11.2
     if "`e(cmd)'" != "ardl" error 301
@@ -8,16 +8,35 @@ program ardl_estat, rclass
     gettoken subcmd rest : 0, parse(" ,")
     local lsubcmd = length(`"`subcmd'"')
     
-    if `"`subcmd'"'==substr("ectest",1,max(3,`lsubcmd')) {
+    confirm name `subcmd'
+    
+    if "`subcmd'"==substr("ectest",1,max(3,`lsubcmd')) {
         _ardl_ectest `rest'
     }
-    else if `"`subcmd'"'==substr("btest",1,max(2,`lsubcmd')) {
+    else if "`subcmd'"==substr("btest",1,max(2,`lsubcmd')) {
         _ardl_btest `rest'
     }
-    else {
+    else if "`subcmd'"==substr("summarize",1,max(2,`lsubcmd')) | inlist("`subcmd'", "ic", "vce") {
         estat_default `0'
     }
-    return add
+    else {  // estat subcommands for -regress-
+        
+        _ts , sort
+        
+        local vv = _caller()
+        
+        tempname ardl
+        _estimates hold `ardl' , restore copy
+
+        local regressors "`e(regressors)'"
+        local regressors : subinstr local regressors "_cons" "" , word count(local hascons)
+
+        if !`hascons' local nocons nocons
+        version `vv' : qui reg `e(depvar)' `regressors' if e(sample) , `nocons'
+        version `vv' : estat `0'
+
+    }
+    
 end
 
 program _ardl_ectest, rclass
@@ -27,7 +46,7 @@ program _ardl_ectest, rclass
         exit 198
     }
 	
-	syntax , [ SIGlevels(passthru) ASYmptotic ]
+	syntax , [ SIGlevels(passthru) ASYmptotic noCritval noRule noDecision ]
 	
 	local asymptotic = ("`asymptotic'"!="")
 	
@@ -44,6 +63,30 @@ program _ardl_ectest, rclass
 	matrix `cvmat' = `cvmat' \ r(cvmat)
 	local siglevels = r(siglevels)
 	
+    // decision matrix
+    tempname decmat F_pv0 t_pv0 F_pv1 t_pv1 sl_frac decval
+    local numlevels : word count `siglevels'
+    matrix `decmat' = J(1, `numlevels', .)
+    local cnames = subinstr("`siglevels' ", " ", "% ", .)
+    matrix colnames `decmat' = `cnames'
+    matrix rownames `decmat' = decision
+    
+    scalar `F_pv0' = `cvmat'[1, colnumb(`cvmat', "p-value:I(0)")]
+    scalar `t_pv0' = `cvmat'[2, colnumb(`cvmat', "p-value:I(0)")]
+    scalar `F_pv1' = `cvmat'[1, colnumb(`cvmat', "p-value:I(1)")]
+    scalar `t_pv1' = `cvmat'[2, colnumb(`cvmat', "p-value:I(1)")]
+    foreach sl of local siglevels {
+        scalar `sl_frac' = `sl' / 100
+        local decval .
+        if (`F_pv0'>`sl_frac') | (`t_pv0'>`sl_frac') {
+            local decval .a
+        }
+        else if (`F_pv1'<`sl_frac') & (`t_pv1'<`sl_frac') {
+            local decval .r
+        }
+        matrix `decmat'[1,colnumb(`decmat', "`sl'%")] = `decval'
+    }
+            
 	if c(noisily) {
 		local col = c(linesize)-13
 		local col = max(min(`col', 66), 28)  // 28: accounts for length of preceding string
@@ -57,18 +100,27 @@ program _ardl_ectest, rclass
 		else {
 			disp as txt _n "Finite sample (" as res "`k'" as txt " variables, " as res "`n'" as txt " observations, " as res "`sr'" as txt " short-run coefficients)"
 		}
-		disp as txt _n "Kripfganz and Schneider (2018) critical values and approximate p-values"
-
-		local cspec : disp _dup(`=colsof("`cvmat'")/2') "| %7.3f & %7.3f "
-		matlist `cvmat', cspec(& %2s `cspec' &) rspec(&|&&)
         
-		disp as txt _n "do not reject H0 if"
-		disp           "    both F and t are closer to zero than critical values for I(0) variables"
-		disp           "      (if p-values > desired level for I(0) variables)"
-		disp           "reject H0 if"
-		disp           "    both F and t are more extreme than critical values for I(1) variables"
-		disp           "      (if p-values < desired level for I(1) variables)"
+        if "`critval'"!="nocritval" {
+            disp as txt _n "Kripfganz and Schneider (2020) critical values and approximate p-values"
 
+            local cspec : disp _dup(`=colsof("`cvmat'")/2') "| %7.3f & %7.3f "
+            matlist `cvmat', cspec(& %2s `cspec' &) rspec(&|&&)
+        }
+        
+        if "`rule'"!="norule" {
+            disp as txt _n "do not reject H0 if"
+            disp           "    either F or t are closer to zero than critical values for I(0) variables"
+            disp           "      (if either p-value  > desired level for I(0) variables)"
+            disp           "reject H0 if"
+            disp           "    both F and t are more extreme than critical values for I(1) variables"
+            disp           "      (if both   p-values < desired level for I(1) variables)"
+        }
+        
+        if "`decision'"!="nodecision" {
+            disp as text _n "decision: no rejection (.a), inconclusive (.), or rejection (.r) at levels:"
+            matlist `decmat'
+        }
 	}
 
 	return local siglevels = "`siglevels'"	
@@ -80,7 +132,8 @@ program _ardl_ectest, rclass
 	return scalar case = e(case)
 	return scalar k    = `k'
 
-	return matrix cvmat = `cvmat'
+    return matrix decmat = `decmat'
+	return matrix cvmat  = `cvmat'
 	
 end
 

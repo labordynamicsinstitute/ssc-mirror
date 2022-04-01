@@ -1,4 +1,4 @@
-*! version 1.0.4  25aug2020  sk dcs
+*! version 1.0.5  29mar2022  sk dcs
 
 program define ardl , eclass sortpreserve byable(recall)
 
@@ -43,6 +43,18 @@ program define ardl , eclass sortpreserve byable(recall)
         exit
     }
 
+    local cmdline_orig `"`0'"'  // may be changed slightly below, so save for returning e(cmdline)
+    capture syntax anything [if] [in] , TRendvar [ * ]
+    if !_rc {
+        tsset , noquery
+        local trendvar `r(timevar)'
+        local 0 `"`anything' `if' `in' , `options'"'
+    }
+    else {
+        local trendvaropt "TRendvar(varlist min=1 max=1 numeric)"
+            // do not inlcude directly in -syntax-, as it would overwrite `trendvar' with nothing
+    }
+
     syntax varlist(min=1 numeric) [if] [in] [, LAgs(numlist >=0 int miss)    ///
                                        Maxlags(numlist >=0 int miss)         ///
                                        MAXCombs(numlist min=1 max=1 >0 int)  ///
@@ -53,7 +65,7 @@ program define ardl , eclass sortpreserve byable(recall)
                                        AIC BIC                               ///
                                        Exog(varlist numeric ts)              ///
                                        noConstant                            ///
-                                       TRendvar(varlist min=1 max=1 numeric) ///  
+                                       `trendvaropt'                         ///
                                        REStricted                            ///  
                                        nofast                                ///  use -regress- instead of Mata code for optimal lag selection
                                        Regstore(namelist min=1 max=1)        ///  stores results from -regress-
@@ -62,6 +74,7 @@ program define ardl , eclass sortpreserve byable(recall)
                                        noHEader                              ///  do not display regression table header
                                        BTest                                 ///  (no longer documented) display bounds test
                                        DOTs                                  ///
+                                       /// nosign                                ///
                                        * ]                                   //   Stata display options
 
     // NOTE: all varlists are already in unabbreviated form
@@ -218,20 +231,26 @@ program define ardl , eclass sortpreserve byable(recall)
     }
     
     _get_diopts diopts , `options'
-
+    
     // -------------- OPTIMAL LAG SELECTION --------------------------------------------------
+    if "`ic'" != "" | "`matcrit'"!="" {
+        if ("`aic'" != "") & ("`bic'" != "") {
+            disp as error `"Options 'aic' and 'bic' are mutually exclusive."'
+            exit 198
+        }
+        
+        if "`aic'" == "" local bic "bic" // BIC is the default information criterion
+    }
+    
     if "`ic'" != "" {
+        local ic `bic'`aic'
+        
         if "`dots'"!="" {
             disp as text _n "Optimal lag selection, % complete:"
             local progline "{c -}{c -}{c -}{c +}{c -}{c -}{c -}"
             local progend  "{c -}{c -}{c -}{c +}{c -}"
             local progline "{c -}`progline'20%`progline'40%`progline'60%`progline'80%`progend'100%"
             disp as text "`progline'"
-        }
-
-        local ic "bic"          // BIC is the default information criterion
-        if ("`aic'" != "") & ("`bic'" == "") {
-            local ic "aic"
         }
 
         local matalags    `lag1'
@@ -248,7 +267,6 @@ program define ardl , eclass sortpreserve byable(recall)
             // defines locals `optimlag`i''
             // defines local `numcombs'
             // defines matrix `matcrit' if option -matcrit- has been used
-        if "`matcrit'"!="" matrix colnames `matcrit' = `varlist' `ic'
 
         if "`dots'"!="" disp as text _n `"`=upper("`ic'")' optimized over `numcombs' lag combinations"'
 
@@ -349,7 +367,8 @@ program define ardl , eclass sortpreserve byable(recall)
         }
     }
 
-    qui regress `regdepvar' `indepvarset' `exog' `trendvar' if `touse' , `constant'  // use `touse' and not `if' and `in' to remain consistent with lag selection
+    qui regress `regdepvar' `indepvarset' `exog' `trendvar' if `touse' , `constant'
+        // use `touse' and not `if' and `in' to remain consistent with lag selection
 		// if ec/ec1 is not used, -regress- results are automatically included
 		//   in e()-results returned  by -ardl- since there is no -erturn clear/post- statement
     tempname regtable
@@ -454,8 +473,16 @@ program define ardl , eclass sortpreserve byable(recall)
                 local nlcomexp "`nlcomexp' (`curvar': _b[`curvar'])"
             }
 
-* disp `"nlcomexp: `nlcomexp'"'
-            qui nlcom `nlcomexp', level(`level') noheader           // long-run coefficients and standard errors (delta method)
+            capture nlcom `nlcomexp', level(`level') noheader iter(1000)
+                // long-run coefficients and standard errors (delta method)
+            if _rc {
+                disp as error `"{bf:nlcom} exited with error."'
+                if _rc==498 {
+                    disp as error `"If your independent variables are on vastly different scales,"'
+                    disp as error `"consider rescaling them before running {bf:ardl}."'
+                }
+                exit _rc
+            }
 
             tempname b_ec1 V_ec1
             matrix `b_ec1' = r(b)
@@ -482,7 +509,8 @@ program define ardl , eclass sortpreserve byable(recall)
             local indepvarset "`lrvars' `indepvarset_ec1'"
             
             local dof = `df_r'
-            ereturn post `b_ec1' `V_ec1', esample(`esample') depname(D.`depvar') dof(`dof')  // will be re-posted later to get error-correction form
+            ereturn post `b_ec1' `V_ec1', esample(`esample') depname(D.`depvar') dof(`dof')
+                // will be re-posted later to get error-correction form
 
         }
 
@@ -509,7 +537,16 @@ program define ardl , eclass sortpreserve byable(recall)
             local nlcomexp `nlcomexp' (`curvar_': _b[`curvar'])
         }
         
-        qui nlcom `nlcomexp', level(`level') noheader           // long-run coefficients and standard errors (delta method)
+        capture nlcom `nlcomexp', level(`level') noheader iter(1000)
+            // long-run coefficients and standard errors (delta method)
+        if _rc {
+            disp as error `"{bf:nlcom} exited with error."'
+            if _rc==498 {
+                disp as error `"If your independent variables are on vastly different scales,"'
+                disp as error `"consider rescaling them before running {bf:ardl}."'
+            }
+            exit _rc
+        }
 
         matrix `b_ec' = r(b)
         matrix `V_ec' = r(V)
@@ -558,7 +595,6 @@ program define ardl , eclass sortpreserve byable(recall)
         ereturn scalar r2_a = `r2_a'
         ereturn scalar ll = `ll'
         ereturn scalar rank = `rank'
-        if "`numcombs'"!="" ereturn scalar numcombs = `numcombs'
         
 		if `k'<=10 {
 			local hist ""
@@ -567,9 +603,11 @@ program define ardl , eclass sortpreserve byable(recall)
 			ereturn `hist' matrix F_critval = `F_critval'
 		}
     }
-
+    if "`numcombs'"!="" ereturn scalar numcombs = `numcombs'
+    
+    
     local regressors  `indepvarset' `exog' `trendvar' `_cons'
-    ereturn local regressors : list clean regressors   // get rid of potential uneven spacing
+    ereturn local regressors : list clean regressors   // get rid of potentially uneven spacing
 
     qui tsreport if e(sample)
     local N_gaps `r(N_gaps)'
@@ -590,7 +628,8 @@ program define ardl , eclass sortpreserve byable(recall)
     ereturn matrix maxlags  = `maxlags'
     
     // matrix e(lagcombs) is no longer returned in versions >=0.7.0
-    * if "`ic'"!="" ereturn matrix lagcombs = `lagcombs' , copy  // strangely, -eret mat- w/o the -copy- option takes very long for large matrices, effectively freezing Stata
+    * if "`ic'"!="" ereturn matrix lagcombs = `lagcombs' , copy
+        // strangely, -eret mat- w/o the -copy- option takes very long for large matrices, effectively freezing Stata
 
 	// title/model ops
 	forvalues j=1/`=colsof("`optimlags'")' {
@@ -615,13 +654,34 @@ program define ardl , eclass sortpreserve byable(recall)
     ereturn local estat_cmd   ardl_estat
     ereturn local title      `"`title'"'
     ereturn local model      `"`model'"'
-    ereturn local cmdversion  1.0.2
-    ereturn local cmdline    `"`cmd' `0'"'
+    ereturn local cmdversion  1.0.5
+    ereturn local cmdline    `"`cmd' `cmdline_orig'"'
     ereturn local cmd         "`cmd'"
+    
+    // define matcrit
+    if "`matcrit'"!="" {
+        if "`ic'"=="" {
+            // optim lag determination has NOT been performed
+            local ic `bic'`aic'
+
+            matrix `matcrit' = J(1, `=`numvars'+1', .)
+            forvalues i = 1/`numvars' {
+                matrix `matcrit'[1,`i'] = `lag`i''
+            }
+            // if ("`ic'"=="aic") matrix `matcrit'[1,`=`numvars'+1'] = -2*e(ll) + 2*k
+            // else               matrix `matcrit'[1,`=`numvars'+1'] = -2*e(ll) + k*log(e(N))
+            tempname icmat
+            qui estat ic
+            matrix `icmat' = r(S)
+            matrix `matcrit'[1,`=`numvars'+1'] = `icmat'[1, colnumb(`icmat', upper("`ic'"))]
+        }
+        matrix colnames `matcrit' = `varlist' `ic'
+    }
+    
 
     if `c(noisily)' _ardl_display , `diopts' `ctable' `header' `btest'
 
-end
+end // fold
 
 
 *** --------------------------------- SUBROUTINES -----------------------------------------
@@ -645,7 +705,7 @@ program define _ardl_display
 
     if "`e(model)'"=="ec" & "`btest'"!="" estat btest  // for backward comp
 
-end
+end // fold
 
 *** --------------------------------- MATA ------------------------------------------------
 
@@ -751,13 +811,50 @@ mata:
             Xy = cross(X,y)
 
             // prepare algo for efficiently inverting matrices
+            /*
+            general idea:
+            assume a maxlag = 2 5 3 4, with depvar=2 maxlags and indepvar1=5 lags fixed
+            the matrix lagcombs will look like ("| #" indicates the rownum)
+            1 5 0 0 | 1
+            1 5 0 1 | 2
+            1 5 0 2 | 3
+            1 5 0 3 | 4
+            1 5 0 4 | 5
+            1 5 1 0 | 6
+            1 5 1 1 | 7
+            1 5 1 2 | 8
+            ...     | 
+            1 5 3 4 | 
+            2 5 0 0 | 
+            2 5 0 1 | 
+            ...
+            The algo calculates the inverse of 1 5 0 0, then successively calcs
+            incremental inverses (i.e. adds a col to X) w/ lags 1-4 of indepvar3.
+            Then it jumps back to the inverse 1 5 0 0 and adds lag 1
+            of indepvar2, then it again adds cols 1-4 of indepvar3.
+            That way, an inverse is calculated from scratch only once. Afterwards,
+            all inverses are calculated using an updating algorithm that uses
+            the previous inverse and the new column of X and its cross-products.
+            This is based on the results for inverses of partitioned matrices.
+            
+            XXinvbase is a vector of pointers to inverses that the algo needs to
+            jump back to. It jumps back
+            to the leftmost col for which the lag index changes. Let's say that
+            it is true for col c. Then the inverse stored in XXinvbase(c) is queried
+            and updated by adding a new lag of var #c. The result is stored back
+            in XXinvbase(c) and also in XXinvbase(d) for all d>c.
+            
+            For each new inverse calculation, the regression-based IC is recorded.
+            */
+            
 			if (numvars==1) {
 				Xidxstart = 1 + numexogdet
 			} else {
-				Xidxstart = ((1 , runningsum(matamx2lags[1::numvars-1]:+1)) :+ numexogdet) // starting index of variables within  X
-							// e.g. for matamx2lags =(3, 2, 5, 2) this is (1, 4, 7, 13)
-							//   (if there are no exogdet cols), taking
-							//   into account that x-vars start with a zero lag
+				Xidxstart = ((1 , runningsum(matamx2lags[1::numvars-1]:+1)) :+ numexogdet)
+                    // starting index of variables within  X
+					// e.g. for matamx2lags =(3, 2, 5, 2) this is (1, 4, 7, 13)
+					//   (if there are no exogdet cols), taking
+					//   into account that x-vars start with a zero lag
 			}
 
             pointer(real matrix) rowvector XXinvbase, XXbase, vXbase
@@ -788,6 +885,13 @@ mata:
                 lagcombsi1 = (lagcombs[i,1]-1, lagcombs[i,2..numvars])  // depvar does not have lag 0
 
                 if (vidx==numvars) {
+                    /*
+                    implemented for efficiency:
+                    when a column is appended to the previous XX (a lag is 
+                    added to the last regressor) use this fact in the indexing operations; 
+                    use the expensive Xselect calculation and indexing
+                    only if the column selection is more complicated
+                    */
 
 					cidx = Xidxstart[numvars] + lagcombsi1[numvars]
 
@@ -839,9 +943,8 @@ mata:
                 }
 
                 // calculate e'e = y'*Mx*y = y'y - y'X*XXinv*X'y
-                ee = yy - cXy'*cXXinv*cXy  // TODO: can we exploit symmetry of cXXinv to calc the quadr form more efficiently?
+                ee = yy - cXy'*cXXinv*cXy
                 sigma2 = ee/N
-
                 ll = N*log(2*pi()) + N*log(sigma2) + N
                 if (ic=="aic") ic_val = ll + 2*k
                 else ic_val = ll + k*log(N)
@@ -880,7 +983,6 @@ mata:
                 if (ic=="aic") ic_val = icmat[1,5]
                 else ic_val = icmat[1,6]
                 lagcombs[i, numvars+1] = ic_val
-
                 if (ic_val<ic_min) {
                     ic_min = ic_val
                     optimcomb = i
@@ -925,10 +1027,13 @@ mata:
         numlagvec = ds_select(maxlags, lags:>=.)
 			// do not use select() here, as it did not exist before Stata 13
 
-        if (!minlag1) {                                     // x-var lag selection is 0/maxlag if option minlag1 is not used, otherwise it is 1/maxlag
-            numlagvec = numlagvec :+1                       // numlagvec: row vector whose elements denote the length of the searched lag length for each variable
-                                                            //            e.g. 3 for a lag length search specification 0/2
-            if (lags[1]>=.) numlagvec[1] = numlagvec[1]-1   // for y-var lags are from 1::maxlag
+        if (!minlag1) {
+            // x-var lag selection is 0/maxlag if option minlag1 is not used, otherwise it is 1/maxlag
+            // numlagvec: row vector whose elements denote the length of the searched lag length for each variable
+            //            e.g. 3 for a lag length search specification 0/2
+            // for y-var lags are from 1::maxlag
+            numlagvec = numlagvec :+1
+            if (lags[1]>=.) numlagvec[1] = numlagvec[1]-1
         }
 
         lagmat = J(max(numlagvec), numvars, .)
@@ -1002,14 +1107,12 @@ mata:
 		return(vecout)
 	}
 	
-end
-
+end // fold
 
 
 
 
 mata:
-mata set matastrict on
 
 matrix ds_twocomb(matrix v1, matrix v2) {
 // forms all permutations of rows of v1 and rows of v2

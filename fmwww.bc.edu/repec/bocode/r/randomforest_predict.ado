@@ -24,8 +24,8 @@ program define randomforest_predict, eclass
 			exit 103
 		}
 		javacall RF EvaluateModel if `touse', args(`arg') jars(randomforest.jar weka.jar)
-		ereturn scalar MAE = scalar(MAE)
-		ereturn scalar RMSE = scalar(RMSE)
+		capture ereturn scalar MAE = scalar(MAE)
+		capture ereturn scalar RMSE = scalar(RMSE)
 	}
 	else if "`e(model_type)'" == "random forest classification"{
 		local lengthofString = udstrlen("`arg'")
@@ -45,10 +45,10 @@ program define randomforest_predict, eclass
 			javacall RF EvaluateModel if `touse', args(`arg' `pr') jars(randomforest.jar weka.jar)
 		}
 		if ("`pr'" == ""){
-			ereturn scalar correct_class = scalar(correctly_classified)
-			ereturn scalar incorrect_class = scalar(incorrectly_classified)
-			ereturn scalar error_rate = scalar(error_rate)
-			ereturn matrix fMeasure = fMeasure
+			capture ereturn scalar correct_class = scalar(correctly_classified)
+			capture ereturn scalar incorrect_class = scalar(incorrectly_classified)
+			capture ereturn scalar error_rate = scalar(error_rate)
+			capture ereturn matrix fMeasure = fMeasure
 			
 			local transform = "true"
 			quietly levelsof `e(depvar)'
@@ -59,7 +59,7 @@ program define randomforest_predict, eclass
 					break
 				}
 			}
-			local classVarLabel = originalValueLabel
+			capture local classVarLabel = originalValueLabel
 			if ("`transform'" == "true" && `numVars' == 1){
 					quietly replace `arg' = `arg' + 1
 				}

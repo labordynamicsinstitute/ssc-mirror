@@ -2,10 +2,10 @@
 **    Luciano Lopez & Sylvain Weber     **
 **        University of Neuchâtel       **
 **    Institute of Economic Research    **
-**    This version: October 20, 2017    **
+**     This version: March 31, 2022     **
 ******************************************
 
-*! version 4.0 Luciano Lopez & Sylvain Weber 20oct2017
+*! version 4.1 Luciano Lopez & Sylvain Weber 31mar2022
 program xtgcause, rclass
 version 10.0
 
@@ -52,12 +52,12 @@ qui: sum `time' if `touse'
 local tmin = `r(min)'
 local tmax = `r(max)'
 if `=`tmax'-(`tmin'-1)'>`T' {
-	di as error "Panel must be strongly balanced and without gaps (no missing values allowed in " as input "`depvar'" as error " and " as input "`indepvar'" as error ")."
+	di as error "Panel must be strongly balanced and without gaps (no missing values allowed in {bf:`depvar'} and {bf:`indepvar'})."
 	exit 459
 }
 qui: count if `touse' & mi(`depvar',`indepvar')
 if r(N)>0 {
-	di as error "Panel must be strongly balanced and without gaps (no missing values allowed in " as input "`depvar'" as error " and " as input "`indepvar'" as error ")."
+	di as error "Panel must be strongly balanced and without gaps (no missing values allowed in {bf:`depvar'} and {bf:`indepvar'})."
 	exit 459
 }
 
@@ -102,8 +102,8 @@ if `K'<=0 {
 	exit 198
 }
 if `T'-`K'<=`=5+2*`K'' {
-	di as error "Warning: T (here " as input "`T'" as error ") must be larger than 5+3K (here " as input "`=5+3*`K''" as error ") where K is the lag order."
-	di as error "The maximal lag order that can be included here is " as input "`=floor((`T'-6)/3)'" as error "." 
+	di as error "Warning: T (here {bf:`T'}) must be larger than 5+3K (here {bf:`=5+3*`K''}) where K is the lag order."
+	di as error "The maximal lag order that can be included here is {bf:`=floor((`T'-6)/3)'}." 
 	exit 459
 }
 
@@ -151,7 +151,7 @@ if !inlist("`ltype'","aic","bic","hqic") {
 		local ++j
 		qui: reg `depvar' l(1/`K').`depvar' l(1/`K').`indepvar' if `id'==`i' & inrange(`time',`=`tmin'+`K'',`tmax')
 		if "`regress'"=="regress" {
-			di _n(1) as input "Reg for id==`i'"
+			di _n(1) "Regression for {bf:`id'==`i'}"
 			noi: reg
 			di _n(1) 
 		}
@@ -216,7 +216,7 @@ if inlist("`ltype'","aic","bic","hqic") {
 		local ++j
 		qui: reg `depvar' l(1/`K').`depvar' l(1/`K').`indepvar' if `id'==`i' & inrange(`time',`=`tmin'+`K'',`tmax')
 		if "`regress'"=="regress" {
-			di _n(1) as input "Reg for id==`i' and lags==`K'"
+			di _n(1) "Regression for {bf:`id'==`i'} and {bf:lags==`K'}"
 			noi: reg
 			di _n(1) 
 		}
@@ -392,9 +392,9 @@ if "`bootstrap'"=="bootstrap" {
 }
 
 di _dup(62) "-"
-di as txt "H0: " as input "`indepvar'" as txt " does not Granger-cause " as input "`depvar'" as txt "." 
-di "H1: " as input "`indepvar'" as txt " does Granger-cause " as input "`depvar'" as txt " for at least one panelvar (" as input "`id'" as txt ")." 
-if "`bootstrap'"!="" di as txt "*p-values computed using " as input `breps' as txt " bootstrap replications."
+di as txt "H0: {bf:`indepvar'} does not Granger-cause {bf:`depvar'}." 
+di "H1: {bf:`indepvar'} does Granger-cause {bf:`depvar'} for at least one panel ({bf:`id'})." 
+if "`bootstrap'"!="" di as txt "*p-values computed using {bf:`breps'} bootstrap replications."
 
 *** Re-store initial number of observations (in case matrices ZBARd and ZBARTd were larger than dataset) ***
 if "`bootstrap'"!="" qui: keep in 1/`Nobs'
@@ -458,4 +458,6 @@ Update history:
 	- Initial conditions for bootstrap adapted: series re-constructed based on initial conditions
 	- Displaying dots using undocumented command _dots instead of own loop
 	- Matrices ZBARb and ZBARTb stored in returned results
+- v4.1 (31mar2022)
+	- The display directive -input- overrides -quietly-. All occurrences of "as input" replaced by {bf:}.
 */

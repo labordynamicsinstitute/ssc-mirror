@@ -1,4 +1,4 @@
-*! version 1.0.4  25aug2020  dcs sk
+*! version 1.0.5  29mar2022  dcs sk
 
 
 
@@ -158,7 +158,7 @@ program define ardlbounds , rclass
 	if c(noisily) {
 		local col = c(linesize)-13
 		local col = max(min(`col', 67), 28)  // 28: accounts for length of preceding string
-		disp as txt _n "Kripfganz and Schneider (2018) critical values`pvalmsg'"
+		disp as txt _n "Kripfganz and Schneider (2020) critical values`pvalmsg'"
 		disp as txt    "for the Pesaran, Shin, and Smith (2001) bounds test"
 		disp as txt _n "Case " as res "`case_orig'"
 		if `asymptotic' {
@@ -375,7 +375,7 @@ program define _ardlbounds_table_surfreg , rclass
     matrix colnames `cvmat' = [I_0]:L_1   [I_1]:L_1    [I_0]:L_05  [I_1]:L_05    [I_0]:L_025  [I_1]:L_025    [I_0]:L_01  [I_1]:L_01
 	local rspec : disp _dup(`=`kmax'+1') "&"
 	
-	disp as text _n "Kripfganz and Schneider (2018) Critical Values (0.1-0.01)"
+	disp as text _n "Kripfganz and Schneider (2020) Critical Values (0.1-0.01)"
 	disp            "`stat'-statistic, `lags' Lags, Case `case'`npart'"
 	matlist `cvmat' , cspec(& %5s | %6.2f & %6.2f | %6.2f & %6.2f | %6.2f & %6.2f | %6.2f & %6.2f &) ///
 					  rspec(&|`rspec')

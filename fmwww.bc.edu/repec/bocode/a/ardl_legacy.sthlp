@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.4  25aug2020}{...}
+{* *! version 1.0.5  29mar2022}{...}
 {title:Title}
 
 {phang}
@@ -62,7 +62,7 @@ and displays critical values for these statistics tabulated in PSS.
 Superseded by {help ardl_legacy##btest:estat btest}, which in turn has been superseded by
 {help ardl_postestimation##ectest:estat ectest}.
 
-{marker savedresults}{...}
+{marker storedresults}{...}
 {title:Saved results}
 
 {pstd}
@@ -117,7 +117,7 @@ If {it:nobs} does not exactly match one of these numbers, {cmd:ardl btest} picks
 {pmore}
 If {opt n} or {opt n(nobs)} is not specified, or if {it:nobs} is larger or equal than 83, large sample critical values are displayed.
 
-{marker savedresults}{...}
+{marker storedresults}{...}
 {title:Saved results of estat btest}
 
 {pstd}

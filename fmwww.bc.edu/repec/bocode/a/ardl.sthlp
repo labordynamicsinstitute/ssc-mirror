@@ -1,11 +1,11 @@
 {smcl}
-{* *! version 1.0.4  25aug2020}{...}
+{* *! version 1.0.5  29mar2022}{...}
 {title:Title}
 
 {phang}
 {bf:ardl}   {hline 2}   Autoregressive distributed lag regression model
 
-
+{* foldend}{* foldbeg}{* * * SYNTAX * * *}{marker syntax}
 {title:Syntax}
 
 {p 8 17 2}
@@ -14,18 +14,18 @@
 {synoptset 25 tabbed}{...}
 {synopthdr}
 {synoptline}
-{syntab:Model}
+{syntab:{help ardl##model:Model}}
 {synopt:{opth la:gs(numlist)}}set lag lengths{p_end}
 {synopt:{opt ec}}estimate with {it:depvar} in first differences and display output in error-correction form{p_end}
 {synopt:{opt ec1}}like option {opt ec}, but parameterizes long-run coefficients as of time t-1{p_end}
 {synopt:{opt e:xog(exogvars)}}exogenous variables in regression{p_end}
 {synopt:{opt noc:onstant}}suppress constant term{p_end}
-{synopt:{opt tr:endvar(trendvarname)}}specify trend variable{p_end}
+{synopt:{opt tr:endvar}[{bf:(}{it:trendvarname}{bf:)}]}add time trend to the model{p_end}
 {synopt:{opt res:tricted}}restrict constant or trend term (see {help ardl##deterministiccomponents:Deterministic components}){p_end}
 {synopt:{opt r:egstore(storename)}}stores estimation results from underlying {cmd:regress} command as {it:storename}{p_end}
 {synopt:{opt per:fect}}do not check for collinearity{p_end}
 
-{syntab:Lag selection}
+{syntab:{help ardl##lagselection:Lag selection}}
 {synopt:{opth m:axlags(numlist)}}set maximum lag lengths{p_end}
 {synopt:{opt maxc:ombs(combnum)}}set maximum number of lag permutations for lag selection to {it:combnum}; default: 100000{p_end}
 {synopt:{opt aic}}use AIC as information criterion{p_end}
@@ -33,13 +33,14 @@
 {synopt:{opt matcr:it(lagcombmat)}}save combinations of lags across which lag selection has searched in matrix {it:lagcombmat}; includes the information criterion for each lag specification{p_end}
 {synopt:{opt nofast}}use slow method for finding the optimal lag structure{p_end}
 
-{syntab:Reporting}
+{syntab:{help ardl##reporting:Reporting}}
 {synopt:{opt dot:s}}display one dot for each 1% progress of optimal lag selection{p_end}
 {synopt:{opt noct:able}}do not display coefficient table{p_end}
 {synopt:{opt nohe:ader}}do not display coefficient table header{p_end}
 {synopt:{it:{help ardl##display_options:display_options}}}control column formats, row spacing, line width, and display of omitted variables{p_end}
 
-{syntab:Legacy}
+{syntab:{help ardl##other:Other}}
+{* {synopt:{opt nosign}}do not sign estimation sample{p_end}}{...}
 {synopt:{it:{help ardl_legacy:legacy_options}}}Legacy, out-of-date options of former versions of the command that continue to work{p_end}
 {synoptline}
 {p 4 6 2}You must {cmd:tsset} your data before using {cmd:ardl}; see {helpb tsset:[TS] tsset}.{p_end}
@@ -48,7 +49,7 @@
 {p 4 6 2}See {help ardl postestimation} for features available after estimation.{p_end}
 
 
-{marker description}{...}
+{* foldend}{* foldbeg}{* * * DESCRIPTION * * *}{marker description}{...}
 {title:Description}
 
 {pstd}
@@ -57,7 +58,7 @@ Information criteria are used to find the optimal lag lengths, if those are not 
 Estimation output is delivered either in levels form or in error-correction form.
 
 
-{marker abbreviations}{...}
+{* foldend}{* foldbeg}{* * * ABBREVIATIONS * * *}{marker abbreviations}{...}
 {title:Abbreviations and definitions used in the help entries of the {cmd:ardl} package}
 
 {p2colset 5 20 20 0}{...}
@@ -73,9 +74,10 @@ Estimation output is delivered either in levels form or in error-correction form
 See also the remarks section on {help ardl##terminology:terminology} below.
 
 
-{marker options}{...}
+{* foldend}{* foldbeg}{* * * OPTIONS * * *}{marker options}{...}
 {title:Options}
 
+{marker model}{...}
 {dlgtab:Model}
 
 {phang}
@@ -109,9 +111,9 @@ For more details on the different parameterizations, see the remarks section {he
 {opt noc:onstant} suppresses the constant term in the model.
 
 {phang}
-{opt tr:endvar(trendvarname)} lets you add a trend term to your model.
+{opt tr:endvar}{bf:[}({it:trendvarname}){bf:]} lets you add a time trend term to your model.
 {it:trendvarname} must exist in the data set before execution of {cmd:ardl} and it must be collinear with {it:timevar}, where {it:timevar} is the time variable set by {help tsset}.
-A convenient shortcut that skips the creation of a separate time trend variable is to use {opt trendvar(timevar)}.
+You may omit {it:trendvarname}: Specifying just {opt tr:endvar} is equivalent to {opt trendvar(timevar)}.
 
 {phang}
 {opt res:tricted} will restrict either the constant term or the time trend, if any of the two are specified.
@@ -122,7 +124,25 @@ If no deterministics are in the model, {opt restricted} will cause an error.
 
 {phang}
 {opt r:egstore(storename)} will store the estimation results from the underlying regress command.
-See {help estimates}, {help regress} and {help regress postestimation}.
+See {help estimates}.
+
+{pmore}
+In many cases, you do not have to use option {opt regstore()} to perform model
+diagnostics that relate to the underlying {cmd:regress} command of {cmd:ardl}
+since that normally works immediately after {cmd:ardl}.
+See {help ardl postestimation}.
+However, if the latter procedure fails for some reason, {opt regstore()} provides an alternative.
+
+{pmore}
+Another potential use for {opt regstore()} is to access the regression on which
+the output for the error-correction form (option {opt ec} or {opt ec1}) is based.
+The equation that is actually estimated was called the "first-difference equation"
+in section {help ardl##terminology:terminology}.
+The output shown corresponds to the "error-correction equation".
+Compare equations (FDF0) to (ECF0) (or equations (FDF1) to (ECF1))
+in the section on {help ardl##longruncoefficients:long-run coefficients}
+to see the difference between the estimated and
+presented equations for an ARDL(1,1) model.
 
 {pmore}
 Note that if an estimation results set called {it:storename} already exists option {opt regstore()} will overwrite it without warning.
@@ -130,6 +150,7 @@ Note that if an estimation results set called {it:storename} already exists opti
 {phang}
 {opt per:fect} omits the check for collinearity among the regressors.
 
+{marker lagselection}{...}
 {dlgtab:Lag selection}
 
 {phang}
@@ -155,10 +176,23 @@ If you have to specify a large number for {opt maxcombs()}, say 1,000,000, the c
 You will always be able to hit the break key if you want to interrupt execution.
 
 {phang}
+{opt bic} and {opt aic} specify which information criterion is used.
+
+{phang2}
 {opt aic} is used to determine the optimal lag lengths with the Akaike information criterion.
 
-{phang}
-{opt bic} is used to determine the optimal lag lengths with the Bayesian information criterion, which is the default.
+{phang2}
+{opt bic} is used to determine the optimal lag lengths with the Bayesian information criterion.
+
+{pmore}
+{opt bic} is the default.
+You may not use both options at the same time.
+
+{pmore}
+Information on the information criterion is only necessary if optimal lag order
+selection is performed or if you use option {opt matcrit()}.
+If these options are not used, any specification
+of {opt bic} and/or {opt aic} is ignored.
 
 {phang}
 {opt matcr:it(lagcombmat)} saves the combinations of lags across which lag selection has searched in matrix {it:lagcombmat}.
@@ -171,13 +205,17 @@ You have to ask for the creation of this matrix explicitly by using option {opt 
 
 {pmore}
 Potentially, {it:lagcombmat} has a large number of rows.
-Note that {cmd:ardl} will perform its calculations and define {it:lagcombmat} regardless of what your current {help matsize} setting is.
-While you will always be able to display {it:lagcombmat}, many matrix operations on it (like matrix indexing) may result in Stata errors if its number of rows exceeds your {cmd:matsize} setting.
+Note that {cmd:ardl} will perform its calculations and define {it:lagcombmat} regardless of what your
+current size limit for Stata matrices is
+(see {help matsize} for Stata 15 and lower versions and {help limits} for Stata 16 and higher versions).
+While you will always be able to display {it:lagcombmat}, many matrix operations on it
+(like matrix indexing) may result in Stata errors if its number of rows exceeds your Stata matrix limit.
 
 {phang}
 {opt nofast} uses {cmd:regress} instead of Mata code to perform auxiliary regressions for finding the optimal lag lengths.
 This is much slower but in rare cases may be more robust in terms of computer numerics.
 
+{marker reporting}{...}
 {dlgtab:Reporting}
 
 {phang}
@@ -202,8 +240,20 @@ Each dot displayed represents a 1% progress in the calculation of all models con
 {opt nolstretch};
     see {helpb estimation options##display_options:[R] estimation options}.
 
+{marker other}{...}
+{dlgtab:Other}
+{* {opt nosign} skips signing the estimation sample. The latter is only necessary if you plan on using postestimation commands that are normally used after {cmd:regress}.}{...}
+{* See {help regress postestimation:here} and {help regress postestimation ts:here}. Specifying {opt nosign} provides a small speed advantage that should normally not be noticeable.}{...}
 
-{marker remarks}{...}
+{phang}
+{it:{help ardl_legacy:legacy_options}} consist of options of former versions of
+the command. They are out-of-date but continue to work
+in order to not break existing user code.
+If you have not used them before, consider them irrelevant, since the current
+implementation of the command provides better alternatives.{p_end}
+
+
+{* foldend}{* foldbeg}{* * * REMARKS * * *}{marker remarks}{...}
 {title:Remarks}
 
 {pstd}
@@ -219,7 +269,7 @@ Remarks are presented under the following headings:
     {help ardl##pureAR:Pure autoregressive processes}
     {help ardl##postestimation:Postestimation}
 
-{marker introduction}{...}
+{* foldend}{* foldbeg}{* * * REMARKS INTRODUCTION * * *}{marker introduction}{...}
 {title:Introduction}
 
 {pstd}
@@ -229,7 +279,7 @@ ARDL models can, among other things, be used for the estimation and testing of l
 Key contributions in this area are {help ardl##PS1999:Pesaran and Shin (1999)} and {help ardl##PSS2001:Pesaran, Shin and Smith (1999)}.
 For a succinct exposition of ARDL models in the context of cointegration, see {help ardl##HW2005:Hassler and Wolters (2005, 2006)}.
 
-{marker terminology}{...}
+{* foldend}{* foldbeg}{* * * REMARKS TERMINOLOGY * * *}{marker terminology}{...}
 {title:Terminology}
 
 {pstd}
@@ -244,10 +294,10 @@ The remarks section {help ardl##longruncoefficients:Long-run coefficients expres
 
 {pstd}
 {cmd:ardl} without option {opt ec} will run a regression of the levels equation, save the dependent variable and the regressors in the macros e(depvar) and e(regressors) and in the matrix e(b), and display a corresponding table of estimates.
-If option {opt ec} is used, {cmd:ardl} will run a regression corresponding to the first-difference equation and save the dependent variable and the regressors in the macros e(depvar) and e(regressors).
+If option {opt ec} (or {opt ec1}) is used, {cmd:ardl} will run a regression corresponding to the first-difference equation and save the dependent variable and the regressors in the macros e(depvar) and e(regressors).
 The coefficient output table and e(b) will be in terms of the error-correction form.
 
-{marker lagspecification}{...}
+{* foldend}{* foldbeg}{* * * REMARKS LAGSPECIFICATION * * *}{marker lagspecification}{...}
 {title:Lag specification}
 
 {pstd}
@@ -258,7 +308,7 @@ The lag length of the first differences in the first-difference equation will be
 {pstd}
 In a similar fashion, any lag information saved in {bf:e()} will refer to the levels equation.
 
-{marker deterministiccomponents}{...}
+{* foldend}{* foldbeg}{* * * REMARKS DETERMINISTICCOMPONENTS * * *}{marker deterministiccomponents}{...}
 {title:Deterministic components}
 
 {pstd}
@@ -320,7 +370,7 @@ In the conditional ARDL modelling approach proposed by PSS, for example, cases 2
 The distinction within each case-pair concerns the interpretation of the deterministic terms, i.e. whether they are considered to be part of the long-run relationship or not.
 Accordingly, the asymptotic distribution for the test for a levels-relationship advanced in PSS is different for each case.
 
-{marker longruncoefficients}{...}
+{* foldend}{* foldbeg}{* * * REMARKS LONGRUNCOEFFICIENTS * * *}{marker longruncoefficients}{...}
 {title:Long-run coefficients expressed in time t or t-1}
 
 {pstd}
@@ -328,6 +378,8 @@ It is possible to write the error-correction form with levels regressors express
 These are just different parameterizations.
 We show the two parameterizations for an ARDL(1,1) model.
 Equations shown refer to the different forms explained in the remarks section on {help ardl##terminology:Terminology}.
+In the equation labels below, read "LE" as "levels equation", "FDF" as "first-difference form", and
+"ECF" as "error-correction" form.
 Equations (FDF0)-(ECF0) and (FDF1)-(ECF1) express the regressors in the long-run relationship in time t and in time t-1, respectively.
 The long-run relationship term appears in brackets.
 
@@ -363,7 +415,7 @@ With a lag order of zero for the x-regressor (ARDL(1,0)), the above equations be
 (FDF0b) and (FDF1b) are identical equations since b_0 * x(t) = b_0 * x(t-1) + b_0 * x(t) - b_0 * x(t-1) = b_0 * x(t-1) + b_0 * dx(t).
 
 
-{marker errorcorrectionterm}{...}
+{* foldend}{* foldbeg}{* * * REMARKS ERRORCORRECTIONTERM * * *}{marker errorcorrectionterm}{...}
 {title:The error-correction term}
 
 {pstd}
@@ -402,7 +454,7 @@ See {help ardl_postestimation:ardl postestimation}.
 The adjustment term in this example is (a_1 - 1) = -(1 - a_1) = -0.297
 
 
-{marker boundstest}{...}
+{* foldend}{* foldbeg}{* * * REMARKS BOUNDSTEST * * *}{marker boundstest}{...}
 {title:Bounds test for a level relationship}
 
 {pstd}
@@ -416,7 +468,7 @@ See {help ardl_legacy##btest:ardl legacy}.
 {marker pureAR}{...}
 {smcl}
 
-{marker pureAR}{...}
+{* foldend}{* foldbeg}{* * * REMARKS PUREAR * * *}{marker pureAR}{...}
 {title:Pure autoregressive processes}
 
 {pstd}
@@ -432,7 +484,7 @@ Below is a short illustration of the two approaches.
 
 {phang}{stata webuse lutkepohl2:. webuse lutkepohl2}{p_end}
 
-{phang}{stata ardl ln_inv, ec trendvar(qtr) aic maxlag(8):. ardl ln_inv, ec trendvar(qtr) aic maxlag(8)}{p_end}
+{phang}{stata ardl ln_inv, ec trend aic maxlag(8):. ardl ln_inv, ec trend aic maxlag(8)}{p_end}
 {phang}{stata estat ectest:. estat ectest}{p_end}
 
 {pstd}
@@ -452,7 +504,7 @@ by {cmd:estat ectest} should be identical for the I(0) and I(1) cases.
 Since these values are currently based on separate response surface regressions,
 slight deviations may occur.
 
-{marker examples}{...}
+{* foldend}{* foldbeg}{* * * EXAMPLES * * *}{marker examples}{...}
 {title:Examples}
 
 {phang}
@@ -509,7 +561,7 @@ The output shows that we cannot confirm the existence of a levels relationship.
 Neither the F-statistic nor the t-statistic reject the null hypothesis of no levels relationship.
 
 
-{marker savedresults}{...}
+{* foldend}{* foldbeg}{* * * STOREDRESULTS * * *}{marker storedresults}{...}
 {title:Saved results}
 
 {pstd}
@@ -580,7 +632,7 @@ Neither the F-statistic nor the t-statistic reject the null hypothesis of no lev
 {p2colreset}{...}
 
 
-{marker authors}{...}
+{* foldend}{* foldbeg}{* * * AUTHORS * * *}{marker authors}{...}
 {title:Authors}
 
 {pstd}
@@ -590,7 +642,7 @@ Sebastian Kripfganz, University of Exeter Business School, S.Kripfganz@exeter.ac
 Daniel C. Schneider, Max Planck Institute for Demographic Research, schneider@demogr.mpg.de
 
 
-{marker references}{...}
+{* foldend}{* foldbeg}{* * * REFERENCES * * *}{marker references}{...}
 {title:References}
 
 {marker DF1979}{...}
@@ -611,7 +663,7 @@ Freie Universitaet Berlin, Working Paper No.2005/22.
 {phang}
 Kripfganz, S. and D. Schneider (2020): Response surface regressions for critical value
 bounds and approximate p-values in equilibrium correction models.
-Oxford Bulletin of Economics and Statistics. https://doi.org/10.1111/obes.12377
+Oxford Bulletin of Economics and Statistics, 82 (6), 1456-1481. https://doi.org/10.1111/obes.12377
 
 {marker L2005}{...}
 {phang}
@@ -647,7 +699,7 @@ Pesaran, M.H., Shin, Y. and R.J. Smith (2001): Bounds Testing Approaches to the 
 Journal of Applied Econometrics, 16 (3), 289-326.
 
 
-{marker alsosee}{...}
+{* foldend}{* foldbeg}{* * * ALSOSEE * * *}{marker alsosee}{...}
 {title:Also see}
 
 {psee}
@@ -656,3 +708,4 @@ Help: {manhelp regress R:regress}, {manhelp vec TS:vec}
 {psee}
 Other commands of the {cmd:ardl} package: {help ardlbounds}
 
+{* foldend}

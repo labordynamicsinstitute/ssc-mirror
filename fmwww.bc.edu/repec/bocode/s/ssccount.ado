@@ -1,7 +1,7 @@
-*! v 1.0 Tim Morris 30 Oct 2015
+*! v 1.1 Tim Morris 28 Mar 2022
 * Downloads count of SSC hits and optionally graph for specified author and package
 program define ssccount
-version 13
+version 14.0
 
 syntax , [ FRom(string) to(string) AUthor(string) clear Fillin(string) GRaph PACKage(string) SAVing(string) ]
 
@@ -50,6 +50,7 @@ if `fromno' > `tono' {
 
 * Report on what will be downloaded
 display as text "Looking to download `numdsets' months of SSC files (" %tmm_CY `fromno' " to " %tmm_CY `tono' ")"
+noi _dots 0, title("")
 
 if "`clear'" == "" {
   use "http://repec.org/docs/sschotP`fromno'.dta"
@@ -59,7 +60,7 @@ if "`clear'" == "" {
   }
 }
 else {
-  display as text "." _cont
+  noisily display as text "." _cont
   capture use "http://repec.org/docs/sschotP`fromno'.dta" , `clear'
 }
 if c(rc) != 0 {
@@ -70,7 +71,7 @@ if c(rc) != 0 {
 else {
   local two = `fromno'+1
   forval i = `two' / `tono' {
-    noisily display as text "." _cont
+	noi _dots `i' 0
     capture quietly append using "http://repec.org/docs/sschotP`i'.dta"
     if c(rc) != 0 {
       display ""
@@ -100,9 +101,9 @@ if `"`author'"' != "" {
 }
 quietly count
 if `r(N)' == 0 {
-  if "`author'" == "" display as text "Found no results for package `package' from `from' to `to'"
-  else if "`package'" == "" display as text "Found no results for author `author' from `from' to `to'"
-  else display as text "Found no results for author `author' and package `package' from `from' to `to'"
+  if "`author'" == "" display as text "Warning: " as error "Found no results for package `package' from " %tmMon_CCYY `fromno' " to " %tmMon_CCYY `tono'
+  else if "`package'" == "" display as text "Warning: " as error "Found no results for author `author' from " %tmMon_CCYY `fromno' " to " %tmMon_CCYY `tono'
+  else display as text "Warning: " as error "Found no results for author `author' and package `package' from " %tmMon_CCYY `fromno' " to " %tmMon_CCYY `tono'
 }
 
 quietly encode package, generate(`command')
@@ -124,8 +125,12 @@ quietly compress
 
 sort author `command' mo
 
+
 if "`graph'" != "" & "`author'" == "" & "`package'" == "" {
   display as error "No authors or packages have been selected, but the graph option has." _newline "The thousands of small graphs will not be drawn."
+}
+if "`graph'" != "" & _N==0 {
+  
 }
 else if `"`graph'"' != "" {
   quietly tab `command' author
@@ -154,6 +159,7 @@ end
 exit
 
 History of ssccount.ado
+28mar2022  v 1.1  T Morris  Minor improvements to dots display and error messages following feedback from Ella Marley-Zagar.
 30oct2015  v 1.0  T Morris  Various bugs fixed and incorporated helpful suggestions from Roger Newson.
 09jun2015  v 0.7  T Morris  Added smoothed line (lowess) to the graph drawn if graph option is specified.
 12feb2015  v 0.6  T Morris  Fixed issue with inappropriate warning message.

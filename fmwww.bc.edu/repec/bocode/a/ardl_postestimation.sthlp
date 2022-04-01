@@ -1,21 +1,23 @@
 {smcl}
-{* *! version 1.0.4  25aug2020}{...}
+{* *! version 1.0.5  29mar2022}{...}
 {title:Title}
 
 {phang}
 {bf:ardl postestimation {hline 2}} Postestimation tools for {help ardl}
 
 
-{marker description}{...}
+{* foldend}{* foldbeg}{* * * DESCRIPTION * * *}{marker description}{...}
 {title:Description}
 
 {pstd}
 The following postestimation commands are of special interest after {opt ardl}:
 
-{synoptset 15}{...}
+{synoptset 20}{...}
 {synopt:Command}Description{p_end}
 {synoptline}
 {synopt:{helpb ardl_postestimation##ectest:estat ectest}}Pesaran/Shin/Smith (2001) bounds test for the existence of a level relationship{p_end}
+{synopt:{helpb regress_postestimation:estat {it:subcmd_reg}}}all {cmd:estat} subcommands available after {cmd:regress}, except for {cmd:estat moran}; see the {help ardl_postestimation##postregress:note} below{p_end}
+{synopt:{helpb regress_postestimationts:estat {it:subcmd_reg_ts}}}all {cmd:estat} subcommands available after {cmd:regress} when run on a time series data set; see the {help ardl_postestimation##postregress:note} below{p_end}
 {synoptline}
 {p2colreset}{...}
 
@@ -25,7 +27,8 @@ The following standard postestimation commands are also available:
 {synoptset 15}{...}
 {synopt:Command}Description{p_end}
 {synoptline}
-{synopt:{helpb estat}}AIC, BIC, VCE, and estimation sample summary{p_end}
+{synopt:{helpb estat}}AIC/BIC, VCE, and estimation sample summary ({cmd:estat}
+subcommands {cmd:ic}, {cmd:vce}, and {cmd:{ul:su}mmary}, respectively).{p_end}
 {synopt:{helpb estimates}}cataloging estimation results{p_end}
 {synopt:{helpb lincom}}point estimates, standard errors, testing, and inference for linear combinations of coefficients{p_end}
 {synopt:{helpb lrtest}}likelihood-ratio test{p_end}
@@ -37,20 +40,19 @@ The following standard postestimation commands are also available:
 {p2colreset}{...}
 
 
-
-{marker abbreviations}{...}{* * * * * * * * * * * * * * * * * ABBREVIATIONS * * * * * * * * * * * * * * * *}
+{* foldend}{* foldbeg}{* * * ABBREVIATIONS * * *}{marker abbreviations}{...}
 {title:Abbreviations and definitions used in this help entry}
 
 {pstd}
 See the {help ardl##abbreviations:abbreviations section of ardl}.
 
 
-{marker ectest}{...}{* * * * * * * * * * * * * * * * * ECTEST * * * * * * * * * * * * * * * *}
+{* foldend}{* foldbeg}{* * * ECTEST * * *}{marker ectest}{...}
 {title:Syntax for estat ectest}
 
 {p 8 17 2}
-{cmd:estat {ul:ect}est} {cmd:,} [ {opt sig:levels(levellist)} {opt asy:mptotic} ]
-
+{cmd:estat {ul:ect}est} {cmd:,} [ {opt sig:levels(levellist)} {opt asy:mptotic} 
+    {opt nocr:itval} {opt nor:ule} {opt nodec:ision} ]
 
 {title:Description for estat ectest}
 
@@ -71,7 +73,7 @@ However, {cmd:estat ectest} displays the F-statistic and t-statistic as well as 
 {p 4 13 2}
 {bf:{ul:Warning}:} The Kripfganz/Schneider critical values and p-values are obtained on the basis of the
 methodology used as of the release date of command version 1.0.3 (June 2020)
-and still applicable as of the relase data of this command version (1.0.4, August 2020).
+and are still applicable as of the release date of this command version (1.0.5, March 2022).
 Compared to version 1.0.2 (September 2018), version 1.0.3 introduces very slight changes in the
 computed statistics.
 Future versions of {cmd:ardl} may reflect further potential methodological refinements.
@@ -91,8 +93,34 @@ There are 221 different levels among which you can choose, indicated by the Stat
 {opt asy:mptotic} requests that the sample size returned by {cmd:ardl} in {bf:e(N)} be ignored, and
 shows asymptotic CVs instead.
 
+{phang}
+{opt nocr:itval} does not display the critical values table.
 
-{marker syntax_predict}{...}{* * * * * * * * * * * * * * * * * PREDICT * * * * * * * * * * * * * * * *}
+{phang}
+{opt nor:ule} does not display the decision rule.
+
+{phang}
+{opt nodec:ision} does not display the decision table.
+
+
+{* foldend}{* foldbeg}{* * * POSTESTIMATION COMMANDS BORROWED FROM REGRESS * * *}{marker postregress}{...}
+{title:Postestimation Commands Borrowed from regress}
+
+{pstd}
+A large number of {cmd:estat} subcommands for {cmd:regress} can be used after {cmd:ardl};
+see {help regress_postestimation:here} and {help regress_postestimationts:here}.
+Importantly, the results obtained with some of them can
+differ depending on whether the model is specified in levels form or in
+first-difference / error-correction form (see the sections on {help ardl##terminology:terminology}
+and on {help ardl##longruncoefficients:long-run coefficients} for a clarification of these terms).
+For example, the {cmd:estat ovtest} includes higher-order powers
+of the dependent variable – which is either y(t) or dy(t) – as regressors in an auxiliary regression.
+This complication does not apply to postestimation commands based on
+residuals – such as {cmd:estat bgodfrey} and {cmd:estat imtest} – because the error term e(t) is
+unaffected by the model's reparameterization.
+
+
+{* foldend}{* foldbeg}{* * * SYNTAX_PREDICT * * *}{marker syntax_predict}{...}
 {marker predict}{...}
 {title:Syntax for predict}
 
@@ -118,7 +146,7 @@ shows asymptotic CVs instead.
 All statistics are available both in and out of sample; type {cmd:predict ... if e(sample)} if wanted only for the estimation sample.
 
 
-{marker options_predict}{...}
+{* foldend}{* foldbeg}{* * * OPTIONS_PREDICT * * *}{marker options_predict}{...}
 {title:Options for predict}
 
 {dlgtab:Main}
@@ -137,7 +165,7 @@ For a precise description of what is being calculated, refer to the {cmd:ardl} h
 {help ardl##errorcorrectionterm:The error-correction term}.
 
 
-{marker savedresults}{...}
+{* foldend}{* foldbeg}{* * * STOREDRESULTS * * *}{marker storedresults}{...}
 {title:Saved results}
 
 {pstd}
@@ -159,6 +187,7 @@ For a precise description of what is being calculated, refer to the {cmd:ardl} h
 
 {syntab:Matrices}
 {synopt:{cmd:r(cvmat)}}matrix of critical values and approximate p-values{p_end}
+{synopt:{cmd:r(decmat)}}matrix indicating the decision on the bounds test{p_end}
 {p2colreset}{...}
 
-
+{* foldend}

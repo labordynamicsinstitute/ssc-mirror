@@ -11,7 +11,7 @@
 {title:Title}
 
 {pstd}
-ssccount {hline 2} download ssc hits over time for user-written packages
+ssccount {hline 2} download ssc hits data over time for user-written packages
 
 
 {marker syntax}{...}
@@ -41,19 +41,19 @@ ssccount {hline 2} download ssc hits over time for user-written packages
 
 {pstd}
 For authors of user-written packages released on SSC, {cmd:ssccount} is a command
-to keep track of monthly hits. It uses the same datasets as {cmd:ssc hot} and appends
+to keep track of monthly hits. It uses the same datasets as {bf:{help ssc:ssc hot}} and appends
 them over time. Datasets are downloaded for the specified date range and loaded into
 memory. If neither {opt author()} nor {opt package()} options are specified,
-{cmd: ssccount} will download data for all authors and packages for the specified
+{cmd:ssccount} will download data for all authors and packages for the specified
 months. It is then up to the user to process as they wish.
 
 {pstd}
 Note that records began in 2007m7 (that is, July 2007) and {cmd:ssccount} will react
 angrily if dates before this are specified. Unfortunately {cmd:ssccount} is not a crystal
 ball, and if dates specified are in the future you will not get any results. There
-also tends to be a lag on the release of the datasets of about two months. Specifying
+also tends to be a lag of around two months on the release of the datasets. Specifying
 months that are not yet available will display an error but {cmd:ssccount} will load
-into memort (and save if specified) the datasets it was able to download, if any.
+into memory the datasets it was able to download, if any.
 
 
 {marker options}{...}
@@ -77,22 +77,22 @@ hits files become available online.
 on SSC packages can be of an inconsistent form. You do not have to get it exactly right,
 as long as the name used contains what you specify in author. Note that the option is not
 sensitive to case, so specifiying {opt author(bloggs)} is the same as {opt author(BLOGGS)}
-or anything in between, like {opt author(BlOgGs)}.
+or anything in between, like {opt author(bLoGgS)}.
 
 {phang}
-{opt clear} specifies that any dataset currently in memory be cleared. If there is a data
+{opt clear} specifies that any dataset currently in memory be cleared. If there is a dataset
 in memory and the {opt clear} option is not specified, {cmd:ssccount} will exit with an
 error.
 
 {phang}
-{opt fillin(#)} calls the {help fillin} command. This is for use with plots when more than
+{opt fillin(#)} calls the {bf:{help fillin:fillin}} command. This is for use with plots when more than
 one author and/or package has been specified. It creates missing months to form a rectangular
 dataset and fills each one in with # hits. Filling as missing (.) is allowed. Default is not
 to fill anything.
 
 {phang}
-{opt graph} draws a simple graph of the month-by-month hits using {cmd:twoway line} and
-overlays a smoothed trend using {cmd:lowess}. If the data contains multiple authors or
+{opt graph} draws a simple graph of the month-by-month hits using {bf:{help line:twoway line}} and
+overlays a smoothed trend using {bf:{help lowess:lowess}}. If the data contains multiple authors or
 packages, the graphs will be drawn by author and/or package.
 
 {phang}
@@ -125,6 +125,13 @@ Download and plot hits for the {cmd:psmatch2} package from Jan to May 2015:
 
 {phang2}
 {cmd:ssccount , from(2015m1) to(2015m5) graph package(psmatch2) saving(psmatch2_2015)}
+
+
+{title:Reference}
+
+{phang}
+Choodari-Oskooei, B. and Morris, T. P. (2016). Quantifying the uptake of user-written commands over
+time. {it:The Stata Journal} {bf:16}(1)88–95.
 
 
 {title:Acknowledgements}

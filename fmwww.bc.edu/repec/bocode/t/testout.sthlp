@@ -14,7 +14,7 @@
 {it:y}
 {it:x1 x2 ...}
 {ifin}
-[{cmd:,} {bf:iv}({it:varname}) {bf:k}({it:real}) {bf:alpha}({it:real}) {bf:maxw}({it:real}) {bf:prec}({it:real})]
+[{cmd:,} {bf:iv}({it:varname}) {bf:cluster}({it:varname}) {bf:pweight}({it:varname}) {bf:k}({it:real}) {bf:alpha}({it:real}) {bf:maxw}({it:real}) {bf:prec}({it:real})]
 
 
 {marker description}{...}
@@ -37,6 +37,14 @@ If the test rejects the null hypothesis of the bounded second-moment condition f
 {bf:iv({it:varname})} sets an instrumental variable.
 If this option is not invoked, then the command executes the outlier tests for the OLS ({bf:reg}).
 If this option is invoked, then the command executes the outlier tests for the 2SLS ({bf:ivreg}) where the first independent variable {bf:x1} is treated as an endogenous variable instrumented by the {bf:iv}.
+
+{phang}
+{bf:cluster({it:varname})} sets a clustering variable.
+If this option is not invoked, then the command does not cluster observations.
+
+{phang}
+{bf:pweight({it:varname})} sets sample weights.
+If this option is not invoked, then the command does not impose sample weights.
 
 {phang}
 {bf:k({it:real})} sets the number of extreme order statistics to be used for the tests. 
@@ -88,6 +96,9 @@ Scalars
 {p_end}
 {phang2}
 {bf:r(N)} {space 10}observations
+{p_end}
+{phang2}
+{bf:r(G)} {space 10}cluster size
 {p_end}
 {phang2}
 {bf:r(k)} {space 10}number of extreme order statistics

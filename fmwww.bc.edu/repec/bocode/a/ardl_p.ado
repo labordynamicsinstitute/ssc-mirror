@@ -1,4 +1,4 @@
-*! version 1.0.4  25aug2020  sk dcs
+*! version 1.0.5  29mar2022  sk dcs
 
 program define ardl_p , sortpreserve
 
@@ -77,7 +77,8 @@ program define ardl_p , sortpreserve
         matrix colnames `y' = LR:L.`depvar'
 
         capture matrix `ecx' = -1 * `b'[1, "LR:"]
-        matrix `ec' = (`y' , nullmat(`ecx'))  // `ecx' does not exist if model contains no LR-xregs or LR deterministics
+        matrix `ec' = (`y' , nullmat(`ecx'))
+            // `ecx' does not exist if model contains no LR-xregs or LR deterministics
         matrix score `typlist' `varlist' = `ec' if `touse' , equation(LR)
         label variable `varlist' "ardl: error-correction term"
     }

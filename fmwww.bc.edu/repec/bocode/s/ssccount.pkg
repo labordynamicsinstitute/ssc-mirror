@@ -12,9 +12,9 @@ d KW: user-written commands
 d KW: ssc
 d KW: ssc hot
 d
-d Requires: Stata version 13
+d Requires: Stata version 14
 d
-d Distribution-Date: 20151110
+d Distribution-Date: 20220331
 d
 d Author: Tim Morris, MRC Clinical Trials Unit at UCL
 d Support: email T.Morris@@ctu.mrc.ac.uk
