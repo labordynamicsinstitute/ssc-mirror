@@ -46,6 +46,7 @@ p scsomersd module to compute rank statistics for scenario comparisons
 p scto module to provide utility functions for data collected using SurveyCTO 
 p sctree module to implement classification trees via optimal pruning, bagging, random forests, and boosting methods
 p sdecode module to decode a numeric variable into a string variable
+p sdid module to perform synthetic difference-in-differences estimation, inference, and visualization
 p sdist module to simulate the Central Limit Theorem
 p sdlim module to rescale variables measured with a limited rating scale
 p sdline module to plot SD line or reduced major axis

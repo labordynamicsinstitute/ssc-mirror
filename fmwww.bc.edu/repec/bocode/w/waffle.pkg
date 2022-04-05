@@ -1,0 +1,25 @@
+d 'WAFFLE': module to produce waffle charts using percent or proportion variables
+d
+d     waffle is a wrapper for twoway scatter and draws waffle
+d charts based on variables containing percents or decimals. The   
+d standard waffle chart will be a 10x10 grid with colored squares
+d indicating the percent value; specifying wide will make the	
+d grid 5x20.  If only one variable is listed in varlist, by() is
+d allowed and will make a different waffle chart for each   
+d category of by(). You can specify up to 5 variables in varlist
+d and indicate the colors of each category.  Other twoway options  
+d  not listed here are not allowed because waffle charts rely on
+d specific options of twoway being specified. 
+d
+d KW: waffle
+d KW: graphics
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20220404
+d
+d Author: Jared Colston, University of Wisconsin-Madison
+d Support: email colston@@wisc.edu
+d
+f waffle.ado
+f waffle.sthlp

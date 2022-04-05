@@ -14,7 +14,7 @@ d KW: esttab
 d
 d Requires: Stata version 12, estout package and chewfile package from SSC (q.v.)
 d
-d Distribution-Date: 20170504
+d Distribution-Date: 20220404
 d
 d Author: Derek Wolfson, Innovations for Poverty Action
 d Support: email dwolfson@@poverty-action.org

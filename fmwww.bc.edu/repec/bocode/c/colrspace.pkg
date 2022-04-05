@@ -12,7 +12,7 @@ d KW: color management
 d
 d Requires: Stata version 14.2 
 d
-d Distribution-Date: 20200606
+d Distribution-Date: 20220404
 d
 d Author: Ben Jann, University of Bern
 d Support: email jann@@soz.unibe.ch
@@ -20,9 +20,10 @@ d
 f colrspace.sthlp
 f colrspace_source.sthlp
 f colrspace_library_generators.sthlp
-f colrspace_library_matplotlib.sthlp
 f colrspace_library_namedcolors.sthlp
 f colrspace_library_palettes.sthlp
+f colrspace_library_lsmaps.sthlp
+f colrspace_library_rgbmaps.sthlp
 f ../l/lcolrspace.mlib
 f colrspace.zip
 f colrspace_cscript.do

@@ -11,7 +11,7 @@ d KW: line patterns
 d
 d Requires: Stata version 14.2 and colrspace from SSC (q.v.); (version 9.2 for colorpalette9)
 d
-d Distribution-Date: 20200527
+d Distribution-Date: 20220404
 d
 d Author: Ben Jann, University of Bern
 d Support: email jann@@soz.unibe.ch
@@ -25,4 +25,6 @@ f ../l/linepalette.ado
 f ../l/linepalette.hlp
 f ../s/symbolpalette.ado
 f ../s/symbolpalette.hlp
+f ../c/colorcheck.ado
+f ../c/colorcheck.hlp
 f palettes.zip
