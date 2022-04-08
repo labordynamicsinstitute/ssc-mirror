@@ -1,4 +1,4 @@
-d 'SGPV': module to  calculate Second-Generation P-Value(s) (SGPV) and their associated diagnosis
+d 'SGPV': module to calculate Second-Generation P-Value(s) (SGPV) and their associated diagnosis
 d
 d      sgpv allows the calculation of the Second-Generation
 d P-Values (SGPV) developed by Blume	et.al.(PLOS One 2018,
@@ -13,7 +13,7 @@ d KW: false discovery rate
 d
 d Requires: Stata version 12
 d
-d Distribution-Date: 20210605
+d Distribution-Date: 20220315
 d
 d Author: Sven-Kristjan Bormann, School of Economics and Business Administration, University of Tartu
 d Support: email  sven-kristjan@@gmx.de

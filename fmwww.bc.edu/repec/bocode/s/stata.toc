@@ -77,7 +77,7 @@ p sfcross module for cross-sectional stochastic frontier models estimation
 p sfkk module to estimate endogenous stochastic frontier models in the style of Karakaplan and Kutlu
 p sfpanel module for panel data stochastic frontier models estimation
 p sgini module to compute Generalized Gini and Concentration coefficients, Gini correlations and fractional ranks
-p sgpv module to  calculate Second-Generation P-Value(s) (SGPV) and their associated diagnosis
+p sgpv module to calculate Second-Generation P-Value(s) (SGPV) and their associated diagnosis
 p sgtreg module to perform Regression using the Skewed Generalized T Distribution
 p shakespeare module to randomly generate quotes from the Bard of Avon 
 p shapley2 module to compute additive decomposition of estimation statistics by regressors or groups of regressors
