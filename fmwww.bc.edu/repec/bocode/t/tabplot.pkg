@@ -1,6 +1,6 @@
 d 'TABPLOT': module to show table of frequencies as table of bars 
 d
-d tabplot plots a table of frequencies, fractions, or percents in 
+d  tabplot plots a table of frequencies, fractions, or percents in 
 d graphical form. It is mainly intended for use with two
 d categorical  variables but also has uses for plotting multiple
 d histograms.  The widths of bars may be tuned to allow touching or
@@ -17,11 +17,10 @@ d KW: tabulations
 d
 d Requires: Stata version 8.0 (6.0 for tabplot6)
 d
+d Distribution-Date: 20220409
 d
 d Author: Nicholas J. Cox, University of Durham
 d Support: email N.J.Cox@@durham.ac.uk
-d
-d Distribution-Date: 20190715
 d
 f tabplot.ado
 f ../_/_glgroup.ado

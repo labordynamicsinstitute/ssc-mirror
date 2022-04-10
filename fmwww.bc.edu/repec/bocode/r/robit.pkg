@@ -9,10 +9,13 @@ d KW: regression
 d
 d Requires: Stata version 16 and xlink from SSC (q.v.)
 d
-d Distribution-Date: 20211221
+d Distribution-Date: 20220409
 d
 d Author: Roger Newson,  King's College London
 d Support: email roger.newson@@kcl.ac.uk
+d
+d Author: Milena Falcaro,  King's College London
+d Support: email milena.falcaro@@kcl.ac.uk
 d
 f robit.sthlp
 f robit.ado

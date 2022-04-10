@@ -9,5 +9,6 @@ p jnsn module to fit Johnson distributions
 p johans module to perform Johansen-Juselius ML estimates of cointegration
 p joinvars module to join values of variables
 p jonter module to perform Jonckheere-Terpstra test
+p joyplot module to produce joyplots or ridgeline plots
 p jrule module to detect model misspecifications in SEM
 p jsonio module for I/O operations on JSON data

@@ -4,15 +4,15 @@ version 16.0;
 *
  Robit wrapper for glm.
  with added estimation results.
-*!Author: Roger Newson
-*!Date: 21 December 2021
+*!Authors: Roger Newson, Milena Falcaro
+*!Date: 01 April 2021
 *;
 
 
 *
  Check that all necessary Stata packages are present
 *;
-qui _whichlist robit1 robit2 robit3 robit4 robit5 robit6 robit7 robit8,
+qui _whichlist robit1 robit2 robit3 robit4 robit5 robit6 robit7 robit8 robit9 robit10,
   pack(xlink);
 local incpackages `"`r(incomplete)'"';
 if "`incpackages'"!="" {;
@@ -31,12 +31,16 @@ if(replay()){;
  Beginning of replay section (not indented)
 *;
 
-if "`e(cmd)'"!="glm"{;error 301;};
-if _by() {;
-  error 190;
-};
-syntax [, Level(cilevel) EForm ];
-glm, level(`level') `eform';
+if "`e(cmd)'"!="glm" error 301;
+local cmdline `"`e(cmdline)'"';
+local cmd2: word 1 of `cmdline';
+if `"`cmd2'"'!="robit" error 301;
+if _by() error 190;
+syntax [, Level(cilevel) noHEADer notable COEFLegend
+  ];
+_robitplay, level(`level') 
+  `table' `header' `coeflegend'
+  ;
 
 *
  End of replay section (not indented)
@@ -47,11 +51,25 @@ else {;
  Beginning of non-replay section (not indented)
 *;
 
-syntax varlist(numeric fv ts) [if] [in] [fweight pweight iweight aweight] [,
-  DFRObit(numlist integer >=1 <=8 min=1 max=1)
-  Family(passthru) Level(cilevel) EForm * ];
-if "`dfrobit'"=="" local dfrobit 7;
-if `"`family'"'=="" local family "family(bernoulli)";
+syntax varlist(numeric fv ts) [if] [in] [fweight pweight iweight aweight],
+  DFreedom(numlist integer >=1 <=8 min=1 max=1) [
+  Level(cilevel)
+  noCONStant
+  ASIS
+  OFFset(passthru)
+  CONSTraints(passthru)
+  VCE(passthru)
+  COLlinear
+  COEFLegend
+  DIFficult
+  FROM(passthru)
+  noHEADer
+  noTABLE
+  ];
+/*
+ dfreedom() specifies the robit degrees of freedom.
+ Other options are passed to glm.
+*/
 
 
 * Identify sample to use *;
@@ -59,17 +77,26 @@ marksample touse;
 
 
 * Run glm *;
-disp _n as text "Robit regression";
 glm `varlist' if `touse' [`weight'`exp'] , level(`level') `eform'
-  `family' link(robit`dfrobit') `options';
-if !inlist(lower(e(varfunct)),"binomial","bernoulli")
-  disp "Warning: Variance function not binomial or Bernoulli";
+  family(bernoulli) link(robit`dfreedom')
+  `constant'
+  `asis'
+  `offset'
+  `constraints'
+  `vce'
+  `collinear'
+  `coeflegend'
+  `difficult'
+  `from'
+  noheader
+  notable
+  ;
 
 
 * Change e(cmdline) (but not e(cmd)) to refer to robit *;
 ereturn local cmdline `"robit `0'"';
 
-
+
 * Add e(depvarsum) *;
 local yvar "`e(depvar)'";
 if "`e(wtype)'"=="fweight" {;
@@ -81,34 +108,17 @@ else {;
 ereturn scalar depvarsum=r(sum);
 
 
-* Add e(msum) *;
-if `"`e(m)'"'!="" {;
-  tempvar mvar;
-  qui gene long `mvar'=`e(m)';
-  qui compress `mvar';
-  if "`e(wtype)'"=="fweight" {;
-    qui summ `mvar' [`e(wtype)'`e(wexp)'] if e(sample), meanonly;
-  };
-  else {;
-    qui summ `mvar' if e(sample), meanonly;
-  };  
-};
-ereturn scalar msum=r(sum);
-
-
 *
- Restore r() results
+ Display results
 *;
-if "`eform'"=="eform" {;
-  local exteform "eform(exp(b))";
-};
-qui ereturn display, level(`level') `exteform';
+_robitplay, level(`level') `header' `table' `coeflegend';
 
 
 *
  End of non-replay section (not indented)
 *;
 };
+
 
 end;
 
@@ -214,6 +224,45 @@ foreach R in incomplete complete absent present {;
   return local `R' `"``R''"';
 };
 
+
+end;
+
+
+program define _robitplay;
+version 16.0;
+*
+ Display output
+*;
+
+syntax [, Level(cilevel) noHEADer notable COEFLegend ];
+/*
+ level() specifies a confidence level.
+ noheader specifies no header.
+ notable specified no table.
+*/
+
+
+* Check that confidence level is within range *;
+if((`level'<10.00)|(`level'>99.99)){;
+  disp as error "Level must be between 10.00 and 99.99 inclusive";
+  exit 198;
+};
+
+* Display estimates *;
+disp as text "Model: `e(linkt)'" _n;
+if "`header'"!="noheader" {;
+  disp as text "Number of obs: " as result e(N);
+  disp as text "`e(chi2type)' chi2(`=e(df_m)'): " as result e(chi2);
+  disp as text "Prob > chi2: " as result e(p);
+  if inlist("`e(vce)'","oim","opg") {;
+    disp as text "Log likelihood: " as result e(ll);
+  };
+  else {;
+    disp as text "Log pseudolikelihood: " as result e(ll);
+  };
+  disp;
+};
+if "`table'"!="notable" ereturn display, level(`level') `coeflegend';
 
 end;
 

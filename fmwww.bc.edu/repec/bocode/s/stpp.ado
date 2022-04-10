@@ -1,4 +1,4 @@
-*! version 1.2.4 2022-01-13
+*! version 1.2.6 2022-04-06
 
 program define stpp, rclass sortpreserve
   version 16.0
@@ -13,11 +13,13 @@ program define stpp, rclass sortpreserve
                    BY(varlist)                                          ///
                    CRUDEProb(namelist min=1 max=2)                      ///
                    DEATHPROB                                            ///
+                   dropexpected                                         ///
                    ederer2                                              ///
                    FH                                                   ///
                    LEVel(real `c(level)')                               ///
                    INDWeights(varname)                                  ///
                    LIST(numlist ascending >0)                           ///
+                   MINEXPsurv(string)                                   ///
                    pmage(string)                                        ///
                    pmother(string)                                      ///
                    pmrate(string)                                       ///
@@ -83,7 +85,7 @@ program define stpp, rclass sortpreserve
         exit 198
       }
     }
-    if "`using2'" != "" & "`crudeprob'`allcause'" != "" {
+    if "`crudeprob'`allcause'" != "" {
       di as error "You can't use the standstrata option with all-cause or crude probabilities"       
       di as error "You could use the indweight() options as an alternative"
       exit 198
@@ -163,6 +165,10 @@ program define stpp, rclass sortpreserve
     local pmother2 = cond("`pmother2'"== ".","",cond("`pmother2'"== "","`pmother'","`pmother2'"))
     local pmrate2  = cond("`pmrate2'" == "","`pmrate'","`pmrate2'") 
     
+    if "`minexpsurv'" != "" {
+      confirm number `minexpsurv'
+    }
+    
     qui describe using "`using2filename'", varlist short
     local popmort2vars `r(varlist)'
     foreach var in `pmage2' `pmyear2' `pmother2' `pmrate2' {
@@ -216,24 +222,23 @@ program define stpp, rclass sortpreserve
   mata: stpp()
   return add
   
-  if "`by'" != "" {
+  if "`by'" != "" & "`list'" != ""  {
   	quietly {
-	  matrix colnames PP=`by' time PP PP_lci PP_uci	
-	  return matrix PP=PP
-	  if "`allcause'"  != "" {
-	  	matrix colnames AC=`by' time AC AC_lci AC_uci	
-	    return matrix AC=AC
-		
+  	  matrix colnames PP=`by' time PP PP_lci PP_uci	
+  	  return matrix PP=PP
+  	  if "`allcause'"  != "" {
+  	  	matrix colnames AC=`by' time AC AC_lci AC_uci	
+  	    return matrix AC=AC
+  	  }
+	    if "`crudeprob'" != "" {
+	      matrix colnames CP_can=`by' time CP_can CP_can_lci CP_can_uci	
+	      return matrix CP_can=CP_can
+	  	  if wordcount("`crudeprob'")>1 {
+	  	    matrix colnames CP_oth=`by' time CP_oth CP_oth_lci CP_oth_uci	
+	        return matrix CP_oth=CP_oth		
+	  	  }
+	    }
 	  }
-	  if "`crudeprob'" != "" {
-	    matrix colnames CP_can=`by' time CP_can CP_can_lci CP_can_uci	
-	    return matrix CP_can=CP_can
-		if wordcount("`crudeprob'")>1 {
-		  matrix colnames CP_oth=`by' time CP_oth CP_oth_lci CP_oth_uci	
-	      return matrix CP_oth=CP_oth		
-		}
-	  }
-	}
   }  
 
   // merge in results  
@@ -459,12 +464,15 @@ struct stpp_info {
                         hasdeathprob,     // calculate net and All-cause death probs 
                         haslist,          // display at specific time points
                         hasflemhar,       // Fleming Harrington   
+                        hasminexpsurv,    // has minimum expected survival
+                        minexpsurv,       // values of minimum expected survival  
                         pmmaxage,         // maximum age in popmort file
                         pmmaxyear,        // maximum year in popmort file
                         ederer2,          // ederer2 option
                         level,            // level for confidence intervals
-                        hasstandstrata ,  // has strata to standardize over
+                        hasstandstrata,   // has strata to standardize over
                         verbose,          // print out details
+                        dropexpected,     // drop expected rates (trick for CS)
                         haspopmort2,      // has second popmort file
                         haspmother2,      // popmort2 file straified by other
                         haspmyear2,       // popmort2 file straified by year
@@ -520,7 +528,6 @@ struct stpp_info {
                         indweights        // individual level weights
                         
   transmorphic matrix   pmothervars       // other variables
-
 
 // standstrata options
   real         scalar   Nstandlevels      // Number of levels in standstrata
@@ -601,6 +608,7 @@ function PP_Get_stpp_info()
   S.hascrudeprob   = st_local("crudeprob") != ""
   S.hasdeathprob   = st_local("deathprob") != ""
   S.hasflemhar     = st_local("fh") != ""
+  S.hasminexpsurv  = st_local("minexpsurv") != ""
   S.pmage          = st_local("pmage")
   S.pmyear         = st_local("pmyear")
   S.pmother        = tokens(st_local("pmother"))
@@ -611,6 +619,7 @@ function PP_Get_stpp_info()
   S.level          = strtoreal(st_local("level"))/100  
   S.hasstandstrata = st_local("standstrata") != ""
   S.haspopmort2    = st_local("using2") != ""
+  S.dropexpected   = st_local("dropexpected") != ""
 
 // read in popmort2 options  
   if(S.haspopmort2) {
@@ -631,6 +640,9 @@ function PP_Get_stpp_info()
     S.Nlist   = cols(S.list)
   }  
 
+// minexpsurv options
+  if(S.hasminexpsurv) S.minexpsurv = strtoreal(st_local("minexpsurv"))  
+  
 // variables in poport files  
   S.pmvars  = tokens(invtokens((S.pmage,S.pmyear,S.pmother,S.pmrate)))
   if(S.haspopmort2) {
@@ -644,7 +656,6 @@ function PP_Get_stpp_info()
     S.CP_newvarnames = tokens(st_local("CP_newvarnames"))
   }
   S.CP_calcother = cols(S.CP_newvarnames)==2 :& S.hascrudeprob
-
 
 // popmort files as a view
   if(S.verbose) printf("Reading in popmort file(s)\n")
@@ -661,7 +672,6 @@ function PP_Get_stpp_info()
 
 // read in data from Stata
   S.touse         = st_local("touse")
-
   S.datediag      = st_data(., st_local("datediag"), S.touse)
   S.agediag       = st_data(., st_local("agediag"), S.touse)
   S.t             = st_data(.,"_t",S.touse)
@@ -720,7 +730,6 @@ function PP_Get_stpp_info()
   S.maxt_k       = asarray_create("real",1)
   S.mint_k       = asarray_create("real",1)
   
-
   for(k=1;k<=S.Nbylevels;k++) {
     for(s=1;s<=S.Nstandlevels;s++) {
       asarray(S.unique_t_sk,(s,k), uniqrows(S.t[selectindex(S.d :& rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars :& S.standstrata:==S.standlevels[s])]))
@@ -951,9 +960,6 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
         atrisk_index  = selectindex(atrisk)
         exprates_index = selectindex(t0_by[S.atrisk_all_index]:<tj) // needed to reduce exprates with delayentry
 
-        
-        
-
 // attained age (note quicker than using rowmin)
         S.attage = floor(agediag_by[S.atrisk_all_index] :+ tstart_j) 
         tmpselect = selectindex(S.attage:>S.pmmaxage)
@@ -968,7 +974,11 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
         exprates = PP_gen_exprates(S,1,S.pm,S.attyear):*S.yj  
         expcumhaz[S.atrisk_all_index] = expcumhaz[S.atrisk_all_index] :+ exprates
        
-        expsurv_tj = exp(-(expcumhaz[atrisk_index])) 
+        expsurv_tj = exp(-(expcumhaz[atrisk_index]))
+        if(S.hasminexpsurv) {
+          tmpselect = selectindex(expsurv_tj:<S.minexpsurv)
+          expsurv_tj[tmpselect] = J(rows(tmpselect),1,S.minexpsurv)
+        }
         if(S.haspopmort2) {
           if(S.haspmyear2) tmpattyear = S.attyear
           else tmpattyear = J(rows(S.atrisk_all_index),1,1)
@@ -976,7 +986,11 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
           exprates2 = PP_gen_exprates(S,2,S.pm2,tmpattyear):*S.yj
 	  
           expcumhaz2[S.atrisk_all_index] = expcumhaz2[S.atrisk_all_index] :+ exprates2
-          expsurv2_tj = exp(-(expcumhaz2[atrisk_index]))           
+          expsurv2_tj = exp(-(expcumhaz2[atrisk_index])) 
+          if(S.hasminexpsurv) {
+            tmpselect = selectindex(expsurv2_tj:<S.minexpsurv)
+            expsurv2_tj[tmpselect] = J(rows(tmpselect),1,S.minexpsurv)
+          }
         }
         died_tj = (t_by[atrisk_index]:==tj) :& d_by[atrisk_index] 
         died_tj_select = selectindex(died_tj)
@@ -988,9 +1002,8 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
         Y_wt = colsum(wt_atrisk)	
         v1   = colsum((wt_atrisk[died_tj_select]:^2))	
 
-
-
-        lambda_e_tmp[j] = (N_wt :- colsum(wt_atrisk:*exprates[exprates_index])):/Y_wt
+        if(!S.dropexpected) lambda_e_tmp[j] = (N_wt :- colsum(wt_atrisk:*exprates[exprates_index])):/Y_wt
+        else lambda_e_tmp[j] = (N_wt):/Y_wt
         lambda_e_tmp_var[j] = (v1:/(Y_wt:^2))
 
 // Crude probabilities and allcause
@@ -1011,8 +1024,6 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
           }
         }
       }
-      
-
       
 // Store contribution to cumulative hazards      
       asarray(S.lambda_e_t,    (s,S.bylevels[k,]),(lambda_e_tmp))
@@ -1187,8 +1198,6 @@ real matrix allcause, allcause_v,
             tmpmat_v[j]=quadsum((tmpmat[j]:-tmpmat[1::j,.]):^2:*lambda_all_t_var[1::j,.]) 
           }      
           asarray(S.CP_oth, k, PP_loglog_tran_var(tmpmat,tmpmat_v,zz))
-
-          //asarray(S.CP_oth, k, (tmpmat, J(rows(tmpmat),1,-99), J(rows(tmpmat),1,-99)))
         }
       }
     }

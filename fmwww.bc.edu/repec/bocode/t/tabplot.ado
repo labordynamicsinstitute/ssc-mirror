@@ -1,3 +1,4 @@
+*! 2.8.1 NJC 9 April 2022 
 *! 2.8.0 NJC 2 July 2019 
 * 2.7.2 NJC 30 June 2017 
 * 2.7.1 NJC 12 February 2017 
@@ -346,8 +347,8 @@ program tabplot, sort
 		else if "`pm'`pm2'" != "" local format %3.0f 		
 
 		local biggest = trim("`: di `format' `biggest''")
-		if "`frame'" != "" local note "note(`text': `biggest'; frame: `frame')"  
-		else local note "note(`text': `biggest')"
+		if "`frame'" != "" local note `"note("`text': `biggest'; frame: `frame'")"'   
+		else local note `"note("`text': `biggest'")"' 
  	}
 
 	if `"`by'"' == "" { 

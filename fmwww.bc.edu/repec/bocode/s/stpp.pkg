@@ -17,12 +17,11 @@ d KW: marginal net survival
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20220114
+d Distribution-Date: 20220409
 d
 d Author: Paul Lambert, University of Leicester
 d Support: email paul.lambert@@le.ac.uk
 d
 f stpp.ado
-f stpp_old.ado
 f stpp_example.ado
 f stpp.sthlp

@@ -1,6 +1,9 @@
 *! Attaullah Shah; Email: attaullah.shah@imsciences.edu.pk; Support website: www.FinTechProfessor.com
-*! Version 5.5: Nov 6, 2021 : Added max2, max3, max4, and max5 for finding second, third, fourth and fifth largest values.
 
+*!Version 5.7: Arpil 5, 2022: bug fixed when option window(var 0 1) was used 
+
+* Version 5.6: Mar 1, 2022 : New statistic - kurtosis - added
+* Version 5.5: Nov 6, 2021 : Added max2, max3, max4, and max5 for finding second, third, fourth and fifth largest values.
 * Version 5.4: July 13, 2021 : The error 'PRODUCT():  3201  vector required' fixed. This error would occur in the calculation of product if extended missing values were present
 * Version 5.3: June 14, 2021 : Bug fixed related to missing value in the rangeevar
 * Version 5.2: Nov 29, 2020 : Bug fix when 0 was used in the back window
@@ -44,7 +47,7 @@ prog asrol, byable(onecall) sortpreserve
 			& "`z'" != "count" 	& "`z'" != "min" 		& "`z'" 	!= "max"      ///
 			& "`z'" != "first" 	& "`z'" != "last" 		& "`z'" 	!= "missing" ///
 			& "`z'" != "skewness" & "`z'" != "max2" 	& "`z'" 	!= "max3"  ///
-			& "`z'" != "max4" 	& "`z'" != "max5"{ 
+			& "`z'" != "max4" 	& "`z'" != "max5" 		& "`z'"		!= "kurtosis" { 
 			display as error " Incorrect statistics specified!"
 			display as text "You have entered {cmd: `z'} in the {cmd: stat option}. However, only the following staticts are allowed with {help asrol}"
 			dis as res "mean, gmean, sd, sum, product, median, count, min, max, first, last, missing"
@@ -124,9 +127,13 @@ prog asrol, byable(onecall) sortpreserve
 				exit
 			}
 
-			if `fw' == 0 {
+			if (`fw' == 0) {
 			    loc fw
 				loc bw = abs(`bw')
+			}
+			
+			else if(`bw' == 0 & `fw' > 0) {
+			    loc bw = -1
 			}
 		}
 

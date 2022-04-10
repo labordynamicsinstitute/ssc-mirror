@@ -1,5 +1,5 @@
 
-*! version 1.2.6  10mar2021
+*! version 1.3.0  7jan2022
 *! author: Federico Belotti, Michele Mancini and Alessandro Borin
 *! see end of file for version comments
 
@@ -27,43 +27,61 @@ if `"`opt_iciotable'"'!="" {
 }
 else loc user_defi_table 0
 
-if "`iciotable'"=="tivao" & "`year'"=="" loc year 2011
-if "`iciotable'"=="tivan" & "`year'"=="" loc year 2015
-if "`iciotable'"=="wiodo" & "`year'"=="" loc year 2011
-if "`iciotable'"=="wiodn" & "`year'"=="" loc year 2014
-if "`iciotable'"=="eora" & "`year'"=="" loc year 2015
-if "`iciotable'"=="adb" & "`year'"=="" loc year 2019
 
-// Here we need to create an ado file for icio_table_releases
-// Brute force fix: just copy and past the content of icio_table_releases.do below
-*qui include "`path4include'/icio_table_releases.do"
-/* TIVA OLD */
-local tivao "2016"
-/* TIVA NEW */
-local tivan "2018"
-/* WIOD OLD */
-local wiodo "2013"
-/* WIOD NEW */
-local wiodn "2016"
-/* EORA */
-local eora "199.82"
-local eora_rel "199_82"
-/* ADB */
-local adb "2021"
-local adb_rel "jan2021"
+if `user_defi_table'==0 {
+
+preserve
+// Get the icio_releases file from the web (first time)
+cap findfile icio_releases.csv, path(`".;`c(adopath)';`"`sysdir_plus'"'"') nodescend
+if _rc {
+	// Download the file from http://www.tradeconomics.com/icio/data
+	qui insheet using "http://www.tradeconomics.com/icio/data/icio_releases.csv", c clear
+	if "`working_version'"=="1" {
+		local path4save `"`c(adopath)'"'
+		gettoken path4save butta: path4save, parse(";")
+	}
+	else {
+		loc path4save `"`sysdir_plus'"'
+	}
+	loc path4save = regexr("`path4save'", "/$", "")
+	qui outsheet using `"`path4save'/icio_releases.csv"', c
+}
+else {
+	qui insheet using `"`r(fn)'"', c clear
+}
+
+// Get table locals and _tab_rels matrix from icio_releases.csv
+
+qui count
+local numrel `r(N)'
+loc num_rel 2
+m _table_rels = J(`=`numrel'-`num_rel'',1,"")
+m _tab_rels = J(`=`numrel'-`num_rel'',3,.)
+loc j = 1
+forvalues i = 1/`numrel' {
+	if regexm("`: di table[`i']'", "_rel")==0 {
+		loc `: di table[`i']' "`: di rel[`i']'"
+		mat _tab_rels = nullmat(_tab_rels) \ (`: di rel[`i']', syear[`i'], eyear[`i'])
+		m _table_rels[`j'] = "`: di table[`i']'"
+		m _tab_rels[`j',.] = (`: di rel[`i']', `: di syear[`i']', `: di eyear[`i']')
+		loc j = `j'+1
+	}
+	else loc `: di table[`i']' "`: di rel[`i']'"
+
+	if regexm("`: di table[`i']'", "^`iciotable'$")==1 & "`year'"=="" local year `: di eyear[`i']'
+}
 
 // Here display the table releases and exit
 if "`info'"!="" {
-qui {
-	mat _tab_rels = `wiodn', 2000, 2014 \ `tivan', 2005, 2015 \ `eora' , 1990, 2015 \ `adb', 2000, 2019 \ `wiodo', 1995, 2011 \ `tivao', 1995, 2011
-	mat rownames _tab_rels = "wiodn" "tivan" "eora" "adb" "wiodo" "tivao"
-	mat colnames _tab_rels = "version" "from" "to"
-	noi matlist _tab_rels, row(table_name) cspec(|%5s|%9.0g|%9.0g|%9.0g|) rspec(--&&&&&-)
-	cap mat drop _tab_rels
-	sret clear
-	exit
-}
-
+	qui {
+		//mat _tab_rels = `wiodn', 2000, 2014 \ `tivan', 2005, 2015 \ `eora' , 1990, 2015 \ `adb', 2000, 2019 \ `wiodo', 1995, 2011 \ `tivao', 1995, 2011
+		mat rownames _tab_rels = "wiodn" "tivan" "eora" "adb" "wiodo" "tivao"
+		mat colnames _tab_rels = "version" "from" "to"
+		noi matlist _tab_rels, row(table_name) cspec(|%5s|%9.0g|%9.0g|%9.0g|) rspec(--&&&&&-)
+		cap mat drop _tab_rels
+		sret clear
+		exit
+	}
 }
 
 if "`iciotable'" == "wiodn" local filename "icio_`wiodn'_wiod"
@@ -81,38 +99,23 @@ if "`user_defi_table'"=="0" {
 		di as error "-year()- incorrectly specified. It must be yyyy, e.g. 2011."
 		exit 198
 	}
+
+	m range_avail = select(_tab_rels, _table_rels:=="`iciotable'")
+	m range_avail = range_avail[., 2..cols(range_avail)]
+	m st_local("_check_year", strofreal((`year'<range_avail[1,1] | `year'>range_avail[1,2])))
+
+	if `_check_year'==1 {
+		di as error "Year `year' is not available in the loaded table."
+		error 198
+	}
 }
 
-*** Parsing year for finding files (keep only the last 2 digits)
+restore
+
 local yy = substr("`year'",3,2)
 
-if `user_defi_table'==0 {
-	*** Check if the specified year is in the list
-	if "`iciotable'" == "wiodn" & (`year'<2000 | `year'>2014) {
-		di as error "Year `year' is not available for the WIOD `wiodn' release."
-		error 198
-	}
-	if "`iciotable'" == "wiodo" & (`year'<1995 | `year'>2011) {
-		di as error "Year `year' is not available for the WIOD `wiodo' release."
-		error 198
-	}
-	if "`iciotable'" == "tivan" & (`year'<2005 | `year'>2015) {
-		di as error "Year `year' is not available for the TiVA `tivan' release."
-		error 198
-	}
-	if "`iciotable'" == "tivao" & (`year'<1995 | `year'>2011) {
-		di as error "Year `year' is not available for the TiVA `tivao' release."
-		error 198
-	}
-	if "`iciotable'" == "eora" & (`year'<1990 | `year'>2015) {
-		di as error "Year `year' is not available for the EORA `eora' release."
-		error 198
-	}
-	if "`iciotable'" == "adb" & inlist("`year'","2000","2007","2008","2009","2010","2011","2012")==0 & inlist("`year'","2013","2014","2015","2016","2017","2018","2019")==0 {
-		di as error "Year `year' is not available for the ADB `adb' release."
-		error 198
-	}
-}
+} /* close the if on `user_defi_table'==0 */
+
 
 *** Load country list
 preserve
@@ -334,6 +337,10 @@ foreach mo of local mobjlist {
 	cap m mata drop `mo'
 }
 
+cap m mata drop _table_rels
+cap m mata drop _tab_rels
+cap m mata drop range_avail
+cap matrix drop _tab_rels
 
 end
 
@@ -405,4 +412,4 @@ end
 * version 1.2.4  27may2020 - Added ADB tables
 * version 1.2.5 13nov2020 - Added links to help and -icio, info- after -icio_load-.
 * version 1.2.6 10mar2021 - Now also eora and adb tables have the official release date/code in the name of each table
-*/
+* version 1.3.0 7jan2022 - This is a huge update. It allows to update tables and their releases without the need of updating also the distributed ado files. It exploits the icio_releases.csv file

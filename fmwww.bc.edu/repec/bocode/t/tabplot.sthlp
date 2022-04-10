@@ -2,8 +2,9 @@
 {* 27oct2004/26sep2005/22jan2007/7jul2009/24jul2009/25nov2009/30nov2009/10dec2009/14jun2010/14dec2010/1mar2011/11oct2011/16nov2011/9may2012/6jun2012/14aug2012/19oct2012}{...}
 {* 21feb2013/16jul2013/28aug2013/30dec2013/2may2015/25may2015/9jul2015/26aug2015/29sep2015/15oct2015/18dec2015/27apr2016/26aug2016/14sep2016/17oct2016/21dec2016}{...}
 {* 9jan2017/5feb2017/12feb2017/28mar2017/13apr2017/24may2017/9jun2017/30jun2017/12jul2017/28sep2017/16oct2017/20nov2017/4dec2017/18dec2017/12feb2018/12may2018/4jun2018/30jan2019/22feb2019/23apr2019/19may2019}{...}
-{* 3jul2019/12jul2019}{...}
-{hi:help tabplot}{right: ({browse "http://www.stata-journal.com/article.html?article=up0056":SJ17-3:gr0066_1})}
+{* 3jul2019/12jul2019/23jul2019/14oct2019/23dec2019/13jan2020}{...}
+{* 12may2020/10jun2020/28jun2020/10jul2020/15sep2020/30sep2020/26nov2020/10apr2021/25may2021/3jul2021/31aug2021/24feb2022/9apr2022}{...}
+{hi:help tabplot}{right: ({browse "http://www.stata-journal.com/article.html?article=up0056":SJ20-3:gr0066_2})}
 {hline}
 
 {title:Title}
@@ -211,9 +212,12 @@ in such cases.
 {p 4 8 2}{opt frame(#)} specifies that all bars should be framed with bars showing 
 constant value {it:#}. Most commonly, {it:#} is the maximum possible value (say 
 fraction 1 or percent 100) or some other reference value. By default, framing bars have 
-no colour. See (e.g.) Cleveland and McGill (1984) or Cleveland (1985) 
-for the idea of framed rectangles and Keen (2010, 2018) for so-called 
-thermometer charts. 
+no fill color. See (e.g.) Cleveland and McGill (1984) or Cleveland (1985; examples on pp.209, 222, 287) 
+or Cleveland (1994; example on p.241) or Munzer (2015)
+for the idea of framed rectangles and (e.g.) Wilkinson (1999, 2005), 
+Wild and Seber (2000) or 
+Keen (2010, 2018) for the term thermometer glyphs, plots or charts. 
+Wexler (2021, pp.186, 188{c -}189, 191) gives further examples. 
 
 {p 8 8 2}{opt frameopts(frame_options)} specifies options of {help twoway rbar} 
 to tune representation of the framing bars. 
@@ -356,8 +360,9 @@ as far as Playfair (1786).  See, for example, Playfair (2005, 25) or Wainer
 Bar charts presented in table form with two or more rows and two or more
 columns are less common. Evans {it:et al.} (1933) discussed various geological
 applications. Emeny (1934) used them in a well-illustrated monograph on raw
-materials. Sears (1933, 1935) gave examples in pollen diagrams (for which line
-or area plots are more common).  Brinton (1914, 66) showed a hybrid (in more
+materials. Sears (1933, 1935) gave examples in pollen diagrams.                       
+(In palynology  line or area plots seem to be more common: see e.g. Faegri and Iversen 1950.)
+Brinton (1914, 66) showed a hybrid (in more
 recent terms) of a bumps chart and a two-way bar chart. 
 
 {p 4 4 2} 
@@ -366,16 +371,21 @@ Brinton (1939),
 Neurath (1939), 
 Kinsey et al. (1948, 1953), 
 Olds (1949),
-Stouffer et al. (1949a, 1949b), 
+Stouffer et al. (1949a, 1949b),
+Hovland et al. (1949),  
 Rogers (1961), 
 Ager (1963), 
+Munk et al. (1963), 
 Lockwood (1969), 
 Koch and Link (1970), 
 Colinvaux (1973, 1986, 1993), 
 Doran and Hodson (1975), 
+May (1976), Pianka (1976), 
 Bertin (1981, 1983), 
+Greenacre (1984), 
 Lebart, Morineau, and Warwick (1984), 
 Morrison (1985), 
+Zelazny (1985, 2001), 
 Cliff and Haggett (1988),
 Anderson and May (1991), 
 Gleick (1993),
@@ -384,6 +394,7 @@ Hobbie et al. (1995),
 Chapman and Wykes (1996), 
 de Falguerolles, Friedrich, and Sawitzki (1997),
 Chauchat and Risson (1998), 
+Wild and Seber (2000), 
 Valiela (2001), 
 Mihalisin (2002), 
 MacKay (2003, 2009),  
@@ -393,7 +404,7 @@ Hahsler, Hornik, and Buchta (2008),
 Hofmann (2008),
 Sarkar (2008),  
 Theus and Urbanek (2009),  
-Few (2009, 2012, 2015), 
+Few (2009, 2012, 2015, 2020), 
 Atkins (2010), 
 Carr and Pickle (2010, 85),
 McDaniel and McDaniel (2012a, 2012b),  
@@ -406,8 +417,14 @@ Schwabish (2017, 91),
 Evergreen (2017, 111), 
 Wexler {it:et al.} (2017), 
 Albert (2018),    
-Kriebel and Murray (2018)
-and Healy (2019, 102). 
+Kriebel and Murray (2018), 
+Rosling {it:et al.} (2018, 211),
+Sleeper (2018),  
+Healy (2019, 102), 
+Holmes and Huber (2019, 31), 
+Wilke (2019), 
+Schwabish (2021, 89{c -}90, 97, 373{c -}374)
+and Wexler (2021, 192, 212{c -}214).  
 
 {p 4 4 2}
 As the example of pollen diagrams shows, the same form of graph can be
@@ -428,7 +445,7 @@ Rao and Card [1994],
 Pirolli and Rao [1996],
 Spence [2001, 2007, 2014],
 Ward, Grinstein, and Keim [2010],
-Few [2012],
+Few [2012, 2020],
 and
 Cook, Lee, and Majumder [2016]);
 
@@ -438,17 +455,19 @@ Siirtola and M{c a:}kinen 2005; M{c a:}kinen and Siirtola 2005);
 {p 8 8 2}Bertin plots (e.g. Carlson 2017); 
 
 {p 8 8 2}multiple bar charts and fluctuation diagrams 
-(see Becker, Chambers, and Wilks [1988], Unwin, Theus, and Hosmann [2006],
+(see Becker, Chambers, and Wilks [1988], Unwin, Theus, and Hofmann [2006],
 Hofmann [2008], Theus and Urbanek [2009], and Unwin [2015]);
 
 {p 8 8 2}layered bar charts (see Streit and Gehlenborg [2014]); 
 
-{p 8 8 2}panel bar charts (see Peltier [2013a, 2013b] and 
-Rahlf [2017, 110, 214]);  
+{p 8 8 2}panel or trellis bar charts (see Peltier [2013a, 2013b],  
+Rahlf [2017, 110, 214] or Gerbing [2020, 139]);  
 
-{p 8 8 2}matrix charts (see Kirk [2016]); and
+{p 8 8 2}matrix charts (see Kirk [2016]); 
 
-{p 8 8 2}thermometer charts (see Keen [2010, 2018]).  
+{p 8 8 2}thermometer plots and charts (see Wild and Seber [2000] or Keen [2010, 2018]); 
+
+{p 8 8 2}small multiples bar charts (see Pirrone [2020] or Schwabish [2021]). 
 
 {p 4 4 2}Such bar charts may require no more than a {helpb reshape}.  The
 Examples include one with archaeological data for different levels at a site.
@@ -515,21 +534,21 @@ or Roberts {it:et al.} (2013) or search Statalist.
 
 {p 4 8 2}{cmd:. clear}{p_end}
 {p 4 8 2}{cmd:. input levels freqcores freqblanks freqtools}{p_end}
-{p 4 8 2}{cmd:.     25 21 32 70}{p_end}
-{p 4 8 2}{cmd:.     24 36 52 115}{p_end}
-{p 4 8 2}{cmd:.     23 126 650 549}{p_end}
-{p 4 8 2}{cmd:.     22 159 2342 1633}{p_end}
-{p 4 8 2}{cmd:.     21 75 487 511}{p_end}
-{p 4 8 2}{cmd:.     20 176 1090 912}{p_end}
-{p 4 8 2}{cmd:.     19 132 713 578}{p_end}
-{p 4 8 2}{cmd:.     18 46 374 266}{p_end}
-{p 4 8 2}{cmd:.     17 550 6182 1541}{p_end}
-{p 4 8 2}{cmd:.     16 76 846 349}{p_end}
-{p 4 8 2}{cmd:.     15 17 182 51}{p_end}
-{p 4 8 2}{cmd:.     14 4 51 14}{p_end}
-{p 4 8 2}{cmd:.     13 29 228 130}{p_end}
-{p 4 8 2}{cmd:.     12 135 2227 729}{p_end}
-{p 4 8 2}{cmd:. end}{p_end}
+{p 4 8 2}{cmd:     25 21 32 70}{p_end}
+{p 4 8 2}{cmd:     24 36 52 115}{p_end}
+{p 4 8 2}{cmd:     23 126 650 549}{p_end}
+{p 4 8 2}{cmd:     22 159 2342 1633}{p_end}
+{p 4 8 2}{cmd:     21 75 487 511}{p_end}
+{p 4 8 2}{cmd:     20 176 1090 912}{p_end}
+{p 4 8 2}{cmd:     19 132 713 578}{p_end}
+{p 4 8 2}{cmd:     18 46 374 266}{p_end}
+{p 4 8 2}{cmd:     17 550 6182 1541}{p_end}
+{p 4 8 2}{cmd:     16 76 846 349}{p_end}
+{p 4 8 2}{cmd:     15 17 182 51}{p_end}
+{p 4 8 2}{cmd:     14 4 51 14}{p_end}
+{p 4 8 2}{cmd:     13 29 228 130}{p_end}
+{p 4 8 2}{cmd:     12 135 2227 729}{p_end}
+{p 4 8 2}{cmd: end}{p_end}
 {p 4 8 2}{cmd:. reshape long freq, i(levels) j(type) string}{p_end}
 {p 4 8 2}{cmd:. tabplot levels type [w=freq], bfcolor(none) horizontal barw(1) percent(levels) subtitle(% at each level) showval(offset(0.45)) xsc(r(0.8 .)) yasis}
 
@@ -538,42 +557,42 @@ Encuesta Nacional de la Salud (Spanish National Health Survey):
 
 {p 4 8 2}{cmd:. clear}{p_end}
 {p 4 8 2}{cmd:. input byte(agegroup health) long freq}{p_end}
-{p 4 8 2}{cmd:. 1 1 243}{p_end}
-{p 4 8 2}{cmd:. 1 2 789}{p_end}
-{p 4 8 2}{cmd:. 1 3 167}{p_end}
-{p 4 8 2}{cmd:. 1 4  18}{p_end}
-{p 4 8 2}{cmd:. 1 5   6}{p_end}
-{p 4 8 2}{cmd:. 2 1 220}{p_end}
-{p 4 8 2}{cmd:. 2 2 809}{p_end}
-{p 4 8 2}{cmd:. 2 3 164}{p_end}
-{p 4 8 2}{cmd:. 2 4  35}{p_end}
-{p 4 8 2}{cmd:. 2 5   6}{p_end}
-{p 4 8 2}{cmd:. 3 1 147}{p_end}
-{p 4 8 2}{cmd:. 3 2 658}{p_end}
-{p 4 8 2}{cmd:. 3 3 181}{p_end}
-{p 4 8 2}{cmd:. 3 4  41}{p_end}
-{p 4 8 2}{cmd:. 3 5   8}{p_end}
-{p 4 8 2}{cmd:. 4 1  90}{p_end}
-{p 4 8 2}{cmd:. 4 2 469}{p_end}
-{p 4 8 2}{cmd:. 4 3 236}{p_end}
-{p 4 8 2}{cmd:. 4 4  50}{p_end}
-{p 4 8 2}{cmd:. 4 5  16}{p_end}
-{p 4 8 2}{cmd:. 5 1  53}{p_end}
-{p 4 8 2}{cmd:. 5 2 414}{p_end}
-{p 4 8 2}{cmd:. 5 3 306}{p_end}
-{p 4 8 2}{cmd:. 5 4 106}{p_end}
-{p 4 8 2}{cmd:. 5 5  30}{p_end}
-{p 4 8 2}{cmd:. 6 1  44}{p_end}
-{p 4 8 2}{cmd:. 6 2 267}{p_end}
-{p 4 8 2}{cmd:. 6 3 284}{p_end}
-{p 4 8 2}{cmd:. 6 4  98}{p_end}
-{p 4 8 2}{cmd:. 6 5  20}{p_end}
-{p 4 8 2}{cmd:. 7 1  20}{p_end}
-{p 4 8 2}{cmd:. 7 2 136}{p_end}
-{p 4 8 2}{cmd:. 7 3 157}{p_end}
-{p 4 8 2}{cmd:. 7 4  66}{p_end}
-{p 4 8 2}{cmd:. 7 5  17}{p_end}
-{p 4 8 2}{cmd:. end}{p_end}
+{p 4 8 2}{cmd: 1 1 243}{p_end}
+{p 4 8 2}{cmd: 1 2 789}{p_end}
+{p 4 8 2}{cmd: 1 3 167}{p_end}
+{p 4 8 2}{cmd: 1 4  18}{p_end}
+{p 4 8 2}{cmd: 1 5   6}{p_end}
+{p 4 8 2}{cmd: 2 1 220}{p_end}
+{p 4 8 2}{cmd: 2 2 809}{p_end}
+{p 4 8 2}{cmd: 2 3 164}{p_end}
+{p 4 8 2}{cmd: 2 4  35}{p_end}
+{p 4 8 2}{cmd: 2 5   6}{p_end}
+{p 4 8 2}{cmd: 3 1 147}{p_end}
+{p 4 8 2}{cmd: 3 2 658}{p_end}
+{p 4 8 2}{cmd: 3 3 181}{p_end}
+{p 4 8 2}{cmd: 3 4  41}{p_end}
+{p 4 8 2}{cmd: 3 5   8}{p_end}
+{p 4 8 2}{cmd: 4 1  90}{p_end}
+{p 4 8 2}{cmd: 4 2 469}{p_end}
+{p 4 8 2}{cmd: 4 3 236}{p_end}
+{p 4 8 2}{cmd: 4 4  50}{p_end}
+{p 4 8 2}{cmd: 4 5  16}{p_end}
+{p 4 8 2}{cmd: 5 1  53}{p_end}
+{p 4 8 2}{cmd: 5 2 414}{p_end}
+{p 4 8 2}{cmd: 5 3 306}{p_end}
+{p 4 8 2}{cmd: 5 4 106}{p_end}
+{p 4 8 2}{cmd: 5 5  30}{p_end}
+{p 4 8 2}{cmd: 6 1  44}{p_end}
+{p 4 8 2}{cmd: 6 2 267}{p_end}
+{p 4 8 2}{cmd: 6 3 284}{p_end}
+{p 4 8 2}{cmd: 6 4  98}{p_end}
+{p 4 8 2}{cmd: 6 5  20}{p_end}
+{p 4 8 2}{cmd: 7 1  20}{p_end}
+{p 4 8 2}{cmd: 7 2 136}{p_end}
+{p 4 8 2}{cmd: 7 3 157}{p_end}
+{p 4 8 2}{cmd: 7 4  66}{p_end}
+{p 4 8 2}{cmd: 7 5  17}{p_end}
+{p 4 8 2}{cmd: end}{p_end}
 {p 4 8 2}{cmd:. label values agegroup agegroup}{p_end}
 {p 4 8 2}{cmd:. label def agegroup 1 "16-24", modify}{p_end}
 {p 4 8 2}{cmd:. label def agegroup 2 "25-34", modify}{p_end}
@@ -617,49 +636,59 @@ immediately.
 
 {p 4 8 2}{cmd:. clear}{p_end}
 {p 4 8 2}{cmd:. input str6 sex str8 year str1 policy int freq}{p_end}
-{p 4 8 2}{cmd:. "male"   "1"        "A" 175}{p_end}
-{p 4 8 2}{cmd:. "male"   "1"        "B" 116}{p_end}
-{p 4 8 2}{cmd:. "male"   "1"        "C" 131}{p_end}
-{p 4 8 2}{cmd:. "male"   "1"        "D"  17}{p_end}
-{p 4 8 2}{cmd:. "male"   "2"        "A" 160}{p_end}
-{p 4 8 2}{cmd:. "male"   "2"        "B" 126}{p_end}
-{p 4 8 2}{cmd:. "male"   "2"        "C" 135}{p_end}
-{p 4 8 2}{cmd:. "male"   "2"        "D"  21}{p_end}
-{p 4 8 2}{cmd:. "male"   "3"        "A" 132}{p_end}
-{p 4 8 2}{cmd:. "male"   "3"        "B" 120}{p_end}
-{p 4 8 2}{cmd:. "male"   "3"        "C" 154}{p_end}
-{p 4 8 2}{cmd:. "male"   "3"        "D"  29}{p_end}
-{p 4 8 2}{cmd:. "male"   "4"        "A" 145}{p_end}
-{p 4 8 2}{cmd:. "male"   "4"        "B"  95}{p_end}
-{p 4 8 2}{cmd:. "male"   "4"        "C" 185}{p_end}
-{p 4 8 2}{cmd:. "male"   "4"        "D"  44}{p_end}
-{p 4 8 2}{cmd:. "male"   "Graduate" "A" 118}{p_end}
-{p 4 8 2}{cmd:. "male"   "Graduate" "B" 176}{p_end}
-{p 4 8 2}{cmd:. "male"   "Graduate" "C" 345}{p_end}
-{p 4 8 2}{cmd:. "male"   "Graduate" "D" 141}{p_end}
-{p 4 8 2}{cmd:. "female" "1"        "A"  13}{p_end}
-{p 4 8 2}{cmd:. "female" "1"        "B"  19}{p_end}
-{p 4 8 2}{cmd:. "female" "1"        "C"  40}{p_end}
-{p 4 8 2}{cmd:. "female" "1"        "D"   5}{p_end}
-{p 4 8 2}{cmd:. "female" "2"        "A"   5}{p_end}
-{p 4 8 2}{cmd:. "female" "2"        "B"   9}{p_end}
-{p 4 8 2}{cmd:. "female" "2"        "C"  33}{p_end}
-{p 4 8 2}{cmd:. "female" "2"        "D"   3}{p_end}
-{p 4 8 2}{cmd:. "female" "3"        "A"  22}{p_end}
-{p 4 8 2}{cmd:. "female" "3"        "B"  29}{p_end}
-{p 4 8 2}{cmd:. "female" "3"        "C" 110}{p_end}
-{p 4 8 2}{cmd:. "female" "3"        "D"   6}{p_end}
-{p 4 8 2}{cmd:. "female" "4"        "A"  12}{p_end}
-{p 4 8 2}{cmd:. "female" "4"        "B"  21}{p_end}
-{p 4 8 2}{cmd:. "female" "4"        "C"  58}{p_end}
-{p 4 8 2}{cmd:. "female" "4"        "D"  10}{p_end}
-{p 4 8 2}{cmd:. "female" "Graduate" "A"  19}{p_end}
-{p 4 8 2}{cmd:. "female" "Graduate" "B"  27}{p_end}
-{p 4 8 2}{cmd:. "female" "Graduate" "C" 128}{p_end}
-{p 4 8 2}{cmd:. "female" "Graduate" "D"  13}{p_end}
-{p 4 8 2}{cmd:. end}{p_end}
+{p 4 8 2}{cmd: "male"   "1"        "A" 175}{p_end}
+{p 4 8 2}{cmd: "male"   "1"        "B" 116}{p_end}
+{p 4 8 2}{cmd: "male"   "1"        "C" 131}{p_end}
+{p 4 8 2}{cmd: "male"   "1"        "D"  17}{p_end}
+{p 4 8 2}{cmd: "male"   "2"        "A" 160}{p_end}
+{p 4 8 2}{cmd: "male"   "2"        "B" 126}{p_end}
+{p 4 8 2}{cmd: "male"   "2"        "C" 135}{p_end}
+{p 4 8 2}{cmd: "male"   "2"        "D"  21}{p_end}
+{p 4 8 2}{cmd: "male"   "3"        "A" 132}{p_end}
+{p 4 8 2}{cmd: "male"   "3"        "B" 120}{p_end}
+{p 4 8 2}{cmd: "male"   "3"        "C" 154}{p_end}
+{p 4 8 2}{cmd: "male"   "3"        "D"  29}{p_end}
+{p 4 8 2}{cmd: "male"   "4"        "A" 145}{p_end}
+{p 4 8 2}{cmd: "male"   "4"        "B"  95}{p_end}
+{p 4 8 2}{cmd: "male"   "4"        "C" 185}{p_end}
+{p 4 8 2}{cmd: "male"   "4"        "D"  44}{p_end}
+{p 4 8 2}{cmd: "male"   "Graduate" "A" 118}{p_end}
+{p 4 8 2}{cmd: "male"   "Graduate" "B" 176}{p_end}
+{p 4 8 2}{cmd: "male"   "Graduate" "C" 345}{p_end}
+{p 4 8 2}{cmd: "male"   "Graduate" "D" 141}{p_end}
+{p 4 8 2}{cmd: "female" "1"        "A"  13}{p_end}
+{p 4 8 2}{cmd: "female" "1"        "B"  19}{p_end}
+{p 4 8 2}{cmd: "female" "1"        "C"  40}{p_end}
+{p 4 8 2}{cmd: "female" "1"        "D"   5}{p_end}
+{p 4 8 2}{cmd: "female" "2"        "A"   5}{p_end}
+{p 4 8 2}{cmd: "female" "2"        "B"   9}{p_end}
+{p 4 8 2}{cmd: "female" "2"        "C"  33}{p_end}
+{p 4 8 2}{cmd: "female" "2"        "D"   3}{p_end}
+{p 4 8 2}{cmd: "female" "3"        "A"  22}{p_end}
+{p 4 8 2}{cmd: "female" "3"        "B"  29}{p_end}
+{p 4 8 2}{cmd: "female" "3"        "C" 110}{p_end}
+{p 4 8 2}{cmd: "female" "3"        "D"   6}{p_end}
+{p 4 8 2}{cmd: "female" "4"        "A"  12}{p_end}
+{p 4 8 2}{cmd: "female" "4"        "B"  21}{p_end}
+{p 4 8 2}{cmd: "female" "4"        "C"  58}{p_end}
+{p 4 8 2}{cmd: "female" "4"        "D"  10}{p_end}
+{p 4 8 2}{cmd: "female" "Graduate" "A"  19}{p_end}
+{p 4 8 2}{cmd: "female" "Graduate" "B"  27}{p_end}
+{p 4 8 2}{cmd: "female" "Graduate" "C" 128}{p_end}
+{p 4 8 2}{cmd: "female" "Graduate" "D"  13}{p_end}
+{p 4 8 2}{cmd: end}{p_end}
 {p 4 8 2}{cmd:. tabplot policy year [w=freq], by(sex, subtitle(% by sex and year, place(w)) note("")) percent(sex year) showval}{p_end}
 {p 4 8 2}{cmd:. tabplot policy year [w=freq], by(sex, subtitle(% by sex and year, place(w)) note("")) percent(sex year) showval frame(100)} 
+
+{p 4 4 2}Aigner {it:et al.} (2011, pp.142{c -}143) gave an example with 
+loadings from PCA, which inspired this example: 
+
+{p 4 8 2}{cmd:. use http://www.stata-press.com/data/r16/audiometric.dta, clear}{p_end}
+{p 4 8 2}{cmd:. pca *00}{p_end}
+{p 4 8 2}{cmd:. * ssc install pcacoefsave }{p_end}
+{p 4 8 2}{cmd:. pcacoefsave using pca_audiometric}{p_end}
+{p 4 8 2}{cmd:. use pca_audiometric}{p_end}
+{p 4 8 2}{cmd:. tabplot varname PC [iw=corr] if PC <= 4, horizontal height(0.5) bfcolor(none) subtitle(correlations) note(maximum 0.834)}{p_end}
 
 
 {title:Acknowledgments} 
@@ -671,7 +700,8 @@ Vince Wiggins suggested how best to align x-axis labels when bars are
 horizontal.  Jay Goodliffe suggested flagging use of the {cmd:subtitle()}
 option in this help.  Maarten Buis pointed out that compound double quotes
 may be needed to handle value labels. William Huber and Jeff Laux indirectly 
-encouraged addition of the {cmd:frame()} option. 
+encouraged addition of the {cmd:frame()} option. Marc Kaulisch unearthed 
+another bug. 
  
 
 {title:References} 
@@ -679,6 +709,10 @@ encouraged addition of the {cmd:frame()} option.
 {p 4 8 2}Ager, D. V. 1963.
 {it:Principles of Paleoecology: An Introduction to the Study of How and Where Animals and Plants Lived in the Past}.
 New York: McGraw-Hill.
+
+{p 4 8 2}Aigner, W., S. Miksch, H. Schumann, and C. Tominski. 2011. 
+{it:Visualization of Time-Oriented Data.} 
+London: Springer. 
 
 {p 4 8 2}Aitkin, M., D. Anderson, B. Francis, and J. Hinde. 1989.
 {it:Statistical Modelling in GLIM}. Oxford: Oxford University Press.
@@ -755,7 +789,11 @@ San Diego, CA: Academic Press.
 
 {p 4 8 2}Cleveland, W.S. 1985. 
 {it:The Elements of Graphing Data.} 
-Monterey, CA: Wadsworth. 
+Monterey, CA: Wadsworth.
+ 
+{p 4 8 2}Cleveland, W.S. 1994. 
+{it:The Elements of Graphing Data.} 
+Summit, NJ: Hobart Press. 
 
 {p 4 8 2}Cleveland, W.S. and R. McGill. 1984. 
 Graphical perception: theory, experimentation, and application to the 
@@ -821,7 +859,11 @@ London: 1st World Petroleum Congress 1: 251{c -}256. WPC-1060.
 
 {p 4 8 2}Evergreen, S. D. H. 2017. 
 {it:Effective Data Visualization: The Right Chart for the Right Data}.
-Thousand Oaks, CA: Sage.
+Thousand Oaks, CA: SAGE.
+
+{p 4 8 2}Faegri, K. and J. Iversen. 1950. 
+{it:Textbook of Modern Pollen Analysis.} 
+Copenhagen: Ejnar Munksgaard. [later editions to 1989] 
 
 {p 4 8 2}Few, S. 2009.
 {it:Now You See It: Simple Visualization Techniques for Quantitative Analysis}.
@@ -835,9 +877,20 @@ Burlingame, CA: Analytics Press.
 {it:Signal: Understanding What Matters in a World of Noise}.
 Burlingame, CA: Analytics Press.
 
+{p 4 8 2}Few, S. 2020. 
+{it:Now You See It: An Introduction to Visual Sensemaking.}.
+El Dorado Hills, CA: Analytics Press.
+
+{p 4 8 2}Gerbing, D. W. 2020. 
+{it:R Visualizations: Derive Meaning from Data.}
+Boca Raton, FL: CRC Press. 
+
 {p 4 8 2}Gleick, P. H., ed. 1993.
 {it:Water in Crisis: A Guide to the World's Fresh Water Resources}.
 New York: Oxford University Press.
+
+{p 4 8 2}Greenacre, M. 1984. {it:Theory and Applications of Correspondence Analysis.}
+London: Academic Press. 
 
 {p 4 8 2}Greenacre, M. 2007. {it:Correspondence Analysis in Practice}.
 2nd ed. Boca Raton, FL: Chapman & Hall/CRC.
@@ -904,6 +957,14 @@ In {it:Handbook of Data Visualization},
 ed. C. Chen, W. H{c a:}rdle, and A. Unwin, 617{c -}642.
 Berlin: Springer.
 
+{p 4 8 2}Holmes, S. and W. Huber. 2019. 
+{it:Modern Statistics for Modern Biology.} 
+Cambridge: Cambridge University Press. 
+
+{p 4 8 2}Hovland, C. I., A. A. Lumsdaine and F. D. Sheffield. 1949. 
+{it:Experiments on Mass Communication.}  
+Princeton, NJ: Princeton University Press.
+
 {p 4 8 2}Keen, K. J. 2010 (second edition 2018). 
 {it:Graphics for Statistics and Data Analysis with  R.} 
 Boca Raton, FL: CRC Press. 
@@ -920,7 +981,7 @@ Philadelphia: W.B. Saunders.
 
 {p 4 8 2}Kirk, A. 2016. 
 {it:Data Visualization: A Handbook for Data Driven Design}.
-London: Sage. 
+London: SAGE. 
 
 {p 4 8 2}Koch, G. S., Jr., and R. F. Link. 1970.
 {it:Statistical Analysis of Geological Data: Volume I}.
@@ -960,7 +1021,12 @@ Automating the design of graphical presentations of relational information.
 
 {p 4 8 2}M{c a:}kinen,  E. and H. Siirtola. 2005.
 The barycenter heuristic and the reorderable matrix.
-{it:Informatica (Slovenia)} 29: 357{c -}364
+{it:Informatica (Slovenia)} 29: 357{c -}364. 
+
+{p 4 8 2}May, R. M. 1976. 
+Patterns in multi-species communities. 
+In {it:Theoretical Ecology: Principles and Applications}, 
+ed. R. M. May, 142{c -}162. Oxford: Blackwell Scientific. See p.150. 
 
 {p 4 8 2}McDaniel, E., and S. McDaniel. 2012a.
 {it:The Accidental Analyst: Show Your Data Who's Boss}.
@@ -987,6 +1053,17 @@ San Diego, CA: Academic Press.
 Symbolic representation of tabular data.
 {it:New Zealand Journal of Geography} 79: 11{c -}18.
 
+{p 4 8 2}Munk, W. H., G. R. Miller, F. E. Snodgrass, and N. F. Barber. 
+1963. 
+Directional recording of swell from distant storms. 
+{it:Philosophical Transactions of the Royal Society of London, Series A} 
+255: 505{c -}584. See pp.531{c -}533, 541{c -}544, 550. 
+{browse "https://www.jstor.org/stable/pdf/73101.pdf":https://www.jstor.org/stable/pdf/73101.pdf} 
+
+{p 4 8 2}Munzner, T. 2015. 
+{it:Visualization Analysis and Design.} 
+Boca Raton, FL: CRC Press. On frames: pp.112-113.
+
 {p 4 8 2}Murphy, K. P. 2012.
 {it:Machine Learning: A Probabilistic Perspective}.
 Cambridge, MA: MIT Press.
@@ -1009,7 +1086,12 @@ Column Chart with Primary and Secondary Axes
 {browse "https://peltiertech.com/excel-column-chart-primary-secondary-axes/":https://peltiertech.com/excel-column-chart-primary-secondary-axes/}
 [October 28]. 
 
-{p 4 8 2}Peltier, J. Note many similar posts on the author's site. 
+{p 4 8 2}Peltier, J. Note many similar posts on the author's site.
+ 
+{p 4 8 2}Pianka, E. R. 1976. 
+Competition and niche theory. 
+In {it:Theoretical Ecology: Principles and Applications}, 
+ed. R. M. May, 114{c -}141. Oxford: Blackwell Scientific. See p.132. 
 
 {p 4 8 2}
 Pirolli, P., and R. Rao. 1996.
@@ -1017,6 +1099,11 @@ Table lens as a tool for making sense of data.
 In {it:AVI '96: Proceedings of the Workshop on Advanced Visual Interfaces},
 ed. T. Catarci, M. F. Costabile, S. Levialdi, and G. Santucci, 67{c -}80.
 New York: Association for Computing Machinery.
+
+{p 4 8 2}
+Pirrone, A. 2020.  
+Visualizing Likert scale data: same data, displayed seven different ways.
+{browse "https://medium.com/nightingale/seven-different-ways-to-display-likert-scale-data-d0c1c9a9ad59":https://medium.com/nightingale/seven-different-ways-to-display-likert-scale-data-d0c1c9a9ad59} 
 
 {p 4 8 2}Playfair, W. H. 1786.
 {it:The Commercial and Political Atlas}.
@@ -1079,6 +1166,11 @@ Schwabish, J. 2017.
 {it:Better Presentations: A Guide for Scholars, Researchers, and Wonks}.
 New York: Columbia University Press.
 
+{p 4 8 2}
+Schwabish, J. 2021. 
+{it:Better Data Visualizations: A Guide for Scholars, Researchers, and Wonks}.
+New York: Columbia University Press.
+
 {p 4 8 2}Sears, P. B. 1933.
 Climatic change as a factor in forest succession.
 {it:Journal of Forestry} 31: 934{c -}942.
@@ -1090,6 +1182,10 @@ Types of North American pollen profiles.
 {p 4 8 2}Siirtola, H. and E. M{c a:}kinen. 2005.  
 Constructing and reconstructing the reorderable matrix. 
 {it:Information Visualization} 4: 32{c -}48. 
+
+{p 4 8 2}Sleeper, R. 2018. 
+{it:Practical Tableau: 100 Tips, Tutorials, and Strategies from a Tableau Zen Master.} 
+Sebastopol, CA: O'Reilly. See p.149.  
 
 {p 4 8 2}Snyder, T. 2012.
 Data visualization for clinical trials data management and operations. 
@@ -1161,6 +1257,9 @@ Princeton, NJ: Princeton University Press.
 {it:Interactive Data Visualization: Foundations, Techniques, and Applications}.
 Natick, MA: A K Peters.
 
+{p 4 8 2}Wexler, S. 2021. 
+{it:The Big Picture: How to Use Data Visualizations to Make Better Decisions{c -}Faster.} New York: McGraw Hill. 
+
 {p 4 8 2}Wexler, S., J. Shaffer and A. Cotgreave. 2017. 
 {it:The Big Book of Dashboards: Visualizing Your Data Using Real-World Business Scenarios.} 
 Hoboken, NJ: John Wiley. 
@@ -1170,10 +1269,39 @@ See pp.63, 65, 66, 225, 228, 247, 249{c -}252, 257, 283, 288{c -}290.
 {it:IEEE Transactions on Visualization and Computer Graphics} 17: 
 2223{c -}2230. 
 
+{p 4 8 2}Wild, C.J. and G.A.F. Seber. 2000. 
+{it:Chance Encounters: A First Course in Data Analysis and Inference.}
+New York: John Wiley. 
+
+{p 4 8 2}
+Wilke, C.O. 2019. 
+{it:Fundamentals of Data Visualization: A Primer on Making Informative and Compelling Figures.}
+Sebastopol, CA: O'Reilly.
+ 
+{p 4 8 2}
+Wilkinson, L. 1999.
+{it:The Grammar of Graphics}.           
+New York: Springer.
+
 {p 4 8 2}
 Wilkinson, L. 2005.
 {it:The Grammar of Graphics}. 2nd ed.
 New York: Springer.
+
+{p 4 8 2}
+Yau, N. 2013. 
+{it:Data Points: Visualization That Means Something.} 
+Indianapolis, IN: John Wiley. See p.123. 
+
+{p 4 8 2}
+Zelazny, G. 1985. 
+{it:Say It With Charts: The Executive's Guide to Successful Presentations.} 
+Homewood, IL: Dow Jones-Irwin.  
+
+{p 4 8 2}
+Zelazny, G. 2001. 
+{it:Say It With Charts: The Executive's Guide to Visual Communication.} 
+New York: McGraw-Hill. See p.14. 
 
 
 {title:Author} 

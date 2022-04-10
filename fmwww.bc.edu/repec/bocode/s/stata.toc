@@ -291,6 +291,7 @@ p stratarand module to perform stratified random assignment
 p strbee module to estimate a treatment effect adjusting for treatment switches
 p strcs module to estimate flexible parametric survival models on the log hazard scale
 p strdist module to calculate the Levenshtein distance, or edit distance, between strings
+p streamplot module to produce streamplots
 p strgroup module to match strings based on their Levenshtein edit distance
 p stripplot module for strip plots (one-way dot plots) 
 p strkeep module to clean string variables by keeping only whitelisted characters

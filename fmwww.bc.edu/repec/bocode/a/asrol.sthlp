@@ -1,6 +1,6 @@
 {smcl}
-{right:version:  5.5}
-{cmd:help asrol} {right:Nov 6, 2021}
+{right:version:  5.7}
+{cmd:help asrol} {right:April 1, 2022}
 {hline}
 {viewerjumpto "Statistics" "asrol##stat"}{...}
 {viewerjumpto "Window" "asrol##window"}{...}
@@ -110,6 +110,10 @@ The program has one required option and 8 optional options: Details are given be
 
 {p2col : {opt median}} 	Returns median of non-missing values {p_end}
 
+{p2col : {opt skewness}} 	Returns skewness of non-missing values {p_end}
+
+{p2col : {opt kurtosis}} 	Returns kurtosis of non-missing values {p_end}
+
 {p2col : {opt count}} 	Counts the number of non-missing observations in a given window {p_end}
 
 {p2col : {opt missing}} Counts the number of missing values in a given window {p_end}
@@ -198,9 +202,15 @@ Therefore, if focal year is {hi:2006}, the window will include these years in th
 {p2col : {opt w:indow(year -5 5)}}	A rolling window of 10 observations. 
 Therefore, if focal year is {hi:2006}, the window will include these years in the 
 calculations: {hi:2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011}. 
+
+{p2col : {opt w:indow(year 0 1)}}	A rolling window of 2 observations. 
+Therefore, if focal year is {hi:2006}, the window will include these years in the 
+calculations: {hi:2006, and 2007}. Since asrol considers focal observation as 
+pertaining to the past, therefore, writing the window as {opt w:indow(year -1 1)} will produce exactly the
+same results.  
  {p_end}
 
-{p2col : {opt  Note on missing values in the rangevar}} Some posts on the Statalist 
+{p2col : {opt  Note on missing values in the rangevar}:} Some posts on the Statalist 
 show a confusion concerning the interpretation of the option {opt w:indow()}.
  For example, using {opt window(year -5)}, a user might incorrectly assume that 
  the observation in this range will always be 5. This might not be true in a 
@@ -550,8 +560,8 @@ The results are stored in a new variable, {it:gmean10}.
    return using the product method and adding 1 to the returns, which asrol
    will automatically deduct at the end. Now assume that we are currently 
    at the end of December 2019. This strategy will include the 
-   following months in the calculations  which are shown in the bold 
-    and exclude the ones that are shown without bold face : 
+   following months in the calculations  which are shown in bold face
+    and exclude the ones that are shown without the bold face : 
    {hi:Dec-18, Jan-19, Feb-19, Mar-19, Apr-19, May-19, Jun-19, Jul-19, Aug-19, Sep-19, Oct-19}, Nov-19, Dec-19. 
    From Dec-18 upto Dec-19, there are 13 months. 
    To implement this using asrol, the window argument is written as:{break}
@@ -585,6 +595,7 @@ The results are stored in a new variable, {it:gmean10}.
 {psee}{stata "ssc desc asreg":asreg : for rolling-window, by-group, and Fama and MacBeth regressions} {p_end}
 {psee}{stata "ssc desc ascol":ascol : for converting asset returns and prices from daily to a weekly, monthly, quarterly, and yearly frequency}{p_end}
 {psee}{stata "ssc desc searchfor":searchfor : for searching text in data sets} {p_end}
+{psee}{stata "ssc desc flexmat":flexmat : Creates a flexible matrix of real, string and complex elements} {p_end}
 
 {title:Acknowledgements}
 

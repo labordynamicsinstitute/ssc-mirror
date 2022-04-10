@@ -1,5 +1,5 @@
 program mvdcmpgroup, eclass
-*! version 2 27apr2017 Dan Powers
+*! version 2 27apr2017 Dan Powers & Hiro Yoshioka
 // previous update 18sept2010
 // program doesn't use erets related to E,C,R anymore.
 // debugged
@@ -225,7 +225,7 @@ local format
 		di as text "Version 2.0"
         di %10s as text "Decomposition Results"              as text %55s    "Number of obs =   "   as res %7s "$mvdcmp_N"
         di as text "{hline 13}{hline 70}"
-	    di as text "High outcome group: " as res "`e(high)'"  as text " ---  Low outcome group: " as res "`e(low)'""
+	    di as text "Reference group (A): " as res "`e(high)'"  as text " ---  Comparison group (B): " as res "`e(low)'""
 /*
 	di as text "{hline 11}{c TT}{hline 71}"
         di as text %11s "$mvdcmp_depvar" _col(10) as text "{c |}" _col(11) as text %11s "Coef." _col(22) as text %11s "Std. Err." _col(29) as text %8s "z" _col(38) /*

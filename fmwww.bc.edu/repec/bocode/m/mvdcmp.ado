@@ -1,9 +1,10 @@
 program define mvdcmp
-*! version 2.0 19jun2019 Dan Powers
+*! version 2.0 8apr2022 Dan Powers & Hirotoshi Yoshioka
 ////////////////////////////////////////////////////////////////////////////////////
 //  -mvdcmpgroup- (now appears to work with Stata 15)
-// 6/19/19 nbreg?
-// fixed: parameter name problem in nbreg resulting in Stata version changes 
+// 27Jan22 added error message to flag non-binary coded (0/1) grouping variable
+// 19Jun19 nbreg? (revert to version 12)
+// 19Jun19 fixed: parameter name problem in nbreg resulting in Stata version changes 
 // broke: the norm option (devcon)
 // solution: force version 12 in nbreg
 // fixed output format 12feb2019
@@ -11,11 +12,10 @@ program define mvdcmp
 // iweights implemented 07apr2018
 // cluster and robust options 25apr2017
 // major update 17sept2010
-//  added new PDFs(x1,b1,wv1) for logit, probit, poisson, nbreg and cll
-//  changed from e(Var) to e(V), e(Coef) to e(b)
-//  version 10 added 17sept2010 
-//  e(sample) added  06apr2010
-// 
+// added new PDFs(x1,b1,wv1) for logit, probit, poisson, nbreg and cll
+// changed ereturns e(Var) to e(V) and e(Coef) to e(b)
+// version 10 added 17sept2010 
+// e(sample) added  06apr2010
 /////////////////////////////////////////////////////////////////////////////////////
 version 15.0
 gettoken mvdcmp_cmd model:0, parse(":")
@@ -57,16 +57,23 @@ end
 program linearDecomp 
 syntax anything(id="varlist") [fw pw aw iw] , BY(varname) ///
     [REVerse NORmal(string) Scale(integer 1) CLUSter(varname) ROBust]
-// 
+
 tempname matrix
+// check if 2 x 1 matrix is returned
 capture tab `by', matrow(`matrix')
 if _rc==0 & r(r)!=2 {
-di as error "group variable (i.e., `by') must take exactly two values"
+  di as error "group variable (i.e., `by') must have only two categories coded 0 and 1"
 macro drop mvdcmp_*
-}
+  }
+// check if matrix elements are each 0 or 1
+if `matrix'[1,1] ! = 0 & `matrix'[2,1] ! = 1 {
+  di as error "group variable (i.e., `by') must be coded 0/1"
+macro drop mvdcmp_*
+  }
+else {
 
-else{
 gettoken cmd newvarlist:newvarlist
+set trace off
 tempvar _cons
 gen `_cons'=1
 gettoken depvar varlist:anything
@@ -81,7 +88,7 @@ if substr("`weight'",2,2)=="pw" | substr("`weight'",2,2)=="fw" ///
 	gettoken wv wv: wv
 	gettoken wv test: wv, parse("]")
 }
-else{
+else {
 tempvar wv
 gen `wv' = 1
 }
@@ -125,11 +132,12 @@ if ("`cluster'"!="") {
 
 //estimation by group 
 
+
 forval i = 0/1 {
 
 qui regress `depvar' `varlist' `weight' if `by'==`val`i'' , `ropt' `copt' 
 
-  
+////
 local normal`i' `normal'
 if "`normal`i''"!=""{
 local j 0
@@ -147,6 +155,7 @@ while (1) {
         }
 }
 global mvdcmp_lab`i' "`by'==`val`i''"
+
 local df`i' = e(df_m)
 
 tempvar touse
@@ -174,6 +183,7 @@ gen `tempwv' = 1
 mata: wv`i'=0
 mata: st_view(wv`i', ., (tokens("`tempwv'")), "`touse'")
 }
+
 
 mata: xMean`i'=mean(x`i':*wv`i'):/mean(wv`i')
 mata: varb`i'=st_matrix("e(V)")
@@ -225,13 +235,21 @@ end
 program logitDecomp, eclass
 syntax anything(id="varlist") [fw pw iw], BY(varname) ///
 [REVerse NORmal(string) Scale(integer 1) CLUster(varname) ROBust] 
+
 tempname matrix
 capture tab `by', matrow(`matrix')
-if _rc==0 & r(r)!=2 {
-di as error "group variable (i.e., `by') must take exactly two values"
+// check if returned matrix and rows=2
+if _rc==0 & r(r) != 2  {
+  di as error "group variable (i.e., `by') must have exactly two categories coded 0 and 1"
 macro drop mvdcmp_*
 }
-else{
+// check if matrix elements are each 0 or 1
+if `matrix'[1,1] ! = 0 & `matrix'[2,1] ! = 1 {
+  di as error "group variable (i.e., `by') must be coded 0/1"
+macro drop mvdcmp_*
+}
+
+else {
 tempvar _cons
 gen `_cons'=1
 gettoken depvar varlist:anything
@@ -297,7 +315,7 @@ while (1) {
         gettoken bar normal`i' : normal`i', parse("|")
         }
         local nnormal `++k'
-        }
+     }
 }
 global mvdcmp_lab`i' "`by'==`val`i''"
 local df`i' = e(df_m)
@@ -367,10 +385,17 @@ syntax anything(id="varlist") [fw pw iw], BY(varname) ///
 [,REVerse NORmal(string) Scale(integer 1) CLUSter(varname) ROBust]
 tempname matrix
 capture tab `by', matrow(`matrix')
-if _rc==0 & r(r)!=2 {
-di as error "group variable (i.e., `by') must take exactly two values"
+// check if matrix is 2 x 1
+if _rc==0 & r(r)!=2  {
+  di as error "group variable (i.e., `by') must have exactly two categories coded 0 and 1"
+macro drop mvdcmp_*
+ }
+// check if matrix elements are each 0 or 1
+if `matrix'[1,1] ! = 0 & `matrix'[2,1] ! = 1 {
+  di as error "group variable (i.e., `by') must be coded 0/1"
 macro drop mvdcmp_*
 }
+
 else{
 tempvar _cons
 gen `_cons'=1
@@ -514,7 +539,12 @@ gen `offset'=0
 tempname matrix
 capture tab `by', matrow(`matrix')
 if _rc==0 & r(r)!=2 {
-di as error "group variable (i.e., `by') must take exactly two values"
+di as error "group variable (i.e., `by') must take exactly two values coded 0 and 1"
+macro drop mvdcmp_*
+}
+// check if matrix elements are each 0 or 1
+if `matrix'[1,1] ! = 0 & `matrix'[2,1] ! = 1 {
+  di as error "group variable (i.e., `by') must be coded 0/1"
 macro drop mvdcmp_*
 }
 else{
@@ -680,7 +710,12 @@ gen `offset'=0
 tempname matrix
 capture tab `by', matrow(`matrix')
 if _rc==0 & r(r)!=2 {
-di as error "group variable (i.e., `by') must take exactly two values"
+di as error "group variable (i.e., `by') must take exactly two values coded 0 and 1"
+macro drop mvdcmp_*
+}
+// check if matrix elements are each 0 or 1
+if `matrix'[1,1] ! = 0 & `matrix'[2,1] ! = 1 {
+  di as error "group variable (i.e., `by') must be coded 0/1"
 macro drop mvdcmp_*
 }
 else{
@@ -791,7 +826,9 @@ mata: varb`i'=0
 mata: st_subview(varb`i', varb, (1,rows(varb)-1),((1\cols(varb)-1)))
 mata: off`i'=0
 mata: st_view(off`i', ., "`offset'", "`touse'")
+/// calculating exposure from log exposure
 mata: off`i'=exp(off`i')
+///
 }
 
 //check if the number of independent variables
@@ -848,10 +885,14 @@ syntax anything(id="varlist") [fw pw iw], BY(varname) ///
 tempname matrix
 capture tab `by', matrow(`matrix')
 if _rc==0 & r(r)!=2 {
-di as error "group variable (i.e., `by') must take exactly two values"
+di as error "group variable (i.e., `by') must take exactly two values coded 0 and 1"
 macro drop mvdcmp_*
 }
-
+// check if matrix elements are each 0 or 1
+if `matrix'[1,1] ! = 0 & `matrix'[2,1] ! = 1 {
+  di as error "group variable (i.e., `by') must be coded 0/1"
+macro drop mvdcmp_*
+}
 else{
 gettoken cmd newvarlist:newvarlist
 tempvar _cons
@@ -1490,12 +1531,12 @@ return(f)
 	}
 end
 
-//Poisson pdf & CDF
+//Poisson/nbreg pdf & CDF
 mata:
 function pois(real matrix x, real matrix b, real matrix off, real matrix weight)
 	{
 		xb=x*b'
-		 F=exp(xb :+ log(off)):*weight
+		 F=exp(xb :+ log(off)):*weight // offset is exposure here...log exposure is offset
 return(F)
 	}
 end

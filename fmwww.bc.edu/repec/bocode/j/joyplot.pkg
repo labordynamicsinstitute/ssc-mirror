@@ -1,0 +1,18 @@
+d 'JOYPLOT': module to produce joyplots or ridgeline plots
+d
+d  This program produces joy plots, or ridgeline plots, as
+d described in the Medium ridgeline plots feature. 
+d
+d KW: joyplot
+d KW: graphics
+d KW: ridgeline plot
+d
+d Requires: Stata version 15 and palettes, colrspace from SSC
+d
+d Distribution-Date: 20220409
+d
+d Author: Asjad Naqvi, WU Vienna
+d Support: email asjadnaqvi@@gmail.com
+d
+f joyplot.ado
+f joyplot.sthlp
