@@ -164,6 +164,7 @@ p coldiag2 module to evaluate collinearity in linear regression
 p colelms module to calculate Cole's LMS values for growth data 
 p collapse2 module to extend the collapse command
 p collapseunique module to reduce data to unique observations based on specified key variables
+p color_style module to change the colors in the current scheme
 p colorscatter module to draw scatter plots with marker colors varying by a third variable.
 p colrspace module providing a class-based color management system in Mata
 p combinatorics module to evaluate the performance of all possible 2^n models generated with a given set of n possible explanatory variables
