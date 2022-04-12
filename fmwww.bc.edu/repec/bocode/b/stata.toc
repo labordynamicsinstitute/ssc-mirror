@@ -40,6 +40,7 @@ p bic module to evaluate the statistical significance of variables in a model
 p bicdrop1 module to estimate the probability a model is more likely without each explanatory variable
 p bidensity module to produce and graph bivariate density estimates
 p bihist module to produce bihistograms
+p bimap module to produce bivariate maps
 p bineq module to analyze multidimensional inequality in two dimensions of wellbeing
 p binscatter module to generate binned scatterplots
 p binscatterhist module to produce binned scatterplot with marginal histograms

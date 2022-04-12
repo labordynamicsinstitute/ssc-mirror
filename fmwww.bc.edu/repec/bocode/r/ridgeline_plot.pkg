@@ -1,0 +1,25 @@
+d 'RIDGELINE_PLOT': module to produce ridgeline plots
+d
+d  ridgeline_plot is a command that can be used to create ridgeline
+d plots. It also comes with functions that could easily enable you
+d to produce stackline plots, or stream plots. These are plots for
+d a single variable across different categories, often across time.
+d However, one can also use other variables in the horizonatl axis
+d (age for example). This command also allows you to easily use or
+d change colors with colorpalette options (if installed). 
+d
+d KW: graphics
+d KW: ridgeline plot
+d KW: stackline plot
+d KW: stream plot
+d
+d Requires: Stata version 16 and palettes, colrspace from SSC (q.v.)
+d
+d Distribution-Date: 20220411
+d
+d Author: Fernando Rios-Avila, Levy Economics Institute of Bard College
+d Support: email friosavi@@levy.org
+d
+f ridgeline_plot.ado
+f ridgeline_plot.sthlp
+f ../c/covid_small.dta

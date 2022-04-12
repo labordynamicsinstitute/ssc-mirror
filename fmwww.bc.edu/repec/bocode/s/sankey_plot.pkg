@@ -1,0 +1,22 @@
+d 'SANKEY_PLOT': module to produce Sankey plots
+d
+d	  'sankey_plot' is a command that can be used to create
+d Sankey type plots. 
+d
+d KW: graphics
+d KW: Sankey plot
+d KW: alluvial plot
+d KW: stream graph
+d
+d Requires: Stata version 16 and palettes, colrspace from SSC (q.v.)
+d
+d Distribution-Date: 20220411
+d
+d Author: Fernando Rios-Avila, Levy Economics Institute of Bard College
+d Support: email friosavi@@levy.org
+d
+f sankey_plot.ado
+f sankey_plot.sthlp
+f ../j/jobmarket.dta
+f ../i/immigration.dta
+f ../d/dogs_and_happiness.dta

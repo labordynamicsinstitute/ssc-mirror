@@ -1,0 +1,17 @@
+d 'WAFFLE_PLOT': module to produce waffle plots
+d
+d  'waffle_plot' is a command that can be used to create waffle
+d plots. It is a wrapper for scatter plots. 
+d
+d KW: graphics
+d KW: waffle plot
+d
+d Requires: Stata version 16 and palettes, colrspace from SSC (q.v.)
+d
+d Distribution-Date: 20220411
+d
+d Author: Fernando Rios-Avila, Levy Economics Institute of Bard College
+d Support: email friosavi@@levy.org
+d
+f waffle_plot.ado
+f waffle_plot.sthlp

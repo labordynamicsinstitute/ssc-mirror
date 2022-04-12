@@ -164,6 +164,7 @@ p rhsbsample module for repeated half-sample bootstrap sampling
 p richness module to compute measures of income richness
 p ridder module to solve equation by Ridder's method
 p ridge2sls module to compute Two-Stage Least Squares (2SLS) Ridge & Weighted Regression
+p ridgeline_plot module to produce ridgeline plots
 p ridgereg module to compute Ridge Regression Models
 p rif module to compute Recentered Influence Functions (RIF): RIF-Regression and RIF-Decomposition
 p rifle module to perform Randomization Inference for Leader Effects

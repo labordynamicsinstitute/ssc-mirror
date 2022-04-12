@@ -1,0 +1,20 @@
+d 'MSCATTER': module to produce multiple scatter plots
+d
+d  mscatter is a command that can be used to create scatter groups
+d "over" different groups in the same plot. Each group will be
+d identified with a different colors. 
+d
+d KW: graphics
+d KW: scatter
+d KW: color
+d KW: multiple scatterplot
+d
+d Requires: Stata version 16 and palettes, colrspace from SSC (q.v.)
+d
+d Distribution-Date: 20220411
+d
+d Author: Fernando Rios-Avila, Levy Economics Institute of Bard College
+d Support: email friosavi@@levy.org
+d
+f mscatter.ado
+f mscatter.sthlp

@@ -8,10 +8,11 @@ d KW: graphics
 d
 d Requires: Stata version 15 and palettes, colrspace from SSC
 d
-d Distribution-Date: 20220409
+d Distribution-Date: 20220411
 d
 d Author: Asjad Naqvi, WU Vienna
 d Support: email asjadnaqvi@@gmail.com
 d
 f streamplot.ado
+f streamplot_crash.ado
 f streamplot.sthlp

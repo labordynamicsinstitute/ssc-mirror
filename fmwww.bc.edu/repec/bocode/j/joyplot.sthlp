@@ -15,7 +15,8 @@ The command is based on the following guide on Medium: {browse "https://medium.c
 {p 8 15 2}
 
 {cmd:joyplot} {it:y x} {ifin}, {cmd:over}({it:variable}) {cmd:[} {cmd:overlap}({it:num}) {cmdab:bwid:th}({it:num}) {cmd:color}({it:str}) {cmd:alpha}({it:num}) {cmdab:off:set}({it:num}) {cmdab:lw:idth}({it:num}) {cmdab:lc:olor}({it:str}) 
-					{cmdab:xlabs:ize}({it:num}) {cmdab:ylabs:ize}({it:num}) {cmd:xticks}({it:str}) {cmd:xtitle}({it:str}) {cmd:ytitle}({it:str}) {cmd:title}({it:str}) {cmd:subtitle}({it:str}) {cmd:note}({it:str}) {cmd:]}
+					{cmdab:xlabs:ize}({it:num}) {cmdab:ylabs:ize}({it:num}) {cmdab:xlabc:olor}({it:str}) {cmdab:ylabc:olor}({it:str}) {cmd:xticks}({it:str}) 
+					{cmd:xtitle}({it:str}) {cmd:ytitle}({it:str}) {cmd:title}({it:str}) {cmd:subtitle}({it:str}) {cmd:note}({it:str}) {cmd:scheme}({it:str}) {cmd:]}
 
 
 {p 4 4 2}
@@ -25,7 +26,7 @@ The options are described as follows:
 {synopthdr}
 {synoptline}
 
-{p2coldent : {opt joyplot y x}}The command requires a numeric {it:y} variable and a numeric {it:x} variable. Usually the x variable is the date.{p_end}
+{p2coldent : {opt joyplot y x}}The command requires a numeric {it:y} variable and a numeric {it:x} variable. The x variable is usually a time variable.{p_end}
 
 {p2coldent : {opt over(group variable)}}This is the group variable that defines the joyplot layers.{p_end}
 
@@ -37,17 +38,19 @@ The options are described as follows:
 
 {p2coldent : {opt offset(value)}}This option is used for offseting the labels on the y-axis. Default is {it:0}. A higher offsetting can be achieved by providing a negative number, e.g. -20.{p_end}
 
-{p2coldent : {opt lwidth(value)}}The line width of the area stroke. Default is {it:thin}. This can also be replaced with a number.{p_end}
+{p2coldent : {opt lw:idth(value)}}The line width of the area stroke. Default is {it:thin}. This can also be replaced with a number.{p_end}
 
-{p2coldent : {opt lcolor(string)}}The line color of the area stroke. Default is {it:white}.{p_end}
+{p2coldent : {opt lc:olor(string)}}The line color of the area stroke. Default is {it:white}.{p_end}
 
-{p2coldent : {opt xlabsize(value)}, {opt ylabsize(value)}}The size of the x and y-axis labels. Defaults are {it:1.7}.{p_end}
+{p2coldent : {opt xlabs:ize(value)}, {opt ylabsize(value)}}The size of the x and y-axis labels. Defaults are {it:1.7}.{p_end}
 
-{p2coldent : {opt xlabc(string)}, {opt ylabc(string)}}This option can be used to customize the x and y-axis label colors especially if non-standard graph schemes are used. Default is {it:black}.{p_end}
+{p2coldent : {opt xlabc:olor(string)}, {opt ylabcolor(string)}}This option can be used to customize the x and y-axis label colors especially if non-standard graph schemes are used. Default is {it:black}.{p_end}
 
 {p2coldent : {opt xticks(string)}}This option can be used to customize the x-axis ticks. See example below.{p_end}
 
-{p2coldent : {opt xtitle, ytitle, title, subtitle, note}}These are standard twoway graph options if additional labels are required. The default is no labels.{p_end}
+{p2coldent : {opt xtitle, ytitle, title, subtitle, note}}These are standard twoway graph options.{p_end}
+
+{p2coldent : {opt scheme(string)}}Load the custom scheme. Above options can be used to fine tune individual elements.{p_end}
 
 {synoptline}
 {p2colreset}{...}
@@ -55,9 +58,9 @@ The options are described as follows:
 
 {title:Dependencies}
 
-The package requires the {stata "http://repec.sowi.unibe.ch/stata/palettes/index.html":palette} package (Jann 2018):
+The {browse "http://repec.sowi.unibe.ch/stata/palettes/index.html":palette} package (Jann 2018) is required for {cmd:joyplot}:
 
-{stata ssc install colorpalette, replace}
+{stata ssc install palettes, replace}
 {stata ssc install colrspace, replace}
 
 
@@ -71,7 +74,7 @@ keep if group10==1
 keep country date new_cases
 
 
-- Basic examples:
+- Basic use:
 
 joyplot new_cases date, over(country)
 
@@ -94,6 +97,21 @@ joyplot new_cases date if date > 22267, over(country) overlap(8) color(CET C1) a
 	title("{fontface Arial Bold:My joyplot}") subtitle("a subtitle here") ///
 	note("Some text here", size(vsmall)) 
 
+- Custom graph scheme
+
+The example below uses the {stata ssc install schemepack, replace:schemepack} suite and loads the {stata set scheme neon:neon} which has a black background. Here we need to fix some colors:
+
+qui summ date if date > 22267
+
+local xmin = r(min)
+local xmax = r(max)
+	
+joyplot new_cases date if date > 22267, over(country) overlap(8) color(CET C1) alpha(100) ///
+	lc(white) lw(0.2) xticks(`xmin'(30)`xmax') off(-30) ///
+	ylabc(white) xlabc(white) /// 
+	xtitle("Date") ytitle("Countries") ///
+	title("{fontface Arial Bold:My joyplot}") subtitle("a subtitle here", color(white)) ///
+	note("Some text here", size(vsmall)) scheme(neon)
 
 
 {title:Version history}

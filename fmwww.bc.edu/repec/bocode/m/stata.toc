@@ -210,6 +210,7 @@ p mrobust module to estimate model robustness and model influence
 p mrprobit module to estimate probit with Misclassification of the Dependent Variable
 p mrsprep module to estimate marginal relative survival models
 p mrtab module to compute one- and two-way tables of multiple responses
+p mscatter module to produce multiple scatter plots
 p msdeco module to calculate the Mookherjee & Shorrocks (1982) over-time inequality decomposition by subgroup
 p msdirb module to create a dataset of file names from the output of a MS-DOS dir/b command (Windows only)
 p mseffect module to estimate the mean effect size of (binary/multiple group) treatment on multiple outcomes

@@ -1,0 +1,18 @@
+d 'JOY_PLOT': module to produce joy plots
+d
+d  joy_plot is a command that can be used to create joyplots, also
+d known as ridgeplots. 
+d
+d KW: graphics
+d KW: joy plot
+d KW: ridgeplot 
+d
+d Requires: Stata version 16 and palettes, colrspace from SSC (q.v.)
+d
+d Distribution-Date: 20220411
+d
+d Author: Fernando Rios-Avila, Levy Economics Institute of Bard College
+d Support: email friosavi@@levy.org
+d
+f joy_plot.ado
+f joy_plot.sthlp

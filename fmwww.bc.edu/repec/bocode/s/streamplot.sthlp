@@ -14,8 +14,10 @@ The command is based on the following guide on Medium: {browse "https://medium.c
 {marker syntax}{title:Syntax}
 {p 8 15 2}
 
-{cmd:streamplot} {it:y x} {ifin}, {cmd:by}(varname) {cmd:[} {cmd:color}(string) {cmd:smooth}(num) {cmd:labcond}(string) {cmdab:lc:olor}(string) {cmdab:lw:idth}(string) 
-			{cmdab:xlabs:ize}({it:num}) {cmdab:ylabs:ize}({it:num}) {cmd:xticks}(string) {cmd:xtitle}(string) {cmd:ytitle}(string) {cmd:title}(string) {cmd:subtitle}(string) {cmd:note}(string) {cmd:]}
+{cmd:streamplot} {it:y x} {ifin}, {cmd:by}(varname) {cmd:[} {cmd:palette}(string) {cmd:smooth}(num) {cmd:labcond}(string) 
+			{cmdab:lc:olor}(string) {cmdab:lw:idth}(string) {cmd:xticks}(string) {cmdab:xlabs:ize}({it:num}) {cmdab:ylabs:ize}({it:num})
+			{cmdab:xlabc:olor}({it:str}) {cmdab:ylabc:olor}({it:str}) {cmdab:xlinew:idth}(string) {cmdab:xlinec:olor}(string) 
+			{cmd:title}(string) {cmd:subtitle}(string) {cmd:note}(string) {cmd:scheme}({it:str}) {cmd:]}
 
 
 {p 4 4 2}
@@ -25,27 +27,35 @@ The options are described as follows:
 {synopthdr}
 {synoptline}
 
-{p2coldent : {opt streamplot y x}}The command requires a numeric {it:y} variable and a numeric {it:x} variable. Usually the x variable is the date.{p_end}
+{p2coldent : {opt streamplot y x}}The command requires a numeric {it:y} variable and a numeric {it:x} variable. The x variable is usually a time variable.{p_end}
 
 {p2coldent : {opt by(group variable)}}This is the group variable that defines the layers.{p_end}
 
+{p2coldent : {opt palette(string)}}Color name is any named scheme defined in the {stata help colorpalette:colorpalette} package. Default is {stata colorpalette CET C6:{it:CET C6}}.{p_end}
+
 {p2coldent : {opt smooth(value)}}The data is smoothed based on a number of past observations. The default value 6. A value of 0 implies no smoothing.{p_end}
 
-{p2coldent : {opt labcond(string)}}Here the label condition can be defined. For example if we want to label only values which are greater than a certain threhold, then we can write {it:labcond(>= 10000)}. Currently only one condition is supported and the main aim is to clean up the labels especially if they are bunched on top of each other. See example below.{p_end}
+{p2coldent : {opt labcond(string)}}Labels have the group name and the value of the last observation in brackets. The label condition can be used to limit the number of labels shown. 
+For example if we want to label only values which are greater than a certain threhold, then we can write {it:labcond(>= 10000)}. Currently only one condition is supported. 
+Here the main aim is to clean up the figure especially if labels are bunched on top of each other. See example below.{p_end}
 
-{p2coldent : {opt color(string)}}Color name is any named scheme defined in the {stata help colorpalette:colorpalette} package. Default is {stata colorpalette CET C6:{it:CET C6}}.{p_end}
+{p2coldent : {opt xticks(string)}}This option can be used for customizing the x-axis ticks. See example below.{p_end}
 
-{p2coldent : {opt xticks(string)}}This option can be used to customize the x-axis ticks. See example below.{p_end}
+{p2coldent : {opt lw:idth(value)}}The line width of the area stroke. The default is {it:0.02}.{p_end}
 
-{p2coldent : {opt lwidth(value)}}The line width of the area stroke. The default is {it:0.02}.{p_end}
+{p2coldent : {opt lc:olor(string)}}The line color of the area stroke. The default is {it:white}.{p_end}
 
-{p2coldent : {opt lcolor(string)}}The line color of the area stroke. The default is {it:white}.{p_end}
+{p2coldent : {opt xlinew:idth(string)}}The width of the verticle grid lines.{p_end}
 
-{p2coldent : {opt xlabsize(value)}, {opt ylabsize(value)}}The size of the x and y-axis labels. Defaults are {it:2} and {it:1.4} respectively.{p_end}
+{p2coldent : {opt xlinec:olor(string)}}The color of the verticle grid lines.{p_end}
 
-{p2coldent : {opt xlabc(string)}, {opt ylabc(string)}}This option can be used to customize the x and y-axis label colors especially if non-standard graph schemes are used. Default is {it:black}.{p_end}
+{p2coldent : {opt xlabs:ize(value)}, {opt ylabsize(value)}}The size of the x and y-axis labels. Defaults are {it:2} and {it:1.4} respectively.{p_end}
 
-{p2coldent : {opt xtitle, ytitle, title, subtitle, note}}These are standard twoway graph options if additional labels are required. The default is no labels.{p_end}
+{p2coldent : {opt xlabc:olor(string)}, {opt ylabc:olor(string)}}This option can be used for customizing the x and y-axis label colors especially if non-standard graph schemes are used. Defaults are {it:black}.{p_end}
+
+{p2coldent : {opt title, subtitle, note}}These are standard twoway graph options.{p_end}
+
+{p2coldent : {opt scheme(string)}}Load the custom scheme. Above options can be used to fine tune individual elements.{p_end}
 
 {synoptline}
 {p2colreset}{...}
@@ -53,14 +63,13 @@ The options are described as follows:
 
 {title:Dependencies}
 
-The package requires the {stata "http://repec.sowi.unibe.ch/stata/palettes/index.html":palette} package (Jann 2018):
+The {browse "http://repec.sowi.unibe.ch/stata/palettes/index.html":palette} package (Jann 2018) is required for {cmd:streamplot}:
 
-{stata ssc install colorpalette, replace}
+{stata ssc install palettes, replace}
 {stata ssc install colrspace, replace}
 
 
 {title:Examples}
-
 
 Load the data and clean it up:
 use "https://github.com/asjadnaqvi/The-Stata-Guide/blob/master/data/OWID_data.dta?raw=true", clear
@@ -89,27 +98,45 @@ lab de region  1 "United States" 2 "Rest of North America" 3 "Brazil" 4 "Rest of
 
 lab val region region
 
-- Basic example:
+- Basic use:
 
 streamplot new_cases date, by(region)
 
+streamplot new_cases date if date > 22400, by(region) palette(twilight) 
+
+streamplot new_cases date, by(region) xlinew(medium)
+
+streamplot new_cases date, by(region) xlinec(none)
 
 - With additional options:
 
-streamplot new_cases date if date > 22600, by(region) smooth(5) ///
-	title("My stream plot") note("Note here") ///
+{it:Condition labels}
+
+streamplot new_cases date if date > 22400, by(region) smooth(5) ///
+	title("My stream plot") note("test the note") ///
 	labcond(> 100000) ylabsize(1.8) lc(black) lw(0.08)
 
 
-qui summ date if date > 22600
-	local xmin = r(min)
-	local xmax = r(max) + 40
+{it:Condition x-axis}
 
-streamplot new_cases date if date > 22600, by(region) smooth(3) ///
+qui summ date if date > 22400
+
+local xmin = r(min)
+local xmax = r(max) + 40
+
+streamplot new_cases date if date > 22400, by(region) smooth(3) ///
 	title("My stream plot") subtitle("Subtitle here") note("Note here") ///
-	labcond(> 100000) ylabsize(1.5) xlabc(blue) lc(white) lw(0.08) ///
+	labcond(> 100000) ylabsize(1.5) xlabc(blue) ylabc(orange) lc(white) lw(0.08) ///
 	xticks(`xmin'(20)`xmax')
 
+{it:Custom graph scheme}
+
+The example below uses the {stata ssc install schemepack, replace:schemepack} suite and loads the {stata set scheme neon:neon} which has a black background. Here we need to fix some colors:
+
+streamplot new_cases date if date > 22400, by(region) ///
+	title("My stream plot", size(6)) subtitle("Subtitle here", size(4)) note("Note here") ///
+	labcond(> 100000) ylabs(2.1) lc(black) lw(0.02) ///
+	scheme(neon) xlinec(gs4) 
 
 {hline}
 

@@ -19,15 +19,15 @@ program joyplot, sortpreserve
 version 15
  
 	syntax varlist(min=2 max=2 numeric) [if] [in], over(varname) [overlap(real 6) BWIDth(real 0.05) color(string) alpha(real 80)] ///
-		[ LColor(string)] [LWidth(string)] [XLABSize(real 1.7) YLABSize(real 1.7)] [OFFset(real 0) ]  ///
-		[ xticks(string) xtitle(string) ytitle(string) title(string) subtitle(string) note(string) ] ///
-		[ XLABColor(string) YLABColor(string) scheme(string) allopt graphopts(string asis) * ] 
+		[ LColor(string) LWidth(string) XLABSize(real 1.7) YLABSize(real 1.7) OFFset(real 0) 		]  ///
+		[ xticks(string) xtitle(string) ytitle(string) title(string) subtitle(string) note(string) 	] ///
+		[ XLABColor(string) YLABColor(string) scheme(string) allopt graphopts(string asis) * 		] 
 		
 		
 	// check dependencies
 	capture findfile colorpalette.ado
 	if _rc != 0 {
-		display as error "colorpalette package is missing. Install the {stata ssc install colorpalette, replace:colorpalette} and {stata ssc install colrspace, replace:colrspace} packages."
+		display as error "The palettes package is missing. Install the {stata ssc install palettes, replace:palettes} and {stata ssc install colrspace, replace:colrspace} packages."
 		exit
 	}	
 	
@@ -132,12 +132,12 @@ preserve
 	foreach x of local lvls {
 
 
-	 summ `over'
+	summ `over'
 	local newx = `r(max)' + 1 - `x'   
 
 	tempvar y`newx'
 	
-     lowess `norm' `xvar' if `over'==`newx', bwid(`bwidth') gen(`y`newx'') nograph
+    lowess `norm' `xvar' if `over'==`newx', bwid(`bwidth') gen(`y`newx'') nograph
     
     tempvar ybot`newx' ytop`newx'
 	
@@ -161,7 +161,7 @@ preserve
 	, ///
 	xlabel(`xti', labcolor(`xcolor') nogrid labsize(`xlabsize') angle(vertical)) ///
 	ylabel(, nolabels noticks nogrid) yscale(noline)   ///
-	legend(off) title(`title') subtitle(`subtitle') note(`note') xtitle(`xtitle') ytitle(`ytitle')
+	legend(off) title(`title') subtitle(`subtitle') note(`note') xtitle(`xtitle') ytitle(`ytitle') scheme(`scheme')
 
 restore			
 	}
