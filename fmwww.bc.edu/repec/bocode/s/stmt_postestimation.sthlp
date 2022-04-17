@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.4.8 16Mar2021}{...}
+{* *! version 1.4.8c 08Apr2022}{...}
 {cmd:help stmt postestimation}
 {right:also see:  {help stmt}}
 {hline}

@@ -1,8 +1,10 @@
-*! version 1.04  (August 2021) Modify stripper
-*! version 1.03  (April 2021) when requesting Constant, Only constant will comeup
-*! version 1.02  (March 2021) More Bug with Weights.
-*! version 1.01  (Feb 2021) Bug with Weights.
-*! version 1.0  (Feb 2021) By Fernando Rios-Avila
+*! version 1.1  (APR 2022) Adds new options and default
+* version 1.05  (Feb 2022) adds Name
+* version 1.04  (August 2021) Modify stripper
+* version 1.03  (April 2021) when requesting Constant, Only constant will comeup
+* version 1.02  (March 2021) More Bug with Weights.
+* version 1.01  (Feb 2021) Bug with Weights.
+* version 1.0  (Feb 2021) By Fernando Rios-Avila
 * Inspired  by grqreg (Pedro Azevedo)
 * This is an attempt to "update" grqreg by allowing for factor notation,
 * providing more flexibility in how plots are generated. (and how are options used)
@@ -19,7 +21,11 @@ capture program drop rifhdreg_stripper
 capture program drop rif_stripper
 capture program drop sqreg_stripper
 capture program drop short_local
-capture program drop label_var_lab*/
+capture program drop label_var_lab
+capture program drop raopt_default 
+capture program drop lnopt_default 
+capture program drop reg_default 
+capture program drop twopt_default*/
 
 ** This little piece of code "prevents"  loosing all!
 program define qregplot, rclass
@@ -45,21 +51,24 @@ program define grqreg_x, rclass
 	if c(stata_version) >= 11  {
     syntax [varlist( fv default=none)]             ///
         [,                          ///
-        Quantile(string)            /// defines list of quantiles 
+        Quantile(string asis)            /// defines list of quantiles 
         cons                        /// Indicates to plot constant
-        ols olsopt(string)          /// If one wants OLS results
-        raopt(string) 				///	Options for RArea plot
-		lnopt(string)               /// Options for Line
-		grcopt(string)              /// Options for GRcombine plot
-		twopt(string) 				/// Options for two way plot
-		seed(string)			    /// If one uses bsreg
+        ols olsopt(string asis)          /// If one wants OLS results
+        RAopt(string asis) 				///	Options for RArea plot
+		LNopt(string asis)               /// Options for Line
+		grcopt(string asis)              /// Options for GRcombine plot
+		TWOpt(string asis) 				/// Options for two way plot
+		seed(string asis)			    /// If one uses bsreg
 		savemat						/// If one wants to save the results as matrices in r()
-		estore(string)				/// If one wants to save the results in e() (est store)
-		esave(string)				/// If one wants to save the results as str (est save)
-		from(string)				/// if you have stored coefficients
+		estore(string asis)				/// If one wants to save the results in e() (est store)
+		esave(string asis)				/// If one wants to save the results as str (est save)
+		from(string asis)				/// if you have stored coefficients
 		label					    /// 
-		labelopt(string)		    /// 
-        ]
+		labelopt(string asis) *    ///
+		MTITLEs(passthru)  ]
+		/// Mtitles, when wanting to add titles to all other options
+		*name(passthru)              ///
+		*        ]
 	}
 	if c(stata_version) < 11  {
 		display in red "You need at least Stata 11.0 to run this command"
@@ -86,7 +95,7 @@ program define grqreg_x, rclass
 			}
 			qrgraph ,  `cons'  `e(ols)' raopt(`raopt') lnopt(`lnopt') grcopt(`grcopt')  twopt(`twopt') ///
 							matrixlist(e(qq) e(bs) e(ll) e(ul)) matrixols(e(bso) e(llo) e(ulo)) ///
-							vlist(`vlist') xlist(`e(xlist)') `label' labelopt(`labelopt')
+							vlist(`vlist') xlist(`e(xlist)') `label' labelopt(`labelopt') `options' `mtitles'
 		}		
 		
 		exit
@@ -258,9 +267,14 @@ program define grqreg_x, rclass
 		}
 	}
 	******************************************
-	qrgraph ,  `cons'  `ols' raopt(`raopt') lnopt(`lnopt') grcopt(`grcopt')  twopt(`twopt') ///
-	   				    matrixlist(`qq' `bs' `ll' `ul') matrixols( `bso' `llo' `ulo') xlist(`xlist') vlist(`vlist') `label' labelopt(`labelopt')
-	
+	qrgraph ,  `cons'  `ols' raopt(`raopt') ///
+			   lnopt(`lnopt') grcopt(`grcopt') ///
+			   twopt(`twopt') ///
+	   			matrixlist(`qq' `bs' `ll' `ul') ///
+				matrixols( `bso' `llo' `ulo') ///
+				xlist(`xlist') vlist(`vlist') ///
+				`label' labelopt(`labelopt') `options' `mtitles'
+	 
 	
  	if "`estore'"!="" {
 	    estore, qq(`qq') bs(`bs')   ll(`ll')   ul(`ul')    xlist(`xlist') ///
@@ -368,7 +382,7 @@ program define rif_stripper, rclass
 end
 
 program define sqreg_stripper, rclass
-	syntax anything [if] [in] [aw iw pw fw], *
+	syntax anything [if] [in] [aw iw pw fw], [*]
 	
 	gettoken yvar xvar:anything  
 	*local xvar `=subinstr("`anything'","`e(depvar)'","",1)' 
@@ -383,7 +397,7 @@ program define sqreg_stripper, rclass
 end
 
 program define short_local, rclass
-	syntax, llocal(string) [maxlength(integer 20) lines(integer 1)]
+	syntax, llocal(string asis) [maxlength(integer 20) lines(integer 1)]
 	local lng = length("`llocal'")
 	
 	local dlt2 = round(`lng'/`lines')
@@ -417,7 +431,7 @@ program define short_local, rclass
 end
 
 program define label_var_lab, rclass
-	syntax, var(string) [label]
+	syntax, var(string asis) [label]
 	local dot = strpos("`var'",".")
 	local b_dot = substr("`var'",1,`=`dot'-1')
 	local a_dot = substr("`var'",`=`dot'+1',.)
@@ -457,15 +471,48 @@ program define label_var_lab, rclass
  return local labout `lout1'
 end
 
+program raopt_default, rclass
+	syntax, [pstyle(passthru) fintensity(passthru) lwidth(passthru) *]
+	if `"`pstyle'"'     == "" local pstyle pstyle(p1)
+	if `"`fintensity'"' == "" local fintensity fintensity(30)
+	if `"`lwidth'"'     == "" local lwidth lwidth(none)
+	return local ropt `pstyle' `fintensity' `lwidth' `options'
+end
+
+program lnopt_default, rclass
+	syntax, [pstyle(passthru) lwidth(passthru)  *] 
+	if `"`pstyle'"'     == "" local pstyle pstyle(p1)
+	if `"`lwidth'"'     == "" local lwidth lwidth(0.3)
+	return local ropt `pstyle' `lwidth' `options'
+end
+
+program reg_default, rclass
+	syntax, [margin(string asis) * ]
+	if `"`margin'"'=="" local margin margin(vsmall)
+ 
+	return local ropt `margin' `options'
+end
+
+program twopt_default, rclass
+	syntax, [graphregion(string asis) plotregion(string asis) * ]
+	reg_default, `graphregion'
+	local graphregion graphregion(`r(ropt)')
+	reg_default, `plotregion'
+	local plotregion plotregion(`r(ropt)')
+	return local ropt `plotregion'  `graphregion' `options'
+end
+
 
 program define qrgraph,
 *[varlist( fv default=none)]             
 	syntax ///
 			, matrixlist(str) matrixols(str) xlist(string)  ///
-			[ vlist(string) cons  ols raopt(str) lnopt(str) 	grcopt(str)	twopt(str)  label labelopt(str) ]
+			[ vlist(string) cons  ols raopt(str asis ) lnopt(str asis ) ///
+			   grcopt(str asis )	twopt(str asis ) ///
+			   mtitles(str asis)    ///
+			   label labelopt(str asis )   *]
 			
-	
-			
+				
 	/*
 			qrgraph `varlist',  from(`from') `cons'  `e(ols)' raopt(`raopt') lnopt(`lnopt') grcopt(`grcopt')  twopt(`twopt') ///
 							matrixlist(e(qq) e(bs) e(ll) e(ul)) matrixols(e(bso) e(llo) e(ulo)) xlist(`e(xlist)')
@@ -500,6 +547,15 @@ program define qrgraph,
 	    local vlist `xlist'
 	}    
  
+ ********
+ *** Default options
+	raopt_default, `raopt'
+	local raopt `r(ropt)'
+	lnopt_default, `lnopt'
+	local lnopt `r(ropt)'
+	
+	twopt_default, `twopt'
+	local twopt `r(ropt)'
 	
 	*ms_fvstrip `fxvar', expand dropomit
 	*local vlist `r(varlist)'
@@ -512,6 +568,7 @@ program define qrgraph,
     local gcnt: word count `vlist'
  	tempname sols sbs
 	
+	local nmtitle:word count `mtitles'
 	
 	foreach v of local vlist {
 		local cnt = `cnt' + 1
@@ -525,15 +582,25 @@ program define qrgraph,
  
 		}
 		** label variables
-		local vlab
 		
-		label_var_lab , var(`v') `label'
-		
-		local vlab `r(labout)'
-		if "`v'"=="_cons" local vlab Intercept
-		
-		short_local, llocal(`vlab') `labelopt'
-		local vlab "`r(out)'"
+		if `cnt' > `nmtitle' {
+			local vlab
+			label_var_lab , var(`v') `label'
+			local vlab `r(labout)'
+			if "`v'"=="_cons" local vlab Intercept
+			short_local, llocal(`vlab') `labelopt'
+			local vlab "`r(out)'"
+		}
+		else {
+			local vlabx:word `cnt' of `mtitles'
+			if "`vlabx'"==" " {
+				display "here"
+				label_var_lab , var(`v') `label'
+				local vlabx `r(labout)'
+			}
+			short_local, llocal(`vlabx') `labelopt'
+			local vlab "`r(out)'"
+		}
 		
 		****		
 		label var `sbs'1 "Quantile"
@@ -543,21 +610,21 @@ program define qrgraph,
 			twoway  (rarea `sbs'3 `sbs'4 `sbs'1 , `raopt' ) || ///
 				   (line `sbs'2 `sbs'1, lp(solid) `lnopt') `olsci' , ///
 				   name(`m`cnt'', replace) legend(off) nodraw ///
-				   title(`vlab') `twopt'
+				   title(`vlab') `twopt' 
 			local grcmb	 `grcmb' `m`cnt''
 		}
 		else {
 		    twoway  (rarea `sbs'3 `sbs'4 `sbs'1 , `raopt' ) || ///
 				   (line `sbs'2 `sbs'1, lp(solid) `lnopt') `olsci' , ///
 				   legend(off)   ///
-				   title(`vlab') `twopt'
+				   title(`vlab') `twopt'  `options'
 		}
 		qui:drop `sbs'*	   
 		capture drop `sols'*
 	}
 	
 	if `gcnt'>1 {
-		graph combine `grcmb', `grcopt'
+ 		graph combine `grcmb', `grcopt'  `options'
 		graph drop `grcmb'
 	}
 	

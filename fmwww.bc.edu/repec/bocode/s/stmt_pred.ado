@@ -2,7 +2,7 @@
 // ===============================================================================
 //stmt_pred.ado Flexible parametric survival models with multiple timescales prediction file
 
-*! version 1.4.8 16Mar2021
+*! version 1.4.8c 09Apr2022
 //Updated 20180629 removed 3 section interaction for cumulative hazard (from strcs command)- working on mata code
 //Updated 20180803 added hazard ratio prediction
 //Updated 20180920 HB added indicator prediction for hazards

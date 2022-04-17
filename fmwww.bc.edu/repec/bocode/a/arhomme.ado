@@ -1,9 +1,9 @@
-*! version 1.0.1 26nov2020
+*! version 1.1.0 10apr2022
 /* by Pascal Erhardt & Martin Biewen, University of Tuebingen */
 
 program define arhomme, eclass byable(recall)
 
-version 16.0
+version 16
 
 syntax varlist(min=2 numeric) [if] [in] [pweight/], SELect(string) [RHOpoints(integer 19) ///
 																TAUpoints(integer 3) ///
@@ -15,7 +15,7 @@ syntax varlist(min=2 numeric) [if] [in] [pweight/], SELect(string) [RHOpoints(in
 																CENTergrid(real 0) ///
 																Quantiles(numlist >0 <1 ascending max=100) ///
 																GAUssian FRAnk PLACKett JOEma GRAph NOSTDerrors ///
-																OUTput(string) FILLfraction(real 0.3)]
+																OUTput(string) FAILfraction(real 0.3)]
 	
 
 	
@@ -81,8 +81,8 @@ syntax varlist(min=2 numeric) [if] [in] [pweight/], SELect(string) [RHOpoints(in
 		display as error "options {bf:nostderrors} and {bf:subsample} are mutually exclusive"
 		exit 198
 	}
-	else if (`r(nostd)' + `r(fill)' > 1) {
-		display as error "options {bf:nostderrors} and {bf:fillfraction} are mutually exclusive"
+	else if (`r(nostd)' + `r(fail)' > 1) {
+		display as error "options {bf:nostderrors} and {bf:failfraction} are mutually exclusive"
 		exit 198
 	}
 	
@@ -91,9 +91,8 @@ syntax varlist(min=2 numeric) [if] [in] [pweight/], SELect(string) [RHOpoints(in
 		exit 198
 	}
 	
-	if (`fillfraction' < 0) {
-		display as error "{p}{bf:fillfraction(`fillfraction')} must be greater than " ///
-		"or equal to 0{p_end}"
+	if ((`failfraction' < 0) | (`failfraction' > 1)) {
+		display as error "{bf:failfraction(`failfraction')} must not be outside the unit interval"
 		exit 198
 	}
 			
@@ -251,12 +250,11 @@ syntax varlist(min=2 numeric) [if] [in] [pweight/], SELect(string) [RHOpoints(in
 	/* remove collinear quantile regressors */
 	_rmcoll `indepvar' if `touse', forcedrop
 	local indepvar "`r(varlist)'"
-	local num_indepv: word count `indepvar'
-	/* remove collinearity in selection regressors */
-	_rmcoll `selreg' if `probuse', forcedrop
+	/* remove collinearity in selection regressors 
+	_rmcoll `selreg' if `probuse' //, forcedrop
 	local selreg "`r(varlist)'"
-	local num_sel: word count `selreg'
-	
+			*/
+			
 	tempvar wght
 	if ("`weight'" != "") {
 		qui sum `exp' if `probuse'
@@ -299,7 +297,7 @@ syntax varlist(min=2 numeric) [if] [in] [pweight/], SELect(string) [RHOpoints(in
 		local quantiles = ".1 .2 .3 .4 .5 .6 .7 .8 .9"
 		forvalues i = 1/`nq' {
 			local temp_q = abbrev("`i'_quantile",11)
-			local coef_eq = "`coef_eq'" + (`num_indepv'+1)*".`temp_q' "
+			local coef_eq = "`coef_eq'" + `num_vlist'*".`temp_q' "
 		}
 	}
 	else { // user specific quantiles
@@ -309,7 +307,7 @@ syntax varlist(min=2 numeric) [if] [in] [pweight/], SELect(string) [RHOpoints(in
 			local temp_q: word `i' of `quantiles'
 			mat `quant' = (`quant'\ `temp_q')
 			local temp_q = abbrev("`temp_q'_quantile",11)
-			local coef_eq = "`coef_eq' " + (`num_indepv' + 1)*".`temp_q' "
+			local coef_eq = "`coef_eq' " + `num_vlist'*".`temp_q' "
 		}
 	}
 	
@@ -322,8 +320,7 @@ syntax varlist(min=2 numeric) [if] [in] [pweight/], SELect(string) [RHOpoints(in
 	}
 		
 	if ("`copulaparameter'" == "") {
-		mata: heavylift_7355("`indepvar'", ///
-							"`depvar'", ///
+		mata: heavylift_7355("`varlist'", ///
 							"`gamma'", ///
 							"`zgamma'", ///
 							"`copula'", ///
@@ -344,7 +341,6 @@ syntax varlist(min=2 numeric) [if] [in] [pweight/], SELect(string) [RHOpoints(in
 							`meshsize', ///
 							`centergrid', ///
 							"`instrument'")
-							
 	local clist = `nq'*"_cons `indepvar' " + "rho"
 	local coef_list = "`probnames' " + "`clist'"
 	local ceq = "`coef_eq' " + "_anc"
@@ -355,8 +351,7 @@ syntax varlist(min=2 numeric) [if] [in] [pweight/], SELect(string) [RHOpoints(in
 	else {
 		di _newline(1) as txt "{p}note: second step estimation redundant because copula parameter" ///
 		" already defined as {bf:copulaparameter(`copulaparameter')}{p_end}"
-		mata: main_fct2("`indepvar'", ///
-						"`depvar'", ///
+		mata: main_fct2("`varlist'", ///
 						"`gamma'", ///
 						"`zgamma'", ///
 						"`copula'", ///
@@ -375,8 +370,7 @@ syntax varlist(min=2 numeric) [if] [in] [pweight/], SELect(string) [RHOpoints(in
 
 								
 	if ("`nostderrors'" == "") {
-		mata: std_erf("`indepvar'", ///
-						"`depvar'", ///
+		mata: std_erf("`varlist'", ///
 						"`gamma'", ///
 						"`copula'", ///
 						`taupoints', ///
@@ -403,7 +397,7 @@ syntax varlist(min=2 numeric) [if] [in] [pweight/], SELect(string) [RHOpoints(in
 						"`b_betas'", ///
 						"`s_betas'", ///
 						"`cbands'", ///
-						`fillfraction')
+						`failfraction')
 	}
 	
 	di _newline(3) as text "{hline 78}"	
@@ -459,7 +453,7 @@ syntax varlist(min=2 numeric) [if] [in] [pweight/], SELect(string) [RHOpoints(in
 			ereturn scalar subsample = `subsample'
 			ereturn scalar repetitions = `actreps'
 			ereturn scalar Vrho = `Vrho'
-			ereturn scalar fillfrac = `fillfraction'
+			ereturn scalar failfrac = `failfraction'
 			ereturn matrix pvals = `pvals'
 			ereturn matrix bbetas = `b_betas'
 			ereturn matrix sbetas = `s_betas'
@@ -493,29 +487,16 @@ syntax varlist(min=2 numeric) [if] [in] [pweight/], SELect(string) [RHOpoints(in
 		cmd_out ,dep("`depvar'") regs("`indepvar'") seldep("`biname'") selreg("`selreg'") nsel(`num_sel') beta("e(b)") cov("e(V)") nq(`nq') nvar(`num_vlist') quant("`quant'") pvals("e(pvals)") conf("e(confivals)") cop("`copula'")
 	}
 	
-	if ("`copula'" == "frank") {
-		di as text "note: parameter estimates based on Frank copula model"
-	}
-	else if ("`copula'" == "gaussian") {
-    	di as text "note: parameter estimates based on Gaussian copula model"
-	}
-	else if ("`copula'" == "joema") {
-    	di as text "note: parameter estimates based on Joe & Ma copula model"
-	}
-	else {
-    	di as text "note: parameter estimates based on Plackett copula model"
-	}
+	di as text "note: parameter estimates based on `copula' copula model"
 	
 	if ("`nostderrors'" == "") {
 		if (`actreps' != `repetitions') {
 			local fsubs = `repetitions' - `actreps'
 			local plu = plural(`fsubs',"subsample")
-			local fillp = 100*`fillfraction'
+			local failp = 100*`failfraction'
 			di _newline in red "`fsubs' `plu' had to be discarded because of failed convergence"
-			di as text "note: user-specified limit for replacing failed repetitions reached"
-			di as text "standard errors may be questionable"
-            di as text "you may wish to increase {bf:subsample(`subsample')}"
-
+			di as text "remember: a maximum of `failp'% of subsamples are replaced"
+			di as text "you may wish to increase {bf:subsample(`subsample')} or {bf:failfraction(`failfraction')}"
 		}
 	}
 	
@@ -584,15 +565,15 @@ real rowvector lp_fnm(numeric matrix A, real rowvector c, real colvector b, real
 			x is n x 1	
 	=============================================================================== */
 real vector s, y, r, z, w, q, rhs, dy, dx, dz, dw, fx, fs, fw, fz, dxdz, dsdw, xinv, sinv, xi
-real matrix AQ, AQA
-real scalar beta, small, max_it, n, k, gap, mu, g
+real matrix AQA //, AQ
+real scalar beta, small, max_it, n, gap, mu, g //, k
 	
 // Set some constants
 beta = 0.9995
 small = 1e-5
 max_it = 100
 n = cols(A)
-k = rows(A)
+//k = rows(A)
 
 // Generate initial feasible point
 s = u - x // n x 1
@@ -613,6 +594,7 @@ while (gap > small & it < max_it) {
 	q = 1 :/ ((z' :/ x) + (w' :/ s)) // n x 1
 	r = z - w // 1 x n
 	//Q = diag(q) // no sparse option available
+	/*
 	AQ = J(k,n,0)
 	for (i=1;i<=n;i++) {
 		for (j=1;j<=k;j++) {
@@ -621,8 +603,10 @@ while (gap > small & it < max_it) {
 	}	
 	
 	AQA = AQ * A' // k x k
-	rhs = AQ * r' // k x 1
-	dy = (invsym(AQA) * rhs)' // 1 x k
+	*/
+	AQA = cross(A',q,A') /* a (faster) alternative for A*(q:*A') */
+	rhs = cross((q':*A)',r') //A*(q:*r') // k x 1
+	dy = (qrsolve(AQA,rhs))' // (invsym(AQA) * rhs)' // 1 x k
 	dx = q :* (dy * A - r)' // n x 1
 	ds = -dx // n x 1
 	dz = -z :* (1 :+ (dx :/ x))' // 1 x n
@@ -653,7 +637,7 @@ while (gap > small & it < max_it) {
 		sinv = 1 :/ s // n x 1
 		xi = mu * (xinv - sinv) // n x 1
 		rhs = rhs + A * ( q :* (dxdz - dsdw - xi)) // k x 1
-		dy = (invsym(AQA)* rhs)' // 1 x k
+		dy = (qrsolve(AQA,rhs))' // (invsym(AQA)* rhs)' // 1 x k
 		
 		dx = q :* (A' * dy' + xi - r' - dxdz + dsdw) // n x 1
 		ds = -dx // n x 1
@@ -757,8 +741,7 @@ return(k/(x^k) *integral)
 /* end of function deye */
 }
 
-void heavylift_7355(string scalar invnames, ///
-					string scalar depvname, ///
+void heavylift_7355(string scalar vnames, ///
 					string scalar gam, ///
 					string scalar zgam, ///
 					string scalar copula, ///
@@ -782,18 +765,17 @@ void heavylift_7355(string scalar invnames, ///
 {
 
 /* construct data matrices */				
-xdata = st_data(., invnames, touse) /* import quantile vars */
-ydata = st_data(., depvname, touse) /* import quantile vars */
+data = st_data(., vnames, touse) /* import quantile vars */
 zgamma = st_data(., zgam, touse) /* get probit prediction */
 wght = st_data(., weights, touse) /* import weights */
 gamma = st_matrix(gam) /* get probit coefficients */
 instrument = st_data(., instr, touse) /* load instrument variable*/
-v = cols(xdata) + 1
-n = rows(xdata)
+v = cols(data)
+n = rows(data)
 pscore = normal(zgamma)
 varphi = wght :*instrument
-X = wght :*(J(n,1,1), xdata) //[.,2::v])
-y = wght :*ydata[.,1]
+X = wght :*(J(n,1,1), data[.,2::v])
+y = wght :*data[.,1]
 /* define grid points for tau */
 tauvec = (1::taupoints):/(taupoints + 1)
 /* define grid points for copula parameter */
@@ -1093,8 +1075,7 @@ st_matrix(est_bvec,est_betas')
 
 
 
-void main_fct2(string scalar invnames, ///
-				string scalar depvname, ///
+void main_fct2(string scalar vnames, ///
 				string scalar gam, ///
 				string scalar zgam, ///
 				string scalar copula, ///
@@ -1107,17 +1088,16 @@ void main_fct2(string scalar invnames, ///
 {
 
 /* construct data matrices */				
-xdata = st_data(., invnames, touse) /* import quantile vars */
-ydata = st_data(., depvname, touse) /* import quantile vars */
+data = st_data(., vnames, touse) /* import quantile vars */
 zgamma = st_data(., zgam, touse) /* get probit prediction */
 wght = st_data(., weights, touse) /* import weights */
 gamma = st_matrix(gam) /* get probit coefficients */
 rhovar = st_data(., cpara, touse) /* load user-specified copula parameter */
-v = cols(xdata) + 1
-n = rows(xdata)
+v = cols(data)
+n = rows(data)
 pscore = normal(zgamma)
-X = wght :*(J(n,1,1), xdata) //[.,2::v])
-y = wght :*ydata[.,1]
+X = wght :*(J(n,1,1), data[.,2::v])
+y = wght :*data[.,1]
 
 /* 3rd step in Arellano Bonhomme estimation */
 Qtiles = st_matrix(quantiles)
@@ -1241,8 +1221,7 @@ function probit_func(transmorphic M, ///
 
 }
 
-void std_erf(string scalar invnames, ///
-					string scalar depvname, ///
+void std_erf(string scalar vnames, ///
 					string scalar gam, ///
 					string scalar copula, ///
 					real scalar taupoints, ///
@@ -1269,12 +1248,11 @@ void std_erf(string scalar invnames, ///
 					string scalar bbetas, ///
 					string scalar sbetas, ///
 					string scalar confb, ///
-					real scalar fillfrac)
+					real scalar failfrac)
 {
 
 /* construct data matrices */				
-xdata = st_data(., invnames, probuse) /* import quantile vars */
-ydata = st_data(., depvname, probuse) /* import quantile vars */
+data = st_data(., vnames, probuse) /* import quantile vars */
 Z = st_data(., selreg, probuse) /* import selection regressors */
 D = st_data(., touse, probuse) /* import binary response var */
 wght = st_data(., weights, probuse) /* import weights */
@@ -1282,11 +1260,11 @@ init_gamma = st_matrix(gam) /* get probit coefficients */
 gammaCov = st_matrix(gamCov) /* get probit covariance matrix */
 Ebetas = st_matrix(est_bvec)
 instrument = st_data(., instr, probuse)
-v = cols(xdata) + 1
-n = rows(xdata)
+v = cols(data)
+n = rows(data)
 Ebetas = Ebetas'
 nEbetas = rows(Ebetas)
-bmax = ceil((1+ fillfrac)*boots) /* maximum of samples to be drawn */
+bmax = ceil((1+ failfrac)*boots) /* maximum of samples to be drawn */
 rep = 0
 b = 1
 prob_fail=0
@@ -1316,8 +1294,7 @@ while (b<=boots & rep < bmax) {
 
 	while (isel==subS | isel==0) { /* rule out subsamples with[out] [perfect] selection */
 		inSample = ceil(n * runiform(subS,1))
-		Sub_xdata = xdata[inSample,.]
-		Sub_ydata = ydata[inSample,.]
+		Sub_data = data[inSample,.]
 		Sub_Z = Z[inSample,.]
 		Sub_D = D[inSample,1]
 		Sub_wght = wght[inSample,1]
@@ -1325,9 +1302,9 @@ while (b<=boots & rep < bmax) {
 		isel = colsum(Sub_D)
 	}
 
-	y = Sub_wght :* Sub_ydata //[.,1]
+	y = Sub_wght :* Sub_data[.,1]
 	y = select(y,Sub_D) /* selected in subsample */
-	X = Sub_wght :* (J(subS,1,1), Sub_xdata) //[.,2::v])
+	X = Sub_wght :* (J(subS,1,1), Sub_data[.,2::v])
 	X = select(X,Sub_D) /* selected regressors in subsample */
 	M = moptimize_init()
 	moptimize_init_evaluator(M, &probit_func())
@@ -1345,7 +1322,7 @@ while (b<=boots & rep < bmax) {
 	moptimize(M)
 	//moptimize_result_display(M)
 	conv = moptimize_result_converged(M) /* end loop if probit succesfully converged */
-	if (conv==0) {
+	if (conv==0 & rep <= bmax) {
 		if (mod(rep,50) != 0 & b!=boots) {
 				displayas("text")
 				printf("{txt}x")
@@ -1361,7 +1338,7 @@ while (b<=boots & rep < bmax) {
 			
 	gamma = moptimize_result_coefs(M)
 	mck = rowsum( (gamma :== .) )
-	if (mck>=1) {
+	if (mck>=1 & rep < bmax) {
 		if (mod(rep,50) != 0 & b!=boots) {
 				displayas("text")
 				printf("{txt}x")
@@ -1374,10 +1351,12 @@ while (b<=boots & rep < bmax) {
 		//displayas("error")
 		//printf("\n{red:note: probit estimation on subsample }" + strofreal(b) + "/" + strofreal(boots) + "{red: contains at least one missing. Subsample dropped and replaced}\n")
 	}
-	if ((mck >=1) | (conv==0)) {
+	if (mck >=1 | conv==0) {
 		prob_fail++
 	}
-	else{ //if (conv==1 & mck==0) {	
+	
+	
+	if (conv==1 & mck==0) {	
 		zgamma = (Sub_Z,J(subS,1,1)) * gamma'
 		pscore = normal(zgamma)
 		Sub_wght = select(Sub_wght,Sub_D)
@@ -1651,11 +1630,11 @@ if (rep == bmax & b<=boots) {
 
 if (prob_fail > 0) {
 	displayas("text")
-	printf("\n{txt}note: probit model failed to converge for " + strofreal(prob_fail) + plural(prob_fail," subsample"))
+	printf("\n{txt}Probit model failed to converge for " + strofreal(prob_fail) + plural(prob_fail," subsample"))
 }
-if (q_fail >0) {
+else if (q_fail >0) {
 	displayas("text")
-	printf("\n{txt}note: selection corrected quantile regression failed to converge for " + strofreal(q_fail) + plural(q_fail," subsample"))
+	printf("\n{txt}Selection corrected quantile regression failed to converge for " + strofreal(q_fail) + plural(q_fail," subsample"))
 }
 
 
@@ -1744,7 +1723,7 @@ program cmd_in, rclass
 	local gra = (strpos("`options'","gra") != 0)
 	local nostd = (strpos("`options'","nostd") != 0)
 	local out = (strpos("`options'","out") != 0)
-	local fill = (strpos("`options'","fill") != 0)
+	local fail = (strpos("`options'","fail") != 0)
 	
 	return local opt `"`options'"'
 	return local rho `"`rho'"'
@@ -1763,7 +1742,7 @@ program cmd_in, rclass
 	return local gra `"`gra'"'
 	return local nostd `"`nostd'"'
 	return local out `"`out'"'
-	return local fill `"`fill'"'
+	return local fail `"`fail'"'
 	/* end of sub-program cmd_in */
 end
 

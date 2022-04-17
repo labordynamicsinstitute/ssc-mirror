@@ -1,9 +1,11 @@
+*! check how to a) find Min delta and b) apply delta to model
 ** NOTE when Panel is unbalanced (check this somehow.)
 ** there could be two solutions.
 ** 1 Using strong balance 
 ** 2 use semi balance (whenever att_gt exists)
 ** 3 use weak balance/crossection with cluster.
 ** Ultimate check. Do thestatistics Once.
+*! v1.57  by FRA. Takes Pretrend from AGG NOT ALLOWED
 * v1.56  by FRA. bug for NOT YET, 2021 ref
 * v1.55  by FRA. Allows for more periods
 * v1.53  by FRA. changes e(gtt). THis give sdetailed sample 
@@ -362,7 +364,7 @@ program csdid_r, sortpreserve eclass
 		local agg attgt
 	}
 	
-	if !inlist("`agg'","attgt","simple","pretrend","group","calendar","event") {
+	if !inlist("`agg'","attgt","simple","group","calendar","event") {
 		display in red "Aggregation not Allowed"
 		exit 10
 	}

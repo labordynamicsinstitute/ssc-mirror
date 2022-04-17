@@ -1,0 +1,17 @@
+d 'FMMHIST': module to generate a multi-class histogram after estimating a fmm model
+d
+d  Generates a multi-class histogram after estimating a fmm model. 
+d
+d KW: histogram
+d KW: finite mixture model
+d KW: fmm
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20220416
+d
+d Author: Jan Brogger, Haukeland University Hospital, Bergen
+d Support: email jan.christian.brogger@@helse-bergen.no
+d
+f fmmhist.ado
+f fmmhist.sthlp

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.4.8 16Mar2021}}{...}
+{* *! version 1.4.8c 08Apr2022}}{...}
 {cmd:help stmt}
 {right:also see:  {help stmt_postestimation}}
 {hline}
@@ -29,16 +29,16 @@
 
 {syntab: Timescale-specific sub-options}
 {synopt :{opt bk:nots(knots_list)}}boundary knots for the timescale specified{p_end}
-{synopt :{opt bknotst:vc(knots_list)}}boundary knots for time-dependent effects{p_end}
+{synopt :{opt bknotst:vc(knots_list)}}boundary knots for covariate-interactions with timescale{p_end}
 {synopt :{cmdab:df(#)}}degrees of freedom for the timescale specified {p_end}
-{synopt :{opt dft:vc(df_list)}}degrees of freedom for each time-dependent effect{p_end}
+{synopt :{opt dft:vc(df_list)}}degrees of freedom for each interaction with the timescale{p_end}
 {synopt :{opt indi:cator(varname)}}specifies which observations are to have the second or third timescale{p_end}
 {synopt :{opt knots(knots_list)}}knot locations for timescale specified{p_end}
-{synopt :{opt knotst:vc(knots_list)}}knot locations for time-dependent effects{p_end}
+{synopt :{opt knotst:vc(knots_list)}}knot locations for interactions with the timescale{p_end}
 {synopt :{opt knsc:ale(scale)}}scale for user-defined knots (default scale is time){p_end}
-{synopt :{opt logt:off}} smooth the timescale over time (default is log time){p_end}
-{synopt :{opt start(varname)}} the difference between the timescale and the timescale specified {cmd:stset}{p_end}
-{synopt :{opt tvc(varlist)}}varlist of time varying effects{p_end}
+{synopt :{opt logt:off}}smooth the timescale over time (default is log time){p_end}
+{synopt :{opt start(varname)}}the difference between the timescale and the timescale specified {cmd:stset}{p_end}
+{synopt :{opt tvc(varlist)}}varlist for covariate-timescale interactions{p_end}
 
 {syntab:Estimation options}
 {synopt :{opt nocon:stant}}suppress constant term{p_end}
@@ -164,7 +164,8 @@ by {cmd:knscale()}.
 
 {phang}
 {opt bknotstvc(knots_list)} {it:knots_list} gives the boundary knots for
-any time-dependent effects. By default these are the same as for the {cm:bknots()}
+any restricted cubic splines created for the timescale, when including an interaction
+between a covariate and the timescales. By default these are the same as for the {cmd:bknots()}
 option. They are specified on the scale defined by {cmd:knscale()}.
 
 {pmore}
@@ -186,17 +187,19 @@ there are also boundary knots placed at the minimum and maximum of the distribut
 of uncensored survival times.
 
 {phang}
-{opt dftvc(df_list)} gives the degrees of freedom for time-dependent effects
-in {it:df_list}. With 1 degree of freedom a linear effect is fitted.
-If there is more than one time-dependent effect and different degrees of freedom
-are requested for each time-dependent effect then the following syntax applies:
+{opt dftvc(df_list)} gives the degrees of freedom used when including interactions
+between the timescale and covariates in {it:df_list}.
+With 1 degree of freedom a linear effect is fitted.
+If there is more than one interaction and different degrees of freedom
+are requested, then the following syntax applies:
 
 {pmore}
 {cmd:dftvc(x1:3 x2:2 1)}
 
 {pmore}
 This will use 3 degrees of freedom for {cmd:x1}, 2 degrees of freedom for
-{cmd:x2} and 1 degree of freedom for all remaining time-dependent effects.
+{cmd:x2} and 1 degree of freedom for all remaining interactions between covariates
+and the timescale.
 
 {phang}
 {opt indicator(varname)} specifies an indicator variable which indicates which
@@ -213,8 +216,9 @@ log time unless the {cmd:logtoff} option is specified. Default knot positions ar
 
 {phang}
 {opt knotstvc(knots_list)} defines numlist {it:knots_list} as the location
-of the interior knots for time-dependent effects. If different knots
-are required for different time-dependent effects the option is
+of the interior knots used when recalculating the restricted cubic splines for the
+specified timescale-covariate interaction. If different knots
+are required for different interactions, the option is
 specified, for example, as follows:
 
 {pmore}
@@ -229,7 +233,7 @@ survival times, or log survival times depending on whether the {cmd:logtoff} opt
 is specified. The default is {cmd:knscale(time)}.
 
 {phang}
-{opt logtoff} smoothes the timescale over time using restricted cubic splines.
+{opt logtoff} smooths the timescale over time using restricted cubic splines.
 By default, smoothing is over log time.
 
 {phang}
@@ -241,9 +245,9 @@ example, {it:varname} would be a variable which contains the age at diagnosis. N
 using {cmd:time1()} since this timescale is specified when using the {cmd:stset} command.
 
 {phang}
-{opt tvc(varlist)} gives the name of the variables that are time-dependent.
-Time-dependent effects are fitted using restricted cubic splines.
-The degrees of freedom are specified using the {opt dftvc()} option.
+{opt tvc(varlist)} gives the name of the variables that are to be included as part
+of an interaction with the specified timescale. The degrees of freedom are specified
+using the {opt dftvc()} option.
 
 
 {dlgtab:Estimation options}
@@ -358,7 +362,7 @@ iteration.
 {pstd}
 {cmd:stmt} stores the following in {cmd:e()}:
 
-{synoptset 25 tabbed}{...}
+{synoptset 30 tabbed}{...}
 {p2col 5 20 24 2: Scalars}{p_end}
 {synopt:{cmd:e(rank)}}rank of {cmd:e(V)}{p_end}
 {synopt:{cmd:e(N)}}number of observations{p_end}
@@ -382,7 +386,7 @@ iteration.
 {synopt:{cmd:e(BIC)}}Bayesian information criterion{p_end}
 {synopt:{cmd:e(Ntimescales)}}BNumber of timescales included in model{p_end}
 
-{synoptset 25 tabbed}{...}
+{synoptset 30 tabbed}{...}
 {p2col 8 20 24 2: Macros}{p_end}
 {synopt:{cmd:e(cmdline)}}command as typed{p_end}
 {synopt:{cmd:e(cmd)}}{cmd:stmt}{p_end}
@@ -394,13 +398,13 @@ iteration.
 {synopt:{cmd:e(rcsterms_base_t#)}}name of spline terms used to model timescale #{p_end}
 {synopt:{cmd:e(bhknots_t#)}}value of the knots used to model timescale #{p_end}
 {synopt:{cmd:e(exp_bhknots_t#)}}exponential of the knots used to model timescale #{p_end}
-{synopt:{cmd:e(tvc_t#)}}variables with time-dependent effects on timescale #{p_end}
-{synopt:{cmd:e(rcsterms_t#_{it:varname})}}name of spline terms used to model the time-dependent effect for {it:varname} on timescale #{p_end}
-{synopt:{cmd:e(tvcknots_t#_{it:varname})}}value of the knots for the time-dependent effect of {it:varname} on timescale #{p_end}
-{synopt:{cmd:e(exp_tvcknots_t#_{it:varname})}}exponential of the knots for the time-dependent effect of {it:varname} on timescale #{p_end}
+{synopt:{cmd:e(tvc_t#)}}variables to be included in a timescale-covariate interaction #{p_end}
+{synopt:{cmd:e(rcsterms_t#_{it:varname})}}name of spline terms used to model the timescale for the {it:varname}-timescale interaction #{p_end}
+{synopt:{cmd:e(tvcknots_t#_{it:varname})}}value of the knots used for the interaction between {it:varname} and the timescale #{p_end}
+{synopt:{cmd:e(exp_tvcknots_t#_{it:varname})}}exponential of the knots specified in {cmd:e(tvcknots_t#_{it:varname})} #{p_end}
 {synopt:{cmd:e(knots_timeint#_t1)}}knots for the first timescale as part of timescale interaction #{p_end}
 {synopt:{cmd:e(knots_timeint#_t2)}}knots for the second timescale as part of timescale interaction #{it:varname} on timescale #{p_end}
-{synopt:{cmd:e(noconstant)}}{cmd: noconstant} if constant term was supressed{p_end}
+{synopt:{cmd:e(noconstant)}}{cmd:noconstant} if constant term was supressed{p_end}
 {synopt:{cmd:e(opt)}}type of optimization{p_end}
 {synopt:{cmd:e(vce)}}vcetype specified in {cmd:vce()}{p_end}
 {synopt:{cmd:e(user)}}name of likelihood-evaluator program{p_end}
@@ -409,7 +413,7 @@ iteration.
 {synopt:{cmd:e(which)}}{cmd:max} or {cmd:min}; whether optimizer is to perform maximization or minimization{p_end}
 {synopt:{cmd:e(properties)}}{cmd:b V}{p_end}
 
-{synoptset 25 tabbed}{...}
+{synoptset 30 tabbed}{...}
 {p2col 5 20 24 2: Matrices}{p_end}
 {synopt:{cmd:e(b)}}coefficient vector{p_end}
 {synopt:{cmd:e(V)}}variance-covariance matrix of estimators{p_end}
@@ -417,11 +421,11 @@ iteration.
 {synopt:{cmd:e(R_bh_t#)}}orthogonlization matrix for timescale #{p_end}
 {synopt:{cmd:e(ilog)}}iteration log{p_end}
 {synopt:{cmd:e(gradient)}}gradient vector{p_end}
-{synopt:{cmd:e(R_{it:varname})}}orthogonalization matrix for splines of time-dependent effect {it:varname}{p_end}
+{synopt:{cmd:e(R_{it:varname})}}orthogonalization matrix for splines of timescale-covariate interactions {it:varname}{p_end}
 {synopt:{cmd:e(R_timeint#_t1)}}orthogonalization matrix for splines of timescale 1 in timescale interaction #{p_end}
 {synopt:{cmd:e(R_timeint#_t2)}}orthogonalization matrix for splines of timescale 2 in timescale interaction #{p_end}
 
-{synoptset 25 tabbed}{...}
+{synoptset 30 tabbed}{...}
 {p2col 5 20 24 2: Functions}{p_end}
 {synopt:{cmd:e(sample)}}marks estimation sample{p_end}
 {p2colreset}{...}

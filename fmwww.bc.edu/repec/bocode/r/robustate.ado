@@ -285,7 +285,7 @@ void estimate( string scalar yv,     string scalar dwv,
 	robust_hat = trimmed_hat
 	
 	for( kappa = 1 ; kappa <= k-1 ; kappa++ ){
-	 robust_hat = robust_hat + mean(A:^(kappa-1):*(sout:-1)) / factorial(kappa) * m_hat[kappa+1,1]
+	 robust_hat = robust_hat - mean(A:^(kappa-1):*(sout:-1)) / factorial(kappa) * m_hat[kappa+1,1]
 	}
 	
 	////////////////////////////////////////////////////////////////////////////
@@ -313,14 +313,14 @@ void estimate( string scalar yv,     string scalar dwv,
 	Z_robust = Z_robust :+ phi_hat*mean(d_omega1)'
 	
 	for( kappa = 1 ; kappa <= k-1 ; kappa++ ){
-	 omega2 = A:^(kappa-1) :* (sout :- 1 )
+	 omega2 = -A:^(kappa-1) :* (sout :- 1 )
 	 Z_robust = Z_robust :+ ( omega2 :* m_hat[kappa+1,.] :+ psi_hat[.,kappa] :* mean(omega2) ) :/ factorial(kappa)
 	}
 	
 	for( kappa = 1 ; kappa <= k-1 ; kappa++ ){
-	 omega2 = A:^(kappa-1) :* ( sout :- 1 )
+	 omega2 = -A:^(kappa-1) :* ( sout :- 1 )
  	 S(A_plus:/h,sout_plus)
-	 omega2_plus = A_plus:^(kappa-1) :* ( sout_plus :- 1 )
+	 omega2_plus = -A_plus:^(kappa-1) :* ( sout_plus :- 1 )
 	 d_omega2 = ( omega2_plus :- J(1,p+1,1)#omega2 ) :/ 0.000001
 	 d_m_hat = ( m_hat_plus[kappa+1,.] :- m_hat[kappa+1,.] ) :/ 0.000001
 	 Z_robust = Z_robust :+ phi_hat*( m_hat[kappa+1,1]:*mean(d_omega2):+mean(omega2):*d_m_hat )' :/ factorial(kappa)
@@ -479,7 +479,7 @@ void estimate_probit( string scalar yv,     string scalar dwv,
 	robust_hat = trimmed_hat
 	
 	for( kappa = 1 ; kappa <= k-1 ; kappa++ ){
-	 robust_hat = robust_hat + mean(A:^(kappa-1):*(sout:-1)) / factorial(kappa) * m_hat[kappa+1,1]
+	 robust_hat = robust_hat - mean(A:^(kappa-1):*(sout:-1)) / factorial(kappa) * m_hat[kappa+1,1]
 	}
 	
 	////////////////////////////////////////////////////////////////////////////
@@ -507,14 +507,14 @@ void estimate_probit( string scalar yv,     string scalar dwv,
 	Z_robust = Z_robust :+ phi_hat*mean(d_omega1)'
 	
 	for( kappa = 1 ; kappa <= k-1 ; kappa++ ){
-	 omega2 = A:^(kappa-1) :* (sout :- 1 )
+	 omega2 = -A:^(kappa-1) :* (sout :- 1 )
 	 Z_robust = Z_robust :+ ( omega2 :* m_hat[kappa+1,.] :+ psi_hat[.,kappa] :* mean(omega2) ) :/ factorial(kappa)
 	}
 	
 	for( kappa = 1 ; kappa <= k-1 ; kappa++ ){
-	 omega2 = A:^(kappa-1) :* ( sout :- 1 )
+	 omega2 = -A:^(kappa-1) :* ( sout :- 1 )
  	 S(A_plus:/h,sout_plus)
-	 omega2_plus = A_plus:^(kappa-1) :* ( sout_plus :- 1 )
+	 omega2_plus = -A_plus:^(kappa-1) :* ( sout_plus :- 1 )
 	 d_omega2 = ( omega2_plus :- J(1,p+1,1)#omega2 ) :/ 0.000001
 	 d_m_hat = ( m_hat_plus[kappa+1,.] :- m_hat[kappa+1,.] ) :/ 0.000001
 	 Z_robust = Z_robust :+ phi_hat*( m_hat[kappa+1,1]:*mean(d_omega2):+mean(omega2):*d_m_hat )' :/ factorial(kappa)

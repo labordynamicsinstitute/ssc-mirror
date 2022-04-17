@@ -1,5 +1,5 @@
 {smcl}
-{* 24 Feb 2021}
+{* 24 Feb 2022}
 {hline}
 help for {cmd:qregplot}{right:Fernando Rios Avila}
 {hline}
@@ -9,7 +9,7 @@ help for {cmd:qregplot}{right:Fernando Rios Avila}
 {p 8 21 2}{cmdab:qregplot}
 [{it:varlist}]
 [{cmd:,}
-    {cmdab:q:uantiles}{cmd:(numlist{cmd:)}
+    {cmdab:q:uantiles}{cmd:(numlist{cmd:)}}
     {cmd:cons}
     {cmd:ols}
     {cmd:olsopt(}{it:regress options}{cmd:)}
@@ -17,11 +17,13 @@ help for {cmd:qregplot}{right:Fernando Rios Avila}
     {cmdab:raopt}{cmd:(}{it:rarea options}{cmd:)}
 	{cmdab:lnopt}{cmd:(}{it:line options}{cmd:)}
 	{cmdab:twopt}{cmd:(}{it:twoway options}{cmd:)}
-	{cmdab:grcopt}{cmd:(}{it:graph combine options}{cmd:)}
 	{cmdab:estore}{cmd:(}{it:name} {cmd:)}
 	{cmdab:from}{cmd:(}{it:name}{cmd:)}
 	{cmdab:label}
-	{cmdab:labelopt(}{it:label options}{cmd:)}}
+	{cmdab:labelopt(}{it:label options}{cmd:)}
+	{cmdab:mtitles(}{it:titles}{cmd:)}
+	{cmdab:grcopt}{cmd:(}{it:graph combine options}{cmd:)}
+	{cmd:graph_combine_options}
 	]
 
 {title:Description}
@@ -32,7 +34,7 @@ mmqreg and rifhdreg (for unconditional quantiles).{p_end}
 
 {phang}{cmd:qregplot} Works in a similar way as {help grqreg}, but provides added options
 to give the user more control on the creation of the requested figures, also allowing 
-for the use factor notation. {p_end}
+for the use of factor notation. {p_end}
 
 {phang}The command works as follows.{p_end}
 
@@ -79,9 +81,9 @@ estimation specification (typically 95%) {p_end}
 all coefficients except the intercept, will be plotted. This accepts factor notation. {p_end}
 
 {synopt:{cmdab:q:uantiles(numlist)}} Indicates which quantiles to use for plotting. One can use
-any {help numlist} to do so. The default is quantile(10(5)95). This is ignored after {cmd: sqreg}. {p_end}
+any {help numlist} to do so. The default is quantile(10(5)90). This is ignored after {cmd: sqreg}. {p_end}
   
-{synopt:{cmdab:cons}} Requests the ntercept to be plotted.{p_end}
+{synopt:{cmdab:cons}} Requests the intercept to be plotted.{p_end}
 
 {synopt:{cmdab:ols}} Requests to include in the graph the coefficients and CI for the standard
 ols model (via {help regress}).{p_end}
@@ -95,36 +97,45 @@ number for each quantile replication. {p_end}
 
 {synopt:{cmdab:raopt}{cmd:(}{it:rarea options}{cmd:)}} 
 Provides options to be used in the "twoway rarea" part of the graph. This controls 
-the aspects of the Confidence intervals.{p_end}
+the aspects of the Confidence intervals.
+The default options are pstyle(p1) fintensity(30) lwidth(none)
+{p_end}
 
 {synopt:{cmdab:lnopt}{cmd:(}{it:line options}{cmd:)}} 
 Provides options to be used in the "twoway line" part of the graph. This controls 
-aspects of the point estimates. {p_end}
+aspects of the point estimates. 
+The default options are pstyle(p1) lwidth(0.3)({p_end}
 
 {synopt:{cmdab:twopt}{cmd:(}{it:twoway options}{cmd:)}} 
 Provides options to be used on the "twoway" graph. This controls
-aspects of the twoway graph, after combining rarea and line{p_end}
+aspects of the twoway graph, after combining rarea and line. 
+The default options is to set graph and plot region margins to vsmall ({p_end}
 
 {synopt:{cmdab:grcopt}{cmd:(}{it:graph combine options}{cmd:)}} 
 Provides options to be used along with "graph combine". This controls 
 aspects for the combined graph of all coefficients. {p_end}
 
+{synopt:{it:graph combine options}}It is no longer needed to provide Graph combine options with grcopt(). One can simply add any of those options directly in the command line. This controls 
+aspects for the combined graph of all coefficients. However, if you are plotting a single coefficient, it will affect the {help twoway options} {p_end}
+
 {synopt:{cmdab:estore}{cmd:(}{it:name}{cmd:)}} Request to save all estimated coefficients 
 and CI in e(). This will be stored in memory under {it: name }. This could be used later on
-for plotting coefficients only, without re-estimating the quantile regressions. {p_end}
+for plotting coefficients only, without re-estimating the quantile regressions. One could also Save this results in a file as a ster file. See {help estimates save}{p_end}
 
 {synopt:{cmdab:from}{cmd:(}{it:name}{cmd:)}} Request to plot quantile coefficients using
 the information previously stored in e(). 
 When this option is used, one graph aspects options can be used. {p_end}
  
 {synopt:{cmdab:label}} Request the use variable (or value) labels to be used as titles
-for each individual quantile plot. The default option is using the variable name. {p_end}
+for each individual quantile plot. The default option is to use the variable name. {p_end}
  
-{synopt:{cmdab:labelopt(}options{cmd)}} Provides additional information to handle "long"
+{synopt:{cmdab:labelopt(}options{cmd:)}} Provides additional information to handle "long"
 variable labels. The two options are: {p_end} 
 {synopt:} - {cmd:lines(#L)} Request to break a label into #L lines. {p_end} 
 {synopt:} - {cmd:maxlength(#k)} Request to break a label into lines of maxlength #k. 
 This be superseeded by lines if #k is too small to break a label into #L lines. {p_end} 
+{synopt:{cmd:mtitles(titles)}}One also has the option of providing titles for each sub-graph. They should be written within double quotes. For exaple mtitles("first" "second") will use 'first' and 'second' as title graphs. See examples for details.{p_end} 
+
 {marker Examples} 
 {title:Examples}
 
@@ -137,9 +148,9 @@ Setup. {p_end}
 {phang2}
 {bf: {stata qreg wage age education i.married children i.county}}
 
-{pstd} Ploting all coefficients of interest, for quantiles 5 95 in 2.5 increaments {p_end}
+{pstd} Ploting all coefficients of interest, for quantiles 5 95 in 2.5 increments. Storing coefficients in qp {p_end}
 {phang2}
-{bf: {stata qregplot age education i.married children, q(5(2.5)95) }}
+{bf: {stata qregplot age education i.married children, q(5(2.5)95) estore(qp)}}
 
 {pstd} Same as above but adding OLS coefficients and CI {p_end}
 {phang2}
@@ -151,11 +162,23 @@ Setup. {p_end}
 
 {pstd} Same as above, but ploting in only 1 column for the combined graph {p_end}
 {phang2}
-{bf: {stata qregplot age education i.married children, q(5(2.5)95) ols raopt( color(black%5)) grcopt(col(1)) }}
+{bf: {stata qregplot age education i.married children, q(5(2.5)95) ols raopt( color(black%5)) col(1) }}
 
 {pstd} Same as above, but changing the aspect of the graph for better readability {p_end}
 {phang2}
-{bf: {stata qregplot age education i.married children, q(5(2.5)95) ols raopt( color(black%5)) grcopt(col(1) ysize(20) xsize(8)) }}
+{bf: {stata qregplot age education i.married children, q(5(2.5)95) ols  col(1) ysize(20) xsize(8) }}
+
+{pstd} Using only 3 variables and use results from qp (see above) {p_end}
+{phang2}{bf: {stata qregplot age education  children, from(qp) }}
+
+{pstd} Same as above but using labels as titles {p_end}
+{phang2}{bf: {stata qregplot age education  children, from(qp) label }}
+
+{pstd} Same as above but using own titles for figures 1 and 2 {p_end}
+{phang2}{bf: {stata qregplot age education  children, from(qp) label mtitles("Age in years since 1980" "Years of education")}}
+
+{pstd} Same as above but using own titles for figures 1 and 2, written in two lines {p_end}
+{phang2}{bf: {stata qregplot age education  children, from(qp) label mtitles("Age in years since 1980 I want this to be long" "Years of education, including Highschool and college") labelopt(lines(2)) }}  
 
 {pstd} Using alternative Estimation, bsqreg {p_end}
 {phang2}

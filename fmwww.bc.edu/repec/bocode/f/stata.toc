@@ -64,6 +64,7 @@ p flower module to draw sunflower plots
 p fmiss module to identify variables with problematic missing values 
 p fmlogit module fitting a fractional multinomial logit model by quasi maximum likelihood
 p fmm module to estimate finite mixture models
+p fmmhist module to generate a multi-class histogram after estimating a fmm model
 p fmmic module for postestimation with finite mixture models
 p fmmlc module for postestimation with finite mixture models
 p fndmtch module to find matching values
