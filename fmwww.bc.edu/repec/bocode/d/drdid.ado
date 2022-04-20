@@ -1,3 +1,4 @@
+*! Ver 1.66 Bug with binit, skip fixed
 *! Ver 1.65 Bug with binit. Fixed
 *! Ver 1.64 added binit for faster csdid (if slighly)
 *! Ver 1.63 added Dryrun
@@ -1543,7 +1544,7 @@ program define drdid_imp, eclass
 		qui {
 			
 			`isily'  mlexp (`trt'*{xb:`xvar' _cons}-(`trt'==0)*exp({xb:}))  ///
-					if `touse' & `tmt'==0 [iw = `weight'], vce(robust) from(`binit',skip) ///
+					if `touse' & `tmt'==0 [iw = `weight'], vce(robust) from(`binit') ///
 					 derivative(/xb=`trt'-(`trt'==0)*exp({xb:}))
 
 			//& `tmt'==0 

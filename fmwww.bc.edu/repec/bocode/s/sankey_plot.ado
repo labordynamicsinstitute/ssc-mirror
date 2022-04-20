@@ -1,6 +1,7 @@
 ** Need to make Colors easier.
 ** and Separate Colros for RBAR from RAREA
 
+*! v1.31 by FRA fix for varabbref
 *! v1.3 by FRA adds more control and transform data
 *! v1.2 by FRA Adjusts Labels
 *! v1.11 by FRA Sorts
@@ -19,23 +20,25 @@ capture program drop change_names
 capture program drop extra_adj
 capture program drop sankey_i2
 capture program drop sankey_wide
-capture mata mata  drop sdlong()
-*/
+capture mata mata  drop sdlong()*/
+
 program sankey_plot
 	syntax anything(everything), [* wide tight]
-	version 16
-	if `c(stata_version)'<16 {
-		display "You need Stata 16 or higher to use this command"
-		error 9
+	varabbrev  {
+		if `c(stata_version)'<16 {
+			display "You need Stata 16 or higher to use this command"
+			error 9
+		}
+		
+		if "`wide'"!="" {
+			sankey_wide `anything', `tight' `options'
+		}
+		else {
+			
+			sankey_i2 `anything', `options'
+		 
+		}
 	}
-	
-	if "`wide'"!="" {
-		sankey_wide `anything', `tight' `options'
-	}
-	else {
-		sankey_i2 `anything', `options'
-	}
-	
 	if runiform()<0.001 {
 		easter_egg
 	}
@@ -452,7 +455,7 @@ syntax varlist [if],  [width0(varname) width1(varname) sharp(real 7) ///
 				 label0(varname) label1(varname)  gap(real 0.01) ///
 				 noline nobar extra colorpalette(passthru) fillcolor(str asis) ///
 				 newframe(string) bwidth(real 0.025) bheight(numlist >0 max=1) bcolor(string asis) blcolor(string asis) blwidth(string asis) ///
-				 labangle(real 0) labpos(string asis) labsize(string asis) labcolor(string asis) labgap(string asis)]  
+				 labangle(real 0) labpos(string asis) labsize(string asis) labcolor(string asis) labgap(string asis) xaxis(passthru)]  
 	
 	if "`newframe'"=="" tempname newframe
 	local nn = _N
@@ -541,7 +544,7 @@ syntax varlist [if],  [width0(varname) width1(varname) sharp(real 7) ///
 					local totext `totext' `=y0_cnt[`j']'  `=x_or_[`j']' (`pos') "`=lb0b_[`j']'"
 				}
 				
-			local totext (scatteri `totext', msymbol(none) mlabangle(`labangle') mlabsize(`labsize') mlabcolor(`labcolor') mlabgap(`labgap'))
+			local totext (scatteri `totext', msymbol(none) mlabangle(`labangle') mlabsize(`labsize') mlabcolor(`labcolor') mlabgap(`labgap') `xaxis')
 		}
 		*display `"`rrbarr'"'
 		two `toplot' `rrbarr' `totext'  , `options' ylabel("") legend(off)

@@ -57,7 +57,7 @@ will be named "x_i"
 
 
 
-{title:Examples}
+{title:Examples Imputing completely at random}
 
 {p}	Impute variables var1 and var2 and store results in "var1_m" and "var2_m":
 
@@ -73,9 +73,14 @@ will be named "x_i"
 
 {p 4 8 }{inp:. hotdeckvar housevalue if own_house==1}
 
-{p}  Imputing within a categories defined by other variables: 
+
+{title:Example:  Specifying a donor pool of observations }
+
+{p} Often you don't want to impute completely at random, but rather from a pool of observations  defined by a combination of a small number of categorical variables: 
 
 {p 4 8 }{inp:. bysort classvar1 classvar2: hotdeckvar y }
+
+{p} If the donor pool of observations is empty (that is, if a combination of classvar1 and classvar2  has only missing values) then you will get an error mesage.
 
 {p}  The sort in "bysort" is not stable. If you are want to make this reproducible,
 in addition to setting a seed value you need to specify a stable sorting algorithm: 
@@ -87,12 +92,12 @@ in addition to setting a seed value you need to specify a stable sorting algorit
 {p 4 8 }{inp:. by classvar1 classvar2: hotdeckvar y }
 
 
-{p}  Multiple imputation. In this example we  impute 5 times. All
-5 data sets remain in memory.  (In
-Mander's function "hotdeck" they are written into an external file)
+{title:Example: Multiple imputation.}
+
+{p} Suppose we have 3 variables with missing values, x5, x2, and x8. We use the categorical variables x3 and x4 to form pool of observations from which missing values are imputed. That is, we only impute among observations that have the same combinations of values for x3 and x4.
+
+{p} In this example we impute 5 times. All 5 data sets remain in memory.  (In Mander's function "hotdeck" imputations are written into an external file).
 The five data sets can be identified  through the variable imputation.
-micombine is a user written function that works with most
-regression functions for multiply imputed data.
 
 {p 4 8}{inp:.gen seq=_n}
 
@@ -102,9 +107,13 @@ regression functions for multiply imputed data.
 
 {p 4 8}{inp:.by seq: gen imputation= _n}
 
-{p 4 8}{inp:.bysort imputation: hotdeckvar x y z }
+{p} We specify all three variables with missing values in the same command. In case  an observation has missing values for more than one of the x-variables, this ensures that the same donor observation is used for the imputation.
 
-{p 4 8}{inp:.micombine regress z y, obsid(seq) impid(imputation)}
+{p 4 8}{inp:.bysort imputation x3 x4 : hotdeckvar x5 x2 x8 }
+
+{p} micombine is a user written function that works with most regression functions for multiply imputed data. We use the imputed version of the variables (with suffix _i). Because previously we identified x3 and x4 as categorical variables, we use the i. prefix to create indicator variables.
+
+{p 4 8}{inp:.micombine regress y x1 x2_i i.x3 i.x4 x5_i x6 x7 x8_i, obsid(seq) impid(imputation)}
 
 
 {title:Author}
@@ -118,10 +127,7 @@ schonlau at uwaterloo dot ca
 
 {p} On-Line: {hi: hotdeck} in STB54, sg116.1 by A. Mander and D. Clayton
 
-{p 4 4} This ado file performs multiple imputations by subgroups. 
-Each imputation is output to a different file
-which has to be merged back to the main data set.
-Therefore it is more cumbersome to use when a single imputation is desired.
+{p 4 4} This ado file performs multiple imputations by subgroups.  Each imputation is output to a different file which has to be merged back to the main data set. Therefore it is more cumbersome to use when a single imputation is desired.
 
 {p} On-Line: {hi: micombine} by Patrick Royston
 

@@ -1,10 +1,6 @@
 program define hotdeckvar, sortpreserve byable(recall)
-*! 1.0.3  Feb  6, 2003 Matthias Schonlau 
-*! 1.0.4  May 13, 2003 adding "by" option
-*! 1.0.5  Jan 19, 2005 in case of duplicates a stable sort was required to ensure that the seed works properly
-*! 1.0.6  Feb  9, 2006 Multivariate imputation, i.e. miss values in one obs are always impute from the same donor obs
-*! 1.0.7  Feb 17, 2008 ignore option
-*! 1.1.0  Apr  6, 2016 updated to version 14.0 ("set seed" no longer functioned with uniform() under version 7) 
+*! 1.1.1  April 3, 2022 improved examples in helpfile
+
 	version 14.0
 	syntax [varlist] [if] [in] ,  [ SUffix(str) ignore ]
 
@@ -143,3 +139,11 @@ program define hotdeckvar, sortpreserve byable(recall)
  
 end 
 
+// version history
+* 1.0.3  Feb  6, 2003 Matthias Schonlau 
+* 1.0.4  May 13, 2003 adding "by" option
+* 1.0.5  Jan 19, 2005 in case of duplicates a stable sort was required to ensure that the seed works properly
+* 1.0.6  Feb  9, 2006 Multivariate imputation, i.e. miss values in one obs are always impute from the same donor obs
+* 1.0.7  Feb 17, 2008 ignore option
+* 1.1.0  Apr  6, 2016 updated to version 14.0 ("set seed" no longer functioned with uniform() under version 7) 
+* 1.1.1  April 3, 2022 improved examples in helpfile

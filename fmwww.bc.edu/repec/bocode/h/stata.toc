@@ -11,6 +11,7 @@ p hapblock module to perform haplotype analysis to identify the edges of haploty
 p hapipf module to perform haplotype analysis
 p harmby module to harmonize values of variables within by-groups
 p hausman module to compute a Hausman test statistic (version 5)
+p hazdcmp module to produce multivariate decomposition for piecewise constant hazard rate models
 p hbar module to generate horizontal bar charts
 p hbox module to draw horizontal box plots
 p hcaccprox module to compute a hierchical cluster analysis with conditional measures of proximity

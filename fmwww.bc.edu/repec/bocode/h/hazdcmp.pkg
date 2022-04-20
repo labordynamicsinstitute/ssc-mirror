@@ -1,0 +1,26 @@
+d 'HAZDCMP': module to produce multivariate decomposition for piecewise constant hazard rate models
+d
+d      hazdcmp extends the Oaxaca-Blinder decomposition to
+d decompose a group difference in hazard rates into    components
+d reflecting the portion of the difference attributable to group
+d differences in    characteristics (endowments) and to group
+d differences in effects (coefficients) as well as the	  detailed
+d (multivariate) decomposition results as described by Powers and
+d Yun (2009). 
+d
+d KW: hazard rates
+d KW: decomposition
+d KW: Oaxaca-Blinder
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20220419
+d
+d Author:  Daniel A. Powers, University of Texas at Austin
+d Support: email  dpowers@@austin.utexas.edu
+d
+d Author: Hirotoshi Yoshioka, University of Texas at Austin
+d Support: email hiro12@@prc.utexas.edu
+d
+f hazdcmp.ado
+f hazdcmp.sthlp
