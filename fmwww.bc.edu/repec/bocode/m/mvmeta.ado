@@ -1,5 +1,71 @@
 /******************************************************************************
-*! version 3.2.0 # Ian White # 6apr2018
+*! version 4.0.2 # Ian White # 21apr2022
+	skip pi option if no Sigma
+	fix pbest problem in Stata12: variable names were lost
+version 4.0.1 # Ian White # 07apr2022
+	change invt() to invtttail() to allow running under Stata12
+version 4.0 # Ian White # 07apr2022
+	new release to UCL, github and SSC
+version 3.6 # Ian White # 8feb2022
+	warnings fixed
+		warning() was parsed too late in Estimate
+		warning() is now passed to Replay, mvmeta_estimate, mvmeta_bubble, bubble
+		references dropped to disused argument warnings
+		mvmeta_estimate now has arguments warningest and warningnoest
+		noposdef check respects warningest
+	removed unnecessary qui/noi on mvmeta_estimate
+version 3.5.2 # Ian White # 20jan2022
+	improved handling of checks for positive semi-definite
+		use _getcovcorr instead of varcheck
+		respect psdcrit and psdcheck 
+		run mvmeta_estimate, noestimate to get checks output nicely
+		noposdef suppresses fe estimation
+version 3.5.1 # Ian White # 21dec2021
+	bubble updates:
+		bug fix - bubble was ignored with noestimate because Replay wasn't called
+		add warning in replay mode that bubble uses last mvmeta run
+		omit statement of variables chosen when there are only 2
+version 3.5.0 # Ian White # 15nov2021
+	fixed small bug to mvmeta_lmata.ado 
+		this affected results in ~5th sig figure
+		in models without covariates and without the longparm option
+	new bscovariance(exchangeable)
+version 3.4.1 # Ian White # 15nov2021
+	correct penalty() option so that global is set in mvmeta_estimate and hence cleared at end
+version 3.4.0 # Ian White # 11nov2021
+	added warning in Replay if Riley correlations are larger than 0.95
+	new penalty() option modifies ll and rll to penalise near-singular between-studies correlation matrix
+		need an error if other methods are used
+version 3.3.0 # Ian White # 14oct2021
+	better error message if sencode is not installed
+	added error if wrong ciscale()
+	added pi option
+	Replay-only options not explicitly parsed in Estimate
+	Replay tables in common format - title, hline, table, hline
+	qscalar and pi added to help file
+	move variance check after listing of variables found
+	wt(nostudies) suppresses study-specific weights
+	all warnings controlled by new warning() option via three routines warn*
+	covariance variable may be missing for all studies if no study has both point estimates
+version 3.2.5 # Ian White # 13oct2021
+	improved and documented the bubble option
+version 3.2.4 # Ian White # 8mar2021
+	RELEASED TO UCL 13OCT2021
+	enabled coeflegend option on replay
+	pbest:
+		added note when probabilities are loaded into memory
+		default is to report all ranks (new option bestonly request just the best rank)
+		neater output
+version 3.2.3 # Ian White # 22jan2021
+	fixed bug that ignored constraints
+	but constraints may still not be correct
+		REML wrong with constraints on fixed parameters?
+		needs checking in test file
+version 3.2.2 # Ian White # 9apr2020
+	fixed bug in bubble: only top half of confidence regions appeared [line required c(l), as c(L) seems to be default]
+version 3.2.1 # Ian White # 11mar2020
+	fixed bug in bubble: confidence regions didn't appear unless variables were in alphabetical order
+version 3.2.0 # Ian White # 6apr2018
 	links corrected to UCL website
 	RELEASED TO UCL AND SSC
 version 3.1.4  Ian White  11feb2016
@@ -165,16 +231,22 @@ syntax [anything] [if] [in], ///
     SUPPress(string) /// additional analysis options
     augment augquiet missest(real 0) missvar(real 1E4) /// Augmentation options - NOW UNDOCUMENTED
     maxse(real 5) psdcrit(passthru) noposdef mata no2pi TAULog /// Tuning options
-    SHOWStart id(varname) /// Output options
-    SHOWChol SHOWAll eform EFORM2(passthru) noUNCertainv print(passthru) dof(passthru) i2 i2fmt(passthru) ciscale(passthru) NCchi2 TESTsigma pbest(passthru) RANDFix RANDFix2(passthru) Qscalar cformat(passthru) pformat(passthru) sformat(passthru) WT WT2(passthru) BUbble BUbble2(passthru) /// Replay options
-    Level(passthru) cholnames nolog quick debug noESTimates noJOINTCHeck noreplay mmfix constraints(passthru) COLLinear network(string) wscorrforce noWARNings UVITERate(int 20) ITERate(string) FORest FORest2(passthru) /// Undocumented options
-    * /// ml options
+    SHOWStart id(varname) WARNing(string) /// Output options for Estimate
+    cholnames nolog quick debug noESTimates noJOINTCHeck mmfix constraints(passthru) COLLinear network(string) wscorrforce noWARNings UVITERate(int 20) ITERate(string) penalty(real 0) /// Undocumented Estimate options
+    * /// ml and Replay options
     ]
-* NB current 69 options is the limit!
 global MVMETA_obserror  // new 21jul2015
 
 ****************** PARSE *****************
-mlopts mlopts, `options'
+mlopts mlopts replayopts, `options'
+
+if "`warning'"=="" local warning error
+if !inlist("`warning'", "error", "text", "off") {
+	di as error "syntax: warning(error|text|off)"
+	exit 198
+}
+local warn warn`warning'
+
 * OUTCOMES AND VARIANCES
 tokenize "`anything'"
 local ystub `1'
@@ -232,7 +304,7 @@ else if "`wscorr'"!="" {
     }
 }
 else if !mi("`wscorrforce'") {
-    if mi("`warnings'") di as error "wscorrforce ignored - wscorr(#) not specified"
+    `warn' "wscorrforce ignored - wscorr(#) not specified"
     local wscorrforce
 }
 
@@ -247,7 +319,7 @@ if "`parmtype'"=="common" {
 
 * notrunc not allowed without method mm -> move
 if "`trunc'"=="notrunc" & !inlist("`bsest'","mm1","mm2","fixed") {
-    if mi("`warnings'") di as error "notrunc option ignored with method `bsest'"
+    `warn' "notrunc option ignored with method `bsest'"
     local trunc
 }
 
@@ -263,6 +335,15 @@ foreach word of local suppress {
     if "`word'"=="mm" local suppressmm suppressmm
     if "`word'"=="fe" local suppressfe suppressfe
 }
+if !mi("`posdef'") local suppressfe suppressfe // 20jan2022
+
+if `penalty'<0 {
+	di as error "penalty() must be non-negative"
+	exit 198
+}
+if `penalty' di as text "Note: log likelihood enhanced by penalty term " as res "`penalty' * log(det(corr(Sigma)))"
+
+****************** END OF PARSING *****************
 
 ****************** IDENTIFY Y AND S VARIABLES TO USE, AND p *****************
 
@@ -281,12 +362,12 @@ foreach yvar of varlist `ylist0' {
     }
     local yend = substr("`yvar'",1+length("`ystub'"),.)
     if "`yend'"=="" {
-        if mi("`warnings'") di as error "Warning: variable `yvar' not used (looking for variable names `ystub'+suffix)"
+        `warn' "variable `yvar' not used (looking for variable names `ystub'+suffix)"
         continue
     }
     summ `yvar' `if' `in', meanonly
     if r(N)==0 {
-        if mi("`warnings'") di as error "Warning: variable `yvar' not used (no non-missing values)"
+        `warn'  "variable `yvar' not used (no non-missing values)"
         continue
     }
     * Found a valid yvar
@@ -328,11 +409,8 @@ foreach yvar of varlist `ylist0' {
             if "`newxvars'" == "." local newxvars
         }
         if "`xvars_`p''" != "`newxvars'" {
-            if mi("`warnings'") {
-                di as error _col(7) "Collinearity detected: now regressing `yvar_`p'' on " _c
-                if !mi("`newxvars'") di "`newxvars'"
-                else di "(nothing)"
-            }
+			local newxvarsdisp = cond(!mi("`newxvars'"), "`newxvars'", "(nothing)")
+			`warn' "Collinearity detected: now regressing `yvar_`p'' on `newxvarsdisp'"
             local xvars_`p' `newxvars'
         }
     }
@@ -355,6 +433,14 @@ if `p'==0 {
 if !`isregression' {
     if `p'>1 local plural s
     di as text "Note: using variable`plural' " as result "`ylist'"
+}
+
+forvalues r=1/`p' {
+	cap confirm var `Sstub'`yend_`r''`yend_`r''
+	if _rc {
+		di as error "Variance `Sstub'`yend_`r''`yend_`r'' not found for estimate `ystub'`yend_`r''"
+		exit 459
+	}
 }
 
 **************** SORT OUT COVARIANCE STRUCTURES  *******************
@@ -400,18 +486,25 @@ else {
 	}
 	else if substr("`bscovariance'",1,4)=="exch" {
         local rho = word("`bscovariance'",2)
-        cap confirm number `rho'
-        if _rc {
-            di as error "Syntax: bscovariance(exch #)"
-            exit 198
-        }
-        if `rho'<-1 | `rho'>1 {
-            di as error "Syntax: bscovariance(exch #) with -1<=#<=1"
-            exit 198
-        }
-        local bscovariance proportional
-        mat `sigma0' = (1-`rho')*I(`p')+`rho'*J(`p',`p',1)
-        local sigma0exp `=1-`rho''*I(`p')+`=`rho''*J(`p',`p',1)
+        if mi("`rho'") {
+			* correlation is to be estimated, so this really is bscov(exch)
+			local bscovariance exchangeable
+		}
+		else { 
+			* correlation is given, so this is shorthand for bscov(prop ..)
+			cap confirm number `rho'
+			if _rc {
+				di as error "Syntax: bscovariance(exch #)"
+				exit 198
+			}
+			if `rho'<-1 | `rho'>1 {
+				di as error "Syntax: bscovariance(exch #) with -1<=#<=1"
+				exit 198
+			}
+			local bscovariance proportional
+			mat `sigma0' = (1-`rho')*I(`p')+`rho'*J(`p',`p',1)
+			local sigma0exp `=1-`rho''*I(`p')+`=`rho''*J(`p',`p',1)
+		}
 	}
 	else {
 		di as error "bscovariance(`bscovariance') not available"
@@ -449,14 +542,14 @@ qui count if `hasyvalues'==0 & `touse'
 if r(N) {
     local observations = cond(r(N)>1,"observations","observation")
     local have = cond(r(N)>1,"have","has")
-    if mi("`warnings'") di as error "Warning: " r(N) " `observations' `have' all outcomes missing, and `have' been dropped from analysis"
+    `warn'  r(N) " `observations' `have' all outcomes missing, and `have' been dropped from analysis"
     qui replace `touse' = 0 if `hasyvalues'==0
 }
 qui count if `hasxnoy'==1 & `touse'
 if r(N) {
     local observations = cond(r(N)>1,"observations","observation")
     local have = cond(r(N)>1,"have","has")
-    if mi("`warnings'") di as error "Warning: " r(N) " `observations' `have' observed outcome and missing covariate, and `have' been dropped from analysis"
+    `warn'  r(N) " `observations' `have' observed outcome and missing covariate, and `have' been dropped from analysis"
     qui replace `touse' = 0 if `hasxnoy'==1
 }
 
@@ -478,7 +571,7 @@ if "`bscovariance'"=="unstructured" {
                     di as error "`yvar_`r'' and `yvar_`s'' `problem' - consider alternatives to bscov(unstructured)"
                     exit 459
                 }
-                else if mi("`warnings'") di as text "Warning: `yvar_`r'' and `yvar_`s'' `problem' - consider alternatives to bscov(unstructured)"
+                else `warn' "`yvar_`r'' and `yvar_`s'' `problem' - consider alternatives to bscov(unstructured)"
             }
         }
     }
@@ -487,7 +580,7 @@ if "`bscovariance'"=="unstructured" {
 **************** RUN SECONDARY ESTIMATIONS ***************
 
 ereturn clear // Needed to drop any old e-results (since we don't always do -ereturn post-)
-local optsforall `constant' `warnings' parmtype(`parmtype') `augment' missest(`missest') missvar(`missvar') `augquiet' `taulog' `debug' `trunc' `mmfix' `idopt' `mlopts'
+local optsforall `constant' parmtype(`parmtype') `augment' missest(`missest') missvar(`missvar') `augquiet' `taulog' `debug' `trunc' `mmfix' `idopt' `mlopts' `psdcrit' `posdef' warningest(`warning') // added psdcrit posdef 14jan2022; added warningest 8deb2022
 forvalues r=1/`p' {
     if `r'>1 local xvarslist `xvarslist',
     if mi("`xvars_`r''") local xvarslist `xvarslist' . // missing is awkward
@@ -495,12 +588,16 @@ forvalues r=1/`p' {
     local nxvars_`r' = wordcount(`"`xvars_`r''"') + ("`constant'"!="noconstant")
 }
 
+* first run it with noestimates to check var-cov matrices and return 
+`ifdebug' di as input _new "Checking data"
+mvmeta_estimate `ystub' `Sstub' if `touse', yends(`yends') xvarslist(`xvarslist') wscorr(`wscorr') `wscorrforce' `optsforall' noestimates warningnoest(`warning')
+
 if "`estimates'"!="noestimates" {
 
     ******** RUN FIXED-EFFECT ESTIMATION *******
     if "`suppressfe'"!="suppressfe" {
         `ifdebug' di as input _new "Running fixed-effect estimation"
-        `ifdebugnoi' mvmeta_estimate `ystub' `Sstub' if `touse', yends(`yends') xvarslist(`xvarslist') wscorr(`wscorr') `wscorrforce' bsest(fixed) `optsforall' 
+        `ifdebugnoi' mvmeta_estimate `ystub' `Sstub' if `touse', yends(`yends') xvarslist(`xvarslist') wscorr(`wscorr') `wscorrforce' bsest(fixed) `optsforall' warningnoest(off) 
         if r(success) {
             tempname b_fixed V_fixed
             mat `b_fixed' = r(b)
@@ -513,7 +610,7 @@ if "`estimates'"!="noestimates" {
             if "`bsest'"=="reml" local ll0 = r(rl0)   // [re]ll for FE model - needed for testsigma option
             else if "`bsest'"=="ml" local ll0 = r(ll0)
         }
-        else if mi("`warnings'") di as error "Fixed-effect estimation failed"
+        else `warn' "Fixed-effect estimation failed"
     }
     else `ifdebug' di as input _new "Estimation of fixed-effect model suppressed"
 
@@ -523,14 +620,14 @@ if "`estimates'"!="noestimates" {
         forvalues r=1/`p' {
             `ifdebug' di as input _new "Running univariate estimation for outcome `yvar_`r''"
             qui count if `touse' & !mi(`yvar_`r'')
-            if r(N)==`nxvars_`r'' & "`bsest'"=="reml" & !mi("`debug'") di as error "Warning: univariate REML estimation may fail for outcome `yvar_`r'', since #obs= #parms"
+            if r(N)==`nxvars_`r'' & "`bsest'"=="reml" & !mi("`debug'") `warn' "univariate REML estimation may fail for outcome `yvar_`r'', since #obs= #parms"
             if "`bscovariance'"=="equals" {
                 local sigma0uv = `sigma0'[`r',`r']
                 local bscovopt bscovariance(equals) sigma0(`sigma0uv')
             }
             else local bscovopt bscovariance(unstructured)
             
-            `ifdebugnoi' mvmeta_estimate `ystub' `Sstub' if `touse' & !mi(`yvar_`r''), yends(`yend_`r'') xvarslist(`xvars_`r'') bsest(`bsest') `bscovopt' `cholnames' `showstart' `optsforall' iterate(`uviterate')
+            `ifdebugnoi' mvmeta_estimate `ystub' `Sstub' if `touse' & !mi(`yvar_`r''), yends(`yend_`r'') xvarslist(`xvars_`r'') bsest(`bsest') `bscovopt' `cholnames' `showstart' `optsforall' iterate(`uviterate') warningnoest(off)
             
             if r(success) {
                 mat `thisb' = r(b)
@@ -564,7 +661,7 @@ if "`estimates'"!="noestimates" {
                 mat `V_uv' = (`V_uv', `zeroV' \ `zeroV'', `thisV')
             }
         }
-        if !mi("`failedvars'") di as text "Warning: univariate estimation failed for outcomes " as result "`failedvars'"
+        if !mi("`failedvars'") `warn' "univariate estimation failed for outcomes " as result "`failedvars'"
         `ifdebug' di as input "Results of univariate estimations:" _c
         `ifdebug' mat l `b_uv', title(b_uv)
         `ifdebug' mat l `V_uv', title(V_uv)
@@ -574,7 +671,7 @@ if "`estimates'"!="noestimates" {
     ******** RUN UNSTRUCTURED-SIGMA MM FOR ALL METHODS, BECAUSE I^2 NEEDS IT *******
     if "`suppressmm'"!="suppressmm" {
         `ifdebug' di as input _new "Running unstructured-sigma mm"
-        `ifdebugnoi' mvmeta_estimate `ystub' `Sstub' if `touse', yends(`yends') xvarslist(`xvarslist') wscorr(`wscorr') `wscorrforce' bsest(mm1) bscovariance(unstructured) `start' `cholnames' `showstart' `optsforall'
+        `ifdebugnoi' mvmeta_estimate `ystub' `Sstub' if `touse', yends(`yends') xvarslist(`xvarslist') wscorr(`wscorr') `wscorrforce' bsest(mm1) bscovariance(unstructured) `start' `cholnames' `showstart' `optsforall' warningnoest(off)
         if r(success) {
             tempname Q Qa Qb
             mat `Q' = r(Q)
@@ -588,7 +685,7 @@ if "`estimates'"!="noestimates" {
         }
         else {
             if inlist("`bsest'","reml","ml") {
-                di as text "Warning: unstructured-variance method of moments failed - I2 statistic is not available"
+                `warn' "unstructured-variance method of moments failed - I2 statistic is not available"
             }
             if "`bscovariance'"=="unstructured" & inlist("`bsest'","mm2") {
                 di as error "Error: method of moments failed"
@@ -609,7 +706,7 @@ else {
 // - must be last, as mvmeta_estimate implies -ereturn clear-
 // - this is run even with noestimates option, since it also writes data matrices
 `ifdebug' di as input _new "Running main estimation"
-mvmeta_estimate `ystub' `Sstub' if `touse', yends(`yends') xvarslist(`xvarslist') wscorr(`wscorr') `wscorrforce' bsest(`bsest') bscovariance(`bscovariance') sigma0(`sigma0') `start' `cholnames' `showstart' `optsforall' `estimates' sigma0exp(`sigma0exp') iterate(`iterate')
+mvmeta_estimate `ystub' `Sstub' if `touse', yends(`yends') xvarslist(`xvarslist') wscorr(`wscorr') `wscorrforce' bsest(`bsest') bscovariance(`bscovariance') sigma0(`sigma0') `start' `cholnames' `showstart' `optsforall' `estimates' sigma0exp(`sigma0exp') iterate(`iterate') `constraints' warningnoest(off) penalty(`penalty')
 
 // ereturn the main answers
 `ifdebug' di as input "Ereturning the main answers"
@@ -656,7 +753,11 @@ foreach thing in Q Qa Qb b_fixed V_fixed b_uv V_uv _wt {
 
 ereturn local cmd "mvmeta"
 
-if "`replay'"!="noreplay" & "`estimates'"!="noestimates" Replay, `showall' `eform' `eform2' `uncertainv' `print' `level' `dof' `i2' `i2fmt' `ciscale' `ncchi2' `estimates' `testsigma' `pbest' `randfix' `randfix2' `qscalar' `debug' `cformat' `pformat' `sformat' `forest' `forest2' `bubble' `bubble2' `wt' `wt2'
+// call replay if estimation has happened, or if bubble is called
+// 21dec2021
+local 0 ,`replayopts'
+syntax, [bubble bubble2(string) *]
+if !mi("`bubble'`bubble2'") | "`estimates'"!="noestimates" Replay, `estimates' `debug' `replayopts' hasestimated warning(`warning')
 
 end
 
@@ -668,8 +769,19 @@ end
 
 program define Replay
 // PARSE
-syntax, [SHOWChol SHOWAll eform EFORM2(string) noUNCertainv print(string) Level(cilevel) dof(string) i2 i2fmt(string) ciscale(string) NCchi2 noESTimates TESTsigma pbest(string) RANDFix RANDFix2(varlist) Qscalar debug cformat(passthru) pformat(passthru) sformat(passthru) WT WT2(string) FORest FORest2(string asis) BUbble BUbble2(string asis)]
+syntax, [SHOWChol SHOWAll eform EFORM2(string) noUNCertainv print(string) Level(cilevel) dof(string) i2 i2fmt(string) ciscale(string) NCchi2 noESTimates TESTsigma pbest(string) RANDFix RANDFix2(varlist) Qscalar debug cformat(passthru) pformat(passthru) sformat(passthru) WT WT2(string) FORest FORest2(string asis) BUbble BUbble2(string asis) COEFLegend id(varname) PI PI2(string) hasestimated warning(string)]
 if !mi("`debug'") di "Starting Replay program"
+if !mi("`id'") {
+	di as error "id() option not allowed in replay mode"
+	exit 198
+}
+
+if "`warning'"=="" local warning error
+if !inlist("`warning'", "error", "text", "off") {
+	di as error "syntax: warning(error|text|off)"
+	exit 198
+}
+local warn warn`warning'
 
 foreach bit in `print' {
     if "`bit'"=="bscov" local printbscov on
@@ -726,12 +838,16 @@ local ciscale = lower("`ciscale'")
 if "`ciscale'"=="sd" local ciscalename SD
 else if "`ciscale'"=="logsd" local ciscalename log(SD)
 else if "`ciscale'"=="logh" local ciscalename log(H)
+else {
+	di as error "Syntax: ciscale(sd|logsd|logh)"
+	exit 198
+}
 if "`i2fmt'"=="" local i2fmt %6.0f
 
 if "`debug'"=="" local ifdebug *
 
 if "`showchol'"=="showchol" {
-    di as text "Warning: showchol option has been renamed showall"
+    `warn' "showchol option has been renamed showall"
     local showall showall
 }
 
@@ -785,14 +901,14 @@ if "`estimates'"!="noestimates" {
             if _rc {
                 di as error "_coef_table failed - you may be using a version older than 3.0.0"
                 di as error "All parameters will be exponentiated"
-                ereturn display, `eform' `levelopt' `cformat' `pformat' `sformat' `neq'
+                ereturn display, `eform' `levelopt' `cformat' `pformat' `sformat' `neq' `coeflegend' 
             }
             else {
-                _coef_table, `eform' `levelopt' `cformat' `pformat' `sformat' `neq'
+                _coef_table, `eform' `levelopt' `cformat' `pformat' `sformat' `neq' `coeflegend' 
             }
             di as text "Variance parameters are not exponentiated"
         }
-        else ereturn display, `eform' `levelopt' `cformat' `pformat' `sformat' `neq'
+        else ereturn display, `eform' `levelopt' `cformat' `pformat' `sformat' `neq' `coeflegend' 
         _estimates unhold `hold' /* brings back the main results */
     }
     if "`e(parmtype)'"=="common" & `p'>1 {
@@ -815,14 +931,16 @@ if ("`estimates'"!="noestimates" | "`printbscov'`printbscorr'"!="") & "`bsest'"!
         if _rc local bsprob 1
         else mat colnames `SD'="SD"
         if `bsprob' {
-            di _newline "Warning: can't convert between-studies covariance matrix to correlation matrix" _c
+            `warn' "can't convert between-studies covariance matrix to correlation matrix" _c
 *            di " (probably because one or more variances are zero or negative)" _c
             local printbscov on
             local printbscorr
         }
     }
     if "`printbscov'"=="on" {
-       di as text _newline "Estimated between-studies covariance matrix Sigma:" _c
+       di as text _newline "Estimated between-studies covariance matrix Sigma"
+		local linelength 49
+		di as txt "{hline `linelength'}" _c
        mat l e(Sigma), noheader
     }
     if "`printbscorr'"=="on" {
@@ -835,10 +953,31 @@ if ("`estimates'"!="noestimates" | "`printbscov'`printbscorr'"!="") & "`bsest'"!
                 mat `all'[`r',`s']=.
             }
         }
-        if "`e(wscorr)'"=="riley" di as text _newline "Estimated between-studies SDs and OVERALL correlation matrix:" _c
-        else di as text _newline "Estimated between-studies SDs and correlation matrix:" _c
+        if "`e(wscorr)'"=="riley" {
+			di as text _newline "Estimated between-studies SDs and OVERALL correlation matrix" 
+			local linelength 60
+		}
+        else { 
+			if word(e(bscovariance),1)=="equals" di as text _newline "Specified" _c // 20jan2022
+			else di as text _newline "Estimated" _c
+			di as text " between-studies SDs and correlation matrix" 
+			local linelength 52
+		}
+		di as txt "{hline `linelength'}" _c
         mat l `all', noheader
     }
+	if "`e(wscorr)'"=="riley" { // warnings re Riley
+		tempname corr
+		mat `corr' = corr(e(Sigma))
+		forvalues r=1/`p' {
+			forvalues s=`r'/`p' {
+				if `s'<=`r' continue
+				if `corr'[`r',`s']>0.95 di as error "Warning: overall Riley correlation is near 1: estimates may be unstable"
+				if `corr'[`r',`s']<-0.95 di as error "Warning: overall Riley correlation is near -1: estimates may be unstable"
+			}
+		}
+	}	
+	di as txt "{hline `linelength'}"
 }
 
 // PRINT WEIGHTS AND BOS
@@ -1092,10 +1231,10 @@ if !mi("`randfix'`randfix2'") {
         di as error "option randfix ignored - not appropriate with fixed-effect analysis"
     }
     else if `noVfixed' {
-        di as error "option randfix ignored - mvmeta didn't estimate the fixed-effects model"
+        di as error "option randfix ignored - mvmeta didn't estimate the fixed-effect model"
     }
     else {
-        di _new as text "Multivariate R statistic:"
+        di _new as text "Multivariate R statistic"
         di "Measures ratio of std errors in current vs. fixed-effect analysis"
         local yvars = e(yvars)
         if mi("`randfix2'") local randfix `yvars'
@@ -1164,13 +1303,22 @@ if "`pbest'"!="" {
 
 *** BUBBLE PLOT
 if !missing(`"`bubble'`bubble2'"') {
-    mvmeta_bubble, `bubble2' `debug'
+    mvmeta_bubble, `bubble2' `debug' `hasestimated' warning(`warning')
 }
 
 *** FOREST PLOT
 if !missing(`"`forest'`forest2'"') {
     * mvmeta_forest, `forest2' `debug'
     di as error "Sorry, forest plot is not yet available"
+}
+
+*** PREDICTION INTERVAL
+if !mi("`pi'`pi2'") {
+	cap confirm matrix e(Sigma)
+	if "`e(bsest)'"=="fixed" di as error "Prediction intervals not reported - not meaningful after a fixed-effect model"
+	else if _rc di as error "Prediction intervals not reported - Sigma was not estimated"
+	else if !mi("`pi2'") mvmeta_pi, `pi2'
+	else if !mi("`pi'") mvmeta_pi
 }
 
 end
@@ -1183,9 +1331,9 @@ program define pbest
 // Parse
 syntax anything [if] [in], [ ///
     REPs(int 1000) zero gen(string) seed(int -1) format(string) /// documented
-    id(varname) PREDict all saving(string) replace clear bar line /// documented
+    id(varname) PREDict BESTonly saving(string) replace clear bar line /// documented
     CUMulative TABDISPoptions(string) mcse MEANrank /// documented
-    zeroname(string) STRIPprefix(string) rename(string) /// undocumented
+    zeroname(string) STRIPprefix(string) rename(string) all /// undocumented
     title(passthru) note(passthru) *]
 local minmax `anything'
 if !inlist("`minmax'","min","max") {
@@ -1195,10 +1343,19 @@ if !inlist("`minmax'","min","max") {
 if `seed'!=-1 set seed `seed'
 if mi("`zeroname'") local zeroname zero
 marksample touse
-if !mi("`line'") & mi("`all'") {
-    di as text "Option line specified -> option all assumed"
-    local all all
+
+if !mi("`bestonly'") {
+	if !mi("`all'") {
+		di as error "Please don't specify both bestonly and all"
+		exit 498
+	}
+	if !mi("`line'") {
+		di as text "Option bestonly ignored - cannot be specified with line"
+		local bestonly
+	}
 }
+if mi("`bestonly'") local all all
+
 * parse id variable
 if mi("`id'") & !mi(e(id)) {
     cap confirm var `e(id)'
@@ -1221,7 +1378,9 @@ if _rc {
 cap confirm numeric var `id'
 if _rc {
     tempvar idnum
-    sencode `id', gen(`idnum')
+    cap noi sencode `id', gen(`idnum')
+	if _rc==199 di "Please install sencode using {stata ssc install sencode}"
+	if _rc exit _rc
 }
 else local idnum `id'
 if !mi("`meanrank'") local all all
@@ -1271,7 +1430,10 @@ local smax = cond("`all'"=="all", `p' + ("`zero'"=="zero"), 1)
 forvalues s=1/`smax' {
     forvalues r=`rmin'/`p' {
         qui gen `pbest'`r'_`s'=0 if `touse'
-        if `r'>0 local thischarold = subinstr("`yvar_`r''","`stripprefix'","",1)
+        if `r'>0 { // 8apr2022: subinstr fails in Stata12 if "from" is missing
+			if mi("`stripprefix'") local thischarold `yvar_`r''
+			else local thischarold : subinstr local yvar_`r' "`stripprefix'" ""
+		}
         else local thischarold `zeroname'
 		local thischarnew
         forvalues i=1/`renamen' { // rename
@@ -1357,9 +1519,9 @@ if "`saving'" != "" postclose `pbestpost'
 preserve
 
 * header
-di as text _new "Estimated probabilities (%) of each treatment being the best" _c
-if `smax'>1 di " (and other ranks)" _c
-di
+di as text _new "Estimated probabilities (%) of each treatment " _c
+if `smax'>1 di "having each rank" 
+else di "being the best" 
 di as text "- assuming the " as result "`minmax'imum" as text " parameter is the best"
 di as text "- using " as result `reps' as text " draws" _c
 if "`saving'" != "" di as text " (written to file " as result "`saving'" as text ")" _c
@@ -1450,9 +1612,14 @@ if !mi("`meanrank'") {
 }
 
 * tabulate
+/* old
 local byid by(`idnum') // could make this -if `multid'-?
 if `smax'==1 local tabcmd tabdisp `idnum' `treat', c(`dispvars') `tabdispoptions'
 else local tabcmd tabdisp `rank' `treat', `byid' c(`dispvars') `tabdispoptions'
+*/
+// could make this -if `multid'-?
+if `multid' local byid by(`idnum') 
+local tabcmd tabdisp `rank' `treat', `byid' c(`dispvars') `tabdispoptions'
 `tabcmd'
 
 // GRAPH
@@ -1490,13 +1657,15 @@ else if !mi("`line'") {
     // imargin(medium) avoids "worst" of one column overlapping and "best" of next column
 }
 `graphcmd'
+format `pbest' `format'
 
 // FINISH OFF
 if !mi("`clear'") { // keep variables in memory
-    global F7 `tabcmd'
-    di as text "Tabulate command is stored in F7"
+    di as text "Rank probabilities have been loaded into memory"
+	global F7 `tabcmd'
+    di as text "tabulate command is stored in F7"
     global F8 `graphcmd'
-    di as text "Graph command is stored in F8"
+    di as text "graph command is stored in F8"
     restore, not
     exit
 }
@@ -1618,6 +1787,7 @@ syntax, [            ///
     UNscaled         /// also unscaled details (SD method only)
     Wide             /// wide format (SD + details only)
     mat(name)        /// weights matrix to be saved: undocumented
+	noSTUDies        /// no study weights (SD method only)
     debug            /// undocumented
     ]
 if !mi("`debug'") di as input "Running: mvmeta_wt `0'"
@@ -1737,9 +1907,12 @@ if !mi("`sd'") {
     * and `direct'_scaled, `borrowed'_scaled and `total'_scaled which are studies x parameters
 
     * Main output: study weights and BoS
-    mat `total'_scaled_withtotal = `total'_scaled \ `total'_scaled_sum \ `borrowed'_scaled_sum \ `direct'_scaled_sum
+    mat `total'_scaled_withtotal = `total'_scaled_sum \ `borrowed'_scaled_sum \ `direct'_scaled_sum
+    if "`studies'"!="nostudies" mat `total'_scaled_withtotal = `total'_scaled \ `total'_scaled_withtotal 
     di as text _n "Weights using score decomposition method" 
-    di as text "Study weights and borrowing of strength (% of total for each parameter):" _c
+    if "`studies'"!="nostudies" di as text "Study weights and borrowing of strength (% of total for each parameter)" 
+	else di as text "Borrowing of strength (% of total for each parameter)" 
+	di "{hline 71}" _c
     mat l `total'_scaled_withtotal, noheader `format'
     
     if !mi("`details'") { // now output as a data set
@@ -1773,7 +1946,9 @@ if !mi("`sd'") {
                 forvalues k=1/`qsum`p'' {
                     replace `parmid' = "``parmid'`k''" if parm==`k'
                 }
-                sencode `parmid', replace
+                cap noi sencode `parmid', replace
+				if _rc==199 noi di "Please install sencode using {stata ssc install sencode}"
+				if _rc exit _rc
             }
             drop parm
             egen totsum = sum(total), by(parameter)
@@ -1815,6 +1990,7 @@ if !mi("`sd'") {
     if !mi("`mat'") {
         mat `mat' = `total'_scaled
     }
+    di as text "{hline 71}"
 
 }
 
@@ -1851,7 +2027,8 @@ if !mi("`rv'") {
 	mat colnames `rvmat'_details = `names'
 
     di as text _n "Weights using relative variances method" 
-    di "Borrowing of strength (% of total for each parameter):" _c
+    di "Borrowing of strength (% of total for each parameter)" 
+    di as text "{hline 53}" _c
     mat l `rvmat', noheader `format'
     if !mi("`details'") {
         di _n as text "Standard errors used in the relative variance method:" _c
@@ -1861,6 +2038,7 @@ if !mi("`rv'") {
         if !mi("`details'") mat `keepmat'se = `rvmat'_details
         mat `keepmat' = `rvmat'
     }
+    di as text "{hline 53}"
 }
 
 // COMPUTE DATA-POINT COEFFICIENTS
@@ -1877,9 +2055,11 @@ if !mi("`dpc'") {
         mat coleq `W' = "Overall"
     }
     di as text _n "Weights using data-point coefficients method" 
-    di as text "Coefficients for parameters by data points:" _c
+    di as text "Coefficients for parameters by data points" 
+    di as text "{hline 70}" _c
     mat l `W', noheader `format'
     if !mi("`keepmat'") mat `keepmat' = `W'
+    di as text "{hline 70}"
 }
 
 end
@@ -1897,26 +2077,34 @@ version 1.5 Ian White 11feb2015
 
 program define mvmeta_bubble
 // PARSE
-syntax [anything], ///
+syntax, ///
     [Variables(string) noMv noUv STUDylabel(passthru) UVLABel(passthru) MVLABel(passthru) clear MLABel ///
-    noESTimates debug * /// to be undocumented
+    hasestimated debug warning(string) * /// to be undocumented
     ]
-if mi(e(bsest)) local estimates noestimates
+if mi("`hasestimated'") di as text "Bubble option: using data from last mvmeta run" // in replay mode
+
+if "`warning'"=="" local warning error
+if !inlist("`warning'", "error", "text", "off") {
+	di as error "syntax: warning(error|text|off)"
+	exit 198
+}
+local warn warn`warning'
+
 * allows all bubble options 
 if !mi("`debug'") di as input "Call: mvmeta_bubble `0'"
-if !mi("`estimates'") {
+if mi(e(bsest)) {
     local uv nouv
     local mv nomv
     local wt
 }
 if mi("`variables'") {
     local variables = word(e(yvars),1)+" "+word(e(yvars),2)
-    di as text _newline "Bubble option: no variables specified, displaying " as result word(e(yvars),1) as text " and " as result word(e(yvars),2)
+    if wordcount(e(yvars)) > 2 di as text "Bubble option: no variables specified, displaying " as result word(e(yvars),1) as text " and " as result word(e(yvars),2)
 }
 cap unab variables : `variables'
 tokenize "`variables'"
 if mi("`2'") | !mi("`3'") {
-    di as error "bubble: variables option must contain exactly two variables"
+    di as error "Bubble option: variables() suboption must contain exactly two variables"
     exit 198
 }
 local y `1'
@@ -1931,9 +2119,10 @@ forvalues i = 1/`e(dims)' {
 }
 if (`hasx' | e(parmtype)=="common") {
     if "`uv'"!="nouv" | "`mv'"!="nomv" {
-        di as error "Sorry, bubble plot can't show summaries - last mvmeta run " _c
-		if `hasx' di "had covariates"
-        else if e(parmtype)=="common" di "used commonparm option"
+		if `hasx' local text "had covariates"
+        else if e(parmtype)=="common" local text "used commonparm option"
+		else local text
+        `warn' "bubble plot can't show summaries - last mvmeta run `text'"
 		local mv nomv
         local uv nouv
     }
@@ -1947,7 +2136,7 @@ mvmeta_getdata `y' `x', type(`type') corr `uv' `mv' `studylabel' `uvlabel' `mvla
 if !mi("`mlabel'") local mopts mopts(mlab(_id))
 cap confirm variable corr_`y'_`x'
 local corrvar = cond(_rc,"corr_`x'_`y'","corr_`y'_`x'")
-bubble `y' `x' se_`y' se_`x' `corrvar', `mopts' group(`type') `debug' `clear' nowarnings `options'
+bubble `y' `x' se_`y' se_`x' `corrvar', `mopts' group(`type') `debug' `clear' `options' warning(`warning')
 
 if !mi("`debug'") di as input "Ending mvmeta_bubble"
 end
@@ -1978,13 +2167,20 @@ syntax varlist(min=2 max=5) [if] [in], [pct(numlist) n(int 36) clear /// main op
     GRoup(varname) COLors(string) LPatterns(string) LWidths(string) /// by-group options
 	MLABel(passthru) MSymbol(passthru) MSIZe(passthru) MSTYle(passthru) /// marker options
 	LSTYle(passthru) /// line options
-    noWARnings /// output options
+    warning(string) /// output options
     lopts(string) mopts(string) cov debug eform *] // graph options
 
 if !mi("`debug'") di as input "Call: bubble `0'"
 tokenize "`varlist'"
 local ymean `1'
 local xmean `2'
+
+if "`warning'"=="" local warning error
+if !inlist("`warning'", "error", "text", "off") {
+	di as error "syntax: warning(error|text|off)"
+	exit 198
+}
+local warn warn`warning'
 
 tempvar ysd xsd corr
 qui {
@@ -2045,12 +2241,14 @@ else {
 // MISSING VALUES
 qui drop if mi(`xmean') & mi(`ymean')
 tempvar ismiss ismisssum
-if mi("`warnings'") foreach z in x y { // warnings (picks up mis-matched mean and sd)
+/* these warnings are not needed when bubble is called by mvmeta_bubble
+foreach z in x y { // warnings (picks up mis-matched mean and sd)
     qui count if mi(``z'mean') > mi(``z'sd')
-    if r(N) di as error "Warning: `=r(N)' observations with missing ``z'mean' and non-missing ``z'sd'
+    if r(N) `warn' "`=r(N)' observations with missing ``z'mean' and non-missing ``z'sd'
     qui count if mi(``z'mean') < mi(``z'sd')
-    if r(N) di as error "Warning: `=r(N)' observations with non-missing ``z'mean' and missing ``z'sd'
+    if r(N) `warn' "`=r(N)' observations with non-missing ``z'mean' and missing ``z'sd'
 }
+*/
 foreach z in x y {
     if "``z'stagger'"=="" {
         qui summ ``z'mean'
@@ -2090,8 +2288,12 @@ local i 0
 
 if !mi("`group'") { 
     cap confirm numeric var `group'
-    if _rc sencode `group', replace // convert to numeric
-    qui levelsof `group', local(grouplevels)
+    if _rc {
+		cap noi sencode `group', replace // convert to numeric
+		if _rc==199 di "Please install sencode using {stata ssc install sencode}"
+		if _rc exit _rc
+    }
+	qui levelsof `group', local(grouplevels)
 }
 local l 0
 foreach p of numlist `pct' {
@@ -2108,7 +2310,7 @@ foreach p of numlist `pct' {
             local ++s
             local cond `group'==`level'
             local graphlist `graphlist' ///
-                (line `y'`i' `x'`i' if `cond', pstyle(p`s') cmissing(n) `lcol`s'' `lpatt`s'' `lwid`s'' `lopts') ///
+                (line `y'`i' `x'`i' if `cond', pstyle(p`s') c(l) cmissing(n) `lcol`s'' `lpatt`s'' `lwid`s'' `lopts') ///
                 (scatter `ymean' `xmean' if `cond' & _theta==0, pstyle(p`s') `mcol`s'' `mopts')
             local ++l
             if `i'==1 local legendorder `legendorder' `l'
@@ -2171,7 +2373,7 @@ program define mvmeta_estimate, rclass // taken from mvmeta.ado, 2apr2015
 
 *** PARSE
 
-syntax namelist(min=2 max=2) if, yends(string) parmtype(string) missest(string) missvar(string) [bsest(string) xvarslist(string) bscovariance(string) wscorr(string) sigma0(string) start(string) noconstant wscorrforce nowarnings augment augquiet notrunc cholnames debug showstart mmfix taulog id(varname) noestimates ITERate(passthru) sigma0exp(string) *]
+syntax namelist(min=2 max=2) if, yends(string) parmtype(string) missest(string) missvar(string) [bsest(string) xvarslist(string) bscovariance(string) wscorr(string) sigma0(string) start(string) noconstant wscorrforce warningest(string) warningnoest(string) augment augquiet notrunc cholnames debug showstart mmfix taulog id(varname) noestimates ITERate(passthru) sigma0exp(string) penalty(string) psdcrit(real 0) noposdef *]
 mlopts mlopts, `options' // iterate is parsed separately as it is changed in 2nd -ml- run
 if mi("`debug'") local ifdebug *
 `ifdebug' di as input "mvmeta_estimate `0'"
@@ -2202,6 +2404,15 @@ if "`estimates'"!="noestimates" & "`bsest'"=="" {
     di as error "mvmeta_estimate: bsest() required"
     exit 497
 }
+foreach type in est noest { // warnings for estimate and no-estimate parts
+	if "`warning`type''"=="" local warning`type' error
+	if !inlist("`warning`type''", "error", "text", "off") {
+		di as error "syntax: warning`type'(error|text|off)"
+		exit 198
+	}
+}
+local warn warn`warningnoest'
+
 
 *** START OF CODE TAKEN FROM MVMETA.ADO
 
@@ -2243,8 +2454,17 @@ forvalues r=1/`p'{
             local Svar_`r'_`s' `covvar'`r'`s'
         }
         else {
-            di as error "Neither `Sstub'`yend_`r''`yend_`s'' nor `Sstub'`yend_`s''`yend_`r'' found, and wscorr() not specified"
-            exit 459
+            local message "Neither `Sstub'`yend_`r''`yend_`s'' nor `Sstub'`yend_`s''`yend_`r'' found, and wscorr() not specified"
+			qui count if !mi(`yvar_`r'',`yvar_`s'')
+			if r(N)==0 {
+				`warn' "`message' - not a problem as `yvar_`r'', `yvar_`s'' are never jointly observed"
+				qui gen `covvar'`r'`s' = 0 // just to satisfy the pos def check
+				local Svar_`r'_`s' `covvar'`r'`s'
+			}
+			else {
+				di as error "Error: `message'"
+				exit 459
+			}
         }
         if "`wscorr'"!="" & `s'!=`r' {
             if (`oksr'|`okrs') & mi("`wscorrforce'") local wscorrunused 1
@@ -2252,15 +2472,17 @@ forvalues r=1/`p'{
         }
     }
 }
-if "`wscorr'"=="riley" & mi("`warnings'") {
-    di as text "Note: using Riley's overall correlation model" _c
-    if `wscorrunused' di " (ignoring covariances)" _c
-    di
-}
-else if "`wscorr'"!="" & mi("`warnings'") {
-    if `wscorrused' & `wscorrunused' di as text "Warning: " as result "wscorr(`wscorr')" as text " used for only some covariances"
-    if !`wscorrused' & `wscorrunused' di as text "Warning: wscorr(" as result "`wscorr'" as text ") not used"
-    if `wscorrused' & !`wscorrunused' di as text "Note: wscorr(" as result "`wscorr'" as text ") used for all covariances"
+if "`warningnoest'"!="off" {
+	if "`wscorr'"=="riley" {
+		di as text "Note: using Riley's overall correlation model" _c
+		if `wscorrunused' di " (ignoring covariances)" _c
+		di
+	}
+	else if "`wscorr'"!="" {
+		if `wscorrused' & `wscorrunused' `warn' "wscorr(`wscorr')" as text " used for only some covariances"
+		if !`wscorrused' & `wscorrunused' `warn' "wscorr(" as result "`wscorr'" as text ") not used"
+		if `wscorrused' & !`wscorrunused' di as text "Note: wscorr(" as result "`wscorr'" as text ") used for all covariances"
+	}
 }
 
 ************* CONVERT VARIABLES TO MATRICES *************
@@ -2310,17 +2532,16 @@ forvalues obs=1/`N' {
                     exit 459
                 }
                 if `misscase' & !missing(`Svar_`r'_`s''[`obs']) {
-                    if `s'>`r' & mi("`warnings'") & "`Svar_`r'_`s''"!="`covvar'`r'`s'" ///
-                        & "`wscorr'"!="riley" ///
-                        di as text "Warning at `identifier_text'" as result "`identifier_result'" ///
-                            as text ": " `missdesc`misscase'' ///
+                    if `s'>`r' & "`Svar_`r'_`s''"!="`covvar'`r'`s'" & "`wscorr'"!="riley" ///
+                        `warn' "at `identifier_text'" as result "`identifier_result'" ///
+                            as text ", " `missdesc`misscase'' ///
                             as text " missing, so I'm ignoring non-missing " ///
                             as result "`Svar_`r'_`s''"
-                    if `s'==`r' & mi("`warnings'") ///
-                        di as text "Warning at `identifier_text'" as result "`identifier_result'" ///
-                        as text ": " as result "`yvar_`r''" ///
-                        as text " is missing, so I'm ignoring non-missing " ///
-                        as result "`Svar_`r'_`r''"
+                    if `s'==`r' ///
+                        `warn' "at `identifier_text'" as result "`identifier_result'" ///
+							as text ", " as result "`yvar_`r''" ///
+							as text " is missing, so I'm ignoring non-missing " ///
+							as result "`Svar_`r'_`r''"
                 }
                 local Svalue = `Svar_`r'_`s''[`obs']
                 if `r'==`s' & `Svalue'==0 {
@@ -2395,17 +2616,23 @@ forvalues obs=1/`N' {
         }
         // CHECK VAR-COV MATRICES ARE POSITIVE DEFINITE
         if `p'>1 & !matmissing(`Smat'`i') {
-            cap varcheck `Smat'`i', check(psd) `psdcrit'
+            * cap varcheck `Smat'`i', check(psd) `psdcrit' // removed 20jan2022
+			if `psdcrit'>0 local tol tol(`psdcrit') // added 20jan2022
+			cap _getcovcorr `Smat'`i', check(psd) `tol' // added 20jan2022
             if _rc==506 {
-                if `augmented' di as error _new "Augmented v" _c
-                else di as error _new "V" _c
-                di as error "ariance-covariance matrix not positive semi-definite at `identifier_text'`identifier_result'"
-                mat l `Smat'`i' // for some reason this is not printing
-                if "`posdef'"=="" {
+                if `augmented' local augtext "augmented "
+                else local augtext 
+                if "`posdef'"=="" { // error
+					di as error "Error: `augtext'variance-covariance matrix not positive semi-definite at `identifier_text'`identifier_result':" _c
+					mat l `Smat'`i' 
                     global MVMETA_obserror `obs'
                     exit 459
                 }
-                else di as text "Proceeding in the hope that estimation will work..."
+                else { // just a problem
+					`warn' "`augtext'variance-covariance matrix not positive semi-definite at `identifier_text'`identifier_result':" _c
+					if "`warningnoest'" != "off" mat l `Smat'`i' 
+					`warn' "this may cause estimation to fail" _new
+				}
             }
             else if _rc {
                 di as error "Error in varcheck code"
@@ -2416,11 +2643,12 @@ forvalues obs=1/`N' {
 }
 
 if "`estimates'"!="noestimates" {
+local warn warn`warningest'
 
 ************* SET UP GLOBALS *************
 
 * needed in all subroutines including mvmeta_bscov_*.ado, mvmeta_mufromsigma.ado, mvmeta_lmata.ado
-local things things ystub Sstub ymat Smat Xmat p n N xcons bsest ylist yends parmtype wscorr 2pi bscovariance sigma0 sigma0exp touse fixedparms quick taulog id
+local things things ystub Sstub ymat Smat Xmat p n N xcons bsest ylist yends parmtype wscorr 2pi bscovariance sigma0 sigma0exp touse fixedparms quick taulog id penalty
 forvalues r=1/`p' {
     local things `things' yvar_`r' xvars_`r' 
     forvalues s=`r'/`p' {
@@ -2590,6 +2818,8 @@ local k_eform = `neqs_mean' // system name picked up by _coef_table in Replay
 
 } // noestimates resumes here
 
+local warn warn`warningnoest'
+
 * make combined data matrices
 tempname ydata Sdata Xdata
 forvalues i=1/`n' {
@@ -2629,38 +2859,6 @@ return local locallist `locallist'
 end
 
 *=========================== END OF MVMETA_ESTIMATE PROGRAM ===========================
-
-*====================== VARCHECK PROGRAM (FOR MVMETA_ESTIMATE) ========================
-
-program define varcheck
-syntax anything, [check(string) psdcrit(real 1E-8)]
-_getcovcorr `anything'
-if "`check'"!="" {
-    tempname evecs evals
-    mat symeigen `evecs' `evals' = `anything'
-    local dim = colsof(`evals')
-    local maxeigen = `evals'[1,1]
-    local mineigen = `evals'[1,`dim']
-    if "`check'"=="psd" {
-        if `maxeigen'<=0 | `mineigen'/`maxeigen' < -`psdcrit' {
-            di as error "`anything' is not positive semi-definite"
-            exit 506
-        }
-    }
-    else if "`check'"=="pd" {
-        if `maxeigen'<=0 | `mineigen'/`maxeigen'<=0 {
-            di as error "`anything' is not positive definite"
-            exit 506
-        }
-    }
-    else {
-        di as error "varcheck: check(`check') invalid"
-        exit 497
-    }
-}
-end
-
-*=========================== END OF VARCHECK PROGRAM ==========================
 
 *=========================== START OF MVMETA_GETDATA PROGRAM ===========================
 
@@ -2728,19 +2926,30 @@ forvalues i=1/`newobs' {
         mat roweq `S' = ""
     }
     foreach var in `namelist' {
-        mat `value' = `y'[1,"`var'"]
-        qui replace `var' = `value'[1,1] in `i'
-        mat `value' = `S'["`var'","`var'"]
-        qui replace se_`var' = sqrt(`value'[1,1]) in `i'
+*        mat `value' = `y'[1,"`var'"]
+*        qui replace `var' = `value'[1,1] in `i'
+*        mat `value' = `S'["`var'","`var'"]
+*        qui replace se_`var' = sqrt(`value'[1,1]) in `i'
+*        if `i'<=e(N) & !mi("`wt'") {
+*            mat `value' = `wtdata'[`i',"`var'"] 
+*            qui replace wt_`var' = `value'[1,1] in `i'
+*        }
+		local r = colnumb(`y',"`var'")
+        qui replace `var' = `y'[1,`r'] in `i'
+        qui replace se_`var' = sqrt(`S'[`r',`r']) in `i'
         if `i'<=e(N) & !mi("`wt'") {
-            mat `value' = `wtdata'[`i',"`var'"] 
-            qui replace wt_`var' = `value'[1,1] in `i'
+            qui replace wt_`var' = `wtdata'[`i',`r'] in `i'
         }
-        if !mi("`corr'") {
+    }
+	if !mi("`corr'") {
+		foreach var in `namelist' {
+			local r = colnumb(`y',"`var'")
             foreach var2 in `namelist' {
                 if "`var2'">="`var'" continue
-                mat `value' = `S'["`var'","`var2'"]
-                qui replace corr_`var2'_`var' = `value'[1,1] / (se_`var'*se_`var2') in `i'
+*                mat `value' = `S'["`var'","`var2'"]
+*                qui replace corr_`var2'_`var' = `value'[1,1] / (se_`var'*se_`var2') in `i'
+				local s = colnumb(`y',"`var2'")
+                qui replace corr_`var2'_`var' = `S'[`r',`s'] / (se_`var'*se_`var2') in `i'
             }
         }
     }
@@ -2751,6 +2960,72 @@ if !mi("`uv'") qui drop if _n==e(N)+1
 end
 
 *=========================== END OF MVMETA_GETDATA PROGRAM ===========================
+
+*======================= START OF MVMETA_PI PROGRAM ====================
+/*
+IW 14oct2021
+	now works also with long parameterisation
+	added warning after metaregression
+	nicer output
+IW 8apr2020
+
+Form prediction intervals after mvmeta
+Assumes df = total sample size minus 2: this matches univariate advice
+*/
+program define mvmeta_pi
+
+syntax [, format(string) level(cilevel) xvar(string)]
+
+if mi("`format'") local format %9.0g
+if mi("`xvar'") local xvar _cons
+
+if e(cmd)!="mvmeta" {
+	di as error "mvmeta was not the last command run"
+	exit 301
+}
+
+* detect meta-regression
+local metareg 0
+forvalues i=1/`e(dims)' {
+	if !mi(e(xvars_`i')) local metareg 1
+}
+
+local plevel = (100+`level')/200
+
+local col1 _col(1)
+forvalues i=2/6 {
+    local pos = 1+12*(`i'-1)
+    local col`i' `format' _col(`pos')
+}
+if `metareg' local metaregnote for the meta-regression intercepts
+di as txt _n "Table of prediction intervals `metaregnote'" _n "{hline 70}" 
+di `col1' as txt "Outcome" `col2' "Estimate" `col3' "`level'% Confidence Int." `col5' "`level'% Prediction Int."
+
+tempname Sigma
+mat `Sigma'=e(Sigma)
+local df = e(N)-2
+foreach yvar in `e(yvars)' {
+	if e(parmtype)=="short" { 
+		local est = _b[`yvar']
+		local se  = _se[`yvar']
+	}
+	else {
+		local est = [`yvar']_b[`xvar']
+		local se  = [`yvar']_se[`xvar']
+	}
+	local pme = invnorm(`plevel') * `se'
+
+*	local pmp = invt(`df',`plevel') * sqrt(`se'^2 + `Sigma'["`yvar'","`yvar'"]) // old way for stata17
+	local r = colnumb(`Sigma',"`yvar'")
+	local pmp = invttail(`df',1-`plevel') * sqrt(`se'^2 + `Sigma'[`r',`r']) // 7apr2022 to allow Stata v12
+
+	di `col1' as txt "`yvar'" `col2' as res `format' `est' `col3' `format' `est'-`pme' `col4' `format' `est'+`pme' `col5' `format' `est'-`pmp' `col6' `format' `est'+`pmp'
+}
+di as txt "{hline 70}"
+di as txt "Note: using N-2=" as res `df' as txt " degrees of freedom"
+
+end
+*=========================== END OF MVMETA_PI PROGRAM ===========================
 
 *======================= START OF MATA ROUTINE FOR RANDFIX ====================
 mata:
@@ -2767,6 +3042,26 @@ void selectpart(string scalar cname,
 }
 end
 *======================= END OF MATA ROUTINE FOR RANDFIX ====================
+
+*======================= ROUTINES FOR WARNINGS ====================
+
+program define warnerror
+foreach thing in txt text result  res {
+	local 0 : subinstr local 0 "as `thing' " "as error ", all
+}
+di as error "Warning: " `0'
+end
+
+program define warntext
+di as text "Warning: " `0'
+end
+
+program define warnoff
+local y
+end
+
+*======================= END OF ROUTINES FOR WARNINGS ====================
+
 
 /******************************************************************************
 

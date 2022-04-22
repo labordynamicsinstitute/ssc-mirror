@@ -1,5 +1,28 @@
 /********************************************************************* 
-*! version 0.21  Ian White   22jun2015
+*! version 4.0.2 # Ian White # 21apr2022
+	last regression doesn't contaminate ereturn-ed values
+version 4.0 # Ian White # 07apr2022
+	version number changed to match mvmeta
+	new release to UCL, github and SSC
+version 0.23.1  Ian White   7apr2022
+	reordered options to match help file
+version 0.23  Ian White   5apr2022
+	add option countby: 
+		written by S Kaptoge (Apr2009, Aug2016) to allow extraction of
+		study-specific counts of events, participants, 	and person-time of follow up 
+		by a variable specified in added option countby(varname)
+version 0.22.2  Ian White   5apr2022
+	extended usecoefs to work without eqname (also corrected help)
+version 0.22.1  Ian White   4apr2022
+	added dicmd subroutine
+version 0.22  Ian White   28mar2022
+	major edit to enable prefix syntax
+	small changes to output 
+	debug option enhanced
+20jan2022: added but commented out possible change to pos def checking
+version 0.21.1  Ian White   2nov2021
+	quietly suppresses all output
+version 0.21  Ian White   22jun2015
     by(varname) changed to by(varlist) 
     multiple equations rewritten
         bug fix - some covariances were omitted
@@ -112,20 +135,86 @@ PROBLEMS:
 
 prog def mvmeta_make, eclass
 version 11
-syntax anything(equalok) [if] [in] [fweight aweight pweight iweight], ///
-    by(varlist) /// by-variable options
-    [SAVing(string) replace append clear /// save-file options
-    NAMEs(namelist min=2 max=2) keepmat infix(string) /// what coefficients are stored
-	USEVars(varlist) USEConstant USEEqs(string) LEARNif(string) USECOEfs(string) /// what coefficients are stored
-	esave(string) rsave(string) counts(string) COLLapse(string) /// what other results are stored
-    noDETails pause /// screen-output options
-    PPFix(string) AUGwt(real 0.01) noAUGList PPCmd(string) /// augmentation 
+
+local mvoptions ///
+	SAVing(string) replace append clear /// save-file options
+	USEVars(varlist) USEConstant USEEqs(string) LEARNif(string) /// what results are stored
+	USECOEfs(string) esave(string) counts(string) COLLapse(string) /// what results are stored
+    NAMEs(namelist min=2 max=2) infix(string) LONGnames keepmat /// how results are stored
+    noDETails pause /// output 
+    PPFix(string) AUGwt(real 0.01) noAUGList PPCmd(string) /// perfect prediction behaviour 
     hard /// estimation
-    STrata(passthru) noCONstant coef or nohr  /// command options requiring special treatment
+    debug dryrun rsave(string) countby(varname) // undocumented options
+
+local cmdoptions STrata(passthru) noCONstant coef or nohr  /// command options requiring special treatment
 	robust cluster(passthru) BAseoutcome(passthru) /// command options requiring special treatment
-    debug dryrun LONGnames /// undocumented options
-    * /// other command options
-    ]
+    * // other command options
+
+* WHICH SYNTAX?
+* if first character after mvmeta_make is "," then we have prefix syntax, otherwise we have classic syntax
+if substr("`0'",1,1)=="," {
+	local syntype prefix
+	di as text "Prefix syntax detected"
+}
+else if substr("`0'",1,1)==" " {
+	di as text "Program error"
+	exit 498
+}
+else {
+	local syntype classic
+	di as text "Classic (non-prefix) syntax detected"
+}
+
+* PARSE CLASSIC (NON-PREFIX) SYNTAX
+* detect multiple commas
+gettoken left right : 0, parse(",") bind
+local right: subinstr local right "," "" 
+gettoken left right : right, parse(",") bind
+if !mi("`right'") di as error "Probable syntax error: multiple commas found"
+
+if "`syntype'"=="classic" {
+	syntax anything(equalok) [if] [in] [fweight aweight pweight iweight], ///
+		by(varlist) [`mvoptions' `cmdoptions']
+}
+
+* PARSE PREFIX SYNTAX
+else {
+	gettoken prefixpart anything : 0, parse(":")
+	local anything = trim(subinstr("`anything'",":","",1))
+	
+	* parse the mvmeta_make options
+	local 0 `prefixpart'
+	syntax, by(varlist) [`mvoptions']
+
+	* parse the regcmd: might be prefix (main command after colon) or mixed (main command before ||)
+	local prefixcmds bootstrap jackknife permute "mi estimate" 
+	while inlist(word("`anything'",1), "bootstrap", "jackknife", "permute", "mi") { 
+		// while a prefix command is detected
+		gettoken one anything : anything, parse(":")
+		local prefix `prefix' `one':
+		local anything: subinstr local anything ":" ""
+	}
+	if word("`anything'",1) == "mixed" { 
+		local strpos = strpos("`anything'","||")
+		local postfix = substr("`anything'",`strpos',.)
+		local anything = substr("`anything'",1,`strpos'-1)
+	}
+	
+	local 0 `anything'
+	syntax anything(equalok) [if] [in] [fweight aweight pweight iweight], ///
+		[`cmdoptions']
+}
+
+* if postfix doesn't contain a comma, append one
+_parse comma lhs rhs : postfix
+if mi("`rhs'") local postfix `postfix',
+
+if !mi("`debug'") {
+	di as input "Initial results of parsing:"
+	foreach thing in prefix anything by if in weight postfix options {
+		di as text _col(5) "`thing'" as result _col(16) "``thing''"
+	}	
+}
 
 local options `options' `robust' `cluster' `baseoutcome'
 
@@ -134,7 +223,7 @@ local options `options' `robust' `cluster' `baseoutcome'
 * Find yvar and xvarlist
 gettoken regcmd regbody : anything, parse(" ")
 unabcmd `regcmd'
-local regcmd = r(cmd)
+local anything `prefix' `anything'
 if substr("`regcmd'",1,2)=="st" local xvarlist `regbody'
 else if "`regcmd'"=="mvreg" {
 	gettoken yvar xvarlist : regbody, parse("=")
@@ -184,6 +273,7 @@ else {
 }
 
 if "`details'"=="nodetails" local qui qui
+if !mi("`debug'") local noidicmd dicmd
 tempname onevalue post
 
 if "`hard'"=="hard" local hardcap capture
@@ -268,6 +358,13 @@ else if mi("`learnif'") local learnif 1 // by default, use all data to learn coe
 
 *********************** END OF PARSING ***********************
 
+if !mi("`debug'") {
+	di as input "Final results of parsing:"
+	foreach thing in anything if in wtexp postfix strata constant eformopts options {
+		di as text _col(5) "`thing' " as result _col(16) "``thing''"
+	}
+}
+
 *********************** START ANALYSIS: IF/IN AND BYVARS ***********************
 
 marksample touse, novarlist
@@ -275,10 +372,15 @@ markout `touse' `yvar' `xvarlist'
 
 * Make summary by-variable
 local byvarlist `by'
-tempvar byvarname
-qui egen `byvarname' = group(`byvarlist') if `touse', label
-qui levelsof `byvarname' if `touse', local(bylevels)
+if wordcount("`by'")>1 {
+	tempvar byvarname
+	qui egen `byvarname' = group(`byvarlist') if `touse', label
+}
+else local byvarname `by'
+qui levelsof `byvarname' if `touse', local(byvarnamelevels)
 local nby : word count `bylevels'
+cap confirm numeric var `byvarname'
+local ischarbyvarname = _rc>0
 
 * Create postfile expression for by-variables
 foreach byvar of local byvarlist { 
@@ -344,12 +446,13 @@ if !mi("`usecoefs'") {
 	foreach usecoef of local usecoefs {
 		local ++ncoefs
 		local pos = strpos("`usecoef'","]")
-		if !`pos' di as error "Error in usecoefs()"
-		local eq = substr("`usecoef'",2,`pos'-2)
+		if `pos' local eq = substr("`usecoef'",2,`pos'-2)
+		local colon = cond(`pos',":","")
 		local var = substr("`usecoef'",`pos'+1,.)
-		local coef`ncoefs' `eq':`var'
+		local coef`ncoefs' `eq'`colon'`var'
 		local coefname`ncoefs' `infix'`eq'`infix'`var'
-		di as result "[`eq']`var' " _c
+		if `pos' di as result "[`eq']`var' " _c
+		else di as result "`var' " _c
 	}
 }
 
@@ -359,7 +462,7 @@ else {
 	* by default this fits FULL command to ALL data - learnif() simplifies
 	di as text "Learning equation names..."
 	if "`regcmd'"=="stcox" local estimate estimate
-	qui `anything' if `touse' & `learnif' `wtexp', ///
+	`noidicmd' qui `anything' if `touse' & `learnif' `wtexp' `postfix' ///
 		`strata' `constant' `eformopts' `options' `estimate'
 	tempname b
 	mat `b' = e(b)
@@ -443,6 +546,24 @@ foreach e in `esave' {
 foreach r in `rsave' {
     local rvars `rvars' _r_`r'
 }
+if "`countby'"~="" { // SK code
+    capture confirm string variable `countby'
+    local strcount = _rc==0
+    qui levelsof `countby', local(countbylevls)
+    foreach levl in `countbylevls' {
+      local addcount ns_`countby'_`levl' nf_`countby'_`levl' pt_`countby'_`levl'
+      local countsby `countsby' `addcount'
+    }
+	 capture confirm variable _rec _nrec, exact
+	 local uniquecond = cond(_rc == 0, "& _rec == _nrec", "")		/* distinct observations in case-cohort data declared by stsetcco */
+}
+/* SK generate time variable for computing person-time below, taking account of delayed entry */
+tempvar timevar
+qui gen double `timevar' = .
+qui if "`:char _dta[_dta]'" == "st" {
+	replace `timevar' = _t - _t0
+	local idvar: char _dta[st_id]
+}
 
 if "`append'"=="append" {
     cap confirm file "`saving'"
@@ -450,26 +571,35 @@ if "`append'"=="append" {
     tempfile postfile
 }
 else local postfile `saving'
-postfile `post' `bypost' `bvars' `Svars' `evars' `rvars' `counts' ///
+postfile `post' `bypost' `bvars' `Svars' `evars' `rvars' `counts' `countsby' ///
 	_ppfixed _ppremains using "`postfile'", `replace'
 
 if !mi("`debug'") {
     foreach thing in bvars Svars evars rvars counts {
-        di as text "`thing' are ``thing''" 
+        di as text "`thing':" as result _col(21) "``thing''" 
     }
 }
 
 *********************** MAIN ANALYSIS ***********************
 
+if !mi("`debug'") di as input `"Basic command is: `anything' `if' `in' `wtexp' `postfix' `strata' `constant' `eformopts' `options'"'
+
 tempvar esample individual
 gen `esample' = 0
 gen `individual' = _n
-forvalues level=1/`nby' {
-    `qui' di _newline(3)
-    
+foreach level of local byvarnamelevels {
+    `qui' di _newline
+    if !mi("`debug'") di as input `"level `level'"'
     * identify this level
-    summ `individual' if `byvarname'==`level', meanonly
+    if `ischarbyvarname' local levelvalue `""`level'""'
+    else local levelvalue `level'
+
+    summ `individual' if `byvarname' == `levelvalue', meanonly
     local first = r(min) // an obs in this by-group
+	if mi("`first'") {
+		di as error "Program error in mvmeta_make has led to wrongly seeking `byvarname'==`levelvalue'"
+		exit 498
+	}
     local bylevels
     local bydesc
     foreach byvar of local byvarlist {
@@ -483,9 +613,10 @@ forvalues level=1/`nby' {
             local bylevel2 : label (`byvar') `bylevel'
         }
         local bylevels `bylevels' (`bylevel')
-        local bydesc `bydesc' `byvar'=`bylevel2'
+        local bydesc `bydesc' `byvar'==`bylevel2'
     }
-    di as input `"-> `bydesc'"'
+    * di as input `"-> `bydesc'"' // not silenced by quietly
+    di `"{input}-> `bydesc'"' // silenced by quietly
     
     local pptofix 0
     local fix fix
@@ -499,7 +630,7 @@ forvalues level=1/`nby' {
         *  DO THE MAIN REGRESSION
         local regrc 0
         if `pptofix'==0 {                 // WITHOUT FIXING PP
-            `hardcap' `qui' `anything' if `byvarname'==`level' & `touse' `wtexp', `strata' `constant' `eformopts' `options'
+            `noidicmd' `hardcap' `qui' `anything' if `byvarname'==`levelvalue' & `touse' `wtexp' `postfix' `strata' `constant' `eformopts' `options'
             if "`hard'"=="hard" {
                 local regrc = _rc
                 if `regrc' {
@@ -524,7 +655,7 @@ forvalues level=1/`nby' {
         else if `pptofix'==1 {            // WITH FIXING PP
 			if "`ppcmd'"!="" {
                 di as error `"`bydesc': attempting to `fix' perfect prediction by using `ppcmd'"'
-               `qui' `ppcmd1' `regbody' if `byvarname'==`level' & `touse' `wtexp', `strata' `constant' `eformopts' `options' `ppcmd2'
+               `qui' `ppcmd1' `regbody' if `byvarname'==`levelvalue' & `touse' `wtexp', `strata' `constant' `eformopts' `options' `ppcmd2'
             }
             else {
                 if "`regcmd'"=="cox" | substr("`regcmd'",1,2)=="st" local st st
@@ -535,7 +666,7 @@ forvalues level=1/`nby' {
                 local list = cond("`auglist'"!="noauglist", "list", "")
                 if "`regcmd'"=="clogit" local groupvar groupvar(`e(group)')
                 `qui' _augment if `touse' `wtexp', `list' `st' xvarlist(`xvarlist') ///
-					yvar(`yvar') subgroup(`byvarname'==`level') timesweight(`augwt') ///
+					yvar(`yvar') subgroup(`byvarname'==`levelvalue') timesweight(`augwt') ///
 					wtvar(`wtvar') augvar(`augvar') `strata' `groupvar' `constant'
 				local wtexp2 [iweight=`wtvar']
                 if "`st'"=="st" {
@@ -543,7 +674,7 @@ forvalues level=1/`nby' {
                     local wtexp2
                 }
                 `qui' di as text _newline "Analysis after augmentation:"
-                `qui' `anything' if (`byvarname'==`level' & `touse')|`augvar' `wtexp2', `strata' `constant' `eformopts' `options'
+                `noidicmd' `qui' `anything' if (`byvarname'==`levelvalue' & `touse')|`augvar' `wtexp2' `postfix' `strata' `constant' `eformopts' `options'
                 restore
             }
         }
@@ -555,6 +686,21 @@ forvalues level=1/`nby' {
                mat l `Smat'`level', title(e(V) for study `level')
             }
             *  CHECK FOR PERFECT PREDICTION:
+/*
+			*** change 20jan2022: reduce to the required matrix before checking for PP
+			* fails with logit - need to add the equation names to `row', `col'
+			tempname SS
+			mat `SS'=J(`p',`p',.)
+			forvalues r=1/`p' {
+				local row : word `r' of `usevars'
+				forvalues c=1/`p' {
+					local col: word `c' of `usevars'
+					mat `SS'[`r',`c'] = `Smat'`level'["`row'", "`col'"]
+				}
+			}
+			if !mi("`debug'") mat l `SS', title("Variance matrix being checked")
+            cap varcheck `SS', check(pd)
+*/
             cap varcheck `Smat'`level', check(pd)
             if _rc {
                 `qui' di 
@@ -591,7 +737,7 @@ forvalues level=1/`nby' {
         if "`ppfix'"=="all" | "`ppfix'"=="none" | `ppfound'==0 continue, break
         if `pass'==0 local pptofix `ppfound'
     }
-    if !mi("`debug'") di as input "Estimation completed for study `level'"
+    if !mi("`debug'") di as input "Estimation completed for study `levelvalue'"
 	
     * POST THE RESULTS 
     local blist
@@ -672,8 +818,32 @@ forvalues level=1/`nby' {
             exit 198
         }
     }
-    qui replace `esample' = e(sample) if `byvarname'==`level' & `touse'
-    local postcommand post `post' `bylevels' `blist' `Slist' `elist' `rlist' `clist' (`pptofix') (`ppfound') 
+    if "`countby'"~="" {
+    	 local countsby
+    	 local depvar = cond("`e(cmd)'"=="cox", "_d", "`e(depvar)'")
+		 if !missing("`idvar'") {
+			tempvar idsubgroup
+			egen `idsubgroup' = tag(`idvar' `countby') if e(sample) `uniquecond'
+			local idsubgcond = "& `idsubgroup' == 1"
+       }
+		 qui foreach levl in `countbylevls' {
+			  local subgroup = cond(`strcount'==1, `"`countby'=="`levl'""', `"`countby'==`levl'"')
+			  count if e(sample) & `subgroup' `uniquecond' `idsubgcond'
+			  local ns = r(N)
+			  count if e(sample) & `depvar'==1 & `subgroup' `uniquecond'
+			  local nf = r(N)
+			  local pt = .
+			  if !missing("`timevar'") {
+					summ `timevar' if e(sample) & `subgroup'
+					local pt = r(sum)
+			  }
+			  local addcount (`ns') (`nf') (`pt')
+			  local countsby `countsby' `addcount'
+		 }
+		 capture drop `idsubgroup'
+    }
+    qui replace `esample' = e(sample) if `byvarname'==`levelvalue' & `touse'
+    local postcommand post `post' `bylevels' `blist' `Slist' `elist' `rlist' `clist' `countsby' (`pptofix') (`ppfound') 
     if "`debug'"=="debug" di as input `"Post command: `postcommand'"'
 	`postcommand'
 	`pause'
@@ -709,10 +879,13 @@ if !mi("`labelsfile'") qui do `labelsfile'
 foreach byvar of local byvarlist {
     if !mi("`label`byvar''") label val `byvar' `label`byvar''
 }
+`qui' di
 if !mi("`savingorig'") save "`saving'", replace
 if !mi("`clear'") {
-	di as text "(data are now loaded into memory)"
+	if !mi("`savingorig'") di as text "mvmeta_make results are also loaded into memory"
+	else di as text "mvmeta_make results are now loaded into memory"
 	restore, not
+	ereturn post // removes ereturned results from last regression
 }
 else {
 	restore
@@ -963,4 +1136,9 @@ foreach rowfullname of local rowfullnames {
 matpart `matin' `select' `matout'
 mat rownames `matout' = `newrowfullnames'
 mat colnames `matout' = `newrowfullnames'
+end
+
+prog def dicmd
+noi di as input `"`0'"'
+`0'
 end

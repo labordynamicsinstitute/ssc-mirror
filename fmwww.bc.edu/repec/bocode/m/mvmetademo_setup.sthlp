@@ -7,6 +7,11 @@
 {cmd:Ian White}
 {hline}
 
+{title:How to run this tutorial}
+
+{p}You will need to install the mvmeta package as described in {help mvmetademo_run:the main demonstration}.
+
+
 {p}{cmd:mvmeta} expects the data to be organised with one line per study,
 with each line containing the estimates and their variances for that study. 
 The estimates must be named as a common stub followed by a unique ending, 

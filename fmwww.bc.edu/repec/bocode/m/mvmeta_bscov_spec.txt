@@ -1,0 +1,24 @@
+Specification for mvmeta_bscov_*.ado files
+==========================================
+
+general options: dims, taulog
+read from: globals MVMETA_*
+
+option: setup
+return: 
+    local nvarparms   = #variance parms
+    matrix binit      = starting values for mu's
+    matrix init       = starting values for mu's and variance parms
+    local eqlist      = list of equations for variance parms
+
+option: varparms()
+argument: name of matrix containing variance parms
+return:
+	matrix Sigma      = variance matrix
+	scalar nparms_aux = #variance parameters
+	scalar neqs_aux   = #variance equations
+
+option: postfit
+uses fitted variance parms
+return: as varparms() plus
+	local Sigma`s'`r' = expression evaluating to Sigma[`s',`r']

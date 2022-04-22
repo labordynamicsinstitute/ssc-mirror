@@ -1,6 +1,8 @@
 /*******************************************************************************************
 MUFROMSIGMA PROGRAM - called by mvmeta.ado, mvmeta_lmata.ado and mvmeta_bscov_*.ado
-*! version 3.1.3  Ian White  21jul2015
+*! version 3.5.0 # Ian White # 15nov2021
+	changed short equation name from "Oveall" to "Overall_mean" to match standard output
+version 3.1.3  Ian White  21jul2015
     also outputs error observation number as $MVMETA_obserror
 version 3.1.2  Ian White  16jul2015
     incorporate id
@@ -70,7 +72,7 @@ else if "$MVMETA_parmtype"=="long" {
     }
 }
 else if "$MVMETA_parmtype"=="short" {
-    local eqs "Overall"
+    local eqs "Overall_mean"
     local names $MVMETA_ylist
 }
 mat coleq `mu' = `eqs'

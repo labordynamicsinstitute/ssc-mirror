@@ -1,6 +1,10 @@
 /*******************************************************************************************
 LIKELIHOOD FOR MVMETA.ADO 
-*! version 3.0.1  Ian White  27may2015
+*! version 3.5.0 # Ian White # 15nov2021
+	corrected single to double precision that affected shortparm results
+version 3.2.3 # Ian White # 16jun2020
+	modifies ll and rll if MVMETA_penalty is set
+version 3.0.1  Ian White  27may2015
 version 2.2.1  31may2011
     corrected the constant term in log L and log RL, as suggested by Antonio Gasparrini: affects L/RL (only) in models with missing outcomes and models with covariates
 version 1.7.1  3jun2010
@@ -52,7 +56,7 @@ if "$MVMETA_quick" == "quick" {
 else mat `fixedb' = `b'[1,1..$MVMETA_fixedparms]
 if "`parmtype'"=="short" {
     forvalues r=1/`p' {
-        qui gen `mu'`r' = `fixedb'[1,`r']
+        qui gen double `mu'`r' = `fixedb'[1,`r'] // 15nov2021
     }
     local k `p'
 }
@@ -107,9 +111,9 @@ void loglik(string scalar yname,
 debug=0
 if(debug==1) "Debugging loglik() in mvmeta_lmata.ado"
 if(debug==1) printf("yname is %s\n", yname)
+    fullSigma = st_matrix(Sigmaname)
     for(i=1;i<=n;++i) {
 if(debug==1) printf("Loop with i = %6.0f\n",i)
-        Sigma = st_matrix(Sigmaname)
 if(debug==1) "Sigma"
 if(debug==1) Sigma
         y = st_matrix(yname+strofreal(i))
@@ -130,13 +134,13 @@ if(debug==1) !colmissing(y)
 
         /* Restrict to submatrices with non-missing values */
         X = select(X,!colmissing(y))
-if(debug==1) "X"
-if(debug==1) X
+			if(debug==1) "X"
+			if(debug==1) X
         S = select(S,!colmissing(y))
         S = select(S,!colmissing(y)')
-if(debug==1) "S"
+			if(debug==1) "S"
 if(debug==1) S
-        Sigma = select(Sigma,!colmissing(y))
+        Sigma = select(fullSigma,!colmissing(y))
         Sigma = select(Sigma,!colmissing(y)')
 if(debug==1) "Sigma"
 if(debug==1) Sigma
@@ -162,16 +166,21 @@ if(debug==1) V
 if(debug==1) "W"
 if(debug==1) W
         ll = ll - add2pi*cols(dev)*log(2*pi())/2 + log(det(W))/2 - dev*W*dev'/2
-if(debug==1) "ll"
-if(debug==1) ll
+if(debug==1) printf("ll is %9.0g\n", ll)
         XWXsum = XWXsum + X*W*X'
 if(rows(XWXsum) != rows(X)) "rows(XWXsum) != rows(X)"
 if(debug==1) "XWXsum"
 if(debug==1) XWXsum
     }
+
+	// NEW LINES 16JUN2020 TO ENCODE PENALTY
+	// warning: without penalty, fullSigma may become singular
+	// so only compute its determinant i there is a penalty
+	penalty = strtoreal(st_global("MVMETA_penalty"))
+	if(!missing(penalty)&(penalty>0)) ll = ll + penalty * log(det(corr(fullSigma)))
+
     rl = ll - log(det(XWXsum))/2 + add2pi*q*log(2*pi())/2
-if(debug==1) "rl"
-if(debug==1) rl
+if(debug==1) printf("rl is %9.0g\n", rl)
     st_numscalar("r(ll)",ll)
     st_numscalar("r(rl)",rl)
 }
