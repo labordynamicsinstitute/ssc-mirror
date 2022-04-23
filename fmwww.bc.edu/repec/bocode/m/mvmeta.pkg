@@ -23,6 +23,7 @@ f mvmeta.ado
 f mvmeta.sthlp
 f mvmeta_bscov_correlation.ado
 f mvmeta_bscov_equals.ado
+f mvmeta_bscov_exchangeable.ado
 f mvmeta_bscov_proportional.ado
 f mvmeta_bscov_unstructured.ado
 f mvmeta_mufromsigma.ado
@@ -31,7 +32,12 @@ f mvmetademo_setup.sthlp
 f mvmeta_lmata.ado
 f mvmeta_make.ado
 f mvmeta_make.sthlp
-f ../f/FSCstage1.dta
-f ../f/FSCfpama.dta
+f mvmeta_mufromsigma.ado
+f ../f/fscstage1.dta
+f ../f/fscfpama.dta
 f ../p/p53.dta
 f ../b/berkey.dta
+f ../t/testdata_mi.dta
+f ../t/testdata_mixed.dta
+f ../f/fsc2cigraph.gph
+f mvmeta_bscov_spec.txt
