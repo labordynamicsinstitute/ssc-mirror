@@ -312,6 +312,7 @@ p suchowtest module to calculate successive Chow tests on cross section and time
 p sum2 module to store summary statistics
 p sum2docx module to report summary statistics to formatted table in DOCX file
 p summarizeby module to use statsby functionality with summarize
+p summclust module to compute cluster level measures of leverage, influence, and a cluster jackknife variance estimator
 p summout module to produce comparative table of summary statistics
 p summtab module to compute summary statistics overall and/or across levels of a categorical variable 
 p sumscale module to generate summated scales

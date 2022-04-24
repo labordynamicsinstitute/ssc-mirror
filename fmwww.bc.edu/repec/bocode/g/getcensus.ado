@@ -1,4 +1,4 @@
-*! version 2.0.0
+*! version 2.0.1
 
 program define getcensus
 
@@ -489,6 +489,16 @@ program define getcensus
 		// make API call
 		capture noisily {
 			import delimited "`api_url'", stringcols(_all) varnames(1) stripquotes(yes) clear
+			
+			// check if an invalid API key message was returned
+			quietly ds
+			local v1 = word("`r(varlist)'", 1)
+			quietly assert !ustrregexm(`v1', "Invalid Key", 1)
+		}
+		if _rc == 9 {
+			display as error `"{p}You have entered an invalid or unactivated API key. If you do not have a key, you may acquire one {browse "https://api.census.gov/data/key_signup.html":here}.{p_end}"'
+			clear
+			exit
 		}
 		
 		// if unsuccessful, list possible reasons and provide link to API call
@@ -596,6 +606,8 @@ program define getcensus
 		if `is_table' & "`noerror'" != "" {
 			drop *_*m
 		}
+		
+		compress
 	}
 	
 	if "`nolabel'" == "" {
