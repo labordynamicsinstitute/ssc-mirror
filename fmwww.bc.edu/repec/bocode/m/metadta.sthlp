@@ -1,12 +1,9 @@
 {smcl}
 {* *! version 1.0.0 4dec2017}{...}
-{vieweralsosee "[ME] meqrlogit" "help ME meqrlogit"}{...}
 {vieweralsosee "[ME] meqrlogit" "mansection ME meqrlogit"}{...}
 {vieweralsosee "" "--"}{...}
-{vieweralsosee "[R] binreg" "help R binreg"}{...}
 {vieweralsosee "[R] binreg" "mansection R binreg"}{...}
 {viewerjumpto "Syntax" "metadta##syntax"}{...}
-{viewerjumpto "Menu" "metadta##menu"}{...}
 {viewerjumpto "Description" "metadta##description"}{...}
 {viewerjumpto "Options" "metadta##options"}{...}
 {viewerjumpto "Remarks" "metadta##remarks"}{...}
@@ -34,6 +31,37 @@ of diagnostic accuracy studies using logistic regression.{p_end}
 {p 4 6 2}{it:indepvars} should be {cmd:string} for categorical variables and/or {cmd:numeric} for continous variables. 
 {cmd:The variable names should not contain underscores}.{p_end}
 
+{marker description}{...}
+{title:Description}
+{pstd}
+{cmd:metadta} is implements the generalized linear model for the binomial family 
+with a logit link, i.e logistic regression for meta-analysis of diagnostic accuracy data. 
+The program presents the results in tables, forest plot and/or SROC curve.  
+
+{pstd}
+The program fits fixed or a random-effects model. The data can be from independent studies; where each row contains data from seperate studies, 
+comparative studies; where each study has two rows of data. The first row has the index data and the second row has the control data. The data can also be paired, 
+where each row contains data from each seperation cross-tabulation between the index and the control test.
+
+{pstd}
+A random-effects model accounts for correlation between logit sentivity and specificity 
+and allows the quantification of heterogeneity between studies. On the other hand, a fixed-effects model assuming homogeneous studies or whenever 
+the random-effects model cannot be fitted, i.e when there are less than {cmd:3} studies.
+
+{pstd}
+When data is from comparative or paired studies, either the proportions
+or the relative ratios can be tabulated and/or plotted. 
+
+{pstd}
+When there are no covariates, heterogeneity is also quantified using the I-squared measure({help metapreg##ZD2014:Zhou and Dendukuri 2014}).
+
+{synoptline}
+{pstd}
+{cmd: Note 1} We recommend going through our published tutorial. Find it here: {browse "https://archpublichealth.biomedcentral.com/articles/10.1186/s13690-021-00747-5"}
+
+{pstd}
+{cmd: Note 2} The Stata do file to reproduce the examples in the tutorial can be found here: {browse "https://github.com/VNyaga/Metadta/blob/master/NyagaArbyn2022ArchPubHealth.do"}
+
 {marker options_table}{...}
 
 {synoptset 30 tabbed}{...}
@@ -55,6 +83,7 @@ covariate information; default is {cmd:sesp}{p_end}
 {synopt :{opt nomc}}do not perform {cmd:m}odel {cmd:c}omparison with likelihood-ratio tests comparison the specified model with other simpler models{p_end}
 
 {dlgtab:General}
+{synopt :{opt str:atify}}requests for a consolidated sub-analyses by the {opth by:(varname:byvar)} variable{p_end}
 {synopt :{opth label:(varname:[namevar=varname], [yearvar=varname])}}specifies that date be labelled by its name and/or year{p_end}
 {synopt :{opt noove:rall}}suppress the display of overall estimates in the itable and fplot{p_end}
 {synopt :{opt nosubg:roup}}suppress the display of the group estimates in the itable and fplot{p_end}
@@ -181,33 +210,14 @@ estimated{p_end}
 
 {synoptline}
 {p2colreset}{...}
-{marker description}{...}
-{title:Description}
-
-{pstd}
-{cmd:metadta} is implements the generalized linear model for the binomial family 
-with a logit link, i.e logistic regression for meta-analysis of diagnostic accuracy data. 
-The program presents the results in tables, forest plot and/or SROC curve.  
-
-{pstd}
-The program fits fixed or a random-effects model. The data can be from independent studies; where each row contains data from seperate studies, 
-comparative studies; where each study has two rows of data. The first row has the index data and the second row has the control data. The data can also be paired, 
-where each row contains data from each seperation cross-tabulation between the index and the control test.
-
+{marker remarks}{...}
+{title:Remarks}
 {pstd}
 {helpb meqrlogit} is used for the random-effects model and {helpb binreg} for the fixed-effects model. 
 The binomial distribution is used to model the within-study variability ({help metapreg##Hamza2008:Hamza et al. 2008}).
 Studies with less variability have more influence in the pooled estimate since they contribute more to the likelihhod function. The 
 weighting is implicit and parameter estimation is an iterative procedure. Therefore, even though the forest plot never displays
-weights for the individual studies, weighting is indeed done. The logistic regression requires at least two studies to run.
-
-
-{pstd}
-The logistic regression framework allows meta-regression. When data is from comparative or paired studies, either the proportions
-or the relative ratios can be tabulated and/or plotted. 
-
-{pstd}
-When there are no covariates, heterogeneity is also quantified using the I-squared measure({help metapreg##ZD2014:Zhou and Dendukuri 2014}).
+weights for the individual studies, weighting is indeed done. 
 
 {marker options}{...}
 {title:Options}
@@ -404,6 +414,10 @@ confounding variables.  The standard-errors, Z-statistic and p-value are in the 
 {cmd: noitable} suppress display of the table containing the studies and the summary estimates. By default, the table presented. 
 
 {dlgtab:General}
+
+{phang}
+{opt stratify} requests for a consolidated sub-analyses by the {opth by:(varname:byvar)} variable. The results are 
+presented in one table and one forest plot 
 
 {phang}
 {cmd: label(varname[namevar=varname], [yearvar=varname])} specifies that date be labelled by its name and/or year.  
@@ -639,23 +653,6 @@ bubble is identified by a number which is the row number of the submitted data.
 {cmd: graphregion(color(white))}. To change the order of the legend, the elements in the SROC plot are drawn in the following order; summary points, confidence cross,
 sroc curve, confidence region, prediction region, observed data, the study bubbles and finaly the identifiers for the bubbles.
 
-
-{marker remarks}{...}
-{title:Remarks}
-
-{pstd}
-With {help metadta}, a fixed-effects or a random-effects model can be fitted. A random-effects model accounts for correlation between logit sentivity and specificity 
-and allows the quantification of heterogeneity between studies. On the other hand, a fixed-effects model assuming homogeneous studies or whenever 
-the random-effects model cannot be fitted, i.e when there are less than {cmd:3} studies.
-
-{pstd}
-In fitting the logistic regression, {helpb meqrlogit} is used for the random-effects model and {helpb binreg} for the fixed-effects model. 
-The binomial distribution is used to model the within-study variability ({help metadta##Hamza2008:Hamza et al. 2008}).
-Studies with less variability have more influence in the pooled estimate since they contribute more to the likelihhod function. The 
-weighting is not explicit because parameter estimation is an iterative procedure. Therefore, even though the forest plot does not display
-weights for the individual studies, weighting is indeed done. The logistic regression requires at least two studies to run.
-
-
 {marker examples}{...}
 {title:Examples}
 {marker example_one}{...}
@@ -714,7 +711,7 @@ With one categorical variable, different sroc curves each for every category is 
 via {cmd:soptions(...)} and {cmd:foptions(...)}. 
 
 {pmore2}
-{stata `"use "http://fmwww.bc.edu/repec/bocode/a/ascus.dta""':. use "http://fmwww.bc.edu/repec/bocode/a/ascus.dta"}
+{stata `"use "https://github.com/VNyaga/Metadta/blob/master/ascus.dta?raw=true""':. use "https://github.com/VNyaga/Metadta/blob/master/ascus.dta?raw=true"}
 {p_end}
 
 {pmore2}
@@ -753,7 +750,7 @@ via {cmd:soptions(...)} and {cmd:foptions(...)}.
 This example extends {help metadta##example_two_one:Example 2.1} by presenting the relative summary measures instead of the absolute measures.  
 
 {pmore2}
-{stata `"use "http://fmwww.bc.edu/repec/bocode/a/ascus.dta""':. use "http://fmwww.bc.edu/repec/bocode/a/ascus.dta"}
+{stata `"use "https://github.com/VNyaga/Metadta/blob/master/ascus.dta?raw=true""':. use "https://github.com/VNyaga/Metadta/blob/master/ascus.dta?raw=true"}
 {p_end}
 
 {pmore2}

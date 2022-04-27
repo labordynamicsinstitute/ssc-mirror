@@ -31,6 +31,7 @@ DATE:						DETAILS:
 11.05.2021					fixed dp = 4 for p-value, fixed dp=0 for df
 14.06.2021					Graph save issues
 17.06.2021					Subline fix
+15.10.2021					Subgroup analysis with superimposed graphs; stratify option
 
 */
 
@@ -47,6 +48,7 @@ version 14.0
 	syntax varlist(min=4) [if] [in],  /*tp fp fn tn tp2 fp2 fn2 tn2  */
 	STudyid(varname) /*Study Idenfier*/
 	[
+	STRatify  /*Stratified analysis, requires byvar()*/
 	LAbel(string asis) /*namevar=namevar, yearvar=yearvar*/
 	DP(integer 2) /*Decimal place*/
 	POWer(integer 0) /*Exponentiating power*/  
@@ -61,6 +63,7 @@ version 14.0
 	CImethod(string) /*ci method for the study proportions*/
 	noFPlot /*No forest plot*/
 	noITable /*No study specific summary table*/
+	noHTable /*No heterogeneity table*/
 	noMC /*No Model comparison - Saves time*/
 	PROGress /*See the model fitting*/
 	noSRoc /*No SROC*/
@@ -81,14 +84,16 @@ version 14.0
 	marksample touse, strok 
 	qui drop if !`touse'
 
-	tempvar rid se sp event total invtotal use id neolabel es lci uci df uniq rowid
-	tempname logodds absout rrout sptestnl setestnl selogodds absoutse serrout splogodds absoutsp ///
-		sprrout coefmat coefvar BVar WVar Esigma omat isq2 Isq2 bghet bshet lrtestp V dftestnl ptestnl se_lrtest sp_lrtest samtrix
+	tempvar rid se sp event total invtotal use id neolabel es lci uci df uniq rowid obsid
+	tempname logodds absout logoddsi absouti rrout rrouti sptestnl setestnl selogodds absoutse selogoddsi absoutsei serrout serrouti splogodds absoutsp splogoddsi absoutspi ///
+		sprrout sprrouti coefmat coefvar BVar BVari WVar Esigma omat isq2 Isq2 bghet bshet lrtestp V Vi dftestnl ptestnl se_lrtest sp_lrtest samtrix
 	
 	if _by() {
 		global by_index_ = _byindex()
-		if "`graph'" == "" & "$by_index_" == "1" {
+		if ("`fplot'" == "" | "`sroc'" == "") & "$by_index_" == "1" {
 			cap graph drop _all
+			global fplotname = 0
+			global srocname = 0
 		}
 	}
 	else {
@@ -208,12 +213,6 @@ version 14.0
 			di as err "Conflict in cveffect(`cveffect') & interaction(`interaction')"
 			exit
 		}
-	}
-	//Number of studies in the analysis
-	qui {
-		egen `uniq' = group(`studyid')
-		summ `uniq'
-		local Nuniq = r(max)
 	}
 
 	tokenize `varlist'
@@ -339,26 +338,6 @@ version 14.0
 		local nusp = "`nusp'"
 	}
 	
-	di as res _n "*********************************** Fitted model ***************************************" 
-	
-	tokenize `varlist'
-	di "{phang} `1' ~ binomial(logit(se), `1' + `4'){p_end}"
-	di "{phang} `2' ~ binomial(logit(sp), `2' + `3'){p_end}"
-	di "{phang} logit(se) = `nuse'{p_end}"
-	di "{phang} logit(sp) = `nusp'{p_end}"
-	
-	if "`model'" == "random" {	
-		di "{phang}`studyid'_se, `studyid'_sp ~ biv.normal(0, sigma){p_end}"
-	}
-	if "`paired'" != "" {
-		di "{phang} Index = 0 if Comparator{p_end}"
-		di "{phang} Index = 1 if Index{p_end}"
-	}
-	
-	di "{phang}" as txt "Number of observations = " as res "`=r(N)'{p_end}"
-	di "{phang}" as txt "Number of studies = " as res "`Nuniq'{p_end}"
-	
-	
 	//=======================================================================================================================
 	//=======================================================================================================================
 	tempfile master
@@ -434,6 +413,7 @@ version 14.0
 		qui gen `index' = "Yes"
 		qui replace `index' = "No" if `comparator'
 	}
+	
 	//byvar
 	if "`by'" != "" {
 		cap confirm string variable `by'
@@ -441,15 +421,11 @@ version 14.0
 			di as error "The by() variable should be a string"
 			exit, _rc
 		}
-		if strpos(`"`varlist'"', "`by'") == 0 {
-			tempvar byvar
-			my_ncod `byvar', oldvar(`by')
-			drop `by'
-			rename `byvar' `by'
-		}
 	}
+
 	
 	buildregexpr `varlist', cveffect(`cveffect') interaction(`interaction') se(`se') sp(`sp') `alphasort' `paired'  index(`index') 
+	
 	
 	local regexpression = r(regexpression)
 	local seregexpression = r(seregexpression)
@@ -472,6 +448,17 @@ version 14.0
 		local typevarx  
 	}
 	
+	//Ensure varx in comparative is bi-categorical
+	if "`comparative'" != "" {
+		qui label list `varx'
+		local ncat = r(max)
+		cap assert `ncat' == 2
+		if _rc != 0 {
+			di as error "Comparative analysis requires that `varx' only has 2 categories but found `ncat'"
+			exit _rc
+		} 
+	}
+	
 	local pcont: word count `contreg'
 
 	if `pcont' > 0 {
@@ -479,7 +466,7 @@ version 14.0
 	}
 		
 	if ("`catreg'" != " " | "`typevarx'" =="i")  {
-		di "{phang}Base levels{p_end}"
+		di as res "*********************************** Base levels ***************************************" 
 		di as txt "{pmore} Variable  -- Base Level{p_end}"
 		
 		/*if "`typevarx'" =="i" & strpos("`catreg'", "`varx'") == 0 {
@@ -498,7 +485,36 @@ version 14.0
 			}
 		}
 	}
-
+	// encode the byvar if not encoded
+	if "`by'" != "" {
+		cap confirm string variable `by'
+		if _rc == 0 {
+			tempvar byvar
+			my_ncod `byvar', oldvar(`by')
+			drop `by'
+			rename `byvar' `by'
+		}
+		else {
+			local byvar  "`by'"
+		}
+		*How many times to loop
+		qui label list `by'
+		local nlevels = r(max)
+	}
+	*Check by is active & that there are more than 1 levels
+	if "`stratify'" != "" {
+		if "`by'" == "" {
+			di as error "The by() variable needs to be specified in stratified analysis"
+			exit			
+		}
+		else {
+			if `nlevels' < 2 {
+				di as error "The by() variable should have atleast 2 categories in stratified analysis"	
+				exit
+			}
+		}
+	}
+	
 	if "`subgroup'" == "" & ("`catreg'" != "" | "`typevarx'" =="i" ) {
 		if "`outplot'" == "abs" {
 			if "`typevarx'" =="i" {
@@ -533,314 +549,499 @@ version 14.0
 	else {
 		local echo qui
 	}
-	`echo' madamodel `event' `total' `se' `sp', cov(`cov') modelopts(`modelopts') model(`model') regexpression(`regexpression') sid(`studyid') `comparative' idpair(`varx') level(`level') 
-
-	estimates store metadta_modest
-
-	cap drop _ESAMPLE
-	qui gen _ESAMPLE = e(sample)
-
-	mat `coefmat' = e(b)
-	mat `coefvar' = e(V)
-
-	estcovar, matrix(`coefmat') model(`model') covtype(`cov') 
-	local kcov = r(k) //#covariance parameters
-	mat `BVar' = r(BVar)  //Between var-cov
-	mat colnames `BVar' = logitse logitsp
-	mat rownames `BVar' = logitse logitsp
 	
-	if("`sumtable'" != "") {
-		local loddslabel = "Log_odds"
-		local abslabel = "Proportion"
-		local rrlabel = "Rel_Ratio"
+	*Loop should begin here
+	if "`stratify'" == "" {
+		local nlevels = 0
 	}
 
-	local S_1 = e(N) -  e(k) //df
-	local S_2 = . //between study heterogeneity chi2
-	local S_3 = . // between study heterogeneity pvalues
-	local S_7 = . //Isq
-	local S_71 = . //Isqse
-	local S_72 = . //Isqsp
-	local S_81 = . //Full vs Null chi2 -- se
-	local S_91 = . //Full vs Null  pvalue -- se
-	local S_891 = . //Full vs Null  df -- se
-	local S_82 = . //Full vs Null chi2 -- sp
-	local S_92 = . //Full vs Null  pvalue -- sp
-	local S_892 = . //Full vs Null  df -- sp
+	local i = 1
+	local modeli = "`model'"
+	local modeloptsi = "`modelopts'"
+	
+	//Should run atleast once
+	while `i' < `=`nlevels' + 2' {
+	
+		*Stratify except the last loop for the overall
+		if (`i' < `=`nlevels' + 1') & ("`stratify'" != "") {
+			local strataif `"if `by' == `i'"'
+			local ilab:label `by' `i'
+			local stratalab `":`by' = `ilab'"'
+			
+			*Check if there is enough data in each strata
+			//Number of obs in the analysis
+			qui egen `obsid' = group(`rid') if `by' == `i'
+			qui summ `obsid'
+			local Nobs= r(max)
+			drop `obsid'	
 
-	//Consider a reduced model	
-	if "`model'" == "random" {
-		qui estimates restore metadta_modest
-		local S_2 = e(chi2_c)
-		local S_3 = e(p_c)
-	}
-	
-	if `p' == 0 & "`paired'" == ""{
-		/*Compute I2*/
-		mat `Esigma' = J(2, 2, 0) /*Expected within study variance*/
-					
-		qui gen `invtotal' = 1/`total'
-		qui summ `invtotal' if `se'
-		local invtotalse = r(sum)
-		
-		qui summ `invtotal' if `sp' 
-		local invtotalsp = r(sum)
-		local K = r(N)
-		
-		mat `Esigma'[1, 1] = (exp(`BVar'[1, 1]*0.5 + `coefmat'[1, 1]) + exp(`BVar'[1, 1]*0.5 - `coefmat'[1, 1]) + 2)*(1/(`K'))*`invtotalse'
-		mat `Esigma'[2, 2] = (exp(`BVar'[2, 2]*0.5 + `coefmat'[1, 2]) + exp(`BVar'[2, 2]*0.5 - `coefmat'[1, 2]) + 2)*(1/(`K'))*`invtotalsp'
-		
-		local detEsigma = `Esigma'[1, 1]*`Esigma'[2, 2]
-		
-		local detSigma = (1 - (`BVar'[2, 1]/sqrt(`BVar'[1, 1]*`BVar'[2, 2]))^2)*`BVar'[1, 1]*`BVar'[2, 2]
-		
-		local IsqE = sqrt(`detSigma')/(sqrt(`detEsigma') + sqrt(`detSigma'))
-		
-		local S_7 = `IsqE'
-		local S_71 = (`BVar'[1, 1]/(`Esigma'[1, 1] + `BVar'[1, 1]))  //se
-		local S_72 = (`BVar'[2, 2]/(`Esigma'[2, 2] + `BVar'[2, 2])) //sp
-	}
-	if `p' > 0 & "`mc'" == "" {
-		forvalues i=1/2 {
-			local S_9`i' = .
-			local S_8`i' = .
-			local S_89`i' = .
-		}
-		
-		di "*********************************** ************* ***************************************"
-		di as txt "Just a moment - Fitting reduced models for comparisons"
-		if "`interaction'" !="" {
-			local confariates "`confounders'"
-		}
-		if "`interaction'" ==""  {
-			local confariates "`regressors'"
-		}
-		local initial 1
-		foreach c of local confariates {
-			
-			/*if "`interaction'" !="" {
-				local xterm = "`c'#`idpair'"
-				local xnu = "`c'*`idpair'"
-			}
-			else {
-				local xterm = "`c'"
-				local xnu = "`c'"
-			}*/
-			if "`cveffect'" != "sp" {
-				if "`interaction'" =="sesp" | "`interaction'" =="se" {
-					local xterm = "`c'#`varx'"
-					local xnu = "`c'*`varx'"
-				}
-				else {
-					local xterm = "`c'"
-					local xnu = "`c'"
-				}
-				//Sensivitivity terms
-				local nullse		
-				foreach term of local seregexpression {
-					if ("`term'" != "i.`xterm'#c.`se'")&("`term'" != "c.`xterm'#c.`se'")&("`term'" != "`xterm'#c.`se'") {
-						local nullse "`nullse' `term'"
-					} 
-				}
-				local nullnuse = subinstr("`nuse'", "+ `xnu'", "", 1)
-				di as res _n "Ommitted : `xnu' in logit(se)"
-				di as res "{phang} logit(se) = `nullnuse'{p_end}"
-				di as res "{phang} logit(sp) = `nusp'{p_end}"
-				
-				local nullse = "`nullse' `spregexpression'"
-				`echo' madamodel `event' `total' `se' `sp',  cov(`cov') modelopts(`modelopts') model(`model') regexpression(`nullse') sid(`studyid') `comparative' idpair(`varx') level(`level') 
-				estimates store metadta_Nullse
-				
-				//LR test the model
-				qui lrtest metadta_modest metadta_Nullse
-				local selrp :di %10.`dp'f chi2tail(r(df), r(chi2))
-				local selrchi2 = r(chi2)
-				local selrdf = r(df)
-				estimates drop metadta_Nullse
-				
-				if `initial'  {
-					mat `se_lrtest' = [`selrchi2', `selrdf', `selrp']
-				}
-				else {
-					mat `se_lrtest' = [`selrchi2', `selrdf', `selrp'] \ `se_lrtest'
-				}
-				local rownameslrse "`rownameslrse' `xnu'"
-			}
-			if "`cveffect'" != "se" {
-				if "`interaction'" =="sesp" | "`interaction'" =="sp" {
-					local xterm = "`c'#`varx'"
-					local xnu = "`c'*`varx'"
-				}
-				else {
-					local xterm = "`c'"
-					local xnu = "`c'"
-				}
-				//Specificity terms
-				local nullsp		
-				foreach term of local spregexpression {
-					if ("`term'" != "i.`xterm'#c.`sp'")&("`term'" != "c.`xterm'#c.`sp'")&("`term'" != "`xterm'#c.`sp'") {
-						local nullsp "`nullsp' `term'"
-					} 
-				}
-				
-				local nullnusp = subinstr("`nusp'", "+ `xnu'", "", 1)
-				di as res _n "Ommitted : `xnu' in logit(sp)"
-				di as res "{phang} logit(se) = `nuse'{p_end}"
-				di as res "{phang} logit(sp) = `nullnusp'{p_end}"
-				
-				local nullsp = "`seregexpression' `nullsp'" 
-				`echo' madamodel `event' `total' `se' `sp', cov(`cov') modelopts(`modelopts') model(`model') regexpression(`nullsp') sid(`studyid') `comparative' idpair(`varx') level(`level') 
-				estimates store metadta_Nullsp
-				
-				//LR test the model
-				qui lrtest metadta_modest metadta_Nullsp
-				local splrp :di %10.`dp'f chi2tail(r(df), r(chi2))
-				local splrchi2 = r(chi2)
-				local splrdf = r(df)
-				estimates drop metadta_Nullsp
-				
-				if `initial' {
-					mat `sp_lrtest' = [`splrchi2', `splrdf', `splrp']
-				}
-				else {
-					mat `sp_lrtest' = [`splrchi2', `splrdf', `splrp'] \ `sp_lrtest'
-				}
-				local rownameslrsp "`rownameslrsp' `xnu'"
-			}
-			
-			local initial 0
-		}
-		if "`cveffect'" != "sp" { 
-			mat rownames `se_lrtest' = `rownameslrse'
-			mat colnames `se_lrtest' =  chi2 df p
-		}
-		if "`cveffect'" != "se" {
-			mat rownames `sp_lrtest' = `rownameslrsp'
-			mat colnames `sp_lrtest' = chi2 df p
-		}
-		//Ultimate null model
-		if `p' > 0 {
-			if "`cveffect'" != "sp" {
-				local nullse `se'		
-				local nullse = "`nullse' `spregexpression'"
-				`echo' madamodel `event' `total' `se' `sp',  cov(`cov') modelopts(`modelopts') model(`model') regexpression(`nullse') sid(`studyid') `comparative' idpair(`varx') level(`level') 
-				estimates store metadta_Nullse
-				
-				qui lrtest metadta_modest metadta_Nullse
-				local S_91 :di %10.`dp'f chi2tail(r(df), r(chi2))
-				local S_81 = r(chi2)
-				local S_891 = r(df)
-				estimates drop metadta_Nullse
-			}
-			if "`cveffect'" != "se" {
-				local nullsp `sp'
-				local nullsp = "`seregexpression' `nullsp'"
-				`echo' madamodel `event' `total' `se' `sp',  cov(`cov') modelopts(`modelopts') model(`model') regexpression(`nullsp') sid(`studyid') `comparative' idpair(`varx') level(`level') 
-				estimates store metadta_Nullsp
-				
-				qui lrtest metadta_modest metadta_Nullsp
-				local S_92 :di %10.`dp'f chi2tail(r(df), r(chi2))
-				local S_82 = r(chi2)
-				local S_892 = r(df)
-				estimates drop metadta_Nullsp
-			}
-		}
-	}
-	
-	//LOG ODDS
-	if ("`sumtable'" == "all") |(strpos("`sumtable'", "logodds") != 0){
-	
-		estp, estimates(metadta_modest) sumstat(`loddslabel') depname(Effect) interaction(`interaction') cveffect(`cveffect') ///
-			catreg(`catreg') contreg(`contreg') se(`se') level(`level') dp(`dp') varx(`varx') typevarx(`typevarx') by(`by') regexpression(`regexpression') `paired'
-
-	}
-	else {
-		estp, estimates(metadta_modest) sumstat(`loddslabel') depname(Effect) interaction(`interaction') cveffect(`cveffect') ///
-			catreg(`catreg') contreg(`contreg') se(`se') level(`level') noprint  varx(`varx') typevarx(`typevarx') by(`by') regexpression(`regexpression') `paired'
-	}
-	mat `V' = r(Vmatrix) //var-cov for catreg & overall 
-	mat `logodds' = r(outmatrix)
-	mat `selogodds' = r(outmatrixse)
-	mat `splogodds' = r(outmatrixsp)
-	
-	if "`interaction'" == "" {
-		//names of the V matrix
-		local rnames :rownames `V'
-		local nrowsv = rowsof(`V')
-		forvalues r = 1(1)`nrowsv' {
-		//Labels
-			local rname`r':word `r' of `rnames'
-			tokenize `rname`r'', parse("#")					
-			
-			local left = "`1'"
-			local right = "`3'"
-			
-			tokenize `left', parse(.)
-			local parm = substr("`1'", 1, 1)
-			if `parm' == 0 {
-				local eqlab "sp"
-			}
-			else {
-				local eqlab "se"
-			}
-			
-			if "`right'" == "" {
-				local lab = "Overall"
-			}
-			else {
-				tokenize `right', parse(.)
-				local rightv = "`3'"
-				local rightlabel = substr("`1'", 1, 1)
-			
-				local rlab:label `rightv' `rightlabel'
-				local rlab = ustrregexra("`rlab'", " ", "-")
-				local lab = "`rightv'_`rlab'"
-			}
-			
-			local vnames = "`vnames' `eqlab':`lab'"	
-		}
-		mat rownames `V' = `vnames'
-		mat colnames `V' = `vnames'
-	}
-	
-	//ABS
-	if ("`sumtable'" == "all") |(strpos("`sumtable'", "abs") != 0) {
-		estp, estimates(metadta_modest) sumstat(`abslabel') depname(Effect) interaction(`interaction') cveffect(`cveffect') ///
-			catreg(`catreg') contreg(`contreg')  se(`se') level(`level') expit power(`power') dp(`dp') varx(`varx') ///
-			typevarx(`typevarx') by(`by') regexpression(`regexpression') `paired'
-	}
-	else {
-		estp, estimates(metadta_modest) sumstat(`abslabel') depname(Effect) interaction(`interaction') ///
-			cveffect(`cveffect') catreg(`catreg') contreg(`contreg') se(`se') level(`level') expit noprint  ///
-			varx(`varx') typevarx(`typevarx') by(`by') regexpression(`regexpression') `paired'
-	}
-	mat `absout' = r(outmatrix)
-	mat `absoutse' = r(outmatrixse)
-	mat `absoutsp' = r(outmatrixsp)
-
-	//RR
-	if "`catreg'" != " " | "`typevarx'" == "i" {
-		if (("`sumtable'" == "all") |(strpos("`sumtable'", "rr") != 0)) & (`p' > 0 | "`paired'" !="") {
-			estr, estimates(metadta_modest) sumstat(`rrlabel') `comparative' cveffect(`cveffect') ///
-			catreg(`catreg') se(`se') level(`level') power(`power') dp(`dp') varx(`varx') ///
-			typevarx(`typevarx') by(`by') regexpression(`regexpression') `paired'
+			//Number of studies in the analysis
+			qui egen `uniq' = group(`studyid') if `by' == `i'
+			qui summ `uniq'
+			local Nuniq = r(max)
+			drop `uniq'	
 		}
 		else {
-			estr, estimates(metadta_modest) sumstat(`rrlabel') `comparative' cveffect(`cveffect') ///
-			catreg(`catreg') se(`se') level(`level') power(`power') noprint varx(`varx') ///
-			typevarx(`typevarx') by(`by') regexpression(`regexpression') `paired'
+			//Nullify
+			local strataif 
+			local stratalab ": Full"
+			
+			//Number of obs in the analysis
+			qui count
+			local Nobs= r(N)
+			if "`paired'" != "" {
+				local Nobs = `Nobs'*0.25
+			}
+			else {
+				local Nobs = `Nobs'*0.5
+			}
+
+			qui egen `uniq' = group(`studyid')
+			qui summ `uniq'
+			local Nuniq = r(max)
+			drop `uniq'
+		}
+	
+		if `Nobs' < 3 & "`model'" == "random"  {
+			local modeli fixed //If less than 3 studies, use fixed model
+			if "`modelopts'" != "" {
+				local modeloptsi
+				di as res _n  "Warning: Model options ignored."
+				di as res _n  "Warning: Consider specifying options for the fixed-effects model."
+			}
+		}
+		//Implement this check
+		/*if "`comparative'" != "" {
+			cap assert `=`Nobs'/`Nuniq'' == 2 
+			if _rc != 0 {
+				di as error "Comparative analysis requires 2 observations per study"
+				exit _rc
+			}
+		}*/
+		
+		di as res _n "*********************************** Fitted model`stratalab' ***************************************" 
+		
+		tokenize `varlist'
+		di "{phang} `1' ~ binomial(logit(se), `1' + `4'){p_end}"
+		di "{phang} `2' ~ binomial(logit(sp), `2' + `3'){p_end}"
+		di "{phang} logit(se) = `nuse'{p_end}"
+		di "{phang} logit(sp) = `nusp'{p_end}"
+		
+		if "`modeli'" == "random" {	
+			di "{phang}`studyid'_se, `studyid'_sp ~ biv.normal(0, sigma){p_end}"
+		}
+		if "`paired'" != "" {
+			di "{phang} Index = 0 if Comparator{p_end}"
+			di "{phang} Index = 1 if Index{p_end}"
+		}
+		
+		di "{phang}" as txt "Number of observations = " as res "`Nobs'{p_end}"
+		di "{phang}" as txt "Number of studies = " as res "`Nuniq'{p_end}"
+		
+	
+		*Run model if more than 1 study
+		if `Nobs' > 1 {
+			`echo' madamodel `event' `total' `se' `sp' `strataif', cov(`cov') modelopts(`modeloptsi') model(`modeli') regexpression(`regexpression') sid(`studyid') `comparative' idpair(`varx') level(`level') 
+
+			estimates store metadta_modest
+
+			cap drop _ESAMPLE
+			qui gen _ESAMPLE = e(sample)
+			
+			mat `coefmat' = e(b)
+			mat `coefvar' = e(V)
 			
 		}
-		mat `rrout' = r(outmatrix)
-		mat `serrout' = r(outmatrixse)
-		mat `sprrout' = r(outmatrixsp)
-		
-		local inltest = r(inltest)
-		if "`inltest'" == "yes" {
-			mat `setestnl' = r(setestnl) //Equality of RR
-			mat `sptestnl' = r(sptestnl) 
+		else {
+			mat `coefmat' = (0 , 0)
+			mat `coefvar' = e(V)
 		}
+
+		estcovar, matrix(`coefmat') model(`modeli') covtype(`cov') 
+		local kcov = r(k) //#covariance parameters
+		mat `BVari' = r(BVar)  //Between var-cov
+		mat colnames `BVari' = logitse logitsp
+		mat rownames `BVari' = logitse logitsp
+		
+		if("`sumtable'" != "") {
+			local loddslabel = "Log_odds"
+			local abslabel = "Proportion"
+			local rrlabel = "Rel_Ratio"
+		}
+		if `Nobs' > 1 {
+			local S_1 = e(N) -  e(k) //df
+		}
+		else {
+			local S_1 = .
+		}
+		local S_2 = . //between study heterogeneity chi2
+		local S_3 = . // between study heterogeneity pvalues
+		local S_7 = . //Isq
+		local S_71 = . //Isqse
+		local S_72 = . //Isqsp
+		local S_81 = . //Full vs Null chi2 -- se
+		local S_91 = . //Full vs Null  pvalue -- se
+		local S_891 = . //Full vs Null  df -- se
+		local S_82 = . //Full vs Null chi2 -- sp
+		local S_92 = . //Full vs Null  pvalue -- sp
+		local S_892 = . //Full vs Null  df -- sp
+
+		//Consider a reduced model	
+		if "`model'" == "random" {
+			qui estimates restore metadta_modest
+			local S_2 = e(chi2_c)
+			local S_3 = e(p_c)
+		}
+	
+		if `p' == 0 & "`paired'" == "" {
+			/*Compute I2*/
+			mat `Esigma' = J(2, 2, 0) /*Expected within study variance*/
+			
+			if "`strataif'" != "" {
+				qui gen `invtotal' = 1/`total'
+				
+				qui summ `invtotal' if `se' & `by' == `i'
+				local invtotalse = r(sum)
+				
+				qui summ `invtotal' if `sp' & `by' == `i'
+				local invtotalsp = r(sum)
+				drop `invtotal'
+			}
+			else {
+				qui gen `invtotal' = 1/`total'
+				qui summ `invtotal' if `se'
+				local invtotalse = r(sum)
+				
+				qui summ `invtotal' if `sp' 
+				local invtotalsp = r(sum)
+			}
+
+			mat `Esigma'[1, 1] = (exp(`BVari'[1, 1]*0.5 + `coefmat'[1, 1]) + exp(`BVari'[1, 1]*0.5 - `coefmat'[1, 1]) + 2)*(1/(`Nuniq'))*`invtotalse'
+			mat `Esigma'[2, 2] = (exp(`BVari'[2, 2]*0.5 + `coefmat'[1, 2]) + exp(`BVari'[2, 2]*0.5 - `coefmat'[1, 2]) + 2)*(1/(`Nuniq'))*`invtotalsp'
+			
+			local detEsigma = `Esigma'[1, 1]*`Esigma'[2, 2]
+			
+			local detSigma = (1 - (`BVari'[2, 1]/sqrt(`BVari'[1, 1]*`BVari'[2, 2]))^2)*`BVari'[1, 1]*`BVari'[2, 2]
+			
+			local IsqE = sqrt(`detSigma')/(sqrt(`detEsigma') + sqrt(`detSigma'))
+			
+			local S_7 = `IsqE'
+			local S_71 = (`BVari'[1, 1]/(`Esigma'[1, 1] + `BVari'[1, 1]))  //se
+			local S_72 = (`BVari'[2, 2]/(`Esigma'[2, 2] + `BVari'[2, 2])) //sp
+		}
+		if `p' > 0 & "`mc'" == "" {
+			forvalues j=1/2 {
+				local S_9`j' = .
+				local S_8`j' = .
+				local S_89`j' = .
+			}
+			
+			di "*********************************** ************* ***************************************"
+			di as txt "Just a moment - Fitting reduced models for comparisons"
+			if "`interaction'" !="" {
+				local confariates "`confounders'"
+			}
+			if "`interaction'" ==""  {
+				local confariates "`regressors'"
+			}
+			local initial 1
+			foreach c of local confariates {
+				if "`cveffect'" != "sp" {
+					if "`interaction'" =="sesp" | "`interaction'" =="se" {
+						local xterm = "`c'#`varx'"
+						local xnu = "`c'*`varx'"
+					}
+					else {
+						local xterm = "`c'"
+						local xnu = "`c'"
+					}
+					//Sensivitivity terms
+					local nullse		
+					foreach term of local seregexpression {
+						if ("`term'" != "i.`xterm'#c.`se'")&("`term'" != "c.`xterm'#c.`se'")&("`term'" != "`xterm'#c.`se'") {
+							local nullse "`nullse' `term'"
+						} 
+					}
+					local nullnuse = subinstr("`nuse'", "+ `xnu'", "", 1)
+					di as res _n "Ommitted : `xnu' in logit(se)"
+					di as res "{phang} logit(se) = `nullnuse'{p_end}"
+					di as res "{phang} logit(sp) = `nusp'{p_end}"
+					
+					local nullse = "`nullse' `spregexpression'"
+					`echo' madamodel `event' `total' `se' `sp',  cov(`cov') modelopts(`modelopts') model(`model') regexpression(`nullse') sid(`studyid') `comparative' idpair(`varx') level(`level') 
+					estimates store metadta_Nullse
+					
+					//LR test the model
+					qui lrtest metadta_modest metadta_Nullse
+					local selrp :di %10.`dp'f chi2tail(r(df), r(chi2))
+					local selrchi2 = r(chi2)
+					local selrdf = r(df)
+					estimates drop metadta_Nullse
+					
+					if `initial'  {
+						mat `se_lrtest' = [`selrchi2', `selrdf', `selrp']
+					}
+					else {
+						mat `se_lrtest' = [`selrchi2', `selrdf', `selrp'] \ `se_lrtest'
+					}
+					local rownameslrse "`rownameslrse' `xnu'"
+				}
+				if "`cveffect'" != "se" {
+					if "`interaction'" =="sesp" | "`interaction'" =="sp" {
+						local xterm = "`c'#`varx'"
+						local xnu = "`c'*`varx'"
+					}
+					else {
+						local xterm = "`c'"
+						local xnu = "`c'"
+					}
+					//Specificity terms
+					local nullsp		
+					foreach term of local spregexpression {
+						if ("`term'" != "i.`xterm'#c.`sp'")&("`term'" != "c.`xterm'#c.`sp'")&("`term'" != "`xterm'#c.`sp'") {
+							local nullsp "`nullsp' `term'"
+						} 
+					}
+					
+					local nullnusp = subinstr("`nusp'", "+ `xnu'", "", 1)
+					di as res _n "Ommitted : `xnu' in logit(sp)"
+					di as res "{phang} logit(se) = `nuse'{p_end}"
+					di as res "{phang} logit(sp) = `nullnusp'{p_end}"
+					
+					local nullsp = "`seregexpression' `nullsp'" 
+					`echo' madamodel `event' `total' `se' `sp', cov(`cov') modelopts(`modelopts') model(`model') regexpression(`nullsp') sid(`studyid') `comparative' idpair(`varx') level(`level') 
+					estimates store metadta_Nullsp
+					
+					//LR test the model
+					qui lrtest metadta_modest metadta_Nullsp
+					local splrp :di %10.`dp'f chi2tail(r(df), r(chi2))
+					local splrchi2 = r(chi2)
+					local splrdf = r(df)
+					estimates drop metadta_Nullsp
+					
+					if `initial' {
+						mat `sp_lrtest' = [`splrchi2', `splrdf', `splrp']
+					}
+					else {
+						mat `sp_lrtest' = [`splrchi2', `splrdf', `splrp'] \ `sp_lrtest'
+					}
+					local rownameslrsp "`rownameslrsp' `xnu'"
+				}
+				
+				local initial 0
+			}
+			if "`cveffect'" != "sp" { 
+				mat rownames `se_lrtest' = `rownameslrse'
+				mat colnames `se_lrtest' =  chi2 df p
+			}
+			if "`cveffect'" != "se" {
+				mat rownames `sp_lrtest' = `rownameslrsp'
+				mat colnames `sp_lrtest' = chi2 df p
+			}
+			//Ultimate null model
+			if `p' > 0 {
+				if "`cveffect'" != "sp" {
+					local nullse `se'		
+					local nullse = "`nullse' `spregexpression'"
+					`echo' madamodel `event' `total' `se' `sp',  cov(`cov') modelopts(`modelopts') model(`model') regexpression(`nullse') sid(`studyid') `comparative' idpair(`varx') level(`level') 
+					estimates store metadta_Nullse
+					
+					qui lrtest metadta_modest metadta_Nullse
+					local S_91 :di %10.`dp'f chi2tail(r(df), r(chi2))
+					local S_81 = r(chi2)
+					local S_891 = r(df)
+					estimates drop metadta_Nullse
+				}
+				if "`cveffect'" != "se" {
+					local nullsp `sp'
+					local nullsp = "`seregexpression' `nullsp'"
+					`echo' madamodel `event' `total' `se' `sp',  cov(`cov') modelopts(`modelopts') model(`model') regexpression(`nullsp') sid(`studyid') `comparative' idpair(`varx') level(`level') 
+					estimates store metadta_Nullsp
+					
+					qui lrtest metadta_modest metadta_Nullsp
+					local S_92 :di %10.`dp'f chi2tail(r(df), r(chi2))
+					local S_82 = r(chi2)
+					local S_892 = r(df)
+					estimates drop metadta_Nullsp
+				}
+			}
+		}
+		
+		mat `isq2' = (`S_71', `S_7' \ `S_7', `S_72') //Isq
+		mat `Isq2' = (`S_7' , `S_71', `S_72')
+		mat colnames `Isq2' = Generalized logitse logitse
+		mat rownames `Isq2' = Overall
+		
+		mat `bghet' = (`S_81', `S_91',  `S_891' \  `S_82', `S_92' ,  `S_892' ) // Full vs Null 
+		mat colnames `bghet' = Chi2 pval df
+		mat rownames `bghet' = logitse logitsp
+		
+		mat `bshet' = (`S_2', `kcov', `S_3') // chisq re vs fe, df, pv re vs fe
+		mat colnames `bshet' = Chi2 df pval
+		mat rownames `bshet' = Overall
+	
+		if `Nobs' > 1 {
+			//Display heterogeneity
+			if "`modeli'" == "random" & "`htable'" == "" {
+				disphetab , `htable' dp(`dp') isq2(`isq2') bshet(`bshet')  bvar(`BVari') p(`p') 
+			}
+			
+			//LOG ODDS
+			if ("`sumtable'" == "all") |(strpos("`sumtable'", "logodds") != 0){
+			
+				estp, estimates(metadta_modest) sumstat(`loddslabel') depname(Effect) interaction(`interaction') cveffect(`cveffect') ///
+					catreg(`catreg') contreg(`contreg') se(`se') level(`level') dp(`dp') varx(`varx') typevarx(`typevarx') by(`by') regexpression(`regexpression') `paired'  `stratify'
+
+			}
+			else {
+				estp, estimates(metadta_modest) sumstat(`loddslabel') depname(Effect) interaction(`interaction') cveffect(`cveffect') ///
+					catreg(`catreg') contreg(`contreg') se(`se') level(`level') noprint  varx(`varx') typevarx(`typevarx') by(`by') regexpression(`regexpression') `paired' `stratify'
+			}
+			mat `Vi' = r(Vmatrix) //var-cov for catreg & overall 
+
+			mat `logoddsi' = r(outmatrix)
+			mat `selogoddsi' = r(outmatrixse)
+			mat `splogoddsi' = r(outmatrixsp)
+			
+			if "`interaction'" == "" {
+				//names of the V matrix
+				local vnames
+				local rnames :rownames `Vi'
+				local nrowsv = rowsof(`Vi')
+				forvalues r = 1(1)`nrowsv' {
+				//Labels
+					local rname`r':word `r' of `rnames'
+					tokenize `rname`r'', parse("#")					
+					
+					local left = "`1'"
+					local right = "`3'"
+					
+					tokenize `left', parse(.)
+					local parm = substr("`1'", 1, 1)
+					if `parm' == 0 {
+						local eqlab "sp"
+					}
+					else {
+						local eqlab "se"
+					}
+					
+					if "`right'" == "" {
+						local lab = "Overall"
+					}
+					else {
+						tokenize `right', parse(.)
+						local rightv = "`3'"
+						local rightlabel = substr("`1'", 1, 1)
+					
+						local rlab:label `rightv' `rightlabel'
+						local rlab = ustrregexra("`rlab'", " ", "-")
+						local lab = "`rightv'_`rlab'"
+					}
+					
+					local vnames = "`vnames' `eqlab':`lab'"	
+				}
+				mat rownames `Vi' = `vnames'
+				mat colnames `Vi' = `vnames'
+			}
+				
+			//ABS
+			if ("`sumtable'" == "all") |(strpos("`sumtable'", "abs") != 0) {
+				estp, estimates(metadta_modest) sumstat(`abslabel') depname(Effect) interaction(`interaction') cveffect(`cveffect') ///
+					catreg(`catreg') contreg(`contreg')  se(`se') level(`level') expit power(`power') dp(`dp') varx(`varx') ///
+					typevarx(`typevarx') by(`by') regexpression(`regexpression') `paired' `stratify'
+			}
+			else {
+				estp, estimates(metadta_modest) sumstat(`abslabel') depname(Effect) interaction(`interaction') ///
+					cveffect(`cveffect') catreg(`catreg') contreg(`contreg') se(`se') level(`level') expit noprint  ///
+					varx(`varx') typevarx(`typevarx') by(`by') regexpression(`regexpression') `paired' `stratify'
+			}
+			
+			mat `absouti' = r(outmatrix)
+			mat `absoutsei' = r(outmatrixse)
+			mat `absoutspi' = r(outmatrixsp)
+			
+			//RR
+			if "`catreg'" != " " | "`typevarx'" == "i"  {
+				if (("`sumtable'" == "all") |(strpos("`sumtable'", "rr") != 0)) & (`p' > 0 | "`paired'" !="") {
+					estr, estimates(metadta_modest) sumstat(`rrlabel') `comparative' cveffect(`cveffect') ///
+					catreg(`catreg') se(`se') level(`level') power(`power') dp(`dp') varx(`varx') ///
+					typevarx(`typevarx') by(`by') `stratify' regexpression(`regexpression') `paired'
+				}
+				else {
+					estr, estimates(metadta_modest) sumstat(`rrlabel') `comparative' cveffect(`cveffect') ///
+					catreg(`catreg') se(`se') level(`level') power(`power') noprint varx(`varx') ///
+					typevarx(`typevarx') by(`by') `stratify' regexpression(`regexpression') `paired'
+					
+				}
+				mat `rrouti' = r(outmatrix)
+				mat `serrouti' = r(outmatrixse)
+				mat `sprrouti' = r(outmatrixsp)
+				
+				local inltest = r(inltest)
+				if "`stratify'" != "" {
+					local inltest
+				}
+				if "`inltest'" == "yes" {
+					mat `setestnl' = r(setestnl) //Equality of RR
+					mat `sptestnl' = r(sptestnl) 
+				}
+			}
+			else {
+				local rr "norr"
+			}
+		}
+		*if one study
+		else { 
+			mat `absouti' = J(2, 6, 0)
+			mat `absoutsei' = J(1, 6, 0)
+			mat `absoutspi' = J(1, 6, 0)
+			
+			mat `rrouti' = J(2, 6, 1)
+			mat `serrouti' = J(1, 6, 1)
+			mat `sprrouti' = J(1, 6, 1)
+			
+			mat `Vi' = J(2, 2, 0)//var-cov for catreg & overall 
+			mat `logoddsi' = J(2, 6, 0)
+			mat `selogoddsi' = J(1, 6, 0)
+			mat `splogoddsi'	= J(1, 6, 0)	
+		}
+		
+		*Stack the matrices
+		if `i' == 1 {
+			mat `absout' =	`absouti'	
+			mat `absoutse' = `absoutsei'	
+			mat `absoutsp' = `absoutspi'
+			if "`rr'" == "" {
+				mat `rrout' =	`rrouti'
+				mat `serrout' = `serrouti'	
+				mat `sprrout' = `sprrouti'
+			}
+			mat `BVar' = `BVari'
+			mat `V' = `Vi' //var-cov for catreg & overall 
+			mat `logodds' = `logoddsi'
+			mat `selogodds' = `selogoddsi'
+			mat `splogodds' = `splogoddsi'		
+		}
+		else {
+			mat `absout' = `absout' \ `absouti'
+			mat `absoutse' = `absoutse' \ `absoutsei'
+			mat `absoutsp' =  `absoutsp' \ `absoutspi'
+			if "`rr'" == "" {
+				mat `rrout' = `rrout' \ `rrouti'
+				mat `serrout' = `serrout' \ `serrouti'
+				mat `sprrout' =  `sprrout' \ `sprrouti'
+			}
+			mat `BVar' = `BVar' \ `BVari'
+			mat `V' = `V' \ `Vi' 
+			mat `logodds' = `logodds' \ `logoddsi'
+			mat `selogodds' = `selogodds' \ `selogoddsi'
+			mat `splogodds' = `splogodds' \ `splogoddsi'
+		}
+		
+		
+		local ++i
 	}
+	*Loop should end here
 
 	//CI
 	if "`outplot'" == "rr" {
@@ -851,15 +1052,15 @@ version 14.0
 			macro shift
 			local confounders `*'*/
 			qui count
-			local NStudies = `=r(N)'*0.25
-			cap assert mod(88, 2) == 0 /*Check if the number of studies is half*/
+			local Nobs = `=r(N)'*0.25
+			cap assert mod(`Nobs', 2) == 0 /*Check if the number of studies is half*/
 			if _rc != 0 {
 				di as error "Some studies cannot be compared properly"
 				exit _rc, STATA
 			}
 			
 			sort `se' `regressors' `rid'
-			egen `id' = seq(), f(1) t(`NStudies') b(1) 
+			egen `id' = seq(), f(1) t(`Nobs') b(1) 
 			sort `id' `se' `varx'
 			widesetup `event' `total' `confounders', idpair(`varx') se(`se') sid(`id') `comparative'
 			gen `sp' = 1 - `se'
@@ -996,19 +1197,6 @@ version 14.0
 	if "`groupvar'" == "" {
 		local subgroup nosubgroup
 	}
-
-	mat `isq2' = (`S_71', `S_7' \ `S_7', `S_72') //Isq
-	mat `Isq2' = (`S_7' , `S_71', `S_72')
-	mat colnames `Isq2' = Generalized logitse logitse
-	mat rownames `Isq2' = Overall
-	
-	mat `bghet' = (`S_81', `S_91',  `S_891' \  `S_82', `S_92' ,  `S_892' ) // Full vs Null 
-	mat colnames `bghet' = Chi2 pval df
-	mat rownames `bghet' = logitse logitsp
-	
-	mat `bshet' = (`S_2', `kcov', `S_3') // chisq re vs fe, df, pv re vs fe
-	mat colnames `bshet' = Chi2 df pval
-	mat rownames `bshet' = Overall
 	
 	prep4show `id' `se' `use' `neolabel' `es' `lci' `uci', ///
 		sortby(`sortby') groupvar(`groupvar') df(`df') 	///
@@ -1041,7 +1229,7 @@ version 14.0
 		}
 		use "`master'", clear
 		sroc `varlist',  model(`model') selogodds(`selogodds') splogodds(`splogodds') v(`V') bvar(`BVar') ///
-		groupvar(`groupvar') cimethod(`cimethod') level(`level') p(`p') `soptions'
+		groupvar(`groupvar') cimethod(`cimethod') level(`level') p(`p') `soptions' `stratify'
 	}
 	
 	cap ereturn clear
@@ -1178,10 +1366,12 @@ cap program drop madamodel
 program define madamodel
 version 14.0
 
-	syntax varlist, [ cov(string) model(string) modelopts(string asis) regexpression(string) sid(varname) comparative idpair(varname) level(integer 95)]
+	syntax varlist [if], [ cov(string) model(string) modelopts(string asis) regexpression(string) sid(varname) comparative idpair(varname) level(integer 95)]
 		tokenize `varlist'	
+		
+		
 		if ("`model'" == "fixed") {
-			capture noisily binreg `1' `regexpression', noconstant n(`2') ml `modelopts' l(`level')
+			capture noisily binreg `1' `regexpression' `if', noconstant n(`2') ml `modelopts' l(`level')
 			local success = _rc
 		}
 		if ("`model'" == "random") {		
@@ -1196,7 +1386,7 @@ version 14.0
 			}
 			//First trial
 			#delim ;
-			capture noisily  meqrlogit (`1' `regexpression', noc )|| 
+			capture noisily  meqrlogit (`1' `regexpression' `if', noc )|| 
 			  (`sid': `3' `4', noc cov(`cov')),
 			  binomial(`2') `modelopts' l(`level');
 			#delimit cr 
@@ -1210,7 +1400,7 @@ version 14.0
 				while `try' < 3 & `converged' == 0 {
 				
 					#delim ;					
-					capture noisily  meqrlogit (`1' `regexpression', noc )|| 
+					capture noisily  meqrlogit (`1' `regexpression' `if', noc )|| 
 						(`sid': `3' `4', noc cov(`cov')) ,
 						binomial(`2') `modelopts' l(`level') refineopts(iterate(`=10 * `try''));
 					#delimit cr 
@@ -1224,7 +1414,7 @@ version 14.0
 			*Try matlog if still difficult
 			if (strpos(`"`modelopts'"', "matlog") == 0) & ((`converged' == 0) | (_rc != 0)) {
 				#delim ;
-				capture noisily  meqrlogit (`1' `regexpression', noc )|| 
+				capture noisily  meqrlogit (`1' `regexpression' `if', noc )|| 
 					(`sid': `3' `4', noc cov(`cov')),
 					binomial(`2') `modelopts' l(`level') refineopts(iterate(`=10 * `try'')) matlog;
 				#delimit cr
@@ -1465,8 +1655,53 @@ version 14.0
 		gsort `id' `se' 
 	}
 end	
+
+/*+++++++++++++++++++++++++	SUPPORTING FUNCTIONS: DISPHETAB +++++++++++++++++++++++++
+							Display table 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+cap program drop disphetab
+program define disphetab
+version 14.0
+#delimit ;
+syntax [, isq2(name) bshet(name) dp(integer 2) bvar(name)  p(integer 0)] ;
+	#delimit cr
+	
+	di as res  "****************************************************************************************"
+	local rho 		= `bvar'[1, 2]/sqrt(`bvar'[1, 1]*`bvar'[2, 2])
+	local tau2se 	= `bvar'[1, 1]
+	local tau2sp	= `bvar'[2, 2]
+	local tau2g		= (1 - (`bvar'[1, 2]/sqrt(`bvar'[1, 1]*`bvar'[2, 2]))^2)*`bvar'[1, 1]*`bvar'[2, 2]
+	di as txt "Between-study heterogeneity" 
+	di as txt _col(28) "rho" _cont
+	di as res _n _col(28) %5.`=`dp''f `rho' 
+	
+	di as txt  _col(28) "Tau.sq" _cont
+	if `p' == 0  {
+		di as txt _col(45) "I^2(%)" _cont
+		local isq2b  = `isq2'[1, 2]*100
+		local isq2se = `isq2'[1, 1]*100
+		local isq2sp = `isq2'[2, 2]*100
+	}			
+	di as txt _n  "Generalized" _cont	
+	di as res   _col(28) %5.`=`dp''f `tau2g' _col(45) %5.`=`dp''f `isq2b'  
+	di as txt  "Sensitivity" _cont	
+	di as res    _col(28) %5.`=`dp''f `tau2se' _col(45) %5.`=`dp''f `isq2se'  
+	di as txt  "Specificity" _cont
+	di as res    _col(28) %5.`=`dp''f `tau2sp' _col(45) %5.`=`dp''f `isq2sp'
+
+	di as txt  _col(30) "Chi2"  _skip(8) "degrees of" _cont
+	di as txt _n  _col(28) "statistic" 	_skip(6) "freedom"      _skip(8)"p-val"   _cont
+	
+	local chisq = `bshet'[1, 1]
+	local df 	= `bshet'[1, 2]
+	local pv 	= `bshet'[1, 3]	
+			
+	di as txt _n "LR Test: RE vs FE model" _cont
+	di as res _col(25) %10.`=`dp''f `chisq' _col(45) `df' _col(52) %10.4f `pv'  
+	
+end
 /*+++++++++++++++++++++++++	SUPPORTING FUNCTIONS: DISPTAB +++++++++++++++++++++++++
-							Prepare data for display table and graph
+							Display table 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 cap program drop disptab
 program define disptab
@@ -1561,50 +1796,7 @@ version 14.0
 			}
 		}
 	}
-
-	if (`p' > 0 ) | ("`model'" =="random") {
-		di as res  "****************************************************************************************"
-		
-		if "`model'" =="random" {			
-			local rho 		= `bvar'[1, 2]/sqrt(`bvar'[1, 1]*`bvar'[2, 2])
-			local tau2se 	= `bvar'[1, 1]
-			local tau2sp	= `bvar'[2, 2]
-			local tau2g		= (1 - (`bvar'[1, 2]/sqrt(`bvar'[1, 1]*`bvar'[2, 2]))^2)*`bvar'[1, 1]*`bvar'[2, 2]
-			di as txt "Between-study heterogeneity" 
-			di as txt _col(28) "rho" _cont
-			di as res _n _col(28) %5.`=`dp''f `rho' 
-			
-			di as txt  _col(28) "Tau.sq" _cont
-			if `p' == 0  {
-				di as txt _col(45) "I^2(%)" _cont
-				local isq2b  = `isq2'[1, 2]*100
-				local isq2se = `isq2'[1, 1]*100
-				local isq2sp = `isq2'[2, 2]*100
-			}			
-			di as txt _n  "Generalized" _cont	
-			di as res   _col(28) %5.`=`dp''f `tau2g' _col(45) %5.`=`dp''f `isq2b'  
-			di as txt  "Sensitivity" _cont	
-			di as res    _col(28) %5.`=`dp''f `tau2se' _col(45) %5.`=`dp''f `isq2se'  
-			di as txt  "Specificity" _cont
-			di as res    _col(28) %5.`=`dp''f `tau2sp' _col(45) %5.`=`dp''f `isq2sp'
-		}
-		
-		if ("`mc'" =="") {
-			di as txt  _col(30) "Chi2"  _skip(8) "degrees of" _cont
-			di as txt _n  _col(28) "statistic" 	_skip(6) "freedom"      _skip(8)"p-val"   _cont
-		}	
-		local nc : word count `catreg'
-		
-		if "`model'" =="random" {
-			local chisq = `bshet'[1, 1]
-			local df 	= `bshet'[1, 2]
-			local pv 	= `bshet'[1, 3]	
-			if ("`mc'" =="") { 		
-				di as txt _n "LR Test: RE vs FE model" _cont
-				di as res _col(25) %10.`=`dp''f `chisq' _col(45) `df' _col(52) %10.4f `pv'  
-			}
-		}
-		
+	if (`p' > 0 ) {
 		if (`p' > 0) & ("`mc'" =="") {
 			local S_81 = `bghet'[1, 1] //chi
 			local S_91 = `bghet'[1, 2] //p
@@ -1613,7 +1805,12 @@ version 14.0
 			local S_92 = `bghet'[2, 2] //p
 			local S_892 = `bghet'[2, 3] //df
 			if (`p' > 0) {
-			di as txt  "LR Test: Full Model vs Intercept-only Model"   _cont
+			
+			di as txt _n  "LR Test: Full Model vs Intercept-only Model" _n   
+			
+			di as txt  _col(30) "Chi2"  _skip(8) "degrees of" _cont
+			di as txt _n  _col(28) "statistic" 	_skip(6) "freedom"      _skip(8)"p-val"   _cont
+			
 			di as txt _n "Sensitivity " _cont
 			di as res  _col(25) %10.`=`dp''f `S_81' _col(45) `S_891' _col(52) %10.4f `S_91'   _cont
 			di as txt _n "Specificity" _cont
@@ -1676,6 +1873,7 @@ version 14.0
 			}
 		}			
 	}
+
 	restore
 end
 /*+++++++++++++++++++++++++	SUPPORTING FUNCTIONS: LONGSETUP +++++++++++++++++++++++++
@@ -1849,10 +2047,15 @@ end
 	version 14.1
 		syntax, estimates(string) [sumstat(string) noprint depname(string) expit se(varname) DP(integer 2)) ///
 			cveffect(string) interaction(string) catreg(varlist) contreg(varlist) power(integer 0) ///
-			level(integer 95) by(varname) varx(varname) typevarx(string) regexpression(string) paired]
+			level(integer 95) by(varname) varx(varname) typevarx(string) regexpression(string) paired stratify]
 		
 			tempname outmatrix catregmatrixout bycatregmatrixout secontregmatrixout spcontregmatrixout outmatrixse ///
 				outmatrixsp serow sprow outmatrixse outmatrixsp outmatrixr overallse overallsp Vmatrix byVmatrix
+			
+			*Nulliify by			
+			if "`stratify'" != "" {
+				local by
+			}
 			
 			if "`paired'" != "" {
 				tokenize `regexpression'
@@ -2263,7 +2466,7 @@ end
 	version 13.1
 		syntax, estimates(string) [catreg(varlist) varx(varname) typevarx(string) sumstat(string) ///
 		se(varname) noprint comparative level(integer 95) DP(integer 2) power(integer 0) ///
-		cveffect(string) paired by(varname) regexpression(string)]
+		cveffect(string) paired stratify by(varname) regexpression(string)]
 		
 		local ZOVE -invnorm((100-`level')/200)
 		
@@ -2274,7 +2477,7 @@ end
 			local idpairconcat "#`varx'"
 			local typevarx "i"
 		}
-		if "`by'" != "" {
+		if "`by'" != "" & {
 			local confounders "`by' `catreg'"
 		}
 		else {
@@ -2290,7 +2493,7 @@ end
 		
 		tempname lcoef lV outmatrix outmatrixse outmatrixsp serow sprow outmatrixse outmatrixsp outmatrixr overallse overallsp setestnl sptestnl serowtestnl sprowtestnl testmat2print
 		
-		if "`marginlist'" != "" | "`paired'" != "" {
+		if "`marginlist'" != "" | ("`paired'" != "" & "`stratify'" == "" ){
 			qui estimates restore `estimates'
 			if "`marginlist'" != "" {
 				qui margins `marginlist', predict(xb) over(`se') post level(`level')
@@ -2391,7 +2594,7 @@ end
 			}
 			
 			
-			if "`comparative'" != ""  | "`paired'" != ""{
+			if "`comparative'" != ""  | ("`paired'" != "" & "`stratify'" == "") {
 				mat `outmatrix' = J(`=`ncols' + 2', 6, .)
 			}
 			else {
@@ -3690,15 +3893,13 @@ end
 		if "$by_index_" != "" {
 			qui graph dir
 			local gnames = r(list)
-			local gname: word 1 of `gnames'
+			local gname: word $by_index_ of `gnames'
 			tokenize `gname', parse(".")
-			local gname `1'
 			if "`3'" != "" {
 				local ext =".`3'"
 			}
 			
-			qui graph rename `gname'`ext' `gname'_fplot$by_index_`ext', replace
-
+			qui graph rename fplot`ext' fplot$by_index_`ext', replace
 		}
 		if `"`graphsave'"' != `""' {
 			di _n
@@ -3758,11 +3959,13 @@ end
 			BUBOpt(string) /*soptions: options the bubble points*/
 			BIDopt(string) /*soptions: options the bubble ID points*/
 			GRAPHSave(string asis)
+			STRAtify  /*Stratify*/
 			* /*soptions:Other two-way options*/
 			]
 			;
 		#delimit cr
 		tempvar se selci seuci sp splci spuci csp Ni rowid Dis tp fp NDis fn tn mu gvar
+		tempname vi bvari
 		
 		local soptions `"`options'"'
 		
@@ -3936,7 +4139,17 @@ end
 					local nrows = rowsof(`splogodds')
 					local ovindex = rowsof(`v')
 				}
+				
+			mat `bvari' = `bvar'
+			mat `vi' = `v'
+			
 			forvalues j=1/`nlevels' {
+				
+				*Take out the right matrix
+				if "`stratify'" != "" {
+					mat `bvari' = (`bvar'[`=2*`j' - 1' ,1], `bvar'[`=2*`j' - 1' ,2] \ `bvar'[`=2*`j'',1], `bvar'[`=2*`j'',2])
+					mat `vi' = (`v'[`=2*`j' - 1' ,1], `v'[`=2*`j' - 1' ,2] \ `v'[`=2*`j'',1], `v'[`=2*`j'',2])
+				}
 			
 				local color:word `j' of `colorpalette'
 				qui count if `gvar' == `j'
@@ -4036,8 +4249,8 @@ end
 					gen `sp`j'' = 1 - `fpr`j''
 					
 					/*HsROC parameters*/
-					local b = (sqrt(`bvar'[2,2])/sqrt(`bvar'[1,1]))^0.5
-					local beta = ln(sqrt(`bvar'[2,2]) / sqrt(`bvar'[1,1]))
+					local b = (sqrt(`bvari'[2,2])/sqrt(`bvari'[1,1]))^0.5
+					local beta = ln(sqrt(`bvari'[2,2]) / sqrt(`bvari'[1,1]))
 					
 					if `p' > 1 {
 						local lambda = `b' * `selogodds'[`nrows', 1] + `splogodds'[`nrows', 1] / `b'
@@ -4049,8 +4262,8 @@ end
 						local theta = 0.5 * (`b' * `selogodds'[`j', 1] -  `splogodds'[`j', 1]  /`b')
 					}
 					
-					local var_accu =  2*( sqrt(`bvar'[2,2]*`bvar'[1,1]) + `bvar'[2,1]) 
-					local var_thresh = 0.5*( sqrt(`bvar'[2,2]*`bvar'[1,1]) - `bvar'[2,1]) 
+					local var_accu =  2*( sqrt(`bvari'[2,2]*`bvari'[1,1]) + `bvari'[2,1]) 
+					local var_thresh = 0.5*( sqrt(`bvari'[2,2]*`bvari'[1,1]) - `bvari'[2,1]) 
 
 					/*The y axis*/
 					gen `se`j'' = invlogit(`lambda' * exp(-`beta' / 2) + exp(-`beta') * logit(`fpr`j''))
@@ -4065,21 +4278,31 @@ end
 					local t = sqrt(2*invF(2, `=`N`j'' - 2', `level'/100))
 					local nlen = 500
 					if `p' > 1 {
-						local rho = `v'[`=2*`nrows'-1', `=2*`nrows'']/sqrt(`v'[`=`ovindex'-1', `=`ovindex'-1']*`v'[`=2*`nrows'', `=2*`nrows''])
+						local rho = `vi'[`=2*`nrows'-1', `=2*`nrows'']/sqrt(`vi'[`=`ovindex'-1', `=`ovindex'-1']*`vi'[`=2*`nrows'', `=2*`nrows''])
 					}
 					else {
-						local rho = `v'[`j', `=`nlevels' + `j'']/sqrt(`v'[`j', `j']*`v'[`=`nlevels' + `j'', `=`nlevels' + `j''])
+						local rho = `vi'[`j', `=`nlevels' + `j'']/sqrt(`vi'[`j', `j']*`vi'[`=`nlevels' + `j'', `=`nlevels' + `j''])
+					}
+					if "`stratify'" != "" {
+						local rho = `vi'[1, 2]/sqrt(`vi'[1, 1]*`vi'[2, 2])
 					}
 					
 					tempvar a 
 					range `a' 0 2*_pi `nlen'
-					if `p' > 1 {
-						gen `xcregion`j'' = 1 - invlogit(`splogodds'[`nrows', 1] + sqrt(`v'[`=`ovindex'-1', `=`ovindex'-1']) * `t' * cos(`a' + acos(`rho')))
-						gen `ycregion`j'' = invlogit(`selogodds'[`nrows', 1] +  sqrt(`v'[`ovindex', `ovindex']) * `t' * cos(`a'))
+					if "`stratify'" != "" {
+						gen `xcregion`j'' = 1 - invlogit(`splogodds'[`j', 1] + sqrt(`vi'[1, 1]) * `t' * cos(`a' + acos(`rho')))
+						gen `ycregion`j'' = invlogit(`selogodds'[`j', 1] +  sqrt(`vi'[2, 2]) * `t' * cos(`a'))
+					
 					}
 					else {
-						gen `xcregion`j'' = 1 - invlogit(`splogodds'[`j', 1] + sqrt(`v'[`j', `j']) * `t' * cos(`a' + acos(`rho')))
-						gen `ycregion`j'' = invlogit(`selogodds'[`j', 1] +  sqrt(`v'[`=`nlevels' + `j'', `=`nlevels' + `j'']) * `t' * cos(`a'))
+						if `p' > 1 {
+							gen `xcregion`j'' = 1 - invlogit(`splogodds'[`nrows', 1] + sqrt(`vi'[`=`ovindex'-1', `=`ovindex'-1']) * `t' * cos(`a' + acos(`rho')))
+							gen `ycregion`j'' = invlogit(`selogodds'[`nrows', 1] +  sqrt(`vi'[`ovindex', `ovindex']) * `t' * cos(`a'))
+						}
+						else {
+							gen `xcregion`j'' = 1 - invlogit(`splogodds'[`j', 1] + sqrt(`vi'[`j', `j']) * `t' * cos(`a' + acos(`rho')))
+							gen `ycregion`j'' = invlogit(`selogodds'[`j', 1] +  sqrt(`vi'[`=`nlevels' + `j'', `=`nlevels' + `j'']) * `t' * cos(`a'))
+						}
 					}
 
 					local cregion `"`cregion' (line `ycregion`j'' `xcregion`j'', lcolor(`color') `ciopt')"'
@@ -4092,20 +4315,30 @@ end
 					/*Joint prediction region*/
 					if "`prediction'" == "" {
 						if `p' > 1 {
-							local rho =  (`v'[`=`ovindex'-1', `ovindex'] + `bvar'[1,2])/ sqrt((`v'[`=`ovindex'-1', `=`ovindex'-1'] + `bvar'[2, 2]) * (`v'[`ovindex', `ovindex'] + `bvar'[1, 1]))
+							local rho =  (`vi'[`=`ovindex'-1', `ovindex'] + `bvari'[1,2])/ sqrt((`vi'[`=`ovindex'-1', `=`ovindex'-1'] + `bvari'[2, 2]) * (`vi'[`ovindex', `ovindex'] + `bvari'[1, 1]))
 						}
 						else {
-							local rho =  (`v'[`=`nlevels' + `j'', `j'] + `bvar'[1,2])/ sqrt((`v'[`j', `j'] + `bvar'[2, 2]) * (`v'[`=`nlevels' + `j'', `=`nlevels' + `j''] + `bvar'[1, 1]))
+							local rho =  (`vi'[`=`nlevels' + `j'', `j'] + `bvari'[1,2])/ sqrt((`vi'[`j', `j'] + `bvari'[2, 2]) * (`vi'[`=`nlevels' + `j'', `=`nlevels' + `j''] + `bvari'[1, 1]))
+						}
+						if "`stratify'" != "" {
+							local rho =  (`vi'[2, 1] + `bvari'[1,2])/ sqrt((`vi'[1, 1] + `bvari'[2, 2]) * (`vi'[2, 2] + `bvari'[1, 1]))
 						}
 						local d = acos(`rho')	
-						if `p' > 1 {
-							gen `xpregion`j'' = 1 - invlogit(`splogodds'[`nrows', 1] + `t' * sqrt(`v'[`=`ovindex'-1', `=`ovindex'-1'] + `bvar'[2, 2]) * cos(`a' + acos(`rho')))
-							gen `ypregion`j'' = invlogit(`selogodds'[`nrows', 1] +  sqrt(`v'[`ovindex', `ovindex'] + `bvar'[1, 1]) * `t' * cos(`a'))
+						if "`stratify'" != "" {
+							gen `xpregion`j'' = 1 - invlogit(`splogodds'[`j', 1] + `t' * sqrt(`v'[1, 1] + `bvari'[2, 2]) * cos(`a' + acos(`rho')))
+							gen `ypregion`j'' = invlogit(`selogodds'[`j', 1] +  sqrt(`vi'[2, 2] + `bvari'[1, 1]) * `t' * cos(`a'))
 						}
 						else {
-							gen `xpregion`j'' = 1 - invlogit(`splogodds'[`j', 1] + `t' * sqrt(`v'[`j', `j'] + `bvar'[2, 2]) * cos(`a' + acos(`rho')))
-							gen `ypregion`j'' = invlogit(`selogodds'[`j', 1] +  sqrt(`v'[`=`nlevels' + `j'', `=`nlevels' + `j''] + `bvar'[1, 1]) * `t' * cos(`a'))
+							if `p' > 1 {
+								gen `xpregion`j'' = 1 - invlogit(`splogodds'[`nrows', 1] + `t' * sqrt(`vi'[`=`ovindex'-1', `=`ovindex'-1'] + `bvari'[2, 2]) * cos(`a' + acos(`rho')))
+								gen `ypregion`j'' = invlogit(`selogodds'[`nrows', 1] +  sqrt(`vi'[`ovindex', `ovindex'] + `bvari'[1, 1]) * `t' * cos(`a'))
+							}
+							else {
+								gen `xpregion`j'' = 1 - invlogit(`splogodds'[`j', 1] + `t' * sqrt(`v'[`j', `j'] + `bvari'[2, 2]) * cos(`a' + acos(`rho')))
+								gen `ypregion`j'' = invlogit(`selogodds'[`j', 1] +  sqrt(`vi'[`=`nlevels' + `j'', `=`nlevels' + `j''] + `bvari'[1, 1]) * `t' * cos(`a'))
+							}
 						}
+						
 						local pregion `"`pregion' (line `ypregion`j'' `xpregion`j'', `predciopt' lcolor(`color'))"'
 						if `nlevels' == 1 {
 							local ++index
@@ -4150,6 +4383,19 @@ end
 		if strpos(`"`soptions'"', "yscale") == 0 {
 			local soptions `"yscale(range(0 1)) `soptions'"'
 		}
+		if strpos(`"`soptions'"', "xtitle") == 0 {
+			local soptions `"xtitle("False positive rate") `soptions'"'
+		}
+		if strpos(`"`soptions'"', "ytitle") == 0 {
+			local soptions `"ytitle("Sensitivity") `soptions'"'
+		}
+		if strpos(`"`soptions'"', "xlabel") == 0 {
+			local soptions `"xlabel(0(0.2)1) `soptions'"'
+		}
+		if strpos(`"`soptions'"', "ylabel") == 0 {
+			local soptions `"ylabel(0(0.2)1) `soptions'"'
+		}
+		
 		#delimit ;
 		graph tw 
 			`centre'
@@ -4167,14 +4413,13 @@ end
 		if "$by_index_" != "" {
 			qui graph dir
 			local gnames = r(list)
-			local gname: word 1 of `gnames'
+			local gname: word $by_index_ of `gnames'
 			tokenize `gname', parse(".")
-			local gname `1'
 			if "`3'" != "" {
 				local ext =".`3'"
 			}
 			
-			qui graph rename `gname'`ext' `gname'_sroc$by_index_`ext', replace
+			qui graph rename sroc`ext' sroc$by_index_`ext', replace
 			
 		}
 		

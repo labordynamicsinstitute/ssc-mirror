@@ -1,4 +1,4 @@
-program metapreg_examples
+ program metapreg_examples
 	version 14.1
 	`1'
 end
@@ -16,7 +16,6 @@ program define metapreg_example_one_one
 	di "	cimethod(exact) ///"
 	di "	label(namevar=author, yearvar=year) ///"
 	di "	xlab(.25, 0.5, .75, 1) ///"
-	di "	xline(0, lcolor(black)) ///"
 	di "	subti(Atypical cervical cytology, size(4)) ///"
 	di "	olineopt(lcolor(red) lpattern(shortdash)) ///"
 	di "	graphregion(color(white)) ///"
@@ -35,8 +34,7 @@ program define metapreg_example_one_one
 		sumtable(none) ///
 		by(STRtgroup) ///
 		label(namevar=author, yearvar=year) ///
-		xlab(0.5, .25, 0.5, .75, 1) ///
-		xline(0, lcolor(black)) ///
+		xlab(.25, 0.5, .75, 1) ///
 		subti(Atypical cervical cytology, size(4)) ///
 		graphregion(color(white)) /// 
 		olineopt(lcolor(red) lpattern(shortdash)) ///
@@ -68,7 +66,7 @@ program define metapreg_example_one_two
 		model(random)  ///
 		cimethod(wilson) ///
 		label(namevar=author, yearvar=year) ///
-		xlab(0, .25,0.5,.75,1) ///
+		xlab(0, .25, 0.5, .75,1) ///
 		xline(0, lcolor(black)) ///
 		subti(Atypical cervical cytology, size(4)) ///
 		olineopts(lcolor(red) lpattern(shortdash)) ///
@@ -165,9 +163,8 @@ program define metapreg_example_three_one
 	di ". metapreg cases_tb population bcg,  ///" 
 	di "	studyid(study) ///"
 	di "	model(fixed)  /// "
-	di "	sumtable(all)  ///"
-	di "	comparative	///"
-	di "	output(rr) ///"
+	di "	design(comparative)	///"
+	di "	outplot(rr) ///"
 	di "	sumstat(Risk ratio) ///"
 	di "	plotregion(color(white)) /// "
 	di "	graphregion(color(white)) /// "
@@ -183,10 +180,9 @@ program define metapreg_example_three_one
 	
 	metapreg cases_tb population bcg,  /// 
 		studyid(study) ///
-		model(fixed)  /// 
 		sumtable(all)  ///
-		comparative	///
-		output(rr) ///
+		design(comparative)	///
+		outplot(rr) ///
 		sumstat(Risk ratio) ///
 		plotregion(color(white)) /// 
 		graphregion(color(white)) /// 
@@ -207,7 +203,7 @@ program define metapreg_example_three_two
 	di "	studyid(study) ///"
 	di "	model(random)  /// "
 	di "	sumtable(all) by(bcg)  ///"
-	di "	paired	sortby(lat) ///"
+	di "	design(comparative)	sortby(lat) ///"
 	di "	plotregion(color(white)) /// "
 	di "	graphregion(color(white)) /// "
 	di "	xlab(0, 0.05, 0.1) /// "
@@ -220,6 +216,7 @@ program define metapreg_example_three_two
 	di "	texts(1.5) prediction "
 		
 	set more off
+	
 	metapreg cases_tb population lat,  /// 
 		studyid(study) ///
 		model(random)  /// 
@@ -246,8 +243,8 @@ program define metapreg_example_three_three
 	di "	model(random)  /// "
 	di "	sortby(lat) ///"
 	di "	sumtable(all) ///"
-	di "	comparative  ///"
-	di "	output(rr) ///"
+	di "	design(comparative)  ///"
+	di "	outplot(rr) ///"
 	di "	interaction ///"
 	di "	plotregion(color(white)) /// "
 	di "	graphregion(color(white)) /// "
@@ -260,13 +257,14 @@ program define metapreg_example_three_three
 	di "	texts(1.5) logscale" 
 	
 	set more off
+
 	metapreg cases_tb population bcg lat,  /// 
 		studyid(study) ///
 		model(random)  /// 
 		sortby(lat) ///
 		sumtable(all) ///
-		comparative  ///
-		output(rr) ///
+		design(comparative)  ///
+		outplot(rr) ///
 		interaction ///
 		plotregion(color(white)) /// 
 		graphregion(color(white)) /// 
@@ -290,8 +288,8 @@ program define metapreg_example_four_one
 	di "	sortby(year) ///"
 	di "	model(fixed)  /// "
 	di "	sumtable(all) ///"
-	di "	comparative   ///"
-	di "	output(rr) ///"
+	di "	design(comparative)   ///"
+	di "	outplot(rr) ///"
 	di "	interaction ///"
 	di "	plotregion(color(white)) /// "
 	di "	graphregion(color(white)) /// "
@@ -304,7 +302,9 @@ program define metapreg_example_four_one
 	di "	astext(70) /// "
 	di "	texts(1.5) logscale "
 			
+
 	set more off
+	
 	gsort firstauthor -arm
 	
 	metapreg response total arm missingdata,  /// 
@@ -312,7 +312,7 @@ program define metapreg_example_four_one
 		sortby(year) ///
 		model(fixed)  /// 
 		sumtable(all) ///
-		comparative  ///
+		design(comparative)  ///
 		outplot(rr) ///
 		interaction ///
 		plotregion(color(white)) /// 
@@ -331,13 +331,13 @@ end
 
 program define metapreg_example_five_one
 	preserve
-	use "http://fmwww.bc.edu/repec/bocode/p/paired.dta", clear
+	use "https://github.com/VNyaga/Metapreg/blob/master/matched.dta?raw=true", clear
 	di ". metapreg a b c d index comparator,  /// "
 	di "	studyid(study) ///"
 	di "	model(fixed)  /// "
 	di "	sumtable(all) ///"
-	di "	paired  ///"
-	di "	output(rr) ///"
+	di "	design(matched)  ///"
+	di "	outplot(rr) ///"
 	di "	plotregion(color(white)) /// "
 	di "	graphregion(color(white)) /// "
 	di "	xlab(0.9, 1, 1.1) /// "
@@ -350,13 +350,14 @@ program define metapreg_example_five_one
 	di "	texts(1.5) logscale  "
 	
 	set more off
+
 	
-		metapreg a b c d index comparator, /// 
+	metapreg a b c d index comparator, /// 
 		studyid(study) ///
 		model(fixed)  /// 
 		sumtable(all) ///
-		output(rr) ///
-		paired ///
+		outplot(rr) ///
+		design(matched) ///
 		by(comparator) ///
 		plotregion(color(white)) /// 
 		graphregion(color(white)) /// 
@@ -368,6 +369,6 @@ program define metapreg_example_five_one
 		lcols(a b c d comparator index) /// 
 		astext(80) /// 
 		texts(1.5) logscale  
-		
+			
 	restore
 end

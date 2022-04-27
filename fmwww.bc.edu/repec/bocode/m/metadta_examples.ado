@@ -18,6 +18,7 @@ program define example_one
 	di `"{pmore}diamopt(color(red)) pointopt(msymbol(s)msize(1)) olineopt(color(red) lpattern(dash))) {p_end}"' 
 	
 	set more off
+
 	
 	#delimit ;
 	metadta tp fp fn tn, 
@@ -36,7 +37,7 @@ end
 program define example_two_one
 	preserve
 	di _n
-	use "http://fmwww.bc.edu/repec/bocode/a/ascus.dta", clear
+	use "https://github.com/VNyaga/Metadta/blob/master/ascus.dta?raw=true", clear
 	di _n
 	
 	di `". metadta tp fp fn tn test,  			///"'
@@ -67,7 +68,7 @@ end
 program define example_two_two
 	preserve
 	di _n
-	use "http://fmwww.bc.edu/repec/bocode/a/ascus.dta", clear
+	use "https://github.com/VNyaga/Metadta/blob/master/ascus.dta?raw=true", clear
 	di _n
 	
 	di `". metadta tp fp fn tn test,  			///"'
@@ -150,7 +151,7 @@ end
 program define example_five
 	preserve
 	di _n
-	use "https://github.com/VNyaga/Metapreg/blob/master/pairedta.dta?raw=true", clear
+	use "https://github.com/VNyaga/Metadta/blob/master/pairedta.dta?raw=true", clear
 	di _n
 	
 	di `". metadta tp1 fp1 fn1 tn1 tp2 fp2 fn2 tn2 hpv1 hpv2, ///"'

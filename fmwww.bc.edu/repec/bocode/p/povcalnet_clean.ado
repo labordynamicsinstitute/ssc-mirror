@@ -22,8 +22,10 @@ syntax anything(name=type),      ///
 								year(string)     ///
 								region(string)   ///
 								iso              ///
+								wb				///
+								nocensor			///
 								rc(string)       ///
-								pause						 ///
+								pause			///
              ]
 
 if ("`pause'" == "pause") pause on
@@ -34,29 +36,27 @@ else                      pause off
 ==================================================*/
 
 if ("`rc'" == "copy") {
+	noi dis ""
+	noi dis in red "It was not possible to download data from the PovcalNet API."
+	noi dis ""
+	noi dis in white `"(1) Please check your Internet connection by "' _c 
+	noi dis in white  `"{browse "http://iresearch.worldbank.org/PovcalNet/home.aspx" :clicking here}"'
+	noi dis in white `"(2) Please consider adjusting your Stata timeout parameters. For more details see {help netio}"'
+	noi dis in white `"(3) Please send us an email to:"'
+	noi dis in white _col(8) `"email: data@worldbank.org"'
+	noi dis in white _col(8) `"subject: povcalnet query error 20 on `c(current_date)' `c(current_time)'"'
 	noi di ""
-	noi di as err "{p 4 4 2} It was not possible to download data from the PovcalNet API. {p_end}"
-	noi di ""
-	noi dis as text `"{p 4 4 2} (1) Please check your internet connection by {browse "http://iresearch.worldbank.org/PovcalNet/home.aspx" :clicking here}{p_end}"'
-	noi dis as text `"{p 4 4 2} (3) Please consider ajusting your Stata timeout parameters. For more details see {help netio}. {p_end}"'
-	noi dis as text `"{p 4 4 2} (4) Please send us an email to report this error by {browse "mailto:data@worldbank.org, ?subject= povcalnet query error 20 at `c(current_date)' `c(current_time)': `queryspec' "  :clicking here} or writing to:  {p_end}"'
-	noi dis as result `"{p 12 4 2} email: " as input "data@worldbank.org  {p_end}"'
-	noi dis as result `"{p 12 4 2} subject: " as input "povcalnet query error 20 at `c(current_date)' `c(current_time)': `queryspec'  {p_end}"'
-	noi di ""
-	noi di ""
-	break
-	exit
+	error 673
 }
 
 if ("`rc'" == "in" | c(N) == 0) {
 	noi di ""
-	noi di as err "There was a problem laoding the downloaded data." /* 
+	noi di as err "There was a problem loading the downloaded data." /* 
 	 */ _n "Check that all parameters are correct and try again."
 	noi dis as text  `"{p 4 4 2} You could use the {stata povcalnet_info:guided selection} instead. {p_end}"'
-	noi dis as text  `"{p 4 4 2} References year can only be 1981, 1984, 1987, 1990, 1993, 1996, 1999, 2002, 2005, 2008, 2010, 2011, 2012, 2013 and 2015 (As of Sep 2018). Due to the constant updating of the PovCalNet databases, using the option {it:last} or {it:all} will load the years most updated year(s). {p_end}"'
 	noi di ""
 	break
-	exit 20
+	error 
 }
 
 
@@ -175,7 +175,7 @@ if ("`type'" == "2") {
 		keep if `keep_this' == 1 
 	}
 	
-	pause clean - after droping by region 
+	pause clean - after dropping by region 
 	
 	if  ("`year'" == "last") {
 		tempvar maximum_y
@@ -184,7 +184,7 @@ if ("`type'" == "2") {
 	}
 	
 	***************************************************
-	* 4. Renaming and labelling
+	* 4. Renaming and labeling
 	***************************************************
 	
 

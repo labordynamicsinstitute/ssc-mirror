@@ -1,4 +1,3 @@
-*! version 1.0.0  	<sept2018>
 /*=======================================================
 Program Name: povcalnet.ado
 Author:		  
@@ -31,6 +30,7 @@ COUNtry(string)              ///
 REGion(string)               ///
 YEAR(string)                 /// 
 POVline(numlist)             /// 
+POPShare(numlist)	   			///
 PPP(numlist)                 /// 
 AGGregate                    ///
 CLEAR                        ///
@@ -49,6 +49,28 @@ if ("`pause'" == "pause") pause on
 else                      pause off
 
 qui {
+	dis as text "{hline}"
+	noi disp in red "WARNING:" 
+	noi dis as text  `"{p 6 4 0 80}The povcalnet command and website have been replaced with the new pip command and the Poverty and Inequality Portal, {browse "https://pip.worldbank.org/"}. Povcalnet will remain functional until the end of 2022, but its data is now  {bf:outdated}. Once retired, you will no longer be able to access these data. If you anticipate needing to reproduce existing analysis based on PovcalNet data, you will want to save a version of the data. Moving forward, we encourage you to  use the new PIP site and its corresponding {browse "https://github.com/worldbank/pip": pip} Stata command, with the latest data and many new features.{p_end}"'
+	dis as text "{hline}" _n
+	
+	
+	
+	//========================================================
+	// Conditions
+	//========================================================
+	if ("`aggregate'" != "" & "`fillgaps'" != "") {
+		noi disp in red "options {it:aggregate} and {it:fillgaps} are mutually exclusive." _n /* 
+		 */ "Please select only one."
+		 error
+	}
+	
+	if ("`popshare'" != "" &  (lower("`subcommand'") == "wb" | "`aggregate'" != "")) {
+		noi disp in red "option {it:popshare} can't be combined with option {it:aggregate}" _c /* 
+		 */ " or with subcommand {it:wb}" _n
+		 error
+	}
+	
 	
 	// ------------------------------------------------------------------------
 	// New session procedure
@@ -60,16 +82,20 @@ qui {
 		// Update PovcalNet 
 		// ---------------------------------------------------------------
 		
-		mata: povcalnet_source("povcalnet") // creates local src
+		* mata: povcalnet_source("povcalnet") // creates local src
+		_pcn_find_src povcalnet
+		local src = "`r(src)'"
 		
 		* If povcalnet was installed from github
 		if (regexm("`src'", "github")) {
-			local git_cmds povcalnet github
+			local git_cmds povcalnet
 			
 			foreach cmd of local git_cmds {
 				
 				* Check repository of files 
-				mata: povcalnet_source("`cmd'")
+				* mata: povcalnet_source("`cmd'")
+				_pcn_find_src `cmd'
+				local src = "`r(src)'"
 				
 				if regexm("`src'", "\.io/") {  // if site
 					if regexm("`src'", "://([^ ]+)\.github") {
@@ -84,9 +110,27 @@ qui {
 						
 				qui github query `repo'
 				local latestversion = "`r(latestversion)'"
-				
+				if regexm("`r(latestversion)'", "v([0-9]+)\.([0-9]+)\.([0-9]+)"){
+					local lastMajor = regexs(1)
+					local lastMinor = regexs(2)
+					local lastPatch = regexs(3)		 
+				}
+					
 				qui github version `cmd'
 				local crrtversion =  "`r(version)'"
+				if regexm("`r(version)'", "v([0-9]+)\.([0-9]+)\.([0-9]+)"){
+					local crrMajor = regexs(1)
+					local crrMinor = regexs(2)
+					local crrPatch = regexs(3)
+				}
+				foreach x in repo cmd {
+					local `x' : subinstr local `x' "." "", all 
+					local `x' : subinstr local `x' "-" ".", all 
+					if regexm("``x''", "v([0-9]+)(\.)?([a-z]+)?([0-9]?)") {
+					 disp regexs(1) regexs(2) regexs(4)
+				  }
+					
+				}
 
 				* force installation 
 				if ("`crrtversion'" == "") {
@@ -96,13 +140,14 @@ qui {
 					global pcn_cmds_ssc = ""
 					exit 
 				}
-
-				if ("`latestversion'" != "`crrtversion'") {
+				
+				if (`lastMajor' > `crrMajor' | `lastMinor' > `crrMinor' | `lastPatch' > `crrPatch') {
+				* if (`lastMajor'`lastMinor'`lastPatch' > `crrMajor'`crrMinor'`crrPatch') {
 					cap window stopbox rusure "There is a new version of `cmd' in Github (`latestversion')." ///
 					"Would you like to install it now?"
 					
 					if (_rc == 0) {
-						cap github update `cmd'
+						cap github install `repo', replace
 						if (_rc == 0) {
 							cap window stopbox note "Installation complete. please type" ///
 							"discard in your command window to finish"
@@ -111,7 +156,7 @@ qui {
 						else {
 							noi disp as err "there was an error in the installation. " _n ///
 							"please run the following to retry, " _n(2) ///
-							"{stata github update `cmd'}"
+							"{stata github install `repo', replace}"
 							local bye "error"
 						}
 					}	
@@ -154,7 +199,7 @@ qui {
 				noi disp as result "SSC version of {cmd:povcalnet} is up to date."
 				local bye ""
 			}
-		}  // Finish checking povclanet update 
+		}  // Finish checking povcalnet update 
 		else {
 			noi disp as result "Source of {cmd:povcalnet} package not found." _n ///
 			"You won't be able to benefit from latest updates."
@@ -194,18 +239,44 @@ qui {
 	*---------- API defaults
 	
 	if "`server'"!=""  {
-		if ("`server'" == "int") local server "http://wbgmsrech001"
-		local base="`server'/PovcalNet/PovcalNetAPI.ashx"
-	} 
+		
+		if !inlist(lower("`server'"), "int", "testing", "ar") {
+			noi disp in red "the server requested does not exist" 
+			error
+		}
+	
+		if (lower("`server'") == "int")     {
+			local server "${pcn_svr_in}"
+		}
+		if (lower("`server'") == "testing") {
+			local server "${pcn_svr_ts}"
+		}
+		if (upper("`server'") == "AR") {
+			local server "${pcn_svr_ar}"
+		}
+		
+		if ("`server'" == "") {
+			noi disp in red "You don't have access to internal servers" _n /* 
+					*/ "You're being redirected to public server"
+			local server "http://iresearch.worldbank.org/PovcalNet"
+		}
+		
+	}
 	else {
-		local serveri    = "http://iresearch.worldbank.org"
-		local site_name = "PovcalNet"
-		local handler   = "PovcalNetAPI.ashx"		
-		local base      = "`serveri'/`site_name'/`handler'"
+		local server "http://iresearch.worldbank.org/PovcalNet"
 	}
 	
-	return local server    = "`serveri'`server'"
-	return local site_name = "`site_name'"
+	local base             = "`server'/PovcalNetAPI.ashx"	
+	return local server    = "`server'"
+	
+	//------------ Check internet connection
+	scalar tpage = fileread(`"`server'/js/common_NET.js"')
+	
+	if regexm(tpage, "error") {
+		noi disp in red "You may not have Internet connections. Please verify"
+		error
+	}
+	
 	
 	*---------- lower case subcommand
 	local subcommand = lower("`subcommand'")
@@ -217,7 +288,8 @@ qui {
 			error
 		}
 		local fq = "`base'?${pcn_query}"
-		view browse "`fq'"
+		noi disp in y "querying" in w _n "`fq'"
+		noi view browse "`fq'"
 		exit
 	}
 	
@@ -227,10 +299,10 @@ qui {
 		local aggregate ""
 		local subcommand "wb"
 		local wb_change 1
-		noi disp as err "Warning: " as text " {cmd:povclanet, country(all) aggregate} " /* 
+		noi disp as err "Warning: " as text " {cmd:povcalnet, country(all) aggregate} " /* 
 	  */	"is equivalent to {cmd:povcalnet wb}. " _n /* 
-	  */ " if you want to aggregate all countries by survey years, " /* 
-	  */ "you need to parse the list of countries in {it:country()} option. See " /*
+	  */  " if you want to aggregate all countries by survey years, " /* 
+	  */  "you need to parse the list of countries in {it:country()} option. See " /*
 	  */  "{help povcalnet##options:aggregate option description} for an example on how to do it"
 	}
 	else {
@@ -251,8 +323,29 @@ qui {
 		}
 	}
 	
-	*---------- Poverty line
-	if ("`povline'" == "") local povline = 1.9
+	*---------- Poverty line/population share
+	
+	// Blank popshare and blank povline = default povline 1.9
+	if ("`popshare'" == "" & "`povline'" == "")  {
+		local povline = 1.9
+		local pcall = "povline"
+	}
+	
+	// defined popshare and defined povline = error
+	else if ("`popshare'" != "" & "`povline'" != "")  {
+		noi disp as err "povline and popshare cannot be used at the same time"
+		error
+	}
+	
+	// blank popshare and defined povline
+	else if ("`popshare'" == "" & "`povline'" != "")  {
+		local pcall = "povline"
+	}
+	
+	// defined popshare and blank povline
+	else {
+		local pcall = "popshare"
+	}
 	
 	*---------- Info
 	if regexm("`subcommand'", "^info")	{
@@ -314,7 +407,7 @@ qui {
 	
 	*---------- Country and region
 	if  ("`country'" != "") & ("`region'" != "") {
-		noi disp in r "options {it:country()} and {it:region()} are mutally exclusive"
+		noi disp in r "options {it:country()} and {it:region()} are mutually exclusive"
 		error
 	}
 	
@@ -375,7 +468,10 @@ qui {
 	
 	local f = 0
 	
-	foreach i_povline of local povline {	
+	if ("`pcall'" == "povline") 	loc i_call "i_povline"
+	else 							loc i_call "i_popshare"
+	
+	foreach `i_call' of local `pcall' {	
 		local ++f 
 		
 		/*==================================================
@@ -385,7 +481,8 @@ qui {
 		region("`region'")                     ///
 		year("`year'")                         ///
 		povline("`i_povline'")                 ///
-		ppp("`i_ppp'")                         ///
+		popshare("`i_popshare'")	   					  ///
+		ppp("`ppp'")                         ///
 		coverage(`coverage')                   ///
 		server(`server')                       ///
 		`clear'                                ///
@@ -403,16 +500,23 @@ qui {
 		local query_pl = "`r(query_pl)'"
 		local query_ds = "`r(query_ds)'"
 		local query_pp = "`r(query_pp)'"
+		local query_ps = "`r(query_ps)'"
 		
 		return local query_ys_`f' = "`query_ys'"
 		return local query_ct_`f' = "`query_ct'"
 		return local query_pl_`f' = "`query_pl'"
 		return local query_ds_`f' = "`query_ds'"
 		return local query_pp_`f' = "`query_pp'"
+		return local query_ps_`f' = "`query_ps'"
 		return local base      = "`base'"
 		
 		*---------- Query
-		local query = "`query_ys'&`query_ct'&`query_pl'`query_pp'`query_ds'&format=csv"
+		if ("`popshare'" == ""){
+			local query = "`query_ys'&`query_ct'&`query_pl'`query_pp'`query_ds'&format=csv"
+		}
+		else{
+			local query = "`query_ys'&`query_ct'&`query_ps'`query_pp'`query_ds'&format=csv"
+		}
 		return local query_`f' "`query'"
 		global pcn_query = "`query'"
 		
@@ -453,11 +557,11 @@ qui {
 			local rtype 2
 		}
 		
-		pause after downdload
+		pause after download
 		
 		*---------- Clean data
 		povcalnet_clean `rtype', year("`year'") `iso' /* 
-		*/ rc(`rc') region(`region') `pause'
+		*/ rc(`rc') region(`region') `pause' `wb'
 		
 		pause after cleaning
 		
@@ -465,12 +569,13 @@ qui {
 		Display Query
 		==================================================*/
 		
-		if ("`dipsquery'" == "") {
+		if ("`dipsquery'" == "" & "`rc'" == "0") {
 			noi di as res _n "{ul: Query at \$`i_povline' poverty line}"
 			noi di as res "{hline}"
 			if ("`query_ys'" != "") noi di as res "Year:"         as txt "{p 4 6 2} `query_ys' {p_end}"
 			if ("`query_ct'" != "") noi di as res "Country:"      as txt "{p 4 6 2} `query_ct' {p_end}"
 			if ("`query_pl'" != "") noi di as res "Poverty line:" as txt "{p 4 6 2} `query_pl' {p_end}"
+			if ("`query_ps'" != "") noi di as res "Population share:" as txt "{p 4 6 2} `query_ps' {p_end}"
 			if ("`query_ds'" != "") noi di as res "Aggregation:"  as txt "{p 4 6 2} `query_ds' {p_end}"
 			if ("`query_pp'" != "") noi di as res "PPP:"          as txt "{p 4 6 2} `query_pp' {p_end}"
 			noi di as res _dup(20) "-"
@@ -516,16 +621,112 @@ qui {
 		}		
 	}
 	
+	
+	//========================================================
+	//  Create notes
+	//========================================================
+	
+	local pllabel ""
+	foreach p of local povline {
+		local pllabel "`pllabel' \$`p'"
+	}
+	local pllabel = trim("`pllabel'")
+	local pllabel: subinstr local pllabel " " ", ", all
+	
+	
+	
+	if ("`wb'" == "")   {
+		if ("`aggregate'" == "" & "`fillgaps'" == "") {
+			local lvlabel "country level"
+		} 
+		else if ("`aggregate'" != "" & "`fillgaps'" == "") {
+			local lvlabel "aggregated level"
+		} 
+		else if ("`aggregate'" == "" & "`fillgaps'" != "") {
+			local lvlabel "Country level (lined up)"
+		} 
+		else {
+			local lvlabel ""
+		}
+	}   
+	else {
+		local lvlabel "regional and global level"
+	}
+	
+	
+	local datalabel "WB poverty at `lvlabel' using `pllabel'"
+	local datalabel = substr("`datalabel'", 1, 80)
+	
+	label data "`datalabel' (`c(current_date)')"
+	
+	* citations
+	local cite `"Please cite as: Castaneda Aguilar, R. A., C. Lakner, E. B. Prydz, J. S. Lopez, R. Wu and Q. Zhao (2019) "povcalnet: Stata module to access World Bank’s Global Poverty and Inequality data," Statistical Software Components 2019, Boston College Department of Economics."'
+	notes: `cite'
+	
+		dis as text "{hline}"
+	noi disp in red "WARNING:" 
+	noi dis as text  `"{p 6 4 0 80}The povcalnet command and website have been replaced with the new pip command and the Poverty and Inequality Portal, {browse "https://pip.worldbank.org/"}. Povcalnet will remain functional until the end of 2022, but its data is now  {bf:outdated}. Once retired, you will no longer be able to access these data. If you anticipate needing to reproduce existing analysis based on PovcalNet data, you will want to save a version of the data. Moving forward, we encourage you to  use the new PIP site and its corresponding {browse "https://github.com/worldbank/pip": pip} Stata command, with the latest data and many new features.{p_end}"'
+	dis as text "{hline}" _n
+	
+	noi disp in y _n `"`cite'"'
+	
+	return local cite `"`cite'"'
+	
 } // end of qui
 end
+
+//========================================================
+// Aux programs
+//========================================================
+
+program define _pcn_find_src, rclass 
+syntax anything(name=cmd id="Package name")
+
+qui {
+	preserve
+	drop _all
+	
+	// find stata.trk file 
+	findfile stata.trk
+	local fn = "`r(fn)'"
+	
+	// create copy
+	tempfile statatrk
+	copy "`r(fn)'" "`statatrk'"
+	
+	// import copy into stata
+	import delimited using `statatrk',  bindquote(nobind)
+	
+	gen n = _n    // line number
+	
+	// find line where the package is used
+	levelsof n if regexm(v1, "`cmd'.pkg"), sep(,) loca(pklines)
+	
+	if (`"`pklines'"' == `""') local src = "NotInstalled"
+	else {
+	
+		// the latest source and subtract which refers to the source 
+		local sourceline = max(0, `pklines') - 1 
+		
+		// get the source without the initial S
+		if regexm(v1[`sourceline'], "S (.*)") local src = regexs(1)
+	}
+	
+	// return info 
+	return local src = "`src'"
+} // end of qui
+end 
+
+
+
 
 // ------------------------------------------------------------------------
 // MATA functions
 // ------------------------------------------------------------------------
 
 
-findfile stata.trk
-local fn = "`r(fn)'"
+* findfile stata.trk
+* local fn = "`r(fn)'"
 
 cap mata: mata drop povcalnet_*()
 mata:
@@ -573,42 +774,6 @@ Notes:
 		
 Version Control:
 
-
-*##s
-
-findfile stata.trk
-local fn = "`r(fn)'"
-
-mata:
-cmd = "povcalnet"
-cmd =  cmd :+ "\.pkg"
-	
-	fh = _fopen("`fn'", "r")
-	
-	pos_a = ftell(fh)
-	pos_b = 0
-	while ((line=strtrim(fget(fh)))!=J(0,0,"")) {
-		if (regexm(strtrim(line), cmd)) {
-			fseek(fh, pos_b, -1)
-			break
-		}
-		pos_b = pos_a
-		pos_a = ftell(fh)
-	}
-	
-	src = strtrim(fget(fh))
-	if (rows(src) > 0) {
-		src = substr(src, 3)
-		st_local("src", src)
-	} 
-	else {
-		st_local("src", "NotFound")
-	}
-	
-	fclose(fh)
-	src
-	
-end 
-
-
-*##e
+*! version 1.2.0  	<Apr2022>
+*! version 1.1.8  	<Oct2021>
+*! version 1.0.0  	<sept2018>

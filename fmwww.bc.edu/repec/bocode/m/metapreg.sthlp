@@ -1,10 +1,10 @@
 {smcl}
-{* *! version 1.0.0 8May2019}{...}
+{* *! version 2.0.0 8May2019}{...}
 {viewerdialog metapreg "dialog metapreg"}{...}
-{vieweralsosee "[ME] meqrlogit" "help ME meqrlogit"}{...}
+{vieweralsosee "[ME] meqrlogit" "help meqrlogit"}{...}
 {vieweralsosee "[ME] meqrlogit" "mansection ME meqrlogit"}{...}
 {vieweralsosee "" "--"}{...}
-{vieweralsosee "[R] binreg" "help R binreg"}{...}
+{vieweralsosee "[R] binreg" "help binreg"}{...}
 {vieweralsosee "[R] binreg" "mansection R binreg"}{...}
 {viewerjumpto "Syntax" "metapreg##syntax"}{...}
 {viewerjumpto "Menu" "metapreg##menu"}{...}
@@ -25,19 +25,60 @@ of proportions with logistic regression{p_end}
 
 {p 8 16 2}
 [{help by} {varlist}{cmd::}] 
-{opt metapreg [n N] [a b c d index comparator]} 
+{opt metapreg  {depvars}} 
 [{indepvars}] 
 {ifin}
 {cmd:,} 
 {opt st:udyid}({it:{help varname:studyid}}) 
 [{it:{help metapreg##options_table:options}}]
 
+{p 8 8 2}
+{it:{depvars}} has the form {cmd: n N} in independent/comparative/network studies, {cmd: a b c d} in matched studies, and {cmd: ab ac N} in paired studies.{p_end}
 
-{p 4 4 2}
+{p 8 8 2}
 {it:studyid} is a variable identifying each study.{p_end}
 	
-{p 4 6 2}{it:indepvars} may be {cmd:string} for categorical variables and/or {cmd:numeric} for continous variables. 
+{p 8 8 2}
+{it:{indepvars}} must be {cmd:string} for categorical variables and {cmd:numeric} for continuous variables. Depending on the design of the analysis, 
+there are {cmd:required} and {cmd:optional} covariates. The {cmd:required} covariates must be string variables. The {cmd:required} covariates are as follows;
+
+{p 8 8 2}
+The first covariate must be a binary variable in comparative studies, and a multi-category variable (with at least 2 levels) in network meta-analysis. 
+In matched or paired studies, two first string covariates required are; {cmd: index} variable (multi-category; with at least 2 levels) and the {cmd:comparator} variable.
+
+{p 8 8 2}
 {cmd:The variable names should not contain underscores}.{p_end}
+
+{marker description}{...}
+{title:Description}
+
+{pstd}
+{cmd:metapreg} is a routine for pooling proportions 
+from binomial data. A generalized linear model for the binomial family with a logit link is fitted, i.e logistic regression. 
+
+{pstd}
+The program fits fixed or a random-effects model. The data can be from independent studies; where each row contains data from seperate studies, 
+comparative studies; where each study has two rows of data. The first row has the index data and the second row has the control data. The data can also be matched, 
+where each row contains data from each seperate cross-tabulation between the index and the control test. When only the marginal data from the cross-tabulation is available, 
+then we refer this as paired data. 
+
+{pstd}
+In network meta-analysis, each study contributes atleast two rows of data from different treatments/tests. In this setting we view the treatments assigned in a study as nested factors within a study. 
+The fitted models assumes exchangeability of the treatments effects and that the missing treatments are missing at random (MAR). 
+
+{pstd}
+A random-effects model accounts for and allows the quantification of heterogeneity between (and within) studies while a fixed-effects model assumes homogeneity in studies. 
+By default, the fixed effect model is fitted when there are less than {cmd:3} studies.
+
+{pstd}
+When data is from comparative/matched/paired studies, the study-specific relative proportions can be tabulated and/or plotted.
+
+{pstd}
+When there are no covariates, heterogeneity is also quantified using the I-squared measure({help metapreg##ZD2014:Zhou and Dendukuri 2014}).
+In network meta-analysis, we quantify the proportion of unexplained variation due to within and between study variability.
+
+{pstd}
+The command requires Stata 14.1 or later versions.
 
 {marker options_table}{...}
 {synoptset 30 tabbed}{...}
@@ -48,8 +89,8 @@ of proportions with logistic regression{p_end}
 
 {synopt :{opth m:odel(metapreg##modeltype:type[, modelopts])}}specifies the type of model to fit; default is {cmd:model(random)}. 
 {help metapreg##optimization_options:modelopts} control the control the optimization process{p_end}
-{synopt :{opt comparative}}notifies the program that the studies are comparative (2 observations per study) {p_end}
-{synopt :{opt paired}}notifies the program that data is from paired studies i.e {cmd: a b c d index comparator} data {p_end}
+{synopt :{opth des:ign(metapreg##designtype:design[, baselevel(label)])}}specifies the type of the studies or design of meta-analysis; default is {cmd:design(independent)}. 
+{cmd:baselevel(label)}is relevant in network meta-analysis and indicates the label of the reference level of the covariate of interest. {p_end}
 {synopt :{opt nomc}}informs the program not to perform {cmd:m}odel {cmd:c}omparison with likelihood-ratio tests comparison for the specified model with other simpler models{p_end}
 {synopt :{opth by:(varname:byvar)}}specificies the stratifying variable for which the margins are estimated {p_end}
 {synopt : {opt int:eraction}}directs the model to include interaction terms between the first covariate and each of the remaining covariates{p_end}
@@ -59,25 +100,26 @@ of proportions with logistic regression{p_end}
 {synoptline}
 {syntab:General}
 {synoptline}
+{synopt :{opt str:atify}}requests for a consolidated sub-analyses by the {opth by:(varname:byvar)} variable{p_end}
 {synopt :{opth dp:(int:#)}}sets decimal points to display; default is {cmd:dp(2)}{p_end}
 {synopt :{opth l:evel(level)}}sets confidence level; default is {cmd: level(95)}{p_end}
 {synopt :{opth pow:er(int:#)}}sets the exponentiating power; default is {cmd: power(0)}. {cmd:#} is any real value {p_end}
 {synopt :{opt sums:tat(label)}}specifies the label(name) for proportions/relative ratios in the graph {p_end}
 {synopt :{opth sor:tby(varlist)}}requests to sort the data by variables in {it:varlist}{p_end}
 {synopt :{opth ci:method(metapreg##citype:citype)}}specifies how the confidence intervals 
-for the individuals studies are computed; default is {cmd:cimodel(exact)} for proportions and {cmd:cimodel(koopman)} for relative ratios{p_end}
+for the individuals studies are computed; default is {cmd:cimethod(exact)} for proportions and {cmd:cimethod(koopman)} for relative ratios{p_end}
 {synopt :{opt noove:rall}}suppresses the overall estimate; by default the overall estimate is displayed{p_end}
 {synopt :{opt nosub:group}}prevents the display of within-group summary estimates. By default both within-group and overall summaries are displayed{p_end}
 {synopt :{opt summary:only}}requests to show only the summary estimates{p_end}
-{synopt :{opth outp:ut(metapreg##output:abs|rr)}}specifies to display/plot absolute/relative measures; default is {cmd:outplot(abs)}{p_end}
+{synopt :{opth outp:lot(metapreg##outplot:abs|rr)}}specifies to display/plot absolute/relative measures; default is {cmd:outplot(abs)}{p_end}
 {synopt :{opth down:load(path)}}specify the location where a copy of data used to plot the forest plot should be stored {p_end}
 
 {synoptline}
 {syntab:Table}
 {synoptline}
-{synopt :{opt noita:ble}}requests to suppress the table with the study-specific estimates{p_end}
+{synopt :{opt noita:ble}}suppresses the table with the study-specific estimates{p_end}
 {synopt :{opth sumt:able(metapreg##sumtable:none|logit|abs|rr|all)}}specifies to display the which tables to display {cmd:logits}, 
-{cmd:proportions} and/or the {cmd:relative ratios}; by default all the summary tables are displayed{p_end}
+{cmd:proportions} and/or the {cmd:ratios} of proportions; by default all the summary tables are displayed{p_end}
 
 
 {synoptline}
@@ -108,14 +150,26 @@ be comma separated.{p_end}
 
 
 {synoptline}
+{marker designtype}{...}
+{synoptline}
+{synopthdr :design}
+{synoptline}
+
+{synopt :{opt independent}} notifies the program that the data is from independent studies. The program expects atleast {cmd: n N} to be specified {p_end}
+{synopt :{opt comparative}} notifies the program that the data is from comparative studies. The program expects atleast {cmd: n N bicat} to be specified {p_end}
+{synopt :{opt paired}} notifies the program that the data is from paired studies. The program expects atleast {cmd: a b c d index comparator} to be is supplied{p_end}
+{synopt :{opt matched}} notifies the program that the data is from matched studies. The program expects atleast {cmd: ab ac n index comparator} to be is supplied{p_end}
+{synopt :{opt network}} instructs the program to perform network meta-analysis. The program expects atleast {cmd: n N cat} to be specified {p_end}
+
+{synoptline}
 {marker modeltype}{...}
 {synoptline}
 {synopthdr :model type}
 {synoptline}
-{syntab:Independent analysis}
 
 {synopt :{opt random}}fits a {cmd:random}-effects model{p_end}
 {synopt :{opt fixed}}fits a {cmd:fixed}-effects model{p_end}
+
 
 {synoptline}
 
@@ -132,8 +186,8 @@ be comma separated.{p_end}
 
 {dlgtab:rr}
 
-{synopt :{opt koopman}}computes Koopman asymptotic score confidence intervals; the {cmd:default} for comparative studies. These intervals have better coverage even for small sample size{p_end}
-{synopt :{opt cml}}computes constrained maximum likelihood (cml) confidence intervals; the {cmd:default} for paired data. These intervals have better coverage even for small sample size{p_end}
+{synopt :{opt koopman}}computes Koopman asymptotic score confidence intervals; the {cmd:default} for comparative/paired studies. These intervals have better coverage even for small sample size{p_end}
+{synopt :{opt cml}}computes constrained maximum likelihood (cml) confidence intervals; the {cmd:default} for matched data. These intervals have better coverage even for small sample size{p_end}
 
 {synoptline}
 {marker sumtable}{...}
@@ -145,11 +199,11 @@ be comma separated.{p_end}
 {synopt :{opt none}}requests the suppression of the summary tables{p_end}
 
 {synoptline}
-{marker output}{...}
-{synopthdr :output}
+{marker outplot}{...}
+{synopthdr :outplot}
 {synoptline}
-{synopt :{opt abs}}requests the display of the study-specific and overall absolute measures in a table and /or a graph; the default{p_end}
-{synopt :{opt rr}}requests the display of the study-specific and overall relative ratios in a table and /or a graph. This is an option when studies are comparative or with paired data{p_end}
+{synopt :{opt abs}}requests the display of the study-specific and overall absolute measures in a table and /or a graph; the default{p_end}. 
+{synopt :{opt rr}}requests the display of the study-specific and overall relative ratios in a table and /or a graph. This is an option when studies are comparative or in network analysis{p_end}
 
 {synoptline}
 
@@ -195,40 +249,39 @@ the maximization process during refinement of starting values
 {synoptline}
 {p2colreset}{...}
 
-{marker description}{...}
-{title:Description}
-
-{pstd}
-{cmd:metapreg} is a routine for pooling and summarizing proportions 
-from binomial data, from seperate but modelologically and 
-epidemiologically similar studies. A generalized linear model for the binomial family with a logit link is fitted, i.e logistic regression. 
-
-{pstd}
-The program fits fixed or a random-effects model. The data can be from independent studies; where each row contains data from seperate studies, 
-comparative studies; where each study has two rows of data. The first row has the index data and the second row has the control data. The data can also be paired, 
-where each row contains data from each seperation cross-tabulation between the index and the control test.
-
-{pstd}
-A random-effects model accounts for and allows the quantification of heterogeneity between studies while a fixed-effects model assumes homogeneity in studies. 
-By default, the fixed effect model is fitted when there are less than {cmd:3} studies.
-
-{pstd}
-{helpb meqrlogit} is used for the random-effects model and {helpb binreg} for the fixed-effects model. 
-The binomial distribution is used to model the within-study variability ({help metapreg##Hamza2008:Hamza et al. 2008}).
-Studies with less variability have more influence in the pooled estimate since they contribute more to the likelihhod function. The 
-weighting is implicit and parameter estimation is an iterative procedure. Therefore, even though the forest plot never displays
-weights for the individual studies, weighting is indeed done. The logistic regression requires at least two studies to run.
-
-
-{pstd}
-The logistic regression framework allows meta-regression. When data is from comparative or paired studies, either the proportions
-or the relative ratios can be tabulated and/or plotted.
-
-{pstd}
-When there are no covariates, heterogeneity is also quantified using the I-squared measure({help metapreg##ZD2014:Zhou and Dendukuri 2014}).
-
 {marker options}{...}
 {title:Options}
+
+{dlgtab:Design}
+
+{phang}
+{opt design(type, baselevel(label))} specifies the type of the studies or design of the meta-analysis to perform. {it:design} is one of the following {cmd:independent},
+{cmd:comparative}, {cmd:matched}, {cmd:paired} and {cmd:network}. 
+
+{pmore}
+{cmd:design(independent)} indicates that the data is from independent studies i.e the {cmd: studyid} should be unique. The required {it:{vars}} has the form {cmd: n N}.
+
+{pmore}
+{cmd:design(comparative)} indicates that the data is from comparative studies i.e there are two rows of data per each {cmd: studyid}. The required {it:{vars}} has the form {cmd: n N bicat} 
+where {it:bicat} is the first covariate which should be a string variable with two levels.
+
+{pmore}
+{cmd:design(matched)} indicates that the data is from matched studies. There can be more than one row of data per each {cmd: studyid}. The required {it:{vars}} has the form {cmd: a b c d index comparator}. 
+{cmd: index comparator} are the first two covariates and both should be string variables. {cmd:index} should have atleast two levels.
+When there are matched observations from each study, the proportions are correlated. 
+The confidence intervals for the individual studies are computed accounting for this correlation. 
+
+{pmore}
+{cmd:design(paired)} indicates that the data is from paired studies. There can be more than one row of data per each {cmd: studyid}. The required {it:{vars}} has the form {cmd: ab ac N index comparator}.
+{cmd: index comparator} are the first two covariates and both should be string variables. {cmd:index} should have atleast two levels.
+{cmd: paired} data is actually aggregated {cmd: matched} data where {cmd: ab = a + b}, {cmd: ac = a + c} and 
+{cmd: n = a + b + c + d}. Because the {cmd: a b c d} is not available, there is unfortunately no way to account 
+for the correlation when computing the confidence intervals for the individual studies.
+
+{pmore}
+{cmd:design(network)} instructs to perform network meta-analysis. The rquired {it:{vars}} has the form {cmd: n N cat} where {it:cat} is the 
+first covariate which should be a string with atleast two levels. There should be atleast two rows of data per {cmd:studyid}. 
+
 
 {dlgtab:Model}
 
@@ -236,10 +289,10 @@ When there are no covariates, heterogeneity is also quantified using the I-squar
 {opt model(type, modelopts)} specifies the type of model to fit. {it:type} is either {cmd:fixed},or {cmd:random}. 
 
 {pmore}
-{cmd:model(fixed)} fits a fixed-effects model be fitted to the data. The model assumes that the studies are homogeneous.
+{cmd:model(fixed)} fits a fixed-effects model to the data. The model assumes that the studies are homogeneous.
 
 {pmore}
-{cmd:model(random)} requests that random-effects model be fitted to the data. As such the model allows the treatment effect to vary 
+{cmd:model(random)} requests that a random-effects model be fitted to the data. As such the model allows the treatment effect to vary 
 between the studies. 
 
 {pmore}
@@ -251,19 +304,11 @@ or {cmd:meqrlogit} (see {it:{help meqrlogit##maximize_options:maximize_options}}
 
 {pmore}
 The fixed-effects model is maximized using Stata's {help ml} command. This implies that
-{cmd: irls} would be inadmissible option and {cmd: ml} is implicit. 
+{cmd: irls} would be an inadmissible option and {cmd: ml} is implicit. 
 
 {pmore}
 Examples, {cmd: model(random, intpoint(9))} to increase the integration points, 
 {cmd: model(random, technique(bfgs))} to specify Stata's BFGS maximiztion algorithm.
-
-{phang}
-{cmd:paired} indicates that data is paired. The expected data is the format {cmd: a b c d index comparator [covariates]} When there are paired observations from each study, the proportions are correlated. 
-The confidence intervals for the individual studies are computed accounting for this correlation. 
-
-{phang}
-{cmd:comparative} indicates that studies are comparative. For each study, there are two observations; the index and comparator data. The expected data format is 
-{cmd: n N pair [covariates]}. {cmd:pair} is a string variable with the two indicator values; for the index and comparator.
 
 {phang}
 {cmd:by(byvar)} specifies that the summary etsimates be stratified/grouped according to the variable declared. This is useful in meta-regression with more than one covariate,
@@ -274,6 +319,10 @@ levels of the first categorical variable in the regression equation.
 This option is not the same as the Stata {help by} prefix which repeates the analysis for each group of observation for which the values of the prefixed variable are the same.
 
 {dlgtab:General}
+
+{phang}
+{opt stratify} requests for a consolidated sub-analyses by the {opth by:(varname:byvar)} variable. The results are 
+presented in one table and one forest plot 
 
 {phang}
 {opt dp(#)} sets decimal points to display in the table and graph; default is {cmd:dp(2)}{p_end}
@@ -312,7 +361,7 @@ small sample size and/or extreme probilities.
 {pmore}
 {opt cimethod(wilson)} specifies Wilson confidence intervals. 
 Compared to the Wald confidence intervals, Wilson score intervals; 
-have the actual coverage probability close to the nomimal value
+have the actual coverage probability close to the nominal value
 and have good properties even with small sample size and/or extreme probilities.
 However, the actual confidence level does not converge to the nominal level as {it:n}
 increases.
@@ -330,7 +379,7 @@ See {help metapreg##BCD2001:Brown, Cai, and DasGupta (2001)} and {help metapreg#
 comparison of the different binomial confidence intervals.
 
 {pmore}
-With comparative and paired data, the Koopman score{help metapreg##koopman1984:Koopman (1984)} 
+With comparative and matched data, the Koopman score{help metapreg##koopman1984:Koopman (1984)} 
 and constrained maximum likelihood(cml){help metapreg##NB2002:Nam, and Blackwelder (2002)} confidence intervals for ratios are respectively computed.
 
 {phang}
@@ -341,13 +390,13 @@ enforces the {cmd: nowt} option.
 {opt nosubgroup} prevents the display of within-group summary estimates. By default both within-group and overall summaries are displayed{p_end}
 
 {phang}
-{opt output(abs|rr)} specifies to plot absolute/relative measures; default is {cmd:output(abs)}. 
+{opt outplot(abs|rr)} specifies to plot absolute/relative measures; default is {cmd:outplot(abs)}. 
 
 {pmore} 
-{opt output(abs)} is the default and specifies that the absolute measures be presented in the table and/or in the graph. 
+{opt outplot(abs)} is the default and specifies that the absolute measures be presented in the table and/or in the graph. 
 
 {pmore}
-{opt output(rr)} requests that the relative ratios be presented in the table and/or in the graph. This options is relevant with paired or comparative data. 
+{opt outplot(rr)} requests that the relative ratios be presented in the table and/or in the graph. This options is relevant with matched, paired or comparative data. 
 
 {phang}
 {opt summaryonly} requests to show only the summary estimates. Useful when there are many studies in the groups.
@@ -451,6 +500,15 @@ See {help scatter##connect_options:connect_options} for the relevant options.
 when all the different plots are combined together. This allows the addition of titles, subtitles, captions,
 etc., control of margins, plot regions, graph size, aspect ratio, and the use of schemes.
 
+{marker remarks}{...}
+{title:Remarks}
+{pstd}
+{helpb meqrlogit} is used for the random-effects model and {helpb binreg} for the fixed-effects model. 
+The binomial distribution is used to model the within-study variability ({help metapreg##Hamza2008:Hamza et al. 2008}).
+Studies with less variability have more influence in the pooled estimate since they contribute more to the likelihood function. The 
+weighting is implicit and parameter estimation is an iterative procedure. Therefore, even though the forest plot never displays
+weights for the individual studies, weighting is indeed done. The logistic regression requires at least two studies to run.
+
 {marker examples}{...}
 {title:Examples}
 {marker example_one}{...}
@@ -500,9 +558,6 @@ a black vertical line at 0.5, a red dashed line for the pooled estimate, e.t.c.
 {cmd :xlab(.25, 0.5, .75, 1) }
 {p_end}
 {pmore3}
-{cmd :xline(0.5, lcolor(black))}
-{p_end}
-{pmore3}
 {cmd :subti(Atypical cervical cytology, size(4)) }
 {p_end}
 {pmore3}
@@ -549,7 +604,7 @@ vertical line at zero, a red dashed line for the pooled estimate, Wilson confide
 {p_end}
 
 {pmore2}
-{cmd:. #delimit cr}
+{cmd:. #delimit ;}
 {p_end}
 
 {pmore2}
@@ -625,7 +680,7 @@ increased text size, a red diamond for the confidence intervals of the pooled es
 {cmd:studyid(study) ///}
 {p_end}
 {pmore3}
-{cmd:outtable(all) ///}
+{cmd:sumtable(all) ///}
 {p_end}
 {pmore3}
 {cmd:model(random)  ///}
@@ -670,7 +725,7 @@ Logistic regression correctly handles the extreme cases appropriately without ne
 suppressed weights, increased text size, a black diamond for the confidence intervals of the pooled estimate, a black vertical line at zero, a red dashed line, for the pooled estimate, e.t.c.
 
 {pmore}
-The dataset used in this example produced the top-left graph in figure one in
+The dataset used in this example produced the top-left graph in figure two in
 {help metapreg##Ioanna_etal2009:Ioanna Tsoumpou et al. (2009)}.
 
 {pmore2}
@@ -693,7 +748,7 @@ The dataset used in this example produced the top-left graph in figure one in
 {cmd: sortby(year author) ///}
 {p_end}
 {pmore3}
-{cmd: xlab(0.1,.2, 0.3,0.4,0.5) ///}
+{cmd: xlab(0, .2, 0.4, 0.6, 0.8, 1) ///}
 {p_end}
 {pmore3}
 {cmd: xline(0, lcolor(black)) ///}
@@ -733,7 +788,7 @@ By supplying the risk-ratios and their variability, {help metapreg##Sharp1998:Sh
 
 {pmore}
 The logistic regression model appropriately accounts for both within- and between-study heterogeneity, with vaccination arm as a covariate. 
-The options {cmd:comparative} indicates that the data is comparative. The first covariate {bcg}, identifies the first and the second observations of the pair. 
+The options {cmd:comparative} indicates that the data is comparative. The first covariate {cmd:bcg}, identifies the first and the second observations of the pair. 
 The risk-ratios are requested with the option {cmd:outplot(rr)}. All output tables are requested with the option {cmd:sumtable(all)}. 
 
 {pmore}
@@ -741,7 +796,7 @@ To fit an equivalent fixed effects model to the data as in {help metapreg##Sharp
 use the option {cmd: model(fixed)}.
    
 {pmore2}
-{stata `"use "https://github.com/VNyaga/Metapreg/blob/master/bcg.dta?raw=true""':. use "https://github.com/VNyaga/Metapreg/blob/master/bcg.dta?raw=true"}
+{stata `"use "http://fmwww.bc.edu/repec/bocode/b/bcg.dta""':. use "http://fmwww.bc.edu/repec/bocode/b/bcg.dta"}
 {p_end}
 
 {pmore2}
@@ -754,7 +809,7 @@ use the option {cmd: model(fixed)}.
 {cmd: sumtable(all)  ///}
 {p_end}
 {pmore3}
-{cmd: comparative	///}
+{cmd: design(comparative)	///}
 {p_end}
 {pmore3}
 {cmd: outplot(rr) ///}
@@ -808,7 +863,7 @@ use the option {cmd: model(fixed)}.
 We investigate whether altitude has an effect on the vaccination by including {cmd:alt} as a continous covariate.
 
 {pmore2}
-{stata `"use "https://github.com/VNyaga/Metapreg/blob/master/bcg.dta?raw=true""':. use "https://github.com/VNyaga/Metapreg/blob/master/bcg.dta?raw=true"}
+{stata `"use "http://fmwww.bc.edu/repec/bocode/b/bcg.dta""':. use "http://fmwww.bc.edu/repec/bocode/b/bcg.dta"}
 {p_end}
 
 {pmore2}
@@ -836,10 +891,10 @@ We investigate whether altitude has an effect on the vaccination by including {c
 {cmd: graphregion(color(white)) /// }
 {p_end}
 {pmore3}
-{cmd: xlab(0, 0.05, 0.1)) /// }
+{cmd: xlab(0, 0.05, 0.1) /// }
 {p_end}
 {pmore3}
-{cmd: xtick(0, 0.05, 0.1))  /// }
+{cmd: xtick(0, 0.05, 0.1)  /// }
 {p_end}
 {pmore3}
 {cmd: olineopt(lcolor(red) lpattern(shortdash)) /// }
@@ -878,7 +933,7 @@ Activated by the option {cmd:interaction}, an interaction term allows to assess 
 The interaction term from {cmd:metapreg} and the coefficient for lat using {cmd:metareg} as was done by {help metapreg##Sharp1998:Sharp (1998)} are equivalent. 
 
 {pmore2}
-{stata `"use "https://github.com/VNyaga/Metapreg/blob/master/bcg.dta?raw=true""':. use "https://github.com/VNyaga/Metapreg/blob/master/bcg.dta?raw=true"}
+{stata `"use "http://fmwww.bc.edu/repec/bocode/b/bcg.dta""':. use "http://fmwww.bc.edu/repec/bocode/b/bcg.dta"}
 {p_end}
 
 {pmore2}
@@ -894,10 +949,10 @@ The interaction term from {cmd:metapreg} and the coefficient for lat using {cmd:
 {cmd:sumtable(all) ///}
 {p_end}
 {pmore3}
-{cmd:comparative  ///}
+{cmd:design(comparative)  ///}
 {p_end}
 {pmore3}
-{cmd:output(rr) ///}
+{cmd:outplot(rr) ///}
 {p_end}
 {pmore3}
 {cmd:interaction ///}
@@ -945,7 +1000,11 @@ The analysis is more appropriately perfomed using {cmd:metapreg} by including {c
 
 
 {pmore2}
-{stata `"use "https://github.com/VNyaga/Metapreg/blob/master/schizo.dta?raw=true""':. use "https://github.com/VNyaga/Metapreg/blob/master/schizo.dta?raw=true"}
+{stata `"use "http://fmwww.bc.edu/repec/bocode/s/schizo.dta""':. use "http://fmwww.bc.edu/repec/bocode/s/schizo.dta"}
+{p_end}
+
+{pmore2}
+{cmd:. sort firstauthor arm }
 {p_end}
 
 {pmore2}
@@ -964,10 +1023,10 @@ The analysis is more appropriately perfomed using {cmd:metapreg} by including {c
 {cmd:sumtable(all) ///}
 {p_end}
 {pmore3}
-{cmd:comparative  ///}
+{cmd:design(comparative)  ///}
 {p_end}
 {pmore3}
-{cmd:output(rr) ///}
+{cmd:outplot(rr) ///}
 {p_end}
 {pmore3}
 {cmd:interaction ///}
@@ -1008,9 +1067,9 @@ The analysis is more appropriately perfomed using {cmd:metapreg} by including {c
 
 {synoptline}
 {marker example_five_one}{...}
-{cmd : 5.1 Meta-regression - Paired Studies }
+{cmd : 5.1 Meta-regression - matched Studies }
 {pmore}
-We demonstrate the use of {cmd:paired} option when paired data is available. The data should be a from a 2x2 table as displayed below;
+We demonstrate the use of {cmd:matched} option when matched data is available. The data should be a from a 2x2 table as displayed below;
 
 {p 18} 
 {c |} comparator
@@ -1036,7 +1095,7 @@ Total {c |} a + c {space 5} b + d  {space 4}{c |} a + b + c+ d
 
 
 {pmore2}
-{stata `"use "https://github.com/VNyaga/Metapreg/blob/master/paired.dta?raw=true""':. use "https://github.com/VNyaga/Metapreg/blob/master/paired.dta?raw=true"}
+{stata `"use "https://github.com/VNyaga/Metapreg/blob/master/matched.dta?raw=true""':. use "https://github.com/VNyaga/Metapreg/blob/master/matched.dta?raw=true"}
 {p_end}
 
 {pmore2}
@@ -1049,7 +1108,7 @@ Total {c |} a + c {space 5} b + d  {space 4}{c |} a + b + c+ d
 {cmd:model(fixed) sumtable(all) ///}
 {p_end}
 {pmore3}
-{cmd:output(rr) paired  ///}
+{cmd:outplot(rr) design(matched)  ///}
 {p_end}
 {pmore3}
 {cmd:by(comparator) ///}
@@ -1123,18 +1182,6 @@ B1050 Brussels, {p_end}
 {pmore}
 Belgium.{p_end}
 
-{pmore}
-Marc Arbyn ({it:Marc.Arbyn@sciensano.be}) {p_end}
-{pmore}
-Belgian Cancer Center/Unit of Cancer Epidemiology, {p_end}
-{pmore}
-Sciensano,{p_end}
-{pmore} 
-Juliette Wytsmanstraat 14, {p_end}
-{pmore}
-B1050 Brussels, {p_end}
-{pmore}
-Belgium.{p_end}
 
 {title:References}
 
