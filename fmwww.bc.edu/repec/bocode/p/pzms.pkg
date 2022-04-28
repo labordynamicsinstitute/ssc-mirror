@@ -1,0 +1,36 @@
+d 'PZMS': module to implements the Placebo Zone optimal Model Selection algorithm for regression discontinuity and kink designs
+d
+d    pzms implements the placebo zone model selection algorithm for
+d regression discontinuity (RDD) and kink (RKD) designs proposed   
+d in Kettlewell & Siminski (2022). It also reports regression
+d estimates using the model specification selected by the
+d algorithm.	The pzms algorithm works by estimating treatment
+d effects for candidate RDD or RKD specifications at various
+d 'placebo    thresholds'. These placebo thresholds are cut-off
+d points along the range of the running variable where there is no
+d actual    discrete change in treatment (this region is described
+d as the placebo zone). Treatment effects are assumed to be zero at
+d these    thresholds. Candidate models can vary by combinations of
+d bandwidth, polynomial order, kernel weighting, analytical
+d weighting    and covariates. The candidate specification with the
+d lowest root mean squared error of placebo estimates is selected
+d as the    preferred specification. 
+d
+d KW: placebo zone
+d KW: regression discontinuity
+d KW: treatment effects
+d
+d Requires: Stata version 12.1
+d
+d Distribution-Date: 20220427
+d
+d Author:   Nathan Kettlewell, University of Technology Sydney
+d Support: email  Nathan.Kettlewell@@uts.edu.au
+d
+d Author:  Peter Siminski, University of Technology Sydney
+d Support: email   Peter.Siminski@@uts.edu.au
+d
+f pzms.ado
+f pzms_custom.ado
+f pzms.sthlp
+f pzms_example_data.dta

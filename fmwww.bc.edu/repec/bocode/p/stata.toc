@@ -183,3 +183,4 @@ p pwploti module to plot power curve for sample size and power calculation
 p pyconvertu module to convert a string variable into a classification from the default or user-provided JSON file with the help of Python 3
 p pyramid tutorial for population pyramids
 p python module for using the Python language within Stata
+p pzms module to implements the Placebo Zone optimal Model Selection algorithm for regression discontinuity and kink designs

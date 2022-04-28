@@ -7,9 +7,9 @@ d KW: graphics
 d KW: joy plot
 d KW: ridgeplot 
 d
-d Requires: Stata version 16 and palettes, colrspace from SSC (q.v.)
+d Requires: Stata version 14.2 and palettes, colrspace from SSC (q.v.)
 d
-d Distribution-Date: 20220416
+d Distribution-Date: 20220427
 d
 d Author: Fernando Rios-Avila, Levy Economics Institute of Bard College
 d Support: email friosavi@@levy.org
