@@ -1,0 +1,17 @@
+d 'TACTS': module to provide a clinical trial simulator
+d
+d  tacts simulates data from different types of trials and
+d summarises the results. 
+d
+d KW: clinical trials
+d KW: simulation
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20220429
+d
+d Author: Adrian Mander , University of Cardiff
+d Support: email ManderA@@cardiff.ac.uk
+d
+f tacts.ado
+f tacts.sthlp

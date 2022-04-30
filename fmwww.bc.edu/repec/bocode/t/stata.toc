@@ -31,6 +31,7 @@ p tabsheet module to rapidly output cross-tabular statistics to a tab-delimited 
 p tabstat2excel module to export summary statistics generated from a tabstat command to an Excel spreadsheet
 p tabstatmat module to save matrices saved by tabstat to single named matrix
 p tabxml module to save results in XML format for use in Microsoft Excel and OpenOffice  Calc
+p tacts module to provide a clinical trial simulator
 p tail module to print the tail observations (last observations in data set)
 p tarow module to tabulate each row against all others 
 p tcod module to perform Gloudemans' COD tolerance tests

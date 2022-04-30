@@ -1,4 +1,4 @@
-d 'PZMS': module to implements the Placebo Zone optimal Model Selection algorithm for regression discontinuity and kink designs
+d 'PZMS': module to implement the Placebo Zone optimal Model Selection algorithm for regression discontinuity and kink designs
 d
 d    pzms implements the placebo zone model selection algorithm for
 d regression discontinuity (RDD) and kink (RKD) designs proposed   
