@@ -25,6 +25,7 @@
 {browse "https://www.sciencedirect.com/science/article/abs/pii/S0304407618301301":Kato and Sasaki (2018)}. 
 The command requires as input two measurements, {bf:x1} and {bf:x2}, of the unobserved latent variable {bf:x} with classical measurement errors, {bf:e1} = {bf:x1} - {bf:x} and {bf:e2} = {bf:x2} - {bf:x}, respectively. The output consists of a deconvolution kernel density estimate of {it:f}({bf:x}) and their uniform confidence band over a domain of {bf:x}.
 
+
 {marker options}{...}
 {title:Options}
 
@@ -42,35 +43,68 @@ The command requires as input two measurements, {bf:x1} and {bf:x2}, of the unob
 {phang}
 {bf:tp({it:real})} sets the scale-normalized tuning parameter. The default value is {bf: tp(0.2)}.
 
+
 {marker examples}{...}
 {title:Examples}
 
 {phang}
-({bf:x1} first measurement of {bf:x}, {bf:x2} second measurement of {bf:x}){p_end}
+Total factor productivity of individual firms in Chile ({bf:x1982} first measurement of {bf:x}, {bf:x1983} second measurement of {bf:x}){p_end}
 
-{phang}Construction of a 95% uniform confidence band:
+{phang}Constructing a uniform confidence band in the domain corresponding to +/- 4 standard deviations of {bf:x}:
 
-{phang}{cmd:. dkdensity x1 x2}{p_end}
+{phang}{cmd:. use "example_1982_1983.dta"}{p_end}
+{phang}{cmd:. dkdensity x1982 x1983, numx(100) domain(4)}{p_end}
 
 {phang}Construction of a 90% uniform confidence band:
 
-{phang}{cmd:. dkdensity x1 x2, cover(0.90)}{p_end}
+{phang}{cmd:. use "example_1982_1983.dta"}{p_end}
+{phang}{cmd:. dkdensity x1982 x1983, numx(100) domain(4) cover(0.90)}{p_end}
 
-{phang}Constructing a uniform confidence band on a grid points of 100 points in the domain corresponding to +/- 3 standard deviations of {bf:x}:
 
-{phang}{cmd:. dkdensity x1 x2, numx(100) domain(3)}{p_end}
+{marker stored}{...}
+{title:Stored results}
 
 {phang}
-({bf:x1982} first measurement of {bf:x}, {bf:x1983} second measurement of {bf:x}){p_end}
+{bf:dkdensity} stores the following in {bf:e()}: 
+{p_end}
 
-{phang}{cmd:. use "example_1982_1983.dta"}{p_end}
-{phang}{cmd:. kotlarski x1982 x1983, domain(4) cover(0.90)}{p_end}
+{phang}
+Scalars
+{p_end}
+{phang2}
+{bf:r(N)} {space 10}observations
+{p_end}
+
+{phang}
+Macros
+{p_end}
+{phang2}
+{bf:r(cmd)} {space 8}{bf:dkdensity}
+{p_end}
+
+{phang}
+Matrices
+{p_end}
+{phang2}
+{bf:r(x)} {space 10}vector of x
+{p_end}
+{phang2}
+{bf:r(fx)} {space 9}vector of density values
+{p_end}
+{phang2}
+{bf:r(lower)} {space 6}confidence band (lower boundary)
+{p_end}
+{phang2}
+{bf:r(upper)} {space 6}confidence band (upper boundary)
+{p_end}
+
 
 {title:Reference}
 
 {p 4 8}Kato, K. and Y. Sasaki. 2018. Uniform Confidence Bands in Deconvolution with Unknown Error Distribution. {it:Journal of Econometrics}, 207 (1), pp. 129-161. 
 {browse "https://www.sciencedirect.com/science/article/abs/pii/S0304407618301301":Link to Paper}.
 {p_end}
+
 
 {title:Authors}
 

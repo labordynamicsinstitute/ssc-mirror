@@ -6,7 +6,7 @@
 // Use it when you consider repeated measurements x1 and x2 for the true latent
 // variable x with measurement errors e1 = x1 - x and e2 = x2 - x. The command
 // draws a uniform confidence band for the density function fx of x.
-////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////// 
 program define dkdensity, rclass
     version 14.2
  
@@ -18,12 +18,23 @@ program define dkdensity, rclass
     fvexpand `indepvars' 
     local cnames `r(varlist)'
  
-    tempname N CB
+    tempname N CB x fx CBl CBu
 
 		mata: estimate("`depvar'", "`cnames'", `numx', `domain', ///
-					   `tp', `cover', "`touse'", "`N'", "`CB'") 
+					   `tp', `cover', "`touse'", "`N'", "`CB'", ///
+					   "`x'", "`fx'", "`CBl'", "`CBu'") 
 
 	_matplot `CB', connect(1) noname ytitle("f{sub:X}(x)") xtitle("x") recast(line) name(UCB, replace)		
+	
+	return scalar N = `N'
+	return matrix upper = `CBu'
+	return matrix lower = `CBl'
+	return matrix fx = `fx'
+	return matrix x = `x'
+    return local cmd "dkdensity"
+	di "*dkdensity command is based on Kato, K. & Sasaki, Y. (2018): Uniform Confidence"
+	di "Bands in Deconvolution with Unknown Error Distribution. Journal of Econometrics"
+	di "207 (1), 129-161."
 end
 
 		
@@ -47,14 +58,10 @@ void estimate( string scalar x1v,     string scalar x2v,
 			   real scalar numx,      real scalar domain,
 			   real scalar tuning,	  real scalar cover,
 			   string scalar touse,   string scalar nname, 
-			   string scalar cbname) 
+			   string scalar cbname,
+			   string scalar xname,   string scalar fxname,
+			   string scalar cblname, string scalar cbuname) 
 {
-	printf("\n{hline 78}\n")
-	printf("Executing:          Kato, K. & Sasaki, Y. (2018): Uniform Confidence Bands in \n")
-	printf("                    Deconvolution with Unknown Error Distribution. Journal of \n")
-    printf("                    Econometrics 207 (1), 129-161. \n")
-	printf("{hline 78}\n")
-
     x1      = st_data(., x1v, touse)
     x2      = st_data(., x2v, touse)
     n      = length(x1)
@@ -171,6 +178,10 @@ void estimate( string scalar x1v,     string scalar x2v,
     st_matrix(cbname, (BBB,XXX))
 	
     st_numscalar(nname, n)
+	st_matrix(xname, final_xlist)
+	st_matrix(fxname, final_fx)
+	st_matrix(cblname, final_CBl)
+	st_matrix(cbuname, final_CBu)
 }
 end
 ////////////////////////////////////////////////////////////////////////////////

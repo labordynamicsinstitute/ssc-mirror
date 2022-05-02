@@ -1,4 +1,5 @@
-*! v1.51 Refinements for Default Options
+*! v1.52 Corrects if 
+* v1.51 Refinements for Default Options
 * v1.5 over and by
 * v1.4 works with Stata 10 or above?
 * v1.3 Fixes gap0
@@ -85,6 +86,8 @@ end
 	}
 end */
 
+ 
+
 program joy_plot
 
 	syntax varname [if] [in] [aw/], [over(varname) by(varname) *]     //  overall look of outline
@@ -94,22 +97,26 @@ program joy_plot
 										msymbol(passthru) msize(passthru) ///
 										msangle(passthru) mfcolor(passthru) mlcolor(passthru) ///
 										mlwidth(passthru) mlalign(passthru) jitter(passthru) jitterseed(passthru) *]*/
-	version 14.2								
 	marksample touse
-	markout `touse' `varlist' `over' `by' `exp', strok
+	** detect if
+ 
+	
+	markout `touse' `varlist' `over' `by' `exp' , strok
 	tempname frame
 	
 	if `c(stata_version)'>=16 {
 		frame put `varlist' `over' `by' `exp'  if `touse', into(`frame') 
-		if "`by'"==""		qui:frame `frame': make_joy `0'
-		if "`by'"!=""		qui:frame `frame': make_joy2 `0'		
+		syntax anything [aw] [if] [in], [*]
+		if "`by'"==""		qui:frame `frame': make_joy `anything' [`weight'`exp'], `options'
+		if "`by'"!=""		qui:frame `frame': make_joy2 `anything' [`weight'`exp'], `options'
 	}
 	if `c(stata_version)'<16 {
 		preserve
 			qui:keep `varlist' `over'  `by' `exp'  `touse'
 			qui:keep if `touse'
-			if "`by'"==""		: make_joy `0'
-			if "`by'"!=""		: make_joy2 `0'
+			syntax anything [aw] [if] [in], [*]
+			if "`by'"==""		: make_joy `anything' [`weight'`exp'], `options'
+			if "`by'"!=""		: make_joy2 `anything' [`weight'`exp'], `options'
 		restore
 	}
 	

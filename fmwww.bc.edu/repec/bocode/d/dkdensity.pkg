@@ -15,7 +15,7 @@ d KW: confidence band
 d
 d Requires: Stata version 14.2
 d
-d Distribution-Date: 20200914
+d Distribution-Date: 20220501
 d
 d Author: Kengo Kato, Cornell University
 d Support: email kk976@@cornell.edu
@@ -25,3 +25,4 @@ d Support: email yuya.sasaki@@gmail.com
 d
 f dkdensity.ado
 f dkdensity.sthlp
+f ../e/example_1982_1983.dta
