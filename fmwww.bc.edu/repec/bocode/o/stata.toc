@@ -20,6 +20,7 @@ p omega module to calculate the omega reliability coefficient
 p omegacoef module to calculate the omega reliability coefficient
 p omninorm module to calculate omnibus test for univariate/multivariate normality
 p omodel modules to perform tests on ordered probit and ordered logit models
+p oneclick module to screen for control variables that keep the explanatory variables at a certain level of significance
 p onespell module to generate single longest spell for each unit in panel data, listwise
 p onewayplot module for oneway plots
 p onewplot module for oneway plots

@@ -8,7 +8,7 @@
 <link rel="stylesheet" type="text/css" href="../../../ecstyle.css">
 <body>
 <h1>Submitting and retrieving materials from the SSC Archive</h1>
-<h3>C F Baum, <a href="mailto:baum@bc.edu">baum@bc.edu</a>  revision of 23 February 2020</h3>
+<h3>C F Baum, <a href="mailto:baum@bc.edu">baum@bc.edu</a>  revision of 2 May 2022</h3>
 <p>
 The Statistical Software Components (SSC) Archive, often termed the "Boston College" archive, is a <a href="http://repec.org">RePEc</a> repository containing user-written software for statistical analysis in a number of computer languages. The predominant language of SSC materials is Stata, and the archive contains Stata materials dating back to 1996. RePEc access to these materials is provided by <a href="http://ideas.repec.org/s/boc/bocode.html">IDEAS</a> and <a href="http://econpapers.repec.org/software/bocbocode/">EconPapers</a>.
 </p>
@@ -23,6 +23,10 @@ Any Stata user is welcome to submit materials to the SSC archive. It should be n
 <p>
 To facilitate the workings of Stata's <tt>ssc</tt> and <tt>adoupdate</tt> commands, every ado-file in the SSC Archive must have a Stata <tt>version n.n</tt> command to indicate the lowest version of Stata on which the routine will run. If <tt>version</tt> is 10.0 or greater, all help files should be presented as <tt>.sthlp</tt> rather than <tt>.hlp</tt>.
 </p>
+
+<p>
+All programs should be tested after the command <tt>set varabbrev off</tt> is given. Programs should work regardless of the user's preference to allow or disable 
+this feature of Stata. Many errors in user-written programs can be traced to the assumption that users will allow <tt>varabbrev</tt>.
 
 <p>
 In line with StataCorp convention, user-written command names must be strictly lower case.

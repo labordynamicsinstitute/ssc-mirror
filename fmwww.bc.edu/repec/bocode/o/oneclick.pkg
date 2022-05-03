@@ -1,0 +1,24 @@
+d 'ONECLICK': module to screen for control variables that keep the explanatory variables at a certain level of significance
+d
+d    oneclick By entering your control variables, the oneclick
+d command helps you to select all true subsets of the control	
+d variables and add them to the regression in turn, and at the end
+d only the combinations at the level of significance you are   
+d satisfied with are listed. It is important to note that the
+d tuples command must be downloaded in advance. This command is a  
+d  new development based on the tuples command and it's very
+d useful, especially when we do not know what control variables are
+d    appropriate. 
+d
+d KW: model selection
+d KW: control variables
+d
+d Requires: Stata version 16 and tuples from SSC (q.v.)
+d
+d Distribution-Date: 20220429
+d
+d Author: Shutter Zor	 , Wuhan Textile University
+d Support: email Shutter_Z@@outlook.com
+d
+f oneclick.ado
+f oneclick.sthlp
