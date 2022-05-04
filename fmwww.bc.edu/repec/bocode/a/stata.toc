@@ -50,6 +50,7 @@ p alignmicro module to perform alignment in microsimulation
 p allcross modules to create variables corresponding to moment matrices
 p allpossible module to fit all possible models with subsets of predictors
 p allsubsets module to perform all subsets (combinatorial) meta-analysis in a set of studies 
+p allsynth module to automate estimation of (i) bias-corrected synthetic control gaps ("treatment effects")
 p almon Module to Estimate Shirley Almon Generalized Polynomial Distributed Lag Model
 p almon1 module to estimate Shirley Almon Polynomial Distributed Lag Model
 p alogit module to estimate (In)attentive logit regression from Abaluck and Adams 

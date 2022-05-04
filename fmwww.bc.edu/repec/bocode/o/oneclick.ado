@@ -1,5 +1,5 @@
 *===================================================================================*
-* Ado-file: OneClick Version 3.2 
+* Ado-file: OneClick Version 3.3 
 * Author: Shutter Zor(左祥太)
 * Affiliation: School of Accountancy, Wuhan Textile University
 * E-mail: Shutter_Z@outlook.com 
@@ -43,7 +43,7 @@ program define oneclick
 				replace seOfIndX = _se["`independentvariable'"] in `i'
 				replace tOfIndX = bOfIndX / seOfIndX in `i'
 				replace degreeOfFreedom = e(df_r) in `i'	
-				replace tValue = invttail(degreeOfFreedom, `significance') in `i'
+				replace tValue = invttail(degreeOfFreedom, `significance'/2) in `i'
 				replace rSq = e(r2) in `i'
 				replace subSet = "`tuple`i''" in `i'
 			}
@@ -75,7 +75,7 @@ program define oneclick
 					replace seOfIndX = _se["`independentvariable'"] in `i'
 					replace tOfIndX = bOfIndX / seOfIndX in `i'
 					replace degreeOfFreedom = e(df_r) in `i'	
-					replace tValue = invttail(degreeOfFreedom, `significance') in `i'
+					replace tValue = invttail(degreeOfFreedom, `significance'/2) in `i'
 					replace rSq = e(r2) in `i'
 					replace subSet = "`tuple`i''" in `i'
 				}

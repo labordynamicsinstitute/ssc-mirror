@@ -1,0 +1,36 @@
+d 'ALLSYNTH': module to automate estimation of (i) bias-corrected synthetic control gaps ("treatment effects")
+d
+d      allsynth is a wrapper for the synth command which automates
+d the implementation of several additional    features. The primary
+d extensions are:  (1) automated estimation of "bias-corrected"
+d synthetic control    gaps to adjust for discrepancies in
+d predictor variable values between a treated unit and its donor   
+d pool, proposed by Abadie and L'Hour (2021) and Ben-Michael,
+d Feller and Rothstein (2021); (2)    automated estimation
+d RMSPE-ranked p-values based on in-space placebo tests (for
+d "classic" and    "bias-corrected" specifications) in which
+d treatment status is randomly permuted across untreated    units
+d (Abadie, Diamond and Hainmueller (2015)); (3) automated
+d estimation of a "stacked" synthetic	 control estimator with
+d many treated units and potentially staggered treatment timing
+d (Dube and    Zipperer (2015), Wiltshire (2021)), yielding
+d estimates of the average treatment effects and (if	desired)
+d associated RMSPE-ranked p-values for both classic and
+d bias-corrected specifications; and (4)    greatly expanded
+d automated graphing capability.  allsynth also provides additional
+d diagnostics and    warnings to help practitioners with its usage. d
+d KW: synthetic control
+d KW: treatment effects
+d KW: bias correction
+d
+d Requires: Stata version 16 and synth, distinct, elasticregress from SSC (q.v.)
+d
+d Distribution-Date: 20220503
+d
+d Author: 	  Justin C. Wiltshire,    University of California, Davis
+d Support: email  jcwiltshire@@ucdavis.edu
+d
+f allsynth.ado
+f allsynth.sthlp
+f ../s/synth_smoking.dta
+f allsynth_walmart.dta
