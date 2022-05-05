@@ -1,5 +1,5 @@
 *===================================================================================*
-* Ado-file: OneClick Version 3.3 
+* Ado-file: OneClick Version 3.4 
 * Author: Shutter Zor(左祥太)
 * Affiliation: School of Accountancy, Wuhan Textile University
 * E-mail: Shutter_Z@outlook.com 
@@ -60,7 +60,8 @@ program define oneclick
 		}
 		
 		list subSet
-		keep bOfIndX seOfIndX tOfIndX rSq
+		keep subSet bOfIndX seOfIndX tOfIndX rSq
+		order subSet bOfIndX seOfIndX tOfIndX rSq
 		save subset.dta, replace
 		}
 		
