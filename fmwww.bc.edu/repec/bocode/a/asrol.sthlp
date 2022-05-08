@@ -66,10 +66,10 @@ would always look backward. This has changed in version 5.
 {p 4 4 2} The window argument can now take up to three arguments. The window can now look
 backward, forward, and both back and forward. More details can be read in {help asrol##window:Section}
 
-{p 4 4 2} {hi:2. Improved algoritham for rolling window indices} {break}
+{p 4 4 2} {hi:2. Improved algorithm  for rolling window indices} {break}
 This version of {cmd: asrol} (version 5.0) significantly improves the 
 calculation speed of the required statistics,
-thanks to the development of a more efficient algoritham for extracting rolling 
+thanks to the development of a more efficient algorithm for extracting rolling 
 window indices. This has resulted in  significant speed advantage for asrol compared
 to its previous versions or other available programs. The speed efficiency matters 
 more in larger datasets. While writing the source code of {opt asrol}, I took 

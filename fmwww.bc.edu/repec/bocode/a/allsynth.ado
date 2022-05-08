@@ -1,4 +1,4 @@
-*! version 0.0.9 BETA  Justin Wiltshire 05/02/2022 - Wrapper adding functionality to -synth- package
+*! version 1.0  Justin Wiltshire 05/06/2022 - Wrapper adding functionality to -synth- package
 
 program allsynth, eclass sortpreserve byable(recall)
 	version 15.1 // Not tested on earlier versions
@@ -17,6 +17,27 @@ program allsynth, eclass sortpreserve byable(recall)
 
 	if "`pvar'" == "" {
 		di as err "Panel time variable missing. Please use -tsset panelvar timevar-"
+		exit 198
+	}
+	
+	* Confirm -synth- program is installed
+	capture synth
+	if _rc == 199 {
+		di as err "-synth- package and its ancillary data must be installed. Type -ssc install synth, replace all-"
+		exit 198
+	}
+			
+	* Confirm -distinct- program is installed
+	capture distinct
+	if _rc == 199 {
+		di as err "-distinct- package must be installed. Type -ssc install distinct-"
+		exit 198
+	}
+	
+	* Confirm -elasticregress- program is installed if one of the bcorrect() options -ridge-, -lasso-, or -elastic- are specified
+	capture elasticregress
+	if _rc == 199 {
+		di as err "-elasticregress- package must be installed. Type -ssc install elasticregress-"
 		exit 198
 	}
 
@@ -1071,7 +1092,12 @@ program allsynth, eclass sortpreserve byable(recall)
 				exit 198
 			}
 			
-			* Ensure there are no duplicates in the list of predictors
+			* Replace abbreviated ordvar name if it is abbreviated
+			unab var : `ordvar'
+			local anything = subinstr("`anything'", "`ordvar' ", "`var' ", 1)
+			local ordvar "`var'"
+			
+			/* Ensure there are no duplicates in the list of predictors
 			local everything2 "`everything'"
 			local evsize : list sizeof everything2
 			local everything
@@ -1084,7 +1110,7 @@ program allsynth, eclass sortpreserve byable(recall)
 				local evsize = `evsize' - 1
 			}
 			local anything "`ordvar'`everything'"
-			local anything2 "`anything'"
+			local anything2 "`anything'"*/
 
 			* Check at least one predictor variable is specified
 			if "`everything'" == "" {
@@ -1092,7 +1118,7 @@ program allsynth, eclass sortpreserve byable(recall)
 				exit 198
 			}
 			
-			******* Temporarily rename control variables to allow for long names
+			/******* Temporarily rename control variables to allow for long names
 			local xthing
 			local ything
 			
@@ -1145,7 +1171,7 @@ program allsynth, eclass sortpreserve byable(recall)
 				local listthing "`listthing' `a'`b'"
 				local ct = `ct' - 1
 			}
-			local anything = subinstr("`listthing'", "(NO)", "", .)
+			local anything = subinstr("`listthing'", "(NO)", "", .)*/
 			
 			* Get dependent variable with new name and re-define the everything local
 			gettoken dvar everything: anything
@@ -1184,7 +1210,7 @@ program allsynth, eclass sortpreserve byable(recall)
 				di as err "No predictor variables specified. Please supply at least one predictor variable"
 				exit 198
 			}
-
+			
 			* Begin variable construction
 			while "`everything'" != "" {
 
@@ -1197,13 +1223,17 @@ program allsynth, eclass sortpreserve byable(recall)
 				* If not, token is just a varname; so check whether it is a (numeric) variable
 				if `whereq' == 0 {
 					capture confirm numeric var `p'
+					
 					if _rc {
 						di as err "`p' does not exist as a (numeric) variable in dataset"
 						exit 198
 					}
 					
 					* Get the variable
-					local var "`p'"
+					unab var: `p'
+					
+					* Replace abbreviated varname in anything macro
+					local anything = subinstr("`anything'", " `p'", " `var'", 1)
 					
 					* Use xperiod for time (user-defined or default)
 					local xtime "`xperiod'"
@@ -1217,6 +1247,12 @@ program allsynth, eclass sortpreserve byable(recall)
 					
 					* Get variable
 					local var = substr("`p'",1,`whereq'-1)
+					unab var2: `var'
+					
+					* Replace abbreviated varname in p and anything macros
+					local p = subinstr("`p'", "`var'", "`var2'", 1)
+					local anything = subinstr("`anything'", " `var'(", " `var2'(", .)
+					local whereq = strpos("`p'", "(")
 					
 					* Confirm it's numeric
 					qui capture confirm numeric var `var'
@@ -1318,26 +1354,6 @@ program allsynth, eclass sortpreserve byable(recall)
 			mat Xbc = `Xtr',`Xco'
 			mat Xbc = Xbc'
 			mat Xbc = Xid, Xbc
-				
-			* Confirm -synth- program is installed
-			capture synth
-			if _rc == 199 {
-				di as err "-synth- package must be installed. Type -ssc install synth, replace all-"
-				exit 198
-			}
-			
-			* Confirm -distinct- program is installed
-			capture distinct
-			if _rc == 199 {
-				di as err "-distinct- package must be installed. Type -ssc install distinct-"
-				exit 198
-			}
-			* Confirm -elasticregress- program is installed if one of the bcorrect() options -ridge-, -lasso-, or -elastic- are specified
-			capture elasticregress
-			if _rc == 199 {
-				di as err "-elasticregress- package must be installed. Type -ssc install elasticregress-"
-				exit 198
-			}
 			
 			* Gather treated and included control units in a single macro
 			local counit : subinstr local counit "  " "", all
@@ -1492,7 +1508,7 @@ program allsynth, eclass sortpreserve byable(recall)
 				if _rc != 0 /*== 504*/ & "`trunit'" != "`actreat'" {
 					local pl_rc = _rc
 					local pl_unit = "`pl_unit' `trunit'"
-					di as err "Nested optimization failed for placebo run `pvar' == `trunit'. Calculating W-matrix using regression-based V-matrix"
+					di as err "Nested optimization failed for placebo run `pvar' == `trunit'. Calculating W-matrix using default V-matrix"
 					#delimit ;
 						`caploc' synth 
 							`anything', 
@@ -1534,7 +1550,7 @@ program allsynth, eclass sortpreserve byable(recall)
 				* Save the ereturn matrices
 				mat X_b = e(X_balance)
 				mat _eRMSPE = e(RMSPE)
-				mat _eV_matrix = e(V_Matrix)
+				mat _eV_matrix = e(V_matrix)
 				mat _eX_balance = e(X_balance)
 				mat _eW_weights = e(W_weights)
 				mat _eY_synthetic = e(Y_synthetic)
@@ -2013,7 +2029,7 @@ program allsynth, eclass sortpreserve byable(recall)
 			if `pl_rc' != 0 {
 				di ""
 				di "{hline}"
-				di as err "Note: Nested optimization failed for placebo run(s) `pvar' == (`pl_unit'). Synthetic control W-matrix calculated using regression-based V-matrix for the placebo runs for `pvar' == (`pl_unit')"
+				di as err "Note: Nested optimization failed for placebo run(s) `pvar' == (`pl_unit'). Synthetic control W-matrix calculated using default V-matrix for the placebo runs for `pvar' == (`pl_unit')"
 				di ""
 				di "{hline}"
 			}
@@ -2667,14 +2683,20 @@ program graphgaps, rclass
 		local gapfigc "(line gap `tvar' if `pvar' == `actreat', lp(solid) lcolor(black))"
 		local cleglabo "label(2 "
 		local cleglabc ")"
-		local gapfigcleg "Average classic SC"
+		local gapfigcleg "Classic SC"
+		if "`stacked'" != "" {
+			local gapfigcleg "Average classic SC"
+		}
 		local cname "classic_"
 	}
 	if `gapfigbcorrect' == 1 {
 		local gapfigbc "(line gap_bc `tvar' if `pvar' == `actreat', lp(solid) lcolor(black))"
 		local bcleglabo "label(2 "
 		local bcleglabc ")"
-		local gapfigbcleg "Average bias-corrected SC"
+		local gapfigbcleg "Bias-corrected SC"
+		if "`stacked'" != "" {
+			local gapfigbcleg "Average bias-corrected SC"
+		}
 		local bcname "bias_corrected_"
 	}
 	if `gapfigclassic' == 1 & `gapfigbcorrect' == 1 {

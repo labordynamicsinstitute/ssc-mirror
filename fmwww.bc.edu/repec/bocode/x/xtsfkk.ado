@@ -1,3 +1,4 @@
+*! version 2.0.3  29apr2022
 *! version 2.0.2  03mar2022
 *! version 2.0.1  10jun2021
 *! version 2.0.0  08dec2020
@@ -16,6 +17,9 @@ Recommended Citations:
 
 The following citations are recommended for referring to the xtsfkk
 program package, underlying econometric methodology, and examples:
+
++ Karakaplan, Mustafa U. (2022) "Panel Stochastic Frontier Models with 
+Endogeneity." Forthcoming. The Stata Journal.
 
 + Karakaplan, Mustafa U. (2018) "xtsfkk: Stata Module for Endogenous 
 Panel Stochastic Frontier Models." Available at Boston College, 
@@ -46,8 +50,8 @@ program xtsfkk
 	if replay() {
 		if "`2'"=="version" | "`2'"=="ver" | "`2'"=="vers" | "`2'"=="versi" | "`2'"=="versio" {
 			di _n(1) "{bf:{ul:Version}}"
-			di _n(1) "{txt}{sf}    xtsfkk version 2.0.1"
-			di "    June 10, 2021"
+			di _n(1) "{txt}{sf}    xtsfkk version 2.0.3"
+			di "    April 29, 2022"
 			di _n(1) "{bf:{ul:Program Author}}"
 			di _n(1) "    Dr. Mustafa Ugur Karakaplan"
 			di `"    E-mail: {browse "mailto:mukarakaplan@yahoo.com":mukarakaplan@yahoo.com}"'
@@ -55,6 +59,7 @@ program xtsfkk
 			di _n(1) "{pstd}For comments, suggestions, or questions about {cmd: xtsfkk}, please send an email to me."
 			di _n(1) "{bf:{ul:Recommended Citations}}"
 			di _n(1) "{pstd}The following citations are recommended for referring to the xtsfkk program package, the underlying econometric methodology, and examples: {p_end}"
+			di _n(1) `"{phang}+ Karakaplan, Mustafa U. (2022) "Panel Stochastic Frontier Models with Endogeneity." {it:Forthcoming.}  {browse "www.stata-journal.com":The Stata Journal}."'
 			di _n(1) `"{phang}+ Karakaplan, Mustafa U. (2018) "xtsfkk: Stata Module for Endogenous Panel Stochastic Frontier Models." Available at Boston College, Department of Economics, Statistical Software Components (SSC) {browse "https://ideas.repec.org/c/boc/bocode/s458445.html":S458445}{p_end}"'
 			di _n(1) `"{phang}+ Karakaplan, Mustafa U. and Kutlu, Levent (2017) "Endogeneity in Panel Stochastic Frontier Models." {browse "http://www.tandfonline.com/doi/abs/10.1080/00036846.2017.1363861":Applied Economics}{p_end}"'
 			di _n(1) "{help xtsfkk##citation:{bf:{ul:More Recommended Citations}}}"
@@ -876,6 +881,7 @@ else di in red "Model converged!"
 	if ("`nomessage'"=="") {	
 			di _n(1) "{bf:{ul:Recommended Citations}}"
 			di _n(1) "{pstd}The following citations are recommended for referring to the xtsfkk program package, the underlying econometric methodology, and examples: {p_end}"
+			di _n(1) `"{phang}+ Karakaplan, Mustafa U. (2022) "Panel Stochastic Frontier Models with Endogeneity." {it:Forthcoming.}  {browse "www.stata-journal.com":The Stata Journal}."'
 			di _n(1) `"{phang}+ Karakaplan, Mustafa U. (2018) "xtsfkk: Stata Module for Endogenous Panel Stochastic Frontier Models." Available at Boston College, Department of Economics, Statistical Software Components (SSC) {browse "https://ideas.repec.org/c/boc/bocode/s458445.html":S458445}{p_end}"'
 			di _n(1) `"{phang}+ Karakaplan, Mustafa U. and Kutlu, Levent (2017) "Endogeneity in Panel Stochastic Frontier Models." {browse "http://www.tandfonline.com/doi/abs/10.1080/00036846.2017.1363861":Applied Economics}{p_end}"'
 			di _n(1) "{help xtsfkk##citation:{bf:{ul:Click for more recommended citations.}}}"

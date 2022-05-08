@@ -25,7 +25,7 @@ d KW: bias correction
 d
 d Requires: Stata version 16 and synth, distinct, elasticregress from SSC (q.v.)
 d
-d Distribution-Date: 20220503
+d Distribution-Date: 20220507
 d
 d Author: 	  Justin C. Wiltshire,    University of California, Davis
 d Support: email  jcwiltshire@@ucdavis.edu

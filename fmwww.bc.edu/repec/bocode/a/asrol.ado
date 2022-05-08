@@ -1,7 +1,7 @@
 *! Attaullah Shah; Email: attaullah.shah@imsciences.edu.pk; Support website: www.FinTechProfessor.com
+* Version 5.8: May 5, 2022: bug fixed in max2, max2, max4, and max5
 
-*!Version 5.7: Arpil 5, 2022: bug fixed when option window(var 0 1) was used 
-
+* Version 5.7: Arpil 5, 2022: bug fixed when option window(var 0 1) was used 
 * Version 5.6: Mar 1, 2022 : New statistic - kurtosis - added
 * Version 5.5: Nov 6, 2021 : Added max2, max3, max4, and max5 for finding second, third, fourth and fifth largest values.
 * Version 5.4: July 13, 2021 : The error 'PRODUCT():  3201  vector required' fixed. This error would occur in the calculation of product if extended missing values were present
@@ -127,13 +127,9 @@ prog asrol, byable(onecall) sortpreserve
 				exit
 			}
 
-			if (`fw' == 0) {
+			if `fw' == 0 {
 			    loc fw
 				loc bw = abs(`bw')
-			}
-			
-			else if(`bw' == 0 & `fw' > 0) {
-			    loc bw = -1
 			}
 		}
 

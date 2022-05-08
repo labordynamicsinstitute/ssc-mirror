@@ -1,9 +1,9 @@
 {smcl}
-{* May2,2022}{...}
+{* May6,2022}{...}
 {cmd:help allsynth} 
 {hline}
 
-{title:Title} {p 19 20 0} {cmd:Beta version 0.0.9} - Release date: May 2, 2022. Tested on Stata 15.1 and above. Email bug reports to: jcwiltshire@ucdavis.edu
+{title:Title} {p 19 20 0} {cmd:Beta version 1.0} - Release date: May 6, 2022. Tested on Stata 15.1 and above. Email bug reports to: jcwiltshire@ucdavis.edu
 
 {p2colset 5 20 20 2}{...}
 {p2col :{hi:allsynth} {hline 2}}Automates estimation of (i) bias-corrected synthetic control gaps ("treatment effects"); (ii) RMSPE-ranked {it:p}-values from 
@@ -153,7 +153,7 @@ each treated unit {it:i} will be saved in {it:filename_panelvar_i.dta}, while th
 {it:filename_ate.dta}. If the {cmd:allsynth} option {cmd:pvalues} is specified, then the estimated average gaps, placebo gaps, RMPSE, and 
 RMSPE-ranked {it:p}-values will be saved in {it:filename_ate_distn.dta}.
 
-{p 8 8 2}{cmd:trunit}({it:varname}) is required, and {it:varname} must identify a dummy variable that, in all periods, identifies the treated units with a 1 
+{p 8 8 2}{cmd:trunits}({it:varname}) is required, and {it:varname} must identify a dummy variable that, in all periods, identifies the treated units with a 1 
 and the donor pool units with a 0. {cmd:trperiods}({it:varname}) is required, and {it:varname} must identify an integer variable that, in all periods, contains 
 the {it:timevar} period of treatment (assumed to be in calendar time) for every treated unit. If the treatment is simultaneous in {it:timevar} for all 
 treated units {it:i}, results will be displayed and saved in {it:timevar} periods (assumed to be calendar periods); otherwise, results will be displayed and 
@@ -339,7 +339,8 @@ treatment effects from Abadie, Diamond and Hainmueller (2010)) are all highly st
 (for each post-treatment year the RMSPE is larger than that of all the donor pool units), {it:the bias-corrected gaps are not significant} at the 10% level 
 before 1994, and after that the {it:p}-values are only 0.077 (the RMSPEs are ranked third among 39 total runs rather than first). As {cmd:gapfigure()} and its own 
 {cmd:bcorrect}, {cmd:placebos}, and {cmd:lineback} options are specified along with {cmd:bcorrect()}, it also plots the dynamic paths of the the (bias-corrected) 
-gaps for the treated unit against those for each donor pool unit against each other in a figure, with the dotted vertical line indicating the period immediately preceding treatment.{p_end}
+gaps for the treated unit against those for each donor pool unit against each other in a figure, with the dotted vertical line indicating the period immediately 
+preceding treatment. Note that all the option abbreviations are used. The resulting plot is the bias-corrected analogue of Figure 4 in Abadie, Diamond and Hainmueller (2010).{p_end}
 
 {p 4 4 2}
 Example 10 - Calculate, display, and save and the bias-corrected gaps between the treated unit outcome and the synthetic control outcome, for the
@@ -348,11 +349,8 @@ treated unit and also for each donor pool unit (placebo treatments), and calcula
 {phang}{stata allsynth cigsale beer(1984(1)1988) lnincome retprice age15to24 cigsale(1988) cigsale(1980) cigsale(1975), trunit(3) trperiod(1989) bcor(merge) gapfig(bcorrect placebos, title(Ex10) save(ex10, replace)) pval keep(smokingresults) rep}
 
 {p 8 8 2}
-This example reproduces the estimation and plot from Example 9, but as {cmd:figure} is specified it also plots the classic outcome path for the treated unit and its synthetic control.
-Because {cmd:bcorrect(figure)} is specified, it also plots the bias-corrected outcome path for the treated unit and its synthetic control. Note that all the option abbreviations are used.
-This plot is the bias-corrected version of the figure (from Example 7) analogous to Figure 4 in Abadie, Diamond, and Hainmueller (2010). Note that specifying the {cmd:gapfigure()} option {cmd:lineback}
-results in the dotted vertical line being placed in the period immediately preceding treatment on the other graphs, as well. Specifying the {cmd:gapfigure()} options {cmd:title(Ex10) save(ex10}{cmd:, replace)} 
-after the comma adds the title "Ex10" and saves the graph as "{it:ex10.pdf}", replacing any existing file with the same name.{p_end}
+This example reproduces the estimation and plot from Example 9, but with the {cmd:gapfigure()} option {cmd:lineback} dropped. Specifying the {cmd:gapfigure()} options {cmd:title(Ex10) 
+save(ex10}{cmd:, replace)} after the comma adds the title "Ex10" and saves the graph as "ex10.pdf", replacing any existing file with the same name.{p_end}
 
 
 {p 0 4 2}{cmd:Examples 11-13:}

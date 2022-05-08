@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.02 2020-04-29}{...}
+{* *! version 1.03 2022-05-05}{...}
 {hline}
 help for {cmd:table1_mc_dta2docx}
 {hline}
@@ -52,12 +52,13 @@ If there are no variables with the prefix N_ or m_, this table won't appear.{p_e
 
 
 
-{title:Examples [Stata 15.1 required]}
+{title:Examples [Stata 15.1 or later required]}
 
 {pstd}{sf:. }{stata "sysuse auto, clear"} {break} 
 {sf:. }{stata "table1_mc, by(foreign) vars(price conts \ weight contn %5.0f \ rep78 cate) extraspace clear"} {break}
 {sf:Did the above command use the} {bf:clear} {sf:option? Yes! Then we are now ready to:} {break}
-{sf:. }{stata `"table1_mc_dta2docx using "N:\example Table 1.docx", replace"'}{p_end}
+{sf:. cd "H:\"   (or whichever directory you want to save to)} {break}
+{sf:. }{stata `"table1_mc_dta2docx using "example Table 1.docx", replace"'}{p_end}
 
 {pstd}{sf:To prevent a pvalue column appearing in the main table in the coming .docx file:}{break}
 {sf:. }{stata "drop pvalue"}{break}
@@ -65,7 +66,8 @@ If there are no variables with the prefix N_ or m_, this table won't appear.{p_e
 {sf:. }{stata "drop N_*"}{break}
 {sf:Or, to report only the main table in the coming .docx file:}{break}
 {sf:. }{stata "drop N_* m_*"}{break}
-{sf:. }{stata `"table1_mc_dta2docx using "N:\example Table 1.docx", replace tablenumber("Table 1.") tabletitle("Car characteristics by car type.") footnote("Foreign cars included Audi, Datsun, Toyota and VW cars.")"'}{p_end}
+{sf:. cd "H:\"   (or whichever directory you want to save to)} {break}
+{sf:. }{stata `"table1_mc_dta2docx using "example Table 1.docx", replace tablenumber("Table 1.") tabletitle("Car characteristics by car type.") footnote("Foreign cars included Audi, Datsun, Toyota and VW cars.")"'}{p_end}
 
 
 {title:Author}

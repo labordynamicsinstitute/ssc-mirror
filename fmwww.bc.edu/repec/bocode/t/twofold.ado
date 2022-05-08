@@ -1,12 +1,13 @@
 *PERFORMS TWO-FOLD FULLY CONDITIONAL SPECIFICATION MULTIPLE IMPUATION ALGORITHM
-*VERSION 3: RUNS MI IMPUTE CHAINED ONCE TO PRODUCE IMPUTATIONS
+*VERSION 4: RUNS MI IMPUTE CHAINED ONCE TO PRODUCE IMPUTATIONS
 *Uses the mi impute chained options seed, savetrace, dryrun and force
-*Runs if some time points are completely observed or completely missing
 *Change imputation order for variables with missing data if necessary for conditional statements 
+*Runs if some time points are completely observed or completely missing
+
 
 program define twofold
 local default_seed=int(uniform()*100)
-syntax, [WIDTH(integer 1) BA(integer 10) M(integer 5) BW(integer 5) CAT(string  ) BASE(string  ) INDOBS(string  ) DEPOBS(string  ) INDMIS(string  ) DEPMIS(string  ) OUTCOME(string  ) CONDITIONON(string  ) CONDVAR(string  )  CONDVAL(string  ) SAVING(string  ) SAVETRACE(string asis) CLEAR TABLE IM KEEPOUTSIDE SEED(integer `default_seed') DRYRUN FORCE OMIT(string ) ] TIMEIN(string) TIMEOUT(string) 
+syntax, [WIDTH(integer 1) BA(integer 10) M(integer 5) BW(integer 5) CAT(string  ) BASE(string  ) INDOBS(string  ) DEPOBS(string  ) INDMIS(string  ) DEPMIS(string  ) OUTCOME(string  ) CONDITIONON(string  ) CONDVAR(string  )  CONDVAL(string  ) SAVING(string  ) SAVETRACE(string asis) CLEAR TABLE IM KEEPOUTSIDE SEED(integer `default_seed') DRYRUN FORCE ] TIMEIN(string) TIMEOUT(string) 
 
 
 qui cap {
@@ -258,17 +259,17 @@ qui cap {
 		}	
 	
 
-		*CREATE IF STATEMENT FOR TIME-INDEPENDENT VARIABLES WITH CONDITION
+	*CREATE IF STATEMENT FOR TIME-INDEPENDENT VARIABLES WITH CONDITION
 		if "`condvar'"!="" & "`condval'"!="" & "`conditionon'"!="" {	
 			local word=wordcount("`condvar'")
 			forvalues k=1/`word' {
 				tokenize `condvar'
 				local cvar ``k''
 				
-				*CHECK CONDVAR IS A TIME-INDEPENDENT VARIABLE
+				*CHECK CONDVAR IS A TIME-INDEPENDENT VARIABLE (because time-dependent stub won't exist as a variable)
 				cap confirm variable `cvar'
 				if _rc {
-					continue, break
+					continue
 				}
 				
 				tokenize `condval'
@@ -345,6 +346,7 @@ qui cap {
 				}
 			}
 		}
+		
 		forvalues i=`start'/`end' {	
 			*CREATE IF STATEMENT FOR TIME-DEPENDENT VARIABLES WITH CONDITION
 			if "`condvar'"!="" & "`condval'"!="" & "`conditionon'"!=""  {	
@@ -443,6 +445,15 @@ qui cap {
 			}		
 		}
 		
+		*CREATE VARIABLES
+		forvalues t=`start'/`end' {
+			forvalues i=1/`bw' {
+				foreach var in `depmis' {
+					gen `var'`t'_`i'=`var'`t'
+				}
+			}
+		}
+		
 		*TIME-INDEPENDENT VARIABLES CONDITION ON BASELINE VARIABLES ONLY
 		local missingvars 
 		foreach i in `indmis' {
@@ -480,22 +491,35 @@ qui cap {
 						if `t'!=`base' local omit_`i' `omit_`i'' `j'`t'
 					}
 				}
+			}
+		*THE SYNTAX INCLUDES TOO MANY VARIABLES IF THEY ARE NOT MISSING
+		*CODE BELOW REMOVES EXCESS VARIABLE
+		foreach v in `depmis' {
+			forvalues t=`start'/`end' {
+				qui count if missing(`v'`t') 
+				if r(N)==0 {
+					local tostop 0
+					forvalues b = 1/`bw' {
+						if "`cat'"!="" {
+							foreach c in `cat' {
+								if "`v'"=="`c'" {
+										if local omit_`i' `omit_`i'' i.`v'`t'_`b'
+										local tostop 1
+										continue, break
+									}
+								}	
+							
+							}
+							if "`cat'"=="" | `tostop'==0 {
+								local omit_`i' `omit_`i'' `v'`t'_`b'
+							}
+						}
+					}
+				}
 			}			
 		}
 		
-
-		*CREATE VARIABLES
-		forvalues t=`start'/`end' {
-			foreach var in `depmis' {
-		
-				count if missing(`var'`t')
-				if r(N)==0 	local depmis_obsvar `depmis_obsvar' `var'`t'	
-				else forvalues i=1/`bw' {
-						gen `var'`t'_`i'=`var'`t'
-				}
-			}
-		}
-
+	
 		local depvar		
 		forvalues t=`start'/`end' {
 
@@ -503,230 +527,186 @@ qui cap {
 			local counter 1			
 			forvalues i=1/`bw' {
 				foreach var in `depmis' {
-				
-					count if missing(`var'`t')
-					if r(N)!=0 & r(N)!=_N {				
-				
-						local depvar `depvar' `var'`t'_`i'
-						local missingvars `missingvars' `var'`t'_`i'
-						
-						
-						local tostop 0
-						if "`cat'"!="" {
-							foreach c in `cat' {
-								if "`var'"=="`c'" {
-									local number_`counter' i.`var'`t'_`i'
-									continue, break
-								}
-								else {
-									local number_`counter' `var'`t'_`i'
-									continue, break
-								}
-							}
-						}
-						else {
-							local number_`counter' `var'`t'_`i'
-							continue, break
-						}
+					local depvar `depvar' `var'`t'_`i'
+					local missingvars `missingvars' `var'`t'_`i'
 					
-						foreach j in `depmis' {
-							forvalues x=`start'/`end' {
-							
-								count if missing(`j'`x')					
-								if r(N)!=_N & r(N)!=0 {
-									local tostop 0
+					local tostop 0
+					if "`cat'"!="" {
+						foreach c in `cat' {
+							if "`var'"=="`c'" {
+								count if missing(`var'`t'_`i')
+								if r(N)!=_N local number_`counter' i.`var'`t'_`i'
+								continue, break
+							}
+							else {
+								count if missing(`var'`t'_`i')
+								if r(N)!=_N local number_`counter' `var'`t'_`i'
+								continue, break
+							}
+						}
+					}
+				
+					foreach j in `depmis' {
+						forvalues x=`start'/`end' {
+							local tostop 0
 
-									if "`cat'"!="" {
-										foreach c in `cat' {					
-											if "`j'"=="`c'" {
-												if `x'<=`t'+`width' & `x'>=`t'-`width' & `x'!=`t'   local incl_`var'`t'_`i' `incl_`var'`t'_`i'' i.`j'`x'_`bw'
-												if  `x'==`t' & `i'==1 & "`var'"!="`j'"  local incl_`var'`t'_`i' `incl_`var'`t'_`i'' i.`j'`x'_1
-												
+							if "`cat'"!="" {
+								foreach c in `cat' {					
+									if "`j'"=="`c'" {
+										if `x'<=`t'+`width' & `x'>=`t'-`width' & `x'!=`t'  {
+											count if missing(`j'`x'_`bw')					
+											if r(N)!=_N & r(N)!=0 {
+												local incl_`var'`t'_`i' `incl_`var'`t'_`i'' i.`j'`x'_`bw'
 												local tostop 1
-												continue, break										
+												continue, break
+												
 											}
 										}
-									}
-								
-									if "`cat'"=="" | `tostop'==0 {
-											if `x'<=`t'+`width' & `x'>=`t'-`width' & `x'!=`t' local incl_`var'`t'_`i' `incl_`var'`t'_`i'' `j'`x'_`bw'					
-											if  `x'==`t' & `i'==1  & "`var'"!="`j'"   local incl_`var'`t'_`i' `incl_`var'`t'_`i'' `j'`x'_1	
-									}
-								}
-								if r(N)==_N {
-									local tostop 0
-
-									if "`cat'"!="" {
-										foreach c in `cat' {					
-											if "`j'"=="`c'" {
-												if `x'<=`t'+`width' & `x'>=`t'-`width' & `x'!=`t'   local incl_`var'`t'_`i' `incl_`var'`t'_`i'' i.`j'`x'
-												if  `x'==`t' & `i'==1 & "`var'"!="`j'"  local incl_`var'`t'_`i' `incl_`var'`t'_`i'' i.`j'`x'
-												
-												local tostop 1
-												continue, break										
-											}
+										count if missing(`j'`x'_1)
+										if  `x'==`t' & `i'==1 & "`var'"!="`j'" & r(N)!=_N & r(N) {
+											local incl_`var'`t'_`i' `incl_`var'`t'_`i'' i.`j'`x'_1
+											local tostop 1
+											continue, break		
 										}
 									}
-								
-									if "`cat'"=="" | `tostop'==0 {
-											if `x'<=`t'+`width' & `x'>=`t'-`width' & `x'!=`t' local incl_`var'`t'_`i' `incl_`var'`t'_`i'' `j'`x'					
-											if  `x'==`t' & `i'==1  & "`var'"!="`j'"   local incl_`var'`t'_`i' `incl_`var'`t'_`i'' `j'`x'
-									}
-								}								
-								
-								
-							
+								}
 							}
-							
-						}
-						local varnum wordcount("`depmis'")
-						forvalues v=1/`=`varnum'-1' {
-							if   `i'>1  local incl_`var'`t'_`i' `incl_`var'`t'_`i'' `number_`=`counter'-`v''' 
-						}
-
-						foreach v in `depobs' {
-							local tostop 0
-							forvalues x=`start'/`end' {
-								if "`cat'"!="" {
-									foreach c in `cat' {					
-										if "`v'"=="`c'" {
-											if (`x'>`t'+`width' & `x'<=`end')|(`x'<`t'-`width' & `x'>=`start') local omit_`var'`t'_`i' `omit_`var'`t'_`i'' i.`v'`x'
-											local tostop 1
+						
+							if "`cat'"=="" | `tostop'==0 {
+									if `x'<=`t'+`width' & `x'>=`t'-`width' & `x'!=`t' {
+										count if missing(`j'`x'_`bw')									
+										if r(N)!=_N & r(N)!=0 {
+											local incl_`var'`t'_`i' `incl_`var'`t'_`i'' `j'`x'_`bw'
 											continue, break
 										}
-									}
-								}
-								if "`cat'"=="" | `tostop'==0 {
-									 if (`x'>`t'+`width' & `x'<=`end')|(`x'<`t'-`width' & `x'>=`start') local omit_`var'`t'_`i' `omit_`var'`t'_`i'' `v'`x'
-								}
+									}							
+									count if missing(`j'`x'_1)									
+									if  `x'==`t' & `i'==1  & "`var'"!="`j'" & r(N)!=_N & r(N)!=0 {
+										local incl_`var'`t'_`i' `incl_`var'`t'_`i'' `j'`x'_1	
+										continue, break
+									}  
 								
 							}
-						}	
-						foreach v in `depmis_obsvar' {
-							local tostop 0
-							forvalues x=`start'/`end' {
-								if "`cat'"!="" {
-									foreach c in `cat' {					
-										if "`v'"=="`c'`x'" {
-											if (`x'>`t'+`width' & `x'<=`end')|(`x'<`t'-`width' & `x'>=`start') local omit_`var'`t'_`i' `omit_`var'`t'_`i'' i.`v'
-											local tostop 1
-											continue, break
-										}
-									}
-								}
-								if "`cat'"=="" | `tostop'==0 {
-									 if (`x'>`t'+`width' & `x'<=`end')|(`x'<`t'-`width' & `x'>=`start') local omit_`var'`t'_`i' `omit_`var'`t'_`i'' `v'
-									 continue, break
-								}
-								
-							}
-						}	
-						
-						
-						foreach v in `indmis' {
-							local tostop 0
+						}
+					}
+					local varnum wordcount("`depmis'")
+					forvalues v=1/`=`varnum'-1' {
+						if   `i'>1  local incl_`var'`t'_`i' `incl_`var'`t'_`i'' `number_`=`counter'-`v''' 
+					}
+
+					foreach v in `depobs' {
+						local tostop 0
+						forvalues x=`start'/`end' {
 							if "`cat'"!="" {
 								foreach c in `cat' {					
 									if "`v'"=="`c'" {
-										local incl_`var'`t'_`i' `incl_`var'`t'_`i'' i.`v'
+										if (`x'>`t'+`width' & `x'<=`end')|(`x'<`t'-`width' & `x'>=`start') local omit_`var'`t'_`i' `omit_`var'`t'_`i'' i.`v'`x'
 										local tostop 1
 										continue, break
 									}
 								}
 							}
 							if "`cat'"=="" | `tostop'==0 {
-								local incl_`var'`t'_`i' `incl_`var'`t'_`i'' `v'
+								 if (`x'>`t'+`width' & `x'<=`end')|(`x'<`t'-`width' & `x'>=`start') local omit_`var'`t'_`i' `omit_`var'`t'_`i'' `v'`x'
 							}
-						
-						}					
-						local counter=`counter'+1
-						*nois di "`var'`t'_`i': `incl_`var'`t'_`i''"	
+							
+						}
+					}	
+					foreach v in `indmis' {
+						local tostop 0
+						if "`cat'"!="" {
+							foreach c in `cat' {					
+								if "`v'"=="`c'" {
+									local incl_`var'`t'_`i' `incl_`var'`t'_`i'' i.`v'
+									local tostop 1
+									continue, break
+								}
+							}
+						}
+						if "`cat'"=="" | `tostop'==0 {
+							local incl_`var'`t'_`i' `incl_`var'`t'_`i'' `v'
+						}
 					
-	
-					}
-					
+					}					
+					local counter=`counter'+1
+					*nois di "`var'`t'_`i': `incl_`var'`t'_`i''"		
 				}
 			}
 			
 			foreach v in `depobs' {
-				local depvar `depvar' `v'`t'
-			}	
-		}
-		
-		if "`condvar'"!="" {
-			foreach i in `indmis'  {
-				if strpos("`conditionon'","`i'")>0 & strpos("`condvar'","`i'")==0 {
-					local iorder1 `iorder1' `i'
-				}
-				else if strpos("`conditionon'","`i'")>0 & strpos("`condvar'","`i'")>0 {
-					local iorder2 `iorder2' `i'
-				}
-				else if strpos("`conditionon'","`i'")==0 & strpos("`condvar'","`i'")>0 {
-					local iorder3 `iorder3' `i'
-				}	
-				else {
-					local iorder4 `iorder4' `i'
-				}
-			}
-			foreach i in `depmis' {
-				if strpos("`conditionon'","`i'")>0 & strpos("`condvar'","`i'")==0 {
-					local dorder1 `dorder1' `i'
-				}				
-				else if strpos("`conditionon'","`i'")>0 & strpos("`condvar'","`i'")>0 {
-					local dorder2 `dorder2' `i'
-				}
-				else if strpos("`conditionon'","`i'")==0 & strpos("`condvar'","`i'")>0 {
-					local dorder3 `dorder3' `i'
-				}	
-				else {
-					local dorder4 `dorder4' `i'
-				}
-			}		
-			if "`iorder1'"=="" & "`dorder1'"!="" {
-				local order `iorder4' `depvar' `iorder2' `iorder3'
-			}
-			else {
-				local order `iorder4' `iorder1' `iorder2' `depvar' `iorder3'
-			}
-		}
-		else {
-			local order `indmis' `depvar'
-		}
-	nois di "order `order'"
-		*** CREATE SYNTAX FOR MI IMPUTE CHAINED COMMAND ***
-		local vars_syntax
-		local auxvarsind
-		
-		foreach var in  `order' `indobs' `outcome' `depmis_obsvar' {	
-			if "`omit'"!="" {
-				local word=wordcount("`omit'")
-				forvalues k=1/`word' {
-					tokenize `omit'
-					local ovar ``k''
-					if "`ovar'"!="`var'"  local omit_`var' `omit_`var'' `ovar'
-					if "`ovar'"=="`var'"  {
-						local tostop 0
-						foreach v in `depmis_obsvar' {
-							forvalues x=`start'/`end' {
-								if "`cat'"!="" {
-									foreach c in `cat' {					
-										if "`v'"=="`c'`x'" {
-											local omit_``k'' `omit_``k''' i.`v' 
-											local tostop 1
-											continue, break
-										}
-									}
-								}
-								if "`cat'"=="" | `tostop'==0 {
-									 local omit_``k'' `omit_``k''' `v' 
-									 continue, break
-								}
-							}
+				local tostop 0
+				if "`cat'"!="" {
+					foreach c in `cat' {					
+						if "`v'"=="`c'" {
+							local depvar `depvar' i.`v'`t'
+							local tostop 1
+							continue, break
 						}
 					}
 				}
-			}
-			
+				if "`cat'"=="" | `tostop'==0 {
+					local depvar `depvar' `v'`t'
+				}
+			}	
+		}
+		
+		*THE SYNTAX  INCLUDES TOO MANY VARIABLES IF THEY ARE NOT MISSING
+		*CODE BELOW REMOVES EXCESS VARIABLES
+		foreach i in `depvar' {
+			foreach v in `depmis' {
+				forvalues t=`start'/`end' {
+					qui count if missing(`v'`t') 
+					if r(N)==0 {
+						local tostop 0
+						forvalues b = 1/`bw' {
+							if "`cat'"!="" {
+								foreach c in `cat' {
+									if "`v'"=="`c'" {
+											local omit_`i' `omit_`i'' i.`v'`t'_`b'
+											local tostop 1
+											continue, break
+										}
+									}	
+								
+								}
+								if "`cat'"=="" | `tostop'==0 {
+									local omit_`i' `omit_`i'' `v'`t'_`b'
+									
+								}
+								forvalues w=-`width'/`width' {
+									if "`i'"=="`v'`=`t'+`w''_`b'"  {
+										local tostop 0
+										if "`cat'"!="" {
+											foreach c in `cat' {
+												if "`v'"=="`c'" {
+														local incl_`i' `incl_`i'' i.`v'`t'
+														local tostop 1
+														continue, break
+													}
+												}	
+											}
+											if "`cat'"=="" | `tostop'==0 {
+												local incl_`i' `incl_`i'' `v'`t'
+												continue, break
+											}			
+										}
+											
+									}
+									
+									
+								}
+								
+							}
+						
+						}
+					}
+				}			
+				
+
+		*** CREATE SYNTAX FOR MI IMPUTE CHAINED COMMAND ***
+		local vars_syntax
+		local auxvarsind
+		foreach var in `indmis' `depvar' `indobs' `outcome' {	
 			if substr("`var'",1,2)=="i." {
 				local sub=substr("`var'",3,.)
 				count if missing(`sub')
@@ -734,7 +714,7 @@ qui cap {
 			}
 			else count if missing(`var')
 			local miss=r(N)
-			*DONT INCLUDE IN REGRESSION IF COMPLETELY MISSING OR COMPLETELY OBSERVED
+			*DONT IMPUTATE IF COMPLETELY MISSING OR COMPLETELY OBSERVED
 			if `miss'>0 & `miss'!=_N {			
 				local tostop 0
 				if "`cat'"!="" {
@@ -762,7 +742,6 @@ qui cap {
 					local vars_syntax `vars_syntax' (regress, cond(`if_`var'') omit(`omit_`var'') include(`incl_`var'')) `var'
 				}
 			}
-			
 			else if r(N)==0 {
 				local tostop 0
 			
@@ -786,11 +765,9 @@ qui cap {
 					else {
 						local auxvarsind `auxvarsind' `var'
 					}	
+				
 			}
 		}
-		
-		
-		
 		mi set flong
 		cap mi register imputed `missingvars' 
 		if _rc {
@@ -807,11 +784,8 @@ qui cap {
 			mi extract 0, clear
 			foreach i in `depmis' {
 				forvalues j=`start'/`end' {
-					count if missing(`i'`j')
-					if r(N)!=0 & r(N)!=_N {	
-						forvalues w=1/`bw'{
-							cap drop `i'`j'_`w'
-						}
+					forvalues w=1/`bw'{
+						cap drop `i'`j'_`w'
 					}
 				}
 			}
@@ -819,23 +793,13 @@ qui cap {
 		else {
 			foreach i in `depmis' {
 				forvalues j=`start'/`end' {
-					count if missing(`i'`j')
-					if r(N)!=0 & r(N)!=_N {	
-						replace `i'`j'=`i'`j'_`bw' if _mi_m>0 & missing(`i'`j')
-						forvalues w=1/`bw'{
-							drop `i'`j'_`w'
-						}
-					}	
-				}
-			}
-			*DROP IMPUTED VALUES OUTSIDE OF FOLLOW-UP
-			if "`keepoutside'"=="" {
-				foreach v in `depmis'{
-					forvalues j=`start'/`end' {
-						replace `v'`j'=. if !inrange(`j',`timein',`timeout')
+					replace `i'`j'=`i'`j'_`bw' if _mi_m>0 & missing(`i'`j')
+					forvalues w=1/`bw'{
+						drop `i'`j'_`w'
 					}
 				}
 			}
+			
 			if "`using'"!="" & "`clear'"=="" {
 				save `"`using'"', `replace'
 				mi extract 0, clear
@@ -861,9 +825,10 @@ qui cap {
 					cap drop `i'`j'_`w'
 				}
 			}
+			
 		}
 		error `rc'
+		
 	}
 
 	end
-

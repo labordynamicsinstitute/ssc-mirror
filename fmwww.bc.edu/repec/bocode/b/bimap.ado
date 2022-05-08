@@ -1,5 +1,5 @@
-*! Bimap v1.0 Naqvi 8.Apr.2022
-
+*! Bimap Naqvi v1.2 05 May 2022. category cut-offs, counts, error checks, bug fixes, new palettes
+* v1.1 14 Apr 2022. Stable release
 
 **********************************
 * Step-by-step guide on Medium   *
@@ -19,16 +19,18 @@ program bimap, sortpreserve
 version 15
  
 	syntax varlist(min=2 max=2 numeric) [if] [in] using/ , ///
-		cut(string) palette(string) ///
-		[ BOXsize(real 8) textx(string) texty(string) xscale(real 30) yscale(real 100) TEXTLABSize(real 2) TEXTSize(real 2.5) values ] ///
-		[ polygon(string) ] ///
+		cut(string) palette(string)  ///
+		[ count BOXsize(real 8) textx(string) texty(string) xscale(real 30) yscale(real 100) TEXTLABSize(real 2) TEXTSize(real 2.5) values ] ///
+		[ polygon(passthru) line(passthru) point(passthru) label(passthru) ] ///
 		[ ocolor(string) osize(string) ]   ///
-		[ ndocolor(string) ndsize(string) ndocolor(string) ]   ///
-		[ title(string) subtitle(string) note(string)  ] ///
+		[ ndocolor(string) ndsize(string) ndfcolor(string) ]   ///
+		[ title(passthru) subtitle(passthru) note(passthru) name(passthru)  ] ///
 		[ allopt graphopts(string asis) * ] 
 		
 		
-		capture confirm file "`using'.dta"   
+		if (substr(reverse("`using'"),1,4) != "atd.") local using "`using'.dta"  // from spmap to check for extension
+		
+		capture confirm file "`using'"   
 		if _rc {
 			di as err "{p}File {bf:`using'} not found{p_end}"
 			exit 601
@@ -38,18 +40,24 @@ version 15
 	// check dependencies
 		capture findfile spmap.ado
 		if _rc != 0 {
-			display as error "spmap package is missing. Install the {stata ssc install spmap, replace:spmap}."
+			di as error "spmap package is missing. Install the {stata ssc install spmap, replace:spmap}."
 			exit
 		}
 
 		capture findfile colorpalette.ado
 		if _rc != 0 {
-			display as error "colorpalette package is missing. Install the {stata ssc install colorpalette, replace:colorpalette} and {stata ssc install colrspace, replace:colrspace} packages."
+			di as error "palettes package is missing. Click here to install the {stata ssc install palettes, replace:palettes} and {stata ssc install colrspace, replace:colrspace} packages."
 			exit
 		}	
 	
 		marksample touse, strok
 		gettoken var2 var1 : varlist 
+	
+		if `var1' == `var2' {
+			di as error "Both variables are the same. Please choose different variables."
+			exit
+		}
+	
 	
 		***** Get the cuts
 
@@ -65,20 +73,57 @@ qui {
 		}
 		
 		if "`cut'" == "equal" {
-			egen `cat_`var1'' = cut(`var1') if `touse', at(0,33,66,100) icodes
-			egen `cat_`var2'' = cut(`var2') if `touse', at(0,33,66,100) icodes
+			
+			summ `var1'
+			local interv = (r(max) - r(min)) / 3
+							
+				local cut0 = r(min)
+				local cut1 = `cut0' + `interv'
+				local cut2 = `cut1' + `interv'
+				local cut3 = r(max)
+			
+			egen `cat_`var1'' = cut(`var1') if `touse', at(`cut0', `cut1' , `cut2', `cut3') icodes
+
+			
+			summ `var2'
+			local interv = (r(max) - r(min)) / 3
+							
+				local cut0 = r(min)
+				local cut1 = `cut0' + `interv'
+				local cut2 = `cut1' + `interv'
+				local cut3 = r(max)			
+			
+			egen `cat_`var2'' = cut(`var2') if `touse', at(`cut0', `cut1' , `cut2', `cut3') icodes
 			
 			
 			replace `cat_`var1'' = `cat_`var1'' + 1 
 			replace `cat_`var2'' = `cat_`var2'' + 1
 		}	
 	
+		
+		*fillin `cat_`var1'' `cat_`var2''  // rectangularize for correct assignment with group
+		
 		sort `cat_`var1'' `cat_`var2''
 		
 		tempvar grp_cut
-		egen `grp_cut' = group(`cat_`var1'' `cat_`var2'')
+		*egen `grp_cut' = group(`cat_`var1'' `cat_`var2'')
 	
-	
+		*drop if _fillin==1  // drop the groups we don't actually have
+		*drop _fillin
+		
+		gen `grp_cut' = .
+		
+		replace `grp_cut' = 1 if `cat_`var2''==1 & `cat_`var1''==1
+		replace `grp_cut' = 2 if `cat_`var2''==2 & `cat_`var1''==1
+		replace `grp_cut' = 3 if `cat_`var2''==3 & `cat_`var1''==1
+		replace `grp_cut' = 4 if `cat_`var2''==1 & `cat_`var1''==2
+		replace `grp_cut' = 5 if `cat_`var2''==2 & `cat_`var1''==2
+		replace `grp_cut' = 6 if `cat_`var2''==3 & `cat_`var1''==2
+		replace `grp_cut' = 7 if `cat_`var2''==1 & `cat_`var1''==3
+		replace `grp_cut' = 8 if `cat_`var2''==2 & `cat_`var1''==3
+		replace `grp_cut' = 9 if `cat_`var2''==3 & `cat_`var1''==3
+		
+		
 	
 		***** store the cut-offs for labels	
 		
@@ -105,13 +150,26 @@ qui {
 		summ `var2' if `cat_`var2'' == 3
 		local var23 = r(max)
 		local var23 : di %05.1f `var23'
+		
+		
+		// grp order: 1 = 1 1, 2 = 1 2, 3 = 1 3, 4 = 2 1, 5 = 2 2, 6 = 2 3, 7 = 3 1, 8 = 3 2, 9 = 3 3
+		
+		if "`count'" != "" {			
+
+			forval i = 1/3 {
+				forval j = 1/3 {
+					count if `cat_`var1''==`j' & `cat_`var2''==`i' 
+					local grsize`i'`j' = `r(N)'					
+				}
+			}
+		}
 	
-		***** define the colors (https://www.joshuastevens.net/cartography/make-a-bivariate-choropleth-map/)
+		
 	
 		// from spmap
    
 		if "`palette'" != "" {
-			local LIST "pinkgreen bluered greenblue purpleyellow"
+			local LIST "pinkgreen bluered greenblue purpleyellow yellowblue orangeblue"
 			local LEN = length("`palette'")
 			local check = 0
 			foreach z of local LIST { 
@@ -121,10 +179,10 @@ qui {
 			}
 			
 			if !`check' {
-				di in yellow "Wrong palette specified. The supported palettes are {ul:pinkgreen}, {ul:bluered}, {ul:greenblue}, {ul:purpleyellow}."
+				di in yellow "Wrong palette specified. The supported palettes are {ul:pinkgreen}, {ul:bluered}, {ul:greenblue}, {ul:purpleyellow}, {ul:yellowblue}, {ul:orangeblue}."
 				exit 198
 			}
-	
+		}
 
 		if "`palette'" == "pinkgreen" {
 			local color #e8e8e8 #dfb0d6 #be64ac #ace4e4 #a5add3 #8c62aa #5ac8c8 #5698b9 #3b4994
@@ -140,7 +198,15 @@ qui {
 
 		if "`palette'" == "purpleyellow" {
 			local color #e8e8e8 #cbb8d7 #9972af #e4d9ac #c8ada0 #976b82 #c8b35a #af8e53 #804d36
+		}
+		
+		if "`palette'" == "yellowblue" {   // from ArcGIS
+			local color #e8e6f2 #f3d37a #f3b300 #a2c8db #8e916e #7a5a00 #509dc2 #284f61 #424035
 		}		
+		
+		if "`palette'" == "orangeblue" {   // from ArcGIS
+			local color #fef1e4 #97d0e7 #18aee5 #fab186 #b0988c #407b8f #f3742d #ab5f37 #5c473d
+		}			
 	
 		if "`polygon'" == "" {
 			local polyadd 
@@ -154,8 +220,10 @@ qui {
 		
 		local lw = cond("`osize'" == "", "0.02", "`osize'")
 	
-	
-	
+		local ndo = cond("`ndocolor'" == "", "gs12", "`ndocolor'")
+		
+		local ndf = cond("`ndfcolor'" == "", "gs8", "`ndfcolor'")
+		
 		// finally the map!
 		
 		colorpalette `color', nograph 
@@ -164,8 +232,8 @@ qui {
 		spmap `grp_cut' using "`using'", ///
 			id(_ID) clm(unique)  fcolor("`colors'") ///
 			ocolor(`lc' ..) osize(`lw' ..) ///	
-			ndocolor(gs6 ..) ndsize(`lw' ..) ndfcolor(gs14)  ///
-			polygon(`polyadd') ///
+			ndocolor(`ndo' ..) ndsize(`lw' ..) ndfcolor(`ndf' ..)  ///
+			`polygon' `polyline' `point' ///
 			legend(off)  ///
 			name(_map, replace) nodraw
 	
@@ -179,6 +247,28 @@ qui {
 		egen y = seq(), b(3)  
 		egen x = seq(), t(3) 	
 		
+		
+		if "`count'" != "" {
+			gen mycount = .
+		
+			local x = 1
+			forval i = 1/3 {
+				forval j = 1/3 {				
+					replace mycount = `grsize`i'`j'' in `x'		
+					local x = `x' + 1
+				}
+			}
+		
+
+			*forval i = 1/9 {
+			*	replace mycount = `grsize`i'' in `i'
+			*}
+			
+		local marksym mycount	
+			
+		}
+
+	
 		cap drop spike*
 	
 	
@@ -273,12 +363,14 @@ qui {
 			levelsof x, local(xlvl)	
 			levelsof y, local(ylvl)
 
+			
 
 		local boxes
 
 		foreach x of local xlvl {
 			foreach y of local ylvl {
-				local boxes `boxes' (scatter y x if x==`x' & y==`y', msymbol(square) msize(`boxsize') mc("`color`x'`y''")) ///
+				local boxes `boxes' (scatter y x if x==`x' & y==`y', mlab("`marksym'") mlabpos(0) msymbol(square) msize(`boxsize') mc("`color`x'`y''")) ///
+				
 			
 			}
 		}
@@ -319,11 +411,12 @@ qui {
 	 
 	  graph combine _map _legend, ///
 		imargin(zero) ///
-		title(`title') ///
-		subtitle(`subtitle') ///
-		note(`note')
+		`title' 	///
+		`subtitle' ///
+		`note' ///
+		`name' 
 	
-	}	 
+	
 }
 
 end

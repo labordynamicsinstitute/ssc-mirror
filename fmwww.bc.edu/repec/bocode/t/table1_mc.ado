@@ -1,4 +1,10 @@
-*! -table1_mc- version 3.2 Mark Chatfield    2020-04-29
+*! -table1_mc- version 3.3 Mark Chatfield    2022-05-05
+* added statistic option to give the value of the test statistic
+* if missing option is chosen, the test associated with categorical variables did not include the missing category. This has been corrected.
+* Wrap tempfile macros in double quotes. 
+* added informative error messages if no data for binary/categorical vars: "no categories for `varname' ... cannot tabulate"
+
+* -table1_mc- version 3.2 Mark Chatfield    2020-04-29
 * give error message if by() variable name will cause trouble
 * give error message if by() variable takes value 919, and quite a few other changes relating to 919 = total
 * _columna called _columna_ earlier (and same for b), so no longer need to be renamed later (around line 851)
@@ -67,6 +73,7 @@ program define table1_mc, sclass
 		[MISsing]			/// don't exclude missing values
 		[pdp(integer 3)]	/// max number of decimal places in p-value
 		[test]				/// include column specifying which test was used
+		[STATistic]         /// give value of test statistic
 		[SAVing(string asis)] /// optional Excel file to save output		
 		[clear]				/// keep the resulting table in memory
 		[percent_n]			///
@@ -194,7 +201,7 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 	qui reshape wide n N_, i(factor) j(`groupnum')
 	rename n* `groupnum'*
 	gen sort1=`sortorder++'
-	qui save `resultstable', replace
+	qui save "`resultstable'", replace
 	restore
 
 	* step through the variables
@@ -226,13 +233,24 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 				preserve
 				qui keep if `touse'
 				qui drop if missing(`by')
+								
+				qui levelsof `groupnum' if `varname'!=., local(glevels)
+				local nglevels: word count `glevels'
 				
 				* significance test
-				if `groupcount'>1 {
+				if `nglevels'>=2 {
 					qui anova `varname' `groupnum' [`weight'`exp']
 					local p=1-F(e(df_m), e(df_r), e(F))
+					local f : di %6.2f e(F)
+					local df1 = e(df_m) 
+					local df2 = e(df_r)
 				}
-				if "`pairwise123'" == "pairwise123" {
+				if `nglevels'==2 {
+					qui regress `varname' ib(first).`groupnum' [`weight'`exp']
+					matrix T = r(table)
+					local tstat : di %6.2f -1*T[3,2]
+				}
+				if "`pairwise123'" == "pairwise123" & `nglevels' >1 {
 					qui anova `varname' `groupnum' [`weight'`exp'] if `groupnum' == `level1' | `groupnum' == `level2'
 					local p12=1-F(e(df_m), e(df_r), e(F))
 					qui anova `varname' `groupnum' [`weight'`exp'] if `groupnum' == `level2' | `groupnum' == `level3'
@@ -278,19 +296,24 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 				rename mean_sd* `groupnum'*
 				
 				* add p-value, test and sort variable, then save
-				if `groupcount'>1 qui gen p=`p'
-				if "`pairwise123'" == "pairwise123" {
-					qui gen p12=`p12'
-					qui gen p23=`p23'
-					qui gen p13=`p13'
-				}	
-				if "`test'"=="test" & `groupcount'>1 {
-					if `groupcount'==2 gen test="Two sample t test"
-					else gen test="ANOVA"
+				if `nglevels'>1  qui {
+					gen p=`p'
+					if "`pairwise123'" == "pairwise123" {
+						qui gen p12=`p12'
+						qui gen p23=`p23'
+						qui gen p13=`p13'
+					}	
 				}
+				
+				if "`test'"=="test" & `nglevels'==2   gen test="Ind. t test"  
+				if "`test'"=="test" & `nglevels'>2    gen test="ANOVA"
+				
+				if "`statistic'"=="statistic" & `nglevels'==2   gen statistic="t(`df2')=`tstat'"
+				if "`statistic'"=="statistic" & `nglevels'>2    gen statistic="F(`df1',`df2')=`f'"	
+				
 				gen sort1=`sortorder++'
-				qui append using `resultstable'
-				qui save `resultstable', replace
+				qui append using "`resultstable'"
+				qui save "`resultstable'", replace
 				restore
 			}
 
@@ -299,17 +322,27 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 				preserve
 				qui keep if `touse'
 				qui drop if missing(`by')
-				qui drop if `varname' <=0  // as log transformation will give missing value
+				qui drop if `varname' <=0  // as log transformation will give missing value. I think this line could be deleted.
 				tempvar lvarname
-				*qui replace `varname' = log(`varname')
 				qui gen `lvarname' = log(`varname')
 				
+				qui levelsof `groupnum' if `lvarname'!=., local(glevels)
+				local nglevels: word count `glevels'
+				
 				* significance test
-				if `groupcount'>1 {
+				if `nglevels'>=2 {
 					qui anova `lvarname' `groupnum' [`weight'`exp']
 					local p=1-F(e(df_m), e(df_r), e(F))
+					local f : di %6.2f e(F)
+					local df1 = e(df_m) 
+					local df2 = e(df_r)
 				}
-				if "`pairwise123'" == "pairwise123" {
+				if `nglevels'==2 {
+					qui regress `lvarname' ib(first).`groupnum' [`weight'`exp']
+					matrix T = r(table)
+					local tstat : di %6.2f -1*T[3,2]
+				}								
+				if "`pairwise123'" == "pairwise123" & `nglevels' >1 {
 					qui anova `lvarname' `groupnum' [`weight'`exp'] if `groupnum' == `level1' | `groupnum' == `level2'
 					local p12=1-F(e(df_m), e(df_r), e(F))
 					qui anova `lvarname' `groupnum' [`weight'`exp'] if `groupnum' == `level2' | `groupnum' == `level3'
@@ -357,19 +390,24 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 				rename mean_sd* `groupnum'*
 				
 				* add p-value, test and sort variable, then save
-				if `groupcount'>1 qui gen p=`p'
-				if "`pairwise123'" == "pairwise123" {
-					qui gen p12=`p12'
-					qui gen p23=`p23'
-					qui gen p13=`p13'
-				}	
-				if "`test'"=="test" & `groupcount'>1 {
-					if `groupcount'==2 gen test="Two sample t test, logged data"
-					else gen test="ANOVA, logged data"
+				if `nglevels'>1  qui {
+					gen p=`p'
+					if "`pairwise123'" == "pairwise123" {
+						qui gen p12=`p12'
+						qui gen p23=`p23'
+						qui gen p13=`p13'
+					}
 				}
+			
+				if "`test'"=="test" & `nglevels'==2  gen test="Ind. t test, logged data"  
+				if "`test'"=="test" & `nglevels'>2   gen test="ANOVA, logged data"
+				
+				if "`statistic'"=="statistic" & `nglevels'==2  gen statistic="t(`df2')=`tstat'"
+				if "`statistic'"=="statistic" & `nglevels'>2   gen statistic="F(`df1',`df2')=`f'"
+				
 				gen sort1=`sortorder++'
-				qui append using `resultstable'
-				qui save `resultstable', replace
+				qui append using "`resultstable'"
+				qui save "`resultstable'", replace
 				restore
 			}
 						
@@ -379,26 +417,31 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 				qui keep if `touse'
 				qui drop if missing(`groupnum')
 
-				* need to expand by frequency weight since ranksum & kwallis
-				* don't allow frequency weights
+				* need to expand by frequency weight since ranksum & kwallis don't allow frequency weights
 				if "`weight'"=="fweight" qui expand `exp'
 				
-				* significance tests
-				if `groupcount'>1 {
-					if `groupcount'==2 {
-						* rank-sum for 2 groups
-						cap ranksum `varname', by(`groupnum')
-						if _rc == 0 qui ranksum `varname', by(`groupnum')
-						local p=2*normal(-abs(r(z)))
-					}
-					else {
-						* Kruskal-Wallis for >2 groups
-						cap kwallis `varname', by(`groupnum')
-						if _rc == 0 qui kwallis `varname', by(`groupnum')
-						local p=chi2tail(r(df), r(chi2_adj))
-					}
+				qui levelsof `groupnum' if `varname'!=., local(glevels)
+				local nglevels: word count `glevels'
+				
+				* significance test
+				if `nglevels'>2 {
+					* Kruskal-Wallis for >2 groups
+					cap kwallis `varname', by(`groupnum')
+					if _rc == 0 qui kwallis `varname', by(`groupnum')
+					local p=chi2tail(r(df), r(chi2_adj))
+					local chi2 :di %6.2f r(chi2_adj)
+					local df = r(df)
 				}
-				if "`pairwise123'" == "pairwise123" {
+				if `nglevels'==2 {
+					* rank-sum for 2 groups
+					cap ranksum `varname', by(`groupnum')
+					if _rc == 0 qui ranksum `varname', by(`groupnum')
+					local z = r(z)
+					local p=2*normal(-abs(`z'))
+					local z : di %6.2f `z'
+				}
+				
+				if "`pairwise123'" == "pairwise123" & `nglevels'>1 {
 					cap ranksum `varname' if `groupnum' == `level1' | `groupnum' == `level2', by(`groupnum')					
 					if _rc == 0 qui ranksum `varname' if `groupnum' == `level1' | `groupnum' == `level2', by(`groupnum')
 					local p12=2*normal(-abs(r(z)))	
@@ -445,19 +488,24 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 				rename median_iqr* `groupnum'*
 
 				* add p-value, test and sort variable, then save
-				if `groupcount'>1 qui gen p=`p'
-				if "`pairwise123'" == "pairwise123" {
-					qui gen p12=`p12'
-					qui gen p23=`p23'
-					qui gen p13=`p13'
-				}				
-				if "`test'"=="test" & `groupcount'>1 {
-					if `groupcount'==2 gen test="Wilcoxon rank-sum"
-					else gen test="Kruskal-Wallis"
+				if `nglevels'>1 qui {
+					gen p=`p'
+					if "`pairwise123'" == "pairwise123" {
+						qui gen p12=`p12'
+						qui gen p23=`p23'
+						qui gen p13=`p13'
+					}
 				}
+				
+				if "`test'"=="test" & `nglevels'==2  gen test="Wilcoxon rank-sum"  
+				if "`test'"=="test" & `nglevels'>2	gen test="Kruskal-Wallis"
+				
+				if "`statistic'"=="statistic" & `nglevels'==2  gen statistic="Z=`z'"
+				if "`statistic'"=="statistic" & `nglevels'>2   gen statistic="Chi2(`df')=`chi2'"
+				
 				gen sort1=`sortorder++'
-				qui append using `resultstable'
-				qui save `resultstable', replace
+				qui append using "`resultstable'"
+				qui save "`resultstable'", replace
 				restore
 			}
 			
@@ -467,6 +515,12 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 				qui keep if `touse'
 				qui drop if missing(`groupnum')
 				if "`missing'"!="missing" qui drop if missing(`varname')
+				
+				qui count
+				if r(N)==0 {
+					di in red "no categories for `varname' ... cannot tabulate"
+					exit 198
+				}				
 
 				* categories should be numeric
 				tempvar varnum
@@ -474,29 +528,41 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 				if !_rc qui clonevar `varnum'=`varname'
 				else qui encode `varname', gen(`varnum')
 				
+				qui levelsof `groupnum', local(glevels)
+				local nglevels: word count `glevels'
+				qui levelsof `varnum', local(vlevels)
+				local nvlevels: word count `vlevels'					
+				if "`missing'"=="missing" {
+					qui count if `varnum'==.
+					if r(N)!=0 local nvlevels = `nvlevels'+1
+				}				
+				
+				
 				* significance test
-				if `groupcount'>1 {
+				if `nglevels'>1 & `nvlevels'>1 {
 					if "`vartype'"=="cat" {
-						qui tab `varnum' `groupnum' [`weight'`exp'], chi2
+						qui tab `varnum' `groupnum' [`weight'`exp'], chi2 m
 						local p=r(p)
+						local chi2 : di %6.2f r(chi2)
+						local df = (r(r)-1)*(r(c)-1)
 						if "`pairwise123'" == "pairwise123" {
-						qui tab `varnum' `groupnum' [`weight'`exp'] if `groupnum' == `level1' | `groupnum' == `level2', chi2
+						qui tab `varnum' `groupnum' [`weight'`exp'] if `groupnum' == `level1' | `groupnum' == `level2', chi2 m
 						local p12=r(p)
-						qui tab `varnum' `groupnum' [`weight'`exp'] if `groupnum' == `level2' | `groupnum' == `level3', chi2
+						qui tab `varnum' `groupnum' [`weight'`exp'] if `groupnum' == `level2' | `groupnum' == `level3', chi2 m
 						local p23=r(p)
-						qui tab `varnum' `groupnum' [`weight'`exp'] if `groupnum' == `level1' | `groupnum' == `level3', chi2
+						qui tab `varnum' `groupnum' [`weight'`exp'] if `groupnum' == `level1' | `groupnum' == `level3', chi2 m
 						local p13=r(p)						
 						}												
 					}
 					else {
-						qui tab `varnum' `groupnum' [`weight'`exp'], exact
+						qui tab `varnum' `groupnum' [`weight'`exp'], exact m
 						local p=r(p_exact)
 						if "`pairwise123'" == "pairwise123" {
-						qui tab `varnum' `groupnum' [`weight'`exp'] if `groupnum' == `level1' | `groupnum' == `level2', exact
+						qui tab `varnum' `groupnum' [`weight'`exp'] if `groupnum' == `level1' | `groupnum' == `level2', exact m
 						local p12=r(p_exact)
-						qui tab `varnum' `groupnum' [`weight'`exp'] if `groupnum' == `level2' | `groupnum' == `level3', exact
+						qui tab `varnum' `groupnum' [`weight'`exp'] if `groupnum' == `level2' | `groupnum' == `level3', exact m
 						local p23=r(p_exact)
-						qui tab `varnum' `groupnum' [`weight'`exp'] if `groupnum' == `level1' | `groupnum' == `level3', exact
+						qui tab `varnum' `groupnum' [`weight'`exp'] if `groupnum' == `level1' | `groupnum' == `level3', exact m
 						local p13=r(p_exact)								
 						}						
 					}				
@@ -581,8 +647,7 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 					qui replace level="Missing" if `varnum'==. // mc
 				}
 				else {
-					* add new observation to contain name of variable and
-					* p-value
+					* add new observation to contain name of variable and p-value
 					qui set obs `=_N + 1'
 					tempvar reorder
 					qui gen `reorder'=1 in L
@@ -604,24 +669,32 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 
 				* add p-value, test and sort variables, then save
 				qui gen cat_not_top_row = 1 if _n!=1
-				if `groupcount'>1 qui gen p=`p' if _n==1
+				if `nglevels'>1 & `nvlevels'>1 {
+					qui gen p=`p' if _n==1
+					if "`pairwise123'" == "pairwise123" {
+						qui gen p12=`p12' if _n==1
+						qui gen p23=`p23' if _n==1
+						qui gen p13=`p13' if _n==1
+					}					
+				}	
 				foreach v of var N_* {					
 					qui replace `v' = . if _n!=1 // N now only appears on P-value line
-				}				
-				if "`pairwise123'" == "pairwise123" {
-					qui gen p12=`p12' if _n==1
-					qui gen p23=`p23' if _n==1
-					qui gen p13=`p13' if _n==1
-				}				
-				if "`test'"=="test" & `groupcount'>1 {
-					if "`vartype'"=="cat" qui gen test="Pearson's chi-squared" if _n==1
+				}					
+				
+				if "`test'"=="test" & `nglevels'>1 & `nvlevels'>1 {
+					if "`vartype'"=="cat" qui gen test="Chi-square" if _n==1	
 					else qui gen test="Fisher's exact" if _n==1
 				}
+				if "`statistic'"=="statistic" & `nglevels'>1 & `nvlevels'>1 {
+					if "`vartype'"=="cat" qui gen statistic="Chi2(`df')=`chi2'" if _n==1
+					else qui gen statistic="N/A" if _n==1
+				}				
+				
 				gen sort1=`sortorder++'
 				qui gen sort2=_n
 				qui drop `varnum'
-				qui append using `resultstable'
-				qui save `resultstable', replace
+				qui append using "`resultstable'"
+				qui save "`resultstable'", replace
 				restore
 			}
 	
@@ -630,18 +703,31 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 				preserve
 				qui keep if `touse'
 				qui drop if missing(`groupnum') | missing(`varname')
+				
+				qui count
+				if r(N)==0 {
+					di in red "no categories for `varname' ... cannot tabulate"
+					exit 198
+				}													
 
 				* categories should be numeric 0/1	
 				capture assert `varname'==0 | `varname'==1
 				if _rc {
-					di in red "bin variable `varname' must be 0 (negative) or 1 (positive)"
+					di in red "binary variable `varname' must be 0 (negative) or 1 (positive)"
 					exit 198
 				}
-					
+
+				qui levelsof `groupnum' if `varname'!=., local(glevels)
+				local nglevels: word count `glevels'
+				qui levelsof `varname', local(vlevels)
+				local nvlevels: word count `vlevels'
+				
 				* significance test
-					if "`vartype'"=="bin" {
+					if "`vartype'"=="bin" & `nglevels'>1 & `nvlevels'>1 {
 						qui tab `varname' `groupnum' [`weight'`exp'], chi2
 						local p=r(p)
+						local chi2 : di %6.2f r(chi2)
+						local df = (r(r)-1)*(r(c)-1)						
 						if "`pairwise123'" == "pairwise123" {
 						qui tab `varname' `groupnum' [`weight'`exp'] if `groupnum' == `level1' | `groupnum' == `level2', chi2
 						local p12=r(p)
@@ -651,7 +737,7 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 						local p13=r(p)						
 						}												
 					}
-					else {
+					if "`vartype'"=="bine" & `nglevels'>1 & `nvlevels'>1 {
 						qui tab `varname' `groupnum' [`weight'`exp'], exact
 						local p=r(p_exact)
 						if "`pairwise123'" == "pairwise123" {
@@ -719,19 +805,27 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 				rename n_perc* `groupnum'*
 
 				* add p-value, test and sort variables, then save
-				if `groupcount'>1 qui gen p=`p'
-				if "`pairwise123'" == "pairwise123" {
-					qui gen p12=`p12'
-					qui gen p23=`p23'
-					qui gen p13=`p13'
-				}				
-				if "`test'"=="test" & `groupcount'>1 {
-					if "`vartype'"=="bin" qui gen test="Pearson's chi-squared"
-					else qui gen test="Fisher's exact"
+				if `nglevels'>1 & `nvlevels'>1 {
+					qui gen p=`p'
+					if "`pairwise123'" == "pairwise123" {
+						qui gen p12=`p12'
+						qui gen p23=`p23'
+						qui gen p13=`p13'
+					}	
 				}
+				
+				if "`test'"=="test" & `nglevels'>1 & `nvlevels'>1 {
+					if "`vartype'"=="bin" qui gen test="Chi-square" 	
+					else qui gen test="Fisher's exact" 
+				}
+				if "`statistic'"=="statistic" & `nglevels'>1 & `nvlevels'>1 {
+					if "`vartype'"=="bin" qui gen statistic="Chi2(`df')=`chi2'"
+					else qui gen statistic="N/A"
+				}				
+				
 				gen sort1=`sortorder++'
-				qui append using `resultstable'
-				qui save `resultstable', replace
+				qui append using "`resultstable'"
+				qui save "`resultstable'", replace
 				restore
 			}			
 		}
@@ -742,7 +836,7 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 	local vallab: value label `groupnum'
 	if "`vallab'"!="" {
 		tempfile labels
-		qui label save `vallab' using `labels'
+		qui label save `vallab' using "`labels'"
 	}
 
 	* levels of group variable, for subsequent labelling
@@ -750,11 +844,11 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 
 	* load results table
 	preserve
-	qui use `resultstable', clear
+	qui use "`resultstable'", clear
 
 	
 	* restore value labels if available
-	capture do `labels'
+	capture do "`labels'"
 	
 	if "`total'" != "" { 
 		if "`vallab'"=="" local vallab "beatles"	
@@ -786,6 +880,7 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 	lab var factor "Factor "
 	capture lab var level "Level"
 	capture lab var test "Test"
+	capture lab var statistic "Statistic"
 	if `groupcount'==1 lab var `groupnum'1 "Total"
 	capture lab var _columna_919 "T _columna_"
 	capture lab var _columnb_919 "T _columnb_"
@@ -794,6 +889,7 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 	
 	* format p-values
 	if `groupcount'>1 {
+		cap gen p = .
 		qui gen pvalue=string(p, "%4.2f") if !missing(p)
 		qui replace pvalue=string(p, "%`=`pdp'+2'.`pdp'f") if p<0.10
 		local pmin=10^-`pdp'
@@ -844,14 +940,14 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 	order `groupnum'*, seq
 	order factor `groupnum'* N_* m_*
 	capture order factor `groupnum'* pvalue // won't have p-value if no group var ... mc swapped in `groupnum' for `by'
-	capture order test, after(pvalue) // won't have test if no group var
+	capture order test, before(pvalue) // won't have test if no group var
+	capture order statistic, before(pvalue)
 	capture order p12s p23s p13s, after(pvalue) // mc
 	capture order level, after(factor) // won't have level if no cat vars
 
 	
 	* rename placeholder group variable if by() option not used
-	* otherwise rename group variables using the specified group var (only
-	*   important if using the "clear" option)
+	* otherwise rename group variables using the specified group var (only important if using the "clear" option)
 	if `groupcount'==1 rename `groupnum'1 Total
 	else rename `groupnum'* `by'*
  

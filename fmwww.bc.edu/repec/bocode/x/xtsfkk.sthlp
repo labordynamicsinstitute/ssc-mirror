@@ -1,4 +1,5 @@
 {smcl}
+{* *! version 2.0.3  29apr2022}{...}
 {* *! version 2.0.2  03mar2022}{...}
 {* *! version 2.0.1  10jun2021}{...}
 {* *! version 2.0.0  08dec2020}{...}
@@ -522,6 +523,10 @@ an email to me. {p_end}
 underlying econometric methodology, and examples:
 
 {phang}
++ Karakaplan, Mustafa U. (2022) "Panel Stochastic Frontier Models with Endogeneity."
+{it:Forthcoming.} {browse "www.stata-journal.com":The Stata Journal}.
+
+{phang}
 + Karakaplan, Mustafa U. (2018) "xtsfkk: Stata Module for Endogenous Panel Stochastic Frontier Models." Available at Boston College, Department of Economics, Statistical Software Components (SSC) 
 {browse "https://ideas.repec.org/c/boc/bocode/s458445.html":S458445}{p_end}
 
@@ -551,7 +556,7 @@ Kutlu, Levent (2010) "Battese–Coelli Estimator with Endogenous Regressors."
 
 {title:Acknowledgments}
 
-{pstd}I would like to thank Levent Kutlu, Hung-Jen Wang, Isabel Canette, Joerg Luedicke, Ben Jann, Jan Ditzen, Kit Baum, and an anonymous referee for their great support.
+{pstd}I would like to thank Levent Kutlu, Hung-Jen Wang, Isabel Canette, Joerg Luedicke, Ben Jann, Jan Ditzen, Myk Milligan, Kit Baum, and an anonymous referee for their great support. I would also like to acknowledge that the Research Computing program under the Division of Information Technology at the University of South Carolina contributed to the results in this research by providing high performance computing resources and expertise.
 
 
 {title:Disclaimer}
