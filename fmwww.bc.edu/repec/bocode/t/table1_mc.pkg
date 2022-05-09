@@ -12,8 +12,8 @@ d Requires: Stata version 14.2 (15.1 for docx output)
 d
 d Distribution-Date: 20220507
 d
-d Author: Mark Chatfield, Menzies School of Health Research
-d Support: email Mark.Chatfield@@menzies.edu.au
+d Author: Mark Chatfield, University of Queensland
+d Support: email m.chatfield@@uq.edu.au
 d
 f table1_mc.ado
 f table1_mc.sthlp
