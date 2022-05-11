@@ -1,0 +1,30 @@
+d 'XTDPDBC': module to perform bias-corrected estimation of linear dynamic panel data models
+d
+d  xtdpdbc implements a bias-corrected method-of-moments estimator
+d for linear dynamic panel data models with fixed or random
+d effects. Higher-order autoregressive models and unbalanced panel
+d data sets are supported. Postestimation commands are available to
+d test for serial correlation and the validity of overidentifying
+d restrictions. 
+d
+d KW:  DPD
+d KW: bias correction
+d KW: panel data
+d KW: serial correlation
+d
+d Requires: Stata version 12.1
+d
+d Distribution-Date: 20220510
+d
+d Author:  Sebastian Kripfganz, University of Exeter Business School
+d Support: email S.Kripfganz@@exeter.ac.uk
+d
+d Author:  Jörg Breitung, University of Cologne
+d Support: email  breitung@@statistik.uni-koeln.de
+d
+f xtdpdbc.ado
+f xtdpdbc.sthlp
+f xtdpdbc_p.ado
+f xtdpdbc_estat.ado
+f xtdpdbc_postestimation.sthlp
+f ../l/lxtdpdbc.mlib

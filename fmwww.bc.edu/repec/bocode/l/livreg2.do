@@ -1,6 +1,6 @@
-*! livreg2 1.1.06  2july2014
+*! livreg2 1.2.01  28july2015
 *! authors cfb & mes
-*! compiled in Stata 9.2
+*! compiled in Stata 11.2
 * Mata library for ivreg2 and ranktest.
 * Introduced with ivreg2 v 3.1.01 and ranktest v 1.3.01.
 
@@ -14,27 +14,29 @@
 * 1.1.05     Added whichlivreg2(.) to aid in version control
 * 1.1.06     Fixed remaining weighting bug (see 1.1.04) in 2-way clustering when interection
 *            of clustering levels is groups
+* 1.1.07     Fixed HAC bug that crashed m_omega(.) when there were no obs for a particular lag
+* 1.2.01     Promotion to compilation in Stata 11.2.  Added support for -center- option.
 
 * Locals used in whichlivreg2; set when compiled
 local stata_version `c(stata_version)'
 local born_date `c(born_date)'
 
-version 9.2
+version 11.2
 mata:
 mata clear
 
 void whichlivreg2()
 {
 ""
-"livreg2 01.1.06  2july2014"
+"livreg2 01.2.01  28july2015"
 "compiled under Stata " + "`stata_version'" + " born " + "`born_date'"
 "Mata library for ivreg2 and related programs"
 "authors CFB/MS"
 st_sclear()
 st_global("s(stata_born_date)","`born_date'")
 st_global("s(stata_version)","`stata_version'")
-st_global("s(compiled_date)","2july2014")
-st_global("s(ver)", "01.1.06")
+st_global("s(compiled_date)","28july2015")
+st_global("s(ver)", "01.2.01")
 }
 
 
@@ -44,6 +46,7 @@ struct ms_vcvorthog {
 	string scalar	robust, clustvarname, clustvarname2, clustvarname3, kernel
 	string scalar	sw, psd, ivarname, tvarname, tindexname
 	real scalar		wf, N, bw, tdelta, dofminus
+	real scalar		center
 	real matrix		ZZ
 	pointer matrix	e
 	pointer matrix	Z
@@ -90,7 +93,7 @@ void s_vkernel(	string scalar kernel,
 // Check kernel
 // Valid kernel list is abbrev, full name, whether special case if bw=1
 // First in list is default kernel = Barlett
-	vklist = 	(		("", "bartlett", "0")
+	vklist = 	(	("", "bartlett", "0")
 				\	("bar", "bartlett", "0")
 				\	("bartlett", "bartlett", "0")
 				\	("par", "parzen", "0")
@@ -171,6 +174,19 @@ printf("\n{error:Error: invalid kernel}\n")
 	L=cols(*vcvo.Z)
 	K=cols(*vcvo.e)		// ivreg2 always calls with K=1; ranktest may call with K>=1.
 
+// If centered moments specified, need rowvector of mean organized as (e1'Z e2'Z ...).
+// Needed only if non-homoskedastic
+	if ((vcvo.center==1) & ((vcvo.robust~="") | (vcvo.clustvarname==""))) {
+		if ((vcvo.weight=="fweight") | (vcvo.weight=="iweight")) {
+			wv = *vcvo.wvar
+		}
+		else {
+			wv = (*vcvo.wvar * vcvo.wf):^2		// wf needed for aweights and pweights
+		}
+		eZmean=quadcross(*vcvo.e, wv, *vcvo.Z) / vcvo.N
+		eZmean=vec(eZmean')'
+	}
+
 // Covariance matrices
 // shat * 1/N is same as estimated S matrix of orthog conditions
 
@@ -198,12 +214,12 @@ printf("\n{error:Error: invalid kernel}\n")
 					tmatrix = tnow, tlag
 					svar=(tnow:<.):*(tlag:<.)		// multiply column vectors of 1s and 0s
 					tmatrix=select(tmatrix,svar)	// to get intersection, and replace tmatrix
+// if no lags exist, tmatrix has zero rows.
+					if (rows(tmatrix)>0) {
 // col 1 of tmatrix has row numbers of all rows of data with this time period that have a corresponding lag
 // col 2 of tmatrix has row numbers of all rows of data with lag tau that have a corresponding ob this time period.
 // Should never happen that fweights or iweights make it here,
 // but if they did the next line would be sqrt(wvari)*sqrt(wvari1) [with no wf since not needed for fw or iw]
-// if no lags exist, tmatrix has zero rows.  Code below still works (ghat+ghat'=0) but best to catch anyway
-					if (rows(tmatrix)>0) {
 						wv = (*vcvo.wvar)[tmatrix[.,1]]		///
 									:* (*vcvo.wvar)[tmatrix[.,2]]*(vcvo.wf^2)	// inner weighting matrix for quadcross
 						sigmahat = quadcross((*vcvo.e)[tmatrix[.,1],.],   wv ,(*vcvo.e)[tmatrix[.,2],.])	///
@@ -223,7 +239,8 @@ printf("\n{error:Error: invalid kernel}\n")
 // Need to enter for double-clustering if one cluster is time.
 	if ( (vcvo.robust~="") & (vcvo.sw=="") & ((vcvo.clustvarname=="")		///
 			| ((vcvo.clustvarname2~="") & (vcvo.kernel~="")))  ) {
-		if (K==1) {										// simple/fast where e is a column vector
+		if ((K==1) & (vcvo.center~=1)) {				// simple/fast where e is a column vector
+														// and no centering
 			if ((vcvo.weight=="fweight") | (vcvo.weight=="iweight")) {
 				wv = (*vcvo.e:^2) :* *vcvo.wvar
 			}
@@ -236,12 +253,15 @@ printf("\n{error:Error: invalid kernel}\n")
 			shat=J(L*K,L*K,0)
 			for (i=1; i<=rows(*vcvo.e); i++) {
 				eZi=((*vcvo.e)[i,.])#((*vcvo.Z)[i,.])
+				if (vcvo.center==1) {
+					eZi=eZi-eZmean
+				}
 				if ((vcvo.weight=="fweight") | (vcvo.weight=="iweight")) {
 // wvar is a column vector. wf not needed for fw and iw (=1 by dfn so redundant).
 					shat=shat+quadcross(eZi,eZi)*((*vcvo.wvar)[i])
 				}
 				else {
-					shat=shat+quadcross(eZi,eZi)*((*vcvo.wvar)[i] * vcvo.wf)^2	//  **** ADDED *vcvo.wf
+					shat=shat+quadcross(eZi,eZi)*((*vcvo.wvar)[i] * vcvo.wf)^2
 				}
 			}
 		}
@@ -267,34 +287,38 @@ printf("\n{error:Error: invalid kernel}\n")
 
 // col 1 of tmatrix has row numbers of all rows of data with this time period that have a corresponding lag
 // col 2 of tmatrix has row numbers of all rows of data with lag tau that have a corresponding ob this time period.
-					if (K==1) {										// simple/fast where e is a column vector
+// if no lags exist, tmatrix has zero rows
+					if (rows(tmatrix)>0) {
+						if ((K==1) & (vcvo.center~=1)) {			// simple/fast where e is a column vector
+																	// and no centering
 // wv is inner weighting matrix for quadcross
-// if no lags exist, tmatrix has zero rows.  Code below still works (ghat+ghat'=0) but best to catch anyway
-						if (rows(tmatrix)>0) {
 							wv   = (*vcvo.e)[tmatrix[.,1]] :* (*vcvo.e)[tmatrix[.,2]]		///
 								:* (*vcvo.wvar)[tmatrix[.,1]] :* (*vcvo.wvar)[tmatrix[.,2]] * (vcvo.wf^2)
 							ghat = quadcross((*vcvo.Z)[tmatrix[.,1],.], wv, (*vcvo.Z)[tmatrix[.,2],.])
 						}
-					}
-					else {											// e is a matrix so must loop
-						ghat=J(L*K,L*K,0)
-// if tmatrix has zero rows, loop not entered
-						for (i=1; i<=rows(tmatrix); i++) {
-							wvari =(*vcvo.wvar)[tmatrix[i,1]]
-							wvari1=(*vcvo.wvar)[tmatrix[i,2]]
-							ei    =(*vcvo.e)[tmatrix[i,1],.]
-							ei1   =(*vcvo.e)[tmatrix[i,2],.]
-							Zi    =(*vcvo.Z)[tmatrix[i,1],.]
-							Zi1   =(*vcvo.Z)[tmatrix[i,2],.]
-							eZi =ei#Zi
-							eZi1=ei1#Zi1
+						else {										// e is a matrix so must loop
+							ghat=J(L*K,L*K,0)
+							for (i=1; i<=rows(tmatrix); i++) {
+								wvari =(*vcvo.wvar)[tmatrix[i,1]]
+								wvari1=(*vcvo.wvar)[tmatrix[i,2]]
+								ei    =(*vcvo.e)[tmatrix[i,1],.]
+								ei1   =(*vcvo.e)[tmatrix[i,2],.]
+								Zi    =(*vcvo.Z)[tmatrix[i,1],.]
+								Zi1   =(*vcvo.Z)[tmatrix[i,2],.]
+								eZi =ei#Zi
+								eZi1=ei1#Zi1
+								if (vcvo.center==1) {
+									eZi=eZi-eZmean
+									eZi1=eZi1-eZmean
+								}
 // Should never happen that fweights or iweights make it here, but if they did
 // the next line would be ghat=ghat+eZi'*eZi1*sqrt(wvari)*sqrt(wvari1)
 // [without *vcvo.wf since wf=1 for fw and iw]
-							ghat=ghat+quadcross(eZi,eZi1)*wvari*wvari1 * (vcvo.wf^2)	// ADDED * (vcvo.wf^2)
+								ghat=ghat+quadcross(eZi,eZi1)*wvari*wvari1 * (vcvo.wf^2)
+							}
 						}
-					}
-					shat=shat+kw*(ghat+ghat')
+						shat=shat+kw*(ghat+ghat')
+					}	// end non-zero-obs accumulation block
 				}	// end non-zero kernel weight block
 			}	// end tau loop
 		}  // end kernel code
@@ -318,7 +342,8 @@ printf("\n{error:Error: invalid kernel}\n")
 				info3 = panelsetup(clustvar3, 1)
 				if (rows(info3)==rows(*vcvo.e)) {	// intersection of levels 1 & 2 are all single obs
 													// so no need to loop through row by row
-					if (K==1) {										// simple/fast where e is a column vector
+				if ((K==1) & (vcvo.center~=1)) {			// simple/fast where e is a column vector
+															// and no centering
 						wv = (*vcvo.e :* *vcvo.wvar * vcvo.wf):^2
 						shat3=quadcross(*vcvo.Z, wv, *vcvo.Z)		// basic Eicker-Huber-White-sandwich-robust vce
 					}
@@ -326,7 +351,10 @@ printf("\n{error:Error: invalid kernel}\n")
 						shat3=J(L*K,L*K,0)
 						for (i=1; i<=rows(*vcvo.e); i++) {
 							eZi=((*vcvo.e)[i,.])#((*vcvo.Z)[i,.])
-							shat3=shat3+quadcross(eZi,eZi)*((*vcvo.wvar)[i] * vcvo.wf)^2	//  **** ADDED *vcvo.wf
+							if (vcvo.center==1) {
+								eZi=eZi-eZmean
+							}
+							shat3=shat3+quadcross(eZi,eZi)*((*vcvo.wvar)[i] * vcvo.wf)^2
 							}
 						}
 				}
@@ -338,13 +366,17 @@ printf("\n{error:Error: invalid kernel}\n")
 						Zsub=panelsubmatrix(*vcvo.Z,i,info3)
 						wsub=panelsubmatrix(*vcvo.wvar,i,info3)
 						wv = esub :* wsub * vcvo.wf
-						if (K==1) {							// simple/fast where e is a column vector
+						if ((K==1) & (vcvo.center~=1)) {	// simple/fast where e is a column vector
+															// and no centering
 							eZ = quadcross(1, wv, Zsub)		// equivalent to colsum(wv :* Zsub)
 						}
 						else {
 							eZ = J(1,L*K,0)
 							for (j=1; j<=rows(esub); j++) {
-								eZ=eZ+(esub[j,.]#Zsub[j,.])*wsub[j,.] * vcvo.wf	//  **** ADDED *vcvo.wf
+								eZ=eZ+(esub[j,.]#Zsub[j,.])*wsub[j,.] * vcvo.wf
+							}
+							if (vcvo.center==1) {
+								eZ=eZ-eZmean
 							}
 						}
 						shat3=shat3+quadcross(eZ,eZ)
@@ -362,14 +394,19 @@ printf("\n{error:Error: invalid kernel}\n")
 				esub=panelsubmatrix(*vcvo.e,i,info)
 				Zsub=panelsubmatrix(*vcvo.Z,i,info)
 				wsub=panelsubmatrix(*vcvo.wvar,i,info)
-				if (K==1) {						// simple/fast if e is a column vector
+				if ((K==1) & (vcvo.center~=1)) {	// simple/fast where e is a column vector
+													// and no centering
 					wv = esub :* wsub * vcvo.wf
 					eZ = quadcross(1, wv, Zsub)		// equivalent to colsum(wv :* Zsub)
 				}
 				else {
 					eZ=J(1,L*K,0)
 					for (j=1; j<=rows(esub); j++) {
-						eZ=eZ+(esub[j,.]#Zsub[j,.])*wsub[j,.]*vcvo.wf	//  **** ADDED *vcvo.wf
+						eZj=(esub[j,.]#Zsub[j,.])*wsub[j,.]*vcvo.wf
+							if (vcvo.center==1) {
+								eZj=eZj-eZmean
+							}
+						eZ=eZ+eZj
 					}
 				}
 				shat=shat+quadcross(eZ,eZ)
@@ -386,15 +423,19 @@ printf("\n{error:Error: invalid kernel}\n")
 				esub=select(*vcvo.e,svar)		// it is, however, noticably slower.
 				Zsub=select(*vcvo.Z,svar)
 				wsub=select(*vcvo.wvar,svar)
-				if (K==1) {						// simple/fast if e is a column vector
+				if ((K==1) & (vcvo.center~=1)) {	// simple/fast where e is a column vector
+													// and no centering
 					wv = esub :* wsub * vcvo.wf
 					eZ = quadcross(1, wv, Zsub)		// equivalent to colsum(wv :* Zsub)
 				}
 				else {
 					eZ=J(1,L*K,0)
 					for (j=1; j<=rows(esub); j++) {
-						eZ=eZ+(esub[j,.]#Zsub[j,.])*wsub[j,.]*vcvo.wf	//  **** ADDED *vcvo.wf
+						eZ=eZ+(esub[j,.]#Zsub[j,.])*wsub[j,.]*vcvo.wf
 					}
+				}
+				if (vcvo.center==1) {
+					eZ=eZ-eZmean
 				}
 				shat2=shat2+quadcross(eZ,eZ)
 			}
@@ -414,16 +455,19 @@ printf("\n{error:Error: invalid kernel}\n")
 					esub=select(*vcvo.e,svar)
 					Zsub=select(*vcvo.Z,svar)
 					wsub=select(*vcvo.wvar,svar)
-					if (K==1) {						// simple/fast if e is a column vector
+					if ((K==1) & (vcvo.center~=1)) {	// simple/fast where e is a column vector
+														// and no centering
 						wv = esub :* wsub * vcvo.wf
 						eZ = quadcross(1, wv, Zsub)		// equivalent to colsum(wv :* Zsub)
 					}
 					else {
-// MISSING LINE IS NEXT
 						eZ=J(1,L*K,0)
 						for (j=1; j<=rows(esub); j++) {
-							eZ=eZ+(esub[j,.]#Zsub[j,.])*wsub[j,.]*vcvo.wf	//  **** ADDED *vcvo.wf
+							eZ=eZ+(esub[j,.]#Zsub[j,.])*wsub[j,.]*vcvo.wf
 						}
+					}
+					if (vcvo.center==1) {
+						eZ=eZ-eZmean
 					}
 					shat2=shat2+quadcross(eZ,eZ)
 				}
@@ -453,7 +497,8 @@ printf("\n{error:Error: invalid kernel}\n")
 							wv1 = select((*vcvo.e),svar1) :* select((*vcvo.wvar),svar1) * vcvo.wf
 							Zsub =select((*vcvo.Z),svar)
 							Zsub1=select((*vcvo.Z),svar1)
-							if (K==1) {						// simple/fast, e is column vector
+						if ((K==1) & (vcvo.center~=1)) {			// simple/fast where e is a column vector
+																	// and no centering
 								eZsub = quadcross(1, wv, Zsub)		// equivalent to colsum(wv :* Zsub)
 								eZsub1= quadcross(1, wv1, Zsub1)	// equivalent to colsum(wv :* Zsub)
 							}
@@ -470,6 +515,10 @@ printf("\n{error:Error: invalid kernel}\n")
 									Z1j  =Zsub1[j,.]
 									eZsub1=eZsub1+(wv1j#Z1j)
 								}
+							}
+							if (vcvo.center==1) {
+								eZsub=eZsub-eZmean
+								eZsub1=eZsub1-eZmean
 							}
 							ghat=quadcross(eZsub,eZsub1)
 							shat2=shat2+kw*(ghat+ghat')
@@ -519,6 +568,9 @@ printf("\n{error:Error: invalid kernel}\n")
 				shatsub=J(L*K,L*K,0)
 				for (j=1; j<=rows(esub); j++) {
 					eZi=esub[j,1]#Zsub[j,.]
+					if (vcvo.center==1) {
+						eZi=eZi-eZmean
+					}
 					if ((vcvo.weight=="fweight") | (vcvo.weight=="iweight")) {
 						shatsub=shatsub+quadcross(eZi,eZi)*wsub[j]*vcvo.wf
 						sigmahatsub=sigmahatsub + quadcross(esub[j,1],esub[j,1])*wsub[j]*vcvo.wf

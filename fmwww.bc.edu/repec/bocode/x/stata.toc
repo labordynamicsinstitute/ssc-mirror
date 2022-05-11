@@ -50,6 +50,7 @@ p xtcsi module to investigate Residual Cross-Section Independence
 p xtdcce module to estimate heterogeneous coefficient models using common correlated effects in a dynamic panel
 p xtdcce2 module to estimate heterogeneous coefficient models using common correlated effects in a dynamic panel
 p xtdolshm module to perform panel data cointegration 
+p xtdpdbc module to perform bias-corrected estimation of linear dynamic panel data models
 p xtdpdgmm module to perform generalized method of moments estimation of linear dynamic panel data models
 p xtdpdml module to estimate Dynamic Panel Data Models using Maximum Likelihood
 p xtdpdqml module to perform quasi-maximum likelihood linear dynamic panel data estimation

@@ -1,20 +1,20 @@
 d 'ICIO': module for Economic Analysis with Inter-Country Input-Output tables
 d
-d  icio measures trade in value-added and participation in GVCs of
-d countries and sectors by exploiting Inter-Country Input-Output
-d (ICIO) tables. It provides decompositions of aggregate, bilateral
-d and sectoral exports and imports according to the source and the
-d destination of their value-added content. The command allows to
-d work directly with the most popular ICIO tables - WIOD (Timmer et
-d al. 2015), TIVA (OECD), EORA (Lenzen et al. 2013); in addition,
-d any other user-provided ICIO table can be loaded. icio
-d encompasses the most relevant measures of value-added in exports
-d and imports at different level of aggregation. It follows closely
-d the accounting framework presented in Borin and Mancini (2019),
-d which - in turn - extends, refines and reconciles the other main
-d contributions in this strand of the literature. As different
-d empirical questions call for distinct accounting methods, icio is
-d designed to be flexible also in this respect. 
+d  Several new statistical tools and analytical frameworks have
+d been recently developed to measure countries' and sectors'
+d involvement in global value chains. Such a wealth of
+d methodologies reflects the fact that different empirical
+d questions call for distinct accounting methods and different
+d levels of aggregation of trade flows. In this article, we
+d describe icio, a new command for the computation of the most
+d appropriate measures of trade in value added as well as
+d participation in global value chains. icio follows the conceptual
+d framework proposed by Borin and Mancini (2019, Policy Research
+d Working Paper WPS 8804; WDR 2020 Background Paper, World Bank
+d Group), which in turn extends, refines, and reconciles the other
+d main contributions in this strand of the literature. icio is
+d flexible enough to work with any intercountry input–output
+d table and with any level of aggregation of trade flows. 
 d
 d KW: input-output tables
 d KW: inter-country tables
@@ -23,7 +23,7 @@ d KW: global value chains
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20210529
+d Distribution-Date: 20220409
 d
 d Author: Federico Belotti, University of Rome Tor Vergata
 d Support: email federico.belotti@@uniroma2.it

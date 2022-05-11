@@ -21,6 +21,7 @@ p ngram module to provide n-gram feature extractor
 p nharvey module to perform Nyblom-Harvey panel test of common stochastic trends
 p nicedates module for nice dates, especially for time series graphs
 p niceest module to export regression table to excel
+p nicelabels module for nice axis labels for general scales
 p niceloglabels module to produce nice axis labels for logarithmic scales
 p nicewords module to pay compliments
 p njc_stuff module documenting Stata programs and help files by Nicholas J. Cox  
