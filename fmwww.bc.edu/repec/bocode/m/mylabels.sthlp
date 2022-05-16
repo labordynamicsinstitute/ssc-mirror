@@ -1,10 +1,15 @@
 {smcl}
-{* 16may2004/7sep2004/7jun2005/2jul2008/20aug2012/21sep2016}{...}
+{* 16may2004/7sep2004/7jun2005/2jul2008/20aug2012/21sep2016/13may2022}{...}
 {hline}
-help for {hi:mylabels} and {hi:myticks}
+{cmd:mylabels} and {cmd:myticks}{right:({browse "http://www.stata-journal.com/article.html?article=gr00??":SJ22-?: gr00??)}}
 {hline}
 
-{title:Axis labels or ticks on specified scales}
+{title:Title}
+
+{p 8 8 2}{cmd:mylabels} and {cmd:myticks} {hline 2} Axis labels or ticks on specified scales{p_end}
+
+{marker syntax}{...}
+{title:Syntax}
 
 {p 8 17 2}
 {cmd:mylabels}
@@ -16,7 +21,9 @@ help for {hi:mylabels} and {hi:myticks}
 {cmdab:f:ormat(}{it:format}{cmd:)} 
 {cmd:clean} 
 {cmdab:pre:fix(}{it:text}{cmd:)} 
-{cmdab:suf:fix(}{it:text}{cmd:)} 
+{cmdab:suf:fix(}{it:text}{cmd:)}
+{cmdab:first:only}
+{cmdab:last:only} 
 ]
 
 {p 8 17 2}
@@ -88,7 +95,7 @@ A similar idea may be used for axis ticks.
 {cmd:local(}{it:macname}{cmd:)} inserts the option specification in
 local macro {it:macname} within the calling program's space.  Hence that
 macro will be accessible after {cmd:mylabels} or {cmd:myticks} has
-finished. This is helpful for subsequent use with {help graph} or other
+finished. This is helpful for later use with {help graph} or other
 graphics commands. This is a required option. 
 
 {p 4 8 2}
@@ -108,7 +115,7 @@ presentation of leading zeros.
 decimal points (whether periods (stops) or commas). This option is most
 often used together with {cmd:format()}. Thus by itself
 {cmd:format(%03.2f)} would render 0(0.25)1 as 0.00 0.25 0.50 0.75 1.00
-but {cmd:clean} reduces it to 0 0.25 0.5 0.75 1. 
+but {cmd:clean} reduces it to 0 0.25 0.5 0.75 1. Do not use this option with integer labels such as 10(10)40. 
 
 {p 4 8 2}
 {cmd:prefix()} specifies text to be prepended to all axis labels.
@@ -118,22 +125,33 @@ Specify any blank spaces within {cmd:" "}.
 {cmd:suffix()} specifies text to be appended to all axis labels. Specify
 any blank spaces within {cmd:" "}. 
 
+{p 4 8 2}
+{cmd:firstonly} and {cmd:lastonly} specify that any prefix or suffix should be attached to the first or last label, only. 
+
 
 {title:Examples}
 
-{p 4 8 2}{cmd:. webuse nlswork, clear }{p_end}
-{p 4 8 2}{cmd:. spikeplot ln_wage, root}{p_end}
-{p 4 8 2}{cmd:. mylabels 1 3 10 30 100 300, myscale(ln(@)) local(myxla)}{p_end}
-{p 4 8 2}{cmd:. mylabels 0 25 100 225, myscale(sqrt(@)) local(myyla)}{p_end}
-{p 4 8 2}{cmd:. spikeplot ln_wage, root xla(`myxla') yla(`myyla') ytitle(frequency (root scale)) xtitle(wage/GNP deflator (log scale)) xsc(titlegap(*5))}{p_end}
+{p 4 8 2}{cmd: . sysuse auto, clear }{p_end}
+{p 4 8 2}{cmd: . scatter mpg weight}{p_end}
+{p 4 8 2}{cmd: . generate gpm = 1000/mpg}{p_end}
+{p 4 8 2}{cmd: . mylabels 15(5)40, myscale(1000/@) local(myyla)}{p_end}
+{p 4 8 2}{cmd: . scatter gpm weight, yla(`myyla', ang(h)) ytitle(Miles per gallon (reciprocal scale)) ms(Oh)}{p_end}
+{p 4 8 2}{cmd: . myticks 12/41, myscale(1000/@) local(myyti)}{p_end}
+{p 4 8 2}{cmd: . scatter gpm weight,  yla(`myyla', ang(h)) ytitle(Miles per gallon (reciprocal scale)) ymtic(`myyti') ms(Oh)}{p_end}
 
-{p 4 8 2}{cmd:. sysuse auto, clear }{p_end}
-{p 4 8 2}{cmd:. scatter mpg weight}{p_end}
-{p 4 8 2}{cmd:. gen gpm = 1000/mpg}{p_end}
-{p 4 8 2}{cmd:. mylabels 15(5)40, myscale(1000/@) local(myyla)}{p_end}
-{p 4 8 2}{cmd:. sc gpm weight, yla(`myyla', ang(h)) ytitle(Miles per gallon (reciprocal scale))}{p_end}
-{p 4 8 2}{cmd:. myticks 12/41, myscale(1000/@) local(myyti)}{p_end}
-{p 4 8 2}{cmd:. sc gpm weight, yla(`myyla', ang(h)) ytitle(Miles per gallon (reciprocal scale)) ymtic(`myyti')}{p_end}
+{p 4 8 2}{cmd: . webuse citytemp, clear }{p_end}
+{p 4 8 2}{cmd: . summarize }{p_end}
+{p 4 8 2}{cmd: . scatter tempjuly tempjan}{p_end}
+{p 4 8 2}{cmd: . mylabels 10(5)35, myscale(32 + (9/5)* @) local(myyla)}{p_end}
+{p 4 8 2}{cmd: . mylabels -15(5)20, myscale(32 + (9/5)* @) local(myxla)}{p_end}
+{p 4 8 2}{cmd: . scatter tempjuly tempjan, yla(`myyla', ang(h)) xla(`myxla') ms(Oh) ///}{p_end}
+{p 4 8 2}{cmd: ytitle(Average July temperature ({&degree}C)) xtitle(Average January temperature ({&degree}C))}{p_end}
+
+{p 4 8 2}{cmd: . sysuse census, clear}{p_end}
+{p 4 8 2}{cmd: . generate pc_older = 100 * pop65p / pop}{p_end}
+{p 4 8 2}{cmd: . nicelabels pc_older, local(yla)}{p_end}
+{p 4 8 2}{cmd: . mylabels `yla', suffix(%) local(yla)}{p_end}
+{p 4 8 2}{cmd: . scatter pc_older medage, ylabel(`yla', ang(h)) xlabel(, format(%2.0f)) ytitle(% 65 and older) ms(none) mlabel(state2) mlabpos(0)}{p_end}
 
 {p 4 8 2}{cmd:. mylabels 0(5)20, local(labels) myscale(@/100) suffix(" %")}{p_end}
 {p 4 8 2}{cmd:. mylabels 0(5)20, local(labels) prefix($)}{p_end}
@@ -180,6 +198,13 @@ Freely accessible at
 
 {title:Also see}
 
-{p 4 13 2}
-Online:  help for {help axis_label_options}
-{p_end}
+{p 4 14 2}
+help: {manhelpi axis_label_options G-3}{p_end}
+
+{p 4 14 2} 
+help: {help nicelabels} (if installed)
+
+{p 4 14 2} 
+help: {help niceloglabels} (if installed)
+
+

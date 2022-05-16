@@ -30,35 +30,13 @@ program define fdrisk, rclass
 version 12.0
 syntax, nulllo(string) nullhi(string) STDerr(real)   ///
 		NULLSpace(string asis)  ALTSpace(string asis) ///
-		[ Pi0(real 0.5) ///
-		/*Depreciated options   NULLWeights(string)  ALTWeights(string) INTType(string) INTLevel(string) SGPVal(integer 0) */ ///
-		/*Newly added options to replace existing ones*/  fcr Level(cilevel) LIKelihood(numlist min=1 max=2)  NULLTruncnormal ALTTruncnormal] ///
-		/*[mata]*/ /* Test options for Mata integration */
+		[ Pi0(real 0.5) fcr Level(cilevel) LIKelihood(numlist min=1 max=2)  NULLTruncnormal ALTTruncnormal] 
 *Syntax parsing
 local integrate nomataInt
-/*
-if "`mata'" == "" local integrate nomataInt
-else if "`mata'"=="mata"{
-	/*capt findfile lmoremata.mlib
-	if _rc {
-		di as error "-moremata- is required to use the -mata- option; type {stata ssc install moremata}"
-		error 499
-	}*/
-	local integrate mataInt
-} 
-*/
-*Error message when still using the old syntax
-/*
-if "`nullweights'"!="" |  "`altweights'"!="" | "`inttype'"!="" | "`intlevel'"!=""{ // Does not check for sgpval being set, because the default value will always be set, so that the following message would be always displayed.
-	disp as error "You have tried to use the old syntax for this command."
-	disp as error "Please use the new syntax as described in the help file." 
-	disp as error "The old syntax has been depreceated and does not work anymore."
-	exit 198
-}
-*/
+
 *New syntax(checks)---------------------------
-// The new command syntax is mapped to the old syntax so that existing code still works with new version.
-// But the new syntax should be more Stata-like than the old R-based one. 
+* The new command syntax is mapped to the old syntax so that no major changes needed to be made to the code when changing the syntax.
+* But the new syntax should be more Stata-like than the old R-based one. 
 
 *Set sgpval
 if "`fcr'"!="" local sgpval 1
@@ -288,7 +266,6 @@ if "`inttype'"=="likelihood"{
 	  if !real("`truncNormmu'") | !real("`truncNormsd'") stop "Both elements of the option 'altspace' must be numeric or be expressions which evaluate to a number."
         local integrand `powerx' * ( normalden(x, `truncNormmu', `truncNormsd') * (normal((`=max(`:word 1 of `altspace'', `:word 2 of `altspace'')' - `truncNormmu')/`truncNormsd') - normal((`=min(`:word 1 of `altspace'', `:word 2 of `altspace'')'- `truncNormmu')/ `truncNormsd'))^(-1) ) 
         qui `integrate', f(`integrand') l(`=min(`:word 1 of `altspace'', `:word 2 of `altspace'')') u(`=max(`:word 1 of `altspace'', `:word 2 of `altspace'')')      
-        *qui integrate, f(`integrand') l(`=min(`:word 1 of `altspace'', `:word 2 of `altspace'')') u(`=max(`:word 1 of `altspace'', `:word 2 of `altspace'')') vectorise
       local PsgpvH1 = `r(integral)'
     }
 	
@@ -344,16 +321,3 @@ program define nomataInt, rclass
 	restore
  
 end
-
-*Use Mata for integration using Ben Jann's moremata package
-/* Not yet working as intended. Needs further debugging.
-program define mataInt, rclass
-syntax , Lower(real) Upper(real) Function(string)
-	
-	mata: function myf(x) return(st_local("function"))
-	mata: st_local("integral", mm_integrate_sr(&myf(),st_local("lower"), st_local("upper"),1000,1))
-	mata: mata drop myf()
-	
-	return local integral `integral'
-end
-*/

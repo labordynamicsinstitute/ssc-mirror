@@ -391,8 +391,8 @@ Wang, Hanseng, Bo Li and Chenlei Leng. 2009. Shrinkage tuning parameter selectio
 {it:Journal of Royal Statistical Society, Series B} 71(3): 671-683.
 
 {phang}
-Yan, Guanpeng, and Qiang Chen. 2021. rcm: A Stata Command for Regression Control Method. 
-{it:Shandong University working paper}.
+Yan, Guanpeng, and Qiang Chen. 2022. rcm: A Stata Command for Regression Control Method. 
+{it:Stata Journal} revise and resubmit.
 
 {marker author}{...}
 {title:Author}

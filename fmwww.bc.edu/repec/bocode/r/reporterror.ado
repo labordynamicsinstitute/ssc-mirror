@@ -6,7 +6,7 @@
 // want to estimate the true mass function of the variable as well as the
 // conditional probabilities of mis-reporting.
 ////////////////////////////////////////////////////////////////////////////////
-program define reporterror, eclass
+program define reporterror, rclass
     version 14.2
  
     syntax varlist(numeric) [if] [in] [, minu(real -999999) maxu(real -999999) nounderreport(real 1) boot(real 2500)]
@@ -17,22 +17,28 @@ program define reporterror, eclass
     fvexpand `indepvars' 
     local cnames `r(varlist)'
  
-    tempname b V N
+    tempname b V N fU fX fY pXU pYU support
 
 	mata: estimate_nounder("`depvar'", "`cnames'", ///
 						   "`touse'", `boot', ///
 						   `minu', `maxu', `nounderreport', ///
-						   "`b'", "`V'", "`N'") 
+						   "`b'", "`V'", "`N'", ///
+						   "`fU'", "`fX'", "`fY'", "`pXU'", "`pYU'", "`support'") 
 
 	matrix colnames `b' = fU
 	matrix colnames `V' = fU
 	matrix rownames `V' = fU
 	
-    ereturn post `b' `V', esample(`touse') buildfvinfo
-    ereturn scalar N    = `N'
-    ereturn local  cmd  "reporterror"
- 
-    //ereturn display
+    return scalar N    = `N'
+    return local  cmd  "reporterror"
+	return matrix pYU  = `pYU'
+	return matrix pXU  = `pXU'
+	return matrix fY   = `fY'
+	return matrix fX   = `fX'
+	return matrix fU   = `fU'
+	return matrix suppU= `support'
+	di "* reporterror is based on Hu, Y. & Sasaki, Y. (2019): Identification of Paired"
+	di "Nonseparable Measurement Error Models. Econometric Theory 33 (4), 955-979."
 end
 
 		
@@ -46,13 +52,10 @@ rseed(1)
 void estimate_nounder( string scalar xv,      string scalar yv,
 					   string scalar touse,   real scalar num_boot,
 					   real scalar min_u, 	  real scalar max_u,	   real scalar nounder, 
-					   string scalar bname,   string scalar Vname,     string scalar nname) 
+					   string scalar bname,   string scalar Vname,     string scalar nname,
+					   string scalar funame,  string scalar fxname,    string scalar fyname,
+					   string scalar pxuname, string scalar pyuname,   string scalar suppname) 
 {
-	printf("\n\n{hline 78}\n")
-	printf("Executing:  Hu, Y. & Sasaki, Y. (2019): Identification of Paired Nonseparable \n")
-	printf("            Measurement Error Models. Econometric Theory 33 (4), 955-979.     \n")
-	printf("{hline 78}\n")
- 
     x      = st_data(., xv, touse)
     y      = st_data(., yv, touse)
     n      = rows(y)
@@ -252,7 +255,8 @@ void estimate_nounder( string scalar xv,      string scalar yv,
 	se_prob_correct_y = diagonal(var_est_prob_correct_y):^0.5
 	
 	printf("\n")
-	printf("       Obs: %f\n\n",n)
+	printf("{hline 78}\n")
+	printf("                                                                   Obs: %6.0f\n",n)
 	printf("{hline 78}\n")
 	printf("         U      Mass of U    Mass of X    Mass of Y    Pr(U=X|U)    Pr(U=Y|U)\n")
 	printf("{hline 78}\n")
@@ -261,7 +265,6 @@ void estimate_nounder( string scalar xv,      string scalar yv,
 		printf("               (%8.7f)  (%8.7f)  (%8.7f)  (%8.7f)  (%8.7f)\n", se_true_fU[idx], se_fX[idx], se_fY[idx], se_prob_correct_x[idx], se_prob_correct_y[idx])
 	}
 	printf("{hline 78}\n")
-	printf("\n")
 	////////////////////////////////////////////////////////////////////////////
 	// Set b, V, n and cb
 	b = est_true_fU'
@@ -270,6 +273,12 @@ void estimate_nounder( string scalar xv,      string scalar yv,
     st_matrix(bname, b)
     st_matrix(Vname, V)
     st_numscalar(nname, n)
+	st_matrix(funame, est_true_fU)
+	st_matrix(fxname, est_fX)
+	st_matrix(fyname, est_fY)
+	st_matrix(pxuname, est_prob_correct_x)
+	st_matrix(pyuname, est_prob_correct_y)
+	st_matrix(suppname, support')
 }
 end
 ////////////////////////////////////////////////////////////////////////////////

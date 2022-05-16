@@ -1,6 +1,6 @@
 d 'MYLABELS': module for axis labels or ticks on transformed scales or for daily dates
 d
-d mylabels and myticks generate axis labels and ticks on
+d  mylabels and myticks generate axis labels and ticks on
 d transformed scales. Their use is best explained by example. You
 d draw a graph and one axis is on a transformed square root scale.
 d You wish the axis labels to show untransformed values. For some
@@ -28,14 +28,13 @@ d KW: time series
 d
 d Requires: Stata version 8.0 (9.0 for mydays)
 d
+d Distribution-Date: 20220515
 d
 d Author: Nicholas J. Cox, Durham University
 d Support: email N.J.Cox@@durham.ac.uk
 d
 d Author: Scott Merryman
 d Support: email scott.merryman@@gmail.com
-d
-d Distribution-Date: 20160923
 d
 f mylabels.ado
 f mylabels.sthlp

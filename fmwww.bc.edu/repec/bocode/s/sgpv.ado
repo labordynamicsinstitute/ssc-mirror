@@ -1,5 +1,9 @@
 *!Calculate the Second-Generation P-Value(s)(SGPV) and their associated diagnosis statistics after common estimation commands based on Blume et al. 2018,2019
 *!Author: Sven-Kristjan Bormann
+*!Version 1.2.1 13.05.2022: Fixed a bug introduced by removing the support for the original R-syntax for fdrisk, so that the options fdrisk and all did not work anymore.  ///  
+							Removed the code to support the original R-syntax for fdrisk. ///
+							Removed the support for the already depreciated bonus option. ///
+							Fixed a bug that the deltagap has always been calculated and displayed even if the deltagap-option or the all-option had not been set.
 *!Version 1.2c 14.02.2022: Fixed a bug when using the coefficient-option together with noconstant-option. ///
 							Support for Mata to calculate Fdrs has been removed, because it did not work as intended and offered no significant speed advantage. 
 *!Version 1.2b 10.06.2021: Added option to use Mata to calculate the Fdrs; requires the moremata-package by Ben Jann
@@ -69,7 +73,6 @@ To-Do(Things that I wish to implement at some point or that I think that might b
 	- Make matrix parsing more flexible and rely on the names of the rows for identifiying the necessary numbers; allow calculations for more than one stored estimate
 	- Return more infos (Which infos are needed for further processing?)
 	- Allow plotting of the resulting SGPVs against the normal p-values directly after the calculations -> use user-provided command plotmatrix instead?	
-	- improve the speed of fdrisk.ado -> the integration part takes too long. -> switch over to Mata integration functions provided by moremata-package
 	- add an immidiate version of sgpvalue similar like ttesti-command; allow two sample t-test equivalent -> currently the required numbers need be calculated or extracted from these commands.
 */
 
@@ -123,25 +126,15 @@ else{
 }
 
 
-**Define here options
+**Define options here
 syntax [anything(name=subcmd)] [, Estimate(name)  Matrix(name)  Coefficient(string asis) NOCONStant   /// input-options
  Quietly MATListopt(string asis)  FORmat(str) NONULLwarnings  DELTAgap FDrisk all  /// display-options
-  nulllo(string) nullhi(string) Null(string)  /// null hypotheses  -> option "null" unifies nulllo and nullhi for easier entering the intervals -> not documented and a rather experimental change
-  TRUNCnormal  /*set truncated normal distribution for nullspace*/ Level(cilevel) LIKelihood(numlist min=1 max=2) Pi0(real 0.5) /*nomata*/ /// fdrisk-options
-    debug  /*Display additional debug messages: undocumented*/ ///
-	/*depreciated options*/ Bonus(string) /* NULLSpace(string asis) NULLWeights(string) ALTWeights(string) ALTSpace(string asis) INTLevel(string) INTType(string) */ /// 
+  nulllo(string) nullhi(string)   /// null hypotheses 
+  TRUNCnormal  /*set truncated normal distribution for nullspace*/ Level(cilevel) LIKelihood(numlist min=1 max=2) Pi0(real 0.5) /// fdrisk-options
 	/*new possible options, not implemented yet */ /*Plot*/  ] 
 
 
 ***Option parsing
-*Check Mata option for fdrisk
-if "`mata'"=="mata"{
-	capt findfile lmoremata.mlib
-	if _rc {
-		di as error "-moremata- is required to use the -mata- option; type {stata ssc install moremata}"
-		error 499
-	}
-}
 **Check for what SGPVs should be calculated for
 if "`cmd'"!="" & ("`estimate'"!="" | "`matrix'"!=""){
 	disp as error "Options 'matrix' and 'estimate' cannot be used in combination with a new estimation command."
@@ -185,17 +178,7 @@ else if "`estimate'"!="" & "`matrix'"!=""{
 				exit 198
 			}
 	  }
-	}
-	
-	*Parse alternative new syntax for entering intervals -> add exclusivity check so that only one of the ways to enter an interval is used
-	*For now only parse new "null" option -> experimental change -> not sure which approach is better 
-	if "`null'"!="" & ("`nulllo'"!=""|"`nullhi'"!="") stop "Values for intervals found both in option 'null' and options 'nulllo' 'nullhi'. {break} Only one way of entering intervals allowed at the same time."	
-	if "`null'"!=""{
-		ParseInt ,interval(`null') optname(null)
-		local nulllo `r(lb)'
-		local nullhi `r(ub)'
-	}
-		
+	}		
 	
 	*Catch input errors when using multiple null hypotheses
 	*Add checks for string input
@@ -235,109 +218,38 @@ else if "`estimate'"!="" & "`matrix'"!=""{
 		local nullspace `nulllo'
 	}
 	
-	**Set the interval type for Fdrisk Inttype
-	* Depreciated approach based on R -> will be removed after two releases
-	if "`inttype'"!="" & inlist("`inttype'", "confidence","likelihood"){
-		local inttype `inttype'
-	}
-	else if "`inttype'"!="" & !inlist("`inttype'", "confidence","likelihood"){
-		stop "Parameter intervaltype must be one of the following: confidence or likelihood "
-	}
-	else{
-		local inttype "confidence"
-	}
-	
-	* More Stata-like documented approach
-	if "`inttype'"==""{ // Make confidence the default interval type
-		local inttype "confidence"
-	}
-	if "`likelihood'"!="" & "`matrix'"!=""{ // Allow likelihood intervals only for matrices, because likelihood intervals are not used by standard estimation commands.
-		local inttype "likelihood"
-	}
-	else if "`likelihood'"!="" & "`matrix'"==""{
+	if "`likelihood'"!="" & "`matrix'"==""{ // Allow likelihood intervals only for matrices, because likelihood intervals are not used by standard estimation commands.
 		stop "Option 'likelihood' is only allowed together with the option 'matrix'."
 	}
-	
-	
-	**Set the level of the confidence or likelihood interval: 
-	*Only needed when calculating the fdr, but setting them here regardless of Fdr-calculations does not hurt.
-	*Depreciated approach based on R
-	if "`intlevel'"!=""{
-		local intlevel = `intlevel'
-	}
 		
-	*More Stata like approach
-	if "`likelihood'"==""{
-			if "`level'"!=""{
-			local intlevel = 1 - 0.01*`level'
-			}
-			else{
-				local intlevel 0.05
-			}
-	}
-	else{
-		local intlevel = `likelihood'
-	}
-
-	
 	*Nullweights: 21.11.2020 -> Depreciated nullspace and nullweights option but left the code in place to not break existing code. Will be removed in another release for clearer code.
-	*Not properly tested yet
-	if "`nullweights'"!=""{
-		local nullweights `nullweights'
+	if "`truncnormal'"!=""{
+		local nulltruncnormal nulltruncnormal
+		local alttruncnormal alttruncnormal
 	}
-	else if  "`nullweights'"=="" & "`nullspace'"=="`nulllo'"{
-		local nullweights "Point"
-	}
-	else if "`nullweights'"=="" & mod(`=wordcount("`nullspace'")',2)==0{ //Assuming that Uniform is good default nullweights for a nullspace with two values -> TruncNormal will be chosen only if explicitly set.	
-		local nullweights "Uniform" 
-	} 
-	else if "`truncnormal'"!="" & mod(`=wordcount("`nullspace'")',2)==0{
-		local nullweights "TruncNormal"
-	}
-	
-	*Altweights
-	if "`altweights'"!="" & inlist("`altweights'", "Uniform", "TruncNormal"){
-		local altweights `altweights'
-	}
-	else if "`truncnormal'"!=""{ // Set altweights and nullweights to same distribution -> not strictly required by Blume et. al. but makes the code a bit shorter.
-		local altweights "TruncNormal"	
-	}
-	else{
-		local altweights "Uniform"
-	}
-	
 	*Pi0
 	if !(`pi0'>0 & `pi0'<1){
 		stop "Values for pi0 need to lie within the exclusive 0 - 1 interval. A prior probability outside of this interval is not sensible. The default value assumes that both hypotheses are equally likely."
 	}
 	
 	
-**Parse bonus option
-*Changed the default behaviour so that the option is now a bit confusing, at least the code for it.
-*02.11.2020: Changed these options from one singular option to multiple optionally_on options;
-*old code is kept to avoid breaking existing code,  
-*no checks implemented on ensure that only one of the optionally_on options is used.
-if !inlist("`bonus'","deltagap","fdrisk","all","none",""){
-	stop `"Option 'bonus' is incorrectly specified. It takes only values `"none"', `"deltagap"', `"fdrisk"' or `"all"'. "'
-}
+**Parse bonus statistic options
+if "`deltagap'"=="" | "`all'"=="" local nodeltagap nodeltagap
 
-if "`bonus'"=="" | "`bonus'"=="none"{ 	
-	local nodeltagap nodeltagap
-	local fdrisk_stat 
-}
-
-if "`bonus'"=="deltagap" | "`deltagap'"=="deltagap" {
+if  "`deltagap'"=="deltagap" {
 	local nodeltagap 
 	}
 	
-if "`bonus'"=="fdrisk" | "`fdrisk'"=="fdrisk" {
+if  "`fdrisk'"=="fdrisk" {
 	local fdrisk_stat fdrisk
+	local nodeltagap nodeltagap
 }
 
-if "`bonus'"=="all"| "`all'"=="all"{
+if "`all'"=="all"{
 	local fdrisk_stat fdrisk
 	local nodeltagap 
 }
+
 
 **Estimation command
 local cmd = ustrltrim("`cmd'") // Remove trailing whitespaces which could make the second comparison fail
@@ -364,11 +276,6 @@ else if "`e(cmd)'"!=""{ // Replay previous estimation
 	quietly `e(cmd)' , level(`level')
 }
 
-*Check if the confidence level for the estimation command is different than set in the level()-option and overwrite the previously set option
-if r(level)!=`level'{
-	local intlevel = 1-0.01*r(level)
-}
- 
 * disp "Start calculating SGPV"
  *Create input vectors
   tempname input  input_new sgpv pval comp rest fdrisk 
@@ -420,7 +327,6 @@ if wordcount("`nullhi'")>1{
 	
 *Calculate SGPVs
 qui sgpvalue, esthi(`esthi') estlo(`estlo') nullhi(`nullhi') nulllo(`nulllo') nowarnings `nodeltagap' 
-if "`debug'"=="debug" disp "Finished SGPV calculations. Starting now bonus Fdr calculations."
 
 mat `comp'=r(results)
 mat colnames `pval' = "P-Value"
@@ -432,12 +338,15 @@ if "`fdrisk_stat'"=="fdrisk"{
 	forvalues i=1/`:word count `rownames''{
 		if `=`comp'[`i',1]'==0{
 		if wordcount("`nullhi'")==1{
-			 qui fdrisk, nullhi(`nullhi') nulllo(`nulllo') stderr(`=`input_new'[2,`i']') inttype(`inttype') intlevel(`intlevel') nullspace(`nullspace') 	nullweights(`nullweights') altspace(`=`input_new'[5,`i']' `=`input_new'[6,`i']') altweights(`altweights') pi0(`pi0') `mata'
+			 qui fdrisk, nullhi(`nullhi') nulllo(`nulllo') stderr(`=`input_new'[2,`i']')  level(`level') likelihood(`likelihood') ///
+			 nullspace(`nullspace')  altspace(`=`input_new'[5,`i']' `=`input_new'[6,`i']') ///
+			 `nulltruncnormal' `alttruncnormal' pi0(`pi0') 
 			}
 		else if wordcount("`nullhi'")>1{			
 			qui fdrisk, nullhi(`=word("`nullhi'",`i')') nulllo(`=word("`nulllo'",`i')') ///
-			stderr(`=`input_new'[2,`i']') inttype(`inttype') intlevel(`intlevel') ///
-			nullspace(`=word("`nulllo'",`i')' `=word("`nullhi'",`i')') 	nullweights(`nullweights') altspace(`=`input_new'[5,`i']' `=`input_new'[6,`i']') altweights(`altweights') pi0(`pi0') `mata'
+			stderr(`=`input_new'[2,`i']')  level(`level') likelihood(`likelihood') ///
+			nullspace(`=word("`nulllo'",`i')' `=word("`nullhi'",`i')')  altspace(`=`input_new'[5,`i']' `=`input_new'[6,`i']') ///
+			`nulltruncnormal' `alttruncnormal' pi0(`pi0') 
 			}			
 			capture confirm scalar r(fdr)
 			if !_rc mat `fdrisk'[`i',1] = r(fdr)
@@ -479,7 +388,7 @@ if wordcount("`nulllo'")>1{
  if wordcount("`nulllo'")==1{
 	local interval_name = cond(`nullhi'==`nulllo',"point","interval")
 	local null_interval = cond(`nullhi'==`nulllo',"`nullhi'","[`nulllo',`nullhi']")
-	matlist r(display_mat) , title(`"Comparison of ordinary P-Values and Second Generation P-Values for a`=cond(substr("`interval_name'",1,1)=="p","","n")'  `interval_name' Null-Hypothesis of `null_interval' based on a `=cond("`inttype'"=="confidence","`: display %6.4g 100*(1-`intlevel')'%",cond("`inttype'"=="likelihood","`intlevel'",""))' `inttype' `=cond("`inttype'"=="likelihood","support","")' interval"') rowtitle(Variables) `matlistopt'
+	matlist r(display_mat) , title(`"Comparison of ordinary P-Values and Second Generation P-Values for a`=cond(substr("`interval_name'",1,1)=="p","","n")'  `interval_name' Null-Hypothesis of `null_interval' based on a `=cond("`likelihood'"=="","`: display %6.4g `level''%",cond("`likelihood'"!="","`likelihood'",""))'  `=cond("`likelihood'"!="","likelihood support","confidence")' interval"') rowtitle(Variables) `matlistopt'
  }
 
 
@@ -513,41 +422,6 @@ end
 
 
 *Additional helper commands (roughly ordered by appearance in the command)--------------------------------------------------------------
-
-/*Parse a new syntax for the defining the hypotheses intervals
-New syntax could be:"(lower_bound1,upper_bound1) (lower_bound2,upper_bound2)..."
-Not sure which syntax use exactly if any... maybe ("lower_bound1","upper_bound1") to allow spaces in expressions
-*/
-capture program drop ParseInt
-program define ParseInt, rclass
-syntax ,INTerval(string) [optname(string)]
-
-*Basic loop to extract the bounds from input
-*Needs additional input checks but works in principal
-*Does not work if input string contains a "(" -> no expressions allowed at the moment -> less powerful than existing syntax
-local i 0
-
-while "`interval'"!=""{
-	local ++i	
-	capture gettoken left interval:interval,match(parens)
-	if _rc==132 stop "Number of left and right parentheses do not match. You may have forgotten a parenthesis somewhere. "
-	if "`parens'"!="(" stop "The interval `i' in option `optname' needs to start with a '('"
-	
-	gettoken lb ub:left,parse(" ,")
-	if real("`=`lb''")==. stop "The interval `i' in option `optname' needs to have valid number or expression after the '('."
-	local lb_full `lb_full' `lb'
-	
-	gettoken colon ub:ub, parse(" ,")
-	if "`colon'"!="," stop "The interval `i' in option `optname' needs to have ',' to separate lower and upper bound."
-		
-	if real("`=`ub''")==. stop "The interval `i' in option `optname' needs to have valid number or expression after the ',' to declare an upper bound."
-	local ub_full `ub_full' `ub'
-	
-}
-
-return local lb `lb_full'
-return local ub `ub_full'
-end
 
 *Check if an interval contains missing value which are not allowed
 program define IsMissing, rclass

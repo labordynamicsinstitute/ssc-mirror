@@ -1,8 +1,8 @@
-* Version 1:0 25-03-2021 
-
-cap prog drop winratio
+* Version 1.0.1 09-07-2021 
+* Version 1.0.2 28-03-2022 
+cap prog drop winratio 
 prog winratio , rclass 
-syntax varlist(min=2 max=2) [if] , outcomes(string) [ strata(varname) strata_method(string)  PFormat(string)  WRFormat(string) ]
+syntax varlist(min=2 max=2) [if] , outcomes(string) [ STRata(varname) STWeight(string)  PFormat(string)  WRFormat(string) saving(string)  ]
 
 version 12.0
 preserve 
@@ -22,6 +22,11 @@ if "`pformat'"=="" {
 	local pformat %05.4f
 	}
 
+if "`saving'"!="" {
+gettoken saving replace:saving , parse(",")
+local saving=trim("`saving'")
+}
+
 * -----------------------------------------------
 * Checks
 * -----------------------------------------------
@@ -32,15 +37,15 @@ if `comp_n'!=round(`comp_n') {
 	exit
 	}
 
-if "`strata'"!="" & "`strata_method'"=="" {
-	local strata_method="unweighted"
+if "`strata'"!="" & "`stweight'"=="" {
+	local stweight="unweighted"
 	}
 	
-if "`strata'"!="" & !inlist("`strata_method'", "IV", "MH", "unweighted") {
-	di in r "Invalid option for strata_method"
+if "`strata'"!="" & !inlist("`stweight'", "iv", "mh", "unweighted") {
+	di in r "Invalid option for stweight"
 	exit
 	}
-	
+
 qui sum `trtvar'
 if r(min)!=0 | r(max)!=1 {
 	di in r "Treatment group variable should be 0/1"
@@ -56,36 +61,52 @@ if r(N)>0 {
 	di in r "Missing values in ID variable"
 	exit
 	}
-* local outlist="`outcomes'"   // needed? 
-* What other checks needed?
 
+if "`saving'"!="" {
+	tempname post_results
+	tempfile wr_results
+	postfile `post_results' level wins ties losses strata using `wr_results'
+	}
 
-* ------------------------------------------------
-* Separate components into c outcomes, types, time/direction vars  
-* ------------------------------------------------
+* -----------------------------------------------------
+* Separate into c outcomes, types, time/direction  
+* -----------------------------------------------------
 forvalues c=1/`comp_n' {
 
 gettoken x outcomes:outcomes
 local outvar `outvar' `x'
 gettoken y outcomes:outcomes
-	if inlist("`y'", "c", "tf", "ts", "r")!=1 {
-		di in r "Type should be one of c, tf, ts, r" 
-		exit 
-		}
+
+	local y2 `y'
+
+	if substr("`y'",1,1)=="r" {
+		local y2 r 
+		local HasNumber=regexm("`y'", "[0-9]")		
+			if `HasNumber'!=1 {
+			di in r "Need to specify r# where # is maximum repeat events (syntax changed at version 1.0.2)"
+			exit
+			                  }
+		local rx=substr("`y'", 2,.)
+		capture confirm number `rx'
+			if _rc!=0 {
+			di in r "Need to specify r# where # is maximum repeat events (syntax changed at version 1.0.2)"
+			exit 
+					  }
+							}
 local type `type' `y'
 gettoken z outcomes:outcomes
+
 local tdvar `tdvar' `z'
-if "`z'"!="<" & "`z'"!=">" {
+if substr("`z'",1,1)!="<" & substr("`z'",1,1)!=">"	{
 	local tdvarlist `tdvarlist' `z'
-	}
-}
+							}
+						}
 
 forvalues c=1/`comp_n' {
 	local out`c':word `c' of `outvar'
 	local type`c':word `c' of `type'
 	local tdvar`c':word `c' of `tdvar'
-	}
-
+						}
 * -----------------------------------------------
 * Loop through program once if unstratified
 * or M times if stratified
@@ -128,24 +149,49 @@ rename * *_j
 qui save `file_j'	 
 rename *_j *_i
 cross using `file_j'
-
 * ------------------------------------------------
 * Loop through i outcomes in sequence-creating 
 * a comp`i' variable for each 
 * ------------------------------------------------
 forvalues i=1/`comp_n' {
-	decide_winner, out(`out`i'') type(`type`i'') tdvar(`tdvar`i'') i(`i') 
-	}	
+    	decide_winner, out(`out`i'') type(`type`i'') tdvar(`tdvar`i'') i(`i') 
+
+		if "`r(errorvar)'"!="" {
+		disp in r "Variable `r(errorvar)' not in dataset"
+  		continue , break 
+		}		
+	
+		if "`r(errortype)'"=="1" {
+  		di in r "Type should be one of c, tf, ts, r#" 
+		continue , break 
+		}		
+
+		if "`r(errortdvar)'"=="1" {
+  		di in r "Margin for comparison should be <[#] or >[#]" 
+		continue , break 
+		}
+		
+		if "`r(errormargin)'"=="1" {
+  		di in r "Margin for comparison should be <[#] or >[#]" 
+		continue , break 
+		}
+		
+		}
+		if "`r(errortype)'"=="1" | "`r(errorvar)'"!="" | "`r(errorrepvar)'"!="" | "`r(errortdvar)'"=="1" | "`r(errormargin)'"=="1" {
+		 exit 
+		}		
+			
 * --------------------------------------------
 * Create single variable u_ij containing WLT 
 * across hierarchy of components
 * -------------------------------------------- 
-qui gen u_ij=comp1
+tempvar u_ij
+qui gen `u_ij'=X_comp1
 
 * Wins/Losses at level 1
-qui count if u_ij==1 & (`trtvar'_i==1 & `trtvar'_j==0)
+qui count if `u_ij'==1 & (`trtvar'_i==1 & `trtvar'_j==0)
 	local w1=r(N)
-qui count if u_ij==-1 & (`trtvar'_i==1 & `trtvar'_j==0)
+qui count if `u_ij'==-1 & (`trtvar'_i==1 & `trtvar'_j==0)
 	local l1=r(N)
 
 local wcum=`w1'
@@ -153,12 +199,12 @@ local lcum=`l1'
 
 * Replace untied values with wins/losses at subsequent levels
 forvalues i=2/`comp_n' {
-	qui replace u_ij=comp`i' if u_ij==0
+	qui replace `u_ij'=X_comp`i' if `u_ij'==0
 
 * Count wins/losses at levels 2,3,...
-	qui count if u_ij==1 & (`trtvar'_i==1 & `trtvar'_j==0)
+	qui count if `u_ij'==1 & (`trtvar'_i==1 & `trtvar'_j==0)
 	local w`i'=r(N)-`wcum'
-	qui count if u_ij==-1 & (`trtvar'_i==1 & `trtvar'_j==0)
+	qui count if `u_ij'==-1 & (`trtvar'_i==1 & `trtvar'_j==0)
 	local l`i'=r(N)-`lcum'
 	local wcum=`wcum'+`w`i''
 	local lcum=`lcum'+`l`i''
@@ -166,16 +212,16 @@ forvalues i=2/`comp_n' {
 
 * Final ties (includes possibilty of u_ij being missing if
 * missing values in outcomes)
-qui count if inlist(u_ij, 0 , .) & (`trtvar'_i==0 & `trtvar'_j==1)
+qui count if inlist(`u_ij', 0 , .) & (`trtvar'_i==0 & `trtvar'_j==1)
 	local ties`m'=r(N)
 
 * ---------------------------------------
 * For Win Ratio compare wins/losses 
 * only for Trt_1 v Trt_2 comparisons
 * ---------------------------------------
-qui count if u_ij==1 & (`trtvar'_i==1 & `trtvar'_j==0)
+qui count if `u_ij'==1 & (`trtvar'_i==1 & `trtvar'_j==0)
 	local W`m'=r(N)
-qui count if u_ij==-1 & (`trtvar'_i==1 & `trtvar'_j==0)
+qui count if `u_ij'==-1 & (`trtvar'_i==1 & `trtvar'_j==0)
 	local L`m'=r(N)
 	local wr`m'=`W`m''/`L`m''
 
@@ -185,20 +231,22 @@ qui count if u_ij==-1 & (`trtvar'_i==1 & `trtvar'_j==0)
 * Step 1: calculate u_i for each person 
 * 		 i.e. sum of u_ij for j=1 to N 
 * ------------------------------------------------
-qui bysort `idvar'_i:egen u_i=sum(u_ij)
+tempvar u_i T 
+qui bysort `idvar'_i:egen `u_i'=sum(`u_ij')
 qui bysort `idvar'_i:keep if _n==1  
 * ------------------------------------------------
 * Step 2: calculate T = sum(u_i x d_i) where d_i 
 *         is 1 if patient in active group 
 *		  T is single value (not variable) 
 * ------------------------------------------------
-egen T=sum(u_i*(`trtvar'_i==1))
+egen `T'=sum(`u_i'*(`trtvar'_i==1))
 * ------------------------------------------------
 * Step 3: Variance = (N1xN2)/(Nx(1-N))xSum(u_i^2)
 * ------------------------------------------------
-qui gen u_isq=u_i^2 if `trtvar'_i==1
-qui egen U_isq=sum(u_i^2)
-qui sum U_isq
+tempvar u_isq U_isq
+qui gen `u_isq'=`u_i'^2 if `trtvar'_i==1
+qui egen `U_isq'=sum(`u_i'^2)
+qui sum `U_isq'
 	local sumUisq=r(max)
 qui count if `trtvar'_i==0
 	local N1=r(N)
@@ -210,7 +258,7 @@ qui count if `trtvar'_i==1
 * -----------------------------------------------
 * Step 4: calculate Z = T/sqrt(V)  -> p-value
 * ------------------------------------------------
-qui sum T 
+qui sum `T' 
 	local T`m'=r(max)
 local z=`T`m''/sqrt(`V`m'')
 local p=2*(1-normal(abs(`z')))
@@ -223,11 +271,9 @@ local pstr=string(`p',"`pformat'")
 
 local logwr`m'=log(`wr`m'')
 local s`m'=`logwr`m''/`z'
-* di "Null standard error estimate: `s`m''" // do we need this? could add to return list
 local ll=string(exp(`logwr`m''-1.96*`s`m''),"`wrformat'")
 local ul=string(exp(`logwr`m''+1.96*`s`m''),"`wrformat'")
 local ci "(`ll', `ul')"
-
 local wrrep`m'=string(`wr`m'', "`wrformat'")
 
 * -------------------------------------
@@ -255,6 +301,17 @@ forvalues j=1/`comp_n' {
 di "Outcome `j'" _col(20) `w`j''  _col(30) `l`j''
 }
 
+if "`saving'"!="" {
+	local total_wins=0
+	local total_losses=0
+	forvalues j=1/`comp_n' {
+		local total_wins=`total_wins'+`w`j''
+		local total_losses=`total_losses'+`l`j''
+		local ties=`Ncomps'-`total_wins'-`total_losses'
+		post `post_results' (`j') (`w`j'') (`ties') (`l`j'') (`m')
+		}
+	}
+
 di in smcl in gr "{hline 60}
 di "Total" _col(20) `W`m''  _col(30) `L`m'' _col(40) `ties`m''
 di in smcl in gr "{hline 60}
@@ -265,25 +322,21 @@ di in smcl in gr "{hline 60}
 *-----------------------------------------
 *Defining strata weights
 *-----------------------------------------
-if "`strata_method'"=="unweighted"  {
-	* di "Calculating unweighted weights"
+if "`stweight'"=="unweighted"  {
 	local weight`m'=1	
 	local TotalWeight=`TotalWeight'+`weight`m''	
 	}
-if "`strata_method'"=="MH" {
-	* di "Calculating MH weights"
+if "`stweight'"=="mh" {
 	local weight`m'=1/`N'
 	local TotalWeight=`TotalWeight'+`weight`m''	
 	}
-if "`strata_method'"=="IV" {
-	* di "Calculating IV weights"
+if "`stweight'"=="iv" {
 	local weight`m'=1/`V`m''
 	local TotalWeight=`TotalWeight'+`weight`m''	
 	}
 
 restore , preserve  
 }  // end of strata loop 
-
 
 
 *-------------------------------------
@@ -304,7 +357,7 @@ foreach m of local M {
 	
 * Alternative methodology as per ATTRACT/PARTNER trials
 * Calculate sum of test statistic and sum of variance of test statistic and use this
-if "`strata_method'"=="unweighted" {
+if "`stweight'"=="unweighted" {
 	local Tsum=`Tsum'+`T`m''
 	local Vsum=`Vsum'+`V`m''
 	}
@@ -314,10 +367,10 @@ if "`strata_method'"=="unweighted" {
 	local vstrat=`vstrat'+`var_contrib'  
 	}	
 
-*For unweighted win ratio the p-value is calculated by taking the sum of test statistics
-*and comparing to the sum of variances. 
-*This approach has been used in ATTR-ACT (N Engl J Med 2018; 379:1007-1016) and PARTNER trials 
-if "`strata_method'"=="unweighted" {
+/*
+For unweighted win ratio the p-value is calculated by taking the sum of test statistics and comparing to the sum of variances. This approach has been used in ATTR-ACT (N Engl J Med 2018; 379:1007-1016) and PARTNER trials
+*/ 
+if "`stweight'"=="unweighted" {
 	local wrstrat=`wsum'/`lsum'
 	local z=`Tsum'/sqrt(`Vsum')
 	local p=2*(1-normal(abs(`z')))
@@ -328,7 +381,7 @@ if "`strata_method'"=="unweighted" {
 	}	
 
 *For MH or IV weighting the p-value is calculated from the weighted null standard error 
-if "`strata_method'"!="unweighted" {
+if "`stweight'"!="unweighted" {
 	local wrstrat=`wsum'/`lsum'
 	local se_logwr=sqrt(`vstrat')
 	local z=log(`wrstrat')/`se_logwr'
@@ -338,13 +391,10 @@ if "`strata_method'"!="unweighted" {
 	local uci=string(exp(log(`wrstrat')+1.96*`se_logwr'),"`wrformat'")
 	}
 
-
-
 local wrstrat1=string(`wrstrat' , "`wrformat'")
 
 disp "Stratified Win Ratio: `wrstrat1' 95% CI (`lci', `uci') P=`pstr'"
 di in smcl in gr "{hline 60}	
-	
 }
 
 * ---------------------------------------
@@ -369,6 +419,11 @@ if "`strata'"=="" {
 	
 return scalar p = `p'
 
+if "`saving'"!="" {
+	postclose `post_results'
+	use `wr_results', clear
+	save `"`saving'"'    `replace'
+	}
 * ---------------------------------------
 
 end 

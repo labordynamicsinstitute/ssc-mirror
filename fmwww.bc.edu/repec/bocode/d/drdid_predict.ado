@@ -1,7 +1,7 @@
- 
+ *! v0.1 fixed minibug with time treatment (TR and T)
  program drdid_predict
 	syntax anything(id="newvarname") [if] [in], [weight pscore]  
-	if !inlist("`e(method)'","drimp","dripw","ipw","stdipw") {
+	if !inlist("`e(method)'","drimp","dripw","aipw","ipw","stdipw") {
 		display as error "IPW/IPT Weights cannot be estimated"
 		exit
 	}
@@ -57,11 +57,11 @@ end
 
  
 program _parser_drdid , sclass
-	syntax anything(everything) , [* time(str) tr(str)]
+	syntax anything(everything) , [* Time(str) TReatment(str)]
 	sum `time' if e(sample)==1, meanonly
 	sreturn local mint = r(min)
 	sreturn local tvr   `time'
-	sum `tr'   if e(sample)==1, meanonly
+	sum `treatment'   if e(sample)==1, meanonly
 	sreturn local maxtr = r(max)
 	sreturn local trvr   `tr'
 	

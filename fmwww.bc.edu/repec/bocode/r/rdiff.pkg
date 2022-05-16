@@ -1,0 +1,24 @@
+d 'RDIFF': module to calculate 95% confidence intervals for the differences of binomial proportions
+d
+d    rdiff is an immediate command that constructs a 95% confidence
+d interval for the difference between two independent binomial	 
+d proportions. Besides the most well-known method —— normal
+d approximation method —— which may produce undesirable results
+d in	extreme cases, the more remarkable method, Wilson score
+d method, is also available. Note that rdiff is recommended only
+d for the    case where the proportion of #succ1 for #n1 is equal
+d to or greater than the proportion of #succ2 for #n2. 
+d
+d KW: binomial proportions
+d KW: confidence interval
+d KW: Wilson score
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20220515
+d
+d Author: Xiaokun Yang, Lanzhou University
+d Support: email yangxk19@@lzu.edu.com
+d
+f rdiff.ado
+f rdiff.sthlp

@@ -17,13 +17,14 @@ d KW: noisy measurements
 d
 d Requires: Stata version 14.2
 d
-d Distribution-Date: 20200415
+d Distribution-Date: 20220515
 d
 d Author:  Yingyao Hu, Johns Hopkins University
-d Support: email NA
+d Support: email yuya.sasaki@@gmail.com
 d
 d Author: Yuya Sasaki, Department of Economics, Vanderbilt University
-d Support: email yuya.sasaki@@gmail.com
+d Support: email 
 d
 f reporterror.ado
 f reporterror.sthlp
+f ../e/example_education.dta

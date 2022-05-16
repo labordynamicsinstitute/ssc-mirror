@@ -155,7 +155,7 @@ if "`setorder'"!="" & "`setorder'"!="sgpv"{
 		qui sgpvalue, estlo(`estlo') esthi(`esthi') nulllo(`nulllo') nullhi(`nullhi') `mata' `replace' //Previously nomata-option was set by default -> variables were always created
 	}
 	else if `varsfound'==0{ // Not correct yet
-			qui sgpvalue, estlo(`estlo') esthi(`esthi') nulllo(`nulllo') nullhi(`nullhi') `mata' `replace'  //Nomata option may not be useful, will fail if nomata and c(matsize) < rows of esthi or estlo -> how test these cases?
+			qui sgpvalue, estlo(`estlo') esthi(`esthi') nulllo(`nulllo') nullhi(`nullhi') `mata' `replace'  
 			}
 	*A matrix with the results will be returned if the nomata is not set even when variables are used as inputs.
 	capture confirm matrix r(results)

@@ -1,12 +1,12 @@
-*! version 1.6.6 Cross-validated Area Under the Curve ROC 14.March.2019
+*! version 1.6.7 Cross-validated Area Under the Curve ROC 7.May.2022
 *! cvauroc: Stata module for cross-validated area under the curve (cvauroc)
-*! by Miguel Angel Luque-Fernandez [cre, aut], Daniel Redondo [aut], Camille Maringe [aut]
+*! by Miguel Angel Luque-Fernandez [cre, aut] and Camille Maringe [aut]
 *! Sampling weights, robust SE, cluster(var), probit and logit models
 *! Bug reports: 
 *! miguel-angel.luque at lshtm.ac.uk
 
 /*
-Copyright (c) 2019  <Miguel Angel Luque-Fernandez>
+Copyright (c) 2022  <Miguel Angel Luque-Fernandez>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -32,7 +32,7 @@ program define cvauroc, rclass
          version 10.1
          set more off
          syntax varlist(fv) [if] [pw] [, /*
-		 */ Kfold(numlist max=1) Seed(numlist max=1) CLuster(varname) Detail Probit Fit Graph Graphlowess]
+		 */ Kfold(numlist max=1) Seed(numlist max=1) CLuster(varname) Detail Probit Fit graph graphlowess]
          local var `varlist'
          tokenize `var'
          local yvar = "`1'"  /*retain the y variable*/
@@ -127,7 +127,7 @@ else {
 	
 	tempvar auc
     svmat f, name(`auc')
-	qui: sum `auc'
+	qui: sum `auc'1
 	return scalar mean_auc =  `r(mean)'
 	return scalar sd_auc =  `r(sd)'
 	mat drop f

@@ -5,7 +5,6 @@
 {phang}
 {bf:reporterror} {hline 2} Executes estimation of the probability masses of an unobserved discrete random variable using two measurements with possibly nonclassical and nonseparable measurement errors.
 
-
 {marker syntax}{...}
 {title:Syntax}
 
@@ -42,19 +41,62 @@ The command takes two measurements, {bf:x} (e.g., self-reported years of educati
 {phang}
 {bf:boot({it:real})} sets the number of bootstrap iterations. The default value is {bf: boot(2500)}.
 
+
 {marker examples}{...}
 {title:Examples}
 
 {phang}
-({bf:x} first measurement of {bf:u}, {bf:y} second measurement of {bf:u})
-
-{phang}Estimation on the whole support of {bf:u}:
-
-{phang}{cmd:. reporterror x y}{p_end}
+({bf:u} true years of education, {bf:selfreport} first measurement of {bf:u}, {bf:siblingreport} second measurement of {bf:u})
 
 {phang}Estimation focusing on individuals with high-school diploma {bf:u}=12 or higher degrees:
 
-{phang}{cmd:. reporterror x y, minu(12)}{p_end}
+{phang}{cmd:. use "example_education.dta"}{p_end}
+{phang}{cmd:. reporterror selfreport siblingreport, minu(12)}{p_end}
+
+
+{marker stored}{...}
+{title:Stored results}
+
+{phang}
+{bf:reporterror} stores the following in {bf:r()}: 
+{p_end}
+
+{phang}
+Scalars
+{p_end}
+{phang2}
+{bf:r(N)} {space 10}observations
+{p_end}
+
+{phang}
+Macros
+{p_end}
+{phang2}
+{bf:r(cmd)} {space 8}{bf:reporterror}
+{p_end}
+
+{phang}
+Matrices
+{p_end}
+{phang2}
+{bf:r(suppU)} {space 6}support of U
+{p_end}
+{phang2}
+{bf:r(fU)} {space 9}mass f(U) of U
+{p_end}
+{phang2}
+{bf:r(fX)} {space 9}mass f(X) of X
+{p_end}
+{phang2}
+{bf:r(fY)} {space 9}mass f(Y) of Y
+{p_end}
+{phang2}
+{bf:r(pXU)} {space 8}conditional probability Pr(X=U|U)
+{p_end}
+{phang2}
+{bf:r(pYU)} {space 8}conditional probability Pr(Y=U|U)
+{p_end}
+
 
 {title:Reference}
 

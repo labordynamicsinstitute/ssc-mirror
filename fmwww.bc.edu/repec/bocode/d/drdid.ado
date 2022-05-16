@@ -1,7 +1,8 @@
-*! Ver 1.66 Bug with binit, skip fixed
-*! Ver 1.65 Bug with binit. Fixed
-*! Ver 1.64 added binit for faster csdid (if slighly)
-*! Ver 1.63 added Dryrun
+*! Ver 1.67 Bug with IPW 
+* Ver 1.66 Bug with binit, skip fixed
+* Ver 1.65 Bug with binit. Fixed
+* Ver 1.64 added binit for faster csdid (if slighly)
+* Ver 1.63 added Dryrun
 * Ver 1.63 Bug with option all and RC estimator
 * Ver 1.62 Added level
 * Ver 1.61 Change sample for drimp
@@ -859,7 +860,7 @@ program define drdid_aipw, eclass
 			 *						///
 			 ] 
 	** PS
-	set trace on
+	*set trace on
 	_get_diopts diopts other, `options' 
 	quietly capture Display, `diopts' `other' 
 	

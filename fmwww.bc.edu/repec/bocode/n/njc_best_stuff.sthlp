@@ -1,6 +1,6 @@
 {smcl}
 {hline}
-index of NJC's best Stata stuff (version 7 March 2021)  
+index of NJC's best Stata stuff (version 13 May 2022)  
 {hline}
 
 {title:Description} 
@@ -59,6 +59,7 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help eqprhistogram}       equal probability histograms 
 {space 4}{help fabplot}             plots for each subset, rest of data as backdrop 
 {space 4}{help favplots}            formatted added-variable plot(s)
+{space 4}{help floatplot}           floating or sliding stacked bar plot
 {space 4}{help fractileplot}        smoothing with distribution function predictors
 {space 4}{help kaplansky}           graph examples of distributions of varying kurtosis 
 {space 4}{help linkplot}            linked scatter plots 
@@ -70,7 +71,8 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help multiline}           multiple panel line plots 
 {space 4}{help multqplot}           multiple quantile plots
 {space 4}{help mycolours}           set a palette of colours through local macros
-{space 4}{help mylabels}            axis labels or ticks on specified scales 
+{space 4}{help mylabels}            axis labels or ticks on specified scales
+{space 4}{help nicelabels}          nice axis labels for general scales 
 {space 4}{help niceloglabels}       nice axis labels for logarithmic scales
 {space 4}{help pairplot}            plots of paired observations
 {space 4}{help parplot}             parallel coordinates plots   
@@ -88,7 +90,6 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help statplot}            plots of summary statistics 
 {space 4}{help stemplot}            stem-and-leaf plots 
 {space 4}{help stripplot}           strip plots 
-{space 4}{help subsetplot}          plots for subsets, rest of the data as backdrop 
 {space 4}{help tabplot}             one-, two- and three-way bar charts for tables  
 {space 4}{help transplot}           plots for trying out transformations 
 {space 4}{help triplot}             triangular plots 
@@ -172,9 +173,9 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help missings}            utilities for managing missing values
 {space 4}{help moss}                multiple occurrences of substrings 
 {space 4}{help multencode}          encode multiple string variables into numeric
+{space 4}{help myaxis}              reorder categorical variable by specified sort criterion
 {space 4}{help numdate}             generate numeric date-time variable
 {space 4}{help panelthin}           observations for thinned panel dataset
-{space 4}{help personage}           people's ages or daily date differences
 {space 4}{help rowranks}            row ranks of a set of variables 
 {space 4}{help rowsort}             row sort a set of variables 
 {space 4}{help seqvar}              assign integer numlists to variables

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  25mar2021}{...}
+{* *! version 1.0.1  07sep2021}{...}
 
 {viewerjumpto "Syntax" "winratio##syntax"}{...}
 {viewerjumpto "Description" "winratio##description"}{...}
@@ -27,7 +27,9 @@
 {opth str:ata(varname)} 
 {cmdab:stw:eight(}{it:weighting method}{cmdab:)}
 {opth pf:ormat(%fmt)} 
-{opth wrf:ormat(%fmt)} ]
+{opth wrf:ormat(%fmt)} 
+{cmdab:saving(filename [, replace])}
+]
 
 {pstd}
 {it:idvar} may be a string or numeric unique identifier variable.
@@ -36,8 +38,10 @@
 {it:trtvar} must be a binary 0 1 numeric variable, where 0 and 1 indicate the control and intervention groups respectively.
 
 {p 4 4 2}
-{cmd: outcomes(}{it:list}{cmd:)} is a required option; {it: list} consists of sets of 3 items to indicate the outcome, type of outcome and either time variable if time to event or repeat events
- or direction of comparison (< or >) if continuous, ordinal categorical or binary. See options and examples below for more details. 
+{cmd: outcomes(}{it:list}{cmd:)} is a required option; {it: list} consists of sets of 3 items, where each set relates to an outcome in the hierarchy.
+The 3 items in each set provides information about
+ (i) the outcome variable(s), (ii) the type of outcome and (iii) either the follow-up time variable(s) if the outcome is a time-to-event or a repeated event, 
+ or the direction of comparison (<[#] or >[#]) if the outcome is continuous, ordinal or binary. See options and examples below for more details. 
 
 {pstd}
 {cmd:by} is not allowed.
@@ -48,38 +52,45 @@
 {pstd}
 {cmd:winratio} The win ratio was introduced in 2012 by Pocock {it:et al} {cmd:[1]} as a novel approach to the analysis of composite endpoints in randomised clinical trials.
 The approach motivated by the Finkelstein–Schoenfeld test {cmd:[2]} takes into account the order of importance of the component events and also allows the components to be different types of outcomes
-e.g. time to event (failure or success), quantitative outcomes such as quality of life scores and vital signs, repeat events, and more.
+e.g. time-to-event (failure or success), quantitative outcomes such as quality of life scores and vital signs, repeated events, and more.
 
 
 {marker options}{...}
 {title:Options}
 
 {pstd}
-{cmd: outcomes(}{it:list}{cmd:)} is a required option; {it: list} consists of sets of 3 items each of which refers to an outcome in the composite.
+{cmd: outcomes(}{it:list}{cmd:)} is a required option; {it: list} consists of {it:n} sets of 3 items, where the {it:ith} set relates to the {it:ith} outcome in the hierarchy being considered, for {it:i} = 1,...,{it:n} outcomes. 
 The first set of 3 items refers to the first (i.e. most important) outcome in the composite, the second set of 3 items to the second outcome, and so on. 
 
 {pstd}
-The {cmd:first item} in each set will be the name of the outcome variable. In the case of time-to-event this will be a binary (0/1) variable indicating the event.
-For binary, ordinal categorical and continous outcomes this will be the variable name. 
-In the case of repeat events this will be the stub of the names of a set of  binary (0/1) variables indicating the repeat events 
-e.g. hosp if hosp1, hosp2, hosp3 are three binary variables indicating repeat hospitalisations. For repeat events the winner or loser in each patient pair is decided based upon the number of events during shared follow-up (timing of events during shared follow-up is not considered).  
+The {cmd:first item} in each set relates to the name of the outcome variable. For binary, ordinal, and continous outcomes this will be the variable name. 
+In the case of a time-to-event outcome this will be a binary (0/1) variable indicating whether or not the event occurred.
+In the case of a repeated event outcome this will be the stub of the names of a set of  binary (0/1) variables indicating the repeat events 
+e.g. hosp if hosp1, hosp2, hosp3 are three binary variables indicating repeat hospitalisations.
 
 {pstd}
 The {cmd: second item} in each set will indicate the {it:type of outcome}. 
- This will be {cmd: tf} for time-to-event failure outcomes, {cmd: ts} for time-to-event success outcomes,{cmd: c} for continuous, ordinal categorical or binary outcomes and {cmd: r} for repeat events.
+ This will be {cmd: c} for continuous, ordinal categorical or binary outcomes, {cmd: tf} for time-to-event failure outcomes, {cmd: ts} for
+ time-to-event success outcomes, and {cmd: r#} for repeat events where # is the maximum number of repeat events.
+ 
 
 {pstd}
 The {cmd:third item} in each set depends on the type of outcome.
+For continuous, ordinal or binary outcomes this will be {cmd: >}[#] or {cmd:<}[#] to indicate the direction of the comparison i.e. whether higher or lower values are better, and where # is the margin of success required for a win;
+when # is not specified the default margin is 0. 
 For time-to-event outcomes this will be the name of the variable containing the follow-up (censoring or event) time.
-For continuous, ordinal categorical or binary outcomes this will be {cmd: >} or {cmd:<} to indicate the direction of the comparison i.e. whether higher or lower values are better.
 For repeat events this will be the stub of the names of a set of variables containing follow-up times.
 
 {pstd}
-{opth str:ata(varname)} allows computation of the stratified Win Ratio. varname must be a numeric categorical variable.  
+{opth strata(varname)} allows computation of the stratified Win Ratio. varname must be a numeric categorical variable.  
 
 {pstd}
-{cmdab:stw:eight(}{it:method}{cmdab:)} allows specification of the weighting method to be used for the stratified win ratio. 
-{it:method} can be {bf:unweighted} (the default if no weighting option is specified along with strata: test statistics and variance estimators are simply summed across strata) {bf:IV} for inverse-variance weights and {bf:MH} for Mantel-Haenszel (MH) weights (each strata weighted according to the number of patients in the strata).
+{cmdab:stweight(}{it:method}{cmdab:)} allows specification of the weighting method to be used for the stratified win ratio. 
+{it:method} can be {bf:unweighted} (the default if no weighting option is specified along with strata: test statistics and
+ variance estimators are simply summed across strata) {bf:iv} for inverse-variance weights and {bf:mh} for Mantel-Haenszel (MH) weights (each strata weighted according to the number of patients in the strata).
+
+{pstd}
+{cmdab:saving(filename [, replace])} saves a dataset containing the number of wins, losses and ties at each level of the hierarchy and for each strata. 
 
 {pstd}
 {opth pf:ormat(%fmt)} controls the numeric display format for p-values; for example, for a p-value with a leading
@@ -87,6 +98,7 @@ For repeat events this will be the stub of the names of a set of variables conta
 
 {pstd}
 {opth wrf:ormat(%fmt)} controls the numeric display format for the estimated Win Ratio and confidence intervals.
+
  
 {marker examples}{...}
 {title:Examples}
@@ -108,15 +120,25 @@ use win_ratio_example.dta
 The command syntax for this analysis would then be: 
 
 {pstd}
-winratio patid trt , outcomes(dth tf fudth hf r fuhf) 
+{cmd: winratio patid trt , outcomes(dth tf fudth hf r4 fuhf)}
 
 {pstd}
 {bf:Example 2:}
 Suppose the trial in example 1 now adds a third prioritised outcome, quality of life ({cmd:qol}). Quality of life is to be considered as the third outcome in the hierarchy and higher values are better. The command syntax would then be: 
 
 {pstd}
-winratio patid trt , outcomes(dth tf fudth hf r fuhf qol c >) 
+{cmd: winratio patid trt , outcomes(dth tf fudth hf r4 fuhf qol c >) }
 
+
+{pstd}
+{bf:Example 3:}
+Suppose we now require the quality of life score to be more than 0.1 points higher to declare a winner. The command syntax would then be: 
+
+{pstd}
+{cmd: winratio patid trt , outcomes(dth tf fudth hf r4 fuhf qol c >0.1)}
+
+{pstd}
+Notice that there is no gap between > and 0.1. We could also specify >=0.1 for at least 0.1 points higher. 
 
 {marker savedresults}{...}
 {title:Saved results}
@@ -149,6 +171,6 @@ winratio patid trt , outcomes(dth tf fudth hf r fuhf qol c >)
 {marker authors}{...}
 {title:Authors}
 
-{phang}Tim Collier, Medical Statistics Department, London School of Hygiene and Tropical Medicine
+{phang}Tim Collier, Medical Statistics Department, London School of Hygiene and Tropical Medicine, tim.collier@lshtm.ac.uk
 {phang}John Gregson, Medical Statistics Department, London School of Hygiene and Tropical Medicine, john.gregson@lshtm.ac.uk
 

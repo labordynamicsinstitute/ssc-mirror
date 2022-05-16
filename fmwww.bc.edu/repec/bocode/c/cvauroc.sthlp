@@ -1,5 +1,5 @@
 {smcl}
-{right:version 1.6.6 14.March.2019}
+{right:version 1.6.7 7.May.2022}
 {title:}
 
 {phang}
@@ -9,7 +9,7 @@
 {title:Syntax}
 
 {p 4 4 2}
-{cmd: cvauroc} {depvar} {varlist} [if] [pw] [{cmd:,} Kfold() Seed() Probit Fit Detail Graph Graphlowess]
+{cmd: cvauroc} {depvar} {varlist} [if] [pw] [{cmd:,} Kfold() Seed() Probit Fit Detail graph graphlowess Detail]
 {p_end}
 
 
@@ -178,6 +178,11 @@ Miguel Angel Luque Fernandez is supported by the Spanish National Institute of H
 Award (CP17/00206).
 
 {title:References}
+
+
+{p 4 4 2}
+Luque-Fernandez MA, Redondo-Sánchez D, Maringe C. cvauroc: Command to compute cross-validated area under the curve for ROC analysis after predictive modeling for binary outcomes. The Stata Journal. 2019;19(3):615-625. doi:10.1177/1536867X19874237
+{p_end}
 
 {p 4 4 2}
 Miguel Angel Luque-Fernandez (2016), Crossvalidation in Epidemiology {browse "http://scholar.harvard.edu/malf/presentations/cross-validation-epidemiology": Presentation}

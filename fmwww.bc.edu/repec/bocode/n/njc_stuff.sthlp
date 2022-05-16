@@ -1,6 +1,6 @@
 {smcl}
 {hline}
-index of NJC's Stata stuff (version 10 March 2021)
+index of NJC's Stata stuff (version 13 May 2022)
 {hline}
 
 {title:Description}
@@ -45,7 +45,7 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}sup means superseded
 {space 4}psup means partially superseded
 {space 4}+ means good
-{space 4}judgements assume availability of Stata 15 
+{space 4}judgements assume availability of Stata 17 
 
 {space 4}{help aaplot}
 {space 4}SSC (NJC)
@@ -332,16 +332,21 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help corrci}, {help corrcii} 
 {space 4}pr0041_1 sj10-4 (NJC) 
 {space 4}correlation with z-based confidence intervals (2) 
-{space 4}sup(SJ 20-4)
+{space 4}sup(SJ 21-4)
 
 {space 4}{help corrci}, {help corrcii} 
 {space 4}pr0041_2 sj17-3 (NJC) 
 {space 4}correlation with z-based confidence intervals (3) 
-{space 4}sup(SJ 20-4)
+{space 4}sup(SJ 21-3)
 
 {space 4}{help corrci}, {help corrcii} 
 {space 4}pr0041_3 sj20-4 (NJC) 
 {space 4}correlation with z-based confidence intervals (4)
+{space 4}sup(SJ 21-3)
+
+{space 4}{help corrci}, {help corrcii} 
+{space 4}pr0041_4 sj21-3 (NJC) 
+{space 4}correlation with z-based confidence intervals (5)
 {space 4}+         
 
 {space 4}{help corrtable} 
@@ -722,7 +727,12 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help fabplot}
 {space 4}SSC (NJC)
 {space 4}plots for each subset, rest of data as backdrop 
-{space 4}+
+{space 4}sup(SJ 21-2)
+
+{space 4}{help fabplot}
+{space 4}gr0087 sj21-2 
+{space 4}plots for each subset, rest of data as backdrop 
+{space 4}+ 
 
 {space 4}{help favplots}
 {space 4}SSC (NJC)
@@ -781,6 +791,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help fixsort}
 {space 4}SSC (NJC)
 {space 4}sort and align variables, others fixed in position
+{space 4}+
+
+{space 4}{help floatplot}
+{space 4}SSC (NJC) 
+{space 4}floating or sliding stacked bar plot for frequencies, proportions, or percents
 {space 4}+
 
 {space 4}{help flower}
@@ -1233,6 +1248,16 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}moving-window descriptive statistics in time series
 {space 4}pobs(OS rolling)
 
+{space 4}{help myaxis} 
+{space 4}SSC (NJC)
+{space 4}reorder categorical variable by specified sort criterion
+{space 4}+
+
+{space 4}{help myaxis}
+{space 4}st0654 sj21-3 (NJC)
+{space 4}reorder categorical variable by specified sort criterion
+{space 4}+ 
+
 {space 4}{help mycolours}
 {space 4}SSC (NJC)
 {space 4}set palette of colours through local macros 
@@ -1258,6 +1283,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help nicedates}
 {space 4}SSC (NJC)
 {space 4}nice dates, especially for time series graphs
+
+{space 4}{help nicelabels}
+{space 4}SSC (NJC)
+{space 4}nice axis labels for general scales
+{space 4}+
 
 {space 4}{help niceloglabels}
 {space 4}SSC (NJC)
@@ -1392,7 +1422,7 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help personage}
 {space 4}SSC (NJC) 
 {space 4}calculate people's ages or similar daily date differences
-{space 4}+
+{space 4}sup(OS functions introduced Stata 17) 
 
 {space 4}{help pexp}
 {space 4}SSC (NJC)
@@ -1688,6 +1718,7 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help slideplot}
 {space 4}SSC (NJC)
 {space 4}sliding bar plots for frequencies or percents
+{space 4}psup(floatplot)
 
 {space 4}{help sparkline}
 {space 4}SSC (NJC)
@@ -1803,7 +1834,7 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help subsetplot}
 {space 4}SSC (NJC) 
 {space 4}plots for each subset with rest of the data as backdrop 
-{space 4}+
+{space 4}sup(fabplot)
 
 {space 4}{help summdate}
 {space 4}SSC (NJC)
