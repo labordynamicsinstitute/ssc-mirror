@@ -7,7 +7,7 @@ d to implement the following	regression algorithms: ordinary
 d least squares, elastic net, tree, boosting, random forest, neural
 d    network, nearest neighbor, support vector machine. It provides
 d hyper-parameters' optimal tuning via	  K-fold cross-validation
-d using greed search.  This command makes use of the Python
+d using greedy search.	This command makes use of the Python
 d Scikit-learn API to	 carry out both cross-validation and
 d prediction. 
 d
@@ -23,7 +23,7 @@ d KW: support vector machine
 d
 d Requires: Stata version 16.1 
 d
-d Distribution-Date: 20220322
+d Distribution-Date: 20220516
 d
 d Author: Giovanni Cerulli, IRCrES-CNR
 d Support: email giovanni.cerulli@@ircres.cnr.it

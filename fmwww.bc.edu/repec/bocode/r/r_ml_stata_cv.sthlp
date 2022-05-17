@@ -1,12 +1,13 @@
 {smcl}
-{* 16Mar2022}{...}
+{* 09May2022}{...}
 {cmd:help r_ml_stata_cv}
 {hline}
 
 {title:Title}
 
-{p2colset 5 18 20 2}{...}
-{p2col:{hi:r_ml_stata_cv}{hline 1}}Machine learning regression in Stata{p2colreset}{...}
+{p2colset 5 16 21 2}{...}
+{p2col :{hi:r_ml_stata_cv} {hline 2}}Machine learning regression in Stata{p_end}
+{p2colreset}{...}
 
 
 {title:Syntax}
@@ -14,7 +15,8 @@
 {p 8 17 2}
 {hi:r_ml_stata_cv}
 {it:outcome} 
-{it:features} ,
+{it:features} 
+{ifin},
 {cmd:mlmodel}{cmd:(}{it:{help r_ml_stata_cv##modeltype:modeltype}}{cmd:)}
 {cmd:data_test}{cmd:(}{it:filename}{cmd:)}
 {cmd:seed}{cmd:(}{it:integer}{cmd:)}
@@ -136,9 +138,9 @@ This command makes use of the Python {browse "https://scikit-learn.org/stable/":
 {synoptset 24 tabbed}{...}
 {syntab:Scalars}
 {synopt:{cmd:e(N_train_all)}}Total number of observations in the initial training dataset{p_end}
-{synopt:{cmd:e(N_train_used)}}Number of training observations actually used{p_end}
+{synopt:{cmd:e(N_train_used)}}Number of training observations used{p_end}
 {synopt:{cmd:e(N_test_all)}}Total number of observations in the initial testing dataset{p_end}
-{synopt:{cmd:e(N_test_used)}}Number of testing observations actually used{p_end}
+{synopt:{cmd:e(N_test_used)}}Number of testing observations used{p_end}
 {synopt:{cmd:e(N_features)}}Number of features{p_end}
 {synopt:{cmd:e(TRAIN_ACCURACY)}}K-fold cross-validation training average accuracy (= explained variance){p_end}
 {synopt:{cmd:e(TEST_ACCURACY)}}K-fold cross-validation testing average accuracy (= explained variance){p_end}
@@ -212,6 +214,10 @@ or (2) {it:distance} (observations weighted by the inverse of their distance fro
            them here (observe that the SFI API is already installed in your Stata 16 or later versions): 
            (1) Scikit-learn: https://scikit-learn.org/stable/install.html; (2) sfi: https://www.stata.com/python/api17. 
 
+{phang} Before displaying the Stata output, this program displays (in red) a panel of "Python warnings" concerning the current fit. These warnings can be useful sometimes, for example to check whether convergence of certain algorithms is achieved.
+
+{phang} This program incorporates the {cmd:pylearn, setup} command carried out by Droste (2002) to check whether your computer has the prerequisite Python packages, trying to install them automatically if not.
+
 {phang} Please, remember to have the most recent up-to-date version of this program installed.
 
 
@@ -282,6 +288,9 @@ or (2) {it:distance} (observations weighted by the inverse of their distance fro
 
 {phang}
 Cerulli, G. 2021. Improving econometric prediction by machine learning, {it:Applied Economics Letters}, 28, 16, 1419-1425, 2021.
+
+{phang}
+Droste, M. 2022. {it:Stata-pylearn}. Available at: https://github.com/mdroste/statapylearn.
 
 {phang}
 Gareth, J., Witten, D., Hastie, D.T., Tibshirani, R. 2013. {it:An Introduction to Statistical Learning : with Applications in R}. New York, Springer.

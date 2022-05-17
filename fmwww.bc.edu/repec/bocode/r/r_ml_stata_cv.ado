@@ -1,8 +1,8 @@
 ********************************************************************************
 *! "r_ml_stata_cv"
 *! Author: Giovanni Cerulli
-*! Version: 7
-*! Date: 09 March 2022
+*! Version: 8
+*! Date: 11 May 2022 
 ********************************************************************************
 
 ********************************************************************************
@@ -1430,7 +1430,7 @@ python:
 #! "r_tree()": Tree regression with CV 
 #! Author: Giovanni Cerulli
 #! Version: 7
-#! Date: 09/03/2022
+#! Date: 02/05/2022
 ################################################################################
 def r_tree():
 	# IMPORT NEEDED PACKAGES
@@ -1481,6 +1481,11 @@ def r_tree():
 	# FIT THE GRID
 	grid.fit(X, y)
 	
+	# FIT THE GRID
+	grid.fit(X, y)
+	
+	# ALL_CV_RES=pd.DataFrame(grid.cv_results_)[['param_max_depth','mean_train_score','mean_test_score']]
+
 	# VIEW THE RESULTS 
 	CV_RES=pd.DataFrame(grid.cv_results_)[['mean_train_score','mean_test_score','std_test_score']]
 	D=Macro.getLocal("cross_validation") 
@@ -1531,13 +1536,25 @@ def r_tree():
 	D=Macro.getLocal("_____out_prediction") 
 	D=D+".dta"
 	OUT.to_stata(D)
+	
+	# PRINT GRID SEARCH RESULTS
+	ALL_CV_RES=pd.DataFrame(grid.cv_results_)[['param_max_depth','mean_train_score','mean_test_score']]
+	ALL_CV_RES.columns = ['Tree depth', 'Train accuracy', 'Test accuracy']
+	ALL_CV_RES['Index'] = ALL_CV_RES.index
+	column_names = ['Index','Tree depth', 'Train accuracy', 'Test accuracy']
+	ALL_CV_RES = ALL_CV_RES.reindex(columns=column_names)
+	print("================================================")
+	print(" Results of cross-validation grid search")
+	print("================================================")
+	print(ALL_CV_RES.to_string(index=False))
+	print("================================================")
 ################################################################################
 
 ################################################################################
 #! "r_elasticnet()": Elastic-net with CV 
 #! Author: Giovanni Cerulli
 #! Version: 7
-#! Date: 09/03/2022
+#! Date: 02/05/2022
 ################################################################################
 def r_elasticnet():
 	# IMPORT NEEDED PACKAGES
@@ -1642,13 +1659,25 @@ def r_elasticnet():
 	D=Macro.getLocal("_____out_prediction") 
 	D=D+".dta"
 	OUT.to_stata(D)
+	
+	# PRINT GRID SEARCH RESULTS
+	ALL_CV_RES=pd.DataFrame(grid.cv_results_)[['param_l1_ratio','param_alpha','mean_train_score','mean_test_score']]
+	ALL_CV_RES.columns = ['L1 ratio', 'alpha' , 'Train accuracy', 'Test accuracy']
+	ALL_CV_RES['Index'] = ALL_CV_RES.index
+	column_names = ['Index','L1 ratio', 'alpha' , 'Train accuracy', 'Test accuracy']
+	ALL_CV_RES = ALL_CV_RES.reindex(columns=column_names)
+	print("====================================================")
+	print(" Results of cross-validation grid search")
+	print("====================================================")
+	print(ALL_CV_RES.to_string(index=False))
+	print("====================================================")
 ################################################################################
 
 ################################################################################
 #! "r_svm()": SVM regression with CV
 #! Author: Giovanni Cerulli
 #! Version: 7
-#! Date: 09/03/2022
+#! Date: 02/05/2022
 ################################################################################
 def r_svm():
 	# IMPORT NEEDED PACKAGES
@@ -1758,13 +1787,25 @@ def r_svm():
 	D=Macro.getLocal("_____out_prediction") 
 	D=D+".dta"
 	OUT.to_stata(D)
+		
+	# PRINT GRID SEARCH RESULTS
+	ALL_CV_RES=pd.DataFrame(grid.cv_results_)[['param_C','param_gamma','mean_train_score','mean_test_score']]
+	ALL_CV_RES.columns = ['c', 'Gamma' , 'Train accuracy', 'Test accuracy']
+	ALL_CV_RES['Index'] = ALL_CV_RES.index
+	column_names = ['Index','c', 'Gamma' , 'Train accuracy', 'Test accuracy']
+	ALL_CV_RES = ALL_CV_RES.reindex(columns=column_names)
+	print("===============================================")
+	print(" Results of cross-validation grid search")
+	print("===============================================")
+	print(ALL_CV_RES.to_string(index=False))
+	print("===============================================")
 ################################################################################	
 
 ################################################################################
 #! "r_randomforest()": Random-forest regression with CV
 #! Author: Giovanni Cerulli
 #! Version: 7
-#! Date: 09/03/2022
+#! Date: 02/05/2022
 ################################################################################
 def r_randomforest():
 	# IMPORT NEEDED PACKAGES
@@ -1895,13 +1936,25 @@ def r_randomforest():
 	D=Macro.getLocal("_____out_prediction") 
 	D=D+".dta"
 	OUT.to_stata(D)
+	
+	# PRINT GRID SEARCH RESULTS
+	ALL_CV_RES=pd.DataFrame(grid.cv_results_)[['param_max_depth','param_max_features','param_n_estimators','mean_train_score','mean_test_score']]
+	ALL_CV_RES.columns = ['Tree depth', 'N. of splitting features', 'N. of trees','Train accuracy', 'Test accuracy']
+	ALL_CV_RES['Index'] = ALL_CV_RES.index
+	column_names = ['Index','Tree depth', 'N. of splitting features','N. of trees','Train accuracy','Test accuracy']
+	ALL_CV_RES = ALL_CV_RES.reindex(columns=column_names)
+	print("=====================================================================================")
+	print(" Results of cross-validation grid search")
+	print("=====================================================================================")
+	print(ALL_CV_RES.to_string(index=False))
+	print("=====================================================================================")
 ################################################################################
 
 ################################################################################
 #! "r_neuralnet()": Neural network regression with CV 
 #! Author: Giovanni Cerulli
 #! Version: 7
-#! Date: 09/03/2022
+#! Date: 02/05/2022
 ################################################################################
 def r_neuralnet():
 	# IMPORT NEEDED PACKAGES
@@ -2025,13 +2078,25 @@ def r_neuralnet():
 	D=Macro.getLocal("_____out_prediction") 
 	D=D+".dta"
 	OUT.to_stata(D)
+		
+	# PRINT GRID SEARCH RESULTS
+	ALL_CV_RES=pd.DataFrame(grid.cv_results_)[['param_hidden_layer_sizes','param_alpha','mean_train_score','mean_test_score']]
+	ALL_CV_RES.columns = ['(N. of neurons in L1, N. of neurons in L2)','Alpha','Train accuracy', 'Test accuracy']
+	ALL_CV_RES['Index'] = ALL_CV_RES.index
+	column_names = ['Index','(N. of neurons in L1, N. of neurons in L2)','Alpha','Train accuracy','Test accuracy']
+	ALL_CV_RES = ALL_CV_RES.reindex(columns=column_names)
+	print("======================================================================================")
+	print(" Results of cross-validation grid search")
+	print("======================================================================================")
+	print(ALL_CV_RES.to_string(index=False))
+	print("======================================================================================")
 ################################################################################
 
 ################################################################################
 #! "r_nearestneighbor()": Nearest neighbor regression with CV 
 #! Author: Giovanni Cerulli
 #! Version: 7
-#! Date: 09/03/2022
+#! Date: 02/05/2022
 ################################################################################
 def r_nearestneighbor():
 	# IMPORT NEEDED PACKAGES
@@ -2136,6 +2201,18 @@ def r_nearestneighbor():
 	D=Macro.getLocal("_____out_prediction") 
 	D=D+".dta"
 	OUT.to_stata(D)
+		
+	# PRINT GRID SEARCH RESULTS
+	ALL_CV_RES=pd.DataFrame(grid.cv_results_)[['param_n_neighbors','param_weights','mean_train_score','mean_test_score']]
+	ALL_CV_RES.columns = ['N. of nearest neighbors','Kernel','Train accuracy', 'Test accuracy']
+	ALL_CV_RES['Index'] = ALL_CV_RES.index
+	column_names = ['Index','N. of nearest neighbors','Kernel','Train accuracy', 'Test accuracy']
+	ALL_CV_RES = ALL_CV_RES.reindex(columns=column_names)
+	print("=======================================================================")
+	print(" Results of cross-validation grid search")
+	print("=======================================================================")
+	print(ALL_CV_RES.to_string(index=False))
+	print("=======================================================================")
 ################################################################################
 
 
@@ -2143,7 +2220,7 @@ def r_nearestneighbor():
 #! "r_boost()": Boosting regression with CV
 #! Author: Giovanni Cerulli
 #! Version: 7
-#! Date: 09/03/2022
+#! Date: 02/05/2022
 ################################################################################
 def r_boost():
 	# IMPORT NEEDED PACKAGES
@@ -2267,6 +2344,18 @@ def r_boost():
 	D=Macro.getLocal("_____out_prediction") 
 	D=D+".dta"
 	OUT.to_stata(D)
+		
+	# PRINT GRID SEARCH RESULTS
+	ALL_CV_RES=pd.DataFrame(grid.cv_results_)[['param_learning_rate','param_n_estimators','param_max_depth','mean_train_score','mean_test_score']]
+	ALL_CV_RES.columns = ['Learning rate', 'N. of trees', 'Tree depth','Train accuracy', 'Test accuracy']
+	ALL_CV_RES['Index'] = ALL_CV_RES.index
+	column_names = ['Index','Learning rate','N. of trees','Tree depth','Train accuracy','Test accuracy']
+	ALL_CV_RES = ALL_CV_RES.reindex(columns=column_names)
+	print("==========================================================================")
+	print(" Results of cross-validation grid search")
+	print("==========================================================================")
+	print(ALL_CV_RES.to_string(index=False))
+	print("==========================================================================")
 ################################################################################
 
 
@@ -2274,7 +2363,7 @@ def r_boost():
 #! "r_ols()": OLS with CV 
 #! Author: Giovanni Cerulli
 #! Version: 7
-#! Date: 09/03/2022
+#! Date: 02/05/2022
 ################################################################################
 def r_ols():
 	# IMPORT NEEDED PACKAGES

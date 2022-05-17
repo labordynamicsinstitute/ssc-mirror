@@ -1,7 +1,6 @@
-*! ntreatreg v4 GCerulli 05may2015
-capture program drop ntreatreg
-program ntreatreg, eclass sortpreserve
-	version 11
+*! ntreatreg_1 v6, GCerulli 16/05/2022
+program ntreatreg_2, eclass sortpreserve
+	version 14
 	#delimit ;     
 	syntax varlist [if] [in] [fweight iweight pweight] , 
 	spill(string)  
@@ -9,13 +8,16 @@ program ntreatreg, eclass sortpreserve
 	vce(string) 
 	beta 
 	graphic
+	save_graph(string)
 	const(string) 
 	head(string) 
 	conf(numlist max=1)];
 	#delimit cr
-	***********************************************************************
+	****************************************************************************
+	* BEGIN PROGRAM
+	****************************************************************************
 	* DROP OUTCOME VARIABLES GENERATED LATER ON
-	***********************************************************************
+	****************************************************************************
 	foreach var of local xvars{
     capture drop _ws_`var' _z_`var' _v_`var' _ws_v_`var' 
     }	
@@ -23,9 +25,9 @@ program ntreatreg, eclass sortpreserve
 	capture drop _ws_`var'  
 	}
 	capture drop ATE_x ATET_x ATENT_x 
-	***********************************************************************
+	****************************************************************************
 	* START BY ASKING IF A SPECIFIC MODEL HAS BEEN CHOSEN 
-	***********************************************************************
+	****************************************************************************
 	marksample touse
 	tokenize `varlist'
     local y `1'
@@ -33,10 +35,13 @@ program ntreatreg, eclass sortpreserve
 	macro shift
 	macro shift
 	local xvars `*'
-	***********************************************************************
+	****************************************************************************
 	* GENERATE THE VARIABLES
-	***********************************************************************
-	gsort - `w'
+	****************************************************************************
+	tempvar ___ID // NEW
+	gen `___ID'=_n // NEW
+	gsort - `w' `___ID' // NEW
+    ****************************************************************************
 	foreach var of local hetero{
 	tempvar m_`var' 
 	tempvar s_`var'
@@ -51,9 +56,9 @@ program ntreatreg, eclass sortpreserve
 	foreach var of local hetero{
     local xvar2 `xvar2' _ws_`var'
 	}
-	********************************************************
+	****************************************************************************
 	* Create the variables v for each obs i
-	********************************************************
+	****************************************************************************
 	foreach var of local xvars{
 	tempname mat_`var'
 	tempname v_`var'
@@ -73,9 +78,16 @@ program ntreatreg, eclass sortpreserve
 	local z_vars `z_vars' _z_`var'  
 	}
 	***********************************************************************************************
-	regress `y' `w' `xvars' `xvar2' `z_vars' if `touse' , `vce' `beta' `const' `head' level(`conf')
+	* BASELINE REGRESSION
+	***********************************************************************************************
+	regress `y' `w' `xvars' `xvar2' `z_vars' if `touse' [`weight'`exp'] , vce(`vce') `beta' `const' `head' level(`conf')
+	***********************************************************************************************
+	tempvar yhat
+	tempvar res
+	predict `yhat' if `touse', xb
+	predict `res' if `touse', res
 	ereturn scalar ate = _b[`w']
-	************** NEW-CORRECT ********************************************************************
+	****************************************************************************
 	foreach var of local hetero{
 	scalar _d`var' = _b[_ws_`var']
 	scalar _g`var' = _b[_z_`var']
@@ -85,7 +97,16 @@ program ntreatreg, eclass sortpreserve
     foreach var of local hetero{
  	replace `k' = `k' + (`s_`var'' * _d`var') + (`s_v_`var'' * _g`var')
 	}
-	************** NEW-CORRECT *****************************************
+	****************************************************************************
+	*** Calculate the spillover _spill_=z*lambda
+	****************************************************************************
+	cap drop _spill_
+	gen _spill_=0
+	la var _spill_ "Neighborhood effect (=z*lambda)"
+	foreach v of local xvars{
+	replace _spill_=_spill_+_z_`v'*_b[_z_`v'] if `touse'
+	}
+	****************************************************************************
 	capture drop ATE_x ATET_x ATENT_x
 	gen ATE_x = _b[`w'] + `k'
 	tempvar wk
@@ -119,16 +140,16 @@ program ntreatreg, eclass sortpreserve
 	if "`hetero'" != ""{
 	if "`graphic'"=="graphic"{
 	graph_1 `model'
+	if "`graphic'"=="graphic" & & "`save_graph'"!=""{
+    qui graph save `save_graph' , replace
+    }
 	}
 	}
 end
-
 ***********************************************************************
 * PROGRAM "graph_1" TO DRAW THE OVELAPPING DISTRIBUTIONS 
 * OF ATE(x), ATET(x) and ATENT(x)
 ***********************************************************************
-
-*! graph_1 v1.0.0 GCerulli 25aug2010
 capture program drop graph_1
 program graph_1
 args model
@@ -137,7 +158,9 @@ twoway kdensity ATE_x , ///
 || ///
 kdensity ATET_x , lpattern(dash) ///
 || ///
-kdensity ATENT_x , lpattern(longdash_dot) xtitle() ///
+kdensity ATENT_x , lpattern(longdash_dot) xtitle("") ///
 ytitle(Kernel density) legend(order(1 "ATE(x)" 2 "ATET(x)" 3 "ATENT(x)")) ///
-title("Model `model': Comparison of ATE(x) ATET(x) ATENT(x)", size(medlarge)) name()
+title("Distribution of ATE(x) ATET(x) ATENT(x)", size(medlarge)) ///
+scheme(s1mono) 
 end
+********************************************************************************

@@ -1,8 +1,8 @@
 ********************************************************************************
 *! "c_ml_stata_cv"
 *! Author: Giovanni Cerulli
-*! Version: 8
-*! Date: 17 March 2022
+*! Version: 9
+*! Date: 12 May 2022
 ********************************************************************************
 
 
@@ -1517,7 +1517,7 @@ python:
 
 # ******************************************************************************
 # * TITLE:  "DECISION TREE CLASSIFIER USING CROSS-VALIDATION" 
-# * DATE:   09/03/2022
+# * DATE:   02/05/2022
 # * AUTHOR: GIOVANNI CERULLI
 # *****************************************************************************
 # * USE THE "scikit-learn" PYTHON PACKAGE, METHOD: "DecisionTreeClassifier()"
@@ -1635,11 +1635,22 @@ def c_tree():
 	D=Macro.getLocal("_____out_prediction") 
 	D=D+".dta"
 	OUT.to_stata(D)
-
+	
+	# PRINT GRID SEARCH RESULTS
+	ALL_CV_RES=pd.DataFrame(grid.cv_results_)[['param_max_depth','mean_train_score','mean_test_score']]
+	ALL_CV_RES.columns = ['Tree depth', 'Train accuracy', 'Test accuracy']
+	ALL_CV_RES['Index'] = ALL_CV_RES.index
+	column_names = ['Index','Tree depth', 'Train accuracy', 'Test accuracy']
+	ALL_CV_RES = ALL_CV_RES.reindex(columns=column_names)
+	print("================================================")
+	print(" Results of cross-validation grid search")
+	print("================================================")
+	print(ALL_CV_RES.to_string(index=False))
+	print("================================================")
 	
 #******************************************************************************
 # * TITLE:  "SUPPORT VECTOR MACHINE CLASSIFICATION USING CROSS-VALIDATION" 
-# * DATE:   09/03/2022
+# * DATE:   02/05/2022
 # * AUTHOR: GIOVANNI CERULLI
 # *****************************************************************************
 # * USE THE "scikit-learn" PYTHON PACKAGE, METHOD: "svm.SVC()"
@@ -1764,11 +1775,22 @@ def c_svm():
 	D=Macro.getLocal("_____out_prediction") 
 	D=D+".dta"
 	OUT.to_stata(D)
-
+		
+	# PRINT GRID SEARCH RESULTS
+	ALL_CV_RES=pd.DataFrame(grid.cv_results_)[['param_C','param_gamma','mean_train_score','mean_test_score']]
+	ALL_CV_RES.columns = ['c', 'Gamma' , 'Train accuracy', 'Test accuracy']
+	ALL_CV_RES['Index'] = ALL_CV_RES.index
+	column_names = ['Index','c', 'Gamma' , 'Train accuracy', 'Test accuracy']
+	ALL_CV_RES = ALL_CV_RES.reindex(columns=column_names)
+	print("===============================================")
+	print(" Results of cross-validation grid search")
+	print("===============================================")
+	print(ALL_CV_RES.to_string(index=False))
+	print("===============================================")
 
 #******************************************************************************
 # * TITLE:  "RANDOM FOREST CLASSIFICATION USING CROSS-VALIDATION" 
-# * DATE:   09/03/2022
+# * DATE:   02/05/2022
 # * AUTHOR: GIOVANNI CERULLI
 # *****************************************************************************
 # * USE THE "scikit-learn" PYTHON PACKAGE, METHOD: "RandomForestClassifier()"
@@ -1918,10 +1940,22 @@ def c_randomforest():
 	D=Macro.getLocal("_____out_prediction") 
 	D=D+".dta"
 	OUT.to_stata(D)
-
+	
+	# PRINT GRID SEARCH RESULTS
+	ALL_CV_RES=pd.DataFrame(grid.cv_results_)[['param_max_depth','param_max_features','param_n_estimators','mean_train_score','mean_test_score']]
+	ALL_CV_RES.columns = ['Tree depth', 'N. of splitting features', 'N. of trees','Train accuracy', 'Test accuracy']
+	ALL_CV_RES['Index'] = ALL_CV_RES.index
+	column_names = ['Index','Tree depth', 'N. of splitting features','N. of trees','Train accuracy','Test accuracy']
+	ALL_CV_RES = ALL_CV_RES.reindex(columns=column_names)
+	print("=====================================================================================")
+	print(" Results of cross-validation grid search")
+	print("=====================================================================================")
+	print(ALL_CV_RES.to_string(index=False))
+	print("=====================================================================================")
+	
 #******************************************************************************
 # * TITLE:  "NEURAL-NETWORK CLASSIFICATION USING CROSS-VALIDATION" 
-# * DATE:   09/03/2022
+# * DATE:   02/05/2022
 # * AUTHOR: GIOVANNI CERULLI
 # *****************************************************************************
 # * USE THE "scikit-learn" PYTHON PACKAGE, METHOD: "MLPClassifier()"
@@ -2068,11 +2102,22 @@ def c_neuralnet():
 	D=Macro.getLocal("_____out_prediction") 
 	D=D+".dta"
 	OUT.to_stata(D)
-
+		
+	# PRINT GRID SEARCH RESULTS
+	ALL_CV_RES=pd.DataFrame(grid.cv_results_)[['param_hidden_layer_sizes','param_alpha','mean_train_score','mean_test_score']]
+	ALL_CV_RES.columns = ['(N. of neurons in L1, N. of neurons in L2)','Alpha','Train accuracy', 'Test accuracy']
+	ALL_CV_RES['Index'] = ALL_CV_RES.index
+	column_names = ['Index','(N. of neurons in L1, N. of neurons in L2)','Alpha','Train accuracy','Test accuracy']
+	ALL_CV_RES = ALL_CV_RES.reindex(columns=column_names)
+	print("======================================================================================")
+	print(" Results of cross-validation grid search")
+	print("======================================================================================")
+	print(ALL_CV_RES.to_string(index=False))
+	print("======================================================================================")
 
 #******************************************************************************
 # * TITLE:  "NEAREST_NEIGHBOR USING CROSS-VALIDATION" 
-# * DATE:   09/03/2022
+# * DATE:   02/05/2022
 # * AUTHOR: GIOVANNI CERULLI
 # *****************************************************************************
 # * USE THE "scikit-learn" PYTHON PACKAGE, METHOD: "KNeighborsClassifier()"
@@ -2197,7 +2242,19 @@ def c_nearestneighbor():
 	D=Macro.getLocal("_____out_prediction") 
 	D=D+".dta"
 	OUT.to_stata(D)
-
+		
+	# PRINT GRID SEARCH RESULTS
+	ALL_CV_RES=pd.DataFrame(grid.cv_results_)[['param_n_neighbors','param_weights','mean_train_score','mean_test_score']]
+	ALL_CV_RES.columns = ['N. of nearest neighbors','Kernel','Train accuracy', 'Test accuracy']
+	ALL_CV_RES['Index'] = ALL_CV_RES.index
+	column_names = ['Index','N. of nearest neighbors','Kernel','Train accuracy', 'Test accuracy']
+	ALL_CV_RES = ALL_CV_RES.reindex(columns=column_names)
+	print("=======================================================================")
+	print(" Results of cross-validation grid search")
+	print("=======================================================================")
+	print(ALL_CV_RES.to_string(index=False))
+	print("=======================================================================")
+	
 #******************************************************************************
 # * TITLE:  "BOOSTING-TREE CLASSIFICATION USING CROSS-VALIDATION" 
 # * DATE:   02/11/2021
@@ -2339,10 +2396,22 @@ def c_boost():
 	D=Macro.getLocal("_____out_prediction") 
 	D=D+".dta"
 	OUT.to_stata(D)
-
+		
+	# PRINT GRID SEARCH RESULTS
+	ALL_CV_RES=pd.DataFrame(grid.cv_results_)[['param_learning_rate','param_n_estimators','param_max_depth','mean_train_score','mean_test_score']]
+	ALL_CV_RES.columns = ['Learning rate', 'N. of trees', 'Tree depth','Train accuracy', 'Test accuracy']
+	ALL_CV_RES['Index'] = ALL_CV_RES.index
+	column_names = ['Index','Learning rate','N. of trees','Tree depth','Train accuracy','Test accuracy']
+	ALL_CV_RES = ALL_CV_RES.reindex(columns=column_names)
+	print("==========================================================================")
+	print(" Results of cross-validation grid search")
+	print("==========================================================================")
+	print(ALL_CV_RES.to_string(index=False))
+	print("==========================================================================")	
+	
 #******************************************************************************
 # * TITLE:  "REGULARIZED MULTINOMIAL CLASSIFICATION USING CROSS-VALIDATION" 
-# * DATE:   09/03/2022
+# * DATE:   02/05/2022
 # * AUTHOR: GIOVANNI CERULLI
 # *****************************************************************************
 # * USE THE "scikit-learn" PYTHON PACKAGE, METHOD: "LogisticRegression()"
@@ -2476,10 +2545,22 @@ def c_rmn():
 	D=Macro.getLocal("_____out_prediction") 
 	D=D+".dta"
 	OUT.to_stata(D)
-
+	
+	# PRINT GRID SEARCH RESULTS
+	ALL_CV_RES=pd.DataFrame(grid.cv_results_)[['param_l1_ratio','param_C','mean_train_score','mean_test_score']]
+	ALL_CV_RES.columns = ['L1 ratio', 'Alpha' , 'Train accuracy', 'Test accuracy']
+	ALL_CV_RES['Index'] = ALL_CV_RES.index
+	column_names = ['Index','L1 ratio', 'Alpha' , 'Train accuracy', 'Test accuracy']
+	ALL_CV_RES = ALL_CV_RES.reindex(columns=column_names)
+	print("====================================================")
+	print(" Results of cross-validation grid search")
+	print("====================================================")
+	print(ALL_CV_RES.to_string(index=False))
+	print("====================================================")
+	
 #******************************************************************************
 # * TITLE:  "NAIVE-BAYES CLASSIFICATION USING CROSS-VALIDATION" 
-# * DATE:   09/03/2022
+# * DATE:   02/05/2022
 # * AUTHOR: GIOVANNI CERULLI
 # *****************************************************************************
 # * USE THE "scikit-learn" PYTHON PACKAGE, METHOD: "GaussianNB()"
@@ -2595,7 +2676,7 @@ def c_naivebayes():
 	
 #******************************************************************************
 # * TITLE:  "MULTINOMIAL CLASSIFICATION" 
-# * DATE:   09/03/2022
+# * DATE:   02/05/2022
 # * AUTHOR: GIOVANNI CERULLI
 # *****************************************************************************
 # * USE THE "scikit-learn" PYTHON PACKAGE, METHOD: "LogisticRegression()"

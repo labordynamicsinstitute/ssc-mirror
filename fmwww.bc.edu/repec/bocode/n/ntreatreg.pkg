@@ -12,14 +12,16 @@ d KW: ATE
 d KW: conditional mean independence
 d KW: SUTVA
 d
-d Requires: Stata version 11
+d Requires: Stata version 14
 d
-d Distribution-Date: 20150609
+d Distribution-Date: 20220516
 d
 d Author: Giovanni Cerulli, Ceris-CNR
 d Support: email g.cerulli@@ceris.cnr.it
 d
 f ntreatreg.ado
 f ntreatreg.sthlp
+f ../m/mkomega.ado
+f ../m/mkomega.sthlp
 f ntreat_ex.do
 f ntreatreg_jun_2015.pdf
