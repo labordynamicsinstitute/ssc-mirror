@@ -43,7 +43,6 @@ f c_naivebayes.py
 f c_nearestneighbor.py
 f c_neuralnet.py
 f c_randomforest.py
-f ../p/pylearn.py
 f c_regularizedmultinomial.py
 f c_multinomial.py
 f c_svm.py
