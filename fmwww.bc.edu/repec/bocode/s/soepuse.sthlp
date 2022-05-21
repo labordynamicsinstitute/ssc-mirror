@@ -1,5 +1,5 @@
 {smcl}
-{* März 19, 2009 @ 16:56:09 UK}{...}
+{* Mai 20, 2022 @ 09:59:04 UK}{...}
 {hi:help soepuse}, {hi:help soepadd}
 {hline}
 
@@ -78,7 +78,7 @@ example: To combine individual gross and net income variables with
 household income using the waves of 1991 and 1992 you would specify
 {p_end}
 
-{phang2}{cmd:. soepuse hp5401 ip5401 hp5402 ip5402 using ~/data/gsoep24, f(p) w(1991 1992)}{p_end}
+{phang2}{cmd:. soepuse hp5401 ip5401 hp5402 ip5402 using ~/data/gsoep37, f(p) w(1991 1992)}{p_end}
 {phang2}{cmd:. soepadd hh49 ih49, f(h) w(1991 1992)}
 {p_end}
 
@@ -89,7 +89,7 @@ the variable list:
 {p 8 8 0}{cmd:. soepuse }{p_end}
 {p 12 12 0}{cmd:hp5401 ip5401 }{p_end}
 {p 12 12 0}{cmd:hp5402 ip5402 }{p_end}
-{p 10 10 0}{cmd:using ~/data/gsoep24, f(p) w(1991 1992) }{p_end}
+{p 10 10 0}{cmd:using ~/data/gsoep37, f(p) w(1991 1992) }{p_end}
 
 {pstd}{cmd:soepuse} and {cmd:soepadd} are constructed for using them
 in connection with
@@ -134,7 +134,7 @@ the example will become{p_end}
 {p 12 12 0}{cmd:- bp75 cp75 dp84 ep73 fp89}{p_end}
 {p 12 12 0}{cmd:ap5601 bp7901 cp7901 dp8801 ep7701 fp9301}{p_end}
 {p 12 12 0}{cmd:ap5602 bp7902 cp7902 dp8802 ep7702 fp9302}{p_end}
-{p 10 10 0}{cmd:using ~/data/gsoep24, f(p) w(1991/1998) }{p_end}
+{p 10 10 0}{cmd:using ~/data/gsoep37, f(p) w(1984/1989) }{p_end}
 
 {title:Options}
 
@@ -209,7 +209,7 @@ fast bypasses the additional check of variable names. {p_end}
 {title:Example(s)}
 
 {pstd}Constructing Longitudinal Individual Records{p_end}
-{phang2}{cmd:. soepuse gp109 zp6401 hp10901 ip10901 jp10901 using ., ost(g) w(1990/1993) f(p)}{p_end}
+{phang2}{cmd:. soepuse gp109 gp6401e hp10901 ip10901 jp10901 using ., ost(g) w(1990/1993) f(p)}{p_end}
 
 {pstd}Linking Household Data to Individuals{p_end}
 {phang2}{cmd:. soepuse hp5401 hp5402 using ., w(1991) f(p)}{p_end}
@@ -225,7 +225,7 @@ fast bypasses the additional check of variable names. {p_end}
 {phang2}{cmd:. gen pt=1 if hp15==2}{p_end}
 {phang2}{cmd:. gen unemp=1 if hp07==1}{p_end}
 {phang2}{cmd:. gen noinf=1 if hp15==9}{p_end}
-{phang2}{cmd:. collapse (count) n_ft=ft n_pt=pt n_unemp=unemp n_noinf=noinf (mean) hhnr=hhnr, by(hhnr)}{p_end}
+{phang2}{cmd:. collapse (count) n_ft=ft n_pt=pt n_unemp=unemp n_noinf=noinf, by(cid hhhnr)}{p_end}
 {phang2}{cmd:. soepadd htyphh1 htyphh2, w(1991) f(hgen)}{p_end}
 
 {pstd}Creating longitudinal data from waves 1984-2006 with vars from different sources{p_end}
@@ -233,8 +233,10 @@ fast bypasses the additional check of variable names. {p_end}
 {p 8 4 0}{cmd:afamstd bfamstd cfamstd dfamstd efamstd ffamstd gfamstd hfamstd}{p_end}
 {p 8 4 0}{cmd:ifamstd jfamstd kfamstd lfamstd mfamstd nfamstd ofamstd pfamstd}{p_end}
 {p 8 4 0}{cmd:qfamstd rfamstd sfamstd tfamstd ufamstd vfamstd}{p_end}
-{p 8 4 0}{cmd:egp84 egp85 egp86 egp87 egp88 egp89 egp90 egp91 egp92 egp93 egp94}{p_end}
-{p 8 4 0}{cmd:egp95 egp96 egp97 egp98 egp99 egp00 egp01 egp02 egp03 egp04 egp05}{p_end}
+{p 8 4 0}{cmd:egp08_84 egp08_85 egp08_86 egp08_87 egp08_88 egp08_89 egp08_90}{p_end}
+{p 8 4 0}{cmd:egp08_91 egp08_92 egp08_93 egp08_94 egp08_95 egp08_96 egp08_97}{p_end}
+{p 8 4 0}{cmd:egp08_98 egp08_99 egp08_00 egp08_01 egp08_02 egp08_03 egp08_04}{p_end}
+{p 8 4 0}{cmd:egp08_05}{p_end}
 {p 8 4 0}{cmd:using . ,}{p_end}
 {p 8 4 0}{cmd:ftyp(pgen) waves(1984/2005)}{p_end}
 {p 8 4 0}{cmd:design(3) keep(sex gebjahr) clear}{p_end}
@@ -266,7 +268,7 @@ the GSOEP and many other panel data sets is
 
 {title:Author}
 
-{pstd}Ulrich Kohler, WZB, kohler@wzb.eu{p_end}
+{pstd}Ulrich Kohler, University of Potsdam, ukohler@uni-potsdam.de{p_end}
 
 {title:Also see}
 

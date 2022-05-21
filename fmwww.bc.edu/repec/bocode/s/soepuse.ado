@@ -1,4 +1,4 @@
-*! version 3.0.1 Januar 31, 2012 @ 17:12:52 UK
+*! version 3.0.1 Mai 20, 2022 @ 10:04:56 UK
 // This is -mkdat- reloaded
 // 1.0.0 Initial version
 // 1.0.1 Option uc does not work -> fixed.
@@ -6,6 +6,7 @@
 // 2.0 Updated to Stata 11
 // 3.0 Updated to GSOEP after wave "z" 
 // 3.0.1 Bug fix
+// 4.0 New names for identifiers
 
 program soepuse
 version 11
@@ -54,12 +55,12 @@ version 11
 	// Set identifier
 	// --------------
 	
-	if substr("`ftyp'",1,1) =="p" | "`ftyp'" == "kind" {	 
-		local identif  "hhnr hhnrakt persnr"
+	if substr("`ftyp'",1,1) =="p" | "`ftyp'" == "kind" {
+		local identif  "cid hid pid"
 		local match "1:1"
 	}
 	else if substr("`ftyp'",1,1) =="h" {
-		local identif  "hhnr hhnrakt"
+		local identif  "cid hid"
 		local match "n:1"
 	}
 	else {
@@ -113,17 +114,23 @@ version 11
 
 	// By default we run an addtional check before starting
 	if "`fast'" == "" {
-		local i 1 
-		foreach file of local filelist {
-			tokenize `anything'  
-			forv j = `i++'(`nwaves')`nvars' {        
-				if "``j''" != "-" local vars "`vars' ``j''"
+		quietly {
+			local i 1
+			foreach file of local filelist {
+				tokenize `anything'  
+				forv j = `i++'(`nwaves')`nvars' {        
+					if "``j''" != "-" local vars "`vars' ``j''"
+				}
+				capture describe `identif' `vars' using `"`using'/`file'"'
+				if _rc {
+					noi display "{err} Varlist invalid for file `file'"
+					exit _rc
+				}
+				macro drop _vars
 			}
-			quietly describe `identif' `vars' using `"`using'/`file'"'
-			macro drop _vars
 		}
 	}
-
+	
 	
 	// Prepare using data
 	// ------------------
@@ -154,7 +161,7 @@ version 11
 		local pfadvar "`pfadvar' `wave'hhnr `wave'netto"
 	}
 	
-	qui use hhnr persnr `pfadvar' `keep' using `using'/ppfad
+	qui use cid pid `pfadvar' `keep' using `using'/ppfad
 	
 	// Set up the longitudinal design
 	// ------------------------------
@@ -191,14 +198,15 @@ version 11
 	// -----------------
 	
 	quietly {
-		gen long hhnrakt = .
+		gen long hid = .
 		foreach file of local filelist {
-			local i = strlen("`file'")-strlen("`ftyp'")
-			replace hhnrakt = `=substr("`file'",1,`i')'hhnr
+			local noostfile = subinstr("`file'","ost","",.)
+			local i = strlen("`noostfile'")-strlen("`ftyp'")
+			replace hid = `=substr("`noostfile'",1,`i')'hhnr
 			sort `identif'
 			merge `match' `identif' using ``file'', keep(1 3) nogen
 		}
-		drop hhnrakt
+		drop hid
 	}
 
 	// Link with soepadd
@@ -212,6 +220,5 @@ end
 exit
 
 Author: Ulrich Kohler
-Tel +49 (0)30 25491 361
-Fax +49 (0)30 25491 360
-Email kohler@wzb.eu
+Tel. +49 331 9773565
+Email ukohler@uni-potsdam.de
