@@ -18,7 +18,7 @@ d KW: predict
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20210429
+d Distribution-Date: 20210523
 d
 d Author: Fernando Rios-Avila, Levy Economics Institute of Bard College
 d Support: email friosavi@@levy.org
@@ -31,6 +31,7 @@ f f_able_p.ado
 f fgen.ado
 f fmargins.ado
 f frep.ado
+f f_reg.ado
 f f_symev.ado
 f f_symrv.ado
 f f_spline.ado
