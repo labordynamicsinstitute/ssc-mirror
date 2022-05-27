@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.2  27 Dec 2020}{...}
+{* *! version 1.2.1  21 May 2022}{...}
 {viewerdialog sgpv "dialog sgpv"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "SGPV Value Calculations" "help sgpvalue"}{...}
@@ -268,6 +268,13 @@ A backup of the original file is kept with the name {cmd:profile.do.bak}.
 ONLY tested under Windows, other operation systems should work but could not be tested.
 The {cmd:profile.do} file should NOT contain a line like "global F4 `" or like "global F5 '". 
 Otherwise, the option returns an error and will not delete the menu entries. 
+Also make sure that {cmd:profile.do} is not open in another program nor 
+that the files {cmd:profile.do.bak} or {cmd:profile.do.new} already exist.
+If they exist, you can delete them. {break}
+As an alternative to this subcommand, open the {cmd:profile.do} file by running the following two commands and delete manually the lines added by the permdialog-option: {break}
+{stata . findfile profile.do, path(STATA;.)}{break}
+{stata . doedit "`r(fn)'"}          
+ 
 
 {marker examples}{...}
 {title:Examples}

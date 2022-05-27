@@ -1,12 +1,16 @@
 *!Calculate the Second-Generation P-Value(s)(SGPV) and their associated diagnosis statistics after common estimation commands based on Blume et al. 2018,2019
 *!Author: Sven-Kristjan Bormann
-*!Version 1.2.1 13.05.2022: Fixed a bug introduced by removing the support for the original R-syntax for fdrisk, so that the options fdrisk and all did not work anymore.  ///  
+*!Version 1.2.3 25.05.2022: Fixed a bug when running "sgpv menu, remove" under Linux.
+*Version 1.2.2 20.05.2022: Fixed a bug which prevented the subcommands from running under some circumstances. ///
+							Fixed a bug which did not remove all entries added by the command sgpv menu, permdialog from the profile.do ///
+							Added an explanation to the help file how to remove the entries manually if the remove option fails.
+*Version 1.2.1 13.05.2022: Fixed a bug introduced by removing the support for the original R-syntax for fdrisk, so that the options fdrisk and all did not work anymore.  ///  
 							Removed the code to support the original R-syntax for fdrisk. ///
 							Removed the support for the already depreciated bonus option. ///
 							Fixed a bug that the deltagap has always been calculated and displayed even if the deltagap-option or the all-option had not been set.
-*!Version 1.2c 14.02.2022: Fixed a bug when using the coefficient-option together with noconstant-option. ///
+*Version 1.2c 14.02.2022: Fixed a bug when using the coefficient-option together with noconstant-option. ///
 							Support for Mata to calculate Fdrs has been removed, because it did not work as intended and offered no significant speed advantage. 
-*!Version 1.2b 10.06.2021: Added option to use Mata to calculate the Fdrs; requires the moremata-package by Ben Jann
+*Version 1.2b 10.06.2021: Added option to use Mata to calculate the Fdrs; requires the moremata-package by Ben Jann
 *Version 1.2a 01.02.2021: Fixed a bug with the level option. Fixed a bug with regards to leading whitespaces when prefixing sgpv.
 *Version 1.2 27.12.2020 : Changed the name of the option permament to permdialog to clarify the meaning of the option. ///
 							Fixed the format option in the Dialog box. /// 
@@ -79,61 +83,53 @@ To-Do(Things that I wish to implement at some point or that I think that might b
 capture program drop sgpv
 program define sgpv, rclass
 version 12.0
-*Parse the initial input 
+*Parse the initial input: If nothing is after the colon than continue as usual 
 capture  _on_colon_parse `0'
 
-*Check if anything to calculate is given
-if _rc & "`e(cmd)'"=="" & (!ustrregexm(`"`0'"',"matrix\(\w+\)") & !ustrregexm(`"`0'"',"m\(\w+\)") ) & (!ustrregexm(`"`0'"',"estimate\(\w+\)") & !ustrregexm(`"`0'"',"e\(\w+\)") ) & !inlist("`: word 1 of `0''","value","power","risk","plot", "menu" ) { // If the command was not prefixed and no previous estimation exists. -> There should be a more elegant solution to this problem 
-	disp as error "No last estimate or matrix, saved estimate for calculating SGPV found."
-	disp as error "No subcommand found either."
-	disp as error "Make sure that the matrix option is correctly specified as 'matrix(matrixname)' or 'm(matrixname)' . "
-	disp as error "Make sure that the estimate option is correctly specified as 'estimate(stored estimate name)' or 'e(stored estimate name)' . "
-	disp as error "The currently available subcommands are 'value', 'power', 'fdrisk', 'plot' and 'menu'."
-	exit 198
+if _rc{
+	*local 0 `0'
+	
+	gettoken before after:0 ,parse(",")
+	if inlist(`"`before'"',"value","power","risk","plot", "menu" ){
+	if ("`before'"=="value"){
+		local 0 sgp`0'
+	} 
+	if ("`before'"=="power"){
+		local 0 sg`0'
+	} 
+	if ("`before'"=="plot"){
+		local 0 = subinstr(`"`0'"',"plot","plotsgpv",1)
+	} 
+	if ("`before'"=="risk"){
+		local 0 fd`0'
+	}
+	`0'
+	exit	
+	}
+	*if !inlist(`"`before'"',"value","power","risk","plot", "menu" ) & "`before'"=="," 
+	if "`e(cmd)'"=="" & (!ustrregexm(`"`0'"',"matrix\(\w+\)") & !ustrregexm(`"`0'"',"m\(\w+\)") ) & (!ustrregexm(`"`0'"',"estimate\(\w+\)") & !ustrregexm(`"`0'"',"e\(\w+\)") ) & !inlist(`"`before'"',"value","power","risk","plot", "menu" ) {
+		disp as error "No last estimate or matrix, saved estimate for calculating SGPV found."
+		disp as error "No subcommand found either."
+		disp as error "Make sure that the matrix option is correctly specified as 'matrix(matrixname)' or 'm(matrixname)' . "
+		disp as error "Make sure that the estimate option is correctly specified as 'estimate(stored estimate name)' or 'e(stored estimate name)' . "
+		disp as error "The currently available subcommands are 'value', 'power', 'fdrisk', 'plot' and 'menu'."
+		exit 198
+	}
+	
 }
-
 
 if !_rc{
 	local cmd `"`s(after)'"'
 	local 0 `"`s(before)'"' 
 } 
 
-***Parsing of subcommands -> A convenience feature to use only one command for SGPV calculation -> no further input checks of acceptable options
-* Potential subcommands: value, power, fdrisk, plot, menu
-local old_0 `0'
-gettoken subcmd 0:0, parse(" ,:")
-if inlist("`subcmd'","value","power","risk","plot", "menu" ){ // Change the code to allow shorter subcommand names? Look at the code for estpost.ado for one way how to do it
-	if "`cmd'"!="" stop "Subcommands cannot be used when prefixing an estimation command."
-
-	if ("`subcmd'"=="value"){
-		local subcmd : subinstr local subcmd "`=substr("`subcmd'",1,1)'" "sgpv"
-	} 
-	if ("`subcmd'"=="power"){
-		local subcmd : subinstr local subcmd "`=substr("`subcmd'",1,1)'" "sgp"
-	} 
-	if ("`subcmd'"=="plot"){
-		local subcmd `subcmd'sgpv
-	} 
-	if ("`subcmd'"=="risk"){
-		local subcmd fdrisk
-	}
-	`subcmd' `0'
-	exit	
-	
-}
-else{
-	local 0 `old_0'
-}
-
-
 **Define options here
 syntax [anything(name=subcmd)] [, Estimate(name)  Matrix(name)  Coefficient(string asis) NOCONStant   /// input-options
  Quietly MATListopt(string asis)  FORmat(str) NONULLwarnings  DELTAgap FDrisk all  /// display-options
   nulllo(string) nullhi(string)   /// null hypotheses 
-  TRUNCnormal  /*set truncated normal distribution for nullspace*/ Level(cilevel) LIKelihood(numlist min=1 max=2) Pi0(real 0.5) /// fdrisk-options
-	/*new possible options, not implemented yet */ /*Plot*/  ] 
-
-
+  TRUNCnormal Level(cilevel) LIKelihood(numlist min=1 max=2) Pi0(real 0.5) /// fdrisk-options
+	/*new possible options, not implemented yet */ /*Plot*/] 
+	
 ***Option parsing
 **Check for what SGPVs should be calculated for
 if "`cmd'"!="" & ("`estimate'"!="" | "`matrix'"!=""){
@@ -276,7 +272,6 @@ else if "`e(cmd)'"!=""{ // Replay previous estimation
 	quietly `e(cmd)' , level(`level')
 }
 
-* disp "Start calculating SGPV"
  *Create input vectors
   tempname input  input_new sgpv pval comp rest fdrisk 
  
@@ -292,7 +287,6 @@ else if "`e(cmd)'"!=""{ // Replay previous estimation
  
  ***Input processing
  mat `input' = `inputmatrix'
- pause Display matrixes after estimation 
  return add // save existing returned results 
  
  *Coefficient selection 
@@ -644,8 +638,13 @@ program define menu
 			file read `fh' line
 			while r(eof)==0{ // Skip the lines containing the window commands and write only the others back to a new file, then rename the original file to profile.do.bak and rename the new file as profile.do
 				if `"`line'"'==`"`start_line'"'{
-					while r(eof)==0 & `"`line'"' != `"`end_line'"'{
+					*while r(eof)==0 & `"`line'"' != `"`end_line'"'{ // does not remove yet the end_line from the file!
+					while r(eof)==0{
 					file read `fh' line
+					if `"`line'"'==`"`end_line'"'{
+							file read `fh' line
+							continue, break
+						} 
 					}
 				
 				}
@@ -655,7 +654,9 @@ program define menu
 			file close `fh'
 			file close `fh2'
 	}
-	*plattform dependent backup file
+	* Plattform dependent backup file
+	* Renaming will fail silently on windows if profile.do.bak already exists! Hence, the profile.do remains the same.
+	* Very tricky to account for all kinds of silent access violations from within in Stata.
 	disp "Renaming the original profile.do to profile.do.bak"
 	if strmatch(c(os),"Win*"){
 		!ren "`path'\\`filename'" `filename'.bak
@@ -663,8 +664,8 @@ program define menu
 		
 	}
 	else{ // Not testable on my system
-		!mv  "`path'/`filename'" `"`path'/`filename'.bak"'
-		!mv "`profile_new'" "`path'/`filename'"
+		!mv  "`path'/`filename'" `path'/`filename'.bak
+		!mv "`profile_new'" `path'/`filename'
 	}
   exit
  }

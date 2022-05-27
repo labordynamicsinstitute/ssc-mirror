@@ -1,34 +1,37 @@
 program define treatoprobitsim, sortpreserve 
+version 14.5
 *! v.1.0.0 cagregory 3 26 14
-	if replay() {
-		if ("`e(cmd)'" != "treatoprobit_lf") error 301
-		Replay `0'
-		}
-	else Estimate `0'
-end	
+        if replay() {
+                if ("`e(cmd)'" != "treatoprobit_lf") error 301
+                Replay `0'
+                }
+        else Estimate `0'
+end     
 
 program Estimate, eclass
 
 syntax varlist [if] [in] [pweight iweight fweight] , TREATment(string) ///
- 	SIMulationdraws(integer) [FACDENSity(string) FACSCale(real 1) ///
- 	FACSKew(real 2) STARTpoint(integer 5) FACMEAN(real 2) vce(string) ///
- 	sesim(integer 100) mixpi(real 50) ]
-	
+        SIMulationdraws(integer) [FACDENSity(string) FACSCale(real 1) ///
+        FACSKew(real 2) STARTpoint(integer 5) FACMEAN(real 2) vce(string) ///
+        sesim(integer 100) mixpi(real 50) ]
+
+ di "Hi There!"
+		
 *parse
 gettoken lhs rhs: varlist
 gettoken tlhs treatment : treatment, parse("=")
 gettoken equal trhs : treatment, parse("=")
-	if "`equal'" != "=" {
-		di in red "invalid syntax: equal sign is needed in the selection equation"
-		exit 198
-		}
+        if "`equal'" != "=" {
+                di in red "invalid syntax: equal sign is needed in the selection equation"
+                exit 198
+                }
 
 local rhs `rhs' `tlhs'
 
 if `mixpi'<=0 | `mixpi'>=100 {
-	di in red "Mixing parameter must be between 0 and 100"
-	exit 
-	}
+        di in red "Mixing parameter must be between 0 and 100"
+        exit 
+        }
 
 
 
@@ -38,21 +41,20 @@ local pi1 = `mixpi'/100
 mlopts mlopts, `options' //ml options
 gettoken firstvce restvce: vce
 
-if "`vce'"!=" " {
-if "`firstvce'" == "cluster"  {
-		local clopt "vce(cluster `restvce')"
-		}
-if "`firstvce'" == "robust" {
-		local robustopt "vce(robust)"
-		di "`robustopt'"
-		}
-}
+if "`firstvce'" == "`cluster'"  {
+                local clopt "vce(cluster `restvce')"
+                }
+if "`firstvce'" == "`robust'" {
+                local robustopt "vce(robust)"
+                di "`robustopt'"
+                }
+
 if "`weight'" != "" {
-		tempvar wvar
-		quietly gen double `wvar' `exp'
-		local wgt "[`weight'=`wvar']"
-		//local awgt "[aw=`wvar']"
-		}
+                tempvar wvar
+                quietly gen double `wvar' `exp'
+                local wgt "[`weight'=`wvar']"
+                //local awgt "[aw=`wvar']"
+                }
 
 
 
@@ -106,17 +108,17 @@ mat `startmat' = `b_trt', `b_out', `lambda_init', `cuts'
 
 local cutpts
 forvalues i = 1/$ncut {
-	local cutpts "`cutpts' /cut`i'"
-	}
-qui levelsof(`depvar2')
-global nchoices: word count `r(levels)'
+        local cutpts "`cutpts' /cut`i'"
+        }
+
+
 
 *displaying ancilliary parameters
 local lambda diparm(lambda)
 local di_cuts
 forv i = 1/$ncut {
-	local di_cuts "`di_cuts' diparm(cut`i') " 
-	}
+        local di_cuts "`di_cuts' diparm(cut`i') " 
+        }
 local di_cuts "`di_cuts' diparm(__sep__)"
 
 qui sum `touse'
@@ -125,77 +127,77 @@ scalar sim = `simulationdraws'
 scalar se_sim = `sesim'
 local start init(`startmat',copy) search(off)
 
-	
-	if "`facdensity'"=="" {
-		local facdensity = "normal"
-	}
-	
-	
-	mata: _treatoprobit_S=st_numscalar("sim")
-	if "`facdensity'"=="normal" {
-		mata: _treatoprobit_rnd = `facscale'* ///
-								invnormal(halton(`nobs'*_treatoprobit_S,1,`startpoint',0))
-		
-		}
-		if "`facdensity'"=="uniform" {
-			mata: _treatoprobit_rnd = `facscale'*sqrt(12)* ///
-									((halton(`nobs'*_treatoprobit_S,1,`startpoint',0)):-0.5)
-		}
-		if "`facdensity'"=="chi2" {
-			local k = `=8/(`facskew'*`facskew')'
-			local sgn = `=sign(`facskew')'
-			mata: _treatoprobit_rnd = `facscale'/sqrt(2*`k')*`sgn'* ///
-									(invchi2(`k',halton(`nobs'*_treatoprobit_S, 1,`startpoint',0)):-`k')
-		}
-		if "`facdensity'"=="gamma"{
-			mata: _treatoprobit_rnd = invgammap(`facmean', halton(`nobs'*_treatoprobit_S,1, `startpoint',0)):-`facmean'
-			
-		}
-		if "`facdensity'"=="logit" {
-			mata: _treatoprobit_rnd= `facscale'*logit(halton(`nobs'*_treatoprobit_S,1,`startpoint',0))
-		}
-		if "`facdensity'"=="lognormal"{
-			mata: _treatoprobit_rnd = exp(`facscale'*invnormal(halton(`nobs'*_treatoprobit_S,1,`startpoint',0)))
-			mata: _treatoprobit_mean = mean(_treatoprobit_rnd)
-			//mata: _switchoprobit_mean
-			mata: _treatoprobit_rnd = _treatoprobit_rnd:-_treatoprobit_mean
-			}
-		if "`facdensity'"=="mixture" {
-			tempvar p1 p2
-			qui g double `p1' = runiform()<`pi1'
-			qui g double `p2' = 1-`p1'
-			local pi `p1' `p2'
-			mata: st_view(p=.,.,tokens(st_local("pi")))
-			mata: p1 = p[.,1]
-			mata: p2 = p[.,2]
-			mata: _treatoprobit_c1 = invnormal(halton(`nobs'*_treatoprobit_S,1,`startpoint',0))
-			mata: _treatoprobit_c2 = `facmean':+`facscale'*invnormal(halton(`nobs'*_treatoprobit_S,1,`startpoint',0))
-			mata: _treatoprobit_c1 = colshape(_treatoprobit_c1,  _treatoprobit_S)
-			mata: _treatoprobit_c2 = colshape(_treatoprobit_c2, _treatoprobit_S)
-			mata: _treatoprobit_rnd = p1:*_treatoprobit_c1:+p2:*_treatoprobit_c2
-			
-			}
-					
-		mata: _treatoprobit_rnd=colshape(_treatoprobit_rnd,_treatoprobit_S)
-		//mata: _treatoprobit_rnd[|1,1\5,cols(_treatoprobit_rnd)|]
-		local title "Treatment-effects Latent Factor Ordered Probit Regression"
-		di " "
-		di in green _newline "Fitting full model for treatment and outcome:"
-		ml model lf2 treatoprobitsim_work (`tlhs': `tlhs' = `trhs') ///
-			(`lhs': `lhs' = `rhs', noconstant) /lambda `cutpts' if `touse' ///
-			`wgt' ///
-			, ///
-			title(`title') ///
-			`robustopt'       ///
-			`clopt'        /// 
-			`mlopts'       ///
-			`start'        /// 
-			`di_cuts'      ///
-			`lambda'       ///
-			missing        ///
-			technique(nr)  ///
-			nonrtol       ///
-			maximize       //waldtest(2)
+        
+        if "`facdensity'"=="" {
+                local facdensity = "normal"
+        }
+        
+        
+        mata: _treatoprobit_S=st_numscalar("sim")
+        if "`facdensity'"=="normal" {
+                mata: _treatoprobit_rnd = `facscale'* ///
+                                                                invnormal(halton(`nobs'*_treatoprobit_S,1,`startpoint',0))
+                
+                }
+                if "`facdensity'"=="uniform" {
+                        mata: _treatoprobit_rnd = `facscale'*sqrt(12)* ///
+                                                                        ((halton(`nobs'*_treatoprobit_S,1,`startpoint',0)):-0.5)
+                }
+                if "`facdensity'"=="chi2" {
+                        local k = `=8/(`facskew'*`facskew')'
+                        local sgn = `=sign(`facskew')'
+                        mata: _treatoprobit_rnd = `facscale'/sqrt(2*`k')*`sgn'* ///
+                                                                        (invchi2(`k',halton(`nobs'*_treatoprobit_S, 1,`startpoint',0)):-`k')
+                }
+                if "`facdensity'"=="gamma"{
+                        mata: _treatoprobit_rnd = invgammap(`facmean', halton(`nobs'*_treatoprobit_S,1, `startpoint',0)):-`facmean'
+                        
+                }
+                if "`facdensity'"=="logit" {
+                        mata: _treatoprobit_rnd= `facscale'*logit(halton(`nobs'*_treatoprobit_S,1,`startpoint',0))
+                }
+                if "`facdensity'"=="lognormal"{
+                        mata: _treatoprobit_rnd = exp(`facscale'*invnormal(halton(`nobs'*_treatoprobit_S,1,`startpoint',0)))
+                        mata: _treatoprobit_mean = mean(_treatoprobit_rnd)
+                        //mata: _switchoprobit_mean
+                        mata: _treatoprobit_rnd = _treatoprobit_rnd:-_treatoprobit_mean
+                        }
+                if "`facdensity'"=="mixture" {
+                        tempvar p1 p2
+                        qui g double `p1' = runiform()<`pi1'
+                        qui g double `p2' = 1-`p1'
+                        local pi `p1' `p2'
+                        mata: st_view(p=.,.,tokens(st_local("pi")))
+                        mata: p1 = p[.,1]
+                        mata: p2 = p[.,2]
+                        mata: _treatoprobit_c1 = invnormal(halton(`nobs'*_treatoprobit_S,1,`startpoint',0))
+                        mata: _treatoprobit_c2 = `facmean':+`facscale'*invnormal(halton(`nobs'*_treatoprobit_S,1,`startpoint',0))
+                        mata: _treatoprobit_c1 = colshape(_treatoprobit_c1,  _treatoprobit_S)
+                        mata: _treatoprobit_c2 = colshape(_treatoprobit_c2, _treatoprobit_S)
+                        mata: _treatoprobit_rnd = p1:*_treatoprobit_c1:+p2:*_treatoprobit_c2
+                        
+                        }
+                                        
+                mata: _treatoprobit_rnd=colshape(_treatoprobit_rnd,_treatoprobit_S)
+                //mata: _treatoprobit_rnd[|1,1\5,cols(_treatoprobit_rnd)|]
+                local title "Treatment-effects Latent Factor Ordered Probit Regression"
+                di " "
+                di in green _newline "Fitting full model for treatment and outcome:"
+                ml model lf2 treatoprobitsim_work (`tlhs': `tlhs' = `trhs') ///
+                        (`lhs': `lhs' = `rhs', noconstant) /lambda `cutpts' if `touse' ///
+                        `wgt' ///
+                        , ///
+                        title(`title') ///
+                        `robustopt'       ///
+                        `clopt'        /// 
+                        `mlopts'       ///
+                        `start'        /// 
+                        `di_cuts'      ///
+                        `lambda'       ///
+                        missing        ///
+                        technique(nr)  ///
+                        nonrtol       ///
+                        maximize       //waldtest(2)
 ereturn local marginsnotok _ALL
 ereturn scalar k_aux = $ncut+1
 ereturn scalar simulationdraws = scalar(sim)
@@ -208,8 +210,8 @@ ereturn local facmean `facmean'
 ereturn local facskew `facskew'
 ereturn local predict "treatoprobitsim_p"
 if "`facdensity'"=="chi2" {
-		ereturn local facskew `facskew'
-	}
+                ereturn local facskew `facskew'
+        }
 ereturn local depvar "`tlhs' `lhs'"
 ereturn scalar cuts = $ncut
 ereturn scalar startpt = `startpoint'
@@ -227,10 +229,10 @@ qui test _b[lambda:_cons]=0
 local `lrtest' = round(`r(chi2)',.01)
 local `pval' = round(`r(p)',.01)
 di in yellow `"{p}Notes:{p_end}"'
-	di in gr `"{p}1. `e(simulationdraws)' Halton sequence-based quasirandom draws per observation{p_end}"'
-	di in gr `"{p}2. Latent factor density is `e(facdensity)'{p_end}"'
-	di in gr `"{p}3. Standard deviation of factor density is `e(facscale)'{p_end}"'
-	di in gr `"{p}4. Test of independent equations = ``lrtest''. Probability of independent equations ``pval''.{p_end}"'
+        di in gr `"{p}1. `e(simulationdraws)' Halton sequence-based quasirandom draws per observation{p_end}"'
+        di in gr `"{p}2. Latent factor density is `e(facdensity)'{p_end}"'
+        di in gr `"{p}3. Standard deviation of factor density is `e(facscale)'{p_end}"'
+        di in gr `"{p}4. Test of independent equations = ``lrtest''. Probability of independent equations ``pval''.{p_end}"'
 
 
 

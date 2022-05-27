@@ -111,6 +111,7 @@ p clean_name module to clean name variables
 p cleanchars module to replace specific characters or strings in variable names and/or variable labels and/or string variable values and/or value label names and levels with stated characters/strings (using 1-1 or m-1 match)
 p cleanlog module to clean log files
 p clemao_io module to perform unit root tests with one or two structural breaks
+p clipgeo module for polyline and polygon clipping
 p clogithet module to estimate heteroscedastic conditional logit model
 p clorenz module to estimate Lorenz and concentration curves
 p clrbound module to perform estimation and inference on intersection bounds

@@ -1,4 +1,4 @@
-*! version 2.21 21MAY2021
+*! version 2.40 26MAY2022
 
 /*
 History: Changes from version 1.0
@@ -22,13 +22,17 @@ version 2.20:
 	
 version 2.21:
 	1- The STLENGTH option  was added.
+	
+version 2.40:
+	1- The program does not save FactorLoadings file any more. Instead, it stores two matrices; fctrldngs for factor loadings and fctrscrs for factor scores, respectively.
+	2- Using "minimum" option, we can choose to display a minimum amount of output which includes factor scores, distinguishing statements, and consensus statements. 
 */
-program define qfactor 
+program define qfactor, rclass 
 version 12.0
 
 syntax varlist(min=3 numeric) [if] [in], NFActor(integer) [EXTraction(string)] ///
                       [ROTation(string)] [SCOre(string)] [ESize(string)] ///
-					  [BIPolar(string)] [STLength(string)]
+					  [BIPolar(string)] [STLength(string)] [MINimum]
 preserve
 foreach var in `varlist' {
 confirm variable `var'
@@ -59,7 +63,17 @@ if "`stlength'"=="" local stlength "50"
 global s=`stlength'
 replace statement=substr(statement,1,$s )
 
-factor `varlist', fa($n) `extraction'  /*Choose matrix extracting technique*/
+dis ""
+dis "       ******************************************************************"
+dis "          ******** FACTOR EXTRACTION METHOD =" " `extraction' *********"
+dis "       ******************************************************************"
+
+if "`minimum'" !="" {
+	qui factor `varlist', fa($n) `extraction'  /*Choose matrix extracting technique*/
+}
+else {
+	factor `varlist', fa($n) `extraction'  /*Choose matrix extracting technique*/
+}
 matrix unrotated=e(L)
 matrix unique=e(Psi) /* These 4 line calculate communality for each subject*/
 qui matrix unique=unique'
@@ -75,7 +89,12 @@ if "`rotation'"=="none" {
 matrix rotated=e(L) /*To save unrotated factor loadings*/
 }
 else {
-rotate, `rotation' normalize /*Rotating the extracted factors*/
+if "`minimum'" !="" {
+	qui rotate, `rotation' normalize /*Rotating the extracted factors*/
+}
+else {
+	rotate, `rotation' normalize /*Rotating the extracted factors*/
+}    
 
 matrix rotated=e(r_L) /*To save rotated factor loadings*/
 }
@@ -166,10 +185,12 @@ local j = 1
       label val Qsort Qsort
 
 format f* %5.2g
+if "`minimum'" =="" {
 dis ""
 dis   "********** Q-SORTS LOADED ON EACH FACTOR **********"
-list Qsort f* loaded* if f1 <., noobs sep(0)
 
+list Qsort f* loaded* if f1 <., noobs sep(0)
+}
 
 /*Next step: standardise the factor score*/
 
@@ -250,6 +271,10 @@ dis ""
 dis "       ************** z_scores and ranks for all Statements  **************"
 list StatNo zscore1-F_$n if F_1<. , noobs sep(0)
 
+//Storing factor scores in fctrscrs matrix*/
+mkmat StatNo zscore1-F_$n if F_1<., mat(fctrscrs)
+return matrix fctrscrs= fctrscrs
+
 /*Saving unrotated Factor loadings, factor scores and Factor variable, etc.*/
 
 svmat unrotated, names(unroL)
@@ -276,16 +301,18 @@ dis ""
 dis "               ************** Consensus Statements **************"
 list StatNo statement F_* if F_1<. & ds==0, noobs sep(0)
 
-/*Saving Factor Loadings in a different file*/
+/*Storing Factor Loadings in fctrldngs matrix*/
 qui keep Qsort Factor unique h2 unroL*   
 sort Qsort
 qui drop if Qsort>nsort
 matrix rotL=e(r_L)
 svmat rotL, names(rotL)
 order Qsort unroL* rotL* unique h2 Factor
-qui save FactorLoadings.dta, replace
+mkmat Qsort unroL* rotL* unique h2 Factor, mat(fctrldngs)
+return matrix fctrldngs= fctrldngs
 
 restore
-
+ereturn clear
+sreturn clear
 end
 

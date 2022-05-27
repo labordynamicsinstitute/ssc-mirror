@@ -1,5 +1,5 @@
 {smcl}
-{* *! Version 2.20 04JUN2019}{...}
+{* *! Version 2.40 24MAY2022}{...}
 
 {title:Title}
 
@@ -13,8 +13,8 @@
 {p 8 17 2}
 {cmdab:qfactor} {varlist} {ifin}
 {cmd:,}
-{cmdab:nfa:ctor(#)} [{cmdab:ext:raction(string)} {cmdab:rot:ation(string)} 
-{cmdab:sco:re(string)} {cmdab:es:ize(string)} {cmdab:bip:olar(string)} {cmdab:stl:ength(#)}] 
+{cmdab:nfa:ctor(#)} [{cmdab:ext:raction(string)} {cmdab:rot:ation(string)} {cmdab:sco:re(string)} 
+{cmdab:es:ize(string)} {cmdab:bip:olar(string)} {cmdab:stl:ength(#)} {cmdab:min:imum}] 
 
 {p}
 {bf:varlist} includes Q-sorts that need to be factor-analyzed.
@@ -73,6 +73,8 @@ It also provides number of Q-sorts loaded on each factor, distinguishing stateme
 
 {synopt :{opt stl:ength(#)}}it identifies the maximum length of characters for each statement to be displayed; {ul:the default length is 50 characters}.{p_end}
 
+{synopt :{opt min:imum}}a minimum amount of output is displayed which includes factor scores, distinguishing statements, and consensus statements}.{p_end}
+
 {title: Options for factor extraction}
 
 {phang}
@@ -96,14 +98,18 @@ specifies that the iterated principal-factor method be used to analyze the corre
 This reestimates the communalities iteratively. ipf is the default.
 
 
-{title:Saved results}
+{title:Stored results}
 
 {phang}
-In addition to the displayed results, qfactor saves a data file ({bf:FactorLoadings.dta}) in the working directory for subsequent use.
-The variables included in this file are Qsort (Qsort number), unrotated and rotated factor 
-loadings, unique (for the uniqueness of each Qsort), h2 (communality of the extracted factors), 
-Factor (which indicates which Q-sort was loaded on which factor). This file can be used for 
-subsequent analysis, e.g. producing loading-based graphs.
+In addition to the displayed results, qfactor stores two matrices in r().
+The first matrix is r(fctrldngs) and its columns includes variables such as Q-sort number, 
+unrotated and rotated factor loadings, uniqueness and communality of each Q-sort, 
+and Factor which indicates which Q-sort was loaded on what factor. The second matrix 
+is r(fctrscrs) which stores factor scores for all statements. This matrix contains 
+z-scores and ranked scores for the extracted factors. These matrices can be retrieved 
+and used in subsequent analysis, e.g., to compare factors scores based on different 
+factor extraction techniques, to compare demographic and other background variables 
+among the extracted factors, or to graphically display rotated and unrotated factor loadings.
 
 
 {title:Examples of qfactor}
@@ -163,45 +169,12 @@ each statement to a maximum of 30 characters in the output:{p_end}
 {phang2}
 {bf:qfactor qsort1-qsort40, nfa(3) ext(pcf) stl(30)}
 
-{title:Stored results: Useful for Stata programmers}
+{phang}
+The following command extracts 4 principal component factors using varimax rotation. It displays a minimum amount of output which includes factor scores, distinguishing statements and consensus statements:{p_end}
 
-    {bf:qfactor} stores the following in e():
+{phang2}
+{bf:qfactor qsort1-qsort40, nfa(4) ext(pcf) min}
 
-    {bf:Scalars}        
-      e(f)                number of retained factors
-      e(evsum)            sum of all eigenvalues
-      e(df_m)             model degrees of freedom
-      e(df_r)             residual degrees of freedom
-      e(chi2_i)           likelihood-ratio test of "independence vs. saturated"
-      e(df_i)             degrees of freedom of test of "independence vs.  saturated"
-      e(p_i)              p-value of "independence vs. saturated"
-
-    {bf:Macros}         
-      e(cmd)              factor
-      e(cmdline)          command as typed
-      e(method)           pf, pcf, or ipf
-      e(wtype)            weight type (factor only)
-      e(wexp)             weight expression (factor only)
-      e(title)            Factor analysis
-      e(mtitle)           description of method (e.g., principal factors)
-      e(heywood)          Heywood case (when encountered)
-      e(factors)          specified factors() option
-      e(properties)       nob noV eigen
-      e(rotate_cmd)       factor_rotate
-      e(estat_cmd)        factor_estat
-      e(predict)          factor_p
-      e(marginsnotok)     predictions disallowed by margins
-
-    {bf:Matrices}       
-      e(sds)              standard deviations of analyzed variables
-      e(means)            means of analyzed variables
-      e(C)                analyzed correlation matrix
-      e(Phi)              variance matrix common factors
-      e(L)                factor loadings
-      e(Psi)              uniqueness (variance of specific factors)
-      e(Ev)               eigenvalues
-
-	  
 {title:Author}
 
 {pstd}

@@ -17,11 +17,11 @@
 {title:Option}
 
 {phang}
-{opt estw(numlist)}   Set the estimatimation window.The default is (-200,-10), which stands for an estimation window starts from the 200th tradding days before the event date and ends at the 10th tradding day before the event date.
+{opt estw(string)}   Set the estimatimation window.The default is (-200,-10), which stands for an estimation window starts from the 200th tradding days before the event date and ends at the 10th tradding day before the event date.
 {p_end}
 
 {phang}
-{opt eventw(numlist)}   Define the event window.The default choice is (-3,5), which stands for an event window from the 3rd trading day before the event date to the 5th trading day aftern the event date.
+{opt eventw(string)}   Define the event window.The default choice is (-3,5), which stands for an event window from the 3rd trading day before the event date to the 5th trading day aftern the event date.Besides,multiple event windows also can be set up according to the user requirements.
 {p_end}
 
 {phang}
@@ -43,7 +43,7 @@
     {pstd}399001 Shenzhen Component Index.{p_end}
 	{pstd}399003 Shenzhen B-Share Component Index.{p_end}
 	{pstd}399005 Shenzhen small and mediam sized 100-firm Index.{p_end}	
-	{pstd}399006 Shenzhen Growth Enterprise Market Index. {p_end}
+	{pstd}399006 Shenzhen Growth Enterprise Market Index.{p_end}
 	{pstd}399008 Shenzhen small and mediam sized 300-firm Index.{p_end}
 	
 
@@ -54,6 +54,21 @@
 
 {phang}
 {opt filename(string)} Set a results file where Abnormal Return and Cumulative Abnormal Return will be saved in. The default is CAR,replace.
+{p_end}
+
+{phang}
+{opt carg(string)}  Draw a figure that plots the cumulative abnormal returns around eventdate.And set results file where the figure will be saved in. The default is (CAR), which stands for the results filename is CAR,the output format is gph. If as() is not specified, the output format is determined by the suffix of newfilename.
+{p_end}
+    {pstd}Output format: following are some commonly used format{p_end}
+    {pstd}ps PostScript.{p_end}
+	{pstd}eps The EPS (Encapsulated PostScript).{p_end}
+	{pstd}svg SVG (Scalable Vector Graphics).{p_end}
+    {pstd}pdf PDF (Portable Document Format).{p_end}
+    {pstd}png PNG (Portable Network Graphics).{p_end}
+	{pstd}other {p_end}
+	
+{phang}
+{opt t(string)}  Examine whether specific events had a significant effect on the CAR by t-test,and output the docx.
 {p_end}
 
 {marker description}{...}
@@ -146,7 +161,7 @@ To run this command, you only need to load your event list into memory containin
 {stata `"keep stkcd ed"'}
 {p_end}
 {phang}
-{stata `"cnevent stkcd ed,estw(-190 -10) eventw(-3 3) ar(AR_k) car(CAR_k) index(1) estsmpn(150)  filename(myeventstudy,replace)"'}
+{stata `"cnevent stkcd ed,estw(-190,-10) eventw(-3,3 -2,3 -1,5) ar(AR_k) car(CAR_k) index(1) estsmpn(150)  filename(myeventstudy,replace) carg(1p,pdf) t(ttest)"'}
 {p_end}
 
 

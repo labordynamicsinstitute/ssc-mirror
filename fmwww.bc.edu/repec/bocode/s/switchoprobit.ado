@@ -1,19 +1,22 @@
 capture program drop switchoprobit
-version 10
 program define switchoprobit, eclass sortpreserve 
+
+version 14.5
 *!version 1.0.0 cagregory
-	if replay() {
-		if ("`e(cmd)'" != "switchoprobit") error 301
-		Replay `0'
-		}
-	else Estimate `0'
+        if replay() {
+                if ("`e(cmd)'" != "switchoprobit") error 301
+                Replay `0'
+                }
+        else Estimate `0'
 end
 
 program define Estimate, eclass
 
 syntax anything(equalok) [if] [in] [pweight iweight fweight], treat(varlist) ///
- 	[vce(string) level(integer 95)]
+        [vce(string) level(integer 95)]
 
+		
+		
 *parse
 gettoken depvar2 indvar2: anything
 gettoken depvar1 indvar1: treat
@@ -24,27 +27,28 @@ mlopts mlopts, `options' //ml options
 
 gettoken firstvce restvce: vce
 
-if "`vce'"!=" " {
-if "`firstvce'" == "cluster"  {
-		local clopt "vce(cluster `restvce')"
-		}
-if "`firstvce'" == "robust" {
-		local robustopt "vce(robust)"
-		di "`robustopt'"
-		}
-}
+if "`vce'"!="" {
+if "`firstvce'" == "`cluster'"  {
+                local clopt "vce(cluster `restvce')"
+                di `clopt'
+                }
+if "`firstvce'" == "`robust'" {
+                local robustopt "vce(robust)"
+                //di "`robustopt'"
+                }
+
 if "`weight'" != "" {
-		tempvar wvar
-		quietly gen double `wvar' `exp'
-		local wgt "[`weight'=`wvar']"
-		local awgt "[aw=`wvar']"
-		}
+                tempvar wvar
+                quietly gen double `wvar' `exp'
+                local wgt "[`weight'=`wvar']"
+                local awgt "[aw=`wvar']"
+                }
 
 if "`level'"!="" {
-	tempname cilevel
-	global cilevel = `level'
+        tempname cilevel
+        global cilevel = `level'
 }
-
+}
 
 *mark sample
 marksample touse 
@@ -70,6 +74,8 @@ qui predict `ystar', xb
 mat `b_trt' = e(b)
 
 *outcome eq: ordered probit, treated
+
+
 di in gr _newline "Estimating Ordered Outcome Equation for Treatment Group"
 oprobit `depvar2' `indvar2' `wgt' if `depvar1' & `touse' , nocoef
 tempname b b_out_t cuts_t zstar_t 
@@ -105,9 +111,9 @@ mat `startmat' = `b_trt', `b_out_u', `b_out_t', `rho0_init', `rho1_init', `cuts_
 local cutpts1
 local cutpts0
 forvalues i = 1/$ncut {
-	local cutpts1 "`cutpts1' /cut_1`i'"
-	local cutpts0 "`cutpts0' /cut_0`i'"
-	}
+        local cutpts1 "`cutpts1' /cut_1`i'"
+        local cutpts0 "`cutpts0' /cut_0`i'"
+        }
 qui levelsof(`depvar2')
 global nchoices: word count `r(levels)'
 
@@ -120,9 +126,9 @@ local rho "`rho' diparm(atanh_rho1, tanh label("rho1")) diparm(__sep__)"
 local di_cuts1
 local di_cuts0
 forv i = 1/$ncut {
-	local di_cuts1 "`di_cuts1' diparm(cut_1`i')" 
-	local di_cuts0 "`di_cuts0' diparm(cut_0`i')"
-	}
+        local di_cuts1 "`di_cuts1' diparm(cut_1`i')" 
+        local di_cuts0 "`di_cuts0' diparm(cut_0`i')"
+        }
 local di_cuts "`di_cuts0' `di_cuts1' diparm(__sep__)"
 
 
@@ -130,22 +136,22 @@ local di_cuts "`di_cuts0' `di_cuts1' diparm(__sep__)"
 di in gr _newline "Estimating Full Model"
 ml model lf0 switchoprobit_work ("`depvar1'": `depvar1' = `indvar1')              ///
                                ("`depvar2'_0": `depvar2' = `indvar2', noconstant) ///
-							    ("`depvar2'_1": `depvar2' = `indvar2', noconstant) ///
+                                                            ("`depvar2'_1": `depvar2' = `indvar2', noconstant) ///
                           /atanh_rho0 /atanh_rho1 `cutpts0' `cutpts1' if `touse' ///
-							   `wgt' ///
-								 , ///
-							    title("Ordered Probit Switching Regression") ///
-							    init(`startmat', copy) ///
-							    search(off)            ///
-							    technique(nr)        ///
-							    nonrtol                ///
-							    maximize               ///
-							    `clopt'                ///
-							    `mlopts'			   ///
-							    `robustopt'               ///
-							   `di_cuts'               ///
-							   `athrho'                ///
-							   `rho'
+                                                           `wgt' ///
+                                                                 , ///
+                                                            title("Ordered Probit Switching Regression") ///
+                                                            init(`startmat', copy) ///
+                                                            search(off)            ///
+                                                            technique(nr)        ///
+                                                            nonrtol                ///
+                                                            maximize               ///
+                                                            `clopt'                ///
+                                                            `mlopts'                       ///
+                                                            `robustopt'               ///
+                                                           `di_cuts'               ///
+                                                           `athrho'                ///
+                                                           `rho'
 
 *ml init `startmat', copy 
 *ml check

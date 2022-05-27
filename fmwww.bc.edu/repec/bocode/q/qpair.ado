@@ -1,4 +1,4 @@
-*! version 1.00 21MAY2021
+*! version 1.10 12MAY2022
 
 program define qpair, rclass 
 version 12.0
@@ -173,11 +173,11 @@ scalar fcount`i'=r(N) /* Number of significant loadings for each factor*/
 drop ncount
 } 
 //
-gen Factor=0 //To identify which Qsort loaded on which factor
+gen Qfactor=0 //To identify which Qsort loaded on which factor
 forvalues i=1/$n {
 qui gen loaded`i'=f`i'
 qui recode loaded`i' (0=0)(nonmiss=1)
-qui replace Factor= `i' if loaded`i'==1
+qui replace Qfactor= `i' if loaded`i'==1
 }
 //
 qui gen Qsort=_n
@@ -192,19 +192,19 @@ list Qsort f1-f$n loaded1-loaded$n if f1 <., noobs sep(0)
 forvalues i=1/$n {
 qui egen zscore`i'=std(score`i')
 sort zscore`i' StatNo // To generate the same F's in the next line
-qui egen F_`i'=rank(zscore`i'), unique
+qui egen F`i'=rank(zscore`i'), unique
 }
 //
 /* Calculating the final synthesized Q-sort for each factor*/
 local j= dim1[1,1]
 local k= dim2[1,1]
-qui recode F_* (1/`j'=`k')
+qui recode F* (1/`j'=`k')
 
 forvalues i=2/`=r' {
 local l= dim1[`i'-1,1]+1
 local j= dim1[`i',1]
 local k= dim2[`i',1]
-qui recode F_* (`l'/`j'=`k')	
+qui recode F* (`l'/`j'=`k')	
 }		
 /*Identifying distiguishing statements for each factor*/
 
@@ -266,7 +266,7 @@ sort StatNo, stable
 dis ""
 dis ""
 dis "       ************** z_scores and ranks for all Statements  **************"
-list StatNo zscore1-F_$n if F_1<. , noobs sep(0)
+list StatNo zscore1-F$n if F1<. , noobs sep(0)
 
 /*Saving unrotated Factor loadings, factor scores and Factor variable, etc.*/
 
@@ -280,8 +280,8 @@ dis ""
 dis "             ********* Distinguishing Statements for Factor `i' **********"
 dis ""
 dis "                      Number of Q-sorts loaded on Factor `i'= " fcount`i'  
-gsort -F_`i' /*to sort ranks in decending order*/
-list StatNo statement F_* if F_1<. & ds`i'==$n-1, noobs sep(0)
+gsort -F`i' /*to sort ranks in decending order*/
+list StatNo statement F* if F1<. & ds`i'==$n-1, noobs sep(0)
 } 
 
 /* The following commands print Consensus statements*/ 
@@ -289,17 +289,19 @@ egen ds=rowtotal(ds*)
 dis ""
 dis ""
 dis "               ************** Consensus Statements **************"
-list StatNo statement F_* if F_1<. & ds==0, noobs sep(0)
+list StatNo statement F* if F1<. & ds==0, noobs sep(0)
 
-/*Saving Factor scores in a different file*/
-
+/*Saving Factor loadings in a different file*/
+ren Qfactor Factor
 qui keep Qsort Factor unique h2 unroL*   
 sort Qsort
 qui drop if Qsort>`nsort'
 matrix rotL=e(r_L)
 svmat rotL, names(rotL)
 order Qsort unroL* rotL* unique h2 Factor
-qui save FactorLoadings.dta, replace
+qui replace Factor=. if Factor==0
+mkmat Qsort unroL* rotL* unique h2 Factor, mat(fctrldngs)
+return matrix fctrldngs= fctrldngs
 }
 else {
 if "`approach'"=="2" | "`approach'"=="II" | "`approach'"=="two" {
@@ -399,11 +401,11 @@ scalar fcount`i'=r(N) /* Number of significant loadings for each factor*/
 drop ncount
 } 
 //
-gen Factor=0 //To identify which Qsort loaded on which factor
+gen Qfactor=0 //To identify which Qsort loaded on which factor
 forvalues i=1/$n {
 qui gen loaded`i'=f`i'
 qui recode loaded`i' (0=0)(nonmiss=1)
-qui replace Factor= `i' if loaded`i'==1
+qui replace Qfactor= `i' if loaded`i'==1
 }
 //
 qui gen Qsort=_n
@@ -418,19 +420,19 @@ list Qsort f* loaded* if f1 <., noobs sep(0)
 forvalues i=1/$n {
 qui egen zscore`i'=std(score`i')
 sort zscore`i'
-qui egen F_`i'=rank(zscore`i'), unique
+qui egen F`i'=rank(zscore`i'), unique
 }
 //
 /* Calculating the final synthesized Q-sort for each factor*/
 local j= dim1[1,1]
 local k= dim2[1,1]
-qui recode F_* (1/`j'=`k')
+qui recode F* (1/`j'=`k')
 
 forvalues i=2/`=r' {
 local l= dim1[`i'-1,1]+1
 local j= dim1[`i',1]
 local k= dim2[`i',1]
-qui recode F_* (`l'/`j'=`k')	
+qui recode F* (`l'/`j'=`k')	
 }		
 			 
 /*Identifying distiguishing statements for each factor*/
@@ -490,7 +492,7 @@ sort StatNo, stable
 dis ""
 dis ""
 dis "       ************** z_scores and ranks for all Statements  **************"
-list StatNo zscore1-F_$n if F_1<. , noobs sep(0)
+list StatNo zscore1-F$n if F1<. , noobs sep(0)
 
 /*Saving unrotated Factor loadings, factor scores and Factor variable, etc.*/
 
@@ -504,8 +506,8 @@ dis ""
 dis "       ******* Distinguishing Statements for Factor `i' at Baseline *******"
 dis ""
 dis "                      Number of Q-sorts loaded on Factor `i'= " fcount`i'  
-gsort -F_`i' /*to sort ranks in decending order*/
-list StatNo statement F_* if F_1<. & ds`i'==$n-1, noobs sep(0)
+gsort -F`i' /*to sort ranks in decending order*/
+list StatNo statement F* if F1<. & ds`i'==$n-1, noobs sep(0)
 } 
 
 /* The following commands print Consensus statements*/ 
@@ -513,17 +515,17 @@ egen ds=rowtotal(ds*)
 dis ""
 dis ""
 dis "        ************** Consensus Statements at Baseline **************"
-list StatNo statement F_* if F_1<. & ds==0, noobs sep(0)
+list StatNo statement F* if F1<. & ds==0, noobs sep(0)
 
-/*Saving Factor Loadings in a different file*/
+/*Storing Factor Loadings in a matrix */
 
 sort Qsort, stable
 matrix rotL=e(r_L)
 svmat rotL, names(rotL)
 
-mkmat Qsort unroL* rotL* unique h2 Factor, mat(FactorLoadings)
-return matrix FactorLoadings=FactorLoadings
+ren Qfactor Factor
 qui recode Factor(0=.)
+mkmat Qsort unroL* rotL* unique h2 Factor, mat(fctrldngs)
 
 dis ""
 dis ""
@@ -531,22 +533,23 @@ dis "     ******** Number of Q-sorts loaded on each factor at Baseline ********"
 tab Factor, gen(factor)
 qui recode factor* (.=0) if Qsort<=`nsort'  
 mkmat factor*, matrix(factors) nomis
-/*Cleaning and re-saving FactorScores file*/
-order StatNo zscore* F_*
+/*Cleaning and storing Factor Scores matrix*/
+ren Factor Qfactor
+order StatNo zscore* F*
 sort StatNo, stable
 qui drop if StatNo==.
 
-mkmat StatNo zscore* F_*, mat(FactorScores)
-return matrix FactorScores=FactorScores
+mkmat StatNo zscore* F*, mat(fctrscrs)
+return matrix fctrscrs=fctrscrs
 
 mkmat `second', matrix(Qsortafter)
 matrix A=Qsortafter*factors
 
-mkmat F_*, matrix(Fscores)
+mkmat F*, matrix(Fscores)
 svmat A, names(After)
 
 forvalues i=1/$n {
-ren F_`i' F`i'1
+ren F`i' F`i'_1
 }
 //
 forvalues i=1/$n {
@@ -567,32 +570,42 @@ qui recode rankAfter* (`l'/`j'=`k')
 }		
 //
 drop After* zAfter*
-ren rankAfter* F*2
+ren rankAfter* F*_2
 
 /*Writing Distinguishing Statements*/
 order _all, seq
 forvalues i=1/$n {
 dis ""
 dis ""
-dis "    **** Score Differences in Distinguishing Statements for Factor `i' ****"
+dis "    **** Factor Scores for Distinguishing Statements for Factor `i' ****"
 dis ""
 dis "                      Number of Q-sorts loaded on Factor `i'= " fcount`i'  
-gsort -F`i'1 /*to sort ranks in decending order*/
-list StatNo statement F`i'* if F11<. & ds`i'==$n-1, noobs sep(0)
+gsort -F`i'_1 /*to sort ranks in decending order*/
+list StatNo statement F`i'* if F1_1<. & ds`i'==$n-1, noobs sep(0)
 } 
 //
 sort StatNo, stable
-drop Factor
-dis ""
-dis "    ******** Score Differences for all Statements for all Factors ********"
-list StatNo statement F* if F11<. , noobs sep(0)
 
+dis ""
+dis "    ******** Factor Scores for all Statements for all Factors ********"
+list StatNo statement F* if F1_1<. , noobs sep(0)
+
+//Storing Factor Loadings matrix
+clear
+qui svmat fctrldngs, names(col)
+matrix drop fctrldngs
+qui drop if Qsort>`nsort'
+qui replace Factor=. if Factor==0
+mkmat Qsort unroL* rotL* unique h2 Factor, mat(fctrldngs)
+return matrix fctrldngs= fctrldngs
 }
 else {
 dis as err "********** `approach' is not an acceptable approach. **********" 
 }
 }
 // 
-restore
 
+restore
+ereturn clear
+sreturn clear
 end

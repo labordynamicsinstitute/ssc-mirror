@@ -1,19 +1,24 @@
 capture program drop treatoprobit
-version 10.0
+
 program define treatoprobit, eclass sortpreserve 
+version 15
+
 *!version 1.0.0 cagregory
-	if replay() {
-		if ("`e(cmd)'" != "treatobprobit") error 301
-		Replay `0'
-		}
-	else Estimate `0'
+        if replay() {
+                if ("`e(cmd)'" != "treatobprobit") error 301
+                Replay `0'
+                }
+        else Estimate `0'
 end
 
 program define Estimate, eclass
 
 syntax anything(equalok) [if] [in] [pweight iweight fweight], treat(varlist) ///
- 	[vce(string) level(integer 95)  ]
+        [vce(string) level(integer 95)  ]
 
+di "Hi!"
+		
+		
 *parse
 gettoken depvar2 indvar2: anything
 gettoken depvar1 indvar1: treat
@@ -22,25 +27,24 @@ local indvar2 "`indvar2' `depvar1'"
 
 *options
 mlopts mlopts, `options' //ml options
+
+if "`vce'"!= "" {
 gettoken firstvce restvce: vce
 
-if "`vce'"!= " " {
-if "`firstvce'" == "cluster"  {
-		local clopt "vce(cluster `restvce')"
-		di "`clopt'"
-		}
-if "`firstvce'" == "robust" {
-		local robustopt "vce(robust)"
-		di "`robustopt'"
-		}
+if "`firstvce'" == "`cluster'"  {
+                local clopt "vce(cluster `restvce')"
+                }
+if "`firstvce'" == "`robust'" {
+                local robustopt "vce(robust)"
+                
+                }
 }
-
 if "`weight'" != "" {
-		tempvar wvar
-		quietly gen double `wvar' `exp'
-		local wgt "[`weight'=`wvar']"
-		local awgt "[aw=`wvar']"
-		}
+                tempvar wvar
+                quietly gen double `wvar' `exp'
+                local wgt "[`weight'=`wvar']"
+                local awgt "[aw=`wvar']"
+                }
 
 
 
@@ -87,8 +91,8 @@ mat `startmat' = `b_trt', `b_out', `rho_init', `cuts'
 
 local cutpts
 forvalues i = 1/$ncut {
-	local cutpts "`cutpts' /cut`i'"
-	}
+        local cutpts "`cutpts' /cut`i'"
+        }
 qui levelsof(`depvar2')
 global nchoices: word count `r(levels)'
 
@@ -98,8 +102,8 @@ local athrho diparm(atanh_rho)
 local rho diparm(atanh_rho, tanh label("rho"))
 local di_cuts
 forv i = 1/$ncut {
-	local di_cuts "`di_cuts' diparm(cut`i') " 
-	}
+        local di_cuts "`di_cuts' diparm(cut`i') " 
+        }
 local di_cuts "`di_cuts' diparm(__sep__)"
 *full model
 constraint 1 _b[cut1:_cons] = 0
@@ -107,20 +111,20 @@ di in gr _newline "Estimating Full Model"
 ml model lf2 treatoprobit_work ("`depvar1'": `depvar1' = `indvar1')              ///
                                ("`depvar2'": `depvar2' = `indvar2', noconstant) ///
                                /atanh_rho `cutpts' if `touse'               ///
-							   `wgt' ///
-								 , ///
-							    title("Treatment Effects Ordered Probit Regression") ///
-							    init(`startmat', copy) ///
-							    search(off)            ///
-							    maximize               ///
-							    `clopt'                ///
-							    `mlopts'			    ///
-							    `robustopt'               ///
-							   `di_cuts'               ///
-								`athrho'                ///
-								technique(nr)           ///
-								nonrtol                   ///
-								`rho'
+                                                           `wgt' ///
+                                                                 , ///
+                                                            title("Treatment Effects Ordered Probit Regression") ///
+                                                            init(`startmat', copy) ///
+                                                            search(off)            ///
+                                                            maximize               ///
+                                                            `clopt'                ///
+                                                            `mlopts'                        ///
+                                                            `robustopt'               ///
+                                                           `di_cuts'               ///
+                                                                `athrho'                ///
+                                                                technique(nr)           ///
+                                                                nonrtol                   ///
+                                                                `rho'
 
 *ml init `startmat', copy 
 //ml check

@@ -22,10 +22,16 @@
 {title: Description}
 
 {pstd}
-{cmd:qpair} performs by-person factor analysis on paired Q-sorts. The command performs factor analysis on pairs of Q-sorts (matched Q-sorts) using either principal factor, iterated principal factor, or principal-component factor extraction methods. 
-{cmd:qpair} is also able to rotate factors using all factor rotation techniques available in Stata (orthogonal and oblique) including varimax, quartimax, equamax, obminin, and promax. 
-{cmd:qpair} displays the eigenvalues of the correlation matrix, the factor loadings, and the uniqueness of the variables. It also provides number of Q-sorts loaded on each factor, distinguishing statements for each factor, and consensus statements. 
-{cmd:qpair} is able to handle bipolar factors and identify distinguishing statements based on {it:Cohen's effect size (d)}.
+{cmd:qpair} performs by-person factor analysis on paired Q-sorts. The command performs factor 
+analysis on pairs of Q-sorts (matched Q-sorts) using either principal factor, iterated 
+principal factor, or principal-component factor extraction methods.{p_end} 
+
+{cmd:qpair} is also able to rotate factors using all factor rotation techniques available in 
+Stata (orthogonal and oblique) including varimax, quartimax, equamax, obminin, and promax.{p_end} 
+{cmd:qpair} displays the eigenvalues of the correlation matrix, the factor loadings, 
+and the uniqueness of the variables. It also provides number of Q-sorts loaded on each 
+factor, distinguishing statements for each factor, and consensus statements. 
+{cmd:qpair} is able to handle bipolar factors and identify distinguishing statements based on {it:Cohen's effect size (d)}.{p_end}
 
 {pstd}
 Variables used in {cmd:qpair} are Q-sorts. {cmd:qpair} is able to extract factors for subgroup of Q-sorts using “if” and “in” options. 
@@ -68,10 +74,12 @@ Variables used in {cmd:qpair} are Q-sorts. {cmd:qpair} is able to extract factor
 
 {synopt :{opt es:ize(string)}}it specifies how the distinguishing statements to be identified for each factor. The options include:{p_end}
 {synoptline}
-{synopt:{opt stephenson}}distinguishing statements are identified based on Stephenson's formula as described by Brown (1980); {ul:this is the default option}.{p_end}
+{synopt:{opt stephenson}}distinguishing statements are identified based on Stephenson's 
+formula as described by Brown (1980); {ul:this is the default option}.{p_end}
 {synopt:{opt any #}}for any # between zero and one (0<#≤1) distinguishing statements are identified based on Cohen's d.{p_end}
 
-{synopt :{opt bip:olar(string)}}defines the criteria for a bipolar factor, it calculates the factor scores for each bipolar factor seperately. This option works only with Brown’s factor scores. The options include:{p_end}
+{synopt :{opt bip:olar(string)}}defines the criteria for a bipolar factor, it calculates the factor 
+scores for each bipolar factor seperately. This option works only with Brown’s factor scores. The options include:{p_end}
 {synoptline}
 {synopt:{opt 0 or no}}indicates no assessment of a bipolar factor; {ul:the default approach}{p_end}
 {synopt:{opt any #}}any integer number more than 0 indicates number of negative loadings required for a bipolar factor.{p_end}
@@ -101,20 +109,31 @@ specifies that the iterated principal-factor method be used to analyze the corre
 This reestimates the communalities iteratively. {ul:ipf is the default approach}.
 
 
-{title:Saved results}
+{title:Stored results}
 
 {phang}
-In addition to the displayed results, qpair saves a data file ({bf:FactorLoadings.dta}) in the working directory for subsequent use. The variables included in this file are Qsort (Qsort number), unrotated and rotated factor 
-loadings, unique (for the uniqueness of each Qsort), h2 (communality of the extracted factors), 
-Factor (which indicates which Q-sort was loaded on which factor). This file may be used for 
-subsequent analysis, e.g. producing loading-based graphs.
+In addition to the displayed results, qpair stores two matrices in r(). The first matrix is 
+r(fctrldngs) and its columns includes variables such as Q-sort number, unrotated and rotated 
+factor loadings, uniqueness and communality of each Q-sort, and Factor which indicates which 
+Q-sort was loaded on what factor. The second matrix is r(fctrscrs) which stores factor scores 
+for all statements. This matrix is generated only when approach II is used and contains 
+z-scores and ranked scores for the extracted factors. These matrices can be retrieved and 
+used in subsequent analysis, e.g., to compare factors scores based on different factor 
+extraction techniques, to compare demographic and other background variables among the 
+extracted factors, or to graphically display rotated and unrotated factor loadings.{p_end}
+
 
 
 {title:Examples of qpair}
 
 {phang} 
-{bf:qpairdata.dta:} This dataset includes perceptions of 50 IT professionals on person-organization fit with training and development priorities (Wingreen & Blanton 2018). Each IT professional completed two Q-sorts, one Q-sort for the person’s priorities and one Q-sort for the organization's priorities. The organizational priorities are the basically the person’s subjective perception or understanding of the organizational priorities. 
-The study was conducted using 27 statements. Q-sorts are named Q-sort1_1, Q-sort2_1,…, Q-sort50_1 for person's priorities and Q-sort1_2, Q-sort2_2,…, Q-sort50_2 for organization's priorities.{p_end} 
+{bf:qpairdata.dta:} This dataset includes perceptions of 50 IT professionals on person-organization 
+fit with training and development priorities (Wingreen & Blanton 2018). Each IT professional completed 
+two Q-sorts, one Q-sort for the person’s priorities and one Q-sort for the organization's priorities. 
+The organizational priorities are the basically the person’s subjective perception or understanding 
+of the organizational priorities. The study was conducted using 27 statements. Q-sorts are 
+named Q-sort1_1, Q-sort2_1,…, Q-sort50_1 for person's priorities and Q-sort1_2, Q-sort2_2,…, 
+Q-sort50_2 for organization's priorities.{p_end} 
 
 {phang}
 The following commands conduct analysis using {bf:approach I} to extract 3 {bf:ipf} factors using varimax rotation:{p_end}
@@ -164,51 +183,13 @@ Same as above to use {bf:regression} factor scores
 {phang2}
 {bf:qpair, first(qsort*_1) second(qsort*_2) nfa(3) app(II) ext(pcf) score(regression)}
 
-{title:Stored results: Useful for Stata programmers}
-
-    {bf:qpair} stores the following in e():
-
-    {bf:Scalars}        
-      e(f)                number of retained factors
-      e(evsum)            sum of all eigenvalues
-      e(df_m)             model degrees of freedom
-      e(df_r)             residual degrees of freedom
-      e(chi2_i)           likelihood-ratio test of "independence vs. saturated"
-      e(df_i)             degrees of freedom of test of "independence vs.  saturated"
-      e(p_i)              p-value of "independence vs. saturated"
-
-    {bf:Macros}         
-      e(cmd)              factor
-      e(cmdline)          command as typed
-      e(method)           pf, pcf, or ipf
-      e(wtype)            weight type (factor only)
-      e(wexp)             weight expression (factor only)
-      e(title)            Factor analysis
-      e(mtitle)           description of method (e.g., principal factors)
-      e(heywood)          Heywood case (when encountered)
-      e(factors)          specified factors() option
-      e(properties)       nob noV eigen
-      e(rotate_cmd)       factor_rotate
-      e(estat_cmd)        factor_estat
-      e(predict)          factor_p
-      e(marginsnotok)     predictions disallowed by margins
-
-    {bf:Matrices}       
-      e(sds)              standard deviations of analyzed variables
-      e(means)            means of analyzed variables
-      e(C)                analyzed correlation matrix
-      e(Phi)              variance matrix common factors
-      e(L)                factor loadings
-      e(Psi)              uniqueness (variance of specific factors)
-      e(Ev)               eigenvalues
-
-	  
+	
 {title:Author}
 
 {pstd}
 {bf:Noori Akhtar-Danesh} ({ul:daneshn@mcmaster.ca}), McMaster University, Hamilton, CANADA
 
-{title:Reference}
+{title:References}
 
 {pstd}
 {bf:Akhtar-Danesh N.} qfactor: A command for Q-methodology analysis. {it:The Stata Journal}. 2018;18(2):432-446.
