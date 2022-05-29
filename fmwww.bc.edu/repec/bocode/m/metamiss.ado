@@ -1,5 +1,8 @@
 /*
-*! version 3.16  Ian White 02oct2018
+*! version 3.17  16may2022
+	handles new metan which returns results on log RR/OR scale
+	with thanks to David Fisher 15feb2022
+version 3.16  Ian White 02oct2018
 version 3.16  Ian White 02oct2018
 	corrected error message if called with no observations
 	check if logimor() etc are variables, and if so return an error
@@ -26,7 +29,7 @@ version 3.1   24apr2007 - graphs fixed
 version 3.0    9feb2007 - combined Ian's and Julian's programs
 */
 
-prog def metamiss
+program define metamiss
 version 10.1
 
 * Note: this file includes programs expectn, exit498
@@ -36,17 +39,18 @@ version 10.1
 if _N==0 error 2000
 
 tempvar one
-gen `one'=1
-cap metan `one' `one' `one' `one', nointeger nograph
-local oldmetan = _rc>0
-cap metan `one' `one', nograph
-local oldmetan = `oldmetan' | _rc>0
-if `oldmetan' {
+gen byte `one'=1
+capture {
+	metan `one' `one' `one' `one', nointeger nograph
+	metan `one' `one', nograph
+}
+if _rc {
     di as error "Your version of -metan- appears to be too old to be compatible with -metamiss-."
     di as error "Please upgrade to a more recent version (e.g. from http://fmwww.bc.edu/RePEc/bocode/m)."
     di as error "You can do this simply by running " as input "{stata net install metan, replace}" 
     exit 498
 }
+local oldmetan = (`"`r(metan_version)'"'==`""')		// DF 15feb2022: if r(metan_version) not returned, must be v3.04 or older
 drop `one'
 
 ************************************ COMMON PARSING ************************************
@@ -727,8 +731,8 @@ if "`weight'"=="w1" {
 }
 else if "`weight'"=="w2" {
    * ACA fixed-effect analysis for standard errors
-   quiet metan `rE' `fE' `rC' `fC', fixedi `or' `rr' `rd' nointeger nograph
-   if "`measure'"=="RD" qui gen `sestar' = _seES
+   qui metan `rE' `fE' `rC' `fC', fixedi `or' `rr' `rd' nointeger nograph
+   if "`measure'"=="RD" | !`oldmetan' qui gen `sestar' = _seES		// DF 15feb2022: if metan v4.0+, use _seES rather than _selogES
    else qui gen `sestar' = _selogES
 }
 else if "`weight'"=="w3" {
@@ -828,26 +832,30 @@ if `nmeasures'==1 {
     if `"`idopt'`options'`eform'`graph'"'!="" di as text `"with options: `idopt' `options' `eform' `graph'"' _c
     di as text " ...)"
     if "`debug'"=="debug" di `"metan `eststar' `sestar' `if' `in', `idopt' `options' `eform' `graph'"'
-qui count if mi(`eststar',! `sestar')
-if r(N)>0 {
-    di as error "Missing values of estimate and/or standard error found"
-    foreach name in eststar sestar pEstar pCstar {
-        char ``name''[varname] `name'
-    }
-    l `id' `eststar' `sestar' `pEstar' `pCstar' if mi(`eststar',! `sestar'), subvarname
-    exit 498
-}
+
+	qui count if mi(`eststar', !`sestar')
+	if r(N)>0 {
+		di as error "Missing values of estimate and/or standard error found"
+		foreach name in eststar sestar pEstar pCstar {
+			char ``name''[varname] `name'
+		}
+		l `id' `eststar' `sestar' `pEstar' `pCstar' if mi(`eststar',! `sestar'), subvarname
+		exit 498
+	}
+
     metan `eststar' `sestar' `if' `in', `idopt' `options' `eform' `graph' effect(`log' `measure')
-    qui gen _ES = `eststar'
-    if "`eform'"=="eform" qui replace _ES=exp(_ES)
-    if "`measure'"!="RD" & "`log'"!="log" local selog log
-    qui gen _se`selog'ES = `sestar'
-    label var _ES        "`measurename'"
-    label var _LCI       "Lower CI (`measurename')"
-    label var _UCI       "Upper CI (`measurename')"
-    label var _se`selog'ES "se(`semeasurename')"
-    move _ES _LCI
-    move _se`selog'ES _LCI
+	if `oldmetan' {		// added DF 15feb2022
+		qui gen _ES = `eststar'
+		if "`eform'"=="eform" qui replace _ES=exp(_ES)
+		if "`measure'"!="RD" & "`log'"!="log" local selog log
+		qui gen _se`selog'ES = `sestar'
+		label var _ES        "`measurename'"
+		label var _LCI       "Lower CI (`measurename')"
+		label var _UCI       "Upper CI (`measurename')"
+		label var _se`selog'ES "se(`semeasurename')"
+		move _ES _LCI
+		move _se`selog'ES _LCI
+	}
 }
 else {
     di _newline as text "More than one measure specified: meta-analysis not performed."

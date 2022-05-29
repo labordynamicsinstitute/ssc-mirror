@@ -1,0 +1,33 @@
+d 'EXQUANTILE': module for estimation and inference for (conditional) extremal quantiles
+d
+d  This program estimates (conditional) extremal quantiles based on
+d the nearest neighbor method for Hill's estimator of the tail
+d index. If indepvar is absent in the command line, then the
+d unconditional extremal quantile is computed.	If indepvar is
+d present in the command line, then the conditional extremal
+d quantile is computed given the value of indepvar specified by the
+d xval option. To compute conditional extremal quantiles given a
+d continuous indepvar, the data have to be either panel or repeated
+d cross-sectional data.  For unconditional extremal quantiles (or
+d conditional extremal quantiles given a discrete variable), on the
+d other hand, data can be cross-sectional or repeated
+d cross-sectional. 
+d
+d KW: quantiles
+d KW: conditional quantiles
+d KW: estimation
+d KW: inference
+d
+d Requires: Stata version 14.2
+d
+d Distribution-Date: 20220528
+d
+d Author: Yuya Sasaki, Department of Economics, Vanderbilt University
+d Support: email yuya.sasaki@@gmail.com
+d
+d Author: Yulong Wang, Syracuse University 
+d Support: email ywang402@@syr.edu
+d
+f exquantile.ado
+f exquantile.sthlp
+f ../n/natl_random.dta

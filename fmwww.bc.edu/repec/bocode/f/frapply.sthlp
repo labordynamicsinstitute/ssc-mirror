@@ -1,5 +1,5 @@
 {smcl}
-{* version 1.0  26jan2022  Gorkem Aksaray <gaksaray@ku.edu.tr>}
+{* version 1.1.0  21mar2022  Gorkem Aksaray <gaksaray@ku.edu.tr>}
 {viewerjumpto "Syntax" "frapply##syntax"}{...}
 {viewerjumpto "Description" "frapply##description"}{...}
 {viewerjumpto "Options" "frapply##options"}{...}
@@ -7,6 +7,7 @@
 {viewerjumpto "Examples" "frapply##examples"}{...}
 {viewerjumpto "Remarks" "frapply##remarks"}{...}
 {viewerjumpto "Author" "frapply##author"}{...}
+{vieweralsosee "gautils" "help gautils"}{...}
 {cmd:help frapply}{right: {browse "https://github.com/gaksaray/stata-gautils/"}}
 {hline}
 
@@ -31,7 +32,7 @@
 where the syntax of {it:commandlist} is 
 
 {p 8 16 2}
-{it:command} [ || {it:command} [ || {it:command} [...]]]
+{it:command} [ |> {it:command} [ |> {it:command} [...]]]
 
 {pstd}
 and {it:command} is any Stata command.
@@ -104,40 +105,46 @@ Applying serial commands interactively
 {phang}{input:. frapply if price > 5000 & mpg > 15, into(subset)}{p_end}
 
 {phang}{input:. frapply, into(subset, replace change): ///}{p_end}
-{phang}{input:{space 6}keep if price > 5000 ||{space 12}///}{text: you may change these numbers}{p_end}
-{phang}{input:{space 6}keep if mpg > 15{space 5}||{space 12}///}{text: and run frapply again}{p_end}
+{phang}{input:{space 6}keep if price > 5000 |>{space 12}///}{text: you may change these numbers}{p_end}
+{phang}{input:{space 6}keep if mpg > 15{space 5}|>{space 12}///}{text: and run frapply again}{p_end}
 {phang}{input:{space 6}collapse price mpg, by(foreign)}{text:{space 5}// to see the result change}{p_end}
 
 {pstd}
 Listing means by group
 
 {phang}{input:. sysuse auto, clear}{p_end}
-{phang}{input:. frapply: collapse price mpg, by(foreign) || list}
+{phang}{input:. frapply: collapse price mpg, by(foreign) |> list}
 
 {pstd}
 Displaying predictive margins
 
 {phang}{input:. sysuse auto, clear}{p_end}
-{phang}{input:. frapply, qui: reg price mpg || predict yhat || collapse yhat || noi l}{p_end}
+{phang}{input:. frapply, qui: reg price mpg |> predict yhat |> collapse yhat |> noi l}{p_end}
 
 
 {marker remarks}{...}
 {title:Remarks}
 
 {pstd}
+{cmd:frapply} uses |>-separator to daisy chain commands, somewhat similar to {browse "https://stat.ethz.ch/R-manual/R-devel/library/base/html/pipeOp.html":the pipe operator in R} (and in {browse "https://magrittr.tidyverse.org/":Tidyverse}).
+This was changed from an earlier version of {cmd:frapply} in which the separator was ||.
+This is in order to distinguish it from the ||-separator notation used in {help twoway}, which denotes serial superimposition rather than chaining.
+The |> operator makes it clear that it acts as a forward pipe, and is also more familiar for folks coming from R.
+
+{pstd}
 One seeming limitation of using daisy-chained {it:commandlist} is that macros produced by a command may not be an input of a subsequent command.
-For example, {cmd:summary || di `r(mean)'} would summarize the dataset but not display {cmd:r(mean)}, as Stata would substitute the local macro before {cmd:frapply} starts to run.
+For example, {cmd:summary |> di `r(mean)'} would summarize the dataset but not display {cmd:r(mean)}, as Stata would substitute the local macro before {cmd:frapply} starts to run.
 
 {pstd}
 To illustrate,
 
 {phang}{input:. sysuse auto, clear}{p_end}
-{phang}{input:. frapply, qui: sum price || noi di r(mean)}{p_end}
+{phang}{input:. frapply, qui: sum price |> noi di r(mean)}{p_end}
 
 {pstd}
 displays the mean. However,
 
-{phang}{input:. frapply, qui: sum price || noi di `r(mean)'}{p_end}
+{phang}{input:. frapply, qui: sum price |> noi di `r(mean)'}{p_end}
 
 {pstd}
 doesn't display the mean, as the local macro {cmd:`r(mean)'} is substituted to nothing right before {cmd:frapply} runs.
@@ -146,7 +153,7 @@ doesn't display the mean, as the local macro {cmd:`r(mean)'} is substituted to n
 This can be circumvented by using escape character "\" before any macro.
 In the same example,
 
-{phang}{input:. frapply, qui: sum price || noi di \`r(mean)'}{p_end}
+{phang}{input:. frapply, qui: sum price |> noi di \`r(mean)'}{p_end}
 
 {pstd}
 does display the mean.

@@ -204,6 +204,7 @@ p rollreg module to perform rolling regression estimation
 p rollstat module to compute rolling-window statistics for time series or panel data
 p roman module for handling Roman numerals and decimal equivalents 
 p romantoarabic module  for converting roman numerals to arabic numbers
+p rori module for estimation of selection bias through relative odds ratio (ROR) with large sample confidence interval 
 p rosali module to detect of response shift at item-level between two times of measurement
 p rosssekh module to perform forecast comparison and forecast rationality tests
 p rotate2 module to produce sorted and labeled rotated matrix

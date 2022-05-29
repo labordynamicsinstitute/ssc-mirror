@@ -47,7 +47,7 @@
 {synopt:{opt bound(#)}}clipping bound for the variables{p_end}
 
 {syntab:Placebo Tests}
-{synopt:{cmdab: placebo}([{{bf:unit}|{opth unit(numlist)}} {opth period(numlist)} {opt cut:off(#_c)}])}in-space placebo test using fake treatment units and/or in-time placebo test using a fake treatment time{p_end}
+{synopt:{cmdab: placebo}([{{bf:unit}|{opth unit(numlist)}} {opth period(numlist)} {opt cut:off(#_c)} {opt show(#_s)}])}in-space placebo test using fake treatment units and/or in-time placebo test using a fake treatment time{p_end}
 
 {syntab:Robustness Test}
 {synopt:{cmdab: loo}}Robustness test that excludes one unit in the donor pool with nonzero weight{p_end}
@@ -144,7 +144,7 @@ The user may tune the maximize settings depending on his application (e.g., like
 {dlgtab:Placebo Tests}  
 
 {phang}
-{cmdab: placebo}([{{bf:unit}|{opth unit(numlist)}} {opth period(numlist)} {opt cutoff(#_c)}]) specifies the types of placebo tests to be performed; otherwise, no placebo test will be implemented.
+{cmdab: placebo}([{{bf:unit}|{opth unit(numlist)}} {opth period(numlist)} {opt cutoff(#_c)} {opt show(#_s)}]) specifies the types of placebo tests to be performed; otherwise, no placebo test will be implemented.
 
 {phang2} 
 {{bf:unit}|{opth unit(numlist)}} specifies placebo tests using fake treatment units in donor pool, 
@@ -158,6 +158,11 @@ and calculate the p-values of the treatment effects. Note that only one of {bf:u
 {phang2} 
 {opt cutoff(#_c)} specifies a cutoff threshold that discards fake treatment units with pre-treatment MSPE {it:#_c} times larger than that of the treated unit, where {it:#_c} must be a real number greater than or equal to 1. 
 This option only applies when {bf:unit} or {opth unit(numlist)} is specificed. If this option is not specified, then no fake treatment units are discarded.
+
+{phang2} 
+{opt show(#_s)} specifies the number of units to show in the post/pre MSPE graph, which correponds to units with the largest {it:#_s} ratios of post-treatment MSPE to pre-treatment MSPE.
+This option only applies when {bf:unit} or {opth unit(numlist)} is specificed. 
+If this option is not specified, the default is to show post/pre MSPE ratios for all units.
 
 {dlgtab:Robustness Test}  
 
@@ -264,7 +269,7 @@ Abadie, A. and Gardeazabal, J. 2003. Economic Costs of Conflict: A Case Study of
 {it:American Economic Review} 93(1): 113-132.
 
 {phang}
-Yan, G. and Chen, Q. 2021. synth2: Synthetic Control Method with Placebo Tests, Robustness Test and Visualization. 
+Yan, G. and Chen, Q. 2022. synth2: Synthetic Control Method with Placebo Tests, Robustness Test and Visualization. 
 {it:Shandong University Working Paper}.
 
 {marker author}{...}

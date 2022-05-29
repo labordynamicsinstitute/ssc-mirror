@@ -109,6 +109,7 @@ p expl module to explore folders and files
 p explist module to generate an exponentially-spaced list of numbers
 p explorelabs module to explore the use of value labels in the dataset
 p expy module to calculate the EXPY-index as proposed by Hausmann et al. (2007)
+p exquantile module for estimation and inference for (conditional) extremal quantiles
 p extfunnel module to produce graphical augmentations to the funnel plot to indicate the potential impact of a new study on an existing meta-analysis
 p extreme module to fit models used in univariate extreme value theory
 p extremes module to list extreme values of a variable

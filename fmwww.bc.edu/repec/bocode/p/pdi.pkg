@@ -1,0 +1,24 @@
+d 'PDI': module  to calculate the polytomous discrimination index (PDI)
+d
+d  This program calculates the polytomous discrimination index
+d (PDI) which was proposed by Calster et al. (2012). PDI extends
+d the binary discrimination measure, the c-statistic or area under
+d the ROC curve (AUC), to nominal settings. 
+d
+d KW: discrimination
+d KW: c-statistic
+d KW: AUC
+d KW: polytomous discrimination index
+d KW: polytomous regression
+d KW: multinomial regression
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20220528
+d
+d Author: Chao Wang, Faculty of Health, Social Care and Education, Kingston University and St George's, University of London
+d Support: email excelwang@@gmail.com
+d
+f pdi.ado
+f pdi_outcome.ado
+f pdi.sthlp

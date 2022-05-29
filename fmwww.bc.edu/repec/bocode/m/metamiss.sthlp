@@ -1,28 +1,48 @@
 {smcl}
+{* updated 16may2022}{* Ian White}{...}
 {* 7sep2007}{* Ian White}{...}
-{* updated 02oct2018}{* Ian White}{...}
-{hline}
-{cmd:help metamiss}
-{hline}
+{vieweralsosee "metan (if installed)" "metan"}{...}
+{vieweralsosee "metamiss2 (if installed)" "metamiss2"}{...}
+{viewerjumpto "Description" "metamiss##Description"}{...}
+{viewerjumpto "Data" "metamiss##Data"}{...}
+{viewerjumpto "Syntax" "metamiss##Syntax"}{...}
+{viewerjumpto "Meta-analysis options" "metamiss##Metaanalysisoptions"}{...}
+{viewerjumpto "Imputation options" "metamiss##Imputationoptions"}{...}
+{viewerjumpto "Imputation using reasons" "metamiss##Imputationusingreasons"}{...}
+{viewerjumpto "Imputation weight options" "metamiss##Imputationweightoptions"}{...}
+{viewerjumpto "Imputation debugging options" "metamiss##Imputationdebuggingoptions"}{...}
+{viewerjumpto "Bayes options" "metamiss##Bayesoptions"}{...}
+{viewerjumpto "Saved variables" "metamiss##Savedvariables"}{...}
+{viewerjumpto "Examples" "metamiss##Examples"}{...}
+{viewerjumpto "Note" "metamiss##Note"}{...}
+{viewerjumpto "Authors and Updates" "metamiss##Authors"}{...}
+{viewerjumpto "References" "metamiss##References"}{...}
+{viewerjumpto "Please cite this program as" "metamiss##Pleasecitethisprogramas"}{...}
+{viewerjumpto "See also" "metamiss##Seealso"}{...}
+{title:Title}
 
-{title:Meta-analysis with missing data}
+{phang}
+{bf:metamiss} {hline 2} Meta-analysis with missing data
 
 
-{title:Description}
+{title:Description}{marker Description}
 
 {pstd}
 {cmd:metamiss} performs a meta-analysis of studies comparing a binary outcome between two groups (such as in a randomised controlled trial) where the outcome may be missing. Three methods are available:
 
 {pstd}
-(i) imputation methods as described in Higgins et al. Missing values 
-may be imputed as failures, successes, same as control group, same as 
-experimental group, same as own group, or using IMORs (see below). When reasons for
-missingness are known, a mixture of the methods may be used.
+(i) imputation methods as described in {help metamiss##Higgins++08:Higgins et al (2008)}. 
+Missing values may be imputed as failures, successes, same as control group, same as 
+experimental group, same as own group, or using Informative Missingness Odds Ratios (IMORs).
+When reasons for missingness are known, a mixture of the methods may be used.
+
+{pstd}The IMOR is defined as the odds ratio between the outcome (success/failure) and the missingness of the outcome (missing/observed), within groups.
+A value of 1 indicates that the data are missing at random (MAR), while IMOR = 0 means that missing values are all failures, and IMOR = infinity means that missing values are all successes.
 
 {pstd}or 
 
 {pstd}
-(ii) methods allowing for uncertainty about how informative the missing data are, as in White et al based on Forster and Smith (1998). 
+(ii) methods allowing for uncertainty about how informative the missing data are, as in {help metamiss##White++08:White et al (2008)} based on {help metamiss##ForsterSmith:Forster and Smith (1998)}. 
 These use the following model for outcome Y, missingness M and group X:
 {p_end}
           M|X=i       ~ Bernoulli(alpha_i)
@@ -34,24 +54,25 @@ The values of logIMOR_i in the two groups can be specified exactly or through a 
 
 {pstd}or 
 
-{pstd}(iii) the "uncertainty method" of Gamble and Hollis (2005).
+{pstd}(iii) the "uncertainty method" of {help metamiss##GambleHollis:Gamble and Hollis (2005)}.
 
 {pstd}
-{cmd:metamiss} only prepares the data for each study: it then calls {help metan} to 
+With all three methods, {cmd:metamiss} only prepares the data for each study: it then calls {help metan} to 
 perform the meta-analysis.
 A note "(Calling metan ...)" is printed at this point 
 to help the user identify the source of any error messages.
-We have tried to make {cmd:metamiss} compatible with all versions of {cmd:metan}.
+We have tried to make {cmd:metamiss} compatible with all versions of {help metan}.
 
 
-{title:Data}
+{title:Data}{marker Data}
 
 {pstd}
 {cmd:metamiss} requires 6 variables specifying the numbers of successes, 
 failures and missing values in each group. The first group is considered to be the experimental group and the second group the control group, although applications outside randomised controlled trials are also possible.
+The 6 variables are described as {it:rE fE mE rC fC mC} in the syntax descriptions below.
 
 
-{title:Syntax}
+{title:Syntax}{marker Syntax}
 
 Simple imputation:
 
@@ -93,7 +114,7 @@ Gamble-Hollis analysis:
 {it:imor_spec} is {cmd:imor(#|var [#|var])} or {cmd:logimor(#|var [#|var])}.
 
 
-{title:Meta-analysis options}
+{title:Meta-analysis options}{marker Metaanalysisoptions}
 
 {phang}
 {cmd:rr, or, rd} specify the measures to be analysed. 
@@ -112,7 +133,7 @@ is not performed if more than 1 measure is specified.
 All other options allowed with {help metan} are allowed: for example, {cmd:by()}, {cmd:random}.
 
 
-{title:Imputation options}
+{title:Imputation options}{marker Imputationoptions}
 
 {phang}{cmd:aca} performs an available cases analysis.
 
@@ -145,7 +166,7 @@ not beneficial events, then {cmd:icaw} will yield a best-case analysis.
 The default is {cmd:icaimor} if {cmd:imor()} or {cmd:logimor()} is specified, and otherwise {cmd:aca}.
 
 
-{title:Imputation using reasons}
+{title:Imputation using reasons}{marker Imputationusingreasons}
 
 {pstd}
 Alternatively, different subgroups of missing values may be assigned using
@@ -162,7 +183,7 @@ missing values in each group are imputed using ICA0 and the rest are imputed
 using ICAp.
 
 
-{title:Imputation weight options}
+{title:Imputation weight options}{marker Imputationweightoptions}
 
 {phang}
 {cmd:w1} specifies that standard errors be computed treating the imputed 
@@ -183,7 +204,7 @@ schemes including ICA-pE or ICA-pC, but the conditional standard errors appear
 to be more realistic than the unconditional standard errors in this setting.
 
 
-{title:Imputation debugging options}
+{title:Imputation debugging options}{marker Imputationdebuggingoptions}
 
 {phang}
 {cmd:listnum} lists the reason counts for each study implied by the {cmd:ica0} etc. options.
@@ -196,7 +217,7 @@ of missing values and imputing missing for studies with no reasons.
 {cmd:listp} lists the imputed probabilities for each study.
 
 
-{title:Bayes options}
+{title:Bayes options}{marker Bayesoptions}
 
 {phang}
 {cmd:logimor()} sets the prior means for the log IMOR in the experimental and control groups. 
@@ -224,7 +245,7 @@ The argument must be an expression, not a variable.
 method (and the default). {cmd: method(MC)} performs a full Bayesian analysis by sampling 
 directly from the posterior. This is time-consuming, so dots display progress, and you can request 
 more than one of the measures RR, OR, RD. {cmd: method(Taylor)} uses a Taylor series approximation 
-as in section 4 of Forster and Smith (1998) and is faster than the default but inaccurate 
+as in section 4 of {help metamiss##ForsterSmith:Forster and Smith (1998)} and is faster than the default but inaccurate 
 for wide log IMOR distributions. 
 
 {phang}
@@ -241,7 +262,7 @@ The 3rd and 4th arguments, if present, apply to the control group; otherwise the
 {cmd:nodots} suppresses the dots that are displayed to mark the number of MC draws completed.
 
 
-{title:Saved variables}
+{title:Saved variables}{marker Savedvariables}
 
 {pstd}
 {cmd:metamiss} saves variables in the same way as {help metan}: _ES _selogES etc. _SS, 
@@ -250,29 +271,34 @@ gives the total number of missing values.
 
 {pstd}
 When {cmd:method(mc)} is run, the following variables are saved for each {it:measure}:
-the ACA estimate ESTRAW_{it:measure}, the ACA variance VARRAW_{it:measure}, the corrected 
+the available cases analysis estimate ESTRAW_{it:measure}, 
+the available cases analysis variance VARRAW_{it:measure}, the corrected 
 estimate ESTSTAR_{it:measure}, and the corrected variance VARSTAR_{it:measure}.
 
 
-{title:Examples}
+{title:Examples}{marker Examples}
 
 We analyse the haloperidol data as in {help metamiss##citethis:White and Higgins (2009)}.
 
-{phang}{stata use haloperidol}
+{phang}{stata use haloperidol, clear}
 
 The data set contains the key variables: author r1 f1 m1 r2 f2 m2
 
-Available case analysis (two equivalent commands):
+Available case analysis (three equivalent commands):
 
 {phang}{stata metan r1 f1 r2 f2, rr fixedi label(namevar=author)}
 
 {phang}{stata metamiss r1 f1 m1 r2 f2 m2, rr id(author) aca}
 
-ICA-0, impute missing as zeroes (two equivalent commands):
+{phang}{stata metamiss r1 f1 m1 r2 f2 m2, rr id(author) imor(1)}
+
+ICA-0, impute missing as zeroes (three equivalent commands):
 
 {phang}{stata metamiss r1 f1 m1 r2 f2 m2, rr id(author) ica0 w4}
 
 {phang}{stata metamiss r1 f1 m1 r2 f2 m2, rr id(author) ica0(m1 m2) w4}
+
+{phang}{stata metamiss r1 f1 m1 r2 f2 m2, rr id(author) imor(0)}
 
 Impute using reasons for missingness:
 
@@ -303,7 +329,7 @@ Random uncorrelated IMORs:
 {phang}{stata metamiss r1 f1 m1 r2 f2 m2, rr id(author) logimor(0) sdlogimor(1) corrlogimor(0) method(gh) nip(50)}
 
 
-{title:Note}
+{title:Note}{marker Note}
 
 {pstd}Different methods may give slightly different answers due to 
 different handling of zero cells. For example, 
@@ -318,43 +344,55 @@ different handling of zero cells. For example,
 only does this for 3 studies with r2+m2==0. 
 
 
-{title:Authors}
+{title:Authors and Updates}{marker Authors}
 
-{pstd}Ian White and Julian Higgins, MRC Biostatistics Unit, Institute of Public Health,
-Robinson Way, Cambridge CB2 0SR, UK. 
+{pstd}Ian White, MRC Clinical Trials Unit at UCL, London, UK. 
+
+{pstd}Julian Higgins, School of Social and Community Medicine, University of Bristol, UK.
+
+{pstd}We thank David Fisher for help in making this version compatible with version 4 of {help metan}.
+
+{pstd}You can get the latest version of this package by visiting {browse "https://github.com/UCL/metamiss"}
+or within Stata by running 
+{stata "net from https://raw.githubusercontent.com/UCL/metamiss/master"}.
 
 {pstd}For assistance please email {browse "mailto:ian.white@ucl.ac.uk":ian.white@ucl.ac.uk}.
 
 
-{title:References}
 
-{pstd}Forster JJ, Smith PWF.  Model-based inference for categorical survey data 
+{title:References}{marker References}
+
+{pstd}{marker ForsterSmith}Forster JJ, Smith PWF (1998).  Model-based inference for categorical survey data 
 subject to non-ignorable non-response.  Journal of the Royal Statistical 
-Society (B) 1998; 60: 57-70.
+Society (B) 60: 57-70.
 
-{pstd}Gamble C, Hollis S.  Uncertainty method improved on best-worst case analysis 
-in a binary meta-analysis.  Journal of Clinical Epidemiology 2005; 58: 579-588.
+{pstd}{marker GambleHollis}Gamble C, Hollis S (2005).  Uncertainty method improved on best-worst case analysis 
+in a binary meta-analysis.  Journal of Clinical Epidemiology 58: 579-588.
 
-{pstd}Higgins JPT, White IR, Wood A.  
+{pstd}{marker Higgins++08}Higgins JPT, White IR, Wood A (2008).  
 Imputation methods for missing outcome data in meta-analysis of clinical trials.  
 Clinical Trials 2008; 5: 225-239. 
 
-{pstd}White IR, Higgins JPT, Wood AM.  Allowing for uncertainty due to missing data 
-in meta-analysis. 1. Two-stage methods.  Statistics in Medicine 2008; 27: 711-727.
+{pstd}{marker White++08}White IR, Higgins JPT, Wood AM (2008).
+Allowing for uncertainty due to missing data in meta-analysis. 
+1. Two-stage methods.  Statistics in Medicine 27: 711-727.
 
-{pstd}White IR, Higgins JPT. Meta-Analysis with missing data. In: Palmer TM, Sterne JAC, editors. Meta-Analysis in Stata: An Updated Collection from the Stata Journal. 2nd ed. 2016. 
+{pstd}{marker WhiteHiggins}White IR, Higgins JPT (2016). Meta-Analysis with missing data. 
+In: Palmer TM, Sterne JAC, editors. Meta-Analysis in Stata: An Updated Collection from the Stata Journal. 2nd ed. 
 {browse "https://www.stata.com/bookstore/meta-analysis-in-stata/"}
 
-{pstd}Chaimani A, Mavridis D, Higgins J, Salanti G, White IR. Allowing for informative missingness in aggregate data meta-analysis with continuous or binary outcomes: extensions to metamiss. Stata J. 2018;(3):716–40. 
+{pstd}{marker Chaimani++}Chaimani A, Mavridis D, Higgins J, Salanti G, White IR (2018). 
+Allowing for informative missingness in aggregate data meta-analysis with continuous or binary outcomes: extensions to metamiss. 
+Stata J. 3:716–40. 
 
 
-{title:Please cite this program as}
+{title:Please cite this program as}{marker Pleasecitethisprogramas}
 
 {pstd}{marker citethis}White IR, Higgins JPT. Meta-analysis with missing data. Stata J. 2009;9:57–69. 
 {browse "http://www.stata-journal.com/article.html?article=st0157"}
 
 
-{title:See also}
+{title:See also}{marker Seealso}
 
 {help metan}
 {help metamiss2} if installed.

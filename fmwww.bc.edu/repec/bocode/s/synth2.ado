@@ -1,4 +1,4 @@
-*! synth2 1.0.0 Guanpeng Yan and Qiang Chen 12/04/2021
+*! synth2 0.0.1 Guanpeng Yan and Qiang Chen 11/23/2021
 capture program drop synth2
 program synth2, eclass sortpreserve
 	version 16
@@ -341,7 +341,8 @@ program synth2_placebo, eclass sortpreserve
 		maxiter(passthru) ///
 		sigf(passthru) ///
 		bound(passthru) ///
-		unit(numlist missingokay) period(numlist min = 1 int sort <`trperiod') Cutoff(numlist min = 1 max = 1 >=1) noFIGure nested allopt]
+		unit(numlist missingokay) period(numlist min = 1 int sort <`trperiod') Cutoff(numlist min = 1 max = 1 >=1) ///
+		show(numlist min = 1 max = 1 >=1) noFIGure nested allopt]
 	
 	gettoken depvar indepvars : anything
 	local graphlist ""
@@ -423,6 +424,10 @@ program synth2_placebo, eclass sortpreserve
 			frame `placeboUnitframe'{
 				qui svmat mspe, name(col)
 				mata: st_sstore(., st_addvar("strL", "unit"), tokens("`unit_tr' `unit_pboList'")')
+				if ("`show'" != "") {
+					qui gsort -RatioPostPre
+					qui drop if _n >`show'
+				}
 				graph hbar (asis) RatioPostPre, over(unit, sort(RatioPostPre) descending label(labsize(vsmall))) ///
 				ytitle("Ratios of Post-treatment MSPE to Pre-treatment MSPE") ///
 				title("Placebo Test Using Fake Treatment Units") name("ratio_pboUnit", replace) nodraw
@@ -861,6 +866,5 @@ mata:
 	}
 end
 
-* 1.0.0 Improve some details
 * 0.0.1 Fix the issue of parameter transfer in the placebo test
 * 0.0.0 Submit the initial version of synth2

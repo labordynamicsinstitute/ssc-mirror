@@ -1,4 +1,4 @@
-*! version 1.01  31jan2022  Gorkem Aksaray <gaksaray@ku.edu.tr>
+*! version 1.1.2  27apr2022  Gorkem Aksaray <gaksaray@ku.edu.tr>
 *!
 *! Syntax
 *! ------
@@ -7,12 +7,23 @@
 *!
 *!   where the syntax of commandlist is
 *!
-*!     command [ || command [ || command [...]]]
+*!     command [ |> command [ |> command [...]]]
 *!
 *!   and comand is any Stata command.
 *!
 *! Changelog
 *! ---------
+*!   [1.1.2]
+*!     - Revised parsing of command list again to allow for "empty pipes".
+*!       The command list can now start with |>, end with |>, and have
+*!       consecutive |>'s with nothing in between. frapply is now robust to
+*!       those "errors".
+*!   [1.1.1]
+*!     - Rewrote parsing of command list to allow for protected locals
+*!       while also allowing for | and > characters within the individual
+*!       commands.
+*!   [1.1.0]
+*!     - Changed the 'pipe' operator from "||" to "|>" as in R language.
 *!   [1.01]
 *!     - Using an if expression on a non-current frame was causing an error.
 *!       This is now fixed.
@@ -59,30 +70,26 @@ program define frapply
         confirm new frame `intoname'
     }
     
-    // multiple command check
-    local cmdchk `"`command'"'
-    while `"`cmdchk'"' != "" {
-        gettoken cmd cmdchk : cmdchk, parse("|")
-        if `"`cmd'"' == "|" {
-            if substr(`"`cmdchk'"', 1, 1) == "|" {
-                gettoken cmd cmdchk : cmdchky, parse("|")
-                continue
-            }
-            else {
-                noisily display as error "| invalid command"
-                exit 198
-            }
-        }
-    }
-    
     // run command(s)
     frame `cframe' {
         preserve
         quietly capture keep `in' `if'
+        
         while `"`command'"' != "" {
-            gettoken cmd command : command, parse("|")
-            if `"`cmd'"' == "|" continue
-            `quietly' `cmd'
+            gettoken part command : command, parse("|")
+            if `"`part'"' == "|" & substr(`"`command'"', 1, 1) == ">" {
+                gettoken part command : command, parse(">")
+                local part ""
+            }
+            if substr(`"`command'"', 1, 2) == "|>" | `"`command'"' == "" {
+                gettoken sep command : command, parse("|")
+                gettoken sep command : command, parse(">")
+                `quietly' `cmd' `part'
+                local cmd ""
+            }
+            else {
+                local cmd `"`cmd' `part'"'
+            }
         }
         frput, into(`intoname') `intoreplace'
         restore

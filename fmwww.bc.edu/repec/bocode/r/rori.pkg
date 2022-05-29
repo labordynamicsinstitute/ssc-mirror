@@ -1,0 +1,28 @@
+d 'RORI': module for estimation of selection bias through relative odds ratio (ROR) with large sample confidence interval 
+d
+d  Response bias is an often neglected consideration when
+d evaluating the results of epidemiologic surveys, usually because
+d of a paucity of information about nonrespondents. The effect of
+d nonparticipation was described by a relative odds ratio (ROR),
+d calculated as the OR (participants)/ OR (source population). The
+d relative odds ratio (ROR) is computed as the cross product ratio
+d of the participation rates in the four exposure by outcome
+d categories. -rori- calculates the relative odds ratio (ROR) in a
+d 2x2 table of outcome and exposure. -rori- also calculates the
+d Prevalence ratios of the exposure groups. When exposure isn't
+d binary, it is possible to specify N for the target and response
+d populations. 
+d
+d KW: relative odds ratio
+d KW: selection bias
+d KW: confidence interval
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20220528
+d
+d Author: Niels Henrik Bruun, Aarhus University
+d Support: email nhbr@@ph.au.dk
+d
+f rori.ado
+f rori.sthlp
