@@ -1,3 +1,8 @@
+*! Package rori v. 0.11
+*! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
+*! 2022-05-29 Version bug fixed
+*! 2022-05-23 created
+
 *capture program drop rori
 program define rori, rclass
     version 12
@@ -31,26 +36,26 @@ program define rori, rclass
     
     // Exposed targets
     scalar _ne_t = `=_t[1,1] + _t[2,1]' 
-    `QUIETLY' cii prop `=_N_t' `=_ne_t', wald level(`_lvl')
-    scalar _pe_t = r(proportion)
+    `QUIETLY' cii `=_N_t' `=_ne_t', wald level(`_lvl')
+    scalar _pe_t = r(mean)
     scalar _se_pe_t = r(se)
     
     //Unexposed targets
     scalar _nu_t = _N_t - _ne_t
-    `QUIETLY' cii prop `=_N_t' `=_nu_t', wald level(`_lvl')
-    scalar _pu_t = r(proportion)
+    `QUIETLY' cii `=_N_t' `=_nu_t', wald level(`_lvl')
+    scalar _pu_t = r(mean)
     scalar _se_pu_t = r(se)
     
     // Exposed response
     scalar _ne_r = `=_r[1,1] + _r[2,1]' 
-    `QUIETLY' cii prop `=_N_r' `=_ne_r', wald level(`_lvl')
-    scalar _pe_r = r(proportion)
+    `QUIETLY' cii `=_N_r' `=_ne_r', wald level(`_lvl')
+    scalar _pe_r = r(mean)
     scalar _se_pe_r = r(se)
 
     // Unexposed response
     scalar _nu_r = _N_r - _ne_r 
-    `QUIETLY' cii prop `=_N_r' `=_nu_r', wald level(`_lvl')
-    scalar _pu_r = r(proportion)
+    `QUIETLY' cii `=_N_r' `=_nu_r', wald level(`_lvl')
+    scalar _pu_r = r(mean)
     scalar _se_pu_r = r(se)
 
     scalar _pre = _pe_r / _pe_t
@@ -109,16 +114,6 @@ program define rori, rclass
 end
 
 
-/*
-sysuse lbw, clear
-keep low smoke race
-expand 10
-label variable low outcome
-label variable smoke subgroup
-label variable race exposure
-label define race 1 "Grp1" 2 "Grp2" 3 "Grp3", replace
-label define smoke 0 "Not in" 1 "In", replace
-table smoke race low
 */
 /*
 -----------------------------------
