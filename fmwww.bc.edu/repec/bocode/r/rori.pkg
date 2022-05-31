@@ -21,8 +21,8 @@ d Requires: Stata version 12
 d
 d Distribution-Date: 20220528
 d
-d Author: Niels Henrik Bruun, Aarhus University
-d Support: email nhbr@@ph.au.dk
+d Author: Niels Henrik Bruun, Aalborg University Hospital
+d Support: email niels.henrik.bruun@@gmail.com
 d
 f rori.ado
 f rori.sthlp

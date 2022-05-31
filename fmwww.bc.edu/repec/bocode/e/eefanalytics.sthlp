@@ -27,4 +27,3 @@ The methods can also be used more widely beyond education trials. This package c
 {synopt :{help crtbayes}} ... for Cluster Randomised Trials.{p_end}
 {synopt :{help mstbayes}} ... for Multisite Randomised Trials.{p_end}
 {synoptline}
-{p_end}

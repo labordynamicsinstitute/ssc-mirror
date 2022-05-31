@@ -1,28 +1,28 @@
 
-*! version 1.1.0  25feb2022
+*! version 1.1.0  25Feb2022
 capture program drop crtfreq
 program define crtfreq, rclass
 version 15.1
 syntax varlist(numeric fv) [if] [in], INTervention(varlist numeric fv max=1) RANdom(varlist numeric max=1) [, NPerm(integer 0) NBoot(integer 0) SEED(integer 1020252) noDOT noIsily ML REML CASE(numlist asc >0 max=2) RESidual PERCentile BASIC PASTE *]
 
-quietly {
+qui {
 	preserve
 	if "`paste'"!="" {
-	if "`nperm'" != "0" {
-		cap drop PermC_I*_W PermUnc_I*_W PermC_I*_T PermUnc_I*_T
+		if "`nperm'" != "0" {
+			cap drop PermC_I*_W PermUnc_I*_W PermC_I*_T PermUnc_I*_T
+			}
+		if "`nboot'" != "0" {
+			cap drop BootC_I*_W BootC_I*_T BootUnc_I*_W BootUnc_I*_T
+			}
 		}
-	if "`nboot'" != "0" {
-		cap drop BootC_I*_W BootC_I*_T BootUnc_I*_W BootUnc_I*_T
-		}
-	}
-	if "`nboot'" == "0" & "`percentile'"!="" | "`nboot'" == "0" & "`basic'"!="" | "`nboot'" == "0" &  "`case'" != "" | "`nboot'" == "0" &  "`residual'" != "" {
-		noi disp as error "Please specify number of bootstraps"
-        error 198
-		}
-	if "`percentile'"!="" & "`basic'"!="" | "`nperm'" != "0" & "`nboot'" != "0" {
-		noi disp as error "you have included resampling options that cannot be specified at the same time"
-        error 198
-		}
+		if "`nboot'" == "0" & "`percentile'"!="" | "`nboot'" == "0" & "`basic'"!="" | "`nboot'" == "0" &  "`case'" != "" | "`nboot'" == "0" &  "`residual'" != "" {
+			noi disp as error "Please specify number of bootstraps"
+        		error 198
+			}
+		if "`percentile'"!="" & "`basic'"!="" | "`nperm'" != "0" & "`nboot'" != "0" {
+			noi disp as error "you have included resampling options that cannot be specified at the same time"
+        		error 198
+			}
 	
 	local ci percentile
 	if "`basic'"!="" local ci `basic'
@@ -37,9 +37,9 @@ quietly {
 	
 	local maximization reml
 	if "`ml'" != "" & "`reml'" != "" {
-	noi disp as error "ml and reml may not be specified at the same time"
-	error 198
-	}
+		noi disp as error "ml and reml may not be specified at the same time"
+		error 198
+		}
 	if "`ml'" != "" {
 		local maximization
 		}
@@ -178,11 +178,8 @@ quietly {
 		}
 		}
 
-	local broken_treatment
-	foreach i of numlist 1/`=`max'' {
-		local broken_treatment `broken_treatment' `broken_factor'`i' /*store all brokn_fctors in local*/
-		}
-	rename (`one' `two') (`broken_treatment') /*rename broken_factors based on new ref category (i.e. broken2 broken1 broken3 to broken1 broken2 broken3)*/
+	unab broken_treatment:`broken_factor'*
+	rename (`one' `two') (`broken_treatment') 
 	forvalues s = 1/2 {
 		forvalues i = 1/`=`max'-1' {
 			tempfile forloop
@@ -192,7 +189,7 @@ quietly {
 			
 			scalar `d`s'w`i'' = `Coef'[`i',1] / sqrt( `res_variance`s'' )
 	
-			tab `random' `broken_factor'`=`i'+1', matcell(`Br_F`i'')  /*because `=`max'-1' = 2 , broken factor is 1,2,3 but we need 2,3 because 1 is baseline*/
+			tab `random' `broken_factor'`=`i'+1', matcell(`Br_F`i'') 
 			//svmat Br_F`i'
 			mata functot("`Br_F`i''","`sumBr_F`i''") 
 			
@@ -218,7 +215,9 @@ quietly {
 			}
 	
 	forvalues i = 1/`=`max'-1' {
-	tempname nsim1`i' nsim2`i' nsimTotal`i' vterm1`i' v`s'term2`i' v`s'term3`i' s`s'te`i' L`s'B`i' U`s'B`i' Out`s'put`i' nut`i' nuc`i' d`s't1`i' d`s't2`i' d`s'tTotal`i' B`i' At`i' Ac`i' A`i' v`s'term1Tot`i' v`s'term2Tot`i' v`s'term3Tot`i' s`s'teTot`i' L`s'Btot`i' U`s'Btot`i' Out`s'putTot`i' Out`s'putG`i' sqnt`i' sqnc`i' qnt`i' qnc`i' 
+	tempname nsim1`i' nsim2`i' nsimTotal`i' vterm1`i' v`s'term2`i' v`s'term3`i' s`s'te`i' L`s'B`i' U`s'B`i' Out`s'put`i' ///
+	nut`i' nuc`i' d`s't1`i' d`s't2`i' d`s'tTotal`i' B`i' At`i' Ac`i' A`i' v`s'term1Tot`i' v`s'term2Tot`i' v`s'term3Tot`i' s`s'teTot`i' ///
+	L`s'Btot`i' U`s'Btot`i' Out`s'putTot`i' Out`s'putG`i' sqnt`i' sqnc`i' qnt`i' qnc`i' 
 	
 		mata: hfunc3("`nt`i''", "`nc`i''","`sqnt`i''", "`sqnc`i''","`qnt`i''", "`qnc`i''") 
 		
@@ -279,11 +278,7 @@ quietly {
 	tempfile touseit
 	save `touseit'
 		
-	   //====================================================//	
-	  //===================                =================//	
-	 //==================  PERMUTATIONS  ==================//
-	//=================                ===================//
-   //====================================================//
+	 //================== PERMUTATIONS ==================//
 	
 	if "`nperm'" != "0"  {
 		tempname N_total from to sumnotconv sumconv
@@ -314,7 +309,7 @@ quietly {
 				
 		scalar `sumnotconv'= 0
 								
-            forvalues j = `=`from''/`=`to'' {
+           	forvalues j = `=`from''/`=`to'' {
 			if "`seed'" == "1020252" {
 				local defseed = `=12890*`j'+1'
 				set seed `defseed'
@@ -333,7 +328,7 @@ quietly {
 						}
 					}
 				}
-		capture {
+		cap {
 			tempvar n shuffle
 			keep `intervention' `random'
 			collapse `intervention', by(`random')
@@ -389,17 +384,17 @@ quietly {
 			} /*nperm*/
 			scalar `from' = `=`to'' + 1
 			scalar `to' = `=`to''+ `=`sumnotconv''
-		} /*while*/
+			} /*while*/
 			forvalues s = 1/2 {
 				forvalues j = 1/`nperm' {
 					forvalues i = 1/`=`max'-1' {
 						if `nperm'>`=`N_total'' {
 							set obs `nperm'
 							}
-						capture gen double Perm`s'_T`i'_W=.
-						capture gen double Perm`s'_T`i'_T=.
-						capt replace Perm`s'_T`i'_W = `d`s'w`i'`j'' in `j'
-						capt replace Perm`s'_T`i'_T = `d`s'tTotal`i'`j'' in `j'
+						cap gen double Perm`s'_T`i'_W=.
+						cap gen double Perm`s'_T`i'_T=.
+						cap replace Perm`s'_T`i'_W = `d`s'w`i'`j'' in `j'
+						cap replace Perm`s'_T`i'_T = `d`s'tTotal`i'`j'' in `j'
 						}
 					}
 				}
@@ -426,44 +421,41 @@ quietly {
 							 gen `Tp`s'_`i'' = abs(Perm`s'_T`i'_T)>=abs(`d`s't1`i'')
 							 summarize `Tp`s'_`i'', meanonly
 							 matrix `pval_`s''[2,`i'] =round(r(mean),.01)
+						}
 					}
 				}
-			}
 			
 			return matrix CondPv = `pval_1'
 			return matrix UncondPv = `pval_2'
 			
-		if "`dot'" == "" {
-			noi di as txt ""
-			}
-		noisily di as txt "  Permutations completed."
-		tempfile crt
-		save `crt'
-		if "`paste'"!="" {
-		local f
-		forvalues i = 1/`=`max'' {
-			if "`=`refcat'+0'" != "``i''" {
-			local f = `f' + 1
-			rename (Perm1_T`f'_W Perm2_T`f'_W Perm1_T`f'_T Perm2_T`f'_T) (PermC_I``i''_W PermUnc_I``i''_W PermC_I``i''_T PermUnc_I``i''_T )
-			}
-		}
-		keep PermC_I*_W PermUnc_I*_W PermC_I*_T PermUnc_I*_T
+			if "`dot'" == "" {
+				noi di as txt ""
+				}
+			noisily di as txt "  Permutations completed."
+			tempfile crt
+			save `crt'
+			if "`paste'"!="" {
+				local f
+				forvalues i = 1/`=`max'' {
+				if "`=`refcat'+0'" != "``i''" {
+					local f = `f' + 1
+					rename (Perm1_T`f'_W Perm2_T`f'_W Perm1_T`f'_T Perm2_T`f'_T) (PermC_I``i''_W PermUnc_I``i''_W PermC_I``i''_T PermUnc_I``i''_T )
+					}
+				}
+			keep PermC_I*_W PermUnc_I*_W PermC_I*_T PermUnc_I*_T
 		
-		tempfile permES
-		save `permES'
-		use `Original'
-		merge 1:1 _n using `permES', nogenerate
-		tempfile Original
-		save `Original'	
-		}
+			tempfile permES
+			save `permES'
+			use `Original'
+			merge 1:1 _n using `permES', nogenerate
+			tempfile Original
+			save `Original'	
+			}
 		} /*if nperm is chosen*/
 		
 		
-	   //====================================================//	
-	  //====================              ==================//	
-	 //===================	BOOTSTRAPS	===================//
-	//==================              ====================//
-   //====================================================//	
+	
+        //=================== BOOTSTRAPS ===================//	
 	
 	if "`nboot'" != "0" {
 	tempname N_total from to sumnotconv sumconv
@@ -493,7 +485,7 @@ quietly {
 				replace `res`i''=`res`i''-r(mean)
 				
 				matrix `resvar`i''=`res_variance`i''
-				mata: funcchol("`N_total'", "`resvar`i''", "`res`i''") /*reseffc local containing name(s) of residuals/reffects; covar needs to be matrix*/
+				mata: funcchol("`N_total'", "`resvar`i''", "`res`i''") 
 				}
 			
 			tempfile beta1
@@ -508,7 +500,7 @@ quietly {
 				
 				matrix `resvar`i''=`cluster_variance`i''
 				
-				mata: funcchol("`M'", "`resvar`i''", "`rIntercept`i''") /*reseffc local containing name(s) of residuals/reffects; covar needs to be matrix*/
+				mata: funcchol("`M'", "`resvar`i''", "`rIntercept`i''") 
 
 				tempfile reff
 				save `reff'
@@ -517,9 +509,6 @@ quietly {
 			use `beta1'
 			}
 			
-			
-
-	
 		noisily di as txt "  Running Bootstraps..."
 		
 		scalar `sumnotconv'= 0
@@ -528,7 +517,11 @@ quietly {
 		scalar `to' = `nboot'
 								
 		while `=`sumconv''!=`nboot' {
-			
+			if `=`sumnotconv''==`nboot' {
+				noi disp ""
+				noi disp as error "error: Something has gone wrong, no models have converged"
+				error 459
+				}
 			if "`dot'" == "" {     
 				noi disp as txt ""
 				}
@@ -551,7 +544,7 @@ quietly {
 						}
 					}
 				}
-		capture {
+		cap {
 		if "`residual'" == "" {
 			keep `varlist_clean' `intervention' `random'
 			local countn: word count `case'
@@ -645,10 +638,10 @@ quietly {
 					if `nboot'>`=`N_total'' {
 						set obs `nboot'
 						}
-					capture gen double Boot`s'_T`i'_W=.
-					capture gen double Boot`s'_T`i'_T=.
-					capt replace Boot`s'_T`i'_W = `Within`s'_`i'`j'' in `j'
-					capt replace Boot`s'_T`i'_T = `Total`s'_`i'`j'' in `j'
+					cap gen double Boot`s'_T`i'_W=.
+					cap gen double Boot`s'_T`i'_T=.
+					cap replace Boot`s'_T`i'_W = `Within`s'_`i'`j'' in `j'
+					cap replace Boot`s'_T`i'_T = `Total`s'_`i'`j'' in `j'
 					}
 				}
 			}
@@ -658,7 +651,7 @@ quietly {
 			tempname W`s'_25_`i' W`s'_975_`i' T`s'_25_`i' T`s'_975_`i'
 			
 				centile Boot`s'_T`i'_W, centile(2.5)
-				scalar `W`s'_975_`i''	=2*`d`s'w`i''-r(c_1) /*scalars assigned in reverse order to respect basic (Hall's) CI formula.*/
+				scalar `W`s'_975_`i''	=2*`d`s'w`i''-r(c_1) 
 				centile Boot`s'_T`i'_W, centile(97.5)
 				scalar `W`s'_25_`i''	=2*`d`s'w`i''-r(c_1)
 			
@@ -725,7 +718,7 @@ quietly {
 	
 			/*TABLES*/
 	
-	capture {
+	cap {
 		noisily {
 			return matrix Beta = `Beta'
 
@@ -749,7 +742,7 @@ quietly {
 	}	
 end
 
-capture program drop baseset
+cap program drop baseset
 program define baseset, rclass
 syntax, max(name) INTervention(varlist fv)
 
@@ -783,7 +776,7 @@ syntax, max(name) INTervention(varlist fv)
 	
 	if "`allow'" == "opt1" { 
 		forvalues i=1/`=`max'' {
-			cap if "`refcat'" != "``i''" local s = `s'+1 /*checking cases were intervention is irregular (i.e. 1 4 9) and user has specified a number of baseline that is not 1,4 or 9 and not below 1 and not above 9*/
+			cap if "`refcat'" != "``i''" local s = `s'+1 
 			}
 		if "`refcat'" != "" {
 			if "`refcat'">"`=`Max''" | "`refcat'"<"`=`min''" | "`s'" == "`=`max''" {
