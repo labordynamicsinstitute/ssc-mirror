@@ -8,12 +8,16 @@ d
 d KW: shell
 d KW: operating system
 d
-d Requires: Stata version 10
+d Requires: Stata version 9
 d
-d Distribution-Date: 20220315
+d Distribution-Date: 20220601
 d
 d Author: Matthew Bryant Hall  ,  Wesleyan University
 d Support: email mhall@@wesleyan.edu
 d
 f inshell.sthlp
 f inshell.ado
+f ../_/_inshell_cd.ado
+f ../_/_inshell_deansify.ado
+f inshell_example1.sh
+f inshell_example2.sh
