@@ -1,0 +1,19 @@
+d 'LMZTEST': module to test for Zipf´s law
+d
+d  This program calculates the test statistic for Zipf´s law 
+d proposed by Urzúa (Econ.Lett., 2000). It is locally optimal if
+d the possible alternative distributions are contained in the
+d Pareto type (II) family. 
+d
+d KW: Zipf's law
+d KW: Pareto distribution
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20220602
+d
+d Author: Carlos M. Urzúa, Tecnológico de Monterrey
+d Support: email curzua@@tec.mx
+d
+f lmztest.ado
+f lmztest.sthlp

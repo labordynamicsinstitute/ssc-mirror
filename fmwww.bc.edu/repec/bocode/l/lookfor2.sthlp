@@ -69,7 +69,7 @@ and value labels, but exclude notes{p_end}
 {title:Stored results}
 
 {pstd}
-{cmd:lookfor} stores the following in {cmd:r()}:
+{cmd:lookfor2} stores the following in {cmd:r()}:
 
 {synoptset 15 tabbed}{...}
 {p2col 5 15 19 2: Macros}{p_end}

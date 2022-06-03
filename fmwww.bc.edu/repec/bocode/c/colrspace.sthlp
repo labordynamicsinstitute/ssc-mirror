@@ -1,5 +1,5 @@
 {smcl}
-{* 21apr2022}{...}
+{* 30may2022}{...}
 {cmd:help colrspace}{...}
 {right:{browse "http://github.com/benjann/colrspace/"}}
 ({browse "http://ideas.repec.org/p/bss/wpaper/42.html":PDF manual}){...}
@@ -1023,6 +1023,17 @@
 {p2col:{stata colorpalette burd:{bf:burd}}}13 qualitative colors as in {cmd:burd} by {browse "http://ideas.repec.org/c/boc/bocode/s457623.html":Briatte (2013)}{p_end}
 {p2col:{stata colorpalette lean:{bf:lean}}}15 gray scales (qualitative) as in {cmd:lean} by {browse "http://www.stata-journal.com/article.html?article=gr0002":Juul (2003)}{p_end}
 {p2col:{stata colorpalette tableau:{bf:tableau}}}20 qualitative colors from {browse "http://dx.doi.org/10.1111/cgf.12127":Lin et al. (2013)}{p_end}
+{p2col:{it:pals}}qualitative palettes from the {cmd:pals} package in R
+    ({browse "http://github.com/kwstat/pals":github.com/kwstat/pals}),
+    where {it:pals} is
+    {stata colorpalette alphabet:{bf:alphabet}} (26),
+    {stata colorpalette alphabet2:{bf:alphabet2}} (26),
+    {stata colorpalette cols25:{bf:cols25}} (25),
+    {stata colorpalette glasbey:{bf:glasbey}} (32),
+    {stata colorpalette kelly:{bf:kelly}} (22; default),
+    {stata colorpalette polychrome:{bf:polychrome}} (36), or
+    {stata colorpalette watlington:{bf:watlington}} (16)
+    {p_end}
 {p2col:{cmd:d3} [{it:scheme}]}qualitative palettes from {browse "http://d3js.org/":D3.js}, where {it:scheme} is
     {stata colorpalette d3 10:{bf:10}} (default),
     {stata colorpalette d3 20, rows(8):{bf:20}},
@@ -1049,17 +1060,6 @@
     {stata colorpalette sb bright6:{bf:bright6}},
     {stata colorpalette sb dark6:{bf:dark6}},
     {stata colorpalette sb colorblind6:{bf:colorblind6}}
-    {p_end}
-{p2col:{cmd:pals} [{it:scheme}]}qualitative palettes from the {cmd:pals} package in R
-    ({browse "http://github.com/kwstat/pals":github.com/kwstat/pals}),
-    where {it:scheme} is
-    {stata colorpalette pals alphabet:{bf:alphabet}} (26),
-    {stata colorpalette pals alphabet2:{bf:alphabet2}} (26),
-    {stata colorpalette pals cols25:{bf:cols25}} (25),
-    {stata colorpalette pals glasbey:{bf:glasbey}} (32),
-    {stata colorpalette pals kelly:{bf:kelly}} (22; default),
-    {stata colorpalette pals polychrome:{bf:polychrome}} (36), or
-    {stata colorpalette pals watlington:{bf:watlington}} (16)
     {p_end}
 {p2col:{cmd:tab} [{it:scheme}]}color schemes from
     {browse "http://www.tableau.com/about/blog/2016/7/colors-upgrade-tableau-10-56782":Tableau 10}
@@ -1184,7 +1184,7 @@
     {p_end}
 {p2col:{cmd:carto} [{it:scheme}]}color schemes from {browse "http://carto.com/carto-colors/":carto.com/carto-colors}
     {p_end}
-{p2col:}qualitative (2-11): {stata colorpalette carto Antique:{bf:Antique}},
+{p2col:}qualitative (3-12): {stata colorpalette carto Antique:{bf:Antique}},
     {stata colorpalette carto Bold:{bf:Bold}} (default),
     {stata colorpalette carto Pastel:{bf:Pastel}},
     {stata colorpalette carto Prism:{bf:Prism}},

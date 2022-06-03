@@ -179,6 +179,7 @@ p pwcorrw module to print wide correlation matrix with significance indicators
 p pwcov module to compute pairwise covariances
 p pweibull module to generate probability plot for data vs fitted Weibull distribution
 p pwexp module to fit piecewise exponential model
+p pwlaw module to test for power-law behavior
 p pwmc module to compute pairwise multiple comparisons (unequal variances)
 p pwploti module to plot power curve for sample size and power calculation
 p pyconvertu module to convert a string variable into a classification from the default or user-provided JSON file with the help of Python 3

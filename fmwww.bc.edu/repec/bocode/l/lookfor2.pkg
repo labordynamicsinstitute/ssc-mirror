@@ -10,10 +10,12 @@ d KW: data management
 d
 d Requires: Stata version 10.1
 d
-d Distribution-Date: 20180930
+d Distribution-Date: 20220602
 d
 d Author: Maarten L. Buis, University of Konstanz
 d Support: email maarten.buis@@uni-konstanz.de
 d
 f lookfor2.ado
+f ../c/closedesc.ado
 f lookfor2.sthlp
+f ../c/closedesc.sthlp

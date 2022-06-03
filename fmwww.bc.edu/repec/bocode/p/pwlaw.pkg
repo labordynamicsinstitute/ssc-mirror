@@ -1,0 +1,19 @@
+d 'PWLAW': module to test for power-law behavior
+d
+d  This program calculates the test statistic for power-law
+d behavior proposed by Urzúa (Stata J., 2020). It is locally
+d optimal if the possible alternative distributions are contained
+d in the Pareto type (IV) family. 
+d
+d KW: power law
+d KW: Pareto distribution
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20220602
+d
+d Author: Carlos M. Urzúa, Tecnológico de Monterrey
+d Support: email curzua@@tec.mx
+d
+f pwlaw.ado
+f pwlaw.sthlp
