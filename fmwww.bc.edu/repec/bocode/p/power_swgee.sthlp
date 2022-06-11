@@ -1,33 +1,34 @@
 {smcl}
-{* *! version 1.0.0 15Feb2021}
+{* *! version 1.1.0 15Apr2022}
 {cmd:help power swgee}
 {hline}
 
 {title:Title}
 
-{p2colset 10 17 17 2}{...}
+{p2colset 1 15 17 2}{...}
 {p2col :{hi:power swgee} {hline 2}}Computes power (under both a Z and t distribution) for cluster randomized stepped wedge designs assuming analysis is performed using a generalized estimating equations (GEE) model
 
 {marker syntax}{...}
 {title:Syntax}
 
 
-{p 8 17 5}
-{cmd:power swgee, } {cmd:es({it:real}) {cmdab:nclust:ers(}{it:{help integer}}) {cmdab:nper:iods(}{it:integer})  {cmdab:n(}{it:integer}) [{it:other options} *]}
+{p 8 14 2}
+{cmd:power swgee, } {cmd:es({it:real}) {cmdab:nclust:ers(}{it:{help integer}}) {cmdab:nper:iods(}{it:integer})  {cmdab:n(}{it:integer}) [{it:other options} {it:power_options}]}
 
 {synoptset 30 tabbed}{...}
 {synopthdr}
 {synoptline}
 {syntab:Required}
-{synopt:{cmdab:es(}{it:real})}Specify the effect size. Note that this is not the standardized effect size but the effect size on the scale of the outcome. Specifically, specify a difference for identity link, 
+{synopt:{cmdab:es(}{it:real})}Specifies the effect size. Note that this is not the standardized effect size but the effect size on the scale of the outcome. Specifically, specify a difference for identity link, 
 an odds ratio for logit link and a risk or rate ratio for log link (for binary or count outcomes, respectively).{p_end}
-{synopt:{cmdab:nclust:ers(}{it:integer})}Specify the number of clusters in the stepped wedge design. Note that if only the
+{synopt:{cmdab:nclust:ers(}{it:integer})}Specifies the number of clusters in the stepped wedge design. Note that if only the
 required options are specified, then the number of clusters must be a multiple of {cmdab:nper:iods}-1{p_end}
 {synopt:{cmdab:nper:iods(}{it:integer})}Number of time periods in the study{p_end}
 {synopt:{cmdab:n(}{it:integer})}Number of individuals in each cluster at each time period. Depednign on the design 
 (cross sectional or cohort) these may be the same individuals within the same cluster in different time periods, or 
 these may be different people in each cluster in each time period{p_end}
 
+{pstd}
 If only the required options are specified, a complete design is assumed and all clusters start in the control condition 
 so that the number of steps is {cmdab:nper:iods}-1.
 
@@ -46,25 +47,26 @@ Otherwise, if {cmd:mus} is specified, {cmd:mu0} and {cmd:muT} will be overridden
 to the design, where those variables are from a data set that is currently loaded in Stata.  
 
 {synopt:{cmdab:alpha(}{it:real})}Two-tailed type I error rate; defaults to 0.05{p_end}
-{synopt:{cmdab:working_ind(}{it:integer})}specifes whether to use the robust sandwich variance assuming
-working independence (1) or the model based variance with true working correlation
-(0) to estimate standard errors of the mean model parameters. The default is the
-model based variance with true working correlation.{p_end}
-{synopt:{cmdab:corstr(}{it:{help string}})}gives the structure of the true correlation matrix, which is also the
+{synopt:{cmdab:working_ind(}{it:integer})}Specifes whether to use the robust sandwich variance assuming
+working independence (1) or the model based variance where the working correlation corresponds to the true correlation structure (0) to estimate standard errors of the mean model parameters. The default is the
+model based variance where the working correlation corresponds to the true correlation structure (0).{p_end}
+{synopt:{cmdab:corstr(}{it:{help string}})}Gives the structure of the true correlation matrix, which is also the
 working correlation matrix if working_ind=0. The following options are available
-for corstr in the context of SW-CRTs. The default is nested exchangeable.{p_end}
+for corstr in the context of SW-CRTs. The default is nested exchangeable.  Note that the underline in the table indicates 
+that the option can be specified more succinctly with only the first word of each structure.  For example, nested exchangeable 
+can be specified by only including the word "nested" in the option.{p_end}
 
 {center:{opt corstr} options}
              {center:{hline 63}}
 {center:              Option                Design Type       Correlation Parameters}
              {center:{hline 63}}
-{center:nested exchangeable   Cross-sectional   tau0, tau1}
-{center:     block exchangeable    Cohort            tau0, tau1, tau2}	
-{center:exponential decay     Cross-sectional   tau0, rho1}
-{center:      proportional decay    Cohort            tau0, rho1, rho2}
+{center:{ul:nested} exchangeable   Cross-sectional   tau0, tau1}
+{center:      {ul:block} exchangeable    Cohort            tau0, tau1, tau2}	
+{center:{ul:exponential} decay     Cross-sectional   tau0, rho1}
+{center:      {ul:proportional} decay    Cohort            tau0, rho1, rho2}
              {center:{hline 63}}
 
-{synopt:{cmdab:family(}{it:string})}Specifies the distribution family; default is binomial.{p_end}
+{synopt:{cmdab:family(}{it:string})}Specifies the distribution family; default is gaussian, which can also be specified as normal.{p_end}
 {synopt:{cmdab:link(}{it:string})}Specifies the link function.  The default is logit for binomial family; log for Poisson family; and identity for Gaussian family. The following options are available for {cmdab:family} and {cmdab:link}.{p_end}
 
 {center:Family     Link    }
@@ -88,7 +90,8 @@ for corstr in the context of SW-CRTs. The default is nested exchangeable.{p_end}
 {synopt:{cmdab:rho1(}{it:real})}Between-period ICC decay parameter (for exponential and proportional decay correlation structures); defaults to be equal to 1, indicating no decay{p_end}
 {synopt:{cmdab:rho2(}{it:real})}Repeated-measures ICC decay parameter (for proportional decay correlation structure); defaults to be equal to {cmdab:rho1}{p_end}
 
-The * indicates that other options are passed to the power command.  For example, the option {cmd:table} requests an output table, and {cmd:graph()} can be used to specify parameters to graph.
+{pstd}
+{it:power_options} indicates that other options are passed to the power command.  For example, the option {cmd:table} requests an output table, and {cmd:graph()} can be used to specify parameters to graph.
 However, certain options, such as {cmd:onesided}, have no effect on this custom power program.
 
 {synoptline}
@@ -104,6 +107,7 @@ However, certain options, such as {cmd:onesided}, have no effect on this custom 
 {marker options}{...}
 {title:Options}
 
+{pstd}
 If the {cmdab:design} option is not specified, then the design defaults to a complete design defined by {cmdab:nclust:ers} and {cmdab:nper:iods}.  For example, if {cmdab:nclust:ers}=5 and {cmdab:nper:iods}=6, then there are 5 steps 
 with 1 cluster per step (because all clusters are assumed to start in the control condition and end in the treatment condition and an equal number of clusters is assumed in each step). The design is given by:
 
@@ -116,14 +120,17 @@ with 1 cluster per step (because all clusters are assumed to start in the contro
           {center:5 {c |}  {res}0   0   0   0   0   1{txt}  {c |}}
             {center:{c BLC}{hline 25}{c BRC}{txt}}
 
+{pstd}
 Period effects are specified using either the {cmd:mu0} and {cmd:muT} options, or the {cmd:mus} option.  The {cmd:mu0} and {cmd:muT} options are used by default, and will be overridden if the {cmd:mus} option is specified.
 
+{pstd}
 If using the {cmd:mu0} and {cmd:muT} options, you specify the prevalence/rate of outcome in control at baseline and final time period.  (Note that for continuous outcomes with identity link, these will
 be undefined.  If you enter values anyway, they are ignored in the calculation.)  (If muT is not specified, it will default to be equal to mu0, which is equivalent to stating that there is no time 
 trend in the outcome.)  Then the program will create a linear trend on the link function scale based on these prevalences/rates and the number of time periods.  For example, suppose you specify 0.1 as {cmd:mu0} and 0.2 as {cmd:muT}, 
 with four time periods and using a log link.  First, the program will convert the endpoints on the link function scale (log(0.1)=-2.30 and log(0.2)=-1.61), then create period effects for the other two time periods in equally spaced 
 intervals between these two periods (in this case, -2.07 and -1.84).
 
+{pstd}
 For researchers who want even more fine-tuned control, the {cmd:mus} option will allow you to enter a set of probabilities/rates equal to the number of periods, which will then be
 converted to the link function scale for the power function.
 
@@ -141,6 +148,7 @@ converted to the link function scale for the power function.
 {phang2}{cmd:.  replace var4 = 1}{p_end}
 {phang2}{cmd:.  replace var3 = 1 in 1/10}{p_end}
 {phang2}{cmd:.  replace var2 = 1 in 1/5}{p_end}
+
 
 	Run power command with proportional decay correlation structure, varying tau0
 {phang2}{cmd:. power swgee, mu0(0.1) muT(0.2) es(2) design(var1-var4) nclust(15) nper(4) n(100) family(poisson) link(log)} 
@@ -173,11 +181,13 @@ converted to the link function scale for the power function.
 {synopt:{cmd:r(power)}}power {cmd:defunct; not used in the program; see power_t and power_z in the output table.}{p_end}
 {synopt:{cmd:r(working_ind)}}1 if working_ind option set to 1; 0 otherwise{p_end}
 
-{phang2}Other items in the return scalars are for the last iteration of the power program (last row of the output table).  All {p_end}
-{phang2}items for all iterations can be extracted from the table matrix ({cmd:r(pss_table)}){p_end}
+{phang2}Other items in the return scalars are for the last iteration of the power program (last row of the output table).  All 
+items for all iterations can be extracted from the table matrix ({cmd:r(pss_table)}).{p_end}
 
 {p2col 5 23 26 2: Macros}{p_end}
 {synopt:{cmd:r(corstr)}}Correlation structure chosen{p_end}
+{synopt:{cmd:r(family)}}Distributional family chosen{p_end}
+{synopt:{cmd:r(link)}}Link function chosen{p_end}
 
 {phang2}Other macros are common to the power command.  See {it:{help power}} for more information.{p_end}
 
@@ -248,5 +258,4 @@ Li, F. (2020). Design and analysis considerations for cohort stepped wedge clust
 {marker acknowledgements}{...}
 {title:Acknowledgements}
 
-The authors would like to thank Alyssa Platt of the Duke Global Health Institute
-Research Design and Analysis Core for testing and providing feedback on the programs.
+The authors would like to thank Alyssa Platt of the Duke Global Health Institute Research Design and Analysis Core for testing and providing feedback on the programs.

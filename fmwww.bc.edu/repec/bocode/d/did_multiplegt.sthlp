@@ -131,7 +131,10 @@ The DID_M and DID_l estimators with controls are similar to those without contro
 of the first-difference of the outcome on the first-differences of the controls and time fixed effects. Those regressions are estimated in the sample of control (g,t)s: (g,t)s 
 such that group g's treatment does not change from t-1 to t for the DID_M estimator, and (g,t)s such that group g's treatment has not changed till period t for the DID_l estimators. 
 Those regressions are also estimated separately for each possible value of the treatment, or for each set of treatment values binned together if the {cmd:recat_treatment(}{it:varlist}{cmd:)} option
-is used. Estimators with controls are unbiased even if groups experience differential trends,
+is used. If one of these regressions has fewer observations than the number of control variables, a warning message appears. Even if the warning does not appear,
+some of these regressions could still have too many controls, if they have fewer observations than the number of time fixed effects plus the number of control variables. In that case,
+not all control variables are accounted for.
+Estimators with controls are unbiased even if groups experience differential trends,
 provided such differential trends can be fully explained by a linear model in covariates changes. See de Chaisemartin and D'Haultfoeuille (2020b) for further details.
 When this option is specified, the {cmd:reghdfe}, {cmd:ftools}, and {cmd:moremata} packages have to be installed.{p_end}
 
@@ -200,11 +203,10 @@ With a non-binary treatment and if the {cmd:robust_dynamic} option is specified,
 (resp. {cmd:switchers(}{it:out}{cmd:)}) option the command estimates the treatment effect among first-time switchers whose average treatment over the duration of the panel is higher (resp. lower) than if they had never switched.{p_end}
 
 {p 4 8}{cmd:if_first_diff(}{it:string}{cmd:)}: when this option is specified, the command deletes observations that do not meet the condition specified in {it:string}, 
-after having aggregated the data at the (g,t) level
-and computed all the first- and long-differences of the treatment and of the outcome necessary to estimate the placebos and dynamic effects requested. 
-This option may for instance be useful when one estimates
+after having taken first differences of the outcome treatment and controls at the (g,t) level. This option may for instance be useful when one estimates
 dynamic effects, and one would like all the dynamic effects to apply to the same groups, see the FAQ section below. This option can also be useful when one wants to compute the
-DIDM estimator, controlling for other treatments that may change over the panel, as proposed by de Chaisemartin and D'Haultfoeuille (2020c), see the FAQ section below as well.{p_end}
+DIDM estimator, controlling for other treatments that may change over the panel, as proposed by de Chaisemartin and D'Haultfoeuille (2020c), see the FAQ section below as well.
+This option can only be used if the data is aggregated at the (g,t) level. If it is not, you need to aggregate your data at that level before running the command.{p_end}
 
 {p 4 8}{cmd:count_switchers_tot}: when this option is specified, the command counts the number of switchers of first-time switchers for which each of the instantaneous and
 dynamic effects requested are observed in the data. This number may be larger than the number of switchers of first-time switchers for which each effect can be estimated.
@@ -259,6 +261,10 @@ Then, the command does not produce a graph, because placebos are first-differenc
 so they are not really 
 comparable. When dynamic effects and long-difference placebos are requested, everything is relative to the period prior to first-switches, referred to as period -1. 
 Accordingly, the first placebo is shown at period -2 on the graph.{p_end}
+
+{p 4 4} {it:{cmd:did_multiplegt} is not running, or returning strange results, with the {cmd:controls()}, {cmd:trends_nonparam()}, or {cmd:trends_lin()} options?}
+
+{p 4 4} You most likely did not install the auxiliary packages {cmd:moremata}, {cmd:ftools}, and {cmd:reghdfe}, as indicated above.
 
 {p 4 4} {it:My group-level panel is unbalanced: some groups (e.g. counties) are not observed in every year. Can I still use the command?} 
 
@@ -342,6 +348,29 @@ you can just use the sum of the estimated variances in the X==0 and X==1 subgrou
 If your data is at a more disaggregated level than groups and X is a time-invariant characteristic also at a more disaggregated level 
 (you have X=0 and X=1 observations within the same group), then you can still use the same procedure to estimate heterogeneous effects, but you 
 will need to bootstrap the command yourself to estimate the variance of the differences between the effects, if you want your ses to be clustered at the group level.  
+
+{p 4 4}{it:The command takes a lot of time to run, is there a way I can speed it up?}
+
+{p 4 4} Yes, when the {cmd:robust_dynamic} option is specified. In staggered adoption designs with a binary treatment, you just need to define
+a variable Cohort equal to the time period when group g first gets treated (and to 0 if group g never gets treated). Then, you need to run {cmd:did_multiplegt} 
+with Cohort instead of G as the group variable. If the number of groups is large in your application, using this strategy can divide the computing time by more than 10. In more
+complicated designs with a non-binary and/or non-staggered treatment, the Cohort variable needs to be defined as follows: {cmd:egen Cohort=group(D1 F increase)},
+where: D1 is a time-invariant variable equal to group g's treatment at the first period it appears in the data; 
+F is a time-invariant variable equal to the first time period where group g's treatment changes (and to 0 if group g's treatment never changes);
+increase is a variable equal to 1 if on average across all time periods, group g's treatments are strictly higher than D1, and to 0 otherwise. If the {cmd:trends_non_param} option is
+specified, Cohort should be defined as follows: {cmd:egen Cohort=group(D1 F increase trends_non_param)}.
+
+{p 4 4} If you define Cohort as the group variable, you will not be able to cluster your standard errors at, say, the group level. 
+Then, you will need to bootstrap the command yourself to obtain standard errors. To do so, you just need to: i) preserve the data; 
+ii) draw a bootstrap sample using the {cmd:bsample} 
+command (you can cluster the bootstrap, say, at the group level); iii) run {cmd:did_multiplegt} with Cohort as the group variable; iv) store the estimates somewhere; 
+v) restore your data; vi) replicate i) to v), say, 100 times; vii) use the standard error of your estimates across the 100 replications to estimate their actual standard errors. 
+
+{p 4 4} Specifying Cohort instead of G as the group variable will return numerically equivalent estimates, if your data is at the (g,t) level, 
+the panel of groups is balanced, the estimation is unweighted or weighted with time-invariant weights (e.g. groups' populations at the start of the panel), 
+and there are no controls or linear trends. Otherwise, the two estimations may give different results. For instance, with time-varying weights, cohorts cannot be written as simple
+averages of groups with time-invariant weights, and one can show that imposing parallel trends at the group level is not equivalent to imposing it at the cohort level. 
+Without controls or linear trends, differences are likely to be small, however. With controls or linear trends, differences may be larger. 
 
 {hline}
 

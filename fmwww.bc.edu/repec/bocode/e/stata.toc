@@ -104,6 +104,7 @@ p excelsave module to provide a convenient way to export matched Stata datasets 
 p expand_n module to expand dataset
 p expandby module to duplicate observations by variable
 p expandihlp module to expand the help file preprocessor directive for substituting repeated material in a given help file
+p expandrank module to expand and rank observations
 p expgen module to duplicate observations sorted in original order with generated variables
 p expl module to explore folders and files
 p explist module to generate an exponentially-spaced list of numbers

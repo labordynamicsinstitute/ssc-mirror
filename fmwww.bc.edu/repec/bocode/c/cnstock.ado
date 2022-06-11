@@ -1,7 +1,7 @@
 * Authors:
 * Chuntao Li, Ph.D. , China Stata Club(爬虫俱乐部)(chtl@zuel.edu.cn)
 * Zijian LI, China Stata Club(爬虫俱乐部)(jeremylee_41@163.com)
-* Yuan Xue, China Stata Club(爬虫俱乐部)(xueyuan@hust.edu.cn)
+* Yuan Xue, China Stata Club(爬虫俱乐部)(xueyuan19920310@163.com)
 * Updated on Oct 31th, 2018
 * Fix some bugs and make this command run faster
 * Original Data Source: https://quote.cfi.cn/stockList.aspx
@@ -52,7 +52,8 @@ program define cnstock
 			set obs 1
 			gen v = fileread("https://quote.cfi.cn/stockList.aspx?t=`c'")
 			replace v = ustrregexs(0) if ustrregexm(v, "<div id='divcontent' runat='server'>.*")
-			mata spredata()
+			if c(version) >= 16 mata spredata()
+			else mata spredata2()
 			gen stknm = ustrregexs(1) if ustrregexm(v, `".html">(.*?)\(\d"')
 			gen stkcd = ustrregexs(1) if ustrregexm(v, "\((.*?)\)")
 			drop v
@@ -87,6 +88,24 @@ void function spredata() {
 	
 	A = st_sdata(., "v", .)
 	B = ustrsplit(A, "</a></td>")
+	stata("drop in 1")
+	st_addobs(cols(B))
+	st_sstore(., "v", B')
+}
+
+
+void function spredata2() {
+    string matrix A
+	string matrix B
+	
+	A = st_sdata(., "v", .)
+	B = substr(A, 1, strpos(A, "</a></td>") - 1)
+	A = subinstr(A, B + "</a></td>", "", 1)
+	do {
+		B = B, substr(A, 1, strpos(A, "</a></td>") - 1)
+		A = subinstr(A, B[1, cols(B)] + "</a></td>", "", 1)
+	} while (strpos(A, "</a></td>") != 0)
+	B = B, A
 	stata("drop in 1")
 	st_addobs(cols(B))
 	st_sstore(., "v", B')

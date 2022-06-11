@@ -2,6 +2,12 @@
 *! Estimates chi2 statistic for dichotomous outcomes
 *! on clustered data. May 30, 2000. Jeph Herrin
 *! see also clprob.ado, cldiff.ado, and clttest.ado
+
+*
+*  	Revised 14 Sep 2021 - check nesting of clusters
+*
+*
+
 capture program drop clchi2
 program define clchi2, rclass
 	version 7.0
@@ -16,6 +22,7 @@ program define clchi2, rclass
 		di in r "Must specify cluster"
 		exit
 	}
+	
 	if "`strata'"!="" { 
 		unabbrev `strata', max(1)
 		local strata "$S_1"
@@ -23,6 +30,8 @@ program define clchi2, rclass
 	tokenize `varlist', parse(" ")
 	local var1 "`1'"
 	local var2 "`2'"
+	
+	
 	if "`cluster'"==""|"`var1'"==""|"`var2'"==""  {
 		di in gr "Syntax for " in wh "clchi2" _c
 		di in gr ", the clustered chi2 is:"
@@ -30,13 +39,15 @@ program define clchi2, rclass
 		di in gr "v3" in wh ") strata(" _c
 		di in gr "v4" in wh ") [table] "
 		di in gr "  where " in wh "v1 " 
-    		di in gr "is the dichotomous event variable"
+    	di in gr "is the dichotomous event variable"
 		di in wh "        v2 " in gr "is the classification variable"
 		di in wh "        v3 " in gr "is a required cluster variable"
 		di in wh "        v4 " in gr "is an optional strata variable"
 		exit
 	}
 
+	
+	
 	quietly {
 	tempvar myin 
 	tempname CT CA CR chi2 obs df PT PA PR rholb rhoub 
@@ -51,6 +62,16 @@ program define clchi2, rclass
 		replace `myin'=0
 		replace `myin'=1 `if' `in'
 		}
+	
+	* check nesting
+	tempvar evar
+	bys `myin' `cluster' (`var2') : gen `evar'=`var2'[_N]!=`var2'[1]
+	qui sum `evar' if `myin'
+	if r(max)>0 {
+		di in r "Clusters must be nested within var2"
+		exit
+	}
+		
 	if "`strata'"!="" {
 		inspect `strata'
 		scalar `nstr'=r(N_unique)

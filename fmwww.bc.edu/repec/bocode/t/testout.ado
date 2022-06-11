@@ -7,13 +7,21 @@
 program define testout, rclass
     version 14.2
 
-    syntax varlist(min=2 numeric) [if] [in] [, iv(varname numeric) cluster(varname numeric) pweight(varname numeric) k(real 0) alpha(real 0.05) maxw(real 2) prec(real 0.00025)]
+    syntax varlist(min=2 numeric) [if] [in] [, iv(varlist) cluster(varname) aweight(varname numeric) pweight(varname numeric) k(real 0) alpha(real 0.05) maxw(real 2) prec(real 0.00025)]
     marksample touse
  
     gettoken depvar indepvars : varlist
     _fv_check_depvar `depvar'
     fvexpand `indepvars' 
     local cnames `r(varlist)'
+	
+	tempvar aw
+	if "`aweight'" == "" {
+	  gen `aw' = 1
+   	}
+	if "`aweight'" != "" {
+	  gen `aw' = `aweight'
+   	}
 	
 	tempvar pw
 	if "`pweight'" == "" {
@@ -26,12 +34,12 @@ program define testout, rclass
 	tempname N G K KS Pval1 Pval2
 	if "`cluster'" == "" {
 		if "`iv'" == "" {
-			mata: test("`depvar'", "`cnames'","`touse'","`N'","`K'","`Pval1'","`Pval2'","`pw'",`k',`alpha',`maxw',`prec')
+			mata: test("`depvar'", "`cnames'","`touse'","`N'","`K'","`Pval1'","`Pval2'","`aw'","`pw'",`k',`alpha',`maxw',`prec')
 		}
 		if "`iv'" != "" {
 			tempvar ivvar
-			gen `ivvar' = `iv'
-			mata: test_iv("`depvar'", "`cnames'","`touse'","`ivvar'","`N'","`K'","`Pval1'","`Pval2'","`pw'",`k',`alpha',`maxw',`prec')
+			//gen `ivvar' = `iv'
+			mata: test_iv("`depvar'", "`cnames'","`touse'","`iv'","`N'","`K'","`Pval1'","`Pval2'","`aw'","`pw'",`k',`alpha',`maxw',`prec')
 		}
 		return scalar pval2 = `Pval2'
 		return scalar pval1 = `Pval1'	
@@ -41,12 +49,12 @@ program define testout, rclass
 	}
 	if "`cluster'" != "" {
 		if "`iv'" == "" {
-			mata: cluster_test("`depvar'", "`cnames'","`touse'","`N'","`G'","`K'","`Pval1'","`Pval2'","`cluster'","`pw'",`k',`alpha',`maxw',`prec')
+			mata: cluster_test("`depvar'", "`cnames'","`touse'","`N'","`G'","`K'","`Pval1'","`Pval2'","`cluster'","`aw'","`pw'",`k',`alpha',`maxw',`prec')
 		}
 		if "`iv'" != "" {
 			tempvar ivvar
-			gen `ivvar' = `iv'
-			mata: cluster_test_iv("`depvar'", "`cnames'","`touse'","`ivvar'","`N'","`G'","`K'","`Pval1'","`Pval2'","`cluster'","`pw'",`k',`alpha',`maxw',`prec')
+			//gen `ivvar' = `iv'
+			mata: cluster_test_iv("`depvar'", "`cnames'","`touse'","`iv'","`N'","`G'","`K'","`Pval1'","`Pval2'","`cluster'","`aw'","`pw'",`k',`alpha',`maxw',`prec')
 		}
 		return scalar pval2 = `Pval2'
 		return scalar pval1 = `Pval1'	
@@ -122,16 +130,17 @@ real scalar getteststat(real vector vstar, real scalar k, real scalar maxW){
 }
 //////////////////////////////////////////////////////////////////////////////// 
 // Test for reg
-void test( string scalar yv, string scalar xv, string scalar touse, string scalar nname, string scalar kname, string scalar pval1name, string scalar pval2name, string scalar pwname, real scalar k, real scalar alpha, real scalar maxW, real scalar prec) 
+void test( string scalar yv, string scalar xv, string scalar touse, string scalar nname, string scalar kname, string scalar pval1name, string scalar pval2name, string scalar awname, string scalar pwname, real scalar k, real scalar alpha, real scalar maxW, real scalar prec) 
 {
 	// Set Data ////////////////////////////////////////////////////////////////
     y      = st_data(., yv, touse)
     x      = st_data(., xv, touse)
 	pw     = st_data(., pwname, touse)
+	aw     = st_data(., awname, touse)
     n = rows(y)
 	x = J(n,1,1),x
-	y = sqrt(pw) :* y
-	x = (sqrt(pw)*J(1,cols(x),1)) :* x
+	y = sqrt(aw:*pw) :* y
+	x = (sqrt(aw:*pw)*J(1,cols(x),1)) :* x
 	dimx = cols(x)
 	if( k < 3 ){
 	 k = max(3 \ ceil(0.05*n))
@@ -191,13 +200,14 @@ void test( string scalar yv, string scalar xv, string scalar touse, string scala
 }
 //////////////////////////////////////////////////////////////////////////////// 
 // Test for ivreg
-void test_iv( string scalar yv, string scalar xv, string scalar touse, string scalar iv, string scalar nname, string scalar kname, string scalar pval1name, string scalar pval2name, string scalar pwname, real scalar k, real scalar alpha, real scalar maxW, real scalar prec) 
+void test_iv( string scalar yv, string scalar xv, string scalar touse, string scalar iv, string scalar nname, string scalar kname, string scalar pval1name, string scalar pval2name, string scalar awname, string scalar pwname, real scalar k, real scalar alpha, real scalar maxW, real scalar prec) 
 {
 	// Set Data ////////////////////////////////////////////////////////////////
     y      = st_data(., yv, touse)
     x      = st_data(., xv, touse)
-	z = st_data(., iv, touse)
+	z      = st_data(., iv, touse)
 	pw     = st_data(., pwname, touse)
+	aw     = st_data(., awname, touse)
     n = rows(y)
 	if( cols(x)>1 ){
 	 z = J(n,1,1),z,x[,2..cols(x)]
@@ -205,10 +215,11 @@ void test_iv( string scalar yv, string scalar xv, string scalar touse, string sc
 	 z = J(n,1,1),z
 	}
 	x = J(n,1,1),x
-	y = sqrt(pw) :* y
-	x = (sqrt(pw)*J(1,cols(x),1)) :* x
-	z = (sqrt(pw)*J(1,cols(z),1)) :* z
+	y = sqrt(aw:*pw) :* y
+	x = (sqrt(aw:*pw)*J(1,cols(x),1)) :* x
+	z = (sqrt(aw:*pw)*J(1,cols(z),1)) :* z
 	dimx = cols(x)
+	dimz = cols(z)
 	if( k < 3 ){
 	 k = max(3 \ ceil(0.05*n))
 	}
@@ -224,10 +235,10 @@ void test_iv( string scalar yv, string scalar xv, string scalar touse, string sc
 	}
 
 	// 2SLS ////////////////////////////////////////////////////////////////////
-	TSLS = luinv(z'*x)*z'*y
+	TSLS = luinv(x'*z*luinv(z'*z)*z'*x)*x'*z*luinv(z'*z)*z'*y
 	u = y - x*TSLS
-	A1 = rowsum( ( J(1,dimx,u) :* z ):^2 ):^(1/2)
-	A2 = rowsum( ( J(1,dimx,u) :* z ):^2 ):^(2/2)
+	A1 = rowsum( ( J(1,dimz,u) :* z ):^2 ):^(1/2)
+	A2 = rowsum( ( J(1,dimz,u) :* z ):^2 ):^(2/2)
 
 	// COMPUTE THE TEST STATISTICS AND P VALUES ////////////////////////////////
 	A1order = sort(A1,-1)
@@ -268,19 +279,20 @@ void test_iv( string scalar yv, string scalar xv, string scalar touse, string sc
 
 //////////////////////////////////////////////////////////////////////////////// 
 // Test for reg under clustering
-void cluster_test( string scalar yv, string scalar xv, string scalar touse, string scalar nname, string scalar gname, string scalar kname, string scalar pval1name, string scalar pval2name, string scalar clname, string scalar pwname, real scalar k, real scalar alpha, real scalar maxW, real scalar prec) 
+void cluster_test( string scalar yv, string scalar xv, string scalar touse, string scalar nname, string scalar gname, string scalar kname, string scalar pval1name, string scalar pval2name, string scalar clname, string scalar awname, string scalar pwname, real scalar k, real scalar alpha, real scalar maxW, real scalar prec) 
 {
 	// Set Data ////////////////////////////////////////////////////////////////
     y      = st_data(., yv, touse)
     x      = st_data(., xv, touse)
 	cl     = st_data(., clname, touse)
 	pw     = st_data(., pwname, touse)
+	aw     = st_data(., awname, touse)
     n = rows(y)
 	uniq_cl = uniqrows(cl)
 	G = length(uniq_cl)
 	x = J(n,1,1),x
-	y = sqrt(pw) :* y
-	x = (sqrt(pw)*J(1,cols(x),1)) :* x
+	y = sqrt(aw:*pw) :* y
+	x = (sqrt(aw:*pw)*J(1,cols(x),1)) :* x
 	dimx = cols(x)
 	if( k < 3 ){
 	 k = max(3 \ ceil(0.05*G))
@@ -347,7 +359,7 @@ void cluster_test( string scalar yv, string scalar xv, string scalar touse, stri
 }
 //////////////////////////////////////////////////////////////////////////////// 
 // Test for ivreg under clustering
-void cluster_test_iv( string scalar yv, string scalar xv, string scalar touse, string scalar iv, string scalar nname, string scalar gname, string scalar kname, string scalar pval1name, string scalar pval2name, string scalar clname, string scalar pwname, real scalar k, real scalar alpha, real scalar maxW, real scalar prec) 
+void cluster_test_iv( string scalar yv, string scalar xv, string scalar touse, string scalar iv, string scalar nname, string scalar gname, string scalar kname, string scalar pval1name, string scalar pval2name, string scalar clname, string scalar awname, string scalar pwname, real scalar k, real scalar alpha, real scalar maxW, real scalar prec) 
 {
 	// Set Data ////////////////////////////////////////////////////////////////
     y      = st_data(., yv, touse)
@@ -355,6 +367,7 @@ void cluster_test_iv( string scalar yv, string scalar xv, string scalar touse, s
 	z = st_data(., iv, touse)
 	cl     = st_data(., clname, touse)
 	pw     = st_data(., pwname, touse)
+	aw     = st_data(., awname, touse)
     n = rows(y)
 	uniq_cl = uniqrows(cl)
 	G = length(uniq_cl)
@@ -364,9 +377,9 @@ void cluster_test_iv( string scalar yv, string scalar xv, string scalar touse, s
 	 z = J(n,1,1),z
 	}
 	x = J(n,1,1),x
-	y = sqrt(pw) :* y
-	x = (sqrt(pw)*J(1,cols(x),1)) :* x
-	z = (sqrt(pw)*J(1,cols(z),1)) :* z
+	y = sqrt(aw:*pw) :* y
+	x = (sqrt(aw:*pw)*J(1,cols(x),1)) :* x
+	z = (sqrt(aw:*pw)*J(1,cols(z),1)) :* z
 	dimx = cols(x)
 	dimz = cols(z)
 	if( k < 3 ){
@@ -384,7 +397,7 @@ void cluster_test_iv( string scalar yv, string scalar xv, string scalar touse, s
 	}
 
 	// 2SLS ////////////////////////////////////////////////////////////////////
-	TSLS = luinv(z'*x)*z'*y
+	TSLS = luinv(x'*z*luinv(z'*z)*z'*x)*x'*z*luinv(z'*z)*z'*y
 	u = y - x*TSLS	
 	uz = J(1,dimz,u) :* z
 	uz_cl = J(G,dimz,0)

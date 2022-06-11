@@ -4,6 +4,7 @@
 * July 13rd, 2017
 * Updated on December 27th, 2018
 * Updated on November 12th, 2020
+* Updated on June 9th, 2022
 * Program written by Dr. Chuntao Li and Yuan Xue
 * Report regression table to formatted table in DOCX file.
 * Can only be used in Stata version 15.0 or above
@@ -15,21 +16,44 @@ program define reg2docx
 		exit 9
 	}
 
-	syntax anything using/, [append replace b Bfmt(string) t Tfmt(string) z ///
-		Zfmt(string) p Pfmt(string) se SEfmt(string) scalars(string asis) NOCONstant ///
-		NOSTAr STAR STAR2(string asis) staraux title(string) mtitles MTITLES2(string asis) ///
-		noMTITLE DEPvars order(string asis) indicate(string asis) drop(string asis) ///
-		NOPArentheses PArentheses BRackets noOBS note(string) pagesize(string) ///
-		font(string) landscape]
+	syntax anything using/, [append APPEND2(string asis) replace b Bfmt(string) t Tfmt(string) z ///
+		Zfmt(string) p Pfmt(string) se SEfmt(string) ci CIfmt(string) scalars(string asis) NOCONstant ///
+		NOSTAr STAR STAR2(string asis) staraux starsps title(string) mtitles MTITLES2(string asis) ///
+		noMTITLE DEPvars order(string asis) indicate(string asis) addfe(string asis) ///
+		drop(string asis) keep(string asis) NOPArentheses PArentheses BRackets noOBS ///
+		note(string asis) pagesize(string) font(string) landscape varname varlabel ///
+		layout(string) *]
+		
+	tokenize `"`0'"', parse(",")
+	
+	local 0 `1', `options'
+	local margins
+	syntax anything using/, [margin(passthru) *]
+	while `"`margin'"' != "" {
+		local margins `margins' `margin'
+		local 0 `1', `options'
+		syntax anything using/, [margin(passthru) *]
+	}
+	
+	if `"`options'"' != "" {
+		di as err "option " `"{bf:`options'}"' " not allowed"
+		exit 198
+	}
 
-	if "`append'" != "" & "`replace'" != "" {
+	if ("`append'" != "" | `"`append2'"' != "") & "`replace'" != "" {
 		disp as error "you could not specify both append and replace"
 		exit 198
 	}
 	
+	if `"`append2'"' != "" & `"`append2'"' != "pagebreak" & c(stata_version) < 16 {
+		disp as error "you could only specify append or append(pagebreak) in the version before 16"
+		exit 198
+	}
+	
 	if ("`t'" != "" | "`tfmt'" != "") + ("`z'" != "" | "`zfmt'" != "") + ///
-	("`p'" != "" | "`pfmt'" != "") + ("`se'" != "" | "`sefmt'" != "") >= 2 {
-		disp as error "you could only specify one of t|z|p|se[(fmt)]"
+	("`p'" != "" | "`pfmt'" != "") + ("`se'" != "" | "`sefmt'" != "") + ///
+	("`ci'" != "" | "`cifmt'" != "") >= 2 {
+		disp as error "you could only specify one of t|z|p|se|ci[(fmt)]"
 		exit 198
 	}
 
@@ -40,8 +64,8 @@ program define reg2docx
 
 	if `"`scalars'"' == "" & "`obs'" == "" local scalars = "N"
 
-	if ("`nostar'" != "") & ("`star'" != "" | "`star2'" != "" | "`staraux'" != "") {
-		disp as error "you could not specify both nostar and star[()]|staraux"
+	if ("`nostar'" != "") & ("`star'" != "" | "`star2'" != "" | "`staraux'" != "" | "`starsps'" != "") {
+		disp as error "you could not specify both nostar and star[()]|staraux|starsps"
 		exit 198
 	}
 	
@@ -57,6 +81,11 @@ program define reg2docx
 	
 	if ("`parentheses'" != "") & ("`noparentheses'" != "" | "`brackets'" != "") {
 		disp as error "you could not specify both parentheses and noparentheses|brackets"
+		exit 198
+	}
+	
+	if "`varname'" != "" & "`varlabel'" != "" {
+		disp as error "you could not specify both varname and varlabel"
 		exit 198
 	}
 	
@@ -93,8 +122,9 @@ program define reg2docx
 			local modelnum = `modelnum' + 1
 			est stat `mdl'
 			mat ictable = r(S)
+			est restore `mdl'
 			cap est replay `mdl'
-			_est unhold `mdl'
+			*_est unhold `mdl'
 
 			if `stats_number' != 0 {
 				if `modelnum' != 1 mat scalar_mat = scalar_mat, blank_scalar
@@ -108,18 +138,19 @@ program define reg2docx
 
 			local df = e(df_r)   //自由度
 			local depvar = word(`"`=e(depvar)'"', 1)
+			local level = r(level)
 
 			local indicate_error = ""
 			if has_eprop(b) & has_eprop(V) {
 				local bV = 1
 				mat b = e(b)'
 				mat V = e(V)
-				mata calculate_all("b", "V", "", `df', `"`drop'"', `"`indicate'"', `"`noconstant'"', `modelnum')
+				mata calculate_all("b", "V", "", `df', `level', `"`drop'"', `"`keep'"', `"`indicate'"', `"`noconstant'"', `modelnum')
 			}
 			else {
 				local bV = 0
 				mat regtable = r(table)'
-				mata calculate_all("", "", "regtable", `df', `"`drop'"', `"`indicate'"', `"`noconstant'"', `modelnum')
+				mata calculate_all("", "", "regtable", `df', `level', `"`drop'"', `"`keep'"', `"`indicate'"', `"`noconstant'"', `modelnum')
 			}
 			if `"`indicate'"' != "" {
 				if "`indicate_error'" == "error" {
@@ -132,14 +163,48 @@ program define reg2docx
 				else mat indicate_mat = indicate_mat, indicateornot
 			}
 		}
+		
+		if `"`addfe'"' != "" {
+			local addfe_error = ""
+			mata: addfe(`"`addfe'"')
+			if "`addfe_error'" == "error" {
+				disp as error "you specify the option addfe() incorrectly"
+				exit 198
+			}
+			forvalues fei = 1/`addfe_num' {
+				if ustrwordcount("`fe_result`fei''") != 1 & ustrwordcount("`fe_result`fei''") != `modelnum' {
+					disp as error "you specify the option addfe() incorrectly"
+					exit 198
+				}
+			}
+		}
 
 		if `"`drop'"' != "" {
 			local droperror = ""
 			mata testdrop(`"`indepvar'"', `"`drop'"')
 			if `"`droperror'"' == "error" {
-				disp as error "the `drop_item' in option indicate() could not match any independent variables"
+				disp as error "the `drop_item' in option drop() could not match any independent variables"
 				exit 198
 			}
+		}
+		
+		if `"`keep'"' != "" {
+			local keeperror = ""
+			mata testkeep(`"`indepvar'"', `"`keep'"')
+			if `"`keeperror'"' == "error" {
+				disp as error "the `keep_item' in option keep() could not match any independent variables"
+				exit 198
+			}
+		}
+		
+		if `"`drop'"' != "" & `"`keep'"' != "" {
+			local keepdroperror = ""
+			mata testkeepanddrop(`"`keep'"', `"`drop'"')
+			if "`keepdroperror'" == "error" {
+				disp as error "the `keepdrop_item' in both keep() and drop()"
+				exit 198
+			}
+			
 		}
 
 		if `"`mtitles2'"' != "" {
@@ -167,6 +232,10 @@ program define reg2docx
 		if "`p'" != "" | "`pfmt'" != "" {
 			local sig = "p"
 			if "`pfmt'" == "" local pfmt `bfmt'
+		}
+		if "`ci'" != "" | "`cifmt'" != "" {
+			local sig = "ci"
+			if "`cifmt'" == "" local cifmt `bfmt'
 		}
 
 		local ordererror = ""
@@ -203,21 +272,31 @@ program define reg2docx
 			local top = 1
 		}
 		if `"`indicate'"' != "" local rowsnum = `rowsnum' + `indicate_num'
+		if `"`addfe'"' != "" local rowsnum = `rowsnum' + `addfe_num'
 
 		if `"`pagesize'"' == "" local pagesize = "A4"
 		if `"`font'"' == "" local font = "Times New Roman"
 		putdocx clear
-		putdocx begin, pagesize(`pagesize') font(`font') `landscape'
+		
+		if c(stata_version) < 16 & "`append2'" == "pagebreak" {
+			putdocx begin, font(`font')
+			putdocx sectionbreak, pagesize(`pagesize') `landscape' `margins'
+		}
+		else {
+			putdocx begin, font(`font') pagesize(`pagesize') `landscape' `margins'
+		}
+		
 		putdocx paragraph, spacing(after, 0) halign(center)
 		if `"`title'"' == "" local title = "Regression Table"
+		if "`layout'" == "" local layout = "autofitwindow"
 		putdocx text (`"`title'"')
 
 		if `"`note'"' != "" {
-			putdocx table regtbl = (`rowsnum', `colsnum'), border(all, nil) border(top) halign(center) note(`"`note'"')
+			putdocx table regtbl = (`rowsnum', `colsnum'), border(all, nil) border(top) halign(center) note(`note') layout(`layout')
 			putdocx table regtbl(`rowsnum', .), border(bottom)
 		}
 		else {
-			putdocx table regtbl = (`rowsnum', `colsnum'), border(all, nil) border(top) border(bottom) halign(center)
+			putdocx table regtbl = (`rowsnum', `colsnum'), border(all, nil) border(top) border(bottom) halign(center) layout(`layout')
 		}
 
 		putdocx table regtbl(`top', 1), border(bottom)
@@ -232,7 +311,15 @@ program define reg2docx
 		}
 		local row = `top' + 1
 		foreach var in `orderindepvar1' {
-			putdocx table regtbl(`row', 1) = ("`var'"), halign(center)
+			if "`varlabel'" == "" putdocx table regtbl(`row', 1) = ("`var'"), halign(center)
+			else {
+				cap local lab: var label `var'
+				if _rc == 0 {
+					if "`lab'" == "" putdocx table regtbl(`row', 1) = ("`var'"), halign(center)
+					else putdocx table regtbl(`row', 1) = ("`lab'"), halign(center)
+				}
+				else putdocx table regtbl(`row', 1) = ("`var'"), halign(center)
+			}
 			local row = `row' + 2
 		}
 		putdocx table regtbl(`=`row'-1', .), border(bottom)
@@ -249,17 +336,34 @@ program define reg2docx
 			}
 		}
 
-		if `"`indicate'"' != "" {
-			foreach name in `indicate_name' {
-				putdocx table regtbl(`row', 1) = ("`name'"), halign(center)
-				local row = `row' + 1
+		if `"`indicate'"' + `"`addfe'"' != "" {
+			if `"`indicate'"' != "" {
+				foreach name in `indicate_name' {
+					putdocx table regtbl(`row', 1) = (`"`name'"'), halign(center)
+					local row = `row' + 1
+				}
+			}
+			if `"`addfe'"' != "" {
+				forvalues fei = 1/`addfe_num' {
+					putdocx table regtbl(`row', 1) = (trim(`"`fe_name`fei''"')), halign(center)
+					local row = `row' + 1
+				}
 			}
 			putdocx table regtbl(`=`row'-1', .), border(bottom)
 		}
 		
 		if `stats_number' != 0 {
 			foreach name in `scalar_list' {
-				putdocx table regtbl(`row', 1) = ("`name'"), halign(center)
+				if inlist("`name'", "r2", "r2_a", "r2_p", "r2_b", "r2_o", "r2_w") {
+					if "`name'" == "r2" putdocx table regtbl(`row', 1) = ("R"), halign(center)
+					else if "`name'" == "r2_a" putdocx table regtbl(`row', 1) = ("Adj. R"), halign(center)
+					else if "`name'" == "r2_p" putdocx table regtbl(`row', 1) = ("Pseudo R"), halign(center)
+					else if "`name'" == "r2_b" putdocx table regtbl(`row', 1) = ("Between R"), halign(center)
+					else if "`name'" == "r2_o" putdocx table regtbl(`row', 1) = ("Overall R"), halign(center)
+					else if "`name'" == "r2_w" putdocx table regtbl(`row', 1) = ("Within R"), halign(center)
+					putdocx table regtbl(`row', 1) = ("2"), append script(super) halign(center)
+				}
+				else putdocx table regtbl(`row', 1) = ("`name'"), halign(center)
 				local row = `row' + 1
 			}
 		}
@@ -273,6 +377,8 @@ program define reg2docx
 				local tz = tz1[`vi', `mi']
 				local se = se1[`vi', `mi']
 				local p = p1[`vi', `mi']
+				local ll = ll1[`vi', `mi']
+				local ul = ul1[`vi', `mi']
 				if `b' < . {
 					local staroutput = ""
 					local bstar = ""
@@ -292,8 +398,19 @@ program define reg2docx
 						local bstar = ""
 						local tstar = "" 
 					}
-					putdocx table regtbl(`row', `=`mi' + 1') = (`"`=subinstr("`: disp `bfmt' `b''", " ", "", .)'`bstar'"'), halign(center)
-					putdocx table regtbl(`=`row' + 1', `=`mi' + 1') = (`"`tleft'`=subinstr("`: disp `sigfmt' ``sig'''", " ", "", .)'`tright'`tstar'"'), halign(center)
+					
+					if "`starsps'" == "" {
+						putdocx table regtbl(`row', `=`mi' + 1') = (`"`=subinstr("`: disp `bfmt' `b''", " ", "", .)'`bstar'"'), halign(center)
+						if "`sig'" != "ci" putdocx table regtbl(`=`row' + 1', `=`mi' + 1') = (`"`tleft'`=subinstr("`: disp `sigfmt' ``sig'''", " ", "", .)'`tright'`tstar'"'), halign(center)
+						else putdocx table regtbl(`=`row' + 1', `=`mi' + 1') = (`"[`=subinstr("`: disp `sigfmt' `ll''", " ", "", .)',`=subinstr("`: disp `sigfmt' `ul''", " ", "", .)']`tstar'"'), halign(center)
+					}
+					else {
+						putdocx table regtbl(`row', `=`mi' + 1') = (`"`=subinstr("`: disp `bfmt' `b''", " ", "", .)'"'), halign(center)
+						if "`bstar'" != "" putdocx table regtbl(`row', `=`mi' + 1') = (`"`bstar'"'), append script(super) halign(center)
+						if "`sig'" != "ci" putdocx table regtbl(`=`row' + 1', `=`mi' + 1') = (`"`tleft'`=subinstr("`: disp `sigfmt' ``sig'''", " ", "", .)'`tright'"'), halign(center)
+						else putdocx table regtbl(`=`row' + 1', `=`mi' + 1') = (`"[`=subinstr("`: disp `sigfmt' `ll''", " ", "", .)',`=subinstr("`: disp `sigfmt' `ul''", " ", "", .)']"'), halign(center)
+						if "`tstar'" != "" putdocx table regtbl(`=`row' + 1', `=`mi' + 1') = (`"`tstar'"'), append script(super) halign(center)
+					}
 				}
 			}
 			local row = `row' + 2
@@ -327,8 +444,19 @@ program define reg2docx
 								local bstar = ""
 								local tstar = "" 
 							}
-							putdocx table regtbl(`row', `=`mi' + 1') = (`"`=subinstr("`: disp `bfmt' `b''", " ", "", .)'`bstar'"'), halign(center)
-							putdocx table regtbl(`=`row' + 1', `=`mi' + 1') = (`"`tleft'`=subinstr("`: disp `sigfmt' ``sig'''", " ", "", .)'`tright'`tstar'"'), halign(center)
+							
+							if "`starsps'" == "" {
+								putdocx table regtbl(`row', `=`mi' + 1') = (`"`=subinstr("`: disp `bfmt' `b''", " ", "", .)'`bstar'"'), halign(center)
+								if "`sig'" != "ci" putdocx table regtbl(`=`row' + 1', `=`mi' + 1') = (`"`tleft'`=subinstr("`: disp `sigfmt' ``sig'''", " ", "", .)'`tright'`tstar'"'), halign(center)
+								else putdocx table regtbl(`=`row' + 1', `=`mi' + 1') = (`"[`=subinstr("`: disp `sigfmt' `ll''", " ", "", .)',`=subinstr("`: disp `sigfmt' `ul''", " ", "", .)']`tstar'"'), halign(center)
+							}
+							else {
+								putdocx table regtbl(`row', `=`mi' + 1') = (`"`=subinstr("`: disp `bfmt' `b''", " ", "", .)'"'), halign(center)
+								if "`bstar'" != "" putdocx table regtbl(`row', `=`mi' + 1') = (`"`bstar'"'), append script(super) halign(center)
+								if "`sig'" != "ci" putdocx table regtbl(`=`row' + 1', `=`mi' + 1') = (`"`tleft'`=subinstr("`: disp `sigfmt' ``sig'''", " ", "", .)'`tright'"'), halign(center)
+								else putdocx table regtbl(`=`row' + 1', `=`mi' + 1') = (`"[`=subinstr("`: disp `sigfmt' `ll''", " ", "", .)',`=subinstr("`: disp `sigfmt' `ul''", " ", "", .)']"'), halign(center)
+								if "`tstar'" != "" putdocx table regtbl(`=`row' + 1', `=`mi' + 1') = (`"`tstar'"'), append script(super) halign(center)
+							}
 						}
 					}
 					local row = `row' + 2
@@ -336,21 +464,28 @@ program define reg2docx
 			}
 		}
 
-		if `"`indicate'"' != "" {
-			forvalues indi = 1/`indicate_num' {
-				forvalues mi = 1/`modelnum' {
-					local yon = indicate_mat[`indi', `mi']
-					if `yon' == 1 {
-						putdocx table regtbl(`row', `=`mi' + 1') = ("Yes"), halign(center)
+		if `"`indicate'"' + `"`addfe'"' != "" {
+			if `"`indicate'"' != "" {
+				forvalues indi = 1/`indicate_num' {
+					forvalues mi = 1/`modelnum' {
+						local yon = indicate_mat[`indi', `mi']
+						if `yon' == 1 putdocx table regtbl(`row', `=`mi' + 1') = ("Yes"), halign(center)
+						else putdocx table regtbl(`row', `=`mi' + 1') = ("No"), halign(center)
 					}
-					else {
-						putdocx table regtbl(`row', `=`mi' + 1') = ("No"), halign(center)
-					}
+					local row = `row' + 1
 				}
-				local row = `row' + 1
+			}
+			if `"`addfe'"' != "" {
+				forvalues fei = 1/`addfe_num' {
+					forvalues mi = 1/`modelnum' {
+						if ustrwordcount("`fe_result`fei''") == 1 putdocx table regtbl(`row', `=`mi' + 1') = (trim("`fe_result`fei''")), halign(center)
+						else putdocx table regtbl(`row', `=`mi' + 1') = (trim(ustrword("`fe_result`fei''", `mi'))), halign(center)
+					}
+					local row = `row' + 1
+				}
 			}
 		}
-
+		
 		if `stats_number' != 0 {
 			forvalues si = 1/`stats_number' {
 				forvalues mi = 1/`modelnum' {
@@ -365,11 +500,17 @@ program define reg2docx
 			}
 		}
 
-		if "`replace'" == "" & "`append'" == "" {
+		if "`replace'" == "" & "`append'" == "" & "`append2'" == "" {
 			putdocx save `"`using'"'
 		}
-		else {
+		else if "`append2'" == ""{
 			putdocx save `"`using'"', `replace'`append'
+		}
+		else if c(stata_version) < 16 {
+			putdocx save `"`using'"', append
+		}
+		else {
+			putdocx save `"`using'"', append(`append2')
 		}
 	}
 	di as txt `"regression table have been written to file {browse "`using'"}"'
@@ -427,7 +568,7 @@ mata
 		}
 	}
 
-	void function calculate_all(string scalar b, string scalar V, string scalar regtable, real scalar df, string scalar drop, string scalar indicate, string scalar constant, real scalar modelnum) {
+	void function calculate_all(string scalar b, string scalar V, string scalar regtable, real scalar df, real scalar level, string scalar drop, string scalar keep, string scalar indicate, string scalar constant, real scalar modelnum) {
 		
 		string colvector depvar
 		string colvector indepvar
@@ -443,6 +584,8 @@ mata
 		real matrix allvalue
 		string rowvector drop_token
 		real colvector droprow
+		string rowvector keep_token
+		real colvector keeprow
 		real colvector consrow
 		string colvector indicate_vec
 		string matrix indicate_name
@@ -478,13 +621,20 @@ mata
 				se[i, 1] = sqrt(Var[i, i])
 			}
 			tz = coef :/ se
-			if (df < .) pvalue = 2 :* ttail(df, abs(tz))
-			else pvalue = 2 :* (1 :- normal(abs(tz)))
-
-			allvalue = coef, se, tz, pvalue
+			if (df < .) {
+				pvalue = 2 :* ttail(df, abs(tz))
+				ll = coef :- invttail(df, (100 - level)/200) :* se
+				ul = coef :+ invttail(df, (100 - level)/200) :* se
+			}
+			else {
+				pvalue = 2 :* (1 :- normal(abs(tz)))
+				ll = coef :- invnormal(1 - (100 - level)/200) :* se
+				ul = coef :+ invnormal(1 - (100 - level)/200) :* se
+			}
+			allvalue = coef, se, tz, pvalue, ll, ul
 		}
 		else {
-			allvalue = st_matrix(regtable)[., 1..4]
+			allvalue = st_matrix(regtable)[., 1..6]
 		}
 		
 		omitvar = ustrregexm(indepvar, "^o\.")
@@ -494,22 +644,11 @@ mata
 			}
 		}
 		
-		drop_token = tokens(drop)
-		if (cols(drop_token) != 0) {
-			droprow = J(rows(indepvar), 1, 0)
-			for (i = 1; i <= cols(drop_token); i++) {
-				droprow = droprow + strmatch(indepvar, drop_token[1, i])
+		basevar = ustrregexm(indepvar, "^\d+b\.")
+		for (i = 1; i <= rows(indepvar); i++) {
+			if (basevar[i, 1] == 1 & allvalue[i, 3] >= .) {
+				indepvar[i, 1] = subinstr(indepvar[i, 1], "b.", ".", 1)
 			}
-			depvar = select(depvar, !droprow)
-			indepvar = select(indepvar, !droprow)
-			allvalue = select(allvalue, !droprow)
-		}
-
-		if (constant != "") {
-			consrow = indepvar :== "_cons"
-			depvar = select(depvar, !consrow)
-			indepvar = select(indepvar, !consrow)
-			allvalue = select(allvalue, !consrow)
 		}
 		
 		indicate_vec = tokens(indicate)'
@@ -532,6 +671,35 @@ mata
 			st_matrix("indicateornot", indicateornot)
 			indicate_name = (`"""' :+ indicate_name :+ `"""')
 			st_local("indicate_name", invtokens(indicate_name', " "))
+		}
+		
+		drop_token = tokens(drop)
+		if (cols(drop_token) != 0) {
+			droprow = J(rows(indepvar), 1, 0)
+			for (i = 1; i <= cols(drop_token); i++) {
+				droprow = droprow + strmatch(indepvar, drop_token[1, i])
+			}
+			depvar = select(depvar, !droprow)
+			indepvar = select(indepvar, !droprow)
+			allvalue = select(allvalue, !droprow)
+		}
+		
+		keep_token = tokens(keep), "_cons"
+		if (cols(keep_token) != 1) {
+			keeprow = J(rows(indepvar), 1, 0)
+			for (i = 1; i <= cols(keep_token); i++) {
+				keeprow = keeprow + strmatch(indepvar, keep_token[1, i])
+			}
+			depvar = select(depvar, keeprow)
+			indepvar = select(indepvar, keeprow)
+			allvalue = select(allvalue, keeprow)
+		}
+
+		if (constant != "") {
+			consrow = indepvar :== "_cons"
+			depvar = select(depvar, !consrow)
+			indepvar = select(indepvar, !consrow)
+			allvalue = select(allvalue, !consrow)
 		}
 		
 		if (depvar == J(rows(depvar), 1, "")) {
@@ -571,6 +739,42 @@ mata
 			if (validdrop[1, i] == 0) {
 				st_local("droperror", "error")
 				st_local("drop_item", drop_token[1, i])
+			}
+		}
+	}
+	
+	void function testkeep(string scalar indepvar, string scalar keep) {
+
+		string rowvector indepvar_token
+		string rowvector keep_token
+		real rowvector validkeep
+
+		indepvar_token = tokens(indepvar)
+		keep_token = tokens(keep)
+		validkeep = colsum(strmatch(indepvar_token' :* J(rows(indepvar_token'), cols(keep_token), 1), keep_token))
+		for (i = 1; i <= cols(validkeep); i++) {
+			if (validkeep[1, i] == 0) {
+				st_local("keeperror", "error")
+				st_local("keep_item", keep_token[1, i])
+			}
+		}
+	}
+	
+	
+	void function testkeepanddrop(string scalar keep, string scalar drop) {
+	
+		string rowvector keep_token
+		string rowvector drop_token
+		real colvector validkeepanddrop
+	
+		keep_token = tokens(keep)
+		drop_token = tokens(drop)
+		validkeepanddrop = rowsum(keep_token' :* J(rows(keep_token'), cols(drop_token), 1) :== drop_token)
+
+		for (i = 1; i <= rows(validkeepanddrop); i++) {
+			if (validkeepanddrop[i, 1] != 0) {
+				st_local("keepdroperror", "error")
+				st_local("keepdroperror_item", keep_token[1, i])
 			}
 		}
 	}
@@ -651,6 +855,8 @@ mata
 					if (misst[n, 1] == 1) {
 						value[n, 3] = 0
 						value[n, 4] = 0
+						value[n, 5] = 0
+						value[n, 6] = 0
 					}
 				}
 			}
@@ -668,18 +874,24 @@ mata
 				orderse = value[., 2]
 				ordertz = value[., 3] + misst
 				orderp = value[., 4] + misst
+				orderll = value[., 5] + misst
+				orderul = value[., 6] + misst
 			}
 			else {
 				orderb = orderb, value[., 1]
 				orderse = orderse, value[., 2]
 				ordertz = ordertz, value[., 3] + misst
 				orderp = orderp, value[., 4] + misst
+				orderll = orderll, value[., 5] + misst
+				orderul = orderul, value[., 6] + misst
 			}
 		}
 		st_matrix("b1", orderb)
 		st_matrix("se1", orderse)
 		st_matrix("tz1", ordertz)
 		st_matrix("p1", orderp)
+		st_matrix("ll1", orderll)
+		st_matrix("ul1", orderul)
 	}
 
 	void function getothertable(string scalar otherdpv, string scalar order, real scalar modelnum) {
@@ -754,6 +966,8 @@ mata
 									if (misst[n, 1] == 1) {
 										value[n, 3] = 0
 										value[n, 4] = 0
+										value[n, 5] = 0
+										value[n, 6] = 0
 									}
 								}
 							}
@@ -771,12 +985,16 @@ mata
 								orderse = value[., 2]
 								ordertz = value[., 3] + misst
 								orderp = value[., 4] + misst
+								orderll = value[., 5] + misst
+								orderul = value[., 6] + misst
 							}
 							else {
 								orderb = orderb, value[., 1]
 								orderse = orderse, value[., 2]
 								ordertz = ordertz, value[., 3] + misst
 								orderp = orderp, value[., 4] + misst
+								orderll = orderll, value[., 5] + misst
+								orderul = orderul, value[., 6] + misst
 							}
 							break
 						}
@@ -786,12 +1004,16 @@ mata
 								orderse = J(cols(orderindepvar), 1, .)
 								ordertz = J(cols(orderindepvar), 1, .)
 								orderp = J(cols(orderindepvar), 1, .)
+								orderll = J(cols(orderindepvar), 1, .)
+								orderul = J(cols(orderindepvar), 1, .)
 							}
 							else {
 								orderb = orderb, J(cols(orderindepvar), 1, .)
 								orderse = orderse, J(cols(orderindepvar), 1, .)
 								ordertz = ordertz, J(cols(orderindepvar), 1, .)
 								orderp = orderp, J(cols(orderindepvar), 1, .)
+								orderll = orderll, J(cols(orderindepvar), 1, .)
+								orderul = orderul, J(cols(orderindepvar), 1, .)
 							}
 						}
 					}
@@ -802,12 +1024,16 @@ mata
 						orderse = J(cols(orderindepvar), 1, .)
 						ordertz = J(cols(orderindepvar), 1, .)
 						orderp = J(cols(orderindepvar), 1, .)
+						orderll = J(cols(orderindepvar), 1, .)
+						orderul = J(cols(orderindepvar), 1, .)
 					}
 					else {
 						orderb = orderb, J(cols(orderindepvar), 1, .)
 						orderse = orderse, J(cols(orderindepvar), 1, .)
 						ordertz = ordertz, J(cols(orderindepvar), 1, .)
 						orderp = orderp, J(cols(orderindepvar), 1, .)
+						orderll = orderll, J(cols(orderindepvar), 1, .)
+						orderul = orderul, J(cols(orderindepvar), 1, .)
 					}
 				}
 			}
@@ -815,6 +1041,28 @@ mata
 			st_matrix(sprintf("se%g", i + 1), orderse)
 			st_matrix(sprintf("tz%g", i + 1), ordertz)
 			st_matrix(sprintf("p%g", i + 1), orderp)
+			st_matrix(sprintf("ll%g", i + 1), orderll)
+			st_matrix(sprintf("ul%g", i + 1), orderul)
 		}
 	}
+	
+	void function addfe(string scalar addfestring) {
+		
+		string rowvector addfe_vec
+		real scalar addfe_num
+		
+		addfe_vec = tokens(addfestring)
+		if ((strpos(addfe_vec, "=") :== 0) != J(1, cols(addfe_vec), 0)) {
+			st_local("addfe_error", "error")
+		}
+		else {
+			addfe_num = cols(addfe_vec)
+			st_local("addfe_num", strofreal(addfe_num))
+			for (i = 1; i <= addfe_num; i++) {
+				st_local(sprintf("fe_name%g", i), tokens(addfe_vec[1, i], "=")[1, 1])
+				st_local(sprintf("fe_result%g", i), tokens(addfe_vec[1, i], "=")[1, 3])			
+			}
+		}
+	}
+	
 end

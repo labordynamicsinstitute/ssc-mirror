@@ -1,4 +1,4 @@
-*! version 2.13 Januar 15, 2019 @ 17:36:51 UK
+*! version 2.14 Juni 7, 2022 @ 17:24:33 UK
 *! Decomposing total effects using the KHB method 
 *! Support: ukohler@uni-potsdam.de
 
@@ -24,6 +24,7 @@
 * 2.11: S.E. incorrect with option -concomittant()- -> fixed
 * 2.12: Changes names of residuals stored with -khb ..., keep-
 * 2.13: Version 2.12 accidently outcommented a line. -> fixed
+* 2.14: Updated to Stata 17, removed some noisily debug lines
 
 // Caller Program
 // ==============
@@ -32,7 +33,7 @@ program khb, eclass
 
 local caller = c(version)
 
-version 11
+version 17
 	
 	// Low level parsing
 	// -----------------
@@ -276,15 +277,20 @@ program _KHB, eclass
 		if "`method'"=="APE" margins, dydx(*) post  ///
 		  `continuous' `predict'
 
+		// Define equation names for models
+		if inlist("`model'","regress","logit","xtregress") local eqname ""
+		else if inlist("`model'","ologit","oprobit","scobit","xtlogit","xtprobit") local eqname `y' 
+		else if inlist("`model'","mlogit") local eqname `outcome'
+		else if inlist("`model'","slogit") local eqname dim1
+
 		// Store results
 		matrix _FULLb = e(b)
 		matrix _FULLcov = e(V)
-
-		if "`method'" == "KHB" & "`model'"=="mlogit" {
-			matrix _FULLb = _FULLb[1,"`outcome':"]
-			matrix _FULLcov = _FULLcov["`outcome':"1,"`outcome':"]
+		if "`method'" == "KHB" {
+			matrix _FULLb = _FULLb[1,"`eqname':"]
+			matrix _FULLcov = _FULLcov["`eqname':"1,"`eqname':"]
 		}
-
+		
 		// Reduced model
 		// -------------
 		
@@ -296,15 +302,11 @@ program _KHB, eclass
 
 		matrix _REDUCEDb = e(b)
 		matrix _REDUCEDcov = e(V)
-
-		if "`method'" == "KHB" & "`model'"=="mlogit" {
-			matrix _REDUCEDb = _REDUCEDb[1,"`outcome':"]
-			matrix _REDUCEDcov = _REDUCEDcov["`outcome':","`outcome':"]
+		if "`method'" == "KHB" {
+			matrix _REDUCEDb = _REDUCEDb[1,"`eqname':"]
+			matrix _REDUCEDcov = _REDUCEDcov["`eqname':"1,"`eqname':"]
 		}
-
-*DEBUG		noisily matrix list _REDUCEDcov
-		
-		
+				
 		// Call Mata Function
 		// -------------------
 
@@ -332,7 +334,7 @@ program _KHB, eclass
 		local FULLxnames: subinstr local FULLxnames " " `"",""' , all
 		
 		// Call it
-		noi mata: khb(("`SURxnames'"),("`FULLznames'"),("`FULLxnames'"),("`method'"))
+		mata: khb(("`SURxnames'"),("`FULLznames'"),("`FULLxnames'"),("`method'"))
 		
 		// Calculate Summary table
 		// ----------------------
@@ -353,17 +355,16 @@ program _KHB, eclass
 			
 			matrix _NAIVEb = e(b)
 			matrix _NAIVEcov = e(V)
-			
-			if "`method'" == "KHB" & "`model'"=="mlogit" {
-				matrix _NAIVEb = _NAIVEb[1,"`outcome':"]
-				matrix _NAIVEcov = _NAIVEcov["`outcome':","`outcome':"]
+			if "`method'" == "KHB" {
+				matrix _NAIVEb = _NAIVEb[1,"`eqname':"]
+				matrix _NAIVEcov = _NAIVEcov["`eqname':"1,"`eqname':"]
 			}
-			
+
 			local NAIVExnames: colnames _NAIVEb
 			local NAIVExnames: list NAIVExnames - Cnames
 			local NAIVExnames: subinstr local NAIVExnames " _cons" "", all
 			local NAIVExnames: subinstr local NAIVExnames " " `"",""' , all
-			noi mata: khb_summary(("`NAIVExnames'"))
+			mata: khb_summary(("`NAIVExnames'"))
 		}
 
 		// Disentangle table
@@ -371,7 +372,7 @@ program _KHB, eclass
 
 		if "`disentangle'" != ""  {
 
-			noi mata: khb_disentangle(("`FULLznames'"),("`FULLxnames'"))
+			mata: khb_disentangle(("`FULLznames'"),("`FULLxnames'"))
 		}
 	}
 	

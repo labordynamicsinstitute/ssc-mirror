@@ -15,9 +15,9 @@ d KW: effects
 d KW: probit
 d KW: nonlinear probability model
 d
-d Requires: Stata version 11
+d Requires: Stata version 17
 d
-d Distribution-Date: 20190224
+d Distribution-Date: 20220610
 d
 d Author: Ulrich Kohler, University of Potsdam
 d Support: email ukohler@@uni-potsdam.de

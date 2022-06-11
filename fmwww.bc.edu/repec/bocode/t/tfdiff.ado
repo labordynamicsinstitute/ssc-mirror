@@ -1,6 +1,7 @@
 ********************************************************************************
-*! tfdiff, v10, G.Cerulli, 15dic2020
+* PROGRAM "tfdiff"
 ********************************************************************************
+*! tfdiff, v11, G.Cerulli, 03june2022
 program tfdiff, eclass sortpreserve
 version 14
 #delimit;     
@@ -8,7 +9,6 @@ syntax varlist(numeric ts fv) [if] [in] [aweight fweight pweight] ,
 t(numlist max=1)
 tvar(varlist numeric max=1)
 datatype(string)
-model(string)
 [
 pvar(varlist numeric max=1)
 ci(numlist max=1)
@@ -27,6 +27,8 @@ local w `2'  // treatment
 macro shift
 macro shift
 local xvars `*'
+********************************************************************************
+local model "ols"
 ********************************************************************************
 * Labels
 ********************************************************************************
@@ -123,21 +125,6 @@ tsset `pvar' `tvar'
 reg `y' i.`w'##i._D* `xvars' [`weight' `exp'] if `touse' , vce(`vce') noomitted // ols
 }
 ********************************************************************************
-if "`model'"=="fe" & "`pvar'"==""{
-di _newline(1)
-di as result in red "*************************************************************"
-di as result in red "Warning: the option 'pvar()' must be declared with panel data"
-di as result in red "*************************************************************"
-di _newline(1)
-exit
-}
-else if "`model'"=="fe" & "`pvar'"!=""{
-di as result in red "***********************************************************"
-di as result in red "Model type: Fixed-effect"
-di as result in red "***********************************************************"
-tsset `pvar' `tvar'
-xtreg `y' i.`w'##i._D* `xvars' [`weight' `exp'] if `touse' , vce(`vce') fe  noomitted coeflegend // fixed effects
-}
 }
 ********************************************************************************
 * CROSS-SECTION ESTIMATION
@@ -295,4 +282,3 @@ save `save_results' , replace
 restore
 ********************************************************************************
 end
-********************************************************************************

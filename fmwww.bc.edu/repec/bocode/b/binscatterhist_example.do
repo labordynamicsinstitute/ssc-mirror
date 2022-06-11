@@ -1,4 +1,4 @@
-*! version 2.3  16nov2021  Matteo Pinna, matteo.pinna@gess.ethz.ch
+*! version 2.4  3jun2022  Matteo Pinna, matteo.pinna@gess.ethz.ch
 
 /*
 This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.  
@@ -11,8 +11,9 @@ The full legal text as well as a human-readable summary can be accessed at http:
 
 /* WORKING EXAMPLE */
 clear all
-* cd ../binscatterhist_2.3/working_example/
-webuse nlsw88
+
+* cd ../binscatterhist_2.4/working_example/
+webuse nlsw88, clear
 
 * The basic binscatterhist works exactly as binscatter
 binscatterhist wage tenure
@@ -42,6 +43,8 @@ graph export "example6.png", replace
 replace tenure=-abs(tenure)
 binscatterhist wage tenure, regtype(areg) absorb(grade) vce(robust) coef(0.01) ci(95) pvalue sample xmin(-22) ymin(5) histogram(wage tenure)  xhistbarheight(15) yhistbarheight(15) xhistbins(40) yhistbins(40)
 graph export "example7.png", replace
+
+
 
 
 

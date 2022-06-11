@@ -1,15 +1,20 @@
-*!version1.0 28JUL2021
+*!version1.1 15APR2022
 
 /* -----------------------------------------------------------------------------
 ** PROGRAM NAME: POWER_CMD_SWGEE
-** VERSION: 1.0
-** DATE: JUL 28, 2021
+** VERSION: 1.1
+** DATE: APR 15, 2022
 ** -----------------------------------------------------------------------------
 ** CREATED BY: JOHN GALLIS, XUEQI WANG, PAUL RATHOUZ, JOHN PREISSER, FAN LI, LIZ TURNER
 ** -----------------------------------------------------------------------------
 ** PURPOSE: THIS PROGRAM ALLOWS THE USER TO PERFORM POWER CALCULATIONS FOR GEE
 **			ANALYSES OF STEPPED WEDGE CLUSTER RANDOMIZED TRIALS, FOR BOTH CLOSED
 **			COHORT AND CROSS-SECTIONAL DESIGNS
+** -----------------------------------------------------------------------------
+** MODIFICATIONS: APR 15, 2022 - MINOR UPDATES TO OPTIONS REQUESTED BY STATA JOURNAL
+							   - CORSTR OPTION CAN NOW BE ABBREVIATED
+							   - DEFAULT FAMILY IS NOW GAUSSIAN
+							   - NORMAL CAN BE SPECIFIED AS FAMILY INSTEAD OF GAUSSIAN
 ** -----------------------------------------------------------------------------
 ** OPTIONS: SEE HELP FILE
 ** -----------------------------------------------------------------------------
@@ -33,10 +38,11 @@ version 15.1
 	}
 	
 	/* DEFAULTS FOR FAMILY AND LINK */
-	if "`family'" == "" local family "binomial"
+	if "`family'" == "" local family "gaussian"
 	if "`link'" == "" & "`family'"=="binomial"  local link "logit"
 	if "`link'" == "" & "`family'"=="poisson" local link "log"
 	if "`link'" == "" & "`family'"=="gaussian" local link "identity"
+	if "`link'" == "" & "`family'"=="normal" local link "identity"
 
 	/* DEFAULT IF DESIGN IS LEFT BLANK */
 	if "`design'" == "" {
@@ -50,21 +56,21 @@ version 15.1
 	}
 	
 	/* CHECKING PROPER CORRELATION PARAMETERS ARE SPECIFIED */
-	if strpos("`corstr'","exchangeable") > 0 & (`rho1' != -99 | `rho2' != -99) {
+	if (strpos("`corstr'","nested") > 0 | strpos("`corstr'","block") > 0) & (`rho1' != -99 | `rho2' != -99) {
 	    di as error "Must specify tau (not rho) parameters for exchangeable correlation structure"
 		exit 198
 	}
 	
-	if strpos("`corstr'","decay") > 0 & (`tau1' != -99 | `tau2' != -99) {
+	if (strpos("`corstr'","exponential") > 0 | strpos("`corstr'","proportional") > 0) & (`tau1' != -99 | `tau2' != -99) {
 	    di as error "Must specify rho (not tau) parameters for decay correlation structure"
 		exit 198	
 	}
 	
-	if (inlist("`corstr'","nested exchangeable") & `tau2' != -99) {
+	if (strpos("`corstr'","nested") > 0 & `tau2' != -99) {
 	    di as error "A nested exchangeable correlation structure should only have two correlation parameters specified (tau0 and tau1)"
 	}
 	
-	if (inlist("`corstr'","exponential decay") & `rho2' != -99)  {
+	if (strpos("`corstr'","exponential") > 0 & `rho2' != -99)  {
 	    di as error "An exponential decay correlation structure should only have two correlation parameters specified (tau0 and rho1)"
 		exit 198
 	}
@@ -185,7 +191,7 @@ version 15.1
 	/* ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| */
 	
 	/* DEFAULTS FOR CORRELATION PARAMETERS */
-	if strpos("`corstr'","exchangeable") > 0 {
+	if strpos("`corstr'","nested") > 0 | strpos("`corstr'","block") > 0 {
 		if `tau1' == -99 {
 			local tau1 = `tau0'
 		}
@@ -222,7 +228,7 @@ version 15.1
 
 	
 	/* VALIDITY CHECKS ON CORRELATION PARAMETERS */
-	if strpos("`corstr'","exchangeable") > 0 {
+	if strpos("`corstr'","nested") > 0 | strpos("`corstr'","block") > 0  {
 		foreach i in tau0 tau1 tau2 {
 			if ((``i'' > 1 | ``i'' < 0) & ``i'' != .) {
 				di as error "`i' must be between 0 and 1"
@@ -267,8 +273,10 @@ version 15.1
 	return scalar phi=`phi'
 	return scalar working_ind=`working_ind'
 	return local corstr "`corstr'"
+	return local family "`family'"
+	return local link "`link'"
 	
-	if strpos("`corstr'","exchangeable") > 0 {
+	if strpos("`corstr'","nested") > 0 | strpos("`corstr'","block") > 0  {
 		return scalar tau0=`tau0'
 		return scalar tau1=`tau1'
 		return scalar tau2=`tau2'
@@ -279,13 +287,13 @@ version 15.1
 		return scalar rho2=`rho2'
 	}
 	return scalar posdeff=posdeff
-	if "`family'" == "gaussian" & "`link'" == "identity" {
+	if ("`family'" == "gaussian" | "`family'" == "normal") & "`link'" == "identity" {
 	    local betas = .
 	}
 	matrix betas = (`betas')
 	return matrix betas=betas
 	local mus: subinstr local mus " " ", ", all
-	if "`family'" == "gaussian" & "`link'" == "identity" {
+	if ("`family'" == "gaussian" | "`family'" == "normal") & "`link'" == "identity" {
 	    local mus = .
 	}
 	matrix mus = (`mus')
@@ -334,25 +342,25 @@ matrix swpower(scalar delta, string scalar design, scalar I, scalar J, scalar K,
 	}
 	
 	// TRUE CORRELATION MATRIX
-	if (corstr=="nested exchangeable") {
+	if (strpos(corstr,"nested") > 0) {
 		alpha0=alpha0
 		alpha1=alpha1
 		R=diag(J(J,J,1))*((1+(K-1):*alpha0)/K-alpha1) + J(J,J,1)*alpha1
 	}
-	else if (corstr=="exponential decay") {
+	else if (strpos(corstr,"exponential")>0) {
 	    tau=alpha0
 		rho=alpha1
 		decay=rho:^abs(J(J,1,range(0,J-1,1)'):-range(0,J-1,1))
 		R = diag(J(J,J,1))*((1+(K-1):*tau)/K) + (decay-diag(J(J,J,1)))*tau
 	
 	}
-	else if (corstr=="block exchangeable") {
+	else if (strpos(corstr,"block")>0) {
 		alpha0=alpha0
 		alpha1=alpha1
 		alpha2=alpha2
 		R=diag(J(J,J,1))*((1+(K-1):*alpha0)/K-(alpha2+(K-1)*alpha1)/K) + J(J,J,1)*((alpha2+(K-1)*alpha1)/K)
 	}
-	else if (corstr=="proportional decay") {
+	else if (strpos(corstr,"proportional")>0) {
 	    tau=alpha0
 		rho0=alpha1
 		rho1=alpha2
@@ -396,7 +404,7 @@ matrix swpower(scalar delta, string scalar design, scalar I, scalar J, scalar K,
 			deltabeta=(delta,betas)'
 
 			
-			if (family=="gaussian") {
+			if (family=="gaussian" | family=="normal") {
 				if (link=="identity") {
 					mu=X*deltabeta
 					W=invR
@@ -465,7 +473,7 @@ matrix swpower(scalar delta, string scalar design, scalar I, scalar J, scalar K,
 			
 			deltabeta=(delta,betas)'
 			
-			if (family=="gaussian") {
+			if (family=="gaussian" | family=="normal") {
 				if (link=="identity") {
 					mu=X*deltabeta
 					W=invI

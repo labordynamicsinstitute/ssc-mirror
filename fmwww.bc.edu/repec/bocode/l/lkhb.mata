@@ -3,8 +3,9 @@
 // version 0.4 Remove bug in concomitant function
 // version 0.5 Set SE to missing for option SE
 // version 0.6 WIP
+// version 0.7 Update to Stata version 17
 
-version 11
+version 17
 
 mata:
 	mata clear
@@ -85,14 +86,14 @@ mata:
 		sigma = khb_sigma(FULLcov,SURcov,SURxselector,SURnames,SURxnames,zselector,FULLznames)
 
 		Vdiff = deriv * sigma * deriv'
-
 		Vdiff = Vdiff[|1,1 \ cols(FULLxnames),cols(FULLxnames)|]
+			
 		if (Method == "APE") Vdiff = Vdiff * 0  // Sets SE to missing
 		
 		// Make Coefficient Vector and Variance/Covarince Matrix
 		b = vec(breduced \ bfull \ bdiff)
 		V = diag(vec((diagonal(Vreduced)' \ diagonal(Vfull)' \ diagonal(Vdiff)')))
-		
+
 		// Row and Column names
 		eqnames = vec((
 				select(FULLnames[.,2],xselector),
@@ -317,7 +318,7 @@ mata:
 				(SURxselector :* J(rows(SURnames),1,SURxnames[1,i]) :== SURnames[.,2]))
 			
 		}
-		
+
 		return(sigma)
 	}
 	

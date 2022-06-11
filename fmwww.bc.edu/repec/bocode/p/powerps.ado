@@ -1,4 +1,4 @@
-*! Version 2.0.0 25january2022
+*! Version 2.0.1 25january2022
 
 /*
 	Syntax:
@@ -290,9 +290,14 @@ program powerps, rclass sortpreserve
 	matrix colname `generalInfoTable' = "#"
 	matlist `generalInfoTable', border(none) lines(none) format(%7.2g) names(rows) left(9) twidth(40)
 
-	return scalar OBS						= `obs'
-	return scalar GOODS						= `goods'
+	
+	return scalar TOL						= `tolerance'
 	return scalar EFF						= `efficiency'
+	return scalar SIM						= `simulations'
+	return scalar GOODS						= `goods'
+	return scalar OBS						= `obs'	
+	return local  AXIOM						"`allAxiomsDisplay'"
+
 		
 	matrix colnames `rawResults' = Power PS Pass AEI
 	matlist `rawResults', border(top bottom) rowtitle("Axioms")
@@ -325,9 +330,7 @@ program powerps, rclass sortpreserve
 			matrix colnames `sumStatsTable' =	"#vio" "%vio" AEI
 			matrix rownames `sumStatsTable' =	Mean "Std. Dev." Min ///
 												Q1 Median Q3 Max
-												
-			return scalar TOL_`axiomDisplay'= `tolerance'
-			
+
 		}
 			
 		else if ("`aei'" == "") {
@@ -355,17 +358,18 @@ program powerps, rclass sortpreserve
 										rowtitle("`axiomDisplay'")
 
 		* Return list for several axioms
-		return scalar SIM						= `simulations'
+	
 		return scalar AEI_`axiomDisplay'		= `AEI_`ax''
 		return scalar PASS_`axiomDisplay'		= `PASS_`ax''
 		return scalar PS_`axiomDisplay'			= `PS_`ax''
 		return scalar POWER_`axiomDisplay'		= `P_`ax''
-		return local  AXIOM						"`allAxiomsDisplay'"
 		return matrix SIMRESULTS_`axiomDisplay'	= `sim_`ax''
 		return matrix SUMSTATS_`axiomDisplay'	= `sumStatsTable'
 
+	
 	}
-
+	
+	
 end
 
 

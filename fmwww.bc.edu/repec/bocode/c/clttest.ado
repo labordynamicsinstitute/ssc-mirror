@@ -4,7 +4,10 @@
 *! see also clchi2.ado
 * 
 * Modified 
-*	02 Feb 2012 - return scalars  
+* 
+* 		09 Sep 2021 - check nesting
+*
+*	    02 Feb 2012 - return scalars  
 *
 *       21 Apr 2004 - v8; fix strata problem
 *
@@ -51,6 +54,8 @@ program define clttest, rclass
 		di in r "Must specify by variable"
 		exit
 	}
+	
+	
 	if "`strata'"!="" { 
 		unabbrev `strata', max(1)
 		local strata "$S_1"
@@ -71,8 +76,11 @@ program define clttest, rclass
 		di in wh "        v4 " in gr "is an optional strata variable"
 		exit
 	}
-
+	
 	quietly {
+	
+
+	
 
 	gen byte `myin'= 1
 	if ("`if'`in'"!="") {
@@ -81,6 +89,14 @@ program define clttest, rclass
 		}
 	replace `myin'=`myin'&`var1'!=.&`by'!=.&`cluster'!=.
 
+	* check the nesting
+	tempvar evar
+	bys `myin' `cluster' (`by') : gen `evar'=`by'[_N]!=`by'[1]
+	qui sum `evar' if `myin'
+	if r(max)>0 {
+		noi di in r "Clusters must be nested within by() variable"
+		exit
+	}
 
 	** check the strata **
 

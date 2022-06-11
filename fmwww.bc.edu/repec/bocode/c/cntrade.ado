@@ -42,193 +42,265 @@ program define cntrade
 	}
 	
 	if regexm(`"`path'"', "(/|\\)$") local path = regexr(`"`path'"', ".$", "")
-
+	tempfile tempcsvfile tempdta
+	
 	foreach name in `tickers' {
-
-		if length("`name'") > 6 {
-			disp as error `"`name' is an invalid stock code"'
-			exit 601
-		} 
-		while length("`name'") < 6 {
-			local name = "0" + "`name'"
-		}
-		
-		if "`index'" == "" {
-			if `name' >= 600000 local url "`address'?code=0`name'&start=`start'&end=`end'&fields=`field'"
-			else local url "`address'?code=1`name'&start=`start'&end=`end'&fields=`field'"
-		}
-				
-		else {
-			if `name' <= 1000 local url "`address'?code=0`name'&start=`start'&end=`end'&fields=`field'"
-			else local url "`address'?code=1`name'&start=`start'&end=`end'&fields=`field'"
-		}
-
-		tempfile tempcsvfile
-		
 		qui {
-			capture copy `"`url'"' `"`tempcsvfile'"', replace
-			local times = 0
-			while _rc != 0 {
-				local times = `times' + 1
-				sleep 1000
-				cap copy `"`url'"' `"`tempcsvfile'"', replace
-				if `times' > 10 {
-					disp as error "Internet speeds is too low to get the data"
+			if `name' != 689009 {
+				if length("`name'") > 6 {
+					disp as error `"`name' is an invalid stock code"'
+					exit 601
+				} 
+				while length("`name'") < 6 {
+					local name = "0" + "`name'"
+				}
+				
+				if "`index'" == "" {
+					if `name' >= 600000 local url "`address'?code=0`name'&start=`start'&end=`end'&fields=`field'"
+					else local url "`address'?code=1`name'&start=`start'&end=`end'&fields=`field'"
+				}
+						
+				else {
+					if `name' <= 1000 local url "`address'?code=0`name'&start=`start'&end=`end'&fields=`field'"
+					else local url "`address'?code=1`name'&start=`start'&end=`end'&fields=`field'"
+				}
+				
+				capture copy `"`url'"' `"`tempcsvfile'"', replace
+				local times = 0
+				while _rc != 0 {
+					local times = `times' + 1
+					sleep 1000
+					cap copy `"`url'"' `"`tempcsvfile'"', replace
+					if `times' > 10 {
+						disp as error "Internet speeds is too low to get the data"
+						exit 601
+					}
+				}
+
+				if _caller() >= 14 {
+					import delimited using `"`tempcsvfile'"', clear encoding("gb18030")
+				}
+				else {
+					insheet using `"`tempcsvfile'"', clear
+				}
+
+				if `=_N' == 0 {
+					disp as error `"`name' is an invalid stock code"'
+					clear
 					exit 601
 				}
-			}
 
-			if _caller() >= 14 {
-				import delimited using `"`tempcsvfile'"', clear encoding("gb18030")
+				if "`index'" == "" & c(stata_version) < 14 {
+					gen date = date(v1, "YMD")
+					drop v1 
+					format date %dCY-N-D
+					label var date "Trading Date"
+					rename v2 stkcd 
+					capture destring stkcd, replace force ignor(')
+					label var stkcd "Stock Code"
+					rename v3 stknme
+					label var stknme "Stock Name"
+					rename v4 clsprc 
+					label var clsprc "Closing Price"
+					drop if clsprc == 0
+					rename v5 hiprc 
+					label var hiprc  "Highest Price"
+					rename v6 lowprc 
+					label var lowprc "Lowest Price"
+					rename v7 opnprc
+					label var opnprc "Opening Price"
+					destring v10, force replace
+					rename v10 rit
+					replace rit = 0.01 * rit
+					label var rit "Daily Return"
+					destring v11, force replace
+					rename v11 turnover
+					label var turnover "Turnover rate"
+					rename v12 volume
+					label var volume "Trading Volume"
+					rename v13 transaction
+					label var transaction "Trading Amount in RMB"
+					rename v14 tcap
+					label var tcap "Total Market Capitalization"
+					rename v15 mcap
+					label var mcap "Circulation Market Capitalization"
+					drop v8 v9
+					order stkcd date
+				}
+				else if "`index'" == "" {
+					gen date = date(日期, "YMD")
+					drop 日期 
+					format date %dCY-N-D
+					label var date "Trading Date"
+					rename 股票代码 stkcd
+					capture destring stkcd, replace force ignor(')
+					label var stkcd "Stock Code"
+					rename 名称 stknme
+					label var stknme "Stock Name"
+					rename 收盘价 clsprc
+					label var clsprc "Closing Price"
+					drop if clsprc == 0
+					rename 最高价 hiprc
+					label var hiprc  "Highest Price"
+					rename 最低价 lowprc
+					label var lowprc "Lowest Price"
+					rename 开盘价 opnprc
+					label var opnprc "Opening Price"
+					destring 涨跌幅, replace force
+					rename 涨跌幅 rit
+					replace rit = 0.01 * rit
+					label var rit "Daily Return"
+					destring 换手率, replace force
+					rename 换手率 turnover
+					label var turnover "Turnover rate"
+					rename 成交量 volume
+					label var volume "Trading Volume"
+					rename 成交金额 transaction
+					label var transaction "Trading Amount in RMB"
+					rename 总市值 tcap
+					label var tcap "Total Market Capitalization"
+					rename 流通市值 mcap
+					label var mcap "Circulation Market Capitalization"
+					drop 前收盘 涨跌额
+					order stkcd date
+				}
+				else if c(stata_version) < 14 {
+					gen date = date(v1, "YMD")
+					drop v1 
+					format date %dCY-N-D
+					label var date "Trading Date"
+					rename v2 indexcd 
+					capture destring indexcd, replace force ignor(')
+					label var indexcd "Index Code"
+					rename v3 indexnme
+					label var indexnme "Index Name"
+					rename v4 clsprc
+					label var clsprc "Closing Price"
+					drop if clsprc == 0
+					rename v5 hiprc
+					label var hiprc  "Highest Price"
+					rename v6 lowprc
+					label var lowprc "Lowest Price"
+					rename v7 opnprc
+					label var opnprc "Opening Price"
+					destring v10, replace force
+					rename v10 rmt
+					replace rmt = 0.01 * rmt
+					label var rmt "Daily Return"
+					rename v11 volume
+					label var volume "Trading Volume"
+					destring v12, replace force
+					rename v12 transaction
+					label var transaction "Trading Amount in RMB"
+					drop v8 v9
+					order indexcd date
+				}
+				else {
+					gen date = date(日期, "YMD")
+					drop 日期
+					format date %dCY-N-D
+					label var date "Trading Date"
+					rename 股票代码 indexcd
+					capture destring indexcd, replace force ignor(')
+					label var indexcd "Index Code"
+					rename 名称 indexnme
+					label var indexnme "Index Name"
+					rename 收盘价 clsprc
+					label var clsprc "Closing Price"
+					drop if clsprc == 0
+					rename 最高价 hiprc
+					label var hiprc "Highest Price"
+					rename 最低价 lowprc
+					label var lowprc "Lowest Price"
+					rename 开盘价 opnprc
+					label var opnprc "Opening Price"
+					destring 涨跌幅, replace force
+					rename 涨跌幅 rmt
+					replace rmt = 0.01 * rmt
+					label var rmt "Daily Return"
+					rename 成交量 volume
+					label var volume "Trading Volume"
+					destring 成交金额, replace force
+					rename 成交金额 transaction
+					label var transaction "Trading Amount in RMB"
+					drop 前收盘 涨跌额
+				}
 			}
+			
 			else {
-				insheet using `"`tempcsvfile'"', clear
-			}
-
-			if `=_N' == 0 {
-				disp as error `"`name' is an invalid stock code"'
 				clear
-				exit 601
+				local n = 0
+				forvalues y = 2020/3000 {
+					forvalue s = 1/4 {
+						clear
+						set obs 1
+						gen v = fileread("http://quotes.money.163.com/trade/lsjysj_689009.html?year=`y'&season=`s'")
+						local times = 0
+						while filereaderror(v[1]) != 0 {
+							local times = `times' + 1
+							sleep 1000
+							replace v = fileread("http://quotes.money.163.com/trade/lsjysj_689009.html?year=`y'&season=`s'")
+							if `times' > 10 {
+								disp as error "Internet speeds is too low to get the data"
+								exit 601
+							}
+						}
+						replace v = ustrregexra(v, "\r|\n", "")
+						if !index(v, "<tr class=''>") {
+							continue
+						}
+						replace v = ustrregexs(1) if ustrregexm(v, `"<tr class=''>(.*?)<div id="dropBox1" class="drop_box">"')
+						split v, p("</tr>")
+						drop v
+						stack _all, into(_var1) clear
+						drop _stack
+						split _var1, p("</td>")
+						drop _var1
+						foreach v of varlist _all {
+							replace `v' = ustrregexra(`v', "<.*?>", "")
+						}
+						compress
+						drop _var16 _var110
+						rename _all (date opnprc hiprc lowprc clsprc rit volume transaction turnover)
+						destring _all, replace ignore(",")
+						drop if date == ""
+						gen d = date(date, "YMD")
+						drop date
+						rename d date
+						format %dCY-N-D date
+						gen stkcd = 689009
+						order stkcd date clsprc hiprc lowprc opnprc rit turnover volume transaction
+						label var date "Trading Date"
+						label var stkcd "Stock Code"
+						label var clsprc "Closing Price"
+						label var hiprc  "Highest Price"
+						label var lowprc "Lowest Price"
+						label var opnprc "Opening Price"
+						replace rit = 0.01 * rit
+						label var rit "Daily Return"
+						label var turnover "Turnover rate"
+						label var volume "Trading Volume (100 shares)"
+						label var transaction "Trading Amount in 10 thousands RMB"
+						if `n' == 0 save "`tempdta'", replace
+						else {
+							append using "`tempdta'"
+							save "`tempdta'", replace
+						}
+						local n = `n' + 1
+						if qofd(date(c(current_date), "DMY")) <= yq(`y', `s') {
+							continue, break
+						}
+					}
+					if year(date(c(current_date), "DMY")) <= `y' {
+						continue, break
+					}
+				}
+				use "`tempdta'", clear
 			}
-
-			if "`index'" == "" & c(stata_version) < 14 {
-				gen date = date(v1, "YMD")
-				drop v1 
-				format date %dCY-N-D
-				label var date "Trading Date"
-				rename v2 stkcd 
-				capture destring stkcd, replace force ignor(')
-				label var stkcd "Stock Code"
-				rename v3 stknme
-				label var stknme "Stock Name"
-				rename v4 clsprc 
-				label var clsprc "Closing Price"
-				drop if clsprc == 0
-				rename v5 hiprc 
-				label var hiprc  "Highest Price"
-				rename v6 lowprc 
-				label var lowprc "Lowest Price"
-				rename v7 opnprc
-				label var opnprc "Opening Price"
-				destring v10, force replace
-				rename v10 rit
-				replace rit = 0.01 * rit
-				label var rit "Daily Return"
-				destring v11, force replace
-				rename v11 turnover
-				label var turnover "Turnover rate"
-				rename v12 volume
-				label var volume "Trading Volume"
-				rename v13 transaction
-				label var transaction "Trading Amount in RMB"
-				rename v14 tcap
-				label var tcap "Total Market Capitalization"
-				rename v15 mcap
-				label var mcap "Circulation Market Capitalization"
-				drop v8 v9
-				order stkcd date
-			}
-			else if "`index'" == "" {
-				gen date = date(日期, "YMD")
-				drop 日期 
-				format date %dCY-N-D
-				label var date "Trading Date"
-				rename 股票代码 stkcd
-				capture destring stkcd, replace force ignor(')
-				label var stkcd "Stock Code"
-				rename 名称 stknme
-				label var stknme "Stock Name"
-				rename 收盘价 clsprc
-				label var clsprc "Closing Price"
-				drop if clsprc == 0
-				rename 最高价 hiprc
-				label var hiprc  "Highest Price"
-				rename 最低价 lowprc
-				label var lowprc "Lowest Price"
-				rename 开盘价 opnprc
-				label var opnprc "Opening Price"
-				destring 涨跌幅, replace force
-				rename 涨跌幅 rit
-				replace rit = 0.01 * rit
-				label var rit "Daily Return"
-				destring 换手率, replace force
-				rename 换手率 turnover
-				label var turnover "Turnover rate"
-				rename 成交量 volume
-				label var volume "Trading Volume"
-				rename 成交金额 transaction
-				label var transaction "Trading Amount in RMB"
-				rename 总市值 tcap
-				label var tcap "Total Market Capitalization"
-				rename 流通市值 mcap
-				label var mcap "Circulation Market Capitalization"
-				drop 前收盘 涨跌额
-				order stkcd date
-			}
-			else if c(stata_version) < 14 {
-				gen date = date(v1, "YMD")
-				drop v1 
-				format date %dCY-N-D
-				label var date "Trading Date"
-				rename v2 indexcd 
-				capture destring indexcd, replace force ignor(')
-				label var indexcd "Index Code"
-				rename v3 indexnme
-				label var indexnme "Index Name"
-				rename v4 clsprc
-				label var clsprc "Closing Price"
-				drop if clsprc == 0
-				rename v5 hiprc
-				label var hiprc  "Highest Price"
-				rename v6 lowprc
-				label var lowprc "Lowest Price"
-				rename v7 opnprc
-				label var opnprc "Opening Price"
-				destring v10, replace force
-				rename v10 rmt
-				replace rmt = 0.01 * rmt
-				label var rmt "Daily Return"
-				rename v11 volume
-				label var volume "Trading Volume"
-				destring v12, replace force
-				rename v12 transaction
-				label var transaction "Trading Amount in RMB"
-				drop v8 v9
-				order indexcd date
-			}
-			else {
-				gen date = date(日期, "YMD")
-				drop 日期
-				format date %dCY-N-D
-				label var date "Trading Date"
-				rename 股票代码 indexcd
-				capture destring indexcd, replace force ignor(')
-				label var indexcd "Index Code"
-				rename 名称 indexnme
-				label var indexnme "Index Name"
-				rename 收盘价 clsprc
-				label var clsprc "Closing Price"
-				drop if clsprc == 0
-				rename 最高价 hiprc
-				label var hiprc "Highest Price"
-				rename 最低价 lowprc
-				label var lowprc "Lowest Price"
-				rename 开盘价 opnprc
-				label var opnprc "Opening Price"
-				destring 涨跌幅, replace force
-				rename 涨跌幅 rmt
-				replace rmt = 0.01 * rmt
-				label var rmt "Daily Return"
-				rename 成交量 volume
-				label var volume "Trading Volume"
-				destring 成交金额, replace force
-				rename 成交金额 transaction
-				label var transaction "Trading Amount in RMB"
-				drop 前收盘 涨跌额
-			}
-			sort date 
-			save `"`path'/`name'"', replace
-			noi disp as text `"file `name'.dta has been saved"'
-		}		
+		}
+		
+		sort date 
+		save `"`path'/`name'"', replace
+		noi disp as text `"file `name'.dta has been saved"'
 	}
 end 

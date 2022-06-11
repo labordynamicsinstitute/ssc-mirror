@@ -14,7 +14,7 @@
 {it:y}
 {it:x1 x2 ...}
 {ifin}
-[{cmd:,} {bf:iv}({it:varname}) {bf:cluster}({it:varname}) {bf:pweight}({it:varname}) {bf:k}({it:real}) {bf:alpha}({it:real}) {bf:maxw}({it:real}) {bf:prec}({it:real})]
+[{cmd:,} {bf:iv}({it:varlist}) {bf:cluster}({it:varname}) {bf:aweight}({it:varname}) {bf:pweight}({it:varname}) {bf:k}({it:real}) {bf:alpha}({it:real}) {bf:maxw}({it:real}) {bf:prec}({it:real})]
 
 
 {marker description}{...}
@@ -34,17 +34,21 @@ If the test rejects the null hypothesis of the bounded second-moment condition f
 {title:Options}
 
 {phang}
-{bf:iv({it:varname})} sets an instrumental variable.
+{bf:iv({it:varlist})} sets instrumental variable(s).
 If this option is not invoked, then the command executes the outlier tests for the OLS ({bf:reg}).
-If this option is invoked, then the command executes the outlier tests for the 2SLS ({bf:ivreg}) where the first independent variable {bf:x1} is treated as an endogenous variable instrumented by the {bf:iv}.
+If this option is invoked, then the command executes the outlier tests for the 2SLS ({bf:ivreg}) where the first independent variable {bf:x1} is treated as an endogenous variable instrumented by the list of variables included in {bf:iv}.
 
 {phang}
 {bf:cluster({it:varname})} sets a clustering variable.
 If this option is not invoked, then the command does not cluster observations.
 
 {phang}
-{bf:pweight({it:varname})} sets sample weights.
-If this option is not invoked, then the command does not impose sample weights.
+{bf:aweight({it:varname})} sets analytic weights.
+If this option is not invoked, then the command does not impose analytic weights.
+
+{phang}
+{bf:pweight({it:varname})} sets probability weights.
+If this option is not invoked, then the command does not impose probability weights.
 
 {phang}
 {bf:k({it:real})} sets the number of extreme order statistics to be used for the tests. 

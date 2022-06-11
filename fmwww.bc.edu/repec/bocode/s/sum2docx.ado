@@ -3,6 +3,7 @@
 * Yuan Xue, China Stata Club(爬虫俱乐部)(xueyuan@hust.edu.cn)
 * July 13rd, 2017
 * Updated on November 27th, 2018
+* Updated on June 9th, 2022
 * Program written by Dr. Chuntao Li and Yuan Xue
 * Report summary statistics to formatted table in DOCX file.
 * Can only be used in Stata version 15.0 or above
@@ -14,15 +15,40 @@ program define sum2docx
 		exit 9
 	}
 
-	syntax varlist(numeric) [if] [in] [aweight fweight iweight/] using/, [append replace title(string) ///
-		stats(string asis) note(string) pagesize(string) font(string) landscape]
+	syntax varlist(numeric) [if] [in] [aweight fweight iweight/] using/, [append APPEND2(string asis) ///
+		replace title(string) stats(string asis) note(string asis) pagesize(string) font(string) ///
+		landscape varname varlabel layout(string) *]
+	tokenize `"`0'"', parse(",")
 
 	marksample touse, novarlist
 	qui count if `touse'
 	if `r(N)' == 0 exit 2000
+	local 0 `1', `options'
+	local margins
+	syntax varlist(numeric) [if] [in] [aweight fweight iweight/] using/, [margin(passthru) *]
+	while `"`margin'"' != "" {
+		local margins `margins' `margin'
+		local 0 `1', `options'
+		syntax varlist(numeric) [if] [in] [aweight fweight iweight/] using/, [margin(passthru) *]
+	}
+	
+	if `"`options'"' != "" {
+		di as err "option " `"{bf:`options'}"' " not allowed"
+		exit 198
+	}
 
-	if "`append'" != "" & "`replace'" != "" {
+	if ("`append'" != "" | `"`append2'"' != "") & "`replace'" != "" {
 		disp as error "you could not specify both append and replace"
+		exit 198
+	}
+	
+	if `"`append2'"' != "" & `"`append2'"' != "pagebreak" & c(stata_version) < 16 {
+		disp as error "you could only specify append or append(pagebreak) in the version before 16"
+		exit 198
+	}
+	
+	if "`varname'" != "" & "`varlabel'" != "" {
+		disp as error "you could not specify both varname and varlabel"
 		exit 198
 	}
 
@@ -61,18 +87,25 @@ program define sum2docx
 		if `"`pagesize'"' == "" local pagesize = "A4"
 		if `"`font'"' == "" local font = "Times New Roman"
 		putdocx clear
-		putdocx begin, pagesize(`pagesize') font(`font') `landscape'
+		if c(stata_version) < 16 & "`append2'" == "pagebreak" {
+			putdocx begin, font(`font')
+			putdocx sectionbreak, pagesize(`pagesize') `landscape' `margins'
+		}
+		else {
+			putdocx begin, font(`font') pagesize(`pagesize') `landscape' `margins'
+		}
 		
 		if `"`title'"' == "" local title = "Summary Statistics"
 		putdocx paragraph, spacing(after, 0) halign(center)
 		putdocx text (`"`title'"')
 
+		if "`layout'" == "" local layout = "autofitwindow"
 		if `"`note'"' != "" {
-			putdocx table sumtable = (`rownum', `colnum'), border(all, nil) border(top) halign(center) note(`"`note'"')
+			putdocx table sumtable = (`rownum', `colnum'), border(all, nil) border(top) halign(center) note(`note') layout(`layout')
 			putdocx table sumtable(`rownum', .), border(bottom)
 		}
 		else {
-			putdocx table sumtable = (`rownum', `colnum'), border(all, nil) border(top) border(bottom) halign(center)
+			putdocx table sumtable = (`rownum', `colnum'), border(all, nil) border(top) border(bottom) halign(center) layout(`layout')
 		}
 		putdocx table sumtable(1, .), border(bottom)
 		putdocx table sumtable(1, 1) = ("VarName"), halign(left) valign(center)
@@ -90,7 +123,17 @@ program define sum2docx
 			else {
 				sum `var' [`weight' = `exp'] if `touse', d
 			}
-			putdocx table sumtable(`i', 1) = ("`var'"), halign(left) valign(center)
+			
+			if "`varlabel'" == "" putdocx table sumtable(`i', 1) = ("`var'"), halign(left) valign(center)
+			else {
+				cap local lab: var label `var'
+				if _rc == 0 {
+					if "`lab'" == "" putdocx table sumtable(`i', 1) = ("`var'"), halign(left) valign(center)
+					else putdocx table sumtable(`i', 1) = ("`lab'"), halign(left) valign(center)
+				}
+				else putdocx table sumtable(`i', 1) = ("`var'"), halign(left) valign(center)
+			}
+			
 			forvalues col = 2/`colnum' {
 				if "`stat_`=`col'-1''" != "N" {
 					putdocx table sumtable(`i', `col') = (`"`=subinstr("`: disp `stat_`=`col'-1'_fmt' `=r(`stat_`=`col'-1'')''", " ", "", .)'"'), halign(right) valign(center)
@@ -102,11 +145,17 @@ program define sum2docx
 			local i = `i' + 1
 		}
 		
-		if "`replace'" == "" & "`append'" == "" {
+		if "`replace'" == "" & "`append'" == "" & "`append2'" == "" {
 			putdocx save `"`using'"'
 		}
-		else {
+		else if "`append2'" == ""{
 			putdocx save `"`using'"', `replace'`append'
+		}
+		else if c(stata_version) < 16 {
+			putdocx save `"`using'"', append
+		}
+		else {
+			putdocx save `"`using'"', append(`append2')
 		}
 	}
 	di as txt `"summary statistics have been written to file {browse "`using'"}"'

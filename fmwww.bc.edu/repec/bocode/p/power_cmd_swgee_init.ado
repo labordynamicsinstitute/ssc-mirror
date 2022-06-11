@@ -1,3 +1,5 @@
+*!version1.1 15APR2022
+
 capture program drop power_cmd_swgee_init
 program power_cmd_swgee_init, sclass
    version 15.1

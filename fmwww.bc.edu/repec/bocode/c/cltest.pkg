@@ -1,6 +1,6 @@
 d 'CLTEST': modules for performing cluster-adjusted chi-square and t-tests
 d
-d cltest is a pair of programs for analyzing data that have been
+d  cltest is a pair of programs for analyzing data that have been
 d randomized in clusters.  clttest compares the means of two sets
 d of grouped outcomes, with optional support for group-stratified
 d outcomes. clchi2 estimates an adjusted chi-square test of
@@ -17,15 +17,14 @@ d KW: clustering
 d KW: chi-square
 d KW: t-test
 d
-d Requires: Stata version 7.0
+d Requires: Stata version 8
 d
+d Distribution-Date: 20220610
 d
 d Author: Jeph Herrin 
 d Support: email jeph.herrin@@yale.edu
 d
-d Distribution-Date: 20120203
-d
 f clttest.ado
-f clttest.hlp
+f clttest.sthlp
 f clchi2.ado
-f clchi2.hlp
+f clchi2.sthlp

@@ -13,12 +13,13 @@ d KW: graphics
 d KW: plot
 d KW: hammock plot 
 d
-d Requires: Stata version 7
+d Requires: Stata version 14
 d
-d Distribution-Date: 20190302
+d Distribution-Date: 20220610
 d
 d Author: Matthias Schonlau,  University of Waterloo
 d Support: email schonlau@@uwaterloo.ca
 d
 f hammock.ado
+f hammock_examples.ado
 f hammock.hlp

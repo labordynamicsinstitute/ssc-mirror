@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.3 16nov2021}{...}
+{* *! version 2.4 3jun2022}{...}
 {viewerjumpto "Syntax" "binscatterhist##syntax"}{...}
 {viewerjumpto "Description" "binscatterhist##description"}{...}
 {viewerjumpto "Options" "binscatterhist##options"}{...}
@@ -64,6 +64,8 @@ where {it:varlist} is
 {synopt :{opt p:value}}reports the pvalue of the regression on residualized variables {p_end}
 {synopt :{opt sample}}reports the sample size of the regression on residualized variables{p_end}
 {synopt :{opth stars(stars)}}signals p-value using stars; stars can be: {bf:nostars}, {bf:1} (*5% **1%), {bf:2} (+10% *5% **1%), {bf:3} (+10% *5% **1% ***0.1%), {bf:4} (*5% **1% ***0.1%); default is {bf:stars(1)}{p_end}
+{synopt :{opth xcoef(value)}}sets x-axis position for coefficient box {p_end}
+{synopt :{opth ycoef(value)}}sets y-axis position for coefficient box  {p_end}
 
 {syntab :Graph Style}
 {synopt :{cmdab:col:ors(}{it:{help colorstyle}list}{cmd:)}}ordered list of colors{p_end}
@@ -461,6 +463,6 @@ rather than {bf:r(graphcmd)} in order to avoid truncation due to Stata's charact
 {marker acknowledgements}{...}
 {title:Acknowledgements}
 
-{pstd} The author would like to thank one anonymous referee, Elliott Ash, Chistopher Baum, Suresh Naidu, Sergio Galletta and Malka Guillot for the useful feedback on first versions of the program.
+{pstd} The author would like to thank one anonymous referee, Elliott Ash, Chistopher Baum, Suresh Naidu, Sergio Galletta, Malka Guillot, Susanna B. Berkouwer and Guohui Jiang for the useful feedback on the program.
 
 {pstd}The present version of {cmd:binscatterhist} is based on a program in Michael Stepner (2013): "BINSCATTER: Stata module to generate binned scatterplots" - https://EconPapers.repec.org/RePEc:boc:bocode:s457709 and Ben Jann (2014): "ADDPLOT: Stata module to add twoway plot objects to an existing twoway graph," Statistical Software Components S457917, Boston College Department of Economics, revised 28 Jan 2015 <https://ideas.repec.org/c/boc/bocode/s457917.html>

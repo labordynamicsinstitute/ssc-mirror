@@ -35,7 +35,10 @@ either using the {it:append} option or the command can be as following: {p_end}
 {opt replace} permits to overwrite an existing file. {p_end}
 
 {phang}
-{opt append} permits to append the output to an existing file. {p_end}
+{cmd:append[(}{help putdocx_begin##apopts:{it:apopts}}{cmd:)]} permits to append the output to an existing file and change style definitions along with page break, header, and footer settings. {p_end}
+
+{phang}
+{cmd:margin(}{help putdocx_begin##type:{it:type}}{cmd:, #[}{help putdocx_begin##unit:{it:unit}}{cmd:])} set page margins for the document. {p_end}
 
 {phang}
 {opt title(string)} specify the title of the table. The default is title("Regression Table"). {p_end}
@@ -51,7 +54,16 @@ Use font("", size) to specify font size only. Use font("", "", color) to specify
 {opt landscape} changes the document orientation from portrait to landscape. {p_end}
 
 {phang}
-{opt note(string)} adds notes under the table. {p_end}
+{cmd:note(}{it:string}[{cmd:,} {help putdocx_table##cellfmtopts:{it:cell_fmt_options}}]{cmd:)} adds notes under the table. {p_end}
+
+{phang}
+{opth layout:(putdocx_table##layouttype:layouttype)} adjust column width. {p_end}
+
+{phang}
+{opt varname} output variables' names in the first column of the table. {p_end}
+
+{phang}
+{opt varlabel} output variables' labels instead of names in the first column of the table. {p_end}
 
 {phang}
 {opt b(string)} specify format for coefficient. {p_end}
@@ -67,6 +79,9 @@ Use font("", size) to specify font size only. Use font("", "", color) to specify
 
 {phang}
 {opt se}{opt [}{opt (fmt)}{opt ]} output standard error and specify the format. {p_end}
+
+{phang}
+{opt ci}{opt [}{opt (fmt)}{opt ]} output confidence interval and specify the format. {p_end}
 
 {phang}
 {opt scalars(scalarlist)} specify the scalars to be output. Including all the scalars you can get in ereturn list after a regression command. The format of the scalar is defined in parentheses after the scalar.(e.g. r2(%9.2f), %9.3f by default) {p_end}
@@ -90,6 +105,9 @@ Use font("", size) to specify font size only. Use font("", "", color) to specify
 {opt staraux} the significance stars be printed next to the t-statistics (or standard errors, etc.) instead of the coefficient. {p_end}
 
 {phang}
+{opt starsps} set the format of symbols to be superscript. {p_end}
+
+{phang}
 {opt mtitles(titlelist)} specift model's title in the table header. {p_end}
 
 {phang}
@@ -105,7 +123,13 @@ Use font("", size) to specify font size only. Use font("", "", color) to specify
 {opt indicate(groups)} indicate presence of parameters. {p_end}
 
 {phang}
+{opt addfe(groups)} specifies user-added text about the presence of fixed effects. {p_end}
+
+{phang}
 {opt drop(droplist)} drop individual coefficients. {p_end}
+
+{phang}
+{opt keep(keeplist)} keep individual coefficients. {p_end}
 
 {phang}
 {opt noparentheses} do not print parentheses around t-statistics. {p_end}
@@ -214,7 +238,11 @@ Use font("", size) to specify font size only. Use font("", "", color) to specify
 {p_end}
 
 {phang}
-{stata `"reg2docx m1 m2 m3 m4 using d:/mytable2.docx, replace indicate("ind=ind*") drop(x2 x3) scalars(N r2(%9.3f) r2_a(%9.2f)) order(x6 x5) b(%9.3f) t(%7.2f) title(table2: OLS regression results) mtitles("model 1" "model 2" "" "model 4")"'}
+{stata `"reg2docx m1 m2 m3 m4 using d:/mytable2.docx, replace indicate("ind=ind*") drop(x2 x3) scalars(N r2(%9.3f) r2_a(%9.2f)) order(x6 x5) b(%9.3f) t(%7.2f) title(table1: OLS regression results) mtitles("model 1" "model 2" "" "model 4")"'}
+{p_end}
+
+{phang}
+{stata `"reg2docx m1 m2 m3 m4 using d:/mytable2.docx, append newsection keep(x1 x4 x5 x6) addfe("ind = Yes") scalars(N r2(%9.3f)) order(x6 x5) b(%9.3f) t(%7.2f) title(table2: OLS regression results) mtitles("model 1" "model 2" "" "model 4")"'}
 {p_end}
 
 {title:Author}

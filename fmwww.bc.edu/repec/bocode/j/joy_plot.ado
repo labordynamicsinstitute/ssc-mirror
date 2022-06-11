@@ -1,4 +1,5 @@
-*! v1.52 Corrects if 
+*! v1.53 Corrects xlabel for biviolin
+* v1.52 Corrects if 
 * v1.51 Refinements for Default Options
 * v1.5 over and by
 * v1.4 works with Stata 10 or above?
@@ -90,7 +91,7 @@ end */
 
 program joy_plot
 
-	syntax varname [if] [in] [aw/], [over(varname) by(varname) *]     //  overall look of outline
+	syntax varlist [if] [in] [aw/], [over(varname) by(varname) *]     //  overall look of outline
    
 	/*
 	[ alegend legend(string) color(string) colorpalette(string) by(string) ///
@@ -100,23 +101,27 @@ program joy_plot
 	marksample touse
 	** detect if
  
-	
+	fvexpand `varlist'
+	local vars:word count `r(varlist)'
+	if `vars'>1 & "`over'"!="" {
+		display in red "over cannot be combined with multiple variables"
+	}
 	markout `touse' `varlist' `over' `by' `exp' , strok
 	tempname frame
 	
 	if `c(stata_version)'>=16 {
 		frame put `varlist' `over' `by' `exp'  if `touse', into(`frame') 
-		syntax anything [aw] [if] [in], [*]
-		if "`by'"==""		qui:frame `frame': make_joy `anything' [`weight'`exp'], `options'
-		if "`by'"!=""		qui:frame `frame': make_joy2 `anything' [`weight'`exp'], `options'
+		syntax varlist [aw] [if] [in], [*]
+		if "`by'"==""    qui:frame `frame': make_joy  `varlist' [`weight'`exp'], `options'
+		if "`by'"!=""    qui:frame `frame': make_joy2 `varlist' [`weight'`exp'], `options'
 	}
 	if `c(stata_version)'<16 {
 		preserve
 			qui:keep `varlist' `over'  `by' `exp'  `touse'
-			qui:keep if `touse'
-			syntax anything [aw] [if] [in], [*]
-			if "`by'"==""		: make_joy `anything' [`weight'`exp'], `options'
-			if "`by'"!=""		: make_joy2 `anything' [`weight'`exp'], `options'
+			qui:keep if `touse'			
+			syntax varlist [aw] [if] [in], [*]
+			if "`by'"==""  qui: make_joy `varlist' [`weight'`exp'], `options'
+			if "`by'"!=""  qui: make_joy2 `varlist' [`weight'`exp'], `options'
 		restore
 	}
 	
@@ -165,7 +170,7 @@ program text_default, rclass
 end
 
 program make_joy
-	syntax varname [if] [in] [aw/], [over(varname) by(varname) ///
+	syntax varlist [if] [in] [aw/], [over(varname) by(varname) ///
 	radj(real 0)   /// Range Adjustment. How much to add or substract to the top bottom.
 	range(numlist min=2 max=2) ///
 	offset(real 0) /// to move text
@@ -185,11 +190,10 @@ program make_joy
     FColor(passthru)        ///  fill color and opacity
     FIntensity(passthru) 	///  fill intensity
     LColor(passthru)        ///  outline color and opacity
-    LCidth(passthru)     	///  thickness of outline
+    LWidth(passthru)     	///  thickness of outline
     LPattern(passthru) 		///  outline pattern (solid, dashed, etc.)
     LAlign(passthru) 		///   outline alignment (inside, outside, center)
-    LSTYle(passthru) 		///
-	XLABel(passthru)        /// 
+    LSTYle(passthru) 		///	XLABel(passthru)        /// 
     violin right addplot(string asis) *]     //  overall look of outline
    
    	if "`kernel'"=="" 	local kernel gaussian
@@ -197,6 +201,29 @@ program make_joy
 	if "`bwadj'"==""  local bwadj=0
 		
 ** make variable numeric with labels
+	** Expand for newvar
+	fvexpand `varlist'
+	local vars:word count `r(varlist)'
+	if `vars'>1 {
+		tempvar id over t fvar
+		gen double `id'=_n
+		expand `vars'
+		bysort `id':gen `over'=_n
+		gen double `fvar'=.
+		foreach i of varlist `varlist' {
+			local vcnt=`vcnt'+1
+			replace `fvar'=`i' if `over'==`vcnt'
+			local vn:variable label `i'
+			if "`vn'"=="" local vn `i'
+			local varlab `varlab' `vcnt' "`vn'"
+		}
+		label define varlab  `varlab' 
+		label values `over' varlab
+		label var `fvar' " "
+		local varlist `fvar'
+		
+	}
+
 		tempvar nb
  		_over `over', gen(`nb') var(`varlist')
 		local over `nb'
@@ -293,9 +320,11 @@ program make_joy
 				local cn     = `cn'+1
 				local f0 = `f0`cn''[1]
 				local fvio `fvio' `f0'
-				qui: replace `f0`cn''=`f0'-0.5*(`f`cn''-`f0')
-				qui: replace `f`cn'' =`f0'+0.5*(`f`cn''-`f0')				
+				qui: replace `f0`cn''=`f0'-0.5*(`f`cn''-`f0')-0.5/`cnt'
+				qui: replace `f`cn'' =`f0'+0.5*(`f`cn''-`f0')-0.5/`cnt'				
+				sum `f0`cn'' `f`cn''
 			}
+			
 		}
 		****************************
 		** IQR
@@ -308,8 +337,8 @@ program make_joy
 				kdensity `varlist' if `over'==`i'   `wgtx' , gen(`pt`cn'') ///
 															  kernel(`kernel') at(`prng`cn'') bw(`bw`cn'') nograph
 				qui:replace `pt`cn''=0 if `pt`cn''==.
-				replace `pt`cn''=(`pt`cn''/`fmax')*`dadj'/`cnt'+1/`cnt'*(`cnt'-`cn')*`gp'*`vm'	in 1/10
-				gen `p0`cn''=1/`cnt'*(`cnt'-`cn')*`gp'*`vm'	in 1/10
+				replace `pt`cn''=(`pt`cn''/`fmax')*`dadj'/`cnt'+1/`cnt'*(`cnt'-`cn')*`gp'*`vm'	 
+				gen `p0`cn''=1/`cnt'*(`cnt'-`cn')*`gp'*`vm'	 
 				
 			}
 			** If violin	
@@ -319,8 +348,8 @@ program make_joy
 				foreach i of local lvl {
 					local cn     = `cn'+1
 					local f0 = `p0`cn''[1]
-					qui: replace `p0`cn'' =`f0'-0.5*(`pt`cn''-`f0')
-					qui: replace `pt`cn'' =`f0'+0.5*(`pt`cn''-`f0')				
+					qui: replace `p0`cn'' =`f0'-0.5*(`pt`cn''-`f0') -0.5/`cnt'
+					qui: replace `pt`cn'' =`f0'+0.5*(`pt`cn''-`f0')	-0.5/`cnt'			
 				}
 			}			
 		}
@@ -351,7 +380,7 @@ program make_joy
 					local cn     = `cn'+1
 					local lbl: label (`over') `i', `strict'
 					*local vl : word  `cn' `fvio'
-					local vl = 1/`cnt'*(`cnt'-`cn')*`vm'
+					local vl = 1/`cnt'*(`cnt'-`cn')*`vm'-0.5/`cnt'
 					local vtotext `vtotext'  `vl' "`lbl'"
 				}
 			}
@@ -413,12 +442,12 @@ program make_joy
 		*** text defai;t
 		text_default , `textopt' `right'
 		local textopt `r(textopt)'
-		xlabel_default, vio(`vtotext') `xlabel' `text'
+		xlabel_default, vio(`vtotext') `xlabel' `text' `options'
 		local mxlabel `r(xlabel)'
 		
 		two `joy' (`addplot'), ///
 			text(`totext' , `textopt') ///
-			`options' `leg' `ylabx'  `mxlabel'
+			`options' `leg' `ylabx'  `mxlabel' 
 end
 
 ** This maes the program not 15 friendly
@@ -459,7 +488,7 @@ end
 
 *** This will do the over and by
 program make_joy2
-	syntax varname [if] [in] [aw/], [over(varname) by(varname) ///
+	syntax varlist [if] [in] [aw/], [over(varname) by(varname) ///
 	radj(real 0)   /// Range Adjustment. How much to add or substract to the top bottom.
 	range(numlist min=2 max=2) ///
 	offset(real 0) /// to move text
@@ -479,16 +508,45 @@ program make_joy2
     FColor(passthru)        ///  fill color and opacity
     FIntensity(passthru) 	///  fill intensity
     LColor(passthru)        ///  outline color and opacity
-    LCidth(passthru)     	///  thickness of outline
+    LWidth(passthru)     	///  thickness of outline
     LPattern(passthru) 		///  outline pattern (solid, dashed, etc.)
     LAlign(passthru) 		///   outline alignment (inside, outside, center)
-    LSTYle(passthru) 		///
-	XLABel(passthru)        /// 
+    LSTYle(passthru) 		///	XLABel(passthru)        /// 
     violin right addplot(string asis) *]     //  overall look of outline
 	   
    	if "`kernel'"=="" 	local kernel gaussian
 		
 	if "`bwadj'"==""  local bwadj=0
+	
+	fvexpand `varlist'
+	local vars:word count `r(varlist)'
+	if `vars'>1 {
+		tempvar id over t fvar
+		gen double `id'=_n
+		expand `vars'
+		bysort `id':gen `over'=_n
+		gen double `fvar'=.
+		foreach i of varlist `varlist' {
+			local vcnt=`vcnt'+1
+			replace `fvar'=`i' if `over'==`vcnt'
+			local vn:variable label `i'
+			if "`vn'"=="" local vn `i'
+			local varlab `varlab' `vcnt' "`vn'"
+		}
+		label define varlab  `varlab' 
+		label values `over' varlab
+		label var `fvar' " "
+		local varlist `fvar'
+		
+	}
+	
+	tempvar nb
+	_over `over', gen(`nb') var(`varlist')
+	local over `nb'
+	
+	tempvar nb2
+	_over `by', gen(`nb2') var(`varlist')
+	local by `nb2'
 	
 	if "`violin'"!="" {
 		tempvar nx
@@ -499,14 +557,6 @@ program make_joy2
 			error 222
 		}
 	}
-	** modify? instead of new variable?
-	tempvar nb
-	_over `over', gen(`nb') var(`varlist')
-	local over `nb'
-	
-	tempvar nb2
-	_over `by', gen(`nb2') var(`varlist')
-	local by `nb2'
 	
 		** Create Rage var
 		tempname rvar
@@ -640,7 +690,8 @@ program make_joy2
 				foreach j of local lvl2 {
 					local jj     = `jj'+1
 					local f0 = `f0`ii'`jj''[1]
-					qui: replace `f`ii'`jj'' =`f0'+0.5*(`f`ii'`jj''-`f0')*`flp'				
+					qui: replace `f`ii'`jj'' =`f0'+0.5*(`f`ii'`jj''-`f0')*`flp'			-0.5/`cnt'	
+					qui: replace `f0`ii'`jj'' = `f0`ii'`jj''   -0.5/`cnt'	
 					local flp = -`flp'
 					
 				}	
@@ -680,7 +731,8 @@ program make_joy2
 					foreach j of local lvl2 {						
 						local jj = `jj'+1
 						local f0 = `p0`ii'`jj''[1]
-						qui: replace `pt`ii'`jj'' =`f0'+0.5*(`pt`ii'`jj''-`f0')*`flp'	
+						qui: replace `pt`ii'`jj'' =`f0'+0.5*(`pt`ii'`jj''-`f0')*`flp'	-0.5/`cnt'
+						qui: replace `p0`ii'`jj''=`p0`ii'`jj''-0.5/`cnt'
 						local flp = -`flp'
 					}		
 				}
@@ -714,7 +766,7 @@ program make_joy2
 					local cn     = `cn'+1
 					local lbl: label (`over') `i', `strict'
 					*local vl : word  `cn' `fvio'
-					local vl = 1/`cnt'*(`cnt'-`cn')*`vm'
+					local vl = 1/`cnt'*(`cnt'-`cn')*`vm'-0.5/`cnt'
 					local vtotext `vtotext'  `vl' "`lbl'"
 				}
 			}
@@ -777,8 +829,9 @@ program make_joy2
 		*** text default
 		text_default , `textopt' `right'
 		local textopt `r(textopt)'
-
+		
 		xlabel_default, vio(`vtotext') `options' `text'
+		
 		local mxlabel `r(xlabel)'
 		
 		two `joy' (`addplot'), ///
@@ -789,6 +842,7 @@ end
 
 program xlabel_default, rclass
 	syntax , [vio(string asis) xlabel(str asis) * notext]
+		
 	if `"`xlabel'"'=="" {
 		if `"`vio'"'=="" return local xlabel xlabel(, nogrid)
 		else             return local xlabel xlabel(`vio', nogrid)

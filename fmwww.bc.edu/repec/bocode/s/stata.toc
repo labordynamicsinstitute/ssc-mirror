@@ -130,6 +130,7 @@ p sob module to perform second-order bootstrap standard error correction
 p soepdo module to handle SOEP drop-outs
 p soepren module providing easy SOEP renames
 p soepuse module providing easy SOEP access
+p solve module to seek an approximate solution to an equation of the form F(x) = y
 p somersd module to calculate Kendall's tau-a, Somers' D and median differences
 p songbl module to search and share Stata resources and blogs
 p sortl module to sort factor loadings or rotated matrix from PCA or factor

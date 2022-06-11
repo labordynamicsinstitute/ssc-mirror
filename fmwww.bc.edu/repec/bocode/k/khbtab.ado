@@ -1,4 +1,4 @@
-*! version 2.1 Februar 20, 2019 @ 18:23:48 UK
+*! version 2.1 Juni 8, 2022 @ 08:47:53 UK
 *! Nested nonlinear probability models with khb-correction
 *! Support: ukohler@uni-potsdam.de
 
@@ -12,7 +12,7 @@
 program khbtab, rclass
 local caller = c(version)
 
-version 13
+version 17
 	
 	// Low level parsing
 	// -----------------
@@ -71,7 +71,7 @@ version 13
 			unab residuals : _khb_res*
 			local droplist `droplist' `residuals'
 			local droplist: list uniq droplist
-		
+			
 			if "`outcome'" != "" {
 				local predict predict(outcome(`outcome'))
 			}
@@ -97,7 +97,7 @@ version 13
 
 	// Caller for program to format the table
 	khb_tab _khb_* `using' , `tableoptions'   ///
-	  x(`X') z(`Zall') y(`Y') `esttab' droplist(`droplist')
+	  x(`X') z(`Zall') y(`Y') `esttab' droplist(`droplist') model(`model') `ape'
 
 	// Returns
 	tempname bkhb Vkhb
@@ -115,10 +115,19 @@ end
 
 program khb_tab, rclass
 	syntax anything [using] ///
-	  , x(string) z(string) y(string)  ///
-	  [ c(string) esttab keep(string) stats(passthru) droplist(string) drop(string) * ]
+	  , x(string) z(string) y(string) model(string)  ///
+	  [ c(string) esttab keep(string) stats(passthru) ape droplist(string) drop(string) * ]
 
 	unab residuals: _khb_*
+
+
+	if "`model'" == "mlogit" & "`ape'" != "" {
+		foreach name of local droplist {
+			local eqlist `eqlist' `name':
+		}
+	local droplist `eqlist'
+	}
+
 	local drop drop(`drop' `droplist')
 
 	if `"`keep'"' == "" local keep keep(`x' `z' `c') 

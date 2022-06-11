@@ -1,5 +1,5 @@
 {smcl}
-{* 25may2020,17:55}{...}
+{* 03june2022,18:10}{...}
 {cmd:help tfdiff}
 {hline}
 
@@ -19,7 +19,6 @@
 {ifin}
 {weight}{cmd:,}
 {cmd:datatype}{cmd:(}{it:datatype}{cmd:)}
-{cmd:model}{cmd:(}{it:modeltype}{cmd:)}
 {cmd:tvar}{cmd:(}{it:time_variable}{cmd:)}
 {cmd:t}{cmd:(}{it:#}{cmd:)}
 [{cmd:pvar}{cmd:(}{it:panel_variable}{cmd:)}
@@ -38,10 +37,10 @@ see {help weight}.
 
 {title:Description}
 
-{pstd}{cmd:tfdiff} estimates Average Treatment Effects (ATEs) when the treatment is binary and fixed to a specific point in time. It assumes the availability of a panel dataset where the same treated and untreated units are observed over time.
+{pstd}{cmd:tfdiff} estimates Average Treatment Effects (ATEs) when the treatment is binary and fixed to a specific point in time. It works both with the availability of a panel (or longitudinal) dataset or a cross-section.
 Using {cmd:tfdiff}, the user can estimate 
 the {it:pre}- and {it:post}-intervention effects by selecting the intervention time {it:t}. The results are plotted in an easy-to-read graphical representation. In order to assess the reliability of the causal results achieved by
-the user's specified model, {cmd:tfdiff} allows to test the "parallel trend" assumption via a joint significance test on the pre-treatment effects. The model estimated by {cmd:tfdiff} is a generalization of the Difference-In-Differences (DID) approach to more than one pre- and post-treatment periods and fixed treatment time. 
+the user's specified model, {cmd:tfdiff} allows to test the "parallel trend" assumption via a joint significance test on the pre-treatment effects. The model estimated by {cmd:tfdiff} is a generalization of the Difference-In-Differences (DID) approach to more than one pre- and post-treatment period and fixed treatment time. 
 
 
 {phang} According to the {cmd:tfdiff} syntax:
@@ -58,10 +57,6 @@ the user's specified model, {cmd:tfdiff} allows to test the "parallel trend" ass
 {phang} {cmd:datatype}{cmd:(}{it:datatype}{cmd:)} specifies the type of dataset employed, where {it:datatype} must be one out of these two alternatives:
 "cross-section" (for a cross-section dataset), or "panel" (for a longitudinal dataset). 
 It is always required to specify one data type. 
-
-{phang} {cmd:model}{cmd:(}{it:modeltype}{cmd:)} specifies the estimation model, 
-where {it:modeltype} must be one out of these two alternatives:
-"fe" (fixed effects), or "ols" (ordinary least squares). It is always required to specify one model. Notice that, with option "cross-section" in 'datatype()', only one model must be declared into the option 'model()': "ols".
 
 {phang} {cmd:tvar}{cmd:(}{it:time_variable}{cmd:)} specifies the time variable. It has to be numeric. 
 
@@ -151,7 +146,7 @@ this program to make sure you have an up-to-date version of Stata installed.
 . tsset id time
 ********************************************************************************
 . tfdiff y w x , t(2010) pvar(id) tvar(time) datatype(panel) ///
-  model(ols) ci(10) graph vce(cluster id) save_results(RES_tfdiff)
+  ci(10) graph vce(cluster id) save_results(RES_tfdiff)
 ********************************************************************************
 
 

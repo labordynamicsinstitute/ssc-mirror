@@ -10,12 +10,12 @@
 {title:Syntax}
 
 {p 8 16 2}
-{cmd:joy_plot} varname [if] [in] [aweight], [over(varname) by(varname)] [joy_plot_options color_options legend_options twoway_options]
+{cmd:joy_plot} varlist [if] [in] [aweight], [over(varname) by(varname)] [joy_plot_options color_options legend_options twoway_options]
 
 {synoptset 19 tabbed}{...}
 {marker opt}{synopthdr:options}
 {synoptline}
-{synopt  : {cmd: varname}} You need to specify a single variable that will be used to create plots (kdensity, or line).
+{synopt  : {cmd: varlist}} You need to specify a list of variable that will be used to create plots (kdensity, or line). 
 
 {synopt : {cmd: over(varname)}} Indicates a variable that defines the groups to be used for the joy_plot. If you omit this, you probably would prefer using {help kdensity} directly. See descriptions for details. 
 

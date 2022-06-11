@@ -1,0 +1,19 @@
+d 'EXPANDRANK': module to expand and rank observations
+d
+d  expandrank is a wrapper for expand which runs the command and
+d creates a ranking variable that assigns values 1...n to the
+d 1st...nth duplicate observations. 
+d
+d KW: data management
+d KW: ranks
+d KW: expand
+d
+d Requires: Stata version 9
+d
+d Distribution-Date: 20220610
+d
+d Author: Jan Kabátek, University of Melbourne
+d Support: email j.kabatek@@unimelb.edu.au
+d
+f expandrank.ado
+f expandrank.sthlp

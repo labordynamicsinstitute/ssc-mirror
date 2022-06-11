@@ -38,7 +38,10 @@ either using the {it:append} option or the command can be as following: {p_end}
 {opt replace} permits to overwrite an existing file. {p_end}
 
 {phang}
-{opt append} permits to append the output to an existing file. {p_end}
+{cmd:append[(}{help putdocx_begin##apopts:{it:apopts}}{cmd:)]} permits to append the output to an existing file and change style definitions along with page break, header, and footer settings. {p_end}
+
+{phang}
+{cmd:margin(}{help putdocx_begin##type:{it:type}}{cmd:, #[}{help putdocx_begin##unit:{it:unit}}{cmd:])} set page margins for the document. {p_end}
 
 {phang}
 {opt title(string)} specify the title of the table. The default is title("Summary Statistics"). {p_end}
@@ -54,7 +57,16 @@ Use font("", size) to specify font size only. Use font("", "", color) to specify
 {opt landscape} changes the document orientation from portrait to landscape. {p_end}
 
 {phang}
-{opt note(string)} adds notes under the table. {p_end}
+{cmd:note(}{it:string}[{cmd:,} {help putdocx_table##cellfmtopts:{it:cell_fmt_options}}]{cmd:)} adds notes under the table. {p_end}
+
+{phang}
+{opth layout:(putdocx_table##layouttype:layouttype)} adjust column width. {p_end}
+
+{phang}
+{opt varname} output variables' names in the first column of the table. {p_end}
+
+{phang}
+{opt varlabel} output variables' labels instead of names in the first column of the table. {p_end}
 
 {phang}
 {opt stats()} specifies the statistics to be output. Including N, {opt mean}{opt [}{opt (fmt)}{opt ]}, {opt var}{opt [}{opt (fmt)}{opt ]}, {opt sd}{opt [}{opt (fmt)}{opt ]}, {opt skewness}{opt [}{opt (fmt)}{opt ]}, 

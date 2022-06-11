@@ -26,7 +26,7 @@ d KW: histogram
 d
 d Requires: Stata version 12.1 and addplot from SSC (q.v.) 
 d
-d Distribution-Date: 20220130
+d Distribution-Date: 20220610
 d
 d Author: Matteo Pinna, ETH Zurich
 d Support: email  matteo.pinna@@gess.ethz.ch
