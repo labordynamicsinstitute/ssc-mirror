@@ -1,0 +1,46 @@
+d 'REGSENSITIVITY': module for regression sensitivity analysis
+d
+d  This module provides a set of tools for analyzing the
+d sensitivity of regression estimates to the presence of omitted
+d variables. Specifically, it calculates bounds on regression
+d coefficients by relaxing the assumption that the omitted
+d variables are uncorrelated with the included variable of
+d interest. Bounds are calculated for a range of alternative
+d assumptions about the omitted variables. The module also performs
+d breakdown analysis for hypotheses about these regression
+d coefficients. This analysis tells us how much we can relax the
+d exogeneity assumption before a hypothesis about the regression
+d coefficient of interest is overturned. The module also provides
+d tools to visualize the results. 
+d
+d KW: regression
+d KW: omitted variables
+d KW: breakdown analysis
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20220614
+d
+d Author: Paul Diegert, Duke University
+d Support: email paul.diegert@@duke.edu
+d
+d Author: Matthew A. Masten, Duke University
+d Support: email matt.masten@@duke.edu
+d
+d Author: Alexandre Poirier,  Georgetown University
+d Support: email alexandre.poirier@@georgetown.edu
+d
+f regsensitivity.ado
+f regsensitivity.sthlp
+f regsensitivity_plot.sthlp
+f regsensitivity_breakdown.sthlp
+f regsensitivity_bounds.sthlp
+f regsen.sthlp
+f regsen.ado
+f ../_/_regsen_write_tuples.ado
+f ../_/_regsen_write_table_header.ado
+f ../_/_regsen_write_scalar_table.ado
+f ../_/_regsen_idset_plot.ado
+f ../_/_regsen_display.ado
+f ../_/_regsen_breakfront_plot.ado
+f ../b/bfg2020.dta

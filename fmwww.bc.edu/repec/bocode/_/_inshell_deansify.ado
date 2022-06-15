@@ -1,3 +1,7 @@
+*! 1.1 - 13 June 2022
+*!   a) improvements to the regular expression used to "deansify" files
+*!   b) file write routines which are more robust to lines with special characters
+*!
 *! 1.0 - 29 May 2022
 *!
 *! this is a subprogram that is part of the shell wrapper package -inshell-
@@ -9,8 +13,11 @@ capture program drop _inshell_deansify
 
 program define _inshell_deansify, rclass
 
-  syntax, file(string) [ error ]
+  syntax, File(string) [ ERRor TYpe ]
   version 9
+
+  local ansi_regex_1 "[\x1b]*\[[?0-9;]*[CADJKlmhsu]"
+  local ansi_regex_2 "[\x1b]*\[[^@-~]*[@-~]"
 
   tempname  deansify   deansify_nosmcl
   tempfile  deansifyf  deansifyf_nosmcl
@@ -23,15 +30,38 @@ program define _inshell_deansify, rclass
     file write `deansify' "{err}{...}" _n
   }
   file read `filen' line
+  local lines_with_errors ""
   while r(eof) == 0 {
-    if strlen("`macval(line)'") != 0 {
+    if `:strlen local line' != 0 {
       local ++ln
-      local line2 = subinstr(ustrregexra("`macval(line)'", "\x1b\[([0-9]{1,2}(;[0-9]{1,2})*)?m" , ""),  char(10), " ", .)
-      file write `deansify' `"`macval(line2)'"' _n
-      if "`error'" != "" file write `deansify_nosmcl' `"`macval(line2)'"' _n
+      capture file write `deansify' (ustrregexra(`"`macval(line)'"', "`ansi_regex_1'" , "")) _n
+      if _rc {
+        capture file write `deansify' (ustrregexra("`macval(line)'", "`ansi_regex_1'" , "")) _n
+        if _rc {
+          capture file write `deansify' (ustrregexra(`""`macval(line)'""', "`ansi_regex_1'" , "")) _n
+          if _rc {
+            file write `deansify' ("THIS LINE WAS NOT CAPTURED") _n
+            local lines_with_errors "`lines_with_errors',`ln'"
+          }
+        }
+      }
+      if "`error'" != "" {
+        capture file write `deansify_nosmcl' (ustrregexra(`"`macval(line)'"', "`ansi_regex_1'" , "")) _n
+        if _rc {
+          capture file write `deansify_nosmcl' (ustrregexra("`macval(line)'", "`ansi_regex_1'" , "")) _n
+          if _rc {
+            capture file write `deansify_nosmcl' (ustrregexra(`""`macval(line)'""', "`ansi_regex_1'" , "")) _n
+            if _rc {
+              file write `deansify_nosmcl' ("THIS LINE WAS NOT CAPTURED") _n
+            }
+          }
+        }
+      }
     }
     file read `filen' line
   }
+
+  return local deansify_errors = "`:subinstr local lines_with_errors "," "" '"
 
   capture file close `filen'
   capture file close `deansify'
@@ -44,6 +74,11 @@ program define _inshell_deansify, rclass
     local outf_nosmcl "`c(tmpdir)'inshell_deansified_`=now()'_nosmcl.txt"
     capture quietly copy "`deansifyf_nosmcl'" "`outf_nosmcl'"
     return local outfile_nosmcl "`outf_nosmcl'"
+  }
+
+  // using the -type- option allows one to use _inshell_deansify as a standalone program for testing purposes
+  if !missing("`type'") {
+    noisily type "`outf'"
   }
 
 end

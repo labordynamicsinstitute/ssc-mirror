@@ -1,4 +1,6 @@
-*! 1.0   MBH 27 May 2022
+*! 1.0.1  MBH 13 June 2022
+*! 		minor revisions
+*! 1.0    MBH 27 May 2022
 *!   	this program is a wrapper for -cd- and is a subprogram of the shell
 *!   wrapper package -inshell-
 *!   	its usefulness is found primary in its ability to -cd- to paths set by
@@ -78,7 +80,7 @@ program define _inshell_cd, rclass
 			exit 0
 		}
 	}
-	else if missing("`home'", "`macval(directory)'") | ("`home'" != "" & "`macval(directory)'" != "") {
+	else if missing( "`home'", "`macval(directory)'" ) | !missing( "`home'", "`macval(directory)'" ) {
 		display as error ///
 			">>> you have either specified both options or neither of them. this is invalid"
 	}

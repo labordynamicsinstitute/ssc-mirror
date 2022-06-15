@@ -1,5 +1,8 @@
-// Ariel Gu (ariel.gu@northumbria.ac.uk) and Hong Il Yoo (h.i.yoo@durham.ac.uk): 21 May 2020.
+// Ariel Gu (ariel.gu@northumbria.ac.uk) and Hong Il Yoo (h.i.yoo@durham.ac.uk): 12 June 2022.
 // M-Way Clustered Standard Errors
+// v1.0.4 (12 June 2022) 
+//  -where relevant, the code correctly prints a warning message that an eigenvalue adjustment has been applied to produce a p.s.d. covariance matrix.
+//  -now support post-estimation command -suest-. See the option vmsuest(.) below.
 // v1.0.3 (21 May 2020) 
 //  - the code is now compatible with commands that only allow for vce(cluster clustvar) instead of both vce(cluster clustvar) and cluster(clustvar)
 // v1.0.2 (16 Feb 2020)
@@ -20,7 +23,7 @@ end
 program define Estimate, eclass 
 	version 13.1
 	syntax anything(id="command line" name=command_line) [if] [in] [fweight  aweight  pweight  iweight], CLuster(varlist min=2) ///
-																								    [VMCFACTOR(string) VMDFR(integer 0) *]  
+																								    [VMCFACTOR(string) VMDFR(integer 0) VMSUEST(string) *]  
 	// Check for syntax errors
 	if (`vmdfr' < 0) {
 		di as red "Residual degrees of freedom for t tests and F tests, # in option -vmdfr(#)-, must be a positive integer."
@@ -31,13 +34,18 @@ program define Estimate, eclass
 		di as red "The small-cluster correction type, str in option -vmcfactor(str)-, must be default or minimum or none."
 		exit 197
 	}
+	if ("`vmsuest'" == "") local vmsuest no
+	if ("`vmsuest'" != "no" & "`vmsuest'" != "yes") {
+		di as red "The input str in option -vmsuest(str)- must be yes or no."
+		exit 197
+	}	
 																									
 	// Mark sample
 	marksample touse
 	markout `touse' `cluster', strok
 	
 	// Remove vcemway options from the rest 
-	local remove vmcfactor(`vmcfactor') vmdfr(`vmdfr')
+	local remove vmcfactor(`vmcfactor') vmdfr(`vmdfr') vmsuest(`vmsuest')
 	local options : list options - remove
 	
 	// Set up weight options
@@ -77,8 +85,18 @@ program define Estimate, eclass
 		//---------------------------------------
 		// Step 1: one-way cluster on `cluster1' 
 		//---------------------------------------
-		capture	`command_line' `weight' if `touse' `in', cluster(`cluster1') `options'
-		if (_rc != 0) `command_line' `weight' if `touse' `in', vce(cluster `cluster1') `options'
+		if ("`vmsuest'" == "yes") {
+			capture	`command_line', cluster(`cluster1') `options'
+			if (_rc != 0) `command_line', vce(cluster `cluster1') `options'	
+			if ("`e(cmd)'" != "suest") {
+			 	di as red "The option -vmsuest(yes)- must be dropped unless the command -suest- is being used."
+				exit 197	
+			}
+		}
+		else {
+			capture	`command_line' `weight' if `touse' `in', cluster(`cluster1') `options'
+			if (_rc != 0) `command_line' `weight' if `touse' `in', vce(cluster `cluster1') `options'
+		}
 		matrix `b'        = e(b)
 		matrix `V_oneway' = e(V)
 		local N_clust1    = e(N_clust)
@@ -155,8 +173,14 @@ program define Estimate, eclass
 			matrix `V1' = `V_oneway'
 			est store `output_cluster1'
 			forvalues i = 2/`ntuples' {
-				capture `command_line' `weight' if `touse' `in', cluster(`cluster`i'') `options'
-				if (_rc != 0) `command_line' `weight' if `touse' `in', vce(cluster `cluster`i'') `options'
+				if ("`vmsuest'" == "yes") {
+					capture	`command_line', cluster(`cluster`i'') `options'
+					if (_rc != 0) `command_line', vce(cluster `cluster`i'') `options'				
+				}
+				else {
+					capture `command_line' `weight' if `touse' `in', cluster(`cluster`i'') `options'
+					if (_rc != 0) `command_line' `weight' if `touse' `in', vce(cluster `cluster`i'') `options'
+				}
 				matrix `V`i'' = e(V)
 				local N_clust`i' = e(N_clust)
 				if (`i' <= `k_way') local N_clustALL `N_clustALL', `N_clust`i''			
@@ -299,7 +323,8 @@ program define Replay
 		di as text "    `stat' and `prob' above only account for one-way clustering on `e(clustvar1)'."       
 		di as text "      Use {helpb test} to compute `stat' and `prob' that account for `k_way'-way clustering."		
 	}
-	if ("`replace'" == "yes") {
+	capture confirm matrix e(V_raw)
+	if (_rc == 0) {
 		di as text ""
 		di as text "	The initial variance-covariance matrix, " as result "e(V_raw)" as text ", was not positive semi-definite." 
 		di as text "	  The final matrix, " as result "e(V)" as text ", was computed by replacing negative eigenvalues with 0s."

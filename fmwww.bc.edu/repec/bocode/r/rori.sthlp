@@ -14,8 +14,8 @@ relative odds ratio (ROR) with large sample confidence interval
 {title:Syntax}
 {p 8 17 2}
 {cmdab:rori, }
-{opt t:argetpopulation}(A, B \ C, D) 
-{opt r:esponsepopulation}(a, b \ c, d) 
+{opt t:argetpopulation}(a matrix name or a matrix definition) 
+{opt r:esponsepopulation}(a matrix name or a matrix definition) 
 [{it:options}]
 
 {synoptset 20 tabbed}{...}
@@ -24,22 +24,17 @@ relative odds ratio (ROR) with large sample confidence interval
 
 {syntab:Required}
 
-{synopt:{opt t:argetpopulation}} 2x2 table of outcome and exposure (A, B \ C, D) 
-for the target population
+{synopt:{opt t:argetpopulation}} a matrix name or a matrix definition of 
+exposure (rows) and maybe an binary outcome (columns) for the target population
 
-{synopt:{opt r:esponsepopulation}} 2x2 table of outcome and exposure (a, b \ c, d) 
-for the response population. 
+{synopt:{opt r:esponsepopulation}} a matrix name or a matrix definition of 
+exposure (rows) and maybe an binary outcome (columns) for the response population. 
 {error: Note that all the cell values in the response population must be lower than or equal to the cell values in the target population}
 
 {syntab:Optional}
 
-{synopt:{opt noq:uietly}(integer)} See output from {help csi:csi} in the log
+{synopt:{opt ref:erence}(integer)} Set reference row number in ror table
 
-{synopt:{opt nr:esponse}(integer)} The total for the responses must be set here, when 
-exposure isn't binary
-
-{synopt:{opt nt:arget}} The total for the targets must be set here, when 
-exposure isn't binary
 
 {synoptline}
 {p2colreset}{...}
@@ -48,12 +43,16 @@ exposure isn't binary
 {marker description}{...}
 {title:Description}
 
-{pstd}{bf:rori} calculates the relative odds ratio (ROR) in a 2x2 table of 
-outcome and exposure.
+{pstd}{bf:rori} calculates the relative odds ratios (ROR) in a exposure by 
+binary outcome table.
 
-{pstd}{bf:rori} also calculates the Prevalence ratios of the exposure groups.
-When exposure isn't binary, it is possible to specify N for the target and 
-response populations. 
+{pstd}{bf:rori} also calculates the ratios of relative frequencies (RRF) of 
+the exposure groups.
+
+{pstd}The key point in {cmd:rori} is that Nohr(2006) produces a formula for 
+"the asymptotic variance of the difference between the estimate based on a 
+random subpopulation and that based on the total population, 
+Var[estimate_sub - estimate_tot] = Var[estimate_sub] - Var[estimate_tot]".
 
 {pstd}The relative odds ratio (ROR) is used to quantify selection bias. (Nohr 2018, modified)
 
@@ -83,67 +82,86 @@ results using non-parametric bootstrap. (Nohr 2006, modified)
 {pstd}"The simple approach based on equation 1 gave 95% confidence intervals 
 with coverage probabilities in the range from 94.4% to 96.0%" (Nohr 2006)
 
-{pstd}Odds ratios are estimated using {help csi:csi}.
-The standard errors for the odds ratios are from the log of the confidence interval 
-bounds. 
-
-{pstd}"Confidence intervals for the PR were found using the same simple 
-approximate formula as for the ROR." (Nohr 2018)
-
 
 {marker examples}{...}
 {title:Examples}
-{phang}{bf:When exposure is binary}{p_end}
+{phang}{bf:Immediate inputs}{p_end}
 {phang}Data are rounded and from Table 1 and Table 2 in (Austin 1981){p_end}
 {phang}{stata `"rori, t(30, 63 \ 401, 2807) r(25, 45 \ 347, 2313)"'}{p_end}
 {phang}To see the returned matrix:{p_end}
-{phang}{stata `"matlist r(rori)"'}{p_end}
-{phang}{stata `"matlist r(pr_ror)"'}{p_end}
-{phang}{stata `"matlist r(pr)"'}{p_end}
+{phang}{stata `"matlist r(ror)"'}{p_end}
+{phang}{stata `"matlist r(rrf)"'}{p_end}
 
+{phang}If there is only one column in the entered tables/matrices, only the
+the ratios of relative frequencies (RRF) are returned:{p_end}
+{phang}{stata `"rori, t(22193 \ 17277 \ 9065) r(7719 \ 5297 \ 2291)"'}{p_end}
+{phang}To see the returned matrix:{p_end}
+{phang}{stata `"matlist r(rrf)"'}{p_end}
 
-{phang}{bf:When exposure is not binary}{p_end}
+{phang}{bf:Using datasets}{p_end}
 {phang}Consider the data:{p_end}
+{phang}{stata `"use highbp rural agegrp using "https://www.stata-press.com/data/r17/nhanes2.dta", clear"'}{p_end}
+{phang}{error:In the following, it is wrongly assumed that the rural subpopulation is a random sample from the whole population.}{p_end}
 
------------------------------------
-             |        outcome      
-             |      0     1   Total
--------------+---------------------
-  subgroup   |                     
-    exposure |                     
-      Grp1   |    330   190     520
-      Grp2   |     40    60     100
-      Grp3   |     70    50     120
-      Total  |    440   300     740
-  Total      |                     
-    exposure |                     
-      Grp1   |    730   230     960
-      Grp2   |    150   110     260
-      Grp3   |    420   250     670
-      Total  |  1,300   590   1,890
------------------------------------
+{phang}We want to investigate whether there is selection bias for the 
+age proportions in the rural population compared to whole population.{p_end}
 
-{phang}The totals needs to be set to get the correct prevalence ratios when Grp2
-is compared to Grp1 (reference):{p_end}
-{phang}{stata `"rori, t(110, 230 \ 150, 730) r(60, 190 \ 40, 330) nt(1890) nr(740)"'}{p_end}
-{phang}{stata `"matlist r(rori)"'}{p_end}
-{phang}{stata `"matlist r(pr_ror)"'}{p_end}
-{phang}{stata `"matlist r(pr)"'}{p_end}
+{phang}Generate the target matrix (age distribution for the whole population):{p_end}
+{phang}{stata `"tab agegrp, matcell(tgtage)"'}{p_end}
+{phang}{stata `"matrix rownames tgtage = 20- 30- 40- 50- 60- 70+"'}{p_end}
+{phang}{stata `"matrix colnames tgtage = n"'}{p_end}
+
+{phang}Generate the response matrix (age distribution for the rural population):{p_end}
+{phang}{stata `"tab agegrp if rural, matcell(rspage)"'}{p_end}
+{phang}{stata `"matrix rownames rspage = 20- 30- 40- 50- 60- 70+"'}{p_end}
+{phang}{stata `"matrix colnames rspage = n"'}{p_end}
+
+{phang}Use {cmd:rori} to get the ratios of relative frequencies (RRF) with 
+confidence intervals{p_end}
+{phang}{stata `"rori, t(tgtage) r(rspage)"'}{p_end}
+{phang}{stata `"matlist r(rrf)"'}{p_end}
+
+{phang}We want to investigate whether there is selection bias for the effect 
+(odds ratio) of age proportions on high blood pressure limiting data to the 
+rural part of the whole population.{p_end}
+
+{phang}Generate the target matrix (age distribution by high blood pressure for 
+the whole population):{p_end}
+{phang}{stata `"tab agegrp highbp, matcell(tgtage)"'}{p_end}
+{phang}{stata `"matrix rownames tgtage = 20- 30- 40- 50- 60- 70+"'}{p_end}
+{phang}{stata `"matrix colnames tgtage = no yes"'}{p_end}
+{phang}Generate the target matrix (age distribution by high blood pressure for 
+the rural population):{p_end}
+{phang}{stata `"tab agegrp highbp if rural, matcell(rspage)"'}{p_end}
+{phang}{stata `"matrix rownames rspage = 20- 30- 40- 50- 60- 70+"'}{p_end}
+{phang}{stata `"matrix colnames rspage = n yes"'}{p_end}
+{phang}Use {cmd:rori} to get the relative odds ratios (ROR) with 
+confidence intervals{p_end}
+{phang}{stata `"rori, t(tgtage) r(rspage)"'}{p_end}
+{phang}{stata `"matlist r(ror)"'}{p_end}
+{phang}{cmd:rori} also returns the ratios of relative frequencies (RRF) by 
+outcome values with confidence intervals{p_end}
+{phang}{stata `"matlist r(rrf)"'}{p_end}
+{phang}As a default the reference row for relative odds ratios (ROR) is the 
+first. With option {opt ref:erence}(integer) another reference row can be chosen.
+Row 3 is chosen beow:{p_end}
+{phang}{stata `"rori, t(tgtage) r(rspage) ref(3)"'}{p_end}
+{phang}{stata `"matlist r(ror)"'}{p_end}
+{phang}The ratios of relative frequencies (RRF) are unchanged by this option.{p_end}
+{phang}{stata `"matlist r(rrf)"'}{p_end}
 
 
 {title:Stored results}
 
 {synoptset 15 tabbed}{...}
-{p2col 5 15 19 2: Scalars}{p_end}
-{synopt:{cmd:r(pru)}}The prevalence ratio (PR) of the unexposed.{p_end}
-{synopt:{cmd:r(pre)}}The prevalence ratio (PR) of the exposed.{p_end}
-{synopt:{cmd:r(ror)}}The relative odds ratio (ROR).{p_end}
 {p2col 5 15 19 2: Matrices}{p_end}
-{synopt:{cmd:r(rori)}}Matrix with the odds ratio for the response 2x2 table of 
-outcome and exposure, the odds ratio for the target 2x2 table of 
-outcome and exposure, and the relative odds ratio (ROR). All with confidence interval.{p_end}
-{synopt:{cmd:r(pr)}}The prevalence ratios (PR) with confidence interval.{p_end}
-{synopt:{cmd:r(pr_rori)}}A combination of {cmd:r(pr)} and {cmd:r(rori)}.{p_end}
+{synopt:{cmd:r(ror)}}Matrix with the odds ratios exposure by outcome table 
+for the response, the odds ratios exposure by outcome table 
+for the target, and the relative odds ratio (ROR). 
+All with confidence interval.{p_end}
+{synopt:{cmd:r(rrf)}}The ratios of relative frequencies (RRF) with confidence 
+intervals.{p_end}
+
 
 {marker author}{...}
 {title:Author and support}

@@ -1,5 +1,5 @@
 {smcl}
-{* 06November2020/}{...}
+{* 12June2022/}{...}
 {cmd:help vcemway}{right: ({browse "https://doi.org/10.1177/1536867X19893637":SJ19-4: st0582})}
 {hline}
 
@@ -19,6 +19,7 @@ multiway clustering{p_end}
 {opth cl:uster(varlist)}
 [{opt vmcfactor(type)}
 {opt vmdrf(#)}
+{opt vmsuest(type)}
 {it:cmdline_options}]
 
 {pstd}
@@ -107,6 +108,10 @@ researcher can carry out large-sample tests instead of t and F tests.  In case
 the estimation command reports small-sample statistics (for example,
 {cmd:regress}), {it:#} is set to (G - 1), where G is the size of the smallest
 clustering dimension.
+
+{phang}
+{opt vmsuest(type)} is required only when the user wishes to apply {cmd:vcemway} with {helpb suest}. 
+In this case, {it:type} must be set to {cmd:yes} to form a command line such as {cmd:vcemway suest modelA modelB, cluster(id1 id2) vmsuest(yes)}.
 
 {phang}
 {it:cmdline_options} specifies required and optional options in that command

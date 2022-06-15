@@ -84,22 +84,27 @@ cap confirm  variable `out'`repev'_i
 	
 /* Event qualifies only if it occurs during the shared follow up of two patients...set events after the end of shared follow up to 0 */
 qui egen `fu_min'=rowmin(`tdvar'`repev'_i `tdvar'`repev'_j)
-	
+
+local listi 
+local listj 
+
 forvalues r=1/`repev' {
 	
 	cap confirm  variable `out'`r'_i
-	if _rc!=0 {
-	return local errorvar `out'`r'
-	exit 
-	}
+		if _rc!=0 {
+		return local errorvar `out'`r'
+		exit 
+		}
 	
 	qui replace `out'`r'_i=0 if `fu_min'<`tdvar'`r'_i & !missing(`fu_min', `tdvar'`r'_i)
 	qui replace `out'`r'_j=0 if `fu_min'<`tdvar'`r'_j & !missing(`fu_min', `tdvar'`r'_j)
+	local listi `listi' `out'`r'_i
+	local listj `listj' `out'`r'_j
 	}
 
 * Calculate number of events for i and j
-qui egen `events_i'=rowtotal(`out'*_i)
-qui egen `events_j'=rowtotal(`out'*_j)
+qui egen `events_i'=rowtotal(`listi')
+qui egen `events_j'=rowtotal(`listj')
 
 * WLT
 qui gen X_comp`i'=(`events_i'<`events_j')+(`events_i'>`events_j')*-1 if !missing(`events_i', `events_j')

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.2 29apr2022}{...}
+{* *! version 1.3 13jun2022}{...}
 {viewerjumpto "Syntax" "inshell##syntax"}{...}
 {viewerjumpto "Description" "inshell##description"}{...}
 {viewerjumpto "Remarks" "inshell##remarks"}{...}
@@ -10,7 +10,7 @@
 {viewerjumpto "Suggestions" "inshell##suggestions"}{...}
 {viewerjumpto "Changing directory" "inshell##cd"}{...}
 {viewerjumpto "Return code" "inshell##returncode"}{...}
-{viewerjumpto "Command prefix" "inshell##commandprefix"}{...}
+{viewerjumpto "Shell macros" "inshell##shellmacros"}{...}
 {viewerjumpto "Saved results" "inshell##savedresults"}{...}
 {vieweralsosee "[D] shell" "help shell"}{...}
 {vieweralsosee "[D] cd" "help cd"}{...}
@@ -38,7 +38,7 @@
 {cmd:inshell} is a shell wrapper that is designed to enhance both the interactive and the scripted use of the shell in Stata.
 It can execute commands or scripts via the operating system's shell and will display the {it:{res:standard output}} in the {cmd:Results} window while capturing it into a series of local macros.
 In the event of an error, it will also capture and display both the {it:{err:standard error}} and the shell's native return code.
-Additionally, it contains an enhanced wrapper for {cmd:cd}. It runs on {bf:macOS}, {bf:Linux}, and {bf:Microsoft Windows Command shell}.
+Additionally, it contains an enhanced wrapper for {cmd:cd}. It runs on {bf:macOS}, {bf:Linux}, and {bf:Microsoft Windows Command} shells.
 It also works with {bf:Microsoft PowerShell} on all operating systems, with some limitations.{p_end}
 
 {marker remarks}{...}
@@ -62,7 +62,7 @@ Therefore if your code is intended to reference a variable within the shell's en
 {cmd:$var1} or {cmd:${var2}} to {cmd:\$var1} or {cmd:\${var2}}. For instance, to print the {cmd:PATH} variable on {bf:macOS} and {bf:Linux}:{p_end}
 
 {p 8 8 2}
-{cmd:. inshell echo \$PATH}{bind:     }{it:({stata inshell echo \$PATH:click to run})}{p_end}
+{cmd:. inshell echo \$PATH}{bind:        }{it:({stata inshell echo \$PATH:click to run})}{p_end}
 
 {p 6 4 3}
 In this case it is necessary to use the single backslash ({cmd:\}) to {it:escape} the dollar sign ({cmd:$}) otherwise Stata will look for a {cmd:global} macro named {cmd:PATH}.
@@ -81,7 +81,7 @@ However, any dollar signs ({cmd:$}) used for command substitution or in another 
 Common shell parameters such as {cmd:$0} (the current shell), {cmd:$$} (the current shell's process ID), or {cmd:$?} (the previous command's return code) also need {it:not} be escaped.{p_end}
 
 {p 6 4 3}
-{cmd:local} macros also need not be escaped as they have a different structure {hline 2} they are located between a back-tick ({cmd:`}) and a single apostrophe ({cmd:'})
+{cmd:local} macros also need not be escaped as they have a different structure {hline 2} formed between a back-tick ({cmd:`}) and a single apostrophe ({cmd:'})
 {hline 2} than double back-tick command substitution, which is performed between two single back-ticks: ({cmd:`}){it: command }({cmd:`}).{p_end}
 
 {p 6 4 3}
@@ -110,7 +110,7 @@ or for users of {bf:Microsoft PowerShell} running on a {bf:Mac} or {bf:Linux} co
 {title:Environment}
 
 {p 6 4 3}
-Sourcing of shell configuration files to produce the shell's environment will differ across each Stata installation for several obvious reasons, but for the most part,
+Sourcing of shell configuration files to produce the shell's {browse "https://en.wikipedia.org/wiki/Environment_variable":environment} will differ across each Stata installation for several obvious reasons, but for the most part,
 terminal-launched instances (also called {it:console} instances) of Stata will assemble their environments from a broader range of sources than those used by the GUI application.
 On {bf:macOS} using {bf:zsh} as the default shell, for instance, the {bf:.zshrc} configuration file is {it:not} sourced when using the GUI application,
 but it will be sourced when using a console instance. In both cases {bf:.zshenv} is sourced.{p_end}
@@ -126,9 +126,9 @@ for example, and the {bf:gsed} command functions as expected in the user's inter
 
 {p 8 8 2}{cmd:. inshell echo "$pangram" | gsed -E 's/( .....[^a-z] ?)/\U\1/g'}{p_end}
 
-{p 8 8 2}{error:{c TLC}{hline 34}{c TRC}{space 36}{c TLC}{hline 5}{c TRC}}{p_end}
-{p 8 8 2}{error:{c |} zsh:1: command not found: gsed{space 3}{c |}{space 36}{c |} 127 {c |}}{p_end}
-{p 8 8 2}{error:{c BLC} {it:stderr} {hline 26}{c BRC}{space 36}{c BLC}{hline 1} {it:rc} {c BRC}}{p_end}
+{p 8 8 2}{error:{c TLC}{hline 34}{c TRC}{space 30}{c TLC}{hline 5}{c TRC}}{p_end}
+{p 8 8 2}{error:{c |} zsh:1: command not found: gsed{space 3}{c |}{space 30}{c |} 127 {c |}}{p_end}
+{p 8 8 2}{error:{c BLC} {it:stderr} {hline 26}{c BRC}{space 30}{c BLC}{hline 1} {it:rc} {c BRC}}{p_end}
 
 {p 6 4 3}
 use the {it:absolute path} of the command{p_end}
@@ -182,7 +182,13 @@ for example, or{p_end}
 {res:123}{p_end}
 
 {p 6 4 3}
-In this fashion Stata macros can be exported to external scripts. For example, using the included shell script named {cmd:inshell_example1.sh}, the contents of which are:{p_end}
+In this fashion Stata macros can be exported to external scripts.
+{cmd:inshell} contains two ancillary files to demonstrate this usage which are both {browse "https://en.wikipedia.org/wiki/POSIX":POSIX}-compatible shell scripts
+and which must be installed separately from {cmd:inshell} itself into the {cmd:PERSONAL} system directory.
+To install these files {it:({stata `"cd `c(sysdir_personal)'"' :click here})} and then {it:({stata `"if "`c(pwd)'`c(dirsep)'" == "`c(sysdir_personal)'" net get inshell"' :click here})}.{p_end}
+
+{p 6 4 3}
+Using the included shell script named {cmd:inshell_example1.sh}, the contents of which are:{p_end}
 
 {space 8}{hline 18} {it:example shell script content} {hline 18}
 {* example_start - file}{...}
@@ -205,10 +211,10 @@ the user could code:{p_end}
 {p 8 8 2}
 {cmd:. global myvar=65536}{p_end}
 {p 8 8 2}
-{cmd:. inshell export var=$myvar ; . "`:sysdir PLUS'"/inshell_example1.sh}{p_end}
+{cmd:. inshell export var=$myvar ; . "`:sysdir PERSONAL'"/inshell_example1.sh}{p_end}
 
 {p 8 8 2}
-{it:({stata `"inshell export var=65536 ; . "`:sysdir PLUS'"inshell_example1.sh"' :click to run})}{p_end}
+{it:({stata `"inshell export var=65536 ; . "`:sysdir PERSONAL'"inshell_example1.sh"' :click to run})}{p_end}
 
 {res}{...}
 {p 8 8 2}65536{p_end}
@@ -218,14 +224,14 @@ the user could code:{p_end}
 {text}{...}
 
 {p 6 4 3}
-Also included is another shell script named {cmd:inshell_example2.sh} ({stata `"view `:sysdir PLUS'/inshell_example2.sh"':{it:click to view}})
-which is POSIX-compatible and is intended as a more sophisticated demonstration of shell scripting using {cmd:inshell}. It can be run using the following code:{p_end}
+Also included is another shell script named {cmd:inshell_example2.sh} ({stata `"view `:sysdir PERSONAL'/inshell_example2.sh"':{it:click to view}})
+which is intended as a more sophisticated demonstration of shell scripting using {cmd:inshell}. It can be run using the following code:{p_end}
 
 {p 8 8 2}
-{cmd:. inshell export var1=123; export var2=\$var1 ; export var3=$((var1*var2)); export flavor=`=lower("`c(edition_real)'")' ; export os="`c(os)'" ; . `:sysdir PLUS'/inshell_example2.sh}{p_end}
+{cmd:. inshell export var1=123; export var2=\$var1 ; export var3=$((var1*var2)); export flavor=`=lower("`c(edition_real)'")' ; export os="`c(os)'" ; . `:sysdir PERSONAL'/inshell_example2.sh}{p_end}
 
 {p 8 8 2}
-({stata `"inshell export var1=123; export var2=\$var1 ; export var3=$((var1*var2)); export flavor=`=lower("`c(edition_real)'")' ; export os="`c(os)'" ; . "`:sysdir PLUS'/inshell_example2.sh""':{it:click to run}}){p_end}
+({stata `"inshell export var1=123; export var2=\$var1 ; export var3=$((var1*var2)); export flavor=`=lower("`c(edition_real)'")' ; export os="`c(os)'" ; . "`:sysdir PERSONAL'/inshell_example2.sh""':{it:click to run}}){p_end}
 
 {p 6 4 3}
 Note that the termination of the shell session at the end of every {cmd:inshell} command implies that there is a syntax in use {ul:at all times}, namely:{p_end}
@@ -281,7 +287,7 @@ Some other special characters that do not form part of a single expression will 
 In the example above, the colon must be surrounded by single quotes, which in this case must be also escaped with a backslash.{p_end}
 
 {p 6 4 2}{txt}{...}
-The following are some examples on how to find the version of PowerShell that is installed.{p_end}
+The following are some examples on how to find the version of {bf:PowerShell} that is installed.{p_end}
 
 {p 8 8 2}{cmd}{...}. inshell /usr/local/bin/pwsh -Command '(Get-Host).Version'{p_end}
 {p 8 8 2}{cmd}{...}. inshell /usr/local/bin/pwsh -Command '\$host.Version'{p_end}
@@ -303,7 +309,7 @@ Standalone pipes and Math class expressions also require single-quoting, like so
 . inshell /usr/local/bin/pwsh -Command Get-Item env:TMPDIR '|' Select-Object -ExpandProperty Value{p_end}
 
 {p 8 8 6}{res}{...}
-/var/folders/m2/rxk2m73n2yxgqxzdzwrkbzdw0000gn/T/{p_end}
+{ccl tmpdir}{p_end}
 
 {p 8 8 2}{cmd}{...}
 . global result 429981696{p_end}
@@ -314,7 +320,7 @@ Standalone pipes and Math class expressions also require single-quoting, like so
 20736{p_end}
 
 {p 6 4 2}{txt}{...}
-There are likely numerous other potential command structures which also require escaping, so the user is advised to carefully test each and every {cmd:inshell} command.{p_end}
+There are likely numerous other potential command structures which also require quoting or escaping, so the user is advised to carefully test each and every {cmd:inshell} command.{p_end}
 
 {p 6 4 2}{txt}{...}
 Note that when using {bf:PowerShell} the return code will only reflect the {bf:True} or {bf:False} condition of the success of the last operation, which is represented as a boolean of {bf:0} or {bf:1}, respectively.{p_end}
@@ -323,7 +329,8 @@ Note that when using {bf:PowerShell} the return code will only reflect the {bf:T
 {title:Technical Notes}
 
 {p 6 4 2}{txt}{...}
-The output from a shell command can contain invisible characters called ANSI escape sequences that are used to specify formatting components such as the color or font styling of text as well as special types of whitespace.{p_end}
+The output from a shell command can contain control directives called {browse "https://en.wikipedia.org/wiki/ANSI_escape_code":ANSI escape sequences}
+that are used to specify formatting components such as the color or font styling of text as well as special types of whitespace.{p_end}
 
 {p 6 4 2}{txt}{...}
 Because the Stata interface is not completely compatible with these sequences, the resulting text that is captured may be garbled or unprintable.
@@ -343,7 +350,7 @@ the result may look something like this:{p_end}
 The cryptographic sequences at the beginning and end of lines one and two are in this case meant to display the output in bold and green font and should not be visible as text.{p_end}
 
 {p 6 4 2}{txt}{...}
-Stata does not process these directives as they are intended to be and instead will simply display the coding of the control sequences themselves, however even some of these are not printed visibly.
+Stata does not process these directives as they are intended to be and instead will simply display the coding of the control sequences themselves, however even some of these cannot be printed visibly.
 If these control sequences are not removed they will distort the ways in which the information is captured, copied, saved or displayed.{p_end}
 
 {p 6 4 2}{txt}{...}
@@ -359,6 +366,11 @@ Because these control sequences can cause such pervasive aberrations {hline 2} i
 {p 8 8 6}{res:-----  -----  -----  --------------- ----------}{p_end}
 {p 8 8 6}{res:7{space 6}2{space 6}4}{p_end}
 
+{p 6 4 2}{txt}{...}
+In some rare cases lines of output cannot be captured because they contain too many special characters that prompt Stata to interpret the text as one of its internal directives, like a {cmd:local} macros or a value {cmd:label} dereference.
+{cmd:inshell} is designed to be robust to these possibilities, but in the rare case that it cannot process a line, it will instead output {bf:THIS LINE WAS NOT CAPTURED} in its place and continue on to the next line.
+It also will return a local macro {cmd:r(line_errors)} which contains a comma-separated list of the lines which have not been properly captured. ({help inshell##savedresults:see Saved Results}){p_end}
+
 {marker suggestions}{...}
 {title:Suggestions}
 
@@ -371,7 +383,7 @@ When Stata is launched from a terminal, it naturally exists at a level closer to
 and that fact is reflected in the relaxed requirements with regards to quoting and escaping as well as the sourcing of a wider range of configuration files.{p_end}
 
 {p 6 4 3}
-Also note that Stata's implementation of the shell has no interactive abilities and the information printed to the {cmd:Results} window may contain garbled or otherwise unprintable text.
+As noted above Stata's implementation of the shell has no interactive abilities and the information printed to the {cmd:Results} window may contain garbled or otherwise unprintable text.
 This is because the shell is accessed through Stata's limited shell parser, and therefore the user should explicitly avoid any commands that involve any interactive or complicated display functionality.
 {cmd:inshell} attempts to remove any hidden formatting directives that exist as ANSI escape sequences so that the output is clean and legible ({help inshell##tech:see Technical Notes}).{p_end}
 
@@ -389,7 +401,7 @@ For example, if the user wanted to {cmd:cd} to the temporary directory, often se
 {p 8 8 2}
 {cmd:. inshell cd \$TMPDIR}{p_end}
 {p 8 8 2}
-{res:/private/var/folders/m2/rxk2m73n2yxgqxzdzwrkbzdw0000gn/T}{p_end}
+{res:{ccl tmpdir}}{p_end}
 
 {p 6 4 3}
 {cmd:inshell} also respects the differences between the intended behavior of a {cmd:cd} command {it:without arguments} on {bf:macOS/Linux} and {bf:Microsoft Windows}.
@@ -403,13 +415,13 @@ The shell's return code is the return code produced by the commands sent to the 
 This value can subsequently be used in error handling routines. It is always returned in {cmd:r(rc)}, which is not to be confused with Stata's return code, which is always provided
 in {cmd:c(rc)} or the system variable {cmd:_rc}.{p_end}
 
-{marker commandprefix}{...}
-{title:Command prefix}
+{marker shellmacros}{...}
+{title:Shell macros}
 
 {p 6 4 3}
-{cmd:inshell} does not currently allow the use of the global macro {cmd:S_SHELL} which can be used to "prefix" each {cmd:shell} command because it does not function as expected.
-If {cmd:S_SHELL} is set, {cmd:inshell} will abort the command and present the user with the option to clear it.
-For more information about {cmd:S_SHELL} {manpage D 800:{it:see page 793}} in the complete PDF manual.{p_end}
+{cmd:inshell} does not currently allow the use of the global macros {cmd:S_SHELL} or {cmd:S_XSHELL} which can be used to control the behavior of {cmd:shell} commands because they do not function as expected.
+If {cmd:S_SHELL} or {cmd:S_XSHELL} is set, {cmd:inshell} will abort the command and present the user with the option to clear it.
+For more information about {cmd:S_SHELL} and {cmd:S_XSHELL} {manpage D 800:{it:see page 793}} in the complete PDF manual.{p_end}
 
 {marker savedresults}{...}
 {title:Saved results}
@@ -425,13 +437,14 @@ For more information about {cmd:S_SHELL} {manpage D 800:{it:see page 793}} in th
 {synopt:{cmd:r(errln)}}the total number of lines of {it:{err:standard error}} captured{p_end}
 {synopt:{cmd:r(stderr)}}all of the lines of {it:{err:standard error}} condensed into a single line{p_end}
 {synopt:{cmd:r(rc)}}the shell's native return code produced by {it:commands}, which is equal to {bf:0} in the event of no errors{p_end}
+{synopt:{cmd:r(line_errors)}}a comma-separated list of the lines of {it:{res:standard output}} which encountered processing errors{p_end}
 {p2colreset}{...}
 
 {p 6 4 3}
 Often lines of {it:{res:standard output}} can be blank and, because Stata cannot store empty macros, these blank lines cannot be stored in {cmd:r()}.
 For that reason {cmd:inshell} preserves the sequential numerical ordering of the lines captured into {cmd:r(no1)} to {cmd:r(no{text}{it:m}{cmd:)}}. If {cmd:r(no)} = {it:m}
 there will exist {it:m} non-empty lines {cmd:r(no1)}, ... , {cmd:r(no}{it:(m-1)}{cmd:)}, {cmd:r(no}{it:m}{cmd:)}.
-This limitation should only pose a problem to users attempting to {cmd:inshell} some extremely sparse {help u_glossary##ascii:ASCII} art.{p_end}
+This limitation should only pose a problem to users attempting to {cmd:inshell} some extremely sparse {browse "https://en.wikipedia.org/wiki/ASCII_art":ASCII art}.{p_end}
 
 {title:Author}
 

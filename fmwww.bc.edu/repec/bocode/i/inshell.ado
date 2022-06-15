@@ -1,3 +1,9 @@
+*! 1.6   MBH 13 June 2022
+*!  a significant update which includes:
+*!			a) much more robust ANSI detection
+*!			b) better capture of strings with special characters
+*!			c) slightly streamlined code
+*!			d) corrections and revisions to the help file
 *! 1.5   MBH 31 May 2022
 *!   a major update which contains:
 *!      a)  further corrections for Windows
@@ -20,10 +26,17 @@ program define inshell, rclass
 
 	if "${S_SHELL}" != "" {
 		noisily display as error ///
-			">>> shell command prefix {bf:S_SHELL} is set to: " as text `"${S_SHELL}"' ///
+			">>> shell macro {bf:S_SHELL} is set to: " as text `"${S_SHELL}"' ///
 			_n as error ">>> this is not allowed with {bf:inshell}. Please drop the global macro {bf:S_SHELL} and try again." ///
 			_n ">>> Clear the {bf:S_SHELL} macro by clicking here: "`"[{stata `"macro drop S_SHELL"': drop S_SHELL macro }]"'
 		error 991
+	}
+	if "${S_XSHELL}" != "" {
+			noisily display as error ///
+				">>> shell macro {bf:S_XSHELL} is set to: " as text `"${S_XSHELL}"' ///
+				_n as error ">>> this is not allowed with {bf:inshell}. Please drop the global macro {bf:S_XSHELL} and try again." ///
+				_n ">>> Clear the {bf:S_XSHELL} macro by clicking here: "`"[{stata `"macro drop S_XSHELL"': drop S_XSHELL macro }]"'
+			error 991
 	}
 
 	** begin -cd- wrapper *********************************************************
@@ -44,6 +57,9 @@ program define inshell, rclass
 		tempfile stdout stderr rc
 		tempname out err c
 
+		local ansi_regex_1 "[\x1b]*\[[?0-9;]*[CADJKlmhsu]"
+		local ansi_regex_2 "[\x1b]*\[[^@-~]*[@-~]"
+
 		if c(os) != "Windows" {
 			shell `macval(0)' 2> `stderr' 1> `stdout' || echo $? > `rc'
 		}
@@ -55,7 +71,7 @@ program define inshell, rclass
 					" This is a Stata limitation."
 				exit 990
 			}
-							local       batf `c(tmpdir)'inshell.bat
+							local       batf `c(tmpdir)'inshell_`=now()'.bat               // added timestamp
 							// using -tempfile- to create the .bat does not work for some reason
 			capture erase     "`batf'"
 							tempname    batn
@@ -86,17 +102,19 @@ program define inshell, rclass
 		if `is_err' == 0 {
 			capture confirm file "`stdout'"
 			if !_rc {
-				local is_ansi = ustrtrim(fileread("`stdout'"))
-				if ustrregexm("`is_ansi'" , "\x1b\[([0-9]{1,2}(;[0-9]{1,2})*)?m") == 1 {
+				tempname is_ansi_scalar
+				scalar `is_ansi_scalar' = subinstr(fileread("`stdout'"),  char(10), "", . )
+				if ustrregexm(scalar(`is_ansi_scalar'), "`ansi_regex_1'") == 1 {
 					_inshell_deansify, file("`stdout'")
 					local stdout2 "`r(outfile)'"
+					if !missing("`r(deansify_errors)'") return local line_errors = "`r(deansify_errors)'"
 				}
 				else local stdout2 "`stdout'"
 				file open `out' using "`stdout2'", read
 				file read `out' line
 				local ln = 0
 				while r(eof) == 0 {
-					if strlen("`macval(line)'") != 0 {
+					if `:strlen local line' != 0 {
 						local ++ln
 						return local no`ln' `"`macval(line)'"'
 					}
@@ -104,14 +122,14 @@ program define inshell, rclass
 				}
 				return local no = `ln'
 				file close `out'
-				noisily type "`stdout2'"
+				noisily type "`stdout2'", asis
 				return local rc = 0
 			}
 			else exit 601
 		}
 		else if `is_err' != 0 {
 			local errormessage = ustrtrim(fileread("`stderr'"))
-			local is_ansi = ustrregexm("`errormessage'" , "\x1b\[([0-9]{1,2}(;[0-9]{1,2})*)?m")
+			local is_ansi = ustrregexm("`errormessage'" , "`ansi_regex_1'")
 			if `is_ansi' == 1 {
 				_inshell_deansify, file("`stderr'") error
 				local stderr2          "`r(outfile)'"
@@ -125,15 +143,13 @@ program define inshell, rclass
 			}
 			file open `err' using "`stderr_nosmcl'", read
 			file read `err' line
-			local firstline `"`macval(line)'"'
-			local firstline_length = udstrlen("`macval(firstline)'")
 			local ln = 0
 			local maxlinelength = 0
 			while r(eof) == 0 {
 				local linelength = udstrlen("`macval(line)'")
 				if `linelength' != 0 {
 					local ++ln
-					return local err`ln' = ustrtrim("`macval(line)'")
+					return local err`ln' `"`macval(line)'"'
 					local err`ln'_int `"`macval(line)'"'
 					if `linelength' > `maxlinelength' {
 						local maxlinelength = `linelength'
@@ -145,11 +161,9 @@ program define inshell, rclass
 			file close `err'
 			local errormessage = ustrtrim(fileread("`stderr_nosmcl'"))
 			local errorcode = ustrtrim(fileread("`rc'"))
-			if strpos("`errorcode'","fileread") local errorcode "?"
-
-			if "`c(console)'" == "" & `maxlinelength' <= `=`:set linesize' - `:strlen local errorcode' - 10' {
-				local symbol_l  " "
-				local symbol_r  " "
+			capture confirm integer number `errorcode'
+			if _rc local errorcode "?"
+			if "`c(console)'" == "" & `maxlinelength' <= `=`:set linesize' - min(`:strlen local errorcode', 2) - 9' {
 				local stderr_size = `maxlinelength' + 2
 				if `:strlen local errorcode' < 2 {
 					local rc_size   = `:strlen local errorcode' + 3
@@ -160,25 +174,25 @@ program define inshell, rclass
 				}
 				local space_size  = `:set linesize' - `stderr_size' - `rc_size' - 4
 				local rc_hline    = `:strlen local rc_size' - 6
-				forvalues i = 2 / `ln' {
-					local error_box`i' _n "{c |} `macval(err`i'_int)' {space `= `maxlinelength' - `:udstrlen local err`i'_int''}{c |}"
-					if `i' == 2 {
-						local error_box`i' `"`error_box`i'' "{space `space_size'}{c BLC}{hline `rc_hline'}{it:`symbol_l'rc`symbol_r'}{c BRC}""'
-					}
-					local error_box_total "`error_box_total' `error_box`i''"
-				}
 				if `ln' >= 2 {
+					forvalues i = 2 / `ln' {
+						local error_box`i' _n "{c |} `macval(err`i'_int)' {space `=`maxlinelength' - `:udstrlen local err`i'_int''}{c |}"
+						if `i' == 2 {
+							local error_box`i' `"`error_box`i'' "{space `space_size'}{c BLC}{hline `rc_hline'}{it: rc }{c BRC}""'
+						}
+						local error_box_total "`error_box_total' `error_box`i''"
+					}
 					noisily display as smcl ///
 						_n "{err}{c TLC}{hline `stderr_size'}{c TRC}{space `space_size'}{c TLC}{hline `rc_size'}{c TRC}" ///
-						_n "{c |} `macval(firstline)' {space `=`stderr_size'-`firstline_length'-2'}{c |}{space `space_size'}{c |} {bf:`padding'`errorcode'} {c |}" ///
+						_n "{c |} `macval(err1_int)' {space `=`stderr_size'-`:udstrlen local err1_int'-2'}{c |}{space `space_size'}{c |} {bf:`padding'`errorcode'} {c |}" ///
 						`error_box_total' ///
-						_n "{c BLC}{it:`symbol_l'stderr`symbol_r'}{hline `=`stderr_size'-8'}{c BRC}"
+						_n "{c BLC}{it: stderr }{hline `=`stderr_size'-8'}{c BRC}"
 					}
 				else if `ln' == 1 {
 					noisily display as smcl ///
 						_n "{err}{c TLC}{hline `stderr_size'}{c TRC}{space `space_size'}{c TLC}{hline `rc_size'}{c TRC}" ///
-						_n "{c |} `macval(firstline)' {c |}{space `space_size'}{c |} {bf:`padding'`errorcode'} {c |}" ///
-						_n "{c BLC}{it:`symbol_l'stderr`symbol_r'}{hline `=`stderr_size'-8'}{c BRC}{space `space_size'}{c BLC}{hline `rc_hline'}{it:`symbol_l'rc`symbol_r'}{c BRC}"
+						_n "{c |} `macval(err1_int)' {c |}{space `space_size'}{c |} {bf:`padding'`errorcode'} {c |}" ///
+						_n "{c BLC}{it: stderr }{hline `=`stderr_size'-8'}{c BRC}{space `space_size'}{c BLC}{hline `rc_hline'}{it: rc }{c BRC}"
 				}
 			}
 			else {
@@ -193,7 +207,7 @@ program define inshell, rclass
 		}
 	}
 
-	if strlen(`"`macval(0)'"') > 200 {
+	if strlen(`"`macval(0)'"') > 250 {
 			local long_command_box_size = 73
 			noisily display as smcl ///
 					 "{txt}{c TLC}{hline `long_command_box_size'}{c TRC}" ///

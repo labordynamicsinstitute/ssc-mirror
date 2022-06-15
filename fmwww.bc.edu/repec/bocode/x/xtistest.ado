@@ -1,8 +1,9 @@
 * Inoue & Solon (2006) IS-test for serial correlation
-*! Version 1.1.0 06apr2018
+*! Version 1.2.0 14june2022
 * Contact jesse.wursten@kuleuven.be for bug reports/inquiries.
 
 * Changelog
+** 14jun2022: Made compatible with older versions of Stata by manually including vech_lower() source code.
 ** 06apr2018: Reference to Stata Journal article added.
 ** 4jan2017: Set 2 as default lag length again.
 ** 9nov2016: Crucial bug fix! Test would use completely wrong values if data were unbalanced.
@@ -286,7 +287,7 @@ mata:
 			
 			sigmaSquared = sum(E[.,i]:^2) / ((T-1))
 						
-			if (p == T) si = vech_lower(Sik :- sigmaSquared/-T)
+			if (p == T) si = vech_lower_copy(Sik :- sigmaSquared/-T)
 			else si = __offdiag(Si, (1..p), 0) :- sigmaSquared/-T
 						
 			outsideFactor = outsideFactor + si
@@ -327,7 +328,7 @@ mata:
 			nonMissings = sum(rownonmissing(E[.,i]))
 			sigmaSquared = sum(E[.,i]:^2) / (nonMissings-1)
 					
-			if (p == T) si = vech_lower(Sik :- sigmaSquared/-nonMissings)
+			if (p == T) si = vech_lower_copy(Sik :- sigmaSquared/-nonMissings)
 			else si = __offdiag(Si, (1..p), 0) :- sigmaSquared/-nonMissings
 			
 			_editmissing(si, 0)
@@ -394,3 +395,11 @@ mata:
 		return(res)
 	}
 end
+
+
+mata:
+	transmorphic colvector vech_lower_copy(transmorphic matrix x) {
+		return(vech(x,1))
+	}
+end
+
