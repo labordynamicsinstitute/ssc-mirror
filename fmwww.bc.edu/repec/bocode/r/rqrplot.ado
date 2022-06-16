@@ -1,4 +1,4 @@
-*! rqrplot 1.0.0 05oct2021 Nicolai T. Borgen 
+*! rqrplot 1.0.2 15june2022 Nicolai T. Borgen 
 
 program define rqrplot, rclass
 
@@ -23,6 +23,15 @@ program define rqrplot, rclass
 	    di as error "RQR model not estimated with bootstrap prefix"
 		exit 198
 	}
+	
+	tempname matquantile
+	matrix `matquantile'=e(quantiles)
+	local nquantiles=rowsof(`matquantile')
+	if `nquantiles'==1 {
+		di as error "RQR model estimated for only one quantile; re-estimate with two or more quantiles before using rqrplot."
+		exit 198
+	} 
+	
 
 	if ("`bootstrap'"!="" & "`bootstrap'"!="normal") & "`level'"!="" {
 		di as error "bootstrap(`bootstrap') option cannot be combined with level() option."
@@ -40,7 +49,8 @@ program define rqrplot, rclass
 	if substr(e(cmdline),1,9)=="bootstrap" local crit=invnormal(`level')*-1
 	
 
-	tempvar Q b se cil ciu plotmat plotout
+	tempvar Q b se cil ciu 
+	tempname plotmat plotout
 	
 	qui {
 			
@@ -51,32 +61,49 @@ program define rqrplot, rclass
 		gen `ciu'=.
 		
 		lab var `Q' "Quantile"
-			
-		local nquantiles=rowsof(e(quantiles))
+		
+		tempname eb eV bootV
+		matrix `eb'=e(b)
+		matrix `eV'=e(V)
+
 		forvalues i=1/`nquantiles' {
-			local q=e(quantiles)[`i',1]
+			
+			local q=`matquantile'[`i',1]
+			local ebcolnumb=colnumb(`eb',"Q`q':`treat'")
+			local ebrownumb=rownumb(`eb',"y1")
+			local eVcolnumb=colnumb(`eV',"Q`q':`treat'")
+			local eVrownumb=rownumb(`eV',"Q`q':`treat'")			
+			local coef=`eb'[`ebrownumb',`ebcolnumb']
+			local StandErr=sqrt(`eV'[`eVrownumb',`eVcolnumb'])			
 			
 			replace `Q'=`q' in `i'/`i'
-			replace `b'=e(b)["y1","Q`q':`treat'"] in `i'/`i'
-			replace `se'=sqrt(e(V)["Q`q':`treat'","Q`q':`treat'"]) in `i'/`i'
+			replace `b'=`coef' in `i'/`i'
+			replace `se'=`StandErr' in `i'/`i'
 			
 			if substr(e(cmdline),1,9)!="bootstrap" {
-				replace `cil'=`b'[`i']-(`crit'*sqrt(e(V)["Q`q':`treat'","Q`q':`treat'"])) in `i'/`i'
-				replace `ciu'=`b'[`i']+(`crit'*sqrt(e(V)["Q`q':`treat'","Q`q':`treat'"])) in `i'/`i'
+				replace `cil'=`coef'-(`crit'*`StandErr') in `i'/`i'
+				replace `ciu'=`coef'+(`crit'*`StandErr') in `i'/`i'
 			}
 			
 			if substr(e(cmdline),1,9)=="bootstrap" & ("`bootstrap'"=="" | "`bootstrap'"=="normal") {
-			    replace `cil'=`b'[`i']-(`crit'*sqrt(e(V)["Q`q':`treat'","Q`q':`treat'"])) in `i'/`i'
-				replace `ciu'=`b'[`i']+(`crit'*sqrt(e(V)["Q`q':`treat'","Q`q':`treat'"])) in `i'/`i'
+			    replace `cil'=`coef'-(`crit'*`StandErr') in `i'/`i'
+				replace `ciu'=`coef'+(`crit'*`StandErr') in `i'/`i'
 			}
 			
 			if substr(e(cmdline),1,9)=="bootstrap" & ("`bootstrap'"!="" & "`bootstrap'"!="normal") {
-				if "`bootstrap'"=="percentile" local V e(ci_percentile)
-				if "`bootstrap'"=="bc" local V e(ci_bc)
-				if "`bootstrap'"=="bca" local V e(ci_bca)
-				if "`bootstrap'"=="" local V e(ci_normal)
-				replace `cil'=`V'["ll","Q`q':`treat'"] in `i'/`i'
-				replace `ciu'=`V'["ul","Q`q':`treat'"] in `i'/`i'
+				if "`bootstrap'"=="percentile" matrix `bootV'=e(ci_percentile)
+				if "`bootstrap'"=="bc" matrix `bootV'=e(ci_bc)
+				if "`bootstrap'"=="bca" matrix `bootV'=e(ci_bca)
+				if "`bootstrap'"=="" matrix `bootV'=e(ci_normal)
+				
+				local bootVcolnumb=colnumb(`bootV',"Q`q':`treat'")
+				local bootVrownumbll=rownumb(`bootV',"ll")				
+				local bootVrownumbul=rownumb(`bootV',"ul")				
+				
+				local bootCIl=`bootV'[`bootVrownumbll',`bootVcolnumb']
+				local bootCIu=`bootV'[`bootVrownumbul',`bootVcolnumb']
+				replace `cil'=`bootCIl' in `i'/`i'
+				replace `ciu'=`bootCIu' in `i'/`i'
 			}
 			
 		}
@@ -108,6 +135,7 @@ program define rqrplot, rclass
 				, legend(off) ytitle(Coefficient) `twopts'
 		}
 	}
+
 	mkmat `Q' `b' `se' `cil' `ciu', matrix(`plotmat') nomissing 
 	mat colnames `plotmat'=q b se ll ul
 	if "`notabout'"=="" {
@@ -123,18 +151,9 @@ program define rqrplot, rclass
 		mat l `plotout', noheader
 	}
 	return matrix plotmat=`plotmat'
-	
-end 
-
-
-
-capture program drop rqrboot 
-program define rqrboot, 
-
-	bootstrap, reps(`reps'): 
-
 
 end 
+
 
 
 

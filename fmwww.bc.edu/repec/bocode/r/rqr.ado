@@ -1,4 +1,4 @@
-*! rqr 1.0.1 06oct2021 Nicolai T. Borgen 
+*! rqr 1.0.2 15june2022 Nicolai T. Borgen 
 
 program define rqr, eclass
 	
@@ -97,8 +97,8 @@ program define rqr, eclass
 
 		
 	marksample touse
-	markout `touse' `varlist' 
-	
+	markout `touse' `varlist' `controls' `absorb'
+		
 	tokenize `varlist'
 		local y `1'
 		local yname `1'
@@ -109,7 +109,7 @@ program define rqr, eclass
 		
 	if "`smoothing'"!="" {	
 		tempvar yjitter u
-		gen double `u'=runiform(`jitter')
+		gen double `u'=runiform(`jitter') 
 		/*qui */ su `u'
 		gen double `yjitter'=`y'+`u'-r(mean)
 	}
@@ -125,17 +125,17 @@ program define rqr, eclass
 
 	if "`absorb'"==""  {
 	    if "`step1command'"=="" local step1command regress
-	    `qui' `step1command' `treatment' `controls' if `touse', `step1options'
+	    `qui' `step1command' `treatment' `controls' if `touse' [`weight' `exp'], `step1options'
 	}
 	if "`absorb'"!="" {
 		tempvar resid
 			
 		if "`step1command'"!="" {
 			if "`step1command'"=="xtreg" `qui' `step1command' `treatment' `controls' if `touse', fe i(`absorb') `step1options'
-			else `qui' `step1command' `treatment' `controls' if `touse', absorb(`absorb') `step1options'
+			else `qui' `step1command' `treatment' `controls' if `touse' [`weight' `exp'], absorb(`absorb') `step1options'
 		} 
-		if `nabsorb'==1 & "`step1command'"=="" `qui' areg `treatment' `controls' if `touse', absorb(`absorb') `step1options'
-		if `nabsorb'>1 & "`step1command'"=="" `qui' reghdfe `treatment' `controls' if `touse', absorb(`absorb') residuals(`resid') `step1options'
+		if `nabsorb'==1 & "`step1command'"=="" `qui' areg `treatment' `controls' if `touse' [`weight' `exp'], absorb(`absorb') `step1options'
+		if `nabsorb'>1 & "`step1command'"=="" `qui' reghdfe `treatment' `controls' if `touse' [`weight' `exp'], absorb(`absorb') residuals(`resid') `step1options'
 		if `nabsorb'>1 local step1command "reghdfe"
 	}
 	qui predict double `treat' if `touse', `options_predict'		
@@ -165,16 +165,18 @@ program define rqr, eclass
 		exit
 	}
 		
-	qui `qrmodel' `y' `treat' if `touse', q(`quantile') 	///
+	qui `qrmodel' `y' `treat' if `touse' [`weight' `exp'], q(`quantile') 	///
 		`options_qreg' `options_qrprocess'
-
+	
+	tempname matquantile 
+	
 	if "`qrmodel'"=="qrprocess" {
 		local nquantile=rowsof(e(quantiles))
 		local colrownames
 		forvalues n=1/`nquantile' {
-			local nn=e(quantiles)[`n',1]
-			local colrownames `colrownames' Q`nn':`treatment' Q`nn':_cons
-			
+			matrix `matquantile'=e(quantiles)
+			local nn=`matquantile'[`n',1]
+			local colrownames `colrownames' Q`nn':`treatment' Q`nn':_cons		
 		}
 	}
 				
@@ -275,7 +277,6 @@ program define rqr, eclass
 	if "`smoothing'"!="" {
 		di as text "The outcome variable is smoothed"
 	}
-
 
 	
 end

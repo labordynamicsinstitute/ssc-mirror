@@ -1,45 +1,46 @@
-*! version 1.2.3  22aug2021
+*! version 1.2.5  31mar2022  I I Bolotov
 program def pyconvertu
 	version 16.0
 	/*
-		By default, this small program converts country names (in English) to
-		ISO 3166-1 codes (alpha-2, alpha-3, and numeric) and to full names
-		in English and French using regular expressions with Unicode support.
-		The from() option allows the user to import an external JSON file as
-		a dictionary to replace the default classification.
-		The JSON file can be created from data in memory, provided they include
-		headings "Data", "Metadata" and "Sources" in the first variable,
-		immediately followed by content. The template JSON file structure is
-		the following ("regex" is a compulsory key and the file is saved using
-		Python's json.dump()):
-		[
-			{
-				"regex":"^(.*afgh.*|\\s*AFG\\s*|\\s*AF\\s*|\\s*4\\s*)$",
-				"name_en":"Afghanistan",        # classification A
-				"name_fr":"Afghanistan (l')",   # classification B
-				"iso3":"AFG",                   # ...
-				"iso2":"AF",
-				"isoN":"4"
-			},
-			...
-		]
-		Author: Ilya Bolotov, MBA, Ph.D.
-		Date: 20 July 2021
+		By default, this small program converts country names (in English) to   
+		ISO 3166-1 codes (alpha-2, alpha-3, and numeric) and to full names      
+		in English and French using regular expressions with Unicode support.   
+		The from() option allows the user to import an external JSON file as    
+		a dictionary to replace the default classification.                     
+		The JSON file can be created from data in memory, provided they include 
+		headings "Data", "Metadata" and "Sources" in the first variable,        
+		immediately followed by content. The template JSON file structure is    
+		the following ("regex" is a compulsory key and the file is saved using  
+		Python's json.dump()):                                                  
+		[                                                                       
+			{                                                                   
+				"regex":"^(.*afgh.*|\\s*AFG\\s*|\\s*AF\\s*|\\s*4\\s*)$",        
+				"name_en":"Afghanistan",        # classification A              
+				"name_fr":"Afghanistan (l')",   # classification B              
+				"iso3":"AFG",                   # ...                           
+				"iso2":"AF",                                                    
+				"isoN":"4"                                                      
+			},                                                                  
+			...                                                                 
+		]                                                                       
+
+		Author: Ilya Bolotov, MBA, Ph.D.                                        
+		Date: 20 July 2021                                                      
 	*/
 	syntax 																	///
 	name(name=name) [, to(string) Generate(string) replace print]			///
 	[from(string) *]
 	tempname json sections_n vars
 	tempvar converted
-	// import classification
+	// import classification                                                    
 	if `"`from'"' == "" {
 		qui findfile `"pyconvertu_classification.json"'
 		local from `"`r(fn)'"'
 	}
-	// convert the variable to classification
+	// convert the variable to classification                                   
 	cap confirm variable `name'
 	if ! _rc {
-		/* check options for errors */
+		/* check options for errors                                           */
 		if `"`to'"' == "" {					// check for missing options
 			di as err "option to() required"
 			exit 198
@@ -48,8 +49,12 @@ program def pyconvertu
 			di as err "must specify either generate, replace or print option"
 			exit 198
 		}
-		/* ado + python */
-		python: l = _pyconvertu(r'`from'', Data.get('`name''), '`to'')
+		/* ado + python                                                       */
+		cap python: l = _pyconvertu(r'`from'', Data.get('`name''), '`to'')
+		if _rc {
+			di as err "JSON file does not contain valid entry/dictionary"
+			exit 7102
+		}
 		if `"`print'"' == "" {				// store the converted variable
 			g `converted' = ""
 			python: Data.store('`converted'', None, l)
@@ -65,9 +70,9 @@ program def pyconvertu
 		}
 		exit 0
 	}
-	// save classification to a variable
+	// save classification to a variable                                        
 	if `"`name'"' == "__classification" {
-		/* check options for errors */
+		/* check options for errors                                           */
 		if `"`to'"' == "" {
 			di as err "option to() required"
 			exit 198
@@ -76,8 +81,12 @@ program def pyconvertu
 			di as err "must specify either generate or print option"
 			exit 198
 		}
-		/* ado + python */
-		python: l = _pyconvertu_list(r'`from'', '`to''); l.sort()
+		/* ado + python                                                       */
+		cap python: l = _pyconvertu_list(r'`from'', '`to''); l.sort()
+		if _rc {
+			di as err "JSON file does not contain valid entry/dictionary"
+			exit 7102
+		}
 		python: n = len(l) - Data.getObsTotal()
 		if `"`print'"' == "" {				// store the classification
 			g `converted' = ""
@@ -92,23 +101,27 @@ program def pyconvertu
 		}
 		exit 0
 	}
-	// print metadata and sources
+	// print metadata and sources                                               
 	if `"`name'"' == "__info" {
-		python: l = _pyconvertu_info(r'`from'')
+		cap python: l = _pyconvertu_info(r'`from'')
+		if _rc {
+			di as err "JSON file does not contain valid entry/dictionary"
+			exit 7102
+		}
 		python: print(f'\n'.join(l))
 		exit 0
 	}
-	// dump classification from data to a json file
+	// dump classification from data to a json file                             
 	if `"`name'"' == "__dump" {
 		qui ds
 		local `vars' = r(varlist)
-		/* find _n of the json sections */
+		/* find _n of the json sections                                       */
 		forvalues n = 1/`=_N' {
 			if regexm(`=word("``vars''", 1)'[`n'], "^\s*(Data|Meta|Sources)") {
 				local `sections_n' "``sections_n'' `n'"
 			}
 		}
-		/* ado + python */
+		/* ado + python                                                       */
 		scalar `json' = ""
 		cap preserve
 		forvalues i = 1/`=wordcount("``sections_n''")' {
@@ -150,13 +163,14 @@ program def pyconvertu
 		python: _pyconvertu_dump(r'`to'', Scalar.getString('`json''))
 		exit 0
 	}
-	// or display error
+	// or display error                                                         
 	di as err 																///
 	"must specify either a variable, __classification, __info, or __dump"
 	exit 198
 end
 
-* Python 3 code ***********
+* Python 3 code ***********                                                     
+version 16.0
 python:
 # Stata Function Interface
 from sfi import Data, Scalar
@@ -172,19 +186,19 @@ def _pyconvertu(
 ):
 	"""
 	/*
-		Converts a list of strings (from_list) to classification
-		(to_classification) based on a JSON file (source_file),
-		unmatched strings are returned unchanged.
+		Converts a list of strings (from_list) to classification.               
+		(to_classification) based on a JSON file (source_file),                 
+		unmatched strings are returned unchanged.                               
 	*/
 	"""
 	try:
-		#// load classification
+		#// load classification                                                 
 		with open(os.path.expanduser(source_file)) as f:
 			classification = list(filter(
 				lambda d: not d.get('metadata') and not d.get('sources'),
 				json.load(f)
 			))
-		#// convert list
+		#// convert list                                                        
 		return list(map(
 			lambda s:
 				(lambda l, s: 
@@ -201,66 +215,66 @@ def _pyconvertu(
 			from_list
 		))
 	except:
-		return {}
+		raise PyConvertUError
 
 def _pyconvertu_list(
 	source_file=r'', from_classification='', *args, **kwargs
 ):
 	"""
 	/*
-		Creates a list of strings from classification
-		(from_classification) based on a JSON file (source_file).
+		Creates a list of strings from classification                           
+		(from_classification) based on a JSON file (source_file).               
 	*/
 	"""
 	try:
-		#// load classification
+		#// load classification                                                 
 		with open(os.path.expanduser(source_file)) as f:
 			classification = list(filter(
 				lambda d: not d.get('metadata') and not d.get('sources'),
 				json.load(f)
 			))
-		#// create list
+		#// create list                                                         
 		return list(map(
 			lambda d: d.get(from_classification),
 			classification
 		))
 	except:
-		return {}
+		raise PyConvertUError
 
 def _pyconvertu_info(
 	source_file=r'', *args, **kwargs
 ):
 	"""
 	/*
-		Returns a list based on a JSON file (source_file).
+		Returns a list based on a JSON file (source_file).                      
 	*/
 	"""
 	try:
-		#// load classification metadata
+		#// load classification metadata                                        
 		with open(os.path.expanduser(source_file)) as f:
 			metadata = list(filter(
 				lambda d: d.get('metadata') or d.get('sources'),
 				json.load(f)
 			))
-		#// create list
+		#// create list                                                         
 		return list(map(
 			lambda d: str(d),
 			metadata
 		))
 	except:
-		return {}
+		raise PyConvertUError
 
 def _pyconvertu_dump(
 	target_file=r'', json_string='', *args, **kwargs
 ):
 	"""
 	/*
-		Writes JSON string to a JSON file (target_file).
+		Writes JSON string to a JSON file (target_file).                        
 	*/
 	"""
 	target_file = target_file.replace('.json', '') + '.json'
 	with open(os.path.expanduser(target_file), 'w') as f:
-		#// dump classification and print message
+		#// dump classification and print message                               
 		json.dump(
 			json.loads('[' + json_string[0:-2].replace('\\', '\\\\') + ']'),
 			f

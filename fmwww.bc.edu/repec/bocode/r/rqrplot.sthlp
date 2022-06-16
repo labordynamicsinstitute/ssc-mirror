@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  Nicolai T. Borgen 05oct2021}{...}
+{* *! version 1.0.2  Nicolai T. Borgen 15june2022}{...}
 {cmd:help rqrplot}
 {hline}
 
@@ -59,8 +59,8 @@ The {helpb rqrplot} postestimation command only works after the {helpb rqr}
 command.
 
 {pstd}
-See Borgen, Haupt, and Wiborg (2021b) for descriptions and examples of the 
-{cmd:rqr} and {helpb rqrplot} commands. 
+See {browse "https://osf.io/preprints/socarxiv/4vquh": Borgen, Haput, and Wiborg (2021b)}
+for descriptions and examples of the {cmd:rqr} and {helpb rqrplot} commands. 
 
 
 {title:Examples: Basic usage}
@@ -161,15 +161,15 @@ The {cmd:rqrplot} command requires Stata 12.0 or later.
 {title:Reference}
 
 {p 4 8 2}
-{browse "https://osf.io/preprints/socarxiv/42gcb/": Borgen, Haput, and Wiborg (2021a)}
+{browse "https://osf.io/preprints/socarxiv/42gcb/": Borgen, Haupt, and Wiborg (2021a)}
 A New Framework for Estimation of Unconditional Quantile Treatment Effects: 
 The Residualized Quantile Regression (RQR) Model. {it:SocArXiv}. 
-April 14. doi:10.31235/osf.io/42gcb{p_end}
+doi:10.31235/osf.io/42gcb{p_end}
 
 {p 4 8 2}
-{browse Borgen, Haput, and Wiborg (2021b)} 
+{browse "https://osf.io/preprints/socarxiv/4vquh": Borgen, Haupt, and Wiborg (2021b)}
 Flexible and fast estimation of quantile treatment effects: The rqr and rqrplot
-commands {it:SocArXiv}. XXX. doi:XXX{p_end}
+commands {it:SocArXiv}. doi:10.31235/osf.io/4vquh{p_end}
 
 
 {title:Authors}
@@ -191,10 +191,11 @@ Thanks for citing this software in one of the following ways:
 {browse "https://osf.io/preprints/socarxiv/42gcb/": Borgen, NT., A. Haupt, and ØN. Wiborg (2021).}
 A New Framework for Estimation of Unconditional Quantile Treatment Effects: 
 The Residualized Quantile Regression (RQR) Model. {it:SocArXiv}. 
-April 14. doi:10.31235/osf.io/42gcb{p_end}
+doi:10.31235/osf.io/42gcb{p_end}
 
 {p 8 8 2}
-{browse Borgen, NT, A. Haput, and ØN. Wiborg (2021).} 
+{browse "https://osf.io/preprints/socarxiv/4vquh": Borgen, Haput, and Wiborg (2021b)}
 Flexible and fast estimation of quantile treatment effects: The rqr and rqrplot
-commands {it:SocArXiv}. XXX. doi:XXX{p_end}
+commands {it:SocArXiv}. doi:10.31235/osf.io/4vquh{p_end}
+
 

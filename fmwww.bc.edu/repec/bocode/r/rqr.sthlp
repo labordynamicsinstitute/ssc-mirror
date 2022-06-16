@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0  Nicolai T. Borgen 05oct2021}{...}
+{* *! version 1.0.2  Nicolai T. Borgen 15june2022}{...}
 {cmd:help rqr}
 {hline}
 
@@ -80,7 +80,8 @@ The {helpb rqrplot} postestimation command can be used to plot the coefficients 
 confidence interval effortless. 
 
 {pstd}
-See Borgen, Haupt, and Wiborg (2021b) for descriptions and examples of the 
+See {browse "https://osf.io/preprints/socarxiv/4vquh": Borgen, Haput, and Wiborg (2021b)}
+for descriptions and examples of the 
 {cmd:rqr} and {helpb rqrplot} commands. 
 
 
@@ -206,7 +207,8 @@ Plotting coefficients after {cmd:rqr}; see {helpb rqrplot} for more details. {p_
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Macros}{p_end}
-{synopt:{cmd:e(cmd)}}rqr{p_end}
+{synopt:{cmd:e(cmd)}}Second-step QR model{p_end}
+{synopt:{cmd:e(cmdname)}}rqr{p_end}
 {synopt:{cmd:e(cmdline)}}command as typed{p_end}
 {synopt:{cmd:e(treatment)}}treatment variable{p_end}
 {synopt:{cmd:e(controls)}}control variables{p_end}
@@ -263,15 +265,15 @@ the {helpb qrprocess} (Chernozhukov et al. 2020) and {helpb reghdfe}
 {title:Reference}
 
 {p 4 8 2}
-{browse "https://osf.io/preprints/socarxiv/42gcb/": Borgen, Haput, and Wiborg (2021a)}
+{browse "https://osf.io/preprints/socarxiv/42gcb/": Borgen, Haupt, and Wiborg (2021a)}
 A New Framework for Estimation of Unconditional Quantile Treatment Effects: 
 The Residualized Quantile Regression (RQR) Model. {it:SocArXiv}. 
-April 14. doi:10.31235/osf.io/42gcb{p_end}
+doi:10.31235/osf.io/42gcb{p_end}
 
 {p 4 8 2}
-{browse Borgen, Haput, and Wiborg (2021b)} 
+{browse "https://osf.io/preprints/socarxiv/4vquh": Borgen, Haupt, and Wiborg (2021b)}
 Flexible and fast estimation of quantile treatment effects: The rqr and rqrplot
-commands {it:SocArXiv}. XXX. doi:XXX{p_end}
+commands {it:SocArXiv}. doi:10.31235/osf.io/4vquh{p_end}
 
 {p 4 8 2}
 {browse "https://rdcu.be/cxW6l": Chernozhukov, V., I. Fernández-Val, and B. Melly (2020).} Fast algorithms for the
@@ -301,10 +303,10 @@ Thanks for citing this software in one of the following ways:
 {browse "https://osf.io/preprints/socarxiv/42gcb/": Borgen, NT., A. Haupt, and ØN. Wiborg (2021).}
 A New Framework for Estimation of Unconditional Quantile Treatment Effects: 
 The Residualized Quantile Regression (RQR) Model. {it:SocArXiv}. 
-April 14. doi:10.31235/osf.io/42gcb{p_end}
+doi:10.31235/osf.io/42gcb{p_end}
 
 {p 8 8 2}
-{browse Borgen, NT, A. Haput, and ØN. Wiborg (2021).} 
+{browse "https://osf.io/preprints/socarxiv/4vquh": Borgen, Haput, and Wiborg (2021b)}
 Flexible and fast estimation of quantile treatment effects: The rqr and rqrplot
-commands {it:SocArXiv}. XXX. doi:XXX{p_end}
+commands {it:SocArXiv}. doi:10.31235/osf.io/4vquh{p_end}
 
