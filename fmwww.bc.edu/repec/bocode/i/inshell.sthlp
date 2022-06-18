@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.3 13jun2022}{...}
+{* *! version 1.4 16jun2022}{...}
 {viewerjumpto "Syntax" "inshell##syntax"}{...}
 {viewerjumpto "Description" "inshell##description"}{...}
 {viewerjumpto "Remarks" "inshell##remarks"}{...}
@@ -439,12 +439,6 @@ For more information about {cmd:S_SHELL} and {cmd:S_XSHELL} {manpage D 800:{it:s
 {synopt:{cmd:r(rc)}}the shell's native return code produced by {it:commands}, which is equal to {bf:0} in the event of no errors{p_end}
 {synopt:{cmd:r(line_errors)}}a comma-separated list of the lines of {it:{res:standard output}} which encountered processing errors{p_end}
 {p2colreset}{...}
-
-{p 6 4 3}
-Often lines of {it:{res:standard output}} can be blank and, because Stata cannot store empty macros, these blank lines cannot be stored in {cmd:r()}.
-For that reason {cmd:inshell} preserves the sequential numerical ordering of the lines captured into {cmd:r(no1)} to {cmd:r(no{text}{it:m}{cmd:)}}. If {cmd:r(no)} = {it:m}
-there will exist {it:m} non-empty lines {cmd:r(no1)}, ... , {cmd:r(no}{it:(m-1)}{cmd:)}, {cmd:r(no}{it:m}{cmd:)}.
-This limitation should only pose a problem to users attempting to {cmd:inshell} some extremely sparse {browse "https://en.wikipedia.org/wiki/ASCII_art":ASCII art}.{p_end}
 
 {title:Author}
 

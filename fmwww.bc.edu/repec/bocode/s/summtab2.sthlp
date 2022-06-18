@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.0 01Dec2020}
+{* *! version 3.0.0 17Jun2022}
 {cmd:help summtab2}
 {hline}
 
@@ -57,6 +57,7 @@
 {syntab:Output Options}
 {synopt :{cmd:directory(}{it:string})}The directory in which the results are saved; if not specified, defaults to current working directory{p_end}
 {synopt :{cmd:title(}{it:string})}Table title, to put at the top of the output Word document; defaults to Table 1{p_end}
+{synopt :{cmd:footnote(}{it:string})}Table footnote, to put below the table in the output Word document; defaults to no footnote{p_end}
 {synopt :{cmd:word}}If specified, a Word document will be output{p_end}
 {synopt :{cmd:wordname(}{it:string})}Name of Word document; defaults to table1{p_end}
 {synopt :{cmd:excel}}If specified, an Excel document will be output{p_end}

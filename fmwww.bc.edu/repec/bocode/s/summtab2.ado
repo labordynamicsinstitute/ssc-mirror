@@ -1,9 +1,9 @@
-*!version2.0 01Dec2020
+*!version3.0 17Jun2022
 
 /* -----------------------------------------------------------------------------
 ** PROGRAM NAME: summtab2
-** VERSION: 2.0
-** DATE: DEC 01, 2020
+** VERSION: 3.0
+** DATE: JUN 17, 2022
 ** -----------------------------------------------------------------------------
 ** CREATED BY: JOHN GALLIS
 ** DEDICATED TO THE MEMORY OF TIRZAH ELISE GALLIS
@@ -17,6 +17,8 @@
 		DEC 01, 2020 - UPDATING CODE SO THAT IF 0 INDIVIDUALS HAVE THE "YES" LEVEL OF THE
 					   VARIABLE, THE CATROW OPTION REPORTS 0 (0.0%), RATHER THAN REPORTING 
 					   THE # (WHICH IS 100%) WITH A ZERO VALUE.
+		JUN 17, 2022 - ADDED FUNCTIONALITY TO INCLUDE STRING VARIABLES AS CATEGORICAL VARIABLES
+					 - FOOTNOTES CAN NOW BE ADDED TO THE TABLE WITH THE FOOTNOTE() OPTION
 ** -----------------------------------------------------------------------------
 ** OPTIONS: SEE HELP FILE
 ** -----------------------------------------------------------------------------
@@ -30,7 +32,7 @@ program define summtab2
 	syntax [if] [in], [by(varname) total vars(varlist) type(numlist) meanrow catrow mean median range pnonmiss pmiss rowperc catmisstype(string) pval 
 								contptype(integer 1) catptype(integer 1) clustpval clustid(varname) wts(varname) wtfreq(string) fracfmt(integer 2)
 								mnfmt(integer 2) medfmt(integer 1) rangefmt(integer 1) pnonmissfmt(integer 1) pmissfmt(integer 1) catfmt(integer 1) pfmt(integer 3)
-								title(string) directory(string) word wordname(string) excel excelname(string) replace append sheetname(string) *]
+								title(string) directory(string) word wordname(string) excel excelname(string) replace append sheetname(string) footnote(string) *]
 	
 	;
 	#delimit cr
@@ -1736,7 +1738,14 @@ foreach t of local type {
 						
 						matrix M3 = M2[`Mcount',1...]
 						matrix X1 = M3*.
-						matrix M4 = M1\X1
+						*June 17, 2022 - String variables put missing data first
+						qui ds `cv', has(type 1/100)
+						if "`r(varlist)'" == "" {
+							matrix M4 = M1\X1
+						}
+						else {
+							matrix M4 = X1\M1
+						}
 						
 						local perc_1 = M4[`k',`m']
 						local perc_1 = strltrim("`perc_1'")
@@ -1957,7 +1966,14 @@ foreach t of local type {
 						
 						matrix M3 = M2[`Mcount',1...]
 						matrix X1 = M3*.
-						matrix M4 = M1\X1
+						*June 17, 2022 - String variables put missing data first
+						qui ds `cv', has(type 1/100)
+						if "`r(varlist)'" == "" {
+							matrix M4 = M1\X1
+						}
+						else {
+							matrix M4 = X1\M1
+						}
 						
 						
 						local perc_1 = M4[`k',1]
@@ -2166,7 +2182,14 @@ foreach t of local type {
 							
 							matrix M3 = M2[`Mcount',1...]
 							matrix X1 = M3*.
-							matrix M4 = M1\X1
+							*June 17, 2022 - String variables put missing data first
+							qui ds `cv', has(type 1/100)
+							if "`r(varlist)'" == "" {
+								matrix M4 = M1\X1
+							}
+							else {
+								matrix M4 = X1\M1
+							}
 							
 							local perc_1 = M4[`k',1]
 							local perc_1 = strltrim("`perc_1'")
@@ -2272,13 +2295,31 @@ foreach t of local type {
 	}
 	
 	/* for word table ||||||||||||||||||||||||||||||| */
-	if "`word'" == "word" {
-		putdocx table tbl12 = (2,1), border(all, nil) /*headerrow(1)*/ layout(fixed) cellspacing(0.01)
-		putdocx table tbl12(1,1) = table(tbl1)
-		putdocx table tbl12(2,1) = table(tbl2), border(bottom)
-		putdocx table tbl12(2,1) = table(tbl2), border(bottom)
-		putdocx save `wordname', `replace' `append'
+	*footnotes: June 17, 2022
+	if "`footnote'" != "" {
+		if "`word'" == "word" {
+			putdocx table tbl3 = (1,`col'), border(all, nil) memtable layout(fixed)
+			putdocx table tbl3(1,1) = ("`footnote'"), halign(left) border(top) colspan(`col')
+		}
+	
+	/* for word table ||||||||||||||||||||||||||||||| */
+		if "`word'" == "word" {
+			putdocx table tbl12 = (3,1), border(all, nil) /*headerrow(1)*/ layout(fixed) cellspacing(0.01)
+			putdocx table tbl12(1,1) = table(tbl1)
+			putdocx table tbl12(2,1) = table(tbl2)
+			putdocx table tbl12(3,1) = table(tbl3)
+			putdocx save `wordname', `replace' `append'
+		}
 	}
+	else if "`footnote'" == "" {
+		if "`word'" == "word" {
+			putdocx table tbl12 = (2,1), border(all, nil) /*headerrow(1)*/ layout(fixed) cellspacing(0.01)
+			putdocx table tbl12(1,1) = table(tbl1)
+			putdocx table tbl12(2,1) = table(tbl2), border(bottom)
+			putdocx save `wordname', `replace' `append'
+		}
+	}
+		
 	
 
 	if "`pval'" == "pval" & "`mean'" != "mean" {
@@ -2445,10 +2486,26 @@ program tabcount2, byable(recall)
 						local var1: word 1 of `varlist'
 						local var2: word 2 of `varlist'
 						if "`var2'" != "" {
-							su `wt' if `var1' != . & `var2' != ., meanonly
+							qui ds `var1', has(type 1/100)
+							* June 17, 2022 - Allow processing of string variables for categories
+							if "`r(varlist)'" == "" {
+								su `wt' if `var1' != . & `var2' != ., meanonly
+							}
+							else {
+								su `wt' if `var1' != "" & `var2' != ., meanonly
+							}
+							
 						}
+						
 						else if "`var2'" == "" {
-							su `wt' if `var1' != ., meanonly
+							* June 17, 2022 - Allow processing of string variables for categories
+							qui ds `var1', has(type 1/100)
+							if "`r(varlist)'" == "" {
+								su `wt' if `var1' != ., meanonly
+							}
+							else {
+								su `wt' if `var1' != "", meanonly
+							}
 						}
 						local N = r(sum)
 						local num = r(sum_w)

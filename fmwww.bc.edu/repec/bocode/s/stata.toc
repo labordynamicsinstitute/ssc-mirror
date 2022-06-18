@@ -10,6 +10,7 @@ p sampsi_reg module to calculate the sample size/power for linear regression
 p sampsi_rho module to compute sample size for a Pearson correlation
 p sampsi_sccs module to calculate the sample size for self controlled case series study designs
 p sankey_plot module to produce Sankey plots
+p sankeyplot module to produce Sankey diagramms
 p saswrapper module to run a SAS program from within Stata
 p save12 module to save data in version 12 format
 p save13 module to save data in version 13 format

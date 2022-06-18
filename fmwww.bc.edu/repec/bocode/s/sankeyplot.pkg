@@ -1,0 +1,20 @@
+d 'SANKEYPLOT': module to produce Sankey diagramms
+d
+d  'sankeyplot' is a command that can be used to plot variables as
+d Sankey type plots. 
+d
+d KW:  graphics
+d KW: Sankey plot
+d KW: alluvial plot
+d KW: stream graph
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20220617
+d
+d Author: Maik Hamjediers, Humboldt-Universität zu Berlin
+d Support: email maik.hamjediers@@hu-berlin.de
+d
+f sankeyplot.ado
+f sankeyplot_eg.ado
+f sankeyplot.sthlp
