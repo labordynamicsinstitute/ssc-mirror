@@ -1,4 +1,5 @@
-*! version 1.0.0  10Jun2022 
+*! version 1.0.1  20Jun2022 
+cap program drop expandrank 
 program define expandrank
 
 	version 9
@@ -30,7 +31,7 @@ quietly {
 	expand `E' `if' `in'
 	
 	if "`ordered'"=="" { 
-		whichtype_expr(`E')
+		whichtype_expr(`base' + `E' - 1)
 		gen $TYPE_EXPRNK `name' = `base' + (_n>`N')*(1 + mod((_n-`N'-1),`E'-1)) 
 		
 		if "`if'`in'"!="" {
@@ -38,7 +39,7 @@ quietly {
 		}
 	}
 	else {
-		whichtype_expr(`E'-1)
+		whichtype_expr(`base' +`E' - 2)
 		gen $TYPE_EXPRNK `name' = `base' + (_n>`N')*(1 + mod((_n-`N'-1),`E'-1)) - 1
 		
 		if "`if'`in'"!="" {
@@ -79,4 +80,3 @@ version 9
 	global TYPE_EXPRNK `type'
 end
 exit	
-  

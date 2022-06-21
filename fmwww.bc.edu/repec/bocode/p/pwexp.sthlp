@@ -1,5 +1,5 @@
 {smcl}
-{* 13 September 2020 }{...}
+{* 20Jun2022, 13Sep2020 }{...}
 {hline}
 help for {hi:swexp} 
 {hline}
@@ -13,7 +13,7 @@ help for {hi:swexp}
 {cmd:,} 
 {cmdab:g:enerate(}{it:varname y}{cmd:)}
 {cmdab:tim:epoints(}{it:numlist}{cmd:)}
-{cmdab:sur:vivalpoints(}{it:numlist}{cmd:)}
+{cmdab:sur:vivalpoints(}{it:numlist}{cmd:)} or {cmdab:h:azardpoints(}{it:numlist}{cmd:)}
 [
 {cmdab:f:type(}{it:pdf , cdf , inv , lmd or lambda}{cmd:)}
 {cmdab:rhr(}{it:number}{cmd:) replace }
@@ -21,8 +21,10 @@ help for {hi:swexp}
 
 {title:Description}
 
-{p 4 8 2}{cmd:swexp} piecewise exponential distribution function defined by the time change(s) and end points listed in {cmdab:tim:e(}{it:numlist}{cmd:)} with the corresponding survival values of {cmdab:sur:vival(}{it:numlist}{cmd:)}. 
-These together define the implied failure rate of each defined time interval.
+{p 4 8 2}{cmd:swexp} piecewise exponential distribution function defined by the time change(s) and end points listed in 
+{cmdab:tim:e(}{it:numlist}{cmd:)} with the corresponding survival values of {cmdab:sur:vival(}{it:numlist}{cmd:)} 
+or the failure rates of {cmdab:h:azard(}{it:numlist}{cmd:)}. 
+These together define the implied failure rate or survival of each defined time interval.
 
 {title:Options}
 
@@ -40,7 +42,7 @@ These together define the implied failure rate of each defined time interval.
 
 {title:Returned matrix}
 
-{p 4 8 2} {cmd:r(itimeS)} This is a matrix containing the defined number, time, and survival defined by the time change(s), end points, and survival values input, for verification.
+{p 4 8 2} {cmd:r(itimeS)} This is a matrix containing the defined number, time, and survival or hazard defined by the time change(s), end points, and survival or hazard values input, for verification.
 
 {title:Examples}
 {p 4 8 2}{cmd:. clear}{p_end}
@@ -49,21 +51,29 @@ These together define the implied failure rate of each defined time interval.
 {p 4 8 2}{cmd:. }{p_end}
 {p 4 8 2}{cmd:. local tlistA `"0 1(1)4 9"'}{p_end}
 {p 4 8 2}{cmd:. local slistA `"1 .8 .6 .4 .2 0.02"'}{p_end}
+{p 4 8 2}{cmd:. local hlistA `"0 .22314 .28768 .40547 .69314 .46052"'}{p_end}
 {p 4 8 2}{cmd:. }{p_end}
-{p 4 8 2}{cmd:. pwexp time , gen(S) time(`tlistA') sur(`slistA')}{p_end}
-{p 4 8 2}{cmd:. pwexp time , gen(lamda) f(lmd) time(`tlistA') sur(`slistA')}{p_end}
+{p 4 8 2}{cmd:. pwexp time , gen(S0h) time(`tlistA') haz(`hlistA') replace}{p_end}
+{p 4 8 2}{cmd:. matrix list r(itimeS)}{p_end}
 {p 4 8 2}{cmd:. }{p_end}
+{p 4 8 2}{cmd:. pwexp time , gen(S0) time(`tlistA') sur(`slistA')}{p_end}
+{p 4 8 2}{cmd:. matrix list r(itimeS)}{p_end}
+{p 4 8 2}{cmd:. }{p_end}
+{p 4 8 2}{cmd:. pwexp time , gen(lamda0) f(lmd) time(`tlistA') sur(`slistA')}{p_end}
 {p 4 8 2}{cmd:. pwexp time , gen(S1) rhr(`=2/3') time(`tlistA') sur(`slistA')}{p_end}
 {p 4 8 2}{cmd:. pwexp time , gen(lamda1) f(lambda) rhr(`=2/3') time(`tlistA') sur(`slistA') replace}{p_end}
 {p 4 8 2}{cmd:. }{p_end}
-{p 4 8 2}{cmd:. matrix list r(itimeS)}{p_end}
-{p 4 8 2}{cmd:. }{p_end}
 {p 4 8 2}{cmd:. twoway ///}{p_end}
-{p 4 8 2}{cmd:.  (line S time, sort lcolor(teal)) ///}{p_end}
+{p 4 8 2}{cmd:.  (line S0 time, sort lcolor(teal)) ///}{p_end}
 {p 4 8 2}{cmd:.  (line S1 time, sort lcolor(green)) ///}{p_end}
-{p 4 8 2}{cmd:.  (scatter lamda time, sort yaxis(2) msymbol(o) msize(vtiny) mcolor(teal%100) ) ///}{p_end}
+{p 4 8 2}{cmd:.  (scatter lamda0 time, sort yaxis(2) msymbol(o) msize(vtiny) mcolor(teal%100) ) ///}{p_end}
 {p 4 8 2}{cmd:.  (scatter lamda1 time, sort yaxis(2) msymbol(o) msize(vtiny) mcolor(green%100) ), ///}{p_end}
-{p 4 8 2}{cmd:.  yscale(range(0 1)) ylabel(0(.2)1) ytitle(probabilty) ytitle(lambda, axis(2)) xscale(range(0 5)) legend(off) }{p_end}
+{p 4 8 2}{cmd:.  yscale(range(0 1)) ylabel(0(.2)1) ytitle(probabilty) ytitle(lambda, axis(2)) xscale(range(0 5)) legend(off)}{p_end}
+{p 4 8 2}{cmd:. }{p_end}
+{p 4 8 2}{cmd:. gsort lamda0 time}{p_end}
+{p 4 8 2}{cmd:. by lamda0: keep if inlist(_n,1,_N)}{p_end}
+{p 4 8 2}{cmd:. gsort time}{p_end}
+{p 4 8 2}{cmd:. list , clean noobs}{p_end}
 
 {title:Author} 
 
