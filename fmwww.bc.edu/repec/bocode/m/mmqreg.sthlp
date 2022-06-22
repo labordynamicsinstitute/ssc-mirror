@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1 March 2020}{...}
+{* *! version 2.0 June 2022}{...}
 {cmd:help mmqreg} 
 
 {hline}
@@ -16,7 +16,7 @@
 {phang}
 
 {p 8 13 2}
-{cmd:mmqreg} {depvar} {indepvars} {ifin} [{cmd:,} {it:options}]
+{cmd:mmqreg} {depvar} {indepvars} {ifin} [aw] [{cmd:,} {it:options}]
 
 
 {synoptset 25 tabbed}{...}
@@ -35,30 +35,38 @@ and {it:{help qreg##qreg_bwidth:bwidth}}. The default are {cmd:bwmethod}="hsheat
 {synopt :{opt dfadj}}request using degrees of freedom adjustment equal to k+absc, where k is the number of variables, including constant, in the model , and 
 absc the number of absorbed coefficients. {p_end}
 
+{synopt :{opt nowarning}}request showing no warning when the scale function predicts negative values.{p_end}
+
+{synopt :{opt nols}}request not to show the location or scale coefficients{p_end}
+
+{synopt :{robust}}request reporting standard errors that are robust to heteroskedasticty, based on the White Huber estimator/sandwidth estimator. The default is to report standard errors under the assumption of correctly specified Scale model{p_end}
+
+{synopt :{cluster(cvar)}}request reporting clustered standard errors. Only accepts one way clustered cvar{p_end}
+
 {synoptline}
 {p2colreset}{...}
 {phang} {it: indepvars} may contain factor variables; see {help fvvarlist}.{p_end}
-{phang}{cmd:mmqreg} does not allow {cmd:weight}s.{p_end}
+{phang}{cmd:mmqreg} does allows for {cmd:aweight}.{p_end}
 
 
 {title:Description}
 
 {pstd}
-{cmd:mmqreg} estimates quantile regressions using the method of moments as described in Machado and Santos Silva (2019). {p_end}
+{cmd:mmqreg} estimates quantile regressions using the method of moments as described in Machado and Santos Silva (2019), and expanding the methodology to allow for multiple fixed effects. {p_end}
 {pstd} In contrast with {help xtqreg}, {cmd:mmqreg} adds three features to the estimation of this type of models:{p_end}
 {pstd} 1. It allows the estimation of the Location-Scale quantile regressions when there are no fixed effects. {p_end}
 {pstd} 2. Using the command {cmd:hdfe} it allows the estimation of LS quantile regression absorbing multiple fix effects {p_end}
 {pstd} 3. It reports the estimation of various quantiles jointly, which facilitates testing of coefficients across quantiles, using resampling 
-methods like Bootstrap. (see {help bootstrap}). {p_end}
+methods like Bootstrap. (see {help bootstrap}), or based on analytical standard errors. {p_end}
 {pstd} Also, in contrast with {help xtqreg}, standard errors for quantiles, location, and scale effects, can be 
-estimated adjusting for the degrees of freedom.
-
+estimated adjusting for the degrees of freedom.{p_end}
+{pstd} Furthermore, because this is a GMM estimator, -mmqreg- also provides 3 options for standard errors, the default which is the same as -xtqreg-, robust standard errors, and clustered standard errors.
 
 {title:Remarks}
 
 {pstd}
-As the command stands, {cmd: mmqreg} provides the asymptotic approximations for the correlations of coefficients across quantiles.
-The theoretical properties of this estimates, however, have not been verfied. For tests across quantiles, I recommend using resampling methods.{p_end}
+As the command stands, {cmd: mmqreg} provides the asymptotic approximations for the correlations of coefficients across quantiles, and also provides two different standard error options. Their properties derive from it being a GMM estimator. However, you may also wish to consider resampling methods.
+
 {pstd} I want to thank to J.M.C. Santos Silva for claryfing some of the details regarding the estimation methodology. {p_end}
 {pstd} All errors are my own.
 

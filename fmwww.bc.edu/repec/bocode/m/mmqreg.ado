@@ -1,4 +1,6 @@
-*! v2.2  Simultaneous Q's for model simple
+*! v2.3 More Efficient rewritten. adds NOls
+* v2.21 keep singletons
+* v2.2  Simultaneous Q's for model simple
 * v2.1  Corrects Bug Clustered SE and DF
 * v2  Corrects Bug and Speeds up Clustered SE
 * v1.8 adds Obs
@@ -36,7 +38,7 @@ capture program drop mmqreg1
 capture program drop mmqreg2
 capture program drop myhdfe
 */
-
+** verifies nlist using own rules
 program define mynlist,rclass
 	syntax anything, 
 	numlist `anything',  range(>0 <100) sort
@@ -50,7 +52,7 @@ program define mynlist,rclass
 	return local numlist `numlist'
 end
 
-
+** Main program calling on mmqreg
 program define mmqreg , eclass 
 
  if replay() {
@@ -71,18 +73,13 @@ program define mmqreg , eclass
 								robust	 		 /// hidden option. Alternative method for Standard errors
 								cluster(varname) /// hidden
 								dfadj            /// Degrees of freedom adjustment 
+								nowarning NOLS ///
 								 ]
 	// x is a hidden option. It technically estimates omega using the larger version of the matrix
 	// It will also gets the data using st_data rather than views
 
 	** verify one is "Absorbing". When Absorbing, use reghdfe
 	if "`absorb'"!="" {
-		/*qui:capture which reghdfe
-		if _rc==111 {
-			display in red "Absorb Option requires community-contributed command " as result "reghdfe"
-			display as text "You can install it using {stata ssc install reghdfe}"
-			exit 111
-		}*/
 		qui:capture which hdfe
 		if _rc==111 {
 			display in red "Absorb Option requires community-contributed command " as result "hdfe"
@@ -118,7 +115,8 @@ program define display_mmqreg
 end
 
 program define mmqreg1, eclass sortpreserve
-	qui:syntax varlist(fv) [in] [if] [ pw aw iw fw], [Quantile(str)  denopt(str) robust cluster(varname) dfadj]
+	qui:syntax varlist(fv) [in] [if] [ pw aw iw fw], ///
+		[Quantile(str)  denopt(str) robust cluster(varname) dfadj nowarning NOLS ]
 	** start with sample checks
 	capture drop ___zero___
 	marksample touse
@@ -138,9 +136,6 @@ program define mmqreg1, eclass sortpreserve
 	if "`exp'"!="" {
 		tempvar mwgt 
 		qui:gen double `mwgt'`exp'
-		qui:sum `mwgt' if `touse', meanonly
-		qui:replace `mwgt'=`mwgt'/r(mean)
-		local exp "=`mwgt'"
 	}
 	else {
 		tempvar mwgt 
@@ -153,7 +148,7 @@ program define mmqreg1, eclass sortpreserve
     macro shift
     local xvar `*'
 	
-	** estimation of location effect. Necesary. Leave weights but not for now.
+	** estimation of location effect. Necessary. 
 	qui:reg `y' `xvar' if `touse' [`weight'`exp']
 	tempname lfb
 	matrix `lfb'=e(b)
@@ -167,18 +162,21 @@ program define mmqreg1, eclass sortpreserve
 	tempname sfb sfV
 	matrix `sfb'=e(b)
 	qui:predict double `ares_hat' 
-	qui:sum `ares_hat' if `touse'
+	qui:sum `ares_hat' if `touse', meanonly
 	** if scale is negtive, Stop
-	if `r(min)'<=0 {
-	    display in red "WARNING: some fitted values of the scale function are negative" ///
+	if `r(min)'<=0 & "`warning'"=="" {
+		qui:count  if `touse'	& `ares_hat'<0
+	    display  "WARNING: some fitted values of the scale function are negative" ///
 				_n "Consider using a different model specification" ///
-				_n "The command will proceed using the Absolute value of these observations"
-		qui:replace `ares_hat'=abs(`ares_hat')		
+				_n "`r(N)' Observations have negative predicted Scale values"
+				* "The command will proceed using the Absolute value of these observations"
+		*qui:replace `ares_hat'=abs(`ares_hat')		
 	}
 	** generate standardized residuals. Send St_res to Mata
 	qui:gen double `st_res'=`res'/`ares_hat'
 	tempname qval qth fden	
 	** and get the "quantile". Here we obtain all qth qval and fden
+	
 	foreach q in `quantile' {	
 		if "`denopt'"!="" local denopt=",`denopt'"
 		qui:qreg `st_res' if `touse' [iw=`mwgt'], q(`q') vce(iid `denopt') 
@@ -192,44 +190,69 @@ program define mmqreg1, eclass sortpreserve
 	** name of all variables for equation
 	local bnm: colnames `sfb'
 	** we need a constant.
-	tempvar cns
-	qui:gen byte `cns'=1
+	*tempvar cns
+	*qui:gen byte `cns'=1
 	** this code does all the rest. 
-	if "`cluster'"=="" {
-	mata:mmqreg_vce1`x'("`y'","`xvar' `cns'","`lfb'","`sfb'", ///
-					 "`qval'","`qth'","`fden'", "`touse'","`dfadj'","`mwgt'")
+	                   local vce= 0
+	if "`robust'"!=""  local vce= 1
+	if "`cluster'"!="" local vce= 2
+	
+	if "`nols'"=="" local ls 0
+	else            local ls 1
+	
+	if `vce'==0 {
+		mata:mmqreg_vce1("`y'","`xvar' `cns'","`lfb'","`sfb'", ///
+				 "`qval'","`qth'","`fden'", "`touse'","`dfadj'","`mwgt'",`ls')
 	}
 	else {
-		sort `cluster'
-		mata:mmqreg_vce1c("`y'","`xvar' `cns'","`lfb'","`sfb'", ///
-					 "`qval'","`qth'","`fden'","`cluster'", "`touse'","`dfadj'","`mwgt'")
-	}
+		if `vce'==2 sort `cluster'
+ 
+		mata:mmqreg_vce1x("`y'","`xvar'","`lfb'","`sfb'", ///
+					     "`qval'","`qth'","`fden'","`cluster' ", ///
+						  "`touse'","`dfadj'","`mwgt'",`vce',`ls')
+ 	}
 	* After the mata code is run, I get vq bq
 	* but need extra info. eq name and betas
 	* This should capture all EQ names
-	local eqnm="location "*colsof(`sfb')+"scale "*colsof(`sfb')
+	if "`nols'"=="" local eqnm="location "*colsof(`sfb')+"scale "*colsof(`sfb')
 	* this should see how many quantiles are there
+		local extraeq="location "*colsof(`sfb')+"scale "*colsof(`sfb')+" qtile"
+	local extracl="`bnm' "*2
 	local nmb:word count `quantile'
 	
 	if `nmb'>1 {
 		foreach q in `quantile' {
 			local strq=subinstr("`q'",".","_",.)
 			local eqnm="`eqnm'"+"qtile_`strq' "*colsof(`sfb')
+			local extracl ="`extracl'"+"qtile_`strq' "
 		}
 	}
-	
-	else local eqnm="`eqnm'"+"qtile "*colsof(`sfb')
-	
+	else {
+		local eqnm="`eqnm'"+"qtile "*colsof(`sfb')
+		*local extraeq ="`extraeq'"+"qtile"
+		local extracl ="`extracl'"+"qtile"
+	}
+
 	** and this the names
-	local bnm2="`bnm' "*(2+colsof(`qval'))
+	if "`nols'"=="" local bnm2="`bnm' "*(2+colsof(`qval'))
+	else            local bnm2="`bnm' "*(colsof(`qval'))
+	
+	
 	** name all coefficients and other
 	matrix colname __vq = `bnm2'
 	matrix rowname __vq = `bnm2'
 	matrix colname __bq = `bnm2'
-	
 	matrix coleq __vq = `eqnm'
 	matrix roweq __vq = `eqnm'
 	matrix coleq __bq = `eqnm'
+	
+	matrix colname __vqq = `extracl'
+	matrix rowname __vqq = `extracl'
+	matrix colname __bqq = `extracl'
+	matrix coleq __vqq = `extraeq'
+	matrix roweq __vqq = `extraeq'
+	matrix coleq __bqq = `extraeq'
+	
 	** and post them
 	sum `touse', meanonly
 	local nobs=r(sum)
@@ -249,6 +272,8 @@ program define mmqreg1, eclass sortpreserve
 	ereturn matrix qth `qth'
 	ereturn matrix qval `qval'
 	ereturn matrix fden `fden'
+	ereturn matrix bls __bqq
+	ereturn matrix vls __vqq
 	ereturn local fevlist `absorb'
 	local 1:word 1 of `varlist'
 	ereturn local depvar `1'
@@ -272,7 +297,8 @@ end
 
 
 program define mmqreg2, eclass sortpreserve
-	qui:syntax varlist(fv) [in] [if] [aw pw iw fw], [Quantile(str) Absorb(varlist) cluster(varname) denopt(str) dfadj robust]
+	qui:syntax varlist(fv) [in] [if] [aw pw iw fw], ///
+		[Quantile(str) Absorb(varlist) cluster(varname) denopt(str) dfadj robust nowarning NOLS]
 	** start with sample checks
 	capture drop _i_* 
 	capture drop ___zero___
@@ -293,9 +319,6 @@ program define mmqreg2, eclass sortpreserve
 	if "`exp'"!="" {
 		tempvar mwgt 
 		gen double `mwgt'`exp'
-		qui:sum `mwgt' if `touse', meanonly
-		qui:replace `mwgt'=`mwgt'/r(mean)
-		local exp "=`mwgt'"
 	}
 	else {
 		tempvar mwgt 
@@ -305,9 +328,10 @@ program define mmqreg2, eclass sortpreserve
 	
 	** variable definitions: dependent and independent
 	** here I can add the new set of variables
+	** 
 	qui:myhdfe `varlist' if `touse' [`weight'`exp'], abs(`absorb')
 	local df_a= `r(df_a)'
-	** updates touse to drop singletons
+	** 
 	
     ** name of all variables for equation
 	local bnm `r(fullvar)'  
@@ -325,7 +349,7 @@ program define mmqreg2, eclass sortpreserve
 	qui:reg `y' `xvar' if `touse' [`weight'`exp']
 	tempname lfb
 	matrix `lfb'=e(b)
-	** predict residual. Transformation not needed here
+	** predict residual. 
 	tempvar res ares
 	qui:predict double `res' , res
 	qui:gen     double `ares'=abs(`res')
@@ -337,14 +361,17 @@ program define mmqreg2, eclass sortpreserve
 	tempname sfb sfV
 	matrix `sfb'=e(b)
 	qui:predict double `ares_hat', res
+	** Idea y = xb + fe + error -> xb+fe=y-err <-- needed for Ahat
 	qui:replace `ares_hat'=`ares'-`ares_hat'
 	qui:sum `ares_hat' if `touse'
 	** if scale is negative, Stop? for now will continue
-	if `r(min)'<=0 {
-	    display in red "WARNING: some fitted values of the scale function are negative" ///
+	if `r(min)'<=0 & "`warning'"=="" {
+		qui:count  if `touse'	& `ares_hat'<0
+	    display  "WARNING: some fitted values of the scale function are negative" ///
 				_n "Consider using a different model specification" ///
-				_n "The command will proceed using the Absolute value of these observations"
-		qui:replace `ares_hat'=abs(`ares_hat')		
+				_n "`r(N)' Observations have negative predicted Scale values"
+				* "The command will proceed using the Absolute value of these observations"
+		*qui:replace `ares_hat'=abs(`ares_hat')		
 	}
 	** generate standardized residuals. Send St_res to Mata
 	qui:gen double `st_res'=`res'/`ares_hat'
@@ -360,37 +387,58 @@ program define mmqreg2, eclass sortpreserve
 		matrix `qth' =nullmat(`qth') ,`e(q)'
 	}
 
+		               local vce= 0
+	if "`robust'"!=""  local vce= 1
+	if "`cluster'"!="" local vce= 2
+	
+	if "`nols'"=="" local ls 0
+	else            local ls 1
 	** we need a constant.
-	tempvar cns
-	qui:gen byte `cns'=1
+	*tempvar cns
+	*qui:gen byte `cns'=1
 	** this code does all the rest. 
-	if "`cluster'"=="" {
-		mata:mmqreg_vce2`x'("`y'","`xvar' `cns'","`st_res'","`ares_hat'","`lfb'","`sfb'", ///
-					 "`qval'","`qth'","`fden'", `df_a', "`touse'","`dfadj'","`mwgt'")
+	*! Update code to do for ABS here
+	if `vce'==0 {
+		mata:mmqreg_vce2("`y'","`xvar' `cns'","`st_res'","`ares_hat'","`lfb'","`sfb'", ///
+					 "`qval'","`qth'","`fden'", `df_a', "`touse'","`dfadj'","`mwgt'",`ls')
+		
 	}
 	else {
-	    sort `cluster'
-	    mata:mmqreg_vce2c("`y'","`xvar' `cns'","`st_res'","`ares_hat'","`lfb'","`sfb'", ///
-					 "`qval'","`qth'","`fden'", "`cluster'", `df_a', "`touse'","`dfadj'","`mwgt'")
-	}
+		** Modify vce2 for FE
+		if `vce'==2 sort `cluster'
+		mata:mmqreg_vce2x("`y'","`xvar' `cns'","`st_res'", ///
+						 "`ares_hat'","`lfb'","`sfb'", ///
+					     "`qval'","`qth'","`fden'", "`cluster' ", ///
+					     `df_a', "`touse'","`dfadj'", "`mwgt'",`vce',`ls')
+ 	}
+	
 	* After the mata code is run, I get vq bq
 	* but need extra info. eq name and betas
 	* This should capture all EQ names
-	local eqnm="location "*colsof(`sfb')+"scale "*colsof(`sfb')
-
+	if "`nols'"=="" local eqnm="location "*colsof(`sfb')+"scale "*colsof(`sfb')
 	* this should see how many quantiles are there
+		local extraeq="location "*colsof(`sfb')+"scale "*colsof(`sfb')+" qtile"
+	local extracl="`bnm' "*2
 	local nmb:word count `quantile'
 	
 	if `nmb'>1 {
 		foreach q in `quantile' {
 			local strq=subinstr("`q'",".","_",.)
 			local eqnm="`eqnm'"+"qtile_`strq' "*colsof(`sfb')
+			local extracl ="`extracl'"+"qtile_`strq' "
 		}
 	}
-	else local eqnm="`eqnm'"+"qtile "*colsof(`sfb')
+	else {
+		local eqnm="`eqnm'"+"qtile "*colsof(`sfb')
+		*local extraeq ="`extraeq'"+"qtile"
+		local extracl ="`extracl'"+"qtile"
+	}
 
 	** and this the names
-	local bnm2="`bnm' "*(2+colsof(`qval'))
+	if "`nols'"=="" local bnm2="`bnm' "*(2+colsof(`qval'))
+	else            local bnm2="`bnm' "*(colsof(`qval'))
+	
+	
 	** name all coefficients and other
 	matrix colname __vq = `bnm2'
 	matrix rowname __vq = `bnm2'
@@ -398,6 +446,14 @@ program define mmqreg2, eclass sortpreserve
 	matrix coleq __vq = `eqnm'
 	matrix roweq __vq = `eqnm'
 	matrix coleq __bq = `eqnm'
+	
+	matrix colname __vqq = `extracl'
+	matrix rowname __vqq = `extracl'
+	matrix colname __bqq = `extracl'
+	matrix coleq __vqq = `extraeq'
+	matrix roweq __vqq = `extraeq'
+	matrix coleq __bqq = `extraeq'
+	
 	** and post them
 	sum `touse', meanonly
 	local nobs=r(sum)
@@ -449,7 +505,7 @@ syntax varlist(fv) [if] [in] [aw pw iw fw], abs(varlist)
 	ms_fvstrip `varlist' if `touse', expand dropomit
 	local fullxv  `r(fullvarlist)'
 	local parxv   `r(varlist)'
-	hdfe `varlist' if `touse' [`weight'`exp'], abs(`abs') gen(_i_)  
+	hdfe `varlist' if `touse' [`weight'`exp'], abs(`abs') gen(_i_)   keepsingletons
 	local df_a `e(df_a)'
 	local actxv   `r(varlist)'
 	markout `touse' _i_*
@@ -489,9 +545,10 @@ mata:
 void mmqreg_vce1x(string scalar yvar_,  string scalar xvar_,	
 			 	  string scalar beta_,  string scalar gama_,
 				  string scalar qval_,  string scalar qth_, 
-				  string scalar fden_,  string scalar touse,  
-				  string scalar dfadj,  string scalar wgt_ ) {
-		real matrix xvar, yvar, wgt
+				  string scalar fden_,  string scalar cvar_,  
+				  string scalar touse,  string scalar dfadj,  
+				  string scalar wgt_ ,  real scalar vce, real scalar nls) {
+		real matrix xvar, yvar, wgt, cvar 
 		real vector beta, gama , betaq
 		real vector qval, qth, fden
 		real matrix u_hat, u, v, w  
@@ -499,8 +556,18 @@ void mmqreg_vce1x(string scalar yvar_,  string scalar xvar_,
 		real scalar us1, nobs, i, qs, k , nn
 		real matrix vcvq
 		real matrix omgx
-		st_view(xvar =.,.,xvar_ ,touse)
+		
 		st_view(yvar =.,.,yvar_ ,touse)
+		xvar =st_data(.,xvar_ ,touse),J(rows(yvar),1,1)
+		
+		if (vce==2) {
+			st_view(cvar =.,.,cvar_ ,touse)
+			real matrix info 
+			real scalar nc 
+			info = panelsetup(cvar, 1)
+			nc   = rows(info)
+		}
+		
 		wgt=st_data(.,wgt_  ,touse)
 		wgt=wgt:/mean(wgt)
 		//wgt=wgt:/mean(wgt)
@@ -517,9 +584,9 @@ void mmqreg_vce1x(string scalar yvar_,  string scalar xvar_,
 		qs  =cols(qth)
 		// std residuals : residuals and fitted values will be obtained with reghdfe		
 		// Change this to abs
-		u_hat=abs(xvar*gama)
-		u    = (yvar-xvar*beta):/u_hat
-		v    = 2*u:*((u:>=0):-mean(u:>=0,wgt)):-1
+		u_hat=(xvar*gama)
+		u    = (yvar-xvar*beta)
+		v    = 2*u:*((u:>=0):-mean(u:>=0,wgt)):-u_hat
 		
 		// other elements common 
 		// elements that do not depend on w
@@ -529,144 +596,69 @@ void mmqreg_vce1x(string scalar yvar_,  string scalar xvar_,
 		// E(U_s) E(U_s^2)
 		us1 = mean(u_hat,wgt)
 		
+		if1 = nobs*(xvar:*u)*iqxx
+		if2 = nobs*(xvar:*v)*iqxx
+		
 		// Betas and VCOV for first and second
 		// This residual changes by quantile
 		
 		w=J(nobs,qs,0)
 		
- 		for(i=1;i<=qs;i++) {
-			
-			w[.,i]= ( 1/fden[i]*(qth[i]:-((u:-qval[i]):<=0)) - (u:+(qval[i]*v)) ) :/  (us1 * nobs)
-			
+ 		for(i=1;i<=qs;i++) {			
+			w[.,i]= 1/fden[i] * (qth[i]:-((u:-qval[i]*u_hat):<=0)) :* u_hat:/us1 - u:/us1 :-  qval[i]*v:/us1			
 		}	
 		
 		// Xi and Omg
-		
-		xi2=( iqxx    , J(k,k+qs,0)      )  \ ///
-			( J(k,k,0), iqxx , J(k,qs,0) )  \ ///
-			J(qs,1,1)#iqxx , qval'#iqxx , I(qs) # (gama)  
-
-		real matrix xvar_uhat, omg_x
-		xvar_uhat = xvar:*u_hat
-		omg_x     =(xvar_uhat:*u,xvar_uhat:*v,u_hat:*w):*wgt
-		omg       =quadcross(omg_x,omg_x)	
-
-		betaq=beta', gama'
-		for(i=1;i<=qs;i++) {
-			betaq=betaq,(beta+gama*qval[i])'
-		}
-		if (dfadj!="") {
-			nn=nobs-(k-diag0cnt(qxx))
+		if (nls==0) {
+			xi2=( I(k)    , J(k,k+qs,0)      )  \ ///
+			( J(k,k,0), I(k) , J(k,qs,0) )  \ ///
+			J(qs,1,1)#I(k) , qval'#I(k) , I(qs) # (gama) 
+			betaq=beta', gama'
 		}
 		else {
-			nn=nobs
+			xi2= J(qs,1,1)#I(k) , qval'#I(k) , I(qs) # (gama)  
+			betaq=J(1,0,.)
 		}
-		//n=(nobs-(k-diag0cnt(qxx)))
-		vcvq = xi2*omg*xi2'*(nobs/nn)
+		
+		real matrix xvar_uhat, omg_x
+		omg_x     =(if1,if2,w):*wgt
+		
+		if (vce==1) {
+			omg       =quadcross(omg_x,omg_x)/(nobs^2)
+		}
+		if (vce==2) {
+ 			omg_xx 	=panelsum(omg_x,info)
+ 			omg     =quadcross(omg_xx,omg_xx)/(nobs^2)
+			real scalar ncone
+			ncone=0
+		}
 
-		st_matrix("__bq",betaq)
-		st_matrix("__vq",makesymmetric(vcvq) )	
-		st_numscalar("df_r", nn)
-		//}		 
-}
-
-void mmqreg_vce1c(string scalar yvar_, string scalar xvar_,	
-				 string scalar beta_,  string scalar gama_,
-				 string scalar qval_,  string scalar qth_, 
-				 string scalar fden_, string scalar cvar_,  
-				 string scalar touse,  string scalar dfadj, string scalar wgt_) {
-		real matrix xvar, yvar, wgt
-		real vector beta, gama , betaq
-		real vector qval, qth, fden, cvar
-		real matrix u_hat, u, v, w  
-		real matrix qxx, iqxx, xi, xi2, omg 
-		real scalar us1,    nobs, i, qs, k ,nn
-		real matrix vcvq
-		
-		st_view(xvar =.,.,xvar_ ,touse)
-		st_view(yvar =.,.,yvar_ ,touse)
-		st_view(cvar =.,.,cvar_ ,touse)
-		wgt = st_data(.,wgt_  ,touse)
-		wgt=wgt:/mean(wgt)		//wgt=wgt:/mean(wgt)
-		// first load data
-		
-		beta=st_matrix(beta_)'
-		gama=st_matrix(gama_)'
-		// N obs k rows
-		nobs=rows(xvar)
-		k=cols(xvar)
-		// fden qth qval
-		qval=st_matrix(qval_)
-		qth =st_matrix(qth_)
-		fden=st_matrix(fden_)
-		qs=cols(qth)
-		// std residuals : residuals and fitted values will be obtained with reghdfe		
-		// Change this to abs
-		u_hat=abs(xvar*gama)
-		u    = (yvar-xvar*beta):/u_hat
-		v    = 2*u:*((u:>=0):-mean(u:>=0,wgt)):-1
-		
-		// other elements common 
-		// elements that do not depend on w
-		 qxx = quadcross(xvar,wgt,xvar)
-	    iqxx = invsym(qxx)
-		
-		// E(U_s) E(U_s^2)
-		us1 = mean(u_hat,wgt)
-		
-		// Betas and VCOV for first and second
-		// This residual changes by quantile
-		
-		w=J(nobs,qs,0)
-		
- 		for(i=1;i<=qs;i++) {
-			
-			w[.,i]= ( 1/fden[i]*(qth[i]:-((u:-qval[i]):<=0)) - (u:+(qval[i]*v)) ) :/  (us1 * nobs)
-			
-		}	
-		
-		// Xi and Omg
-		
-		xi2=( iqxx    , J(k,k+qs,0)      )  \ ///
-			( J(k,k,0), iqxx , J(k,qs,0) )  \ ///
-			J(qs,1,1)#iqxx , qval'#iqxx , I(qs) # (gama)  
-
-		real matrix xvar_uhat, omg_x, omg_xx
-		xvar_uhat = xvar:*u_hat
-		omg_x     =(xvar_uhat:*u,xvar_uhat:*v,u_hat:*w):*wgt
-		
-		real matrix info 
-		real scalar nc 
-	    
-		info = panelsetup(cvar, 1)
-		nc   = rows(info)
-		omg_xx 	  =panelsum(omg_x,info)
-		 
-        omg  =cross(omg_xx,omg_xx)
-			
-        real scalar ncone
-		ncone=0
-		betaq=beta', gama'
+ 
 		for(i=1;i<=qs;i++) {
 			betaq=betaq,(beta+gama*qval[i])'
 		}
- 
+		
 		if (dfadj!="") {
-			nn=nobs-(k-diag0cnt(qxx))
+			nn=nobs-(k-diag0cnt(qxx))			
 			ncone=1
 		}
 		else {
-			nn=nobs-1
+			nn=nobs
+			if (vce==2) nn=nobs-1
 		}
-		
-		//n=(nobs-(k-diag0cnt(qxx)))
-		vcvq = xi2*omg*xi2'*(nobs-1)/nn*(nc/(nc-ncone))
- 
+	 
+		if (vce==1) vcvq = xi2*omg*xi2'*(nobs/nn)
+		if (vce==2) vcvq = xi2*omg*xi2'*(nobs-1)/nn*(nc/(nc-ncone))
+
 		st_matrix("__bq",betaq)
 		st_matrix("__vq",makesymmetric(vcvq) )	
 		st_numscalar("df_r", nn)
+		// extra
+		st_matrix("__bqq",(beta', gama',qval))
+		st_matrix("__vqq",makesymmetric(omg))
 		//}		 
 }
+
 /// this will be another "hidden" option that will try to obtained clustered standard errors.
  
 // This is for the basic no FE noRobust
@@ -674,7 +666,7 @@ void mmqreg_vce1(string scalar yvar_, string scalar xvar_,
 				 string scalar beta_,  string scalar gama_,
 				 string scalar qval_,  string scalar qth_, 
 				 string scalar fden_,  string scalar touse,  
-				 string scalar dfadj, string scalar wgt_ ) {
+				 string scalar dfadj, string scalar wgt_ , real scalar nls) {
 		real matrix xvar, yvar, wgt
 		real vector beta, gama , betaq
 		real vector qval, qth, fden
@@ -684,9 +676,10 @@ void mmqreg_vce1(string scalar yvar_, string scalar xvar_,
 		real matrix vcvq
 		
 		// first load data
-		st_view(xvar=.,.,xvar_,touse)
 		st_view(yvar=.,.,yvar_,touse)
-		wgt =st_data( ., wgt_,touse)
+		xvar=st_data(.,xvar_,touse),J(rows(yvar),1,1)
+		
+		wgt =st_data( ., wgt_,touse)	
 		wgt = wgt:/mean(wgt)
 		//wgt=wgt:/mean(wgt)
 		beta=st_matrix(beta_)'
@@ -698,19 +691,31 @@ void mmqreg_vce1(string scalar yvar_, string scalar xvar_,
 		qval=st_matrix(qval_)
 		qth =st_matrix(qth_)
 		fden=st_matrix(fden_)
+		
 		qs=cols(qth)
+		
 		// std residuals : residuals and fitted values will be obtained with reghdfe		
 		
 		// Residuals
-		// Change this to abs
-		u_hat=abs(xvar*gama)
+		// Change this to abs...nolonger abs
+		u_hat=(xvar*gama)
 		// Std Residual First regression   y = xb + u * sigma
-		u    =(yvar-xvar*beta):/(u_hat)
+	
 		// Std Residual Second regression  abs(u * sigma) = xg + RR 
 		// Std Residual Second regression  abs(u * sigma) - xg = RR    || 1/xg
 		// This just makes a change from Abs(X) = 2*X(...)
 		// Std Residual Second regression  abs(u * sigma)/xg - 1 = V
+		u    = (yvar-xvar*beta):/u_hat
 		v    = 2*u:*((u:>=0):-mean(u:>=0,wgt)):-1
+		
+		qxx   = quadcross(xvar,wgt,xvar)
+		iqxx  = invsym(qxx)
+		
+		us1 = mean(u_hat,wgt)
+		// IF2 = IF2 v
+		if1 = nobs*(xvar:*u_hat)*iqxx
+		if2 = nobs*(xvar:*u_hat)*iqxx
+		ifw = u_hat
 		
 	    // The idea here is S2=i(X'X) (X * e^2 * X )    i(X'X)
 		// The idea here is S2=i(X'X) * (X * ( u * sigma )^2 * X ) *  i(X'X)
@@ -721,37 +726,46 @@ void mmqreg_vce1(string scalar yvar_, string scalar xvar_,
 		euv=mean(u:*v,wgt)
 		// elements that do not depend on w
 		
-		qxx   = quadcross(xvar,wgt,xvar)
-		iqxx  = invsym(qxx)	
-		pxx   = quadcross(xvar,wgt:*(u_hat:^2),xvar)
-		px    = quadcross(xvar,wgt:*u_hat:^2)
+ 		pxx   = quadcross(if1,wgt,if1)
+		px    = quadcross(if1,wgt,ifw)
 	
 		// E(U_s) E(U_s^2)
 		us1 = mean(u_hat,wgt)
+		
 		us2 = quadcross(u_hat,wgt,u_hat)
 		
 		w=J(nobs,qs,0)
-
+        
 		for(i=1;i<=qs;i++) {
-			w[.,i]=(1/fden[i]*(qth[i]:-((u:-qval[i]):<=0))-(u:+(qval[i]*(v)))):/(us1*nobs)
+//			w[.,i]=1/fden[i]*(qth[i]:-((u:-qval[i]*u_hat):<=0)):*u_hat:/us1 :- u:/us1 :-  qval[i]*v:/us1
+	     // Thi is almost straight from the paper. except I add US1
+			w[.,i]=1/fden[i]*(qth[i]:-((u:-qval[i]):<=0)):/us1 - u:/us1 :-  qval[i]*v:/us1
 		}	
 		
 		euw=mean(u:*w,wgt)
 		evw=mean(v:*w,wgt)
 		ew2=cross(w,wgt,w)/nobs
-		 
+ 
 		
 		// Xi and Omg
 		//xi=J(qs,1,1)#iqxx,qval'#iqxx,I(qs)#(gama)  
-		xi2=( iqxx    , J(k,k+qs,0)      )  \ ///
-			( J(k,k,0), iqxx , J(k,qs,0) )  \ ///
-			J(qs,1,1)#iqxx,qval'#iqxx,I(qs)#(gama)
-			
+		if (nls==0) {
+			xi2=( I(k)    , J(k,k+qs,0)      )  \ ///
+			( J(k,k,0), I(k) , J(k,qs,0) )  \ ///
+			J(qs,1,1)#I(k) , qval'#I(k) , I(qs) # (gama) 
+			betaq=beta', gama'
+		}
+		else {
+			xi2= J(qs,1,1)#I(k) , qval'#I(k) , I(qs) # (gama)  
+			betaq=J(1,0,.)
+		}
+		 
  		omg=(eu2*pxx , euv*pxx  , euw#px \  ///
              euv*pxx , ev2*pxx  , evw#px \   ///  
 	        (euw#px)', (evw#px)', ew2*us2)
- 	
-		betaq=beta', gama'
+ 	    omg=omg/(nobs^2)
+		
+		
 		for(i=1;i<=qs;i++) {
 			betaq=betaq,(beta+gama*qval[i])'
 		}
@@ -765,15 +779,20 @@ void mmqreg_vce1(string scalar yvar_, string scalar xvar_,
 		
 		st_matrix("__bq",betaq)
 		st_matrix("__vq",makesymmetric(vcvq) )	
+		st_matrix("__bqq",(beta', gama',qval))
+		st_matrix("__vqq",makesymmetric(omg))
 		st_numscalar("df_r", nn)
 }
  
+ 
+					 
 void mmqreg_vce2(string scalar yvar_, string scalar xvar_,	
 				  string scalar u_   , string scalar u_hat_, 
 				  string scalar beta_,  string scalar gama_,
 				  string scalar qval_,  string scalar qth_, 
 				  string scalar fden_, real scalar df_a, 
-				  string scalar touse,  string scalar dfadj ,  string scalar wgt_ ) {
+				  string scalar touse,  string scalar dfadj , 
+				  string scalar wgt_ , real scalar nls) {
 		real matrix xvar, yvar, wgt
 		real vector beta, gama , betaq
 		real vector qval, qth, fden
@@ -783,8 +802,9 @@ void mmqreg_vce2(string scalar yvar_, string scalar xvar_,
 		real matrix vcvq
 				
 		// first load data. y may not be needed
-		st_view(xvar=. ,.,xvar_ ,touse)
+		
 		st_view(yvar=. ,.,yvar_ ,touse)
+		xvar=st_data(.,xvar_,touse),J(rows(yvar),1,1)
  		st_view(u=.    ,.,u_    ,touse)
 		st_view(u_hat=.,.,u_hat_,touse)
 		// Change this to abs
@@ -805,27 +825,30 @@ void mmqreg_vce2(string scalar yvar_, string scalar xvar_,
 	
 		qs=cols(qth)
 		// std residuals : residuals and fitted values will be obtained with reghdfe		
-		
 		v=2*u:*((u:>=0):-mean(u:>=0,wgt)):-1
 		
 		// other elements common 
-		eu2=mean(u:^2,wgt)
-		ev2=mean(v:^2,wgt)
-		euv=mean(u:*v,wgt)
+
 		// elements that do not depend on w
-		qxx=quadcross(xvar,wgt,xvar)
-		
-	   iqxx=invsym(qxx)
+		 qxx = quadcross(xvar,wgt,xvar)
+		iqxx = invsym(qxx)
 	   
 		//pxx=quadcross(xvar,wgt,u_hat:^2,xvar)/nobs
 		//px =quadcross(xvar,wgt,u_hat:^2)/nobs
 
-		pxx=quadcross(xvar,wgt:*(u_hat:^2),xvar)
-		px =quadcross(xvar,wgt:*(u_hat:^2))
-		
 		// E(U_s) E(U_s^2)
-		us1=mean(u_hat,wgt)
-		us2=quadcross(u_hat:^2,wgt)
+ 		if1 = nobs*(xvar:*u_hat)*iqxx
+		if2 = nobs*(xvar:*u_hat)*iqxx
+		ifw = u_hat
+
+		us1 = mean(u_hat,wgt)
+		us2 = quadcross(u_hat,wgt,u_hat)
+		eu2=mean(u:^2,wgt)
+		ev2=mean(v:^2,wgt)
+		euv=mean(u:*v,wgt)
+		
+ 		pxx   = quadcross(if1,wgt,if1)
+		px    = quadcross(if1,wgt,ifw)
 		
 		// Betas and VCOV for first and second
 		//vcvb=eu2*iqxx*pxx*iqxx/rows(x)
@@ -834,7 +857,9 @@ void mmqreg_vce2(string scalar yvar_, string scalar xvar_,
 		w=J(nobs,qs,0)
 
 		for(i=1;i<=qs;i++) {
-			w[.,i]=(1/fden[i]*(qth[i]:-((u:-qval[i]):<=0))-(u:+(qval[i]*v))):/(us1*nobs)
+			//w[.,i]=(1/fden[i]*(qth[i]:-((u:-qval[i]):<=0))-(u:+(qval[i]*v))):/(us1*nobs)
+			w[.,i]= 1/fden[i]*(qth[i]:-((u:-qval[i]):<=0)):/us1 - u:/us1 :-  qval[i]*v:/us1
+
 		}	
 		
 		euw=mean(u:*w,wgt)
@@ -843,16 +868,24 @@ void mmqreg_vce2(string scalar yvar_, string scalar xvar_,
 		
 		// Xi and Omg
 		// xi=J(qs,1,1)#iqxx,qval'#iqxx,I(qs)#( gama)  
-		xi2=( iqxx    , J(k,k+qs,0)      )  \ ///
-			( J(k,k,0), iqxx , J(k,qs,0) )  \ ///
-			J(qs,1,1)#iqxx,qval'#iqxx,I(qs)#( gama) 
-		
-		omg=(eu2*pxx , euv*pxx  , euw#px \  ///
+		if (nls==0) {
+			xi2=( I(k)    , J(k,k+qs,0)      )  \ ///
+			( J(k,k,0), I(k) , J(k,qs,0) )  \ ///
+			J(qs,1,1)#I(k) , qval'#I(k) , I(qs) # (gama) 
+			betaq=beta', gama'
+		}
+		else {
+			xi2= J(qs,1,1)#I(k) , qval'#I(k) , I(qs) # (gama)  
+			betaq=J(1,0,.)
+		}
+		 
+ 		omg=(eu2*pxx , euv*pxx  , euw#px \  ///
              euv*pxx , ev2*pxx  , evw#px \   ///  
 	        (euw#px)', (evw#px)', ew2*us2)
- 	
+ 	    omg=omg/(nobs^2)
+			
 		// create all 
-		betaq=beta', gama'
+
 		for(i=1;i<=qs;i++) {
 			betaq=betaq,(beta+gama*qval[i])'
 		}
@@ -870,15 +903,19 @@ void mmqreg_vce2(string scalar yvar_, string scalar xvar_,
 		st_matrix("__bq",betaq)
 		st_matrix("__vq",makesymmetric(vcvq) )	
 		st_numscalar("df_r", nn)
-		//}
+		
+		st_matrix("__bqq",(beta', gama',qval))
+		st_matrix("__vqq",makesymmetric(omg))
 }
   
 void mmqreg_vce2x(string scalar yvar_, string scalar xvar_,	
 				  string scalar u_   , string scalar u_hat_, 
 				  string scalar beta_,  string scalar gama_,
 				  string scalar qval_,  string scalar qth_, 
-				  string scalar fden_, real scalar df_a,
-				  string scalar touse,  string scalar dfadj ,  string scalar wgt_ ) {
+				  string scalar fden_, string scalar cvar_, 
+				  real scalar df_a,  string scalar touse,  
+				  string scalar dfadj ,  string scalar wgt_,
+				  real scalar vce, real scalar nls) {
 		real matrix xvar, yvar,wgt
 		real vector beta, gama , betaq
 		real vector qval, qth, fden
@@ -888,12 +925,22 @@ void mmqreg_vce2x(string scalar yvar_, string scalar xvar_,
 		real matrix vcvq
 		real matrix omgx
 
-		st_view(xvar =.,.,xvar_ ,touse)
+		
 		st_view(yvar =.,.,yvar_ ,touse)
+		xvar =st_data(.,xvar_ ,touse),J(rows(yvar),1,1)
+		st_view(cvar =.,.,cvar_ ,touse)
  		st_view(u    =.,.,u_  ,touse)
 		st_view(u_hat=.,.,u_hat_  ,touse)
-		u_hat=abs(u_hat)
 		
+		if (vce==2) {
+			st_view(cvar =.,.,cvar_ ,touse)
+			real matrix info 
+			real scalar nc 
+			info = panelsetup(cvar, 1)
+			nc   = rows(info)
+		}
+		
+		u_hat=abs(u_hat)
 		wgt = st_data(.,wgt_  ,touse)
 		wgt=wgt:/mean(wgt)
 		// first load data. y may not be needed
@@ -910,16 +957,18 @@ void mmqreg_vce2x(string scalar yvar_, string scalar xvar_,
 	
 		qs=cols(qth)
 		// std residuals : residuals and fitted values will be obtained with reghdfe		
-		
-		v = 2*u:*((u:>=0):-mean(u:>=0,wgt)):-1
-
+		u    =u:*u_hat
+		v=2*u:*((u:>=0):-mean(u:>=0,wgt)):-u_hat
+ 
 		// elements that do not depend on w
 		qxx=quadcross(xvar,wgt,xvar)
 	   iqxx=invsym(qxx)
  
 		// E(U_s) E(U_s^2)
 		us1=mean(u_hat,wgt)
-
+		if1 = nobs*(xvar:*u)*iqxx
+		if2 = nobs*(xvar:*v)*iqxx
+		
 		// Betas and VCOV for first and second
 		//vcvb=eu2*iqxx*pxx*iqxx/rows(x)
 		//vcvg=ev2*iqxx*pxx*iqxx/rows(x)
@@ -928,142 +977,62 @@ void mmqreg_vce2x(string scalar yvar_, string scalar xvar_,
 
 		for(i=1;i<=qs;i++) {
 			//w[.,i]=1/fden[i]*(qth[i]:-((u:+qval[i]):<=0))-(u:+qth[i])
-			w[.,i]=(1/fden[i]*(qth[i]:-((u:-qval[i]):<=0))-(u:+(qval[i]*v))):/(us1*nobs)
+			w[.,i]=1/fden[i]*(qth[i]:-((u:-qval[i]*u_hat):<=0)):*u_hat:/us1 - u:/us1 :-  qval[i]*v:/us1
+
 		}	
 		
 		// Xi and Omg
-		xi =J(qs,1,1)#iqxx,qval'#iqxx,I(qs)#(gama)  
-		xi2=( iqxx    , J(k,k+qs,0)      )  \ ///
-			( J(k,k,0), iqxx , J(k,qs,0) )  \ xi 
-		real matrix xvar_uhat 
-		xvar_uhat = xvar:*u_hat
-		omgx=(xvar_uhat:*u,xvar_uhat:*v,u_hat:*w)
- 		omg =quadcross(omgx,wgt:^2,omgx)	
+		if (nls==0) {
+			xi2=( I(k)    , J(k,k+qs,0)      )  \ ///
+			( J(k,k,0), I(k) , J(k,qs,0) )  \ ///
+			J(qs,1,1)#I(k) , qval'#I(k) , I(qs) # (gama) 
+			betaq=beta', gama'
+		}
+		else {
+			xi2= J(qs,1,1)#I(k) , qval'#I(k) , I(qs) # (gama)  
+			betaq=J(1,0,.)
+		}
 		
-		// create all 
-		betaq=beta', gama'
+		real matrix xvar_uhat, omg_x
+		omg_x     =(if1,if2,w):*wgt
+		
+		if (vce==1) {
+			omg       =quadcross(omg_x,omg_x)/(nobs^2)
+		}
+		if (vce==2) {
+ 			omg_xx 	=panelsum(omg_x,info)
+ 			omg     =quadcross(omg_xx,omg_xx)/(nobs^2)
+			real scalar ncone
+			ncone=0
+		}
+		
+ 
 		for(i=1;i<=qs;i++) {
 			betaq=betaq,(beta+gama*qval[i])'
 		}
 		
 		if (dfadj!="") {
-			nn=(nobs-(k-diag0cnt(qxx)+df_a-1)) 
+			nn=nobs-(k-diag0cnt(qxx))			
+			ncone=1
 		}
 		else {
 			nn=nobs
+			if (vce==2) nn=nobs-1
 		}
-		vcvq = xi2*omg*xi2'*nobs/nn
+	 
+		if (vce==1) vcvq = xi2*omg*xi2'*(nobs/nn)
+		if (vce==2) vcvq = xi2*omg*xi2'*(nobs-1)/nn*(nc/(nc-ncone))
 
 		st_matrix("__bq",betaq)
 		st_matrix("__vq",makesymmetric(vcvq) )	
 		st_numscalar("df_r", nn)
-		//}
+		// extra
+		st_matrix("__bqq",(beta', gama',qval))
+		st_matrix("__vqq",makesymmetric(omg))
+		
 }
 
-void mmqreg_vce2c(string scalar yvar_, string scalar xvar_,	
-				  string scalar u_   , string scalar u_hat_, 
-				  string scalar beta_,  string scalar gama_,
-				  string scalar qval_,  string scalar qth_, 
-				  string scalar fden_, string scalar cvar_, 
-				  real scalar df_a, string scalar touse,  
-				  string scalar dfadj ,  string scalar wgt_ ) {
-		real matrix xvar, yvar, cvar, wgt
-		real vector beta, gama , betaq
-		real vector qval, qth, fden
-		real matrix u_hat, u, v, w  
-		real matrix qxx, iqxx, xi, xi2, omg 
-		real scalar us1, nn,nobs, i, qs, k
-		real matrix vcvq
-		
-		st_view(xvar =.,.,xvar_ ,touse)
-		st_view(yvar =.,.,yvar_ ,touse)
-		st_view(cvar =.,.,cvar_ ,touse)
-		st_view(u    =.,.,u_  ,touse)
-		st_view(u_hat=.,.,u_hat_  ,touse)
-		u_hat=abs(u_hat)
-		wgt = st_data(.,wgt_  ,touse)
-		wgt=wgt:/mean(wgt)
-		
-		// first load data. y may not be needed
-		
-		beta=st_matrix(beta_)'
-		gama=st_matrix(gama_)'
-		// N obs k rows
-		nobs=rows(xvar)
-		k=cols(xvar)
-		// fden qth qval
-		qval=st_matrix(qval_)
-		qth =st_matrix(qth_)
-		fden=st_matrix(fden_)
-	
-		qs=cols(qth)
-		// std residuals : residuals and fitted values will be obtained with reghdfe		
-		
-		v=2*u:*((u:>=0):-mean(u:>=0,wgt)):-1
 
-		// elements that do not depend on w
-		qxx=quadcross(xvar,wgt,xvar)
-		//n=(nobs-(k-diag0cnt(qxx)+df_a-1))
-		
-	   iqxx=invsym(qxx)
- 
-		// E(U_s) E(U_s^2)
-		us1=mean(u_hat,wgt)
-		
-		// Betas and VCOV for first and second
-		//vcvb=eu2*iqxx*pxx*iqxx/rows(x)
-		//vcvg=ev2*iqxx*pxx*iqxx/rows(x)
-		// This residual changes by quantile
-		w=J(nobs,qs,0)
-
-		for(i=1;i<=qs;i++) {
-			//w[.,i]=1/fden[i]*(qth[i]:-((u:+qval[i]):<=0))-(u:+qth[i])
-			w[.,i]=(1/fden[i]*(qth[i]:-((u:-qval[i]):<=0))-(u:+(qval[i]*v))):/(us1*nobs)
-		}	
-		
-		// Xi and Omg
-		
-		xi2=( iqxx    , J(k,k+qs,0)      )  \ ///
-			( J(k,k,0), iqxx , J(k,qs,0) )  \ ///
-			J(qs,1,1)#iqxx,qval'#iqxx,I(qs)#( gama)
- 
-		real matrix xvar_uhat, omg_x, omg_xx
-		xvar_uhat = xvar:*u_hat
-		omg_x     =(xvar_uhat:*u,xvar_uhat:*v,u_hat:*w):*wgt
-		
-		real matrix info 
-		real scalar nc 
-	    
-		info = panelsetup(cvar, 1)
-		nc   = rows(info)
-		omg_xx 	  =panelsum(omg_x,info)
-		 
-        omg  =cross(omg_xx,omg_xx)
-		
-		// create all 
-		betaq=beta', gama'
-		for(i=1;i<=qs;i++) {
-			betaq=betaq,(beta+gama*qval[i])'
-		}
-		
-		real scalar ncone
-		ncone=0
-		
-		if (dfadj!="") {
-			nn=nobs-(k-diag0cnt(qxx)+df_a-1)
-			ncone=1
-		}
-		else {
-			nn=nobs-1
-		}
-		
-		vcvq = xi2*omg*xi2'*(nobs-1)/nn*(nc/(nc-ncone))
-
-		st_matrix("__bq",betaq)
-		st_matrix("__vq",makesymmetric(vcvq) )	
-		st_numscalar("df_r",nn)
-
-}
 end
 
 /*
@@ -1076,4 +1045,5 @@ ms_fvstrip c.mpg##i.foreign, expand dropomit
 ** creates variables as needed
 hdfe c.mpg##i.foreign, abs(abs) gen(__new)
 ** myhdfe creates and drop some stuff from hdfe
+-** add a VCE=3 for WB a la CSDID
 */
