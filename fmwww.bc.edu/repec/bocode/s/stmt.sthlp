@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.4.8c 08Apr2022}}{...}
+{* *! version 1.4.9 22Jun2022}}{...}
 {cmd:help stmt}
 {right:also see:  {help stmt_postestimation}}
 {hline}
@@ -120,7 +120,10 @@ The following syntax applies:
 This will create restricted cubic splines for the first timescale specified in the {cmd:timeint()}
 option with internal knots at 2 and 5 (3 degrees of freedom), and restricted cubic splines for the
 second timescale specified in the {cmd:timeint()} option at 50, 60 and 70 (4 degrees of freedom),
-and then interact the spline terms together. Internal knots for additional timescale interactions
+and then interact the spline terms together. The spaces separate the internal knot locations, whereas 
+the colon separates the timescales included in {cmd:timeint()}, i.e. the internal knots for the first 
+timescale in {cmd:timeint()} are specified prior to the colon, and the internal knots for the second 
+timescale in {cmd:timeint()} come after the colon. Internal knots for additional timescale interactions
 can be added using | in a similar way to the {cmd:timeint()} option, for example:
 
 {pmore}
@@ -142,7 +145,10 @@ The following syntax applies:
 This will create restricted cubic splines for the first timescale specified in {cmd:timeint()}
  with boundary knots at 0 and 7, and restricted cubic splines for the second timescale
  specified in {cmd:timeint()} with boundaries at 25 and 95, and then interact the spline terms
-together. Boundary knots for additional timescale interactions can be added using | in
+together. The spaces separate the boundary knot locations, whereas 
+the colon separates the timescales included in {cmd:timeint()}, i.e. the boundary knots for the first 
+timescale in {cmd:timeint()} are specified prior to the colon, and the boundary knots for the second 
+timescale in {cmd:timeint()} come after the colon. Boundary knots for additional timescale interactions can be added using | in
 a similar way to the {cmd:timeint()} option, for example:
 
 {pmore}
@@ -378,6 +384,7 @@ iteration.
 {synopt:{cmd:e(Ntimeint)}}number of timescale interactions #{p_end}
 {synopt:{cmd:e(df_timeint#_t1)}}degrees of freedom used for timescale 1 of timescale interaction #{p_end}
 {synopt:{cmd:e(df_timeint#_t2)}}degrees of freedom used for timescale 2 of timescale interaction #{p_end}
+{synopt:{cmd:e(df_timeint#_t3)}}degrees of freedom used for timescale 3 of timescale interaction #{p_end}
 {synopt:{cmd:e(minknot)}}value of minimum knot{p_end}
 {synopt:{cmd:e(maxknot)}}value of maximum knot{p_end}
 {synopt:{cmd:e(nodes)}}number of nodes used in numerical integration{p_end}
@@ -404,6 +411,7 @@ iteration.
 {synopt:{cmd:e(exp_tvcknots_t#_{it:varname})}}exponential of the knots specified in {cmd:e(tvcknots_t#_{it:varname})} #{p_end}
 {synopt:{cmd:e(knots_timeint#_t1)}}knots for the first timescale as part of timescale interaction #{p_end}
 {synopt:{cmd:e(knots_timeint#_t2)}}knots for the second timescale as part of timescale interaction #{it:varname} on timescale #{p_end}
+{synopt:{cmd:e(knots_timeint#_t3)}}knots for the third timescale as part of timescale interaction #{it:varname} on timescale #{p_end}
 {synopt:{cmd:e(noconstant)}}{cmd:noconstant} if constant term was supressed{p_end}
 {synopt:{cmd:e(opt)}}type of optimization{p_end}
 {synopt:{cmd:e(vce)}}vcetype specified in {cmd:vce()}{p_end}
@@ -424,6 +432,7 @@ iteration.
 {synopt:{cmd:e(R_{it:varname})}}orthogonalization matrix for splines of timescale-covariate interactions {it:varname}{p_end}
 {synopt:{cmd:e(R_timeint#_t1)}}orthogonalization matrix for splines of timescale 1 in timescale interaction #{p_end}
 {synopt:{cmd:e(R_timeint#_t2)}}orthogonalization matrix for splines of timescale 2 in timescale interaction #{p_end}
+{synopt:{cmd:e(R_timeint#_t3)}}orthogonalization matrix for splines of timescale 3 in timescale interaction #{p_end}
 
 {synoptset 30 tabbed}{...}
 {p2col 5 20 24 2: Functions}{p_end}

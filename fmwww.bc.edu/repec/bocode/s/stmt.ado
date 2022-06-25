@@ -2,7 +2,7 @@
 // ===============================================================================
 //stmt.ado Flexible parametric survival models with multiple timescales
 
-*! version 1.4.8c 08Apr2022
+*! version 1.4.9 22Jun2022
 // Updated 20170704 better syntax
 // Updated 20170919 two-way timescale interactions (V1.3)
 // Updated 20170920 allow multiple timescales for a sub-population

@@ -1,4 +1,4 @@
-*! version 1.0.1  October, 2021  Shoya Ishimaru
+*! version 1.0.2  June, 2022  Shoya Ishimaru
 program ivolsdec, rclass
 	version 12.1
 	// confirmed to work in versions 12.1 and 15.1
@@ -10,7 +10,7 @@ program ivolsdec, rclass
 	local z `s(inst)'
 	local 0 `s(zero)'
 	
-	syntax [if] [aw fw pw iw], XNBasis(varlist fv) [WBasis(varlist fv) XIBasis(varlist fv) VCE(string) DID RDd format(string)]
+	syntax [if] [aw fw pw iw] [, XNBasis(varlist fv) WBasis(varlist fv) XIBasis(varlist fv) VCE(string) DID RDd BINary CGroup(varlist fv) TLevel(numlist) format(string)]
 	
 	// check if did or rd option is specified
 	local didrd = 0
@@ -59,7 +59,7 @@ program ivolsdec, rclass
 		local wb `wbasis'
 		local wb_def = 0
 	}
-
+	
 	//" To demompose an IV-OLS gap, this command performs two auxiliary regressions"
 	//" Y = W'a1 + (q(W)'b1)*X + e1, and"
 	//" Y = W'a2 + (q(W)'b2)*X + q(W)'(C2)r(X) + p(X)'d2 + e2,"
@@ -81,6 +81,53 @@ program ivolsdec, rclass
 	local xib `r(varlist)'
 	fvrevar `xnbasis'
 	local xnb `r(varlist)'
+	
+	if ( "`cgroup'"!="" ){
+		fvrevar `cgroup'
+		local cg `r(varlist)'
+		foreach v of varlist `cg'{
+			capture tabulate `v'
+			if _rc!=0 | (_rc==0 & r(r)!=2) {
+				di as error `""cgroup" must be all binary"'
+				exit 198
+			}
+			quietly summarize `v'
+			if r(min)!=0 | r(max)!=1 {
+				di as error `""cgroup" must be all binary (take on values zero or one)"'
+				exit 198
+			}
+		}
+	}
+	
+	if ( "`binary'"=="" ){
+		if ( "`xnbasis'"=="" ){
+			di as error `""xnbasis" must be nonempty unless "binary" option is chosen in a command."'
+			exit 198
+		}
+		// make sure basis functions do not include X itself
+		foreach v of varlist `xnb' `xib'{
+			if ( "`v'"=="`x'" ){
+				di as error "xnbasis or xibasis cannot contain a treatment variable itself"
+				exit 198
+			}
+		}		
+	}
+	else{
+		// check if X is really binary
+		capture tabulate `x'
+		if _rc!=0 | (_rc==0 & r(r)!=2) {
+			di as error `"Treatment must be binary when "binary" option is chosen in a command."'
+			exit 198
+		}	
+		if ( "`xnbasis'"!="" ){
+			di as error `""xnbasis" must be empty when "binary" option is chosen in a command."'
+			exit 198
+		}		
+		if ( "`xibasis'"!="" ){
+			di as error `""xibasis" must be empty when "binary" option is chosen in a command."'
+			exit 198
+		}		
+	}
 	
 	// Identify observations with no missing values  
 	tempvar mask
@@ -129,10 +176,12 @@ program ivolsdec, rclass
 	local m_xz = r(cov_12)	
 	
 	if ( `didrd'==0 ){
-		foreach v of varlist `xnb' `xib'{
-			tempvar `v'_res
-			qui reg `v' `w' [`weight'`exp'] `cond'
-			qui predict double ``v'_res' `cond', resid	
+		if !( "`xnb'"=="" & "`xib'"=="" ){
+			foreach v of varlist `xnb' `xib'{
+				tempvar `v'_res
+				qui reg `v' `w' [`weight'`exp'] `cond'
+				qui predict double ``v'_res' `cond', resid	
+			}
 		}
 	}
 	else if ( `wb_def'==0 ){
@@ -165,7 +214,7 @@ program ivolsdec, rclass
 	qui reg `e_gap' [`weight'`exp'] `cond', `vce_opt'
 	local se_gap = _se[_cons]
 	local b_gap = `b_iv'-`b_ols'
-	
+		
 	// Predict Y by W'a + (q(W)'b)*X
 	tempvar mhat1 vhat1 zhat1 rhat1
 	local qx
@@ -218,82 +267,95 @@ program ivolsdec, rclass
 	local se_cw = _se[_cons]
 	local b_cw = `b_c'-`b_ols'
 	
-	// Predict Y by W'a + (q(W)'b)*X + q(W)'Cr(X) + p(X)'d
-	tempvar mhat2 vhat2 zhat2 rhat2
-	local qwx
-	if ( "`xib'"!="" ){
-		foreach u of varlist `xib'{
+	if ( "`binary'"=="" ){
+		// Predict Y by W'a + (q(W)'b)*X + q(W)'Cr(X) + p(X)'d
+		tempvar mhat2 vhat2 zhat2 rhat2
+		local qwx
+		if ( "`xib'"!="" ){
+			foreach u of varlist `xib'{
+				foreach v of varlist `wb'{
+					tempvar `v'_`u'
+					qui gen double ``v'_`u'' = `v'*`u' `cond'
+					local qwx `qwx' ``v'_`u''
+				}
+			}
+		}
+		qui reg `y' `x' `qx' `qwx' `xnb' `w' [`weight'`exp'] `cond'
+		qui predict double `vhat2' `cond', resid
+		if ( `didrd'==0 ){
+			qui gen double `mhat2' = _b[`x']*`x_res' `cond'
+			qui gen double `rhat2' = 0 `cond'
+			foreach v of varlist `xnb'{
+				qui replace `mhat2' = `mhat2' + _b[`v']*``v'_res' `cond'
+			}		
 			foreach v of varlist `wb'{
-				tempvar `v'_`u'
-				qui gen double ``v'_`u'' = `v'*`u' `cond'
-				local qwx `qwx' ``v'_`u''
-			}
-		}
-	}
-	qui reg `y' `x' `qx' `qwx' `xnb' `w' [`weight'`exp'] `cond'
-	qui predict double `vhat2' `cond', resid
-	if ( `didrd'==0 ){
-		qui gen double `mhat2' = _b[`x']*`x_res' `cond'
-		qui gen double `rhat2' = 0 `cond'
-		foreach v of varlist `xnb'{
-			qui replace `mhat2' = `mhat2' + _b[`v']*``v'_res' `cond'
-		}		
-		foreach v of varlist `wb'{
-			qui replace `mhat2' = `mhat2' + _b[``v'_x']*`v'*`x_res' `cond'
-			if ( "`xib'"!="" ){
-				foreach u of varlist `xib'{
-					qui replace `mhat2' = `mhat2' + _b[``v'_`u'']*`v'*``u'_res' `cond'
+				qui replace `mhat2' = `mhat2' + _b[``v'_x']*`v'*`x_res' `cond'
+				if ( "`xib'"!="" ){
+					foreach u of varlist `xib'{
+						qui replace `mhat2' = `mhat2' + _b[``v'_`u'']*`v'*``u'_res' `cond'
+					}
 				}
 			}
-		}
-		qui reg `z_res' `x' `qx' `qwx' `xnb' `w' [`weight'`exp'] `cond'
-		qui predict double `zhat2' `cond', xb		
-	}	
-	else if ( `wb_def'==1 ){
-		qui predict double `mhat2' `cond', xb
-		qui gen double `rhat2' = 0 `cond'
-		qui reg `z_res' `x' `qx' `qwx' `xnb' `w' [`weight'`exp'] `cond'
-		qui predict double `zhat2' `cond', xb		
-	}	
-	else{
-		qui gen double `mhat2' = _b[`x']*`x' `cond'
-		qui gen double `rhat2' = 0 `cond'
-		foreach v of varlist `xnb'{
-			qui replace `mhat2' = `mhat2' + _b[`v']*`v' `cond'
+			qui reg `z_res' `x' `qx' `qwx' `xnb' `w' [`weight'`exp'] `cond'
+			qui predict double `zhat2' `cond', xb		
 		}	
-		local qwx_hat
-		foreach v of varlist `wb'{
-			qui replace `mhat2' = `mhat2' + _b[``v'_x']*``v'_hat'*`x' `cond'
-			qui replace `rhat2' = `rhat2' + _b[``v'_x']*``v'_res'*`xz_hat' `cond'
-			if ( "`xib'"!="" ){
-				foreach u of varlist `xib'{
-					qui replace `mhat2' = `mhat2' + _b[``v'_`u'']*``v'_hat'*`u' `cond'
-					qui replace `rhat2' = `rhat2' + _b[``v'_`u'']*``v'_res'*``u'z_hat' `cond'
-					tempvar `v'hat_`u'
-					qui gen double ``v'hat_`u'' = ``v'_hat'*`u' `cond'
-					local qwx `qwx' ``v'hat_`u''
+		else if ( `wb_def'==1 ){
+			qui predict double `mhat2' `cond', xb
+			qui gen double `rhat2' = 0 `cond'
+			qui reg `z_res' `x' `qx' `qwx' `xnb' `w' [`weight'`exp'] `cond'
+			qui predict double `zhat2' `cond', xb		
+		}	
+		else{
+			qui gen double `mhat2' = _b[`x']*`x' `cond'
+			qui gen double `rhat2' = 0 `cond'
+			foreach v of varlist `xnb'{
+				qui replace `mhat2' = `mhat2' + _b[`v']*`v' `cond'
+			}	
+			local qwx_hat
+			foreach v of varlist `wb'{
+				qui replace `mhat2' = `mhat2' + _b[``v'_x']*``v'_hat'*`x' `cond'
+				qui replace `rhat2' = `rhat2' + _b[``v'_x']*``v'_res'*`xz_hat' `cond'
+				if ( "`xib'"!="" ){
+					foreach u of varlist `xib'{
+						qui replace `mhat2' = `mhat2' + _b[``v'_`u'']*``v'_hat'*`u' `cond'
+						qui replace `rhat2' = `rhat2' + _b[``v'_`u'']*``v'_res'*``u'z_hat' `cond'
+						tempvar `v'hat_`u'
+						qui gen double ``v'hat_`u'' = ``v'_hat'*`u' `cond'
+						local qwx `qwx' ``v'hat_`u''
+					}
 				}
-			}
-		}	
-		qui reg `z_res' `x' `qx_hat' `qwx_hat' `xnb' `w' [`weight'`exp'] `cond'
-		qui predict double `zhat2' `cond', xb		
-	}
+			}	
+			qui reg `z_res' `x' `qx_hat' `qwx_hat' `xnb' `w' [`weight'`exp'] `cond'
+			qui predict double `zhat2' `cond', xb		
+		}
+		
+		tempvar e_ct e_tw e_me
+		// Compute treatment-level weight difference and S.E.
+		qui ivregress 2sls `mhat2' (`x'=`z') `w' [`weight'`exp'] `cond'
+		qui predict double `e_ct' `cond', resid
+		local b_ct = _b[`x']
+		qui gen double `e_tw' = ( (`e_ct'*`z_res' + `vhat2'*`zhat2' + `rhat2' ) - (`e_c'*`z_res' + `vhat1'*`zhat1' + `rhat1' ) )/`m_xz' `cond'
+		qui reg `e_tw' [`weight'`exp'] `cond', `vce_opt'
+		local se_tw = _se[_cons]
+		local b_tw = `b_ct'-`b_c'
 	
-	tempvar e_ct e_tw e_me
-	// Compute treatment-level weight difference and S.E.
-	qui ivregress 2sls `mhat2' (`x'=`z') `w' [`weight'`exp'] `cond'
-	qui predict double `e_ct' `cond', resid
-	local b_ct = _b[`x']
-	qui gen double `e_tw' = ( (`e_ct'*`z_res' + `vhat2'*`zhat2' + `rhat2' ) - (`e_c'*`z_res' + `vhat1'*`zhat1' + `rhat1' ) )/`m_xz' `cond'
-	qui reg `e_tw' [`weight'`exp'] `cond', `vce_opt'
-	local se_tw = _se[_cons]
-	local b_tw = `b_ct'-`b_c'
-
-	// Marginal effect difference and S.E.
-	qui gen double `e_me' = ( `e_iv'*`z_res' - (`e_ct'*`z_res' + `vhat2'*`zhat2' + `rhat2' ) )/`m_xz' `cond'
-	qui reg `e_me' [`weight'`exp'] `cond', `vce_opt'
-	local se_me = _se[_cons]
-	local b_me = `b_iv'-`b_ct'
+		// Marginal effect difference and S.E.
+		qui gen double `e_me' = ( `e_iv'*`z_res' - (`e_ct'*`z_res' + `vhat2'*`zhat2' + `rhat2' ) )/`m_xz' `cond'
+		qui reg `e_me' [`weight'`exp'] `cond', `vce_opt'
+		local se_me = _se[_cons]
+		local b_me = `b_iv'-`b_ct'
+	}
+	else{
+		// Since treatment is binary, treatment-level weight difference and S.E. are zero.
+		local se_tw = 0
+		local b_tw = 0
+		// Marginal effect difference and S.E.
+		tempvar e_me
+		qui gen double `e_me' = ( `e_iv'*`z_res' - ( `e_c'*`z_res' + `vhat1'*`zhat1' + `rhat1' ) )/`m_xz' `cond'
+		qui reg `e_me' [`weight'`exp'] `cond', `vce_opt'
+		local se_me = _se[_cons]
+		local b_me = `b_iv'-`b_c'	
+	}
 	
 	matrix define b = (`b_ols',`se_ols' \ `b_iv',`se_iv' \ `b_gap',`se_gap' \ `b_cw',`se_cw' \ `b_tw',`se_tw' \ `b_me',`se_me')
 	matrix colnames b = "Coef" "StdErr" 
@@ -303,4 +365,89 @@ program ivolsdec, rclass
 	disp "Number of Observations: " `Nobs'
 	disp "VCE Type: `vce_opt'" 
 	return matrix D = b
+	
+	// compute weights on treatment level
+	if ( "`tlevel'"!="" ){
+		local nl=0
+		local matrows = ""
+		foreach i of numlist `tlevel'{
+			local nl = `nl'+1
+			local matrows = "`matrows'" + " " + "`i' "
+		}
+		matrix define LW_m = J(`nl',4,0)
+		matrix colnames LW_m = "OLS wgt" "(s.e.)" "IV wgt" "(s.e.)"
+		matrix rownames LW_m = `matrows'
+		local j=0
+		foreach i of numlist `tlevel'{
+			local j = `j'+1
+			tempvar x`j'
+			qui gen double `x`j'' = (`x'>=`i')
+			qui reg `x`j'' `x' `w' [`weight'`exp'] `cond', `vce_opt'
+			matrix LW_m[`j',1] = _b[`x']
+			matrix LW_m[`j',2] = _se[`x']
+			qui ivregress 2sls `x`j'' (`x'=`z') `w' [`weight'`exp'] `cond', `vce_opt'
+			matrix LW_m[`j',3] = _b[`x']
+			matrix LW_m[`j',4] = _se[`x']			
+		}
+		disp ""
+		matlist LW_m, title("Weights on Treatment Levels") format(`format')
+		return matrix LW = LW_m
+	}
+	
+	// compute weights on treatment groups
+	if ( "`cgroup'"!="" ){
+		local ng = 0
+		foreach v of varlist `cg'{
+			local ng = `ng'+1
+		}
+		local matrows = ""
+		fvexpand `cgroup'
+		foreach v in `r(varlist)'{
+			local matrows = "`matrows'" + " " + "`v' "
+		}				
+		matrix define CW_m = J(`ng',5,0)
+		matrix colnames CW_m = "Share" "OLS wgt" "(s.e.)" "IV wgt" "(s.e.)"
+		matrix rownames CW_m = `matrows'
+		if ( `didrd'!=0 & `wb_def'!=0 ){
+			// For SE correction terms with DID/RD (computed already if wb_def==0)
+			tempvar xz xz_hat 
+			qui gen double `xz' = `x'*`z_res'
+			qui reg `xz' `w' [`weight'`exp'] `cond'
+			qui predict double `xz_hat' `cond', xb
+		}
+		local j = 0
+		foreach v of varlist `cg'{
+			local j = `j'+1
+			qui reg `v' [`weight'`exp'] `cond'
+			matrix CW_m[`j',1] =  _b[_cons]
+			tempvar w_`v' 
+			qui gen double `w_`v'' = `v'*`x_res'
+			qui reg `w_`v'' `x' `w' [`weight'`exp'] `cond', `vce_opt'
+			matrix CW_m[`j',2] =  _b[`x']
+			matrix CW_m[`j',3] = _se[`x']
+			if ( `didrd'==0 ){
+				qui ivregress 2sls `w_`v'' (`x'=`z') `w' [`weight'`exp'] `cond', `vce_opt'
+				matrix CW_m[`j',4] =  _b[`x']
+				matrix CW_m[`j',5] = _se[`x']	
+			}
+			else{
+			// slightly different formula for RD/DID
+				tempvar `v'_hat `v'_res w`v'_res e`v'_res
+				qui reg `v' `w' [`weight'`exp'] `cond'
+				qui predict double ``v'_hat' `cond', xb
+				qui predict double ``v'_res' `cond', resid
+				qui replace `w_`v'' = ``v'_hat'*`x' `cond'
+				qui ivregress 2sls `w_`v'' (`x'=`z') `w' [`weight'`exp'] `cond'
+				matrix CW_m[`j',4] =  _b[`x']		
+				qui predict double `w`v'_res' `cond', resid
+				qui gen double `e`v'_res' = (`w`v'_res'*`z_res' + ``v'_res'*`xz_hat')/`m_xz' `cond'
+				qui regress `e`v'_res' [`weight'`exp'] `cond', `vce_opt'
+				matrix CW_m[`j',5] =  _se[_cons]
+			}
+		}
+		disp ""
+		matlist CW_m, title("Weights on Covariate Groups") format(`format')
+		return matrix CW = CW_m
+	}
+	
 end
