@@ -1,5 +1,9 @@
-*! streamplot v1.1 Naqvi 08.Apr.2022
-* v1.0 06.Aug.2021
+*! streamplot v1.3 (20 Jun 2022). Add marker labels and format options 
+*! Asjad Naqvi (asjadnaqvi@gmail.com)
+
+* v1.2 14 Jun 2022: passthru optimizations. error checks. reduce the default smoothing. labels fix
+* v1.1 08 Apr 2022
+* v1.0 06 Aug 2021
 
 **********************************
 * Step-by-step guide on Medium   *
@@ -18,14 +22,12 @@ program streamplot, sortpreserve
 
 version 15
  
-	syntax varlist(min=2 max=2 numeric) [if] [in], by(varname) [palette(string) alpha(real 80) smooth(real 6)] ///
-		[ LColor(string)  LWidth(string) XLABSize(real 2) labcond(string) ] ///
-		[ XLINEPattern(string) XLINEColor(string) XLINEWidth(string) ] ///
-		[ YLABSize(real 1.4) YLABel(varname)  XLABColor(string) YLABColor(string)  ] ///
-		[ xticks(string) title(string) subtitle(string) note(string) scheme(string) ] ///
-		[  allopt graphopts(string asis) * ] 
+	syntax varlist(min=2 max=2 numeric) [if] [in], by(varname) [palette(string) alpha(real 80) smooth(real 3)] ///
+		[ LColor(string)  LWidth(string) labcond(string) ] 		///					
+		[ YLABSize(real 1.4) YLABel(varname)  YLABColor(string) offset(real 0.12)    ] ///
+		[ xlabel(passthru) xtitle(passthru) title(passthru) subtitle(passthru) note(passthru) scheme(passthru) name(passthru) xsize(passthru) ysize(passthru)  ] ///
+		[  allopt graphopts(string asis) PERCENT FORMAT(string) * ] 
 		
-		// xtitle(string) ytitle(string) removed for now.
 		
 		
 	// check dependencies
@@ -35,26 +37,45 @@ version 15
 		exit
 	}	
 	
-	
 	marksample touse, strok
 	gettoken yvar xvar : varlist 	
-	
+
+
+* Definition  of locals - Default format
+if `"`format'"' == "" {
+local format "%12.0f"	
+}
+
+
 qui {
 preserve	
-		collapse (sum) `yvar' if `touse', by(`xvar' `by')
+		
+		levelsof `xvar'
+		if `r(r)' < 5 {
+			di as err "The variable{it:`xvar'} has less than 5 obvervations per group. Please choose a dataset with a longer time series."
+			exit
+		}
+		
 
-		xtset `by' `xvar' 
+
+		
+	// prepare the dataset	
+	collapse (sum) `yvar' if `touse', by(`xvar' `by')
+
+	xtset `by' `xvar' 
 			
+	// this is technically wrong but we do it anyways  
+	// fix in later versions
 	
+	replace `yvar' = 0 if `yvar' < 0	
 	
-	tempvar `yvar'_ma7
+	tempvar `yvar'_ma7	
 	tssmooth ma ``yvar'_ma7'  = `yvar' , w(`smooth' 1 0) 
 
-
-	// this is technically wrong but we do it anyways
-	replace `yvar' = 0 if `yvar' < 0
-
-	
+	// add the range variable on the x-axis
+	summ `xvar' if ``yvar'_ma7' != .
+		local xrmin = r(min)
+		local xrmax = r(max) + ((r(max) - r(min)) * `offset') 
 	
 	cap drop stack_`yvar'
 	
@@ -72,25 +93,23 @@ preserve
 		}	
 
 
-	sort `by' `xvar'  	
-		
-
-		
-keep `by' `xvar' `yvar' stack_`yvar'
+	sort `by' `xvar'  		
+	keep `by' `xvar' `yvar' stack_`yvar'
   
-*ren stack_`yvar' cases
-
-
+	
 
 ** preserve the labels
 
+	local mylab: value label `by'
 
-levelsof `by', local(idlabels)      // store the id levels
-	
-foreach x of local idlabels {       
-   	local idlab_`x' : label `by' `x'  // store the corresponding value label in a macro
-	
-	}
+
+	levelsof `by', local(idlabels)      // store the id levels
+		
+	foreach x of local idlabels {       
+		local idlab_`x' : label `mylab' `x'  // store the corresponding value label in a macro
+		
+		}
+
 
 
 reshape wide stack_`yvar' `yvar' , i(`xvar') j(`by') 
@@ -118,42 +137,41 @@ foreach x of varlist stack_`yvar'* {
 	gen `x'_norm  = `x' - meanval_`yvar'
 }	
 	
-
-
 drop meanval*
+
 
 // this part is for the mid points 		
 
-summ date
-gen last = 1 if date==r(max)
+summ `xvar'
+gen last = 1 if `xvar'==r(max)
 
 
 ds stack_`yvar'*norm
 local items : word count `r(varlist)'
 local items = `items' - 2
-display `items'
+
+
 
 forval i = 0/`items' {
-local i0 = `i'
-local i1 = `i' + 1
+	local i0 = `i'
+	local i1 = `i' + 1
 
-gen y`yvar'`i1'  = (stack_`yvar'`i0'_norm + stack_`yvar'`i1'_norm) / 2 if last==1
-
+	gen y`yvar'`i1'  = (stack_`yvar'`i0'_norm + stack_`yvar'`i1'_norm) / 2 if last==1
 }
+
+
 
 egen lastsum_`yvar'  = rowtotal(`yvar'*)  if last==1
 
 
 foreach x of varlist `yvar'* {
-	gen `x'_share = (`x' / lastsum_`yvar') * 100
+	gen double `x'_share = (`x' / lastsum_`yvar') * 100
 	}
 
 
 drop lastsum*
 
 **** automate this part
-
-
 
 
 	ds stack_`yvar'*norm
@@ -169,41 +187,30 @@ drop lastsum*
 				local condition 
 			}
 		
+		   * Addition of percent and format (Marc Kaulisch)
+		   if `"`percent'"'!="" {
+			local ylabvalues `"string(`yvar'`x'_share, `"`format'"') + "%""'
+		   }
+		   else {
+			local ylabvalues `"string(`yvar'`x', `"`format'"')"'
+		   }
 
 		local t : var lab `yvar'`x'
-		gen label`x'_`yvar'  = "`t'" + " (" + string( `yvar'`x', "%12.0f") + ")"	if last==1  `condition'
+		gen label`x'_`yvar'  = "`t'" + " (" + `ylabvalues' + ")"	if last==1  `condition' // 
+
 	}
 
 
 
-	if "`xticks'" == "" {
-		summ `xvar'
-		local xmin = r(min)
-		local xmax = r(max) + (r(max) - r(min)) * 0.2
-		local gap = round((`xmax' - `xmin') / 10)
-		local xti  `xmin'(`gap')`xmax'
-	}
-	else {
-		local xti `xticks'
-	}	
 	
-
-	if "`xlabcolor'" == "" {
-		local xcolor  black
+	if "`ylabcolor'" != "palette" {
+		local ycolor  `ylabcolor'
 	}
-	else {
-		local xcolor `xlabcolor'
-	}	
 	
-	if "`ylabcolor'" == "" {
-		local ycolor  black
-	}
-	else {
-		local ycolor `ylabcolor'
-	}	
+	
 	
 	if "`palette'" == "" {
-		local mycolor CET C6
+		local mycolor "CET C6"
 	}
 	else {
 		local mycolor `palette'
@@ -223,37 +230,6 @@ drop lastsum*
 		local linew `lwidth'
 	}
 	
-	if "`xtitle'" == "" {
-		local xtitle = ""
-	}
-	else {
-		local xtitle = `xtitle'
-	}	
-
-	/*   // removed for now
-	if "`xlinepattern'" != "" {
-		local xp solid
-	}
-	else {
-		local xp `xlinepattern'
-	}
-	*/
-	
-	if "`xlinecolor'" == "" {
-		local xc gs13
-	}
-	else {
-		local xc `xlinecolor'
-	}	
-	
-	
-	if "`xlinewidth'" == "" {
-		local xw vthin
-	}
-	else {
-		local xw `xlinewidth'
-	}		
-	
 
 summ stack_`yvar'0_norm	
 local ymin = -1 * abs(r(min)) * 1.05
@@ -266,8 +242,7 @@ local items = `items' - 2
 display `items'
 
 	
-forval x = 0/`items' {  // total observations - 1
-*display "`x'"
+forval x = 0/`items' {  
 
 local numcolor = `items' + 1
 
@@ -276,10 +251,14 @@ colorpalette `mycolor', n(`numcolor') nograph
 	local x0 =  `x'
 	local x1 =  `x' + 1
 
-
 	local areagraph `areagraph' rarea stack_`yvar'`x0'_norm stack_`yvar'`x1'_norm `xvar', fcolor("`r(p`x1')'") fi(100) lcolor(`linec') lwidth(`linew') ||
+
 	
-	local labels    `labels'  (scatter y`yvar'`x1' `xvar' if last==1, mlabel(label`x1'_`yvar') mcolor(none) mlabsize(`ylabsize') mlabcolor(`ylabcolor')) || 			
+	if "`ylabcolor'" == "palette" {
+		local ycolor  "`r(p`x1')'"
+	}	
+	
+	local labels    `labels'  (scatter y`yvar'`x1' `xvar' if last==1, mlabel(label`x1'_`yvar') mcolor(none) mlabsize(`ylabsize') mlabcolor("`ycolor'")) || 			
 		
 
 	}
@@ -288,14 +267,13 @@ colorpalette `mycolor', n(`numcolor') nograph
 	twoway /// 
 		`areagraph' ///
 		`labels'	///
-	, ///
-		legend(off) ///
-		yscale(noline) xscale(noline) ///
-		ytitle("") xtitle("")  ///
-		ylabel(`ymin' `ymax', nolabels noticks nogrid) ///
-		xlabel(`xti', labsize(`xlabsize') labcolor(`xlabcolor') angle(vertical) glwidth(`xw') glpattern(solid) glcolor(`xc')) ///
-		title(`title') subtitle(`subtitle') ///
-		note(`note') scheme(`scheme')
+			, ///
+				legend(off) ///
+				yscale(noline) xscale(noline) ///
+				ytitle("") `xtitle'  ///
+				ylabel(`ymin' `ymax', nolabels noticks nogrid) ///
+				`xlabel' xscale(range(`xrmin' `xrmax'))   ///  
+				`title' `subtitle' `note' `scheme' `xsize' `ysize'
 
 restore
 }		

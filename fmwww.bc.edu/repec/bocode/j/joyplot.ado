@@ -1,5 +1,7 @@
-*! Joyplot v1.4 26 Apr 2022: axes reverse options added. various optimizations
+*! Joyplot v1.42 22 Jun 2022: y-axis was bugged in the over plot
 *! Asjad Naqvi 
+* v1.41 20 Jun 2022: installations fix, numerical over fix.
+* v1.4  26 Apr 2022: axes reverse options added. various optimizations
 * v1.3  24 Apr 2022: stacked densities added. label placement optimized. 
 * v1.21 15 Apr 2022: xsize/ysize added. ylabels on right option added.
 * v1.2  13 Apr 2022: xlabel angle, local normalization, lines only option added
@@ -42,7 +44,7 @@ version 15
 	
 	capture findfile labmask.ado
 	if _rc != 0 {
-		display as error "The labmask package is missing. Click {stata ssc install labmask, replace} to install."
+		display as error "The {it:labmask} package is missing. Click {stata ssc install labutil, replace} to install."
 		exit
 	}		
 	
@@ -59,7 +61,7 @@ version 15
 
 if `length' == 2 {
 
-		gettoken yvar xvar : varlist 
+	gettoken yvar xvar : varlist 
 		
 	
 qui {	
@@ -75,7 +77,7 @@ preserve
 	cap drop _fillin
 	
 	
-	tempvar myvar // duplicate the original data
+	tempvar myvar // duplicate 
 	gen `myvar' = `yvar' 	
 	*replace `myvar' = . if `myvar' < 0   // TODO: see how to deal with negative values 
 	
@@ -86,6 +88,13 @@ preserve
 			encode `over', gen(`over2')
 			local over `over2' 
 		}
+		else {
+			tempvar tempov over2
+			tostring `over', gen(`tempov')	
+			encode `tempov', gen(`over2')
+			local over `over2' 
+		}
+	
 		
 	if "`yreverse'" != "" {
 					
@@ -227,8 +236,6 @@ preserve
 		replace `xpoint' = r(max) + ((r(max) - r(min)) * 0.01) + `offset' if `tag'==1
 	}
 	
-
-	
 	
 	gen `ypoint' = .
 
@@ -343,14 +350,19 @@ preserve
 	
 	cap confirm numeric var `over'
 	
-	if _rc!=0 {
-			tempvar over2
-			encode `over', gen(`over2')
-			local over `over2' 
-		}
-		
-
-		
+	if _rc!=0 {  // if string
+		tempvar over2
+		encode `over', gen(`over2')
+		local over `over2' 
+	}
+	else {
+		tempvar tempov over2
+		egen `over2' = group(`over')
+		labmask `over2', val(`over')
+		local over `over2' 
+	}
+	
+			
 	if "`yreverse'" != "" {
 					
 		clonevar over2 = `over'
@@ -368,6 +380,7 @@ preserve
 			labmask `over', val(over2)
 		}
 	}		
+		
 		
 		
 	if "`bwidth'" == "" {
@@ -412,6 +425,8 @@ preserve
 	
 	local xrmin = `xrmin' - `pad'
 	local xrmax = `xrmax' + `pad'
+	
+	
 	
 	
 	// normalization 
@@ -517,11 +532,9 @@ preserve
 	
 	
 	if ("`ylabposition'" == "") | ("`ylabposition'" == "left") {
-		*qui summ `xvar'
 		replace `xpoint' = `xrmin' - ((`xrmax' - `xrmin') * 0.10) + `offset' if `tag'==1
 	}
 	if ("`ylabposition'" == "right")  {	
-		*qui summ `xvar'
 		replace `xpoint' = `xrmax' + ((`xrmax' - `xrmin') * 0.01) + `offset' if `tag'==1
 	}
 	
@@ -551,6 +564,8 @@ preserve
 	}
 	
 	
+	
+	
 	summ `ybot1', meanonly
 	local shift = r(mean)
 	
@@ -559,13 +574,12 @@ preserve
 	foreach x of local lvls {
 		replace `ybot`x'' = `ybot`x'' - `shift'
 		replace `ytop`x'' = `ytop`x'' - `shift'	
-		
 	}
 	
 	
 	levelsof `over', local(lvls)
 	local items = `r(r)'
-
+	
 	foreach x of local lvls {
 
 
@@ -608,7 +622,7 @@ preserve
 	
 	}
 	
-
+	
 	twoway  ///
 		`yli'	   ///
 		`mygraph'  ///
@@ -618,9 +632,9 @@ preserve
 			ylabel(, nolabels noticks nogrid) yscale(noline) ///
 			legend(off) `title' `subtitle' `note' `xtitle' `ytitle' `xrev'  ///
 			`xsize' `ysize' `scheme' `name' 
-
 		
-restore			
+		
+	restore			
 	}
 }
 
@@ -633,3 +647,5 @@ end
 *********************************
 ******** END OF PROGRAM *********
 *********************************
+
+

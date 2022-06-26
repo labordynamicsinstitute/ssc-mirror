@@ -83,23 +83,22 @@ If neither {cmd:did} nor {cmdab:rd:d} option is active, the decomposition assume
 {marker s_examples}{title:Example}
 
 {pstd}Load Card (1995) data{p_end}
-{phang2}{bf:{stata "use http://www.stata.com/data/jwooldridge/eacsap/card, clear" : . use http://www.stata.com/data/jwooldridge/eacsap/card, clear}}{p_end}
+{phang2}. {stata "use http://www.stata.com/data/jwooldridge/eacsap/card, clear"}{p_end}
 
-{pstd} Run OLS and IV regressions as usual ({cmd:ivolsdec} works even without running these commands beforehand) {p_end}
-{phang2}{bf:{stata "regress lwage educ age black smsa66 south66 sinmom14 kww, robust" : . regress lwage educ age black smsa66 south66 sinmom14 kww, robust}}{p_end}
-{phang2}{bf:{stata "ivregress 2sls lwage (educ=nearc4) age black smsa66 south66 sinmom14 kww, robust" : . ivregress 2sls lwage (educ=nearc4) age black smsa66 south66 sinmom14 kww, robust}}{p_end}
+{pstd} Run OLS and IV regressions as usual ({cmd:ivolsdec} works even without running these commands beforehand){p_end}
+{phang2}. {stata "regress lwage educ age black smsa66 south66 sinmom14 kww, robust"}{p_end}
+{phang2}. {stata "ivregress 2sls lwage (educ=nearc4) age black smsa66 south66 sinmom14 kww, robust"}{p_end}
 
 {pstd}Run {cmd:ivolsdec} command to decompose the IV-OLS gap{p_end}
-{phang2}{bf:{stata "ivolsdec lwage (educ=nearc4) age black smsa66 south66 sinmom14 kww, xnb(i.educ) format(%7.3f)" : . ivolsdec lwage (educ=nearc4) age black smsa66 south66 sinmom14 kww, xnb(i.educ) format(%7.3f)}}{p_end}
+{phang2}. {stata "ivolsdec lwage (educ=nearc4) age black smsa66 south66 sinmom14 kww, xnb(i.educ) format(%7.3f)"}
 
 {pstd}May try a different specification{p_end}
-{phang2}{bf:{stata "gen educ_c=max(educ-12,0)" : . gen educ_c=max(educ-12,0)}}{p_end}
-{phang2}{bf:{stata "ivolsdec lwage (educ=nearc4) age black smsa66 south66 sinmom14 kww, xnb(i.educ) xib(educ_c) format(%7.3f)" : . ivolsdec lwage (educ=nearc4) age black smsa66 south66 sinmom14 kww, xnb(i.educ) xib(educ_c) format(%7.3f)}}{p_end}
+{phang2}. {stata "gen educ_c=max(educ-12,0)"}{p_end}
+{phang2}. {stata "ivolsdec lwage (educ=nearc4) age black smsa66 south66 sinmom14 kww, xnb(i.educ) xib(educ_c) format(%7.3f)"}{p_end}
 
 {pstd}Display weights on covariate groups and treatment levels in addition to the decomposition{p_end}
-{phang2}{bf:{stata "xtile kww_g=kww, nq(3)" : . xtile kww_g=kww, nq(3)}}{p_end}
-{phang2}{bf:{stata "ivolsdec lwage (educ=nearc4) age black smsa66 south66 sinmom14 kww, xnb(i.educ) tlevel(9/18) cgroup(ibn.south66 sinmom14 ibn.kww_g) format(%7.3f)" : . ivolsdec lwage (educ=nearc4) age black smsa66 south66 sinmom14 kww, xnb(i.educ) tlevel(9/18) cgroup(ibn.south66 sinmom14 ibn.kww_g) format(%7.3f)}}{p_end}
-
+{phang2}. {stata "xtile kww_g=kww, nq(3)"}{p_end}
+{phang2}. {stata "ivolsdec lwage (educ=nearc4) age black smsa66 south66 sinmom14 kww, xnb(i.educ) tlevel(9/18) cgroup(ibn.south66 sinmom14 ibn.kww_g) format(%7.3f)"}{p_end}
 
 {title:Stored results}
 

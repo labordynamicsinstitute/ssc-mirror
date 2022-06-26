@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 Aug 24 2021}{...}
+{* *! version .0 Jun 24 2022}{...}
 {cmd:help xteventplot}
 {hline}
 
@@ -44,7 +44,6 @@
 {synopt:{opt suptciplotopts(string)}} graphics options for sup-t confidence interval plot{p_end}
 {synopt:{opt staticovplotopts(string)}} graphics options for smoothest path plot{p_end}
 {synopt:{opt trendplotopts(string)}} graphics options for extrapolated trend plot{p_end}
-{synopt:{opt scatterplotopts(string)}} graphics options for coefficient scatter plot{p_end}
 {synopt:{opt addplots(string)}} plot to be overlaid on event-study plot{p_end}
 {synopt:{it: additional_options}} additional options to be passed to {cmd:twoway}{p_end}
 
@@ -107,7 +106,7 @@ all the estimates in the post event window.
 {opt , maxiter(integer)} sets the maximum number of inner iterations for optimization. The default is 100.
 
 {phang2}
-{opt , maxorder(integer)} sets the maximum order for the polynomial smoothest line. The default is 15.
+{opt , maxorder(integer)} sets the maximum order for the polynomial smoothest line. Maxorder must be between 1 and 10. The default is 10.
 
 {phang2} 
 {opt , technique(string)} sets the optimization technique for the inner iterations of the quadratic program.

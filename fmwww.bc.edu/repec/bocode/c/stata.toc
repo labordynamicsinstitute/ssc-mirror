@@ -264,4 +264,5 @@ p cv_regress module to estimate the leave-one-out error for linear regression mo
 p cvauroc module to compute Cross-validated Area Under the Curve for ROC Analysis after Predictive Modelling for Binary Outcomes
 p cvcrand module for efficient design and analysis of Cluster Randomized Trials
 p cvxhull module to compute and plot convex hulls of bivariate data
+p cwmglm module to estimate Cluster Weighted Models (CWM)
 p cycleplot module for cycle plot (month plot or seasonal subseries plot)

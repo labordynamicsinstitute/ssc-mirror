@@ -1,4 +1,4 @@
-* xteventplot.ado 1.00 Aug 24 2021
+* xteventplot.ado 2.00 Jun 24 2022
 
 version 11.2
 
@@ -9,10 +9,10 @@ program define xteventplot
 	[	
 	noci /* Supress confidence intervals */
 	nosupt /* Omit sup-t CI */
-	nozeroline */ Supress line at 0 */
-	nominus1label */ Supress label for value of dependent variable at event time = -1 */
-	noprepval */ Supress p-vale for pre-trends test */
-	nopostpval */ Supress p-vale for leveling-off test */
+	nozeroline /* Supress line at 0 */
+	nominus1label /* Supress label for value of dependent variable at event time = -1 */
+	noprepval /* Supress p-vale for pre-trends test */
+	nopostpval /* Supress p-vale for leveling-off test */
 	suptreps(integer 1000) /* Draws from multivariate normal for sup-t CI calculations */
 	overlay(string) /* Overlay plots: Trend, IV, or static */	
 	y /* Plot for dependent variable in IV setting */
@@ -66,8 +66,8 @@ program define xteventplot
 		exit 301
 	}
 	
-	if "`overlay'"=="trend" & "`=e(trend)'"!="trend" {
-		di as err "option {bf:overlay(trend)} only allowed after {cmd:xtevent, trend()}"
+	if "`overlay'"=="trend" & "`=e(trend)'"!="trend" { 
+		di as err "option {bf:overlay(trend)} only allowed after {cmd:xtevent, trend(, saveoverlay)}"
 		exit 301
 	}
 	
@@ -81,7 +81,7 @@ program define xteventplot
 	tempname b V
 	if inlist("`overlay'","trend","iv")  {
 		mat `b' = e(deltaov)
-		mat `V' = e(Vdeltaov)			
+		mat `V' = e(Vdeltaov)
 	}
 	else if "`y'" !="" {
 		if "`=e(method)'"!="iv" {
@@ -108,7 +108,7 @@ program define xteventplot
 	if "`ci'"=="noci" di as txt _n "option {bf:noci} has been specified. Confidence intervals won't be displayed"
 	if "`supt'"=="nosupt" di as txt _n "option {bf:nosupt} has been specified. Sup-t confidence intervals won't be displayed or calculated"
 	if "`zeroline'"=="nozeroline" di as txt _n "option {bf:nozeroline} has been specified. The reference line at 0 won't be displayed"
-	if "`minus1label'"=="nominus1label" di as txt _n "{option bf:nominus1label} has been specified. The label for the value of the depedent variable at event-time = -1 won't be displayed"
+	if "`minus1label'"=="nominus1label" di as txt _n "option {bf:nominus1label} has been specified. The label for the value of the depedent variable at event-time = -1 won't be displayed"
 	if "`prepval'"=="noprepval" di as txt _n "option {bf:noprepval} has been specified. The p-value for a pretrends test won't be displayed"
 	if "`postpval'"=="nopostpval" di as txt _n "option {bf:nopostpval} has been specified. The p-value for a test of effects leveling-off won't be displayed"
 	
@@ -171,10 +171,10 @@ program define xteventplot
 	loc kmin : word 1 of `kgs'
 	loc ksize : list sizeof kgs
 	loc kmax : word `ksize' of `kgs'
-	
+
 	* Omit right and left endpoints if trend
 	
-	if "`=e(trend)'"!="." {
+	if "`=e(trend)'"!="." { 
 		if "`kmiss'"=="." loc kmiss "`kmax',`kmin'"
 		else loc kmiss "`kmiss',`kmax',`kmin'"
 	}
@@ -194,11 +194,55 @@ program define xteventplot
 		loc cmdstatic = r(cmdstatic)
 		loc cmdpredict = r(cmdpredict)
 		loc depvar = e(depvar)
-		loc cmdpredict: subinstr local cmdpredict "`depvar'" "`yhat'", word	
 		
-		qui est store `estimates'						
-		`cmdstatic'
-		qui predict `yhat' 
+		*find name of policyvar 
+		loc policyvarp = r(policyvarp)
+		
+		*parse impute option 
+		loc impute = r(imputep)
+		if  "`impute'"=="." loc impute=""
+		parseimp `impute'
+		loc imptype = r(imptype)
+		if  "`imptype'"=="." loc imptype=""
+		loc saveimp = r(saveimpl)
+		if  "`saveimp'"=="." loc saveimp=""
+		
+		loc cmdpredict: subinstr local cmdpredict "`depvar'" "`yhat'", word	
+		qui est store `estimates'
+		
+		*the user didn't specify impute option
+		if "`impute'"==""{
+			`cmdstatic'
+		}
+		*the user specified impute option 
+		else{
+			*the user indicated not to save the imputed policyvar
+			if "`saveimp'"=="" {
+				 
+				* Check for a variable named as the imputed policyvar
+				cap unab oldkvars : `policyvarp'_imputed
+				if !_rc {
+					di as err _n "{bf:xteventplot, overlay(static)} requieres to temporarily add the imputed policyvar to the database to estimate the static overlay, but you already have a variable named `policyvarp'_imputed."
+					di as err _n "Please drop or rename this variable before proceeding."
+					exit 110
+				}				
+				*change to save the imputed policyvar
+				loc cmdstatic="`cmdstatic' impute(`imptype', saveimp)"
+				`cmdstatic'
+			}
+			*the user indicated to save the imputed policyvar 
+			else {
+				loc cmdstatic=regexr("`cmdstatic'","policyvar\(*`policyvarp'*\)", "") 
+				loc cmdstatic="`cmdstatic'" + " policyvar(`policyvarp'_imputed)"
+				`cmdstatic'		
+			}
+			*change to not to save the imputed policyvar for the prediction
+			loc cmdpredict="`cmdpredict' impute(`imptype')"
+		}
+		
+		qui predict `yhat'
+		*had temporarily added the policyvar, drop it
+		if "`impute'"!="" & "`saveimp'"=="" drop `policyvarp'_imputed
 		qui `cmdpredict'
 		mat `bstatic' = e(delta)
 		mat `Vstatic' = e(Vdelta)		
@@ -339,7 +383,8 @@ program define xteventplot
 		* "
 		di _n "Note: Smoothest line drawn for system confidence level = `=c(level)'"
 		parsesmpath `smpath'
-		loc postwindow = r(postwindow)		
+		loc postwindow = r(postwindow)	
+		loc maxorderinput=r(maxorder) 
 		loc plottype=r(plottype)		
 		cap _return drop smpathparse
 		_return hold smpathparse			
@@ -349,6 +394,11 @@ program define xteventplot
 			di as err "Window for smoothest line must be smaller than window for the estimates. For a line on the entire window, omit the {bf:postwindow} option"
 			exit 301
 		}
+		*error if user chooses order greater than 10
+		if `maxorderinput'>10{
+			di as err "The maximum allowed order is 10"
+			exit 301
+		} 
 		
 		if "`plottype'"=="." loc plottype "line"
 				
@@ -390,7 +440,7 @@ program define xteventplot
 		cap qui mata:	polyline(1-st_numscalar("c(level)")/100,"r(maxiter)","r(technique)",dhat,Vhat0,"r(maxorder)",errorcodem=.,errorcodep=.,convergedm=.,convergedp=.,maxedout=.,param=.,WB=.)	
 	
 		mata: st_numscalar("maxedout",maxedout)		
-		
+
 		if !maxedout {
 		
 			mata: p=param
@@ -473,21 +523,22 @@ program define xteventplot
 	else loc note ""
 	
 	if "`proxy'"!="" {
-		loc y1plot : di %-9.2f `=e(x1)'
+		loc y1plot : di %9.4g `=e(x1)'
 		loc y1plot=strtrim("`y1plot'")
 		loc y1plot `""0 (`y1plot')" "'
 	}
 	else {
-		loc y1plot : di %-9.2f `=e(y1)'
+		loc y1plot : di %9.4g `=e(y1)'
 		loc y1plot=strtrim("`y1plot'")
 		loc y1plot `""0 (`y1plot')" "'
 	}
 	
 	* Overlay plot for trend
 	
-	if "`=e(trend)'"=="trend" & "`overlay'"=="trend" {
-		mat mattrendy = e(mattrendy)
+	if "`=e(trend)'"=="trend" & "`overlay'"=="trend" { 
+		mat mattrendy = e(mattrendy) 
 		mat mattrendx = e(mattrendx)
+		 
 		tempname trendy trendx
 		svmat mattrendy, names(`trendy')
 		svmat mattrendx, names(`trendx')
@@ -517,7 +568,7 @@ program define xteventplot
 	* Label for value of y at -1 by default, unless supressed
 	if "`minus1label'"=="nominus1label" loc ylab ""
 	else loc ylab "ylab(#5 0 `y1plot')"	
-	
+
 	tw  `smgraph' `smplotopts' || `cigraph' `ciplotopts' || `cigraphsupt' `suptciplotopts' || `cmdov' , xtitle("") ytitle("") `xaxis' pstyle(p1) `ylab' `note' msymbol(circle triangle_hollow) `scatterplotopts' || `addplots'	|| `trendplot' `trendplotopts' ||,`zeroline' `options' `legend'
 	cap qui mata: mata drop kgs		
 end
@@ -526,7 +577,7 @@ end
 cap program drop parsesmpath
 program define parsesmpath, rclass
 
-	syntax [anything] , [maxiter(integer 100) technique(string) postwindow(real 0) maxorder(integer 15)]
+	syntax [anything] , [maxiter(integer 100) technique(string) postwindow(real 0) maxorder(integer 10)]
 	
 	return local plottype "`anything'"	
 	return scalar maxiter=`maxiter'
@@ -563,17 +614,28 @@ end
 
 cap program drop parsecmdline
 program define parsecmdline, rclass
-	syntax anything [aw fw pw] [if][in], samplevar(string) [window(numlist min=1 max=2 integer) savek(string) plot nostaggered proxy(string) *]
+	syntax anything [aw fw pw] [if][in], samplevar(string) [window(numlist min=1 max=2 integer) savek(string) plot proxy(string) policyvar(string) impute(string) *]
 	
 	if "`if'"=="" loc ifs "if `samplevar'"
 	else loc ifs "`if' & `samplevar'"
 	
-	loc cmdstatic `anything' [`weight'`exp'] `ifs' `in', `options' proxy(`proxy') static
-	loc cmdpredict `anything' [`weight'`exp'] `if' `in', window(`window') `staggered' `options' proxy(`proxy')
+	loc cmdstatic `anything' [`weight'`exp'] `ifs' `in', policyvar(`policyvar') `options' proxy(`proxy') static
+	loc cmdpredict `anything' [`weight'`exp'] `if' `in', policyvar(`policyvar') window(`window') `options' proxy(`proxy')
 	return local cmdstatic = "`cmdstatic'"
 	return local cmdpredict = "`cmdpredict'"
+	return local policyvarp = "`policyvar'"
+	return local imputep = "`impute'"
 	
 end
+
+*program to parse impute option
+cap program drop parseimp
+program define parseimp, rclass
+	syntax [anything] , [saveimp]
+	return local imptype "`anything'"
+	return local saveimpl "`saveimp'"
+end	
+
 
 mata
 
