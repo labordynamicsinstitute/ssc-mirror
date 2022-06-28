@@ -16,13 +16,13 @@ d Requires: Stata version 16
 d
 d Distribution-Date: 20220625
 d
-d Author: Daniele Spinelli , Università degli Studi di Bergamo
+d Author: Daniele Spinelli , University of Milano-Bicocca
 d Support: email daniele.spinelli@@unimib.it
 d
 d Author: Salvatore Ingrassia  , Università degli Studi di Catania
 d Support: email s.ingrassia@@unict.it
 d
-d Author: Giorgio Vittadini , Università degli Studi di Bergamo
+d Author: Giorgio Vittadini , University of Milano-Bicocca
 d Support: email giorgio.vittadini@@unimib.it
 d
 f cwmglm.ado

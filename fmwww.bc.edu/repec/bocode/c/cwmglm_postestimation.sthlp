@@ -72,3 +72,10 @@
 {pstd}Bootstrap{p_end}
 {phang2} {cmd:. cwmbootstrap, nreps(1000)}
 
+{title:Authors}
+
+{phang} Daniele Spinelli, corresponding author (University of Milano-Bicocca, daniele.spinelli@unimib.it) {p_end}
+{phang} Salvatore Ingrassia (University of Catania, s.ingrassia@unict.it) {p_end}
+{phang} Giorgio Vittadini (University of Milano-Bicocca, giorgio.vittadinid@unimib.it) {p_end}
+
+

@@ -90,8 +90,12 @@ preserve
 		}
 		else {
 			tempvar tempov over2
-			tostring `over', gen(`tempov')	
-			encode `tempov', gen(`over2')
+			egen   `over2' = group(`over')
+			
+			if "`: value label `over''" != "" {
+				decode `over', gen(`tempov')		
+				labmask `over2', val(`tempov')
+			}
 			local over `over2' 
 		}
 	
@@ -349,7 +353,7 @@ preserve
 	// finetune the over variable
 	
 	cap confirm numeric var `over'
-	
+
 	if _rc!=0 {  // if string
 		tempvar over2
 		encode `over', gen(`over2')
@@ -357,8 +361,12 @@ preserve
 	}
 	else {
 		tempvar tempov over2
-		egen `over2' = group(`over')
-		labmask `over2', val(`over')
+		egen   `over2' = group(`over')
+		
+		if "`: value label `over''" != "" {
+			decode `over', gen(`tempov')		
+			labmask `over2', val(`tempov')
+		}
 		local over `over2' 
 	}
 	

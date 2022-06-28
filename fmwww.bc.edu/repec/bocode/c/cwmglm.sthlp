@@ -256,6 +256,12 @@ Celeux, G., & Govaert, G. (1995). {browse "https://www.sciencedirect.com/science
 
 Ingrassia, S., Punzo, A., Vittadini, G., & Minotti, S. C. (2015). {browse "https://link.springer.com/article/10.1007/s00357-015-9177-z" :Erratum to: The generalized linear mixed cluster-weighted model}. Journal of Classification, 32(2), 327-355.
 
+{title:Authors}
+
+{phang} Daniele Spinelli, corresponding author (University of Milano-Bicocca, daniele.spinelli@unimib.it) {p_end}
+{phang} Salvatore Ingrassia (University of Catania, s.ingrassia@unict.it) {p_end}
+{phang} Giorgio Vittadini (University of Milano-Bicocca, giorgio.vittadinid@unimib.it) {p_end}
+
 
 
 
