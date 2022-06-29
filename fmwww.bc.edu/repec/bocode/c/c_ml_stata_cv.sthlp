@@ -1,12 +1,12 @@
 {smcl}
-{* 09May2022}{...}
+{* 28June2022}{...}
 {cmd:help c_ml_stata_cv}
 {hline}
 
 {title:Title}
 
 {p2colset 5 16 21 2}{...}
-{p2col :{hi:c_ml_stata_cv} {hline 2}}Machine learning regression in Stata{p_end}
+{p2col :{hi:c_ml_stata_cv} {hline 2}}Machine learning classification in Stata{p_end}
 {p2colreset}{...}
 
 
@@ -226,7 +226,7 @@ or (2) {it:distance} (observations weighted by the inverse of their distance fro
 
 
 {pstd}{bf:Example 1}: Default classification tree with train/test predictions{p_end}
-{phang2} Load intial dataset{p_end}
+{phang2} Load initial dataset{p_end}
 {phang3} {stata webuse iris, clear}{p_end}
 {phang2} Split dataset into train and test datasets{p_end}
 {phang3} {stata splitsample, generate(svar, replace) split(0.80 0.20)}{p_end}
@@ -246,7 +246,7 @@ or (2) {it:distance} (observations weighted by the inverse of their distance fro
 {phang3} {stata c_ml_stata_cv iris seplen sepwid petlen petwid , mlmodel("tree") data_test("iris_test") default prediction("pred") seed(10)}{p_end}
 
 {pstd}{bf:Example 2}: Classification tree with train/test predictions, and cross-validation{p_end}
-{phang2} Load intial dataset{p_end}
+{phang2} Load initial dataset{p_end}
 {phang3} {stata webuse iris, clear}{p_end}
 {phang2} Split dataset into train and test datasets{p_end}
 {phang3} {stata splitsample, generate(svar, replace) split(0.80 0.20)}{p_end}
@@ -266,7 +266,7 @@ or (2) {it:distance} (observations weighted by the inverse of their distance fro
 {phang3} {stata c_ml_stata_cv iris seplen sepwid petlen petwid , mlmodel("tree") data_test("iris_test") tree_depth(3) prediction("pred") cross_validation("CV") n_folds(5) seed(10)}{p_end}        
         
 {pstd}{bf:Example 3}: Classification tree with train/test predictions, cross-validation, and optimal tuning{p_end}
-{phang2} Load intial dataset{p_end}
+{phang2} Load initial dataset{p_end}
 {phang3} {stata webuse iris, clear}{p_end}
 {phang2} Split dataset into train and test datasets{p_end}
 {phang3} {stata splitsample, generate(svar, replace) split(0.80 0.20)}{p_end}
@@ -312,5 +312,5 @@ Raschka, S., Mirjalili, V. 2019. {it:Python Machine Learning}. 3rd Edition, Pack
 {dlgtab:Also see}
 
 {psee}
-Online: {helpb python}, {helpb c_ml_stata_cv}, {helpb srtree}, {helpb srtree}, {helpb subset}
+Online: {helpb python}, {helpb c_ml_stata_cv}, {helpb srtree}, {helpb sctree}, {helpb subset}
 {p_end}

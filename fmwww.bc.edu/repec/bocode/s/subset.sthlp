@@ -1,5 +1,5 @@
 {smcl}
-{* 17may2019}{...}
+{* 28june2022}{...}
 {cmd:help subset}
 {hline}
 
@@ -15,7 +15,7 @@
 {hi:subset}
 {it:outcome} 
 [{it:varlist}]
-{ifin}
+{ifin},
 {cmd:model}{cmd:(}{it:{help subset##modeltype:modeltype}}{cmd:)}
 {cmd:rversion}{cmd:(}{it:R_version}{cmd:)}
 [{cmd:nvmax}{cmd:(}{it:number}{cmd:)}

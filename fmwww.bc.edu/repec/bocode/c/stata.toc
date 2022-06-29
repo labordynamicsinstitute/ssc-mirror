@@ -76,6 +76,7 @@ p chm module to copy hard missings
 p choi_lr_test module to perform Choi's likelihood ratio test
 p chowreg module to compute Structural Change Regressions and Chow Test
 p chowtest module to perform Chow test for structural break
+p chrdreg module to estimate high-dimensional regressions based on cluster-robust double/debiased machine learning
 p chunky module to chunk a large text file into smaller parts
 p chunky8 module to chunk a large text file into smaller parts (version 8)
 p ci2 module to compute confidence intervals for correlations
