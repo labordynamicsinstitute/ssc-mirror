@@ -234,6 +234,7 @@ p cquadr module to estimate Quadratic Exponential models running the cquad R pac
 p cquantile module to generate corresponding quantiles
 p crater module to calculate computer scorer vs. human rater agreement statistics
 p creplace module to exchange values cyclically between variables
+p crhdreg module to estimate high-dimensional regressions based on cluster-robust double/debiased machine learning
 p crm module to implement the continual reassessment model 
 p crossfold module to perform k-fold cross-validation
 p crossplot module for scatter (or other twoway) plots for each y vs each x variable
