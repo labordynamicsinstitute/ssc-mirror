@@ -1,0 +1,26 @@
+d 'POWER_ONEROC': module to compute power and sample size for a one-sample ROC test
+d
+d  power oneroc computes sample size or power for a one-sample
+d receiver operating characteristic (ROC) analysis, based on
+d equations 2 and 3 in Obuchowski, Lieber and Wians (2004). If auc0
+d is not specified, the default null hypothesis is set to 0.50,
+d indicating no discrimination ability. Alternatively, the user can
+d specify any value between 0.50 and 1.0 to represent the null
+d hypothesis. 
+d
+d KW: ROC curve
+d KW: area under the curve
+d KW: power
+d KW: sample size
+d KW: one-sample
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20220630
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f power_cmd_oneroc.ado
+f power_cmd_oneroc_init.ado
+f power_oneroc.sthlp
