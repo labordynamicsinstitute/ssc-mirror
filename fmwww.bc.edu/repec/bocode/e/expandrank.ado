@@ -1,4 +1,4 @@
-*! version 1.0.1  20Jun2022 
+*! version 1.0.2  01Jul2022 
 cap program drop expandrank 
 program define expandrank
 
@@ -17,7 +17,7 @@ program define expandrank
 	local N = _N
 	local E `exp'
 	
-	if "`if'`in'"!="" 	marksample touse
+	if `"`if'`in'"'!="" marksample touse
 	if "`name'"=="" 	local name rank
 	if "`sort'"!="" {	
 						sort `sort'
@@ -34,7 +34,7 @@ quietly {
 		whichtype_expr(`base' + `E' - 1)
 		gen $TYPE_EXPRNK `name' = `base' + (_n>`N')*(1 + mod((_n-`N'-1),`E'-1)) 
 		
-		if "`if'`in'"!="" {
+		if `"`if'`in'"'!="" {
 			replace `name' = . if `touse'==0
 		}
 	}
@@ -42,7 +42,7 @@ quietly {
 		whichtype_expr(`base' +`E' - 2)
 		gen $TYPE_EXPRNK `name' = `base' + (_n>`N')*(1 + mod((_n-`N'-1),`E'-1)) - 1
 		
-		if "`if'`in'"!="" {
+		if `"`if'`in'"'!="" {
 			drop if _n <= `N' & `touse'==1
 			replace `name' = . if `touse'==0
 		}

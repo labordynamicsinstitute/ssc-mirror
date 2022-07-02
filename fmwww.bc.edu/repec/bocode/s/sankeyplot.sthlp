@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 16june2022}{...}
+{* *! version 1.1 01july2022}{...}
 {vieweralsosee "[G] graphics" "mansection G graphics"}{...}
 {vieweralsosee "" "--"}{...}
 {viewerjumpto "Syntax" "sankeyplot##syntax"}{...}
@@ -26,11 +26,12 @@ help for {hi:sankeyplot}
    {cmd:sankeyplot} {var} {it:clustervar} {it:domainvar} {ifin} {cmd:, long} [{help sankeyplot##comopt:{it:options}}]
 
 
-{synoptset 30 tabbed}{...}
+{synoptset 37 tabbed}{...}
 {synopthdr}
 {synoptline}
 {syntab :Options}
 {synopt :{cmdab:perc:ent}}relative frequencies instead of absolute number of observations{p_end}{...}
+{synopt :{cmdab:p:oints(}#{cmdab:)}}draw flows via # points between bars (deafult is points(10)){p_end}{...}
 {synopt :{cmdab:miss:ing}}plot missing values of {it:varlist} (default is to omit them){p_end}{...}
 {synopt :{cmdab:force}}generate graph although variables in {it:varlist} have many levels {p_end}{...}
 {synopt :{cmdab:barw:idth(}#{cmdab:)}}width of bars (default is barwidth(0.1)){p_end}{...}
@@ -43,13 +44,15 @@ help for {hi:sankeyplot}
      {it:Bar labels}
 {synopt :{cmdab:blabel(vallabel|catlabel)}}adds labels to bars{p_end}{...}
 {synopt :{cmdab:blabsize(}{help textsizestyle}{cmdab:)}}barlabels: size of text{p_end}{...}
-{synopt :{cmdab:blabcolor(}{help colorstyle}{cmdab:)}}barlabels: color and opacity of text{p_end}{...}
+{synopt :{cmdab:blabcol:or(}{help colorstyle}{cmdab:)}}barlabels: color and opacity of text{p_end}{...}
+{synopt :{cmdab:blaborient:ation(}{help orientationstyle}{cmd:)}}barlabels: orientation of label {p_end}{...}
 {synopt :{cmdab:blabformat(}{help %fmt}{cmd:)}}barlabels: format label values per %fmt{p_end}{...}
 
      {it:Flow labels}
 {synopt :{cmdab:flowlabel(left|right)}}adds labels to flows{p_end}{...}
 {synopt :{cmdab:flowlabsize(}{help textsizestyle}{cmdab:)}}flowlabels: size of text{p_end}{...}
-{synopt :{cmdab:flowlabcolor(}{help colorstyle}{cmdab:)}}flowlabels: color and opacity of text{p_end}{...}
+{synopt :{cmdab:flowlabcol:or(}{help colorstyle}{cmdab:)}}flowlabels: color and opacity of text{p_end}{...}
+{synopt :{cmdab:flowlaborient:ation(}{help orientationstyle}{cmd:)}}flowlabels: orientation of label {p_end}{...}
 {synopt :{cmdab:flowlabformat(}{help %fmt}{cmd:)}}flowlabels: format label values per %fmt{p_end}{...}
 
 {synopt :{it:twoway_options}}Any options documented in  {manhelpi twoway_options G-3}{p_end}{...}
@@ -60,20 +63,26 @@ help for {hi:sankeyplot}
 {marker description}{...}
 {title:Description}
 
+{pstd}
+{hi:sankeyplot} creates a sankey diagram, which visualizes flow of the values of one variable to another. 
 
-{hi:sankeyplot} creates a sankey diagram, which visualizes flow of the values of {break}  one variable to another. 
+{pstd}
+In the default setting, the command assumes that the data is given in a wide format (each variable presents a domain). The command takes two or more categorical variables as input, which should represent the same set of values across domains (e.g., waves or generations).
 
-In the default setting, the command assumes that the data is given in a wide format  {break} (each variable presents a domain). The command takes two or more categorical {break} variables as input, which should represent the same set of values {break} across domains (e.g., waves or generations).
+{pstd}
+If the data that should be plotted is in a long format (obsverations represent domains), specify the {cmd:long}-option and three variables as the input: the categorical variable that should be plotted, an identifier of the clusters (e.g., pid), and a domain variable (e.g., wave).
 
-If the data that should be plotted is in a long format (obsverations represent {break} domains), specify the {cmd:long}-option and three variables as the input: {break} the categorical variable that should be plotted, an identifier {break} of the clusters (e.g., pid), and a domain variable (e.g., wave).
-
-Altough it is most common to visualize flows among variables with the same set of {break} values, specifying two different set of values is also possible. Yet, note {break} that the legend and colors will be based on the variable mentioned {break} first in {it:varlist}. If two different variables are used it is recommended to {break} use the options {cmd:blabel(catlabel)} and {cmd:legend(off)}.
+{pstd}
+Altough it is most common to visualize flows among variables with the same set of values, specifying two different set of values is also possible. Yet, note that the legend and colors will be based on the variable mentioned first in {it:varlist}. If two different variables are used it is recommended to use the options {cmd:blabel(catlabel)} and {cmd:legend(off)}.
 
 {marker comopt}{...}
 {title:Options}
 
 {phang}
 {cmd:percent} specifies to plot the relative frequencies of the levels of the plotted variables. The default is to plot absolute frequencies.
+
+{phang}
+{cmd:points(}{it:#}{cmd:)} specifies the number of points between bars through which the flows are drawn. The default are 10 points, with a larger number increasing the smoothness and computational time.
 
 {phang}
 {cmd:missing} specifies to plot missing values in {it:varlist} as well. The default is to disregard them. Note that missing values can lead to an imbalance between start and end bars or they produce flows into empty bars. Instead of using {cmd:missing}, rather code missing values as distinct values in the underyling variables.
@@ -100,12 +109,14 @@ Altough it is most common to visualize flows among variables with the same set o
 {cmd:flowoptions(}{it:area_options}{cmd:)} allows most of the {help area_options} to change the look of the flows. Note that any specified option in {cmd:flowoptions()} affect all flows; specifying for instance {cmd:flowoptions(color(navy))} overrides any specification of the above options {cmd:colors()} and {cmd:flowcolors()} and depicts all flows in {it:navy}.
 
 {phang}
-{cmd:blabel(vallabel|catlabel)} adds either value-labels or the labels of the plotted categories to all bars. If {cmd:vallabel} and {cmd:percent} are specified, relative frequencies are presented in the bars; otherwise {cmd:vallabel} shows absolute frequencies. {break}
-{cmd:blabformat({it:%fmt})}, {cmd:blabsize({it:textsizestyle})}, and {cmd:blabcolor({it:colorstyle})} specify details about how the bar labels are presented. See {help format}, {manhelpi textsizestyle G-4}, and {manhelpi colorstyle G-4}.
+{cmd:blabel(vallabel|catlabel)} adds either value-labels or the labels of the plotted categories to all bars. If {cmd:vallabel} and {cmd:percent} are specified, relative frequencies are presented in the bars; otherwise {cmd:vallabel} shows absolute frequencies. 
+{break}
+{cmd:blabformat({it:%fmt})}, {cmd:blabsize({it:textsizestyle})}, {cmd:blaborientation({it:orientationstyle})}, and {cmd:blabcolor({it:colorstyle})} specify details about how the bar labels are presented. See {help format}, {manhelpi textsizestyle G-4}, {help orientationstyle}, and {manhelpi colorstyle G-4}.
 
 {phang}
-{cmd:flowlabel(left|right)} adds value-labels at the start or end of all flows. If {cmd:flowlabel()} and {cmd:percent} are specified, relative frequencies are presented in the flows; otherwise {cmd:flowlabel()} shows absolute frequencies. {break}
-{cmd:flowlabformat({it:%fmt})}, {cmd:flowlabsize({it:textsizestyle})}, and {cmd:flowlabcolor({it:colorstyle})} specify details about how the flow labels are presented. See {help format}, {manhelpi textsizestyle G-4}, and {manhelpi colorstyle G-4}.
+{cmd:flowlabel(left|right)} adds value-labels at the start or end of all flows. If {cmd:flowlabel()} and {cmd:percent} are specified, relative frequencies are presented in the flows; otherwise {cmd:flowlabel()} shows absolute frequencies. 
+{break}
+{cmd:flowlabformat({it:%fmt})}, {cmd:flowlabsize({it:textsizestyle})}, {cmd:flowlaborientation({it:orientationstyle})} and {cmd:flowlabcolor({it:colorstyle})} specify details about how the flow labels are presented. See {help format}, {manhelpi textsizestyle G-4}, {help orientationstyle}, and {manhelpi colorstyle G-4}.
 
 {phang}
 {it:twoway_options} allows for the inclusion of any additional {help twoway_options:graphing options} such as titles, axes, added lines, etc.
@@ -135,7 +146,7 @@ Altough it is most common to visualize flows among variables with the same set o
 {phang2}{cmd:. 	title("Educational Mobility Across Generations") }{p_end}
 
 {pstd}Highlighting the stream in the middle {p_end}
-{phang2}{cmd:. {stata "sankeyplot edu_0 edu_1, flowcol(gs12%80 maroon gs12%80)"}}{p_end}
+{phang2}{cmd:. {stata "sankeyplot edu_0 edu_1, flowcol(none maroon none)"}}{p_end}
 
 {pstd}Plotting more than two variables {p_end}
 {phang2}{cmd:. {stata "sankeyplot edu_0 edu_1 edu_2"}}{p_end}
