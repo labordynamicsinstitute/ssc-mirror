@@ -1,0 +1,28 @@
+d 'IVREG2M': module to identify treatment-effects estimates with potentially misreported and endogenous program participation
+d
+d  ivreg2m can be invoked to estimate the average causal effect for
+d compliers (Imbens and Angrist, 1994) in a    traditionally
+d identified single equation when both non-compliance and
+d misreporting of treatment status are	  present. The approach
+d follows the estimation procedure developed in Calvi, Lewbel and
+d Tommasi (JBES, 2021) and    Tommasi and Zhang (IZA, 2022). 
+d
+d KW: treatment
+d KW: program participation
+d KW: measurement error
+d
+d Requires: Stata version 15 and ivreg2, ranktest from SSC (q.v.)
+d
+d Distribution-Date: 20220702
+d
+d Author: Christopher F Baum, Boston College 
+d Support: email baum@@bc.edu
+d
+d Author: Denni Tommasi, University of Bologna
+d Support: email denni.tommasi@@monash.edu
+d
+d Author: Lina Zhang, University of Amsterdam
+d Support: email l.zhang5@@uva.nl
+d
+f ivreg2m.ado
+f ivreg2m.sthlp

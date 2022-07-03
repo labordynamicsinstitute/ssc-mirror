@@ -71,19 +71,17 @@ default is {cmd:alpha(0.05)}.
 
 {phang} 
 {opth power(numlist)} specifies the desired power at which sample size is to be computed. 
-{cmd:power()} cannot be specified together with {cmd:n()}, {cmd:n1()}, or {cmd:n2()}.
+If {cmd:power()} is specified in conjunction with {cmd:n()}, {cmd:n1()}, or {cmd:n2()}, 
+then the actual power of the test is presented.
 
 {phang} 
-{opth n(numlist)} specifies the total number of subjects in the study to be used for determining power.  If {cmd:n()} is specified, the power is computed.
-{cmd:n()} cannot be specified together with {cmd:power()}. 
+{opth n(numlist)} specifies the total number of subjects in the study to be used for determining power. 
 
 {phang}
 {opth n1(numlist)} specifies the number of subjects in the experimental group to be used for determining power.
-{cmd:n1()} cannot be specified together with {cmd:power()}.
 
 {phang} 
 {opth n0(numlist)} specifies the number of subjects in the control group to be used for determining power. 
-{cmd:n0()} cannot be specified together with {cmd:power()}.
 
 {phang}
 {opth kappa(numlist)} specifies the sample-size ratio of the control group relative to the experimental group, 
@@ -112,8 +110,8 @@ and the power of the test in the {cmd:power()} option. The default power
 is set to 0.80.  
 
 {pstd}
-To compute power, you must specify the sample size(s) in either the {cmd:n()},
-{cmd:n1()} and/or {cmd:n0()} options, along with the AUCs under the alternative 
+To compute power, you must specify the sample size(s) in any of the {cmd:n()},
+{cmd:n1()} or {cmd:n0()} options, along with the AUCs under the alternative 
 and null hypotheses, {it:auc1} and {it:auc0}, respectively.
 
 {pstd}
@@ -189,6 +187,7 @@ By default, the computed sample size is rounded up to the next integer.
 {synopt:{cmd: r(N1)}}sample size of the experimental group{p_end}
 {synopt:{cmd: r(onesided)}}1 for a one-sided test, 0 otherwise{p_end}
 {synopt:{cmd: r(power)}}power{p_end}
+{synopt:{cmd: r(variance)}}variance function of the AUC {p_end}
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Macros}{p_end}

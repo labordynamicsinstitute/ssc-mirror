@@ -134,6 +134,7 @@ p ivreg28 module for extended instrumental variables/2SLS and GMM estimation (v8
 p ivreg29 module for extended instrumental variables/2SLS and GMM estimation (v9)
 p ivreg2h module to perform instrumental variables estimation using heteroskedasticity-based instruments
 p ivreg2hdfe module to estimate an Instrumental Variable Linear Regression Model with two High Dimensional Fixed Effects
+p ivreg2m module to identify treatment-effects estimates with potentially misreported and endogenous program participation
 p ivreg_ss module to compute confidence intervals, standard errors, and p-values in an IV regression in which the excluded instrumental variable has a shift-share structure
 p ivreghdfe module for extended instrumental variable regressions with multiple levels of fixed effects
 p ivregress2 module to export first and second-stage results similar to ivregress
