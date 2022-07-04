@@ -1,4 +1,4 @@
-*! version 2.3.8  13aug2021
+*! version 2.4.2  02jul2022
 *! Sebastian Kripfganz, www.kripfganz.de
 
 *==================================================*
@@ -25,12 +25,11 @@ program define xtdpdgmm_estat, rclass
 	if "`subcmd'" != "" {
 		if e(k_aux) > 0 & e(k_aux) < . & ("`subcmd'" == "serial" | "`subcmd'" == "hausman") {
 			tempname xtdpdgmm_e
-			est sto `xtdpdgmm_e'
+			_est hold `xtdpdgmm_e', copy
 			xtdpdgmm_estat_noaux
 			cap noi xtdpdgmm_estat_`subcmd' `rest'
 			loc error			= _rc
-			qui est res `xtdpdgmm_e'
-			est drop `xtdpdgmm_e'
+			_est unhold `xtdpdgmm_e'
 			if `error' != 0 {
 				exit `error'
 			}
@@ -81,7 +80,7 @@ program define xtdpdgmm_estat_serial, rclass
 	if `sigma2e' == . {
 		qui predict double `score'* if `smpl', score
 		cap conf mat e(V_modelbased)
-		if _rc == 0 {
+		if !_rc {
 			loc V				"e(V_modelbased)"
 		}
 		else {
@@ -135,11 +134,10 @@ program define xtdpdgmm_estat_overid, rclass
 	}
 	else {
 		tempname xtdpdgmm_e
-		est sto `xtdpdgmm_e'
+		_est hold `xtdpdgmm_e'
 		qui est res `namelist'
 		if "`e(cmd)'" != "xtdpdgmm" {
-			qui est res `xtdpdgmm_e'
-			est drop `xtdpdgmm_e'
+			_est unhold `xtdpdgmm_e'
 			di as err "`namelist' is not supported by estat overid"
 			exit 322
 		}
@@ -160,43 +158,52 @@ program define xtdpdgmm_estat_overid, rclass
 		if `df' == 0 | `J_u' <= 0 {
 			loc miss_u			= 1
 		}
-		qui est res `xtdpdgmm_e'
-		est drop `xtdpdgmm_e'
+		_est unhold `xtdpdgmm_e'
 		di _n as txt "Sargan-Hansen difference test of the overidentifying restrictions"
 		di "H0: additional overidentifying restrictions are valid"
 	}
-	di _n e(steps) "-step moment functions, " e(steps) "-step weighting matrix" _col(56) "chi2(" as res `df' as txt ")" _col(68) "=" _col(70) as res %9.4f `J'
+	if "`e(estimator)'" == "cugmm" {
+		di _n "continuously-updated weighting matrix" _c
+	}
+	else {
+		di _n e(steps) "-step moment functions, " e(steps) "-step weighting matrix" _c
+	}
+	di _col(56) "chi2(" as res `df' as txt ")" _col(68) "=" _col(70) as res %9.4f `J'
 	loc p				= chi2tail(`df', `J')
 	if `miss' {
 		di as txt "note: assumptions not satisfied" _c
 	}
 	else if `df' == 0 {
-		di as txt "note: coefficients are exactly identified" _c
+		di as txt "note: coefficients are just-identified" _c
 	}
-	else if (e(steps) == 1) {
+	else if (e(steps) == 1 & "`e(estimator)'" != "cugmm") {
 		di as txt "note: *" _c
 	}
 	di _col(56) as txt "Prob > chi2" _col(68) "=" _col(73) as res %6.4f `p'
-	di _n as txt e(steps) "-step moment functions, " e(steps) + 1 "-step weighting matrix" _col(56) "chi2(" as res `df' as txt ")" _col(68) "=" _col(70) as res %9.4f `J_u'
-	loc p_u				= chi2tail(`df', `J_u')
-	if `miss_u' {
-		di as txt "note: assumptions not satisfied" _c
+	if "`e(estimator)'" != "cugmm" & !("`e(estimator)'" == "igmm" & e(converged)) {
+		di _n as txt e(steps) "-step moment functions, " e(steps) + 1 "-step weighting matrix" _col(56) "chi2(" as res `df' as txt ")" _col(68) "=" _col(70) as res %9.4f `J_u'
+		loc p_u				= chi2tail(`df', `J_u')
+		if `miss_u' {
+			di as txt "note: assumptions not satisfied" _c
+		}
+		else if `df' == 0 {
+			di as txt "note: coefficients are just-identified" _c
+		}
+		else if (e(steps) == 1) {
+			di as txt "note: *" _c
+		}
+		di _col(56) as txt "Prob > chi2" _col(68) "=" _col(73) as res %6.4f `p_u'
 	}
-	else if `df' == 0 {
-		di as txt "note: coefficients are exactly identified" _c
-	}
-	else if (e(steps) == 1) {
-		di as txt "note: *" _c
-	}
-	di _col(56) as txt "Prob > chi2" _col(68) "=" _col(73) as res %6.4f `p_u'
-	if e(steps) == 1 & `df' & (!`miss' | !`miss_u') {
+	if e(steps) == 1 & `df' & (!`miss' | !`miss_u') & "`e(estimator)'" != "cugmm" {
 		di _n as txt "* asymptotically invalid if the one-step weighting matrix is not optimal"
 	}
 
-	ret sca p_J_u		= `p_u'
+	if "`e(estimator)'" != "cugmm" & !("`e(estimator)'" == "igmm" & e(converged)) {
+		ret sca p_J_u		= `p_u'
+		ret sca chi2_J_u	= `J_u'
+	}
 	ret sca p_J			= `p'
 	ret sca df_J		= `df'
-	ret sca chi2_J_u	= `J_u'
 	ret sca chi2_J		= `J'
 end
 
@@ -206,14 +213,19 @@ program define xtdpdgmm_estat_overid_diff, rclass
 	version 13.0
 
 	capture conf mat e(J)
-	if _rc != 0 {
+	if _rc {
 		error 321
 	}
 	di _n as txt "Sargan-Hansen (difference) test of the overidentifying restrictions"
 	di "H0: (additional) overidentifying restrictions are valid"
-	di _n e(steps) "-step weighting matrix from full model"
-	if e(steps) == 1 {
-		di "note: asymptotically invalid if the one-step weighting matrix is not optimal"
+	if "`e(estimator)'" == "cugmm" {
+		di _n "continuously-updated weighting matrix from full model"
+	}
+	else {
+		di _n e(steps) "-step weighting matrix from full model"
+		if e(steps) == 1 {
+			di "note: asymptotically invalid if the one-step weighting matrix is not optimal"
+		}
 	}
 
 	loc iveqnames		: cole e(W), q
@@ -342,21 +354,19 @@ program define xtdpdgmm_estat_hausman, rclass
 		exit 184
 	}
 
-	forv e = 1/2 {
+	forv e = 1 / 2 {
 		loc clustvar`e'		"`e(clustvar)'"
 		if `e' == 2 {
 			tempname xtdpdgmm_e
-			est sto `xtdpdgmm_e'
+			_est hold `xtdpdgmm_e'
 			qui est res `estname'
 			if "`e(cmd)'" != "xtdpdgmm" {
-				qui est res `xtdpdgmm_e'
-				est drop `xtdpdgmm_e'
+				_est unhold `xtdpdgmm_e'
 				di as err "`estname' is not supported by estat hausman"
 				exit 322
 			}
 			if "`clustvar1'" != "`clustvar2'" {
-				qui est res `xtseqreg_e'
-				est drop `xtseqreg_e'
+				_est unhold `xtdpdgmm_e'
 				di as err "cannot compare estimates based on different cluster variables"
 				exit 322
 			}
@@ -389,8 +399,7 @@ program define xtdpdgmm_estat_hausman, rclass
 			qui replace `aux' = `aux' - `touse'
 			sum `aux', mean
 			if r(max) | r(min) {
-				qui est res `xtdpdgmm_e'
-				est drop `xtdpdgmm_e'
+				_est unhold `xtdpdgmm_e'
 				di as err "estimation samples must coincide"
 				exit 322
 			}
@@ -398,21 +407,20 @@ program define xtdpdgmm_estat_hausman, rclass
 		}
 		if !`: list varlist in bvars`e'' {
 			if `e' == 2 {
-				qui est res `xtdpdgmm_e'
-				est drop `xtdpdgmm_e'
+				_est unhold `xtdpdgmm_e'
 			}
 			di as err "`: list varlist - bvars`e'' not found"
 			exit 111
 		}
 		tempname score`e'
-		forv k = 1/`: word count `bvars`e''' {
+		forv k = 1 / `: word count `bvars`e''' {
 			tempvar `score`e''`k'
 			loc scorevars`e' "`scorevars`e'' `score`e''`k'"
 		}
 		qui predict double `score`e''* if `touse', score
 		tempname V`e'
 		cap conf mat e(V_modelbased)
-		if _rc == 0 {
+		if !_rc {
 			mat `V`e''			= e(V_modelbased)
 		}
 		else {
@@ -429,8 +437,7 @@ program define xtdpdgmm_estat_hausman, rclass
 			loc df`e'			= e(zrank) + e(zrank_nl) - e(rank)
 		}
 	}
-	qui est res `xtdpdgmm_e'
-	est drop `xtdpdgmm_e'
+	_est unhold `xtdpdgmm_e'
 
 	mata: xtdpdgmm_hausman(	"`scorevars1'",			///
 							"`scorevars2'",			///
@@ -494,11 +501,10 @@ program define xtdpdgmm_estat_mmsc, rclass
 		forv e = 1 / `m' {
 			loc name 			: word `e' of `namelist'
 			tempname xtdpdgmm_e
-			est sto `xtdpdgmm_e'
+			_est hold `xtdpdgmm_e'
 			qui est res `name'
 			if "`e(cmd)'" != "xtdpdgmm" {
-				qui est res `xtdpdgmm_e'
-				est drop `xtdpdgmm_e'
+				_est unhold `xtdpdgmm_e'
 				di as err "`name' is not supported by estat mmsc"
 				exit 322
 			}
@@ -510,8 +516,7 @@ program define xtdpdgmm_estat_mmsc, rclass
 			loc J`e'			= e(chi2_J)
 			loc nmom`e'			= e(zrank) + e(zrank_nl)
 			loc npar`e'			= e(rank)
-			qui est res `xtdpdgmm_e'
-			est drop `xtdpdgmm_e'
+			_est unhold `xtdpdgmm_e'
 		}
 	}
 
@@ -545,7 +550,7 @@ program define xtdpdgmm_estat_noaux, eclass
 	eret repost b = `b', rename
 	eret sca k_aux		= 0
 	cap conf mat e(V_modelbased)
-	if _rc == 0 {
+	if !_rc {
 		tempname V0
 		mat `V0'			= e(V_modelbased)
 		mat roweq `V0'		= ""

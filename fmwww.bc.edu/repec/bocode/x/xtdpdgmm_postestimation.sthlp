@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.3.8  13aug2021}{...}
+{* *! version 2.4.2  02jul2022}{...}
 {* *! Sebastian Kripfganz, www.kripfganz.de}{...}
 {vieweralsosee "xtdpdgmm" "help xtdpdgmm"}{...}
 {vieweralsosee "" "--"}{...}
@@ -81,8 +81,8 @@ INCLUDE help post_testnl
 {synopt:{opt xb}}calculate linear prediction; the default{p_end}
 {synopt:{opt stdp}}calculate standard error of the prediction{p_end}
 {synopt:{opt ue}}calculate the combined residual{p_end}
-{p2coldent:* {opt xbu}}calculate prediction including unit-specific error component{p_end}
-{p2coldent:* {opt u}}calculate the the unit-specific error component{p_end}
+{p2coldent:* {opt xbu}}calculate prediction including group-specific error component{p_end}
+{p2coldent:* {opt u}}calculate the the group-specific error component{p_end}
 {p2coldent:* {opt e}}calculate the idiosyncratic error component{p_end}
 {p2coldent:* {opt iv}}generate instrumental variables used in the estimation{p_end}
 {p2coldent:* {opt sc:ores}}calculate parameter-level scores{p_end}
@@ -121,10 +121,10 @@ INCLUDE help unstarred
 {opt ue} calculates the prediction of u_i + e_it, the combined residual; see {helpb xtreg postestimation##options_predict:[XT] xtreg postestimation}.
 
 {phang}
-{opt xbu} calculates the linear prediction including the unit-specific error component; see {helpb xtreg postestimation##options_predict:[XT] xtreg postestimation}.
+{opt xbu} calculates the linear prediction including the group-specific error component; see {helpb xtreg postestimation##options_predict:[XT] xtreg postestimation}.
 
 {phang}
-{opt u} calculates the prediction of u_i, the estimated unit-specific error component; see {helpb xtreg postestimation##options_predict:[XT] xtreg postestimation}.
+{opt u} calculates the prediction of u_i, the estimated group-specific error component; see {helpb xtreg postestimation##options_predict:[XT] xtreg postestimation}.
 
 {phang}
 {opt e} calculates the prediction of e_it; see {helpb xtreg postestimation##options_predict:[XT] xtreg postestimation}.
@@ -183,23 +183,23 @@ where {it:name} is a name under which estimation results were stored via {helpb 
 A cluster-robust version is computed if {cmd:vce(robust)} or {cmd:vce(cluster} {it:clustvar}{cmd:)} is specified with {helpb xtdpdgmm}.
 
 {pstd}
-{cmd:estat overid} reports the Sargan (1958) and Hansen (1982) J-statistic which is used to determine the validity of the overidentifying restrictions. Two versions of the test are reported.
+{cmd:estat overid} reports the Sargan (1958) and Hansen (1982) J-statistic which is used to determine the validity of the overidentifying restrictions. Two versions of the test are reported for the one-step and two-step GMM estimators.
 The first version uses the weighting matrix from the final estimation step. The second version updates the weighting matrix one more time based on the residuals from the final estimation step.
 The moment functions are evaluated at the final-step estimates in any case. After {helpb xtdpdgmm} with option {cmd:onestep} or {cmd:twostep}, these are the one-step or two-step estimates, respectively.
 
 {pstd}
 {cmd:estat overid, difference} reports the Sargan-Hansen statistics for the reduced models, leaving out one subset of moment conditions at a time without reestimating the weighting matrix.
-It also reports the corresponding Sargan-Hansen difference statistics as proposed by Newey (1985) and Eichenbaum, Hansen, and Singleton (1988) which are used to determine the validity of the omitted subset of overidentifying restrictions.
+It also reports the corresponding Sargan-Hansen difference statistics as proposed by Newey (1985) and Eichenbaum, Hansen, and Singleton (1988), which are used to determine the validity of the omitted subset of overidentifying restrictions.
 
 {pstd}
-{cmd:estat overid} {it:name} reports a Sargan-Hansen difference statistic as proposed by Eichenbaum, Hansen, and Singleton (1988) which is used to determine the validity of a subset of overidentifying restrictions.
+{cmd:estat overid} {it:name} reports a Sargan-Hansen difference statistic as proposed by Eichenbaum, Hansen, and Singleton (1988), which is used to determine the validity of a subset of overidentifying restrictions.
 It is computed as the difference between the respective J-statistics from the most recent {helpb xtdpdgmm} estimation results and the estimation results stored as {it:name} by using {helpb estimates store:estimates store}.
 
 {pstd}
 {cmd:estat hausman} reports a generalized Hausman (1978) test for model misspecification by comparing the coefficient estimates of {it:varlist} from the most recent {helpb xtdpdgmm} estimation results
 to the corresponding coefficient estimation results stored as {it:name} by using {helpb estimates store:estimates store}. By default, the coefficients of all {it:indepvars} are contrasted, excluding the constant term.
-This generalized test does not require one of the estimators to be efficient. It uses the cluster-robust variance-covariance estimator for the test statistic suggested by White (1982)
-that is computed using the parameter-level scores; see {helpb suest:[R] suest}.
+This generalized test does not require one of the estimators to be efficient. It uses the cluster-robust variance-covariance estimator for the test statistic suggested by White (1982),
+which is computed using the parameter-level scores; see {helpb suest:[R] suest}.
 
 {pstd}
 {cmd:estat mmsc} reports the Akaike (AIC), Bayesian (BIC), and Hannan-Quinn (HQIC) versions of the Andrews and Lu (2001) model and moment selection criterion.

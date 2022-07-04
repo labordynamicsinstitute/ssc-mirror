@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.3.8  13aug2021}{...}
+{* *! version 2.4.2  02jul2022}{...}
 {* *! Sebastian Kripfganz, www.kripfganz.de}{...}
 {vieweralsosee "xtdpdgmm postestimation" "help xtdpdgmm_postestimation"}{...}
 {vieweralsosee "" "--"}{...}
@@ -43,21 +43,23 @@
 {synopt:{opt nl}{cmd:(}{it:{help xtdpdgmm##options_spec:nl_spec}}{cmd:)}}add nonlinear moment conditions derived from error covariance structure{p_end}
 {synopt:{opt c:ollapse}}collapse GMM-type into standard instruments{p_end}
 {synopt:{opt m:odel}{cmd:(}{it:{help xtdpdgmm##options_spec:model_spec}}{cmd:)}}set the default model for the instruments and VCE{p_end}
+{synopt:{opt nolev:el}}ignore specifications for the model in levels{p_end}
 {synopt:{opt nores:cale}}do not rescale the transformed moment conditions{p_end}
 {synopt:{opt w:matrix}{cmd:(}{it:{help xtdpdgmm##options_spec:wmat_spec}}{cmd:)}}specify initial weighting matrix{p_end}
 {p2coldent :* {opt one:step}|{opt two:step}}use the one-step or two-step estimator{p_end}
 {p2coldent :* {opt igmm}}use the iterated GMM estimator{p_end}
+{p2coldent :* {opt cu:gmm}}use the continuously-updating GMM estimator{p_end}
 {synopt:{opt te:ffects}}add time effects to the model{p_end}
-{synopt:{opt over:id}}compute overidentification statistics for reduced models{p_end}
 {synopt:{opt nocons:tant}}suppress constant term{p_end}
 
 {syntab:SE/Robust}
 {synopt :{opt vce}{cmd:(}{it:{help xtdpdgmm##options_spec:vce_spec}}{cmd:)}}specify the {help xtdpdgmm##vcetype:{it:vcetype}} for the SE estimation{p_end}
+{synopt:{opt sm:all}}make degrees-of-freedom adjustment and report small-sample statistics{p_end}
 
 {syntab:Reporting}
+{synopt:{opt over:id}}compute overidentification statistics for reduced models{p_end}
 {synopt:{opt aux:iliary}}display all coefficients as auxiliary parameters{p_end}
 {synopt:{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}{p_end}
-{synopt:{opt sm:all}}make degrees-of-freedom adjustment and report small-sample statistics{p_end}
 INCLUDE help shortdes-coeflegend
 {synopt:{opt nohe:ader}}suppress output header{p_end}
 {synopt:{opt notab:le}}suppress coefficient table{p_end}
@@ -98,13 +100,13 @@ INCLUDE help shortdes-displayoptall
 {it:wmat_spec} is
 
 {p 8 12 2}
-[{opt un:adjusted}|{opt ind:ependent}|{opt sep:arate}] [{cmd:,} {opt r:atio(#)}]
+[{opt un:adjusted}|{opt ind:ependent}|{opt sep:arate}|{opt identity}] [{cmd:,} {opt r:atio(#)}]
 
 {p 4 6 2}
 {it:vce_spec} is
 
 {p 8 12 2}
-[{opt conventional}|{opt r:obust}|{opt cl:uster} {it:clustvar}] [{cmd:,} {opt m:odel(model_spec)}]
+[{opt conventional}|{opt r:obust}|{opt cl:uster} {it:clustvar}] [{cmd:,} {opt m:odel(model_spec)} {opt wc}|{opt dc}]
 
 {p 4 6 2}
 {it:model_spec} is
@@ -137,15 +139,20 @@ See {helpb xtdpdgmm postestimation} for features available after estimation.{p_e
 {pstd}
 {cmd:xtdpdgmm} implements generalized method of moments (GMM) estimators for linear dynamic panel data models. GMM estimators can be specified with linear moment conditions in the spirit of Arellano and Bond (1991), Arellano and Bover (1995),
 Blundell and Bond (1998), and Hayakawa, Qi, and Breitung (2019). {cmd:xtdpdgmm} can also incorporate the nonlinear moment conditions suggested by Ahn and Schmidt (1995).
-The latter yield efficiency gains and more robust results for highly persistent data. The Windmeijer (2005) finite-sample standard error correction is implemented for estimators with and without nonlinear moment conditions.
+The latter yield efficiency gains and more robust results for highly persistent data.
 
 {pstd}
-The model can be estimated with the one-step or two-step GMM estimator, or the iterated GMM estimator. The two-step estimator uses an optimal weighting matrix that is estimated based on the one-step residuals.
+The model can be estimated with the one-step, two-step, iterated, or continuously-updating GMM estimator. The two-step estimator uses an optimal weighting matrix which is estimated from the one-step residuals.
 The iterated GMM estimator, suggested by Hansen, Heaton, and Yaron (1996), further updates the weighting matrix until convergence.
+The continuously-updating GMM estimator, also proposed by Hansen, Heaton, and Yaron (1996), updates the weighting matrix jointly with the coefficients.
+
+{pstd}
+For estimators other than the continuously-updating GMM estimator, the Windmeijer (2005) finite-sample standard error correction is implemented.
+Alternatively, the Lee (2014), Hansen and Lee (2021), and Hwang, Kang, and Lee (2022) doubly-corrected misspecification-robust standard errors are available as well.
 
 {pstd}
 Possible model transformations include first differences, deviations from within-group means, and forward-orthogonal deviations. With the latter, backward-orthogonal deviations of the instrumental variables are possible.
-Instruments for different model transformations can be combined to form a 'system GMM' estimator.
+Instruments for different model transformations can be combined flexibly to form a 'system GMM' estimator.
 
 
 {marker options}{...}
@@ -227,7 +234,13 @@ Specifying {cmd:weight(0)} implies that the nonlinear moment conditions are igno
 
 {phang}
 {opt model(model)} sets the default model used to generate the instruments specified with options {cmd:iv()} and {cmd:gmmiv()} and the default model for the conventional variance estimator specified with option {cmd:vce()}.
-{it:model} is allowed to be {opt l:evel}, {opt d:ifference}, {opt md:ev}, or {opt fod:ev}. The default is {cmd:model(level)}.
+{it:model} is allowed to be {opt l:evel}, {opt d:ifference}, {opt md:ev}, or {opt fod:ev}. The default is {cmd:model(level)} unless option {opt nolevel} is specified, in which case the default is {cmd:model(difference)}.
+
+{phang}
+{opt nolevel} requests that all model specifications refer to a transformed model. This changes the default from {cmd:model(level)} to {cmd:model(difference)}. All instruments which are explicitly specified for the model in levels are ignored.
+With this option, instruments for the time dummies created with option {opt teffects} are no longer specified for the model in levels but for the default model set with option {opt model(model)}.
+The degrees-of-freedom adjustment with option {opt small} is corrected for the reduction of time periods in the transformed model or the absorbed group-specific effects.
+A regression intercept is still estimated for the model in levels unless option {opt noconstant} is specified.
 
 {phang}
 {opt norescale} requests not to rescale the moment conditions. By default, the moment conditions for the model in deviations from within-group means or forward-orthogonal deviations are rescaled by a group-specific factor
@@ -235,12 +248,12 @@ such that the transformed error term retains the same variance under the assumpt
 A similar transformation is applied to the nonlinear moment conditions added with option {cmd:nl(iid)}. This option is seldom used.
 
 {phang}
-{cmd:wmatrix(}[{it:wmat_type}] [{cmd:,} {opt r:atio(#)}]{cmd:)} specifies the weighting matrix to be used to obtain one-step GMM estimates or initial estimates for two-step GMM estimation.
-{it:wmat_type} is either {opt un:adjusted}, {opt ind:ependent}, or {opt sep:arate}.
+{cmd:wmatrix(}[{it:wmat_type}] [{cmd:,} {opt r:atio(#)}]{cmd:)} specifies the weighting matrix to be used to obtain one-step GMM estimates or initial estimates for two-step or iterated GMM estimation.
+{it:wmat_type} is either {opt un:adjusted}, {opt ind:ependent}, {opt sep:arate}, or {opt identity}.
 
 {pmore}
-{cmd:wmatrix(unadjusted)}, the default, is optimal for an error-components structure with a unit-specific component and an independent and identically distributed idiosyncratic component
-if all instruments refer to the models in first differences and deviations from within-group means, or if the variance ratio of the unit-specific error component to the idiosyncratic error component is known,
+{cmd:wmatrix(unadjusted)}, the default, is optimal for an error-components structure with a group-specific component and an independent and identically distributed idiosyncratic component
+if none of the instruments refer to the model in levels or if the variance ratio of the group-specific error component to the idiosyncratic error component is known,
 and only if there are no nonlinear moment conditions. The variance ratio can be specified with the suboption {opt ratio(#)}. The default is {cmd:ratio(0)}.
 Nonlinear moment conditions are always treated as independent in the initial weighting matrix.
 
@@ -251,15 +264,18 @@ Nonlinear moment conditions are always treated as independent in the initial wei
 {cmd:wmatrix(separate)} is the same as {cmd:wmatrix(unadjusted)} but treats the model in levels and the transformed models as separate models with an independent and identically distributed error term for the transformed models,
 thus ignoring the covariance between the respective error terms and the serial correlation of the transformed error terms.
 
+{pmore}
+{cmd:wmatrix(identity)} is the identity matrix. This option is seldom used.
+
 {phang}
-{opt onestep}, {opt twostep}, and {opt igmm} specify which estimator is to be used. At most one of these options can be specified.
+{opt onestep}, {opt twostep}, {opt igmm}, and {opt cugmm} specify which estimator is to be used. At most one of these options can be specified.
 
 {pmore}
-{opt onestep} requests the one-step GMM estimator to be computed that is based on the initial weighting matrix specified with option {opt wmatrix(wmat_spec)}. This is the default unless option {opt nl(nl_spec)} is specified.
+{opt onestep} requests the one-step GMM estimator to be computed which is based on the initial weighting matrix specified with option {opt wmatrix(wmat_spec)}. This is the default unless option {opt nl(nl_spec)} is specified.
 In a model without nonlinear moment conditions and with weighting matrix {cmd:wmatrix(unadjusted)}, the one-step estimator corresponds to the two-stage least squares estimator.
 
 {pmore}
-{opt twostep} requests the two-step GMM estimator to be computed that is based on an optimal weighting matrix. This is the default if option {opt nl(nl_spec)} is specified.
+{opt twostep} requests the two-step GMM estimator to be computed which is based on an optimal weighting matrix. This is the default if option {opt nl(nl_spec)} is specified.
 An unrestricted (cluster-robust) optimal weighting matrix is computed using one-step GMM estimates. The unrestricted weighting matrix allows for intragroup correlation at the level specified with {cmd:vce(cluster} {it:clustvar}{cmd:)}.
 By default, {it:clustvar} equals {it:panelvar}.
 
@@ -267,13 +283,13 @@ By default, {it:clustvar} equals {it:panelvar}.
 {opt igmm} requests the iterated GMM estimator to be computed. At each iteration step, an unrestricted (cluster-robust) optimal weighting matrix is computed using the GMM estimates from the previous step.
 Iterations continue until convergence is achieved for the coefficient vector or the weighting matrix, or the maximum number of iterations is reached; see {it:{help xtdpdgmm##igmm_options:igmm_options}}.
 
-{phang}
-{opt teffects} requests that time-specific effects are added to the model. The first time period in the estimation sample is treated as the base period.
+{pmore}
+{opt cugmm} requests the continuously-updating GMM estimator to be computed. As a function of the model's coefficients, the unrestricted (cluster-robust) weighting matrix is updated jointly with the coefficients.
 
 {phang}
-{opt overid} requests to compute the overidentification statistics for the reduced models, leaving out one subset of moment conditions at a time.
-These statistics can subsequently be used to compute Sargan-Hansen difference tests of the overidentifying restrictions with the postestimation command {cmd:estat overid}; see {helpb xtdpdgmm postestimation##estat:xtdpdgmm postestimation}.
-This option is not needed to compute the Sargan-Hansen test for the full model.
+{opt teffects} requests that time-specific effects are added to the model. Time dummies are instrumented by themselves for the model in levels unless option {opt nolevel} is specified,
+in which case the time dummies are instrumented for the model specified by option {opt model(model)}. The first time period in the estimation sample is treated as the base period
+unless options {opt nolevel} and {cmd:model(fodev)} are jointly specified, in which case the last time period is treated as the base period. 
 
 {phang}
 {opt noconstant}; see {helpb estimation options##noconstant:[R] estimation options}.
@@ -282,7 +298,7 @@ This option is not needed to compute the Sargan-Hansen test for the full model.
 {dlgtab:SE/Robust}
 
 {phang}
-{opt vce}{cmd:(}{it:vcetype} [{cmd:,} {opt m:odel(model)}]{cmd:)} specifies the type of standard error reported, which includes types that are derived from asymptotic theory ({opt conventional}),
+{opt vce}{cmd:(}{it:vcetype} [{cmd:,} {opt m:odel(model)} {opt wc}|{opt dc}]{cmd:)} specifies the type of standard error reported, which includes types that are derived from asymptotic theory ({opt conventional}),
 that are robust to some kinds of misspecification ({opt r:obust}), and that allow for intragroup correlation ({opt cl:uster} {it:clustvar}). {it:model} is allowed to be {opt l:evel}, {opt d:ifference}, {opt md:ev}, or {opt fod:ev}.
 
 {pmore}
@@ -292,11 +308,23 @@ the residuals in deviations from within-group means, {cmd:model(mdev)}, or the r
 but without the Windmeijer (2005) correction. {cmd:vce(conventional)} is the default, although in most cases {cmd:vce(robust)} would be recommended.
 
 {pmore}
-{cmd:vce(robust)} and {cmd:vce(cluster} {it:clustvar}{cmd:)} use the sandwich estimator for one-step GMM estimation with only linear moment conditions. For the corresponding two-step GMM estimation,
-they compute the conventional estimator with the Windmeijer (2005) correction. For GMM estimation with nonlinear moment conditions, the sandwich estimator with the respective Windmeijer (2005) correction is computed
-for both one-step and two-step estimation. {cmd:vce(robust)} is equivalent to {cmd:vce(cluster} {it:panelvar}{cmd:)}.
+{cmd:vce(robust)} and {cmd:vce(cluster} {it:clustvar}{cmd:)} use the sandwich estimator for one-step GMM estimation with only linear moment conditions. Suboption {opt wc}, the default, applies the Windmeijer (2005) finite-sample correction
+to the conventional two-step or iterated GMM estimator. For GMM estimation with nonlinear moment conditions, the sandwich estimator with the respective Windmeijer (2005) correction is computed for one-step, two-step, and iterated estimation.
+Alternatively, the Lee (2014), Hansen and Lee (2021), and Hwang, Kang, and Lee (2022) doubly-corrected misspecification-robust standard errors are available with suboption {opt dc}.
+No correction is applied for continuously-updating GMM estimation. {cmd:vce(robust)} is equivalent to {cmd:vce(cluster} {it:panelvar}{cmd:)}.
+
+{phang}
+{opt small} requests that a degrees-of-freedom adjustment be made to the variance-covariance matrix and that small-sample t and F statistics be reported.
+The adjustment factor is (N-1)/(N-K) * M/(M-1), where N is the number of observations, M the number of clusters specified with {cmd:vce(cluster} {it:clustvar}{cmd:)}, and K the number of coefficients.
+When option {opt nolevel} is specified, the adjustment factor is corrected for the reduction of time periods in the transformed model or the absorbed group-specific effects.
+By default, no degrees-of-freedom adjustment is made and z and Wald statistics are reported. This option does not affect the computation of the optimal weighting matrix.
 
 {dlgtab:Reporting}
+
+{phang}
+{opt overid} requests to compute the overidentification statistics for the reduced models, leaving out one subset of moment conditions at a time.
+These statistics can subsequently be used to compute Sargan-Hansen difference tests of the overidentifying restrictions with the postestimation command {cmd:estat overid}; see {helpb xtdpdgmm postestimation##estat:xtdpdgmm postestimation}.
+This option is not needed to compute the Sargan-Hansen test for the full model.
 
 {phang}
 {opt auxiliary} displays all coefficients as auxiliary parameters and suppresses display of the {it:vcetype}. This option is seldom used.
@@ -304,11 +332,6 @@ It allows the subsequent use of postestimation commands that require equation-le
 
 {phang}
 {opt level(#)}; see {helpb estimation options##level():[R] estimation options}.
-
-{phang}
-{opt small} requests that a degrees-of-freedom adjustment be made to the variance-covariance matrix and that small-sample t and F statistics be reported.
-The adjustment factor is (N-1)/(N-K) * M/(M-1), where N is the number of observations, M the number of clusters specified with {cmd:vce(cluster} {it:clustvar}{cmd:)}, and K the number of coefficients.
-By default, no degrees-of-freedom adjustment is made and z and Wald statistics are reported. This option does not affect the computation of the optimal weighting matrix.
 
 {phang}
 {opt coeflegend}; see {helpb estimation options##coeflegend:[R] estimation options}.
@@ -331,10 +354,11 @@ By default, no degrees-of-freedom adjustment is made and z and Wald statistics a
 
 {phang}
 {opt noanalytic} requests that the coefficient estimates are obtained numerically instead of using analytical closed-form solutions. This option is seldom used.
-It is implied when the model contains nonlinear moment conditions under the option {opt nl(nl_spec)} because closed-form solutions do not exist in this case.
+It is implied when the model contains nonlinear moment conditions under the option {opt nl(nl_spec)} or if the continuously-updating GMM estimator is used, because closed-form solutions do not exist in this case.
 
 {phang}
-{opt from(init_specs)} specifies initial values for the coefficients; see {helpb maximize:[R] maximize}. By default, initial values are set to zero.
+{opt from(init_specs)} specifies initial values for the coefficients; see {helpb maximize:[R] maximize}. By default, initial values are set to zero unless the continuously-updating GMM estimator is used.
+In the latter case, the default initial values are the two-stage least squares estimates, ignoring any nonlinear moment conditions.
 
 {phang}
 {opt nodots} specifies that an iteration log is displayed instead of dots. By default, one dot character is displayed for each step of the iterated GMM estimator.
@@ -374,8 +398,8 @@ Remarks are presented under the following headings:
 y = X b + u + e
 
 {pstd}
-referred to as the untransformed model, {cmd:model(level)}, where y denotes the vector containing all observations of {it:depvar}, X the matrix of {it:indepvars}, b the regression coefficients, u the unit-specific error component,
-and e the idiosyncratic error component. To remove the unit-specific error component, a model transformation D can be applied that is orthogonal to u (i.e. D u = 0):
+referred to as the untransformed model, {cmd:model(level)}, where y denotes the vector containing all observations of {it:depvar}, X the matrix of {it:indepvars}, b the regression coefficients, u the group-specific error component,
+and e the idiosyncratic error component. To remove the group-specific error component, a model transformation D can be applied which is orthogonal to u (i.e. D u = 0):
 
 {pmore2}
 D y = D X b + D e
@@ -384,7 +408,7 @@ D y = D X b + D e
 Matrix D can yield a first-difference transformation, {cmd:model(difference)}, deviations from within-group means, {cmd:model(mdev)}, or forward-orthogonal deviations, {cmd:model(fodev)}.
 
 {pstd}
-Instrumental variables can be specified for the untransformed model and/or for one or more of the transformed models. However, it is important to keep in mind that the estimation is not performed separately for different equations.
+Instrumental variables can be specified for the untransformed model and/or for one or more of the transformed models. However, it is important to keep in mind that the estimation is not performed separately for different models.
 In fact, instead of transforming the estimation equation, {cmd:xtdpdgmm} internally transforms the instruments Z for the transformed models back into instruments for the untransformed model.
 Technically, this is achieved by forming instruments D' Z for the untransformed model, where D' is the transpose of the above transformation matrix.
 
@@ -412,8 +436,8 @@ while {cmd:iv(}{it:varlist}{cmd:, bod l(}{it:#}{cmd:) m(fod))} creates the {it:#
 
 {pstd}
 Strictly exogenous variables are variables that are uncorrelated with the idiosyncratic error component of all time periods.
-Predetermined variables, also referred to as weakly exogenous variables, are variables that are uncorrelated with the idiosyncratic error component of the current and all following time periods but that might be correlated with past errors.
-Endogenous variables are variables that are uncorrelated with the idiosyncratic error component of all following time periods but that might be correlated with current or past errors.
+Predetermined variables, also referred to as weakly exogenous variables, are variables that are uncorrelated with the idiosyncratic error component of the current and all following time periods but which might be correlated with past errors.
+Endogenous variables are variables that are uncorrelated with the idiosyncratic error component of all following time periods but which might be correlated with current or past errors.
 
 {pstd}
 Strictly exogenous variables are valid instruments{p_end}
@@ -441,9 +465,9 @@ As a general rule, if the serial correlation of the idiosyncratic error term in 
 Alternatively, the list of {it:indepvars} could be amended to obtain a dynamically complete model with serially uncorrelated errors.
 
 {pstd}
-Variables are only valid instruments for the untransformed model, {cmd:model(level)}, if they are uncorrelated with the unit-specific error component.
+Variables are only valid instruments for the untransformed model, {cmd:model(level)}, if they are uncorrelated with the group-specific error component.
 This might often be an unreasonable assumption if the instruments are not first-differenced with option {opt difference}, as proposed by Blundell and Bond (1998).
-However, there is no guarantee that first-differenced instruments for the untransformed model are uncorrelated with the unit-specific error component. This remains an assumption to be justified by the user.
+However, there is no guarantee that first-differenced instruments for the untransformed model are uncorrelated with the group-specific error component. This remains an assumption to be justified by the user.
 
 {pstd}
 When instruments are combined for multiple model transformations, some of them might become redundant.
@@ -471,7 +495,7 @@ Even if the weighting matrix for the one-step GMM estimator was optimal in the a
 It is not recommended to use the {opt noconstant} option when nonlinear moment conditions are used even if all other moment conditions refer to transformed models.
 
 {pstd}
-{cmd:xtdpdgmm} minimizes the GMM criterion function numerically with the Gauss-Newton technique if some of the moment conditions are nonlinear or the option {cmd:noanalytic} is specified.
+{cmd:xtdpdgmm} minimizes the GMM criterion function numerically with the Gauss-Newton technique if some of the moment conditions are nonlinear, if the continuously-updating GMM estimator is used, or if the option {cmd:noanalytic} is specified.
 Otherwise, the estimates are obtained from the analytical closed-form solutions of the first-order conditions.
 
 
@@ -507,11 +531,10 @@ This rescaling can be switched off again with the option {cmd:norescale}.
 {pstd}
 The option {opt teffects} adds dummy variables {cmd:i.}{it:timevar}, after removing collinear dummies, to {it:indepvars} and as standard instruments for the untransformed model, {cmd:iv(i.}{it:timevar}{cmd:, model(level))}.
 This may not be desired in some cases if all other moment conditions refer to transformed models, for example if the weighting matrix of the one-step GMM estimator for the transformed model is already optimal,
-which typically requires a homoskedasticity assumption. In this case, time dummies and their instruments need to be added manually.
+which typically requires a homoskedasticity assumption. In this case, the option {opt nolevel} can be used to create standard instruments for the transformed model instead.
 
 {pstd}
-When the two-step GMM estimator is used, even if all other moment conditions refer to transformed models, it is still efficient to specify the time dummies as instruments for the untransformed model,
-which is why the option {opt teffects} is generally recommended. If time dummies nevertheless are specified manually, they should only be specified as instruments for a single model transformation or the untransformed model, not both.
+Time dummies and their instruments can also be specified manually. However, they should generally only be specified as instruments for a single model transformation or the untransformed model, not both.
 Otherwise, some of these instruments would be (asymptotically) redundant.
 
 
@@ -543,8 +566,10 @@ These should generally be in addition to any first-differenced instruments or ti
 {phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n w k, l(1 4) c) m(d) nl(noser) two vce(r)}{p_end}
 {phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n w k, l(1 4) c) m(d) nl(iid) two vce(r)}{p_end}
 
-{pstd}Blundell-Bond two-step GMM estimator with predetermined covariates and curtailed/collapsed instruments{p_end}
+{pstd}Blundell-Bond two-step, iterated, and continuously-updating GMM estimators with predetermined covariates and curtailed/collapsed instruments{p_end}
 {phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n w k, l(1 4) c m(d)) iv(L.n w k, d) two vce(r)}{p_end}
+{phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n w k, l(1 4) c m(d)) iv(L.n w k, d) igmm vce(r)}{p_end}
+{phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n w k, l(1 4) c m(d)) iv(L.n w k, d) cu}{p_end}
 
 {pstd}Hayakawa-Qi-Breitung IV estimator with predetermined covariates{p_end}
 {phang2}. {stata xtdpdgmm L(0/1).n w k, iv(L.n w k, bod) m(fod) nocons}{p_end}
@@ -577,14 +602,15 @@ These should generally be in addition to any first-differenced instruments or ti
 {synopt:{cmd:e(g_max)}}largest group size{p_end}
 {synopt:{cmd:e(f)}}value of the objective function{p_end}
 {synopt:{cmd:e(chi2_J)}}Hansen's J-statistic{p_end}
-{synopt:{cmd:e(chi2_J_u)}}Hansen's J-statistic with updated weighting matrix{p_end}
+{synopt:{cmd:e(chi2_J_u)}}Hansen's J-statistic with updated weighting matrix; not always saved{p_end}
 {synopt:{cmd:e(rank)}}rank of {cmd:e(V)}{p_end}
 {synopt:{cmd:e(zrank)}}number of linear moment functions{p_end}
 {synopt:{cmd:e(zrank_nl)}}number of nonlinear moment functions{p_end}
+{synopt:{cmd:e(df_a)}}absorbed degrees of freedom; not always saved{p_end}
 {synopt:{cmd:e(sigma2e)}}estimate of sigma_e^2; not always saved{p_end}
 {synopt:{cmd:e(steps)}}number of steps{p_end}
 {synopt:{cmd:e(ic)}}number of iterations in final step{p_end}
-{synopt:{cmd:e(converged)}}= {cmd:1} if converged in final step, {cmd:0} otherwise{p_end}
+{synopt:{cmd:e(converged)}}= {cmd:1} if convergence achieved, {cmd:0} otherwise{p_end}
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Macros}{p_end}
@@ -598,8 +624,10 @@ These should generally be in addition to any first-differenced instruments or ti
 {synopt:{cmd:e(teffects)}}time effects created with option {cmd:teffects}{p_end}
 {synopt:{cmd:e(wmatrix)}}{it:wmat_spec} specified with option {cmd:wmatrix()}{p_end}
 {synopt:{cmd:e(estimator)}}{cmd:onestep}, {cmd:twostep}, or {cmd:igmm}{p_end}
+{synopt:{cmd:e(clustvar)}}name of cluster variable{p_end}
 {synopt:{cmd:e(vce)}}{cmd:conventional} or {cmd:robust}{p_end}
 {synopt:{cmd:e(vcetype)}}title used to label Std. Err.{p_end}
+{synopt:{cmd:e(vcecor)}}type of variance correction; not always saved{p_end}
 {synopt:{cmd:e(properties)}}{cmd:b V}{p_end}
 {synopt:{cmd:e(depvar)}}name of dependent variable{p_end}
 
@@ -680,6 +708,11 @@ Initial conditions and moment restrictions in dynamic panel data models.
 {it:Journal of Econometrics} 87: 115-143.
 
 {phang}
+Hansen, B. E., and S. Lee. 2021.
+Inference for iterated GMM under misspecification.
+{it:Econometrica} 89: 1419-1447.
+
+{phang}
 Hansen, L. P., J. Heaton, and A. Yaron. 1996.
 Finite-sample properties of some alternative GMM estimators.
 {it:Journal of Business & Economic Statistics} 14: 262-280.
@@ -690,6 +723,11 @@ Double filter instrumental variable estimation of panel data models with weakly 
 {it:Econometric Reviews} 38: 1055-1088.
 
 {phang}
+Hwang, J., B. Kang, and S. Lee. 2022.
+A doubly corrected robust variance estimator for linear GMM.
+{it:Journal of Econometrics} 229: 276-298.
+
+{phang}
 Kiviet, J. F. 2020.
 Microeconometric dynamic panel data methods: Model specification and selection issues.
 {it:Econometrics and Statistics} 13: 16-45.
@@ -698,6 +736,11 @@ Microeconometric dynamic panel data methods: Model specification and selection i
 Kripfganz, S., and C. Schwarz. 2019.
 Estimation of linear dynamic panel data models with time-invariant regressors.
 {it:Journal of Applied Econometrics} 34: 526-546.
+
+{phang}
+Lee, S. 2014.
+Asymptotic refinements of a misspecification-robust bootstrap for generalized method of moments estimators.
+{it:Journal of Applied Econometrics} 178: 398-413.
 
 {phang}
 Roodman, D. 2009.

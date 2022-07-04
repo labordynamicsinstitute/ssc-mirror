@@ -1,4 +1,4 @@
-*! version 2.3.8  13aug2021
+*! version 2.4.2  02jul2022
 *! Sebastian Kripfganz, www.kripfganz.de
 
 *==================================================*
@@ -25,12 +25,11 @@ program define xtdpdgmm_p, sort
 	}
 	if e(k_aux) > 0 & e(k_aux) < . {
 		tempname xtdpdgmm_e
-		est sto `xtdpdgmm_e'
+		_est hold `xtdpdgmm_e', copy
 		xtdpdgmm_p_noaux
 		cap noi xtdpdgmm_p_`predict' `0'
 		loc error			= _rc
-		qui est res `xtdpdgmm_e'
-		est drop `xtdpdgmm_e'
+		_est unhold `xtdpdgmm_e'
 		if `error' != 0 {
 			exit `error'
 		}
@@ -266,7 +265,10 @@ program define xtdpdgmm_p_scores, rclass
 		qui gen double `gen`var'' = .
 		loc scorevars		"`scorevars' `gen`var''"
 	}
-	loc wc				= (e(steps) > 1 & "`e(vcetype)'" == "WC-Robust")
+	loc wc				= (e(steps) > 1 & ("`e(vcecor)'" != ""))
+	if `wc' & "`e(estimator)'" == "igmm" & `e(converged)' {
+		loc ++wc
+	}
 	mata: xtdpdgmm_score(`e(mopt)', "`scorevars'", "`smpl'", `wc')
 	if e(df_r) < . {
 		if e(N_clust) < . {
@@ -302,7 +304,7 @@ program define xtdpdgmm_p_noaux, eclass
 	eret repost b = `b', rename
 	eret sca k_aux		= 0
 	cap conf mat e(V_modelbased)
-	if _rc == 0 {
+	if !_rc {
 		tempname V0
 		mat `V0'			= e(V_modelbased)
 		mat roweq `V0'		= ""

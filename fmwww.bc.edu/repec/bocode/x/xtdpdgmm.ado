@@ -1,4 +1,4 @@
-*! version 2.3.8  13aug2021
+*! version 2.4.2  02jul2022
 *! Sebastian Kripfganz, www.kripfganz.de
 
 *==================================================*
@@ -51,11 +51,13 @@ program define xtdpdgmm_gmm, eclass
 														ONEstep				///
 														TWOstep				///
 														IGMM				///
+														CUgmm				///
 														Wmatrix(str)		///
 														OVERid				///
 														FROM(passthru)		///
 														VCE(passthru)		///
 														SMall				///
+														NOLEVel				///
 														AUXiliary			///
 														noSERial			/// historical since version 2.0.0
 														IID					/// historical since version 2.0.0
@@ -95,6 +97,8 @@ program define xtdpdgmm_gmm, eclass
 	if "`constant'" != "" {
 		mata: xtdpdgmm_init_cons(`mopt', "off")			// constant term
 	}
+	xtdpdgmm_parse_model `nolevel', todo(2) `model'
+	loc model			"`s(model)'"
 
 	*--------------------------------------------------*
 	*** time effects ***
@@ -103,8 +107,13 @@ program define xtdpdgmm_gmm, eclass
 	loc tmin			= r(min)
 	loc tmax			= r(max)
 	if "`teffects'" != "" {
-		cap _rmcoll i(`= `tmin'+`tdelta'*("`constant'" == "")'(`tdelta')`= `tmax'')bn.`_dta[_TStvar]' if `touse', exp `constant'
-		if _rc != 0 {
+		if "`nolevel'" != "" & "`model'" == "fodev" {
+			cap _rmcoll i(`= `tmin''(`tdelta')`= `tmax'-`tdelta'')bn.`_dta[_TStvar]' if `touse', exp `constant'
+		}
+		else {
+			cap _rmcoll i(`= `tmin'+`tdelta'*("`constant'" == "" | "`nolevel'" != "")'(`tdelta')`= `tmax'')bn.`_dta[_TStvar]' if `touse', exp `constant'
+		}
+		if _rc {
 			error 451
 		}
 		loc teffects		"`r(varlist)'"
@@ -114,11 +123,18 @@ program define xtdpdgmm_gmm, eclass
 
 	*--------------------------------------------------*
 	*** type of weighting matrix ***
+	if "`wmatrix'" != "" & "`cugmm'" != "" {
+		di as err "options wmatrix() and cugmm may not be combined"
+		exit 184
+	}
 	xtdpdgmm_parse_wmatrix `wmatrix'
 	loc wmatrix			"`s(wmatrix)'"
 	loc ratio			= `s(ratio)'
 	if "`wmatrix'" == "unadjusted" {
 		mata: xtdpdgmm_init_wmatrix(`mopt', "", `ratio')
+	}
+	else if "`wmatrix'" == "identity" {
+		mata: xtdpdgmm_init_wmatrix(`mopt', "identity")
 	}
 	else {
 		mata: xtdpdgmm_init_wmatrix(`mopt', "independent", `ratio')
@@ -141,6 +157,10 @@ program define xtdpdgmm_gmm, eclass
 		loc nl				"`serial'`iid', norescale"
 	}
 	if "`nl'" != "" {
+		if "`nlevel'" != "" {
+			di as err "options nl() and nolevel may not be combined"
+			exit 184
+		}
 		loc nlsyntax		= cond("`collapse'" == "", "Collapse", "noCollapse")
 		loc nlsyntax		= cond("`rescale'" == "", "`nlsyntax' noREScale", "`nlsyntax' REScale")
 		xtdpdgmm_parse_nl `nlsyntax' `nl'
@@ -171,16 +191,12 @@ program define xtdpdgmm_gmm, eclass
 	sum `obs', mean
 	loc maxlag			= r(max) - r(min)
 	loc ivnum			= 0
-	if "`model'" == "" {
-		loc model			"level"
-	}
-	else {
-		xtdpdgmm_parse_model level , todo(2) `model'
-		loc model			"`s(model)'"
-	}
 	while `"`options'"' != "" {
 		xtdpdgmm_parse_options , maxlag(`maxlag') `options' `collapse' `rescale' model(`model')
 		loc options			`"`s(options)'"'
+		if "`nolevel'" != "" & "`s(model)'"  == "level" {
+			continue
+		}
 		loc ivnames			"`s(varlist)'"
 		loc transform		"`s(transform)'"
 		if "`s(fvops)'" == "true" {
@@ -280,13 +296,37 @@ program define xtdpdgmm_gmm, eclass
 		mata: xtdpdgmm_init_ivvars_type(`mopt', `ivnum', "`s(ivtype)'")
 	}
 	if "`teffects'" != "" {
-		loc ivvars "`ivvars' `teffects'"
 		loc ++ivnum
 		loc ivnames_`ivnum'	"`teffects'"
-		loc ivmodel_`ivnum'	"level"
 		loc ivlag1_`ivnum'	= 0
 		loc ivlag2_`ivnum'	= 0
-		mata: xtdpdgmm_init_ivvars(`mopt', `ivnum', "`teffects'")
+		if "`nolevel'" != "" {
+			fvrevar `teffects'
+			xtdpdgmm_parse_options , maxlag(`maxlag') iv(`r(varlist)', l(0 0)) `rescale' m(`model')
+			if "`model'" == "diff" {
+				loc divvars			"`divvars' `s(ivlist)'"
+			}
+			if "`model'" == "fodev" {
+				loc fodivvars		"`fodivvars' `s(ivlist)'"
+			}
+			else if "`model'" == "mdev" {
+				loc mdivvars		"`mdivvars' `s(ivlist)'"
+			}
+			loc ivmodel_`ivnum'	"`model'"
+			mata: xtdpdgmm_init_ivvars(`mopt', `ivnum', "`s(ivlist)'")
+			mata: xtdpdgmm_init_ivvars_model(`mopt', `ivnum', "`model'")
+			if "`s(rescale)'" == "" {
+				mata: xtdpdgmm_init_ivvars_rescale(`mopt', `ivnum', "no")
+			}
+			if "`wmatrix'" == "separate" {
+				mata: xtdpdgmm_init_ivvars_separate(`mopt', `ivnum', "yes")
+			}
+		}
+		else {
+			loc ivvars "`ivvars' `teffects'"
+			loc ivmodel_`ivnum'	"level"
+			mata: xtdpdgmm_init_ivvars(`mopt', `ivnum', "`teffects'")
+		}
 	}
 	loc gmmivvars		: list retok gmmivvars
 	loc ivvars			: list retok ivvars
@@ -298,16 +338,42 @@ program define xtdpdgmm_gmm, eclass
 	*--------------------------------------------------*
 	*** type of variance-covariance matrices ***
 	if `"`vce'"' != "" {
-		xtdpdgmm_parse_vce , `vce' `twostep'`igmm' model(`model')
+		xtdpdgmm_parse_vce if `touse', `vce' model(`model')
 		loc vce				"`s(vce)'"
 		loc vcem			"`s(model)'"
+		loc vcec			"`s(vcecor)'"
 		loc clustvar		"`s(clustvar)'"
 		if "`vce'" == "robust" {
 			mata: xtdpdgmm_init_vcetype(`mopt', "robust")
+			if "`vcec'" == "DC" {
+				if "`cugmm'" != "" {
+					loc vcec			""
+// 					di as txt "note: DC standard errors not available with continuously-updating GMM estimator"
+				}
+// 				else if "`nl'" != "" {
+// 					loc vcec			"WC"
+// 					di as txt "note: DC standard errors not available with nonlinear moment conditions"
+// 				}
+				else {
+					mata: xtdpdgmm_init_vce_cor(`mopt', 2)
+				}
+			}
+			if "`vcec'" == "WC" {
+				if "`cugmm'" != "" | ("`twostep'`igmm'`cugmm'" == "" & "`nl'" == "") {
+					loc vcec			""
+// 					di as txt "note: WC standard errors not available with continuously-updating GMM estimator"
+				}
+				else {
+					mata: xtdpdgmm_init_vce_cor(`mopt', 1)
+				}
+			}
+			if "`clustvar'" != "" {
+				mata: xtdpdgmm_init_cluster(`mopt', "`clustvar'")
+			}
 		}
-		if "`clustvar'" != "" {
-			mata: xtdpdgmm_init_cluster(`mopt', "`clustvar'")
-		}
+// 		if "`s(rescale)'" != "" {
+// 			mata: xtdpdgmm_init_vce_rescale(`mopt', "no")
+// 		}
 	}
 	else {
 		loc vce				"conventional"
@@ -316,12 +382,12 @@ program define xtdpdgmm_gmm, eclass
 		loc vcem			"`model'"
 	}
 	mata: xtdpdgmm_init_vce_model(`mopt', "`vcem'")
-	if "`vce'" == "conventional" {
-		if ("`twostep'`igmm'" != "" | "`nl'" != "") {
-			di as txt "note: standard errors can be severely biased in finite samples; use vce(robust)"
+	if "`vce'" == "conventional" & "`cugmm'" == "" {
+		if ("`twostep'`igmm'" != "") {
+			di as txt "note: conventional standard errors can be severely biased in finite samples"
 		}
-		else {
-			di as txt "note: standard errors may not be valid; use vce(robust)"
+		else if "`nolevel'" == "" {
+			di as txt "note: conventional one-step standard errors may not be valid"
 		}
 	}
 
@@ -338,6 +404,9 @@ program define xtdpdgmm_gmm, eclass
 		_mkvec `b0', `from' col(`regnames') first err("from()")
 		mata: xtdpdgmm_init_coefs(`mopt', st_matrix("`b0'"))
 	}
+	else if "`cugmm'" != "" {
+		mata: xtdpdgmm_init_2sls(`mopt', "yes")
+	}
 
 	*--------------------------------------------------*
 	*** estimation ***
@@ -345,24 +414,33 @@ program define xtdpdgmm_gmm, eclass
 	mata: xtdpdgmm(`mopt')
 
 	mata: st_numscalar("r(N)", xtdpdgmm_result_N(`mopt'))
+	mata: st_numscalar("r(N_g)", xtdpdgmm_result_Ng(`mopt'))
 	mata: st_numscalar("r(rank)", xtdpdgmm_result_rank(`mopt'))
 	mata: st_numscalar("r(zrank_nl)", xtdpdgmm_result_zrank(`mopt', "nonlinear"))
+	if ("`igmm'" == "") {
+		mata: st_numscalar("r(converged)", xtdpdgmm_result_converged(`mopt'))
+	}
+	else {
+		mata: st_numscalar("r(converged)", xtdpdgmm_result_igmm_converged(`mopt'))
+	}
 	mata: st_matrix("r(b)", xtdpdgmm_result_coefs(`mopt'))
 	mata: st_matrix("r(V)", xtdpdgmm_result_V(`mopt'))
 	mata: st_matrix("r(V_modelbased)", xtdpdgmm_result_V_oim(`mopt'))
 	mata: st_matrix("r(W)", xtdpdgmm_result_wmatrix(`mopt'))
 	loc N				= r(N)
+	loc N_g				= r(N_g)
 	loc rank			= r(rank)
 	loc zrank_nl		= r(zrank_nl)
+	loc conv			= r(converged)
 	tempname b V W
 	mat `b'				= r(b)
 	mat `V'				= r(V)
 	mat `W'				= r(W)
-	if !("`vce'" != "robust" & "`twostep'`igmm'" != "") {
+	if !("`vcec'" == "" & "`twostep'`igmm'`cugmm'" != "") & !("`igmm'" != "" & `conv') {
 		tempname V0
 		mat `V0'			= r(V_modelbased)
 	}
-	if "`twostep'`igmm'" != "" & "`vce'" == "robust" {
+	if "`twostep'" != "" & "`vcec'" == "WC" {
 		mata: st_matrix("r(b)", xtdpdgmm_result_coefs(`mopt', 1))
 		mata: st_matrix("r(V_modelbased)", xtdpdgmm_result_V_oim(`mopt', 1))
 		mata: st_matrix("r(W)", xtdpdgmm_result_wmatrix(`mopt', 1))
@@ -371,28 +449,40 @@ program define xtdpdgmm_gmm, eclass
 		mat `V01'			= r(V_modelbased)
 		mat `W1'			= r(W)
 	}
+	loc df_a			= cond("`nolevel'" != "", `N_g' - ("`constant'" == ""), 0)
+	loc df_g			= cond("`nolevel'" != "", `N_g', 0)
 	if "`vce'" == "robust" {
 		mata: st_numscalar("r(N_clust)", xtdpdgmm_result_Nclust(`mopt'))
 		loc N_clust			= r(N_clust)
 		if "`small'" != "" {
 			loc df				= `N_clust' - 1
-			mat `V'				= `N_clust' / `df' * (`N' - 1) / (`N' - `rank') * `V'
+			if "`nolevel'" != "" & "`model'" != "mdev" {
+				mat `V'				= `N_clust' / `df' * (`N' - 1 - `N_g') / (`N' - `rank' - `df_a') * `V'
+			}
+			else {
+				mat `V'				= `N_clust' / `df' * (`N' - 1) / (`N' - `rank' - `df_a') * `V'
+			}
 		}
 	}
 	else if "`small'" != "" {
-		loc df				= `N' - `rank'
-		mat `V'				= `N' / `df' * `V'
+		loc df				= `N' - `rank' - `df_a'
+		if "`nolevel'" != "" {
+			mat `V'				= (`N' - `N_g') / `df' * `V'
+		}
+		else {
+			mat `V'				= `N' / `df' * `V'
+		}
 	}
 	if "`auxiliary'" != "" {
 		loc k_aux			: word count `regnames'
 		mat coleq `b'		= `regnames'
 		mat roweq `V'		= `regnames'
 		mat coleq `V'		= `regnames'
-		if !("`vce'" != "robust" & "`twostep'`igmm'" != "") {
+		if !("`vcec'" == "" & "`twostep'`igmm'`cugmm'" != "") & !("`igmm'" != "" & `conv') {
 			mat roweq `V0'		= `regnames'
 			mat coleq `V0'		= `regnames'
 		}
-		if "`twostep'`igmm'" != "" & "`vce'" == "robust" {
+		if "`twostep'" != "" & "`vcec'" == "WC" {
 			mat coleq `b1'		= `regnames'
 			mat roweq `V01'		= `regnames'
 			mat coleq `V01'		= `regnames'
@@ -405,11 +495,11 @@ program define xtdpdgmm_gmm, eclass
 	mat coln `b'		= `regnames'
 	mat rown `V'		= `regnames'
 	mat coln `V'		= `regnames'
-	if !("`vce'" != "robust" & "`twostep'`igmm'" != "") {
+	if !("`vcec'" == "" & "`twostep'`igmm'`cugmm'" != "") & !("`igmm'" != "" & `conv') {
 		mat rown `V0'		= `regnames'
 		mat coln `V0'		= `regnames'
 	}
-	if "`twostep'`igmm'" != "" & "`vce'" == "robust" {
+	if "`twostep'" != "" & "`vcec'" == "WC" {
 		mat coln `b1'		= `regnames'
 		mat rown `V01'		= `regnames'
 		mat coln `V01'		= `regnames'
@@ -512,7 +602,7 @@ program define xtdpdgmm_gmm, eclass
 		loc fvopt			"buildfv"
 	}
 	eret post `b' `V', dep(`depvar') o(`N') `small' e(`touse') `fvopt' findomitted
-	mata: st_numscalar("e(N_g)", xtdpdgmm_result_Ng(`mopt'))
+	eret sca N_g		= `N_g'
 	if "`vce'" == "robust" {
 		eret sca N_clust	= `N_clust'
 	}
@@ -521,26 +611,27 @@ program define xtdpdgmm_gmm, eclass
 	mata: st_numscalar("e(g_max)", xtdpdgmm_result_Tmax(`mopt'))
 	mata: st_numscalar("e(f)", xtdpdgmm_result_value(`mopt'))
 	mata: st_numscalar("e(chi2_J)", xtdpdgmm_result_overid(`mopt', 1))
-	mata: st_numscalar("e(chi2_J_u)", xtdpdgmm_result_overid(`mopt', 2))
+	if "`cugmm'" == "" & !("`igmm'" != "" & `conv') {
+		mata: st_numscalar("e(chi2_J_u)", xtdpdgmm_result_overid(`mopt', 2))
+	}
 	eret sca rank		= `rank'
 	mata: st_numscalar("e(zrank)", xtdpdgmm_result_zrank(`mopt', "linear"))
 	eret sca zrank_nl	= `zrank_nl'
-	if "`vce'" == "conventional" & "`twostep'`igmm'" == "" & "`nl'" == "" {
+	if "`nolevel'" != "" {
+		eret sca df_a		= `df_a'
+	}
+	if "`vce'" == "conventional" & "`twostep'`igmm'`cugmm'" == "" & "`nl'" == "" {
 		mata: st_numscalar("e(sigma2e)", xtdpdgmm_result_sigma2(`mopt'))
 	}
 	mata: st_numscalar("e(steps)", xtdpdgmm_result_steps(`mopt'))
 	mata: st_numscalar("e(ic)", xtdpdgmm_result_iterations(`mopt'))
-	mata: st_numscalar("e(converged)", xtdpdgmm_result_converged(`mopt'))
+	eret sca converged	= `conv'
+	eret loc vcecor		= strlower("`vcec'")
 	if "`auxiliary'" == "" {
-		if "`vce'" == "robust" {
-			if "`twostep'`igmm'" != "" | "`nl'" != "" {
-				eret loc vcetype	"WC-Robust"
-			}
-			else {
-				eret loc vcetype	"Robust"
-			}
+		if "`vcec'" != "" {
+			eret loc vcetype	"`vcec'-Robust"
 		}
-		else if "`twostep'`igmm'" == "" & "`nl'" != "" {
+		else if "`vce'" == "robust" | "`twostep'`igmm'`cugmm'`nl'" != "" {
 			eret loc vcetype	"Robust"
 		}
 		if "`clustvar'" == "" {
@@ -551,12 +642,12 @@ program define xtdpdgmm_gmm, eclass
 			eret loc clustvar	"`clustvar'"
 		}
 	}
-	eret loc estimator	"`onestep'`twostep'`igmm'"
+	eret loc estimator	"`onestep'`twostep'`igmm'`cugmm'"
 	eret loc wmatrix	"`wmatrix', ratio(`ratio')"
 	eret loc teffects	"`teffects'"
 	mata: st_matrix("e(ilog)", xtdpdgmm_result_iterationlog(`mopt'))
 	eret mat W			= `W'
-	if !("`vce'" != "robust" & "`twostep'`igmm'" != "") {
+	if !("`vcec'" == "" & "`twostep'`igmm'`cugmm'" != "") & !("`igmm'" != "" & `conv') {
 		eret mat V_modelbased	= `V0'
 	}
 
@@ -581,7 +672,7 @@ program define xtdpdgmm_gmm, eclass
 	}
 	eret historical loc gmmivvars	"`gmmivvars'"
 	eret historical loc ivvars		"`ivvars'"
-	if "`twostep'" != "" & "`vce'" == "robust" {
+	if "`twostep'" != "" & "`vcec'" == "WC" {
 		eret historical mat W_onestep	= `W1'
 		eret historical mat V_onestep	= `V01'
 		eret historical mat b_onestep	= `b1'
@@ -636,6 +727,7 @@ program define xtdpdgmm_init, sclass
 				ONEstep								///
 				TWOstep								///
 				IGMM								///
+				CUgmm								///
 				noANalytic							///
 				METHOD(string)						///
 				ITERate(integer `maxiter')			///
@@ -666,17 +758,6 @@ program define xtdpdgmm_init, sclass
 			mata: `mopt' = xtdpdgmm_init()
 		}
 	}
-	if `"`method'"' == "" {
-		loc method			"q1"
-	}
-	else {
-		loc method			: subinstr loc method "quadratic" "q", all
-		loc methods			"q0 q1 q1debug"
-		if `: word count `method'' > 1 | !`: list method in methods' {
-			di as err "option method() incorrectly specified -- invalid evaluator type"
-			exit 198
-		}
-	}
 	if "`onestep'" != "" & "`twostep'" != "" {
 		di as err "options onestep and twostep may not be combined"
 		exit 184
@@ -685,7 +766,11 @@ program define xtdpdgmm_init, sclass
 		di as err "options `onestep'`twostep' and igmm may not be combined"
 		exit 184
 	}
-	if "`onestep'`twostep'`igmm'" == "" {
+	if "`onestep'`twostep'`igmm'" != "" & "`cugmm'" != "" {
+		di as err "options `onestep'`twostep'`igmm' and cugmm may not be combined"
+		exit 184
+	}
+	if "`onestep'`twostep'`igmm'`cugmm'" == "" {
 		if "`nl'" == "" {
 			loc onestep			"onestep"
 		}
@@ -693,9 +778,26 @@ program define xtdpdgmm_init, sclass
 			loc twostep			"twostep"
 		}
 	}
-	if "`dots'" != "" & "`nodots'" != "" {
-		di as err "options dots and nodots may not be combined"
-		exit 184
+	if "`dots'" != "" {
+		if "`nodots'" != "" {
+			di as err "options dots and nodots may not be combined"
+			exit 184
+		}
+		if "`cugmm'" != "" {
+			di as err "options dots and cugmm may not be combined"
+			exit 184
+		}
+	}
+	if `"`method'"' == "" {
+		loc method			= cond("`cugmm'" == "", "q1", "q0")
+	}
+	else {
+		loc method			: subinstr loc method "quadratic" "q", all
+		loc methods			"q0 q1 q1debug"
+		if `: word count `method'' > 1 | !`: list method in methods' | ("`cugmm'" != "" & "`method'" != "q0") {
+			di as err "option method() incorrectly specified -- invalid evaluator type"
+			exit 198
+		}
 	}
 	if `iterate' < 0 {
 		di as err "option iterate() incorrectly specified -- outside of allowed range"
@@ -716,8 +818,11 @@ program define xtdpdgmm_init, sclass
 		mata: xtdpdgmm_init_igmm_eps(`mopt', `igmmeps')
 		mata: xtdpdgmm_init_igmm_weps(`mopt', `igmmweps')
 	}
+	if "`cugmm'" != "" {
+		mata: xtdpdgmm_init_cugmm(`mopt', "yes")
+	}
 	mata: xtdpdgmm_init_evaluatortype(`mopt', "`method'")
-	if "`analytic'" == "" & "`nl'" == "" {
+	if "`analytic'" == "" & "`nl'" == "" & "`cugmm'" == "" {
 		mata: xtdpdgmm_init_technique(`mopt', "")
 	}
 	mata: xtdpdgmm_init_conv_maxiter(`mopt', `iterate')
@@ -744,7 +849,7 @@ program define xtdpdgmm_init, sclass
 
 	sret loc mopt		"`mopt'"
 	sret loc method		`"`method'"'
-	sret loc options	`"`nl' `onestep'`twostep'`igmm' `options'"'
+	sret loc options	`"`nl' `onestep'`twostep'`igmm'`cugmm' `options'"'
 end
 
 *==================================================*
@@ -940,19 +1045,29 @@ end
 **** syntax parsing for the model equations ****
 program define xtdpdgmm_parse_model, sclass
 	version 13.0
-	syntax anything , TODO(integer) [	Level Difference MDev FODev IID		///
+	syntax [anything] , TODO(integer) [	Level Difference MDev FODev IID		///
 										EC]									// historical since version 2.0.0
 
 	if `: word count `level' `difference' `mdev' `fodev'' > 1 | (`todo' == 2 & "`iid'`ec'" != "") {
 		di as err "option model() incorrectly specified"
 		exit 198
 	}
+	if "`anything'" == "" {
+		loc anything		"level"
+	}
+	else if "`anything'" == "nolevel" {
+		if "`level'" != "" {
+			di as err "options model(level) and nolevel may not be combined"
+			exit 184
+		}
+		loc anything		"diff"	
+	}
 	if "`level'`difference'`mdev'`fodev'`iid'`ec'" == "" {
 		if "`anything'" == "diff" {
-			loc difference			"difference"
+			loc difference		"difference"
 		}
 		else {
-			loc `anything'			"`anything'"
+			loc `anything'		"`anything'"
 		}
 	}
 	if `todo' == 1 & "`fodev'" == "" {
@@ -1052,7 +1167,7 @@ program define xtdpdgmm_parse_wmatrix, sclass
 	else if `"`anything'"' == substr("separate", 1, max(3, `length')) {
 		loc anything		"separate"
 	}
-	else {
+	else if `"`anything'"' != "identity" {
 		di as err "option wmatrix() incorrectly specified"
 		exit 198
 	}
@@ -1069,64 +1184,79 @@ end
 program define xtdpdgmm_parse_vce, sclass
 	version 13.0
 	sret clear
-	syntax , [VCE(passthru) TWOstep IGMM Model(string)]
+	syntax [if] [in] , [VCE(passthru) Model(string)]
 
 	cap _vce_parse , opt(CONVENTIONAL Robust) argopt(CLuster) : , `vce'
 	if "`r(vce)'" == "" {
 		cap _vce_parse , : , `vce'
 	}
-	if _rc != 0 {
-		cap _vce_parse , argopt(CONVENTIONAL Robust CLuster) : , `vce'
-		if _rc != 0 {
-			if "`r(vce)'" == "cluster" {
-				di as err "option vce(cluster) incorrectly specified"
-				exit 198
-			}
-			_vce_parse , : , `vce'
+	if "`r(vce)'" == "robust" | "`r(vce)'" == "cluster" {
+		xtdpdgmm_parse_vce_robust , `vce'
+		if "`s(clustvar)'" != "" & "`s(clustvar)'" != "`_dta[_TSpanel]'" {
+			xtdpdgmm_cluster `s(clustvar)' `if' `in'
 		}
+	}
+	else if _rc {
+		_vce_parse , argopt(CONVENTIONAL) : , `vce'
 		loc vceargs			"`r(vceargs)'"
 		loc vceargs			: subinstr loc vceargs "," ""
 		loc vceargs			: list retokenize vceargs
 		if "`vceargs'" != "" {
-			if "`r(vce)'" == "robust" {
-				di as err "option vce(robust) incorrectly specified"
-				exit 198
-			}
 			xtdpdgmm_parse_vce_model `model' , `vceargs'
 			loc model			"`s(model)'"
 		}
+
+		sret loc vce		"conventional"
+		sret loc model		"`model'"
 	}
-	loc vce				"`r(vce)'"
-	if "`vce'" == "cluster" {
+end
+
+*==================================================*
+**** syntax parsing for robust variance-covariance matrix ****
+program define xtdpdgmm_parse_vce_robust, sclass
+	version 13.0
+	syntax , vce(string)
+
+	xtdpdgmm_parse_vce_cor `vce'
+end
+
+*==================================================*
+**** syntax parsing for the variance correction type ****
+program define xtdpdgmm_parse_vce_cor, sclass
+	version 13.0
+	syntax anything , [	WCorrection DCorrection		///
+						noCorrection]				// undocumented
+
+	_vce_parse , opt(Robust) argopt(CLuster) : , vce(`anything')
+	if "`r(vce)'" == "cluster" {
 		if `: word count `r(cluster)'' > 1 {
 			di as err "option vce(cluster) incorrectly specified -- too many arguments"
 			exit 198
 		}
 		loc clustvar		"`r(cluster)'"
-		if "`clustvar'" != "`_dta[_TSpanel]'" {
-			xtdpdgmm_cluster `clustvar' `if' `in'
-		}
+	}
+	if `: word count `correction' `wcorrection' `dcorrection'' > 1 {
+		di as err "option vce(`vce') incorrectly specified -- too many arguments"
+		exit 198
+	}
+	else if "`dcorrection'" != "" {
+		loc vcecor			"DC"
+	}
+	else if "`wcorrection'" != "" | "`correction'" == "" {
+		loc vcecor			"WC"
 	}
 
-	if "`vce'" == "" {
-		sret loc vce		"conventional"
-	}
-	else if "`vce'" == "cluster" {
-		sret loc vce		"robust"
-		sret loc clustvar	"`clustvar'"
-	}
-	else {
-		sret loc vce		"`vce'"
-	}
-	sret loc model		"`model'"
+	sret loc vce		"robust"
+	sret loc clustvar	"`clustvar'"
+	sret loc vcecor		"`vcecor'"
 end
 
 *==================================================*
-**** syntax parsing for standard instruments ****
+**** syntax parsing for the variance model equation ****
 program define xtdpdgmm_parse_vce_model, sclass
 	version 13.0
-	syntax anything , [	Model(string)						///
-						Difference]							// historical since version 2.0.3
+	syntax anything , [	Model(string) 				/// noREScale
+						Difference]					// historical since version 2.0.3
 
 	if "`difference'" == "" {
 		xtdpdgmm_parse_model `anything' , todo(2) `model'
@@ -1138,6 +1268,7 @@ program define xtdpdgmm_parse_vce_model, sclass
 		}
 		sret loc model		"diff"
 	}
+// 	sret loc rescale	"`rescale'"
 end
 
 *==================================================*
@@ -1152,8 +1283,8 @@ program define xtdpdgmm_cluster, rclass sort
 	tempname aux aux2
 	qui by `varlist': gen long `aux' = cond(_n == 1, 1, 0) if `touse'
 	qui replace `aux' = sum(`aux')
-	sort `_dta[_TSpanel]' `varlist'
-	qui by `_dta[_TSpanel]': gen long `aux2' = `aux'[1] - `aux'[_N]
+	sort `_dta[_TSpanel]' `touse' `varlist'
+	qui by `_dta[_TSpanel]' `touse': gen long `aux2' = `aux'[1] - `aux'[_N]
 	qui count if `aux2' != 0 & `touse'
 	if r(N) > 0 {
 		di as err "panels are not nested within clusters"
@@ -1163,6 +1294,12 @@ end
 
 *==================================================*
 *** version history ***
+* version 2.4.2  02jul2022  doubly corrected standard errors added for nonlinear estimator; option wmatrix(identity) added
+* version 2.4.1  14jun2022  suboptions wc and dc added to option vce(); adjusted standard error labels; adjusted Windmeijer correction for iterated GMM; bug fixed with conventional two-step standard errors in combination with option nl()
+* version 2.4.0  05jun2022  option cugmm added; incorrect modification to Windmeijer correction in version 2.3.11 reversed; bug with option auxiliary fixed that was introduced in version 2.3.10
+* version 2.3.11 30may2022  modification to Windmeijer correction in predict with option score, affecting postestimation commands estat serial and estat hausman
+* version 2.3.10 23mar2022  option nolevel added
+* version 2.3.9  02sep2021  bug fixed with option vce(cluster) and if-condition
 * version 2.3.8  13aug2021  bug with option nl() fixed for postestimation commands
 * version 2.3.7  30jul2021  bug with factor variables fixed in estat hausman
 * version 2.3.6  11jul2021  bug fixed that was introduced in version 2.3.5
