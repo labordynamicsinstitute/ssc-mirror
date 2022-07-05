@@ -16,14 +16,14 @@ help for {hi:ivreg2m}
 
 {title:Syntax}
 
-{p 6 14 0 0}{cmd:ivreg2m} {it:depvar} [{it:varlist}] ({cmd:Treatment({help varname:{it:varname}})}={it:varlist_iv}) [{it:weight}] [{cmd:if} {it:exp}] [{cmd:in} {it:range}] [{cmd:,} {cmd:ta}({it:string}) {cmd:tb}({it:string}) {it:options}]
+{p 6 14 0 0}{cmd:ivreg2m} {it:depvar} [{it:varlist}] ({cmd:treatment}={it:varlist_iv}) [{it:weight}] [{cmd:if} {it:exp}] [{cmd:in} {it:range}] [{cmd:,} {cmd:ta}({it:string}) {cmd:tb}({it:string}) {it:options}]
 
 
 {synoptset 20 tabbed}{...}
 {synopthdr :Required:}
 {synoptline}
 {syntab:Model}
-{synopt :{cmd:Treatment({help varname:{it:varname}})}} specifies the name of the misclassified treatment variable.{p_end}
+{synopt :{cmd:treatment}} specifies the name of the endogenous misclassified treatment variable.{p_end}
 {synopt :{cmd:ta}({it:string})} specifies the numeric value(s) of the variable {cmd:treatment} defining the treatment group. The default is ta(1).{p_end}
 {synopt :{cmd:tb}({it:string})} specifies the numeric value(s) of the variable {cmd:treatment} defining the control group. The default is tb(-1).{p_end}
 {synoptline}
