@@ -17,13 +17,13 @@ d KW: robust inference
 d
 d Requires: Stata version 13.1
 d
-d Distribution-Date: 20200406
+d Distribution-Date: 20220708
 d
 d Author: Sebastian Calonico, Department of Economics, University of Miami
 d Support: email scalonico@@bus.miami.edu
 d
-d Author: Matias D. Cattaneo, Department of Economics and Department of Statistics, University of Michigan
-d Support: email cattaneo@@umich.edu
+d Author: Matias D. Cattaneo, Department of Operations Research and Financial Engineering, Princeton University
+d Support: email cattaneo@@princeton.edu
 d
 d Author:  Max H. Farrell, Booth School of Business, University of Chicago
 d Support: email max.farrell@@chicagobooth.edu

@@ -34,6 +34,7 @@ p cdout module to display the current working directory
 p cdreg module to estimate Linear Regression under Measurement Error using Auxiliary Information
 p cedesign module to find the optimal flexible two stage single-arm binary outcome design
 p cem module to perform Coarsened Exact Matching
+p cemimix module to perform reference-based multiple imputation of cost-effectiveness data in clinical trials
 p cenpois module to estimate censored maximum likelihood Poisson regression models
 p censornb module to estimate censored negative binomial regression as survival model
 p censusapi module to download Census data through the Census API

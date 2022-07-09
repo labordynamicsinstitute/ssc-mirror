@@ -1,0 +1,40 @@
+d 'RDDENSITY': module to perform  Manipulation Testing Using Local Polynomial Density Estimation
+d
+d   rddensity implements manipulation testing procedures using the
+d local polynomial density estimators proposed	      in Cattaneo,
+d Jansson and Ma (2020), and implements graphical procedures with
+d valid confidence bands using	      the results in Cattaneo,
+d Jansson and Ma (2021).  In addition, the command provides
+d complementary        manipulation testing based on finite sample
+d exact binomial testing following the results in Cattaneo,	  
+d Frandsen and Titiunik (2015) and Cattaneo, Frandsen and
+d Vazquez-Bare (2017).	For an introduction to	      manipulation
+d testing see McCrary (2008). 
+d
+d KW: manipulation
+d KW: local polynomial density
+d
+d Requires: Stata version 14 and lpdensity from SSC (q.v.)
+d
+d Distribution-Date: 20220708
+d
+d Author: Matias D. Cattaneo, Department of Operations Research and Financial Engineering, Princeton University
+d Support: email cattaneo@@princeton.edu
+d
+d Author: Michael Jansson, Department of Economics, UC-Berkeley
+d Support: email mjansson@@econ.berkeley.edu
+d
+d Author:  Xinwei Ma, Department of Economics, UCSD
+d Support: email x1ma@@ucsd.edu
+d
+f rdbwdensity.ado
+f rdbwdensity.sthlp
+f rddensity.ado
+f rddensity.sthlp
+f rddensity_fv.mo
+f rddensity_h.mo
+f rddensity_quantile.mo
+f rddensity_rep.mo
+f rddensity_unique.mo
+f rddensity_senate.dta
+f rddensity_fun.do

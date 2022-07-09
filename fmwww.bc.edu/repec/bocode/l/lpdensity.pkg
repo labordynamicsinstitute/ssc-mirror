@@ -1,0 +1,50 @@
+d 'LPDENSITY': module to perform Local Polynomial Density Estimation and Inference
+d
+d   lpdensity implements the local polynomial regression based
+d density (and derivatives) estimator proposed in	 Cattaneo,
+d Jansson and Ma (2020).  Robust bias-corrected inference, both
+d pointwise (confidence intervals)	  and uniform (confidence
+d bands) are also implemented following the results in Cattaneo,
+d Jansson and Ma	(2020) and Cattaneo, Jansson and Ma
+d (2022a).  See Cattaneo, Jansson and Ma (2022b) for more	
+d implementation details and illustrations. 
+d
+d KW: local polynomial
+d KW: density
+d KW: bias-corrected inference
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20220708
+d
+d Author: Matias D. Cattaneo, Department of Operations Research and Financial Engineering, Princeton University
+d Support: email cattaneo@@princeton.edu
+d
+d Author: Michael Jansson, Department of Economics, UC-Berkeley
+d Support: email mjansson@@econ.berkeley.edu
+d
+d Author:  Xinwei Ma, Department of Economics, UCSD
+d Support: email x1ma@@ucsd.edu
+d
+f lpbwdensity.ado
+f lpbwdensity.sthlp
+f lpdensity.ado
+f lpdensity.sthlp
+f lpdensity_bwimse.mo
+f lpdensity_bwirot.mo
+f lpdensity_bwmse.mo
+f lpdensity_bwrot.mo
+f lpdensity_cgen.mo
+f lpdensity_fn.mo
+f lpdensity_fn.mo
+f lpdensity_ggen.mo
+f lpdensity_normdgp.mo
+f lpdensity_optfunc.mo
+f lpdensity_quantile.mo
+f lpdensity_rep.mo
+f lpdensity_sgen.mo
+f lpdensity_tgen.mo
+f lpdensity_unique.mo
+f lpdensity_whichmin.mo
+f lpdensity_illustration.do
+f lpdensity_fun.do

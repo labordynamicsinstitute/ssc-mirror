@@ -63,6 +63,7 @@ p rdbalance module to compute covariate balance statistics with formatted table 
 p rdci module to calculate risk difference confidence intervals
 p rdcont module to compute non-randomized approximate sign test of density continuity
 p rdcv module to perform Sharp Regression Discontinuity Design with Cross Validation Bandwidth Selection
+p rddensity module to perform  Manipulation Testing Using Local Polynomial Density Estimation
 p rddsga module to conduct subgroup analysis for regression discontinuity designs
 p rdecompose module to implements Gupta's rate decomposition method for aggregated data
 p rdesigni module to perform design analysis

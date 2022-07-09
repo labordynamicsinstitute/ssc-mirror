@@ -1,4 +1,4 @@
-*!version 8.0.2  04-03-2020
+*!version 9.0.3  2022-06-25
    
 capture mata mata drop rdrobust_res()
 mata
@@ -93,11 +93,7 @@ real matrix rdrobust_bw(real matrix Y, real matrix X, real matrix T, real matrix
 	D_V = eY
 	R_V = J(n_V,o+1,.)
 	for (j=1; j<=(o+1); j++) R_V[.,j] = (eX:-c):^(j-1)
-	if (covs_drop_coll==0) {
-		invG_V = cholinv(quadcross(R_V,eW,R_V))
-	} else {
-		invG_V = invsym(quadcross(R_V,eW,R_V))
-	}
+	invG_V = cholinv(quadcross(R_V,eW,R_V))
 	e_v = J((o+1),1,0); e_v[nu+1]=1
 	s = 1
 	if (rows(T)>1) {
@@ -107,20 +103,17 @@ real matrix rdrobust_bw(real matrix Y, real matrix X, real matrix T, real matrix
 	}
 	if (rows(Z)>1) {
 		dZ = cols(Z)
-		eZ = Z[ind_V,]
-		D_V = D_V,eZ
-		U = quadcross(R_V:*eW,D_V)
-		ZWD  = quadcross(eZ,eW,D_V)
 		colsZ = (2+dT)::(2+dT+dZ-1)
-		UiGU =  quadcross(U[,colsZ],invG_V*U) 
-		ZWZ = ZWD[,colsZ] - UiGU[,colsZ] 
-		ZWY = ZWD[,1::1+dT] - UiGU[,1::1+dT] 
-		if (covs_drop_coll==0) {
-			gamma = cholinv(ZWZ)*ZWY
-			} else{
-			gamma = invsym(ZWZ)*ZWY
-			}
-			
+		eZ   = Z[ind_V,]
+		D_V  = D_V,eZ
+		U    = quadcross(R_V:*eW,D_V)
+		ZWD  = quadcross(eZ,eW,D_V)
+		UiGU = quadcross(U[,colsZ],invG_V*U) 
+		ZWZ  = ZWD[,colsZ] - UiGU[,colsZ] 
+		ZWY  = ZWD[,1::1+dT] - UiGU[,1::1+dT] 		
+		if (covs_drop_coll==0) gamma = cholinv(ZWZ)*ZWY
+		if (covs_drop_coll==1) gamma =  invsym(ZWZ)*ZWY
+		if (covs_drop_coll==2) gamma =    pinv(ZWZ)*ZWY
 		s = 1 \ -gamma[,1]
 	}
 	if (rows(C)>1) {
@@ -148,10 +141,9 @@ real matrix rdrobust_bw(real matrix Y, real matrix X, real matrix T, real matrix
 	if (vce=="hc0" | vce=="hc1" | vce=="hc2" | vce=="hc3") {
 		predicts_V=R_V*beta_V
 		if (vce=="hc2" | vce=="hc3") {
-			hii=J(n_V,1,.)	
-				for (i=1; i<=n_V; i++) {
-					hii[i] = R_V[i,]*invG_V*(R_V:*eW)[i,]'
-				}
+			
+			hii = rowsum((R_V*invG_V):*(R_V:*eW))
+			
 		}
 	}	
 	res_V = rdrobust_res(eX, eY, eT, eZ, predicts_V, hii, vce, nnmatch, dups_V, dupsid_V, o+1)
@@ -171,15 +163,7 @@ real matrix rdrobust_bw(real matrix Y, real matrix X, real matrix T, real matrix
 	D_B = eY
 	R_B = J(n_B,o_B+1,.)
 	for (j=1; j<=(o_B+1); j++) R_B[.,j] = (eX:-c):^(j-1)
-	
-	
-	if (covs_drop_coll==0) {
-		invG_B = cholinv(quadcross(R_B,eW,R_B))
-	} else{
-		invG_B = invsym(quadcross(R_B,eW,R_B))
-	}
-			
-			
+	invG_B = cholinv(quadcross(R_B,eW,R_B))
 	if (dT==1) {
 		eT = T[ind]
 		D_B = D_B,eT
@@ -204,10 +188,9 @@ real matrix rdrobust_bw(real matrix Y, real matrix X, real matrix T, real matrix
 		if (vce=="hc0" | vce=="hc1" | vce=="hc2" | vce=="hc3") {
 			predicts_B=R_B*beta_B
 			if (vce=="hc2" | vce=="hc3") {
-				hii=J(n_B,1,.)	
-					for (i=1; i<=n_B; i++) {
-						hii[i] = R_B[i,]*invG_B*(R_B:*eW)[i,]'
-				}
+				
+				hii = rowsum((R_B*invG_B):*(R_B:*eW))
+				
 			}
 		}	
 		res_B = rdrobust_res(eX, eY, eT, eZ, predicts_B, hii, vce, nnmatch, dups_B, dupsid_B,o_B+1)
@@ -257,22 +240,85 @@ real matrix rdrobust_vce(real scalar d, real matrix s, real matrix RX, real matr
 			for (i=1; i<=g; i++) {
 				Xi = panelsubmatrix(RX_o,  i, info)
 				ri = panelsubmatrix(res_o, i, info)
-				M = M + quadcross(quadcross(Xi,ri)',quadcross(Xi,ri)')
+				Xr = quadcross(Xi,ri)'
+				M = M + quadcross(Xr,Xr)
 			}
 		}
 		else {
 			for (i=1; i<=g; i++) {
 				Xi = panelsubmatrix(RX_o,  i, info)
-				ri = panelsubmatrix(res_o, i, info)
-					for (l=1; l<=1+d; l++) {	
-						for (j=1; j<=1+d; j++) {
-							M = M + quadcross(quadcross(Xi,s[l]:*ri[,l])',quadcross(Xi,s[j]:*ri[,j])')
-						}	
-					}					
-			}
+				ri = panelsubmatrix(res_o, i, info)				
+				MHolder = J(1+d,k,.)
+				for (l=1; l<=1+d; l++) {
+					MHolder[l,] = quadcross(Xi,s[l]:*ri[,l])'
+				}
+				summedvalues = colsum(MHolder)
+				M = M + quadcross(summedvalues,summedvalues)
+			}		
 		}
 	}
 	return(w*M)		
 }
 mata mosave rdrobust_vce(), replace 
+end
+
+capture mata mata drop rdrobust_groupid()
+mata
+real colvector rdrobust_groupid(real colvector x, real vector at)
+{
+        real scalar i, j
+        real colvector result, p
+        result = J(rows(x),1,.)
+        j = length(at)
+                for (i=rows(x); i>0; i--) {
+                        if (x[i]>=.) continue
+                        for (; j>0; j--) {
+                                if (at[j]<=x[i]) break
+                        }
+                        if (j>0) result[i,1] = j
+                }
+                return(result)
+}
+mata mosave rdrobust_groupid(), replace 
+end
+
+capture mata mata drop rdrobust_median()
+mata
+real colvector rdrobust_median(real colvector x)
+{	
+  n = length(x)
+  s = sort(x,1)
+  if (mod(n,2)==1) {  	
+	result = s[(n+1)/2]
+  } 
+  else{
+    i = n/2
+    med1 = s[i]
+    med2 = s[i+1]
+    result = (med1+med2)/2	
+  }     
+	return(result)  
+}
+mata mosave rdrobust_median(), replace 
+end
+
+
+capture mata mata drop rdrobust_collapse()
+mata
+real matrix rdrobust_collapse(real matrix x, real colvector id)
+{	
+	info  = panelsetup(id,1)
+	g     = rows(info)
+	mean = J(g,2,.)
+	var  = J(g,1,.)
+		for (i=1; i<=g; i++) {
+				Xi       = panelsubmatrix(x,  i, info)
+				mean[i,] = mean(Xi)
+				var[i]   = variance(Xi[,2])
+		}
+		nobs =  (info[,2]-info[,1]):+1
+		result = nobs, mean, var	
+		return(result)  		
+}	
+mata mosave rdrobust_collapse(), replace 
 end
