@@ -147,14 +147,20 @@ See {it:{help metaparm_content_opts}} for details of these options.
 {synopt:{cmdab::no}{cmdab:ze:rop}}Reset zero {it:P}-values to smallest positive double-precision number{p_end}
 {synopt:{opt nu:llvalue(#)}}Value of estimated parameters under null hypotheses{p_end}
 {synopt:{opt fast}}Calculate confidence limits without precautions{p_end}
+{synopt:{opt plo:wer}}Create variable containing lower one-tailed {it:P}-values{p_end}
+{synopt:{opt pup:per}}Create variable containing upper one-tailed {it:P}-values{p_end}
 {synopt:{cmdab:est:imate}{cmd:(}{it:{help varname}}{cmd:)}}Name of input estimate variable{p_end}
 {synopt:{cmdab:std:err}{cmd:(}{it:{help varname}}{cmd:)}}Name of input standard error variable{p_end}
 {synopt:{cmdab:d:of}{cmd:(}{it:{help varname}}{cmd:)}}Name of input degrees of freedom variable{p_end}
 {synopt:{cmdab:z:stat}{cmd:(}{it:{help newvar:newvarname}}{cmd:)}}Name of output {it:z}-statistic variable{p_end}
 {synopt:{cmdab:t:stat}{cmd:(}{it:{help newvar:newvarname}}{cmd:)}}Name of output {it:t}-statistic variable{p_end}
 {synopt:{cmdab:p:value}{cmd:(}{it:{help newvar:newvarname}}{cmd:)}}Name of output {it:P}-value variable{p_end}
+{synopt:{cmdab:plov:alue}{cmd:(}{it:{help newvar:newvarname}}{cmd:)}}Name of output lower one-sided {it:P}-value variable{p_end}
+{synopt:{cmdab:pupv:alue}{cmd:(}{it:{help newvar:newvarname}}{cmd:)}}Name of output upper one-sided {it:P}-value variable{p_end}
 {synopt:{cmdab:sta:rs}{cmd:(}{it:{help numlist}}{cmd:)}}List of {it:P}-value thresholds for stars{p_end}
-{synopt:{cmdab:nsta:rs}{cmd:(}{it:{help newvar:newvarname}}{cmd:)}}Name of output stars variable{p_end}
+{synopt:{cmdab:nsta:rs}{cmd:(}{it:{help newvar:newvarname}}{cmd:)}}Name of output stars variable for {it:P}-value{p_end}
+{synopt:{cmdab:nstarsl:ower}{cmd:(}{it:{help newvar:newvarname}}{cmd:)}}Name of output stars variable for lower one-sided {it:P}-value{p_end}
+{synopt:{cmdab:nstarsu:pper}{cmd:(}{it:{help newvar:newvarname}}{cmd:)}}Name of output stars variable for upper one-sided {it:P}-value{p_end}
 {synopt:{cmdab:le:vel}{cmd:(}{it:{help numlist}}{cmd:)}}Confidence level(s) for calculating confidence limits{p_end}
 {synopt:{cmdab:cln:umber}{cmd:(}{it:numbering_rule}{cmd:)}}Numbering rule for naming confidence limit variables{p_end}
 {synopt:{cmdab:minp:refix}{cmd:(}{it:prefix}{cmd:)}}Prefix for lower confidence limits{p_end}
@@ -382,8 +388,8 @@ displayed by {helpb svy tabulate twoway:svy: tabulate}.
 {title:Author}
 
 {pstd}
-Roger Newson, Imperial College London, UK.
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, King's College London, UK.
+Email: {browse "mailto:roger.newson@kcl.ac.uk":roger.newson@kcl.ac.uk}
 
 
 {title:References}

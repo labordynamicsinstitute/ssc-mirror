@@ -44,6 +44,9 @@ f rdrobust_bw.mo
 f rdrobust_kweight.mo
 f rdrobust_res.mo
 f rdrobust_vce.mo
+f rdrobust_groupid.mo
+f rdrobust_collapse.mo
+f rdrobust_median.mo
 f rdbwselect_2014_functions.do
 f rdrobust_functions.do
 f rdrobust_illustration.do

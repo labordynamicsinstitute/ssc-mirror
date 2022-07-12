@@ -124,8 +124,8 @@ the variables in the output dataset specified by the corresponding {help varlist
 {title:Author}
 
 {pstd}
-Roger Newson, Imperial College London, UK.
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, King's College London, UK.
+Email: {browse "mailto:roger.newson@kcl.ac.uk":roger.newson@kcl.ac.uk}
 
 
 {title:References}

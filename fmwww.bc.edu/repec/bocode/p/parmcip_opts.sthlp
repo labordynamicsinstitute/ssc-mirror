@@ -18,14 +18,20 @@
 {synopt:{cmdab::no}{cmdab:ze:rop}}Reset zero {it:P}-values to smallest positive double-precision number{p_end}
 {synopt:{opt nu:llvalue(#)}}Value of estimated parameters under null hypotheses{p_end}
 {synopt:{opt fast}}Calculate confidence limits without precautions{p_end}
+{synopt:{opt plo:wer}}Create variable containing lower one-tailed {it:P}-values{p_end}
+{synopt:{opt pup:per}}Create variable containing upper one-tailed {it:P}-values{p_end}
 {synopt:{cmdab:est:imate}{cmd:(}{it:{help varname}}{cmd:)}}Name of input estimate variable{p_end}
 {synopt:{cmdab:std:err}{cmd:(}{it:{help varname}}{cmd:)}}Name of input standard error variable{p_end}
 {synopt:{cmdab:d:of}{cmd:(}{it:{help varname}}{cmd:)}}Name of input degrees of freedom variable{p_end}
 {synopt:{cmdab:z:stat}{cmd:(}{it:{help newvar:newvarname}}{cmd:)}}Name of output {it:z}-statistic variable{p_end}
 {synopt:{cmdab:t:stat}{cmd:(}{it:{help newvar:newvarname}}{cmd:)}}Name of output {it:t}-statistic variable{p_end}
 {synopt:{cmdab:p:value}{cmd:(}{it:{help newvar:newvarname}}{cmd:)}}Name of output {it:P}-value variable{p_end}
+{synopt:{cmdab:plov:alue}{cmd:(}{it:{help newvar:newvarname}}{cmd:)}}Name of output lower one-sided {it:P}-value variable{p_end}
+{synopt:{cmdab:pupv:alue}{cmd:(}{it:{help newvar:newvarname}}{cmd:)}}Name of output upper one-sided {it:P}-value variable{p_end}
 {synopt:{cmdab:sta:rs}{cmd:(}{it:{help numlist}}{cmd:)}}List of {it:P}-value thresholds for stars{p_end}
-{synopt:{cmdab:nsta:rs}{cmd:(}{it:{help newvar:newvarname}}{cmd:)}}Name of output stars variable{p_end}
+{synopt:{cmdab:nsta:rs}{cmd:(}{it:{help newvar:newvarname}}{cmd:)}}Name of output stars variable for {it:P}-value{p_end}
+{synopt:{cmdab:nstarsl:ower}{cmd:(}{it:{help newvar:newvarname}}{cmd:)}}Name of output stars variable for lower one-sided {it:P}-value{p_end}
+{synopt:{cmdab:nstarsu:pper}{cmd:(}{it:{help newvar:newvarname}}{cmd:)}}Name of output stars variable for upper one-sided {it:P}-value{p_end}
 {synopt:{cmdab:le:vel}{cmd:(}{it:{help numlist}}{cmd:)}}Confidence level(s) for calculating confidence limits{p_end}
 {synopt:{cmdab:cln:umber}{cmd:(}{it:numbering_rule}{cmd:)}}Numbering rule for naming confidence limit variables{p_end}
 {synopt:{cmdab:minp:refix}{cmd:(}{it:prefix}{cmd:)}}Prefix for lower confidence limits{p_end}
@@ -106,6 +112,14 @@ to restore the original data if the user presses {help break:Break}.
 If used with {helpb metaparm}, the {cmd:fast} option implies the {cmd:norestore} option (see {it:{help metaparm_outdest_opts}}).
 
 {p 4 8 2}
+{cmd:plower} specifies that a new variable will be created, with default name {cmd:plower},
+containing the lower one-sided {it:P}-values for the parameter estimates.
+
+{p 4 8 2}
+{cmd:pupper} specifies that a new variable will be created, with default name {cmd:pupper},
+containing the upper one-sided {it:P}-values for the parameter estimates.
+
+{p 4 8 2}
 {cmd:estimate(}{it:{help varname}}{cmd:)} specifies the name of the input variable containing estimates.
 It is set to {hi:estimate} if not specified.
 
@@ -135,9 +149,17 @@ containing the stars for the {it:P}-values.
 It works in the same way as the {cmd:stars()} option of {helpb parmest}.
 
 {p 4 8 2}
-{cmd:nstars(}{it:{help newvar:newvarname}}{cmd:)} specifies the name of the output variable containing the stars,
+{cmd:nstars(}{it:{help newvar:newvarname}}{cmd:)} specifies the name of the output variable
+containing the stars for the {it:P}-value,
 if {cmd:stars()} is specified. If {cmd:nstars()} is not specified,
 then the name is set to {hi:stars}.
+
+{p 4 8 2}
+{cmd:nstarslower(}{it:{help newvar:newvarname}}{cmd:)} and {cmd:nstarsupper(}{it:{help newvar:newvarname}}{cmd:)}
+specify the names of output variables containing the stars for the lower and upper one-sided {it:P}-values,
+if the user specifies the options {cmd:plower} and {cmd:pupper}, respectively,
+and if {cmd:stars()} is also specified.
+The default names for these output variables are {cmd:starslower} and {cmd:starsupper}, respectively.
 
 {p 4 8 2}
 {cmd:level(}{it:{help numlist}}{cmd:)} specifies the confidence levels, in percent, for
@@ -199,8 +221,8 @@ or with the variables in the {cmd:by()} and {cmd:sumvar()} options of {helpb met
 {title:Author}
 
 {pstd}
-Roger Newson, Imperial College London, UK.
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, King's College London, UK.
+Email: {browse "mailto:roger.newson@kcl.ac.uk":roger.newson@kcl.ac.uk}
 
 
 {title:References}

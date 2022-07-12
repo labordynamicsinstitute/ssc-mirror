@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.10 06 December 2017}{...}
+{* *! version 1.20 11 July 2022}{...}
 {viewerjumpto "Syntax" "estquant##syntax"}{...}
 {viewerjumpto "Description" "estquant##description"}{...}
 {viewerjumpto "Options" "estquant##options"}{...}
@@ -19,10 +19,10 @@
 {p 8 17 2}
 {cmdab:estquant} {varname} {ifin}, {cmd:cat({varname})} 
 [{opt sh:ift} {opt di:lation} {opt tr:uncation} {opt initr(#)} {opt qrange(#)} {opt bvar:iable}{bf:([on|off])} 
-{opt brep:lication(#)} {opt bsam:pling(#)} {opt strata} {opt maxit:eration(#)} {opt eps1(#)} {opt eps2(#)} 
-{opt ci}{bf:([normal|bootstrap])} {opt l:evel(#)} ]
+{opt brep:lication(#)} {opt bsam:pling(#)} {opt strata} {opt optech:nique}{bf:([nr|dfp|bfgs|nm])} {opt opnms:implexdeltas(#)} 
+{opt maxit:eration(#)} {opt eps1(#)} {opt eps2(#)} {opt ci}{bf:([normal|bootstrap])} {opt l:evel(#)} ]
 
-{synoptset 25 tabbed}{...}
+{synoptset 35 tabbed}{...}
 {synopthdr}
 {synoptline}
 {syntab:Required Settings}
@@ -46,6 +46,10 @@
 {synopt:{opt bsam:pling(#)}} specifies the percentage of the sample size for bootstrap sampling.
 {p_end}
 {synopt:{opt strata}} fixes the number of observations in each category in each bootstrap replication.
+{p_end}
+{synopt:{opt optech:nique}{bf:([nr|dfp|bfgs|nm])}} sets the optimization technique.
+{p_end}
+{synopt:{opt opnms:implexdeltas(#)}} sets the values of delta to build the simplex required by the Nelder-Mead method.
 {p_end}
 {synopt:{opt maxit:eration(#)}} specifies the maximum number of iterations in numerical optimization.
 {p_end}
@@ -129,18 +133,25 @@ bootstrap sampling. This option is ignored when is specified.
 {p_end}
 
 {phang}
+{opt optech:nique}{bf:([nr|dfp|bfgs|nm])} sets the optimization technique from the four choices: nr (modified Newton-Raphson), dfp (Davidon-Fletcher-Powell), bfgs (Broyden-Fletcher-Goldfarb-Shanno), and nm (Nelder-Mead). Try nm if the optimization fails. The default optimization technique is nr. See the manaul "[M-5] optimize() --- Function optimization" for the deails of optimization technique.
+
+{phang}
+{opt opnms:implexdeltas(#)} sets the values of delta to build the simplex required by the Nelder-Mead method. The 
+default value is 1e-2.
+
+{phang}
 {opt maxit:eration(#)} specifies the maximum number of iterations in numerical optimization. The 
 default value is 1e+3.
 {p_end}
 
 {phang}
 {opt eps1(#)} specifies the convergence tolerance in numerical optimization. The stopping rule 
-of {opt eps1(#)} is shown in Kondo (2016). The default value is 1e-6.
+of {opt eps1(#)} is shown in Kondo (2017). The default value is 1e-6.
 {p_end}
 
 {phang}
 {opt eps2(#)} specifies the convergence tolerance in numerical optimization. The stopping rule 
-of {opt eps2(#)} is shown in Kondo (2016). The default value is 1e-6. 
+of {opt eps2(#)} is shown in Kondo (2017). The default value is 1e-6. 
 {p_end}
 
 {phang}
@@ -167,12 +178,25 @@ confidence interval.
 
 {phang2}{cmd:. estquant} lntfp, cat(cat) sh di {p_end}
 
+{phang}Estimation with 100 bootstrap replications:{p_end}
+
+{phang2}{cmd:. estquant} lntfp, cat(cat) sh di tr brep(100) {p_end}
+
+{phang}Estimation with bootstrap replications using the {it:varname1}-{it:varname100} named in a sequential order in the dataset:{p_end}
+
+{phang2}{cmd:. estquant} lntfp, cat(cat) sh di tr brep(100) bvar(on) {p_end}
+
+{phang}Estimation by the Nelder-Mead method (if the optimization fails):{p_end}
+
+{phang2}{cmd:. estquant} lntfp, cat(cat) sh di tr optech(nm) opnms(1e-2) {p_end}
+
+
 {marker author}{...}
 {title:Author}
 
 {pstd}Keisuke Kondo{p_end}
 {pstd}Research Institute of Economy, Trade and Industry (RIETI). Tokyo, Japan.{p_end}
-{pstd}(URL: https://sites.google.com/site/keisukekondokk/){p_end}
+{pstd}(URL: https://keisukekondokk.github.io/){p_end}
 
 
 {marker references}{...}
@@ -186,6 +210,7 @@ large cities: Distinguishing agglomeration from firm selection," {it:Econometric
 
 {marker K2017}{...}
 {phang}
-Kondo, K. (2017) "Quantile approach for distinguishing agglomeration from firm selection in Stata," RIETI TP 17-T-001.
+Kondo, K. (2017) "Quantile approach for distinguishing agglomeration from firm selection in Stata," 
+RIETI TP 17-T-001. (GitHub: https://github.com/keisukekondokk/estquant)
 {p_end}
 

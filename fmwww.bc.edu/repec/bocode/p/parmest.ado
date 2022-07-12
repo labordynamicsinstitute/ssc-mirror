@@ -9,7 +9,7 @@ version 16.0;
  (replacing the current one, in the manner of the collapse command,
  if the user explicitly requests this).
 *! Author: Roger Newson
-*! Date: 10 April 2020
+*! Date: 08 July 2022
 */
 
 
@@ -17,7 +17,9 @@ syntax [, LIst(string asis) FRAme(string asis) SAving(string asis) noREstore FAS
     EForm Dof(string)
     LEvel(numlist >=0 <100 sort) CLNumber(passthru) MCOMPare(passthru) MCOMCi(passthru)
     BMATrix(string) VMATrix(string) DFMATrix(string)
-    MSEType OMit EMPty Label YLabel IDNum(string) IDStr(string) STArs(passthru)
+    MSEType OMit EMPty Label YLabel IDNum(string) IDStr(string)
+	PUPper PLOwer
+	STArs(passthru)
     EMac(string asis) EScal(string asis) EVec(string asis) ERows(string asis) ECols(string asis)
     REName(string) FOrmat(string) FLOAT noDOUble noZErop NUllvalue(numlist min=1 max=1) ];
 /*
@@ -124,11 +126,18 @@ ERows() is a list of matrix estimation results
 ECols() is a list of matrix estimation results
   whose columns will be stored in numeric variables
   with names of form ec_xx_yy.
+PUPper specifies that upper one-sided P-values will be returned
+  in a variable with default name pupper.
+PLOwer specifies that lower one-sided P-values will be returned
+  in a variable with default name plower.
 STArs() specifies a list of P-value thresholds,
-  and indicates that the new data set should contain a string variable
-  with default name stars,
-  containing, in each observation, one star for each P-value threshold alpha
-  such that the variable p is less than or equal to alpha.
+  and indicates that the new data set will contain string variables,
+  with default names stars, starslower, and starsupper,
+  corresponding to two-sided, lower one-sided, or upper one-sided P-values,
+  respectively,
+  and containing, in each observation,
+  one star for each P-value threshold alpha
+  such that the corresponding P-variable is less than or equal to alpha.
 
 Variable-modifying options:
 
@@ -602,7 +611,8 @@ else {;
  Add t-statistics or z-statistics, P-values, confidence limits,
  and stars if requested
 *;
-qui parmcip, fast level(`level') `stars' `clnumber' `mcompare' `mcomci' `zerop' nullvalue(`pnullvalue');
+qui parmcip, fast level(`level') `stars' `clnumber' `mcompare' `mcomci' `zerop'
+  nullvalue(`pnullvalue') `pupper' `plower';
 
 
 *

@@ -30,7 +30,11 @@ If the {cmd:rename()} option is not specified, then the output dataset contains 
 {p2col:{hi:t}}{it:t}-test statistic{p_end}
 {p2col:{hi:z}}{it:z}-test statistic{p_end}
 {p2col:{hi:p}}{it:P}-value{p_end}
+{p2col:{hi:plower}}Lower one-tailed {it:P}-value{p_end}
+{p2col:{hi:pupper}}Upper one-tailed {it:P}-value{p_end}
 {p2col:{hi:stars}}Stars for {it:P}-value{p_end}
+{p2col:{hi:starslower}}Stars for lower one-tailed {it:P}-value{p_end}
+{p2col:{hi:starsupper}}Stars for upper one-tailed {it:P}-value{p_end}
 {p2col:{hi:min}{it:yy}}Lower {it:xx}% confidence limit{p_end}
 {p2col:{hi:max}{it:yy}}Upper {it:xx}% confidence limit{p_end}
 {p2col:{hi:em_}{it:y}}{it:y}th macro estimation result specified by {cmd:emac()}{p_end}
@@ -63,6 +67,11 @@ which defaults to zero, or to one if the {cmd:eform} option is specified,
 unless specified otherwise by the {cmd:nullvalue()} option.
 The variable {hi:stars} is only present if the option {cmd:stars()} is specified,
 and contains the specified numbers of stars for the {it:P}-values in the variable {hi:p}.
+The variable {cmd:plower} is only present if the {cmd:plower} option is specified,
+the variable {cmd:pupper} is only present if the {cmd:pupper} option is specified,
+the variable {cmd:starslower} is only present if the options {cmd:plower} and {cmd:stars} are specified,
+and
+the variable {cmd:starsupper} is only present if the options {cmd:pupper} and {cmd:stars} are specified.
 The {it:xx}% confidence limits {hi:min}{it:yy} and {hi:max}{it:yy}
 are calculated using a list of one or more confidence levels {it:xx}, which may be specified in the
 {cmd:level()} option, or by {help set level}, and which is a single confidence level of 95% if not specified.
@@ -132,8 +141,8 @@ which is set by the options {cmd:mcompare()} and {cmd:mcomci()}.
 {title:Author}
 
 {pstd}
-Roger Newson, Imperial College London, UK.
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, King's College London, UK.
+Email: {browse "mailto:roger.newson@kcl.ac.uk":roger.newson@kcl.ac.uk}
 
 
 {title:Also see}

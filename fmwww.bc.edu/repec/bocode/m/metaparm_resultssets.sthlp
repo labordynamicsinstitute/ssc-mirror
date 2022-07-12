@@ -20,7 +20,11 @@ the dataset in memory will contain the following variables (and possibly others)
 {p2col:{hi:t}}{it:t}-test statistic{p_end}
 {p2col:{hi:z}}{it:z}-test statistic{p_end}
 {p2col:{hi:p}}{it:P}-value{p_end}
+{p2col:{hi:plower}}Lower one-tailed {it:P}-value{p_end}
+{p2col:{hi:pupper}}Upper one-tailed {it:P}-value{p_end}
 {p2col:{hi:stars}}Stars for {it:P}-value{p_end}
+{p2col:{hi:starslower}}Stars for lower one-tailed {it:P}-value{p_end}
+{p2col:{hi:starsupper}}Stars for upper one-tailed {it:P}-value{p_end}
 {p2col:{hi:min}{it:yy}}Lower {it:xx}% confidence limit{p_end}
 {p2col:{hi:max}{it:yy}}Upper {it:xx}% confidence limit{p_end}
 {p2line}
@@ -34,7 +38,12 @@ execution of {helpb parmcip}.
 The others are added to the dataset by {helpb parmcip}.
 The variable {hi:t} is created only if the {cmd:tdist} option is in force,
 the variable {hi:z} is only present if the {cmd:notdist} option is in force,
-and the variable {cmd:stars} is only present if the {cmd:stars()} option is specified.
+the variable {cmd:stars} is only present if the {cmd:stars()} option is specified,
+the variable {cmd:plower} is only present if the {cmd:plower} option is specified,
+the variable {cmd:pupper} is only present if the {cmd:pupper} option is specified,
+the variable {cmd:starslower} is only present if the options {cmd:plower} and {cmd:stars} are specified,
+and
+the variable {cmd:starsupper} is only present if the options {cmd:pupper} and {cmd:stars} are specified.
 All of these variables may have non-default names, which can be specified
 by the options in {it:{help parmcip_opts}}.
 
@@ -63,8 +72,8 @@ The {it:by-variables} and {it:sumvar-variables} aare also described in
 {title:Author}
 
 {pstd}
-Roger Newson, Imperial College London, UK.
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, King's College London, UK.
+Email: {browse "mailto:roger.newson@kcl.ac.uk":roger.newson@kcl.ac.uk}
 
 
 {title:Also see}

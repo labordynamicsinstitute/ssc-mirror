@@ -1,4 +1,5 @@
-*! Ver 1.67 Bug with IPW 
+*! Ver 1.68 Bug with drimp
+* Ver 1.67 Bug with IPW 
 * Ver 1.66 Bug with binit, skip fixed
 * Ver 1.65 Bug with binit. Fixed
 * Ver 1.64 added binit for faster csdid (if slighly)
@@ -1545,7 +1546,7 @@ program define drdid_imp, eclass
 		qui {
 			
 			`isily'  mlexp (`trt'*{xb:`xvar' _cons}-(`trt'==0)*exp({xb:}))  ///
-					if `touse' & `tmt'==0 [iw = `weight'], vce(robust) from(`binit') ///
+					if `touse' [iw = `weight'], vce(robust) from(`binit') ///
 					 derivative(/xb=`trt'-(`trt'==0)*exp({xb:}))
 
 			//& `tmt'==0 

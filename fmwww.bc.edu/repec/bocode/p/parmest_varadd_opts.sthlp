@@ -19,6 +19,8 @@
 {synopt:{opt yl:abel}}Variable containing {it:Y}-variable labels{p_end}
 {synopt:{opt idn:um(#)}}Numeric dataset ID variable{p_end}
 {synopt:{opt ids:tr(string)}}String dataset ID variable{p_end}
+{synopt:{opt plo:wer}}Variable containing lower one-tailed {it:P}-values{p_end}
+{synopt:{opt pup:per}}Variable containing upper one-tailed {it:P}-values{p_end}
 {synopt:{cmdab:sta:rs}{cmd:(}{help numlist:{it:numlist}})}Variable containing stars for the {it:P}-value{p_end}
 {synopt:{opt em:ac(name_list)}}Variables containing macro estimation results{p_end}
 {synopt:{opt es:cal(name_list)}}Variables containing scalar estimation results{p_end}
@@ -105,6 +107,14 @@ A {helpb parmest} or {helpb parmby} output dataset may contain a variable {hi:id
 a variable {hi:idstr}, both, or neither.
 
 {p 4 8 2}
+{cmd:plower} specifies that a new variable will be created, with default name {cmd:plower},
+containing the lower one-sided {it:P}-values for the parameter estimates.
+
+{p 4 8 2}
+{cmd:pupper} specifies that a new variable will be created, with default name {cmd:pupper},
+containing the upper one-sided {it:P}-values for the parameter estimates.
+
+{p 4 8 2}
 {cmd:stars(}{it:numlist}{cmd:)} specifies a descending list of {it:P}-value thresholds.
 If {cmd:stars()} is specified, then a string variable {hi:stars} is created in the output dataset,
 containing, in each observation, a string of stars whose length is equal to the number of
@@ -114,6 +124,10 @@ For instance, if the user specifies {cmd:stars(0.05 0.01 0.001 0.0001)},
 then the variable {hi:stars} will contain an empty string {hi:""} if {hi:p>0.05},
 a single star {hi:"*"} if {hi:0.05>=p>0.01}, two stars {hi:"**"} if {hi:0.01>=p>0.001},
 three stars {hi:"***"} if {hi:0.001>=p>0.0001}, and four stars {hi:"****"} if {hi:p<=0.0001}.
+If the options {cmd:plower} or {cmd:pupper} are also specified,
+then new string variables are created,
+with default names {cmd:starslower} and {cmd:starsupper}, respectively,
+containing stars for the lower and upper one-sided {it:P}-values, respectively.
 
 {p 4 8 2}
 {cmd:emac(}{it:name_list}{cmd:)} specifies a list of names of macro
@@ -204,8 +218,8 @@ created by {helpb parmest} or {helpb parmby}, see {help parmest_resultssets:{it:
 {title:Author}
 
 {pstd}
-Roger Newson, Imperial College London, UK.
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, King's College London, UK.
+Email: {browse "mailto:roger.newson@kcl.ac.uk":roger.newson@kcl.ac.uk}
 
 
 {title:Also see}

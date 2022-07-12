@@ -80,7 +80,7 @@ quietly: file write rcode ///
 	`"library("tree")"'_newline ///
 	`"library(MASS)"'_newline ///
 	`"# Fit a Regression Tree over the whole training sample"' _newline ///
-	`"tree.data=tree(y~.,data)"'_newline ///
+	`"tree.data=tree(as.factor(y)~.,data)"'_newline ///
 	`"summary(tree.data)"'_newline ///
 	`"plot(tree.data)"'_newline ///
 	`"text(tree.data,pretty=0)"' _newline ///
@@ -101,7 +101,7 @@ quietly: file write rcode ///
     `"train = sample(1:nrow(data), nrow(data)/2)"'_newline ///	
 	`"data.test=data[-train,]"'  _newline ///
     `"y.test=y[-train]"'  _newline ///
-	`"tree.data=tree(y~.,data,subset=train)"'  _newline ///
+	`"tree.data=tree(as.factor(y)~.,data,subset=train)"'  _newline ///
 	`"yhat_test=predict(tree.data,data.test,type="class")"' _newline ///
 	`"table(yhat_test,y.test)"'  _newline ///
 	`"data2 <- as.data.frame(cbind(yhat_test,y.test))"' _newline ///
@@ -136,7 +136,7 @@ quietly: file write rcode ///
 	`"library(MASS)"' _newline ///
 	`"# Fit a Regression Tree over the whole training sample"' _newline ///
 	///
-	`"tree.data=tree(y~.,data)"'_newline ///
+	`"tree.data=tree(as.factor(y)~.,data)"'_newline ///
 	`"#summary(tree.data)"'_newline ///
 	`"#plot(tree.data, main="")"'_newline ///
 	`"#text(tree.data,pretty=0)"' _newline ///
@@ -194,7 +194,7 @@ quietly: file write rcode ///
 	`"library(MASS)"' _newline ///
 	`"# Fit a Regression Tree over the whole training sample"' _newline ///
 	`"# Fit a Regression Tree over the whole training sample"' _newline ///
-	`"tree.data=tree(y~.,data)"' _newline ///
+	`"tree.data=tree(as.factor(y)~.,data)"' _newline ///
 	`"yhat=predict(tree.data,type="class")"' _newline ///
 	`"# Cross-validation to find the optimal tree size"' _newline ///
 	`"set.seed(`S')"' _newline ///
@@ -255,14 +255,11 @@ quietly: file write rcode ///
 	`"# Fit the model by Bagging or Random-forests on the whole sample"' _newline ///
 	///
 	`"set.seed(`S')"' _newline ///
-	`"bag.data=randomForest(y~.,data=data,mtry=`A',ntree=`B',importance=TRUE)"' _newline ///
+	`"bag.data=randomForest(as.factor(y)~.,data=data,mtry=`A',ntree=`B',importance=TRUE)"' _newline ///
 	///
 	`"# Train-MSE"' _newline ///
 	///	
 	`"yhat.train = predict(bag.data)"' _newline ///
-	`"plot(yhat.train, y)"' _newline ///
-	`"abline(0,1)"' _newline ///
-	`"title(main="Actual Vs. Prediction on the training dataset")"' _newline ///
 	`"y_train = y"' _newline ///
 	`"data1 <- as.data.frame(cbind(yhat.train,y_train))"' _newline ///
     `"write.dta(data1, "`in_samp_data'.dta")"'  _newline ///
@@ -273,12 +270,9 @@ quietly: file write rcode ///
 	///	
 	`"set.seed(`S')"' _newline ///
 	`"train = sample(1:nrow(data), nrow(data)/2)"' _newline ///
-	`"bag.data=randomForest(y~.,data=data,subset=train,mtry=`A',ntree=`B',importance=TRUE)"' _newline ///
+	`"bag.data=randomForest(as.factor(y)~.,data=data,subset=train,mtry=`A',ntree=`B',importance=TRUE)"' _newline ///
 	`"yhat.test = predict(bag.data,newdata=data[-train,])"' _newline ///
 	`"y.test=data[-train,"y"]"' _newline ///
-	`"plot(yhat.test, y.test)"' _newline ///
-	`"abline(0,1)"' _newline ///
-	`"title(main="Actual Vs. Prediction on the testing dataset")"' _newline ///
 	`"# The test-MSE is equal to:"' _newline ///
 	`"data2 <- as.data.frame(cbind(yhat.test,y.test))"' _newline ///
     `"write.dta(data2,"`out_samp_data'.dta")"' _newline ///
@@ -467,7 +461,7 @@ quietly: file write rcode ///
 	///
 	`"# Fit the tree pruned at size A"' _newline ///
 	///
-	`"tree.data=tree(y~.,data)"'_newline ///
+	`"tree.data=tree(as.factor(y)~.,data)"'_newline ///
 	`"prune.data=prune.tree(tree.data,best=`A')"'  _newline ///
 	`"summary(prune.data)"'_newline ///
 	///
@@ -516,7 +510,7 @@ quietly: file write rcode ///
 	`"# Fit the model by Bagging or Random-forests on the whole sample"' _newline ///
 	///
 	`"set.seed(`S')"' _newline ///
-	`"bag.data=randomForest(y~.,data=data,mtry=`A',ntree=`B',importance=TRUE)"' _newline ///
+	`"bag.data=randomForest(as.factor(y)~.,data=data,mtry=`A',ntree=`B',importance=TRUE)"' _newline ///
 	///
 	`"# Prediction on new data"' _newline ///
 	///	
@@ -569,7 +563,7 @@ quietly: file write rcode ///
 	`"# Fit the model by Boosting on the whole sample"' _newline ///
 	///
 	`"set.seed(`S')"' _newline ///
-	`"boost.data=gbm(y~.,data=data,n.trees=`B',interaction.depth=`A',shrinkage=`C',verbose=F)"' _newline ///
+	`"boost.data=gbm(as.factor(y)~.,data=data,n.trees=`B',interaction.depth=`A',shrinkage=`C',verbose=F)"' _newline ///
 	`"my_data_new <- read.csv("`prediction'.csv", sep=",")"' _newline ///
 	`"data_new<-as.data.frame(my_data_new)"' _newline ///
     `"y <- data_new[,1]"' _newline ///
@@ -622,7 +616,7 @@ quietly: file write rcode ///
 	`"# Fit the model by Boosting on the whole sample"' _newline ///
 	///
 	`"set.seed(`S')"' _newline ///
-	`"boost.data=gbm(y~.,data=data,n.trees=`B',interaction.depth=`A',shrinkage=`C',verbose=F)"' _newline ///
+	`"boost.data=gbm(as.factor(y)~.,data=data,n.trees=`B',interaction.depth=`A',shrinkage=`C',verbose=F)"' _newline ///
 	///
 	`"# Prediction on new data"' _newline ///
 	///

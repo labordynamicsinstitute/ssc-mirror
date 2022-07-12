@@ -167,6 +167,8 @@ See {help parmest_ci_opts:{it:parmest_ci_opts}} for details of these options.
 {synopt:{opt yl:abel}}Variable containing {it:Y}-variable labels{p_end}
 {synopt:{opt idn:um(#)}}Numeric dataset ID variable{p_end}
 {synopt:{opt ids:tr(string)}}String dataset ID variable{p_end}
+{synopt:{opt plo:wer}}Variable containing lower one-tailed {it:P}-values{p_end}
+{synopt:{opt pup:per}}Variable containing upper one-tailed {it:P}-values{p_end}
 {synopt:{cmdab:sta:rs}{cmd:(}{help numlist:{it:numlist}})}Variable containing stars for the {it:P}-value{p_end}
 {synopt:{opt em:ac(name_list)}}Variables containing macro estimation results{p_end}
 {synopt:{opt es:cal(name_list)}}Variables containing scalar estimation results{p_end}
@@ -425,8 +427,8 @@ from which I have modified some code for use in {cmd:parmby} for appending frame
 {title:Author}
 
 {pstd}
-Roger Newson, Imperial College London, UK.
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, King's College London, UK.
+Email: {browse "mailto:roger.newson@kcl.ac.uk":roger.newson@kcl.ac.uk}
 
 
 {title:References}
