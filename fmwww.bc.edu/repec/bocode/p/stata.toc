@@ -53,6 +53,7 @@ p pcorrmat module to compute partial correlation coefficients controlled for a f
 p pcpanel module to perform power calculations for randomized experiments with panel data, allowing for arbitrary serial correlation
 p pctrim module to trim variables based on percentiles
 p pdc module for computing the Proportion of Days Covered (of a medication)
+p pdfplot module to Plot a Distribution's Probability Density Function
 p pdi module  to calculate the polytomous discrimination index (PDI)
 p pdplot module to produce Pareto dot plot
 p pdslasso module for post-selection and post-regularization OLS or IV estimation and inference

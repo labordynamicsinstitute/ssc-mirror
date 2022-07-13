@@ -6,9 +6,6 @@ v 1
 Author--Jacob Orchard
 Update--8/8/2016*/
 
-
-
-
 program intllf_ggsigma_group
 version 13
 		args lnf delta sigma p  
@@ -35,43 +32,39 @@ version 13
 								& $ML_y2 != . & $ML_y1 == $ML_y2
 								
 		qui replace `lnf' = `x' - `y' - `z' - `w' - `v'
-		
-		
 			
 		*Interval data
-			qui replace `zu' = ($ML_y2/exp(`delta'))^(1/exp(`sigma')) if $ML_y1 != . & $ML_y2 != . & ///
-															$ML_y1 != $ML_y2
-								
-			qui replace `Fu' = gammap(`p',`zu') if $ML_y1 != . & $ML_y2 != . ///
-								&  $ML_y1 != $ML_y2
-								
-			qui replace `zl' = ($ML_y1/exp(`delta'))^(1/exp(`sigma')) if $ML_y1 != . & $ML_y2 != .  ///
-												&  $ML_y1 != $ML_y2
-								
-			qui replace `Fl' = gammap(`p',`zl') if $ML_y1 != . & $ML_y2 != . ///
-										&  $ML_y1 != $ML_y2
-										
-			qui replace `lnf' = log(`Fu' -`Fl') if $ML_y1 != . & $ML_y2 != . ///
-								&  $ML_y1 != $ML_y2
-		
+		qui replace `zu' = ($ML_y2/exp(`delta'))^(1/exp(`sigma')) if $ML_y1 != . & $ML_y2 != . & ///
+														$ML_y1 != $ML_y2
+							
+		qui replace `Fu' = gammap(`p',`zu') if $ML_y1 != . & $ML_y2 != . ///
+							&  $ML_y1 != $ML_y2
+							
+		qui replace `zl' = ($ML_y1/exp(`delta'))^(1/exp(`sigma')) if $ML_y1 != . & $ML_y2 != .  ///
+											&  $ML_y1 != $ML_y2
+							
+		qui replace `Fl' = gammap(`p',`zl') if $ML_y1 != . & $ML_y2 != . ///
+									&  $ML_y1 != $ML_y2
+									
+		qui replace `lnf' = log(`Fu' -`Fl') if $ML_y1 != . & $ML_y2 != . ///
+							&  $ML_y1 != $ML_y2
 		
 		*Bottom coded data
-			qui replace `zl' = ($ML_y1/exp(`delta'))^(1/exp(`sigma')) if $ML_y1 != . & $ML_y2 == .
-									
-			qui replace `Fl' = gammap(`p',`zl') if $ML_y1 != . & $ML_y2 == .
-							
-			qui replace `lnf' = log(1-`Fl') if $ML_y1 != . & $ML_y2 == .
-		
-		*Top coded data
-		
-			qui replace `zu' = ($ML_y2/exp(`delta'))^(1/exp(`sigma'))	if $ML_y2 != . & $ML_y1 == .
+		qui replace `zl' = ($ML_y1/exp(`delta'))^(1/exp(`sigma')) if $ML_y1 != . & $ML_y2 == .
 								
-			qui replace `Fu' = gammap(`p',`zu') if $ML_y2 != . & $ML_y1 == .
-									
-			qui replace `lnf' = log(`Fu') if $ML_y2 != . & $ML_y1 == .
+		qui replace `Fl' = gammap(`p',`zl') if $ML_y1 != . & $ML_y2 == .
+						
+		qui replace `lnf' = log(1-`Fl') if $ML_y1 != . & $ML_y2 == .
+		
+		*Top coded data		
+		qui replace `zu' = ($ML_y2/exp(`delta'))^(1/exp(`sigma'))	if $ML_y2 != . & $ML_y1 == .
+							
+		qui replace `Fu' = gammap(`p',`zu') if $ML_y2 != . & $ML_y1 == .
+								
+		qui replace `lnf' = log(`Fu') if $ML_y2 != . & $ML_y1 == .
 			
 		*Missing values
-			qui replace `lnf' = 0 if $ML_y2 == . & $ML_y1 == .
+		qui replace `lnf' = 0 if $ML_y2 == . & $ML_y1 == .
 				
 		 *Group frequency
 		 qui replace `lnf' = `lnf'*$group_per

@@ -46,9 +46,53 @@ Update for v 1.8 (5/22/2018) by Bryan Chia
 - for the SGT family: GT, ST, GED, SLaplace, T
 - for the GB2 family: Br 12, Br3, Gamma 
 
-*/
+******************************
 
-capture program drop gintreg
+Update for v 1.9 (06/21/2021) by Jacob Triplett
+1. Fixed misidentified constraints for the Gamma and Weibull distributions
+2. Corrected mechanism by which distribution defaults to Normal
+3. BIC and AIC values are now returnable with e(BIC) and e(AIC) and are only
+	displayed when option bicaic is specified and for gb2-tree distributions 
+	and if data is non-grouped
+4. Standardized output title formatting
+5. The "ml display" table is now followed by alternate notation (a=1/sigma) 
+	(beta=exp(delta)) (sigma=exp(lnsigma))
+6. Initiated gini option, currently only coded for weibull, br3, br12
+7. Conventionalized distribution input names to be consistent with what Stata's
+	in-house programs use and trimmed superfluous labels (i.e. dropped "ln" when
+	"lnormal" is also accepted and prefererred conventionally, changed "gg" to 
+	"ggamma") 
+8. Added plot option to vizualize pdf; works for all accepted distributions
+9. Built a companion program, called 'pdfplot', to flexibly plot pdfs
+10. Added these distributions: laplace, skewed normal ("snormal")
+11. Corrected typo in pdf specification within inllf_lnormal.ado
+12. Because of the nonlinear transformation to lambda reflected in update 1.6.9,
+	only the constant was reported. Now, if lambda(varlist) is used, pre-
+	transformation "alphas" are reported. See the help file for more info.
+13. Updated help file to reflect changes and offer more detail
+
+******************************
+
+Update for v 2.0 (07/07/2022) by Jacob Triplett
+1. gintreg has become incredibly advanced, adaptable and useful thanks to many 
+	updates from Dr James B McDonald and his RAs. Though the program remained
+	effective, under-the-hood, the code grew in complication and size to over 
+	5000 lines. Nearly a year after beginning work on gintreg, I found I was 
+	still in the process of understanding it thoroughly. I sought to create a 
+	new edition of gintreg, following all best practices, that anyone could 
+	comprehend in a single day, if not a single sitting. v2.0 is the result.
+	v2.0 retains all previous functionality, adds far more instructive 
+	commentary, and does so in about 625 lines. In the process, a few additional
+	improvements (beyond rearranging & compressing) were made and are listed below
+2. Facilitated accepting user-defined constraints in every setting; previously, 
+	such constraints were ignored if the program also defined constraints 
+3. Corrected AICBIC calculations with a simple, robust mechanism to count 
+	estimated parameters; this replaced a long list of hard-coded equations
+4. Reconfigured EYX code to operate correctly regardless of NOCONStant activation
+5. Preserved extracted parameters by renaming from "mu" to "_mu" etc; otherwise
+	the code might read "di p" and interpret "di price", for example, if price 
+	were a data variable's name
+*/
 
 program gintreg, eclass
 version 13.0
@@ -58,4484 +102,576 @@ version 13.0
 	else {
 		set more off
 		syntax varlist(min=2 fv ts)  [aw fw pw iw] [if] [in] ///
-		[, DISTribution(string) /// 
-		sigma(varlist) ///
-		lambda(varlist) ///
-		p(varlist) ///
-		q(varlist) ///
-		b(varlist) ///
-		beta(varlist)  ///
-		INITial(numlist) ///
-		vce(passthru)  ///
-		eyx(string) ///
-		Het(string) CONSTraints(passthru) DIFficult TECHnique(passthru) ITERate(passthru)  /// 
-		nolog TRace GRADient showstep HESSian SHOWTOLerance TOLerance(passthru) NONRTOLerance ///
-		LTOLerance(passthru) NRTOLerance(passthru) robust cluster(passthru) repeat(integer 1) NOCONStant ///
-		svy SHOWConstonly FREQuency(varlist)] 
+		[, DISTribution(string)	/// gintreg options
+		sigma(varlist)			///
+		lambda(varlist)			///
+		p(varlist)				///
+		q(varlist)				///
+		eyx(string)				///
+		gini					///
+		aicbic					///
+		plot(numlist)			///
+		INITial(numlist)		///
+		CONSTraints(numlist) 	///
+		FREQuency(varlist)		///
+		DIFficult TECHnique(passthru) ITERate(passthru) 	/// ml_model options
+		nolog TRace GRADient showstep HESSian SHOWTOLerance 				///
+		TOLerance(passthru) NONRTOLerance LTOLerance(passthru)				///
+		NRTOLerance(passthru) robust cluster(passthru) repeat(integer 1)	///
+		NOCONStant svy vce(passthru)] 
 		
-		*Defines Independent and Dependent Variables
+		/* CHECKS PROPER DISTribution INPUT */
+		* defines distribution trees; useful for concise if-statements
+		local sgt_tree /// excludes normal bc inlist takes max 10 arguments
+			`"snormal","laplace","slaplace","ged","sged","t","gt","st","sgt"'
+		local gb2_tree ///
+			`"lnormal","weibull","gamma","ggamma","br3","br12","gb2"'
+		
+		* returns error if DISTribution specified incorrectly
+		if !inlist("`distribution'","`sgt_tree'") & !inlist("`distribution'","`gb2_tree'")	///
+			& "`distribution'"!="normal" & "`distribution'"!="" {
+			di as err "distribution not recognized"
+			exit 498
+		}
+		
+		* returns error if GINI activated with incompatible DISTribution
+		if "`gini'"!="" & !inlist("`distribution'","weibull","gamma","br3","br12") {
+			di as err "gini not operational with specified distribution"
+			exit 498
+		}
+		
+		/* CHECKS PARAMETER-DISTRIBUTION CONSISTENCY */
+		if "`p'"!="" & !inlist("`distribution'","ged","sged","gt","sgt","gamma","ggamma","br3","gb2") {
+			di as err "p is not a parameter of the chosen distribution"  
+			exit 498
+		}
+		if "`q'"!="" & !inlist("`distribution'","t","gt","st","sgt","br12","gb2") {
+			di as err "q is not a parameter of the chosen distribution"
+			exit 498 
+		}
+		if "`lambda'"!="" & !inlist("`distribution'","snormal","slaplace","sged","st","sgt") {
+			di as err "lambda is not a parameter of the chosen distribution"  
+			exit 498 
+		}
+		
+		/* DEFINES DEPVARs INDEPVARs */
 		local depvar1: word 1 of `varlist'
 		local depvar2: word 2 of `varlist'
 		local tempregs: list varlist - depvar1 
 		local regs: list tempregs - depvar2
-				
-		*Defines variables for other parameters
-		if "`sigma;" != ""{
-			local sigmavars `sigma'
-			}
-			
-		if "`lambda;" != ""{
-			local lambdavars `lambda'
-			}
-		if "`p;" != ""{
-			local pvars `p'
-			}
-		if "`q;" != ""{
-			local qvars `q'
-			}
 		
-		if "`het'" != "" {
-             ParseHet `het'
-             local hetvar "`r(varlist)'"
-             local hetnocns "`r(constant)'"		
-			 }
-		
-		
-		local nregs: word count `regs'
-		local nsigma: word count `sigmavars'
-		local nlambda: word count `lambdavars'
-		local np: word count `pvars'
-		local nq: word count `qvars'
-		
-		*Working with heteroskedasticity
-		
-		if "`het'" != "" {
-		local sigmaeq `"(`hetvar')"'
-		di as txt "`sigmaeq'"
-		}
-		
-		
-		
-		*Displays error if distribution name does not exist 
-		
-		if "`distribution'" != "lnormal" & "`distribution'" != "ln" & "`distribution'" != "br12" & "`distribution'" != "br3" & ///
-		"`distribution'" != "gg" & "`distribution'" != "gb2" & "`distribution'" != "gamma" & "`distribution'" != "ga" /// 
-		& "`distribution'" != "ga" & "`distribution'" != "sgt" & "`distribution'" != "gt" & "`distribution'" != "st" ///
-		& "`distribution'" != "ged" & "`distribution'" != "sged" & "`distribution'" != "t" & "`distribution'" != "slaplace" ///
-		& "`distribution'" != "weibull" & "`distribution'" != "normal"  {
-			di as err "Distribution specified incorrectly. Use the following: gb2, br12, br3, gg, gamma, ln, lnormal, sgt, gt, st, sged, ged, slaplace, t, normal"
-			exit 498
-			}
-		
-		*Displays error if using the wrong parameter with chosen distribution
-		if  (`nlambda' > 0) & (("`distribution'" != "sgt") & ("`distribution'" != "sged")){
-				di as err "Lambda is not a parameter of the chosen distribution"  
-				exit 498 
-			}
-			
-		if `np' > 0 & ("`distribution'" != "sgt" & "`distribution'" != "gb2" & "`distribution'" ///
-								!= "gg" & "`distribution'" != "sged") {
-					di as err "p is not a parameter of the chosen distribution"  
-					exit 498
-				}
-		if  `nq' > 0 &  ("`distribution'" != "sgt" & "`distribution'" != "gb2") {
-
-						di as err "q is not a parameter of the chosen distribution"
-						exit 498 
-				}
-				
-				
-		*Displays error if depvar1 is greater than depvar2
-		qui count if `depvar1' > `depvar2' & `depvar1' != .
-		if r(N) >0{
-			di as err "Dependent variable 1 is greater than dependent variable 2 for some observation"
+		* returns error if the "higher bound" (depvar2) is lower than the "lower bound" (depvar1)
+		qui count if `depvar1'>`depvar2' & `depvar1'!=.
+		if r(N)>0 {
+			di as err "dependent variable 1 is greater than dependent variable 2 for some observation"
 			exit 198
 		}
 		
-		*Defines titles used when running the program
-	    local gb2title "Interval Regression with GB2 Distribution"
-		local ggtitle "Interval Regression with Generalized Gamma Distribution"
-	    local lntitle "Interval Regression with Log-Normal Distribution"
-		local sgttitle "Interval Regression with SGT Distribution"
-		local sgedtitle "Interval Regression with the SGED Distribution"
-		local slaplacetitle "Interval Regression with the Skewed Laplace Distribution"
-		local normaltitle "Interval Regression with Normal Distribution"
-		local br12title "Interval Regression with Burr 12 Distribution" 
-		local br3title "Interval Regression with Burr 3 Distribution"
-		local gammatitle "Interval Regression with Gamma Distribution"
-		local gttitle "Interval Regression with GT Distribution"
-		local sttitle "Interval Regression with ST Distribution"
-		local gedtitle "Interval Regression with GED Distribution"
-		local ttitle "Interval Regression with T Distribution"
-		local slaplacetitle "Interval Regression with SLaplace Distribution"
-		local laplacetitle "Interval Regression with Laplace Distribution"
-		local weibulltitle "Interval Regression with Weibull Distribution" 
-		
-		*Decides which observations to use in analysis.
-		
+		/* MARKS OBSERVARTIONS TO USE in analysis */
 		marksample touse, nov
+		foreach i in  `regs' `sigma' `p' `q' {
+			qui replace `touse' = 0 if `i'==. // exclude obs with missing x's
+		}
+		qui replace `touse' = 0 if `depvar1'==`depvar2'==. // exclude obs with missing y's
 		
-		foreach i in  `regs' `sigmavars' `pvars' `qvars'{
-			qui replace `touse' = 0 if `i' ==.
+		* if user specifies a positive distribution, returns warning and removes
+		* from analysis observations with non-positive dependent variable
+		if inlist("`distribution'","`gb2_tree'") { 
+			quietly {
+				count if `touse' & `depvar1'<0 & `depvar1'==`depvar2'
+				if r(N)>0 {
+					noi di as txt _n "{res:`depvar1'} has `r(N)' uncensored values < 0; not used in calculations"
+				}
+				count if `touse' & `depvar1'==0 & `depvar1'==`depvar2'
+				if r(N)>0 {
+					noi di as txt _n "{res:`depvar1'} has `r(N)' uncensored values = 0; not used in calculations"
+				}
+				count if `touse' & `depvar1'<=0 & `depvar2'<=0 & `depvar1'!=`depvar2'
+				if r(N)>0 {
+					noi di as txt _n "{res:`depvar1'} has `r(N)' intervals < 0; not used in calculations"
+				}
+				count if `touse' & `depvar1'==. & `depvar2'<=0 & `depvar1'!=`depvar2' 
+				if r(N)>0 {
+					noi di as txt _n "{res:`depvar1'} has `r(N)' left censored values <= 0; not used in calculations"
+				}
+			replace `touse' = 0 if `depvar2'<=0
 			}
-		qui replace `touse' = 0 if `depvar1' == `depvar2' == .
-		
-		*Gets rid of uncensored observations with a non-positive dependent
-		*variable if user is using a positive distribution.
-	
-		if "`distribution'" == "lnormal" | "`distribution'" == "ln" | "`distribution'" == "br12"| "`distribution'" == "br3"| ///
-		"`distribution'" == "gg" | "`distribution'" == "gb2" | "`distribution'" == "gamma" | "`distribution'" == "ga" | "`distribution'" == "weibull"{
-			quietly{ 
-			  count if `depvar1' < 0 & `touse' & `depvar1' == `depvar2'
-			  local n =  r(N) 
-			  if `n' > 0 {
-				noi di " "
-				if `n' == 1{
-					noi di as txt " {res:`depvar1'} has `n' uncensored value < 0;" _c
-					noi di as text " not used in calculations"
-				}
-				else{
-					noi di as txt " {res:`depvar1'} has `n' uncensored values < 0;" _c
-					noi di as text " not used in calculations"
-					}
-				}
-
-			  count if `depvar1' == 0 & `touse' & `depvar1' == `depvar2'
-			  local n =  r(N) 
-			  if `n' > 0 {
-				noi di " "
-				noi di as txt " {res:`depvar1'} has `n' uncensored values = 0;" _c
-				noi di as text " not used in calculations"
-				}
-				
-			  count if `depvar1' <= 0 & `depvar2' <= 0 & `touse' & `depvar1' != `depvar2'
-			  local n =  r(N) 
-			  if `n' > 0 {
-				noi di " "
-				noi di as txt " {res:`depvar1'} has `n' intervals < 0;" _c
-				noi di as text " not used in calculations"
-				}
-				
-			count if `depvar1' == . & `depvar2' <= 0 & `touse' & `depvar1' != `depvar2'
-			local n =  r(N) 
-			  if `n' > 0 {
-				noi di " "
-				noi di as txt " {res:`depvar1'} has `n' left censored values <= 0;" _c
-				noi di as text " not used in calculations"
-				}
-				
-		  replace `touse' = 0 if  `depvar2' <= 0
-		  
-		  }
 		}
 		
-		*Counts the number of each type of interval
-		quietly{
-			count
-			local total = r(N)
-			count if `depvar1' != . & `depvar2' != . & `depvar1' == `depvar2'  /// 
-			& `touse' == 1
-			local nuncensored = r(N)
-			count if `depvar1' != . & `depvar2' != . & `depvar1' != `depvar2'  ///
-			& `touse' == 1
-			local ninterval = r(N)
-			count if `depvar1' != . & `depvar2' == .  & `touse' == 1
-			local nright = r(N)
-			count if `depvar1' == . & `depvar2' != . & `touse' == 1
-			local nleft = r(N)
-			count if `depvar1' == . & `depvar2' ==. & `touse' == 1
-			local nnoobs = r(N)
-			
-		}
-		*Duplicates observations if group data
-		if "`frequency'" != ""{
+		/* DEFINES variables tags and labels depending on status of FREQuency */
+		if "`frequency'" != "" {
+			* normalizes frequency variable to sum to one
 			tempvar tot per
 			qui egen `tot' = sum(`frequency')
 			qui gen `per' = `frequency'/`tot'
-			global group_per `per'
+			global group_per `per' // referenced by evaluator files for group data
+			
+			local group "_group" // tag to indicate correct evaluator file, ie intllf_normal(_group)
+			local count_type "groups" // label for post-evaluation statistics
+		}
+		else {
+			local count_type "observations" // label for post-evaulation statistics
 		}
 		
-		*Evaluates model if grouped data
-if "`frequency'" != ""{	
-		if "`distribution'" == "normal"{
-		
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_normal_group
-			
-			di " "
-			di as txt "Fitting Full model with no constant:"
-			
-			
-			if "`initial'" !=""{
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs',noconstant)  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			init(`initial',copy) `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance' `nonrtolerance' ///
-			`tolerance' `ltolerance' `nrtolerance' title(`normaltitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs',noconstant)  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			 `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance' `nonrtolerance' ///
-			`tolerance' `ltolerance' `nrtolerance' title(`normaltitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			}
-			}
-			
-			else{
-			local evaluator intllf_normal_group
-			
-			if "`initial'" !=""{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			init(`initial', copy) `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'   ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' title(`normaltitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			 `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'   ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' title(`normaltitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display			
-			}
-			}
-		}
-		
-		else if "`distribution'" == "lnormal" | "`distribution'" == "ln" {
-		
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_ln_group
-			
-			di " "
-			di as txt "Fitting Full model with no constant:"
-			
-			if "`initial'" !=""{
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs',noconstant)  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			init(`initial',copy) `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance' `nonrtolerance' ///
-			`tolerance' `ltolerance' `nrtolerance' title(`lntitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs',noconstant)  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			initial(`initial') `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance' `nonrtolerance' ///
-			`tolerance' `ltolerance' `nrtolerance' title(`lntitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			}
-			}
-			
-			else{
-			local evaluator intllf_ln_group
-			
-			if "`initial'" !=""{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			init(`initial', copy) `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' title(`lntitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			 `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'   ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' title(`lntitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display			
-			}
-			}
-		}
-		
-		else if "`distribution'" == "t"{
-		
-			constraint define 1 [p]_cons=2
-			constraint define 2 [lambda]_cons=0
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_sgt_condition_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster'
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			  [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints(1 2) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`sgttitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(4)
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
+		/* AGGREGATES options used by every regression */
+		local max_opts `" maximize missing `technique' `difficult' `iterate' `log' `trace' `gradient' `showstep' `hessian' `showtolerance' `nonrtolerance' `tolerance' `ltolerance' `nrtolerance' `vce' `robust' `cluster' `svy' "'
 
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			 (lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 constraints(1 2) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`sgttitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display, neq(4)
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_sgt_condition_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-		
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q:`qvars') (lambda: `lambdavars')   ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints (1 2) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`sgttitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(4)
-			
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			 [`weight'`exp'] if `touse' ==1 , missing search(on) maximize ///
-			 constraints(1 2) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`sgttitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display, neq(4) 
-			
-			}
-			
-
-			}
-		}
-		
-		else if "`distribution'" == "st"{
-		
-			constraint define 1 [p]_cons=2
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_sgt_condition_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster'
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			  [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`sttitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(4)
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			 (lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`sttitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display, neq(4)
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_sgt_condition_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-		
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q:`qvars') (lambda: `lambdavars')   ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints (1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`sttitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(4)
-			
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			 [`weight'`exp'] if `touse' ==1 , missing search(on) maximize ///
-			 constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`sttitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display, neq(4) 
-			
-			}
-			
-
-			}
-		}
-		
-		else if "`distribution'" == "gt"{
-		
-		constraint define 1 [lambda]_cons=0
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_sgt_condition_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster'
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			  [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`gttitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(4)
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			 (lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`gttitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display, neq(4)
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_sgt_condition_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q:`qvars') (lambda: `lambdavars')   ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints (1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`gttitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(4)
-			
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			 [`weight'`exp'] if `touse' ==1 , missing search(on) maximize ///
-			 constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`gttitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display, neq(4) 
-			
-			}
-			
-
-			}
-		}
-		
-		else if "`distribution'" == "sgt"{
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_sgt_condition_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster'
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			  [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			`constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`sgttitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(4)
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			 (lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 `constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`sgttitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display, neq(4)
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_sgt_condition_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q:`qvars') (lambda: `lambdavars')   ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			`constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`sgttitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(4)
-			
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			 [`weight'`exp'] if `touse' ==1 , missing search(on) maximize ///
-			 `constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`sgttitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display, neq(4) 
-			
-			}
-			
-
-			}
-		}
-		
-		else if "`distribution'" == "slaplace"{
-		
-		constraint define 1 [p]_cons=1
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_sged_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' `constraints'
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars')  ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints (1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`slaplacetitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(3) 
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars')///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 constraints (1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`slaplacetitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display, neq(3) 
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_sged_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' `constraints'
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars') ///
-			 [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints (1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`slaplacetitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(3) 
-			
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars') ///
-			 [`weight'`exp'] if `touse' ==1 , maximize missing search(norescale) ///
-			constraints (1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`slaplacetitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat')
-
-			ml display, neq(3) 
-			
-			}
-			
-
-			}
-			
-		}
-		
-		else if "`distribution'" == "ged"{
-		
-		constraint define 1 [lambda]_cons=0
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_sged_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' `constraints'
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars')  ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints (1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`gedtitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(3) 
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars')///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 constraints (1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`gedtitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display, neq(3) 
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_sged_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' `constraints'
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars') ///
-			 [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints (1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`gedtitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(3) 
-			
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars') ///
-			 [`weight'`exp'] if `touse' ==1 , maximize missing search(norescale) ///
-			constraints (1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`gedtitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat')
-
-			ml display, neq(3) 
-			
-			}
-			
-
-			}
-			
-		}
-		
-		else if "`distribution'" == "sged"{
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_sged_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' `constraints'
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars')  ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			`constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`sgedtitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(3) 
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars')///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 `constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`sgedtitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display, neq(3) 
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_sged_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' `constraints'
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars') ///
-			 [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			`constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`sgedtitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(3) 
-			
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars') ///
-			 [`weight'`exp'] if `touse' ==1 , maximize missing search(norescale) ///
-			`constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`sgedtitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat')
-
-			ml display, neq(3) 
-			
-			}
-			
-
-			}
-			
-		}
-		
-		else if "`distribution'" == "br12"{
-		
-		constraint define 1 [p]_cons=1
-
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_gb2exp_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')   ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(`initial' coeff2,copy) ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`br12title') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			qui ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')  ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`br12title') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_gb2exp_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')  ///
-			 [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`br12title') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			
-			}
-			
-			else{
-			
-			
-			di " "
-			di as txt "Fitting Full model:"
-						
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')  ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`br12title') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			
+		/* DEFINES PARAMETERS AND CONSTRAINTS for distributions within SGT tree */
+		if inlist("`distribution'","`sgt_tree'") | "`distribution'"=="normal" | "`distribution'"=="" {
+			
+			* evaluates normal if specified or by default
+			if "`distribution'"=="normal" | "`distribution'"=="" {
+				local evaluator intllf_normal`group'
+				local title "{title:Interval Regression with Normal Distribution}"
+				local params `" (mu: `depvar1' `depvar2' = `regs', `noconstant') (lnsigma: `sigma') "'
+			}
+			* if INITial activated, performs preliminary evaulation to estimate good starting parameters for other distributions in sgt-tree
+			else if "`initial'"!="" {
+				local params `" (mu: `depvar1' `depvar2' = `regs', `noconstant') (lnsigma: `sigma') "'
+				quietly ml model lf intllf_normal`group' `params' [`weight' `exp'] if `touse', `max_opts' constraints(`constraints') search(norescale)
+				matrix b_0 = e(b) // starting parameter values (mu, sigma)
+				
+				local init_opts `" init(b_0 `initial', copy) search(norescale) continue "' // defines options conditional on activation of INITial; previous authors found that "search(norescale)" and "continue" improve convergence with INITial activated
+			}
+			
+			* these distributions use a common evaluator file (namely, SGED); constraints are applied to estimate special cases
+			if inlist("`distribution'","snormal","laplace","slaplace","ged","sged") {
+				local evaluator intllf_sged`group'
+				local params `" (mu: `depvar1' `depvar2' = `regs', `noconstant') (lnsigma: `sigma') (p: `p') (lambda: `lambda') "'
+				local neq `" neq(3) "' // suppresses default lambda output; replaced in /transforming lambda/ section
+				
+				if "`distribution'"=="snormal" {
+					local title "{title:Interval Regression with Skewed Normal Distribution}"
+					constraint define 1 [p]_cons=2
+					local const_list 1
+				}
+				else if "`distribution'"=="laplace" {
+					local title "{title:Interval Regression with Laplace Distribution}"
+					constraint define 1 [p]_cons=1
+					constraint define 2 [lambda]_cons=0
+					local const_list 1 2
+				}
+				else if "`distribution'"=="slaplace" {
+					local title "{title:Interval Regression with Skewed Laplace Distribution}"
+					constraint define 1 [p]_cons=1
+					local const_list 1
+				}
+				else if "`distribution'"=="ged" {
+					local title "{title:Interval Regression with Generalized Error Distribution}"
+					constraint define 1 [lambda]_cons=0
+					local const_list 1
+				}
+				else if "`distribution'"=="sged" {
+					local title "{title:Interval Regression with Skewed Generalized Error Distribution}"
 				}
 			}
 			
+			* these distributions use a common evaluator file (namely, SGT); constraints are applied to estimate special cases
+			if inlist("`distribution'","t","st","gt","sgt") {
+				local evaluator intllf_sgt_condition`group'
+				local params `" (mu: `depvar1' `depvar2' = `regs', `noconstant') (lnsigma: `sigma') (p: `p') (q: `q') (lambda: `lambda') "'
+				local neq `" neq(4) "' // suppresses default lambda output; replaced in /transforming lambda/ section
+				
+				if "`distribution'"=="t" {
+					local title "{title:Interval Regression with t Distribution}"
+					constraint define 1 [p]_cons=2
+					constraint define 2 [lambda]_cons=0
+					local const_list 1 2
+				}
+				else if "`distribution'"=="st" {
+					local title "{title:Interval Regression with Skewed t Distribution}"
+					constraint define 1 [p]_cons=2
+					local const_list 1
+				}
+				else if "`distribution'"=="gt" {
+					local title "{title:Interval Regression with Generalized t Distribution}"
+					constraint define 1 [lambda]_cons=0
+					local const_list 1
+				}
+				else if "`distribution'"=="sgt" {
+					local title "{title:Interval Regression with Skewed Generalized t Distribution}"
+				}
 			}
+		}
 		
-		else if "`distribution'" == "br3"{
-		
-		constraint define 1 [q]_cons=1
-
-			if "`noconstant'" != ""{
+		/* DEFINES PARAMETERS AND CONSTRAINTS for distributions within GB2 tree */
+		if inlist("`distribution'","`gb2_tree'") {
 			
-			local evaluator intllf_gb2exp_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
+			* evaluates lnormal if specified
+			if "`distribution'"=="lnormal" {
+				local evaluator intllf_lnormal`group'
+				local title "{title:Interval Regression with Lognormal Distribution}"
+				local params `" (mu: `depvar1' `depvar2' = `regs', `noconstant') (lnsigma: `sigma') "'
+			}
+			* if INITial activated, performs preliminary evaulation to estimate good starting parameters for other distributions in gb2-tree
+			else if "`initial'"!="" {
+				local params `" (mu: `depvar1' `depvar2' = `regs', `noconstant') (lnsigma: `sigma') "'
+				quietly ml model lf intllf_normal`group' `params' [`weight' `exp'] if `touse', `max_opts' constraints(`constraints') search(norescale)
+				matrix b_0 = e(b) // starting parameter values (mu, sigma); mu is interpreted as delta -- see help ml init (...,copy)
+				
+				local init_opts `" init(b_0 `initial', copy) search(norescale) continue "' // defines options conditional on activation of INITial; previous authors found that "search(norescale)" and "continue" improve convergence with INITial activated
 			}
 			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')   ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(`initial' coeff2,copy) ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`br3title') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			qui ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')  ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`br3title') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_gb2exp_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')  ///
-			 [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`br3title') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			
-			}
-			
-			else{
-			
-			
-			di " "
-			di as txt "Fitting Full model:"
-						
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')  ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`br3title') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			
+			* these distributions use a common evaluator file (namely, GGAMMA); constraints are applied to estimate special cases
+			if inlist("`distribution'","weibull","gamma","ggamma") {
+				local evaluator intllf_ggsigma`group'
+				local params `" (delta: `depvar1' `depvar2' = `regs', `noconstant') (lnsigma: `sigma') (p: `p') "'
+				
+				if "`distribution'"=="weibull" {
+					local title "{title:Interval Regression with Weibull Distribution}"
+					constraint define 1 [p]_cons=1
+					local const_list 1
+				}
+				else if "`distribution'"=="gamma" {
+					local title "{title:Interval Regression with Gamma Distribution}"
+					constraint define 1 [lnsigma]_cons=0
+					local const_list 1
+					
+					* overwrites starting values becuase gamma does not estimate lnsigma
+					if "`initial'"!="" {
+						matrix b_0 = b_0[1,"delta:"]
+						local init_opts `" init(b_0 `initial', copy) search(norescale) continue "'
+					}
+				}
+				else if "`distribution'"=="ggamma" {
+					local title "{title:Interval Regression with Generalized Gamma Distribution}"
 				}
 			}
 			
-			}
-			
-		else if "`distribution'" == "gb2"{
-
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_gb2exp_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')   ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(`initial' coeff2,copy) ///
-			`constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`gb2title') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			qui ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')  ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 `constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`gb2title') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_gb2exp_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')  ///
-			 [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			`constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`gb2title') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			
-			}
-			
-			else{
-			
-			
-			di " "
-			di as txt "Fitting Full model:"
-						
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')  ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 `constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`gb2title') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			
+			* these distributions use a common evaluator file (namely, GB2); constraints are applied in order to estimate special cases
+			if inlist("`distribution'","br3","br12","gb2") {
+				local evaluator intllf_gb2exp`group'
+				local params `" (delta: `depvar1' `depvar2' = `regs', `noconstant') (lnsigma: `sigma' ) (p: `p') (q: `q') "'
+				
+				if "`distribution'"=="br3" {
+					local title "{title:Interval Regression with Burr type 3 Distribution}"
+					constraint define 1 [q]_cons=1
+					local const_list 1
+				}
+				else if "`distribution'"=="br12" {
+					local title "{title:Interval Regression with Burr type 12 Distribution}"
+					constraint define 1 [p]_cons=1
+					local const_list 1
+				}
+				if "`distribution'"=="gb2" {
+					local title "{title:Interval Regression with Generalized Beta of the Second Kind Distribution}"
 				}
 			}
-			
-			}
-		
-		else if "`distribution'" == "gamma" | "`distribution'" == "ga"{
-		
-		constraint define 1 [p]_cons=1
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_ggsigma_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars')  ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`gammatitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`gammatitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_ggsigma_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars')  ///
-			 [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`gammatitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars')   ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize ///
-			 constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`gammatitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
 		}
 		
-		}
-		}
+		/* PERFORMS EVALUATION */
+		local const_list `const_list' `constraints' // appends user's constraints to program constraints
+		local max_opts `" `max_opts' constraints(`const_list') repeat(`repeat') title(`title') "' // appends options used by final evaluations
 		
-		else if "`distribution'" == "weibull"{
+		ml model lf `evaluator' `params' [`weight' `exp'] if `touse', `max_opts' `init_opts'
+		ml display, `neq'
 		
-		constraint define 1 [sigma]_cons=1
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_ggsigma_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars')  ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`weibulltitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`weibulltitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_ggsigma_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars')  ///
-			 [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`weibulltitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars')   ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize ///
-			 constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`weibulltitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-		}
+		mat betas = e(b) // saves coefficient matrix for use in post-evaluation
 		
-		}
-		}
-		
-		else if "`distribution'" == "gg"{
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_ggsigma_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars')  ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			`constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`ggtitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 `constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`ggtitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_ggsigma_group
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars')  ///
-			 [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			`constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`ggtitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars')   ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize ///
-			 `constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`ggtitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-		}
-		
-		}
-		}
-		else{
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_normal_group
-			
-			di " "
-			di as txt "Fitting Full model with no constant:"
-			
-			
-			if "`initial'" !=""{
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs',noconstant)  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			init(`initial',copy) `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance' `nonrtolerance' ///
-			`tolerance' `ltolerance' `nrtolerance' title(`normaltitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs',noconstant)  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			 `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance' `nonrtolerance' ///
-			`tolerance' `ltolerance' `nrtolerance' title(`normaltitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			}
-			}
-			
-			else{
-			
-			local evaluator intllf_normal_group
-			
-			if "`initial'" !=""{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			init(`initial', copy) `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'   ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' title(`normaltitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			di as txt "OVER HERE"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			 `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'   ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' title(`normaltitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display			
-			}
-			}
-		}		
-		
-}	
-*Evaluates model if non-grouped data
-else{	
-		if "`distribution'" == "normal"{
-		
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_normal
-			
-			di " "
-			di as txt "Fitting Full model with no constant:"
-			
-			
-			if "`initial'" !=""{
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs',noconstant)  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			init(`initial',copy) `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance' `nonrtolerance' ///
-			`tolerance' `ltolerance' `nrtolerance' title(`normaltitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs',noconstant)  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			 `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance' `nonrtolerance' ///
-			`tolerance' `ltolerance' `nrtolerance' title(`normaltitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			}
-			}
-			
-			else{
-			local evaluator intllf_normal
-			
-			if "`initial'" !=""{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			init(`initial', copy) `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'   ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' title(`normaltitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			 `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'   ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' title(`normaltitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display			
-			}
-			}
-		}
-		
-		else if "`distribution'" == "lnormal" | "`distribution'" == "ln" {
-		
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_ln
-			
-			di " "
-			di as txt "Fitting Full model with no constant:"
-			
-			if "`initial'" !=""{
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs',noconstant)  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			init(`initial',copy) `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance' `nonrtolerance' ///
-			`tolerance' `ltolerance' `nrtolerance' title(`lntitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs',noconstant)  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			initial(`initial') `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance' `nonrtolerance' ///
-			`tolerance' `ltolerance' `nrtolerance' title(`lntitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			}
-			}
-			
-			else{
-			local evaluator intllf_ln
-			
-			if "`initial'" !=""{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			init(`initial', copy) `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' title(`lntitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			 `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'   ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' title(`lntitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display			
-			}
-			}
-		}
-		
-		else if "`distribution'" == "t"{
-		
-			constraint define 1 [p]_cons=2
-			constraint define 2 [lambda]_cons=0
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_sgt_condition
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster'
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			  [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints(1 2) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`sgttitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(4)
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			 (lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 constraints(1 2) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`sgttitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display, neq(4)
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_sgt_condition
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-		
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q:`qvars') (lambda: `lambdavars')   ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints (1 2) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`sgttitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(4)
-			
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			 [`weight'`exp'] if `touse' ==1 , missing search(on) maximize ///
-			 constraints(1 2) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`sgttitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display, neq(4) 
-			
-			}
-			
-
-			}
-		}
-		
-		else if "`distribution'" == "st"{
-		
-			constraint define 1 [p]_cons=2
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_sgt_condition
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster'
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			  [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`sttitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(4)
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			 (lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`sttitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display, neq(4)
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_sgt_condition
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-		
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q:`qvars') (lambda: `lambdavars')   ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints (1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`sttitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(4)
-			
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			 [`weight'`exp'] if `touse' ==1 , missing search(on) maximize ///
-			 constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`sttitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display, neq(4) 
-			
-			}
-			
-
-			}
-		}
-		
-		else if "`distribution'" == "gt"{
-		
-		constraint define 1 [lambda]_cons=0
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_sgt_condition
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster'
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			  [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`gttitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(4)
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			 (lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`gttitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display, neq(4)
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_sgt_condition
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q:`qvars') (lambda: `lambdavars')   ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints (1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`gttitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(4)
-			
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			 [`weight'`exp'] if `touse' ==1 , missing search(on) maximize ///
-			 constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`gttitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display, neq(4) 
-			
-			}
-			
-
-			}
-		}
-		
-		else if "`distribution'" == "sgt"{
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_sgt_condition
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster'
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			  [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			`constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`sgttitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(4)
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			 (lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 `constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`sgttitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display, neq(4)
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_sgt_condition
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q:`qvars') (lambda: `lambdavars')   ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			`constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`sgttitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(4)
-			
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars') (lambda: `lambdavars') ///
-			 [`weight'`exp'] if `touse' ==1 , missing search(on) maximize ///
-			 `constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`sgttitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display, neq(4) 
-			
-			}
-			
-
-			}
-		}
-		
-		else if "`distribution'" == "slaplace"{
-		
-		constraint define 1 [p]_cons=1
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_sged
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' `constraints'
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars')  ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints (1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`slaplacetitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(3) 
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars')///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 constraints (1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`slaplacetitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display, neq(3) 
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_sged
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' `constraints'
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars') ///
-			 [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints (1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`slaplacetitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(3) 
-			
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars') ///
-			 [`weight'`exp'] if `touse' ==1 , maximize missing search(norescale) ///
-			constraints (1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`slaplacetitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat')
-
-			ml display, neq(3) 
-			
-			}
-			
-
-			}
-			
-		}
-		
-		else if "`distribution'" == "ged"{
-		
-		constraint define 1 [lambda]_cons=0
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_sged
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' `constraints'
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars')  ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints (1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`gedtitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(3) 
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars')///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 constraints (1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`gedtitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display, neq(3) 
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_sged
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' `constraints'
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars') ///
-			 [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints (1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`gedtitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(3) 
-			
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars') ///
-			 [`weight'`exp'] if `touse' ==1 , maximize missing search(norescale) ///
-			constraints (1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`gedtitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat')
-
-			ml display, neq(3) 
-			
-			}
-			
-
-			}
-			
-		}
-		
-		else if "`distribution'" == "sged"{
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_sged
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' `constraints'
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars')  ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			`constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`sgedtitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(3) 
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars')///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 `constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`sgedtitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display, neq(3) 
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_sged
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_normal (mu: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' `constraints'
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars') ///
-			 [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			`constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`sgedtitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display, neq(3) 
-			
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (lambda: `lambdavars') ///
-			 [`weight'`exp'] if `touse' ==1 , maximize missing search(norescale) ///
-			`constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`sgedtitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat')
-
-			ml display, neq(3) 
-			
-			}
-			
-
-			}
-			
-		}
-		
-		else if "`distribution'" == "br12"{
-		
-		constraint define 1 [p]_cons=1
-
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_gb2exp
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')   ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(`initial' coeff2,copy) ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`br12title') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			qui ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')  ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`br12title') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_gb2exp
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')  ///
-			 [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`br12title') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			
-			}
-			
-			else{
-			
-			
-			di " "
-			di as txt "Fitting Full model:"
-						
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')  ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`br12title') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			
+		/* TRANSFORMS LAMBDA */
+		local asterisk 0 // flag to print warning message regarding alpha/lambda
+		if inlist("`distribution'","`sgt_tree'") {
+			if "`lambda'"=="" { // homoskedastic lambda (_cons only)
+				di "{res:lambda}       {c |}"
+				
+				if betas[1,"lambda:_cons"]==0 {
+					table_line_zero "_cons" // reports constrained lambda
+					scalar _lambda = 0 // used by later sections
+				}
+				else { // transforms unconstrained lambda (from "alpha", see help file)
+					* extracts alpha matrix from parameter matrix
+					mat A = betas[1,"lambda:_cons"]
+					mat A_SE = _se["lambda:_cons"]
+					* extract constants and standard error from alpha matrix
+					scalar alpha_c = A[1,1]
+					scalar alpha_se = A_SE[1,1]
+					* transforms alpha into lambda
+					scalar _lambda = (exp(alpha_c)-1)/(exp(alpha_c)+1)
+					scalar lambda_se = alpha_se*(2*exp(alpha_c)) / (exp(alpha_c)+1)^2
+					* calculates inference statistics
+					scalar zscore = lambda / lambda_se
+					scalar p = normal(-abs(zscore))
+					scalar llimit = lambda + 1.96*lambda_se
+					scalar ulimit = lambda - 1.96*lambda_se
+					*display and ereturn							
+					table_line "_cons" lambda lambda_se zscore p ulimit llimit 
+					ereturn scalar lambda = _lambda
 				}
 			}
-			
-			}
-		
-		else if "`distribution'" == "br3"{
-		
-		constraint define 1 [q]_cons=1
-
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_gb2exp
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')   ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(`initial' coeff2,copy) ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`br3title') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			qui ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')  ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`br3title') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_gb2exp
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')  ///
-			 [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`br3title') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			
-			}
-			
-			else{
-			
-			
-			di " "
-			di as txt "Fitting Full model:"
-						
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')  ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`br3title') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			
+			else { // heteroskedastic lambda (lambdavars and _cons) -- report untransformed alpha
+			di "{res:alpha*}       {c |}"
+				foreach var in `lambda' _cons {
+					* extract alpha matrix from parameter matrix
+					mat A_`var' = betas[1,"lambda:`var'"]
+					mat A_SE_`var' = _se["lambda:`var'"]
+					* extract constant and se from alpha matrix
+					scalar alpha_`var' = A_`var'[1,1]
+					scalar alpha_se_`var' = A_SE_`var'[1,1]
+					* calculate inference statistics
+					scalar zscore_`var' = alpha_`var' / alpha_se_`var'
+					scalar p_`var' = normal(-abs(zscore_`var'))
+					scalar llimit_`var' = alpha_`var' + 1.96*alpha_se_`var'
+					scalar ulimit_`var' = alpha_`var' - 1.96*alpha_se_`var'
+					* display and ereturn							
+					table_line_alpha "`var'" alpha_`var' alpha_se_`var' zscore_`var' p_`var' ulimit_`var' llimit_`var' 
+					ereturn scalar alpha_`var' = alpha_`var'
 				}
+			local asterisk 1 // activate flag to print warning message
+			
+			* extracts _cons after transformation for use in later sections 
+			scalar _lambda = (exp(alpha__cons)-1)/(exp(alpha__cons)+1)
 			}
-			
-			}
-			
-		else if "`distribution'" == "gb2"{
-
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_gb2exp
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')   ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(`initial' coeff2,copy) ///
-			`constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`gb2title') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			qui ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')  ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 `constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`gb2title') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_gb2exp
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')  ///
-			 [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			`constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`gb2title') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			
-			}
-			
-			else{
-			
-			
-			di " "
-			di as txt "Fitting Full model:"
-						
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') (q: `qvars')  ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 `constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`gb2title') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			
-				}
-			}
-			
-			}
-		
-		else if "`distribution'" == "gamma" | "`distribution'" == "ga"{
-		
-		constraint define 1 [p]_cons=1
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_ggsigma
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars')  ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`gammatitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`gammatitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_ggsigma
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars')  ///
-			 [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`gammatitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars')   ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize ///
-			 constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`gammatitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-		}
-		
-		}
-		}
-		
-		else if "`distribution'" == "weibull"{
-		
-		constraint define 1 [sigma]_cons=1
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_ggsigma
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars')  ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`weibulltitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`weibulltitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_ggsigma
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars')  ///
-			 [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`weibulltitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars')   ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize ///
-			 constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`weibulltitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-		}
-		
-		}
-		}
-		
-		else if "`distribution'" == "gg"{
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_ggsigma
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs', noconstant)  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars')  ///
-			[`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			`constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`ggtitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars' ) (p: `pvars') ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			 `constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`ggtitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			}
-			
-			}
-			
-			else{
-			
-			local evaluator intllf_ggsigma
-			
-			if "`initial'" != ""{
-			
-			*This portion here first evaluates the beta coefficients to get an estimate to pass it in later 
-			* as start values
-			
-			qui ml model lf intllf_ln (delta: `depvar1' `depvar2'= `regs')  (lnsigma: `sigmavars' ) [`weight'`exp'] ///
-			if `touse' ==1,missing search(norescale) maximize `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' `vce'  ///
-			`robust' `cluster' 
-			
-			matrix coeff = e(b)
-			
-			if `nsigma' == 0{
-				matrix coeff2 = coeff
-				*matrix coeff2 = coeff[1..., 1..`nregs']
-			}
-			
-			else{
-				matrix coeff2 = coeff
-			}
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars')  ///
-			 [`weight'`exp'] if `touse' ==1 , maximize continue missing search(norescale) init(coeff2 `initial',copy) ///
-			`constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  `nonrtolerance' /// 
-			 `tolerance' `ltolerance' `nrtolerance' title(`ggtitle') `vce'  ///  
-			`robust' `cluster' `svy' repeat(`repeat') 
-			
-			ml display
-			
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars' ) (p: `pvars')   ///
-			[`weight'`exp'] if `touse' ==1 , missing search(on) maximize ///
-			 `constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `tolerance' `ltolerance' `nrtolerance' `nonrtolerance'   ///  
-			`showtolerance' title(`ggtitle') `vce'  /// 
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-		}
-		
-		}
-		}
-		else{
-			
-			if "`noconstant'" != ""{
-			
-			local evaluator intllf_normal
-			
-			di " "
-			di as txt "Fitting Full model with no constant:"
-			
-			
-			if "`initial'" !=""{
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs',noconstant)  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			init(`initial',copy) `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance' `nonrtolerance' ///
-			`tolerance' `ltolerance' `nrtolerance' title(`normaltitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs',noconstant)  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			 `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance' `nonrtolerance' ///
-			`tolerance' `ltolerance' `nrtolerance' title(`normaltitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			}
-			}
-			
-			else{
-			
-			local evaluator intllf_normal
-			
-			if "`initial'" !=""{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			init(`initial', copy) `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'   ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' title(`normaltitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display
-			
-			}
-			
-			else{
-			
-			di " "
-			di as txt "Fitting Full model:"
-			
-			di as txt "OVER HERE"
-			
-			ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')  (lnsigma: ///
-			`sigmavars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize /// 
-			 `constraints' `technique'  `difficult' `iterate' ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'   ///
-			`tolerance' `ltolerance' `nrtolerance' `nonrtolerance' title(`normaltitle') `vce' ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			ml display			
-			}
-			}
-		}		
-		
-}	
-	*******************************************************************************************************************
-		
-		*Can't remember what the following section is for so I'm going to comment it out 
-		
-		/*
-			if "`noconstant'" != ""{ 
-			
-			if "`distribution'" == "ln" | "`distribution'" == "lnormal" {
-			
-			local evaluator intllf_ln
-			
-			quietly ml model lf `evaluator' (mu: `depvar1' `depvar2' = )  /// 
-			(lnsigma: ) [`weight'`exp'] if `touse' ==1 , missing search(on)  /// 
-			maximize initial(`initial') `constraints' `technique'  `difficult'  ///
-			`iterate' `log' `trace' `gradient' `showstep' `hessian'  ///
-			`showtolerance' `tolerance' `ltolerance' `nrtolerance' title(`lntitle') ///
-			`vce'  `robust' `cluster' `svy' repeat(`repeat')
-			
-			quietly ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')  /// 
-			(lnsigma: `sigmavars' ) [`weight'`exp'] if `touse' ==1 , missing search(on) continue /// 
-			maximize initial(`initial') `constraints' `technique'  `difficult'  ///
-			`iterate' `log' `trace' `gradient' `showstep' `hessian'  ///
-			`showtolerance' `tolerance' `ltolerance' `nrtolerance' title(`lntitle') ///
-			`vce'  `robust' `cluster' `svy' repeat(`repeat')
-			
-			}
-			
-			else if "`distribution'" == "gg" {
-			
-			local evaluator intllf_ggsigma
-			
-			quietly ml model lf `evaluator' (delta: `depvar1' `depvar2' = )   ///
-			(lnsigma: ) (p: ) [`weight'`exp']  ///
-			 if `touse' ==1 , missing search(on) maximize  ///
-			initial(`initial') `constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' title(`ggtitle') `vce'  ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			quietly ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs')   ///
-			(lnsigma: `sigmavars') (p: `pvars') [`weight'`exp']   ///
-			 if `touse' ==1 , missing search(on) maximize continue ///
-			initial(`initial') `constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' title(`ggtitle') `vce'  ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			}
-			
-			else if "`distribution'" =="sged"{
-			
-			local evaluator intllf_sged
-			
-			quietly ml model lf `evaluator' (mu: `depvar1' `depvar2' = )   ///
-			(lambda: ) (lnsigma:  ) (p: ) [`weight'`exp']  ///
-			 if `touse' ==1 , missing search(on) maximize  ///
-			initial(`initial') `constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' title(`sgttitle') `vce'  ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			quietly ml model lf `evaluator' (mu: `depvar1' `depvar2' = `regs')   ///
-			(lambda: `lambdavars') (lnsigma: `sigmavars' ) (p: `pvars') [`weight'`exp']   ///
-			 if `touse' ==1 , missing search(on) maximize continue ///
-			initial(`initial') `constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' title(`sgttitle') `vce'  ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			}
-			
-			else if "`distribution'" == "gb2"{
-
-			local evaluator intllf_gb2exp
-			
-			quietly ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars') (p: `pvars') (q:  ///
-			`qvars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize ///
-			initial(`initial') `constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' title(`gb2title') `vce'  ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			quietly ml model lf `evaluator' (delta: `depvar1' `depvar2' = )   ///
-			(lnsigma:  ) (p: ) (q:  ///
-			) [`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			initial(`initial') `constraints' `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' title(`gb2title') `vce'  ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			}
-			
-			else if "`distribution'" == "br3"{
-
-			local evaluator intllf_gb2exp
-			
-			constraint define 1 [q]_cons=1
-			
-			quietly ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars') (p: `pvars') (q:  ///
-			`qvars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize ///
-			initial(`initial') constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' title(`gb2title') `vce'  ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			quietly ml model lf `evaluator' (delta: `depvar1' `depvar2' = )   ///
-			(lnsigma:  ) (p: ) (q:  ///
-			) [`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			initial(`initial') constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' title(`gb2title') `vce'  ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			}
-			
-			else if "`distribution'" == "br12"{
-
-			local evaluator intllf_gb2exp
-			
-			constraint define 1 [q]_cons=1
-			
-			quietly ml model lf `evaluator' (delta: `depvar1' `depvar2' = `regs', noconstant)   ///
-			(lnsigma: `sigmavars') (p: `pvars') (q:  ///
-			`qvars') [`weight'`exp'] if `touse' ==1 , missing search(on) maximize ///
-			initial(`initial') constraints(1)`technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' title(`gb2title') `vce'  ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			quietly ml model lf `evaluator' (delta: `depvar1' `depvar2' = )   ///
-			(lnsigma:  ) (p: ) (q:  ///
-			) [`weight'`exp'] if `touse' ==1 , missing search(on) maximize  ///
-			initial(`initial') constraints(1) `technique'  `difficult' `iterate'  ///
-			`log' `trace' `gradient' `showstep' `hessian' `showtolerance'  ///
-			`tolerance' `ltolerance' `nrtolerance' title(`gb2title') `vce'  ///
-			`robust' `cluster' `svy' repeat(`repeat')
-			
-			}
-			
-			}
-			
-			*/
-		
-		mat betas = e(b) //coefficient matrix
-		
-		*Transforming lambda
-		if "`distribution'" == "sgt" | "`distribution'" == "sged" | "`distribution'" == "gt" | "`distribution'" == "slaplace" |  ///
-		"`distribution'" == "st" |  "`distribution'" == "ged" |"`distribution'" == "t"{
-		
-		di "{res:lambda}       {c |}"
-		
-		mat A = betas[1,"lambda:_cons"]
-		mat A_SD = _se["lambda:_cons"]
-		scalar alpha_c = A[1,1]
-		scalar alpha_sd = A_SD[1,1]
-		scalar lambda = (exp(alpha_c)- 1)/(exp(alpha_c)+ 1)
-		scalar lambda_sd = alpha_sd*(2*exp(alpha_c)) / (exp(alpha_c) + 1)^2
-		scalar zscore = lambda / lambda_sd
-		scalar p = normal(-zscore)
-		scalar llimit = lambda + 1.96*lambda_sd 
-		scalar ulimit = lambda - 1.96*lambda_sd
-		
-		if lambda == 0{
-		
-		table_line_zero " _cons"  
 		di as text "{hline 13}{c BT}{hline 64}"
-		
 		}
+
+		/* EXTRACTS ESTIMATED COEFFICIENTS for use in eyx, alt notation, aicbic, gini, plot */
 		
-		else{
-		table_line "_cons" lambda lambda_sd zscore p ulimit llimit 
-		di as text "{hline 13}{c BT}{hline 64}"
-		ereturn scalar lambda = lambda
-		}
+		* /estimated params/	/distributions/
+		* mu sigma				normal lnormal
+		* mu sigma p lambda		snormal laplace slaplace ged sged
+		* mu sigma p q lambda	t gt st sgt
+		* delta sigma p			weibull gamma ggamma
+		* delta sigma p q		br3 br12 gb2
 		
-		}
+		scalar _sigma = exp(betas[1,"lnsigma:_cons"])
 		
-		*Find the Conditional expected value at specified level
-		if "`distribution'" == "gb2" | "`distribution'" == "gg" ///
-		| "`distribution'" == "weibull" | "`distribution'" == "gamma"  ///
-		| "`distribution'" == "ln" | "`distribution'" == "lnormal" ///
-		| "`distribution'" == "st" | "`distribution'" == "gt" ///
-		| "`distribution'" == "t" | "`distribution'" == "ged" ///
-		| "`distribution'" == "sgt" | "`distribution'" == "sged" | "`distribution'" == "slaplace" {
+		if inlist("`distribution'","`sgt_tree'") | "`distribution'"=="normal" | "`distribution'"=="" | "`distribution'"=="lnormal" {
 			
-			mat mid_Xs = 1
-			if "`eyx'" == ""{
+			if "`noconstant'"=="" { // if NOCONStant activated, mu:_cons is not estimated
+				scalar _mu = betas[1,"mu:_cons"] 
+			}
+			
+			if inlist("`distribution'","`sgt_tree'") {
+				scalar _p = betas[1,"p:_cons"]
+				* lambda is extracted in /transforming lambda/ section above
+				
+				if inlist("`distribution'","t","gt","st","sgt") {
+					scalar _q = betas[1,"q:_cons"]
+				}
+			}
+		}
+		else { // gb2-tree excluding lnormal
+		
+			if "`noconstant'"=="" { // if NOCONStant activated, delta:_cons is not estimated
+				scalar _delta = betas[1,"delta:_cons"] 
+			}
+			scalar _p = betas[1,"p:_cons"]
+			
+			* alternate notation
+			scalar _a = 1/sigma
+			scalar _b_ = exp(delta) // "_b" is a STATA reserved word
+			
+			if inlist("`distribution'","br3","br12","gb2") {
+				scalar _q = betas[1,"q:_cons"]
+			}
+		}
+		
+		/* Opt EYX - CALCULATES CONDITIONAL EXPECTED VALUE AT SPECIFIED LEVEL */
+		if "`distribution'"!="normal" & "`distribution'"!="" { // eyx not reported for normal distribution
+		
+			* displays first line of eyx output
+			if "`eyx'"=="" | "`eyx'"=="mean" { // spacing following "`eyx'" of length four
 				local eyx "mean"
-				di "{res:`eyx'}         {c |}"
+				di "{res:`eyx'}         {c |}" 
 			}
-			else if "`eyx'" == "mean" {
-			di "{res:`eyx'}          {c |}" 
+			else if inlist("`eyx'","min","max","p10","p25","p50","p75","p90","p95","p99") {	// spacing following "`eyx'" of length three
+				di "{res:`eyx'}          {c |}"
 			}
-			else if "`eyx'" == "p50" | "`eyx'" == "p10" | "`eyx'" == "p25" | ///
-			        "`eyx'" == "p75" | "`eyx'" == "p90" | "`eyx'" == "p95" | ///
-					"`eyx'" == "p99" | "`eyx'" == "min" | "`eyx'" == "max" {		
-			
-					di "{res:`eyx'}          {c |}"
-				}
-			else if "`eyx'" == "p1" | "`eyx'" == "p5" {
-				di "{res:`eyx'}             {c |}"
-				}
-			else{
-				di as err "Not a valid option for eyx"
+			else if inlist("`eyx'","p1","p5") { // spacing following "`eyx'" of length two
+				di "{res:`eyx'}           {c |}"
+			}
+			else {
+				di as err "not a valid option for eyx"
 				exit 498
+			}
+			
+			* creates vector of indepvars at specified percentile
+			* ie [1, indepvar1@p75, indepvar2@p75, ...] if `eyx'==p75
+			mat indepvar_percentiles = 1 // begin with 1 to match with mu/delta's _cons
+			qui foreach indepvar in `regs' { // find and append percentile values for indepvars one at a time
+				sum `indepvar', detail 
+				scalar percentile = r(`eyx') // equal to 75th percentile of `indepvar' if `eyx'==p75
+				mat indepvar_percentiles = indepvar_percentiles, percentile // appends to vector
+			}
+			if "`noconstant'"!="" {
+				mat indepvar_percentiles = indepvar_percentiles[1,2...] // drop constant if NOCONStant activated
+			}
+			
+			* computes inner product of estimated location parameter (mu or delta) with indepvars at specified percentile;
+			if inlist("`distribution'","`sgt_tree'") | "`distribution'"=="lnormal" {
+				mat mu_vec = betas[1,"mu:"]'
+				mata: st_matrix("mu_vec", flipud(st_matrix("mu_vec"))) // flips matrix around to correspond to correct indepvars
+				mat xbeta = indepvar_percentiles*mu_vec
+				scalar xbeta = xbeta[1,1]
+				
+				* computes resulting expected value
+				if inlist("`distribution'","snormal","laplace","slaplace","ged","sged") {
+					scalar expected = xbeta + 2*_lambda*_sigma*(exp(lngamma(2/_p))/exp(lngamma(1/_p)))
 				}
-			
-			
-			quietly foreach x in `regs' {
-				sum `x', detail
-				scalar mid_ = r(`eyx')
-				mat mid_Xs = mid_Xs, mid_
+				else if inlist("`distribution'","t","gt","st","sgt") {
+					scalar expected = xbeta + 2*_lambda*_sigma*((_q^(1/_p))*(exp(lngamma(2/_p)+lngamma(_q-(1/_p))-lngamma((1/_p)+_q))/exp(lngamma(1/_p)+lngamma(_q))-lngamma((1/_p)+_q)))
+				}
 			}
-			mat sigma = betas[1,"lnsigma:_cons"]
-			scalar sigma = sigma[1,1]
-			
-			if "`distribution'" == "gb2" |"`distribution'" == "br12" | "`distribution'" == "br3"{
-			
-				mat deltas = betas[1,"delta:"]
-				mat deltas = deltas'
-				mata: st_matrix("deltas", flipud(st_matrix("deltas"))) //flips matrix around
-		                        									// to conform with Xs									
-				mat p = betas[1,"p:_cons"]
-				scalar p = p[1,1]
-				mat q = betas[1,"q:_cons"]
-				scalar q = q[1,1]
-				mat xbeta = mid_Xs*deltas
-				scalar xbeta = xbeta[1,1]
-				mat expected = exp(xbeta)*( (exp(lngamma(p+exp(sigma)))*exp(lngamma(q-exp(sigma))))/  ///
-											( exp(lngamma(p))*exp(lngamma(q))))
+			if inlist("`distribution'","`gb2_tree'") {
+				if "`distribution'"=="lnormal" {
+					* computes resulting expected value
+					scalar expected = exp(xbeta+(_sigma^2/2)) // xbeta calculated above
+				}
+				else {
+					* computes inner product of estimated location parameter (mu or delta) with indepvars at specified percentile;
+					mat delta_vec = betas[1,"delta:"]'
+					mata: st_matrix("delta_vec", flipud(st_matrix("delta_vec")))
+					mat xbeta = indepvar_percentiles*delta_vec
+					scalar xbeta = xbeta[1,1]
+					
+					* computes resulting expected value
+					if inlist("`distribution'","weibull","gamma","ggamma") {
+						scalar expected = exp(xbeta)*((exp(lngamma(_p+_sigma)))/(exp(lngamma(_p))))
+					}
+					else if inlist("`distribution'","br3","br12","gb2") {
+						scalar expected = exp(xbeta)*((exp(lngamma(_p+_sigma))*exp(lngamma(_q-_sigma)))/(exp(lngamma(_p))*exp(lngamma(_q))))
+					}
+				}
 			}
-			
-			
-			if "`distribution'" == "sgt" | "`distribution'" == "st" | "`distribution'" == "gt"| "`distribution'" == "t"{
-			
-				mat mu = betas[1,"mu:"]
-				mat mu = mu'
-				mata: st_matrix("mu", flipud(st_matrix("mu"))) //flips matrix around
-																		// to conform with Xs										
-				mat xbeta = mid_Xs*mu     																
-				mat p = betas[1,"p:_cons"]
-				scalar p = p[1,1]
-				mat q = betas[1,"q:_cons"]
-				scalar q = q[1,1]
-				mat A = betas[1,"lambda:_cons"]
-				scalar alpha_c = A[1,1]
-				scalar lambda = (exp(alpha_c)- 1)/(exp(alpha_c)+ 1)
-				mat sigma = betas[1,"lnsigma:_cons"]
-				scalar sigma = sigma[1,1]
-				scalar xbeta = xbeta[1,1]
-				mat expected = xbeta + 2*lambda*exp(sigma)*((q^(1/p))*(exp(lngamma(2/p) ///
-				+lngamma(q-(1/p)) - lngamma((1/p)+q))/exp(lngamma(1/p) ///
-				+lngamma(q)) - lngamma((1/p)+q)) ) 
-			}
-			
-			if "`distribution'" == "sged" | "`distribution'" == "ged" {
-			
-				mat mu = betas[1,"mu:"]
-				mat mu = mu'
-				mata: st_matrix("mu", flipud(st_matrix("mu"))) //flips matrix around
-																		// to conform with Xs										
-				mat xbeta = mid_Xs*mu     																
-				mat p = betas[1,"p:_cons"]
-				scalar p = p[1,1]
-				mat A = betas[1,"lambda:_cons"]
-				scalar alpha_c = A[1,1]
-				scalar lambda = (exp(alpha_c)- 1)/(exp(alpha_c)+ 1)
-				mat sigma = betas[1,"lnsigma:_cons"]
-				scalar sigma = sigma[1,1]
-				scalar xbeta = xbeta[1,1]
-				mat expected = xbeta + 2*lambda*exp(sigma)*(exp(lngamma(2/p)) /exp(lngamma(1/p)))
+			* prints eyx in output table format
+			table_line "E[Y|X]" expected
+			di as text "{hline 13}{c BT}{hline 64}"
+		}
+
+		/* PRINTS WARNING regarding untransformed lambda ("alpha") */
+		if `asterisk' {
+			di as text "*for a description of alpha/lambda, see model options in " in smcl "{help gintreg}" _n
+		}
 				
-			}
-			
-			if "`distribution'" == "gg" | "`distribution'" == "gamma" | "`distribution'" == "weibull" {
-			
-				mat deltas = betas[1,"delta:"]
-				mat deltas = deltas'
-				mata: st_matrix("deltas", flipud(st_matrix("deltas"))) //flips matrix around
-																		// to conform with Xs										
-				mat p = betas[1,"p:_cons"]
-				scalar p = p[1,1]
-				mat xbeta = mid_Xs*deltas
-				scalar xbeta = xbeta[1,1]
-				mat expected = exp(xbeta)*( (exp(lngamma(p+exp(sigma))))/  ///
-											( exp(lngamma(p))))
-			}
-			
-			if "`distribution'" == "ln" | "`distribution'" == "lnormal" {
-				
-				mat mu = betas[1,"mu:"]
-				mat mu = mu'
-				mata: st_matrix("mu", flipud(st_matrix("mu"))) //flips matrix around
-																		// to conform with Xs										
-				mat xbeta = mid_Xs*mu
-				scalar xbeta = xbeta[1,1]
-				mat expected = exp(xbeta + (exp(sigma)^2/2))
-			}
-			
-				scalar eyx = expected[1,1]
-				table_line "E[Y|X]" eyx 
-				di as text "{hline 13}{c BT}{hline 64}"
-				ereturn scalar eyx = eyx
+		/* REPORTS ALTERNATE NOTATION */
+		di as txt "Alternate notation: "
+		if inlist("`distribution'","`gb2_tree'") & "`distribution'"!="lnormal" {
+			di as text "a: " _a
+			di as text "beta: " _b_
+		}
+		else {
+			di as txt "sigma: " _sigma
 		}
 		
-		qui count
-		scalar numobs = r(N)
-		scalar numvars = e(df_m)
-		scalar logll = e(ll)
+		/* Opt AICBIC - CALCULATES AND REPORTS AIC AND BIC */
+		
+		* 		AIC = 2k-2loglike
+		* 		BIC = kln(n)-2loglike
+		
+		if "`aicbic'"!="" {
+			if "`frequency'"!="" {
+				di as err "option aicbic incompatible with grouped data"
+				exit 498
+			}
+			else {
+				* three ingredients: first, loglikelihood values
+				scalar loglike = e(ll)
+				
+				* second, number of observations
+				qui count if `touse'
+				scalar nobs = r(N)
+				
+				* third, total number of estimated parameters
+				scalar _k = colsof(betas)
+				* correct for constrained parameters
+				local nconstraints: word count `const_list'
+				scalar _k = _k - `nconstraints'
+				
+				* perform calculations
+				scalar aic = 2*_k - 2*loglike
+				scalar bic = _k*ln(nobs) - 2*loglike
+				
+				* display and ereturn results
+				di _n "AIC: " aic
+				di "BIC: " bic
+				ereturn scalar aic = aic
+				ereturn scalar bic = bic
+			}
+		}
+		
+		/* Opt GINI - CALCULATES AND REPORTS GINI COEFFICIENTS */
+		if "`gini'"!="" {
+			if "`distribution'"=="weibull" {
+				local gini_coef 1-(.5^(_sigma))
+			}
+			if "`distribution'"=="gamma" {
+				local gini_coef exp(lngamma(_p + .5)) / (exp(lngamma(_p + 1)) * sqrt(_pi))
+			}			
+			else if "`distribution'"=="br3" {
+			    local gini_coef [exp(lngamma(_p)) * exp(lngamma(2*_p + _sigma))] ///
+												/ [exp(lngamma(_p + _sigma)) * exp(lngamma(2*_p))] - 1
+			}
+			else if "`distribution'"=="br12" {
+			    local gini_coef 1 - [exp(lngamma(_q)) * exp(lngamma(2*_q - _sigma))] ///
+												/ [exp(lngamma(_q - _sigma)) * exp(lngamma(2*_q))]
+			}
+			di _n "Gini coefficient: " `gini_coef'
+		}
+		
+		/* Opt PLOT - PLOTS PDF using _cons only, as extracted above */
+		if "`plot'"!="" {
+			if "`distribution'"=="normal" | "`distribution'"=="" {
+				twoway function ///
+					y = normalden(x, _mu, _sigma), ///
+					range(`plot')
+			}
+			else if inlist("`distribution'","snormal","laplace","slaplace","ged","sged") {
+				scalar G = exp(lngamma(1/_p)) // gamma function
+
+				twoway function ///
+					y = [p * exp(-(abs(x-_mu)^_p / ((1 + _lambda*sign(x-_mu))^_p * _sigma^_p)))] / [2*_sigma*G], ///
+					range(`plot')
+			}
+			else if inlist("`distribution'","t","gt","st","sgt") {
+				scalar B = exp(lngamma(1/_p)+lngamma(_q)-lngamma(1/_p + _q)) // beta function
+
+				twoway function ///
+					y = (_p)/[(2*_sigma*_q^(1/_p)*B)*(1 + (abs(x-_mu)^_p)/(_q*_sigma^_p*(1 + _lambda*sign(x-_mu))^_p))^(_q + 1/_p)], ///
+					range(`plot')
+			}
+			else if "`distribution'" == "lnormal" {
+				twoway function ///
+					y = [exp(-(ln(x)-_mu)^2 / 2 * _sigma^2)] / [sqrt(2*c(pi)) * x*_sigma], ///
+					range(`plot')
+			}
+			if inlist("`distribution'","weibull","gamma","ggamma") {
+				scalar G = exp(lngamma(_p)) // gamma function
+				
+				twoway function ///
+					y = (abs(_a)*(x/_b_)^(_a*_p)*exp(-(x/_b_)^_a))/(x*G), ///
+					range(`plot')
+			}
+			else if inlist("`distribution'","br3","br12","gb2") {
+				scalar B = exp(lngamma(p)+lngamma(q)-lngamma(p+q)) // beta function
+
+				twoway function ///
+					y = [abs(_a) * (x/_b_)^(_a*_p)] / [x*B * (1 + (x/_b_)^_a)^(_p+_q)], ///
+					range(`plot')
+			}
+		}
+		
+		/* PRINTS COUNTS of data types */
+		qui count if `touse'
+		di _n as text "{res:`r(N)'} `count_type'" // total
+		
+		qui count if `depvar1'==. & `depvar2'!=. & `touse' // left censored
+		di "{res:`r(N)'} left-censored `count_type'"	
+		
+		qui count if `depvar1'!=. & `depvar2'==. & `touse' // right censored
+		di "{res:`r(N)'} right-censored `count_type'"
+		
+		qui count if `depvar1'!=. & `depvar2'!=. & `depvar1'==`depvar2' & `touse' // uncensored
+		di "{res:`r(N)'} uncensored `count_type'"
+		
+		qui count if `depvar1'!=. & `depvar2'!=. & `depvar1'!=`depvar2' & `touse' // interval
+		di "{res:`r(N)'} interval `count_type'"
 	
-		if "`noconstant'" != ""{
-			if "`distribution'" == "gb2"{
-				if p == 1{
-				scalar BIC = ln(numobs)*(numvars + 2)-2*logll
-				scalar AIC = 2* (numvars + 2) - 2* logll
-				}
-				else if q == 1{
-				scalar BIC = ln(numobs)*(numvars + 2)-2*logll
-				scalar AIC = 2* (numvars + 2) - 2* logll
-				}
-				else{
-				scalar BIC = ln(numobs)*(numvars + 3)-2*logll
-				scalar AIC = 2* (numvars + 3) - 2* logll
-				}
-			}
-			else if "`distribution'" == "lnormal" | "`distribution'" == "ln"{
-				scalar BIC = ln(numobs)*(numvars + 1)-2*logll
-				scalar AIC = 2* (numvars + 1) - 2* logll
-			}
-			else if "`distribution'" == "gg" {
-
-				if p == 1{
-				scalar BIC = ln(numobs)*(numvars + 1)-2*logll
-				scalar AIC = 2* (numvars + 1) - 2* logll
-				}
-				else if sigma == 0{
-				scalar BIC = ln(numobs)*(numvars + 1)-2*logll
-				scalar AIC = 2* (numvars + 1) - 2* logll
-				}
-				else{
-				scalar BIC = ln(numobs)*(numvars + 3)-2*logll
-				scalar AIC = 2* (numvars + 2) - 2* logll
-				}
-			}
-			else if "`distribution'" == "sgt"  {
-				if p == 2{
-				scalar BIC = ln(numobs)*(numvars + 3)-2*logll
-				scalar AIC = 2* (numvars + 3) - 2* logll
-				}
-				else if lambda == 0{
-				scalar BIC = ln(numobs)*(numvars + 3)-2*logll
-				scalar AIC = 2* (numvars +3) - 2* logll
-				}
-				else if lambda == 0 & p ==2{
-				scalar BIC = ln(numobs)*(numvars + 2)-2*logll
-				scalar AIC = 2* (numvars + 2) - 2* logll
-				}
-				else{
-				scalar BIC = ln(numobs)*(numvars + 4)-2*logll
-				scalar AIC = 2* (numvars + 4) - 2* logll
-				}
-			}
-			else if "`distribution'" == "sged" {
-				if lambda == 0{
-				scalar BIC = ln(numobs)*(numvars + 2)-2*logll
-				scalar AIC = 2* (numvars + 2) - 2* logll
-				}
-				else {
-				scalar BIC = ln(numobs)*(numvars + 3)-2*logll
-				scalar AIC = 2* (numvars +3) - 2* logll
-				}
-			}
-			
-			else if "`distribution'" == "st"  {
-				scalar BIC = ln(numobs)*(numvars + 3)-2*logll
-				scalar AIC = 2* (numvars +3) - 2* logll
-			}
-			
-			else if "`distribution'" == "gt" {
-				scalar BIC = ln(numobs)*(numvars + 3)-2*logll
-				scalar AIC = 2* (numvars +3) - 2* logll
-			}
-			
-			else if "`distribution'" == "ged"  {
-				scalar BIC = ln(numobs)*(numvars + 2)-2*logll
-				scalar AIC = 2* (numvars + 2) - 2* logll
-			}
-			
-			else if "`distribution'" == "weibull"  {
-				scalar BIC = ln(numobs)*(numvars + 1)-2*logll
-				scalar AIC = 2* (numvars + 1) - 2* logll
-			}
-			
-			else if "`distribution'" == "gamma" | "`distribution'" == "ga"{
-				scalar BIC = ln(numobs)*(numvars + 1)-2*logll
-				scalar AIC = 2* (numvars + 1) - 2* logll
-			}
-			else if "`distribution'" == "t" {
-				scalar BIC = ln(numobs)*(numvars + 2)-2*logll
-				scalar AIC = 2* (numvars + 2) - 2* logll
-			}
-			
-			else{
-				scalar BIC = ln(numobs)*(numvars + 1)-2*logll
-				scalar AIC = 2* (numvars + 1) - 2* logll
-			}
-		}
-		else
-		{
-			if "`distribution'" == "gb2"{
-				if p == 1{
-				scalar BIC = ln(numobs)*(numvars + 3)-2*logll
-				scalar AIC = 2* (numvars + 3) - 2* logll
-				}
-				else if q == 1{
-				scalar BIC = ln(numobs)*(numvars + 3)-2*logll
-				scalar AIC = 2* (numvars + 3) - 2* logll
-				}
-				else{
-				scalar BIC = ln(numobs)*(numvars + 4)-2*logll
-				scalar AIC = 2* (numvars + 4) - 2* logll
-				}
-				
-			}
-			else if "`distribution'" == "lnormal" | "`distribution'" == "ln"{
-				scalar BIC = ln(numobs)*(numvars + 2)-2*logll
-				scalar AIC = 2* (numvars + 2) - 2* logll
-			}
-			else if "`distribution'" == "gg" {
-
-				if p == 1{
-				scalar BIC = ln(numobs)*(numvars + 2)-2*logll
-				scalar AIC = 2* (numvars + 2) - 2* logll
-				}
-				else if sigma == 0{
-				scalar BIC = ln(numobs)*(numvars + 2)-2*logll
-				scalar AIC = 2* (numvars + 2) - 2* logll
-				}
-				else{
-				scalar BIC = ln(numobs)*(numvars + 3)-2*logll
-				scalar AIC = 2* (numvars + 3) - 2* logll
-				}
-			}
-			else if "`distribution'" == "sgt" {
-				if p == 2{
-				scalar BIC = ln(numobs)*(numvars + 4)-2*logll
-				scalar AIC = 2* (numvars + 4) - 2* logll
-				}
-				else if lambda == 0{
-				scalar BIC = ln(numobs)*(numvars + 4)-2*logll
-				scalar AIC = 2* (numvars + 4) - 2* logll
-				}
-				else if lambda == 0 & p ==2{
-				scalar BIC = ln(numobs)*(numvars + 3)-2*logll
-				scalar AIC = 2* (numvars + 3) - 2* logll
-				}
-				else{
-				scalar BIC = ln(numobs)*(numvars + 5)-2*logll
-				scalar AIC = 2* (numvars + 5) - 2* logll
-				}
-			}
-			else if "`distribution'" == "sged" {
-				if lambda == 0{
-				scalar BIC = ln(numobs)*(numvars + 3)-2*logll
-				scalar AIC = 2* (numvars + 3) - 2* logll
-				}
-				else {
-				scalar BIC = ln(numobs)*(numvars + 4)-2*logll
-				scalar AIC = 2* (numvars + 4) - 2* logll
-				}
-			}
-			
-			else if "`distribution'" == "st" {
-				scalar BIC = ln(numobs)*(numvars + 4)-2*logll
-				scalar AIC = 2* (numvars +4) - 2* logll
-			}
-			
-			else if "`distribution'" == "gt"  {
-				scalar BIC = ln(numobs)*(numvars + 4)-2*logll
-				scalar AIC = 2* (numvars +4) - 2* logll
-			}
-			
-			else if "`distribution'" == "ged"  {
-				scalar BIC = ln(numobs)*(numvars + 3)-2*logll
-				scalar AIC = 2* (numvars + 3) - 2* logll
-			}
-			
-			else if "`distribution'" == "weibull"  {
-				scalar BIC = ln(numobs)*(numvars + 2)-2*logll
-				scalar AIC = 2* (numvars + 2) - 2* logll
-			}
-			
-			else if "`distribution'" == "gamma" | "`distribution'" == "ga" {
-				scalar BIC = ln(numobs)*(numvars + 2)-2*logll
-				scalar AIC = 2* (numvars + 2) - 2* logll
-			}
-			else if "`distribution'" == "t" {
-				scalar BIC = ln(numobs)*(numvars + 3)-2*logll
-				scalar AIC = 2* (numvars + 3) - 2* logll
-			}
-			
-			
-			else{
-				scalar BIC = ln(numobs)*(numvars + 2)-2*logll
-				scalar AIC = 2* (numvars + 2) - 2* logll
-			}
-		
-		}
-
-		di as txt "BIC: " BIC
-		di as txt "AIC: " AIC
-		
-		*Observation type count for interval regression
-		if "`frequency'" == ""{
-			noi di " "
-			if `nleft' != 1{
-				noi di as txt " {res:`nleft'} left-censored observations" 
-			}
-			if `nleft' == 1{
-				noi di as txt " {res:`nleft'} left-censored observation" 
-			}
-			if `nuncensored' != 1{
-				noi di as txt " {res: `nuncensored'} uncensored observations" 
-			}
-			if `nuncensored' == 1{
-				noi di as txt " {res:`nuncensored'} uncensored observation" 
-			}
-			if `nright' != 1{
-				noi di as txt " {res:`nright'} right-censored observations" 
-			}
-			if `nright' == 1{
-				noi di as txt " {res:`nright'} right-censored observation" 
-			}
-			if `ninterval' != 1{
-				noi di as txt " {res:`ninterval'} interval observations" 
-			}
-			if `ninterval' == 1{
-				noi di as txt " {res:`ninterval'} interval observation" 
-			}
-		}
-		*Observation type count for grouped regression
-		if "`frequency'" ~= ""{
-			
-			noi di " "
-			noi di as txt " {res: `total'} groups"
-			if `nleft' != 1{
-				noi di as txt " {res:`nleft'} left-censored groups" 
-			}
-			if `nleft' == 1{
-				noi di as txt " {res:`nleft'} left-censored group" 
-			}
-			if `nuncensored' != 1{
-				noi di as txt " {res: `nuncensored'} uncensored groups" 
-			}
-			if `nuncensored' == 1{
-				noi di as txt " {res:`nuncensored'} uncensored group" 
-			}
-			if `nright' != 1{
-				noi di as txt " {res:`nright'} right-censored groups" 
-			}
-			if `nright' == 1{
-				noi di as txt " {res:`nright'} right-censored group" 
-			}
-			if `ninterval' != 1{
-				noi di as txt " {res:`ninterval'} interval groups" 
-			}
-			if `ninterval' == 1{
-				noi di as txt " {res:`ninterval'} interval group" 
-			}
-		}
-		qui ereturn list
-		
-		}
+		/* ERETURNS relevant information */
+		qui ereturn list	
+	}
 	
 end
 
-*program drop table_line
-capture program drop table_line
 program table_line
 	args vname coef se z p 95l 95h
 	if (c(linesize) >= 100){
@@ -4550,13 +686,32 @@ program table_line
 	local abname = abbrev("`vname'",12)
 	display as text %12s "`abname'" " { c |}" /*
 	*/ as result /*
-	*/ "    " %8.0g `coef' "  " /*
-	*/ %9.0g `se' "   " %03.2f `z' "   " /*
-	*/ %04.3f `p' "    " %9.0g `95l' "    " /*
+	*/ "   " %8.0g `coef' "  " /*
+	*/ %9.0g `se' "  " %7.2f `z' "  " /*
+	*/ %6.3f `p' "    " %9.0g `95l' "   " /*
 	*/ %9.0g `95h'
 end
 
-capture program drop table_line_zero
+program table_line_alpha
+	args vname coef se z p 95l 95h
+	if (c(linesize) >= 100){
+		local abname = "`vname'"
+		}
+	else if (c(linesize) > 80){
+	local abname = abbrev("`vname'", 12+(c(linesize)-80))
+	}
+	else{
+	local abname = abbrev("`vname'", 12)
+	}
+	local abname = abbrev("`vname'",12)
+	display as text %12s "`abname'" " { c |}" /*
+	*/ as result /*
+	*/ "   " %8.0g `coef' "  " /*
+	*/ %9.0g `se' "  " %7.2f `z' "  " /*
+	*/ %6.3f `p' "    " %9.0g `95l' "   " /*
+	*/ %9.0g `95h'
+end
+
 program table_line_zero
 	args vname 
 	if (c(linesize) >= 100){
@@ -4570,15 +725,7 @@ program table_line_zero
 	}
 	local abname = abbrev("`vname'",12)
 	display as text %12s "`abname'" " { c |}" /*
-	*/ as result /*
-	*/ "          " "0  {sf:(constrained)}" " " 
-end
-
-capture program drop ParseHet
-program ParseHet, rclass
-        syntax varlist(fv ts numeric) [, noCONStant]
-        return local varlist "`varlist'"
-        return local constant `constant'
+	*/ "          " "{res:0}  (constrained)" " " 
 end
 
 version 13.0

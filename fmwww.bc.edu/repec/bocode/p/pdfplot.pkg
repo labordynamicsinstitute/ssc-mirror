@@ -1,0 +1,23 @@
+d 'PDFPLOT': module to Plot a Distribution's Probability Density Function
+d
+d    pdfplot is a tool to efficiently plot the PDF of one of the
+d above distributions with chosen parameter values. It	  uses
+d twoway_function to do so. pdfplot was originally developed as a
+d companion to gintreg, which performs maxiumum    likelihood
+d estimation on any of the same set of accepted distributions and
+d is compatible with numerous forms of	  data, including point,
+d interval, truncated, censored and grouped data. 
+d
+d KW: graphics
+d KW: PDF
+d KW: probability density function
+d
+d Requires: Stata version 17 
+d
+d Distribution-Date: 20220712
+d
+d Author: Jacob Triplett  , Brigham Young University
+d Support: email jacobwtriplett@@icloud.com
+d
+f pdfplot.ado
+f pdfplot.sthlp

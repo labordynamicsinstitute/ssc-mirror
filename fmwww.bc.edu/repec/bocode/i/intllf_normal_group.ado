@@ -5,8 +5,6 @@ v 1
 Author--Jacob Orchard
 Update--5/24/2016*/
 
-
-
 program intllf_normal_group
 version 13
 		args lnf mu sigma
@@ -29,13 +27,10 @@ version 13
 							$ML_y1 != $ML_y2
 		
 		*Bottom coded data
-			
 		 qui replace `Fl' = normal(($ML_y1-`mu')/exp(`sigma')) 
 		 qui replace `lnf' = log(1-`Fl') if $ML_y1 != . & $ML_y2 == .
-		 
 
 		*Top coded data
-			
 		 qui replace `Fu' = normal(($ML_y2-`mu')/exp(`sigma')) if $ML_y2 != . & $ML_y1 == .
 		 qui replace `lnf' = log(`Fu') if $ML_y2 != . & $ML_y1 == .
 	
@@ -44,6 +39,4 @@ version 13
 				
 		*Group frequency
 		 qui replace `lnf' = `lnf'*$group_per
-end		
-
-
+end
