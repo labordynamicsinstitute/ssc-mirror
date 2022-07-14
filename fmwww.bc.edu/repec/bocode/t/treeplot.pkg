@@ -1,0 +1,21 @@
+d 'TREEPLOT': module to graph a tree in Stata
+d
+d   treeplot is a command for graphing a regression or
+d classification tree in Stata 16.  It uses the Stata/Python   
+d integration (sfi) capability of Stata 16 making use of the Python
+d Scikit-learn API. 
+d
+d KW: regression tree
+d KW: classification tree
+d KW: python
+d KW: graphics
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20220713
+d
+d Author: Giovanni Cerulli, IRCrES-CNR
+d Support: email giovanni.cerulli@@ircres.cnr.it
+d
+f treeplot.ado
+f treeplot.sthlp

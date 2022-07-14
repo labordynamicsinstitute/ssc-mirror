@@ -1,75 +1,95 @@
 capture program drop xtnumfac
-program define xtnumfac, eclass
-syntax varlist(max=1 ts /*ts added by JD*/ ) [if] [in] [, kmax(integer 8) STANdardize(integer 1) Detail]
+program define xtnumfac, eclass 
+syntax varlist(min=1 ts /*ts added by JD*/ ) [if] [in] [, kmax(integer 8) STANdardize(integer 1) Detail]
 version 11.2
 
 
-marksample touse
+marksample touse, novarlist
 
+preserve	
 
 * Error messages
-	qui xtset 	
-	if "`r(balanced)'" ~= "strongly balanced" {
-	display as error "Dataset must be balanced for this program to work."
-	exit
-	} 
-
-
 	if `kmax' < 1 {
-	display as error "Maximum number of factors needs to be at least 1."
-	exit
+		display as error "Maximum number of factors needs to be at least 1."
+		exit
 	}	
 
-	
+	if `standardize' > 5 | `standardize' < 1 {
+		display as error "Value for standardize out of range. Values must lie between 1 and 5."
+		exit
+	}
 
-* Extract panel identifiers and panel size	
-	qui xtset
-	local timevar  = r(timevar)
-	local panelvar = r(panelvar)
+* TS/XT information
+	cap _xt
+	if _rc != 0 {
+		tempvar idvar
+		gen `idvar' = 1
+		qui tsset
+		qui xtset `idvar' `r(timevar)'
+	}
+	qui xtset 		
+	local timevar  `r(timevar)'
+	local panelvar `r(panelvar)'
+	local isbalanced = ("`r(balanced)'" == "strongly balanced" )
+
+* number of variables
+	local k = wordcount("`varlist'")
+
+* balance dataset
+	if `isbalanced' == 0 {
+		** get T min, T bar and T max
+		tempvar numT
+		qui by `panelvar' (`timevar'), sort: gen `numT' = _N if `touse'
+		qui sum `numT'
+		local Tmin = r(min)
+		local Tbar = r(mean)
+		local Tmax = r(max)
+
+		*** balance panel 
+		qui tsfill, full
+	}
+
+	*** clear ereturn
+	ereturn clear
+
 	qui tab `timevar' if `touse'
 	ereturn scalar T = r(r)
 	qui tab `panelvar' if `touse'
-	ereturn scalar N = r(r)	
+	ereturn scalar N_g = r(r)
+	ereturn scalar N = r(N)	
+	ereturn hidden scalar k = `k'
 
+	if `isbalanced' == 0 {
+		ereturn hidden scalar Tbar = `Tbar'
+		ereturn hidden scalar Tmin = `Tmin'
+		ereturn hidden scalar Tmax = `Tmax'
+	}
+		
+	
 	
 * Get results 
-	mata: mainroutine(st_data(., "`varlist'", "`touse'"), st_numscalar("e(N)"), st_numscalar("e(T)"), strtoreal(st_local("kmax")), strtoreal(st_local("standardize")))
+noi	mata: mainroutine(st_data(., "`varlist'", "`touse'"), st_numscalar("e(N)"), st_numscalar("e(T)"), strtoreal(st_local("kmax")), strtoreal(st_local("standardize")))
 
+
+
+
+restore
 
 * Report results
 if !missing("`detail'") {
-/*
-	di as result _newline "Statistics for number of common factors in `varlist'" _col(80) as text "N = `e(N)'; T = `e(T)'" 
-	di ""
-	di as text "{hline 11}{c TT}{hline 108}" 	
-	di as result _col(2) "# factors " "{c |}" _col(15) "PC_{p1}" _col(27)  "PC_{p2}" _col(39)  "PC_{p3}" _col(51)  "IC_{p1}" _col(63) "IC_{p2}" _col(75) "IC_{p3}" _col(90) "ER"  _col(102) "GR" _col(114) "GOL"
-	di as text "{hline 11}{c +}{hline 108}" 	
-	di as text "{hline 11}{c +}{hline 108}" 	
-	forvalues k = 0(1)`kmax' {
-		forvalues myIC = 1(1)6 {
-			if `k'== best_numfac[1,`myIC'] {
-				local tempIC`myIC' : display %6.3f allICs[`k'+1,`myIC']
-				local tempIC`myIC' `tempIC`myIC''*
-			} 
-			else {
-				local tempIC`myIC' : display %6.3f allICs[`k'+1,`myIC']
-				local tempIC`myIC' `tempIC`myIC'' " "				
-			}
-		}
-		
-		di as text %6s "`k'" _col(12) "{c |}" %12s "`tempIC1'" %12s "`tempIC2'" %12s "`tempIC3'" ///
-		%12s "`tempIC4'" %12s "`tempIC5'" %12s "`tempIC6'" %12s "`tempIC7'" ///
-		%12s "`tempIC8'" %12s "`tempIC9'"
-	}
-	di as text "{hline 11}{c BT}{hline 108}" 
-	di as text "*: number of factors " ///
-	   as text "{ul:chosen}" ///
-       as text " by respective estimator."
-	di as text _col(4) "PC_{p1},...,IC_{p3} from Bai and Ng (2002); ER, GR from Ahn and Horenstein (2013); GOL from Gagliardini, Ossola, Scaillet (2019)"
-	*/
 	di as result _newline "Statistics for number of common factors in `varlist'" 
-	di as result _col(71) as text "N" _col(73) "=" _col(76) %9.0g `e(N)'
-	di as result _col(71) as text "T" _col(73) "=" _col(76) %9.0g `e(T)'
+	if `isbalanced' == 1 {
+		dis as text _col(4) "Number of obs" 		_col(25) "=" as result %9.0g `e(N)' 	_col(55) as text 	"Obs per group"		_col(73) "=" %9.0g `e(T)'
+		dis as text _col(4) "Number of groups" 		_col(25) "=" as result %9.0g `e(N_g)'	_col(55) as text 	"Number of variables" 	_col(73) "=" %9.0g `e(k)'
+	}
+	else {
+		dis as text																			_col(60) "Obs per group:"		
+		dis as text _col(4) "Number of obs" 		_col(25) "=" %9.0g as results `e(N)'		as text	_col(68) "min"					_col(73) "=" as result %9.0f `e(Tmin)'
+		dis as text _col(4) "Number of groups" 		_col(25) "=" %9.0g as results `e(N_g)'		as text	_col(68) "avg"					_col(73) "=" as result %9.2f `e(Tbar)'
+		dis as text _col(4) "Number of variables" 	_col(25) "=" %9.0g as results `e(k)'		as text	_col(68) "max"					_col(73) "=" as result %9.0f `e(Tmax)'
+	}
+	*di as result _col(71) as text "N" _col(73) "=" _col(76) %9.0g `e(N)'
+	*di as result _col(71) as text "T" _col(73) "=" _col(76) %9.0g `e(T)'
 	di ""
 	di as text "{hline 11}{c TT}{hline 76}" 	
 	di as result _col(2) "# factors " "{c |}" _col(19) "PC_{p1}" _col(31)  "PC_{p2}" _col(43)  "PC_{p3}" _col(55)  "IC_{p1}" _col(67) "IC_{p2}" _col(79) "IC_{p3}" 	
@@ -117,33 +137,24 @@ if !missing("`detail'") {
 
 }
 else {
-	/*
-	di as result _newline "Estimated number of common factors in `varlist'" 
-	di as text "N = `e(N)'; T = `e(T)'" 
-	di ""
-	di as text "{hline 11}{c TT}{hline 98}" 	
-	di as result _col(12)  "{c |}" _col(15) "PC_{p1}" _col(25)  "PC_{p2}" _col(35)  "PC_{p3}" _col(45)  "IC_{p1}" _col(55) "IC_{p2}" _col(65) "IC_{p3}" _col(77) "ER"  _col(87) "GR" _col(97) "GOL" _col(107) "ED"
-	di as text "{hline 11}{c +}{hline 98}" 	
-	di _continue as text %6s _col(2) "# factors " "{c |}" 
-	di as result %6.0f best_numfac[1,1] %10.0f best_numfac[1,2] %10.0f best_numfac[1,3] ///
-	   %10.0f best_numfac[1,4] %10.0f best_numfac[1,5] %10.0f best_numfac[1,6] %10.0f best_numfac[1,7] ///
-	   %10.0f best_numfac[1,8] %10.0f best_numfac[1,9] %10.0f best_numfac[1,10]
-	di as text "{hline 11}{c BT}{hline 98}"  
-	di as result "`kmax'" ///
-	   as text " factors maximally considered."
-	di as text "PC_{p1},...,IC_{p3} from Bai and Ng (2002); ER, GR from Ahn and Horenstein (2013);"
-	di as text "ED from Onatski (2010)"
-	di as text "GOL from Gagliardini, Ossola, Scaillet (2019)"
-
-	*/
+	
 	local l1 10
 	local l2 13
 	local l3 10
 	local l4 13
-
-	di as result _newline "Estimated number of common factors in `varlist'" 
-	di as result _col(`=`l1'+`l2'+`l3'+3') as text "N" _col(`=`l1'+`l2'+`l3'+6') "=" _col(`=`l1'+`l2'+`l3'+8') %9.0g `e(N)'
-	di as result _col(`=`l1'+`l2'+`l3'+3') as text "T" _col(`=`l1'+`l2'+`l3'+6') "=" _col(`=`l1'+`l2'+`l3'+8') %9.0g `e(T)'
+	if `isbalanced' == 1 {
+		dis as text _col(2) "N" 	_col(6)	as result 	"=" %9.0g `e(N)' 	as text _col(`=`l1'+`l2'+`l3'') "T"			_col(`=`l1'+`l2'+`l3'+7') "=" as result %9.0g `e(T)'
+		dis as text _col(2) "N_g" 	_col(6)	as result 	"=" %9.0g `e(N_g)'	as text _col(`=`l1'+`l2'+`l3'') "vars." 		_col(`=`l1'+`l2'+`l3'+7') "=" as result %9.0g `e(k)'
+	}
+	else {
+		dis as text																		_col(`=`l1'+`l2'+`l3'-3') "Obs per group:"		
+		dis as text _col(2) "N" 		_col(8) "=" as result	%9.0g `e(N)'	as text	_col(`=`l1'+`l2'+`l3'') "min"		_col(`=`l1'+`l2'+`l3'+7') "=" as result %9.0f `e(Tmin)'
+		dis as text _col(2) "N_g" 		_col(8) "=" as result	%9.0g `e(N_g)'	as text	_col(`=`l1'+`l2'+`l3'') "avg"		_col(`=`l1'+`l2'+`l3'+7') "=" as result %9.2f `e(Tbar)'
+		dis as text _col(2) "vars." 	_col(8) "=" as result	%9.0g `e(k)'	as text	_col(`=`l1'+`l2'+`l3'') "max"		_col(`=`l1'+`l2'+`l3'+7') "=" as result %9.0f `e(Tmax)'
+	}
+	*di as result _newline "Estimated number of common factors in `varlist'" 
+	*di as result _col(`=`l1'+`l2'+`l3'+3') as text "N" _col(`=`l1'+`l2'+`l3'+6') "=" _col(`=`l1'+`l2'+`l3'+8') %9.0g `e(N)'
+	*di as result _col(`=`l1'+`l2'+`l3'+3') as text "T" _col(`=`l1'+`l2'+`l3'+6') "=" _col(`=`l1'+`l2'+`l3'+8') %9.0g `e(T)'
 	
 	di as text "{hline `l1'}{c TT}{hline `l2'}{c TT}{hline `l3'}{c TT}{hline `l4'}"
 	di as text _col(2) "IC" _col(`=`l1'+1') "{c |} # factors" _col(`=`l1'+`l2'+2')"{c |}" _col(`=`l1'+`l2'+5') "IC" _col(`=`l1'+`l2'+`l3'+3') "{c |} # factors"
@@ -170,8 +181,14 @@ else {
 	di as text "ER, GR from Ahn and Horenstein (2013)"
 	di as text "ED from Onatski (2010)"
 	di as text "GOL from Gagliardini, Ossola, Scaillet (2019)"
-
 }
+
+    if (e(missnum) > 0) {
+	di as text ""
+	di as text "`e(missnum)' missing values imputed before estimating number of factors."
+	}
+	global e(missnum)=.
+
 end
 
 
@@ -182,13 +199,15 @@ mata
 
 // mata drop mainroutine()
 function mainroutine(real matrix data, real scalar N, real scalar T, kmax, stan)  {
-	real matrix X, allICs
-	real rowvector best_numfac
+	real matrix X, allICs, allICs0, X_sd
+	real rowvector best_numfac, best_numfac0
+	string matrix cnames, rnames
 	
 // Reshape to wide format	
 	X        = colshape(data', T)'	
-	
-	
+// Correct number of units to account for several supplied variables	
+	N        = cols(data)*N
+
 // Add if-clauses for standardization options	
 	if (stan == 2 | stan == 3) X = X - J(T,1,1)*mean(X)
 
@@ -202,6 +221,9 @@ function mainroutine(real matrix data, real scalar N, real scalar T, kmax, stan)
 
 // Call interior functions to get all IC values and chosen num of factors	
 	allICs0      = numfac_int(X,kmax)
+	/// update kmax
+	kmax = cols(allICs0)-1
+	st_local("kmax",strofreal(kmax))
 	best_numfac0 = bestnum_ic_int(allICs0[1..9,])
 	best_numfac = (best_numfac0, allICs0[10,1])
 	allICs      = allICs0[1..9,]
@@ -210,6 +232,7 @@ function mainroutine(real matrix data, real scalar N, real scalar T, kmax, stan)
 	st_matrix("e(allICs)", allICs')
 	st_matrix("e(best_numfac)", best_numfac)	
 	st_numscalar("e(kmax)", kmax)
+	st_numscalar("e(N)", N)
 	st_matrix("allICs", allICs')
 	st_matrix("best_numfac", best_numfac)
 
@@ -238,15 +261,62 @@ function numfac_int(X0, kmax0)  {
 	T     = rows(X0)
 	N     = cols(X0)
     minNT = min((N, T))
+
+    if (minNT < (kmax0+5)) {
+    	kmax0 = minNT - 5
+    	sprintf("")
+    	if (minNT <= 5) {
+
+    		sprintf("Cannot estimate ED, at least 6 cross-sections/variables are required to estimate number of common factors.")    				
+    	}
+    	if (kmax0 <= 0) {
+    		kmax0 = 1    		
+    	}    
+    	sprintf("Number of variables/cross-sections too small. Maximum number of common factors set to %s." , strofreal(kmax0) )	
+    	sprintf("")
+    }
+
+	missind = X0 :== .
+	missnum = sum(sum(missind)')
+	st_numscalar("e(missnum)", missnum)
 	
-	if (T > N) {
-			xx         = cross(X0,X0)
-            fullsvd(xx:/(N*T), junk1, mus, junk2) // N x N
-        } 
-	else {  
-			xx         = cross(X0',X0')
-            fullsvd(xx:/(N*T), junk1, mus ,junk2) // T x T	 
-	}	
+	if ( missnum == 0)
+		if (T > N) {
+				xx         = cross(X0,X0)
+				fullsvd(xx:/(N*T), junk1, mus, junk2) // N x N
+			} 
+		else {  
+				xx         = cross(X0',X0')
+				fullsvd(xx:/(N*T), junk1, mus ,junk2) // T x T	 
+		}	
+	else {
+		obsind  = J(T,N,1) - missind
+		
+	    X0mean  = J(T,1,1) * mean(editmissing(X0,0))
+		X0      = editmissing(X0,0) + X0mean:*missind
+		
+		conv_crit = (X0 - X0mean):^2
+		conv_crit = mean(mean(conv_crit)')
+		upd       = conv_crit
+		while (upd > 0.001*conv_crit) {
+			X0_old = X0
+			if (T > N) {
+				xx         = cross(X0,X0)
+				fullsvd(xx:/(N*T), vee_k, mus, junk2)
+				vee_k = vee_k[.,1..(kmax0+5)]
+				uu_k  = X0*vee_k/sqrt(N*T)
+			} 
+			else {  
+				xx         = cross(X0',X0')
+				fullsvd(xx:/(N*T), uu_k, mus ,junk2)
+				uu_k  = uu_k[.,1..(kmax0+5)]
+				vee_k = X0'*uu_k/sqrt(N*T)
+			}
+			X0  = X0_old:*obsind + (uu_k*vee_k'):*missind:*sqrt(N*T)
+			upd = mean(mean(abs(X0-X0_old))')
+		}	
+	}		
+		
 
 // NOTE: Due to the equality of mean squared residuals and cumulative 
 // eigenvalues, this function requires neither the estimation of SSR nor a 
@@ -260,11 +330,11 @@ function numfac_int(X0, kmax0)  {
     penalties = ((N+T)/(N*T)*ln((N*T)/(N+T)) \ (N+T)/(N*T)*ln(minNT) \ ln(minNT)/minNT)
 	
     for (mm0=kmax0; mm0>=1; mm0--) {
-       V_val[mm0]    = sum(mus[mm0+1..minNT])
-       PC_ICs[.,mm0] = J(3,1,V_val[mm0]) + penalties*mm0*V_val[kmax0]
-       IC_ICs[.,mm0] = J(3,1,ln(V_val[mm0])) + penalties*mm0
+       	V_val[mm0]    = sum(mus[mm0+1..minNT])
+       	PC_ICs[.,mm0] = J(3,1,V_val[mm0]) + penalties*mm0*V_val[kmax0]
+       	IC_ICs[.,mm0] = J(3,1,ln(V_val[mm0])) + penalties*mm0
     }
-	
+
 	
     V_val[kmax0+1] = sum(mus[kmax0+2..minNT])
     V0               = mean(vec(X0):^2)
@@ -283,31 +353,38 @@ function numfac_int(X0, kmax0)  {
     mockEV      = V0/ln(minNT);
     ER          = (mockEV/mus[1], ER)
     GR          = (ln(1 + mockEV)/ln(1+ mutildes[1]), GR)
-	
+
 // Now do Onatski
 	mus_o    = mus*N
 	jay      = kmax0+1
 	ED       = -4
 	ED_old   = -2
-	
-	while (ED_old != ED) 
-	{
-		y_delt    = mus_o[jay..(jay+4)]
-		x_delt    = J(5,1,1)
-		x_delt    = (x_delt, (((jay-1)..(jay+3))'):^(2/3))
-		bet_delt  = qrsolve(x_delt,y_delt)
-		delta     = 2*abs(bet_delt[2,1])
-	
-		lamdiff   = mus_o[1..(jay-1)] - mus_o[2..jay]
-		ED_old    = ED
-		del_check = (lamdiff :> delta)'
-		intlist   = 1..(jay-1)
-		intlist2  = intlist:*del_check
-		ED        = max(intlist2)				
-		jay       = ED+1
+
+	if (minNT > 5) {
+		while (ED_old != ED) 
+		{
+			y_delt    = mus_o[jay..(jay+4)]
+			x_delt    = J(5,1,1)
+			x_delt    = (x_delt, (((jay-1)..(jay+3))'):^(2/3))
+			bet_delt  = qrsolve(x_delt,y_delt)
+			delta     = 2*abs(bet_delt[2,1])
+		
+			lamdiff   = mus_o[1..(jay-1)] - mus_o[2..jay]
+			ED_old    = ED
+			del_check = (lamdiff :> delta)'
+			intlist   = 1..(jay-1)
+			intlist2  = intlist:*del_check
+			ED        = max(intlist2)	
+			if (ED==0) {
+				break	
+			}
+			jay       = ED+1
+		}
+		ED      = (ED, J(1,kmax0,.))
 	}
-	ED      = (ED, J(1,kmax0,.))
-	
+	else {
+		ED = (J(rows(ER),cols(ER),.))
+	}
 
 // Now do GOL
 // penalty is g(n,t), p. 512

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0 April 04, 2022}
+{* *! version 1.0.0 April 01, 2022}
 {title:Title}
 
 {p 4 4 2}
@@ -9,7 +9,7 @@
 {title:Syntax}
 
 {p 4 4 2}
-{opt sdid} {opt depvar} {opt groupvar} {opt timevar} {opt treatment}{cmd:,} {it:vce(vcetype)} [{it:options}]
+{opt sdid} {opt depvar} {opt groupvar} {opt timevar} {opt treatment} {ifin}{cmd:,} {it:vce(vcetype)} [{it:options}]
 
 {synoptset 29 tabbed}{...}
 {synopthdr}
@@ -25,7 +25,8 @@ Optional {it:type} can be specified, as either "optimized" (the default) or "pro
 {synopt :{opt graph_export}({it:string}, {it:{help graph export:type}})} option allowing for generated graphs to be saved to the disk.{p_end}
 {synopt :{opt unstandardized}} In the case of "optimized" covariates, by default covariates will be standardized as z-scores,
 unless the unstandardized option is specified.{p_end}
-
+{synopt :{opt mattitles}} Requests that weights returned in matrices are accompanied by the name
+of the groupvar corresponding to each weight.{p_end}
 {pstd}
 {p_end}
 {synoptline}
@@ -39,28 +40,18 @@ unless the unstandardized option is specified.{p_end}
 {pstd}
  {cmd:sdid} implements the synthetic difference-in-differences estimation procedure, along with a range of inference and graphing procedures as described in {help sdid##SDID2021:Arkhangelsky et al. (2021)}.
  Synthetic difference-in-differences is based on a panel (group by time) set-up, in which certain units are treated and
- remaining units are untreated. 
- The {cmd:sdid} procedure calculates a treatment effect as the pre- versus post-
+ remaining units are untreated.  The {cmd:sdid} procedure calculates a treatment effect as the pre- versus post-
  difference-in-difference
  between treated units and synthetic control units, where synthetic control units are chosen as an optimally weighted function
  of untreated units (unit-specific weights) and pre-treatment times (time-specific weights).  The {cmd:sdid} command exactly implements
- the procedures described in Arkhangelsky et al. (2021).  The full estimation procedure implemented by {cmd:sdid} is described in their Algorithm 1.
+ the procedures described in Arkhangelsky et al. (2021).  The exact estimation procedure implemented by {cmd:sdid} is described in their Algorithm 1.
 {p_end}
 
-
-{pstd}
-The {cmd:sdid} command requires as arguments a dependent variable, a
- variable indicating treatment groups (eg states, countries), a time variable, and a binary indicator
- of treatment.  The panel based on groups and time must be strongly balanced and not contain missing
- values of key variables, as
- optimal weights are calculated based on full coverage in the pre-treatment periods.
-{p_end}
- 
 {pstd}
 Much of Arkhangelsky et al. (2021) focuses on cases with a single time period of adoption, however their Appendix A lays out the
 estimation procedure in cases of staggered-adoption designs, where treated units can adopt treatment at different moments of
-time, while control units never adopt.  {cmd:sdid} seamlessly estimates treatment effects in cases with both single adoption periods and
-multiple periods of adoption.  In the latter case, rather than calculating a single unit and time-specific weight vector,
+time, while control units never adopt.  {cmd:sdid} seamlessly estimates treatment effects in cases with both single-time periods of treatment and
+multiple-time periods of treatment.  In the latter case, rather than calculating a single unit and time-specific weight vector,
 an optimal unit and time-specific weight vector is calculated for each adoption period.  The reported average treatment effect
 on the treated (ATT) in the staggered adoption design is the weighted estimand described in Arkhangelsky et al. (2021), Appendix A.
 {p_end} 
@@ -106,6 +97,12 @@ after regression adjustment.  However, this has been observed to be problematic 
 sensitive to optimization if covariates have high dispersion.  Thus, an alternative type is implmented ("projected"), which consists
 of conducting regression adjustment based on parameters estimated only in untreated groups.
 This type follows the procedure proposed by Kranz, 2021 (xsynth in R), and is observed to be more stable in some implementations (and at times, considerably faster).
+{cmd:sdid} will run simple checks on the covariates indicated and return an error if covariates are constant, to avoid multicolineality.
+However, prior to running {cmd:sdid}, you are encouraged to ensure that covariates are not perfectly
+multicolinear with other covariates and state and year fixed effects, in a simple two-way fixed
+effect regression.  If perfectly multi-colinear covariates are included {cmd:sdid} will execute
+without errors, however where type is "optimized", the procedure may be sensitive to the
+inclusion of redundant covariates.
 
 {pstd}
 {p_end}
@@ -150,6 +147,15 @@ This option should be used with care.
 
 {pstd}
 {p_end}
+{phang}
+{opt mattitles} Requests labels to be added to the returned {cmd:e(omega)} weight matrix providing names (in string) for the unit variables which generate the synthetic control group in each case.
+If mattitles is not indicated, the returned weight matrix ({cmd:e(omega)}) will store these
+weights with a final column providing the numerical ID of units, where this numerical ID is either
+taken from the unit variable (if this variable is a numerical format), or arranged in alphabetical
+order based on the unit variable, if this variable is in string format.
+
+{pstd}
+{p_end}
 
 
 {title:Stored results}
@@ -175,13 +181,14 @@ This option should be used with care.
 {synopt:{cmd:e(clustvar)}}name of cluster variable{p_end}
 
 
-
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Matrices}{p_end}
 {synopt:{cmd:e(tau)}}tau estimator for each adoption time-period{p_end}
 {synopt:{cmd:e(lambda)}}lambda weights (time-specific weights){p_end}
 {synopt:{cmd:e(omega)}}omega weights (unit-specific weights){p_end}
 {synopt:{cmd:e(adoption)}}adoption times{p_end}
+{synopt:{cmd:e(beta)}}beta vector of corresponding to covariates{p_end}
+{synopt:{cmd:e(series)}}control and treatment series of the graphs{p_end}
 
 {pstd}
 {p_end}
@@ -190,24 +197,7 @@ This option should be used with care.
 {title:Examples}
 
 {pstd}
-An example based on Propostion 99 (Abadie et al., 2010), with a single adoption date. Load data from Abadie et al., (2010):
-
-{pstd}
- . {stata webuse set www.damianclarke.net/stata/}
-
-{pstd}
- . {stata webuse prop99_example.dta, clear}
-
-
-{pstd}
-Estimate with SDID, exporting weight and trend graphs:
-
-{pstd}
- . {stata sdid packspercapita state year treated, vce(placebo) seed(1213) graph g1_opt(xtitle("")) g2_opt(ylabel(0(50)150, axis(2)))}
- 
-
-{pstd}
-A staggered adoption design example based on parliamentary gender quotas, women in parliament and maternal mortality (Bhalotra et al., 2020).  Load data:
+Load data on quotas, women in parliament and maternal mortality (a balanced panel version) from Bhalotra et al., (2020).
 
 {pstd}
  . {stata webuse set www.damianclarke.net/stata/}
@@ -230,6 +220,15 @@ Run SDID estimator using covariates in projected way.
 {pstd}
  . {stata sdid womparl country year quota, vce(bootstrap) seed(1213) covariates(lngdp, projected)}
 
+{pstd}
+Example with one time adoption and some graphics options. Load data from Abadie et al., (2010).
+
+{pstd}
+ . {stata webuse prop99_example.dta, clear}
+
+{pstd}
+ . {stata sdid packspercapita state year treated, vce(placebo) seed(1213) graph g1_opt(xtitle("")) g2_opt(ylabel(0(50)150))}
+ 
 {marker references}{...}
 {title:References}
 
@@ -253,7 +252,7 @@ Working paper.
 {p_end}
 
 
-{title:Authors}
+{title:Author}
 Damian Clarke, Universidad de Chile.
 Email {browse "mailto:dclarke@fen.uchile.cl":dclarke@fen.uchile.cl}
 

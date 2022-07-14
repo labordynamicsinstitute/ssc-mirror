@@ -1,0 +1,29 @@
+d 'REDI': module providing a Random Empirical Distribution Imputation method for estimating continuous incomes
+d
+d  redi is a method for cold-deck imputation of a continuous
+d distribution from binned incomes, using a real-world reference
+d dataset (in this case, the CPS ASEC). The Random Empirical
+d Distribution Imputation (redi) method imputes discrete
+d observations using binned income data. The user may wish to
+d combine or compare income data across years or surveys, stymied
+d by incompatible categories. The redi package converts categorical
+d to continuous incomes through random cold-deck imputation from a
+d real world reference dataset. The redi method reconciles bins
+d between datasets or across years and handles top incomes.  redi
+d has other advantages of computing an income distribution that is
+d nonparametric, bin consistent, area- and variance-preserving, and
+d continuous. 
+d
+d KW: data management
+d KW: imputation
+d KW: income
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20220713
+d
+d Author: Molly King	 , Santa Clara University
+d Support: email mmking@@scu.edu
+d
+f redi.ado
+f redi.sthlp

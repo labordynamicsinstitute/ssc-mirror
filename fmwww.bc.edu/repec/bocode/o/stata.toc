@@ -22,6 +22,7 @@ p omninorm module to calculate omnibus test for univariate/multivariate normalit
 p omodel modules to perform tests on ordered probit and ordered logit models
 p oneclick module to screen for control variables that keep the explanatory variables at a certain level of significance
 p onespell module to generate single longest spell for each unit in panel data, listwise
+p onetext module to perform simple Chinese text analysis
 p onewayplot module for oneway plots
 p onewplot module for oneway plots
 p oparallel module providing post-estimation command for testing the parallel regression assumption

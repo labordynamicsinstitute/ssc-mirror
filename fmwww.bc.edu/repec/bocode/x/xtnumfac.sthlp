@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.95 07jan2022}{...}
+{* *! version 1.0 12jul2022}{...}
 {cmd:help xtnumfac}
 
 {viewerjumpto "Syntax" "xtnumfac##syntax"}{...}
@@ -13,7 +13,7 @@
 {title:Title}
 
 {phang}
-{bf:xtnumfac} Estimate the number of factors in panel data
+{bf:xtnumfac} Estimate the number of factors in time series and panel data
 
 {marker syntax}{...}
 {title:Syntax}
@@ -40,7 +40,8 @@
 {pstd}
 {cmd:xtnumfac} Estimates the number of factors in the variable {varname}, observed in a large-dimensional panel dataset, by obtaining and reporting the estimators of Bai and Ng 
 (2002), Ahn and Horenstein (2013), Onatski (2010) and Gagliardini et al. (2019).
-the number of factors Data must be xtset and strongly balanced.
+the number of factors Data must be {help:tsset} or {help:xtset}.
+In case of unbalanced panels, missing values are imputed following Stock and Watson (1998) and Bai et al. (2015).
 {varname} may contain time-series operators, see {help tsvarlist}.
 
 {marker options}{...}
@@ -100,6 +101,9 @@ Questions, Comments, Suggestions? Please let me know.
 {space 4}{browse "mailto:simon.reese@nek.lu.se":simon.reese@nek.lu.se}
 
  
+{space 4}Jan Ditzen
+{space 4}Free University of Bozen-Bolzano 
+{space 4}{browse "mailto:jan.ditzen@unibz.it":jan.ditzen@unibz.it}
  
 {marker examples}{...}
 {title:Examples}
@@ -147,7 +151,16 @@ Ahn, S. C., & Horenstein, A. R. (2013). Eigenvalue ratio test for the number of 
 Bai, J., & Ng, S. (2002). Determining the number of factors in approximate factor models. {it:Econometrica}, 70(1), 191-221.
 
 {phang}
-Gagliardini, P., Ossola, E., & Scaillet, O. (2019). A diagnostic criterion for approximate factor structure. Journal of Econometrics, 212(2), 503-521.
+Bai, J., Y. Liao, & Jisheng Yang. 2015. Unbalanced Panel Data Models with Interactive Effects. In The Oxford Handbook of Panel Data, 149–170
+
+{phang}
+Gagliardini, P., Ossola, E., & Scaillet, O. (2019). A diagnostic criterion for approximate factor structure. {it: Journal of Econometrics}, 212(2), 503-521.
 
 {phang} 
 Kapetanios, G., Pesaran, M.H., & Reese, S. (2021). Detection of units with pervasive effects in large panel data models. {it: Journal of Econometrics}, 221(2),  510-541.
+
+{phang} 
+Onatski, A. 2010. Determining the Number of Factors from Empirical Distribution of Eigenvalues. {it:The Review of Economics and Statistics}, 92(4): 1004–1016.
+
+{phang}
+Stock, J. H., and M. W. Watson. 1998. Diffusion Indexes. NBER Working Paper (w6702).
