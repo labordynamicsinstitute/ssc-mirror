@@ -19,18 +19,19 @@ program pdfplot
 	}
 			
 	else if inlist("`dist'", "sged", "ged", "slaplace", "laplace", "snormal") {
-		local sigma: word 1 of `params'
+		local mu: word 1 of `params'
+		local sigma: word 2 of `params'
 		if "`dist'" == "sged" {
-			local p: word 2 of `params'
-			local lambda: word 3 of `params'
+			local p: word 3 of `params'
+			local lambda: word 4 of `params'
 		}
 		else if "`dist'" == "ged" {
-			local p: word 2 of `params'
+			local p: word 3 of `params'
 			local lambda = 0
 		}
 		else if "`dist'" == "slaplace" {
 			local p = 1
-			local lambda: word 2 of `params'
+			local lambda: word 3 of `params'
 		}
 		else if "`dist'" == "laplace" {
 			local p = 1
@@ -38,35 +39,36 @@ program pdfplot
 		}
 		else if "`dist'" == "snormal" {
 			local p = 1
-			local lambda: word 2 of `params'
+			local lambda: word 3 of `params'
 		}
 		local G = exp(lngamma(1/`p'))
 		
 		twoway function ///
-			y = [`p'*exp(-((x-`mu')^`p'/((1+`lambda'*sign(x-`mu'))^`p'*`sigma'^`p')))] ///
+			y = [`p'*exp(-(abs(x-`mu')^`p'/((1+`lambda'*sign(x-`mu'))^`p'*`sigma'^`p')))] ///
 				/ [2 * `sigma' * `G'], `range'
 	}
 	
 	else if inlist("`dist'", "sgt", "st", "gt", "t") {
-		local sigma: word 1 of `params'
+		local mu: word 1 of `params'
+		local sigma: word 2 of `params'
 		if "`dist'" == "sgt" {
-			local p: word 2 of `params'
-			local q: word 3 of `params'
-			local lambda: word 4 of `params'
+			local p: word 3 of `params'
+			local q: word 4 of `params'
+			local lambda: word 5 of `params'
 		}
 		else if "`dist'" == "st" {
 			local p = 2
-			local q: word 2 of `params'
-			local lambda: word 3 of `params'
+			local q: word 3 of `params'
+			local lambda: word 4 of `params'
 		}
 		else if "`dist'" == "gt" {
-			local p: word 2 of `params'
-			local q: word 3 of `params'
+			local p: word 3 of `params'
+			local q: word 4 of `params'
 			local lambda = 0
 		}
 		else if "`dist'" == "t" {
 			local p = 2
-			local q: word 2 of `params'
+			local q: word 3 of `params'
 			local lambda = 0
 		}
 		local B = exp(lngamma(1/`p')+lngamma(`q')-lngamma(1/`p'+`q'))

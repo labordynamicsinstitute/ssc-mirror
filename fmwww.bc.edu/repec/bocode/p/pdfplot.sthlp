@@ -23,15 +23,15 @@ Supported distributions come from the Skewed Generalized t and Generlized Beta o
 		Distribution{space 25}{it:dist_name}{space 6}{it:params}
 		{hline 71}
 		Normal{space 31}normal{space 9}mu, sigma
-		Skewed Normal{space 24}snormal{space 8}sigma, lambda
-		Laplace{space 30}laplace{space 8}sigma
-		Skewed Laplace{space 23}slaplace{space 7}sigma, lambda
-		Generalized Error{space 20}ged{space 12}sigma, p
-		Skewed Generalized Error{space 13}sged{space 11}sigma, p, lambda
-		t{space 36}t{space 14}sigma, q
-		Generalized t{space 24}gt{space 13}sigma, p, q
-		Skewed t{space 29}st{space 13}sigma, q, lambda
-		Skewed Generalized t{space 17}sgt{space 12}sigma, p, q, lambda
+		Skewed Normal{space 24}snormal{space 8}mu, sigma, lambda
+		Laplace{space 30}laplace{space 8}mu, sigma
+		Skewed Laplace{space 23}slaplace{space 7}mu, sigma, lambda
+		Generalized Error{space 20}ged{space 12}mu, sigma, p
+		Skewed Generalized Error{space 13}sged{space 11}mu, sigma, p, lambda
+		t{space 36}t{space 14}mu, sigma, q
+		Generalized t{space 24}gt{space 13}mu, sigma, p, q
+		Skewed t{space 29}st{space 13}mu, sigma, q, lambda
+		Skewed Generalized t{space 17}sgt{space 12}mu, sigma, p, q, lambda
 		Lognormal{space 28}lnormal{space 8}mu, sigma
 		Weibull{space 30}weibull{space 8}a, b
 		Gamma{space 32}gamma{space 10}b, p

@@ -1,8 +1,8 @@
 ********************************************************************************
 *! "r_ml_stata_cv"
 *! Author: Giovanni Cerulli
-*! Version: 8
-*! Date: 11 May 2022 
+*! Version: 9
+*! Date: 15 July 2022 
 ********************************************************************************
 
 ********************************************************************************
@@ -1468,8 +1468,10 @@ def r_tree():
 	# k_range = list(range(1,16))
 	tree_depth = Matrix.get("mat_tree_depth")
 	k_range=tree_depth[0]
-
+	k_range = [int(x) for x in k_range]
+	
 	# CREATE A PARAMETER GRID: MAP THE PARAMETER NAMES TO THE VALUES THAT SHOULD BE SEARCHED
+	
 	param_grid = dict(max_depth=k_range)
 	
 	# READ THE NUMBER OF CV-FOLDS "n_folds" FROM STATA
@@ -1501,6 +1503,8 @@ def r_tree():
 	
 	# GET THE VALUE "opt_leaves" AND PUT IT INTO A STATA SCALAR "OPT_LEAVES"
 	opt_leaves=grid.best_params_.get('max_depth')
+	
+	opt_leaves=opt_leaves
 	
 	# TRAIN YOUR MODEL USING ALL DATA AND THE BEST KNOWN PARAMETERS
 	model=DecisionTreeRegressor(max_depth=opt_leaves,random_state=R)
@@ -1853,6 +1857,7 @@ def r_randomforest():
 	
 	_M = Matrix.get("mat_tree_depth")
 	gridD=_M[0]
+	gridD = [int(x) for x in gridD]
 	
 	_M = Matrix.get("mat_max_features")
 	gridG=_M[0]
@@ -2277,6 +2282,7 @@ def r_boost():
 	
 	_M = Matrix.get("mat_max_depth")
 	gridH=_M[0]
+	gridH = [int(x) for x in gridH]
 	
 	# PUT THE GENERATED GRIDS INTO A PYTHON DICTIONARY 
 	param_grid = {'learning_rate': gridD, 'n_estimators': gridG, 'max_depth': gridH}
@@ -2299,10 +2305,10 @@ def r_boost():
 	# PUT OPTIMAL PARAMETER(S) INTO STATA SCALAR(S)
 	params_values=list(grid.best_params_.values()) 
 	Scalar.setValue('OPT_LEARNING_RATE',params_values[0],vtype='visible')
-	Scalar.setValue('OPT_N_ESTIMATORS',params_values[1],vtype='visible')
-	Scalar.setValue('OPT_MAX_DEPTH',params_values[2],vtype='visible')
+	Scalar.setValue('OPT_N_ESTIMATORS',params_values[2],vtype='visible')
+	Scalar.setValue('OPT_MAX_DEPTH',params_values[1],vtype='visible')
 
-	# GET THE VALUE "opt_learning_rate" AND PUT IT INTO A STATA SCALAR "opt_n_estimators"
+	# GET THE VALUE "opt_learning_rate" AND PUT IT INTO A STATA SCALAR
 	opt_learning_rate=grid.best_params_.get('learning_rate')
 	opt_n_estimators=grid.best_params_.get('n_estimators')
 	opt_max_depth=grid.best_params_.get('max_depth')

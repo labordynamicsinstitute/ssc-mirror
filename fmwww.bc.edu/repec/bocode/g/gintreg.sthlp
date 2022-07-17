@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0  21jun2022}{...}
+{* *! version 2.0  12jul2022}{...}
 {viewerjumpto "Syntax" "examplehelpfile##syntax"}{...}
 {viewerjumpto "Description" "examplehelpfile##description"}{...}
 {viewerjumpto "Options" "examplehelpfile##options"}{...}
@@ -264,8 +264,8 @@ If stat is not specified then the independent variables will be taken at their m
 {p2colreset}{...}
 
 {phang}
-{opth plot(numlist)} Uses twoway_function to plot the selected distribution with the estimated parameters over a range of the 
-user's choice; {it: numlist} takes a lower and upper bound in the same way {opt range(numlist)} does in {bf:{help twoway_function}}, ie {cmd:plot(0 1)}. 
+{opth plot(numlist)} Uses the estimated constants only and twoway_function to plot the selected distribution with the estimated parameters over a range of the 
+user's choice. {it: numlist} takes a lower and upper bound in the same way {opt range(numlist)} does in {bf:{help twoway_function}}, ie {cmd:plot(0 1)}. 
 To flexibly plot PDFs, see {cmd:gintreg}'s companion program, {bf:{help pdfplot}}.
 
 {phang}

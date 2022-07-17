@@ -1,0 +1,18 @@
+d 'TICTOC': module to provide simplified timer commands
+d
+d   tic & toc are Matlab-style commands for measuring elapsed time 
+d
+d KW: timer
+d KW: clock
+d
+d Requires: Stata version 9
+d
+d Distribution-Date: 20220716
+d
+d Author: Jan Kabátek, University of Melbourne
+d Support: email j.kabatek@@unimelb.edu.au
+d
+f tic.ado
+f tic.sthlp
+f toc.ado
+f toc.sthlp

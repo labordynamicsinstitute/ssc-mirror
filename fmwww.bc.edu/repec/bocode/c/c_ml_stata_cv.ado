@@ -1,8 +1,8 @@
 ********************************************************************************
 *! "c_ml_stata_cv"
 *! Author: Giovanni Cerulli
-*! Version: 9
-*! Date: 12 May 2022
+*! Version: 10
+*! Date: 15 July 2022
 ********************************************************************************
 
 
@@ -1558,6 +1558,7 @@ def c_tree():
 	tree_depth = Matrix.get("mat_tree_depth")
 	k_range=tree_depth[0]
 	# k_range = list(range(1,16))
+	k_range = [int(x) for x in k_range]
 
 	# CREATE A PARAMETER GRID: 
 	# MAP THE PARAMETER NAMES TO THE VALUES THAT SHOULD BE SEARCHED
@@ -1842,6 +1843,7 @@ def c_randomforest():
 	
 	_M = Matrix.get("mat_tree_depth")
 	gridD=_M[0]
+	gridD = [int(x) for x in gridD]
 	
 	_M = Matrix.get("mat_max_features")
 	gridG=_M[0]
@@ -2318,6 +2320,7 @@ def c_boost():
 	
 	_M = Matrix.get("mat_max_depth")
 	gridH=_M[0]
+	gridH = [int(x) for x in gridH]
 	
 	# PUT THE GENERATED GRIDS INTO A PYTHON DICTIONARY 
 	param_grid = {'learning_rate': gridD, 'n_estimators': gridG, 'max_depth': gridH}
@@ -2340,8 +2343,8 @@ def c_boost():
 	# PUT OPTIMAL PARAMETER(S) INTO STATA SCALAR(S)
 	params_values=list(grid.best_params_.values()) 
 	Scalar.setValue('OPT_LEARNING_RATE',params_values[0],vtype='visible')
-	Scalar.setValue('OPT_N_ESTIMATORS',params_values[1],vtype='visible')
-	Scalar.setValue('OPT_MAX_DEPTH',params_values[2],vtype='visible')
+	Scalar.setValue('OPT_N_ESTIMATORS',params_values[2],vtype='visible')
+	Scalar.setValue('OPT_MAX_DEPTH',params_values[1],vtype='visible')
 
 	# GET THE VALUE "opt_learning_rate" AND PUT IT INTO A STATA SCALAR "opt_n_estimators"
 	opt_learning_rate=grid.best_params_.get('learning_rate')

@@ -73,7 +73,7 @@ Update for v 1.9 (06/21/2021) by Jacob Triplett
 
 ******************************
 
-Update for v 2.0 (07/07/2022) by Jacob Triplett
+Update for v 2.0 (07/12/2022) by Jacob Triplett
 1. gintreg has become incredibly advanced, adaptable and useful thanks to many 
 	updates from Dr James B McDonald and his RAs. Though the program remained
 	effective, under-the-hood, the code grew in complication and size to over 
@@ -102,21 +102,21 @@ version 13.0
 	else {
 		set more off
 		syntax varlist(min=2 fv ts)  [aw fw pw iw] [if] [in] ///
-		[, DISTribution(string)	/// gintreg options
+		[, DISTribution(string)		/// gintreg options
 		sigma(varlist)			///
 		lambda(varlist)			///
-		p(varlist)				///
-		q(varlist)				///
-		eyx(string)				///
-		gini					///
-		aicbic					///
+		p(varlist)			///
+		q(varlist)			///
+		eyx(string)			///
+		gini				///
+		aicbic				///
 		plot(numlist)			///
 		INITial(numlist)		///
-		CONSTraints(numlist) 	///
+		CONSTraints(numlist)	 	///
 		FREQuency(varlist)		///
 		DIFficult TECHnique(passthru) ITERate(passthru) 	/// ml_model options
-		nolog TRace GRADient showstep HESSian SHOWTOLerance 				///
-		TOLerance(passthru) NONRTOLerance LTOLerance(passthru)				///
+		nolog TRace GRADient showstep HESSian SHOWTOLerance 			///
+		TOLerance(passthru) NONRTOLerance LTOLerance(passthru)			///
 		NRTOLerance(passthru) robust cluster(passthru) repeat(integer 1)	///
 		NOCONStant svy vce(passthru)] 
 		
@@ -225,7 +225,7 @@ version 13.0
 				local title "{title:Interval Regression with Normal Distribution}"
 				local params `" (mu: `depvar1' `depvar2' = `regs', `noconstant') (lnsigma: `sigma') "'
 			}
-			* if INITial activated, performs preliminary evaulation to estimate good starting parameters for other distributions in sgt-tree
+			* if INITial activated, evaluates preliminary normal to estimate good starting parameters for other distributions in sgt-tree
 			else if "`initial'"!="" {
 				local params `" (mu: `depvar1' `depvar2' = `regs', `noconstant') (lnsigma: `sigma') "'
 				quietly ml model lf intllf_normal`group' `params' [`weight' `exp'] if `touse', `max_opts' constraints(`constraints') search(norescale)
@@ -303,10 +303,10 @@ version 13.0
 				local title "{title:Interval Regression with Lognormal Distribution}"
 				local params `" (mu: `depvar1' `depvar2' = `regs', `noconstant') (lnsigma: `sigma') "'
 			}
-			* if INITial activated, performs preliminary evaulation to estimate good starting parameters for other distributions in gb2-tree
+			* if INITial activated, evaulates preliminary lnormal to estimate good starting parameters for other distributions in gb2-tree
 			else if "`initial'"!="" {
 				local params `" (mu: `depvar1' `depvar2' = `regs', `noconstant') (lnsigma: `sigma') "'
-				quietly ml model lf intllf_normal`group' `params' [`weight' `exp'] if `touse', `max_opts' constraints(`constraints') search(norescale)
+				quietly ml model lf intllf_lnormal`group' `params' [`weight' `exp'] if `touse', `max_opts' constraints(`constraints') search(norescale)
 				matrix b_0 = e(b) // starting parameter values (mu, sigma); mu is interpreted as delta -- see help ml init (...,copy)
 				
 				local init_opts `" init(b_0 `initial', copy) search(norescale) continue "' // defines options conditional on activation of INITial; previous authors found that "search(norescale)" and "continue" improve convergence with INITial activated
@@ -326,12 +326,6 @@ version 13.0
 					local title "{title:Interval Regression with Gamma Distribution}"
 					constraint define 1 [lnsigma]_cons=0
 					local const_list 1
-					
-					* overwrites starting values becuase gamma does not estimate lnsigma
-					if "`initial'"!="" {
-						matrix b_0 = b_0[1,"delta:"]
-						local init_opts `" init(b_0 `initial', copy) search(norescale) continue "'
-					}
 				}
 				else if "`distribution'"=="ggamma" {
 					local title "{title:Interval Regression with Generalized Gamma Distribution}"
@@ -389,12 +383,12 @@ version 13.0
 					scalar _lambda = (exp(alpha_c)-1)/(exp(alpha_c)+1)
 					scalar lambda_se = alpha_se*(2*exp(alpha_c)) / (exp(alpha_c)+1)^2
 					* calculates inference statistics
-					scalar zscore = lambda / lambda_se
+					scalar zscore = _lambda / lambda_se
 					scalar p = normal(-abs(zscore))
-					scalar llimit = lambda + 1.96*lambda_se
-					scalar ulimit = lambda - 1.96*lambda_se
+					scalar llimit = _lambda + 1.96*lambda_se
+					scalar ulimit = _lambda - 1.96*lambda_se
 					*display and ereturn							
-					table_line "_cons" lambda lambda_se zscore p ulimit llimit 
+					table_line "_cons" _lambda lambda_se zscore p ulimit llimit 
 					ereturn scalar lambda = _lambda
 				}
 			}
@@ -427,11 +421,11 @@ version 13.0
 		/* EXTRACTS ESTIMATED COEFFICIENTS for use in eyx, alt notation, aicbic, gini, plot */
 		
 		* /estimated params/	/distributions/
-		* mu sigma				normal lnormal
-		* mu sigma p lambda		snormal laplace slaplace ged sged
+		* mu sigma		normal lnormal
+		* mu sigma p lambda	snormal laplace slaplace ged sged
 		* mu sigma p q lambda	t gt st sgt
-		* delta sigma p			weibull gamma ggamma
-		* delta sigma p q		br3 br12 gb2
+		* delta sigma p		weibull gamma ggamma
+		* delta sigma p q	br3 br12 gb2
 		
 		scalar _sigma = exp(betas[1,"lnsigma:_cons"])
 		
@@ -458,8 +452,8 @@ version 13.0
 			scalar _p = betas[1,"p:_cons"]
 			
 			* alternate notation
-			scalar _a = 1/sigma
-			scalar _b_ = exp(delta) // "_b" is a STATA reserved word
+			scalar _a = 1/_sigma
+			scalar _b_ = exp(_delta) // "_b" is a STATA reserved word
 			
 			if inlist("`distribution'","br3","br12","gb2") {
 				scalar _q = betas[1,"q:_cons"]
@@ -610,6 +604,12 @@ version 13.0
 		
 		/* Opt PLOT - PLOTS PDF using _cons only, as extracted above */
 		if "`plot'"!="" {
+			
+			* returns error if NOCONStant activated or indepvars present (which changes _cons estimates)
+			if "`noconstant'"!="" | "`regs'"!="" | "`sigma'"!="" | "`p'"!="" | "`q'"!="" | "`lambda'"!="" {
+				di as err "constant-only estimation is required to plot pdf"
+				exit 498
+			}
 			if "`distribution'"=="normal" | "`distribution'"=="" {
 				twoway function ///
 					y = normalden(x, _mu, _sigma), ///
@@ -619,7 +619,7 @@ version 13.0
 				scalar G = exp(lngamma(1/_p)) // gamma function
 
 				twoway function ///
-					y = [p * exp(-(abs(x-_mu)^_p / ((1 + _lambda*sign(x-_mu))^_p * _sigma^_p)))] / [2*_sigma*G], ///
+					y = [_p * exp(-(abs(x-_mu)^_p / ((1 + _lambda*sign(x-_mu))^_p * _sigma^_p)))] / [2*_sigma*G], ///
 					range(`plot')
 			}
 			else if inlist("`distribution'","t","gt","st","sgt") {
@@ -642,7 +642,7 @@ version 13.0
 					range(`plot')
 			}
 			else if inlist("`distribution'","br3","br12","gb2") {
-				scalar B = exp(lngamma(p)+lngamma(q)-lngamma(p+q)) // beta function
+				scalar B = exp(lngamma(_p)+lngamma(_q)-lngamma(_p+_q)) // beta function
 
 				twoway function ///
 					y = [abs(_a) * (x/_b_)^(_a*_p)] / [x*B * (1 + (x/_b_)^_a)^(_p+_q)], ///
@@ -666,8 +666,10 @@ version 13.0
 		qui count if `depvar1'!=. & `depvar2'!=. & `depvar1'!=`depvar2' & `touse' // interval
 		di "{res:`r(N)'} interval `count_type'"
 	
-		/* ERETURNS relevant information */
-		qui ereturn list	
+		/* ERETURNS relevant information and cleans memory */
+		qui ereturn list
+		mat drop _all
+		scalar drop _all
 	}
 	
 end
