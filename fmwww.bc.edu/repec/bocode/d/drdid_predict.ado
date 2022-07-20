@@ -1,6 +1,7 @@
- *! v0.1 fixed minibug with time treatment (TR and T)
+ *! v0.2 fixed minibug with varname anything
+ * v0.1 fixed minibug with time treatment (TR and T)
  program drdid_predict
-	syntax anything(id="newvarname") [if] [in], [weight pscore]  
+	syntax newvarname [if] [in], [weight pscore]  
 	if !inlist("`e(method)'","drimp","dripw","aipw","ipw","stdipw") {
 		display as error "IPW/IPT Weights cannot be estimated"
 		exit
@@ -46,8 +47,8 @@
 
 	if "`weight'"!="" {
 		syntax newvarname [if] [in] [, * ]
-		qui:gen `typelist' `varlist' = `wgt'
-		label var `varlist' "IPW/IPT weights"
+		qui:gen `typelist' `anything' = `wgt'
+		label var `anything' "IPW/IPT weights"
 	}
 	else {
 		qui:gen `typelist' `varlist' = `pr'
@@ -63,6 +64,6 @@ program _parser_drdid , sclass
 	sreturn local tvr   `time'
 	sum `treatment'   if e(sample)==1, meanonly
 	sreturn local maxtr = r(max)
-	sreturn local trvr   `tr'
+	sreturn local trvr   `treatment'
 	
 end

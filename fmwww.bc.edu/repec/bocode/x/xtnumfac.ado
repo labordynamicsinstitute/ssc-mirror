@@ -1,3 +1,5 @@
+*! xtnumfac
+*! v. 1.1 - 19.07.2022
 capture program drop xtnumfac
 program define xtnumfac, eclass 
 syntax varlist(min=1 ts /*ts added by JD*/ ) [if] [in] [, kmax(integer 8) STANdardize(integer 1) Detail]
@@ -19,6 +21,9 @@ preserve
 		exit
 	}
 
+* keep only touse data
+	qui keep if `touse'
+
 * TS/XT information
 	cap _xt
 	if _rc != 0 {
@@ -32,14 +37,11 @@ preserve
 	local panelvar `r(panelvar)'
 	local isbalanced = ("`r(balanced)'" == "strongly balanced" )
 
-* number of variables
-	local k = wordcount("`varlist'")
-
 * balance dataset
 	if `isbalanced' == 0 {
 		** get T min, T bar and T max
 		tempvar numT
-		qui by `panelvar' (`timevar'), sort: gen `numT' = _N if `touse'
+		qui by `panelvar' (`timevar'), sort: gen `numT' = _N 
 		qui sum `numT'
 		local Tmin = r(min)
 		local Tbar = r(mean)
@@ -52,23 +54,24 @@ preserve
 	*** clear ereturn
 	ereturn clear
 
-	qui tab `timevar' if `touse'
+	qui tab `timevar' 
 	ereturn scalar T = r(r)
-	qui tab `panelvar' if `touse'
+	qui tab `panelvar' 
 	ereturn scalar N_g = r(r)
 	ereturn scalar N = r(N)	
-	ereturn hidden scalar k = `k'
+
+	if `c(version)' >= 13 local hid `hidden'
 
 	if `isbalanced' == 0 {
-		ereturn hidden scalar Tbar = `Tbar'
-		ereturn hidden scalar Tmin = `Tmin'
-		ereturn hidden scalar Tmax = `Tmax'
+		ereturn `hid' scalar Tbar = `Tbar'
+		ereturn `hid' scalar Tmin = `Tmin'
+		ereturn `hid' scalar Tmax = `Tmax'
 	}
 		
 	
 	
 * Get results 
-noi	mata: mainroutine(st_data(., "`varlist'", "`touse'"), st_numscalar("e(N)"), st_numscalar("e(T)"), strtoreal(st_local("kmax")), strtoreal(st_local("standardize")))
+mata: mainroutine(st_data(., "`varlist'"), st_numscalar("e(N_g)"), st_numscalar("e(T)"), strtoreal(st_local("kmax")), strtoreal(st_local("standardize")))
 
 
 
@@ -84,9 +87,9 @@ if !missing("`detail'") {
 	}
 	else {
 		dis as text																			_col(60) "Obs per group:"		
-		dis as text _col(4) "Number of obs" 		_col(25) "=" %9.0g as results `e(N)'		as text	_col(68) "min"					_col(73) "=" as result %9.0f `e(Tmin)'
-		dis as text _col(4) "Number of groups" 		_col(25) "=" %9.0g as results `e(N_g)'		as text	_col(68) "avg"					_col(73) "=" as result %9.2f `e(Tbar)'
-		dis as text _col(4) "Number of variables" 	_col(25) "=" %9.0g as results `e(k)'		as text	_col(68) "max"					_col(73) "=" as result %9.0f `e(Tmax)'
+		dis as text _col(4) "Number of obs" 		_col(25) "=" %9.0g as result `e(N)'		as text	_col(68) "min"					_col(73) "=" as result %9.0f `e(Tmin)'
+		dis as text _col(4) "Number of groups" 		_col(25) "=" %9.0g as result `e(N_g)'		as text	_col(68) "avg"					_col(73) "=" as result %9.2f `e(Tbar)'
+		dis as text _col(4) "Number of variables" 	_col(25) "=" %9.0g as result `e(k)'		as text	_col(68) "max"					_col(73) "=" as result %9.0f `e(Tmax)'
 	}
 	*di as result _col(71) as text "N" _col(73) "=" _col(76) %9.0g `e(N)'
 	*di as result _col(71) as text "T" _col(73) "=" _col(76) %9.0g `e(T)'
@@ -187,7 +190,7 @@ else {
 	di as text ""
 	di as text "`e(missnum)' missing values imputed before estimating number of factors."
 	}
-	global e(missnum)=.
+	///global e(missnum)=.
 
 end
 
@@ -214,14 +217,14 @@ function mainroutine(real matrix data, real scalar N, real scalar T, kmax, stan)
 	if (stan == 4 | stan == 5) X = X - J(T,1,1)*mean(X) - mean(X')'*J(1,N,1) + J(T,1,1)*mean(vec(X))*J(1,N,1)
 	
 	if (stan == 3 | stan == 5) {
-	X_sd = sqrt(diagonal(quadvariance(X)))
-	X = X :/(J(T,1,1)*X_sd')
+		X_sd = sqrt((mean(X:^2) - mean(X):^2))'
+		X = X :/(J(T,1,1)*X_sd')
 	}
 			
 
 // Call interior functions to get all IC values and chosen num of factors	
 	allICs0      = numfac_int(X,kmax)
-	/// update kmax
+	// update kmax
 	kmax = cols(allICs0)-1
 	st_local("kmax",strofreal(kmax))
 	best_numfac0 = bestnum_ic_int(allICs0[1..9,])
@@ -232,9 +235,9 @@ function mainroutine(real matrix data, real scalar N, real scalar T, kmax, stan)
 	st_matrix("e(allICs)", allICs')
 	st_matrix("e(best_numfac)", best_numfac)	
 	st_numscalar("e(kmax)", kmax)
-	st_numscalar("e(N)", N)
 	st_matrix("allICs", allICs')
 	st_matrix("best_numfac", best_numfac)
+	st_numscalar("e(k)",cols(data))
 
 // matrix col and row names (by JD)
 	cnames = (J(9,1,"") , ("PC_{p1}" \ "PC_{p2}" \ "PC_{p3}" \ "IC_{p1}" \ "IC_{p2}" \ "IC_{p3}" \ "ER" \ "GR" \ "GOL"))

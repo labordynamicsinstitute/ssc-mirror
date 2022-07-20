@@ -426,13 +426,17 @@ are set by {cmd:bspline} to be equal to the infimum and supremum, respectively,
 of the interval of {it:X}-values for which the {it:B}-spline is non-zero.
 The characteristic {it:varname}{cmd:[xvalue]} is set by {cmd:frencurv} and {cmd:flexcurv}
 to be equal to the reference point on the {it:X}-axis corresponding to the reference spline.
+The characteristic {it:varname}{cmd:[basestat]} is set by {cmd:frencurv} and {cmd:flexcurv}
+to be 1 if the reference point on the {it:X}-axis corresponding to the reference spline
+is equal to the {cmd:base()} option,
+and to be 0 otherwise.
 
 
 {title:Author}
 
 {pstd}
-Roger Newson, National Heart and Lung Institute, Imperial College London, UK.
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, King's College London, UK.
+Email: {browse "mailto:roger.newson@kcl.ac.uk":roger.newson@kcl.ac.uk}
 
 
 {title:References}
@@ -459,7 +463,7 @@ Download from
 {phang}
 Newson R.  2001.
 Splines with parameters that can be explained in words to non-mathematicians.
-Presented at the 7th UK Stata User Meeting, 14–15 May, 2001.
+Presented at the 7th UK Stata User Meeting, 14â€“15 May, 2001.
 Download from
 {browse "http://ideas.repec.org/p/boc/usug01/11.html"}.
 

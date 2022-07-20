@@ -21,7 +21,7 @@ version 16.0;
  and variable labels generated using format labfmt if present,
  or format of X-variable otherwise.
 *! Author: Roger Newson
-*! Date: 03 April 2020
+*! Date: 16 July 2022
 */
 
 syntax [ newvarlist ] [if] [in] ,
@@ -395,8 +395,9 @@ return add;
 * Transform B-splines to reference value splines *;
 tempname cref coefv;
 local i1=0;
-while(`i1'<`nspline'){;local i1=`i1'+1;
-  local spline:word `i1' of `splist';
+while(`i1'<`nspline' ){;
+  local i1=`i1'+1;
+  local spline: word `i1' of `splist';
   scal `cref'=`refv'[1,`i1'];
   matr def `coefv'=`sptran'[1...,`i1']';
   matr scor `type' `spline'=`coefv';
@@ -416,6 +417,9 @@ while(`i1'<`nspline'){;local i1=`i1'+1;
   format `spline' %8.4f;
   char `spline'[xvalue] "`=`cref''";
   char `spline'[xvar] "`xvar'";
+  if "`base'"=="" char `spline'[basestat] "0";
+  else if `base'==`cref' char `spline'[basestat] "1";
+  else char `spline'[basestat] "0";
 };
 
 * Return results not created by bspline *;

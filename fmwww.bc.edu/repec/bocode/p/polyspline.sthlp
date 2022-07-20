@@ -319,13 +319,17 @@ are set to be equal to the infimum and supremum, respectively,
 of the completeness region.
 The characteristic {it:varname}{cmd:[xvalue]} is set
 to be equal to the reference point on the {it:X}-axis corresponding to the reference spline.
+The characteristic {it:varname}{cmd:[basestat]} is set by {cmd:polyspline}
+to be 1 if the reference point on the {it:X}-axis corresponding to the reference spline
+is equal to the {cmd:base()} option,
+and to be 0 otherwise.
 
 
 {title:Author}
 
 {pstd}
-Roger Newson, National Heart and Lung Institute, Imperial College London, UK.
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, King's College London, UK.
+Email: {browse "mailto:roger.newson@kcl.ac.uk":roger.newson@kcl.ac.uk}
 
 
 {marker polyspline_references}{...}
@@ -334,7 +338,7 @@ Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
 {phang}
 Newson, R. B.  2014.
 Easy-to-use packages for estimating rank and spline parameters.
-Presented at the {browse "http://ideas.repec.org/p/boc/usug14/01.html":20th UK Stata User Meeting, 11–12 September, 2014}.
+Presented at the {browse "http://ideas.repec.org/p/boc/usug14/01.html":20th UK Stata User Meeting, 11â€“12 September, 2014}.
 
 {phang}
 Newson R. B.  2012.

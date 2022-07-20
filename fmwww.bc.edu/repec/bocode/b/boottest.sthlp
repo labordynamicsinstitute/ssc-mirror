@@ -1,5 +1,5 @@
 {smcl}
-{* *! boottest 4.0.3 3 April 2022}{...}
+{* *! boottest 4.1.0 19 July 2022}{...}
 {help boottest:boottest}
 {hline}{...}
 
@@ -43,11 +43,11 @@ In words, {it:indeplist} is a list of hypotheses to be tested independently; if 
 in turn consists of one or more jointly tested constraints, linear in parameters; if there is more than one, then each must be enclosed in parentheses. Finally, each 
 individual constraint expression must conform to the syntax for {help constraint:constraint define}.
 
-{synoptset 45 tabbed}{...}
+{synoptset 37 tabbed}{...}
 {synopthdr}
 {synoptline}
-{synopt:{cmdab:weight:type(}{it:rademacher} {cmd:|}}specify weight type for bootstrapping; default is {it:rademacher}{p_end}
-{synopt:{space 12} {it:mammen} {cmd:|} {it:webb} {cmd:|} {it:normal}{cmd:)} {cmd:|} {it:gamma}{cmd:)}}{p_end}
+{synopt:{cmdab:weight:type(}{it:rademacher} {cmd:|} {it:mammen} {cmd:|} }specify weight type for bootstrapping; default is {it:rademacher}{p_end}
+{synopt:{space 12} {it:webb} {cmd:|} {it:normal} {cmd:|} {it:gamma}{cmd:)}}{p_end}
 {synopt:{opt boot:type(wild | score)}}specify bootstrap type; after ML estimation, {it:score} is default and only option{p_end}
 {synopt:{opt stat:istic(t | c)}}specify statistic type to bootstrap; default is {it:t}{p_end}
 {synopt:{opt r:eps(#)}}specifies number of replications for bootstrap-based tests; deafult is 999; set to 0 for Rao or Wald test{p_end}
@@ -74,21 +74,23 @@ individual constraint expression must conform to the syntax for {help constraint
 {p2colreset}{...}
 
 {pstd}
-These options are relevant when testing one or two hypotheses after OLS/2SLS/LIML/k-class, when by default a confidence function is plotted and, if there is one
-hypothesis, a confidence set is derived:
+These options are relevant when testing one- or two-dimensional hypotheses after OLS/2SLS/LIML/k-class, when by default a confidence function is plotted and, if the hypothesis is
+one-dimensional, a confidence set is derived:
 
-{synoptset 45 tabbed}{...}
+{synoptset 37 tabbed}{...}
 {synopthdr}
 {synoptline}
 {synopt:{opt gridmin(# [#])}}set lower end(s) of confidence set search range; two entries for 2-D hypotheses{p_end}
 {synopt:{opt gridmax(# [#])}}analogous upper ends{p_end}
 {synopt:{opt gridpoints(# [#])}}set number of equally space points to compute rejection confidence{p_end}
 {synopt:{opt graphopt(string)}}formatting options to pass to graph command{p_end}
-{synopt:{opt noci}}prevent derivation of confidence set from inverted bootstrap test{p_end}
-{synopt:{opt ptol:erance(#)}}sets precision of identification of confidence set bounds (default 1e-6){p_end}
 {synopt:{cmd:graphname(}{it:name}[{cmd:, replace}]{cmd:)}}name graph; for multiple independent hypotheses, uses {it:name} as stub{p_end}
 {synopt:{opt nogr:aph}}allow derivation of confidence set but don't graph confidence function{p_end}
-{synopt:{opt p:type(symmetric | equaltail | lower | upper)}}for unary hypotheses, set p value type; {it:symmetric} is default{p_end}
+{synopt:{cmdab:f:ormat(}fmt{cmd:)}}set {help format:numerical format} for confidence set bounds; default is %6.0g{p_end}
+{synopt:{opt noci}}prevent derivation of confidence set from inverted bootstrap test{p_end}
+{synopt:{opt ptol:erance(#)}}sets precision of identification of confidence set bounds (default 1e-6){p_end}
+{synopt:{cmdab:p:type(}{it:symmetric} {cmd:|} {it:equaltail} {cmd:|}}for unary hypotheses, set p value type; {it:symmetric} is default{p_end}
+{synopt:{space 12} {it:lower} {cmd:|} {it:upper}{cmd:)}}{p_end}
 {synoptline}
 {p2colreset}{...}
 
@@ -193,9 +195,9 @@ after estimation commands that do not support those adjustments.
 
 {pstd}
 The tests are available after OLS, constrained OLS, 2SLS, and LIML estimation performed with {help regress}, {help cnsreg}, {help ivreg}, {help ivregress}, or 
-{stata ssc describe cmp:ivreg2}. The
+{stata ssc describe ivreg2:ivreg2}. The
 program works with Fuller LIML and {it:k}-class estimates done with {help ivreg2} (WRE bootstrap only). The program also works with regressions with one set of "absorbed" fixed
-effects performed with {help areg}; {help xtreg:xtreg, fe}; {help xtivreg:xtivreg, fe}; {help xtivreg2}; {help reghdfe:reghdfe}; {help didregress}; 
+effects performed with {help areg}; {help xtreg:xtreg, fe}; {help xtivreg:xtivreg, fe}; {help xtivreg2:xtivreg2, fe}; {help reghdfe:reghdfe}; {help didregress}; 
 or {help xtdidregress}. ({help didregress} and {help xtdidregress} themselves can run the wild bootstrap, but much more slowly.) And {cmd:boottest} works after most Stata 
 ML-based estimation commands, including {help probit}, {help glm}, {stata ssc describe cmp:cmp}, and, in Stata 14.0 or later, 
 {help sem} and {help gsem} (score bootstrap only). (To work with {cmd:boottest}, an iterative optimization command must accept
@@ -303,6 +305,15 @@ dimensions of the hypothesis. But any entry may be missing (".") to accept {cmd:
 (25, for {opt gridpoints()}). To override the default formatting of the contour plot, include {help twoway contour} options inside a {cmd:boottest} {opt graphopt()} option.
 
 
+{title:Including results in estimation tables}
+
+{pstd}The easiest way to add {cmd:boottest} results to estimation tables is to first store them in the relevant e() results using the {cmd:estadd} command in the
+{stata ssc describe estout:estout} package. For example, after a {cmd:boottest} command, {cmd:estadd scalar p = r(p)} saves the {it:p} value as e(p). {cmd:estadd local CIstr "`r(CIstr)'"} 
+saves the string describing the bootstrap confidence set as e(CIstr). (Use {cmd:boottest}'s {cmdab:f:ormat()} option to control the number display in this 
+string.) Then, commands such as {help table}, {stata ssc describe estout:esttab}, and {stata ssc describe outreg2:outreg2} can access the results
+as they build tables. 
+
+
 {marker options}{...}
 {title:Options}
 
@@ -334,7 +345,7 @@ min(1, n*p) where p is the unadjusted probability and n is the number of hypothe
 confidence level is 95% and the null is expressed in a constraint as X + Y = 1, 
 {cmd:boottest} will iteratively search for the high and low values U and L such that the bootstrapped two-tailed p values of the 
 hypotheses X + Y = U and X + Y = L are 0.05. See Cameron and Miller (2015, section VIC.2). This option is only relevant when testing a 
-one-costraint hypothesis after OLS/2SLS/GMM/LIML, for only then is the confidence interval derived anyway. 
+one-costraint hypothesis after OLS/2SLS/GMM/LIML, for only then is the confidence interval derived anyway.
 
 {phang}{opt l:evel(#)} specifies the confidence level, in percent, for the confidence interval; see {help level:help level}. The
 default is controlled by {help level:set level} and is usually 95. Setting it to 100 suppresses computation and plotting of the confidence 
@@ -357,6 +368,10 @@ with the bootstrapped distribution, and uses 25 grid points.
 producing {it:name}_1, {it:name}_2, etc.
 
 {phang}{opt nogr:aph} prevents graphing of the confidence function but not the derivation of confidence sets.
+
+{phang}{cmdab:f:ormat(}fmt{cmd:)} sets the {help format:numerical format} for confidence set bounds. This affects the 
+confidence curve plots and the construction of the string destription of the condifence set returned in {cmd:r(CIstr)}. The
+default is %5.0g.
 
 {phang}{opt p:type(symmetric | equaltail | lower | upper)} sets the p value type. The option applies only to unary hypotheses, ones involving a single 
 equality. The default, {it:symmetric}, has the p value derived from the
@@ -493,10 +508,11 @@ the Julia StableRNG with a seed extracted from the Stata random-number generator
 {synopt:{cmd:r(weighttype)}}bootstrapping weight type{p_end}
 {synopt:{cmd:r(robust)}}indicates robust/clustered test{p_end}
 {synopt:{cmd:r(clustvars)}}clustering variables for test, if any{p_end}
+{synopt:{cmd:r(CIstr)}}confidence set statement in string form{p_end}
 
 {p2col 5 20 24 2: Matrices}{p_end}
-{synopt:{cmd:r(CI)}}bounds of confidence sets, if any{p_end}
-{synopt:{cmd:r(plot)}}data for p value plot, if any{p_end}
+{synopt:{cmd:r(CI)}}bounds of confidence set; if disjoint, one row per piece{p_end}
+{synopt:{cmd:r(plot)}}data for p value plot{p_end}
 {synopt:{cmd:r(dist)}}t/z distribution, if requested with {opt svm:at}{p_end}
 {synopt:{cmd:r(v)}}wild weight matrix, if requested with {opt svv}{p_end}
 {synopt:{cmd:r(b)}}numerator of test statistic{p_end}
@@ -546,7 +562,7 @@ giving back through a {browse "http://j.mp/1iptvDY":donation} to support the wor
 
 {title:Examples}
 
-{phang}. {stata "use http://web.archive.org/web/20150802214527/http://faculty.econ.ucdavis.edu/~dlmiller/statafiles/collapsed"}{p_end}
+{phang}. {stata "use https://raw.githubusercontent.com/droodman/boottest/master/data/collapsed"}{p_end}
 
 {phang}. {stata regress hasinsurance selfemployed post post_self, cluster(year)}{p_end}
 {phang}. {stata boottest post_self=.04} // wild bootstrap, Rademacher weights, null imposed, 999 replications{p_end}
@@ -590,7 +606,8 @@ giving back through a {browse "http://j.mp/1iptvDY":donation} to support the wor
 {phang}. {stata boottest tenure} // reasonable match on test statistic and p value{p_end}
 
 {phang}. {stata ivreg2 wage collgrad smsa race age (tenure = union married), cluster(industry) fuller(1)}{p_end}
-{phang}. {stata boottest tenure, nograph} // Wald test, WRE bootstrap, Rademacher weights, 999 replications{p_end}
+{phang}. {stata boottest tenure, seed(934871) format(%5.2f) nograph}  // Wald test, WRE bootstrap, Rademacher weights, 999 replications{p_end}
+{phang}. {stata estadd local CIstr "`r(CIstr)'"}  // Store string description of confidence set as e(CIstr){p_end}
 {phang}. {stata boottest, nograph ar} // same, but Anderson-Rubin (faster, but CI misleading if instruments invalid){p_end}
 
 {phang}. {stata ivregress liml wage (collgrad tenure = ttl_exp union), cluster(industry)}{p_end}

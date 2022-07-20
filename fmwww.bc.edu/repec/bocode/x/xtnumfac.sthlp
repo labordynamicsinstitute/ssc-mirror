@@ -1,6 +1,7 @@
 {smcl}
-{* *! version 1.0 12jul2022}{...}
+{* *! version 1.1 19jul2022}{...}
 {cmd:help xtnumfac}
+{hline}
 
 {viewerjumpto "Syntax" "xtnumfac##syntax"}{...}
 {viewerjumpto "Description" "xtnumfac##description"}{...}
@@ -20,7 +21,7 @@
 
 {p 8 17 2}
 {cmdab:xtnumfac}
-[{varname}]
+[{varlist}]
 {ifin}
 [{cmd:,} {it:options}]
 
@@ -38,11 +39,12 @@
 {title:Description}
 
 {pstd}
-{cmd:xtnumfac} Estimates the number of factors in the variable {varname}, observed in a large-dimensional panel dataset, by obtaining and reporting the estimators of Bai and Ng 
+{cmd:xtnumfac} Estimates the number of factors in the variables {varlist}, observed in a large-dimensional panel dataset, by obtaining and reporting the estimators of Bai and Ng 
 (2002), Ahn and Horenstein (2013), Onatski (2010) and Gagliardini et al. (2019).
-the number of factors Data must be {help:tsset} or {help:xtset}.
-In case of unbalanced panels, missing values are imputed following Stock and Watson (1998) and Bai et al. (2015).
-{varname} may contain time-series operators, see {help tsvarlist}.
+Data must be {help tsset} or {help xtset}.
+In case of unbalanced panels, {cmd:xtnumfac} internally fills in the gaps using {help tsfill}. 
+Missing values are imputed following Stock and Watson (1998) and Bai et al. (2015).
+{varlist} may contain time-series operators, see {help tsvarlist}.
 
 {marker options}{...}
 {title:Options}
@@ -88,13 +90,15 @@ Third, the ED (edge distribution) estimator of Onatski (2010) is based on the di
 of two successive eigenvalues. Determining the number of factors is not achieved by picking the extremum
 in a list of options. Instead, a threshold is determined from the data and the eigenvalue differences
 exceeding this differences are targeted. This procedure is iterated to convergence with an updated list of eigenvalues and an updated threshold.
-Lastly, the diagnostic criterion of Gagliardini et al. (2019) considers the decreasing sequence of eigenvalues minus a correction term. It chooses the number of factors as one less than the position of the earliest negative corrected eigenvalue in that series. 
+Lastly, the diagnostic criterion of Gagliardini et al. (2019) considers the decreasing sequence of eigenvalues minus a correction term. 
+It chooses the number of factors as one less than the position of the earliest negative corrected eigenvalue in that series. 
+The criterion shows {it:kmax+1} factors if no negative corrected eigenvalue is found.
  
 {marker contact}{...}
 {title:Contact}
 
 {pstd}
-Questions, Comments, Suggestions? Please let me know. 
+Questions, Comments, Suggestions? Please let us know. 
 
 {space 4}Simon Reese 
 {space 4}Associate Senior Lecturer, Lund University 
@@ -129,6 +133,7 @@ with the package and which is taken from the first empirical example in Kapetani
 {synopt:{cmd:e(N)}}Number of cross-sections.{p_end}
 {synopt:{cmd:e(T)}}Number of time periods.{p_end}
 {synopt:{cmd:e(kmax)}}Maximum number of factors considered.{p_end}
+{synopt:{cmd:e(missnum)}}Number of missing values which are imputed.{p_end}
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Matrices}{p_end}
