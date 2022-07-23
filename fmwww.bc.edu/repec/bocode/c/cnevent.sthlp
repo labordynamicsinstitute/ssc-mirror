@@ -17,11 +17,14 @@
 {title:Option}
 
 {phang}
-{opt estw(string)}   Set the estimatimation window.The default is (-200,-10), which stands for an estimation window starts from the 200th tradding days before the event date and ends at the 10th tradding day before the event date.
+{opt estw(string)}   Set the estimatimation window.The default is (-200,-10), which stands for an estimation window starts 
+from the 200th tradding days before the event date and ends at the 10th tradding day before the event date.
 {p_end}
 
 {phang}
-{opt eventw(string)}   Define the event window.The default choice is (-3,5), which stands for an event window from the 3rd trading day before the event date to the 5th trading day aftern the event date.Besides,multiple event windows also can be set up according to the user requirements.
+{opt eventw(string)}   Define the event window.The default choice is (-3,5), which stands for an event window from the 3rd 
+trading day before the event date to the 5th trading day aftern the event date.Besides,multiple event windows also can be set 
+up according to the user requirements.
 {p_end}
 
 {phang}
@@ -33,7 +36,8 @@
 {p_end}
 
 {phang}
-{opt index(string)}  Set index which stands for the market's daily return.The default is 300. users may have many choices to use different indeces. 
+{opt index(string)}  Set index which stands for the market's daily return.The default is 300. users may have many choices to use 
+different indeces. 
 {p_end}
     {pstd}Index Codes: following are some commonly used indeces{p_end}
     {pstd}000001 The Shanghai Composite Index.{p_end}
@@ -49,15 +53,19 @@
 
 
 {phang}
-{opt estsmpn(int)}  Set the minimum number which stands for the sample size within the estimate window.The default is 50. If there are less than 50 trading days in the estimation window, the event study for the underlying event will not be carried out due to insufficient samples
+{opt estsmpn(int)}  Set the minimum number which stands for the sample size within the 365 days before the event date.
+The default is 50. If there are less than 50 trading days in the 365 days before the event date, the event study for the 
+underlying event will not be carried out due to insufficient samples.
 {p_end}
 
 {phang}
-{opt filename(string)} Set a results file where Abnormal Return and Cumulative Abnormal Return will be saved in. The default is CAR,replace.
+{opt filename(string)} Set a results file where Abnormal Return and Cumulative Abnormal Return will be saved in. The default is CAR.
 {p_end}
 
 {phang}
-{opt carg(string)}  Draw a figure that plots the cumulative abnormal returns around eventdate.And set results file where the figure will be saved in. The default is (CAR), which stands for the results filename is CAR,the output format is gph. If as() is not specified, the output format is determined by the suffix of newfilename.
+{opt carg(filename[,type])}  Draw a figure that plots the cumulative abnormal returns around eventdate.And set results file where the 
+figure will be saved in. The default is CAR, which stands for the results filename is CAR,the output format is gph. If users need to 
+output charts of other types, they can add other output types to carg. The following are some commonly used output types.
 {p_end}
     {pstd}Output format: following are some commonly used format{p_end}
     {pstd}ps PostScript.{p_end}
@@ -68,14 +76,17 @@
 	{pstd}other {p_end}
 	
 {phang}
-{opt t(string)}  Examine whether specific events had a significant effect on the CAR by t-test,and output the docx.
+{opt t(filename)}  Examine whether specific events had a significant effect on the CAR by t-test,and output the docx.
 {p_end}
 
 {marker description}{...}
 {title:Description}
    
-{pstd}{it:cnevent} can carry out a standard market model event study. It calculates the abnormal returns and Cumulative abnormal returns for each event.
-To run this command, you only need to load your event list into memory containing necessary variables. The event list contains a variable of event date that record the date when the event happens and a variable of event firm id which identifies the subject of each sample. For instance: 
+{pstd}{it:cnevent} can carry out a standard market model event study. It calculates the abnormal returns and Cumulative abnormal 
+returns for each event.
+To run this command, you only need to load your event list into memory containing necessary variables. The event list contains a 
+variable of event date that record the date when the event happens and a variable of event firm id which identifies the subject of
+each sample. For instance: 
 {p_end}
 	
 {pstd}stkcd	  edate{p_end}
@@ -88,8 +99,13 @@ To run this command, you only need to load your event list into memory containin
 {pstd}601666  2019-09-17{p_end}
 
 
-{pstd}After reading the event data, you have to specify the relative parameters to the event date to set the event window and estimate window. For example, you may choose (-200,-10) as the estimate window and (-3,5) as the event window, and then you may set parameters like this: ...estw(-200 -10) eventw(-3 5).
-    In this command, we use the market model to calculate the abnormal return. A output file will be stored in CAR.dta or the file name you specified with the {it:cnevent} option. which contains variables of your event list, abnormal returns and and the Cumulative Abnormal Return. {p_end}
+{pstd}After reading the event data, you need to specify the relative parameters to the event date to set the event window and estimate
+window. For example, you may choose (-200,-10) as the estimate window and (-3,5) as the event window, and then you may set parameters 
+like this: ...estw(-200 -10) eventw(-3 5).
+In this command, we use the market model to calculate the abnormal return. A output file will be stored in CAR.dta or the file name 
+you specified with the {it:cnevent} option. which contains variables of your event list, abnormal returns and and the Cumulative 
+Abnormal Return. 
+{p_end}
 
 {title:Examples1}
 
@@ -161,7 +177,7 @@ To run this command, you only need to load your event list into memory containin
 {stata `"keep stkcd ed"'}
 {p_end}
 {phang}
-{stata `"cnevent stkcd ed,estw(-190,-10) eventw(-3,3 -2,3 -1,5) ar(AR_k) car(CAR_k) index(1) estsmpn(150)  filename(myeventstudy,replace) carg(1p,pdf) t(ttest)"'}
+{stata `"cnevent stkcd ed,estw(-190,-10) eventw(-3,3 -2,3 -1,5) ar(AR_k) car(CAR_k) index(1) estsmpn(150)  filename(myeventstudy) carg(1p,pdf) t(ttest)"'}
 {p_end}
 
 

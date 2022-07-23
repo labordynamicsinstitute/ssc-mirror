@@ -29,7 +29,7 @@ where {it:format_spec} is either a format or a string variable name,
 and {it:esubstitution_rule} is any one of
 
 {p 8 21 2}
-{cmd:none} | {cmd:x10} | {cmd:rtfsuper} | {cmd:texsuper} | {cmd:htmlsuper} | {cmd:smclsuper}
+{cmd:none} | {cmd:x10} | {cmd:rtfsuper} | {cmd:texsuper} | {cmd:htmlsuper} | {cmd:smclsuper} | {cmd:mdsuper}
 
 
 {title:Description}
@@ -135,7 +135,7 @@ These substrings may indicate that the substring to the left is a mantissa,
 and that the substring to the right is the absolute value of an exponent,
 conventionally presented in documents as a superscript.
 The possible values of the {it:esubstitution_rule} are
-{cmd:none}, {cmd:x10}, {cmd:rtfsuper}, {cmd:texsuper}, {cmd:htmlsuper} and {cmd:smclsuper}.
+{cmd:none}, {cmd:x10}, {cmd:rtfsuper}, {cmd:texsuper}, {cmd:htmlsuper}, {cmd:smclsuper}, and {cmd:mdsuper}.
 These rules are documented below under
 {helpb sdecode##esub_rules:{title:Substitution rules for the esub() option}}.
 The suboption {cmd:elzero}, if present, indicates that, if the exponent contains leading zeros,
@@ -209,6 +209,7 @@ The values for the different {it:esubstitution_rule}s are as follows:
 {cmd:texsuper}            {cmd:"\times 10^{c -(}-"}  {cmd:"\times 10^{c -(}"}  {cmd:"{c )-}"}        TeX superscript
 {cmd:htmlsuper}           {cmd:"x10<sup>-"}     {cmd:"x10<sup>"}     {cmd:"</sup>"}   HTML superscript
 {cmd:smclsuper}           {cmd:"x10{c -(}sup:-"}     {cmd:"x10{c -(}sup:"}     {cmd:"{c )-}"}        SMCL superscript
+{cmd:mdsuper}             {cmd:"x10^-"}         {cmd:"x10^"}         {cmd:"^"}        Markdown superscript
 {hline}
 
 {pstd}
@@ -271,8 +272,8 @@ see {help sdecode##newson_2012:Newson (2012)}.
 {title:Author}
 
 {pstd}
-Roger Newson, Imperial College London, UK.
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, King's College London, UK.
+Email: {browse "mailto:roger.newson@kcl.ac.uk":roger.newson@kcl.ac.uk}
 
 
 {title:References}

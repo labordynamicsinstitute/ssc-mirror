@@ -1,9 +1,9 @@
 *eventstudy2.ado - performs state-of-the art event studies with raw returns or (multi)factor models and calculates various test statistics in Mata
-*! version 3.1 T Kaspereit Apr2020
-* Changes relative to version 3.0:
-* Graphing of CAAR now assumes that missing abnormal returns are set to zero (corresponds to "fill" option")
-* Average abnormal return output now includes only returns from non-thinly traded firms, i.e., only those returns which are not confounded by cumulated unobservable returns on the prior day. Thus, AAR[0] is now equivalent to CAAR[0,0], and AAR[1] is now equivalent to CAAR[1,1], etc.
-* The "aarfile" output file does no longer contain CAARE and corresponding test statistics.
+
+*New in this version 3.2:
+*1) Built-in version of nearmrg, which solves the problem of unstable sorts (see Statalist)
+*2) Correction of a minor error in the calculation of the Kolari + Pynnonen (2010) adjustment; the prior version slightly overestimated the cross-correlation by not disregarding the i = j = 1.00 cross-correlations.
+*3) Option KOLBlock (see below)
 
 * Models in this version of eventstudy2:
 	* No specification selected or "RAW"	-> 	Raw returns
@@ -24,8 +24,7 @@ quietly{
 
 	preserve
 
-	syntax varlist(min=2 max=2) using [if] [in], RETurns(str asis) [DIAGnosticsfile(str asis) GRAPHfile(str asis) AARfile(str asis) CARfile(str asis) ARfile(str asis) CROSSfile(str asis) REPLACE MODel(str asis) MARKETFILE(str asis) MARketreturns(str asis) IDMARket(str asis) FACTOR1(str asis) FACTOR2(str asis) FACTOR3(str asis) FACTOR4(str asis) FACTOR5(str asis) FACTOR6(str asis) FACTOR7(str asis) FACTOR8(str asis) FACTOR9(str asis) FACTOR10(str asis) RISKfreerate(str asis) Prices(str asis) TRADINGvolume(str asis) EVWLB(int -20) EVWUB(int 20) ESWLB(int -270) ESWUB(int -21) MINEVW(int 1) MINESW(int 30) CAR1LB(int -20) CAR1UB(int 20) CAR2LB(int -20) CAR2UB(int 20) CAR3LB(int -20) CAR3UB(int 20) CAR4LB(int -20) CAR4UB(int 20) CAR5LB(int -20) CAR5UB(int 20) CAR6LB(int -20) CAR6UB(int 20) CAR7LB(int -20) CAR7UB(int 20) CAR8LB(int -20) CAR8UB(int 20) CAR9LB(int -20) CAR9UB(int 20) CAR10LB(int -20) CAR10UB(int 20) LOGreturns THIN(real 0.00) FILL NOKOLari DELweekend DATELINEthreshold(real 0.00) SHIFT(int 3) GARCH ARCHOption(str asis) GARCHOption(str asis) ARCHIterate(int 20) PARAllel PCLUSters(int 2) PROCessors(int 0) PARAPath(str asis) ARFILLEStimation ARFILLEVent SAVERAM CROSSONLY]
-		
+	syntax varlist(min=2 max=2) using [if] [in], RETurns(str asis) [DIAGnosticsfile(str asis) GRAPHfile(str asis) AARfile(str asis) CARfile(str asis) ARfile(str asis) CROSSfile(str asis) REPLACE MODel(str asis) MARKETFILE(str asis) MARketreturns(str asis) IDMARket(str asis) FACTOR1(str asis) FACTOR2(str asis) FACTOR3(str asis) FACTOR4(str asis) FACTOR5(str asis) FACTOR6(str asis) FACTOR7(str asis) FACTOR8(str asis) FACTOR9(str asis) FACTOR10(str asis) RISKfreerate(str asis) Prices(str asis) TRADINGvolume(str asis) EVWLB(int -20) EVWUB(int 20) ESWLB(int -270) ESWUB(int -21) MINEVW(int 1) MINESW(int 30) CAR1LB(int -20) CAR1UB(int 20) CAR2LB(int -20) CAR2UB(int 20) CAR3LB(int -20) CAR3UB(int 20) CAR4LB(int -20) CAR4UB(int 20) CAR5LB(int -20) CAR5UB(int 20) CAR6LB(int -20) CAR6UB(int 20) CAR7LB(int -20) CAR7UB(int 20) CAR8LB(int -20) CAR8UB(int 20) CAR9LB(int -20) CAR9UB(int 20) CAR10LB(int -20) CAR10UB(int 20) LOGreturns THIN(real 0.00) FILL NOKOLari KOLBlock(str asis) DELweekend DATELINEthreshold(real 0.00) SHIFT(int 3) GARCH ARCHOption(str asis) GARCHOption(str asis) ARCHIterate(int 20) PARAllel PCLUSters(int 2) PROCessors(int 0) PARAPath(str asis) ARFILLEStimation ARFILLEVent SAVERAM CROSSONLY]
 		
 	* Ensuring that all user-written commands are installed:
 	
@@ -35,14 +34,13 @@ quietly{
 			exit = 3499
 		}
 	
-	foreach p in nearmrg distinct _gprod rmse parallel{
+	foreach p in nearmrgstable distinct _gprod rmse parallel{
 		capture `p'
 			if _rc == 199 {
 				di as error "Please install the user-written program `p' before running eventstudy2 (type > ssc install `p' < in the command line)"
 				exit = 199
 			}
 	}
-	
 	
 	if "`parallel'" == "parallel"{
 	
@@ -92,7 +90,12 @@ quietly{
 		local garchoption "1"
 	}
 	
-	foreach v in NoDates dow dateline event_date original_event_date exp_id IPO DEL set eventcount group datenum target td dif thinvar event_window est_window factor_avail event_windowWithMKT count_event_obsWithMKT event_windowWithSecAndMKT count_event_obsWithSecAndMKT event_windowWithSec count_event_obsWithSec est_windowWithMKT est_windowWithSecAndMKT count_est_obsWithSecAndMKT est_windowWithSec count_est_obsWithSec count_est_obsWithMKT nvals predicted_return _id STDF zero p STDFtemp Acc N retp1 MKTp1 difp tstr acc cum_periods n cum_`returns' cum_intercept RMSE STDP t_arch last_AR last_AR_min first_cum_periods first_cum_periods_min{
+	if "`kolblock'" != ""{
+		tempvar klblk 
+		egen double `klblk' = group(`kolblock')
+	}
+	
+	foreach v in NoDates dow dateline event_date original_event_date exp_id IPO DEL set eventcount group datenum target td dif thinvar event_window est_window factor_avail event_windowWithMKT count_event_obsWithMKT event_windowWithSecAndMKT count_event_obsWithSecAndMKT event_windowWithSec count_event_obsWithSec est_windowWithMKT est_windowWithSecAndMKT count_est_obsWithSecAndMKT est_windowWithSec count_est_obsWithSec count_est_obsWithMKT nvals predicted_return _id STDF zero p STDFtemp Acc N retp1 MKTp1 difp tstr acc cum_periods n cum_`returns' cum_intercept RMSE STDP t_arch last_AR last_AR_min first_cum_periods first_cum_periods_min ma_returns ma_cum_`returns'{
 		tempvar `v'
 	}
 	
@@ -124,7 +127,7 @@ quietly{
 	if "`model'" == "BHAR"  | "`model'" == "BHAR_raw" {
 		local fill "fill"
 	}
-	
+
 	***** Returning error messages when input is inconsistent *****
 	
 	if "`if'" != ""{
@@ -239,7 +242,7 @@ quietly{
 	count
 	scalar `NoOfEntriesEventfileValid' = r(N)
 
-	nearmrg using "`__Dateline'", nearvar(`2') genmatch(`dateline') upper keep(1 3) nogen
+	nearmrgstable using "`__Dateline'", nearvar(`2') genmatch(`dateline') upper keep(1 3) nogen
 		replace `dateline' =  . if (`dateline' - `2') > `shift'
 	 
 	replace `dateline' = . if `2' < `start' | `2' > `end'
@@ -479,6 +482,11 @@ quietly{
 		replace `cum_periods' = 1
 	}
 	
+	if "`riskfreerate'" != ""{
+		replace `returns' =  `returns' - `riskfreerate'
+		replace `marketreturns' =  `marketreturns' - `riskfreerate'
+	}
+	
 	if "`model'" == "MA" | "`model'" == "FM" | "`model'" == "RAW" | "`model'" == "COMEAN"{	
 		foreach v in `marketreturns' `factor1' `factor2' `factor3' `factor4' `factor5' `factor6' `factor7' `factor8' `factor9' `factor10' `factor11' `factor12' `factor13' `factor14' `factor15' `riskfreerate'{
 			gen `cum_`v'' = `v'
@@ -493,11 +501,6 @@ quietly{
 		capture: replace `marketreturns' = exp(`marketreturns')-1
 	}
 	
-	if "`riskfreerate'" != ""{
-		replace `returns' =  `returns' - `riskfreerate'
-		replace `marketreturns' =  `marketreturns' - `riskfreerate'
-	}
-
 	tempfile __Stockdata
 	save "`__Stockdata'"
 
@@ -746,8 +749,12 @@ quietly{
 			
 			if "`model'" == "MA" {
 					
-				replace `cum_`returns'' = `cum_`returns'' - `cum_`marketreturns''
-				replace `returns' = `returns' - `marketreturns'
+				*replace `cum_`returns'' = `cum_`returns'' - `cum_`marketreturns''
+				*replace `returns' = `returns' - `marketreturns'
+				
+				gen `ma_cum_`returns'' = `cum_`returns'' - `cum_`marketreturns''
+				gen `ma_returns' = `returns' - `marketreturns'
+				
 			}
 								
 			while `j' <= `O' { 
@@ -761,7 +768,8 @@ quietly{
 				}
 
 				if "`model'" == "MA" {	
-					capture: reg `cum_`returns'' `zero'  if `_id' == `j' & `est_window' == 1, nocons
+					*capture: reg `cum_`returns'' `zero'  if `_id' == `j' & `est_window' == 1, nocons
+					 capture: reg `ma_cum_`returns'' `zero'  if `_id' == `j' & `est_window' == 1, nocons
 				}
 				
 				if "`model'" == "FM" & "`garch'" != "garch"{
@@ -844,7 +852,7 @@ quietly{
 		
 
 
-		if "`model'" == "BHAR" {
+		if "`model'" == "BHAR" | "`model'" == "MA" {
 			replace `predicted_return' = `marketreturns'
 		}
 
@@ -852,7 +860,8 @@ quietly{
 			replace `predicted_return' = 0
 		}
 
-		gen AR = `returns' - `predicted_return'		
+		gen AR = `returns' - `predicted_return'	
+		
 		rename `original_event_date' original_event_date
 	}
 	
@@ -935,9 +944,9 @@ quietly{
 	}
 
 	foreach v in `2' `idmarket' `set' `factor_avail' `nvals' `predicted_return' `datenum' `target' `td' `thinvar' `n' `factor1' `factor2' `factor3' `factor4' `factor5' `factor6' `factor7' `factor8' `factor9' `factor10' `factor11' `factor12' `factor13' `factor14' `factor15' `event_window' `event_windowWithMKT' `event_windowWithSecAndMKT' `event_windowWithSec' `est_window' `est_windowWithMKT' `est_windowWithSecAndMKT' `est_windowWithSec' `count_event_obsWithMKT' `count_event_obsWithSec' `count_event_obsWithSecAndMKT' `count_est_obsWithMKT' `count_est_obsWithSecAndMKT' `count_est_obsWithSec' `zero' `retp1' `MKTp1'{
+		di "`v'"
 		capture: drop `v'
 	}
-	
 	forvalues i = 1/10 {
 		capture: drop `Cret`i'' 
 		capture: drop `CMKT`i'' 
@@ -982,7 +991,7 @@ quietly{
 
 	use "`__RawResults'", clear
 	
-	if "`model'" =="FM" | "`model'" =="RAW" | "`model'" =="MA" | "`model'" =="COMEAN"{ 
+	if "`model'" =="FM" | "`model'" =="RAW" | "`model'" =="MA" | "`model'" =="COMEAN" { 
 		keep if `dif' <= `eswub' & `dif' >= `eswlb' 
 		gen `difp' = `dif' - `eswlb'
 		tempfile __temp
@@ -993,6 +1002,19 @@ quietly{
 		mata AR = st_data(.,.)' 
 		mata: df = st_numscalar("`df'")
 	}
+	
+	use "`__RawResults'", clear
+
+	if ("`model'" == "FM" | "`model'" =="RAW" | "`model'" =="MA" | "`model'" =="COMEAN") & "`kolblock'" != ""{ 
+		keep if `dif' <= `eswub' & `dif' >= `eswlb' 
+		gen `difp' = `dif' - `eswlb'
+		tempfile __temp
+		save "`__temp'"
+		keep `_id' `klblk' `difp' 
+		reshape wide `klblk', i(`_id') j(`difp')
+		drop `_id'
+		mata KLBK = st_data(.,.)' 
+	}
 
 	if "`nokolari'" != "nokolari"{
 		use "`__temp'", clear
@@ -1001,7 +1023,12 @@ quietly{
 		reshape wide `STDF' , i(`_id') j(`difp')
 		drop `_id'
 		mata STDF = st_data(.,.)' 
-		mata: KolariADJ = KOLARI(AR,STDF,df)
+		if "`kolblock'" == "" {
+			mata: KolariADJ = KOLARI(AR,STDF,df)
+		}
+		else{
+			mata: KolariADJ = KOLARIBLK(AR,STDF,df,KLBK)
+		}
 	}
 	else{
 		mata: KolariADJ = 1
@@ -1254,9 +1281,6 @@ quietly{
 	append using "`__SecurityWithNoReturns'" 
 	replace categorymissing = 1 if categorymissing == . 
 	replace categorystring = "Firm/security for which no data is available in the security returns file" if categorymissing == 1
-	
-	di "`'"
-
 
 	if "`model'" =="FM" | "`model'" =="RAW" | "`model'" =="COMEAN" | "`model'" =="MA"{
 		append using "`__InsufficientEstObsSec'"
@@ -1423,6 +1447,124 @@ log close
 
 end
 
+capture: program drop nearmrgstable
+program define nearmrgstable
+syntax [varlist(default=none)] using ,  ///
+	Nearvar(varname numeric) [TYPE(str asis)] ///
+	[LIMit(str asis) GENMATCH(str asis) LOWer UPper  ROundup   * ]
+*--------------error checking
+if !inlist(`"`type'"', "_n", "1:1", "m:1", "1:m", "m:m") {
+	loc type "m:1"
+	di in yellow `"Merge Type not or incorrectly specified. Type [m:1] assumed.  See {help merge} for more."'
+	}
+if `"`genmatch'"'!=`""' confirm new var `genmatch'
+if `"`roundup'"'==`""' local eq = "="
+if ((`"`lower'"'!=`""') + (`"`upper'"'!=`""') + (`"`roundup'"'!=`""'))>1 {
+	di as err `"Cannot choose more than one of options {bf:roundup, lower, or upper}"'
+	exit 198
+ } //end.check.opts
+
+*--------------specify varlist
+local fullvars `"`varlist' `nearvar'"'
+if `"`varlist'"' != `""' {
+	local bycmd `"by `varlist': "'
+}
+**qui {
+*--------------master/work dataset (order lookup)
+tempvar order 
+tempfile work
+gen double `order'=_n
+
+preserve
+	keep `order' `fullvars' 
+	save `work'
+	*--------------using data
+	use `fullvars' `using', clear
+		*---error check: _dstr master data nearvar:
+		 *cap confirm string var `nearvar'
+		 *if _rc ==0  _dstr `nearvar' , `string' xx(`stringdate')
+		 if mi(`nearvar') {
+	 	  di as err `"`nearvar' contains non-numeric chars, cannot destring (if `nearvar' is a date, convert using time-date functions)"'
+		  exit 198
+		  }	
+		*noi desc
+	sort `fullvars', stable
+	cap isid `fullvars'
+	if _rc {
+		di as err "Variables: `fullvars' not unique in using dataset"
+		error 459
+	}
+	*--------------append master/work dataset to using
+	append using `work'
+	sort `fullvars', stable
+	*--------------find nearest match first/last/merg/gen
+	tempvar last next mrg gen
+	clonevar `last'=`nearvar' if `order'==.
+	clonevar `next'=`last'
+	`bycmd' replace `last'=`last'[_n-1] if mi(`last')
+	gsort `varlist' -`nearvar'
+	`bycmd' replace `next'=`next'[_n-1] if mi(`next')
+		//fix 'double' format condition//
+			 cap confirm numeric var `nearvar'
+			 noi di _rc
+	
+	if `"`lower'"' !=`""' gen double `gen'=cond(`nearvar'!=`next',`last',`next')
+	if `"`upper'"' !=`""' gen double `gen'=cond(`nearvar'!=`last',`next',`last')
+	if `"`upper'`lower'"' == `""' gen double `gen'=cond((`nearvar'-`last')<`eq'abs(`nearvar'-`next'),`last',`next')
+	*----------------
+	local tmpfmt: format `nearvar'
+	format `gen' `tmpfmt'
+	drop if `order'==.
+	sort `order', stable
+	keep `order' `gen'
+	save `work', replace
+	/* now get the matching values into original data */
+restore
+
+sort `order', stable
+if `c(version)' <11 merge `order' using `work' , _merge(`mrg')
+if `c(version)' >=11 merge `type' `order' using `work' , generate(`mrg')
+cap drop `mrg'
+
+/* now shuffle around the names to do the merge into the using dataset */
+tempvar hold
+rename `nearvar' `hold'
+rename `gen' `nearvar'
+sort `fullvars', stable
+if `c(version)' <11 merge  `fullvars' `using' ,  `options'
+if `c(version)' >=11 merge m:1 `fullvars' `using' ,  `options' 
+rename `nearvar' `gen'
+rename `hold' `nearvar'
+
+*----------limit subprgm
+	if `"`limit'"' != "" {
+			tempvar diff
+			gen `diff' =  abs(`gen' - `nearvar')
+			keep if `diff'<=`limit'
+		} //end.limit.subprgm
+	
+
+		if "`genmatch'"!="" {
+			clonevar `genmatch'=`gen'
+			local text `"`upper'`lower' "'
+			if `"`fullvars'"' !="" local text2 ", matched on `varlist'"
+			label var `genmatch' `"nearest `text'match to `nearvar' `text2'"'
+		}  //end.genmatch.if
+	
+**} //end qui
+end
+
+*--destring subprgm--*
+program define _dstr
+syntax varlist, [string xx(str asis)]
+if `"`string'"' != `""' & `"`stringdate'"' == ""  {
+ cap confirm string var `varlist'
+  if _rc!=0 	di as err `"`varlist' contains non-string variables"'
+ cap confirm string var `varlist'
+  if _rc==0  qui destring `varlist', replace force 
+} //end string
+end
+
 ***** Test statistics in Mata *****
 
 clear mata
@@ -1435,16 +1577,60 @@ function KOLARI(AR,STDF,df)
 	CitEst=STDF:/siEst 
 	VitEst=AR:/siEst:/(CitEst:^(0.5)) 
 	colsEst = cols(VitEst)
-	workload = colsEst^2
+	workload = colsEst^2 - colsEst
 	progress = 0
-	psave = J(colsEst*colsEst,1,.)
+	downcounter = 0
+	psave = J((colsEst*colsEst - colsEst),1,.)
 	for (i=1; i <= colsEst; i=i+1) {
 		for (j=1; j <= colsEst; j=j+1) {
-			a = VitEst[1...,i],VitEst[1...,j]
-			p = correlation(a)
-			psave[(i-1)*colsEst+j,] = p[2,1]
-			progress = progress+1
-			progress, workload
+			if (i != j) {
+				a = VitEst[1...,i],VitEst[1...,j]
+				p = correlation(a)
+				psave[(i-1)*colsEst+j-downcounter,] = p[2,1]
+				progress = progress+1
+				progress, workload
+			}
+			if (i == j) {
+				downcounter = downcounter +1
+			}
+		}
+	}
+	nKolari = round(0.5 + sqrt(0.25 + colsum(((psave:-1):/(psave:-1))))) 
+	rKolari = mean((psave:-1):/(psave:-1):*psave)
+	KolariADJ = ((1-rKolari)/(1+(nKolari-1)*rKolari))^(0.5)
+	return(KolariADJ)
+}
+end
+
+mata:
+function KOLARIBLK(AR,STDF,df,KLBK)
+{
+	TEst = colsum((AR:+100):/(AR:+100))
+	siEst = J(rows(AR),1,(colsum(AR:^2):/(TEst:-(2+df))):^(0.5))  
+	CitEst=STDF:/siEst 
+	VitEst=AR:/siEst:/(CitEst:^(0.5)) 
+	colsEst = cols(VitEst)
+	workload = colsEst^2 - colsEst
+	progress = 0
+	downcounter = 0
+	psave = J((colsEst*colsEst - colsEst),1,.)
+	for (i=1; i <= colsEst; i=i+1) {
+		for (j=1; j <= colsEst; j=j+1) {
+			if (i != j) {
+				a = VitEst[1...,i],VitEst[1...,j]
+				if (KLBK[1,i] == KLBK[1,j]) {
+					p = correlation(a)
+					psave[(i-1)*colsEst+j-downcounter,] = p[2,1]
+				}
+				else{
+					psave[(i-1)*colsEst+j-downcounter,] = 0
+				}
+				progress = progress+1
+				progress, workload
+			}
+			if (i == j) {
+				downcounter = downcounter +1
+			}
 		}
 	}
 	nKolari = round(0.5 + sqrt(0.25 + colsum(((psave:-1):/(psave:-1))))) 
@@ -1718,3 +1904,7 @@ function BHAR(BHRE,MRE,fill)
 	return(SkewAdjtCI)
 }
 end
+
+
+
+

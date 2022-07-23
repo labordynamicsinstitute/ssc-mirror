@@ -12,9 +12,9 @@ d KW:  China
 d KW: firms
 d KW: event study
 d
-d Requires: Stata version 16 and cntrade from SSC (q.v.)
+d Requires: Stata version 17 and cntrade from SSC (q.v.)
 d
-d Distribution-Date: 20220526
+d Distribution-Date: 20220722
 d
 d Author: Chuntao Li, Zhongnan Univ. of Econ. & Law 
 d Support: email chtl@@zuel.edu.cn

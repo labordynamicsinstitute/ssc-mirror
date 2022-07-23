@@ -6,7 +6,7 @@ version 13.0;
   which may be new or replace the input variable,
   optionally replacing unlabelled input values with formatted values.
 *! Author: Roger Newson
-*! Date: 19 November 2020
+*! Date: 21 July 2022
 */
 
 syntax varname(numeric) [if] [in] , [ Generate(name) replace MAXLength(string) FORMat(string) LABOnly Missing
@@ -181,7 +181,7 @@ if `"`esub'"'=="" {;
   error 498;
 };
 local esub=lower(`"`esub'"');
-if !inlist(`"`esub'"',"none","x10","rtfsuper","texsuper","htmlsuper","smclsuper") {;
+if !inlist(`"`esub'"',"none","x10","rtfsuper","texsuper","htmlsuper","smclsuper","mdsuper") {;
   disp as error `"Illegal esub(`esub')"';
   error 498;
 };
@@ -240,6 +240,12 @@ qui {;
     replace `generate'=subinstr(`generate',"e+","x10{sup:",1) if `toepsub';
     replace `generate'=`generate'+"}" if `toemsub' | `toepsub';    
   };
+  else if `"`esub'"'=="mdsuper" {;
+    replace `generate'=subinstr(`generate',"e-","x10^-",1) if `toemsub';
+    replace `generate'=subinstr(`generate',"e+","x10^",1) if `toepsub';
+    replace `generate'=`generate'+"^" if `toemsub' | `toepsub';    
+  };
+  
 };
 
 end;

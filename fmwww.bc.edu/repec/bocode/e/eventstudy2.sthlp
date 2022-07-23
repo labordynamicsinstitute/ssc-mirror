@@ -1,14 +1,18 @@
 {smcl}
-{* 31 October 2019}{...}
+{* 10 July 2022}{...}
 {hline}
-help for {hi:eventstudy2}
+help for {hi:eventstudy2beta}
 {hline}
 
 {title:eventstudy2 - A module to perform event studies with complex test statistics}
 
 EXAMPLES AND DATA ARE AVAILABLE BELOW. IT IS RECOMMENDED TO FRIST GET THESE EXAMPLES RUNNNING AND THEN APPLYING {cmd:eventstudy2} TO ONE'S OWN DATA. 
 
-NEW IN THIS VERSION: GRANK-T test for cumulative average abnormal returns according to Kolari and Pynnönen (2011); Adjusted Patell test (Kolari and Pynnönen (2010) adjustment); Wilcoxon (1945) signed ranks test; further:a substantially improved error output when input data does not match eventstudy2's criteria; the correction of an error in displaying significance levels of buy-and-hold returns; the correction of an error in calculating the bootstrapped skewness-adjusted t-ratio -> Thanks to Ludwig Erl for bringing this error to my attention.
+NEW IN THIS VERSION:
+
+1) Built-in version of nearmrg, which solves the problem of unstable sorts (see Statalist)
+2) Correction of a minor error in the calculation of the Kolari + Pynnonen (2010 ) adjustment; the prior version slightly overestimated the cross-correlation by not disregarding the i = j = 1.00 cross-correlations.
+3) Option KOLBlock (see below)
 
 {p 8 16 2}{cmd:eventstudy2}
 {it:security_id} {it:date} {cmd:using} {it:security_returns_file}{cmd:,} 
@@ -24,7 +28,7 @@ NEW IN THIS VERSION: GRANK-T test for cumulative average abnormal returns accord
 {cmdab:minevw(}{it:minimum_observations_event_window}{cmd:)} {cmdab:minesw(}{it:minimum_observations_estimation_window}{cmd:)}
 {cmdab:aar:file:(}{it:output_average_abn_ret_file}{cmd:)} {cmdab:car:file:(}{it:output_cum_average_abn_ret_file}{cmd:)}  {cmdab:ar:file:(}{it:output_abn_ret_file}{cmd:)} 
 {cmdab:cross:file:(}{it:output_cross_sec_file}{cmd:)} {cmdab:diag:nosticsfile:(}{it:output_diag_file}{cmd:)} {cmdab:graph:file:(}{it:output_graph_file}{cmd:)} {cmd:replace}
-{cmdab:log:returns} {cmdab:thin(}{it:thin_trading_threshold}{cmd:)} {cmdab:fill} {cmdab:nokol:ari} {cmdab:del:weekend}  {cmdab:dateline:threshold(}{it:dateline_threshold}{cmd:)}
+{cmdab:log:returns} {cmdab:thin(}{it:thin_trading_threshold}{cmd:)} {cmdab:fill} {cmdab:nokol:ari} {cmdab:kolb:lock(}{it:cross_sec_corr_block}{cmd:)} {cmdab:del:weekend}  {cmdab:dateline:threshold(}{it:dateline_threshold}{cmd:)}
 {cmdab:shift(}{it:maximum_event_date_shift}{cmd:)}
 {cmdab:garch} {cmdab:archo:ption:(}{it:arch_option}{cmd:)} {cmdab:garcho:ption:(}{it:garch_option}{cmd:)} {cmdab:archi:terate:(}{it:iterations}{cmd:)}
 {cmdab:para:llel} {cmdab:pclus:ters:(}{it:clusters}{cmd:)} {cmdab:proc:essors:(}{it:processors_StataMP}{cmd:)} {cmdab:prap:ath:(}{it:path_eventstudy2_parallel}{cmd:)}
@@ -197,6 +201,8 @@ first or after the last valid return observation in the file {it:security_return
 
 {p 4 8 2}{cmdab:nokol:ari} If this option is called, the Kolari and Pynnönen (2010, p. 4003) adjustment of the Boehmer et al. (1991, pp. 258-270) test is not calculated but set to 1. In this case
 the Boehmer test equals the Kolari test. Calling this option might increase the calculation of test statistics dramatically since resource requirements to calculate the Kolari and Pynnönen adjustment increase quadratically in the number of events.
+
+{p 4 8 2}{cmdab:kolb:lock} The Kolari and Pynnönen (2010, p. 4003) adjustment will be calculated under the assumption that abnormal returns have zero cross-correlations across the clusters defined by {it:cross_sec_corr_block}.
 
 {p 4 8 2}{cmdab:del:weekend} If this option is called, return observations at Saturdays and Sundays are never considered valid observations and are deleted from the analysis.
 

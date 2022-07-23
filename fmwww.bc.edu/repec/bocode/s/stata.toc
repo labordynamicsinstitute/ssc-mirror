@@ -54,6 +54,7 @@ p sdlim module to rescale variables measured with a limited rating scale
 p sdline module to plot SD line or reduced major axis
 p sdmxuse module to import data from statistical agencies using the SDMX standard
 p searchfor module to search for texts in selected or all string variables
+p searchr module to search for similar packages in R software within Stata Command Window
 p seast module to calculate tests for seasonality with a variable population at risk
 p segregation module to compute segregation indices
 p seldum module to transform indicator variables coefficients in semilog model

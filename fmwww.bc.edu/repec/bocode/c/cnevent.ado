@@ -23,7 +23,7 @@ program define cnevent
 
     syntax varlist(max=2 min=2) [,estw(string) eventw(string)  car(string) ar(string) index(string) estsmpn(int 50) filename(string) carg(string) t(string)] 
 	qui{
-	    tempname stkcd eventdate est_window_s est_window_e eve_window_s eve_window_e eve temp1 abss a  temp2 event_n temp3 file option temp4 stk Event_date num1 num before dol
+	    tempname stkcd eventdate est_window_s est_window_e eve_window_s eve_window_e eve temp1 abss a  temp2 event_n temp3 file option temp4 stk Event_date num before dol y ynum AR_t
 	    tokenize "`varlist'"
 	    local `stkcd' `1'
 	    local `eventdate' `2'
@@ -194,6 +194,9 @@ program define cnevent
                 gsort -date
                 gen time= -_n
                 save `before', replace
+				local `y' = ``Event_date''-365
+				keep if date > ``y''
+				local `ynum' = _N
                 restore
                 keep if date>= ``Event_date''
                 sort date  
@@ -203,17 +206,11 @@ program define cnevent
                 sort time
                 keep if time>=``est_window_s'' & time<=``eve_window_e''
 				local `num' = ``eve_window_e''-``eve_window_s''+1
-		    	tempname AR_t
                 local `AR_t' "(`ar'[1])"
-		
                 forvalues i = 2(1)``num'' {
                     local `AR_t' "``AR_t'' (`ar'[`i'])"
                 }
-				preserve
-				keep if time <= ``est_window_e''
-		        local `num1' = _N
-				restore
-	    	    if ``num1'' >= `estsmpn' {
+	    	    if ``ynum'' >= `estsmpn' {
                     reg rit rmt if time <= ``est_window_e''
                     predict `ar' if time >= ``eve_window_s'', res
                     keep if time >= ``eve_window_s''
@@ -264,9 +261,7 @@ program define cnevent
 				
 		    }
 		    }
-		egen `car' = rowtotal(`ar'*)
-		label var `car' "CAR[``eve_window_s'',``eve_window_e'']"	
-	    replace `car' = . if `car' == 0
+
 	    save ``file''.dta,replace
 		if `"`t'"' != ""{
 		local tn `t1'
@@ -283,7 +278,6 @@ program define cnevent
         putdocx save `t'.docx, replace
 		}
 		restore
-		
 		if `"`carg'"' !=""{
 		tempname c d s n name type
 		if ``eve_window_s'' < 0{
@@ -340,10 +334,11 @@ program define cnevent
 			}
 			else{
 				graph save ``name''.gph, replace	
-			}				
+			}
 		}
-	
-	    cwf default
+
 	}
+	cwf default
+	use "``file''",clear
     end
 	

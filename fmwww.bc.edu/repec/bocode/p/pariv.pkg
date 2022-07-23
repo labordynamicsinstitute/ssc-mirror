@@ -1,0 +1,18 @@
+d 'PARIV': module to perform nearly-collinear robust instrumental-variables regression
+d
+d  pariv fits a partitioned 2SLS regression that is more robust to
+d near collinearity than existing Stata 2SLS commands. 
+d
+d KW: instrumental variables
+d KW: robust
+d KW: collinearity
+d
+d Requires: Stata version 13.1
+d
+d Distribution-Date: 20220722
+d
+d Author:  Alwyn Young,   London School of Economics
+d Support: email a.young@@lse.ac.uk
+d
+f pariv.sthlp
+f pariv.ado

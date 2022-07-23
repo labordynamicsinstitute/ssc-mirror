@@ -19,6 +19,7 @@ p parallel module for Parallel Computing
 p paramed module to perform causal mediation analysis using parametric regression models
 p paran module to compute Horn's test of principal components/factors
 p paretofit module to fit a Type 1 Pareto distribution
+p pariv module to perform nearly-collinear robust instrumental-variables regression
 p parmest module to create new data set with one observation per parameter of most recent model
 p parmhet module to produce heterogeneity tests in parmest resultssets
 p parmparse module to parse a parameter name variable in a parmest resultsset

@@ -52,7 +52,7 @@ and {help char:{it:characteristic_name}} is the name of a {help char:variable ch
 and {it:esubstitution_rule} is any one of
 
 {p 8 21 2}
-{cmd:none} | {cmd:x10} | {cmd:rtfsuper} | {cmd:texsuper} | {cmd:htmlsuper} | {cmd:smclsuper}
+{cmd:none} | {cmd:x10} | {cmd:rtfsuper} | {cmd:texsuper} | {cmd:htmlsuper} | {cmd:smclsuper} | {cmd:mdsuper}
 
 {pstd}
 and {help bmjcip##headline_subopts:{it:headline_suboptions}} can be any subset of the {help bmjcip##headline_subopts:headline suboptions}
@@ -101,7 +101,7 @@ in decoded estimates, confidence limits, {it:P}-values and {it:Q}-values.
 These strings indicate a following exponent (conventionally presented in documents as a superscript),
 and are especially important for very small {it:P}-values and {it:Q}-values.
 The {it:esubstitution_rule} may be
-{cmd:none}, {cmd:x10} (the default), {cmd:rtfsuper}, {cmd:texsuper}, {cmd:htmlsuper}, or {cmd:smclsuper}.
+{cmd:none}, {cmd:x10} (the default), {cmd:rtfsuper}, {cmd:texsuper}, {cmd:htmlsuper}, {cmd:smclsuper}, or {cmd:mdsuper}.
 The substitution rules are the same as the ones documented in the help for
 the {cmd:esub()} option of {helpb sdecode}.
 The {cmd:x10} substitution rule is intended for users
@@ -114,8 +114,10 @@ who intend to output the decoded confidence intervals, {it:P}-values and {it:Q}-
 The {cmd:htmlsuper} substitution rule is intended for users
 who intend to output the decoded confidence intervals, {it:P}-values and {it:Q}-values to a HTML document.
 The {cmd:smclsuper} substitution rule is intended for users
-who intend to output their confidence intervals to {help graph_text:Stata graphics text},
+who intend to output the decoded confidence intervals, {it:P}-values and {it:Q}-values to {help graph_text:Stata graphics text},
 which is a branch of {help smcl:the Stata Markup and Control Language (SMCL)}.
+The {cmd:mdsuper} substitution rule is intended for users
+who intend to output the decoded confidence intervals, {it:P}-values and {it:Q}-values to a Markdown document.
 
 {phang}
 {cmd:elzero} specifies that leading zeros in exponents in decoded estimates, confidence limits and {it:P}-values will not be removed.
@@ -372,8 +374,8 @@ allowing the decoded string variables to be included in a table in an XHTML docu
 {title:Author}
 
 {pstd}
-Roger Newson, National Heart and Lung Institute, Imperial College London, UK.{break}
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, King's College London, UK.{break}
+Email: {browse "mailto:roger.newson@kcl.ac.uk":r.newson@kcl.ac.uk}
 
 
 {marker references}{title:References}

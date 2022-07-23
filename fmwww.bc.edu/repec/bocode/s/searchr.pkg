@@ -1,0 +1,30 @@
+d 'SEARCHR': module to search for similar packages in R software within Stata Command Window
+d
+d      searchr make it easy for users to search the related
+d functions in R within Stata command window.  The source    data
+d comes from R CRAN. Specify, this function is designed to find the
+d related packages based on similar text    patterns. Two
+d approaches are introduced.  The first one is based on the matchit
+d routine. All the default options    in this function are used.
+d The second one is based on the the same word count between
+d keywords and text. 
+d
+d KW: instrumental variables
+d KW: robust
+d KW: collinearity
+d
+d Requires: Stata version 15 and matchit from SSC (q.v.)
+d
+d Distribution-Date: 20220722
+d
+d Author:    Wanhai, You,   School of Economics and Management, Fuzhou University
+d Support: email  ywhfzu@@163.com
+d
+d Author:   Jianping, Li ,  School of Economics and Management, University of Chinese Academy of Sciences
+d Support: email  ljp@@ucas.ac.cn
+d
+d Author:    Yujun, Lian,  Lingnan College, Sun Yat-Sen University
+d Support: email  arlionn@@163.com
+d
+ ../r/searchr.sthlp
+ ../r/searchr.ado

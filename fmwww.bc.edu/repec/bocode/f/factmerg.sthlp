@@ -28,7 +28,7 @@ apart from {cmd:generate()}, {cmd:replace} and {cmd:delimiters()}.
 {title:Description}
 
 {pstd}
-{cmd:factmerg} takes, as input, a list of variables (numeric or string), representing discrete factors in a model.
+{cmd:factmerg} takes, as input, a list of variables (numeric or string), representing discrete factors.
 It creates, as output, one to three string variables, containing, in each observation,
 a value, a factor name or a factor variable label, respectively,
 copied from the first factor variable in the input variable list with a non-missing value for that observation.
@@ -173,8 +173,8 @@ containing, in each observation, the name, label and value of the factor.
 {title:Author}
 
 {pstd}
-Roger Newson, Imperial College London, UK.
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, King's College London, UK.
+Email: {browse "mailto:roger.newson@kcl.ac.uk":roger.newson@kcl.ac.uk}
 
 
 {marker references}{title:References}
