@@ -9,9 +9,9 @@ d routine. All the default options    in this function are used.
 d The second one is based on the the same word count between
 d keywords and text. 
 d
-d KW: instrumental variables
-d KW: robust
-d KW: collinearity
+d KW: programming
+d KW: search
+d KW: R language
 d
 d Requires: Stata version 15 and matchit from SSC (q.v.)
 d
@@ -26,5 +26,5 @@ d
 d Author:    Yujun, Lian,  Lingnan College, Sun Yat-Sen University
 d Support: email  arlionn@@163.com
 d
- ../r/searchr.sthlp
- ../r/searchr.ado
+f searchr.sthlp
+f searchr.ado
