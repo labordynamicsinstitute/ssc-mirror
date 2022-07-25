@@ -47,6 +47,7 @@ p hist3 module to draws histograms for intervals of different size
 p histbox module to generate histogram with boxplot
 p historaj module to produce histogram with descriptive statistics
 p histplot module to produce histogram for frequency distribution
+p hkstock module to download stock names and codes for Hong Kong listed companies
 p hl module to compute Hodges and Lehman (1963) robust measure of location
 p hlist module for horizontally listing values
 p hlm module to invoke and run HLM v6 software from within Stata

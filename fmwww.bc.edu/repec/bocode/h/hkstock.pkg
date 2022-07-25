@@ -1,0 +1,22 @@
+d 'HKSTOCK': module to download stock names and codes for Hong Kong listed companies
+d
+d  Downloads stock names and stock codes for Hong Kong's listed
+d companies. 
+d
+d KW: data management
+d KW: Hong Kong
+d KW: stocks
+d KW: equities
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20220724
+d
+d Author: Jiaqi Li, China Stata Club
+d Support: email jeremylee_41@@163.com
+d
+d Author:  Zijian Li
+d Support: email 
+d
+f hkstock.ado
+f hkstock.sthlp

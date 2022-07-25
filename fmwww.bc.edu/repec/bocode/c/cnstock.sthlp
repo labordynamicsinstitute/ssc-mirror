@@ -7,8 +7,7 @@
 
 
 {phang}
-{bf:cnstock} {hline 2} Downloads stock names and stock codes for China 's listed companies from China Finance Information
-                       Network(http://cfi.cn/).
+{bf:cnstock} {hline 2} Downloads stock names and stock codes for China 's listed companies from eastmoney.com.
 
 
 {title:Syntax}
@@ -28,13 +27,15 @@
 
 
 {pstd}{it:exchange} exchange is Chinese Securities Market. For each valid exchange, they represent different meanings of security markerts.Examples of Exchange and the names of the Exchange are as following: {p_end}
+{pstd} {hi:A}:Shanghai, Shenzhen and Beijing A-share  {p_end}
 {pstd} {hi:SHA}:Shanghai A-share  {p_end}
-{pstd} {hi:SZM}:Shenzhen Stock Exchange {p_end}
-{pstd} {hi:SZSM}:Small and Medium-sized Enterprises of Shenzhen {p_end}
+{pstd} {hi:SZA}:Shenzhen A-share {p_end}
+{pstd} {hi:BJA}:Beijing A-share {p_end}
 {pstd} {hi:SZGE}:Growth Enterprise Market of Shenzhen {p_end}
+{pstd} {hi:SHSTAR}:Shanghai STAR Market {p_end}
+{pstd} {hi:B}:Shanghai and Shenzhen B-share {p_end}
 {pstd} {hi:SHB}:Shanghai B-share {p_end}
 {pstd} {hi:SZB}:Shenzhen B-share {p_end}
-
 
 {pstd}You can download stock names and stock codes for all the listed firms if choosing {it: command all} markets {p_end}
 
@@ -54,25 +55,25 @@
 It will extract a list of all the stock codes and stock names for all the A-share firms listed in Shanghai.
 
 {phang}
-{stata `"cnstock SZM"'}
+{stata `"cnstock SZGE"'}
 {p_end}
 
 {pstd}
-It will extract a list of all the stock codes and stock names for all the firms listed in Shenzhen Exchange's mainboard.
+It will extract a list of all the stock codes and stock names for all the firms listed in Shenzhen Exchange's Growth Enterprise Board.
 
 {phang}
-{stata `"cnstock SZM SZSM SZGE"'}
+{stata `"cnstock SZA SHA"'}
 {p_end}
 
 {pstd}
-It will extract a list of all the stock codes and stock names for all the firms listed in Shenzhen's mainboard,Small and Medium-sized Enterprises board and the Growth Enterprise Board.
+It will extract a list of all the stock codes and stock names for all the firms of Shenzhen's Shanghai's A-share.
 
 {phang}
-{stata `"cnstock all,path(D:/temp/)"'}
+{stata `"cnstock all, path(D:/temp/)"'}
 {p_end}
 
 {pstd}
-It will extract a list of all the stock codes and stock names for all the the listed firms in China, whether Shanghai or Shenzhen, A-share or B-share, etc, with output files saving to folder D:/temp/.
+It will extract a list of all the stock codes and stock names for all the the listed firms in China, whether Shanghai, Shenzhen or Beijing, A-share or B-share, etc, with output files saving to folder D:/temp/.
 
 
 

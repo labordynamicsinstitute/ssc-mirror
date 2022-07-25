@@ -28,21 +28,21 @@ program define cnstock
 		disp `"`path'"'
 	}
 
-	if "`exchange'"== "all" {
-		local exchange SHA SZM SZSM SZGE SHB SZB
-	}
-
 	qui {
 		tempfile `exchange'
 
 		foreach name in `exchange'{
 			
-			if "`name'" == "SHA" local c "11"
-			else if "`name'" == "SZM" local c "12"
-			else if "`name'" == "SZSM" local c "13"
-			else if "`name'" == "SZGE" local c "14"
-			else if "`name'" == "SHB" local c "15"
-			else if "`name'" == "SZB" local c "16"
+			if "`name'" == "SHA" local fs = "m:1+t:2,m:1+t:23"
+			else if "`name'" == "SZA" local fs = "m:0+t:6,m:0+t:80"
+			else if "`name'" == "BJA" local fs = "m:0+t:81+s:2048"
+			else if "`name'" == "SZGE" local fs = "m:0+t:80"
+			else if "`name'" == "SHSTAR" local fs = "m:1+t:23"
+			else if "`name'" == "A" local fs "m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23,m:0+t:81+s:2048"
+			else if "`name'" == "SZB" local fs = "m:0+t:7"
+			else if "`name'" == "SHB" local fs = "m:1+t:3"
+			else if "`name'" == "B" local fs = "m:0+t:7,m:1+t:3"
+			else if "`name'" == "all" local fs = "m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23,m:0+t:81+s:2048,m:0+t:7,m:1+t:3"
 			else {
 				disp as error `"`name' is an invalid exchange"'
 				exit 601
@@ -50,19 +50,14 @@ program define cnstock
 
 			clear
 			set obs 1
-			gen v = fileread("https://quote.cfi.cn/stockList.aspx?t=`c'")
-			replace v = ustrregexs(0) if ustrregexm(v, "<div id='divcontent' runat='server'>.*")
-			if c(version) >= 16 mata spredata()
-			else mata spredata2()
-			gen stknm = ustrregexs(1) if ustrregexm(v, `".html">(.*?)\(\d"')
-			gen stkcd = ustrregexs(1) if ustrregexm(v, "\((.*?)\)")
+			gen v = fileread("https://20.push2.eastmoney.com/api/qt/clist/get?pn=1&pz=10000&web&fs=`fs'&fields=f12,f14")
+			replace v = ustrregexs(1) if ustrregexm(v, `""diff":\{"0":\{(.*?)\}\}\}\}"')
+			replace v = ustrregexra(v, `""\d+":"', "")
+			mata spredata()
+			gen stknm = ustrregexs(1) if ustrregexm(v, `""f14":"(.*?)""')
+			gen stkcd = ustrregexs(1) if ustrregexm(v, `""f12":"(.*?)""')
 			drop v
-			keep if ustrregexm(stkcd, "^000") | ustrregexm(stkcd, "^001") | ustrregexm(stkcd, "^002") | ustrregexm(stkcd, "^003") | ustrregexm(stkcd, "^2") | ustrregexm(stkcd, "^3") | ustrregexm(stkcd, "^6") |ustrregexm(stkcd, "^9")
-			drop if ustrregexm(stkcd, "\D")
 			destring stkcd, replace
-			if "`name'" == "SZM" {
-			    drop if stkcd >= 100000
-			}
 			format %06.0f stkcd
 			save `"``name''"', replace
 		}
@@ -71,8 +66,7 @@ program define cnstock
 		foreach name in `exchange' {
 			append using `"``name''"'
 		}
-		drop if stkcd == 963 & stknm == "中证下游"
-
+		compress
 		label var stkcd stockcode
 		label var stknm stockname
 	}
@@ -83,28 +77,17 @@ end
 
 mata
 void function spredata() {
+    
     string matrix A
 	string matrix B
 	
 	A = st_sdata(., "v", .)
-	B = ustrsplit(A, "</a></td>")
-	stata("drop in 1")
-	st_addobs(cols(B))
-	st_sstore(., "v", B')
-}
-
-
-void function spredata2() {
-    string matrix A
-	string matrix B
-	
-	A = st_sdata(., "v", .)
-	B = substr(A, 1, strpos(A, "</a></td>") - 1)
-	A = subinstr(A, B + "</a></td>", "", 1)
+	B = substr(A, 1, strpos(A, "},{") - 1)
+	A = subinstr(A, B + "},{", "", 1)
 	do {
-		B = B, substr(A, 1, strpos(A, "</a></td>") - 1)
-		A = subinstr(A, B[1, cols(B)] + "</a></td>", "", 1)
-	} while (strpos(A, "</a></td>") != 0)
+		B = B, substr(A, 1, strpos(A, "},{") - 1)
+		A = subinstr(A, B[1, cols(B)] + "},{", "", 1)
+	} while (strpos(A, "},{") != 0)
 	B = B, A
 	stata("drop in 1")
 	st_addobs(cols(B))
