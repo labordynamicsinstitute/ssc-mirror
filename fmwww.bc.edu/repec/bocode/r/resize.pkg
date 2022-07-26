@@ -1,0 +1,24 @@
+d 'RESIZE': module to change the graph size but keep the font size unchanged
+d
+d  When changing the sizes of graphs and when combining different
+d graphs, Stata automatically changes the font size (in absolute
+d terms). With this new ado, it becomes easier to control font size
+d and keep it coherent within and, most of all, between figures. 
+d
+d KW: graphics
+d KW: graph size
+d KW: font
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20220724
+d
+d Author: Ansgar Hudde, University of Cologne
+d Support: email hudde@@wiso.uni-koeln.de
+d
+f resize.ado
+f resizec1leg.ado
+f resizecombine.ado
+f resize.sthlp
+f resizec1leg.sthlp
+f resizecombine.sthlp

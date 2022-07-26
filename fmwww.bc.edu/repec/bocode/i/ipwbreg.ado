@@ -6,7 +6,7 @@ version 16.0;
  creating inverse probability weights as requested.
  This program allows fweights, iweights or pweights.
 *! Author: Roger Newson
-*! Date: 20 December 2021
+*! Date: 24 July 2022
 */
 
 if(replay()){;
@@ -37,6 +37,7 @@ else{;
 syntax varlist(min=1 max=9999 numeric fv ts) [if] [in] [fweight iweight pweight]
   [,
   noSTABfact
+  LTRim(numlist max=1 >=0 <=1) RTRim(numlist max=1 >=0 <=1)
   PRObability(name) XB(name) IPWeight(name) ATETweight(name) ATECweight(name) OVWeight(name)
   noCONStant
   *
@@ -70,7 +71,7 @@ if !inlist(_rc,0,430) {;
 local depvar=e(depvar);
 cap assert inlist(`depvar',0,1) if `touse';
 if _rc {;
-  disp as error "Depemdent variable `depvar' is not binary";
+  disp as error "Dependent variable `depvar' is not binary";
   error 498;
 };
 
@@ -98,10 +99,10 @@ ereturn scalar stabfac1=`stabfac1';
 qui {;
   predict double `probability' if `touse';
   if "`xb'"!="" predict double `xb' if `touse', xb;
-  foreach X of var `probability' `xb' {;
-    local Xlab: var lab `X';
-    lab var `X' "`Xlab' (primary)";
-  };
+  * Trim probabilities if requested *;
+  if "`ltrim'"!="" replace `probability'=max(`probability',`ltrim') if `touse' & !missing(`probability');
+  if "`rtrim'"!="" replace `probability'=min(`probability',`rtrim') if `touse' & !missing(`probability');
+  * Compute weights if requested *;
   if "`ipweight'"!="" gene double `ipweight'=cond(`depvar',`stabfac1'/`probability',`stabfac0'/(1-`probability')) if `touse';
   if "`atetweight'"!="" gene double `atetweight'=cond(`depvar',`stabfac1',`stabfac0'*`probability'/(1-`probability')) if `touse';
   if "`atecweight'"!="" gene double `atecweight'=cond(`depvar',`stabfac1'*(1-`probability')/`probability',`stabfac0') if `touse';

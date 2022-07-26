@@ -144,6 +144,7 @@ p resetxt Module to Compute Panel Data REgression Specification Error Tests (RES
 p reshape3 module to enhance reshape for multilevel data
 p reshape7 module to provide improved reshape
 p reshape8 module to reshape while preserving variable labels
+p resize module to change the graph size but keep the font size unchanged
 p resp module to compute Index of Relative Specialization
 p respdiff module for generating response differentiation indices
 p reswage module to estimate a reservation wage model with endogenous selection

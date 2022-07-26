@@ -3,7 +3,7 @@
 help for {cmd:docxtab} {right:(Roger Newson)}
 {.-}
  
-{title:List variables to a Word table with head or foot rows from {help char:characteristics}}
+{title:List variables to a {cmd:.docx} table with head or foot rows from {help char:characteristics}}
 
 {p 8 21 2}
 {cmd:docxtab} [ {varlist} ] {ifin} , {opt tab:lename(tablename)} [
@@ -28,13 +28,13 @@ including {cmd:varnames} and {cmd:obsno}.
 
 {pstd}
 {cmd:docxtab} lists the variables in the {varlist} (or all variables, if the {varlist}
-is absent) to a Microsoft Word table acceptable to {helpb putdocx_table:putdocx table},
+is absent) to an Office Open XML ({cmd:.docx}) table acceptable to {helpb putdocx_table:putdocx table},
 with added header rows above and footer rows below,
 extracted from {help char:variable characteristics}.
 These characteristics may be multiple
 (allowing multiple header and footer rows),
 and each characteristic may be set for multiple variables by the {help ssc:SSC} package {helpb chardef}.
-The generated Word table can then be modified using other {helpb putdocx_table:putdocx table} commands,
+The generated {cmd:.docx} table table can then be modified using other {helpb putdocx_table:putdocx table} commands,
 to change the formatting of rows, columns, or cells.
 
 
@@ -42,9 +42,9 @@ to change the formatting of rows, columns, or cells.
 
 {phang}
 {opt tablename(tablename)} must be specified.
-It specifies a table name for the generated Word table,
+It specifies a table name for the generated {cmd:.docx} table,
 acceptable to {helpb putdocx_table:putdocx table}.
-This Word table can then be modified using further {helpb putdocx_table:putdocx table} commands,
+This {cmd:.docx} table can then be modified using further {helpb putdocx_table:putdocx table} commands,
 to modify formats of rows, columns, and cells.
 
 {phang}
@@ -80,9 +80,9 @@ For instance, {cmd:footformat(italic)} specifies that the footer rows will all b
 {title:Remarks}
 
 {pstd}
-{cmd:docxtab} is intended to give the Microsoft Word user some of the functionality of {helpb listtab},
+{cmd:docxtab} is intended to give the{cmd:.docx} user some of the functionality of {helpb listtab},
 which is described in {help docxtab##docxtab_newson2012:Newson (2012)}.
-{helpb listtab} and {cmd:docxtab} freq/uently use {help char:variable characteristics},
+{helpb listtab} and {cmd:docxtab} frequently use {help char:variable characteristics},
 frequently set using the {help ssc:SSC} package {helpb chardef},
 to create header and footer rows for tables.
 The packages {helpb listtab}, {helpb chardef}, and {cmd:docxtab}
@@ -94,7 +94,7 @@ which are described in {help docxtab##docxtab_newson2012:Newson (2012)}, {help d
 {title:Examples}
 
 {pstd}
-The following example demonstrates the creation of a Microsoft Word document,
+The following example demonstrates the creation of a {cmd:.docx} document,
 containing a table with one header row extracted from a characteristic.
 The table has 1 row for each of the 22 non-US car models in the {helpb sysuse:auto} data.
 
@@ -131,7 +131,7 @@ from multiple variable characteristics.
 {title:Saved results}
 
 {pstd}
-{cmd:listtab_rstyle} saves the following in {cmd:r()}:
+{cmd:docxtab} saves the following in {cmd:r()}:
 
 {synoptset 15 tabbed}{...}
 {p2col 5 15 19 2: Scalars}{p_end}
@@ -155,7 +155,7 @@ is equal to the sum of {cmd:r(nhead)}, {cmd:r(nbody)}, and {cmd:r(nfoot)}
 plus one more row of variable names if the option {cmd:varnames} is specified.
 The total number of columns in the table {cmd:r(ncol)}
 is equal to the total number of variables in the input {varlist},
-plus one mor column of table body row sequence numbers,
+plus one more column of table body row sequence numbers,
 if the {cmd:obsno} option is specified.
 The options {cmd:varnames} and {cmd:obsno}
 will probably not be necessary very often.

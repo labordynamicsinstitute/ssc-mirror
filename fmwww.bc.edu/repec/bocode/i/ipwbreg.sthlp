@@ -11,7 +11,7 @@ help for {cmd:ipwbreg}{right:(Roger Newson)}
 {weight}
 {ifin}
 [,
-  {cmd:no}{opt stab:fact}
+  {cmd:no}{opt stab:fact} {opt ltr:im(#)} {opt rtr:im(#)}
   {break}
   {opth pro:bability(newvar)}
   {opth xb(newvar)}
@@ -54,13 +54,23 @@ supplied in {helpb xlink}.
 If {cmd:nostabfact} is not specified,
 then {cmd:a_0} is set to the proportion of observations in the estimation sample
 in which the dependent binary variable {depvar} is 0,
-and {cmd:a_1} is set to the proportion of ovservations in the estimation sample
+and {cmd:a_1} is set to the proportion of observations in the estimation sample
 in which the dependent variable is 1.
 These proportions are weighted by the {weight} expression,
 if weights are present.
 For an explanation of the role of stabilization factors in weighting methods,
 see
 {help ipwbreg##ipwbreg_methform:Methods and formulas} below.
+
+{phang}
+{opt ltrim(#)} specifies a minimum predicted probability,
+such that predicted probabilities below it will be reassinged (or left-trimmed) to it.
+It must be between 0 and 1 (inclusive).
+
+{phang}
+{opt rtrim(#)} specifies a maximum predicted probability,
+such that predicted probabilities above it will be reassinged (or right-trimmed) to it.
+It must be between 0 and 1 (inclusive).
 
 {phang}
 {opth probability(newvar)}, {opth xb(newvar)}, {opth ipweight(newvar)},
