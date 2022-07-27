@@ -1,20 +1,6 @@
-*! v1 24 jun 2022
-cap mata: mata drop createable
-mata:
-void createtable(string mat) { //create a table with mean se CI and z-value basing on the bootstrapped values stored in stata matrix mat (it replaces mat)
-	real matrix Mat, mean, sd
-	string matrix colstripe
-	Mat=st_matrix(mat)
-	mean=mean(Mat)
-	sd=sqrt(diagonal(variance(Mat)))'
-	colstripe=st_matrixcolstripe(mat)
-	Mat=mean\sd\(mean-1.96*sd)\(mean+1.96*sd)\ (mean:/sd)
-	st_matrix(mat,Mat)
-	st_matrixcolstripe(mat,colstripe)
-	st_matrixrowstripe(mat, (J(5,1,""),("mean","sd",  "95% CI lcl" ,"95% CI ucl", "z")'))
-}
+*! v2 27 jul 2022
 
-end
+
 /***************THESE FUNCTIONS ARE FOR THE NON-PARAMETRIC BOOTSTRAP*****/
 cap pro drop cwmbootstrap 
 pro def cwmbootstrap, rclass
@@ -39,6 +25,7 @@ local xnormal `e(xnormal)'
 local xnormmodel `e(xnormmodel)'
 local xbinomial `e(xbinomial)'
 local xmultinomial_fv `e(xmultinomial_fv)'
+local xmultinomial `e(xmultinomial)'
 local xpoisson `e(xpoisson)'
 local convcrit `e(convcrit)'
 local nmulti=e(nmulti)
@@ -47,7 +34,7 @@ local k=e(k)
 tempname _beta _p_binomial _mu _lambda 
 if ("`xmultinomial_fv'"!="") { //loading multinomial returned results
 		forval i=1/`nmulti' {
-		tempname MULT`i'
+		tempname _mult`i'
 		local rownames`i':  rownames e(p_multi_`i')
 	}
 }
@@ -61,53 +48,62 @@ forval rep=1/`nreps' {
 
 	if !_rc {
 			noi di ".", _continue 
-			if ("`glmfamily'"!="") matrix `_beta'=nullmat(`_beta') \ `b'
-			if ("`xnormal'"!="") matrix `_mu'=nullmat(`_mu') \ `mu'
-			if ("`xbinomial'"!="") matrix `_p_binomial'=nullmat(`_p_binomial') \ `p_binomial'
-			if ("`xpoisson'"!="") matrix `_lambda'=nullmat(`_lambda') \ `lambda'
-			if ("`xmultinomial_fv'"!="") {
-				
+			if ("`depvar'"!="") matrix `_beta'=nullmat(`_beta') \ `b'
+			if ("`xnormal'"!="") {
+				matrix `mu'	=`mu''
+				matrix `_mu'=nullmat(`_mu') \ vec(`mu')'			
+				}
+			if ("`xbinomial'"!="") matrix `_p_binomial'=nullmat(`_p_binomial') \ vec(`p_binomial')'
+			if ("`xpoisson'"!="") matrix `_lambda'=nullmat(`_lambda') \vec(`lambda')'
+			if ("`xmultinomial_fv'"!="") {				
 					forval i=1/`nmulti' {
-						tempname _app p_mult`i'
-						
-							forval j=1/`k' {
-								matrix `_app'=`p_multi_`i''[.,"g`j'"]    
-								matrix roweq `_app'="g`j'"
-								//noi di in red "`:rownames `e(p_multi_`i')'''"
-								matrix rownames `_app'= `rownames`i''
-								matrix `p_mult`i''=nullmat(`p_mult`i''), `_app''
-											}
-					
-					matrix `MULT`i''=nullmat(`MULT`i'') \ `p_mult`i''
-		//matlist `_p_multi_`i''
-					}
+					matrix rownames `p_multi_`i''=`rownames`i''
+					matrix `_mult`i''=nullmat(`_mult`i'') \ vec(`p_multi_`i'')'
+					}				
+			}
 		}
-	}
 	else noi di "x", _continue
 	if (mod(`rep',10)==0) noi di as result "`rep'"
 }
-if ("`glmfamily'"!="") {
-	mata: createtable("`_beta'")
-	return matrix b=`_beta'
-	}
-	
-if ("`xpoisson'"!="") {
-	mata: createtable("`_lambda'")
-	return matrix lambda=`_lambda'
+tempname _bb _VV
+if ("`depvar'"!="") {
+		mata: _summary_stat_bootstrap("`_beta'","`_bb'","`_VV'")
+		di as result "GLM estimates",  _newline   
+		_coef_table , bmatrix(`_bb') vmatrix(`_VV') neq(`k') 
+		matrix `_beta'=r(table)
+		return matrix b=`_beta'
 	}
 	if ("`xnormal'"!="") {
-		mata: createtable("`_mu'")
+		mata: _summary_stat_bootstrap("`_mu'","`_bb'","`_VV'")
+		di as result "Mean of Gaussian covariates (marginal distribution)",  _newline   
+		_coef_table , bmatrix(`_bb') vmatrix(`_VV') neq(`k')
+		matrix `_mu'=r(table)
 		return matrix mu=`_mu'
 	}
+if ("`xpoisson'"!="") {
+	mata: _summary_stat_bootstrap("`_lambda'","`_bb'","`_VV'")
+	di as result "Mean of Poisson covariates (marginal distribution)",  _newline   
+	_coef_table , bmatrix(`_bb') vmatrix(`_VV') neq(`k') 
+	matrix `_lambda'=r(table)
+	return matrix lambda=`_lambda'
+	}
+
 if ("`xbinomial'"!="") {
-	mata: createtable("`_p_binomial'")
-	return matrix p_binomial=`_p_binomial'
+		mata: _summary_stat_bootstrap("`_p_binomial'","`_bb'","`_VV'")
+		di as result "Mean of Binomial covariates (marginal distribution)",  _newline  
+		_coef_table , bmatrix(`_bb') vmatrix(`_VV') neq(`k')
+		matrix `_p_binomial'=r(table)
+		return matrix p_binomial=`_p_binomial'
 	}
 		if ("`xmultinomial_fv'"!="") {
 			
 				forval i=1/`nmulti' {
-				mata: createtable("`MULT`i''")	
-				return matrix p_multi_`i'=`MULT`i''
+					local multvar: word `i'  of `xmultinomial' 
+					di as result "Mean of Multinomial covariate `multvar'",  _newline  
+					mata: _summary_stat_bootstrap("`_mult`i''","`_bb'","`_VV'")
+					_coef_table , bmatrix(`_bb') vmatrix(`_VV') neq(`k')
+					matrix `_mult`i''=r(table)
+					return matrix p_multi_`i'=`_mult`i''
 				}
 				
 		}

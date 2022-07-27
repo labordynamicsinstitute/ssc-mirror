@@ -47,6 +47,7 @@ p screen module to quickly identify possible outliers based on the interquartile
 p scsomersd module to compute rank statistics for scenario comparisons
 p scto module to provide utility functions for data collected using SurveyCTO 
 p sctree module to implement classification trees via optimal pruning, bagging, random forests, and boosting methods
+p scul module to implement regularized synthetic control (using LASSO) estimators for single and multiple-treated unit settings
 p sdecode module to decode a numeric variable into a string variable
 p sdid module to perform synthetic difference-in-differences estimation, inference, and visualization
 p sdist module to simulate the Central Limit Theorem

@@ -1,4 +1,5 @@
-*! v1 24 jun 2022
+*! v2  27 jul 2022
+
 cap pro drop cwmglm_predict
 cap pro drop cwmglm_estimate
 cap pro drop cwmglm_display

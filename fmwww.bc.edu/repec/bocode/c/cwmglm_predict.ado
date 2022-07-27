@@ -1,4 +1,5 @@
-*! v1 24 jun 2022
+*! v2  27 jul 2022
+
 //this program assigns observations to classing by calculating the maximum a posteriori probabilities 
 pro def cwmglm_predict
 syntax newvarname (min=1 max=1) 
