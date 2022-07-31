@@ -1,4 +1,4 @@
-/* cmp 8.6.6 12 October 2021
+/* cmp 8.7.4 28 July 2022
    Copyright (C) 2007-21 David Roodman
 
    This program is free software: you can redistribute it and/or modify
@@ -190,7 +190,7 @@ class cmp_model {
 	struct smatrix colvector X // NEq-vector of data matrices--needed only in gfX() estimation, to expand scores to one per regressor
   struct smatrix colvector sTScores, sGammaScores
 
-	void new(), cmp_init(), BuildXU(), BuildTotalEffects(), 
+	void new(), BuildXU(), BuildTotalEffects(), 
 				setReverse(), setSigXform(), setQuadTol(), setQuadIter(), setGHKType(), setMaxCuts(), setindVars(), setLtVars(), setUtVars(), setyLVars(), 
 				setGHKAnti(), setGHKDraws(), setGHKScramble(), setQuadrature(), setd(), setL(), settodo(),
 				setREAnti(), setREType(), setREScramble(), setEqs(), setGammaI(), setNumEff(), setNumMprobitGroups(), setNumRoprobitGroups(),
@@ -205,13 +205,13 @@ class cmp_model {
   static pointer (real matrix) rowvector SpGr(), SpGrKronProd()
   static pointer colvector GQNn1d(), GQNw1d(), KPNn1d(), KPNw1d()
 	static void _st_view()
-	real scalar getGHKDraws()
+	real scalar getGHKDraws(), cmp_init()
 }
 
 void cmp_model::new()
 	Adapted = AdaptivePhaseThisEst = WillAdapt = AdaptNextTime = HasGamma = ghkScramble = REScramble = 0
 
-void cmp_model::setcol(pointer(real matrix) scalar pX, real rowvector c, real colvector v)
+void cmp_model::setcol(pointer(real matrix) scalar pX, real rowvector c, real matrix v)
   if (cols(*pX)==cols(c))
     pX = &v
   else
@@ -366,7 +366,7 @@ real matrix cmp_model::_PermuteTies(real colvector Indexes, real matrix TiedRang
 }
 
 // given indexes for variables, and dimension of variance matrix, return corresponding indexes in vectorized variance matrix
-// e.g., (1,3) ->((1,1), (3,1), (3,3)) -> (1, 3, 6)
+// e.g., (1,3) -> ((1,1), (3,1), (3,3)) -> (1, 3, 6)
 real rowvector cmp_model::vSigInds(real rowvector inds, real scalar d)
 	return (vech(invvech(1::d*(d+1)*0.5)[inds,inds])')
 
@@ -1112,7 +1112,7 @@ void cmp_model::BuildTotalEffects(real scalar l) {
 		if (RE->HasRC) {
 			pUT = &RE->J_N_NEq_0
 			if (cols(RE->REInds))
-			  setcol(pUT, RE->REEqs, RE->U[r].M * RE->T[, RE->REInds]) // REs
+  			setcol(pUT, RE->REEqs, RE->U[r].M * RE->T[, RE->REInds]) // REs
 		} else
 			pUT                              = & (RE->U[r].M * RE->T)     // REs
 
@@ -1719,7 +1719,7 @@ void cmp_model::gf1(transmorphic M, real scalar todo, real rowvector b, real col
 	}
 }
 
-void cmp_model::cmp_init(transmorphic M) {
+real scalar cmp_model::cmp_init(transmorphic M) {
 	real scalar i, l, ghk_nobs, d_ghk, eq1, eq2, c, m, j, r, k, d_oprobit, d_mprobit, d_roprobit, start, stop, PrimeIndex, Hammersley, NDraws, HasRE, cols, d2
 	real matrix Yi, U
 	real colvector remaining, S
@@ -1840,7 +1840,7 @@ void cmp_model::cmp_init(transmorphic M) {
 	Primes = 2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109
 	if (L>1 & REType != "random" & length(Primes) < sum(NumEff) - 1 - (ghkType=="hammersley" | REType=="hammersley")) {
 		errprintf("Number of unobserved variables to simulate too high for Halton-based simulation. Try {cmd:retype(random)}.\n")
-		return 
+		return(1001) 
 	}
 	PrimeIndex = 1
 
@@ -2245,6 +2245,8 @@ void cmp_model::cmp_init(transmorphic M) {
 
 	if ((ghk_nobs & (ghkType=="random" | ghkType=="ghalton")) | (L>1 & (REType=="random" | REType=="ghalton")))
 		printf("Starting seed for random number generator = %s\n", st_strscalar("c(seed)"))
+
+  return(0)
 }
 
 
@@ -2332,10 +2334,15 @@ void cmp_model::SaveSomeResults() {
 			br = br, (SigXform? ln(sig), atanh(rho) : sig, rho)[keep]
 			_colstripe = _colstripe \ ((tokens(st_local("sigparams"+strofreal(l)))' \ tokens(st_local("rhoparams"+strofreal(l)))')[keep] , J(rows(keep), 1, "_cons"))
 			dbr_db = blockdiag(dbr_db, dOmega_dSig[keep,])
-			keep = colshape(rowsum(dOmega_dSig[|.,.\k*d,.|]:!=0):>0, k) // get retained sig params by eq
-			NumEff = NumEff \ rowsum(keep)'
-			for (j=d; j; j--)
-				st_global("e(EffNames_reducedform"+strofreal(l)+"_"+strofreal(j)+")", invtokens(tokens(st_local("cmp_rcu"+strofreal(l)))[selectindex(keep[j,])]))
+
+			if (RE->NSigParams) {
+        keep = colshape(rowsum(dOmega_dSig[|.,.\k*d,.|]:!=0):>0, k) // get retained sig params by eq
+        NumEff = NumEff \ rowsum(keep)'
+        for (j=d; j; j--)
+          st_global("e(EffNames_reducedform"+strofreal(l)+"_"+strofreal(j)+")", invtokens(tokens(st_local("cmp_rcu"+strofreal(l)))[selectindex(keep[j,])]))
+      } else
+        NumEff = NumEff \ J(1,d,0)
+
 			st_matrix("e(fixed_sigs_reducedform"+strofreal(l)+")", J(1, d, .)) 
 			st_matrix("e(fixed_rhos_reducedform"+strofreal(l)+")", J(d, d, .)) 
 		}
