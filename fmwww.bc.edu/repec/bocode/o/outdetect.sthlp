@@ -42,6 +42,7 @@
 {synopt :{opt madf:actor(#)}}specify Fisher consistency factor for median absolute deviation; default is 1.4826{p_end}
 {synopt :{opt sf:actor(#)}}specify Fisher consistency factor for S-statistic; default is 1.1926{p_end}
 {synopt :{opt qf:actor(#)}}specify Fisher consistency factor for Q-statistic; default is 2.2219{p_end}
+{synopt :{opt small}}apply small samples correction for MAD, S and Q statistics{p_end}
 
 {syntab:Reporting}
 {synopt :{opt sformat(%fmt)}}specify format for summary statistics panel{p_end}
@@ -225,6 +226,9 @@ When this option is specified, {cmd:outdetect} stores the Pearson/df ratio corre
 {phang}
 {opt qf:actor(#)} specifies the Fisher consistency factor to be applied to the Q-statistic, if this statistic is selected for the calculation of the z-score. The default is 2.2219.
 
+{phang}
+{opt small} applies small samples correction for MAD, S and Q statistics.
+
 
 {dlgtab:Reporting}
 
@@ -356,10 +360,12 @@ The ITC reports the value of the statistic of choice, as a function of how many 
 
 {marker MV2021}{...}
 {phang}
-Belotti, F., Mancini, G., and Vecchi, G. 2021. {it:Outlier Detection for Welfare Analysts using Stata}. Mimeo.
+Belotti, F., G. Mancini, and G. Vecchi. 2022. {it:Outlier Detection for Welfare Analysis}. Unpublished manuscript, University of Rome “Tor Vergata”.
 
 {phang}
-Mancini, G. and Vecchi, G. 2021. {it:On the Construction of a Consumption Aggregate for Inequality and Poverty Analysis}, World Bank, mimeo.
+Mancini, G. and G. Vecchi. 2022.
+{browse "https://documents.worldbank.org/en/publication/documents-reports/documentdetail/099225003092220001/p1694340e80f9a00a09b20042de5a9cd47e":{it:On the Construction of the Consumption Aggregate for Inequality and Poverty Analysis}}.
+Washington, DC: World Bank.
 
 {phang}
 Box, G. E., and Cox, D. R. 1964. {it:An analysis of transformations}. Journal of the Royal Statistical Society: Series B (Methodological), 26(2), 211-243.

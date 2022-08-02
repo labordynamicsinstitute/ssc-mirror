@@ -1,7 +1,14 @@
 
-** Author: Federico Belotti
-*! version 3.1.4 - 8apr2021
+** Author: Federico Belotti, Giulia Mancini and Giovanni Vecchi
+*! version 3.1.6 - 20jul2022
 *! See the end of ado file for versioning
+
+/* TODO: Look at pshare (BJ), update DASP */
+/* TODO: share bottom40, Watts */
+/* TODO: p90/p10 is unexpected with PCE tunisia (to check) */
+
+
+version 15.1
 
 capture program drop outdetect
 program define outdetect, rclass byable(recall, noheader) sortpreserve
@@ -9,15 +16,14 @@ program define outdetect, rclass byable(recall, noheader) sortpreserve
 syntax varlist(max=1) [if] [in] [pw aw/] [, ///
 							REWeight ///
 							noZero noNegative ///
-							REPLACE noGenerate ///
+							REPLACE noGENerate ///
 						    NORMalize(string) BESTnormalize SEEBEST ///
 							OUTliers(string) Graph(string) EXCEL(string)  ///
-						    ZSCORE(string) PLINE(string) ///
+						    ZSCORE(string) PLine(string) ///
 						    noPERCent Alpha(real 3) MADFactor(real 1.4826022) SFormat(string) IFormat(string) ///
 						    SFactor(real 1.1926) QFactor(real 2.2219) ///
-						    NOI FORCE FORCEFraction(real 0.5) TIMER ]
+						    NOI FORCE FORCEFraction(real 0.5) TIMER NORMVAR(string) SMALL ]
 
-version 15
 
 
 loc cutoff `alpha'
@@ -80,6 +86,7 @@ if ("`r(wvar)'"!="" & "`weight'"=="") | ///
 	loc weight_type "`r(wtype)'"
 	if "`r(strata1)'"!="" loc _strata "`r(strata1)'"
 	if "`r(strata2)'"!="" {
+		// TOCHECK:Is that really true??
 		di as error "outdetect cannot handle multiple-stage sampling designs."
 		error 198
 	}
@@ -190,7 +197,7 @@ if "`_itc_trim_extent'" == "" {
 	/* Check before if -clear- has been specified */
 	cap confirm v _out`_bylev', exact
 	if _rc == 0 & "`replace'"=="" & "`generate'"=="" {
-		di as error "_out variable altready exists. Use the " in yel "replace " as error "or the " in yel "nogenerate" as error " options"
+		di as error "_out variable already exists. Use the " in yel "replace " as error "or the " in yel "nogenerate" as error " options"
 		exit 198
 	}
 	else if _rc == 0 & "`replace'"!="" {
@@ -198,7 +205,7 @@ if "`_itc_trim_extent'" == "" {
 		tempvar _out`_bylev'
 		qui gen byte `_out`_bylev'' = .
 	}
-	else if _rc == 0 & "`generate'"!=""{
+	else if _rc == 0 & "`generate'"!="" {
 		tempvar _out`_bylev'
 		qui gen byte `_out`_bylev'' = .
 	}
@@ -248,7 +255,7 @@ if "`_itc_trim_extent'" == "" {
 		}
 	}
 
-	mata: _hhb_MADn("`j'","`touse'",`madfactor',0,"`weight_type'","`wvar'")
+	mata: _out_MADn("`j'","`touse'",`madfactor',0,"`weight_type'","`wvar'")
 	if `_meth_value_'==0 & "`force'" == "" {
 		di as error "MAD/S/Q of `j' are equal to 0. 50% or more of the observations have the same value."
 		di as error "Use option -force- to exclude the block of duplicate values which are causing the issue."
@@ -311,30 +318,34 @@ if "`_itc_trim_extent'" == "" {
 	// that can be used in subsequent functions
 	preserve
 	sort `j', stable
-	noi m _od = _out_gini("`j'", "`wvar'", "`weight_type'", "`touse'", _od, "no")
+	cap `noi' m _od = _out_gini("`j'", "`wvar'", "`weight_type'", "`touse'", _od, "no")
+	if _rc == 3301 {
+		di as error "Too few observations to compute the gini index"
+		exit 3301
+	}
 	restore
 
 	// Compute MLD family of indicators
-	noi m _out_MLD(_od, 0, "no")
+	`noi' m _out_MLD(_od, 0, "no")
 	sca _out_mld0 = _out_mld
-	noi m _out_MLD(_od, 1, "no")
+	`noi' m _out_MLD(_od, 1, "no")
 	sca _out_mld1 = _out_mld
-	noi m _out_MLD(_od, 2, "no")
+	`noi' m _out_MLD(_od, 2, "no")
 	sca _out_mld2 = _out_mld
 
 	// Compute Atkinson's indicators
-	noi m _out_Atkinson(_od, 0.125, "no")
+	`noi' m _out_Atkinson(_od, 0.125, "no")
 	sca _out_atk125 = _out_atk
-	noi m _out_Atkinson(_od, 1, "no")
+	`noi' m _out_Atkinson(_od, 1, "no")
 	sca _out_atk1 = _out_atk
-	noi m _out_Atkinson(_od, 2, "no")
+	`noi' m _out_Atkinson(_od, 2, "no")
 	sca _out_atk2 = _out_atk
 
 	// Compute quantile and share ratios indicators
-	noi m _out_perc_shares(_od, 0.9, 0.1, "no")
+	`noi' m _out_perc_shares(_od, 0.9, 0.1, "no")
 
 	// Compute other base stats
-	noi m _od = _out_other_stats(_od, "no")
+	`noi' m _od = _out_other_stats(_od, "no")
 
 	// Compute poverty indicators if required
 	if "`pline'"!="" {
@@ -349,11 +360,11 @@ if "`_itc_trim_extent'" == "" {
 			if `r(sd)' == 0 loc _table_note "Poverty line: `r(mean)' (`pline')"
 			else loc _table_note "Poverty line: `pline'"
 		}
-		noi m `_povmata'(_od, 0, "`pline'", "no")
+		`noi' m `_povmata'(_od, 0, "`pline'", "no")
 		sca _out_hc = _out_pov
-		noi m `_povmata'(_od, 1, "`pline'", "no")
+		`noi' m `_povmata'(_od, 1, "`pline'", "no")
 		sca _out_pg = _out_pov
-		noi m `_povmata'(_od, 2, "`pline'", "no")
+		`noi' m `_povmata'(_od, 2, "`pline'", "no")
 		sca _out_pg2 = _out_pov
 		local pov ", _out_hc, _out_pg, _out_pg2"
 		local povlab `""H" "PG" "PG2""'
@@ -378,7 +389,7 @@ if "`_itc_trim_extent'" == "" {
 				_out_atk2,
 				_out_dr`pov';
 
-	mat colnames __ind_pre_s`_bylev' = "Mean" "Median" "SD" "CV" "IQR";
+	mat colnames __ind_pre_s`_bylev' = "Mean" "Median" "SD" "CV (%)" "IQR";
 
 	mat colnames __ind_pre_ss`_bylev' = "Gini" "MLD" "Theil" "CV2" "A(0.125)" "A(1)" "A(2)" "p90/p10" `povlab';
 
@@ -399,11 +410,11 @@ if "`_itc_trim_extent'" == "" {
 		if `AreThereNegValues' > 0 {
 			if "`bestnormalize'"!="" {
 				loc atransf "log asinh yj"
-				noi di in gr "The best normalization will be selected among: log, asinh and yj"
+				di in gr "The best normalization will be selected among: log, asinh and yj"
 			}
 			else {
 				if inlist("`normalize'", "log", "asinh", "yj")==0 {
-					noi di as error "normalize(`normalize') cannot be used with negative value(s). Possible choices are: log, asinh, yj"
+					di as error "normalize(`normalize') cannot be used with negative value(s). Possible choices are: log, asinh, yj"
 					exit 198
 				}
 			}
@@ -412,12 +423,12 @@ if "`_itc_trim_extent'" == "" {
 			if "`bestnormalize'"!="" {
 				if `AreThereNegValues' == 0 {
 					local atransf "log asinh sqrt yj"
-					noi di in gr "The best normalization will be selected among: log, asinh, yj and sqrt"
+					di in gr "The best normalization will be selected among: log, asinh, yj and sqrt"
 				}
 			}
 			else {
 				if inlist("`normalize'", "log", "asinh", "yj", "sqrt")==0 {
-					noi di as error "normalize(`normalize') cannot be used with zero value(s). Possible choices are: log, asinh, sqrt, yj"
+					di as error "normalize(`normalize') cannot be used with zero value(s). Possible choices are: log, asinh, sqrt, yj"
 					exit 198
 				}
 			}
@@ -428,14 +439,20 @@ if "`_itc_trim_extent'" == "" {
 		if "`normalize'"!="none" {
 			tempvar jj jjj
 			cap clonevar `jj'=`j'
-			noi _out_normalize `jj' if `touse', transformation(`normalize') outputvar(`jjj')
+			`noi' _out_normalize `jj' if `touse', transformation(`normalize') outputvar(`jjj')
 
 			markout `touse' `jjj'
 			loc todrop_and_rename 1
 			loc transf "`r(transf)'"
 			loc transftitle "`r(transftitle)'"
 			// This is important to get into the structure _od the normalized variable
-			noi m _od = _out_getdata("`jjj'", "`wvar'", "`weight_type'", "`touse'")
+			`noi' m _od = _out_getdata("`jjj'", "`wvar'", "`weight_type'", "`touse'")
+
+			if "`normvar'"!="" {
+				qui clonevar `normvar' = `jjj'
+				label var `normvar' "Normalized variable (`transf')"
+			}
+
 	 	}
 		else if "`normalize'"=="none" {
 			tempvar jj jjj
@@ -448,30 +465,30 @@ if "`_itc_trim_extent'" == "" {
 
 		if "`atransf'" == "" {
 			local atransf "ln bcox sqrt"
-			noi di in gr "The best normalization will be selected among: ln, bcox and sqrt"
+			di in gr "The best normalization will be selected among: ln, bcox and sqrt"
 		}
 
-		noi di in gr "Finding best normalization ..."
+		di in gr "Finding best normalization ..."
 		m _P_d_dfs = J(0,1,.)
 		m _Transf = J(0,1,"")
 		m _Transf_ti = J(0,1,"")
 		foreach tr of local atransf  {
 			tempvar jj jjj_`tr'
 			cap clonevar `jj'=`j'
-			noi _out_normalize `jj' if `touse', transformation(`tr') outputvar(`jjj_`tr'')
+			`noi' _out_normalize `jj' if `touse', transformation(`tr') outputvar(`jjj_`tr'')
 			loc see_transftitle "`r(transftitle)'"
 			m _Transf_ti = _Transf_ti \ "`see_transftitle'"
 			putmata `jjj_`tr'' if `touse', replace
-			noi m _out_pearson_test(`jjj_`tr'')
+			`noi' m _out_pearson_test(`jjj_`tr'')
 			if "`seebest'" != "" {
 				loc _P_d_df = _P_d_df
-				noi di in gr "`see_transftitle'" in gr " = " in yel %4.3f `_P_d_df'
+				di in gr "`see_transftitle'" in gr " = " in yel %4.3f `_P_d_df'
 			}
 			m _P_d_dfs = _P_d_dfs \ st_numscalar("_P_d_df")
 			m _Transf = _Transf \ "`tr'"
 		}
-		noi m _out_bestnorm_sel(_P_d_dfs,_Transf,_Transf_ti)
-		noi di as res "`_bestt'" in gr " is the best (Pearson/df = " %6.3f _best_p_def ")"
+		`noi' m _out_bestnorm_sel(_P_d_dfs,_Transf,_Transf_ti)
+		di as res "`_bestt'" in gr " is the best (Pearson/df = " %6.3f _best_p_def ")"
 		tempvar jjj
 		clonevar `jjj' = `jjj_`_bestt''
 		local normalize "`_bestt'"
@@ -481,15 +498,21 @@ if "`_itc_trim_extent'" == "" {
 		loc transf "`_bestt'"
 		loc transftitle "`_bestt_ti'"
 		// This is important to get into the structure _od the normalized variable
-		noi m _od = _out_getdata("`jjj'", "`wvar'", "`weight_type'", "`touse'")
+		`noi' m _od = _out_getdata("`jjj'", "`wvar'", "`weight_type'", "`touse'")
+
+		if "`normvar'"!="" {
+			qui clonevar `normvar' = `jjj'
+			label var `normvar' "Normalized variable (`transf')"
+		}
 	}
 
 
 
 	/// Compute required robust scale measure
-	if ("`method'"=="q") noi mata: _hhb_Qn("`jjj'","`touse'",`qfactor',1,"`weight_type'","`wvar'")
-	if ("`method'"=="s") noi mata: _hhb_Sn("`jjj'","`touse'",`sfactor',1,"`weight_type'","`wvar'")
-	if ("`method'"=="mad") noi mata: _hhb_MADn("`jjj'","`touse'",`madfactor',1,"`weight_type'","`wvar'")
+	//if ("`method'"=="q") noi mata: _out_Qn("`jjj'","`touse'",`qfactor',1,"`weight_type'","`wvar'")
+	if ("`method'"=="q") `noi' mata: _out_Qn("qn",`qfactor',1)
+	if ("`method'"=="s") `noi' mata: _out_Sn("`jjj'","`touse'",`sfactor',1,"`weight_type'","`wvar'")
+	if ("`method'"=="mad") `noi' mata: _out_MADn("`jjj'","`touse'",`madfactor',1,"`weight_type'","`wvar'")
 
 
 	/* ======================================================= */
@@ -502,7 +525,7 @@ if "`_itc_trim_extent'" == "" {
 
 	*noi m liststruct(_od)
 	/// Compute the z score and the _out (0,1,2) var
-	noi m _out_score(_od, "`touse'", "`_out`_bylev''", "`loc'", "`method'", `cutoff', "`_out_type'")
+	`noi' m _out_score(_od, "`touse'", "`_out`_bylev''", "`loc'", "`method'", `cutoff', "`_out_type'")
 	*noi m liststruct(_od)
 
 	**********************************
@@ -577,45 +600,49 @@ if "`_itc_trim_extent'" == "" {
 	markout `touse' `touseup'
 
 	/// For all other computation use data from _out_getdata()
-	noi m _odt = _out_getdata("`j'", "`twvar'", "`weight_type'", "`touse'")
+	`noi' m _odt = _out_getdata("`j'", "`twvar'", "`weight_type'", "`touse'")
 
 	// Here the gini function needs to stay on its own due to the sort, stable
 	// Actually we pass the _od structure to collect info
 	/// that can be used in subsequent functions
 	preserve
 	sort `j', stable
-	noi m _odt = _out_gini("`j'", "`twvar'", "`weight_type'", "`touse'", _odt, "no")
+	cap `noi' m _odt = _out_gini("`j'", "`twvar'", "`weight_type'", "`touse'", _odt, "no")
+	if _rc == 3301 {
+		di as error "Too few observations to compute the gini index"
+		exit 3301
+	}
 	restore
 
 	// Compute MLD family of indicators
-	noi m _out_MLD(_odt, 0, "no")
+	`noi' m _out_MLD(_odt, 0, "no")
 	sca _out_mld0 = _out_mld
-	noi m _out_MLD(_odt, 1, "no")
+	`noi' m _out_MLD(_odt, 1, "no")
 	sca _out_mld1 = _out_mld
-	noi m _out_MLD(_odt, 2, "no")
+	`noi' m _out_MLD(_odt, 2, "no")
 	sca _out_mld2 = _out_mld
 
 	// Compute Atkinson's indicators
-	noi m _out_Atkinson(_odt, 0.125, "no")
+	`noi' m _out_Atkinson(_odt, 0.125, "no")
 	sca _out_atk125 = _out_atk
-	noi m _out_Atkinson(_odt, 1, "no")
+	`noi' m _out_Atkinson(_odt, 1, "no")
 	sca _out_atk1 = _out_atk
-	noi m _out_Atkinson(_odt, 2, "no")
+	`noi' m _out_Atkinson(_odt, 2, "no")
 	sca _out_atk2 = _out_atk
 
 	// Compute quantile and share ratios indicators
-	noi m _out_perc_shares(_odt, 0.9, 0.1, "no")
+	`noi' m _out_perc_shares(_odt, 0.9, 0.1, "no")
 
 	// Compute other base stats
-	noi m _odt = _out_other_stats(_odt, "no")
+	`noi' m _odt = _out_other_stats(_odt, "no")
 
 	// Compute poverty indicators (if required)
 	if "`pline'"!="" {
-		noi m `_povmata'(_odt, 0, "`pline'", "no")
+		`noi' m `_povmata'(_odt, 0, "`pline'", "no")
 		sca _out_hc = _out_pov
-		noi m `_povmata'(_odt, 1, "`pline'", "no")
+		`noi' m `_povmata'(_odt, 1, "`pline'", "no")
 		sca _out_pg = _out_pov
-		noi m `_povmata'(_odt, 2, "`pline'", "no")
+		`noi' m `_povmata'(_odt, 2, "`pline'", "no")
 		sca _out_pg2 = _out_pov
 		local pov ", _out_hc, _out_pg, _out_pg2"
 		local povlab `""H" "PG" "PG2""'
@@ -640,7 +667,7 @@ if "`_itc_trim_extent'" == "" {
 				_out_atk2,
 				_out_dr`pov';
 
-	mat colnames __ind_trim_s`_bylev' = "Mean" "Median" "SD" "CV" "IQR";
+	mat colnames __ind_trim_s`_bylev' = "Mean" "Median" "SD" "CV (%)" "IQR";
 
 	mat colnames __ind_trim_ss`_bylev' = "Gini" "MLD" "Theil" "CV2" "A(0.125)" "A(1)" "A(2)" "p90/p10" `povlab';
 
@@ -745,6 +772,10 @@ if "`_itc_trim_extent'" == "" {
 	qui count if `touse'==1
 	return scalar N_trimmed = r(N)
 
+	// Post MAd, S and Q
+	// Todo: should we post also std?
+	if inlist("`method'", "mad", "s", "q") return scalar `=upper("`method'")' = _meth_value_
+
 	if "`_qqplot'" != "" {
 		if "`normalize'"!="none" loc qqplot_ti "Normalized `j'"
 		else loc qqplot_ti "`j'"
@@ -772,7 +803,7 @@ else {
 	/* Why is this here ? muted
 	// Check if MAD is 0. This is crucial.
 	// If it is 0, (eventually) remove the block of duplicate values for detection purposes
-	mata: _hhb_MADn("`j'","`touse'",`madfactor',0,"`weight_type'","`wvar'")
+	mata: _out_MADn("`j'","`touse'",`madfactor',0,"`weight_type'","`wvar'")
 	if `_meth_value_'==0 & "`force'" == "" {
 		di as error "MAD/S/Q of `j' are 0. Cannot compute robust scale measures for this variable."
 		di as error "Use option -force- to exclude the block of duplicate values which are causing the issue."
@@ -848,7 +879,7 @@ else {
 	/// Here we need to sort stable for gini se computation
 	/// Only Gini computations have their own data input strategy
 	/// For all other computation use data from _out_getdata()
-	noi m _od = _out_getdata("`j'", "`wvar'", "`weight_type'", "`touse'")
+	`noi' m _od = _out_getdata("`j'", "`wvar'", "`weight_type'", "`touse'")
 
 	// Here the trimiming() function needs to stay on its own due to the sort, stable needed for gini
 	// Actually we pass the _od structure to collect info
@@ -861,7 +892,7 @@ else {
 	gen `sort_index' = _n if `touse'
 	gsort -`sort_index'
 
-	noi m  _top_extremes = _out_trimming("`j'", "`wvar'", "`weight_type'", "`touse'", _od, "no", `_itc_trim_extent', "`sort_index'", "`_itc_stat'", `_itc_abs', "`_g_pline'", `_g_plinevar')
+	`noi' m  _top_extremes = _out_trimming("`j'", "`wvar'", "`weight_type'", "`touse'", _od, "no", `_itc_trim_extent', "`sort_index'", "`_itc_stat'", `_itc_abs', "`_g_pline'", `_g_plinevar')
 	restore
 
 	/// Move out bottom extreme values
@@ -870,7 +901,7 @@ else {
 	tempvar sort_index
 	gen `sort_index' = _n if `touse'
 
-	noi m  _bottom_extremes = _out_trimming("`j'", "`wvar'", "`weight_type'", "`touse'", _od, "no", `_itc_trim_extent', "`sort_index'", "`_itc_stat'", `_itc_abs', "`_g_pline'", `_g_plinevar')
+	`noi' m  _bottom_extremes = _out_trimming("`j'", "`wvar'", "`weight_type'", "`touse'", _od, "no", `_itc_trim_extent', "`sort_index'", "`_itc_stat'", `_itc_abs', "`_g_pline'", `_g_plinevar')
 	restore
 
 	tempvar _top_extremes _bottom_extremes _psample_t _psample_b
@@ -973,6 +1004,7 @@ else {
 	******************************
 	******** POST RESULTS ********
 	******************************
+	eret clear
 
 	return local cmd "outdetect"
 	*return mat b`_bylev' = __ind`_bylev'
@@ -1013,14 +1045,14 @@ end
 program define ParseG, sclass
 	syntax [, ITCccc ITC(string) QQplot * ]
 
-	if "`itcccc'"!="" local itc "10:gini"
+	if "`itcccc'"!="" local itc "5:gini"
 
 	if "`itc'"!="" {
 		gettoken itc itc_options : itc, parse(":")
 		cap confirm n `itc'
 		if _rc != 0 {
 			if "`itc_options'"=="" & "`itc'"!="" loc itc_options "`itc'"
-			loc itc 10
+			loc itc 5
 		}
 		if "`itc_options'"!="" local itc_options = subinstr("`itc_options'", ":", "", .)
 		ParseITC, `itc_options'
@@ -1043,7 +1075,7 @@ program define ParseG, sclass
 end
 
 program define ParseITC, sclass
-	syntax [, ABSolute Mean GIni MLD THeil CV2 ATK0 ATK1 ATK2 H PG PG2 PLINE(string) ]
+	syntax [, ABSolute Mean GIni MLD THeil CV2 ATK0 ATK1 ATK2 H PG PG2 PLine(string) ]
 
 	local wc : word count `mean' `gini' `mld' `theil' `cv2' `h' `pg' `pg2' `atk0' `atk1' `atk2'
 	if `wc' > 1 {
@@ -1350,3 +1382,5 @@ exit
 ** version 3.1.2 - 4apr2021 - excel() now works also after graph(itc) and the latter produces a table with the results reported in the plot
 ** version 3.1.3 - 7apr2021 - Now also mld, theil and cv2 indicator can be exploited for ITC. Fixed some labels for itc plots and tables.
 ** version 3.1.4 - 8apr2021 - Now also Atkinson class can be exploited for ITC.
+** version 3.1.5 - 27may2021 - Added the generate() option to get out the normalized variable.
+** version 3.1.6 - 20jul2022 - Bug fixes on weighted standard deviation and Q statistic
