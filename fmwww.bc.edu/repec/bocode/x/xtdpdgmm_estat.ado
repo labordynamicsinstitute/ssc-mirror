@@ -1,4 +1,4 @@
-*! version 2.4.2  02jul2022
+*! version 2.6.2  03aug2022
 *! Sebastian Kripfganz, www.kripfganz.de
 
 *==================================================*
@@ -19,11 +19,11 @@ program define xtdpdgmm_estat, rclass
 	else if "`subcmd'" == substr("hausman", 1, max(4, `: length loc subcmd')) {
 		loc subcmd			"hausman"
 	}
-	else if "`subcmd'" != "mmsc" {
+	else if "`subcmd'" != "serialpm" & "`subcmd'" != "mmsc" {
 		loc subcmd			""
 	}
 	if "`subcmd'" != "" {
-		if e(k_aux) > 0 & e(k_aux) < . & ("`subcmd'" == "serial" | "`subcmd'" == "hausman") {
+		if e(k_aux) > 0 & e(k_aux) < . & inlist("`subcmd'", "serial", "serialpm", "hausman") {
 			tempname xtdpdgmm_e
 			_est hold `xtdpdgmm_e', copy
 			xtdpdgmm_estat_noaux
@@ -48,10 +48,18 @@ end
 **** computation of serial-correlation test statistics ****
 program define xtdpdgmm_estat_serial, rclass
 	version 13.0
-	syntax [, AR(numlist int >0)]
+	syntax [, 	Order(numlist int >0)				///
+				AR(numlist int >0)]					// historical since version 2.6.1
 
-	if "`ar'" == "" {
-		loc ar				"1 2"
+	if "`ar'" != "" {
+		if "`order'" != "" {
+			di as err "ar(`ar') invalid"
+			exit 198
+		}
+		loc order			"`ar'"
+	}
+	else if "`order'" == "" {
+		loc order			"1 2"
 	}
 	tempvar smpl dsmpl e
 	qui gen byte `smpl' = e(sample)
@@ -86,30 +94,146 @@ program define xtdpdgmm_estat_serial, rclass
 		else {
 			loc V				"e(V)"
 		}
-		loc clustvar		"`e(clustvar)'"
 	}
 
 	di _n as txt "Arellano-Bond test for autocorrelation of the first-differenced residuals"
-	foreach order of num `ar' {
+	foreach o of num `order' {
 		qui gen byte `dsmpl' = `smpl'
-		markout `dsmpl' D.`e' L`order'D.`e'
+		markout `dsmpl' D.`e' L`o'D.`e'
 		tsrevar D.`e' if `smpl'
 		loc tde				"`r(varlist)'"
-		tsrevar L`order'D.`e' if `smpl'
+		tsrevar L`o'D.`e' if `smpl'
 		loc tlde			"`r(varlist)'"
 		fvrevar `dindepvars' if `smpl'
 		loc tdindepvars		"`r(varlist)'"
-		mata: st_numscalar("r(z)", xtdpdgmm_serial("`tde'", "`tlde'", "`tdindepvars'", "`scorevars'", "`_dta[_TSpanel]'", "`clustvar'", "`_dta[_TStvar]'", "`smpl'", "`dsmpl'", "`V'", "e(V)", `sigma2e'))
-		loc z`order'		= r(z)
-		loc p`order'		= 2 * normal(- abs(`z`order''))
+		mata: st_numscalar("r(z)", xtdpdgmm_serial("`tde'", "`tlde'", "`tdindepvars'", "`scorevars'", "`_dta[_TSpanel]'", "`e(clustvar)'", "`_dta[_TStvar]'", "`smpl'", "`dsmpl'", "`V'", "e(V)", `sigma2e'))
+		loc z`o'			= r(z)
+		loc p`o'			= 2 * normal(- abs(`z`o''))
 		qui drop `dsmpl'
-		di as txt "H0: no autocorrelation of order " `order' as txt ":" _col(40) "z = " as res %9.4f `z`order'' _col(56) as txt "Prob > |z|" _col(68) "=" _col(73) as res %6.4f `p`order''
+		di as txt "H0: no autocorrelation of order " `o' _col(40) as txt "z = " as res %9.4f `z`o'' _col(56) as txt "Prob > |z|" _col(68) "=" _col(73) as res %6.4f `p`o''
 	}
 
-	foreach order of num `ar' {
-		ret sca p_`order'	= `p`order''
-		ret sca z_`order'	= `z`order''
+	foreach o of num `order' {
+		ret sca p_`o'		= `p`o''
+		ret sca z_`o'		= `z`o''
 	}
+end
+
+*==================================================*
+**** computation of serial-correlation portmanteau test statistics ****
+program define xtdpdgmm_estat_serialpm, rclass
+	version 13.0
+	syntax [, Difference Collapse Order(numlist asc int >0)]
+
+	tempvar smpl dsmpl e
+	qui gen byte `smpl' = e(sample)
+	qui predict double `e' if `smpl', ue
+	tempname b
+	mat `b'				= e(b)
+	loc indepvars		: coln `b'
+	loc indepvars		: subinstr loc indepvars "_cons" "`smpl'", w c(loc constant)
+	if !`constant' {
+		loc indepvars		: subinstr loc indepvars "o._cons" "o.`smpl'", w c(loc constant)
+	}
+	loc K				: word count `indepvars'
+	tempname score
+	forv k = 1 / `K' {
+		tempvar `score'`k'
+		loc scorevars		"`scorevars' `score'`k'"
+	}
+	loc sigma2e			= e(sigma2e)
+	qui predict double `score'* if `smpl', score
+	cap conf mat e(V_modelbased)
+	if !_rc {
+		loc V				"e(V_modelbased)"
+	}
+	else {
+		loc V				"e(V)"
+	}
+	if "`difference'" != "" {
+		loc difference			"D"
+	}
+	qui gen byte `dsmpl' = `smpl'
+	markout `dsmpl' D.`e'
+	sum `_dta[_TStvar]' if `smpl', mean
+	loc maxlag			= (r(max) - r(min)) / `_dta[_TSdelta]'
+	if "`difference'" != "" {
+		loc --maxlag
+		loc order1			= 0
+	}
+	else {
+		loc order1			= 1
+	}
+	if "`order'" == "" {
+		loc orderlist		"2 / `maxlag'"
+	}
+	else {
+		loc orderlist			: subinstr loc order " " ",", all
+		if max(., `orderlist') > `maxlag' {
+			di as err "option order() incorrectly specified -- outside of allowed range"
+			exit 125
+		}
+		if "`difference'" == "" {
+			loc order1			: list order1 in order
+		}
+		else if min(., `orderlist') == 1 {
+			di as err "option order() incorrectly specified -- outside of allowed range"
+			exit 125
+		}
+		loc orderlist		: list order - order1
+	}
+	foreach j of num `orderlist' {
+		loc elags			"`elags' L`j'`difference'.`e'"
+	}
+	if `order1' {
+		loc elags			"`elags' F.`e'"
+	}
+	foreach var of loc indepvars {
+		foreach j of num `orderlist' {
+			if "`var'" != "`smpl'" {
+				fvrevar L`j'`difference'.`var' if `smpl'
+				loc indeplags		"`indeplags' `r(varlist)'"
+			}
+			else {
+				loc indeplags		"`indeplags' `smpl'"
+			}
+		}
+		if `order1' {
+			if "`var'" != "`smpl'" {
+				fvrevar F.`var' if `smpl'
+				loc indeplags		"`indeplags' `r(varlist)'"
+			}
+			else {
+				loc indeplags		"`indeplags' `smpl'"
+			}
+		}
+	}
+	mata: xtdpdgmm_serialpm(`e(mopt)', "`e'", "`elags'", "`indepvars'", "`indeplags'", "`scorevars'", "`_dta[_TSpanel]'", "`smpl'", "`dsmpl'", "`V'", ("`collapse'" != ""))
+	loc chi2			= r(chi2)
+	loc df				= r(df)
+	loc p				= chi2tail(`df', `chi2')
+	if "`difference'`collapse'`order'" == "" {
+		di _n as txt "Jochmans" _c
+	}
+	else {
+		di _n as txt "Restricted" _c
+	}
+	di " portmanteau test" _col(56) "chi2(" as res `df' as txt ")" _col(68) "=" _col(70) as res %9.4f `chi2'
+	di as txt "H0: no autocorrelation of " _c
+	if "`order'" == "" {
+		di "any order" _c
+	}
+	else if `: word count `orderlist'' == 1 {
+		di "order `order'" _c
+	}
+	else {
+		di "specified orders" _c
+	}
+	di _col(56) "Prob > chi2" _col(68) "=" _col(73) as res %6.4f `p'
+
+	ret sca p			= `p'
+	ret sca df			= `df'
+	ret sca chi2		= `chi2'
 end
 
 *==================================================*
@@ -302,6 +426,9 @@ program define xtdpdgmm_estat_overid_diff, rclass
 		else if el(`J', 3, `g') == .m {
 			loc model			"mdev"
 		}
+		else if el(`J', 3, `g') == .a {
+			loc model			"mean"
+		}
 		else if el(`J', 3, `g') == .z {
 			loc model			"level"
 		}
@@ -471,7 +598,7 @@ end
 **** computation of Andrews-Lu MMSC statistics ****
 program define xtdpdgmm_estat_mmsc, rclass
 	version 13.0
-	syntax [namelist(id="estimation results")] , [N(string) HQ(real 1.01)]
+	syntax [namelist(id="estimation results")] , [N(str) HQ(real 1.01)]
 
 	if `hq' <= 1 {
 		di as txt "note: HQ factor must be larger than 1 for consistency of MMSC-HQIC"

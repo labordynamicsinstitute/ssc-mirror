@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.4.2  02jul2022}{...}
+{* *! version 2.6.2  03aug2022}{...}
 {* *! Sebastian Kripfganz, www.kripfganz.de}{...}
 {vieweralsosee "xtdpdgmm" "help xtdpdgmm"}{...}
 {vieweralsosee "" "--"}{...}
@@ -30,6 +30,7 @@ The following postestimation commands are of special interest after {cmd:xtdpdgm
 {p2coldent:Command}Description{p_end}
 {synoptline}
 {synopt:{helpb xtdpdgmm postestimation##estat:estat serial}}perform test for autocorrelated residuals{p_end}
+{synopt:{helpb xtdpdgmm postestimation##estat:estat serialpm}}perform portmanteau test for autocorrelated residuals{p_end}
 {synopt:{helpb xtdpdgmm postestimation##estat:estat overid}}perform tests of overidentifying restrictions{p_end}
 {synopt:{helpb xtdpdgmm postestimation##estat:estat hausman}}perform generalized Hausman test{p_end}
 {synopt:{helpb xtdpdgmm postestimation##estat:estat mmsc}}obtain model and moment selection criteria{p_end}
@@ -149,10 +150,16 @@ The Windmeijer (2005) finite-sample correction is taken into account whenever ap
 {title:Syntax for estat}
 
 {phang}
-Arellano-Bond test for autocorrelated residuals
+Arellano-Bond test for no autocorrelation in the residuals
 
 {p 8 16 2}
-{cmd:estat} {cmdab:ser:ial} [, {opth ar(numlist)}]
+{cmd:estat} {cmdab:ser:ial} [, {opth o:rder(numlist)}]
+
+{phang}
+Jochmans portmanteau test for no autocorrelation in the residuals
+
+{p 8 16 2}
+{cmd:estat} {cmdab:serialpm} [, {opt d:ifference} {opt c:ollapse} {opth o:rder(numlist)}]
 
 {phang}
 Sargan-Hansen tests of overidentifying restrictions
@@ -179,8 +186,14 @@ where {it:name} is a name under which estimation results were stored via {helpb 
 {title:Description for estat}
 
 {pstd}
-{cmd:estat serial} reports the Arellano and Bond (1991) test for autocorrelation of the first-differenced residuals.
-A cluster-robust version is computed if {cmd:vce(robust)} or {cmd:vce(cluster} {it:clustvar}{cmd:)} is specified with {helpb xtdpdgmm}.
+{cmd:estat serial} reports the Arellano and Bond (1991) test for absence of autocorrelation in the first-differenced residuals at specific orders.
+
+{pstd}
+{cmd:estat serialpm} reports the the heteroskedasticity-robust Jochmans (2020) portmanteau test for absence of autocorrelation in the idiosyncratic error component at any order.
+
+{pstd}
+{cmd:estat serialpm, difference collapse} and {cmd:estat serialpm, difference collapse order(}{it:#}{cmd:)} report the Yamagata (2008) and Arellano and Bond (1991) tests for absence of autocorrelation in the first-differenced residuals
+at any order or order {it:#}, respectively.
 
 {pstd}
 {cmd:estat overid} reports the Sargan (1958) and Hansen (1982) J-statistic which is used to determine the validity of the overidentifying restrictions. Two versions of the test are reported for the one-step and two-step GMM estimators.
@@ -209,7 +222,14 @@ If {it:namelist} is specified, it lists the criteria for the most recent {helpb 
 {title:Options for estat}
 
 {phang}
-{opth ar(numlist)} with {cmd:estat serial} specifies the orders of serial correlation to be tested. The default is {cmd:ar(1 2)}.
+{opth order(numlist)} with {cmd:estat serial} or {cmd:estat serialpm} specifies the orders of serial correlation to be tested with the Arellano-Bond test. With {cmd:estat serial}, the default is {cmd:ar(1 2)}.
+With {cmd:estat serialpm}, the default is to test for serial correlation of any order.
+
+{phang}
+{opt difference} with {cmd:estat serialpm} requests to compute tests for serial correlation of the first-differenced residuals instead of the the untransformed idiosyncratic error component.
+
+{phang}
+{opt collapse} with {cmd:estat serialpm} requests to compute a collapsed version of the test, which consumes only one degree of freedom for each order of serial correlation.
 
 {phang}
 {opt difference} with {cmd:estat overid} requests to report Sargan-Hansen difference statistics for a subset of the overidentifying restrictions. This option requires that option {opt overid} was specified with {helpb xtdpdgmm}.
@@ -232,11 +252,46 @@ the number of clusters, {cmd:n(cluster)}, or the number of observations, {cmd:n(
 {title:Remarks for estat}
 
 {pstd}
+Remarks are presented under the following headings:
+
+{phang2}{help xtdpdgmm_postestimation##remarks_serial:Serial correlation tests}{p_end}
+{phang2}{help xtdpdgmm_postestimation##remarks_overid:Overidentification tests}{p_end}
+{phang2}{help xtdpdgmm_postestimation##remarks_mmsc:Model and moment selection criteria}{p_end}
+
+
+{marker remarks_serial}{...}
+{title:Serial correlation tests}
+
+{pstd}
+The Arellano and Bond (1991) test considers the null hypothesis of no autocorrelation of the first-differenced residuals at a specified order. If the untransformed idiosyncratic error component is serially uncorrelated,
+it is expected to find first-order autocorrelation but no higher-order autocorrelation of the first-differenced residuals. If {cmd:vce(robust)} or {cmd:vce(cluster} {it:clustvar}{cmd:)} is specified with {helpb xtdpdgmm},
+a cluster-robust version is computed with {cmd:estat serial}.
+
+{pstd}
+The Jochmans (2020) portmanteau test is a joint test for the null hypothesis of no autocorrelation of the idiosyncratic error component at any order. It is robust to heteroskedasticity irrespective of the chosen variance-covariance estimator.
+By default, for each order of autocorrelation a separate restriction is included in the test for every time period. When the number of time periods is large, the portmanteau test therefore consumes a large number of degrees of freedom,
+which can result in a loss of power.
+
+{pstd}
+Restricted versions of the portmanteau test can be obtained by forming linear combinations of the tested moment conditions. Option {opt difference} of {cmd:estat serialpm} limits the test to autocorrelation of the first-differenced residuals.
+Option {opt collapse} combines moments for the same order of autocorrelation over all time periods into a single restriction. Option {opt order(numlist)} limits the test to autocorrelation of orders specified in {it:numlist}.
+Combining options {opt difference} and {opt collapse} yields the Yamagata (2008) test for the joint null hypothesis of no autocorrelation of the first-differenced residuals at any order.
+
+{pstd}
+{cmd:estat serial, }{opt order(#)} and {cmd:estat serialpm, difference collapse }{opt order(#)} compute equivalent Arellano and Bond (1991) tests for order {it:#}. However, due to different ways of computing the test statistics,
+they will not be numerically identical in finite samples. If multiple orders are specified with option {opt order(numlist)}, the two commands produce different tests.
+{cmd:estat serial} computes separate tests for each order of autocorrelation, while {cmd:estat serialpm} computes a joint test for the specified orders of autocorrelation.
+
+
+{marker remarks_overid}{...}
+{title:Overidentification tests}
+
+{pstd}
 The overidentification tests are asymptotically invalid after {helpb xtdpdgmm} with option {cmd:onestep} if the one-step weighting matrix is not optimal.
 This is true even for the version of the test with updated weighting matrix because the one-step estimates remain inefficient.
 
 {pstd}
-The Sargan-Hansen difference test statistics reported by {cmd:estat overid, difference} are guaranteed to be nonnegative because all statistics are based on the same weighting matrix from the full model.
+The Sargan (1958) or Hansen (1982) difference test statistics reported by {cmd:estat overid, difference} are guaranteed to be nonnegative because all statistics are based on the same weighting matrix from the full model.
 This is not the case when calling {cmd:estat overid} with a {it:name} of stored estimation results. Asymptotically, both versions are equivalent.
 
 {pstd}
@@ -247,6 +302,10 @@ subtracting the J-statistic with the smaller degrees of freedom from the one wit
 {pstd}
 The generalized Hausman test can be used as an asymptotically equivalent test to the Sargan-Hansen difference test if the two estimators are nested
 and the number of the excluded overidentifying restrictions does not exceed the number of contrasted coefficients. This test statistic is guaranteed to be nonnegative but it might have poor coverage in finite samples.
+
+
+{marker remarks_mmsc}{...}
+{title:Model and moment selection criteria}
 
 {pstd}
 The Andrews-Lu model and moment selection criteria can be used to find an optimal model among competing specifications.
@@ -261,17 +320,25 @@ Smaller values of the model and moment selection criteria are preferred.
 {phang2}. {stata webuse abdata}{p_end}
 
 {pstd}Two-step difference GMM estimator with predetermined covariates{p_end}
-{phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n w k, l(1 4) c) m(d) two vce(r)}{p_end}
+{phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n w k, l(1 4)) m(d) c two vce(r)}{p_end}
 {phang2}. {stata estimates store ab}{p_end}
 
-{pstd}Arellano-Bond test for autocorrelation of the first-differenced residuals{p_end}
-{phang2}. {stata estat serial, ar(1/3)}{p_end}
+{pstd}Jochmans portmanteau test for no autocorrelation{p_end}
+{phang2}. {stata estat serialpm}{p_end}
+
+{pstd}Yamagata test for no autocorrelation{p_end}
+{phang2}. {stata estat serialpm, difference collapse}{p_end}
+
+{pstd}Arellano-Bond test for no autocorrelation{p_end}
+{phang2}. {stata estat serial, order(1/3)}{p_end}
+{phang2}. {stata estat serialpm, difference collapse order(2)}{p_end}
+{phang2}. {stata estat serialpm, difference collapse order(3)}{p_end}
 
 {pstd}Sargan-Hansen test for the validity of the overidentifying restrictions{p_end}
 {phang2}. {stata estat overid}{p_end}
 
 {pstd}Two-step system GMM estimator with predetermined covariates{p_end}
-{phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n w k, l(1 4) c m(d)) iv(L.n w k, d) two vce(r) overid}{p_end}
+{phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n w k, l(1 4) m(d)) iv(L.n w k, d) two c vce(r) overid}{p_end}
 
 {pstd}Sargan-Hansen difference test for the additional level moment conditions{p_end}
 {phang2}. {stata estat overid, difference}{p_end}
@@ -326,6 +393,11 @@ Specification tests in econometrics.
 {it:Econometrica} 46: 1251-1271.
 
 {phang}
+Jochmans, K. 2020.
+Testing for correlation in error-component models.
+{it: Journal of Applied Econometrics} 35: 860-878.
+
+{phang}
 Newey, W. K. 1985.
 Generalized method of moments specification testing.
 {it:Journal of Econometrics} 29: 229-256.
@@ -344,3 +416,8 @@ Maximum likelihood estimation of misspecified models.
 Windmeijer, F. 2005.
 A finite sample correction for the variance of linear efficient two-step GMM estimators.
 {it:Journal of Econometrics} 126: 25-51.
+
+{phang}
+Yamagata, T. 2008.
+A joint serial correlation test for linear panel data models.
+{it:Journal of Econometrics} 146: 135-145.

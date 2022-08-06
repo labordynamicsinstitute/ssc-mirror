@@ -1,4 +1,4 @@
-*! version 2.4.2  02jul2022
+*! version 2.6.2  03aug2022
 *! Sebastian Kripfganz, www.kripfganz.de
 
 *==================================================*

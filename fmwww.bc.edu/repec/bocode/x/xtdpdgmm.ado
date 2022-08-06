@@ -1,4 +1,4 @@
-*! version 2.4.2  02jul2022
+*! version 2.6.2  03aug2022
 *! Sebastian Kripfganz, www.kripfganz.de
 
 *==================================================*
@@ -42,26 +42,27 @@ end
 
 program define xtdpdgmm_gmm, eclass
 	version 13.0
-	syntax varlist(num ts fv) [if] [in] , MOPT(name) [	noCONStant			///
-														TEffects			///
-														NL(str)				///
-														Collapse			///
-														noREScale			///
-														Model(string)		///
-														ONEstep				///
-														TWOstep				///
-														IGMM				///
-														CUgmm				///
-														Wmatrix(str)		///
-														OVERid				///
-														FROM(passthru)		///
-														VCE(passthru)		///
-														SMall				///
-														NOLEVel				///
-														AUXiliary			///
-														noSERial			/// historical since version 2.0.0
-														IID					/// historical since version 2.0.0
-														*]					// GMMIV() IV() parsed separately
+	syntax varlist(num ts fv) [if] [in] , MOPT(name) [	noCONStant								///
+														TEffects								///
+														NL(str)									///
+														Collapse								///
+														CURtail(numlist max=1 int miss >=0)		///
+														noREScale								///
+														Model(str)								///
+														ONEstep									///
+														TWOstep									///
+														IGMM									///
+														CUgmm									///
+														Wmatrix(str)							///
+														CENter									///
+														OVERid									///
+														FROM(passthru)							///
+														VCE(passthru)							///
+														SMall									///
+														NOLEVel									///
+														AUXiliary								///
+														noSERial IID							/// historical since version 2.0.0
+														*]										// GMMIV() IV() parsed separately
 	loc fv				= ("`s(fvops)'" == "true")
 	if `fv' {
 		fvexpand `varlist'
@@ -71,6 +72,12 @@ program define xtdpdgmm_gmm, eclass
 	gettoken depvar indepvars : varlist
 	if "`indepvars'" == "" & "`constant'" != "" {
 		error 102
+	}
+	if "`nolevel'" != "" {
+		tempvar aux
+		qui by `_dta[_TSpanel]': egen int `aux' = total(`touse')
+		qui replace `touse' = 0 if `aux' == 1
+		drop `aux'
 	}
 	sum `touse', mean
 	if r(sum) == 0 {
@@ -119,6 +126,8 @@ program define xtdpdgmm_gmm, eclass
 		loc teffects		"`r(varlist)'"
 		loc indepvars		"`indepvars' `teffects'"
 	}
+	_rmdcoll `depvar' `indepvars' if `touse', `constant'
+	loc indepvars		"`r(varlist)'"
 	mata: xtdpdgmm_init_indepvars(`mopt', "`indepvars'")		// independent variables
 
 	*--------------------------------------------------*
@@ -139,6 +148,9 @@ program define xtdpdgmm_gmm, eclass
 	else {
 		mata: xtdpdgmm_init_wmatrix(`mopt', "independent", `ratio')
 	}
+	if "`center'" != "" {
+		mata: xtdpdgmm_init_wmatrix_center(`mopt', "yes", ("`rescale'" == "" ? "yes" : "no"))
+	}
 
 	*--------------------------------------------------*
 	*** syntax parsing of options for instruments ***
@@ -157,26 +169,35 @@ program define xtdpdgmm_gmm, eclass
 		loc nl				"`serial'`iid', norescale"
 	}
 	if "`nl'" != "" {
-		if "`nlevel'" != "" {
-			di as err "options nl() and nolevel may not be combined"
-			exit 184
-		}
 		loc nlsyntax		= cond("`collapse'" == "", "Collapse", "noCollapse")
 		loc nlsyntax		= cond("`rescale'" == "", "`nlsyntax' noREScale", "`nlsyntax' REScale")
 		xtdpdgmm_parse_nl `nlsyntax' `nl'
 		loc nl				"`s(nl)'"
+		if "`nolevel'" != "" & "`nl'" != "predetermined" {
+			di as err "options nl(`nl') and nolevel may not be combined"
+			exit 184
+		}
 		if "`nl'" == "iid" {
 			loc options			`"gmmiv(L.`depvar', iid `s(collapse)') `options'"'
 		}
 		tempvar nltouse
 		qui gen byte `nltouse' = `touse'
-		if "`nl'" == "noserial" {
+		if "`nl'" != "iid" {
 		    tempvar maxt
 			qui by `_dta[_TSpanel]': egen `maxt' = max(`_dta[_TStvar]') if `touse'
 			qui replace `nltouse' = 0 if F`s(lag)'.`_dta[_TStvar]' > `maxt'
 			drop `maxt'
 		}
-		mata: xtdpdgmm_init_nl(`mopt', "`nl'")
+		if "`nl'" == "predetermined" {
+			tempvar test
+			qui gen byte `test' = F.`touse'
+			qui replace `nltouse' = 0 if !F.`touse'
+			mata: xtdpdgmm_init_nl(`mopt', "pre")
+			mata: xtdpdgmm_init_nl_ivvar(`mopt', "LD.`depvar'")
+		}
+		else {
+			mata: xtdpdgmm_init_nl(`mopt', "`nl'")
+		}
 		mata: xtdpdgmm_init_nl_touse(`mopt', "`nltouse'")
 		if "`s(collapse)'" != "" {
 			mata: xtdpdgmm_init_nl_collapse(`mopt', "yes")
@@ -186,15 +207,13 @@ program define xtdpdgmm_gmm, eclass
 		}
 		mata: xtdpdgmm_init_nl_weight(`mopt', `s(weight)')
 	}
-	tempvar obs
-	qui by `_dta[_TSpanel]': gen int `obs' = _n
-	sum `obs', mean
-	loc maxlag			= r(max) - r(min)
+	sum `_dta[_TStvar]', mean
+	loc maxlag			= (r(max) - r(min)) / `tdelta'
 	loc ivnum			= 0
 	while `"`options'"' != "" {
-		xtdpdgmm_parse_options , maxlag(`maxlag') `options' `collapse' `rescale' model(`model')
+		xtdpdgmm_parse_options , maxlag(`maxlag' `curtail') `options' `collapse' `rescale' model(`model')
 		loc options			`"`s(options)'"'
-		if "`nolevel'" != "" & "`s(model)'"  == "level" {
+		if "`nolevel'" != "" & ("`s(model)'"  == "level" | "`s(model)'" == "mean") {
 			continue
 		}
 		loc ivnames			"`s(varlist)'"
@@ -350,10 +369,6 @@ program define xtdpdgmm_gmm, eclass
 					loc vcec			""
 // 					di as txt "note: DC standard errors not available with continuously-updating GMM estimator"
 				}
-// 				else if "`nl'" != "" {
-// 					loc vcec			"WC"
-// 					di as txt "note: DC standard errors not available with nonlinear moment conditions"
-// 				}
 				else {
 					mata: xtdpdgmm_init_vce_cor(`mopt', 2)
 				}
@@ -386,7 +401,7 @@ program define xtdpdgmm_gmm, eclass
 		if ("`twostep'`igmm'" != "") {
 			di as txt "note: conventional standard errors can be severely biased in finite samples"
 		}
-		else if "`nolevel'" == "" {
+		else if "`nolevel'`nl'" == "" {
 			di as txt "note: conventional one-step standard errors may not be valid"
 		}
 	}
@@ -515,6 +530,8 @@ program define xtdpdgmm_gmm, eclass
 		loc fodivvars		: list retok fodivnames
 	}
 	loc ivnames			""
+	tempvar obs
+	qui by `_dta[_TSpanel]': gen int `obs' = _n
 	sum `obs' if `touse', mean
 	loc maxlag			= r(max) - r(min) + 1
 	forv j = 1 / `ivnum' {
@@ -729,7 +746,7 @@ program define xtdpdgmm_init, sclass
 				IGMM								///
 				CUgmm								///
 				noANalytic							///
-				METHOD(string)						///
+				METHOD(str)							///
 				ITERate(integer `maxiter')			///
 				noLOg								///
 				NODOTs								///
@@ -863,14 +880,17 @@ program define xtdpdgmm_parse_nl, sclass
 	loc collapse		= cond(("`csyntax'" == "noCollapse" & "`collapse'" == "") | ("`csyntax'" == "Collapse" & "`collapse'" != ""), "collapse", "")
 	loc rescale			= cond(("`rsyntax'" == "noREScale" & "`rescale'" == "") | ("`rsyntax'" == "REScale" & "`rescale'" != ""), "rescale", "")
 	loc length			: length loc anything
-	if `"`anything'"' == substr("noserial", 1, max(5, `length')) {
+	if `"`anything'"' == substr("predetermined", 1, max(3, `length')) {
+		loc anything		"predetermined"
+	}
+	else if `"`anything'"' == substr("noserial", 1, max(5, `length')) {
 		loc anything		"noserial"
 	}
 	else if `"`anything'"' != "iid" {
 		di as err "option nl() incorrectly specified"
 		exit 198
 	}
-	else if "`lag'" != "" {
+	if "`anything'" != "noserial" & "`lag'" != "" {
 		di as err "option nl() incorrectly specified -- option lag() not allowed"
 		exit 198
 	}
@@ -894,7 +914,7 @@ end
 program define xtdpdgmm_parse_options, sclass
 	version 13.0
 	sret clear
-	syntax , MAXLAG(integer) [GMMiv(string) IV(string) Collapse noREScale Model(string) *]
+	syntax , MAXLag(numlist max=2 int miss >=0) [GMMiv(str) IV(str) Collapse noREScale Model(str) *]
 
 	*--------------------------------------------------*
 	*** GMM instruments ***
@@ -940,8 +960,8 @@ program define xtdpdgmm_parse_gmmiv, sclass
 	gettoken csyntax 0 : 0
 	gettoken rsyntax 0 : 0
 	gettoken mdefault 0 : 0
-	syntax varlist(num ts fv), MAXLag(integer) [Lagrange(numlist max=2 int miss) Difference BODev `csyntax' `rsyntax' IID Model(string)		///
-												EC]																							// historical since version 2.0.0
+	syntax varlist(num ts fv), MAXLag(numlist max=2 int miss >=0) [	Lagrange(numlist max=2 int miss) Difference BODev `csyntax' `rsyntax' IID Model(str)		///
+																	EC]																							// historical since version 2.0.0
 
 	if "`s(fvops)'" == "true" {
 		fvexpand `varlist'
@@ -1006,7 +1026,7 @@ program define xtdpdgmm_parse_iv, sclass
 	version 13.0
 	gettoken rsyntax 0 : 0
 	gettoken mdefault 0 : 0
-	syntax varlist(num ts fv), MAXLag(integer) [Lagrange(numlist max=2 int) Difference BODev `rsyntax' Model(string)]
+	syntax varlist(num ts fv), MAXLag(numlist max=2 int miss >=0) [Lagrange(numlist max=2 int) Difference BODev `rsyntax' Model(str)]
 
 	if "`s(fvops)'" == "true" {
 		fvexpand `varlist'
@@ -1045,10 +1065,10 @@ end
 **** syntax parsing for the model equations ****
 program define xtdpdgmm_parse_model, sclass
 	version 13.0
-	syntax [anything] , TODO(integer) [	Level Difference MDev FODev IID		///
-										EC]									// historical since version 2.0.0
+	syntax [anything] , TODO(integer) [	Level Difference Mean MDev FODev IID		///
+										EC]											// historical since version 2.0.0
 
-	if `: word count `level' `difference' `mdev' `fodev'' > 1 | (`todo' == 2 & "`iid'`ec'" != "") {
+	if `: word count `level' `difference' `mean' `mdev' `fodev'' > 1 | (`todo' == 2 & "`iid'`ec'" != "") {
 		di as err "option model() incorrectly specified"
 		exit 198
 	}
@@ -1056,13 +1076,13 @@ program define xtdpdgmm_parse_model, sclass
 		loc anything		"level"
 	}
 	else if "`anything'" == "nolevel" {
-		if "`level'" != "" {
-			di as err "options model(level) and nolevel may not be combined"
+		if "`level'`mean'" != "" {
+			di as err "options model(`level'`mean') and nolevel may not be combined"
 			exit 184
 		}
 		loc anything		"diff"	
 	}
-	if "`level'`difference'`mdev'`fodev'`iid'`ec'" == "" {
+	if "`level'`difference'`mean'`mdev'`fodev'`iid'`ec'" == "" {
 		if "`anything'" == "diff" {
 			loc difference		"difference"
 		}
@@ -1085,7 +1105,7 @@ program define xtdpdgmm_parse_model, sclass
 		loc model			"iid"
 	}
 	else {
-		loc model			"`level'`difference'`mdev'`fodev'"
+		loc model			"`level'`difference'`mean'`mdev'`fodev'"
 	}
 
 	sret loc model		"`model'"
@@ -1095,8 +1115,10 @@ end
 **** syntax parsing for the instrument lag range ****
 program define xtdpdgmm_parse_lagrange, sclass
 	version 13.0
-	syntax , MAXLag(integer) [Lagrange(numlist max=2 int miss) Difference BODev Model(string) GMMiv]
+	syntax , MAXLag(numlist max=2 int miss >=0) [Lagrange(numlist max=2 int miss) Difference BODev Model(str) GMMiv]
 
+	loc curtail			: word 2 of `maxlag'
+	loc maxlag			: word 1 of `maxlag'
 	loc minlag			= - `maxlag'
 	if "`difference'" != "" | "`bodev'" != "" {
 		loc --maxlag
@@ -1107,16 +1129,23 @@ program define xtdpdgmm_parse_lagrange, sclass
 	if "`model'" == "diff" {
 		loc ++minlag
 	}
+	if "`curtail'" == "" {
+		loc curtail			= .
+	}
+	else if `curtail' < . & `curtail' > `maxlag' {
+		di as err "curtail() invalid -- outside of allowed range"
+		exit 125
+	}
 	gettoken lag1 lag2 : lagrange
 	if "`gmmiv'" != "" {
 		if `lag1' == . {
-			loc lag1			= `minlag'
+			loc lag1			= cond(`curtail' < ., 0, `minlag')
 		}
 		if "`lag2'" == "" {
-			loc lag2			= `maxlag'
+			loc lag2			= min(`maxlag', `curtail')
 		}
 		else if `lag2' == . {
-			loc lag2			= `maxlag'
+			loc lag2			= min(`maxlag', `curtail')
 		}
 	}
 	else if "`lag2'" == "" {
@@ -1184,7 +1213,7 @@ end
 program define xtdpdgmm_parse_vce, sclass
 	version 13.0
 	sret clear
-	syntax [if] [in] , [VCE(passthru) Model(string)]
+	syntax [if] [in] , [VCE(passthru) Model(str)]
 
 	cap _vce_parse , opt(CONVENTIONAL Robust) argopt(CLuster) : , `vce'
 	if "`r(vce)'" == "" {
@@ -1215,7 +1244,7 @@ end
 **** syntax parsing for robust variance-covariance matrix ****
 program define xtdpdgmm_parse_vce_robust, sclass
 	version 13.0
-	syntax , vce(string)
+	syntax , vce(str)
 
 	xtdpdgmm_parse_vce_cor `vce'
 end
@@ -1255,7 +1284,7 @@ end
 **** syntax parsing for the variance model equation ****
 program define xtdpdgmm_parse_vce_model, sclass
 	version 13.0
-	syntax anything , [	Model(string) 				/// noREScale
+	syntax anything , [	Model(str)	 				/// noREScale
 						Difference]					// historical since version 2.0.3
 
 	if "`difference'" == "" {
@@ -1294,6 +1323,11 @@ end
 
 *==================================================*
 *** version history ***
+* version 2.6.2  03aug2022  options difference, collapse, and order() added for postestimation command estat serialpm
+* version 2.6.1  01aug2022  postestimation command estat serialpm added; option order() replaces option ar() of estat serial
+* version 2.6.0  27jul2022  command xtdpdgmmfe added; option curtail() added; bug fixed with maximum lag determination in panels with gaps
+* version 2.5.1  21jul2022  suboption model(mean) added; collinearity checks for indepvars added; option nolevel removes groups with only 1 observation
+* version 2.5.0  13jul2022  options nl(predetermined) and center added; bug fixed when options nl() and vce(cluster) are combined
 * version 2.4.2  02jul2022  doubly corrected standard errors added for nonlinear estimator; option wmatrix(identity) added
 * version 2.4.1  14jun2022  suboptions wc and dc added to option vce(); adjusted standard error labels; adjusted Windmeijer correction for iterated GMM; bug fixed with conventional two-step standard errors in combination with option nl()
 * version 2.4.0  05jun2022  option cugmm added; incorrect modification to Windmeijer correction in version 2.3.11 reversed; bug with option auxiliary fixed that was introduced in version 2.3.10
@@ -1308,7 +1342,7 @@ end
 * version 2.3.3  16mar2021  bug with estat mmsc fixed that was introduced in version 2.3.2
 * version 2.3.2  25jan2021  bug fixed with option nl(noserial); option n() added for estat mmsc and default changed if vce(cluster) specified
 * version 2.3.1  08oct2020  bug fixed with lagged interaction terms as instruments
-* version 2.3.0  26aug2020  suboption lag() added for option nl(noserial); bug with time-series operators in dependent variable fixed in postestimation command predict; option nofootnote replaced by nofooter
+* version 2.3.0  26aug2020  suboption lag() added for option nl(noserial); bug with time-series operators in depvar fixed in postestimation command predict; option nofootnote replaced by nofooter
 * version 2.2.7  21jul2020  bug with interaction terms fixed in estat serial; bug with option noomitted fixed; improved help files
 * version 2.2.6  19apr2020  support for postestimation command margins added
 * version 2.2.5  17apr2020  bug with postestimation commands fixed if _cons is omitted

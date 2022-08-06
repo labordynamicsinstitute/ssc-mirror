@@ -1,27 +1,38 @@
 d 'XTDPDGMM': module to perform generalized method of moments estimation of linear dynamic panel data models
 d
 d  xtdpdgmm implements generalized method of moments estimators for
-d linear dynamic panel data models. Linear moment conditions can be
-d combined with the nonlinear moment conditions suggested by Ahn
-d and Schmidt (1995). The Windmeijer (2005) finite-sample standard
-d error correction is implemented for estimators with and without
-d nonlinear moment conditions. Available postestimation statistics
-d include the Arellano-Bond test for autocorrelation of the
-d residuals and Hansen's J-test for the validity of the
-d overidentifying restrictions. 
+d linear dynamic panel models. Linear moment conditions in the
+d spirit of Arellano and Bond (1991), Arellano and Bover (1995),
+d Blundell and Bond (1998), and Hayakawa, Qi, and Breitung (2019)
+d can be combined with the nonlinear moment conditions suggested by
+d Ahn and Schmidt (1995) or Chudik and Pesaran (2022). One-step,
+d two-step, iterated, and continuously-updating GMM estimators can
+d be used. The Windmeijer (2005) finite-sample standard error
+d correction and the doubly-corrected misspecification-robust
+d standard errors of Hwang, Kang, and Lee (2022) are available.
+d Possible model transformations include first differences,
+d deviations from within-group means, and forward-orthogonal
+d deviations. Available postestimation statistics include the
+d Arellano and Bond (1991) and Jochmans (2020) tests for
+d autocorrelation of the residuals, the Sargan-Hansen test for the
+d validity of the overidentifying restrictions, a generalized
+d Hausman test, and the Andrews and Lu (2001) model and moment
+d selection criteria. 
 d
 d KW: dynamic panel data
 d KW: generalized method of moments
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20220703
+d Distribution-Date: 20220805
 d
 d Author: Sebastian Kripfganz, University of Exeter
 d Support: email S.Kripfganz@@exeter.ac.uk
 d
 f xtdpdgmm.ado
 f xtdpdgmm.sthlp
+f xtdpdgmmfe.ado
+f xtdpdgmmfe.sthlp
 f xtdpdgmm_p.ado
 f xtdpdgmm_estat.ado
 f xtdpdgmm_postestimation.sthlp

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.4.2  02jul2022}{...}
+{* *! version 2.6.2  03aug2022}{...}
 {* *! Sebastian Kripfganz, www.kripfganz.de}{...}
 {vieweralsosee "xtdpdgmm postestimation" "help xtdpdgmm_postestimation"}{...}
 {vieweralsosee "" "--"}{...}
@@ -42,10 +42,12 @@
 {synopt:{opt gmm:iv}{cmd:(}{it:{help xtdpdgmm##options_spec:gmmiv_spec}}{cmd:)}}GMM-type instruments; can be specified more than once{p_end}
 {synopt:{opt nl}{cmd:(}{it:{help xtdpdgmm##options_spec:nl_spec}}{cmd:)}}add nonlinear moment conditions derived from error covariance structure{p_end}
 {synopt:{opt c:ollapse}}collapse GMM-type into standard instruments{p_end}
+{synopt:{opt cur:tail(#)}}curtail the lag range for GMM-type instruments{p_end}
 {synopt:{opt m:odel}{cmd:(}{it:{help xtdpdgmm##options_spec:model_spec}}{cmd:)}}set the default model for the instruments and VCE{p_end}
 {synopt:{opt nolev:el}}ignore specifications for the model in levels{p_end}
 {synopt:{opt nores:cale}}do not rescale the transformed moment conditions{p_end}
 {synopt:{opt w:matrix}{cmd:(}{it:{help xtdpdgmm##options_spec:wmat_spec}}{cmd:)}}specify initial weighting matrix{p_end}
+{synopt:{opt cen:ter}}center moments in the optimal weighting matrix{p_end}
 {p2coldent :* {opt one:step}|{opt two:step}}use the one-step or two-step estimator{p_end}
 {p2coldent :* {opt igmm}}use the iterated GMM estimator{p_end}
 {p2coldent :* {opt cu:gmm}}use the continuously-updating GMM estimator{p_end}
@@ -53,7 +55,7 @@
 {synopt:{opt nocons:tant}}suppress constant term{p_end}
 
 {syntab:SE/Robust}
-{synopt :{opt vce}{cmd:(}{it:{help xtdpdgmm##options_spec:vce_spec}}{cmd:)}}specify the {help xtdpdgmm##vcetype:{it:vcetype}} for the SE estimation{p_end}
+{synopt:{opt vce}{cmd:(}{it:{help xtdpdgmm##options_spec:vce_spec}}{cmd:)}}specify the {help xtdpdgmm##vcetype:{it:vcetype}} for the SE estimation{p_end}
 {synopt:{opt sm:all}}make degrees-of-freedom adjustment and report small-sample statistics{p_end}
 
 {syntab:Reporting}
@@ -94,7 +96,7 @@ INCLUDE help shortdes-displayoptall
 {it:nl_spec} is
 
 {p 8 12 2}
-{opt noser:ial}|{opt iid} [{cmd:,} [{cmdab:no:}]{opt c:ollapse} [{cmdab:no:}]{opt res:cale} {opt l:ag(#)} {opt w:eight(#)}]
+{opt noser:ial}|{opt iid}|{opt pre:determined} [{cmd:,} [{cmdab:no:}]{opt c:ollapse} [{cmdab:no:}]{opt res:cale} {opt l:ag(#)} {opt w:eight(#)}]
 
 {p 4 6 2}
 {it:wmat_spec} is
@@ -112,7 +114,7 @@ INCLUDE help shortdes-displayoptall
 {it:model_spec} is
 
 {p 8 12 2}
-{opt l:evel}|{opt d:ifference}|{opt md:ev}|{opt fod:ev}
+{opt l:evel}|{opt d:ifference}|{opt fod:ev}|{opt md:ev}|{opt m:ean}
 
 {p 4 6 2}
 {it:init_specs} is one of
@@ -128,7 +130,7 @@ All {it:varlists} may contain factor variables; see {help fvvarlist}.{p_end}
 {p 4 6 2}
 {it:depvar} and all {it:varlists} may contain time-series operators; see {help tsvarlist}.{p_end}
 {p 4 6 2}
-See {helpb xtdpdgmm postestimation} for features available after estimation.{p_end}
+See {helpb xtdpdgmm postestimation} for features available after estimation and {helpb xtdpdgmmfe} for a wrapper of {cmd:xtdpdgmm} with simplified syntax.{p_end}
 {p 4 6 2}
 {cmd:xtdpdgmm} is a community-contributed program. The current version requires Stata version 13 or higher; see {help xtdpdgmm##update:version history and updates}.{p_end}
 
@@ -137,9 +139,9 @@ See {helpb xtdpdgmm postestimation} for features available after estimation.{p_e
 {title:Description}
 
 {pstd}
-{cmd:xtdpdgmm} implements generalized method of moments (GMM) estimators for linear dynamic panel data models. GMM estimators can be specified with linear moment conditions in the spirit of Arellano and Bond (1991), Arellano and Bover (1995),
-Blundell and Bond (1998), and Hayakawa, Qi, and Breitung (2019). {cmd:xtdpdgmm} can also incorporate the nonlinear moment conditions suggested by Ahn and Schmidt (1995).
-The latter yield efficiency gains and more robust results for highly persistent data.
+{cmd:xtdpdgmm} implements generalized method of moments (GMM) estimators for linear dynamic panel data models. GMM estimators can be specified with linear moment conditions in the spirit of Anderson and Hsiao (1981), Arellano and Bond (1991),
+Arellano and Bover (1995), Blundell and Bond (1998), and Hayakawa, Qi, and Breitung (2019). {cmd:xtdpdgmm} can also incorporate the nonlinear moment conditions suggested by Ahn and Schmidt (1995) or Chudik and Pesaran (2022),
+which can yield efficiency gains and more robust results for highly persistent data.
 
 {pstd}
 The model can be estimated with the one-step, two-step, iterated, or continuously-updating GMM estimator. The two-step estimator uses an optimal weighting matrix which is estimated from the one-step residuals.
@@ -162,7 +164,7 @@ Instruments for different model transformations can be combined flexibly to form
 
 {phang}
 {cmd:iv(}{varlist} [{cmd:,} {it:suboptions}]{cmd:)} and {cmd:gmmiv(}{varlist} [{cmd:,} {it:suboptions}]{cmd:)} specify standard and GMM-type instruments, respectively. You may specify as many sets of standard instruments as you need.
-Allowed {it:suboptions} for both type of instruments are {opt l:agrange(#_1 [#_2])}, {opt d:ifference}, {opt bod:ev}, {opt m:odel}{cmd:(}{opt l:evel}|{opt d:ifference}|{opt md:ev}|{opt fod:ev}{cmd:)}, and [{cmdab:no:}]{opt res:cale}.
+Allowed {it:suboptions} for both type of instruments are {opt l:agrange(#_1 [#_2])}, {opt d:ifference}, {opt bod:ev}, {opt m:odel}{cmd:(}{opt l:evel}|{opt d:ifference}|{opt fod:ev}|{opt md:ev}|{opt m:ean}{cmd:)}, and [{cmdab:no:}]{opt res:cale}.
 GMM-type instruments allow the additional {it:suboptions} [{cmdab:no:}]{opt c:ollapse} and {opt iid}.
 
 {pmore}
@@ -173,9 +175,9 @@ Used with option {cmd:iv()}, the default is {cmd:lagrange(0 0)}. Specifying {cmd
 unless suboption {cmd:bodev} is specified; see {help tsvarlist}. {opt lagrange(#_1)} with only one argument is equivalent to {opt lagrange(#_1 #_1)} with two identical arguments.
 
 {pmore2}
-Used with option {cmd:gmmiv()}, the default is {cmd:lagrange(1 .)} in combination with {cmd:model(difference)}, and {cmd:lagrange(0 .)} otherwise. A missing value for {it:#_1} requests all available leads to be used until {it:#_2},
-while a missing value for {it:#_2} requests all available lags to be used starting with {it:#_1}. Thus, {cmd:lagrange(. .)} uses all available observations.
-{opt lagrange(#_1)} with only one argument is equivalent to {cmd:lagrange(}{it:#_1}{cmd: .)}.
+Used with option {cmd:gmmiv()}, the default is {cmd:lagrange(1 .)} in combination with {cmd:model(difference)}, and {cmd:lagrange(0 .)} otherwise.
+Unless restricted with option {cmd:curtail()}, a missing value for {it:#_1} requests all available leads to be used until {it:#_2}, while a missing value for {it:#_2} requests all available lags to be used starting with {it:#_1}.
+Thus, {cmd:lagrange(. .)} uses all available observations. {opt lagrange(#_1)} with only one argument is equivalent to {cmd:lagrange(}{it:#_1}{cmd: .)}.
 
 {pmore}
 {opt collapse} and {opt nocollapse} used with option {cmd:gmmiv()} request to either collapse or to not collapse the GMM-type instruments into standard instruments. The suboption {cmd:collapse} is useful to reduce the number of instruments,
@@ -189,21 +191,22 @@ The suboption {cmd:nocollapse} can be used to override the default set by the gl
 {opt bodev} requests a backward-orthogonal deviations transformation of {it:varlist}. This is only possible in combination with {cmd:model(fodev)}.
 
 {pmore}
-{opt model(model)} specifies if the instruments apply to the model in levels, {cmd:model(level)}, in first differences, {cmd:model(difference)}, in deviations from within-group means, {cmd:model(mdev)},
-or in forward-orthogonal deviations, {cmd:model(fodev)}. The default is {cmd:model(level)} unless otherwise specified with the global option {opt model(model)}.
+{opt model(model)} specifies if the instruments apply to the model in levels, {cmd:model(level)}, in first differences, {cmd:model(difference)}, in forward-orthogonal deviations, {cmd:model(fodev)},
+in deviations from within-group means, {cmd:model(mdev)}, or in within-group means, {cmd:model(mean)}. The default is {cmd:model(level)} unless otherwise specified with the global option {opt model(model)}.
 
 {pmore}
-{opt rescale} and {opt norescale} request to either rescale or to not rescale the moment conditions such that the transformed error term retains the same variance
-under the assumption that the untransformed idiosyncratic error term is independent and identically distributed. These suboptions are seldom used and only have an effect in combination with {cmd:model(mdev)} or {cmd:model(fodev)}.
+{opt rescale} and {opt norescale} request to either rescale or to not rescale the moment conditions such that the transformed error term retains the same variance under the assumption that the untransformed idiosyncratic error component
+is independent and identically distributed. These suboptions are seldom used and only have an effect in combination with {cmd:model(fodev)}, {cmd:model(mdev)}, or {cmd:model(mean)}.
 They similarly affect the transformation of {it:varlist} when suboption {cmd:bodev} is specified. {cmd:rescale} is the default unless otherwise specified with the global option {cmd:norescale}.
 
 {pmore}
 {opt iid} used with option {cmd:gmmiv()} specifies instruments valid under an error-components structure with an independent and identically distributed idiosyncratic error component.
-These are the additional instruments implied by the linear moment conditions derived by Ahn and Schmidt (1995) under the assumption of homoskedastic errors if specified as {cmd:gmmiv(L.}{it:depvar}{cmd:,} {cmd:iid)}.
+If specified as {cmd:gmmiv(L.}{it:depvar}{cmd:,} {cmd:iid)}, these are the additional instruments implied by the linear moment conditions derived by Ahn and Schmidt (1995) under the assumption of homoskedastic errors.
+If specified as {cmd:gmmiv(L.}{it:depvar}{cmd:,} {cmd:difference} {cmd:iid)}, these are the additional instruments which can replace the nonlinear moment conditions derived by Chudik and Pesaran (2022).
 This suboption is seldom used and it implies the other suboptions {cmd:model(difference)} and {cmd:lagrange(0 0)}.
 
 {phang}
-{cmd:nl(}{opt noser:ial}|{opt iid} [, {it:suboptions}]{cmd:)} adds nonlinear moment conditions that are valid under an error-components structure with specific assumptions on the idiosyncratic error component.
+{cmd:nl(}{opt noser:ial}|{opt iid}|{opt pre:determined} [, {it:suboptions}]{cmd:)} adds nonlinear moment conditions that are valid under an error-components structure with specific assumptions on the idiosyncratic error component.
 Allowed {it:suboptions} are [{cmdab:no:}]{opt c:ollapse}, [{cmdab:no:}]{opt res:cale}, {opt l:ag(#)}, and {opt w:eight(#)}.
 
 {pmore}
@@ -214,6 +217,10 @@ Allowed {it:suboptions} are [{cmdab:no:}]{opt c:ollapse}, [{cmdab:no:}]{opt res:
 It further adds linear moment conditions of the form {cmd:gmmiv(L.}{it:depvar}{cmd:, iid} [{cmd:collapse}]{cmd:)} that are valid under this assumption.
 
 {pmore}
+{cmd:nl(predetermined)} adds the nonlinear moment conditions suggested by Chudik and Pesaran (2022) under the absence of serial correlation in the idiosyncratic error component.
+It requires that all {it:indepvars} are predetermined or strictly exogenous.
+
+{pmore}
 {opt collapse} requests to add up the moment conditions to form a single moment condition. {cmd:nocollapse} can be used to override the default set by the global option {cmd:collapse}.
 
 {pmore}
@@ -222,8 +229,8 @@ under the assumption that the untransformed idiosyncratic error term is independ
 {cmd:rescale} is the default unless otherwise specified with the global option {cmd:norescale}.
 
 {pmore}
-{opt lag(#)} specifies the minimum lag of the first-differenced error term in the moment conditions under the absence of serial correlation, {cmd:nl(noserial)}. The default is {cmd:lag(1)}.
-This option is not allowed in combination with {cmd:nl(iid)}.
+{opt lag(#)} specifies the minimum lag of the first-differenced error term in the moment conditions under the absence of serial correlation. The default is {cmd:lag(1)}.
+This option is only allowed in combination with {cmd:nl(noserial)}.
 
 {pmore}
 {opt weight(#)} specifies the weight of the nonlinear moment conditions in the initial weighting matrix relative to the linear moment conditions. The default is {cmd:weight(1)}.
@@ -233,19 +240,25 @@ Specifying {cmd:weight(0)} implies that the nonlinear moment conditions are igno
 {opt collapse} requests to collapse all GMM-type instruments into standard instruments and to collapse the nonlinear moment conditions into a single moment condition.
 
 {phang}
+{opt curtail(#)} requests to curtail the lag range for GMM-type instruments if either {it:#_1} or {it:#_2} in the {cmd:gmmiv()} suboption {opt lagrange(#_1 [#_2])} are specified as missing values.
+If {it:#_1} is missing, no leads will be used. If {it:#_2} is missing, all available lags until {it:#} will be used. Thus, {opt lagrange(. .)} is equivalent to {cmd:lagrange(0 }{it:#}{cmd:)}.
+{opt curtail(.)} can be specified to only restrict {it:#_1}.
+
+{phang}
 {opt model(model)} sets the default model used to generate the instruments specified with options {cmd:iv()} and {cmd:gmmiv()} and the default model for the conventional variance estimator specified with option {cmd:vce()}.
-{it:model} is allowed to be {opt l:evel}, {opt d:ifference}, {opt md:ev}, or {opt fod:ev}. The default is {cmd:model(level)} unless option {opt nolevel} is specified, in which case the default is {cmd:model(difference)}.
+{it:model} is allowed to be {opt l:evel}, {opt d:ifference}, {opt fod:ev}, {opt md:ev}, or {opt m:ean}. The default is {cmd:model(level)} unless option {opt nolevel} is specified, in which case the default is {cmd:model(difference)}.
 
 {phang}
-{opt nolevel} requests that all model specifications refer to a transformed model. This changes the default from {cmd:model(level)} to {cmd:model(difference)}. All instruments which are explicitly specified for the model in levels are ignored.
-With this option, instruments for the time dummies created with option {opt teffects} are no longer specified for the model in levels but for the default model set with option {opt model(model)}.
-The degrees-of-freedom adjustment with option {opt small} is corrected for the reduction of time periods in the transformed model or the absorbed group-specific effects.
-A regression intercept is still estimated for the model in levels unless option {opt noconstant} is specified.
+{opt nolevel} requests that all model specifications refer to a transformed model. This changes the default from {cmd:model(level)} to {cmd:model(difference)}.
+All instruments which are explicitly specified for {cmd:model(level)} or {cmd:model(mean)} are ignored. With this option, instruments for the time dummies created with option {opt teffects} are no longer specified for the model in levels
+but for the default model set with option {opt model(model)}. The degrees-of-freedom adjustment with option {opt small} is corrected for the reduction of time periods in the transformed model or the absorbed group-specific effects.
+Groups with only a single observation are removed from the estimation sample. A regression intercept is still estimated for the model in levels unless option {opt noconstant} is specified.
 
 {phang}
-{opt norescale} requests not to rescale the moment conditions. By default, the moment conditions for the model in deviations from within-group means or forward-orthogonal deviations are rescaled by a group-specific factor
+{opt norescale} requests not to rescale the moment conditions. By default, the moment conditions for {cmd:model(fodev)}, {cmd:model(mdev)}, and {cmd:model(mean)} are rescaled by a group-specific factor
 such that the transformed error term retains the same variance under the assumption that the untransformed idiosyncratic error term is independent and identically distributed.
-A similar transformation is applied to the nonlinear moment conditions added with option {cmd:nl(iid)}. This option is seldom used.
+A similar transformation is applied to the nonlinear moment conditions added with option {cmd:nl(iid)}. In combination with option {opt center},
+{opt norescale} ignores an adjustment to the mean of the moment functions in the optimal weighting matrix, which is applied by default when the number of observations differs across clusters, as in the case of unbalanced panel data.
 
 {phang}
 {cmd:wmatrix(}[{it:wmat_type}] [{cmd:,} {opt r:atio(#)}]{cmd:)} specifies the weighting matrix to be used to obtain one-step GMM estimates or initial estimates for two-step or iterated GMM estimation.
@@ -266,6 +279,9 @@ thus ignoring the covariance between the respective error terms and the serial c
 
 {pmore}
 {cmd:wmatrix(identity)} is the identity matrix. This option is seldom used.
+
+{phang}
+{opt center} requests to center the moment functions in the computation of the optimal weighting matrix.
 
 {phang}
 {opt onestep}, {opt twostep}, {opt igmm}, and {opt cugmm} specify which estimator is to be used. At most one of these options can be specified.
@@ -299,13 +315,13 @@ unless options {opt nolevel} and {cmd:model(fodev)} are jointly specified, in wh
 
 {phang}
 {opt vce}{cmd:(}{it:vcetype} [{cmd:,} {opt m:odel(model)} {opt wc}|{opt dc}]{cmd:)} specifies the type of standard error reported, which includes types that are derived from asymptotic theory ({opt conventional}),
-that are robust to some kinds of misspecification ({opt r:obust}), and that allow for intragroup correlation ({opt cl:uster} {it:clustvar}). {it:model} is allowed to be {opt l:evel}, {opt d:ifference}, {opt md:ev}, or {opt fod:ev}.
+that are robust to some kinds of misspecification ({opt r:obust}), and that allow for intragroup correlation ({opt cl:uster} {it:clustvar}). {it:model} is allowed to be {opt l:evel}, {opt d:ifference}, {opt fod:ev}, {opt md:ev}, or {opt m:ean}.
 
 {pmore}
 {cmd:vce(conventional)} uses the conventionally derived variance estimator. It is robust to some kinds of misspecification if the two-step GMM estimator is used or if nonlinear moment conditions are employed.
 After one-step estimation, the error variance is by default computed from the level residuals, {cmd:model(level)}, unless it is specified that it is to be computed from the residuals in first differences, {cmd:model(difference)},
-the residuals in deviations from within-group means, {cmd:model(mdev)}, or the residuals in forward-orthogonal deviations, {cmd:model(fodev)}. The sandwich estimator is used for one-step GMM estimation with nonlinear moment conditions,
-but without the Windmeijer (2005) correction. {cmd:vce(conventional)} is the default, although in most cases {cmd:vce(robust)} would be recommended.
+the residuals in forward-orthogonal deviations, {cmd:model(fodev)}, the residuals in deviations from within-group means, {cmd:model(mdev)}, or the within-group means of the residuals, {cmd:model(mean)}.
+The sandwich estimator is used for one-step GMM estimation with nonlinear moment conditions, but without the Windmeijer (2005) correction. {cmd:vce(conventional)} is the default, although in most cases {cmd:vce(robust)} would be recommended.
 
 {pmore}
 {cmd:vce(robust)} and {cmd:vce(cluster} {it:clustvar}{cmd:)} use the sandwich estimator for one-step GMM estimation with only linear moment conditions. Suboption {opt wc}, the default, applies the Windmeijer (2005) finite-sample correction
@@ -364,10 +380,12 @@ In the latter case, the default initial values are the two-stage least squares e
 {opt nodots} specifies that an iteration log is displayed instead of dots. By default, one dot character is displayed for each step of the iterated GMM estimator.
 For the one-step and two-step estimator, display of an iteration log is the default.
 
-{phang}{marker igmm_options}
+{marker igmm_options}{...}
+{phang}
 {it:igmm_options}: {opt igmmit:erate(#)}, {opt igmmeps(#)}, and {opt igmmweps(#)}; see {helpb gmm:[R] gmm}. These options are seldom used and only have an effect if the iterated GMM estimator is used.
 
-{phang}{marker minimize_options}
+{marker minimize_options}{...}
+{phang}
 {it:minimize_options}: {opt iter:ate(#)}, {opt nolo:g}, {opt showstep}, {opt showtol:erance}, {opt tol:erance(#)}, {opt ltol:erance(#)}, {opt nrtol:erance(#)}, and {opt nonrtol:erance}; see {helpb maximize:[R] maximize}.
 These options are seldom used.
 
@@ -405,7 +423,7 @@ and e the idiosyncratic error component. To remove the group-specific error comp
 D y = D X b + D e
 
 {pstd}
-Matrix D can yield a first-difference transformation, {cmd:model(difference)}, deviations from within-group means, {cmd:model(mdev)}, or forward-orthogonal deviations, {cmd:model(fodev)}.
+Matrix D can yield a first-difference transformation, {cmd:model(difference)}, forward-orthogonal deviations, {cmd:model(fodev)}, deviations from within-group means, {cmd:model(mdev)}, or within-group means, {cmd:model(mean)}.
 
 {pstd}
 Instrumental variables can be specified for the untransformed model and/or for one or more of the transformed models. However, it is important to keep in mind that the estimation is not performed separately for different models.
@@ -440,23 +458,9 @@ Predetermined variables, also referred to as weakly exogenous variables, are var
 Endogenous variables are variables that are uncorrelated with the idiosyncratic error component of all following time periods but which might be correlated with current or past errors.
 
 {pstd}
-Strictly exogenous variables are valid instruments{p_end}
-{phang2}with {cmd:lagrange(. .)} for {cmd:model(difference)}{p_end}
-{phang2}with {cmd:lagrange(. .)} for {cmd:model(mdev)}{p_end}
-{phang2}with {cmd:lagrange(. .)} for {cmd:model(fodev)}{p_end}
-{phang2}with {cmd:lagrange(. .)} for {cmd:model(level)}{p_end}
-
-{pstd}
-Predetermined variables are valid instruments{p_end}
-{phang2}with {cmd:lagrange(1 .)} for {cmd:model(difference)}{p_end}
-{phang2}with {cmd:lagrange(0 .)} for {cmd:model(fodev)}{p_end}
-{phang2}with {cmd:lagrange(0 .)} for {cmd:model(level)}{p_end}
-
-{pstd}
-Endogenous variables are valid instruments{p_end}
-{phang2}with {cmd:lagrange(2 .)} for {cmd:model(difference)}{p_end}
-{phang2}with {cmd:lagrange(1 .)} for {cmd:model(fodev)}{p_end}
-{phang2}with {cmd:lagrange(1 .)} for {cmd:model(level)}{p_end}
+Strictly exogenous variables are valid instruments with {cmd:lagrange(. .)} for any model transformation.
+Predetermined variables are valid instruments with {cmd:lagrange(0 .)} for {cmd:model(level)} or {cmd:model(fodev)}, but only {cmd:lagrange(1 .)} for {cmd:model(difference)}.
+Endogenous variables are valid instruments with {cmd:lagrange(1 .)} for {cmd:model(level)} or {cmd:model(fodev)}, but only {cmd:lagrange(2 .)} for {cmd:model(difference)}.
 
 {pstd}
 If the idiosyncratic error term is serially correlated in the untransformed model, the classification of variables into these three groups can become problematic.
@@ -465,7 +469,7 @@ As a general rule, if the serial correlation of the idiosyncratic error term in 
 Alternatively, the list of {it:indepvars} could be amended to obtain a dynamically complete model with serially uncorrelated errors.
 
 {pstd}
-Variables are only valid instruments for the untransformed model, {cmd:model(level)}, if they are uncorrelated with the group-specific error component.
+Variables are only valid instruments for the untransformed model, {cmd:model(level)}, or the model in within-group means, {cmd:model(mean)}, if they are uncorrelated with the group-specific error component.
 This might often be an unreasonable assumption if the instruments are not first-differenced with option {opt difference}, as proposed by Blundell and Bond (1998).
 However, there is no guarantee that first-differenced instruments for the untransformed model are uncorrelated with the group-specific error component. This remains an assumption to be justified by the user.
 
@@ -479,7 +483,8 @@ A model specification approach that sequentially classifies variables as endogen
 
 {pstd}
 A serially uncorrelated idiosyncratic error term in the model in levels is a necessary condition for the validity of the instruments in most dynamic panel data models.
-In that case, the nonlinear moment conditions added by the option {cmd:nl(noserial)} do not require any additional assumption. The moment conditions added by the option {cmd:nl(iid)} require an additional homoskedasticity assumption.
+In that case, the nonlinear moment conditions added by the option {cmd:nl(noserial)} only require the mild additional assumption that both the group-specific error component and the initial observations of {it:varlist} and {it:indepvars} are
+uncorrelated with the first-differenced idiosyncratic error component. The moment conditions added by the option {cmd:nl(iid)} require an additional homoskedasticity assumption.
 Both types of nonlinear moment conditions were proposed by Ahn and Schmidt (1995).
 
 {pstd}
@@ -487,12 +492,19 @@ When there is evidence that the idiosyncratic error term is serially correlated,
 by specifying {cmd:nl(noserial, lag(}{it:#}{cmd:))}. If the serial correlation of the idiosyncratic error term in levels is of order {it:#} minus 1, then {opt lag(#)} would still produce valid moment conditions.
 
 {pstd}
-Adding the nonlinear moment conditions might improve the (asymptotic) efficiency of the GMM estimator and could help to identify the coefficients.
-However, the {cmd:nl(noserial)} moment conditions might become redundant if instruments for {cmd:model(level)} in the spirit of Blundell and Bond (1998) are added.
+Chudik and Pesaran (2022) proposed alternative nonlinear moment conditions, which are added by the option {cmd:nl(predetermined)}. In addition to a serially uncorrelated idiosyncratic error term, they require that all {it:indepvars} are
+predetermined or strictly exogenous. It further requires that the deviations of the initial observations of {it:depvar} from its long-run mean are uncorrelated with the first-differenced idiosyncratic error component.
+This is a weaker assumption than the corresponding requirement for {cmd:nl(noserial)} on the group-specific error component and the initial observations.
+Under an additional homoskedasticity assumption, the nonlinear moment conditions proposed by Chudik and Pesaran (2022) can be replaced by linear moment conditions with the {cmd:gmmiv()} suboption {opt iid}.
 
 {pstd}
-Even if the weighting matrix for the one-step GMM estimator was optimal in the absence of nonlinear moment conditions, after adding them it is no longer optimal. For efficient estimation, the two-step or iterated GMM estimator should be used.
-It is not recommended to use the {opt noconstant} option when nonlinear moment conditions are used even if all other moment conditions refer to transformed models.
+Adding the nonlinear moment conditions might improve the (asymptotic) efficiency of the GMM estimator and could help to identify the coefficients.
+However, the {cmd:nl(noserial)} or {cmd:nl(predetermined)} moment conditions might become redundant if instruments for {cmd:model(level)} in the spirit of Blundell and Bond (1998) are added.
+
+{pstd}
+Even if the weighting matrix for the one-step GMM estimator was optimal in the absence of nonlinear moment conditions, after adding them it is no longer optimal.
+For efficient estimation, the two-step, iterated, or continuously-updating GMM estimator should be used.
+It is not recommended to use the {opt noconstant} option in combination with {cmd:nl(noserial)} or {cmd:nl(iid)} even if all other moment conditions refer to transformed models.
 
 {pstd}
 {cmd:xtdpdgmm} minimizes the GMM criterion function numerically with the Gauss-Newton technique if some of the moment conditions are nonlinear, if the continuously-updating GMM estimator is used, or if the option {cmd:noanalytic} is specified.
@@ -517,7 +529,8 @@ or collapsing the GMM-type into standard instruments with the {cmd:collapse} sub
 {pstd}
 The moment conditions under deviations from within-group means with suboption {cmd:model(mdev)} are rescaled by the square root of the ratio {it:T_i} / ({it:T_i} - 1), where {it:T_i} is the number of observations for group {it:i},
 unless the option {cmd:norescale} is specified. This ensures that the variance of the error term is left unchanged by the transformation under the assumption that the untransformed error term is independent and identically distributed.
-Rescaling for {cmd:model(mdev)} has no effect with balanced panel data.
+Similarly, the moment conditions for the model in within-group means with suboption {cmd:model(mean)} are rescaled by the square root of {it:T_i}.
+Rescaling for {cmd:model(mdev)} or {cmd:model(mean)} has no effect with balanced panel data.
 
 {pstd}
 For the moment conditions under forward-orthogonal deviations with suboption {cmd:model(fodev)}, a scaling factor with the same purpose was suggested by Arellano and Bover (1995).
@@ -542,7 +555,7 @@ Otherwise, some of these instruments would be (asymptotically) redundant.
 {title:Time-invariant regressors}
 
 {pstd}
-If time-invariant regressors are included in {it:indepvars}, the identification of their coefficients requires at least as many instruments specified for {cmd:model(level)} as there are time-invariant regressors.
+If time-invariant regressors are included in {it:indepvars}, the identification of their coefficients requires at least as many instruments specified for {cmd:model(level)} or {cmd:model(mean)} as there are time-invariant regressors.
 These should generally be in addition to any first-differenced instruments or time dummies to avoid spurious estimates of those coefficients, as discussed by Kripfganz and Schwarz (2019).
 
 
@@ -557,19 +570,22 @@ These should generally be in addition to any first-differenced instruments or ti
 {phang2}. {stata xtdpdgmm L(0/1).n w k, iv(L2.n) iv(w k, d) m(d) nocons}{p_end}
 
 {pstd}Arellano-Bond one-step GMM estimator with strictly exogenous covariates and curtailed/collapsed instruments{p_end}
-{phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n, l(1 4) c) iv(w k, d) m(d) nocons}{p_end}
+{phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n, l(1 4)) iv(w k, d) m(d) c nocons}{p_end}
 
 {pstd}Arellano-Bover two-step GMM estimator with predetermined covariates and curtailed/collapsed instruments{p_end}
-{phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n w k, l(0 3) c) m(fod) two vce(r)}{p_end}
+{phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n w k, l(0 3)) m(fod) c two vce(r)}{p_end}
 
 {pstd}Ahn-Schmidt two-step GMM estimators with predetermined covariates and curtailed/collapsed instruments{p_end}
-{phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n w k, l(1 4) c) m(d) nl(noser) two vce(r)}{p_end}
-{phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n w k, l(1 4) c) m(d) nl(iid) two vce(r)}{p_end}
+{phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n w k, l(1 4)) m(d) nl(noser) c two vce(r)}{p_end}
+{phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n w k, l(1 4)) m(d) nl(iid) c two vce(r)}{p_end}
+
+{pstd}Chudik-Pesaran two-step GMM estimator with predetermined covariates and curtailed/collapsed instruments{p_end}
+{phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n w k, d l(1 4)) m(d) nl(pre) c two vce(r)}{p_end}
 
 {pstd}Blundell-Bond two-step, iterated, and continuously-updating GMM estimators with predetermined covariates and curtailed/collapsed instruments{p_end}
-{phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n w k, l(1 4) c m(d)) iv(L.n w k, d) two vce(r)}{p_end}
-{phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n w k, l(1 4) c m(d)) iv(L.n w k, d) igmm vce(r)}{p_end}
-{phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n w k, l(1 4) c m(d)) iv(L.n w k, d) cu}{p_end}
+{phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n w k, l(1 4) m(d)) iv(L.n w k, d) c two vce(r)}{p_end}
+{phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n w k, l(1 4) m(d)) iv(L.n w k, d) c igmm vce(r)}{p_end}
+{phang2}. {stata xtdpdgmm L(0/1).n w k, gmm(L.n w k, l(1 4) m(d)) iv(L.n w k, d) c cu}{p_end}
 
 {pstd}Hayakawa-Qi-Breitung IV estimator with predetermined covariates{p_end}
 {phang2}. {stata xtdpdgmm L(0/1).n w k, iv(L.n w k, bod) m(fod) nocons}{p_end}
@@ -706,6 +722,11 @@ Another look at the instrumental variable estimation of error-components models.
 Blundell, R., and S. R. Bond. 1998.
 Initial conditions and moment restrictions in dynamic panel data models.
 {it:Journal of Econometrics} 87: 115-143.
+
+{phang}
+Chudik, A., and M. H. Pesaran. 2022.
+An augmented Anderson-Hsiao estimator for dynamic short-T panels.
+{it:Econometric Reviews} 41: 416-447.
 
 {phang}
 Hansen, B. E., and S. Lee. 2021.
