@@ -18,7 +18,7 @@
 capture program drop sgpower
 program define sgpower, rclass
 version 12.0
-syntax , true(real)  nulllo(real)  nullhi(real)   [STDerr(real 1)  Bonus Level(cilevel) LIKelihood(numlist min=1 max=2) /*Depreciated options*/ INTType(string)   INTLevel(string)]
+syntax , true(real)  nulllo(real)  nullhi(real)   [STDerr(real 1)  Bonus Level(cilevel) LIKelihood(numlist min=1 max=1) /*Depreciated options*/ INTType(string)   INTLevel(string)]
 
 if "`level'"!="" & "`likelihood'"=="" & "`inttype'"=="" & "`intlevel'"==""{
 	local inttype "confidence"

@@ -44,7 +44,7 @@
 {p_end}
 
 {syntab:Reporting}
-{synopt:{opt l:evel(#)}} set confidence level for ...; default is {cmd:level(95)}
+{synopt:{opt l:evel(#)}} set confidence level; default is {cmd:level(95)}
 {p_end}
 {synopt:{opt q:uietly}}  suppress the output of the estimation command.
 {p_end}
@@ -129,7 +129,7 @@ The formulas for the Second-Generation P-Values can be found {help sgpv##formula
 {title:Options}
 {dlgtab:Main}
 {phang}
-{opt replay} the default behaviour if no estimation command, matrix or stored estimate is set. 
+{opt replay} is the default behaviour if no estimation command, matrix or stored estimate is set. 
 The replay-option is only available in the {dialog sgpv:dialog box}.
 {cmd:sgpv} behaves like any other estimation command (e.g. {helpb regress}) which replays the previous results when run without a varlist.
 Currently, the results from previous runs of {cmd:sgpv} are {bf:not} used to display the results. 
@@ -137,7 +137,7 @@ Instead, the results are calculated fresh on every run of {cmd:sgpv}.{break}
 To see the results from a previous run of {cmd:sgpv} without recalculation, use the command {stata matlist r(comparison)} 
 if no other commands were run after {cmd:sgpv}.
 
-{phang} ONLY one thing can be used to calculate the SGPVs: an estimation command, the results from the previous estimation command, a stored estimation result or a matrix with the necessary information.
+{phang} Only one thing can be used to calculate the SGPVs: an estimation command, the results from the previous estimation command, a stored estimation result or a matrix with the necessary information.
 
 {phang}
 {opt e:stimate(name)} takes the name of a previously stored estimation.
@@ -149,7 +149,7 @@ The matrix must follow the structure of the r(table) matrix returned after commo
 Meaning that the parameter estimate has to be in the 1st row, the standard errors need to be in the 2nd row, the p-values in 4th row, the lower bound in the 5th and the upper bound in the 6th row.
 As additional check, the row names of the supplied matrix need to match the rownames of the r(table) matrix.
 The rownames are: b se t pvalue ll ul{break}
-To the set rownames run: mat rownames <your matrix> =  b se t pvalue ll ul {break}
+To the set rownames run: mat rownames {it:your_matrix} =  b se t pvalue ll ul {break}
 Example code is located in the file {cmd:sgpv-leukemia-example.do} which can be viewed {stata viewsource sgpv-leukemia-example.do:here}, if installed.
 To run the example code, go to the respective {help sgpv##leukemia-example:example section}.
 
@@ -200,7 +200,7 @@ Using this default value will always result in having SGPVs of value 0 or 0.5!{p
 
 {dlgtab:Reporting}
 {phang}
-{opt l:evel(#)} set the level of the confidence interval. 
+{opt l:evel(#)} set the confidence level, as a percentage, for the confidence interval(s). 
 The default is {cmd:level(95)} or as set by {helpb set level}. See also {helpb estimation options##level():[R] estimation options}. 
 This option overwrites the same named option of an estimation command.   
 A warning is displayed in the beginning if this happens.
@@ -236,15 +236,17 @@ Setting the format option via {cmd:matlistopt()} overrides the setting here and 
  More information about each option can be found in the help for {help fdrisk}. 
 {p_end} 
 {phang2}
-{opt trunc:normal} use the truncated normal distribution as the probability distribution for the null and alternative parameter space. 
+{opt trunc:normal} uses the truncated normal distribution as the probability distribution for the null and alternative parameter space. 
 The default is to use the uniform distribution as the probability distribution for the null and alternative parameter space.
 The mean and standard deviation of the distribution are automatically set based on the estimated coefficient.
 
 {phang2}
 {opt lik:elihood(#)} use a 1/k likelihood support interval (LSI) instead of a (1-α)100% confidence interval to calculate the Fdr. 
+The level is 1/k (not k).
 This option works only in combination with the option {cmd:matrix()} for a user supplied matrix. 
 The level should be set equal to the level of the LSI which was used to calculate the lower and upper bound of the estimated coefficients.
-No official Stata command reports likelihood support intervals.
+For technical reasons, a fraction like 1/8 as the level must be converted to a real number like 0.125 first, when used for this option.	
+No official Stata command reports likelihood support intervals yet.
 
 {phang2}
 {opt p:i0(#)}  prior probability of the null hypothesis. Default is 0.5. This value can be only between 0 and 1 (exclusive). 
@@ -266,7 +268,7 @@ The dialog boxes can be accessed as usual by for example {stata db sgpv}.
 {opt remove} remove the entries created by the option {opt permdialog} from the {cmd:profile.do} file. 
 A backup of the original file is kept with the name {cmd:profile.do.bak}. 
 ONLY tested under Windows, other operation systems should work but could not be tested.
-The {cmd:profile.do} file should NOT contain a line like "global F4 `" or like "global F5 '". 
+The {cmd:profile.do} file should not contain a line like "global F4 `" or like "global F5 '". 
 Otherwise, the option returns an error and will not delete the menu entries. 
 Also make sure that {cmd:profile.do} is not open in another program nor 
 that the files {cmd:profile.do.bak} or {cmd:profile.do.new} already exist.

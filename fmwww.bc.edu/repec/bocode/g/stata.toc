@@ -152,6 +152,7 @@ p gsgroup module to create a group variable and optionally an output dataset for
 p gsreg module to perform Global Search Regression
 p gsum module to calculate summary statistics for grouped data
 p gtools module to provide a fast implementation of common group commands 
+p gtsheckman module to compute a generalized two-step Heckman selection model
 p gumbelfit module to fit a two-parameter Gumbel distribution
 p guttmanl module to produce Guttman lower bound reliability coefficients
 p gvselect module to perform best subsets variable selection

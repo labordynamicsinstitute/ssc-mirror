@@ -19,8 +19,7 @@
 {marker syntax}{...}
 {title:Syntax}
 {p 8 17 2}
-{cmdab:sgpower}
-{cmd:,} {opt true(#)} {opt nulllo(#)} {opt nullhi(#)} {opt l:evel(#)} {opt lik:elihood(#)}
+{cmdab:sgpower}{cmd:,} {opt true(#)} {opt nulllo(#)} {opt nullhi(#)} {opt l:evel(#)} {opt lik:elihood(#)}
 [{opt std:err(#)} {opt b:onus}]
 
 {synoptset 20 tabbed}{...}
@@ -87,8 +86,9 @@ from {browse "https://journals.plos.org/plosone/article/file?id=10.1371/journal.
 {opt l:evel(#)} confidence interval with level (1-α)100% was used to calculated the SGPV. The default is {cmd:level(95)} or as set by {helpb set level} if option {cmd:likelihood} or another confidence level is not set. 
 
 {phang}
-{opt lik:elihood(#)} likelihood support interval with level 1/k was used to calculate the SGPV. 
-				
+{opt lik:elihood(#)} likelihood support interval with level 1/k was used to calculate the SGPV. The level is 1/k (not k).
+For technical reasons, a fraction like 1/8 as the level must be converted to a real number like 0.125 first, when used for this option.	
+			
 {pstd}
 {p_end}
 
@@ -126,12 +126,12 @@ To download the file together with the rest of the examples click {net "get sgpv
 {synopt:{cmd:r(powerinc)}}  probability of 0 < SGPV < 1 calculated assuming the parameter is equal to {cmd:true}. 	That is, {cmd:powerinc} = P(0 < SGPV < 1 | θ = {cmd:true}). {p_end}
 
 {pstd}The next three scalars are only returned if the bonus-option was used.{p_end}
-{synopt:{cmd:r(minI)}}  is the minimum type I error over the range ({cmd:nulllo}, {cmd:nullhi}), which occurs at the midpoint of ({cmd:nulllo}, {cmd:nullhi}). {p_end}
-{synopt:{cmd:r(maxI)}}  is the maximum type I error over the range ({cmd:nulllo}, {cmd:nullhi}), which occurs at the boundaries of the null hypothesis, {cmd:nulllo} and {cmd:nullhi}.  {p_end}
-{synopt:{cmd:r(avgI)}}  is the average type I error (unweighted) over the range ({cmd:nulllo}, {cmd:nullhi}). {p_end}
+{synopt:{cmd:r(minI)}}  minimum type I error over the range ({cmd:nulllo}, {cmd:nullhi}), which occurs at the midpoint of ({cmd:nulllo}, {cmd:nullhi}). {p_end}
+{synopt:{cmd:r(maxI)}}  maximum type I error over the range ({cmd:nulllo}, {cmd:nullhi}), which occurs at the boundaries of the null hypothesis, {cmd:nulllo} and {cmd:nullhi}.  {p_end}
+{synopt:{cmd:r(avgI)}}  average type I error (unweighted) over the range ({cmd:nulllo}, {cmd:nullhi}). {p_end}
 
 {pstd}If 0 is included in the null hypothesis region, then "type I error summaries" also contains "at 0":{p_end}
-{synopt:{cmd:r(pow0)}}  is the type I error assuming the true parameter value θ is equal to 0. {p_end}
+{synopt:{cmd:r(pow0)}}  type I error assuming the true parameter value θ is equal to 0. {p_end}
 
 
 {title:References}

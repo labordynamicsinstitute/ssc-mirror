@@ -1,0 +1,25 @@
+d 'GTSHECKMAN': module to compute a generalized two-step Heckman selection model
+d
+d      gtsheckman fits regression models with selection by using
+d Heckman's two-step consistent estimator.  It is similar    to the
+d two step consistent heckman estimator, but allows for
+d heteroskedasticity in the first step and a more    general
+d specification of the control function.  Moreover it provides both
+d heteroskedastic robust inference as well    as cluster robust
+d inference.  Therefore this command encompasses the two step
+d consistent heckman estimator as a    special case.  The
+d methodology was proposed and studied by Carlson and Joshi (2022). d
+d KW: heckman
+d KW: two-step selection model
+d KW: heteroskedasticity
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20220807
+d
+d Author:  Alyssa H. Carlson, University of Missouri
+d Support: email  carlsonah@@missouri.edu
+d
+f gtsheckman.ado
+f gtsheckman.sthlp
+f gtsheckman_examples.do

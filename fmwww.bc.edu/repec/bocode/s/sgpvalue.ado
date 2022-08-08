@@ -1,7 +1,8 @@
 *!Second Generation P-Values Calculations
 *!Based on the R-code for sgpvalue.R from the sgpv-package from https://github.com/weltybiostat/sgpv
+*!Version 1.07a 13.07.2022: Fixed the example "Simulated two-group dichotomous data for different parameters" in the help file. No actual code changes.
 *!Version 1.07	15.05.2022: Handling of larger inputs and nomata-option should work now as intended. Previously, not all possible combinations of large inputs and nomata-option have been supported correctly. 
-*!Version 1.06  13.02.2022: Fixed a bug when variables as input with only one null-hypothesis is used, but only a few observations exist. ///
+*Version 1.06  13.02.2022: Fixed a bug when variables as input with only one null-hypothesis is used, but only a few observations exist. ///
 							Fixed a bug which prevented one of the examples from the help file to run.
 *Version 1.05  01.11.2020: Fixed a bug in an input check which made it impossible to use missing values as input for one-sided intervals. ///
 							Fixed a bug which set delta incorrectly when calculating the deltagap for one-sided intervals. 

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.04  22 Jul 2020}{...}
+{* *! version 1.07  13 Jul 2022}{...}
 {viewerdialog sgpvalue "dialog sgpvalue"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "SGPV (Main Command)" "help sgpv"}{...}
@@ -19,7 +19,7 @@
 {marker syntax}{...}
 {title:Syntax}
 {p 8 17 2}
-{cmdab:sgpvalue} {cmd:,} 
+{cmdab:sgpvalue}{cmd:,} 
 {cmd:estlo({it:{help sgpvalue##boundlist:boundlist}})} {cmd:esthi({it:{help sgpvalue##boundlist:boundlist}})} {cmd:nulllo({it:{help sgpvalue##boundlist:boundlist}})} {cmd:nullhi({it:{help sgpvalue##boundlist:boundlist}})}
 [{it:options}]
 
@@ -162,18 +162,22 @@ The following examples are based on the original documentation for the R-code, b
 	 
 	{pstd}{bf:Simulated two-group dichotomous data for different parameters:}{p_end}
 	{phang2}	. set seed 1492 {p_end}
-	{phang2}	. local n 30{p_end}
-	{phang2}	. local x1 = rbinomial(30,0.15){p_end}
-	{phang2}	. local x2 = rbinomial(30,0.5){p_end}
-	{phang2}	. * On the difference in proportions{p_end}
-	{phang2}	. qui prtesti 30 `x1' 30 `x2',count{p_end}
-	{phang2}	. local d = 1.96*sqrt((`r(P_1)'*(1-`r(P_1)') + `r(P_2)'*(1-`r(P_2)'))/30){p_end}
-	{phang2}	. sgpvalue, estlo(`m'-`d') esthi(`m'+`d') nulllo(-0.2) nullhi(0.2)
+	{phang2}	. local n1 30{p_end}
+	{phang2}	. local n2 30{p_end}
+	{phang2}	. local x1 = rbinomial(`n1',0.15){p_end}
+	{phang2}	. local x2 = rbinomial(`n2',0.5){p_end}
+	{phang2}	. local p1 = `x1'/`n1'{p_end}
+	{phang2}	. local p2 = `x2'/`n2'{p_end}
+	
+		{pstd}On the difference in proportions for a 95% confidence interval{p_end}
+	{phang2}	. local mean = `p1'-`p2'{p_end}
+	{phang2}	. local se = 1.96*sqrt((`p1'*(1-`p1')/`n1' + `p2'*(1-`p2')/`n2')){p_end}
+	{phang2}	. sgpvalue, estlo(`mean'-`se') esthi(`mean'+`se') nulllo(-0.2) nullhi(0.2)
 
-		{pstd}On the log odds ratio scale{p_end}
-	{phang2}	. local m = log(`x1'*(30-`x2')/(`x2'*(30-`x1'))){p_end}
-	{phang2}	. local d = 1.96*sqrt(1/`x1'+1/`x2'+1/(30-`x1')+1/(30-`x2')){p_end}
-	{phang2}	. sgpvalue, estlo(`m'-`d') esthi(`m'+`d') nulllo(log(1/1.5)) nullhi(log(1.5)){p_end}
+		{pstd}On the log odds ratio scale for a 95% confidence interval{p_end}
+	{phang2}	. local mean2 = log(`x1'*(`n2'-`x2')/(`x2'*(`n1'-`x1'))){p_end}
+	{phang2}	. local se2 = 1.96*sqrt(1/`x1'+1/`x2'+1/(`n1'-`x1')+1/(`n2'-`x2')){p_end}
+	{phang2}	. sgpvalue, estlo(`mean2'-`se2') esthi(`mean2'+`se2') nulllo(log(1/1.5)) nullhi(log(1.5)){p_end}
 	 		
 	{pstd}{bf: A simple more Stata-like example with a point null hypothesis}{p_end}	
 	{phang2}	{stata . sysuse auto, clear}{p_end}

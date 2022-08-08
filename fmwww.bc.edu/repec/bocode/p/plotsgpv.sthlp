@@ -20,8 +20,8 @@
 {p 8 17 2}
 {cmdab:plotsgpv}
 [{help if}]
-[{help in}]
-{cmd:,} {opt estlo(name)} {opt esthi(name)} {cmd:nulllo({it:{help plotsgpv##boundlist:boundlist}})} {cmd:nullhi({it:{help plotsgpv##boundlist:boundlist}})}
+[{help in}]{cmd:,} 
+{opt estlo(name)} {opt esthi(name)} {cmd:nulllo({it:{help plotsgpv##boundlist:boundlist}})} {cmd:nullhi({it:{help plotsgpv##boundlist:boundlist}})}
 [{it:options}]
 
 {synoptset 25 tabbed}{...}

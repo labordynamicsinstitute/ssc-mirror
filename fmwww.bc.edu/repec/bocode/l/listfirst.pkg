@@ -1,0 +1,23 @@
+d 'LISTFIRST': module to list first so many observations
+d
+d     listfirst lists the first # observations, either generally or
+d (more usefully) those satisfying an if   condition. Optionally it
+d will also list the last # observations, either generally or (more
+d usefully)    those satisfying an if condition.  # defaults to 10.
+d Optionally it may be changed, and need not	be equal for first
+d and last subsets. If varlist is not specified, it defaults to all
+d variables in the    dataset. Otherwise one or more variables may
+d be specified. 
+d
+d KW: list
+d KW: data management
+d
+d Requires: Stata version 8.2
+d
+d Distribution-Date: 20220807
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f listfirst.ado
+f listfirst.sthlp

@@ -87,7 +87,8 @@ The default is to calculate the false discovery risk, when the observed second-g
 {opt l:evel(#)} confidence interval with level (1-α)100% was used to calculate the SGPV. The default is {cmd:level(95)} if option {cmd:likelihood} or no other confidence level is not set. 
 
 {phang}
-{opt lik:elihood(#)} likelihood support interval with level 1/k was used to calculate´ the SGPV. 
+{opt lik:elihood(#)} likelihood support interval with level 1/k was used to calculate the SGPV. The level is 1/k (not k).
+For technical reasons, a fraction like 1/8 as the level must be converted to a real number like 0.125 first, when used for this option.	
 
 {phang}
 {opt nulls:pace(# [#])}  support of the null probability distribution.

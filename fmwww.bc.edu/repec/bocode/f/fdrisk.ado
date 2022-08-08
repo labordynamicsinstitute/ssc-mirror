@@ -30,7 +30,7 @@ program define fdrisk, rclass
 version 12.0
 syntax, nulllo(string) nullhi(string) STDerr(real)   ///
 		NULLSpace(string asis)  ALTSpace(string asis) ///
-		[ Pi0(real 0.5) fcr Level(cilevel) LIKelihood(numlist min=1 max=2)  NULLTruncnormal ALTTruncnormal] 
+		[ Pi0(real 0.5) fcr Level(cilevel) LIKelihood(numlist min=1 max=1)  NULLTruncnormal ALTTruncnormal] 
 *Syntax parsing
 local integrate nomataInt
 

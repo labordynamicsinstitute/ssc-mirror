@@ -87,7 +87,6 @@ version 12.0
 capture  _on_colon_parse `0'
 
 if _rc{
-	*local 0 `0'
 	
 	gettoken before after:0 ,parse(",")
 	if inlist(`"`before'"',"value","power","risk","plot", "menu" ){
@@ -106,7 +105,7 @@ if _rc{
 	`0'
 	exit	
 	}
-	*if !inlist(`"`before'"',"value","power","risk","plot", "menu" ) & "`before'"=="," 
+ 
 	if "`e(cmd)'"=="" & (!ustrregexm(`"`0'"',"matrix\(\w+\)") & !ustrregexm(`"`0'"',"m\(\w+\)") ) & (!ustrregexm(`"`0'"',"estimate\(\w+\)") & !ustrregexm(`"`0'"',"e\(\w+\)") ) & !inlist(`"`before'"',"value","power","risk","plot", "menu" ) {
 		disp as error "No last estimate or matrix, saved estimate for calculating SGPV found."
 		disp as error "No subcommand found either."
@@ -127,7 +126,7 @@ if !_rc{
 syntax [anything(name=subcmd)] [, Estimate(name)  Matrix(name)  Coefficient(string asis) NOCONStant   /// input-options
  Quietly MATListopt(string asis)  FORmat(str) NONULLwarnings  DELTAgap FDrisk all  /// display-options
   nulllo(string) nullhi(string)   /// null hypotheses 
-  TRUNCnormal Level(cilevel) LIKelihood(numlist min=1 max=2) Pi0(real 0.5) /// fdrisk-options
+  TRUNCnormal Level(cilevel) LIKelihood(numlist min=1 max=1) Pi0(real 0.5) /// fdrisk-options
 	/*new possible options, not implemented yet */ /*Plot*/] 
 	
 ***Option parsing
@@ -571,6 +570,7 @@ program define FormatDisplay, rclass
 	return matrix display_mat = `display_mat' 
 
 end
+
 
 *Simulate the behaviour of the R-function with the same name 
 program define stop

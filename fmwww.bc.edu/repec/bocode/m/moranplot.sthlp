@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.3 11 Sep 2021}{...}
+{* *! version 1.0.3 13th September 2021}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Install command2" "ssc install command2"}{...}
 {vieweralsosee "Help command2 (if installed)" "help command2"}{...}
@@ -29,6 +29,7 @@ varlist(numeric)
 {synopt:{opt id(varname)}} individuals identification{p_end}
 {synopt:{opt note(numlist)}} note about graph{p_end}
 {synopt:{opt mlabel(varname)}} specify marker variable{p_end}
+{synopt:{opt mlabvp(varname)}} specify label position{p_end}
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
@@ -39,10 +40,7 @@ varlist(numeric)
 {cmd:moranplot} draws Moran scatter plots. Although it is currently possible to draw Moran scatter plots using the {help spatlsa} command, but the graphics are not pretty.
 The scatter plots has an black background and cannot be further edited.
 It cannot be published in academic papers. To solve this problem, we developed the moranplot command.
-This command can draw Moran scatter plots of multiple variables simultaneously, graphics are standard and pretty.
-In addition, using grss command solves the problem that the current picture will automatically cover the previous picture in the drawing process of Stata.
-Please install the {help grss} command before using it, you can find grss command by {help findit}.
-To avoid the {err:"variable w1_000000 not found"} error, please use the new version of spmat.ado (Version 1.0.5, 26Nov2018) developed by Drukker, D. M., H. Peng, I. R. Prucha, and R. Raciborski. 
+This command can draw Moran scatter plots of multiple variables simultaneously, graphics are standard and pretty. To avoid the {err:"variable w1_000000 not found"} error, please use the new version of spmat.ado (Version 1.0.5, 26Nov2018) developed by Drukker, D. M., H. Peng, I. R. Prucha, and R. Raciborski. For convenience, I have put the relevant code in the ado file. This is the original work by Drukker et al.(2013). Thanks for their excellent contribution!
 
 {marker options}{...}
 {title:Options}
@@ -59,6 +57,9 @@ To avoid the {err:"variable w1_000000 not found"} error, please use the new vers
 {phang}
 {opt mlabel(varname)} requests that - in the Moran scatter plots - locations be represented by an identifier instead of the default graphic symbol. You can enter character variables or numeric variables. For example, id or name.
 
+{phang}
+{opt mlabvp(varname)} must be a numeric variable. You can specify the position of the variable with the time scale on the clock. For example, 5 or 12.
+
 
 {marker examples}{...}
 {title:Examples}
@@ -68,6 +69,7 @@ To avoid the {err:"variable w1_000000 not found"} error, please use the new vers
 {p 4 4 2}{inp:.} {cmd:moranplot y1 x1 y2 if year==2018, w(W1) id(id)}{p_end}
 {p 4 4 2}{inp:.} {cmd:moranplot y1 x1 y2 if year==2018, w(W1) id(id) note(2018)}{p_end}
 {p 4 4 2}{inp:.} {cmd:moranplot y1 x1 y2 if year==2018, w(W1) id(id) note(2018) mlabel(name)}{p_end}
+{p 4 4 2}{inp:.} {cmd:moranplot y1 if year==2018, w(W1) id(id) note(2018) mlabel(name) mlabvp(pos)}{p_end}
 
 {phang}{cmd: Using panel data:}{p_end}
 {p 4 4 2}{inp:.} {cmd:use moranplot_data.dta, clear}{p_end}
@@ -87,7 +89,11 @@ Email: {browse "mailto:czh2017@nefu.edu.cn":czh2017@nefu.edu.cn}, {browse "mailt
 {title:Reference}
 
 {p 4 4 2}
-{cmd:Chen Z, Zhu H, Zhao W, Zhao M, Zhang Y. Spatial Agglomeration of China’s Forest Products Manufacturing Industry: Measurement, Characteristics and Determinants. Forests. 2021, 12(8):1006. https://doi.org/10.3390/f12081006.}{p_end}
+{cmd:[1] Chen Z, Zhu H, Zhao W, Zhao M, Zhang Y. Spatial Agglomeration of China’s Forest Products Manufacturing Industry: Measurement, Characteristics and Determinants. Forests. 2021, 12(8):1006. https://doi.org/10.3390/f12081006.}{p_end}
+
+{p 4 4 2}
+{cmd:[2] Drukker D M, Peng H, Prucha I R, et al. Creating and managing spatial-weighting matrices with the spmat command[J]. Stata Journal, 2013,13(2):242-286.}{p_end}
+
 
 {title:See Also}
 
@@ -95,4 +101,3 @@ Related commands:
 
 {help spatlsa} (if installed)
 {help splagvar} (if installed)   {stata ssc install splagvar} (to install this command)
-{help grss} (if installed)
