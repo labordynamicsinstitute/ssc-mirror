@@ -223,6 +223,7 @@ p rqr module to estimate the residualized quantile regression model
 p rqrs module to install required community-contributed packages
 p rrcalc module to calculate AAPOR compliant response rates
 p rrlogit module to estimate logistic regression for randomized response data
+p rrp module to compute Rescaled Regression Prediction (RRP) using two samples
 p rrr module to perform Reduced rank regression 
 p rrreg module to estimate linear probability model for randomized response data
 p rscore module for estimation of responsiveness scores

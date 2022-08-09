@@ -1,0 +1,32 @@
+d 'XTREGTWO': module to estimate panel regression with standard errors robust to two-way clustering and serial correlation in time effects
+d
+d   xtregtwo executes estimation of linear panel regression models
+d with standard errors robust to two-way clustering	   and
+d untruncated serial correlation in common time effects.  The
+d method is based on Chiang, Hansen, and Sasaki        (2022).	The
+d command reports the ordinary least squares estimates, robust
+d standard errors, z values, p values,	      and confidence
+d intervals.  The command runs the fixed-effect estimation by
+d within-transformation if the fe	 option is used. 
+d
+d KW: regression
+d KW: fixed effects
+d KW: clustering
+d KW: time effects
+d
+d Requires: Stata version 14.2
+d
+d Distribution-Date: 20220808
+d
+d Author: Harold D. Chiang,  University of Wisconsin 
+d Support: email yuya.sasaki@@gmail.com
+d
+d Author: Bruce E. Hansen, University of Wisconsin
+d Support: email 
+d
+d Author: Yuya Sasaki, Department of Economics, Vanderbilt University
+d Support: email 
+d
+f xtregtwo.ado
+f xtregtwo.sthlp
+f ../f/fama_french.dta

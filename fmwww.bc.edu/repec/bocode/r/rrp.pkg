@@ -1,0 +1,28 @@
+d 'RRP': module to compute Rescaled Regression Prediction (RRP) using two samples
+d
+d	rrp implements a Rescaled Regression Prediction (RRP) using
+d two samples in two steps.  First it creates a new    variable, by
+d imputing the dependent variable in the current sample, using the
+d stored first-stage regression, fitted    in the sample that
+d contains the dependent variable and the proxies. The samples can
+d be in different datasets or can    be appended, indexed by a
+d sample identifier.  The command requires the proxy variables in
+d the two samples    (first-stage regression and in proxies()) to
+d have the same name (order does not matter). The user needs to   
+d correctly input the partial R-squared (see example).	The command
+d returns the results of the second-stage    regression and creates
+d the new imputed variable. 
+d
+d KW: regression
+d KW: scaling
+d KW: proxy variable
+d
+d Requires: Stata version 8
+d
+d Distribution-Date: 20220807
+d
+d Author:    Stavros Poupakis,  University College London
+d Support: email  s.poupakis@@ucl.ac.uk
+d
+f rrp.ado
+f rrp.sthlp

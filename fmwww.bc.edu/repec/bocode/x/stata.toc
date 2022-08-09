@@ -117,6 +117,7 @@ p xtregmle module to estimate Trevor Breusch MLE Random-Effects Panel Data: Ridg
 p xtregre2 module to estimate random effects model with weights
 p xtregrem module to estimate Fuller-Battese GLS Random-Effects Panel Data: Ridge and Weighted Regression
 p xtregsam module to estimate Swamy-Arora Random-Effects Panel Data: Ridge and Weighted Regression
+p xtregtwo module to estimate panel regression with standard errors robust to two-way clustering and serial correlation in time effects
 p xtregwem module to estimate Within-Effects Panel Data: Ridge and Weighted Regression
 p xtregwhm module to estimate Wallace-Hussain Random-Effects Panel Data: Ridge and Weighted Regression
 p xtrobreg module providing pairwise-differences and first-differences robust regression estimators
