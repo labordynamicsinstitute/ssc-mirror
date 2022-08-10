@@ -1,12 +1,13 @@
-*! version 1.0.5  15aug2011  CFBaum   
+*! version 1.0.6  09aug2022  CFBaum   
 * from xttest1 v1.0.3 and sureg
-* following Greene, 2000, p. 601
+* following Greene, 2000, p. 601 and Pesaran, 2015
 * 1.0.1 published SJ-1, st0004
 * 1.0.1: allow xtgls
 * 1.0.2: mod to correct handling of unbalanced panels, trap errors of too few common obs
 * 1.0.3: trap inadequate matsize
 * 1.0.4: allow ivreg2
 * 1.0.5: reduce criterion for singularity
+* 1.0.6: allow xtreg, re
 
 program define xttest2, rclass
 	version 6.0
@@ -15,10 +16,10 @@ program define xttest2, rclass
 	if "`e(cmd)'"=="xtgls" { local est 2 }
 	if "`e(cmd)'"=="ivreg2" { local est 3 }
 	if "`est'" ==""	{ error 301 }
-	if "`e(model)'" != "fe" & "`est'"=="1" {
-		di in red "last estimates not xtreg, fe"
-		exit 301
-	}
+//	if "`e(model)'" != "fe" & "`est'"=="1" {
+//		di in red "last estimates not xtreg, fe"
+//		exit 301
+//	}
 	if "`*'"!="" { error 198 }
         
 	tempvar touse  xb

@@ -1,5 +1,5 @@
 {smcl}
-{* 6aug2022}{...}
+{* 6aug2022/8aug2022}{...}
 {hline}
 {cmd:help listfirst}
 {hline}
@@ -36,17 +36,24 @@ not be equal for first and last subsets.
 {p 4 4 2}If {it:varlist} is not specified, it defaults to all variables in the 
 dataset. Otherwise one or more variables may be specified. 
 
-{p 4 4 2}Output may be limited by what exists in the dataset. In
-particular, no observations will be {cmd:list}ed if none exist that
-satisfy the {cmd:if} condition. That is not considered an error.  
+{p 4 4 2}Output may be limited by what exists in the dataset. For
+example, no observations will be {cmd:list}ed if none exist that
+satisfy a specified {cmd:if} condition. That is not considered an error.  
 
 
 {title:Remarks}  
 
-{p 4 4 2}Your motive for asking this remains private to you, but the
-command allows you to ask to see a sample of observations quickly,
-especially in a large dataset. Perhaps a full {cmd:list} or opening
-{help edit} or {help browse} seems over the top. 
+{p 4 4 2}Many readers will be familiar with utilities in Unix or other
+operating systems allowing you to see the head (top or first lines) or
+tail (bottom or end lines) of text files. Similar features have been
+folded into various statistical programs. In Stata most but not quite
+all the possibilities yield easily to {help list} or {help edit} or
+{help browse} when the concern is with a dataset.
+
+{p 4 4 2}You may have special interest in what is at either end of a
+dataset. Perhaps more commonly the point is just to see a small sample
+of the dataset, especially of a large dataset.  Perhaps a full
+{cmd:list} or opening {cmd:edit} or {cmd:browse} seems over the top. 
 
 {p 4 4 2}Examples use the auto dataset bundled with Stata, which has 74
 observations. 
@@ -78,16 +85,17 @@ observations.
 {p 8 8 2}{cmd:listfirst mpg, first(5) last(5)} 
 
 {p 4 4 2}is similarly more
-challenging. 
+challenging to emulate with {cmd:list}. 
 
 {p 4 4 2}The use of an {cmd:if} condition is where {cmd:listfirst}
 scores. 
 
-{p 8 8 2}{cmd:listfirst mpg if foreign} lists the first 10 observations
+{p 8 8 2}{cmd:listfirst mpg if foreign} 
 
-{p 4 4 2}which is more difficult otherwise without working out where they are in
-the dataset, or
-knowing that for another reason. However, a useful trick is
+{p 4 4 2}lists the first 10 observations satisfying the condition
+specified, which is more difficult otherwise without working out where 
+they are in the dataset, or knowing that for another reason. However, a
+useful trick is
 
 {p 8 8 2}{cmd:list mpg if foreign & sum(foreign) <= 10} 
 
@@ -102,10 +110,10 @@ true-or-false expression. See (e.g.) Cox (2007) for more on such ideas.
 
 {title:Options} 
 
-{p 4 4 2}{cmd:first()} specifies that the first {it:#} observations be
-listed. THe default is 10. 
+{p 4 4 2}{cmd:first()} specifies that the first {it:#} pertinent observations be
+listed. The default is 10. 
 
-{p 4 4 2}{cmd:last()} specifies that the last {it:#} observations also
+{p 4 4 2}{cmd:last()} specifies that the last {it:#} pertinent observations also
 be listed. 
 
 {p 4 4 2}{cmd:last} is a convenient alternative to {cmd:last(10)}. 
@@ -149,9 +157,10 @@ SSC that was first announced on 18 August 2014 in
 {browse "https://www.statalist.org/forums/forum/general-stata-discussion/general/163527-new-on-ssc-listsome-a-program-to-list-a-small-random-sample-of-observations":this post}. 
 
 {p 4 4 2}Robert's command has a strong feature of offering random
-samples, which is not attempted here. This {cmd:listfirst} command has two small
-virtues, being limited, and therefore simple; and showing "last" values
-too if that is also wanted. I happily yield the command name to Robert. 
+samples, which is not attempted here. This {cmd:listfirst} command has
+two small virtues, being limited, and therefore simple; and showing
+"last" observations too if that is also wanted. I happily yield the
+command name to Robert. 
 
 
 {title:References} 
