@@ -1,4 +1,4 @@
-*! version 2.0.0 28jun2018 daniel klein
+*! version 2.1.0 11aug2022 daniel klein
 program kappaetc , byable(onecall)
 	version 11.2
 	
@@ -2491,7 +2491,7 @@ void kappaetc_cac_ado()
 	
 	kappaetc_get_propobs(A)
 	kappaetc_get_propexp(A)
-	
+
 	kappaetc_get_results(A)
 	kappaetc_set_results(A)
 }
@@ -2989,10 +2989,10 @@ void kappaetc_get_propexp(`clAgreeStatS' A)
 			delta = (A.raw':==A.cat[l])
 			A.K[3].p_ei = A.K[3].p_ei + ///
 				A.w_kl[, l]#(delta:-A.p_gk[, l]:*(eps_g:-A.n_g/A.K[3].n))
-		}
-		A.K[3].p_ei = J(A.q, 1, A.K[3].n:/(A.n_g)):*A.K[3].p_ei
-		A.K[3].p_ei = quadcolsum(A.K[3].p_ei:*vec(A.r*mean(A.p_gk):-A.p_gk))	
-		A.K[3].p_ei = 1/(A.r*(A.r-1)):*A.K[3].p_ei'
+		}	
+		A.K[3].p_ei = J(A.q, 1, A.K[3].n:/(A.n_g)):*A.K[3].p_ei		
+		A.K[3].p_ei = quadcolsum(A.K[3].p_ei:*vec(A.r*mean(A.p_gk):-A.p_gk))
+		A.K[3].p_ei = 1/(A.r*(A.r-1)):*A.K[3].p_ei'	
 	}
 	else {
 			// not possible with frequency data or ACM
@@ -4675,7 +4675,7 @@ void kappaetc_ado_rtable_citype(`stAdoTS' T)
 void kappaetc_ado_rtable_benchmark(`stAdoTS' T)
 {
 	`RM' bm, b, imp, p_cum, idx, table_prob, table_det
-	`RR' z
+	`RR' lb, z, trunc
 	
 	if (!T.benchmark) {
 		st_matrix("r(table_benchmark_prob)", J(0, 0, .))
@@ -4686,13 +4686,14 @@ void kappaetc_ado_rtable_benchmark(`stAdoTS' T)
 		return
 	}
 	
+    lb  = (0, J(1,5,-1)) // lower bounds benchmark interval
 	bm 	= strtoreal(tokens(st_local("benchmark_scale")))
-	bm 	= J(1, 6, bm[cols(bm)..1]')
+	bm 	= J(1, 6, bm[cols(bm)..1]')\ lb // add lower bounds
 	b 	= st_matrix("r(b)")
 	z 	= (b:-bm):/st_matrix("r(se)")
 	
 	if ((T.largesample) | (st_global("r(setype)") == "unconditional")) {
-		imp = normal(z)
+        imp   = normal(z)
 	}
 	else {
 		if ((st_global("r(seconditional)") == "subjects") & 
@@ -4701,39 +4702,43 @@ void kappaetc_ado_rtable_benchmark(`stAdoTS' T)
 		}
 		else imp = (1:-ttail(st_matrix("r(df)"), z))
 	}
-	
-	p_cum 	= imp
-	if (rows(imp) > 1) {
-		for (i = 1; i <= rows(imp); ++i) {
-			if (i < rows(imp)) {
-				imp[i, ] 	= imp[(i+1), ]:-imp[i, ]
-			}
-			p_cum[i, ]		= quadcolsum(imp[(1::i), ])
-		}
-	}	
-	p_cum = p_cum:/(p_cum:*(p_cum:>1)+(p_cum:<=1))
-	
+    
+    trunc = (imp[rows(imp),]:-imp[1,]) // truncated distribution
+    imp = p_cum = (imp[(2::rows(imp)),]:-imp[(1::rows(imp)-1),]) :/ trunc
+        
+    for (i=2; i<=rows(imp); i++) p_cum[i,] = quadcolsum(imp[(1::i),], 1)
+    
+    bm = bm[(1::rows(bm)-1),] // strip lower bounds
+    
 	table_prob = table_det = J(6, 6, .)
 	table_prob[(1::2), ] = table_det[(1::2), ] = T.rtable[(1::2), ]
 	
 	for (i = 1; i <= cols(table_prob); ++i) {
-		idx = ((p_cum[, i] :> (T.level/100)), (b[i] :<= bm[, i]))
+        // idx := (prob, det)
+		idx = (
+            (p_cum[, i] :> (T.level/100) :& (p_cum[,i] :< .)), 
+            (b[i] :<= bm[, i])
+            )
 		idx = (colmin(select((1::rows(bm)), idx[, 1])), ///
 			colmax(select((1::rows(bm)), idx[, 2])))
 		table_prob[3, i] 	= missing(idx[1]) ? idx[1] : imp[idx[1], i]
 		table_det[3, i] 	= missing(idx[2]) ? idx[2] : imp[idx[2], i]
 		table_prob[4, i] 	= missing(idx[1]) ? idx[1] : p_cum[idx[1], i]
 		table_det[4, i] 	= missing(idx[2]) ? idx[2] : p_cum[idx[2], i]
-		table_prob[5, i] 	= (idx[1] < rows(bm)) ? bm[(idx[1]+1), i] : .
-		table_det[5, i] 	= (idx[2] < rows(bm)) ? bm[(idx[2]+1), i] : .
-		table_prob[6, i] 	= missing(idx[1]) ? idx[1] : bm[idx[1], i]
+        table_prob[5, i] 	= missing(idx[1]) ? idx[1] : 
+                              ( (idx[1]<rows(bm)) ? bm[(idx[1]+1), i] : lb[i] )
+        table_det[5, i] 	= missing(idx[2]) ? idx[2] : 
+                              ( (idx[2]<rows(bm)) ? bm[(idx[2]+1), i] : lb[i] )
+        table_prob[6, i] 	= missing(idx[1]) ? idx[1] : bm[idx[1], i]
 		table_det[6, i] 	= missing(idx[2]) ? idx[2] : bm[idx[2], i]
 	}
-	
+    
 	st_matrix("r(p_cum)", p_cum)
 	st_matrixcolstripe("r(p_cum)", st_matrixcolstripe("r(b)"))
 	st_matrix("r(imp)", imp)
 	st_matrixcolstripe("r(imp)", st_matrixcolstripe("r(b)"))
+    st_matrix("r(trunc)", trunc)
+    st_matrixcolstripe("r(trunc)", st_matrixcolstripe("r(b)"))
 	st_matrix("r(benchmarks)", bm[, 1])
 	st_matrixcolstripe("r(benchmarks)", ("", "Benchmarks"))
 	st_matrix("r(table_benchmark_det)", table_det)
@@ -5069,6 +5074,9 @@ void _kappaetc_internal_error(`SS' where, | `RS' par)
 end
 exit
 
+2.1.0   11aug2022   probabilistic benchmarking based on truncated distribution
+                    additionl r(trunc) with coefficient specific upper bounds
+                    lowest benchmark interval now reported as -1 (or 0) not .
 2.0.0	28jun2018	bug fix incorrect icc() when not sorted on id()
 					new syntax for se() option; jackknife no longer allowed
 					CI for subject cond. se now based on t(r-1) distribution
@@ -5079,7 +5087,7 @@ exit
 					option store() allows stub* and may be used with by
 					option df() no longer documented
 					remove options version and transpose
-					varous changes to r() results
+					various changes to r() results
 					slightly changed output table
 					rewrite parts of code
 1.7.0	24feb2018	bug fix ttest did not work with frequency data

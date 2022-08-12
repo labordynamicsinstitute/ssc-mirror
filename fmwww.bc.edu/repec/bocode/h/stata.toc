@@ -57,6 +57,7 @@ p hlp2winpdf module to convert Stata's help files into pdf in Windows environmen
 p hlpdir module to find location(s) of help file
 p hlpedit module to edit help file in do-file editor
 p hmap module to graph a heatmap
+p hmindex module to compute Houtman-Maks Index
 p hnbclg module to estimate negative binomial-complementary log log hurdle regression 
 p hnblogit module to estimate negative binomial-logit hurdle regression
 p hnbreg1 module to estimate Heterogeneous linear negative binomial regression (NB-1)

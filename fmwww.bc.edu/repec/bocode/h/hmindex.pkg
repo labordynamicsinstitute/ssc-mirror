@@ -1,0 +1,26 @@
+d 'HMINDEX': module to compute Houtman-Maks Index
+d
+d    The command hmindex is an implementation of the Houtman-Maks
+d index, and gives a measure of how “close” consumer demand
+d data are to satisfy utility maximizing behavior. The command is
+d formulated as a combinatorial algorithm that converges in a
+d finite number of steps. 
+d
+d KW: Houtman-Maks index
+d KW: utility
+d KW: axioms
+d KW: consumer demand
+d
+d Requires: Stata version 15.1
+d
+d Distribution-Date: 20220811
+d
+d Author:   Marcos Demetry,  Linnaeus University
+d Support: email Marcos.Demetry@@ifn.se
+d
+d Author:   Per Hjertstrand ,  Research Institute of Industrial Economics, Sweden
+d Support: email Per.Hjertstrand@@ifn.se
+d
+f hmindex.ado
+f hmindex.sthlp
+f hm_example_data.dta
