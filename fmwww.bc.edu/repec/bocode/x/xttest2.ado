@@ -1,13 +1,12 @@
-*! version 1.0.6  09aug2022  CFBaum   
+*! version 1.0.5  15aug2011  CFBaum   
 * from xttest1 v1.0.3 and sureg
-* following Greene, 2000, p. 601 and Pesaran, 2015
+* following Greene, 2000, p. 601
 * 1.0.1 published SJ-1, st0004
 * 1.0.1: allow xtgls
 * 1.0.2: mod to correct handling of unbalanced panels, trap errors of too few common obs
 * 1.0.3: trap inadequate matsize
 * 1.0.4: allow ivreg2
 * 1.0.5: reduce criterion for singularity
-* 1.0.6: allow xtreg, re
 
 program define xttest2, rclass
 	version 6.0
