@@ -16,12 +16,10 @@ d of stcmd.ado to change the setting of the local macro path, which
 d contains the path for the Stat/Transfer st command (see on-line
 d help for details). 
 d
-d KW: sensitivity
-d KW: specificity
 d
 d Requires: Stata version 13.0 and Stat/Transfer
 d
-d Distribution-Date: 20200430
+d Distribution-Date: 20220816
 d
 d Author: Roger Newson,  King's College London
 d Support: email roger.newson@@kcl.ac.uk

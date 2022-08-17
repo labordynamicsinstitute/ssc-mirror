@@ -25,9 +25,9 @@ help for {hi:hammock}{right:{hi: Matthias Schonlau}}
 {synopt :{opt lab:el}} Show value labels or else show values   {p_end}
 
 {syntab :Highlighting}
-{synopt :{opt hivar:iable(varname)}} name of variable to highlight {p_end}
-{synopt :{opt hival:ues(numlist)}}  list of values of {it:hivariable} to highlight {p_end}
-{synopt :{opt col:orlist(str)}} list of colors for highlighting {p_end}
+{synopt :{opt hivar:iable(varname)}} Name of variable to highlight {p_end}
+{synopt :{opt hival:ues(numlist)}}  List of values of {it:hivariable} to highlight {p_end}
+{synopt :{opt col:orlist(str)}} Default color and colors for highlighting {p_end}
 
 {syntab :Manipulating Spacing and Layout}
 {synopt :{opt bar:width(real)}} Change width of the plot elements to reduce clutter {p_end}
@@ -35,6 +35,7 @@ help for {hi:hammock}{right:{hi: Matthias Schonlau}}
 {synopt :{opt labelopt(str)}} Pass options to {it:{help added_text_options}}, e.g. to manipulate label text size{p_end}
 
 {syntab :Other options}
+{synopt :{opt shape(str)}} Box shape: "parallelogram" (default) or "rectangle"  {p_end}
 {synopt :{opt same:scale(varlist)}} Use the same axis scale for each variable specified {p_end}
 {synopt :graph_options} Specify additional options passed to  {it:graph, twoway}  {p_end}
 {synoptline}
@@ -129,15 +130,23 @@ The arguments are passed  to {it:{help added_text_options}}.
 This can be used to manipulate the text sizes of the labels, for example, {it: labelopt(size(vsmall))}.
 Text size names are explained in {it:{help textsizestyle}}. 
 By default, label size is "medium". If option {it:label} is not specified,  option {it:labelopt} is ignored. 
-  
+
 {dlgtab:Other options}
+
+{phang}
+{opt shape} refers to the shape of the boxes or plotting elements. 
+The two options are "parallelogram" (default) and "rectangle".  Rectangles can look better for steep angles. 
+They also avoid the so-called reverse line-width illusion of the parallelogram: 
+The vertical width of parallelogram-boxes with steep angles are larger than that of parallelogram-boxes with smaller angles. 
+Focusing on the end points of the boxes, can create the illusion that there are more observations in steep-angled parallelograms
+than there really are. 
 
 {phang}
 {opt samescale} specifies that for the list of variables specified each axis should have the same scale. 
 The list of variables can be a subset of {it:varlist} or the entire list: {it: samescale(_all)}. 
 This is useful, for example, if one categorical variable has been repeatedly measured over time, 
 but not all categories occur each at each time point.
-  
+
 {phang}
 {it:graph_options} are options of {cmd: graph, twoway} other than 
 {cmd:symbol()} and {cmd:connect()}. 

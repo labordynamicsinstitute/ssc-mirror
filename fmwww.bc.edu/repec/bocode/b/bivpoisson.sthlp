@@ -41,7 +41,7 @@
 	They cannot be zero inflated; model warns and exits on zero inflated data.
 	{p_end}
 {p 4 6 2}
-    {it:indepvars1} and {it:indepvars2} are the independent variables for the first and second eqations respectively.
+    {it:indepvars1} and {it:indepvars2} are the independent variables for the first and second equations respectively.
     Model automatically includes a constant; the constant cannot be omitted.
 	{p_end}
 
@@ -51,8 +51,8 @@
 {title:Description}
 
 {pstd}
-	{cmd:bivpoisson} is a user-written command that fits a seemingly unrelated count regressioin model using maximum likelihood estimation. It is
-	implemented as an {cmd:lf1 ml} evaluator. The model involves one equation with 
+	{cmd:bivpoisson} is a user-written command that fits a seemingly unrelated count regression model using maximum likelihood estimation. It is
+	implemented as an {cmd:lf0 ml} evaluator. The model involves one equation with 
 	the count valued dependent variable {it:depvar1} and a second equation with count valued dependent
 	variable {it:depvar2}. Both dependent variables {it:depvar1} and {it:depvar2} have to be both integer valued.
 
@@ -127,9 +127,6 @@
 {marker references}{...}
 {title:References}
 
-{phang}
-	Zhang, Y. (2021). Exploring the Importance of Accounting for Nonlinearity in Correlated Count Regression Systems from the Perspective of Causal Estimation and Inference. DOI: {browse "https://doi.org/10.7912/C2/2873"}
-	{p_end}
 
 {phang}
 	Aitchison, J., & Ho, C. H. (1989). The multivariate Poisson-log normal distribution. Biometrika, 76(4), 643–653. DOI: {browse "https://doi.org/10.1093/biomet/76.4.643"}
@@ -138,7 +135,15 @@
 {phang}
 	Chib, S., & Winkelmann, R. (2001). Markov Chain Monte Carlo Analysis of Correlated Count Data. Journal of Business & Economic Statistics, 19(4), 428–435. DOI: {browse "https://doi.org/10.1198/07350010152596673"} 
 	{p_end}
+
+{phang}
+	Mander, A. (2018). INTEGRATE_AQ: Stata Module to do Adaptive Quadrature for Integrals. Statistical Software Components, Boston College. URL: {browse "https://econpapers.repec.org/software/bocbocode/s458502.htm"} 
+	{p_end}
 	
+{phang}
+	Zhang, Y. (2021). Exploring the Importance of Accounting for Nonlinearity in Correlated Count Regression Systems from the Perspective of Causal Estimation and Inference. DOI: {browse "https://doi.org/10.7912/C2/2873"}
+	{p_end}
+
 {marker author}{...}
 {title:Author}
 

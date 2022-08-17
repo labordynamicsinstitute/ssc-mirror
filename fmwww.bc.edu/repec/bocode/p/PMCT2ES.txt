@@ -1,0 +1,713 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed June 24 15:24:51 2022
+
+@authors: Alan.Mustafa@ieee.org, AHatemi@uaeu.ac.ae
+"""
+
+# -*- coding: utf-8 -*-
+#******************************************************************************
+#   Name of the program:  PMCT2ES
+#   Title of the program: Python Module for Cointegration Tests
+#                         with Two Endogenous Structural Shifts
+#                         The module provides also the cointegration vector with 
+#                         two unknown breaks. For critical values see the 
+#                         published paper (Hatemi-J, 2008, Empirical Economics).
+#   Version: 001
+# 
+#   This program is released under GNU General Public License, version 3.
+# 
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+# 
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+# 
+#   You should have received a copy of the GNU General Public License
+#   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# 
+#   This software has been developed by Dr. Alan Mustafa under supervision of 
+#   Prof. Abdulnasser Hatemi-J (Hatemi-J, 2008).
+#   Contacts:
+#    - Dr. Alan Mustafa: Alan.Mustafa@ieee.org
+#    - Prof. Abdulnasser Hatemi-J: AHatemi@uaeu.ac.ae
+# 
+#    Date: June 2022
+#
+#    © 2022 Dr. Alan Mustafa and Prof. Abdulnasser Hatemi-J
+# 
+#******************************************************************************
+
+# import threading
+import numpy as np
+import pandas as pd
+import os
+import math
+#######################################
+import tkinter as tk
+# import time
+from tkinter.ttk import Progressbar
+from datetime import datetime
+from tkinter.filedialog import askopenfilename
+###############################################################################
+#                         Start of GUI
+###############################################################################
+
+
+#========================= functions =========================================
+class create_window_menu_UI(tk.Frame):
+
+    def __init__(self, master):
+        tk.Frame.__init__(self, master)
+        self.master = master
+
+        #=========================================================  GUI  Row 0 ============================================
+
+        #============= Application Title --------------------------------------
+       
+        #============= Adding a Blank Row --------------------------------------
+        self.lblTitle = tk.Label(self, text="Conducting Tests of Cointegration with Two Endogenous Structural Shifts", font=("Helvetica", 14));
+        # self.lblTitle.grid(row=0, column=1, columnspan=11, sticky="ns")
+        self.lblTitle.grid(row=0, column=0, columnspan=12, sticky="ns")
+        
+
+        #=========================================================  GUI  Row 1 ============================================
+        #============= Drawing Horizontal Line --------------------------------
+        hr = tk.Frame(self,height=2,width=900,bg="green")
+        hr.grid(row=1, column=0, columnspan=12, sticky="ew")
+
+
+        #=========================================================  GUI  Row 2 ============================================
+        #============= Adding a Blank Row --------------------------------------
+        self.lblBlank = tk.Label(self, text=" ", font=("Helvetica", 8))
+        self.lblBlank.grid(row=2, column=0, columnspan=12, sticky="ew")
+
+
+
+        #=========================================================  GUI  Row 3 ============================================
+        
+        #============= Load My Data Button ---------------------------------
+        self.btnLoadMydata = tk.Label(self, text="Load the Data Set", font=("Helvetica", 10))
+        self.btnLoadMydata.grid(row=3, column=0, sticky="e")
+        
+        var_DatasetFile = tk.StringVar()
+        self.tbx_DatasetFile = tk.Entry(self, textvariable=var_DatasetFile, font=("Helvetica", 10), state="disabled", justify="center")
+        self.tbx_DatasetFile.grid(row=3, column=1, columnspan=2, sticky="wns")
+        
+        self.btnSelectDataFile = tk.Button(self, text="Select the Data Set File (*.csv)", command=lambda: (var_DatasetFile.set(os.path.split(askopenfilename(filetypes=(("CSV Files", "*.csv"),), title="Select CSV File"))[1]), self.btnCalcPCTESS.config(state="normal")), font=("Helvetica", 10))
+        self.btnSelectDataFile.grid(row=3, column=3, columnspan=3, sticky="ew")
+
+
+        #============= Message for Producing a Report --------------------------------
+        infoText = """A copy of the estimated results has been added to the same folder as the program resides in [BreakTest_rprt_YMD_Time.txt]."""
+        self.txtFileRprtMsg = tk.Label(self, text=infoText, font=("Helvetica", 10, "italic"), anchor="nw", justify="left", wraplength=275, borderwidth=2, relief="groove")
+        self.txtFileRprtMsg.grid(row=3, column=6, columnspan=4, rowspan=3, sticky="nse")
+        
+        
+        
+        #=========================================================  GUI  Row 4 ============================================
+        #============= Load My Data Button ---------------------------------
+        self.lblMaxLag = tk.Label(self, text="Maximum Lag Order", font=("Helvetica", 10))
+        self.lblMaxLag.grid(row=4, column=0, sticky="e")
+        
+        var_maxLag = tk.StringVar();
+        
+        self.tbx_maxLag = tk.Entry(self, textvariable=var_maxLag, font=("Helvetica", 10), justify="center")
+        self.tbx_maxLag.insert(0,2)
+        self.tbx_maxLag.grid(row=4, column=1, columnspan=2, sticky="wns")
+
+        #============= Adding a Blank Cell -----------------------------------
+        self.lblEnterInt = tk.Label(self, text="Default lag is 2.", font=("Helvetica", 10, "italic"), anchor="w", justify="left")
+        self.lblEnterInt.grid(row=4, column=3, columnspan=3, sticky="ew")
+
+
+
+        #=========================================================  GUI  Row 5 ============================================
+        self.lblNotValidated = tk.Label(self, text=" ", font=("Helvetica", 8, "italic"), fg="#f00")
+        self.lblNotValidated.grid(row=5, column=1, columnspan=2, sticky="ew")
+
+
+
+        #=========================================================  GUI  Row 14 ============================================
+        #============= Button to Calculate the Cointegration --------------------------------
+        
+        self.btnCalcPCTESS = tk.Button(self, text="Run the Test", command=lambda: validate_MaxLag (var_DatasetFile, var_maxLag, self), state="disabled", font=("Helvetica", 10))
+        self.btnCalcPCTESS.grid(row=6, column=3, columnspan=2, sticky="ew")
+
+        self.btnRestartProg = tk.Button(self, text="Restart the Program", command=lambda: refresh(), font=("Helvetica", 10))
+        self.btnRestartProg.grid(row=6, column=6, columnspan=2, sticky="e")
+                
+        #============= Close the Module Button -------------------------------------------
+        self.btnExit = tk.Button(self, text="Close", command=self.master.destroy, font=("Helvetica", 10))
+        self.btnExit.grid(row=6, column=8, columnspan=2, sticky="ew")
+
+
+    
+        #==================================================================================================================    
+        #=========================================================  GUI  Row 7 ============================================
+        #==================================================================================================================    
+        #============= Printing Results and Credits ---------------------------------------
+        #============= Drawing Horizontal Line --------------------------------
+        hr = tk.Frame(self,height=2,width=900,bg="green")
+        hr.grid(row=8, column=0, columnspan=12, sticky="ew")
+
+
+        
+        #=========================================================  GUI  Row 8 ============================================
+        #============= Adding a Blank Cell -----------------------------------
+        self.lblBlank180 = tk.Label(self, text=" ", font=("Helvetica", 10), anchor="w", justify="left")
+        self.lblBlank180.grid(row=9, column=0, sticky="w")
+                
+        #============= Output Message - Modified ADF Test       ---------------
+        self.msgOutputMsg_Modified_ADF_Test = tk.Message(self, text=" ", font=("Helvetica", 10), anchor="nw", justify="left")
+        self.msgOutputMsg_Modified_ADF_Test.grid(row=9, column=1, columnspan=4, sticky="ew")
+
+        
+        #============= Adding a Blank Cell -----------------------------------
+        self.lblBlank181 = tk.Label(self, text=" ", font=("Helvetica", 10), anchor="w", justify="left")
+        self.lblBlank181.grid(row=9, column=4, columnspan=2, sticky="ew")
+                
+        #============= Output Message - Modified Phillips Test       ---------------
+        self.msgOutputMsg_Modified_Phillips_Test = tk.Message(self, text=" ", font=("Helvetica", 10), anchor="nw", justify="left")
+        self.msgOutputMsg_Modified_Phillips_Test.grid(row=9, column=6, columnspan=4, sticky="ew")
+        
+        #============= Adding a Blank Cell -----------------------------------
+        self.lblBlank182 = tk.Label(self, text=" ", font=("Helvetica", 10), anchor="w", justify="left")
+        self.lblBlank182.grid(row=9, column=9, columnspan=3, sticky="ew")
+
+                
+        
+        #=========================================================  GUI  Row 9 ============================================
+        #============= Adding a Blank Cell -----------------------------------
+        self.lblBlank190 = tk.Label(self, text=" ", font=("Helvetica", 10), anchor="w", justify="left")
+        self.lblBlank190.grid(row=10, column=0, sticky="w")
+                
+        #============= Output Message - b_se_t       ---------------
+        self.msgOutputMsg_b_se_t = tk.Message(self, text=" ", font=("Helvetica", 10), anchor="nw", justify="left")
+        self.msgOutputMsg_b_se_t.grid(row=10, column=1, columnspan=4, sticky="nsw")
+        
+        #============= Adding a Blank Cell -----------------------------------
+        self.lblBlank191 = tk.Label(self, text=" ", font=("Helvetica", 10), anchor="nw", justify="left")
+        self.lblBlank191.grid(row=10, column=4, columnspan=2, sticky="ew")
+                
+       #============= Output Message - Models_X1       ---------------
+        self.msgOutputMsg_Models_X1 = tk.Message(self, text=" ", font=("Helvetica", 10), anchor="nw", justify="left")
+        self.msgOutputMsg_Models_X1.grid(row=10, column=6, columnspan=4, sticky="nsw")
+        
+        #============= Adding a Blank Cell -----------------------------------
+        self.lblBlank192 = tk.Label(self, text=" ", font=("Helvetica", 10), anchor="w", justify="left")
+        self.lblBlank192.grid(row=10, column=9, columnsp=3, sticky="ew")
+
+        
+        #=========================================================  GUI  Row 10============================================
+        #============= Drawing Horizontal Line --------------------------------
+        hr = tk.Frame(self,height=2,width=900,bg="green")
+        hr.grid(row=11, column=0, columnspan=12, sticky="w")
+        
+                 
+        #=========================================================  GUI  Row 11============================================
+        #============= Drawing Horizontal Line --------------------------------
+        hr = tk.Frame(self,height=2,width=900,bg="green")
+        hr.grid(row=12, column=0, columnspan=12, sticky="ew")
+        
+        
+        #=========================================================  GUI  Row 12============================================
+        #============= Output EndNote         ---------------------------------
+        self.msgEndNote = tk.Message(self, text=" ", font=("Helvetica", 8, "italic"), anchor="w", justify="left", bg="#d4d4d4", borderwidth=2, relief="groove")
+        self.msgEndNote.bind("<Configure>", lambda e: self.msgEndNote.configure(width=e.width))
+        self.msgEndNote.grid(row=13, column=0, columnspan=12, sticky="ew")
+        
+
+###########################################################################################################################
+#                                                                    End of GUI                                           #
+###########################################################################################################################
+
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+
+def validate_MaxLag(dataset_file,var_maxLag,self):
+# def validate_MaxLag(pb,dataset_file,var_maxLag,self):
+    try:
+        calc_BreakTest(dataset_file,var_maxLag,self)
+        
+    except ValueError:
+        self.lblNotValidated.config(text="The entry is not an integer!");
+        
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+
+def calc_BreakTest(dataset_file,var_maxLag,self):
+    var_DatasetFile = dataset_file.get();
+    dataset = pd.read_csv(var_DatasetFile, header=None);
+    
+    #=============== creating Output Report File ==============================
+    x = dataset.iloc[:, 1:].values;
+    y = dataset.iloc[:, [0]].values;
+    
+    fileName = create_rprt_file();
+    
+    calc_BreakTestMain(y,x,4,2,var_maxLag,self,fileName);
+
+    EndNote(fileName,self);
+
+    return;
+    
+################################################
+def create_rprt_file():
+    
+
+    #=============== creating Output Report File ==============================
+    now = datetime.now()
+    dt_string2 = now.strftime("%Y%m%d_%H%M%S")
+    fileName = 'BreakTest_rprt' + "_" + dt_string2 + '.txt'
+    output_rprt_file = open(fileName,'w')
+    output_rprt_file.write('###############################################################################\n')
+    output_rprt_file.write('#                                                                             #\n')
+    output_rprt_file.write('#                             COINTEGRATION TEST RESULTS                      #\n')
+    output_rprt_file.write('#                                                                             #\n')
+    output_rprt_file.write('###############################################################################\n')
+    output_rprt_file.close
+    return(fileName);
+
+################################################
+def calc_BreakTestMain(y,x,model,choice,var_maxLag,self,fileName):
+    #*************************************************************************
+    #----  PROC MAIN
+    #----FORMAT: call  main(y,x,model,choice,k)
+    #----INPUT:      y - depend variable
+    #        x - data matrix for independent variables (first row is first observation)
+    #                model - choice for model
+    #                        =2  C
+    #                        =3  C/T
+    #                        =4  C/S
+    #        choice - only in ADF test,  =1  pre-specified AR lag
+    #                        =2  AIC-chosen AR lag
+    #                        =3  BIC-chosen AR lag
+    #                        =4  downward-t-chosen AR lag
+    #        k - maximum lag for ADF test
+    #----OUTPUT: print automatically Za*, breakpoint for Za*, Zt*, breakpoint for Zt*
+    #, ADF*,                        breakpoint for ADF* and AR lag chosen for ADF*
+    #----GLOBAL VARIABLES: none
+    #----EXTERNAL PROCEDURES: adf,  phillips
+    #----NB: Constant included in regression
+    #************************************************************************#
+    #****************  Main procedure *******************
+    #************************************************************************#
+    # pb.start();
+    
+
+    n = y.shape[0];
+    
+    k = int(var_maxLag.get());
+    
+    begin = (np.rint(0.15 * n)).astype(int);
+    final1 = (np.rint(0.7 * n)).astype(int);
+    final2 = (np.rint(0.85 * n)).astype(int);
+    temp1=999 * np.ones((final1-begin+1,final2-begin*2+1));
+    
+    temp2=temp1.copy();
+    temp3=temp1.copy();
+    temp4=temp1.copy();
+    t1=begin;
+    while t1 <= final1:
+        t2 = t1 + begin;
+        while t2 <= final2:
+            
+            dummy1 = np.concatenate((np.zeros((t1,1)), np.ones((n-(t1),1))), axis = 0);
+            dummy2 = np.concatenate((np.zeros((t2,1)), np.ones((n-(t2),1))), axis = 0);
+            
+            # adjust regressors for different models
+            if model==3:
+                x1=np.concatenate((np.ones((n,1)),dummy1,dummy2,seqa(1,1,n),x), axis = 1);
+            elif model==4:
+                x1=np.concatenate((np.ones((n,1)),dummy1,dummy2,x,np.multiply(dummy1,x),np.multiply(dummy2,x)), axis = 1)
+            elif model==2:
+                x1=np.concatenate((np.ones((n,1)),dummy1,dummy2,x), axis = 1)
+            #else:
+                #nothing
+
+            temp1[t1-begin,t2-begin*2],temp2[t1-begin,t2-begin*2]=adf(y,x1,k,choice);
+  
+            # compute Za or Zt for each t
+            temp3[t1-begin,t2-begin*2],temp4[t1-begin,t2-begin*2]=phillips(y,x1);
+
+            t2=t2+1;
+
+        t1 = t1 +1;
+
+    tstatminc = np.amin(temp1, axis = 0);
+    minlag1ind = np.argmin(temp1, axis = 0);
+    tstat = np.amin(tstatminc, axis = 0);
+    bpt2 = np.where(tstatminc == np.amin(tstatminc))[0];
+    bpt1 = minlag1ind[bpt2];
+    breakpta1 = (bpt1+begin)/n;
+    breakpta2 = (bpt2+begin)/n;
+    
+    lag=temp2[bpt1,bpt2];
+    
+    print("******** Modified ADF Test ***********");
+    print("t-statistic = %.3f" %tstat);
+    print("AR lag = ", lag);
+    print("First break point(ADF) = %.3f" %breakpta1);
+    print("Second break point(ADF) = %.3f" %breakpta2);
+    print(" ");
+    
+    txtADF = '';
+    txtADF = txtADF + '============================\n';
+    txtADF = txtADF + '|\tModified ADF Test\t\t|\n';
+    txtADF = txtADF + '============================\n';
+    
+    txtADF = txtADF + 't-statistic = %.3f\n' %tstat;
+    txtADF = txtADF + 'AR lag = %.3f\n' %lag;
+    txtADF = txtADF + 'First break point(ADF) = %.3f\n' %breakpta1;
+    txtADF = txtADF + 'Second break point(ADF) = %.3f\n\n' %breakpta2;
+    txtADF = txtADF + 'For critical values see Hatemi-J (2008).\n' %breakpta2;
+    
+    # For critical values see Hatemi-J (2008).
+    
+    txtADF = txtADF + '\n';
+
+    self.msgOutputMsg_Modified_ADF_Test["text"] = "%s" % (txtADF);
+
+
+
+    #@ Phillips test @
+    zaminc = np.amin(temp3, axis = 0);
+    minlag1ind = np.argmin(temp3, axis = 0);
+    za = np.amin(zaminc, axis = 0);
+    bpt2 = np.argmin(zaminc, axis = 0);
+    bpt1 = minlag1ind[bpt2];
+    breakptza1 = (bpt1+begin)/n;
+    breakptza2 = (bpt2+begin)/n;
+    ztminc = np.amin(temp4, axis = 0);
+    minlag1ind = np.argmin(temp4, axis = 0);
+    zt = np.amin(ztminc, axis = 0);
+    bpt2 = np.argmin(ztminc, axis = 0);
+    bpt1 = minlag1ind[bpt2];
+    breakptzt1 = (bpt1+begin)/n;
+    breakptzt2 = (bpt2+begin)/n;
+    
+    print("********  Modified Phillips Test ********");
+    print("Zt = %.3f" %zt);
+    print("First breakpoint(Zt) = %.3f" %breakptzt1);
+    print("Second breakpoint(Zt) =  %.3f" %breakptzt2);
+    print("Za =  %.3f" %za);
+    print("First breakpoint(Za) =  %.3f" %breakptza1);
+    print("Second breakpoint(Za) =  %.3f" %breakptza2);
+    print(" ");
+
+    txtPhil = '';
+    txtPhil = txtPhil + '============================\n';
+    txtPhil = txtPhil + '|\tModified Zt and Za Tests\t|\n';
+    txtPhil = txtPhil + '============================\n';
+    
+    txtPhil = txtPhil + 'Zt = %.3f\n' %zt;
+    txtPhil = txtPhil + 'First breakpoint(Zt) = %.3f\n' %breakptzt1;
+    txtPhil = txtPhil + 'Second breakpoint(Zt) = %.3f\n\n' %breakptzt2;
+    
+    txtPhil = txtPhil + 'Za = %.3f\n' %za;
+    txtPhil = txtPhil + 'First breakpoint(Za) = %.3f\n' %breakptza1;
+    txtPhil = txtPhil + 'Second breakpoint(Za) = %.3f\n' %breakptza2;
+    
+    txtPhil = txtPhil + '\n';
+
+    self.msgOutputMsg_Modified_Phillips_Test["text"] = "%s" % (txtPhil);
+
+    
+    dummy1=np.concatenate((np.zeros((bpt1+begin,1)),np.ones((n-(bpt1+begin),1))), axis = 0);
+    dummy2=np.concatenate((np.zeros((bpt2+begin,1)),np.ones((n-(bpt2+begin),1))), axis = 0);
+    
+    # adjust regressors for different models
+    if model==3:
+       x1=np.concatenate((np.ones((n,1)),dummy1,dummy2,seqa(1,1,n),x), axis = 1);
+    elif model==4:
+       x1=np.concatenate((np.ones((n,1)),dummy1,dummy2,x,np.multiply(dummy1,x),np.multiply(dummy2,x)), axis = 1);
+    elif model==2:
+       x1=np.concatenate((np.ones((n,1)),dummy1,dummy2,x), axis = 1);
+    #endif;
+
+    print ("if model==3;");
+    print ("  x1=ones(n,1)~dummy1~dummy2~seqa(1,1,n)~x;");
+    print ("elseif model==4;");
+    print ("  x1=ones(n,1)~dummy1~dummy2~x~(dummy1).*x~(dummy2).*x;");
+    print ("elseif model==2;");
+    print ("  x1=ones(n,1)~dummy1~dummy2~x;");
+
+    txtModel = '';
+    txtModel = txtModel + '==========================\n';
+    txtModel = txtModel + '|\t   Model\t\t       |\n';
+    txtModel = txtModel + '==========================\n';
+    
+    # txtModel = txtModel + 'if model==3\n';
+    # txtModel = txtModel + '  x1=ones(n,1)~dummy1~dummy2~seqa(1,1,n)~x;\n';
+    # txtModel = txtModel + 'elseif model==4;\n';
+    txtModel = txtModel + 'x1=ones(n,1) ~ dummy1 ~ dummy2 ~ x ~ (dummy1) .* x ~ (dummy2) .* x;\n';
+    # txtModel = txtModel + 'elseif model==2;\n';
+    # txtModel = txtModel + '  x1=ones(n,1)~dummy1~dummy2~x;\n';
+    
+    txtModel = txtModel + '\n';
+
+    self.msgOutputMsg_Models_X1["text"] = "%s" % (txtModel);
+
+    b, e1,sig2,se = estimate(y,x1);
+    
+    np.set_printoptions(precision=3, suppress=True)
+    
+    b_divd_se = np.divide(b,se);
+    b_se_bds = np.concatenate((b,se,b_divd_se), axis = 1);
+    print("\n\n\tb\t\tse\t\tt\n\t______\t______\t______\n", b_se_bds);
+
+    txt_b_se_t = '';
+    txt_b_se_t = txt_b_se_t + '============================\n';
+    txt_b_se_t = txt_b_se_t + '|\tEstimation Results      \t|\n';
+    txt_b_se_t = txt_b_se_t + '============================\n';
+
+    txt_b_se_t = txt_b_se_t + 'b\tse\tt\n';
+
+    for i in range(0,b_se_bds.shape[0]):
+        txt_b_se_t = txt_b_se_t + str(b_se_bds[i]).lstrip('[').rstrip(']') + '\n';
+    
+    txt_b_se_t = txt_b_se_t + '\n';
+
+    self.msgOutputMsg_b_se_t["text"] = "%s" % (txt_b_se_t);
+    
+    
+    ###########################################################################
+    output_rprt_file = open(fileName,'a');
+    
+    output_rprt_file.write(txtADF);
+    output_rprt_file.write('\n\n');
+    output_rprt_file.write(txtPhil);
+    output_rprt_file.write('\n\n');
+    output_rprt_file.write(txtModel);
+    output_rprt_file.write('\n\n');
+    output_rprt_file.write(txt_b_se_t);
+    output_rprt_file.write('\n\n');
+    output_rprt_file.close;
+    ###########################################################################
+
+    return;
+    
+################################################
+def adf(y,x,kmax,choice):
+    #/**********************  PROC ADF  *****************************
+    #**   FORMAT
+    #**          { stat,lag } = adf(y,x)
+    #**   INPUT
+    #**        y - dependent variable
+    #**        x - independent variables
+    #**   OUTPUT
+    #**  stata - ADF statistic
+    #**  lag - the lag length
+    #**   GLOBAL VARIABLES: none
+    #**   EXTERNAL PROCEDURES: estimate
+    #**********************************************************************/
+    #*************** Modified ADF for each breakpoint ********************
+    #**********************************************************************/
+    
+    n = y.shape[0];
+    b,e,sig2,se=estimate(y,x);
+    de=e[1:n]-e[0:n-1]; # difference of residuals
+    ic=0;
+    k=kmax;
+    temp1=np.zeros((kmax+1,1));
+    temp2=np.zeros((kmax+1,1));
+    
+    while k>=0:
+        yde=de[k:n];
+        n1=yde.shape[0];
+        xe=e[k:n-1];
+
+        j=1;
+        
+        while j <= k:
+            xe=np.concatenate((xe,de[k-j:n-1-j]), axis = 1);
+            j=j+1;
+
+        b,e1,sig2,se=estimate(yde,xe);
+
+        if choice==1:  # K is pre-specified
+          temp1[k]=-1000;   # set an random negative constant
+          temp2[k]=b[0]/se[0];
+          break;
+        elif choice==2:  # K is determined by AIC
+          aic = np.log((np.dot((np.transpose(e1)), e1))/n1) + 2 * (k + 2) / n1;
+          ic=aic;
+        elif choice==3:  # K is determined by BIC
+          bic=np.log((np.dot((np.transpose(e1)), e1))/n1) + (k+2)*np.log(n1)/n1;
+          ic=bic;
+        elif choice==4: # K is determined by downward t
+          if abs(b[k]/se[k]) >= 1.96 or k==0:
+            temp1[k]=-1000;    # set an random negative constant
+            temp2[k]=b[0]/se[0];
+            break;
+
+        temp1[k]=ic;
+        temp2[k]=b[0]/se[0];
+        k=k-1;
+
+    lag = np.where(temp1 == np.amin(temp1))[0];
+
+    tstat=temp2[lag];
+
+    return(tstat,lag);
+
+################################################
+def phillips(y,x):
+    #**********************  PROC PHILLIPS  *****************************
+    #**   FORMAT
+    #**  { za,zt } = phillips(y,x)
+    #**   INPUT
+    #**  y  - dependent variable
+    #**  x - independent variables
+    #**   OUTPUT
+    #**  za - the Phillips test statistic
+    #**  zt -  the Phillips test statistic
+    #**   GLOBAL VARIABLES: none
+    #**********************************************************************/
+    #*************** Modified Za or Zt for each breakpoint ********************
+    #**********************************************************************/
+    n = y.shape[0];
+    
+    #  OLS regression
+    b = np.transpose(np.linalg.pinv(np.transpose(x))).dot(y);
+
+    #e=y-x*b;
+    e = y - (np.dot(x,b));
+
+    # OLS regression on residuals
+    be = np.transpose(np.linalg.pinv(np.transpose(e[0:n-1]))).dot(e[1:n]);
+
+    ue = e[1:n] - np.dot(e[0:n-1],be);
+
+    # calculate bandwidth number
+    nu=ue.shape[0];
+    bu = np.transpose(np.linalg.pinv(np.transpose(ue[0:nu-1]))).dot(ue[1:nu]);
+    uu=ue[1:nu]-ue[0:nu-1]*bu;
+    su=(np.power(uu,2)).mean(axis=0)
+    a2=(4*np.power(bu,2)*su/(np.power((1-bu),8)))/(su/(np.power(1-bu,4)));
+
+    bandwidth=1.3221*(np.power(a2*nu,0.2));
+
+    m=bandwidth;
+    j=1;
+    lemda=0;
+    while j<=m:
+        ueTue = np.dot((np.transpose(ue[0:nu-j])),ue[j:nu]);
+        gama=ueTue/nu;
+        c=j/m;
+        Pi = math.pi;
+        w=(75/((6*Pi*c)**2))*(math.sin(1.2*Pi*c)/(1.2*Pi*c) - math.cos(1.2*Pi*c));
+        lemda=lemda+w*gama;
+        j=j+1;
+    
+    # calculate Za and Zt for each t
+    p=np.sum(np.multiply(e[0:n-1],e[1:n])-lemda)/np.sum(np.power(e[0:n-1],2));
+    za=n*(p-1);
+    
+    sigma2 = 2 * lemda + (np.dot(np.transpose(ue),ue)/nu);
+    s=sigma2/(np.dot(np.transpose(e[0:n-1]),e[0:n-1]));
+    zt=(p-1)/np.sqrt(s);
+    
+    return (za,zt);
+
+################################################
+def estimate(y,x):
+
+    m = np.linalg.inv(np.dot((np.transpose(x)),x))
+
+    #b=m*(x'y);
+    b = np.dot(m, (np.dot((np.transpose(x)), y)));
+
+    #e=y-x*b;
+    e = y - np.dot(x,b);
+    sig2 = np.dot((np.transpose(e)), e)/(y.shape[0] - x.shape[1]);
+    se=np.sqrt(np.multiply((np.diag(m)),sig2));
+    se = np.transpose(se);
+    return (b,e,sig2,se);
+
+
+################################################
+def seqa(start,inc,n):
+    matrix = [n];
+    for i in range(start, n, inc):
+        #print(matrix[idx:idx + inc])
+        matrix = np.concatenate(matrix[i+inc]);
+    return(matrix);
+
+################################################
+def EndNote(fileName,self):
+
+    output_rprt_file = open(fileName,'a');
+
+    output_rprt_file.write('===============================================================================\n');
+    output_rprt_file.write('|							REFERENCES											|\n');
+    output_rprt_file.write('|	-Hatemi-J A. (2008) Tests for cointegration with two unknown regime shifts |\n');
+    output_rprt_file.write('|	with an application to financial market integration,						|\n');
+    output_rprt_file.write('|  	vol. 35(3), 497-505.														|\n');
+    output_rprt_file.write('|																				|\n');
+    output_rprt_file.write('===============================================================================\n');
+    output_rprt_file.write('\n');
+    
+    output_rprt_file.write('===============================================================================\n');
+    output_rprt_file.write('|							ADDITIONAL INFORMATION								|\n');
+    output_rprt_file.write('|																				|\n');
+    output_rprt_file.write('|	This program code is the copyright of the authors. Applications are allowed |\n');
+    output_rprt_file.write('|	only if proper reference and acknowledgments are provided. 					|\n');
+    output_rprt_file.write('|	For non-Commercial applications only. No performance guarantee is			|\n');
+    output_rprt_file.write('|	made. Bug reports are welcome. If this code is used for research or in any	|\n');
+    output_rprt_file.write('|	other code, proper attribution needs to be included.						|\n');
+    output_rprt_file.write('|																				|\n');
+    output_rprt_file.write('|	© 2022 Dr. Alan Mustafa and Prof. Abdulnasser Hatemi-J						|\n');
+    output_rprt_file.write('===============================================================================\n');
+    
+    output_rprt_file.close;
+    #--------------------------------------------------------------------------
+    
+    txtEndNote = "";
+    txtEndNote = txtEndNote + """REFERENCE:
+    - Hatemi-J A. (2008) Tests for cointegration with two unknown regime shifts with an application to financial market integration, Empirical Economics, vol. 35(3), 497-505.
+    
+    ADDITIONAL INFORMATION:
+    This program code is the copyright of the authors. Applications are allowed only if proper reference and acknowledgments are provided. For non-Commercial 
+    applications only. No performance guarantee is made. Bug reports are welcome. If this code is used for research or in any other code, proper attribution 
+    needs to be included.
+    © 2022 Dr. Alan Mustafa and Prof. Abdulnasser Hatemi-J
+    """
+    self.msgEndNote["text"] = "%s" % (txtEndNote)
+    
+    return;    
+
+###############################################################################
+#              End of Calculations: Calculating Options             #
+###############################################################################
+
+#In our main function, create the GUI and pass it to our App class
+def main():
+    global window
+    window= tk.Tk()
+    window.title("Tests of Cointegration with Two Endogenous Structural Shifts (PMCT2ES 1.0)")
+    
+    window.geometry('900x900+50+50')
+    
+    theWindow = create_window_menu_UI(window);
+    theWindow.grid(row=0, column=1);
+    
+    window.mainloop()
+
+def refresh():
+    window.destroy()
+    main()
+
+#Run the main function
+if __name__ == "__main__":
+    main()
+

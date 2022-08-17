@@ -61,6 +61,7 @@ p nw_fromlist module to build a network from a list of long-form data
 p nw_projection module to project a bipartite network into one of its two dimensions
 p nw_wcc module to calculate Weighted Clustering Coefficients (WCC) in Complex Direct Networks 
 p nwannd module to compute ANND (average nearest neighbor degree) and related measures
+p nwassortativity module to compute network assortativity coefficient
 p nwcluster module to compute the clustering coefficient of a network's vertices
 p nwdisparity module to calculate the disparity of a network's nodes  
 p nwind module to compute Newey-Windmeijer VCE after ivreg2 GMM-CUE estimation

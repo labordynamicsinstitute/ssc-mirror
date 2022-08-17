@@ -1,4 +1,4 @@
-*! version 1.0.0 , July-20-2022
+*! version 1.0.1 , August-02-2022
 *! Author: Abbie Yilei Zhang
 *! Co-Authors: James Fisher, Joseph Terza
 *! Website: https://github.com/zhangyl334/bivpoisson
@@ -11,9 +11,6 @@
 
 
 /* ESTIMATION */
-
-
-clear all
 
 capture program drop bivpoisson
 program define bivpoisson, sortpreserve eclass
@@ -87,35 +84,35 @@ program define bivpoisson, sortpreserve eclass
 				exit 2000
 			}
 		/*Check that target variables are not overly zero-inflated.
-		Current test: poisson regression returns coefficient >= 0.
-		Needs work*/
+		Current test: poisson regression returns coefficient >= -1.
+		Needs work.*/
 		/*Eq1*/
 			qui: poisson `dep1' if `touse' == 1
 			scalar tmp = e(b)[1,1]
-			if tmp < 0 {
+			if tmp < -1 {
 				dis in green "{bf:`dep1'} is zero-inflated"
 				exit 2000
 			}
 		/*Eq2*/
 			qui: poisson `dep2' if `touse' == 1
 			scalar tmp = e(b)[1,1]
-			if tmp < 0 {
+			if tmp < -1 {
 				dis in green "{bf:`dep2'} is zero-inflated"
 				exit 2000
 			}
-		/*Check for colinear feature variables and remove them*/
+		/*Check for collinear feature variables and remove them*/
 		/*Eq1*/
 			qui _rmcoll `indep1' if `touse' == 1, forcedrop
 			local indep1 "`r(varlist)'"
 			if r(k_omitted) > 0 {
-				dis in green "{bf:EQ1} several independent variables are colinear, automatically dropping them"
+				dis in green "{bf:EQ1} several independent variables are collinear, automatically dropping them"
 				dis in green "{bf:EQ1} revised independent variables are: `indep1'"
 			}
 		/*Eq2*/
 			qui _rmcoll `indep2' if `touse' == 1, forcedrop
 			local indep2 "`r(varlist)'"
 			if r(k_omitted) > 0 {
-				dis in green "{bf:EQ2} several independent variables are colinear, automatically dropping them"
+				dis in green "{bf:EQ2} several independent variables are collinear, automatically dropping them"
 				dis in green "{bf:EQ2} revised independent variables are: `indep2'"
 			}
 		
@@ -212,6 +209,7 @@ end
 
 /*Mata Programs*/
 	/*Quadrature Weights and Abscissa*/
+	/*This mata program is due to Adrian Mander (mandera@cardiff.ac.uk)*/
 	capture mata: mata drop GLQwtsandabs()
 	mata 
 	matrix GLQwtsandabs(real scalar quadpts)
@@ -229,7 +227,7 @@ end
 	} 
 	end
 
-	/*Integrand Bivariate Probit*/
+	/*Integrand of Bivariate Probit*/
 	capture mata: mata drop BivPoissNormIntegrand()
 	mata
 	real matrix BivPoissNormIntegrand(real matrix xxu1, real matrix xxu2, /*

@@ -113,8 +113,7 @@ which causes the operating-system window to stay open until the return key is pr
 
 {pstd}
 Stat/Transfer can be installed on Microsoft Windows, MacOS, Linux and Solaris.
-It is available from {browse "http://www.stata.com/":Stata Corporation}
-and developed by {browse "http://www.stattransfer.com/":Circle Systems}.
+It is developed and sold by {browse "http://www.stattransfer.com/":Circle Systems}.
 
 {pstd}
 {cmd:inputst}, {cmd:outputst} and {cmd:outputstold} call {cmd:stcmd},
@@ -154,10 +153,10 @@ This is probably done most easily by inserting a line into the user's {help prof
 to initialize this {help macro:global macro} every time the user starts Stata.
 For instance, under Windows, if the user's {help profile:profile do-file} contains the line
 
-{p 8 12 2}{cmd:. global StatTransfer_path `"C:\Program Files\StatTransfer13-64\st.exe"'}{p_end}
+{p 8 12 2}{cmd:. global StatTransfer_path `"C:\Program Files\StatTransfer16-64\st.exe"'}{p_end}
 
 {pstd}
-and the {cmd:st} program of Stat/Transfer, in the user's system, has path {hi:"C:\Program Files\StatTransfer13-64\st.exe"},
+and the {cmd:st} program of Stat/Transfer, in the user's system, has path {hi:"C:\Program Files\StatTransfer16-64\st.exe"},
 then {cmd:stcmd} will find the {cmd:st} command of Stat/Transfer correctly on that path.
 
 {pstd}
@@ -198,8 +197,8 @@ After the user has done this, Stata will use the higher version of {cmd:stcmd}.
 {title:Author}
 
 {pstd}
-Roger Newson, Imperial College London, UK.{break}
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, King's College London, UK.{break}
+Email: {browse "mailto:roger.newson@kcl.ac.uk":roger.newson@kcl.ac.uk}
 
 
 {title:Also see}
