@@ -13,14 +13,13 @@ d KW: cluster analysis
 d KW: graphics
 d KW: hierarchical clusters
 d
-d Requires: Stata version 7
+d Requires: Stata version 17
 d
-d Distribution-Date: 20181027
+d Distribution-Date: 20220821
 d
 d Author: Matthias Schonlau,  University of Waterloo
 d Support: email schonlau@@uwaterloo.ca
 d
 f clustergram.ado
-f clustergram.hlp
-f clustervar.hlp
-f ../a/asbestos.dta
+f clustergram.sthlp
+f ../a/clustergram_examples.ado

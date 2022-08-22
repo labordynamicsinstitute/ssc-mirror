@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 3.0  14 Apr 2021}{...}
+{* *! version 4.0  5 Jul 2022}{...}
 {viewerjumpto "Syntax" "examplextgranger##syntax"}{...}
 {viewerjumpto "Description" "examplextgranger##description"}{...}
 {viewerjumpto "Options" "examplextgranger##options"}{...}
@@ -11,15 +11,14 @@
 
 {marker syntax}{...}
 {title:Syntax}
-
 {phang}
 {p 8 16 2}{cmd:xtgranger} {depvar} [{indepvars}] [if] [in] 
-[, lags(integer) maxlags(integer) het sum nodfc] 
+[, lags(integer) maxlags(integer) het {ul:boot}strap[({it:options})] csd sum nodfc] 
 
 {smcl}
 
 {p 4 6 2}
-You must {cmd:xtset} your data before using {cmd:xtgranger}; see {helpb xtset:[XT] xtset}.{p_end}
+You must {cmd:xtset} your data before using {cmd:xtgranger}; see {helpb xtset:[XT] xtset}. The panel must be balanced.{p_end}
 
 {smcl}
 
@@ -29,8 +28,11 @@ You must {cmd:xtset} your data before using {cmd:xtgranger}; see {helpb xtset:[X
 {pstd}
 {cmd:xtgranger} performs the Half-Panel Jackknife (HPJ) Wald-type test for Granger non-causality, developed by Juodis, Karavias, and Sarafidis (2021). 
 This test offers superior size and power performance, which stems from the use of a pooled estimator with a sqrt(NT) rate of convergence. 
-The test has two other useful properties; it can be used in multivariate systems and it has power against both homogeneous as well as heterogeneous alternatives. 
+The test has two other useful properties; it can be used in multivariate systems and it has power against both homogeneous as well as heterogeneous alternatives.
+The test allows for cross-section dependence and cross-section heteroskedasticity. 
 The command also reports results for the HPJ estimator. 
+{cmd:xtgranger} can bootstrap the variance of the HPJ estimator.
+The bootstrap resamples across the cross-section dimension.
 {smcl}
 
 {marker options}{...}
@@ -47,36 +49,22 @@ The command also reports results for the HPJ estimator.
 {opt het} allows for cross-sectional heteroskedasticity.
 
 {phang}
+{opt csd} allows for weak cross-sectional dependence.
+
+{phang}
 {opt nodfc} does not apply a degrees of freedom correction in the computation of the variance-covariance matrix of the HPJ estimator. This option is mostly useful under cross-sectional heteroskedasticity.
+
+{dlgtab:Bootstrap}
+{phang}
+{opt boot:strap} employs a bootstrap variance estimator in the HPJ Wald statistic with the current seed and 100 repetitions.
+
+{phang}
+{opt boot:strap}{cmd:(}{it:#reps}{cmd:, seed({help seed}))} employs a bootstrap variance estimator in the HPJ Wald statistic with the custom {help seed} and {it:#reps} repetitions.
 
 {dlgtab:Reporting}
 {phang}
 {opt sum} presents results on the sum of the estimated feedback coefficients. This option can be useful when the number of lags is greater than 1.
 
-
-{marker examples}{...}
-{title:Examples}
-
-{phang} The dataset xtgranger_example.dta used in this example is downloadable from the SSC Archive and 
-{browse "https://sites.google.com/site/yianniskaravias/files/xtgranger"}.
-
-{pstd}xtset the data{p_end}
-{phang2}{cmd:xtset cert time} 
-
-{pstd}Dynamic model with given lags{p_end}
-{phang2}{cmd:xtgranger roa inefficiency quality, lags(2)} 
-
-{pstd}Dynamic model with given lags, cross-sectional heteroskedasticity-robust standard errors {p_end}
-{phang2}{cmd:xtgranger roa inefficiency quality, lags(2) het}
-
-{pstd}Dynamic model with given lags and cross-sectional heteroskedasticity-robust standard errors. It reports the sum of the lagged coefficients {p_end}
-{phang2}{cmd:xtgranger roa inefficiency quality, lags(2) het sum}
-
-{pstd}Dynamic model with lag length selection (up to 4 lags) based on BIC, with cross-sectional heteroskedasticity-robust standard errors {p_end}
-{phang2}{cmd:xtgranger roa inefficiency quality, maxlags(4) het}{p_end}
-
-{pstd}Dynamic model with lag length selection (up to 4 lags) based on BIC, with cross-sectional heteroskedasticity-robust standard errors, and no variance degrees-of-freedom correction {p_end}
-{phang2}{cmd:xtgranger roa inefficiency quality, maxlags(4) het nodfc}{p_end}
 
 {marker results}{...}
 {title:Stored results}
@@ -100,6 +88,56 @@ The command also reports results for the HPJ estimator.
 {synopt:{cmd:e(b_Sum_HPJ)}}Sum of the HPJ estimates for the feedback coefficients{p_end}
 {synopt:{cmd:e(Var_Sum_HPJ)}}The variance of the sum of the HPJ estimators {p_end}
 
+
+{marker postestimation}{...}
+{title:Postestimation commands}
+{phang}
+Predict can be used after {cmd:xtgranger}. The residuals and predicted values will be stored in {newvar}.{p_end}
+
+{phang}
+{p 8 16 2}{cmd:predict} {newvar} [if] [in] 
+[, residuals xb] 
+{smcl}
+{marker options}{...}
+{title:Postestimation options}
+
+{phang}
+{opt residuals:} calculates the residuals.{p_end}
+
+{phang}
+{opt xb} calculates the linear prediction on the partialled out variables.{p_end} 
+
+
+{marker examples}{...}
+{title:Examples}
+
+{phang} The dataset ``xtgranger_example.dta'' used in this example is downloadable from
+{browse "https://sites.google.com/site/yianniskaravias/files/xtgranger"}.
+
+{pstd}xtset the data{p_end}
+{phang2}{cmd:xtset cert time} 
+
+{pstd}Dynamic model with given lags{p_end}
+{phang2}{cmd:xtgranger roa inefficiency quality, lags(2)} 
+
+{pstd}Dynamic model with given lags, cross-sectional heteroskedasticity-robust standard errors {p_end}
+{phang2}{cmd:xtgranger roa inefficiency quality, lags(2) het}
+
+{pstd}Dynamic model with given lags and cross-sectional heteroskedasticity-robust standard errors. It reports the sum of the lagged coefficients {p_end}
+{phang2}{cmd:xtgranger roa inefficiency quality, lags(2) het sum}
+
+{pstd}Dynamic model with lag length selection (up to 4 lags) based on BIC, with cross-sectional heteroskedasticity-robust standard errors {p_end}
+{phang2}{cmd:xtgranger roa inefficiency quality, maxlags(4) het}{p_end}
+
+{pstd}Dynamic model with lag length selection (up to 4 lags) based on BIC, with cross-sectional heteroskedasticity-robust standard errors, and no variance degrees-of-freedom correction {p_end}
+{phang2}{cmd:xtgranger roa inefficiency quality, maxlags(4) het nodfc}{p_end}
+
+{pstd}Bootstrap variance of the HPJ estimator with a default of 100 repetitions{p_end}
+{phang2}{cmd:xtgranger roa inefficiency quality, bootstrap}{p_end}
+
+{pstd}Bootstrap variance of the HPJ estimator with 200 repetitions and control of the {help seed}{p_end}
+{phang2}{cmd:xtgranger roa inefficiency quality, bootstrap(200, seed(123))}{p_end}
+
 {title:References}
 {p}
 {p_end}
@@ -109,13 +147,16 @@ Dhaene, G., Jochmans, K., 2015. Split-panel Jackknife estimation of fixed-effect
 
 Juodis, A., Karavias, Y., and Sarafidis, V., 2021. A homogeneous approach to testing for Granger non-causality in heterogeneous panels. Empir Econ 60, 93–112. {browse "https://doi.org/10.1007/s00181-020-01970-9"}
 
-Xiao, J., Juodis, A., Karavias, Y., and Sarafidis, V., 2021. Improved Tests for Granger Causality in Panel Data. Submitted to the Stata Journal.
+Xiao, J., Juodis, A., Karavias, Y., Sarafidis, V., and Ditzen, J., 2022. Improved Tests for Granger Causality in Panel Data. Submitted to the Stata Journal.
+
 
 {title:Acknowledgements}
 {p}
 {p_end}
 {pstd}
-{cmd:xtgranger} is not an official Stata command. It is a free contribution to the research community. Please cite Xiao et al (2021) and Juodis et al (2021), as listed in the references above.
+{cmd:xtgranger} is not an official Stata command. It is a free contribution to the research community. 
+Please cite Xiao et al (2022) and Juodis et al (2021), as listed in the references above.
+
 
 {title:Authors}
 {p}
@@ -126,6 +167,12 @@ Jiaqi Xiao{break}
 University of Birmingham{break}
 Birmingham, UK{break}
 {browse "mailto:Jxx963@outlook.com?subject=Question/remark about -xtgranger-&cc=Jxx963@outlook.com":Jxx963@outlook.com}
+
+{pstd}
+Arturas Juodis{break}
+University of Amsterdam{break}
+Amsterdam, Netherlands{break}
+{browse "mailto:a.juodis@uva.nl?subject=Question/remark about -xtgranger-&cc=i.Karavias@bham.ac.uk":a.juodis@uva.nl}
 
 {pstd}
 Yiannis Karavias{break}
@@ -139,4 +186,8 @@ BI Norwegian Business School{break}
 Oslo, Norway{break}
 {browse "mailto:vasilis.sarafidis@gmail.com?subject=Question/remark about -xtgranger-&cc=vasilis.sarafidis@gmail.com":vasilis.sarafidis@gmail.com}
 
-
+{pstd}
+Jan Ditzen{break}
+Free University of Bozen-Bolzano{break}
+Bozen, Italy{break}
+{browse "mailto:jan.ditzen@unibz.it?subject=Question/remark about -xtgranger-&cc=jan.ditzen@unibz.it":jan.ditzen@unibz.it}

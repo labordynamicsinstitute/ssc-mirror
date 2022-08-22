@@ -13,9 +13,9 @@ d KW: synthetic control
 d KW: multiple treatment
 d KW: lasso 
 d
-d Requires: Stata version 17 and distinct, greshape, coefplot, lassopack, tabstatmat from SSC (q.v.)
+d Requires: Stata version 17 and distinct, greshape, coefplot, lassopack, tabstatmat, schemepack from SSC (q.v.)
 d
-d Distribution-Date: 20220726
+d Distribution-Date: 20220821
 d
 d Author: Jared Greathouse, Georgia State University
 d Support: email j.greathouse200@@gmail.com
@@ -31,4 +31,4 @@ f scul_bp.dta
 f scul_basque.dta
 f ../p/placebos_scul.dta
 f ../g/GasHoliday.dta
-f scul_testcode.do
+f scultest.do

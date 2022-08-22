@@ -1,5 +1,4 @@
 *****************************************************
-
 set more off
 *****************************************************
 
@@ -30,10 +29,8 @@ cap prog drop scul // Drops previous iterations of the program
 
 *! SCUL v1.0.0, Jared Greathouse, 7/23/22
 prog define scul, rclass
-version 17 // Stata MP- Lowest version it'll work on is 11
-	graph close _all
-	graph drop _all
-	scalar drop _all
+version 16 // Stata MP- Lowest version it'll work on is 11
+
 	
 /**********************************************************
 	* Installation*
@@ -125,28 +122,30 @@ _xtstrbal $panel $time `touse'
 		exit 198
 	}
 	
-	* Confirm -elasticregress- program is installed if one of the bcorrect() options -ridge-, -lasso-, or -elastic- are specified
+	* Confirm -gtools- program is installed
 	capture greshape
 	if _rc == 199 {
 		di as err "-greshape- package must be installed. Type -ssc install gtools-"
 		exit 198
 	}
 
+	* Confirm -tabstatmat- program is installed
+	capture tabstatmat
+	if _rc == 199 {
+		di as err "-tabstatmat- package must be installed. Type -ssc install tabstatmat-"
+		exit 198
+	}
 
 	syntax anything [if], ///
-		[TReated(varname)] /// We need a treatment variable as 0 1
-		ahead(numlist min=1 max=1 >=1 int) /// Number of forecasting periods.
-		trdate(numlist min=1 max=1 >=1 int) /// Give the date of treatment
-		trunit(numlist min=1 max=1 >=1 int) /// Which unit was treated? Relevant only for single-intervention studies
+		TReated(varname) /// We need a treatment variable as 0 1
+		[ahead(numlist min=1 max=1 >=1 int)] /// Number of forecasting periods.
 		[PLAcebos] /// Conducts iterative assignment of the intervention at time t
-		LAMBda(string) /// specifies the lambda we're using
+		[LAMBda(string)] /// specifies the lambda we're using
 		[COVs(varlist)] ///
-		[multi] /// *!! Needed for multiple units.
 		[cv(string)] [scheme(string)] ///
 		[sqerr(numlist min=0 max=1 >=0)] ///
 		[before(numlist min=1 max=1 int)] ///
 		[after(numlist min=1 max=1 int)] ///
-		[intname(string)] /// Time Relative to "Intervention"
 		[rellab(numlist)] /// relabels event study axis
 		[obscol(string)] ///
 		[cfcol(string)] [conf(string)] ///
@@ -154,7 +153,8 @@ _xtstrbal $panel $time `touse'
 		[TRANSform(string)] ///
 		[avgs(numlist min=1 max=1 int)] ///
 		[donadj(string)] ///
-		[q(numlist min=0 max=1)] //
+		[q(numlist min=0 max=1)] ///
+		[plat] [times(numlist)]
 
 tempvar touse
 mark `touse' `if' `in'
@@ -169,14 +169,26 @@ gettoken depvar anything: anything
 
 unab depvar: `depvar'
 
-local y_lab: variable label `depvar'
+local y_lab: variable lab `depvar'
 
-gl outlab: disp "`y_lab'" // Grabs the label of our outcome variable
+loc outlab "`y_lab'" // Grabs the label of our outcome variable
 
 if "`q'"=="" {
 	
 	loc q =1
 }
+
+if "`lambda'"=="" {
+	
+	loc lambda lopt
+}
+
+if "`ahead'"=="" {
+	
+	loc ahead = 1
+}
+
+local tr_lab: variable lab `treated'
 
 		
 /**********************************************************
@@ -192,7 +204,15 @@ design. We break the command into two stages: data validation
 and estimation.
 **********************************************************/
 
-if "`placebos'" != "placebos" & "`multi'" != "multi" { // thus......
+qui insp $panel if `treated'==1
+
+loc totaltreat = r(N_unique)
+
+qui su $panel if `treated' ==1, mean
+
+loc realunit = r(mean)
+
+if "`placebos'" != "placebos" & "`plat'" == ""  & `totaltreat'==1 { // thus......
 
 preserve // Keep the primary long dataset the exact same
 
@@ -200,23 +220,21 @@ numcheck, unit($panel) ///
 	time($time) ///
 	transform(`transform') ///
 	depvar(`depvar') /// Routine 1
-	trdate(`trdate') q(`q')
+	q(`q') treated(`treated')
 
 
 // Routine 2
 
-treatprocess, treatunit(`trunit') /// 
-	time($time) ///
+treatprocess, time($time) ///
 	unit($panel) ///
-	interdate(`trdate') covs(`covs')
+	covs(`covs') treated(`treated')
 
 data_org, unit($panel) ///
 	time($time) ///
 	depvar(`depvar') ///
-	covs(`covs')
+	covs(`covs') treated(`treated')
 
-
-
+loc trdate = e(interdate)
 /**********************************************************
 
 	
@@ -231,8 +249,8 @@ This is where we do estimaiton if the dataset above passes.
 est_lasso, time($time) h(`ahead') interdate(`trdate') ///
 	lambda(`lambda') cv(`cv') scheme(`scheme') ///
 	obscol(`obscol') cfcol(`cfcol') conf(`conf') ///
-	legpos(`legpos') transform(`transform') intname(`intname') ///
-	rellab(`rellab') q(`q')
+	legpos(`legpos') transform(`transform') intname(`tr_lab') ///
+	rellab(`rellab') q(`q') outlab(`outlab')
 	
 restore // brings back the long panel dataset
 
@@ -278,14 +296,14 @@ return mat Weights = W
 return loc donors `labs2'
 
 drop id2
-}
+
 /*
 collect get r(W)
 collect layout (rowname)(colname)
 */
 }
-
-if "`placebos'" == "placebos" & "`multi'"=="" { // However, if we DO want placebos...
+}
+if "`placebos'" == "placebos" & "`plat'" == "" & `totaltreat'==1 { // However, if we DO want placebos...
 
 if mi("`sqerr'") {
 	
@@ -319,15 +337,21 @@ level.
 qui levelsof $panel, l(placebo_units) // For each unit...
 di as txt "Estimating... This could take a while..."
 foreach x of loc placebo_units {
+	
+qui su $time if `treated' ==1
+
+loc trdate = r(min)
 
 
 preserve
+
+loc clab: label ($panel) `x'
+loc currentlab: disp "`clab'"
+
+		
 qui numcheck, unit($panel) time($time) 	transform(`transform') ///
 	depvar(`depvar') /// Routine 1
-	trdate(`trdate')
-
-
-// Routine 2
+	treated(`treated')
 
 qui placebos_process, treatunit(`x') /// 
 	time($time) ///
@@ -339,7 +363,7 @@ qui data_org_placebos, unit($panel) ///
 	depvar(`depvar') ///
 	covs(`covs')
 	
-	
+
 *We repreat the above checking. It doesn't change at all
 
 
@@ -357,10 +381,11 @@ plots for every single unit. I leave that to the end/
 
 
 qui est_placebos, time($time) h(`ahead') ///
-interdate(`trdate') treatunit(`trunit') ///
+interdate(`trdate') treatunit(`x') ///
 lambda(`lambda') ///
 cv(`cv') scheme(`scheme') transform(`transform') q(`q')
 
+noi di "`currentlab' is done..." _continue
 restore // again, bring back the long data
 }	
 
@@ -419,9 +444,9 @@ qui	drop if $panel == `l'
 */
 
 sort $panel relative
-cls
 
-g byte treated = $panel == `trunit'
+
+g byte treated = $panel == `realunit'
 rename diff_ diff
 
 qui {
@@ -484,7 +509,7 @@ replace postmse = sqrt(e(b)[1,1]) if $panel ==`x'
 
 }
 
-cls
+
 *Grey
 loc cb_col red
 
@@ -565,6 +590,20 @@ tw ///
 	xli(0, lcol(gs8) lpat(dash)) ///
 	xti("t-`=ustrunescape("\u2113")' until `intname'") name(placeboestimates, replace) ///
 	ti("In-Space Placebo Studies")
+	
+preserve
+
+
+gcollapse (firstnm) premse postmse ratio rmspe_rank pval, by($panel)
+sort rmspe_rank
+decode $panel, g(panel)
+
+mkmat premse postmse ratio rmspe_rank pval, rownames(panel) mat(errmat)
+
+matname errmat "Pre-MSE" "Post-MSE" "Ratio" "Rank" "pvalue", columns(1..5) explicit
+
+restore
+return mat errs = errmat
 
 sa placebos_scul, replace	
 	
@@ -602,7 +641,7 @@ qui drop if $panel ==`x'
 qui save "`core2'", replace
 
 
-cls
+
 set seed 12345
 		forval n = 1/`avgs' {
 			
@@ -671,23 +710,186 @@ loc a: word `i' of `files'
 erase "`a'"
 
 }
-preserve
-
-
-gcollapse (firstnm) premse postmse ratio rmspe_rank pval, by($panel)
-sort rmspe_rank
-decode $panel, g(panel)
-
-mkmat premse postmse ratio rmspe_rank pval, rownames(panel) mat(errmat)
-
-matname errmat "Pre-MSE" "Post-MSE" "Ratio" "Rank" "pvalue", columns(1..5) explicit
-
-restore
-return mat errs = errmat
 
 }
 
-if "`multi'" == "multi" {
+if "`plat'" == "plat" & `totaltreat'==1 {
+
+loc placount: word count `times'
+
+cap as `placount' != 0
+if _rc {
+	
+	di in red "You must specify time-to-event palcebos."
+	exit 498
+}
+
+	
+local files : dir "`c(pwd)'" files "*sculitp*"
+qui foreach l of loc files {
+	erase "`l'" // Erases previous placebo files. Maybe make into tempfiles?
+}
+
+numcheck_itp, unit($panel) ///
+	time($time) ///
+	transform(`transform') ///
+	depvar(`depvar') /// Routine 1
+	q(`q') treated(`treated')
+
+loc mastertrdate = e(interdate)
+foreach placebo of num 0 `times' {
+loc npp = `mastertrdate'-`placebo'
+if `placebo' > 0 {
+noi di "`gap'`npp' (`placebo' pre-periods)" _continue
+loc gap ...
+}
+
+
+preserve
+treatprocess_itp, time($time) ///
+	unit($panel) ///
+	covs(`covs') treated(`treated') times(`placebo')
+	
+loc trdate = e(interdate)
+	
+data_org_itp, unit($panel) ///
+	time($time) ///
+	depvar(`depvar') ///
+	covs(`covs') ///
+	treated(`treated') ///
+	times(`placebo')
+
+est_placebos_itp, time($time) ///
+	h(`ahead') ///
+	interdate(`trdate') ///
+	lambda(`lambda') ///
+	cv(`cv') ///
+	transform(`transform') ///
+	q(`q') ///
+	treatunit(`realunit') ///
+	times(`placebo')
+
+restore
+	}
+
+local files : dir "`c(pwd)'" files "*sculitp*" // gather the placebos...
+
+loc first_file: word 1 of `files' // Get the first one
+
+u "`first_file'", clear // bring it in
+
+loc n: word count `files'
+
+
+forv i = 1/`n' {
+
+loc a: word `i' of `files'
+
+
+cap joinby $time using "`a'", unmatched(none) // Join them side by side to reshape them.
+
+}
+qui tsset $time
+
+qui su $time if relative_0==0
+
+loc interdate = r(mean)
+
+rename cf_itp_0 cf_0
+
+order *cf*, last seq
+
+twoway (tsline `depvar'*, lcolor(`obscol') lwidth(thick)) ///
+(tsline cf_0, lcolor(`cfcol') lpat(dash) lwidth(medthick)) ///
+ (tsline *itp*, lcolor(gs12%30 ..) lwidth(thin)), ///
+ legend(pos(`legpos') ring(0) ///
+ order(1 "Observed $treat_lab" 2 "Original Counterfactual" 3 "Backdates") ///
+ fcolor(white) region(fcolor(none))) ///
+ tline(`interdate', lcol("52 44 44") lpat(dash) lwidth(thin)) ///
+ yti("`outlab'") ti("In-Time Placebos")  name(backdates, replace)
+ 
+ twoway (tsline `depvar'*, lcolor(`obscol') lwidth(thick)) ///
+(tsline cf_0, lcolor(`cfcol') lpat(dash) lwidth(medthick)) ///
+ (tsline *itp*, lcolor(gs12%30 ..) lwidth(thin)) if relative_0 < 1, ///
+ legend(pos(`legpos') ring(0) ///
+ order(1 "Observed $treat_lab" 2 "Original Counterfactual" 3 "Backdates") ///
+ fcolor(white) region(fcolor(none))) ///
+ tline(`interdate', lcol("52 44 44") lpat(dash) lwidth(thin)) ///
+ yti("`outlab'") ti("In-Time Placebos")  name(backdatespre, replace)
+ 
+ 
+tempname e123 cont treat loss means B
+
+mkmat `depvar'* if relative_0 < 0, mat(`treat')
+
+
+mata A=J(0,1,.)
+
+foreach x of var *cf* {
+
+mkmat `x' if relative_0 < 0, mat(`cont')
+
+mat `loss' = (`treat' - `cont')' * (`treat' - `cont')
+
+mat `loss' = `loss''/ rowsof(`treat')
+
+mata: X = round(sqrt(st_matrix("`loss'")),.000000001)
+
+mata: st_matrix("`loss'", X)
+
+loc err =`loss'[1,1]
+
+ matrix `e123'=`err'
+
+ mata: A=A\st_matrix("`e123'")
+}
+
+mata: st_matrix("`B'",A)
+
+mata C="RMSE"
+mata C=C,J(1,1," ")
+mata st_matrix("`B'",A)
+mata st_matrixcolstripe("`B'",C)
+
+local rn
+qui foreach i of num 0 `times' { //
+    local rn `rn' `:display `i''
+}
+mat rownames `B' = `rn'
+
+order *diff*, last seq
+
+qui mean diff* if relative_0 >= 0
+
+mat `means' = e(b)'
+
+mat colnames `means' = ATTs
+
+matrix itplacebos = `B' , `means'
+
+qui sa timeplacebos, replace
+local files : dir "`c(pwd)'" files "*sculitp*" // gather the placebos...
+
+loc first_file: word 1 of `files' // Get the first one
+
+u "`first_file'", clear // bring it in
+
+loc n: word count `files'
+
+
+forv i = 1/`n' {
+
+loc a: word `i' of `files'
+
+
+erase "`a'"
+
+}
+
+macro drop treat_lab
+}
+
+if `totaltreat' > 1 {
 	
 if "`treated'"=="" {
 	
@@ -731,7 +933,7 @@ then we handle it in this section.
 **********************************************************/
 levelsof $panel if `treated' == 1, l(mun)
 
-cls
+
 qui {	
 local files : dir "`c(pwd)'" files "*mscul_*"
 foreach l of loc files {
@@ -743,8 +945,12 @@ foreach x of loc mun {
 	
 preserve
 
+qui su $time if `treated' ==1 & $panel == `x'
 
-numcheck_multi, unit($panel) time($time) depvar(`depvar') treated(`treated') // Routine 1
+loc treatdate = r(min)
+
+
+numcheck_multi, unit($panel) time($time) depvar(`depvar') treatunit(`x') treatdate(`treatdate') treated(`treated') transform(`transform') // Routine 1
 
 
 
@@ -758,11 +964,11 @@ data_org_multi, unit($panel) ///
 	treatunit(`x')
 	
 est_lasso_multi, time($time) h(`ahead') lambda(`lambda') treatunit(`x') cv(`cv') scheme(`scheme') ///
-q(`q')
+q(`q') transform(`transform')
 
 restore
 }
-cls
+
 
 local files : dir "`c(pwd)'" files "*mscul*" // gather the placebos...
 
@@ -795,8 +1001,10 @@ if `x'== 0 {
 
 lab var relative_ "Relative Time to `intname'"
 
+qui {
 xtset $panel $time
 sa atts_scul, replace
+}
 clear matrix
 
 keep if inrange(relative_,-`before',`after')
@@ -807,9 +1015,20 @@ qui distinct $panel
 if r(ndistinct) < 10 {
 
 loc last =r(ndistinct)+1
+
+if "`transform'" == "norm" {
+	
+	loc ytitle "Normalized Outcome Gap (%)"
+}
+
+else if "`transform'" != "norm" {
+	
+	loc ytitle Pointwise Impact
+}
+
 preserve
 decode $panel, gen(id2)
- tabstat diff_ lowbound_ upbound_ if relative_ >= 0, stat(mean)  by(id2) save
+qui tabstat diff_ lowbound_ upbound_ if relative_ >= 0, stat(mean)  by(id2) save
 
 
 qui tabstatmat Z
@@ -830,15 +1049,15 @@ mat Z= Z'
 mat rownames Z = ATT LB UB
 
 mat colnames Z = `colnames' Overall
-cls
+
 
 loc ATT: di %6.4g Z[1,`last']
 
 coefplot matrix(Z), ///
 	ci((Z[2] Z[3])) ///
 	caption("ATT = `ATT' across all treated units.") ///
-	ti("SCUL, Staggered Implementation") xli(0, lcol(blue) lwidth(thick)) ///
-	scheme(`scheme') ysize(4) xsize(4.5) name(postplot)
+	ti("SCUL, Staggered Implementation") xli(0, lcolor("`cfcol'") lwidth(thin)) ///
+	scheme(`scheme') ysize(4) xsize(4.5) name(postplot, replace)
 restore
 
 preserve
@@ -860,18 +1079,20 @@ loc adjtype Donors include only never-treated units.
 	
 }
 
+
+
 **# Multi-Intervention Graph
 
-tw (line diff_ relative_, xlab(`rellab') mcolor(`obscol') msize(medium) ///
-	lcolor(`obscol') lwidth(thick)) || ///
-	(line upbound_ relative_, lcolor(`cfcol')) || ///
-	(line lowbound_ relative_, lcolor(`cfcol')), ///
+tw (line diff_ relative_, xlab(`rellab') mcolor("`obscol'") msize(medium) ///
+	lcolor("`obscol'") lwidth(thick)) || ///
+	(line upbound_ relative_, lcolor("`cfcol'")) || ///
+	(line lowbound_ relative_, lcolor("`cfcol'")), ///
 		legend(order(1 "SCUL" 2 "Confidence Interval") pos(7) ring(0) region(fcolor(none))) ///
 		caption("ATT = `ATT'. `adjtype'", pos(6)) ///
 		xti("t-`=ustrunescape("\u2113")' until `intname'") name(eventplot, replace) scheme(`scheme') ///
-		yti("Pointwise Impact and Uncertainty") yli(0, lpat(solid) lwidth(thin)) ///
-		xli(-1, lpat(dash) lwidth(thin)) ti("Event-Study") ///
-		xsize(6) ysize(4)
+		yti("`ytitle'") yli(0, lpat(solid) lwidth(thin)) ///
+		xli(-1, lpat(dash) lcolor("`cfcol'") lwidth(thin)) ti("Event-Study") ///
+		xsize(7) ysize(4)
 restore
 }
 
@@ -888,15 +1109,15 @@ qui su diff_ if relative_ >= 0, mean
 
 loc ATT: disp %6.4g `r(mean)' 
 
-twoway (connected diff_ relative_, xlab(`rellab') mcolor(`obscol') msize(medium) ///
-	msymbol(circle) lcolor(`cfcol') lwidth(thick)) || ///
-	(connected upbound_ relative_, mcolor(`cfcol') lcolor(`cfcol')) || ///
-	(connected lowbound_ relative_, mcolor(`cfcol')  lcolor(`cfcol')), ///
+twoway (connected diff_ relative_, xlab(`rellab') mcolor("`obscol'") msize(medium) ///
+	msymbol(circle) lcolor("`cfcol'") lwidth(thick)) || ///
+	(connected upbound_ relative_, mcolor("`cfcol'") lcolor("`cfcol'")) || ///
+	(connected lowbound_ relative_, mcolor("`cfcol'")  lcolor("`cfcol'")), ///
 		legend(order(1 "SCUL" 2 "Confidence Interval") pos(7) ring(0) region(fcolor(none))) ///
 		caption("ATT = `ATT'. `adjtype'", pos(6)) ///
 		xti("t-`=ustrunescape("\u2113")' until `intname'") name(eventplot, replace) scheme(`scheme') ///
-		yti("Pointwise Impact and Uncertainty") yli(0, lpat(solid) lwidth(thin)) ///
-		xli(-1, lpat(dash) lwidth(thin)) ti("Event-Study") xsize(6) ysize(4)
+		yti("`ytitle'") yli(0, lpat(solid) lwidth(thin)) ///
+		xli(-1, lpat(dash) lcolor("`cfcol'") lwidth(thin)) ti("Event-Study") xsize(7) ysize(4)
 restore
 
 }
@@ -914,11 +1135,14 @@ return mat ATTs = Z
 }
 
 
-if !mi("`multi'") & !mi("`placebos'"){
+/*
+Future version
+if `totaltreat'>1  & "`placebos'"=="placebos"{
+
 	
 if mi("`treated'") {
 	
-	di in red "You must specify a treatment variables."
+	di in red "You must specify a treatment variable."
 	exit 498
 }
 
@@ -981,6 +1205,10 @@ restore
 }
 }
 }
+
+0
+*/
+
 end
 
 
@@ -998,8 +1226,8 @@ syntax, ///
 	time(varname) ///
 	depvar(varname) ///
 	[transform(string)] ///
-	trdate(numlist min=1 max=1 >=1 int) ///
-	[q(numlist min=0 max=1)]
+	[q(numlist min=0 max=1)] ///
+	treated(varname)
 	
 		
 /*#########################################################
@@ -1033,7 +1261,7 @@ if !_rc {
 	loc optimizer "Ridge"
 }
 
-cap as `q' ==.5
+cap as `q' !inlist(`q',0,1)
 
 if !_rc {
 	
@@ -1089,13 +1317,15 @@ without the maximum number of observations (unbalanced) */
 		exit 498
 	}
 	
+	qui su $time if `treated'==1
+	
 	if "`transform'" == "norm" {
 		
 	di "You've asked me to normalize `depvar'."
 	
 	tempvar _XnormVar _xXnormVar
 			
-	loc pretreatm1 = `trdate'-1
+	loc pretreatm1 = r(min)-1
 	
 	qui g `_XnormVar' = `depvar' if `time' == `pretreatm1'
 	
@@ -1104,12 +1334,14 @@ without the maximum number of observations (unbalanced) */
 	
 	qui replace `depvar' = 1*`depvar'/`_xXnormVar'
 	}
+	
+	
 end
 
 cap prog drop treatprocess // Subroutine 1.2
 prog treatprocess
         
-syntax, time(varname) unit(varname) treatunit(numlist min=1 max=1 >=1 int) interdate(numlist min=1 max=1 >=1 int) [covs(varlist)]
+syntax, time(varname) unit(varname) [covs(varlist)] treated(varname)
 
 /*#########################################################
 
@@ -1122,32 +1354,32 @@ syntax, time(varname) unit(varname) treatunit(numlist min=1 max=1 >=1 int) inter
 *########################################################*/
 
 di as txt "{hline}"
-di as txt "Making our treatment variable..."
+di as txt "Inspecting our treatment variable..."
 di as txt "{hline}"
 
-
-qui {
-	
-tempvar treated_synth
-
-g treated_synth = 1 if `unit' == `treatunit' & `time' > = `interdate'
-
-replace treated_synth = 0 if mi(treated_synth)
-}
-qui: su `time' if treated_synth ==1
+qui su `time' if `treated' ==1
 
 loc last_date = r(max)
+loc interdate = r(min)
+
+qui su `unit' if `treated'==1
+
+loc treated_unit = r(min)
+
+qui insp `time' if `treated' ~= 1 & `unit'==`treated_unit'
+
+loc npp = r(N)
 
 
 	if !_rc {
 		
-		su `unit' if treated_synth ==1, mean
+		su `unit' if `treated' ==1, mean
 		
-		loc clab: label (`unit') `treatunit'
+		loc clab: label (`unit') `treated_unit'
 		gl treat_lab: disp "`clab'"
 		
 		
-		qui: levelsof `unit' if treated_synth == 0 & `time' > `interdate', l(labs)
+		qui: levelsof `unit' if `treated' == 0 & `time' > `interdate', l(labs)
 
 		local lab : value label `unit'
 
@@ -1158,10 +1390,10 @@ loc last_date = r(max)
 		loc controls: display "`all'"
 				
 		di as txt ""
-		display "Treatment is measured from " $time_format `interdate' " to " $time_format  `last_date'
+		display "Treatment is measured from " $time_format `interdate' " to " $time_format  `last_date' " (`npp' pre-periods)"
 		
 		
-		qui: distinct `unit' if treated_synth == 0
+		qui distinct `unit' if `treated' == 0
 		
 		loc dp_num = r(ndistinct) - 1
 		
@@ -1192,9 +1424,9 @@ end
 
 
 cap prog drop data_org // Subroutine 1.3
-prog data_org
+prog data_org, eclass
         
-syntax, time(varname) depvar(varname) unit(varname) [covs(varlist)]
+syntax, time(varname) depvar(varname) unit(varname) [covs(varlist)] treated(varname)
 
 /*#########################################################
 
@@ -1207,10 +1439,12 @@ di as txt "{hline}"
 di as txt "Second Step: Data Reorganizing"
 di as txt "{hline}"
 
-su `unit' if treated_synth ==1, mean
+qui su `unit' if `treated' ==1, mean
 
-loc treat_id: disp `r(mean)'
+loc treat_id = `r(mean)'
 
+qui su `time' if `treated' ==1
+ereturn scalar interdate = r(min)
 
 keep `unit' `time' `depvar' `covs'
 di "Reshaping..."
@@ -1232,11 +1466,7 @@ order `depvar'`treat_id', a(`time')
 
 end
 
-
 cap prog drop est_lasso // Subroutine 2.1
-
-
-
 
 prog est_lasso, eclass
 	
@@ -1254,7 +1484,7 @@ syntax, ///
 	[transform(string)] ///
 	[intname(string)] ///
 	[rellab(numlist)] ///
-	[q(numlist min=0 max=1)]
+	[q(numlist min=0 max=1)] [outlab(string)]
 	
 di as txt "{hline}"
 di as txt "Third Step: Estimation"
@@ -1281,9 +1511,25 @@ loc b: word `nwords' of `r(varlist)'
 
 loc last_donor: disp "`b'" // Last donor...
 
-di as txt "Optimizing with LASSO... This could take quite a while..."
+cap as "`lambda'" =="lopt"
+
+if !_rc {
+	
+	loc ltype "optimal lambda"
+}
+
+cap as "`lambda'" =="lse"
+
+if !_rc {
+	
+	loc ltype "one standard error lambda"
+}
+
+
+di as txt "Optimizing (`ltype')... This could take quite a while..."
 di as txt ""
 di as txt ""
+
 
 timer clear 1
 timer on 1
@@ -1304,7 +1550,7 @@ qui timer list
 
 loc minutes: di %3.2f r(t1)/60
 
-di as text "Optimization took `minutes' minutes"	
+di as txt "Optimization took `minutes' minutes"	
 
 qui{
 cap drop cf
@@ -1317,7 +1563,9 @@ keep `time' `treated_unit' cf // We only need these
 	qui replace cf = 1 if `time' ==`interdate'-1
 	}
 
+lab var cf "Counterfactual"
 
+lab var `treated_unit' "$treat_lab"
 
 g relative = `time'- `interdate' // Generate an event-time variable
 
@@ -1325,7 +1573,7 @@ g diff_ = `treated_unit'- cf // Difference between the cf and the observed outco
 
 
 /* Strictly, this should be quite close to 0 before the intervention, and
-moderate to large agter the intervention. */
+moderate to large after the intervention. */
 
 qui su if relative < 0
 
@@ -1337,13 +1585,15 @@ qui su if relative > = 0
 
 loc obs_post = r(N)
 
-loc r: di floor((`obs_pre'/11)/`obs_post')
+loc K = 3
 
-loc sd_lheq = sqrt(1+(11*`r'/`obs_post'))
+loc r: di floor((`obs_pre'/`K')/`obs_post')
+
+loc sd_lheq = sqrt(1+(`K'*`r'/`obs_post'))
 
 *di `sd_lheq'
 
-loc right_sd_t1 = 1/(11-1)
+loc right_sd_t1 = 1/(`K'-1)
 
 *di `sd_lheq'*sqrt(`right_sd_t1')
 
@@ -1359,7 +1609,7 @@ qui su `ssd'
 
 loc sd_scm: di sqrt(`sd_lheq')*sqrt(`right_sd_t1'*`r(sum)')
 
-loc sqk = sqrt(11)
+loc sqk = sqrt(`K')
 
 qui su diff_ if relative > 0
 
@@ -1375,9 +1625,9 @@ local czw_t : di %6.4g round(`tau',0.001)
 
 loc se = `sd_scm'/`sqk'
 
-g te_ub = diff_+(`tau'*(1 - .95/2)*`se')
+g te_ub = diff_+((`tau'*(1 - .95/2))*`se')
 
-g te_lb = diff_-(`tau'*(1 - .95/2)*`se')
+g te_lb = diff_-((`tau'*(1 - .95/2))*`se')
 }
 
 else if r(N) < 10 {
@@ -1518,6 +1768,7 @@ lab var relative "Relative Time to `intname'"
 
 **# Single Treated Graphs
 
+
 if "`conf'"=="ci" {
 
 tw ///
@@ -1525,37 +1776,43 @@ tw ///
 		lcol("`obscol'" "`cfcol'") ///
 		lpat(solid shortdash) ///
 		lwidth(medium medthin) xlab(, noticks)) /// Real Outcomes
-	 (rline cf_lb cf_ub `time', lcolor(red) lwidth(vthin) lpattern(shortdash)),,, /// Potential Outcomes
-		xli(`interdate', lcol(gs10) lpat(dash) lwidth(thin)) ///
+	 (rarea cf_lb cf_ub `time', fcolor(gs6%50) lcolor(pink) lwidth(none)),,, /// Potential Outcomes
 		legend(order(1 "Real $treat_lab" 2 "Synthetic $treat_lab" 3 "Upper/Lower Bound") ///
-		color(black) fcolor(white) region(fcolor(none)) ring(0) position(`legpos') rows(3)) ///
-		yti("$outlab") ///
-		ylab(, noticks) name("Real_1") ///
+		color(black) fcolor(white) region(fcolor("214 211 202")) ring(0) position(`legpos') rows(3)) ///
+		yti("`outlab'") ///
+		ylab(#4, noticks) name("Real_1", replace) ///
 		scheme(`scheme') xsize(6) ysize(4) ///
-		note("RMSE = `errround', ATT: `ATT'", position(6)) //  "Chernozhukov, Zhu and Wuthrich's T: `czw_t'"
+		caption("RMSE = `errround', ATT: `ATT'", position(6)) ///
+		note("Dashed reference line is `intname', `:di $time_format `interdate''.") ///
+		xli(`interdate', lcol("52 44 44") lpat(dash) lwidth(thin)) //
+		
 		
 		if mi("`transform'") {
-	cls
+	
 
 		twoway (line diff_ relative, xlab(`rellab', noticks) ///
 		lcolor("`cfcol'") lwidth(medium)) ///
-		(rline te_lb te_ub relative, lcolor(`cfcol') lwidth(vthin) lpattern(shortdash)), ///
-		xli(0, lpat(solid)) ///
+		(rarea te_lb te_ub relative, fcolor(gs6%50) lcolor(gs14%50) lwidth(none)), ///
+		xli(0, lcol("52 44 44") lpat(dash) lwidth(thin)) ///
 		yti("Pointwise Treatment Effect") ///
 		xti("t-`=ustrunescape("\u2113")' until `intname'") ///
 		name(sculgap, replace) scheme(`scheme') ///
-		xsize(6) ysize(4)
+		xsize(6) ysize(4)  ///
+		legend(order(1 "Causal Impact" 2 "95% Confidence Interval") ///
+		color(black) fcolor(white) region(fcolor("214 211 202")) ring(0) position(`legpos') rows(2)) //
 		}
 		if "`transform'" == "norm" {
 		
 		twoway (line diff_ relative, ///
-		lcolor("`cfcol'") lwidth(medium) xlab(`rellab', noticks)))) ///
-		(rline te_lb te_ub relative, lcolor(`cfcol') lwidth(vthin) lpattern(shortdash)), ///
-		xli(-1, lpat(solid)) ///
+		lcolor("`cfcol'") lwidth(medium) xlab(`rellab', noticks)) ///
+		(rarea te_lb te_ub relative, fcolor(gs6%50) lcolor(gs14%50) lwidth(none)), ///
+		xli(-1, lcol("52 44 44") lpat(dash) lwidth(thin)) ///
 		yti("Normalized Effect (%)") ///
 		xti("t-`=ustrunescape("\u2113")' until `intname'") ///
 		name(sculgap, replace) scheme(`scheme') ///
-		xsize(6) ysize(4)
+		xsize(6) ysize(4) ///
+		legend(order(1 "Causal Impact" 2 "95% Confidence Interval") ///
+		color(black) fcolor(white) region(fcolor("214 211 202")) ring(0) position(`legpos') rows(2))
 	}
 
 
@@ -1566,15 +1823,15 @@ if "`conf'" !="ci" {
 tw ///
 	(line `treated_unit' cf `time', ///
 		lcol("`obscol'" "`cfcol'") ///
-		lpat(solid shortdash) lwidth(medium medthin)), /// Real Outcomes
-		xli(`interdate', lcol(gs10) lpat(dash) lwidth(thin)) ///
+		lpat(solid dash) lwidth(medium medthin)), /// Real Outcomes
 		legend(order(1 "Real $treat_lab" 2 "Synthetic $treat_lab") ///
-		color(black) fcolor(white) region(fcolor(none)) ring(0) position(`legpos') rows()) ///
-		yti("$outlab") ///
-		ylab(, noticks) xlab(, noticks) name("Real_1") ///
+		color(black) fcolor(white) region(fcolor(gs14%50)) ring(0) position(`legpos') rows()) /// gs14%50
+		yti(`outlab') ///
+		ylab(#4, noticks) xlab(, noticks) name("Real_1", replace) ///
 		scheme(`scheme') xsize(6) ysize(4) ///
-		note("RMSE = `errround', ATT: `ATT'", position(6)) //  "Chernozhukov, Zhu and Wuthrich's T: `czw_t'"
-		
+		caption("RMSE = `errround', ATT: `ATT'", position(6)) ///
+		note("Dashed reference line is `intname', `:di $time_format `interdate''.") ///
+		xli(`interdate', lcol("52 44 44") lpat(dash) lwidth(thin)) //
 		
 		
 	if "`transform'" == "norm" {
@@ -1583,7 +1840,7 @@ tw ///
 		
 twoway (line diff_ relative, lcolor("`obscol'") lwidth(medium)), ///
 ytitle(Normalized Effect (%)) ///
-xline(-1, lpattern(solid)) xti("t-`=ustrunescape("\u2113")' to `intname'") ///
+xline(-1, lpattern(dash) lwidth(thin) lcol("52 44 44")) xti("t-`=ustrunescape("\u2113")' to `intname'") ///
 name(sculgap, replace) scheme(`scheme')  xsize(6) ysize(4)
 /*
 		twoway (line diff_ relative, ///
@@ -1596,11 +1853,11 @@ name(sculgap, replace) scheme(`scheme')  xsize(6) ysize(4)
 */
 	}
 	
-	else if "`transform'"!="norm" {
+	if "`transform'"!="norm" {
 	
 		twoway (line diff_ relative, ///
-		lcolor("`cfcol'") lwidth(medium) xlab(`rellab', noticks)), ///
-		xli(0, lpat(solid)) ///
+		lcolor("`cfcol'") lpat(dash) lwidth(medium) xlab(`rellab', noticks)), ///
+		xli(0, lpattern(dash) lwidth(thin) lcol("52 44 44")) ///
 		yti("Pointwise Treatment Effect") ///
 		xti("t-`=ustrunescape("\u2113")' until `intname'") ///
 		name(sculgap, replace) scheme(`scheme') ///
@@ -1812,8 +2069,6 @@ qui g diff_$treat_id = `treated_unit'- cf_$treat_id
 qui compress
 qui sa "scul_placebos_$treat_lab", replace
 
-di "$treat_lab is done"
-
 macro drop treat_lab outlab int_date
 end
 
@@ -1827,7 +2082,13 @@ end
 cap prog drop numcheck_multi // Subroutine 1.1
 prog numcheck_multi
 // Original Data checking
-syntax, unit(varname) time(varname) depvar(varname) treated(varname)
+syntax, unit(varname) ///
+	time(varname) ///
+	depvar(varname) ///
+	treated(varname) ///
+	treatunit(numlist min=1 max=1 >=1 int) ///
+	treatdate(numlist min=1 max=1 >=1 int) ///
+	[transform(string)]
 	
 		
 /*#########################################################
@@ -1907,14 +2168,27 @@ without the maximum number of observations (unbalanced) */
 		exit 498
 	}
 	
+	if "`transform'" == "norm" {
+		
+	di "You've asked me to normalize `depvar'."
+	
+	tempvar _XnormVar _xXnormVar
+			
+	loc pretreatm1 = `treatdate'-1
+	
+	qui g `_XnormVar' = `depvar' if `time' == `pretreatm1'
+	
+	qbys `unit': egen `_xXnormVar' = max(`_XnormVar')
+	
+	qui replace `depvar' = 1*`depvar'/`_xXnormVar'
+	}
 
 end
 
 
-
 cap prog drop treatprocess_multi // Subroutine 3.2
 prog treatprocess_multi
-        
+
 syntax, time(varname) ///
 unit(varname) ///
 treated(varname) ///
@@ -1968,6 +2242,10 @@ loc dropped: word count `drops'
 drop if inlist(`unit',`drops')
 
 	}
+	
+qui insp `time' if `treated' ~= 1 & `unit'==`treatunit'
+
+loc npp = r(N)
 		
 		su `unit' if `treated' ==1, mean
 		
@@ -1987,7 +2265,7 @@ drop if inlist(`unit',`drops')
 		
 		qui su `time' if `treated' ==1, mean
 		di as txt ""
-		display "Treatment is measured from " $time_format r(min) " to " $time_format  r(max)
+		display "Treatment is measured from " $time_format r(min) " to " $time_format  r(max) " (`npp' pre-periods)"
 		
 		qui: distinct `unit' if `treated' == 0
 		
@@ -2075,7 +2353,7 @@ cap prog drop est_lasso_multi // Subroutine 3.4
 prog est_lasso_multi
 	
 syntax, time(varname) h(numlist min=1 max=1 >=1 int) lambda(string) treatunit(numlist min=1 max=1 >=1 int) [cv(string)] [scheme(string)] ///
-[q(numlist min=0 max=1)]
+[q(numlist min=0 max=1)] [transform(string)]
 
 di as txt "{hline}"
 di as txt "Third Step: Estimation"
@@ -2117,6 +2395,11 @@ qui{
 cap drop cf_$treat_id
 predict double cf_$treat_id, `lambda' // Here is our counterfactual
 }
+
+	if "`transform'" == "norm" {
+			
+	qui replace cf = 1 if `time' ==$int_date - 1
+	}
 
 qui: keep `time' `treated_unit' cf_$treat_id // We only need these three
 
@@ -2431,4 +2714,337 @@ order `depvar'`plaunit', a(`time')
 *qui sa `treat_id'_wide, replace
 
 end
+
+cap prog drop numcheck_itp
+prog numcheck_itp, eclass
+// Original Data checking
+syntax, ///
+	unit(varname) ///
+	time(varname) ///
+	depvar(varname) ///
+	[transform(string)] ///
+	[q(numlist min=0 max=1)] ///
+	treated(varname)
+	
+		
+/*#########################################################
+
+	* Section 1.1: Extract panel vars
+
+	Before SCM can be done, we need panel data.
+	
+	
+	Along with the R package, I'm checking that
+	our main vairables of interest, that is,
+	our panel variables and outcomes are all:
+	
+	a) Numeric
+	b) Non-missing and
+	c) Non-Constant
+	
+*########################################################*/
+
+cap as `q' ==1
+
+if !_rc {
+	
+	loc optimizer "LASSO"
+}
+
+cap as `q' ==0 
+
+if !_rc {
+	
+	loc optimizer "Ridge"
+}
+
+cap as `q' !inlist(`q',0,1)
+
+if !_rc {
+	
+	loc optimizer "Elastic-Net"
+}
+
+cap if mi("`q'")  {
+	
+	loc optimizer "LASSO"
+}
+
+di as txt "{hline}"
+di as txt "Algorithm: Synthetic `optimizer', Single Unit Treated"
+di as txt ""
+di as txt "In Time Placebos..."
+di as txt "{hline}"
+di as txt "First Step: Data Setup"
+di as txt "{hline}"
+di as txt "Checking that setup variables make sense."
+
+tempvar obs_count
+qbys `unit' (`time'): g `obs_count' = _N
+qui su `obs_count'
+
+qui drop if `obs_count' < `r(max)'
+
+/*The panel should be balanced, but in case it isn't somehow, we drop any variable
+without the maximum number of observations (unbalanced) */
+
+
+	foreach v of var `unit' `time' `depvar' {
+	cap {	
+		conf numeric v `v', ex // Numeric?
+		
+		as !mi(`v') // Not missing?
+		
+		qui: su `v'
+		
+		as r(sd) ~= 0 // Does the unit ID change?
+	}
+	}
+	if !_rc {
+		
+		
+		di as res "Setup successful!! All variables `unit' (ID), `time' (Time) and `depvar' (Outcome) pass."
+		di as txt ""
+		di as res "All are numeric, not missing and non-constant."
+	}
+	
+	else if _rc {
+		
+		
+		
+		disp as err "All variables `unit' (ID), `time' (Time) and `depvar' must be numeric, not missing and non-constant."
+		exit 498
+	}
+	
+	qui su $time if `treated'==1
+	
+	loc interdate = r(min)
+	
+	if "`transform'" == "norm" {
+		
+	di "You've asked me to normalize `depvar'."
+	
+	tempvar _XnormVar _xXnormVar
+			
+	loc pretreatm1 = r(min)-1
+	
+	qui g `_XnormVar' = `depvar' if `time' == `pretreatm1'
+	
+	
+	qbys `unit': egen `_xXnormVar' = max(`_XnormVar')
+	
+	qui replace `depvar' = 1*`depvar'/`_xXnormVar'
+	}
+	
+ereturn scalar interdate = `interdate'	
+end
+
+cap prog drop treatprocess_itp // Subroutine 1.2
+prog treatprocess_itp, eclass
+        
+syntax, time(varname) unit(varname) [covs(varlist)] treated(varname) times(numlist)
+
+/*#########################################################
+
+	* Section 1.2: Check Treatment Variable
+
+	Before SCM can be done, we need a treatment variable.
+	
+	
+	The treatment enters at a given time and never leaves.
+*########################################################*/
+if `times' == 0 {
+di as txt "{hline}"
+
+di as txt "Inspecting our treatment variable..."
+di as txt "{hline}"
+}
+qui su `time' if `treated' ==1
+
+loc last_date = r(max)
+loc interdate = r(min)-`times'
+
+qui su `unit' if `treated'==1
+
+loc treated_unit = r(min)
+
+qui insp `time' if `treated' ~= 1 & `unit'==`treated_unit'
+
+loc npp = r(N)-`times'
+
+cap as `npp' > 5
+
+if _rc {
+	
+	di in red "You need more than 5 periods"
+}
+
+
+
+	if !_rc {
+		
+		su `unit' if `treated' ==1, mean
+		
+		loc clab: label (`unit') `treated_unit'
+		gl treat_lab: disp "`clab'"
+		
+		
+		qui: levelsof `unit' if `treated' == 0 & `time' > `interdate', l(labs)
+
+		local lab : value label `unit'
+
+		foreach l of local labs {
+		    local all `all' `: label `lab' `l'',
+		}
+
+		loc controls: display "`all'"
+if `times' == 0 {				
+		di as txt ""
+		display "Treatment is measured from " $time_format `interdate' " to " $time_format  `last_date' " (`npp' pre-periods)"
+		
+		
+		qui distinct `unit' if `treated' == 0
+		
+		loc dp_num = r(ndistinct) - 1
+		
+		cap as `dp_num' > 2
+		if _rc {
+			
+		di in red "You need at least 2 donors for every treated unit"
+		exit 489
+		}
+		di as res "{hline}"
+		di "{txt}{p 15 50 0} Treated Unit: {res}$treat_lab {p_end}"
+		di as res "{hline}"
+		di as txt ""
+		di "{txt}{p 15 30 0} Control Units: {res}`dp_num' total donor pool units{p_end}"
+		di as res "{hline}"
+		di as txt ""
+		di "{txt}{p 15 30 0} Specifically: {res}`controls'{p_end}"
+
+	}	
+
+		if !mi("`covs'") {
+		di as res "{hline}"
+		di "{txt}{p 15 30 0} You've adjusted for the following covariates: `covs' {p_end}"
+		}
+		}
+ereturn scalar interdate = `interdate'
+
+end
+
+cap prog drop data_org_itp // Subroutine 1.3
+prog data_org_itp
+        
+syntax, time(varname) depvar(varname) unit(varname) [covs(varlist)] treated(varname) times(numlist)
+
+/*#########################################################
+
+	* Section 1.3: Reorganizing the Data into Matrix Form
+
+	We need a wide dataset to do what we want.
+*########################################################*/
+if `times' == 0 {
+di as txt "{hline}"
+di as txt "Second Step: Data Reorganizing"
+di as txt "{hline}"
+}
+qui su `unit' if `treated' ==1, mean
+
+loc treat_id = `r(mean)'
+
+qui su `time' if `treated' ==1
+
+keep `unit' `time' `depvar' `covs'
+if `times' == 0 {
+di "Reshaping..."
+}
+qui greshape wide `depvar' `covs', j(`unit') i(`time')
+
+
+foreach v in `covs' {
+	
+	cap drop `v'`treat_id'
+
+}
+if `times' == 0 {
+di as txt "Done!"
+di as txt ""
+
+di as inp "Estimating in-time placebos..."
+}
+qui: tsset `time'
+
+order `depvar'`treat_id', a(`time')
+//sa dataprocess, replace
+//dataex
+end
+
+cap prog drop est_placebos_itp // Subroutine 2.1
+prog est_placebos_itp
+	
+syntax, time(varname) h(numlist min=1 max=1 >=1 int) ///
+interdate(numlist min=1 max=1 >=1 int) ///
+treatunit(numlist min=1 max=1 >=1 int) ///
+ lambda(string) [cv(string)] [scheme(string)] ///
+ [transform(string)] [q(numlist min=0 max=1)] times(numlist)
+
+qui: ds
+
+loc temp: word 1 of `r(varlist)'
+
+loc time: disp "`temp'"
+
+loc t: word 2 of `r(varlist)'
+
+loc treated_unit: disp "`t'"
+
+loc a: word 3 of `r(varlist)'
+
+loc donor_one: disp "`a'"
+
+local nwords :  word count `r(varlist)'
+
+loc b: word `nwords' of `r(varlist)'
+
+loc last_donor: disp "`b'"
+
+cap cvlasso `treated_unit' `donor_one'-`last_donor' if `time' < `interdate', `lambda' lglmnet roll h(`h') `cv' ///
+alpha(`q') prest
+	
+
+cap drop cf_$treat_id
+qui predict double cf_itp_`times', `lambda'
+
+lab var cf_itp_`times' "SCUL $treat_lab, `interdate'"
+
+lab var `treated_unit' "Real $treat_lab"
+
+	if "`transform'" == "norm" {
+			
+	qui replace cf_itp_`times' = 1 if `time' ==`interdate'-1
+	}
+
+
+qui g relative_`times' = `time'- `interdate'
+
+qui g diff_`times' = `treated_unit'- cf_itp_`times'
+
+keep `treated_unit' `time' cf* relative* diff*
+
+cap as `times' > 0
+if !_rc {
+	
+	drop `treated_unit' rel*
+}
+
+qui compress
+qui sa "sculitp_$treat_lab`times'", replace
+
+macro drop outlab int_date
+end
+
+
+
+
 

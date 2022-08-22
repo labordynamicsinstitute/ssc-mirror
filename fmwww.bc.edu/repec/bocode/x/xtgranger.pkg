@@ -16,7 +16,7 @@ d KW: heterogeneous panels
 d
 d Requires: Stata version 12 
 d
-d Distribution-Date: 20210415
+d Distribution-Date: 20220821
 d
 d Author: Jiaqi Xiao, University of Birmingham
 d Support: email Jxx963@@outlook.com
@@ -27,7 +27,14 @@ d
 d Author: Vasilis Sarafidis, BI Norwegian Business School
 d Support: email vasilis.sarafidis@@gmail.com
 d
+d Author: Arturas Juodis, Free University of Amsterdam
+d Support: email a.juodis@@uva.nl
+d
+d Author: Jan Ditzen, Free University of Bozen-Bolzano
+d Support: email jan.ditzen@@unibz.it
+d
 f xtgranger.ado
+f xtgranger_p.ado
 f xtgranger.sthlp
 f xtgranger_example.dta
 f xtgranger_example.do
