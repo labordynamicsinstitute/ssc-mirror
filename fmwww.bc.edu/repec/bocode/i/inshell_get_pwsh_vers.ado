@@ -2,7 +2,6 @@
 *!   this program obtains the version info from
 *!    Microsoft PowerShell
 
-
 capture program drop inshell_get_pwsh_vers
 
 program define inshell_get_pwsh_vers, rclass
@@ -14,7 +13,7 @@ local outfile          "`c(tmpdir)'inshell_pwsh_version_`= clock("`c(current_tim
 capture quietly erase  "`outfile'"
 capture quietly shell   \$PSVersionTable.PSVersion > "`outfile'"
 capture confirm file   "`outfile'"
-if !_rc {
+if (!_rc) {
   local filereadtest = fileread("`outfile'")
 }
 if !missing("`filereadtest'") {
@@ -40,7 +39,7 @@ if !missing("`filereadtest'") {
 else if missing("`filereadtest'") {
   noisily display ///
     as error ///
-      " >>> Microsoft PowerShell was not determined to be the shell when using Stata on this system."
+      _n " >>> Microsoft PowerShell was not determined to be the shell when using Stata on this system."
   return local pwsh_notdetected 1
 }
 

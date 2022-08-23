@@ -17,7 +17,7 @@ program define clustergram
 	* observations to use 
 	marksample touse 
 	qui count if `touse' 
-	if r(N) == 0 { error 2000 } 
+	if r(N) == 0  error 2000  
 
 	* check whether jth variable defines j clusters 
 	local nc = 0
@@ -102,14 +102,18 @@ program define clustergram
 	// before calling GraphBoxColor.)
 	qui gen `width' =_freq / `N' * `range' * `fraction'
 
-	if "`xlabel'" == "" { local xlabel "1 (1) `max'" } 
+	if "`xlabel'" == "" { 
+		local xlabel "1 (1) `max'" 
+		} 
 
 	qui gen `clus_nlag' = `clus_n' + 1
 
 	// adapting to GraphBoxColor, a more general function from hammock.ado
 	qui gen colorgroup=1
 	local colorlist = "black"
-	if ("`color'"!="")  { local colorlist = "`color'" }
+	if ("`color'"!="")  { 
+		local colorlist = "`color'" 
+	}
 	qui summarize `clmeanlag', meanonly 
 	local ylabmax=r(max)   // if user supplied ylab and "rectangle", this may not be right
 	local ylabmin=r(min)   // if user supplied ylab and "rectangle", this may not be right
@@ -166,7 +170,9 @@ program  compute_addlabeltext, rclass
 				local addlabeltext= `"`addlabeltext' `=`mat_label_coord'[`j',1]' `=`mat_label_coord'[`j',2]' "``pos''" "'
 			}
 		}
-		if (`missing'==1) local addlabeltext= `"`addlabeltext' 0 1 "missing" "'
+		if (`missing'==1) {
+			local addlabeltext= `"`addlabeltext' 0 1 "missing" "'
+		}
 		* add label options 
 		local addlabeltext= `"`addlabeltext',`labelopt')"'
 	
@@ -506,9 +512,12 @@ program define GraphBoxColor
 					local temp = r(addplot)
 					assert "`temp'"!=""
 					// caution : addplot might get tooo long
-					if (`"`addplot'"'=="")  local addplot  `"`temp'"'
-					else 					local addplot  `"`addplot' || `temp'"'
-				}
+					if (`"`addplot'"'=="")  {
+						local addplot  `"`temp'"'
+					}
+					else {
+				 		local addplot  `"`addplot' || `temp'"'
+					}
 			}						
 			qui replace `increment' = `increment'+ `w_k' if `w_k'!=.   // for the next color
 		}

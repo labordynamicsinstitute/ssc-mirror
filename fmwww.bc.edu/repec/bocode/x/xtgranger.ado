@@ -2,7 +2,7 @@ cap program drop xtgranger
 program xtgranger,eclass 
 version 12.0
 
-syntax varlist(numeric ts) [if][in][,lags(integer 1) maxlags(integer 0) het nodfc sum csd csd2 csd3 BOOTstrapindex BOOTstrapcmd(string)]
+syntax varlist(numeric ts) [if][in][,lags(integer 1) maxlags(integer 0) het nodfc sum BOOTstrapindex BOOTstrapcmd(string)]
 
 marksample touse
 preserve
@@ -64,18 +64,6 @@ if (`maxlags'!=0){
 	matrix lag_BIC=r(lag_BIC)
 }
 
-*** added support to remove time fixed effects by JD
-if "`csd3'" != "" {
-	tempvar csdv
-	foreach var of varlist `depvar' `indeps' {
-		qui by `tvar', sort: egen double `csdv' = mean(`var')
-		qui replace `var' = `var' - `csdv'
-		drop `csdv'
-	}
-	sort `idvar' `tvar'
-}
-
-
 *** bootstrap
 local bootstrapdraws = 0
 if "`bootstrapindex'" != "" {
@@ -91,7 +79,7 @@ if "`bootstrapcmd'" != "" {
 
 markout `touse' `depvar' L(1/`lags').(`indeps')  L(1/`lags').`depvar'
 
-mata: test1("`depvar'","L(1/`lags').(`indeps')","L(1/`lags').`depvar'","`idvar' `tnew'","`touse'",`t',`n',`lags',"`het'","`dfc'",`bootstrapdraws',(("`csd'"!=""),("`csd2'"!="")))
+mata: test1("`depvar'","L(1/`lags').(`indeps')","L(1/`lags').`depvar'","`idvar' `tnew'","`touse'",`t',`n',`lags',"`het'","`dfc'",`bootstrapdraws')
 
 scalar W_HPJ=r(W_HPJ)
 local k=r(k)
@@ -199,7 +187,7 @@ ereturn local predict "xtgranger_p"
 /// hidden, added by JD for predict
 ereturn hidden local depvar "`depvar'"
 ereturn hidden local indepvar "`names'"
-ereturn hidden local csd "`csd'"
+
 restore
 end
 	
@@ -278,7 +266,7 @@ end
 
 
 mata:
-void test1(string scalar depvar,string scalar indeps, string scalar depvarlag,string scalar idtn, string scalar tousen, numeric scalar t, numeric scalar n,numeric scalar p,string scalar het,string scalar dfc,real scalar bootdraws, real matrix demean)
+void test1(string scalar depvar,string scalar indeps, string scalar depvarlag,string scalar idtn, string scalar tousen, numeric scalar t, numeric scalar n,numeric scalar p,string scalar het,string scalar dfc,real scalar bootdraws)
 {
 	z1=st_data(.,depvar,tousen) //the transfer (t*n)*1 matrix-y
 	z2=st_data(.,indeps,tousen)
@@ -293,7 +281,7 @@ void test1(string scalar depvar,string scalar indeps, string scalar depvarlag,st
 	index = panelsetup(idt,1)
 
 	/// inital draw with no bootstrap
-	beta = estBeta(z1,z2,z3,idt,index,(1::n),t,p,demean,RSS=0,b=.)
+	beta = estBeta(z1,z2,z3,idt,index,(1::n),t,p,RSS=0,b=.)
 	
 	BIC=n*(t-1-p-p)*log(RSS/(n*(t-1-p-p)))+p*log(n*(t-1-p-p))
 	
@@ -308,7 +296,7 @@ void test1(string scalar depvar,string scalar indeps, string scalar depvarlag,st
 
 	/// Variance estimation
 	if (bootdraws == 0) {
-		var = calcVar(z1,z2,z3,b,idt,index,(1::n),het,dfc,p,demean)
+		var = calcVar(z1,z2,z3,b,idt,index,(1::n),het,dfc,p)
 	}
 	else {
 		stata(`"di as text _dup(78) "-""')
@@ -319,7 +307,7 @@ void test1(string scalar depvar,string scalar indeps, string scalar depvarlag,st
 
 		for (r = 1;r<=bootdraws-1;r++) {
 			/// draw from uniform distribution units
-			beta_rr = estBeta(z1,z2,z3,idt,index,runiformint(n,1,1,n),t,p,demean,tmp1=0,tmp2=.)
+			beta_rr = estBeta(z1,z2,z3,idt,index,runiformint(n,1,1,n),t,p,tmp1=0,tmp2=.)
 			beta_r[r,.] = beta_rr'
 			msg = sprintf("noi _dots %s 0",strofreal(r))
 			stata(msg)
@@ -362,27 +350,16 @@ end
 
 
 mata:
-	function estBeta(real matrix y, real matrix x, real matrix Ly, real matrix idt, real matrix index,  real matrix sel, real scalar t,real scalar p, real matrix demean,real scalar RSS, real matrix b)
+	function estBeta(real matrix y, real matrix x, real matrix Ly, real matrix idt, real matrix index,  real matrix sel, real scalar t,real scalar p,real scalar RSS, real matrix b)
 	{
 
 		
 		pointer(real matrix) yp, xp, Lyp
 
-		if (sum(demean):==0) {
-			yp = &y
-			xp = &x
-			Lyp = &Ly	
-		}
-		else {
-			all=DemeanPartial((y,x,Ly),idt,index,sel,demean[1],demean[2])
-			all1 = all[.,1]
-			yp = &all1
-			all2 = all[.,2..cols(x)+1]
-			xp = &all2
-			all3 = all[.,cols(x)+2..cols(all)]
-			Lyp = &all3
-		}
-
+		yp = &y
+		xp = &x
+		Lyp = &Ly	
+		
 		N = rows(index)
 
 		xx_f = xx_u = xx = J(cols(x),cols(x),0)
@@ -434,7 +411,7 @@ mata:
 end
 
 mata:
-	function calcVar(real matrix y, real matrix x, real matrix z, real matrix beta, real matrix idt, real matrix index, real matrix sel, string scalar het,string scalar dfc,real scalar p, real matrix demean)
+	function calcVar(real matrix y, real matrix x, real matrix z, real matrix beta, real matrix idt, real matrix index, real matrix sel, string scalar het,string scalar dfc,real scalar p)
 	{
 
 		panelstats = panelstats(index)
@@ -443,23 +420,10 @@ mata:
 
 		pointer(real matrix) yp, xp, Lyp
 
-		if (sum(demean):==0) {
-			yp = &y
-			xp = &x
-			zp = &z	
-		}
-		else {
-			mean((y,x,z))
-			all=DemeanPartial((y,x,z),idt,index,sel,demean[1],demean[2])
-			all1 = all[.,1]
-			yp = &all1
-			all2 = all[.,2..cols(x)+1]
-			xp = &all2
-			all3 = all[.,cols(x)+2..cols(all)]
-			zp = &all3
-			mean((*yp,*xp,*zp))
-		}
-
+		yp = &y
+		xp = &x
+		zp = &z	
+		
 		xx = J(cols(x),cols(x),0)
 		xy =  J(cols(x),1,0)
 
@@ -509,66 +473,3 @@ mata:
 
 end
 
-capture mata mata drop PartialOut
-mata:
-	function PartialOut(real matrix y, real matrix csa, real matrix idt, real matrix index, real matrix sel)
-	{
-		real matrix output
-		output = J(rows(y),cols(y),.)
-		N = rows(index) 
-
-		for (ii=1;ii<=N;ii++){
-			i = sel[ii]
-			idti = panelsubmatrix(idt,i,index)
-			csai = csa[idti[.,2],.]
-			M = I(rows(csai)) - csai * invsym(quadcross(csai,csai)) *csai'
-			yi = panelsubmatrix(y,i,index)
-			output[|index[i,1],. \ index[i,2],.|] = M* yi
-			
-		}
-
-		return(output)
-	}
-
-end
-
-capture mata mata drop DemeanPartial
-mata:
-	function DemeanPartial(real matrix x, real matrix idt, real matrix index, real matrix sel, real scalar demean, real scalar csa)
-
-	{
-		/// calculate csa
-		real matrix output
-		output = x
-
-		stats = panelstats(index)
-		N = stats[1]
-		T = stats[3]
-
-		csam = J(T,cols(x),0)
-		cnt = J(T,1,0)
-		for (ii=1;ii<=N;ii++) {
-			i = sel[ii]
-			idti = panelsubmatrix(idt,i,index)			
-			xi = panelsubmatrix(x,i,index)
-			csam[idti[.,2],.] = csam[idti[.,2],.] + xi
-			cnt[idti[.,2],.] = cnt[idti[.,2],.] + J(rows(xi),1,1)
-		}
-		csam = csam :/ cnt
-
-		if (demean:==1) {
-			for (ii=1;ii<=N;ii++) {
-				i = sel[ii]
-				idti = panelsubmatrix(idt,i,index)
-				xi = panelsubmatrix(x,i,index)
-				output[|index[i,1],. \ index[i,2],.|] = xi :- csam[idti[.,2],.]
-				
-			}
-		}
-		if (csa :== 1) {
-			output = PartialOut(output,csam,idt,index,sel)
-		}
-		return(output)
-	}
-
-end

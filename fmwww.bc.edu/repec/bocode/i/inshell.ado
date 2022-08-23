@@ -1,3 +1,5 @@
+*! 2.1   MBH 18 Aug  2022
+*!      a) corrections to the syntax line to better allow commas
 *! 2.0   MBH 20 July 2022
 *!      a) post-redirection file processing is now done in Mata, which
 *!          preserves all special characters
@@ -36,24 +38,24 @@ capture program drop inshell
 
 program define inshell, rclass
 version 14
-syntax anything (everything equalok)
+syntax anything(everything equalok) [, * ]
 
 // inshell diagnostics
-if inlist("`0'", "diag", "diagn", "diagno", "diagnos", "diagnost", "diagnosti", "diagnostic", "diagnostics") {
+if inlist(`"`0'"', "diag", "diagn", "diagno", "diagnos", "diagnost", "diagnosti", "diagnostic", "diagnostics") {
 	if lower(c(os)) != "windows" {
 		capture which inshell_diagnostics
-		if ! _rc{
+		if (!_rc) {
 			inshell_diagnostics
 			exit 0
 		}
-		if _rc {
-			noisily display as error ///
-				" >>> the program which runs the diagnostic routines for {bf:inshell} was not found on your system. Perhaps it has become lost, deleted, renamed, or otherwise corrupted.
+		if (_rc) {
+			noisily display ///
+				as error " >>> the program which runs the diagnostic routines for {bf:inshell} was not found on your system. Perhaps it has become lost, deleted, renamed, or otherwise corrupted.
 				exit 1
 		}
 	}
 	else if lower(c(os)) == "windows" {
-		display ///
+		noisily display ///
 			as error _n " >>> Sorry, but {bf:inshell} does not currently have a diagnostics mode for {bf:Microsoft Windows}. Stay tuned."
 		exit 1
 	}
@@ -63,12 +65,12 @@ if inlist("`0'", "diag", "diagn", "diagno", "diagnos", "diagnost", "diagnosti", 
 // issued that is the name of a sub-directory within the current working
 // directory, it will perform the -cd- command to that sub-directory. It is
 // toggled off by default
-if !inlist("`1'", "", "cd", "chdir") & missing("`2'") & !missing("${INSHELL_ENABLE_AUTOCD}") {
+if !inlist(`"`1'"', "", "cd", "chdir") & missing("`2'") & !missing("${INSHELL_ENABLE_AUTOCD}") {
 	tempname direxist
 	mata : st_numscalar("`direxist'", direxists("`macval(1)'"))
 	if scalar(`direxist') == 1 {
 		quietly capture cd `"`macval(1)'"'
-		if !_rc {
+		if (!_rc) {
 			noisily pwd
 			return local no = 1
 			return local no1 "`c(pwd)'"
@@ -79,13 +81,13 @@ if !inlist("`1'", "", "cd", "chdir") & missing("`2'") & !missing("${INSHELL_ENAB
 }
 
 // for -cd- wrapper
-if inlist("`1'", "cd", "chdir") {
-	if "`2'" == "-" {
+if inlist(`"`1'"', "cd", "chdir") {
+	if `"`2'"' == "-" {
 		noisily display ///
 			as error " >>> previous directory switching is not supported by this cd wrapper"
 		exit 1
 	}
-	mata : inshell_cd("`macval(2)'")
+	mata : inshell_cd(`"`macval(2)'"')
 	if `cdsuccess' == 1 {
 		noisily pwd
 		return local no1 = "`c(pwd)'"
@@ -191,9 +193,9 @@ if !inlist(`"`1'"', "cd", "chdir") {
 						erase     "`batf'"
 	}
 	// confirm that the stderr file has length greater than zero
-	capture confirm file `stderr'
-	if !_rc {
-		file open `err' using `stderr' , read
+	capture confirm file "`stderr'"
+	if (!_rc) {
+		file open `err' using "`stderr'" , read
 		file seek `err' eof
 		file seek `err' query
 		local is_err = r(loc)
@@ -203,7 +205,7 @@ if !inlist(`"`1'"', "cd", "chdir") {
 
 	if `is_err' == 0 {
 		capture confirm file "`stdout'"
-		if !_rc {
+		if (!_rc) {
 			quietly mata : M = inshell_process_file("`stdout'")
 			quietly mata : Q = select(M, strlen(M))
 			forvalues i = 1 / `rows' {
@@ -213,7 +215,7 @@ if !inlist(`"`1'"', "cd", "chdir") {
 				capture scalar drop no`j'
 			}
 			return local no = `rows'
-			noisily type "`outfile'"
+			noisily type "`outfile'", asis
 			local rc2 = 0
 			capture mata mata drop Q
 		}
@@ -238,7 +240,7 @@ if !inlist(`"`1'"', "cd", "chdir") {
 		if "`errorcode'" == "True"  local errorcode 1
 		if "`errorcode'" == "False" local errorcode 0
 		capture confirm integer number `errorcode'
-		if _rc local errorcode "?"
+		if (_rc) local errorcode "?"
 
 		if "`c(console)'" == "" & `maxdlen' <= `= `: set linesize' - min(`: strlen local errorcode', 2) - 9' {
 			local stderr_size = `maxdlen' + 2
@@ -261,10 +263,10 @@ if !inlist(`"`1'"', "cd", "chdir") {
 				}
 				noisily display as smcl ///
 					_n "{err}{c TLC}{hline `stderr_size'}{c TRC}{space `s1'}{c TLC}{hline `rc_size'}{c TRC}" ///
-					_n "{c |}`macval(err1_int)' {space `= `stderr_size' - `: udstrlen local err1_int' - 1'}{c |}{space `s1'}{c |} {bf:`pad'`errorcode'} {c |}" ///
+					_n "{c |} `macval(err1_int)' {space `= `stderr_size' - `: udstrlen local err1_int' - 2'}{c |}{space `s1'}{c |} {bf:`pad'`errorcode'} {c |}" ///
 					`error_box_total'   ///
 					_n "{c BLC}{it: stderr }{hline `= `stderr_size' - 8'}{c BRC}"
-				}
+			}
 			else if `ln' == 1 {
 				noisily display as smcl ///
 					_n "{err}{c TLC}{hline `stderr_size'}{c TRC}{space `s1'}{c TLC}{hline `rc_size'}{c TRC}" ///
@@ -273,9 +275,10 @@ if !inlist(`"`1'"', "cd", "chdir") {
 			}
 		}
 		else {
-			else display as error `"`macval(errormessage)'"'
-			display as error ///
-					"return code: `errorcode'"
+			display ///
+				as error `"`macval(errormessage)'"'
+			display ///
+				as error "return code: `errorcode'"
 	  }
 		return local stderr = subinstr(ustrtrim(`"`macval(errormessage)'"'),  char(10), " ", .)
 		local rc2 = "`errorcode'"
@@ -283,14 +286,14 @@ if !inlist(`"`1'"', "cd", "chdir") {
 	}
 }
 
-if strlen("`macval(0)'") > 250 & missing("${INSHELL_DISABLE_LONGCMDMSG}") {
+if strlen(`"`macval(0)'"') > 300 & missing("${INSHELL_DISABLE_LONGCMDMSG}") {
 		local long_command_box_size = 73
 		noisily display as smcl ///
 				 "{txt}{c TLC}{hline `long_command_box_size'}{c TRC}" ///
 			_n "{c |} >>>  This is not an error. The command you have entered is very long.   {c |}" ///
 			_n "{c |} >>> You are probably better off storing this set of commands in a shell {c |}" ///
 			_n "{c |} >>> script and then executing that script file using {bf:inshell} as found {c |}" ///
-			_n "{c |} >>> in syntax (3) in the help file: " `"[{stata `"help inshell##syntax"':help inshell: Syntax}]{space 14}{c |}"' ///
+			_n "{c |} >>> in syntax (3) in the help file: " `"[{stata `"help inshell##suggestions"':help inshell: Suggestions}]{space 14}{c |}"' ///
 			_n "{c BLC}{hline `long_command_box_size'}{c BRC}"
 }
 

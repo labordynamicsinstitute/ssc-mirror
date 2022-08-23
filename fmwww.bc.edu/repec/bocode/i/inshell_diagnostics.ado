@@ -1,3 +1,5 @@
+*! 1.1 MBH 21 Aug  2022
+*!   minor fixes
 *! 1.0 MBH 14 July 2022
 *!   this do-file is meant to accompany the shell wrapper -inshell-
 *!   and functions as a "diagnostic" routine
@@ -29,7 +31,7 @@ if missing("${INSHELL_DISABLE_LOGO}") {
 *********************** macro options **************************
 local non_toggle_options   INSHELL_TERM INSHELL_PATHEXT
 local toggle_options       INSHELL_ENABLE_AUTOCD INSHELL_DISABLE_REFOCUS INSHELL_DISABLE_LONGCMDMSG
-local toggled_on         `: all globals "INSHELL_*ABLE*"'
+local toggled_on          : all globals "INSHELL_*ABLE*"
 local toggled_off         : list toggle_options - toggled_on
 local s1                  3
 
@@ -55,10 +57,10 @@ foreach b in `non_toggle_options' `toggle_options' {
 }
 
 noisily display ///
-	as text	_n " >>> {it}these are the current" `"{stata "help inshell##syntax": macro options}"' " for {bf:inshell:}{sf}" _n
+	as text	_n " >>> {it}these are the current {stata help inshell##options:macro options} for {bf:inshell:}{sf}" _n
 
 local maxofcol3 = max(`: strlen global INSHELL_TERM', `: strlen global INSHELL_PATHEXT', 3)
-local dropcol `= 3 + max(60, `maxofcol3', `= 43 + `: strlen global S_SHELL'')'
+local dropcol  `= 3 + max(60, `maxofcol3', `= 43 + `: strlen global S_SHELL'')'
 
 foreach c in `non_toggle_options' {
 	if !missing("${`c'}") {
@@ -125,7 +127,7 @@ if !strpos("${S_SHELL}", "pwsh") {
 	capture quietly shell echo \$PATH > "`pathfile'"
 }
 capture confirm file "`pathfile'"
-if !_rc {
+if (!_rc) {
 	local get_path = subinstr(fileread("`pathfile'"), char(10), "", .)
 }
 if missing("`get_path'") {
@@ -151,7 +153,7 @@ if (!missing("${INSHELL_PATHEXT}") & strpos("${S_SHELL}", "pwsh")) | !strpos("${
 
 if !strpos("${S_SHELL}", "pwsh") {
 	capture which inshell
-	if !_rc {
+	if (!_rc) {
 		capture inshell echo \$PATH
 		local inshell_path "`r(no1)'"
 		if !missing("${INSHELL_PATHEXT}") {

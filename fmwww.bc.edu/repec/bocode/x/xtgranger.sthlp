@@ -13,7 +13,7 @@
 {title:Syntax}
 {phang}
 {p 8 16 2}{cmd:xtgranger} {depvar} [{indepvars}] [if] [in] 
-[, lags(integer) maxlags(integer) het {ul:boot}strap[({it:options})] csd sum nodfc] 
+[, lags(integer) maxlags(integer) het {ul:boot}strap[({it:options})] sum nodfc] 
 
 {smcl}
 
@@ -47,9 +47,6 @@ The bootstrap resamples across the cross-section dimension.
 {dlgtab:SE/Robust}
 {phang}
 {opt het} allows for cross-sectional heteroskedasticity.
-
-{phang}
-{opt csd} allows for weak cross-sectional dependence.
 
 {phang}
 {opt nodfc} does not apply a degrees of freedom correction in the computation of the variance-covariance matrix of the HPJ estimator. This option is mostly useful under cross-sectional heteroskedasticity.

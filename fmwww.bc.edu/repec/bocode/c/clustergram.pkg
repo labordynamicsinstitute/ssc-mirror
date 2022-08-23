@@ -15,11 +15,11 @@ d KW: hierarchical clusters
 d
 d Requires: Stata version 17
 d
-d Distribution-Date: 20220821
+d Distribution-Date: 20220822
 d
 d Author: Matthias Schonlau,  University of Waterloo
 d Support: email schonlau@@uwaterloo.ca
 d
 f clustergram.ado
 f clustergram.sthlp
-f ../a/clustergram_examples.ado
+f clustergram_examples.ado

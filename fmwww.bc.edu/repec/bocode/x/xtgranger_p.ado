@@ -30,25 +30,6 @@ program define xtgranger_p
 		/// remove from touse variables before lag
 		by `idvar' (`tvar'), sort: replace `touse' = 0 if _n <= `e(p)'
 
-		/// remove time fixed effects
-		if "`e(csd)'" != "" {
-			
-			local indepvars
-
-			tsrevar `e(indeps)', list
-			local tmplist `r(varlist)'
-
-			tempvar csd
-			foreach var of varlist `e(depvar)' `tmplist' {
-				tempname tmp
-				qui by `tvar', sort: egen double `csd' = mean(`var')
-				qui gen `tmp' = `var' - `csd'
-				drop `csd'
-				local indepvars `indepvars' `tmp'
-			}
-			sort `idvar' `tvar'
-		}
-
 		mata m_xtgranger_p("`depvar'","L(1/`e(p)').`depvar'","`indepvars'","`anything'","`idvar' `tvar'","`touse'",("`xb'":=="xb"))
 	}
 

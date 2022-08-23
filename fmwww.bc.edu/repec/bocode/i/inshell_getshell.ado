@@ -10,7 +10,7 @@ version 14
 
 // detect whether Stata is using PowerShell
 capture which inshell_detect_pwsh
-if !_rc {
+if (!_rc) {
   inshell_detect_pwsh
   if !missing("`r(pwsh_detected)'") {
     return add
@@ -42,7 +42,7 @@ if inlist("`shell'", "sh", "bash", "ksh", "oil", "osh", "yash", "zsh") {
 else if inlist("`shell'", "csh", "tcsh") {
   capture quietly shell (`shell_location' --version > "`version_file'") >& "`version_file'"
 }
-// clean the shel's version
+// clean the shell's version
 else if inlist("`shell'", "ash", "dash") {
   local shell_version_pure "(not available in`= cond("`shell'" == "dash", " Debian", "")' Almquist shell)"
 }
@@ -66,7 +66,6 @@ if inlist("`shell'", "sh", "bash", "csh", "ksh", "oil", "osh", "tcsh", "yash", "
 }
 if strpos("`shell'", "ksh") {
   local shell_version2 = trim(itrim(subinstr("`shell_version2'", "sh (AT&T Research)", "", .)))
-  // local shell_version_pure         "`: word 1 of `shell_version2''"
   return local shell_version_pure  "`shell_version2'"
 }
 
