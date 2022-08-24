@@ -1,0 +1,34 @@
+d 'PYSTACKED': module for stacking generalization and machine learning in Stata
+d
+d  pystacked implements stacked generalization for regression and
+d binary classification via Python's scikit-learn. Stacking
+d combines multiple supervised machine learners---the “base” or
+d “level-0”' learners---into a single learner. The currently
+d supported base learners include regularized regression, random
+d forest, gradient boosted trees, support vector machines, and
+d feed-forward neural nets (multi-layer perceptron). pystacked can
+d also be used with as a ‘regular’ machine learning program to
+d fit a single base learner and, thus, provides an easy-to-use API
+d for scikit-learn's machine learning algorithms. 
+d
+d KW: machine learning
+d KW: binary classification
+d KW: Python
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20220823
+d
+d Author: Achim Ahrens, ETH Zürich
+d Support: email achim.ahrens@@gess.ethz.ch
+d
+d Author: Christian B. Hansen, University of Chicago
+d Support: email Christian.Hansen@@chicagobooth.edu
+d
+d Author: Mark E Schaffer, Heriot-Watt University
+d Support: email m.e.schaffer@@hw.ac.uk
+d
+f pystacked.ado
+f pystacked.sthlp
+f pystacked_p.ado
+f ../_/_pyparse.ado
