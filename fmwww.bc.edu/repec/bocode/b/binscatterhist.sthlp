@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.4 3jun2022}{...}
+{* *! version 3.0 Sep2022}{...}
 {viewerjumpto "Syntax" "binscatterhist##syntax"}{...}
 {viewerjumpto "Description" "binscatterhist##description"}{...}
 {viewerjumpto "Options" "binscatterhist##options"}{...}
@@ -32,6 +32,7 @@ where {it:varlist} is
 {synopthdr :options}
 {synoptline}
 {syntab :Main}
+{synopt :{opt binsreg}}{bf:(recommended)} creates the scatterplot points by running the program binsreg in the background ({help binsreg}), for a correct data visualization in the presence of covariates{p_end}
 {synopt :{opth by(varname)}}plot separate series for each group (see {help binscatterhist##by_notes:important notes below}){p_end}
 {synopt :{opt med:ians}}plot within-bin medians instead of means{p_end}
 
@@ -144,6 +145,8 @@ handle regression discontinuities (see {help binscatterhist##fit_line:Fit Line})
 {dlgtab:Main}
 
 {marker by_notes}{...}
+{phang}{opt binsreg} {bf:(recommended)} creates the scatterplot points by running the program binsreg in the background ({help binsreg}), for a correct data visualization in the presence of covariates.
+
 {phang}{opth by(varname)} plots a separate series for each by-value.  Both numeric and string by-variables
 are supported, but numeric by-variables will have faster run times.
 
@@ -430,6 +433,12 @@ used each age as a discrete bin, since there are fewer than 20 unique values.){p
 {phang2}. {stata replace tenure=-abs(tenure)}{p_end}
 {phang2}. {stata binscatterhist wage tenure, regtype(areg) absorb(grade) vce(robust) coef(0.01) ci(95) pvalue sample xmin(-22) ymin(5) histogram(wage tenure)  xhistbarheight(15) yhistbarheight(15) xhistbins(40) yhistbins(40)}{p_end}
 
+{pstd}In the presence of covariates, binscatterhist may not correctly visualise the data. Scatterpoints can be correctly created by running the package binsreg in the background{p_end}
+{phang2}. {stata replace tenure=abs(tenure)}{p_end}
+{phang2}. {stata binscatterhist wage tenure, controls(age) histogram(wage tenure) ymin(8) coef(0.01) pvalue sample binsreg}{p_end}
+
+
+
 {marker saved_results}{...}
 {title:Saved Results}
 
@@ -465,4 +474,4 @@ rather than {bf:r(graphcmd)} in order to avoid truncation due to Stata's charact
 
 {pstd} The author would like to thank one anonymous referee, Elliott Ash, Chistopher Baum, Suresh Naidu, Sergio Galletta, Malka Guillot, Susanna B. Berkouwer and Guohui Jiang for the useful feedback on the program.
 
-{pstd}The present version of {cmd:binscatterhist} is based on a program in Michael Stepner (2013): "BINSCATTER: Stata module to generate binned scatterplots" - https://EconPapers.repec.org/RePEc:boc:bocode:s457709 and Ben Jann (2014): "ADDPLOT: Stata module to add twoway plot objects to an existing twoway graph," Statistical Software Components S457917, Boston College Department of Economics, revised 28 Jan 2015 <https://ideas.repec.org/c/boc/bocode/s457917.html>
+{pstd}The present version of {cmd:binscatterhist} is based on a program in Michael Stepner (2013): "BINSCATTER: Stata module to generate binned scatterplots" - https://EconPapers.repec.org/RePEc:boc:bocode:s457709; a program by Ben Jann (2014): "ADDPLOT: Stata module to add twoway plot objects to an existing twoway graph," Statistical Software Components S457917, Boston College Department of Economics, revised 28 Jan 2015 <https://ideas.repec.org/c/boc/bocode/s457917.html>; and uses the BINSREG program: Cattaneo, M. D., R. K. Crump, M. H. Farrell, and Y. Feng. 2019b.  Binscatter Regressions. arXiv:1902.09615.

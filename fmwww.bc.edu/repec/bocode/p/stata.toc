@@ -109,6 +109,7 @@ p poverty module to calculate poverty measures
 p povguide module to generate the U.S. Poverty Guideline value for a given family size and year
 p povimp module to provide poverty estimates in the absence of actual consumption data
 p povtime module to compute aggregate intertemporal poverty measures (poverty in a panel accounting for time)
+p power_diagnostic module to compute power and sample size for sensitivity and specificity of a diagnostic test
 p power_oneroc module to compute power and sample size for a one-sample ROC test
 p power_swgee module to compute power (under both a Z and t distribution) for cluster randomized stepped wedge designs 
 p power_tworates_zhu module to calculate sample size or power for a two-sample test of rates

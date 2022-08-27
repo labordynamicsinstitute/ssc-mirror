@@ -522,7 +522,9 @@ program define GraphBoxColor
 			qui replace `increment' = `increment'+ `w_k' if `w_k'!=.   // for the next color
 		}
 	}
-	
+
+	}  //  cfb fix	
+
     // *most work happens in `addplot' (all parallelograms) and `addlabeltext' (all labels)
 	// the rest just sets up the coordinates but plots nothing because msymbol(none)
 	// *xscale and yscale are explicitly specified because they were needed earlier to compute aspectratio

@@ -1,4 +1,4 @@
-*! version 2.4 3june2022  Matteo Pinna, matteo.pinna@gess.ethz.ch
+*! version 3.0 Sep2022  Matteo Pinna, matteo.pinna@gess.ethz.ch
 
 * Versions:
 * version 1.1 partly fixes the display of multiple graphs, sets default values for xmin and ymin, add twoway general options to the histograms and solves some bugs in the error messages
@@ -10,6 +10,7 @@
 * version 2.2 fixes an issue with color compatibility and adds rounding option for coefficient reporting
 * version 2.3 adds the options pvalue and ci()
 * version 2.4 fixes issue with coef se and ci reporting in some cases, and adds options to adjust coefficient positioning
+* version 3.0 adds binning via binsreg
 /*
 This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.  
 The full legal text as well as a human-readable summary can be accessed at http://creativecommons.org/licenses/by-nc-sa/4.0/
@@ -17,7 +18,8 @@ The full legal text as well as a human-readable summary can be accessed at http:
 
 * Any feedback on issues and possible new features is very welcome.
 
-* This program is based on the original binscatter by Michael Stepner (2013): "BINSCATTER: Stata module to generate binned scatterplots" - https://EconPapers.repec.org/RePEc:boc:bocode:s457709 and uses Ben Jann (2014): "ADDPLOT: Stata module to add twoway plot objects to an existing twoway graph," Statistical Software Components S457917, Boston College Department of Economics, revised 28 Jan 2015 <https://ideas.repec.org/c/boc/bocode/s457917.html>
+* This program is based on the original binscatter by Michael Stepner (2013): "BINSCATTER: Stata module to generate binned scatterplots" - https://EconPapers.repec.org/RePEc:boc:bocode:s457709 and uses Ben Jann (2014): "ADDPLOT: Stata module to add twoway plot objects to an existing twoway graph," Statistical Software Components S457917, Boston College Department of Economics, revised 28 Jan 2015 <https://ideas.repec.org/c/boc/bocode/s457917.html> and the BINSREG program: Cattaneo, M. D., R. K. Crump, M. H. Farrell, and Y. Feng. 2019b.  Binscatter Regressions. arXiv:1902.09615.
+
 cap program drop binscatterhist
 program define binscatterhist, rclass sortpreserve
 
@@ -31,7 +33,8 @@ local stata_version=c(version)
 		COLors(string) MColors(string) LColors(string) Msymbols(string) ///
 		savegraph(string) savedata(string) replace ///
 		nofastxtile randvar(varname numeric) randcut(real 1) randn(integer -1) ///
-		/* LEGACY OPTIONS */ nbins(integer 20) create_xq x_q(varname numeric) symbols(string) method(string) unique(string) ///
+		/* OPTIONS */ nbins(integer 20) create_xq x_q(varname numeric) symbols(string) method(string) unique(string) ///
+		/* scatterpoints creation */ binsreg ///
 		/* standard errors */ CLUSTer(varname) vce(string) ///
 		/* coefficient display */ COEFficient(string) xcoef(string) ycoef(string) sample Pvalue ci(string) stars(string) ///
 		/* histogram options */ HISTogram(string) XMin(string) YMin(string) xhistbarheight(string) yhistbarheight(string) xhistbarwidth(string) yhistbarwidth(string) xhistbins(string) yhistbins(string) ///
@@ -86,7 +89,12 @@ local stata_version=c(version)
 		di as text "NOTE: legacy option symbols() has been renamed msymbols(), and is supported only for backward compatibility."
 		local msymbols `symbols'
 	}
-	
+
+	if ("`binsreg'"!="") & (("`by'"!="") | ("`medians'"!="") | ("`genxq'"!="") | ("`discrete'"!="") | ("`xq'"!="") | ("`nofastxtile'"!="") | ("`randvar'"!="") | ("`randcut'"!="1")  | ("`randn'"!="-1")) {
+	display as error "The binsreg option cannot be used together with by, medians, genxq, discrete, xq, nofastxtile, randvar, randcut, randn"
+	exit
+	}
+
 	if ("`linetype'"=="noline") {
 		di as text "NOTE: legacy line type 'noline' has been renamed 'none', and is supported only for backward compatibility."
 		local linetype none
@@ -118,6 +126,7 @@ local stata_version=c(version)
 	
 	if ("`cluster'"!="") & ("`vce'"!="") {
 	di as error "Options cluster() and vce() cannot be specified together."
+	exit
 	}	
 	
 	if ("`linetype'"=="none") & (("`coefficient'"!="") | ("`sample'"!="")) {
@@ -141,17 +150,30 @@ local stata_version=c(version)
 	*** Perform checks
 
 	* addplot check
-	capt which addplot
-	if _rc !=0 {
-	di as error "Binscatterhist requires addplot to be installed. Addplot can be installed by typing ssc install addplot"
+	if "`histogram'"!="" {
+		capt which addplot
+		if _rc !=0 {
+		di as error "Binscatterhist requires addplot to be installed. Addplot can be installed by typing ssc install addplot"
+		exit
+		}
 	}
 
-	if ("`regtype'"=="") | ("`regtype'"=="reghdfe"){
 	* reghdfe check
+	if ("`regtype'"=="") | ("`regtype'"=="reghdfe"){
 	capt which reghdfe
 		if _rc !=0 {
 		di as error "Binscatterhist requires reghdfe to be installed. Reghdfe can be installed by typing ssc install reghdfe"
+		exit
 		}
+	}
+	
+	if "`binsreg'"!="" {
+		* binsreg check
+		capt which binsreg
+			if _rc !=0 {
+			di as error "Binscatterhist requires binsreg to be installed to use the binsreg option. Binsreg can be installed by typing ssc install binsreg"
+			exit
+			}
 	}
 	
 	* Set default linetype and check valid
@@ -264,6 +286,33 @@ local stata_version=c(version)
 		local addci="level(`ci')"
 		}	
 	
+	****** Save constant if binsreg is run 
+	if ("`reportreg'"=="") | (("`reportreg'"!="") & ("`binsreg'"=="")) local binsreg_verbosity "quietly"
+	if ("`binsreg'"!="") `binsreg_verbosity' {
+		if `"`absorb'"'!="" {
+		local absorb "absorb(`absorb')"
+			if ("`regtype'"=="")|("`regtype'"=="reghdfe") {
+			local regtype "reghdfe"
+			local addresid="resid"
+			}
+			if ("`regtype'"=="areg") {
+			local regtype "areg"
+			}
+		}
+		else {
+			local regtype "reg"
+		}
+	
+		if ("`binsreg_verbosity'"=="quietly") capture `regtype' `y_vars' `x_var' `controls' `wt' if `touse', `absorb' `addcluster' `addvce'
+			else capture noisily `regtype' `y_vars' `x_var' `controls' `wt' if `touse', `absorb' `addcluster' `addvce'	
+	mat binsreg_eb=e(b)
+	mat binsreg_eV=e(V)
+	mat mat_edf_r=e(df_r)
+	local binsreg_edf_r=mat_edf_r[1,1]
+	local binsreg_const=binsreg_eb[1,"_cons"] 	
+	}
+	*
+	
 	******  Create residuals  ******
 	
 	if (`"`controls'`absorb'"'!="") quietly {
@@ -282,12 +331,11 @@ local stata_version=c(version)
 		else {
 			local regtype "reg"
 		}
-	
-		* Generate residuals
 		
+		* Generate residuals
 		local firstloop=1
 		foreach var of varlist `x_var' `y_vars' {
-			tempvar residvar
+			tempvar residvar 
 			`regtype' `var' `controls' `wt' if `touse', `absorb' `addcluster' `addvce' `addresid' `addci'
 			predict `residvar' if e(sample), residuals
 			if ("`addmean'"!="noaddmean") {
@@ -308,10 +356,10 @@ local stata_version=c(version)
 		local x_r `x_var'
 		local y_vars_r `y_vars'
 	}
+	
 
 	****** Regressions for fit lines ******
-	
-	if ("`reportreg'"=="") local reg_verbosity "quietly"
+	if ("`reportreg'"=="") | (("`reportreg'"!="") & ("`binsreg'"!="")) local reg_verbosity "quietly"
 
 	if inlist("`linetype'","lfit","qfit") `reg_verbosity' {
 
@@ -364,7 +412,7 @@ local stata_version=c(version)
 					else if ("`2'"!="") local conds `conds' & `x_r'>`1' & `x_r'<=`2'
 					else local conds `conds' & `x_r'>`1'
 				}
-
+					
 				* LOOP over y-vars
 				local counter_depvar=1
 				foreach depvar of varlist `y_vars_r' {
@@ -379,7 +427,6 @@ local stata_version=c(version)
 					* perform regression
 					if ("`reg_verbosity'"=="quietly") capture reg `depvar' `x_r2' `x_r' `wt' if `conds', `addcluster' `addvce'
 					else capture noisily reg `depvar' `x_r2' `x_r' `wt' if `conds', `addcluster' `addvce'
-					
 					* store results
 					if (_rc==0) matrix e_b_temp=e(b)
 					else if (_rc==2000) {
@@ -572,6 +619,25 @@ local stata_version=c(version)
 		}
 	}
 
+
+	*********** With Binsreg ***********
+	if "`binsreg'"=="binsreg" {	/* This saves the matrix of scatterpoints from binsreg and replaces the one from binscatterhist */	
+	if "`nquantiles'"!="" local addnbins "nbins(`nquantiles')"
+	tempfile binsreg_points
+	qui binsreg `y_vars' `x_var' `controls' `wt' if `touse', `addnbins' savedata(`binsreg_points')
+	preserve
+	use `binsreg_points', clear
+	mkmat dots_x dots_fit, matrix(`y1_scatterpts')
+	qui ereplace dots_binid=max(dots_binid)
+	local binsreg_nbins=dots_binid[1]
+	restore
+		if "`binsreg_nbins'"!="`nquantiles'" {
+		di as error "Binsreg is selecting `binsreg_nbins' bins, update your nquantiles option or replace with `binsreg_nbins'"
+		exit
+		}
+	}	
+	*
+
 	*********** Perform Graphing ***********
 
 	* If rd is specified, prepare xline parameters
@@ -714,7 +780,6 @@ local stata_version=c(version)
 				
 				* Find lower and upper bounds for the fit line
 				matrix `fitline_bounds'[1,1]=`y`counter_depvar'_scatterpts'[1,`xind']
-				
 				local fitline_ub_rindex=`nquantiles'
 				local fitline_ub=.
 				while `fitline_ub'==. {
@@ -722,7 +787,7 @@ local stata_version=c(version)
 					local --fitline_ub_rindex
 				}
 				matrix `fitline_bounds'[1,`rdnum'+1]=`fitline_ub'
-		
+				*if "`binsreg'"!="" matrix `fitline_bounds'=[]
 				* LOOP over rd intervals
 				forvalues counter_rd=1/`rdnum' {
 					
@@ -735,13 +800,12 @@ local stata_version=c(version)
 						local coef_quad=`y`counter_depvar'_coefs'[`row0'+`counter_rd',1]
 						local coef_lin=`y`counter_depvar'_coefs'[`row0'+`counter_rd',2]
 						local coef_cons=`y`counter_depvar'_coefs'[`row0'+`counter_rd',3]
-					}
-					
+					}	
 					if !missing(`coef_quad',`coef_lin',`coef_cons') {
 						local leftbound=`fitline_bounds'[1,`counter_rd']
 						local rightbound=`fitline_bounds'[1,`counter_rd'+1]
-					
-						local fits `fits' (function `coef_quad'*x^2+`coef_lin'*x+`coef_cons', range(`leftbound' `rightbound') lcolor(`: word `c' of `lcolors''))
+						if ("`binsreg'"=="") local fits `fits' (function `coef_quad'*x^2+`coef_lin'*x+`coef_cons', range(`leftbound' `rightbound') lcolor(`: word `c' of `lcolors''))
+						if ("`binsreg'"!="") local fits `fits' (function `coef_quad'*x^2+`coef_lin'*x+`binsreg_const', range(`leftbound' `rightbound') lcolor(`: word `c' of `lcolors''))
 					}
 				}
 			}
@@ -855,12 +919,11 @@ local stata_version=c(version)
 	scalar `t_r_`y_vars''=abs(r(min)-r(max))
 	
 	* Save parameters from binscatter
-	
 	mata: st_numscalar("max_b_x", max(st_matrix("`y1_scatterpts'")[,1]))
 	mata: st_numscalar("min_b_x", min(st_matrix("`y1_scatterpts'")[,1]))
 	mata: st_numscalar("max_b_y", max(st_matrix("`y1_scatterpts'")[,2]))
 	mata: st_numscalar("min_b_y", min(st_matrix("`y1_scatterpts'")[,2]))
-
+		
 	tempname t_minb_`x_var' t_maxb_`x_var' t_rb_`x_var' t_minb_`y_vars' t_maxb_`y_vars' t_rb_`y_vars'
 	scalar `t_minb_`x_var''=min_b_x
 	scalar `t_maxb_`x_var''=max_b_x
@@ -1044,10 +1107,19 @@ local stata_version=c(version)
 		if "`ci'"!=""{
 		local ci2=(`ci'+((1-`ci'/100)/2)*100)/100
 		}
-		mat eb=e(b)
-		mat eV=e(V)
+			if "`binsreg'"==""{
+			mat eb=e(b)
+			mat eV=e(V)
+			mat mat_edf_r=e(df_r)
+			local edf_r=mat_edf_r[1,1]
+			}
+			if "`binsreg'"!=""{
+			mat eb=binsreg_eb
+			mat eV=binsreg_eV
+			local edf_r=`binsreg_edf_r'
+			}		
 		local tstatistic = eb[1,1]/sqrt(eV[1,1])
-		local pval=2*ttail(e(df_r),abs(`tstatistic'))
+		local pval=2*ttail((`edf_r'),abs(`tstatistic'))  /* 		local pval=2*ttail(e(df_r),abs(`tstatistic')) */
 		if "`ci'"!=""{
 		local ci2=(`ci'+((1-`ci'/100)/2)*100)/100
 		local lci=eb[1,1]-invnormal(`ci2')*sqrt(eV[1,1])
@@ -1114,6 +1186,8 @@ local stata_version=c(version)
 			tempvar nsize
 			local beta=round(eb[1,1],`rounding')
 			local beta: display `beta'
+			*local pval=round(`pval',`rounding')
+			*local pval: display `pval'
 			local standerr=round(sqrt(eV[1,1]),`rounding')
 			local standerr: display `standerr'
 			cap egen `nsize'=total(e(sample))
@@ -1125,6 +1199,8 @@ local stata_version=c(version)
 			tempvar nsize
 			local beta=round(eb[1,1],`rounding')
 			local beta: display `beta'
+			*local pval=round(`pval',`rounding')
+			*local pval: display `pval'
 			local standerr=round(sqrt(eV[1,1]),`rounding')
 			local standerr: display `standerr'
 			cap egen `nsize'=total(e(sample))

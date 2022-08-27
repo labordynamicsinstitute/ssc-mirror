@@ -1,5 +1,5 @@
 {smcl}
-{* *! boottest 4.1.0 19 July 2022}{...}
+{* *! boottest 4.2.0 24 August 2022}{...}
 {help boottest:boottest}
 {hline}{...}
 
@@ -49,6 +49,7 @@ individual constraint expression must conform to the syntax for {help constraint
 {synopt:{cmdab:weight:type(}{it:rademacher} {cmd:|} {it:mammen} {cmd:|} }specify weight type for bootstrapping; default is {it:rademacher}{p_end}
 {synopt:{space 12} {it:webb} {cmd:|} {it:normal} {cmd:|} {it:gamma}{cmd:)}}{p_end}
 {synopt:{opt boot:type(wild | score)}}specify bootstrap type; after ML estimation, {it:score} is default and only option{p_end}
+{synopt:{opt jack:knife} or {opt jk}}request jackknifing of bootstrap data-generating process{p_end}
 {synopt:{opt stat:istic(t | c)}}specify statistic type to bootstrap; default is {it:t}{p_end}
 {synopt:{opt r:eps(#)}}specifies number of replications for bootstrap-based tests; deafult is 999; set to 0 for Rao or Wald test{p_end}
 {synopt:{opt nonul:l}}suppress imposition of null before bootstrapping{p_end}
@@ -107,19 +108,27 @@ one-dimensional, a confidence set is derived:
 {cmd:waldtest}, {cmd:artest}, and {cmd:scoretest} accept all options listed above except {cmdab:weight:type()}, {cmdab:boot:type()}, {opt r:eps(#)}, {opt svm:at}, {opt svv}, and {opt seed(#)}.
 
 {title:Updates}
+{pstd}Since the publication of Roodman et al. (2019), {cmd:boottest} has gained four significant features and some minor changes:
 
-{p 2 4 0}* Since the publication of Roodman et al. (2019), {cmd:boottest} has gained three significant features. The first is the option to perform the bootstrap-c,
+{p 2 4 0}* The first significant addition is an option to perform the bootstrap-c,
 which bootstraps the distribution of the {it:coefficient(s)} of interest (or linear combinations thereof) rather t/z/F/chi2 statistics. Standard theory favors the latter, 
 but Young (2022) presents evidence that the bootstrap-c (or "non-studentized" test) is at least as reliable in instrumental variables estimation. And theory and simulation in
-Wang (2021) favors the non-studentized test when instruments are weak (but strong in at least one cluster). The option 
+Wang (2021) favors the non-studentized test when instruments are weak, but strong in at least one cluster. The option 
 {cmdab:stat:istic(c)} invokes the feature.
 
-{p 2 4 0}* The second major new feature is the {cmdab:marg:ins} option, which allows you to bootstrap results from the {cmd:margins} command. To use this feature,
+{p 2 4 0}* The second notable new feature is the ability to jackknife the bootstrap data-generating process, as advocated for OLS by MacKinnon, Nielsen, and
+Webb (2022). (And Young (2022) advocates it for instrumental variable estimation too.) If a single cluster contains extreme observations,
+that will drive the initial model fit toward minimizing their apparent extremity, thus potentially making the bootstrap data-generating process less realistic. To reduce this risk,
+the {help jackknife} computes each bootstrapping cluster's best fit, and associated residuals, using only the data from all the other clusters. {cmd:boottest}'s
+implementation corresponds to what MacKinnon, Nielsen, and Webb (2022) calls the WCU/WCR31.
+
+{p 2 4 0}* The thrid new feature is the {cmdab:marg:ins} option, which allows you to bootstrap results from the {cmd:margins} command when those results are
+linear functions of the parameters. To use this feature,
 run {cmd:boottest} immediately after {cmd:margins} and do not include any hypotheses before the comma in the {cmd:boottest} command line. {cmd:boottest} will treat
 each marginal effect separately.
 
-{p 2 4 0}* The third new feature is the ability, in Stata 16 and higher, to use a faster implementation written in the free programming language Julia. Where {cmd:boottest} is already fast,
-this option is useless. But for computationally intensive applications, the {cmd:julia} option can improve performance by an order of magnitude. See {help boottest##julia:{it:Using Julia}}.
+{p 2 4 0}* The fourth new feature is the ability, in Stata 16 and higher, to use a faster implementation written in the free programming language Julia. Where {cmd:boottest} is already fast,
+this option is useless. But for some computationally intensive applications, the {cmd:julia} option can improve performance by an order of magnitude. See {help boottest##julia:{it:Using Julia}}.
 
 {p 2 4 0}* Version 2.0.6 of {cmd:boottest}, released in May 2018, introduced two changes that can slightly affect results. The default for {opt r:eps(#)}
 is now 999 instead of 1000. And in computing percentiles in the bootstrap distribution, ties are no longer (half-)counted. 
@@ -173,7 +182,7 @@ distribution. In contrast, the bootstrap-c uses the same bootstrap data-generati
 combinations thereof. From the bootstrap numerators, the bootstrap-c algorithm then computes a single covariance matrix for use in all the statistics. For one-dimensional hypotheses,
 dividing the test statistic numerator and its bootstrap replications by this universal denominator has no substantive effect; but it is needed for higher-dimensional hypothesis in order
 to norm the numerators, which are vectors. Under standard asumptions, the
-bootstrap-t, unlike the bootstrap-c, offers {it:asymptotic refinement}, more-rapid convergence to the true distribution. But Young (2019) and Wang (2021) provide evidence
+bootstrap-t, unlike the bootstrap-c, offers {it:asymptotic refinement}, more-rapid convergence to the true distribution. But Young (2022) and Wang (2021) provide evidence
 that in instrumental variables estimation, the bootstrap-c is at least as reliable. {cmd:boottest} offers both through the {cmdab:stat:istic()} option, {cmd:stat(t)} being the default.
 
 {p 4 6 0}
@@ -325,6 +334,13 @@ Webb weights are probably better.
 {phang}{opt boot:type(wild | score)} specifies the bootstrap type. After ML estimation, {it:score} is the default and only option. Otherwise, the wild or wild 
 restricted efficient bootstrap is the default, which {cmd:boottype(score)} overrides in favor of the score bootstrap.
 
+{phang}{opt jack:knife} or {opt jk} requests jackknifing of the bootstrap data-generating process. In the inital model fit, the one subject to the null 
+unless {cmdab:nonul:l} is specified, the fit within each bootstrapping cluster, as well as the associated residuals, are computed using only the data from all
+the other clusters. MacKinnon, Nielsen, and Webb (2022) dubs this process WCU/WCR31. The option is currently available after OLS estimation, as well
+as instrumental variables estimation when the Anderson-Rubin test is requested with the {cmd:ar} option. Implementation for IV without the Anderson-Rubin test,
+i.e., for the Wild Restricted Efficient bootstrap, is pending.
+
+
 {phang}{opt stat:istic(t | c)} specifies the boostrapped statistic. The default, {it:t}, invokes the bootstrap-t, meaning the bootstrapping of
 distributions for t, z, F, or chi2 statistics. The alternative, {it:c}, requests the bootstrap-c.
 
@@ -336,7 +352,8 @@ and {cmd:scoretest} facilitate this usage.
 
 {phang}{opt marg:ins} instructs {cmd:boottest} to treat results from a call to {cmd:margins}, which must just have been generated, as a linear combination of parameters,
 and test the independent hypotheses that each is 0. {cmd:boottest} extracts the coefficients of these linear combinations from the r(Jacobian) return value of
-{cmd:margins}. When using this option, do not include any hypotheses before the comma (or in the deprecated {cmd:h0()} option).
+{cmd:margins}. When using this option, do not include any hypotheses before the comma 
+(or in the deprecated {cmd:h0()} option). This option only works for margins that are linear predictions, such as average predicted outcome by subgroup after {cmd:regress}.
 
 {phang}{opt madj:ust(bonferroni | sidak)} requests the Bonferroni or Sidak adjustment for multiple hypothesis tests. The Bonferroni correction is
 min(1, n*p) where p is the unadjusted probability and n is the number of hypotheses. The Sidak correction is 1 - (1 - p) ^ n.
@@ -567,6 +584,7 @@ giving back through a {browse "http://j.mp/1iptvDY":donation} to support the wor
 {phang}. {stata regress hasinsurance selfemployed post post_self, cluster(year)}{p_end}
 {phang}. {stata boottest post_self=.04} // wild bootstrap, Rademacher weights, null imposed, 999 replications{p_end}
 {phang}. {stata boottest post_self=.04, weight(webb) noci} // wild bootstrap, Webb weights, null imposed, 999 replications, no graph or CI{p_end}
+{phang}. {stata boottest post_self=.04, weight(webb) noci jk} // same, but jackknifed{p_end}
 {phang}. {stata scoretest post_self=.04}{space 18} // Rao score/Lagrange multipler test of same{p_end}
 
 {phang}. {stata boottest post_self post, reps(9999) weight(webb)} // wild bootstrap test of joint null, Webb weights, null imposed, 9,999 replications{p_end}
@@ -667,6 +685,7 @@ inference in cluster-IV models. DOI: 10.1002/jae.2710.{p_end}
 inference. {it:Journal of Econometric Methods} 1(1): 23-41.{p_end}
 {p 4 8 2}Liu, R. Y. 1988. Bootstrap procedures under some non-I.I.D. models. {it:Annals of Statistics} 16: 1696-1708.{p_end}
 {p 4 8 2}MacKinnon, J.G., M.O. Nielsen, and M.D. Webb. 2017. Bootstrap and asymptotic inference with multiway clustering. Queen's Economics Department Working Paper No. 1386.{p_end}
+{p 4 8 2}MacKinnon, J.G., M.O. Nielsen, and M.D. Webb. 2022. Fast and Reliable Jackknife and Bootstrap Methods for Cluster-Robust Inference. Queen's Economics Department Working Paper No. 1485.{p_end}
 {p 4 8 2}MacKinnon, J.G., and M.D. Webb. 2018. The wild bootstrap for few (treated) clusters. {it:Econometrics Journal} 21: 114-35.{p_end}
 {p 4 8 2}Mammen, E. 1993. Bootstrap and wild bootstrap for high dimensional linear models. {it:Annals of Statistics} 21: 255-85.{p_end}
 {p 4 8 2}Rao, C.R. 1948. Large sample tests of statistical hypotheses concerning several parameters with applications to problems of
@@ -678,4 +697,4 @@ large. {it:Transactions of the American Mathematical Society} 54: 426-82.{p_end}
 {p 4 8 2}Webb, M.D. 2014. Reworking wild bootstrap based inference for clustered errors. Queen's Economics Department Working Paper No. 1315.{p_end}
 {p 4 8 2}Wu, C.F.J. 1986. Jackknife, bootstrap and other resampling methods in regression analysis (with discussions). {it:Annals of Statistics}
 14: 1261-1350.{p_end}
-{p 4 8 2}Young, A. 2022. Leverage, heteroskedasticity and instrumental variances in practical application. https://personal.lse.ac.uk/YoungA/Leverage&IV.pdf.{p_end}
+{p 4 8 2}Young, A. 2022. Consistency without inference: Instrumental variables in practical application. {it:European Economic Review} 147.{p_end}

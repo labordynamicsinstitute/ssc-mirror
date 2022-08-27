@@ -1,4 +1,4 @@
-*! version 2.4  3jun2022  Matteo Pinna, matteo.pinna@gess.ethz.ch
+*! version 3.0 Sep2022  Matteo Pinna, matteo.pinna@gess.ethz.ch
 
 /*
 This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.  
@@ -12,8 +12,10 @@ The full legal text as well as a human-readable summary can be accessed at http:
 /* WORKING EXAMPLE */
 clear all
 
-* cd ../binscatterhist_2.4/working_example/
+cd /Users/matteop/Dropbox/a_projects/stata_programs/binscatterhist/working_example
 webuse nlsw88, clear
+
+* cd ../binscatterhist_3.0/working_example/
 
 * The basic binscatterhist works exactly as binscatter
 binscatterhist wage tenure
@@ -35,7 +37,9 @@ graph export "example4.png", replace
 binscatterhist wage tenure, histogram(wage tenure) ymin(4) xhistbarheight(15) yhistbarheight(15) xhistbins(40) yhistbins(40)
 graph export "example5.png", replace
 
-* Let's further report estimation results, using robust standard errors and with grade fixed effects
+* mata run time error, check here
+
+* Let's further report estimation results, using robust standard errors and with grade fixed effects.
 binscatterhist wage tenure, absorb(grade) vce(robust) coef(0.01) sample xmin(-2.2) ymin(5) histogram(wage tenure)  xhistbarheight(15) yhistbarheight(15) xhistbins(40) yhistbins(40)
 graph export "example6.png", replace
 
@@ -44,7 +48,10 @@ replace tenure=-abs(tenure)
 binscatterhist wage tenure, regtype(areg) absorb(grade) vce(robust) coef(0.01) ci(95) pvalue sample xmin(-22) ymin(5) histogram(wage tenure)  xhistbarheight(15) yhistbarheight(15) xhistbins(40) yhistbins(40)
 graph export "example7.png", replace
 
-
+* In the presence of covariates, binscatterhist may not correctly visualise the data. Scatterpoints can be correctly created by running the package binsreg in the background
+replace tenure=abs(tenure)
+binscatterhist wage tenure, controls(age) histogram(wage tenure) ymin(8) coef(0.01) pvalue sample binsreg
+graph export "example8.png", replace
 
 
 

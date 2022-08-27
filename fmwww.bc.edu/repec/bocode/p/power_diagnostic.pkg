@@ -1,0 +1,50 @@
+d 'POWER_DIAGNOSTIC': module to compute power and sample size for sensitivity and specificity of a diagnostic test
+d
+d  The power diagnostic suite of commands is useful for planning
+d prospective studies evaluating the accuracy of diagnostic tests
+d for a binary outcome (e.g. diseased/not-diseased) and in which a
+d test's sensitivity and specificity are the measures of interest. 
+d Sensitivity is the probability of a test detecting disease when
+d the patient actually has the disease, and specificity is the
+d probability that the test is negative when the patient is
+d actually disease-free. Sample size and power can be computed for
+d a one-sample, two-sample, and paired-sample diagnostic test. All
+d power diagnostic commands implement the naive prevalence
+d inflation method introduced by Obuchowski and Zhou (2002). Li and
+d Fine (2004) found this method (which they refer to as "Method 0")
+d to be a useful approximation to exact sample-size calculations
+d based on unconditional power, which are more computationally
+d intensive. Sample size can be computed given power, and power can
+d be computed given sample size. Results can be displayed in a
+d table (default) and on a graph ([PSS-2] power, graph). 
+d
+d KW: power
+d KW: sensitivity
+d KW: specificity
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20220826
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f power_cmd_onesens_init.ado
+f power_cmd_onesens.ado
+f power_onesens.sthlp
+f power_cmd_onespec_init.ado
+f power_cmd_onespec.ado
+f power_onespec.sthlp
+f power_cmd_pairsens_init.ado
+f power_cmd_pairsens.ado
+f power_pairsens.sthlp
+f power_cmd_pairspec_init.ado
+f power_cmd_pairspec.ado
+f power_pairspec.sthlp
+f power_cmd_twosens_init.ado
+f power_cmd_twosens.ado
+f power_twosens.sthlp
+f power_cmd_twospec_init.ado
+f power_cmd_twospec.ado
+f power_twospec.sthlp
+f power_diagnostic.sthlp
