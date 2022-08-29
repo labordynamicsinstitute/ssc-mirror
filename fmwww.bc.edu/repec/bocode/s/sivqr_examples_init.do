@@ -7,6 +7,14 @@
 * timers 2,5: best approach, start at median, work away into tails using init("e(b)")
 * timers 3,6: next-best, start at 0.1 and use init("e(b)") to proceed iteratively to 0.9
 
+* To install:
+*net from https://kaplandm.github.io/stata
+*net describe sivqr
+*net install sivqr
+*net get sivqr
+version 14.2
+which sivqr
+
 webuse nlswork , clear
 timer clear
 timer on 1
@@ -61,14 +69,14 @@ timer off 6
 *
 timer list
 
-/* on Dave's computer (standard University-issue):
+/* on Dave's computer (standard University-issue...circa 2017):
 . timer list
-   1:    182.77 /        1 =     182.7660
-   2:     26.52 /        1 =      26.5250
-   3:     83.96 /        1 =      83.9640
-   4:    278.62 /        1 =     278.6200
-   5:     77.21 /        1 =      77.2140
-   6:    166.49 /        1 =     166.4850
+   1:     82.89 /        1 =      82.8950
+   2:     23.76 /        1 =      23.7580
+   3:     69.33 /        1 =      69.3350
+   4:    346.14 /        1 =     346.1380
+   5:     69.90 /        1 =      69.9000
+   6:    209.80 /        1 =     209.8030
 */
 
 * End of file

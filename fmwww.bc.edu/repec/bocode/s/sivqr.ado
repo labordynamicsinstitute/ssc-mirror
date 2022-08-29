@@ -1,4 +1,4 @@
-*! version 1.0 23jun2021
+*! version 1.1.0  22jan2022
 program sivqr, eclass properties(svyb) byable(recall)
  version 11
  if (!replay()) {
@@ -15,13 +15,13 @@ program sivqr, eclass properties(svyb) byable(recall)
   }
 
   * Parse rest of arguments
-  syntax [if] [in] [pweight iweight fweight/] , Quantile(real) [Bandwidth(real -1) Level(cilevel) Reps(integer 20) LOGiterations noCONstant SEED(integer 112358) INITial(string) noDOTS]
+  syntax [if] [in] [pweight iweight fweight/] , Quantile(real) [Bandwidth(real -112358) Level(cilevel) Reps(integer 0) LOGiterations noCONstant SEED(integer 112358) INITial(string) noDOTS]
   if (`quantile'<=0) {
-    di as error "{bf:quantile(`quantile')} is out of range; must be >0"
+    di as error "{bf:quantile(`quantile')} is out of range: must be >0"
     exit 198
   }
   else if (`quantile'>=100) {
-    di as error "{bf:quantile(`quantile')} is out of range; must be <100"
+    di as error "{bf:quantile(`quantile')} is out of range: must be <100"
     exit 198
   }
   else if (`quantile'>=1) {
@@ -31,15 +31,18 @@ program sivqr, eclass properties(svyb) byable(recall)
     di as error "{bf:level(`level')} is out of range: must be between 10 and 99.99 inclusive"
     exit 198
   }
-  if (`reps'<2) {
-    di as text "Note: not computing standard errors because reps<2"
+  if (`reps'<2 & `reps'!=0) {
+    // di as text "Note: computing analytic standard errors (not bootstrap) because reps<2"
     local reps 0
   }
-  if (`bandwidth'<0) {
-    di as text "Computing plug-in bandwidth because bandwidth(`bandwidth')<0"
+  if (`bandwidth'==-112358) {
     if ("`weight'"!="") {
       di as text "Warning: plug-in bandwidth ignores weights (assumes iid)"
     }
+  }
+  else if (`bandwidth'<0) {
+    di as error "{bf:bandwidth(`bandwidth')} is out of range: must be non-negative real number"
+    exit 198
   }
   local wgtvar = ""
   if ("`weight'"!="") {
@@ -61,15 +64,15 @@ program sivqr, eclass properties(svyb) byable(recall)
   }
 
   * Main subroutine call
-  tempname sivqrb sivqrV sivqrh sivqrhhat initname
+  tempname sivqrb sivqrV sivqrh sivqrhhat sivqrhhatmax initname
   if ("`initial'"=="") {
     * qreg doesn't support noconstant, so adjust after
     if ("`weight'"!="") {
       * Using aweight so can use Stata version 11; o/w need Stata 12 for pw/iw
-      qui qreg ``lhs'' ``Xendo'' ``Xexog'' [aw=`exp'] , quantile(`quantile')
+      qui qreg ``lhs'' ``Xendo'' ``Xexog'' if `touse' [aw=`exp'] , quantile(`quantile')
     }
     else {
-      qui qreg ``lhs'' ``Xendo'' ``Xexog'' , quantile(`quantile')
+      qui qreg ``lhs'' ``Xendo'' ``Xexog'' if `touse' , quantile(`quantile')
     }
     matrix `initname' = e(b)
     if ("`constant'"=="noconstant") {
@@ -81,7 +84,7 @@ program sivqr, eclass properties(svyb) byable(recall)
   }
   tempname seedname
   local `seedname' = c(seed)
-  mata: sivqrmain("``lhs''", "``Xendo''", "``Xexog''", "``Zexcl''", "`touse'", `quantile', `bandwidth', `reps', "`logiterations'"=="logiterations", "`constant'"=="noconstant", "`wgtvar'", `seed', "`dots'"=="nodots", "`sivqrb'", "`sivqrV'", "`sivqrh'", "`sivqrhhat'", "`initname'")
+  mata: sivqrmain("``lhs''", "``Xendo''", "``Xexog''", "``Zexcl''", "`touse'", `quantile', `bandwidth', `reps', "`logiterations'"=="logiterations", "`constant'"=="noconstant", "`wgtvar'", `seed', "`dots'"=="nodots", "`sivqrb'", "`sivqrV'", "`sivqrh'", "`sivqrhhat'", "`sivqrhhatmax'", "`initname'")
   set seed ``seedname''
 
   * Store return values
@@ -111,9 +114,11 @@ program sivqr, eclass properties(svyb) byable(recall)
   ereturn scalar reps = `reps' // # bootstrap replications
   if (strtrim("``Xexog''")=="") {
     ereturn local insts "``Zexcl''"
+    ereturn local exogr ""
   }
   else {
     ereturn local insts "``Xexog'' ``Zexcl''"
+    ereturn local exogr "``Xexog''"
   }
   ereturn local instd "``Xendo''"
   ereturn local title "Smoothed instrumental variables quantile regression (SIVQR)"
@@ -122,7 +127,14 @@ program sivqr, eclass properties(svyb) byable(recall)
   }
   ereturn scalar bwidth = `sivqrh' //matches qreg name (though different meaning!)
   ereturn scalar bwidth_req = `sivqrhhat'
+  if (`bandwidth'<0) {
+    ereturn scalar bwidth_max = `sivqrhhatmax'
+  }
   ereturn scalar q = `quantile'
+  ereturn local vcetype Robust
+  if (`reps'>1) {
+    ereturn local vcetype Bootstrap
+  }
   ereturn local cmd "sivqr" // should be last to store (according to ereturn entry in Stata Manual)
  }
  else { // replay
@@ -136,6 +148,7 @@ program sivqr, eclass properties(svyb) byable(recall)
  }
 
   * Print results header; see https://www.stata.com/manuals13/pdisplay.pdf
+  di as text ""
   di as text "Smoothed instrumental variables quantile regression (SIVQR)" ///
      as text "   Quantile = "                   as result trim("`: display %6.0g e(q)'")
   di as text "Smoothing bandwidth used = "      as result %-9.0g e(bwidth) ///
@@ -155,11 +168,13 @@ end
 *
 *
 *
+* Setting "version" here recommended by https://www.stata.com/manuals/m-2version.pdf
+version 11
 mata:
-void sivqrmain(string scalar Yname, string matrix Dname, string matrix Xexogname, string matrix Zexclname, string scalar touse, real scalar tau, real scalar h, real scalar reps, real scalar logiterations, real scalar noconst, string scalar wgtname, real scalar seed, real scalar nodots, string scalar sivqrbname, string scalar sivqrVname, string scalar sivqrhname, string scalar sivqrhhatname, string scalar binitname) {
-  real colvector Y, binit, weights, sivqrb, wstar, IQRs
+void sivqrmain(string scalar Yname, string matrix Dname, string matrix Xexogname, string matrix Zexclname, string scalar touse, real scalar tau, real scalar h, real scalar reps, real scalar logiterations, real scalar noconst, string scalar wgtname, real scalar seed, real scalar nodots, string scalar sivqrbname, string scalar sivqrVname, string scalar sivqrhname, string scalar sivqrhhatname, string scalar sivqrhhatmaxname, string scalar binitname) {
+  real colvector Y, binit, weights, sivqrb, wstar, IQRs, hhats
   real matrix D, Xexog, Zexcl, Z, X, tmp, bstars, corrmat
-  real scalar n, hhat, db, sivqrh, i, junk, k25, k75, eps25, eps75, p25, p75, N01iqr
+  real scalar n, hhat, db, sivqrh, i, junk, k25, k75, eps25, eps75, p25, p75, N01iqr, Vhat, Vsd, sighat, hVCE
   string scalar iterlog
 
   iterlog = "off"
@@ -210,17 +225,22 @@ void sivqrmain(string scalar Yname, string matrix Dname, string matrix Xexogname
   if (h<0) {
     // compute plug-in bandwidth
     // binit = sivqrest(tau, Y, X, Z, 0, binit, weights, junk, iterlog)
-    hhat = sivqrbw(tau, Y, X, binit, n, db)
-    binit = sivqrest(tau, Y, X, Z, hhat, binit, weights, junk, iterlog)
-    hhat = sivqrbw(tau, Y, X, binit, n, db)
+    hhats = sivqrbw(tau, Y, X, binit, n, db)
+    binit = sivqrest(tau, Y, X, Z, hhats[1], binit, weights, junk, iterlog)
+    hhats = sivqrbw(tau, Y, X, binit, n, db)
+    hhat = hhats[1]
   }
   else {
+    hhats = h
     hhat = h
   }
   sivqrh = .
   retraw = sivqrest(tau, Y, X, Z, hhat, binit, weights, sivqrh, iterlog)
   sivqrb = retraw
   st_numscalar(sivqrhhatname, hhat)
+  if (length(hhats)>1) {
+    st_numscalar(sivqrhhatmaxname, max(hhats))
+  }
   st_numscalar(sivqrhname, sivqrh)
   st_matrix(sivqrbname, sivqrb')
 
@@ -235,6 +255,7 @@ void sivqrmain(string scalar Yname, string matrix Dname, string matrix Xexogname
     for (i=1; i<=reps; i++) {
       // Dirichlet weights for Bayesian bootstrap
       wstar = rexponential(n,1,1)
+      //wstar = invexponential(1, runiform(n,1))
       wstar = n * wstar / sum(wstar)
       wstar = wstar:*weights
       wstar = n * wstar / sum(wstar)
@@ -271,7 +292,26 @@ void sivqrmain(string scalar Yname, string matrix Dname, string matrix Xexogname
       // Given asy normal approx, std dev ~= IQR/N01iqr, and cov=(corr)(sd1)(sd2)
       st_matrix( sivqrVname , correlation(bstars):*(IQRs*IQRs')/N01iqr^2 )
     }
-  } // else: do not store VCE (do nothing)
+  }
+  else { // compute analytic SE
+    Vhat = Y - X*sivqrb  // additive residuals
+    _sort(Vhat,1) // sort in place (argument 1=1st column)
+    // Compute Silverman-type "sigma hat" and bandwidth
+    Vsd = sqrt(variance(Vhat))
+    k25 = floor(0.25*(n+1));  eps25 = (0.25*(n+1))-k25
+    k75 = floor(0.75*(n+1));  eps75 = (0.75*(n+1))-k75
+    p25 = ((1-eps25)*Vhat[k25]+eps25*Vhat[k25+1])
+    p75 = ((1-eps75)*Vhat[k75]+eps75*Vhat[k75+1])
+    sighat = min((Vsd, (p75-p25)/(invnormal(0.75)-invnormal(0.25))))
+    hVCE = 1.06*n^(-1/5)*sighat
+
+    Shat = tau*(1-tau)*quadcross(Z,Z)/n
+    Jhat = quadcross(Z, normalden(Vhat/hVCE), X) / (n*hVCE)
+    Shatinv = invsym(Shat)
+    st_matrix( sivqrVname , invsym(Jhat' * Shatinv * Jhat) / n )
+    // Jhatinv = inv(Jhat)
+    // st_matrix( sivqrVname , Jhatinv*Shat*Jhatinv' )
+  }
 }
 
 
@@ -365,7 +405,7 @@ real colvector sivqrest(real scalar tau, real colvector Y, real matrix X, real m
 
 
 // Compute plug-in bandwidth from Stata Journal article
-real scalar sivqrbw(real scalar tau, real colvector Y, real matrix X, real colvector binit, real scalar n, real scalar db) {
+real colvector sivqrbw(real scalar tau, real colvector Y, real matrix X, real colvector binit, real scalar n, real scalar db) {
   real scalar k, eps, k25, eps25, k75, eps75, p25, p75
   real scalar h1, h2, h3, Vsd, sighat
   real colvector Vhat
@@ -390,16 +430,13 @@ real scalar sivqrbw(real scalar tau, real colvector Y, real matrix X, real colve
   h1 = sivqrbwK(tau, n, db, sighat, Vhat)
 
   // Compute Gaussian reference h
-  h2 = h1
-  if (tau!=0.5) { // o/w get infinity w/ tau=0.5
-    h2 = sivqrbwG(tau, n, db, sighat)
-  }
+  h2 = sivqrbwG(tau, n, db, sighat)  //adj'd to allow tau=.5
 
-  // Compute Silverman bandwidth for f(0)
+  // Compute Silverman bandwidth
   h3 = 1.06*n^(-1/5)*sighat
 
-  // Take minimum to be "safe"
-  return(min((h1, h2, h3)))
+  // Return all (will try min later, then next-lowest, etc.)
+  return( sort( (h1,h2,h3)' , 1 ) )
 }
 
 
@@ -427,7 +464,7 @@ real scalar sivqrbwK(real scalar tau, real scalar n, real scalar db, real scalar
 // Gaussian reference bandwidth
 real scalar sivqrbwG(real scalar tau, real scalar n, real scalar db, real scalar sighat) {
   real scalar Ztau, denom
-  Ztau = invnormal(tau)
+  Ztau = max( ( invnormal(0.55) , abs(invnormal(tau)) ) ) // avoid denom~0
   denom = Ztau^2 * normalden(Ztau)
   return( n^(-1/3) * sighat * (3*db/denom)^(1/3) )
 }
