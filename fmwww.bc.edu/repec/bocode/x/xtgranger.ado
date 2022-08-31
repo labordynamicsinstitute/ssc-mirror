@@ -1,8 +1,10 @@
+*! version 1.1 - 25.08.2022
+
 cap program drop xtgranger
 program xtgranger,eclass 
 version 12.0
 
-syntax varlist(numeric ts) [if][in][,lags(integer 1) maxlags(integer 0) het nodfc sum BOOTstrapindex BOOTstrapcmd(string)]
+syntax varlist(numeric ts) [if][in][,lags(integer 1) maxlags(integer 0) het nodfc sum BOOTstrapindex BOOTstrapcmd(string) /*internal: */ trace NONOVERLAP ]
 
 marksample touse
 preserve
@@ -29,14 +31,30 @@ foreach var in `indeps'{
 	}
 }
 
+/// internal option trace
+if "`trace'" != "" {
+	local trace noi 
+}
+else {
+	local trace qui
+}
+
 capture xtset
-local t =r(tmax)-r(tmin)+1
-local n =(_N)/`t'
 local idvar `r(panelvar)'
 local tvar `r(timevar)'
 
+if "`r(balanced)'" != "strongly balanced" {
+	display as error "Panel needs to be strongly balanced"
+	exit
+}
+
+qui sum `tvar' if `touse'
+local t =r(max)-r(min)+1
+local n =r(N)/`t'
+
+
 tempvar tnew
-egen `tnew' = group(`tvar')
+egen `tnew' = group(`tvar') if `touse'
 
 if _rc {
 	display as error "Panel variable not set; use xtset before running xtgranger."
@@ -79,7 +97,7 @@ if "`bootstrapcmd'" != "" {
 
 markout `touse' `depvar' L(1/`lags').(`indeps')  L(1/`lags').`depvar'
 
-mata: test1("`depvar'","L(1/`lags').(`indeps')","L(1/`lags').`depvar'","`idvar' `tnew'","`touse'",`t',`n',`lags',"`het'","`dfc'",`bootstrapdraws')
+`trace' mata: test1("`depvar'","L(1/`lags').(`indeps')","L(1/`lags').`depvar'","`idvar' `tnew'","`touse'",`n',`t',`lags',"`het'","`dfc'",`bootstrapdraws',"`nonoverlap'"!="")
 
 scalar W_HPJ=r(W_HPJ)
 local k=r(k)
@@ -167,7 +185,7 @@ ereturn post `beta' `v'
 ereturn display
 
 ereturn scalar N = `n'
-ereturn scalar T = `t'-`lags'
+ereturn scalar T = `t'
 ereturn scalar p=`lags'
 if(`maxlags'!=0){
 	ereturn scalar BIC=`BIC'
@@ -190,8 +208,9 @@ ereturn hidden local indepvar "`names'"
 
 restore
 end
-	
 
+/// version for mata programs
+version 12.0
 capture mata mata drop test0() test1() estBeta() ols_inner()
 	
 mata:
@@ -266,7 +285,7 @@ end
 
 
 mata:
-void test1(string scalar depvar,string scalar indeps, string scalar depvarlag,string scalar idtn, string scalar tousen, numeric scalar t, numeric scalar n,numeric scalar p,string scalar het,string scalar dfc,real scalar bootdraws)
+void test1(string scalar depvar,string scalar indeps, string scalar depvarlag,string scalar idtn, string scalar tousen, numeric scalar n, numeric scalar t, numeric scalar p,string scalar het,string scalar dfc,real scalar bootdraws , numeric scalar overlap)
 {
 	z1=st_data(.,depvar,tousen) //the transfer (t*n)*1 matrix-y
 	z2=st_data(.,indeps,tousen)
@@ -277,29 +296,30 @@ void test1(string scalar depvar,string scalar indeps, string scalar depvarlag,st
 	idt[.,2] = idt[.,2] :- min(idt[.,2]):+1
 
 	k=cols(z2)/p
-
+	
 	index = panelsetup(idt,1)
 
 	/// inital draw with no bootstrap
-	beta = estBeta(z1,z2,z3,idt,index,(1::n),t,p,RSS=0,b=.)
-	
-	BIC=n*(t-1-p-p)*log(RSS/(n*(t-1-p-p)))+p*log(n*(t-1-p-p))
-	
-	/// Mata Output
-	stata(`"di in gr ""')
-	stata(`"di in gr "Juodis, Karavias and Sarafidis (2021) Granger non-causality Test""')
-	stata(`"di as text _dup(78) "-"')
+	beta = estBeta(z1,z2,z3,index,(1::n),p,RSS=0,b=.,overlap)
 
-	stata(sprintf(`"di in gr "Number of units" _col(16) "= " in ye %s _col(45) in gr "Obs. per unit (T)" _col(63) "= " _col(64) in ye  %s"',strofreal(n),strofreal((t-p))))
-	stata(sprintf(`"di in gr "Number of lags" _col(16) "= "  in ye %s _col(45) in gr "BIC" _col(63) "= " _col(64) in  ye %s"',strofreal(p),strofreal(BIC)))
+	BIC=n*(t-1-p-p)*log(RSS/(n*(t-1-p-p)))+p*log(n*(t-1-p-p))
+	"RSS, BIC, BIC dof adjust."
+	RSS,BIC,n*(t-1-p-p)
+	/// Mata Output
+	stata(`"noi di in gr ""')
+	stata(`"noi di in gr "Juodis, Karavias and Sarafidis (2021) Granger non-causality Test""')
+	stata(`"noi di as text _dup(78) "-"')
+
+	stata(sprintf(`"noi di in gr "Number of units" _col(16) "= " in ye %s _col(45) in gr "Obs. per unit (T)" _col(63) "= " _col(64) in ye  %s"',strofreal(n),strofreal((t-p))))
+	stata(sprintf(`"noi di in gr "Number of lags" _col(16) "= "  in ye %s _col(45) in gr "BIC" _col(63) "= " _col(64) in  ye %s"',strofreal(p),strofreal(BIC)))
 
 
 	/// Variance estimation
 	if (bootdraws == 0) {
-		var = calcVar(z1,z2,z3,b,idt,index,(1::n),het,dfc,p)
+		var = calcVar(z1,z2,z3,b,index,(1::n),het,dfc,p)
 	}
 	else {
-		stata(`"di as text _dup(78) "-""')
+		stata(`"noi di as text _dup(78) "-""')
 		msg = sprintf("noi _dots 0, title(Bootstrap Variances for HPJ test) reps(%s) ",strofreal(bootdraws))
 		stata(msg)
 		beta_r = J(bootdraws,rows(beta),0)
@@ -307,7 +327,7 @@ void test1(string scalar depvar,string scalar indeps, string scalar depvarlag,st
 
 		for (r = 1;r<=bootdraws-1;r++) {
 			/// draw from uniform distribution units
-			beta_rr = estBeta(z1,z2,z3,idt,index,runiformint(n,1,1,n),t,p,tmp1=0,tmp2=.)
+			beta_rr = estBeta(z1,z2,z3,index,(floor(n:*runiform(n,1) :+ 1)),p,tmp1=0,tmp2=.)
 			beta_r[r,.] = beta_rr'
 			msg = sprintf("noi _dots %s 0",strofreal(r))
 			stata(msg)
@@ -345,12 +365,14 @@ void test1(string scalar depvar,string scalar indeps, string scalar depvarlag,st
 	st_matrix("r(V)",var) 
 	st_matrix("r(beta_sum)",beta_sum)
 	st_matrix("r(Svar)",Svar)
+	st_numscalar("n",n)
+	st_numscalar("t",t)
 }
 end
 
 
 mata:
-	function estBeta(real matrix y, real matrix x, real matrix Ly, real matrix idt, real matrix index,  real matrix sel, real scalar t,real scalar p,real scalar RSS, real matrix b)
+	function estBeta(real matrix y, real matrix x, real matrix Ly, real matrix index,  real matrix sel,real scalar p,real scalar RSS, real matrix b,numeric scalar overlap)
 	{
 
 		
@@ -360,35 +382,45 @@ mata:
 		xp = &x
 		Lyp = &Ly	
 		
+		if (overlap==1) overlap = p
+
 		N = rows(index)
 
 		xx_f = xx_u = xx = J(cols(x),cols(x),0)
 		xy_f = xy_u = xy = J(cols(x),1,0)
 
-		RSS = 0
-		for (i=N;i>0;i--) {
-			ii = sel[i]
-			yi = panelsubmatrix(*yp,ii,index)
-			xi = panelsubmatrix(*xp,ii,index)
-			Lyi = J(rows(yi),1,1),panelsubmatrix(*Lyp,ii,index)
+		RSS = 0	
+		
+		for (i=N;i>0;i--) {		
 			
-			mid = floor(t/2)
-
+			ii = sel[i]				
+			yi = panelsubmatrix(*yp,ii,index)			
+			xi = panelsubmatrix(*xp,ii,index)			
+			Lyi = J(rows(yi),1,1),panelsubmatrix(*Lyp,ii,index)			
+			ti = rows(yi)+overlap
+			mid = floor(ti/2)
+			
 			/// full panel
 			ols_inner(yi,xi,Lyi,xx,xy,RSS)
-			
+
 			/// First part of panel
-			ols_inner(yi[|1,. \ mid-p,.|],xi[|1,. \ mid-p,.|],Lyi[|1,. \ mid-p,.|],xx_f,xy_f,tmp=.)
+			ols_inner(yi[|1,. \ mid-overlap,.|],xi[|1,. \ mid-overlap,.|],Lyi[|1,. \ mid-overlap,.|],xx_f,xy_f,tmp=.)
 
 			// Second Part of panel
 			ols_inner(yi[|mid+1,. \ .,.|],xi[|mid+1,. \ .,.|],Lyi[|mid+1,. \ .,.|],xx_u,xy_u,tmp=.)
-
 		}
 
 		b=quadcross(cholinv(xx),xy)
 		b_f=quadcross(cholinv(xx_f),xy_f)
 		b_l=quadcross(cholinv(xx_u),xy_u)
 		beta=2*b-(b_f+b_l)/2   //beta 
+		"Coefficient Estimates"
+		"all - 1st - 2nd - HPJ"
+		b,b_f,b_l, beta
+		"obs - 1st - 2nd - t - mid point - N"
+		rows(y),rows(yi[|1,. \ mid-overlap,.|]),rows(yi[|mid+1,. \ .,.|]),ti,mid, N
+
+		
 		return(beta)
 	}
 end
@@ -411,13 +443,14 @@ mata:
 end
 
 mata:
-	function calcVar(real matrix y, real matrix x, real matrix z, real matrix beta, real matrix idt, real matrix index, real matrix sel, string scalar het,string scalar dfc,real scalar p)
+	function calcVar(real matrix y, real matrix x, real matrix z, real matrix beta, real matrix index, real matrix sel, string scalar het, string scalar dfc,real scalar p)
 	{
 
 		panelstats = panelstats(index)
 		n = panelstats[1]
 		t = panelstats[2]/n
-
+		/// t missing lags, need them here
+		t = t + p
 		pointer(real matrix) yp, xp, Lyp
 
 		yp = &y
@@ -429,13 +462,11 @@ mata:
 
 		sum_het = J(cols(x),cols(x),0)
 		sum = 0
-		
+
 		for (i=n;i>0;i--) {
 			yi = panelsubmatrix(*yp,i,index)
 			xi = panelsubmatrix(*xp,i,index)
-			zi = J(rows(yi),1,1),panelsubmatrix(*zp,i,index)
-
-			
+			zi = J(rows(yi),1,1),panelsubmatrix(*zp,i,index)			
 
 			Mi = I(rows(zi)) - zi * luinv(quadcross(zi,zi)) * zi'
 
@@ -452,7 +483,7 @@ mata:
 				sum_het = sum_het + quadcross(tmp,tmp)
 			}
 		}
-		t = t + p
+		
 		if(dfc=="") {
 			degree=n*t-n*1-n*p-cols(x)
 		}

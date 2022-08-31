@@ -30,7 +30,7 @@ You must {cmd:xtset} your data before using {cmd:xtgranger}; see {helpb xtset:[X
 This test offers superior size and power performance, which stems from the use of a pooled estimator with a sqrt(NT) rate of convergence. 
 The test has two other useful properties; it can be used in multivariate systems and it has power against both homogeneous as well as heterogeneous alternatives.
 The test allows for cross-section dependence and cross-section heteroskedasticity. 
-The command also reports results for the HPJ estimator. 
+The command also reports results for the HPJ estimator, with overlapping half panels.
 {cmd:xtgranger} can bootstrap the variance of the HPJ estimator.
 The bootstrap resamples across the cross-section dimension.
 {smcl}
