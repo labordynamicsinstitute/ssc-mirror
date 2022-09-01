@@ -1,6 +1,7 @@
 {smcl}
-{* *! version 1.2.1  09apr2022}{...}
+{* *! version 1.3.0  26may2022}{...}
 {* *! Sebastian Kripfganz, www.kripfganz.de}{...}
+{* *! Jörg Breitung, wisostat.uni-koeln.de/en/institute/professors/breitung}{...}
 {vieweralsosee "xtdpdbc" "help xtdpdbc"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[R] predict" "help predict"}{...}

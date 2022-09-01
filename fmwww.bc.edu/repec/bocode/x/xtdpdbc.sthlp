@@ -1,6 +1,7 @@
 {smcl}
-{* *! version 1.2.1  09apr2022}{...}
+{* *! version 1.3.0  26may2022}{...}
 {* *! Sebastian Kripfganz, www.kripfganz.de}{...}
+{* *! Jörg Breitung, wisostat.uni-koeln.de/en/institute/professors/breitung}{...}
 {vieweralsosee "xtdpdbc postestimation" "help xtdpdbc_postestimation"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[XT] xtreg" "help xtreg"}{...}
@@ -56,6 +57,8 @@ INCLUDE help shortdes-displayoptall
 
 {syntab:Minimization}
 {synopt:{opt from(init_specs)}}initial values for the coefficients{p_end}
+{synopt:{opt rein:it(#)}}perform maximum of {it:#} reinitializations; default is {cmd:reinit(10)}{p_end}
+{synopt:{opt eigtol:erance(#)}}tolerance for the maximum eigenvalue; default is {cmd:eigtolerance(0)}{p_end}
 {synopt:{opt conc:entration}}minimize the concentrated objective function{p_end}
 {synopt:{it:{help xtdpdbc##minimize_options:minimize_options}}}control the minimization process; seldom used{p_end}
 {synoptline}
@@ -109,7 +112,7 @@ for models with a single lag of the dependent variable, to the iterative bias-co
 {opt teffects} requests that time-specific effects are added to the model. The first time period in the estimation sample is treated as the base period.
 
 {phang}
-{opt onestep} requests the one-step instead of the two-step GMM estimator to be computed for the random-effects or hybrid model. This is the default for the fixed-effects model.
+{opt onestep} requests the one-step instead of the two-step GMM estimator to be computed for the random-effects or hybrid model. This option is implied by the fixed-effects model.
 
 {phang}
 {opt nocorrection} requests not to apply the bias correction.
@@ -161,6 +164,14 @@ The adjustment factor is (N-1)/(N-K) * M/(M-1), where N is the number of observa
 {opt from(init_specs)} specifies initial values for the coefficients; see {helpb maximize:[R] maximize}. By default, initial values are taken from the fixed-effects estimator; see {helpb xtreg:[XT] xtreg}.
 
 {phang}
+{opt reinit(#)} requests to make a maximum of {it:#} attempts to randomly reinitialize the optimization if the algorithm converges to an incorrect solution, which is characterized by a maximum eigenvalue of the gradient
+larger than the tolerance specified with option {opt eigtolerance(#)}. At each reinitialization, a new initial value for the first autoregressive coefficient is drawn from the uniform distribution. All other inital values are set to zero.
+The default is {cmd:reinit(10)}.
+
+{phang}
+{opt eigtol:erance(#)} specifies the tolerance for the maximum eigenvalue by which it is allowed to exceed zero. The default is {cmd:eigtolerance(0)}.
+
+{phang}
 {opt concentration} specifies that the concentrated objective function with the autoregressive coefficients as the only parameters should be minimized.
 The coefficient estimates for the strictly exogenous {it:indepvars} are obtained from the analytical first-order conditions given the estimates of the autoregressive coefficients.
 By default, minimization is done over all coefficients simultaneously.
@@ -187,11 +198,17 @@ The minimum number of consecutive observations required per group is 1 + 2 * {it
 
 {pstd}
 Due to the nonlinearity of the moment functions, the estimator has multiple solutions and the numerical algorithm might converge to an incorrect solution. At the correct solution, all eigenvalues of the gradient should be negative.
-A warning message is displayed if this is not the case. In such a situation, as discussed by Breitung, Kripfganz, and Hayakawa (2021), alternative starting values with the option {cmd:from()} should be used until a correct solution is found.
+A warning message is displayed if this is not the case. In such a situation, as discussed by Breitung, Kripfganz, and Hayakawa (2021), alternative initial values should be used until a correct solution is found.
+By default, {cmd:xtdpdbc} randomly draws new initial values for the first autoregressive coefficient from the uniform distribution and sets all other initial values to zero.
+Alternative initial values can also be provided with the option {cmd:from()}.
+
+{pstd}
+It sometimes occurs that the correct solution has a maximum eigenvalue close to zero and numerical inaccuracies result in estimates with a marginally positive eigenvalue. In such a situation, as an alternative to a reinitialization,
+the tolerance for the maximum eigenvalue can be set to a small positive value, e.g. {cmd:eigtolerance(1e-4)}.
 
 {pstd}
 In some cases, the numerical algorithm might not converve due to an almost flat criterion function. In such a situation, the option {opt concentration} might help to simplify the optimization problem.
-Otherwise, formal convergence could be achieved by declaring the option {opt nonrtolerance}. However, the results might not be very reliable.
+Otherwise, formal convergence could be achieved by declaring the option {opt nonrtolerance}. However, the results might not be very reliable and the algorithm is more prone for convergence to an incorrect solution.
 
 
 {marker example}{...}

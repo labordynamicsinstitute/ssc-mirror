@@ -1,5 +1,6 @@
-*! version 1.2.1  09apr2022
+*! version 1.3.0  26may2022
 *! Sebastian Kripfganz, www.kripfganz.de
+*! Jörg Breitung, wisostat.uni-koeln.de/en/institute/professors/breitung
 
 *==================================================*
 ****** Bias-corrected linear dynamic panel data estimation ******
@@ -245,6 +246,13 @@ program define xtdpdbc_mm, eclass prop(xt)
 	di _n as txt "Bias-corrected estimation"
 	mata: xtdpdbc(`mopt')
 
+	mata: st_numscalar("r(reconv)", xtdpdbc_result_reinit_converged(`mopt'))
+	if !r(reconv) {
+		di as err "correct solution not found -- try alternative initial values"
+// 		if "`force'" == "" {
+// 			exit 498
+// 		}
+	}
 	mata: st_numscalar("r(N)", xtdpdbc_result_N(`mopt'))
 	mata: st_numscalar("r(N_g)", xtdpdbc_result_Ng(`mopt'))
 	mata: st_numscalar("r(rank)", xtdpdbc_result_rank(`mopt'))
@@ -256,9 +264,6 @@ program define xtdpdbc_mm, eclass prop(xt)
 	loc N_g				= r(N_g)
 	loc rank			= r(rank)
 	loc maxeig			= r(maxeig)
-	if `maxeig' > 0 {
-		di as txt "note: score matrix has positive eigenvalues -- try alternative starting values"
-	}
 	tempname b V V0 log
 	mat `b'				= r(b)
 	mat `V'				= r(V)
@@ -376,6 +381,8 @@ program define xtdpdbc_mm_init, sclass
 	loc maxiter			= c(maxiter)
 	syntax [,	METHOD(string)						///
 				CONCentration						///
+				REINit(integer 10)					///
+				EIGTOLerance(real 0)				///
 				ITERate(integer `maxiter')			///
 				noLOg								///
 				SHOWSTEP							///
@@ -420,6 +427,8 @@ program define xtdpdbc_mm_init, sclass
 		}
 		mata: xtdpdbc_init_concentrate(`mopt', "on")
 	}
+	mata: xtdpdbc_init_reinit(`mopt', `reinit')
+	mata: xtdpdbc_init_reinit_tol(`mopt', `eigtolerance')
 	mata: xtdpdbc_init_conv_maxiter(`mopt', `iterate')
 	mata: xtdpdbc_init_conv_ptol(`mopt', `tolerance')
 	mata: xtdpdbc_init_conv_vtol(`mopt', `ltolerance')
@@ -549,6 +558,7 @@ end
 
 *==================================================*
 *** version history ***
+* version 1.3.0  26may2022  bug with calculation of maximum eigenvalue fixed; automatic reinitialization if convergence to an incorrect solution
 * version 1.2.1  09apr2022  bug fixed that was introduced in version 1.2.0
 * version 1.2.0  08apr2022  options re and hybrid() added; option vce(unadjusted) added; postestimation commands estat serial, estat overid, and estat hausman added; collinearity check added; bug fixed with option concentration; bug fixed with option scores of predict
 * version 1.1.0  30jul2021  factor variables supported; option small added
