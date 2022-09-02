@@ -104,6 +104,7 @@ program define example_three
 	di `"{pmore}outplot(rr) graphregion(color(white)) texts(2) xlabel(0.7, 1, 1.2))					{p_end}"'
 
 	set more off
+		
 	#delimit ;
 	metadta tp fp fn tn sample Setting, 
 		studyid(study) interaction(sesp) model(random) 
@@ -155,23 +156,49 @@ program define example_five
 	di _n
 	
 	di `". metadta tp1 fp1 fn1 tn1 tp2 fp2 fn2 tn2 hpv1 hpv2, ///"'
-	di `"{phang}studyid(study) model(random) ///{p_end}"'
-	di `"{phang}paired sumtable(rr)  ///{p_end}"'
+	di `"{phang}studyid(study) model(random) cov(, zero) ///{p_end}"'
+	di `"{phang}cbnetwork sumtable(rr)  ///{p_end}"'
 	di `"{phang}foptions(outplot(rr) grid graphregion(color(white)) texts(1.85) ///{p_end}"'
 	di `"{pmore}xlabel(0.75, 0.90, 1, 1.11, 1.33) logscale lcols(hpv2 setting)  astext(70)    ///{p_end}"' 
 	di `"{pmore}arrowopt(msize(1)) pointopt(msymbol(s)msize(1)) diamopt(color(red)) olineopt(color(red) lpattern(dash))){p_end}"'
 
  
-	// metadta tp1---fn2 index comparator, paired
+	// metadta tp1---fn2 index comparator, cbnetwork
 	set more off
 	 metadta tp1 fp1 fn1 tn1 tp2 fp2 fn2 tn2 hpv1 hpv2, ///
-		studyid(study) model(random) ///
-		paired sumtable(rr)  ///
+		studyid(study) model(random) cov(, zero) ///
+		cbnetwork sumtable(rr)  ///
 		foptions(outplot(rr) grid graphregion(color(white)) texts(1.85) ///
 			xlabel(0.75, 0.90, 1, 1.11, 1.33) logscale lcols(hpv2 setting)  astext(70)    /// 
 			arrowopt(msize(1)) pointopt(msymbol(s)msize(1)) diamopt(color(red)) olineopt(color(red) lpattern(dash)))
-
+	restore
 end
 
+program define example_six
 
+	preserve
+	di _n
+	use "https://github.com/VNyaga/Metadta/blob/master/network.dta?raw=true", clear
+	di _n
+	
+	di `". metadta  tp fp fn tn test ,  ///"' 
+	di `"{phang}studyid(study) model(random, laplace) ///{p_end}"'
+	di `"{phang}abnetwork ref(HC2) sumtable(all) ///{p_end}"'
+	di `"{phang}foptions(outplot(rr) graphregion(color(white)) texts(1.75) ///{p_end}"'
+	di `"{pmore}xlabel(0.80, 0.90, 1, 1.11, 2) logscale astext(70) ///{p_end}"'
+	di `"{pmore}arrowopt(msize(1)) pointopt(msymbol(s)msize(.5)) ///{p_end}"'
+	di `"{pmore}diamopt(color(red)) olineopt(color(red) lpattern(dash))){p_end}"'
+
+
+//ab network meta-analysis
+	set more off
+	metadta  tp fp fn tn test ,  /// 
+		studyid(study) model(random, laplace) ///
+		abnetwork ref(HC2) sumtable(all) ///
+		foptions(outplot(rr) graphregion(color(white)) texts(1.75) ///
+		xlabel(0.80, 0.90, 1, 1.11, 2) logscale astext(70) ///
+	arrowopt(msize(1)) pointopt(msymbol(s)msize(.5)) ///
+	diamopt(color(red)) olineopt(color(red) lpattern(dash)))
+	restore
+end
 

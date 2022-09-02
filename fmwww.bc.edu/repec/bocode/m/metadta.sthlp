@@ -11,15 +11,14 @@
 {viewerjumpto "Stored results" "metadta##results"}{...}
 
 {title:Title}
-{p2colset 5 23 25 2}{...}
-{p2col :{opt metadta} {hline 2}} Fixed- and random-effects meta-analysis and meta-regression 
-of diagnostic accuracy studies using logistic regression.{p_end}
-{p2colreset}{...}
+{p 4 4 2}
+{opt metadta} {hline 2} Fixed-effects and random-effects meta-analysis, meta-regression and network meta-analysis 
+of diagnostic test accuracy studies using logistic and logistic-normal regression.
 
 {marker syntax}{...}
 {title:Syntax}
 
-{p 8 16 2}
+{p 4 4 2}
 [{help by} {varlist}{cmd::}] {opt metadta tp fp fn tn [tp2 fp2 fn2 tn2 index comparator]} [{indepvars}] {ifin} {cmd:,} 
 {opt stu:dyid}({var})
 [{it:{help metadta##options_table:options}} {it:{help metadta##foptions_table:foptions}}
@@ -34,23 +33,26 @@ of diagnostic accuracy studies using logistic regression.{p_end}
 {marker description}{...}
 {title:Description}
 {pstd}
-{cmd:metadta} is implements the generalized linear model for the binomial family 
-with a logit link, i.e logistic regression for meta-analysis of diagnostic accuracy data. 
-The program presents the results in tables, forest plot and/or SROC curve.  
+{cmd:metadta} implements a generalized linear mixed model for the binomial family 
+with a logit link.  
 
 {pstd}
-The program fits fixed or a random-effects model. The data can be from independent studies; where each row contains data from seperate studies, 
-comparative studies; where each study has two rows of data. The first row has the index data and the second row has the control data. The data can also be paired, 
-where each row contains data from each seperation cross-tabulation between the index and the control test.
+By default a random-effects model accounting for the correlation between logit sensitivity and logit specif is fitted. A fixed-effects model is automatically used when the correlation cannot be 
+computed due to insufficient data i.e when there are less than {cmd:3} or whenever it is plausible to assume that the studies are homogeneous.
 
 {pstd}
-A random-effects model accounts for correlation between logit sentivity and specificity 
-and allows the quantification of heterogeneity between studies. On the other hand, a fixed-effects model assuming homogeneous studies or whenever 
-the random-effects model cannot be fitted, i.e when there are less than {cmd:3} studies.
+Four different types of analysis can be performed.{p_end}
+{pstd}
+1. The {cmd:basic} analysis requires data from independent studies where each row contains data from seperate studies.{p_end}
+{pstd}
+2. {cmd:Comparative} analysis where each studies each study contributes two rows to the dataset; one for each test. The two tests are similar in all studies.{p_end}
+{pstd}
+3. {cmd:Arm-based network} meta-analysis where a study contributes more two rows to the dataset; one for each tests. Different tests can be used in different studies.{p_end}
+{pstd}
+4. {cmd:Contrast-based network} meta-analysis where each study contributes at least one row of dataset, with each row containing data for each comparison between an index/candidate and a comparator test(s).{p_end}
 
 {pstd}
-When data is from comparative or paired studies, either the proportions
-or the relative ratios can be tabulated and/or plotted. 
+The model parameters are further processed and results presented in tables, forest plot and/or SROC plot. After a comparative meta-analysis or contrast-based network meta-analysis, the study-specific relative sensitivity and specificity can be tabulated and/or plotted. 
 
 {pstd}
 When there are no covariates, heterogeneity is also quantified using the I-squared measure({help metapreg##ZD2014:Zhou and Dendukuri 2014}).
@@ -70,16 +72,18 @@ When there are no covariates, heterogeneity is also quantified using the I-squar
 {dlgtab:Modeling}
 {synopt :{opt mod:el(random|fixed [, modelopts])}}the type of model to fit; default is {cmd:random}. {help metadta##optimization_options:modelopts}
 control the control the optimization process{p_end}
-{synopt :{opth cov:(metadta##vartype:vartype)}}variance-covariance structure of 
-the random-effects; default is {cmd: un}structured{p_end}
+{synopt :{opth cov:(metadta##vartype:bcov[, wcov])}} specifies the variance-covariance structure of 
+the random-effects; default {cmd:bcov} is {cmd: un}structured (and {cmd:wcov} is {cmd:ind}ependent; in {cmd:network} meta-analysis){p_end}
 {synopt : {opth cv:effect(se|sp|sesp)}}specify which latent outcome is to be affected by 
 covariate information; default is {cmd:sesp}{p_end}
 {synopt : {opth in:teraction(se|sp|sesp)}}specify for latent outcome to include the interaction terms; default is {cmd:sesp}{p_end}
-{synopt :{opt pair:ed}}indicate notifies the program that the data is in the form {cmd: tp1 fp1 fn1 tn1 tp2 fp2 fn2 tn2 index comparator} {p_end}
-{synopt :{opt comparative}}notifies the program that the studies are comparative (2 observations per study) {p_end}
+{synopt :{opt cb:network}}notifies the program that the data is in the form {cmd: tp1 fp1 fn1 tn1 tp2 fp2 fn2 tn2 index comparator} to perform a contrast-based network meta-analysis{p_end}
+{synopt :{opt comp:arative}}notifies the program that the studies are comparative (2 observations per study) {p_end}
+{synopt :{opt ab:network}}instructs the program to perform arm-based network meta-analysis (expects atleast 2 observations per study) {p_end}
 {synopt :{opth by:(varname:byvar)}}specificies the stratifying variable for which the margins are estimated {p_end}
 {synopt :{opt prog:ress}}show the {cmd:progress} of the model estimation process{p_end}
 {synopt :{opt A:lphasort}}sort the categorical variables alphabetically {p_end}
+{synopt :{opt ref([label], [top|bottom])}}specifies the reference level in network and comparative analysis and its position in computing the probability ratios{p_end}
 {synopt :{opt nomc}}do not perform {cmd:m}odel {cmd:c}omparison with likelihood-ratio tests comparison the specified model with other simpler models{p_end}
 
 {dlgtab:General}
@@ -137,6 +141,7 @@ The points in the list {cmd:must} be comma separated.{p_end}
 {synoptline}
 
 {synopt :{opt nosr:oc}}suppress the sroc plot {p_end}
+{synopt :{opt nocur:ve}}suppress the sroc curve in the sroc plot {p_end}
 {synopt :{opt col:orpalette(string)}}specify the colour for each class of the grouping categorical variable. {p_end}
 {synopt :{opt nopred:iction}}suppress the prediction region{p_end}
 {synopt :{opt b:ubbles}}show the study size as weight{p_end}
@@ -186,7 +191,7 @@ the maximization process during refinement of starting values
 {synoptline}
 
 {marker vartype}{...}
-{synopthdr :cov}
+{synopthdr :bcov}
 {synoptline}
 {synopt :{opt ind:ependent}}different variance parameters for logit sensitivity and logit specificity random-effects, covariance is 0; the default{p_end}
 {synopt :{opt exc:hangeable}}equal variances for logit sensitivity and logit specificity random-effects, 
@@ -195,6 +200,14 @@ and a different covariance parameter{p_end}
 covariance is 0{p_end}
 {synopt :{opt un:structured}}all variances logit sensitivity and logit specificity random-effects and covariances to be distinctly 
 estimated{p_end}
+{synoptline}
+
+{marker vartype}{...}
+{synopthdr :wcov}
+{synoptline}
+{synopt :{opt ind:ependent}}different variance parameters for logit sensitivity and logit specificity random-effects in the nested factor, the default{p_end}
+{synopt :{opt id:entity}}equal variances for logit sensitivity and logit specificity random-effects in the nested factor {p_end}
+{synopt :{opt zero}}zero variance for logit sensitivity and logit specificity in the nested factor i.e assume homogeneity {p_end}
 {synoptline}
 
 {marker citype}{...}
@@ -299,14 +312,14 @@ Examples, {cmd: model(random, intpoint(9))} to increase the integration points,
 {cmd: model(random, technique(bfgs))} to specify Stata's BFGS maximiztion algorithm.
 
 {phang}
-{opt cov(vartype)} specifies the structure of the covariance matrix for the two random-effects.  {it:vartype} is one of the following:
+{opt cov([bcov][, wvoc])} specifies the structure of the covariance matrix for the random-effects. 
+{it:bcov} controls the stucture of the random effects on the first level of hierarchy and is one of the following:
 {cmd:independent}, {cmd:exchangeable}, {cmd:identity}, or {cmd:unstructured}.
 
 {pmore}
 {cmd:covariance(independent)} covariance structure allows a distinct
 variance for each of the two random-effects and assumes the covariance is 0. 
 The independent covariance matrix has 2 unique parameters. 
-
 
 {phang2}
 {cmd:covariance(exchangeable)} structure specifies one common variance for two
@@ -318,8 +331,10 @@ The identity covariance matrix has 1 parameter.
 
 {phang2}
 {cmd:covariance(unstructured)} allows for all variances and covariances to be
-distinct. The unstructured covariance matrix has 3 unique parameters. 
-The default is {cmd:covariance(unstructured)}.
+distinct. The unstructured covariance matrix has 3 unique parameters. The default is {cmd:covariance(unstructured)}.
+
+{phang2}
+{it:wvoc} controls the stucture of the random effects on the second level of hierarchy and is one of the following: {cmd:independent}, {cmd:identity}, or {cmd:zero}.
 
 {phang}
 {cmd: cveffect(effect)} specify which latent outcome is to be affected by 
@@ -357,7 +372,13 @@ The variable identifying the pairs should be a {cmd: string} variable and should
 {cmd: tp tn fp fn}. 
 
 {phang}
-{cmd:paired} indicates that data is paired. The expected data is the format {cmd: tp1 fp1 fn1 tn1 tp2 fp2 fn2 tn2 index comparator [covariates]}. 
+{cmd:cbnetwork} instructs the program to fit a model for contrast-based network meta-analysis. The expected data is the format {cmd: tp1 fp1 fn1 tn1 tp2 fp2 fn2 tn2 index comparator [covariates]}. 
+There can be more than one row of observation for each study with data from each seperate comparison.
+
+{phang}
+{cmd: abnetwork} instructs the program to fit a model for contrast-based network meta-analysis.
+The variable identifying the different tests should be a {cmd: string} variable and should be the {cmd:fifth} variable after 
+{cmd: tp tn fp fn}. 
 
 {phang}
 {cmd: progress} specifies whether the noisily or quitely display the model maximization process as is being executed. 
@@ -414,9 +435,12 @@ confounding variables.  The standard-errors, Z-statistic and p-value are in the 
 {cmd: noitable} suppress display of the table containing the studies and the summary estimates. By default, the table presented. 
 
 {dlgtab:General}
+{phang}
+{cmd: ref([label][,position])} specifies the reference category and its position when computing the summary probability ratios in comparative 
+and network meta-analysis. The first category in the {cmd:fifth} variable is used as the reference by default.
 
 {phang}
-{opt stratify} requests for a consolidated sub-analyses by the {opth by:(varname:byvar)} variable. The results are 
+{cmd: stratify} requests for a consolidated sub-analyses by the {opth by:(varname:byvar)} variable. The results are 
 presented in one table and one forest plot 
 
 {phang}
@@ -610,6 +634,11 @@ Instead, a cross is plotted spanning the confidence intervals of sensitivity and
 {cmd: colorpalette(string)} specify the colour for each class of the grouping categorical variable. The default color palette has the following
 colours: {cmd: black forest_green cranberry blue sienna orange emerald magenta dknavy gray purple}. Each class of the grouping
 variable is assigned a colour from the palette.
+
+{phang}
+{cmd: nocurve} suppress the sroc curve. By default, the curvn is displayed whenever the 
+a random-effects model is fitted.
+
 
 {phang}
 {cmd: noprediction} suppress the prediction region. By default, the prediction region is displayed whenever the 
@@ -867,10 +896,10 @@ accounting for the clinical setup. The look of the sroc and forest plot is enhan
 {it:({stata "metadta_examples example_four":click to run})}
 
 {pstd}
-{cmd :5. Metaregression - Paired data - RR}
+{cmd :5. Metaregression - contrast-based network meta-analysis - RR}
 
 {pmore}
-In paired data, each row is of the form {cmd: tp1 fp1 fn1 tn1 tp2 fp2 fn2 tn2 index comparator}. The data should be a from a 2x2 table as displayed below;
+Each row in the dataset is of the form {cmd: tp1 fp1 fn1 tn1 tp2 fp2 fn2 tn2 index comparator}. The data should be a from a 2x2 table as displayed below;
 
 {p 22} 
 {c |} Disease Status
@@ -922,10 +951,10 @@ Negative{space 3} {c |} {space 2} fn2 {space 7}	tn2 {space 2} {c |}
 {cmd:. metadta tp1 fp1 fn1 tn1 tp2 fp2 fn2 tn2 hpv1 hpv2,									///} 
 {p_end}
 {pmore3}
-{cmd:studyid(study) model(random)									///}  
+{cmd:studyid(study) model(random) cov(, zero)									///}  
 {p_end}
 {pmore3}
-{cmd:paired sumtable(rr)									///}
+{cmd:cbnetwork sumtable(rr)									///}
 {p_end}
 {pmore3}
 {cmd:foptions(outplot(rr) grid graphregion(color(white)) texts(1.85)									///} 
@@ -939,6 +968,40 @@ Negative{space 3} {c |} {space 2} fn2 {space 7}	tn2 {space 2} {c |}
 
 {pmore2} 
 {it:({stata "metadta_examples example_five":click to run})}
+
+
+{pstd}
+{cmd :6. Metaregression - arm-based network meta-analysis - RR}
+
+{pmore2}
+{stata `"use "https://github.com/VNyaga/Metadta/blob/master/network.dta?raw=true""':. use "https://github.com/VNyaga/Metadta/blob/master/network.dta?raw=true"}
+{p_end}
+
+{pmore2}
+{cmd:. metadta  tp fp fn tn test ,  ///}
+{p_end}
+{pmore3} 
+{cmd:studyid(study) model(random, laplace) ///}
+{p_end}
+{pmore3}
+{cmd:abnetwork ref(HC2) sumtable(all) ///}
+{p_end}
+{pmore3}
+{cmd:foptions(outplot(rr) graphregion(color(white)) texts(1.75) ///}
+{p_end}
+{pmore3}
+{cmd:xlabel(0.80, 0.90, 1, 1.11, 2) logscale astext(70) ///}
+{p_end}
+{pmore3}
+{cmd:arrowopt(msize(1)) pointopt(msymbol(s)msize(.5)) ///}
+{p_end}
+{pmore3}
+{cmd:diamopt(color(red)) olineopt(color(red) lpattern(dash)))}
+{p_end}
+
+{pmore2} 
+{it:({stata "metadta_examples example_six":click to run})}
+
 
 {marker results}{...}
 {title:Stored results}
