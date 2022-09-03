@@ -1,4 +1,4 @@
-*! version 1.1 - 25.08.2022
+*! version 1.11 - 02.09.2022
 
 cap program drop xtgranger
 program xtgranger,eclass 
@@ -327,7 +327,7 @@ void test1(string scalar depvar,string scalar indeps, string scalar depvarlag,st
 
 		for (r = 1;r<=bootdraws-1;r++) {
 			/// draw from uniform distribution units
-			beta_rr = estBeta(z1,z2,z3,index,(floor(n:*runiform(n,1) :+ 1)),p,tmp1=0,tmp2=.)
+			beta_rr = estBeta(z1,z2,z3,index,(floor(n:*runiform(n,1) :+ 1)),p,tmp1=0,tmp2=.,overlap)
 			beta_r[r,.] = beta_rr'
 			msg = sprintf("noi _dots %s 0",strofreal(r))
 			stata(msg)

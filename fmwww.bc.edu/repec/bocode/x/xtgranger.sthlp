@@ -29,17 +29,21 @@ You must {cmd:xtset} your data before using {cmd:xtgranger}; see {helpb xtset:[X
 {cmd:xtgranger} performs the Half-Panel Jackknife (HPJ) Wald-type test for Granger non-causality, developed by Juodis, Karavias, and Sarafidis (2021). 
 This test offers superior size and power performance, which stems from the use of a pooled estimator with a sqrt(NT) rate of convergence. 
 The test has two other useful properties; it can be used in multivariate systems and it has power against both homogeneous as well as heterogeneous alternatives.
-The test allows for cross-section dependence and cross-section heteroskedasticity. 
-The command also reports results for the HPJ estimator, with overlapping half panels.
-{cmd:xtgranger} can bootstrap the variance of the HPJ estimator.
-The bootstrap resamples across the cross-section dimension.
+The test allows for cross-sectional dependence and cross-sectional heteroskedasticity. 
+The command also reports results for the HPJ estimator with overlapping half panels.
+In the presence of cross-sectional dependence the variance of the HPJ estimator can be obtained by bootstrapping.
+The bootstrap resamples across the cross-sectional dimension.
+{break}
+{cmd:xtgranger} internally adds lags of the dependent variable with heterogeneous slope coefficients when calculating the HPJ test statistic and estimating the HPJ estimator.
+The lags are partialled out and their estimation results not presented in the output.
 {smcl}
 
 {marker options}{...}
 {title:Options}
 {dlgtab:Main}
 {phang}
-{opt lags():} specifies the number of lags of dependent and independent variables to be added to the regression. If {cmd:lags()} is not specified, the default is {cmd:lags(1)}.{p_end}
+{opt lags():} specifies the number of lags of dependent and independent variables to be added to the regression. If {cmd:lags()} is not specified, the default is {cmd:lags(1)}.
+The lags of the dependent variable are partialled out.{p_end}
 
 {phang}
 {opt maxlags:()} specifies the upper bound of lags. The BIC criterion is used to select the number of lags that provides the best model fit. {cmd:lags()} and {cmd:maxlags()} cannot be used at the same time.{p_end} 
@@ -53,10 +57,10 @@ The bootstrap resamples across the cross-section dimension.
 
 {dlgtab:Bootstrap}
 {phang}
-{opt boot:strap} employs a bootstrap variance estimator in the HPJ Wald statistic with the current seed and 100 repetitions.
+{opt boot:strap} employs a bootstrap variance estimator in the HPJ Wald statistic, statistic, which allows for cross-sectional dependence. 100 repetitions are used based on the current seed.
 
 {phang}
-{opt boot:strap}{cmd:(}{it:#reps}{cmd:, seed({help seed}))} employs a bootstrap variance estimator in the HPJ Wald statistic with the custom {help seed} and {it:#reps} repetitions.
+{opt boot:strap}{cmd:(}{it:#reps}{cmd:, seed({help seed}))} employs a bootstrap variance estimator in the HPJ Wald statistic, which allows for cross-sectional dependence and with a custom {help seed} and {it:#reps} repetitions.
 
 {dlgtab:Reporting}
 {phang}
@@ -93,13 +97,13 @@ Predict can be used after {cmd:xtgranger}. The residuals and predicted values wi
 
 {phang}
 {p 8 16 2}{cmd:predict} {newvar} [if] [in] 
-[, residuals xb] 
+[, {ul:res}iduals xb] 
 {smcl}
 {marker options}{...}
 {title:Postestimation options}
 
 {phang}
-{opt residuals:} calculates the residuals.{p_end}
+{opt res:iduals:} calculates the residuals.{p_end}
 
 {phang}
 {opt xb} calculates the linear prediction on the partialled out variables.{p_end} 
@@ -129,10 +133,12 @@ Predict can be used after {cmd:xtgranger}. The residuals and predicted values wi
 {pstd}Dynamic model with lag length selection (up to 4 lags) based on BIC, with cross-sectional heteroskedasticity-robust standard errors, and no variance degrees-of-freedom correction {p_end}
 {phang2}{cmd:xtgranger roa inefficiency quality, maxlags(4) het nodfc}{p_end}
 
-{pstd}Bootstrap variance of the HPJ estimator with a default of 100 repetitions{p_end}
+{pstd}Bootstrap variance of the HPJ estimator that allows for cross-sectional dependence, 
+with a default of 100 repetitions{p_end}
 {phang2}{cmd:xtgranger roa inefficiency quality, bootstrap}{p_end}
 
-{pstd}Bootstrap variance of the HPJ estimator with 200 repetitions and control of the {help seed}{p_end}
+{pstd}Bootstrap variance of the HPJ estimator that allows for cross-sectional dependence, 
+with 200 repetitions and control of the {help seed}{p_end}
 {phang2}{cmd:xtgranger roa inefficiency quality, bootstrap(200, seed(123))}{p_end}
 
 {title:References}
