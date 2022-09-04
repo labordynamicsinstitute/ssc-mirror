@@ -105,6 +105,7 @@ p ckvar module to allow error checking routines to easily be defined and attache
 p clan module to perform cluster-level analysis of cluster randomised trials
 p clarify module for Interpreting and Presenting Statistical Results
 p classplot module to plot predicted probability and empirical values after a binary response model
+p classtab module or computing diagnostic accuracy statistics and classification table
 p classtabi module for generating classification statistics and table using summarized data 
 p clean_class module to clean classroom variables
 p clean_fname module to clean firstname variables
@@ -152,6 +153,7 @@ p cns module to compute Consensus Measure for Ordinal Scales
 p cnsrsig module to evaluate validity of restrictions on a regression
 p cnssc module to mirror SSC Archive in China 
 p cnstock module to download stock names and codes for Chinese listed companies
+p cnstroke module to return the stroke count of Chinese characters
 p cntop10 module to download information of top 10 shareholders for a list of stock codes from HeXun
 p cntrade module to retrieve Chinese stock market quotations from NetEase
 p cntraveltime module to extract the time needed for traveling between two locations from Baidu Map
