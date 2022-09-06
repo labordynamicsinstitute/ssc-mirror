@@ -7,7 +7,7 @@
 * Can only be used in Stata version 14.0 or above
 
 program define cnstroke, rclass
-Version 14
+version 14
 if ustrlen("`1'") != 1 {
 	dis as error "`1' is an invalid word"
 	error 601
