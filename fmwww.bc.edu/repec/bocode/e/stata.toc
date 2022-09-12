@@ -96,6 +96,7 @@ p ewma module to calculate exponentially weighted moving average
 p ewreg module to estimate errors-in-variable model with mismeasured regressor
 p exampleobs module to prints example observations 
 p examples module to show examples from on-line help files
+p exbsample module to compute exchangeably weighted (or Bayesian) bootstraps
 p excel2latex module to convert Excel table to LaTeX table
 p excelclean module to clean and integrate excel files
 p excelcol module to convert a column index into a name of an Excel column

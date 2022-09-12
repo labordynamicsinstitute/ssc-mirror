@@ -1,10 +1,10 @@
 /*==================================================================================
-Program to implement placebo zome model selection algorithm for RDD/RKD designs.
+Program to implement placebo zone model selection algorithm for RDD/RKD designs.
 See Kettlewell & Siminski 'Optimal Model Selection for RDD and Related Designs'
 
 Authors: Nathan Kettlewell & Peter Siminski
-Updated: 6 April 2022
-Version: 1.0
+Updated: 4 September 2022
+Version: 1.1
 ==================================================================================*/
 
 capture program drop pzms
@@ -13,10 +13,10 @@ version 12.1
 #delimit ;
 syntax varlist(min=2 max=2) [if] [in], MAXBW(real) [MINBW(real 0) C(real 0) PZRANGE(numlist min=2 max=2) 
 P(int 1) DERIV(integer 0) PZSTEPNUM(integer 0) PZSTEPSIZE(real 0) BWSTEPNUM(integer 0) BWSTEPSIZE(real 0) VCE(string) 
-COVS(varlist) WEIGHT(varname)  PZPLOT NOLOG COLLAPSE(string)
+COVS(varlist) WEIGHT(varname) PZPLOT NOLOG COLLAPSE(string)
 Kernel(string) BWLFIX(real 0) BWRFIX(real 0) DONUT(numlist min=2 max=2) MCUSTOM1(string) MCUSTOM2(string)
 MCUSTOM3(string) MCUSTOM4(string) MCUSTOM5(string) MCUSTOM6(string) MCUSTOM7(string) MCUSTOM8(string)
-MCUSTOM9(string) MCUSTOM10(string)] ;
+MCUSTOM9(string) MCUSTOM10(string) nodisplay(integer 0)] ;
 #delimit cr
 
 tokenize "`varlist'"
@@ -25,6 +25,11 @@ tempvar rv treat kweight n //These will be used as we step through the placebo e
 qui g double `rv' = .
 qui g double `treat' = .
 qui g double `kweight' = .
+
+*Preserve dataset so it can be altered by if, in and collapse
+preserve
+capture keep `if'
+capture keep `in'
 
 *Error messages
 foreach f in maxbw minbw pzstepnum pzstepsize bwstepsize bwlfix bwrfix {
@@ -50,14 +55,6 @@ if (`pzstepnum' > 0 & `pzstepsize' > 0) {
 	exit 198
 }
 
-forvalues x =1/5 {
-	capture confirm variable `pzinf'`x'
-	if !_rc {
-		di as err "Variable `pzinf'`x' already exists. Drop this variable or use a different option for pzinf"
-		exit 198
-	}
-}	
-
 if `minbw' > `maxbw' {
 	di as err "maxbw must not be less than minbw"
 	exit 198
@@ -80,11 +77,11 @@ if "`pz1'" == "" { //nothing specified, use full range of running variable
 qui sum `2', detail
 if `pz1' < r(min) {
 	local pz1 = r(min)
-	di _newline "Note: lower value specified in pzrange exceds the support of the running variable. Default value used."
+	di as text _newline "Note: lower value specified in pzrange exceds the support of the running variable. Default value used."
 }
 if `pz2' > r(max) {
 	local pz2 = r(max)
-	di _newline "Note: upper value specified in pzrange exceds the support of the running variable. Default value used."
+	di as text _newline "Note: upper value specified in pzrange exceds the support of the running variable. Default value used."
 }
 
 capture reg `1' `2' if `2' > r(max), vce(`vce')   //this is just to check whether vce is correctly specified, there will be no observations
@@ -93,9 +90,43 @@ if _rc == 198 {
 	exit 198
 }
 
-if ((`c'-`maxbw' < `pz1') | (`pz2'-`c' < `maxbw')) & (`bwlfix' == 0 & `bwrfix' == 0) {
-	di as err "Threshold must be within the range of the placebo zone specified in pzrange, trimmed by the amount specified in maxbw"
+if (`c' < `pz1') | (`c' > `pz2') {
+	di as err "Threshold must be within the range specified by pzrange"
 	exit 198
+}
+
+if (`pz2' - `maxbw')-(`c' + `maxbw') <= 0 & (`c' - `maxbw') <= (`pz1' + `maxbw') {
+	di as error "maxbw is too large - there will be no placebo thresholds."
+	exit 198
+}
+
+if (`bwlfix' > `c'-`pz1') {
+	local bwlfix = `c'-`pz1'
+	di as text _newline "bwlfix exceeds pzrange on left hand side. bwlfix changed to `bwlfix'."
+	local lcap "LHS bandwidths are restricted to `bwlfix'."  //used later in table results display
+}
+
+if (`bwrfix' > `pz2'-`c') {
+	local bwrfix = > `pz2'-`c'
+	di as text _newline "bwrfix exceeds pzrange on right hand side. bwrfix changed to `bwrfix'."
+	local rcap "RHS bandwidths are restricted to `bwrfix'."  //used later in table results display
+}
+
+local Lbw = `maxbw'  //these macros are used in case user specifies bw outside pzrange. Will utilise asymmetric bws once the canditade bw
+local Rbw = `maxbw'  //becomes larger than the largest possible on the L/R of the real threshold
+
+if (`c'-`maxbw' < `pz1') | (`bwlfix' > `c'-`pz1') {
+	local Lbw = `c'-`pz1'
+	di as text _newline "maxbw exceeds pzrange on left hand side. maxbw will be `Lbw' on LHS and `maxbw' on RHS."
+	di as text _newline "This trial includes models with bandwidths exceeding `Lbw' (which is the maximum feasible symmetric bandwidth, given the support of the running variable). For those models, the bandwidth is asymmetrical. To allow only symmetric bandwidths, set the maxbw to `Lbw' (or smaller)."	
+	local lcap "LHS bandwidths are capped at `Lbw'."  //used later in table results display
+}
+
+if (`pz2'-`c' < `maxbw') | (`bwrfix' > `pz2'-`c') {
+	local Rbw = `pz2'-`c'
+	di as text _newline "maxbw exceeds pzrange on right hand side. maxbw will be `Rbw' on RHS and `maxbw' on LHS."
+	di as text _newline "This trial includes models with bandwidths exceeding `Rbw' (which is the maximum feasible symmetric bandwidth, given the support of the running variable). For those models, the bandwidth is asymmetrical. To allow only symmetric bandwidths, set the maxbw to `Rbw' (or smaller)."		
+	local rcap "RHS bandwidths are capped at `Rbw'."  //used later in table results display
 }
 
 if ("`: word 1 of `vce''"  == "bootstrap" | "`: word 1 of `vce''"  == "jackknife") & ("`weight'" != "" | "`kernel'" == "triangular" | "`collapse'" == "`weight'") {
@@ -113,11 +144,6 @@ if "`mckernel'" == "" {
 
 if ("`kernel'" != "uniform" & "`kernel'" != "triangular") | ("`mckernel'" != "uniform" & "`mckernel'" != "triangular") {
 	di as err "Invalid kernel weights. Only uniform and triangular allowed"
-	exit 198
-}
-
-if "`pzinf'" != "" & ("`execute'" == "" | "`rdestimate'" == "") {
-	di as err "pzinf can only be specified if execute and rdestimate are also specified"
 	exit 198
 }
 
@@ -146,13 +172,6 @@ if (`dn1' >= `minbw') | (`dn2' >= `minbw')  {
 	exit 198
 }
 
-if "`if'" != "" {
-	local if = "`if' &"  //deals with the fact there will be multiple if statements as we run through the placebo zone
-}
-
-if "`if'" == "" {
-	local if = "if"
-}
 
 if "`weight'" != "" & "`kernel'" == "triangular"  {
 	local aweight = "[aweight=`weight'*`kweight']"
@@ -166,7 +185,7 @@ else if "`weight'" != "" & "`kernel'" == "uniform" {
 
 *Collapse data if option invoked
 if "`collapse'" != "" {
-	preserve
+	*preserve
 	forvalues q = 1/10 {
 	if "`mcustom`q''" != "" {
 		pzms_custom `mcustom`q''  //run this subprogram to extraxct mcustom options
@@ -219,22 +238,22 @@ if `pzstepnum' == 0 & `pzstepsize' == 0 {
 }	
 
 if `bwstepnum' == 0 & `bwstepsize' == 0 {
-	local bwstepnum = 10
+	local bwstepnum = 20
 }	
 
-if `bwstepnum' > 0 {
-	local bwstepsize = (`maxbw'-`minbw')/`bwstepnum'
+if `bwstepnum' > 0 {	
+	local bwstepsize = ((`maxbw'-`minbw')/(`bwstepnum'-1))-0.0000000000000001  //the tiny amount deducted from the step size is to ensure that when looping through bandwidths by step size, the maxbw gets used. Otherwise, steps will be just over maxbw due to rounding in some cases 
 }	
 
 if `pzstepnum' > 0 {
-	local pzstepsize = (max(`c'-2*`maxbw'-`pz1',0)+max(`pz2'-`c'-2*`maxbw',0))/(`pzstepnum'-1)  //note this does not guarantee no. of steps, as some steps could be too small to move to new PZ threshold
-}	
+	local pzstepsize = (max(`c'-`Rbw'-`Lbw'-`pz1',0)+max(`pz2'-`c'-`Rbw'-`Lbw',0))/(`pzstepnum'-1)-0.0000000000000001  //note this does not guarantee no. of steps, as some steps could be too small to move to new PZ threshold.
+}	//the tiny amount deducted from the step size is to ensure that when looping through placebo range by step size, the last threshold gets used. Otherwise, steps will be just over last threshold (e.g., rendob) due to rounding 
 
 if `pzstepnum' == 0 & `pzstepsize' == 0 {
-	local pzstepsize = (max(`c'-2*`maxbw'-`pz1',0)+max(`pz2'-`c'-2*`maxbw',0))/(`pzstepnum'-1)  //note this does not guarantee no. of steps, as some steps could be too small to move to new PZ threshold
+	local pzstepsize = (max(`c'-`Rbw'-`Lbw'-`pz1',0)+max(`pz2'-`c'-`Rbw'-`Lbw',0))/(`pzstepnum'-1)-0.0000000000000001   //note this does not guarantee no. of steps, as some steps could be too small to move to new PZ threshold
 }	
 
-local maxiter = round(1+(max(`c'-2*`maxbw'-`pz1',0)+max(`pz2'-`c'-2*`maxbw',0))/(`pzstepsize'))  //maximium number of iterations, for display later
+local maxiter = round(1+(max(`c'-`Rbw'-`Lbw'-`pz1',0)+max(`pz2'-`c'-`Rbw'-`Lbw',0))/(`pzstepsize'))  //maximium number of iterations, for display later
 
 if `deriv' == 0 & `p' ==1 & "`covs'" == "" {  // RDD, linear, no covariates
 	local nmodels = 1
@@ -476,21 +495,28 @@ forvalues q = 1/10 {
 	}
 }
 
-local rstart = `c' + `maxbw'  //This will be where we start for pz to right of cutoff
-local rendob = `pz2' - `maxbw'  //This will be the last pz threshold to the right of cut-off
-local lstart = `pz1' + `maxbw'  //This will be where we start for pz to left of cutoff
-local lendob = `c' - `maxbw'  //This will be the last pz threshold  to the left of cut-off
+if "`bwlfix'" != "" {
+	local Lbw = `bwlfix'  //this ensures that with asymmetric bandwidths, maximum placebo thresholds used when defining following macros for interations
+}
+if "`bwrfix'" != "" {
+	local Rbw = `bwrfix'  //this ensures that with asymmetric bandwidths, maximum placebo thresholds used when defining following macros for interations
+}
+
+local rstart = `c' + `Lbw'  //This will be where we start for pz to right of cutoff
+local rendob = `pz2' - `Rbw'  //This will be the last pz threshold to the right of cut-off
+local lstart = `pz1' + `Rbw'  //This will be where we start for pz to left of cutoff
+local lendob = `c' - `Lbw'  //This will be the last pz threshold  to the left of cut-off
 local iter = 0  //iteration counter (how many estimators with different BWs we have for each model)
 local move = 0  //used later to identify when the pzstep is actually large enough to move to a new pz threshold
 
-if `c' - `maxbw' > `pz1' + `maxbw' {
+if `c' - `Rbw' > `pz1' + `Lbw' {
 	local LHS = 1  //flag for if will be using LHS of threshold in placebo zone
 }
 else {
 	local LHS = 0
 }
 
-if `pz2' - `maxbw' > `c' + `maxbw' {
+if `pz2' - `Rbw' > `c' + `Lbw' {
 	local RHS = 1  //flag for if will be using RHS of threshold in placebo zone
 }
 else {
@@ -545,7 +571,7 @@ if `LHS' == 1 {
 							else {
 								local xR = `x'
 							}
-							`m`q'' `if' `rv' >= -`xL' & `rv' <= `xR' & (`rv' <= -`dn1' | `rv' >= `dn2') `in',  //regression model q 
+							`m`q'' if `rv' >= -`xL' & `rv' <= `xR' & `rv' >= -`Lbw' & `rv' <= `Rbw' & (`rv' <= -`dn1' | `rv' >= `dn2'),  //regression model q 
 							local m`q'_est1_bw_`j' = _b[`treat']
 							local m`q'_ssqe_`j' = `m`q'_ssqe_`j'' + (_b[`treat'])^2 
 						}
@@ -572,7 +598,7 @@ if `LHS' == 1 {
 							else {
 								local xR = `x'
 							}
-							`m`q'' `if' `rv' >= -`xL' & `rv' <= `xR' & (`rv' <= -`dn1' | `rv' >= `dn2') `in',   //regression model q 
+							`m`q'' if `rv' >= -`xL' & `rv' <= `xR' & `rv' >= -`Lbw' & `rv' <= `Rbw' & (`rv' <= -`dn1' | `rv' >= `dn2'),   //regression model q 
 							local m`q'_est1_bw_`j' = _b[c.`rv'#c.`treat']
 							local m`q'_ssqe_`j' = `m`q'_ssqe_`j'' + (_b[c.`rv'#c.`treat'])^2 
 						}
@@ -624,7 +650,7 @@ if `RHS' == 1 {
 							else {
 								local xR = `x'
 							}
-							`m`q'' `if' `rv' >= -`xL' & `rv' <= `xR' & (`rv' <= -`dn1' | `rv' >= `dn2') `in',   //regression model q 
+							`m`q'' if `rv' >= -`xL' & `rv' <= `xR' & `rv' >= -`Lbw' & `rv' <= `Rbw' & (`rv' <= -`dn1' | `rv' >= `dn2'),   //regression model q 
 							local m`q'_est1_bw_`j' = _b[`treat']
 							local m`q'_ssqe_`j' = `m`q'_ssqe_`j'' + (_b[`treat'])^2 
 						}
@@ -651,7 +677,7 @@ if `RHS' == 1 {
 							else {
 								local xR = `x'
 							}
-							`m`q'' `if' `rv' >= -`xL' & `rv' <= `xR' & (`rv' <= -`dn1' | `rv' >= `dn2') `in',   //regression model q 
+							`m`q'' if `rv' >= -`xL' & `rv' <= `xR' & `rv' >= -`Lbw' & `rv' <= `Rbw' & (`rv' <= -`dn1' | `rv' >= `dn2'),   //regression model q 
 							local m`q'_est1_bw_`j' = _b[c.`rv'#c.`treat']
 							local m`q'_ssqe_`j' = `m`q'_ssqe_`j'' + (_b[c.`rv'#c.`treat'])^2 
 						}
@@ -750,7 +776,7 @@ if `LHS' == 1 {
 				else {
 					local xR = ``best'_low_bw'
 				}
-				``best'' `if' `rv' >= -`xL' & `rv' <= `xR' & (`rv' <= -`dn1' | `rv' >= `dn2') `in', vce(`vce')
+				``best'' if `rv' >= -`xL' & `rv' <= `xR' & `rv' >= -`Lbw' & `rv' <= `Rbw' & (`rv' <= -`dn1' | `rv' >= `dn2'), vce(`vce')
 				local i2 = `i2' + 1
 				if `deriv' == 0 {
 					matrix `R'[`i2',1] = _b[`treat']
@@ -802,7 +828,7 @@ if `RHS' == 1 {
 				else {
 					local xR = ``best'_low_bw'
 				}
-				``best'' `if' `rv' >= -`xL' & `rv' <= `xR' & (`rv' <= -`dn1' | `rv' >= `dn2') `in', vce(`vce')
+				``best'' if `rv' >= -`xL' & `rv' <= `xR' & `rv' >= -`Lbw' & `rv' <= `Rbw' & (`rv' <= -`dn1' | `rv' >= `dn2'), vce(`vce')
 				local i2 = `i2' + 1
 				if `deriv' == 0 {
 					matrix `R'[`i2',1] = _b[`treat']
@@ -848,7 +874,7 @@ else {
 	local xR = ``best'_low_bw'
 }
 
-qui ``best'' `if' `rv' >= -`xL' & `rv' <= `xR' & (`rv' <= -`dn1' | `rv' >= `dn2') `in', vce(`vce')
+qui ``best'' if `rv' >= -`xL' & `rv' <= `xR' & `rv' >= -`Lbw' & `rv' <= `Rbw' & (`rv' <= -`dn1' | `rv' >= `dn2'), vce(`vce')
 
 if `deriv' == 0 {
 	local pzms_est = _b[`treat']
@@ -967,98 +993,113 @@ if "`e(vcetype)'" == "" {
 	ereturn local vcetype = "Homoscedastic"
 }
 
-di _newline(1)
-di as result "KS Placebo Zone Model Selection Procedure"
-di as text "Placebo zone trial summary results"
-di as text "Dependent variable:" _col(25) as result "`1'"    
-di as text "Running variable:" _col(25) as result "`2'"
-di as text "Range of running variable used in trial:" _col(25) as result "(`pz1', `pz2')"
-di as text "Model type:" _col(25) as result "`m1_model'" 
-if `p' == 1 {
-	di as text "Poly. order(s):" _col(25) as result "1"
-}
-if `p' == 2 {
-	di as text "Poly. order(s):" _col(25) as result "1, 2"
-}
-di as text "Kernel:" _col(25) as result "`kernel'"
-di as text "Weight:" _col(25) as result "`weight'"
-di as text "Covariates:" _col(25) as result "`covs'"
-di as text "Bandwidths considered in trial: bandwidths between " as result `minbw' as text " and " as result `maxbw' as text " in steps of " as result `bwstepsize' 
-di as text "Number of placebo thresholds used in trial: " as result `titer' as text ", with step size of " as result `pzstepsize' as text " units between thresholds"
-if `RHS' ==1 & `LHS' ==1 {
-	di as text "Placebo thresholds on both sides of the actual threshold were used in the trial"
-	di as text "Placebo thresholds range from " as result "`2' = " `lstart' as text " to " as result "`2' = " `lendob' as text " on LHS and from " as result "`2' = " `rstart' as text " to " as result "`2' = " `rendob' as text " on RHS"
-}
-if `RHS' ==1 & `LHS' ==0 {
-	di as text "Placebo thresholds on RHS only of the actual threshold were used in the trial"
-	di as text "Placebo thresholds range from " as result "`2' = " `rstart' as text " to " as result "`2' = " `rendob'
-}
-if `RHS' ==0 & `LHS' ==1 {
-	di as text "Placebo thresholds on LHS only of the actual threshold were used in the trial"
-	di as text "Placebo thresholds range from " as result "`2' = " `lstart' as text " to " as result"`2' = " `lendob'
-}
-di _newline(1)
-di as result "Results of Trial"
-if "`bwlfix'" != "" & "`bwrfix'" == "" {
-	di as text "Optimal RHS bandwidth: " as result _col(25) %5.3f ``best'_low_bw' 
-}
-else if "`bwrfix'" != "" & "`bwlfix'" == "" {
-	di as text "Optimal LHS bandwidth: " as result _col(25) %5.3f ``best'_low_bw' 
-}
-else if "`bwrfix'" != "" & "`bwlfix'" != "" {
-	di as text "Optimal bandwidth: " as result _col(25) %5.3f "Fixed" 
-}
-else {
-	di as text "Optimal bandwidth: " as result _col(25) %5.3f ``best'_low_bw' 
-}
-if ``best'_poly' != . {
-	di as text "Polynomial order: " as result _col(25) ``best'_poly'
-}
-else {
-	di as text "Optimal specification:" as result _col(24) " ``best'_custom_num'"
-}
-if `RHS' ==1 & `LHS' ==1 { {
-	di as text "Effective sample size of placebo estimates from optimal model:  
-	di as text "  Lower bound: " as result _col(25) %5.3f `ess' 
-	di as text "  Upper Bound: " as result _col(25) %5.3f `ess_SUM'
-}
-if (`RHS' ==1 & `LHS' ==0) | (`RHS' ==0 & `LHS' ==1)  { {
-	di as text "Effective sample size of placebo estimates from optimal model: "  as result %5.3f `ess_SUM' 
+if `nodisplay' == 0 {  //nodisplay is an undocumented option that suppresses the main results table. Invoked in our companion program pzms_sim
+
+	di _newline(1)  //here we display the results
+	di as result "KS Placebo Zone Model Selection Procedure"
+	di as text "Placebo zone trial summary results"
+	di as text "Dependent variable:" _col(25) as result "`1'"    
+	di as text "Running variable:" _col(25) as result "`2'"
+	di as text "Range of running variable used in trial:" _col(25) as result "(`pz1', `pz2')"
+	di as text "Model type:" _col(25) as result "`m1_model'" 
+	if `p' == 1 {
+		di as text "Poly. order(s):" _col(25) as result "1"
+	}
+	if `p' == 2 {
+		di as text "Poly. order(s):" _col(25) as result "1, 2"
+	}
+	di as text "Kernel:" _col(25) as result "`kernel'"
+	di as text "Weight:" _col(25) as result "`weight'"
+	di as text "Covariates:" _col(25) as result "`covs'"
+	if `Lbw' != `maxbw' {
+		di as text "Bandwidths considered in trial: bandwidths between " as result `minbw' as text " and " as result `maxbw' as text " in steps of " as result `bwstepsize' as text ". LHS bandwidths are capped at " as result %5.3f `Lbw'
+	}
+	else if `Rbw' != `maxbw' {
+		di as text "Bandwidths considered in trial: bandwidths between " as result `minbw' as text " and " as result `maxbw' as text " in steps of " as result `bwstepsize' as text ". RHS bandwidths are capped at " as result %5.3f `Rbw'
+	}
+	else if `Rbw' != `maxbw' & `Lbw' != `maxbw' {
+		di as text "Bandwidths considered in trial: bandwidths between " as result `minbw' as text " and " as result `maxbw' as text " in steps of " as result `bwstepsize' as text ". LHS bandwidths are capped at " as result %5.3f `Lbw' as text ". RHS bandwidths are capped at " as result %5.3f `Rbw' 
+	}
+	else { 
+		di as text "Bandwidths considered in trial: bandwidths between " as result `minbw' as text " and " as result `maxbw' as text " in steps of " as result `bwstepsize'
+	}
+	di as text "Number of placebo thresholds used in trial: " as result `titer' as text ", with step size of " as result `pzstepsize' as text " units between thresholds"
+	if `RHS' ==1 & `LHS' ==1 {
+		di as text "Placebo thresholds on both sides of the actual threshold were used in the trial"
+		di as text "Placebo thresholds range from " as result "`2' = " `lstart' as text " to " as result "`2' = " `lendob' as text " on LHS and from " as result "`2' = " `rstart' as text " to " as result "`2' = " `rendob' as text " on RHS"
+	}
+	if `RHS' ==1 & `LHS' ==0 {
+		di as text "Placebo thresholds on RHS only of the actual threshold were used in the trial"
+		di as text "Placebo thresholds range from " as result "`2' = " `rstart' as text " to " as result "`2' = " `rendob'
+	}
+	if `RHS' ==0 & `LHS' ==1 {
+		di as text "Placebo thresholds on LHS only of the actual threshold were used in the trial"
+		di as text "Placebo thresholds range from " as result "`2' = " `lstart' as text " to " as result"`2' = " `lendob'
+	}
+	di _newline(1)
+	di as result "Results of Trial"
+	if "`bwlfix'" != "" & "`bwrfix'" == "" {
+		di as text "Optimal RHS bandwidth: " as result _col(25) %5.3f ``best'_low_bw' 
+	}
+	else if "`bwrfix'" != "" & "`bwlfix'" == "" {
+		di as text "Optimal LHS bandwidth: " as result _col(25) %5.3f ``best'_low_bw' 
+	}
+	else if "`bwrfix'" != "" & "`bwlfix'" != "" {
+		di as text "Optimal bandwidth: " as result _col(25) %5.3f "Fixed" 
+	}
+	else {
+		di as text "Optimal bandwidth: " as result _col(25) %5.3f ``best'_low_bw' 
+	}
+	if ``best'_poly' != . {
+		di as text "Polynomial order: " as result _col(25) ``best'_poly'
+	}
+	else {
+		di as text "Optimal specification:" as result _col(24) " ``best'_custom_num'"
+	}
+	di as text "RMSE: " as result _col(23) sqrt(`win_model_ssq'/`iter')
+
+	if `RHS' ==1 & `LHS' ==1 { 
+		di as text "Effective sample size of placebo estimates from optimal model: "  
+		di as text "  Lower bound: " as result _col(25) %5.3f `ess' 
+		di as text "  Upper Bound: " as result _col(25) %5.3f `ess_SUM'
+	}
+	if (`RHS' ==1 & `LHS' ==0) | (`RHS' ==0 & `LHS' ==1)  { 
+		di as text "Effective sample size of placebo estimates from optimal model: " as result %5.3f `ess' 
+	}
+
+	di _newline(1)
+	di as result "Estimated Treatment Effect Using Optimal Model" as text _col(53) "Observations:" as result "{ralign 15:`e(N)'}"
+	di as text _col(53) "Threshold:" as result "{ralign 18:`c'}"
+	di as text _col(53) "vce:" as result "{ralign 24:`vce'}"
+	di as text "{hline 19}{c TT}{hline 60}"
+	di as text "{ralign 18:Inference method}"  _col(19) " {c |} " _col(24) "Coef."  _col(33) `"Std. Err."'  _col(46) "`stat'"    _col(52) "P>|`stat'|"   _col(61) `"[95% Conf. Interval]"'
+	di as text "{hline 19}{c +}{hline 60}"
+
+	di as text "{ralign 18:`e(vcetype)'}" as result _col(19) " {c |} " _col(22) %7.0g `pzms_est' _col(33) %7.0g `pzms_se' _col(43) %7.0g `tstat' _col(52) %5.4f `pzms_p' _col(60) %5.4f `ci_L' _col(73) %5.4f `ci_U'
+	di as text "{ralign 18:KS rand. infer.}" as result _col(19) " {c |} " _col(22) %7.0g `pzms_est' _col(33) %7.0g `alt_se' _col(43) %7.0g `alt_t' _col(52) %5.4f `alt_p' _col(60) %5.4f `pzms_est'-`t_crit_alt'*`alt_se' _col(73) %5.4f `pzms_est'+`t_crit_alt'*`alt_se'
+
+	di as text "{hline 19}{c BT}{hline 60}"
+	if "`bwlfix'" != "" {
+		di as text "Note: left bandwidth is fixed at value `bwlfix'"
+	} 
+	if "`bwrfix'" != "" {
+		di as text "Note: right bandwidth is fixed at value `bwrfix'"
+	} 
+
+	if "`pzplot'" != "" {  //for drawing plot of placebo estimates
+		local alt_ci_L = `pzms_est'-`t_crit_alt'*`alt_se'
+		local alt_ci_U = `pzms_est'+`t_crit_alt'*`alt_se'
+		qui sum ___1
+		local min = min(r(min),`ci_L',`alt_ci_L')
+		local max = max(r(max),`ci_U',`alt_ci_U') 
+		local gap = (`max'-`min')/3
+		kdensity ___1, xlabel(`min'(`gap')`max', format(%5.3f)) xline(`pzms_est', lcolor(red) lpattern(dash)) scheme(s1mono) ///
+		title(Kernel density estimate of placebo treatment effects) xtitle("") xline(`ci_L', lcolor(gs1)) ///
+		xline(`ci_U', lcolor(gs1)) xline(`alt_ci_L', lcolor(gs12)) xline(`alt_ci_U', lcolor(gs12)) ///
+		note("Dashed line is the estimated true treatment effect." "Dark lines are the conventional CI" "Gray lines are the KS randomization inference CI")
+	}
 }
 
-di _newline(1)
-di as result "Estimated Treatment Effect Using Optimal Model" as text _col(53) "Observations:" as result "{ralign 15:`e(N)'}"
-di as text _col(53) "Threshold:" as result "{ralign 18:`c'}"
-di as text _col(53) "vce:" as result "{ralign 24:`vce'}"
-di as text "{hline 19}{c TT}{hline 60}"
-di as text "{ralign 18:Inference method}"  _col(19) " {c |} " _col(24) "Coef."  _col(33) `"Std. Err."'  _col(46) "`stat'"    _col(52) "P>|`stat'|"   _col(61) `"[95% Conf. Interval]"'
-di as text "{hline 19}{c +}{hline 60}"
-
-di as text "{ralign 18:`e(vcetype)'}" as result _col(19) " {c |} " _col(22) %7.0g `pzms_est' _col(33) %7.0g `pzms_se' _col(43) %7.0g `tstat' _col(52) %5.4f `pzms_p' _col(60) %5.4f `ci_L' _col(73) %5.4f `ci_U'
-di as text "{ralign 18:KS rand. infer.}" as result _col(19) " {c |} " _col(22) %7.0g `pzms_est' _col(33) %7.0g `alt_se' _col(43) %7.0g `alt_t' _col(52) %5.4f `alt_p' _col(60) %5.4f `pzms_est'-`t_crit_alt'*`alt_se' _col(73) %5.4f `pzms_est'+`t_crit_alt'*`alt_se'
-
-di as text "{hline 19}{c BT}{hline 60}"
-if "`bwlfix'" != "" {
-	di as text "Note: left bandwidth is fixed at value `bwlfix'"
-} 
-if "`bwrfix'" != "" {
-	di as text "Note: right bandwidth is fixed at value `bwrfix'"
-} 
-
-if "`pzplot'" != "" {  //for drawing plot of placebo estimates
-	qui sum ___1
-	local min = min(r(min),`pzms_est')
-	local max = max(r(max),`pzms_est') 
-	local gap = (`max'-`min')/3
-	_pctile ___1, percentiles(2.5 97.5)
-	local plow = r(r1)
-	local phigh = r(r2)
-	kdensity ___1, xlabel(`min'(`gap')`max', format(%5.3f)) xline(`pzms_est', lcolor(red) lpattern(dash)) ///
-	xline(`plow', lcolor(blue) lpattern(dot)) xline(`phigh', lcolor(blue) lpattern(dot)) scheme(s1mono)  ///
-	title(Kernel density estimate of placebo treatment effects) xtitle("") ///
-	note("Dotted lines are 2.5th and 97.5th percentiles. Dashed line is the estimated true treatment effect.")
-}
-	
 qui drop ___*
 
 capture ereturn scalar pz_est = `pzms_est'
@@ -1069,14 +1110,13 @@ capture ereturn scalar pz_ess_sum = `ess_SUM'
 capture ereturn scalar pz_altp = `alt_p'
 capture ereturn scalar pz_alt_se = `alt_se'
 capture ereturn scalar pz_altp_sum = `alt_pSUM'
+capture ereturn scalar pz_rmse = sqrt(`win_model_ssq'/`iter')
 capture ereturn matrix pz_rep_results = `R'
 ereturn scalar pz_winbw = ``best'_low_bw'
 ereturn matrix pz_winmodels = `WINNERS'
 ereturn scalar pz_pzstepsize = `pzstepsize'
 ereturn scalar pz_bwstepsize = `bwstepsize'
 
-if "`collapse'" != "" {
-	restore
-}
+capture restore
 
 end

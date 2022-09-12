@@ -10,7 +10,7 @@ d KW: graphs
 d
 d Requires: Stata version 15
 d
-d Distribution-Date: 20211116
+d Distribution-Date: 20220911
 d
 d Author: Asjad Naqvi, WU Vienna
 d Support: email asjadnaqvi@@gmail.com
@@ -26,6 +26,7 @@ f scheme-black_set3.scheme
 f scheme-black_tableau.scheme
 f scheme-black_viridis.scheme
 f scheme-black_w3d.scheme
+f scheme-cblind1.scheme
 f scheme-gg_brbg.scheme
 f scheme-gg_cividis.scheme
 f scheme-gg_hue.scheme
@@ -39,6 +40,10 @@ f scheme-gg_w3d.scheme
 f scheme-neon.scheme
 f scheme-rainbow.scheme
 f scheme-swift_red.scheme
+f scheme-tab1.scheme
+f scheme-tab2.scheme
+f scheme-tab3.scheme
+f scheme-ukraine.scheme
 f scheme-white_brbg.scheme
 f scheme-white_cividis.scheme
 f scheme-white_hue.scheme

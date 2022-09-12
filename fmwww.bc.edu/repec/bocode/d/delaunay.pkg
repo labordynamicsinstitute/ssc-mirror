@@ -1,0 +1,22 @@
+d 'DELAUNAY': module for Delaunay triangulation
+d
+d  This is a Stata package for for Delaunay triangulation, Convex
+d hull, and Voronoi tesselations. It implements the S-Hull
+d algorithm (Sinclair 2016) for generating the Delaunay triangles.
+d The Convex hull is a derived as a residual. The Voronoi
+d tessellations are generated as a dual to the triangles. 
+d
+d KW: graphics
+d KW: Delaunay
+d KW: convex hull
+d
+d Requires: Stata version 15 
+d
+d Distribution-Date: 20220911
+d
+d Author: Asjad Naqvi, WU Vienna
+d Support: email asjadnaqvi@@gmail.com
+d
+f delaunay.ado
+f ../v/voronoi.ado
+f delaunay.sthlp

@@ -1,0 +1,20 @@
+d 'TREEMAP': module for treemaps
+d
+d  This is a Stata package for plotting hierarchical data as a
+d treemap. This program implements the {it:squarify} tiling
+d algorithm (Bruls et. al. 2000).  This algorithm is highly robust
+d and aims to optimize the aspect ratio of rectangles relative to
+d the overall graph dimensions. 
+d
+d KW: graphics
+d KW: tree maps
+d
+d Requires: Stata version 15 and palettes, colrspace, labmask from SSC
+d
+d Distribution-Date: 20220911
+d
+d Author: Asjad Naqvi, WU Vienna
+d Support: email asjadnaqvi@@gmail.com
+d
+f treemap.ado
+f treemap.sthlp

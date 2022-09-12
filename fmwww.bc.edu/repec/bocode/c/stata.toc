@@ -93,6 +93,7 @@ p cij module for binomial confidence intervals for proportions using Jeffreys pr
 p ciplot module for plots of confidence intervals
 p cipolate module for cubic interpolation
 p circkde module to perform kernel density estimation for circular data
+p circlepack module for hierarchical circle packing
 p circstat modules to calculate circular statistics
 p circular module for circular statistics
 p circularkde module to perform kernel density estimation for circular data

@@ -22,6 +22,7 @@ p ddf2dct module to facilitate infiling US Government data distributed with a DD
 p deci module to perform Variable Base conversion
 p decomp module to compute decompositions of earnings gaps
 p decompose module to compute decompositions of wage differentials 
+p delaunay module for Delaunay triangulation
 p delta module  to compute the Delta index of scale discrimination
 p demotivate module to remind users of the harsh reality of econometric & statistical practice
 p denton module to interpolate a flow or stock series from low-frequency totals via proportional Denton method

@@ -1,0 +1,16 @@
+d 'ARCPLOT': module for arc plots
+d
+d  This is a Stata packkage to produce arc plots. 
+d
+d KW: graphics
+d KW: arc plots
+d
+d Requires: Stata version 15 and palettes, colrspace, labmask from SSC
+d
+d Distribution-Date: 20220911
+d
+d Author: Asjad Naqvi, WU Vienna
+d Support: email asjadnaqvi@@gmail.com
+d
+f arcplot.ado
+f arcplot.sthlp

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.0  31mar2021}{...}
+{* *! version 0.0  2apr2020}{...}
 {viewerjumpto "Syntax" "eventstudyinteract##syntax"}{...}
 {viewerjumpto "Description" "eventstudyinteract##description"}{...}
 {viewerjumpto "Options" "eventstudyinteract##options"}{...}
@@ -19,8 +19,7 @@ Under treatment effects heterogeneity, the TWFE regression can result in estimat
 The IW estimator is implemented in three steps.  
 First, estimate the interacted regression with {helpb reghdfe}, where the interactions are between relative time indicators and cohort indicators.
 Second, estimate the cohort shares underlying each relative time.  
-Third, take the weighted average of estimates from the first step, with weights set to the estimated cohort shares. 
-For the latest version, please check {browse "https://github.com/lsun20/EventStudyInteract":https://github.com/lsun20/EventStudyInteract}
+Third, take the weighted average of estimates from the first step, with weights set to the estimated cohort shares.
 {p_end}
 {p2colreset}{...}
  
@@ -48,7 +47,7 @@ The syntax is similar to {helpb reghdfe} in specifying fixed effects (with {help
 and the type of standard error reported (with {help reghdfe##opt_vce:vcetype}).  
 Regressors other than the relative time indicators need to be specified separately in {opth covariates(varlist)}.
 Furthermore, it also requires the user to specify the cohort categories as well as which cohort is the control cohort (see {help eventstudyinteract##by_notes:important notes below}).  
-Note that Sun and Abraham (2020) only establishes the validity of the IW estimators for balanced panel data without covariates. {opt eventstudyinteract} evaluates the IW estimators for unbalanced panel data as well.  
+Note that Sun and Abraham (2020) only establishes the validity of the IW estimators for balanced panel data without covariates. {opt eventstudyinteract} does not impose a balanced panel by dropping units with observations that are missing in any time period.  Instead, it evaluates the IW estimators for unbalanced panel data by estimating the interacted regression using all observations.  
 
 {pstd}
 {opt eventstudyinteract} requires {helpb avar} (Baum and Schaffer, 2013) and {helpb reghdfe} (Sergio, 2017) to be installed.
@@ -87,11 +86,11 @@ In addition, it stores the following in {cmd:e()}:
 
 {syntab:Matrices}
 {synopt:{cmd:e(b_iw)}}IW estimate vector{p_end}
-{synopt:{cmd:e(V_iw)}}pointwise variance estimate of the IW estimators{p_end}
+{synopt:{cmd:e(V_iw)}}pointwise variance covariance estimate of the IW estimators, which can be used as input of pre-trend test such as {browse "https://github.com/jonathandroth/pretrends":pretrends}{p_end}
 {synopt:{cmd:e(b_interact)}}Each column vector contains estimates of cohort-specific effect for the given relative time. {p_end}
 {synopt:{cmd:e(V_interact)}}Each column vector contains variance estimate of the cohort-specific effect estimator for the given relative time. {p_end}
 {synopt:{cmd:e(ff_w)}}Each column vector contains estimates of cohort shares underlying the given relative time. {p_end}
-{synopt:{cmd:e(Sigma_l)}}variance estimate of the cohort share estimators{p_end}
+{synopt:{cmd:e(Sigma_ff)}}variance estimate of the cohort share estimators{p_end}
 
 {synoptline}
 {p 4 6 2}
@@ -153,25 +152,29 @@ Implicitly this assumes that effects outside the lead windows are zero.  {p_end}
 {phang2}. {stata set matsize 800 }{p_end}
 {phang2}. {stata eventstudyinteract ln_wage g_* g0-g18, cohort(first_union) control_cohort(never_union) covariates(south) absorb(i.idcode i.year) vce(cluster idcode) }{p_end}
 
+{title:Event study plots}
 {pstd} We may feed the estimates into {helpb coefplot} for an event study plot.{p_end}
 {phang2}. {stata matrix C = e(b_iw)}{p_end}
-{phang2}. {stata mata st_matrix("A",sqrt(st_matrix("e(V_iw)")))}{p_end}
-{phang2}. {stata matrix C = C \ A}{p_end}
+{phang2}. {stata mata st_matrix("A",sqrt(diagonal(st_matrix("e(V_iw)"))))}{p_end}
+{phang2}. {stata matrix C = C \ A'}{p_end}
 {phang2}. {stata matrix list C}{p_end}
 {phang2}. {stata coefplot matrix(C[1]), se(C[2])}{p_end}
 
+{title:Binning}
 {pstd} Pre-treatment effects seem relatively constant, which might suggest binning the many leads. 
 TODO: current implementation of bins does not follow Sun and Abraham (2020) exactly due to coding challenge.  
 But it is valid if effects in the bin are constant for each cohort.{p_end}
 {phang2}. {stata gen g_l4 = ry <= -4}{p_end}
 
+{title:Using the last treated as the control cohort}
 {pstd} Alternatively, we can take the control cohort to be individuals that were unionized last.{p_end}
 {phang2}. {stata gen last_union = (first_union == 88)}{p_end}
 
-{pstd} If using the last-treated cohort as the control, be sure to restrict the analysis sample to be before 
+{pstd} If using the last-treated cohort as the control, be sure to restrict the analysis sample to exclude the never-treated (if any) and to be before 
 the treated periods for the last-treated cohort.{p_end}
 {phang2}. {stata eventstudyinteract ln_wage g_l4 g_3 g_2 g0-g18 if first_union != . & year < 88, cohort(first_union) control_cohort(last_union) covariates(south) absorb(i.idcode i.year) vce(cluster idcode) }{p_end}
 
+{title:Understanding the mechanics of the IW estimator}
 {pstd} We can look at the share of cohorts underlying the IW estimates for each relative time.{p_end}
 {phang2}. {stata matrix list e(ff_w) }{p_end}
 
@@ -188,13 +191,53 @@ with weights corresponding to the cohort share estimates: {p_end}
 {phang2}. {stata matrix nu = delta[1...,1]'*weight[1...,1]}{p_end}
 {phang2}. {stata matrix list nu}{p_end}
 
+{title:Aggregating event study estimates}
+{pstd} It is possible to use {helpb lincom} to estimate the average effect, say over the first five years of joining the union. However, since {helpb lincom} looks for coefficients and variance covariance matrix stored in {cmd:e(b)} 
+and {cmd:e(V)} a workaround is the following: {p_end}
+{phang2}. {stata matrix b = e(b_iw)}{p_end}
+{phang2}. {stata matrix V = e(V_iw)}{p_end}
+{phang2}. {stata ereturn post b V}{p_end}
+{phang2}. {stata lincom (g0 + g1 + g2 + g3 + g4)/5}{p_end}
 
+{title:Aggregating event study estimates}
+{pstd} It is possible to use {helpb test} to perform a joint F-test of pretrends in the sense of testing whether all of the coefficients on the pre-event relative time indicators are jointly zero. However, since {helpb test} looks for coefficients and variance covariance matrix stored in {cmd:e(b)} 
+and {cmd:e(V)} a workaround is the following: {p_end}
+{phang2}. {stata matrix b = e(b_iw)}{p_end}
+{phang2}. {stata matrix V = e(V_iw)}{p_end}
+{phang2}. {stata ereturn post b V}{p_end}
+{phang2}. {stata test (g_l4=0) (g_3=0) (g_2=0)}{p_end}
+
+{title:Compare event study estimates for subsamples}
+{pstd} Suppose we want to compare the average effect over the first five years of joining the union between college graduates and non-college graduates. We can first estimate their separate effects by interacting the relative time indicators with the indicator of college graduates: {p_end}
+	{cmd:forvalues k = 18(-1)2 {c -(}}
+	{cmd:   gen g_`k'_collgrad0 = ry == -`k' & collgrad == 0}
+	{cmd:{c )-}}
+	{cmd:forvalues k = 0/18 {c -(}}
+	{cmd:     gen g`k'_collgrad0 = ry == `k' & collgrad == 0}
+	{cmd:{c )-}}
+	{cmd:gen g_l4_collgrad0 = ry <= -4 & collgrad == 0} 
+	{cmd:forvalues k = 18(-1)2 {c -(}}
+	{cmd:   gen g_`k'_collgrad1 = ry == -`k' & collgrad == 1}
+	{cmd:{c )-}}
+	{cmd:forvalues k = 0/18 {c -(}}
+	{cmd:     gen g`k'_collgrad1 = ry == `k' & collgrad == 1}
+	{cmd:{c )-}}
+	{cmd:gen g_l4_collgrad1 = ry <= -4 & collgrad == 1}
+
+{pstd} We can then use {helpb lincom} to estimate the difference in their average effects as below.  Alternatively, we can use {helpb eventstudyinteract} separately on the subsamples of college graduates and non-college graduates. 
+The point estimates might be slightly different because the control cohort is restricted to college graduates and non-college graduates respectively. The approach below combines both into one control cohort. {p_end}	
+{phang2}. eventstudyinteract ln_wage g_l4_collgrad* g_3_collgrad* g_2_collgrad* g0_collgrad0-g18_collgrad0  g0_collgrad1-g18_collgrad1 if first_union != . & year < 88, cohort(first_union) control_cohort(last_union)  absorb(i.idcode i.year) 
+vce(cluster idcode)  {p_end}
+{phang2}. {stata matrix b = e(b_iw)}{p_end}
+{phang2}. {stata matrix V = e(V_iw)}{p_end}
+{phang2}. {stata ereturn post b V}{p_end}
+{phang2}. {stata lincom (g0_collgrad1 + g1_collgrad1 + g2_collgrad1 + g3_collgrad1 + g4_collgrad1)/5 - (g0_collgrad0 + g1_collgrad0 + g2_collgrad0 + g3_collgrad0 + g4_collgrad0)/5}{p_end}
 
 {marker acknowledgements}{...}
 {title:Acknowledgements}
   
-{pstd}Thank you to the users of early versions of the program who devoted time to reporting
-the bugs that they encountered.
+{pstd}Thanks to the users of early versions of the program who devoted time to reporting
+the bugs that they encountered.  Thanks to Yunan Ji, Soomi Kim, Paichen Li, Emma Rackstraw and Jie Zhou for beta testing.  Thanks to Claudio A. Mora-García for incorporating covariance estimation into the code.
  
 {marker references}{...}
 {title:References}

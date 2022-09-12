@@ -1,0 +1,34 @@
+d 'EXBSAMPLE': module to compute exchangeably weighted (or Bayesian) bootstraps
+d
+d  exbsample generates bootstrap replication weights for
+d implementation of  exchangeably weighted bootstrap schemes, also
+d known as the Bayesian bootstrap. It can be used as an alternative
+d to bsample. Exchangeably weighted bootstrap schemes (or weighted,
+d or exchangeable bootstraps) are  alternatives to the traditional
+d non-parametric (paired) bootstrap. Standard bootstrap 
+d replications involve generating bootstrap samples of size N by
+d drawing with replacement  from the original data. Such a
+d bootstrap resample can be seen as a frequency weighted  version
+d of the original data, with integer weights representing the
+d number of times each observation is drawn in a resample. (See the
+d weight option of Stata's bootstrap drawing command bsample.)
+d Exchangeably weighted bootstrap schemes can be seen as extensions
+d of this representation:  bootstrap resamples are created by
+d generating replication weights directly from appropriate
+d distribution functions.  See Praestgaard and Wellner (1993) for
+d details. This technique is also known as the Bayesian bootstrap
+d (Rubin, 1981). 
+d
+d KW: exchangeable weighting
+d KW: bootstrap
+d KW: Bayesian bootstrap
+d
+d Requires: Stata version 9.2 
+d
+d Distribution-Date: 20220911
+d
+d Author: Philippe Van Kerm, Luxembourg Institute of Socio-Economic Research
+d Support: email philippe.vankerm@@liser.lu
+d
+f exbsample.ado
+f exbsample.sthlp

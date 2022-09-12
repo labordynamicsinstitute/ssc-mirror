@@ -1,0 +1,21 @@
+d 'LCAENTROPY': module to calculate entropy for models with categorical latent variables
+d
+d  Calculates entropy after a model with one or more categorical
+d latent  variables is estimated using {help gsem}. The measure of
+d entropy implemented was first described by Ramaswamy, DeSarbo,
+d Reibstein, and Robinson (1993). 
+d
+d KW: entropy
+d KW: latent class analysis
+d KW: latent profile analysis
+d KW: categorical latent variables
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20220911
+d
+d Author: Rose Anne Medeiros, RA Medeiros Statistical Consulting
+d Support: email ramedeiros@@ramstat.com 
+d
+f lcaentropy.ado
+f lcaentropy.sthlp

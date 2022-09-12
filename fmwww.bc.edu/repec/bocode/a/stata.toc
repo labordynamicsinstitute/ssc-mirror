@@ -72,6 +72,7 @@ p apoverty module to compute poverty measures
 p appendfile module to append text files
 p archlm module to calculate LM test for ARCH effects
 p archqq module to generate Q-Q plot and distribution tests for ARCH models
+p arcplot module for arc plots
 p ardl module to perform autoregressive distributed lag model estimation
 p arhomme module to estimate Arellano and Bonhomme quantile selection model 
 p arimaauto module to find the best ARIMA model with the help of a Stata-adjusted Hyndman-Khandakar (2008) algorithm 

@@ -26,6 +26,7 @@ p margintegrate module to estimate non-parametric smooth functions for generaliz
 p marglmean module to compute marginal log means from regression models
 p margprev module to compute marginal prevalences from binary regression models
 p marhis module to produce predictive margins and marginal effects plots with histogram after regress, logit, xtmixed and mixed
+p marimekko module for marikmekko charts
 p mark_changes module to generate a variable indicating where one or more variables changes value
 p markdoc module for literate programming
 p marker module to generate indicator variable marking desired sample

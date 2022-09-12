@@ -23,7 +23,7 @@ d KW: two-way fixed effects
 d
 d Requires: Stata version 13 and avar, ftools and reghdfe from SSC (q.v.)
 d
-d Distribution-Date: 20210804
+d Distribution-Date: 20220911
 d
 d Author: Liyang Sun, MIT	
 d Support: email lsun20@@mit.edu
