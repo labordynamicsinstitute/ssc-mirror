@@ -1,5 +1,5 @@
 program define clustergram
-*! 1.1.0 August 2022, replacing Stata 7 graph routine "gph" with twoway rarea
+*! 1.1.1 September 12, 2022, minor changes with parenthesis in if commands for Mac compatability
 
 	version 17 
 	syntax varlist [if] [in], CLuster(varlist) [ FRaction(real 0.2) ///
@@ -518,12 +518,11 @@ program define GraphBoxColor
 					else {
 				 		local addplot  `"`addplot' || `temp'"'
 					}
+				}
 			}						
 			qui replace `increment' = `increment'+ `w_k' if `w_k'!=.   // for the next color
 		}
 	}
-
-	}  //  cfb fix	
 
     // *most work happens in `addplot' (all parallelograms) and `addlabeltext' (all labels)
 	// the rest just sets up the coordinates but plots nothing because msymbol(none)
@@ -1006,3 +1005,4 @@ end
 //*! 1.0.0 August 1, 2002 Matthias Schonlau 
 //*! 1.0.1 May 8, 2003, label of y axis changed if k==1 
 //*! 1.1.0 August 2022, replacing Stata 7 graph routine "gph" with twoway rarea
+//*! 1.1.1 September 12, 2022, minor changes with parenthesis in if commands for Mac compatability
