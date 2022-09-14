@@ -1,0 +1,30 @@
+d 'ATTREGTEST': module to implement the regression-based attrition tests proposed in  Ghanem et al. (2022)
+d
+d   attregtest implements the two regression-based attrition tests
+d proposed in  Ghanem et al. (2022). The first test is based on the
+d testable implication of the identifying assumption of internal
+d validity for the respondent subpopulation (IV-R). The second test
+d is based on the testable implication of the identifying
+d assumption of internal validity for the study population (IV-P).
+d These tests can be implemented for completely or cluster
+d randomized experiments as well as experiments with stratified
+d randomization. 
+d
+d KW: regression
+d KW: attrition tests
+d
+d Requires: Stata version 13 and estout, randtreat from SSC (q.v.)
+d
+d Distribution-Date: 20220913
+d
+d Author: Dalia Ghanem, University of California, Davis
+d Support: email dghanem@@ucdavis.edu
+d
+d Author: Sarojini Hirshleifer, University of California, Riverside
+d Support: email sarojini.hirshleifer@@ucr.edu
+d
+d Author: Karen Ortiz-Becerra, University of San Diego
+d Support: email kortizbecerra@@sandiego.edu
+d
+f attregtest.ado
+f attregtest.sthlp

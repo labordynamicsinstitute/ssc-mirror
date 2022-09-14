@@ -1,12 +1,12 @@
 {smcl}
-{* *! version 2.0 Fernando Rios-Avila January 2021}{...}
+{* *! version 3.0 Fernando Rios-Avila September 2022}{...}
 {cmd:help f_spline}
 {hline}
 
 {title:Title}
 
 {p2colset 5 14 16 2}{...}
-{p2col :{cmd:f_able} {hline 1}} Module for the construction of polynomial splines for {cmd:f_able} {p_end}
+{p2col :{cmd:f_spline} {hline 1}} Module for the construction of polynomial splines for {cmd:f_able} {p_end}
 {p2colreset}{...}
 
 
@@ -55,7 +55,7 @@ Polynomial spline of degree #d with #k knots set at equally distant #k percentil
 {cmd:=}
 {it:oldvar}
 {ifin}
-[{cmd:,  weight(varname) {opt kp:ctile:nots(#k)} {opt d:egree}(#d)}]
+[{cmd:,  weight(varname) {opt np:ctile(#k)} {opt d:egree}(#d)}]
 
 
 {marker description}{...}
@@ -111,6 +111,9 @@ used to define the knots based on the empirical distribution of {it: oldvar}.
 {cmd:weight(varname)} Used to indicate a weight variable to be used internally 
 to determine the empirical distribution of {it: oldvar}. It can only be used with 
 the 3rd and 4th syntax of {cmd: f_spline}.
+
+{phang}
+{cmd:replace} Request replacing variables if they already exist in memory.
 
 {marker examples}{...}
 {title:Examples}

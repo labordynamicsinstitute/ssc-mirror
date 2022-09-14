@@ -1,8 +1,19 @@
-*! v1 FRA 10/22/2020 First version for spline for F_ABLE
+* v1.1 FRA version for spline for F_ABLE. Adds replace
+*! v1  FRA 10/22/2020 First version for spline for F_ABLE
 *                    This command creates splines, of any degree, given percentiles, or knots.
  
-capture program drop f_spline
-program f_spline, 
+*capture program drop f_spline
+program f_spline
+	syntax [anything(equalok everything)], [version] *
+	if "`version'"!="" | "`0'"=="" {
+		addr scalar version = 1.1
+		display "version:" scalar(r(version))
+		exit
+	}
+	else f_spline_wk `0'
+end
+
+program f_spline_wk , 
 	syntax anything(id="newvarname")=/exp [if] [in] , ///
 					[ weight(varname) /// declares weghiths for some cases
 					NPctile(numlist >=1) /// uses Number of percentiles. for example 3 would use the 33th 66th 
@@ -10,7 +21,7 @@ program f_spline,
 					NKnots(numlist >=1 int) /// knots declare equidistance knots if data is between 0-100, 1 knot would be 50, 2 would be 33 66, etc
 					Knots(numlist sort) /// This deckares which points to use the breakdowns 
 					Degree(numlist >=1 int) /// this indicates the degree of polynomials.
-					] 
+					replace ] 
 	
 	if "`npctile'`kpctile'`nknots'`knots'"=="" {
 		display in red "Spline option needed"
@@ -79,12 +90,17 @@ program f_spline,
 	local vcnt =1
 	forvalues i = 2/ `degree' {
 		local vcnt=`vcnt'+1 
+		if "`replace'"!="" capture drop `anything'`vcnt'
 		fgen `anything'`vcnt'=`exp'^`i'
 	}
 	foreach i of local mlist {
 		local vcnt=`vcnt'+1 
+		if "`replace'"!="" capture drop `anything'`vcnt'
 		fgen `anything'`vcnt'=max(`exp'-`i',0)^`degree'
 	}
 end
 
+program addr, rclass
+	return `0'
+end 
  

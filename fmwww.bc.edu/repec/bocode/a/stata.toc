@@ -97,6 +97,7 @@ p assertky module to assert unique dataset keys
 p astile module to provide a faster and byable alternative for xtile
 p astx module to create a table of descriptive statistics and t-statistics by a grouping variable
 p atkplot module to generate Atkinson residual normality plots
+p attregtest module to implement the regression-based attrition tests proposed in  Ghanem et al. (2022)
 p autofill module to fill missing values with existing values
 p autofmt module to automatically format a significant number of digits
 p autolog module to generate dialog to create log files

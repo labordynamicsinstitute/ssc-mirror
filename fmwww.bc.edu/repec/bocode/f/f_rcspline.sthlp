@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0 Fernando Rios-Avila January 2021}{...}
+{* *! version 3.0 Fernando Rios-Avila September 2022}{...}
 {cmd:help f_rcspline}
 {hline}
 
@@ -21,7 +21,7 @@ Restricted cubic spline
 {cmd:=}
 {it:oldvar}
 {ifin}
-[{cmd:,  {opt k:nots(numlist)} {opt nk:nots(#k)} weight(varname)}]
+[{cmd:,  {opt k:nots(numlist)} {opt nk:nots(#k)} weight(varname) replace}]
 
 {marker description}{...}
 {title:Description}
@@ -62,6 +62,9 @@ Each new variable will be named consecutively starting from 2.
 to determine the empirical distribution of {it: oldvar}, and determine the 
 location of the knots when using the option {cmd: nk:nots(#k)}.
 
+{phang}		
+{cmd: {opt replace}}  Request to replace the variables if they already exist in the dataset.  
+		
 {marker examples}{...}
 {title:Examples}
 
