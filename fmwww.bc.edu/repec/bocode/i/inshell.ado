@@ -1,3 +1,10 @@
+*! 2.5   MBH  8 Sept 2022
+*!    this update contains several important improvements such as:
+*!      a) a syntax parser written in Mata to properly direct commands
+*!      b) removal of empty lines after the command line by using -quietly shell-
+*!      c) further improvements to capturing strings
+*!      d) streamlined code with less file I/O so -inshell- is faster than ever
+*!      e) corrections for handling commands that produce an error code without stderr
 *! 2.1   MBH 18 Aug  2022
 *!      a) corrections to the syntax line to better allow commas
 *! 2.0   MBH 20 July 2022
@@ -40,23 +47,31 @@ program define inshell, rclass
 version 14
 syntax anything(everything equalok) [, * ]
 
-// inshell diagnostics
-if inlist(`"`0'"', "diag", "diagn", "diagno", "diagnos", "diagnost", "diagnosti", "diagnostic", "diagnostics") {
-	if lower(c(os)) != "windows" {
+// clear the return list
+quietly mata : st_rclear()
+
+// parse the syntax within Mata to allow unbalanced quoting and back-ticks
+quietly mata : inshell_parse_syntax()
+
+// diagnostics - display information about the shell, its PATH, and the various macro options
+if ("`parser'" == "diagnostics") {
+	if (lower(c(os)) != "windows") {
 		capture which inshell_diagnostics
 		if (!_rc) {
 			inshell_diagnostics
 			exit 0
 		}
-		if (_rc) {
+		else if (_rc) {
 			noisily display ///
-				as error " >>> the program which runs the diagnostic routines for {bf:inshell} was not found on your system. Perhaps it has become lost, deleted, renamed, or otherwise corrupted.
+				as error ///
+					" >>> the diagnostics program for {bf:inshell} was not found on your system. Perhaps it has become lost, deleted, renamed, or otherwise corrupted."
 				exit 1
 		}
 	}
-	else if lower(c(os)) == "windows" {
+	else if (lower(c(os)) == "windows") {
 		noisily display ///
-			as error _n " >>> Sorry, but {bf:inshell} does not currently have a diagnostics mode for {bf:Microsoft Windows}. Stay tuned."
+			as error ///
+				_n " >>> Sorry, but {bf:inshell} does not currently have a diagnostics mode for {bf:Microsoft Windows}. Stay tuned."
 		exit 1
 	}
 }
@@ -64,57 +79,63 @@ if inlist(`"`0'"', "diag", "diagn", "diagno", "diagnos", "diagnost", "diagnosti"
 // "auto cd" -- this feature mimics zsh's AUTO_CD feature: if a command is
 // issued that is the name of a sub-directory within the current working
 // directory, it will perform the -cd- command to that sub-directory. It is
-// toggled off by default
-if !inlist(`"`1'"', "", "cd", "chdir") & missing("`2'") & !missing("${INSHELL_ENABLE_AUTOCD}") {
-	tempname direxist
-	mata : st_numscalar("`direxist'", direxists("`macval(1)'"))
-	if scalar(`direxist') == 1 {
-		quietly capture cd `"`macval(1)'"'
-		if (!_rc) {
+// toggled off by default. This is in effect an auto-cd wrapper
+if ("`parser'" == "autocd") {
+			mata : if (direxists("`macval(1)'")); chdir("`macval(1)'")
 			noisily pwd
 			return local no = 1
 			return local no1 "`c(pwd)'"
 			return local rc = 0
 			exit 0
-		}
-	}
 }
 
-// for -cd- wrapper
-if inlist(`"`1'"', "cd", "chdir") {
-	if `"`2'"' == "-" {
+// -cd- wrapper
+if ("`parser'" == "cd") {
+	if (`"`2'"' == "-") {
 		noisily display ///
-			as error " >>> previous directory switching is not supported by this cd wrapper"
+			as error ///
+				" >>> previous directory switching is not supported by this cd wrapper"
 		exit 1
 	}
-	mata : inshell_cd(`"`macval(2)'"')
-	if `cdsuccess' == 1 {
+	else if (`"`2'"' == "" & lower(c(os)) == "windows") {
 		noisily pwd
 		return local no1 = "`c(pwd)'"
 		return local no = 1
 		return local rc = 0
 		exit 0
 	}
-	else if `cdsuccess' == 0 {
-		return local rc = 1
-		exit 1
+	else {
+		quietly mata : inshell_cd(`"`macval(2)'"')
+		if (`cdsuccess' == 1) {
+			noisily pwd
+			return local no1 = "`c(pwd)'"
+			return local no = 1
+			return local rc = 0
+			exit 0
+		}
+		else if (`cdsuccess' == 0) {
+			return local rc = 1
+			exit 1
+		}
 	}
 }
 
-if !inlist(`"`1'"', "cd", "chdir") {
+// shell command
+if ("`parser'" == "command") {
 
 	tempfile stdout stderr rc
 	tempname out err c
 
-	if lower(c(os)) != "windows" {
-		if strpos("${S_SHELL}", "pwsh") {
-			shell `macval(0)' 2> `stderr' 1> `stdout' ; echo $? > `rc'
+	// choose between Windows or not-Windows
+	if (lower(c(os)) != "windows") {
+		if (strpos("${S_SHELL}", "pwsh")) {
+			quietly shell `macval(0)'  2> `stderr' 1> `stdout' ; echo  $? > `rc'
 		}
-		if !strpos("${S_SHELL}", "pwsh") & !strpos("${S_SHELL}", "csh") {
-			if !missing("${INSHELL_PATHEXT}") {
+		else if (!strpos("${S_SHELL}", "pwsh") & !strpos("${S_SHELL}", "csh")) {
+			if (!missing("${INSHELL_PATHEXT}")) {
 				tempname pathextisvalid
 				mata : st_numscalar("`pathextisvalid'", direxists("${INSHELL_PATHEXT}"))
-				quietly if scalar(`pathextisvalid') == 0 {
+				quietly if (scalar(`pathextisvalid') == 0) {
 					noisily display ///
 						as error   " >>>  {bf:inshell} path extension macro {bf:INSHELL_PATHEXT} is set to "  ///
 						as text   `"${INSHELL_PATHEXT}"'                                                  _n  ///
@@ -123,29 +144,29 @@ if !inlist(`"`1'"', "cd", "chdir") {
 						" >>> Clear the {bf:INSHELL_PATHEXT} macro by clicking here: "`"[{stata `"macro drop INSHELL_PATHEXT"': drop INSHELL_PATHEXT macro }]"'
 					exit 991
 				}
-				else if scalar(`pathextisvalid') == 1 {
-					if missing("${INSHELL_TERM}") {
-						shell export PATH=${INSHELL_PATHEXT}:\$PATH && `macval(0)' 2> `stderr' 1> `stdout' || echo $? > `rc'
+				else if (scalar(`pathextisvalid') == 1) {
+					if (missing("${INSHELL_TERM}")) {
+						quietly shell export PATH=${INSHELL_PATHEXT}:\$PATH && `macval(0)' 2> `stderr' 1> `stdout' || echo $? > `rc'
 					}
-					else if !missing("${INSHELL_TERM}") {
-						shell export PATH=${INSHELL_PATHEXT}:\$PATH && export TERM=${INSHELL_TERM} && `macval(0)' 2> `stderr' 1> `stdout' || echo $? > `rc'
+					else if (!missing("${INSHELL_TERM}")) {
+						quietly shell export PATH=${INSHELL_PATHEXT}:\$PATH && export TERM=${INSHELL_TERM} && `macval(0)' 2> `stderr' 1> `stdout' || echo $? > `rc'
 					}
 				}
 			}
-			else if missing("${INSHELL_PATHEXT}") {
-				if !missing("${INSHELL_TERM}") {
-					shell export TERM=${INSHELL_TERM} && `macval(0)' 2> `stderr' 1> `stdout' || echo $? > `rc'
+			else if (missing("${INSHELL_PATHEXT}")) {
+				if (!missing("${INSHELL_TERM}")) {
+					quietly shell export TERM=${INSHELL_TERM} && `macval(0)' 2> `stderr' 1> `stdout' || echo $? > `rc'
 				}
-				else if missing("${INSHELL_TERM}") {
-					shell `macval(0)' 2> `stderr' 1> `stdout' || echo $? > `rc'
+				else if (missing("${INSHELL_TERM}")) {
+					quietly shell `macval(0)' 2> `stderr' 1> `stdout' || echo $? > `rc'
 				}
 			}
 		}
-		else if strpos("${S_SHELL}", "csh") {
-			if !missing("${INSHELL_PATHEXT}") {
+		else if (strpos("${S_SHELL}", "csh")) {
+			if (!missing("${INSHELL_PATHEXT}")) {
 				tempname pathextisvalid
 				mata : st_numscalar("`pathextisvalid'", direxists("${INSHELL_PATHEXT}"))
-				quietly if scalar(`pathextisvalid') == 0 {
+				quietly if (scalar(`pathextisvalid') == 0) {
 					noisily display ///
 						as error   " >>>  {bf:inshell} path extension macro {bf:INSHELL_PATHEXT} is set to "  ///
 						as text   `"${INSHELL_PATHEXT}"'                                                  _n  ///
@@ -154,33 +175,34 @@ if !inlist(`"`1'"', "cd", "chdir") {
 						" >>> Clear the {bf:INSHELL_PATHEXT} macro by clicking here: "`"[{stata `"macro drop INSHELL_PATHEXT"': drop INSHELL_PATHEXT macro }]"'
 					exit 991
 				}
-				else if scalar(`pathextisvalid') == 1 {
-					if missing("${INSHELL_TERM}") {
-						shell setenv PATH ${INSHELL_PATHEXT}:\$PATH && ( `macval(0)' > `stdout' ) >& `stderr' || echo $? > `rc'
+				else if (scalar(`pathextisvalid') == 1) {
+					if (missing("${INSHELL_TERM}")) {
+						quietly shell setenv PATH ${INSHELL_PATHEXT}:\$PATH && ( `macval(0)' > `stdout' ) >& `stderr' || echo $? > `rc'
 					}
-					else if !missing("${INSHELL_TERM}") {
-						shell setenv PATH ${INSHELL_PATHEXT}:\$PATH && setenv TERM ${INSHELL_TERM} && ( `macval(0)' > `stdout' ) >& `stderr' || echo $? > `rc'
+					else if (!missing("${INSHELL_TERM}")) {
+						quietly shell setenv PATH ${INSHELL_PATHEXT}:\$PATH && setenv TERM ${INSHELL_TERM} && ( `macval(0)' > `stdout' ) >& `stderr' || echo $? > `rc'
 					}
 				}
 			}
-			else if missing("${INSHELL_PATHEXT}") {
-				if !missing("${INSHELL_TERM}") {
-					shell setenv TERM ${INSHELL_TERM} && ( `macval(0)' > `stdout' ) >& `stderr' || echo $? > `rc'
+			else if (missing("${INSHELL_PATHEXT}")) {
+				if (!missing("${INSHELL_TERM}")) {
+					quietly shell setenv TERM ${INSHELL_TERM} && ( `macval(0)' > `stdout' ) >& `stderr' || echo $? > `rc'
 				}
-				else if missing("${INSHELL_TERM}") {
-					shell ( `macval(0)' > `stdout' ) >& `stderr' || echo $? > `rc'
+				else if (missing("${INSHELL_TERM}")) {
+					quietly shell ( `macval(0)' > `stdout' ) >& `stderr' || echo $? > `rc'
 				}
 			}
 		}
 	}
-	else if lower(c(os)) == "windows" {
-		if "`c(mode)'" == "batch" {
-			display ///
-				as error " >>> {bf:inshell} will not function in batch mode on {bf:Windows}. This is a Stata limitation."
+	else if (lower(c(os)) == "windows") {
+		if ("`c(mode)'" == "batch") {
+			noisily display ///
+				as error ///
+					" >>> {bf:inshell} will not function in batch mode on {bf:Windows}. This is a Stata limitation."
 			exit 990
 		}
 						local       batf  "`c(tmpdir)'inshell_`= clock("`c(current_time)'", "hms")'`= runiformint(1, 99999)'.bat"
-						// using -tempfile- to create the .bat does not work for some reason. I hope the timestamp random number combination is sufficient for all of the future uses of inshell and its future derivatives
+						// using -tempfile- to create the .bat does not work for some reason
 						tempname    batn
 		capture file close `batn'
 		quietly file open  `batn' using "`batf'" , write text replace
@@ -192,119 +214,137 @@ if !inlist(`"`1'"', "cd", "chdir") {
 		quietly shell     "`batf'"
 						erase     "`batf'"
 	}
-	// confirm that the stderr file has length greater than zero
-	capture confirm file "`stderr'"
-	if (!_rc) {
-		file open `err' using "`stderr'" , read
-		file seek `err' eof
-		file seek `err' query
-		local is_err = r(loc)
-		file close `err'
-	}
-	else exit 601
 
-	if `is_err' == 0 {
-		capture confirm file "`stdout'"
-		if (!_rc) {
-			quietly mata : M = inshell_process_file("`stdout'")
-			quietly mata : Q = select(M, strlen(M))
-			forvalues i = 1 / `rows' {
-			  local j = `rows' - `i' + 1
-			  mata : st_strscalar("no`j'", Q[`j'])
-			  return local no`j' = scalar(no`j')
-				capture scalar drop no`j'
-			}
-			return local no = `rows'
-			noisily type "`outfile'", asis
-			local rc2 = 0
-			capture mata mata drop Q
+	// read the stdout
+	capture confirm file "`stdout'"
+	if (!_rc) {
+		quietly mata : M = inshell_process_file("`stdout'")
+		quietly mata : Q = select(M, strlen(M))
+		return local no  = `rows'
+		forvalues i = 1 / `rows' {
+		  local j = `rows' - `i' + 1
+			mata : st_global("r(no`j')", Q[`j'])
 		}
-		else exit 601
+		return add
+		noisily type "`outfile'", asis
+		capture mata mata drop Q
 	}
-	else if `is_err' != 0 {
-		quietly mata : inshell_process_file("`stderr'")
-		file open `err' using "`outfile'", read
-		file read `err' line
-		local ln = 0
-		while r(eof) == 0 {
-			local ++ln
-			return local err`ln' `"`macval(line)'"'
-			local err`ln'_int    `"`macval(line)'"'
-			file read `err' line
-		}
-		return local errln = `ln'
-		file close `err'
-		local errormessage = ustrtrim(fileread("`outfile'"))
+
+	// read the return code
+	capture confirm file "`rc'"
+	if (!_rc) {
 		local errorcode    = ustrtrim(fileread("`rc'"))
 		// two lines below for PowerShell
-		if "`errorcode'" == "True"  local errorcode 1
-		if "`errorcode'" == "False" local errorcode 0
+		if ("`errorcode'" == "True")  local errorcode 0
+		if ("`errorcode'" == "False") local errorcode 1
 		capture confirm integer number `errorcode'
 		if (_rc) local errorcode "?"
+		local rc2    "`errorcode'"
+		if (missing("`rc2'")) local rc2 = 0
+	}
 
-		if "`c(console)'" == "" & `maxdlen' <= `= `: set linesize' - min(`: strlen local errorcode', 2) - 9' {
-			local stderr_size = `maxdlen' + 2
-			if `: strlen local errorcode' < 2 {
-				local rc_size   = `: strlen local errorcode' + 3
-				local pad         " "
+	// read the standard error
+	capture confirm file "`stderr'"
+	if (!_rc) {
+		quietly mata : N = inshell_process_file("`stderr'")
+		mata : st_local("displayrows", strofreal(rows(N)))
+		if (`displayrows' > 0) {
+			quietly mata : R = select(N, strlen(N))
+			mata : st_local("errormessage", subinstr(invtokens(R'), char(9), "   ", .))
+			mata : for (i=1; i<=rows(N); i++) st_local("err"+strofreal(i)+"_int", subinstr(N[i], char(9), "   ", .))
+			forvalues i = 1 / `rows' {
+				// this cannot be looped in an inline Mata statement: "non rclass programs my not set r-class values"
+				mata : st_global("r(err`i')", R[`i'])
+			}
+			capture mata mata drop R i
+			return local errln = `rows'
+			return add
+
+			// display the standard error
+			if (`maxdlen' <= `= `: set linesize' - min(`: strlen local errorcode', 2) - 9') {
+				local stderr_size = `maxdlen' + 2
+				if (`: strlen local errorcode' < 2) {
+					local rc_size   = `: strlen local errorcode' + 3
+					local pad         " "
+				}
+				else {
+					local rc_size   = `: strlen local errorcode' + 2
+				}
+				local s1          = `: set linesize' - `stderr_size' - `rc_size' - 4
+				local rc_hline    = `: strlen local rc_size' - 6
+				if (`displayrows' >= 2) {
+					forvalues i = 2 / `displayrows' {
+						local error_box`i' _n "{c |} `macval(err`i'_int)' {space `= `maxdlen' - `: udstrlen local err`i'_int''}{c |}"
+						if (`i' == 2) {
+							local error_box`i' `"`macval(error_box`i')' "{space `s1'}{c BLC}{hline `rc_hline'}{it: rc }{c BRC}""'
+						}
+						local error_box_total "`macval(error_box_total)' `macval(error_box`i')'"
+					}
+					noisily display ///
+						as smcl ///
+							 "{err}{c TLC}{hline `stderr_size'}{c TRC}{space `s1'}{c TLC}{hline `rc_size'}{c TRC}"      ///
+						_n "{c |} `macval(err1_int)' {space `= `stderr_size' - `: udstrlen local err1_int' - 2'}{c |}{space `s1'}{c |} {bf:`pad'`errorcode'} {c |}" ///
+						          `macval(error_box_total)'   ///
+						_n "{c BLC}{it: stderr }{hline `= `stderr_size' - 8'}{c BRC}"
+				}
+				else if (`displayrows' == 1) {
+					noisily display ///
+						as smcl ///
+							 "{err}{c TLC}{hline `stderr_size'}{c TRC}{space `s1'}{c TLC}{hline `rc_size'}{c TRC}"      ///
+						_n "{c |} `macval(err1_int)' {c |}{space `s1'}{c |} {bf:`pad'`errorcode'} {c |}"              ///
+						_n "{c BLC}{it: stderr }{hline `= `stderr_size' - 8'}{c BRC}{space `s1'}{c BLC}{hline `rc_hline'}{it: rc }{c BRC}"
+				}
 			}
 			else {
-				local rc_size   = `: strlen local errorcode' + 2
-			}
-			local s1          = `: set linesize' - `stderr_size' - `rc_size' - 4
-			local rc_hline    = `: strlen local rc_size' - 6
-			if `ln' >= 2 {
-				forvalues i = 2 / `ln' {
-					local error_box`i' _n "{c |} `macval(err`i'_int)' {space `= `maxdlen' - `: udstrlen local err`i'_int''}{c |}"
-					if `i' == 2 {
-						local error_box`i' `"`error_box`i'' "{space `s1'}{c BLC}{hline `rc_hline'}{it: rc }{c BRC}""'
-					}
-					local error_box_total "`error_box_total' `error_box`i''"
+				if (!missing("`macval(errormessage)'")) {
+					noisily display ///
+						as error ///
+							`"`macval(errormessage)'"'
+					noisily display ///
+						as error ///
+							"{it:return code:}{bf: `errorcode'}"
 				}
-				noisily display as smcl ///
-					_n "{err}{c TLC}{hline `stderr_size'}{c TRC}{space `s1'}{c TLC}{hline `rc_size'}{c TRC}" ///
-					_n "{c |} `macval(err1_int)' {space `= `stderr_size' - `: udstrlen local err1_int' - 2'}{c |}{space `s1'}{c |} {bf:`pad'`errorcode'} {c |}" ///
-					`error_box_total'   ///
-					_n "{c BLC}{it: stderr }{hline `= `stderr_size' - 8'}{c BRC}"
 			}
-			else if `ln' == 1 {
-				noisily display as smcl ///
-					_n "{err}{c TLC}{hline `stderr_size'}{c TRC}{space `s1'}{c TLC}{hline `rc_size'}{c TRC}" ///
-					_n "{c |} `macval(err1_int)' {c |}{space `s1'}{c |} {bf:`pad'`errorcode'} {c |}" ///
-					_n "{c BLC}{it: stderr }{hline `= `stderr_size' - 8'}{c BRC}{space `s1'}{c BLC}{hline `rc_hline'}{it: rc }{c BRC}"
-			}
+			return local stderr = subinstr(ustrtrim(`"`macval(errormessage)'"'),  char(10), " ", .)
 		}
-		else {
-			display ///
-				as error `"`macval(errormessage)'"'
-			display ///
-				as error "return code: `errorcode'"
-	  }
-		return local stderr = subinstr(ustrtrim(`"`macval(errormessage)'"'),  char(10), " ", .)
-		local rc2 = "`errorcode'"
-		return local no = 0
+	}
+	if (!missing("`errorcode'") & missing("`errormessage'")) {
+		if ("`errorcode'" != "0") {
+			if `:strlen local errorcode' == 1 local pad " "
+		  local rc_hline = max(`: strlen local errorcode' - 2, 0)
+		  local rc_size  = `rc_hline' + 4
+		  local space    = `: set linesize' - `rc_hline' - 6
+		  noisily display ///
+				as smcl ///
+		     "{err}{space `space'}{c TLC}{hline `rc_size'}{c TRC}"      ///
+		       _n "{space `space'}{c |} {bf:`pad'`errorcode'} {c |}"    ///
+		       _n "{space `space'}{c BLC}{hline `rc_hline'}{it: rc }{c BRC}"
+		}
 	}
 }
 
-if strlen(`"`macval(0)'"') > 300 & missing("${INSHELL_DISABLE_LONGCMDMSG}") {
+// long shell command
+if ("`parser'" == "command" & "`parser2'" == "longcmd") {
 		local long_command_box_size = 73
-		noisily display as smcl ///
+		noisily display ///
+			as smcl ///
 				 "{txt}{c TLC}{hline `long_command_box_size'}{c TRC}" ///
 			_n "{c |} >>>  This is not an error. The command you have entered is very long.   {c |}" ///
 			_n "{c |} >>> You are probably better off storing this set of commands in a shell {c |}" ///
-			_n "{c |} >>> script and then executing that script file using {bf:inshell} as found {c |}" ///
-			_n "{c |} >>> in syntax (3) in the help file: " `"[{stata `"help inshell##suggestions"':help inshell: Suggestions}]{space 14}{c |}"' ///
+			_n "{c |} >>> script and then executing that script file using {bf:inshell} as found   {c |}" ///
+			_n "{c |} >>> in syntax (3) in the help file: " `"[{stata `"help inshell##suggestions"':help inshell: Suggestions}]{space 9}{c |}"' ///
 			_n "{c BLC}{hline `long_command_box_size'}{c BRC}"
 }
 
-if missing("${INSHELL_DISABLE_REFOCUS}") {
+// refocus to Commmand window
+if (missing("${INSHELL_DISABLE_REFOCUS}")) {
 	quietly {
 		// refocus to the Command window to aid interactive use, as the shell's actions can potentially shift it away
 		if ("`c(console)'" == "" & "`c(mode)'" != "batch") {
-			if lower(c(os)) != "windows" window manage forward command
-			if lower(c(os)) == "windows" window manage forward results
+			if (lower(c(os)) != "windows") window manage forward command
+			if (lower(c(os)) == "windows") window manage forward results
 			// on Windows the Results window must be called instead, oddly enough
-			// tested on StataSE 17 on Windows 10
+			// this was tested with StataSE 17 on Windows 10
 		}
 	}
 }

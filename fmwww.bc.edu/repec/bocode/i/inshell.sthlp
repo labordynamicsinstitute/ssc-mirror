@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.4 16jun2022}{...}
+{* *! version 1.5 14sept2022}{...}
 {viewerjumpto "Syntax" "inshell##syntax"}{...}
 {viewerjumpto "Description" "inshell##description"}{...}
 {viewerjumpto "Remarks" "inshell##remarks"}{...}
@@ -376,8 +376,9 @@ Users should also be aware that lines of {cmd:inshell} commands should not conta
 
 {p 6 4 2}{txt}{...}
 It is the author's goal to make {cmd:inshell} compatible with a wide variety of shells and operating systems.
-At present (on {bf:macOS} and {bf:Linux}) it has been tested with {bf:bash}, {bf:zsh}, {bf:ksh}, {bf:tcsh}, {bf:dash}, and {bf:yash}, as well as {bf:Microsoft PowerShell}, and should also work with {bf:ash}, {bf:csh}, {bf:osh}, and {bf:sh}.
-It is not fully compatible with {bf:fish}, the friendly interactive shell.
+At present (on {bf:macOS} and {bf:Linux}) it has been tested with {bf:bash}, {bf:dash}, {bf:ksh}, {bf:mksh}, {bf:oil}, {bf:tcsh}, {bf:yash}, and {bf:zsh},
+as well as {bf:Microsoft PowerShell}, and should also work with {bf:ash}, {bf:csh}, and {bf:sh}.
+It is not fully compatible with {bf:fish}, the "friendly interactive shell."
 Although it has not been extensively tested on {bf:Microsoft Windows} it will work with both {bf:Windows Command} shell {bf:(cmd.exe)} and {bf:Microsoft PowerShell}.{p_end}
 
 {marker suggestions}{...}
@@ -512,10 +513,10 @@ This diagnostics routine is currently only available for users of {bf:macOS} or 
 {p2colreset}{...}
 
 {p 6 4 3}
-Often lines of {it:{res:standard output}} can be blank and, because Stata cannot store empty macros, these blank lines cannot be stored in {cmd:r()}.
-For that reason {cmd:inshell} preserves the sequential numerical ordering of the lines captured into {cmd:r(no1)} to {cmd:r(no{text}{it:m}{cmd:)}}. If {cmd:r(no)} = {it:m}
+Often lines of {it:{res:standard output}} or {it:{err:standard error}} can be blank and, because Stata cannot store empty macros, these blank lines cannot be stored in {cmd:r()}.
+For that reason {cmd:inshell} preserves the sequential numerical ordering of the lines captured into {cmd:r(no1)} to {cmd:r(no{text}{it:m}{cmd:)}} or {cmd:r(err1)} to {cmd:r(err{text}{it:m}{cmd:)}}. If {cmd:r(no)} = {it:m}
 there will exist {it:m} non-empty lines {cmd:r(no1)}, ... , {cmd:r(no}{it:(m-1)}{cmd:)}, {cmd:r(no}{it:m}{cmd:)}.
-However, for completeness, the entire {it:{res:standard output}} including blank lines will be stored in the Mata string column vector {bf:M}.{p_end}
+However, for completeness, the entire {it:{res:standard output}} and {it:{err:standard error}} including blank lines will be stored in the Mata string column vectors {bf:M} and {bf:N}, respectively.{p_end}
 
 {title:Author}
 

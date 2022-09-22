@@ -35,7 +35,7 @@ Search the API data dictionary
 {synopthdr}
 {synoptline}
 {syntab:Main}
-{synopt:{opth year:s(numlist)}}year(s) to retrieve; default is latest available.
+{synopt:{opth year:s(numlist)}}year(s) to retrieve; default is most recent available.
 {p_end}
 {synopt:{opt samp:le(integer)}}1, 3, or 5; default is {opt sample(1)}.
 {p_end}
@@ -135,8 +135,8 @@ is the best place to start.
 
 {phang}
 {opth years(numlist)} specifies the years (or endyears, if multiyear estimates 
-are requested) of the sample to be retrieved. Defaults is the latest available 
-year. If multiple years are requested, data for all years requested will be 
+are requested) of the sample to be retrieved. Defaults is the most recent 
+available. If multiple years are requested, data for all years requested will be 
 appended together. Users requesting multiple years should be aware that not all 
 ACS estimates are available for all years, and table specifications and 
 geographies may change between years; see 
@@ -147,7 +147,7 @@ and 2019).
 
 {phang}
 {opt sample(integer)} specifies the sample to retrieve: 1 for one-year 
-estimates, 3 for three-year estimates (2012-2013 only), or 5 for five-year 
+estimates, 3 for three-year estimates (2007-2013 only), or 5 for five-year 
 estimates. Default is 1. One-year estimates are only available for geographic 
 areas with more than 65,000 residents; see 
 {browse "https://www.census.gov/programs-surveys/acs/guidance/estimates.html":When to Use 1-year or 5-year Estimates} 

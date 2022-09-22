@@ -1,13 +1,13 @@
 capture program drop rforest
 
 program define rforest, eclass
-*! version 2.0.0 Mar, 2022
+*! version 2.0.1 Sep 19, 2022   default numvars set to floor(sqrt(number of vars))
 	version 15.0
 	
 	syntax varlist(min=2) [if] [in] [,type(string) ITERations(int 100) ///
 							Seed(int 1) Depth(int 0) LSize(int 1) ///
 							Variance(real 0.049787) NUMDECimalplaces(int 5) ///
-							NUMVars(int 1)]
+							NUMVars(int -9)]
 	
 	ereturn clear
 	return clear
@@ -32,19 +32,20 @@ program define rforest, eclass
 		exit 198
 	}
 	
-	if (`iterations' <= 0 | `depth' < 0 | ///
-	    `lsize' < 1 | `numdecimalplaces' < 1 | `numvars' < 1){
-		di as error "Error: iterations, depth or numvars incorrectly specified"
-		exit 198
-	}
-	
 	// varlist includes y
 	local count: word count `varlist'
+	if `numvars'==(-9)  local numvars= floor(sqrt(`count'))   // by default use sqrt
 	if (`numvars'> `count'-1) {
 		di as error "Error: numvars argument specifies more x-variables than are available"
 		exit 198
 	}
 	
+	if (`iterations' <= 0 | `depth' < 0 | ///
+	    `lsize' < 1 | `numdecimalplaces' < 1 | `numvars' < 1){
+		di as error "Error: iterations, depth or numvars incorrectly specified"
+		exit 198
+	}
+		
 	quietly count
 	local obs = r(N)
 	if (`obs' <= 1) {
@@ -110,6 +111,7 @@ program define rforest, eclass
 	
 end
 // Version History
+// version 2.0.1 Sep 19, 2022: default numvars set to floor(sqrt(number of vars))
 // version 2.0.0 Mar 2022: fixed Java bug; related to not being able to predict on unseen data
 // version 1.9.0 Mar 2021: fixed Java bug "one line of dead code"
 // version 1.8.0 Feb 2021: fixed Java bug related to reordering of variables in Stata 

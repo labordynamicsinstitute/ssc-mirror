@@ -1,5 +1,6 @@
 {smcl}
-{* *! version 1.3  2021-05-25}{...}
+{* *! version 1.4  2022-03-24}{...}
+{* *  version 1.3  2021-05-25}{...}
 {* *  version 1.2  2020-06-02}{...}
 {* *  version 1.1  2020-05-21}{...}
 {* *  version 1.0  2020-05-05}{...}
@@ -18,7 +19,7 @@
 {phang}
 {bf:bunching} {hline 2} uses bunching to partially and point identify the elasticity of a response variable with respect to
  changes in the slope of the budget set using different assumptions 
-on unobserved heterogeneity  according to the procedures of Bertanha, McCallum, and Seegert (2021).
+on unobserved heterogeneity  according to the procedures of Bertanha, McCallum, and Seegert (2022).
 {bf:bunching} is a wrapper function for three other commands: {help bunchbounds}, {help bunchtobit}, and {help bunchfilter}.
 
 
@@ -78,13 +79,13 @@ on unobserved heterogeneity  according to the procedures of Bertanha, McCallum, 
 	and also the full sample so that the number of estimates is always one more than the number of entries in {opt numlist}; 
 	for example, if {opt grid(15 82)}, then {cmd: bunching} estimates the Tobit model three times using 100, 82, and 15 percent of the data around the kink point; 
 	the default value for the {opt numlist} is 10(10)90, which provides 10 estimates (option of {help bunchtobit}) {p_end}
-{synopt :{opt n:umiter(#)}} is the maximum number of iterations allowed when maximizing the Tobit likelihood; 
+{synopt :{opt n:umiter(#)}} is the maximum number of iterations allowed when maximizing the Tobit log likelihood; 
 	it must be a positive integer and the default is 500 (option of {help bunchtobit}) {p_end}
 {synopt :{opt savingtobit}({it:filename}[,{it:replace}])} saves {it: filename.dta} with Tobit estimates for each truncation window;
 	the  {it: filename.dta} file contains eight variables corresponding to the matrices that the code stores in {opt r()}; 
 	see below for more details;
 	use {it: replace} if {it: filename.dta} already exists in the working directory (option of {help bunchtobit}) {p_end}
-{synopt :{opt verbose}} displays detailed output from the Tobit estimation including iterations of maximizing the likelihood; 
+{synopt :{opt verbose}} displays detailed output from the Tobit estimation including iterations of maximizing the log likelihood; 
 	non-verbose mode is the default (option of {help bunchtobit}) {p_end}
 {synopt :{opt deltam(# real)}} is the distance between the kink point and the lower bound of the support of the friction error to be filtered;
 	it must be a real number in the same units as the response variable;
@@ -121,7 +122,7 @@ on unobserved heterogeneity  according to the procedures of Bertanha, McCallum, 
 {pstd}
 The user enters the name of the response variable, the location of the kink point, the slopes before and after the kink point, 
 and the maximum slope magnitude of the heterogeneity PDF.
-For example, in the income-tax application of Bertanha, McCallum, and Seegert (2021), dollars of taxable income and the dollar value of the kink point 
+For example, in the income-tax application of Bertanha, McCallum, and Seegert (2022), dollars of taxable income and the dollar value of the kink point 
 are transformed by taking logs, and the slopes must be input as the log of one minus the marginal tax rates.  
 You need to have a dataset with the response variable drawn from a mixed continuous-discrete distribution.
 The distribution is continuous except for the 
@@ -209,7 +210,7 @@ The income variable with error is "yfric."
 {synopt:{cmd:r(tobit_eps_hat)}} elasticity estimate{p_end}
 {synopt:{cmd:r(tobit_se_hat)}} standard error of the elasticity estimator{p_end}
 {synopt:{cmd:r(tobit_covcol)}} number of covariates whose coefficients were restricted because of collinearity{p_end}
-{synopt:{cmd:r(tobit_flag)}} dummy that equals one if the likelihood optimization did not converge {p_end}
+{synopt:{cmd:r(tobit_flag)}} dummy that equals one if the log likelihood optimization did not converge {p_end}
 
 {p2col 5 20 24 2: Scalars}{p_end}
 
@@ -251,12 +252,11 @@ this is not stored if option {opt nopic} is stated. {p_end}
 {title:Reference}
 
 {p 5 6 2}
-Bertanha, M., McCallum, A., Seegert, N. (2021), "Better Bunching, Nicer Notching". Working paper SSRN 3144539.
+Bertanha, M., McCallum, A., Seegert, N. (2022), "Better Bunching, Nicer Notching". Working paper SSRN 3144539.
 {p_end}
 
 {p 5 6 2}
-Bertanha, M., McCallum, A., Payne, A., Seegert, N. (2021), "Bunching Estimation of Elasticities Using Stata".
-Finance and Economics Discussion Series 2021-006. 
-Board of Governors of the Federal Reserve System (U.S.).
+Bertanha, M., McCallum, A., Payne, A., Seegert, N. (2022), "Bunching Estimation of Elasticities Using Stata".
+Stata Journal, forthcoming.
 {p_end}
 

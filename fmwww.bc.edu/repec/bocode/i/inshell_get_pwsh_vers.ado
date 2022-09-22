@@ -16,12 +16,12 @@ capture confirm file   "`outfile'"
 if (!_rc) {
   local filereadtest = fileread("`outfile'")
 }
-if !missing("`filereadtest'") {
+if (!missing("`filereadtest'")) {
   mata : P = subinstr(stritrim(strtrim(inshell_process_file("`outfile'"))), " ", ".")
   mata : st_numscalar("rows", rows(P))
   forvalues i = 1 / `= scalar(rows)' {
     mata : st_strscalar("line`i'", strtrim(P[`i']))
-    if regexm("`= scalar(line`i')'", "^[0-9]") {
+    if (regexm("`= scalar(line`i')'", "^[0-9]")) {
       local version   "`= scalar(line`i')'"
     }
     capture scalar drop line`i'
@@ -30,13 +30,13 @@ if !missing("`filereadtest'") {
   local s1 2
   noisily display ///
     as text     _n " >>> {it}your default shell is{sf}"          ///
-    as result      "{space `s1'}Microsoft PowerShell"        _n  ///
+    as result      "{space `s1'}Microsoft PowerShell (pwsh)"        _n  ///
     as text        "{it}{space 7}which is at version{sf}"        ///
     as result      "{space `s1'}`version'"                   _n  ///
     as text        "{it}{space 9}and is located at{sf}"          ///
     as result      "{space `s1'}`location' `check'"          _n
 }
-else if missing("`filereadtest'") {
+else if (missing("`filereadtest'")) {
   noisily display ///
     as error ///
       _n " >>> Microsoft PowerShell was not determined to be the shell when using Stata on this system."
@@ -44,7 +44,6 @@ else if missing("`filereadtest'") {
 }
 
 return local shell_version "`version'"
-
 capture quietly erase      "`outfile'"
 capture mata mata drop P
 

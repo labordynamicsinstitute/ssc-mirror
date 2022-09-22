@@ -1,4 +1,19 @@
-*! 1.0.0  MBH 11 July 2022
+*! 1.1  MBH  8 Sept 2022
+*!  a) ksh is identified by the presense of a "ksh" string rather than
+*!      a string equal to "ksh," primarily for users of ksh93
+*!  b) better handling of version strings
+*!   this program has now been tested with:
+*!     bash  (3.2.57 and 5.1.16)
+*!     dash  (0.5.11.5, though the shell does not report version numbers)
+*!     ksh   (93u+ 2012-08-01)
+*!     ksh93 (93u+m/1.0.3 2022-08-25)
+*!     mksh  (R59 2020/10/31)
+*!     oil   (0.12.5)
+*!     Microsoft PowerShell (7.2.6)
+*!     tcsh  (6.21.00 and 6.24.01)
+*!     yash  (2.53)
+*!     zsh   (5.9 and 5.7.1)
+*! 1.0  MBH 11 July 2022
 *!	this program determines which shell is in use by Stata
 *!   and displays it along with its version info
 
@@ -12,68 +27,78 @@ version 14
 capture which inshell_detect_pwsh
 if (!_rc) {
   inshell_detect_pwsh
-  if !missing("`r(pwsh_detected)'") {
+  if (!missing("`r(pwsh_detected)'")) {
     return add
     exit 0
   }
 }
 
 // obtain the shell's location
-if !missing("${S_SHELL}") {
+if (!missing("${S_SHELL}")) {
   local shell_location   "`: word 1 of ${S_SHELL}'"
   local method           "S_SHELL"
 }
-else if missing("${S_SHELL}") {
+else if (missing("${S_SHELL}")) {
   local shell_location   "`: environment SHELL'"
   local method           "default"
 }
-if !missing("`shell_location'") {
+if (!missing("`shell_location'")) {
   local shell = substr("`shell_location'", strrpos("`shell_location'", "/") + 1 , .)
 }
-else if missing("`shell_location'") {
+else if (missing("`shell_location'")) {
   exit 1
 }
+
 // obtain the shell's version
 local version_file        "`c(tmpdir)'inshell_sh_version_`= clock("`c(current_time)'", "hms")'`= runiformint(1, 99999)'.txt"
 capture quietly erase     "`version_file'"
-if inlist("`shell'", "sh", "bash", "ksh", "oil", "osh", "yash", "zsh") {
-  capture quietly shell `shell_location' --version > "`version_file'" 2>&1
+if ("`shell'" == "bash") {
+  capture quietly shell echo \$BASH_VERSION > "`version_file'"
 }
-else if inlist("`shell'", "csh", "tcsh") {
-  capture quietly shell (`shell_location' --version > "`version_file'") >& "`version_file'"
+else if (inlist("`shell'", "oil", "osh")) {
+  capture quietly shell echo \$OIL_VERSION > "`version_file'"
 }
+else if ("`shell'" == "sh") {
+  capture quietly shell echo $($0 --version) > "`version_file'"
+}
+else if ("`shell'" == "yash") {
+  capture quietly shell echo \$YASH_VERSION > "`version_file'"
+}
+else if ("`shell'" == "zsh") {
+  capture quietly shell echo \$ZSH_VERSION > "`version_file'"
+}
+else if (strpos("`shell'", "ksh")) {
+  capture quietly shell echo \$KSH_VERSION  2> "`version_file'" 1> "`version_file'"
+}
+else if (inlist("`shell'", "csh", "tcsh")) {
+  capture quietly shell echo \$tcsh >  "`version_file'"
+}
+
 // clean the shell's version
-else if inlist("`shell'", "ash", "dash") {
-  local shell_version_pure "(not available in`= cond("`shell'" == "dash", " Debian", "")' Almquist shell)"
+if (inlist("`shell'", "ash", "dash")) {
+  local shell_version_pure "{it:(not available in`= cond("`shell'" == "dash", " Debian", "")' Almquist shell)}"
 }
-if !inlist("`shell'", "ash", "dash") {
+if (!inlist("`shell'", "ash", "dash")) {
   tempname shvers
-  mata : st_strscalar("`shvers'", inshell_process_file("`version_file'")[1])
-  if scalar(`shvers') != "" {
-    local shell_version = trim(substr("`= subinstr(trim(itrim(scalar(`shvers'))), "version", "@", .)'",  `= strpos("`= subinstr(trim(itrim(scalar(`shvers'))), "version", "@", .)'", "@") + 1', .))
-    if strpos("`shell_version'", "`shell'") {
-      local shell_version2 = trim(substr(subinstr("`shell_version'", "`shell'", "@", 1), `= strpos("`shell_version'", "@") + 2', .))
-    }
-    else local shell_version2 "`shell_version'"
-  }
+  mata : st_local("shell_version2", inshell_process_file("`version_file'")[1])
 }
-if inlist("`shell'", "sh", "bash", "csh", "ksh", "oil", "osh", "tcsh", "yash", "zsh") {
+if (inlist("`shell'", "sh", "bash", "csh", "oil", "osh", "tcsh", "yash", "zsh")) {
   local shell_version_pure         "`: word 1 of `shell_version2''"
-  if "`shell'" == "bash" {
+  if ("`shell'" == "bash") {
     local shell_version_pure = substr("`shell_version_pure'", 1, `=strpos("`shell_version_pure'", "(") - 1')
   }
   return local shell_version_pure  "`shell_version_pure'"
 }
-if strpos("`shell'", "ksh") {
-  local shell_version2 = trim(itrim(subinstr("`shell_version2'", "sh (AT&T Research)", "", .)))
-  return local shell_version_pure  "`shell_version2'"
+if (strpos("`shell'", "ksh")) {
+  local shell_version2 = trim(regexr("`shell_version2'", "sh (AT&T Research)|Version [AJM?]*|.*KSH", ""))
+  local shell_version_pure  "`shell_version2'"
 }
 
 local s1 2
-if strpos("`shell_location'", "//") {
+if (strpos("`shell_location'", "//")) {
   local shell_location = subinstr("`shell_location'", "//", "/", .)
 }
-if "`shell_location'" == "`: environment SHELL'" {
+if ("`shell_location'" == "`: environment SHELL'") {
   local check "✅"
 }
 

@@ -1,4 +1,5 @@
-*! ver 2.1 2021-05-25
+*! ver 2.2 2022-02-10
+*  ver 2.1 2021-05-25
 *  ver 2.0 2021-05-11
 *  ver 1.9 2020-09-05
 *  ver 1.8 2020-05-21
@@ -237,16 +238,15 @@ program define bunchtobit, sortpreserve rclass
 
 	
 		*save beta estimates of included variables
-		tempname init_beta_l init_beta_r
+		tempname init_beta 
 		if `=scalar(`ncovar')' > 0 {
-			matrix `init_beta_l' = J(1, `=scalar(`ncovar')', 0)
-			matrix `init_beta_r' = J(1, `=scalar(`ncovar')', 0)		    
+		    matrix `init_beta'   = J(1, `=scalar(`ncovar')', 0)
 		}
 
 
 		
 		*create updated list of included variables for next step
-		tempname ncovar2 var_left var_right init_beta init_sigma 
+		tempname ncovar2 var_left var_right init_sigma 
 		
 		local namecov2   = " " 
 		scalar `ncovar2' = 0
@@ -259,30 +259,42 @@ program define bunchtobit, sortpreserve rclass
 				scalar `var_right' = `varcov_r'[`j',`j']	
 
 
-				*if j-th variable is omitted
+				*if j-th variable is omitted in both sides
 				** let the user know
 				** don't keep that variable in the next estimation
-				if `=scalar(`var_left')*scalar(`var_right')' == 0 | `=scalar(`var_left')'== . | `=scalar(`var_right')'== .  { 			
+				if (`=scalar(`var_left')'==0 | `=scalar(`var_left')'==.) & ( `=scalar(`var_right')' == 0 | `=scalar(`var_right')'==. )  { 			
 					di as text "variable `=word("`covariates'", `j')' omitted because of collinearity"
 				}
-				*if j-th variable is not omitted
+				*if j-th variable is not omitted in both sides
 				** keep that variable in the next estimation
-				** save the coefficients on that variable
+				** we have coefficient estimates in at least one of the sides 
+				** save the coefficients for that variable
 				else {
 					scalar `ncovar2' = `ncovar2' + 1
 					local namecov2 = "`namecov2' " + word(" `covariates'", `j')
-					matrix `init_beta_l'[1, `=scalar(`ncovar2')'] = `estimates_l'[1,`j']
-					matrix `init_beta_r'[1, `=scalar(`ncovar2')'] = `estimates_r'[1,`j']
+					
+					* if coefficient was obtained in just one side, save that one estimate
+					** otherwise, take an average of the two sides
+					if (`=scalar(`var_left')'==0 | `=scalar(`var_left')'==.) {
+						matrix `init_beta'[1, `=scalar(`ncovar2')'] = `estimates_r'[1,`j']
+					}
+					else {
+						matrix `init_beta'[1, `=scalar(`ncovar2')'] = 0.5*(`estimates_l'[1,`j'] + `estimates_r'[1,`j'])
+					}
+					
+					if (`=scalar(`var_right')'==0 | `=scalar(`var_right')'==.) {
+						matrix `init_beta'[1, `=scalar(`ncovar2')'] = `estimates_l'[1,`j']
+					}
+					else {
+						matrix `init_beta'[1, `=scalar(`ncovar2')'] = 0.5*(`estimates_r'[1,`j'] + `estimates_l'[1,`j'])
+					}
 				}
 			}
 		}
 		
 		if `=scalar(`ncovar2')' > 0 {
-			*update the dimension of init_beta_l and init_beta_r
-			matrix `init_beta_l' = `init_beta_l'[1, 1..`=scalar(`ncovar2')']
-			matrix `init_beta_r' = `init_beta_r'[1, 1..`=scalar(`ncovar2')']
-			*initial guess is an avg of left and right betas and sigmas
-			matrix `init_beta' = 0.5*(`init_beta_l' + `init_beta_r')
+			*update the dimension of init_beta
+			matrix `init_beta' = `init_beta'[1, 1..`=scalar(`ncovar2')']
 		}
 		scalar `init_sigma' = 0.5*(`init_sigma_l' + `init_sigma_r')
 		
@@ -326,12 +338,12 @@ program define bunchtobit, sortpreserve rclass
 		scalar `init_lngamma'      = -ln(`=scalar(`init_sigma')' )
 
 		if `=scalar(`ncovar2')' > 0 {
-		matrix `init_delta_slope'  = `init_beta'   / `=scalar(`init_sigma')' 
-		matrix `init_fullvec'      = (`init_delta_slope', `=scalar(`init_delta_l_cons')', ///
+			matrix `init_delta_slope'  = `init_beta'   / `=scalar(`init_sigma')' 
+			matrix `init_fullvec'      = (`init_delta_slope', `=scalar(`init_delta_l_cons')', ///
 									  `init_delta_slope', `=scalar(`init_delta_r_cons')', `=scalar(`init_lngamma')' )
 		}
 		else {
-		matrix `init_fullvec'      = (`=scalar(`init_delta_l_cons')', /// 
+			matrix `init_fullvec'      = (`=scalar(`init_delta_l_cons')', /// 
 									  `=scalar(`init_delta_r_cons')', `=scalar(`init_lngamma')' )
 		}
 				

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.4 26feb2022}{...}
+{* *! version 1.0.4 16sep2022}{...}
 {viewerjumpto "Syntax" "bacondecomp##syntax"}{...}
 {viewerjumpto "Description" "bacondecomp##description"}{...}
 {viewerjumpto "Options" "bacondecomp##options"}{...}

@@ -1,5 +1,6 @@
 {smcl}
-{* *! version 1.6  2021-05-25}{...}
+{* *! version 1.7  2022-03-24}{...}
+{* *  version 1.6  2021-05-25}{...}
 {* *  version 1.5  2021-05-11}{...}
 {* *  version 1.4  2020-06-02}{...}
 {* *  version 1.3  2020-05-21}{...}
@@ -20,7 +21,7 @@
 {phang}
 {bf:bunchbounds} {hline 2} uses bunching to partially identify the elasticity of a response variable
 with respect to changes in the slope of the budget set
-according to the procedures of Bertanha, McCallum, and Seegert (2021). 
+according to the procedures of Bertanha, McCallum, and Seegert (2022). 
 
 
 
@@ -69,7 +70,7 @@ of the slope magnitude of the heterogeneity PDF;  use {it: replace} if {it: file
 {pstd}
 The user enters the name of the response variable, the location of the kink point, the slopes before and after the kink point,
 and the maximum slope magnitude of the heterogeneity PDF.
-For example, in the income-tax application of Bertanha, McCallum, and Seegert (2021), dollars of taxable income and the dollar value of the kink point 
+For example, in the income-tax application of Bertanha, McCallum, and Seegert (2022), dollars of taxable income and the dollar value of the kink point 
 are transformed by taking logs, and the slopes must be input as the log of one minus the marginal tax rates.  
 You need to have a dataset with the response variable drawn from a mixed continuous-discrete distribution. The distribution is continuous except for the 
 {it:kink} value, which has a positive mass point. 
@@ -155,22 +156,21 @@ available only when the choice of {it:m} entered by user is bigger than {it:M_ha
 {title:Reference}
 
 {p 5 6 2}
-Bertanha, M., McCallum, A., Seegert, N. (2021), "Better Bunching, Nicer Notching". Working paper SSRN 3144539.
+Bertanha, M., McCallum, A., Seegert, N. (2022), "Better Bunching, Nicer Notching". Working paper SSRN 3144539.
 {p_end}
 
 {p 5 6 2}
-Bertanha, M., McCallum, A., Payne, A., Seegert, N. (2021), "Bunching Estimation of Elasticities Using Stata".
-Finance and Economics Discussion Series 2021-006. 
-Board of Governors of the Federal Reserve System (U.S.).
+Bertanha, M., McCallum, A., Payne, A., Seegert, N. (2022), "Bunching Estimation of Elasticities Using Stata".
+Stata Journal, forthcoming. 
 {p_end}
 
 {p 5 6 2}
 Cattaneo, M., Jansson, M., Ma, X. (2020), "Simple Local Polynomial Density Estimators".
-Journal of the American Statistical Association, 115(531), pg 1449 - 1455. 
+Journal of the American Statistical Association 115(531), pg 1449 - 1455. 
 {p_end}
 
 {p 5 6 2}
-Cattaneo, M., Jansson, M., Ma, X. (2021), "lpdensity: Local Polynomial Density Estimation and Inference".
-Journal of Statistical Software, Articles, forthcoming.
+Cattaneo, M., Jansson, M., Ma, X. (2022), "lpdensity: Local Polynomial Density Estimation and Inference".
+Journal of Statistical Software 101(2): 1-25, January 2022.
 {browse "https://nppackages.github.io/lpdensity/":https://nppackages.github.io/lpdensity/}
 {p_end}

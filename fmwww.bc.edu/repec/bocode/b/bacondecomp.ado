@@ -1,4 +1,6 @@
-*! 1.0.4 24feb2022 Andrew Goodman-Bacon, Thomas Goldring, Austin Nichols
+*! 1.0.5 16sep2022 Andrew Goodman-Bacon, Thomas Goldring, Austin Nichols
+* change from 1.0.4 24feb2020: timing groups code in lines 291-292 commented out per Connor Forsythe (no X branch)
+* 1.0.4 24feb2022 Andrew Goodman-Bacon, Thomas Goldring, Austin Nichols
 * change from 1.0.3 14feb2020: multiple versions of 1.0.3 were circulating; fixed version control problems noted by Kit Baum
 * also fixes: some ddetail labeling, zero shares, and put anynever initialization to zero alongside anyalways
 * 1.0.3 14feb2020 Andrew Goodman-Bacon, Thomas Goldring, Austin Nichols
@@ -286,8 +288,8 @@ if "`x'"=="" & "`ddetail'"=="" {
     replace `S' = `finals' in `index'
     replace `B' = `Beta' in `index'
     replace `cgroup'=1*(!inlist("`itstring'","Always","Never")&!inlist("`jtstring'","Always","Never"))+2*inlist("Always","`itstring'","`jtstring'")+3*inlist("Never","`itstring'","`jtstring'")  in `index'
-    replace `T' = "Timing" if `cgroup'==1
-    replace `C' = "Groups" if `cgroup'==1
+*    replace `T' = "Timing" if `cgroup'==1
+*    replace `C' = "Groups" if `cgroup'==1
     loc index=`index'+1
     }		
    foreach name in samp Dtilde dp dk tsamp{

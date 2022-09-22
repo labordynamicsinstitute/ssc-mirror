@@ -85,6 +85,7 @@ p plot3d module to draw colored, scalable, rotatable 3D plots
 p plotbeta module to plot linear combinations of coefficients
 p plotmatrix module to plot values of a matrix as different coloured blocks 
 p plotrpys module to plot a spectrogram using CSV export from CRExplorer 
+p plottabs module providing fast graphing commands for large datasets
 p pls module to calculate composite variables using the partial least squares path modeling (PLS) algorithm
 p plssas module to execute SAS partial least squares procedure (Windows only)
 p plssem module to implement Partial least squares structural equation modelling (PLS-SEM)
