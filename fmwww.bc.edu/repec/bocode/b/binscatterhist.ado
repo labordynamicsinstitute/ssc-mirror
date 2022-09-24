@@ -1,4 +1,4 @@
-*! version 3.0 Sep2022  Matteo Pinna, matteo.pinna@gess.ethz.ch
+*! version 3.1 Sep2022  Matteo Pinna, matteo.pinna@gess.ethz.ch
 
 * Versions:
 * version 1.1 partly fixes the display of multiple graphs, sets default values for xmin and ymin, add twoway general options to the histograms and solves some bugs in the error messages
@@ -11,6 +11,7 @@
 * version 2.3 adds the options pvalue and ci()
 * version 2.4 fixes issue with coef se and ci reporting in some cases, and adds options to adjust coefficient positioning
 * version 3.0 adds binning via binsreg
+* version 3.1 fixes an issue in trasmitting graph options to addplot and add info on correct format of legend
 /*
 This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.  
 The full legal text as well as a human-readable summary can be accessed at http://creativecommons.org/licenses/by-nc-sa/4.0/
@@ -39,7 +40,7 @@ local stata_version=c(version)
 		/* coefficient display */ COEFficient(string) xcoef(string) ycoef(string) sample Pvalue ci(string) stars(string) ///
 		/* histogram options */ HISTogram(string) XMin(string) YMin(string) xhistbarheight(string) yhistbarheight(string) xhistbarwidth(string) yhistbarwidth(string) xhistbins(string) yhistbins(string) ///
 		/* histogram esthetic options */ xcolor(string) xcfcolor(string) xfintensity(string) xlcolor(string) xlwidth(string) xlpattern(string) xlalign(string) xlstyle(string) xbstyle(string) xpstyle(string) ycolor(string) ycfcolor(string) yfintensity(string) ylcolor(string) ylwidth(string) ylpattern(string) ylalign(string) ylstyle(string) ybstyle(string) ypstyle(string) ///
-		/* options legacy */ name(string) ///
+		/* options legacy */ name(string) legacy(string) ///
 		*]
 		
 	set more off
@@ -724,7 +725,7 @@ local stata_version=c(version)
 			local scatters `scatters', `scatter_options')
 			if ("`savedata'"!="") local savedata_scatters `savedata_scatters', `scatter_options')
 		
-
+			/*
 			* Add legend
 			if "`by'"=="" {
 				if (`ynum'==1) local legend_labels off
@@ -740,7 +741,7 @@ local stata_version=c(version)
 				else local legend_labels `legend_labels' lab(`counter_series' `depvar': `byvarname'=`byvalname')
 			}
 			if ("`by'"!="" | `ynum'>1) local order `order' `counter_series'
-			
+			*/
 		}
 		
 	}
@@ -1249,31 +1250,29 @@ local stata_version=c(version)
 		}
 	}
 	*
-	
+
 	* Display the graph
 	if ("`histogram'"!="") {
-	local graphcmd twoway `scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `addname' `options' nodraw `coefficient_report'
+	local graphcmd twoway `scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') `addname'   `options' `coefficient_report' nodraw legend(label(1 "Binscatter") label(2 "Histogram"))
 	if ("`savedata'"!="") local savedata_graphcmd twoway `savedata_scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `addname' `options' `coefficient_report'
 	}
 	if ("`histogram'"=="") {
 	local graphcmd twoway `scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `addname' `options' `coefficient_report'
-	if ("`savedata'"!="") local savedata_graphcmd twoway `savedata_scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `addname' `options' `coefficient_report'
+	if ("`savedata'"!="") local savedata_graphcmd twoway `savedata_scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `addname' `options' `coefficient_report' 
 	}
 	`graphcmd'
-
 	if ("`histogram'"!="") {
 	local temp_barwidth1=`barw_`x_var''
 	local temp_barwidth2=`barw_`y_vars''
 		if ("`histogram'"=="`x_var'") {
-		addplot `name_addplot': bar `t_d_`x_var'' `t_b_`x_var'', barwidth(`temp_barwidth1') base(`ymin') /* general options */ `xcolor' `xcfcolor' `xfintensity' `xlcolor' `xlwidth' `xlpattern' `xlalign' `xlstyle' `xbstyle' `xpstyle' `xbstyle' `xcolor_default'/* add histogram */ 
+		addplot `name_addplot': bar `t_d_`x_var'' `t_b_`x_var'', barwidth(`temp_barwidth1') base(`ymin') /* general options */ `xcolor' `xcfcolor' `xfintensity' `xlcolor' `xlwidth' `xlpattern' `xlalign' `xlstyle' `xbstyle' `xpstyle' `xbstyle' `xcolor_default'/* add histogram */ `options'
 		}
 		if ("`histogram'"=="`y_vars'") {
-		addplot `name_addplot': bar `t_d_`y_vars'' `t_b_`y_vars'', horizontal base(`xmin') barwidth(`temp_barwidth2') /* general options */ `ycolor' `ycfcolor' `yfintensity' `ylcolor' `ylwidth' `ylpattern' `ylalign' `ylstyle' `ybstyle' `ypstyle' `ybstyle' `ycolor_default'/* add histogram */
+		addplot `name_addplot': bar `t_d_`y_vars'' `t_b_`y_vars'', horizontal base(`xmin') barwidth(`temp_barwidth2') /* general options */ `ycolor' `ycfcolor' `yfintensity' `ylcolor' `ylwidth' `ylpattern' `ylalign' `ylstyle' `ybstyle' `ypstyle' `ybstyle' `ycolor_default'/* add histogram */ `options'
 		}
 		if ("`histogram'"=="`x_var' `y_vars'") | ("`histogram'"=="`y_vars' `x_var'") {
-		qui addplot `name_addplot': bar `t_d_`x_var'' `t_b_`x_var'', barwidth(`temp_barwidth1') base(`ymin') /* general options */ `xcolor' `xcfcolor' `xfintensity' `xlcolor' `xlwidth' `xlpattern' `xlalign' `xlstyle' `xbstyle' `xpstyle' `xbstyle' `xcolor_default'/* add histogram */
-		addplot `name_addplot': bar `t_d_`y_vars'' `t_b_`y_vars'', horizontal base(`xmin') barwidth(`temp_barwidth2') /* general options */ `ycolor' `ycfcolor' `yfintensity' `ylcolor' `ylwidth' `ylpattern' `ylalign' `ylstyle' `ybstyle' `ypstyle' `ybstyle' `ycolor_default'/* add histogram */
-		}
+		qui addplot `name_addplot': bar `t_d_`x_var'' `t_b_`x_var'', barwidth(`temp_barwidth1') base(`ymin') /* general options */ `xcolor' `xcfcolor' `xfintensity' `xlcolor' `xlwidth' `xlpattern' `xlalign' `xlstyle' `xbstyle' `xpstyle' `xbstyle' `xcolor_default'/* add histogram */ `options' legend(`legend_labels' order(`order'))
+		addplot `name_addplot': bar `t_d_`y_vars'' `t_b_`y_vars'', horizontal base(`xmin') barwidth(`temp_barwidth2') /* general options */ `ycolor' `ycfcolor' `yfintensity' `ylcolor' `ylwidth' `ylpattern' `ylalign' `ylstyle' `ybstyle' `ypstyle' `ybstyle' `ycolor_default'/* add histogram */ `options'
 	}
 	
 

@@ -1,6 +1,10 @@
 {smcl}
-{* *! version 1.0.1  19aug2022}{...}
-{findalias asfradohelp}{...}
+{* *! version 1.1  21sep2022}{...} 
+{vieweralsosee "plottabs" "help plottabs"}{...}
+{vieweralsosee "plotmeans" "help plotmeans"}{...}
+{vieweralsosee "plotshares" "help plotshares"}{...}
+{vieweralsosee "plotbetas" "help plotbetas"}{...}
+{vieweralsosee "twoway" "help twoway"}{...}
 {viewerjumpto "Syntax" "plotmeans##syntax"}{...}
 {viewerjumpto "Description" "plotmeans##description"}{...} 
 {viewerjumpto "Examples" "plotmeans##examples"}{...}
@@ -26,8 +30,8 @@
 {syntab :Basic options}
 {p2col:{cmdab:ov:er(}{it:{help groupvar}})}specify the conditioning variable{p_end}
 {p2col:{cmdab:gr:aph(}{it:graph_type})}specify the {it:{help twoway}} {it:graph_type} for mean values:  {bf:line}(default)/{bf:bar}/{bf:connected}/{bf:scatter}/etc.{p_end}
-{p2col:{cmdab:rgr:aph(}{it:rgraph_type})}specify the {it:{help twoway}} {it:rgraph_type} for confidence intervals:  {bf:rarea}(default)/{bf:rbar}/{bf:rcap}/{bf:rspike}/etc.{p_end}
-{p2col:{cmdab:ci(}{bf:#},{it:ci_options})}specify the confidence level for confidence intervals:  {bf:#} = 0...100, default = 95{p_end}
+{p2col:{cmdab:rgr:aph(}{it:rgraph_type})}specify the {it:{help twoway}} {it:rgraph_type} for confidence intervals:  {bf:rarea}(default)/{bf:rbar}/{bf:rcap}/{bf:rspike}/etc.{p_end}
+{p2col:{cmdab:ci(}{bf:#},{it:ci_options})}specify the confidence level for confidence intervals:  {bf:#} = 0...100, {bf:95} = default, {bf:off} = suppress CIs{p_end}
 {p2col:}  {it:ci_options} denote {it:rgraph_type} customization options ({it:e.g.}, color and transparency){p_end}
 
 {syntab :Memory/data management}
@@ -88,7 +92,7 @@ The confidence-interval plots can be customized by selecting the preferred {it:{
 {phang2}{cmd:. plotmeans ttl_exp, over(age)}{p_end}
 
 {phang2}{cmd:* produce a whisker plot instead:}{p_end}
-{phang2}{cmd:. plotmeans ttl_exp, over(age) graph(scatter) rgraph(rcap)}{p_end}
+{phang2}{cmd:. plotmeans ttl_exp, over(age) graph(scatter) rgraph(rcap) clear}{p_end}
 
     {hline}
     Compare conditional means for two groups:

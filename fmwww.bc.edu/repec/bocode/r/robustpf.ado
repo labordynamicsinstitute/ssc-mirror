@@ -1,26 +1,20 @@
 ////////////////////////////////////////////////////////////////////////////////
-// STATA FOR Hu, Y., Huang, G., & Sasaki, Y. (2020): Estimating Production 
+// Stata for Hu, Y., Huang, G., & Sasaki, Y. (2020): Estimating Production 
 //           Functions with Robustness Against Errors in the Proxy Variables. 
 //           Journal of Econometrics 215 (2), pp. 375-398.
-//
-// Use this code for estimation of production functions with robustness against
-// errors in the proxy variables.
 ////////////////////////////////////////////////////////////////////////////////
+!* version 17  21sep2022
  program define robustpf, eclass
-    version 14.2
+    version 17
  
-    syntax varlist(min=3 numeric) [if] [in] [, proxy(varname numeric) m1(varname numeric) m2(varname numeric) m3(varname numeric) m4(varname numeric) m5(varname numeric) init_k(real 0) init_l(real 0) init_m(real 0.5) onestep dfp bfgs]
+    syntax varlist(min=1 max=1 numeric) [if] [in] [, CAPital(varlist min = 1 max=1) FRee(varlist min=1) M(varlist) PROXy(varname numeric) init_capital(real 0.1) init_free(real 0.1) init_m(real 0.3) ONEstep dfp bfgs]
     marksample touse
- 
 	qui xtset
 	local panelid   = r(panelvar)
 	local timeid  = r(timevar)
-
     gettoken depvar indepvars : varlist
     _fv_check_depvar `depvar'
-    fvexpand `indepvars' 
-    local cnames `r(varlist)'
-	
+		
 	local ones = 1
 	if "`onestep'" == ""{
 		local ones = 0
@@ -36,84 +30,55 @@
 		local method_bfgs = 0
 	}
 	
-	tempvar m1var m2var m3var m4var m5var xvar
-	local m1in = 0 
-	if "`m1'" != "" {
-	    local m1in = 1
-		gen `m1var' = `m1'
-	}
-	local m2in = 0 
-	if "`m2'" != "" {
-	    local m2in = 1
-		gen `m2var' = `m2'
-	}
-	local m3in = 0 
-	if "`m3'" != "" {
-	    local m3in = 1
-		gen `m3var' = `m3'
-	}
-	local m4in = 0 
-	if "`m4'" != "" {
-	    local m4in = 1
-		gen `m4var' = `m4'
-	}
-	local m5in = 0 
-	if "`m5'" != "" {
-	    local m5in = 1
-		gen `m5var' = `m5'
+	if "`dfp'" != "" & "`bfgs'" != ""{
+		di "{hline 80}"
+		di "Error: The two options, dfp and bfgs, cannot be called simultaneously."
+		di "{hline 80}"
+		exit
 	}
 	
-	if "`proxy'" == "" {
-	    di "{hline 41}"
-	    di "Error: the proxy() option must be called."
-	    di "{hline 41}"
+	if "`capital'" == "" || "`free'" == "" || "`proxy'" == "" {
+	    di "{hline 80}"
+	    di "Error: necessary options are not invoked."
+		if "`capital'" == "" { 
+			di "       The capital() option must be called with one variables as an argument."
+		}
+		if "`free'" == "" { 
+			di "       The free() option must be called with at least one variable as arguments."
+		}
+		if "`proxy'" == "" { 
+			di "       The proxy() option must be called with one variables as an argument."
+		}
+	    di "{hline 80}"
+		exit
 	}
 	
-	if "`proxy'" != "" {
+	local lbl `capital' `free' `m'
+	tempvar mmvar
+	if "`m'" == ""{
+		gen `mmvar' = 0
+		local m = "`mmvar'"
+		local lbl `capital' `free'
+	}
+	
+	//if "`capital'" != "" & "`free'" != "" & "`proxy'" != ""{
+		tempvar xvar
 		gen `xvar' = `proxy'
 
 		tempname b V br Vr NT N T minT maxT Obj
-		mata: estimation("`depvar'", "`cnames'", "`xvar'", ///
-						 "`panelid'", "`timeid'", ///
-						 "`m1var'", `m1in', ///
-						 "`m2var'", `m2in', ///
-						 "`m3var'", `m3in', ///
-						 "`m4var'", `m4in', ///
-						 "`m5var'", `m5in', ///
-						 `init_k', 	`init_l', `init_m', ///
-						 `ones', ///
-						 `method_dfp',	`method_bfgs', ///
-						 "`touse'", "`b'", "`V'", "`br'", "`Vr'", "`NT'", "`N'", "`T'", "`minT'", "`maxT'", "`Obj'") 
-	 
-		//local cnames `cnames' Intermediate
-	 
-		local lbl `cnames'
-		if "`m1'" != "" {
-		 local lbl "`lbl' m1"
-		}
-		local m2in = 0 
-		if "`m2'" != "" {
-		 local lbl "`lbl' m2"
-		}
-		local m3in = 0 
-		if "`m3'" != "" {
-		 local lbl "`lbl' m3"
-		}
-		local m4in = 0 
-		if "`m4'" != "" {
-		 local lbl "`lbl' m4"
-		}
-		local m5in = 0 
-		if "`m5'" != "" {
-		 local lbl "`lbl' m5"
-		}
-	 
+		mata: estimation("`depvar'", "`xvar'", "`capital'", "`free'", "`m'",	///
+						 "`panelid'", "`timeid'", `init_capital', `init_free',	///
+						 `init_m', `ones', `method_dfp',	`method_bfgs',		///
+						 "`touse'", "`b'", "`V'", "`br'", "`Vr'", "`NT'", 		///
+						 "`N'", "`T'", "`minT'", "`maxT'", "`Obj'") 
+		mata: mata clear
+		
 		matrix colnames `b' = `lbl'
 		matrix colnames `V' = `lbl'
 		matrix rownames `V' = `lbl'
 
 		ereturn post `b' `V', esample(`touse') buildfvinfo
-		ereturn scalar NT   = `NT'
+		ereturn scalar obs  = `NT'
 		ereturn scalar N    = `N'
 		ereturn scalar T    = `T'
 		ereturn scalar minT = `minT'
@@ -124,7 +89,10 @@
 		ereturn local  cmd  "robustpf"
 	 
 		ereturn display
-	}
+		di "  *  robustPF is based on Hu, Y., Huang, G., & Sasaki, Y. (2020): Estimating"
+		di "  Production Functions with Robustness Against Errors in the Proxy Variables."
+		di "  Journal of Econometrics 215 (2), pp. 375-398."
+	//}
 end
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -132,9 +100,7 @@ end
 mata:
 //////////////////////////////////////////////////////////////////////////////// 
 // Function for the GMM Criterion
-void GMMc(todo, para, NT, numlmumm, yearlist, yearyk, l, m, x, z, W, crit, g, H){
-	N = NT[1,1]
-	T = NT[1,2]
+void GMMc(todo, para, size, numlmumm, yearlist, yearyk, l, m, x, z, W, crit, g, H){
 	numl = numlmumm[1,1]
 	numm = numlmumm[1,2]
 	
@@ -173,15 +139,13 @@ void GMMc(todo, para, NT, numlmumm, yearlist, yearyk, l, m, x, z, W, crit, g, H)
 		moments[2*(idx-1)+1] = sum( z[.,idx] :* (ytilde_tplus1 :- (a_xomega*phi1) :* ytilde) )
 		moments[2*(idx-1)+2] = sum( z[.,idx] :* (xtilde_tplus1 :- phi1 :* ytilde) )
 	}
-	moments = moments :/ (N * (T-1))
+	moments = moments :/ size
 
     crit = moments' * W * moments
 }
 //////////////////////////////////////////////////////////////////////////////// 
 // Function for the GMM Variance
-void GMMv(para, NT, numlmumm, yearlist, yearyk, l, m, x, z, variance){
-	N = NT[1,1]
-	T = NT[1,2]
+void GMMv(para, size, numlmumm, yearlist, yearyk, l, m, x, z, variance){
 	numl = numlmumm[1,1]
 	numm = numlmumm[1,2]
 	
@@ -214,11 +178,11 @@ void GMMv(para, NT, numlmumm, yearlist, yearyk, l, m, x, z, variance){
 		}
 	}
 	//xtilde_tplus1,xtilde
-	
-	moments = J(cols(z)*2,N*(T-1),0)
+
+	moments = J(cols(z)*2,size,0)
 	for( idx = 1 ; idx <= cols(z) ; idx++ ){
 	    index = 1
-	    for( jdx = 1 ; jdx <= N*T ; jdx++ ){
+	    for( jdx = 1 ; jdx <= rows(z) ; jdx++ ){
 		    if( year[jdx] != min(yearlist) ){
 				moments[2*(idx-1)+1,index] = sum( z[jdx,idx] :* (ytilde_tplus1[jdx] :- (a_xomega*phi1) :* ytilde[jdx]) )
 				moments[2*(idx-1)+2,index] = sum( z[jdx,idx] :* (xtilde_tplus1[jdx] :- phi1 :* ytilde[jdx]) )
@@ -227,13 +191,11 @@ void GMMv(para, NT, numlmumm, yearlist, yearyk, l, m, x, z, variance){
 		}
 	}
 	
-	variance = moments * moments' :/ (N*(T-1)) :- (moments :/ (N*(T-1))) * (moments :/ (N*(T-1)))'
+	variance = moments * moments' :/ size :- (moments :/ size) * (moments :/ size)'
 }
 //////////////////////////////////////////////////////////////////////////////// 
 // Function for the GMM moments
-void GMMm(para, NT, numlmumm, yearlist, yearyk, l, m, x, z, moments){
-	N = NT[1,1]
-	T = NT[1,2]
+void GMMm(para, size, numlmumm, yearlist, yearyk, l, m, x, z, moments){
 	numl = numlmumm[1,1]
 	numm = numlmumm[1,2]
 	
@@ -272,13 +234,13 @@ void GMMm(para, NT, numlmumm, yearlist, yearyk, l, m, x, z, moments){
 		moments[2*(idx-1)+1] = sum( z[.,idx] :* (ytilde_tplus1 :- (a_xomega*phi1) :* ytilde) )
 		moments[2*(idx-1)+2] = sum( z[.,idx] :* (xtilde_tplus1 :- phi1 :* ytilde) )
 	}
-	moments = moments :/ (N * (T-1))
+	moments = moments :/ size
 }
 //////////////////////////////////////////////////////////////////////////////// 
 // Function for the GMM gradients
-void GMMg(para, NT, numlmumm, yearlist, yearyk, l, m, x, z, gradients){
+void GMMg(para, size, numlmumm, yearlist, yearyk, l, m, x, z, gradients){
     real matrix moments
-	GMMm(para, NT, numlmumm, yearlist, yearyk, l, m, x, z, moments)
+	GMMm(para, size, numlmumm, yearlist, yearyk, l, m, x, z, moments)
 
 	gradients = J(length(moments),length(para),0)
 	
@@ -288,65 +250,44 @@ void GMMg(para, NT, numlmumm, yearlist, yearyk, l, m, x, z, gradients){
 	for( idx = 1 ; idx <= length(para) ; idx++ ){
 		delta_para = para
 		delta_para[idx] = delta_para[idx] + delta
-		GMMm(delta_para, NT, numlmumm, yearlist, yearyk, l, m, x, z, delta_moments)
+		GMMm(delta_para, size, numlmumm, yearlist, yearyk, l, m, x, z, delta_moments)
 		
 		gradients[.,idx] = (delta_moments - moments ) :/ delta
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
 // Main Estimation Function
-void estimation( string scalar depvar,  string scalar indepvar,  
-				 string scalar xvar,
-				 string scalar panelid, string scalar timeid,  
-				 string scalar m1var,	real scalar m1in,
-				 string scalar m2var,	real scalar m2in,
-				 string scalar m3var,	real scalar m3in,
-				 string scalar m4var,	real scalar m4in,
-				 string scalar m5var,	real scalar m5in,
-				 real scalar init_k,	real scalar init_l, real scalar init_m,
-				 real scalar onestep,
-				 real scalar dfp,		real scalar bfgs,
-				 string scalar touse,   string scalar bname,   
-				 string scalar Vname,   string scalar brname,
-				 string scalar Vrname,	string scalar ntname,
-				 string scalar nname,	string scalar tname,	
-				 string scalar mintname, string scalar maxtname,
-				 string scalar oname) 
+void estimation( string scalar depvar,	string scalar xvar,	
+				 string scalar cvar, 	string scalar lvar,	
+				 string scalar mvar, 	string scalar panelid, 
+				 string scalar timeid,	real scalar init_k,	
+				 real scalar init_l, 	real scalar init_m,	
+				 real scalar onestep, 	real scalar dfp,		
+				 real scalar bfgs, 		string scalar touse,   
+				 string scalar bname, 	string scalar Vname,   
+				 string scalar brname, 	string scalar Vrname,	
+				 string scalar ntname, 	string scalar nname,	
+				 string scalar tname, 	string scalar mintname,
+				 string scalar maxtname,string scalar oname) 
 {
-	printf("{hline 78}\n")
-	printf("Executing:  Hu, Y., Huang, G., & Sasaki, Y. (2020): Estimating Production     \n")
-	printf("            Functions with Robustness Against Errors in the Proxy Variables.  \n")
-	printf("            Journal of Econometrics 215 (2), pp. 375-398.                     \n")
-	printf("{hline 78}\n")
+	printf("\nExecuting robustPF.\n")
  
  	////////////////////////////////////////////////////////////////////////////
 	// depvar ==> y, first row of indepvar ==> k, the last row of indepvar ==> x
     y    = st_data(., depvar, touse)
-    kl  = st_data(., indepvar, touse)
-	k    = kl[., 1]
-	l    = kl[., 2..(cols(kl))]
+	k    = st_data(., cvar, touse)
+	l    = st_data(., lvar, touse)
 	numl = cols(l)
 	x    = st_data(., xvar, touse)
-    m    = J(rows(y),(m1in+m2in+m3in+m4in+m5in),0)
-	index = 1
-	if( m1in ){
-	    m[.,index++] = st_data(., m1var, touse)
-	}
-	if( m2in ){
-	    m[.,index++] = st_data(., m2var, touse)
-	}
-	if( m3in ){
-	    m[.,index++] = st_data(., m3var, touse)
-	}
-	if( m4in ){
-	    m[.,index++] = st_data(., m4var, touse)
-	}
-	if( m5in ){
-	    m[.,index++] = st_data(., m5var, touse)
-	}
+	m    = st_data(., mvar, touse)
 	numm = cols(m)
     year = st_data(., timeid, touse)
 	id   = st_data(., panelid, touse)
+	
+	if( sum(m:!=0)==0 ){
+	 m = J(rows(y),0,0)
+	 numm=0
+	}
 
 	////////////////////////////////////////////////////////////////////////////
 	// Get the list of ids
@@ -378,44 +319,7 @@ void estimation( string scalar depvar,  string scalar indepvar,
 	yearlist = sort(yearlist,1)
 	T = length(yearlist)
 	
-	////////////////////////////////////////////////////////////////////////////
-	// Get balanced panel
-	balanceidlist = 0
-	for( idx = 1 ; idx <= length(idlist) ; idx++ ){		
-		if( length( select( year, idlist[idx] :== id ) ) == length( yearlist ) ){
-		    balanceidlist = balanceidlist, idlist[idx]
-		}
-	}
-	balanceidlist = balanceidlist[2..(length(balanceidlist))]
-	N = length(balanceidlist)
-	
-	balanceindices = y :* 0
-	index = 1
-	for( idx = 1 ; idx <= rows(y) ; idx++ ){
-		if( sum( id[idx] :== balanceidlist ) == 1 ){
-			balanceindices[index++] = idx
-		}
-	}
-	balanceindices = balanceindices[1..(index-1)]
-
-	for( idx = 1 ; idx <= length(balanceindices) ; idx++ ){
-	id[idx,.] = id[balanceindices[idx],.]
-	year[idx,.] = year[balanceindices[idx],.]
-	y[idx,.] = y[balanceindices[idx],.]
-	k[idx,.] = k[balanceindices[idx],.]
-	l[idx,.] = l[balanceindices[idx],.]
-	x[idx,.] = x[balanceindices[idx],.]
-	m[idx,.] = m[balanceindices[idx],.]
-	}
-	id = id[1..(idx-1),.]
-	year = year[1..(idx-1),.]
-	y = y[1..(idx-1),.]
-	k = k[1..(idx-1),.]
-	l = l[1..(idx-1),.]
-	x = x[1..(idx-1),.]
-	m = m[1..(idx-1),.]
-	
-	//id,year
+	size = sum( min(yearlist) :!= year ) // Effective Sample Size
 	
 	////////////////////////////////////////////////////////////////////////////
 	// Form instruments - first if x is a part of m, then take the lag of that m
@@ -439,7 +343,7 @@ void estimation( string scalar depvar,  string scalar indepvar,
 
 	////////////////////////////////////////////////////////////////////////////
 	// 1st Step GMM Estimation
-	printf("{hline 32}\n    GMM: 1st Step Estimation\n{hline 32}\n")
+	printf("  GMM: 1st Step Estimation\n")
 	W = diag(J(cols(z)*2,1,1))
 
 	a_x0 = J(1,1,0.0)
@@ -462,7 +366,7 @@ void estimation( string scalar depvar,  string scalar indepvar,
 		optimize_init_technique(S,"bfgs")
 	}
 	optimize_init_singularHmethod(S,"hybrid") 
-	optimize_init_argument(S,1,(N,T))
+	optimize_init_argument(S,1,size)
 	optimize_init_argument(S,2,(numl,numm))
 	optimize_init_argument(S,3,yearlist)
 	optimize_init_argument(S,4,(year,y,k))
@@ -472,25 +376,27 @@ void estimation( string scalar depvar,  string scalar indepvar,
 	optimize_init_argument(S,8,z)
 	optimize_init_argument(S,9,W)
 	optimize_init_params(S, init)
-	//optimize_init_conv_maxiter(S, 200)
+	optimize_init_tracelevel(S, "none")
+	optimize_init_trace_dots(S, "on")
+	//optimize_init_conv_maxiter(S, 2)
 	est=optimize(S)	
 	//est
 
 	////////////////////////////////////////////////////////////////////////////
 	// Estimate 1st GMM variance
 	real matrix variance
-	GMMv(est, (N,T), (numl,numm), yearlist, (year,y,k), l, m, x, z, variance)
+	GMMv(est, size, (numl,numm), yearlist, (year,y,k), l, m, x, z, variance)
 	//variance
 	
 	////////////////////////////////////////////////////////////////////////////
 	// Estimate 1st GMM gradients
 	real matrix graidents
-	GMMg(est, (N,T), (numl,numm), yearlist, (year,y,k), l, m, x, z, gradients)
+	GMMg(est, size, (numl,numm), yearlist, (year,y,k), l, m, x, z, gradients)
 	
 	if( !onestep ){
 	////////////////////////////////////////////////////////////////////////////
 	// 2nd Step GMM Estimation
-	printf("{hline 32}\n    GMM: 2nd Step Estimation\n{hline 32}\n")
+	printf("  GMM: 2nd Step Estimation\n")
 	W = luinv(variance)
 	
 	S = optimize_init()
@@ -505,7 +411,7 @@ void estimation( string scalar depvar,  string scalar indepvar,
 		optimize_init_technique(S,"bfgs")
 	}
 	optimize_init_singularHmethod(S,"hybrid") 
-	optimize_init_argument(S,1,(N,T))
+	optimize_init_argument(S,1,size)
 	optimize_init_argument(S,2,(numl,numm))
 	optimize_init_argument(S,3,yearlist)
 	optimize_init_argument(S,4,(year,y,k))
@@ -515,28 +421,30 @@ void estimation( string scalar depvar,  string scalar indepvar,
 	optimize_init_argument(S,8,z)
 	optimize_init_argument(S,9,W)
 	optimize_init_params(S, init)
-	//optimize_init_conv_maxiter(S, 200)
+	optimize_init_tracelevel(S, "none")
+	optimize_init_trace_dots(S, "on")
+	//optimize_init_conv_maxiter(S, 2)
 	est=optimize(S)	
 	//est
 	
 	////////////////////////////////////////////////////////////////////////////
 	// Estimate 2nd GMM variance
-	GMMv(est, (N,T), (numl,numm), yearlist, (year,y,k), l, m, x, z, variance)
+	GMMv(est, size, (numl,numm), yearlist, (year,y,k), l, m, x, z, variance)
 	//variance
 	
 	////////////////////////////////////////////////////////////////////////////
 	// Estimate 2nd GMM gradients
-	GMMg(est, (N,T), (numl,numm), yearlist, (year,y,k), l, m, x, z, gradients)
+	GMMg(est, size, (numl,numm), yearlist, (year,y,k), l, m, x, z, gradients)
 	
 	//gradients' * luinv(variance) * gradients / (N*(T-1))
 	} // END IF !onestep //
 		
 	b = est[1,4..(length(est)-1)]'
-	V = ( gradients' * luinv(variance) * gradients / (N*(T-1)) )[4..(length(est)-1),4..(length(est)-1)]
+	V = ( gradients' * luinv(variance) * gradients / size )[4..(length(est)-1),4..(length(est)-1)]
 
     st_matrix(bname, b')
     st_matrix(Vname, V)
-    st_numscalar(ntname, N*T)
+    st_numscalar(ntname, rows(year))
     st_numscalar(nname, N)
     st_numscalar(tname, T)
     st_numscalar(mintname, min(year))
@@ -552,14 +460,18 @@ void estimation( string scalar depvar,  string scalar indepvar,
 	
 	printf("\n")
 	printf("{hline 78}\n")
-	printf("Number of cross-sectional observations in the balanced subsample:     N=%6.0f\n", N)
-	printf("Number of time periods in the balanced subsample:                     T=%6.0f\n", T)
+	if( N*T == rows(year) ){
+	printf("Exactly balanced panel:                                    observations=%6.0f\n",rows(year))
+	}else{
+	printf("Unbalanced panel:                                          observations=%6.0f\n",rows(year))
+	}
+	printf("Number of cross-sectional observations in the subsample:              N=%6.0f\n", N)
+	printf("Number of time periods in the subsample:                              T=%6.0f\n", T)
 	printf("                                                                   minT=%6.0f\n",min(year))
 	printf("                                                                   maxT=%6.0f\n",max(year))
 	printf("{hline 78}\n")
 	printf("Returns to Scale (Std. Err.) = %f (%f)\n",RTS,SE_RTS)
 }
-
 end
 ////////////////////////////////////////////////////////////////////////////////
 

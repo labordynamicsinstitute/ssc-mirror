@@ -67,17 +67,20 @@ syntax, FRame(string) [COMmand NODIAG YZero NODraw]
 				local ci_col `3'
 				** if no, is color for the main chart defined?
 				local 999 plotaux , `gs_op'
-				if `"`gs_op'"' != "" _parse expand x col : 999 , common(CoLor()) 
-				if "`ci_col'" =="" & "`col_op'" != "" {
-					tokenize `col_op', parse("(%)")
-					local ci_col `3'
+				if `"`gs_op'"' != "" _parse expand x col : 999 , common(CoLor())  
+				if `"`ci_col'"' =="" & `"`col_op'"' != "" {
+					tokenize `col_op', parse("(%)")	
+					tokenize `3', parse("%")
+					local ci_col `1' 
 				}				
 
 				** is transparency for rarea graphs defined?
 				if "`rgraph'" == "rarea" {
 					tokenize `citr_op', parse("%)")
 					if "`3'"=="" local ci_col `ci_col'%15
-				}
+					tokenize `col_op', parse(`"""')
+					if "`2'" != "" local ci_col ""`ci_col'""
+				} 
 				
 				** extract all other ci options and save it as `cioth_op'
 				local 0 (`cmd_1'
@@ -98,30 +101,16 @@ syntax, FRame(string) [COMmand NODIAG YZero NODraw]
 				
 				** updated options for ci area graphs
 				local r_op pstyle(p`j') `cioth_op'
-				if "`ci_col'" != "" local r_op color(`ci_col') `r_op'
+				if `"`ci_col'"' != "" local r_op color(`ci_col') `r_op'
 				
 				** legends for ci area graphs
-				if "`ci_leg'" != "" local r_op `r_op' legend(label(`gr_counter' "`ci_leg'"))
+				if `"`ci_leg'"' != "" local r_op `r_op' legend(label(`gr_counter' "`ci_leg'"))
 				
 				** rgraph syntax
 				local graph_syntax `graph_syntax' (`rgraph' LCI_val`j' UCI_val`j' x_val`j' , `r_op' `ax_op') 
 				
 			}
 		}  
-		
-		
-		** default title of the y-axis (`output' type corresponding to the last plot)
-		local 0  plotaux , `tw_op' 
-		if `"`tw_op'"' != "" _parse expand cmd yt : 0 , common(YTitle(string)) 
-		if `"`yt_op'"' == "" local tw_op `tw_op' `ytitle1' `ytitle2'
-		
-		** default title of the x-axis (label of x_val in the last plot) 
-		if `"`tw_op'"' != "" _parse expand cmd xt : 0 , common(XTitle(string)) 
-		if `"`xt_op'"' == "" {
-			*frame `frame':  local xlbl : variable label x_val`I'
-			cap frame `frame':  local xlbl : variable label x_val`I'
-			local tw_op `tw_op' xtitle("`xlbl'")
-		}
 		
 		** include zero on the y-axis (pt3) (add to the global two-way options)
 		if "`yzero'" != "" {
@@ -139,6 +128,18 @@ syntax, FRame(string) [COMmand NODIAG YZero NODraw]
 		if "`nodiag'"=="" n di as text  						"  - graph type:             "  "`graph'"  	
 		if "`nodiag'"=="" & `"`tw_op'"' != "" n di as text   	"  - twoway options:         " `"`tw_op'"'	
 	    if "`nodiag'"=="" & `"`gs_op'"' != "" n di as text  	"  - graph-specific options: " `"`gs_op'"'	
+				
+		** default title of the y-axis (`output' type corresponding to the last plot)
+		local 0  plotaux , `tw_op' 
+		if `"`tw_op'"' != "" _parse expand cmd yt : 0 , common(YTitle(string)) 
+		if `"`yt_op'"' == "" local tw_op `tw_op' `ytitle1' `ytitle2'
+		
+		** default title of the x-axis (label of x_val in the last plot) 
+		if `"`tw_op'"' != "" _parse expand cmd xt : 0 , common(XTitle(string)) 
+		if `"`xt_op'"' == "" {
+			cap frame `frame':  local xlbl : variable label x_val`I'
+			local tw_op `tw_op' xtitle("`xlbl'")
+		}
 		
 		** white background for s2color scheme unless specified otherwise
 		local 0 plotaux , `tw_op' 

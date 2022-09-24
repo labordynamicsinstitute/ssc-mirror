@@ -1,6 +1,10 @@
 {smcl}
-{* *! version 1.0.1  19aug2022}{...}
-{findalias asfradohelp}{...}
+{* *! version 1.1  21sep2022}{...} 
+{vieweralsosee "plottabs" "help plottabs"}{...}
+{vieweralsosee "plotmeans" "help plotmeans"}{...}
+{vieweralsosee "plotshares" "help plotshares"}{...}
+{vieweralsosee "plotbetas" "help plotbetas"}{...}
+{vieweralsosee "twoway" "help twoway"}{...}
 {viewerjumpto "Syntax" "plotshares##syntax"}{...}
 {viewerjumpto "Description" "plotshares##description"}{...} 
 {viewerjumpto "Examples" "plotshares##examples"}{...}

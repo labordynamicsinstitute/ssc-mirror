@@ -3,7 +3,7 @@ capture program drop plotbetas
 program define plotbetas
 	version 16
 	
-	** Plotb-specific options defined here
+	** Plotbetas-specific options defined here
 	local pt_opts 		CIopt(string)       clear 				///
 		COMmand     	FRame(string) 		GLobal 				///
 		GRaph(name)  	NODIAG 				OUTput(string) 		///
@@ -56,9 +56,9 @@ program define plotbetas
 	** extract all CI options from the composite `ciopt' string: 
 	tokenize "`ciopt'", parse(",")
 	cap confirm number `1'
-	if _rc != 0 local ciopt 95 `ciopt'
+	if _rc != 0  & "`1'"!="off" local ciopt 95 `ciopt'
 	_parse expand cmd off : ciopt , common(off)
-	if "`off_op'" == "off" local noci noci
+	if "`off_op'" == "off" | "`1'" == "off" local noci noci
 	else{
 		tokenize "`cmd_1'", parse(",")
 		local ci = `1'
@@ -68,8 +68,7 @@ program define plotbetas
 	** define defaults: 
 	if "`graph'" == "" local graph = "line"
 	if "`rgraph'"== "" local rgraph = "rarea"
-	if "`frame'" == "" local frame frame_pt
- 							 
+	if "`frame'" == "" local frame frame_pt 		 
 	qui {
 		** (1) FRAME INITIALIZATION (SAME FOR ALL PLOT COMMANDS) ***************
 		
@@ -199,10 +198,10 @@ program define plotbetas
 				frame `frame'_cust: replace cust_oci = `"`ci_op'"'  `in_i'
 			}
 		}
-		else if "`tw_op'"!="" {
+		else if `"`tw_op'"'!="" {
 			frame `frame'_cust: replace cust_two = `"`tw_op'"'  in 1
-		}
-				 
+		} 
+		
 		** (4) TWO-WAY COMMAND *******************************************
 		** create a twoway command syntax  
 		n plottwoway, frame(`frame') `command' `nodiag' `yzero'

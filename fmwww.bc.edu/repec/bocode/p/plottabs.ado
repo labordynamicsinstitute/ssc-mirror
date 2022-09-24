@@ -137,7 +137,7 @@ program define plottabs
 			frame `frame'_cust: replace cust_two = `"`tw_op'"'   in 1
 			frame `frame'_cust: replace cust_oth = `"`oth_op'"'  in 1 
 		}
-		else if "`tw_op'"!="" {
+		else if `"`tw_op'"'!="" {
 			frame `frame'_cust: replace cust_two = `"`tw_op'"'  in 1
 		}
 				

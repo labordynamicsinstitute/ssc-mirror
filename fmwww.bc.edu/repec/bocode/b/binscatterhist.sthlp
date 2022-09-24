@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 3.0 Sep2022}{...}
+{* *! version 3.1 Sep2022}{...}
 {viewerjumpto "Syntax" "binscatterhist##syntax"}{...}
 {viewerjumpto "Description" "binscatterhist##description"}{...}
 {viewerjumpto "Options" "binscatterhist##options"}{...}
@@ -35,6 +35,7 @@ where {it:varlist} is
 {synopt :{opt binsreg}}{bf:(recommended)} creates the scatterplot points by running the program binsreg in the background ({help binsreg}), for a correct data visualization in the presence of covariates{p_end}
 {synopt :{opth by(varname)}}plot separate series for each group (see {help binscatterhist##by_notes:important notes below}){p_end}
 {synopt :{opt med:ians}}plot within-bin medians instead of means{p_end}
+{synopt :{opt legend}}works normally when a histogram is not included. With histogram, has to take the form legend(order(1 ".." 2 "..")){p_end}
 
 {syntab :Bins}
 {synopt :{opth n:quantiles(#)}}number of equal-sized bins to be created; default is {bf:20}{p_end}
@@ -165,6 +166,9 @@ by-value), you can construct a variable containing your desired bins beforehand,
 {phang}{opt med:ians} creates the binned scatterplot using the median x- and y-value within each bin, rather than the mean.
 This option only affects the scatter points; it does not, for instance, cause {opt linetype(lfit)}
 to use quantile regression instead of OLS when drawing a fit line.
+
+{phang}{opt legend} works normally when a histogram is not included. When a histogram is included, it has to take the form legend(order(1 ".." 2 "..")). This is is due to a compatibility issue in the auxiliary package addplot.
+
 
 {dlgtab:Bins}
 

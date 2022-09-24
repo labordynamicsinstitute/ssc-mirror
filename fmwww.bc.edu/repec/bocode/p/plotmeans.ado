@@ -3,13 +3,13 @@ capture program drop plotmeans
 program define plotmeans
 	version 16
 	
-	** Plottabs-specific options defined here
+	** Plotmeans-specific options defined here
 	local pt_opts 		CIopt(string) 		clear 				///
 		COMmand			FRame(string) 		GLobal 				///
 		GRaph(name)  	 				    NODiag 				///
 		PLOTonly   		PLName(string) 		REPlace(integer -1) ///
 		RGRaph(name) 	OUTput(string) 		TIMes(real 1)  		///
-		XSHift(real 0)  	YSHift(real 0) 		YZero
+		XSHift(real 0)  YSHift(real 0) 		YZero
 	
 	** All native twoway options specified here...
 	local tw_opts 		 noDRAW 			NAME(string) 		///
@@ -44,14 +44,14 @@ program define plotmeans
 	** extract all CI options from the composite `ciopt' string: 
 	tokenize "`ciopt'", parse(",")
 	cap confirm number `1'
-	if _rc != 0 local ciopt 95 `ciopt'
+	if _rc != 0 & "`1'"!="off" local ciopt 95 `ciopt'
 	_parse expand cmd off : ciopt , common(off)
-	if "`off_op'" == "off" local noci noci
+	if "`off_op'" == "off" | "`1'" == "off" local noci noci
 	else{
 		tokenize "`cmd_1'", parse(",")
 		local ci = `1'
 		local ci_op `3' 
-	}
+	} 
 	
 	** deal with alternative varname declarations:
 	if "`varlist'" != "" & "`plotonly'" == ""  confirm var `over'
@@ -139,24 +139,12 @@ program define plotmeans
 			
 			local ii = 0
 			qui foreach var in `fvarlist' {    
-				** determine the value of the factorized variable:
-				local pos = strpos("`var'","i") + 1
-				local length = strpos("`var'",".") - `pos'
-				*n di "`pos'" " " "`length'" " " "`var'"
-				local ii =  real(substr("`var'",`pos',`length'))
-				*n di "`ii'"  
-				** deal with ibn's
-				if `ii'==. {
-					local pos_suffix = `pos' + `length' - 2
-					if substr("`var'",`pos_suffix',2) == "bn" local ii =  real(substr("`var'",`pos',`length'-2))
-				}				
- 			
 				cap qui di _b[`var']
 				if _rc ==0 { 
 					if "`noci'" =="" {
 						** get degrees of freedom & inverse t-stat for confidence level `ci'
 						local df = e(df_r)
-						local invt = invt(`df',0.`ci')
+						local invt = invt(`df',`ci'/100)
 						** derive the CI for the given coefficient
 						local LC = _b[`var'] - `invt'*_se[`var']
 						local UC = _b[`var'] + `invt'*_se[`var']
@@ -177,6 +165,7 @@ program define plotmeans
 			frame `frame': svmat x_val, names(x_val`i')  	
 			
 			** PM: rename the plot variables
+			frame `frame': rename x_val`i'1 x_val`i'
 			frame `frame': rename plot_val`i'1 y_val`i'
 			if "`noci'" ==""{
 				frame `frame': cap rename plot_val`i'2 LCI_val`i'
@@ -227,10 +216,10 @@ program define plotmeans
 				frame `frame'_cust: replace cust_oci = `"`ci_op'"'  `in_i'
 			}
 		}
-		else if "`tw_op'"!="" {
+		else if `"`tw_op'"'!="" {
 			frame `frame'_cust: replace cust_two = `"`tw_op'"'  in 1
 		}
-				
+
 		** (4) TWO-WAY COMMAND *******************************************
 		** create a twoway command syntax  
 		n plottwoway, frame(`frame') `command' `nodiag' `yzero'

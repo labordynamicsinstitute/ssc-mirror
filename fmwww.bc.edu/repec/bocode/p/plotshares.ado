@@ -3,7 +3,7 @@ capture program drop plotshares
 program define plotshares
 	version 16
 	
-	** Plottabs-specific options defined here
+	** Plotshares-specific options defined here
 	local pt_opts 		clear 				COMmand     		///
 		FRame(string) 	GLobal 				GRaph(name)  		///
 		INVert 		    OUTput(string)		PLOTonly 			///
@@ -116,15 +116,20 @@ program define plotshares
 			forvalues i = `imin'/`imax'	{
 				** assign descriptive labels to auxiliary plot variables?
 				** specify the plot variable labels (EDIT)
-				if "`plname'" == "" local plname "Share"
+				*if "`plname'" == "" local plname "Share"
 				
 				** grnum assignment depends on invert
 				if `inv_sw'==0 local grnum = gr_val[1,`i']
 				else local grnum = gr_val[1,`imax'-(`i'-`imin')]
 				
-				*n di `grnum'
-				local lab`i' : label `vlab' `grnum'
-				frame `frame': label var y_val`i' "`plname': `lab`i''"	
+				** specify the category-labels 
+				if "`vlab'" != "" {
+					local lab`i' : label `vlab' `grnum'
+					frame `frame': label var y_val`i' "`varlist'= `lab`i''"	
+				} 
+				else { 
+					frame `frame': label var y_val`i' "`varlist'=`grnum'"	
+				}
 				
 				** x-labels do not work as before (used as titles) because x's are now plot-specific
 				local xlbl : variable label `over'
@@ -141,7 +146,7 @@ program define plotshares
 			frame `frame'_cust: replace cust_two = `"`tw_op'"'   in 1
 			frame `frame'_cust: replace cust_oth = `"`oth_op'"'  in 1 
 		}
-		else if "`tw_op'"!="" {
+		else if `"`tw_op'"'!="" {
 			frame `frame'_cust: replace cust_two = `"`tw_op'"'  in 1
 		}
 				
