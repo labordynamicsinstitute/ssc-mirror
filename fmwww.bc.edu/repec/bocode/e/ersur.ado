@@ -2,6 +2,7 @@
 *!       v1.1 CFBaum 11mar2017 Mata logic added 
 *!       v1.2 CFBaum 01apr2017 onepanel added, returns modified
 *!       v1.3 CFBaum 26jan2018 guard against rounding values in alphas
+*!       v1.3 CFBaum 24sep2022 remove mata clear
 capture program drop ersur
 program ersur, rclass
 version 13
@@ -243,7 +244,7 @@ return local varname = "`varlist'"
 restore
 end
 
-mata: mata clear
+// DISABLE mata: mata clear
 version 13
 mata
 void ersur1(string scalar consts,

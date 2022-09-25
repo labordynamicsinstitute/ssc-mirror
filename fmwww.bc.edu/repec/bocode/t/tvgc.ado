@@ -5,9 +5,10 @@
 *! v1.3 cfb 24dec2020 added merge to retain prefix variables if selected
 *! v1.4 cfb 17jan2021 added restab
 *! v1.5 cfb 01mar2021 adjust handling of notitle
+*! v1.5 cfb 24sep2022 remove mata clear
 
 capture program drop tvgc
-mata: mata clear
+// DISABLE mata: mata clear
 program tvgc, rclass 
 version 13
 

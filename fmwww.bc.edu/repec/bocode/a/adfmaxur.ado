@@ -3,6 +3,7 @@
 *!          v1.2 CFBaum 25mar2017 reverse logic corrected, onepanel enabled
 *!          v1.3 CFBaum 26jan2018 guard against rounding values in alphas
 *!          v1.3 CFBaum 02apr2018 fix to guard against very low test statistics for which p-value approximation may not be good
+*!          v1.3 CFBaum 24sep2022 remove mata clear
 capture program drop adfmaxur
 program adfmaxur, rclass 
 version 13
@@ -257,7 +258,7 @@ return local varname = "`varlist'"
 restore
 end
 
-mata: mata clear
+// DISABLE mata: mata clear
 version 13
 mata
 void adfmaxur1(string scalar consts,
