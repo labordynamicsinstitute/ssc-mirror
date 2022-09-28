@@ -1,4 +1,4 @@
-*! version 1.1 19Sep2022 
+*! version 1.2 27Sep2022 
 capture program drop plotshares
 program define plotshares
 	version 16
@@ -112,7 +112,6 @@ program define plotshares
 				
 		** save custom graph options for new or replaced graphs
 		if "`plotonly'" == "" | `replace' != -1  {	
-			local vlab : value label `varlist'
 			forvalues i = `imin'/`imax'	{
 				** assign descriptive labels to auxiliary plot variables?
 				** specify the plot variable labels (EDIT)
@@ -135,6 +134,15 @@ program define plotshares
 				local xlbl : variable label `over'
 				if "`xlbl'" == "" local xlbl "Grouping variable"
 				frame `frame': label var x_val`i' "`xlbl'"
+				
+				** copy x-value labels
+				local xvlbl : value label `over'
+				if "`xvlbl'" != "" {
+				    tempfile auxlabfile
+				    cap label save `xvlbl' using `auxlabfile', replace 
+					frame `frame': cap qui do `auxlabfile'
+					frame `frame': label values x_val`i' `xvlbl'
+				}
 				 
 				** save custom graph options for new or replaced graphs	
 				if "`global'" == "" local in_i in `i'

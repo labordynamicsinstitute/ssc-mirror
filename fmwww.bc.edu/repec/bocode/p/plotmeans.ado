@@ -1,4 +1,4 @@
-*! version 1.1 19Sep2022 
+*! version 1.2 27Sep2022 
 capture program drop plotmeans 
 program define plotmeans
 	version 16
@@ -198,6 +198,15 @@ program define plotmeans
 			frame `frame': label var y_val`i' "`plname', Estimates"
 			frame `frame': cap label var LCI_val`i' "`plname' `ci'% CI, LB"
 			frame `frame': cap label var UCI_val`i' "`plname' `ci'% CI, UB"
+			
+			** copy x-value labels
+			local xvlbl : value label `over'
+			if "`xvlbl'" != "" {
+				tempfile auxlabfile
+				cap label save `xvlbl' using `auxlabfile', replace 
+				frame `frame': cap qui do `auxlabfile'
+				frame `frame': label values x_val`i' `xvlbl'
+			}
 						
 			local output "Conditional Means"	
 			local ci_lab  "`plname', `ci'% CIs"

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0 MLB 28Mar2016}{...}
+{* *! version 1.4.1 MLB 26Sept2022}{...}
 {cmd:help stdtable}
 {hline}
 
@@ -44,8 +44,10 @@ column percentages.{p_end}
 {synopt:{opth f:ormat(%fmt)}}specifies the display format for the output{p_end}
 {synopt:{opt raw}}also displays the raw counts.{p_end}
 {synopt:{opt replace}}replace current data with standardized (and raw) counts.{p_end}
-{synopt:{cmd:replace(}{it:framename} {cmd:[, replace] )}}replaces the data in 
-frame {it:framename} with standardized (and raw) counts. Requires stata 16 or higher{p_end}
+{synopt:{cmd:replace(}{it:framename} {cmd:[}{it:, replace}{cmd:] )}}replaces the data in 
+frame {it:framename} with standardized (and raw) counts. Requires Stata 16 or higher{p_end}
+{synopt:{opt name(collectname)}}Specifies the name of the {help tables intro :collection} 
+that {cmd:stdtable} will leave behind. Requires Stata 17 or higher{p_end}
 
 {syntab:IPF options}
 {synopt:{opt tol:erance(#)}}tolerance for the standardized counts; default is 1e-6{p_end}
@@ -123,6 +125,11 @@ margins will the 100 / (number of columns) for the column totals
 and 100 / (number of rows) for row totals. These standardized
 counts can be interpreted as the cell percentages that would have
 occurred if each category was equally likely to occur.
+
+{pstd} As of Stata 17, the results will be displayed with the new
+{help table} command, which mean that it will leave behind a 
+{help tables intro :collection} that can be easily exported using
+{help collect export}. 
 
 {pstd} Standardizing tables can also be useful to compare tables
 with different marginal distributions. In the example below we look
@@ -259,7 +266,7 @@ and {it:rowvar} respectively.
 {p_end}
 
 {phang}
-{cmd:replace(}{it:framename} {cmd:, [replace] )} replace data in frame {it:framename}
+{cmd:replace(}{it:framename} {cmd:, [}{it:replace}{cmd:] )} replace data in frame {it:framename}
 with standardized (and raw) counts. Frame {it: framename} will be created if 
 frame {it:framename} does not exist. {cmd:stdtable} will exit with an error if 
 frame {it:framename} already exists and the {cmd:replace} sub-option has not 
@@ -267,6 +274,11 @@ been specified. Stata 16 or higher is required. The row and column totals are
 returned in observations with missing values on {it:colvar} and {it:rowvar} 
 respectively.
 {p_end}
+
+{phang}
+{opt name(collectname)} specifies the name of the {help tables intro :collection} 
+that {cmd:stdtable} leaves behind. The default is {it:stdtable}. Stata 17 or higher
+is required.
 
 {dlgtab:IPF options}
 

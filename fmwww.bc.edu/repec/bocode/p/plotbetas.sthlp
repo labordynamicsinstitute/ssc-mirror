@@ -97,7 +97,6 @@ The confidence-interval plots can be customized by selecting the preferred {it:{
     Compare regression estimates for two groups:
 
 {phang2}{cmd:. clear all}{p_end}
-{phang2}{cmd:. sysuse auto}{p_end}
 {phang2}{cmd:. sysuse nlsw88}{p_end}
 
 {phang2}{cmd:. reg ttl_exp i.age if union==0}{p_end}

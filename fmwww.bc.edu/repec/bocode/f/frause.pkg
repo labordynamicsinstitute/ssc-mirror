@@ -1,0 +1,20 @@
+d 'FRAUSE': module to access Wooldridge Stata datasets
+d
+d     frause provides access to Stata-format datasets used in
+d "Introductory Econometrics: a Modern Approach" by    Wooldridge. 
+d This should contain all datasets that the book uses in their
+d examples and exercises, and we will be    using this for the
+d Research Methods class at Levy. 
+d
+d KW: data management
+d KW: Wooldridge
+d
+d Requires: Stata version 9
+d
+d Distribution-Date: 20220927
+d
+d Author: Fernando Rios-Avila, Levy Economics Institute of Bard College
+d Support: email friosavi@@levy.org
+d
+f frause.ado
+f frause.sthlp

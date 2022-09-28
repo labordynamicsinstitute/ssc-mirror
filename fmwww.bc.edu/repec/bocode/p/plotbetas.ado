@@ -1,4 +1,4 @@
-*! version 1.1 19Sep2022 
+*! version 1.2 27Sep2022 
 capture program drop plotbetas 
 program define plotbetas
 	version 16
@@ -47,6 +47,8 @@ program define plotbetas
 		cap _fv_check_depvar `varlist'
 		if _rc != 0 {
 		    local factor = 1
+			tokenize `varlist', parse(".#")
+			local fv_name `3'
 		    fvexpand `varlist'
 			local varlist = r(varlist)
 		}		
@@ -105,12 +107,12 @@ program define plotbetas
 			 
 			** PB: populate the matrix of results
 			local ii = 0
-			qui foreach var in `varlist' {   
+			qui foreach var in `varlist' {
 				if `factor'==1 {
 					** determine the value of the factorized variable:
-					local pos = strpos("`var'","i") + 1
+					local pos = 1 // strpos("`var'","i") + 1
 					local length = strpos("`var'",".") - `pos'
-					local ii =  real(substr("`var'",`pos',`length'))
+					local ii =  real(substr("`var'",`pos',`length')) 
 					** deal with ibn's
 					if `ii'==. {
 						local pos_suffix = `pos' + `length' - 2
@@ -121,7 +123,7 @@ program define plotbetas
 					** or just start from 1 (for non-factorized variables):
 				    local ii = `ii' + 1
 					local xlab `xlab' `ii' "`var'"
-				}					
+				}		
 				cap qui di _b[`var']
 				if _rc ==0 { 
 					if "`noci'" =="" {
@@ -183,7 +185,18 @@ program define plotbetas
 			
 			local output "Coefficient Estimates"
 			local ci_lab  "`plname' `ci'% CIs"
-				 				
+			
+			** copy x-value labels for factorized vars
+			if `factor'==1 {
+				cap local xvlbl : value label `fv_name'
+				if "`xvlbl'" != "" {
+				    tempfile auxlabfile
+				    cap label save `xvlbl' using `auxlabfile', replace 
+					frame `frame': cap qui do `auxlabfile'
+					frame `frame': label values x_val`i' `xvlbl'
+				}
+			}
+			
 			** save custom graph options for new or replaced graphs	
 			if "`global'" == "" local in_i in `i'
 			frame `frame'_cust: cap set obs `i' 

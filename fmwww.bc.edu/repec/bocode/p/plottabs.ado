@@ -1,4 +1,4 @@
-*! version 1.1 19Sep2022 
+*! version 1.2 27Sep2022 
 capture program drop plottabs
 program define plottabs
 	version 16
@@ -81,7 +81,7 @@ program define plottabs
 				forvalues r = 2 / `Nr' { 	
 					mat plot_val`i'[`r',1] = plot_val`i'[`r',1] + plot_val`i'[`r'-1,1]
 				}			
-				local output Cummulative Share	 
+				local output Cumulative Share	 
 			}
 			else { 
 				if "`out'"!="fre" {
@@ -126,7 +126,16 @@ program define plottabs
 			if _rc == 0 {
 				if "`xlbl'" == "" local xlbl "Grouping variable"
 				frame `frame': label var x_val`i' "`xlbl'"
-			} 
+			}
+			
+			** copy x-value labels
+			local xvlbl : value label `over'
+			if "`xvlbl'" != "" {
+				tempfile auxlabfile
+				cap label save `xvlbl' using `auxlabfile', replace 
+				frame `frame': cap qui do `auxlabfile'
+				frame `frame': label values x_val`i' `xvlbl'
+			}
 			 
 			** save custom graph options for new or replaced graphs	
 			if "`global'" == "" local in_i in `i'

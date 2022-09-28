@@ -1,9 +1,14 @@
-*! version 1.3.0 18Nov2019 MLB
-* replace(framename) 
-* row and col allowed with by(,basline())
-* format also used for saved variables
+*! version 1.4.1 26Sep2022 MLB
+*  adjust the helpfile
+*  use table for display
+*  row and col now also work for symmetric tables (relevant for raw counts)
+*  margins (only for display) are now computed using double precision instead of float
+
 program define stdtable, rclass
-	if c(version) >= 16 {
+	if c(version) >= 17 {
+		version 17
+	}
+	else if c(version) >= 16 {
 		version 16
 	}
 	else {
@@ -14,7 +19,7 @@ program define stdtable, rclass
        [raw replace REPLACE2(string) by(string)                      ///
        BASERow(namelist min=1 max=1) BASECol(namelist min=1 max=1)   ///
        TOLerance(real 1e-6) ITERate(integer 16000) log        ///
-       Format(string) row col * ]
+       Format(string) name(string) row col * ]
 
 	if "`weight'" != "" local wgt "[`weight'`exp']"
 
@@ -30,8 +35,8 @@ program define stdtable, rclass
 		local format "%9.3g"
 	}
 	else {
-		capture display `format' 2
-		if _rc error 120
+		Rc_chk `"display `format' 2"' 120
+		if s(res) == "fail" error 120
 	}
 	if "`replace'" != "" & `"`replace2'"' != "" {
 		di as err "{p}replace can only be specified once{p_end}"
@@ -56,8 +61,17 @@ program define stdtable, rclass
 			frame change `frame'
 		}
 	}
-	
-	
+	if c(version) < 17 {
+		if `"`name'"' != "" {
+			di as err "{p}the name() option can only be specified in Stata >= 17{p_end}"
+		}
+	}
+	else {
+		if `"`name'"' == ""{
+			local name "stdtable"
+		} 
+		confirm name `name'
+	}	
 	marksample touse, strok
 	gettoken by byopts : by, parse(",")
 	gettoken comma byopts : byopts, parse(",")
@@ -95,6 +109,7 @@ program define stdtable, rclass
 	if r(sum) == 0 error 2000
 
 	gettoken r c : varlist
+	local c : list clean c
 
 	bys `r' : gen byte `mark' = _n == 1
 	qui count if `mark'
@@ -151,8 +166,7 @@ program define stdtable, rclass
 		}
 		matrix `ones' = J(`kc',1,1)
 		matrix `sumcol' = `basecol'*`ones'
-		capture assert mreldif(`sumcol', `sumrow') < `tolerance' 
-		if _rc{
+		if mreldif(`sumcol', `sumrow') > `tolerance'{
 			di as error "{p}the sums of the matrices in basecol() and baserow() need to be equal{p_end}"
 			exit 198
 		}
@@ -169,11 +183,6 @@ program define stdtable, rclass
 		drop `id'
 	}
 	else {
-		if `kc' == `kr' & "`row'`col'" != "" {
-			// the default is then to already show row and col percentages
-			local row ""
-			local col ""
-		} 
 		if `kc' != `kr' {
 			gen double `basec' = 100/`kc'
 			gen double `baser' = 100/`kr'
@@ -234,6 +243,7 @@ program define stdtable, rclass
 			replace `c' = . if `tot' == 1 
 		}
 		replace `muhat' = 0 if `tot' == 1
+		recast double `tot'
 		bys `by' `r' (`c') : replace `tot' = sum(`muhat')
 		bys `by' `r' (`tot') : replace `muhat' = `tot'[_N] if missing(`c')
 		if "`raw'" != "" {
@@ -253,6 +263,7 @@ program define stdtable, rclass
 			replace `r' = . if `tot' == 1
 		}
 		replace `muhat' = 0 if `tot' == 1
+		recast double `tot'
 		bys `by' `c' (`r') : replace `tot' = sum(`muhat')
 		bys `by' `c' (`tot') : replace `muhat' = `tot'[_N] if missing(`r')
 		if "`raw'" != "" {
@@ -260,7 +271,7 @@ program define stdtable, rclass
 			bys `by' `c' (`r') : replace `tot' = sum(`freq')
 			bys `by' `c' (`tot') : replace `freq' = `tot'[_N] if missing(`r')
 		}
-	}
+	} // ends quitely
 
 	if "`row'" != "" {
 		qui bys `r' `by' (`c') : replace `muhat' = `muhat'/`muhat'[_N]*100 
@@ -273,14 +284,47 @@ program define stdtable, rclass
 
 
 	// display the result
-	if "`raw'" != "" {
-		local freqopt "`freq'"
+	if c(version) < 17 {
+		if "`raw'" != "" {
+			local freqopt "`freq'"
+		}
+		if "`by'" != "" {
+			local byopt "by(`by')"
+		}
+		tabdisp `r' `c' , `byopt' cellvar(`muhat' `freqopt') totals format(`format') `options'
 	}
-	if "`by'" != "" {
-		local byopt "by(`by')"
+	else {
+		if "`raw'" != "" {
+			local rawstat "stat(total `freq')"
+			if "`weight'" == "aweight" | "`weight'" == "iweight" {
+				label var `freq' "sum of weights"
+			}
+			else {
+				label var `freq' "observed"
+			}
+		}
+        label var `muhat' "standardized"
+        
+        // make string variables numeric
+		Rc_chk "confirm numeric variable `r'" 7
+        if s(res) == "fail" {
+            tempvar rnum
+            qui encode `r', gen(`rnum')
+            local r `rnum'
+        }
+        Rc_chk "confirm numeric variable `c'" 7
+        if s(res) == "fail" {
+            tempvar cnum
+            qui encode `c', gen(`cnum')
+            local c `cnum'
+        }
+        Addtotallab `r'
+        Addtotallab `c'
+        
+ 		table (`by' `r') (`c'), stat(total `muhat') `rawstat' ///
+		      zero nformat(`format') `options' name(`name') replace nototals missing
 	}
-	tabdisp `r' `c' , `byopt' cellvar(`muhat' `freqopt') totals format(`format') `options'
-
+	
 	// restore or replace original data
 	if `"`replace'`replace2'"' == "" {
 		restore
@@ -289,7 +333,7 @@ program define stdtable, rclass
 		if "`raw'" != "" {
 			qui gen double _freq = `freq'
 			format _freq `format'
-			if "`weight'" == "pweight" {
+			if "`weight'" == "aweight" | "`weight'" == "iweight" {
 				label variable _freq "sum of weights"
 			}
 			else {
@@ -325,8 +369,9 @@ program define Parseby, rclass
 
 	if "`baseline'" != "" {
 		markout `touse' `varlist', strok
-		capture confirm string variable `varlist'
-		if _rc {
+		Rc_chk "confirm string variable `varlist'" 7
+		
+		if s(res) == "fail" {
 			qui count if `varlist' == `baseline' & `touse' == 1
 			if r(N) == 0 {
 				di as err "{p}the value `baseline' must occur in `varlist'{p_end}"
@@ -342,9 +387,35 @@ program define Parseby, rclass
 			}
 			return local baseline `"`baseline'"'
 		}
-		
-	}
+}
 	return local by "`varlist'"
+end
+
+program define Rc_chk , sclass
+	args tochk rc 
+	
+	capture `tochk'
+	if _rc == `rc' {
+		sreturn local res = "fail"
+	}
+	else if _rc == 0 {
+		sreturn local res = "pass"
+	}
+	else {
+		di as error "{p}Something happend that should never happen{p_end}"
+		di as error "{p}contact the developer{p_end}"
+		exit 198
+	}
+end
+
+program define Addtotallab
+    syntax varname
+
+    qui replace `varlist' = .m if `varlist' == .
+    local labname : value label `varlist'
+    if "`labname'" == "" local labname "`varlist'_lb"
+    label define `labname' .m "Total", modify
+    label values `varlist' `labname'
 end
 
 program define Parseframe, rclass
@@ -383,21 +454,21 @@ program define Contract_w
 
         * Check generated variables *
         if "`zero'" != "" {
-                capture confirm new variable _fillin
-                if _rc != 0 {
+                Rc_chk "confirm new variable _fillin" 110
+                if s(res) == "fail" {
                         di as error "_fillin already defined"
                         exit 110
                 }
         }
 
         if `"`freq'"' == "" {
-                capture confirm new variable _freq
-                if _rc == 0 {
+                Rc_chk "confirm new variable _freq" 110
+                if s(res) == "pass" {
                         local freq "_freq"
                 }
-                else {
-                        di as error "_freq already defined: " /*
-                        */ "use freq() option to specify frequency variable"
+                else if s(res) == "fail" {
+                        di as error "{p}_freq already defined: " /*
+                        */ "use freq() option to specify frequency variable{p_end}"
                         exit 110
                 }
         }
@@ -419,7 +490,10 @@ program define Contract_w
                 error 2000 
         }
         keep `varlist' `expvar'
-        sort `varlist'
+        
+        // also sorting on `expvar' in the hope that adding the smaller values 
+        // first in a running sum improves precision
+        sort `varlist' `expvar'
 
         qui by `varlist' : gen double `freq' = sum(`expvar')
 		if "`weight'" == "iweight" | "`weight'" == "aweight" {

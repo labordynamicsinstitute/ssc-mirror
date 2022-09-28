@@ -91,6 +91,7 @@ p frameappend module to append frames
 p framingham module for calculating the Framingham 10-year Cardiovascular Disease Risk Prediction
 p framingham30 module to calculate 30-year risk of cardiovascular disease 
 p frapply module to nondestructively apply command(s) to a frame
+p frause module to access Wooldridge Stata datasets
 p frcount module to estimate fractional response model under the presence of count endogeneity and unobservable heterogeneity
 p fre module to display one-way frequency table
 p freduse module to Import FRED (Federal Reserve Economic Database) data

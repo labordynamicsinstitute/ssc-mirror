@@ -5,7 +5,7 @@ version 16.0;
  Extension of describe
  creating a resultsset and/or a do-file.
 *! Author: Roger Newson
-*! Date: 11 March 2020
+*! Date: 27 September 2022
 */
 
 syntax [anything(id="varlist")] [using] [,
@@ -181,10 +181,14 @@ local oldframe=c(frame);
 tempname tempframe;
 if `"`using'"'!="" {;
   frame create `tempframe';
-  frame `tempframe': qui use if 0 `using', clear;
+  cap frame `tempframe': qui use in 1 `using', clear;
+  if _rc cap frame `tempframe': qui use if 0 `using', clear;
+  else frame `tempframe': keep if 0; 
 };
 else {;
-  frame put if 0, into(`tempframe');
+  cap frame put in 1, into(`tempframe');
+  if _rc cap frame put if 0, into(`tempframe');
+  else frame `tempframe': keep if 0;  
 };
 frame `tempframe': {;
 
