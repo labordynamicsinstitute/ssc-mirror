@@ -1,0 +1,20 @@
+d 'GRMATGROUPS': module to produce a scatter plot matrix with different marker symbols according to another variable
+d
+d   grmatgroups returns a matrix of scatter plots, similar to that
+d produced by the command graph matrix, but with different markers
+d according to an over() variable. Each value of the this variable
+d is connected to a set of options which can be changed with
+d markeroptions(). There will be one legend for the whole graph. 
+d
+d KW: graphics
+d KW: scatter plots
+d
+d Requires: Stata version 14 and grc1leg from stata.com/users/vwiggins
+d
+d Distribution-Date: 20220930
+d
+d Author: Dominik Flügel, N/A
+d Support: email mail@@dominikfluegel.de
+d
+f grmatgroups.ado
+f grmatgroups.sthlp

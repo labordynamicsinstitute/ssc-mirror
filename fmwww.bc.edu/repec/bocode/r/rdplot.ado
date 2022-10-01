@@ -1,4 +1,4 @@
-*!version 9.0.3  2022-06-25
+*!version 9.0.5  2022-09-29
 
 capture program drop rdplot
 program define rdplot, eclass
@@ -97,6 +97,8 @@ program define rdplot, eclass
 	if ("`covs_drop'"=="invsym")  local covs_drop_coll = 1
 	if ("`covs_drop'"=="pinv")    local covs_drop_coll = 2
 	
+	if ("`covs_drop'"!="off") {	
+		
 		qui _rmcoll `covs_list'
 		local nocoll_controls_cat `r(varlist)'
 		local nocoll_controls ""
@@ -113,16 +115,11 @@ program define rdplot, eclass
 		local ncovs_new: word count `covs_list_new'
 		
 		if (`ncovs_new'<`ncovs') {
-			if ("`covs_drop'"=="off") {	
-				di as error  "{err}Multicollinearity issue detected in {cmd:covs}. Please rescale and/or remove redundant covariates, or add {cmd:covs_drop} option." 
-				exit 125
-			} 
-			else {
 				local ncovs = "`ncovs_new'"
 				local covs_list = "`covs_list_new'"
-				*local covs_drop_coll = 1
+				di as error  "{err}Multicollinearity issue detected in {cmd:covs}. Redundant covariates were removed." 				
 			}	
-		}
+		}	
 	}
 	
 			
@@ -636,7 +633,7 @@ if  ("`covs_eval'"=="mean" & "`covs'"!="") {
 	rdplot_N        = rdplot_N_l \ rdplot_N_r
 	rdplot_min_bin  = rdplot_min_bin_l[rdplot_na_l] \ rdplot_min_bin_r[rdplot_na_r]
 	rdplot_max_bin  = rdplot_max_bin_l[rdplot_na_l] \ rdplot_max_bin_r[rdplot_na_r]
-	rdplot_se_y     = rdplot_sd_y_l:/rdplot_N_l \ rdplot_sd_y_r:/rdplot_N_r
+	rdplot_se_y     = rdplot_sd_y_l:/sqrt(rdplot_N_l) \ rdplot_sd_y_r:/sqrt(rdplot_N_r)
 	
 	rdplot_length_l = rdplot_max_bin_l - rdplot_min_bin_l
 	rdplot_length_r = rdplot_max_bin_r - rdplot_min_bin_r

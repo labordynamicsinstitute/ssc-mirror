@@ -17,7 +17,7 @@ d KW: robust inference
 d
 d Requires: Stata version 13.1
 d
-d Distribution-Date: 20220708
+d Distribution-Date: 20220930
 d
 d Author: Sebastian Calonico, Department of Economics, University of Miami
 d Support: email scalonico@@bus.miami.edu
@@ -37,19 +37,20 @@ f rdbwselect.ado
 f rdbwselect.sthlp
 f rdplot.ado
 f rdplot.sthlp
+f rdplot_illustration.do
 f rdbwselect_2014.ado
 f rdbwselect_2014.sthlp
+f rdbwselect_2014_functions.do
 f rdbwselect_2014_kconst.ado
 f rdrobust_bw.mo
+f rdrobust_collapse.mo
+f rdrobust_functions.do
+f rdrobust_groupid.mo
+f rdrobust_illustration.do
 f rdrobust_kweight.mo
+f rdrobust_median.mo
 f rdrobust_res.mo
 f rdrobust_vce.mo
-f rdrobust_groupid.mo
-f rdrobust_collapse.mo
-f rdrobust_median.mo
-f rdbwselect_2014_functions.do
-f rdrobust_functions.do
-f rdrobust_illustration.do
 f rdbwselect.pdf
 f rdplot.pdf
 f rdrobust.pdf
