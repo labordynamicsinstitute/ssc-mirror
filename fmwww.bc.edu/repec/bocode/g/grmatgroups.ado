@@ -46,7 +46,7 @@ syntax varlist(min=3 numeric) [if] [in], OVER(varname numeric) ///
 capture findfile grc1leg.ado
 if "`r(fn)'" == "" {
 	di as error "user-written package grc1leg needs to be installed first;"
-	di as error "use -ssc install grc1leg- to do that"
+	di as error "use -search grc1leg- to find and install it"
 	exit 498
 }
 

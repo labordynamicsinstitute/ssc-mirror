@@ -59,7 +59,7 @@
 
 {title:Description}
 
-{pstd}{cmd: grmatgroups} returns a matrix of scatter plots, similar to that produced by the command {help graph matrix}, but with different markers according to an {bf: over()} variable. Each value of the this variable is connected to a set of options which can be changed with {bf: markeroptions()}. There will be one legend for the whole graph. The command depends on Vince Wiggins' {help grc1leg:grc1leg} which has to be installed via the SSC before using this command.
+{pstd}{cmd: grmatgroups} returns a matrix of scatter plots, similar to that produced by the command {help graph matrix}, but with different markers according to an {bf: over()} variable. Each value of the this variable is connected to a set of options which can be changed with {bf: markeroptions()}. There will be one legend for the whole graph. The command depends on Vince Wiggins' which has to be installed before using this command ({search grc1leg:search grc1leg} to find and install it).
 {p_end}
 
 
