@@ -20,8 +20,8 @@ d Requires: Stata version 12
 d
 d Distribution-Date: 20220722
 d
-d Author: Thomas Kaspereit, University of Oldenburg
-d Support: email thomas.kaspereit@@uni-oldenburg.de
+d Author: Thomas Kaspereit, University of Luxembourg
+d Support: email thomas.kaspereit@@uni.lu
 d
 f eventstudy2.ado
 f eventstudy2_parallel.do

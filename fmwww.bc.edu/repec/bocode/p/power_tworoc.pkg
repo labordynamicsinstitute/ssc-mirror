@@ -1,0 +1,33 @@
+d 'POWER_TWOROC': module to compute power and sample size for a two-sample (independent or paired) ROC test
+d
+d  power tworoc computes sample size or power for a two-sample
+d receiver operating characteristic (ROC) analysis.  When there is
+d no correlation corr(0) between the two alternative AUCs  (auc1
+d and auc2), power tworoc computes sample size (power) for an
+d independent two-sample test. When the correlation does not equal
+d 0, power tworoc computes sample size (power) for a paired
+d two-sample test. Variance functions are computed using either the
+d method described in Obuchowski, Lieber and Wians (2004) for
+d ordinal data assuming a binormal distribution, or the method
+d described by Hanley and McNeil (1982) for continuous data which
+d is based on the Mann-Whitney version of the rank-sum test (the
+d default). 
+d
+d KW: ROC curve
+d KW: area under the curve
+d KW: power
+d KW: sample size
+d KW: two-sample
+d KW: paired samples
+d KW: independent samples
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20221003
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f power_cmd_tworoc.ado
+f power_cmd_tworoc_init.ado
+f power_tworoc.sthlp

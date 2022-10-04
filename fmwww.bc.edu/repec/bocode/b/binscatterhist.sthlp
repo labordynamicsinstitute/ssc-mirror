@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 3.1 Sep2022}{...}
+{* *! version 3.2 Oct2022}{...}
 {viewerjumpto "Syntax" "binscatterhist##syntax"}{...}
 {viewerjumpto "Description" "binscatterhist##description"}{...}
 {viewerjumpto "Options" "binscatterhist##options"}{...}

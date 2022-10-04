@@ -114,6 +114,7 @@ p power_diagnostic module to compute power and sample size for sensitivity and s
 p power_oneroc module to compute power and sample size for a one-sample ROC test
 p power_swgee module to compute power (under both a Z and t distribution) for cluster randomized stepped wedge designs 
 p power_tworates_zhu module to calculate sample size or power for a two-sample test of rates
+p power_tworoc module to compute power and sample size for a two-sample (independent or paired) ROC test
 p powercal module to perform general power and sample size calculations
 p powerclus module to calculate sample size and/or cluster size for cluster designed studies
 p powermap module to create power heat maps for experimental design using multiple periods
