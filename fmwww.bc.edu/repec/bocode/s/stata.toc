@@ -305,6 +305,7 @@ p strrec module to recode string variables according to rules
 p strsrcs module to fit flexible parametric models for relative survival using restricted cubic splines
 p stsurvdiff module to compute difference in Kaplan-Meier survival curves
 p stsurvimpute module for flexible imputation of censored survival data 
+p sttex module to integrate Stata results into a LaTeX document
 p subinfile module to perform byte-based substitution for the contents of a text-formatted file
 p sublime module to set up StataEditor (a package of Sublime Text) automatically
 p subsave module to save a subset of the dataset in memory to a disk file

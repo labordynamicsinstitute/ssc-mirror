@@ -1,0 +1,23 @@
+d 'TMPINV': module to solve hybrid linear programming-least squares problems
+d
+d  The algorithm solves "hybrid" linear programming- least squares
+d (LP-LS) problems with the help of the Moore-Penrose inverse
+d (pseudoinverse), calculated using singular value decomposition
+d (SVD), with emphasis on estimation of non-typical constrained OLS
+d (cOLS), Transaction Matrix (TM), and custom (user-defined) cases.
+d Eventual regression analysis and a Monte-Carlo-based t-test of
+d mean NRMSE is performed, the sample being drawn from a uniform or
+d a user-specified distribution (Mata function). 
+d
+d KW: linear programming
+d KW: least squares
+d KW: pseudoinverse
+d KW: singular value decomposition
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20221005
+d
+f tmpinv.ado
+F tmpinv.mmat
+f tmpinv.sthlp

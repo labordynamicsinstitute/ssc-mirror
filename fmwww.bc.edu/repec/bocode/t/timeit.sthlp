@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.2.0 10jun2021}{...}
+{* *! version 1.3.0 04okt2022}{...}
 {findalias asfradohelp}{...}
 {title:timeit}
 
@@ -38,11 +38,14 @@
 {pstd}
 If your {it: cmd} leads to an error, the timer will stop running. Hitting break will also stop the timer.
 
-{pstd}The time stored in timer #, r(t{it:#}) and/or r({it:name}) will always be total accumulated time of that timer. {p_end} 
-{tab}E.g. if timer 1 was at 5s before and ran for 2s during the -timeit 1 name:-, then timer 1 will be 7s and {it:name} = 7
+{pstd}The time stored in timer #, r(t{it:#}) will always be total accumulated time of that timer. {p_end} 
+{tab}E.g. if timer 1 was at 5s before and ran for 2s during -timeit 1 name:-, then timer 1 will be 7s and {it:name} = 7
 
-{pstd}The time stored in r(delta_t{it:#}) will be the time spent in this run. {p_end} 
-{tab}E.g. if timer 1 was at 5s before and ran for 2s during the -timeit 1 name:-, then r(delta_t{it:1}) = 2
+{pstd}The time stored in r(delta_t{it:#}) and optionally r(delta_{it:name}) will be the time spent in this run. {p_end} 
+{tab}E.g. if timer 1 was at 5s before and ran for 2s during -timeit 1 name:-, then r(delta_t{it:1}) = 2
+
+{pstd}The time optionally stored in r({it:name}) will be the total accumulated time of that named timer. {p_end} 
+{tab}E.g. if timer regression was at 5s before and ran for 2s during -timeit 1 regression:-, then r({it:regression}) = 7
 
 {pstd}
 Any mistakes are my own.
@@ -82,6 +85,7 @@ Any mistakes are my own.
 {synopt:{cmd:r(t{it:#})}} Current value of timer{p_end}
 {synopt:{cmd:r(delta_t{it:#})}} Incremental value of timer{p_end}
 {synopt:{cmd:r({it:name})}} Current value of timer{p_end}
+{synopt:{cmd:r(delta_{it:name})}} Incremental value of named timer{p_end}
 {p2colreset}{...}
 
 

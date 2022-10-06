@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.1  31jan2022}{...}
+{* *! version 1.1.2  30sep2022}{...}
 {vieweralsosee "[TS] arima" "mansection TS arima"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[TS] arima postestimation" "help arima postestimation"}{...}
@@ -40,24 +40,24 @@ test the normalized RMSE
         {p_end}
 
 {syntab:Constructing the LHS}
-{synopt:{opth m:odel(varlist|matname)}}the MODEL part of {bf:`a'}
+{synopt:{opth m:odel(varlist|matname)}}the MODEL part of {bf:`a`}
         (see {help lppinv##methods:Methods and formulas})
         {p_end}
-{synopt:{opth c:onstraints(varlist|matname)}}the CONSTRAINTS part of {bf:`a'}
+{synopt:{opth c:onstraints(varlist|matname)}}the CONSTRAINTS part of {bf:`a`}
         {p_end}
-{synopt:{opth s:lackvars(varlist|matname)}}the SLACK VARIABLES part of {bf:`a'}
+{synopt:{opth s:lackvars(varlist|matname)}}the SLACK VARIABLES part of {bf:`a`}
         {p_end}
-{synopt:{opt zerod:iagonal}}set all the diagonal elements of {bf:`a'} to 0
+{synopt:{opt zerod:iagonal}}set all the diagonal elements of {bf:`a`} to 0
         {p_end}
 
 {syntab:SVD-based estimation}
 {synopt:{opth tol:erance(real)}}{helpb [M-1] tolerance:roundoff error},
         a number to determine when a number is small enough to be considered
         zero (optional, not specifying {it:tol} is equivalent to specifying
-        {it:tol}=1){p_end}
+        {it:tol}=0){p_end}
 {synopt:{opth l:evel(#)}} confidence level (by default: {helpb clevel:c(level)})
 
-{syntab :Monte-Carlo-based t-test}
+{syntab:Monte-Carlo-based t-test}
 {synopt:{opth seed(#)}}random-number seed, # is any number between 0 and
         2^31-1 (or 2,147,483,647)
         (by default:{helpb set_seed: c(rngseed_mt64s)}) {p_end}
@@ -71,6 +71,7 @@ test the normalized RMSE
         {cmd:lppinv}, the full list of  built-in functions is available
         {help mf_runiform:here}){p_end}
 {synopt:{opt nomc}}skip the Monte Carlo-based t-test{p_end}
+{synopt:{opt notrace}}hide any output with the exception of dots{p_end}
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
@@ -92,7 +93,7 @@ available after estimation.{p_end}
 {title:Description}
 
 {pstd}
-The algorithm solves "hybrid" least squares linear programming (LS-LP) problems
+The algorithm solves "hybrid" linear programming-least squares (LP-LS) problems
 with the help of the Moore-Penrose inverse (pseudoinverse), calculated using
 {help mf_svsolve:singular value decomposition (SVD)}, with emphasis on
 estimation of non-typical constrained OLS ({bf:cOLS}), Transaction Matrix
@@ -102,8 +103,8 @@ group of problems under certain conditions, see Albert (1972). Over- and
 identified problems are accompanied by {helpb regress:regression} analysis,
 which is feasible in their case. For such and especially all remaining cases,
 a Monte-Carlo-based {helpb ttest:t-test} of mean {bf:NRMSE} (normalized
-by variance of the RHS) is performed, the sample being drawn from a uniform
-or user-provided distribution (via a {help m2_ftof:Mata function}).
+by standard deviation of the RHS) is performed, the sample being drawn from a
+uniform or user-provided distribution (via a {help m2_ftof:Mata function}).
 
 {pstd}
 Non-typical constrained OLS ({bf:cOLS}) is based on constraints in model and/or
@@ -216,6 +217,7 @@ For Python-savy users there is a Python version of {cmd:lppinv}
         {cmd:. gen rowsum = rnormal(15, 100)}
         {cmd:. gen colsum = rnormal(12, 196)}
         {cmd:. lppinv rowsum colsum, tm level(90)}
+        {cmd:. lppinv rowsum colsum, tm zerod level(90)}
         {cmd:. matlist r(solution)}
 
         TM problem (with Monte Carlo t-test based on normal distribution):
@@ -229,7 +231,7 @@ For Python-savy users there is a Python version of {cmd:lppinv}
 
 {phang}
 Albert, A., 1972. {it:Regression And The Moore-Penrose Pseudoinverse.}
-    New York: Academic Press.
+New York: Academic Press.
 
 {phang}
 Bolotov, I. 2014. {it:Modelling of Time Series Cyclical Component on a Defined}

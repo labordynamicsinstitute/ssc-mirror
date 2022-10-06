@@ -1,12 +1,14 @@
-*! version 1.2.0 10jun21
+*! version 1.3.0 04okt2022
 * Contact jesse.wursten@kuleuven.be for bug reports/inquiries.
 * Many thanks to Daniel Klein for his suggestions and code snippets.
 
 * Changelog
+** 04oct2022: Better handling of named timers
 ** 10jun2021: timeit now executes commands in host version rather than the version 11 specified by this particular ado
 ** 14jan2019: Fixed space-before-colon issue
 ** 27nov2018: Fixed space-in-command issue
 ** 16apr2018: Fixed some parsing issues, added r-results (this is a pain) and incremental timer results
+
 program define timeit, rclass
 	version 11
 	
@@ -14,6 +16,7 @@ program define timeit, rclass
 	gettoken beforeColon afterColon : 0, parse(":") quotes
 	gettoken theTimer theName: beforeColon, quotes
 	gettoken theColon theCommand : afterColon , parse(":")
+	local theName = trim("`theName'")
 	
 	** Some error checking
 	*** User didn't enter a timer
@@ -66,6 +69,11 @@ program define timeit, rclass
 		exit 198
 	}
 	
+	** Check if timer -theName- already exists
+	if "`theName'" != "" {
+		if r(`theName') != . local initialValue_theName = r(`theName')
+	}
+	
 	** Check whether timer is already running
 	*** Store return results in case they were present
 	tempname r_results
@@ -113,9 +121,21 @@ program define timeit, rclass
 	else 				scalar `timer_increment' = scalar(`timer_value')
 
 	*** Compile return()
+	**** Numbered timers
 	return scalar t`theTimer' = scalar(`timer_value')
 	return scalar delta_t`theTimer' = scalar(`timer_increment')
-	if trim("`theName'") != "" return scalar `theName' = scalar(`timer_value')
+	
+	**** Named timers
+	if "`theName'" != "" {
+		if "`initialValue_theName'" != "" {
+			return scalar `theName' = `initialValue_theName' + scalar(`timer_increment')
+			return scalar delta_`theName' = scalar(`timer_increment')
+		}
+		else {
+			return scalar `theName' = scalar(`timer_increment')
+			return scalar delta_`theName' = scalar(`timer_increment')
+		}
+	}
 	
 	*** Compile r()
 	return add
