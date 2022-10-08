@@ -1,4 +1,5 @@
-*! version 1.1  (APR 2022) Adds new options and default
+*! version 1.11  (AUG 2022) Corrects for IF with strings
+* version 1.1  (APR 2022) Adds new options and default
 * version 1.05  (Feb 2022) adds Name
 * version 1.04  (August 2021) Modify stripper
 * version 1.03  (April 2021) when requesting Constant, Only constant will comeup
@@ -126,8 +127,11 @@ program define grqreg_x, rclass
 	
 	if inlist("`e(cmd)'","qreg","bsqreg","mmqreg","qrprocess") | ///
 	   inlist("`e(cmd)'","qreg2","xtqreg","ivqreg2") {
-	    local xvars `=subinstr("`e(cmdline)'","`e(cmd)'","",1)'
+	   	local cmdline `e(cmdline)'
+	   	gettoken cmd xvars:cmdline
+	    *local xvars `=subinstr("`e(cmdline)'","`e(cmd)'","",1)'
 	 	qui:qreg_stripper `xvars'
+		return list
 		** estimate all variables
 		local cmd  `e(cmd)'
 		local xvar `r(xvar)'
@@ -140,7 +144,10 @@ program define grqreg_x, rclass
 	}
 	if inlist("`e(cmd)'","sqreg") { 
 		tempname aux2
-	    local xvars `=subinstr("`e(cmdline)'","`e(cmd)'","",1)'
+		local cmdline `e(cmdline)'
+	   	gettoken cmd xvars:cmdline
+	    *local xvars `=subinstr("`e(cmdline)'","`e(cmd)'","",1)'
+		*local xvars `=subinstr("`e(cmdline)'","`e(cmd)'","",1)'
 		qui:ereturn display
 		matrix `aux2'=r(table)
 	    qui:sqreg_stripper `xvars'
@@ -157,7 +164,10 @@ program define grqreg_x, rclass
 	}
 	if inlist("`e(cmd)'","rifhdreg","bsrifhdreg") {
 		
-	    local xvars `=subinstr("`e(cmdline)'","`e(cmd)'","",1)'
+	    *local xvars `=subinstr("`e(cmdline)'","`e(cmd)'","",1)'
+		local cmdline `e(cmdline)'
+	   	gettoken cmd xvars:cmdline
+	    *local xvars `=subinstr("`e(cmdline)'","`e(cmd)'","",1)'
 	    qui:rifhdreg_stripper `xvars'
 		local cmd  `e(cmd)'
 		local xvar `r(xvar)'

@@ -1,9 +1,9 @@
 **************************************************
-** Martin Péclat, August Warren & Sylvain Weber **
-**         This version: March 25, 2021         **
+** Sylvain Weber, Martin Péclat & August Warren **
+**        This version: January 5, 2022         **
 **************************************************
 
-*! version 3.2 by Martin Péclat, August Warren & Sylvain Weber 25mar2021
+*! version 4.0 by Sylvain Weber, Martin Péclat & August Warren 22nov2021
 /*
 Revision history:
 - version 1.1 (2nov2016):
@@ -13,10 +13,10 @@ Revision history:
 	- Check if HERE account is valid
 	- cit in route_url if !herepaid
 	- Return diagnostic if distance cannot be returned
--version 2.1 (20sep2017):
+- version 2.1 (20sep2017):
 	- Correction of a bug causing an error (no geocoding) if blank spaces were 
 	  inserted between x,y coordinates in startxy() or endxy()
--version 2.2 (20oct2017):
+- version 2.2 (20oct2017):
 	- Correction of a bug causing an error (no geocoding) if x,y coordinates 
 	  in startxy() or endxy() were below 1 (in absolute value) and inserted
 	  without leading 0.
@@ -32,6 +32,12 @@ Revision history:
 	  in case the content did not exist.
 - version 3.2 (17mar2021)
 	- use geturi() to format addresses properly.
+- version 4.0 (05jan2022)
+	- HERE's routing API v7 service is deprecated and is planned to be discontinued. 
+	  Transit API V8 used instead for transport modes "publicTransport" and 
+	  "publicTransportTimeTable".
+	- Possibility to use hereid(APP ID) and herecode(APP CODE) instead of 
+	  herekey(API KEY) suppressed.
 */
 
 
@@ -42,17 +48,14 @@ version 10.0
 *** Syntax ***
 #d ;
 syntax, 
+		herekey(string)
 	[
-		herekey(string) hereid(string) herecode(string)
 		STARTADdress(string) startxy(string) 
 		ENDADdress(string) endxy(string) 
 		TMode(string)
 		RType(string)
-		TRAFfic(string)
 		DTime(string)
 		AVoid(string)
-		SOFTexclude(string)
-		STRICTexclude(string)
 		km
 		herepaid
 		NOSETtings
@@ -75,29 +78,9 @@ if _rc==111 {
 	exit 111
 }
 
-*HERE credentials must be specified either with API KEY (alone) or with both APP ID and APP CODE
-if "`herekey'"=="" & ("`hereid'"=="" & "`herecode'"=="") {
-	di as err "herekey() is compulsory. It provides the credentials of the HERE application to be used."
-	exit 198
-}
-if "`herekey'"!="" & !("`hereid'"=="" & "`herecode'"=="") {
-	di as err "If you are using a HERE application created before December 2019, the application credentials can be indicated either with herekey() alone, or with both hereid() and herecode()."
-	exit 198
-}
-if ("`hereid'"!="" & "`herecode'"=="") | ("`hereid'"=="" & "`herecode'"!="") {
-	di as err "If you are using a HERE application created before December 2019, the application credentials can be indicated either with herekey() alone, or with both hereid() and herecode()."
-	exit 198
-}
-
 *HERE credentials must be valid and internet connection is required
 *Check HERE credentials using a (wrong) query
-if "`herekey'"!="" {
-	local here_check = "https://geocoder.ls.hereapi.com/6.2/geocode.json?searchtext=outofearth&apiKey=`herekey'"
-}
-if ("`hereid'"!="" & "`herecode'"!="") {
-	local here_check = "http://geocoder.cit.api.here.com/6.2/geocode.json?searchtext=outofearth&app_id=`hereid'&app_code=`herecode'"
-	if ("`herepaid'"=="herepaid") local here_check = "http://geocoder.api.here.com/6.2/geocode.json?searchtext=outofearth&app_id=`hereid'&app_code=`herecode'"
-}
+local here_check = "https://geocoder.ls.hereapi.com/6.2/geocode.json?searchtext=outofearth&apiKey=`herekey'"
 tempvar checkok 
 qui: gen str240 `checkok' = ""
 qui: insheetjson `checkok' using "`here_check'", columns("Response:MetaInfo:Timestamp") flatten replace
@@ -181,57 +164,32 @@ if "`tmode'"=="" {
 	local tmode = "car"
 	local tmodedefault = "(assigned by default)"
 }
-if !inlist("`tmode'","car","pedestrian","carHOV","publicTransport","publicTransportTimeTable","truck","bicycle") {
-	di as err _n(1) "The specified transport mode (" as input "`tmode'" as err `") is not in allowable list. Please use one of the following (see the {browse "https://developer.here.com/documentation/routing/topics/transport-modes.html":HERE documentation}):"'
+if !inlist("`tmode'","car","publicTransit","pedestrian","bicycle") {
+	di as err _n(1) "The specified transport mode (" as input "`tmode'" as err `") is not allowed. Please use one of the following (see also {browse "https://developer.here.com/documentation/routing/topics/transport-modes.html":HERE documentation} for details):"'
 	di as err _col(3) "- car"
+	di as err _col(3) "- publicTransit"
 	di as err _col(3) "- pedestrian"
-	di as err _col(3) "- carHOV"
-	di as err _col(3) "- publicTransport"
-	di as err _col(3) "- publicTransportTimeTable"
-	di as err _col(3) "- truck"
 	di as err _col(3) "- bicycle"
 	exit 198
 }
 
 
 *** Parse route type (rtype) ***
-*Default: 'balanced'
+*Default: 'fast'
 if "`rtype'"=="" {
-	local rtype = "balanced"
+	local rtype = "fast"
 	local rtypedefault = "(assigned by default)"
 }
-foreach rt in fastest shortest balanced {
+foreach rt in fast short {
 	if regexm("`rt'","^`rtype'") { // search for a match at the beginning of the string -> Route types can be abbreviated to a minimum of 1 letter
 		local rtype = "`rt'"
 	}
 }
-if !inlist("`rtype'","fastest","shortest","balanced") {
-	di as err _n(1) "The specified routing type (" as input "`rtype'" as err `") is not in allowable list. Please use one of the following (see the {browse "https://developer.here.com/documentation/routing/dev_guide/topics/resource-param-type-routing-mode.html#type-routing-type":HERE documentation}):"'
-	di as err _col(3) "- fastest"
-	di as err _col(3) "- shortest"
-	di as err _col(3) "- balanced"
-	di as err "Routing types can be abbreviated to a minimum of 1 letter: 'f' for fastest, 's' for shortest, 'b' for balanced."
-	exit 198
-}
-
-
-*** Parse traffic mode (traffic) ***
-*Default: 'default'
-if "`traffic'"=="" {
-	local traffic = "default"
-	local trafficdefault = "(assigned by default)"
-}
-foreach tr in enabled disabled default {
-	if regexm("`tr'","^`traffic'") & length("`traffic'")>=2 { // search for a match at the beginning of the string -> Route types can be abbreviated to a minimum of 2 letters
-		local traffic = "`tr'"
-	}
-}
-if !inlist("`traffic'","enabled","disabled","default") {
-	di as err _n(1) "The specified traffic mode (" as input "`traffic'" as err `") is not in allowable list. Please use one of the following (see the {browse "https://developer.here.com/documentation/routing/dev_guide/topics/resource-param-type-routing-mode.html#type-traffic-mode":HERE documentation}):"'
-	di as err _col(3) "- enabled"
-	di as err _col(3) "- disabled"
-	di as err _col(3) "- default"
-	di as err "Traffic modes can be abbreviated to a minimum of 2 letters: 'en' for enabled, 'di' for disabled, 'de' for default."
+if !inlist("`rtype'","fast","short") {
+	di as err _n(1) "The specified routing type (" as input "`rtype'" as err `") is not allowed. Please use one of the following (see also {browse "https://developer.here.com/documentation/routing/dev_guide/topics/resource-param-type-routing-mode.html#type-routing-type":HERE documentation} for details):"'
+	di as err _col(3) "- fast"
+	di as err _col(3) "- short"
+	di as err "Routing types can be abbreviated to a minimum of 1 letter: 'f' for fast, 's' for short."
 	exit 198
 }
 
@@ -249,8 +207,8 @@ if "`dtime'"!="" & "`dtime'"!="now" {
 	local date = "`1'"
 	local mask = "`3'"
 	if "`date'"=="" | "`mask'"=="" | ("`2'"!="" & "`2'"!=",") | "`4'"!="" {
-		di as err _n(1) "Departure time incorrectly specified."
 		di as err `"Please use dtime(datetime, mask), with datetime and mask defined such as in {helpb clock()}."'
+		di as err _n(1) "Departure time incorrectly specified."
 		exit 198
 	}
 	if clock("`date'","`mask'")==. {
@@ -268,81 +226,61 @@ if "`dtime'"!="" & "`dtime'"!="now" {
 }
 
 
-*** Parse routing features and their weights ***
+*** Parse routing features (avoid) ***
 *Default: none (unused)
-
 local featuresapi ""
-local avoid_w = -1
-local softexclude_w = -2
-local strictexclude_w = -3
-
-foreach wtype in strictexclude softexclude avoid { // in order of decreasing importance; in case the same feature is specified with several weights, only the first is considered
-	if "``wtype''"!="" {
-		local `wtype'_disp ""
-		local `wtype'_feat ""
-		tokenize `=subinstr("``wtype''",",","",.)'
-		local i = 1
-		while "``i''"!="" {
-			local found = 0
-			local l = length("``i''")
-			foreach f in tollroad motorway boatFerry railFerry tunnel dirtRoad park {
-				if regexm("`f'","^``i''") & `l'>=2 { // search for a match at the beginning of the string -> Routing features can be abbreviated to a minimum of 2 letters
-					local found = 1
-					if !regexm("`featuresapi'","`f'") { // If feature is already present, further apparitions are ignored
-						local featuresapi `"`featuresapi'`f':``wtype'_w',"'
-						if "``wtype'_disp'"=="" {
-							if "`wtype'"=="avoid" local `wtype'_disp "Avoid: "
-							if "`wtype'"=="softexclude" local `wtype'_disp "Softly exclude: "
-							if "`wtype'"=="strictexclude" local `wtype'_disp "Strictly exclude: "
-						}
-						local `wtype'_feat `"``wtype'_feat' `f',"'
-					}
+if "`avoid'"!="" {
+    local featuresapi "&avoid[features]="
+	local avoid_feat ""
+	tokenize `=subinstr("`avoid'",","," ",.)'
+	local i = 1
+	while "``i''"!="" {
+		local found = 0
+		local l = length("``i''")
+		foreach f in tollRoad ferry tunnel dirtRoad {
+			if regexm("`f'","^``i''") & `l'>=2 { // search for a match at the beginning of the string -> Routing features can be abbreviated to a minimum of 2 letters
+				local found = 1
+				if !regexm("`featuresapi'","`f'") { // If feature is already present, further apparitions are ignored
+					local featuresapi `"`featuresapi'`f',"'
+					local avoid_feat `"`avoid_feat'`f', "'
 				}
 			}
-			if !`found' {
-				di as err _n(1) "The specified routing feature (" as input "``i''" as err ") in " as input "`wtype'() " as err `"is not in allowable list. Please use one of the following (see the {browse "https://developer.here.com/documentation/routing/dev_guide/topics/resource-param-type-routing-mode.html#type-routing-type":HERE documentation}):"'
-				di as err _col(3) "- tollroad"
-				di as err _col(3) "- motorway"
-				di as err _col(3) "- boatFerry"
-				di as err _col(3) "- railFerry"
-				di as err _col(3) "- tunnel"
-				di as err _col(3) "- dirtRoad"
-				di as err _col(3) "- park"
-				di as err "Routing features can be abbreviated to a minimum of 2 letters: 'to' for tollroad, 'mo' for motorway, 'bo' for boatFerry, 'ra' for railFerry, 'tu' for tunnel, 'di' for dirtRoad, 'pa' for park."
-				exit 198
-			}
-			local ++i
 		}
+		if !`found' {
+			di as err _n(1) "The specified routing feature (" as input "``i''" as err ") in " as input "avoid() " as err `"is not in allowed. Please use one of the following (see also {browse "https://developer.here.com/documentation/routing/dev_guide/topics/resource-param-type-routing-mode.html#type-routing-type":HERE documentation} for details):"'
+			di as err _col(3) "- tollRoad"
+			di as err _col(3) "- ferry"
+			di as err _col(3) "- tunnel"
+			di as err _col(3) "- dirtRoad"
+			di as err "Routing features can be abbreviated to a minimum of 2 letters: 'to' for tollRoad, 'fe' for ferry, 'tu' for tunnel, 'di' for dirtRoad."
+			exit 198
+		}
+		local ++i
 	}
-	local `wtype'_feat = regexr("``wtype'_feat'",",$",".") // replace the last comma by a point
 }
 local featuresapi = regexr("`featuresapi'",",$","") // remove the last comma
+local avoid_feat = regexr("`avoid_feat'",", $",".") // replace the last comma by a point
 
 
 *** Flag irrelevant combinations of attributes ***
 *(Without stopping route calculation)
+if inlist("`tmode'","publicTransit","pedestrian","bicycle") {
+    local rtype "(no impact with selected transport mode)"
+	local rtypedefault ""
+}
 if inlist("`tmode'","pedestrian","bicycle") {
-	local traffic "(no impact with selected transport mode)"
-	local trafficdefault ""
 	local dtimedisp "(no impact with selected transport mode)"
 	local dtimedefault ""
 }
-if regexm("`featuresapi'","park") & !inlist("`tmode'","pedestrian","bicycle") {
-	local featureswarn "Warning: 'park' has no impact with selected transport mode."
+if inlist("`tmode'","publicTransit","pedestrian","bicycle") & "`avoid'"!="" {
+    local avoid_feat "(no impact with selected transport mode)"
 }
 
 
 *** Calculate travel distance and time ***
 *Prepare url links
-if "`herekey'"!="" {
-	local xy_url = "https://geocoder.ls.hereapi.com/6.2/geocode.json?responseattributes=matchCode&searchtext="
-	local here_key = "&apiKey=`herekey'"
-}
-if ("`hereid'"!="" & "`herecode'"!="") {
-	local xy_url = "http://geocoder.cit.api.here.com/6.2/geocode.json?responseattributes=matchCode&searchtext="
-	if ("`herepaid'"=="herepaid") local xy_url = "http://geocoder.api.here.com/6.2/geocode.json?responseattributes=matchCode&searchtext="
-	local here_key = "&app_id=" + "`hereid'" + "&app_code=" + "`herecode'"
-}
+local xy_url = "https://geocoder.ls.hereapi.com/6.2/geocode.json?responseattributes=matchCode&searchtext="
+local here_key = "&apiKey=`herekey'"
 
 *Addresses to xy-coordinates (only if addresses are provided, skipped if xy-coordinates are provided)
 foreach p in start end {
@@ -374,35 +312,46 @@ qui: gen str240 `tmp_distance' = ""
 qui: gen str240 `tmp_time' = ""
 local s = "`startxy'"
 local e = "`endxy'"
-if "`herekey'"!="" {
-	local route_url = "https://route.ls.hereapi.com/routing/7.2/calculateroute.json?apiKey=`herekey'"
-}
-if ("`hereid'"!="" & "`herecode'"!="") {
-	local route_url = "http://route.cit.api.here.com/routing/7.2/calculateroute.json?app_id=" + "`hereid'" + "&app_code=" + "`herecode'"
-	if ("`herepaid'"=="herepaid") local route_url = "http://route.api.here.com/routing/7.2/calculateroute.json?app_id=" + "`hereid'" + "&app_code=" + "`herecode'"
-}
-if inlist("`tmode'","car","carHOV","truck","publicTransport","publicTransportTimeTable") { 
-	local route_request = "`route_url'" + "&waypoint0=geo!" + "`s'" + "&waypoint1=geo!" + "`e'" +"&mode=`rtype';`tmode';traffic:`traffic';`featuresapi'&representation=overview&departure=`dtimeapi'"
-}
-if inlist("`tmode'","pedestrian","bicycle") { 
-	local route_request = "`route_url'" + "&waypoint0=geo!" + "`s'" + "&waypoint1=geo!" + "`e'" +"&mode=`rtype';`tmode';&representation=overview&departure=`dtimeapi'"
+
+local route_url = "https://router.hereapi.com/v8/routes?apiKey=`herekey'"
+local heresummary = "summary"
+if inlist("`tmode'","publicTransit") {
+	local route_url = "https://transit.router.hereapi.com/v8/routes?apiKey=`herekey'"
+	local heresummary = "travelSummary"
 }
 
-#d ;
-qui: insheetjson `tmp_distance' `tmp_time' using "`route_request'", 
-	columns("response:route:1:summary:distance" 
-			"response:route:1:summary:travelTime"
-	) 
-	flatten replace
-;
-#d cr
-if "`km'"=="" {
-	local distance: di %8.2f real(`tmp_distance'[1])/1609.344
+if inlist("`tmode'","car") { 
+	local route_request = "`route_url'" + "&origin=" + "`s'" + "&destination=" + "`e'" + "&transportMode=`tmode'&routingMode=`rtype'`featuresapi'&return=summary&departureTime=`dtimeapi'"
 }
-if "`km'"=="km" {
-	local distance: di %8.2f real(`tmp_distance'[1])/1000
+if inlist("`tmode'","pedestrian","bicycle") {
+	local route_request = "`route_url'" + "&origin=" + "`s'" + "&destination=" + "`e'" + "&transportMode=`tmode'&return=summary"
 }
-local time: di %8.2f (1/60)*real(`tmp_time'[1])
+if inlist("`tmode'","publicTransit") {
+	local route_request = "`route_url'" + "&origin=" + "`s'" + "&destination=" + "`e'" + "&return=travelSummary&departureTime=`dtimeapi'"
+}
+
+local tmpd = 0
+local tmpt = 0
+local i = 0
+while `tmp_distance'[1]!="[]" { // iterate until the last section of the route
+	local ++i
+	#d ;
+	qui: insheetjson `tmp_distance' `tmp_time' using "`route_request'", 
+		columns(
+			"routes:1:sections:`i':`heresummary':length"
+			"routes:1:sections:`i':`heresummary':duration" 
+		) 
+		flatten replace
+	;
+	#d cr
+	if `tmp_distance'[1]!="[]" {
+		if "`km'"=="" local tmpd = `tmpd' + real(`tmp_distance'[1])/1609.344
+		if "`km'"=="km" local tmpd = `tmpd' + real(`tmp_distance'[1])/1000
+		local tmpt = `tmpt' + real(`tmp_time'[1])/60
+	}
+}
+local distance: di %8.2f `tmpd'
+local time: di %8.2f `tmpt'
 
 
 *** Print inputs and outputs ***
@@ -414,16 +363,9 @@ if "`nosettings'"!="nosettings" {
 	di as input "End:" _col(12) as res cond("`endaddress'"!="","`endaddress' (`endxy')","(`endxy')")
 	di as input "Mode:" _col(12) as res "`tmode' `tmodedefault'"
 	di as input "Route:" _col(12) as res "`rtype' `rtypedefault'"
-	di as input "Traffic:" _col(12) as res "`traffic' `trafficdefault'"
-	di as input "Departure:" _col(12) as res "`dtimedisp' `dtimedefault'" 
+	if "`dtimedisp'"!="" di as input "Departure:" _col(12) as res "`dtimedisp' `dtimedefault'" 
 	if "`dtimewarn'"!="" di as err _col(12) "`dtimewarn'"
-	if "`avoid_disp'"!="" | "`softexclude_disp'"!="" | "`strictexclude_disp'"!="" {
-		di as input "Restrictions:"
-		if "`avoid_disp'"!="" di as input _col(12) "- `avoid_disp'" as res "`avoid_feat'"
-		if "`softexclude_disp'"!="" di as input _col(12) "- `softexclude_disp'" as res "`softexclude_feat'"
-		if "`strictexclude_disp'"!="" di as input _col(12) "- `strictexclude_disp'" as res "`strictexclude_feat'"
-		if "`featureswarn'"!="" di as err _col(12) "`featureswarn'"
-	}
+	if "`avoid_feat'"!="" di as input "Avoid:" _col(12) as res "`avoid_feat'"
 	di as input "{hline}"
 }
 *Print and save outputs
@@ -455,9 +397,7 @@ if `distance'==. {
 		if "`tmode'"=="bicycle" {
 			di as err _col(3) `"- Note also that the 'bicycle' mode is in beta mode. In case bicycle road cannot be calculated, try the 'pedestrian' mode instead. Travel distance should be close in both cases and travel time could be adjusted."'
 		}
-		if "`tmode'"=="publicTransportTimeTable" {
-			di as err _col(3) `"- Note also that 'PublicTransportTimeTable' can only be used for a relatively recent period of time."'
-		}
 	}
 }
+
 end

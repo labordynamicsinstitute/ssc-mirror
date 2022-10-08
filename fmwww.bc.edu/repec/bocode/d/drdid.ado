@@ -1,4 +1,5 @@
-*! Ver 1.68 Bug with drimp
+*! Ver 1.7 adds version for easier update
+* Ver 1.68 Bug with drimp
 * Ver 1.67 Bug with IPW 
 * Ver 1.66 Bug with binit, skip fixed
 * Ver 1.65 Bug with binit. Fixed
@@ -61,7 +62,15 @@ program define drdid, eclass byable(onecall)
                 ereturn local cmdline `"drdid `0'"'
                 exit
         }
-
+		
+		syntax [anything(everything)], [* version]
+		/**Version**/
+		if   "`version'"!="" {
+			display "version: 1.7"
+			addr scalar version = 1.7
+			exit
+		}
+		
         if replay() {
                 if `"`e(cmd)'"' != "drdid" { 
                         error 301
@@ -1483,9 +1492,9 @@ program define drdid_imp, eclass
 		qui {
 			
 			`isily'  mlexp (`trt'*{xb:`xvar' _cons}-(`trt'==0)*exp({xb:}))  ///
-					if `touse' & `tmt'==0 [iw = `weight'], vce(robust) from(`binit') ///
+					if `touse' & `tmt'==0 [iw = `weight'],  from(`binit') ///
 					 derivative(/xb=`trt'-(`trt'==0)*exp({xb:}))
-
+			*vce(robust)
 			matrix `iptb'=e(b)
 			matrix `iptV'=e(V)
 			predict double `psxb',xb
@@ -1544,6 +1553,10 @@ program define drdid_imp, eclass
 	**# for Crossection estimator				
 
 		qui {
+
+			/*`isily' gmm ((`trt'==1)-(`trt'==0)*exp({b:`xvar' _cons})) if `touse'  [iw = `weight'], ///
+			instrument(`xvar' ) derivative(/b=-(`trt'==0)*exp({b:})) ///
+			onestep winit(identity) */
 			
 			`isily'  mlexp (`trt'*{xb:`xvar' _cons}-(`trt'==0)*exp({xb:}))  ///
 					if `touse' [iw = `weight'], vce(robust) from(`binit') ///
@@ -2739,4 +2752,6 @@ void mboot(real matrix rif,mean_rif, vv, cband, string scalar clv, touse,  real 
 /// qtp(abs(xx/ iqrse(xx)),.95) 
 end
 
- 
+program addr, rclass
+	return `0'
+end 
