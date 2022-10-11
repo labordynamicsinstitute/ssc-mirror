@@ -31,14 +31,14 @@
 {synopthdr}
 {synoptline}
 {syntab:Model}
-{synopt:{opth ctrlu:nit(numlist:numlist)}}control units to be used as the donor pool{p_end}
-{synopt:{opth prep:eriod(numlist:numlist)}}pre-treatment periods before the intervention occurred{p_end}
-{synopt:{opth postp:eriod(numlist:numlist)}}post-treatment periods when and after the intervention occurred{p_end}
-{synopt:{opth xp:eriod(numlist:numlist)}}periods over which the predictors specified in {indepvars} are averaged{p_end}
+{synopt:{opth cou:nit(numlist:numlist)}}control units to be used as the donor pool{p_end}
+{synopt:{opth prep:eriod(numlist:numlist)}}pretreatment periods before the intervention occurred{p_end}
+{synopt:{opth postp:eriod(numlist:numlist)}}posttreatment periods when and after the intervention occurred{p_end}
+{synopt:{opth xp:eriod(numlist:numlist)}}periods over which the covariates specified in {indepvars} are averaged{p_end}
 {synopt:{opth mspep:eriod(numlist:numlist)}}periods over which the mean squared prediction error (MSPE) should be minimized{p_end}
-{synopt:{opth cus:tomV(numlist)}}supply custom V-Weights which determines the predictive power of the variable for the outcome over the pre-treatment periods{p_end}
 {synopt:{cmdab: nested}}fully nested optimization procedure that searches among all (diagonal) positive semidefinite V-matrices and sets of W-weights{p_end}
 {synopt:{cmdab: allopt}}gaining fully robust results if nested is specified{p_end}
+{synopt:{opth cus:tomV(numlist)}}supply custom V-Weights which determines the predictive power of the variable for the outcome over the pretreatment periods{p_end}
 
 {syntab:Optimization}
 {synopt:{opth margin(real)}}margin for constraint violation tolerance{p_end}
@@ -87,25 +87,25 @@ Note that only a single time period can be specified.
 {dlgtab:Model}
 
 {phang} 
-{opth ctrlunit:(numlist:numlist)} a list of unit numbers for the control units as {it:{help numlist:numlist}} given in the panel variable specified in {helpb xtset} {it:panelvar}. 
-The list of control units specified constitute what is known as the "donor pool". If no {bf:ctrlunit} is specified, 
-the donor pool defaults to all available units other than the treated unit.
+{opth counit:(numlist:numlist)} a list of unit numbers for the control units as {it:{help numlist:numlist}} given in the panel variable specified in {helpb xtset} {it:panelvar}. 
+The list of control units specified constitute what is known as the "donor pool". If no {bf:counit} is specified, 
+the donor pool defaults to all available units other than the treated unit. The  previous option {opth ctrlunit:(numlist:numlist)} is deprecated, but continues to work just like the current option {opth counit:(numlist:numlist)}.  
 
 {phang} 
-{opth preperiod:(numlist:numlist)} a list of pre-treatment periods as {it:{help numlist:numlist}} given in the time variable specified in {helpb xtset} {it:timevar}.
+{opth preperiod:(numlist:numlist)} a list of pretreatment periods as {it:{help numlist:numlist}} given in the time variable specified in {helpb xtset} {it:timevar}.
 If no {bf:preperiod} is specified, {bf:preperiod} defaults to the entire pre-intervention period, 
 which ranges from the earliest time period available in the time variable to the period immediately prior to the intervention.
 
 {phang} 
-{opth postperiod:(numlist:numlist)} a list of post-treatment periods (when and after the intervention occurred) as {it:{help numlist:numlist}} given in the time variable specified in {helpb xtset} {it:timevar}. 
+{opth postperiod:(numlist:numlist)} a list of posttreatment periods (when and after the intervention occurred) as {it:{help numlist:numlist}} given in the time variable specified in {helpb xtset} {it:timevar}. 
 If no {bf:postperiod} is specified, {bf:postperiod} defaults to the entire post-intervention period, 
 which ranges from the time period when the intervention occurred to the latest time period available in the time variable.
 
 {phang} 
-{opth xperiod:(numlist:numlist)} a list of periods as {it:{help numlist:numlist}} given in the time variable specified in {helpb xtset} {it:timevar}, over which the predictors specified in {indepvars} are averaged. 
+{opth xperiod:(numlist:numlist)} a list of periods as {it:{help numlist:numlist}} given in the time variable specified in {helpb xtset} {it:timevar}, over which the covariates specified in {indepvars} are averaged. 
 
 {phang} 
-{opth mspeperiod:(numlist:numlist)} a list of pre-treatment periods as {it:{help numlist:numlist}} given in the time variable specified in {helpb xtset} {it:timevar}, over which the mean squared prediction error (MSPE) should be minimized. 
+{opth mspeperiod:(numlist:numlist)} a list of pretreatment periods as {it:{help numlist:numlist}} given in the time variable specified in {helpb xtset} {it:timevar}, over which the mean squared prediction error (MSPE) should be minimized. 
 
 {phang}
 {cmd:nested} if {cmd:nested} is specified, {cmd: synth2} embarks on a fully nested optimization procedure, 
@@ -117,6 +117,11 @@ For details, see {helpb synth}.
 {cmd: allopt} provides a robustness check by running the nested optimization three times using three different starting points, 
 and returns the best result. 
 For details, see {helpb synth}.
+
+{phang}
+{opth customV:(numlist:numlist)} a list of custom V-weights as {it:{help numlist:numlist}} appearing in the same order as the covariates listed in {indepvars} to replace the data-driven V-weights.
+For details, see {helpb synth}.
+
 
 {dlgtab:Optimization}
 
@@ -147,34 +152,34 @@ The user may tune the maximize settings depending on his application (e.g., like
 {cmdab: placebo}([{{bf:unit}|{opth unit(numlist)}} {opth period(numlist)} {opt cutoff(#_c)} {opt show(#_s)}]) specifies the types of placebo tests to be performed; otherwise, no placebo test will be implemented.
 
 {phang2} 
-{{bf:unit}|{opth unit(numlist)}} specifies placebo tests using fake treatment units in donor pool, 
+{{bf:unit}|{opth unit(numlist)}} specifies the in-space placebo test using fake treatment units in the donor pool, 
 where {bf:unit} uses all fake treatment units and {opth unit(numlist)} uses a list of fake treatment units specified by {it:{help numlist:numlist}}.
 These two options iteratively reassign the treatment to control units where no intervention actually occurred, 
-and calculate the p-values of the treatment effects. Note that only one of {bf:unit} and {opth unit(numlist)} can be specificed.
+and calculate the p-values of the treatment effects. Note that only one of {bf:unit} and {opth unit(numlist)} can be specified.
 
 {phang2} 
-{opth period:(numlist:numlist)} specifies placebo tests using fake treatment times. This option reassigns the treatment to time periods previous to the intervention, when no treatment actually ocurred.
+{opth period:(numlist:numlist)} specifies the in-time placebo test using fake treatment times (more than one fake treatment time can be specified). This option reassigns the treatment to time periods previous to the intervention, when no treatment actually occurred.
 
 {phang2} 
-{opt cutoff(#_c)} specifies a cutoff threshold that discards fake treatment units with pre-treatment MSPE {it:#_c} times larger than that of the treated unit, where {it:#_c} must be a real number greater than or equal to 1. 
-This option only applies when {bf:unit} or {opth unit(numlist)} is specificed. If this option is not specified, then no fake treatment units are discarded.
+{opt cutoff(#_c)} specifies a cutoff threshold that discards fake treatment units with pretreatment MSPE {it:#_c} times larger than that of the treated unit, where {it:#_c} must be a real number greater than or equal to 1. 
+This option only applies when {bf:unit} or {opth unit(numlist)} is specified. If this option is not specified, then no fake treatment units are discarded.
 
 {phang2} 
-{opt show(#_s)} specifies the number of units to show in the post/pre MSPE graph, which correponds to units with the largest {it:#_s} ratios of post-treatment MSPE to pre-treatment MSPE.
-This option only applies when {bf:unit} or {opth unit(numlist)} is specificed. 
+{opt show(#_s)} specifies the number of units to show in the post/pre MSPE graph, which correponds to units with the largest {it:#_s} ratios of posttreatment MSPE to pretreatment MSPE.
+This option only applies when {bf:unit} or {opth unit(numlist)} is specified. 
 If this option is not specified, the default is to show post/pre MSPE ratios for all units.
 
 {dlgtab:Robustness Test}  
 
 {phang}
-{cmdab: loo} specifies leave-one-out robustness test that excludes one control unit with a nonzero weight at a time.  
+{cmdab: loo} specifies the leave-one-out robustness test that excludes one control unit with a nonzero weight at a time.  
 {bf:synth2} iteratively re-estimates the model omitting one unit in each iteration that receives a positive weight. 
 By excluding a unit receiving a positive weight goodness of fit is sacrificed, but this sensitivity check can evaluate to what extent results are driven by any particular control unit.
 
 {dlgtab:Reporting}  
 
 {phang}
-{opt frame(framename)} creates a Stata frame storing dataset with generated variables including counterfactual predictions, 
+{opt frame(framename)} creates a Stata frame storing generated variables in the wide form including counterfactual predictions, 
 treatment effects, and results from placebo tests and/or robustness test if implemented. The frame named {it:framename} is replaced if it already exists, or created if not.
 
 {phang}
@@ -190,7 +195,7 @@ placebo tests and robustness test if available.
 {phang2}* Replicate results in Abadie, Diamond, and Hainmueller (2010){p_end}
 {phang2}{cmd:. synth2 cigsale lnincome age15to24 retprice beer cigsale(1988) cigsale(1980) cigsale(1975), trunit(3) trperiod(1989) xperiod(1980(1)1988) nested allopt} {p_end}
 
-{phang2}* Implement in-space placebo test using fake treatment units with pre-treatment MSPE 2 times smaller than or equal to that of the treated unit{p_end}
+{phang2}* Implement in-space placebo test using fake treatment units with pretreatment MSPE 2 times smaller than or equal to that of the treated unit{p_end}
 {phang2}* For illustration, we drop the "allopt" option to save time. The "allopt" option is recommended for the most accurate results if time permits. {p_end}
 {phang2}* To assure convergence, we change the default option "sigf(7)" (7 significant figures) to "sigf(6)". {p_end}
 {phang2}{cmd:. synth2 cigsale lnincome age15to24 retprice beer cigsale(1988) cigsale(1980) cigsale(1975), trunit(3) trperiod(1989) xperiod(1980(1)1988) nested placebo(unit cut(2))  sigf(6)}{p_end}
@@ -216,28 +221,27 @@ placebo tests and robustness test if available.
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Scalars}{p_end}
 {synopt:{cmd:e(N)}}number of observations{p_end}
-{synopt:{cmd:e(T0)}}number of pre-treatment periods{p_end}
-{synopt:{cmd:e(T1)}}number of post-treatment periods{p_end}
-{synopt:{cmd:e(K)}}number of predictors{p_end}
-{synopt:{cmd:e(mae)}}mean absolute error of the model fitted in the pre-treatment periods{p_end}
-{synopt:{cmd:e(mse)}}mean squared error of the model fitted in the pre-treatment periods{p_end}
-{synopt:{cmd:e(rmse)}}root mean squared error of the model fitted in the pre-treatment periods{p_end}
-{synopt:{cmd:e(r2)}}R-squared of the model fitted in the pre-treatment periods{p_end}
+{synopt:{cmd:e(T0)}}number of pretreatment periods{p_end}
+{synopt:{cmd:e(T1)}}number of posttreatment periods{p_end}
+{synopt:{cmd:e(K)}}number of covariates{p_end}
+{synopt:{cmd:e(rmse)}}root mean squared error of the model fitted in the pretreatment period{p_end}
+{synopt:{cmd:e(r2)}}R-squared of the model fitted over the oosttreatment period{p_end}
+{synopt:{cmd:e(att)}}average treatment effect{p_end}
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Macros}{p_end}
 {synopt:{cmd:e(panelvar)}}name of the panel variable{p_end}
 {synopt:{cmd:e(timevar)}}name of the time variable{p_end}
 {synopt:{cmd:e(varlist)}}names of the dependent variable and independent variables{p_end}
-{synopt:{cmd:e(respo)}}name of the response{p_end}
-{synopt:{cmd:e(preds)}}names of predictors{p_end}
+{synopt:{cmd:e(depvar)}}name of the dependent variable{p_end}
+{synopt:{cmd:e(indepvars)}}names of independent variables (covariates){p_end}
 {synopt:{cmd:e(unit_all)}}all units{p_end}
 {synopt:{cmd:e(unit_tr)}}treatment unit{p_end}
 {synopt:{cmd:e(unit_ctrl)}}control units{p_end}
 {synopt:{cmd:e(time_all)}}entire periods{p_end}
 {synopt:{cmd:e(time_tr)}}treatment period{p_end}
-{synopt:{cmd:e(time_pre)}}pre-treatment periods{p_end}
-{synopt:{cmd:e(time_post)}}post-treatment periods{p_end}
+{synopt:{cmd:e(time_pre)}}pretreatment periods{p_end}
+{synopt:{cmd:e(time_post)}}posttreatment periods{p_end}
 {synopt:{cmd:e(frame)}}name of Stata frame storing generated variables{p_end}
 
 {synoptset 20 tabbed}{...}
@@ -246,7 +250,7 @@ placebo tests and robustness test if available.
 {synopt:{cmd:e(U_wt)}}vector {bf:w} that contains the optimal unit weights{p_end}
 {synopt:{cmd:e(bal)}}matrix containing sample averages for the treated unit, 
 synthetic control unit and control units{p_end}
-{synopt:{cmd:e(mspe)}}matrix containing pre-treatment MSPE, post-treatment MSPE, ratios of post-treatment MSPE to pre-treatment MSPE, and ratios of pre-treatment MSPE of control units to that of the treated unit{p_end}
+{synopt:{cmd:e(mspe)}}matrix containing pretreatment MSPE, posttreatment MSPE, ratios of posttreatment MSPE to pretreatment MSPE, and ratios of pretreatment MSPE of control units to that of the treated unit{p_end}
 {synopt:{cmd:e(pval)}}matrix containing estimated treatment effects and p-values from placebo tests using fake treatment units{p_end}
 
 {marker reference}{...}
@@ -269,7 +273,7 @@ Abadie, A. and Gardeazabal, J. 2003. Economic Costs of Conflict: A Case Study of
 {it:American Economic Review} 93(1): 113-132.
 
 {phang}
-Yan, G. and Chen, Q. 2022. synth2: Synthetic Control Method with Placebo Tests, Robustness Test and Visualization. 
+Yan, G. and Chen, Q. 2021. synth2: Synthetic Control Method with Placebo Tests, Robustness Test and Visualization. 
 {it:Shandong University Working Paper}.
 
 {marker author}{...}

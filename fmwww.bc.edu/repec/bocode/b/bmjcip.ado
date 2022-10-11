@@ -10,11 +10,11 @@ version 11.0;
   by the British Medical Journal (BMJ) and other medical journals
   for use in tables.
 *!Author: Roger Newson
-*!Date: 21 July 2022
+*!Date: 10 October 2022
 */
 
 * Check dependencies *;
-_whichlist sdecode msdecode, package(sdecode);
+qui _whichlist sdecode msdecode, package(sdecode);
 if trim(`"`r(incomplete)'"')=="sdecode" {;
   disp as error "Package sdecode needs to be installed for bmjcip to work";
   disp as error "To install sdecode, type:"
