@@ -1,31 +1,13 @@
-*! v2  27 jul 2022
-
-cap pro drop cwmglm_predict
+*! v3 10 Oct 2022
+/*cap pro drop cwmglm_predict
 cap pro drop cwmglm_estimate
 cap pro drop cwmglm_display
 cap pro drop cwmglm
+*/
 
-//this program assigns observations to classing by calculating the maximum a posteriori probabilities 
-pro def cwmglm_predict
-syntax newvarname (min=1 max=1) 
-version 16.0
-local posterior=e(posterior)
-tempvar max touse
-gen `touse'=e(sample)
-quie egen double `max'=rowmax(`posterior') if `touse'
-cap drop max 
-clonevar max=`max'
-quie gen double `varlist'=. if `touse'
-local i=1
-foreach var of local posterior {
-    quie replace `varlist'=`i' if `var'==`max' & `touse'
-	local i=`i'+1
-}
-
-end
 
 pro def cwmglm_estimate, eclass sortpreserve 
-syntax [varlist (default=none numeric fv)], POSTerior(string)  [k(int 2) ITERate(int 1200) start(namelist max=1) eee vee eve vve eev vev evv vvv eei vei evi vvi eii vii family(namelist) XNormal(varlist  numeric) XBINomial(varlist  numeric fv) XMULtinomial(varlist numeric fv) XPOIsson(varlist  numeric) NDraw(int 10) ITERATEXnorm(int 1200) CONVcrit(real 1e-5) INITial(varlist numeric) version(int 1)] 
+syntax [varlist (default=none numeric fv)] [if] [in], POSTerior(string)  [k(int 2) ITERate(int 1200) start(namelist max=1) eee vee eve vve eev vev evv vvv eei vei evi vvi eii vii family(namelist) XNormal(varlist  numeric) XBINomial(varlist  numeric fv) XMULtinomial(varlist numeric fv) XPOIsson(varlist  numeric) NDraw(int 10) ITERATEXnorm(int 1200) CONVcrit(real 1e-5) INITial(varlist numeric) version(int 1)] 
 version 16
 **note: version 1 uses a for loop in the EM, version 2 uses a do-while
 if (`k'<2) { // if the user supplied k=1 the packages aborts the estimation
@@ -183,8 +165,8 @@ if ("`start'"=="custom") { //custom (inputed by the user) starting values
 	
 }
 //executing main; returns all the values
-if (`version'==1) m: main(`k',"`start'",`ndraw',`iterate', "`touse'" ,"`zetas'","`y'","`x'","`family'" , "`xnormal'","`Type'" , "`xbinomial'", "`xmult_factor'","`xpoisson'", `iteratexnorm', `convcrit')
-else  m: mainv2(`k',"`start'",`ndraw',`iterate', "`touse'" ,"`zetas'","`y'","`x'","`family'" , "`xnormal'","`Type'" , "`xbinomial'", "`xmult_factor'","`xpoisson'", `iteratexnorm', `convcrit')
+if (`version'==1) mata: _cwmglm_main(`k',"`start'",`ndraw',`iterate', "`touse'" ,"`zetas'","`y'","`x'","`family'" , "`xnormal'","`Type'" , "`xbinomial'", "`xmult_factor'","`xpoisson'", `iteratexnorm', `convcrit')
+else  mata: _cwmglm_mainv2(`k',"`start'",`ndraw',`iterate', "`touse'" ,"`zetas'","`y'","`x'","`family'" , "`xnormal'","`Type'" , "`xbinomial'", "`xmult_factor'","`xpoisson'", `iteratexnorm', `convcrit')
 if (`converged'!=1) di "WARNING: convergence not achieved"
 quie count if `touse'
 
@@ -194,9 +176,19 @@ if ("`y'"!="") {
 	ereturn post `b' `V' , esample(`touse') depname(`y') 
 	ereturn local indepvars="`x'"
 	ereturn local glmcmd="glm `y' `x' [aw=`posterior'*],family(`family')"
-	ereturn matrix deviance=`deviance'
-	ereturn matrix R_sq=`R_sq'
-	if ("`family'"=="gaussian") ereturn matrix phi0=`phi0'
+	tempname R2
+	matrix `R2'=`localdeviance'[4,1..`=`k'+1']
+	ereturn matrix R2=`R2'
+	ereturn matrix localdeviance=`localdeviance'
+	matrix colnames `globaldeviance'=RWD EWD BD TD
+	matrix rownames `globaldeviance'="Deviance" "Normalized Deviance"
+	ereturn matrix globaldeviance=`globaldeviance'
+	
+	//ereturn matrix R_sq=`R_sq'
+	if ("`family'"!="gaussian") matrix `phi0'=J(1,`k',1)
+	matrix colnames `phi0'=`: colnames `cl_table'' 	
+	matrix rownames `phi0'=phi0
+	ereturn matrix phi0=`phi0'
 }
 else ereturn post , esample(`touse') 
 //ereturn matrix prior=prior
@@ -261,7 +253,14 @@ matlist e(ic), title("Information criteria") names(c)  border(top bottom)
 
 //ereturn scalar dof=dof
 if ("`y'"!="") {
-matlist (e(deviance)\e(R_sq)), title("Deviance measures and coefficient of determination")  border(top bottom)
+/*	
+matlist (e(deviance)\e(R_sq)), title("Deviance measures and coefficient of determination")  border(top bottom) 
+di "WD: within deviance, RD: residual (within) deviance, ED: explained (within) deviance, BD: between deviance"
+di "WD=ED+RD"
+di "TD=RD+ED+BD"*/
+matlist e(localdeviance), title("Local Deviance")  border(top bottom) 
+matlist e(globaldeviance), title("Global Deviance")  border(top bottom) 
+
 ereturn display,  noemptycells
 }
 ereturn local cmd="cwmglm"
@@ -290,7 +289,9 @@ matlist e(ic), title("Information criteria") names(c)  border(top bottom)
 
 //ereturn scalar dof=dof
 if ("`e(depvar)'"!="") {
-matlist (e(deviance)\e(R_sq)), title("Deviance measures and coefficient of determination")  border(top bottom)
+matlist e(localdeviance), title("Local Deviance")  border(top bottom) 
+matlist e(globaldeviance), title("Global Deviance")  border(top bottom) 
+
 	ereturn display, `diopts' level(`level')
 }
 end 

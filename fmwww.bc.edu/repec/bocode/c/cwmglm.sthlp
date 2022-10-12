@@ -91,7 +91,6 @@ help {hi:cwmglm}
 {synopt: {opt family(familyname)}} specifies the distribution of {help varname:depvar} for the GLM (see {help glm}). {cmd:family(gaussian}{cmd:)} (link indentity) is the default. The other allowed distributions are {cmd:family(binomial}{cmd:)} (link logit) and {cmd:family(poisson}{cmd:)} (link log).   {p_end}
 
 {dlgtab:Initialization options}
-
 {synopt: {opt start(svmethod)}} Specifies the initialization procedure of the component membership probabilities or the component memberships.  {p_end}
 {synopt: {opt ndraws(#)}} specifies the number of random draws for selecting the starting values if {opt start(randompr)} or {opt start(randomid)} are specified. Starting values are selected if they have the highest log-likelihood value from the EM iterations. Default is 10. {p_end}
 {phang2}
@@ -131,9 +130,11 @@ observations to initial classes.  {p_end}
 {p2col 5 11 15 2:Matrices}{p_end}
 {synopt:{cmd:e(b)}} coefficient vector of the glm {p_end}
 {synopt:{cmd:e(V)}} variance-covariance matrix of the glm{p_end}
+{synopt:{cmd:e(phi0)}} dispersion parameter for the glm (see {cmd: help glm}) {p_end}
 {synopt:{cmd:e(cl_table)}}  estimated group size {p_end}
-{synopt:{cmd:e(deviance)}}  deviance decomposition matrix for the glm{p_end}
-{synopt:{cmd:e(R_sq)}}  deviance based coefficient of determination  for the glm{p_end}
+{synopt:{cmd:e(localdeviance)}}  within deviance decomposition matrix for the glm{p_end}
+{synopt:{cmd:e(globaldeviance)}}   the overall residual deviance, the overall explained deviance, the between deviance and the total deviance {p_end}
+{synopt:{cmd:e(R2)}}  generalized coefficients of determination for the GLM {p_end}
 {synopt:{cmd:e(prior)}} mixture components weights{p_end}
 {synopt:{cmd:e(p_multi_#)}} probabilities of a each outcome for the {cmd: xmultinomial} variables . (returns n matrices where n is the number of multinomial variables) {p_end}
 {synopt:{cmd:e(p_binomial)}} probabilities of a positive outcome for the {cmd: xbinomial} variables {p_end}

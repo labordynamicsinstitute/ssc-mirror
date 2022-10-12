@@ -1,4 +1,4 @@
-*! v2 27 jul 2022
+*! v3 10 Oct 2022
 
 
 /***************THESE FUNCTIONS ARE FOR THE NON-PARAMETRIC BOOTSTRAP*****/
@@ -10,8 +10,10 @@ if ("`e(cmd)'"!="cwmglm") {
 	di as error "last cwmglm estimates not found, please execute this command after {bf: cwmglm}"
 	exit 144
 }
-
+tempname _estimates
 tempvar touse
+//saves current cwmglm estimates to make them available again after boostrapping
+quie estimates store `_estimates'
 //the returned results of the last cwmglm estimates are used as an input to the bootstrap
 gen `touse'=e(sample)
 quie count if `touse'
@@ -107,6 +109,6 @@ if ("`xbinomial'"!="") {
 				}
 				
 		}
-
+quie estimates restore `_estimates'
 end
 
