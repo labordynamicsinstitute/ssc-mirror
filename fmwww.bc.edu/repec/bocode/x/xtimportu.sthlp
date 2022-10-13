@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.0  31dec2020}{...}
+{* *! version 1.1.2  07oct2022}{...}
 {viewerjumpto "Syntax" "xtimportu##syntax"}{...}
 {viewerjumpto "Description" "xtimportu##description"}{...}
 {viewerjumpto "Options" "xtimportu##options"}{...}
@@ -8,7 +8,7 @@
 {title:Title}
 
 {phang}
-{bf:xtimportu} {hline 2} Import monthly, quarterly, half-yearly or yearly time
+{bf:xtimportu} {hline 2} Import monthly, quarterly, half-yearly, or yearly time
 series and panel data as {it:panelvar} {it:timevar} {it:valuevar} from a
 supported file format to memory or a file
 
@@ -254,7 +254,8 @@ For detailed information on {cmd:sxpose2}, see {helpb sxpose2}.
 {title:Examples}
 
         ****
-        * Example 1. Population time series for the Czech Republic (a country in Central Europe, EU member since 2004)
+        * Example 1. Population time series for the Czech Republic
+        * (a country in Central Europe, EU member since 2004)
         ****
 
         * RegEx for the indicator, case sensitive!
@@ -262,10 +263,14 @@ For detailed information on {cmd:sxpose2}, see {helpb sxpose2}.
         {cmd:. local regex "Počet"}
 
         * ČSÚ's (Czech Statistical Office) file URL for Population
-        {cmd:. local url "https://www.czso.cz/documents/10180/123502877/32018120_0101.xlsx/d60b89c8-980c-4f3a-bc0c-46f38b0b8681?version=1.0"}
+        {cmd:. local url "https://www.czso.cz/documents/10180/123502877/"}
+        {cmd:. local url "`url'32018120_0101.xlsx/"}
+        {cmd:. local url "`url'd60b89c8-980c-4f3a-bc0c-46f38b0b8681"}
+        {cmd:. local url "`url'?version=1.0"}
 
         * import the time series data to memory, unit: thousand
-        {cmd:. xtimportu excel "`url'", cellrange(A3) regex(`regex') encode("Czech Republic") tfreq(Y) tde clear}
+        {cmd:. xtimportu excel "`url'", cellrange(A3) regex(`regex')} ///
+        {cmd:      encode("Czech Republic") tfreq(Y) tde clear}
 
         * revert underscores to spaces in the unit
         {cmd:. replace unit = ustrregexra(unit, "_", " ")}
@@ -274,26 +279,53 @@ For detailed information on {cmd:sxpose2}, see {helpb sxpose2}.
         {cmd:. tsset year}
 
         ****
-        * Example 2. FDI matrix from UNCTAD's Bilateral FDI statistics (historical data, 2000–2014)
+        * Example 2. FDI matrix from UNCTAD's Bilateral FDI statistics
+        * (historical data, 2000–2014)
         ****
 
-        * RegEx for the EU-28, case sensitive! "{c -(}0,{c )-}$" (0 or more non-word characters) excludes Netherlands Antilles
+        * RegEx for the EU-28, case sensitive! "{c -(}0,{c )-}$"
+        * (0 or more non-word characters) excludes Netherlands Antilles
         * unoptimized, illustration only
-        {cmd:. local regex "`regex'Austria|Belgium|Bulgaria|Croatia|Cyprus|Czech Republic|Denmark|Estonia|"}
-        {cmd:. local regex "`regex'Finland|France|Germany|Greece|Hungary|Ireland|Italy|Latvia|Lithuania|"}
-        {cmd:. local regex "`regex'Luxembourg|Malta|Netherlands\W{c -(}0,{c )-}$|Poland|Portugal|Romania|"}
-        {cmd:. local regex "`regex'Slovakia|Slovenia|Spain|Sweden|United Kingdom"}
+        {cmd:. local regex "Austria|Belgium|Bulgaria|Croatia|Cyprus|"}
+        {cmd:. local regex "`regex'Czech Republic|Denmark|Estonia|Finland|"}
+        {cmd:. local regex "`regex'France|Germany|Greece|Hungary|Ireland|"}
+        {cmd:. local regex "`regex'Italy|Latvia|Lithuania|Luxembourg|Malta|"}
+        {cmd:. local regex "`regex'Netherlands\W{c -(}0,{c )-}$|Poland|"}
+        {cmd:. local regex "`regex'Portugal|Romania|Slovakia|Slovenia|Spain|"}
+        {cmd:. local regex "`regex'Sweden|United Kingdom"}
 
-        * UNCTAD's (United Nations Conference on Trade and Development) file URL for the U.S.
-        {cmd:. local url "https://unctad.org/system/files/non-official-document/webdiaeia2014d3_USA.xls"}
+        * UNCTAD's (United Nations Conference on Trade and Development)
+        * file URL for the U.S.
+        {cmd:. local url "https://unctad.org/system/files/"}
+        {cmd:. local url "`url'non-official-document/webdiaeia2014d3_USA.xls"}
 
         * import the panel data to memory, export a copy as a CSV file
-        {cmd:. xtimportu excel "`url'", sheet("inflows") cellrange(E5) regex(`regex') tfreq(Y) clear tde export(delimited "./usa_fdi_matrix.csv", replace)}
+        {cmd:. xtimportu excel "`url'", sheet("inflows") cellrange(E5)} ///
+        {cmd:      regex(`regex') tfreq(Y) clear tde} ///
+        {cmd:      export(delimited "./usa_fdi_matrix.csv", replace)}
 
-        * rename variables to form the 28x1 aka the EU-28 x U.S. FDI matrix, unit: million USD
+        * rename variables to form the 28x1 aka the EU-28 x U.S. FDI matrix,
+        * unit: million USD
         {cmd:. rename unit from}
         {cmd:. rename value to_USA}
 
         * xtset data
         {cmd:. encode from, gen(id)}
         {cmd:. xtset id year}
+
+{title:Author}
+
+{pstd}
+{bf:Ilya Bolotov}
+{break}Prague University of Economics and Business
+{break}Prague, Czech Republic
+{break}{browse "mailto:ilya.bolotov@vse.cz":ilya.bolotov@vse.cz}
+
+{pstd}
+    Thanks for citing this software and my works on the topic:
+
+{p 8 8 2}
+    Bolotov, I. (2020). XTIMPORTU: Stata module to import monthly, quarterly,
+    half-yearly, or yearly time series and panel data as panelvar timevar
+    valuevar from a supported file format to memory or a file. Available from
+    {browse "https://ideas.repec.org/c/boc/bocode/s458880.html"}.

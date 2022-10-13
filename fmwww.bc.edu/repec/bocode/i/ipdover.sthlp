@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 4.02  David Fisher  20apr2021}{...}
+{* *! version 4.03  David Fisher  12oct2022}{...}
 {vieweralsosee "ipdmetan" "help ipdmetan"}{...}
 {vieweralsosee "forestplot" "help forestplot"}{...}
 {vieweralsosee "metan" "help metan"}{...}
@@ -55,9 +55,10 @@ The optional second {opt over(varname)} allows stratification of results by a fu
 in a similar way to {opt by(varname)} with {cmd:ipdmetan}.
 
 {pstd}
-Forest plots produced by {cmd:ipdover} are weighted by sample size rather than by the inverse of the variance,
-and by default sample size will appear to the left of the plot
-(instead of study weights appearing to the right of the plot as in {cmd:ipdmetan}).
+By default, forest plots produced by {cmd:ipdover} are weighted by sample size (rather than by the inverse of the variance),
+and sample size appears as a column of data to the left of the plot.
+However, if the option {opt wgt()} is supplied, weights will not be displayed unless explicitly requested via {opt lcols()}
+(see {bf:{help ipdmetan}} for details of these options).
 
 {pstd}
 {help metan##saved_datasets:Saved datasets} may include the following identifier variables:{p_end}

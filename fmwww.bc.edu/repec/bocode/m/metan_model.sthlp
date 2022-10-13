@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 4.05  David Fisher  29nov2021}{...}
+{* *! version 4.06  David Fisher  12oct2022}{...}
 {vieweralsosee "metan" "help metan"}{...}
 {vieweralsosee "metan_binary" "help metan_binary"}{...}
 {vieweralsosee "metan_continuous" "help metan_continuous"}{...}
@@ -63,11 +63,11 @@ Note: references for particular models may be found in {help metan_model##refs:F
 if not specifically referenced below.{p_end}
 
 {syntab :Methods applicable to {help metan_binary:two-group comparison of binary outcomes} only}
-{synopt :{opt mh:aenszel}}Mantel-Haenszel model (default){p_end}
+{synopt :{opt mh:aenszel} | {opt fixed}}Mantel-Haenszel model (default){p_end}
 {synopt :{opt peto}}common-effect pooling of Peto odds ratios{p_end}
 
 {syntab :Tau-squared estimators for standard inverse-variance random-effects model}
-{synopt :{opt iv:common} | {opt fe} | {opt fixed}}Common (aka "fixed") effect inverse-variance (default unless two-group comparison of binary outcomes){p_end}
+{synopt :{opt iv:common} | {opt fe} | {opt fixedi}}Common (aka "fixed") effect inverse-variance (default unless two-group comparison of binary outcomes){p_end}
 {synopt :{opt random} | {opt re} | {opt dl:aird}}DerSimonian-Laird estimator{p_end}
 {synopt :{opt bdl} | {opt dlb}}Bootstrap DerSimonian-Laird estimator{p_end}
 {synopt :{opt he:dges}}Hedges estimator aka "Cochran ANOVA-like" aka "variance component" estimator{p_end}
@@ -146,8 +146,9 @@ or Skovgaard's ({help metan_model##refs:Guolo 2012}) corrections to the likeliho
 {marker options_label}{...}
 {synopthdr :options_label}
 {synoptline}
-{synopt :{opt label(sting)}}specify alternative display label for a model{p_end}
+{synopt :{opt label(string)}}specify alternative display label for a model{p_end}
 {synopt :{opt extralabel(string)}}optional further description, for display within the forest plot only{p_end}
+{synopt :{opt nomodellab:els}}suppress all model labels in output and forest plot{p_end}
 {synoptline}
 
 
@@ -366,7 +367,7 @@ Ross J Harris, Roger M Harbord, Jonathan A C Sterne.
 Department of Social Medicine, University of Bristol, Bristol, UK
 
 {pstd}
-Current version, {cmd:metan} v4.02:
+{cmd:metan} v4.00 and later (including current version):
 David Fisher, MRC Clinical Trials Unit at UCL, London, UK.
 
 {pstd}

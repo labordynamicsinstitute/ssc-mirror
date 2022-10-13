@@ -21,13 +21,16 @@
 * version 4.04  David Fisher  16aug2021
 // No changes; upversioned to match with the rest of -metan- package
 
-*! version 4.05 beta  29nov2021
+* version 4.05 David Fisher  29nov2021
 // added ability to specify a value label for studies, instead of rownames
 // syntax notes:
 // - studylabel() on its own = apply label to studies labelled "naturally" i.e. 1, 2, ...
 // - studylabel() + rownames = label studies with (numeric) rownames; then apply label to those values
 // - rowfullnames, roweq work the same way.
 // If row[eq|[full]names] are non-numeric with studylabel(), exit with error.
+
+*! version 4.06  David Fisher  12oct2022
+// No changes; upversioned to match with the rest of -metan- package
 
 
 program metani, rclass

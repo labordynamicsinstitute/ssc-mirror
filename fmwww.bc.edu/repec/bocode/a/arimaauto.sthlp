@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.1  31jan2022}{...}
+{* *! version 1.0.3  07oct2022}{...}
 {vieweralsosee "[TS] arima" "mansection TS arima"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[TS] arima postestimation" "help arima postestimation"}{...}
@@ -375,6 +375,22 @@ for unit root tests other than {helpb hegy}, {helpb dfgls:[TS] dfgls}, and
         monthly data:
         {cmd:. webuse air2.dta, clear}
         {cmd:. arimaauto air, sarima(0,1,0,12)}
+
+{title:Author}
+
+{pstd}
+{bf:Ilya Bolotov}
+{break}Prague University of Economics and Business
+{break}Prague, Czech Republic
+{break}{browse "mailto:ilya.bolotov@vse.cz":ilya.bolotov@vse.cz}
+
+{pstd}
+    Thanks for citing this software and my works on the topic:
+
+{p 8 8 2}
+    Bolotov, I. (2022). ARIMAAUTO: Stata module to find the best ARIMA model
+    with the help of a Stata-adjusted Hyndman-Khandakar (2008) algorithm.
+    Available from {browse "https://ideas.repec.org/c/boc/bocode/s459043.html"}.
 
 {marker references}{...}
 {title:References}

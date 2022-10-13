@@ -77,7 +77,7 @@ p tkdensity module for univariate kernel density estimation with calculation on 
 p tknz module to tokenize string into named macros
 p tmap module for simple thematic mapping
 p tmpdir module to indicate the directory Stata is using for a temporary directory
-p tmpinv module to solve hybrid linear programming-least squares problems
+p tmpinv module to solve an under-, over- and identified Transaction Matrix (TM) problem with the help of the Moore-Penrose pseudoinverse, singular value decomposition (SVD), an F-test from linear regression/t-test of mean normalized RMSE, and results adjustment for extreme values
 p tmpm module to implement Trauma Mortality Prediction Model using AIS, ICD-9 or ICD-10 codes
 p tobithetm module to estimate Tobit Multiplicative Heteroscedasticity Regression
 p tobitiv module to perform instrumental variables tobit

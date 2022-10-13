@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.0  31dec2020}{...}
+{* *! version 1.1.2  07oct2022}{...}
 {viewerjumpto "Syntax" "xtmipolateu##syntax"}{...}
 {viewerjumpto "Description" "xtmipolateu##description"}{...}
 {viewerjumpto "Options" "xtmipolateu##options"}{...}
@@ -142,7 +142,8 @@ commands.
 {title:Remarks}
 
 {pstd}
-For detailed information on {cmd:mipolate}, see {helpb mipolate}.
+Please install {helpb summarizeby} before using {cmd:xtmipolateu}.
+{break}For detailed information on {cmd:mipolate}, see {helpb mipolate}.
 
 {marker examples}{...}
 {title:Examples}
@@ -163,3 +164,20 @@ For detailed information on {cmd:mipolate}, see {helpb mipolate}.
         {cmd:. set scheme economist}
         {cmd:. putpdf begin, landscape font("Verdana")}
         {cmd:. xtmipolateu calories, i(person) t(day) epolate put("pdf") pbr sa("./report.pdf", replace)}
+
+{title:Author}
+
+{pstd}
+{bf:Ilya Bolotov}
+{break}Prague University of Economics and Business
+{break}Prague, Czech Republic
+{break}{browse "mailto:ilya.bolotov@vse.cz":ilya.bolotov@vse.cz}
+
+{pstd}
+    Thanks for citing this software and my works on the topic:
+
+{p 8 8 2}
+Bolotov, I. (2020). XTMIPOLATEU: Stata module to replace missing values in a
+    time series, two- or multidimensional varlist with interpolated
+    (extrapolated) ones. Available from
+    {browse "https://ideas.repec.org/c/boc/bocode/s458881.html"}.

@@ -1,13 +1,17 @@
-d 'TMPINV': module to solve hybrid linear programming-least squares problems
+d 'TMPINV': module to solve an under-, over- and identified Transaction Matrix (TM) problem with the help of the Moore-Penrose pseudoinverse, singular value decomposition (SVD), an F-test from linear regression/t-test of mean normalized RMSE, and results adjustment for extreme values
 d
-d  The algorithm solves "hybrid" linear programming- least squares
-d (LP-LS) problems with the help of the Moore-Penrose inverse
-d (pseudoinverse), calculated using singular value decomposition
-d (SVD), with emphasis on estimation of non-typical constrained OLS
-d (cOLS), Transaction Matrix (TM), and custom (user-defined) cases.
-d Eventual regression analysis and a Monte-Carlo-based t-test of
-d mean NRMSE is performed, the sample being drawn from a uniform or
-d a user-specified distribution (Mata function). 
+d  The algorithm solves "hybrid" linear programming-least squares
+d (LP-LS) Transaction Matrix (TM) problems with the help of the
+d Moore-Penrose inverse (pseudoinverse), calculated using singular
+d value decomposition (SVD). Estimation using 2x2 to 50x50
+d contiguous submatrices, repeated with compensatory slack
+d variables until NRMSE is minimized in a given number of
+d iterations, is followed by an F-test from linear
+d regression/t-test of mean NRMSE from a pre-simulated distribution
+d (Monte-Carlo, 50,000 iterations with matrices consisting of
+d normal random variates). The result is adjusted for extreme
+d values to match the RHS via shares of estimated row/column sums
+d if the corresponding option is specified. 
 d
 d KW: linear programming
 d KW: least squares
@@ -16,7 +20,7 @@ d KW: singular value decomposition
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20221005
+d Distribution-Date: 20221012
 d
 f tmpinv.ado
 F tmpinv.mmat

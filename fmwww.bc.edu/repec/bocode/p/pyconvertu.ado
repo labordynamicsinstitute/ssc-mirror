@@ -1,4 +1,4 @@
-*! version 1.2.5  31mar2022  I I Bolotov
+*! version 1.2.6  07oct2022  I I Bolotov
 program def pyconvertu
 	version 16.0
 	/*
@@ -8,7 +8,7 @@ program def pyconvertu
 		The from() option allows the user to import an external JSON file as    
 		a dictionary to replace the default classification.                     
 		The JSON file can be created from data in memory, provided they include 
-		headings "Data", "Metadata" and "Sources" in the first variable,        
+		headings "Data", "Metadata", and "Sources" in the first variable,       
 		immediately followed by content. The template JSON file structure is    
 		the following ("regex" is a compulsory key and the file is saved using  
 		Python's json.dump()):                                                  
@@ -33,7 +33,7 @@ program def pyconvertu
 	tempname json sections_n vars
 	tempvar converted
 	// import classification                                                    
-	if `"`from'"' == "" {
+	if trim(`"`from'"') == "" {
 		qui findfile `"pyconvertu_classification.json"'
 		local from `"`r(fn)'"'
 	}
@@ -41,12 +41,12 @@ program def pyconvertu
 	cap confirm variable `name'
 	if ! _rc {
 		/* check options for errors                                           */
-		if `"`to'"' == "" {					// check for missing options
+		if trim(`"`to'"') == "" {			// check for missing options
 			di as err "option to() required"
 			exit 198
 		}
-		if `"`replace'`generate'`print'"' == "" {
-			di as err "must specify either generate, replace or print option"
+		if trim(`"`replace'`generate'`print'"') == "" {
+			di as err "must specify either generate, replace, or print option"
 			exit 198
 		}
 		/* ado + python                                                       */
@@ -55,13 +55,13 @@ program def pyconvertu
 			di as err "JSON file does not contain valid entry/dictionary"
 			exit 7102
 		}
-		if `"`print'"' == "" {				// store the converted variable
+		if trim(`"`print'"') == "" {		// store the converted variable
 			g `converted' = ""
 			python: Data.store('`converted'', None, l)
-			if `"`generate'"'  != "" {		// generate a new variable
+			if trim(`"`generate'"') != "" {	// generate a new variable
 				g `generate' = `converted'
 			}
-			if `"`replace'"'   != "" {		// replace the existing one
+			if trim(`"`replace'"')  != "" {	// replace the existing one
 				replace `name' = `converted'
 			}
 		}
@@ -71,13 +71,13 @@ program def pyconvertu
 		exit 0
 	}
 	// save classification to a variable                                        
-	if `"`name'"' == "__classification" {
+	if trim(`"`name'"') == "__classification" {
 		/* check options for errors                                           */
-		if `"`to'"' == "" {
+		if trim(`"`to'"') == "" {
 			di as err "option to() required"
 			exit 198
 		}
-		if `"`generate'`print'"' == "" {
+		if trim(`"`generate'`print'"') == "" {
 			di as err "must specify either generate or print option"
 			exit 198
 		}
@@ -88,11 +88,11 @@ program def pyconvertu
 			exit 7102
 		}
 		python: n = len(l) - Data.getObsTotal()
-		if `"`print'"' == "" {				// store the classification
+		if trim(`"`print'"') == "" {		// store the classification
 			g `converted' = ""
 			python: Data.addObs((lambda n: n if n > 0 else 0)(n))
 			python: Data.store('`converted'', [i for i in range(0, len(l))], l)
-			if `"`generate'"' != "" {		// generate a new variable
+			if trim(`"`generate'"') != "" {	// generate a new variable
 				g `generate' = `converted'
 			}
 		}
@@ -102,7 +102,7 @@ program def pyconvertu
 		exit 0
 	}
 	// print metadata and sources                                               
-	if `"`name'"' == "__info" {
+	if trim(`"`name'"') == "__info" {
 		cap python: l = _pyconvertu_info(r'`from'')
 		if _rc {
 			di as err "JSON file does not contain valid entry/dictionary"
@@ -112,7 +112,7 @@ program def pyconvertu
 		exit 0
 	}
 	// dump classification from data to a json file                             
-	if `"`name'"' == "__dump" {
+	if trim(`"`name'"') == "__dump" {
 		qui ds
 		local `vars' = r(varlist)
 		/* find _n of the json sections                                       */

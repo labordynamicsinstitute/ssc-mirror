@@ -1,35 +1,41 @@
-*! version 1.1.0  31dec2020
+*! version 1.1.2  07oct2022  I I Bolotov
 program def xtmipolateu, rclass
 	version 12.0
 	/*
-		This program inter-- and extrapolates missing values in a time series
-		or multidimensional varlist with (SSC) mipolate, allowing the user to
-		export descriptive statistics with (SSC) summarizeby and to write ts-
-		and xtline graphs and tables with the statistics to a new or existing
-		report document using putdocx or putpdf (the style is customizable).
-		Author: Ilya Bolotov, MBA, Ph.D.
-		Date: 20 November 2020
+		This program inter- and extrapolates missing values in a time series   
+		or multidimensional varlist with (SSC) mipolate, allowing the user to   
+		export descriptive statistics with (SSC) summarizeby and to write ts-   
+		and xtline graphs and tables with the statistics to a new or existing   
+		report document using putdocx or putpdf (the style is customizable).    
+
+		Author: Ilya Bolotov, MBA, Ph.D.                                        
+		Date: 20 November 2020                                                  
 	*/
+	cap which summarizeby
+	if _rc {
+		ssc install summarizeby
+	}
+	// syntax                                                                   
 	syntax 																	///
 	varlist(ts fv) [if] [in], [i(varlist)] t(varname)						///
 	[/* ignore */ GENerate(string) /* ignore */]							///
 	[export(string asis)]													///
 	[put(string) PBReak NFORmat(string) SAving(string asis) *]
-	local put = trim("`put'")
-	local nformat = cond("`nformat'" != "", trim("`nformat'"), "%9.2fc")
-	// adjust and preprocess options
+	local put = trim(`"`put'"')
+	local nformat = cond(`"`nformat'"' != "", trim(`"`nformat'"'), "%9.2fc")
+	// adjust and preprocess options                                            
 	if ! regexm(`"`put'"', "^(docx|pdf|)$") {
-		di as err "command put`put' is unrecognized"
+		di as err `"command put`put' is unrecognized"'
 		exit 199
 	}
 	tempname by1 by2 var1 var2
 	tempvar hat
-	// check for third-party packages from SSC
+	// check for third-party packages from SSC                                  
 	qui which mipolate
 	qui which summarizeby
-	// preserve statistics and data for export or putting into a document
+	// preserve statistics and data for export or putting into a document       
 	qui {
-		if `"`export'`put'"' != "" {
+		if trim(`"`export'`put'"') != "" {
 			qui {
 				tempfile tmpf_stats
 				local `by2' = cond("`i'" != "", "by(`i')", "")
@@ -40,30 +46,30 @@ program def xtmipolateu, rclass
 				restore
 			}
 		}
-		if `"`put'"' != "" {
+		if trim(`"`put'"') != "" {
 			tempfile tmpf_dta tmpf_dta_hat
 			save `tmpf_dta'
 		}
 	}
-	// perform mipolate
+	// perform mipolate                                                         
 	local `by1' = cond("`i'" != "", "by `i' (`t'), sort:", "")
 	foreach `var1' of varlist `varlist' {
 		``by1'' mipolate ``var1'' `t' `if' `in', gen(`hat') `options'
 		``by1'' replace ``var1'' = `hat' if missing(``var1'')
 		drop `hat'
 	}
-	// return results
+	// return results                                                           
 	``by1'' count
 	return scalar N_groups = `=_N' / `r(N)'
-	// export statistics or put graph(s) and table(s) into a document
+	// export statistics or put graph(s) and table(s) into a document           
 	tempname n a b l list
-	/* export statistics */
-	if `"`export'`put'"' != "" {
+	/* export statistics                                                      */
+	if trim(`"`export'`put'"') != "" {
 		preserve
 		tempvar id1 id2
 		qui {
 			keep `i' `t' `varlist'
-			summarizeby mean=r(mean) sd=r(sd) min=r(min) max=r(max),	///
+			summarizeby mean=r(mean) sd=r(sd) min=r(min) max=r(max),		///
 			``by2'' clear
 			append using `tmpf_stats', gen(`id1')
 			label define dataset 0 "_hat" 1 "_orig"
@@ -77,7 +83,7 @@ program def xtmipolateu, rclass
 			order v `i' mean* sd* min* max*
 			sort `id1'*
 			drop `id1'*
-			if `"`put'"' != "" {
+			if trim(`"`put'"') != "" {
 				by v (`i'), sort: count
 				local `n' = `r(N)' + 1	// include header
 				ds v, not
@@ -93,13 +99,13 @@ program def xtmipolateu, rclass
 			}
 			save `tmpf_stats', replace
 		}
-		if `"`export'"' != "" {
+		if trim(`"`export'"') != "" {
 			export `export'
 		}
 		restore
 	}
-	/* put graph(s) and table(s) into a document */
-	if `"`put'"' != "" {
+	/* put graph(s) and table(s) into a document                              */
+	if trim(`"`put'"') != "" {
 		cap put`put' begin	// if not opened by user beforehand
 		save `tmpf_dta_hat'	// save data in file to nest preserve / restore
 		tempvar g orig
@@ -155,7 +161,7 @@ program def xtmipolateu, rclass
 				halign(right) nformat(`nformat')
 			}
 		}
-		if `"`saving'"' != "" {
+		if trim(`"`saving'"') != "" {
 			put`put' save `saving'
 		}
 		use `tmpf_dta_hat', clear

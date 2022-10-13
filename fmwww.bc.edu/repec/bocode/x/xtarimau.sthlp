@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  31jan2022}{...}
+{* *! version 1.0.2  07oct2022}{...}
 {vieweralsosee "[TS] arima" "mansection TS arima"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[TS] arima postestimation" "help arima postestimation"}{...}
@@ -227,6 +227,22 @@ For {helpb arima:arima(...)} see a list of
         {cmd:. xtarimau calories, noseas}
         {cmd:. xtarimau calories, noseas nostep maxm(15) export(test)}
         {cmd:. xtarimau calories, noseas post(predict xb)}
+
+{title:Author}
+
+{pstd}
+{bf:Ilya Bolotov}
+{break}Prague University of Economics and Business
+{break}Prague, Czech Republic
+{break}{browse "mailto:ilya.bolotov@vse.cz":ilya.bolotov@vse.cz}
+
+{pstd}
+    Thanks for citing this software and my works on the topic:
+
+{p 8 8 2}
+    Bolotov, I. (2022). XTARIMAU: Stata module to find the best [S]ARIMA[X]
+    models in heterogeneous panels with the help of arimaauto. Available from
+    {browse "https://ideas.repec.org/c/boc/bocode/s459048.html"}.
 
 {marker references}{...}
 {title:References}

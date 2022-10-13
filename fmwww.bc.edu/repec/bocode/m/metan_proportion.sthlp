@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 4.05  David Fisher  29nov2021}{...}
+{* *! version 4.06  David Fisher  12oct2022}{...}
 {vieweralsosee "metan" "help metan"}{...}
 {vieweralsosee "metan_model" "help metan_model"}{...}
 {vieweralsosee "metan_binary" "help metan_binary"}{...}
@@ -44,6 +44,7 @@
 {synopt :{opt denom:inator(#)}}specify a denominator for presentation of proportion data{p_end}
 {synopt :{opt noint:eger}}allow cell counts to be non-integers{p_end}
 {synopt :{opt tr:ansform(tr_method)}}specify a transformation for analysis of proportion data{p_end}
+{synopt :{opt nopr}}report effect sizes on transformed scale, not as proportions{p_end}
 
 {syntab :Forest plot and/or saved data}
 {synopt :{opt co:unts}}display data counts ({it:n}/{it:N}){p_end}
@@ -127,6 +128,10 @@ can sometimes give misleading results. Hence, sensitivity analyses may be carrie
 {help metan##refs:Barendregt et al (2013)} suggest another alternative back-transformation based on the inverse-variance
 of the pooled transformed effects, which may be specified using {cmd:transform(}{opt ft:ukey}{cmd:, }{opt iv:ariance}{cmd:)}.
 
+{phang}
+{opt nopr} requests that effect sizes are reported on the transformed scale.
+In other words, back-transformation to the proportion scale is not performed.
+
 
 {dlgtab:Forest plot and/or saved data}
 
@@ -151,7 +156,7 @@ Ross J Harris, Roger M Harbord, Jonathan A C Sterne.
 Department of Social Medicine, University of Bristol, Bristol, UK
 
 {pstd}
-Current version, {cmd:metan} v4.02:
+{cmd:metan} v4.00 and later (including current version):
 David Fisher, MRC Clinical Trials Unit at UCL, London, UK.
 
 {pstd}

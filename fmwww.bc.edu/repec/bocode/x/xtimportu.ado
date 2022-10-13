@@ -1,18 +1,24 @@
-*! version 1.1.0  31dec2020
+*! version 1.1.2  07oct2022  I I Bolotov
 program def xtimportu, rclass
 	version 14.0
 	/*
-		This program imports monthly, quarterly, half-yearly and yearly time
-		series and panel data from a supported file format, filtering and
-		encoding its cross-sectional units if required (use "|" as separator
-		in encode()), allowing the user to export and/or save the result.
-		Wide (pivoted) data must be imported in a way that the time values
-		are located in _n == 1 (use cellrange() for excel and preformat()
-		for other filetypes) and are transposed with (SSC) sxpose2.
-		Unicode characters are fully supported for Stata 14 and newer versions.
-		Author: Ilya Bolotov, MBA, Ph.D.
-		Date: 20 November 2020
+		This program imports monthly, quarterly, half-yearly, and yearly time   
+		series and panel data from a supported file format, filtering and       
+		encoding its cross-sectional units if required (use "|" as separator    
+		in encode()), allowing the user to export and/or save the result.       
+		Wide (pivoted) data must be imported in a way that the time values      
+		are located in _n == 1 (use cellrange() for excel and preformat()       
+		for other filetypes) and are transposed with (SSC) sxpose2.             
+		Unicode characters are fully supported for Stata 14 and newer versions. 
+
+		Author: Ilya Bolotov, MBA, Ph.D.                                        
+		Date: 20 November 2020                                                  
 	*/
+	cap which sxpose2
+	if _rc {
+		ssc install sxpose2
+	}
+	// syntax                                                                   
 	syntax																	///
 	/* syntax for import */ anything(name=import id="import: subcommand"),	///
 	[/* ignore */ FIRSTrow VARNames(string) case(string) force replace]		///
@@ -21,7 +27,7 @@ program def xtimportu, rclass
 	[TIMEvar(string) TFORmat(string)] TFREQuency(string) [drop TDEstring]	///
 	[GENerate(string) float Ignore(string asis) percent dpcomma TOstring]	///
 	[clear export(string asis) SAving(string asis) *]
-	// adjust and preprocess options
+	// adjust and preprocess options                                            
 	local regex  = ustrregexra(`"`regex'"',  "\s", "\\s")
 	local encode = ustrregexra(`"`encode'"', "\s", "_"  )
 	local tfrequency =														///
@@ -30,41 +36,42 @@ program def xtimportu, rclass
 	cond(ustrregexm(strtrim(`"`tfrequency'"'), "q", 1), "quarter",  "") +	///
 	cond(ustrregexm(strtrim(`"`tfrequency'"'), "m", 1), "month",    "")
 	local ignore = cond(`"`ignore'"' != "", `"ignore(`ignore')"',   "")
-	// check options for errors
-	if `"`tfrequency'"' == "" {
+	// check options for errors                                                 
+	if trim(`"`tfrequency'"') == "" {
 		di as err "invalid syntax"
 		exit 198
 	}
-	if `"`float'`ignore'`percent'`dpcomma'"' != "" & `"`tostring'"' != "" {
+	if trim(`"`float'`ignore'`percent'`dpcomma'"') != "" &					///
+	   trim(`"`tostring'"') != "" {
 		di as err "must specify either * (destring options) or tostring option"
 		exit 198
 	}
-	if `"`clear'`export'`saving'"' == "" {
+	if trim(`"`clear'`export'`saving'"') == "" {
 		di as err "must specify one or more of clear, export or saving options"
 		exit 198
 	}
 	tempname j F f var
-	// check for third-party packages from SSC
+	// check for third-party packages from SSC                                  
 	qui which sxpose2
-	// import data from a supported file format
-	if `"`clear'"' == "" {					// preserve data (if required)
+	// import data from a supported file format                                 
+	if trim(`"`clear'"') == "" {			// preserve data (if required)
 		preserve
 	}
 	qui import `import', `options' clear
 	`preformat'								// preformat data (if required)
-	// prepare the cross-sectional unit(s)
-	if `"`regex'"' != "" {					// filter rows (if required)
+	// prepare the cross-sectional unit(s)                                      
+	if trim(`"`regex'"') != "" {			// filter rows (if required)
 		qui {
-			/* filter panelvar by matching regex() */
-			if `"`panelvar'"' == "" {		// get the first variable
+			/* filter panelvar by matching regex()                            */
+			if trim(`"`panelvar'"') == "" {	// get the first variable
 				ds
 				/* define panelvar */
 				local panelvar : word 1 of `r(varlist)'
 			}
 			drop if ! ustrregexm(`panelvar', `"`regex'"') &					///
 			("`timevar'" != "" | _n > 1)	// preserve the first row
-			/* replace regex with the contents of encode() */
-			if `"`encode'"' != "" {
+			/* replace regex with the contents of encode()                    */
+			if trim(`"`encode'"') != "" {
 				local regex = usubinstr(`"`regex'"', "|", " ", .)
 				local i = usubinstr(`"`encode'"', "|", " ", .)
 				forvalues `j' = 1/`=wordcount(`"`regex'"')' {
@@ -72,30 +79,31 @@ program def xtimportu, rclass
 					ustrregexm(`panelvar', word(`"`regex'"', ``j''))
 				}
 			}
-			/* drop duplicates and missing values */
+			/* drop duplicates and missing values                             */
 			by `panelvar', sort: drop if _n > 1
 		}
 	}
-	// prepare the time variale
+	// prepare the time variale                                                 
 	qui {
-		if "`timevar'" == "" {				// transpose data (if required)
+		if trim("`timevar'") == "" {		// transpose data (if required)
 			sxpose2, clear force
 			/* define timevar */
 			local timevar "_var1"
 		}
-		/* fill in eventual missing values in the time variable */
+		/* fill in eventual missing values in the time variable               */
 		replace `timevar' = `timevar'[_n - 1] if mi(`timevar')
 		tostring `timevar', replace force
-		if `"`tformat'"' == "" {			// autoformat (if required)
+		if trim(`"`tformat'"') == "" {		// autoformat (if required)
 			/* drop yearly sums for frequency higher than yearly */
-			if "`tfrequency'" != "year" & `"`drop'"' != "" {
+			if trim("`tfrequency'") != "year" &								///
+			   trim(`"`drop'"') != "" {
 				drop if ustrregexm(`timevar', `"^\s{0,}\d{4}\s{0,}$"')
 			}
 			/* strip frequency higher than yearly (if `tfrequency' != "year") */
 			replace `timevar' =												///
 			ustrregexrf(`timevar', `".{0,}(\d{4}).{0,}"', "$1", 1)
 			/* recreate stripped frequency (if `tfrequency' != "year") */
-			if "`tfrequency'" != "year" {
+			if trim("`tfrequency'") != "year" {
 				local `F' =	cond("`tfrequency'" == "halfyear", 2, 0) +		///
 							cond("`tfrequency'" == "quarter",  4, 0) +		///
 							cond("`tfrequency'" == "month",   12, 0)
@@ -112,7 +120,8 @@ program def xtimportu, rclass
 			local tformat = cond("`tfrequency'" != "year",					///
 							"Y`=upper(substr("`tfrequency'", 1, 1))'", "Y")
 		}
-		if "`timevar'" == "_var1" | `"`tdestring'"' != "" {
+		if trim("`timevar'") == "_var1" |									///
+		   trim(`"`tdestring'"') != "" {
 			tempvar dt
 			g `dt' = `tfrequency'ly(`timevar', `"`tformat'"')
 			drop `timevar'
@@ -120,7 +129,7 @@ program def xtimportu, rclass
 			order `timevar'
 			destring `timevar', replace force
 		}
-		if "`timevar'" == "_var1" {			// transpose data (if required)
+		if trim("`timevar'") == "_var1" {	// transpose data (if required)
 			foreach `var' of varlist * {
 				rename ``var'' `=subinstr("``var''", "_var", "v", .)'
 			}
@@ -134,11 +143,12 @@ program def xtimportu, rclass
 			reshape long value, string i(`panelvar') j(`timevar')
 			destring `timevar', replace force
 		}
-		/* format the time variable as str# or %tX */
-		if `"`tdestring'"' != "" {
+		/* format the time variable as str# or %tX                            */
+		if trim(`"`tdestring'"') != "" {
 			format `timevar' %t`=lower(substr("`tfrequency'", 1, 1))'
 		}
-		if "`timevar'" == "_var1" & `"`tdestring'"' == "" {
+		if trim("`timevar'") == "_var1" &									///
+		   trim(`"`tdestring'"') == "" {
 			g `dt' = string(yofd(dof`=lower(substr("`tfrequency'", 1, 1))'(	///
 			`timevar'))) + cond("`tfrequency'" != "year", "``f''" +			///
 			string(`tfrequency'(dof`=lower(substr("`tfrequency'", 1, 1))'(	///
@@ -147,25 +157,25 @@ program def xtimportu, rclass
 			rename `dt' `timevar'
 		}
 	}
-	// prepare the variable
-	if `"`tostring'"' == "" {
+	// prepare the variable                                                     
+	if trim(`"`tostring'"') == "" {
 		qui destring value, replace force `float' `ignore' `percent' `dpcomma'
 	}
-	// rename dimensions and the variable, order and sort
+	// rename dimensions and the variable, order and sort                       
 	rename `panelvar' unit
 	rename `timevar' `tfrequency'
-	if `"`generate'"' != "" {
+	if trim(`"`generate'"') != "" {
 		confirm new var `generate'
 		rename value `generate'
 	}
 	order unit `tfrequency'
 	sort  unit `tfrequency'
-	// export data to a supported file format
-	if `"`export'"' != "" {
+	// export data to a supported file format                                   
+	if trim(`"`export'"') != "" {
 		export `export'
 	}
-	// save data to a DTA file
-	if `"`saving'"' != "" {
+	// save data to a DTA file                                                  
+	if trim(`"`saving'"') != "" {
 		save `saving'
 	}
 end

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 4.02  David Fisher  20apr2021}{...}
+{* *! version 4.03  David Fisher  12oct2022}{...}
 {vieweralsosee "ipdover" "help ipdover"}{...}
 {vieweralsosee "forestplot" "help forestplot"}{...}
 {vieweralsosee "metan" "help metan"}{...}
@@ -125,6 +125,7 @@ or a variable currently in memory; {it:%fmt} is an optional {help format}; and {
 Syntax 1 fits the model {it:command} once within each level of {it:study_ID}
 and saves effect sizes and standard errors. By default these are pooled using inverse-variance, with output displayed on screen and in a forest plot.
 Any e-class regression command (whether built-in or user-defined) should be compatible with this syntax of {cmd:ipdmetan}.
+Some {help prefix} commands are also valid; see below.
 
 {pmore}
 In the case of non e-class commands - those which do not change the contents of {cmd:e(b)} -,
@@ -133,6 +134,9 @@ must be specified manually by supplying {it:{help exp_list}}.
 If {it:command} changes the contents in {cmd:e(b)}, {it:exp_list} defaults to
 {cmd:_b[}{it:varname}{cmd:]} {cmd:_se[}{it:varname}{cmd:]},
 where {it:varname} is the first independent variable within {it:command}.
+
+{pmore}
+The following {help prefix} commands are valid with {cmd:ipdmetan}: {cmd:bootstrap}; {cmd:jackknife}; {cmd:svy}; {cmd:mi estimate, post}; {cmd:bayes}; {cmd:version}.
 
 {pstd}
 Syntax 2 converts the IPD to aggregate data using {bf:{help collapse}};

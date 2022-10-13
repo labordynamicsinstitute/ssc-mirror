@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 4.05  David Fisher  29nov2021}{...}
+{* *! version 4.06  David Fisher  12oct2022}{...}
 {vieweralsosee "metan_model" "help metan_model"}{...}
 {vieweralsosee "metan_binary" "help metan_binary"}{...}
 {vieweralsosee "metan_continuous" "help metan_continuous"}{...}
@@ -134,6 +134,7 @@ This incorporates all the functionalities of the previous version of {cmd:metan}
 {synopt :{opt eff:ect(string)}}title for "effect size" column in the output{p_end}
 {synopt :{opt keepa:ll}}display all studies in the output, even those for which no effect could be estimated{p_end}
 {synopt :{opt keepo:rder}}display "no effect" studies in the order in which they would otherwise appear (by default these are moved to the end){p_end}
+{synopt :{opt labtitle(text)}}override the default heading for the list of studies{p_end}
 {synopt :{opt nogr:aph}}suppress the forest plot{p_end}
 {synopt :{opt notab:le}}suppress printing the table of effect sizes to screen; see also {opt summaryonly}{p_end}
 {synopt :{opt nohet} {opt nobetween}}suppress all heterogeneity statistics, or just between-subgroup heterogeneity statistics{p_end}
@@ -209,6 +210,9 @@ If {it:subgroup_id} is a string variable, then subgroups are displayed in the or
 If {it:subgroup_id} is numeric, then subgroups are displayed in numeric order.
 Within each subgroup, studies appear in the order they would appear if the entire analysis were restricted to that subgroup.
 
+{pmore}
+See also the {opt labtitle()} option for over-riding the default heading for the list of studies.
+
 {phang}
 {opt cumulative} requests that the meta-analysis be performed cumulatively; that is, performed repeatedly with one study being added each time.
 Studies will be added in the order specified by {cmd:sortby()} if present, or else in the order they appear in the dataset.
@@ -271,6 +275,15 @@ For such studies, "(Insufficient data)" will appear in place of effect estimates
 {pmore}
 {opt keeporder} requests such studies are displayed in their "natural" sort order.
 By default, such studies are moved to the end.
+
+{phang}
+{opt labtitle(text)} over-rides the default heading for the list of studies, both on-screen and in the forest plot.
+By default, this heading is taken from the {help label:variable label} of the study identifier variable.
+
+{pmore}
+With {opt by()}, the default heading becomes "{bf:{it:studylabel} and {it:bylabel}}" where {it:studylabel}, {it:bylabel}
+are the {help label:variable labels} of the study identifier and subgroup variable respectively.
+This is where {opt labtitle()} is arguably most useful.
 
 {phang}
 {opt nograph}, {opt notable} request the suppression of, respectively,
@@ -682,6 +695,12 @@ This matches the pre-existing behaviour of {cmd:metan} with the Mantel-Haenszel 
 If {it:{help metan_model##model_name:model_name}} is {cmd:mhaenzsel} or {cmd:peto}, 
 between-subgroup heterogeneity is handled as described above for random-effects models.
 
+{pmore2}
+Finally, note that {it:{help metan_model##model_name:model_name}}s {cmd:random} and {cmd:randomi} are now synonymous,
+and both will display the inverse-variance estimate of heterogeneity.
+If you wish to have the Mantel-Haenzel estimate of heterogeneity displayed on screen,
+you could specify {cmd:model(mh \ random)}.
+
 
 {marker diffs_meta16}{...}
 {title:Note: Differences from Stata 16's {cmd:meta} suite}
@@ -1006,7 +1025,7 @@ Ross J Harris, Roger M Harbord, Jonathan A C Sterne.
 Department of Social Medicine, University of Bristol, Bristol, UK
 
 {pstd}
-Current version, {cmd:metan} v4.02:
+{cmd:metan} v4.00 and later (including current version):
 David Fisher, MRC Clinical Trials Unit at UCL, London, UK.
 
 {pstd}

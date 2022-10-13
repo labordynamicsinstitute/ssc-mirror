@@ -2,47 +2,23 @@
 * In separate program on advice of Patrick Royston
 * created by David Fisher, February 2013
 
-* version 1.0  David Fisher  31jan2014
-* version 1.01 David Fisher  11aug2016
+* Release notes for versions prior to v4.0: see end of file
 
-* August 2016:  began adapting code for Syntax 2 of -ipdmetan- (see help file)
-
-* March 2017
-// Needs further thought re behaviour of keepall, "study, m" and "by, m"
-// when some combinations of study and by do not exist in the data.
-// Should they be displayed nevertheless, with the message "(No subgroup data)" or similar?
-// (note this is an ipdover issue rather than an ipdmetan/admetan issue)
-// (this is for the next version of the package)
-
-* version 2.0  David Fisher  11may2017
-* Major update of all parts of the ipdmetan package, including ipdover.ado
-
-* version 2.1  David Fisher  14sep2017
-// various bug fixes
-// improvements to behaviour if some estimates are missing
-
-* version 3.0  David Fisher  08nov2018
-// fixed bug preventing options to [command]
-
-// upversioned to v3.0 to match with ipdmetan and admetan
-// added `useopts' functionality
-
-* version 3.1  David Fisher 03dec2018
-// fixed bug in RD option
-
-* version 3.2  David Fisher 28jan2019
-// no changes to code; upversioned to match admetan/ipdmetan
-// but a minor change to text in the help file
-
-* version 4.00  David Fisher  25nov2020
+* version 4.0  David Fisher  25nov2020
 // no changes to code, other than adding check that -metan- v4.0+ is installed; upversioned to match metan/ipdmetan
 // some changes to text in the help file
 
 * version 4.01  David Fisher  12feb2021
 // no changes to code; upversioned to match with -ipdmetan-
 
-*! version 4.02  David Fisher  20apr2021
+* version 4.02  David Fisher  20apr2021
 // no changes to code; upversioned to match with -ipdmetan-
+
+*! version 4.03  David Fisher  12oct2022
+// Added "clear" (and undocumented "clearstack") options
+// Added prefix() option so that saved variables are `prefix'_ES etc.
+// Fixed bug which made "No. pts" column appear in forestplot with r-class commands even if not explicitly specified (displaying all missing values)
+// (note however that a column of missing values DOES still appear on-screen, as a prompt to the user.)
 
 
 program define ipdover, rclass
@@ -60,14 +36,13 @@ program define ipdover, rclass
 		exit 499
 	}
 	else {
-		local current_version = 4.03
+		local current_version = 4.05
 		if `r(metan_version)' < `current_version' {
 			nois disp as err "{bf:metan} version " as res `r(metan_version)' as err " may not the most recent version available"
 			nois disp as err "Please check, and consider updating {bf:metan}"
 		}
 	}
-	
-	
+
 	
 	// ipdmetan has two possible syntaxes:
 	
@@ -87,7 +62,7 @@ program define ipdover, rclass
 		local 0      `"`s(before)'"'
 		local after  `" :`s(after)'"'
 	}	
-	syntax [anything(everything)], OVER(string) [STUDY(string) BY(string) * ]
+	syntax [anything(everything)], OVER(string) [STUDY(string) BY(string) PREfix(name local) * ]
 
 	if `"`study'"' != `""' {
 		disp as err `"cannot specify {bf:study()} with {bf:ipdover}; please use {bf:over()} or the {bf:ipdmetan} command"'
@@ -146,7 +121,7 @@ program define ipdover, rclass
 	local lrvlist  `tv7' `tv8' `tv9' `tv10'
 	
 	tempfile ipdfile labfile
-	cap nois ipdmetan `anything', study(`study') by(`by') ///
+	cap nois ipdmetan `anything', study(`study') by(`by') prefix(`prefix') ///
 		ipdover(ipdfile(`ipdfile') labfile(`labfile') outvlist(`outvlist') lrvlist(`lrvlist')) `options' `after'	// 30th Jan 2018
 
 	if _rc {
@@ -171,6 +146,7 @@ program define ipdover, rclass
 	local lcols     `"`r(lcols)'"'
 	local rcols     `"`r(rcols)'"'
 	local wt        `r(wt)'				// returned separately from ipdmetan.ado rather than sending straight to forestplot
+	local nonbeta   `r(nonbeta)'		// Added Mar 2022
 	local opts_fplot `"`r(opts_fplot)'"'
 
 	return local citype `citype'
@@ -180,7 +156,7 @@ program define ipdover, rclass
 	// collect returned statistics specific to particular `cmdstruc'
 	if "`cmdstruc'"=="generic" {
 		local estexp `r(estexp)'
-		local invlist _ES _seES
+		local invlist `prefix'_ES `prefix'_seES
 		
 		return local estexp  `"`r(estexp)'"'
 		return local command `"`r(finalcmd)'"'
@@ -200,14 +176,16 @@ program define ipdover, rclass
 	forvalues h=1/`overlen' {
 		local varlab`h' `"`r(varlab`h')'"'
 	}
-	
-	local outvlist _ES _seES _LCI _UCI _NN		// permanent vars, not tempvars
-	
+		
 	// Now parse options (either originally specified to -ipdover-, or returned by -ipdmetan-
 	local 0 `", `r(options)'"'
 	syntax [, noOVerall noSUbgroup SUMMARYONLY noTABle KEEPAll KEEPOrder ///
-		EFFIcacy DF(varname numeric) LEVEL(passthru) SAVING(string) noGRaph * ]
+		EFFIcacy DF(varname numeric) LEVEL(passthru) SAVING(string) noGRaph CLEAR CLEARSTACK * ]
 	local options_ipdm `"`macval(options)'"'
+	
+	// July 2021:
+	// Note: -clearstack- is undocumented; it is shorthand for "clear" + "saving(, stacklabel)", but without the actual saving	
+	if `"`clearstack'"'!=`""' local clear clear
 	
 	// vaccine efficacy: OR and RR only
 	if `"`efficacy'"'!=`""' {
@@ -217,6 +195,30 @@ program define ipdover, rclass
 			exit _rc
 		}
 	}
+	
+	// use locals to avoid referring to `prefix' going forward
+	// and thereby simplify code [July 2022]
+	local outvlist `prefix'_ES `prefix'_seES `prefix'_LCI `prefix'_UCI `prefix'_NN		// permanent vars, not tempvars
+	tokenize `outvlist'
+	args _ES _seES _LCI _UCI _NN
+	local _USE `prefix'_USE
+	
+	// markers of existence of _BY and _OVER
+	// N.B. only _LEVEL is guaranteed to exist.
+	// _OVER will only exist if `overlen'>1 (i.e. if there is a need to distinguish)
+	local _BY
+	cap confirm var `prefix'_BY
+	if !_rc local _BY `prefix'_BY
+	
+	local _OVER
+	cap confirm var `prefix'_OVER
+	if !_rc local _OVER `prefix'_OVER
+
+	local _LEVEL `prefix'_LEVEL
+	local _LABELS `prefix'_LABELS
+
+	cap confirm numeric var `prefix'_WT
+	if !_rc local _WT `prefix'_WT
 	
 	
 	** If raw data, more processing is required to obtain _ES, _seES, _LCI and _UCI
@@ -233,7 +235,7 @@ program define ipdover, rclass
 		syntax [, CC(passthru) noCC2 COUNTS(string asis) LOGRank OEV * ]
 		local options_ipdm `"`macval(options)'"'
 	
-		cap nois GenEffectVars _USE `invlist', outvlist(`outvlist') ///
+		cap nois GenEffectVars `_USE' `invlist', outvlist(`outvlist') ///
 			summstat(`summstat') `logrank' `cc' `cc2' `level' `options_ipdm'
 		
 		if _rc {
@@ -246,7 +248,7 @@ program define ipdover, rclass
 		// We now have _ES and _seES defined throughout.
 		
 		// Identify excluded studies
-		qui replace _USE=2 if _USE==1 & missing(_ES, _seES)
+		qui replace `_USE'=2 if `_USE'==1 & missing(`_ES', `_seES')
 		
 	}	// end if "`cmdstruc'"=="specific"
 
@@ -258,24 +260,24 @@ program define ipdover, rclass
 	syntax , CMDSTRUC(string) 
 
 	// Create confidence limit variables if necessary
-	cap confirm numeric variable _LCI
+	cap confirm numeric variable `_LCI'
 	if _rc==7 {
-		disp as err "variable {bf:_LCI} exists and is string"
+		disp as err `"variable {bf:`prefix'_LCI} exists and is string"'
 		exit _rc
 	}
-	else if _rc qui gen double _LCI = .
-	cap confirm numeric variable _UCI
+	else if _rc qui gen double `_LCI' = .
+	cap confirm numeric variable `_UCI'
 	if _rc==7 {
-		disp as err "variable {bf:_UCI} exists and is string"
+		disp as err `"variable {bf:`prefix'_UCI} exists and is string"'
 		exit _rc
 	}
-	else if _rc qui gen double _UCI = .	
+	else if _rc qui gen double `_UCI' = .	
 
-	
 	// Generate confidence limit values if necessary
 	// v2.1: ifstmt completely recoded to avoid need for "assert" within GenConfInts
 	// (N.B. only one of _LCI, _UCI needs to be missing for GenConfInts to be run)
-	cap nois GenConfInts `invlist' if inlist(_USE, 1, 3, 5) & !missing(_ES, _seES) & missing(_LCI, _UCI), ///
+	cap nois GenConfInts `invlist' if inlist(`_USE', 1, 3, 5) ///
+		& !missing(`_ES', `_seES') & missing(`_LCI', `_UCI'), ///
 		citype(`citype') df(`df') `level' outvlist(`outvlist')
 	if _rc {
 		if `"`err'"'==`""' {
@@ -293,45 +295,35 @@ program define ipdover, rclass
 	//  (N.B. otherwise, identify them by "_USE==2")
 	if `"`keeporder'"'!=`""' local keepall keepall		// `keeporder' implies `keepall'
 	if `"`keepall'"'==`""' {
-		qui drop if _USE==2
-		summ _ES, meanonly
+		qui drop if `_USE'==2
+		summ `_ES', meanonly
 		if !`r(N)' error 2000
 	}
 	
 	// otherwise, maintain original order if requested
 	if `"`keeporder'"'!=`""' {
 		tempvar tempuse
-		qui gen byte `tempuse' = _USE
-		qui replace `tempuse' = 1 if _USE==2		// keep "insufficient data" studies in original study order (default is to move to end)
+		qui gen byte `tempuse' = `_USE'
+		qui replace `tempuse' = 1 if `_USE'==2		// keep "insufficient data" studies in original study order (default is to move to end)
 	}
-	else local tempuse _USE
+	else local tempuse `_USE'
 	
 	
 	** Finish off: return stats & matrices; print to screen; saving/forestplot
-	
-	// markers of existence of _BY and _OVER
-	// N.B. only _LEVEL is guaranteed to exist.
-	// _OVER will only exist if `overlen'>1 (i.e. if there is a need to distinguish)
-	cap confirm var _BY
-	local _BY = cond(_rc, "", "_BY")
-	cap confirm var _OVER
-	local _OVER = cond(_rc, "", "_OVER")
-
+		
 	// need to sort before forming matrix
 	// missing values in _BY may cause problems, so need to be careful!
-	summ _USE, meanonly
+	summ `_USE', meanonly
 	if r(max)==5 {
 		tempvar use5
-		qui gen byte `use5' = (_USE==5)			// marker of _USE==5 to sort on *before* _BY (to get around the issue of missing _BY values)
+		qui gen byte `use5' = (`_USE'==5)		// marker of _USE==5 to sort on *before* _BY (to get around the issue of missing _BY values)
 	}	
 	local notuse5 = cond("`use5'"=="", "", `"*(!`use5')"')
 		
 	// return matrix of coefficients
-	cap confirm numeric var _WT
-	if !_rc local _WT _WT
 	tempname coeffs
-	sort `use5' `_BY' `_OVER' `tempuse' _LEVEL
-	mkmat `_OVER' `_BY' _LEVEL _ES _seES `_WT' _NN if inlist(_USE, 1, 2), matrix(`coeffs')
+	sort `use5' `_BY' `_OVER' `tempuse' `_LEVEL'
+	mkmat `_OVER' `_BY' `_LEVEL' `_ES' `_seES' `_WT' `_NN' if inlist(`_USE', 1, 2), matrix(`coeffs')
 	return matrix coeffs = `coeffs'
 
 	
@@ -390,11 +382,11 @@ program define ipdover, rclass
 
 		// find maximum length of labels in LHS column
 		tempvar vlablen
-		qui gen long `vlablen' = length(_LABELS)
+		qui gen long `vlablen' = length(`_LABELS')
 		if `"`_BY'"'!=`""' {
 			tempvar bylabels
-			cap decode _BY if inlist(_USE, 1, 2), gen(`bylabels')				// if value label
-			if _rc qui gen `bylabels' = string(_BY) if inlist(_USE, 1, 2)		// if no value label
+			cap decode `_BY' if inlist(`_USE', 1, 2), gen(`bylabels')				// if value label
+			if _rc qui gen `bylabels' = string(`_BY') if inlist(`_USE', 1, 2)		// if no value label
 			qui replace `vlablen' = max(`vlablen', length(`bylabels'))
 			drop `bylabels'
 		}
@@ -415,7 +407,7 @@ program define ipdover, rclass
 		}
 	}
 
-	cap nois DrawTableIPD, overlen(`overlen') lablen(`lablen') stitle(`stitle') etitle(`effect') ///
+	cap nois DrawTableIPD, overlen(`overlen') lablen(`lablen') stitle(`stitle') etitle(`effect') prefix(`prefix') ///
 		`eform' `varlabopt' `table' `overall' `subgroup'
 
 	if _rc {
@@ -432,7 +424,7 @@ program define ipdover, rclass
 	* Prepare dataset for graphics or saving *
 	******************************************
 
-	if `"`saving'"'!=`""' | `"`graph'"'==`""' {
+	if `"`saving'"'!=`""' | `"`clear'"'!=`""' | `"`graph'"'==`""' {
 			
 		quietly {
 				
@@ -446,21 +438,22 @@ program define ipdover, rclass
 				syntax [, STACKlabel * ]
 				local saveopts `"`options'"'
 			}
+			if `"`clearstack'"'!=`""' local stacklabel stacklabel	// July 2021; see explanation above
 
 			// summaryonly (added Sep 2017 for v2.1)
-			if `"`summaryonly'"'!=`""' qui drop if inlist(_USE, 1, 2)
+			if `"`summaryonly'"'!=`""' qui drop if inlist(`_USE', 1, 2)
 			
 			// variable name (titles) for "_LABELS" and "_NN"
 			local labtitle = cond(`"`summaryonly'"'!=`""' & `"`_BY'"'!=`""', `"`byvarlab'"', `"`stitle'"')
-			if `"`stacklabel'"'==`""' label variable _LABELS `"`labtitle'"'
-			else label variable _LABELS		// no title if `stacklabel'
+			if `"`stacklabel'"'==`""' label variable `_LABELS' `"`labtitle'"'
+			else label variable `_LABELS'		// no title if `stacklabel'
 						
-			if `"`: variable label _NN'"'==`""' label variable _NN "No. pts"
+			if `"`: variable label `_NN''"'==`""' label variable `_NN' "No. pts"
 			tempvar strlen
-			gen `strlen' = length(string(_NN))
+			gen `strlen' = length(string(`_NN'))
 			summ `strlen', meanonly
 			local fmtlen = max(`r(max)', 3)		// min of 3, otherwise title ("No. pts") won't fit
-			format _NN %`fmtlen'.0f				// right-justified; fixed format (for integers)
+			format `_NN' %`fmtlen'.0f		// right-justified; fixed format (for integers)
 			drop `strlen'
 
 			
@@ -486,40 +479,40 @@ program define ipdover, rclass
 						tokenize `lrvlist'
 						args n1 n0 e1 e0
 					}			
-					qui gen str _counts1 = string(`e1') + "/" + string(`n1') if inlist(_USE, 1, 2, 3, 5)
-					qui gen str _counts0 = string(`e0') + "/" + string(`n0') if inlist(_USE, 1, 2, 3, 5)
-					label variable _counts1 `"`title1' n/N"'
-					label variable _counts0 `"`title0' n/N"'
+					qui gen str `prefix'_counts1 = string(`e1') + "/" + string(`n1') if inlist(`_USE', 1, 2, 3, 5)
+					qui gen str `prefix'_counts0 = string(`e0') + "/" + string(`n0') if inlist(`_USE', 1, 2, 3, 5)
+					label variable `prefix'_counts1 `"`title1' n/N"'
+					label variable `prefix'_counts0 `"`title0' n/N"'
 					
-					local countsvl _counts1 _counts0
+					local countsvl `prefix'_counts1 `prefix'_counts0
 				}
 						
 				// N mean SD for continuous data
 				// counts = "N, mean (SD) in research arm; N, mean (SD) events/total in control arm"
 				else {
 					args n1 mean1 sd1 n0 mean0 sd0
-					qui gen long _counts1    = `n1' if inlist(_USE, 1, 2, 3, 5)
-					qui gen str  _counts1msd = string(`mean1', "%7.2f") + " (" + string(`sd1', "%7.2f") + ")" if inlist(_USE, 1, 2, 3, 5)
-					label variable _counts1 "N"
-					label variable _counts1msd `"`title1' Mean (SD)"'
+					qui gen long `prefix'_counts1    = `n1' if inlist(`_USE', 1, 2, 3, 5)
+					qui gen str  `prefix'_counts1msd = string(`mean1', "%7.2f") + " (" + string(`sd1', "%7.2f") + ")" if inlist(`_USE', 1, 2, 3, 5)
+					label variable `prefix'_counts1 "N"
+					label variable `prefix'_counts1msd `"`title1' Mean (SD)"'
 							
-					qui gen long _counts0    = `n0' if inlist(_USE, 1, 2, 3, 5)
-					qui gen str  _counts0msd = string(`mean0', "%7.2f") + " (" + string(`sd0', "%7.2f") + ")" if inlist(_USE, 1, 2, 3, 5)
-					label variable _counts0 "N"
-					label variable _counts0msd `"`title0' Mean (SD)"'
+					qui gen long `prefix'_counts0    = `n0' if inlist(`_USE', 1, 2, 3, 5)
+					qui gen str  `prefix'_counts0msd = string(`mean0', "%7.2f") + " (" + string(`sd0', "%7.2f") + ")" if inlist(`_USE', 1, 2, 3, 5)
+					label variable `prefix'_counts0 "N"
+					label variable `prefix'_counts0msd `"`title0' Mean (SD)"'
 					
-					local countsvl _counts1 _counts1msd _counts0 _counts0msd
+					local countsvl `prefix'_counts1 `prefix'_counts1msd `prefix'_counts0 `prefix'_counts0msd
 					
 					// Find max number of digits in `_counts1', `_counts0'
-					summ _counts1, meanonly
+					summ `prefix'_counts1, meanonly
 					if r(N) {
 						local fmtlen = floor(log10(`r(max)'))
-						format _counts1 %`fmtlen'.0f
+						format `prefix'_counts1 %`fmtlen'.0f
 					}
-					summ _counts0, meanonly
+					summ `prefix'_counts0, meanonly
 					if r(N) {
 						local fmtlen = floor(log10(`r(max)'))
-						format _counts0  %`fmtlen'.0f
+						format `prefix'_counts0  %`fmtlen'.0f
 					}
 				}
 
@@ -542,11 +535,11 @@ program define ipdover, rclass
 					format `_OE' %6.2f
 					format `_V' %6.2f
 					
-					if `"`saving'"'!=`""' {
-						qui rename `_OE' _OE
-						qui rename `_V' _V
-						local _OE _OE
-						local _V _V
+					if `"`saving'"'!=`""' | `"`clear'"'!=`""' {
+						qui rename `_OE' `prefix'_OE
+						qui rename `_V' `prefix'_V
+						local _OE `prefix'_OE
+						local _V `prefix'_V
 					}					
 				}
 			}		// end if "`oev'"!=""
@@ -555,7 +548,7 @@ program define ipdover, rclass
 			// Oct 2018:
 			// Now temporarily multiply _USE by 10
 			// to enable intermediate numberings for sorting the extra rows
-			qui replace _USE = _USE * 10
+			qui replace `_USE' = `_USE' * 10
 
 			
 			** Insert extra rows for headings, labels, spacings etc.
@@ -570,55 +563,55 @@ program define ipdover, rclass
 					bysort `_BY' `_OVER' : gen byte `expand' = 1 + 2*(_n==1)`notuse5'
 					expand `expand'
 					replace `expand' = !(`expand' - 1)							// `expand' is now 0 if expanded and 1 otherwise
-					sort `_BY' `_OVER' `expand' _USE _LEVEL
-					by `_BY' `_OVER' : replace _USE = 0  if !`expand' & _n==2		// row for headings
-					by `_BY' `_OVER' : replace _USE = 45 if !`expand' & _n==3		// row for blank line
+					sort `_BY' `_OVER' `expand' `_USE' `_LEVEL'
+					by `_BY' `_OVER' : replace `_USE' = 0  if !`expand' & _n==2		// row for headings
+					by `_BY' `_OVER' : replace `_USE' = 45 if !`expand' & _n==3		// row for blank line
 					if `"`_OVER'"'!=`""' {
-						drop if _USE==0 & missing(_OVER)						// ...but not needed for missing _over
+						drop if `_USE'==0 & missing(`_OVER')					// ...but not needed for missing _over
 					}
 					drop `expand'
 							
 					// Extra subgroup headings if both "by" *and* "over"
 					if `"`_BY'"'!=`""' & `"`_OVER'"'!=`""' {
-						bysort _BY : gen byte `expand' =  1 + 3*(_n==1)`notuse5'
+						bysort `_BY' : gen byte `expand' =  1 + 3*(_n==1)`notuse5'
 						expand `expand'
 						replace `expand' = !(`expand' - 1)					// `expand' is now 0 if expanded and 1 otherwise
-						sort _BY `expand' _USE _LEVEL
-						by _BY : replace _USE = -10 if !`expand' & _n==2  	// row for "by" label (title)
-						by _BY : replace _USE = -5  if !`expand' & _n==3	// row for blank line below title
-						by _BY : replace _USE =  41 if !`expand' & _n==4	// row for blank line to separate "by" groups
-						drop if _USE==41 & missing(_OVER)					// ...but not needed for missing _OVER
-						replace _OVER=. if _USE==41
+						sort `_BY' `expand' `_USE' `_LEVEL'
+						by `_BY' : replace `_USE' = -10 if !`expand' & _n==2  	// row for "by" label (title)
+						by `_BY' : replace `_USE' = -5  if !`expand' & _n==3	// row for blank line below title
+						by `_BY' : replace `_USE' =  41 if !`expand' & _n==4	// row for blank line to separate "by" groups
+						drop if `_USE'==41 & missing(`_OVER')					// ...but not needed for missing _OVER
+						replace `_OVER'=. if `_USE'==41
 						drop `expand'
 					}
 				}
 				else {
-					summ _BY, meanonly
+					summ `_BY', meanonly
 					bysort `_BY' `_OVER' : gen byte `expand' = 1 + (`_BY'==`r(max)')*(_n==_N)`notuse5'
 					expand `expand'
 					replace `expand' = !(`expand' - 1)							// `expand' is now 0 if expanded and 1 otherwise
-					sort `_BY' `_OVER' `expand' _USE _LEVEL
-					by `_BY' `_OVER' : replace _USE = 45 if !`expand' & _n==2	// row for blank line
+					sort `_BY' `_OVER' `expand' `_USE' `_LEVEL'
+					by `_BY' `_OVER' : replace `_USE' = 45 if !`expand' & _n==2	// row for blank line
 					drop `expand'
 				}
 			}
 			
 			* Blank out effect sizes etc. in `expand'-ed rows
-			foreach x of varlist _LABELS _ES _seES _LCI _UCI `_WT' _NN `lcols' `rcols' `countsvl' `_OE' `_V' {
+			foreach x of varlist `_LABELS' `_ES' `_seES' `_LCI' `_UCI' `_WT' `_NN' `lcols' `rcols' `countsvl' `_OE' `_V' {
 				cap confirm numeric var `x'
-				if !_rc replace `x' = . if !inlist(_USE, 10, 20, 30, 50)
-				else replace `x' = "" if !inlist(_USE, 10, 20, 30, 50)
+				if !_rc replace `x' = . if !inlist(`_USE', 10, 20, 30, 50)
+				else replace `x' = "" if !inlist(`_USE', 10, 20, 30, 50)
 			}
-			replace _LEVEL = . if !inlist(_USE, 10, 20)
+			replace `_LEVEL' = . if !inlist(`_USE', 10, 20)
 
 			** Now insert label info into new rows
 			//  over() labels
 			if "`_OVER'"!="" {
 				forvalues h=1/`overlen' {
-					replace _LABELS = `"`varlab`h''"' if _USE==0 & _OVER==`h'
-					label define _OVER `h' `"`varlab`h''"', add
+					replace `_LABELS' = `"`varlab`h''"' if `_USE'==0 & `_OVER'==`h'
+					label define `_OVER' `h' `"`varlab`h''"', add
 				}
-				label values _OVER _OVER
+				label values `_OVER' `_OVER'
 			}
 			
 			// extra row to contain what would otherwise be the leftmost column heading if `stacklabel' specified
@@ -626,37 +619,37 @@ program define ipdover, rclass
 			else if `"`stacklabel'"' != `""' {
 				local newN = _N + 1
 				set obs `newN'
-				replace _USE = -10 in `newN'
+				replace `_USE' = -10 in `newN'
 				if "`use5'"=="" {
 					tempvar use5				// we need `use5' here, regardless of whether it's needed elsewhere 
 					gen byte `use5' = 0
 				}				
 				replace `use5' = -1 in `newN'
-				replace _LABELS = `"`labtitle'"' in `newN'
+				replace `_LABELS' = `"`labtitle'"' in `newN'
 			}
 				
 			// "overall" labels
 			if `"`overall'"'==`""' {
-				replace _LABELS = "Overall" if _USE==50
+				replace `_LABELS' = "Overall" if `_USE'==50
 			}
 			
 			// subgroup ("by") headings & labels
 			if `"`_BY'"'!=`""' {
-				qui levelsof _BY if _USE!=50, missing local(bylist)		// _USE!=5 since that will always be missing
-				local bylab : value label _BY
+				qui levelsof `_BY' if `_USE'!=50, missing local(bylist)		// _USE!=5 since that will always be missing
+				local bylab : value label `_BY'
 				foreach byi of local bylist {
 
 					// headings
 					local bylabi : label `bylab' `byi'
 					if `"`summaryonly'"'==`""' {
-						if `"`_OVER'"'!=`""' replace _LABELS = "`bylabi'" if _USE == -10 & _BY==`byi'
-						else                 replace _LABELS = "`bylabi'" if _USE ==   0 & _BY==`byi'
+						if `"`_OVER'"'!=`""' replace `_LABELS' = "`bylabi'" if `_USE' == -10 & `_BY'==`byi'
+						else                 replace `_LABELS' = "`bylabi'" if `_USE' ==   0 & `_BY'==`byi'
 					}
 					
 					// labels
 					if `"`subgroup'"'==`""' {
 						local sglabel = cond(`"`summaryonly'"'!=`""', `"`bylabi'"', `"Subgroup"')
-						replace _LABELS = "`sglabel'" if _USE==30 & _BY==`byi'
+						replace `_LABELS' = "`sglabel'" if `_USE'==30 & `_BY'==`byi'
 					}
 				}
 			}
@@ -664,69 +657,69 @@ program define ipdover, rclass
 			
 			** Sort, and tidy up
 			if `"`keeporder'"'!=`""' {
-				qui replace `tempuse' = _USE
-				qui replace `tempuse' = 10 if _USE==20		// keep "insufficient data" studies in original study order (default is to move to end)
+				qui replace `tempuse' = `_USE'
+				qui replace `tempuse' = 10 if `_USE'==20		// keep "insufficient data" studies in original study order (default is to move to end)
 			}
-			sort `use5' `_BY' `_OVER' `tempuse' _LEVEL
+			sort `use5' `_BY' `_OVER' `tempuse' `_LEVEL'
 			cap drop `use5'
 			if `"`keeporder'"'!=`""' qui drop `tempuse'
 			
-			replace _USE = 0  if _USE == -10
-			replace _USE = 60 if _USE == 41
-			replace _USE = 30 if _USE == 35
-			replace _USE = 50 if _USE == 55
-			replace _USE = 40 if inlist(_USE, -5, 25, 45, 55)
-			replace _USE = _USE / 10
+			replace `_USE' = 0  if `_USE' == -10
+			replace `_USE' = 60 if `_USE' == 41
+			replace `_USE' = 30 if `_USE' == 35
+			replace `_USE' = 50 if `_USE' == 55
+			replace `_USE' = 40 if inlist(`_USE', -5, 25, 45, 55)
+			replace `_USE' = `_USE' / 10
 
 			// Insert vaccine efficacy
 			if `"`efficacy'"'!=`""' {
-				qui gen _VE = string(100*(1 - exp(_ES)), "%4.0f") + " (" ///
-					+ string(100*(1 - exp(_LCI)), "%4.0f") + ", " ///
-					+ string(100*(1 - exp(_UCI)), "%4.0f") + ")" if inlist(_USE, 1, 3, 5)
+				qui gen `prefix'_VE = string(100*(1 - exp(`_ES')), "%4.0f") + " (" ///
+					+ string(100*(1 - exp(`_LCI')), "%4.0f") + ", " ///
+					+ string(100*(1 - exp(`_UCI')), "%4.0f") + ")" if inlist(`_USE', 1, 3, 5)
 				
-				label variable _VE "Vaccine efficacy (%)"
+				label variable `prefix'_VE "Vaccine efficacy (%)"
 				
-				qui gen `strlen' = length(_VE)
+				qui gen `strlen' = length(`prefix'_VE)
 				summ `strlen', meanonly
-				format %`r(max)'s _VE
-				qui compress _VE
+				format %`r(max)'s `prefix'_VE
+				qui compress `prefix'_VE
 				drop `strlen'
 				
-				local _VE _VE
+				local _VE `prefix'_VE
 			}
 			
 			// having added "overall", het. info etc., re-format _LABELS using study names only
-			gen `strlen' = length(_LABELS)
+			gen `strlen' = length(`_LABELS')
 			if `"`summaryonly'"'==`""' {
-				summ `strlen' if inlist(_USE, 1, 2), meanonly
+				summ `strlen' if inlist(`_USE', 1, 2), meanonly
 			}
 			else summ `strlen', meanonly	// alternative if no study estimates (`summaryonly' should be the only reason for this)
-			format _LABELS %-`r(max)'s		// left-justified; length equal to longest study name
+			format `_LABELS' %-`r(max)'s	// left-justified; length equal to longest study name
 			drop `strlen'
 
 			// Oct 2018: Create _EFFECT (was `estText') here rather than in -forestplot-
 			// so that e.g. user can insert p-values into results set
-			if `"`saving'"'!=`""' {
+			if `"`saving'"'!=`""' | `"`clear'"'!=`""' {
 			
 				// need to peek into `opts_fplot' to extract `dp'
 				local 0 `", `opts_fplot'"'
 				syntax [, DP(integer 2) * ]
 				if `"`eform'"'!=`""' local xexp exp
-				summ _UCI, meanonly
+				summ `_UCI', meanonly
 				local fmtx = max(1, ceil(log10(abs(`xexp'(r(max)))))) + 1 + `dp'
 					
-				gen str _EFFECT = string(`xexp'(_ES), `"%`fmtx'.`dp'f"') if !missing(_ES)
-				replace _EFFECT = _EFFECT + " " if !missing(_EFFECT)
-				replace _EFFECT = _EFFECT + "(" + string(`xexp'(_LCI), `"%`fmtx'.`dp'f"') + ", " + string(`xexp'(_UCI), `"%`fmtx'.`dp'f"') + ")"
-				replace _EFFECT = `""' if !inlist(_USE, 1, 3, 5)
-				replace _EFFECT = "(Insufficient data)" if _USE == 2
+				local _EFFECT `prefix'_EFFECT
+				gen str `_EFFECT' = string(`xexp'(`_ES'), `"%`fmtx'.`dp'f"') if !missing(`_ES')
+				replace `_EFFECT' = `_EFFECT' + " " if !missing(`_EFFECT')
+				replace `_EFFECT' = `_EFFECT' + "(" + string(`xexp'(`_LCI'), `"%`fmtx'.`dp'f"') + ", " + string(`xexp'(`_UCI'), `"%`fmtx'.`dp'f"') + ")"
+				replace `_EFFECT' = `""' if !inlist(`_USE', 1, 3, 5)
+				replace `_EFFECT' = "(Insufficient data)" if `_USE' == 2
 
-				local f: format _EFFECT
+				local f: format `_EFFECT'
 				tokenize `"`f'"', parse("%s")
 				confirm number `2'
-				format _EFFECT %-`2's		// left-justify
-				label variable _EFFECT `"`effect' (`level'% CI)"'
-				local _EFFECT _EFFECT
+				format `_EFFECT' %-`2's		// left-justify
+				label variable `_EFFECT' `"`effect' (`level'% CI)"'
 			}
 			
 		}	// end quietly
@@ -735,31 +728,35 @@ program define ipdover, rclass
 		** Save _dta characteristic containing all the options passed to -forestplot-
 		// so that they may be called automatically using "forestplot, useopts"
 		// (N.B. _USE, _LABELS and _NN should always exist)
-		confirm var _NN
-		local wgtvar = cond("`_WT'"!="", "_WT", "_NN")	// `wgtvar' contains `_WT' (i.e. user-defined weights) if supplied; o/w _NN
-		local wgtopt wgt(`wgtvar')
 		
-		local _NN _NN
-		if `"`wt'"'!=`""' local `wgtvar'	// i.e. clear either `_WT' or `_NN' depending on which is the weighting variable
-		if `"`_WT'"'!=`""' local _NN		// clear `_NN' anyway if user-defined weights
+		// Modified Mar 2022
+		if `"`nonbeta'"'==`""' local wgtvar `_NN'
+		if `"`_WT'"'!=`""' local wgtvar `_WT'			// user-defined weights, if supplied
+		if `"`wgtvar'"'!=`""' {							// -ifstmt- is in case of `nonbeta' (see -ipdmetan- )
+			local wgtopt wgt(`wgtvar')
+			if `"`wgtvar'"'==`"`_NN'"' local _NNopt `_NN'	// include _NN in lcols if wgtvar, but *don't* include user-spec _WT in rcols
+		}
+		// end of modified section
 		
-		local useopts `"use(_USE) labels(_LABELS) `wgtopt' nowt `eform' effect(`effect') `keepall' `opts_fplot'"'
-		if `"`_BY'"'!=`""'    local useopts `"`macval(useopts)' by(_BY)"'
-		if trim(`"`lcols' `_NN' `countsvl' `_OE' `_V'"')!=`""' {
-			local useopts `"`macval(useopts)' lcols(`lcols' `_NN' `countsvl' `_OE' `_V')"'
+		local useopts `"use(`_USE') labels(`_LABELS') `wgtopt' nowt `eform' effect(`effect') `keepall' `opts_fplot'"'
+		if `"`_BY'"'!=`""'    local useopts `"`macval(useopts)' by(`_BY')"'
+		if trim(`"`lcols' `_NNopt' `countsvl' `_OE' `_V'"')!=`""' {
+			local useopts `"`macval(useopts)' lcols(`lcols' `_NNopt' `countsvl' `_OE' `_V')"'
 		}
 		if trim(`"`_VE' `_WT' `rcols'"')!=`""' {
 			local useopts `"`macval(useopts)' rcols(`_VE' `_WT' `rcols')"'
 		}
 		if `"`_WT'"'!=`""' local fpnote `"NOTE: Weights are user-defined"'
-		else local fpnote `"NOTE: Weighting is by sample size"'		
-		local useopts = trim(itrim(`"`macval(useopts)' note(`fpnote')"'))
+		else if `"`_NNopt'"'!=`""' local fpnote `"NOTE: Weighting is by sample size"'
+		if `"`fpnote'"'!=`""' {
+			local useopts = trim(itrim(`"`macval(useopts)' note(`fpnote')"'))
+		}
 		
 		// Store data characteristics
 		// June 2016: in future, could maybe add other warnings here, e.g. continuity correction??
 		// NOTE: Only relevant if `saving' (but setup anyway; no harm done)
 		char define _dta[FPUseOpts] `"`useopts'"'
-		char define _dta[FPUseVarlist] _ES _LCI _UCI
+		char define _dta[FPUseVarlist] `_ES' `_LCI' `_UCI'
 
 	
 		** Pass to forestplot
@@ -770,7 +767,7 @@ program define ipdover, rclass
 			// Modified Jan 30th 2018; `wgtopt' is defined earlier
 			// N.B.   if either `counts' or user-defined weights or no _NN, "nowt" is enforced.
 			// N.B.2. wgt() specifies the weighting variable; nowt suppresses its *display*
-			cap nois forestplot _ES _LCI _UCI, `useopts'
+			cap nois forestplot `_ES' `_LCI' `_UCI', `useopts'
 
 			if _rc {
 				if `"`err'"'==`""' {
@@ -785,27 +782,33 @@ program define ipdover, rclass
 		
 		
 		** Finally, save dataset
-		if `"`saving'"'!=`""' {
-			keep  _USE `_BY' `_OVER' _LEVEL _LABELS _ES _seES _LCI _UCI `_WT' _NN _EFFECT `lcols' `rcols' `countsvl' `_OE' `_V' `_VE'
-			order _USE `_BY' `_OVER' _LEVEL _LABELS _ES _seES _LCI _UCI `_WT' _NN _EFFECT `lcols' `rcols' `countsvl' `_OE' `_V' `_VE'
+		if `"`saving'"'!=`""' | `"`clear'"'!=`""' {
+			keep  `_USE' `_BY' `_OVER' `_LEVEL' `_LABELS' `_ES' `_seES' `_LCI' `_UCI' `_WT' `_NN' `_EFFECT' `lcols' `rcols' `countsvl' `_OE' `_V' `_VE'
+			order `_USE' `_BY' `_OVER' `_LEVEL' `_LABELS' `_ES' `_seES' `_LCI' `_UCI' `_WT' `_NN' `_EFFECT' `lcols' `rcols' `countsvl' `_OE' `_V' `_VE'
 			
 			// Oct 2018:  Variable labels
 			if inlist("`summstat'", "or", "rr", "hr") {
-				label variable _ES "Effect size (interval scale)"
+				label variable `_ES' "Effect size (interval scale)"
 			}
-			else label variable _ES "Effect size"
-			label variable _seES "Standard error of effect size"
+			else label variable `_ES' "Effect size"
+			label variable `_seES' "Standard error of effect size"
 			
-			label variable _LCI "`level'% lower confidence limit"
-			label variable _UCI "`level'% upper confidence limit"
-			char define _LCI[Level] `level'
-			char define _UCI[Level] `level'
+			label variable `_LCI' "`level'% lower confidence limit"
+			label variable `_UCI' "`level'% upper confidence limit"
+			char define `_LCI'[Level] `level'
+			char define `_UCI'[Level] `level'
 			
-			label variable _NN "No. pts"
+			label variable `_NN' "No. pts"
 		
 			label data `"Results set created by ipdover"'
 			qui compress
-			qui save `"`saving'"', `saveopts'
+			
+			if `"`saving'"'!=`""' {
+				qui save `"`saving'"', `saveopts'
+			}
+			if `"`clear'"'!=`""' {
+				restore, not
+			}
 		}				
 
 	}	// end if `"`saving'"'!=`""' | `"`graph'"'==`""'
@@ -1318,7 +1321,7 @@ end
 program define DrawTableIPD
 
 	syntax, OVERLEN(integer) ///
-		[LABLEN(integer 0) STITLE(string asis) ETITLE(string asis) ///
+		[PREfix(name local) LABLEN(integer 0) STITLE(string asis) ETITLE(string asis) ///
 		EFORM noTABle noOVerall noSUbgroup * ]
 
 	tempvar obs
@@ -1326,12 +1329,16 @@ program define DrawTableIPD
 	sort `obs'
 
 	// EXTRA LINES FOR USE WITH IPDOVER
-	cap confirm var _BY
-	local _BY = cond(_rc, "", "_BY")
-	cap confirm var _NN
-	local _NN = cond(_rc, "", "_NN")
-	cap confirm var _OVER
-	local _OVER = cond(_rc, "", "_OVER")
+	cap confirm var `prefix'_BY
+	if !_rc local _BY `prefix'_BY
+	cap confirm var `prefix'_NN
+	if !_rc local _NN `prefix'_NN
+	cap confirm var `prefix'_OVER
+	if !_rc local _OVER `prefix'_OVER
+	
+	foreach x in _USE _LABELS _ES _LCI _UCI {
+	    local `x' `prefix'`x'
+	}
 	
 	local swidth = 25							// define `swidth' in case noTAB
 	if `"`table'"'==`""' {
@@ -1400,8 +1407,8 @@ program define DrawTableIPD
 
 		*** Loop over studies, and subgroups if appropriate
 		if `"`_BY'"'!=`""' {
-			qui levelsof _BY if _USE!=5, missing local(bylist)		// _USE!=5 since that will always be missing!
-			local bylab : value label _BY
+			qui levelsof `_BY' if `_USE'!=5, missing local(bylist)		// _USE!=5 since that will always be missing!
+			local bylab : value label `_BY'
 		}
 		local nby = max(1, `: word count `bylist'')
 		
@@ -1417,8 +1424,8 @@ program define DrawTableIPD
 			
 			if `"`_BY'"'!=`""' {
 				local byi : word `i' of `bylist'
-				qui replace `touse' = (_BY==`byi')
-				summ _ES if `touse' & _USE==1, meanonly
+				qui replace `touse' = (`_BY'==`byi')
+				summ `_ES' if `touse' & `_USE'==1, meanonly
 				if !r(N) local nodata `"{col `=`swidth'+4'} (No subgroup data)"'
 				else local K`i' = r(N)
 				
@@ -1434,10 +1441,10 @@ program define DrawTableIPD
 			forvalues h=1/`overlen' {
 				gen byte `touse2' = `touse'
 				if `"`_OVER'"'!=`""' {
-					qui replace `touse2' = `touse' * (_OVER==`h')
+					qui replace `touse2' = `touse' * (`_OVER'==`h')
 				}
 				
-				summ `obs' if `touse2' & inlist(_USE, 1, 2), meanonly
+				summ `obs' if `touse2' & inlist(`_USE', 1, 2), meanonly
 				
 				// EXTRA LINES FOR USE WITH IPDOVER
 				if `overlen'>1 {
@@ -1449,22 +1456,22 @@ program define DrawTableIPD
 				
 				if r(N) {
 					forvalues k = `r(min)' / `r(max)' {
-						local _labels_ = _LABELS[`k']
+						local _labels_ = `_LABELS'[`k']
 						
-						summ `obs' if `touse2' & _USE==1 & _n==`k', meanonly	// 30th March 2017: can this be improved/made more efficient?
+						summ `obs' if `touse2' & `_USE'==1 & _n==`k', meanonly	// 30th March 2017: can this be improved/made more efficient?
 						if !r(N) {
 							di as text substr(`"`_labels_'"', 1, 32) `"{col `=`swidth'+1'}{c |}{col `=`swidth'+4'} (Insufficient data)"'
 						}
 						else {
-							scalar `_ES_'  =  _ES[`k']
-							scalar `_LCI_' = _LCI[`k']
-							scalar `_UCI_' = _UCI[`k']
-							local _labels_ = _LABELS[`k']
+							scalar `_ES_'  =  `_ES'[`k']
+							scalar `_LCI_' = `_LCI'[`k']
+							scalar `_UCI_' = `_UCI'[`k']
+							local _labels_ = `_LABELS'[`k']
 
 							di as text substr(`"`_labels_'"', 1, 32) `"{col `=`swidth'+1'}{c |}{col `=`swidth'+`ewidth'-6'}"' ///
 								as res %7.3f `xexp'(`_ES_') `"{col `=`swidth'+`ewidth'+5'}"' ///
 								as res %7.3f `xexp'(`_LCI_') `"{col `=`swidth'+`ewidth'+15'}"' ///
-								as res %7.3f `xexp'(`_UCI_') `"{col `=`swidth'+`ewidth'+26'}"' %7.0f _NN[`k']
+								as res %7.3f `xexp'(`_UCI_') `"{col `=`swidth'+`ewidth'+26'}"' %7.0f `_NN'[`k']
 						}
 					}
 				}
@@ -1477,19 +1484,19 @@ program define DrawTableIPD
 				di as text `"{col `=`swidth'+1'}{c |}"'
 
 				local byi: word `i' of `bylist'
-				summ `obs' if `touse' & _USE==3, meanonly
+				summ `obs' if `touse' & `_USE'==3, meanonly
 				if !r(N) {
 					di as text `"Effect in subset{col `=`swidth'+1'}{c |}{col `=`swidth'+4'} (Insufficient data)"'
 				}
 				else {		
-					scalar `_ES_'  =  _ES[`r(min)']
-					scalar `_LCI_' = _LCI[`r(min)']
-					scalar `_UCI_' = _UCI[`r(min)']
+					scalar `_ES_'  =  `_ES'[`r(min)']
+					scalar `_LCI_' = `_LCI'[`r(min)']
+					scalar `_UCI_' = `_UCI'[`r(min)']
 					
 					di as text `"Effect in subset{col `=`swidth'+1'}{c |}{col `=`swidth'+`ewidth'-6'}"' ///
 						as res %7.3f `xexp'(`_ES_') `"{col `=`swidth'+`ewidth'+5'}"' ///
 						as res %7.3f `xexp'(`_LCI_') `"{col `=`swidth'+`ewidth'+15'}"' ///
-						as res %7.3f `xexp'(`_UCI_') `"{col `=`swidth'+`ewidth'+26'}"' %7.0f _NN[`r(min)']
+						as res %7.3f `xexp'(`_UCI_') `"{col `=`swidth'+`ewidth'+26'}"' %7.0f `_NN'[`r(min)']
 				}
 			}
 		}		// end forvalues i=1/`nby'
@@ -1501,19 +1508,19 @@ program define DrawTableIPD
 		if `"`overall'"'==`""' {
 			di as text `"{hline `swidth'}{c +}{hline `=`ewidth'+35'}"'
 		
-			summ `obs' if _USE==5, meanonly
+			summ `obs' if `_USE'==5, meanonly
 			if !r(N) {
 				di as text `"Overall effect{col `=`swidth'+1'}{c |}{col `=`swidth'+4'} (Insufficient data)"'
 			}
 			else {
-				scalar `_ES_'  =  _ES[`r(min)']
-				scalar `_LCI_' = _LCI[`r(min)']
-				scalar `_UCI_' = _UCI[`r(min)']
+				scalar `_ES_'  =  `_ES'[`r(min)']
+				scalar `_LCI_' = `_LCI'[`r(min)']
+				scalar `_UCI_' = `_UCI'[`r(min)']
 				
 				di as text %-20s `"Overall effect{col `=`swidth'+1'}{c |}{col `=`swidth'+`ewidth'-6'}"' ///
 					as res %7.3f `xexp'(`_ES_') `"{col `=`swidth'+`ewidth'+5'}"' ///
 					as res %7.3f `xexp'(`_LCI_') `"{col `=`swidth'+`ewidth'+15'}"' ///
-					as res %7.3f `xexp'(`_UCI_') `"{col `=`swidth'+`ewidth'+26'}"' %7.0f _NN[`r(min)']
+					as res %7.3f `xexp'(`_UCI_') `"{col `=`swidth'+`ewidth'+26'}"' %7.0f `_NN'[`r(min)']
 			}
 		}
 		di as text `"{hline `swidth'}{c BT}{hline `=`ewidth'+35'}"'
@@ -1723,3 +1730,44 @@ program define my_prefix_savingIPD, sclass
 	sreturn local options `"`replace' `options'"'
 
 end
+
+
+
+
+
+**************************************************************
+
+* Release notes prior to v4.00
+* originally created by David Fisher, February 2013
+
+* version 1.0  David Fisher  31jan2014
+* version 1.01 David Fisher  11aug2016
+
+* August 2016:  began adapting code for Syntax 2 of -ipdmetan- (see help file)
+
+* March 2017
+// Needs further thought re behaviour of keepall, "study, m" and "by, m"
+// when some combinations of study and by do not exist in the data.
+// Should they be displayed nevertheless, with the message "(No subgroup data)" or similar?
+// (note this is an ipdover issue rather than an ipdmetan/admetan issue)
+// (this is for the next version of the package)
+
+* version 2.0  David Fisher  11may2017
+* Major update of all parts of the ipdmetan package, including ipdover.ado
+
+* version 2.1  David Fisher  14sep2017
+// various bug fixes
+// improvements to behaviour if some estimates are missing
+
+* version 3.0  David Fisher  08nov2018
+// fixed bug preventing options to [command]
+
+// upversioned to v3.0 to match with ipdmetan and admetan
+// added `useopts' functionality
+
+* version 3.1  David Fisher 03dec2018
+// fixed bug in RD option
+
+* version 3.2  David Fisher 28jan2019
+// no changes to code; upversioned to match admetan/ipdmetan
+// but a minor change to text in the help file

@@ -5,8 +5,7 @@ d English to ISO 3-, 2-letter or numeric codes or build dimensions
 d for a balanced panel dataset for the whole world (as of ISO's
 d list of countries) in three lines of Stata code.    Ancillary
 d files contain extended ISO 639 (language), 3166 (country),	  
-d and 4217 (currency) classifications with names in four languages. 
-d
+d and 4217 (currency) classifications with names in four languages. d
 d KW: data management
 d KW: country codes
 d KW: ISO
@@ -20,7 +19,7 @@ d Author: Ilya Bolotov, Prague University of Economics and Business
 d Support: email ilya.bolotov@@vse.cz
 d
 f pyconvertu.ado
-F pyconvertu_classification.json
+f pyconvertu_classification.json
 f pyconvertu.sthlp
 f ../i/iso0639-2_all.json
 f ../i/iso3166-1_all.json

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.2.5  31mar2022}{...}
+{* *! version 1.2.6  07oct2022}{...}
 {viewerjumpto "Syntax" "xtimportu##syntax"}{...}
 {viewerjumpto "Description" "xtimportu##description"}{...}
 {viewerjumpto "Options" "xtimportu##options"}{...}
@@ -29,7 +29,7 @@ Unicode support, the default being ISO 3166-1 (country codes and names)
 {synopt :{opth to:(strings:string)}}is a classification from the JSON file,
         by default, {bf:"iso3"}, {bf:"iso2"}, {bf:"isoN"}, {bf:"name_en"},
         or {bf:"name_fr"}, or a filepath (see the usage of argument
-		{bf:__dump}) {p_end}
+        {bf:__dump}) {p_end}
 
 {syntab:Write to data}
 {p2coldent :* {opth g:enerate(strings:string)}}specify a new
@@ -179,17 +179,37 @@ For detailed information on {cmd:python set exec}, consult {helpb python}.
         * print metadata and sources for the default JSON file
         {cmd:. pyconvertu __info}
 
-        * generate panel dimensions (ISO 3166-1 alpha-3 codes for the years 2000-2020)
+        * generate panel dimensions
+        * (ISO 3166-1 alpha-3 codes for the years 2000-2020)
         {cmd:. clear}
         {cmd:. pyconvertu __classification, to(iso3) gen(iso3)}
         {cmd:. expand `=(2020 - 2000) + 1'}
         {cmd:. by iso3, sort: gen year = 2000 + (_n - 1)}
 
-        * convert ISO 3166-1 alpha-3 to ISO 3166-1 numeric (where possible) in a dataset
+        * convert ISO 3166-1 alpha-3 to ISO 3166-1 numeric (where possible)
+        * in a dataset
         {cmd:. ssc install wbopendata}
         {cmd:. sysuse world-d, clear}
         {cmd:. pyconvertu countrycode, to(isoN) replace}
 
-        * same example, print the result of conversion instead of writing it to data
+        * same example, print the result of conversion instead of writing it
+        * to data
         {cmd:. sysuse world-d, clear}
         {cmd:. pyconvertu countrycode, to(isoN) print}
+
+{title:Author}
+
+{pstd}
+{bf:Ilya Bolotov}
+{break}Prague University of Economics and Business
+{break}Prague, Czech Republic
+{break}{browse "mailto:ilya.bolotov@vse.cz":ilya.bolotov@vse.cz}
+
+{pstd}
+    Thanks for citing this software and my works on the topic:
+
+{p 8 8 2}
+    Bolotov, I. (2021). PYCONVERTU: Stata module to convert a string variable
+    into a classification from the default or user-provided JSON file with
+    the help of Python 3. Available from
+    {browse "https://ideas.repec.org/c/boc/bocode/s458892.html"}.

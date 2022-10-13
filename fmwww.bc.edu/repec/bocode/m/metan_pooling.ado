@@ -8,7 +8,8 @@
 // - Content of subroutine metan_pooling.Heterogi is identical to that of subroutine metan.Heterogi
 // - Content of Mata subroutines is identical to that of compiled Mata library lmetan.mlib
 
-*! version 4.05  29nov2021
+*  version 4.05  29nov2021
+*! version 4.06  12oct2022
 *! Current version by David Fisher
 *! Previous versions by Ross Harris and Michael Bradburn
 
@@ -19,27 +20,35 @@ program define metan_pooling, rclass
 		[SUMMSTAT(name) TESTSTAT(name) QSTAT(passthru) TESTBased ISQParam ///
 		OEVLIST(varlist numeric min=2 max=2) INVLIST(varlist numeric min=2 max=6) ///
 		NPTS(varname numeric) WGT(varname numeric) WTVAR(varname numeric) ///
-		HKsj KRoger BArtlett SKovgaard RObust LOGRank PRoportion TN(string) /*noTRUNCate*/ TRUNCate(string) EIM OIM ///
-		ISQSA(real 80) TSQSA(real -99) QWT(varname numeric) INIT(name) OLevel(cilevel) HLevel(cilevel) RFLevel(cilevel) ///
+		HKsj KRoger BArtlett SKovgaard RObust LOGRank PRoportion TN(string) POVERV(real 2) /*noTRUNCate*/ TRUNCate(string) EIM OIM ///
+		ISQSA(real 80) TSQSA(real -99) QWT(varname numeric) INIT(name) OLevel(cilevel) HLevel(cilevel) RFLevel(cilevel) CItype(passthru) ///
 		ITOL(real 1.0x-1a) MAXTausq(real -9) REPS(real 1000) MAXITer(real 1000) QUADPTS(real 100) DIFficult TECHnique(string) * ]
 
 	// N.B. extra options should just be those allowed for PerformPoolingMH
 
-	marksample touse			// note: *NO* "novarlist" option here
-	local pvlist `varlist'		// for clarity
-	
 	// if no wtvar, gen as tempvar
 	if `"`wtvar'"'==`""' {
 		local wtvar
 		tempvar wtvar
 		qui gen `wtvar' = .
 	}	
+	else {
+		marksample touse, novarlist		// June 2022: temporary marksample, consistent across models (c.f. I-V and no CC; see elsewhere)
+		qui replace `wtvar' = . if `touse'
+	}
+
+	local pvlist `varlist'		// for clarity
+	tokenize `pvlist'
+	args _ES _seES
+	qui replace `_seES' = . if float(`_seES')<=0	// added June 2022
+	marksample touse			// note: *NO* "novarlist" option here	
 	
 	// Firstly, check whether only one study
 	//   if so, cancel random-effects and set to defaults: iv, cochranq, testbased
 	// t-critval ==> es, se, lci, uci returned but nothing else
 	tempname k	
 	qui count if `touse'
+	if !r(N) exit 2000		// no observations *after* effect of marksample, novarlist
 	scalar `k' = r(N)
 	if `k' == 1 {
 		if "`model'"!="peto" {
@@ -48,9 +57,17 @@ program define metan_pooling, rclass
 		}
 		if "`teststat'"!="z" local teststat z
 		local hksj
-		c_local nsg = 1
 	}
-
+	
+	// New June 2022
+	if `"`npts'"'!=`""' {
+		summ `npts' if `touse', meanonly
+		return scalar k_npts = r(N)
+		if r(N) return scalar npts = r(sum)
+		// if r(N)!=`k' c_local nmiss = 1		// marker of "pt. numbers are missing in one or more trials"
+	}
+	return scalar k = `k'
+	
 	
 	** Chi-squared test (OR only; includes Peto OR) or logrank HR
 	if "`oevlist'"!="" {
@@ -74,9 +91,6 @@ program define metan_pooling, rclass
 	*************************************
 	* Standard inverse-variance methods *
 	*************************************
-	
-	tokenize `pvlist'
-	args _ES _seES
 		
 	tempname eff se_eff crit pvalue
 	qui replace `wtvar' = 1/`_seES'^2 if `touse'
@@ -88,10 +102,11 @@ program define metan_pooling, rclass
 	tempvar qhet
 	qui gen double `qhet' = `wtvar'*((`_ES' - `eff')^2)
 	summ `qhet' if `touse', meanonly
-
+	assert r(N) == `k'
+	
 	tempname Q Qdf
-	scalar `Q'   = cond(r(N), r(sum), .)
-	scalar `Qdf' = cond(r(N), r(N)-1, .)
+	scalar `Q' = r(sum)
+	scalar `Qdf' = r(N) - 1
 	
 	// Derive sigmasq and tausq
 	tempname c sigmasq tausq
@@ -192,6 +207,7 @@ program define metan_pooling, rclass
 		else if inlist("`model'", "b0", "bp") {
 			scalar `tausq' = `var_eff'*(`k' - 1)/(`k' + 1)
 			if "`model'"=="b0" {
+				confirm numeric var `npts'
 				summ `npts' if `touse', meanonly	
 				scalar `tausq' = `tausq' - ( (`r(sum)' - `k')*`Qdf'*`meanv'/((`k' + 1)*(`r(sum)' - `k' + 2)) )
 			}
@@ -267,7 +283,7 @@ program define metan_pooling, rclass
 			if "`technique'"=="" local technique nr								// default = nr
 			cap nois mata: REML("`_ES' `_seES'", "`touse'", `hlevel', (`maxtausq', `itol', `maxiter'), "`hmethod'", "`technique'")
 			if `"`r(ll_negtsq)'"'!=`""' {
-			    nois disp `"{error}tau-squared value from last iteration was negative, so has been set to zero"'
+			    disp `"{error}tau-squared value from last iteration was negative, so has been set to zero"'
 			}
 			return scalar converged = r(converged)
 			return scalar tsq_var = r(tsq_var)
@@ -285,8 +301,8 @@ program define metan_pooling, rclass
 			if "`technique'"=="" local technique nr								// default = nr
 			cap nois mata: MLPL("`_ES' `_seES'", "`touse'", (`olevel', `hlevel'), (`maxtausq', `itol', `maxiter'), "`hmethod'", "`technique'", "`mlpl'")			
 			if `"`r(ll_negtsq)'"'!=`""' {
-			    nois disp `"{error}tau-squared value from last iteration was negative, so has been set to zero"'
-			}
+			    disp `"{error}tau-squared value from last iteration was negative, so has been set to zero"'
+			}			
 			return scalar converged = r(converged)
 			return scalar tsq_var = r(tsq_var)
 			return scalar ll = r(ll)
@@ -314,7 +330,7 @@ program define metan_pooling, rclass
 				nois disp as err "Mata compile-time or run-time error"
 				exit _rc
 			}
-			else if _rc disp `"{error}Error(s) detected during running of Mata code; please check output"'
+			else if _rc nois disp `"{error}Error(s) detected during running of Mata code; please check output"'
 		}
 
 		scalar `tausq' = r(tausq)
@@ -339,37 +355,6 @@ program define metan_pooling, rclass
 	}	// end if inlist("`model'", "dlb", "mp", "ml", "pl", "reml")
 		// [i.e. iterative tausq estimators]
 	
-	
-	// SEP 2020: Remove this option.  If MP CI is desired, the entire MP model can be run.
-	// (Doesn't affect forestplot, so why is it needed?  just makes options more complicated)
-	/*
-	// Viechtbauer Q-profiling routine for tausq CI, if *not* Mandel-Paule tsq estimator
-	// (Viechtbauer Stat Med 2007; 26: 37-52)
-	if "`hetci'"=="qprofile" & "`model'"!="mp" {
-		cap nois mata: GenQ("`_ES' `_seES'", "`touse'", `hlevel', (`maxtausq', `itol', `maxiter'))
-		
-		if _rc {
-			if _rc==1 exit _rc				// User break
-			else if _rc==2000 exit _rc		// No studies found with sufficient data to be analysed
-			else if _rc>=3000 {
-				nois disp as err "Mata compile-time or run-time error"
-				exit _rc
-			}
-			else if _rc disp `"{error}Error(s) detected during running of Mata code; please check output"'
-		}				
-	
-		tempname tsq_lci tsq_uci
-		scalar `tsq_lci' = cond(r(rc_tsq_lci)>1 & r(tsq_lci)!=0, ., r(tsq_lci))
-		scalar `tsq_uci' = cond(r(rc_tsq_uci)>1, ., r(tsq_uci))
-		
-		// return extra scalars
-		return scalar tsq_lci  = `tsq_lci'
-		return scalar tsq_uci  = `tsq_uci'
-		return scalar rc_tsq_lci = r(rc_tsq_lci)
-		return scalar rc_tsq_uci = r(rc_tsq_uci)
-	
-	}
-	*/
 	// end of "Iterative, using Mata" section
 
 
@@ -426,30 +411,46 @@ program define metan_pooling, rclass
 	
 	// Quality effects (QE) model (extension of IVhet to incorporate quality scores)
 	// (Doi et al, Contemporary Clinical Trials 2015; 45: 123-9)
+	// DF: Modified Dec 2021 to avoid rounding errors/negative weights when `qwt' is zero
 	if "`model'"=="qe" {
-		tempvar newqe tauqe
-		
-		// re-scale scores relative to highest value
-		confirm numeric variable `qwt'
-		summ `qwt' if `touse', meanonly
-		qui gen double `newqe' = `qwt'/r(max)
 
-		// taui and tauhati
-		qui gen double `tauqe' = (1 - `newqe')/(`_seES'*`_seES'*`Qdf')
-		summ `tauqe' if `touse', meanonly
-		local sumtauqe = r(sum)
-
-		summ `newqe' if `touse', meanonly
-		if r(min) < 1 {				// additional correction if any `newqe' are < 1, to avoid neg. weights
-			tempvar newqe_adj
-			qui gen double `newqe_adj' = `newqe' + r(sum)*`tauqe'/(`sumtauqe'*`Qdf')
-			summ `newqe_adj' if `touse', meanonly
-			qui replace `tauqe' = (`sumtauqe'*`k'*`newqe_adj'/r(sum)) - `tauqe'
+		// check `qwt' >= 0
+		cap {
+			confirm numeric variable `qwt'
+			summ `qwt' if `touse', meanonly
+			assert r(min) >= 0
 		}
-		else qui replace `tauqe' = (`sumtauqe'*`k'*`newqe'/r(sum)) - `tauqe'
+		if _rc {
+			nois disp as err `"error in option {bf:qwt()}: variable {bf:`qwt'} must be numeric with no negative values"'
+			exit _rc
+		}
+
+		// re-scale scores relative to highest value
+		tempvar newqe tauqe
+		tempname sumwt sumnewqe
+		summ `wtvar' if `touse', meanonly
+		scalar `sumwt' = r(sum)				// sum of original weights (inverse-variances)
+		summ `qwt' if `touse', meanonly
+		qui gen double `newqe' = `qwt' / r(max)
+		summ `newqe' if `touse', meanonly
+		scalar `sumnewqe' = r(sum)
 		
-		// Point estimate uses weights = qi/vi + tauhati
-		qui replace `wtvar' = (`newqe'/(`_seES'^2)) + `tauqe' if `touse'
+		// correction to reduce estimator bias (Appendix A of CCT 2015, but without factor of 1/(k-1) as this cancels anyway)
+		qui gen double `tauqe' = 0
+		qui replace `tauqe' = `wtvar' * (1 - `newqe') if `newqe' < 1
+		summ `tauqe' if `touse', meanonly
+		
+		// Point estimate uses weights = qi/vi + tauhati
+		// ...but expressions presented in CCT 2015 involve addition & subtraction of very similar quantities with risk of rounding error.
+		// Instead, we use the expression below, which can be shown to be equivalent to Equation 7 of CCT 2015
+		qui replace `wtvar' = `newqe' * (`wtvar' + (r(sum) / `sumnewqe')) if `touse'
+		
+		summ `wtvar' if `touse', meanonly
+		cap assert float(r(sum))==float(`sumwt')	// compare sum of new weights with sum of original weights
+		if _rc {
+			nois disp as err "Error encountered whilst calculating quality weights"		// DF Dec 2021: this error should never be seen
+			exit _rc
+		}
 	}
 	
 	// Biggerstaff and Tweedie approximate Gamma-based weighting
@@ -462,7 +463,7 @@ program define metan_pooling, rclass
 				nois disp as err "Mata compile-time or run-time error"
 				exit _rc
 			}
-			else if _rc disp `"{error}Error(s) detected during running of Mata code; please check output"'
+			else if _rc nois disp `"{error}Error(s) detected during running of Mata code; please check output"'
 		}
 		
 		// check tausq limits and set to missing if necessary
@@ -496,7 +497,7 @@ program define metan_pooling, rclass
 				nois disp as err "Mata compile-time or run-time error"
 				exit _rc
 			}
-			else if _rc disp `"{error}Error(s) detected during running of Mata code; please check output"'
+			else if _rc nois disp `"{error}Error(s) detected during running of Mata code; please check output"'
 		}
 		
 		return scalar u = r(u)
@@ -541,7 +542,7 @@ program define metan_pooling, rclass
 	
 	// Standard weighting based on additive tau-squared
 	// (N.B. if iv or mu, eff and se_eff have already been calculated)
-	else if !inlist("`model'", "iv", "peto", "mu") {
+	else if !inlist("`model'", "iv", "peto", "mu") {		
 		qui replace `wtvar' = 1/(`_seES'^2 + `tausq') if `touse'
 		summ `_ES' [aw=`wtvar'] if `touse', meanonly
 		scalar `eff' = r(mean)
@@ -551,6 +552,7 @@ program define metan_pooling, rclass
 	// Return weights for CumInfLoop
 	summ `wtvar' if `touse', meanonly
 	return scalar totwt = cond(r(N), r(sum), .)		// sum of (non-normalised) weights	
+
 
 
 	*********************************
@@ -578,16 +580,15 @@ program define metan_pooling, rclass
 	// Hartung-Knapp-Sidik-Jonkman variance estimator
 	// (Roever et al, BMC Med Res Methodol 2015; Jackson et al, Stat Med 2017; van Aert & Jackson, Stat Med 2019)
 
+	local nzt = 0
 	if "`model'"=="mu" | "`hksj'"!="" {
 		tempname tcrit zcrit
 		scalar `zcrit' = invnormal(.5 + `olevel'/200)
 		scalar `tcrit' = invttail(`Qdf', .5 - `olevel'/200)
 		
 		// van Aert & Jackson 2019: truncate at z/t
-		if `"`truncate'"'==`"zovert"' scalar `Hstar' = max(`zcrit'/`tcrit', `Hstar')
+		if "`truncate'"=="zovert" scalar `Hstar' = max(`zcrit'/`tcrit', `Hstar')
 		else {
-			if "`hksj'"!="" & `Hstar' < `zcrit'/`tcrit' c_local nzt = 1		// setup error display for later
-		
 			// (e.g.) Roever 2015: truncate at 1
 			// i.e. don't use if *under* dispersion present
 			if inlist(`"`truncate'"', `"one"', `"1"') scalar `Hstar' = max(1, `Hstar')
@@ -595,10 +596,12 @@ program define metan_pooling, rclass
 				nois disp as err `"invalid use of {bf:truncate()} option"'
 				exit 184
 			}
+			if "`hksj'"!="" & `Hstar' < `zcrit'/`tcrit' local nzt = 1		// setup error display for later
 		}
 		scalar `se_eff' = `se_eff' * `Hstar'
 	}
 	return scalar Hstar = `Hstar'
+	return scalar nzt = `nzt'
 
 	// Sidik-Jonkman robust ("sandwich-like") variance estimator
 	// (Sidik and Jonkman, Comp Stat Data Analysis 2006)
@@ -670,8 +673,7 @@ program define metan_pooling, rclass
 	
 	// Predictive intervals
 	// (uses k-2 df, c.f. Higgins & Thompson 2009; but also see e.g. http://www.metafor-project.org/doku.php/faq#for_random-effects_models_fitt)
-	if `k' < 3 c_local nrfd = 1		// setup error display for later
-	else {
+	if `k' >= 3 {
 		tempname rfcritval rflci rfuci
 		scalar `rfcritval' = invttail(`k'-2, .5 - `rflevel'/200)
 		scalar `rflci' = `eff' - `rfcritval' * sqrt(`tausq' + `se_eff'^2)
@@ -683,131 +685,231 @@ program define metan_pooling, rclass
 	
 	// Proportions
 	if "`proportion'"!="" {
-		tempname z eff_lci eff_uci
-		scalar `z' = `eff'/`se_eff'
+		tempname eff_lci eff_uci
 		scalar `crit' = invnormal(.5 + `olevel'/200)
-		scalar `pvalue' = 2*normal(-abs(`z'))
 		scalar `eff_lci' = `eff' - `crit' * `se_eff'
 		scalar `eff_uci' = `eff' + `crit' * `se_eff'
-
-		if "`summstat'"=="ftukey" {
-			tokenize `invlist'
-			args succ _NN
+		
+		
+		** Back-transforms: special case
+		// if k = 1, pass to GenConfIntsPr
+		if `k'==1 {
+			GenConfIntsPr `invlist' if `touse', `citype' level(`olevel')
+			return scalar prop_eff = r(es)
+			return scalar prop_lci = r(lb)
+			return scalar prop_uci = r(ub)
 			
-			tempname hmean mintes maxtes prop_eff prop_lci prop_uci
-			qui ameans `_NN' if `touse'
-			if      "`tn'"=="arithmetic" scalar `hmean' = r(mean)				// Arithmetic mean
-			else if "`tn'"=="geometric"  scalar `hmean' = r(mean_g)				// Geometric mean
-			else if inlist("`tn'", "", "harmonic") scalar `hmean' = r(mean_h)	// Harmonic mean (Miller 1978; default)
-			else if "`tn'"=="ivariance"  scalar `hmean' = 1/`se_eff'^2			// Barendregt & Doi's suggestion: inverse of pooled variance
-			else {
-				confirm number `tn'
-				scalar `hmean' = `tn'
-			}
-			
-			// recall: transform is = asin(sqrt(`succ' / (`_NN' + 1 ))) + asin(sqrt((`succ' + 1 ) / (`_NN' + 1 )))
-			// so to get our limits `mintes' and `maxtes', we subsitute `hmean' for `_NN', and let `succ' vary from 0 to `hmean'.
-			scalar `mintes' = /*asin(sqrt(0      /(`hmean' + 1))) + */        asin(sqrt((0       + 1)/(`hmean' + 1 )))
-			scalar `maxtes' =   asin(sqrt(`hmean'/(`hmean' + 1))) + asin(1) /*asin(sqrt((`hmean' + 1)/(`hmean' + 1 )))*/
-
-			// Barendregt & Doi use s/v < 2 or (1-s)/v < 2
-			// where s = sin(eff/2)^2 ~= d/n
-			// and where v = se_eff ~= 1/n
-			// ==> s/v ~= d;  (1-s)/v ~= n-d
-			
-			// ... in order to avoid "blow up" when sin(eff) is near zero
-			// Personal communication:  "blow up" may result in confidence limits which do not include the point estimate
-			// Therefore, test for this; and use simplified formula sin(eff)^2 in those cases
-
-			if      `eff' < `mintes' scalar `prop_eff' = 0
-			else if `eff' > `maxtes' scalar `prop_eff' = 1
-			else scalar `prop_eff' = 0.5 * (1 - sign(cos(`eff')) * sqrt(1 - (sin(`eff') + (sin(`eff') - 1/sin(`eff')) / `hmean')^2 ) )
-			
-			if      `eff_lci' < `mintes' scalar `prop_lci' = 0
-			else if `eff_lci' > `maxtes' scalar `prop_lci' = 1
-			else scalar `prop_lci' = 0.5 * (1 - sign(cos(`eff_lci')) * sqrt(1 - (sin(`eff_lci') + (sin(`eff_lci') - 1/sin(`eff_lci')) / `hmean')^2 ) )
-
-			if      `eff_uci' < `mintes' scalar `prop_uci' = 0
-			else if `eff_uci' > `maxtes' scalar `prop_uci' = 1
-			else scalar `prop_uci' = 0.5 * (1 - sign(cos(`eff_uci')) * sqrt(1 - (sin(`eff_uci') + (sin(`eff_uci') - 1/sin(`eff_uci')) / `hmean')^2 ) )
-			
-			cap {
-			    assert `prop_lci' <= `prop_eff' & `prop_eff' <= `prop_uci'
-				assert !missing(`prop_eff', `prop_lci', `prop_uci')
-			}
-			if _rc {
-				scalar `prop_eff' = sin(`eff'    /2)^2
-				scalar `prop_lci' = sin(`eff_lci'/2)^2
-				scalar `prop_uci' = sin(`eff_uci'/2)^2
-			}
-			
-			scalar `z' = 0
-			if `eff' > `mintes' scalar `z' = abs(`eff' - `mintes') / `se_eff'
-			
-			return scalar prop_eff = `prop_eff'
-			return scalar prop_lci = `prop_lci'
-			return scalar prop_uci = `prop_uci'
-			
-			// Predictive intervals
-			if `k' >= 3 {
-				tempname prop_rflci prop_rfuci
-				
-				if      `rflci' < `mintes' scalar `prop_rflci' = 0
-				else if `rflci' > `maxtes' scalar `prop_rflci' = 1
-				else scalar `prop_rflci' = 0.5 * (1 - sign(cos(`rflci')) * sqrt(1 - (sin(`rflci') + (sin(`rflci') - 1/sin(`rflci')) / `hmean')^2 ) )
-
-				if      `rfuci' < `mintes' scalar `prop_rfuci' = 0
-				else if `rfuci' > `maxtes' scalar `prop_rfuci' = 1
-				else scalar `prop_rfuci' = 0.5 * (1 - sign(cos(`rfuci')) * sqrt(1 - (sin(`rfuci') + (sin(`rfuci') - 1/sin(`rfuci')) / `hmean')^2 ) )
-
-				if _rc {		// from earlier "cap assert"
-					scalar `prop_rflci' = sin(`rflci'/2)^2
-					scalar `prop_rfuci' = sin(`rfuci'/2)^2
-				}
-				
-				return scalar prop_rflci = `prop_rflci'
-				return scalar prop_rfuci = `prop_rfuci'
-			}
-		}
-		else if "`summstat'"=="arcsine" {
-			return scalar prop_eff = sin(`eff')^2
-			return scalar prop_lci = sin(`eff_lci')^2
-			return scalar prop_uci = sin(`eff_uci')^2
-			
-			// Predictive intervals
-			if `k' >= 3 {
-				return scalar prop_rflci = sin(`rflci')^2
-				return scalar prop_rfuci = sin(`rfuci')^2
-			}
-		}
-		else if "`summstat'"=="logit" {
-			return scalar prop_eff = invlogit(`eff')
-			return scalar prop_lci = invlogit(`eff_lci')
-			return scalar prop_uci = invlogit(`eff_uci')
-			
-			// Predictive intervals
-			if `k' >= 3 {
-				return scalar prop_rflci = invlogit(`rflci')
-				return scalar prop_rfuci = invlogit(`rfuci')
+			if "`summstat'"=="pr" {			// if untransformed, set eff_lci, eff_uci to returned values from GenConfIntsPr
+				scalar `eff_lci' = r(lb)
+				scalar `eff_uci' = r(ub)
 			}
 		}
 		else {
-			return scalar prop_eff = `eff'
-			return scalar prop_lci = `eff_lci'
-			return scalar prop_uci = `eff_uci'
-			
-			// Predictive intervals
-			if `k' >= 3 {			
-				return scalar prop_rflci = `rflci'
-				return scalar prop_rfuci = `rfuci'
-			}
-		}
+			tokenize `invlist'
+			args succ _NN   
 		
+			** Perform standard back-transforms
+			// first, truncate intervals at `mintes' and `maxtes'
+			tempname mintes maxtes
+			scalar `mintes' = 0
+			scalar `maxtes' = 1
+			
+			// Logit and Single-arcsine
+			if inlist("`summstat'", "logit", "arcsine") {
+
+				// Logit transform
+				if "`summstat'"=="logit" {
+					summ `_NN' if `touse', meanonly
+					scalar `mintes' = logit(.1/`r(sum)')			// use limits of 1/10 difference from `totalN'
+					scalar `maxtes' = logit(1 - (.1/`r(sum)'))
+				}
+				
+				// Single arcsine transform
+				else {
+					scalar `mintes' = 0
+					scalar `maxtes' = _pi/2
+				}
+				
+				if      `eff' < `mintes' scalar `eff' = `mintes'
+				else if `eff' > `maxtes' scalar `eff' = `maxtes'
+				
+				if      `eff_lci' < `mintes' scalar `eff_lci' = `mintes'
+				else if `eff_lci' > `maxtes' scalar `eff_lci' = `maxtes'
+
+				if      `eff_uci' < `mintes' scalar `eff_uci' = `mintes'
+				else if `eff_uci' > `maxtes' scalar `eff_uci' = `maxtes'
+				
+				// Predictive intervals
+				if `k' >= 3 {
+					if      `rflci' < `mintes' scalar `rflci' = `mintes'
+					else if `rflci' > `maxtes' scalar `rflci' = `maxtes'
+
+					if      `rfuci' < `mintes' scalar `rfuci' = `mintes'
+					else if `rfuci' > `maxtes' scalar `rfuci' = `maxtes'
+				}
+				
+				
+				** Perform back-transforms
+				tempname prop_eff prop_lci prop_uci prop_rflci prop_rfuci
+
+				// Logit transform
+				if "`summstat'"=="logit" {
+					return scalar prop_eff = invlogit(`eff')
+					return scalar prop_lci = invlogit(`eff_lci')
+					return scalar prop_uci = invlogit(`eff_uci')
+
+					// Predictive intervals
+					if `k' >= 3 {
+						return scalar prop_rflci = invlogit(`rflci')
+						return scalar prop_rfuci = invlogit(`rfuci')
+					}
+				}
+				
+				// Single arcsine back-transform
+				else {
+					return scalar prop_eff = sin(`eff')^2
+					return scalar prop_lci = sin(`eff_lci')^2
+					return scalar prop_uci = sin(`eff_uci')^2
+					
+					// Predictive intervals
+					if `k' >= 3 {
+						return scalar prop_rflci = sin(`rflci')^2
+						return scalar prop_rfuci = sin(`rfuci')^2
+					}
+				}
+			}
+			
+			
+			** Freeman-Tukey double-arcsine transform
+			// Do this separately, for several reasons; one of which is that, as the value of `hmean' is not fixed...
+			// (e.g. suggested as harmonic mean by Miller, but without much justification, with equally reasonable alternatives suggested by e.g. Scharwzer and Doi)
+			// ...there is little justification for truncating the transformed values at `mintes' and `maxtes'.
+			// "Raw" values are therefore presented if option -nopr-
+			// ...but these values *are* truncated prior to back-transformation (if requested) because a specific value of `hmean' then applies.
+			else if "`summstat'"=="ftukey" {
+				tempname hmean
+				qui ameans `_NN' if `touse'
+				if      "`tn'"=="arithmetic" scalar `hmean' = r(mean)				// Arithmetic mean
+				else if "`tn'"=="geometric"  scalar `hmean' = r(mean_g)				// Geometric mean
+				else if inlist("`tn'", "", "harmonic") scalar `hmean' = r(mean_h)	// Harmonic mean (Miller 1978; default)
+				else if "`tn'"=="ivariance"  scalar `hmean' = 1/`se_eff'^2			// Barendregt & Doi's suggestion: inverse of pooled variance
+				else {
+					confirm number `tn'
+					scalar `hmean' = `tn'
+				}
+				
+				// recall: transform is = asin(sqrt(`succ' / (`_NN' + 1 ))) + asin(sqrt((`succ' + 1 ) / (`_NN' + 1 )))
+				// so to get our limits `mintes' and `maxtes', we subsitute `hmean' for `_NN', and let `succ' vary from 0 to `hmean'.
+				scalar `mintes' = /*asin(sqrt(0      /(`hmean' + 1))) + */        asin(sqrt((0       + 1)/(`hmean' + 1 )))
+				scalar `maxtes' =   asin(sqrt(`hmean'/(`hmean' + 1))) + asin(1) /*asin(sqrt((`hmean' + 1)/(`hmean' + 1 )))*/
+			
+				// Back-transform
+				tempname prop_eff prop_lci prop_uci
+				
+				scalar  `prop_eff' = `eff'
+				if      `prop_eff' < `mintes' scalar `prop_eff' = `mintes'
+				else if `prop_eff' > `maxtes' scalar `prop_eff' = `maxtes'
+				
+				scalar  `prop_lci' = `eff_lci'
+				if      `prop_lci' < `mintes' scalar `prop_lci' = `mintes'
+				else if `prop_lci' > `maxtes' scalar `prop_lci' = `maxtes'
+
+				scalar  `prop_uci' = `eff_uci'
+				if      `prop_uci' < `mintes' scalar `prop_uci' = `mintes'
+				else if `prop_uci' > `maxtes' scalar `prop_uci' = `maxtes'
+				
+				scalar `prop_eff' = 0.5 * (1 - sign(cos(`prop_eff')) * sqrt(1 - (sin(`prop_eff') + (sin(`prop_eff') - 1/sin(`prop_eff')) / `hmean')^2 ) )
+				scalar `prop_lci' = 0.5 * (1 - sign(cos(`prop_lci')) * sqrt(1 - (sin(`prop_lci') + (sin(`prop_lci') - 1/sin(`prop_lci')) / `hmean')^2 ) )
+				scalar `prop_uci' = 0.5 * (1 - sign(cos(`prop_uci')) * sqrt(1 - (sin(`prop_uci') + (sin(`prop_uci') - 1/sin(`prop_uci')) / `hmean')^2 ) )
+		
+				// Predictive intervals
+				if `k' >= 3 {				
+					tempname prop_rflci prop_rfuci
+					
+					scalar  `prop_rflci' = `rflci'
+					if      `prop_rflci' < `mintes' scalar `prop_rflci' = `mintes'
+					else if `prop_rflci' > `maxtes' scalar `prop_rflci' = `maxtes'
+
+					scalar  `prop_rfuci' = `rfuci'
+					if      `prop_rfuci' < `mintes' scalar `prop_rfuci' = `mintes'
+					else if `prop_rfuci' > `maxtes' scalar `prop_rfuci' = `maxtes'
+					
+					scalar `prop_rflci' = 0.5 * (1 - sign(cos(`prop_rflci')) * sqrt(1 - (sin(`prop_rflci') + (sin(`prop_rflci') - 1/sin(`prop_rflci')) / `hmean')^2 ) )
+					scalar `prop_rfuci' = 0.5 * (1 - sign(cos(`prop_rfuci')) * sqrt(1 - (sin(`prop_rfuci') + (sin(`prop_rfuci') - 1/sin(`prop_rfuci')) / `hmean')^2 ) )
+				}
+			
+				if `"`tn'"'==`"ivariance"' {
+					// To avoid problems with boundary values (i.e. proportions ~0 or ~1),
+					// Barendregt & Doi use an extra check/truncation:
+					// s/v < 2 or (1-s)/v < 2   (`poverv' = p/v = 2 by default but can be changed as undocumented option)
+					// where s = sin(eff/2)^2 ~= d/n
+					// and where v = se_eff ~= 1/n
+					// ==> s/v ~= d;  (1-s)/v ~= n-d
+									
+					tempname prop_eff_prime
+					scalar `prop_eff_prime' = sin(`eff'/2)^2
+					if `prop_eff_prime' * `hmean' < `poverv' {
+						scalar `prop_eff' = `prop_eff_prime'
+						scalar `prop_lci' = 0
+						if `k' >= 3 {
+							scalar `prop_rflci' = 0
+						}
+						
+						// adjust upper limit(s) if `prop_eff' is now inconsistent
+						if `prop_uci'   < `prop_eff' scalar `prop_uci'   = 1
+						if `k' >= 3 {
+							if `prop_rfuci' < `prop_eff' scalar `prop_rfuci' = 1
+						}
+					}
+					if (1 - `prop_eff_prime') * `hmean' < `poverv' {
+						scalar `prop_eff' = `prop_eff_prime'
+						scalar `prop_uci' = 1
+						if `k' >= 3 {
+							scalar `prop_rflci' = 1
+						}
+						
+						// adjust lower limit(s) if `prop_eff' is now inconsistent
+						if `prop_lci'   > `prop_eff' scalar `prop_lci'   = 0
+						if `k' >= 3 {
+							if `prop_rflci' > `prop_eff' scalar `prop_rflci' = 0
+						}
+					}
+				}
+
+				return scalar prop_eff = `prop_eff'
+				return scalar prop_lci = `prop_lci'
+				return scalar prop_uci = `prop_uci'
+				
+				// Predictive intervals
+				if `k' >= 3 {
+					return scalar prop_rflci = `prop_rflci'
+					return scalar prop_rfuci = `prop_rfuci'
+				}
+			}		// end else if "`summstat'"=="ftukey"
+			
+			else {	// no transformation; "`summstat'"=="pr"
+				return scalar prop_eff = `eff'
+				return scalar prop_lci = `eff_lci'
+				return scalar prop_uci = `eff_uci'
+				
+				// Predictive intervals
+				if `k' >= 3 {			
+					return scalar prop_rflci = `rflci'
+					return scalar prop_rfuci = `rfuci'
+				}
+			}
+		}		// end if `k'>1
+		
+		// Proportions: always use z-statistic
+		tempname z
+		scalar `z' = `eff'/`se_eff'
+		scalar `pvalue' = 2*normal(-abs(`z'))		
+
 		return scalar z = `z'
 		return scalar eff_lci = `eff_lci'
 		return scalar eff_uci = `eff_uci'
 	}
-	
+
 	// All other data types
 	else {
 		if "`model'"=="pl" {				// N.B. PL confidence limits have already been calculated
@@ -914,11 +1016,11 @@ program define metan_pooling, rclass
 		
 		cap nois Heterogi `Q' `Qdf' if `touse', `testbased' `isqparam' ///
 			stderr(`_seES') tausqlist(`tausqlist') level(`hlevel')
-		
+
 		if _rc {
-			if _rc==1 nois disp as err `"User break in {bf:metan.Heterogi}"'
-			else nois disp as err `"Error in {bf:metan.Heterogi}"'
-			c_local err noerr		// tell -metan- not to also report an "error in metan.PerformPoolingIV"
+			if _rc==1 nois disp as err `"User break in {bf:metan_pooling.Heterogi}"'
+			else nois disp as err `"Error in {bf:metan_pooling.Heterogi}"'
+			c_local err noerr		// tell -metan- not to also report an "error in metan_analysis.PerformPoolingIV"
 			exit _rc
 		}
 		
@@ -933,8 +1035,8 @@ program define metan_pooling, rclass
 
 	if "`kroger'"!="" return scalar df = `df_kr'
 	else if "`teststat'"=="t" return scalar df = `Qdf'	
-	
-	return scalar k   = `k'				// k = number of studies (= count if `touse')
+
+	// return scalar k   = `k'				// k = number of studies (= count if `touse') -- MOVED UPWARDS
 	return scalar Q   = `Q'				// Cochran's Q heterogeneity statistic
 	return scalar Qdf = `Qdf'			// Q degrees of freedom (= `k' - 1)
 	return scalar sigmasq = `sigmasq'	// "typical" within-study variance (Higgins & Thompson 2002)
@@ -942,7 +1044,6 @@ program define metan_pooling, rclass
 	return scalar c = `c'				// scaling factor
 
 end
-
 
 
 

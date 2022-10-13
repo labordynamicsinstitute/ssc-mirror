@@ -1,4 +1,4 @@
-*! rcm 2.0.0 Guanpeng Yan and Qiang Chen 31/10/2021
+*! rcm 3.0.0 Guanpeng Yan and Qiang Chen Oct. 11 2022
 
 cap program drop rcm
 program rcm, eclass sortpreserve
@@ -10,7 +10,8 @@ program rcm, eclass sortpreserve
 		exit 198
     }
 	syntax varlist(min = 1) [if], TRUnit(integer) TRPeriod(integer) ///
-		[CTRLUnit(numlist min = 1 int sort) ///
+		[COUnit(numlist min = 1 int sort) ///
+		CTRLUnit(numlist min = 1 int sort) ///
 		PREPeriod(numlist min = 1 int sort) ///
 		POSTPeriod(numlist min = 1 int sort) ///
 		SCope(numlist min = 2 max = 2 int sort) ///
@@ -40,6 +41,17 @@ program rcm, eclass sortpreserve
 			exit 198
 		}
 	}
+	/* Check ctrlunit */
+	if "`ctrlunit'" != ""{
+		if "`counit'" == ""{
+			di as err `"The option {bf:ctrlunit()} is obsolete and replaced by the option {bf:counit()}, but continues to work just like the current option {bf:counit()}."'
+			local counit "`ctrlunit'"
+		}
+		else{
+			di as err `"The options {bf:ctrlunit()} and {bf:counit()} can not be specified together, and the current option {bf:counit()} is recommended."'
+			exit 198
+		}
+	}
 	/* Check frame() */
 	if "`frame'" == "" tempname frame
 	else {
@@ -58,20 +70,20 @@ program rcm, eclass sortpreserve
 		di as err "invalid trunit() -- treatment unit not found in {it:panelvar}"
 		exit 198
 	}
-	/* Check ctrlunit() */
-	if "`ctrlunit'" != "" {
-		loc check: list ctrlunit in unit_n
+	/* Check counit() */
+	if "`counit'" != "" {
+		loc check: list counit in unit_n
 		if `check' == 0 {
-			di as err "invalid ctrlunit() -- at least one control unit not found in {it:panelvar}"
+			di as err "invalid counit() -- at least one control unit not found in {it:panelvar}"
 			exit 198
 		}
-		loc check: list trunit in ctrlunit
+		loc check: list trunit in counit
 		if `check' == 1 {
-			di as err "invalid ctrlunit() -- treatment unit appears among control units"
+			di as err "invalid counit() -- treatment unit appears among control units"
 			exit 198
 		}
 		foreach i in `unit_n'{
-			loc check: list i in ctrlunit
+			loc check: list i in counit
 			if `check' == 0 & `i' != `trunit' qui drop if `panelVar' == `i'
 		}
 	}
@@ -87,7 +99,7 @@ program rcm, eclass sortpreserve
 		qui levelsof `timeVar' if `timeVar' < `trperiod', local(time_pre)
 		loc check: list preperiod in time_pre
 		if `check' == 0 {
-			di as err "invalid preperiod() -- at least one of pre-treatment periods that not found in {it:timevar} or not ahead of treatment period"
+			di as err "invalid preperiod() -- at least one of pretreatment periods that not found in {it:timevar} or not ahead of treatment period"
 			exit 198
 		}
 		foreach i in `time_pre'{
@@ -100,12 +112,12 @@ program rcm, eclass sortpreserve
 		qui levelsof `timeVar' if `timeVar' >= `trperiod', local(time_post)
 		loc check: list posof "`trperiod'" in postperiod
 		if `check' != 1 {
-			di as err "invalid postperiod() -- treatment period should be the first period of post-treatment periods"
+			di as err "invalid postperiod() -- treatment period should be the first period of posttreatment periods"
 			exit 198
 		}
 		loc check: list postperiod in time_post
 		if `check' == 0 {
-			di as err "invalid postperiod() -- at least one of post-treatment periods not found in {it:timevar}"
+			di as err "invalid postperiod() -- at least one of posttreatment periods not found in {it:timevar}"
 			exit 198
 		}
 		foreach i in `time_post'{
@@ -177,8 +189,8 @@ program rcm, eclass sortpreserve
 			else if ("`fill'" == "linear") qui by `panelVar' : ipolate `i' `timeVar', gen(`fillmissing') epolate
 			qui replace `i' = `fillmissing' if `i' == .
 		}
-		mata: rcm_print(tokens("`varlist'")', ("Variable", "Pre-treatment", " Post-treatment"), ///
-			st_matrix("fillmissing"), "", 0, (13, 13), 0, 1)
+		mata: rcm_print(tokens("`varlist'")', ("Variable", "pretreatment", " posttreatment"), ///
+			st_matrix("fillmissing"), "", 0, (13, 13), 0, 1, 0)
 	}
 	frame put `panelVarStr' `timeVar' `varlist', into(`frame')
 	/* Implement regress control method */
@@ -205,12 +217,12 @@ program rcm, eclass sortpreserve
 		}
 		qui cap drop pred·`depvar'·`unit_tr'
 		qui cap predict pred·`depvar'·`unit_tr'
-		cap lab variable pred·`depvar'·`unit_tr' "prediction of `depvar' in `unit_tr'"
+		cap lab variable pred·`depvar'·`unit_tr' "prediction on `depvar' in `unit_tr'"
 		qui cap drop tr·`depvar'·`unit_tr'
 		qui gen tr·`depvar'·`unit_tr' = `depvar'·`unit_tr' - pred·`depvar'·`unit_tr'
-		cap lab variable tr·`depvar'·`unit_tr' "treatment effect of `depvar' in `unit_tr'"
+		cap lab variable tr·`depvar'·`unit_tr' "treatment effect on `depvar' in `unit_tr'"
 		mata: rcm_summary(st_sdata(., "`timeVarStr'"), st_data(., "`depvar'·`unit_tr' pred·`depvar'·`unit_tr'"), ///
-			"`time_tr'", "`predvar_sel'", "`outvar'", "`estimate'", 0, .)
+			"`unit_tr'", "`time_tr'", "`predvar_sel'", "`outvar'", "`estimate'", 0, .)
 		if("`estimate'" == "ols"){
 			regress, cformat(%8.4f) noheader
 			loc regcmd "`e(cmd)'"
@@ -223,16 +235,16 @@ program rcm, eclass sortpreserve
 			qui lassocoef, display(coef, penalized) sort(none)
 			matrix penalized = r(coef)
 			mata: rcm_print(st_matrixrowstripe("penalized")[., 2], ("`outvar'", "Penalized Coef.", "  Standardized Coef."), ///
-				(st_matrix("penalized"), st_matrix("standardized")), "", 0, (18, 18), 0, 0)
+				(st_matrix("penalized"), st_matrix("standardized")), "", 0, (18, 18), 0, 0, 0)
 		}
 		mkmat `depvar'·`unit_tr' pred·`depvar'·`unit_tr' tr·`depvar'·`unit_tr' if `timeVar' >= `trperiod', rownames(`timeVar') matrix(pred)
 		mat colnames pred = Treated Predicted TrEff
 		scalar N = _N
 		scalar T1 = N - T0
 		matrix b = e(b)
-		di _newline as txt "Prediction results in the post-treatment periods`tmp':"
+		di _newline as txt "Prediction results in the posttreatment period`tmp':"
 		mata: rcm_print(st_sdata(., "`timeVarStr'"), ("Time", "Actual Outcome", " Predicted Outcome", " Treatment Effect"), ///
-			st_data(., "`depvar'·`unit_tr' pred·`depvar'·`unit_tr' tr·`depvar'·`unit_tr'"), "`time_tr'", 1, (13, 17, 16), 0, 0)
+			st_data(., "`depvar'·`unit_tr' pred·`depvar'·`unit_tr' tr·`depvar'·`unit_tr'"), "`time_tr'", 1, (13, 17, 16), 0, 0, 1)
 	}
 	loc graphlist ""
 	if("`figure'" == ""){
@@ -246,7 +258,7 @@ program rcm, eclass sortpreserve
 				ytitle(`depvar')  legend(order(1 "Actual" 2 "Predicted")) nodraw
 			tsline tr·`depvar'·`unit_tr', xline(`xline', lp(dot) lc(black)) yline(0, lp(dot) lc(black)) ///
 				title("Treatment Effects") name(eff, replace) ///
-				ytitle("treatment effects of `depvar'") nodraw
+				ytitle("treatment effects on `depvar'") nodraw
 			loc graphlist = "`graphlist' pred eff"
 		}
 	}
@@ -314,6 +326,7 @@ program rcm, eclass sortpreserve
 	ereturn scalar mse = mse
 	ereturn scalar rmse = rmse
 	ereturn scalar r2 = r2
+	ereturn scalar att = att
 end
 
 cap program drop rcm_placebo
@@ -345,7 +358,7 @@ program rcm_placebo, eclass sortpreserve
 		loc pos = `pos' - 1
 		loc xline_tr: word `pos' of `temp'
 		if("`unit'" != ""){	
-			di _newline as txt "Implementing placebo test using fake treatment unit " _continue
+			di _newline as txt "Implementing in-space placebo test using fake treatment unit " _continue
 			loc tsline ""
 			loc unit_ctrl_sel ""
 			loc unit_ctrl_dis ""
@@ -358,28 +371,31 @@ program rcm_placebo, eclass sortpreserve
 					exit
 				}
 				qui predict pred·`depvar'·`unit_placebo'
-				cap lab variable pred·`depvar'·`unit_placebo' "prediction of `depvar' in `unit_placebo' generated by 'placebo unit'"
+				cap lab variable pred·`depvar'·`unit_placebo' "prediction on `depvar' in `unit_placebo' generated by 'placebo unit'"
 				qui gen tr·`depvar'·`unit_placebo' = `depvar'·`unit_placebo'- pred·`depvar'·`unit_placebo'
-				cap lab variable tr·`depvar'·`unit_placebo' "treatment effect of `depvar' in `unit_placebo' generated by 'placebo unit'"
+				cap lab variable tr·`depvar'·`unit_placebo' "treatment effect on `depvar' in `unit_placebo' generated by 'placebo unit'"
 				mata: rcm_summary(st_sdata(., "`timeVarStr'"), st_data(., "`depvar'·`unit_placebo' pred·`depvar'·`unit_placebo'"), ///
-					"`time_tr'", "`predvar_sel'", "", "`estimate'", 1, ("`cutoff'" == "" ? . : strtoreal("`cutoff'")))
+					"`unit_tr'", "`time_tr'", "`predvar_sel'", "", "`estimate'", 1, ("`cutoff'" == "" ? . : strtoreal("`cutoff'")))
 				if "`unit_placebo'" != "" {
 					loc tsline "`tsline' (tsline tr·`depvar'·`unit_placebo', lp(solid) lc(gs10%40))"
 					loc unit_ctrl_sel "`unit_ctrl_sel' `unit_placebo'"
 				}
 				else loc unit_ctrl_dis "`unit_ctrl_dis' `unit_tmp'"
 			}
-			di _newline _newline as txt "Placebo test results using fake treatment units:"
-			mata: rcm_print(tokens("`unit_tr' `unit_ctrl'")', ("Unit", "Pre MSPE ", " Post MSPE ", "Post/Pre MSPE", "  Pre MSPE of Fake Unit/Pre MSPE of Treated Unit"), st_matrix("mspe"), "", 0, (9, 9, 13, 24), 0, 0)
+			di _newline _newline as txt "In-space placebo test results using fake treatment units:"
+			mata: rcm_print(tokens("`unit_tr' `unit_ctrl'")', ("Unit", "Pre MSPE ", " Post MSPE ", "Post/Pre MSPE", "  Pre MSPE of Fake Unit/Pre MSPE of Treated Unit"), st_matrix("mspe"), "", 0, (9, 9, 13, 24), 0, 0, 0)
 			mata: st_numscalar("pval", mean((st_matrix("mspe")[1, 3] :< st_matrix("mspe")[2..rows(st_matrix("mspe")), 3])))
 			if "`unit_ctrl_dis'" != "" {
 				mata: printf(stritrim(sprintf( ///
-			"{p 0 6 2}{txt}Note: (1) The probability of obtaining a post/pre-treatment MSPE ratio as large as {res}`unit_tr'{txt}'s is{res}%10.4f{txt}.{p_end}\n", mean((st_matrix("mspe")[1, 3] :<= st_matrix("mspe")[. , 3])))))
-				mata: printf("{p 6 6 2}{txt}(2) Total{res} "+strofreal(cols(tokens("`unit_ctrl_dis'")))+" {txt}"+ (cols(tokens("`unit_ctrl_dis'")) > 1 ? "units" : "unit") +" with pre-treatment MSPE {res}`cutoff' {txt}times larger than the treated unit " + (cols(tokens("`unit_ctrl_dis'")) > 1 ? "are" : "is") + " excluded in computing pointwise p-values, including {res}`unit_ctrl_dis'{txt}.{p_end}")
+			"{p 0 6 2}{txt}Note: (1) Using all control units, the probability of obtaining a post/pretreatment MSPE ratio as large as {res}`unit_tr'{txt}'s is{res}%10.4f{txt}.{p_end}\n", mean((st_matrix("mspe")[1, 3] :<= st_matrix("mspe")[. , 3])))))
+			mata: printf(stritrim(sprintf( ///
+			"{p 6 6 2}{txt}(2) Excluding control units with pretreatment MSPE {res}`cutoff'{txt} times larger than the treated unit, the probability of obtaining a post/pretreatment MSPE ratio as large as {res}`unit_tr'{txt}'s is {res}%10.4f{txt}.{p_end}\n", mean((st_matrix("mspe_cut")[1, 3] :<= st_matrix("mspe_cut")[. , 3])))))
+			di "{p 6 6 2}{txt}(3) The pointwise p-values below are computed by excluding control units with pretreatment MSPE {res}`cutoff'{txt} times larger than the treated unit.{p_end}"
+				mata: printf("{p 6 6 2}{txt}(4) There " + (cols(tokens("`unit_ctrl_dis'")) > 1 ? "are" : "is") + "{res} "+strofreal(cols(tokens("`unit_ctrl_dis'")))+" {txt}"+ (cols(tokens("`unit_ctrl_dis'")) > 1 ? "units" : "unit") +" with pretreatment MSPE {res}`cutoff' {txt}times larger than the treated unit, including {res}`unit_ctrl_dis'{txt}.{p_end}")
 			}
 			else mata: printf(stritrim(sprintf( ///
-				"{p 0 6 2}{txt}Note: The probability of obtaining a post/pre-treatment MSPE ratio as large as {res}`unit_tr'{txt}'s is{res}%10.4f{txt}.{p_end}\n", mean((st_matrix("mspe")[1, 3] :<= st_matrix("mspe")[. , 3])))))
-			mata: printf("\n{txt}Placebo test results using fake treatment units (continued" + ///
+				"{p 0 6 2}{txt}Note: The probability of obtaining a post/pretreatment MSPE ratio as large as {res}`unit_tr'{txt}'s is{res}%10.4f{txt}.{p_end}\n", mean((st_matrix("mspe")[1, 3] :<= st_matrix("mspe")[. , 3])))))
+			mata: printf("\n{txt}In-space placebo test results using fake treatment units (continued" + ///
 				("`cutoff'" == "" ? "" : (", cutoff = {res}`cutoff'")) + "{txt}):\n")
 			mata: rcm_placebo("`depvar'", "`unit_tr'", "`unit_ctrl_sel'", "`time_all'", "`time_tr'")
 			cap lab variable pvalTwo "two-sided p-value of treatment effect generated by 'placebo unit'"
@@ -390,8 +406,8 @@ program rcm_placebo, eclass sortpreserve
 			if "`figure'" == "" {
 				loc order_tr = wordcount("`unit_ctrl_sel'") + 1
 				twoway `tsline' (tsline tr·`depvar'·`unit_tr', lp(solid)), xline(`xline_tr', lp(dot) lc(black)) yline(0, lp(dot) lc(black)) ///
-					title("Placebo Test Using Fake Treatment Units") name(eff_pboUnit, replace) ///
-					ytitle("treatment/placebo effects of `depvar'") ///
+					title("In-space Placebo Test") name(eff_pboUnit, replace) ///
+					ytitle("treatment/placebo effects on `depvar'") ///
 					legend(order(`order_tr' "Treatment Effect" 2 "Placebo Effect")) nodraw
 				loc graphlist = "`graphlist' eff_pboUnit"
 				tempname placeboUnitframe
@@ -401,27 +417,27 @@ program rcm_placebo, eclass sortpreserve
 					qui svmat mspe, name(col)
 					mata: st_sstore(., st_addvar("strL", "unit"), tokens("`unit_tr' `unit_ctrl'")')
 					graph hbar (asis) RatioPostPre, over(unit, sort(RatioPostPre) descending label(labsize(vsmall))) ///
-					ytitle("Ratios of Post-treatment MSPE to Pre-treatment MSPE") ///
-					title("Placebo Test Using Fake Treatment Units") name("ratio_pboUnit", replace) nodraw
+					ytitle("Ratios of posttreatment MSPE to pretreatment MSPE") ///
+					title("In-space Placebo Test") name("ratio_pboUnit", replace) nodraw
 				}
 				loc graphlist = "`graphlist' ratio_pboUnit"
 				twoway connected pvalTwo `timeVar' if  `timeVar' >= `trperiod', ///
-					ytitle("two-sided p-values of treatment effects of `depvar'") ///
+					ytitle("two-sided p-values of treatment effects on `depvar'") ///
 					yline(0.05 0.1, lp(dot) lc(black)) ylabel(0(0.1)1) ///
-					title("Placebo Test Using Fake Treatment Units") name(pvalTwo_pboUnit, replace) nodraw
+					title("In-space Placebo Test") name(pvalTwo_pboUnit, replace) nodraw
 				twoway connected pvalRight `timeVar' if  `timeVar' >= `trperiod', ///
-					ytitle("right-sided p-values of treatment effects of `depvar'") ///
+					ytitle("right-sided p-values of treatment effects on `depvar'") ///
 					yline(0.05 0.1, lp(dot) lc(black)) ylabel(0(0.1)1) ///
-					title("Placebo Test Using Fake Treatment Units") name(pvalRight_pboUnit, replace) nodraw
+					title("In-space Placebo Test") name(pvalRight_pboUnit, replace) nodraw
 				twoway connected pvalLeft `timeVar' if  `timeVar' >= `trperiod', ///
-					ytitle("left-sided p-values of treatment effects of `depvar'") ///
+					ytitle("left-sided p-values of treatment effects on `depvar'") ///
 					yline(0.05 0.1, lp(dot) lc(black)) ylabel(0(0.1)1) ///
-					title("Placebo Test Using Fake Treatment Units") name(pvalLeft_pboUnit, replace) nodraw
+					title("In-space Placebo Test") name(pvalLeft_pboUnit, replace) nodraw
 				loc graphlist = "`graphlist' pvalTwo_pboUnit pvalRight_pboUnit pvalLeft_pboUnit"
 			}
 		}
 		if("`period'" != ""){
-			di _newline as txt "Implementing placebo test using fake treatment time " _continue
+			di _newline as txt "Implementing in-time placebo test using fake treatment time " _continue
 			foreach pboperiod in `period'{
 			    qui levelsof `timeVar', local(time_n)
 				loc check: list pboperiod in time_n
@@ -442,28 +458,28 @@ program rcm_placebo, eclass sortpreserve
 				loc subvarname = strtoname("`unit_tr'·`time_pbo'")
 				qui cap drop pred·`depvar'·`subvarname'
 				qui cap predict pred·`depvar'·`subvarname'
-				cap lab variable pred·`depvar'·`subvarname' "prediction of `depvar' in `unit_tr' generated by 'placebo period `time_pbo''"
+				cap lab variable pred·`depvar'·`subvarname' "prediction on `depvar' in `unit_tr' generated by 'placebo period `time_pbo''"
 				qui cap drop tr·`depvar'·`subvarname'
 				qui cap gen tr·`depvar'·`subvarname' = `depvar'·`unit_tr' - pred·`depvar'·`subvarname'
-				cap lab variable tr·`depvar'·`subvarname' "treatment effect of `depvar' in `unit_tr' generated by 'placebo period `time_pbo''"
+				cap lab variable tr·`depvar'·`subvarname' "treatment effect on `depvar' in `unit_tr' generated by 'placebo period `time_pbo''"
 				if "`figure'" == "" {
 					twoway (tsline `depvar'·`unit_tr') (tsline pred·`depvar'·`subvarname', lpattern(dash)), ///
-						title("Placebo Test Using Fake Treatment Time `time_pbo'") xline(`xline_pbo' `xline_tr', lp(dot) lc(black)) ///
+						title("In-time Placebo Test (fake treatment time = `time_pbo')") xline(`xline_pbo' `xline_tr', lp(dot) lc(black)) ///
 						name(pred_pboTime`pboperiod', replace) ytitle(`depvar')  ///
 						legend(order(1 "Actual" 2 "Predicted")) nodraw
 					loc graphlist = "`graphlist' pred_pboTime`pboperiod'"
 					tsline tr·`depvar'·`subvarname', xline(`xline_pbo' `xline_tr', lp(dot) lc(black)) yline(0, lp(dot) lc(black)) ///
-						title("Placebo Test Using Fake Treatment Time `time_pbo'") name(eff_pboTime`pboperiod', replace) ///
-						ytitle("placebo effects of `depvar'") nodraw
+						title("In-time Placebo Test (fake treatment time = `time_pbo')") name(eff_pboTime`pboperiod', replace) ///
+						ytitle("placebo effects on `depvar'") nodraw
 					loc graphlist = "`graphlist' eff_pboTime`pboperiod'"
 				}
 			}
 			di
 			foreach pboperiod in `period'{
 				qui levelsof `timeVarStr' if `timeVar' == `pboperiod', local(time_pbo) clean
-				di _newline as txt "Placebo test results using fake treatment time " as res "`time_pbo'" as txt":"
+				di _newline as txt "In-time placebo test results using fake treatment time " as res "`time_pbo'" as txt":"
 				mata: rcm_print(st_sdata(., "`timeVarStr'"), ("Time", "Actual Outcome", "Predicted Outcome", "Treatment Effect"), ///
-					st_data(., "`depvar'·`unit_tr' pred·`depvar'·`subvarname' tr·`depvar'·`subvarname'"), "`time_pbo'", 1, (13, 17, 16), 0, 0)
+					st_data(., "`depvar'·`unit_tr' pred·`depvar'·`subvarname' tr·`depvar'·`subvarname'"), "`time_pbo'", 1, (13, 17, 16), 0, 0, 0)
 			}
 		}
 	}
@@ -515,7 +531,7 @@ mata:
 		if(rows(result) == 0) result = "."
 		return(result)
 	}
-	void rcm_print(string matrix rownames, string matrix colnames, real matrix M, string scalar startstr, real scalar isMean, real matrix wideM, real scalar extend, real scalar isInt){
+	void rcm_print(string matrix rownames, string matrix colnames, real matrix M, string scalar startstr, real scalar isMean, real matrix wideM, real scalar extend, real scalar isInt, real scalar saveatt){
 		wide = max(udstrlen((rownames[1..rows(rownames),1]\colnames[1])))
 		printf(sprintf("{hline %g}{c TT}", wide + 2))
 		for(j = 1; j <= cols(colnames) - 1; j++) printf(sprintf("{hline %g}", wideM[j] + 2))
@@ -561,9 +577,11 @@ mata:
 		printf(sprintf("{hline %g}{c BT}", wide + 2))
 		for(j = 1; j <= cols(colnames) - 1; j++) printf(sprintf("{hline %g}", wideM[j] + 2))
 		printf(sprintf("{hline %g}\n", extend))
-		if(isMean == 1) 
-			printf(stritrim(sprintf("{p 0 6 2}{txt}Note: The average treatment effect over the post-treatment periods is{res} %10.4f{txt}.\n", 
+		if(isMean == 1){
+			printf(stritrim(sprintf("{p 0 6 2}{txt}Note: The average treatment effect over the posttreatment period is{res} %10.4f{txt}.\n", 
 				meanM[., 3])))
+			if(saveatt == 1) st_numscalar("att", meanM[., 3])
+		}
 	}
 	void rcm_printPval(string matrix rownames, string matrix colnames, string scalar colname, real matrix M, string scalar startstr, real scalar isMean, real matrix wideM, real scalar extend, real scalar isInt){
 		
@@ -620,10 +638,10 @@ mata:
 		for(j = 1; j <= cols(colnames) - 1; j++) printf(sprintf("{hline %g}", wideM[j] + 2))
 		printf(sprintf("{hline %g}\n", extend))
 		if(isMean == 1) 
-			printf(stritrim(sprintf("{txt}Note: The average treatment effect over the post-treatment periods is{res} %10.4f{txt}.\n", 
+			printf(stritrim(sprintf("{txt}Note: The average treatment effect over the posttreatment period is{res} %10.4f{txt}.\n", 
 				meanM[., 3])))
 	}
-	void rcm_summary(string matrix rownames, real matrix M, string scalar time_tr, string scalar predvar, string scalar respo, string scalar estimate, real matrix isPlacobo, real scalar discard){
+	void rcm_summary(string matrix rownames, real matrix M, string scalar unit_tr, string scalar time_tr, string scalar predvar, string scalar respo, string scalar estimate, real matrix isPlacobo, real scalar discard){
 		T0 = selectindex(rownames :== time_tr) - 1
 		T1 = rows(rownames) - T0
 		K = cols(tokens(predvar))
@@ -637,9 +655,10 @@ mata:
 			wide = max(udstrlen((tokens(predvar[.,1]), respo)))
 			wide = wide < 9 ? 9 : (wide + 67 > st_numscalar("c(linesize)") ? max((st_numscalar("c(linesize)") - 67, 9)) : wide)
 			printf("{hline " + strofreal(wide + 66) + "}\n")
-			printf(" {txt}%-24uds =  {res}%8.5f {space "+ strofreal(wide - 9) + "} {txt}%-22uds  =   {res}%8.0f\n", "Mean Absolute Error", MAE, "Number of Observations", T0)
-			printf(" {txt}%-24uds =  {res}%8.5f {space "+ strofreal(wide - 9) + "} {txt}%-22uds  =   {res}%8.0f\n", "Mean Squared Error", MSE, "Number of Predictors", K)
-			printf(" {txt}%-24uds =  {res}%8.5f {space "+ strofreal(wide - 9) + "} {txt}%-22uds  =   {res}%8.5f\n", "Root Mean Squared Error", RMSE, "R-squared", R2)
+			printf(" {txt}%-22uds : {res}%9uds {space "+ strofreal(wide - 9) + "} {txt}%-24uds  =  {res}%9uds\n", "Treated Unit", abbrev(unit_tr, 9), "Treatment Time", abbrev(time_tr, 9))		
+			printf("{hline " + strofreal(wide + 66) + "}\n")
+			printf(" {txt}%-22uds =  {res}%8.0f {space "+ strofreal(wide - 9) + "} {txt}%-24uds  =   {res}%8.5f\n", "Number of Observations", T0, "Root Mean Squared Error", RMSE)
+			printf(" {txt}%-22uds =  {res}%8.0f {space "+ strofreal(wide - 9) + "} {txt}%-24uds  =   {res}%8.5f\n", "Number of Predictors", K,  "R-squared", R2)
 			printf("{hline " + strofreal(wide + 66) + "}\n")
 			st_numscalar("T0", T0)
 			st_numscalar("mse", MSE)
@@ -654,7 +673,11 @@ mata:
 		if(isPlacobo == 1){
 			st_matrix("mspe", st_matrix("mspe")\(MSPE_in, MSPE_out, MSPE_out/MSPE_in, MSPE_in/(st_matrix("mspe")[1, 1])))
 			if((discard != .) & ((MSPE_in/(st_matrix("mspe")[1, 1])) > discard)) st_local("unit_placebo", "")
-		}else st_matrix("mspe", (MSPE_in, MSPE_out, MSPE_out/MSPE_in, 1))
+			else st_matrix("mspe_cut", st_matrix("mspe_cut")\(MSPE_in, MSPE_out, MSPE_out/MSPE_in, MSPE_in/(st_matrix("mspe_cut")[1, 1])))
+		}else{
+			st_matrix("mspe", (MSPE_in, MSPE_out, MSPE_out/MSPE_in, 1))
+			st_matrix("mspe_cut", (MSPE_in, MSPE_out, MSPE_out/MSPE_in, 1))
+		}
 	}
 	void rcm_print_info(string matrix rownames, string matrix colnames, real matrix M, real scalar wideM, real scalar limit, real scalar isOperation, real scalar best){
 		limit = max((min((max(udstrlen(rownames)) + 5, limit)), udstrlen(colnames[cols(colnames)])))
@@ -897,9 +920,9 @@ mata:
 		if(scopeStr != "") scope = strtoreal(tokens(scopeStr)); else scope = (1, rows(preds))
 		if(detail >= 0) printf("{txt}Step 1: Select the suboptimal models\n(method {res}%uds {txt}specified)\n", method)
 		if(method == "best"){
-			if(detail >= 0) printf("{p 0 6 2}{txt}Note: If this takes too long, you may wish to try {bf:method(lasso)}(recommended), {bf:method(forward)} or {bf:method(backward)}. Alternatively, you may restrict {it:indepvars}, and/or the donor pool by the option {bf:ctrlunit()}.{p_end}\n")
+			if(detail >= 0) printf("{p 0 6 2}{txt}Note: If this takes too long, you may wish to try {bf:method(lasso)}(recommended), {bf:method(forward)} or {bf:method(backward)}. Alternatively, you may restrict {it:indepvars}, and/or the donor pool by the option {bf:counit()}.{p_end}\n")
 		}else if(method == "backward" & K > T0) {
-			printf("{p 0 0 2}{err}backward stepwise selection can not be implemented for high-dimensional data with the number of predictors exceeding the number of pre-treatment periods, you may use lasso, best subset or forward stepwise selection instead{p_end}\n")
+			printf("{p 0 0 2}{err}backward stepwise selection can not be implemented for high-dimensional data with the number of predictors exceeding the number of pretreatment periods, you may use lasso, best subset or forward stepwise selection instead{p_end}\n")
 			exit(198)
 		}
 		if(detail >= 0) printf("\n")
@@ -989,7 +1012,7 @@ mata:
 				if(expand == 1) printf("{txt}Note: {res}scope{txt} is automatically changed to {res}%g-%g{txt} for expanding selection.\n", scope[1], scope[2])
 				printf("\n")
 				tmp = (method == "lasso" ? (estimate == "lasso" ? " using {res}lasso{txt}" : " using {res}post-lasso OLS{txt}") : " using {res}OLS{txt}")
-				printf("{txt}Fitting results in the pre-treatment periods%s:\n", tmp)
+				printf("{txt}Fitting results in the pretreatment period%s:\n", tmp)
 			}
 			if(estimate == "ols")
 				stata(sprintf("qui reg %uds %uds in 1/%g, noheader", respo,
@@ -1024,7 +1047,7 @@ mata:
 		rcm_printPval(time, ("Time", "Treatment Effect", "Two-sided ", "Right-sided", "Left-sided"), "p-value of Treatment Effect", (tr_eff, pval), time_tr, 0, (16, 11, 11, 11), 0, 0)
 		printf("{p 0 6 2}{txt}Note: (1) The two-sided p-value of the treatment effect for a particular period is defined as the frequency that the absolute values of the placebo effects are greater than or equal to the absolute value of treatment effect.\n{p_end}")
 		printf("{p 6 6 2}{txt}(2) The right-sided (left-sided) p-value of the treatment effect for a particular period is defined as the frequency that the placebo effects are greater (smaller) than or equal to the treatment effect.\n{p_end}")
-		printf("{p 6 6 2}{txt}(3) If the treatment effects are mostly positive, then the right-sided p-values are recommended; whereas the left-sided p-values are recommended if the treatment effects are mostly negative.\n{p_end}")
+		printf("{p 6 6 2}{txt}(3) If the estimated treatment effect is positive, then the right-sided p-value is recommended; whereas the left-sided p-value is recommended if the estimated treatment effect is negative.{p_end}")
 		stata("cap drop pval")
 		st_store(., st_addvar("float", "pvalTwo"), pval[.,1])
 		st_store(., st_addvar("float", "pvalRight"), pval[.,2])
@@ -1033,9 +1056,10 @@ mata:
 end
 
 * Version history
+* 3.0.0 
 * 2.0.0 Optimize the result displayed
 * 1.0.1 Add two-sided p-value, right-sided p-value and left-sided p-value
 * 1.0.0 Update the display of results
 * 0.0.2 Revise the calculation of the p-value
-* 0.0.1 Revise the calculation of the p-value and the probability of obtaining a post/pre-treatment MSPE ratio as large as that of treated unit
+* 0.0.1 Revise the calculation of the p-value and the probability of obtaining a post/pretreatment MSPE ratio as large as that of treated unit
 * 0.0.0 Submit the initial version of rcm

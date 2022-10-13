@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 4.05  David Fisher  29nov2021}{...}
+{* *! version 4.06  David Fisher  12oct2022}{...}
 {vieweralsosee "metan" "help metan"}{...}
 {vieweralsosee "metan_model" "help metan_model"}{...}
 {vieweralsosee "metan_continuous" "help metan_continuous"}{...}
@@ -185,7 +185,7 @@ Ross J Harris, Roger M Harbord, Jonathan A C Sterne.
 Department of Social Medicine, University of Bristol, Bristol, UK
 
 {pstd}
-Current version, {cmd:metan} v4.02:
+{cmd:metan} v4.00 and later (including current version):
 David Fisher, MRC Clinical Trials Unit at UCL, London, UK.
 
 {pstd}
