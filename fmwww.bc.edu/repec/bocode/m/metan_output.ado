@@ -2858,7 +2858,7 @@ program define BuildResultsSet, rclass
 	*********************
 
 	local 0 `", `opts_adm'"'
-	syntax [, KEEPALL KEEPOrder noWT noSTATs noWARNing noGRaph PLOTID(passthru) EFORM EFFect(string asis) WGT(varname numeric) ///
+	syntax [, KEEPALL KEEPOrder noWT noSTATs noWARNing noGRaph INTERaction PLOTID(passthru) EFORM EFFect(string asis) WGT(varname numeric) ///
 		CREATEDBY(string) FORESTplot(string asis) FPNOTE(string asis) SFMTLEN(integer 8) * ]
 	local twowayopts `"`macval(options)'"'
 
@@ -2896,19 +2896,19 @@ program define BuildResultsSet, rclass
 	if `"`rfdist'"'!=`""' {
 		cap {
 			if "`prvlist'"!="" {
-				assert `_rfLCI' <= `_Prop_LCI'    if `touse' & !missing(`_rfLCI', `_Prop_LCI') & `rflevel'>=`olevel'
-				assert `_rfUCI' >= `_Prop_UCI'    if `touse' & !missing(`_rfUCI', `_Prop_UCI') & `rflevel'>=`olevel'
-				assert `use5' &  missing(`_Prop_ES')       if `touse' & inlist(`_USE', 3, 5) ///
+				assert float(`_rfLCI') <= float(`_Prop_LCI') if `touse' & !missing(`_rfLCI', `_Prop_LCI') & `rflevel'>=`olevel'
+				assert float(`_rfUCI') >= float(`_Prop_UCI') if `touse' & !missing(`_rfUCI', `_Prop_UCI') & `rflevel'>=`olevel'
+				assert `use5' &  missing(`_Prop_ES')         if `touse' & inlist(`_USE', 3, 5) ///
 					& float(`_rfLCI')==float(`_Prop_LCI') & float(`_rfUCI')==float(`_Prop_UCI') & !missing(`_Prop_LCI')
-				assert `use5' & !missing(`_Prop_ES'[_n-1]) if `touse' & inlist(`_USE', 3, 5) ///
+				assert `use5' & !missing(`_Prop_ES'[_n-1])   if `touse' & inlist(`_USE', 3, 5) ///
 					& float(`_rfLCI')==float(`_Prop_LCI') & float(`_rfUCI')==float(`_Prop_UCI') & !missing(`_Prop_LCI')
 			}
 			else {
-				assert `_rfLCI' <= `_LCI'    if `touse' & !missing(`_rfLCI', `_LCI') & `rflevel'>=`olevel'
-				assert `_rfUCI' >= `_UCI'    if `touse' & !missing(`_rfUCI', `_UCI') & `rflevel'>=`olevel'
-				assert `use5' &  missing(`_ES')       if `touse' & inlist(`_USE', 3, 5) ///
+				assert float(`_rfLCI') <= float(`_LCI') if `touse' & !missing(`_rfLCI', `_LCI') & `rflevel'>=`olevel'
+				assert float(`_rfUCI') >= float(`_UCI') if `touse' & !missing(`_rfUCI', `_UCI') & `rflevel'>=`olevel'
+				assert `use5' &  missing(`_ES')         if `touse' & inlist(`_USE', 3, 5) ///
 					& float(`_rfLCI')==float(`_LCI') & float(`_rfUCI')==float(`_UCI') & !missing(`_LCI')
-				assert `use5' & !missing(`_ES'[_n-1]) if `touse' & inlist(`_USE', 3, 5) ///
+				assert `use5' & !missing(`_ES'[_n-1])   if `touse' & inlist(`_USE', 3, 5) ///
 					& float(`_rfLCI')==float(`_LCI') & float(`_rfUCI')==float(`_UCI') & !missing(`_LCI')
 			}
 		}
@@ -3027,7 +3027,7 @@ program define BuildResultsSet, rclass
 	// if "`prvlist'"=="" local proportion			// only pass `proportion' to -forestplot- if on original scale
 	if `"`prefix'"'!=`""' local useopts prefix(`prefix')
 	local useopts  = trim(itrim(`"`macval(useopts)' use(`_USE') labels(`_LABELS') wgt(`_WT') `cumulative' `influence' `denom_opt' `eform'"'))
-	local useopts2 = trim(itrim(`"`keepall' `overall' `subgroup' `het' `wt' `stats' `warning' `plotid'"'))
+	local useopts2 = trim(itrim(`"`interaction' `keepall' `overall' `subgroup' `het' `wt' `stats' `warning' `plotid'"'))
 	
 	if `"`effect'"'!=`""'     local useopts `"`macval(useopts)' effect(`effect')"'
 	local useopts `"`macval(useopts)' `macval(useopts2)'"'

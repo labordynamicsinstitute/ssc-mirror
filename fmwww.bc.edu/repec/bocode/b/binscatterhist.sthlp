@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 3.2 Oct2022}{...}
+{* *! version 3.3 Oct2022}{...}
 {viewerjumpto "Syntax" "binscatterhist##syntax"}{...}
 {viewerjumpto "Description" "binscatterhist##description"}{...}
 {viewerjumpto "Options" "binscatterhist##options"}{...}
@@ -476,6 +476,6 @@ rather than {bf:r(graphcmd)} in order to avoid truncation due to Stata's charact
 {marker acknowledgements}{...}
 {title:Acknowledgements}
 
-{pstd} The author would like to thank one anonymous referee, Elliott Ash, Chistopher Baum, Suresh Naidu, Sergio Galletta, Malka Guillot, Susanna B. Berkouwer and Guohui Jiang for the useful feedback on the program.
+{pstd} The author would like to thank one anonymous referee, Elliott Ash, Chistopher Baum, Suresh Naidu, Sergio Galletta, Malka Guillot, Susanna B. Berkouwer, Guohui Jiang, Jack Glaser and Fabián Enrique Gonzáles for useful feedback and bug finding.
 
 {pstd}The present version of {cmd:binscatterhist} is based on a program in Michael Stepner (2013): "BINSCATTER: Stata module to generate binned scatterplots" - https://EconPapers.repec.org/RePEc:boc:bocode:s457709; a program by Ben Jann (2014): "ADDPLOT: Stata module to add twoway plot objects to an existing twoway graph," Statistical Software Components S457917, Boston College Department of Economics, revised 28 Jan 2015 <https://ideas.repec.org/c/boc/bocode/s457917.html>; and uses the BINSREG program: Cattaneo, M. D., R. K. Crump, M. H. Farrell, and Y. Feng. 2019b.  Binscatter Regressions. arXiv:1902.09615.

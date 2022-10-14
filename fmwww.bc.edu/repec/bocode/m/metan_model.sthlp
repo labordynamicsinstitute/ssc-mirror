@@ -108,7 +108,7 @@ but applicable to a specific model{p_end}
 or Skovgaard's ({help metan_model##refs:Guolo 2012}) corrections to the likelihood, for use with the profile-likelihood model {opt pl}{p_end}
 {synopt: {opt eim} {opt oim}}use expected (default) or observed information matrix to compute degrees of freedom for Kenward-Roger model {opt kroger}
 ({help metan_model##refs:Morris et al 2018}){p_end}
-{synopt :{opt qwt(varname)}}variable containing Quality Effect weights (model {cmd:qe} only; see {help metan_model##refs:Doi et al 2015b}){p_end}
+{synopt :{opt qwt(varname)}}variable containing quality information (model {cmd:qe} only; see {help metan_model##refs:Doi et al 2015b}){p_end}
 
 {syntab :Options for iteration, replication or numerical integration}
 {synopt :{opt itol(#)}}tolerance for iteration convergence (with {opt mpaule}, {opt mle}, {opt reml}, {opt pl}, {opt kroger}, {opt btweedie} or {opt hcopas}){p_end}

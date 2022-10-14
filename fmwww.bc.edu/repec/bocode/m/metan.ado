@@ -318,7 +318,7 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 	if `"`s(interaction)'"'!=`""' local effect `"Interact. `effect'"'
 
 	// options to send to metan_output.ado	
-	local output_opts `"`macval(output_opts)' effect(`"`effect'"') `s(labelopts)'"'
+	local output_opts `"`macval(output_opts)' effect(`"`effect'"') `s(labelopts)' `s(interaction)'"'
 	// N.B. labelopts here are MODEL labels, not to be confused with LABTITLE()
 
 	local m = `s(m)'
@@ -418,7 +418,7 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 	// If transformed proportions ("`summstat'"!="pr"), default is to display back-transformed effect sizes ("`nopr'"=="")
 	// March 2021: Not applicable to `cumulative' or `influence'; this functionality is handled differently, see below
 	local 0 `", `opts_adm'"'
-	syntax [, PROPORTION NOPR CUmulative INFluence * ]
+	syntax [, PRoportion NOPR CUmulative INFluence * ]
 	
 	if `"`xrownames'"'!=`""' {
 		local nt = `: word count `xrownames''
@@ -3669,7 +3669,7 @@ program define ParseOptions, sclass
 	syntax [, BY(varname numeric) * ]	// do not return `byopts' in `opts_adm'
 	local 0 `", `macval(options)'"'	
 	syntax [, SAVING(passthru) CREATEDBY(passthru) DENOMinator(passthru) ///
-		PROPORTION CUmulative INFluence SUMMARYONLY NOPR TESTBased * ]
+		PRoportion CUmulative INFluence SUMMARYONLY NOPR TESTBased * ]
 	
 	// Locals potentially to be altered here:
 	syntax [, LEVEL(passthru) ILevel(passthru) OLevel(passthru) TSQLEVEL(passthru) HLevel(passthru) ///

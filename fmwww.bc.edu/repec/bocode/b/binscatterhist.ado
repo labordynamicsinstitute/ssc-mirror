@@ -1,4 +1,4 @@
-*! version 3.2 Oct2022  Matteo Pinna, matteo.pinna@gess.ethz.ch
+*! version 3.3 Oct2022  Matteo Pinna, matteo.pinna@gess.ethz.ch
 
 * Versions:
 * version 1.1 partly fixes the display of multiple graphs, sets default values for xmin and ymin, add twoway general options to the histograms and solves some bugs in the error messages
@@ -13,6 +13,7 @@
 * version 3.0 adds binning via binsreg
 * version 3.1 fixes an issue in trasmitting graph options to addplot and add info on correct format of legend
 * version 3.2 missing brace added
+* version 3.3 fixes bug in sample reporting for binsreg option and an issue with the legend
 /*
 This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.  
 The full legal text as well as a human-readable summary can be accessed at http://creativecommons.org/licenses/by-nc-sa/4.0/
@@ -1192,8 +1193,13 @@ local stata_version=c(version)
 			*local pval: display `pval'
 			local standerr=round(sqrt(eV[1,1]),`rounding')
 			local standerr: display `standerr'
-			cap egen `nsize'=total(e(sample))
-			local sampsize=`nsize'[1]
+				if "`binsreg'"==""{
+				cap egen `nsize'=total(e(sample))
+				local sampsize=`nsize'[1]
+				}
+				else {
+				local sampsize=e(N)
+				}
 			}
 			if eb[1,1]<0 {
 			local xmin_coef=`t_minb_`x_var'' +(1/6)*`t_rb_`x_var''
@@ -1205,8 +1211,13 @@ local stata_version=c(version)
 			*local pval: display `pval'
 			local standerr=round(sqrt(eV[1,1]),`rounding')
 			local standerr: display `standerr'
-			cap egen `nsize'=total(e(sample))
-			local sampsize=`nsize'[1]
+				if "`binsreg'"==""{
+				cap egen `nsize'=total(e(sample))
+				local sampsize=`nsize'[1]
+				}
+				else {
+				local sampsize=e(N)
+				}		
 			}
 			if ("`xcoef'"!="") local xmin_coef=`xcoef'
 			if ("`ycoef'"!="") local ymin_coef=`ycoef'
@@ -1251,14 +1262,18 @@ local stata_version=c(version)
 		}
 	}
 	*
-
+	
+	* Legend
+	local check_legend=strpos("`options'","legend")
+	if "`check_legend'"=="0" local legendoff="legend(off)"
+	
 	* Display the graph
 	if ("`histogram'"!="") {
-	local graphcmd twoway `scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') `addname'   `options' `coefficient_report' nodraw legend(label(1 "Binscatter") label(2 "Histogram"))
-	if ("`savedata'"!="") local savedata_graphcmd twoway `savedata_scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `addname' `options' `coefficient_report'
+	local graphcmd twoway `scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') `addname' `options' `coefficient_report' nodraw `legendoff'
+	if ("`savedata'"!="") local savedata_graphcmd twoway `savedata_scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle' `addname' `options' `coefficient_report'
 	}
 	if ("`histogram'"=="") {
-	local graphcmd twoway `scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `addname' `options' `coefficient_report'
+	local graphcmd twoway `scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `addname' `options' `coefficient_report' `legendoff'
 	if ("`savedata'"!="") local savedata_graphcmd twoway `savedata_scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `addname' `options' `coefficient_report' 
 	}
 	`graphcmd'
@@ -1266,14 +1281,14 @@ local stata_version=c(version)
 	local temp_barwidth1=`barw_`x_var''
 	local temp_barwidth2=`barw_`y_vars''
 		if ("`histogram'"=="`x_var'") {
-		addplot `name_addplot': bar `t_d_`x_var'' `t_b_`x_var'', barwidth(`temp_barwidth1') base(`ymin') /* general options */ `xcolor' `xcfcolor' `xfintensity' `xlcolor' `xlwidth' `xlpattern' `xlalign' `xlstyle' `xbstyle' `xpstyle' `xbstyle' `xcolor_default'/* add histogram */ `options'
+		addplot `name_addplot': bar `t_d_`x_var'' `t_b_`x_var'', barwidth(`temp_barwidth1') base(`ymin') /* general options */ `xcolor' `xcfcolor' `xfintensity' `xlcolor' `xlwidth' `xlpattern' `xlalign' `xlstyle' `xbstyle' `xpstyle' `xbstyle' `xcolor_default'/* add histogram */ `options' `legendoff'
 		}
 		if ("`histogram'"=="`y_vars'") {
-		addplot `name_addplot': bar `t_d_`y_vars'' `t_b_`y_vars'', horizontal base(`xmin') barwidth(`temp_barwidth2') /* general options */ `ycolor' `ycfcolor' `yfintensity' `ylcolor' `ylwidth' `ylpattern' `ylalign' `ylstyle' `ybstyle' `ypstyle' `ybstyle' `ycolor_default'/* add histogram */ `options'
+		addplot `name_addplot': bar `t_d_`y_vars'' `t_b_`y_vars'', horizontal base(`xmin') barwidth(`temp_barwidth2') /* general options */ `ycolor' `ycfcolor' `yfintensity' `ylcolor' `ylwidth' `ylpattern' `ylalign' `ylstyle' `ybstyle' `ypstyle' `ybstyle' `ycolor_default'/* add histogram */ `options' `legendoff'
 		}
 		if ("`histogram'"=="`x_var' `y_vars'") | ("`histogram'"=="`y_vars' `x_var'") {
-		qui addplot `name_addplot': bar `t_d_`x_var'' `t_b_`x_var'', barwidth(`temp_barwidth1') base(`ymin') /* general options */ `xcolor' `xcfcolor' `xfintensity' `xlcolor' `xlwidth' `xlpattern' `xlalign' `xlstyle' `xbstyle' `xpstyle' `xbstyle' `xcolor_default'/* add histogram */ `options' legend(`legend_labels' order(`order'))
-		addplot `name_addplot': bar `t_d_`y_vars'' `t_b_`y_vars'', horizontal base(`xmin') barwidth(`temp_barwidth2') /* general options */ `ycolor' `ycfcolor' `yfintensity' `ylcolor' `ylwidth' `ylpattern' `ylalign' `ylstyle' `ybstyle' `ypstyle' `ybstyle' `ycolor_default'/* add histogram */ `options'
+		qui addplot `name_addplot': bar `t_d_`x_var'' `t_b_`x_var'', barwidth(`temp_barwidth1') base(`ymin') /* general options */ `xcolor' `xcfcolor' `xfintensity' `xlcolor' `xlwidth' `xlpattern' `xlalign' `xlstyle' `xbstyle' `xpstyle' `xbstyle' `xcolor_default'/* add histogram */ `options' 
+		addplot `name_addplot': bar `t_d_`y_vars'' `t_b_`y_vars'', horizontal base(`xmin') barwidth(`temp_barwidth2') /* general options */ `ycolor' `ycfcolor' `yfintensity' `ylcolor' `ylwidth' `ylpattern' `ylalign' `ylstyle' `ybstyle' `ypstyle' `ybstyle' `ycolor_default'/* add histogram */ `options' `legendoff'
 		}
 	}
 	

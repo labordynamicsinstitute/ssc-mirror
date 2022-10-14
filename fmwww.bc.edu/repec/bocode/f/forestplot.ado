@@ -109,7 +109,8 @@
 //  - for drawing data (boxes, CIs etc.) on top of null and/or overall line(s)
 
 *! version 4.06  David Fisher  12oct2022
-// No changes to -forestplot- code; upversioned to match with -metan-
+// new option "sepline" for drawing prediction interval lines separately (below) confidence interval lines
+// instead of straddling them
 
 
 program define forestplot, sortpreserve rclass
@@ -606,8 +607,8 @@ program define forestplot, sortpreserve rclass
 		}
 		
 		cap {			
-			assert `_rfLCI' <= `_LCI' if `touse' & !missing(`_rfLCI', `_LCI') & `rflevel'>=`olevel'
-			assert `_rfUCI' >= `_UCI' if `touse' & !missing(`_rfUCI', `_UCI') & `rflevel'>=`olevel'
+			assert float(`_rfLCI') <= float(`_LCI') if `touse' & !missing(`_rfLCI', `_LCI') & float(`rflevel')>=float(`olevel')
+			assert float(`_rfUCI') >= float(`_UCI') if `touse' & !missing(`_rfUCI', `_UCI') & float(`rflevel')>=float(`olevel')
 		}
 		if _rc {
 			nois disp as err "Error in predictive interval data"
@@ -1277,7 +1278,7 @@ program define forestplot, sortpreserve rclass
 	// local DYmin = r(min) - 1			// amended Apr 2020
 	local DYmin = 0
 	local DYmax = r(max) + 1
-	
+		
 	// Re-ordered 28th June 2017 so that all twoway options are given together at the end	
 	#delimit ;
 
@@ -3501,21 +3502,6 @@ program define BuildPlotCmds, sclass
 		qui gen byte `tv0' = `touse'
 		local tousePlotID `tv0'
 		
-		/*
-		// find global min & max weights, to maintain consistency across subgroups
-		if `"`newwt'"'==`""' {		// weight consistent across dataid, so just use locals
-			summ `_WT' if `touse' & inlist(`_USE', 1, 2), meanonly	
-			local minwt = r(min)
-			local maxwt = r(max)
-		}
-		else {						// multiple min/max weights required, so use tempvars
-			tempvar minwt maxwt
-			sort `touse' `dataid' `_WT'
-			qui by `touse' `dataid' : gen double `minwt' = `_WT'[1] if `touse'
-			qui by `touse' `dataid' : gen double `maxwt' = `_WT'[_N] if `touse'
-		}
-		*/
-
 		// find global min & max weights, to maintain consistency across subgroups
 		if `"`newwt'"'==`""' {		// weight consistent across dataid, so just do this once
 			summ `_WT' if `touse' & inlist(`_USE', 1, 2), meanonly
@@ -3642,13 +3628,14 @@ program define BuildPlotCmds, sclass
 		// - not allowed within the plotid-specific loops later on (because it's currently implemented as a "global" ordering of plot elements with the -twoway- command)
 		// - similarly: it's not really *used* here; it's simply returned as-is (as an extra soption) to be picked up by the main -twoway- command.
 		
-		// "overlay" options (see "Note" above)
-		local overlay_opt = cond(`"`plot'"'==`"rf"', "OVerlay", "noOVerlay")
+		// options specific to rfplot
+		if `"`plot'"'==`"rf"' local overlay_opt OVerlay SEPLine
+		else                  local overlay_opt noOVerlay
 		
 		local 0 `", ``plot'opts'"'
 		syntax [, LColor(passthru) MColor(passthru) LWidth(passthru) MLWidth(passthru) ///
 			RCAP `overlay_opt' HORizontal VERTical * ]
-
+			
 		// disallowed options
 		if `"`horizontal'"'!=`""' | `"`vertical'"'!=`""' {
 			nois disp as err `"suboptions {bf:horizontal} and {bf:vertical} not allowed in option {bf:`plot'opts()}"'
@@ -3668,6 +3655,10 @@ program define BuildPlotCmds, sclass
 		
 		// "overlay" options (see "Note" above)
 		local g_overlay_`plot' : copy local overlay
+		if `"`plot'"'==`"rf"' {
+			local g_sepline_`plot' : copy local sepline
+			if `"`sepline'"'!=`""' local g_overlay_`plot' overlay		// -sepline- implies -overlay-
+		}
 		
 		local uplot = upper("`plot'")
 		local `uplot'PlotType = cond("`rcap'"=="", "rspike", "rcap")
@@ -3879,7 +3870,11 @@ program define BuildPlotCmds, sclass
 			
 			* POOLED EFFECT MARKERS
 			local touse2 `"`touseDiam' & inlist(`_USE', 3, 5) & `plotid'==`p'"'		// use local, not tempvar, so conditions are copied into plot commands
-			qui count if `touse2'
+			local touse3 : copy local touse2
+			if `"`rfdist'"'!=`""' {													// Oct 2022: don't plot data from "second" _USE==3|5 row containing pred.int. text
+				local touse3 `"`touse3' & float(`_rfLCI')!=float(`_LCI') & float(`_rfUCI')!=float(`_UCI')"'
+			}
+			qui count if `touse3'
 			if r(N) {
 			
 				* DIAMONDS:  DRAW POLYGONS WITH -twoway rarea-
@@ -3912,13 +3907,13 @@ program define BuildPlotCmds, sclass
 					// If so, will need to draw round the edges of the polygon, excepting the "offscale edges"
 					//   and switch off the line options to -twoway rarea-
 					// (draw these lines *after* drawing the area, though, so that the lines appear on top)
-					qui count if `touse2' & (`offscaleL' | `offscaleR')
+					qui count if `touse3' & (`offscaleL' | `offscaleR')
 					if r(N) {
-						local diam`p'Line `"line `DiamY1' `DiamX' if `touse2', `macval(diamPlot`p'Opts)' cmissing(n) ||"'
-						local diam`p'Line `"`macval(diam`p'Line)' line `DiamY2' `DiamX' if `touse2', `macval(diamPlot`p'Opts)' cmissing(n) ||"'
+						local diam`p'Line `"line `DiamY1' `DiamX' if `touse3', `macval(diamPlot`p'Opts)' cmissing(n) ||"'
+						local diam`p'Line `"`macval(diam`p'Line)' line `DiamY2' `DiamX' if `touse3', `macval(diamPlot`p'Opts)' cmissing(n) ||"'
 						local diam`p'LWidth `"lwidth(none)"'
 					}
-					local diamPlot `"`macval(diamPlot)' rarea `DiamY1' `DiamY2' `DiamX' if `touse2', `macval(diamPlot`p'Opts)' `diam`p'LWidth' cmissing(n) || `diam`p'Line' "'
+					local diamPlot `"`macval(diamPlot)' rarea `DiamY1' `DiamY2' `DiamX' if `touse3', `macval(diamPlot`p'Opts)' `diam`p'LWidth' cmissing(n) || `diam`p'Line' "'
 				}
 				
 				* POOLED EFFECTS - PPOINT/PCI
@@ -3953,28 +3948,28 @@ program define BuildPlotCmds, sclass
 					local PCIPlot`p'Type = cond("`rcap'"=="", "`PCIPlotType'", "rcap")
 					
 					// default: both ends within scale (i.e. no arrows)
-					local PCIPlot `"`macval(PCIPlot)' `PCIPlot`p'Type' `_LCI' `_UCI' `id' if `touse2' & !`offscaleL' & !`offscaleR', hor `macval(PCIPlot`p'Opts)' ||"'
+					local PCIPlot `"`macval(PCIPlot)' `PCIPlot`p'Type' `_LCI' `_UCI' `id' if `touse3' & !`offscaleL' & !`offscaleR', hor `macval(PCIPlot`p'Opts)' ||"'
 
 					// if arrows are required
-					qui count if `touse2' & `offscaleL' & `offscaleR'
+					qui count if `touse3' & `offscaleL' & `offscaleR'
 					if r(N) {													// both ends off scale
-						local PCIPlot `"`macval(PCIPlot)' pcbarrow `id' `_LCI' `id' `_UCI' if `touse2' & `offscaleL' & `offscaleR', `macval(PCIPlot`p'Opts)' ||"'
+						local PCIPlot `"`macval(PCIPlot)' pcbarrow `id' `_LCI' `id' `_UCI' if `touse3' & `offscaleL' & `offscaleR', `macval(PCIPlot`p'Opts)' ||"'
 					}
-					qui count if `touse2' & `offscaleL' & !`offscaleR'
+					qui count if `touse3' & `offscaleL' & !`offscaleR'
 					if r(N) {													// only left off scale
-						local PCIPlot `"`macval(PCIPlot)' pcarrow `id' `_UCI' `id' `_LCI' if `touse2' & `offscaleL' & !`offscaleR', `macval(PCIPlot`p'Opts)' ||"'
+						local PCIPlot `"`macval(PCIPlot)' pcarrow `id' `_UCI' `id' `_LCI' if `touse3' & `offscaleL' & !`offscaleR', `macval(PCIPlot`p'Opts)' ||"'
 						if "`PCIPlot`p'Type'" == "rcap" {			// add cap to other end if appropriate
-							local PCIPlot `"`macval(PCIPlot)' rcap `_UCI' `_UCI' `id' if `touse2' & `offscaleL' & !`offscaleR', hor `macval(PCIPlot`p'Opts)' ||"'
+							local PCIPlot `"`macval(PCIPlot)' rcap `_UCI' `_UCI' `id' if `touse3' & `offscaleL' & !`offscaleR', hor `macval(PCIPlot`p'Opts)' ||"'
 						}
 					}
-					qui count if `touse2' & !`offscaleL' & `offscaleR'
+					qui count if `touse3' & !`offscaleL' & `offscaleR'
 					if r(N) {													// only right off scale
-						local PCIPlot `"`macval(PCIPlot)' pcarrow `id' `_LCI' `id' `_UCI' if `touse2' & !`offscaleL' & `offscaleR', `macval(PCIPlot`p'Opts)' ||"'
+						local PCIPlot `"`macval(PCIPlot)' pcarrow `id' `_LCI' `id' `_UCI' if `touse3' & !`offscaleL' & `offscaleR', `macval(PCIPlot`p'Opts)' ||"'
 						if "`PCIPlot`p'Type'" == "rcap" {			// add cap to other end if appropriate
-							local PCIPlot `"`macval(PCIPlot)' rcap `_LCI' `_LCI' `id' if `touse2' & !`offscaleL' & `offscaleR', hor `macval(PCIPlot`p'Opts)' ||"'
+							local PCIPlot `"`macval(PCIPlot)' rcap `_LCI' `_LCI' `id' if `touse3' & !`offscaleL' & `offscaleR', hor `macval(PCIPlot`p'Opts)' ||"'
 						}
 					}				
-					local ppointPlot `"`macval(ppointPlot)' scatter `id' `_ES' if `touse2', `defPPointOpts' `ppointopts' `ppoint`p'opts' ||"'
+					local ppointPlot `"`macval(ppointPlot)' scatter `id' `_ES' if `touse3', `defPPointOpts' `ppointopts' `ppoint`p'opts' ||"'
 					
 					qui replace `touseDiam' = 1 if `plotid'==`p'	// line, not area
 				}
@@ -3987,8 +3982,10 @@ program define BuildPlotCmds, sclass
 					else {
 						local 0 `", `rf`p'opts'"'
 						syntax [, LColor(passthru) MColor(passthru) LWidth(passthru) MLWidth(passthru) ///
-							RCAP OVerlay HORizontal VERTical /*Connect(string)*/ * ]									// check for disallowed options + rcap, plus additional option -overlay-
-						
+							RCAP HORizontal VERTical /*Connect(string)*/ OVerlay SEPLine * ]				// check for disallowed options + rcap,
+																											// plus additional options -overlay- and -sepline-
+						if `"`sepline'"'!=`""' local overlay overlay	// -sepline- implies -overlay-
+																										
 						// disallowed options
 						if `"`horizontal'"'!=`""' | `"`vertical'"'!=`""' {
 							nois disp as err `"suboptions {bf:horizontal} and {bf:vertical} not allowed in option {bf:rf`p'opts}"'
@@ -4006,11 +4003,17 @@ program define BuildPlotCmds, sclass
 						if `"`lwidth'"'!=`""' & `"`mlwidth'"'==`""' local mlwidth m`lwidth'									// for pc(b)arrow
 						local RFPlot`p'Opts `"`defRFOpts' `rfopts' `mcolor' `lcolor' `mlwidth' `lwidth' `options'"'		// main options first, then options specific to plot `p'
 						local RFPlot`p'Type = cond("`rcap'"=="", "`RFPlotType'", "rcap")
-					
+						
 						// if overlay, use same approach as for CI/PCI
 						if trim(`"`overlay'`g_overlay_rf'"') != `""' {
-							local touse_add `"float(`_rfUCI')>=float(`CXmin') & float(`_rfLCI')<=float(`CXmax') & float(`_rfLCI')!=float(`_rfUCI')"'
-					
+							local touse_add `"float(`_rfUCI')>=float(`CXmin') & float(`_rfLCI')<=float(`CXmax')"'
+
+							// Oct 2022: option to plot prediction interval as separate line from confidence interval
+							if trim(`"`sepline'`g_sepline_rf'"') != `""' {
+								 local touse_add `"`touse_add' & float(`_rfLCI')==float(`_LCI') & float(`_rfUCI')==float(`_UCI')"'
+							}
+							else local touse_add `"`touse_add' & float(`_rfLCI')!=float(`_LCI') & float(`_rfUCI')!=float(`_UCI')"'
+							
 							// default: both ends within scale (i.e. no arrows)
 							local touse3 `"`touse2' & !`rfLoffscaleL' & !`rfRoffscaleR' & `touse_add'"'
 							local RFPlot `"`macval(RFPlot)' `RFPlot`p'Type' `_rfLCI' `_rfUCI' `id' if `touse3', hor `macval(RFPlot`p'Opts)' ||"'
@@ -4266,8 +4269,12 @@ program define BuildPlotCmds, sclass
 
 		
 		* POOLED EFFECT MARKERS		
-		local touse2 `"`touseDiam' & inlist(`_USE', 3, 5) & inlist(`plotid', `pplvals')"'		// use local, not tempvar, so conditions are copied into plot commands
-		qui count if `touse2' 
+		local touse2 `"`touseDiam' & inlist(`_USE', 3, 5) & inlist(`plotid', `pplvals')"'	// use local, not tempvar, so conditions are copied into plot commands
+		local touse3 : copy local touse2
+		if `"`rfdist'"'!=`""' {																// Oct 2022: don't plot data from "second" _USE==3|5 row containing pred.int. text
+			local touse3 `"`touse3' & float(`_rfLCI')!=float(`_LCI') & float(`_rfUCI')!=float(`_UCI')"'
+		}
+		qui count if `touse3'
 		if r(N) {
 
 			* DIAMONDS - DRAW POLYGONS WITH -twoway rarea-
@@ -4279,13 +4286,13 @@ program define BuildPlotCmds, sclass
 				// If so, will need to draw round the edges of the polygon, excepting the "offscale edges"
 				//   and switch off the line options to -twoway rarea-
 				// (draw these lines *after* drawing the area, though, so that the lines appear on top)
-				qui count if `touse2' & (`offscaleL' | `offscaleR')
+				qui count if `touse3' & (`offscaleL' | `offscaleR')
 				if r(N) {
-					local diamLine `"line `DiamY1' `DiamX' if `touse2', `macval(diamPlotOpts)' cmissing(n) ||"'
-					local diamLine `"`macval(diamLine)' line `DiamY2' `DiamX' if `touse2', `macval(diamPlotOpts)' cmissing(n) ||"'
+					local diamLine `"line `DiamY1' `DiamX' if `touse3', `macval(diamPlotOpts)' cmissing(n) ||"'
+					local diamLine `"`macval(diamLine)' line `DiamY2' `DiamX' if `touse3', `macval(diamPlotOpts)' cmissing(n) ||"'
 					local diamLWidth `"lwidth(none)"'
 				}
-				local diamPlot `"`macval(diamPlot)' rarea `DiamY1' `DiamY2' `DiamX' if `touse2', `macval(diamPlotOpts)' `diamLWidth' cmissing(n) || `diamLine' "'
+				local diamPlot `"`macval(diamPlot)' rarea `DiamY1' `DiamY2' `DiamX' if `touse3', `macval(diamPlotOpts)' `diamLWidth' cmissing(n) || `diamLine' "'
 			}
 			
 		
@@ -4300,28 +4307,28 @@ program define BuildPlotCmds, sclass
 				local PCIPlotOpts `"`defPCIOpts' `pciopts'"'
 				
 				// default: both ends within scale (i.e. no arrows)
-				local PCIPlot `"`macval(PCIPlot)' `PCIPlotType' `_LCI' `_UCI' `id' if `touse2' & !`offscaleL' & !`offscaleR', hor `macval(PCIPlotOpts)' ||"'
+				local PCIPlot `"`macval(PCIPlot)' `PCIPlotType' `_LCI' `_UCI' `id' if `touse3' & !`offscaleL' & !`offscaleR', hor `macval(PCIPlotOpts)' ||"'
 
 				// if arrows are required
-				qui count if `touse2' & `offscaleL' & `offscaleR'
+				qui count if `touse3' & `offscaleL' & `offscaleR'
 				if r(N) {													// both ends off scale
-					local PCIPlot `"`macval(PCIPlot)' pcbarrow `id' `_LCI' `id' `_UCI' if `touse2' & `offscaleL' & `offscaleR', `macval(PCIPlotOpts)' ||"'
+					local PCIPlot `"`macval(PCIPlot)' pcbarrow `id' `_LCI' `id' `_UCI' if `touse3' & `offscaleL' & `offscaleR', `macval(PCIPlotOpts)' ||"'
 				}
-				qui count if `touse2' & `offscaleL' & !`offscaleR'
+				qui count if `touse3' & `offscaleL' & !`offscaleR'
 				if r(N) {													// only left off scale
-					local PCIPlot `"`macval(PCIPlot)' pcarrow `id' `_UCI' `id' `_LCI' if `touse2' & `offscaleL' & !`offscaleR', `macval(PCIPlotOpts)' ||"'
+					local PCIPlot `"`macval(PCIPlot)' pcarrow `id' `_UCI' `id' `_LCI' if `touse3' & `offscaleL' & !`offscaleR', `macval(PCIPlotOpts)' ||"'
 					if "`PCIPlotType'" == "rcap" {			// add cap to other end if appropriate
-						local PCIPlot `"`macval(PCIPlot)' rcap `_UCI' `_UCI' `id' if `touse2' & `offscaleL' & !`offscaleR', hor `macval(PCIPlotOpts)' ||"'
+						local PCIPlot `"`macval(PCIPlot)' rcap `_UCI' `_UCI' `id' if `touse3' & `offscaleL' & !`offscaleR', hor `macval(PCIPlotOpts)' ||"'
 					}
 				}
-				qui count if `touse2' & !`offscaleL' & `offscaleR'
+				qui count if `touse3' & !`offscaleL' & `offscaleR'
 				if r(N) {													// only right off scale
-					local PCIPlot `"`macval(PCIPlot)' pcarrow `id' `_LCI' `id' `_UCI' if `touse2' & !`offscaleL' & `offscaleR', `macval(PCIPlotOpts)' ||"'
+					local PCIPlot `"`macval(PCIPlot)' pcarrow `id' `_LCI' `id' `_UCI' if `touse3' & !`offscaleL' & `offscaleR', `macval(PCIPlotOpts)' ||"'
 					if "`PCIPlotType'" == "rcap" {			// add cap to other end if appropriate
-						local PCIPlot `"`macval(PCIPlot)' rcap `_LCI' `_LCI' `id' if `touse2' & !`offscaleL' & `offscaleR', hor `macval(PCIPlotOpts)' ||"'
+						local PCIPlot `"`macval(PCIPlot)' rcap `_LCI' `_LCI' `id' if `touse3' & !`offscaleL' & `offscaleR', hor `macval(PCIPlotOpts)' ||"'
 					}
 				}				
-				local ppointPlot `"`macval(ppointPlot)' scatter `id' `_ES' if `touse2', `defPPointOpts' `ppointopts' ||"'
+				local ppointPlot `"`macval(ppointPlot)' scatter `id' `_ES' if `touse3', `defPPointOpts' `ppointopts' ||"'
 				
 				qui replace `touseDiam' = 1 if inlist(`plotid', `pplvals')		// line, not area
 			}
@@ -4341,7 +4348,12 @@ program define BuildPlotCmds, sclass
 			
 				// if overlay, use same approach as for CI/PCI
 				if `"`g_overlay_rf'"'!=`""' {
-					local touse_add `"float(`_rfUCI')>=float(`CXmin') & float(`_rfLCI')<=float(`CXmax') & float(`_rfLCI')!=float(`_rfUCI')"'
+					
+					local touse_add `"float(`_rfUCI')>=float(`CXmin') & float(`_rfLCI')<=float(`CXmax')"'
+
+					// Oct 2022: option to plot prediction interval as separate line from confidence interval
+					if `"`g_sepline_rf'"'!=`""' local touse_add `"`touse_add' & float(`_rfLCI')==float(`_LCI') & float(`_rfUCI')==float(`_UCI')"'
+					else                        local touse_add `"`touse_add' & float(`_rfLCI')!=float(`_LCI') & float(`_rfUCI')!=float(`_UCI')"'
 			
 					// default: both ends within scale (i.e. no arrows)
 					local touse3 `"`touse2' & !`rfLoffscaleL' & !`rfRoffscaleR' & `touse_add'"'

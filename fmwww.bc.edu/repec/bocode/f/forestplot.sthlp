@@ -412,7 +412,7 @@ affect the rendition of weighted boxes representing point estimates
 and use options for a weighted marker (e.g., shape, colour; but not size).
 
 {phang2}
-{cmd:ciopts(}{it:{help line_options}} [{cmd:nooverlay}] [{cmd:rcap}]{cmd:)} and {cmd:ci}{it:#}{cmd:opts(}{it:{help line_options}} [{cmd:rcap}]{cmd:)}
+{cmd:ciopts(}[{it:{help line_options}}] [{cmd:nooverlay}] [{cmd:rcap}]{cmd:)} and {cmd:ci}{it:#}{cmd:opts(}[{it:{help line_options}}] [{cmd:rcap}]{cmd:)}
 affect the rendition of confidence intervals.
 The additional option {cmd:nooverlay} draws confidence interval lines {ul:behind} weighted boxes rather than overlaying them
 (note: cannot be specified with {cmd:ci}{it:#}{cmd:opts()}).
@@ -423,11 +423,11 @@ The additional option {cmd:rcap} requests capped spikes.
 affect the rendition of diamonds representing pooled estimates.
 
 {phang2}
-{cmd:nlineopts(}{it:{help line_options}} [{cmd:nooverlay}]{cmd:)} affects the rendition of the null hypothesis line.
+{cmd:nlineopts(}[{it:{help line_options}}] [{cmd:nooverlay}]{cmd:)} affects the rendition of the null hypothesis line.
 The additional option {cmd:nooverlay} draws this line first, and places data features (e.g. weighted boxes, confidence interval lines) on top.
 
 {phang2}
-{cmd:olineopts(}{it:{help line_options}} [{cmd:nooverlay}]{cmd:)} and {cmd:oline}{it:#}{cmd:opts(}{it:{help line_options}}{cmd:)}
+{cmd:olineopts(}[{it:{help line_options}}] [{cmd:nooverlay}]{cmd:)} and {cmd:oline}{it:#}{cmd:opts(}{it:{help line_options}}{cmd:)}
 affect the rendition of overall effect lines.
 The additional option {cmd:nooverlay} draws these lines first, and places data features (e.g. weighted boxes, confidence interval lines) on top
 (note: cannot be specified with {cmd:oline}{it:#}{cmd:opts()}).
@@ -439,8 +439,8 @@ If the pooled effect itself is {ul:not} plotted, e.g. for an {opt influence} met
 {it:#} must be the value taken by {opt plotid} at the observation where the overall effect line begins.
 
 {phang2}
-{cmd:ocilineopts(}[{it:{help line_options}} {it:{help area_options}}] [{cmd:hide}]{cmd:)}
-and {cmd:ociline}{it:#}{cmd:opts(}[{it:{help line_options}} {it:{help area_options}}] [{cmd:hide}]{cmd:)}
+{cmd:ocilineopts(}[{it:{help line_options}}] [{it:{help area_options}}] [{cmd:hide}]{cmd:)}
+and {cmd:ociline}{it:#}{cmd:opts(}[{it:{help line_options}}] [{it:{help area_options}}] [{cmd:hide}]{cmd:)}
 affect the rendition of optional additional vertical lines representing the confidence limits
 of the pooled effect. By default, {opt cumulative} and {opt influence} meta-analyses (see {bf:{help metan}})
 display these lines, along with the option {opt hide} which "hides" the pooled-effect observation itself.
@@ -454,16 +454,18 @@ affect the rendition of (unweighted) point estimate markers,
 e.g. to clarify the precise point within a larger weighted box (see {opt boxopts()}).
 
 {phang2}
-{cmd:rfopts(}{it:{help line_options}} [{cmd:overlay}] [{cmd:rcap}]{cmd:)}
-and {cmd:rf}{it:#}{cmd:opts(}{it:{help line_options}} [{cmd:overlay}] [{cmd:rcap}]{cmd:)}
+{cmd:rfopts(}[{it:{help line_options}}] [{cmd:overlay}] [{cmd:rcap}] [{cmd:sepline}]{cmd:)}
+and {cmd:rf}{it:#}{cmd:opts(}[{it:{help line_options}}] [{cmd:overlay}] [{cmd:rcap}] [{cmd:sepline}]{cmd:)}
 affect the rendition of prediction interval lines as defined by {opt rfdist(varlist)}.
 The additional option {cmd:overlay} results in the prediction interval being plotted as a single line,
 continuing through the confidence interval and point estimate. (The default is for separate lines
-to be plotted either side of the confidence interval.) The additional option {cmd:rcap} requests capped spikes.
+to be plotted either side of the confidence interval.)
+The additional option {cmd:rcap} requests capped spikes.
+The additional option {cmd:sepline} plots the prediction interval line separately, below the confidence interval rather than straddling it.
 
 {phang2}
-{cmd:rfcilineopts(}[{it:{help line_options}} {it:{help area_options}}] [{cmd:hide}]{cmd:)}
-and {cmd:rfciline}{it:#}{cmd:opts(}[{it:{help line_options}} {it:{help area_options}}] [{cmd:hide}]{cmd:)}
+{cmd:rfcilineopts(}[{it:{help line_options}}] [{it:{help area_options}}] [{cmd:hide}]{cmd:)}
+and {cmd:rfciline}{it:#}{cmd:opts(}[{it:{help line_options}}] [{it:{help area_options}}] [{cmd:hide}]{cmd:)}
 affect the rendition of optional additional vertical lines representing the limits
 of the prediction interval. These options function in the same way as {cmd:ocilineopts()}.
 
@@ -483,6 +485,10 @@ affect the rendition of confidence intervals for pooled estimates
 {pmore}
 {cmd:ppointopts(}{it:{help marker_options}}{cmd:)} and {cmd:ppoint}{it:#}{cmd:opts(}{it:{help marker_options}}{cmd:)}
 affect the rendition of (unweighted) pooled estimate markers.
+
+{pmore}
+Note that, if pooled estimates are not represented by diamonds, then the default prediction interval line may become indistinguishable from the confidence interval line.
+In this case, the lines may be distinguished via appropriate {help twoway} options (e.g. colours); or the option {cmd:sepline} could be used.
 
 
 {marker saved_results}{...}
