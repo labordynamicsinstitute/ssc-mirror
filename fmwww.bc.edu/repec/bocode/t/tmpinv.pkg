@@ -13,6 +13,9 @@ d normal random variates). The result is adjusted for extreme
 d values to match the RHS via shares of estimated row/column sums
 d if the corresponding option is specified. 
 d
+d Author: Ilya Bolotov
+d Support: ilya.bolotov@vse.cz
+d
 d KW: linear programming
 d KW: least squares
 d KW: pseudoinverse
@@ -20,7 +23,7 @@ d KW: singular value decomposition
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20221012
+d Distribution-Date: 20221014
 d
 f tmpinv.ado
 F tmpinv.mmat
