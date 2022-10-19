@@ -1,4 +1,5 @@
- *! v0.2 fixed minibug with varname anything
+ *! v0.3 fixed minibug with varname anything2
+ * v0.2 fixed minibug with varname anything
  * v0.1 fixed minibug with time treatment (TR and T)
  program drdid_predict
 	syntax newvarname [if] [in], [weight pscore]  
@@ -47,8 +48,8 @@
 
 	if "`weight'"!="" {
 		syntax newvarname [if] [in] [, * ]
-		qui:gen `typelist' `anything' = `wgt'
-		label var `anything' "IPW/IPT weights"
+		qui:gen `typelist' `varlist' = `wgt'
+		label var `varlist' "IPW/IPT weights"
 	}
 	else {
 		qui:gen `typelist' `varlist' = `pr'

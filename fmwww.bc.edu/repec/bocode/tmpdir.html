@@ -1,0 +1,92 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>tmpdir</b>                                               manual:  <b>[R] none</b>
+                                                             dialog:  <b> none</b>    
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Returns the directory Stata is using for a temporary directory `r(tmpdir)'</u></b>
+<p>
+        <b>tmpdir</b> [<b>short</b>]
+<p>
+<p>
+{t:itle:Description}
+<p>
+    <b>tmpdir</b> is designed for programmers who want to know what directory Stata
+    writes temp files to.  This can be helpful when using the file command to
+    write intermediary files for a program.  Since spaces in directory names
+    can cause problems for programs running, <b>tmpdir</b> in the Windows operating
+    system replaces directory / subdirectory names that contain spaces, or
+    optionally any name longer than 8 characters, with the first 6 non-space
+    characters plus "~1" or "~2" (up to "~4").  After that it gets a bit
+    crazy with hexadecimal replacements.  <b>tmpdir</b> shells out to DOS and finds
+    the short directory name that DOS has come up with, so there's no attempt
+    to guess the short name.  This makes it possible to use this program on
+    many different versions of Windows and always get the short name right.
+    UNIX/Linux systems tend not to have spaces in the directory designated to
+    be the temporary directory, but <b>tmpdir</b> checks for spaces to make sure the
+    temp directory does not have spaces.
+<p>
+    Note: <b>tmpdir</b> can be hard coded so that it always chooses a specific
+        directory.  This can be helpful if you want to direct large files to
+        your D: drive.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>short</b> is for Windows only and it specifies that any long directory name
+        should be shortened to 8.3 style names.  Not using the <b>short</b> option
+        will allow for long directory names that do not have spaces.
+<p>
+<b><u>Examples</u></b>
+<p>
+    So if your temporary directory is:  "C:\Documents and Settings\dan\Local
+        Settings\temp"
+<p>
+    <b>. tmpdir</b> returns r(tmpdir):
+<p>
+    <b>. return list</b>
+<p>
+    <b>macros:</b>
+<p>
+          <b>r(tmpdir) : "C:\Docume~1\dan\LocalS~1\temp\"</b>
+<p>
+    But if your temp directory is:  "C:\Documents and
+        Settings\dan_blanchette\Local Settings\temp"
+<p>
+    <b>. tmpdir</b> returns r(tmpdir):
+<p>
+    "C:\Docume~1\dan_blanchette\LocalS~1\temp\"
+<p>
+    since "dan_blanchette" has no spaces in the name.
+<p>
+    <b>. tmpdir short</b> returns r(tmpdir):
+<p>
+    "C:\Docume~1\dan_b~1\LocalS~1\temp\"
+<p>
+<p>
+<b><u>Saved Results</u></b>
+<p>
+    The <b>tmpdir</b> command saves in <b>r()</b>:
+<p>
+    The <b>adoedit</b> command saves in <b>r()</b>:
+<p>
+    Macros         
+      <b>r(tmpdir)</b>           Stata's temporary directory path
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Dan Blanchette
+    The Carolina Population Center
+    University of North Carolina - Chapel Hill, USA
+    dan_blanchette@unc.edu
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line: tempfile _getfilename , confirmdir (if installed) shortdir (if
+             installed) savasas (if installed) usesas (if installed)
+<p>
+<p>
+<p>
+</pre>

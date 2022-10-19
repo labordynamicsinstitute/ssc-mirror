@@ -1,4 +1,4 @@
-*! version 1.1.0  07oct2022  I I Bolotov
+*! version 1.1.1  07oct2022  I I Bolotov
 program define tmpinv, eclass byable(recall)
 	version 16.0
 	/*
@@ -180,8 +180,7 @@ mata set matastrict on
 			    : (rows(RHS) > lim ?
 			/*subM*/(rows(RHS_V) ? I(r*c)[|(1\rows(v)),(.\.)|] :
 			          J(0,r*c,.)) :
-			/*full*/(rows(RHS_V) ? I(r*c) : J(0,r*c,.)))
-			)
+			/*full*/(rows(RHS_V) ? I(r*c) : J(0,r*c,.))))
 			a = C,(rows(S) ? S      : J(rows(C),0,.))\
 			      (rows(M) ? M,J(rows(M),cols(S),0) : J(0,cols(C)+cols(S),.))
 			C = S = M = .                            /* clear memory          */
@@ -217,7 +216,8 @@ mata set matastrict on
 					    rows(b) / variance(b))
 				}
 			}
-			e = (rows(e)-(cols(S) > 1)*2),e[(tmp=selectindex(e :== min(e))[1])]
+			e = (iter > 1 ? iter : rows(e)-(cols(S) > 1)*2),
+			    e[(tmp=selectindex(e :== min(e))[1])]
 			X[|d|] = colshape((S=S[,tmp])[1..r*c],c)[|(1\d[2,1]-d[1,1]+1),
 			                                        (1\d[2,2]-d[1,2]+1)|]
 			/* identified and over-identified TM: F-test from Stata's regress */

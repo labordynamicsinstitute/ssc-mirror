@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.0  07oct2022}{...}
+{* *! version 1.1.1  07oct2022}{...}
 {viewerjumpto "Syntax" "tmpinv##syntax"}{...}
 {viewerjumpto "Description" "tmpinv##description"}{...}
 {viewerjumpto "Methods and formulas" "tmpinv##methods"}{...}
@@ -43,9 +43,13 @@ normalized RMSE, and results adjustment for extreme values
 {syntab:SVD-based estimation}
 {synopt:{opth subm:atrix(#)}}maximum size of each contiguous submatrix, set
         {it:subm}≤2 for (over-)identification, OLS estimation, and an F-test
-        from linear regression (default, {it:slower}), or a greater number
-        (maximum is {bf:50}, {it:faster}) for under-identification, minimum-norm
-        least-squares generalized solution, and a t-test of mean NRMSE{p_end}
+        from linear regression (default, {it:slow}: {it:higher quality of}
+        {it:individual estimates} but potentially {it:lower overall quality}),
+        or a greater number (maximum is {bf:50}, {it:faster}: {it:lower quality}
+        {it:of individual estimates} but potentially {it:higher overall}
+        {it:quality}) for under-identification, minimum-norm least-squares
+        generalized solution, and a t-test of mean NRMSE, based on a Monte
+        Carlo-simulated distribution {p_end}
 {synopt:{opth tol:erance(real)}}{helpb [M-1] tolerance:roundoff error},
         a number to determine when a number is small enough to be considered
         zero (optional, not specifying {it:tol} is equivalent to specifying

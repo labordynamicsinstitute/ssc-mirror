@@ -1,20 +1,21 @@
+*! 1.3 MBH 15 Oct 2022
+*!   compatibility with -inshell- version 2.6
 *! 1.2 MBH 13 Sept 2022
 *!   minor stylistic changes
 *! 1.1 MBH 21 Aug  2022
 *!   minor fixes
 *! 1.0 MBH 14 July 2022
 *!   this do-file is meant to accompany the shell wrapper -inshell-
-*!   and functions as a "diagnostic" routine
+*!    and functions as a "diagnostic" routine
 
-capture program drop inshell_diagnostics
-
+// capture program drop inshell_diagnostics
 program define inshell_diagnostics
 version 14
 
 if (lower(c(os)) == "windows") {
 	display ///
 		as error ///
-			" >>> Sorry, but {bf:inshell} does not currently have a diagnostics mode for {bf:Microsoft Windows}. Stay tuned."
+			"{p 2 1} >>> Sorry, but {bf:inshell} does not currently have a diagnostics mode for {bf:Microsoft Windows}. Stay tuned."
 	exit 1
 }
 
@@ -26,14 +27,14 @@ if (missing("${INSHELL_DISABLE_LOGO}")) {
 	  as result ///
 	    "{dup `= `sides'*2+51':░}" _n "{dup `sides':░}{dup 43:░}   ░   ░{dup `sides':░}" _n "{dup `sides':▒}▒▒  {dup 19:▒}   {dup 17:▒}   ▒   ▒{dup `sides':▒}" _n "{dup `sides':▒}▒▒▒▒▒   ▒   ▒▒▒▒     ▒▒   {dup 9:▒}   ▒▒▒▒▒   ▒   ▒{dup `sides':▒}" _n "{dup `sides':▓}▓   ▓▓   ▓▓   ▓   ▓▓▓▓▓     ▓▓▓▓▓  ▓▓▓   ▓▓   ▓   ▓{dup `sides':▓}" _n "{dup `sides':▓}▓   ▓▓   ▓▓   ▓▓▓    ▓▓   ▓▓  ▓▓{space 9}▓▓   ▓   ▓{dup `sides':▓}" _n "{dup `sides':▓}▓   ▓▓   ▓▓   ▓▓▓▓▓   ▓  ▓▓▓   ▓  {dup 9:▓}   ▓   ▓{dup `sides':▓}" _n "{dup `sides':█}█   █    ██   █      ██  ███   ███     ████   █   █{dup `sides':█}" _n "{dup `= `sides'*2+51':█}"
 	noisily display ///
-	  as result "{it}{space `= `sides'+11'}the {ul:ultimate} Stata shell wrapper" _n ///
-	  as text   "{it}{space `= `sides'+19'}by Matthew Bryant Hall"
+		as result "{it}{space `= `sides'+11'}the {ul:ultimate} Stata shell wrapper" _n ///
+		as text   "{it}{space `= `sides'+19'}by Matthew Bryant Hall"
 }
 
 *********************** macro options **************************
-local non_toggle_options   INSHELL_TERM INSHELL_PATHEXT
-local toggle_options       INSHELL_ENABLE_AUTOCD INSHELL_DISABLE_REFOCUS INSHELL_DISABLE_LONGCMDMSG
-local toggled_on          : all globals "INSHELL_*ABLE*"
+local non_toggle_options   INSHELL_TERM INSHELL_PATHEXT INSHELL_ESCTAB_SIZE
+local toggle_options       INSHELL_ENABLE_AUTOCD INSHELL_DISABLE_REFOCUS INSHELL_DISABLE_LONGCMDMSG INSHELL_SETSHELL_CSH
+local toggled_on         `: all globals "INSHELL_*ABLE*" ' `: all globals "INSHELL_SET*"'
 local toggled_off         : list toggle_options - toggled_on
 local s1                  3
 
@@ -47,7 +48,7 @@ if (!missing("${INSHELL_PATHEXT}")) {
 	}
 }
 
-local s2 = max(`s1', max(`: strlen global INSHELL_TERM', `: strlen global INSHELL_PATHEXT'))
+local s2 = max(`s1', `: strlen global INSHELL_TERM', `: strlen global INSHELL_PATHEXT', `: strlen global INSHELL_ESCTAB_SIZE')
 local dist1 0
 
 foreach a in `toggle_options' {
@@ -61,7 +62,8 @@ foreach b in `non_toggle_options' `toggle_options' {
 }
 
 noisily display ///
-	as text _n " >>> {it}these are the current {stata help inshell##options:macro options} for {bf:inshell:}{sf}" _n
+	as text _n ///
+		" >>> {it}these are the current {stata help inshell##options:macro options} for {bf:inshell:}{sf}" _n
 
 local maxofcol3 = max(`: strlen global INSHELL_TERM', `: strlen global INSHELL_PATHEXT', 3)
 local dropcol  `= 3 + max(60, `maxofcol3', `= 43 + `: strlen global S_SHELL'')'
@@ -106,7 +108,7 @@ foreach e in `toggled_off' {
 		as error  _col(`= `dropcol' - 6') "{sf}{bf:OFF}"
 }
 
-if (!missing("${INSHELL_TERM}") | !missing("${INSHELL_PATHEXT}") | !missing("${INSHELL_DISABLE_REFOCUS}") | !missing("${INSHELL_DISABLE_LONGCMDMSG}") | !missing("${INSHELL_ENABLE_AUTOCD}")) {
+if (!missing("${INSHELL_TERM}") | !missing("${INSHELL_PATHEXT}") | !missing("${INSHELL_DISABLE_REFOCUS}") | !missing("${INSHELL_DISABLE_LONGCMDMSG}") | !missing("${INSHELL_ENABLE_AUTOCD}") | !missing("${INSHELL_ESCTAB_SIZE}") | !missing("${INSHELL_SETSHELL_CSH}")) {
 	noisily display ///
 		as text _col(`dropcol') `"[{stata "macro drop INSHELL*" : drop ALL }]"' _n
 }
@@ -121,14 +123,14 @@ if (!missing("${S_SHELL}")) {
 		as result     "{bf:S_SHELL}"                                                           ///
 		as text       "{space `= `s1' - 2'}is set to{sf}"                                      ///
 		as result    `"{space `= max(min(20 - `: strlen global S_SHELL', 4), 1)'}${S_SHELL}{space 1}"' ///
-		as text  _col(`dropcol') `"[{stata `"macro drop S_SHELL"': drop S_SHELL macro }]"'
+		as text  _col(`dropcol') `"[{stata `"macro drop S_SHELL"': drop S_SHELL macro }]"' _n
 }
 ************************** shell ********************************
 capture noisily inshell_getshell
 ************************** PATH **************************
 tempfile pathfile
 if (!strpos("${S_SHELL}", "pwsh")) {
-	capture quietly shell echo \$PATH > "`pathfile'"
+	quietly shell echo \$PATH > "`pathfile'"
 }
 capture confirm file "`pathfile'"
 if (!_rc) {
@@ -159,7 +161,7 @@ if (!strpos("${S_SHELL}", "pwsh")) {
 	capture which inshell
 	if (!_rc) {
 		capture inshell echo \$PATH
-		local inshell_path "`r(no1)'"
+		local inshell_path = r(no1)
 		if (!missing("${INSHELL_PATHEXT}")) {
 				local inshell_path_compare    `: subinstr local inshell_path ":" " ", all'
 				local stata_path_compare      `: subinstr local get_path     ":" " ", all'
@@ -180,8 +182,8 @@ if (!missing("`save_INSHELL_PATHEXT'")) {
 	if (scalar(`pathextisvalid') != 1) {
 		noisily display ///
 			as error  _n " >>>  {bf:inshell} path extension macro {bf:INSHELL_PATHEXT} was set to "    ///
-			as text   "`save_INSHELL_PATHEXT'"                                                  _n  ///
-			as error  " >>> Either this directory does not exist or it is inaccessible."        _n  ///
+			as text   "`save_INSHELL_PATHEXT'"                                                     _n  ///
+			as error  " >>> Either this directory does not exist or it is inaccessible."           _n  ///
 				" >>> As a result this program has cleared the INSHELL_PATHEXT macro."
 	}
 }

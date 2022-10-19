@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.3  07oct2022}{...}
+{* *! version 1.0.4  07oct2022}{...}
 {vieweralsosee "[TS] arima" "mansection TS arima"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[TS] arima postestimation" "help arima postestimation"}{...}
@@ -362,7 +362,7 @@ for unit root tests other than {helpb hegy}, {helpb dfgls:[TS] dfgls}, and
 {helpb kpss}.
 
 {pstd}
-{bf:PSS} All estimations in {bf:ARIMAAuto} are performed under {bf:version 13}.
+{bf:PSS} All estimations in {bf:ARIMAAuto} are performed under {bf:version 15}.
 
 {marker examples}{...}
 {title:Examples}

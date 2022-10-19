@@ -8,9 +8,9 @@ d
 d KW: shell
 d KW: operating system
 d
-d Requires: Stata version 9
+d Requires: Stata version 14
 d
-d Distribution-Date: 20220921
+d Distribution-Date: 20221018
 d
 d Author: Matthew Bryant Hall  ,  Wesleyan University
 d Support: email mhall@@wesleyan.edu
@@ -21,6 +21,6 @@ f inshell_detect_pwsh.ado
 f inshell_diagnostics.ado
 f inshell_get_pwsh_vers.ado
 f inshell_getshell.ado
-f ../l/linshell.mlib
+f ../l/linshell2.mlib
 f inshell_example1.sh
 f inshell_example2.sh

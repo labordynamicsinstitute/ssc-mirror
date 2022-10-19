@@ -1,8 +1,10 @@
+*! 1.1 MBH 15 Oct 2022
+*!   updated for inshell version 2.6
 *! 1.0 MBH 14 July 2022
 *!   this program obtains the version info from
 *!    Microsoft PowerShell
 
-capture program drop inshell_get_pwsh_vers
+// capture program drop inshell_get_pwsh_vers
 
 program define inshell_get_pwsh_vers, rclass
 
@@ -17,7 +19,7 @@ if (!_rc) {
   local filereadtest = fileread("`outfile'")
 }
 if (!missing("`filereadtest'")) {
-  mata : P = subinstr(stritrim(strtrim(inshell_process_file("`outfile'"))), " ", ".")
+  mata : P = subinstr(stritrim(strtrim(inshell_process_file2("`outfile'"))), " ", ".")
   mata : st_numscalar("rows", rows(P))
   forvalues i = 1 / `= scalar(rows)' {
     mata : st_strscalar("line`i'", strtrim(P[`i']))
@@ -26,25 +28,25 @@ if (!missing("`filereadtest'")) {
     }
     capture scalar drop line`i'
   }
+  capture mata mata drop P
   capture scalar drop rows
-  local s1 2
+  local s     "space 2"
   noisily display ///
-    as text     _n " >>> {it}your default shell is{sf}"          ///
-    as result      "{space `s1'}Microsoft PowerShell (pwsh)"        _n  ///
-    as text        "{it}{space 7}which is at version{sf}"        ///
-    as result      "{space `s1'}`version'"                   _n  ///
-    as text        "{it}{space 9}and is located at{sf}"          ///
-    as result      "{space `s1'}`location' `check'"          _n
+    as text     _n " >>> {it}your default shell is{sf}"        ///
+    as result      "{`s'}Microsoft PowerShell (pwsh)"      _n  ///
+    as text        "{it}{space 7}which is at version{sf}"      ///
+    as result      "{`s'}`version'"                        _n  ///
+    as text        "{it}{space 9}and is located at{sf}"        ///
+    as result      "{`s'}`location' `check'"               _n
 }
 else if (missing("`filereadtest'")) {
   noisily display ///
     as error ///
-      _n " >>> Microsoft PowerShell was not determined to be the shell when using Stata on this system."
+      _n " >>> {bf:Microsoft PowerShell} was not determined to be the shell when using Stata on this system."
   return local pwsh_notdetected 1
 }
 
 return local shell_version "`version'"
 capture quietly erase      "`outfile'"
-capture mata mata drop P
 
 end
