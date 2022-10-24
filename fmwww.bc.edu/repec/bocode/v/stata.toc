@@ -38,6 +38,7 @@ p veracrypt module to mount or dismount a VeraCrypt volume
 p viewresults module to display results of a command in the Viewer
 p vincenty module to calculate distances on the Earth's surface
 p violin module to generate violin plots
+p violinplot module to draw violin plots
 p vioplot module to produce violin plots with current graphics
 p vlc module to compare value labels across datasets
 p vlgen module to generate variables and descriptive labels based on how the variables were generated

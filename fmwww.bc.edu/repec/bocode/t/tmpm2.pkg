@@ -1,0 +1,32 @@
+d 'TMPM2': module to implement Trauma Mortality Prediction Model using AIS, ICD-9 or ICD-10 codes
+d
+d      tmpm2 calculates probability of death (p(death)) based on
+d the Trauma Mortality Prediction Model    created by Turner Osler,
+d MD, MSc, and Laurent Glance, MD.  tmpm2 uses injuries recorded in
+d    either AIS, ICD-9-CM or ICD-10-CM and computes the probability
+d of death (p(Death)) for each patient	  in the dataset. tmpm2
+d will accommodate datasets arranged in wide format (one record per
+d patient    with one or more injuries per record), or the long
+d format (one or more records per patient, with    one
+d injury/record). tmpm2 will calculate a probability of death
+d (p(Death)) value for each    observation expressed as a vartype
+d float and add this new variable, -pDeath-, to the user's   
+d otherwise unchanged dataset. 
+d
+d KW: trauma
+d KW: mortality
+d KW: prediction
+d KW: AIS
+d KW: ICD-9
+d KW: ICD-10
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20221023
+d
+d Author:  Alan Cook, Baylor University Medical Center
+d Support: email adcookmd@@gmail.com
+d
+f tmpm2.ado
+f tmpm2.sthlp
+f ../m/marc_table.dta

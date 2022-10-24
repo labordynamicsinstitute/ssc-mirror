@@ -1,0 +1,20 @@
+d 'VIOLINPLOT': module to draw violin plots
+d
+d  violinplot draws so-called violin plots that illustrate the
+d distributions of the specified variables. A violin plot is an
+d overlay of a (reflected) density estimate and a box plot. 
+d
+d KW: violin plot
+d KW: box plot
+d KW: density
+d
+d Requires: Stata version 15 and dstat, moremata, palettes, and colrspace from SSC (q.v.)
+d
+d Distribution-Date: 20221023
+d
+d Author: Ben Jann, University of Bern
+d Support: email jann@@soz.unibe.ch
+d
+f violinplot.ado
+f violinplot.sthlp
+f violinplot.zip

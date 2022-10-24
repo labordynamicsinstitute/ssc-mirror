@@ -1,4 +1,7 @@
-*! v1 csdid_rif
+*! v1.1 csdid_rif
+* Corrects Aggregation when data is missing
+
+* v1 csdid_rif
 * Goal, you feed the RIF, it provides you with Stats 
 * Could be use for post aggregation
 * could be a bit faster... but is faster than csdid_stats right now
@@ -181,10 +184,16 @@ void clusterse(real matrix iiff, cl, V, real scalar cln){
 
 void fix_rif(real matrix rif){
 	real matrix mn_rif, rif2
-	mn_rif= mean(rif)
-	rif2  = rif:-mn_rif
+	
+	//mn_rif= colsum(rif)
+	mn_rif= colsum(rif):/colnonmissing(rif)
+ 	rif2  = rif:-mn_rif
 	rif   = editmissing(rif2,0)
- 	rif   = mn_rif:+rif:*(rows(rif2):/colnonmissing(rif))
+	rif   = mn_rif:+rif:*(rows(rif2):/colnonmissing(rif2))
+ 
+	
+	///:*(rows(rif2):/colnonmissing(rif))
+ 
 	//mean(rif2:^2):/mean(rif:^2)
 	//exp_factor = (rows(rr):/colnonmissing(rr))
 	
