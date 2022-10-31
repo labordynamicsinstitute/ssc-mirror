@@ -45,7 +45,7 @@ forval rep=1/`nreps' {
     preserve
 	bsample(`Nobs') //sample the observations
 	//main is called to re-estimated the CWM: the posterior probabilities are used as initial values, this favours speed and makes label switching less likely
-	cap quie m:  main(`k',"",10,`iterate', "`touse'" ,"`posterior'","`depvar'","`indepvars'","`glmfamily'" , "`xnormal'","`xnormmodel'" , "`xbinomial'", "`xmultinomial_fv'","`xpoisson'", `iterate',`convcrit')
+	cap quie m:  _cwmglm_main(`k',"",10,`iterate', "`touse'" ,"`posterior'","`depvar'","`indepvars'","`glmfamily'" , "`xnormal'","`xnormmodel'" , "`xbinomial'", "`xmultinomial_fv'","`xpoisson'", `iterate',`convcrit')
 	restore
 
 	if !_rc {

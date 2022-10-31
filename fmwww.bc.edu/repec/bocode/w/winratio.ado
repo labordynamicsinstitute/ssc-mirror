@@ -1,8 +1,10 @@
-* Version 1.0.1 09-07-2021 
-* Version 1.0.2 28-03-2022 
+*! Version 1.0.3 26-09-2022 
+*  Version 1.0.2 28-03-2022 
+*  Version 1.0.1 09-07-2021 
+
 cap prog drop winratio 
 prog winratio , rclass 
-syntax varlist(min=2 max=2) [if] , outcomes(string) [ STRata(varname) STWeight(string)  PFormat(string)  WRFormat(string) saving(string)  ]
+syntax varlist(min=2 max=2) , outcomes(string) [ STRata(varname) STWeight(string)  PFormat(string)  WRFormat(string) saving(string)  *  ]
 
 version 12.0
 preserve 
@@ -11,9 +13,6 @@ tokenize `varlist'
 local idvar `1'
 local trtvar `2'
 
-if "`if'"~="" {
-	keep `if' 
-	}
 	
 if "`wrformat'"=="" {
 	local wrformat %03.2f
@@ -30,10 +29,16 @@ local saving=trim("`saving'")
 * -----------------------------------------------
 * Checks
 * -----------------------------------------------
-* Check elements in `outcomes' is a multiple of 3
-local comp_n=wordcount("`outcomes'")/3 
-if `comp_n'!=round(`comp_n') {
-	di in r "Wrong number of elements in outcomes option"
+* Check if elements in `outcomes' is >3 which indicates version 1.0.1 or 1.0.2 (no longer works) 
+local comp_n=wordcount("`outcomes'")
+if `comp_n'>3 {
+	di in r "Option outcomes is a repeated option since Version 1.0.3. Each instance of outcomes must include exactly 3 elements since Version 1.0.3. Please see the help file for further details."
+	exit 
+	}
+
+* Check elements in `outcomes' is not <3
+if `comp_n'<3 {
+	di in r "Option outcomes must contain 3 elements. See help winratio."
 	exit
 	}
 
@@ -71,42 +76,51 @@ if "`saving'"!="" {
 * -----------------------------------------------------
 * Separate into c outcomes, types, time/direction  
 * -----------------------------------------------------
+
+* Put each set of outcomes into local macros out1, out2, etc. 
+local outcome1 `outcomes'
+
+local i=1
+while (`"`options'"'!="")  {
+	local ++i
+	local outcomes
+	local 0 , `options'
+	syntax , [OUTcomes(string) * ]
+		if (`"`outcomes'"'=="")  {
+		di as err `"invalid option `options'"'
+		exit 198 
+		}
+		local outcome`i' `outcomes'
+}
+
+local comp_n=`i'  // number of levels 
+
+
+* -------------------------------------------
+* Extract the 3 elements for each level 
+* -------------------------------------------
 forvalues c=1/`comp_n' {
+	local out`c':word 1 of `outcome`c''
+	local type`c':word 2 of `outcome`c''
 
-gettoken x outcomes:outcomes
-local outvar `outvar' `x'
-gettoken y outcomes:outcomes
-
-	local y2 `y'
-
-	if substr("`y'",1,1)=="r" {
-		local y2 r 
-		local HasNumber=regexm("`y'", "[0-9]")		
+	if substr("`type`c''",1,1)=="r" {
+			local HasNumber=regexm("`type`c''", "[0-9]")		
 			if `HasNumber'!=1 {
 			di in r "Need to specify r# where # is maximum repeat events (syntax changed at version 1.0.2)"
 			exit
 			                  }
-		local rx=substr("`y'", 2,.)
-		capture confirm number `rx'
+	
+	local rx=substr("`type`c''", 2,.)
+	capture confirm number `rx'
 			if _rc!=0 {
 			di in r "Need to specify r# where # is maximum repeat events (syntax changed at version 1.0.2)"
 			exit 
 					  }
-							}
-local type `type' `y'
-gettoken z outcomes:outcomes
-
-local tdvar `tdvar' `z'
-if substr("`z'",1,1)!="<" & substr("`z'",1,1)!=">"	{
-	local tdvarlist `tdvarlist' `z'
-							}
-						}
-
-forvalues c=1/`comp_n' {
-	local out`c':word `c' of `outvar'
-	local type`c':word `c' of `type'
-	local tdvar`c':word `c' of `tdvar'
-						}
+									}
+	local tdvar`c':word 3 of `outcome`c''
+					}
+* ------------------------------------------- 
+						
 * -----------------------------------------------
 * Loop through program once if unstratified
 * or M times if stratified
@@ -154,7 +168,7 @@ cross using `file_j'
 * a comp`i' variable for each 
 * ------------------------------------------------
 forvalues i=1/`comp_n' {
-    	decide_winner, out(`out`i'') type(`type`i'') tdvar(`tdvar`i'') i(`i') 
+    	decide_winner, out(`out`i'') type(`type`i'') tdvar(`tdvar`i'')  i(`i') 
 
 		if "`r(errorvar)'"!="" {
 		disp in r "Variable `r(errorvar)' not in dataset"
@@ -261,8 +275,8 @@ qui count if `trtvar'_i==1
 qui sum `T' 
 	local T`m'=r(max)
 local z=`T`m''/sqrt(`V`m'')
-local p=2*(1-normal(abs(`z')))
-local pstr=string(`p',"`pformat'") 
+local p`m'=2*(1-normal(abs(`z')))
+local pstr`m'=string(`p`m'',"`pformat'") 
 
 * -----------------------------------------
 * Step 5: Approximate 95% CI 
@@ -316,7 +330,7 @@ di in smcl in gr "{hline 60}
 di "Total" _col(20) `W`m''  _col(30) `L`m'' _col(40) `ties`m''
 di in smcl in gr "{hline 60}
 
-di "Win Ratio: `wrrep`m'', 95% CI`ci' P=`pstr'"
+di "Win Ratio: `wrrep`m'', 95% CI`ci' P=`pstr`m''"
 di in smcl in gr "{hline 60}
 
 *-----------------------------------------
@@ -402,23 +416,29 @@ di in smcl in gr "{hline 60}
 * ---------------------------------------
 if "`strata'"!="" {
 foreach i of numlist `M'  {
+	return scalar logwr`i' = log(`wr`i'')
 	return scalar wr`i' = `wr`i''
 	return scalar se`i' = `s`i''
+	return scalar p`i' = `p`i''
 	}
 	}
+
 	
 if "`strata'"!="" {
+	return scalar logwr = log(`wrstrat')
 	return scalar wr = `wrstrat'
 	return scalar se_logwr = `se_logwr'
+	return scalar p = `p'
 	}
 
 if "`strata'"=="" {
+	return scalar logwr = log(`wr1')
 	return scalar wr = `wr1'
 	return scalar se_logwr = `s1'
+	return scalar p = `p1'
 	}
-	
-return scalar p = `p'
 
+	
 if "`saving'"!="" {
 	postclose `post_results'
 	use `wr_results', clear

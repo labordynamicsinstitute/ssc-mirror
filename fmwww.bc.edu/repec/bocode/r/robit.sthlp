@@ -23,6 +23,9 @@ help for {cmd:robit}{right:(Roger Newson, Milena Falcaro)}
 {opth from:(maximize##init_specs:init_specs)}
 ]
 
+{pstd}
+where {depvar} is a dependent variable which must be binary.
+
 {synoptset 27 tabbed}{...}
 {synopthdr}
 {synoptline}

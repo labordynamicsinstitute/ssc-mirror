@@ -1,7 +1,6 @@
+*!  Version 1.0.2 28-03-2022 
 * Version 1.0.1 09-07-2021 
-* Version 1.0.2 28-03-2022 
 
-cap program drop decide_winner
 program define decide_winner , rclass  
 syntax, out(string) type(string) tdvar(string) i(integer) 
 

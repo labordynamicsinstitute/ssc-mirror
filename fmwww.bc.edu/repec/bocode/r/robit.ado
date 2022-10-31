@@ -5,7 +5,7 @@ version 16.0;
  Robit wrapper for glm.
  with added estimation results.
 *!Authors: Roger Newson, Milena Falcaro
-*!Date: 01 April 2021
+*!Date: 26 October 2022
 *;
 
 
@@ -74,6 +74,24 @@ syntax varlist(numeric fv ts) [if] [in] [fweight pweight iweight aweight],
 
 * Identify sample to use *;
 marksample touse;
+
+
+* Check that y-variable is binary in sample to use *;
+local yvar: word 1 of `varlist';
+cap assert inlist(`yvar',0,1) if `touse';
+if _rc {;
+  disp as error "dependent variable must be binary with values 0 or 1";
+  error 498;
+};
+summ `yvar' if `touse', meanonly;
+if missing(r(min)) {;
+  error 2000;
+};
+if r(min)==r(max) {;
+  disp as error "dependent variable is binary but does not vary"
+    _n "all values are " r(min);
+  error 498;
+};
 
 
 * Run glm *;

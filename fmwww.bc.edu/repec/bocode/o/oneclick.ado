@@ -1,9 +1,9 @@
 *===================================================================================*
-* Ado-file: OneClick Version 4.0 
+* Ado-file: OneClick Version 4.2 
 * Author: Shutter Zor(左祥太)
 * Affiliation: School of Accountancy, Wuhan Textile University
 * E-mail: Shutter_Z@outlook.com 
-* Date: 2022/8/17                                          
+* Date: 2022/10/30                                          
 *===================================================================================*
 
 capture program drop oneclick
@@ -13,7 +13,7 @@ program define oneclick
 	syntax varlist(min=3) [if] [in],			///
 			Method(string)						///
 			Pvalue(real)						///
-			FIXvar(varlist)						///
+			FIXvar(varlist fv ts)				///
 			[									///
 				Options(string)					///
 				Zvalue							///
@@ -60,8 +60,8 @@ program define oneclick
 				local ifsignificant = cond(`pv'<`pvalue',1,0)
 				
 				replace subset = "`tuple`i''" in `i' if `ifsignificant'
-				replace positive = 1 if `ifsignificant' & `distribution_v'>0
-				replace positive = 0 if `ifsignificant' & `distribution_v'<0
+				replace positive = 1 in `i' if `ifsignificant' & `distribution_v'>0
+				replace positive = 0 in `i' if `ifsignificant' & `distribution_v'<0
 			}
 		}
 		

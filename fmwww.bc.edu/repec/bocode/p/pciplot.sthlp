@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  14may2013}{...}
+{* *! version 1.2.0  15jul2020}{...}
 {cmd:help pciplot}{right: Patrick Royston}
 {hline}
 
@@ -14,14 +14,18 @@
 {title:Syntax}
 
 {p 8 12 2}
-{cmd:pciplot} {it:yvar} {{it:yvar_lci {it:yvar_uci}} | {it:se_yvar}} {it:xvar} {ifin} [, {it:options} ]
+{cmd:pciplot} {it:yvar} {{it:yvar_lci {it:yvar_uci}} | {it:se_yvar}} {it:xvar} {ifin}
+ [, {it:options} ]
 
 
 {synoptset 30}{...}
 {synopthdr :options}
 {synoptline}
-{synopt :{opt add:plot(plot)}}add other plots to the generated graph{p_end}
+{synopt :{opth "addplot(addplot_option:plot)"}}add other plots to the generated graph{p_end}
+{synopt :{opt exp:onential}}apply exponential transformation to {it:yvar} and its confidence limits{p_end}
+{synopt :{opt rarea:opts(rarea_options)}}options for {helpb graph twoway rarea} affecting the confidence band{p_end}
 {synopt :{it:twoway_options}}options for {cmd:graph, twoway}{p_end}
+
 {synoptline}
 {p2colreset}{...}
 
@@ -43,23 +47,37 @@ supplied. The CIs are rendered as a shaded area and the relationship between
 generated graph. See {manhelpi addplot_option G-3}.
 
 {phang}
-{it:twoway_options} are any options appropriate to {cmd:graph, twoway}.
+{opt exponential} apples exponential transformation to {it:yvar} and its
+confidence limits. This is useful when values that have been estimated
+on the natural log scale (ln()) are better presented on the "antilog"
+(exp()) scale. Note that values of the {opt llim(#)} and {opt ulim(#)}
+options are then assumed to be on the exponential (antilog) scale.
+
+{phang}
+{opt rareaopts(rarea_options)} are options
+documented in {helpb graph twoway rarea} that affect the rendition
+of the pointwise confidence band.
+
+{phang}
+{it:twoway_options} are graph options documented in
+{manhelpi twoway_options G-3}.
 
 
 {title:Examples}
 
 {phang}{cmd:. pciplot y y_se x, addplot(line x x, sort)}{p_end}
-{phang}{cmd:. gen y_lci = y - 1.96 * y_se}{p_end}
-{phang}{cmd:. gen y_uci = y + 1.96 * y_se}{p_end}
-{phang}{cmd:. pciplot y y_lc y_uci x, yline(1) legend(off) saving(graph, replace)}{p_end}
+{phang}{cmd:. generate y_lci = y - 1.96 * y_se}{p_end}
+{phang}{cmd:. generate y_uci = y + 1.96 * y_se}{p_end}
+{phang}{cmd:. pciplot y y_lci y_uci x, yline(0) legend(off) saving(graph, replace)}{p_end}
+{phang}{cmd:. pciplot y y_se x, exponential yline(1) legend(off)}{p_end}
 
 
 {title:Author}
 
 {phang}Patrick Royston{p_end}
-{phang}MRC Clinical Trials Unit{p_end}
+{phang}MRC Clinical Trials Unit at UCL{p_end}
 {phang}London, UK{p_end}
-{phang}pr@ctu.mrc.ac.uk{p_end}
+{phang}j.royston@ucl.ac.uk{p_end}
 
 
 {title:Also see}

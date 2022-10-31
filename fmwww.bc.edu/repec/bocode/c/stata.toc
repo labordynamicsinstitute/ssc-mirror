@@ -141,6 +141,7 @@ p cmitest module to implement testing and inference methods for conditional mome
 p cmogram module to plot histogram-style conditional mean or median graphs
 p cmp module to implement conditional (recursive) mixed process estimator
 p cnar module to retrieve Chinese listed firms' financial data
+p cnborder module to analyze locations in China vs geography
 p cnbreg module to estimate negative binomial regression - canonical parameterization
 p cndnmb3 module to calculate condition number of regressor matrix
 p cnevent module to carry out an event study with Chinese publicly listed firms

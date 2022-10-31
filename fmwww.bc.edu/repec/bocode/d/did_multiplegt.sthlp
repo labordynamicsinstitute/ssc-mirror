@@ -1,4 +1,4 @@
-﻿{smcl}
+{smcl}
 {* *! version 1  2018-07-27}{...}
 {viewerjumpto "Syntax" "did_multiplegt##syntax"}{...}
 {viewerjumpto "Description" "did_multiplegt##description"}{...}
@@ -17,24 +17,24 @@
 [{cmd:,}
 {cmd:robust_dynamic} 
 {cmd:dynamic(}{it:#}{cmd:)}
-{cmd:{ul:av}erage_effect}
 {cmd:placebo(}{it:#}{cmd:)}
-{cmd:{ul:long}diff_placebo}
-{cmd:{ul:joint}testplacebo}
+{cmd:{ul:first}diff_placebo}
 {cmd:controls(}{it:varlist}{cmd:)} 
-{cmd:trends_nonparam(}{it:varlist}{cmd:)} 
+{cmd:trends_nonparam(}{it:varlist}{cmd:)}
 {cmd:trends_lin(}{it:varlist}{cmd:)}
 {cmd:count_switchers_contr}
+{cmd:always_trends_nonparam}
+{cmd:always_trends_lin}
 {cmd:{ul:reca}t_treatment(}{it:varlist}{cmd:)}
 {cmd:{ul:thresh}old_stable_treatment(}{it:#}{cmd:)}
 {cmd:weight(}{it:varlist}{cmd:)}
 {cmd:switchers(}{it:string}{cmd:)}
 {cmd:if_first_diff(}{it:string}{cmd:)}
 {cmd:count_switchers_tot}
+{cmd:drop_larger_lower}
 {cmd:discount(}{it:#}{cmd:)}
 {cmd:breps(}{it:#}{cmd:)}
-{cmd:cluster(}{it:varname}{cmd:)}
-{cmd:covariances} 
+{cmd:cluster(}{it:varname}{cmd:)} 
 {cmd:seed(}{it:#}{cmd:)}
 {cmd:graphoptions(}{it:string}{cmd:)}
 {cmd:{ul:sav}e_results(}{it:path}{cmd:)}]{p_end}
@@ -48,6 +48,17 @@
 The panel of groups may be unbalanced: not all groups have to be observed at every period (see FAQ section for more info on that). The treatment need not be 
 binary.{p_end}
 
+{p 4 8}{cmd:Y} is the outcome variable.{p_end}
+
+{p 4 8}{cmd:G} is the group variable.{p_end}
+
+{p 4 8}{cmd:T} is the time period variable. The command assumes that the time variable is evenly spaced (e.g.: the panel is at the yearly level, and no year is missing for all groups). When it is not (e.g.: the panel is at the yearly level, but three consecutive years are missing for all groups), the command can still be used, 
+though it requires a bit of tweaking, see FAQ section below.{p_end}
+
+{p 4 8}{cmd:D} is the treatment variable.{p_end}
+
+{p 4 4} If the option {cmd:breps(}{it:#}{cmd:)} is not specified, the command executes 50 bootstrap replications by default. To get reliable standard error estimates, we recommend running a greater number of replications. However, bootstrap replications considerably increase the command's running time, so if one just wants to get a sense of what the point estimates look like without having to wait for too long, one can request a lower number of bootstrap replications. With strictly less than two replications, the command does not produce a table and a graph.{p_end}
+ 
 {p 4 4} If the {cmd:robust_dynamic} option is not specified, 
 the command computes the DID_M estimator introduced in de Chaisemartin and D'Haultfoeuille (2020a), 
 which can be used in sharp designs where the treatment varies at the group*time level. DID_M is a weighted average, across time periods t and treatment values d, 
@@ -66,16 +77,9 @@ and in groups with a treatment equal to d from period 1 to t, the not-yet switch
 DID_l estimates the effect of having switched treatment for the first time l periods ago. The DID_l estimators are unbiased under heterogeneous and dynamic effects.
 DID_0 is always computed by the command, and if the {cmd:dynamic(}{it:L}{cmd:)} option is specified, the DID_l estimators are also computed for l in {1,...,L}.{p_end}
 
-{p 4 4}The command can also compute placebo estimators, that can be used to test the non-anticipation, strong exogeneity, and parallel trends assumptions underlying the DID_M and DID_l estimators.{p_end}
+{p 4 4}The command can also compute placebo estimators, that can be used to test the non-anticipation, strong exogeneity, and parallel trends assumptions underlying the DID_M and DID_l estimators. If strictly more than one placebo is requested, and strictly more than one bootstrap replication is executed, the command computes the p-value of a joint test that all the placebos requested are equal to 0, and stores it in {cmd:e()}.{p_end}
 
-{p 4 8}{cmd:Y} is the outcome variable.{p_end}
-
-{p 4 8}{cmd:G} is the group variable.{p_end}
-
-{p 4 8}{cmd:T} is the time period variable. The command assumes that the time variable is evenly spaced (e.g.: the panel is at the yearly level, and no year is missing for all groups). When it is not (e.g.: the panel is at the yearly level, but three consecutive years are missing for all groups), the command may still be used, 
-though it may require a bit of tweaking. In such instances, contacting the command's authors may be advisable.{p_end}
-
-{p 4 8}{cmd:D} is the treatment variable.
+{p 4 4} When the options {cmd:controls(}{it:varlist}{cmd:)}, {cmd:trends_nonparam(}{it:varlist}{cmd:)} and {cmd:trends_lin(}{it:varlist}{cmd:)} are specified, the installation of the {cmd:reghdfe}, {cmd:ftools} and {cmd:moremata} packages is required. Then, the command checks if the packages are already installed, and installs them if they are not.
 
 {marker options}{...}
 {title:Options}
@@ -83,48 +87,50 @@ though it may require a bit of tweaking. In such instances, contacting the comma
 {p 4 8}{cmd:robust_dynamic}: if that option is not specified, the estimators in de Chaisemartin and D'Haultfoeuille (2020a) are computed. 
 If it is specified, the estimators in de Chaisemartin and D'Haultfoeuille (2020b) are computed. {p_end}
 
-{p 4 8}{cmd:dynamic(}{it:#}{cmd:)} gives the number of dynamic treatment effects to be estimated. This option can only be used when the {cmd:robust_dynamic} option is specified. 
-DID_l, the estimator of the lth dynamic effect, compares first-time switchers' and not-yet switchers' outcome evolution, from the last period before first-time switchers' treatment changes to the lth period after that change. 
-With a balanced panel of groups, the maximum number of dynamic effects one can estimate can be determined as follows. For each value of the treatment d, start by
-computing the difference between the last period at which at least one group has had treatment d since period 1, and the first period at which a group with treatment d at period 1 changed 
+{p 4 8}{cmd:dynamic(}{it:#}{cmd:)} gives the number of dynamic treatment effects to be estimated. 
+This option can only be used when the {cmd:robust_dynamic} option is specified. 
+DID_l, the estimator of the lth dynamic effect, compares first-time switchers' and not-yet switchers' outcome evolution, 
+from the last period before first-time switchers' treatment changes to the lth period after that change. 
+With a balanced panel of groups, the maximum number of dynamic effects one can estimate can be determined as follows. 
+For each value of the treatment d, start by
+computing the difference between the last period at which at least one group has had treatment d since period 1, 
+and the first period at which a group with treatment d at period 1 changed 
 its treatment. Then, the maximum number of dynamic effects is equal to the maximum of those values, across all possible values of the treatment. 
 With an unbalanced panel of groups (e.g.: counties appear or disappear over time if the data is a county-level panel), this method can still be used
 to derive an upper bound of the maximum number of dynamic effects one can estimate. See de Chaisemartin and D'Haultfoeuille (2020b) for further details.
-{p_end}
-
-{p 4 8}{cmd:average_effect}: when the {cmd:robust_dynamic} option is specified, DID_l estimates 
-the effect of having switched treatment for the first time l periods ago. In a staggered design with a binary treatment, groups that have switched treatment l periods ago have gone from untreated to treated,
+DID_l estimates the effect of having switched treatment for the first time l periods ago. In a staggered design with a binary treatment, groups that have switched treatment l periods ago have gone from untreated to treated,
 and have remained treated thereafter. Accordingly, DID_l estimates the cumulative effect of having been treated for l+1 periods.
 Outside of staggered designs, some initially untreated groups may switch to being treated and may remain treated thereafter, 
 other groups may revert to being untreated just after that first switch, other groups
-may alternate between treated and untreated, etc. Then, DID_l cannot be directly converted into an effect per unit of treatment received. If the {cmd:average_effect} option is specified, 
-the command computes an estimator of the change in outcome created by a one-unit change in treatment. This estimator is constructed in three steps. First, the command computes a weighted average of the DID_l estimators,
-giving to each estimator a weight proportional to the number of switchers DID_l applies to. Second, the command computes a weighted average of estimators similar to the DID_l, except that the outcome variable is replaced by the treatment.
-This weighted average estimates the effect of first switches on the treatments that units receive after their first switch. Finally, the command computes the ratio of these
+may alternate between treated and untreated, etc. Then, DID_l cannot be directly converted into an effect per unit of treatment received. 
+If the user requests at least one dynamic effect, the command computes an estimator of the change in outcome created by a one-unit change in treatment. 
+This estimator is constructed in three steps. 
+First, the command computes a weighted average of the DID_l estimators,
+giving to each estimator a weight proportional to the number of switchers DID_l applies to. 
+Second, the command computes a weighted average of estimators similar to the DID_l, except that the outcome variable is replaced by the treatment.
+This weighted average estimates the average number of treatment units received by switchers after their first switch, relative to the counterfactual
+where they would have kept their period-one treatment all along. 
+Finally, the command computes the ratio of these
 two estimators. This ratio estimates the ``intention-to-treat'' effect of first switches on the outcome, and scales it by the ``first-stage'' effect of first switches on the treatments received thereafter. Accordingly, 
-it estimates some average of the change in outcome created by a one-unit change in treatment. See de Chaisemartin and D'Haultfoeuille (2020b) for further details. 
-When {cmd:average_effect} is specified, the number of dynamic effects requested should be greater than or equal to 1.{p_end}
+it estimates some average of the change in outcome created by a one-unit change in treatment. This ratio is stored under {cmd:effect_average} in {cmd:e()}.
+See de Chaisemartin and D'Haultfoeuille (2020b) for further details. 
+{p_end}
 
 {p 4 8}{cmd:placebo(}{it:#}{cmd:)} gives the number of placebo estimators to be estimated. When the {cmd:robust_dynamic} option is not specified, the lth placebo compares switchers' and non switchers' 
 outcome evolution from the l+1th to the lth period before switchers' treatment changes, in the sample of groups whose treatment does not change from the l+1th to the last period before the switch. 
 When the {cmd:robust_dynamic} option is specified, placebo estimators compare first-time switchers' and not-yet switchers' outcome evolution, before first-time switchers' treatment changes. 
-The exact comparisons made are described in the discussion of the {cmd:longdiff_placebo} option below. The number of placebos requested can be at most equal to the number of time periods in the data minus 2, though most
+The exact comparisons made are described in the discussion of the {cmd:firstdiff_placebo} option below. The number of placebos requested can be at most equal to the number of time periods in the data minus 2, though most
 often only a smaller number of placebos can be computed. See de Chaisemartin and D'Haultfoeuille (2020b) for further details.{p_end}
 
-{p 4 8}{cmd:longdiff_placebo}: this option can be used when the {cmd:robust_dynamic} option is specified. 
-When this option is specified, the lth placebo compares first-time switchers' and not-yet switchers' outcome evolution, from the last period before first-time switchers' treatment changes to the l+1th period before that change
-(this comparison goes from the future towards the past, to be consistent with event-study regressions where everything is relative to the period prior to the treatment change). Thus, the lth placebo assesses if parallel trends
-holds over l+1 periods, the number of periods over which parallel trends has to hold for the lth dynamic effect to be unbiased. 
-When this option is not specified, the lth placebo compares first-time switchers' and not-yet switchers' outcome evolution, from the l+1th to the lth period before first-time switchers' treatment changes. 
-Thus, the lth placebo assesses if parallel trends holds over 2 consecutive periods, l periods before switchers switch. Such first-difference placebos may be useful to test the no-anticipation assumption. 
+{p 4 8}{cmd:firstdiff_placebo}: when this option is specified, the lth placebo compares first-time switchers' and not-yet switchers' outcome evolution, from the l+1th to the lth period before first-time switchers' treatment changes. 
+Thus, the lth placebo assesses if parallel trends holds over 2 consecutive periods, l periods before switchers switch. 
+Such first-difference placebos may be useful to test the no-anticipation assumption. 
 If parallel trends holds but the treatment, say, one period ahead has an effect on the current outcome, one should find that the first first-difference placebo differs from 0, but others do not. 
+When this option is not specified and the {cmd:robust_dynamic} option is specified, long-difference placebos are computed. The lth placebo compares first-time switchers' and not-yet switchers' outcome evolution, from the last period before first-time switchers' treatment changes to the l+1th period before that change
+(this comparison goes from the future towards the past, to be consistent with event-study regressions where everything is relative to the period prior to the event). Thus, the lth placebo assesses if parallel trends
+holds over l+1 periods, the number of periods over which parallel trends has to hold for the lth dynamic effect to be unbiased. 
 See de Chaisemartin and D'Haultfoeuille (2020b) for further details. 
-When the {cmd:longdiff_placebo} and {cmd:dynamic} options are requested, the number of placebos requested cannot be larger than the number of dynamic effects.{p_end}
-
-{p 4 8}{cmd:jointtestplacebo}: when this option is specified, 
-the command computes the p-value of a joint test that all the placebos requested are equal to 0, and stores it in {cmd:e()}.
-This option can be used when the computation of strictly more than one placebo is requested, 
-and when the {cmd:covariances} and {cmd:breps(}{it:#}{cmd:)} options are specified.{p_end}
+When the {cmd:firstdiff_placebo} option is not requested and the {cmd:dynamic} option is requested, the number of placebos requested cannot be larger than the number of dynamic effects. {p_end}
 
 {p 4 8}{cmd:controls(}{it:varlist}{cmd:)} gives the names of all the control variables to be included in the estimation. 
 The DID_M and DID_l estimators with controls are similar to those without controls, except that the first-difference of the outcome is replaced by residuals from regressions 
@@ -135,24 +141,24 @@ is used. If one of these regressions has fewer observations than the number of c
 some of these regressions could still have too many controls, if they have fewer observations than the number of time fixed effects plus the number of control variables. In that case,
 not all control variables are accounted for.
 Estimators with controls are unbiased even if groups experience differential trends,
-provided such differential trends can be fully explained by a linear model in covariates changes. See de Chaisemartin and D'Haultfoeuille (2020b) for further details.
-When this option is specified, the {cmd:reghdfe}, {cmd:ftools}, and {cmd:moremata} packages have to be installed.{p_end}
+provided such differential trends can be fully explained by a linear model in covariates changes. See de Chaisemartin and D'Haultfoeuille (2020b) for further details.{p_end}
 
 {p 4 8}{cmd:trends_nonparam(}{it:varlist}{cmd:)}: when this option is specified, the DID_M (resp. DID_l) estimator is a weighted average of DIDs comparing 
 switchers and non switchers (resp. first-time switchers and not yet switchers) with the same value of {it:varlist}.
 Estimators with the {cmd:trends_nonparam(}{it:varlist}{cmd:)} option are unbiased even if groups experience differential trends,
 provided all groups with the same value of {it:varlist} experience parallel trends. {it:varlist} can only include one categorical variable, and that variable must be strictly coarser than the group variable. 
 For instance, if one works with a county*year data set and one wants to allow for state-specific trends, then one should write {cmd:trends_nonparam(}state{cmd:)}, 
-where state is the state identifier. When this option is specified, the {cmd:reghdfe}, {cmd:ftools}, and {cmd:moremata} packages have to be installed.{p_end}
+where state is the state identifier.{p_end}
 
 {p 4 8}{cmd:trends_lin(}{it:varlist}{cmd:)}: when this option is specified, fixed effects for each value of {it:varlist} are included as controls when residualizing the first-difference 
 of the outcome. This 
 is equivalent to allowing for {it:varlist}-specific linear trends. 
 Estimators with the {cmd:trends_lin(}{it:varlist}{cmd:)} option are unbiased even if the outcome evolution in each group follows its own linear trend, provided that between each pair of 
 consecutive periods, all groups' potential outcomes experience the same deviation from their {it:varlist}-specific linear trends. 
-{it:varlist} can only include one categorical variable, and that variable must be weakly coarser than the group variable. 
-For instance, if one works with a village*year data set and one wants to allow for village-specific linear trends, one should write {cmd:trends_lin(}village{cmd:)}, 
-where village is the village identifier. When this option is specified, the {cmd:reghdfe}, {cmd:ftools}, and {cmd:moremata} packages have to be installed.{p_end}
+{it:varlist} can only include one categorical variable, and that variable must be weakly coarser than the group variable.
+For instance, suppose one works with a village*year data set, where the treatment is at the county*year level. 
+If one wants to allow for village-specific linear trends, the group variable should also be village: with county as the group variable,
+the variable in the {cmd:trends_lin(}{it:varlist}{cmd:)} option would not be weakly coarser than the group variable.{p_end}
 
 {p 4 8}{cmd:count_switchers_contr}: when this option is specified, the command counts the number of switchers for which counterfactual trends are estimated accounting for the 
 controls requested in {cmd:trends_nonparam(}{it:varlist}{cmd:)} or {cmd:trends_lin(}{it:varlist}{cmd:)}. 
@@ -160,14 +166,20 @@ Assume one works with a county*year data set, to study the effect of a treatment
 Then, assume that one wants to compute the DID_M estimator, allowing for state-specific trends. 
 There may be a county going from, say, 8 to 9 units of treatment between t-1 and t, while no other county in the same state receives 8 units of treatment at both dates. 
 Then, one cannot estimate that county's counterfactual trend controlling for state-specific trends. 
-Instead, the command uses counties from other states receiving 8 units of treatment at both dates to estimate that county's counterfectual trend.
+Instead, the command uses by default counties from other states receiving 8 units of treatment at both dates to estimate that county's counterfactual trend.
 Similarly, assume one would like to allow for county-specific linear trends, but that same county is never observed with 8 units of treatment
 at two counsecutive dates. Then, the linear trend of that county's outcome with 8 units of treatment cannot be estimated. 
 Instead, to estimate that county's linear trend
-the command uses the average linear trend across all counties observed with 8 units of treatment at at least two counsecutive dates.   
+the command uses the average linear trend across all counties observed with 8 units of treatment at at least two counsecutive dates. 
+On the other hand, if the {cmd:always_trends_nonparam} or {cmd:always_trends_lin} option is specified, counties for which the counterfactual trend cannot be estimated controlling for state-specific trends are dropped from the estimation.
 The {cmd:count_switchers_contr} option allows one to know for how many switchers counterfactual trends cannot be estimated accounting for the 
-controls requested in {cmd:trends_nonparam(}{it:varlist}{cmd:)} or {cmd:trends_lin(}{it:varlist}{cmd:)} and have to be estimated differently. When {cmd:count_switchers_contr} is specified, 
+controls requested in {cmd:trends_nonparam(}{it:varlist}{cmd:)} or {cmd:trends_lin(}{it:varlist}{cmd:)} and have to be estimated differently. 
+When {cmd:count_switchers_contr} is specified, 
 {cmd:trends_nonparam(}{it:varlist}{cmd:)} or {cmd:trends_lin(}{it:varlist}{cmd:)} should also be specified.{p_end}
+
+{p 4 8}{cmd:always_trends_nonparam}: when this option and the {cmd:trends_nonparam(}{it:varlist}{cmd:)} option are specified, switchers with no control within the group of observations with the same value of {it:varlist} are dropped from the estimation.{p_end}
+
+{p 4 8}{cmd:always_trends_lin}: when this option and the {cmd:trends_lin(}{it:varlist}{cmd:)} option are specified, switchers whose linear trend cannot be estimated are dropped from the estimation. {p_end}
 
 {p 4 8}{cmd:recat_treatment(}{it:varlist}{cmd:)} bins some values of the treatment together when determining the groups whose outcome evolution are compared. 
 This option may be useful when the treatment takes many values, or some values are rare in the sample. 
@@ -208,36 +220,38 @@ dynamic effects, and one would like all the dynamic effects to apply to the same
 DIDM estimator, controlling for other treatments that may change over the panel, as proposed by de Chaisemartin and D'Haultfoeuille (2020c), see the FAQ section below as well.
 This option can only be used if the data is aggregated at the (g,t) level. If it is not, you need to aggregate your data at that level before running the command.{p_end}
 
-{p 4 8}{cmd:count_switchers_tot}: when this option is specified, the command counts the number of switchers of first-time switchers for which each of the instantaneous and
+{p 4 8}{cmd:count_switchers_tot}: when this option is specified, the command counts the number of switchers or first-time switchers for which each of the instantaneous and
 dynamic effects requested are observed in the data. This number may be larger than the number of switchers of first-time switchers for which each effect can be estimated.
 For instance, assume treatment is binary, the data has 10 periods, the {cmd:robust_dynamic} and {cmd:dynamic(}{it:5}{cmd:)} options are specified, and all groups initially untreated have been treated at least once at period 7.
 Then, from period 7 onwards there is no not-yet switcher group one can use to estimate the treatment effects of groups that switched from untreated to treated. 
 Accordingly, for a group treated for the first time at period 2, the dynamic effect 5 periods after her first switch 
 is observed in the data but cannot be estimated.{p_end}
 
+{p 4 8}{cmd:drop_larger_lower}: This option is only relevant when the treatment is non-binary, and when the {cmd:robust_dynamic} option is specified. 
+It drops all the (g,t)s such that at t,  group g has experienced both a strictly larger and a strictly lower treatment than its period-one treatment. 
+Then, the comparison of the actual and status quo potential outcomes of those (g,t) cells bundles together effects of increases and decreases of 
+their current and past treatments, and may for instance be negative even if increasing the current and past treatments always increases the outcome.
+See de Chaisemartin and D'Haultfoeuille (2020b) for further details.{p_end}
+
 {p 4 8}{cmd:discount(}{it:#}{cmd:)}: this option can be used if one wants to discount the treatment effects and the treatments occurring later in the panel. For instance, if {cmd:discount(}{it:0.95}{cmd:)} is specified, the command
 will use a discount factor of 0.95. See de Chaisemartin and D'Haultfoeuille (2020b) for further details.{p_end}
 
 {p 4 8}{cmd:breps(}{it:#}{cmd:)} gives the number of bootstrap replications to be used in the computation of estimators' standard errors. 
-If that option is not specified, the command does not compute estimators' standard errors.{p_end}
+If that option is not specified, the default value is 50 bootstrap replications.{p_end}
 
 {p 4 8}{cmd:cluster(}{it:varname}{cmd:)} computes the standard errors of the estimators using a block bootstrap at the {it:varname} level. Only one clustering variable is allowed. A common practice
 in DID analysis is to cluster standard errors at the group level. If the {cmd:cluster(}{it:varname}{cmd:)} option is not specified, the bootstrap is still automatically clustered at the group*time level, because the command
 aggregates the data at that level before running the bootstrap. Accordingly, clustering should be at a coarser level than the group*time level.{p_end}
 
-{p 4 8}{cmd:covariances}: if this option and the {cmd:breps(}{it:#}{cmd:)} option are specified, the command computes the covariances between all the pairs of instantaneous and dynamic effects requested, 
-and between all the pairs of placebos requested. This option can be useful to assess if the DID_l estimators significantly differ across l. 
-For instance, assume that one wants to test if the instantaneous effect DID_0 differs from the dynamic effect DID_1. One can specify the {cmd:covariances} option, use the fact that Var(DID_0-DID_1)=V(DID_0)+V(DID_1)-2cov(DID_0,DID_1) to compute the
- standard error of DID_0-DID_1, and finally assess if this difference is significant.{p_end}
-
 {p 4 8}{cmd:seed(}{it:#}{cmd:)} sets the seed to be used in the bootstrap replications, to ensure results can be reproduced.
 
-{p 4 8}{cmd:graphoptions(}{it:string}{cmd:)}: as explained below, when the {cmd:breps(}{it:#}{cmd:)} option is specified, the command produces a graph. 
-One can use the {cmd:graphoptions(}{it:string}{cmd:)} option to modify the appearance of that graph. Options requested have to follow the syntax of Stata {cmd:twoway_options}.
+{p 4 8}{cmd:graphoptions(}{it:string}{cmd:)}: 
+one can use the {cmd:graphoptions(}{it:string}{cmd:)} option to modify the appearance of the graph produced by the command. Options requested have to follow the syntax of Stata {cmd:twoway_options}.
 Do not use quotation marks for text passed into the arguments of {cmd:twoway_options}. For instance, if you want the title of your graph to be "Graph to convince
 skeptical referee", you should type {cmd:graphoptions(}title(Graph to convince skeptical referee){cmd:)}.{p_end}
 
-{p 4 8}{cmd:save_results(}{it:path}{cmd:)}: if this option and the {cmd:breps(}{it:#}{cmd:)} options are specified, the command saves the estimators requested, their standard error, their 95% confidence interval, and the number of observations used in the estimation in a separate data set, at the location specified in {it:path}.{p_end}
+{p 4 8}{cmd:save_results(}{it:path}{cmd:)}: if this option is specified, the command saves the estimators requested, their standard error, their 95% confidence interval, and the number of observations used in the estimation in a separate data set, at the location specified in {it:path}.{p_end}
+
 
 {hline}
 
@@ -246,15 +260,15 @@ skeptical referee", you should type {cmd:graphoptions(}title(Graph to convince s
 
 {p 4 4}{it:When does the command produce a table, and what does the table contain?}
 
-{p 4 4}If the option breps has been specified, the command returns a table with all the estimated treatment effects and placebos, 
+{p 4 4}If strictly more than one bootstrap replication has been run, the command returns a table with all the estimated treatment effects and placebos, 
 their standard errors, their 95% confidence intervals, the number of observations used in the estimation, 
-and the number of switchers the effects and placebos apply to. The average effect only appears in the table 
-if the {cmd:covariances} option is specified. The p-value from the joint test that all placebos are equal to 0 is not shown in the table, 
+and the number of switchers the effects and placebos apply to.
+The p-value from the joint test that all placebos are equal to 0 is not shown in the table, 
 but it is stored in e().{p_end}
 
 {p 4 4}{it:When does the command produce a graph, and how is the graph constructed?}
 
-{p 4 4}If the option breps has been specified, the command returns a graph with all the estimated treatment effects and placebos, 
+{p 4 4} If strictly more than one bootstrap replication has been run, the command returns a graph with all the estimated treatment effects and placebos, 
 and their 95% confidence intervals constructed using a normal approximation. 
 An exception is when dynamic effects and first-difference placebos are requested. 
 Then, the command does not produce a graph, because placebos are first-difference estimators, while dynamic effects are long-difference estimators, 
@@ -262,13 +276,9 @@ so they are not really
 comparable. When dynamic effects and long-difference placebos are requested, everything is relative to the period prior to first-switches, referred to as period -1. 
 Accordingly, the first placebo is shown at period -2 on the graph.{p_end}
 
-{p 4 4} {it:{cmd:did_multiplegt} is not running, or returning strange results, with the {cmd:controls()}, {cmd:trends_nonparam()}, or {cmd:trends_lin()} options?}
-
-{p 4 4} You most likely did not install the auxiliary packages {cmd:moremata}, {cmd:ftools}, and {cmd:reghdfe}, as indicated above.
-
 {p 4 4} {it:My group-level panel is unbalanced: some groups (e.g. counties) are not observed in every year. Can I still use the command?} 
 
-{p 4 4} You can. A frequent case of unbalancendess is when some groups are not observed over the full duration of the panel, 
+{p 4 4} You can. A frequent case of unbalancedness is when some groups are not observed over the full duration of the panel, 
 but all groups are observed at evenly-spaced intervals over the period where they are observed. 
 For instance, your data may be a yearly county-level panel from 1990 to 2000, 
 where some counties appear after 1990 while some exit before 2000, but from the
@@ -282,7 +292,7 @@ to use the 1993 observation for that county. If you wish to compute the DID_l es
 be used in the estimation, 
 except if that county's 1991 and 1993 treatments differ, and that county had never changed treatment prior to 1991. 
 Then, the year when that county's treatment changed for the first time is not known, 
-so the conservative approach implemented by default is to drop it from the
+so the approach implemented by default is to drop it from the
 estimation. If many groups are observed at unevenly spaced intervals, this approach may strongly reduce the sample size. 
 In that case, you may consider filling the group-level panel's holes, using Stata's fillin command. Then, you need
 to replace a group's missing treatments by the value of that same group's treatment, in the first year after those missing years 
@@ -309,7 +319,7 @@ Then, the first treatment changes occurring between 1991 and 1993 will be used i
 
 {p 4 4} With a binary treatment and a balanced panel of groups such that at least one group
 remains untreated and at least one group remains treated throughout the panel, this can be achieved as follows. Assume one estimates two dynamic effects. Then, let {it:Ylead2} 
-denote the lead of order 2 of the outcome variable. If one writes {cmd:if_first_diff(}{it:Ylead2!=.}{cmd:)} in the command's options, groups for which only the instantaneous
+denote the second lead of the outcome variable. If one writes {cmd:if_first_diff(}{it:Ylead2!=.}{cmd:)} in the command's options, groups for which only the instantaneous
 or first dynamic effect can be estimated are discarded, and the instantaneous effect and the first two dynamic
 effects apply to the same groups. If the number of observations per group does not change over time, the number of observations these three effects apply to will also be the same.
 
@@ -337,7 +347,18 @@ and an error message will let you know about that.{p_end}
 In that case, let {it:othertreat} be a variable containing the other treatment, and let 
 {it:fd_othertreat} be the first difference of that other treatment. To compute the estimator proposed by de Chaisemartin and D'Haultfoeuille (2020c), 
 one should write {cmd:if_first_diff(}{it:fd_othertreat==0}{cmd:)} {cmd:trends_nonparam(}{it:othertreat}{cmd:)} in the command's options. 
+With two rather 
+than one other treatments, one should write {cmd:if_first_diff(}{it:fd_othertreat1==0&fd_othertreat2==0}{cmd:)} {cmd:trends_nonparam(}{it:othertreats}{cmd:)} 
+in the command's options, where othertreats is generated as follows: {cmd:egen othertreats=group(othertreat1 othertreat2)}. 
+Etc. for the cases with three, four ... other treatments.
 See de Chaisemartin and D'Haultfoeuille (2020c) for further details.{p_end}
+
+{p 4 4}{it: How can I estimate the backward DID in de Chaisemartin and D'Haultfoeuille (2020c)?}
+
+{p 4 4} To estimate the backward DID, one just needs to revert the time variable (for example "gen opposite_time = - time"), and use the command with this reverted time variable. 
+Aditionnally, if one wants to compute the backward DID controlling for other treatments, 
+then the variable specified in the {cmd:if_first_diff(}{it:variable}{cmd:)}  option needs to be the lead of the first-difference of the other treatments. 
+{p_end}
 
 {p 4 4} {it: How can I use the command to estimate heterogeneous treatment effects?} 
 
@@ -351,7 +372,9 @@ will need to bootstrap the command yourself to estimate the variance of the diff
 
 {p 4 4}{it:The command takes a lot of time to run, is there a way I can speed it up?}
 
-{p 4 4} Yes, when the {cmd:robust_dynamic} option is specified. In staggered adoption designs with a binary treatment, you just need to define
+{p 4 4} First, you can decrease the number of bootstrap replications performed. By default, 50 bootstrap replications are performed, but if you just want to look at the point estimates, you can decrease the number of replications.
+
+{p 4 4} You can also speed it up when the {cmd:robust_dynamic} option is specified. In staggered adoption designs with a binary treatment, you just need to define
 a variable Cohort equal to the time period when group g first gets treated (and to 0 if group g never gets treated). Then, you need to run {cmd:did_multiplegt} 
 with Cohort instead of G as the group variable. If the number of groups is large in your application, using this strategy can divide the computing time by more than 10. In more
 complicated designs with a non-binary and/or non-staggered treatment, the Cohort variable needs to be defined as follows: {cmd:egen Cohort=group(D1 F increase)},
@@ -372,6 +395,7 @@ and there are no controls or linear trends. Otherwise, the two estimations may g
 averages of groups with time-invariant weights, and one can show that imposing parallel trends at the group level is not equivalent to imposing it at the cohort level. 
 Without controls or linear trends, differences are likely to be small, however. With controls or linear trends, differences may be larger. 
 
+
 {hline}
 
 {marker saved_results}{...}
@@ -390,7 +414,7 @@ and let {it:j} denote the number specified in the {cmd:dynamic(}{it:#}{cmd:)} op
 
 {p 4 8}{cmd:e(N_switchers_effect_0_contr)}: number of switchers or first-time switchers whose counterfactual trend at the time of their switch is estimated accounting for the requested controls, if the {cmd:count_switchers_contr} option is specified.{p_end}
 
-{p 4 8}{cmd:e(se_effect_0)}: estimated standard error of {cmd:e(effect_0)}, if the option {cmd:breps(}{it:#}{cmd:)} has been specified.{p_end}
+{p 4 8}{cmd:e(se_effect_0)}: estimated standard error of {cmd:e(effect_0)}, if strictly more than one bootstrap replication was run. {p_end}
 
 {p 4 8}{cmd:e(effect_l)}: estimated effect l periods after first-time switchers have switched treatment for the first time, for all l in 1, ..., j.{p_end}
 
@@ -402,7 +426,7 @@ and let {it:j} denote the number specified in the {cmd:dynamic(}{it:#}{cmd:)} op
 
 {p 4 8}{cmd:e(N_switchers_effect_l_contr)}: number of first-time switchers whose counterfactual trend l periods after their first switch is estimated accounting for the requested controls, if the {cmd:count_switchers_contr} option is specified.{p_end}
 
-{p 4 8}{cmd:e(se_effect_l)}: estimated standard error of {cmd:e(effect_l)}, if the option {cmd:breps(}{it:#}{cmd:)} has been specified.{p_end}
+{p 4 8}{cmd:e(se_effect_l)}: estimated standard error of {cmd:e(effect_l)}, if strictly more than one bootstrap replication was run. {p_end}
 
 {p 4 8}{cmd:e(placebo_l)}: estimated placebo l, for all l in 0, 1, ..., k.{p_end}
 
@@ -414,13 +438,14 @@ and let {it:j} denote the number specified in the {cmd:dynamic(}{it:#}{cmd:)} op
 
 {p 4 8}{cmd:e(N_switchers_placebo_l_contr)}: number of switchers or first-time switchers whose counterfactual trend l periods before their switch is estimated accounting for the requested controls, if the {cmd:count_switchers_contr} option is specified.{p_end}
 
-{p 4 8}{cmd:e(se_placebo_l)}: estimated standard error of {cmd:e(placebo_l)}, if the option {cmd:breps(}{it:#}{cmd:)} has been specified.{p_end}
+{p 4 8}{cmd:e(se_placebo_l)}: estimated standard error of {cmd:e(placebo_l)}, if strictly more than one bootstrap replication was run.{p_end}
 
-{p 4 8}{cmd:e(p_jointplacebo)}: p-value of test that all placebos are equal to 0, if more than one placebo requested, and if the option {cmd:jointtestplacebo} has been specified.{p_end}
+{p 4 8}{cmd:e(p_jointplacebo)}: p-value of the joint test that all the placebos are equal to 0, if strictly more than one placebo was requested, and strictly more than one bootstrap replication was requested. {p_end}
 
-{p 4 8}{cmd:e(cov_effects_m_l)}: estimated covariance between {cmd:e(effect_m)} and {cmd:e(effect_l)}, for all 0<=m<l<=j, if the options {cmd:covariances(}{it:#}{cmd:)} and {cmd:breps(}{it:#}{cmd:)} have been specified.{p_end}
+{p 4 8}{cmd:e(cov_effects_m_l)}: estimated covariance between {cmd:e(effect_m)} and {cmd:e(effect_l)}, for all 0<=m<l<=j, if strictly more than one bootstrap replication was run. Can be useful to assess if the DID_l estimators significantly differ across l. 
+For instance, assume that one wants to test if the instantaneous effect DID_0 differs from the dynamic effect DID_1. One can use the fact that Var(DID_0-DID_1)=V(DID_0)+V(DID_1)-2cov(DID_0,DID_1) to compute the standard error of DID_0-DID_1, and finally assess if this difference is significant. {p_end}
 
-{p 4 8}{cmd:e(cov_placebo_m_l)}: estimated covariance between {cmd:e(placebo_m)} and {cmd:e(placebo_l)}, for all 1<=m<l<=k, if the options {cmd:covariances(}{it:#}{cmd:)} and {cmd:breps(}{it:#}{cmd:)} have been specified, 
+{p 4 8}{cmd:e(cov_placebo_m_l)}: estimated covariance between {cmd:e(placebo_m)} and {cmd:e(placebo_l)}, for all 1<=m<l<=k, if strictly more than one bootstrap replication was run, 
 and at least 2 placebos have been requested.{p_end}
 
 {p 4 8}{cmd:e(effect_average)}: average of the {cmd:e(effect_l)}s computed, scaled by the difference between the average number of treatment units received by first-time switchers after their first switch
@@ -430,11 +455,11 @@ and the number of treatment units they would have received if they had never swi
 
 {p 4 8}{cmd:e(N_switchers_effect_average)}: number of first-time switchers {cmd:e(effect_average)} applies to.
 
-{p 4 8}{cmd:e(se_effect_average)}: estimated standard error of {cmd:e(effect_average)}, if the options {cmd:covariances(}{it:#}{cmd:)} and {cmd:breps(}{it:#}{cmd:)} have been specified.
+{p 4 8}{cmd:e(se_effect_average)}: estimated standard error of {cmd:e(effect_average)}, if strictly more than one bootstrap replication was run.
 
-{p 4 8}{cmd:e(estimates)}: column vector containing all the point estimates and placebos requested, if the option {cmd:breps(}{it:#}{cmd:)} has been specified.
+{p 4 8}{cmd:e(estimates)}: column vector containing all the point estimates and placebos requested, if strictly more than one bootstrap replication was run.
 
-{p 4 8}{cmd:e(variances)}: column vector containing the variances of all the point estimates and placebos requested, if the option {cmd:breps(}{it:#}{cmd:)} has been specified.
+{p 4 8}{cmd:e(variances)}: column vector containing the variances of all the point estimates and placebos requested, if strictly more than one bootstrap replication was run.
 
 {p 4 8}{cmd:e(cmd)}: macro equal to "did_multiplegt", the name of the command.{p_end}
 
@@ -445,8 +470,8 @@ and the number of treatment units they would have received if they had never swi
 
 {p 4 8}ssc install bcuse{p_end}
 {p 4 8}bcuse wagepan{p_end}
-{p 4 8}did_multiplegt lwage nr year union, placebo(1) breps(50) cluster(nr){p_end}
-{p 4 8}did_multiplegt lwage nr year union, robust_dynamic dynamic(1) placebo(1) breps(50) cluster(nr){p_end}
+{p 4 8}did_multiplegt lwage nr year union, placebo(1) breps(100)cluster(nr){p_end}
+{p 4 8}did_multiplegt lwage nr year union, robust_dynamic dynamic(1) placebo(1) breps(100) cluster(nr){p_end}
 
 {hline}
 
@@ -464,8 +489,9 @@ and the number of treatment units they would have received if they had never swi
 
 {title:Authors}
 
-{p 4 8}Clément de Chaisemartin, University of California at Santa Barbara, Santa Barbara, California, USA.
-{browse "mailto:clementdechaisemartin@ucsb.edu":clementdechaisemartin@ucsb.edu}.{p_end}
-{p 4 8}Xavier D'Haultfoeuille, CREST, Palaiseau, France.
-{browse "mailto:xavier.dhaultfoeuille@ensae.fr":xavier.dhaultfoeuille@ensae.fr}.{p_end}
+{p 4 8}Clément de Chaisemartin, University of California at Santa Barbara, Santa Barbara, California, USA.{p_end}
+{p 4 8}Xavier D'Haultfoeuille, CREST, Palaiseau, France.{p_end}
 
+{title:Contact}
+
+{browse "mailto:chaisemartin.packages@gmail.com":chaisemartin.packages@gmail.com}

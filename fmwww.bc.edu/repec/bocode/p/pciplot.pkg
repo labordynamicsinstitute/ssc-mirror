@@ -7,9 +7,9 @@ d
 d KW: survival
 d KW: confidence intervals 
 d
-d Requires: Stata version 11
+d Requires: Stata version 15.1
 d
-d Distribution-Date: 20130713
+d Distribution-Date: 20221030
 d
 d Author: Patrick Royston, MRC Clinical Trials Unit
 d Support: email pr@@ctu.mrc.ac.uk
