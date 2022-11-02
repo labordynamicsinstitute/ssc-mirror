@@ -1,5 +1,5 @@
 {smcl}
-{it:v. 0.2} 
+{it:v. 0.3} 
 {viewerjumpto "Anticipation" "did2s##anticipation"}{...}
 
 {title:Two-Stage Difference-in-Differences}
@@ -11,7 +11,7 @@
 {title:Syntax}
 
 {phang2}
-{cmd:did2s} {depvar} {ifin} [{it:{help regress##weight:weight}}]{cmd:,} {cmdab:first_stage(}{help varlist}{cmd:)} {cmdab:treat_formula(}{help varlist}{cmd:)} {cmdab:treat_var(}{help varname}{cmd:)} {cmdab:cluster(}{help varname}{cmd:)}
+{cmd:did2s} {depvar} {ifin} [{it:{help regress##weight:weight}}]{cmd:,} {cmdab:first_stage(}{help varlist}{cmd:)} {cmdab:second_stage(}{help varlist}{cmd:)} {cmdab:treat_var(}{help varname}{cmd:)} {cmdab:cluster(}{help varname}{cmd:)}
 
 {synoptset 20 tabbed}{...}
 {synopthdr}
@@ -19,8 +19,9 @@
 {syntab:Model}
 {synopt :{opth first_stage(varlist)}}Fixed effects and covariates that will be used to estimate counterfactual Y_it(0). This should be everything besides treatment variables.{p_end}
 {synopt :{opth second_stage(varlist)}}List of treatment variables. This could be, for example a 0/1 treatment dummy, a set of event-study leads/lags, or a continuous treatment variable.{p_end}
-{synopt :{opth treatment(varname)}}This must be a 0/1 dummy for when treatment is occuring; D_it = 1 if unit i is treated during period t. See {help did2s##anticipation:Anticipation} for details on how to deal with anticipation (shift D_it the maximum number of periods of anticipation).{p_end}
+{synopt :{opth treatment(varname)}}This must be a 0/1 dummy for when treatment is occuring; D_it = 1 if unit i is treated during period t. See {help did2s##anticipation:Anticipation} for details on how to deal with anticipation (shift D_it the number of periods of anticipation).{p_end}
 {synopt :{opth cluster(varname)}}What variable to cluster on (use unit id if you don't want to cluster).{p_end}
+{synopt :{opth unit(varname)}}Unit variable. If you use this option, *do not include unit fixed effects* in the first_stage regression. This is a trick that speeds up numerical computation that will speed things up a bunch if you have a lot of unit fixed effects. Note that the numerical equivalency only works if clutser is at the unit level (or higher!! e.g. units = people, cluster at state level) {p_end}
 {synoptline}
 {p2colreset}{...}
 
@@ -59,16 +60,18 @@ The fixed effects could be biased/inconsistent if there are anticipation effects
 {phang2}{cmd:. use https://github.com/kylebutts/did2s_stata/raw/main/data/df_hom.dta, clear}{p_end}
 
 {pstd}Static Model{p_end}
-{phang2}{cmd:. did2s dep_var, first_stage(i.unit i.year) treat_formula(i.treat) treat_var(treat) cluster_var(state) nboot(10)}{p_end}
+{phang2}{cmd:. did2s dep_var, first_stage(i.state i.year) second_stage(i.treat) treatment(treat) cluster(state)}{p_end}
 
 {pstd}Event Study Model{p_end}
 {phang2}{cmd:. gen rel_year_shift = rel_year + 20}{p_end}
-{phang2}{cmd:. did2s dep_var, first_stage(i.unit i.year) treat_formula(i.rel_year_shift) treat_var(treat) cluster_var(state) nboot(10)}{p_end}
+{phang2}{cmd:. replace rel_year_shift = 100 if rel_year_shift == .}{p_end}
+{phang2}{cmd:. did2s dep_var, first_stage(i.state i.year) second_stage(ib100.rel_year_shift) treatment(treat) cluster(state)}{p_end}
 
 {pstd}With Covariates{p_end}
 {phang2}{cmd:. use https://github.com/scunning1975/mixtape/raw/master/castle.dta, clear}{p_end}
-{phang2}{cmd:. global xvar l_police unemployrt poverty l_income l_prisoner l_lagprisoner blackm_15_24 whitem_15_24 blackm_25_44 whitem_25_44 l_exp_subsidy l_exp_pubwelfare}{p_end}
-{phang2}{cmd:. did2s l_homicide, first_stage(i.sid i.year $xvar) treat_formula(i.post) treat_var(post) cluster_var(sid) nboot(10)}{p_end}
+{phang2}{cmd:. global demo blackm_15_24 whitem_15_24 blackm_25_44 whitem_25_44}{p_end}
+{phang2}{cmd:. did2s l_homicide [aweight=popwt], first_stage(i.sid i.year) second_stage(i.post) treatment(post) cluster(sid)}{p_end}
+{phang2}{cmd:. did2s l_homicide [aweight=popwt], first_stage(i.sid i.year $demo) second_stage(i.post) treatment(post) cluster(sid)}{p_end}
 
 
 

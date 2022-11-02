@@ -1,3 +1,5 @@
+*! 1.0.3 NJC 31 October 2022 
+*! 1.0.2 NJC 10 July 2022 
 *! 1.0.1 NJC 30 May 2021 
 *! 1.0.0 NJC 29 May 2021 
 program floatplot 
@@ -24,15 +26,17 @@ program floatplot
 	SHOWVALopts(str asis)                     ///
 	OFFSET(numlist max=1 >0)                  ///
 	textoffset(real 0.35)                     ///
+    showminimum(real 0)                       /// 
 	addplot(str asis) * ] 
 
 	// offset() undocumented: earlier name for textoffset() 
 	// addplot() undocumented; possibly not much use 
+	// showminimum() undocumented 
 
 	// are data suitable?	
 	marksample touse 
 
-	if "`by'" != "" { 
+	if `"`by'"' != "" { 
 		gettoken byvar byopts : by, parse(,) 
 		markout `touse' `byvar', strok 
 		local byby by(`by')  
@@ -124,19 +128,19 @@ program floatplot
 	if "`proportions'" != "" {
 		`showvaloff' if "`format'" == "" local format "%3.2f"  
 		`showvaloff' by `byvar' `over' : gen `shownum' = `freq'/`cumul'[_N] if `freq' > 0 
-        `showvaloff' by `byvar' `over' : gen `showtxt' = string(`shownum', "`format'")
+        `showvaloff' by `byvar' `over' : gen `showtxt' = string(`shownum', "`format'") if `shownum' >= `showminimum' 
 
 		by `byvar' `over' : replace `cumul' = `cumul'/`cumul'[_N] 
 	} 
 	else if "`frequencies'" != "" { 
 		`showvaloff' if "`format'" == "" local format "%2.0f" 
 		`showvaloff' by `byvar' `over' : gen `shownum' = `freq' if `freq' > 0               
-		`showvaloff' by `byvar' `over' : gen `showtxt' = string(`shownum', "`format'")   
+		`showvaloff' by `byvar' `over' : gen `showtxt' = string(`shownum', "`format'") if `shownum' >= `showminimum'  
 	} 
 	else {
 		`showvaloff' if "`format'" == "" local format "%2.0f" 
 		`showvaloff' by `byvar' `over' : gen `shownum' = 100 * `freq'/`cumul'[_N] if `freq' > 0               
-		`showvaloff' by `byvar' `over' : gen `showtxt' = string(`shownum', "`format'")   
+		`showvaloff' by `byvar' `over' : gen `showtxt' = string(`shownum', "`format'") if `shownum' >= `showminimum' 
 
 		by `byvar' `over' : replace `cumul' = 100 * `cumul'/`cumul'[_N]
 	}
@@ -196,7 +200,7 @@ program floatplot
 	local vtitle : var label `varlist'
 	if `"`vtitle'"' == "" local vtitle `varlist'
 
-	if "`by'" == "" local gap = cond("`vertical'" == "", "xsc(titlegap(*5))", "ysc(titlegap(*5))") 
+	if `"`by'"' == "" local gap = cond("`vertical'" == "", "xsc(titlegap(*5))", "ysc(titlegap(*5))") 
 
 	if "`vertical'" == "" { 
 		`showvaloff' local scall scatter `xpos' `ypos', ms(none) mla(`showtxt') mlabpos(0) mlabcolor(black) `showvalopts' 

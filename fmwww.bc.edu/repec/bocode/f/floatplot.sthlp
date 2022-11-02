@@ -1,5 +1,5 @@
 {smcl}
-{* 29may2021/30may2021/31may2021/3jun2021}{...}
+{* 29may2021/30may2021/31may2021/3jun2021/8jul2021/11apr2022/25may2022/24aug2022/31oct2022}{...}
 {hline}
 help for {hi:floatplot}
 {hline}
@@ -98,23 +98,27 @@ naming them so far as I can tell.
 {p 4 4 2}
 Spear (1952) and Schmid (1954) both used the terms {it:sliding bar} (for
 horizontal plots) and {it:floating column} (for vertical plots). The
-terminology may well be older or perhaps both authors devised those 
+terminology may well be older or perhaps both authors devised those
 terms independently. Either way, Spear gave no literature references,
 while Schmid did give literature references but did not cite Spear.  The
 terms are repeated in later works, Spear (1969) on one side and Schmid
 and Schmid (1979) and Schmid (1983) on another.  In her later book Spear
 did give some literature references but not to any work by Schmid, while
 none of the Schmid sequels cite Spear either.  Be that as it may, terms
-such as sliding, slide, or floating have been repeated by others, such as
-Lockwood (1969) and Robertson (1988).   
- 
-{p 4 4 2}
-In their papers giving a big push to the idea, Robbins and Heiberger
-(2011) and Heiberger and Robbins (2014) talk of 
-{it:diverging stacked bar charts}, 
-a term that is much more informative, but also a little more 
-clunky in my view. 
+such as sliding, slide, or floating have been repeated by others, such
+as Lockwood (1969) and Robertson (1988). 
 
+{p 4 4 2} 
+In their papers giving a big push to the idea, Robbins and
+Heiberger (2011) and Heiberger and Robbins (2014) talk of 
+{it:diverging stacked bar charts}, a term that is much more informative, but
+also a little more clunky in my view. See also Heiberger and Holland (2015).  
+
+{p 4 4 2}
+Contrariwise, the example given
+by Rahlf (2017, pp.108{c -}110) underlines that such graphs can easily
+be given without using any special name.   
+ 
 {p 4 4 2}
 A problem for me as author is that I wrote a Stata command
 {cmd:slideplot} in 2003 as a wrapper for {cmd:graph bar} or 
@@ -219,7 +223,8 @@ parallel within one graph panel.
 {p 4 4 2}{cmd:by()} specifies that bars are to be shown in separate
 panels for distinct values of a categorical variable (numeric or
 string). The usual suboptions are allowed, as explained in the help for 
-{help by_option}.   
+{help by_option}. However, although {cmd:total} is legal, it is useless 
+and doesn't do anything helpful. 
 
 {p 0 0 2}{it:Text display of percents, proportions, or frequencies} 
 
@@ -259,6 +264,17 @@ vary with whether cars are {cmd:foreign}?
 
 {p 4 8 2}{cmd:. floatplot rep78, centre(3) vertical fcolors(red red*0.5 gs12 blue*0.5 blue) over(foreign) note(% centred on record 3) name(float2, replace)}{p_end}
 
+{p 4 8 2}The next example shows how to get an extra display showing all observations. See also Cox (2014). 
+
+{p 4 8 2}{cmd:. preserve}{p_end}
+{p 4 8 2}{cmd:. expand 2}{p_end}
+{p 4 8 2}{cmd:. replace foreign = 2 in 75/L}{p_end}
+{p 4 8 2}{cmd:. label def origin 2 "All cars", modify}{p_end}
+
+{p 4 8 2}{cmd:. floatplot rep78, centre(3) vertical fcolors(red red*0.5 gs12 blue*0.5 blue) over(foreign) note(% centred on record 3) name(float3, replace)}{p_end}
+
+{p 4 8 2}{cmd:. restore}{p_end}
+
 {p 4 4 2}Fienberg (1980, 54{c -}55) reports data from
 Duncan, Schuman and Duncan (1973) from 1959 and 1971 surveys of a large
 American city asking "Are the radio and TV networks doing a good job, just a
@@ -284,9 +300,9 @@ fair job, or a poor job?".
 {p 4 8 2}{cmd:. label values race race}{p_end}
 {p 4 8 2}{cmd:. label def race 1 "White" 2 "Black"}{p_end}
 
-{p 4 8 2}{cmd:. floatplot Opinion [fw=freq] , over(race) by(year, note("") col(1))  centre(2) fcolors(red gs12 blue) subtitle(, pos(9) fcolor(none) nobexpand nobox) ytitle("") name(float3, replace)}{p_end}
+{p 4 8 2}{cmd:. floatplot Opinion [fw=freq] , over(race) by(year, note("") col(1))  centre(2) fcolors(red gs12 blue) subtitle(, pos(9) fcolor(none) nobexpand nobox) ytitle("") name(float4, replace)}{p_end}
 
-{p 4 8 2}{cmd:. floatplot Opinion [fw=freq] , over(year) by(race, note("") row(1) legend(pos(3)))  centre(2) fcolors(red gs12 blue) subtitle(, fcolor(none) nobexpand nobox) xtitle("") vertical name(float4, replace)}{p_end}
+{p 4 8 2}{cmd:. floatplot Opinion [fw=freq] , over(year) by(race, note("") row(1) legend(pos(3)))  centre(2) fcolors(red gs12 blue) subtitle(, fcolor(none) nobexpand nobox) xtitle("") vertical name(float5, replace)}{p_end}
 
 {p 4 4 2}Aitkin et al. (1989, 242; 2005, 299; 2009, 311) reported data
 from a survey of student opinion on the Vietnam War taken at the University of
@@ -309,7 +325,11 @@ D The US should withdraw its military forces from Vietnam immediately.
 
 {p 4 4 2} 
 (They also report response rates (1989, 243; 2005, 298; 2009, 310), averaging 26% for males and 17% 
-for females.) 
+for females.)
+
+{p 4 4 2} 
+For other plots and analyses, see for example Friendly (2000) and Friendly 
+and Meyer (2016).  
 
 {p 4 8 2}{cmd:. clear}{p_end}
 {p 4 8 2}{cmd:. input str1 policy float freq long(female year)}{p_end}
@@ -361,7 +381,7 @@ for females.)
 
 {p 4 8 2}{cmd:. encode policy, gen(Preference)}{p_end}
    
-{p 4 8 2}{cmd:. floatplot Preference [fw=freq], over(year) by(female, note("")) highneg(2) fcolors(red red*0.5 blue*0.5 blue) subtitle(, fcolor(green*0.2)) name(float5, replace) }{p_end}
+{p 4 8 2}{cmd:. floatplot Preference [fw=freq], over(year) by(female, note("")) highneg(2) fcolors(red red*0.5 blue*0.5 blue) subtitle(, fcolor(green*0.2)) name(float6, replace) }{p_end}
 
 {p 4 4 2}Box, Hunter and Hunter (1978, 145{c -}149; 2005, 112{c -}116) 
 gave data on five hospitals on the degree of restoration (no improvement,
@@ -393,9 +413,9 @@ Hospital E and the others.
 {p 4 8 2}{cmd:. label def restore 1 "none" 2 "partial" 3 "complete"}{p_end}
 {p 4 8 2}{cmd:. label var restore "How far restored?"}{p_end}
 
-{p 4 8 2}{cmd:. floatplot restore [w=freq], over(hospital) centre(2) fcolors(red gs12 blue) ysc(reverse) name(float6, replace)}{p_end}
+{p 4 8 2}{cmd:. floatplot restore [w=freq], over(hospital) centre(2) fcolors(red gs12 blue) ysc(reverse) name(float7, replace)}{p_end}
 
-{p 4 8 2}{cmd:. floatplot restore [fw=freq], over(hospital) centre(2) fcolors(red*0.4 gs12*0.4 blue*0.4) lcolors(red black blue) textoffset(0) showvalopts(mlabsize(medlarge)) subtitle(percents) name(float7, replace)}{p_end}
+{p 4 8 2}{cmd:. floatplot restore [fw=freq], over(hospital) centre(2) fcolors(red*0.4 gs12*0.4 blue*0.4) lcolors(red black blue) textoffset(0) showvalopts(mlabsize(medlarge)) subtitle(percents) name(float8, replace)}{p_end}
 
 {p 4 4 2}To compare several variables, {cmd:reshape long} and apply {cmd:floatplot, over()}: 
 
@@ -406,13 +426,15 @@ Hospital E and the others.
 {p 4 8 2}{cmd:. egen prneg = mean(answer <= 2), by(question)}{p_end}
 {p 4 8 2}{cmd:. myaxis question2=question, sort(mean prneg)}{p_end}
 {p 4 8 2}{cmd:. label def question2 1 "at ease", modify}{p_end}
-{p 4 8 2}{cmd:. floatplot ans, over(question2) center(3) fcolors(red red*0.5 gs12 blue*0.5 blue) name(float8, replace)}{p_end}
+{p 4 8 2}{cmd:. floatplot ans, over(question2) center(3) fcolors(red red*0.5 gs12 blue*0.5 blue) name(float9, replace)}{p_end}
 
 
 {title:Acknowledgments} 
 
 {p 4 4 2}Eric Melse made several helpful and encouraging comments. 
-He suggested the problem of comparing several variables.
+He suggested the problem of comparing several variables. Marc Kaulisch 
+reported a bug with {cmd:by()} and flagged the difficulty with 
+{cmd:by(, total)}, which led to a new example using {cmd:expand}. 
 
 
 {title:Author}
@@ -427,7 +449,7 @@ n.j.cox@durham.ac.uk
 {help tabplot} ({it:Stata Journal}) (if installed){break}
 {help distplot} ({it:Stata Journal}) (if installed){break}
 {help qplot} ({it:Stata Journal}) (if installed){break}
-{help myaxis} (SSC and {it:Stata Journal} in press 21(3)) (if installed){break}
+{help myaxis} ({it:Stata Journal}) (if installed){break}
 {help slideplot} (SSC) (if installed){break}
 {help catplot} (SSC) (if installed){p_end}
 
@@ -479,17 +501,37 @@ Speaking Stata: Graphing categorical and compositional data
 {it:Stata Journal} 4: 190{c -}215.
 
 {p 4 8 2}
+Cox, N. J. 2014. 
+Stata tip 119: Expanding datasets for graphical ends.
+{it:Stata Journal} 14: 230{c -}235.   
+
+{p 4 8 2}
 Cox, N. J. 2016.
 Speaking Stata: Multiple bar charts in table form
 {it:Stata Journal} 16: 491{c -}510.
 
 {p 4 8 2}Duncan, O. D., H. Schuman, and B. Duncan. 1973. 
 {it:Social Change in a Metropolitan Community}.
-New York: Russell Sage Foundation. 
+New York: Russell Sage Foundation.
+ 
+{p 4 8 2}Evergreen, S. D. H. 2017. 
+{it:Effective Data Visualization: The Right Chart for the Right Data}.
+Thousand Oaks, CA: SAGE. [second edition 2020] 
 
 {p 4 8 2}Fienberg, S. E. 1980. 
 {it:The Analysis of Cross-Classified Categorical Data}.
 Cambridge, MA: MIT Press. 
+
+{p 4 8 2}Friendly, M. 2000. 
+{it:Visualizing Categorical Data.} 
+Cary, NC: SAS Institute. 
+
+{p 4 8 2}Friendly, M. and D. Meyer. 2016. 
+{it:Discrete Data Analysis with R: Visualization and Modeling Techniques for Categorical and Count Data.}
+Boca Raton, FL: CRC Press. 
+
+{p 4 8 2}Heiberger, R. M. and B. Holland. 2015. 
+{it:Statistical Analysis and Data Display: An Intermediate Course with Examples in R.} New York: Springer. 
 
 {p 4 8 2}
 Heiberger, R. M. and N. B. Robbins. 2014.
@@ -506,6 +548,11 @@ London: Studio Vista.
 Robertson, B. 1988. 
 {it:Learn to Draw Charts and Diagrams Step by Step.} 
 London: Macdonald.
+
+{p 4 8 2}
+Rahlf, T. 2017. 
+{it:Data Visualization with R: 100 Examples.} 
+Cham: Springer. 
 
 {p 4 8 2}
 Robbins, N. B. and R. M. Heiberger. 2011.

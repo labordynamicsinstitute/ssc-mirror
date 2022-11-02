@@ -15,9 +15,9 @@ d KW: graphics
 d KW: categorical data
 d KW: ordinal data
 d
-d Requires: Stata version 8.2
+d Requires: Stata version 17
 d
-d Distribution-Date: 20210531
+d Distribution-Date: 20221101
 d
 d Author: Nicholas J. Cox, Durham University
 d Support: email N.J.Cox@@durham.ac.uk
