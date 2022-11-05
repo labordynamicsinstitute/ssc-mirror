@@ -36,6 +36,8 @@ as well as summary measures of these regressions' robustness to heterogeneous tr
 
 {p 4 8} If {cmd:type(}{it:fdTR}{cmd:)} is specified in the option {cmd:type} below, then the command requires a fifth argument, {cmd:D0}. {cmd:D0} is the mean of the treatment in group g and at period t. It should be non-missing at the first period when a group appears in the data (e.g. at t=1 for the groups that are in the data from the beginning), and for all observations for which the first-difference of the group-level mean outcome and treatment are non missing.{p_end}
 
+{p 4 8} The command creates a variables called weight so it will not run if your dataset already has a variable with that name.{p_end}
+
 {marker options}{...}
 {title:Options}
 
@@ -44,8 +46,6 @@ With {it:feS}, it estimates the weights and sensitivity measures attached to the
 effect does not change over time. With {it:fdTR}, it estimates the weights and sensitivity measures attached to the first-difference regression under the common trends assumption. 
 Finally, with {it:fdS} it estimates the weights and sensitivity measures attached to the first-difference regression under common trends and the assumption that groups' treatment
 effect does not change over time.{p_end}
-
-{p 4 8} {cmd:test_random_weights} when this option is specified, the command estimates the correlation between each variable in {it:varlist} and the weights. Testing if those correlations significantly differ from zero is a way to assess whether the weights are as good as randomly assigned to groups and time periods.{p_end}
 
 {p 4 8}{cmd:controls} is a list of control variables that are included in the regression. Controls should not vary within each group*period cell, because the results in in de Chaisemartin & D'Haultfoeuille (2020a) apply to two-way fixed effects regressions with group*period level controls. If a control does vary within a group*period cell, the command will replace it by its average value within each group*period cell. {p_end}
 
@@ -56,6 +56,13 @@ This option can only be used when {cmd:type(}{it:feTR}{cmd:)} is specified. When
 treatment, but it does not report the summary measures of the regression's robustness to heterogeneous treatment effects, as these summary measures are no longer applicable 
 when the regression has several treatment variables. The command also reports the weights attached to the other treatments. The weights reported by the command are those in
 Corollary 1 in de Chaisemartin & D'Haultfoeuille (2020b). See de Chaisemartin & D'Haultfoeuille (2020b) for further details.{p_end}
+
+{p 4 8} {cmd:test_random_weights} when this option is specified, the command estimates 
+the correlation between each variable in {it:varlist} and the weights. Testing if those correlations 
+significantly differ from zero is a way to assess whether the weights are as good as randomly assigned to groups 
+and time periods. When {cmd:other_treatments} is specified, the command only reports the correlation between each variable 
+and the weights attached to the main treatment, not the correlations between each variable 
+and the contamination weights attached to the other treatments. {p_end}
 
 {p 4 8}{cmd:weight}: if the regression is weighted, the weight variable can be specified in {cmd:weight}. 
 If {cmd:type(}{it:fdTR}{cmd:)} is specified, then the weight variable should be non-missing at the first period when a group appears in the data (e.g. at t=1 for the groups that are in the data from the beginning), and for all observations for which the first-difference of the group-level mean outcome and treatment are non missing.{p_end}
@@ -117,11 +124,11 @@ If the treatment effects of the treated groups and time periods are all negative
 
 {title:Authors}
 
-{p 4 8}Clement de Chaisemartin, University of California at Santa Barbara, Santa Barbara, California, USA.
-{browse "mailto:clementdechaisemartin@ucsb.edu":clementdechaisemartin@ucsb.edu}.{p_end}
+{p 4 8}Clément de Chaisemartin, University of California at Santa Barbara, Santa Barbara, California, USA.{p_end}
+{p 4 8}Xavier D'Haultfoeuille, CREST, Palaiseau, France.{p_end}
+{p 4 8}Antoine Deeb, University of California at Santa Barbara, Santa Barbara, California, USA.{p_end}
 
-{p 4 8}Xavier D'Haultfoeuille, CREST, Palaiseau, France.
-{browse "mailto:xavier.dhaultfoeuille@ensae.fr":xavier.dhaultfoeuille@ensae.fr}.{p_end}
 
-{p 4 8}Antoine Deeb, University of California at Santa Barbara, Santa Barbara, California, USA.
-{browse "mailto:antoinedib@ucsb.edu":antoinedib@ucsb.edu}.{p_end}
+{title:Contact}
+
+{browse "mailto:chaisemartin.packages@gmail.com":chaisemartin.packages@gmail.com}

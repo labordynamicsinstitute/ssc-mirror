@@ -1,4 +1,5 @@
-*! v1.1 cv_kfold. August 2020 by Fernando Rios-Avila
+*! v1.2 cv_kfold. OCT 2022 by Fernando Rios-Avila
+* v1.1 cv_kfold. August 2020 by Fernando Rios-Avila
 * correct for poisson. 
 * try adding something for predicted models. Reg poisson tobit
 
@@ -43,6 +44,12 @@ syntax, [ k(int 5) reps(int 1) seed(str) gen(str)]
 	    cross_mlogit , k(`k') reps(`reps') gen(`gen')
 	}
 	else if "`e(cmd)'"=="mlogit"  {
+	    cross_mlogit , k(`k') reps(`reps') gen(`gen')
+	}
+	else if "`e(cmd)'"=="oprobit"  {
+	    cross_mlogit , k(`k') reps(`reps') gen(`gen')
+	}
+	else if "`e(cmd)'"=="ologit"  {
 	    cross_mlogit , k(`k') reps(`reps') gen(`gen')
 	}
 	else {
@@ -192,9 +199,9 @@ program define cross_poisson, rclass
 		forvalues j=1/`k' {
 		    qui:`cmd' `y_x' `wgt' if `touse' & `kfld'!=`j', `opts' from(`binit',skip)
 			qui:capture drop `tmpresid'
-			qui:predict double `tmpresid', pr(`y') 
-			qui:replace `resid'=log(`tmpresid') if `touse' & `kfld'==`j'
-			
+			qui:predict double `tmpresid', xb
+					
+			qui:replace `resid'=-exp(`tmpresid') + `y' * `tmpresid' -  lngamma(`y'+1) if `touse' & `kfld'==`j'
 		}
 		** Root MSQR
 		if "`gen'"!="" {

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 22 May 2020}{...}
+{* *! version 1.1 oct 30 2022}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Install command2" "ssc install cv_kfold"}{...}
 {vieweralsosee "Help command2 (if installed)" "help ck_kfold"}{...}
@@ -36,7 +36,7 @@
 {pstd}This {cmd:cv_kfold} is a post estimation command that implements k-fold crossvalidation for various stata commands. {p_end}
 
 {pstd}The current version of this command can be used after: {cmd:regress}, {cmd:logit}, {cmd:probit}, {cmd:logit}, {cmd:cloglog}, 
-{cmd:poisson}, {cmd:nbreg}, {cmd:mlogit}, and {cmd:mprobit}. {p_end}
+{cmd:poisson}, {cmd:nbreg}, {cmd:mlogit}, {cmd:mprobit}, {cmd: ologit}, and {cmd: oprobit}. {p_end}
 
 {pstd}When used after {cmd:regress}, {cmd:cv_kfold} estimates and reports the average unweighted Root Mean Squared error (RMSE) across all repetitions. 
 For all other estimation commands, it reports the unweighted model loglikelihood function (AvLL). {p_end}
@@ -58,43 +58,49 @@ for {cmd:regress}, see {cmd:cv_regress} available from ssc.
 
 {pstd} Set up {p_end}
 
-{pstd}{stata sysuse auto}{p_end}
+{pstd}{stata ssc install frause}{p_end}
 {pstd}{stata set seed 10101}{p_end}
+{pstd}{stata frause oaxaca, clear}{p_end}
 
 {pstd} Leave on out cross validation {p_end}
 
 {pstd}{stata ssc install cv_regress}{p_end}
-{pstd}{stata regress mpg price headroom trunk weight length turn }{p_end}
+{pstd}{stata regress lnwage educ exper tenure female age agesq }{p_end}
 {pstd}{stata cv_regress}{p_end}
 
 {pstd} k-fold cross validation {p_end}
 
-{pstd}{stata regress mpg price headroom trunk weight length turn }{p_end}
+{pstd}{stata regress lnwage educ exper tenure female age agesq }{p_end}
 {pstd}{stata cv_kfold}{p_end}
 
 {pstd} k-fold cross validation, with 5 repetitions {p_end}
 
-{pstd}{stata regress mpg price headroom trunk weight length turn }{p_end}
+{pstd}{stata regress lnwage educ exper tenure female age agesq }{p_end}
 {pstd}{stata cv_kfold, reps(5) }{p_end}
 {pstd}{stata matrix list r(msqr) }{p_end}
  
 {pstd} k-fold for other type of models. Logit, poisson and mlogit {p_end}
 
-{pstd}{stata "gen d2mpg=mpg>20" } {p_end}
-{pstd}{stata "gen d3mpg=round(mpg/2)-6"}{p_end} 
-{pstd}{stata "xtile d4mpg=mpg, n(5) "}{p_end} 
-{pstd}{stata "logit d2mpg price headroom trunk weight length turn" }{p_end} 
+{pstd}{stata "drop if lnwage==." } {p_end}
+{pstd}{stata "gen dwage=lnwage>3.4" } {p_end}
+{pstd}{stata "gen wage=round(exp(lnwage))"}{p_end} 
+{pstd}{stata "xtile qwage=lnwage, n(5) "}{p_end} 
+{pstd}{stata "logit dwage educ exper tenure female age agesq" }{p_end} 
 {pstd}{stata "cv_kfold, reps(5)" }{p_end}
 {pstd}{stata "matrix list r(msqr)" } 
 
-{pstd}{stata "poisson d3mpg price headroom trunk weight length turn "}{p_end} 
+{pstd} Currently, Poisson model only works if the Dep variable is {p_end}
+{pstd}{stata "poisson wage educ exper tenure female age agesq"}{p_end} 
 {pstd}{stata "cv_kfold, reps(5) "}{p_end}
 {pstd}{stata "matrix list r(msqr) "} {p_end}
 
-{pstd}{stata mlogit d4mpg price headroom trunk weight length turn }{p_end} 
-{pstd}{stata cv_kfold, reps(5) }{p_end}
-{pstd}{stata matrix list r(msqr) } {p_end}
+{pstd}{stata "mlogit qwage educ exper tenure female age agesq"}{p_end} 
+{pstd}{stata "cv_kfold, reps(5)" }{p_end}
+{pstd}{stata "matrix list r(msqr)" } {p_end}
 
+{pstd}{stata "ologit qwage educ exper tenure female age agesq"}{p_end} 
+{pstd}{stata "cv_kfold, reps(5)" }{p_end}
+{pstd}{stata "matrix list r(msqr)" } {p_end}
 
 {title:Author}
 
@@ -104,11 +110,15 @@ Levy Economics Institute of Bard College{break}
 Annandale-on-Hudson, NY{break}
 friosavi@levy.org
 
+{title:Acknowledgement }
+
+     Many thanks to Morteza Saharkhiz for suggesting extending he command to ologit and oprobit models.
+
 {title:Also see}
 
 {p 4 14 2}
 
-Help:  {helpb cv_regress} {p_end}
+Help:  {helpb cv_regress} 
 
 
 

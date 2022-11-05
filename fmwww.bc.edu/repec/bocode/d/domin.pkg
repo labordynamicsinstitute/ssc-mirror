@@ -22,7 +22,7 @@ d
 d Distribution-Date: 20211121
 d
 d Author: Joseph N. Luchman, Fors Marsh Group LLC
-d Support: email  jluchman@@forsmarshgroup.com
+d Support: email  jluchman@@forsmarsh.com
 d
 f domin.ado
 f domin.sthlp
@@ -32,3 +32,4 @@ f ../m/mixdom.ado
 f ../m/mixdom.sthlp
 f ../m/mvdom.ado
 f ../m/mvdom.sthlp
+f ../l/lb_dominance.mlib

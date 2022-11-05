@@ -1,6 +1,7 @@
  
 * Next step Integrate all into csdid.mata <- so Do not need to play with many files
-*! v1.71  by FRA. adds weights back
+*! v1.72  by FRA. Drops always treated
+* v1.71  by FRA. adds weights back
 * v1.7  by FRA. Changes on Datacheks. This should avoid time gaps problems.
 * Adds asinr for pretreatmetn
 * adds version
@@ -142,8 +143,8 @@ program csdid, sortpreserve eclass
 		syntax [anything(everything)] [iw aw pw], [* version]
 
 		if  "`version'"!="" {
-			display "version: 1.71"
-			addr scalar version = 1.71
+			display "version: 1.72"
+			addr scalar version = 1.72
 			exit
 		}
 		
@@ -484,13 +485,15 @@ program csdid_r, sortpreserve eclass
 		display "Verify that Gvar is correctly defined"
 		error 190
 	}
-	
+ 
 	if `mintime'>=`mingvar' {
 		display "Units always treated found. These will be ignored"
-		*qui:replace `touse'=0 if (`gvar'<=`mintime') & (`gvar'>0) & `touse'
+		
 	}
-	
-	
+			qui:replace `touse'=0 if (`gvar'<=`mintime') & (`gvar'>0) & `touse'
+
+
+	qui:mata:data_check("`time'","`gvar'","`touse'")
 	** determine time0
 	/*if "`time0'"=="" {
 	    qui:sum `time' if `touse'
@@ -1474,3 +1477,6 @@ void mboot(real matrix rif,mean_rif, vv, cband, string scalar clv, real matrix v
 end
 
 
+program addr, rclass
+	return `0'
+end
