@@ -1,4 +1,4 @@
-*! 1.0.0 Ariel Linden 27Sep2022
+*! 1.0.0 Ariel Linden 11Nov2022
 
 capture program drop power_cmd_tworoc
 program power_cmd_tworoc, rclass
@@ -14,7 +14,7 @@ version 11.0
 			ratio(real 1)			/// ratio N0 (non-diseased) / N1 (diseased)
 			Power(string)  			///
 			ONESIDed				///
-			ORDinal					/// uses Obuchowski formula for variance; default is Hanley & McNeil
+			HANley					/// uses Hanley & McNeil formula for variance; default is Obuchowski formula
 			corr(real 0)			/// correlation between auc1 and auc2
 			]						///
 
@@ -55,14 +55,14 @@ version 11.0
 				scalar `zbeta' = invnorm(`power')
 				scalar `delta' = abs(`auc1' - `auc2')
 				
-				if "`ordinal'" !="" { 
+				if "`hanley'" =="" { 
 					scalar `A0' = invnorm(`auc0') * 1.414
 					scalar `v0' = (0.0099 * exp(-`A0'^2 / 2)) * ((5 * `A0'^2 + 8) + (`A0'^2 + 8) / `ratio')
 					scalar `A1' = invnorm(`auc1') * 1.414
 					scalar `v1' = (0.0099 * exp(-`A1'^2 / 2)) * ((5 * `A1'^2 + 8) + (`A1'^2 + 8) / `ratio')
 					scalar `A2' = invnorm(`auc2') * 1.414
 					scalar `v2' = (0.0099 * exp(-`A2'^2 / 2)) * ((5 * `A2'^2 + 8) + (`A2'^2 + 8) / `ratio')
-				} // end ordinal
+				} // end Hanley
 				else {
 					scalar `q1_0' = `auc0' / (2 - `auc0')
 					scalar `q2_0' = 2 * (`auc0'^2) / (1 + `auc0') 
@@ -73,9 +73,11 @@ version 11.0
 					scalar `v0' = `q1_0' / `ratio' + `q2_0' - `auc0'^2 * (1 /`ratio' + 1) 
 					scalar `v1' = `q1_1' / `ratio' + `q2_1' - `auc1'^2 * (1 /`ratio' + 1)
 					scalar `v2' = `q1_2' / `ratio' + `q2_2' - `auc2'^2 * (1 /`ratio' + 1)
-				} // end continuous
+				} // end Obuchowski
 				
-				scalar `n1' = ceil((`zalpha' * sqrt(2 * `v0' - 2 * `corr' * `v0') + `zbeta' * sqrt(`v1' + `v2' - 2 * `corr' * sqrt(`v1') * sqrt(`v2')))^2 / `delta'^2)
+				* sample-size formula
+				scalar `n1' = ceil((`zalpha' * sqrt(`v0' + `v0' - 2 * `corr' * sqrt(`v0') * sqrt(`v0')) + `zbeta' * sqrt(`v1' + `v2' - 2 * `corr' * sqrt(`v1') * sqrt(`v2')))^2 /  `delta'^2)
+				
 				scalar `n0' = ceil(`n1' * `ratio')
 				scalar `n' = `n1' + `n0'
 			} // end sample size
@@ -120,14 +122,14 @@ version 11.0
 				scalar `zalpha' = invnorm(1-`test')
 				scalar `delta' = abs(`auc1' - `auc2')
 			
-				if "`ordinal'" !="" { 
+				if "`hanley'" =="" { 
 					scalar `A0' = invnorm(`auc0') * 1.414
 					scalar `v0' = (0.0099 * exp(-`A0'^2 / 2)) * ((5 * `A0'^2 + 8) + (`A0'^2 + 8) / `ratio')
 					scalar `A1' = invnorm(`auc1') * 1.414
 					scalar `v1' = (0.0099 * exp(-`A1'^2 / 2)) * ((5 * `A1'^2 + 8) + (`A1'^2 + 8) / `ratio')
 					scalar `A2' = invnorm(`auc2') * 1.414
 					scalar `v2' = (0.0099 * exp(-`A2'^2 / 2)) * ((5 * `A2'^2 + 8) + (`A2'^2 + 8) / `ratio')
-				} // end ordinal
+				} // end Hanley
 				else {
 					scalar `q1_0' = `auc0' / (2 - `auc0')
 					scalar `q2_0' = 2 * (`auc0'^2) / (1 + `auc0') 
@@ -138,10 +140,11 @@ version 11.0
 					scalar `v0' = `q1_0' / `ratio' + `q2_0' - `auc0'^2 * (1 /`ratio' + 1) 
 					scalar `v1' = `q1_1' / `ratio' + `q2_1' - `auc1'^2 * (1 /`ratio' + 1)
 					scalar `v2' = `q1_2' / `ratio' + `q2_2' - `auc2'^2 * (1 /`ratio' + 1)
-				} // end continuous
+				} // end Obuchowski
 					
-				scalar `power' = normal((sqrt(`n1' * `delta'^2) - `zalpha' * sqrt(2 * `v0' - 2 * `corr' * `v0')) / sqrt(`v1' + `v2' - 2 * `corr' * sqrt(`v1') * sqrt(`v2'))) 	
-	
+			* Reorganized sample size formula to get power				
+			scalar `power' = normal((sqrt(`n1' * `delta'^2) - `zalpha' * sqrt(`v0' + `v0' - 2 * `corr' * sqrt(`v0') * sqrt(`v0'))) / sqrt(`v1' + `v2' - 2 * `corr' * sqrt(`v1') * sqrt(`v2')))
+
 			} // end power
 		
 			// saved results

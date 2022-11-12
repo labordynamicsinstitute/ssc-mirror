@@ -1,5 +1,6 @@
 {smcl}
-{* July 23 2020}{...}
+{* First Version July 23 2020}{...}
+{* This Version Nov 11 2022}{...}
 {viewerdialog xtoos_bin_t "dialog xtoos_bin_t"}{...}
 {vieweralsosee "[XT] xtoos_bin_i" "help xtoos_bin_i"}{...}
 {vieweralsosee "[XT] xtoos_t" "help xtoos_t"}{...}
@@ -28,6 +29,10 @@ The procedure reports both the estimated ROC and also its standard error (SE).{p
 {p}The performance results are broken down and reported in two different ways:{p_end}
 {p}1) According to the last period included in the estimation sample.{p_end}
 {p}2) According to the length of the forecasting horizon.{p_end}
+
+{title:Proceedings Spain Stata Conference 2019} 
+
+https://www.stata.com/meeting/spain19/slides/Spain19_Ugarte-Ruiz.pdf
 
 
 {title:Syntax}
@@ -62,24 +67,33 @@ The particular individual or group must be defined by a dummy variable equal to 
 {synoptline}
 
 {marker Examples}{...}
-{title:Examples}
+
+{title:Example 1. Defining the evaluation (out-of-sample) period}
 
 Use of {cmd:xtoos_bin_t} to evaluate the prediction perfomance based on ROC between the first quarter of year 2010 and the fourht quarter of year 2018
 
 {p 4 8 2}{cmd:. xtoos_bin_t y x1 x2, indate(2010q1) cdate(2018q4) mprob(pr)}{p_end}
 
+{title:Example 2. Fixed Effects option and probability method}
+
 Use of {cmd:xtoos_bin_t} using Fixed-Effects (within) estimator and the estimation option pc1 for the predicted probability
 
 {p 4 8 2}{cmd:. xtoos_bin_t y x1 x2, indate(2010q1) cdate(2018q4) mprob(pc1) fe}{p_end}
+
+{title:Example 3. Changing the estimation method}
 
 Use of {cmd:xtoos_bin_t} using as estimation method the command {cmd:xtprobit}
 
 {p 4 8 2}{cmd:. xtoos_bin_t y x1 x2, indate(2010q1) cdate(2018q4) mprob(pr) met(xtprobit)}{p_end}
 
+{title:Example 4. Restricting the evaluation to a group of individuals}
+
 Use of {cmd:xtoos_bin_t} to evaluate the prediction perfomance based on ROC, but restricting the evaluation only to individual # 1 
 
 {p 4 8 2}{cmd:. gen ind1=individual==1}{p_end}
 {p 4 8 2}{cmd:. xtoos_bin_t y x1 x2, indate(2010q1) cdate(2018q4) mprob(pr) evalopt(ind1)}{p_end}
+
+{title:Example 5. Including dummy variables}
 
 Use of {cmd:xtoos_bin_t} using dummy variables per individual 
 

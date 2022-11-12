@@ -35,6 +35,7 @@ DATE:						DETAILS:
 09.06.2022					Network meta-analysis; 
 26.07.2022					REF(label, top|bottom) ; default is bottom
 01.08.2022					Renamed network to abnetwork; and paired to cbnetwork
+10.10.2022					introduce variance only on se or sp
 
 FUTURE 						Work on the absolutes for the paired analysis; 
 
@@ -242,11 +243,17 @@ version 14.0
 				else if ustrregexm("`bcov'", "id", 1){
 					local bcov = "identity"
 				}
-				else if strpos("`bcov'", "ex") == 1{
+				else if strpos("`bcov'", "ex") == 1 {
 					local bcov = "exchangeable"
 				}
+				else if strpos("`bcov'", "se") == 1 {
+					local bcov = "se"
+				}
+				else if strpos("`bcov'", "sp") == 1 {
+					local bcov = "sp"
+				}
 				else {
-					di as error "Allowed covariance structures: unstructured, independent, identity, or exchangeable"
+					di as error "Allowed covariance structures: se, sp, unstructured, independent, identity, or exchangeable"
 					exit
 				}
 			}
@@ -500,6 +507,13 @@ version 14.0
 		gettoken varx catreg : catreg
 		local typevarx = "i"
 		local baselab:label `varx' `basecode'
+		if `basecode' == 1 {
+			local indexcode "2"
+		}
+		else {
+			local indexcode "1"
+		}
+		local indexlab:label `varx' `indexcode'
 	}
 	local pcat: word count `catreg'
 	
@@ -541,6 +555,10 @@ version 14.0
 	
 	/*Model presenations*/
 	local regressorss "`regressors'"
+	/*Overall*/
+	local lmuse = "mu_lse"
+	local lmusp = "mu_lsp"
+	
 	if "`design'" == "independent" | "`design'" == "comparative" {	
 		local nuse = "mu_lse"
 		local nusp = "mu_lsp"
@@ -657,6 +675,8 @@ version 14.0
 				exit
 			}
 		}
+		//nomc 
+		local mc
 	}
 	
 	if "`groupvar'" == "" {
@@ -710,9 +730,10 @@ version 14.0
 		local modeloptsi = "`modelopts'"
 	
 		//don't run last loop if stratify
-		if (`i' > `nlevels') & ("`stratify'" != "") & ("`design'" == "comparative") {
-			continue, break
-		}
+		*if (`i' > `nlevels') & ("`stratify'" != "") & ("`design'" == "comparative") {
+		*	local overall "nooverall"
+		*	continue, break
+		*}
 	
 		*Stratify except the last loop for the overall
 		if (`i' < `=`nlevels' + 1') & ("`stratify'" != "") {
@@ -722,7 +743,7 @@ version 14.0
 			local ilab = ustrregexra("`ilab'", " ", "_")
 			local byrownames = "`byrownames' `by':`ilab'"
 			if "`design'" == "comparative" & "`stratify'" != "" {
-				local bybirownames = "`bybirownames' `ilab':`baselab' `ilab':`ilab'"
+				local bybirownames = "`bybirownames' `ilab':`baselab' `ilab':`indexlab' `ilab':Overall"
 			}
 			
 			*Check if there is enough data in each strata
@@ -776,7 +797,7 @@ version 14.0
 				exit _rc
 			}
 		}		
-		if `Nobs' < 3 & "`modeli'" == "random"  {
+		if `Nuniq' < 3 & "`modeli'" == "random"  {
 			local modeli fixed //If less than 3 studies, use fixed model
 			if "`modeloptsi'" != "" {
 				local modeloptsi
@@ -784,6 +805,8 @@ version 14.0
 				di as res _n  "Warning: Fixed-effects model fitted instead."
 			}
 		}
+		
+
 		
 		di as res _n "*********************************** Fitted model`stratalab' ***************************************" 
 		
@@ -798,8 +821,16 @@ version 14.0
 			di "{phang} logit(se) = `nuse'{p_end}"
 			di "{phang} logit(sp) = `nusp'{p_end}"
 		}
-		if "`modeli'" == "random" {	
-			di "{phang}`studyid'_lse, `studyid'_lsp ~ biv.normal(0, sigma){p_end}"
+		if "`modeli'" == "random" {
+			if "`bcov'" == "se" {
+				di "{phang}`studyid'_lse ~ normal(0, sigma){p_end}"
+			}
+			else if "`bcov'" == "sp"  {
+				di "{phang}`studyid'_lsp ~ normal(0, sigma){p_end}"
+			}
+			else {
+				di "{phang}`studyid'_lse, `studyid'_lsp ~ biv.normal(0, sigma){p_end}"
+			}
 		}
 		if "`design'" == "cbnetwork"  {
 			di "{phang} Ipair = 0 if 1st set{p_end}"
@@ -955,8 +986,7 @@ version 14.0
 				local S_89`j' = .
 			}
 			
-			di "*********************************** ************* ***************************************"
-			di as txt "Just a moment - Fitting reduced models for comparisons"
+
 			if "`interaction'" !="" {
 				local confariates "`confounders'"
 			}
@@ -976,11 +1006,14 @@ version 14.0
 			local rownamesmcse
 			local rownamesmcsp
 			
-			
+			if "`confariates'" != "" {
+				di "*********************************** ************* ***************************************"
+				di as txt "Just a moment - Fitting reduced models for comparisons"
+			}
 			foreach c of local confariates {
 				if "`cveffect'" != "sp" {
 					if "`interaction'" =="sesp" | "`interaction'" =="se" {
-						local xterm = "`c'#`varx'"
+						local xterm = "`c'#`typevarx'.`varx'"
 						local xnu = "`c'*`varx'"
 					}
 					else {
@@ -1023,7 +1056,7 @@ version 14.0
 				}
 				if "`cveffect'" != "se" {
 					if "`interaction'" =="sesp" | "`interaction'" =="sp" {
-						local xterm = "`c'#`varx'"
+						local xterm = "`c'#`typevarx'.`varx'"
 						local xnu = "`c'*`varx'"
 					}
 					else {
@@ -1354,7 +1387,7 @@ version 14.0
 		}
 		
 		mat `absoutse' = `serow' \  `absoutse'
-		mat `absoutsp' = `serow' \  `absoutsp'
+		mat `absoutsp' = `sprow' \  `absoutsp'
 		mat `absout' = `absoutse' \ `absoutsp'
 		
 		mat colnames `absout' = Estimate SE(logit) z(logit) P>|z| Lower Upper
@@ -1375,6 +1408,10 @@ version 14.0
 			mat `serrout' = `serrow' \  `serrout'
 			mat `sprrout' = `sprrow' \  `sprrout'
 			mat `rrout' = `serrout' \ `sprrout'
+			
+			mat colnames `rrout' = Estimate SE(log) z(log) P>|z| Lower Upper
+			mat colnames `serrout' = Estimate SE(log) z(log) P>|z| Lower Upper
+			mat colnames `sprrout' = Estimate SE(log) z(log) P>|z| Lower Upper
 		}
 		
 		mat rownames `BVar' = `byrownames'
@@ -1413,13 +1450,7 @@ version 14.0
 			local vlist = r(vlist)
 			local cc0 = r(cc0)
 			local cc1 = r(cc1)
-			
-			if `basecode' == 1 {
-				local indexcode "2"
-			}
-			else {
-				local indexcode "1"
-			} 	
+				
 			if "`refpos'" == "bottom" {	
 				koopmanci `event'`=`indexcode'-1' `total'`=`indexcode'-1' `event'`=`basecode'-1' `total'`=`basecode'-1', rr(`es') upperci(`uci') lowerci(`lci') alpha(`=1 - `level'*0.01')
 			}
@@ -1725,6 +1756,21 @@ version 14.0
 		else {
 			local nested
 		}
+		
+		if ("`bcov'" == "se") | ("`bcov'" == "sp"){
+			if ("`bcov'" == "se") {
+				local re = "`3'"
+			}
+			else {
+				local re = "`4'"
+			}
+			local cov
+		}
+		else {
+			local re = "`3' `4'"
+			local cov = "cov(`bcov')"
+		}
+		
 	
 		if ("`model'" == "fixed") {
 			capture noisily binreg `1' `regexpression' if `touse', noconstant n(`2') ml `modelopts' l(`level')
@@ -1735,7 +1781,7 @@ version 14.0
 				local modelopts = `"iterate(30) `modelopts'"'
 			}
 			if strpos(`"`modelopts'"', "intpoi") == 0  {
-				qui count `if'
+				qui count if `touse'
 				if `=r(N)' < 7 {
 					local modelopts = `"intpoints(`=r(N)') `modelopts'"'
 				}
@@ -1744,7 +1790,7 @@ version 14.0
 			//First trial
 			#delim ;
 			capture noisily meqrlogit (`1' `regexpression' if `touse', noc )|| 
-			  (`sid': `3' `4', noc cov(`bcov')) `nested',
+			  (`sid': `re', noc `cov') `nested',
 			  binomial(`2') `modelopts' l(`level');
 			#delimit cr 
 			
@@ -1758,7 +1804,7 @@ version 14.0
 					local refine "refineopts(iterate(`=10 * `try''))"
 					#delim ;					
 					capture noisily meqrlogit (`1' `regexpression' if `touse', noc )|| 	
-							(`sid': `3' `4', noc cov(`bcov')) `nested',						
+							(`sid': `re', noc `cov') `nested',						
 							binomial(`2') `modelopts' l(`level') `refine' ;
 					#delimit cr 
 					
@@ -1773,7 +1819,7 @@ version 14.0
 					local refine "refineopts(iterate(`=10 * `try''))"
 					#delim ;					
 					capture noisily meqrlogit (`1' `regexpression' if `touse', noc )|| 	
-							(`sid': `3' `4', noc cov(`bcov')) `nested',						
+							(`sid': `re', noc `cov') `nested',						
 							binomial(`2') `modelopts' l(`level') `refine' ;
 					#delimit cr 
 					
@@ -1787,7 +1833,7 @@ version 14.0
 				local ++try 
 				#delim ;
 				capture noisily meqrlogit (`1' `regexpression' if `touse', noc )|| 
-					(`sid': `3' `4', noc cov(`bcov')) `nested',
+					(`sid': `re', noc `cov') `nested',
 					binomial(`2') `modelopts' l(`level') `refine' matlog;
 				#delimit cr
 				
@@ -1937,23 +1983,28 @@ version 14.0
 			qui label list `groupvar'
 			local nlevels = r(max)
 			local c = 0
+			local m = 1
 			
 			forvalues l = 1/`nlevels' {
 				if "`outplot'" == "abs" {
 					if ("`stratify'" !="") {
 						local c = 1
+						if ("`comparative'" !="") {
+							local m = 3
+						}
 					}
-					local S_112 = `absoutse'[`=`l' + `c'', 1]
-					local S_122 = `absoutsp'[`=`l' + `c'', 1]
 					
-					local S_312 = `absoutse'[`=`l' + `c'', 5]
-					local S_322 = `absoutsp'[`=`l' + `c'', 5]
+					local S_112 = `absoutse'[`=`l'*`m' + `c'', 1]
+					local S_122 = `absoutsp'[`=`l'*`m' + `c'', 1]
 					
-					local S_412 = `absoutse'[`=`l' + `c'', 6]
-					local S_422 = `absoutsp'[`=`l' + `c'', 6]
+					local S_312 = `absoutse'[`=`l'*`m' + `c'', 5]
+					local S_322 = `absoutsp'[`=`l'*`m' + `c'', 5]
+					
+					local S_412 = `absoutse'[`=`l'*`m' + `c'', 6]
+					local S_422 = `absoutsp'[`=`l'*`m' + `c'', 6]
 				}
 				else {
-					if ("`abnetwork'" !="") {
+					if ("`abnetwork'" !="") | ("`stratify'" !="")  {
 						local c = 1
 					}
 					local S_112 = `serrout'[`=`l' + `c'', 1]
@@ -2275,15 +2326,15 @@ program define printmat
 		}
 			
 		if ("`type'" == "abs") {	
-			if `nrows' > 2 {
+			if `nrows' > 4 {
 				if "`cveffect'" == "sesp" {
 					local rspec "---`="&"*`=`nrows'/2 - 2''--`="&"*`=`nrows'/2 - 2''-"
 				}
 				else if "`cveffect'" == "se" {
-					local rspec "---`="&"*`=(`pcat' + `byncatreg' - 2)/2 + `ncontreg'''---"
+					local rspec "---`="&"*`=`nrows'-4''---"
 				}
 				else if "`cveffect'" == "sp" {
-					local rspec "-----`="&"*`=(`pcat' + `byncatreg' - 2)/2 + `ncontreg'''-"
+					local rspec "-----`="&"*`=`nrows'-4''-"
 				}
 			}
 			else {
@@ -2292,13 +2343,16 @@ program define printmat
 		}
 		if ("`type'" == "rr") {
 		local rownamesmaxlen = 20
-			if `nrows' > 2 {
+			if `nrows' > 4 {
 				if "`cveffect'" == "sesp" {
 				 local rspec "---`="&"*`=`nrows'/2 - 2''--`="&"*`=`nrows'/2 - 2''-"
 				 
 				}
-				else{
-					local rspec "--`="&"*`=`nrows'/2''-"
+				else if "`cveffect'" == "se" {
+					local rspec "---`="&"*`=`nrows'-4''---"
+				}
+				else if "`cveffect'" == "sp" {
+					local rspec "-----`="&"*`=`nrows'-4''-"
 				}
 			}
 			else {
@@ -2675,14 +2729,14 @@ end
 			
 			if `i' > 1 & "`interaction'" != "" {
 				if "`interaction'" == "se" {
-					local seregexpression = "`seregexpression' ``i''#`1'#c.`se'"
+					local seregexpression = "`seregexpression' `prefix_`i''.``i''#`prefix_1'.`1'#c.`se'"
 				}
 				else if "`interaction'" == "sp" {
-					local spregexpression = "`spregexpression' ``i''#`1'#c.`sp'"
+					local spregexpression = "`spregexpression' `prefix_`i''.``i''#`prefix_1'.`1'#c.`sp'"
 				}
 				else {
-					local seregexpression = "`seregexpression' ``i''#`1'#c.`se'"
-					local spregexpression = "`spregexpression' ``i''#`1'#c.`sp'"
+					local seregexpression = "`seregexpression' `prefix_`i''.``i''#`prefix_1'.`1'#c.`se'"
+					local spregexpression = "`spregexpression' `prefix_`i''.``i''#`prefix_1'.`1'#c.`sp'"
 				}
 			}
 			//Pick out the interactor variable
@@ -2698,7 +2752,7 @@ end
 				local catreg "`catreg' ``i''"
 			}
 			else {
-				local contreg "`catreg' ``i''"
+				local contreg "`contreg' ``i''"
 			}
 			*}/
 		}
@@ -2728,7 +2782,7 @@ end
 			cveffect(string) interaction(string) catreg(varlist) contreg(varlist) power(integer 0) ///
 			level(integer 95) by(varname) varx(varname) typevarx(string) regexpression(string) abnetwork cbnetwork stratify independent comparative ]
 		
-			tempname outmatrix catregmatrixout bycatregmatrixout secontregmatrixout spcontregmatrixout outmatrixse ///
+			tempname outmatrix contregmatrixout catregmatrixout bycatregmatrixout secontregmatrixout spcontregmatrixout outmatrixse ///
 				outmatrixsp serow sprow outmatrixse outmatrixsp outmatrixr overallse overallsp Vmatrix byVmatrix
 			
 			*Nullify by			
@@ -2832,23 +2886,23 @@ end
 					summ `v' if `touse', meanonly
 					local vmean = r(mean)
 					qui margin if `touse', over(`se') predict(xb) at(`v'=`vmean') level(`level')
-					mat `matrixout' = r(table)'
-					mat `matrixout' = `matrixout'[1..., 1..6]
+					mat `contregmatrixout' = r(table)'
+					mat `contregmatrixout' = `contregmatrixout'[1..., 1..6]
 					if `init' {
 						local init 0
-						mat `secontregmarixout' = `matrixout'[2, 1...] 
-						mat `spcontregmarixout' = `matrixout'[1, 1...] 
+						mat `secontregmatrixout' = `contregmatrixout'[2, 1...] 
+						mat `spcontregmatrixout' = `contregmatrixout'[1, 1...] 
 					}
 					else {
-						mat `secontregmarixout' =  `secontregmarixout' \ `matrixout'[2, 1...]
-						mat `spcontregmarixout' =  `spcontregmarixout' \ `matrixout'[1, 1...]
+						mat `secontregmatrixout' =  `secontregmatrixout' \ `contregmatrixout'[2, 1...]
+						mat `spcontregmatrixout' =  `spcontregmatrixout' \ `contregmatrixout'[1, 1...]
 					}
 					local contserownames = "`contserownames' `v'"
 					local contsprownames = "`contsprownames' `v'"
 					local ++ncontreg
 				}
-				mat rownames `secontregmarixout' = `contserownames'
-				mat rownames `spcontregmarixout' = `contsprownames'
+				mat rownames `secontregmatrixout' = `contserownames'
+				mat rownames `spcontregmatrixout' = `contsprownames'
 			}
 			
 			if "`expit'" != "" {
@@ -3085,7 +3139,7 @@ end
 					}
 					else {
 						if (`=`ncatreg' + `byncatreg' - 2' > 0) & (`ncontreg' > 0) { 
-							mat `outmatrix' = `serow' \ `overallse' \ `sprow' \ `outmatrixsp' \`spcontregmatrixout' \ `overallsp'
+							mat `outmatrix' = `serow' \ `overallse' \ `sprow' \ `outmatrixsp' \ `spcontregmatrixout' \ `overallsp'
 						}
 						else if (`=`ncatreg' + `byncatreg' - 2' > 0) & (`ncontreg' == 0) { 
 							mat `outmatrix' = `serow' \ `overallse' \ `sprow' \ `outmatrixsp' \ `overallsp'
@@ -3180,6 +3234,10 @@ end
 			*local catreg "`*'"
 			local idpairconcat "#`varx'"
 			local typevarx "i"
+			*Nullify by			
+			if "`stratify'" != "" {
+				local by
+			}
 		}
 		*if "`by'`comparator'" != ""  {
 			local confounders "`by' `catreg'"
@@ -3314,15 +3372,14 @@ end
 				mat roweq `setestnl' = Relative_Sensitivity
 				mat roweq `sptestnl' = Relative_Specificity
 								
-				mat `testmat2print' =  `setestnl'  \ `sptestnl' 
-				mat colnames `testmat2print' = chi2 df p
+				*mat `testmat2print' =  `setestnl'  \ `sptestnl' 
+				*mat colnames `testmat2print' = chi2 df p
 				
 				local inltest = "yes"
 			}
 			else {
 				local inltest = "no"
 			}
-			
 			
 			if "`comparative'" != ""  | "`cbnetwork'" != ""  {
 				mat `outmatrix' = J(`=`ncols' + 2', 6, .)
@@ -3433,18 +3490,17 @@ end
 			if "`cveffect'" == "sesp" {
 				*local rspec "---`="&"*`=`nrows'/2 - 1''--`="&"*`=`nrows'/2 - 1''-"
 				mat `outmatrix' = `serow' \ `outmatrixse' \ `overallse'  \ `sprow' \ `outmatrixsp' \ `overallsp'
-				mat `outmatrixse' = `outmatrixse' \ `overallse' 
-				mat `outmatrixsp' = `outmatrixsp' \ `overallsp' 
 			}
+			else if "`cveffect'" == "se" { 
+				mat `outmatrix' = `serow' \ `outmatrixse' \ `overallse'  \ `sprow' \  `overallsp'
+				}
 			else {
-				if "`cveffect'" == "se" { 
-					mat `outmatrix' = `serow' `outmatsehole' `ovmatsehole' 
-				}
-				else {
-					mat `outmatrix' = `sprow' `outmatsphole' `ovmatsphole'
-				}
-				*local rspec "--`="&"*`=`nrows'/2''-"
+				mat `outmatrix' = `serow' \ `overallse'  \ `sprow' \ `outmatrixsp' \ `overallsp'
 			}
+				*local rspec "--`="&"*`=`nrows'/2''-"
+			
+			mat `outmatrixse' = `outmatrixse' \ `overallse' 
+			mat `outmatrixsp' = `outmatrixsp' \ `overallsp' 
 		}
 		if `ncols' > 0 &  "`cbnetwork'`comparative'" =="" {
 			if "`cveffect'" == "sesp" {
@@ -3538,9 +3594,21 @@ version 14.0
 						exp(`matcoef'[ `nrows' - 1 - `w', 1])*exp(`matcoef'[ `nrows' - 1 - `w', 1])*tanh(`matcoef'[ `nrows' - `w', 1]), exp(`matcoef'[ `nrows' - 1 - `w', 1])^2)
 			local b = 2
 		}
-		else if strpos("`bcov'", "id") != 0 {
+		else if (strpos("`bcov'", "id") != 0) {
 			mat	`BVar' = (exp(`matcoef'[ `nrows' - `w', 1])^2, 0\ ///
 				0, exp(`matcoef'[ `nrows' - `w', 1])^2)
+				
+			local b = 1
+		}
+		else if (strpos("`bcov'", "sp") != 0) {
+			mat	`BVar' = (0, 0\ ///
+				0, exp(`matcoef'[ `nrows' - `w', 1])^2)
+				
+			local b = 1
+		}
+		else if (strpos("`bcov'", "se") != 0) {
+			mat	`BVar' = (exp(`matcoef'[ `nrows' - `w', 1])^2, 0\ ///
+				0, 0)
 				
 			local b = 1
 		}

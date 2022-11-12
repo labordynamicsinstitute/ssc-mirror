@@ -1,5 +1,6 @@
 {smcl}
-{* July 23 2020}{...}
+{* First Version July 23 2020}{...}
+{* This Version Nov 11 2022}{...}
 {viewerdialog xtoos_t "dialog xtoos_t"}{...}
 {vieweralsosee "[XT] xtoos_i" "help xtoos_i"}{...}
 {vieweralsosee "[XT] xtoos_bin_t" "help xtoos_bin_t"}{...}
@@ -32,6 +33,10 @@ The procedure reports the RMSE of the specified model (RMSE_oos), the alternativ
 {p}2) According to the length of the forecasting horizon.{p_end}
 
 {p}Additionally, it allows to draw a graph with the model forecasts at each forecasting horizon for a selected group of individuals in the panel. {p_end}
+
+{title:Proceedings Spain Stata Conference 2019} 
+
+https://www.stata.com/meeting/spain19/slides/Spain19_Ugarte-Ruiz.pdf
 
 
 {title:Syntax}
@@ -73,13 +78,16 @@ It can only be used together with the option {opt dum}.{p_end}
 This option should be used when using a dynamic panel methods such as {cmd:xtabond} or {cmd:xtdpdsys}.  If other estimation method is being used,
 the command {cmd:xtoos_t} also allows to write down the desired lagged dependent variables terms simply as other explanatory variables. {p_end}
 
-{synopt:{opt hgraph()}}Specifies the individuals for which to draw a "hair" graph, with all the model forecasts at each forecasting horizon.{p_end}
+{synopt:{opt hgraph()}}Specifies the individuals for which to draw a "hair" graph, with all the model forecasts at each forecasting horizon. 
+The graph displays the actual dependent variable together with the model's prediction for each forecasting horizon and the alternative (comparison) prediction, which by default
+corresponds to the prediction of an AR(1) model. The option requires to specify a list of numbers (panel code number) corresponding to the individals that you want to draw the hair graph.{p_end}
 
 {synopt:{it:model_options}}Specifies any other estimation options specific to the method used and not defined elsewhere.{p_end}
 {synoptline}
 
 {marker Examples}{...}
-{title:Examples}
+
+{title:Example 1. Defining the evaluation (out-of-sample) period}
 
 Use of {cmd:xtoos_t} to evaluate the prediction performance between periods 15 and 20 (out of 20 total periods in the sample)
 
@@ -87,34 +95,50 @@ Use of {cmd:xtoos_t} to evaluate the prediction performance between periods 15 a
 {p 4 8 2}{cmd:. xtset company time}{p_end}
 {p 4 8 2}{cmd:. xtoos_t invest market stock, indate(15) cdate(20)}{p_end}
 
+{title:Example 2. Restricting the evaluation to a group of individuals}
+
 Use of {cmd:xtoos_t} to evaluate the prediction performance between periods 15 and 20, but restricting the evaluation only to company # 1 
 
 {p 4 8 2}{cmd:. gen company1=company==1}{p_end}
 {p 4 8 2}{cmd:. xtoos_t invest market stock, indate(15) cdate(20) evalopt(company1)}{p_end}
 
+{title:Example 3. Changing the estimation method}
+
 Use of {cmd:xtoos_t} using as estimation method the command {cmd:xtregar}
 
 {p 4 8 2}{cmd:. xtoos_t invest market stock, indate(15) cdate(20) met(xtregar)}{p_end}
+
+{title:Example 4. Changing the comparison method}
 
 Use of {cmd:xtoos_t} using OLS ({cmd:reg}) as the estimation method for an AR(1) comparison model 
 
 {p 4 8 2}{cmd:. xtoos_t invest market stock, indate(15) cdate(20) mcomp(reg)}{p_end}
 
+{title:Example 5. Fixed Effects and individual components options}
+
 Use of {cmd:xtoos_t} using Fixed-Effects (within) estimator including the estimated individual components in the prediction
 
 {p 4 8 2}{cmd:. xtoos_t invest market stock, indate(15) cdate(20) fe xbu}{p_end}
+
+{title:Example 6. No individual component in the prediction}
 
 Use of {cmd:xtoos_t} using Fixed-Effects (within) estimator but without including the estimated individual components in the prediction
 
 {p 4 8 2}{cmd:. xtoos_t invest market stock, indate(15) cdate(20) fe}{p_end}
 
+{title:Example 7. Use of dummy variables}
+
 Use of {cmd:xtoos_t} using dummy variables per individual and including their estimated values in the prediction (equivalent to options fe xbu)
 
 {p 4 8 2}{cmd:. xtoos_t invest market stock, indate(15) cdate(20) dum}{p_end}
 
+{title:Example 8. Use of dummy varibles in the specification but not in the prediction}
+
 Use of {cmd:xtoos_t} using dummy variables per individual but without including their estimated values in the prediction (equivalent to option fe)
 
 {p 4 8 2}{cmd:. xtoos_t invest market stock, indate(15) cdate(20) dum opar}{p_end}
+
+{title:Example 9. Defining lags of the dependent variable}
 
 Use of {cmd:xtoos_t} including lags of the dependent variable in the specification.  The following three specifications are equivalent:
 
@@ -122,11 +146,15 @@ Use of {cmd:xtoos_t} including lags of the dependent variable in the specificati
 {p 4 8 2}{cmd: xtoos_t l(0/3).invest market stock, indate(15) cdate(20)} {p_end}
 {p 4 8 2}{cmd: xtoos_t invest l.invest l2.invest l3.invest market stock, indate(15) cdate(20)} {p_end}
 
+{title:Example 10. Using a dynamic model method}
+
 Use of {cmd:xtoos_t} using a dynamic model method, either {cmd:xtabond} or {cmd:xtdpdsys}. In this case, the default specification includes one lag 
 of the dependent variable
 
 {p 4 8 2}{cmd:. xtoos_t invest market stock, indate(15) cdate(20) met(xtabond)}{p_end}
 {p 4 8 2}{cmd:. xtoos_t invest market stock, indate(15) cdate(20) met(xtdpdsys) lags(2)}{p_end}
+
+{title:Example 11. Drawing a graph with the different out-of-sample forecasts}
 
 Use of {cmd:xtoos_t} to draw a "hair" graph with all the model forecasts at each forecasting horizons for individuals 1 to 5. 
 
@@ -143,7 +171,6 @@ Use of {cmd:xtoos_t} to draw a "hair" graph with all the model forecasts at each
 {p2col 5 18 22 2: Matrices}{p_end}
 {synopt:{cmd:r(ev_last)}}evaluation according to the last in-sample period{p_end}
 {synopt:{cmd:r(ev_hor)}}evaluation according to the forecasting horizon{p_end}
-
 
 {title:Author}
 

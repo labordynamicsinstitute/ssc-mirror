@@ -1,6 +1,6 @@
 * black --- Asjad Naqvi (2022)
 sequence 1210
-label "black_tableau"
+label "black_brbg"
 #include s2color
 // positions and sizes
 numstyle pcycle             15

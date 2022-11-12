@@ -1,5 +1,7 @@
 {smcl}
-{* July 23 2020}{...}
+{* First Version July 23 2020}{...}
+{* This Version Nov 11 2022}{...}
+
 {viewerdialog xtselvar "dialog xtselvar"}{...}
 {vieweralsosee "[XT] xtselmod" "help xtselmod"}{...}
 {vieweralsosee "[XT] xtoos_t" "help xtoos_t"}{...}
@@ -37,10 +39,12 @@ of the model including the candidate variable. It also allows to estimate the fo
 {p}{cmd:xtselvar} saves and displays the results of the analysis in different ways. If the user chooses to display the results of each estimation for each variable
 it could also create a log file that saves all the results. Otherwise the user can choose to execute the command quietly and then the procedure just displays a final summary 
 through a table that shows all the five statistics estimated for each specification, the ranking of each specification according to each criterion, and the composite ranking. 
-The table of results is displayed ordered by the criterion selected by the user. The user can also choose to save the final results in an excel file.{p_end}
 
-{p}The command {cmd:xtselvar} also needs the command {cmd:matsort} in order to be able to sort the candidate variables according to the specified criterion. 
+{p}The table of results is displayed ordered by the criterion selected by the user. The user can also choose to save the final results in an excel file.{p_end}
+
+{p}The command {cmd:xtselvar} needs the command {cmd:matsort} in order to be able to sort the candidate variables according to the specified criterion. 
 Therefore, {cmd:matsort} also needs to be installed in Stata.{p_end}
+
 
 {title:Use of PCA to construct composite control variables}
 
@@ -58,6 +62,9 @@ while using as control variables the components from the rest of groups.
 {p}This strategy might help us to avoid the bias from omitting the control variables from all other groups different than the group in which the selection is being made.
 The main components of each group are correlated with all the variables from each topic, and therefore, they are useful as a proxies for all of them, reducing the effect of their omission.{p_end}
 
+{title:Proceedings USA Stata Conference 2020} 
+
+https://www.stata.com/meeting/us20/slides/us20_Ugarte-Ruiz.pdf
 
 
 {title:Syntax}
@@ -150,59 +157,90 @@ The default is one component per group, and the maximum number of components is 
 
 
 {marker Examples}{...}
-{title:Examples}
 
-Use of {cmd:xtselvar} to classify 21 different variables, x1 and z1_1, z1_2,...z1_20.  The dates at which the time-series out-of-sample evaluation starts and end must be 
-specified ({opt ind:ate()} and {opt end:ate()}), the same as the number of individuals left-out at each partition in the cross-section out-of-sample evaluation {opt k:sample()}
+{title:Example 1. Basics}
+
+Use of {cmd:xtselvar} to rank 21 different variables, x1 and z1_1, z1_2,...z1_20.  
+
+The dates at which the time-series out-of-sample evaluation starts and end must be specified ({opt ind:ate()} and {opt end:ate()}), 
+the same as the number of individuals left-out at each partition in the cross-section out-of-sample evaluation {opt k:sample()}
+(For further details, see help for command {cmd:xtoos}):
 
 {p 4 8 2}{cmd:. sysuse panelexample, clear}{p_end}
 {p 4 8 2}{cmd:. xtset id t}{p_end}
 {p 4 8 2}{cmd:. xtselvar y x1 z1_1-z1_20, indate(2015) cdate(2020) ksmpl(100)}{p_end}
 {p 4 8 2}{cmd:. xtselvar y x1 z1_1-z1_20, indate(2015) cdate(2020) ksmpl(100)} qui{p_end}
 
+{title:Example 2. Fixed Control Variables}
+
 If we want to keep constant in the specification the variables x2, x3, x4 and x5, we should used the option {opt fix:ed()}: 
 
 {p 4 8 2}{cmd:. xtselvar y x1 z1_1-z1_20, indate(2015) cdate(2020) ksmpl(100) fixed(x2 x3 x4 x5)}{p_end}
+
+{title:Example 3. Saving results in a log file}
 
 If we want to show each variable results and saving them in a log file named "results", we should use the option {opt log()}: 
 
 {p 4 8 2}{cmd:. xtselvar y x1 z1_1-z1_20, indate(2015) cdate(2020) ksmpl(100) log(results)}{p_end}
 
-If we do not want to show each variable results, and we want to save the final summary table in an excel file named "results" and the worksheet named "results1",
-we should use the options {opt qui} and {opt exc()} together with the option {opt she:et()}.  Options {opt exc()} and {opt she:et()} must be used together:
+{title:Example 4. Saving results in an excel file}
+
+If we do not want to show each variable results, and we want to save the summary table in an excel file named "results" and a worksheet named "results1",
+we should use the options {opt qui} and {opt exc()} together with the option {opt she:et()}.
+
+Options {opt exc()} and {opt she:et()} must be used together:
 
 {p 4 8 2}{cmd:. xtselvar y x1 z1_1-z1_20, indate(2015) cdate(2020) ksmpl(100) qui exc(results) sheet(results1)}{p_end}
 
-If we want to give null weights to the criteria adjusted R2, AIC and BIC, and equal weights to the criteria U-Theils in time-series and cross-section dimensions, 
-we should use the option {opt wei:ghts()}.  The given weights should be between 0 and 1: 
+{title:Example 5. Changing weights of the total ranking}
+
+If we want to give null weights to the criteria adjusted R2, AIC and BIC, and equal weights to the criteria U-Theils in time-series and cross-section 
+dimensions, we should use the option {opt wei:ghts()}. The given weights should be between 0 and 1: 
 
 {p 4 8 2}{cmd:. xtselvar y x1 z1_1-z1_20, indate(2015) cdate(2020) ksmpl(100) wei(0 0 0 0.5 0.5) }{p_end}
+
+{title:Example 6. Changing the ranking order}
 
 If we want to order the final summary according to the R-squared in a descending order, we should use the options {opt ord()} and {opt down}:. 
 
 {p 4 8 2}{cmd:. xtselvar y x1 z1_1-z1_20, indate(2015) cdate(2020) ksmpl(100) ord(R2_ad) down}{p_end}
 
+{title:Example 7. Defining a specific prediction horizon for the performance evaluation}
+
 If we want to specify an exact horizon at which the time-series out-of-sample performance should be evaluated, we should use the option {opt hor()}:
 
 {p 4 8 2}{cmd:. xtselvar y x1 z1_1-z1_20, indate(2015) cdate(2020) ksmpl(100) hor(3)}{p_end}
+
+{title:Example 8. Defining an interval for the horizon}
 
 If instead of an exact horizon, we want to evaluate the time-series out-of-sample performance between horizons 1 and 3, we should used options 
 {opt h:or()} and {opt uph:or} together. 
 
 {p 4 8 2}{cmd:. xtselvar y x1 z1_1-z1_20, indate(2015) cdate(2020) ksmpl(100) hor(3) uphor}{p_end}
 
-If we want to create three principal components from three group of variables with 20 variables each, e.g. groups z2 and z3: z2_1, z2_2...z2_20 and z3_1, z3_2...z3_20, 
-we should use the options {opt groups()} and options {opt pca1()}...{opt pca3()}.  The option {opt groups()} defines how many groups of variables are and thus how many 
-principal components should be estimated and included in the specification.  The options {opt pca1()}... to {opt pca#groups()} should list the variables within each group.  
+{title:Example 9. Creating principal components as control variables from different sets of variables}
+
+If we want to create three principal components from three group of variables with 20 variables each, e.g. groups z2 and z3: z2_1, z2_2...z2_20 
+and z3_1, z3_2...z3_20, we should use the options {opt groups()} and options {opt pca1()}...{opt pca3()}.  
+
+The option {opt groups()} defines how many groups of variables are and thus how many principal components should be estimated 
+and included in the specification. The options {opt pca1()}... to {opt pca#groups()} should list the variables within each group.  
+
 There should be as many lists as groups of variables.
 
 {p 4 8 2}{cmd:. xtselvar y x4 z4*, indate(2015) cdate(2020) ksmpl(100) groups(3) pca1(z1*) pca2(z2*) pca3(z3*)}{p_end}
 
-We can also generate various principal components from just one large group of variables, for instance if we do not have an a priori classifications of the predictors. 
-In such case we can create, for example, 6 components from all possible variables, i.e all variables whose name starts with z, using also the option {opt ncomp()}. 
+{title:Example 10. Creating principal components as control variables from one set of variables}
+
+We can also generate various principal components from just one large group of variables, for instance if we do not have 
+an a priori classifications of the predictors. 
+
+In such case we can create, for example, 6 components from all possible variables, i.e all variables whose name starts with z, 
+using also the option {opt ncomp()}. 
+
 Additionally, we specify only one group in option {opt groups()} and list all variables z* in the option {opt pca1()}:
 
-{p 4 8 2}{cmd:. selectvar y x4 z4* if sample==1, ind(2014) cd(2020) o(100) k(100) r(0) qui groups(1) pca1(z*) ncomp(6)}{p_end}
+{p 4 8 2}{cmd:. xtselvar y x4 z4*, ind(2015) cd(2020) o(100) k(100) r(0) qui groups(1) pca1(z*) ncomp(6)}{p_end}
 
 
 

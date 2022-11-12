@@ -17,7 +17,7 @@ version 11.0
 			ratio(real 1)			/// ratio N0 (controls) / N1 (cases)
 			Power(string)  			///
 			ONESIDed				///
-			ORDinal					/// uses Obuchowski formula for variance; default is Hanley & McNeil
+			HANley					/// uses Hanley & McNeil formula for variance; default is Obuchowski formula
 			]						///
 
 			gettoken auc0 rest : anything
@@ -51,12 +51,12 @@ version 11.0
 				scalar `zbeta' = invnorm(`power')
 				scalar `delta' = `auc1' - `auc0'
 				
-				if "`ordinal'" !="" { 
+				if "`hanley'" =="" { 
 					scalar `A0' = invnorm(`auc0') * 1.414
 					scalar `v0' = (0.0099 * exp(-`A0'^2 / 2)) * ((5 * `A0'^2 + 8) + (`A0'^2 + 8) / `ratio')
 					scalar `A1' = invnorm(`auc1') * 1.414
 					scalar `v1' = (0.0099 * exp(-`A1'^2 / 2)) * ((5 * `A1'^2 + 8) + (`A1'^2 + 8) / `ratio')
-				} // end ordinal
+				} // end Hanley
 				else {
 					scalar `q1_0' = `auc0' / (2 - `auc0')
 					scalar `q2_0' = 2 * (`auc0'^2) / (1 + `auc0') 
@@ -64,7 +64,7 @@ version 11.0
 					scalar `q2_1' = 2 * (`auc1'^2) / (1 + `auc1')
 					scalar `v0' = `q1_0' / `ratio' + `q2_0' - `auc0'^2 * (1 /`ratio' + 1) 
 					scalar `v1' = `q1_1' / `ratio' + `q2_1' - `auc1'^2 * (1 /`ratio' + 1)
-				} // end continuous
+				} // end Obuchowski
 				
 				scalar `n1' = ceil(((`zalpha' * sqrt(`v0') + `zbeta' * sqrt(`v1')) ^ 2 / `delta' ^ 2))
 				scalar `n0' = ceil(`n1' * `ratio')
@@ -110,12 +110,12 @@ version 11.0
 				scalar `zalpha' = invnorm(1-`test')
 				scalar `delta' = `auc1' - `auc0'
 				
-				if "`ordinal'" !="" { 
+				if "`hanley'" =="" { 
 					scalar `A0' = invnorm(`auc0') * 1.414
 					scalar `v0' = (0.0099 * exp(-`A0'^2 / 2)) * ((5 * `A0'^2 + 8) + (`A0'^2 + 8) / `ratio')
 					scalar `A1' = invnorm(`auc1') * 1.414
 					scalar `v1' = (0.0099 * exp(-`A1'^2 / 2)) * ((5 * `A1'^2 + 8) + (`A1'^2 + 8) / `ratio')
-				} // end ordinal
+				} // end Hanley
 				else {
 					scalar `q1_0' = `auc0' / (2 - `auc0')
 					scalar `q2_0' = 2 * (`auc0'^2) / (1 + `auc0') 
@@ -123,7 +123,7 @@ version 11.0
 					scalar `q2_1' = 2 * (`auc1'^2) / (1 + `auc1')
 					scalar `v0' = `q1_0' / `ratio' + `q2_0' - `auc0'^2 * (1 /`ratio' + 1) 
 					scalar `v1' = `q1_1' / `ratio' + `q2_1' - `auc1'^2 * (1 /`ratio' + 1)
-				} // end continuous
+				} // end Obuchowski
 					
 				scalar `power' = normal(((sqrt(`n1' * `delta' ^ 2) - `zalpha' * sqrt(`v0')) / sqrt(`v1')))
 			} // end power

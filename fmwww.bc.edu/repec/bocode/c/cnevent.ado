@@ -250,24 +250,36 @@ program define cnevent
 				}
 		        local `d' "``d'' + `ar'``e''"
             }
+			if ``eve_window_s`enum''' < 0{
+		    gen `car'n``c''``eve_window_e`enum'''= ``d''
+		    label var `car'n``c''``eve_window_e`enum''' "CAR[``eve_window_s`enum''',``eve_window_e`enum''']"
+		        if `"`t'"' == ""{
+			        continue
+		        }
+		        else{
+		            collect get: ttest `car'n``c''``eve_window_e`enum''' == 0
+			        local  t`enum' "`enum' "(``eve_window_s`enum''',``eve_window_e`enum''')" "				
+		        }			
+			}
+			else{
 		    gen `car'``c''``eve_window_e`enum'''= ``d''
 		    label var `car'``c''``eve_window_e`enum''' "CAR[``eve_window_s`enum''',``eve_window_e`enum''']"	
-		    if `"`t'"' == ""{
-			    continue
-		    }
-		    else{
-		        collect get: ttest `car'``c''``eve_window_e`enum''' == 0
-			    local  t`enum' "`enum' "(``eve_window_s`enum''',``eve_window_e`enum''')" "
-				
-		    }
-		    }
+		        if `"`t'"' == ""{
+			        continue
+		        }
+		        else{
+		            collect get: ttest `car'``c''``eve_window_e`enum''' == 0
+			        local  t`enum' "`enum' "(``eve_window_s`enum''',``eve_window_e`enum''')" "				
+		        }			
+			}
+		}
 
 	    save ``file''.dta,replace
 		if `"`t'"' != ""{
 		local tn `t1'
-        forvalue tnum = 2(1)``end''{
-             local tn "`tn'`t`tnum''"
-        }
+            forvalue tnum = 2(1)``end''{
+                 local tn "`tn'`t`tnum''"
+            } 
           
         collect label levels cmdset `tn',modify
         collect style cell, nformat(%9.4f) halign(center) font("Times New Roman")

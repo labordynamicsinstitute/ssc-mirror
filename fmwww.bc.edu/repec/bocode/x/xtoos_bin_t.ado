@@ -97,7 +97,7 @@ forvalues k=1/`ousd' {
 	fvexpand i.`panvar' if `samplein'==1 `in'
 	loc dumi=r(varlist)
 
-	if "`mprob'"=="" qui predict `prf', `mprob'
+	if "`mprob'"=="" qui predict `prf', pr
 	else qui predict `prf', `mprob'
 	
 	capture {
@@ -223,26 +223,27 @@ end
 // Subprogram auc //
 
 program auc, rclass
-version 13.0
+version 12.0
 	syntax varlist (min=2 max=2 num) [if/] [in] [, Ncut(integer 100) table snr wint(string) winf(string) ]
 
 tokenize `varlist'
 loc dvar "`1'"
 loc probvar "`2'"
 
-tempvar windowt windowf roc0 roc sn
+tempvar windowt windowf roc0 roc sn tme cut TPR FPR FNR 
 
 loc nm=`ncut'+1
-capture drop cut TPR FPR
-qui gen cut = .
-qui replace cut=1 in 1
-qui gen TPR = .
-qui replace TPR=0 in 1
-qui gen FPR = .
-qui replace FPR=0 in 1
+qui gen `cut' = .
+qui replace `cut'=1 in 1
+qui gen `TPR' = .
+qui replace `TPR'=0 in 1
+qui gen `FPR' = .
+qui replace `FPR'=0 in 1
+qui gen `FNR' = .
+qui replace `FNR'=0 in 1
 
-matrix RTF = J(`nm',3,.)
-matrix SNR = J(1,2,.)
+matrix RTF = J(`nm',4,.)
+matrix SNR = J(1,3,.)
 
 if "`wint'"=="" qui gen `windowt'=0
 else qui gen `windowt'=`wint'
@@ -251,9 +252,10 @@ else qui gen `windowf'=`winf'
 
 qui gen `roc0' = .
 qui gen `sn' = .
+qui gen `tme' = .
 
 forvalues n=2(1)`nm' {
-	tempvar pos 
+	tempvar pos
 	loc n0=`n'-1
 	loc p=(1-(1/`ncut')*`n0')
 	gen `pos'=`probvar'!=. & `probvar'>=`p'
@@ -273,20 +275,22 @@ forvalues n=2(1)`nm' {
 		scalar fpr =r(mean)
 		scalar t0=r(N)
 	}
-	qui replace cut=`p' in `n'
-	qui replace TPR=tpr in `n'
-	qui replace FPR=fpr in `n'
-	qui replace `roc0'=TPR[`n'-1]*(FPR-FPR[`n'-1])+(TPR-TPR[`n'-1])*(FPR-FPR[`n'-1])/2 in `n'
+	qui replace `cut'=`p' in `n'
+	qui replace `TPR'=tpr in `n'
+	qui replace `FPR'=fpr in `n'
+	qui replace `FNR'=1-tpr in `n'
+	qui replace `roc0'=`TPR'[`n'-1]*(`FPR'-`FPR'[`n'-1])+(`TPR'-`TPR'[`n'-1])*(`FPR'-`FPR'[`n'-1])/2 in `n'
 	if "`snr'"=="snr" {
-		qui replace `sn'=TPR-FPR in `n'
+		qui replace `sn'=`TPR'-`FPR' in `n'
+		qui replace `tme'=`FNR'+`FPR' in `n'
 	}
 }
 qui gen `roc'=sum(`roc0')
 scalar auc=`roc'[`nm']
 
-mkmat cut TPR FPR in 1/`nm', mat(RTF)
+mkmat `cut' `TPR' `FPR' `FNR' in 1/`nm', mat(RTF)
 mata : st_matrix("RTF", sort(st_matrix("RTF"), 1))
-matrix colnames RTF = cut TPR FPR
+matrix colnames RTF = cut TPR FPR FNR
 matrix rownames RTF = "."
 
 di "AUC: " auc
@@ -295,16 +299,16 @@ return scalar N = t1 + t0
 if "`table'"=="table" matlist RTF, title("True Positive and False Positive Ratios by Probability Threshold")
 
 if "`snr'"=="snr" {
-	mkmat cut `sn' in 1/`nm', mat(SN)
+	mkmat `cut' `sn' `tme' in 1/`nm', mat(SN)
 	mata : st_matrix("SN", sort(st_matrix("SN"), -2))
 	matrix SNR[1,1] = SN[2,1]
 	matrix SNR[1,2] = SN[2,2]
-	matrix colnames SNR = PROB* SNR*
+	matrix SNR[1,3] = SN[2,3]
+	matrix colnames SNR = PROB* SNR* TME*
 	matrix rownames SNR = "."
-	matlist SNR, title("Optimal Probability Threshold and Maximum SNR")
+	matlist SNR, title("Optimal Probability Threshold, Maximum SNR and Minimum TME")
+	return matrix optimal SNR
 }
-
-qui drop cut TPR FPR
 
 
 end

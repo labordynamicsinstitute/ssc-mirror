@@ -1,5 +1,6 @@
 {smcl}
-{* July 23 2020}{...}
+{* First Version July 23 2020}{...}
+{* This Version Nov 11 2022}{...}
 {viewerdialog xtoos_bin_i "dialog xtoos_bin_i"}{...}
 {vieweralsosee "[XT] xtoos_bin_t" "help xtoos_bin_t"}{...}
 {vieweralsosee "[XT] xtoos_t" "help xtoos_t"}{...}
@@ -25,6 +26,10 @@ The procedure reports both the estimated ROC and also its standard error (SE).{p
 {p}i) Random subsamples of size {it:n}; if the whole sample contains {it:N} individuals, then {it:N/n} subsamples without repeated individuals are extracted and evaluated. Moreover, the sampling process could be repeated {it:r} times.{p_end}
 {p}ii) an ordered partition of the sample in subsamples of size {it:k}; if the whole sample contains {it:N} individuals, then {it:N/k} ordered subsamples are formed and evaluated.{p_end}
 {p}iii) a particular individual or a particular group (e.g.a country or a region).{p_end}
+
+{title:Proceedings Spain Stata Conference 2019} 
+
+https://www.stata.com/meeting/spain19/slides/Spain19_Ugarte-Ruiz.pdf
 
 {title:Syntax}
 
@@ -54,23 +59,31 @@ The procedure reports both the estimated ROC and also its standard error (SE).{p
 {synoptline}
 
 {marker Examples}{...}
-{title:Examples}
+
+{title:Example 1. Defining the evaluation sample (out-of-sample individuals)}
 
 Use of {cmd:xtoos_bin_i} to evaluate the prediction perfomance based on ROC for 3 random subsamples of 1500 individuals ({opt r:smpl()} and {opt o:us()}) 
 and ordered subsamples of also 1500 individuals ({opt k:smpl()})
 
 {p 4 8 2}{cmd:. webuse union, clear}{p_end}
+{p 4 8 2}{cmd:. xtset idcode year}{p_end}
 {p 4 8 2}{cmd:. xtoos_bin_i union age grade i.not_smsa south##c.year, k(1500) o(1500) r(3) mprob(pr)}{p_end}
+
+{title:Example 2. Fixed Effects option and probability method}
 
 Use of {cmd:xtoos_bin_i} using Fixed-Effects (within) estimator and the estimation option pc1 for the predicted probability
 
 {p 4 8 2}{cmd:. xtoos_bin_i union age grade i.not_smsa south##c.year, k(1500) o(1500) r(3) mprob(pc1) fe}{p_end}
 
+{title:Example 3. Changing the estimation method}
+
 Use of {cmd:xtoos_bin_i} using as estimation method the command {cmd:xtprobit}
 
 {p 4 8 2}{cmd:. xtoos_bin_i union age grade i.not_smsa south##c.year, k(1500) o(1500) r(3) mprob(pr) met(xtprobit)}{p_end}
 
-Use of {cmd:xtoos_bin_i} to evaluate the prediction perfomance based on ROC, but restricting the evaluation only to individual # 1  
+{title:Example 4. Restricting the evaluation to a group of individuals}
+
+Use of {cmd:xtoos_bin_i} to evaluate the prediction perfomance based on ROC, but restricting the evaluation to the first 50 individuals  
 
 {p 4 8 2}{cmd:. gen id1to50=idcode<=50}{p_end}
 {p 4 8 2}{cmd:. xtoos_bin_i union age grade i.not_smsa south##c.year, k(1500) o(1500) r(3) mprob(pr) evalopt(id1to50)}{p_end}

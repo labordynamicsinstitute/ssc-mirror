@@ -1,11 +1,14 @@
-program xtselmod, rclass
+qui program xtselmod, rclass
 version 12.0:
 
 	syntax varlist (fv ts) [if] [in], INDate(string) CDate(string) Ksmpl(integer) [FIXed(varlist ts fv) /*
 	*/ Met(string) MComp(string) fe xbu dum opar lags(numlist max=1 integer) EValopt(varname) qui log(string) exc(string) SHEet(string) /*
-	*/ ord(string) down WEIghts(numlist min=5 max=5) Hor(integer 0) UPHor CONDitionals(string) /*
+	*/ ord(string) down WEIghts(numlist min=5 max=5) Hor(integer 0) UPHor CONDitionals(string) CROssection /*
 	*/ spec1(varlist ts fv) spec2(varlist ts fv) spec3(varlist ts fv) spec4(varlist ts fv) spec5(varlist ts fv) /*
-	*/ spec6(varlist ts fv) spec7(varlist ts fv) spec8(varlist ts fv) spec9(varlist ts fv) spec10(varlist ts fv) *]
+	*/ spec6(varlist ts fv) spec7(varlist ts fv) spec8(varlist ts fv) spec9(varlist ts fv) spec10(varlist ts fv) /*
+	*/ GRoups(integer 0) ncomp(integer 1) /*
+	*/ pca1(varlist fv ts) pca2(varlist fv ts) pca3(varlist fv ts) pca4(varlist fv ts) pca5(varlist fv ts) /*
+	*/ pca6(varlist fv ts) pca7(varlist fv ts) pca8(varlist fv ts) pca9(varlist fv ts) pca10(varlist fv ts) best *]
 
 ******************************************************************************************************************************************
 if "`exc'"!="" & "`sheet'"=="" {
@@ -73,22 +76,38 @@ else {
 	loc indate2=real("`indate'")
 	loc cdate2=real("`cdate'")
 }
-
 loc h=`cdate2'-`indate2'+1
 if `hor'>0 {
 	loc h = `hor'
 }
 ******************************************************************************************************************************************
 ******************************************************************************************************************************************
+if `groups'>0 {
+	cap drop _*comp
+	forval i=1/`groups' {
+		qui pca `pca`i'' `if' `in'
+		if `ncomp'>1 {
+			forval j=1/`ncomp' {
+				loc comps`i' `comps`i'' _`i'_`j'comp
+			}
+		qui predict "`comps`i''"
+		loc comps `comps' `comps`i''
+		}
+		else {
+			qui predict _`i'_1comp
+			loc comps `comps' _`i'_1comp
+		}
+	}
+}
+******************************************************************************************************************************************
+******************************************************************************************************************************************
 if "`spec1'"=="" {
-
-	tokenize `xvars'
-	loc nx = wordcount("`xvars'")
 
 	tuples `xvars', asis conditionals(`conditionals')
 
 	if `ntuples'>_N {
-		if `panvar'==_id_ loc add=(`ntuples'-_N)
+		if "`crossection'"=="crossection" loc add=(`ntuples'-_N)
+		else if `panvar'==_id_ loc add=(`ntuples'-_N)
 		else loc add=(`ntuples'-_N)/`imax'
 		tsappend, add("`add'")
 	}
@@ -109,20 +128,20 @@ if "`spec1'"=="" {
 		tempvar yp eu
 		if "`met'"=="" {
 			if "`dum'"=="dum" {
-				`qui' xtreg `y' `ly' `fixed' `tuple`i'' i.`panvar' `if' `in', `options'
+				`qui' xtreg `y' `ly' `fixed' `comps' `tuple`i'' i.`panvar' `if' `in', `options'
 			}
 			else {
-				`qui' xtreg `y' `ly' `fixed' `tuple`i'' `if' `in', `fe' `options'
+				`qui' xtreg `y' `ly' `fixed' `comps' `tuple`i'' `if' `in', `fe' `options'
 			}
 		}
 		else if "`dum'"=="dum" {
-			`qui' `met' `y' `ly' `fixed' `tuple`i'' i.`panvar' `if' `in' ,`options'
+			`qui' `met' `y' `ly' `fixed' `comps' `tuple`i'' i.`panvar' `if' `in' ,`options'
 		}	
 		else if ("`met'"=="xtabond" | "`met'"=="xtdpdsys") & "`lags'"!=""  {
 			`qui' `met' `y' `fixed' `tuple`i'' `if' `in' , `fe' `options' lags(`lags')
 		}	
 		else {
-			`qui' `met' `y' `ly' `fixed' `tuple`i'' `if' `in', `fe' `options' 
+			`qui' `met' `y' `ly' `fixed' `comps' `tuple`i'' `if' `in', `fe' `options' 
 		}	
 		if "`met'"=="" & "`xbu'"=="xbu" {
 			qui predict `eu', u
@@ -150,39 +169,42 @@ if "`spec1'"=="" {
 		capture `qui' estat ic
 		if _rc!=0 {
 			if "`dum'"=="dum" {
-				qui reg `y' `ly' `fixed' `tuple`i'' i.`panvar' `if' `in' 
+				qui reg `y' `ly' `fixed' `comps' `tuple`i'' i.`panvar' `if' `in' 
 			}
 			else {
-				qui reg `y' `ly' `fixed' `tuple`i'' `if' `in'
+				qui reg `y' `ly' `fixed' `comps' `tuple`i'' `if' `in'
 			}
 			`qui' estat ic
 		}
 		qui mata: st_store(`i', "AIC", st_matrix("r(S)")[1,5])
 		qui mata: st_store(`i', "BIC", st_matrix("r(S)")[1,6])
 		
-		`qui' xtoos_t `y' `ly' `fixed' `tuple`i'' `if' `in', ind(`indate') cd(`cdate') m(`met') mc(`mcomp') `fe' `xbu' `dum' `opar' lags(`lags') ev(`evalopt') `options'
-		matrix Ut = r(ev_hor)
-		if "`uphor'"=="uphor" {
-			forval n=1/4 {
-				matrix Uth`n' = Ut[1..`h',`n']
+		if "`crossection'"=="crossection" qui replace Uth_TS = 0 in `i'
+		else {
+			`qui' xtoos_t `y' `ly' `fixed' `comps' `tuple`i'' `if' `in', ind(`indate') cd(`cdate') m(`met') mc(`mcomp') `fe' `xbu' `dum' `opar' lags(`lags') ev(`evalopt') `options'
+			matrix Ut = r(ev_hor)
+			if "`uphor'"=="uphor" {
+				forval n=1/4 {
+					matrix Uth`n' = Ut[1..`h',`n']
+				}
+				matrix Ih = J(1,`h',1)
+				matrix Nh = Ih*Uth4
+				scalar nh=Nh[1,1]
+				forval n=1/`h' {
+					matrix Uth1[`n',1]=Uth1[`n',1]^2
+					matrix Uth2[`n',1]=Uth2[`n',1]^2
+				}
+				matrix Uths1 = (1/nh)*Uth4'*Uth1
+				matrix Uths2 = (1/nh)*Uth4'*Uth2
+				scalar uthts = sqrt(Uths1[1,1])/sqrt(Uths2[1,1])
 			}
-			matrix Ih = J(1,`h',1)
-			matrix Nh = Ih*Uth4
-			scalar nh=Nh[1,1]
-			forval n=1/`h' {
-				matrix Uth1[`n',1]=Uth1[`n',1]^2
-				matrix Uth2[`n',1]=Uth2[`n',1]^2
-			}
-			matrix Uths1 = (1/nh)*Uth4'*Uth1
-			matrix Uths2 = (1/nh)*Uth4'*Uth2
-			scalar uthts = sqrt(Uths1[1,1])/sqrt(Uths2[1,1])
+			else scalar uthts = Ut[`h',3]
+			qui replace Uth_TS = uthts in `i'
 		}
-		else scalar uthts = Ut[`h',3]
-		qui replace Uth_TS = uthts in `i'
 		
 		if "`panvar'"=="_id_" | "`ts'"=="ts" qui replace Uth_CS = 0 in `i'
 		else {
-			`qui' xtoos_i `y' `ly' `fixed' `tuple`i'' `if' `in', k(`ksmpl') r(0) o(`ksmpl') m(`met') mc(`mcomp') `fe' `dum' lags(`lags') ev(`evalopt') `options'
+			`qui' xtoos_i `y' `ly' `fixed' `comps' `tuple`i'' `if' `in', k(`ksmpl') r(0) o(`ksmpl') m(`met') mc(`mcomp') `fe' `dum' lags(`lags') ev(`evalopt') `options'
 			if "`evalopt'"=="" qui mata: st_store(`i', "Uth_CS", st_matrix("r(ordered)")[1,9])
 			else qui mata: st_store(`i', "Uth_CS", st_matrix("r(specific)")[1,9])
 		}
@@ -226,6 +248,8 @@ if "`spec1'"=="" {
 	label var _Model_ Model
 
 	l _Model_ R2_ad AIC BIC Uth_TS Uth_CS R2_ad_r AIC_r BIC_r Uth_TS_r Uth_CS_r _Total_ in 1/`ntuples'
+	
+	loc final =_Model_[1]
 
 	if "`exc'"!="" export excel _Model_ R2_ad AIC BIC Uth_TS Uth_CS R2_ad_r AIC_r BIC_r Uth_TS_r Uth_CS_r _Total_ in 1/`ntuples' using "`exc'.xlsx", firstrow(variables) sheet("`sheet'") sheetmodify
 
@@ -238,6 +262,28 @@ if "`spec1'"=="" {
 	}
 	else sort `panvar' `timevar'
 	
+	* Run Best Model *
+		
+	if "`best'"=="best" {
+		if "`met'"=="" {
+			if "`dum'"=="dum" {
+				xtreg `y' `ly' `final' `fixed' `comps' i.`panvar' `if' `in', `options'
+			}
+			else {
+				xtreg `y' `ly' `final' `fixed' `comps' `if' `in', `fe' `options'
+			}
+		}
+		else if "`dum'"=="dum" {
+			`met' `y' `ly' `final' `fixed' `comps' i.`panvar' `if' `in' ,`options'
+		}	
+		else if ("`met'"=="xtabond" | "`met'"=="xtdpdsys") & "`lags'"!=""  {
+			`met' `y' `final' `fixed' `comps' `if' `in' , `fe' `options' lags(`lags')
+		}	
+		else {
+			`met' `y' `ly' `final' `fixed' `comps' `if' `in', `fe' `options' 
+		}	
+	}
+	cap drop _*comp
 	qui drop _Model_ R2_ad AIC BIC Uth_TS Uth_CS R2_ad_r AIC_r BIC_r Uth_TS_r Uth_CS_r _Total_ R2n
 	
 	qui drop if `timevar'>`tmax'
@@ -267,20 +313,20 @@ else {
 		tempvar yp eu
 		if "`met'"=="" {
 			if "`dum'"=="dum" {
-				`qui' xtreg `y' `ly' `fixed' `spec`i'' i.`panvar' `if' `in', `options'
+				`qui' xtreg `y' `ly' `fixed' `comps' `spec`i'' i.`panvar' `if' `in', `options'
 			}
 			else {
-				`qui' xtreg `y' `ly' `fixed' `spec`i'' `if' `in', `fe' `options'
+				`qui' xtreg `y' `ly' `fixed' `comps' `spec`i'' `if' `in', `fe' `options'
 			}
 		}
 		else if "`dum'"=="dum" {
-			`qui' `met' `y' `ly' `fixed' `spec`i'' i.`panvar' `if' `in' ,`options'
+			`qui' `met' `y' `ly' `fixed' `comps' `spec`i'' i.`panvar' `if' `in' ,`options'
 		}	
 		else if ("`met'"=="xtabond" | "`met'"=="xtdpdsys") & "`lags'"!=""  {
 			`qui' `met' `y' `fixed' `spec`i'' `if' `in' , `fe' `options' lags(`lags')
 		}	
 		else {
-			`qui' `met' `y' `ly' `fixed' `spec`i'' `if' `in', `fe' `options' 
+			`qui' `met' `y' `ly' `fixed' `comps' `spec`i'' `if' `in', `fe' `options' 
 		}	
 		if "`met'"=="" & "`xbu'"=="xbu" {
 			qui predict `eu', u
@@ -308,39 +354,42 @@ else {
 		capture `qui' estat ic
 		if _rc!=0 {
 			if "`dum'"=="dum" {
-				qui reg `y' `ly' `fixed' `spec`i'' i.`panvar' `if' `in' 
+				qui reg `y' `ly' `fixed' `comps' `spec`i'' i.`panvar' `if' `in' 
 			}
 			else {
-				qui reg `y' `ly' `fixed' `spec`i'' `if' `in'
+				qui reg `y' `ly' `fixed' `comps' `spec`i'' `if' `in'
 			}
 			`qui' estat ic
 		}
 		qui mata: st_store(`i', "AIC", st_matrix("r(S)")[1,5])
 		qui mata: st_store(`i', "BIC", st_matrix("r(S)")[1,6])
 		
-		`qui' xtoos_t `y' `ly' `fixed' `spec`i'' `if' `in', ind(`indate') cd(`cdate') m(`met') mc(`mcomp') `fe' `xbu' `dum' `opar' lags(`lags') ev(`evalopt') `options'
-		matrix Ut = r(ev_hor)
-		if "`uphor'"=="uphor" {
-			forval n=1/4 {
-				matrix Uth`n' = Ut[1..`h',`n']
+		if "`crossection'"=="crossection" qui replace Uth_TS = 0 in `i'
+		else {
+			`qui' xtoos_t `y' `ly' `fixed' `comps' `spec`i'' `if' `in', ind(`indate') cd(`cdate') m(`met') mc(`mcomp') `fe' `xbu' `dum' `opar' lags(`lags') ev(`evalopt') `options'
+			matrix Ut = r(ev_hor)
+			if "`uphor'"=="uphor" {
+				forval n=1/4 {
+					matrix Uth`n' = Ut[1..`h',`n']
+				}
+				matrix Ih = J(1,`h',1)
+				matrix Nh = Ih*Uth4
+				scalar nh=Nh[1,1]
+				forval n=1/`h' {
+					matrix Uth1[`n',1]=Uth1[`n',1]^2
+					matrix Uth2[`n',1]=Uth2[`n',1]^2
+				}
+				matrix Uths1 = (1/nh)*Uth4'*Uth1
+				matrix Uths2 = (1/nh)*Uth4'*Uth2
+				scalar uthts = sqrt(Uths1[1,1])/sqrt(Uths2[1,1])
 			}
-			matrix Ih = J(1,`h',1)
-			matrix Nh = Ih*Uth4
-			scalar nh=Nh[1,1]
-			forval n=1/`h' {
-				matrix Uth1[`n',1]=Uth1[`n',1]^2
-				matrix Uth2[`n',1]=Uth2[`n',1]^2
-			}
-			matrix Uths1 = (1/nh)*Uth4'*Uth1
-			matrix Uths2 = (1/nh)*Uth4'*Uth2
-			scalar uthts = sqrt(Uths1[1,1])/sqrt(Uths2[1,1])
+			else scalar uthts = Ut[`h',3]
+			qui replace Uth_TS = uthts in `i'
 		}
-		else scalar uthts = Ut[`h',3]
-		qui replace Uth_TS = uthts in `i'
 		
 		if "`panvar'"=="_id_" | "`ts'"=="ts" qui replace Uth_CS = 0 in `i'
 		else {
-			`qui' xtoos_i `y' `ly' `fixed' `spec`i'' `if' `in', k(`ksmpl') r(0) o(`ksmpl') m(`met') mc(`mcomp') `fe' `dum' lags(`lags') ev(`evalopt') `options'
+			`qui' xtoos_i `y' `ly' `fixed' `comps' `spec`i'' `if' `in', k(`ksmpl') r(0) o(`ksmpl') m(`met') mc(`mcomp') `fe' `dum' lags(`lags') ev(`evalopt') `options'
 			if "`evalopt'"=="" qui mata: st_store(`i', "Uth_CS", st_matrix("r(ordered)")[1,9])
 			else qui mata: st_store(`i', "Uth_CS", st_matrix("r(specific)")[1,9])
 		}
@@ -385,8 +434,11 @@ else {
 	label var _Model_ Model
 
 	l _Model_ R2_ad AIC BIC Uth_TS Uth_CS R2_ad_r AIC_r BIC_r Uth_TS_r Uth_CS_r _Total_ in 1/`s'
+	
+	loc final0 =_Model_[1]
+	loc final=regexr("`final0'","Specification ","spec")
 
-	if "`exc'"!="" export excel Model R2_ad AIC BIC Uth_TS Uth_CS R2_ad_r AIC_r BIC_r Uth_TS_r Uth_CS_r _Total_ in 1/`s' using "`exc'.xlsx", firstrow(variables) sheet("`sheet'") sheetmodify
+	if "`exc'"!="" export excel _Model_ R2_ad AIC BIC Uth_TS Uth_CS R2_ad_r AIC_r BIC_r Uth_TS_r Uth_CS_r _Total_ in 1/`s' using "`exc'.xlsx", firstrow(variables) sheet("`sheet'") sheetmodify
 
 	if "`log'"!="" log close
 
@@ -396,6 +448,29 @@ else {
 		qui tsset `timevar'
 	}
 	else sort `panvar' `timevar'
+	
+	* Run Best Model *
+		
+	if "`best'"=="best" {
+		if "`met'"=="" {
+			if "`dum'"=="dum" {
+				xtreg `y' `ly' ``final'' `fixed' `comps' i.`panvar' `if' `in', `options'
+			}
+			else {
+				xtreg `y' `ly' ``final'' `fixed' `comps' `if' `in', `fe' `options'
+			}
+		}
+		else if "`dum'"=="dum" {
+			`met' `y' `ly' ``final'' `fixed' `comps' i.`panvar' `if' `in' ,`options'
+		}	
+		else if ("`met'"=="xtabond" | "`met'"=="xtdpdsys") & "`lags'"!=""  {
+			`met' `y' ``final'' `fixed' `if' `in' , `fe' `options' lags(`lags')
+		}	
+		else {
+			`met' `y' `ly' ``final'' `fixed' `comps' `if' `in', `fe' `options' 
+		}	
+	}
+	cap drop _*comp
 
 	qui drop _Model_ R2_ad AIC BIC Uth_TS Uth_CS R2_ad_r AIC_r BIC_r Uth_TS_r Uth_CS_r _Total_ R2n
 	

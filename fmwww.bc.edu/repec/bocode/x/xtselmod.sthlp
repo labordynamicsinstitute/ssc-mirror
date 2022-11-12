@@ -1,5 +1,6 @@
 {smcl}
-{* July 23 2020}{...}
+{* First Version July 23 2020}{...}
+{* This Version Nov 11 2022}{...}
 {viewerdialog xtselmod "dialog xtselmod"}{...}
 {vieweralsosee "[XT] xtselvar" "help xtselvar"}{...}
 {vieweralsosee "[XT] xtoos_t" "help xtoos_t"}{...}
@@ -39,17 +40,38 @@ of the model including the candidate specification. It also allows to estimate t
 {p}{cmd:xtselmod} displays the results of the analysis in different ways. If the user chooses to display the results of each estimation for each specification
 it could also create a log file that saves all the results. Otherwise the user can choose to execute the command quietly and then the procedure just displays a final summary 
 through a table that shows all the five statistics estimated for each specification, the ranking of each specification according to each criterion, and the composite ranking. 
-The table of results is displayed ordered by the criterion selected by the user. The user can also choose to save the final results in an excel file.{p_end}
+
+{p}The table of results is displayed ordered by the criterion selected by the user. The user can also choose to save the final results in an excel file. {p_end}
 
 {title:Comparing particular specifications}
 
 {p}{cmd:xtselmod} also allows to compare and rank up to 10 particular specifications.  This option could be useful when the user wants to compare some particular 
-specifications that are difficult to difficult to handle through the option conditionals, for instance when they involve interactions betwen different variables 
-or various lags of the same one.  
+specifications that are difficult to handle through the option conditionals, for instance when they involve interactions betwen different variables 
+or various lags of the same one. {p_end}
 
-This option does not make use of the command {cmd:tuples} and do not find a combination from a set of variables, it just directly compares and rank the literal specifications 
-introduced by the user.
+{p}This option does not make use of the command {cmd:tuples} and do not find a combination from a set of variables, it just directly compares and rank the literal specifications 
+introduced by the user.{p_end}
 
+
+{title:Use of PCA to construct composite control variables}
+
+{p}{cmd:xtselmod} allows to generate a number of principal components (through PCA) for one or more groups of variables (topics) so that these components
+can be used as fixed control variables in each regression in order to avoid or reduce the omitted variables problem.
+
+{p}This option could be specially useful in the case that there is a too large number of possible control variables that cannot be included altogether in the regression.
+Given that testing all possible combinations of all the variables might be unfeasible, it could be convenient, for instance, to group them 
+into a smaller set of principal components that act as uncorrelated control variables.
+
+{p}Similarly, it could also be useful to perform an initial selection of variables when all of the possible predictors could be classified within smaller groups of similar/related variables. 
+In such case the user can create one or more components from each thematic group of variables. Then, one could be able to select the best combination of predictors from within each group, 
+while using as control variables the components from the rest of groups.
+
+{p}This strategy might help us to avoid the bias from omitting the control variables from all other groups different than the group in which the selection is being made.
+The main components of each group are correlated with all the variables from each topic, and therefore, they are useful as a proxies for all of them, reducing the effect of their omission.{p_end}
+
+{title:Proceedings USA Stata Conference 2020} 
+
+https://www.stata.com/meeting/us20/slides/us20_Ugarte-Ruiz.pdf
 
 
 {title:Syntax}
@@ -136,71 +158,130 @@ the forecasting horizon specified in the option {opt h:or()}.{p_end}
 number of 10 particular specifications. Every specification should be written down using one separate option {opt spec#()} with its respective number, 
 and it always has to start with spec1: spec1(x1 c.x1#c.x2 x3) spec2(c.x1#c.x2) spec3(x1 c.x1#c.x2 c.x2#c.x3) spec4(x1 x2 c.x3#c.x3) spec5(x1 x2 x3).{p_end}
 
+{synopt:{opt gr:oups()}}Specifies the number of groups of variables for which a composite component will be generated. The procedures allows a maximum number of 10 groups.{p_end}
+
+{synopt:{opt pca#()}}Specifies the variables that compose the group number #. The procedure allows a maximum number of 10 groups. 
+If the option {opt groups} is set equal to five, then you must also write down five lists specifying the five different groups of variables, e.g.: pca1(var1 var2) pca2(var3 var4)
+pca3(var5 var6) pca4(var7 var8) pca5(var9 var10).{p_end}
+
+{synopt:{opt ncomp()}}Specifies the number of principal components that will be generated for each group of variables.
+The default is one component per group, and the maximum number of components is equal to the number of variables inside each group.{p_end}
+
+
 {synopt:{it:model_options}}Specifies any other estimation options specific to the method used and not defined elsewhere.{p_end}
 {synoptline}
 
 {marker Examples}{...}
-{title:Examples}
 
-Use of {cmd:xtselmod} to classify the specifications based on the set of variables x1, x2, x3, x4 and x5 (32 models). The dates at which the 
-time-series out-of-sample evaluation starts and end must be specified ({opt ind:ate()} and {opt end:ate()}), the same as the number of individuals 
-left-out at each partition in the cross-section out-of-sample evaluation (option {opt k:sample()})
+{title:Example 1. Basics}
+
+Use of {cmd:xtselmod} to classify the best specifications based on the set of variables x1, x2, x3, x4 and x5 (32 models). 
+
+The dates at which the time-series out-of-sample evaluation starts and end must be specified ({opt ind:ate()} and {opt end:ate()}), 
+the same as the number of individuals left-out at each partition in the cross-section out-of-sample evaluation (option {opt k:sample()}). 
+(For further details, see help for command {cmd:xtoos}):
 
 {p 4 8 2}{cmd:. sysuse panelexample, clear}{p_end}
 {p 4 8 2}{cmd:. xtset id t}{p_end}
 {p 4 8 2}{cmd:. xtselmod y x1 x2 x3 x4 x5, indate(2015) cdate(2020) ksmpl(100)}{p_end}
 {p 4 8 2}{cmd:. xtselmod y x1 x2 x3 x4 x5, indate(2015) cdate(2020) ksmpl(100)} qui{p_end}
 
+{title:Example 2. Fixed Control Variables}
+
 If we want that a variable remains fixed in the specification, for instance variable x5, we should used the option {opt fix:ed()}: 
 
 {p 4 8 2}{cmd:. xtselmod y x1 x2 x3 x4, indate(2015) cdate(2020) ksmpl(100) fixed(x5)}{p_end}
+
+{title:Example 3. Restrictions on the combination of variables, option conditionals}
 
 We can also keep variable x5 always fixed in the specification, using the option {opt cond:itionals()}. (For further details, see help for command {cmd:tuples}): 
 
 {p 4 8 2}{cmd:. xtselmod y x1 x2 x3 x4 x5, indate(2015) cdate(2020) ksmpl(100) conditionals(5)}{p_end}
 
+{title:Example 4. More on conditionals}
+
 The option {opt cond:itionals()} also allow to impose more complicated restrictions, such as variables x1 and x2 should always go together:
 
 {p 4 8 2}{cmd:. xtselmod y x1 x2 x3 x4 x5, indate(2015) cdate(2020) ksmpl(100) conditionals(!(1&!2) !(2&!1))}{p_end}
+
+{title:Example 5. Saving results in a log file}
 
 If we want to show each variable results and saving them in a log file named "results", we should use the option {opt log()}: 
 
 {p 4 8 2}{cmd:. xtselmod y x1 x1 x2 x3 x4 x5, indate(2015) cdate(2020) ksmpl(100) log(results)}{p_end}
 
-If we do not want to show each variable results, and we want to save the final summary table in an excel file named "results" and the worksheet named "results1",
-we should use the options {opt qui} and {opt exc()} together with the option {opt she:et()}.  Options {opt exc()} and {opt she:et()} must be used together:
+{title:Example 6. Saving results in an excel file}
+
+If we do not want to show each variable results, and we want to save the final summary table in an excel file named "results" 
+and the worksheet named "results1", we should use the options {opt qui} and {opt exc()} together with the option {opt she:et()}. 
+Options {opt exc()} and {opt she:et()} must be used together:
 
 {p 4 8 2}{cmd:. xtselmod y x1 x1 x2 x3 x4 x5, indate(2015) cdate(2020) ksmpl(100) qui exc(results) sheet(results1)}{p_end}
 
-If we want to give null weights to the criteria adjusted R2, AIC and BIC, and equal weights to the criteria U-Theils in time-series and cross-section dimensions, 
-we should use the option {opt wei:ghts()}.  The given weights should be between 0 and 1: 
+{title:Example 7. Changing weights of the total ranking}
+
+If we want to give null weights to the criteria adjusted R2, AIC and BIC, and equal weights to the criteria U-Theils in time-series 
+and cross-section dimensions, we should use the option {opt wei:ghts()}. The given weights should be between 0 and 1: 
 
 {p 4 8 2}{cmd:. xtselmod y x1 x1 x2 x3 x4 x5, indate(2015) cdate(2020) ksmpl(100) wei(0 0 0 0.5 0.5) }{p_end}
+
+{title:Example 8. Changing the ranking order}
 
 If we want to order the final summary according to the R-squared in a descending order, we should use the options {opt ord()} and {opt down}:. 
 
 {p 4 8 2}{cmd:. xtselmod y x1 x1 x2 x3 x4 x5, indate(2015) cdate(2020) ksmpl(100) ord(R2_ad) down}{p_end}
 
+{title:Example 9. Defining a specific prediction horizon for the performance evaluation}
+
 If we want to specify an exact horizon at which the time-series out-of-sample performance should be evaluated, we should use the option {opt hor()}:
 
 {p 4 8 2}{cmd:. xtselmod y x1 x1 x2 x3 x4 x5, indate(2015) cdate(2020) ksmpl(100) hor(3)}{p_end}
+
+{title:Example 10. Defining an interval for the horizon}
 
 If instead of an exact horizon, we want to evaluate the time-series out-of-sample performance between horizons 1 and 3, we should used options 
 {opt h:or()} and {opt uph:or} together. 
 
 {p 4 8 2}{cmd:. xtselmod y x1 x1 x2 x3 x4 x5, indate(2015) cdate(2020) ksmpl(100) hor(3) uphor}{p_end}
 
+{title:Example 11. Comparing particular specifications (user defined)}
+
 If we want to compare, for instance, 3 particular specifications without combining them up, we should use options {opt spec1()} up to {opt spec3()}. 
 If we would want to compare ten specifications, which is the maximum in this type of options, we should use options {opt spec1()} up to {opt spec10()}. 
-Inside each one of the parenthesis we should write down each specification we want to try. Alternatively, we can only write down the part of each specification 
-that is different from the other ones, and include in the option {opt fix:ed()} the common parts of the specification that remains constant in all the cases, 
-for instance:
+Inside each one of the parenthesis we should write down each specification we want to try. 
 
 {p 4 8 2}{cmd:. xtselmod y, indate(2015) cdate(2020) ksmpl(100) spec1(x1 c.x1#c.x2 x3) spec2(c.x1#c.x2 x2 x3) spec3(x1 c.x1#c.x2 c.x2#c.x3))}{p_end}
 
+{p 4 8 2}{cmd:. xtselmod y, indate(2015) cdate(2020) ksmpl(100) spec1(x1 c.x1#c.x2 x3 x4) spec2(c.x1#c.x2 x2 x3 x4) spec3(x1 c.x1#c.x2 c.x2#c.x3 x4)}{p_end}
+
+Alternatively, we can only write down the part of each specification that is different from the other ones, and include in the option {opt fix:ed()} 
+the common parts of the specification that remains constant in all the cases, for instance:
+
 {p 4 8 2}{cmd:. xtselmod y, indate(2015) cdate(2020) ksmpl(100) spec1(x1 c.x1#c.x2 x3) spec2(c.x1#c.x2 x2 x3) spec3(x1 c.x1#c.x2 c.x2#c.x3) fix(x4 x5)}{p_end}
 
-{p 4 8 2}{cmd:. xtselmod y, indate(2015) cdate(2020) ksmpl(100) spec1(x1 c.x1#c.x2 x3 x4) spec2(c.x1#c.x2 x2 x3 x4) spec3(x1 c.x1#c.x2 c.x2#c.x3 x4)}{p_end}
+{title:Example 12. Creating principal components as control variables from different sets of variables}
+
+If we want to create three principal components from three group of variables with 20 variables each, e.g. groups z2 and z3: z2_1, z2_2...z2_20 
+and z3_1, z3_2...z3_20, we should use the options {opt groups()} and options {opt pca1()}...{opt pca3()}.  
+
+The option {opt groups()} defines how many groups of variables are and thus how many principal components should be estimated 
+and included in the specification. The options {opt pca1()}... to {opt pca#groups()} should list the variables within each group.  
+
+There should be as many lists as groups of variables.
+
+{p 4 8 2}{cmd:. xtselmod y x1 x1 x2 x3 x4 x5, indate(2015) cdate(2020) ksmpl(100) groups(3) pca1(z1*) pca2(z2*) pca3(z3*)}{p_end}
+
+{title:Example 13. Creating principal components as control variables from one set of variables}
+
+We can also generate various principal components from just one large group of variables, for instance if we do not have 
+an a priori classifications of the predictors. 
+
+In such case we can create, for example, 6 components from all possible variables, i.e all variables whose name starts with z, 
+using also the option {opt ncomp()}. 
+
+Additionally, we specify only one group in option {opt groups()} and list all variables z* in the option {opt pca1()}:
+
+{p 4 8 2}{cmd:. xtselmod y x1 x1 x2 x3 x4 x5, ind(2015) cd(2020) o(100) k(100) r(0) qui groups(1) pca1(z*) ncomp(6)}{p_end}
 
 
 {title:Author}

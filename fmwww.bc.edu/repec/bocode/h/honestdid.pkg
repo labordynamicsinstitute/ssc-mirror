@@ -1,0 +1,36 @@
+d 'HONESTDID': module implementing the HonestDiD R package
+d
+d     Stata version of the HonestDiD R package, which implements
+d robust inference for difference-in-differences and event study
+d design    methods developed in Rambachan and Roth (2021). See the
+d examples section below for an illustration of how users can use
+d this	  package to conduct sensitivity analysis on the parallel
+d trends assumption in difference-in-differences and event study
+d designs. 
+d
+d KW: DiD
+d KW: difference in differences
+d KW: parallel trends
+d
+d Requires: Stata version 14.1
+d
+d Distribution-Date: 20221111
+d
+d Author: Mauricio Caceres Bravo, NA
+d Support: email mauricio.caceres.bravo@@gmail.com
+d
+f honestdid.ado
+f honestwork.ado
+f honestdid.sthlp
+f honestecos_macosx.plugin
+f honestecos_macosx86_64.plugin
+f honestecos_macosxarm64.plugin
+f honestecos_unix.plugin
+f honestecos_windows.plugin
+f honestosqp_macosx.plugin
+f honestosqp_macosx86_64.plugin
+f honestosqp_macosxarm64.plugin
+f honestosqp_unix.plugin
+f honestosqp_windows.plugin
+f ../l/lhonestdid.mlib
+f ../l/LWdata_RawData.dta

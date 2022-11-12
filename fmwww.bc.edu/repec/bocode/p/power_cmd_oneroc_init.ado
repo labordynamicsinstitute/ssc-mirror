@@ -8,6 +8,7 @@ program power_cmd_oneroc_init, sclass
 	sreturn local pss_hyp_lhs "auc0"
 	sreturn local pss_hyp_rhs "auc1"
 	sreturn local pss_numopts "ratio n1 n0"
+	sreturn local pss_title " for a one-sample ROC analysis"
 	sreturn local pss_colnames "N1 N0 ratio auc0 auc1 delta"
 	sreturn local pss_samples "twosample"
 end

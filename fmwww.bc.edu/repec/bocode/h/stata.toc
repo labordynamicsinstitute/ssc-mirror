@@ -66,6 +66,7 @@ p hoi module to compute Human Opportunity Index
 p hoishapely module to perform Shapley Decomposition of the Human Opportunity Index
 p hoishapley module to perform Shapley Decomposition of the Human Opportunity Index
 p holsti module to compute Holsti intercoder reliability coefficients
+p honestdid module implementing the HonestDiD R package
 p hotdeck module to impute missing values using the hotdeck method
 p hotdeckvar module for hotdeck imputation
 p hotvalue module to generate scales with missing values conditionally imputed

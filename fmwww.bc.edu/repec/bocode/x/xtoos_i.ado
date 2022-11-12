@@ -614,7 +614,7 @@ if "`evalopt'"!="" {
 		if "`mcomp'"=="" label var _yar1 "naive"
 		else label var _yar1 "AR1"
 
-		xtline `yvar' _yf _yar1 if `evalopt'==1 & `sample'==1 `in', i(`panvar') t(`timevar') 
+		tsline `yvar' _yf _yar1 if `evalopt'==1 & `sample'==1 `in', by(`panvar', yrescale) ttitle(`timevar') tlabel(,angle(45) labsize(vsmall))
 		qui drop  _yf _yar1
 	}
 

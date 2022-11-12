@@ -39,12 +39,14 @@ d KW: variable selection
 d
 d Requires: Stata version 12
 d
-d Distribution-Date: 20210218
+d Distribution-Date: 20221111
 d
 d Author: Alfonso Ugarte Ruiz , BBVA Research 
 d Support: email alfonso.ugarte@@bbva.com
 d
 f xtselmod.ado
+f xtsel.sthlp
 f xtselmod.sthlp
 f xtselvar.ado
 f xtselvar.sthlp
+f ../p/panelexample.dta

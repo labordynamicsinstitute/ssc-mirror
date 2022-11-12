@@ -212,6 +212,7 @@ p cospectdens module to compute cross spectra
 p couliari module to implement Corbae-Ouliaris frequency domain filter to time series data
 p countmatch module to count matching values for one variable in another
 p countvalues module to list counts of integer values across variables
+p countyfips module for merging U.S. county identifiers
 p covbal module for producing covariate balance statistics 
 p cpcorr module for correlations for each row vs each column variable
 p cpigen module to add US CPI series to current dataset

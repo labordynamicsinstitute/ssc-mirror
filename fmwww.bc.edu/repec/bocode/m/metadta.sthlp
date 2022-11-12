@@ -740,7 +740,7 @@ With one categorical variable, different sroc curves each for every category is 
 via {cmd:soptions(...)} and {cmd:foptions(...)}. 
 
 {pmore2}
-{stata `"use "https://github.com/VNyaga/Metadta/blob/master/ascus.dta?raw=true""':. use "https://github.com/VNyaga/Metadta/blob/master/ascus.dta?raw=true"}
+{stata `"use "http://fmwww.bc.edu/repec/bocode/a/ascus.dta""':. use "http://fmwww.bc.edu/repec/bocode/a/ascus.dta"}
 {p_end}
 
 {pmore2}
@@ -779,7 +779,7 @@ via {cmd:soptions(...)} and {cmd:foptions(...)}.
 This example extends {help metadta##example_two_one:Example 2.1} by presenting the relative summary measures instead of the absolute measures.  
 
 {pmore2}
-{stata `"use "https://github.com/VNyaga/Metadta/blob/master/ascus.dta?raw=true""':. use "https://github.com/VNyaga/Metadta/blob/master/ascus.dta?raw=true"}
+{stata `"use "http://fmwww.bc.edu/repec/bocode/a/ascus.dta""':. use "http://fmwww.bc.edu/repec/bocode/a/ascus.dta"}
 {p_end}
 
 {pmore2}
@@ -944,7 +944,7 @@ Negative{space 3} {c |} {space 2} fn2 {space 7}	tn2 {space 2} {c |}
 
 
 {pmore2}
-{stata `"use "https://github.com/VNyaga/Metadta/blob/master/pairedta.dta?raw=true""':. use "https://github.com/VNyaga/Metadta/blob/master/pairedta.dta?raw=true"}
+{stata `"use "http://fmwww.bc.edu/repec/bocode/p/pairedta.dta""':. use "http://fmwww.bc.edu/repec/bocode/p/pairedta.dta"}
 {p_end}
 
 {pmore2}
@@ -974,7 +974,7 @@ Negative{space 3} {c |} {space 2} fn2 {space 7}	tn2 {space 2} {c |}
 {cmd :6. Metaregression - arm-based network meta-analysis - RR}
 
 {pmore2}
-{stata `"use "https://github.com/VNyaga/Metadta/blob/master/network.dta?raw=true""':. use "https://github.com/VNyaga/Metadta/blob/master/network.dta?raw=true"}
+{stata `"use "http://fmwww.bc.edu/repec/bocode/n/network.dta""':. use "http://fmwww.bc.edu/repec/bocode/n/network.dta"}
 {p_end}
 
 {pmore2}

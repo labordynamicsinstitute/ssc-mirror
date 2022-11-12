@@ -25,8 +25,8 @@ loc timevar=r(timevar)
 	
 ******************************************************************************************************************************************
 
-if "`if'"!="" qui xtlogit `yvar' `lyvar' `rhsvars' if `if' `in'
-else qui xtlogit `yvar' `lyvar' `rhsvars' `in'
+if "`if'"!="" qui xtlogit `yvar' `rhsvars' if `if' `in'
+else qui xtlogit `yvar' `rhsvars' `in'
 
 fvexpand i.`panvar' if e(sample) `in'
 loc idum=r(varlist) 
@@ -128,21 +128,21 @@ if `rsmpl'>=1 {
 
 			if "`met'"=="" {
 				if "`dum'"=="dum" {
-					if "`if'"!="" qui xtlogit `yvar' `lyvar' `rhsvars' i.`panvar' if `if' & `samplein'==1 `in', `options'
-					else qui xtlogit `yvar' `lyvar' `rhsvars' i.`panvar' if `samplein'==1 `in', `options'
+					if "`if'"!="" qui xtlogit `yvar' `rhsvars' i.`panvar' if `if' & `samplein'==1 `in', `options'
+					else qui xtlogit `yvar' `rhsvars' i.`panvar' if `samplein'==1 `in', `options'
 				}
 				else {
-					if "`if'"!="" qui xtlogit `yvar' `lyvar' `rhsvars' if `if' & `samplein'==1 `in', `fe' `options'
-					else qui xtlogit `yvar' `lyvar' `rhsvars' if `samplein'==1 `in', `fe' `options'
+					if "`if'"!="" qui xtlogit `yvar' `rhsvars' if `if' & `samplein'==1 `in', `fe' `options'
+					else qui xtlogit `yvar' `rhsvars' if `samplein'==1 `in', `fe' `options'
 				}
 			}
 			else if "`dum'"=="dum" {
-				if "`if'"!="" qui `met' `yvar' `lyvar' `rhsvars' i.`panvar' if `if' & `samplein'==1 `in', `options'
-				else qui `met' `yvar' `lyvar' `rhsvars' i.`panvar' if `samplein'==1 `in', `options'
+				if "`if'"!="" qui `met' `yvar' `rhsvars' i.`panvar' if `if' & `samplein'==1 `in', `options'
+				else qui `met' `yvar' `rhsvars' i.`panvar' if `samplein'==1 `in', `options'
 			}
 			else {
-				if "`if'"!="" qui `met' `yvar' `lyvar' `rhsvars' if `if' & `samplein'==1 `in', `fe' `options'
-				else qui `met' `yvar' `lyvar' `rhsvars' if `samplein'==1 `in', `fe' `options'
+				if "`if'"!="" qui `met' `yvar' `rhsvars' if `if' & `samplein'==1 `in', `fe' `options'
+				else qui `met' `yvar' `rhsvars' if `samplein'==1 `in', `fe' `options'
 			}
 						
 			if "`mprob'"=="" qui predict `prf', pr
@@ -237,21 +237,21 @@ if `ksmpl'>=1 {
 
 		if "`met'"=="" {
 			if "`dum'"=="dum" {
-				if "`if'"!="" qui xtlogit `yvar' `lyvar' `rhsvars' i.`panvar' if `if' & `samplein'==1 `in', `options'
-				else qui xtlogit `yvar' `lyvar' `rhsvars' i.`panvar' if `samplein'==1 `in', `options'
+				if "`if'"!="" qui xtlogit `yvar' `rhsvars' i.`panvar' if `if' & `samplein'==1 `in', `options'
+				else qui xtlogit `yvar' `rhsvars' i.`panvar' if `samplein'==1 `in', `options'
 			}
 			else {
-				if "`if'"!="" qui xtlogit `yvar' `lyvar' `rhsvars' if `if' & `samplein'==1 `in', `fe' `options'
-				else qui xtlogit `yvar' `lyvar' `rhsvars' if `samplein'==1 `in', `fe' `options'
+				if "`if'"!="" qui xtlogit `yvar' `rhsvars' if `if' & `samplein'==1 `in', `fe' `options'
+				else qui xtlogit `yvar' `rhsvars' if `samplein'==1 `in', `fe' `options'
 			}
 		}
 		else if "`dum'"=="dum" {
-			if "`if'"!="" qui `met' `yvar' `lyvar' `rhsvars' i.`panvar' if `if' & `samplein'==1 `in', `options'
-			else qui `met' `yvar' `lyvar' `rhsvars' i.`panvar' if `samplein'==1 `in', `options'
+			if "`if'"!="" qui `met' `yvar' `rhsvars' i.`panvar' if `if' & `samplein'==1 `in', `options'
+			else qui `met' `yvar' `rhsvars' i.`panvar' if `samplein'==1 `in', `options'
 		}
 		else {
-			if "`if'"!="" qui `met' `yvar' `lyvar' `rhsvars' if `if' & `samplein'==1 `in', `fe' `options'
-			else qui `met' `yvar' `lyvar' `rhsvars' if `samplein'==1 `in', `fe' `options'
+			if "`if'"!="" qui `met' `yvar' `rhsvars' if `if' & `samplein'==1 `in', `fe' `options'
+			else qui `met' `yvar' `rhsvars' if `samplein'==1 `in', `fe' `options'
 		}
 	
 		if "`mprob'"=="" qui predict `prf', pr
@@ -320,21 +320,21 @@ if "`evalopt'"!="" {
 
 	if "`met'"=="" {
 		if "`dum'"=="dum" {
-			if "`if'"!="" qui xtlogit `yvar' `lyvar' `rhsvars' i.`panvar' if `if' & `samplein'==1 `in', `options'
-			else qui xtreg `yvar' `lyvar' `rhsvars' i.`panvar' if `samplein'==1 `in', `options'
+			if "`if'"!="" qui xtlogit `yvar' `rhsvars' i.`panvar' if `if' & `samplein'==1 `in', `options'
+			else qui xtreg `yvar' `rhsvars' i.`panvar' if `samplein'==1 `in', `options'
 		}
 		else {
-			if "`if'"!="" qui xtlogit `yvar' `lyvar' `rhsvars' if `if' & `samplein'==1 `in', `fe' `options'
-			else qui xtlogit `yvar' `lyvar' `rhsvars' if `samplein'==1 `in', `fe' `options'
+			if "`if'"!="" qui xtlogit `yvar' `rhsvars' if `if' & `samplein'==1 `in', `fe' `options'
+			else qui xtlogit `yvar' `rhsvars' if `samplein'==1 `in', `fe' `options'
 		}
 	}
 	else if "`dum'"=="dum" {
-		if "`if'"!="" qui `met' `yvar' `lyvar' `rhsvars' i.`panvar' if `if' & `samplein'==1 `in', `options'
-		else qui `met' `yvar' `lyvar' `rhsvars' i.`panvar' if `samplein'==1 `in', `options'
+		if "`if'"!="" qui `met' `yvar' `rhsvars' i.`panvar' if `if' & `samplein'==1 `in', `options'
+		else qui `met' `yvar' `rhsvars' i.`panvar' if `samplein'==1 `in', `options'
 	}
 	else {
-		if "`if'"!="" qui `met' `yvar' `lyvar' `rhsvars' if `if' & `samplein'==1 `in', `fe' `options'
-		else qui `met' `yvar' `lyvar' `rhsvars' if `samplein'==1 `in', `fe' `options'
+		if "`if'"!="" qui `met' `yvar' `rhsvars' if `if' & `samplein'==1 `in', `fe' `options'
+		else qui `met' `yvar' `rhsvars' if `samplein'==1 `in', `fe' `options'
 	}
 			
 	if "`mprob'"=="" qui predict `prf', pr
@@ -355,14 +355,14 @@ if "`evalopt'"!="" {
 	capture qui roctab `yvar' `prf' if `samplein'==1 & `sample'==1 `in'
 	if "`auc'"=="auc" qui auc `yvar' `prf' if `samplein'==1 & `sample'==1 `in', ncut(`ncut') wint(`wint') winf(`winf')
 	matrix R0[1,1]=r(area)
-	if "`auc'"=="auc" matrix R0[1,2]=r(se)
+	if "`auc'"=="" matrix R0[1,2]=r(se)
 	else matrix R0[1,2]=.
 	matrix R0[1,5]=r(N)
 				
 	capture qui roctab `yvar' `prf' if `samplein'==0 & `sample'==1 `in'
 	if "`auc'"=="auc" qui auc `yvar' `prf' if `samplein'==0 & `sample'==1 `in', ncut(`ncut') wint(`wint') winf(`winf')
 	matrix R0[1,3]=r(area)
-	if "`auc'"=="auc" matrix R0[1,4]=r(se)
+	if "`auc'"=="" matrix R0[1,4]=r(se)
 	else matrix R0[1,4]=.
 	matrix R0[1,6]=r(N)
 
@@ -385,19 +385,20 @@ tokenize `varlist'
 loc dvar "`1'"
 loc probvar "`2'"
 
-tempvar windowt windowf roc0 roc sn
+tempvar windowt windowf roc0 roc sn tme cut TPR FPR FNR 
 
 loc nm=`ncut'+1
-capture drop cut TPR FPR
-qui gen cut = .
-qui replace cut=1 in 1
-qui gen TPR = .
-qui replace TPR=0 in 1
-qui gen FPR = .
-qui replace FPR=0 in 1
+qui gen `cut' = .
+qui replace `cut'=1 in 1
+qui gen `TPR' = .
+qui replace `TPR'=0 in 1
+qui gen `FPR' = .
+qui replace `FPR'=0 in 1
+qui gen `FNR' = .
+qui replace `FNR'=0 in 1
 
-matrix RTF = J(`nm',3,.)
-matrix SNR = J(1,2,.)
+matrix RTF = J(`nm',4,.)
+matrix SNR = J(1,3,.)
 
 if "`wint'"=="" qui gen `windowt'=0
 else qui gen `windowt'=`wint'
@@ -406,9 +407,10 @@ else qui gen `windowf'=`winf'
 
 qui gen `roc0' = .
 qui gen `sn' = .
+qui gen `tme' = .
 
 forvalues n=2(1)`nm' {
-	tempvar pos 
+	tempvar pos
 	loc n0=`n'-1
 	loc p=(1-(1/`ncut')*`n0')
 	gen `pos'=`probvar'!=. & `probvar'>=`p'
@@ -428,20 +430,22 @@ forvalues n=2(1)`nm' {
 		scalar fpr =r(mean)
 		scalar t0=r(N)
 	}
-	qui replace cut=`p' in `n'
-	qui replace TPR=tpr in `n'
-	qui replace FPR=fpr in `n'
-	qui replace `roc0'=TPR[`n'-1]*(FPR-FPR[`n'-1])+(TPR-TPR[`n'-1])*(FPR-FPR[`n'-1])/2 in `n'
+	qui replace `cut'=`p' in `n'
+	qui replace `TPR'=tpr in `n'
+	qui replace `FPR'=fpr in `n'
+	qui replace `FNR'=1-tpr in `n'
+	qui replace `roc0'=`TPR'[`n'-1]*(`FPR'-`FPR'[`n'-1])+(`TPR'-`TPR'[`n'-1])*(`FPR'-`FPR'[`n'-1])/2 in `n'
 	if "`snr'"=="snr" {
-		qui replace `sn'=TPR-FPR in `n'
+		qui replace `sn'=`TPR'-`FPR' in `n'
+		qui replace `tme'=`FNR'+`FPR' in `n'
 	}
 }
 qui gen `roc'=sum(`roc0')
 scalar auc=`roc'[`nm']
 
-mkmat cut TPR FPR in 1/`nm', mat(RTF)
+mkmat `cut' `TPR' `FPR' `FNR' in 1/`nm', mat(RTF)
 mata : st_matrix("RTF", sort(st_matrix("RTF"), 1))
-matrix colnames RTF = cut TPR FPR
+matrix colnames RTF = cut TPR FPR FNR
 matrix rownames RTF = "."
 
 di "AUC: " auc
@@ -450,16 +454,17 @@ return scalar N = t1 + t0
 if "`table'"=="table" matlist RTF, title("True Positive and False Positive Ratios by Probability Threshold")
 
 if "`snr'"=="snr" {
-	mkmat cut `sn' in 1/`nm', mat(SN)
+	mkmat `cut' `sn' `tme' in 1/`nm', mat(SN)
 	mata : st_matrix("SN", sort(st_matrix("SN"), -2))
 	matrix SNR[1,1] = SN[2,1]
 	matrix SNR[1,2] = SN[2,2]
-	matrix colnames SNR = PROB* SNR*
+	matrix SNR[1,3] = SN[2,3]
+	matrix colnames SNR = PROB* SNR* TME*
 	matrix rownames SNR = "."
-	matlist SNR, title("Optimal Probability Threshold and Maximum SNR")
+	matlist SNR, title("Optimal Probability Threshold, Maximum SNR and Minimum TME")
+	return matrix optimal SNR
 }
 
-qui drop cut TPR FPR
 
 end
 

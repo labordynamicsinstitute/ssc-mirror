@@ -158,6 +158,7 @@ p spglsxt module to estimate Spatial Panel Autoregressive Generalized Least Squa
 p spgmm module to estimate Spatial Autoregressive Generalized Method of Moments Cross Sections Regression
 p spgmmxt module to estimate Spatial Panel Autoregressive Generalized Method of Moments Regression
 p spgrid module to generate two-dimensional grids for spatial data analysis
+p spider module for spider plots
 p spike module to allow for a zero willingness to pay
 p spineplot module  for spine plots for two-way categorical data
 p spkde module to perform kernel estimation of density and intensity functions for two-dimensional spatial point patterns

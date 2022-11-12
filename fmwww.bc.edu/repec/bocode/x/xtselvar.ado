@@ -1,9 +1,9 @@
-program xtselvar, rclass
+qui program xtselvar, rclass
 version 12.0:
 
 	syntax varlist (fv ts) [if] [in], INDate(string) CDate(string) Ksmpl(integer) [FIXed(varlist fv ts) /* 
 	*/ Met(string) MComp(string) fe xbu dum opar lags(numlist max=1 integer) EValopt(varname) qui log(string) exc(string) SHEet(string) /*
-	*/ ord(string) down Hor(integer 0) UPHor WEIghts(numlist min=5 max=5) GRoups(integer 0) ncomp(integer 1) /*
+	*/ ord(string) down Hor(integer 0) UPHor WEIghts(numlist min=5 max=5) CROssection GRoups(integer 0) ncomp(integer 1) /*
 	*/ pca1(varlist fv ts) pca2(varlist fv ts) pca3(varlist fv ts) pca4(varlist fv ts) pca5(varlist fv ts) /*
 	*/ pca6(varlist fv ts) pca7(varlist fv ts) pca8(varlist fv ts) pca9(varlist fv ts) pca10(varlist fv ts) *]
 
@@ -162,24 +162,27 @@ forvalues x=1/`nx' {
 	matrix RS1[`x',4] = AIC[1,5]
 	matrix RS1[`x',5] = AIC[1,6]
 	
-	`qui' xtoos_t `y' `ly' `fixed' `comps' ``x'' `if' `in', ind(`indate') cd(`cdate') m(`met') mc(`mcomp') `fe' `xbu' `dum' `opar' lags(`lags') ev(`evalopt') `options'
-	matrix Ut = r(ev_hor)
-	if "`uphor'"=="uphor" {
-		forval n=1/4 {
-			matrix Uth`n' = Ut[1..`h',`n']
+	if "`crossection'"=="crossection" matrix RS1[`x',6] = 0
+	else {
+		`qui' xtoos_t `y' `ly' `fixed' `comps' ``x'' `if' `in', ind(`indate') cd(`cdate') m(`met') mc(`mcomp') `fe' `xbu' `dum' `opar' lags(`lags') ev(`evalopt') `options'
+		matrix Ut = r(ev_hor)
+		if "`uphor'"=="uphor" {
+			forval n=1/4 {
+				matrix Uth`n' = Ut[1..`h',`n']
+			}
+			matrix Ih = J(1,`h',1)
+			matrix Nh = Ih*Uth4
+			scalar nh=Nh[1,1]
+			forval n=1/`h' {
+				matrix Uth1[`n',1]=Uth1[`n',1]^2
+				matrix Uth2[`n',1]=Uth2[`n',1]^2
+			}
+			matrix Uths1 = (1/nh)*Uth4'*Uth1
+			matrix Uths2 = (1/nh)*Uth4'*Uth2
+			matrix RS1[`x',6] = sqrt(Uths1[1,1])/sqrt(Uths2[1,1])
 		}
-		matrix Ih = J(1,`h',1)
-		matrix Nh = Ih*Uth4
-		scalar nh=Nh[1,1]
-		forval n=1/`h' {
-			matrix Uth1[`n',1]=Uth1[`n',1]^2
-			matrix Uth2[`n',1]=Uth2[`n',1]^2
-		}
-		matrix Uths1 = (1/nh)*Uth4'*Uth1
-		matrix Uths2 = (1/nh)*Uth4'*Uth2
-		matrix RS1[`x',6] = sqrt(Uths1[1,1])/sqrt(Uths2[1,1])
+		else matrix RS1[`x',6] = Ut[`h',3]
 	}
-	else matrix RS1[`x',6] = Ut[`h',3]
 	
 	if "`panvar'"=="_id_" | "`ts'"=="ts" matrix RS1[`x',7] = 0
 	else {

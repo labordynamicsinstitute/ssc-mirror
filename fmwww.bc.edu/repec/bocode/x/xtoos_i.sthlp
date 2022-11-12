@@ -1,5 +1,6 @@
 {smcl}
-{* July 23 2020}{...}
+{* First Version July 23 2020}{...}
+{* This Version Nov 11 2022}{...}
 {viewerdialog xtoos_i "dialog xtoos_i"}{...}
 {vieweralsosee "[XT] xtoos_t" "help xtoos_t"}{...}
 {vieweralsosee "[XT] xtoos_bin_t" "help xtoos_bin_t"}{...}
@@ -31,6 +32,11 @@ same cases, plus the U-theil ratio.{p_end}
 {p}iii) a particular individual or a particular group (e.g.a country or a region).{p_end}
 
 {p}Additionally, it allows to draw a graph with the model's prediction for a particular individual or a particular group, when those individuals are not included in the estimation sample. {p_end}
+
+{title:Proceedings Spain Stata Conference 2019} 
+
+https://www.stata.com/meeting/spain19/slides/Spain19_Ugarte-Ruiz.pdf
+
 
 {title:Syntax}
 
@@ -75,7 +81,8 @@ corresponds to the in-sample mean at every period. This option must be run toget
 {synoptline}
 
 {marker Examples}{...}
-{title:Examples}
+
+{title:Example 1. Defining the evaluation sample (out-of-sample individuals)}
 
 Use of {cmd:xtoos_i} to evaluate the prediction performance for 20 random subsamples of 40 individuals ({opt r:smpl()} and {opt o:us()}) 
 and ordered subsamples of also 40 individuals ({opt k:smpl()})
@@ -83,11 +90,15 @@ and ordered subsamples of also 40 individuals ({opt k:smpl()})
 {p 4 8 2}{cmd:. webuse abdata, clear}{p_end}
 {p 4 8 2}{cmd:. xtoos_i n w l.w k l.k ys l.ys, ous(40) rsmpl(20) ksmpl(40)}{p_end}
 
+{title:Example 2. Defining lags of the dependent variable}
+
 Use of {cmd:xtoos_i} including lags of the dependent variable in the specification.  The following three specifications are equivalent:
 
 {p 4 8 2}{cmd:. xtoos_i n w l.w k l.k ys l.ys, ous(40) rsmpl(20) ksmpl(40) lags(3)}{p_end}
 {p 4 8 2}{cmd:. xtoos_i l(0/3).n w l.w k l.k ys l.ys, ous(40) rsmpl(20) ksmpl(40) {p_end}
 {p 4 8 2}{cmd:. xtoos_i n l.n l2.n l3.n w l.w k l.k ys l.ys, ous(40) rsmpl(20) ksmpl(40) lags(3)}{p_end}
+
+{title:Example 3. Using a dynamic model method}
 
 Use of {cmd:xtoos_i} using a dynamic model method, either {cmd:xtabond} or {cmd:xtdpdsys}. 
 In this case, the default specification includes one lag of the dependent variable
@@ -95,28 +106,41 @@ In this case, the default specification includes one lag of the dependent variab
 {p 4 8 2}{cmd:. xtoos_i n w l.w k l.k ys l.ys, ous(40) rsmpl(20) ksmpl(40) met(xtabond)}{p_end}
 {p 4 8 2}{cmd:. xtoos_i n w l.w k l.k ys l.ys, ous(40) rsmpl(20) ksmpl(40) met(xtdpdsys) lags(2)}{p_end}
 
-Use of {cmd:xtoos_i} to evaluate the prediction performance between periods 15 and 20, but restricting the evaluation only to first 6 individuals
+{title:Example 4. Defining a specific group of individuals to be left out of the sample}
+
+Use of {cmd:xtoos_i} evaluating the prediction performance of the first 6 individuals
 
 {p 4 8 2}{cmd:. gen id1to6=id<=6}{p_end}
 {p 4 8 2}{cmd:. xtoos_i n w l.w k l.k ys l.ys, ous(40) rsmpl(20) ksmpl(40) evalopt(id1to6)}{p_end}
+
+{title:Example 5. Changing the estimation method}
 
 Use of {cmd:xtoos_i} using as estimation method the command {cmd:xtregar}
 
 {p 4 8 2}{cmd:. xtoos_i n w l.w k l.k ys l.ys, ous(40) rsmpl(20) ksmpl(40) met(xtregar)}{p_end}
 
+{title:Example 6. Changing the comparison method}
+
 Use of {cmd:xtoos_i} using OLS ({cmd:reg}) as the estimation method for the AR(1) comparison model 
 
 {p 4 8 2}{cmd:. xtoos_i n w l.w k l.k ys l.ys, ous(40) rsmpl(20) ksmpl(40) mcomp(reg)}{p_end}
+
+{title:Example 7. Fixed Effects option}
 
 Use of {cmd:xtoos_i} using Fixed-Effects (within) estimator (the estimated individual components cannot be included in the prediction of the out-of-sample individuals)
 
 {p 4 8 2}{cmd:. xtoos_i n w l.w k l.k ys l.ys, ous(40) rsmpl(20) ksmpl(40) fe}{p_end}
 
+{title:Example 8. Use of dummy variables}
+
 Use of {cmd:xtoos_i} using dummy variables per individual (the estimated dummy variable coefficients cannot be included in the prediction of the out-of-sample individuals)
 
 {p 4 8 2}{cmd:. xtoos_i n w l.w k l.k ys l.ys, ous(40) rsmpl(20) ksmpl(40) dum}{p_end}
 
-Use of {cmd:xtoos_i} to evaluate the prediction performance restricting the evaluation only to first 6 individuals, while drawing a graph with the prediction for each one of those 6 individuals
+{title:Example 9. Drawing a graph with the out-of-sample predictions for a group of individuals}
+
+Use of {cmd:xtoos_i} to evaluate the prediction performance restricting the evaluation only to first 6 individuals, while drawing a graph with the prediction 
+for each one of those 6 individuals
 
 {p 4 8 2}{cmd:. xtoos_i n w l.w k l.k ys l.ys, ous(40) rsmpl(0) ksmpl(40) evalopt(id1to6) hgraph}{p_end}
 

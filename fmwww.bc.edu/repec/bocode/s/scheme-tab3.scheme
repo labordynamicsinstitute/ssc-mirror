@@ -205,7 +205,7 @@ linestyle textbox   none
 linewidth textbox   vvthin
 color background          "255 255 255"
 color plotregion          "255 255 255"
-color plotregion_line   "0 0 0"
+color plotregion_line   "255 255 255"
 color graphregion    "255 255 255"
 color legend     "255 255 255"
 color heading     "0 0 0"
@@ -378,9 +378,9 @@ color histogram_line  black
 * color tickline   white
 color tick             "0 0 0"
 color minortick        "0 0 0"
-color grid                   "0 0 0"
-color major_grid             "0 0 0"
-color minor_grid             "0 0 0"
+color grid                   "180 180 180"
+color major_grid             "180 180 180"
+color minor_grid             "180 180 180"
 color axisline         "0 0 0"
 color matrix           gs6
 color matrixmarkline   gs6

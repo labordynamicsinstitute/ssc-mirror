@@ -1,6 +1,6 @@
 * Generic --- Asjad Naqvi (2022)
 sequence 1210
-label "rainbow"
+label "neon"
 #include s2color
 // positions and sizes
 numstyle pcycle             15

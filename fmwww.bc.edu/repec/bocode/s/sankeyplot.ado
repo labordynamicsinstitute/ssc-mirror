@@ -1,4 +1,7 @@
-*! version 1.1  01july2022  Maik Hamjediers
+*! version 1.0   16june2022  Maik Hamjediers
+*! version 1.1   01july2022  Maik Hamjediers
+*! version 1.11  16july2022  Maik Hamjediers
+*! version 1.2	 10nove2022  Maik Hamjediers
 
 cap program drop sankeyplot
 program define sankeyplot
@@ -13,7 +16,7 @@ version 15
         COLors(string asis) FLOWCOLors(string asis) OPACity(real 80) 
         BARWidth(real 0.1) 
         *
-        BLABEL(string) BLABSIZE(string) BLABFORMAT(string asis) BLABCOLor(string asis) BLABORIENTation(string asis)
+        BLABEL(string) BLABFORMAT(string asis) BLABOPTions(string asis)
         FLOWLABEL(string) FLOWLABSIZE(string) FLOWLABFORMAT(string asis) FLOWLABCOLor(string asis) FLOWLABORIENTation(string asis) 
         FLOWOPTions(string asis) BAROPTions(string asis)
 		LEGend(string asis)
@@ -363,23 +366,15 @@ version 15
                 *blabel
                 if "`blabel'" != "" { 
 					local blabeltext
-                        if "`blabsize'" == "" {
-                                local blabsize medium
-                        }
-                        if "`blabformat'"=="" {
-                                local blabformat %9.2g
-                        }
-                        if `"`blabcolor'"'=="" {
-                                local blabcolor black
-                        }
-						if "`blaborientation'"=="" {
-                                local blaborientation horizontal
-                        }
-						levelsof xx_mob, local(xx_paths)
-						foreach mob of local xx_paths {
-							levelsof xx_wave if (xx_start == 1 | xx_end == 1) & bar == 1, local(xx_waves)
-							foreach w of local xx_waves {
-								sum xx_counter if xx_mob == `mob' & bar == 1 & xx_wave == `w' 
+                    if "`blabformat'"=="" {
+                            local blabformat %9.2g
+                    }
+					levelsof xx_mob, local(xx_paths)
+					foreach mob of local xx_paths {
+						levelsof xx_wave if (xx_start == 1 | xx_end == 1) & bar == 1, local(xx_waves)
+						foreach w of local xx_waves {
+							sum xx_counter if xx_mob == `mob' & bar == 1 & xx_wave == `w' 
+							if `r(N)' != 0 {
 								local pos = `r(mean)'
 								if "`blabel'" == "vallabel" {
 									local blab: dis `blabformat' `=xx_`blabel'[`pos']'
@@ -387,10 +382,11 @@ version 15
 								if "`blabel'" == "catlabel" {
 									local blab `"`=xx_`blabel'[`pos']'"'
 								}
-								local text `"text(`=xx_blabpos[`pos']' `w' "`blab'", orientation(`blaborientation') color(`blabcolor') size(`blabsize'))"'
+								local text `"text(`=xx_blabpos[`pos']' `w' "`blab'", place(0) `blaboptions')"'
 								local blabeltext `blabeltext' `text'
 							}
 						}
+					}
                 }
                 *flowlabel
                 if "`flowlabel'" != "" { 
@@ -415,7 +411,7 @@ version 15
                         local graphs `"`graphs' (scatter xx_flowlabpos xx_wave if (xx_start == 1 | xx_end == 1) & bar != 1, m(none) mlabel(xx_flowlab) mlabpos(`mlabpos') mlabformat(`flowlabformat') mlabsize(`flowlabsize') mlabcolor(`flowlabcolor') mlabangle(`flowlaborientation')) "'
                         local graph_n = `graph_n' + 1
                 }
-                
+            
                 *xlabel
                 if ustrregexm(`"`options'"', "xlabel") == 0 {
                         levelsof xx_wave if bar == 1, local(xlabel)
@@ -424,21 +420,22 @@ version 15
                 
 				*Legend (check if order is specified or not)
 				if `"`legend'"' == "" {
-					twoway `graphs', `options' legend(order(`legendlab')) `blabeltext'
-				}
+						twoway `graphs', `options' legend(order(`legendlab')) `blabeltext' 
+					}
 				else {
 					if ustrregexm(`"`legend'"', "order\(") == 0 {
-						twoway `graphs', `options' legend(`legend' order(`legendlab'))  `blabeltext'
-					}
+							twoway `graphs', `options' legend(`legend' order(`legendlab'))  `blabeltext' 
+						}
 					if ustrregexm(`"`legend'"', "order\(") == 1 {
-						twoway `graphs', `options' legend(`legend')  `blabeltext'
-					}
+							twoway `graphs', `options' legend(`legend')  `blabeltext' 
+						}
 					if ustrregexm(`"`legend'"', "label\(") == 1 {
-						noisily: dis as text `"(note:  legend(label()) option is not applied; use legend(order(# "text")) instead)"'
+						noisily: dis as text `"note:  legend(label()) option is not applied; use legend(order(# "text")) instead"'
 					}	
 				}
 			restore
         }
+		
 
 end
 

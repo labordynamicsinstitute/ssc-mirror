@@ -37,7 +37,7 @@ end
 program define example_two_one
 	preserve
 	di _n
-	use "https://github.com/VNyaga/Metadta/blob/master/ascus.dta?raw=true", clear
+	use "http://fmwww.bc.edu/repec/bocode/a/ascus.dta", clear
 	di _n
 	
 	di `". metadta tp fp fn tn test,  			///"'
@@ -68,7 +68,7 @@ end
 program define example_two_two
 	preserve
 	di _n
-	use "https://github.com/VNyaga/Metadta/blob/master/ascus.dta?raw=true", clear
+	use "http://fmwww.bc.edu/repec/bocode/a/ascus.dta", clear
 	di _n
 	
 	di `". metadta tp fp fn tn test,  			///"'
@@ -152,7 +152,7 @@ end
 program define example_five
 	preserve
 	di _n
-	use "https://github.com/VNyaga/Metadta/blob/master/pairedta.dta?raw=true", clear
+	use "http://fmwww.bc.edu/repec/bocode/p/pairedta.dta", clear
 	di _n
 	
 	di `". metadta tp1 fp1 fn1 tn1 tp2 fp2 fn2 tn2 hpv1 hpv2, ///"'
@@ -178,7 +178,7 @@ program define example_six
 
 	preserve
 	di _n
-	use "https://github.com/VNyaga/Metadta/blob/master/network.dta?raw=true", clear
+	use "http://fmwww.bc.edu/repec/bocode/n/network.dta", clear
 	di _n
 	
 	di `". metadta  tp fp fn tn test ,  ///"' 

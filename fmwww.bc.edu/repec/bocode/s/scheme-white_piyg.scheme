@@ -1,7 +1,7 @@
 * white --- Asjad Naqvi (2022)
 *
 sequence 1210
-label "white_tableau"   // auto generated
+label "white_piyg"   // auto generated
 #include s2color
 // positions and sizes
 numstyle pcycle             15

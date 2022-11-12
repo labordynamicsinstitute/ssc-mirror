@@ -323,7 +323,8 @@ if "`hgraph'"!="" {
 		loc hi = `indate'+`i'
 		loc ygraph `ygraph' _yf`hi'
 	}
-	xtline `yvar' `ygraph' if `timevar'<=`cdate' & `dgr'==1 & `sample'==1, i(`panvar') t(`timevar') xline(`indate')
+	tsline `yvar' `ygraph' if `timevar'<=`cdate' & `dgr'==1 & `sample'==1, ///
+	by(`panvar', yrescale) ttitle(`timevar') xline(`indate') tlabel(,angle(45) labsize(vsmall)) ylabel(, labsize(vsmall)) legend(size(*0.5) rowgap(*.3) cols(3))
 	qui drop `ygraph'
 }
 

@@ -1,6 +1,9 @@
-*! bimap v1.32 (19 Aug 2022)
+*! bimap v1.5 (5 Nov 2022)
 *! Asjad Naqvi (asjadnaqvi@gmail.com)
-*
+
+* v1.5  (05 Nov 2022): 3 new colors: rgb, gscale, viridis. arrow, scalebar, diagram passthrus added.
+* v1.4  (02 Oct 2022): custom cut-off points added. cut'offs can be formatted. spmap legend passthru.
+* v1.33 (29 Sep 2022): Passthru options fixed.
 * v1.32 (19 Aug 2022): Fixed a bug in variable comparisons
 * v1.31 (20 Jun 2022): Fixed a floating point error and issue with color assignments.
 * v1.3  (26 May 2022): added percent option. Color range fixes. New schemes. label fixes
@@ -26,13 +29,14 @@ version 15
  
 	syntax varlist(min=2 max=2 numeric) [if] [in] using/ , ///
 		cut(string) palette(string)  ///
-		[ count percent BOXsize(real 8) textx(string) texty(string) xscale(real 30) yscale(real 100) TEXTLABSize(real 2) TEXTSize(real 2.5) values ] ///
+		[ count percent BOXsize(real 8) textx(string) texty(string) formatx(string) formaty(string) TEXTGap(real 2) xscale(real 30) yscale(real 100) TEXTLABSize(real 2) TEXTSize(real 2.5) values ] ///
 		[ polygon(passthru) line(passthru) point(passthru) label(passthru) ] ///
 		[ ocolor(string) osize(string) ]   ///
 		[ ndocolor(string) ndsize(string) ndfcolor(string) ]   ///
 		[ title(passthru) subtitle(passthru) note(passthru) name(passthru)  ] ///
-		[ allopt graphopts(string asis) * ] 
-		
+		[ cutx(numlist min=2 max=2)  cuty(numlist min=2 max=2) SHOWLEGend  ] ///  // 1.4 updates
+		[ LEGend(passthru) legenda(passthru) LEGStyle(passthru) LEGJunction(passthru) LEGCount(passthru) LEGOrder(passthru) LEGTitle(passthru)  ] ///  // 1.4 legend controls as passthru
+		[ arrow(passthru) diagram(passthru) scalebar(passthru) ]  // 1.5
 		
 		if (substr(reverse("`using'"),1,4) != "atd.") local using "`using'.dta"  // from spmap to check for extension
 		
@@ -59,10 +63,24 @@ version 15
 		marksample touse, strok
 		gettoken var2 var1 : varlist   // var1 = x, var2 = y
 	
+	
+	// errors checks
+	
 		if "`var1'" == "`var2'" {
 			di as error "Both variables are the same. Please choose different variables."
 			exit
 		}
+	
+		if "`count'" != "" & "`percent'" != "" {
+			di as error "Please specify either {it:count} or {it:percent}. See {stata help bimap:help file}."
+			exit 
+		}	
+		
+		if "`cut'" == "custom" & "`cutx'"=="" & "`cuty'"=="" {
+			di as error "With {it:cut(custom)}, either {it:cutx(val1 val2)} or {it:cuty(val1 val2)}, or both need to be specified. See {stata help bimap:help file}."
+			exit
+		}
+		
 	
 	
 		***** Get the cuts
@@ -71,47 +89,80 @@ version 15
 qui {
 		
 	preserve	
+		keep if `touse'
 		tempvar cat_`var1' cat_`var2'
 		
 		if "`cut'" == "pctile" {
-			xtile `cat_`var1'' = `var1' if `touse', n(3)
-			xtile `cat_`var2'' = `var2' if `touse', n(3)
+			xtile `cat_`var1'' = `var1', n(3)
+			xtile `cat_`var2'' = `var2', n(3)
 		}
 		
 		if "`cut'" == "equal" {
 			
-			summ `var1'
+			summ `var1', meanonly
 			local interv = (r(max) - r(min)) / 3
 							
-				local cut0 = r(min)
-				local cut1 = `cut0' + `interv'
-				local cut2 = `cut1' + `interv'
-				local cut3 = r(max) + 1    // floating point fix
+				local cutx0 = r(min)
+				local cutx1 = `cutx0' + `interv'
+				local cutx2 = `cutx1' + `interv'
+				local cutx3 = r(max) + 1   
 			
-			egen `cat_`var1'' = cut(`var1') if `touse', at(`cut0', `cut1' , `cut2', `cut3') icodes
-
-			
-			summ `var2'
-			local interv = (r(max) - r(min)) / 3
-							
-				local cut0 = r(min)
-				local cut1 = `cut0' + `interv'
-				local cut2 = `cut1' + `interv'
-				local cut3 = r(max) + 1		// floating point fix	
-			
-			egen `cat_`var2'' = cut(`var2') if `touse', at(`cut0', `cut1' , `cut2', `cut3') icodes
-			
-			
+			egen `cat_`var1'' = cut(`var1'), at(`cutx0', `cutx1' , `cutx2', `cutx3') icodes
 			replace `cat_`var1'' = `cat_`var1'' + 1 
+			
+			summ `var2', meanonly
+			local interv = (r(max) - r(min)) / 3
+							
+				local cuty0 = r(min)
+				local cuty1 = `cuty0' + `interv'
+				local cuty2 = `cuty1' + `interv'
+				local cuty3 = r(max) + 1		// floating point fix	
+			
+			egen `cat_`var2'' = cut(`var2'), at(`cuty0', `cuty1' , `cuty2', `cuty3') icodes
 			replace `cat_`var2'' = `cat_`var2'' + 1
 		}	
 	
+		if "`cut'" == "custom" {
+			
+			if "`cutx'" != "" {
+				summ `var1', meanonly
+					local cutx0 = r(min)
+					local cutx3 = r(max)
+				
+				tokenize `cutx'
+					local cutx1 = `1'
+					local cutx2 = `2'
+					
+				egen `cat_`var1'' = cut(`var1'), at(`cutx0', `cutx1' , `cutx2', `cutx3') icodes
+				replace `cat_`var1'' = `cat_`var1'' + 1 
+			}
+			else {
+				xtile `cat_`var1'' = `var1', n(3)
+			}
 		
+		
+			if "`cuty'" != "" {
+				summ `var2', meanonly
+					local cuty0 = r(min)
+					local cuty3 = r(max)
+				
+				tokenize `cuty'
+					local cuty1 = `1'
+					local cuty2 = `2'
+				
+				egen `cat_`var2'' = cut(`var2'), at(`cuty0', `cuty1' , `cuty2', `cuty3') icodes
+				replace `cat_`var2'' = `cat_`var2'' + 1
+			}
+			else {
+				xtile `cat_`var2'' = `var2', n(3)
+			}
+		}
+		
+
 		
 		sort `cat_`var1'' `cat_`var2''
 		
 		tempvar grp_cut
-		
 		gen `grp_cut' = .
 		
 		replace `grp_cut' = 1 if `cat_`var2''==1 & `cat_`var1''==1
@@ -128,39 +179,46 @@ qui {
 	
 		***** store the cut-offs for labels	
 		
+		if "`formatx'" =="" local formatx "%5.1f"
+		if "`formaty'" =="" local formaty "%5.1f"
+		
+		
 		summ `var1' if `cat_`var1'' == 1
 		local var11 = r(max)
-		local var11 : di %05.1f `var11'
+		local var11 : di `formatx' `var11'
+		
+		if ("`cut'" == "custom" & "`cutx'" != "") local var11 : di `formatx' `cutx1'
 		
 		summ `var1' if `cat_`var1'' == 2
 		local var12 = r(max)
-		local var12 : di %05.1f `var12'
+		local var12 : di `formatx' `var12'
+		
+		if ("`cut'" == "custom" & "`cutx'" != "") local var12 : di `formatx' `cutx2'
 		
 		summ `var1' if `cat_`var1'' == 3
 		local var13 = r(max)
-		local var13 : di %05.1f `var13'
+		local var13 : di `formatx' `var13'
 		
 		summ `var2' if `cat_`var2'' == 1
 		local var21 = r(max)
-		local var21 : di %05.1f `var21'
+		local var21 : di `formaty' `var21'
+		
+		if ("`cut'" == "custom" & "`cuty'" != "") local var21 : di `formaty' `cuty1'
 		
 		summ `var2' if `cat_`var2'' == 2
 		local var22 = r(max)
-		local var22 : di %05.1f `var22'
+		local var22 : di `formaty' `var22'
+		
+		if ("`cut'" == "custom" & "`cuty'" != "") local var22 : di `formaty' `cuty2'
 		
 		summ `var2' if `cat_`var2'' == 3
 		local var23 = r(max)
-		local var23 : di %05.1f `var23'
+		local var23 : di `formaty' `var23'
 		
 		
 		// grp order: 1 = 1 1, 2 = 1 2, 3 = 1 3, 4 = 2 1, 5 = 2 2, 6 = 2 3, 7 = 3 1, 8 = 3 2, 9 = 3 3
 		
-		if "`count'" != "" & "`percent'" != "" {
-			di as error "Please specify either {it:count} or {it:percent} option."
-			exit 
-		}
-		
-		
+	
 		if "`count'" != "" {			
 
 			forval i = 1/3 {
@@ -191,7 +249,7 @@ qui {
 		// from spmap
    
 		if "`palette'" != "" {
-			local LIST "pinkgreen bluered greenblue purpleyellow yellowblue orangeblue brew1 brew2 brew3 census"
+			local LIST "pinkgreen bluered greenblue purpleyellow yellowblue orangeblue brew1 brew2 brew3 census rgb viridis gscale"
 			local LEN = length("`palette'")
 			local check = 0
 			foreach z of local LIST { 
@@ -201,12 +259,13 @@ qui {
 			}
 			
 			if !`check' {
-				di in yellow "Wrong palette specified. The supported palettes are {ul:pinkgreen}, {ul:bluered}, {ul:greenblue}, {ul:purpleyellow}, {ul:yellowblue}, {ul:orangeblue}, {ul:brew1}, {ul:brew2}, {ul:brew3}, {ul:census}."
+				di in yellow "Wrong palette specified. The supported palettes are {it:pinkgreen}, {it:bluered}, {it:greenblue}, {it:purpleyellow}, {it:yellowblue}, {it:orangeblue}, {it:brew1}, {it:brew2}, {it:brew3}, {it:census}, {it:rgb}, {it:viridis}, {it:gscale}."
+				di in yellow "See {stata help bimap:help file}."
 				exit 198
 			}
 		}
 
-		** bottom left to bottom top, bottom middle to top middle, bottom right to top right
+		** bottom left > top left, bottom middle > top middle, bottom right > top right
 
 		if "`palette'" == "pinkgreen" {
 			local color #e8e8e8 #dfb0d6 #be64ac #ace4e4 #a5add3 #8c62aa #5ac8c8 #5698b9 #3b4994
@@ -248,7 +307,20 @@ qui {
 			local color #fffdef #e6f1df #d2e4f6 #fef3a9 #bedebc #a1c8ea #efd100 #4eb87b #007fc4
 		}
 		
-	
+		if "`palette'" == "rgb" {   
+			local color #F5F402 #8EBA13 #2A8F25 #FE870D #B8A5D2 #3092FA #FF4343 #D052EB #5148BA
+		}
+
+		
+		if "`palette'" == "gscale" {   
+			local color #e5e5e5 #d4d4d4 #bbbbbb #a2a2a2 #8a8a8a #727272 #5b5b5b #444444 #262626
+		}				
+		
+		if "`palette'" == "viridis" {   
+			local color #FDE724 #D2E11B #A5DA35 #35B778 #29788E #38568B #462F7C #48196B #440154
+		}
+		
+		
 		if "`polygon'" == "" {
 			local polyadd 
 		}
@@ -265,18 +337,21 @@ qui {
 		
 		local ndf = cond("`ndfcolor'" == "", "gs8", "`ndfcolor'")
 		
+		local leg = cond("`showlegend'"=="", "legend(off)", "`legend'")
+		
 		// finally the map!
 		
 		colorpalette `color', nograph 
 		local colors `r(p)'
 
 		spmap `grp_cut' using "`using'", ///
-			id(_ID) clm(custom) clb(0 1 2 3 4 5 6 7 8 9)  fcolor("`colors'") ///
-			ocolor(`lc' ..) osize(`lw' ..) ///	
-			ndocolor(`ndo' ..) ndsize(`lw' ..) ndfcolor(`ndf' ..)  ///
-			`polygon' `polyline' `point' ///
-			legend(off)  ///
-			name(_map, replace) nodraw
+			id(_ID) clm(custom) clb(0 1 2 3 4 5 6 7 8 9) fcolor("`colors'") ///
+				ocolor(`lc' ..) osize(`lw' ..) ///	
+				ndocolor(`ndo' ..) ndsize(`lw' ..) ndfcolor(`ndf' ..)  ///
+				`polygon' `line' `point' `label'  ///
+				`leg' `legstyle' `legenda' `legendstyle' `legjunction' `legcount' `legorder' `legtitle'  ///  // v1.4 legend passthrus
+				`arrow' `diagram' `scalebar' ///  // v1.5 passthrus
+					name(_map, replace) nodraw
 	
 
 	
@@ -404,7 +479,7 @@ qui {
 		foreach x of local xlvl {
 			foreach y of local ylvl {
 				
-				if (`x'==3 & `y'==3)  {    // | (`x'==3 & `y'==2)  | (`x'==2 & `y'==3)
+				if (`x'==3 & `y'==3)  {    
 					local boxes `boxes' (scatter y x if x==`x' & y==`y', mlab("`marksym'") mlabpos(0) mlabc(gs13) msymbol(square) msize(`boxsize') mc("`color`x'`y''")) ///
 					
 				}					
@@ -431,8 +506,8 @@ qui {
 			`boxes' ///
 			(pcarrow spike1_y1 spike1_x1 spike1_y2 spike1_x2, lcolor(gs6) mcolor(gs6) msize(0.8) ) ///
 			(pcarrow spike2_y1 spike2_x1 spike2_y2 spike2_x2, lcolor(gs6) mcolor(gs6) msize(0.8) ) ///
-			(scatter laby labx in 1, mcolor(none) mlab(labn) mlabsize(`textsize') mlabpos(6))  ///
-			(scatter laby labx in 2, mcolor(none) mlab(labn) mlabsize(`textsize') mlabpos(9) mlabgap(3.5) mlabangle(90))  ///
+			(scatter laby labx in 1, mcolor(none) mlab(labn) mlabsize(`textsize') mlabpos(6) mlabgap(`textgap')				 )  ///
+			(scatter laby labx in 2, mcolor(none) mlab(labn) mlabsize(`textsize') mlabpos(9) mlabgap(`textgap') mlabangle(90))  ///
 			`xvals' ///
 			`yvals' ///
 			, ///
@@ -443,8 +518,8 @@ qui {
 				xsize(1) ysize(1) ///
 				fxsize(`xscale') fysize(`yscale') ///
 				legend(off)		///
-					ytitle("`laby'") 	xtitle("`labx'") ///
-					name(_legend, replace)  nodraw   
+				ytitle("`laby'") xtitle("`labx'") ///
+				name(_legend, replace)  nodraw   
 
 			
 		restore			

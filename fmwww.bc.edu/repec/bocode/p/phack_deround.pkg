@@ -1,0 +1,27 @@
+d 'PHACK_DEROUND': module to deround coefficients and standard errors for meta-analysis
+d
+d  phack_deround generates 4 variables useful for meta-analysis. To
+d do this, the command accepts the coefficients and standard errors
+d of a meta-analysis dataset (one coefficient and one standard
+d error per observation). The command will then generate (1) the
+d standard error's significand and generate (2) a variable which
+d identifies the observations that should be kept according to
+d Kranz and Putz (2022). The command will also apply the derounding
+d applied in Brodeur et al. (2020) (which assumes that the
+d missing-from-publication coefficient and standard error decimals
+d are distributed uniformly) and generate (3) a smoothed
+d coefficient and (4) a smoothed standard error value. 
+d
+d KW: meta-analysis
+d KW: precision
+d KW: p-hacking 
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20221111
+d
+d Author: Nikolai Cook, University of Ottawa
+d Support: email nikolaimcook@@gmail.com
+d
+f phack_deround.ado
+f phack_deround.sthlp
