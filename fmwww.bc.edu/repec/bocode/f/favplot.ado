@@ -1,3 +1,4 @@
+*! 1.1.0 NJC 12nov2022
 *! 1.1.0 NJC 27apr2020
 *! 1.0.0 NJC 30apr2011 
 *! avplot version 3.5.0  17jun2009
@@ -62,7 +63,7 @@ program define favplot, rclass sort
 
 			/* determine if v in original varlist	*/
 	if "`e(depvar)'"=="`v'" { 
-		di in red "cannot include dependent variable"
+		di in red "cannot include outcome or response variable"
 		exit 398
 	}
 	local lhs "`e(depvar)'"
@@ -201,6 +202,7 @@ program define favplot, rclass sort
 	version 8: graph twoway		///
 	(scatter `resid' `evx'		///
 		if `touse',		///
+		ms(oh)                  /// default 12nov2022 
 		ytitle(`"`yttl'"')	///
 		xtitle(`"`xttl'"')	///
 		title(`"`vtitle'"', size(medium)) `vartitle' /// 	                
@@ -214,4 +216,4 @@ program define favplot, rclass sort
 	)				///
 	|| `plot' || `addplot'		///
 	// blank
-end 
+end

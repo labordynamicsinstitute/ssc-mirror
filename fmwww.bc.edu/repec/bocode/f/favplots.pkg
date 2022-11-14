@@ -16,12 +16,12 @@ d KW: added variable plots
 d
 d Requires: Stata version 9
 d
-d Distribution-Date: 20200428
+d Distribution-Date: 20221113
 d
 d Author: Nicholas J. Cox, Durham University
 d Support: email N.J.Cox@@durham.ac.uk
 d
 f favplots.ado
-f favplots.hlp
+f favplots.sthlp
 f favplot.ado
-f favplot.hlp
+f favplot.sthlp

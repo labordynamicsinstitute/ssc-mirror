@@ -1,12 +1,12 @@
 *uirt.ado 
-*ver 2.2
-*2022.02.22
+*ver 2.2.1
+*2022.11.13
 *everythingthatcounts@gmail.com
 
 capture prog drop uirt
 program define uirt, eclass
 version 10
-syntax [varlist] [if] [in] [, GRoup(str asis)  pcm(varlist) gpcm(varlist) GUEssing(str) chi2w(str) sx2(str) icc(str asis) esf(str asis) inf(str asis) PRiors(str) THeta(str) fix(str) init(str) ERRors(str) TRace(numlist integer max=1 >=0 <=2) nip(numlist integer max=1 >=2 <=195) nit(numlist integer max=1 >=0) NINrf(numlist integer max=1 >=0) crit_ll(numlist max=1 >0 <1) crit_par(numlist max=1 >0 <1) NOTable NOHeader SAVingname(namelist max=1)]
+syntax [varlist] [if] [in] [, GRoup(str asis)  pcm(varlist) gpcm(varlist) GUEssing(str) chi2w(str) sx2(str) icc(str asis) esf(str asis) inf(str asis) PRiors(str) THeta(str) fix(str) init(str) ERRors(str) TRace(numlist integer max=1 >=0 <=2) nip(numlist integer max=1 >=2 <=195) nit(numlist integer max=1 >=0) NINrf(numlist integer max=1 >=0) crit_ll(numlist max=1 >0 <1) crit_par(numlist max=1 >0 <1) NOTable NOHeader SAVingname(namelist max=1) ANegative]
 
 	
 
@@ -48,6 +48,14 @@ syntax [varlist] [if] [in] [, GRoup(str asis)  pcm(varlist) gpcm(varlist) GUEssi
 			exit 198
 		}
 		
+
+*************************************************		
+		if("`anegative'"==""){
+			local check_a = 1
+		}
+		else{
+			local check_a = 0
+		}
 		
 *************************************************
 		if(strlen("`fix'")){
@@ -104,7 +112,7 @@ syntax [varlist] [if] [in] [, GRoup(str asis)  pcm(varlist) gpcm(varlist) GUEssi
 		else{
 			local check_miss_fix=0
 		}
-		m: check_matrices("`fix_imatrix'","`fix_cmatrix'","`fix_dmatrix'",.,`check_miss_fix')
+		m: check_matrices("`fix_imatrix'","`fix_cmatrix'","`fix_dmatrix'",.,`check_miss_fix', `check_a')
 
 *******************************************************
 		if(strlen("`errors'")==0){
@@ -185,7 +193,7 @@ syntax [varlist] [if] [in] [, GRoup(str asis)  pcm(varlist) gpcm(varlist) GUEssi
 			local check_miss_init=0
 		}
 		
-		m: check_matrices("`init_imatrix'","`fix_catimatrix'","`init_dmatrix'",.,`check_miss_init')
+		m: check_matrices("`init_imatrix'","`fix_catimatrix'","`init_dmatrix'",.,`check_miss_init', `check_a')
 					
 *************************************************
 		if(strlen("`theta'")){
@@ -1036,10 +1044,10 @@ syntax [varlist] [if] [in] [, GRoup(str asis)  pcm(varlist) gpcm(varlist) GUEssi
 		}
 		
 						
-		m: uirt( "`touse'", "`items'", "`group'", `reference', `estimate_dist', `upd_quad_betw_em', "`errors'",stored_V, pcmlist, gpcmlist, guesslist, `guessing_attempts',`guessing_lrcrit', diflist,`add_theta', eap_names, "`theta_suffix'", `theta_nip', theta_scale, theta_notes, "`savingname'", "`fix_imatrix'", "`init_imatrix'", "`fix_cmatrix'", "`init_dmatrix'", "`fix_dmatrix'", `icc_cleargraphs',`icc_obs', icclist, chi2wlist, chi2w_control, sx2list, sx2_min_freq,`trace',`nip',`nit', `ninrf', `pv', "`pvreg'", `crit_ll', `crit_par', `icc_bins', `icc_pvbin', "`icc_format'",st_local("icc_tw"),icc_colours, icc_prefix_suffix, "`dif_format'",st_local("dif_tw"),dif_colours,`dif_cleargraphs', a_normal_prior, b_normal_prior, c_beta_prior, priorslist,esflist, `esf_bins', "`esf_format'",st_local("esf_tw"),esf_colour, esf_prefix_suffix, `esf_cleargraphs',`esf_obs', `esf_mode', inflist,`inf_mode', st_local("inf_tw"), `inf_ifgr' )
+		m: uirt( "`touse'", "`items'", "`group'", `reference', `estimate_dist', `upd_quad_betw_em', "`errors'",stored_V, pcmlist, gpcmlist, guesslist, `guessing_attempts',`guessing_lrcrit', diflist,`add_theta', eap_names, "`theta_suffix'", `theta_nip', theta_scale, theta_notes, "`savingname'", "`fix_imatrix'", "`init_imatrix'", "`fix_cmatrix'", "`init_dmatrix'", "`fix_dmatrix'", `icc_cleargraphs',`icc_obs', icclist, chi2wlist, chi2w_control, sx2list, sx2_min_freq,`trace',`nip',`nit', `ninrf', `pv', "`pvreg'", `crit_ll', `crit_par', `icc_bins', `icc_pvbin', "`icc_format'",st_local("icc_tw"),icc_colours, icc_prefix_suffix, "`dif_format'",st_local("dif_tw"),dif_colours,`dif_cleargraphs', a_normal_prior, b_normal_prior, c_beta_prior, priorslist,esflist, `esf_bins', "`esf_format'",st_local("esf_tw"),esf_colour, esf_prefix_suffix, `esf_cleargraphs',`esf_obs', `esf_mode', inflist,`inf_mode', st_local("inf_tw"), `inf_ifgr', `check_a' )
 		
 		m: stata("ereturn local cmdline "+char(34)+eret_cmdline+char(34))
-		m: eret_cmdstrip=strtrim("uirt `e(depvar)' "+eret_if+" "+eret_in+","+etet_grstrip+" nip(`nip') ninrf(`ninrf') crit_par(`crit_par') crit_ll(`crit_ll') "+eret_priorstrip)
+		m: eret_cmdstrip=strtrim("uirt `e(depvar)' "+eret_if+" "+eret_in+","+etet_grstrip+" nip(`nip') ninrf(`ninrf') crit_par(`crit_par') crit_ll(`crit_ll') `anegative' "+eret_priorstrip)
 		m: stata("ereturn local cmdstrip "+char(34)+eret_cmdstrip+char(34))
 		
 *clean up mata objects
@@ -1729,7 +1737,7 @@ mata:
 	}
 
 // THE UIRT
-	void uirt(string scalar touse, string scalar items, string scalar group, real scalar ref, real scalar estimate_dist, real scalar upd_quad_betw_em, string scalar errors, real matrix stored_V, string matrix pcmlist,string matrix gpcmlist, string matrix guesslist, real scalar guessing_attempts, real scalar guessing_lrcrit, string matrix diflist, real scalar add_theta, string matrix eap_names, string scalar theta_suffix, real scalar theta_nip, real matrix theta_scale, string scalar theta_notes, string scalar savingname , string scalar fiximatrix, string scalar initimatrix, string scalar catimatrix, string scalar initdmatrix, string scalar fixdmatrix, real scalar icc_cleargraphs, real scalar icc_obs, string matrix icclist, string matrix fitlist, real matrix chi2w_control, string matrix sx2_fitlist, real scalar sx2_min_freq, real scalar trace, real scalar nip,real scalar nit,real scalar nnirf,real scalar pv,string scalar pvreg, real scalar crit_ll, real scalar crit_par, real scalar icc_bins, real scalar icc_pvbin,string scalar icc_format, string scalar icc_tw, string matrix icc_colours, string matrix icc_prefix_suffix, string scalar dif_format, string scalar dif_tw, string matrix dif_colours, real scalar dif_cleargraphs, real matrix a_normal_prior, real matrix b_normal_prior, real matrix c_beta_prior, string matrix priorslist, string matrix esflist, real scalar esf_bins, string scalar esf_format, string scalar esf_tw, string matrix esf_colour, string matrix esf_prefix_suffix, real scalar esf_cleargraphs, real scalar esf_obs, real scalar esf_mode, string matrix inflist, real scalar inf_mode, string scalar inf_tw, inf_ifgr ){
+	void uirt(string scalar touse, string scalar items, string scalar group, real scalar ref, real scalar estimate_dist, real scalar upd_quad_betw_em, string scalar errors, real matrix stored_V, string matrix pcmlist,string matrix gpcmlist, string matrix guesslist, real scalar guessing_attempts, real scalar guessing_lrcrit, string matrix diflist, real scalar add_theta, string matrix eap_names, string scalar theta_suffix, real scalar theta_nip, real matrix theta_scale, string scalar theta_notes, string scalar savingname , string scalar fiximatrix, string scalar initimatrix, string scalar catimatrix, string scalar initdmatrix, string scalar fixdmatrix, real scalar icc_cleargraphs, real scalar icc_obs, string matrix icclist, string matrix fitlist, real matrix chi2w_control, string matrix sx2_fitlist, real scalar sx2_min_freq, real scalar trace, real scalar nip,real scalar nit,real scalar nnirf,real scalar pv,string scalar pvreg, real scalar crit_ll, real scalar crit_par, real scalar icc_bins, real scalar icc_pvbin,string scalar icc_format, string scalar icc_tw, string matrix icc_colours, string matrix icc_prefix_suffix, string scalar dif_format, string scalar dif_tw, string matrix dif_colours, real scalar dif_cleargraphs, real matrix a_normal_prior, real matrix b_normal_prior, real matrix c_beta_prior, string matrix priorslist, string matrix esflist, real scalar esf_bins, string scalar esf_format, string scalar esf_tw, string matrix esf_colour, string matrix esf_prefix_suffix, real scalar esf_cleargraphs, real scalar esf_obs, real scalar esf_mode, string matrix inflist, real scalar inf_mode, string scalar inf_tw, inf_ifgr ,real scalar check_a){
 	
 		N_iter		=nit
 		N_iter_NRF	=nnirf
@@ -1752,7 +1760,7 @@ mata:
 			cats_and_models(Q,guesslist,pcmlist,gpcmlist)
 			
 			if(rows(priorslist)){
-				add_priors(selectQ(Q,priorslist), a_normal_prior, b_normal_prior, c_beta_prior)
+				add_priors(selectQ(Q,priorslist), a_normal_prior, b_normal_prior, c_beta_prior, check_a)
 			}
 				
 			data_pointers	= return_data_pointers(Q,G)
@@ -1765,7 +1773,7 @@ mata:
 			if( sum(Q.get(Q.n_par,.):!=Q.get(Q.n_par_model,.))>0 | sum(Q.get(Q.init_fail,.)) ){
 			
 				if( sum(Q.get(Q.n_par,.):!=Q.get(Q.n_par_model,.))>0){
-					starting_values_logistic(Q, G, Theta_id, Theta_dup, point_Uigc, "" )
+					starting_values_logistic(Q, G, Theta_id, Theta_dup, point_Uigc, "" ,check_a)
 				}
 				
 				if( sum(Q.get(Q.init_fail,.)) ){
@@ -1834,7 +1842,7 @@ mata:
 		
 		
 // THE EM
-			em_results				= em(Q, G, estimate_dist, N_iter, trace, errors, crit_ll, guessing_attempts, guessing_lrcrit, eap_names, theta_nip, theta_scale, theta_notes, Theta_id, Theta_dup, savingname, point_Uigc, point_Fg  , upd_quad_betw_em, N_iter_NRF, crit_par)
+			em_results				= em(Q, G, estimate_dist, N_iter, trace, errors, crit_ll, guessing_attempts, guessing_lrcrit, eap_names, theta_nip, theta_scale, theta_notes, Theta_id, Theta_dup, savingname, point_Uigc, point_Fg  , upd_quad_betw_em, N_iter_NRF, crit_par, check_a)
 			logL					= *em_results[1]
 			long_EMhistory_matrix	= *em_results[2]
 			if_em_converged			= *em_results[3]
@@ -3546,7 +3554,7 @@ mata:
 		}
 	}
 	
-	pointer colvector em(_Q, _G, real scalar estimate_dist, real scalar N_iter, real scalar trace, string scalar errors, real scalar crit_ll, real scalar guessing_attempts, real scalar guessing_lrcrit,string matrix eap_names, real scalar theta_nip, real matrix theta_scale, string scalar theta_notes, real colvector Theta_id, real colvector Theta_dup, string scalar savingname, pointer matrix point_Uigc, pointer matrix point_Fg , real scalar upd_quad_betw_em, real scalar N_iter_NRF, real scalar crit_par){
+	pointer colvector em(_Q, _G, real scalar estimate_dist, real scalar N_iter, real scalar trace, string scalar errors, real scalar crit_ll, real scalar guessing_attempts, real scalar guessing_lrcrit,string matrix eap_names, real scalar theta_nip, real matrix theta_scale, string scalar theta_notes, real colvector Theta_id, real colvector Theta_dup, string scalar savingname, pointer matrix point_Uigc, pointer matrix point_Fg , real scalar upd_quad_betw_em, real scalar N_iter_NRF, real scalar crit_par, real scalar check_a){
 
 		class ITEMS scalar Q
 		Q=_Q
@@ -3685,7 +3693,7 @@ mata:
 					
 					Q.put(Q.pars,haywire_indexes,Q.get(Q.fix,haywire_indexes))
 					
-					starting_values_logistic(Q, G, Theta_id, Theta_dup, point_Uigc, X_var )
+					starting_values_logistic(Q, G, Theta_id, Theta_dup, point_Uigc, X_var, check_a )
 					
 					if(sum(Q.get(Q.init_fail,.))){
 							
@@ -4767,7 +4775,7 @@ mata:
 
 	}
 			
-	void starting_values_logistic(_Q, _G,   real colvector Theta_id, real colvector Theta_dup , pointer matrix point_Uigc, string scalar X_var ){
+	void starting_values_logistic(_Q, _G,   real colvector Theta_id, real colvector Theta_dup , pointer matrix point_Uigc, string scalar X_var , real scalar check_a){
 		
 	
 		class ITEMS scalar Q
@@ -4849,11 +4857,11 @@ mata:
 							}
 						}
 						
-						if(pars_curr[1]>0){	
-							Q.put(Q.pars,i,pars_curr)
+						if(pars_curr[1]<0 & check_a){	
+							Q.put(Q.init_fail,i,2)
 						}
 						else{
-							Q.put(Q.init_fail,i,2)
+							Q.put(Q.pars,i,pars_curr)
 						}
 					}
 					else{
@@ -4898,11 +4906,11 @@ mata:
 							}
 						}
 
-						if(pars_curr[1]>0){	
-							Q.put(Q.pars,i,pars_curr)
+						if(pars_curr[1]<0 & check_a){	
+							Q.put(Q.init_fail,i,2)
 						}
 						else{
-							Q.put(Q.init_fail,i,2)
+							Q.put(Q.pars,i,pars_curr)
 						}
 					}
 					else{
@@ -7074,7 +7082,7 @@ mata:
 	}
 	
 	
-	void add_priors(_Q, real matrix a_normal_prior, real matrix b_normal_prior, real matrix c_beta_prior ){
+	void add_priors(_Q, real matrix a_normal_prior, real matrix b_normal_prior, real matrix c_beta_prior ,real scalar check_a){
 		
 		if((cols(a_normal_prior)==2)|(cols(b_normal_prior)==2)|(cols(c_beta_prior)==2)){
 			
@@ -7088,7 +7096,7 @@ mata:
 				if(rows(viable_for_priors)){
 				
 					if(cols(a_normal_prior)==2){
-						if(a_normal_prior[1]<=0){
+						if(a_normal_prior[1]<=0 & check_a){
 							_error("mean of normal prior for the discrimination parameter has to be positive")
 						}
 						if(a_normal_prior[2]<=0){
@@ -7219,7 +7227,7 @@ mata:
 		return(cloneG)
 	}
 
-	void check_matrices(string scalar ipar, string scalar icats, string scalar grpar, real vector checklist, real scalar check_miss){
+	void check_matrices(string scalar ipar, string scalar icats, string scalar grpar, real vector checklist, real scalar check_miss, real scalar check_a){
 
 		
 		if(checklist==.){
@@ -7286,13 +7294,15 @@ mata:
 				_error("duplicate item names are not allowed")
 			}
 
-			// if discrimination values are nonnegative
-			row_errors=(ipar_val[.,1]:<=0)
-			if(sum(row_errors)){
-				stata("di as err "+char(34)+"{p 0 2}"+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have incorrect discrimination parameter:{p_end}"+char(34))
-				select_err=select(ipar_rown,row_errors),select(strofreal(ipar_val[.,1]),row_errors)
-				di_matrix_as_err(select_err,("item","model","a"))
-				_error("discrimination has to be positive")
+			// if discrimination values are nonnegative (not performed if ANegative was called)
+			if(check_a){
+				row_errors=(ipar_val[.,1]:<=0)
+				if(sum(row_errors)){
+					stata("di as err "+char(34)+"{p 0 2}"+ strofreal(sum(row_errors)) + " items in item parameter matrix ("+ipar+") have incorrect discrimination parameter:{p_end}"+char(34))
+					select_err=select(ipar_rown,row_errors),select(strofreal(ipar_val[.,1]),row_errors)
+					di_matrix_as_err(select_err,("item","model","a"))
+					_error("discrimination has to be positive")
+				}
 			}
 			
 			// if discrimination values are nonmissing

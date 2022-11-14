@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.2 2022.02.22}{...}
+{* *! version 2.2.1 2022.11.13}{...}
 {viewerjumpto "Syntax" "uirt##syntax"}{...}
 {viewerjumpto "Postestimation commands" "uirt##postestimation"}{...}
 {viewerjumpto "Description" "uirt##description"}{...}
@@ -101,6 +101,7 @@
 {synopt:{opt nit(#)}} maximum number of iterations of EM algorithm; default: nit(100) {p_end}
 {synopt:{opt crit_ll(#)}} stopping rule - relative change in logL between EM iterations; default: crit_ll(1e-9) {p_end}
 {synopt:{opt crit_par(#)}} stopping rule - maximum absolute change in parameter values between EM iterations; default: crit_par(1e-4) {p_end}
+{synopt:{opt an:egative}} allow items with negative discrimination {p_end}
 {synopt:{opt err:ors(str)}} method for computation of standard errors (cdm|rem|sem|cp); default: err(cdm){p_end}
 {synopt:{opt pr:iors(varlist [,opts])}} dichotomous items to estimate with priors {synoptset 25 tabbed}{p_end}
 {synopt:{it:opts:}}{p_end}
@@ -149,7 +150,7 @@ LR test is used for DIF testing and model-based P-DIF effect size measures are p
 Generating PVs is performed by adapting a MCMC method
 developed for IRT models by Patz & Junker (1999).
 Observed response proportions are plotted against the item characteristic curves to allow for detailed graphical item fit analysis.
-Two item-fit statistics are available: S-X2 by Orlando and Thissen (2000) and chi2W developed by the author (Kondratek, 2020).
+Two item-fit statistics are available: S-X2 by Orlando and Thissen (2000) and chi2W developed by the author (Kondratek, 2022).
 
 
 {marker options}{...}
@@ -158,7 +159,7 @@ Two item-fit statistics are available: S-X2 by Orlando and Thissen (2000) and ch
 {dlgtab:Models}
 
 {pstd}
-By default {cmd:uirt} will fit the 2-Parameter Logistic Model to all items that are detected to be dichotomous,
+By default, {cmd:uirt} will fit the 2-Parameter Logistic Model to all items that are detected to be dichotomous,
 and the Samejima's Graded Response Model to all items that are detected to have more than two responses.
 Options {opt pcm()}, {opt gpcm()}, {opt guessing()} are used if one wishes to use other models. Hybrid models are allowed.
 
@@ -238,7 +239,7 @@ Using this option requires fixing parameters of at least one item in order to id
 
 {pmore}
 {opt slow} is a sub-option of {opt gr:oup()}; it suppresses a speed-up of EM for the multi-group estimation.
-By default the GH quadrature in {cmd:uirt} is updated within the EM cycle, just after iteration of group parameters is done.
+By default, the GH quadrature in {cmd:uirt} is updated within the EM cycle, just after iteration of group parameters is done.
 This speeds-up the convergence of the algorithm but, in some cases, may lead to log-likelihood increase. 
 Try using this option if you encounter such a problem in a multi-group model.
 
@@ -307,7 +308,7 @@ Default behavior is not to add any suffix.
 
 {pmore}
 {opt cl:eargraphs} is a sub-option of {opt icc()};
-it is used to suppress the dafault behaviour of storing all ICC graphs in Stata memory. 
+it is used to suppress the default behavior of storing all ICC graphs in Stata memory. 
 After specifying this, all graphs are still saved in the current working directory, but only the last graph is active in Stata. 
 
 
@@ -324,7 +325,7 @@ When chi2w(*) is typed the chi2W item-fit statistic is computed for all items de
 chi2W is a Wald-type test statistic that compares the observed and expected item mean scores over a set of ability bins.
 The observed and expected scores are weighted means with weights being {it: a posteriori} density of person's ability within the bin 
 - likewise as in the approach used to compute observed proportions in ICC plots.
-Properties of chi2W have been examined for dichotomous items, Type I error rate was close to nominal and it exceeded S-X2 in statistical power (Kondratek, 2020).
+Properties of chi2W have been examined for dichotomous items, Type I error rate was close to nominal and it exceeded S-X2 in statistical power (Kondratek, 2022).
 Behavior of chi2W in case of polytomous items, as for the time of this {cmd:uirt} release, has not been researched. 
 The results are stored in {cmd:e(item_fit_chi2W)}.
 {opt chi2w()} comes with several sub-options:
@@ -426,7 +427,7 @@ however {opt suf:fix()} will still apply to the PVs.
 {pmore}
 {opt sc:ale(#,#)} is a sub-option of {opt th:eta()};
 it is used to change the scale of the latent trait for variables that are added to the dataset.
-By default the EAP and the PVs are obtained accordingly to the group parameters that are reported in {cmd:e(group_par)}. 
+By default, the EAP and the PVs are obtained accordingly to the group parameters that are reported in {cmd:e(group_par)}. 
 Specifying {opt sc:ale(m,sd)} will rescale the latent trait so that the mean and the standard deviation in reference group are {it:m} and {it:sd}.
 Note that this will not influence the parameters reported in {cmd:e(item_par)} and {cmd:e(group_par)} 
 - only the variables added with {opt theta()} are affected.
@@ -472,7 +473,7 @@ it is used to fix item parameters on values from {cmd:uirt} run that is stored i
 {pmore}
 {opt used:ist} is a sub-option of {opt fix()};
 it is used to fix group parameters on estimates from previous {cmd:uirt} run when calling {opt prev} or {opt from()} sub-options. 
-(Default behaviour of {opt prev} and {opt from()} is to fix only the item parameters.)
+(Default behavior of {opt prev} and {opt from()} is to fix only the item parameters.)
 
 {pmore} 
 {opt i:matrix(name)} is a sub-option of {opt fix()};
@@ -512,7 +513,7 @@ It works exactly like {opt prev}.
 {pmore}
 {opt used:ist} is a sub-option of {opt init()};
 it is used to start group parameters with estimates from previous {cmd:uirt} run when calling {opt prev} or {opt from()} sub-options. 
-(Default behaviour of {opt prev} and {opt from()} is to pass starting values only for the item parameters.)
+(Default behavior of {opt prev} and {opt from()} is to pass starting values only for the item parameters.)
 
 {pmore} 
 {opt i:matrix(name)} is a sub-option of {opt init()};
@@ -546,6 +547,12 @@ Default value is 20. This option is rarely used.
 {phang}
 {opt crit_ll(#)} sets a stopping rule - relative change in log-likelihood between EM iterations.
 Default value is 1e-9.
+
+{phang}
+{opt an:egative} allows to keep items with negative discrimination in the model. 
+Default behavior of {cmd:uirt} is to drop items whenever their discrimination parameter becomes negative. 
+The final model is fit with all such items discarded.
+If you want to keep such items in the model and estimate their parameters, you have to use the {opt an:egative} option.
 
 {phang}
 {opt crit_par(#)} sets a stopping rule - maximum absolute change in parameter values between EM iterations.
@@ -671,6 +678,11 @@ also plot ICC for that item{p_end}
 Bartosz Kondratek
 everythingthatcounts@gmail.com
 
+{title:Suggested citation}
+
+{phang}
+Kondratek, B. (2022). uirt: A command for unidimensional IRT modeling. {it:The Stata Journal}, 22(2), 243{c -}268. https://doi.org/10.1177/1536867X221106368
+
 {title:Acknowledgement}
 
 {phang}
@@ -695,42 +707,49 @@ National Science Centre research grant number 2015/17/N/HS6/02965.
 {title:References}
 
 {phang}
-Bock, R. D., Aitkin, M. 1981.
+Bock, R. D., Aitkin, M. (1981).
 Marginal Maximum Likelihood Estimation of Item Parameters: Application of an EM algorithm.
 {it:Psychometrika}, 46, 443{c -}459; 47, 369 (Errata)
 
 {phang}
-Dempster, A. P., Laird, N. M., Rubin, D. B. 1977. 
+Dempster, A. P., Laird, N. M., Rubin, D. B. (1977). 
 Maximum Likelihood from Incomplete Data via the EM Algorithm.
 {it:Journal of the Royal Statistical Society}, Series B 39(1), 1{c -}38.
 
 {phang}
-Jamshidian, M., Jennrich, R.I. 2000.
+Jamshidian, M., Jennrich, R.I. (2000).
 Standard Errors for EM Estimation. 
 {it:Journal of the Royal Statistical Society}, Series B, 62, 257{c -}270.
 
 {phang}
-Kondratek, B., 2020.
-{it:Item-Fit Statistic Based on Posterior Probabilities of Membership in Ability Groups.}
-Manuscript submitted for publication.
+Kondratek, B. (2022).
+uirt: A command for unidimensional IRT modeling.
+{it:The Stata Journal}, 22(2), 243{c -}268.
+https://doi.org/10.1177/1536867X221106368
 
 {phang}
-Louis, T. A. 1982.
+Kondratek, B. (2022).
+Item-Fit Statistic Based on Posterior Probabilities of Membership in Ability Groups.
+{it:Applied Psychological Measurement}, 46(6), 462{c -}478.
+https://doi.org/10.1177/01466216221108061
+
+{phang}
+Louis, T. A. (1982).
 Finding the Observed Information Matrix When Using the EM Algorithm.
 {it:Journal of the Royal Statistical Society}, Series B, 44, 226{c -}233.
 
 {phang}
-Orlando, M., & Thissen, D. 2000. 
+Orlando, M., & Thissen, D. (2000). 
 Likelihood-based item-fit indices for dichotomous item response theory models.
 {it:Applied Psychological Measurement}, 24, 50{c -}64.
 
 {phang}
-Patz, R. J., Junker, B. W. 1999.
+Patz, R. J., Junker, B. W. (1999).
 A Straightforward Approach to Markov Chain Monte Carlo Methods for Item Response Models.
 {it:Journal of Educational and Behavioral Statistics}, 24(2), 146{c -}178.
 
 {phang}
-Wainer, H. 1993.
+Wainer, H. (1993).
 Model-Based Standardized Measurement of an Item's Differential Impact. 
 In: {it:Differential Item Functioning.}
 ed. Holland, P. W. & Wainer, H., 123{c -}136.

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1,0 2021.03.09}{...}
+{* *! version 1.01 2022.11.13}{...}
 {viewerjumpto "Syntax" "uirt_chi2w##syntax"}{...}
 {viewerjumpto "Description" "uirt_chi2w##description"}{...}
 {viewerjumpto "Options" "uirt_chi2w##options"}{...}
@@ -44,7 +44,7 @@ This behavior depends on whether chi2W item-fit statistics were produced by curr
 chi2W is a Wald-type test statistic that compares the observed and expected item mean scores over a set of ability bins.
 The observed and expected scores are weighted means with weights being {it: a posteriori} density of person's ability within the bin 
 - likewise as in the approach used to compute observed proportions in ICC plots provided by {cmd:uirt}.
-Properties of chi2W have been examined for dichotomous items, Type I error rate was close to nominal and it exceeded S-X2 in statistical power (Kondratek, 2020).
+Properties of chi2W have been examined for dichotomous items, Type I error rate was close to nominal and it exceeded S-X2 in statistical power (Kondratek, 2022).
 Behavior of chi2W in case of polytomous items, as for the time of this {cmd:uirt} release, has not been researched.
 
 
@@ -109,8 +109,9 @@ everythingthatcounts@gmail.com
 {title:References}
 
 {phang}
-Kondratek, B., 2020.
-{it:Item-Fit Statistic Based on Posterior Probabilities of Membership in Ability Groups.}
-Manuscript submitted for publication.
+Kondratek, B. (2022).
+Item-Fit Statistic Based on Posterior Probabilities of Membership in Ability Groups.
+{it:Applied Psychological Measurement}, 46(6), 462{c -}478.
+https://doi.org/10.1177/01466216221108061
 
 

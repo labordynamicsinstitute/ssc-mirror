@@ -1,3 +1,4 @@
+*! 1.1.0 NJC 12nov2022
 *! 1.1.0 NJC 27apr2020
 *! 1.0.0 NJC 29apr2011
 *! avplots 2.4.0  29sep2004
@@ -12,7 +13,7 @@ program define favplots
 	_isfit cons newanovaok
 	syntax [, * ]
 
-	_get_gropts , graphopts(`options') getcombine getallowed(plot addplot)
+	_get_gropts , graphopts(`options') getcombine getallowed(plot addplot name)
 	local options `"`s(graphopts)'"'
 	local gcopts `"`s(combineopts)'"'
 	if `"`s(plot)'"' != "" {
