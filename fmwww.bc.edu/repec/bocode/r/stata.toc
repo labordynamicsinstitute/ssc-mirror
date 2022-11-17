@@ -193,6 +193,7 @@ p robit module to estimate robit regression for binary outcomes
 p robjb module to compute Brys et al. (2008) robust Jarque-Bera Normality test
 p roblpr module to estimate long memory in a set of timeseries
 p robmv module for robust multivariate estimation of location and covariance 
+p robnova module to calculate two robust ANOVA statistics, Welch's and Brown-Forsythe's
 p robreg module providing robust regression estimators
 p robreg10 module providing robust regression estimators
 p robstat module to compute robust univariate statistics

@@ -43,12 +43,17 @@ There are two cases: (i) {it:covariates} are absent and (ii) {it:covariates} are
 
 {break}    - With {it:x}, the lower bound ({cmd:theta_L}) on the APR is defined by 
 
-	{cmd:theta_L} = E[{cmd:theta_L}({it:x})],
+	{cmd:theta_L} = E[{cmd:theta_L_num}({it:x})]/E[{cmd:theta_L_den}({it:x})],
 	
 {p 4 4 2}
 	where
 
-	{cmd:theta_L}({it:x}) = {Pr({it:y}=1|{it:z}=1,{it:x}) - Pr({it:y}=1|{it:z}=0,{it:x})}/{1 - Pr({it:y}=1|{it:z}=0,{it:x})}.
+	{cmd:theta_L_num}({it:x}) = Pr({it:y}=1|{it:z}=1,{it:x}) - Pr({it:y}=1|{it:z}=0,{it:x})
+	
+{p 4 4 2}
+	and
+	
+	{cmd:theta_L_den}({it:x}) = 1 - Pr({it:y}=1|{it:z}=0,{it:x}).
 	
 {p 4 4 2}
 The estimate is obtained by the following procedure.
@@ -67,8 +72,9 @@ Alternatively, if {cmd:model}("interaction") is selected,
 {p 4 4 2}
 Ater step 1, both options are followed by:
 	
-{break}    2. For each {it:x} in the estimation sample, {cmd:theta_L}({it:x}) is evaluated.
-{break}    3. The estimates of {cmd:theta_L}({it:x}) are averaged to estimate {cmd:theta_L}.
+{p 4 8 2}2. For each {it:x} in the estimation sample, {cmd:theta_L_num}({it:x}) and {cmd:theta_L_den}({it:x}) are evaluated.
+
+{p 4 8 2}3. The estimates of {cmd:theta_L_num}({it:x}) and {cmd:theta_L_den}({it:x}) are averaged to estimate {cmd:theta_L}.
 	
 {p 4 4 2}
 	When {it:covariates} are present, the standard error is missing because an analytic formula for the standard error is complex.
@@ -100,7 +106,7 @@ It is recommended to use this package{c 39}s command {bf:persuasio} instead of c
 We first call the dataset included in the package.
 
 {p 4 4 2}
-		. use GKB, clear
+		. use GKB_persuasio, clear
 
 {p 4 4 2}
 The first example estimates the lower bound on the APR without covariates.
@@ -165,7 +171,7 @@ GPL-3
 {title:References}
 
 {p 4 4 2}
-Sung Jae Jun and Sokbae Lee (2019), 
+Sung Jae Jun and Sokbae Lee (2022), 
 Identifying the Effect of Persuasion, 
 {browse "https://arxiv.org/abs/1812.02276":arXiv:1812.02276 [econ.EM]} 
 
@@ -173,7 +179,7 @@ Identifying the Effect of Persuasion,
 {title:Version}
 
 {p 4 4 2}
-0.1.0 30 January 2021
+0.2.0 13 November 2022
 
 
 

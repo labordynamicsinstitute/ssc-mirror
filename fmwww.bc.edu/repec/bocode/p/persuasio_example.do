@@ -23,9 +23,9 @@ cap log close
 set more off
 	
 log using "persuasio_example", replace	
-*************************************
-**** Examples for persuasio.ado *****
-*************************************
+************************************************
+**** Examples for Stata module "persuasio" *****
+************************************************
 
 * Data summary
 

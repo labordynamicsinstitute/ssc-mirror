@@ -71,19 +71,27 @@ _cv_ is the critical value obtained via the method of Stoye (2009).
 	
 - With _x_, the lower bound ({cmd:theta_L}) on the APR is defined by 
 
-	{cmd:theta_L} = E[{cmd:theta_L}(x)],
+	{cmd:theta_L} = E[{cmd:theta_L_num}({it:x})]/E[{cmd:theta_L_den}({it:x})],
 	
 	where
 
-	{cmd:theta_L}(x) = {Pr({it:y}=1|{it:z}=1,{it:x}) - Pr({it:y}=1|{it:z}=0,{it:x})}/{1 - Pr({it:y}=1|{it:z}=0,{it:x})},
+	{cmd:theta_L_num}({it:x}) = Pr({it:y}=1|{it:z}=1,{it:x}) - Pr({it:y}=1|{it:z}=0,{it:x})
 	
-  and the upper bound ({cmd:theta_U}) on the APR is defined by 
+	and
+	
+	{cmd:theta_L_den}({it:x}) = 1 - Pr({it:y}=1|{it:z}=0,{it:x}).
+	
+- With _x_, the upper bound ({cmd:theta_U}) on the APR is defined by 
 
-	{cmd:theta_U} = E[{cmd:theta_U}({it:x})],
+	{cmd:theta_U} = E[{cmd:theta_U_num}({it:x})]/E[{cmd:theta_U_den}({it:x})],
 	
 	where
 
-	{cmd:theta_U}({it:x}) = {E[{it:A}|{it:z}=1,{it:x}] - E[{it:B}|{it:z}=0,{it:x}]}/{1 - E[{it:B}|{it:z}=0,{it:x}]}.
+	{cmd:theta_U_num}({it:x}) = E[{it:A}|{it:z}=1,{it:x}] - E[{it:B}|{it:z}=0,{it:x}]
+	
+	and
+	
+	{cmd:theta_U_den}({it:x}) = 1 - E[{it:B}|{it:z}=0,{it:x}].
 			
 The lower bound is estimated by the following procedure:
 	
@@ -98,8 +106,9 @@ Alternatively, if {cmd:model}("interaction") is selected,
 	
 After step 1, both options are followed by:
 	
-2. For each x in the estimation sample, {cmd:theta_L}(x) is evaluated.
-3. The estimates of {cmd:theta_L}(x) are averaged to estimate {cmd:theta_L}.
+{p 4 8 2}2. For each _x_ in the estimation sample, {cmd:theta_L_num}({it:x}) and {cmd:theta_L_den}({it:x}) are evaluated.
+
+{p 4 8 2}3. The estimates of {cmd:theta_L_num}({it:x}) and {cmd:theta_L_den}({it:x}) are averaged to estimate {cmd:theta_L}.
 
 The upper bound is estimated by the following procedure:
 	
@@ -115,8 +124,9 @@ Alternatively, if {cmd:model}("interaction") is selected,
 	
 After step 1, both options are followed by:
 	
-3. For each _x_ in the estimation sample, {cmd:theta_U}({it:x}) is evaluated.
-4. The estimates of {cmd:theta_U}({it:x}) are averaged to estimate {cmd:theta_U}.
+{p 4 8 2}3. For each _x_ in the estimation sample, {cmd:theta_U_num}({it:x}) and {cmd:theta_U_den}({it:x}) are evaluated.
+
+{p 4 8 2}4. The estimates of {cmd:theta_U_num}({it:x}) and {cmd:theta_U_den}({it:x}) are averaged to estimate {cmd:theta_U}.
 
 Then, a bootstrap confidence interval for the APR is set by 
 
@@ -174,7 +184,7 @@ Examples
 
 We first call the dataset included in the package.
 
-		. use GKB, clear
+		. use GKB_persuasio, clear
 
 The first example conducts inference on the APR without covariates, using normal approximation.
 		
@@ -219,14 +229,14 @@ GPL-3
 References
 ----------
 
-Sung Jae Jun and Sokbae Lee (2019), 
+Sung Jae Jun and Sokbae Lee (2022), 
 Identifying the Effect of Persuasion, 
 [arXiv:1812.02276 [econ.EM]](https://arxiv.org/abs/1812.02276) 
 
 Version
 -------
 
-0.1.0 30 January 2021
+0.2.0 13 November 2022
 
 ***/
 capture program drop persuasio4ytz
@@ -431,7 +441,7 @@ program persuasio4ytz, eclass sortpreserve byable(recall)
 	ereturn local cilevel = (1-`alpha_level')*100
 	ereturn local inference_method "`method'"
 	
-	display "Reference: Jun and Lee (2019), arXiv:1812.02276 [econ.EM]"
+	display "Reference: Jun and Lee (2022), arXiv:1812.02276 [econ.EM]"
 	
 end
 

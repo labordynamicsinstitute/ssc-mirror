@@ -83,8 +83,9 @@ Alternatively, if {cmd:model}("interaction") is selected,
 {p 4 4 2}
 Ater step 1, both options are followed by:
 	
-{break}    2. For each x in the estimation sample, {cmd:theta_L}(x) is evaluated.
-{break}    3. The estimates of {cmd:theta_L}(x) are averaged to estimate {cmd:theta_L}.
+{p 4 8 2}2. For each {it:x} in the estimation sample, {cmd:theta_L_num}({it:x}) and {cmd:theta_L_den}({it:x}) are evaluated.
+
+{p 4 8 2}3. The estimates of {cmd:theta_L_num}({it:x}) and {cmd:theta_L_den}({it:x}) are averaged to estimate {cmd:theta_L}.
 {break}    4. A bootstrap confidence interval for the APR is set by 
 
 {p 8 8 2}		[ bs_est({it:alpha}) , 1 ],
@@ -146,7 +147,7 @@ because bootstrap standard errors can be unreasonably large in applications.
 We first call the dataset included in the package.
 
 {p 4 4 2}
-		. use GKB, clear
+		. use GKB_persuasio, clear
 
 {p 4 4 2}
 The first example conducts inference on the APR without covariates, using normal approximation.
@@ -201,7 +202,7 @@ GPL-3
 {title:References}
 
 {p 4 4 2}
-Sung Jae Jun and Sokbae Lee (2019), 
+Sung Jae Jun and Sokbae Lee (2022), 
 Identifying the Effect of Persuasion, 
 {browse "https://arxiv.org/abs/1812.02276":arXiv:1812.02276 [econ.EM]} 
 
@@ -209,7 +210,7 @@ Identifying the Effect of Persuasion,
 {title:Version}
 
 {p 4 4 2}
-0.1.0 30 January 2021
+0.2.0 13 November 2022
 
 
 

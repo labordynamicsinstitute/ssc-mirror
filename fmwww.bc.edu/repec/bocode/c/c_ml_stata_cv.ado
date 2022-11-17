@@ -1,8 +1,8 @@
 ********************************************************************************
 *! "c_ml_stata_cv"
 *! Author: Giovanni Cerulli
-*! Version: 10
-*! Date: 15 July 2022
+*! Version: 11
+*! Date: 15 November 2022
 ********************************************************************************
 
 
@@ -941,6 +941,7 @@ qui: levelsof `y' , local(ylevels) clean
 * SAVE "data_fitting"
 ********************************************************************************
 qui: save `data_fitting' , replace
+********************************************************************************
 
 di in red "=== Begin Python warnings ==========================================================================="
 
@@ -1319,13 +1320,13 @@ replace _train_index = "test" if _train_index==""
 ********************************************************************************
 * Compute validation train-ERR (Error rate)
 tempvar v_train_err 
-gen `v_train_err'= (`y'!=`prediction') if _train_index=="train"
+gen `v_train_err'= (`y'!=`prediction') if (_train_index=="train" & `y'!=. & `prediction'!=.)  
 qui sum `v_train_err' 
 ereturn scalar Train_err = r(mean)
 
 * Compute validation test-ERR (Error rate)
 tempvar v_test_err 
-gen `v_test_err'= (`y'!=`prediction') if _train_index=="test"
+gen `v_test_err'= (`y'!=`prediction') if (_train_index=="test" & `y'!=. & `prediction'!=.)
 qui sum `v_test_err' 
 ereturn scalar Test_err = r(mean)
 } // end quietly

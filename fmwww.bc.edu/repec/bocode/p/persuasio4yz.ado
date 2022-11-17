@@ -72,8 +72,9 @@ Alternatively, if {cmd:model}("interaction") is selected,
 	
 Ater step 1, both options are followed by:
 	
-2. For each x in the estimation sample, {cmd:theta_L}(x) is evaluated.
-3. The estimates of {cmd:theta_L}(x) are averaged to estimate {cmd:theta_L}.
+{p 4 8 2}2. For each _x_ in the estimation sample, {cmd:theta_L_num}({it:x}) and {cmd:theta_L_den}({it:x}) are evaluated.
+
+{p 4 8 2}3. The estimates of {cmd:theta_L_num}({it:x}) and {cmd:theta_L_den}({it:x}) are averaged to estimate {cmd:theta_L}.
 4. A bootstrap confidence interval for the APR is set by 
 
 {p 8 8 2}		[ bs_est(_alpha_) , 1 ],
@@ -127,7 +128,7 @@ Examples
 
 We first call the dataset included in the package.
 
-		. use GKB, clear
+		. use GKB_persuasio, clear
 
 The first example conducts inference on the APR without covariates, using normal approximation.
 		
@@ -172,14 +173,14 @@ GPL-3
 References
 ----------
 
-Sung Jae Jun and Sokbae Lee (2019), 
+Sung Jae Jun and Sokbae Lee (2022), 
 Identifying the Effect of Persuasion, 
 [arXiv:1812.02276 [econ.EM]](https://arxiv.org/abs/1812.02276) 
 
 Version
 -------
 
-0.1.0 30 January 2021
+0.2.0 13 November 2022
 
 ***/
 capture program drop persuasio4yz
@@ -327,7 +328,7 @@ program persuasio4yz, eclass sortpreserve byable(recall)
 	ereturn local cilevel = `alpha_level'*100
 	ereturn local inference_method "`method'"
 	
-	display "Reference: Jun and Lee (2019), arXiv:1812.02276 [econ.EM]"
+	display "Reference: Jun and Lee (2022), arXiv:1812.02276 [econ.EM]"
 	
 end
 

@@ -62,7 +62,7 @@ Examples
 
 We first call the dataset included in the package.
 
-		. use GKB, clear
+		. use GKB_persuasio, clear
 
 We now compute summary statistics.
 
@@ -109,14 +109,14 @@ GPL-3
 References
 ----------
 
-Sung Jae Jun and Sokbae Lee (2019), 
+Sung Jae Jun and Sokbae Lee (2022), 
 Identifying the Effect of Persuasion, 
 [arXiv:1812.02276 [econ.EM]](https://arxiv.org/abs/1812.02276) 
 
 Version
 -------
 
-0.1.0 30 January 2021
+0.2.0 13 November 2022
 
 ***/
 capture program drop calc4persuasio

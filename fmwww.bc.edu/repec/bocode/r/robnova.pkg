@@ -1,0 +1,20 @@
+d 'ROBNOVA': module to calculate two robust ANOVA statistics, Welch's and Brown-Forsythe's
+d
+d  robnova produces Fisher's F, Welch's F, and Brown-Forsythe's F.
+d It is intended as an alternative to the anova command when
+d homogeneity of variance is violated. 
+d
+d KW: ANOVA
+d KW: robust
+d KW: Welch
+d KW: Brown-Forsythe
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20221116
+d
+d Author: David Speed, University of New Brunswick - Saint John
+d Support: email dspeed@@unb.ca
+d
+f robnova.ado
+f robnova.sthlp

@@ -44,11 +44,15 @@ There are two cases: (i) _covariates_ are absent and (ii) _covariates_ are prese
 
 - With _x_, the upper bound ({cmd:theta_U}) on the APR is defined by 
 
-	{cmd:theta_U} = E[{cmd:theta_U}({it:x})],
+	{cmd:theta_U} = E[{cmd:theta_U_num}({it:x})]/E[{cmd:theta_U_den}({it:x})],
 	
 	where
 
-	{cmd:theta_U}({it:x}) = {E[{it:A}|{it:z}=1,{it:x}] - E[{it:B}|{it:z}=0,{it:x}]}/{1 - E[{it:B}|{it:z}=0,{it:x}]}.
+	{cmd:theta_U_num}({it:x}) = E[{it:A}|{it:z}=1,{it:x}] - E[{it:B}|{it:z}=0,{it:x}]
+	
+	and
+	
+	{cmd:theta_U_den}({it:x}) = 1 - E[{it:B}|{it:z}=0,{it:x}].
 	
 The estimate is obtained by the following procedure.
 	
@@ -64,8 +68,9 @@ Alternatively, if {cmd:model}("interaction") is selected,
 	
 Ater step 1, both options are followed by:
 	
-3. For each _x_ in the estimation sample, {cmd:theta_U}({it:x}) is evaluated.
-4. The estimates of {cmd:theta_U}({it:x}) are averaged to estimate {cmd:theta_U}.
+{p 4 8 2}3. For each _x_ in the estimation sample, {cmd:theta_U_num}({it:x}) and {cmd:theta_U_den}({it:x}) are evaluated.
+
+{p 4 8 2}4. The estimates of {cmd:theta_U_num}({it:x}) and {cmd:theta_U_den}({it:x}) are averaged to estimate {cmd:theta_U}.
 	
 	When _covariates_ are present, the standard error is missing because an analytic formula for the standard error is complex.
 	Bootstrap inference is implemented when this package's command __persuasio__ is called to conduct inference. 
@@ -93,7 +98,7 @@ Examples
 
 We first call the dataset included in the package.
 
-		. use GKB, clear
+		. use GKB_persuasio, clear
 
 The first example estimates the upper bound on the APR without covariates.
 		
@@ -151,14 +156,14 @@ GPL-3
 References
 ----------
 
-Sung Jae Jun and Sokbae Lee (2019), 
+Sung Jae Jun and Sokbae Lee (2022), 
 Identifying the Effect of Persuasion, 
 [arXiv:1812.02276 [econ.EM]](https://arxiv.org/abs/1812.02276) 
 
 Version
 -------
 
-0.1.0 30 January 2021
+0.2.0 13 November 2022
 
 ***/
 capture program drop aprub
@@ -234,8 +239,8 @@ program aprub, eclass sortpreserve byable(recall)
 	
 	matrix `b' = r(b)
 	matrix `V' = r(V)	
-	scalar `ub' = `b'[1,1]
-	scalar `se' = sqrt(`V'[1,1])
+	scalar `ub' = r(table)[1,1]
+	scalar `se' = r(table)[2,1]
 	
 	ereturn post `b' `V', obs(`nobs') esample(`touse')
 	ereturn display, nopv	
@@ -295,21 +300,25 @@ program aprub, eclass sortpreserve byable(recall)
 
 	gen `thetahat_num' = `yhat1' - `yhat0'
 	gen `thetahat_den' = 1 - `yhat0'
-	quietly replace `thetahat_den' = max(`thetahat_den', 1e-8)
-	gen `thetahat' = `thetahat_num'/`thetahat_den'
-    
-	quietly sum `thetahat' if `touse'
 	
+	tempname ub_num ub_den
+	
+	quietly sum `thetahat_num' if `touse'
+	scalar `ub_num' = r(mean)
+	
+	quietly sum `thetahat_den' if `touse'
+	scalar `ub_den' = r(mean)
+		
 	tempname upper_bound_coef
 	
 	local nobs = r(N)
 	
 	tempname b ub se
 	
-	scalar `ub' = r(mean)
+	scalar `ub' = `ub_num'/`ub_den'
 	scalar `se' = .
 		
-	matrix `b' = r(mean)
+	matrix `b' = `ub_num'/`ub_den'
 	matrix colnames `b' = upper_bound
 	
     ereturn post `b', obs(`nobs') esample(`touse')
@@ -330,6 +339,6 @@ program aprub, eclass sortpreserve byable(recall)
 	
 	}
 	
-	display "Reference: Jun and Lee (2019), arXiv:1812.02276 [econ.EM]"
+	display "Reference: Jun and Lee (2022), arXiv:1812.02276 [econ.EM]"
 
 end

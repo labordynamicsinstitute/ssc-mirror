@@ -44,16 +44,18 @@ There are two cases: (i) {it:covariates} are absent and (ii) {it:covariates} are
 
 {break}    - With {it:x}, the LPR is defined by 
 
-	{cmd:LPR} = E[{cmd:LPR}({it:x}){e(1|x) - e(0|x)}]/E[e(1|x) - e(0|x)]
+	{cmd:LPR} = E[{cmd:LPR_num}({it:x}]/E[{cmd:LPR_den}({it:x}]
 	
 {p 4 4 2}
 	where
 
-{p 4 8 2}	{cmd:LPR}({it:x}) = {Pr({it:y}=1|{it:z}=1,{it:x}) - Pr({it:y}=1|{it:z}=0,{it:x})}/{Pr[{it:y}=0,{it:t}=0|{it:z}=0,{it:x}] - Pr[{it:y}=0,{it:t}=0|{it:z}=1,{it:x}]},
-	
+{p 4 8 2}	{cmd:LPR_num}({it:x}) = Pr({it:y}=1|{it:z}=1,{it:x}) - Pr({it:y}=1|{it:z}=0,{it:x})
+
 {p 4 4 2}
-	e(1|x) = Pr({it:t}=1|{it:z}=1,{it:x}), and e(0|x) = Pr({it:t}=1|{it:z}=0,{it:x}).
-	
+	and
+
+{p 4 8 2}	{cmd:LPR_den}({it:x}) = Pr[{it:y}=0,{it:t}=0|{it:z}=0,{it:x}] - Pr[{it:y}=0,{it:t}=0|{it:z}=1,{it:x}].
+		
 {p 4 4 2}
 The estimate is obtained by the following procedure.
 	
@@ -77,7 +79,7 @@ Alternatively, if {cmd:model}("interaction") is selected,
 
 {p 4 8 2} 3. Pr({it:t}=1|{it:z},{it:x}) is estimated by regressing {it:t} on {it:x} given {it:z} = 0,1.
 
-{p 4 8 2} 4. For each {it:x} in the estimation sample, both {cmd:LPR}({it:x}) and {e(1|x)-e(0|x)} are evaluated.
+{p 4 8 2} 4. For each {it:x} in the estimation sample, both {cmd:LPR_num}({it:x}) and {cmd:LPR_den}({it:x}) are evaluated.
 
 {p 4 8 2} 5. Then, the sample analog of {cmd:LPR} is constructed.
 	
@@ -110,7 +112,7 @@ It is recommended to use this package{c 39}s command {bf:persuasio} instead of c
 We first call the dataset included in the package.
 
 {p 4 4 2}
-		. use GKB, clear
+		. use GKB_persuasio, clear
 
 {p 4 4 2}
 The first example estimates the LPR without covariates.
@@ -177,7 +179,7 @@ GPL-3
 {title:References}
 
 {p 4 4 2}
-Sung Jae Jun and Sokbae Lee (2019), 
+Sung Jae Jun and Sokbae Lee (2022), 
 Identifying the Effect of Persuasion, 
 {browse "https://arxiv.org/abs/1812.02276":arXiv:1812.02276 [econ.EM]} 
 
@@ -185,7 +187,7 @@ Identifying the Effect of Persuasion,
 {title:Version}
 
 {p 4 4 2}
-0.1.0 30 January 2021
+0.2.0 13 November 2022
 
 
 

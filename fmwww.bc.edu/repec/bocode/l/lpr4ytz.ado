@@ -41,14 +41,16 @@ There are two cases: (i) _covariates_ are absent and (ii) _covariates_ are prese
 
 - With _x_, the LPR is defined by 
 
-	{cmd:LPR} = E[{cmd:LPR}({it:x}){e(1|x) - e(0|x)}]/E[e(1|x) - e(0|x)]
+	{cmd:LPR} = E[{cmd:LPR_num}({it:x}]/E[{cmd:LPR_den}({it:x}]
 	
 	where
 
-{p 4 8 2}	{cmd:LPR}({it:x}) = {Pr({it:y}=1|{it:z}=1,{it:x}) - Pr({it:y}=1|{it:z}=0,{it:x})}/{Pr[{it:y}=0,{it:t}=0|{it:z}=0,{it:x}] - Pr[{it:y}=0,{it:t}=0|{it:z}=1,{it:x}]},
-	
-	e(1|x) = Pr({it:t}=1|{it:z}=1,{it:x}), and e(0|x) = Pr({it:t}=1|{it:z}=0,{it:x}).
-	
+{p 4 8 2}	{cmd:LPR_num}({it:x}) = Pr({it:y}=1|{it:z}=1,{it:x}) - Pr({it:y}=1|{it:z}=0,{it:x})
+
+	and
+
+{p 4 8 2}	{cmd:LPR_den}({it:x}) = Pr[{it:y}=0,{it:t}=0|{it:z}=0,{it:x}] - Pr[{it:y}=0,{it:t}=0|{it:z}=1,{it:x}].
+		
 The estimate is obtained by the following procedure.
 	
 If {cmd:model}("no_interaction") is selected (default choice),
@@ -68,7 +70,7 @@ Alternatively, if {cmd:model}("interaction") is selected,
 
 {p 4 8 2} 3. Pr({it:t}=1|{it:z},{it:x}) is estimated by regressing _t_ on _x_ given _z_ = 0,1.
 
-{p 4 8 2} 4. For each _x_ in the estimation sample, both {cmd:LPR}({it:x}) and {e(1|x)-e(0|x)} are evaluated.
+{p 4 8 2} 4. For each _x_ in the estimation sample, both {cmd:LPR_num}({it:x}) and {cmd:LPR_den}({it:x}) are evaluated.
 
 {p 4 8 2} 5. Then, the sample analog of {cmd:LPR} is constructed.
 	
@@ -96,7 +98,7 @@ Examples
 
 We first call the dataset included in the package.
 
-		. use GKB, clear
+		. use GKB_persuasio, clear
 
 The first example estimates the LPR without covariates.
 		
@@ -153,14 +155,14 @@ GPL-3
 References
 ----------
 
-Sung Jae Jun and Sokbae Lee (2019), 
+Sung Jae Jun and Sokbae Lee (2022), 
 Identifying the Effect of Persuasion, 
 [arXiv:1812.02276 [econ.EM]](https://arxiv.org/abs/1812.02276) 
 
 Version
 -------
 
-0.1.0 30 January 2021
+0.2.0 13 November 2022
 
 ***/
 capture program drop lpr4ytz
@@ -235,8 +237,8 @@ program lpr4ytz, eclass sortpreserve byable(recall)
 	
 	matrix `b' = r(b)
 	matrix `V' = r(V)	
-	scalar `lpr' = `b'[1,1]
-	scalar `se' = sqrt(`V'[1,1])
+	scalar `lpr' = r(table)[1,1]
+	scalar `se' = r(table)[2,1]
 	
 	ereturn post `b' `V', obs(`nobs') esample(`touse')
 	ereturn display, nopv	
@@ -270,24 +272,21 @@ program lpr4ytz, eclass sortpreserve byable(recall)
 			}	
 		}
 	
-	tempvar thetahat_wgt thetahat_num thetahat_den thetahat_lpr thetahat
+	tempvar thetahat_num thetahat_den
 	
-	gen `thetahat_wgt' = ``T'_1' - ``T'_0'
 	gen `thetahat_num' = ``Y'_1' - ``Y'_0'
 	gen `thetahat_den' = ``den_lpr'_0' - ``den_lpr'_1'
-	quietly replace `thetahat_den' = max(`thetahat_den', 1e-8)
-	gen `thetahat_lpr' = `thetahat_num'/`thetahat_den'
-	gen `thetahat' = `thetahat_lpr'*`thetahat_wgt'
     
 	tempname lpr_num lpr_den
 	
-	quietly sum `thetahat' if `touse'
+	quietly sum `thetahat_num' if `touse'
 	scalar `lpr_num' = r(mean)
+	
+	quietly sum `thetahat_den' if `touse'
+	scalar `lpr_den' = r(mean)
+	
 	local nobs = r(N)
 	
-	quietly sum `thetahat_wgt' if `touse'
-	scalar `lpr_den' = r(mean)
-		
 	tempname lpr b se
 	
 	scalar `lpr' = `lpr_num'/`lpr_den'
@@ -314,6 +313,6 @@ program lpr4ytz, eclass sortpreserve byable(recall)
 	
 	}
 	
-	display "Reference: Jun and Lee (2019), arXiv:1812.02276 [econ.EM]"
+	display "Reference: Jun and Lee (2022), arXiv:1812.02276 [econ.EM]"
 
 end
