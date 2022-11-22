@@ -1,4 +1,4 @@
-*! boottest 4.2.0 24 August 2022
+*! boottest 4.3.0 17 November 2022
 *! Copyright (C) 2015-22 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
@@ -108,7 +108,8 @@ program define _boottest, rclass sortpreserve
   
   local jk = "`jk'`jackknife'" != ""
 
-  if "`julia'" != "" & !0$boottest_julia_loaded {
+  local julia = "`julia'" != "" 
+  if `julia' & !0$boottest_julia_loaded {
     if c(stata_version) < 16 {
       di as err "The {cmd:julia} option requires Stata 16 or higher."
       exit 198
@@ -391,8 +392,8 @@ program define _boottest, rclass sortpreserve
 		exit 198
   }
   
-  if `jk' & `IV' & !`ar' {
-		di as err "boottest can't (yet) jackknife IV-based estimates, except with the Anderson-Rubin test."
+  if `jk' & `IV' & !`ar' & `julia'{
+		di as err "The Julia implementation can't (yet) jackknife IV-based estimates, except with the Anderson-Rubin test."
 		exit 198
   }
   
@@ -496,7 +497,7 @@ program define _boottest, rclass sortpreserve
     }
   }
   else {
-		local N_h0s 1 // number of nulls
+		local N_h0s 1  // number of nulls
 		if "`h0'" == "" {
 			di as txt _n "({cmd:h0(1)} assumed)"
 			local h0 1
@@ -530,12 +531,13 @@ program define _boottest, rclass sortpreserve
     if `partial' local colnames `colnames' `e(partial1)'
     local k = `:word count `colnames'' + (`partial' & 0`e(partialcons)')
 		local _cons _cons
+    local cons = "`:list colnames & _cons'" != ""
 		local colnames: list colnames - _cons
 
 		if `IV' {
 			local Xnames_endog `e(instd)'
 			local Xnames_exog: list colnames - Xnames_endog
-			local cons = inlist("`cmd'`e(cons)'`e(constant)'", "ivreg21", "ivregress") | e(partialcons)==1
+			local cons = `cons' | e(partialcons)==1
 
 			if inlist("`cmd'", "ivreg2", "xtivreg2", "ivreghdfe") local ZExclnames `e(exexog1)'
 //       else if "`e(cmd)'"=="ivreghdfe" {  // ivreghdfe provides no collinear instrument info
@@ -557,11 +559,8 @@ program define _boottest, rclass sortpreserve
       }
 		}
 		else {
-			local Xnames_exog: colnames e(b)
+			local Xnames_exog `colnames'
       if inlist("`e(cmd)'", "didregress", "xtdidregress") local Xnames_exog: subinstr local Xnames_exog "r1vs0." ""
-      local Xnames_exog: subinstr local Xnames_exog "r1vs0." ""
-			local cons = "`:list Xnames_exog & _cons'" != ""
-      local Xnames_exog: list Xnames_exog - _cons
 		}
 
 		local cons = `cons' & !0`NFE'  // no constant in FE model
@@ -632,7 +631,7 @@ program define _boottest, rclass sortpreserve
 	}
   local NBootClustVar: word count `bootcluster'
 
-	forvalues h=1/`N_h0s' { // loop over multiple independent constraints
+	forvalues h=1/`N_h0s' {  // loop over multiple independent constraints
     if `margins' mat `R' = `marginsH0'[`h', 1...]
     else {
     	_estimates hold `hold', restore
@@ -683,7 +682,7 @@ program define _boottest, rclass sortpreserve
 
 		if `df'>1 & "`ptype'"!="symmetric" di as txt "Note: {cmd:ptype(`ptype')} ignored for multi-constraint null hypotheses."
 
-		if `df'<=2 { // a bit duplicative of code in the if-`ML' block just below...
+		if `df'<=2 {  // a bit duplicative of code in the if-`ML' block just below...
 			if  "`graph'"=="" {  // construct axis label(s)
 				if `margins' local constraintLHS1 "Margins of `:word `h' of `marginsnames''"
         else {
@@ -728,7 +727,7 @@ program define _boottest, rclass sortpreserve
 					exit 198
 				}
 
-				mat `R1R' = `R' \ nullmat(`R1') // add null to model constraints
+				mat `R1R' = `R' \ nullmat(`R1')  // add null to model constraints
 				mat `r1r' = `r' \ nullmat(`r1')
 
 				* get rid of any remaining o. and b. constraints; r(k_autcns) doesn't capture all
@@ -746,7 +745,7 @@ program define _boottest, rclass sortpreserve
 				if `"`cmdline'"'=="" local 0 `e(cmdline)'
 				                else local 0 `cmdline'
 				syntax [anything] [aw pw fw iw] [if] [in], [CONSTraints(passthru) from(passthru) INIt(passthru) ITERate(passthru) CLuster(passthru) Robust vce(string) *]
-				if "`e(cmd)'"=="ml" local max max // tack on max option in case ml run in interactive model and cmdline() is missing it
+				if "`e(cmd)'"=="ml" local max max  // tack on max option in case ml run in interactive model and cmdline() is missing it
 
 				cap _estimates drop `hold'
 				_estimates hold `hold', restore
@@ -806,7 +805,7 @@ program define _boottest, rclass sortpreserve
 			}
 
 			unab scnames: `sc'*
-			if `:word count `scnames'' == e(k_eq) { // generate score for each parameter from those for each equation
+			if `:word count `scnames'' == e(k_eq) {  // generate score for each parameter from those for each equation
 				local colnames: colnames `b'
 				tokenize `:coleq `b''
 				local lasteq
@@ -830,7 +829,7 @@ program define _boottest, rclass sortpreserve
 
 			if !`null' {
 				cap _estimates drop `hold'
-				_estimates hold `hold', restore // rename estimation as `hold' instead of generating new sample marker
+				_estimates hold `hold', restore  // rename estimation as `hold' instead of generating new sample marker
 			}
 		}
 		else { // not ML
@@ -866,7 +865,7 @@ program define _boottest, rclass sortpreserve
 
     return local seed = cond("`seed'"!="", "`seed'", "`c(seed)'")
 
-    if "`julia'"=="" {
+    if !`julia' {
       mata boottest_stata("`teststat'", "`df'", "`df_r'", "`p'", "`padj'", "`cimat'", "`plotmat'", "`peakmat'", `level', `ptolerance', ///
                           `ML', `LIML', 0`fuller', `K', `ar', `null', `scoreBS', `jk', "`weighttype'", "`ptype'", "`statistic'", ///
                           "`madjust'", `N_h0s', "`Xnames_exog'", "`Xnames_endog'", ///
@@ -1144,6 +1143,7 @@ end
 
 
 * Version history
+* 4.3.0 Added jackknife for WRE; fixed failure to detect constant term after ivreg; fixed incorrect computation in "WUE"
 * 4.2.1 jk bug fixes
 * 4.2.0 Added jackknife (WCU/WCR_31) for OLS and Anderson-Rubin
 * 4.1.1 Made margins option honor if/in clause in margins call. Clarifed in help that margins option is only for linear predictions.

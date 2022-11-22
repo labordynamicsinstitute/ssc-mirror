@@ -1,8 +1,8 @@
 program define hammock
-*! 1.2.0    August 11, 2022: shape rectangle added 
+*! 1.2.1    Nov 15, 2022: rectangle is default shape, space allowed w/o label, update helpfile
 	version 14.2
 	syntax varlist [if] [in], [  Missing BARwidth(real 1) /// 
-		hivar(str) HIVALues(numlist  missingokay) SPAce(real 0.3) LABel labelopt(str) SAMEscale(varlist) ///
+		hivar(str) HIVALues(numlist  missingokay) SPAce(real 0.0) LABel labelopt(str) SAMEscale(varlist) ///
 		ASPECTratio(real 0.72727) COLorlist(str) shape(str) * ]
 
 	confirm numeric variable `varlist'
@@ -11,12 +11,12 @@ program define hammock
 	local addlabel= "`label'" != ""
 	local same = "`samescale'" !=""
 
-	if ("`shape'"=="") local shape="parallelogram"
+	if ("`shape'"=="") local shape="rectangle"
 	local rangeexpansion=0.1  /*fraction space reserved for missing values*/
 	
 	local varnamewidth=`space' /*=percentage of space given to text as opposed to the graph*/
-	if `addlabel'==0 {
-		local varnamewidth=0
+	if `addlabel'!=0 & `space'==float(0) {
+		local varnamewidth=0.3   // if addlabel, change the default space to 0.3
 	}
 
 	check_sufficient_colors ,  hivar("`hivar'") hivalues("`hivalues'") colorlist("`colorlist'") 
@@ -1078,3 +1078,4 @@ end
 //*! 1.1.3    30 June 2022: fixed bug when not enough colors specified for highlighting
 //*! 1.1.4    July 7 2022: missing values can now be highlighted
 //*! 1.2.0    August 11, 2022: shape rectangle added 
+//*! 1.2.1    Nov 15, 2022: rectangle is default shape, space allowed w/o label, update helpfile

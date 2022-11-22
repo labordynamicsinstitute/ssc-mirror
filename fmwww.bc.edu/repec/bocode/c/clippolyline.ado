@@ -61,12 +61,12 @@ qui {
 		
 		count if shape_order > 3
 		
+		
 		if r(N) > 0 {
 			noisily di in red "`namelist' is not a valid polyline file. It contains polygons. Try {bf:clipolygon} instead."
 			exit
 		}
-	
-	
+
 	
 		// check if the box is valid (v1.1)
 		

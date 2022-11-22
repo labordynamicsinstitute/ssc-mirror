@@ -35,7 +35,7 @@ help for {hi:hammock}{right:{hi: Matthias Schonlau}}
 {synopt :{opt labelopt(str)}} Pass options to {it:{help added_text_options}}, e.g. to manipulate label text size{p_end}
 
 {syntab :Other options}
-{synopt :{opt shape(str)}} Box shape: "parallelogram" (default) or "rectangle"  {p_end}
+{synopt :{opt shape(str)}} Box shape: "parallelogram" or "rectangle" (default) {p_end}
 {synopt :{opt same:scale(varlist)}} Use the same axis scale for each variable specified {p_end}
 {synopt :graph_options} Specify additional options passed to  {it:graph, twoway}  {p_end}
 {synoptline}
@@ -114,16 +114,24 @@ The color list should not be shorter than the number of values to be highlighted
 
 {phang}
 {opt space} specifies the fraction of plot allocated for 
-displaying labels. By default this is set to 0.3, meaning 30% of the available
+displaying labels. If {it:label} is specified, the default is 0.3, meaning 30% of the available
  space is allocated to the display of labels, and 70% for the graph elements.
-If option {it:label} is not specified, option {it:space} is ignored. 
+ If {it:label} is not specified, the default is 0. Negative values are allowed.
 
+{pmore}
+Note: If {it:shape=(parallelogram)}, for technical reasons it is sometimes necessary 
+to "shrink" the boxes to make sure width is proportional to the number of observations.
+(Stata automatically extends the plotting area with interferes with the calculation of width.) 
+In that case, {it:space(0)} may still result in some space.
+Space can be removed by using negative values as in {it:space(-0.1)}.
+ 
 {phang}
 {opt barwidth} specifies the width of the bars relative to the default width.
  This can reduce visual clutter.  
  The relative width of any two bars is not affected.  For example, 0.5 means half as large as the default width.
-  The default is 1.0. The value of {it: barwidth} should be greater than 0, and in most cases should be smaller or equal to 1.0.
-   
+  The default is 1.0. The value of {it: barwidth} should be greater than 0, 
+  and in most cases should be smaller or equal to 1.0.
+  
 {phang}
 {opt labelopt} specifies optional arguments to the labels.
 The arguments are passed  to {it:{help added_text_options}}. 
@@ -131,11 +139,12 @@ This can be used to manipulate the text sizes of the labels, for example, {it: l
 Text size names are explained in {it:{help textsizestyle}}. 
 By default, label size is "medium". If option {it:label} is not specified,  option {it:labelopt} is ignored. 
 
+
 {dlgtab:Other options}
 
 {phang}
 {opt shape} refers to the shape of the boxes or plotting elements. 
-The two options are "parallelogram" (default) and "rectangle".  Rectangles can look better for steep angles. 
+The two options are "parallelogram" and "rectangle" (default).  Rectangles can look better for steep angles. 
 They also avoid the so-called reverse line-width illusion of the parallelogram: 
 The vertical width of parallelogram-boxes with steep angles are larger than that of parallelogram-boxes with smaller angles. 
 Focusing on the end points of the boxes, can create the illusion that there are more observations in steep-angled parallelograms
