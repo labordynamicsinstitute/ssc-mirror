@@ -12,14 +12,18 @@ d distinguish if the variable is a real or a string, but doesn't
 d allow for commas in string	values. Inlist2 does not give error
 d massages if the variable doesn't have one of the values in the
 d list, but one can check    replacement is working correctly in
-d the output. 
+d the output. Sample conditions (if,in); defines the inlist dummy
+d as a byte and sets it equal to zero when conditions are not
+d satisfied; sets to quiet the replace commands (unless verbose
+d option is on); optimises the dummy creation and sets a default
+d var label. 
 d
 d KW: data management
 d KW: programming
 d
 d Requires: Stata version 12.1 
 d
-d Distribution-Date: 20210311
+d Distribution-Date: 20221124
 d
 d Author: Matteo Pinna, ETH Zurich
 d Support: email  matteo.pinna@@gess.ethz.ch

@@ -1,5 +1,5 @@
 {smcl}
-{* 15nov2016}{...}
+{* 12Nov2022}{...}
 {cmd:help hkstock}{right: }
 {hline}
 
@@ -7,62 +7,76 @@
 
 
 {phang}
-{bf:hkstock} {hline 2} Downloads stock names and stock codes for  Hong Kong's listed companies from Hong Kong Stock Exchange(https://www.so.studiodahu.com/wiki/%E9%A6%99%E6%B8%AF%E4%BA%A4%E6%98%93%E6%89%80%E4%B8%8A%E5%B8%82%E5%85%AC%E5%8F%B8%E5%88%97%E8%A1%A8).
+{bf:hkstock} {hline 2} Downloads Security names and codes for Hong Kong listed companies from eastmoney.com.
 
 
 {title:Syntax}
 
 {p 8 18 2}
-{cmdab:hkstock} {it: exchange}{cmd:,}
+{cmdab:hkstock} {it: Family}{cmd:,}
 [{it:options}]
 
 {synoptset 36 tabbed}{...}
 {synopthdr}
 {synoptline}
 {synopt:{opt path(foldername)}}Specify a folder where output .dta files will be saved in{p_end}
+{synopt:{opt filename(name)}}Name the file according to the name entered{p_end}
 
 
 {synoptline}
 {p2colreset}{...}
 
 
-{pstd}{it:exchange}  For each valid exchange, they represent different meanings of security markerts.Examples of Exchange and the names of the Exchange are as following: {p_end}
-{pstd} {hi:GEM}:Hong Kong, Growth Enterprise Stocks  {p_end}
-{pstd} {hi:MAIN}:Hong Kong, Main Board Stocks  {p_end}
-{pstd} {hi:ALL}:Hong Kong:all stocks {p_end}
+{pstd}{it:Family} Family is Hong Kong's Securities Market category. For each valid Family, they represent different meanings of security markerts.You can enter in all uppercase or lowercase, or just capitalize the first letter.Examples of Family and the names of the Family are as following: {p_end}
+{pstd} {hi:Stock}:all Hong Kong's Securities  {p_end}
+{pstd} {hi:Main}:Hong Kong Main Board Stocks {p_end}
+{pstd} {hi:Growth}:Hong Kong's Growth Enterprise Market Securities {p_end}
+{pstd} {hi:ETF}:Hong Kong Stock Connect ETF Fund {p_end}
+{pstd} {hi:H}:Stocks listed in Mainland and Hong Kong at the same time {p_end}
+{pstd} {hi:Option}:Hong Kong Warrants {p_end}
 
 
-{pstd}You can download stock names and stock codes for all the listed firms if choosing {it: command all} markets {p_end}
+
+{pstd}You can download stock names and stock codes for all the listed firms if choosing {it: hkstock All} markets {p_end}
 
 
 {pstd}{it:path} specifies the folder where the output .dta files are to be saved. {p_end}
 {pstd} The folders can be either existed or not. {p_end}
-{pstd} If the folder specified does not exist, {cmd:cnstock} will create it automatically. {p_end}
+{pstd} If the folder specified does not exist, {cmd:hkstock} will create it automatically. {p_end}
+
+{pstd}{it:filename} generates the filename according to the name entered {p_end}
 
 
 {title:Examples}
 
 {phang}
-{stata `"hkstock GEM"'}
+{stata `"hkstock stock"'}
 {p_end}
 
 {pstd}
-It will extract a list of all the stock codes and stock names for all the  Growth Enterprise Stocks in Hong Kong Stock Exchange.
-
+It will extract a list of all the codes and names for the securities listed in Hong Kong.
 
 {phang}
-{stata `"hkstock ALL"'}
+{stata `"hkstock Growth"'}
 {p_end}
 
 {pstd}
-It will extract a list of all the stock codes and stock names for all the firms listed in Hong Kong Stock Exchange.
+It will extract a list of all the stock codes and stock names for all the firms listed in Hong Kong's Growth Enterprise Market.
 
 {phang}
-{stata `"hkstock MAIN, path(D:/temp/)"'}
+{stata `"hkstock OPTION"'}
 {p_end}
 
 {pstd}
-It will extract a list of all the stock codes and stock names for Main Board Stocks in Hong Kong Stock Exchange, with output files saving to folder D:/temp/.
+It will extract a list of all the stock codes and stock names for all the Hong Kong's Warrants.
+
+{phang}
+{stata `"hkstock STOCK, path(D:/temp/) filename("stock")"'}
+{p_end}
+
+{pstd}
+It will extract a list of all the codes and names for the securities listed in Hong Kong, with output files saving to folder D:/temp//stock.dta.
+
 
 
 {title:Authors}
@@ -72,13 +86,10 @@ It will extract a list of all the stock codes and stock names for Main Board Sto
 {pstd}Wuhan, China{p_end}
 {pstd}chtl@zuel.edu.cn{p_end}
 
-{pstd}Jiaqi LI{p_end}
+{pstd}Tianyao Luo{p_end}
 {pstd}China Stata Club(爬虫俱乐部){p_end}
-{pstd}Wuhan, China{p_end}
-{pstd}1725455820@qq.com{p_end}
-
-
-
+{pstd}Business School, Xinjiang University, China{p_end}
+{pstd}cnl1426@163.com{p_end}
 
 
 

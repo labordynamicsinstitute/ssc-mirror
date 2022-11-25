@@ -1,5 +1,6 @@
 {smcl}
-{* *! version 3.1.0 12Sept2018 MLB}{...}
+{* *! version 4.0.0 16Feb2022 MLB}{...}
+{vieweralsosee "smclpres" "help smclpres"}
 {title:Title}
 
 {phang}

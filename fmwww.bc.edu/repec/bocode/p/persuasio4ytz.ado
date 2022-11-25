@@ -236,13 +236,13 @@ Identifying the Effect of Persuasion,
 Version
 -------
 
-0.2.0 13 November 2022
+0.2.1 20 November 2022
 
 ***/
 capture program drop persuasio4ytz
 program persuasio4ytz, eclass sortpreserve byable(recall)
 
-	version 14.2
+	version 16.1
 	
 	syntax varlist (min=3) [if] [in] [, level(cilevel) model(string) method(string) nboot(numlist >0 integer) title(string)]
 			
@@ -303,9 +303,6 @@ program persuasio4ytz, eclass sortpreserve byable(recall)
 			scalar `cv_cns_stoye' = r(mean)
 			}
 
-		*scalar `lb_end' = max(0,`lb_coef' - `cv_cns_stoye'*`lb_se')
-		*scalar `ub_end' = min(1,`ub_coef' + `cv_cns_stoye'*`ub_se')
-		
 		scalar `lb_end' = `lb_coef' - `cv_cns_stoye'*`lb_se'
 		scalar `ub_end' = `ub_coef' + `cv_cns_stoye'*`ub_se'
 				

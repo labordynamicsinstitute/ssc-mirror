@@ -1,0 +1,22 @@
+d 'HKTRADE': module to download historical stock transaction records for Hong Kong listed companies from Tencent.com
+d
+d  Downloads stock names and stock codes for Hong Kong's listed
+d companies. 
+d
+d KW: data management
+d KW: Hong Kong
+d KW: stocks
+d KW: equities
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20221124
+d
+d Author: Chuntao Li, China Stata Club
+d Support: email  chtl@@zuel.edu.cn
+d
+d Author: Tianyao Luo, China Stata Club
+d Support: email  cnl1426@@163.com
+d
+f hktrade.ado
+f hktrade.sthlp

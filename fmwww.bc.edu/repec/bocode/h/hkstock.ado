@@ -1,75 +1,118 @@
 * Authors:
 * Chuntao Li, Ph.D. , China Stata Club(爬虫俱乐部)(chtl@zuel.edu.cn)
-* Jiaqi LI, China Stata Club(爬虫俱乐部)(jeremylee_41@163.com)
-* Updated on July 24th, 2020
-* Original Data Source: "https://www.so.studiodahu.com/wiki/%E9%A6%99%E6%B8%AF%E4%BA%A4%E6%98%93%E6%89%80%E4%B8%8A%E5%B8%82%E5%85%AC%E5%8F%B8%E5%88%97%E8%A1%A8"
-* Please do not use this code for commercial purposes
+* Tianyao Luo, China Stata Club(爬虫俱乐部)(cnl1426@163.com)
+* November 21st, 2022
+* Program written by Dr. Chuntao Li and Tianyao Luo
+* Downloads Security names and codes for Hong Kong listed companies.
+* Can only be used in Stata version 17.0 or above
+
+clear
 capture program drop hkstock
 program define hkstock
+		version 17.0
+		if _caller() < 17.0 {
+                disp as error "this is version `=_caller()' of Stata; it cannot run version 17.0 programs"
+                exit 9
+        }
+		 syntax anything(name = code), [path(string) filename(string)] 
+		 clear
+		 if "`path'" != "" {
+                capture mkdir `"`path'"'
+         }
 
-	version 14
-	
-	if _caller() < 14.0 {
-		disp as error "this is version `=_caller()' of Stata; it cannot run version 14.0 programs"
-		exit 9
-	}
-	
-	syntax anything(name = exchange), [path(string)]
-	
-	clear
+         if "`path'" == "" {
+                local path `"`c(pwd)'"'
+                disp `"`path'"'
+         }
 
-	if "`path'" != "" {
-		capture mkdir `"`path'"'
-	}
+         if "`filename'" == "" {
+                local filename hkstock
+         }
+		 local HN "Stocks listed in Mainland and Hong Kong at the same time"
+		 local hN "Stocks listed in Mainland and Hong Kong at the same time"
+		 local MainN "Hong Kong Main Board Listed Firms"
+		 local MAINN "Hong Kong Main Board Listed Firms"
+		 local mainN "Hong Kong Main Board Listed Firms"
+		 local GrowthN "Hong Kong Growth Enterprise Board Listed Firms"
+		 local growthN "Hong Kong Growth Enterprise Board Listed Firms"
+		 local GROWTHN "Hong Kong Growth Enterprise Board Listed Firms"
+		 local ETFN "Hong Kong Connect ETF Fund"
+		 local EtfN "Hong Kong Connect ETF Fund"
+		 local etfN "Hong Kong Connect ETF Fund"
+		 local StockN "all Hong Kong Securities"
+		 local STOCKN "all Hong Kong Securities"
+		 local stockN "all Hong Kong Securities"
+		 local OptionN "Hong Kong Warrants"
+		 local optionN "Hong Kong Warrants"
+		 local OPTIONN "Hong Kong Warrants"
+		 
+		 
+         qui {
+                tempfile `code'
 
-	if "`path'" == "" {
-		local path `"`c(pwd)'"'
-		disp `"`path'"'
-	}
+                foreach name in `code'{
+                        
+                        if "`name'" == "Main"|"`name'" =="main"|"`name'" =="MAIN" local fs = "m:128+t:3"
+                        else if "`name'" == "Growth"|"`name'" =="growth"|"`name'" =="GROWTH" local fs = "m:128+t:4"
+						else if "`name'" == "ETF"|"`name'" =="etf"|"`name'" =="Etf" local fs = "b:MK0837,b:MK0838"
+						else if "`name'" == "H"|"`name'" =="h" local fs = "b:DLMK0101"
+						else if "`name'" == "Option"|"`name'" =="option"|"`name'" =="OPTION" local fs = "m:128+t:6"
+                        else if "`name'" == "Stock"|"`name'" =="stock"|"`name'" =="STOCK" local fs = "m:128+t:3,m:128+t:4,m:128+t:1,m:128+t:2"
+                        else {
+                                disp as error `"`name' is an invalid CODE. the Code must be the following:"'
+								disp as error `"Main: Hong Kong Main Board Listed Firms"'
+								disp as error `"Growth: Hong Kong Growth Enterprise Board Listed Firms"'
+								disp as error `"ETF:Hong Kong Connect ETF Fund"'
+								disp as error `"H:Stocks listed in Mainland and Hong Kong at the same time"'
+								disp as error `"Stock:all Hong Kong Securities"'
+								disp as error `"Option:Hong Kong Warrants"'
+                                exit 601
+                        }
 
-	
-	qui {
-	copy "https://www.so.studiodahu.com/wiki/%E9%A6%99%E6%B8%AF%E4%BA%A4%E6%98%93%E6%89%80%E4%B8%8A%E5%B8%82%E5%85%AC%E5%8F%B8%E5%88%97%E8%A1%A8"  `"`path'\temphkstkcd.txt"',replace
-	infix strL v 1-100000 using `"`path'\temphkstkcd.txt"', clear   
-	
-	gen v2=1 if index(v, `"<h2><span id=".E5.89.B5.E6.A5.AD.E6.9D.BF.EF.BC.888001-8098.EF.BC.89""')
-	replace v2=1 if index(v,`"" id="9600-9899""')
-	replace v2=0 if v2==.
-	gen v3=sum(v2)
+                        clear
+                        set obs 1
+                        gen v = fileread("https://90.push2.eastmoney.com/api/qt/clist/get?pn=1&pz=10000&web&fs=`fs'&fields=f12,f14")
+                        replace v = ustrregexs(1) if ustrregexm(v, `""diff":\{"0":\{(.*?)\}\}\}\}"')
+                        replace v = ustrregexra(v, `""\d+":"', "")
+                        mata tempname() 
+                        gen stknm = ustrregexs(1) if ustrregexm(v, `""f14":"(.*?)""')
+                        gen stkcd = ustrregexs(1) if ustrregexm(v, `""f12":"(.*?)""')
+                        drop v
+                        destring stkcd, replace
+                        format %05.0f stkcd
+                        save `"``name''"', replace
+						noi di "You've got the names and codes for ``name'N'"
+                }
+                
+                clear
+                foreach name in `code' {
+                        append using `"``name''"'
+                }
+                compress
+                label var stkcd stockcode
+                label var stknm stockname
+        }
 
-	tempfile `exchange'
-	foreach name in `exchange'{	
-		if  "`name'" == "GEM" {
-			keep if v3 ==1
-			
-		}
-		else if  "`name'" == "MAIN" {
-			drop if v3 ==1
-		}
-		else if   "`name'" == "ALL" {
-			continue		
-		}
-		else {
-			disp as error `"`name' is an invalid exchange"'
-			exit 601
-		}
-	}	
-		drop v2 v3
-		erase `"`path'\temphkstkcd.txt"'
-		
-		keep if ustrregexm(v,"<td>([0-9]+)</td>") |  index(v, "<td><a href="http://fmwww.bc.edu/repec/bocode/h/)&#32;		replace&#32;v&#32;=&#32;ustrregexra(v,"<.*?>", "")
-		gen v1 = v[_n - 1]
-		keep if mod(_n, 2) == 0
-		gen stkcd =real(v1)
-		format %05.0f stkcd
-		rename v stknm 
-		drop v1
-		order stkcd,before(stknm)
-		compress
-	}
+        
+        save `"`path'/`filename'.dta"', replace
+end
 
-	di "You've got the stock names and stock codes from `exchange'"
-	save `"`path'/hkstock.dta"', replace
-	
-
+mata
+void function tempname() {
+    
+    string matrix tmp
+        string matrix tmp1
+        
+        tmp = st_sdata(., "v", .)
+        tmp1 = substr(tmp, 1, strpos(tmp, "},{") - 1)
+        tmp = subinstr(tmp, tmp1 + "},{", "", 1)
+        do {
+                tmp1 = tmp1, substr(tmp, 1, strpos(tmp, "},{") - 1)
+                tmp = subinstr(tmp, tmp1[1, cols(tmp1)] + "},{", "", 1)
+        } while (strpos(tmp, "},{") != 0)
+        tmp1 = tmp1, tmp
+        stata("drop in 1")
+        st_addobs(cols(tmp1))
+        st_sstore(., "v", tmp1')
+}
 end

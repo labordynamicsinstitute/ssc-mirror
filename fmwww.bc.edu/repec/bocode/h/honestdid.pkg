@@ -14,10 +14,16 @@ d KW: parallel trends
 d
 d Requires: Stata version 14.1
 d
-d Distribution-Date: 20221111
+d Distribution-Date: 20221124
 d
-d Author: Mauricio Caceres Bravo, NA
+d Author: Mauricio Caceres Bravo, Brown University
 d Support: email mauricio.caceres.bravo@@gmail.com
+d
+d Author: Jonathan Roth, Brown University
+d Support: email jonathan_roth@@brown.edu
+d
+d Author: Ashesh Rambachan, MIT
+d Support: email ashesh.a.rambachan@@gmail.com
 d
 f honestdid.ado
 f honestwork.ado

@@ -1,7 +1,7 @@
 {smcl}
 
 {p 4 4 2}
-{it:version 0.2.0} 
+{it:version 0.2.1} 
 
 
 
@@ -168,7 +168,7 @@ Identifying the Effect of Persuasion,
 {title:Version}
 
 {p 4 4 2}
-0.2.0 13 November 2022
+0.2.1 20 November 2022
 
 
 

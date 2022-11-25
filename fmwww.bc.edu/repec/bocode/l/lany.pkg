@@ -1,0 +1,24 @@
+d 'LANY': module to list values of variables for all observations in subsets of the data
+d
+d  lany lists the values of variables for all observations in
+d subsets defined by the by() option when the if condition is true
+d for at least one observation in a subset. For example, we may
+d have a panel dataset on educational careers of individuals and
+d some individuals report that they went from primary school
+d immediately to university. This seems unlikely, so you want to
+d see the entire educational history of all persons who went to
+d university after primary education to see what is going on. 
+d
+d KW: data preparation
+d KW: list
+d KW: panel data
+d
+d Requires: Stata version 8.1
+d
+d Distribution-Date: 20221124
+d
+d Author: Maarten L. Buis, University of Konstanz
+d Support: email maarten.buis@@uni-konstanz.de
+d
+f lany.ado
+f lany.sthlp

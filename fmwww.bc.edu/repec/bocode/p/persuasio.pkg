@@ -12,9 +12,9 @@ d KW: Persuasion
 d KW: Partial Identification
 d KW: Treatment Effects
 d
-d Requires: Stata version 14.2
+d Requires: Stata version 16.1
 d
-d Distribution-Date: 20221116
+d Distribution-Date: 20221124
 d
 d Author: Sung Jae Jun, Penn State University
 d Support: email sjun@@psu.edu 

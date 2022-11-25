@@ -1,6 +1,6 @@
 /***
 
-_version 0.2.0_ 
+_version 0.2.1_ 
 
 
 Title
@@ -145,13 +145,13 @@ Identifying the Effect of Persuasion,
 Version
 -------
 
-0.2.0 13 November 2022
+0.2.1 20 November 2022
 
 ***/
 capture program drop persuasio
 program persuasio, eclass sortpreserve byable(recall)
 
-	version 14.2
+	version 16.1
 	
 	syntax anything [if] [in] [, level(cilevel) model(string) method(string) nboot(numlist >0 integer) title(string)]
 			

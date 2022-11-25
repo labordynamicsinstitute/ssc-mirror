@@ -1,0 +1,22 @@
+d 'HKAR': module to download historical financial data for a list of Hong Kong public firms from s.askci.com
+d
+d  Downloads stock names and stock codes for Hong Kong's listed
+d companies. 
+d
+d KW: data management
+d KW: Hong Kong
+d KW: stocks
+d KW: equities
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20221124
+d
+d Author: Chuntao Li, China Stata Club
+d Support: email  chtl@@zuel.edu.cn
+d
+d Author: Tianyao Luo, China Stata Club
+d Support: email  cnl1426@@163.com
+d
+f hkar.ado
+f hkar.sthlp

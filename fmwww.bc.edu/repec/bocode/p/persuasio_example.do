@@ -74,12 +74,12 @@ persuasio calc voteddem_all_1 voteddem_all_0
 persuasio apr voteddem_all readsome post MZwave2
 
 set seed 339487731
-qui persuasio apr voteddem_all readsome post MZwave2, ///
+persuasio apr voteddem_all readsome post MZwave2, ///
 	level(80) method("bootstrap") nboot(100)
 * display estimation results
 mat list e(apr_est)	
 mat list e(apr_ci)	
-qui persuasio apr voteddem_all readsome post MZwave2, ///
+persuasio apr voteddem_all readsome post MZwave2, ///
 	level(80) model("interaction") method("bootstrap") nboot(100)
 * display estimation results
 mat list e(apr_est)	
@@ -89,7 +89,7 @@ mat list e(apr_ci)
 
 persuasio lpr voteddem_all readsome post MZwave2, level(80) 
 set seed 339487731	
-qui persuasio lpr voteddem_all readsome post MZwave2, ///
+persuasio lpr voteddem_all readsome post MZwave2, ///
 	level(80) model("interaction") method("bootstrap") nboot(100)
 * display estimation results
 mat list e(lpr_est)	

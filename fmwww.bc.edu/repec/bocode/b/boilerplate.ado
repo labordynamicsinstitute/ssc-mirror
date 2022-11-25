@@ -1,24 +1,31 @@
-*! version 1.1.0 MLB 
+*! version 1.2.0 13Nov2022 MLB 
 program define boilerplate
 	version 10
-    syntax anything(id="file name" name=fn), [dta ana noopen]
+    syntax anything(id="file name" name=fn), [dta ana smclpres git noopen]
 	
-	if "`dta'" != "" & "`ana'" != "" {
-		di as err "options dta and ana can not be combined"
-		exit 198
-	}
-	if "`dta'`ana'" == "" local dta "dta"
+	opts_exclusive "`dta' `ana' `smclpres'"
+	if "`dta'`ana'`smclpres'" == "" local dta "dta"
 		
-    if strpos(`"`fn'"', ".") == 0 {
-		local fn `fn'.do
+    // adds .do if fn has no suffix and makes locals stub and abbrev
+	mata: Parsedirs(`"`fn'"')
+	
+	if "`smclpres'" == "" {
+		normaldo, stub("`stub'") abbrev("`abbrev'") fn(`"`fn'"') `dta' `ana' `git'
+	}
+	else {
+		smcldo, fn(`"`fn'"')
 	}
 	
-	Parsedirs using `fn'
-	local stub `s(stub)'
-	local abbrev `s(abbrev)'
-	
+	if "`open'" == "" {
+		doedit "`fn'"
+	}
+end
+
+program define normaldo
+	syntax, stub(string) abbrev(string) fn(string) [dta ana git]
+    
     tempname do
-	file open  `do' using "`fn'", write text
+	file open  `do' using `fn', write text
     file write `do' "capture log close"_n
     file write `do' "log using `stub'.txt, replace text"_n
     file write `do' _n
@@ -30,7 +37,12 @@ program define boilerplate
     file write `do' "macro drop _all"_n
     file write `do' _n
 	if "`dta'" != "" {
-		file write `do' "*use ../posted/data/<original_data_file.dta>"_n
+		if "`git'" == "" {
+			file write `do' "*use ../posted/data/<original_data_file.dta>"_n	
+		}
+		else {
+			file write `do' "*use ../protected/data/<original_data_file.dta>"_n
+		}
 		file write `do' _n
 		file write `do' "*rename *, lower"_n
 		file write `do' "*keep"_n
@@ -54,27 +66,72 @@ program define boilerplate
     file write `do' "log close"_n
     file write `do' "exit"_n
     file close `do'
-	
-	if "`open'" == "" {
-		doedit "`fn'"
-	}
 end
 
-program define Parsedirs, sclass
-	version 10
-	syntax using/,
+program define smcldo
+	syntax, fn(string)
+    tempname do
+	file open  `do' using `fn', write text
+	file write `do' `"//version #.#.#"'_n
+	file write `do' `""'_n
+	file write `do' `"//layout toc"'_n 
+	file write `do' `"//toctitle"'_n
+	file write `do' `""'_n
+	file write `do' `"//titlepage --------------------------------------------------------------------"'_n
+	file write `do' `"//title "'_n
+	file write `do' `""'_n
+	file write `do' `"/*txt"'_n
+	file write `do' `"{center:Author}"'_n
+	file write `do' `"{center:institution}"'_n
+	file write `do' `""'_n
+	file write `do' `"{center:email}"'_n
+	file write `do' `"txt*/"'_n
+	file write `do' `""'_n
+	file write `do' `"//endtitlepage -----------------------------------------------------------------"'_n
+    file write `do' `""'_n
+    file write `do' `"// ............................................................................."'_n
+	file write `do' `"//section"'_n
+	file write `do' `""'_n
+	file write `do' `"//slide ------------------------------------------------------------------------"'_n
+	file write `do' `"//title "'_n
+	file write `do' `""'_n
+	file write `do' `"/*txt"'_n
+	file write `do' `"{pstd}"'_n
+	file write `do' `""'_n
+	file write `do' `"txt*/"'_n
+	file write `do' `""'_n
+	file write `do' `"//ex"'_n
+	file write `do' `""'_n
+	file write `do' `"//endex"'_n
+	file write `do' `""'_n
+	file write `do' `"//slide ------------------------------------------------------------------------"'_n
+    file close `do'
+end
 
-	local stub : subinstr local using "\" "/", all
-	while `"`stub'"' != "" {
-		gettoken path2 stub : stub, parse("/\:")
-	}
-	local stub `path2'
-	gettoken stub suffix : stub, parse(".")
-	
-	gettoken abbrev rest : stub, parse("_")
-	if "`rest'" == "" local abbrev "<abbrev>"	
-	
-	sreturn local stub `stub'
-	sreturn local abbrev `abbrev'
-	
+mata:
+void Parsedirs(string scalar fn)
+{
+    string scalar    stub, suf
+    string rowvector abbrev
+    real   scalar    k
+
+    suf = pathsuffix(fn)
+    if (suf == "") st_local("fn", fn+".do")
+    
+    stub = pathbasename(fn)
+    stub = pathrmsuffix(stub)
+    st_local("stub", stub)
+
+    abbrev = tokens(stub, "_")
+    k = cols(abbrev)
+    if (k < 3) {
+        st_local("abbrev","<abbrev>")
+    }
+    else {
+        k = k - 2
+        abbrev = abbrev[1..k]
+        abbrev = invtokens(abbrev, "")
+        st_local("abbrev", abbrev)
+    }
+}
 end

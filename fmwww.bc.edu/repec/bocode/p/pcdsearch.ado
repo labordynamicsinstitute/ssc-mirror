@@ -278,11 +278,11 @@ program pcdsearch
 		rename read_oxmis_code readcode
 		rename read_oxmis_name desc
 	}
-	capture confirm variable medcodeid originalreadcode term
+	capture confirm variable medcodeid cleansedreadcode term
 	if _rc==0 {
 		local mlouttp=3
 		rename medcodeid medcode
-		rename originalreadcode readcode
+		rename cleansedreadcode readcode
 		rename term desc
 	}	
 	if `mlouttp'==0 {
@@ -390,6 +390,7 @@ program pcdsearch
         //OUTPUT
         di
         qui count
+		*error
         if r(N)>0 {
   		    //excel
   		    if `filetp'==1 {

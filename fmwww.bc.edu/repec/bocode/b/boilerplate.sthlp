@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.0}{...}
+{* *! version 1.2.0}{...}
 {vieweralsosee "mkproject" "help mkproject"}{...}
 {viewerjumpto "Syntax" "boilerplate##syntax"}{...}
 {viewerjumpto "Description" "boilerplate##description"}{...}
@@ -20,6 +20,8 @@
 {cmd:[}
 {opt dta}
 {opt ana} 
+{opt smclpres}
+{opt git}
 {opt noopen}
 {cmd:]}
 
@@ -29,9 +31,11 @@
 {pstd}
 {cmd:boilerplate} creates a new .do file called {it:new_filename}, which will 
 contain boilerplate code. The type of boilerplate code depends on whether the
-{cmd:dta} or {cmd:ana} option has been specified; the former indicates that the
-.do file is mainly for data preparation, while the latter indicates that the .do
-file is mainly for data analysis.
+{cmd:dta}, {cmd:ana}, or {cmd:smclpres} option has been specified;{p_end} 
+{pmore}the first indicates that the .do file is mainly for data preparation,{p_end}
+{pmore}the second indicates that the .do file is mainly for data analysis, and{p_end}
+{pmore}the last indicates that the .do file is a source file for a 
+{stata ssc desc smclpres:smclpres} presentation.{p_end}
 
 {pstd}
 Once {cmd:boilerplate} has created the file, it will open that .do file in the 
@@ -49,8 +53,17 @@ default.
 {opt ana} specifies that the .do file's main purpose is data analysis.
 
 {phang}
+{opt smclpres} specified that the .do file is to be a source file for a 
+{cmd:smclpres} presentation.
+
+{phang}
 {opt noopen} specifies that the created .do file is not to be opened in the 
 do file editor.	
+
+{phang}
+{opt git} specifies that the .do file will use the directory structure for a 
+project maintained by Git, i.e. the raw data is expected to be in 
+../protected/data rather than in ../posted/data.
 
 
 {marker example}{...}
@@ -63,4 +76,3 @@ do file editor.
 
 {pstd}Maarten Buis, University of Konstanz{break} 
       maarten.buis@uni.kn   
-

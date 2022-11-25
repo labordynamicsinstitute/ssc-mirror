@@ -24,6 +24,7 @@ p labvalpool module to change value labels
 p labvars module to attach a list of labels to varlist
 p lambda module for Goodman and Kruskal's lambda measures for two-way tables
 p landemets module to compute boundaries for group sequential clinical trials using alpha spending functions
+p lany module to list values of variables for all observations in subsets of the data
 p laplacereg module to perform Laplace regression for censored data
 p lars module to perform least angle regression
 p lasagna module to produce lasagna plots

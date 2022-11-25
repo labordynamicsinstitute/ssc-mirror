@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1 10mar2021}{...}
+{* *! version 1.2 Nov2022}{...}
 {viewerjumpto "Syntax" "inlist2##syntax"}{...}
 {viewerjumpto "Description" "inlist2##description"}{...}
 {viewerjumpto "Options" "inlist2##options"}{...}
@@ -17,7 +17,7 @@
 
 {p 8 15 2}
 {cmd:inlist2}
-{varname} [{cmd:,} {it:options}]
+{varname} {ifin} [{cmd:,} {it:options}]
 
 
 {pstd}
@@ -32,16 +32,17 @@ where {it:varname} is the variable values are listed from.
 
 {syntab : Other}
 {synopt :{opth name(string)} saves the inlist2 dummy as "string", default is "inlist2"}{p_end}
+{synopt :{opt v:erbose} sets off the "quietly" in the dummy creation}{p_end}
 
 
 {marker description}{...}
 {title:Description}
 
 {pstd}
-{opt inlist2} generates a dummy equal 1 if {it:varname} is equal to the arguments in {cmd:values()}.{p_end}
+{opt inlist2} generates a dummy equal 1 if {it:varname} is equal to the arguments in {cmd:values()}, 0 otherwise.{p_end}
 
 {pstd}
-{cmd:inlist2} provides a faster way to link multiple "|" operators, similarly to {cmd:inlist}, by creating a dummy variable named inlist2 to be used in successive steps. Inlist2's string values do not require quotation marks (e.g. in case of spaces within the string) so they are faster to write, also, inlist2 does not have a 10 arguments limit for strings or a 250 arguments limit for reals. Inlist2 automatically distinguishes if the variable is a real or a string, but does not allow for commas in strings. Inlist2 does not give error massages if the variable does not have one of the values in the list, but one can check if the replacement is working correctly by looking at the output.
+{cmd:inlist2} provides a faster way to link multiple "|" operators, similarly to {cmd:inlist}, by creating a dummy variable named inlist2 to be used in successive steps. Inlist2's string values do not require quotation marks (e.g. in case of spaces within the string) so they are faster to write, also, inlist2 does not have a 10 arguments limit for strings or a 250 arguments limit for reals. Inlist2 automatically distinguishes if the variable is a real or a string, but does not allow for commas in strings. Inlist2 does not give error massages if the variable does not have one of the values in the list, but one can check if the replacement is working correctly by looking at the output with the verbose option.
 Feedback is greatly appreciated.{p_end}
 
 {marker examples}{...}
@@ -72,4 +73,4 @@ Feedback is greatly appreciated.{p_end}
 {marker acknowledgements}{...}
 {title:Acknowledgements}
 
-{pstd} The author would like to thank Allison Reichel for the input to create the program.{p_end}
+{pstd} The author would like to thank Allison Reichel for the input to create the program and Mead Over for proposing the additions to the command's version 1.2.{p_end}

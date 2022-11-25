@@ -15,7 +15,7 @@ d KW: presentation
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20190905
+d Distribution-Date: 20221124
 d
 d Author: Maarten L. Buis, University of Konstanz
 d Support: email maarten.buis@@uni-konstanz.de
@@ -25,11 +25,5 @@ f smclpres.sthlp
 f ../p/pres2html.ado
 f ../p/pres2html.sthlp
 f ../l/lsmclpres.mlib
-f smclpres_build.mata
-f smclpres_bib.mata
-f smclpres_init.mata
-f smclpres_parts.mata
-f smclpres_slides.mata
-f smclpres_toc.mata
 f ../b/background_grey.zip
 f ../r/raking.zip

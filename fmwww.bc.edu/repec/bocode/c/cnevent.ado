@@ -13,7 +13,7 @@ program define cnevent
 	version 17
     qui cap findfile cntrade.ado
     if  _rc>0 {
-		disp as error "command cntrade is unrecognized,you need "ssc install cntrade" "
+		disp as error `"command cntrade is unrecognized,you need "ssc install cntrade" "'
 		exit 601
 	} 
 	if _caller() < 17.0 {
@@ -51,7 +51,7 @@ program define cnevent
 		    local `eve_window_s``eve''' `1'
 		    local `eve_window_e``eve''' `3'
 			 if ``eve_window_s``eve'''' > ``eve_window_e``eve''''{
-			  	disp as error "Your Event window is invalid"
+			  	disp as error "Your Event window specification is invalid, begining date should be before the ending date"
 	            exit 198   
 			 }
 		}
@@ -185,7 +185,7 @@ program define cnevent
 				local `dol' date[1]
 			}
 	         if ``Event_date'' < ``dol'' {
-		        disp  "Your eventdate of ``stk'' before the date of listing"
+		        disp  "Your eventdate of ``stk'' lies before the IPO date"
 			    continue
 	         }
 			qui{
@@ -214,6 +214,11 @@ program define cnevent
                     reg rit rmt if time <= ``est_window_e''
                     predict `ar' if time >= ``eve_window_s'', res
                     keep if time >= ``eve_window_s''
+					forvalues i = 2(1)``num'' {
+					    replace `ar' = . if `ar'[1]== .
+					    replace `ar' = . if `ar'[`i']== .
+                        }
+
                     frame post `temp1' (``stk'') (``Event_date'') ``AR_t''
 		        }
 			   
@@ -224,7 +229,7 @@ program define cnevent
 			    }
 			} 
 			
-			disp "current working on stock code:  ``stk'', event date:" %dCY-N-D ``Event_date'' ", `s'/``event_n''"
+			disp "current working on Stock  ``stk'' with event date " %dCY-N-D ``Event_date'' ", `s' of ``event_n'' completed"
 		}	 
     qui{
         cwf `temp1'

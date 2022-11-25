@@ -1,9 +1,7 @@
-*! version 3.1.0 MLB 29May2019
-*  change <p> to <br> for output of -log html-
-*  add the dir() option
-version 14
-
+*! version 4.0.0 MLB 16Feb2022
+*  work with smclpres 4.0.0
 program define pres2html
+	version 14.2
 	local olddir = c(pwd)
 	capture noisily pres2html_main `0'
 	if _rc {
@@ -14,6 +12,7 @@ program define pres2html
 end
 
 program define pres2html_main
+	version 14.2
 	syntax using/ , [replace dir(passthru)]
 
 	Parsedirs using `using' , `dir'
@@ -38,14 +37,20 @@ program define pres2html_main
 	file open `base' using `stub'.smcl, read
 	
 	file read `base' line
+	local slideslist = 0
 	while r(eof) == 0 {
 		gettoken first rest : line
 		gettoken second rest : rest
 		if `"`first'"' == "{*" & `"`second'"' == "slides" {
-			gettoken slides rest: rest, parse("}")
+			local slideslist = 1
 		}
-		if `"`first'"' == "{*" & `"`second'"' == "bottomstyle" {
+		else if `"`first'"' == "{*" & `"`second'"' == "bottomstyle" {
+			local slideslist = 0
 			gettoken bottomstyle rest : rest, parse("}")
+		}
+		else if `slideslist' & `"`second'"' != "slides" {
+			gettoken slide bracket : second, parse("}")
+			local slides = `"`slides' `slide'"'
 		}
 		file read `base' line
 	}
@@ -73,6 +78,7 @@ program define pres2html_main
 end
 
 program define Slide2html	
+	version 14.2
 	syntax using/, tofill(string) bottomstyle(string) app(string) appnumber(integer) ddir(string) [replace]
 	
 	file write `tofill' `"<div class="slide" id="`using'">"' _n
@@ -126,6 +132,7 @@ program define Slide2html
 			Fileappend, file(`temphtml') appendto(`tofill')
 			gettoken rest : rest, parse("}")
 			gettoken dofilesource rest : rest
+			local rest = ustrtrim(`"`rest'"')
 			file write `tofill' `"<pre><a href="#app`appnumber'">`rest'</a></pre>"'_n
 			Dohtml using `dofilesource', gen(`temphtml') replace
 			file write `app' `"<div class="slide" id="app`appnumber'">"'_n
@@ -173,6 +180,7 @@ program define Slide2html
 			Fileappend, file(`temphtml') appendto(`tofill')
 			gettoken rest : rest, parse("}")
 			gettoken codefilesource rest : rest
+			local rest = ustrtrim(`"`rest'"')
 			file write `tofill' `"<pre><a href="#app`appnumber'">`rest'</a></pre>"'_n
 			file write `app' `"<div class="slide" id="app`appnumber'">"'_n
 			file write `app' `"<pre><p align="center"><b>`rest'</b></p></pre><br><br>"'_n
@@ -275,6 +283,7 @@ program define Slide2html
 end
 
 program define Dohtml
+	version 14.2
 	syntax using/, [replace] gen(string)
 
 	// this will also be the name of the .html file that will be created
@@ -323,6 +332,7 @@ program define Dohtml
 end
 
 program define Fileappend
+	version 14.2
 	syntax, file(string) appendto(string)
 	tempname toappend 
 	file open `toappend' using `file', read
@@ -334,6 +344,7 @@ program define Fileappend
 end
 
 program define Htmlinit
+	version 14.2
 	syntax, file(string)
 	file write `file' "<!DOCTYPE html>" _n
 	file write `file' "<html>" _n
@@ -409,6 +420,7 @@ program define Htmlinit
 end
 
 program define Parsebottom 
+	version 14.2
 	syntax, line(string) tofill(string) bottomstyle(string)
 	
 	if "`bottomstyle'" == "arrow" {
@@ -442,7 +454,8 @@ program define Parsebottom
 end
 
 program define Parsetoc
-syntax, line(string) tofill(string)
+	version 14.2
+	syntax, line(string) tofill(string)
 	local i = ustrpos(`"`macval(line)'"', "{view ")
 	if `i' == 0 {
 		Smcl2html, line(`"`macval(line)'"') tofill(`"`tofill'"')
@@ -460,6 +473,7 @@ syntax, line(string) tofill(string)
 end
 
 program define Smcl2html,
+	version 14.2
 	syntax, line(string) [link(string)] tofill(string)
 	tempfile smcl html html2
 	tempname file
@@ -485,6 +499,7 @@ program define Smcl2html,
 end
 		
 program define Matchingclose, rclass
+	version 14.2
 	syntax, line(string) startnum(integer)
 	local i = `startnum'+1 // startnum is the position of the open brace, 
 	                       // so you start looking at the next postion
@@ -515,6 +530,7 @@ program define Matchingclose, rclass
 end
 
 program define Parsedirs, sclass
+	version 14.2
 	syntax using/, [dir(string)]
 	local stub : subinstr local using "\" "/", all
 	while `"`stub'"' != "" {

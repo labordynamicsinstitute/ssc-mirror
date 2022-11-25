@@ -116,13 +116,13 @@ Identifying the Effect of Persuasion,
 Version
 -------
 
-0.2.0 13 November 2022
+0.2.1 20 November 2022
 
 ***/
 capture program drop calc4persuasio
 program calc4persuasio, rclass
 
-	version 14.2
+	version 16.1
     args y1 y0 e1 e0
 		
 	* Displaying results
