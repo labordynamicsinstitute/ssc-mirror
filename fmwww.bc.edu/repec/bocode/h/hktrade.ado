@@ -11,11 +11,11 @@ capture program drop hktrade
 program define hktrade
 	version 17.0
 	set maxvar 120000 	
-	qui cap findfile cntrade.ado
-	if  _rc>0 {
-		disp as error "command cntrade is unrecognized,you need "ssc install sxpose" "
-		exit 601
-	} 
+	qui cap findfile sxpose.ado
+        if  _rc>0 {
+                disp as error "command sxpose is unrecognized,you need "ssc install sxpose" "
+                exit 601
+        }  
 	if _caller() < 17.0 {
 		disp as error "this is version `=_caller()' of Stata; it cannot run version 17.0 programs"
 		exit 9
