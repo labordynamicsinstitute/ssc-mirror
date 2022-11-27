@@ -325,6 +325,7 @@ p sumscale module to generate summated scales
 p sumstats module to produce tables of summary statistics
 p sumup module to compute summary statistics by group
 p supclust module to build superordinate categories
+p supercompress module to to run compress on all datasets in a folder and its subfolders
 p supsmooth module to perform Friedman's super smoother
 p suregr module to calculate robust, or cluster-robust variance after sureg
 p surface module to draw a 3D wireform surface plot

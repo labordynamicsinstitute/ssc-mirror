@@ -86,7 +86,7 @@ help for {cmd:conindex} {right: Erasmus University Rotterdam & NUI Galway}
 
 {col 5} {it:graph} {col 25} graph requests that a concentration curve be displayed. If no ranking variable is specified, a Lorenz curve is produced. In 
 {col 25} conjunction with {it:generalized}, one obtains the generalized Lorenz or concentration curve. {cmd:conindex} draws the Lorenz and concentration curves 
-{col 25} using the user-written {help lorenz} command by Ben Jahn. This must be installed prior to using the {it:graph} option. 
+{col 25} using the user-written {help lorenz} command by Ben Jann. This must be installed prior to using the {it:graph} option. Note that {it:aweights} cannot be used with this command.
 
 {col 5} {it:loud} {col 25} shows the output from the regression used to generate the inequality indices.
 

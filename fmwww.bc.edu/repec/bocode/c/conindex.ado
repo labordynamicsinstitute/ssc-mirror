@@ -362,11 +362,11 @@ quietly {
 			local xtitle = "Rank of `xtext'"
 		}	
 		if `generalized'== 0{
-			lorenz estimate `varlist_star', pvar(`ranking')
+			lorenz estimate `varlist_star'  [`weight'`exp'], pvar(`ranking')
 			lorenz graph, ytitle(`ytitle', size(medsmall)) yscale(titlegap(5))  xtitle(`xtitle', size(medsmall))  ytitle(`ytitle', size(medsmall)) graphregion(color(white)) bgcolor(white) 
 		}
 		if `generalized'==1 {
-			lorenz estimate `varlist_star', pvar(`ranking') generalized 
+			lorenz estimate `varlist_star' [`weight'`exp'], pvar(`ranking') generalized 
 			lorenz graph, ytitle(`ytitle', size(medsmall)) yscale(titlegap(5))  xtitle(`xtitle', size(medsmall))  ytitle(`ytitle', size(medsmall)) graphregion(color(white)) bgcolor(white) 
 		}	
 	}
