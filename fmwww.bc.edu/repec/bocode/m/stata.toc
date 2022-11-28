@@ -202,6 +202,7 @@ p motivatedolly module to provide quotes, lyrics and links to motivational songs
 p movavg module using Mata to generate Moving Averages
 p movestay module for maximum likelihood estimation of endogenous regression switching models
 p mpi module to compute the Alkire-Foster multidimensional poverty measures and their decomposition by deprivation indicators and population sub-groups
+p mpitb module to estimate and analyze multidimensional poverty indices (MPI)
 p mplotoffset module to produce marginsplots with offset plotting symbols
 p mpovline module to calculate FGT0, FGT1 and FGT2 by intervals of multiple thresholds
 p mpr module for computing the Medication Possession Ratio

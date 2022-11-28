@@ -1,0 +1,57 @@
+d 'MPITB': module to estimate and analyze multidimensional poverty indices (MPI)
+d
+d    mpitb is a toolbox that offers several commands to facilitate
+d specification, estimation, and    analysis of multidimensional
+d poverty indices (MPI) and supports the popular Alkire-Foster (AF)
+d    framework to multidimensional poverty measurement. In
+d particular this toolbox supports M0, a member    of the
+d Alkire-Foster class of measures, several of its subindices and
+d related auxiliary measures,	 see Alkire and Foster (2011, J.
+d Pub. Econ.) and Alkire et al. (2015).     mpitb has been
+d developed to facilitate the production process of the global
+d multidimensional    poverty index. Indeed, mpitb has been
+d developed in tandem with a particular workflow now underlying   
+d the global MPI estimations. This workflow seeks to provide more
+d efficient and flexible estimation    routines with results that
+d are also easy to replicate (Suppa 2021). 
+d
+d KW: poverty
+d KW: multidimensional poverty
+d KW: Alkire-Foster
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20221127
+d
+d Author: Nicolai Suppa, Autonomous University of Barcelona, Spain
+d Support: email nsuppa@@ced.uab.es
+d
+f mpitb.ado
+f mpitb.sthlp
+f ../_/_mpitb_assoc.ado
+f ../_/_mpitb_ctyselect.ado
+f ../_/_mpitb_est.ado
+f ../_/_mpitb_estcot.ado
+f ../_/_mpitb_gafvars.ado
+f ../_/_mpitb_refsh.ado
+f ../_/_mpitb_rframe.ado
+f ../_/_mpitb_set.ado
+f ../_/_mpitb_setwgts.ado
+f ../_/_mpitb_show.ado
+f ../_/_mpitb_stores.ado
+f mpitb_assoc.sthlp
+f mpitb_ctyselect.sthlp
+f mpitb_est.sthlp
+f mpitb_estcot.sthlp
+f mpitb_gafvars.sthlp
+f mpitb_intro.do
+f mpitb_refsh.sthlp
+f mpitb_rframe.sthlp
+f mpitb_set.sthlp
+f mpitb_setwgts.sthlp
+f mpitb_show.sthlp
+f mpitb_stores.sthlp
+f ../s/syn_ABC_cdata.dta
+f ../s/syn_cdata.dta
+f ../s/syn_DEF_cdta.dta
+f ../s/syn_GHI_cdata.dta

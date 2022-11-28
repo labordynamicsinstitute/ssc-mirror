@@ -270,7 +270,7 @@ quietly{
 	 
 	tempfile __Eventdates
 	save "`__Eventdates'"
-											
+										
 	use "`__temp'"
 
 	keep if `event_date' == .
@@ -1378,7 +1378,7 @@ else{
 
 	quietly: twoway (line CAARE_for_GRAPH t), nodraw
 	quietly: graph save "`graphfile'", `replace'
-	quietly: drop CAARE_for_GRAPH
+	*quietly: drop CAARE_for_GRAPH
 	quietly: save `aarfile', replace
 	
 	quietly {
@@ -1555,6 +1555,7 @@ rename `hold' `nearvar'
 end
 
 *--destring subprgm--*
+capture: program drop _dstr
 program define _dstr
 syntax varlist, [string xx(str asis)]
 if `"`string'"' != `""' & `"`stringdate'"' == ""  {
