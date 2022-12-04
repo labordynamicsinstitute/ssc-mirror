@@ -1,5 +1,6 @@
 * Authors:
 * Chuntao Li, Ph.D. , China Stata Club(爬虫俱乐部)(chtl@zuel.edu.cn)
+* Xiuping Mao, Ph.D. , China Stata Club(爬虫俱乐部)(xiuping_mao@126.com)
 * Tianyao Luo, China Stata Club(爬虫俱乐部)(cnl1426@163.com)
 * November 21st, 2022
 * Program written by Dr. Chuntao Li and Tianyao Luo

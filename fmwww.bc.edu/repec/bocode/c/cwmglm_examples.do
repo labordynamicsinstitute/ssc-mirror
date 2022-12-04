@@ -1,4 +1,57 @@
 /*******************************************************************************
+								The covid dataset
+*******************************************************************************/
+use covid, clear
+describe
+*****CWM K=2
+cwmglm y x1 x2 x3 n1 female, xnormal(x1 x2 x3) xpoisson(n1) xbin(female) k(2) /// 
+posterior(z2z) family(poisson)
+
+matlist e(mu), title("mean of multivariate Gaussian covariates ")
+
+matlist e(sigma),title("variance-covariance matrix of multivariate Gaussian covariates")
+
+matlist e(lambda), title("mean of Poisson covariates")
+
+matlist e(p_binomial), title("mean of binomial covariates")
+
+ matrix results= ( e(ic)' \ e(R2)[.,"Overall"] \ e(globaldeviance)["Normalized Deviance", 2..3]')
+
+ 
+*****CWM K=3
+cwmglm y x1 x2 x3 n1 female, xnormal(x1 x2 x3) xpoisson(n1) xbin(female) k(3) /// 
+posterior(z3z) family(poisson)
+
+matlist e(mu), title("mean of multivariate Gaussian covariates ")
+
+matlist e(sigma),title("variance-covariance matrix of multivariate Gaussian covariates")
+
+matlist e(lambda), title("mean of Poisson covariates")
+
+matlist e(p_binomial), title("mean of binomial covariates")
+
+  matrix results= results, ( e(ic)' \ e(R2)[.,"Overall"] \ e(globaldeviance)["Normalized Deviance", 2..3]')
+
+*****CWM K=4
+cwmglm y x1 x2 x3 n1 female, xnormal(x1 x2 x3) xpoisson(n1) xbin(female) k(4) /// 
+posterior(z4z) family(poisson)
+
+matlist e(mu), title("mean of multivariate Gaussian covariates ")
+
+matlist e(sigma),title("variance-covariance matrix of multivariate Gaussian covariates")
+
+matlist e(lambda), title("mean of Poisson covariates")
+
+matlist e(p_binomial), title("mean of binomial covariates")
+
+  matrix results= results, ( e(ic)' \ e(R2)[.,"Overall"] \ e(globaldeviance)["Normalized Deviance", 2..3]')
+  
+ ***summary of model fit
+ 
+ matrix colnames results= "k=2" "k=3" "k=4"
+ matlist results, title("summary of model fit")
+
+/*******************************************************************************
 								The students dataset
 *******************************************************************************/
 use students, clear
@@ -35,8 +88,8 @@ tw (scatter height weight if group==1 & gender=="M", mcolor(red) msymbol(T)) ///
 cap drop z1 z2
 cwmglm w height heightf,  k(2)  posterior(z) xnormal(height heightf) eee
 
-cwmbootstrap, nreps(5)
-
+cwmbootstrap, nreps(100)
+**see the returned results
 matlist r(b)
 
 matlist r(mu)

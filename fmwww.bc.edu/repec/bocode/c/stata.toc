@@ -67,6 +67,8 @@ p checkipaddresses module to detect Fraud in Online Surveys by Tracing and Scori
 p checkreg3 module to check identification status of simultaneous equations system
 p checkrob module to perform robustness check of alternative specifications
 p checkvar module to check the values of a created variable
+p chesspos module to print chess positions as graphs
+p chesspuzzle module to solve small chess puzzles
 p chewfile module to chew and digest ASCII file down to size 
 p china_map module to provide map of China's provinces
 p china_spatdwm module to provide spatial distance matrices for Chinese provinces and cities

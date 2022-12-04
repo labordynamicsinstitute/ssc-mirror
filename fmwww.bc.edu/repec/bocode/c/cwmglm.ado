@@ -1,13 +1,13 @@
-*! v3 10 Oct 2022
+*! v4 01 Dec 2022
 /*cap pro drop cwmglm_predict
 cap pro drop cwmglm_estimate
 cap pro drop cwmglm_display
-cap pro drop cwmglm
-*/
+cap pro drop cwmglm*/
+
 
 
 pro def cwmglm_estimate, eclass sortpreserve 
-syntax [varlist (default=none numeric fv)] [if] [in], POSTerior(string)  [k(int 2) ITERate(int 1200) start(namelist max=1) eee vee eve vve eev vev evv vvv eei vei evi vvi eii vii family(namelist) XNormal(varlist  numeric) XBINomial(varlist  numeric fv) XMULtinomial(varlist numeric fv) XPOIsson(varlist  numeric) NDraw(int 10) ITERATEXnorm(int 1200) CONVcrit(real 1e-5) INITial(varlist numeric) version(int 1)] 
+syntax [varlist (default=none numeric fv)] [if] [in], POSTerior(string)  [k(int 2) ITERate(int 1200) start(namelist max=1) eee vee eve vve eev vev evv vvv eei vei evi vvi eii vii family(namelist) XNormal(varlist  numeric) XBINomial(varlist  numeric fv) XMULtinomial(varlist numeric fv) XPOIsson(varlist  numeric) NDraw(int 10) ITERATEXnorm(int 1200) CONVcrit(real 1e-5) INITial(varlist numeric) ] 
 version 16
 **note: version 1 uses a for loop in the EM, version 2 uses a do-while
 if (`k'<2) { // if the user supplied k=1 the packages aborts the estimation
@@ -85,9 +85,9 @@ exit 144
 //preparing the GLM
 if ("`varlist'"!="") {
 gettoken y varlist : varlist
-_fv_check_depvar `y'
+_fv_check_depvar `y' //checking wether the response variable is factor 
 
-_rmcoll `varlist', expand
+_rmcoll `varlist', expand //checks collinearity in the X and expands the factor variables
 local x `r(varlist)'
 _rmdcoll `y' `x'
 }
@@ -122,10 +122,10 @@ if ("`start'"=="randompr" | "`start'"=="randomid") { //random starting values ar
 	local zetas `zetas' `posterior'`i'
 	}
 }
-if ("`start'"=="kmeans") { //kmeans
+if ("`start'"=="kmeans") { //preparing initial values based on kmeans
 tempvar _groups
 tempname clustername
-//cluster dir
+
 cap cluster delete `clustername', zap   allvarzap   delname  allcharzap   allothers 
 	if ("`y'"!="") {   
 	fvrevar `x'
@@ -133,7 +133,7 @@ cap cluster delete `clustername', zap   allvarzap   delname  allcharzap   alloth
 	}
 else cluster kmeans `conc_uniq' if `touse', k(`k') gen(`_groups') name(`clustername')
 
-
+//zetas in the list of the k variables containin the posterior group memberships 
 forval i=1/`k' {
 quie gen double `posterior'`i'=`i'.`_groups'
 local zetas `zetas' `posterior'`i'
@@ -144,7 +144,7 @@ cluster delete `clustername', zap   allvarzap   delname  allcharzap   allothers
 
 }
 if ("`start'"=="custom") { //custom (inputed by the user) starting values
-   //confirm numeric variable `initial' 
+  
    cap assert `:word count `initial''==`k'
    	if _rc {
 	di as error "option start: `k' variables are needed for initialization"
@@ -165,8 +165,8 @@ if ("`start'"=="custom") { //custom (inputed by the user) starting values
 	
 }
 //executing main; returns all the values
-if (`version'==1) mata: _cwmglm_main(`k',"`start'",`ndraw',`iterate', "`touse'" ,"`zetas'","`y'","`x'","`family'" , "`xnormal'","`Type'" , "`xbinomial'", "`xmult_factor'","`xpoisson'", `iteratexnorm', `convcrit')
-else  mata: _cwmglm_mainv2(`k',"`start'",`ndraw',`iterate', "`touse'" ,"`zetas'","`y'","`x'","`family'" , "`xnormal'","`Type'" , "`xbinomial'", "`xmult_factor'","`xpoisson'", `iteratexnorm', `convcrit')
+mata: _cwmglm_main(`k',"`start'",`ndraw',`iterate', "`touse'" ,"`zetas'","`y'","`x'","`family'" , "`xnormal'","`Type'" , "`xbinomial'", "`xmult_factor'","`xpoisson'", `iteratexnorm', `convcrit')
+
 if (`converged'!=1) di "WARNING: convergence not achieved"
 quie count if `touse'
 
@@ -183,15 +183,12 @@ if ("`y'"!="") {
 	matrix colnames `globaldeviance'=RWD EWD BD TD
 	matrix rownames `globaldeviance'="Deviance" "Normalized Deviance"
 	ereturn matrix globaldeviance=`globaldeviance'
-	
-	//ereturn matrix R_sq=`R_sq'
 	if ("`family'"!="gaussian") matrix `phi0'=J(1,`k',1)
 	matrix colnames `phi0'=`: colnames `cl_table'' 	
 	matrix rownames `phi0'=phi0
 	ereturn matrix phi0=`phi0'
 }
 else ereturn post , esample(`touse') 
-//ereturn matrix prior=prior
 
 if ("`xnormal'"!="") {
 ereturn matrix mu=`mu'
@@ -204,8 +201,6 @@ ereturn matrix p_binomial=`p_binomial'
 }
 
 if ("`xmultinomial'"!="") {
-//ereturn matrix p_multi=p_multi
-
 forval i=1/`Nmult' {
 local var: word `i' of `xmultinomial'
 quie levelsof `var'
@@ -251,13 +246,7 @@ matlist e(prior), title("Prior Probabilities") names(c)  border(top bottom)
 matlist e(cl_table), title("Clustering Table") names(c)  border(top bottom)
 matlist e(ic), title("Information criteria") names(c)  border(top bottom)
 
-//ereturn scalar dof=dof
 if ("`y'"!="") {
-/*	
-matlist (e(deviance)\e(R_sq)), title("Deviance measures and coefficient of determination")  border(top bottom) 
-di "WD: within deviance, RD: residual (within) deviance, ED: explained (within) deviance, BD: between deviance"
-di "WD=ED+RD"
-di "TD=RD+ED+BD"*/
 matlist e(localdeviance), title("Local Deviance")  border(top bottom) 
 matlist e(globaldeviance), title("Global Deviance")  border(top bottom) 
 
@@ -271,10 +260,10 @@ end
 //this program allows to display the last cwmglm estimates or to estimate
 program define cwmglm, eclass 
 version 16 
-if strpos("`0'","post") cwmglm_estimate `0' //estimate
+if strpos("`0'","post") cwmglm_estimate `0' //calls the estimation routing
 	else { // replay
 		if "`e(cmd)'"!="cwmglm" error 301
-		else cwmglm_display `0'
+		else cwmglm_display `0' // cwm have been already estimated, just display the results
 	}
 end
 
@@ -287,7 +276,7 @@ matlist e(prior), title("Prior Probabilities") names(c)  border(top bottom)
 matlist e(cl_table), title("Clustering Table") names(c)  border(top bottom)
 matlist e(ic), title("Information criteria") names(c)  border(top bottom)
 
-//ereturn scalar dof=dof
+
 if ("`e(depvar)'"!="") {
 matlist e(localdeviance), title("Local Deviance")  border(top bottom) 
 matlist e(globaldeviance), title("Global Deviance")  border(top bottom) 

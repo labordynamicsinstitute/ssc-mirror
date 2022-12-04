@@ -1,13 +1,10 @@
-*! 1.1 MBH 15 Oct 2022
-*!   updated for inshell version 2.6
-*! 1.0 MBH 14 July 2022
-*!   this program obtains the version info from
-*!    Microsoft PowerShell
-
-// capture program drop inshell_get_pwsh_vers
+*! 1.2 MBH  29 Nov  2022
+*! this program obtains the version info from Microsoft PowerShell
+**! 1.1 MBH  15 Oct  2022
+**!  updated for -inshell- version 2.6
+**! 1.0 MBH  14 July 2022
 
 program define inshell_get_pwsh_vers, rclass
-
 version 14
 syntax anything (name=location)
 
@@ -19,19 +16,20 @@ if (!_rc) {
   local filereadtest = fileread("`outfile'")
 }
 if (!missing("`filereadtest'")) {
-  mata : P = subinstr(stritrim(strtrim(inshell_process_file2("`outfile'"))), " ", ".")
-  mata : st_numscalar("rows", rows(P))
+  tempname P
+  mata : `P' = subinstr(stritrim(strtrim(inshell_process_file3("`outfile'"))), " ", ".")
+  mata : st_numscalar("rows", rows(`P'))
   forvalues i = 1 / `= scalar(rows)' {
-    mata : st_strscalar("line`i'", strtrim(P[`i']))
+    mata : st_strscalar("line`i'", strtrim(`P'[`i']))
     if (regexm("`= scalar(line`i')'", "^[0-9]")) {
       local version   "`= scalar(line`i')'"
     }
     capture scalar drop line`i'
   }
-  capture mata mata drop P
+  capture mata mata drop `P'
   capture scalar drop rows
-  local s     "space 2"
-  noisily display ///
+  local s        "space 2"
+  display ///
     as text     _n " >>> {it}your default shell is{sf}"        ///
     as result      "{`s'}Microsoft PowerShell (pwsh)"      _n  ///
     as text        "{it}{space 7}which is at version{sf}"      ///
@@ -40,9 +38,8 @@ if (!missing("`filereadtest'")) {
     as result      "{`s'}`location' `check'"               _n
 }
 else if (missing("`filereadtest'")) {
-  noisily display ///
-    as error ///
-      _n " >>> {bf:Microsoft PowerShell} was not determined to be the shell when using Stata on this system."
+  display as error ///
+    _n " >>> {bf:Microsoft PowerShell} was not determined to be the shell when using Stata on this system."
   return local pwsh_notdetected 1
 }
 

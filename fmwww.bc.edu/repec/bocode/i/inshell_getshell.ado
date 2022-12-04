@@ -1,25 +1,30 @@
-*! 1.2  MBH 15 Oct 2022
-*!     updated for inshell version 2.6
-*! 1.1  MBH  8 Sept 2022
-*!  a) ksh is identified by the presense of a "ksh" string rather than
-*!      a string equal to "ksh," primarily for users of ksh93
-*!  b) better handling of version strings
-*!   this program has now been tested with:
-*!     bash (3.2.57 and 5.1.16)
-*!     dash (0.5.11.5, though the shell does not report version numbers)
-*!     ksh (93u+ 2012-08-01)
-*!     ksh93 (93u+m/1.0.3 2022-08-25)
-*!     mksh (R59 2020/10/31)
-*!     oil (0.12.5)
-*!     Microsoft PowerShell (7.2.6)
-*!     tcsh (6.21.00 and 6.24.01)
-*!     yash (2.53)
-*!     zsh (5.9 and 5.7.1)
-*! 1.0  MBH 11 July 2022
-*!	this program determines which shell is in use by Stata
-*!   and displays it along with its version info
-
-// capture program drop inshell_getshell
+*! 1.3 MBH 29 Nov  2022
+*! this program determines which shell is in use by Stata and displays it along with its version info
+**!  a) includes minor coding refinements
+**!  b) in additon to the shell versions tested in the Sept 8 2022 revision, this program
+**!     has now been tested with:
+**!      bash (5.2.12)
+**!      ksh93 (93u+m/1.0.4 2022-10-22)
+**!      Microsoft PowerShell (7.3.0)
+**!      tcsh (6.24.02)
+**! 1.2  MBH 15 Oct 2022
+**!     updated for inshell version 2.6
+**! 1.1  MBH  8 Sept 2022
+**!  a) ksh is identified by the presense of a "ksh" string rather than
+**!      a string equal to "ksh," primarily for users of ksh93
+**!  b) better handling of version strings
+**!   this program has now been tested with:
+**!     bash (3.2.57 and 5.1.16)
+**!     dash (0.5.11.5, though the shell does not report version numbers)
+**!     ksh (93u+ 2012-08-01)
+**!     ksh93 (93u+m/1.0.3 2022-08-25)
+**!     mksh (R59 2020/10/31)
+**!     oil (0.12.5)
+**!     Microsoft PowerShell (7.2.6)
+**!     tcsh (6.21.00 and 6.24.01)
+**!     yash (2.53)
+**!     zsh (5.9 and 5.7.1)
+**! 1.0  MBH 11 July 2022
 
 program define inshell_getshell, rclass
 version 14
@@ -28,7 +33,7 @@ version 14
 capture which inshell_detect_pwsh
 if (!_rc) {
   inshell_detect_pwsh
-  if (!missing("`r(pwsh_detected)'")) {
+  if (!missing(r(pwsh_detected))) {
     return add
     exit 0
   }
@@ -47,6 +52,8 @@ if (!missing("`shell_location'")) {
   local shell = substr("`shell_location'", strrpos("`shell_location'", "/") + 1, .)
 }
 else if (missing("`shell_location'")) {
+  display as error ///
+    " >>> your shell's path could not be determind"
   exit 1
 }
 if (strpos("`shell_location'", "//")) {
@@ -84,7 +91,7 @@ if (inlist("`shell'", "ash", "dash")) {
   local shell_version_pure "{it:(not available in`= cond("`shell'" == "dash", " Debian", "")' Almquist shell)}"
 }
 if (!inlist("`shell'", "ash", "dash")) {
-  mata : st_local("shell_version2", inshell_process_file2("`version_file'")[1])
+  mata : st_local("shell_version2", inshell_process_file3("`version_file'")[1])
 }
 if (inlist("`shell'", "sh", "bash", "csh", "oil", "osh", "tcsh", "yash", "zsh")) {
   local shell_version_pure         "`: word 1 of `shell_version2''"
@@ -100,13 +107,13 @@ if (strpos("`shell'", "ksh")) {
 local version_text = cond(inlist("`shell'", "ash", "dash"), "text", "result")
 
 local s1 "space 2"
-noisily display ///
+display ///
   as text           " >>> {it}your default shell is{sf}"        ///
-  as result         "{`s1'}`shell'"                   _n  ///
+  as result         "{`s1'}`shell'"                         _n  ///
   as text           "{it}{space 7}which is at version{sf}"      ///
-  as `version_text' "{`s1'}`shell_version_pure'"      _n  ///
+  as `version_text' "{`s1'}`shell_version_pure'"            _n  ///
   as text           "{it}{space 9}and is located at{sf}"        ///
-  as result         "{`s1'}`shell_location' `check'"  _n
+  as result         "{`s1'}`shell_location' `check'"        _n
 
 return local shell            "`shell'"
 return local shell_location   "`shell_location'"

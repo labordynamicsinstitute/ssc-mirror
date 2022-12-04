@@ -86,6 +86,11 @@ It will extract a list of all the codes and names for the securities listed in H
 {pstd}Wuhan, China{p_end}
 {pstd}chtl@zuel.edu.cn{p_end}
 
+{pstd}Xiuping Mao{p_end}
+{pstd}China Stata Club(爬虫俱乐部){p_end}
+{pstd}Wuhan, China{p_end}
+{pstd}xiuping_mao@126.com{p_end}
+
 {pstd}Tianyao Luo{p_end}
 {pstd}China Stata Club(爬虫俱乐部){p_end}
 {pstd}Business School, Xinjiang University, China{p_end}

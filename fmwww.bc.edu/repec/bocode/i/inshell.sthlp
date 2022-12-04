@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.6  17 oct 2022}{...}
+{* *! version 2.7  29 Nov 2022}{...}
 {viewerjumpto "Syntax" "inshell##syntax"}{...}
 {viewerjumpto "Description" "inshell##description"}{...}
 {viewerjumpto "Remarks" "inshell##remarks"}{...}
@@ -24,7 +24,7 @@
 {title:Title}
 
 {phang}
-{cmd:inshell} {hline 2} An enhanced multi-platform shell wrapper that can send commands to the shell as well as capture and print their standard output, standard error, and native shell return codes.{p_end}
+{cmd:inshell} {hline 2} An enhanced multi-platform shell wrapper that will send commands to the operating system's shell while capturing and printing their standard output, standard error, and native shell return codes.{p_end}
 
 {marker syntax}{...}
 {title:Syntax}
@@ -131,7 +131,6 @@ for example, and the {bf:gsed} command functions as expected in the user's termi
 {p 8 8 2}{cmd:.        "All questions asked by five watch experts amazed the judge."}{p_end}
 
 {p 8 8 2}{cmd:. inshell echo "$pangram" | gsed -E 's/( .....[^a-z] ?)/\U\1/g'}{p_end}
-
 {p 8 8 2}{error:{c TLC}{hline 34}{c TRC}{space 26}{c TLC}{hline 5}{c TRC}}{p_end}
 {p 8 8 2}{error:{c |} zsh:1: command not found: gsed{space 3}{c |}{space 26}{c |} 127 {c |}}{p_end}
 {p 8 8 2}{error:{c BLC} {it:stderr} {hline 26}{c BRC}{space 26}{c BLC}{hline 1} {it:rc} {c BRC}}{p_end}
@@ -140,7 +139,6 @@ for example, and the {bf:gsed} command functions as expected in the user's termi
 use the {it:absolute path} of the command{p_end}
 
 {p 8 8 4}{cmd:. inshell echo "$pangram" | /usr/local/bin/gsed -E 's/( .....[^a-z] ?)/\U\1/g'}{p_end}
-
 {p 8 8 2}{result: All questions ASKED by five WATCH experts amazed the JUDGE.}{p_end}
 
 {p 6 4 3}
@@ -218,10 +216,10 @@ the user could code:{p_end}
 {p 8 8 2}
 {cmd:. global myvar=65536}{p_end}
 {p 8 8 2}
-{cmd:. inshell export var=$myvar ; . "`:sysdir PERSONAL'"/inshell_example1.sh}{p_end}
+{cmd:. inshell export var=$myvar ; . "`: sysdir PERSONAL'"/inshell_example1.sh}{p_end}
 
 {p 8 8 2}
-{it:({stata `"inshell export var=65536 ; . "`:sysdir PERSONAL'"inshell_example1.sh"' :click to run})}{p_end}
+{it:({stata `"inshell export var=65536 ; . "`: sysdir PERSONAL'"inshell_example1.sh"' :click to run})}{p_end}
 
 {res}{...}
 {p 8 8 2}65536{p_end}
@@ -231,14 +229,14 @@ the user could code:{p_end}
 {text}{...}
 
 {p 6 4 3}
-Also included is another shell script named {cmd:inshell_example2.sh} ({stata `"view `:sysdir PERSONAL'/inshell_example2.sh"':{it:click to view}})
+Also included is another shell script named {cmd:inshell_example2.sh} ({stata `"view `: sysdir PERSONAL'/inshell_example2.sh"':{it:click to view}})
 which is intended as a more sophisticated demonstration of shell scripting using {cmd:inshell}. It can be run using the following code:{p_end}
 
 {p 8 8 2}
-{cmd:. inshell export var1=123; export var2=\$var1 ; export var3=$((var1*var2)); export flavor=`=lower("`c(edition_real)'")' ; export os="`c(os)'" ; . `:sysdir PERSONAL'/inshell_example2.sh}{p_end}
+{cmd:. inshell export var1=123; export var2=\$var1 ; export var3=$((var1*var2)); export flavor=`= lower(c(edition_real))' ; export os=`c(os)' ; . "`: sysdir PERSONAL'/inshell_example2.sh"}{p_end}
 
 {p 8 8 2}
-({stata `"inshell export var1=123; export var2=\$var1 ; export var3=$((var1*var2)); export flavor=`=lower("`c(edition_real)'")' ; export os="`c(os)'" ; . "`:sysdir PERSONAL'/inshell_example2.sh""':{it:click to run}}){p_end}
+({stata `"inshell export var1=123; export var2=\$var1 ; export var3=$((var1*var2)); export flavor=`= lower(c(edition_real))' ; export os=`c(os)' ; . "`: sysdir PERSONAL'/inshell_example2.sh""':{it:click to run}}){p_end}
 
 {p 6 4 3}
 Note that the termination of the shell session at the end of every {cmd:inshell} command implies that there is a syntax in use {ul:at all times}, namely:{p_end}
@@ -486,10 +484,10 @@ Note that though this function will work in do-files, it is intended for interac
 This either may not perform as intended on all systems or may become a nuisance if it is unwanted and therefore this option is offered to disable it.{p_end}
 
 {p 6 4 3}
-{cmd:INSHELL_DISABLE_LONGCMDSMG} {hline 2} If a command is greater than 300 characters, {cmd:inshell} displays a suggestion to store that command as a script file. By setting this option this message will no longer be displayed.{p_end}
+{cmd:INSHELL_DISABLE_LONGCMDSMG} {hline 2} If a command is greater than 300 characters in length, {cmd:inshell} displays a suggestion to store that command as a script file. By setting this option this message will no longer be displayed.{p_end}
 
 {p 6 4 3}
-{cmd:INSHELL_ESCTAB_SIZE} {hline 2} This option allows the user to specify the number of spaces that escaped tabs are translated into. The default is 3.{p_end}
+{cmd:INSHELL_ESCTAB_SIZE} {hline 2} This option allows the user to specify the number of spaces into which horizontal tabs (ASCII character code 9) are translated. The default is 4.{p_end}
 
 {p 6 4 3}
 {cmd:INSHELL_SETSHELL_CSH} {hline 2} This option {it:must} be set if the user's default shell is either {bf:csh} or {bf:tcsh}. However, if global macro {cmd:S_SHELL} is set to a {bf:csh}-type shell, this option is not required.{p_end}
@@ -501,7 +499,7 @@ This either may not perform as intended on all systems or may become a nuisance 
 {cmd:inshell} contains a program which performs a series of diagnostic routines and which can be run by typing {cmd:inshell} {cmdab:diag:nostics}.
 The screen will be cleared and the current settings of the macro options will be displayed.
 If it is set, it will also display the value of the {cmd:global} shell macro {cmd:S_SHELL}.
-It will then display which shell is in use along with its version number and the full path to the shell.{p_end}
+It will then display which shell is in use along with its version number and the absolute path to the shell.{p_end}
 
 {p 6 4 3}
 It will then display the value of your {bf:$PATH}, and if the {cmd:inshell} path extension macro option {cmd:INSHELL_PATHEXT} is set,

@@ -1,14 +1,16 @@
 * Authors:
 * Chuntao Li, Ph.D. , China Stata Club(爬虫俱乐部)(chtl@zuel.edu.cn)
+* Xiuping Mao, Ph.D. , China Stata Club(爬虫俱乐部)(xiuping_mao@126.com)
 * Tianyao Luo, China Stata Club(爬虫俱乐部)(cnl1426@163.com)
 * November 21st, 2022
 * Program written by Dr. Chuntao Li and Tianyao Luo
 * Downloads historical stock transaction records for Hong Kong listed companies.
 * Can only be used in Stata version 17.0 or above
 
-clear
+
 capture program drop hktrade
 program define hktrade
+	clear all
 	version 17.0
 	set maxvar 120000 	
 	qui cap findfile sxpose.ado
@@ -116,6 +118,7 @@ program define hktrade
 					sort date 
 					order code
 					destring _all,replace
+					compress
 					save `"`path'/`code'"', replace
 					noi disp as text `"file `code'.dta has been generated"'
 											}						

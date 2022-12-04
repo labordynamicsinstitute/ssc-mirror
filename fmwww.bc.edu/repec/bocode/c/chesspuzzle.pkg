@@ -1,0 +1,30 @@
+d 'CHESSPUZZLE': module to solve small chess puzzles
+d
+d   chesspuzzle gives you a chess position from one of over 200
+d historical games, along with information on the game	  and a
+d prompt that gives you the task and whether white or black is to
+d move. As of now, all puzzles are of the type	  "mate in two" and
+d taken from Bill Harvey's website.    You have to type your answer
+d in Algebraic notation (e.g., qxh8+) or verbally (e.g., Queen to
+d h8). Don't forget the    take, check and mate signs ("x", "+",
+d "#") in Algebraic notation. Verbal notation is always the same,
+d however. Both    notations are case-insensitive, but do not
+d tolerate unnecessary blanks. If you cannot figure it out or have
+d to do    something else, type out into the command line and the
+d program will stop. If you want to learn the correct answer,	
+d type help. 
+d
+d KW: chess
+d KW: puzzles
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20221203
+d
+d Author: Dominik Flügel, NA
+d Support: email mail@@dominikfluegel.de
+d
+f chesspuzzle.ado
+f chesspuzzle.sthlp
+f chesspos.ado
+f chesspos.sthlp

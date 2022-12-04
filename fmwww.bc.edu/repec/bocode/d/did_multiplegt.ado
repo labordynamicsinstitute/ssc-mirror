@@ -70,6 +70,12 @@ capture drop ever_strict_increase_XX
 capture drop ever_strict_decrease_XX
 ********************************************************************************
 
+** AJOUT MELITINE **************************************************************
+// Dropping matrices which will be created on Mauricio's advice
+local didmgt_matrices: all matrices "didmgt_*"
+if `:list sizeof didmgt_matrices' matrix drop `didmgt_matrices'
+********************************************************************************
+
 // Performing sanity checks on command requested by user
 
 if "`if'" !=""{
@@ -132,7 +138,6 @@ replace `counter'=0 if `1'==.
 
 //Collapsing the data, ensuring that group variable is not the clustering or the trend_lin variable
 
-**# Bookmark #1
 if "`1'"!="`4'"{
 
 if ("`cluster'"!=""&"`cluster'"!="`2'")&("`trends_lin'"!=""&"`trends_lin'"!="`2'"){	
@@ -433,15 +438,15 @@ if `breps'>0 {
 
 drop _all
 
-svmat bootstrap
-sum bootstrap1
+svmat didmgt_bootstrap
+sum didmgt_bootstrap1
 scalar se_effect_0_2=r(sd)
 forvalue i=1/`dynamic'{
-sum bootstrap`=`i'+1'
+sum didmgt_bootstrap`=`i'+1'
 scalar se_effect_`i'_2=r(sd)
 }
 forvalue i=1/`placebo'{
-sum bootstrap`=`i'+`dynamic'+1'
+sum didmgt_bootstrap`=`i'+`dynamic'+1'
 scalar se_placebo_`i'_2=r(sd)
 }
 
@@ -462,7 +467,7 @@ di as error "The command was not able to estimate the treatment effect at the pe
 di as error "If your treatment is continuous or takes a large number of values, you may need to use" 
 di as error "the threshold_stable_treatment option to ensure you have groups whose treatment does not change" 
 di as error "over time. You may also need to use the recat_treatment option to discretize your treatment variable."
-matrix effect0=.,.,.,.,.,.
+matrix didmgt_effect0=.,.,.,.,.,.
 }
 
 // If instantaneous effect could be estimated, collect estimate and number of observations 
@@ -471,7 +476,7 @@ else {
 ereturn scalar effect_0 = effect_0_2
 if `breps'>0 {
 ereturn scalar se_effect_0 = se_effect_0_2
-matrix effect0=effect_0_2,se_effect_0_2,effect_0_2-1.96*se_effect_0_2,effect_0_2+1.96*se_effect_0_2,N_effect_0_2,N_switchers_effect_0_2
+matrix didmgt_effect0=effect_0_2,se_effect_0_2,effect_0_2-1.96*se_effect_0_2,effect_0_2+1.96*se_effect_0_2,N_effect_0_2,N_switchers_effect_0_2
 }
 ereturn scalar N_effect_0 = N_effect_0_2
 ereturn scalar N_switchers_effect_0 = N_switchers_effect_0_2
@@ -501,7 +506,7 @@ di as error "If your treatment is continuous or takes a large number of values, 
 di as error "the threshold_stable_treatment option to ensure you have groups whose treatment does not change" 
 di as error "over time. You may also need to use the recat_treatment option to discretize your treatment variable."
 di as error "You may also be trying to estimate more dynamic effects than it is possible to do in your data."
-matrix effect`i'=.,.,.,.,.,.
+matrix didmgt_effect`i'=.,.,.,.,.,.
 }
 
 // If dynamic effect i could be estimated, collect estimate and number of observations 
@@ -510,7 +515,7 @@ else {
 ereturn scalar effect_`i' = effect_`i'_2
 if `breps'>0 {
 ereturn scalar se_effect_`i' = se_effect_`i'_2
-matrix effect`i'=effect_`i'_2,se_effect_`i'_2,effect_`i'_2-1.96*se_effect_`i'_2,effect_`i'_2+1.96*se_effect_`i'_2,N_effect_`i'_2,N_switchers_effect_`i'_2
+matrix didmgt_effect`i'=effect_`i'_2,se_effect_`i'_2,effect_`i'_2-1.96*se_effect_`i'_2,effect_`i'_2+1.96*se_effect_`i'_2,N_effect_`i'_2,N_switchers_effect_`i'_2
 }
 ereturn scalar N_effect_`i' = N_effect_`i'_2
 ereturn scalar N_switchers_effect_`i' = N_switchers_effect_`i'_2
@@ -546,7 +551,7 @@ di as error "If your treatment is continuous or takes a large number of values, 
 di as error "the threshold_stable_treatment option to ensure you have groups whose treatment does not change" 
 di as error "over time. You may also need to use the recat_treatment option to discretize your treatment variable."
 di as error "You may also be trying to estimate more placebos than it is possible to do in your data."
-matrix placebo`i'=.,.,.,.,.,.
+matrix didmgt_placebo`i'=.,.,.,.,.,.
 
 }
 
@@ -556,7 +561,7 @@ else {
 ereturn scalar placebo_`i' = placebo_`i'_2
 if `breps'>0 {
 ereturn scalar se_placebo_`i' = se_placebo_`i'_2
-matrix placebo`i'=placebo_`i'_2,se_placebo_`i'_2,placebo_`i'_2-1.96*se_placebo_`i'_2,placebo_`i'_2+1.96*se_placebo_`i'_2,N_placebo_`i'_2,N_switchers_placebo_`i'_2
+matrix didmgt_placebo`i'=placebo_`i'_2,se_placebo_`i'_2,placebo_`i'_2-1.96*se_placebo_`i'_2,placebo_`i'_2+1.96*se_placebo_`i'_2,N_placebo_`i'_2,N_switchers_placebo_`i'_2
 }
 ereturn scalar N_placebo_`i' = N_placebo_`i'_2
 ereturn scalar N_switchers_placebo_`i' = N_switchers_placebo_`i'_2
@@ -582,7 +587,7 @@ if "`dynamic'"!="0"{
 
 forvalue i=0/`dynamic'{
 forvalue j=`=`i'+1'/`dynamic'{
-capture correlate bootstrap`=`i'+1' bootstrap`=`j'+1', covariance
+capture correlate didmgt_bootstrap`=`i'+1' didmgt_bootstrap`=`j'+1', covariance
 if _rc==2000{
 scalar too_many_dynamic_or_placebo=1
 }
@@ -604,7 +609,7 @@ if `placebo'>1{
 
 forvalue i=1/`placebo'{
 forvalue j=`=`i'+1'/`placebo'{
-capture correlate bootstrap`=`i'+`dynamic'+1' bootstrap`=`j'+`dynamic'+1', covariance
+capture correlate didmgt_bootstrap`=`i'+`dynamic'+1' didmgt_bootstrap`=`j'+`dynamic'+1', covariance
 if _rc==2000{
 scalar too_many_dynamic_or_placebo=1
 }
@@ -659,25 +664,25 @@ scalar N_switch_average_effect_int=0
 //// Computing weights
 
 scalar total_weight=0
-matrix Weight=J(`dynamic'+1,1,0)
+matrix didmgt_Weight=J(`dynamic'+1,1,0)
 forvalue i=0/`=`dynamic''{
-matrix Weight[`i'+1,1]=denom_DID_ell_`i'
+matrix didmgt_Weight[`i'+1,1]=denom_DID_ell_`i'
 scalar total_weight=total_weight+denom_delta_`i'
 }
-matrix Weight=Weight*(1/total_weight)
+matrix didmgt_Weight=didmgt_Weight*(1/total_weight)
 
 
 //// Computing average effect, its variance, and returning results 
 
 forvalue i=0/`=`dynamic''{
-scalar average_effect_int=average_effect_int+Weight[`i'+1,1]*effect_`i'_2
+scalar average_effect_int=average_effect_int+didmgt_Weight[`i'+1,1]*effect_`i'_2
 scalar N_average_effect_int=N_average_effect_int+N_effect_`i'_2
 scalar N_switch_average_effect_int=N_switch_average_effect_int+N_switchers_effect_`i'_2
 if "`breps'"!="0"&"`covariances'"!=""{
-scalar var_average_effect_int=var_average_effect_int+Weight[`i'+1,1]^2*se_effect_`i'_2^2
+scalar var_average_effect_int=var_average_effect_int+didmgt_Weight[`i'+1,1]^2*se_effect_`i'_2^2
 if `i'<`dynamic'{
 forvalue j=`=`i'+1'/`=`dynamic''{
-scalar var_average_effect_int=var_average_effect_int+Weight[`i'+1,1]*Weight[`j'+1,1]*2*cov_effects_`i'_`j'_int
+scalar var_average_effect_int=var_average_effect_int+didmgt_Weight[`i'+1,1]*didmgt_Weight[`j'+1,1]*2*cov_effects_`i'_`j'_int
 }
 }
 }
@@ -688,7 +693,7 @@ scalar var_average_effect_int=var_average_effect_int+Weight[`i'+1,1]*Weight[`j'+
 ereturn scalar effect_average=average_effect_int
 if "`breps'"!="0"&"`covariances'"!=""{
 ereturn scalar se_effect_average=sqrt(var_average_effect_int)
-matrix average=average_effect_int,sqrt(var_average_effect_int),average_effect_int-1.96*sqrt(var_average_effect_int),average_effect_int+1.96*sqrt(var_average_effect_int),N_average_effect_int,N_switch_average_effect_int
+matrix didmgt_average=average_effect_int,sqrt(var_average_effect_int),average_effect_int-1.96*sqrt(var_average_effect_int),average_effect_int+1.96*sqrt(var_average_effect_int),N_average_effect_int,N_switch_average_effect_int
 }
 ereturn scalar N_effect_average=N_average_effect_int
 ereturn scalar N_switchers_effect_average=N_switch_average_effect_int
@@ -697,26 +702,26 @@ ereturn scalar N_switchers_effect_average=N_switch_average_effect_int
 ///// Running joint test that placebos all 0, if jointtestplacebo option specified
 
 if "`breps'"!="0"&"`covariances'"!=""&"`jointtestplacebo'"!=""&`placebo'>1{
-
-matrix Placebo=J(`placebo',1,0)
-matrix Var_Placebo=J(`placebo',`placebo',0)
+	
+matrix didmgt_Placebo=J(`placebo',1,0)
+matrix didmgt_Var_Placebo=J(`placebo',`placebo',0)
 forvalue i=1/`placebo'{
-matrix Placebo[`i',1]=placebo_`i'_2
+matrix didmgt_Placebo[`i',1]=placebo_`i'_2
 scalar cov_placebo_`i'_`i'_int=se_placebo_`i'_2^2
 forvalue j=1/`i'{
-matrix Var_Placebo[`i',`j']=cov_placebo_`j'_`i'_int
+matrix didmgt_Var_Placebo[`i',`j']=cov_placebo_`j'_`i'_int
 }
 if `i'<`placebo'{
 forvalue j=`=`i'+1'/`placebo'{
-matrix Var_Placebo[`i',`j']=cov_placebo_`i'_`j'_int
+matrix didmgt_Var_Placebo[`i',`j']=cov_placebo_`i'_`j'_int
 }
 }
 }
 
-matrix Var_Placebo_inv=invsym(Var_Placebo)
-matrix Placebo_t=Placebo'
-matrix chi2placebo=Placebo_t*Var_Placebo_inv*Placebo
-ereturn scalar p_jointplacebo=1-chi2(`placebo',chi2placebo[1,1])
+matrix didmgt_Var_Placebo_inv=invsym(didmgt_Var_Placebo)
+matrix didmgt_Placebo_t=didmgt_Placebo'
+matrix didmgt_chi2placebo=didmgt_Placebo_t*didmgt_Var_Placebo_inv*didmgt_Placebo
+ereturn scalar p_jointplacebo=1-chi2(`placebo',didmgt_chi2placebo[1,1])
 }
 
 ///// Putting estimates and their confidence intervals on a graph, if breps option specified
@@ -833,48 +838,69 @@ save "`save_results'", replace
 // Producing a table
 
 if `breps'>0{
-matrix results=effect0
+matrix didmgt_results=didmgt_effect0
 local rownames "Effect_0"
 if "`dynamic'"!="0"{
 forvalue i=1/`=`dynamic''{
-matrix results=results \ effect`i'
+matrix didmgt_results=didmgt_results \ didmgt_effect`i'
 local rownames "`rownames' Effect_`i'"
 }
 }
+
+** AJOUT MELITINE **************************************************************
+** For compatibility with HonestDiD
+matrix didmgt_results_no_avg = didmgt_results[1...,1]
+
+
+if "`covariances'"!=""&"`jointtestplacebo'"!=""&`placebo'>1{
+matrix didmgt_results_no_avg = didmgt_results_no_avg \ didmgt_Placebo
+matrix didmgt_results_no_avg = didmgt_results_no_avg'
+}
+********************************************************************************
+
 if "`average_effect'"!=""&"`covariances'"!=""{
-matrix results=results \ average
+matrix didmgt_results=didmgt_results \ didmgt_average
 local rownames "`rownames' Average"
 }
 if "`placebo'"!="0"{
 forvalue i=1/`=`placebo''{
-matrix results=results \ placebo`i'
+matrix didmgt_results=didmgt_results \ didmgt_placebo`i'
 local rownames "`rownames' Placebo_`i'"
 }
 }
-matrix colnames results  = "Estimate" "SE" "LB CI" "UB CI" "N" "Switchers"
-matrix rownames results= `rownames'
-noisily matlist results, title("DID estimators of the instantaneous treatment effect, of dynamic treatment effects if the dynamic option is used, and of placebo tests of the parallel trends assumption if the placebo option is used. The estimators are robust to heterogeneous effects, and to dynamic effects if the robust_dynamic option is used.")
-matrix b2=results[1...,1..1]
-ereturn matrix estimates=b2
+matrix colnames didmgt_results  = "Estimate" "SE" "LB CI" "UB CI" "N" "Switchers"
+matrix rownames didmgt_results= `rownames'
+noisily matlist didmgt_results, title("DID estimators of the instantaneous treatment effect, of dynamic treatment effects if the dynamic option is used, and of placebo tests of the parallel trends assumption if the placebo option is used. The estimators are robust to heterogeneous effects, and to dynamic effects if the robust_dynamic option is used.")
+matrix didmgt_b2=didmgt_results[1...,1..1]
+ereturn matrix didmgt_estimates=didmgt_b2
 if "`average_effect'"!=""&"`covariances'"!=""{
-matrix var2=J(`placebo'+`dynamic'+2,1,0)
+matrix didmgt_var2=J(`placebo'+`dynamic'+2,1,0)
 forvalue i=1/`=`placebo'+`dynamic'+2'{
-matrix var2[`i',1]=results[`i',2]^2
+matrix didmgt_var2[`i',1]=didmgt_results[`i',2]^2
 }
 }
 if "`average_effect'"==""|"`covariances'"==""{
-matrix var2=J(`placebo'+`dynamic'+1,1,0)
+matrix didmgt_var2=J(`placebo'+`dynamic'+1,1,0)
 forvalue i=1/`=`placebo'+`dynamic'+1'{
-matrix var2[`i',1]=results[`i',2]^2
+matrix didmgt_var2[`i',1]=didmgt_results[`i',2]^2
 }
 }
-matrix rownames var2= `rownames'
-ereturn matrix variances=var2
+matrix rownames didmgt_var2= `rownames'
+ereturn matrix didmgt_variances=didmgt_var2
 ereturn local cmd "did_multiplegt"
 }
 }
 
 // End of the condition checking that not too_many_dynamic_or_placebo or too_few_bootstrap_reps
+
+** AJOUT MELITINE **************************************************************
+** For compatibility with HonestDiD
+if `breps'>0 {
+mata st_matrix("didmgt_vcov", variance(st_matrix("didmgt_bootstrap")))
+}
+********************************************************************************
+
+
 }
 
 restore
@@ -1101,12 +1127,12 @@ did_multiplegt_estim `varlist', threshold_stable_treatment(`threshold_stable_tre
 
 // Put results into a matrix 
 
-matrix bootstrap_`i'=effect_0_2
+matrix didmgt_bootstrap_`i'=effect_0_2
 forvalue j=1/`dynamic'{
-matrix bootstrap_`i'=bootstrap_`i',effect_`j'_2
+matrix didmgt_bootstrap_`i'=didmgt_bootstrap_`i',effect_`j'_2
 }
 forvalue j=1/`placebo'{
-matrix bootstrap_`i'=bootstrap_`i',placebo_`j'_2
+matrix didmgt_bootstrap_`i'=didmgt_bootstrap_`i',placebo_`j'_2
 }
 
 restore
@@ -1116,9 +1142,9 @@ restore
 
 // Putting the matrix with all bootstrap reps together
 
-matrix bootstrap=bootstrap_1
+matrix didmgt_bootstrap=didmgt_bootstrap_1
 forvalue i=2/`breps'{
-matrix bootstrap=bootstrap\ bootstrap_`i'
+matrix didmgt_bootstrap=didmgt_bootstrap\ didmgt_bootstrap_`i'
 }
 
 // Error message if too many controls
@@ -1232,7 +1258,7 @@ capture $noisily reghdfe diff_y_XX `controls' [aweight=`counter'] if $cond_stabl
 
 }
 
-capture matrix B = e(b)
+capture matrix didmgt_B = e(b)
 
 // Patching if not enough observations in this regression
 if _rc!=301{
@@ -1267,7 +1293,7 @@ replace tag_switchers_contr_XX=1 if `group_incl'==1&($cond_increase | $cond_decr
 local j = 0
 foreach var of local controls {
 local j = `j' + 1
-gen coeff`j' = B[1,`j']
+gen coeff`j' = didmgt_B[1,`j']
 }
 
 ///////////////////// Residualizing outcome changes
@@ -1665,7 +1691,7 @@ cap drop FE*
 capture $noisily reghdfe diff_y_XX  [aweight=`counter'] if $cond_stable, absorb(FE1=trends_var_XX) resid keepsingletons
 
 // Patching if not enough observations in this regression
-capture matrix B = e(b)
+capture matrix didmgt_B = e(b)
 if _rc!=301{ // r(301) in an error for "last estimate not found"
 
 gen `tag_obs'=e(sample)
@@ -1674,7 +1700,7 @@ bys trends_var_XX: egen `group_incl'=max(`tag_obs')
 fcollapse (mean) FE=FE1 , by(trends_var_XX) merge
 
 gen `diff_y_res1'  = diff_y_XX - FE
-gen constant = B[1,1]
+gen constant = didmgt_B[1,1]
 replace `diff_y_res1' = `diff_y_res1' - constant
 
 cap drop FE constant
