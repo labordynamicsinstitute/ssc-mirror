@@ -1,6 +1,6 @@
 * chesspuzzle
-* Version 1.0
-* 29/11/2022
+* Version 1.1
+* 06/12/2022
 * Dominik Flügel
 
 program define chesspuzzle
@@ -246,7 +246,7 @@ local nr = runiformint(1, 221)
 tokenize `puzzle`nr''
 local white	= 	 subinstr("`1'", "_", " ", .)
 local black	= 	 subinstr("`2'", "_", " ", .)
-local place		 subinstr("`3'", "_", " ", .)
+local place	=	 subinstr("`3'", "_", " ", .)
 local year				= "`4'"
 local pos				= "`5'"
 local whotomove			= "`6'"

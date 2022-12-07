@@ -243,6 +243,7 @@ p standsurv module to compute standardized (marginal) survival and related funct
 p starjas module to produce Arjas plot to check proportional hazards assumption
 p stat2data module to generate a Dataset of Descriptive Statistics Calculated for a List of Variables
 p stata2pajek module to export data to Pajek .net format
+p stata_linter module providing a tool to detect and correct bad Stata coding practices
 p statacmds module to produce list of all commands known to Stata, including fuctions and built-ins
 p stataid module to obtain and display information about running Stata instances under Microsoft Windows
 p statajava module to provide Java library of helper classes for Stata plug-ins

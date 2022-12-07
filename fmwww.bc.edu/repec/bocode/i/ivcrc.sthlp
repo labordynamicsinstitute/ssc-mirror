@@ -85,8 +85,6 @@ Sub-option: together with {cmd:varcoef}, specify the support for kernel weights 
 
 {synopt :{opt varcoef(varlist)}}Estimate a varying coefficients model, in which coefficients are conditioned on covariates specified in {it:varlist} as an alternative to conditioning on the ranks of the basic endogenous variables {it:varlist_edg}. Options {cmd:average} and {cmd:bandwidth} are required with {cmd:varcoef}.{p_end}
 
-{synopt :{opt nocons:tant}}Suppress the constant term of the model.{p_end}
-
 {synoptline}
 
 
@@ -120,7 +118,10 @@ Using NLSYM data, available as part of Cameron and Trivedi (2010) {p_end}
 {title:References}
 
 {p 4 8}
-Benson, David, Matthew A. Masten, and Alexander Torgovitsk (2020). "ivcrc: An Instrumental Variables Estimator for the Correlated Random Coefficients Model" Working paper{p_end}
+Benson, David, Matthew A. Masten, and Alexander Torgovitsk (2022). "ivcrc: An Instrumental-Variables Estimator for the Correlated Random-Coefficients Model." {it: Stata Journal} 22 (3), pp. 469-495. {p_end}
+
+{p 4 8}
+Benson, David, Matthew A. Masten, and Alexander Torgovitsk (2020). “ivcrc: An Instrumental Variables Estimator for the Correlated Random Coefficients Model,” Finance and Economics Discussion Series 2020-046r1. Washington: Board of Governors of the Federal Reserve System, https://doi.org/10.17016/FEDS.2020.046r1. {p_end}
 
 {p 4 8}
 Cameron, A. Colin, and Pravin K. Trivedi (2010). "Microeconometrics Using Stata Revised Edition" {it:Stata Press, College Station, Texas}  {p_end}

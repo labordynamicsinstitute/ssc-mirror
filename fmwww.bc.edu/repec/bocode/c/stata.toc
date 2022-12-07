@@ -201,6 +201,7 @@ p conjoint module to analyse and visualise conjoint (factorial) experiments
 p contour module to draw contour plots
 p contrast module to calculate contrasts between factor levels
 p convert_top_lines module to handle leading lines of text file
+p cooksd2 module to compute Cook's distance after regress or xtreg
 p copycode module to produce modular self-written ado files
 p copydesc module to copy description of variable
 p coranal module to perform simple correspondence analysis

@@ -1,0 +1,33 @@
+d 'STATA_LINTER': module providing a tool to detect and correct bad Stata coding practices
+d
+d  The stata_linter package provides a linter for Stata code. Read
+d about what a linter is here:
+d https://en.wikipedia.org/wiki/Lint_(software). The package
+d contains a command that detects bad Stata coding practices in a
+d do-file so that users can manually correct them. The command can
+d also correct some of the issues flagged in a new do-file. The
+d purpose of the command is to help users improve code clarity,
+d readability, and organization in Stata do-files. This linter is
+d based on the best practices outlined in The DIME Analytics Coding
+d Guide published as an appendix to the book Development Research
+d in Practice. See here
+d https://worldbank.github.io/dime-data-handbook/coding.html. For
+d more info about this linter, see
+d https://github.com/worldbank/stata_linter. 
+d
+d KW: linter
+d KW: style guide
+d KW: code best practices
+d
+d Requires: Stata version 16, Python, pandas package 
+d
+d Distribution-Date: 20221206
+d
+d Author: DIME Analytics, The World Bank, DECIE
+d Support: email  dimeanalytics@worldbank.org
+d
+f ../l/lint.ado
+f ../l/lint.sthlp
+f stata_linter_correct.py
+f stata_linter_detect.py
+f stata_linter_utils.py

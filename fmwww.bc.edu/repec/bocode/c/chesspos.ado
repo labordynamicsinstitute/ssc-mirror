@@ -1,6 +1,6 @@
 * chesspos
-* Version 1.0
-* 29/11/2022
+* Version 1.1
+* 06/12/2022
 * Dominik Flügel
 
 program define chesspos
@@ -8,8 +8,16 @@ version 14
 
 syntax anything [, Black name(passthru) saving(passthru) nodraw]
 
+
 * Check Input
-capture assert strlen("`1'") > 16
+capture assert strlen("`1'") >= 15
+if c(rc) != 0 {
+	dis in red "This does not seem to be a valid chess position in FEN notation."
+	exit 198
+}
+
+local n_slash = strlen("`1'") - strlen(subinstr("`1'", "/", "", .))
+capture assert `n_slash' == 7
 if c(rc) != 0 {
 	dis in red "This does not seem to be a valid chess position in FEN notation."
 	exit 198
@@ -19,7 +27,7 @@ if c(rc) != 0 {
 * Maintain Scheme and Font
 local scheme "`c(scheme)'"
 set scheme s1mono
-//graph set window fontfacesymbol default	
+
 
 * Check value labels don't already exist
 qui label dir
@@ -38,6 +46,7 @@ foreach label in lb_file lb_rank_black {
 * Initiate temporary variables
 tempvar touse file rank piece rank_white btm_file btm_rank btm_rank_white
 
+
 * Generate and mark new observations
 qui des, short
 local n = r(N)
@@ -46,6 +55,7 @@ local new_end	= r(N) + 64
 qui set obs `new_end'
 
 qui mark `touse' in `new_start'/`new_end'
+
 
 * distribute ranks (1-8) and files (A-H)
 qui gen `file' = .
@@ -63,6 +73,7 @@ forval x = 1/8 {
 	}
 }
 
+
 * parse position
 local pos `1'
 forval i = 1/8 {
@@ -71,6 +82,7 @@ forval i = 1/8 {
 	*dis as text "`pos'"
 }
 local pos = ustrregexra("`pos'", "/", " ") // replace "/" with " "
+
 
 * insert pieces in FEN notation
 qui gen `piece' = ""
@@ -81,6 +93,7 @@ foreach col in `pos' {
 	}
 	local --y
 }
+
 
 * replace pieces with font letter
 qui replace `piece' = "" if `piece' == "x"					 // empty field
@@ -98,6 +111,7 @@ qui replace `piece' = `"{fontface "Arial Unicode MS":♜}"' if `piece' == "r" //
 qui replace `piece' = `"{fontface "Arial Unicode MS":♞}"' if `piece' == "n" // black knight
 qui replace `piece' = `"{fontface "Arial Unicode MS":♝}"' if `piece' == "b" // black bishop
 qui replace `piece' = `"{fontface "Arial Unicode MS":♟}"' if `piece' == "p" // black pawn
+
 
 * create second variable for white fields (missings)
 qui gen `rank_white' = `rank'
@@ -119,7 +133,6 @@ label val `btm_rank' `btm_rank_white' lb_rank_black
 
 qui gen `btm_file' = `file' * (-1)
 label val `btm_file' lb_file
-
 
 
 * Output (white to move)
@@ -150,6 +163,7 @@ capture noisily {
 			legend(off) `name' `draw' `saving'
 	}	
 }
+
 	
 * Reset Scheme and delete observations
 set scheme `scheme'
