@@ -1,11 +1,13 @@
 cap mata: mata drop GtoolsResults()
 cap mata: mata drop GtoolsByLevels()
+cap mata: mata drop GtoolsRegressOutput()
 
 cap mata: mata drop GtoolsReadMatrix()
 cap mata: mata drop GtoolsDecodeStat()
 cap mata: mata drop GtoolsDecodePth()
 cap mata: mata drop GtoolsSmartLevels()
 cap mata: mata drop GtoolsPrintfSwitch()
+cap mata: mata drop GtoolsFormatDefaultFallback()
 
 cap mata: mata drop GtoolsGtopPrintTop()
 cap mata: mata drop GtoolsGtopUnquote()
@@ -34,6 +36,8 @@ class GtoolsByLevels
     string   scalar      whoami
     string   matrix      printed
     real     matrix      toplevels
+    real     colvector   nj
+    real     matrix      njabsorb
     string   scalar      caller
 
     void read()
@@ -89,7 +93,7 @@ void function GtoolsByLevels::read(string scalar numfmt, real scalar valuelabels
             kchar    = 0
             lens     = .
             map      = .
-            charpos  = . 
+            charpos  = .
         }
         fclose(fbycol)
 
@@ -216,6 +220,8 @@ void function GtoolsByLevels::read(string scalar numfmt, real scalar valuelabels
         charpos   = .
         printed   = ""
         toplevels = .
+        nj        = .
+        njabsorb  = .
     }
 }
 
@@ -226,7 +232,7 @@ void function GtoolsByLevels::desc()
     real rowvector printlens
     string rowvector printfmts
 
-    printstr = J((anyvars? (12 + (caller == "gtop")): 1), 3, " ")
+    printstr = J((anyvars? (12 + (caller == "gtop") + 2 * (caller == "gstats hdfe")): 1), 3, " ")
     printstr[1, 1] = "object"
     printstr[1, 2] = "value"
     printstr[1, 3] = "description"
@@ -245,6 +251,10 @@ void function GtoolsByLevels::desc()
         if ( caller == "gtop" ) {
             printstr[13, 1] = "toplevels"
         }
+        if ( caller == "gstats hdfe" ) {
+            printstr[13, 1] = "nj"
+            printstr[14, 1] = "njabsorb"
+        }
 
         printstr[3,  2] = sprintf("1 x %g", cols(byvars))
         printstr[4,  2] = sprintf("%g", J)
@@ -259,6 +269,10 @@ void function GtoolsByLevels::desc()
         if ( caller == "gtop" ) {
             printstr[13, 2] = sprintf("%g x 5 vector",  rows(toplevels))
         }
+        if ( caller == "gstats hdfe" ) {
+            printstr[13, 2] = sprintf("%g x 1 vector",  rows(nj))
+            printstr[14, 2] = sprintf("%g x %g matrix", rows(njabsorb), cols(njabsorb))
+        }
 
         printstr[3,  3] = "by variable names"
         printstr[4,  3] = "number of levels"
@@ -272,6 +286,10 @@ void function GtoolsByLevels::desc()
         printstr[12, 3] = "formatted (printf-ed) variable levels"
         if ( caller == "gtop" ) {
             printstr[13, 3] = "frequencies of top levels"
+        }
+        if ( caller == "gstats hdfe" ) {
+            printstr[13, 3] = "non-missing obs (row-wise) for each by group"
+            printstr[14, 3] = "# FE each absorb variable had for each by group"
         }
 
         printlens      = colmax(strlen(printstr))
@@ -1233,6 +1251,41 @@ end
 ***********************************************************************
 
 mata:
+void function GtoolsFormatDefaultFallback(string scalar var,| string scalar fmt)
+{
+    string scalar v, l, f
+    v = st_vartype(var)
+    f = args() >= 2? fmt: ""
+    if ( f == "" ) {
+        if ( regexm(v, "str([1-9][0-9]*|L)") ) {
+            l = regexs(1)
+            if ( l == "L" ) {
+                f = "%9s"
+            }
+            else {
+                f = "%" + regexs(1) + "s"
+            }
+        }
+        else if ( v == "byte" ) {
+            f = "%8.0g"
+        }
+        else if ( v == "int" ) {
+            f = "%8.0g"
+        }
+        else if ( v == "long" ) {
+            f = "%12.0g"
+        }
+        else if ( v == "float" ) {
+            f = "%9.0g"
+        }
+        else if ( v == "double" ) {
+            f = "%10.0g"
+        }
+    }
+    if ( f != "" ) {
+        st_varformat(var, f)
+    }
+}
 
 real matrix function GtoolsReadMatrix(
     string scalar fname,
@@ -1253,35 +1306,39 @@ string scalar function GtoolsDecodeStat(real scalar scode, real scalar pretty)
 {
     real scalar sth
     if ( pretty ) {
-        if ( scode ==  -1   )  return("Sum")                  // sum
-        if ( scode ==  -2   )  return("Mean")                 // mean
-        if ( scode ==  -3   )  return("St Dev.")              // sd
-        if ( scode ==  -4   )  return("Max")                  // max
-        if ( scode ==  -5   )  return("Min")                  // min
-        if ( scode ==  -6   )  return("Count")                // n
-        if ( scode ==  -7   )  return("Percent")              // percent
-        if ( scode ==  50   )  return("Median")               // median
-        if ( scode ==  -9   )  return("IQR")                  // iqr
-        if ( scode ==  -10  )  return("First")                // first
-        if ( scode ==  -11  )  return("First Non-Miss.")      // firstnm
-        if ( scode ==  -12  )  return("Last")                 // last
-        if ( scode ==  -13  )  return("Last Non-Miss.")       // lastnm
-        if ( scode ==  -14  )  return("Group size")           // freq
-        if ( scode ==  -15  )  return("SE Mean")              // semean
-        if ( scode ==  -16  )  return("SE Mean (Binom)")      // sebinomial
-        if ( scode ==  -17  )  return("SE Mean (Pois)")       // sepoisson
-        if ( scode ==  -18  )  return("N Unique")             // nunique
-        if ( scode ==  -19  )  return("Skewness")             // skewness
-        if ( scode ==  -20  )  return("Kurtosis")             // kurtosis
-        if ( scode ==  -21  )  return("Unweighted sum")       // rawsum
-        if ( scode ==  -22  )  return("N Missing")            // nmissing
-        if ( scode ==  -23  )  return("Variance")             // variance
-        if ( scode ==  -24  )  return("Coef. of variation")   // cv
-        if ( scode ==  -25  )  return("Range")                // range
-        if ( scode ==  -101 )  return("Sum")                  // nansum
-        if ( scode ==  -121 )  return("Unweighted sum")       // rawnansum
-        if ( scode ==  -206 )  return("Sum Wgt.")             // sum_w
-        if ( scode ==  -203 )  return("Variance")             // variance
+        if ( scode ==  -1    ) return("Sum")                         // sum
+        if ( scode ==  -2    ) return("Mean")                        // mean
+        if ( scode ==  -26   ) return("Geometric mean")              // geomean
+        if ( scode ==  -3    ) return("St Dev.")                     // sd
+        if ( scode ==  -4    ) return("Max")                         // max
+        if ( scode ==  -5    ) return("Min")                         // min
+        if ( scode ==  -6    ) return("Count")                       // n
+        if ( scode ==  -7    ) return("Percent")                     // percent
+        if ( scode ==  50    ) return("Median")                      // median
+        if ( scode ==  -9    ) return("IQR")                         // iqr
+        if ( scode ==  -10   ) return("First")                       // first
+        if ( scode ==  -11   ) return("First Non-Miss.")             // firstnm
+        if ( scode ==  -12   ) return("Last")                        // last
+        if ( scode ==  -13   ) return("Last Non-Miss.")              // lastnm
+        if ( scode ==  -14   ) return("Group size")                  // freq
+        if ( scode ==  -15   ) return("SE Mean")                     // semean
+        if ( scode ==  -16   ) return("SE Mean (Binom)")             // sebinomial
+        if ( scode ==  -17   ) return("SE Mean (Pois)")              // sepoisson
+        if ( scode ==  -18   ) return("N Unique")                    // nunique
+        if ( scode ==  -19   ) return("Skewness")                    // skewness
+        if ( scode ==  -20   ) return("Kurtosis")                    // kurtosis
+        if ( scode ==  -21   ) return("Unweighted sum")              // rawsum
+        if ( scode ==  -22   ) return("N Missing")                   // nmissing
+        if ( scode ==  -23   ) return("Variance")                    // variance
+        if ( scode ==  -24   ) return("Coef. of variation")          // cv
+        if ( scode ==  -25   ) return("Range")                       // range
+        if ( scode ==  -101  ) return("Sum")                         // nansum
+        if ( scode ==  -121  ) return("Unweighted sum")              // rawnansum
+        if ( scode ==  -206  ) return("Sum Wgt.")                    // sum_w
+        if ( scode ==  -203  ) return("Variance")                    // variance
+        if ( scode ==  -27   ) return("Gini Coefficient")            // gini
+        if ( scode ==  -27.1 ) return("Gini Coefficient (drop neg)") // gini|dropneg
+        if ( scode ==  -27.2 ) return("Gini Coefficient (keep neg)") // gini|keepneg
 
         if ( scode > 1000 ) {
             sth = floor(scode) - 1000
@@ -1309,35 +1366,39 @@ string scalar function GtoolsDecodeStat(real scalar scode, real scalar pretty)
         }
     }
     else {
-        if ( scode ==  -1   ) return("sum")
-        if ( scode ==  -2   ) return("mean")
-        if ( scode ==  -3   ) return("sd")
-        if ( scode ==  -4   ) return("max")
-        if ( scode ==  -5   ) return("min")
-        if ( scode ==  -6   ) return("n")
-        if ( scode ==  -7   ) return("percent")
-        if ( scode ==  50   ) return("median")
-        if ( scode ==  -9   ) return("iqr")
-        if ( scode ==  -10  ) return("first")
-        if ( scode ==  -11  ) return("firstnm")
-        if ( scode ==  -12  ) return("last")
-        if ( scode ==  -13  ) return("lastnm")
-        if ( scode ==  -14  ) return("freq")
-        if ( scode ==  -15  ) return("semean")
-        if ( scode ==  -16  ) return("sebinomial")
-        if ( scode ==  -17  ) return("sepoisson")
-        if ( scode ==  -18  ) return("nunique")
-        if ( scode ==  -19  ) return("skewness")
-        if ( scode ==  -20  ) return("kurtosis")
-        if ( scode ==  -21  ) return("rawsum")
-        if ( scode ==  -22  ) return("nmissing")
-        if ( scode ==  -23  ) return("variance")
-        if ( scode ==  -24  ) return("cv")
-        if ( scode ==  -25  ) return("range")
-        if ( scode ==  -101 ) return("nansum")
-        if ( scode ==  -121 ) return("rawnansum")
-        if ( scode ==  -206 ) return("sum_w")
-        if ( scode ==  -203 ) return("variance")
+        if ( scode ==  -1    ) return("sum")
+        if ( scode ==  -2    ) return("mean")
+        if ( scode ==  -26   ) return("geomean")
+        if ( scode ==  -3    ) return("sd")
+        if ( scode ==  -4    ) return("max")
+        if ( scode ==  -5    ) return("min")
+        if ( scode ==  -6    ) return("n")
+        if ( scode ==  -7    ) return("percent")
+        if ( scode ==  50    ) return("median")
+        if ( scode ==  -9    ) return("iqr")
+        if ( scode ==  -10   ) return("first")
+        if ( scode ==  -11   ) return("firstnm")
+        if ( scode ==  -12   ) return("last")
+        if ( scode ==  -13   ) return("lastnm")
+        if ( scode ==  -14   ) return("freq")
+        if ( scode ==  -15   ) return("semean")
+        if ( scode ==  -16   ) return("sebinomial")
+        if ( scode ==  -17   ) return("sepoisson")
+        if ( scode ==  -18   ) return("nunique")
+        if ( scode ==  -19   ) return("skewness")
+        if ( scode ==  -20   ) return("kurtosis")
+        if ( scode ==  -21   ) return("rawsum")
+        if ( scode ==  -22   ) return("nmissing")
+        if ( scode ==  -23   ) return("variance")
+        if ( scode ==  -24   ) return("cv")
+        if ( scode ==  -25   ) return("range")
+        if ( scode ==  -101  ) return("nansum")
+        if ( scode ==  -121  ) return("rawnansum")
+        if ( scode ==  -206  ) return("sum_w")
+        if ( scode ==  -203  ) return("variance")
+        if ( scode ==  -27   ) return("gini")
+        if ( scode ==  -27.1 ) return("gini|dropneg")
+        if ( scode ==  -27.2 ) return("gini|keepneg")
         if ( scode > 1000 ) {
             sth = floor(scode) - 1000
             if ( floor(scode) == ceil(scode) ) {
@@ -1469,7 +1530,7 @@ void function GtoolsGtopPrintTop(
     string matrix printed,
     real scalar matasave)
 {
-    real scalar i, k, l, len, ntop, nrows, gallcomp, minstrlen
+    real scalar i, k, l, len, ntop, nrows, gallcomp, minstrlen, Jmiss, Jother
     real scalar nmap, knum, kstr, valabbrev, weights
     real scalar pctlen, wlen, dlen
     real colvector si_miss, si_other, fmtix
@@ -1485,9 +1546,11 @@ void function GtoolsGtopPrintTop(
     // Done here because if these have embedded characters the parsing
     // gets tripped up...
 
-    levels = st_global("r(levels)")
-    sep    = st_global("r(sep)")
-    colsep = st_global("r(colsep)")
+    Jmiss   = st_numscalar("r(Jmiss)")
+    Jother  = st_numscalar("r(Jother)")
+    levels  = st_global("r(levels)")
+    sep     = st_global("r(sep)")
+    colsep  = st_global("r(colsep)")
 
     weights = st_local("weights") != ""
     pctfmt  = st_local("pctfmt")
@@ -1557,7 +1620,7 @@ void function GtoolsGtopPrintTop(
                             fmtbak = grows[1::ntop, l]
                             grows[1::ntop, l] = st_vlmap(st_varvaluelabel(numvar), nmat[., k])
                             fmtix  = selectindex(grows[1::ntop, l] :== "")
-                            if ( rows(fmtix) > 0 ) {
+                            if ( length(fmtix) > 0 ) {
                                 grows[fmtix, l] = fmtbak[fmtix]
                             }
                         }
@@ -1674,12 +1737,18 @@ void function GtoolsGtopPrintTop(
         olab = st_local("otherlabel")
         if ( any(si_miss) ) {
             minstrlen = sum(gstrmax) + (kvars - 1) + (kvars - 1) * strlen(colsep);
+            if ( (st_local("ngroups") == "") & (Jmiss > 1) ) {
+                mlab = mlab + sprintf(" (%g groups)", Jmiss)
+            }
             if ( minstrlen < strlen(mlab) ) {
                 gstrmax[1] = strlen(mlab) - minstrlen + gstrmax[1]
             }
         }
         if ( any(si_other) ) {
             minstrlen = sum(gstrmax) + (kvars - 1) + (kvars - 1) * strlen(colsep);
+            if ( (st_local("ngroups") == "") & Jother ) {
+                olab = olab + sprintf(" (%s group%s)", strtrim(sprintf("%21.0gc", Jother)), Jother > 1? "s": "")
+            }
             if ( minstrlen < strlen(olab) ) {
                 gstrmax[1] = strlen(olab) - minstrlen + gstrmax[1]
             }
@@ -1781,3 +1850,326 @@ string scalar function GtoolsGtopUnquote(string scalar quoted_str)
     return (quoted_str);
 }
 end
+
+***********************************************************************
+*                      Gtools Regression Output                       *
+***********************************************************************
+
+mata:
+class GtoolsRegressOutput
+{
+    real   scalar    kx
+    real   scalar    cons
+    string scalar    setype
+    real   matrix    b
+    real   scalar    saveb
+    real   matrix    se
+    real   matrix    Vcov
+    real   scalar    savese
+
+    real   scalar    J
+    real   scalar    by
+    string rowvector byvars
+    real   scalar    absorb
+    string rowvector absorbvars
+    real   matrix    njabsorb
+    real   scalar    savenjabsorb
+    string rowvector clustervars
+    real   colvector njcluster
+    real   scalar    savenjcluster
+    string rowvector yvarlist
+    string rowvector xvarlist
+    string rowvector zvarlist
+
+    class GtoolsByLevels ByLevels
+    string scalar whoami
+    string scalar caller
+
+    void init()
+    void print()
+    void desc()
+    void readMatrices()
+}
+
+void function GtoolsRegressOutput::init()
+{
+    caller = st_local("caller")
+    saveb  = st_numscalar("__gtools_gregress_savemb")
+    savese = st_numscalar("__gtools_gregress_savemse")
+    savenjabsorb  = 0
+    savenjcluster = 0
+
+    if ( st_numscalar("__gtools_gregress_cluster") > 0 ) {
+        setype = "cluster"
+        clustervars = tokens(st_local("cluster"))
+    }
+    else if ( st_numscalar("__gtools_gregress_robust") ) {
+        setype = "robust"
+    }
+    else {
+        setype = "homoskedastic"
+    }
+
+    if ( st_numscalar("__gtools_gregress_absorb") > 0 ) {
+        cons = 0
+        absorb = 1
+        absorbvars = tokens(st_local("absorb"))
+    }
+    else {
+        absorb = 0
+        if ( st_numscalar("__gtools_gregress_cons") ) {
+            cons = 1
+        }
+        else {
+            cons = 0
+        }
+    }
+
+    kx = st_numscalar("__gtools_gregress_kv")
+    if ( st_local("byvars") != "" ) {
+        by = 1
+        byvars = tokens(st_local("byvars"))
+    }
+    else {
+        by = 0
+    }
+
+    if ( st_local("yvarlist") != "" ) {
+        yvarlist = tokens(st_local("yvarlist"))
+    }
+
+    if ( st_local("xvarlist") != "" ) {
+        xvarlist = tokens(st_local("xvarlist"))
+    }
+
+    if ( st_local("zvarlist") != "" ) {
+        zvarlist = tokens(st_local("zvarlist"))
+    }
+}
+
+void function GtoolsRegressOutput::readMatrices()
+{
+    real matrix qc
+    real scalar runols, runse, runhdfe
+    J = strtoreal(st_local("r_J"))
+    if ( st_numscalar("__gtools_gregress_savemb") ) {
+        b = editmissing(GtoolsReadMatrix(st_local("gregbfile"),  J, kx), 0)
+    }
+    if ( st_numscalar("__gtools_gregress_savemse") ) {
+        se = GtoolsReadMatrix(st_local("gregsefile"), J, kx)
+        if ( by == 0 ) {
+            Vcov = GtoolsReadMatrix(st_local("gregvcovfile"), kx, kx)
+            qc   = diag((se:^2) :/ rowshape(diagonal(Vcov), 1))
+            Vcov = editmissing(makesymmetric(Vcov :* qc), 0)
+        }
+        else {
+            Vcov = .
+        }
+    }
+
+    runols  = st_numscalar("__gtools_gregress_savemse") | st_numscalar("__gtools_gregress_savegse")
+    runols  = st_numscalar("__gtools_gregress_savemse") | st_numscalar("__gtools_gregress_savegse") | runols
+    runse   = st_numscalar("__gtools_gregress_savemse") | st_numscalar("__gtools_gregress_savegse")
+    runhdfe = st_numscalar("__gtools_gregress_saveghdfe")
+
+    if ( (setype == "cluster") & runols & runse ) {
+        njcluster = GtoolsReadMatrix(st_local("gregclusfile"), J, 1)
+        savenjcluster = 1
+    }
+
+    if ( absorb & (runols | runse | runhdfe) ) {
+        njabsorb = GtoolsReadMatrix(st_local("gregabsfile"), J, st_numscalar("__gtools_gregress_absorb"))
+        savenjabsorb = 1
+    }
+}
+
+void function GtoolsRegressOutput::print(|real scalar trans)
+{
+
+    real scalar j, k
+    if ( args() == 0 ) {
+        trans = 0
+    }
+
+    if ( trans ) {
+        if ( saveb & savese ) {
+            for (j = 1; j <= J; j++) {
+                for (k = 1; k <= kx; k++) {
+                    printf("\t%9.6g (%9.6g)", b[j, k], se[j, k])
+                }
+                    printf("\n")
+            }
+        }
+        else if ( saveb ) {
+            for (j = 1; j <= J; j++) {
+                for (k = 1; k <= kx; k++) {
+                    printf("\t%9.6g", b[j, k])
+                }
+                    printf("\n")
+            }
+        }
+        else if ( savese ) {
+            for (j = 1; j <= J; j++) {
+                for (k = 1; k <= kx; k++) {
+                    printf("\t%(9.6g)", se[j, k])
+                }
+                    printf("\n")
+            }
+        }
+    }
+    else {
+        if ( saveb & savese ) {
+            for (k = 1; k <= kx; k++) {
+                for (j = 1; j <= J; j++) {
+                    printf("\t%9.6g (%9.6g)", b[j, k], se[j, k])
+                }
+                    printf("\n")
+            }
+        }
+        else if ( saveb ) {
+            for (k = 1; k <= kx; k++) {
+                for (j = 1; j <= J; j++) {
+                    printf("\t%9.6g", b[j, k])
+                }
+                    printf("\n")
+            }
+        }
+        else if ( savese ) {
+            for (k = 1; k <= kx; k++) {
+                for (j = 1; j <= J; j++) {
+                    printf("\t(%9.6g)", se[j, k])
+                }
+                    printf("\n")
+            }
+        }
+    }
+}
+
+void function GtoolsRegressOutput::desc()
+{
+    string matrix printstr
+    real scalar i, j, nrows, bpos, sepos, bypos, apos, cpos
+    real rowvector printlens
+    string rowvector printfmts
+
+    nrows = 4
+    if ( saveb ) {
+        nrows = nrows + 1
+        bpos  = nrows
+    }
+    if ( savese ) {
+        sepos = nrows + 1
+        nrows = nrows + 2
+    }
+    if ( by ) {
+        bypos = nrows + 1
+        nrows = nrows + 3
+    }
+    if ( absorb ) {
+        apos  = nrows + 1
+        nrows = nrows + 1 + savenjabsorb
+    }
+    if ( setype == "cluster" ) {
+        cpos  = nrows + 1
+        nrows = nrows + 1 + savenjcluster
+    }
+
+    printstr = J(nrows, 3, " ")
+
+    printstr[1, 1] = "object"
+    printstr[1, 2] = "value"
+    printstr[1, 3] = "description"
+
+    printstr[3, 1] = "kx"
+    printstr[3, 2] = sprintf("%g", kx)
+    printstr[3, 3] = "number of (non-absorbed) covariates"
+
+    printstr[4, 1] = "cons"
+    printstr[4, 2] = sprintf("%g", cons)
+    printstr[4, 3] = "whether a constant was added automagically"
+
+    if ( saveb ) {
+        printstr[bpos, 1] = "b"
+        printstr[bpos, 2] = sprintf("%g x %g matrix", rows(b),  cols(b))
+        printstr[bpos, 3] = "regression coefficients"
+    }
+    if ( savese ) {
+        printstr[sepos,     1] = "se"
+        printstr[sepos + 1, 1] = "setype"
+        printstr[sepos,     2] = sprintf("%g x %g matrix", rows(se), cols(se))
+        printstr[sepos + 1, 2] = sprintf("%s", setype)
+        printstr[sepos,     3] = "corresponding standard errors"
+        printstr[sepos + 1, 3] = "type of SE computed (homoskedastic, robust, or cluster)"
+    }
+    if ( by ) {
+        printstr[bypos,     1] = "byvars"
+        printstr[bypos + 1, 1] = "J"
+        printstr[bypos + 2, 1] = "ByLevels"
+        printstr[bypos,     2] = sprintf("1 x %g row vector", cols(byvars))
+        printstr[bypos + 1, 2] = sprintf("%g", J)
+        printstr[bypos + 2, 2] = sprintf("GtoolsByLevels class object")
+        printstr[bypos,     3] = "grouping variable names"
+        printstr[bypos + 1, 3] = "number of levels defined by grouping variables"
+        printstr[bypos + 2, 3] = sprintf("grouping variable levels; see %s.ByLevels.desc() for details", whoami)
+    }
+    if ( absorb ) {
+        printstr[apos, 1] = "absorbvars"
+        printstr[apos, 2] = sprintf("1 x %g row vector", cols(absorbvars))
+        printstr[apos, 3] = "variables absorbed as fixed effects"
+        if ( savenjabsorb ) {
+            printstr[apos + 1, 1] = "njabsorb"
+            printstr[apos + 1, 2] = sprintf("%g x %g row vector", rows(njabsorb), cols(njabsorb))
+            printstr[apos + 1, 3] = "number of FE each absorb variable had for each grouping level"
+        }
+    }
+    if ( setype == "cluster" ) {
+        printstr[cpos, 1] = "clustervars"
+        printstr[cpos, 2] = sprintf("1 x %g row vector", cols(clustervars))
+        printstr[cpos, 3] = "cluster variables"
+        if ( savenjcluster ) {
+            printstr[cpos + 1, 1] = "njcluster"
+            printstr[cpos + 1, 2] = sprintf("%g x %g row vector", rows(njcluster), cols(njcluster))
+            printstr[cpos + 1, 3] = "number of clusters per grouping level"
+        }
+    }
+
+    printlens      = colmax(strlen(printstr))
+    printfmts      = J(1, 3, "")
+    printstr[2, 1] = sprintf("{hline %g}", printlens[1])
+    printstr[2, 2] = sprintf("{hline %g}", printlens[2])
+    printstr[2, 3] = sprintf("{hline %g}", printlens[3])
+    printfmts[1]   = sprintf("%%-%gs", printlens[1])
+    printfmts[2]   = sprintf("%%%gs",  printlens[2])
+    printfmts[3]   = sprintf("%%-%gs", printlens[3])
+
+    printf("\n")
+    printf("    %s is a class object with %s results\n", whoami, caller)
+    printf("\n")
+    for(i = 1; i <= rows(printstr); i++) {
+        printf("        | ")
+        if ( i == 2 ) {
+            for(j = 1; j <= cols(printstr); j++) {
+                printf(printstr[i, j])
+                printf(" | ")
+            }
+        }
+        else {
+            for(j = 1; j <= cols(printstr); j++) {
+                printf(printfmts[j], printstr[i, j])
+                printf(" | ")
+            }
+        }
+            printf("\n")
+    }
+    printf("\n")
+
+    // else {
+    //     printf("\n")
+    //     printf("    %s is a class object to store regression results; it is currently empty.\n", whoami)
+    //     printf("\n")
+    // }
+}
+end
+
+// mata mata set matastrict on
+// do _gtools_internal.mata

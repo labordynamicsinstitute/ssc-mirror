@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.1.1  11Feb2019}{...}
+{* *! version 0.5.0 26Jan2020}{...}
 {viewerdialog greshape "dialog greshape"}{...}
 {vieweralsosee "[R] greshape" "mansection R greshape"}{...}
 {viewerjumpto "Syntax" "greshape##syntax"}{...}
@@ -160,6 +160,8 @@ are not supported, including: clear, error, query, i, j, xij, and xi.
 {p_end}
 {synopt :{opt match(str)}} Where to match levels of {opt keys()} in stub (default {opt @}). Use {opt match(regex)} for complex matches.
 {p_end}
+{synopt :{opt dropm:iss}} Drop missing observations for reshaped variables.
+{p_end}
 
 {syntab :Wide}
 {synopt :* {opth by(varlist)}} use {it:varlist} as the ID variables (alias {opt i()}).
@@ -170,6 +172,11 @@ are not supported, including: clear, error, query, i, j, xij, and xi.
 {p_end}
 {synopt :{opt match(str)}} Where to replace levels of {opt keys()} in stub (default {opt @}).
 {p_end}
+{synopt :{opt labelf:ormat(str)}} Custom label format using placeholders (only with single variable input for {opt key()}/{opt j()}). Default {it:#keyvalue# #stublabel#}. Other placeholders are {it:#stubname#}, {it:#keyname#}, {it:#keylabel#}, {it:#keyvaluelabel#}.
+{p_end}
+{synopt :{opt prefix(str)}} Custom renaming of reshaped variables (one rename per stub; {opt @} syntax allowed).
+{p_end}
+
 
 {syntab :Common long and wide options}
 {synopt :{opt fast}} Do not wrap the reshape in preserve/restore pairs.
@@ -191,11 +198,17 @@ are not supported, including: clear, error, query, i, j, xij, and xi.
 {p_end}
 {synopt :{opth keys(varname)}} wide->long: {it:varname}, new variable to store variable names (default {it:_key}).
 {p_end}
-{synopt :{opt usel:abels}}Store variable labels instead of their names.
+{synopt :{opt usel:abels[{cmd:(}{it:str}{cmd:)}]}} Store variable labels instead of their names (optionally specify which variables to do this for).
+{p_end}
+{synopt :{opt dropm:iss}} Drop missing observations for reshaped variables.
 {p_end}
 
 {syntab :Spread}
 {synopt :* {opth keys(varlist)}} long->wide: {it:varlist}, existing variable with variable names.
+{p_end}
+{synopt :{opt labelf:ormat(str)}} Custom label format using placeholders (only with single variable input for {opt key()}/{opt j()}). Default {it:#keyvalue# #stublabel#}. Other placeholders are {it:#stubname#}, {it:#keyname#}, {it:#keylabel#}, {it:#keyvaluelabel#}.
+{p_end}
+{synopt :{opt prefix(str)}} Custom renaming of reshaped variables (one common rename; {opt @} syntax allowed).
 {p_end}
 
 {syntab :Common gather and spread options}

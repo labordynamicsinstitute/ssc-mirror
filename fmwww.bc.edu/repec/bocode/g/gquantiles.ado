@@ -55,6 +55,7 @@ program gquantiles, rclass
                                         ///
         by(str)                         /// By variabes: [+|-]varname [[+|-]varname ...]
         replace                         /// Replace newvar, if it exists
+        noinit                          /// Do not initialize targets with missing values
         strict                          /// Exit with error if nq < # if in and non-missing
         minmax                          /// Store r(min) and r(max) (pctiles must be in (0, 100))
         method(passthru)                /// Method to compute quantiles: (1) qsort, (2) qselect
@@ -78,16 +79,16 @@ program gquantiles, rclass
         fill(passthru)                  ///
     ]
 
-    local if0     `if'
-    local in0     `in'
-    local ifin    `if' `in'
-    local weight0 `weight'
-    local exp0    `"`exp'"'
+    local if0:     copy local if
+    local in0:     copy local in
+    local weight0: copy local weight
+    local exp0:    copy local exp
+    mata st_local("ifin", st_local("if") + " " + st_local("in"))
 
     if ( `benchmarklevel' > 0 ) local benchmark benchmark
     local benchmarklevel benchmarklevel(`benchmarklevel')
 
-    local gfallbackmaybe = "`replace'`by'`pctilevar'`xtilevar'`minmax'`cutoffs'`quantmatrix'`cutmatrix'`cutquantiles'`binfreq'`binfreqvar'" == ""
+    local gfallbackmaybe = "`replace'`init'`by'`pctilevar'`xtilevar'`minmax'`cutoffs'`quantmatrix'`cutmatrix'`cutquantiles'`binfreq'`binfreqvar'" == ""
 
     local gen_pctile = ("`pctile'" != "") | ("`pctilevar'" != "")
     local gen_xtile  = ("`xtile'"  != "") | ("`xtilevar'"  != "")
@@ -248,7 +249,7 @@ program gquantiles, rclass
             }
             else {
                 local xsources `anything'
-                local ifin `ifin'
+                local ifin: copy local ifin
             }
         }
         else if ( "`replace'" == "" ) {
@@ -270,13 +271,13 @@ program gquantiles, rclass
                 if ( _rc ) {
                     di as err "Invalid expression"
                     CleanExit
-                    error 198
+                    exit 198
                 }
                 local ifin if `touse' `in0'
             }
             else {
                 local xsources `exp'
-                local ifin `ifin'
+                local ifin: copy local ifin
             }
         }
     }
@@ -294,14 +295,27 @@ program gquantiles, rclass
             if ( _rc ) {
                 di as err "Invalid expression"
                 CleanExit
-                error 198
+                exit 198
             }
             local ifin if `touse' `in0'
         }
         else {
             local xsources `exp'
-            local ifin `ifin'
+            local ifin: copy local ifin
         }
+    }
+
+    cap unab xsources: `xsources'
+    if ( _rc ) {
+        disp "unable to parse source variables or expression"
+        CleanExit
+        exit 198
+    }
+
+    if ( `:list sizeof xsources' > 1 ) {
+        disp "multiple sources not allowed"
+        CleanExit
+        exit 198
     }
 
     if ( "`binfreq'" != "" ) {
@@ -348,7 +362,7 @@ program gquantiles, rclass
     local gqopts `gqopts' `binadd' `binaddvar' `nquantiles' `quantiles'
     local gqopts `gqopts' `cutoffs' `cutpoints' `quantmatrix'
     local gqopts `gqopts' `cutmatrix' `cutquantiles' `cutifin' `cutby'
-    local gqopts `gqopts' `dedup' `replace' `altdef' `method' `strict'
+    local gqopts `gqopts' `dedup' `replace' `init' `altdef' `method' `strict'
     local gqopts `gqopts' `minmax' returnlimit(`returnlimit')
 
     cap noi _gtools_internal `by' `ifin', missing unsorted `opts' gquantiles(`gqopts') gfunction(quantiles)

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.1 23Jan2019}{...}
+{* *! version 1.2.1 30Jan2020}{...}
 {viewerdialog gcollapse "dialog gcollapse"}{...}
 {vieweralsosee "[R] gcollapse" "mansection R gcollapse"}{...}
 {viewerjumpto "Syntax" "gcollapse##syntax"}{...}
@@ -16,6 +16,12 @@ make dataset of summary statistics using C.{p_end}
 {pstd}
 {it:Important}: Please run {stata gtools, upgrade} to update {cmd:gtools} to
 the latest stable version.
+
+{pstd}
+{it:Note}: Stata 17+, MP version, introduced significant speed improvements
+to the native {cmd:collapse} command, specially with many cores. Depending
+on the collapse, it can be up to twice as fast than {cmd:gcollapse}; however,
+it remained slower for some use cases. YMMV.
 
 {marker syntax}{...}
 {title:Syntax}
@@ -49,6 +55,7 @@ in IC and 4-120 times faster in MP), with several additions.
 
 {p2colset 9 22 24 2}{...}
 {p2col :{opt mean}}means (default){p_end}
+{p2col :{opt geomean}}geometric mean (missing if var has any negative values){p_end}
 {p2col :{opt count}}number of nonmissing observations{p_end}
 {p2col :{opt nmissing}}number of missing observations{p_end}
 {p2col :{opt percent}}percentage of nonmissing observations{p_end}
@@ -86,6 +93,9 @@ in IC and 4-120 times faster in MP), with several additions.
 {p2col :{opt sep:oisson}}standard error of the mean, Poisson ({cmd:sqrt(mean / n)}) (result rounded to nearest integer){p_end}
 {p2col :{opt skewness}}Skewness{p_end}
 {p2col :{opt kurtosis}}Kurtosis{p_end}
+{p2col :{opt gini}}Gini coefficient (negative truncated to 0){p_end}
+{p2col :{opt gini dropneg}}Gini coefficient (negative values dropped){p_end}
+{p2col :{opt gini keepneg}}Gini coefficient (negative values kept; the user is responsible for the interpretation of the Gini in this case){p_end}
 {p2colreset}{...}
 
 {synoptset 18 tabbed}{...}

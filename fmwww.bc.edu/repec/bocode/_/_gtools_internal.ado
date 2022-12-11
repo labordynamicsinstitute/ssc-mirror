@@ -1,4 +1,4 @@
-*! version 1.5.1 24Mar2019 Mauricio Caceres Bravo, mauricio.caceres.bravo@gmail.com
+*! version 1.10.1 05Dec2022 Mauricio Caceres Bravo, mauricio.caceres.bravo@gmail.com
 *! gtools function internals
 
 * rc 17000
@@ -14,10 +14,14 @@
 * rc 18102 - greshape wide j variables not unique within id
 * rc 18103 - greshape wide xi variables not unique within id
 * rc 18201 - gstats all variables are non-numeric (soft exit)
+* rc 18301 - gstats transform; unexpected number of stats passed to transform
+* rc 18401 - gregress k > N (too many vars/absorb levels)
+* rc 18402 - hdfe maximum number of iterations
 * --------
 * rc 17459 - isid special error
 * rc 17900 - multi-threading not available
 * rc 17901 - generic not implemented
+* rc 17902 - gtools API OOM
 * rc 17999 - collision error
 * --------
 * > 0 to < 100 strict gives quantiles
@@ -38,19 +42,50 @@ program _gtools_internal, rclass
         exit _rc
     }
 
-    tempfile gstatsfile
-    tempfile gbyvarfile
-    tempfile gbycolfile
-    tempfile gbynumfile
-    tempfile gtopnumfile
-    tempfile gtopmatfile
+    if ( `"${GTOOLS_TEMPDIR}"' == "" ) {
+        tempfile gregfile
+        tempfile gregbfile
+        tempfile gregsefile
+        tempfile gregvcovfile
+        tempfile gregclusfile
+        tempfile gregabsfile
+        tempfile ghdfeabsfile
+        tempfile gstatsfile
+        tempfile gbyvarfile
+        tempfile gbycolfile
+        tempfile gbynumfile
+        tempfile gtopnumfile
+        tempfile gtopmatfile
+    }
+    else {
+        GtoolsTempFile gregfile
+        GtoolsTempFile gregbfile
+        GtoolsTempFile gregsefile
+        GtoolsTempFile gregvcovfile
+        GtoolsTempFile gregclusfile
+        GtoolsTempFile gregabsfile
+        GtoolsTempFile ghdfeabsfile
+        GtoolsTempFile gstatsfile
+        GtoolsTempFile gbyvarfile
+        GtoolsTempFile gbycolfile
+        GtoolsTempFile gbynumfile
+        GtoolsTempFile gtopnumfile
+        GtoolsTempFile gtopmatfile
+    }
 
-    global GTOOLS_GSTATS_FILE:  copy local gstatsfile
-    global GTOOLS_BYVAR_FILE:   copy local gbyvarfile
-    global GTOOLS_BYCOL_FILE:   copy local gbycolfile
-    global GTOOLS_BYNUM_FILE:   copy local gbynumfile
-    global GTOOLS_GTOPNUM_FILE: copy local gtopnumfile
-    global GTOOLS_GTOPMAT_FILE: copy local gtopmatfile
+    global GTOOLS_GREG_FILE:     copy local gregfile
+    global GTOOLS_GREGB_FILE:    copy local gregbfile
+    global GTOOLS_GREGSE_FILE:   copy local gregsefile
+    global GTOOLS_GREGVCOV_FILE: copy local gregvcovfile
+    global GTOOLS_GREGCLUS_FILE: copy local gregclusfile
+    global GTOOLS_GREGABS_FILE:  copy local gregabsfile
+    global GTOOLS_GHDFEABS_FILE: copy local ghdfeabsfile
+    global GTOOLS_GSTATS_FILE:   copy local gstatsfile
+    global GTOOLS_BYVAR_FILE:    copy local gbyvarfile
+    global GTOOLS_BYCOL_FILE:    copy local gbycolfile
+    global GTOOLS_BYNUM_FILE:    copy local gbynumfile
+    global GTOOLS_GTOPNUM_FILE:  copy local gtopnumfile
+    global GTOOLS_GTOPMAT_FILE:  copy local gtopmatfile
 
     global GTOOLS_USER_INTERNAL_VARABBREV `c(varabbrev)'
     * set varabbrev off
@@ -77,6 +112,7 @@ program _gtools_internal, rclass
                          gquantiles   ///
                          gstats       ///
                          greshape     /// 11
+                         gregress     ///
                          ghash
 
     if ( !(`:list GTOOLS_CALLER in GTOOLS_CALLERS') | ("$GTOOLS_CALLER" == "") ) {
@@ -133,6 +169,7 @@ program _gtools_internal, rclass
         oncollision(str)          /// On collision, fall back or throw error
         gfunction(str)            /// Program to handle collision
         replace                   /// Replace variables, if they exist
+        noinit                    /// Do not initialize targets with missing values
         compress                  /// Try to compress strL variables
         forcestrl                 /// Force reading strL variables (stata 14 and above only)
                                   ///
@@ -163,6 +200,7 @@ program _gtools_internal, rclass
                                   /// ---------------
                                   ///
         greshape(str)             /// options for greshape (to parse later)
+        gregress(str)             /// options for gregress (to parse later)
         gstats(str)               /// options for gstats (to parse later)
         gquantiles(str)           /// options for gquantiles (to parse later)
         gcontract(str)            /// options for gcontract (to parse later)
@@ -214,8 +252,8 @@ program _gtools_internal, rclass
     * }
 
     if ( `benchmarklevel' > 0 ) local benchmark benchmark
-    local ifin `if' `in'
-    local gen  `generate'
+    local gen `generate'
+    mata st_local("ifin", strtrim(st_local("if") + " " + st_local("in")))
 
     local hashmethod `hashmethod'
     if ( `"`hashmethod'"' == "" ) local hashmethod 0
@@ -296,6 +334,7 @@ program _gtools_internal, rclass
         disp as txt `"    gquantiles:       `gquantiles'"'
         disp as txt `"    gcontract:        `gcontract'"'
         disp as txt `"    gstats:           `gstats'"'
+        disp as txt `"    gregress:         `gregress'"'
         disp as txt `"    greshape:         `greshape'"'
         disp as txt `"    gcollapse:        `gcollapse'"'
         disp as txt `"    gtop:             `gtop'"'
@@ -390,6 +429,7 @@ program _gtools_internal, rclass
                          top      ///
                          contract ///
                          stats    ///
+                         regress  ///
                          reshape  ///
                          quantiles
 
@@ -448,7 +488,7 @@ program _gtools_internal, rclass
     *     - The output cannot be unsorted!
 
     if ( inlist("`gfunction'", "sort") ) {
-        if ( "`if'" != "" ) {
+        if ( `"`if'"' != "" ) {
             di as err "Cannot sort data with if condition"
             clean_all 198
             exit 198
@@ -682,6 +722,13 @@ program _gtools_internal, rclass
     mata: st_numscalar("__gtools_gfile_topnum", strlen(st_local("gtopnumfile")) + 1)
     mata: st_numscalar("__gtools_gfile_topmat", strlen(st_local("gtopmatfile")) + 1)
 
+    mata: st_numscalar("__gtools_gfile_gregb",    strlen(st_local("gregbfile"))    + 1)
+    mata: st_numscalar("__gtools_gfile_gregse",   strlen(st_local("gregsefile"))   + 1)
+    mata: st_numscalar("__gtools_gfile_gregvcov", strlen(st_local("gregvcovfile")) + 1)
+    mata: st_numscalar("__gtools_gfile_gregclus", strlen(st_local("gregclusfile")) + 1)
+    mata: st_numscalar("__gtools_gfile_gregabs",  strlen(st_local("gregabsfile"))  + 1)
+    mata: st_numscalar("__gtools_gfile_ghdfeabs", strlen(st_local("ghdfeabsfile")) + 1)
+
     scalar __gtools_init_targ   = 0
     scalar __gtools_any_if      = `any_if'
     scalar __gtools_verbose     = `verbose'
@@ -721,6 +768,8 @@ program _gtools_internal, rclass
     scalar __gtools_top_other       = 0
     scalar __gtools_top_lmiss       = 0
     scalar __gtools_top_lother      = 0
+    scalar __gtools_top_Jmiss       = 0
+    scalar __gtools_top_Jother      = 0
     matrix __gtools_contract_which  = J(1, 4, 0)
     matrix __gtools_invert          = 0
     matrix __gtools_weight_smat     = wselmat
@@ -760,6 +809,7 @@ program _gtools_internal, rclass
     matrix __gtools_xtile_quantbin  = J(1, 1, .)
     matrix __gtools_xtile_cutbin    = J(1, 1, .)
 
+    gregress_scalars init
     gstats_scalars   init
     greshape_scalars init
 
@@ -769,8 +819,8 @@ program _gtools_internal, rclass
     * Again, glevelsof is parsed in the open since I defined the options
     * before moving to capturing each caller's options.
 
-    else local sep: copy local separate
     if ( `"`separate'"' == "" ) local sep `" "'
+    else local sep: copy local separate
 
     if ( `"`colseparate'"' == "" ) local colsep `" | "'
     else local colsep: copy local colseparate
@@ -1071,7 +1121,7 @@ program _gtools_internal, rclass
             if ( _rc ) {
                 local notfound
                 foreach var of local clean_anything {
-                    cap confirm var `var'
+                    cap ds `var'
                     if ( _rc  ) {
                         local notfound `notfound' `var'
                     }
@@ -1478,7 +1528,8 @@ program _gtools_internal, rclass
         scalar __gtools_used_io   = 0
         scalar __gtools_ixfinish  = 0
         scalar __gtools_J         = _N
-        scalar __gtools_init_targ = ("`ifin'" != "") & ("`merge'" != "")
+        scalar __gtools_init_targ = (`"`ifin'"' != "") & ("`merge'" != "") & ("`init'" == "")
+            if ( (`"`ifin'"' != "") & ("`replace'" != "") & ("`init'" != "") ) NoInitWarning
 
         if inlist("`anything'", "forceio", "switch") {
             local extravars `__gtools_sources' `__gtools_sources' `freq'
@@ -1583,11 +1634,12 @@ program _gtools_internal, rclass
 
         if ( inlist("`gfunction'", "unique", "egen", "hash") ) {
             local gcall hash
-            scalar __gtools_init_targ = ("`ifin'" != "") & ("`replace'" != "")
+            scalar __gtools_init_targ = (`"`ifin'"' != "") & ("`replace'" != "") & ("`init'" == "")
+            if ( (`"`ifin'"' != "") & ("`replace'" != "") & ("`init'" != "") ) NoInitWarning
         }
         else if ( inlist("`gfunction'",  "reshape") ) {
             local 0: copy local greshape
-            syntax anything, xij(str) [j(str) xi(str) File(str) STRing(int 0)]
+            syntax anything, xij(str) [j(str) xi(str) File(str) STRing(int 0) DROPMISSing]
 
             gettoken shape readwrite: anything
             local readwrite `readwrite'
@@ -1613,12 +1665,627 @@ program _gtools_internal, rclass
             }
 
             local gcall `gfunction' `readwrite' `"`file'"'
+
             scalar __gtools_greshape_code = cond(`"`shape'"' == "wide", 2, 1)
             if ( (`"`shape'"' == "wide") | ("`readwrite'" == "read") ) {
                 local reshapevars `j' `reshapevars'
             }
-            scalar __gtools_greshape_str = `string'
-            scalar __gtools_greshape_kxi = `:list sizeof xi'
+            scalar __gtools_greshape_str      = `string'
+            scalar __gtools_greshape_kxi      = `:list sizeof xi'
+            scalar __gtools_greshape_dropmiss = ( `"`dropmissing'"' != "" )
+        }
+        else if ( inlist("`gfunction'",  "regress") ) {
+            local gcall `gfunction' `"${GTOOLS_GREG_FILE}"'
+            local 0: copy local gregress
+            // syntax varlist(numeric ts fv), [ /// TODO: ts fv not yet supported!
+            syntax varlist(numeric), [       /// TODO: ts fv not yet supported!
+                Robust                       /// Robust SE
+                cluster(str)                 /// Cluster by varlist
+                absorb(varlist)              /// Absorb each var in varlist as FE
+                interval(str)                /// Interval for rolling regressions
+                window(str)                  /// Window for moving regressions
+                hdfetol(real 1e-8)           /// Tolerance for hdfe convergence
+                STANdardize                  /// standardize before applying transform
+                TRACEiter                    /// trace iteration progress (internal hdfe)
+                maxiter(real 100000)         /// maximum number of hdfe iterations
+                algorithm(str)               /// alias for method
+                method(str)                  /// projection method for hdfe
+                                             /// map (method of alternating projections)
+                                             /// squarem
+                                             /// conjugate gradient|cg (default)
+                                             /// it|irons tuck
+                noConstant                   /// Whether to add a constant
+                                             ///
+                ivkendog(int 0)              /// IV endogenous
+                ivkexog(int 0)               /// IV exogenous
+                ivkz(int 0)                  /// IV instruments
+                                             ///
+                glmtol(real 1e-8)            /// Tolerance for GLM (IRLS) convergence
+                glmiter(int 1000)            /// Max iterations for GLM convergence
+                glmfam(str)                  /// GLM family
+                glmlink(str)                 /// GLM link function
+                                             ///
+                mata(str)                    /// save in mata (default)
+                GENerate(str)                /// save in varlist
+                prefix(str)                  /// save prepending prefix
+                PREDict(str)                 /// save fit in `predict'
+                resid                        /// save residuals in _resid_`yvarlist'
+                RESIDuals(str)               /// save residuals in `residuals'
+                replace                      /// Replace targets, if they exist
+                noinit                       /// Do not initialize targets with missing values
+            ]
+
+            if ( ("`algorithm'" != "") & ("`method'" != "") ) {
+                disp as err "gregress: method() is an alias for algorithm(); specify only one"
+                clean_all 198
+                exit 198
+            }
+            if ( `"`algorithm'"' == "" ) local algorithm  cg
+            if ( `"`method'"'    != "" ) local algorithm: copy local method
+            local method: copy local algorithm
+
+            if ( `maxiter' < 1 ) {
+                disp as err "gregress: maxiter() must be >= 1"
+                clean_all 198
+                exit 198
+            }
+
+            if ( missing(`maxiter') ) local maxiter 0
+            local maxiter = floor(`maxiter')
+
+            if ( lower(`"`method'"') == "map" ) {
+                local method_code 1
+                local method map
+            }
+            else if ( lower(`"`method'"') == "squarem" ) {
+                local method_code 2
+                local method squarem
+            }
+            else if ( inlist(lower(`"`method'"'), "conjugate gradient", "conjugate_gradient", "cg") ) {
+                local method_code 3
+                local method cg
+            }
+            else if ( inlist(lower(`"`method'"'), "irons and tuck", "irons tuck", "irons_tuck", "it") ) {
+                local method_code 5
+                local method it
+            }
+            else if ( inlist(lower(`"`method'"'), "bit", "berge_it", "berge it") ) {
+                * TODO: gives segfault on some runs last I checked; debug someday.
+                * Option is undocumented but I leave it here for myself.
+                local method_code 6
+                local method bit
+            }
+            else {
+                disp as err "gstats_hdfe: method() must be one of: map, squarem, cg, it"
+                clean_all 198
+                exit 198
+            }
+
+            local ivregress
+            if ( `ivkendog' > 0 ) {
+                if ( `ivkz' >= `ivkendog' ) {
+                    local ivregress ivregress
+                }
+                else {
+                    disp as error "Need at least as many instruments as endogenous variables (received `ivkz' < `ivkendog')"
+                    local rc = 198
+                    clean_all `rc'
+                    exit `rc'
+                }
+            }
+            else if ( `ivkz' > 0 ) {
+                disp as error "Detected instruments but no endogenous variables for IV regresssion"
+                local rc = 198
+                clean_all `rc'
+                exit `rc'
+            }
+
+            if ( (`"`window'"' != "") & (`"`interval'"' != "") ) {
+                disp as err "moving() and window() are mutually exclusive options"
+                local rc = 198
+                clean_all `rc'
+                exit `rc'
+            }
+
+            if ( (`"`window'"' != "") | (`"`interval'"' != "") ) {
+                if ( `"`window'"'   != "" ) local what window
+                if ( `"`interval'"' != "" ) local what interval
+
+                disp as err "option `what'() is planned for the next release"
+                local rc = 198
+                clean_all `rc'
+                exit `rc'
+
+                if ( `"`cluster'"' != "" ) {
+                    disp as err "cluster() cannot yet be combined with `what'(); this is planned for the next release"
+                    local rc = 198
+                    clean_all `rc'
+                    exit `rc'
+                }
+
+                if ( `"`absorb'"' != "" ) {
+                    disp as err "absorb() cannot yet be combined with `what'(); this is planned for the next release"
+                    local rc = 198
+                    clean_all `rc'
+                    exit `rc'
+                }
+            }
+
+            if ( `"`window'"' != "" ) {
+                encode_moving moving regress `interval'
+                if ( `r(warn)' ) {
+                    disp as txt "{bf:note:} requested window() without a window; will ignore"
+                }
+                else if ( `r(match)' ) {
+                    scalar __gtools_gregress_moving   = `r(scode)'
+                    scalar __gtools_gregress_moving_l = `r(lower)'
+                    scalar __gtools_gregress_moving_u = `r(upper)'
+                }
+                else {
+                    disp as err "window() incorrectly specified"
+                    local rc = 198
+                    clean_all `rc'
+                    exit `rc'
+                }
+            }
+
+            local intervalvar
+            if ( `"`interval'"' != "" ) {
+                encode_range range regress `interval'
+                if ( `r(warn)' ) {
+                    disp as txt "{bf:note:} requested interval() without an interval; will ignore"
+                }
+                else if ( `r(match)' & (`"`r(var)'"' == "") ) {
+                    disp as err "interval() requires a variable; interval(lower upper varname)"
+                    local rc = 198
+                    clean_all `rc'
+                    exit `rc'
+                }
+                else if ( `r(match)' ) {
+                    scalar __gtools_gregress_range    = 1
+                    scalar __gtools_gregress_range_l  = `r(lower)'
+                    scalar __gtools_gregress_range_u  = `r(upper)'
+                    scalar __gtools_gregress_range_ls = `r(lcode)'
+                    scalar __gtools_gregress_range_us = `r(ucode)'
+                    local intervalvar `r(var)'
+                }
+                else {
+                    disp as err "interval() incorrectly specified"
+                    local rc = 198
+                    clean_all `rc'
+                    exit `rc'
+                }
+            }
+
+            * TODO: strL support
+            if ( `"`cluster'"' != "" ) {
+                GenericParseTypes `cluster', mat(__gtools_gregress_clustyp)
+            }
+
+            if ( (`"`cluster'"' == "") & (`"`robust'"' == "") & (`wcode' == 4) ) {
+                disp as txt "{bf:note:} robust SE will be computed with pweights"
+            }
+
+            if ( (`"`cluster'"' == "") & (`"`robust'"' == "") & (`"`glmfam'"' != "") ) {
+                disp as txt "{bf:note:} robust SE will be computed with GLM (`glmfam')"
+            }
+
+            if ( (`wcode' == 4) | (`"`glmfam'"' != "") ) {
+                local robust robust
+            }
+
+            if ( `:list sizeof residuals' > 1 ) {
+                disp as err "resid() must specify a single variable name"
+                local rc = 198
+                clean_all `rc'
+                exit `rc'
+            }
+
+            if ( `:list sizeof predict' > 1 ) {
+                disp as err "predict() must specify a single variable name"
+                local rc = 198
+                clean_all `rc'
+                exit `rc'
+            }
+
+            local regressvars `varlist' `cluster' `absorb' `intervalvar'
+
+            scalar __gtools_gregress_hdfemethnm    = cond(`:list sizeof absorb' > 1, "`method'", "direct")
+            scalar __gtools_gregress_hdfemethod    = `method_code'
+            scalar __gtools_gregress_kvars         = `:list sizeof varlist'
+            scalar __gtools_gregress_cons          = `"`constant'"' != "noconstant"
+            scalar __gtools_gregress_robust        = `"`robust'"'   != ""
+            scalar __gtools_gregress_cluster       = `:list sizeof cluster'
+            scalar __gtools_gregress_absorb        = `:list sizeof absorb'
+            scalar __gtools_gregress_hdfetol       = `hdfetol'
+            scalar __gtools_gregress_hdfemaxiter   = `maxiter'
+            scalar __gtools_gregress_hdfetraceiter = "`traceiter'" != ""
+            scalar __gtools_gregress_hdfestandard  = "`standardize'" != ""
+            scalar __gtools_gregress_glmfam        = `"`glmfam'"' != ""
+            scalar __gtools_gregress_glmlogit      = (`"`glmfam'"' == "binomial") & (`"`glmlink'"' == "logit")
+            scalar __gtools_gregress_glmpoisson    = (`"`glmfam'"' == "poisson")  & (`"`glmlink'"' == "log")
+            scalar __gtools_gregress_glmiter       = `glmiter'
+            scalar __gtools_gregress_glmtol        = `glmtol'
+            scalar __gtools_gregress_ivreg         = `"`ivregress'"' != ""
+            scalar __gtools_gregress_ivkendog      = `ivkendog'
+            scalar __gtools_gregress_ivkexog       = `ivkexog'
+            scalar __gtools_gregress_ivkz          = `ivkz'
+
+            if ( scalar(__gtools_gregress_glmlogit) ) {
+                local Caller Logit
+                local caller glogit
+            }
+            else if ( scalar(__gtools_gregress_glmpoisson) ) {
+                local Caller Poisson
+                local caller gpoisson
+            }
+            else if ( scalar(__gtools_gregress_ivreg) ) {
+                local Caller IV
+                local caller givregress
+            }
+            else {
+                local Caller Regress
+                local caller gregress
+            }
+
+            if ( scalar(__gtools_gregress_glmfam) & scalar(__gtools_gregress_ivreg) ) {
+                disp as err "Parsing error: GLM (`caller') and givregress cannot be run at the same time"
+                local rc = 198
+                clean_all `rc'
+                exit `rc'
+            }
+
+            if ( scalar(__gtools_gregress_cluster) > 1 ) {
+                disp as txt "({bf:warning}: cluster() with multiple variables is assumed to be nested)"
+            }
+
+            if ( scalar(__gtools_gregress_kvars) < 2 ) {
+                disp as err "2 or more variables required: depvar indepvar [indepvar ...]"
+                local rc = 198
+                clean_all `rc'
+                exit `rc'
+            }
+
+            local zvarlist
+            local yxvarlist: copy local varlist
+            gettoken yvarlist xvarlist: yxvarlist
+            scalar __gtools_gregress_kv = __gtools_gregress_kvars - 1 - __gtools_gregress_ivkz
+            if ( scalar(__gtools_gregress_ivreg) ) {
+                 local _xvarlist
+                 forvalues i = 1 / `=scalar(__gtools_gregress_kv)' {
+                     local _xvarlist `_xvarlist' `:word `i' of `xvarlist''
+                 }
+                 local zvarlist
+                 forvalues i = `=scalar(__gtools_gregress_kv) + 1' / `=scalar(__gtools_gregress_kvars) - 1' {
+                     local zvarlist `zvarlist' `:word `i' of `xvarlist''
+                 }
+                 local xvarlist: copy local _xvarlist
+            }
+            scalar __gtools_gregress_kv = __gtools_gregress_kv + __gtools_gregress_cons * (__gtools_gregress_absorb == 0)
+
+            if ( `"`mata'`generate'`prefix'"' == "" ) {
+                scalar __gtools_gregress_savemata = 1
+                scalar __gtools_gregress_savemb   = 1
+                scalar __gtools_gregress_savemse  = 1
+                local saveGregressMata Gtools`Caller'
+                mata: `saveGregressMata' = GtoolsRegressOutput()
+                mata: `saveGregressMata'.whoami = `"`saveGregressMata'"'
+            }
+            else {
+                if ( `"`mata'"' != "" ) {
+                    local 0 `mata'
+                    cap noi syntax [namelist(max = 1)], [noB noSE]
+                    if ( `"`namelist'"' == "" ) local namelist Gtools`Caller'
+
+                    scalar __gtools_gregress_savemata = 1
+                    scalar __gtools_gregress_savemb   = `"`b'"'  != "nob"
+                    scalar __gtools_gregress_savemse  = `"`se'"' != "nose"
+
+                    local saveGregressMata `namelist'
+                    mata: `saveGregressMata' = GtoolsRegressOutput()
+                    mata: `saveGregressMata'.whoami = `"`saveGregressMata'"'
+                }
+
+                if ( (`"`generate'"' != "") & (`"`prefix'"' != "") ) {
+                    local 0, `generate' `prefix'
+                    cap syntax, [b(str) se(str) hdfe(str)]
+                    if ( _rc ) {
+                        disp as err "cannot specify multiple saves across gen() and prefix()"
+                        local rc = 198
+                        clean_all `rc'
+                        exit `rc'
+                    }
+                }
+
+                if ( `"`generate'"' != "" ) {
+                    local 0, `generate'
+                    cap noi syntax, [b(str) se(str) hdfe(str)]
+                    if ( _rc ) {
+                        disp as err "error parsing gen()"
+                        local rc = 198
+                        clean_all `rc'
+                        exit `rc'
+                    }
+
+                    if ( (`:list sizeof b' != scalar(__gtools_gregress_kv)) & (`"`b'"' != "") ) {
+                        disp as err "number of output variables in gen(b()) does not match number of inputs"
+                        if ( scalar(__gtools_gregress_cons) ) {
+                            if ( `:list sizeof b' == (scalar(__gtools_gregress_kv) - 1) ) {
+                                disp as err "Did you forget the constant?"
+                            }
+                        }
+                        local rc = 198
+                        clean_all `rc'
+                        exit `rc'
+                    }
+
+                    if ( (`:list sizeof se' != scalar(__gtools_gregress_kv)) & (`"`se'"' != "") ) {
+                        disp as err "number of output variables in gen(se()) does not match number of inputs"
+                        if ( scalar(__gtools_gregress_cons) ) {
+                            if ( `:list sizeof se' == (scalar(__gtools_gregress_kv) - 1) ) {
+                                disp as err "Did you forget the constant?"
+                            }
+                        }
+                        local rc = 198
+                        clean_all `rc'
+                        exit `rc'
+                    }
+
+                    if ( (`"`hdfe'"' != "") & (scalar(__gtools_gregress_absorb) == 0) ) {
+                        disp as err "gen(hdfe()) without absorb() just makes a copy of the variables"
+                    }
+                    else if ( (`:list sizeof hdfe' != scalar(__gtools_gregress_kvars)) & (`"`hdfe'"' != "") ) {
+                        disp as err "number of output variables in gen(hdfe()) does not match number of inputs"
+                        local rc = 198
+                        clean_all `rc'
+                        exit `rc'
+                    }
+
+                    if ( "`replace'" == "" ) {
+                        cap noi confirm new var `b' `se' `hdfe'
+                        if ( _rc ) {
+                            local rc = _rc
+                            clean_all `rc'
+                            exit `rc'
+                        }
+                    }
+
+                    local nvar = 0
+                    local togen
+                    foreach var in `b' `se' `hdfe' {
+                        cap confirm new var `var'
+                        if ( _rc == 0 ) {
+                            local togen `togen' `var'
+                            local ++nvar
+                        }
+                    }
+
+                    scalar __gtools_gregress_savegb    = `"`b'"'    != ""
+                    scalar __gtools_gregress_savegse   = `"`se'"'   != ""
+                    scalar __gtools_gregress_saveghdfe = `"`hdfe'"' != ""
+
+                    if ( `nvar' > 0 ) {
+                        qui mata: (void) st_addvar(J(1, `nvar', `"`:set type'"'), tokens(`"`togen'"'))
+                    }
+                    local regressvars `regressvars' `b' `se' `hdfe'
+                }
+
+                if ( `"`prefix'"' != "" ) {
+                    local 0, `prefix'
+                    cap noi syntax, [b(str) se(str) hdfe(str)]
+                    if ( _rc ) {
+                        disp as err "error parsing prefix()"
+                        local rc = 198
+                        clean_all `rc'
+                        exit `rc'
+                    }
+
+                    if ( (`:list sizeof b' != 1) & (`"`b'"' != "") ) {
+                        disp as err "specify a single prefix in prefix(b())"
+                        local rc = 198
+                        clean_all `rc'
+                        exit `rc'
+                    }
+
+                    if ( (`:list sizeof se' != 1) & (`"`se'"' != "") ) {
+                        disp as err "specify a single prefix in prefix(se())"
+                        local rc = 198
+                        clean_all `rc'
+                        exit `rc'
+                    }
+
+                    if ( (`:list sizeof hdfe' != 1) & (`"`hdfe'"' != "") ) {
+                        disp as err "specify a single prefix in prefix(hdfe())"
+                        local rc = 198
+                        clean_all `rc'
+                        exit `rc'
+                    }
+
+                    if ( (`"`hdfe'"' != "") & (scalar(__gtools_gregress_absorb) == 0) ) {
+                        disp as err "prefix(hdfe()) without absorb() just makes a copy of the variables"
+                    }
+
+                    local bvars
+                    local sevars
+                    if ( `"`hdfe'"' != "" ) {
+                        local hdfevars `hdfe'`yvarlist'
+                        cap confirm name `hdfe'`yvarlist'
+                        if ( _rc ) {
+                            disp as err "prefix(hdfe()) results in invalid variable name, `hdfe'`yvarlist'"
+                            local rc = 198
+                            clean_all `rc'
+                            exit `rc'
+                        }
+                    }
+
+                    if ( scalar(__gtools_gregress_cons) * (scalar(__gtools_gregress_absorb) == 0) ) {
+                        local cons cons
+                    }
+                    else local cons
+
+                    foreach xvar in `xvarlist' `cons' {
+                        if ( `"`b'"' != "" ) {
+                            local bvars  `bvars' `b'`xvar'
+                            cap confirm name `b'`xvar'
+                            if ( _rc ) {
+                                disp as err "prefix(b()) results in invalid variable name, `b'`xvar'"
+                                local rc = 198
+                                clean_all `rc'
+                                exit `rc'
+                            }
+                        }
+                        if ( `"`se'"' != "" ) {
+                            local sevars  `sevars' `se'`xvar'
+                            cap confirm name `se'`xvar'
+                            if ( _rc ) {
+                                disp as err "prefix(se()) results in invalid variable name, `se'`xvar'"
+                                local rc = 198
+                                clean_all `rc'
+                                exit `rc'
+                            }
+                        }
+                        if ( `"`hdfe'"' != "" ) {
+                            local hdfevars  `hdfevars' `hdfe'`xvar'
+                            cap confirm name `hdfe'`xvar'
+                            if ( _rc ) {
+                                disp as err "prefix(hdfe()) results in invalid variable name, `hdfe'`xvar'"
+                                local rc = 198
+                                clean_all `rc'
+                                exit `rc'
+                            }
+                        }
+                    }
+
+                    foreach zvar in `zvarlist' {
+                        if ( `"`hdfe'"' != "" ) {
+                            local hdfevars  `hdfevars' `hdfe'`zvar'
+                            cap confirm name `hdfe'`zvar'
+                            if ( _rc ) {
+                                disp as err "prefix(hdfe()) results in invalid variable name, `hdfe'`zvar'"
+                                local rc = 198
+                                clean_all `rc'
+                                exit `rc'
+                            }
+                        }
+                    }
+
+                    if ( "`replace'" == "" ) {
+                        cap noi confirm new var `bvars' `sevars' `hdfevars'
+                        if ( _rc ) {
+                            local rc = _rc
+                            clean_all `rc'
+                            exit `rc'
+                        }
+                    }
+
+                    local nvar = 0
+                    local togen
+                    foreach var in `bvars' `sevars' `hdfevars' {
+                        cap confirm new var `var'
+                        if ( _rc == 0 ) {
+                            local togen `togen' `var'
+                            local ++nvar
+                        }
+                    }
+
+                    scalar __gtools_gregress_savegb    = `"`b'"'    != ""
+                    scalar __gtools_gregress_savegse   = `"`se'"'   != ""
+                    scalar __gtools_gregress_saveghdfe = `"`hdfe'"' != ""
+
+                    if ( `nvar' > 0 ) {
+                        qui mata: (void) st_addvar(J(1, `nvar', `"`:set type'"'), tokens(`"`togen'"'))
+                    }
+
+                    local regressvars `regressvars' `bvars' `sevars' `hdfevars'
+                }
+            }
+
+            scalar __gtools_gregress_savegresid = `"`resid'`residuals'"' != ""
+            if ( scalar(__gtools_gregress_savegresid) ) {
+                if ( ("`resid'" != "") & ("`residuals'" != "") ) {
+                    disp as txt "warning: option -resid- ignored with option resid()"
+                }
+                if ( "`residuals'" == "" ) {
+                    local residuals _resid_`yvarlist'
+                }
+                if ( "`replace'" == "" ) {
+                    cap noi confirm new var `residuals'
+                    if ( _rc ) {
+                        local rc = _rc
+                        clean_all `rc'
+                        exit `rc'
+                    }
+                }
+                else {
+                    cap confirm new var `residuals'
+                }
+                if ( _rc == 0 ) {
+                    qui mata: (void) st_addvar(`"`:set type'"', `"`residuals'"')
+                }
+                local regressvars `regressvars' `residuals'
+            }
+
+            scalar __gtools_gregress_savegpred = `"`predict'"' != ""
+            if ( scalar(__gtools_gregress_savegpred) ) {
+                disp as txt "{bf:Warning}: The behavior of predict() is different cross functions."
+                disp as txt "Do not use unless you understand the code and know what it does."
+                if ( "`replace'" == "" ) {
+                    cap noi confirm new var `predict'
+                    if ( _rc ) {
+                        local rc = _rc
+                        clean_all `rc'
+                        exit `rc'
+                    }
+                }
+                else {
+                    cap confirm new var `predict'
+                }
+                if ( _rc == 0 ) {
+                    qui mata: (void) st_addvar(`"`:set type'"', `"`predict'"')
+                }
+                local regressvars `regressvars' `predict'
+            }
+
+            * TODO: strL support
+            if ( `"`absorb'"' != "" ) {
+                local 0: copy local absorb
+                syntax varlist, [save(str)]
+                local absorb: copy local varlist
+                GenericParseTypes `absorb', mat(__gtools_gregress_abstyp)
+                scalar __gtools_gregress_savegabs = `"`save'"' != ""
+            }
+
+            * ---------------------------
+            * TODO: xx What was this for?
+            * ---------------------------
+            * if ( scalar(__gtools_gregress_savegabs) ) {
+            *     if ( "`replace'" == "" ) {
+            *         cap noi confirm new var `save'
+            *         if ( _rc ) {
+            *             local rc = _rc
+            *             clean_all `rc'
+            *             exit `rc'
+            *         }
+            *     }
+            *     else {
+            *         cap confirm new var `save'
+            *     }
+            *     if ( _rc == 0 ) {
+            *         qui mata: (void) st_addvar(`"`:set type'"', `"`save'"')
+            *     }
+            *     local regressvars `regressvars' `save'
+            * }
+
+            if ( `"`saveGregressMata'"' != "" ) {
+                mata: `saveGregressMata'.init()
+            }
+
+            if ( `wcode' == 3 ) {
+                disp as txt "{bf:note:} iweights mimic the behavior of aweights"
+            }
+
+            scalar __gtools_init_targ = (`"`ifin'"' != "") & ("`replace'" != "") & ("`init'" == "")
+            if ( (`"`ifin'"' != "") & ("`replace'" != "") & ("`init'" != "") ) NoInitWarning
         }
         else if ( inlist("`gfunction'",  "stats") ) {
             local gcall `gfunction' `"${GTOOLS_GSTATS_FILE}"'
@@ -1630,6 +2297,32 @@ program _gtools_internal, rclass
                 exit `rc'
             }
             local statvars `varlist'
+
+            * Note: This seems inefficient; if in ought to be done one
+            * level above in gstats... not to mention that it will force
+            * initializing the targets every time.
+            if ( "`gstat'" == "hdfe" ) {
+                tempvar touse
+                mark `touse' `ifin'
+                markout `touse' `__gtools_hdfe_markvars', strok
+                local if if `touse'
+                mata st_local("ifin", st_local("if") + " " + st_local("in"))
+            }
+
+            scalar __gtools_init_targ = (`"`ifin'"' != "") & ("`gstats_replace'" != "") & ("`gstats_init'" == "")
+            if ( ("`gstat'" == "winsor") & `:list sizeof gstats_replace_anysrc' & `=scalar(__gtools_init_targ)' ) {
+                disp as err "gstats winsor: -replace- with source as target not allowed with if/in"
+                clean_all 198
+                exit 198
+            }
+
+            if ( ("`gstat'" == "transform") & ("`gstats_greedy'" != "") & `:list sizeof gstats_replace_anysrc' & `=scalar(__gtools_init_targ)' ) {
+                disp as err "gstats transform: -replace- source as target not allowed with if/in and -nogreedy-"
+                clean_all 198
+                exit 198
+            }
+
+            if ( (`"`ifin'"' != "") & ("`gstats_replace'" != "") & ("`gstats_init'" != "") ) NoInitWarning
         }
         else if ( inlist("`gfunction'",  "contract") ) {
             local 0 `gcontract'
@@ -1680,7 +2373,7 @@ program _gtools_internal, rclass
             local k2: list sizeof byvars
 
             // 1. gen(, replace)  -> replaces existing varlist
-            // 2. gen(prefix)     -> generates prefix_*
+            // 2. gen(prefix)     -> generates prefix*
             // 4. gen(newvarlist) -> generates newvarlist
 
             if ( "`gen'" != "" ) {
@@ -1795,6 +2488,8 @@ program _gtools_internal, rclass
             scalar __gtools_top_miss      = ( `"`misslab'"'     != "" )
             scalar __gtools_top_groupmiss = ( `"`groupmiss'"'   != "" )
             scalar __gtools_top_other     = ( `"`otherlab'"'    != "" )
+            scalar __gtools_top_Jmiss     = 0
+            scalar __gtools_top_Jother    = 0
             scalar __gtools_top_lmiss     = length(`"`misslab'"')
             scalar __gtools_top_lother    = length(`"`otherlab'"')
             scalar __gtools_top_nrows     = abs(__gtools_top_ntop) /*
@@ -2281,7 +2976,7 @@ program _gtools_internal, rclass
                         clean_all 198
                         exit 198
                     }
-                    else if ( _rc & ("`replace'" != "") ) {
+                    else if ( _rc & ("`replace'" != "") & ("`init'" == "") ) {
                         qui replace `qvar' = .
                     }
                     else if ( _rc == 0 ) {
@@ -2296,6 +2991,10 @@ program _gtools_internal, rclass
                 qui mata: st_addvar(__gtools_xtile_addlab, __gtools_xtile_addnam)
             }
 
+            * This is superseded by the replace qvar above:
+            * scalar __gtools_init_targ = (`"`ifin'"' != "") & ("`replace'" != "") & ("`init'" == "")
+            if ( (`"`ifin'"' != "") & ("`replace'" != "") & ("`init'" != "") ) NoInitWarning
+
             local msg "Parsed quantiles and added targets"
             gtools_timer info `t98' `"`msg'"', prints(`benchmark')
         }
@@ -2303,7 +3002,7 @@ program _gtools_internal, rclass
 
         local plugvars `byvars' `etargets' `extravars' `level_targets'
         local plugvars `plugvars' `statvars' `contractvars' `xvars'
-        local plugvars `plugvars' `reshapevars'
+        local plugvars `plugvars' `reshapevars' `regressvars'
 
         scalar __gtools_weight_pos = `:list sizeof plugvars' + 1
         cap noi plugin call gtools_plugin `plugvars' `wvar' `ifin', `gcall'
@@ -2403,6 +3102,8 @@ program _gtools_internal, rclass
             cap scalar list __gtools_top_other
             cap scalar list __gtools_top_lmiss
             cap scalar list __gtools_top_lother
+            cap scalar list __gtools_top_Jmiss
+            cap scalar list __gtools_top_Jother
 
             cap scalar list __gtools_xtile_xvars
             cap scalar list __gtools_xtile_nq
@@ -2469,6 +3170,48 @@ program _gtools_internal, rclass
             else {
                 mata: (void) __gstats_summarize_results()
                 cap mata: mata drop `GstatsMataSave'
+            }
+        }
+
+        tempname ghdfeabsmatrix
+        if ( `=scalar(__gtools_gstats_code)' == 4 ) {
+            return scalar hdfe_nonmiss = `=scalar(__gtools_hdfe_nonmiss)'
+            if ( ("`byvars'" != "") & `=scalar(__gtools_hdfe_matasave)' ) {
+
+                mata: `=scalar(__gtools_hdfe_mataname)' = GtoolsByLevels()
+                mata: `=scalar(__gtools_hdfe_mataname)'.whoami = st_strscalar("__gtools_hdfe_mataname")
+                mata: `=scalar(__gtools_hdfe_mataname)'.caller = "gstats hdfe"
+                mata: `=scalar(__gtools_hdfe_mataname)'.read(`""', 0)
+
+                mata: `ghdfeabsmatrix' = GtoolsReadMatrix(st_local("ghdfeabsfile"), /*
+                    */ 1 + st_numscalar("__gtools_hdfe_absorb"), `=scalar(__gtools_hdfe_mataname)'.J)
+                mata: `=scalar(__gtools_hdfe_mataname)'.nj = `ghdfeabsmatrix'[1, .]'
+                mata: `=scalar(__gtools_hdfe_mataname)'.njabsorb = colshape( /*
+                    */ `ghdfeabsmatrix'[2::rows(`ghdfeabsmatrix'), .], st_numscalar("__gtools_hdfe_absorb"))
+
+                disp as txt "(note: by() info saved in `=scalar(__gtools_hdfe_mataname)';" /*
+                    */ " see {stata mata `=scalar(__gtools_hdfe_mataname)'.desc()})"
+            }
+            else if ( ("`byvars'" == "") & `=scalar(__gtools_hdfe_matasave)' ) {
+                disp as txt "(warning: matasave() without by() is ignored)"
+            }
+
+            return local  hdfe_method   = "`=scalar(__gtools_hdfe_methodname)'"
+            return scalar hdfe_saveinfo = 0
+            return scalar hdfe_saveabs  = 0
+            if ( "`byvars'" == "" ) {
+                return scalar hdfe_saveabs = 1
+                return matrix hdfe_nabsorb = __gtools_hdfe_nabsorb
+
+                return scalar hdfe_saveinfo = 1
+                if ( "`=scalar(__gtools_hdfe_methodname)'" == "direct" ) {
+                    return scalar hdfe_iter  = 1
+                    return scalar hdfe_feval = 1
+                }
+                else {
+                    return scalar hdfe_iter  = __gtools_hdfe_iter
+                    return scalar hdfe_feval = __gtools_hdfe_feval
+                }
             }
         }
 
@@ -2570,12 +3313,27 @@ program _gtools_internal, rclass
                 */ st_numscalar("__gtools_kvars_num"))
         }
 
-        return scalar alpha = __gtools_top_alpha
-        return scalar ntop  = __gtools_top_ntop
-        return scalar nrows = __gtools_top_nrows
+        return scalar alpha  = __gtools_top_alpha
+        return scalar ntop   = __gtools_top_ntop
+        return scalar nrows  = __gtools_top_nrows
+        return scalar Jmiss  = __gtools_top_Jmiss
+        return scalar Jother = __gtools_top_Jother
 
         * return matrix toplevels = __gtools_top_matrix
         * return matrix numlevels = __gtools_top_num
+    }
+
+    * regress results
+    if ( inlist("`gfunction'", "regress") ) {
+        if ( scalar(__gtools_gregress_savemata) ) {
+            mata: `saveGregressMata'.readMatrices()
+            mata: `saveGregressMata'.ByLevels = GtoolsByLevels()
+            mata: `saveGregressMata'.ByLevels.whoami = "ByLevels"
+            mata: `saveGregressMata'.ByLevels.caller = `"`caller'"'
+            mata: `saveGregressMata'.ByLevels.read("%16.0g", 1)
+            c_local saveGregressMata: copy local saveGregressMata
+            disp as txt "Results in `saveGregressMata'; see {stata mata `saveGregressMata'.desc()}"
+        }
     }
 
     * quantile info
@@ -2639,10 +3397,23 @@ end
 capture program drop clean_all
 program clean_all
     args rc
-    if ( "`rc'" == "" ) local rc = 0
+    if ( `"`rc'"' == "" ) local rc = 0
+
+    foreach f of global GTOOLS_TEMPFILES_INTERNAL {
+        cap erase `"${GTOOLS_TEMPDIR}/`f'"'
+    }
+    global GTOOLS_TEMPFILES_INTERNAL
+    global GTOOLS_TEMPFILES_INTERNAL_I
 
     set varabbrev ${GTOOLS_USER_INTERNAL_VARABBREV}
     global GTOOLS_USER_INTERNAL_VARABBREV
+    global GTOOLS_GREG_FILE
+    global GTOOLS_GREGB_FILE
+    global GTOOLS_GREGSE_FILE
+    global GTOOLS_GREGVCOV_FILE
+    global GTOOLS_GREGCLUS_FILE
+    global GTOOLS_GREGABS_FILE
+    global GTOOLS_GHDFEABS_FILE
     global GTOOLS_GSTATS_FILE
     global GTOOLS_BYVAR_FILE
     global GTOOLS_BYCOL_FILE
@@ -2656,6 +3427,11 @@ program clean_all
     cap scalar drop __gtools_gfile_bynum
     cap scalar drop __gtools_gfile_topnum
     cap scalar drop __gtools_gfile_topmat
+    cap scalar drop __gtools_gfile_gregb
+    cap scalar drop __gtools_gfile_gregse
+    cap scalar drop __gtools_gfile_gregclus
+    cap scalar drop __gtools_gfile_gregabs
+    cap scalar drop __gtools_gfile_hdfeabs
     cap scalar drop __gtools_init_targ
     cap scalar drop __gtools_any_if
     cap scalar drop __gtools_verbose
@@ -2697,6 +3473,8 @@ program clean_all
     cap scalar drop __gtools_top_other
     cap scalar drop __gtools_top_lmiss
     cap scalar drop __gtools_top_lother
+    cap scalar drop __gtools_top_Jmiss
+    cap scalar drop __gtools_top_Jother
     cap matrix drop __gtools_contract_which
 
     cap scalar drop __gtools_levels_mataname
@@ -2773,6 +3551,7 @@ program clean_all
     cap matrix drop __gtools_stats
     cap matrix drop __gtools_pos_targets
 
+    gregress_scalars drop
     gstats_scalars   drop
     greshape_scalars drop `_keepgreshape'
 
@@ -2819,7 +3598,7 @@ capture program drop parse_by_types
 program parse_by_types, rclass
     syntax [anything] [if] [in], [clean_anything(str) compress forcestrl glevelsof(str) ds]
 
-    local ifin `if' `in'
+    mata st_local("ifin", st_local("if") + " " + st_local("in"))
     if ( "`anything'" == "" ) {
         matrix __gtools_invert = 0
         matrix __gtools_bylens = 0
@@ -2939,7 +3718,7 @@ program parse_by_types, rclass
         }
     }
 
-    local need_compress = `GTOOLS_STRL_FAIL' | (`c(stata_version)' < 14)
+    local need_compress = `GTOOLS_STRL_FAIL' | (`c(stata_version)' < 14.1)
     if ( ("`varstrL'" != "") & `need_compress' & ("`compress'" != "") ) {
         qui compress `varstrL', nocoalesce
     }
@@ -2972,7 +3751,7 @@ program parse_by_types, rclass
                         _n(1) "from the Stata Plugin Interface, which does not allow writing to strL"  ///
                         _n(1) "variables from a plugin."
         }
-        else if ( `c(stata_version)' < 14 ) {
+        else if ( `c(stata_version)' < 14.1 ) {
             disp as err _n(1) "gtools for Stata 13 and earlier does not support strL variables. I tried"            ///
                         _n(1) ""                                                                                    ///
                         _n(1) "    {stata compress `varstrL'}"                                                      ///
@@ -2997,7 +3776,7 @@ program parse_by_types, rclass
                         _n(1) "comes from the Stata Plugin Interface, which does not allow writing to"                      ///
                         _n(1) "strL variables from a plugin."
         }
-        else if ( `c(stata_version)' < 14 ) {
+        else if ( `c(stata_version)' < 14.1 ) {
             disp as err _n(1) "gtools for Stata 13 and earlier does not support strL variables. If your"                          ///
                         _n(1) "strL variables are string-only, try"                                                               ///
                         _n(1) ""                                                                                                  ///
@@ -3012,7 +3791,7 @@ program parse_by_types, rclass
         }
         exit 17002
     }
-    else if ( ("`varstrL'" != "") & (`c(stata_version)' >= 14) & ("`forcestrl'" == "") ) {
+    else if ( ("`varstrL'" != "") & (`c(stata_version)' >= 14.1) & ("`forcestrl'" == "") ) {
         scalar __gtools_k_strL = `:list sizeof varstrL'
         cap noi plugin call gtools_plugin `varstrL', checkstrL
         if ( _rc ) {
@@ -3194,16 +3973,16 @@ program rc_dispatch
         exit 17001
     }
     else if ( `rc' == 459 ) {
-		local kvars : word count `varlist'
+        local kvars : word count `varlist'
         local s = cond(`kvars' == 1, "", "s")
         di as err "variable`s' `varlist' should never be missing"
         exit 459
     }
     else if ( `rc' == 17459 ) {
-		local kvars : word count `varlist'
-		local var  = cond(`kvars'==1, "variable", "variables")
-		local does = cond(`kvars'==1, "does", "do")
-		di as err "`var' `varlist' `does' not uniquely" ///
+        local kvars : word count `varlist'
+        local var  = cond(`kvars'==1, "variable", "variables")
+        local does = cond(`kvars'==1, "does", "do")
+        di as err "`var' `varlist' `does' not uniquely" ///
                   " identify the observations"
         exit 459
     }
@@ -3306,34 +4085,6 @@ program parse_targets
     }
 
     local stats: subinstr local stats "total" "sum", all
-    local allowed sum        ///
-                  nansum     ///
-                  mean       ///
-                  sd         ///
-                  variance   ///
-                  cv         ///
-                  max        ///
-                  min        ///
-                  range      ///
-                  count      ///
-                  median     ///
-                  iqr        ///
-                  percent    ///
-                  first      ///
-                  last       ///
-                  firstnm    ///
-                  lastnm     ///
-                  freq       ///
-                  semean     ///
-                  sebinomial ///
-                  sepoisson  ///
-                  nunique    ///
-                  nmissing   ///
-                  skewness   ///
-                  kurtosis   ///
-                  rawsum     ///
-                  rawnansum
-
     cap assert `:list sizeof uniq_targets' == `k_targets'
     if ( _rc ) {
         di as err "Cannot specify multiple targets with the same name."
@@ -3368,20 +4119,8 @@ program parse_targets
         local trg: word `k' of `targets'
         local st:  word `k' of `stats'
 
-        encode_aliases `st'
-        local st `r(stat)'
-
-        if ( `:list st in allowed' ) {
-            encode_stat `st' `keepadd'
-            mata: __gtools_stats[`k'] = `r(statcode)'
-        }
-        else {
-            cap noi encode_regex `st'
-            if ( `r(statcode)' == 0 ) {
-                error 110
-            }
-            else mata: __gtools_stats[`k'] = `r(statcode)'
-        }
+        encode_stat_allowed `st' `keepadd'
+        mata: __gtools_stats[`k'] = `r(statcode)'
 
         if ( "`k_exist'" != "sources" ) {
             cap confirm variable `trg'
@@ -3414,37 +4153,97 @@ program parse_targets
     cap mata: mata drop __gtools_pos_targets
 end
 
+capture program drop encode_stat_allowed
+program encode_stat_allowed, rclass
+    args st keepadd
+    local allowed sum          ///
+                  nansum       ///
+                  mean         ///
+                  geomean      ///
+                  sd           ///
+                  variance     ///
+                  cv           ///
+                  max          ///
+                  min          ///
+                  range        ///
+                  count        ///
+                  median       ///
+                  iqr          ///
+                  percent      ///
+                  first        ///
+                  last         ///
+                  firstnm      ///
+                  lastnm       ///
+                  freq         ///
+                  semean       ///
+                  sebinomial   ///
+                  sepoisson    ///
+                  nunique      ///
+                  nmissing     ///
+                  skewness     ///
+                  kurtosis     ///
+                  gini         ///
+                  gini|dropneg ///
+                  gini|keepneg ///
+                  rawsum       ///
+                  rawnansum
+
+    encode_aliases `st'
+    local st `r(stat)'
+
+    if ( `:list st in allowed' ) {
+        encode_stat `st' `keepadd'
+        local statcode `r(statcode)'
+    }
+    else {
+        cap noi encode_regex `st'
+        if ( `r(statcode)' == 0 ) {
+            disp as err "_gtools_internal/encode_stat_allowed: unknown stat `st'"
+            error 110
+        }
+        else local statcode `r(statcode)'
+        local st `r(stat)'
+    }
+
+    return local  statname = `"`st'"'
+    return scalar statcode = `statcode'
+end
+
 capture program drop encode_stat
 program encode_stat, rclass
     args stat keepadd
     local statcode 0
-    if ( "`stat'" == "sum"       ) local statcode = -1 - `keepadd'
-    if ( "`stat'" == "nansum"    ) local statcode = -101
-    if ( "`stat'" == "mean"      ) local statcode = -2
-    if ( "`stat'" == "sd"        ) local statcode = -3
-    if ( "`stat'" == "variance"  ) local statcode = -23
-    if ( "`stat'" == "cv"        ) local statcode = -24
-    if ( "`stat'" == "max"       ) local statcode = -4
-    if ( "`stat'" == "min"       ) local statcode = -5
-    if ( "`stat'" == "range"     ) local statcode = -25
-    if ( "`stat'" == "count"     ) local statcode = -6
-    if ( "`stat'" == "percent"   ) local statcode = -7
-    if ( "`stat'" == "median"    ) local statcode = 50
-    if ( "`stat'" == "iqr"       ) local statcode = -9
-    if ( "`stat'" == "first"     ) local statcode = -10
-    if ( "`stat'" == "firstnm"   ) local statcode = -11
-    if ( "`stat'" == "last"      ) local statcode = -12
-    if ( "`stat'" == "lastnm"    ) local statcode = -13
-    if ( "`stat'" == "freq"      ) local statcode = -14
-    if ( "`stat'" == "semean"    ) local statcode = -15
-    if ( "`stat'" == "sebinomial") local statcode = -16
-    if ( "`stat'" == "sepoisson" ) local statcode = -17
-    if ( "`stat'" == "nunique"   ) local statcode = -18
-    if ( "`stat'" == "nmissing"  ) local statcode = -22
-    if ( "`stat'" == "skewness"  ) local statcode = -19
-    if ( "`stat'" == "kurtosis"  ) local statcode = -20
-    if ( "`stat'" == "rawsum"    ) local statcode = -21 - `keepadd'
-    if ( "`stat'" == "rawnansum" ) local statcode = -121
+    if ( "`stat'" == "sum"          ) local statcode = -1 - `keepadd'
+    if ( "`stat'" == "nansum"       ) local statcode = -101
+    if ( "`stat'" == "mean"         ) local statcode = -2
+    if ( "`stat'" == "geomean"      ) local statcode = -26
+    if ( "`stat'" == "sd"           ) local statcode = -3
+    if ( "`stat'" == "variance"     ) local statcode = -23
+    if ( "`stat'" == "cv"           ) local statcode = -24
+    if ( "`stat'" == "max"          ) local statcode = -4
+    if ( "`stat'" == "min"          ) local statcode = -5
+    if ( "`stat'" == "range"        ) local statcode = -25
+    if ( "`stat'" == "count"        ) local statcode = -6
+    if ( "`stat'" == "percent"      ) local statcode = -7
+    if ( "`stat'" == "median"       ) local statcode = 50
+    if ( "`stat'" == "iqr"          ) local statcode = -9
+    if ( "`stat'" == "first"        ) local statcode = -10
+    if ( "`stat'" == "firstnm"      ) local statcode = -11
+    if ( "`stat'" == "last"         ) local statcode = -12
+    if ( "`stat'" == "lastnm"       ) local statcode = -13
+    if ( "`stat'" == "freq"         ) local statcode = -14
+    if ( "`stat'" == "semean"       ) local statcode = -15
+    if ( "`stat'" == "sebinomial"   ) local statcode = -16
+    if ( "`stat'" == "sepoisson"    ) local statcode = -17
+    if ( "`stat'" == "nunique"      ) local statcode = -18
+    if ( "`stat'" == "nmissing"     ) local statcode = -22
+    if ( "`stat'" == "skewness"     ) local statcode = -19
+    if ( "`stat'" == "kurtosis"     ) local statcode = -20
+    if ( "`stat'" == "gini"         ) local statcode = -27
+    if ( "`stat'" == "gini|dropneg" ) local statcode = -27.1
+    if ( "`stat'" == "gini|keepneg" ) local statcode = -27.2
+    if ( "`stat'" == "rawsum"       ) local statcode = -21 - `keepadd'
+    if ( "`stat'" == "rawnansum"    ) local statcode = -121
     return scalar statcode = `statcode'
 end
 
@@ -3453,7 +4252,9 @@ program encode_regex, rclass
     args st
     local rc = 0
     local statcode = 0
+    local stat: copy local st
     if regexm("`st'", "rawselect") {
+        local stat rawselect
         local select = regexm("`st'", "^rawselect(-|)([0-9]+)$")
         if ( `select' == 0 ) {
             di as error "Invalid stat: (`st'; did you mean rawselect# or rawselect-#?)"
@@ -3468,6 +4269,7 @@ program encode_regex, rclass
         }
     }
     else if regexm("`st'", "select") {
+        local stat select
         local select = regexm("`st'", "^select(-|)([0-9]+)$")
         if ( `select' == 0 ) {
             di as error "Invalid stat: (`st'; did you mean select# or select-#?)"
@@ -3482,6 +4284,7 @@ program encode_regex, rclass
         }
     }
     else if regexm("`st'", "^p([0-9][0-9]?(\.[0-9]+)?)$") {
+        local stat pctile
         if ( `:di regexs(1)' == 0 ) {
             di as error "Invalid stat: (`st'; maybe you meant 'min'?)"
             local rc = 110
@@ -3498,6 +4301,7 @@ program encode_regex, rclass
         di as error "Invalid stat: `st'"
         local rc = 110
     }
+    return local  stat     = `"`stat'"'
     return scalar statcode = `statcode'
     exit `rc'
 end
@@ -3505,71 +4309,183 @@ end
 capture program drop encode_aliases
 program encode_aliases, rclass
     args st
-    local allowed sum        ///
-                  nansum     ///
-                  mean       ///
-                  sd         ///
-                  variance   ///
-                  cv         ///
-                  max        ///
-                  min        ///
-                  range      ///
-                  count      ///
-                  median     ///
-                  iqr        ///
-                  percent    ///
-                  first      ///
-                  last       ///
-                  firstnm    ///
-                  lastnm     ///
-                  freq       ///
-                  semean     ///
-                  sebinomial ///
-                  sepoisson  ///
-                  nunique    ///
-                  nmissing   ///
-                  skewness   ///
-                  kurtosis   ///
-                  rawsum     ///
+    local allowed sum          ///
+                  nansum       ///
+                  mean         ///
+                  geomean      ///
+                  sd           ///
+                  variance     ///
+                  cv           ///
+                  max          ///
+                  min          ///
+                  range        ///
+                  count        ///
+                  median       ///
+                  iqr          ///
+                  percent      ///
+                  first        ///
+                  last         ///
+                  firstnm      ///
+                  lastnm       ///
+                  freq         ///
+                  semean       ///
+                  sebinomial   ///
+                  sepoisson    ///
+                  nunique      ///
+                  nmissing     ///
+                  skewness     ///
+                  kurtosis     ///
+                  gini         ///
+                  gini|dropneg ///
+                  gini|keepneg ///
+                  rawsum       ///
                   rawnansum
 
-    local alias_sum        su
-    local alias_nansum     nansu
-    local alias_mean       me         mea
+    local alias_sum          su
+    local alias_nansum       nansu
+    local alias_mean         me         mea
+    local alias_geomean
+    local alias_gini
+    local alias_gini_dropneg
+    local alias_gini_keepneg
     local alias_sd
-    local alias_variance   var        vari       varia      varian     varianc
+    local alias_variance     var        vari       varia      varian     varianc
     local alias_cv
-    local alias_max        ma         max
-    local alias_min        mi         min
-    local alias_range      r          ra         ran        rang       range
-    local alias_count      co         cou        coun
-    local alias_median     med        medi       media
+    local alias_max          ma         max
+    local alias_min          mi         min
+    local alias_range        r          ra         ran        rang       range
+    local alias_count        co         cou        coun
+    local alias_median       med        medi       media
     local alias_iqr
-    local alias_percent    perc       perce      percen
+    local alias_percent      perc       perce      percen
     local alias_first
     local alias_last
     local alias_firstnm
     local alias_lastnm
     local alias_freq
-    local alias_semean     sem        seme       semea
-    local alias_sebinomial seb        sebi       sebin      sebino     sebinom    sebinomi   sebinomia
-    local alias_sepoisson  sep        sepo       sepoi      sepois     sepoiss    sepoisso
-    local alias_nunique    nuniq      nuniqu
-    local alias_nmissing   nmiss      nmissi     nmissin
-    local alias_skewness   sk         ske        skew       skewn      skewne     skewnes
-    local alias_kurtosis   k          ku         kur        kurt       kurto      kurtos     kurtosi
-    local alias_rawsum     rawsu
-    local alias_rawnansum  rawnansu
+    local alias_semean       sem        seme       semea
+    local alias_sebinomial   seb        sebi       sebin      sebino     sebinom    sebinomi   sebinomia
+    local alias_sepoisson    sep        sepo       sepoi      sepois     sepoiss    sepoisso
+    local alias_nunique      nuniq      nuniqu
+    local alias_nmissing     nmiss      nmissi     nmissin
+    local alias_skewness     sk         ske        skew       skewn      skewne     skewnes
+    local alias_kurtosis     k          ku         kur        kurt       kurto      kurtos     kurtosi
+    local alias_rawsum       rawsu
+    local alias_rawnansum    rawnansu
 
     if ( !`:list st in allowed' ) {
         foreach stat of local allowed {
-            if ( `:list st in alias_`stat'' ) {
+            if ( `:list st in alias_`:subinstr local stat "|" "_", all'' ) {
                 local st: copy local stat
             }
         }
     }
 
     return local stat: copy local st
+end
+
+capture program drop encode_stat_types
+program encode_stat_types, rclass
+    args stat stype ttype
+
+    * default type for summary stats
+    if ( inlist("`stype'", "double", "long") ) {
+        local deftype double
+    }
+    else {
+        local deftype: set type
+    }
+
+    * next-biggest type
+    if ( `"`stype'"' == "byte" ) {
+        local nexttype int
+    }
+    else if ( `"`stype'"' == "int" ) {
+        local nexttype long
+    }
+    else if ( `"`stype'"' == "long" ) {
+        local nexttype double
+    }
+    else if ( `"`stype'"' == "float" ) {
+        local nexttype double
+    }
+    else if ( `"`stype'"' == "double" ) {
+        local nexttype double
+    }
+
+    * minimum OK type for counts
+    if ( `=_N' < maxbyte() ) {
+        local mintype_count byte
+    }
+    else if ( `=_N' < maxint() ) {
+        local mintype_count int
+    }
+    else if ( `=_N' < maxlong() ) {
+        local mintype_count long
+    }
+    else {
+        local mintype_count double
+    }
+
+    encode_stat_allowed `stat' 0
+    local stat `r(statname)'
+
+    if ( "`stat'" == "sum"          ) local type double
+    if ( "`stat'" == "nansum"       ) local type double
+    if ( "`stat'" == "mean"         ) local type `deftype'
+    if ( "`stat'" == "geomean"      ) local type `deftype'
+    if ( "`stat'" == "sd"           ) local type `deftype'
+    if ( "`stat'" == "variance"     ) local type `deftype'
+    if ( "`stat'" == "cv"           ) local type `deftype'
+    if ( "`stat'" == "max"          ) local type `stype'
+    if ( "`stat'" == "min"          ) local type `stype'
+    if ( "`stat'" == "range"        ) local type `nexttype'
+    if ( "`stat'" == "count"        ) local type `mintype_count'
+    if ( "`stat'" == "percent"      ) local type `deftype'
+    if ( "`stat'" == "median"       ) local type `deftype'
+    if ( "`stat'" == "iqr"          ) local type `deftype'
+    if ( "`stat'" == "first"        ) local type `stype'
+    if ( "`stat'" == "firstnm"      ) local type `stype'
+    if ( "`stat'" == "last"         ) local type `stype'
+    if ( "`stat'" == "lastnm"       ) local type `stype'
+    if ( "`stat'" == "freq"         ) local type `mintype_count'
+    if ( "`stat'" == "semean"       ) local type `deftype'
+    if ( "`stat'" == "sebinomial"   ) local type `deftype'
+    if ( "`stat'" == "sepoisson"    ) local type `deftype'
+    if ( "`stat'" == "nunique"      ) local type `mintype_count'
+    if ( "`stat'" == "nmissing"     ) local type `mintype_count'
+    if ( "`stat'" == "skewness"     ) local type `deftype'
+    if ( "`stat'" == "kurtosis"     ) local type `deftype'
+    if ( "`stat'" == "rawsum"       ) local type double
+    if ( "`stat'" == "rawnansum"    ) local type double
+    if ( "`stat'" == "pctile"       ) local type `deftype'
+    if ( "`stat'" == "select"       ) local type `stype'
+    if ( "`stat'" == "rawselect"    ) local type `stype'
+    if ( "`stat'" == "gini"         ) local type `deftype'
+    if ( "`stat'" == "gini|dropneg" ) local type `deftype'
+    if ( "`stat'" == "gini|keepneg" ) local type `deftype'
+
+    if ( `"`ttype'"' == "double" ) {
+        local retype = 0
+    }
+    else if ( `"`ttype'"' == "byte" ) {
+        local retype = !inlist(`"`type'"', "byte")
+    }
+    else if ( `"`ttype'"' == "int" ) {
+        local retype = !inlist(`"`type'"', "byte", "int")
+    }
+    else if ( `"`ttype'"' == "long" ) {
+        local retype = !inlist(`"`type'"', "byte", "int", "long")
+        if ( (`retype') & (`"`type'"' == "float") ) local type double
+    }
+    else if ( `"`ttype'"' == "float" ) {
+        local retype = !inlist(`"`type'"', "byte", "int", "float")
+        if ( (`retype') & (`"`type'"' == "long")  ) local type double
+    }
+    else local retype = 1
+
+    return local type:   copy local type
+    return local retype: copy local retype
 end
 
 capture program drop FreeTimer
@@ -3586,30 +4502,419 @@ end
 
 capture program drop GenericParseTypes
 program GenericParseTypes
-    syntax varlist, mat(name) [strl(int 0)]
+    syntax varlist, mat(name) [matstrl(name)]
 
     cap disp ustrregexm("a", "a")
     if ( _rc ) local regex regex
     else local regex ustrregex
 
+    tempvar strlen
     local types
+    local strl
     foreach var of varlist `varlist' {
         if ( `regex'm("`:type `var''", "str([1-9][0-9]*|L)") ) {
-            if ( (`regex's(1) == "L") & (`strl' == 0) ) {
-                disp as err "Unsupported type `:type `var''"
+            if ( (`regex's(1) == "L") & (`"`matstrl'"' == "") ) {
+                disp as err "ParseTypes(`mat'): Unsupported type `:type `var''"
                 exit 198
             }
-            local types `types' `=`regex's(1)'
+            else if ( `regex's(1) == "L" ) {
+                cap confirm var `strlen'
+                if ( _rc ) {
+                    qui gen `strlen' = length(`var')
+                }
+                else {
+                    qui replace `strlen' = length(`var')
+                }
+                qui sum `strlen', meanonly
+
+                local strl  `strl'  1
+                local types `types' `r(max)'
+            }
+            else {
+                local strl  `strl'  0
+                local types `types' `=`regex's(1)'
+            }
         }
-        else if ( inlist("`:type `var''", "byte", "int", "long", "float", "double") ) {
+        else if inlist("`:type `var''", "byte", "int", "long") {
+            local strl  `strl'  0
+            local types `types' -1
+        }
+        else if inlist("`:type `var''", "float", "double") {
+            local strl  `strl'  0
             local types `types' 0
         }
         else {
-            disp as err "Unknown type `:type `var''"
+            disp as err "ParseTypes(`mat'): Unknown type `:type `var''"
             exit 198
         }
     }
-    mata: st_matrix(st_local("mat"), strtoreal(tokens(st_local("types"))))
+    mata: st_matrix(st_local("mat"),  strtoreal(tokens(st_local("types"))))
+    if ( `"`matstrl'"' != "" ) {
+        mata: st_matrix(st_local("matstrl"), strtoreal(tokens(st_local("strlen"))))
+    }
+end
+
+capture program drop encode_moving
+program encode_moving, rclass
+    syntax anything, [window(str)]
+
+    gettoken lwindow uwindow: window
+    if ( `"`window'"' != "" ) {
+        if ( (`"`lwindow'"' == "") | (`"`uwindow'"' == "") ) {
+            disp as err "moving: option window() requires a lower and upper bound"
+            exit 198
+        }
+        cap confirm integer number `lwindow'
+        if ( _rc & (`lwindow' != .) ) {
+            disp as err "moving: option window() requires integer inputs"
+            exit 7
+        }
+        cap confirm integer number `uwindow'
+        if ( _rc & (`uwindow' != .) ) {
+            disp as err "moving: option window() requires integer inputs"
+            exit 7
+        }
+    }
+    else {
+        local lwindow .
+        local uwindow .
+    }
+
+    local rwarn = 0
+    if ( regexm(`"`anything'"', "^moving[ |]+([^ |]+)[ |]*([^ |]+)?[ |]*([^ |]+)?$") ) {
+        local rmatch = 1
+        local rstat  = regexs(1)
+        cap local rlower = regexs(2)
+        cap local rupper = regexs(3)
+
+        if ( `"`rlower'"' == "" ) local rlower `lwindow'
+        if ( `"`rupper'"' == "" ) local rupper `uwindow'
+
+        cap confirm integer number `rlower'
+        if ( _rc & (`rlower' != .) ) {
+            disp as err "moving: option window requires integer inputs"
+            exit 7
+        }
+
+        cap confirm integer number `rupper'
+        if ( _rc & (`rupper' != .) ) {
+            disp as err "moving: option window requires integer inputs"
+            exit 7
+        }
+
+        local rwarn = `rwarn' | ((`rupper' == .) & (`rlower' == .))
+
+        encode_aliases `rstat'
+        local rstat `r(stat)'
+        local stat moving|`rstat'|`rlower'|`rupper'
+
+        cap encode_stat_allowed `rstat' 0
+        local scode = `r(statcode)'
+        if ( _rc ) {
+            disp as err "moving: unknown sub-statistic `rstat'"
+            exit 198
+        }
+
+        if inlist("`rstat'", "percent", "nunique") {
+            disp as err "moving: `rstat' not implemented"
+            exit 198
+        }
+    }
+    else {
+        local rwarn  = 0
+        local rmatch = 0
+        local scode  = 0
+        local stat:   copy local anything
+        local rstat:  copy local anything
+        local rlower: copy local lwindow
+        local rupper: copy local uwindow
+    }
+
+    c_local stat: copy local stat
+    return local  stat: copy local rstat
+    return local  name  = strtoname(`"`stat'"')
+    return scalar warn  = `rwarn'
+    return scalar scode = `scode'
+    return scalar match = `rmatch'
+    return scalar lower = `rlower'
+    return scalar upper = `rupper'
+end
+
+capture program drop encode_range
+program encode_range, rclass
+    syntax anything, [interval(str) var(str)]
+
+    encode_range_parse `interval'
+
+    local linterval `r(linterval)'
+    local uinterval `r(uinterval)'
+    local variable  `r(variable)'
+    local lstat     `r(lstat)'
+    local ustat     `r(ustat)'
+
+    if ( `"`linterval'"' == ""  ) local linterval .
+    if ( `"`uinterval'"' == ""  ) local uinterval .
+    if ( `"`r(lsign)'"'  == "-" ) local linterval -`linterval'
+    if ( `"`r(usign)'"'  == "-" ) local uinterval -`uinterval'
+    if ( `"`variable'"'  == ""  ) local variable  `var'
+
+    local iwarn = 0
+    if ( regexm(`"`anything'"', "^range[ |]+([^ |]+)[ |]*([^ |]+)?[ |]*([^ |]+)?[ |]*([^ ]+)?$") ) {
+        local imatch = 1
+        local istat  = regexs(1)
+        cap local ilower = regexs(2)
+        cap local iupper = regexs(3)
+        cap local ivar   = regexs(4)
+
+        if ( `"`ilower'"' == "" ) local ilower `linterval'`lstat'
+        if ( `"`iupper'"' == "" ) local iupper `uinterval'`ustat'
+        if ( `"`ivar'"'   == "" ) local ivar   `variable'
+
+        encode_range_parse `ilower' `iupper' `ivar'
+
+        local ilower `r(linterval)'
+        local iupper `r(uinterval)'
+        local ivar   `r(variable)'
+        local ilstat `r(lstat)'
+        local iustat `r(ustat)'
+        local ilsign `r(lsign)'
+        local iusign `r(usign)'
+
+        local iwarn = `iwarn' | ((`iupper' == .) & (`ilower' == .))
+
+        local checkcodes scode lcode ucode
+        foreach checkstat in istat ilstat iustat {
+            gettoken checkcode checkcodes: checkcodes
+            if ( `"``checkstat''"' != "" ) {
+                encode_aliases ``checkstat''
+                local `checkstat' `r(stat)'
+
+                cap encode_stat_allowed ``checkstat'' 0
+                local `checkcode' = `r(statcode)'
+                if ( _rc ) {
+                    disp as err "range: unknown sub-statistic ``checkstat''"
+                    exit 198
+                }
+
+                if inlist("``checkstat''", "percent", "nunique") {
+                    disp as err "range: ``checkstat'' not implemented"
+                    exit 198
+                }
+            }
+            else {
+                local `checkcode' = 0
+            }
+        }
+
+        local irangestr `ivar' within `ivar'[i] `ilsign' `ilower'`ilstat' to `ivar'[i] `iusign' `iupper'`iustat'
+
+        if ( `"`ilsign'"' == "-" ) local ilower -`ilower'
+        if ( `"`iusign'"' == "-" ) local iupper -`iupper'
+
+        local stat range|`istat'|`ilower'`ilstat'|`iupper'`iustat'|`ivar'
+    }
+    else {
+        local irangestr
+        local scode  = 0
+        local lcode  = 0
+        local ucode  = 0
+        local iwarn  = 0
+        local imatch = 0
+        local stat:   copy local anything
+        local istat:  copy local anything
+        local ilower
+        local ilstat
+        local iupper
+        local iustat
+        local ivar
+    }
+
+    c_local stat: copy local stat
+
+    return local stat:     copy local istat
+    return local lower:    copy local ilower
+    return local lstat:    copy local ilstat
+    return local upper:    copy local iupper
+    return local ustat:    copy local iustat
+    return local var:      copy local ivar
+    return local rangestr: copy local irangestr
+
+    return local name   = strtoname(`"`stat'"')
+    return scalar scode = `scode'
+    return scalar lcode = `lcode'
+    return scalar ucode = `ucode'
+    return scalar warn  = `iwarn'
+    return scalar match = `imatch'
+end
+
+capture program drop encode_range_parse
+program encode_range_parse, rclass
+
+    gettoken linterval uinterval: 0
+    gettoken uinterval variable:  uinterval
+
+    local linterval `linterval'
+    local uinterval `uinterval'
+    local variable  `variable'
+    local lstat
+    local ustat
+
+    if ( `"`0'"' != "" ) {
+        if ( (`"`linterval'"' == "") | (`"`uinterval'"' == "") ) {
+            disp as err "range: option interval() requires a lower and upper bound"
+            exit 198
+        }
+
+        cap confirm integer number `linterval'
+        if ( _rc & (`"`linterval'"' != ".") ) {
+            encode_range_stat `linterval'
+            if ( `r(imatch)' == 0 ) {
+                disp as err "range: option interval() incorrectly specified"
+                exit 7
+            }
+            local linterval `r(iscalar)'
+            local lstat     `r(istat)'
+            local lsign     `r(isign)'
+        }
+        else if ( _rc == 0 ) {
+            * negative numbers would have a '-' sign prepended already
+            local lsign = cond(`linterval' < 0, "", "+")
+        }
+
+        cap confirm integer number `uinterval'
+        if ( _rc & (`"`uinterval'"' != ".") ) {
+            encode_range_stat `uinterval'
+            if ( `r(imatch)' == 0 ) {
+                disp as err "range: option interval() incorrectly specified"
+                exit 7
+            }
+            local uinterval `r(iscalar)'
+            local ustat     `r(istat)'
+            local usign     `r(isign)'
+        }
+        else if ( _rc == 0 ) {
+            * negative numbers would have a '-' sign prepended already
+            local usign = cond(`uinterval' < 0, "", "+")
+        }
+    }
+
+    return local linterval: copy local linterval
+    return local uinterval: copy local uinterval
+    return local variable:  copy local variable
+    return local lstat:     copy local lstat
+    return local ustat:     copy local ustat
+    return local lsign:     copy local lsign
+    return local usign:     copy local usign
+end
+
+capture program drop encode_range_stat
+program encode_range_stat, rclass
+    if ( regexm(`"`0'"', "^(\+|-)?([0-9]+\.[0-9]+|\.[0-9]+|[0-9]+)?(.*)$") ) {
+        local imatch      = 1
+        cap local isign   = regexs(1)
+        cap local iscalar = regexs(2)
+        cap local istat   = regexs(3)
+        if ( `"`isign'"' != "-" ) {
+            local isign +
+        }
+        else {
+            local isign -
+        }
+        if ( `"`iscalar'"' == "" ) local iscalar 1
+    }
+    else {
+        local imatch    = 0
+    }
+    return scalar imatch = `imatch'
+    return local isign   : copy local isign
+    return local iscalar : copy local iscalar
+    return local istat   : copy local istat
+end
+
+capture program drop encode_cumsum
+program encode_cumsum, rclass
+    syntax anything, [cumby(str) var(str)]
+
+    local var `var'
+    local anything `anything'
+    local stat: copy local anything
+    local match 0
+    local cumsign 0
+    local cumvars
+
+    if ( (`"`anything'"' == "cumsum") & (`"`cumby'"' == "") ) {
+        local match 1
+    }
+    else {
+        local anything: subinstr local anything "|" " ", all
+        local anything `anything'
+        if ( regexm(`"`anything'"', "^cumsum(.*)$") ) {
+            local _cumby = regexs(1)
+            local _cumby `_cumby'
+            if ( `"`_cumby'"' == "" ) local _cumby: copy local cumby
+
+            gettoken cumsign cumvars: _cumby
+            local cumvars `cumvars'
+            local cumsign `cumsign'
+
+            if inlist(`"`cumsign'"', "+", "-") {
+                * if ( `"`cumvars'"' == "" ) local cumvars: copy local var
+
+                local match 1
+                local stat cumsum|`cumsign'|`:subinstr local cumvars " " "|", all'
+                local cumsign = cond(`"`cumsign'"' == "+", 1, 2)
+            }
+            else {
+                disp as err "cumsum: cumby() misspecified; expected '+/- [varlist]' but got '`_cumby''"
+                exit 7
+            }
+        }
+
+        c_local stat: copy local stat
+    }
+
+    return local stat:     copy local stat
+    return local match:    copy local match
+    return local cumsign:  copy local cumsign
+    return local cumvars:  copy local cumvars
+    return local cumother = `"`cumvars'"' != ""
+end
+
+capture program drop encode_shift
+program encode_shift, rclass
+    syntax anything, [shiftby(str)]
+
+    local anything `anything'
+    local stat: copy local anything
+    local match 0
+    local shift 0
+
+    if regexm(`"`anything'"', "^shift[ |]*([+-]?[0-9]+)[ |]*$") {
+        local shift = `=regexs(1)'
+        local match 1
+        local stat shift|`shift'
+    }
+    else if regexm(`"`anything'"', "^shift[ |]*$") {
+        if ( `"`shiftby'"' == "" ) {
+            disp as err "shift: shiftby() required if no individual shift is specified"
+            exit 198
+        }
+        else {
+            cap confirm integer number `shiftby'
+            if ( _rc ) {
+                disp as err "shift: shiftby() misspecified; expected integer but got '`shiftby''"
+                exit 7
+            }
+            local shift = `=`shiftby''
+            local match 1
+            local stat shift|`shift'
+        }
+    }
+
+    c_local stat: copy local stat
+    return local stat:  copy local stat
+    return local match: copy local match
+    return local shift: copy local shift
 end
 
 ***********************************************************************
@@ -3620,15 +4925,18 @@ capture program drop greshape_scalars
 program greshape_scalars
     * 1 = long, 2 = wide
     if ( inlist(`"`1'"', "gen", "init", "alloc") ) {
-        scalar __gtools_greshape_code = 0
-        scalar __gtools_greshape_kxi  = 0
-        scalar __gtools_greshape_str  = 0
+        scalar __gtools_greshape_code     = 0
+        scalar __gtools_greshape_kxi      = 0
+        scalar __gtools_greshape_str      = 0
+        scalar __gtools_greshape_dropmiss = 0
+
         cap matrix list __gtools_greshape_xitypes
         if ( _rc ) matrix __gtools_greshape_xitypes = 0
         cap matrix list __gtools_greshape_types
         if ( _rc ) matrix __gtools_greshape_types = 0
         cap matrix list __gtools_greshape_maplevel
         if ( _rc ) matrix __gtools_greshape_maplevel = 0
+
         cap scalar dir __gtools_greshape_jfile
         if ( _rc ) scalar __gtools_greshape_jfile = 0
         cap scalar dir __gtools_greshape_kxij
@@ -3642,15 +4950,110 @@ program greshape_scalars
         cap scalar drop __gtools_greshape_code
         cap scalar drop __gtools_greshape_kxi
         cap scalar drop __gtools_greshape_str
+        cap scalar drop __gtools_greshape_dropmiss
+
         if ( `"${GTOOLS_CALLER}"' != "greshape" ) {
+            cap matrix drop __gtools_greshape_xitypes
+            cap matrix drop __gtools_greshape_types
+            cap matrix drop __gtools_greshape_maplevel
+
             cap scalar drop __gtools_greshape_jfile
             cap scalar drop __gtools_greshape_kxij
             cap scalar drop __gtools_greshape_kout
             cap scalar drop __gtools_greshape_klvls
-            cap matrix drop __gtools_greshape_xitypes
-            cap matrix drop __gtools_greshape_types
-            cap matrix drop __gtools_greshape_maplevel
         }
+    }
+end
+
+***********************************************************************
+*                              gregress                               *
+***********************************************************************
+
+capture program drop gregress_scalars
+program gregress_scalars
+    if ( inlist(`"`0'"', "gen", "init", "alloc") ) {
+        scalar __gtools_gregress_kv            = 0
+        scalar __gtools_gregress_kvars         = 0
+        scalar __gtools_gregress_cons          = 0
+        scalar __gtools_gregress_robust        = 0
+        scalar __gtools_gregress_cluster       = 0
+        scalar __gtools_gregress_absorb        = 0
+        scalar __gtools_gregress_hdfetol       = 0
+        scalar __gtools_gregress_hdfemaxiter   = 0
+        scalar __gtools_gregress_hdfetraceiter = 0
+        scalar __gtools_gregress_hdfestandard  = 0
+        scalar __gtools_gregress_hdfemethnm    = ""
+        scalar __gtools_gregress_hdfemethod    = 0
+        scalar __gtools_gregress_glmlogit      = 0
+        scalar __gtools_gregress_glmpoisson    = 0
+        scalar __gtools_gregress_glmfam        = 0
+        scalar __gtools_gregress_glmiter       = 0
+        scalar __gtools_gregress_glmtol        = 0
+        scalar __gtools_gregress_ivreg         = 0
+        scalar __gtools_gregress_ivkendog      = 0
+        scalar __gtools_gregress_ivkexog       = 0
+        scalar __gtools_gregress_ivkz          = 0
+        scalar __gtools_gregress_savemata      = 0
+        scalar __gtools_gregress_savemb        = 0
+        scalar __gtools_gregress_savemse       = 0
+        scalar __gtools_gregress_savegb        = 0
+        scalar __gtools_gregress_savegse       = 0
+        scalar __gtools_gregress_saveghdfe     = 0
+        scalar __gtools_gregress_savegresid    = 0
+        scalar __gtools_gregress_savegpred     = 0
+        scalar __gtools_gregress_savegabs      = 0
+        scalar __gtools_gregress_moving        = 0
+        scalar __gtools_gregress_moving_l      = 0
+        scalar __gtools_gregress_moving_u      = 0
+        scalar __gtools_gregress_range         = 0
+        scalar __gtools_gregress_range_l       = 0
+        scalar __gtools_gregress_range_u       = 0
+        scalar __gtools_gregress_range_ls      = 0
+        scalar __gtools_gregress_range_us      = 0
+        matrix __gtools_gregress_clustyp       = .
+        matrix __gtools_gregress_abstyp        = .
+    }
+    else {
+        cap scalar drop __gtools_gregress_kv
+        cap scalar drop __gtools_gregress_kvars
+        cap scalar drop __gtools_gregress_cons
+        cap scalar drop __gtools_gregress_robust
+        cap scalar drop __gtools_gregress_cluster
+        cap scalar drop __gtools_gregress_absorb
+        cap scalar drop __gtools_gregress_hdfetol
+        cap scalar drop __gtools_gregress_hdfemaxiter
+        cap scalar drop __gtools_gregress_hdfetraceiter
+        cap scalar drop __gtools_gregress_hdfestandard
+        cap scalar drop __gtools_gregress_hdfemethnm
+        cap scalar drop __gtools_gregress_hdfemethod
+        cap scalar drop __gtools_gregress_ivreg
+        cap scalar drop __gtools_gregress_ivkendog
+        cap scalar drop __gtools_gregress_ivkexog
+        cap scalar drop __gtools_gregress_ivkz
+        cap scalar drop __gtools_gregress_glmlogit
+        cap scalar drop __gtools_gregress_glmpoisson
+        cap scalar drop __gtools_gregress_glmfam
+        cap scalar drop __gtools_gregress_glmiter
+        cap scalar drop __gtools_gregress_glmtol
+        cap scalar drop __gtools_gregress_savemata
+        cap scalar drop __gtools_gregress_savemb
+        cap scalar drop __gtools_gregress_savemse
+        cap scalar drop __gtools_gregress_savegb
+        cap scalar drop __gtools_gregress_savegse
+        cap scalar drop __gtools_gregress_saveghdfe
+        cap scalar drop __gtools_gregress_savegresid
+        cap scalar drop __gtools_gregress_savegpred
+        cap scalar drop __gtools_gregress_savegabs
+        cap scalar drop __gtools_gregress_moving
+        cap scalar drop __gtools_gregress_moving_l
+        cap scalar drop __gtools_gregress_moving_u
+        cap scalar drop __gtools_gregress_range
+        cap scalar drop __gtools_gregress_range_l
+        cap scalar drop __gtools_gregress_range_u
+        cap scalar drop __gtools_gregress_range_ls
+        cap scalar drop __gtools_gregress_range_us
+        cap matrix drop __gtools_gregress_clustyp
+        cap matrix drop __gtools_gregress_abstyp
     }
 end
 
@@ -3662,57 +5065,108 @@ capture program drop gstats_scalars
 program gstats_scalars
     scalar __gtools_gstats_code = .
     if ( inlist(`"`0'"', "gen", "init", "alloc") ) {
-        scalar __gtools_winsor_trim    = .
-        scalar __gtools_winsor_cutl    = .
-        scalar __gtools_winsor_cuth    = .
-        scalar __gtools_winsor_kvars   = .
+        scalar __gtools_winsor_trim            = .
+        scalar __gtools_winsor_cutl            = .
+        scalar __gtools_winsor_cuth            = .
+        scalar __gtools_winsor_kvars           = .
 
-        scalar __gtools_summarize_matasave  = 0
-        scalar __gtools_summarize_pretty    = 0
-        scalar __gtools_summarize_colvar    = 0
-        scalar __gtools_summarize_noprint   = 0
-        scalar __gtools_summarize_nosep     = 0
-        scalar __gtools_summarize_pooled    = 0
-        scalar __gtools_summarize_normal    = 0
-        scalar __gtools_summarize_detail    = 0
-        scalar __gtools_summarize_kvars     = 0
-        scalar __gtools_summarize_kstats    = 0
-        scalar __gtools_summarize_tabstat   = 0
-        scalar __gtools_summarize_lwidth    = 16
-        scalar __gtools_summarize_separator = 0
-        scalar __gtools_summarize_format    = 0
-        scalar __gtools_summarize_dfmt      = "%9.0g"
+        scalar __gtools_hdfe_nonmiss           = 0
+        scalar __gtools_hdfe_kvars             = 0
+        scalar __gtools_hdfe_absorb            = 0
+        scalar __gtools_hdfe_method            = 1
+        scalar __gtools_hdfe_maxiter           = 0
+        scalar __gtools_hdfe_traceiter         = 0
+        scalar __gtools_hdfe_standard          = 0
+        scalar __gtools_hdfe_hdfetol           = 0
+        scalar __gtools_hdfe_matasave          = 0
+        scalar __gtools_hdfe_mataname          = ""
+        scalar __gtools_hdfe_iter              = 0
+        scalar __gtools_hdfe_feval             = 0
+        scalar __gtools_hdfe_methodname        = ""
 
-        scalar __gtools_summarize_N         = .
-        scalar __gtools_summarize_sum_w     = .
-        scalar __gtools_summarize_sum       = .
-        scalar __gtools_summarize_mean      = .
-        scalar __gtools_summarize_min       = .
-        scalar __gtools_summarize_max       = .
-        scalar __gtools_summarize_Var       = .
-        scalar __gtools_summarize_sd        = .
-        scalar __gtools_summarize_p1        = .
-        scalar __gtools_summarize_p5        = .
-        scalar __gtools_summarize_p10       = .
-        scalar __gtools_summarize_p25       = .
-        scalar __gtools_summarize_p50       = .
-        scalar __gtools_summarize_p75       = .
-        scalar __gtools_summarize_p90       = .
-        scalar __gtools_summarize_p95       = .
-        scalar __gtools_summarize_p99       = .
-        scalar __gtools_summarize_skewness  = .
-        scalar __gtools_summarize_kurtosis  = .
-        scalar __gtools_summarize_smallest1 = .
-        scalar __gtools_summarize_smallest2 = .
-        scalar __gtools_summarize_smallest3 = .
-        scalar __gtools_summarize_smallest4 = .
-        scalar __gtools_summarize_largest4  = .
-        scalar __gtools_summarize_largest3  = .
-        scalar __gtools_summarize_largest2  = .
-        scalar __gtools_summarize_largest1  = .
+        scalar __gtools_summarize_matasave     = 0
+        scalar __gtools_summarize_pretty       = 0
+        scalar __gtools_summarize_colvar       = 0
+        scalar __gtools_summarize_noprint      = 0
+        scalar __gtools_summarize_nosep        = 0
+        scalar __gtools_summarize_pooled       = 0
+        scalar __gtools_summarize_normal       = 0
+        scalar __gtools_summarize_detail       = 0
+        scalar __gtools_summarize_kvars        = 0
+        scalar __gtools_summarize_kstats       = 0
+        scalar __gtools_summarize_tabstat      = 0
+        scalar __gtools_summarize_lwidth       = 16
+        scalar __gtools_summarize_separator    = 0
+        scalar __gtools_summarize_format       = 0
+        scalar __gtools_summarize_dfmt         = "%9.0g"
 
-        matrix __gtools_summarize_codes = .
-        mata: __gtools_summarize_codes = .
+        scalar __gtools_summarize_N            = .
+        scalar __gtools_summarize_sum_w        = .
+        scalar __gtools_summarize_sum          = .
+        scalar __gtools_summarize_mean         = .
+        scalar __gtools_summarize_min          = .
+        scalar __gtools_summarize_max          = .
+        scalar __gtools_summarize_Var          = .
+        scalar __gtools_summarize_sd           = .
+        scalar __gtools_summarize_p1           = .
+        scalar __gtools_summarize_p5           = .
+        scalar __gtools_summarize_p10          = .
+        scalar __gtools_summarize_p25          = .
+        scalar __gtools_summarize_p50          = .
+        scalar __gtools_summarize_p75          = .
+        scalar __gtools_summarize_p90          = .
+        scalar __gtools_summarize_p95          = .
+        scalar __gtools_summarize_p99          = .
+        scalar __gtools_summarize_skewness     = .
+        scalar __gtools_summarize_kurtosis     = .
+        scalar __gtools_summarize_smallest1    = .
+        scalar __gtools_summarize_smallest2    = .
+        scalar __gtools_summarize_smallest3    = .
+        scalar __gtools_summarize_smallest4    = .
+        scalar __gtools_summarize_largest4     = .
+        scalar __gtools_summarize_largest3     = .
+        scalar __gtools_summarize_largest2     = .
+        scalar __gtools_summarize_largest1     = .
+
+        scalar __gtools_transform_greedy       = 0
+        scalar __gtools_transform_kvars        = 1
+        scalar __gtools_transform_ktargets     = 1
+        scalar __gtools_transform_kgstats      = 1
+        scalar __gtools_transform_cumsum_k     = 0
+        scalar __gtools_transform_range_k      = 0
+        scalar __gtools_transform_range_xs     = 0
+        scalar __gtools_transform_range_xb     = 0
+
+        matrix __gtools_transform_rank_ties    = 1
+        matrix __gtools_summarize_codes        = .
+        matrix __gtools_transform_varfuns      = .
+        matrix __gtools_transform_statcode     = .
+        matrix __gtools_transform_statmap      = .
+        matrix __gtools_hdfe_abstyp            = .
+        matrix __gtools_hdfe_nabsorb           = .
+
+        matrix __gtools_transform_moving       = 0
+        matrix __gtools_transform_moving_l     = .
+        matrix __gtools_transform_moving_u     = .
+
+        matrix __gtools_transform_range        = 0
+        matrix __gtools_transform_range_pos    = 0
+        matrix __gtools_transform_range_l      = .
+        matrix __gtools_transform_range_u      = .
+        matrix __gtools_transform_range_ls     = 0
+        matrix __gtools_transform_range_us     = 0
+
+        matrix __gtools_transform_cumtypes     = 0
+        matrix __gtools_transform_cumsum       = 0
+        matrix __gtools_transform_cumsign      = 0
+        matrix __gtools_transform_cumvars      = 0
+        matrix __gtools_transform_aux8_shift   = 0
+
+        mata: __gtools_transform_cumsum        = .
+        mata: __gtools_transform_cumsign       = .
+        mata: __gtools_transform_cumvars       = .
+        mata: __gtools_transform_aux8_shift    = .
+        mata: __gtools_summarize_codes         = .
     }
     else {
         cap scalar drop __gtools_gstats_code
@@ -3720,6 +5174,20 @@ program gstats_scalars
         cap scalar drop __gtools_winsor_cutl
         cap scalar drop __gtools_winsor_cuth
         cap scalar drop __gtools_winsor_kvars
+
+        cap scalar drop __gtools_hdfe_nonmiss
+        cap scalar drop __gtools_hdfe_kvars
+        cap scalar drop __gtools_hdfe_absorb
+        cap scalar drop __gtools_hdfe_method
+        cap scalar drop __gtools_hdfe_maxiter
+        cap scalar drop __gtools_hdfe_traceiter
+        cap scalar drop __gtools_hdfe_standard
+        cap scalar drop __gtools_hdfe_hdfetol
+        cap scalar drop __gtools_hdfe_matasave
+        cap scalar drop __gtools_hdfe_mataname
+        cap scalar drop __gtools_hdfe_iter
+        cap scalar drop __gtools_hdfe_feval
+        cap scalar drop __gtools_hdfe_methodname
 
         cap scalar drop __gtools_summarize_matasave
         cap scalar drop __gtools_summarize_pretty
@@ -3765,9 +5233,1565 @@ program gstats_scalars
         cap scalar drop __gtools_summarize_largest2
         cap scalar drop __gtools_summarize_largest1
 
+        cap scalar drop __gtools_transform_greedy
+        cap scalar drop __gtools_transform_kvars
+        cap scalar drop __gtools_transform_ktargets
+        cap scalar drop __gtools_transform_kgstats
+        cap scalar drop __gtools_transform_cumsum_k
+        cap scalar drop __gtools_transform_range_k
+        cap scalar drop __gtools_transform_range_xs
+        cap scalar drop __gtools_transform_range_xb
+
+        cap mata st_dropvar(__gtools_gst_dropvars)
+
+        cap matrix drop __gtools_transform_rank_ties
         cap matrix drop __gtools_summarize_codes
+        cap matrix drop __gtools_transform_varfuns
+        cap matrix drop __gtools_transform_statcode
+        cap matrix drop __gtools_transform_statmap
+        cap matrix drop __gtools_hdfe_abstyp
+        cap matrix drop __gtools_hdfe_nabsorb
+
+        cap matrix drop __gtools_transform_moving
+        cap matrix drop __gtools_transform_moving_l
+        cap matrix drop __gtools_transform_moving_u
+
+        cap matrix drop __gtools_transform_range
+        cap matrix drop __gtools_transform_range_pos
+        cap matrix drop __gtools_transform_range_l
+        cap matrix drop __gtools_transform_range_u
+        cap matrix drop __gtools_transform_range_ls
+        cap matrix drop __gtools_transform_range_us
+
+        cap matrix drop __gtools_transform_cumtypes
+        cap matrix drop __gtools_transform_cumsum
+        cap matrix drop __gtools_transform_cumsign
+        cap matrix drop __gtools_transform_cumvars
+        cap matrix drop __gtools_transform_aux8_shift
+
+        cap mata: mata drop __gtools_transform_cumsum
+        cap mata: mata drop __gtools_transform_cumsign
+        cap mata: mata drop __gtools_transform_cumvars
+        cap mata: mata drop __gtools_transform_aux8_shift
+
+        cap mata: mata drop __gtools_transform_rank_ties
         cap mata: mata drop __gtools_summarize_codes
+        cap mata: mata drop __gtools_gst_labels
+        cap mata: mata drop __gtools_gst_formats
+        cap mata: mata drop __gtools_gst_dropvars
+
+        cap mata: mata drop __gtools_transform_varfuns
+        cap mata: mata drop __gtools_transform_statcode
+        cap mata: mata drop __gtools_transform_statmap
+
+        cap mata: mata drop __gtools_transform_moving
+        cap mata: mata drop __gtools_transform_moving_l
+        cap mata: mata drop __gtools_transform_moving_u
+
+        cap mata: mata drop __gtools_transform_range
+        cap mata: mata drop __gtools_transform_range_pos
+        cap mata: mata drop __gtools_transform_range_l
+        cap mata: mata drop __gtools_transform_range_u
+        cap mata: mata drop __gtools_transform_range_ls
+        cap mata: mata drop __gtools_transform_range_us
     }
+end
+
+capture program drop gstats_transform
+program gstats_transform
+    syntax anything(equalok),       ///
+    [                               ///
+                                    /// TODO: Maybe add rawstat at some point...
+        replace                     /// replace variables, if they exist
+        noinit                      /// do not initialize targets with missing values
+        nogreedy                    /// use memory-heavy algorithm
+        TYPEs(str)                  /// override automatic types
+                                    ///
+        WILDparse                   /// parse assuming wildcard renaming
+        AUTOrename                  /// automagically name targets if no target is specified
+        AUTOrenameformat(passthru)  ///
+        LABELFormat(passthru)       /// Custom label engine: (#stat#) #sourcelabel# is the default
+        LABELProgram(passthru)      /// Program to parse labelformat (see examples)
+        statprefix(passthru)        /// add prefix to every stat
+                                    ///
+        ties(str)                   /// how to resolve ties (one per target; use . for non-rank targets)
+        window(passthru)            /// moving window if not specified in the stat
+        interval(passthru)          /// interval if not specified in the stat
+        cumby(passthru)             /// Cummulative sum by +/- and varlst
+        shiftby(passthru)           /// Shift by +/-#
+        excludeself                 /// exclude current obs from statistic
+        excludebounds               /// interval is strict (do not include bounds)
+    ]
+
+    * Parse transforms and variables
+    * ------------------------------
+
+    gstats_transform_parse `anything', ///
+        `wildparse'                    ///
+        `labelformat'                  ///
+        `labelprogram'                 ///
+        `autorename'                   ///
+        `autorenameformat'             ///
+        `window' `interval' `cumby' `shiftby' `statprefix'
+
+    local transforms rank        ///
+                     standardize ///
+                     normalize   ///
+                     demean      ///
+                     demedian     //
+
+    local unknown
+    foreach stat of local __gtools_gst_stats {
+        if ( !`:list stat in transforms' ) {
+            encode_moving `stat'
+            local rmatch = `r(match)'
+            encode_range `stat'
+            local rmatch = `r(match)' | `rmatch'
+            encode_cumsum `stat'
+            local rmatch = `r(match)' | `rmatch'
+            encode_shift  `stat'
+            local rmatch = `r(match)' | `rmatch'
+            if ( `rmatch' == 0 ) {
+                local unknown `unknown' `stat'
+            }
+        }
+    }
+
+    if ( `"`unknown'"' != "" ) {
+        disp as err `"Unknown transformations: `unknown'"'
+        exit 198
+    }
+
+    * if ( !`:list __gtools_gst_uniq_vars === __gtools_gst_vars' ) {
+    *     if ( `"`greedy'"' == "nogreedy" ) {
+    *         disp as err "gstats_transform: nogreedy not allowed with repeat sources"
+    *         exit 198
+    *     }
+    * }
+
+    gstats_transform_types,             ///
+        vars(`__gtools_gst_vars')       ///
+        targets(`__gtools_gst_targets') ///
+        stats(`__gtools_gst_stats')     ///
+        types(`types')                  ///
+        ties(`ties')                    ///
+        prefix(__gtools_gst)
+
+    local kvars:    list sizeof __gtools_gst_vars
+    local ktargets: list sizeof __gtools_gst_targets
+    local kstat:    list sizeof __gtools_gst_stats
+    local ktype:    list sizeof __gtools_gst_types
+    local kretype:  list sizeof __gtools_gst_retype
+    local ktcodes:  list sizeof __gtools_gst_tcodes
+
+    local kbad = 0
+    local kbad = `kbad' | (`kvars' != `ktargets')
+    local kbad = `kbad' | (`kvars' != `kstat')
+    local kbad = `kbad' | (`kvars' != `ktype')
+    local kbad = `kbad' | (`kvars' != `kretype')
+    local kbad = `kbad' | (`kvars' != `ktcodes')
+
+    if ( `kbad' ) {
+        disp as err "gstats_transform: parsing error (inconsistent number of inputs)"
+        exit 198
+    }
+
+    * Parse variables to add
+    * ----------------------
+
+    * A variable needs to be "retyped" only if a target exists already
+    * and it has an unsuitable type. One of two things happens:
+    *
+    *     a) The target is also a source. Source gets renamed, used as
+    *        input, dropped.
+    *
+    *     b) The target is not a source. Target is renamed, dropped.
+
+    local __gtools_gst_i = 0
+    local __gtools_gst_dropvars
+    local __gtools_gst_vars: subinstr local __gtools_gst_vars " "  "  ", all
+
+    local krecast = 0
+    local recast_sources
+    local recast_targets
+
+    forvalues k = 1 / `ktargets' {
+        local retype: word `k' of `__gtools_gst_retype'
+        local target: word `k' of `__gtools_gst_targets'
+
+        cap confirm new variable `target'
+        if ( _rc ) {
+            if ( `"`replace'"' == "" ) {
+                disp as err "gstats_transform: target `target' exists without replace"
+                exit 198
+            }
+
+            if ( `retype' ) {
+                cap confirm new variable __gtools_gst`__gtools_gst_i'
+                while ( _rc ) {
+                    local ++__gtools_gst_i
+                    cap confirm new variable __gtools_gst`__gtools_gst_i'
+                }
+                rename `target' __gtools_gst`__gtools_gst_i'
+                local __gtools_gst_dropvars `__gtools_gst_dropvars' __gtools_gst`__gtools_gst_i'
+
+                if ( `:list target in __gtools_gst_vars' ) {
+                    local __gtools_gst_vars: subinstr local __gtools_gst_vars " `target' " " __gtools_gst`__gtools_gst_i' ", all
+                    local recast_sources `recast_sources' __gtools_gst`__gtools_gst_i'
+                    local recast_targets `recast_targets' `target'
+                    local ++krecast
+                }
+            }
+
+            local __gtools_gst_vars: subinstr local __gtools_gst_vars "  " " ", all
+        }
+    }
+
+    local kadd = 0
+    local __gtools_gst_addvars
+    local __gtools_gst_addtypes
+    forvalues k = 1 / `ktargets' {
+        local target: word `k' of `__gtools_gst_targets'
+        local type:   word `k' of `__gtools_gst_types'
+        cap confirm new variable `target'
+        if ( _rc == 0 ) {
+            local ++kadd
+            local __gtools_gst_addvars  `__gtools_gst_addvars'  `target'
+            local __gtools_gst_addtypes `__gtools_gst_addtypes' `type'
+        }
+    }
+
+    * Group stat codes
+    * ----------------
+
+    * -1          // sum
+    * -2          // mean
+    * -3          // sd
+    * -4          // max
+    * -5          // min
+    * -6          // count, n
+    * -7          // percent
+    * 50          // median
+    * -9          // iqr
+    * -10         // first
+    * -11         // firstnm
+    * -12         // last
+    * -13         // lastnm
+    * -14         // freq
+    * -15         // semean
+    * -16         // sebinomial
+    * -17         // sepoisson
+    * -18         // nunique
+    * -19         // skewness
+    * -20         // kurtosis
+    * -21         // rawsum
+    * -22         // nmissing
+    * -23         // variance
+    * -24         // cv
+    * -25         // range
+    * -26         // geomean
+    * -27         // gini
+    * -27.1       // gini|dropneg
+    * -27.2       // gini|keepneg
+    * -101        // nansum
+    * -121        // rawnansum
+    * -206        // sum weight
+    * -203        // variance
+    * 1000 + #    // #th smallest
+    * -1000 - #   // #th largest
+    * 1000.5 + #  // raw #th smallest
+    * -1000.5 - # // raw #th largest
+
+    * Transform codes
+    * ---------------
+
+    * -1          // standardize normalize
+    * -2          // demean
+    * -3          // demedian
+    * -4          // moving
+    *             //     syntax via stat call
+    *             //
+    *             //         (moving stat lower upper)
+    *             //
+    *             //     and/or via window() option
+    *             //
+    *             //         window(lower upper)
+    *             //
+    *             //     window() fills stat calls w/o lower/upper.
+    *             //
+    * -5          // range
+    *             //     syntax via stat call
+    *             //
+    *             //         (range stat lower upper [reference])
+    *             //
+    *             //     and/or via interval() option
+    *             //
+    *             //         interval(lower upper [reference])
+    *             //
+    *             //     interval() fills stat calls w/o lower/upper.
+    *             //     reference is the reference variable; if empty
+    *             //     the source is taken as its own reference. lower
+    *             //     an upper can be statistical transformations:
+    *             //
+    *             //         (range mean -2sd  0.5sd)
+    *             //         (range skew -2    1.5cv)
+    *             //         interval(-sd sd varname)
+    *             //
+    *             //     if either lower or upper are not numbers then
+    *             //     they will try to be parsed in the format above.
+    *             //     the number in front of the stat is multipled by
+    *             //     the stat requested. so (range mean -2sd 0.5sd)
+    *             //     will compute for x[i] the average over j s.t.
+    *             //     x[i] - 2 * sd(x) <= x[j] <= x[i] + 0.5 * sd(x)
+    * -6          // rank
+    * -7          // cummsum
+    *             //     syntax via stata call
+    *             //
+    *             //         (cumsum)
+    *             //         (cumsum +/-)
+    *             //         (cumsum +/- varlist)
+    *             //
+    *             //     and/or via cumby() option
+    *             //
+    *             //         cumby(+/-)
+    *             //         cumby(+/- varlist)
+    *             //
+    *             //     cumsum happens in the order th data appears or
+    *             //     in ascending/descending order. if varlist then
+    *             //     cumsum happens in ascending or descending order
+    *             //     or varlist.
+    * -8          // shift
+    *             //     syntax via stata call
+    *             //
+    *             //         (shift) for use with shift()
+    *             //         (shift -#)  for lags
+    *             //         (shift #) for leads
+    *             //
+    *             //     where shiftby() is an integer
+    *             //
+    *             //         shiftby(-#) for lags
+    *             //         shiftby(#) for leads
+
+    * moving stats
+    * ------------
+
+    * __gtools_transform_moving
+    *     stat code with the statistic to compute in the moving window.
+    *     e.g. (-2, 0, -3, 0, 75) means moving mean, non-moving stat,
+    *     moving sd, non-moving stat, and moving 75th percentile.
+    *
+    * __gtools_transform_moving_l
+    *     lower window bound. -1 means from the prior obs, . means all
+    *     obs before, 0 means start at current obs, etc.
+    *
+    * __gtools_transform_moving_u
+    *     upper window bound. 1 means up to the next obs, . means all
+    *     obs after, 0 means end at current obs, etc.
+
+    * Range stats
+    * -----------
+
+    * __gtools_transform_range
+    *     stat code with the statistic to compute in the interval window.
+    *     e.g. (-2, 0, -3, 0, 75) means range mean, non-range stat,
+    *     range sd, non-range stat, and range 75th percentile.
+    *
+    * __gtools_transform_range_xs
+    *
+    * __gtools_transform_range_xb
+    *
+    * __gtools_transform_range_k
+    *     number of reference range variables
+    *
+    * __gtools_transform_range_pos
+    *     position of reference range variable. i.e. the input is
+    *
+    *         [byvars] sources targets [rangevars] [weightvar]
+    *
+    *     the kth entry of this matrix maps the kth source with the
+    *     corresponding reference range variable. if the reference
+    *     variable is the source, this is 0.
+    *
+    * __gtools_transform_range_l
+    * __gtools_transform_range_u
+    *
+    *     lower and upper range windows for the kth statistic, if it is
+    *     an range statistic. The ith observation is computed over
+    *     sources[j, k] s.t.
+    *
+    *         lower <= sources[j, k] <= upper
+    *
+    *     where
+    *
+    *         l     = __gtools_transform_range_pos[k]
+    *         lower = rangevars[i, l] + __gtools_transform_range_l[k]
+    *         upper = rangevars[i, l] + __gtools_transform_range_u[k]
+    *
+    *     If l is 0 then this is computed with
+    *
+    *         lower = sources[i, k] + __gtools_transform_range_l[k]
+    *         upper = sources[i, k] + __gtools_transform_range_u[k]
+    *
+    *     Note that both lower and upper are ADDED, so lower must be
+    *     npassed as a negative umber if you want to subtract it.
+    *
+    *     Last, if the range has a reference statistic attached to
+    *     it, then lower/upper are the scalar it multiplies:
+    *
+    *         lscalar = __gtools_transform_range_l[k]
+    *         uscalar = __gtools_transform_range_u[k]
+    *         lower   = rangevars[i, l] + lscalar * lstat[k]
+    *         upper   = rangevars[i, l] + uscalar * ustat[k]
+    *
+    *     or
+    *
+    *         lower   = sources[i, k] + lscalar * lstat[k]
+    *         upper   = sources[i, k] + uscalar * ustat[k]
+    *
+    *     as applicable. For details on lstat and ustat see below.
+    *
+    * __gtools_transform_range_ls
+    * __gtools_transform_range_us
+    *
+    *     lower and upper range statistics for the kth statistic,
+    *     if it is an range statistic and if a statistical
+    *     transformation was requested. Lower and upper bounds
+    *     lstat[k] and ustat[k] referenced above are obtained from
+    *     rangevars[i, l] or sources[i, k], as applicable. The
+    *     requested statistic is computed over all i.
+    *
+    *     these vectors contain the code's statistic. if there is
+    *     no reference statistic, the entry is just 0. For example,
+    *     this computes the mean price within a standard deviation:
+    *
+    *         (range mean -sd sd) price
+    *
+    *         l       = __gtools_transform_range_pos[k] <- 0
+    *         lscalar = __gtools_transform_range_l[k]   <- -1
+    *         uscalar = __gtools_transform_range_u[k]   <- 1
+    *
+    *         lcode   = __gtools_transform_range_ls[k]  <- -3
+    *         ucode   = __gtools_transform_range_us[k]  <- -3
+    *         lstat   = sd(sources[i, k]) over all i
+    *         ustat   = sd(sources[i, k]) over all i
+    *
+    *         lower   = sources[i, k] + lscalar * lstat
+    *         upper   = sources[i, k] + uscalar * ustat
+    *
+    *         ith output obs = mean(sources[j, k]) s.t. lower <= sources[j, k] <= upper
+
+    * Cummulative Sum
+    * ---------------
+
+    * __gtools_transform_cumsum_k
+    *
+    *     number of aux variables for cumsum
+    *
+    * __gtools_transform_cumtypes
+    *
+    *     types for cumvars
+    *
+    * __gtools_transform_cumsum
+    *
+    *     0/1 for whther kth target stat is cumsum
+    *
+    * __gtools_transform_cumsign
+    *
+    *     whether cumsum should be in data (0), ascending (1), or
+    *     descending (2) order
+    *
+    * __gtools_transform_cumvars
+    *
+    *     start and end position of cumvars for each target
+
+    * Shift (lads and leads)
+    * ----------------------
+
+    * __gtools_transform_aux8_shift
+    *
+    *     number (positive or negative) to shift kth target by
+
+    * Transform mappings
+    * ------------------
+
+    * There are two sets of stats: The transformations and the group
+    * stats that the transformations use. For example, normalizing a
+    * variable uses the mean and standard deviation. Each transform has
+    * an internal code for its group stats. normalize has codes 1 and 2
+    * for the mean and standard deviation, demedian has code 1 for the
+    * median, and so on. Hence we create a matrix with mappings from
+    * each stat to their stat's position on the array of group stats. If
+    * we have stats(demedian demean normalize) we get
+    *
+    *     __gtools_transform_varfuns  // code for variable transforms
+    *     demedian demean normalize
+    *     -3       -2     -1
+    *
+    *     __gtools_transform_statcode // code for group stats
+    *     50     -2   -3
+    *     median mean sd
+    *
+    *     __gtools_transform_statmap  // mapping from transforms to the group stats
+    *     1 0 0
+    *     2 0 0
+    *     2 3 0
+    *
+    * The group stat array will have first the median, then the mean,
+    * then the standard deviation. Hence demedian will use the first
+    * stat, demean the second, and normalize the second and third.
+
+    * Generate matrices for plugin internals
+    * --------------------------------------
+
+    local gs_nostats_codes -4 -5 -6 -7 -8
+
+    local gs_standardize mean sd
+    local gs_normalize   mean sd
+    local gs_demean      mean
+    local gs_demedian    median
+    local gs_moving
+    local gs_range
+    local gs_rank
+    local gs_cumsum
+    local gs_shift
+
+    local gs
+    local rangevars
+
+    foreach stat of local __gtools_gst_stats {
+        local gs `gs' `gs_`stat''
+        encode_range `stat'
+        local rangevars `rangevars' `r(var)'
+    }
+
+    local gs: list uniq gs
+    local rangevars: list uniq rangevars
+
+    mata: __gtools_transform_varfuns    = J(1, `:list sizeof __gtools_gst_stats', .)
+    mata: __gtools_transform_statcode   = J(1, max((`:list sizeof gs', 1)), 0)
+    mata: __gtools_transform_statmap    = J(`:list sizeof __gtools_gst_stats', max((`:list sizeof gs', 1)), 0)
+
+    mata: __gtools_transform_moving     = J(1, `:list sizeof __gtools_gst_stats', 0)
+    mata: __gtools_transform_moving_l   = J(1, `:list sizeof __gtools_gst_stats', .)
+    mata: __gtools_transform_moving_u   = J(1, `:list sizeof __gtools_gst_stats', .)
+
+    mata: __gtools_transform_range      = J(1, `:list sizeof __gtools_gst_stats', 0)
+    mata: __gtools_transform_range_pos  = J(1, `:list sizeof __gtools_gst_stats', 0)
+    mata: __gtools_transform_range_l    = J(1, `:list sizeof __gtools_gst_stats', .)
+    mata: __gtools_transform_range_u    = J(1, `:list sizeof __gtools_gst_stats', .)
+    mata: __gtools_transform_range_ls   = J(1, `:list sizeof __gtools_gst_stats', 0)
+    mata: __gtools_transform_range_us   = J(1, `:list sizeof __gtools_gst_stats', 0)
+
+    mata: __gtools_transform_cumsum     = J(1, `:list sizeof __gtools_gst_stats',     0)
+    mata: __gtools_transform_cumsign    = J(1, `:list sizeof __gtools_gst_stats',     0)
+    mata: __gtools_transform_cumvars    = J(1, `:list sizeof __gtools_gst_stats' + 1, 0)
+
+    mata: __gtools_transform_aux8_shift = J(1, `:list sizeof __gtools_gst_stats', 0)
+
+    forvalues l = 1 / `:list sizeof gs' {
+        local gstat: word `l' of `gs'
+        encode_stat_allowed `gstat' 0
+        mata: __gtools_transform_statcode[`l'] = `r(statcode)'
+    }
+
+    local bwarn4 = 0
+    local bwarn5 = 0
+
+    local rwarn = 0
+    local iwarn = 0
+
+    local cumvars
+    forvalues k = 1 / `:list sizeof __gtools_gst_stats' {
+        local stat:  word `k' of `__gtools_gst_stats'
+
+             if ( "`stat'" == "standardize" ) local statcode -1
+        else if ( "`stat'" == "normalize"   ) local statcode -1
+        else if ( "`stat'" == "demean"      ) local statcode -2
+        else if ( "`stat'" == "demedian"    ) local statcode -3
+        else if ( "`stat'" == "rank"        ) local statcode -6
+        else                                  local statcode 0
+
+        * moving matrices
+        encode_moving `stat'
+        local rwarn = `rwarn' | `r(warn)'
+        if ( `r(match)' ) {
+            if ( `r(scode)' == 0 ) {
+                disp as err "gstats_transform: moving parsing error; unknown substat"
+                exit 198
+            }
+            local statcode -4
+            local bwarn4 = 1
+            mata: __gtools_transform_moving[`k']   = `r(scode)'
+            mata: __gtools_transform_moving_l[`k'] = `r(lower)'
+            mata: __gtools_transform_moving_u[`k'] = `r(upper)'
+        }
+
+        * interval matrices
+        encode_range `stat'
+        local iwarn = `iwarn' | `r(warn)'
+        if ( `r(match)' ) {
+            if ( `r(scode)' == 0 ) {
+                disp as err "gstats_transform: range parsing error; unknown substat"
+                exit 198
+            }
+            local statcode -5
+            local bwarn5 = 1
+            mata: __gtools_transform_range[`k']     = `r(scode)'
+            mata: __gtools_transform_range_l[`k']   = `r(lower)'
+            mata: __gtools_transform_range_u[`k']   = `r(upper)'
+            mata: __gtools_transform_range_ls[`k']  = `r(lcode)'
+            mata: __gtools_transform_range_us[`k']  = `r(ucode)'
+            mata: __gtools_transform_range_pos[`k'] = `:list posof "`r(var)'" in rangevars'
+        }
+
+        * cumsum matrices
+        encode_cumsum `stat'
+        if ( `r(match)' ) {
+            local statcode -7
+            local cumvars `cumvars' `r(cumvars)'
+            if ( !inlist(`:word count `r(cumvars)'', 0, 1) ) {
+                disp as err "gstats_transform: cumby for multiple variables not implemented"
+                exit 198
+            }
+            mata: __gtools_transform_cumsum[`k']  = 1
+            mata: __gtools_transform_cumsign[`k'] = `r(cumsign)'
+            mata: __gtools_transform_cumvars[`=`k'+1'] = `:list sizeof cumvars'
+        }
+
+        * shift matrices
+        encode_shift `stat'
+        if ( `r(match)' ) {
+            local statcode -8
+            mata: __gtools_transform_aux8_shift[`k'] = `r(shift)'
+        }
+
+        * other matrices
+        if ( `statcode' == 0 ) {
+            disp as err "gstats_transform: unknown stat `stat'"
+            exit 198
+        }
+
+        mata: __gtools_transform_varfuns[`k'] = `statcode'
+        if ( !`:list statcode in gs_nostats_codes' ) {
+            forvalues l = 1 / `:list sizeof gs' {
+                local gstat: word `l' of `gs'
+                forvalues m = 1 / `:list sizeof gs_`stat'' {
+                    mata: __gtools_transform_statmap[`k', `m'] = `:list posof "`:word `m' of `gs_`stat'''" in gs'
+                }
+            }
+
+            cap mata: assert(all(rowsum(__gtools_transform_statmap[`k', .] :> 0) :> 0))
+            if ( _rc ) {
+                disp as err "gstats_transform: error parsing transform mappings"
+                exit 198
+            }
+        }
+    }
+
+    * if ( `bwarn4' ) {
+    *     disp as txt "{bf:warning}: requested transform {bf:'moving'} is in beta"
+    * }
+    *
+    * if ( `bwarn5' ) {
+    *     disp as txt "{bf:warning}: requested transform {bf:'range'} is in beta"
+    * }
+
+    if ( `rwarn' ) {
+        disp as txt "{bf:note:} requested moving statistic without a window"
+    }
+
+    if ( `iwarn' ) {
+        disp as txt "{bf:note:} requested range statistic without an interval"
+    }
+
+    * NOTE(mauricio): Unlike gcollapse, here we can't really have a set
+    * of unique sources that get mapped to multiple targets because each
+    * source gets transformed! So you will need to read each source in
+    * unmodified for as many targets as you have.
+
+    * TODO: strL support
+    local cumvars `cumvars'
+    if ( `"`cumvars'"' != "" ) {
+        GenericParseTypes `cumvars', mat(__gtools_transform_cumtypes)
+        forvalues i = 1 / `:list sizeof cumvars' {
+            cap mata assert(st_matrix("__gtools_transform_cumtypes")[`i'] :<= 0)
+            if ( _rc ) {
+                disp as err "gstats_transform: cumby for string types not implemented"
+                exit 198
+            }
+        }
+    }
+
+    mata {
+        if ( (`"`excludeself'"'   != "") &  any(__gtools_transform_varfuns :!= -5) ) {
+            if ( all(__gtools_transform_varfuns :!= -5) ) {
+                printf("gstats_transform: option -excludeself- not allowed (only with transform range)\n")
+                _error(198)
+            }
+            else {
+                printf("gstats_transform: excludeself ignored for stats other than range\n")
+            }
+        }
+    }
+
+    * Return varlist for plugin internals
+    * -----------------------------------
+    scalar __gtools_transform_greedy    = (`"`greedy'"' != "nogreedy")
+    scalar __gtools_transform_kvars     = `:list sizeof __gtools_gst_vars'
+    scalar __gtools_transform_ktargets  = `:list sizeof __gtools_gst_targets'
+    scalar __gtools_transform_kgstats   = `:list sizeof gs'
+    scalar __gtools_gstats_code         = 3
+    scalar __gtools_transform_cumsum_k  = `:list sizeof cumvars'
+    scalar __gtools_transform_range_k   = `:list sizeof rangevars'
+    scalar __gtools_transform_range_xs  = (`"`excludeself'"'   != "")
+    scalar __gtools_transform_range_xb  = (`"`excludebounds'"' != "")
+
+    mata: st_matrix("__gtools_transform_rank_ties", strtoreal(tokens(st_local("__gtools_gst_tcodes"))))
+    mata: st_matrix("__gtools_transform_varfuns",    __gtools_transform_varfuns)
+    mata: st_matrix("__gtools_transform_statmap",    __gtools_transform_statmap)
+    mata: st_matrix("__gtools_transform_statcode",   __gtools_transform_statcode)
+
+    mata: st_matrix("__gtools_transform_moving",     __gtools_transform_moving)
+    mata: st_matrix("__gtools_transform_moving_l",   __gtools_transform_moving_l)
+    mata: st_matrix("__gtools_transform_moving_u",   __gtools_transform_moving_u)
+
+    mata: st_matrix("__gtools_transform_range",      __gtools_transform_range)
+    mata: st_matrix("__gtools_transform_range_pos",  __gtools_transform_range_pos)
+    mata: st_matrix("__gtools_transform_range_l",    __gtools_transform_range_l)
+    mata: st_matrix("__gtools_transform_range_u",    __gtools_transform_range_u)
+    mata: st_matrix("__gtools_transform_range_ls",   __gtools_transform_range_ls)
+    mata: st_matrix("__gtools_transform_range_us",   __gtools_transform_range_us)
+
+    mata: st_matrix("__gtools_transform_cumsum",     __gtools_transform_cumsum)
+    mata: st_matrix("__gtools_transform_cumsign",    __gtools_transform_cumsign)
+    mata: st_matrix("__gtools_transform_cumvars",    __gtools_transform_cumvars)
+
+    mata: st_matrix("__gtools_transform_aux8_shift", __gtools_transform_aux8_shift)
+
+    c_local varlist `__gtools_gst_vars' `__gtools_gst_targets' `rangevars' `cumvars'
+
+    * Check if any of the target is any type of source
+    local common: list cumvars | rangevars
+    local common: list common  | __gtools_gst_vars
+    c_local gstats_replace_anysrc: list common & __gtools_gst_targets
+
+    * Potential intensive operations: Add, recast targets
+    * ---------------------------------------------------
+
+    if ( `kadd' ) {
+        mata: (void) st_addvar(tokens(`"`__gtools_gst_addtypes'"'), tokens(`"`__gtools_gst_addvars'"'))
+    }
+
+    if ( `krecast' ) {
+        scalar __gtools_k_recast = `krecast'
+        cap noi plugin call gtools_plugin `recast_targets' `recast_sources', recast
+        local rc = _rc
+        cap scalar drop __gtools_k_recast
+        if ( `rc' ) {
+            exit `rc'
+        }
+    }
+
+    mata __gtools_gst_dropvars = tokens(`"`__gtools_gst_dropvars'"')
+    forvalues k = 1 / `ktargets' {
+        mata: st_varlabel( `"`:word `k' of `__gtools_gst_targets''"', __gtools_gst_labels[`k'])
+        mata: st_varformat(`"`:word `k' of `__gtools_gst_targets''"', __gtools_gst_formats[`k'])
+    }
+
+    c_local gstats_replace: copy local replace
+    c_local gstats_init:    copy local init
+    c_local gstats_greedy:  copy local greedy
+end
+
+* NOTE: Copy/paste from gcollapse.ado/parse_vars
+
+capture program drop gstats_transform_parse
+program gstats_transform_parse
+    syntax anything(equalok), ///
+    [                         ///
+        WILDparse             /// parse assuming wildcard renaming
+        autorename            /// automagically name targets if no target is specified
+        autorenameformat(str) ///
+        window(passthru)      /// moving window if not specified in the stat
+        interval(passthru)    /// interval if not specified in the stat
+        cumby(passthru)       /// cummulative sum by +/- and varlst if not specified in the stat
+        shiftby(passthru)     /// Shift by +/-#
+        statprefix(passthru)  /// add prefix to every stat
+        labelformat(str)      /// label prefix
+        labelprogram(str)     /// label program
+    ]
+
+    * Parse call into list of sources, targets, stats
+    * -----------------------------------------------
+
+    local opts     prefix(__gtools_gst) default(demean)
+    local passthru `window' `interval' `cumby' `shiftby' `statprefix'
+    if ( "`wildparse'" != "" ) {
+        local rc = 0
+
+        ParseListWild `anything', loc(__gtools_gst_call) `opts' `passthru'
+
+        local __gtools_bak_stats      : copy local __gtools_gst_stats
+        local __gtools_bak_vars       : copy local __gtools_gst_vars
+        local __gtools_bak_targets    : copy local __gtools_gst_targets
+        local __gtools_bak_uniq_stats : copy local __gtools_gst_uniq_stats
+        local __gtools_bak_uniq_vars  : copy local __gtools_gst_uniq_vars
+
+        ParseList `__gtools_gst_call',  `opts' `passthru'
+
+        cap assert ("`__gtools_gst_stats'"      == "`__gtools_bak_stats'")
+        local rc = max(_rc, `rc')
+
+        cap assert ("`__gtools_gst_vars'"       == "`__gtools_bak_vars'")
+        local rc = max(_rc, `rc')
+
+        cap assert ("`__gtools_gst_targets'"    == "`__gtools_bak_targets'")
+        local rc = max(_rc, `rc')
+
+        cap assert ("`__gtools_gst_uniq_stats'" == "`__gtools_bak_uniq_stats'")
+        local rc = max(_rc, `rc')
+
+        cap assert ("`__gtools_gst_uniq_vars'"  == "`__gtools_bak_uniq_vars'")
+        local rc = max(_rc, `rc')
+
+        if ( `rc' ) {
+            disp as error "gstats_transform_parse: Wild parsing inconsistent with standard parsing."
+            exit 198
+        }
+    }
+    else {
+        ParseList `anything', `opts' `passthru'
+    }
+
+    if ( `"`autorenameformat'"' != "" ) local autorename       autorename
+    if ( `"`autorenameformat'"' == "" ) local autorenameformat #source#_#stat#
+
+    if ( `"`autorename'"' != "" ) {
+        local targets
+        forvalues k = 1 / `:list sizeof __gtools_gst_vars' {
+            local stat:   word `k' of `__gtools_gst_stats'
+            local var:    word `k' of `__gtools_gst_vars'
+            local target: word `k' of `__gtools_gst_targets'
+            if ( `"`var'"' == `"`target'"' ) {
+                local sname = strtoname(`"`stat'"')
+                local autoname: subinstr local autorenameformat "#source#" "`var'",   all
+                local autoname: subinstr local autoname         "#stat#"   "`sname'", all
+                local targets `targets' `autoname'
+            }
+            else {
+                local targets `targets' `target'
+            }
+        }
+        local __gtools_gst_targets: copy local targets
+    }
+
+    unab  __gtools_gst_vars:         `__gtools_gst_vars'
+    unab  __gtools_gst_uniq_vars:    `__gtools_gst_uniq_vars'
+    local __gtools_gst_uniq_targets: list uniq __gtools_gst_targets
+
+    if ( !`:list __gtools_gst_uniq_targets === __gtools_gst_targets' ) {
+        disp as err "gstats_transform_parse: repeat targets found in function call"
+        exit 198
+    }
+
+    * Get format and labels from sources
+    * ----------------------------------
+
+    if ( "`labelformat'" == "") local labelformat "(#stat#) #sourcelabel#"
+
+    local lnice_regex "(.*)(#stat:pretty#)(.*)"
+    local lpre_regex  "(.*)(#stat#)(.*)"
+    local lPre_regex  "(.*)(#Stat#)(.*)"
+    local lPRE_regex  "(.*)(#STAT#)(.*)"
+    local ltxt_regex  "(.*)(#sourcelabel#)(.*)"
+    local lsub_regex  "(.*)#sourcelabel:([0-9]+):([.0-9]+)#(.*)"
+
+    mata: __gtools_gst_labels  = J(1, `:list sizeof __gtools_gst_targets', "")
+    mata: __gtools_gst_formats = J(1, `:list sizeof __gtools_gst_targets', "")
+    forvalues k = 1 / `:list sizeof __gtools_gst_targets' {
+        local vl = `"`:variable label `:word `k' of `__gtools_gst_vars'''"'
+        local vl = cond(`"`vl'"' == "", `"`:word `k' of `__gtools_gst_vars''"', `"`vl'"')
+        local vp = `"`:word `k' of `__gtools_gst_stats''"'
+
+        if ( "`labelprogram'" == "" ) GtoolsPrettyStat `vp'
+        else `labelprogram' `vp'
+        local vpretty = `"`r(prettystat)'"'
+
+        if ( `"`vpretty'"' == "#default#" ) {
+            GtoolsPrettyStat `vp'
+            local vpretty = `"`r(prettystat)'"'
+        }
+
+        local lfmt_k = `"`labelformat'"'
+
+        if ( "`vp'" == "freq" ) {
+            if !regexm(`"`vl'"', "`ltxt_regex'") {
+                while regexm(`"`lfmt_k'"', "`ltxt_regex'") {
+                    local lfmt_k = regexs(1) + `""' + regexs(3)
+                }
+            }
+            if !regexm(`"`vl'"', "`lsub_regex'") {
+                while regexm(`"`lfmt_k'"', "`lsub_regex'") {
+                    local lfmt_k = regexs(1) + `""' + regexs(4)
+                }
+            }
+        }
+        else {
+            if !regexm(`"`vl'"', "`ltxt_regex'") {
+                while regexm(`"`lfmt_k'"', "`ltxt_regex'") {
+                    local lfmt_k = regexs(1) + `"`vl'"' + regexs(3)
+                }
+            }
+            if !regexm(`"`vl'"', "`lsub_regex'") {
+                while regexm(`"`lfmt_k'"', "`lsub_regex'") {
+                    local lfmt_k = regexs(1) + substr(`"`vl'"', `:di regexs(2)', `:di regexs(3)') + regexs(4)
+                }
+            }
+        }
+
+        if !regexm(`"`vpretty'"', "`lnice_regex'") {
+            while regexm(`"`lfmt_k'"', "`lnice_regex'") {
+                local lfmt_k = regexs(1) + `"`vpretty'"' + regexs(3)
+            }
+        }
+        if !regexm(`"`vp'"', "`lpre_regex'") {
+            while regexm(`"`lfmt_k'"', "`lpre_regex'") {
+                local lfmt_k = regexs(1) + `"`vp'"' + regexs(3)
+            }
+        }
+        if !regexm(`"`vp'"', "`lPre_regex'") {
+            while regexm(`"`lfmt_k'"', "`lPre_regex'") {
+                local lfmt_k = regexs(1) + proper(`"`vp'"') + regexs(3)
+            }
+        }
+        if !regexm(`"`vp'"', "`lPRE_regex'") {
+            while regexm(`"`lfmt_k'"', "`lPRE_regex'") {
+                local lfmt_k = regexs(1) + upper(`"`vp'"') + regexs(3)
+            }
+        }
+        mata: __gtools_gst_labels[`k'] = `"`lfmt_k'"'
+
+        local vf = "`:format `:word `k' of `__gtools_gst_vars'''"
+        local vf = cond(inlist(`"`:word `k' of `__gtools_gst_stats''"', "count", "freq", "nunique", "nmissing"), "%8.0g", "`vf'")
+        mata: __gtools_gst_formats[`k'] = "`vf'"
+    }
+
+    * Locals one level up
+    * -------------------
+
+    c_local __gtools_gst_targets    : copy local __gtools_gst_targets
+    c_local __gtools_gst_vars       : copy local __gtools_gst_vars
+    c_local __gtools_gst_stats      : copy local __gtools_gst_stats
+    c_local __gtools_gst_uniq_vars  : copy local __gtools_gst_uniq_vars
+    c_local __gtools_gst_uniq_stats : copy local __gtools_gst_uniq_stats
+end
+
+capture program drop gstats_transform_types
+program gstats_transform_types
+    syntax, vars(str) targets(str) stats(str) prefix(str) [types(str) ties(str)]
+
+    * Check all inputs are numeric
+    * ----------------------------
+
+    cap confirm var `vars'
+    if ( _rc ) {
+        disp as err "gstats_transform_types: sources must exit"
+        exit 198
+    }
+
+    cap confirm numeric var `vars'
+    if ( _rc ) {
+        disp as err "gstats_transform_types: numeric sources required"
+        exit 198
+    }
+
+    local sametype standardize ///
+                   normalize   ///
+                   demean      ///
+                   demedian    ///
+
+    local upgrade
+    local types
+    local retype
+
+    * Special parsing for rank type
+    * -----------------------------
+
+    if ( (`:list sizeof ties' > 1) & (`:list sizeof ties' != `:list sizeof targets') ) {
+        disp as err "gstats_transform_types: only one tie-break or one tie-break per target in ties()"
+        exit 198
+    }
+
+    if ( scalar(__gtools_weight_code) > 0 ) {
+        local mintype_rank double
+    }
+    else if ( `=_N' < maxbyte() ) {
+        local mintype_rank byte
+    }
+    else if ( `=_N' < maxint() ) {
+        local mintype_rank int
+    }
+    else if ( `=_N' < maxlong() ) {
+        local mintype_rank long
+    }
+    else {
+        local mintype_rank double
+    }
+
+    local tcodes
+    local rtypes
+    local default       d de def defa defau defaul default .
+    local field         f fi fie fiel field
+    local track         t tr tra trac track
+    local unique        u un uni uniq uniqu unique
+    local stableunique  s st sta stab stabl stable stableu stableun stableuni stableuniq stableuniqu stableunique
+
+    if ( `:list sizeof ties' > 1 ) {
+        foreach t of local ties {
+            if ( `:list t in default' | (`"`t'"' == "") ) {
+                local ties_code = 1
+                local rtype = cond(`"`mintype_rank'"' != "double", "`:set type'", "double")
+            }
+            else if ( `:list t in field' ) {
+                local ties_code = 2
+                local rtype `mintype_rank'
+            }
+            else if ( `:list t in track' ) {
+                local ties_code = 3
+                local rtype `mintype_rank'
+            }
+            else if ( `:list t in unique' ) {
+                local ties_code = 4
+                local rtype `mintype_rank'
+            }
+            else if ( `:list ties in stableunique' ) {
+                local ties_code = 5
+                local rtype `mintype_rank'
+            }
+            else {
+                disp as err "ties(`t') not allowed"
+                exit 198
+            }
+            local tcodes `tcodes' `ties_code'
+            local rtypes `rtypes' `rtype'
+        }
+    }
+    else {
+        if ( `:list ties in default' | (`"`ties'"' == "") ) {
+            local ties_code = 1
+            local rtype = cond(inlist(`"`mintype_rank'"', "long", "double"), "double", "`:set type'")
+        }
+        else if ( `:list ties in field' ) {
+            local ties_code = 2
+            local rtype `mintype_rank'
+        }
+        else if ( `:list ties in track' ) {
+            local ties_code = 3
+            local rtype `mintype_rank'
+        }
+        else if ( `:list ties in unique' ) {
+            local ties_code = 4
+            local rtype `mintype_rank'
+        }
+        else if ( `:list ties in stableunique' ) {
+            local ties_code = 5
+            local rtype `mintype_rank'
+        }
+        else {
+            disp as err "gstats_transform_types: ties(`ties') not allowed"
+            exit 198
+        }
+
+        forvalues k = 1 / `:list sizeof targets' {
+            local tcodes `tcodes' `ties_code'
+            local rtypes `rtypes' `rtype'
+        }
+    }
+
+    * If types are empty, autoretype; else use user input
+    * ---------------------------------------------------
+
+    * NOTE(mauricio): retype is 1 if the target exists and the type is
+    * unsuitable or if the target does not exist (since "" will not
+    * equal any named type). In the former case retype is necessary,
+    * in the latter retype will get ignored and a new variable will be
+    * created.
+
+    if ( `"`types'"' == "" ) {
+        forvalues k = 1 / `:list sizeof vars' {
+            gettoken var    vars:    vars
+            gettoken target targets: targets
+            gettoken stat   stats:   stats
+            gettoken rtype  rtypes:  rtypes
+
+            local var    `var'
+            local target `target'
+            local stat   `stat'
+            local rtype  `rtype'
+            local type:  type `var'
+
+            cap confirm var `target'
+            if ( _rc ) local ttype
+            else local ttype: type `target'
+
+            encode_moving `stat'
+            local rmatch = `r(match)'
+            if ( `r(match)' ) {
+                encode_stat_types `r(stat)' `type' `ttype'
+                local types  `types'  `r(type)'
+                local retype `retype' `r(retype)'
+            }
+
+            encode_range `stat'
+            local rmatch = `r(match)' | `rmatch'
+            if ( `r(match)' ) {
+                encode_stat_types `r(stat)' `type' `ttype'
+                local types  `types'  `r(type)'
+                local retype `retype' `r(retype)'
+            }
+
+            encode_cumsum `stat'
+            local rmatch = `r(match)' | `rmatch'
+            if ( `r(match)' ) {
+                local types  `types'  double
+                local retype `retype' `=!inlist("`ttype'", "double")'
+            }
+
+            * shift follows the same retype logic as min, max, first, last, etc.
+            encode_shift `stat'
+            local rmatch = `r(match)' | `rmatch'
+            if ( `r(match)' ) {
+                encode_stat_types first `type' `ttype'
+                local types  `types'  `type'
+                local retype `retype' `r(retype)'
+            }
+
+            if ( `"`stat'"' == "rank" ) {
+                local types `types' `rtype'
+                if ( inlist("`ttype'", "`rtype'", "double") ) {
+                    local retype `retype' 0
+                }
+                else if ( "`ttype'" == "float" ) {
+                    local retype `retype' `=inlist("`rtype'", "long", "double")'
+                }
+                else if ( "`ttype'" == "long" ) {
+                    local retype `retype' `=inlist("`rtype'", "double")'
+                }
+                else if ( "`ttype'" == "int" ) {
+                    local retype `retype' `=!inlist("`rtype'", "int", "byte")'
+                }
+                else if ( "`ttype'" == "byte" ) {
+                    local retype `retype' `=!inlist("`rtype'", "byte")'
+                }
+                else if ( "`ttype'" == "" ) {
+                    local retype `retype' 1
+                }
+                else {
+                    disp as err "gstats_transform_types: Unable to parse type '`ttype''"
+                    exit 198
+                }
+                local rmatch = 1
+            }
+
+            if ( `rmatch' == 0 ) {
+                if inlist(`"`type'"', "long") {
+                    local types   `types'  double
+                    local retype  `retype' `=!inlist("`ttype'", "double")'
+                }
+                else if inlist(`"`type'"', "int", "byte") {
+                    local types   `types'  `:set type'
+                    local retype  `retype' `=!inlist("`ttype'", "`:set type'", "double")'
+                }
+                else {
+                    if ( `:list stat in sametype' ) {
+                        local types  `types'  `type'
+                        local retype `retype' `=!inlist("`ttype'", "`type'", "double")'
+                    }
+                    else if ( `:list stat in upgrade' ) {
+                        local types  `types'  double
+                        local retype `retype' `=!inlist("`ttype'", "double")'
+                    }
+                    else {
+                        disp as err "gstats_transform_types: Uknown stat found in function call"
+                        exit 198
+                    }
+                }
+            }
+        }
+    }
+    else if ( `:list sizeof types' == 1 ) {
+        forvalues k = 1 / `:list sizeof targets' {
+            local target: word `k' of `targets'
+            cap confirm var `target'
+            if ( _rc ) local ttype
+            else local ttype: type `target'
+
+            local types  `types'  `types'
+            local retype `retype' `=("`ttype'" != "`types'")'
+        }
+    }
+    else if ( `:list sizeof types' != `:list sizeof targets' ) {
+        disp as err "gstats_transform_types: types() must be a single input or one input per target"
+        exit 198
+    }
+    else {
+        forvalues k = 1 / `:list sizeof targets' {
+            local tcmp:   word `k' of `types'
+            local target: word `k' of `targets'
+            cap confirm var `target'
+            if ( _rc ) local ttype
+            else local ttype: type `target'
+
+            local retype `retype' `=("`ttype'" != "`tcmp'")'
+        }
+    }
+
+    c_local `prefix'_tcodes: copy local tcodes
+    c_local `prefix'_types:  copy local types
+    c_local `prefix'_retype: copy local retype
+end
+
+capture program drop gstats_hdfe
+program gstats_hdfe
+    syntax anything(equalok), ///
+        absorb(varlist)       ///
+    [                         ///
+        PREfix(str)           /// generate variables with specified prefix
+        GENerate(str)         /// generate specified variables
+        replace               /// replace variables, if they exist
+        noinit                /// do not initialize targets with missing values
+        WILDparse             /// parse assuming wildcard renaming
+                              ///
+        ABSORBMISSing         /// absorb missing levels
+        algorithm(str)        /// alias for method
+        method(str)           /// projection method
+                              /// map (method of alternating projections)
+                              /// squarem
+                              /// conjugate gradient|cg
+                              /// it|irons tuck
+        STANdardize           /// standardize before applying transform
+        TRACEiter             /// trace iteration progress
+        maxiter(real 100000)  /// maximum number of iterations
+        TOLerance(real 1e-8)  /// tolerance for hdfe convergence
+        MATAsave              /// save by vars/levels in mata
+        MATAsavename(str)     /// name of mata object
+                              ///
+        individual            /// do not drop missing rows case-wise
+    ]
+
+    if ( ("`algorithm'" != "") & ("`method'" != "") ) {
+        disp as err "gstats_hdfe: method() is an alias for algorithm(); specify only one"
+        exit 198
+    }
+    if ( `"`algorithm'"' == "" ) local algorithm  cg
+    if ( `"`method'"'    != "" ) local algorithm: copy local method
+    local method: copy local algorithm
+
+    if ( "`individual'" != "" ) {
+        disp as err "gstats_hdfe: option -individual- not implemented; values dropped row-wise"
+        exit 198
+    }
+
+    if ( `maxiter' < 1 ) {
+        disp as err "gstats_hdfe: maxiter() must be >= 1"
+        exit 198
+    }
+
+    if ( missing(`maxiter') ) local maxiter 0
+    local maxiter = floor(`maxiter')
+
+    local __gtools_byvars: copy global GTOOLS_BYNAMES
+    * NB: This is tested internally against gregress; should be OK?
+    * if ( "${GTOOLS_HDFEBY}" != "1" ) {
+    *     if ( "`__gtools_byvars'" != "" ) {
+    *         disp as err "gstats hdfe with by() has {bf:NOT} been tested. Try it at your own risk via"
+    *         disp as err ""
+    *         disp as err "    global GTOOLS_HDFEBY = 1"
+    *         exit 198
+    *     }
+    * }
+
+    if ( `"`matasavename'"' != "" ) local matasave     matasave
+    if ( `"`matasavename'"' == "" ) local matasavename GtoolsByLevels
+
+    if ( lower(`"`method'"') == "map" ) {
+        local method_code 1
+        local method map
+    }
+    else if ( lower(`"`method'"') == "squarem" ) {
+        local method_code 2
+        local method squarem
+    }
+    else if ( inlist(lower(`"`method'"'), "conjugate gradient", "conjugate_gradient", "cg") ) {
+        local method_code 3
+        local method cg
+    }
+    else if ( inlist(lower(`"`method'"'), "irons and tuck", "irons tuck", "irons_tuck", "it") ) {
+        local method_code 5
+        local method it
+    }
+    else if ( inlist(lower(`"`method'"'), "bit", "berge_it", "berge it") ) {
+        * TODO: gives segfault on some runs last I checked; debug someday.
+        * Option is undocumented but I leave it here for myself.
+        local method_code 6
+        local method bit
+    }
+    else {
+        disp as err "gstats_hdfe: method() must be one of: map, squarem, cg, it"
+        exit 198
+    }
+
+    * ---------------------------------------------------------------------
+    * Parse absorb
+    * ---------------------------------------------------------------------
+
+    local absorb_uniq: list uniq absorb
+    if ( `:list sizeof absorb_uniq' < `:list sizeof absorb' ) {
+        disp as txt "warning: duplicate variables in absorb()"
+    }
+
+    * TODO: strL support
+    GenericParseTypes `absorb', mat(__gtools_hdfe_abstyp)
+    matrix __gtools_hdfe_nabsorb = J(1, `:list sizeof absorb', .)
+
+    * ---------------------------------------------------------------------
+    * Parse variable targets
+    * ---------------------------------------------------------------------
+
+    local gen_clist   = strpos(`"`anything'"', "=") > 0
+    local gen_prefix  = ("`prefix'"   != "")
+    local gen_direct  = ("`generate'" != "")
+    local gen_replace = ("`replace'"  != "")
+
+    if ( !`gen_clist' & !`gen_direct' & !`gen_prefix' & !`gen_replace' ) {
+        disp as err "gstats_hdfe: No targets specified and no replace."
+        exit 198
+    }
+
+    if ( `gen_clist' & `gen_direct' ) {
+        disp as err "gstats_hdfe: Cannot specify both generate() and target=source syntax"
+        exit 198
+    }
+
+
+    if ( `gen_replace' & ((`gen_clist' + `gen_direct' + `gen_prefix') == 0) ) {
+        confirm numeric var `anything'
+        unab __gtools_hdfe_vars: `anything'
+        local __gtools_hdfe_targets: copy local __gtools_hdfe_vars
+    }
+
+    if ( `gen_direct' ) {
+        confirm numeric var `anything'
+        unab __gtools_hdfe_vars: `anything'
+        local __gtools_hdfe_targets: copy local generate
+    }
+
+    local opts prefix(__gtools_hdfe) default(hdfe)
+    if ( `gen_clist' ) {
+        if ( "`wildparse'" != "" ) {
+            local rc = 0
+
+            ParseListWild `anything', loc(__gtools_hdfe_call) `opts'
+
+            local __gtools_bak_stats      : copy local __gtools_hdfe_stats
+            local __gtools_bak_vars       : copy local __gtools_hdfe_vars
+            local __gtools_bak_targets    : copy local __gtools_hdfe_targets
+            local __gtools_bak_uniq_stats : copy local __gtools_hdfe_uniq_stats
+            local __gtools_bak_uniq_vars  : copy local __gtools_hdfe_uniq_vars
+
+            ParseList `__gtools_hdfe_call',  `opts'
+
+            cap assert ("`__gtools_hdfe_stats'"      == "`__gtools_bak_stats'")
+            local rc = max(_rc, `rc')
+
+            cap assert ("`__gtools_hdfe_vars'"       == "`__gtools_bak_vars'")
+            local rc = max(_rc, `rc')
+
+            cap assert ("`__gtools_hdfe_targets'"    == "`__gtools_bak_targets'")
+            local rc = max(_rc, `rc')
+
+            cap assert ("`__gtools_hdfe_uniq_stats'" == "`__gtools_bak_uniq_stats'")
+            local rc = max(_rc, `rc')
+
+            cap assert ("`__gtools_hdfe_uniq_vars'"  == "`__gtools_bak_uniq_vars'")
+            local rc = max(_rc, `rc')
+
+            if ( `rc' ) {
+                disp as error "gstats_hdfe: Wild parsing inconsistent with standard parsing."
+                exit 198
+            }
+        }
+        else {
+            ParseList `anything', `opts'
+        }
+    }
+
+    if ( `gen_clist' & `gen_prefix' ) {
+        local _targets
+        forvalues k = 1 / `:list sizeof __gtools_hdfe_vars' {
+            local target: word `k' of `__gtools_hdfe_targets'
+            local source: word `k' of `__gtools_hdfe_vars'
+            if ( "`target'" == "`source'" ) {
+                local _targets `_targets' `prefix'`target'
+            }
+            else {
+                local _targets `_targets' `target'
+            }
+        }
+        local __gtools_hdfe_targets: copy local _targets
+    }
+    else if ( `gen_prefix' ) {
+        confirm numeric var `anything'
+        unab __gtools_hdfe_vars: `anything'
+        local __gtools_hdfe_targets
+        foreach var of local __gtools_hdfe_vars {
+            local __gtools_hdfe_targets `__gtools_hdfe_targets' `prefix'`var'
+        }
+    }
+
+    foreach var of local __gtools_hdfe_targets {
+        cap confirm new var `var'
+        if ( _rc & !`gen_replace' ) {
+            di as err "Variable `var' exists with no replace."
+            exit 198
+        }
+    }
+
+    * ---------------------------------------------------------------------
+    * Parse variable types
+    * ---------------------------------------------------------------------
+
+    local __gtools_hdfe_types
+    foreach var of local __gtools_hdfe_vars {
+        if inlist("`:type `var''", "float", "double") {
+            local __gtools_hdfe_types `__gtools_hdfe_types' `:type `var''
+        }
+        else {
+            local __gtools_hdfe_types `__gtools_hdfe_types' `:set type'
+        }
+    }
+
+    local kvars:    list sizeof __gtools_hdfe_vars
+    local ktargets: list sizeof __gtools_hdfe_targets
+    local ktype:    list sizeof __gtools_hdfe_types
+
+    local kbad = 0
+    local kbad = `kbad' | (`kvars' != `ktargets')
+    local kbad = `kbad' | (`kvars' != `ktype')
+
+    if ( `kbad' ) {
+        disp as err "gstats_hdfe: parsing error (inconsistent number of inputs)"
+        exit 198
+    }
+
+    local __gtools_hdfe_uniq: list uniq __gtools_hdfe_vars
+    if ( `:list sizeof __gtools_hdfe_uniq' != `kvars' ) {
+        disp as err "gstats_hdfe: Repeat sources not allowed"
+        exit 198
+    }
+
+    * ---------------------------------------------------------------------
+    * Recast or drop
+    * ---------------------------------------------------------------------
+
+    local krecast = 0
+    local recast_sources
+    local recast_targets
+
+    local __gtools_hdfe_i = 0
+    local __gtools_hdfe_dropvars
+
+    forvalues k = 1 / `ktargets' {
+        local typek:   word `k' of `__gtools_hdfe_types'
+        local targetk: word `k' of `__gtools_hdfe_targets'
+        local sourcek: word `k' of `__gtools_hdfe_vars'
+
+        cap confirm new variable `targetk'
+        if ( _rc ) {
+            if !inlist("`:type `targetk''", "float", "double") {
+                cap confirm new variable __gtools_hdfe`__gtools_hdfe_i'
+                while ( _rc ) {
+                    local ++__gtools_hdfe_i
+                    cap confirm new variable __gtools_hdfe`__gtools_hdfe_i'
+                }
+                rename `targetk' __gtools_hdfe`__gtools_hdfe_i'
+                local __gtools_hdfe_dropvars `__gtools_hdfe_dropvars' __gtools_hdfe`__gtools_hdfe_i'
+
+                if ( "`targetk'" == "`sourcek'" ) {
+                    local recast_sources `recast_sources' __gtools_hdfe`__gtools_hdfe_i'
+                    local recast_targets `recast_targets' `targetk'
+                    local ++krecast
+                }
+            }
+        }
+    }
+
+    * ---------------------------------------------------------------------
+    * Add target variables
+    * ---------------------------------------------------------------------
+
+    local kadd = 0
+    local __gtools_hdfe_addvars
+    local __gtools_hdfe_addtypes
+    forvalues k = 1 / `ktargets' {
+        local target: word `k' of `__gtools_hdfe_targets'
+        local type:   word `k' of `__gtools_hdfe_types'
+        cap confirm new variable `target'
+        if ( _rc == 0 ) {
+            local ++kadd
+            local __gtools_hdfe_addvars  `__gtools_hdfe_addvars'  `target'
+            local __gtools_hdfe_addtypes `__gtools_hdfe_addtypes' `type'
+        }
+    }
+
+    if ( `kadd' ) {
+        mata: (void) st_addvar(tokens(`"`__gtools_hdfe_addtypes'"'), tokens(`"`__gtools_hdfe_addvars'"'))
+    }
+
+    if ( `krecast' ) {
+        scalar __gtools_k_recast = `krecast'
+        cap noi plugin call gtools_plugin `recast_targets' `recast_sources', recast
+        local rc = _rc
+        cap scalar drop __gtools_k_recast
+        if ( `rc' ) {
+            exit `rc'
+        }
+    }
+
+    mata st_dropvar(tokens(`"`__gtools_hdfe_dropvars'"'))
+
+    * ---------------------------------------------------------------------
+    * Scalars and locals for C internals
+    * ---------------------------------------------------------------------
+
+    scalar __gtools_hdfe_methodname = cond(`:list sizeof absorb' > 1, "`method'", "direct")
+    scalar __gtools_hdfe_method     = `method_code'
+    scalar __gtools_hdfe_mataname   = `"`matasavename'"'
+    scalar __gtools_hdfe_matasave   = `"`matasave'"' != ""
+    scalar __gtools_hdfe_kvars      = `kvars'
+    scalar __gtools_hdfe_absorb     = `:list sizeof absorb'
+    scalar __gtools_hdfe_hdfetol    = `tolerance'
+    scalar __gtools_hdfe_maxiter    = `maxiter'
+    scalar __gtools_hdfe_traceiter  = "`traceiter'" != ""
+    scalar __gtools_hdfe_standard   = "`standardize'" != ""
+    scalar __gtools_gstats_code     = 4
+    scalar __gtools_hdfe_iter       = cond(`:list sizeof absorb' > 1, 1, 0)
+    scalar __gtools_hdfe_feval      = cond(`:list sizeof absorb' > 1, 1, 0)
+
+    if "`absorbmissing'" != "" c_local __gtools_hdfe_markvars `__gtools_hdfe_vars'
+    else c_local __gtools_hdfe_markvars `__gtools_hdfe_vars' `absorb'
+
+    c_local varlist `__gtools_hdfe_vars' `__gtools_hdfe_targets' `absorb'
+
+    c_local gstats_replace: copy local replace
+    c_local gstats_init:    copy local init
+
+* TODO: xx formats and labels for targets?
+* forvalues k = 1 / `ktargets' {
+*     mata: st_varlabel( `"`:word `k' of `__gtools_hdfe_targets''"', __gtools_hdfe_labels[`k'])
+*     mata: st_varformat(`"`:word `k' of `__gtools_hdfe_targets''"', __gtools_hdfe_formats[`k'])
+* }
+
 end
 
 capture program drop gstats_winsor
@@ -3780,6 +6804,7 @@ program gstats_winsor
         Cuts(str)              ///
         Label                  ///
         replace                ///
+        noinit                 ///
     ]
 
     * Default is winsorize or trim 1st or 99th pctile
@@ -3917,6 +6942,9 @@ program gstats_winsor
     }
 
     c_local varlist `varlist' `targetvars'
+    c_local gstats_replace: copy local replace
+    c_local gstats_init:    copy local init
+    c_local gstats_replace_anysrc: list varlist & targetvars
 end
 
 capture program drop gstats_summarize
@@ -4047,6 +7075,10 @@ program gstats_summarize
     * -23         // variance
     * -24         // cv
     * -25         // range
+    * -26         // geomean
+    * -27         // gini
+    * -27.1       // gini|dropneg
+    * -27.2       // gini|keepneg
     * -101        // nansum
     * -121        // rawnansum
     * -206        // sum weight
@@ -4317,6 +7349,9 @@ program gstats_tabstat
     }
     scalar __gtools_summarize_colvar = (`"`columns'"' == "variables")
 end
+
+* findfile "_gtools_internal.mata"
+* include `"`r(fn)'"'
 
 cap mata: mata drop __gstats_summarize_results()
 cap mata: mata drop __gstats_summarize_sprintf()
@@ -4624,6 +7659,379 @@ class GtoolsResults scalar function __gstats_tabstat_results()
 
     return (GtoolsByLevels)
 }
+end
+
+capture program drop GtoolsTempFile
+program GtoolsTempFile
+    if ( `"${GTOOLS_TEMPFILES_INTERNAL_I}"' == "" ) {
+        local  GTOOLS_TEMPFILES_INTERNAL_I = 1
+        global GTOOLS_TEMPFILES_INTERNAL_I = 1
+    }
+    else {
+        local  GTOOLS_TEMPFILES_INTERNAL_I = ${GTOOLS_TEMPFILES_INTERNAL_I} + 1
+        global GTOOLS_TEMPFILES_INTERNAL_I = ${GTOOLS_TEMPFILES_INTERNAL_I} + 1
+    }
+    local f ${GTOOLS_TEMPDIR}/__gtools_tmpfile_internal_`GTOOLS_TEMPFILES_INTERNAL_I'
+    global GTOOLS_TEMPFILES_INTERNAL ${GTOOLS_TEMPFILES_INTERNAL} __gtools_tmpfile_internal_`GTOOLS_TEMPFILES_INTERNAL_I'
+    c_local `0': copy local f
+end
+
+***********************************************************************
+*            Input parsing (copy/paste from gcollapse.ado             *
+***********************************************************************
+
+capture program drop GtoolsPrettyStat
+program GtoolsPrettyStat, rclass
+
+    * Group stats
+    * -----------
+
+    if ( `"`0'"' == "sum"          ) local prettystat "Sum"
+    if ( `"`0'"' == "nansum"       ) local prettystat "Sum"
+    if ( `"`0'"' == "mean"         ) local prettystat "Mean"
+    if ( `"`0'"' == "geomean"      ) local prettystat "Geometric mean"
+    if ( `"`0'"' == "sd"           ) local prettystat "St Dev."
+    if ( `"`0'"' == "variance"     ) local prettystat "Variance"
+    if ( `"`0'"' == "cv"           ) local prettystat "Coef. of variation"
+    if ( `"`0'"' == "max"          ) local prettystat "Max"
+    if ( `"`0'"' == "min"          ) local prettystat "Min"
+    if ( `"`0'"' == "range"        ) local prettystat "Range"
+    if ( `"`0'"' == "count"        ) local prettystat "Count"
+    if ( `"`0'"' == "freq"         ) local prettystat "Group size"
+    if ( `"`0'"' == "percent"      ) local prettystat "Percent"
+    if ( `"`0'"' == "median"       ) local prettystat "Median"
+    if ( `"`0'"' == "iqr"          ) local prettystat "IQR"
+    if ( `"`0'"' == "first"        ) local prettystat "First"
+    if ( `"`0'"' == "firstnm"      ) local prettystat "First Non-Miss."
+    if ( `"`0'"' == "last"         ) local prettystat "Last"
+    if ( `"`0'"' == "lastnm"       ) local prettystat "Last Non-Miss."
+    if ( `"`0'"' == "semean"       ) local prettystat "SE Mean"
+    if ( `"`0'"' == "sebinomial"   ) local prettystat "SE Mean (Binom)"
+    if ( `"`0'"' == "sepoisson"    ) local prettystat "SE Mean (Pois)"
+    if ( `"`0'"' == "nunique"      ) local prettystat "N Unique"
+    if ( `"`0'"' == "nmissing"     ) local prettystat "N Missing"
+    if ( `"`0'"' == "skewness"     ) local prettystat "Skewness"
+    if ( `"`0'"' == "kurtosis"     ) local prettystat "Kurtosis"
+    if ( `"`0'"' == "rawsum"       ) local prettystat "Unweighted sum"
+    if ( `"`0'"' == "rawnansum"    ) local prettystat "Unweighted sum"
+    if ( `"`0'"' == "gini"         ) local prettystat "Gini Coefficient"
+    if ( `"`0'"' == "gini|dropneg" ) local prettystat "Gini Coefficient (drop neg)"
+    if ( `"`0'"' == "gini|keepneg" ) local prettystat "Gini Coefficient (keep neg)"
+
+    local match = 0
+    if regexm(`"`0'"', "^rawselect(-|)([0-9]+)$") {
+        if ( `"`:di regexs(1)'"' == "-" ) {
+            local Pretty Largest (Unweighted)
+        }
+        else {
+            local Pretty Smallest (Unweighted)
+        }
+        local p = `=regexs(2)'
+        local match = 1
+    }
+    else if regexm(`"`0'"', "^select(-|)([0-9]+)$") {
+        if ( `"`:di regexs(1)'"' == "-" ) {
+            local Pretty Largest
+        }
+        else {
+            local Pretty Smallest
+        }
+        local p = `=regexs(2)'
+        local match = 1
+    }
+    else if regexm(`"`0'"', "^p([0-9][0-9]?(\.[0-9]+)?)$") {
+        local p = `:di regexs(1)'
+        local Pretty Pctile
+        local match = 1
+    }
+
+    if ( `match' ) {
+        if ( inlist(substr(`"`p'"', -2, 2), "11", "12", "13") ) {
+            local prettystat "`s'th `Pretty'"
+        }
+        else {
+                 if ( mod(`p', 10) == 1 ) local prettystat "`p'st `Pretty'"
+            else if ( mod(`p', 10) == 2 ) local prettystat "`p'nd `Pretty'"
+            else if ( mod(`p', 10) == 3 ) local prettystat "`p'rd `Pretty'"
+            else                          local prettystat "`p'th `Pretty'"
+        }
+    }
+
+    * Transforms
+    * ----------
+
+    if ( `"`0'"' == "standardize" ) local prettystat "Standardized"
+    if ( `"`0'"' == "normalize"   ) local prettystat "Normalized"
+    if ( `"`0'"' == "demean"      ) local prettystat "De-meaned"
+    if ( `"`0'"' == "demedian"    ) local prettystat "De-medianed"
+
+    encode_moving `0'
+    if ( `r(match)' ) {
+        local range `r(lower)' to `r(upper)'
+        GtoolsPrettyStat `r(stat)'
+        local prettystat "Moving `r(prettystat)' (`range')"
+    }
+
+    encode_range `0'
+    if ( `r(match)' ) {
+        local rangestr `r(rangestr)'
+        GtoolsPrettyStat `r(stat)'
+        local prettystat "`r(prettystat)' for `rangestr'"
+    }
+
+    encode_cumsum `0'
+    if ( `r(match)' ) {
+        if ( `r(cumsign)' == 0 ) {
+            local prettystat "Cummulative sum"
+        }
+        else if ( `r(cumsign)' == 1 ) {
+            if ( `r(cumother)' ) {
+                local prettystat "Cummulative sum (ascending by `r(cumvars)')"
+            }
+            else {
+                local prettystat "Cummulative sum (ascending)"
+            }
+        }
+        else if ( `r(cumsign)' == 2 ) {
+            if ( `r(cumother)' ) {
+                local prettystat "Cummulative sum (descending by `r(cumvars)')"
+            }
+            else {
+                local prettystat "Cummulative sum (descending)"
+            }
+        }
+    }
+
+    encode_shift `0'
+    if ( `r(match)' ) {
+        if ( `r(shift)' == 0 ) {
+            local prettystat ""
+        }
+        else if ( `r(shift)' > 0 ) {
+            local prettystat "Lead (`r(shift)')"
+        }
+        else if ( `r(shift)' < 0 ) {
+            local prettystat "Lag (`=abs(`r(shift)')')"
+        }
+    }
+
+    return local prettystat = `"`prettystat'"'
+end
+
+capture program drop ParseListWild
+program ParseListWild
+    local opts window(passthru) interval(passthru) cumby(passthru) shiftby(passthru) statprefix(str)
+    syntax anything(equalok), LOCal(str) PREfix(str) default(str) [`opts']
+    local stat `default'
+
+    * Trim spaces
+    local 0: copy local anything
+    while strpos("`0'", "  ") {
+        local 0: subinstr local 0 "  " " ", all
+    }
+    local 0 `0'
+
+    * Parse each portion of the collapse call
+    while (trim("`0'") != "") {
+        GetStat   stat   0 : `0'
+        GetTarget target 0 : `0'
+        gettoken  vars   0 : 0
+
+        * Must specify stat (if blank, we do the mean)
+        if ( "`stat'" == "" ) {
+            disp as err "option stat() requried"
+            exit 198
+        }
+
+        if ( `"`stat'"' == "var"  ) local stat variance
+        if ( `"`stat'"' == "sem"  ) local stat semean
+        if ( `"`stat'"' == "seb"  ) local stat sebinomial
+        if ( `"`stat'"' == "sep"  ) local stat sepoisson
+        if ( `"`stat'"' == "skew" ) local stat skewness
+        if ( `"`stat'"' == "kurt" ) local stat kurtosis
+        if ( regexm(`"`stat'"', " ") ) local stat: subinstr local stat " " "|", all
+
+        if ( substr(`"`stat'"', 1, length(`"`statprefix'"')) != `"`statprefix'"' ) {
+            local stat `statprefix'`stat'
+        }
+        encode_moving `stat', `window'
+
+        * Parse bulk rename if applicable
+        unab usources : `vars'
+        if ( "`eqsign'" == "=" ) {
+            cap noi rename `vars' `target'
+            if ( _rc ) {
+                disp as err "Targets cannot exist with option {opt wildparse}."
+                exit `=_rc'
+            }
+            unab utargets : `target'
+            rename (`utargets') (`usources')
+
+            local full_vars    `full_vars'    `usources'
+            local full_targets `full_targets' `utargets'
+
+            foreach svar of varlist `usources' {
+                gettoken tvar utargets: utargets
+
+                * Parsed here because each interval call can specify a
+                * different reference variable. If no reference variable
+                * is specified then it is assumed to be the source.
+
+                encode_range  `stat', `interval' var(`svar')
+                encode_cumsum `stat', `cumby'    var(`svar')
+                encode_shift  `stat', `shiftby'
+
+                local call `call' (`stat') `tvar' = `svar'
+                local full_stats  `full_stats' `stat'
+            }
+        }
+        else {
+            local full_vars    `full_vars'    `usources'
+            local full_targets `full_targets' `usources'
+
+            foreach svar of varlist `usources' {
+                encode_range  `stat', `interval' var(`svar')
+                encode_cumsum `stat', `cumby'    var(`svar')
+                encode_shift  `stat', `shiftby'
+
+                local call `call' (`stat') `svar'
+                local full_stats `full_stats' `stat'
+            }
+        }
+
+        local target
+    }
+
+    * Check that targets don't repeat
+    local dups : list dups targets
+    if ("`dups'" != "") {
+        di as error "repeated targets in collapse: `dups'"
+        error 110
+    }
+
+    c_local `local'             : copy local call
+    c_local `prefix'_targets    `full_targets'
+    c_local `prefix'_stats      `full_stats'
+    c_local `prefix'_vars       `full_vars'
+    c_local `prefix'_uniq_stats : list uniq full_stats
+    c_local `prefix'_uniq_vars  : list uniq full_vars
+end
+
+* NOTE: Regular parsing is adapted from Sergio Correia's fcollapse.ado
+
+capture program drop ParseList
+program define ParseList
+    local opts window(passthru) interval(passthru) cumby(passthru) shiftby(passthru) statprefix(str)
+    syntax anything(equalok), PREfix(str) default(str) [`opts']
+    local stat `default'
+
+    * Trim spaces
+    local 0: copy local anything
+    while strpos("`0'", "  ") {
+        local 0: subinstr local 0 "  " " "
+    }
+    local 0 `0'
+
+    while (trim("`0'") != "") {
+        GetStat stat 0 : `0'
+        GetTarget target 0 : `0'
+        gettoken vars 0 : 0
+        unab vars : `vars'
+
+        * Must specify stat (if blank, we do the mean)
+        if ( "`stat'" == "" ) {
+            disp as err "option stat() requried"
+            exit 198
+        }
+
+        if ( `"`stat'"' == "var"  ) local stat variance
+        if ( `"`stat'"' == "sem"  ) local stat semean
+        if ( `"`stat'"' == "seb"  ) local stat sebinomial
+        if ( `"`stat'"' == "sep"  ) local stat sepoisson
+        if ( `"`stat'"' == "skew" ) local stat skewness
+        if ( `"`stat'"' == "kurt" ) local stat kurtosis
+        if ( regexm(`"`stat'"', " ") ) local stat: subinstr local stat " " "|", all
+
+        if ( substr(`"`stat'"', 1, length(`"`statprefix'"')) != `"`statprefix'"' ) {
+            local stat `statprefix'`stat'
+        }
+        encode_moving `stat', `window'
+
+        foreach var of local vars {
+            if ("`target'" == "") local target `var'
+
+            encode_range  `stat', `interval' var(`var')
+            encode_cumsum `stat', `cumby'    var(`var')
+            encode_shift  `stat', `shiftby'
+
+            local full_vars    `full_vars'    `var'
+            local full_targets `full_targets' `target'
+            local full_stats   `full_stats'   `stat'
+
+            local target
+        }
+    }
+
+    * Check that targets don't repeat
+    local dups : list dups targets
+    if ("`dups'" != "") {
+        di as error "repeated targets in collapse: `dups'"
+        error 110
+    }
+
+    c_local `prefix'_targets    `full_targets'
+    c_local `prefix'_stats      `full_stats'
+    c_local `prefix'_vars       `full_vars'
+    c_local `prefix'_uniq_stats : list uniq full_stats
+    c_local `prefix'_uniq_vars  : list uniq full_vars
+end
+
+capture program drop GetStat
+program define GetStat
+    _on_colon_parse `0'
+    local before `s(before)'
+    gettoken lhs rhs : before
+    local rest `s(after)'
+
+    gettoken stat rest : rest , match(parens)
+    if ("`parens'" != "") {
+        c_local `lhs' `stat'
+        c_local `rhs' `rest'
+    }
+end
+
+capture program drop GetTarget
+program define GetTarget
+    _on_colon_parse `0'
+    local before `s(before)'
+    gettoken lhs rhs : before
+    local rest `s(after)'
+
+    local rest : subinstr local rest "=" "= ", all
+    gettoken target rest : rest, parse("= ")
+    gettoken eqsign rest : rest
+    if ("`eqsign'" == "=") {
+        c_local `lhs': copy local target
+        c_local `rhs': copy local rest
+        c_local eqsign "="
+    }
+    else {
+        c_local eqsign
+    }
+end
+
+capture program drop NoInitWarning
+program NoInitWarning
+    if !inlist(`"${GTOOLS_NOINIT_WARNING}"', "0") {
+        disp as txt "WARNING: You have chosen to use the undocumented option -noinit-"
+        disp as txt "with -replace- and if/in. Variables that exist and will be replaced"
+        disp as txt "WITHOUT modifying any observations not tagged by if/in. Please make"
+        disp as txt "sure you understand the implications of doing this. To supress this"
+        disp as txt "warning, set"
+        disp as txt ""
+        disp as txt "    global GTOOLS_NOINIT_WARNING = 0"
+        disp as txt ""
+    }
 end
 
 ***********************************************************************

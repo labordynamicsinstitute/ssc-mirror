@@ -1,4 +1,4 @@
-*! version 1.1.3 23Jan2019 Mauricio Caceres Bravo, mauricio.caceres.bravo@gmail.com
+*! version 1.3.1 03Nov2021 Mauricio Caceres Bravo, mauricio.caceres.bravo@gmail.com
 *! -collapse- implementation using C for faster processing
 
 capture program drop gcollapse
@@ -36,6 +36,7 @@ program gcollapse, rclass
                                      ///
         merge                        /// Merge statistics back to original data, replacing if applicable
         replace                      /// Allow replacing existing variables with output with merge
+        noinit                       /// Do not initialize targets with missing values
         freq(passthru)               /// Include frequency count with observations per group
                                      ///
         LABELFormat(passthru)        /// Custom label engine: (#stat#) #sourcelabel# is the default
@@ -45,6 +46,7 @@ program gcollapse, rclass
         rawstat(passthru)            /// Ignore weights for selected variables
                                      ///
                                      ///
+        recast                       /// Recast source variables to save memory
         WILDparse                    /// parse assuming wildcard renaming
         unsorted                     /// Do not sort the data; faster
         forceio                      /// Use disk temp drive for writing/reading collapsed data
@@ -84,7 +86,7 @@ program gcollapse, rclass
     }
 
     local replaceby = cond("`debug_replaceby'" == "", "", "replaceby")
-    local gfallbackok = `"`replaceby'`replace'`freq'`merge'`labelformat'`labelprogram'`rawstat'"' == `""'
+    local gfallbackok = `"`replaceby'`replace'`init'`freq'`merge'`labelformat'`labelprogram'`rawstat'"' == `""'
 
     if ( ("`ds'" != "") & ("`nods'" != "") ) {
         di as err "-ds- and -nods- mutually exclusive"
@@ -130,7 +132,7 @@ program gcollapse, rclass
             if ( _rc ) {
                 local notfound
                 foreach var of local clean_by {
-                    cap confirm var `var'
+                    cap ds `var'
                     if ( _rc  ) {
                         local notfound `notfound' `var'
                     }
@@ -215,9 +217,8 @@ program gcollapse, rclass
     * Parse collapse statement to get sources, targets, and stats
     * -----------------------------------------------------------
 
-    gtools_timer on `t97'
     cap noi parse_vars `anything' `if' `in', ///
-        `cw' `labelformat' `labelprogram' `freq' `wildparse'
+        `labelformat' `labelprogram' `freq' `wildparse'
 
     if ( _rc ) {
         local rc = _rc
@@ -343,7 +344,7 @@ program gcollapse, rclass
         tempvar touse
         mark `touse' `if' `in' `wgt'
         if ( "`cw'" != "" ) {
-            markout `touse' `gtools_uniq_vars', strok
+            markout `touse' `__gtools_gc_uniq_vars', strok
         }
         if ( "`merge'" == "" ) {
             qui keep if `touse'
@@ -573,13 +574,18 @@ program gcollapse, rclass
     *                             I/O switch                              *
     ***********************************************************************
 
-    tempfile __gtools_gc_file
+    if ( `"${GTOOLS_TEMPDIR}"' == "" ) {
+        tempfile __gtools_gc_file
+    }
+    else {
+        GcollapseTempFile __gtools_gc_file
+    }
     scalar __gtools_gc_k_extra = __gtools_gc_k_targets - __gtools_gc_k_uniq_vars
 
     local sources  sources(`__gtools_gc_vars')
     local stats    stats(`__gtools_gc_stats')
     local targets  targets(`__gtools_gc_targets')
-    local opts     missing replace `keepmissing' `compress' `forcestrl' `_subtract' `_ctolerance'
+    local opts     missing replace `init' `keepmissing' `compress' `forcestrl' `_subtract' `_ctolerance'
     local opts     `opts' `verbose' `benchmark' `benchmarklevel' `hashmethod' `ds' `nods'
     local opts     `opts' `oncollision' debug(`debug_level') `rawstat'
     local action   `sources' `targets' `stats'
@@ -616,7 +622,7 @@ program gcollapse, rclass
         gtools_timer info `t97' `"`msg'"', prints(`bench')
 
         * Benchmark adding 2 variables to gauge how long it might take to
-        * add __gtools_gc_k_extra variables.
+        * add __gtools_gc_k_extra targets.
         tempvar __gtools_gc_index __gtools_gc_ix __gtools_gc_info
         cap noi benchmark_memvars,     ///
             index(`__gtools_gc_index') ///
@@ -712,6 +718,9 @@ program gcollapse, rclass
         disp `"_gtools_internal `by' `ifin', `opts' `weights' `action' `gcollapse' gfunction(collapse)"'
     }
 
+    local msg `"Ready for plugin execution"'
+    gtools_timer info `t97' `"`msg'"', prints(`bench')
+
     cap noi _gtools_internal `by' `ifin', `opts' `weights' `action' `gcollapse' gfunction(collapse)
     if ( _rc == 17999 ) {
         if ( "`gfallbackok'" != "" ) {
@@ -752,6 +761,7 @@ program gcollapse, rclass
     *                               Finish                                *
     ***********************************************************************
 
+    gtools_timer on `t97'
     if ( "`merge'" == "" ) {
 
         * Keep only the collapsed data
@@ -761,7 +771,7 @@ program gcollapse, rclass
             if ( `=`r_J' > 0' ) keep in 1 / `:di %32.0f `r_J''
             else if ( `=`r_J' == 0' ) {
                 keep in 1
-                drop if 1
+                drop in 1
             }
             else if ( `=`r_J' < 0' ) {
                 di as err "The plugin returned a negative number of groups."
@@ -786,10 +796,8 @@ program gcollapse, rclass
 
         local ifcond (`=_N > 0')                          ///
                    & (`=scalar(__gtools_gc_k_extra)' > 0) ///
-                   & ( `used_io' | ("`forceio'" == "forceio") ) 
+                   & ( `used_io' | ("`forceio'" == "forceio") )
         if ( `ifcond' ) {
-            gtools_timer on `t97'
-
             qui mata: st_addvar(__gtools_gc_addtypes, __gtools_gc_addvars, 1)
             gtools_timer info `t97' `"Added extra targets after collapse"', prints(`bench')
 
@@ -832,15 +840,13 @@ program gcollapse, rclass
 
         forvalues k = 1 / `:list sizeof __gtools_gc_targets' {
             mata: st_varlabel(gtools_targets[`k'], __gtools_gc_labels[`k'])
-            mata: st_varformat(gtools_targets[`k'], __gtools_gc_formats[`k'])
+            mata: GtoolsFormatDefaultFallback(gtools_targets[`k'], __gtools_gc_formats[`k'])
         }
     }
     else {
         forvalues k = 1 / `:list sizeof __gtools_gc_targets' {
             mata: st_varlabel(gtools_targets[`k'], __gtools_gc_labels[`k'])
-        }
-        forvalues k = 1 / `:list sizeof __gtools_gc_targets' {
-            mata: st_varformat(gtools_targets[`k'], __gtools_gc_formats[`k'])
+            mata: GtoolsFormatDefaultFallback(gtools_targets[`k'], __gtools_gc_formats[`k'])
         }
     }
 
@@ -866,7 +872,6 @@ program gcollapse, rclass
         }
     }
 
-    gtools_timer on `t97'
     if ( "`fast'" == "" ) restore, not
 
     local msg "Program exit executed"
@@ -956,7 +961,6 @@ program parse_vars
     syntax [anything(equalok)] ///
         [if] [in] ,            /// subset
     [                          ///
-        cw                     /// case-wise non-missing
         WILDparse              /// parse assuming wildcard renaming
         freq(str)              /// include number of observations in group
         labelformat(str)       /// label prefix
@@ -1098,32 +1102,36 @@ program parse_vars
     * Available Stats
     * ---------------
 
-    local stats sum        ///
-                nansum     /// if every entry is missing, output . instead of 0
-                mean       ///
-                sd         ///
-                variance   ///
-                cv         ///
-                max        ///
-                min        ///
-                range      ///
-                count      ///
-                median     ///
-                iqr        ///
-                percent    ///
-                first      ///
-                last       ///
-                firstnm    ///
-                lastnm     ///
-                semean     ///
-                sebinomial ///
-                sepoisson  ///
-                nunique    ///
-                nmissing   ///
-                skewness   ///
-                kurtosis   ///
-                rawsum     ///
-                rawnansum  //  if every entry is missing, output . instead of 0
+    local stats sum          ///
+                nansum       /// if every entry is missing, output . instead of 0
+                mean         ///
+                geomean      ///
+                sd           ///
+                variance     ///
+                cv           ///
+                max          ///
+                min          ///
+                range        ///
+                count        ///
+                median       ///
+                iqr          ///
+                percent      ///
+                first        ///
+                last         ///
+                firstnm      ///
+                lastnm       ///
+                semean       ///
+                sebinomial   ///
+                sepoisson    ///
+                nunique      ///
+                nmissing     ///
+                skewness     ///
+                kurtosis     ///
+                gini         ///
+                gini|dropneg ///
+                gini|keepneg ///
+                rawsum       ///
+                rawnansum     // if every entry is missing, output . instead of 0
 
     * Parse quantiles
     local anyquant  = 0
@@ -1241,6 +1249,7 @@ program parse_keep_drop, rclass
         local __gtools_gc_uniq_vars: subinstr local __gtools_gc_uniq_vars " "  "  ", all
         local __gtools_gc_keepvars:  subinstr local __gtools_gc_keepvars  " "  "  ", all
 
+        local by: subinstr local by " "  "  ", all
         local K: list sizeof __gtools_gc_targets
         forvalues k = 1 / `K' {
             unab memvars : _all
@@ -1256,7 +1265,11 @@ program parse_keep_drop, rclass
             * Always try to use as target; will recast if necessary
             if ( `:list k_var in __gtools_gc_uniq_vars' ) {
                 local __gtools_gc_uniq_vars: list __gtools_gc_uniq_vars - k_var
-                if ( !`:list k_var in __gtools_gc_targets' & !`:list k_target in memvars' ) {
+                if ( !`:list k_var in __gtools_gc_targets' & !`:list k_target in memvars' & !`:list k_var in by' ) {
+                    * local by " `by' "
+                    * local by: subinstr local by " `k_var' " " `k_target' ", all
+                    * local by `by'
+
                     local __gtools_gc_vars      " `__gtools_gc_vars' "
                     local __gtools_gc_uniq_vars " `__gtools_gc_uniq_vars' "
                     local __gtools_gc_keepvars  " `__gtools_gc_keepvars' "
@@ -1266,10 +1279,16 @@ program parse_keep_drop, rclass
                     local __gtools_gc_vars      `__gtools_gc_vars'
                     local __gtools_gc_uniq_vars `__gtools_gc_uniq_vars'
                     local __gtools_gc_keepvars  `__gtools_gc_keepvars'
+
                     rename `k_var' `k_target'
                 }
             }
         }
+
+        local by " `by' "
+        local by: subinstr local by "  "  " ", all
+        local by `by'
+
         local __gtools_gc_vars      " `__gtools_gc_vars' "
         local __gtools_gc_uniq_vars " `__gtools_gc_uniq_vars' "
         local __gtools_gc_keepvars  " `__gtools_gc_keepvars' "
@@ -1648,6 +1667,12 @@ end
 
 capture program drop CleanExit
 program CleanExit
+    foreach f of global GTOOLS_TEMPFILES_GCOLLAPSE {
+        cap erase `"${GTOOLS_TEMPDIR}/`f'"'
+    }
+    global GTOOLS_TEMPFILES_GCOLLAPSE
+    global GTOOLS_TEMPFILES_GCOLLAPSE_I
+
     set varabbrev ${GTOOLS_USER_VARABBREV}
     global GTOOLS_USER_VARABBREV
     global GTOOLS_CALLER
@@ -1699,6 +1724,21 @@ program CleanExit
     global GTOOLS_T96
 end
 
+capture program drop GcollapseTempFile
+program GcollapseTempFile
+    if ( `"${GTOOLS_TEMPFILES_GCOLLAPSE_I}"' == "" ) {
+        local  GTOOLS_TEMPFILES_GCOLLAPSE_I = 1
+        global GTOOLS_TEMPFILES_GCOLLAPSE_I = 1
+    }
+    else {
+        local  GTOOLS_TEMPFILES_GCOLLAPSE_I = ${GTOOLS_TEMPFILES_GCOLLAPSE_I} + 1
+        global GTOOLS_TEMPFILES_GCOLLAPSE_I = ${GTOOLS_TEMPFILES_GCOLLAPSE_I} + 1
+    }
+    local f ${GTOOLS_TEMPDIR}/__gtools_tmpfile_gcollapse_`GTOOLS_TEMPFILES_GCOLLAPSE_I'
+    global GTOOLS_TEMPFILES_GCOLLAPSE ${GTOOLS_TEMPFILES_GCOLLAPSE} __gtools_tmpfile_gcollapse_`GTOOLS_TEMPFILES_GCOLLAPSE_I'
+    c_local `0': copy local f
+end
+
 capture program drop CheckMatsize
 program CheckMatsize
     syntax [anything], [nvars(int 0)]
@@ -1716,33 +1756,37 @@ end
 
 capture program drop GtoolsPrettyStat
 program GtoolsPrettyStat, rclass
-    if ( `"`0'"' == "sum"         ) local prettystat "Sum"
-    if ( `"`0'"' == "nansum"      ) local prettystat "Sum"
-    if ( `"`0'"' == "mean"        ) local prettystat "Mean"
-    if ( `"`0'"' == "sd"          ) local prettystat "St Dev."
-    if ( `"`0'"' == "variance"    ) local prettystat "Variance"
-    if ( `"`0'"' == "cv"          ) local prettystat "Coef. of variation"
-    if ( `"`0'"' == "max"         ) local prettystat "Max"
-    if ( `"`0'"' == "min"         ) local prettystat "Min"
-    if ( `"`0'"' == "range"       ) local prettystat "Range"
-    if ( `"`0'"' == "count"       ) local prettystat "Count"
-    if ( `"`0'"' == "freq"        ) local prettystat "Group size"
-    if ( `"`0'"' == "percent"     ) local prettystat "Percent"
-    if ( `"`0'"' == "median"      ) local prettystat "Median"
-    if ( `"`0'"' == "iqr"         ) local prettystat "IQR"
-    if ( `"`0'"' == "first"       ) local prettystat "First"
-    if ( `"`0'"' == "firstnm"     ) local prettystat "First Non-Miss."
-    if ( `"`0'"' == "last"        ) local prettystat "Last"
-    if ( `"`0'"' == "lastnm"      ) local prettystat "Last Non-Miss."
-    if ( `"`0'"' == "semean"      ) local prettystat "SE Mean"
-    if ( `"`0'"' == "sebinomial"  ) local prettystat "SE Mean (Binom)"
-    if ( `"`0'"' == "sepoisson"   ) local prettystat "SE Mean (Pois)"
-    if ( `"`0'"' == "nunique"     ) local prettystat "N Unique"
-    if ( `"`0'"' == "nmissing"    ) local prettystat "N Missing"
-    if ( `"`0'"' == "skewness"    ) local prettystat "Skewness"
-    if ( `"`0'"' == "kurtosis"    ) local prettystat "Kurtosis"
-    if ( `"`0'"' == "rawsum"      ) local prettystat "Unweighted sum"
-    if ( `"`0'"' == "rawnansum"   ) local prettystat "Unweighted sum"
+    if ( `"`0'"' == "sum"          ) local prettystat "Sum"
+    if ( `"`0'"' == "nansum"       ) local prettystat "Sum"
+    if ( `"`0'"' == "mean"         ) local prettystat "Mean"
+    if ( `"`0'"' == "geomean"      ) local prettystat "Geometric mean"
+    if ( `"`0'"' == "sd"           ) local prettystat "St Dev."
+    if ( `"`0'"' == "variance"     ) local prettystat "Variance"
+    if ( `"`0'"' == "cv"           ) local prettystat "Coef. of variation"
+    if ( `"`0'"' == "max"          ) local prettystat "Max"
+    if ( `"`0'"' == "min"          ) local prettystat "Min"
+    if ( `"`0'"' == "range"        ) local prettystat "Range"
+    if ( `"`0'"' == "count"        ) local prettystat "Count"
+    if ( `"`0'"' == "freq"         ) local prettystat "Group size"
+    if ( `"`0'"' == "percent"      ) local prettystat "Percent"
+    if ( `"`0'"' == "median"       ) local prettystat "Median"
+    if ( `"`0'"' == "iqr"          ) local prettystat "IQR"
+    if ( `"`0'"' == "first"        ) local prettystat "First"
+    if ( `"`0'"' == "firstnm"      ) local prettystat "First Non-Miss."
+    if ( `"`0'"' == "last"         ) local prettystat "Last"
+    if ( `"`0'"' == "lastnm"       ) local prettystat "Last Non-Miss."
+    if ( `"`0'"' == "semean"       ) local prettystat "SE Mean"
+    if ( `"`0'"' == "sebinomial"   ) local prettystat "SE Mean (Binom)"
+    if ( `"`0'"' == "sepoisson"    ) local prettystat "SE Mean (Pois)"
+    if ( `"`0'"' == "nunique"      ) local prettystat "N Unique"
+    if ( `"`0'"' == "nmissing"     ) local prettystat "N Missing"
+    if ( `"`0'"' == "skewness"     ) local prettystat "Skewness"
+    if ( `"`0'"' == "kurtosis"     ) local prettystat "Kurtosis"
+    if ( `"`0'"' == "rawsum"       ) local prettystat "Unweighted sum"
+    if ( `"`0'"' == "rawnansum"    ) local prettystat "Unweighted sum"
+    if ( `"`0'"' == "gini"         ) local prettystat "Gini Coefficient"
+    if ( `"`0'"' == "gini|dropneg" ) local prettystat "Gini Coefficient (drop neg)"
+    if ( `"`0'"' == "gini|keepneg" ) local prettystat "Gini Coefficient (keep neg)"
 
     local match = 0
     if regexm(`"`0'"', "^rawselect(-|)([0-9]+)$") {
@@ -1816,12 +1860,13 @@ program ParseListWild
             exit 198
         }
 
-        if ( "`stat'" == "var"  ) local stat variance
-        if ( "`stat'" == "sem"  ) local stat semean
-        if ( "`stat'" == "seb"  ) local stat sebinomial
-        if ( "`stat'" == "sep"  ) local stat sepoisson
-        if ( "`stat'" == "skew" ) local stat skewness
-        if ( "`stat'" == "kurt" ) local stat kurtosis
+        if ( `"`stat'"' == "var"  ) local stat variance
+        if ( `"`stat'"' == "sem"  ) local stat semean
+        if ( `"`stat'"' == "seb"  ) local stat sebinomial
+        if ( `"`stat'"' == "sep"  ) local stat sepoisson
+        if ( `"`stat'"' == "skew" ) local stat skewness
+        if ( `"`stat'"' == "kurt" ) local stat kurtosis
+        if ( regexm(`"`stat'"', " ") ) local stat: subinstr local stat " " "|", all
 
         * Parse bulk rename if applicable
         unab usources : `vars'
@@ -1903,12 +1948,13 @@ program define ParseList
         foreach var of local vars {
             if ("`target'" == "") local target `var'
 
-            if ( "`stat'" == "var"  ) local stat variance
-            if ( "`stat'" == "sem"  ) local stat semean
-            if ( "`stat'" == "seb"  ) local stat sebinomial
-            if ( "`stat'" == "sep"  ) local stat sepoisson
-            if ( "`stat'" == "skew" ) local stat skewness
-            if ( "`stat'" == "kurt" ) local stat kurtosis
+            if ( `"`stat'"' == "var"  ) local stat variance
+            if ( `"`stat'"' == "sem"  ) local stat semean
+            if ( `"`stat'"' == "seb"  ) local stat sebinomial
+            if ( `"`stat'"' == "sep"  ) local stat sepoisson
+            if ( `"`stat'"' == "skew" ) local stat skewness
+            if ( `"`stat'"' == "kurt" ) local stat kurtosis
+            if ( regexm(`"`stat'"', " ") ) local stat: subinstr local stat " " "|", all
 
             local full_vars    `full_vars'    `var'
             local full_targets `full_targets' `target'

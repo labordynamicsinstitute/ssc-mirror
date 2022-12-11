@@ -1,4 +1,4 @@
-*! version 1.5.1 24Mar2019 Mauricio Caceres Bravo, mauricio.caceres.bravo@gmail.com
+*! version 1.10.1 05Dec2022 Mauricio Caceres Bravo, mauricio.caceres.bravo@gmail.com
 *! Program for managing the gtools package installation
 
 capture program drop gtools
@@ -102,6 +102,7 @@ program gtools
     }
 
     display "Nothing to do. See {stata help gtools} or {stata gtools, examples} for usage. Version info:"
+    * mata mata mlib index
     which gtools
     cap noi _gtools_internal _check
     if ( _rc ) {
@@ -135,8 +136,8 @@ program gtools_licenses
          _n(1) `"LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,"'  ///
          _n(1) `"OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE"'  ///
          _n(1) `"SOFTWARE."'                                                                      ///
-         _n(1) `""'                                                                               ///
-         _n(1) `"{hline 79}"'                                                                     ///
+         _n(1) `""'
+    disp _n(1) `"{hline 79}"'                                                                     ///
          _n(1) `"spookyhash license"'                                                             ///
          _n(1) `""'                                                                               ///
          _n(1) `"Copyright (c) 2015, Guillaume Voirin"'                                           ///
@@ -167,8 +168,8 @@ program gtools_licenses
          _n(1) `"CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,"'  ///
          _n(1) `"OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE"'  ///
          _n(1) `"OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."'           ///
-         _n(1) `""'                                                                               ///
-         _n(1) `"{hline 79}"'                                                                     ///
+         _n(1) `""'
+    disp _n(1) `"{hline 79}"'                                                                     ///
          _n(1) `"quicksort license"'                                                              ///
          _n(1) `""'                                                                               ///
          _n(1) `"Copyright (c) 1992, 1993"'                                                       ///
@@ -197,8 +198,8 @@ program gtools_licenses
          _n(1) `"LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY"'      ///
          _n(1) `"OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF"'         ///
          _n(1) `"SUCH DAMAGE."'                                                                   ///
-         _n(1) `""'                                                                               ///
-         _n(1) `"{hline 79}"'                                                                     ///
+         _n(1) `""'
+    disp _n(1) `"{hline 79}"'                                                                     ///
          _n(1) `"GNU C library license"'                                                          ///
          _n(1) `""'                                                                               ///
          _n(1) `"                   GNU LESSER GENERAL PUBLIC LICENSE"'                           ///
@@ -241,8 +242,8 @@ program gtools_licenses
          _n(1) `"object code and/or source code for the Application, including any data"'         ///
          _n(1) `"and utility programs needed for reproducing the Combined Work from the"'         ///
          _n(1) `"Application, but excluding the System Libraries of the Combined Work."'          ///
-         _n(1) `""'                                                                               ///
-         _n(1) `"  1. Exception to Section 3 of the GNU GPL."'                                    ///
+         _n(1) `""'
+    disp _n(1) `"  1. Exception to Section 3 of the GNU GPL."'                                    ///
          _n(1) `""'                                                                               ///
          _n(1) `"  You may convey a covered work under sections 3 and 4 of this License"'         ///
          _n(1) `"without being bound by section 3 of the GNU GPL."'                               ///
@@ -278,8 +279,8 @@ program gtools_licenses
          _n(1) `""'                                                                               ///
          _n(1) `"   b) Accompany the object code with a copy of the GNU GPL and this license"'    ///
          _n(1) `"   document."'                                                                   ///
-         _n(1) `""'                                                                               ///
-         _n(1) `"  4. Combined Works."'                                                           ///
+         _n(1) `""'
+    disp _n(1) `"  4. Combined Works."'                                                           ///
          _n(1) `""'                                                                               ///
          _n(1) `"  You may convey a Combined Work under terms of your choice that,"'              ///
          _n(1) `"taken together, effectively do not restrict modification of the"'                ///
@@ -327,8 +328,8 @@ program gtools_licenses
          _n(1) `"   Code. If you use option 4d1, you must provide the Installation"'              ///
          _n(1) `"   Information in the manner specified by section 6 of the GNU GPL"'             ///
          _n(1) `"   for conveying Corresponding Source.)"'                                        ///
-         _n(1) `""'                                                                               ///
-         _n(1) `"  5. Combined Libraries."'                                                       ///
+         _n(1) `""'
+    disp _n(1) `"  5. Combined Libraries."'                                                       ///
          _n(1) `""'                                                                               ///
          _n(1) `"  You may place library facilities that are a work based on the"'                ///
          _n(1) `"Library side by side in a single library together with other library"'           ///
@@ -373,6 +374,10 @@ program gtools_showcase
     * preserve
     gtools_cmd  sysuse auto, clear
 
+    gtools_head gstats {hdfe|residualize} varlist [if] [in] [weight], [absorb(varlist) options]
+    gtools_cmd  gstats hdfe hdfe_price = price, absorb(foreign rep78)
+    gtools_cmd  gstats residualize price mpg [w = gear_ratio], absorb(foreign rep78) prefix(res_)
+
     gtools_head gstats {sum|tab} varlist [if] [in] [weight], [by(varlist) options]
     gtools_cmd  gstats sum price [pw = gear_ratio / 4]
     gtools_cmd  gstats tab price mpg, by(foreign) matasave
@@ -414,6 +419,21 @@ program gtools_showcase
     gtools_cmd  gtoplevelsof foreign rep78
     gtools_cmd  gtop foreign rep78 [w = weight], ntop(5) missrow groupmiss pctfmt(%6.4g) colmax(3)
 
+    gtools_head gregress depvar indepvars [if] [in] [weight], [by(varlist) options]
+    gtools_cmd  gregress price mpg rep78, mata(coefs) prefix(b(_b_) se(_se_))
+    gtools_cmd  gregress price mpg [fw = rep78], by(foreign) absorb(rep78 headroom) cluster(rep78)
+
+    gtools_head givregress depvar (endog = instruments) exog [if] [in] [weight], [by(varlist) options]
+    gtools_cmd  givregress price (mpg = gear_ratio) rep78, mata(coefs) prefix(b(_b_) se(_se_)) replace
+    gtools_cmd  givregress price (mpg = gear_ratio) [fw = rep78], by(foreign) absorb(rep78 headroom) cluster(rep78)
+
+    gtools_head gglm depvar indepvars [if] [in] [weight], family(...) [by(varlist) options]
+    gtools_cmd  gglm price mpg rep78, family(poisson) mata(coefs) prefix(b(_b_) se(_se_)) replace
+    gtools_cmd  gglm price mpg [fw = trunk], family(poisson) by(foreign) absorb(rep78 headroom) cluster(rep78)
+    gtools_cmd
+    gtools_cmd  gglm foreign price rep78 [fw = trunk], family(binomial) absorb(headroom) mata(coefs)
+    gtools_cmd  gglm foreign price if rep78 > 2, family(binomial) by(rep78) prefix(b(_b_) se(_se_)) replace
+
     gtools_head gcollapse (stat) out = src [(stat) out = src ...] [if] [if] [weight], by(varlist) [options]
     gtools_cmd  gen h1 = headroom
     gtools_cmd  gen h2 = headroom
@@ -439,6 +459,15 @@ program gtools_showcase
     gtools_cmd
     gtools_cmd  greshape spread f p, j(j)
     gtools_cmd  greshape gather f? p?, j(j) value(fp)
+
+    gtools_head gstats transform (stat) out = src [(stat) out = src ...] [if] [if] [weight], by(varlist) [options]
+    disp "    gstats range  (stat) out = src [...] [if] [if] [weight], by(varlist) [options]"
+    disp "    gstats moving (stat) out = src [...] [if] [if] [weight], by(varlist) [options]"
+
+    gtools_cmd sysuse auto, clear
+    gtools_cmd gstats transform (normalize) price (demean) price (range mean -sd sd) price, auto
+    gtools_cmd gstats range  (mean) mean_r = price (sd) sd_r = price, interval(-10 10 mpg)
+    gtools_cmd gstats moving (mean) mean_m = price (sd) sd_m = price, by(foreign) window(-5 5)
 end
 
 capture program drop gtools_head

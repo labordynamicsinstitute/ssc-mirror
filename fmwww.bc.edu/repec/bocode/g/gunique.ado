@@ -87,6 +87,11 @@ program gunique, rclass
         }
         else if ( `rc' == 17001 ) {
             di as txt "(no observations)"
+            return scalar N      = 0
+            return scalar J      = 0
+            return scalar unique = 0
+            return scalar minJ   = 0
+            return scalar maxJ   = 0
             exit 0
         }
         else if ( `rc' ) exit `rc'
@@ -101,7 +106,7 @@ program gunique, rclass
         local r_Ndisp = trim(`"`: di %21.0gc `r(N)''"')
         local r_Jdisp = trim(`"`: di %21.0gc `r(J)''"')
 
-        sum `count' in 1 / `=r(J)', d
+        gstats sum `count' in 1 / `=r(J)', d
     }
     else {
         cap noi _gtools_internal `varlist' `if' `in', `countonly' `unsorted' `opts' gfunction(unique)
@@ -114,6 +119,11 @@ program gunique, rclass
         }
         else if ( `rc' == 17001 ) {
             di as txt "(no observations)"
+            return scalar N      = 0
+            return scalar J      = 0
+            return scalar unique = 0
+            return scalar minJ   = 0
+            return scalar maxJ   = 0
             exit 0
         }
         else if ( `rc' ) exit `rc'
@@ -130,8 +140,11 @@ program gunique, rclass
     }
 
     if ( "`by'" != "" ) {
+        * NB: `id' should be the group ID for varlist, which should be
+        * correctly missing for non-if in observations. Hence ifid gives
+        * the right answer here.
         gegen `type' `generate' = tag(`by' `id') `ifid', missing `replace'
-        gegen `generate' = sum(`generate'), by(`by') replace
+        gegen `generate' = sum(`generate') `ifid', by(`by') replace
 
         di as txt ""
         di as txt "'`varlist'' had `r_Jdisp' unique values in `r_Ndisp' observations."

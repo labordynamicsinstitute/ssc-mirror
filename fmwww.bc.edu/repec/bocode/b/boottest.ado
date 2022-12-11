@@ -1,4 +1,4 @@
-*! boottest 4.3.0 17 November 2022
+*! boottest 4.3.1 10 December 2022
 *! Copyright (C) 2015-22 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
@@ -103,7 +103,7 @@ program define _boottest, rclass sortpreserve
 	local 0 `*'
 	syntax, [h0(numlist integer >0) Reps(integer 999) seed(string) BOOTtype(string) CLuster(string) Robust BOOTCLuster(string) noNULl QUIetly WEIGHTtype(string) Ptype(string) STATistic(string) NOCI Level(real `c(level)') NOSMall SMall SVMat ///
 						noGRaph gridmin(string) gridmax(string) gridpoints(string) graphname(string asis) graphopt(string asis) ar MADJust(string) CMDline(string) MATSIZEgb(real 1000000) PTOLerance(real 1e-6) svv MARGins ///
-            issorted julia float(integer 64) Format(string) jk JACKknife*]
+            issorted julia sysimage float(integer 64) Format(string) jk JACKknife*]
   if "`format'"=="" local format %10.4g
   
   local jk = "`jk'`jackknife'" != ""
@@ -115,10 +115,16 @@ program define _boottest, rclass sortpreserve
       exit 198
     }
 
-    qui python query
     if `"`c(python_exec)'"' == "" {
       di as err "The {cmd:julia} option requires that Python be installed and Stata be configured to use it."
       di as err `"See {browse "https://blog.stata.com/2020/08/18/stata-python-integration-part-1-setting-up-stata-to-use-python":instructions}."'
+      exit 198
+    }
+
+    qui python query
+    if "`r(version)'" < "3" {
+      di as err "Stata is currently configured to use Python " `r(version)' ". The {cmd:julia} option requires Python 3."
+      di as err `"See {help python}."'
       exit 198
     }
 
@@ -173,9 +179,9 @@ program define _boottest, rclass sortpreserve
       }
     }
 
-    qui python: Scalar.setValue("rc", Main.eval('VERSION < v"1.7.0"')) 
+    qui python: Scalar.setValue("rc", Main.eval('VERSION < v"1.8.0"')) 
     if 0`rc' {
-      di as err _n "The {cmd:julia} option requires that Julia 1.7 or higher be installed and accessible by default through the system path."
+      di as err _n "The {cmd:julia} option requires that Julia 1.8 or higher be installed and accessible by default through the system path."
       di as err `"Follow {browse "https://julialang.org/downloads/platform":these instructions} for installing it and adding it to the system path."'
       exit 198
     }
@@ -190,9 +196,10 @@ program define _boottest, rclass sortpreserve
         di as err `"You should be able to install it by running Julia and typing {cmd:using Pkg; Pkg.add("WildBootTests")}."'
         exit 198
       }
+      local needsysimage 1
     }
     else {
-      python: Macro.setLocal("rc", str(Main.eval('p[1].version < v"0.8.1"')))  // hard-coded version requirement
+      python: Macro.setLocal("rc", str(Main.eval('p[1].version < v"0.8.3"')))  // hard-coded version requirement
       if "`rc'" == "True" {
         di "Updating WildBootTests.jl..."
         cap python: Pkg.update("WildBootTests")
@@ -201,6 +208,7 @@ program define _boottest, rclass sortpreserve
           di as err `"You should be able to update it by running Julia and typing {cmd:using Pkg; Pkg.update("WildBootTests")}."'
           exit 198
         }
+        local needsysimage 1
       }
     }
 
@@ -215,10 +223,28 @@ program define _boottest, rclass sortpreserve
         exit 198
       }
     }
+
+    if "`sysimage'"!="" {
+      qui python: Main.eval('using Pkg; p=[v for v in values(Pkg.dependencies()) if v.is_direct_dep && v.name=="PackageCompiler"]')
+      python: Macro.setLocal("rc", str(Main.eval('length(p)')))
+      if `rc'==0 {
+        di "Installing PackageCompiler.jl..."
+        cap python: Pkg.add("PackageCompiler")
+        if _rc {
+          di as res _n "Warning: failed to automatically install the Julia package PackageCompiler."
+          di as res `"This should be installable from within Julia by typing {cmd:using Pkg; Pkg.add("PackageCompiler")}."'
+        }
+        if 0`needsysimage' {
+          cap python: Main.eval('using PackageCompiler; create_sysimage(["WildBootTests", "StableRNGs", "SnoopPrecompile"], sysimage_path="boottest.dll")')
+        }
+      }
+    }
 // python:Main.eval('pushfirst!(LOAD_PATH,raw"D:\OneDrive\Documents\Macros\WildBootTests.jl")')
     python: from julia import WildBootTests, StableRNGs
     python: rng = StableRNGs.StableRNG(0)  // create now; properly seed later
     global boottest_julia_loaded 1
+    
+    di as txt "Invoking the Julia implementation. The first call in each Stata session is slow."
   }
 
   if "`small'" != "" & "`nosmall'" != "" {
@@ -1143,6 +1169,7 @@ end
 
 
 * Version history
+* 4.3.1 Bumped Julia version to 0.8.3. Check for Python 2. Restored code path of memory-intensive granular WRE computation of denominator.
 * 4.3.0 Added jackknife for WRE; fixed failure to detect constant term after ivreg; fixed incorrect computation in "WUE"
 * 4.2.1 jk bug fixes
 * 4.2.0 Added jackknife (WCU/WCR_31) for OLS and Anderson-Rubin

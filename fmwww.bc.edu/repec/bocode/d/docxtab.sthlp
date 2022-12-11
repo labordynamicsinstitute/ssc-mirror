@@ -10,6 +10,7 @@ help for {cmd:docxtab} {right:(Roger Newson)}
   {break}
   {cmdab:headc:hars}{cmd:(}{it:namelist}{cmd:)} {cmdab:footc:hars}{cmd:(}{it:namelist}{cmd:)}
   {cmdab:headf:ormat}{cmd:(}{it:cell_fmt_options}{cmd:)} {cmdab:footf:ormat}{cmd:(}{it:cell_fmt_options}{cmd:)}
+  {cmdab:trow:seq}{cmd:(}{newvar}{cmd:)}
   {it:table_data_options}
   ]
 
@@ -76,18 +77,30 @@ recognized by {helpb putdocx table},
 to apply to the footer rows.
 For instance, {cmd:footformat(italic)} specifies that the footer rows will all be in italic fonts.
 
+{phang}
+{cmd:trowseq(}{newvar}{cmd:)} specifies the name of a generated variable,
+to contain, in each observation,
+the table row sequence corresponding to that observation.
+If the observation does not correspond to a table row,
+then the generated variable is set to missing.
+A {cmd:trowseq()} variable can then be used to format a subset of table rows.
+Note that, if the option {cmd:varnames} is specified,
+then the table row sequence starts at the number of header rows plus 2,
+but otherwise the table row sequence starts at the number of header rows plus 1.
+
 
 {title:Remarks}
 
 {pstd}
-{cmd:docxtab} is intended to give the{cmd:.docx} user some of the functionality of {helpb listtab},
+{cmd:docxtab} is intended to give the {cmd:.docx} user some of the functionality of {helpb listtab},
 which is described in {help docxtab##docxtab_newson2012:Newson (2012)}.
 {helpb listtab} and {cmd:docxtab} frequently use {help char:variable characteristics},
 frequently set using the {help ssc:SSC} package {helpb chardef},
 to create header and footer rows for tables.
 The packages {helpb listtab}, {helpb chardef}, and {cmd:docxtab}
 are intended mainly for use with resultssets,
-which are described in {help docxtab##docxtab_newson2012:Newson (2012)}, {help docxtab##docxtab_newson2006:Newson (2006)},
+which are described in {help docxtab##docxtab_newson2022:Newson (2022)},
+{help docxtab##docxtab_newson2012:Newson (2012)}, {help docxtab##docxtab_newson2006:Newson (2006)},
 {help docxtab##docxtab_newson2004:Newson (2004)}, and {help docxtab##docxtab_newson2003:Newson (2003)}.
 
 
@@ -123,6 +136,52 @@ with the first line of variable handles italicized:
 {phang2}{cmd:. putdocx save "myword.docx", replace}{p_end}
 
 {pstd}
+The following more advanced example inputs odd-numbered car models from the {helpb sysuse:auto} data,
+and creates a {cmd:.docx} document,
+containing a table of car models,
+with separate gap rows introducing the US and non-US cars.
+To do this, we use the {help ssc:SSC} packages
+{helpb chardef}, {helpb insingap}, {helpb ingap}, and {helpb sdecode}.
+
+{pstd}
+Set up
+
+{phang2}{cmd:. sysuse auto, clear}{p_end}
+{phang2}{cmd:. keep if mod(_n,2)}{p_end}
+{phang2}{cmd:. describe, full}{p_end}
+
+{pstd}
+Create document
+
+{phang2}{cmd:. putdocx begin, pagesize(A4)}{p_end}
+{phang2}{cmd:. preserve}{p_end}
+{phang2}{cmd:. clonevar rowlab=make}{p_end}
+{phang2}{cmd:. sdecode mpg, replace}{p_end}
+{phang2}{cmd:. sdecode weight, replace}{p_end}
+{phang2}{cmd:. chardef rowlab mpg weight, char(varhandle) values("Car model" "Miles per US gallon" "Weight (US pounds)")}{p_end}
+{phang2}{cmd:. insingap foreign, row(rowlab) grdecode(foreign) prefix("Odd-numbered ") suffix(" Cars:") gapind(gapobs)}{p_end}
+{phang2}{cmd:. docxtab rowlab mpg weight, tablename(theirtable) headchar(varhandle) headformat(italic) trowseq(rowseq)}{p_end}
+{phang2}{cmd:. levelsof rowseq if gapobs, local(gaplist)}{p_end}
+{phang2}{cmd:. putdocx table theirtable(`gaplist',.), bold}{p_end}
+{phang2}{cmd:. putdocx table theirtable(.,.), halign(right)}{p_end}
+{phang2}{cmd:. restore}{p_end}
+{phang2}{cmd:. putdocx save "theirword.docx", replace}{p_end}
+
+{pstd}
+Note that we generate the table between a {helpb preserve} statement and a {helpb restore} statement,
+because we modify existing variables and add new ones when generating the table.
+We use {helpb clonevar} and {helpb sdecode} to create the variables be tabulated,
+as string variables.
+We use {helpb chardef} as before, to set the characteristic {cmd:varhandle}
+for these variables.
+We use {helpb insingap} to add gap rows to the dataset in memory,
+containing gap row labels.
+We then use {cmd:docxtab} to create the first version of the table,
+with a {cmd:trowseq()} option to store the table row sequence numbers in the variable {cmd:rowseq},
+and then use {helpb putdocx table} to modify the gap rows to be bold,
+and to right-justify all cells in the table.
+
+{pstd}
 More complicated examples are possible,
 generating more complicated tables with multiple head and/or foot rows
 from multiple variable characteristics.
@@ -137,13 +196,13 @@ from multiple variable characteristics.
 {p2col 5 15 19 2: Scalars}{p_end}
 {synopt:{cmd:r(fbody)}}first row of table body{p_end}
 {synopt:{cmd:r(lbody)}}last row of table body{p_end}
-{synopt:{cmd:r(nbody)}}number of rows \in table body{p_end}
+{synopt:{cmd:r(nbody)}}number of rows in table body{p_end}
 {synopt:{cmd:r(fhead)}}first row of table head{p_end}
 {synopt:{cmd:r(lhead)}}last row of table head{p_end}
-{synopt:{cmd:r(nhead)}}number of rows \in table head{p_end}
+{synopt:{cmd:r(nhead)}}number of rows in table head{p_end}
 {synopt:{cmd:r(ffoot)}}first row of table foot{p_end}
 {synopt:{cmd:r(lfoot)}}last row of table foot{p_end}
-{synopt:{cmd:r(nfoot)}}number of rows \in table foot{p_end}
+{synopt:{cmd:r(nfoot)}}number of rows in table foot{p_end}
 {synopt:{cmd:r(nrow)}}total number of rows in table{p_end}
 {synopt:{cmd:r(ncol)}}total number of columns in table{p_end}
 {p2colreset}{...}
@@ -169,6 +228,12 @@ Email: {browse "mailto:roger.newson@kcl.ac.uk":roger.newson@kcl.ac.uk}
 
 
 {marker references}{title:References}
+
+{phang}
+{marker docxtab_newson2022}{...}
+Newson, R. B.  2022.
+Resultssets in resultstables in Stata 16-plus.
+Presented at {browse "http://ideas.repec.org/s/boc/lsug22.html" :the 2022 London Stata Conference, London, 8 September, 2022}.
 
 {phang}
 {marker docxtab_newson2012}{...}
@@ -203,5 +268,5 @@ Download from {browse "http://www.stata-journal.com/article.html?article=st0043"
 Help for {helpb putdocx}, {helpb putdocx_table:putdocx table}
 {p_end}
 {p 4 13 2}
-Help for {helpb chardef}, {helpb listtab} if installed
+Help for {helpb chardef}, (helpb sdecode}, {helpb ingap}, {helpb insingap}, {helpb listtab} if installed
 {p_end}

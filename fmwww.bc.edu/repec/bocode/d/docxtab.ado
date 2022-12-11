@@ -5,13 +5,16 @@ version 16.0;
  List the variables in varlist as a table
  to a putdocx table.
  *! Author: Roger Newson
-*! Date: 04 December 2021
+*! Date: 07 December 2022
 *;
 
 syntax [ varlist (min=1) ] [if] [in] , TABlename(name)
  [
   HEADChars(namelist) FOOTChars(namelist)
-  HEADformat(string asis) FOOTFormat(string asis) *
+  HEADformat(string asis) FOOTFormat(string asis)
+  TROWseq(name)
+  varnames 
+  *
  ];
 *
   varlist specifies variables to be written to table.
@@ -20,13 +23,21 @@ syntax [ varlist (min=1) ] [if] [in] , TABlename(name)
   footchars() is a list of variable characteristics containing footer rows.
   headformat() is a list of cell format options for header rows.
   footformat() is a list of cell format options for footer rows.
-  Other options are passed to putdocx table.
+  trowseq() specifies a generated variable
+    containing the table row sequence for each observation.
+  Other options (including varnames) are passed to putdocx table.
 *;
 
 
 * Count variables and mark sample *;
 local nvar: word count `varlist';
 marksample touse, novarlist strok;
+
+
+*
+ Check that table row sequence variable is new if it is requested
+*;
+if "`trowseq'"!="" conf new var `trowseq';
 
 
 *
@@ -86,7 +97,7 @@ else {;
 * 
  Create initial table with just internal cells
 *;
-putdocx table `tablename'=data(`varlist') if `touse', `options';
+putdocx table `tablename'=data(`varlist') if `touse', `varnames' `options';
 
 
 *
@@ -166,6 +177,17 @@ if `nhead'>0 & `"`headformat'"'!="" {;
 };
 if `nfoot'>0 & `"`footformat'"'!="" {;
   putdocx table `tablename'(`=`ffoot''/`=`lfoot'',.), `footformat';
+};
+
+
+*
+ Add table row sequence variable if requested
+*;
+if "`trowseq'"!="" qui {;
+  gene byte `trowseq'=1 if `touse';
+  if "`varnames'"=="" replace `trowseq'=sum(`trowseq')+`nhead' if `touse';
+  else replace `trowseq'=sum(`trowseq')+`nhead'+1 if `touse';
+  lab var `trowseq' "Table row sequence number";
 };
 
 

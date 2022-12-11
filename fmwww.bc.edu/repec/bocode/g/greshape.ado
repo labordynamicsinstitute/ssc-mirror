@@ -1,4 +1,4 @@
-*! version 0.1.1 11Feb2019 Mauricio Caceres Bravo, mauricio.caceres.bravo@gmail.com
+*! version 0.5.0 26Jan2020 Mauricio Caceres Bravo, mauricio.caceres.bravo@gmail.com
 *! Fast implementation of reshape using C plugins
 
 capture program drop greshape
@@ -104,6 +104,8 @@ end
 * X | X | ReS_nodupcheck
 * X | X | ReS_nomisscheck
 * X | X | ReS_cmd
+*   | X | ReS_prefix
+*   | X | ReS_labelformat
 * X | X | ReS_Xij_stubs
 * X |   | ReS_Xij_regex
 * X |   | ReS_Xij_add
@@ -150,6 +152,7 @@ program define Long /* reshape long */
             fast               /// Do not preserve and restore the original dataset. Saves speed
             nochecks           /// Do not do any checks
             CHECKlevel(real 4) /// Check level
+            DROPMISSing        /// Drop missing values from reshape
             nodupcheck         /// Do not check for duplicates
             nomisscheck        /// Do not check for missing values or blanks in j
             match(str)         /// a string (e.g. @) to match or 'regex'
@@ -193,7 +196,9 @@ program define Long /* reshape long */
             KEYs(name)         /// varnames by levels -key()-
             xi(str)            /// Handle extraneous variables
             fast               /// Do not preserve and restore the original dataset. Saves speed
+            DROPMISSing        /// Drop missing values from reshape
             USELabels          /// Use labels as values instead of variable names
+            USELabelsvars(str) /// Use labels as values instead of variable names
             ${GTOOLS_PARSE}    ///
         ]
 
@@ -289,7 +294,14 @@ program define Long /* reshape long */
 
     if ( `"`match'"' == "" ) local match @
 
-    global ReS_uselabels = ( `"`uselabels'"' != "" )
+    if ( `"`uselabelsvars'"' != "" ) {
+        local uselabels uselabels
+    }
+    else if ( `"`uselabels'"' != "" ) {
+        unab uselabelsvars: _all
+    }
+
+    global ReS_uselabels: copy local uselabelsvars
     global ReS_str = ( `"`string'"' != "" )
     global ReS_atwl  `atwl'
     global ReS_match `match'
@@ -374,8 +386,12 @@ program define Long /* reshape long */
         exit 198
     }
 
-
-    tempfile ReS_jfile
+    if ( `"${GTOOLS_TEMPDIR}"' == "" ) {
+        tempfile ReS_jfile
+    }
+    else {
+        GreshapeTempFile ReS_jfile
+    }
     global ReS_jfile `ReS_jfile'
     scalar __greshape_jfile = length(`"`ReS_jfile'"') + 1
 
@@ -421,10 +437,15 @@ program define Long /* reshape long */
     else local cmd long write
 
     if ( `benchmarklevel' > 0 | `"`benchmark'"' != "" ) disp as txt "Writing reshape to disk:"
-    tempfile ReS_Data
+    if ( `"${GTOOLS_TEMPDIR}"' == "" ) {
+        tempfile ReS_Data
+    }
+    else {
+        GreshapeTempFile ReS_Data
+    }
     mata: __greshape_w2l_meta = WideToLongMetaSave()
     global GTOOLS_CALLER greshape
-    local gopts xij($ReS_Xij_names) xi($ReS_Xi) f(`ReS_Data') `string'
+    local gopts xij($ReS_Xij_names) xi($ReS_Xi) f(`ReS_Data') `string' `dropmissing'
     local gopts greshape(`cmd', `gopts') gfunction(reshape) `opts'
     cap noi _gtools_internal ${ReS_i}, `gopts' missing
     global GTOOLS_CALLER ""
@@ -445,8 +466,19 @@ program define Long /* reshape long */
         rename ($ReS_Xij_keep) ($ReS_Xij_keepnames)
     }
     order $ReS_i $ReS_j $ReS_Xij_stubs $ReS_Xi
-    qui set obs `=_N * scalar(__greshape_klvls)'
-    * qui expand `=scalar(__greshape_klvls)'
+    if ( `"`dropmissing'"' != "" ) {
+        * disp as txt "({bf:warning:} -dropmiss- will remove IDs with all missing values)"
+        if ( `=scalar(__gtools_greshape_nrows)' <= `=_N' ) {
+            qui keep in 1 / `=scalar(__gtools_greshape_nrows)'
+        }
+        else {
+            qui set obs `=scalar(__gtools_greshape_nrows)'
+        }
+    }
+    else {
+        qui set obs `=_N * scalar(__greshape_klvls)'
+        * qui expand `=scalar(__greshape_klvls)'
+    }
     if ( `FreeTimer' ) {
         qui timer off `FreeTimer'
         qui timer list
@@ -575,6 +607,17 @@ program define Wide /* reshape wide */
             CHECKlevel(real 4) /// Check level
             nomisscheck        /// Do not check for missing values or blanks in j
             match(str)         /// a string (e.g. @) to match
+            LABELFormat(str)   /// label format; default is '#keyvalue# #stublabel#'
+            prefix(str)        /// a list with the variable prefix format. default
+                               ///
+                               ///     #stub# [#stub# #blank# ...]
+                               ///
+                               /// where #stub# simply uses the stub as the variable prefix.
+                               /// @ syntax allowed. Examples of valid prefixes:
+                               ///
+                               ///     #stub# combo#stub# #stub#combo prefix mid@dle @suffix
+                               ///
+                               ///
             ${GTOOLS_PARSE}    ///
         ]
 
@@ -586,6 +629,8 @@ program define Wide /* reshape wide */
             by(varlist)      /// reshape by groups of -by()-
             i(varlist)       /// reshape by groups of -i()-
             xi(str)          /// Handle extraneous variables
+            LABELFormat(str) /// label format; default is '#keyvalue# #stublabel#'
+            prefix(str)      /// a list with the variable prefix format
             fast             /// Do not preserve and restore the original dataset. Saves speed
             ${GTOOLS_PARSE}  ///
         ]
@@ -669,17 +714,24 @@ program define Wide /* reshape wide */
 
     if ( `"`match'"' == "" ) local match @
 
-    global ReS_atwl      `atwl'
-    global ReS_match     `match'
-    global ReS_Xij       `anything'
-    global ReS_j         `j'
-    global ReS_i         `i'
-    global ReS_Xij_k     `:list sizeof anything'
-    global ReS_jsep:     copy local colseparate
+    if ( `"`labelformat'"' == "" ) {
+        local labelformat #keyvalue# #stublabel#
+    }
+    else if ( `:list sizeof j' > 1 ) {
+        disp as txt "(warning: labelformat() ignored with multiple $ReS_jname() variables)"
+    }
+
+    global ReS_atwl   `atwl'
+    global ReS_match  `match'
+    global ReS_Xij    `anything'
+    global ReS_Xij_k  `:list sizeof anything'
+    global ReS_jsep:  copy local colseparate
+    global ReS_labelformat: copy local labelformat
 
     * This defines $ReS_Xij_stubs and potentially overwrites ReS_Xij
     ParseStubsByMatch wide
 
+    * This is mainly for spread; i are all the excluded variables
     unab oldlist: _all
     unab ReS_Xij_stubs: $ReS_Xij_stubs
     local restvars: list oldlist - ReS_Xij_stubs
@@ -693,6 +745,40 @@ program define Wide /* reshape wide */
     else {
         unab i: `i'
     }
+
+    global ReS_j `j'
+    global ReS_i `i'
+
+    * If there are multiple prefixes, you must specify the same number
+    * of prefixes as stubs; otherwise the prefix is taken for every
+    * variable
+
+    local ReS_Xij_stubs: copy global ReS_Xij_stubs
+    local ReS_prefix:    copy local prefix
+
+    local k1: list sizeof prefix
+    local k2: list sizeof ReS_Xij_stubs
+    if ( `k1' > 1 ) {
+        if ( `k1' != `k2' ) {
+            disp as err `"mismatch: `k1' prefixes for `k2' stubs"'
+            exit 198
+        }
+    }
+    else if ( (`k1' == 1) & (`k2' > 1) ) {
+        local ReS_prefix
+        forvalues kk = 1 / `k2' {
+            local ReS_prefix `ReS_prefix' `prefix'
+        }
+    }
+    global ReS_prefix: copy local ReS_prefix
+
+    * Cannot have multiple stubs with the same name
+    if ( `"`:list uniq ReS_Xij_stubs'"' != `"`ReS_Xij_stubs'"' ) {
+        disp as err `"repeated variables not allowed"'
+        exit 198
+    }
+
+    * Check that the spread call is sane
 
     if ( `"`ReS_cmd'"' == "spread" ) {
         cap assert `:list i == restvars'
@@ -708,6 +794,8 @@ program define Wide /* reshape wide */
             exit 198
         }
     }
+
+    * gtools options!
 
     cap confirm str var `j'
     global ReS_str = (_rc == 0)
@@ -802,7 +890,12 @@ program define Wide /* reshape wide */
     * --------------------------------------------------
 
     tempvar ReS_jcode
-    tempfile ReS_jfile
+    if ( `"${GTOOLS_TEMPDIR}"' == "" ) {
+        tempfile ReS_jfile
+    }
+    else {
+        GreshapeTempFile ReS_jfile
+    }
     global ReS_jcode: copy local ReS_jcode
     global ReS_jfile: copy local ReS_jfile
     scalar __greshape_jfile = length(`"`ReS_jfile'"') + 1
@@ -845,7 +938,13 @@ program define Wide /* reshape wide */
     if ( `benchmarklevel' > 0 | `"`benchmark'"' != "" ) disp as txt "Writing reshape to disk:"
     local cmd wide write
     keep $ReS_i $ReS_j $ReS_jcode $ReS_Xi $rVANS
-    tempfile ReS_Data
+    if ( `"${GTOOLS_TEMPDIR}"' == "" ) {
+        tempfile ReS_Data
+    }
+    else {
+        GreshapeTempFile ReS_Data
+    }
+    * disp "debug 1: $ReS_Xij"
     mata: __greshape_l2w_meta = LongToWideMetaSave(`"$ReS_cmd"' == "spread")
     global GTOOLS_CALLER greshape
     local gopts j($ReS_jcode) xij($rVANS) xi($ReS_Xi) f(`ReS_Data') `string'
@@ -929,6 +1028,7 @@ program ParseStubsByMatch
             }
             foreach stub of global ReS_Xij {
                 local any 0
+                local rep 0
                 if ( `"`group'"' == "" ) local group 1
                 foreach var of varlist `allvars' {
                     if ustrregexm(`"`var'"', `"`stub'"') {
@@ -939,18 +1039,28 @@ program ParseStubsByMatch
                             local ReS_Xij_stubs `ReS_Xij_stubs' `=ustrregexrf(`"`var'"', `"`stub'"', "")'
                             local any 1
                         }
+                        else {
+                            local rep 1
+                        }
                         * disp `"`var'"', `"`stub'"', `any'
                     }
                 }
                 if ( `any' == 0 ) {
-                    disp as err "no variables matched stub regex: `stub'"
-                    exit 198
+                    if ( `rep' ) {
+                        disp as err "no new variables matched regex: `stub' (you probably have repeated stubs)"
+                        exit 198
+                    }
+                    else {
+                        disp as err "no variables matched stub regex: `stub'"
+                        exit 198
+                    }
                 }
             }
         }
         else {
             foreach stub of global ReS_Xij {
                 local any 0
+                local rep 0
                 gettoken stub  group: stub,  p(/)
                 gettoken slash group: group, p(/)
                 local group `group'
@@ -966,13 +1076,22 @@ program ParseStubsByMatch
                                 local ReS_Xij_stubs `ReS_Xij_stubs' `=regexr(`"`var'"', `"`rg'"', "")'
                                 local any 1
                             }
+                            else {
+                                local rep 1
+                            }
                         }
                     }
                     * disp `"`var'"', `"`stub'"', `any'
                 }
                 if ( `any' == 0 ) {
-                    disp as err "no variables matched stub regex: `stub'"
-                    exit 198
+                    if ( `rep' ) {
+                        disp as err "no new variables matched regex: `stub' (you probably have repeated stubs)"
+                        exit 198
+                    }
+                    else {
+                        disp as err "no variables matched stub regex: `stub'"
+                        exit 198
+                    }
                 }
             }
         }
@@ -1100,7 +1219,7 @@ program define FillvalW
             mata: __greshape_res = strofreal(__greshape_res)
         }
         else {
-            mata: (void) SaveJValuesString(__greshape_res, 0)
+            mata: (void) SaveJValuesString(__greshape_res, "")
         }
         mata: __greshape_xijname = sort(uniqrows(__greshape_dsname[__greshape_sel]), 1)
     }
@@ -1112,7 +1231,28 @@ program define FillvalW
             disp as err "variable j contains all missing values"
             exit 498
         }
-        mata: `jlen' = SaveJValuesString(__greshape_res, ${ReS_uselabels}) - 1
+
+        if ( `"$ReS_uselabels"' != "" ) {
+            local 0: copy global ReS_uselabels
+            cap syntax varlist, [exclude]
+            if ( _rc ) {
+                disp as err "option uselabels[()] incorrectly specified"
+                syntax varlist, [exclude]
+                exit 198
+            }
+            else {
+                if ( `"`exclude'"' != "" ) {
+                    unab ReS_uselabels: _all
+                    local ReS_uselabels: list ReS_uselabels - varlist
+                    global ReS_uselabels: copy local ReS_uselabels
+                }
+                else {
+                    global ReS_uselabels: copy local varlist
+                }
+            }
+        }
+
+        mata: `jlen' = SaveJValuesString(__greshape_res, tokens(`"${ReS_uselabels}"')) - 1
         mata: __greshape_xijname = __greshape_res
     }
 
@@ -1132,13 +1272,17 @@ program define FillvalW
         */ (`"$ReS_cmd"' == "gather"))
 
     mata: st_numscalar("__greshape_rc", __greshape_rc)
-    if ( `=scalar(__greshape_rc)' ) exit 198
+    if ( `=scalar(__greshape_rc)' ) {
+        mata: mata drop `jlen'
+        exit 198
+    }
 
     scalar __greshape_nrows = .
     scalar __greshape_ncols = .
 
     mata: st_global("ReS_jv",   invtokens(__greshape_res'))
     mata: st_global("ReS_jlen", strofreal(`jlen' > 0? `jlen': max(strlen(__greshape_res))))
+    mata: mata drop `jlen'
 
     di in gr "(note: $ReS_jname = $ReS_jv)"
     global ReS_jv2: copy global ReS_jv
@@ -1209,6 +1353,7 @@ end
 
 capture mata: mata drop MakeMapLevel()
 capture mata: mata drop GetVariableFromStub()
+capture mata: mata drop GetVariableFromStubPrefix()
 mata:
 real matrix function MakeMapLevel(
     string colvector dsname,
@@ -1254,6 +1399,25 @@ string scalar function GetVariableFromStub(string scalar s, string scalar r)
     return(left + r + right)
 }
 
+string scalar function GetVariableFromStubPrefix(
+    string scalar stub,
+    string scalar level,
+    string scalar prefix)
+{
+    real scalar l, m
+    string scalar left, right, out
+
+    s = subinstr(prefix, "#blank#", "",   .)
+    s = subinstr(s,      "#stub#",  stub, .)
+
+    m = strlen(st_global(`"ReS_match"'))
+    l = strpos(s, st_global(`"ReS_match"'))
+    l = (l == 0)? strlen(s) + 1: l
+    left  = substr(s, 1, l - 1)
+    right = substr(s, l + m, .)
+    return(left + level + right)
+}
+
 end
 
 cap mata ustrregexm("a", "a")
@@ -1285,7 +1449,12 @@ real scalar function CheckVariableTypes(
             sr = gather? res[j]: GetVariableFromStub(xij[i], res[j])
             ix = selectindex(dsname :== sr)
             t  = highest[i, 1]
-            if ( length(ix) ) {
+            if ( length(ix) > 1 ) {
+                errprintf("stub %s had repeated matches (do you have repeated stubs?)\n",
+                          xij[i])
+                return(198)
+            }
+            else if ( length(ix) ) {
                 v = st_vartype(sr)
                 if ( `regex'm(v, "str([1-9][0-9]*|L)") ) {
                     if ( t > 0 ) {
@@ -1385,20 +1554,27 @@ void function SaveJValuesReal(real colvector res)
     fclose(fh)
 }
 
-real scalar function SaveJValuesString(string colvector res, real scalar uselabels)
+real scalar function SaveJValuesString(string colvector res, string rowvector uselabelsvars)
 {
-    real scalar i, fh, max
+    real scalar i, fh, max, uselabels
     string scalar fmt, vlbl
     string colvector reslbl
     colvector C
 
-    fh  = fopen(st_global("ReS_jfile"), "w")
-    C   = bufio()
+    uselabels = length(uselabelsvars) > 0
+
+    fh = fopen(st_global("ReS_jfile"), "w")
+    C  = bufio()
     if ( uselabels ) {
         reslbl = J(rows(res), 1, "")
         for(i = 1; i <= rows(res); i++) {
-            vlbl = st_varlabel(res[i])
-            reslbl[i] = (strtrim(vlbl) == "")? res[i]: vlbl
+            if ( length(selectindex(res[i] :== uselabelsvars)) > 0 ) {
+                vlbl = st_varlabel(res[i])
+                reslbl[i] = (strtrim(vlbl) == "")? res[i]: vlbl
+            }
+            else {
+                reslbl[i] = res[i]
+            }
         }
         max = max(strlen(reslbl)) + 1
         fmt = sprintf("%%%gS", max)
@@ -1471,7 +1647,7 @@ program define FillvalL
         exit 198
     }
 
-    * mata: (void) SaveJValuesString(__greshape_jv)
+    * mata: (void) SaveJValuesString(__greshape_jv, "")
     di in gr "(note: $ReS_jname = $ReS_jv)"
     global ReS_jv2: copy global ReS_jv
 
@@ -1487,6 +1663,7 @@ program CheckVariableTypes
     local i: copy global rVANS
     local k: copy global ReS_Xij
     local j: copy global ReS_jv
+    local p: copy global ReS_prefix
     gettoken j1 jrest: j
 
     global ReS_Xij_keep: copy global rVANS
@@ -1497,37 +1674,88 @@ program CheckVariableTypes
     global ReS_Xij_addtypes
 
     if ( ("$ReS_cmd" != "spread") | ($ReS_Xij_k > 1) ) {
+
+        * Allow for custom user-defined prefixes and such. This is
+        * useful in gather but in wide it's basically a convoluted
+        * rename scheme...
+
         foreach stub of local k {
-            gettoken var i: i
+            gettoken var    i: i
+            gettoken prefix p: p
+
+            local prefix `prefix'
+            if ( `"`prefix'"' != "" ) {
+                local prefix: subinstr local prefix `"#blank#"' `""'
+                local prefix: subinstr local prefix `"#stub#"'  `"`stub'"'
+                local stub: copy local prefix
+            }
+
             if ( index(`"`stub'"', `"$ReS_match"') > 0 ) {
                 local _var: subinstr local stub `"$ReS_match"' `"`j1'"'
             }
             else {
                 local _var `stub'`j1'
             }
+
             global ReS_Xij_keepnames $ReS_Xij_keepnames `_var'
             global ReS_Xij_names     $ReS_Xij_names     `_var'
+
             foreach jv of local jrest {
-                global ReS_Xij_addtypes $ReS_Xij_addtypes `:type `var''
+
                 if ( index(`"`stub'"', `"$ReS_match"') > 0 ) {
                     local _var: subinstr local stub `"$ReS_match"' `"`jv'"'
                 }
                 else {
                     local _var `stub'`jv'
                 }
+
+                global ReS_Xij_addtypes $ReS_Xij_addtypes `:type `var''
                 global ReS_Xij_addvars  $ReS_Xij_addvars  `_var'
                 global ReS_Xij_names    $ReS_Xij_names    `_var'
             }
         }
     }
     else {
+
+        * Allow for custom user-defined prefixes and such. This is
+        * useful in gather but in wide it's basically a convoluted
+        * rename scheme...
+
         foreach var of local i {
-            global ReS_Xij_keepnames $ReS_Xij_keepnames `j1'
-            global ReS_Xij_names     $ReS_Xij_names     `j1'
+
+            local stub:   copy local k
+            local prefix: copy local p
+
+            local prefix `prefix'
+            if ( `"`prefix'"' != "" ) {
+                local prefix: subinstr local prefix `"#blank#"' `""'
+                local prefix: subinstr local prefix `"#stub#"'  `"`stub'"'
+                local stub: copy local prefix
+            }
+            else local stub
+
+            if ( index(`"`stub'"', `"$ReS_match"') > 0 ) {
+                local _var: subinstr local stub `"$ReS_match"' `"`j1'"'
+            }
+            else {
+                local _var `stub'`j1'
+            }
+
+            global ReS_Xij_keepnames $ReS_Xij_keepnames `_var'
+            global ReS_Xij_names     $ReS_Xij_names     `_var'
+
             foreach jv of local jrest {
+
+                if ( index(`"`stub'"', `"$ReS_match"') > 0 ) {
+                    local _var: subinstr local stub `"$ReS_match"' `"`jv'"'
+                }
+                else {
+                    local _var `stub'`jv'
+                }
+
                 global ReS_Xij_addtypes $ReS_Xij_addtypes `:type `var''
-                global ReS_Xij_addvars  $ReS_Xij_addvars  `jv'
-                global ReS_Xij_names    $ReS_Xij_names    `jv'
+                global ReS_Xij_addvars  $ReS_Xij_addvars  `_var'
+                global ReS_Xij_names    $ReS_Xij_names    `_var'
             }
         }
     }
@@ -1716,6 +1944,12 @@ end
 
 capture program drop CleanExit
 program CleanExit
+    foreach f of global GTOOLS_TEMPFILES_GRESHAPE {
+        cap erase `"${GTOOLS_TEMPDIR}/`f'"'
+    }
+    global GTOOLS_TEMPFILES_GRESHAPE
+    global GTOOLS_TEMPFILES_GRESHAPE_I
+
     Macdrop
     mac drop GTOOLS_PARSE
 
@@ -1790,6 +2024,8 @@ program define Macdrop
              ReS_jv            ///
              ReS_jv2           ///
              ReS_jvraw         ///
+             ReS_prefix        ///
+             ReS_labelformat   ///
              ReS_str           ///
              ReS_Xi            ///
              S_1               ///
@@ -2236,27 +2472,41 @@ capture mata: mata drop LongToWideMetaApply()
 capture mata: mata drop WideToLongMetaSave()
 capture mata: mata drop WideToLongMetaApply()
 capture mata: mata drop ApplyDefaultFormat()
+capture mata: mata drop ApplyCustomLabelFormat()
 
 mata:
 transmorphic scalar LongToWideMetaSave(real scalar spread)
 {
     transmorphic scalar LongToWideMeta
-    string rowvector rVANS, ReS_Xij,ReS_jv, ReS_jvraw
-    string scalar newvar, var, stub, lvl, fmt
+    string rowvector rVANS, ReS_Xij,ReS_jv, ReS_jvraw, ReS_prefix
+    string scalar ReS_j, ReS_jvlb, ReS_labelformat
+    string scalar newvar, var, stub, lvl, fmt, lbl, fmtlbl
     string matrix chars, _chars
-    real scalar i, j, k
+    real scalar i, j, k, prefix, njvars
 
-    LongToWideMeta = asarray_create()
-    fmt       = "%s[%s]"
-    rVANS     = tokens(st_global("rVANS"))
-    ReS_Xij   = tokens(st_global("ReS_Xij"))
-    ReS_jv    = tokens(st_global("ReS_jv"))
-    ReS_jvraw = tokens(st_global("ReS_jvraw"))
+    // Get all the meta info! Note that the label formatting only
+    // happens with single-variable input for keys()/j(), so we
+    // only grab the "first" element (because they get ignored
+    // if there are any other elements).
 
-    asarray(LongToWideMeta, "rVANS",     rVANS)
-    asarray(LongToWideMeta, "ReS_Xij",   ReS_Xij)
-    asarray(LongToWideMeta, "ReS_jv",    ReS_jv)
-    asarray(LongToWideMeta, "ReS_jvraw", ReS_jvraw)
+    LongToWideMeta  = asarray_create()
+    fmt             = "%s[%s]"
+    rVANS           = tokens(st_global("rVANS"))
+    ReS_Xij         = tokens(st_global("ReS_Xij"))
+    ReS_jv          = tokens(st_global("ReS_jv"))
+    ReS_jvraw       = tokens(st_global("ReS_jvraw"))
+    ReS_prefix      = tokens(st_global("ReS_prefix"))
+    ReS_j           = tokens(st_global("ReS_j"))[1]
+    njvars          = cols(tokens(st_global("ReS_j")))
+    ReS_jvlb        = st_varvaluelabel(ReS_j)
+    ReS_labelformat = st_global("ReS_labelformat")
+    prefix          = (length(ReS_prefix) > 0)
+
+    asarray(LongToWideMeta, "rVANS",      rVANS)
+    asarray(LongToWideMeta, "ReS_Xij",    ReS_Xij)
+    asarray(LongToWideMeta, "ReS_jv",     ReS_jv)
+    asarray(LongToWideMeta, "ReS_jvraw",  ReS_jvraw)
+    asarray(LongToWideMeta, "ReS_prefix", ReS_prefix)
 
     // Keep labels, value labels, formats, and characteristics of
     // each source variable. All will be applied to (copied to) each
@@ -2271,14 +2521,34 @@ transmorphic scalar LongToWideMetaSave(real scalar spread)
             lbl = ReS_jvraw[j]
             chars  = J(0, 2, "")
             _chars = st_dir("char", var, "*")
-            newvar = spread? lvl: GetVariableFromStub(stub, lvl)
+            if ( prefix ) {
+                newvar = GetVariableFromStubPrefix(stub, lvl, ReS_prefix[i])
+            }
+            else {
+                newvar = spread? lvl: GetVariableFromStub(stub, lvl)
+            }
             for (k = 1; k <= rows(_chars); k++) {
                 chars = chars \ (
                     sprintf(fmt, newvar, _chars[k]),
                     st_global(sprintf(fmt, var, _chars[k]))
                 )
             }
-            asarray(LongToWideMeta, newvar + "lbl", lbl + " " + st_varlabel(var))
+            if ( njvars > 1 ) {
+                fmtlbl = lbl + " " + st_varlabel(var)
+            }
+            else {
+                fmtlbl = ApplyCustomLabelFormat(
+                    ReS_labelformat,
+                    var,
+                    st_varlabel(var),
+                    ReS_j,
+                    st_varlabel(ReS_j),
+                    lbl,
+                    ReS_jvlb
+                )
+            }
+            // asarray(LongToWideMeta, newvar + "lbl", lbl + " " + st_varlabel(var))
+            asarray(LongToWideMeta, newvar + "lbl", fmtlbl)
             asarray(LongToWideMeta, newvar + "fmt", st_varformat(var))
             asarray(LongToWideMeta, newvar + "vlb", st_varvaluelabel(var))
             asarray(LongToWideMeta, newvar + "chr", chars)
@@ -2291,21 +2561,27 @@ transmorphic scalar LongToWideMetaSave(real scalar spread)
 void LongToWideMetaApply(transmorphic scalar LongToWideMeta, real scalar spread)
 {
 
-    string rowvector ReS_Xij,ReS_jv
+    string rowvector ReS_Xij,ReS_jv, ReS_prefix
     string scalar newvar, stub, lvl
     string matrix chars
-    real scalar i, j, k
+    real scalar i, j, k, prefix
 
-    ReS_Xij = asarray(LongToWideMeta, "ReS_Xij")
-    ReS_jv  = asarray(LongToWideMeta, "ReS_jv")
+    ReS_Xij    = asarray(LongToWideMeta, "ReS_Xij")
+    ReS_jv     = asarray(LongToWideMeta, "ReS_jv")
+    ReS_prefix = asarray(LongToWideMeta, "ReS_prefix")
+    prefix     = (length(ReS_prefix) > 0)
 
     spread = (spread & (cols(ReS_Xij) == 1))
     for (i = 1; i <= cols(ReS_Xij); i++) {
         stub = ReS_Xij[i]
         for (j = 1; j <= cols(ReS_jv); j++) {
             lvl = ReS_jv[j]
-            newvar = spread? lvl: GetVariableFromStub(stub, lvl)
-
+            if ( prefix ) {
+                newvar = GetVariableFromStubPrefix(stub, lvl, ReS_prefix[i])
+            }
+            else {
+                newvar = spread? lvl: GetVariableFromStub(stub, lvl)
+            }
             st_varlabel(newvar,  asarray(LongToWideMeta, newvar + "lbl"))
             st_varformat(newvar, asarray(LongToWideMeta, newvar + "fmt"))
 
@@ -2545,6 +2821,65 @@ void function ApplyDefaultFormat(string scalar var)
         st_varformat(var, f)
     }
 }
+
+string scalar function ApplyCustomLabelFormat(
+    string scalar fmt,       // Label format
+    string scalar stbnam,    // stub variable name
+    string scalar stblbl,    // stub variable label
+    string scalar varnam,    // Key variable name
+    string scalar varlbl,    // Key variable label
+    string scalar varval,    // Key variable value
+    string scalar varvlbnam) // Key variable value label name
+{
+    string scalar regstbnam
+    string scalar regstblbl
+    string scalar regvarnam
+    string scalar regvarlbl
+    string scalar regvarval
+    string scalar regvarvlb
+    string scalar varvlb
+    string scalar out
+    real scalar numlbl
+
+    numlbl = st_isnumvar(varnam)? strtoreal(varval): .
+    varvlb = varvlbnam == ""? "": st_vlmap(varvlbnam, numlbl)
+
+    regstbnam = "#stubname#"
+    regstblbl = "#stublabel#"
+    regvarnam = "#keyname#"
+    regvarlbl = "#keylabel#"
+    regvarval = "#keyvalue#"
+    regvarvlb = "#keyvaluelabel#"
+
+    // Fallbacks
+    if ( stblbl == "" ) stblbl = stbnam
+    if ( varlbl == "" ) varlbl = varnam
+    if ( varvlb == "" ) varvlb = varval
+
+    out = subinstr(fmt, regstbnam, stbnam, .)
+    out = subinstr(out, regstblbl, stblbl, .)
+    out = subinstr(out, regvarnam, varnam, .)
+    out = subinstr(out, regvarlbl, varlbl, .)
+    out = subinstr(out, regvarval, varval, .)
+    out = subinstr(out, regvarvlb, varvlb, .)
+
+    return(out)
+}
+end
+
+capture program drop GreshapeTempFile
+program GreshapeTempFile
+    if ( `"${GTOOLS_TEMPFILES_GRESHAPE_I}"' == "" ) {
+        local  GTOOLS_TEMPFILES_GRESHAPE_I = 1
+        global GTOOLS_TEMPFILES_GRESHAPE_I = 1
+    }
+    else {
+        local  GTOOLS_TEMPFILES_GRESHAPE_I = ${GTOOLS_TEMPFILES_GRESHAPE_I} + 1
+        global GTOOLS_TEMPFILES_GRESHAPE_I = ${GTOOLS_TEMPFILES_GRESHAPE_I} + 1
+    }
+    local f ${GTOOLS_TEMPDIR}/__gtools_tmpfile_greshape_`GTOOLS_TEMPFILES_GRESHAPE_I'
+    global GTOOLS_TEMPFILES_GRESHAPE ${GTOOLS_TEMPFILES_GRESHAPE} __gtools_tmpfile_greshape_`GTOOLS_TEMPFILES_GRESHAPE_I'
+    c_local `0': copy local f
 end
 
 ***********************************************************************

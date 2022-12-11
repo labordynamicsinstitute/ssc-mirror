@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.2.0  25Feb2019}{...}
+{* *! version 0.2.1  30Jan2020}{...}
 {viewerdialog gstats_summarize "dialog gstats_summarize"}{...}
 {vieweralsosee "[R] gstats_summarize" "mansection R gstats_summarize"}{...}
 {viewerjumpto "Syntax" "gstats_summarize##syntax"}{...}
@@ -22,15 +22,15 @@ the latest stable version.
 {cmd:gstats {ul:sum}marize}
 {varlist}
 {ifin}
-[{it:{help gstats##weight:weight}}]
-[{cmd:,} {opth by(varlist)} {it:{help gstats##table_options:options}}]
+[{it:{help gstats summarize##weight:weight}}]
+[{cmd:,} {opth by(varlist)} {it:{help gstats summarize##table_options:options}}]
 
 {p 8 17 2}
 {cmd:gstats {ul:tab}stat}
 {varlist}
 {ifin}
-[{it:{help gstats##weight:weight}}]
-[{cmd:,} {opth by(varlist)} {it:{help gstats##table_options:options}}]
+[{it:{help gstats summarize##weight:weight}}]
+[{cmd:,} {opth by(varlist)} {it:{help gstats summarize##table_options:options}}]
 
 {pstd}
 {cmd:gstats {ul:tab}stat} and {cmd:gstats {ul:sum}marize} are fast, by-able
@@ -42,7 +42,7 @@ statistics included by default in {opt summarize, detail}.
 {pstd}
 Note the {it:prefixes} {cmd:by}, {cmd:rolling}, {cmd:statsby} are
 {cmd:{it:not}} supported. To compute a table of statistics by a group
-use the option {opt by()}. With {op by()}, {opt gstats tab} is also
+use the option {opt by()}. With {opt by()}, {opt gstats tab} is also
 faster than {cmd:gcollapse}.
 
 {synoptset 23 tabbed}{...}
@@ -50,7 +50,7 @@ faster than {cmd:gcollapse}.
 {synopthdr}
 {synoptline}
 {syntab :Tabstat Options}
-{synopt:{opth by(varname)}}Group statistics by variable.
+{synopt:{opth by(varlist)}}Group statistics by variable.
 {p_end}
 {synopt:{cmdab:s:tatistics:(}{it:{help gstats_summarize##statname:stat}} [{it:...}]{cmd:)}}Report
 specified statistics; default for {opt tabstat} is count, sum, mean, sd, min, max.
@@ -70,7 +70,7 @@ Use format to display summary stats; default %9.0g
 {p_end}
 {synopt:{opt mean:only}}Calculate only the count, sum, mean, min, max.
 {p_end}
-{synopt:{opth by(varname)}}Group by variable; all stats are computed but output is in the style of tabstat.
+{synopt:{opth by(varlist)}}Group by variable; all stats are computed but output is in the style of tabstat.
 {p_end}
 {synopt:{opt sep:arator(#)}}Draw separator line after every {it:#} variables; default is {cmd:separator(5)}.
 {p_end}
@@ -207,6 +207,9 @@ The following data is stored {opt GstatsOutput}:
             real scalar anyvars
                 1: any by variables; 0: no by variables
 
+            real scalar anynum
+                1: any numeric by variables; 0: all string by variables
+
             real scalar anychar
                 1: any string by variables; 0: all numeric by variables
 
@@ -280,6 +283,7 @@ The following data is stored {opt GstatsOutput}:
 {synopt:{space 4}{it:statname}}Definition{p_end}
 {space 4}{synoptline}
 {synopt:{space 4}{opt me:an}} mean{p_end}
+{synopt:{space 4}{opt geomean}}geometric mean (missing if var has any negative values){p_end}
 {synopt:{space 4}{opt co:unt}} count of nonmissing observations{p_end}
 {synopt:{space 4}{opt n}} same as {cmd:count}{p_end}
 {synopt:{space 4}{opt nmiss:ing}} number of missing observations{p_end}
@@ -317,6 +321,9 @@ The following data is stored {opt GstatsOutput}:
 {synopt:{space 4}{opt sep:oisson}} standard error of the mean, Poisson ({cmd:sqrt(mean)}){p_end}
 {synopt:{space 4}{opt sk:ewness}} skewness{p_end}
 {synopt:{space 4}{opt k:urtosis}} kurtosis{p_end}
+{synopt:{space 4}{opt gini}}Gini coefficient (negative truncated to 0){p_end}
+{synopt:{space 4}{opt gini|dropneg}}Gini coefficient (negative values dropped){p_end}
+{synopt:{space 4}{opt gini|keepneg}}Gini coefficient (negative values kept; the user is responsible for the interpretation of the Gini in this case){p_end}
 {space 4}{synoptline}
 {p2colreset}{...}
 

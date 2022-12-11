@@ -1,4 +1,4 @@
-*! boottest 4.3.0 17 November 2022
+*! boottest 4.3.1 10 December 2022
 *! Copyright (C) 2015-22 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
@@ -8,7 +8,7 @@
 
 * This program is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 * GNU General Public License for more details.
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
@@ -73,7 +73,7 @@ matrix fold(matrix X) return(uppertriangle(X) + lowertriangle(X,0)')  // fold ma
 
 class boottestOLS {  // class for performing OLS
   real scalar y1y1, LIML, Fuller, kappa, isDGP, kZ, kX1, y1bary1bar
-  real colvector y1, invXXXy1par, X1y1, dbetadr, beta0, y1bar, Zperpy1, t1, deltadddot, X2y1, Xy1bar
+  real colvector y1, invXXXy1par, X1y1, dbetadr, beta0, y1bar, Zperpy1, t1, t1Y, deltadddot, X2y1, Xy1bar
   real rowvector y1Y2, Yendog, y1barU2ddot
   real matrix Z, ZZ, invZperpZperp, XZ, XX, PXZ, R1invR1R1, R1perp, Rpar, RperpX, RRpar, RparX, RparY, RR1invR1R1, YY, AR, XAR, invXXXZ, XinvXX, Rt1, invXX, Y2, X2, invH, Deltadddot, Y2bar, perpRperpX, ZperpZperp, ZperpX1, ZperpX2, ZperpY2, XY2, XU2ddot, X1X, X2X, U2ddotU2ddot, Y2Y2, Piddot, ZY2
   pointer(real colvector) scalar py1par, pXy1par
@@ -92,7 +92,7 @@ class boottestARubin extends boottestOLS {
 
 class boottestIVGMM extends boottestOLS {
   real matrix H_2SLS, V, ZR1ZR1, X2ZR1, ZR1Y2, X1ZR1, ZZR1, ZXinvXXXZ, H_2SLSmZZ, X2jk, Y2jk, X1jk, Zjk, ZR1jk
-  real colvector t1Y, Zy1, y1jk
+  real colvector Zy1, y1jk
   real rowvector twoy1ZR1
   real scalar y1pary1par
   pointer(real rowvector) scalar pZy1par
@@ -214,7 +214,7 @@ void boottestOLS::SetR(real matrix R1, | real matrix R) {
 
 // stuff that can be done before r set, and depends only on exogenous variables, which are fixed throughout all bootstrap methods
 void boottestOLS::InitVars(pointer(real matrix) scalar pRperp) {  // pRperp is for replication regression--no null imposed
-  real matrix H; pointer(real matrix) scalar _pwt; real scalar g; real colvector S
+  real matrix H, negR1AR1; pointer(real matrix) scalar _pwt; real scalar g; real colvector S
 
   u1ddot = smatrix(1 + parent->jk)  // for jackknife, need jk'd residuals but also non-jk'd residuals for original test stat
 
@@ -236,13 +236,13 @@ void boottestOLS::InitVars(pointer(real matrix) scalar pRperp) {  // pRperp is f
         invMg = Xg
       else
         XXg = XinvHg = smatrix(parent->Nstar)
-
+      negR1AR1 = - *pR1AR1
       for (g=parent->Nstar; g; g--) {
         S = parent->NClustVar? parent->infoBootData[g,1] \ parent->infoBootData[g,2] : g\g
         _pwt = parent->haswt? pXS(*parent->pwt,S) : parent->pwt
         Xg[g].M = *pXS(*parent->pX1,S)
         if (parent->granularjk) {  // for many small clusters, faster to compute jackknife errors vaia hc3-like formula
-          invMg[g].M = -(Xg[g].M * *pR1AR1 * Xg[g].M')
+          invMg[g].M = Xg[g].M * negR1AR1 * Xg[g].M'
           _diag(invMg[g].M, diagonal(invMg[g].M) :+ 1)
           invMg[g].M  = invsym(invMg[g].M)
         } else {
@@ -334,6 +334,7 @@ void boottestIVGMM::InitVars(|pointer(real matrix) scalar pRperp) {
     pZperp = pXB(*parent->pX1, RperpX)
     invZperpZperp = invsym(ZperpZperp = cross(*pZperp, *parent->pwt, *pZperp))
     pX1 = pX1perpRperpX = pXB(*parent->pX1, perpRperpX)
+
     ZperpX1  = cross(*pZperp, *parent->pwt, *pX1)
     ZperpX2  = cross(*pZperp, *parent->pwt, *parent->pX2)
     ZperpY2  = cross(*pZperp, *parent->pwt, *parent->pY2)
@@ -508,6 +509,8 @@ void boottestIVGMM::InitVars(|pointer(real matrix) scalar pRperp) {
     y1pary1par = y1y1 
     pXy1par    = &(X1y1 \ X2y1)
     py1par     = &y1
+    t1  = J(parent->kZ,1,0)
+    t1Y = J(parent->kY2,1,0)
   }
 
   V = invXX * XZ  // in 2SLS case, estimator is (V' XZ)^-1 * (V'Xy1). Also used in kZ-class and LIML robust VCV by Stata convention
@@ -525,7 +528,7 @@ void boottestIVGMM::InitVars(|pointer(real matrix) scalar pRperp) {
     Yendog = 1, colsum(RparY :!= 0)  // columns of Y = [y1par Zpar] that are endogenous (normally all)
     if (parent->robust & parent->bootstrapt) {  // for WRE replication regression, prepare for CRVE
       XinvXX = *pX12B(*pX1, X2, invXX); if (parent->haswt) XinvXX = XinvXX :* *parent->pwt
-      if (parent->jk & parent->WREnonARubin) {
+      if (((parent->granular & parent->Nw==1) | parent->jk) & parent->WREnonARubin) {
         PXZ = *pX12B(*pX1, X2, invXXXZ); if (parent->haswt) PXZ = PXZ :* *parent->pwt
       }
     }
@@ -567,14 +570,18 @@ void boottestIVGMM::Estimate(real scalar _jk, real colvector r1) {
   pragma unset vec; pragma unset val
 
   if (cols(R1invR1R1)) {
-    py1par = &(y1 - *pZR1 * r1)
+    t1 = R1invR1R1 * r1
+
+    if (isDGP)
+      py1par = &(y1 - *pZR1 * r1)
 
     y1pary1par = y1y1 - twoy1ZR1 * r1 + r1 ' ZR1ZR1 * r1
     py1parY2 = &(y1Y2  - r1 ' ZR1Y2)
     pZy1par  = &( Zy1 -  ZZR1 * r1)
     pXy1par  = &(X1y1 - X1ZR1 * r1 \ X2y1 - X2ZR1 * r1)
 
-    if (_jk)
+    if (_jk) {
+      t1Y = t1[|parent->kX1+1,.\.,.|]
       for (g=parent->Nstar; g; g--) {
         py1parjk = &(y1jk - ZR1jk * r1)
         (*py1pary1parg)[g]   = y1y1g[g]   - twoy1ZR1g[g].M * r1 + r1 ' ZR1ZR1g[g].M * r1
@@ -582,14 +589,13 @@ void boottestIVGMM::Estimate(real scalar _jk, real colvector r1) {
         (*pZy1parg)    [g].M =  Zy1g[g].M -  ZZR1g[g].M * r1
         (*pXy1parg)    [g].M = X1y1g[g].M - X1ZR1g[g].M * r1 \ X2y1g[g].M - X2ZR1g[g].M * r1
       }
+    }
   }
-
+    
   invXXXy1par = invXX * *pXy1par
   YY = y1pary1par, *pZy1par' \ *pZy1par, ZZ
 
   if (isDGP) {
-    t1  = R1invR1R1 * r1
-
     ZXinvXXXy1par = XZ ' invXXXy1par
 
     if (LIML) {
@@ -601,8 +607,7 @@ void boottestIVGMM::Estimate(real scalar _jk, real colvector r1) {
     }
     beta.M = invH * (kappa==1? ZXinvXXXy1par : kappa * (ZXinvXXXy1par - *pZy1par) + *pZy1par)
 
-    if (_jk){
-      t1Y = t1[|parent->kX1+1,.\.,.|]
+    if (_jk)
       for (g=parent->Nstar; g; g--) {
         ZXinvXXXy1par = XZg[g].M ' (invXXXy1parg = invXXg[g].M * (*pXy1parg)[g].M)
         YYg[g].M = (*py1pary1parg)[g], (*pZy1parg)[g].M' \ (*pZy1parg)[g].M, ZZg[g].M
@@ -618,7 +623,6 @@ void boottestIVGMM::Estimate(real scalar _jk, real colvector r1) {
 
         beta[g+1].M = invHg[g].M * (kappag==1? ZXinvXXXy1par : kappag * (ZXinvXXXy1par - (*pZy1parg)[g].M) + (*pZy1parg)[g].M)
       }
-    }
   } else if (parent->WREnonARubin)  // if not score bootstrap of IV/GMM...
     Rt1 = RR1invR1R1 * r1
 }
@@ -659,7 +663,7 @@ void boottestOLS::MakeResiduals(real scalar _jk) {
 
 void boottestIVGMM::MakeResiduals(real scalar _jk) {
   pragma unused _jk
-  real matrix Xu, delta, deltaX, deltaY, tmp; real colvector negXuinvuu, _beta, S; real scalar uu; real scalar g
+  real matrix Xu, delta, deltaX, deltaY, tmp; real colvector negXuinvuu, _beta, S, _t1Y; real scalar uu; real scalar g
   
   if (parent->jk)
     for (g=parent->Nstar; g; g--) {
@@ -676,11 +680,11 @@ void boottestIVGMM::MakeResiduals(real scalar _jk) {
     negXuinvuu = Xu / -uu
     Piddot = invsym(XX + negXuinvuu * Xu') * (negXuinvuu * (*py1parY2 - beta.M ' ZY2) + XY2)
     Y2bar = *pX12B(*pX1, X2, Piddot)
-
     U2ddotU2ddot = Y2Y2 - Piddot'XY2 - XY2'Piddot + Piddot'XX*Piddot
-    delta = Rpar * beta.M + t1
+
+    delta = Rpar * beta.M + t1 - parent->Repl.t1
     deltaX = *pXS(delta, .\parent->kX1)
-    deltaY = delta[|parent->kX1+1,.\.,.|]
+    deltaY = *pXS(delta, parent->kX1+1\.)
     y1bar = *pX1 * (tmp = perpRperpX'deltaX) + Y2bar * deltaY
     deltadddot = Piddot * deltaY; if (kX1) deltadddot[|.\kX1|] = deltadddot[|.\kX1|] + tmp  // (X_∥'X_∥)^-1 * X_∥'y1bar
     Xy1bar = XX * deltadddot
@@ -688,7 +692,8 @@ void boottestIVGMM::MakeResiduals(real scalar _jk) {
     XU2ddot = XY2 - XX * Piddot
     y1barU2ddot = deltadddot'XU2ddot
 
-    if (parent->jk)
+    if (parent->jk) {
+      _t1Y = t1Y - parent->Repl.t1Y
       for (g=parent->Nstar; g; g--) {
         S = parent->NClustVar? parent->infoBootData[g,1] \ parent->infoBootData[g,2] : g\g
         _beta = 1 \ -beta[1+g].M
@@ -697,9 +702,9 @@ void boottestIVGMM::MakeResiduals(real scalar _jk) {
         negXuinvuu = Xu / -uu
         Piddot = invsym(XXg[g].M + negXuinvuu * Xu') * (negXuinvuu * ((*py1parY2g)[g].M - beta[1+g].M ' ZY2g[g].M) + XY2g[g].M)
         U2ddot.M [|S,(.\.)|] = tmp = *pXS(Y2jk,S) - *pX12B(*pXS(X1jk,S), *pXS(X2jk,S), Piddot)
-        u1dddot.M[|S      |] = u1ddot.M[|S|] + tmp * (RparY * beta[1+g].M + t1Y)
+        u1dddot.M[|S      |] = u1ddot.M[|S|] + tmp * (RparY * beta[1+g].M + _t1Y)
       }
-    else {
+    } else {
       U2ddot.M = Y2 - Y2bar
       u1dddot.M = u1ddot.M + U2ddot.M * deltaY
     }
@@ -757,7 +762,7 @@ void boottest::new() {
   pIDBootData = pIDBootAll = &.
 }
 
-// important to call this when done: break loops in data structure topology to enable garbage collection
+// break loops in data structure topology to enable garbage collection
 void boottest::close() {
   DGP.parent = Repl.parent = NULL
 }
@@ -1048,10 +1053,12 @@ void boottest::Init() {  // for efficiency when varying r repeatedly to make CI,
   if (kX2 == 0) pX2 = &J(Nobs,0,0)
   if ((kY2 = cols(*pY2)) == 0) pY2 = &J(Nobs,0,0)
   kZ = kX1 + kY2
+
   if (LIML & kX2 == kY2) {  // exactly identified LIML = 2SLS
     kappa = 1
     LIML = 0
   }
+
   if ((REst = rows(*pR1)) == 0) {  // base model contains no restrictions?
     pR1 = &J(0,kZ,0)
     pr1 = &J(0,1 ,0)
@@ -1154,8 +1161,8 @@ void boottest::Init() {  // for efficiency when varying r repeatedly to make CI,
     purerobust = robust & (scoreBS | subcluster)==0 & Nstar==Nobs  // do we ever error- *and* bootstrap-cluster by individual?
     granular   = WREnonARubin? 2*Nobs*B*(2*Nstar+1) < Nstar*(Nstar*Nobs+Clust.N*B*(Nstar+1)) :
                                !jk & robust & scoreBS==0 & (purerobust | (Clust.N+Nstar)*kZ*B + (Clust.N-Nstar)*B + kZ*B < Clust.N*kZ*kZ + Nobs*kZ + Clust.N * Nstar*kZ + Clust.N*Nstar)
-    if (jk)
-      granularjk = kX1^3 + Nstar * (Nobs/Nstar*kX1^2 + (Nobs/Nstar)^2*kX1 + (Nobs/Nstar)^2 + (Nobs/Nstar)^3) < Nstar * (kX1^2*Nobs/Nstar + kX2^3 + 2*kX1*(kX1 + Nobs/Nstar))
+    if (jk & !WREnonARubin)
+      granularjk = kZ^3 + Nstar * (Nobs/Nstar*kZ^2 + (Nobs/Nstar)^2*kZ + (Nobs/Nstar)^2 + (Nobs/Nstar)^3) < Nstar * (kZ^2*Nobs/Nstar + kZ^3 + 2*kZ*(kZ + Nobs/Nstar))
 
     if (robust & purerobust==0) {
       if (subcluster | granular)
@@ -1176,7 +1183,6 @@ void boottest::Init() {  // for efficiency when varying r repeatedly to make CI,
         IDCTCapstar[i].M = (*pIDCapData)[infoCTCapstar[i].M[,1]]       // ID numbers of those groupings w.r.t. the all-error-clusterings grouping
       }
     }
-
   } else
     minN = rows(infoBootData)
  
@@ -1198,7 +1204,7 @@ void boottest::Init() {  // for efficiency when varying r repeatedly to make CI,
 
         j = i
         
-        if (FEboot) {  // are all of this FE's obs in same bootstrapping cluster? (But no need to check if B=0 for then CT_WE in 2nd term of (62) orthogonal to v = col of 1's)
+        if (!WREnonARubin & FEboot) {  // are all of this FE's obs in same bootstrapping cluster? (But no need to check if B=0 for then CT_WE in 2nd term of (62) orthogonal to v = col of 1's)
           tmp = (*pID)[FEs[i_FE].is, 1..NBootClustVar]
           FEboot = all(tmp :== tmp[1,])
         }
@@ -1294,7 +1300,7 @@ void boottest::Init() {  // for efficiency when varying r repeatedly to make CI,
       Repl.Estimate(0, *pr1)
 
       DGP = boottestIVGMM(); DGP.parent = &this
-      DGP.LIML = kX2 != kY2 + null
+      DGP.LIML = 1
       if (null)
         DGP.SetR(*pR1 \ *pR, J(0,kZ,0))  // DGP constraints: model constraints + imposed null
       else
@@ -1509,11 +1515,10 @@ real matrix boottest::HessianFixedkappa(real rowvector ind1, real scalar ind2, r
   return(_HessianFixedkappa(ind1, ind2, kappa, _jk))
 }
 real rowvector boottest::_HessianFixedkappa(real scalar ind1, real scalar ind2, real scalar kappa, real scalar _jk) {
-  real matrix retval, T2; pointer (real colvector) scalar pT1L, pT1R
+  real matrix retval, _retval; pointer (real colvector) scalar pT1L, pT1R
 
   if (kappa) {
     pT1L = pcol(XYbar,ind1+1)  // X_∥^' Y_(∥i)
-
     if (Repl.Yendog[ind1+1])
       pT1L = &(*pT1L :+ SstarUX[ind1+1].M * v)
 
@@ -1524,13 +1529,17 @@ real rowvector boottest::_HessianFixedkappa(real scalar ind1, real scalar ind2, 
   }
 
   if (kappa != 1) {
-    T2 = SstarUZperpinvZperpZperp[ind1+1].M ' SstarUZperp[ind2+1].M  // quadratic term
-    _diag(T2, diagonal(T2) - (ind1 <= ind2? SstarUU[ind2+1, ind1+1].M : SstarUU[ind1+1, ind2+1].M))  // minus diagonal crosstab
-    if (NFE)
-      T2 = T2 + CTFEU[ind1+1].M ' (invFEwt :* CTFEU[ind2+1].M)
+    _retval = YbarYbar[ind1+1,ind2+1] :+ 
+           (*pcol(SstarUYbar[ind2+1].M, ind1+1) + *pcol(SstarUYbar[ind1+1].M, ind2+1)) ' v + 
+           colsum(v :* (ind1 <= ind2? SstarUU[ind2+1, ind1+1].M : SstarUU[ind1+1, ind2+1].M) :* v)
 
-    retval = kappa? kappa :* retval  + (1 - kappa) :* (YbarYbar[ind1+1,ind2+1] :+ (*pcol(SstarUYbar[ind2+1].M, ind1+1) + *pcol(SstarUYbar[ind1+1].M, ind2+1)) ' (v:+1) - colsum(v :* T2 * v)) :
-                                                       YbarYbar[ind1+1,ind2+1] :+ (*pcol(SstarUYbar[ind2+1].M, ind1+1) + *pcol(SstarUYbar[ind1+1].M, ind2+1)) ' (v:+1) - colsum(v :* T2 * v)
+    if (Repl.Yendog[ind1+1] & Repl.Yendog[ind2+1])
+      _retval = _retval - colsum((SstarUZperpinvZperpZperp[ind1+1].M * v) :* (SstarUZperp[ind2+1].M * v))
+
+    if (NFE)
+      _retval = _retval - colsum(CTFEU[ind1+1].M * v :* (invFEwt :* CTFEU[ind2+1].M) * v)
+
+    retval = kappa? kappa*retval:+(1-kappa)*_retval : _retval
   }
 
   if (_jk) {
@@ -1543,7 +1552,7 @@ real rowvector boottest::_HessianFixedkappa(real scalar ind1, real scalar ind2, 
   }
   return(cols(retval)>1? retval : J(1,cols(v),retval))  // if both vars exogenous, term is same for all b; this duplication is a bit inefficient, but only arises when exog vars involved in null
 }
-
+ 
 
 // Workhorse for WRE CRVE sandwich filling
 // Given column index ind1 and a matrix betas of all the bootstrap estimates, return all bootstrap realizations of P_X * Z[,ind1]_g ' u\hat_1g^*
@@ -1554,38 +1563,53 @@ pointer(real matrix) scalar boottest::Filling(real scalar ind1, real matrix beta
   pragma unset retval
 
   if (granular) {  // create pieces of each N x B matrix one at a time rather than whole thing at once
-    retval = J(Clust.N, cols(v), 0)
-    SstarUXv = SstarUX[ind1+1].M * v
-    for (ind2=0; ind2<=Repl.kZ; ind2++) {
-      if (ind2) {
+    if (Nw == 1) {  // create or avoid NxB matrix?
+      pPXYstar = pcol(PXZbar, ind1)
+      if (Repl.Yendog[ind1+1])
+        pPXYstar = &(*pPXYstar :+ SstarUPX[ind1+1].M * v)
+
+      retval = *_panelsum(*pPXYstar :* (DGP.y1bar :- SstarUMZperp.M * v), *pinfoCapData)
+
+      for (ind2=Repl.kZ;ind2;ind2--) {
         _beta = betas[ind2,]
-        pbetav = &(v :* _beta)
-      } else
-        pbetav = &v
-
-      SstarUZperpinvZperpZperp_v = SstarUZperpinvZperpZperp[ind2+1].M * *pbetav
-
-      if (NFE)
-        CTFEUv = invFEwt :* (CTFEU[ind2+1].M * *pbetav)
-
-      for (i=Clust.N;i;i--) {
-        S = (*pinfoCapData)[i,]'
-        pPXYstar = &PXZbar[|S,(ind1\ind1)|]
-        if (Repl.Yendog[ind1+1])
-          pPXYstar = &(*pPXYstar :+ *pXS(Repl.XinvXX,S) * SstarUXv)
-        if (Repl.Yendog[ind2+1]) {
-          SstarUMZperp_ind2_i = *pXS(*Repl.pZperp,S) * SstarUZperpinvZperpZperp_v - (ind2? (*pU2parddot)[|S, (ind2\ind2)|] :* (*pbetav)[*pXS(*pIDBootData,S),] :
-                                                                                           DGP.u1dddot.M[|S             |] :*        v [*pXS(*pIDBootData,S),])
-
-          if (NFE)
-            SstarUMZperp_ind2_i = SstarUMZperp_ind2_i + CTFEUv[(*pFEID)[|S|],]  // CT_(*,FE) (U ̈_(∥j) ) (S_FE S_FE^' )^(-1) S_FE
-
-          if (ind2)
-            retval[i,] = retval[i,] - colsum(*pPXYstar :* (Zbar[|S,(ind2\ind2)|] * _beta :- SstarUMZperp_ind2_i))
-          else
-            retval[i,] =              colsum(*pPXYstar :* (DGP.y1bar[|S|]                :- SstarUMZperp_ind2_i))
+        retval = retval - *_panelsum(*pPXYstar :* (Repl.Yendog[ind2+1]? *pcol(Zbar,ind2) * _beta :- SstarUMZperp[ind2+1].M * (v :* _beta) :
+                                                                       *pcol(Zbar,ind2) * _beta                                           ), *pinfoCapData)
+      }
+    } else { // create pieces of each N x B matrix one at a time rather than whole thing at once--slower, but less memory-intensive
+      retval = J(Clust.N, cols(v), 0)
+      SstarUXv = SstarUX[ind1+1].M * v
+      for (ind2=0; ind2<=Repl.kZ; ind2++) {
+        if (ind2) {
+          _beta = betas[ind2,]
+          pbetav = &(v :* _beta)
         } else
-            retval[i,] = retval[i,] - colsum(*pPXYstar :* (Zbar[|S,(ind2\ind2)|] * _beta))
+          pbetav = &v
+
+        if (Repl.Yendog[ind2+1])
+          SstarUZperpinvZperpZperp_v = SstarUZperpinvZperpZperp[ind2+1].M * *pbetav
+
+        if (NFE)
+          CTFEUv = invFEwt :* (CTFEU[ind2+1].M * *pbetav)
+
+        for (i=Clust.N;i;i--) {
+          S = (*pinfoCapData)[i,]'
+          pPXYstar = &PXZbar[|S,(ind1\ind1)|]
+          if (Repl.Yendog[ind1+1])
+            pPXYstar = &(*pPXYstar :+ *pXS(Repl.XinvXX,S) * SstarUXv)
+          if (Repl.Yendog[ind2+1]) {
+            SstarUMZperp_ind2_i = *pXS(*Repl.pZperp,S) * SstarUZperpinvZperpZperp_v - (ind2? (*pU2parddot)[|S, (ind2\ind2)|] :* (*pbetav)[*pXS(*pIDBootData,S),] :
+                                                                                             DGP.u1dddot.M[|S             |] :*        v [*pXS(*pIDBootData,S),])
+
+            if (NFE)
+              SstarUMZperp_ind2_i = SstarUMZperp_ind2_i + CTFEUv[(*pFEID)[|S|],]  // CT_(*,FE) (U ̈_(∥j) ) (S_FE S_FE^' )^(-1) S_FE
+
+            if (ind2)
+              retval[i,] = retval[i,] - colsum(*pPXYstar :* (Zbar[|S,(ind2\ind2)|] * _beta :- SstarUMZperp_ind2_i))
+            else
+              retval[i,] =              colsum(*pPXYstar :* (DGP.y1bar[|S|]                :- SstarUMZperp_ind2_i))
+          } else
+              retval[i,] = retval[i,] - colsum(*pPXYstar :* (Zbar[|S,(ind2\ind2)|] * _beta))
+        }
       }
     }
   } else {  // coarse error clustering
@@ -1690,12 +1714,12 @@ void boottest::PrepWRE() {
     SstarUX                   [i+1].M = *_panelsum2(*Repl.pX1, Repl.X2, *puwt, infoBootData)'
     SstarUXinvXX              [i+1].M = Repl.invXX * SstarUX[i+1].M
     if (kappa!=1 | LIML | bootstrapt) {
-      SstarUZperp             [i+1].M = *_panelsum(*Repl.pZperp, *puwt, infoBootData)'
-      SstarUZperpinvZperpZperp[i+1].M = Repl.invZperpZperp * SstarUZperp[i+1].M
+      if (Repl.Yendog[i+1])
+        SstarUZperpinvZperpZperp[i+1].M = Repl.invZperpZperp * (SstarUZperp[i+1].M = *_panelsum(*Repl.pZperp, *puwt, infoBootData)')
+
       if (NFE)
         CTFEU[i+1].M = crosstabFE(*puwt, infoBootData)
     }
-
 
     if (kappa!=1 | LIML | robust==0) {
       SstarUYbar[i+1].M = *_panelsum2(DGP.y1bar, Zbar, *puwt, infoBootData)
@@ -1703,12 +1727,8 @@ void boottest::PrepWRE() {
         SstarUU[i+1,j+1].M = *_panelsum(j? *pcol(*pU2parddot,j) : DGP.u1dddot.M, *puwt, infoBootData)
     }
 
-    if (robust & bootstrapt & granular==0 & Repl.Yendog[i+1]) {
-      if (!(NClustVar == NBootClustVar & !subcluster))  // Within each bootstrap cluster, groupwise sum by all-error-cluster-intersections of u:*X and u:*Zperp (and times invXX or invZperpZperp)
-        for (g=Nstar;g;g--)
-          SCTcapUXinvXX[i+1,g].M = *_panelsum(Repl.XinvXX, *pu, infoCTCapstar[g].M)
+    if (robust & bootstrapt & (granular==0 | Nw==1) & Repl.Yendog[i+1]) {
       SstarUPX[i+1].M = Repl.XinvXX * SstarUX[i+1].M
-
       SstarUMZperp[i+1].M = *Repl.pZperp * SstarUZperpinvZperpZperp[i+1].M
       if (Nobs == Nstar)  // subtract "crosstab" of observation by cap-group of u
         _diag(SstarUMZperp[i+1].M, diagonal(SstarUMZperp[i+1].M) - (i? *pcol(*pU2parddot,i) : DGP.u1dddot.M))  // case: bootstrapping by observation
@@ -1723,6 +1743,10 @@ void boottest::PrepWRE() {
       if (NFE)
         SstarUMZperp[i+1].M = SstarUMZperp[i+1].M + (invFEwt :* CTFEU[i+1].M)[*pFEID,]  // CT_(*,FE) (U ̈_(∥j) ) (S_FE S_FE^' )^(-1) S_FE
     }
+
+    if (robust & bootstrapt & granular==0 & Repl.Yendog[i+1] & !(NClustVar == NBootClustVar & !subcluster))  // Within each bootstrap cluster, groupwise sum by all-error-cluster-intersections of u:*X and u:*Zperp (and times invXX or invZperpZperp)
+      for (g=Nstar;g;g--)
+        SCTcapUXinvXX[i+1,g].M = *_panelsum(Repl.XinvXX, *pu, infoCTCapstar[g].M)
   }
 }
 
@@ -1777,7 +1801,7 @@ void boottest::MakeWREStats(real scalar w) {
         denom.M = (HessianFixedkappa(0,0,0, _jk) - 2 * betas :* HessianFixedkappa(0, 1, 0, _jk) + betas:*betas :* HessianFixedkappa(1, 1, 0, _jk)) / _Nobs :/ As  // classical error variance
 
       storeWtGrpResults(pDist, w, sqrt? numerw:/sqrt(denom.M) : numerw :* numerw :/ denom.M)
-      denom.M = Repl.RRpar * Repl.RRpar * denom.M[1]
+      denom.M = Repl.RRpar * Repl.RRpar * denom.M[1]  // not a bug
     }
 
   } else {  // WRE bootstrap for more than 1 coefficeint in bootstrap regression
@@ -2073,7 +2097,7 @@ void boottest::MakeNumerAndJ(real scalar w, real scalar _jk, | real colvector r)
           } else {
             _v = v[*pIDBootAll,]
             for (d=df;d;d--)
-              (*pJcd)[1,d].M = *_panelsum(*_panelsum(DGP.u1ddot, pM->WXAR[d].M, *pinfoAllData) :* _v, infoErrAll) - *_panelsum2(*pX1, *pX2, pM->WXAR[d].M, *pinfoCapData) * betadev
+              (*pJcd)[1,d].M = *_panelsum(*_panelsum(DGP.u1ddot[1+_jk].M, pM->WXAR[d].M, *pinfoAllData) :* _v, infoErrAll) - *_panelsum2(*pX1, *pX2, pM->WXAR[d].M, *pinfoCapData) * betadev
           }
         }
       for (c=NErrClustCombs; c>granular; c--)
