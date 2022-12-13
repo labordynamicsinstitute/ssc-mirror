@@ -1,0 +1,26 @@
+d 'QQPLOTG': module to draw quantile-quantile plots, generalized to allow groups and plotting difference vs mean
+d
+d      qqplotg plots the quantiles of one distribution against the
+d quantiles of another distribution. It is a   generalization of
+d official command qqplot.  There are two syntaxes. In the first,
+d emulating qqplot,    the two distributions are given by the
+d values of two variables, varname1 and varname2.  In the   
+d second, the distributions are given by the values of varname for
+d two distinct groups of groupvar.    Optionally, the distributions
+d may be plotted as differences between corresponding quantiles   
+d versus their means. 
+d
+d KW: graphics
+d KW: distributions
+d KW: quantiles
+d KW: qqplot 
+d
+d Requires: Stata version 8.2
+d
+d Distribution-Date: 20221212
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f qqplotg.ado
+f qqplotg.sthlp

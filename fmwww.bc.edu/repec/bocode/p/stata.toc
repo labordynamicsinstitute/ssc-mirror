@@ -138,6 +138,7 @@ p prepar module to write code and data file needed to process variables in PARSC
 p preparation module to facilitate a one-by-one observation of varlist to make it easier to control data and labels
 p primes module to generate prime numbers
 p printgph module to execute command for each matching file
+p prismscore module to calculate PRISM III and PRISM IV pediatric risk of mortality scores
 p probcalc module to calculate probabilities for Binomial, Poisson, and Normal Distributions
 p probexog-tobexog modules to test exogeneity in probit/tobit 
 p probgenextval module to Estimate Binary Generalized Extreme Value (GEV) Models

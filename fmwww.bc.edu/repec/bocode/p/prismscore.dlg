@@ -1,0 +1,370 @@
+/* 
+  prismscore.dlg
+*/  
+
+VERSION 17
+
+		INCLUDE 				_std_mlarge	
+		POSITION				. 		. 		480 	560
+		DIALOG 		main, 		tabtitle("Main")							 ///
+								label("prismscore 1.1 - Calculate PRISM Scores")
+			
+********************************************************************************
+
+BEGIN
+
+		GROUPBOX	main			20		10		210		160,			 ///
+								label("PRISM III")								
+		TEXT		tx_neuro		+20		+20		150		.,				 ///
+								label("Neurologic Score Variable:")				
+		EDIT		ed_neuro		@		+20		150		.,				 ///
+								error("Neurologic Score Variable")				
+		TEXT		tx_nonneuro		@		+20		180		.,				 ///
+								label("Non-Neurologic Score Variable:")			
+		EDIT		ed_nonneuro		@		+20		150		.,				 ///
+								error("Non-Neurologic Score Variable")			
+		TEXT		tx_total		@		+20		150		.,				 ///
+								label("PRISM III Score Variable:")				
+		EDIT		ed_total		@		+20		150		.,				 ///
+								error("PRISM III Score Variable")				
+		GROUPBOX	gb_mainiv		+210	10		210		160,			 ///
+								label("PRISM IV")								
+		CHECKBOX	ck_privopt		+20		+20		180		.,				 ///
+								label("Calculate PRISM IV Score")			 ///
+								onclickon(program prismshow)				 ///
+								onclickoff(program prismhide) 				 ///
+								option( prismiv)						
+		TEXT		tx_privvar		@		+40		150		.,				 ///
+								label("PRISM IV Score Variable:")				
+		EDIT		ed_privvar		@		+20		150		.,				 ///
+								error("PRISM IV Score Variable")
+
+END
+
+********************************************************************************
+
+		DIALOG 		variable, 	tabtitle("Variables")						 ///
+								label("prismscore - Calculate PRISM Scores") 
+BEGIN
+*------------------------------------------------------------------------------*
+		GROUPBOX	gb_age			20		10		440		80,				 ///
+								label("Age - Coded Age or both DoB and DoA")
+								
+		TEXT		tx_age			40		+20		120		.,				 ///
+								label("Coded Age:")
+		VARNAME		vn_age			40		+20		120		.,				 ///
+								error("Coded Age")
+		TEXT		tx_dob			180		30		120		.,				 ///
+								label("Date of Birth:")
+		VARNAME		vn_dob			180		+20		120		.,				 ///
+								error("Date of Birth")
+		TEXT		tx_doa			320		30		120		.,				 ///
+								label("Date of Admission:")
+		VARNAME		vn_doa			320		+20		120		.,				 ///
+								error("Date of Admission")
+*------------------------------------------------------------------------------*
+		GROUPBOX	gb_vit			20		90		440		120,			 ///
+								label("Vitals")
+		TEXT		tx_sbp			40		+20		120		.,				 ///
+								label("SBP:")
+		VARNAME		vn_sbp			40		+20		120		.,				 ///
+								error("SBP")
+		TEXT		tx_hr			40		+20		120		.,				 ///
+								label("HR:")
+		VARNAME		vn_hr			40		+20		120		.,				 ///
+								error("HR")
+		TEXT		tx_pup			180		110		120		.,				 ///
+							label("Pupils:")
+		VARNAME		vn_pup			180		+20		120		.,				 ///
+							error("Pupils")
+		TEXT		tx_gcs			180		+20		120		.,				 ///
+							label("GCS:")
+		VARNAME		vn_gcs			180		+20		120		.,				 ///
+							error("GCS")
+		TEXT		tx_tmph			320		110		120		.,				 ///
+							label("Temperature High:")
+		VARNAME		vn_tmph			320		+20		120		.,				 ///
+							error("Temperature High")
+		TEXT		tx_tmpl			320		+20		160		.,				 ///
+							label("Temperature Low: (opt)")
+		VARNAME		vn_tmpl			320		+20		120		.,				 ///
+							error("Temperature Low")
+*------------------------------------------------------------------------------*
+		GROUPBOX	gb_ph			20		210		440		120,			 ///
+							label("Blood Gas Labs")
+		TEXT		tx_phl			40		+20		120		.,				 ///
+							label("pH (low):")
+		VARNAME		vn_phl			40		+20		120		.,				 ///
+							error("pH (low)")
+		TEXT		tx_phh			40		+20		120		.,				 ///
+							label("pH high: (opt)")
+		VARNAME		vn_phh			40		+20		120		.,				 ///
+							error("pH high")
+		TEXT		tx_bcl			180		230		120		.,				 ///
+							label("Bicarbonate (low):")
+		VARNAME		vn_bcl			180		+20		120		.,				 ///
+							error("Bicarbonate (low)")
+		TEXT		tx_bch			180		+20		160		.,				 ///
+							label("Bicarbonate high: (opt)")
+		VARNAME		vn_bch			180		+20		120		.,				 ///
+							error("Bicarbonate high")
+		TEXT		tx_pco			320		230		120		.,				 ///
+							label("PCO2 high:")
+		VARNAME		vn_pco			320		+20		120		.,				 ///
+							error("PCO2")
+		TEXT		tx_pao			320		+20		120		.,				 ///
+							label("PaO2 low:")
+		VARNAME		vn_pao			320		+20		120		.,				 ///
+							error("PaO2")
+*------------------------------------------------------------------------------*
+		GROUPBOX	gb_chem			20		330		290		200,			 ///
+							label("Chemistry and Hematology Labs")
+		TEXT		tx_glu			40		+20		120		.,				 ///
+							label("Glucose High:")
+		VARNAME		vn_glu			40		+20		120		.,				 ///
+							error("Glucose")
+		TEXT		tx_pot			40		+20		120		.,				 ///
+							label("Potassium High:")
+		VARNAME		vn_pot			40		+20		120		.,				 ///
+							error("Potassium")
+		TEXT		tx_cr			180		350		120		.,				 ///
+							label("Creatinine High:")
+		VARNAME		vn_cr			180		+20		120		.,				 ///
+							error("Creatinine")
+		TEXT		tx_bun			180		+20		120		.,				 ///
+							label("BUN high:")
+		VARNAME		vn_bun			180		+20		120		.,				 ///
+							error("BUN")
+		TEXT		tx_wbc			40		430		120		.,				 ///
+							label("WBC Count:")
+		VARNAME		vn_wbc			40		+20		120		.,				 ///
+							error("WBC")
+		TEXT		tx_plt			40		+20		120		.,				 ///
+							label("Platelet Count:")
+		VARNAME		vn_plt			40		+20		120		.,				 ///
+							error("Platelet")
+		TEXT		tx_pt			180		430		120		.,				 ///
+							label("PT High:")
+		VARNAME		vn_pt			180		+20		120		.,				 ///
+							error("PT")
+		TEXT		tx_ptt			180		+20		120		.,				 ///
+							label("PTT High:")
+		VARNAME		vn_ptt			180		+20		120		.,				 ///
+							error("PTT")
+*------------------------------------------------------------------------------*
+		GROUPBOX 	gb_prism4		310		330		150		200,			 ///
+							label("PRISM IV Variables")
+		TEXT		tx_adm			320		+20		120		.,				 ///
+							label("Admit Source:")
+		VARNAME		vn_adm			320		+20		120		.,				 ///
+							error("Admit Source")
+		TEXT		tx_cpr			320		+20		120		.,				 ///
+							label("CPR:")
+		VARNAME		vn_cpr			320		+20		120		.,				 ///
+							error("CPR")
+		TEXT		tx_rsk			320		+20		120		.,				 ///
+							label("Risk:")
+		VARNAME		vn_rsk			320		+20		120		.,				 ///
+							error("Risk")
+		TEXT		tx_can			320		+20		120		.,				 ///
+							label("Cancer:")
+		VARNAME		vn_can			320		+20		120		.,				 ///
+							error("Cancer")
+*------------------------------------------------------------------------------*
+END
+
+********************************************************************************
+
+DIALOG options, label("prismscore - Calculate PRISM Scores") tabtitle("Options")
+BEGIN
+*------------------------------------------------------------------------------*
+		GROUPBOX	gb_wbc			20		10		140		70,				 ///
+							label("WBC Units")
+		RADIO		rb_wbc_1		30		+20		120		.,				 ///
+							first label("cells / mm3")
+		RADIO		rb_wbc_2		30		+20		120		.,				 ///
+							last label("1000 cells / mm3") option(wbcunit(1000))
+*------------------------------------------------------------------------------*							
+		GROUPBOX	gb_plt			170		10		140		70,				 ///
+							label("Platelet Units")
+		RADIO		rb_plt_1		+10		+20		120		.,				 ///
+							first label("cells / mm3") 
+		RADIO		rb_plt_2		@		+20		120		.,				 ///
+							last label("1000 cells / mm3") option(pltunit(1000))
+*------------------------------------------------------------------------------*
+		GROUPBOX	gb_si			320		10		140		70,				 ///
+							label("Chemistry Lab Units")
+		RADIO		rb_si_1			+10		+20		120		.,				 ///
+							first label("Imperial")
+		RADIO		rb_si_2			@		+20		120		.,				 ///
+							last label("SI") option(si )
+*------------------------------------------------------------------------------*							
+		GROUPBOX	gb_temp			20		90		140		70,				 ///
+							label("Temperature Units")
+		RADIO		rb_temp_1		30		+20		120		.,				 ///
+							first label("Celsius")
+		RADIO		rb_temp_2		30		+20		120		.,				 ///
+							last label("Fahrenheit") option(fahrenheit)
+*------------------------------------------------------------------------------*							
+		GROUPBOX	gb_opt			20		180		440		200,			 ///
+							label("Options")
+		CHECKBOX	ck_trac			30		+20		120		.,				 ///
+							label("Trace")  option(trace)
+		CHECKBOX	ck_imp			30		+30		220		.,				 ///
+							label("No Imputation")  option(noimputation )
+		CHECKBOX	ck_val			30		+30		220		.,				 ///
+							label("No Validation")  option(novalidation )
+		TEXT		tx_suppr		30		+30		220		.,				 ///
+							label("Suppress Errors")
+		RADIO		rb_suppr_1		30		+20		160		.,				 ///
+							first label ("No suppression")
+		RADIO		rb_suppr_2		30		+20		160		.,				 ///
+							label ("Suppress non-critical errors")  		 ///
+							option(suppress )
+		RADIO		rb_suppr_3		30		+20		160		.,				 ///
+							last label ("Suppress all errors") 				 ///
+							option(suppressall )
+*------------------------------------------------------------------------------*
+END
+
+********************************************************************************
+
+OK	ok,		label("OK")
+CANCEL	cncel,	label("Cancel")
+SUBMIT	sbmit,	label("Submit")
+HELP	hlp,	view("help prismscore")
+RESET	rest
+COPY	cpy
+
+********************************************************************************
+
+PROGRAM prismshow
+BEGIN
+	call main.ed_privvar.enable
+	call variable.vn_adm.enable
+	call variable.vn_cpr.enable
+	call variable.vn_can.enable
+	call variable.vn_rsk.enable
+END
+
+PROGRAM prismhide
+BEGIN
+	call main.ed_privvar.disable
+	call variable.vn_adm.disable
+	call variable.vn_cpr.disable
+	call variable.vn_can.disable
+	call variable.vn_rsk.disable
+
+END
+
+INCLUDE ifin
+
+PROGRAM command
+BEGIN
+	put "prismscore"
+	if main.ck_privopt.iseq(0) {
+		require main.ed_neuro
+		require main.ed_nonneuro
+		require main.ed_total
+	}
+	if main.ck_privopt.iseq(1) {
+		require main.ed_privvar
+		require variable.vn_adm
+		require variable.vn_cpr
+		require variable.vn_can
+		require variable.vn_rsk
+	}
+	if !variable.vn_dob.isvarname() | !variable.vn_doa.isvarname() {
+		require variable.vn_age
+	}
+	if !variable.vn_age.isvarname(){
+		require variable.vn_dob
+		require variable.vn_doa
+	}
+	require variable.vn_sbp
+	require variable.vn_hr
+	require variable.vn_tmph
+	require variable.vn_gcs
+	require variable.vn_pup
+	require variable.vn_phl
+	require variable.vn_bcl
+	require variable.vn_pco
+	require variable.vn_pao
+	require variable.vn_glu
+	require variable.vn_pot
+	require variable.vn_cr
+	require variable.vn_bun
+	require variable.vn_wbc
+	require variable.vn_plt
+	if variable.vn_pt.isdefault(){
+		require variable.vn_ptt
+	}
+	if variable.vn_ptt.isdefault(){
+		require variable.ptt
+	}
+	put " " main.ed_neuro
+	put " " main.ed_nonneuro
+	put " " main.ed_total
+	put " " main.ed_privvar
+	INCLUDE _ifin_pr
+	put ", "
+	if !variable.vn_age.isdefault(){
+		put "age(" variable.vn_age ") "
+	}
+	if !variable.vn_dob.isdefault(){
+		put "dob(" variable.vn_dob ") "
+	}
+	if !variable.vn_doa.isdefault(){
+		put "doa(" variable.vn_doa ") "
+	}
+	put "sbp(" variable.vn_sbp ") "
+	put "hr(" variable.vn_hr ") "
+	put "temp(" variable.vn_tmph ") "
+	if !variable.vn_tmpl.isdefault(){
+		put "templow(" variable.vn_tmpl ") "
+	}
+	put "gcs(" variable.vn_gcs ") "
+	put "pupils(" variable.vn_pup ") "
+	put "ph(" variable.vn_phl ") "
+	if !variable.vn_phh.isdefault(){
+		put "phhigh(" variable.vn_phh ") "
+	}
+	put "bicarb(" variable.vn_bcl ") "
+	if !variable.vn_bch.isdefault(){
+		put "bicarbhigh(" variable.vn_bch ") "
+	}
+	put "pco2(" variable.vn_pco ") "
+	put "pao2(" variable.vn_pao ") "
+	put "glucose(" variable.vn_glu ") "
+	put "potassium(" variable.vn_pot ") "
+ 	put "creatinine(" variable.vn_cr ") "
+	put "bun(" variable.vn_bun ") "
+	put "wbc(" variable.vn_wbc ") "
+	put "plt(" variable.vn_plt ") "
+	if !variable.vn_pt.isdefault(){
+		put "pt(" variable.vn_pt ") "
+	}
+	if !variable.vn_ptt.isdefault(){
+	put "ptt(" variable.vn_ptt ") "
+	}
+	if main.ck_privopt.iseq(1){
+	put " "/on main.ck_privopt
+	put " cpr(" variable.vn_cpr ") "
+	put "cancer(" variable.vn_can ") "
+	put "source(" variable.vn_adm ") "
+	put "risk(" variable.vn_rsk ") "
+	}
+	put " "/on options.rb_wbc_2
+	put " "/on options.rb_temp_2
+	put " "/on options.rb_plt_2
+	put " "/on options.rb_si_2
+	put " "/on options.ck_trac
+	put " "/on options.ck_imp
+	put " "/on options.ck_val
+	put " "/on options.rb_suppr_2
+	put " "/on options.rb_suppr_3
+	if options.rb_suppr_3.iseq(1){
+	stopbox rusure "You have suppressed all errors."						 ///
+		"Are you sure you want to do this?"
+	}
+END

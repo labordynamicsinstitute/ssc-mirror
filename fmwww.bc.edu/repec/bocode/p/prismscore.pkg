@@ -1,0 +1,23 @@
+d 'PRISMSCORE': module to calculate PRISM III and PRISM IV pediatric risk of mortality scores
+d
+d  prismscore calculates PRISM III and PRISM IV pediatric risk of
+d mortality scores. The scores are outcome prognostication tools
+d that have been used extensively in clinical care and research to
+d calculate the expected mortality and control for illness severity
+d in pediatric intensive care units. 
+d
+d KW: prism
+d KW: mortality risk
+d KW: outcome
+d KW: pediatric
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20221212
+d
+d Author: Razvan Azamfirei,  Johns Hopkins University School of Medicine
+d Support: email stata@@azamfirei.com
+d
+f prismscore.ado
+f prismscore.dlg
+f prismscore.sthlp

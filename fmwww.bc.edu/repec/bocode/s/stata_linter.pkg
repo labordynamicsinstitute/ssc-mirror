@@ -26,8 +26,8 @@ d
 d Author: DIME Analytics, The World Bank, DECIE
 d Support: email dimeanalytics@@worldbank.org
 d
- ../l/lint.ado
- ../l/lint.sthlp
+f ../l/lint.ado
+f ../l/lint.sthlp
 f stata_linter_correct.py
 f stata_linter_detect.py
 f stata_linter_utils.py

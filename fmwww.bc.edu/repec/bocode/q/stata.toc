@@ -18,6 +18,7 @@ p qpfit module containing various quantile and probability plots for assessing d
 p qqcompare module to evaluate balance after matching using quantile-quantile plots
 p qqplot2 module to produce quantile-quantile plot
 p qqplot3 module to plot the unweighted and weighted quantiles of one variable against the corresponding quantiles of another
+p qqplotg module to draw quantile-quantile plots, generalized to allow groups and plotting difference vs mean
 p qqvalue module to generate quasi-q-values by inverting multiple-test procedures
 p qreg2 module to perform quantile regression with robust and clustered standard errors
 p qregpd module to perform Quantile Regression for Panel Data

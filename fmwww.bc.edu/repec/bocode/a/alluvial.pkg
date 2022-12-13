@@ -1,0 +1,17 @@
+d 'ALLUVIAL': module for Alluvial graphs
+d
+d  ALLUVIAL: A Stata program for Alluvial charts. See the help file
+d (help alluvial) for details after installation. 
+d
+d KW: graphics
+d KW: alluvial
+d
+d Requires: Stata version 15 and palettes, colrspace from SSC
+d
+d Distribution-Date: 20221212
+d
+d Author: Asjad Naqvi, WU Vienna
+d Support: email asjadnaqvi@@gmail.com
+d
+f alluvial.ado
+f alluvial.sthlp

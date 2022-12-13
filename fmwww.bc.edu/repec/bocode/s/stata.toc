@@ -9,6 +9,7 @@ p sampsi_mcc module to calculate Sample Size or Power for Matched Case-Control S
 p sampsi_reg module to calculate the sample size/power for linear regression
 p sampsi_rho module to compute sample size for a Pearson correlation
 p sampsi_sccs module to calculate the sample size for self controlled case series study designs
+p sankey module for Sankey diagrams 
 p sankey_plot module to produce Sankey plots
 p sankeyplot module to produce Sankey diagramms
 p saswrapper module to run a SAS program from within Stata
