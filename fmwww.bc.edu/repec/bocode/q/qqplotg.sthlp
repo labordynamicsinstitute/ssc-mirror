@@ -1,5 +1,5 @@
 {smcl}
-{* 11dec2022}{...}
+{* 11dec2022/12dec2022}{...}
 {vieweralsosee "[R] Diagnostic plots" "mansection R Diagnosticplots"}{...}
 {hline}
 help for {hi:qqplotg}
@@ -113,7 +113,7 @@ but see for example Cox (2016).
 {p 4 8 2}{cmd:. gen recmpg = 100/mpg }{p_end}
 {p 4 8 2}{cmd:. qqplotg recmpg, group(foreign) diffvsmean title(gallons per 100 miles) name(QQ4, replace)}{p_end}
 {p 4 8 2}{cmd:. gen lnmpg = ln(mpg)}{p_end}
-{p 4 8 2}{cmd:. qqplotg recmpg, group(foreign) diffvsmean title(ln miles per gallon) name(QQ5, replace)}{p_end}
+{p 4 8 2}{cmd:. qqplotg lnmpg, group(foreign) diffvsmean ysc(reverse) title(ln miles per gallon) name(QQ5, replace)}{p_end}
 
 
 {title:Author}
