@@ -1,0 +1,251 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>bandplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Plot summary statistics of responses for bands of predictors</u></b>
+<p>
+        <b>bandplot</b> <i>yvar</i> <i>xvars</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [
+                 <b><u>cat</u></b><b>egorical(</b><i>varlist</i><b>)</b> <b><u>cont</u></b><b>inuous(</b><i>varlist</i><b>)</b> <b>dta(</b><i>filename</i> [<b>,</b>
+                 <i>save_options</i>]<b>)</b> <b><u>miss</u></b><b>ing</b> <b><u>nq</u></b><b>uantiles(</b><i>#</i><b>)</b> <b><u>s</u></b><b>tatistics(</b><i>stat</i> [<i>stat</i>
+                 ... ]<b>)</b> <b>xweighted</b>
+<p>
+                 <b>bandopts(</b><i>over_subopts</i><b>)</b> <b><u>nu</u></b><b>mber</b> <b>recast(hbar</b> | <b>bar)</b>
+                 <b>xopts(</b><i>over_subopts</i><b>)</b> <b>xvarlabels</b> <b>yvarlabels</b> <i>graph_options</i> ]
+<p>
+<p>
+        <b>bandplot</b> (<i>yvars</i>) <i>xvars</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>,</b>
+                 <b><u>cat</u></b><b>egorical(</b><i>varlist</i><b>)</b> <b><u>cont</u></b><b>inuous(</b><i>varlist</i><b>)</b> <b>dta(</b><i>filename</i> [<b>,</b>
+                 <i>save_options</i>]<b>)</b> <b><u>miss</u></b><b>ing</b> <b><u>nq</u></b><b>uantiles(</b><i>#</i><b>)</b> <b><u>s</u></b><b>tatistics(</b><i>stat</i><b>)</b>
+                 <b>xweighted</b>
+<p>
+                 <b>bandopts(</b><i>over_subopts</i><b>)</b> <b><u>nu</u></b><b>mber</b> <b>recast(hbar</b> | <b>bar)</b>
+                 <b>xopts(</b><i>over_subopts</i><b>)</b> <b>xvarlabels</b> <b>yvarlabels</b> <i>graph_options</i> ]
+<p>
+    <b>aweight</b>s and <b>fweight</b>s may be specified.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>bandplot</b> produces plots showing summary statistics of one or more
+    response variables for bands of one or more predictor variables.
+<p>
+    By default, <b>bandplot</b> is a wrapper for graph dot.  Optionally, <b>bandplot</b>
+    can be specified to be a wrapper for graph hbar or graph bar.
+<p>
+    There are two syntaxes. In the first, <b>bandplot</b> takes the first variable
+    in a <i>varlist</i> to be a response variable <i>yvar</i>, which is summarised for
+    observations in each of various bands of the other predictor variables
+    <i>xvars</i>. In the second, <b>bandplot</b> takes two or more variables specified
+    first within parentheses <b>()</b> as being response variables <i>yvars</i>; all
+    subsequent variables are then taken to be predictors <i>xvars</i>.
+<p>
+    By default, <b>bandplot</b> shows means. Any other statistics produced by 
+    summarize may be specified. Note that with two or more <i>yvars</i> only one
+    statistic may be shown.
+<p>
+    Bands are to be interpreted as follows. By default numeric variables are
+    divided into quantile-based bands. (By default in turn quartile-based
+    bands are used.) Alternatively, variables can be declared explicitly or
+    implicitly as categorical, in which case the distinct values of each such
+    variable are used as bands. Any string variables specified as <i>xvars</i> are
+    treated as categorical, regardless of any other specifications.  No
+    string variables may be specified as <i>yvars</i>.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    <b>bandplot</b> does not draw plots based on coloured bands.  If your search for
+    those or similar plots has led you here, check out twoway rarea. The name
+    used here is not standard, but nor apparently is any other name used
+    routinely for what is plotted by this command.
+<p>
+    The idea of showing summaries of responses for bands of one or more
+    predictors evidently has a long history, which is difficult to trace.
+    Plots summarizing polls or elections in terms of votes for major parties
+    or candidates broken down separately by categorical variables such as
+    sex, age, race or region are common. The particular choices here were
+    inspired largely by examples given by Harrell (2001). See his pp. 126,
+    303f, 314f, 336.
+<p>
+    What <b>bandplot</b> offers is perhaps best explained by a direct comparison
+    with graph dot. There are three major differences and several minor
+    differences. (Similar comments apply to graph bar or graph hbar if either
+    is invoked.)
+<p>
+    First, consider an example with the auto data. Compare
+<p>
+    <b>. graph dot (mean) mpg, over(foreign) over(rep78)</b>
+<p>
+    and
+<p>
+    <b>. bandplot mpg foreign rep78, cat(foreign rep78)</b>
+<p>
+    The <b>graph dot</b> command shows means of <b>mpg</b> for the cross-combinations of
+    <b>foreign</b> and <b>rep78</b> occurring in the data, i.e. one variable's classes are
+    nested inside the other's. The <b>bandplot</b> command shows means of <b>mpg</b>
+    separately for classes of each variable.
+<p>
+    Second, <b>bandplot</b> supports quantile-based bands on the fly. You could show
+    those with <b>graph dot</b>, but you would need to create any variables classed
+    into bands first, say by using xtile.
+<p>
+    Third, <b>graph dot</b> typically carries out a temporary reduction of the
+    dataset, but <b>bandplot</b> carries out its own reduction and passes the
+    results to <b>graph dot</b> for plotting <b>asis</b>. Various options of <b>graph dot</b> are
+    thus irrelevant or inappropriate so far as <b>bandplot</b> is concerned.
+    Further, variables in the dataset are not accessible to the <b>graph dot</b>
+    command.
+<p>
+    <b>bandplot</b> does not offer any rounding or coarsening option such as might
+    be used to bin numeric variables into equal intervals. You would need to
+    do that first. Advice is to use clonevar to create a copy of a variable
+    (notably, keeping the variable label) and then to <b>replace</b> that with a
+    binned version using a function such as round(), floor() or ceil(). Then
+    declare such variables to <b>bandplot</b> as categorical [sic].
+<p>
+    Although <b>bandplot</b> ignores missing values on the <i>yvars</i>, the structure of
+    such missing values may be explored by creating an indicator for
+    missingness using missing().
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+<i><u>Statistics options</u></i> 
+<p>
+    <b>categorical()</b> specifies the names of variables to be treated as
+        categorical, so that the bands of each are the distinct values of
+        each.  All string variables are treated as categorical, regardless of
+        any explicit or implicit specification.
+<p>
+    <b>continuous()</b> specifies the names of variables to be treated as
+        continuous, meaning here only that tbe bands of each are based on
+        quantiles calculated from the data.
+<p>
+        If <b>categorical()</b> is specified but not <b>continuous()</b>, then continuous
+        variables are those not declared as categorical; and conversely. If
+        both <b>categorical()</b> and <b>continuous()</b> are specified, note that all
+        variables must be classified one way or the other. If neither
+        <b>categorical()</b> nor <b>continuous()</b> is specified, all numeric variables
+        are treated as continuous. It will typically be easiest to specify
+        which kind of variable is in the minority. The convention here thus
+        resembles that used by anova.
+<p>
+    <b>dta(</b><i>filename</i> [<b>,</b> <i>save_options</i>]<b>)</b> specifies that the dataset used on the fly
+        for the graph is to be saved as a Stata data file <i>filename</i> using 
+        save. <i>save_options</i> are options of save. The non-standard option name
+        reflects the fact that users may wish to use the <b>graph, saving()</b>
+        option to save their graph to a file.
+<p>
+    <b>missing</b> specifies that missing values of the <i>xvars</i> be used as separate
+        bands for summary. Missing values of the <i>yvars</i> are ignored, come what
+        may. Note that specifying this option has implications for which
+        observations are included in the plot, as observations with missing
+        values on any of the <i>xvars</i> are by default excluded from the
+        summarized and plotted data. The <b>missing</b> option overrides that
+        default.
+<p>
+    <b>nquantiles()</b> specifies the number of quantile bands to be used for
+        continuous variables. The default is 4. Quantiles are calculated
+        using _pctile.  Brackets and parentheses are used on the plot to
+        indicate bands precisely.  Quantile bands take the form [,) [,) ...
+        [,] i.e. values equal to calculated quantiles are allocated to the
+        higher band; values equal to the minimum and maximum are necessarily
+        allocated to the lowest and highest bands respectively.  Users
+        unfamiliar with this notation should note that [a, b) means
+        a &lt;= values &lt; b and [a, b] means a &lt;= values &lt;= b.  Note that the
+        binning convention here differs from that applied by xtile.
+<p>
+    <b>statistics()</b> indicates one or more statistics as calculated by summarize.
+        Names must be used exactly as listed in the help for <b>summarize</b>
+        indicating its saved results. For example, use <b>sd</b> not <b>SD</b> and <b>N</b> not <b>n</b>.
+        If not specified, the default is to show means. If two or more <i>yvars</i>
+        are specified, only one statistic may be specified.
+<p>
+    <b>xweighted</b> indicates that any weights specified are to be used in
+        determining the quantiles of continuous <i>xvars</i>. By default, weights
+        are used only in summarizing the <i>yvars</i>. This is a rarely used option.
+<p>
+<p>
+<i><u>Graphics options</u></i>
+<p>
+    <b>bandopts()</b> are <i>over_subopts</i> of graph dot (or graph hbar or graph bar, as
+        the case may be) used to specify the appearance of the band
+        information (the inside categorical axis).
+<p>
+    <b>number</b> specifies that the (unweighted) number of observations in each
+        band be shown on the graph. The number will appear as part of the
+        band label.
+<p>
+    <b>recast(hbar</b> | <b>bar)</b> specifies that either graph hbar or graph bar be used
+        to plot results rather than graph dot. The name is inspired by an
+        option of graph twoway: see advanced_options. Otherwise there is no
+        resemblance, so that in particular this option can not be used to
+        recast the graph to a <b>twoway</b> type.
+<p>
+    <b>xopts()</b> are <i>over_subopts</i> of graph dot (or graph hbar or graph bar, as the
+        case may be) used to specify the appearance of the <i>xvars</i> information
+        (the outside categorical axis).
+<p>
+    <b>xvarlabels</b> specifies that the variable labels of the <i>xvars</i> are to be
+        shown on the outer categorical axis. By default, variable names are
+        shown, to save space.
+<p>
+    <b>yvarlabels</b> specifies that the variable labels of two or more <i>yvars</i>
+        specified are to be shown in the legend. By default, variable names
+        are shown, to save space.
+<p>
+    <i>graph_options</i> are other options of graph dot (or graph hbar or graph bar,
+        as the case may be).  See also <b>Remarks</b> above.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. sysuse auto, clear</b>
+    <b>. bandplot mpg foreign rep78 weight, cat(for rep)</b>
+    <b>. bandplot mpg foreign rep78 weight, cont(weight)</b>
+    <b>. bandplot mpg foreign rep78 weight, cont(weight) missing</b>
+    <b>. bandplot mpg foreign rep78 weight, cont(weight) missing dta(results)</b>
+    <b>. bandplot mpg foreign rep78 weight, cont(weight) missing nq(8)</b>
+        <b>dta(results, replace)</b>
+    <b>. bandplot mpg foreign rep78 weight, cont(weight) missing nq(8) s(mean</b>
+        <b>p50) legend(order(1 "mean" 2 "median")) marker(1, ms(Sh)) marker(2,</b>
+        <b>ms(Dh))</b>
+    <b>. bandplot (trunk turn) foreign rep78 weight, cont(weight) yvarlabels</b>
+    <b>. bandplot (trunk turn) foreign rep78 weight, cont(weight) yvarlabels</b>
+        <b>xvarlabels marker(1, ms(Sh)) marker(2, ms(Dh))</b>
+    <b>. bandplot (trunk turn) foreign rep78 weight, cont(weight) number</b>
+        <b>yvarlabels xopts(relabel(1 `" "Car" "type" "' 2 `" "Repair" "record"</b>
+        <b>"1978" "' 3 `" "Weight" "(lb)" "'))</b>
+    <b>. bandplot (trunk turn) foreign rep78 weight, cont(weight) number</b>
+        <b>yvarlabels xopts(relabel(1 `" "Car" "type" "' 2 `" "Repair" "record"</b>
+        <b>"1978" "' 3 `" "Weight" "(lb)" "')) recast(hbar)</b>
+    <b>. bandplot (trunk turn) foreign rep78 weight, cont(weight) number</b>
+        <b>yvarlabels xopts(relabel(1 `" "Car" "type" "' 2 `" "Repair" "record"</b>
+        <b>"1978" "' 3 `" "Weight" "(lb)" "')) bandopts(label(labsize(*0.8)))</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, Durham University
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgments</u></b> 
+<p>
+    Marcello Pagano and Fred Wolfe kindly notified me of small bugs.
+<p>
+         
+<b><u>References</u></b>
+<p>
+    Harrell, F.E. 2001.  <i>Regression Modeling Strategies: With Applications to</i>
+        <i>Linear Models, Logistic Regression, and Survival Analysis.</i>  New York:
+        Springer.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line:  help for graph dot, help for graph hbar, help for graph bar,
+             help for summarize, help for _pctile
+<p>
+</pre>

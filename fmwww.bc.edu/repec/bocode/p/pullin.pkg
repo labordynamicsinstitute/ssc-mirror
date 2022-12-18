@@ -1,0 +1,19 @@
+d 'PULLIN': module to run a many-to-one merge with a specific set of options
+d
+d  pullin runs a many-to-one merge with the keep(1 3) and nogen
+d options specified. It's nice for researchers doing a lot of
+d merges, including linking historical records over several linking
+d steps. 
+d
+d KW: data management
+d KW: merge
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20221217
+d
+d Author: Tommy Morgan, Brigham Young University
+d Support: email morganto@@student.byu.edu
+d
+f pullin.ado
+f pullin.sthlp

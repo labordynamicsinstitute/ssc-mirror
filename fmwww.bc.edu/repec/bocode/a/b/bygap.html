@@ -1,0 +1,138 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>bygap</b>                                                   (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Insert a by-gap observation at the start of each by-group</u></b>
+<p>
+        <b>bygap</b> [ <i>varlist</i> ] [ <b>if</b> <i>expression</i> ] [ <b>in</b> <i>range</i> ] [ ,
+                           <b><u>g</u></b><b>apindicator(</b><i>newvarname</i><b>)</b>
+                           <b><u>rs</u></b><b>tring(</b><i>string_replacement_option</i><b>)</b> ]
+<p>
+where <i>string_replacement_option</i> can be <b>name</b>, <b>label</b> or <b>labname</b>.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>bygap</b> inserts a by-gap observation at the start of each by-group defined by the
+by-variables specified in the <i>varlist</i>, or at the start of the data set if the
+<i>varlist</i> is not specified.  The by-gap observation for each by-group has the
+same by-variable values as the by-group, and all other variables are set to
+missing values. (The user can replace these missing values with other values
+afterwards.) Optionally, <b>bygap</b> generates an indicator variable, indicating
+which observations are by-gap observations. <b>bygap</b> is useful for preparing a
+data set to be plotted using graph together with the sencode package
+(downloadable from SSC), or output to a TeX, LaTeX, HTML or Microsoft Word
+table using the listtex package (also downloadable from SSC).
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>gapindicator(</b><i>newvarname</i><b>)</b> specifies the name of a new variable to be generated,
+    equal to 1 for the newly-inserted by-gap observations and 0 for all other
+    observations.
+<p>
+<b>rstring(</b><i>string_replacement_option</i><b>)</b> specifies a rule for replacing the values of
+    string variables (other than by-variables) in by-gap observations. If
+    <b>rstring</b> is set to <b>name</b>, then string variables which are not by-variables
+    are reset to their variable names in by-gap observations. If <b>rstring</b> is set
+    to <b>label</b>, then string variables that are not by-variables are set to their
+    variable labels in by-gap observations, or to missing values if their
+    variable labels are missing.  If <b>rstring</b> is set to <b>labname</b>, then string
+    variables that are not by-variables are set to their variable labels in
+    by-gap observations, or to their variable names if their variable labels
+    are missing. If <b>rstring</b> is set to any other value, or not set, then string
+    variables that are not by-variables are set to missing values. (Note that
+    numeric variables that are not by-variables are always set to numeric
+    missing values in by-gap observations.) The <b>rstring</b> option allows the user
+    to add a title line to a data set of string variables, or to add a title
+    line to each by-group of a data set of string variables. This option can be
+    useful if the data set is output to a TeX, LaTeX, HTML or Microsoft Word
+    table using the listtex package, downloadable from SSC.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+<b>bygap</b> is used to convert a Stata data set to a set of table rows, with table
+gaps at the start of each by-group. The user can label these table gaps by
+using the <b>rstring</b> option, or by modifying the values of variables in the by-gap
+observations using replace.  The user can then create plots using the graph
+command, or list the data set as a list of table rows, using either list or the
+listtex package (downloadable from SSC).  It is often advisable for the user to
+type preserve before a sequence of commands including <b>bygap</b>, and to type 
+restore after a sequence of commands using <b>bygap</b>, because <b>bygap</b> modifies the
+data set by adding new observations. It is often also advisable for the user to
+place the whole sequence of commands in a do-file, and to execute this do-file,
+rather than to type the sequence of commands one by one at the terminal.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . bygap,g(toprow)
+<p>
+        . bygap foreign,g(gind)
+<p>
+        . sort foreign rep78 make
+        . bygap foreign rep78,g(gapobs)
+<p>
+The following example works in the <b>auto</b> data if the user has installed the 
+listtex package, downloadable from SSC. It outputs to the Results window a
+generic ampersand-delimited text table, which can be cut and pasted into a
+Microsoft Word document, and then converted to the rows of a table inside
+Microsoft Word, using the menu sequence <b>Table-&gt;Convert-&gt;Text to Table</b>.  (Note
+that the listtex command can alternatively create table rows suitable for input
+into a TeX, LaTeX or HTML file.)
+<p>
+        . preserve
+        . bygap foreign,gap(gap)
+        . decode foreign,gene(orig)
+        . replace make=orig+" cars:" if gap==1
+        . listtex make mpg weight,type
+        . restore
+<p>
+The following example works in the <b>auto</b> data if the user has installed the 
+listtex package, and also the tostring package of Nicholas J. Cox and Jeremy
+Wernow. (Both of these packages can be downloaded from SSC.) It outputs to the
+Results window a generic ampersand-delimited text table, which can be cut and
+pasted into a Microsoft Word document (as in the previous example), and then
+converted into two tables, one for American cars and one for non-American cars,
+each with a title line containing the variable labels in the <b>auto</b> data. Note
+that, to do this, the user must convert the numeric variables to string
+variables, and this is done using tostring.
+<p>
+        . preserve
+        . tostring *,use
+        . bygap foreign,rstring(labname)
+        . listtex make mpg weight price,type
+        . restore
+<p>
+The following example works in the <b>auto</b> data if the user has installed the 
+sencode package, downloadable from SSC. It produces a graph of mileage by car
+type (US or non-US) and repair record.
+<p>
+        . preserve
+        . gene str1 rowlab=""
+        . replace rowlab=string(rep78,"%2.0f")
+        . bygap foreign,gap(gapind)
+        . replace rowlab="US cars:" if gapind==1 &amp; foreign==0
+        . replace rowlab="Others:" if gapind==1 &amp; foreign==1
+        . sencode rowlab,gene(row) many gs(foreign -gapind rep78)
+        . lab var row "Repair record"
+        . version 7:graph row mpg,yreverse ylab(1(1)12) yscale(0 13)
+                xlab(0(10)50)
+        . restore
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+Roger Newson, King's College, London, UK.  Email: roger.newson@kcl.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b>[U] 14.1.2 by varlist:</b>, <b>[U] 14.5 by varlist: construct</b>, <b>[U] 31.2 The</b>
+                     <b>by construct</b>, <b>[R] by</b>, <b>[R] expand</b>
+On-line:  help for by, byprog, ssc
+          help for listtex, sencode and tostring if installed
+</pre>

@@ -5,27 +5,30 @@ version 16.0;
  List the variables in varlist as a table
  to a putdocx table.
  *! Author: Roger Newson
-*! Date: 07 December 2022
+*! Date: 13 December 2022
 *;
 
 syntax [ varlist (min=1) ] [if] [in] , TABlename(name)
  [
   HEADChars(namelist) FOOTChars(namelist)
   HEADformat(string asis) FOOTFormat(string asis)
+  TCOLchars(namelist)
   TROWseq(name)
-  varnames 
+  varnames obsno
   *
  ];
 *
   varlist specifies variables to be written to table.
   tablename() specifies the name of a table to be generated.
-  headshars() is a list of variable characteristics containing header rows.
+  headchars() is a list of variable characteristics containing header rows.
   footchars() is a list of variable characteristics containing footer rows.
   headformat() is a list of cell format options for header rows.
   footformat() is a list of cell format options for footer rows.
+  tcolchars() is a list of variable characteristics
+    containing corresponding column formats.
   trowseq() specifies a generated variable
     containing the table row sequence for each observation.
-  Other options (including varnames) are passed to putdocx table.
+  Other options (including varnames and obsno) are passed to putdocx table.
 *;
 
 
@@ -97,7 +100,8 @@ else {;
 * 
  Create initial table with just internal cells
 *;
-putdocx table `tablename'=data(`varlist') if `touse', `varnames' `options';
+putdocx table `tablename'=data(`varlist') if `touse',
+  `varnames' `obsno' `options';
 
 
 *
@@ -177,6 +181,21 @@ if `nhead'>0 & `"`headformat'"'!="" {;
 };
 if `nfoot'>0 & `"`footformat'"'!="" {;
   putdocx table `tablename'(`=`ffoot''/`=`lfoot'',.), `footformat';
+};
+
+
+*
+ Use table column characteristics if requested
+*;
+if "`tcolchars'"!="" {;
+  foreach TCC in `tcolchars' {;
+    forv i1=1(1)`nvar' {;
+      local i2 = `i1' + ("`obsno'"!="");
+      local Vcur: word `i1' of `varlist';
+      mata: st_local("TCCcontents",st_global("`Vcur'[`TCC']"));
+      cap putdocx table `tablename'(.,`i2') , `TCCcontents';
+    };  
+  };
 };
 
 

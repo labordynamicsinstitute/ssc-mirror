@@ -1,0 +1,49 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>bystore</b>                                      (Author:  David Harrison)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Repeat estimation command storing results</u></b>
+<p>
+        <b>bystore</b> <i>varlist</i> [<b>,</b> <b><u>nol</u></b><b>abel</b> <b><u>pre</u></b><b>fix(</b><i>string</i><b>)</b> <i>est_table_opts</i> ] : <i>est_cmd</i>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>bystore</b> repeats the estimation command <i>est_cmd</i> (see help estcom) on
+    subsets of the data in the manner of <b>by</b> (see help by), storing the
+    results of each estimation (see help estimates).
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>nolabel</b> specifies that the stored estimation results will be numbered 1,
+        2, etc rather than labelled using labels derived from the <b>egen</b>
+        function <b>group()</b> (see help egen).
+<p>
+    <b>prefix(</b><i>string</i><b>)</b> allows users to choose a prefix for the stored estimation
+        results; the default is <b>_E</b>. All existing stored results with this
+        prefix will be dropped.
+<p>
+    <i>est_table_opts</i> are any of the options for the command <b>estimates table</b>;
+        see help estimates_table.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. bystore foreign: regress price weight</b>
+<p>
+    <b>. bystore foreign, pre(_P) stats(N chi2): poisson rep78 weight</b>
+<p>
+<p>
+<b><u>Maintainer</u></b>
+<p>
+    David A. Harrison
+    Intensive Care National Audit &amp; Research Centre
+    david@icnarc.org
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for by, estcom, estimates
+</pre>

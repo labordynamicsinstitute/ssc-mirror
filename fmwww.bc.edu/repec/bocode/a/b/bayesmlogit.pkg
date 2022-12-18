@@ -1,0 +1,24 @@
+d 'BAYESMLOGIT': module to perform Bayesian estimation of mixed logit models
+d
+d   bayesmlogit can be used to "fit" mixed logit models using
+d Bayesian methods: more precisely, bayesmlogit produces draws from
+d the posterior parameter distribution, and then presents summary
+d and other statistics describing the results of the drawing.
+d Detailed analysis of draws from the posterior is left to the
+d discretion of the user. The implementation follows Train (2009,
+d chapter 12). 
+d
+d KW: Adaptive Markov chain Monte Carlo
+d KW: Sampling from distributions. Adaptive MCMC
+d KW: mixed logit
+d KW: Bayesian estimation
+d
+d Requires: Stata version 11.2, the amcmc package from SSC and Jann's moremata package from SSC (q.v.)
+d
+d Distribution-Date: 20130321
+d
+d Author: Matthew Baker, Hunter College
+d Support: email matthew.baker@@hunter.cuny.edu
+d
+f bayesmlogit.ado
+f bayesmlogit.sthlp

@@ -16,6 +16,7 @@ d boilerplate code at the top of all do-files. iegraph produces
 d graphs based on common impact evaluation regression models. See
 d https://github.com/worldbank/ietoolkit for more details. 
 d
+d KW: reproducible research
 d KW: impact evaluations
 d KW: data management
 d KW: survey data
@@ -24,9 +25,9 @@ d KW: balance tables
 d KW: difference-in-differences
 d KW: matching
 d
-d Requires: Stata version 11 
+d Requires: Stata version 12
 d
-d Distribution-Date: 20220113
+d Distribution-Date: 20221217
 d
 d Author: DIME Analytics, The World Bank, DECIE
 d Support: email  lcardosodeandrad@@worldbank.org
@@ -41,6 +42,8 @@ f ieboilstart.ado
 f ieboilstart.sthlp
 f ieddtab.ado
 f ieddtab.sthlp
+f iedorep.ado
+f iedorep.sthlp
 f iedropone.ado
 f iedropone.sthlp
 f iefolder.ado
@@ -53,3 +56,5 @@ f iekdensity.ado
 f iekdensity.sthlp
 f iematch.ado
 f iematch.sthlp
+f iesave.ado
+f iesave.sthlp

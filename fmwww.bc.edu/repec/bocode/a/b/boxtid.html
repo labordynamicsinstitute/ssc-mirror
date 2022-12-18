@@ -1,0 +1,225 @@
+<pre>
+<b>help boxtid</b>                                                     Patrick Royston
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>boxtid</b> --  Box-Tidwell and exponential regression models
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>boxtid</b> <i>regression_cmd</i> <i>yvar</i> <i>xvarlist</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b>
+            <b><u>cen</u></b><b>ter(</b><i>cen_list</i><b>)</b> <b>df(</b><i>df_list</i><b>)</b> <b><u>dfd</u></b><b>efault(</b><i>#</i><b>)</b> <b><u>exp</u></b><b>on(</b><i>varlist</i><b>)</b>
+            <b><u>in</u></b><b>it(</b><i>init_list</i><b>)</b> <b><u>it</u></b><b>er(</b><i>#</i><b>)</b> <b><u>ltol</u></b><b>erance(</b><i>#</i><b>)</b> <b><u>tr</u></b><b>ace</b> <b><u>zer</u></b><b>o(</b><i>varlist</i><b>)</b>
+            <i>regression_cmd_options</i> ]
+<p>
+    where <i>regression_cmd</i> may be clogit, glm, logistic, logit, poisson, 
+    probit, regress, stcox, or streg.
+<p>
+    <b>boxtid</b> shares the features of all estimation commands; see help estcom.
+<p>
+    All weight types supported by <i>regression_cmd</i> are allowed; see help 
+    weights. Also, factor variables are permitted in <i>xvarlist</i>.
+<p>
+    Note that <b>xfracplot</b> and <b>xfracpred</b> may be used after <b>boxtid</b> to plot and
+    predict fitted values, respectively.  The syntax for <b>xfracplot</b> and
+    <b>xfracpred</b> is the same as for <b>fracplot</b> and <b>fracpred</b>; see help on fracpoly.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>boxtid</b> is a generalization of fracpoly in which continuous rather than
+    fractional powers of the continuous covariates are estimated. <b>boxtid</b> fits
+    Box &amp; Tidwell's (1962) power transformation model to <i>yvar</i> with predictors
+    in <i>xvarlist</i>. The model function for each <i>xvar</i> in <i>xvarlist</i> is
+<p>
+        b1 * xvar^p1 + b2 * xvar^p2 ...
+<p>
+    <b>boxtid</b> also fits exponential models for predictors specified in <b>expon()</b>.
+    The model function for each such <i>xvar</i> in <i>xvarlist</i> is
+<p>
+        b1 * exp(p1 * xvar) + b2 * exp(p2 * xvar) ...
+<p>
+    The quantities p1, p2, ... are real numbers. After execution, <b>boxtid</b>
+    leaves variables in the data named <b>I</b><i>xv</i><b>__1</b>, <b>I</b><i>xv</i><b>__2</b>, ..., where <i>xv</i>
+    represents the first four letters of the name of <i>xvar</i>, the first member
+    of <i>xvarlist</i>. The new variables contain the best-fitting powers of <i>xvar</i>
+    (as centered and scaled by <b>boxtid</b>). Also left are variables named <b>I</b><i>xv</i><b>_p1</b>,
+    <b>I</b><i>xv</i><b>_p2</b>, ... which are auxiliary variables (see Remarks). Subsequent
+    members of <i>xvarlist</i>, if any, also leave behind such variables.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>center(</b><i>cen_list</i><b>)</b> defines the centering for the covariates <i>xvar1</i>, <i>xvar2</i>,
+        ....  The default is <b>center(mean)</b>, except for binary covariates where
+        it is <b>center(</b><i>#</i><b>)</b>, <i>#</i> being the lower of the two distinct values of the
+        covariate. <i>cen_list</i> is a comma-separated list with elements
+        <i>varlist</i><b>:</b>{<b>mean</b>|<i>#</i>|<b>no</b>}, except that the first element may optionally be
+        of the form {<b>mean</b>|<i>#</i>|<b>no</b>} to specify the default for all variables. For
+        example, <b>center(no, age:mean)</b> sets the default centering to <b>no</b> and
+        that for <b>age</b> to <b>mean</b>.
+<p>
+    <b>df(</b><i>df_list</i><b>)</b> sets up the degrees of freedom (df) for each predictor. The
+        df (not counting the regression constant, <b>_cons</b>) are twice the degree
+        of the Box-Tidwell function, defining a model with m terms to have
+        degree m.  For example an <i>xvar</i> fitted as a second-degree Box-Tidwell
+        function has 4 df.  The first item in df_list may be either <i>#</i> or
+        <i>varlist</i><b>:</b><i>#</i>.  Subsequent items must be <i>varlist</i><b>:</b><i>#</i>.  Items are separated
+        by commas and <i>varlist</i> is specified in the usual way for variables.
+        With the first type of item, the df for all predictors are taken to
+        be <i>#</i>.  With the second type of item, all members of <i>varlist</i> (which
+        must be a subset of <i>xvarlist</i>) have <i>#</i> df.
+<p>
+        The default degrees of freedom for a predictor of type varlist
+        specified in <i>xvarlist</i> but not in <i>df_list</i> are assigned according to
+        the number of distinct (unique) values of the predictor, as follows:
+<p>
+        -------------------------------------------
+        # of distinct values    default df
+        -------------------------------------------
+                  1             (invalid predictor)
+                 2-3            1
+                 4-5            min(2, <b>dfdefault()</b>)
+                 &gt;=6            <b>dfdefault()</b>
+        -------------------------------------------
+<p>
+        Example:  <b>df(4)</b>
+        All variables have 4 df.
+<p>
+        Example:  <b>df(2, weight displ:4)</b>
+        <b>weight</b> and <b>displ</b> have 4 df, all other variables have 2 df.
+<p>
+        Example:  <b>df(weight displ:4, mpg:2)</b>
+        <b>weight</b> and <b>displ</b> have 4 df, <b>mpg</b> has 2 df, all other variables have
+        the default of 1 df.
+<p>
+    <b>dfdefault(</b><i>#</i><b>)</b> determines the default maximum degrees of freedom (df) for a
+        predictor. Default <i>#</i> is 2 (one power term, one beta).
+<p>
+    <b>iter(</b><i>#</i><b>)</b> sets <i>#</i> to be the maximum number of iterations allowed for the
+        fitting algorithm to converge. Default: 100.
+<p>
+    <b>expon(</b><i>varlist</i><b>)</b> specifies that all members of varlist are to be modelled
+        using an exponential function, the default being a power
+        (Box-Tidwell) model. For each <i>xvar</i> (a member of <i>varlist</i>), a
+        multi-exponential model is fitted, namely
+<p>
+        b1 * exp(p1 * xvar) + b2 * exp(p2 * xvar) +...
+<p>
+    <b>init(</b><i>init_list</i><b>)</b> sets initial values for the parameters p1, p2, ... of the
+        model. By default these are calculated automatically.  The first item
+        in <i>init_list</i> may be either <i>#</i> [<i>#</i> ...] or <i>varlist</i><b>:</b><i>#</i> [<i>#</i> ...]. Subsequent
+        items must be <i>varlist</i><b>:</b><i>#</i> [<i>#</i> ...]. Items are separated by commas and
+        <i>varlist</i> is specified in the usual way for variables. If the first
+        item is <i>#</i>[<i>#</i> ...], this becomes the default initial value for all
+        variables, but subsequent items (re)set the initial value for
+        variables in subsequent <i>varlist</i>s. If the df for a variable in the
+        model is d (greater than 1) then <i># #</i> ... consists of d/2 items.
+        Typically d = 2 so that there is just one initial value, <i>#</i>.
+<p>
+    <b>ltolerance(</b><i>#</i><b>)</b> is the maximum difference in deviance between iterations
+        required for convergence of the fitting algorithm.  Default <i>#</i>: 0.001.
+<p>
+    <b>powers(</b><i>powerlist</i><b>)</b> defines the powers to be used with fractional
+        polynomial initialization for <i>xvarlist</i> (see Remarks).
+<p>
+    <b>trace</b> reports the progress of the fitting procedure towards convergence.
+<p>
+    <b>zero(</b><i>varlist</i><b>)</b> indicates transformation of negative and zero values of all
+        members of <i>varlist</i> to zero before fitting the model (see Remarks).
+<p>
+    <i>regression_cmd_options</i> are any of the options available with
+        <i>regression_cmd</i>.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>boxtid</b> finds and reports a multiple regression model comprising the
+    maximum likelihood estimate of p1, p2, ... for each member of <i>xvarlist</i>.
+    The model that is fit depends on the type of <i>regression_cmd</i> that is used.
+<p>
+    The fitting procedure is iterative and requires accurate starting values
+    for the powers p1, p2, ... <b>boxtid</b> finds initial values for the p's by
+    fitting a fractional polynomial of the appropriate degree for each xvar
+    in turn, with the remaining xvars treated as linear. This procedure
+    greatly reduces the amount of iteration needed subsequently to obtain
+    maximum likelihood estimates of the p's.
+<p>
+    The table of output includes for each member of <i>xvarlist</i> a test of
+    whether the relation is linear. That is, it reports a quantity called
+    <b>Nonlin. dev.</b>, the difference in deviance between the continuous-power
+    model for an xvar and a model linear in xvar, adjusting for other
+    variables in the model. A P-value from a chi-square or F test of the
+    hypothesis of linearity, and the estimated linear coefficient for the
+    xvar, are given.
+<p>
+    Appropriate estimates of the standard errors of p1, p2, ... are provided
+    in the table of output, and the standard errors of the corresponding
+    regression coefficients are correctly estimated. This requires the
+    auxiliary variables ln(xvar) * xvar^p1, ln(xvar) * xvar^p2, ... to be
+    included in the model.  The estimated t- or z-values for the coefficients
+    of these terms should be zero to at least 3 decimal places. If they are
+    not zero, then the estimation procedure probably has not converged
+    properly; the value of <i>#</i> in <b>ltolerance()</b> should be reduced below its
+    default value of 0.001, and the model re-fitted.
+<p>
+    If an xvar has any negative or zero values and neither the <b>expon()</b> nor
+    the <b>zero()</b> option is used, <b>boxtid</b> behaves exactly like fracpoly in that
+    it subtracts the minimum of xvar from xvar and adds the rounding (or
+    counting) interval. The interval is defined as the smallest positive
+    difference between the ordered values of xvar. After this change of
+    origin, the minimum value of xvar is guaranteed positive.
+<p>
+    An example of the <b>zero()</b> option is in the assessment of the effect of
+    cigarette smoking on the risk of a disease in an epidemiological study.
+    Since non-smokers may be qualitatively different from smokers, the effect
+    of quantity smoked, regarded as a continuous risk factor, may be
+    discontinuous at zero. The risk may be modelled as a constant for the
+    non-smokers and a Box-Tidwell function of the amount smoked for the
+    smokers by including the <b>zero()</b> option and a dummy variable for
+    non-smokers, for example
+<p>
+        <b>. gen byte nonsmoker = (num_cigs==0) if ~missing(num_cigs)</b>
+        <b>. boxtid logit death num_cigs nonsmoker, zero(num_cigs)</b>
+<p>
+    Omission of <b>zero(num_cigs)</b> would cause <b>num_cigs</b> to be transformed before
+    analysis by the addition of a suitable constant, probably 1.
+<p>
+    Convergence of the algorithm is not guaranteed and may be hard to achieve
+    for models with xvars with 4 or more degrees of freedom. Sometimes a
+    large negative or positive power estimate with an enormous standard error
+    is obtained, a sign that the model may be overparametrized. It is worth
+    trying a lower degree model and noting whether the deviance is
+    significantly reduced (chi-square or F test on 2 df).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. sysuse auto.dta</b>
+    <b>. boxtid regress mpg weight</b>
+    <b>. boxtid regress mpg weight displ foreign</b>
+    <b>. boxtid regress mpg weight displ foreign, df(weight displ:2, foreign:1)</b>
+    <b>. boxtid regress mpg displ weight, expon(weight)</b>
+    <b>. boxtid logit foreign mpg, center(no)</b>
+    <b>. boxtid glm foreign mpg, family(bin)</b>
+    <b>. xfracplot mpg</b>
+<p>
+<p>
+<b><u>Reference</u></b>
+<p>
+    Box GEP, Tidwell PW. 1962. Transformation of the independent variables.
+        Technometrics 4:531-550.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Patrick Royston, MRC Clinical Trials Unit, London.
+    patrick.royston@ctu.mrc.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

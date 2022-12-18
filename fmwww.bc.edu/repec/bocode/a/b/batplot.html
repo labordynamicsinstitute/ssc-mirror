@@ -1,0 +1,128 @@
+<pre>
+<b>help batplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+    <b>Produces a Bland-Altman plot when there is a relationship between paired</b>
+    <b>differences and their average</b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>batplot</b> <i>varname1 varname2</i> [if] [in] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Main
+      <b>info</b>                 specifies that the percentage of points outside
+                            the limits of agreement are displayed as a
+                            subtitle.
+      <b><u>val</u></b><b>abel</b>(<i>varname</i>)     specifies that the points outside the limits of
+                            agreement be labelled using the variable <i>varname</i>.
+      <b>shading</b>(min max)     specifies the extent of shading beyond the range
+                            of the data.
+      <b>dp</b>(#)                specifies the precision of the numbers in the
+                            title of the graph.
+      <b>notrend</b>              specifies that the original Bland-Altman plot
+                            (without a trend) be plotted.
+      <b>moptions</b>             specifies options for the markers that lie outside
+                            the limits of agreement.
+      <b><u>sc</u></b><b>atter</b>              specifies options for the scatter part of the
+                            final plot, see scatter.
+      twoway_options       specifies options for example titles and labels.
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>batplot</b> produces a Bland-Altman plot adjusted for trend.
+<p>
+    The standard Bland-Altman plot is between the difference of paired
+    variables versus the average, this is produced using the <b>notrend</b> option.
+    The main addition that this command handles is when there is a linear
+    relationship between the the paired difference and the paired average. A
+    regression model is used to adjust the limits of agreement accordingly.
+    This is particularly useful when the two variables might be measured on
+    different scales and hence a straight conversion factor would recalibrate
+    the two variables.
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>info</b> specifies that the percentage of points outside the limits of
+        agreement are displayed as a subtitle. Additionally when using the
+        notrend option the limits of agreement and mean difference are
+        included in the subtitle.
+<p>
+    <b><u>val</u></b><b>abel</b>(<i>varname</i>) specifies that the points outside the limits of
+        agreement be labelled using the variable <i>varname</i>.
+<p>
+    <b>shading</b>(min max) specifies the extent of shading beyond the range of the
+        data. The default is that the limits of shading is determined by the
+        values in the <b>xlabel</b> option.
+<p>
+    <b>dp</b>(#) specifies the precision of the numbers in the title of the graph.
+        The default is 2 decimal places.
+<p>
+    <b>notrend</b> specifies that the original Bland-Altman plot (without a trend)
+        be plotted.
+<p>
+    <b>moptions</b> specifies options for the markers that lie outside the limits of
+        agreement, the options can be anything from the scatter marker
+        options scatter##marker_options.
+<p>
+    <b><u>sc</u></b><b>atter</b> specifies options for the scatter part of the final plot.
+<p>
+<b><u>Examples</u></b>
+<p>
+    Using the <b>auto.dta</b> dataset supplied with STATA 8 this command can check
+    whether there is agreement between turning circle (ft) and miles per
+    gallon, click the highlighted text in order,
+<p>
+    sysuse auto, clear
+<p>
+    batplot mpg turn
+<p>
+    This is the most basic graphic and using twoway options the look can be
+    improved by clicking below,
+<p>
+    batplot mpg turn, title(Agreement between mpg and turn) xlab(26(4)38)
+<p>
+    By specifying extra options the outlying points can be labelled and
+    identified by the car make,
+<p>
+    batplot mpg turn, title(Agreement between mpg and turn) info
+        valabel(make) xlab(26(4)38)
+<p>
+    To obtain the original Bland Altman plot use the notrend option,
+<p>
+    batplot mpg turn, title(Agreement between mpg and turn) info
+        valabel(make) notrend xlab(26(4)38)
+<p>
+    To improve the labelling of the point VW it may be preferable to change
+    the clock position of the label i.e.  labels could appear to the left of
+    the point. This is handled below with<b> moptions()</b>.
+<p>
+    batplot mpg turn, title(Agreement between mpg and turn) info
+        valabel(make) notrend xlab(26(4)38) moptions(mlabp(9))
+<p>
+    Additionally in the case of multiple scatter points by using the
+    <b>scatter()</b> option the user can specify to "<b>jitter</b>" datapoints
+<p>
+    batplot mpg turn, notrend xlab(26(4)38) moptions(mlabp(9)) sc(jitter(4))
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+Adrian Mander, MRC Biostatistics Unit, Cambridge, UK.
+<p>
+Email adrian.mander@mrc-bsu.cam.ac.uk
+<p>
+<b><u>Also see</u></b>
+<p>
+Related commands
+<p>
+HELP FILES
+baplot (if installed)
+</pre>

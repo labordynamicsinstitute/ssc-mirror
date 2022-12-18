@@ -171,6 +171,7 @@ p pstrata module for optimal propensity score stratification
 p psweight module to perform IPW- and CBPS-type propensity score reweighting, with various extensions
 p ptrend module for trend analysis for proportions
 p ptvtools module contining various tools for PTV analysis
+p pullin module to run a many-to-one merge with a specific set of options
 p punaf module to compute population attributable fractions for cohort studies
 p punafcc module to compute population attributable fractions for case-control and survival studies
 p putdocxcrosstab module to produce crosstabulations with putdocx

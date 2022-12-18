@@ -1,0 +1,250 @@
+<pre>
+ 
+<b> help blp</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>blp</b> -- Berry Levinsohn Pakes random coefficients logit estimator
+<p>
+<b><u>Syntax</u></b>
+<p>
+    <b>blp</b> <i>sharevar</i> [<i>varlist</i>] [<i>if</i>] [<i>in</i>]<b>,</b> <b>endog(</b><i>endogvars=inst</i><b>)</b>
+            <b>stochastic(</b><i>svar1=dvars1,svar2=dvars2,..</i><b>)</b> <b>markets(</b><i>marketvar</i><b>)</b>
+            [<b>draws(</b><i>#</i><b>)</b> <b>demofile(</b><i>demodata</i><b>)</b> <b>tolin(</b><i>#</i><b>)</b> <b>tolout(</b><i>#</i><b>)</b>
+            <b>elast(</b><i>evar,emarket</i><b>)</b> <b>Robust</b> <b>Twostep</b> <b>Noisily</b> <b>Nocons</b>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>blp</b> estimates the random parameters logit demand model from product
+    market shares, using the algorithm proposed by Berry Levinsohn and
+    Pakes(1995).  This allows for endogenous prices, and individual specific
+    coefficients, that can be partially explained by observed variation in
+    demographic variables.  The heterogeneity parameters are estimated using
+    the modified Newton-Raphson method with analytic gradient.
+<p>
+<p>
+<b><u>Options for blp</u></b>
+<p>
+    <b>endog(</b><i>endogvars</i><b>=</b><i>inst</i><b>)</b> identifies <i>endogvars</i> as the endogenous variables,
+        and <i>inst</i> and the instruments, excluding those in <i>varlist</i>. Instruments
+        can still be listed if all variables are exogenous.
+<p>
+    <b>stochastic(</b><i>svar1</i><b>=</b><i>dvars1</i><b>,</b><i>svar2</i><b>=</b><i>dvars2</i><b>,</b>..<b>)</b> is required and identifies
+        <i>svar1</i>, <i>svar2</i> etc as variables with random coefficients, and
+        <i>dvars1</i>,<i>dvars2</i> as the demographic variables (optional). Coefficient
+        equations can contains different demographic variables.
+<p>
+    <b>markets(</b><i>marketvar</i><b>)</b> is required and identifies <i>marketvar</i> as the market
+        variable in the data, and in the demographic data if used.
+<p>
+    <b>draws(</b><i>#</i><b>)</b> specifies the number of simulation draws used to approximate the
+        intgral over the random coefficients.  The defualt is 100.
+<p>
+    <b>demofile(</b><i>demodata</i><b>)</b> identifies <i>demodata</i> as the path to the file that
+        contains the random draws of the demographic variables by market.
+<p>
+    <b>tolin(</b><i>#</i><b>)</b> specifies the tolerance level used to define convergence of the
+        contraction mapping algorithm. The default is 1E-14.
+<p>
+    <b>tolout(</b><i>#</i><b>)</b> specifies the tolerance level used to define convergence of the
+        GMM estimator. The defualt is 10E-12.
+<p>
+    <b>elast(</b><i>evar</i><b>,</b><i>emarket</i><b>)</b> computes the matrix of demand elasticities for
+        variable <i>evar</i> in market<i> emarket</i>. Note that these can only be computed
+        for a variable in<i> svar1</i>,<i>svar2</i> etc.
+<p>
+    <b>Robust</b> computes an estimate of the standard errors that are robust to
+        heteroskedasticity across markets, and correlation across products.
+        The default assumes that the errors are iid.
+<p>
+    <b>Twostep</b> computes the two-step GMM estimator.
+<p>
+    <b>Noisily</b> displays the iterations during estimation. This indicates
+        convergence of the contraction mapping by market, heterogeneity
+        parameters and associated analytical gradients.
+<p>
+    <b>Nocons</b> estimates the model without the constant term.
+<p>
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>blp</b> requires the data to be in long form, where each market contains
+    observations on product shares and characteristics. There is no
+    requirement for products to be the same across markets.
+<p>
+    The number of draws<i> #</i> in <b>draws(</b><i>#</i><b>)</b> is set to 100, but the user should test
+    the stability of the estimates for larger values.
+<p>
+    If demographic variables are used, it is necessary for<i> demofile</i> to
+    contain an equal number of draws across markets (in long-form), and with
+    market identifier<i> marketvar</i>. This number will override<i> #</i>.  As Nevo(2000)
+    points out, identification of the coefficients, requires variation in the
+    distribution of demographic variables over several markets.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+   <b><u>Example 1: No demographic variables</u></b>
+<p>
+    In this example, consumers can select from 6 alternatives including the
+    outside good.  Choice data is generated for 50,000 individuals over 25
+    markets, and aggregated to form shares. The observed characteristics
+    (excluding the constant) are:<i>  x1</i>,<i> x2</i> which are exogenous, and price<i> p</i>
+    which is endogenous. The coefficients vary over individuals, with means
+    (1,1,-1) and standard deviations (1,1,0.5) respectively. Price is
+    instrumented by an suply side variable<i> z</i>, and to identify the standard
+    deviations, a further set of instruments <i>z2=z^2</i>,<i> x12=x1^2</i>,<i> x22=x2^2</i>,
+    <i>expx1=exp(x1)</i>, and<i> expx2=exp(x2)</i> are created. The option <b>elast(</b><i>p,1</i><b>)</b> is
+    included to post the price elasticities for market 1.
+<p>
+<p>
+<p>
+    <b>. use blp_nodemo,clear</b>
+<p>
+    <b>. set seed 2001862510</b>
+<p>
+    <b>. blp s x1 x2, stochastic(x1,x2,p) endog(p=z z2 x12 x22 expx1 expx2)</b>
+    <b>markets(mkt) draws(200) elast(p,1)</b>
+<p>
+Iteration 0:  f(p) =  3.5424634  (not concave)
+Iteration 1:  f(p) =  1.3188697
+Iteration 2:  f(p) =  .97161122
+Iteration 3:  f(p) =   .8951762
+Iteration 4:  f(p) =  .89338484
+Iteration 5:  f(p) =  .89338385
+Iteration 6:  f(p) =  .89338385
+<p>
+One step estimates                                    Number of obs= 125
+                                                      Number of markets= 25
+------------------------------------------------------------------------------
+             |      Coef.   Std. Err.      z    P&gt;|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+Mean Utility |
+        cons |   5.065248    .909824     5.57   0.000     3.282026     6.84847
+          x1 |   1.057797    .124657     8.49   0.000      .813474     1.30212
+          x2 |   1.066779   .1448797     7.36   0.000     .7828198    1.350738
+           p |  -.9908965   .1233748    -8.03   0.000    -1.232707   -.7490864
+-------------+----------------------------------------------------------------
+x1           |
+          SD |   1.081303   .2331608     4.64   0.000     .6243167     1.53829
+-------------+----------------------------------------------------------------
+x2           |
+          SD |    1.06941    .234606     4.56   0.000     .6095908     1.52923
+-------------+----------------------------------------------------------------
+p            |
+          SD |   .5490221   .1436066     3.82   0.000     .2675583    .8304858
+------------------------------------------------------------------------------
+<p>
+    All parameters are significant at the 5% level, and the estimates of the
+    standard-deviations (denoted SD in the above) are very close to their
+    true values. To display the price elasticity matrix type:
+<p>
+    <b>. matrix list e(elast)</b>
+<p>
+e(elast)[5,5]
+            c1          c2          c3          c4          c5
+r1  -1.8574321   .23411686   1.1157211   .08263752   .27073708
+r2   1.7334231  -4.0139038   1.0088303   .21048866    .3898307
+r3   2.1954042   .26810508  -3.3967697   .07055121   .26821809
+r4   1.1356809    .3906932   .49274782  -3.3028753   .57820293
+r5   1.8106098   .35211236   .91160432   .28137038  -4.0760402
+<p>
+<p>
+<p>
+    The<i> ij</i>-elements of the elasticity matrix represent (approximately) the
+    %-change in the demand for product<i> i</i>, following a 1% increase in the
+    price of product<i> j</i>.
+<p>
+<p>
+<p>
+   <b><u>Example 2: Demographic data</u></b>
+<p>
+    This example extends the DGP, to allow the coefficient on<i> x1</i> to be a
+    linear function of demographic variable <i>D</i>, which has a true coefficient
+    of 1. The demographic variable is generated from a log-normal
+    distribution, and to assist in parameter identification, the variance of
+    <i>D</i> differs over markets. Furthermore, the number of available alternatives
+    is increased to 10.  File<b> demodata.dta</b> contains 2000 draws of<i> D</i>, and
+    following Romeo(2010), the mean demographics for each market<i> mu_D</i> is
+    constructed and used an an additional instrument.
+<p>
+<p>
+    <b>. use blp_demo,clear</b>
+<p>
+    <b>. set seed 2001862510</b>
+<p>
+    <b>. blp s x1 x2, stochastic(x1=D,x2,p) endog(p=z z2 x12 x22 mu_D)</b>
+    <b>markets(mkt) demofile(demodata)</b>
+<p>
+number of draws set to number in demographic data file
+draws per market is:  2000
+Demographic variables appearing in random coefficients equation
+<p>
+    D
+x1  1
+x2  0
+ p  0
+Do you wish to continue?: 1=yes, 0=no?. 1
+estimation continuing
+Iteration 0:  f(p) =  15.625377  (not concave)
+Iteration 1:  f(p) =  9.3971018  (not concave)
+Iteration 2:  f(p) =  4.2458365
+Iteration 3:  f(p) =  .27343605
+Iteration 4:  f(p) =  .00312217
+Iteration 5:  f(p) =  9.873e-07
+Iteration 6:  f(p) =  3.970e-13
+Iteration 7:  f(p) =  9.301e-20
+<p>
+One step estimates                                    Number of obs= 225
+                                                      Number of markets= 25
+------------------------------------------------------------------------------
+             |      Coef.   Std. Err.      z    P&gt;|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+Mean Utility |
+        cons |  -5.221238   .5138024   -10.16   0.000    -6.228272   -4.214203
+          x1 |   .9782134   .2445123     4.00   0.000     .4989781    1.457449
+          x2 |   .9997277   .1193572     8.38   0.000     .7657918    1.233664
+           p |  -1.048863   .2948107    -3.56   0.000    -1.626682   -.4710451
+-------------+----------------------------------------------------------------
+x1           |
+           D |   1.110372   .0919074    12.08   0.000     .9302363    1.290507
+          SD |   .9767599   .1012825     9.64   0.000     .7782499     1.17527
+-------------+----------------------------------------------------------------
+x2           |
+          SD |   1.012472   .1785324     5.67   0.000      .662555    1.362389
+-------------+----------------------------------------------------------------
+p            |
+          SD |   .5880409   .2002728     2.94   0.003     .1955133    .9805684
+------------------------------------------------------------------------------
+<p>
+    Hence from the above, the coefficient on<i> x1</i> given<i> D</i>, has an estimated
+    mean of 0.978+1.11*<i>D</i> and a standard deviation of 0.977.
+<p>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    David Vincent
+    Deloitte Economic Consulting LLP
+    Athene Place, 66 Shoe Lane, London, EC4A 3BQ
+    davivincent@deloitte.co.uk
+<p>
+<p>
+<p>
+<b><u>References</u></b> 
+<p>
+    Berry, S., J. Levinsohn, and A. Pakes, (1995), “Automobile Prices in
+        Market Equilibrium,”<i> Econometrica</i>, 63, 4, 841-90.
+<p>
+    Nevo, Aviv, (2000), “A Practitioner's Guide to Estimation of
+        Random-Coefficients Logit Models of Demand,”<i> Journal of Economics &amp;</i>
+        <i>Management Strategy</i>.
+<p>
+    Romeo, Charles J., (2010), “Filling Out the Instrument Set in Mixed Logit
+        Demand Systems for Aggregate Data”,<i> US Department of Justice,600 E</i>
+        <i>Street, NW–Suite 10000 Washington, DC 20530.</i>
+.
+</pre>

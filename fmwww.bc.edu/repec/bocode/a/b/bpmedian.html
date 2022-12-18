@@ -1,0 +1,221 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>bpmedian</b> and <b>bpdifmed</b>                                   (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Bonett-Price confidence intervals for medians and their contrasts</u></b>
+<p>
+        <b>bpmedian</b> <i>varname</i> [<i>if</i>] [<i>in</i>] [ , <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <b><u>ef</u></b><b>orm</b> <b>fast</b> ]
+<p>
+        <b>bpdifmed</b> <i>varname</i> [<i>if</i>] [<i>in</i>] , <b>by(</b><i>groupvarname</i><b>)</b> [ <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <b><u>ef</u></b><b>orm</b> <b>fast</b> ]
+<p>
+    where <i>groupvarname</i> is the name of a grouping variable, which should only
+    have two non-missing values.
+<p>
+    <b>by</b> is allowed; see <b>[R] by</b>.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>bpmedian</b> calculates a Bonett-Price confidence interval for a median,
+    using the Bonett-Price standard error, and saves the results as
+    estimation results.  These can then be saved in an output dataset (or
+    resultsset), using the <b>parmest</b> package (downloadable from SSC), and then
+    input to the <b>metaparm</b> module of the <b>parmest</b> package to calculate
+    Bonett-Price confidence intervals for a linear contrast between medians
+    of independent groups.  <b>bpdifmed</b> calculates Bonett-Price confidence
+    intervals for the medians of two groups, defined by a grouping variable,
+    and also for their difference or ratio.
+<p>
+<p>
+<b><u>Options for </u></b><b><u>bpmedian</u></b><b><u> and </u></b><b><u>bpdifmed</u></b>
+<p>
+    <b>level</b> specifies the confidence level to be used for calculating the
+        confidence intervals.
+<p>
+    <b>eform</b> specifies that confidence intervals will be calculated for the
+        exponentiated median(s), and also, in the case of <b>bpdifmed</b>, for the
+        ratio between the first exponentiated median and the second
+        exponentiated median.  The <b>eform</b> option is useful if the input 
+        <i>varname</i> contains the logarithms of a primary variable, because, for a
+        continuous positive random variable, the ratio between two
+        exponentiated subpopulation medians of the logged variable is then
+        the ratio between the two corresponding unexponentiated subpopulation
+        medians of the unlogged variable.  If <b>eform</b> is not specified, then
+        confidence intervals are calculated for the unexponentiated
+        median(s), and also, in the case of <b>bpdifmed</b>, for the difference
+        between the first median and the second median.  Note that, for a
+        real-life variable (which is never perfectly continuous in a finite
+        sample), the median estimate produced when using the logged variable
+        and specifying <b>eform</b> may be different from the median estimate
+        produced when using the unlogged variable and not specifying <b>eform</b>.
+        This is because the unlogged variable may have two mid-range values.
+        In this case, the median estimate produced using the unlogged
+        variable without <b>eform</b> is the arithmetic mean of the two mid-range
+        values, and the median estimate produced using the logged variable
+        with <b>eform</b> is the geometric mean of the two mid-range values, and is
+        lower than their arithmetic mean.
+<p>
+    <b>fast</b> is an option for programmers.  It specifies that <b>bpmedian</b> and
+        <b>bpdifmed</b> will take no action to restore the original data if the
+        program fails, or if the user presses Break.
+<p>
+<p>
+<b><u>Options for </u></b><b><u>bpdifmed</u></b><b><u> only</u></b>
+<p>
+    <b>by(</b><i>groupvarname</i><b>)</b> specifies a grouping variable, which must have exactly 2
+        non-missing values.  <b>bpdifmed</b> will estimate the difference between
+        the medians, or the ratio between the exponentiated medians, for the
+        dependent variable specified by the <i>varname</i> in the two groups.
+<p>
+<p>
+<b><u>Use of </u></b><b><u>predict</u></b><b><u> after </u></b><b><u>bpmedian</u></b>
+<p>
+    If <b>predict</b> is used after <b>bpmedian</b>, then the predicted values calculated
+    (using <b>predict</b> with no options or with the <b>xb</b> option) will be equal to
+    the estimated median, and the standard errors calculated (using <b>predict</b>
+    with the <b>stdp</b> option) will be equal to the standard error of the
+    estimated median.  The <b>score</b> option of <b>predict</b> is not allowed after
+    <b>bpmedian</b>.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    The Bonett-Price variance estimator fot the sample median is introduced
+    in Price and Bonett (2001).  The theory behind Bonett-Price confidence
+    intervals for general contrasts of independent sample medians is
+    introduced in Bonett and Price (2002).  The special case of confidence
+    intervals for the difference or ratio between the medians of two
+    independent groups is discussed in Price and Bonett (2002).  The formulas
+    for these confidence intervals are related to the confidence interval
+    formulas used by <b>centile</b>, <b>mean</b> and <b>ttest</b>, but are not the same formulas
+    as used by either of those commands.
+<p>
+    Note that the difference (or ratio) between medians is not the same
+    parameter as the Hodges-Lehmann median pairwise difference (or ratio)
+    between values of a variable in two groups, which is estimated by the 
+    <b>cendif</b> module of the <b>somersd</b> package, downloadable from SSC.  The two
+    population parameters are the same if either the two subpopulation
+    distributions are symmetrical or the two subpopulation distributions
+    differ only in location.  The methods of <b>bpmeddif</b> and <b>cendif</b> still
+    produce consistent estimates if neither of these assumptions is true.
+    However, under those circumstances, the two methods are estimating
+    different parameters, and are not alternative methods for estimating the
+    same parameter.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>.sysuse auto, clear</b>
+        <b>.bpmedian weight</b>
+        <b>.bpdifmed weight, by(foreign)</b>
+<p>
+        <b>.sysuse auto, clear</b>
+        <b>.gene logweight=log(weight)</b>
+        <b>.bpmedian logweight, eform</b>
+        <b>.bpdifmed logweight, eform by(foreign)</b>
+<p>
+    The following example demonstrates the use of <b>bpmedian</b> with the <b>parmby</b>
+    and <b>metaparm</b> modules of the <b>parmest</b> package, downloadable from SSC.  We
+    first estimate medians for length (in inches) in even-numbered US cars,
+    odd-numbered US cars, even-numbered non-US cars, and odd-numbered non-US
+    cars.  These medians, with their confidence limits and <i>P</i>-values, are
+    stored in an output dataset (or resultsset), with one observation per car
+    group, which is stored in the memory, overwriting the original input
+    dataset.  The new dataset is listed.  We then use <b>metaparm</b> to estimate
+    the difference between differences between non-US cars and US cars with
+    odd and even sequence numbers.  This difference between differences (or
+    interaction) is listed, and not saved.
+<p>
+        <b>.sysuse auto, clear</b>
+        <b>.gene byte odd=mod(_n,2)</b>
+        <b>.parmby "bpmedian length", by(foreign odd) norestore</b>
+        <b>.list</b>
+        <b>.metaparm [iweight=((odd==1)-(odd==0))*((foreign==1)-(foreign==0))],</b>
+            <b>list(,)</b>
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>bpmedian</b> saves the following in <b>e()</b>:
+<p>
+    Scalars        
+      <b>e(N)</b>                number of observations
+      <b>e(c)</b>                rank of original upper confidence limit
+<p>
+    Macros         
+      <b>e(cmd)</b>              <b>bpmedian</b>
+      <b>e(cmdline)</b>          command as typed
+      <b>e(depvar)</b>           name of dependent variable
+      <b>e(properties)</b>       <b>b V</b>
+<p>
+    Matrices       
+      <b>e(b)</b>                coefficient vector
+      <b>e(V)</b>                variance-covariance matrix of the estimators
+<p>
+    Functions      
+      <b>e(sample)</b>           marks estimation sample
+<p>
+    The scalar <b>e(c)</b> contains the rank, in the outcome-sorted sample, of the
+    original upper confidence limit, denoted as <b>c</b> in the equations of Price
+    and Bonett (2001).  The Bonett-Price standard error is an example of a
+    standard error calculated by the inverse confidence interval method,
+    using an original confidence interval, defined without using a standard
+    error, and extending from the <b>N-c+1</b>th order statistic to the <b>c</b>th order
+    statistic.  The <b>invcise</b> package, downloadable from SSC, is also used to
+    compute standard errors for sample statistics, using the inverse
+    confidence interval method.
+<p>
+    <b>bpdifmed</b> saves the following in <b>r()</b>:
+<p>
+    Scalars        
+      <b>r(N)</b>                number of observations
+      <b>r(N_1)</b>              first sample size
+      <b>r(N_2)</b>              second sample size
+      <b>r(level)</b>            confidence level
+<p>
+    Macros         
+      <b>r(depvar)</b>           name of dependent variable
+      <b>r(by)</b>               name of <b>by()</b> variable defining groups)
+      <b>r(eform)</b>            <b>eform</b> if specified
+<p>
+    Matrices       
+      <b>r(cimat)</b>            matrix of sample numbers, confidence intervals and
+                            <i>P</i>-values
+<p>
+    The matrix <b>r(cimat)</b> is displayed as output by <b>bpdifmed</b>.  It has 5
+    columns, containing sample numbers, estimates, lower and upper confidence
+    limits, and <i>P</i>-values, respectively.  It has 3 rows, containing this
+    information on the first sample median, the second sample median, and the
+    difference (or ratio) between medians, respectively.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, National Heart and Lung Institute, Imperial College London,
+    UK.
+    Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Bonett, D. G. and Price, R. M.  2002.  Statistical inference for a linear
+        function of medians:  Confidence intervals, hypothesis testing, and
+        sample size requirements.  <i>Psychological Methods</i> 7(3): 370-383.
+<p>
+    Price, R. M. and Bonett, D. G.  2002.  Distribution-free confidence
+        intervals for difference and ratio of medians.  <i>Journal of</i>
+        <i>Statistical Computation and Simulation</i> 72(2): 119-124.
+<p>
+    Price, R. M. and Bonett, D. G.  2001.  Estimating the variance of the
+        sample median.  <i>Journal of Statistical Computation and Simulation</i>
+        68(3): 295-305.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+     Manual: <b>[R] centile</b>, <b>[R] mean</b>, <b>[R] ttest</b>, <b>[R] predict</b>
+    On-line: help for <b>centile</b>, <b>mean</b>, <b>ttest</b>, <b>predict</b>
+             help for <b>parmest</b>, <b>parmby</b>, <b>parmcip</b>, <b>metaparm</b>, <b>somersd</b>, <b>cendif</b>, 
+             <b>censlope</b>, <b>invcise</b> if installed
+</pre>

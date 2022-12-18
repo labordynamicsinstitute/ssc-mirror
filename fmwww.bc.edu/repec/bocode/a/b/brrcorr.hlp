@@ -1,0 +1,129 @@
+{smcl}
+{hline}
+help for {hi:brrcorr}
+{hline}
+
+
+{title:Correlations of variables with BRR-based significance calculations}
+
+
+{p 8 17}{cmd:brrcorr}{space 2}[{it:varlist}] [{it:weight}] [{cmd:if} {it:exp}]
+		[{cmd:in} {it:range}] [{cmd:,} 
+		{cmd:pw} {cmdab:o:bs} {cmd:sig} {cmdab:p:rint(}{it:#}{cmd:)} {cmdab:st:ar(}{it:#}{cmd:)}
+		{cmdab:b:onferroni} {cmdab:sid:ak}
+		
+{p 17 17}{cmdab:brrw:eight(}{it:varlist}{cmd:)} 
+		{cmdab:fay(}{it:#}{cmd:)}
+		{cmdab:dof(}{it:#}{cmd:)} ]
+
+{cmd:by} {it:...} {cmd::} may be used with the above commands; see {help by}.
+
+{cmd:pweights} are allowed; see {help weights}.
+
+
+{title:Description}
+
+{p}{cmd:brrcorr} displays the correlation matrix for {it:varlist} or, if {it:varlist} is not
+specified, for all variables in the data.  Observations are excluded from the calculation due to missing values on
+a casewise basis, unless the {cmd:pw} option is specified.
+
+{p}Significance levels of the correlations are based on standard errors that are calculated 
+using a series of user-supplied replication weights, by the
+balanced repeated replication (BRR) method.  This is an alternate method to
+the Taylor series linearization methods used by Stata's {help svy:svy-based} commands.
+
+
+{title:Options}
+
+{p 0 4}{cmd:brrweight()} specifies the list of variables that contain the replicate weights
+for the dataset.  The standard errors for the model are based on the variation in 
+the estimates generated across the various weights.
+
+{p 4 4}A set of {cmd:brrweights} is required for the analysis.  Once the brrweights are specified
+they are stored as a {help char:characteristic} of the dataset and need not be respecified in subsequent command.
+
+{p 0 4}{cmd:fay()} specifies the k value that should be used for weighting the estimates, based
+on Fay's method.  The default is zero, meaning that simple averaging will be used.  As with the replicate weights,
+the value for fay() is stored as a characteristic of the dataset once it is specified, and need not be
+re-specified in subsequent commands.
+
+{p 0 4}{cmd:dof()} specifies the degrees of freedom for model fit and t-statistics.  The default is
+to use the number of replications.
+
+{p 0 4}{cmd:pw} specifies that observations are to be excluded from the calculations on a pairwise basis.  The default is 
+casewise.
+
+{p 0 4}{cmd:obs} adds a line to each row of the matrix reporting the number of observations used 
+in calculating the correlation coefficient.
+
+{p 0 4}{cmd:sig} adds a line to each row of the matrix reporting the significance level of each correlation coefficient.
+
+{p 0 4}{cmd:print(}{it:#}{cmd:)} specifies the significance level of correlation coefficients to be printed.  
+Coefficients with larger significance levels are left blank.  {cmd:print(10)} or {cmd:print(.1)}
+would list only coefficients significant at the 10% level or better.
+
+{p 0 4}{cmd:star(}{it:#}{cmd:)} specifies the significance level of coefficients to be starred.
+{cmd:star(5)} or {cmd:star(.05)} would star all coefficients significant at the 5% level or better.
+
+{p 0 4}{cmd:bonferroni} makes the Bonferroni adjustment to calculated significance levels.  
+This affects printed significance levels and the {cmd:print()} and {cmd:star()} options.  
+{cmd:"pwcorr, print(.05) bonferroni"} prints coefficients with Bonferroni-adjusted 
+significance levels of .05 or less.
+
+{p 0 4}{cmd:sidak} makes the Sidak adjustment to calculated significance levels.  
+This affects printed significance levels and the {cmd:print()} and {cmd:star()} 
+options.  {cmd:"pwcorr, print(.05) sidak"} prints coefficients with Sidak-adjusted
+significance levels of .05 or less.
+
+
+{title:Examples}
+
+{p 8 12}{inp:. brrcorr dvcrate medage [pw=wgt], brrw(bw*)}
+
+{p 8 12}{inp:. brrcorr mrgrate dvcrate medage, pw obs sig} 
+
+
+
+{title:Methods and formulae}
+
+{p}Point estimates are calculated using aweights.  
+Significance levels of the estimated correlations are based on the variance matrix of each estimate, 
+calculated as follows:
+
+                   G    
+          V = c * SUM [ (r - r(i))^2 ]
+                  i=1
+
+{p}where r is the estimated coefficient based on the full sample weights, 
+r(i) is the estimated coefficient using the i'th set of replicate weights, 
+G is the number of replicates, and c is a constant defined as:
+
+         1 / G            for standard BRR (i.e. fay==0), or
+
+         1 / (G*(1-k)^2)  for Fay's method.
+         
+{p}For calculation of variances and significances, the correlations are first
+transformed using Fisher's Z transformation, in order to normalize the distribution.
+
+
+{title:Saved Results}
+
+{p}{cmd:brrcorr} saves in r() the following for the last-calculated correlation:
+
+        rho  the estimated correlation coefficient
+        N    the number of observations
+        p    the p-level
+
+
+{title:Acknowledgements}
+
+{p}These commands consists largely of the ado file code from official Stata's {cmd:pwcorr} command.
+I would like to thank Bobby Gutierrez at StataCorp for advice on implementation of BRR.
+
+
+{title:Author}
+
+	Nick Winter
+	Cornell University
+	nw53@cornell.edu
+

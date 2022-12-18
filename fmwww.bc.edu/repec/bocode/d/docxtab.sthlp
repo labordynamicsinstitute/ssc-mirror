@@ -10,6 +10,7 @@ help for {cmd:docxtab} {right:(Roger Newson)}
   {break}
   {cmdab:headc:hars}{cmd:(}{it:namelist}{cmd:)} {cmdab:footc:hars}{cmd:(}{it:namelist}{cmd:)}
   {cmdab:headf:ormat}{cmd:(}{it:cell_fmt_options}{cmd:)} {cmdab:footf:ormat}{cmd:(}{it:cell_fmt_options}{cmd:)}
+  {cmdab:tcol:chars}{cmd:(}{it:namelist}{cmd:)}
   {cmdab:trow:seq}{cmd:(}{newvar}{cmd:)}
   {it:table_data_options}
   ]
@@ -78,6 +79,14 @@ to apply to the footer rows.
 For instance, {cmd:footformat(italic)} specifies that the footer rows will all be in italic fonts.
 
 {phang}
+{cmd:tcolchars(}{it:namelist}{cmd:)} specifies a list of {help char:variable characteristic names},
+naming characteristics set to contain table cell format options
+for the corresponding variables in the {varlist}.
+For instance, if a characteristic in the {it:namelist} belonging to a variable in the {varlist}
+has value {cmd:halign(right)},
+then the column of the generated table containing that variable will be right-aligned.
+
+{phang}
 {cmd:trowseq(}{newvar}{cmd:)} specifies the name of a generated variable,
 to contain, in each observation,
 the table row sequence corresponding to that observation.
@@ -108,7 +117,8 @@ which are described in {help docxtab##docxtab_newson2022:Newson (2022)},
 
 {pstd}
 The following example demonstrates the creation of a {cmd:.docx} document,
-containing a table with one header row extracted from a characteristic.
+containing a table with one header row extracted from a characteristic
+and column alignments extracted from another characteristic.
 The table has 1 row for each of the 22 non-US car models in the {helpb sysuse:auto} data.
 
 {pstd}
@@ -119,18 +129,20 @@ Set up:
 {phang2}{cmd:. describe, full}{p_end}
 
 {pstd}
-Assign characteristic {cmd:varhandle} to variables {cmd:make}, {cmd:mpg}, and {cmd:weight},
+Assign characteristics {cmd:varhandle} and {cmd:colfmt} to variables {cmd:make}, {cmd:mpg}, and {cmd:weight},
 using the {help ssc:SSC} package {helpb chardef}:
 
 {phang2}{cmd:. chardef make mpg weight, char(varhandle) values("Car model" "Miles per US gallon" "Weight (US pounds)")}{p_end}
+{phang2}{cmd:. chardef make mpg weight, char(colfmt) values("halign(left)" "halign(right)" "halign(right)")}{p_end}
 {phang2}{cmd:. char list}{p_end}
 
 {pstd}
 Create document in the file {cmd:myword.docx},
-with the first line of variable handles italicized:
+with the first line of variable handles italicized,
+and the table columns aligned left, right, and right:
 
 {phang2}{cmd:. putdocx begin,  pagesize(A4)}{p_end}
-{phang2}{cmd:. docxtab make mpg weight, tablename(mytable) headchar(varhandle) headformat(italic)}{p_end}
+{phang2}{cmd:. docxtab make mpg weight, tablename(mytable) headchar(varhandle) headformat(italic) tcolchar(colfmt)}{p_end}
 {phang2}{cmd:. return list}{p_end}
 {phang2}{cmd:. putdocx describe mytable}{p_end}
 {phang2}{cmd:. putdocx save "myword.docx", replace}{p_end}
@@ -268,5 +280,5 @@ Download from {browse "http://www.stata-journal.com/article.html?article=st0043"
 Help for {helpb putdocx}, {helpb putdocx_table:putdocx table}
 {p_end}
 {p 4 13 2}
-Help for {helpb chardef}, (helpb sdecode}, {helpb ingap}, {helpb insingap}, {helpb listtab} if installed
+Help for {helpb chardef}, {helpb sdecode}, {helpb ingap}, {helpb insingap}, {helpb listtab} if installed
 {p_end}

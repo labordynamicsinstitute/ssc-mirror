@@ -1,4 +1,4 @@
-*! version 1.3.8  21nov2022  Ben Jann
+*! version 1.4.2  15dec2022  Ben Jann
 
 capt mata: assert(mm_version()>=201)
 if _rc {
@@ -7,8 +7,9 @@ if _rc {
     error 499
 }
 
-program dstat, eclass properties(svyb svyj)
+program dstat, eclass
     version 14
+    local version : di "version " string(_caller()) ":"
     if replay() {
         Replay `0'
         exit
@@ -19,20 +20,15 @@ program dstat, eclass properties(svyb svyj)
         exit
     }
     if `"`subcmd'"'=="predict" {
-        Predict `00'
+        `version' Predict `00'
         exit
     }
-    local version : di "version " string(_caller()) ":"
     if `"`subcmd'"'==substr("frequency",1,max(4,strlen(`"`subcmd'"'))) {
         // alias for -proportion, frequency-
         local subcmd proportion
         Parse_frequency `00'
     }
-    else {
-        if "`subcmd'"=="pw" {
-            local pw pw
-            local subcmd summarize
-        }
+    else if "`subcmd'"!="pw" {
         capt Parse_subcmd `subcmd' // expands subcmd
         if _rc==1 exit _rc
         if _rc { // try summarize
@@ -45,25 +41,24 @@ program dstat, eclass properties(svyb svyj)
     }
     Get_diopts `subcmd' `00' // returns 00, diopts, dioptshaslevel
     tempname BW AT
-    Check_vce "`BW' `AT'" `subcmd' `00'
-    if "`vcetype'"=="svyr" {
-        if `"`svylevel'"'!="" {
-            if `dioptshaslevel'==0 {
-                local diopts `svylevel' `diopts'
-            }
+    `version' Check_vce "`BW' `AT'" `subcmd' `00'
+    if "`vcetype'"=="svyr" { // svy linearized
+        if `"`svylevel'"'!="" & `dioptshaslevel'==0 {
+            local diopts `svylevel' `diopts'
         }
-        `version' dstat_SVYR `"`svyopts'"' `subcmd' `00'
-        if "`vcenocov'"!="" Remove_Cov
+        `version' SVY_linearized `"`svyopts'"' `subcmd' `00'
+        SVY_cleanup `nocov'
     }
-    else if "`vcetype'"=="svy" {
-        `version' svy `svytype', noheader notable `svyopts': dstat `subcmd' `00'
-        if "`vcenocov'"!="" Remove_Cov
+    else if "`vcetype'"=="svy" { // svy brr etc.
+        `version' svy `svytype', noheader notable `svyopts': /*
+            */ dstat_svyr `subcmd' `00'
+        SVY_cleanup `nocov'
     }
     else if "`vcetype'"!="" { // bootstrap/jackknife
         `version' _vce_parserun dstat, noeqlist wtypes(pw iw) ///
             bootopts(noheader notable force) ///
             jkopts(noheader notable force) : `subcmd' `00'
-        if "`vcenocov'"!="" Remove_Cov
+        if "`nocov'"!="" Remove_Cov
     }
     else {
         if c(stata_version)<15 {
@@ -75,12 +70,8 @@ program dstat, eclass properties(svyb svyj)
             tempname ecurrent
             _estimates hold `ecurrent', restore nullok
         }
-        if "`pw'"!="" {
-            Estimate_PW `00'
-        }
-        else {
-            Estimate `subcmd' `00'
-        }
+        Estimate `subcmd' `00'
+        if `"`markesample'"'!="" exit
         if c(stata_version)<15 {
             _estimates unhold `ecurrent', not
         }
@@ -90,7 +81,10 @@ program dstat, eclass properties(svyb svyj)
     Replay, `diopts'
     if `"`e(generate)'"'!="" {
         if `"`generate_quietly'"'=="" {
+            tempname rcurrent
+            _return hold `rcurrent'
             describe `e(generate)'
+            _return restore `rcurrent'
         }
     }
 end
@@ -183,32 +177,37 @@ program Get_diopts
 end
 
 program Check_vce
+    version 14
+    local version : di "version " string(_caller()) ":"
     gettoken BWAT 0 : 0
     gettoken subcmd 0 : 0
     _parse comma lhs 0 : 0
-    syntax [, vce(str) NOSE * ]
+    syntax [, vce(str) NOSE NOCOV COV * ]
     if `"`vce'"'=="" exit
-    Parse_vceopt `vce' // returns vcetype, vcevars, svytype, svyopts, level, cov, nocov
+    Parse_vceopt `vce' /* returns vcetype and, depending on situation, vcevars,
+        svyopts, svylevel, svytype, svysubpop */
     if "`vcetype'"=="" exit // no prefix command
     // cov/nocov
     if "`cov'"!="" & "`nocov'"!="" {
-        di as err "{bf:vce()}: only one of {bf:cov} and {bf:nocov} allowed"
+        di as err "only one of {bf:cov} and {bf:nocov} allowed"
         exit 198
     }
-    if `"`subcmd'"'!="summarize" & "`cov'"=="" local nocov nocov
-    c_local vcenocov `nocov'
+    if !inlist(`"`subcmd'"',"summarize","pw") & "`cov'"=="" local nocov nocov
+    c_local nocov `nocov'
     // svy linearized
     if "`vcetype'"=="svyr" {
-        c_local 00 `lhs', nose `options'
+        c_local 00 `lhs', `options'
         c_local svyopts `svyopts'
         c_local svylevel `svylevel'
         c_local vcetype svyr
         exit
     }
-    // check for options that are not allowed with replication techniques
+    // check for options that are not allowed with replication techniques and
+    // parse options related to grid and bandwidth
     local 0 `", `options'"'
-    syntax [, Generate(passthru) BWidth(passthru) BWADJust(passthru) ///
-        n(passthru) at(passthru) BALance(passthru) * ]
+    syntax [, Generate(passthru) BALance(passthru) /*
+        */ BWidth(passthru) BWADJust(passthru) noBWFIXed /*
+        */ n(passthru) at(passthru)  * ]
     local options `balance' `options'
     if `"`generate'"'!="" {
         local vcetype `vcetype' `svytype'
@@ -225,14 +224,15 @@ program Check_vce
     }
     // obtain bandwidth and evaluation grid; may replace bwidth and at; may
     // clear bwadj and n
-    Obtain_bwat "`BWAT'" `subcmd' `lhs', `bwidth' `bwadjust' `n' `at' nose `options' ///
-            _vcevars(`vcevars') _vcetype(`vcetype') _svysubpop(`svysubpop')
+    `version' Obtain_bwat "`BWAT'" `subcmd' `lhs', /*
+        */ `bwidth' `bwadjust' `bwfixed' `n' `at' nose `options' /*
+        */ _vcevars(`vcevars') _vcetype(`vcetype') _svysubpop(`svysubpop')
     local options `bwidth' `bwadjust' `n' `at' `options'
-    // svy
+    // svy brr etc.
     if "`vcetype'"=="svy" {
-        c_local 00 `lhs', nose `options'
-        c_local svyopts `"`svyopts'"'
-        c_local svytype `"`svytype'"'
+        c_local 00 `lhs', `options'
+        c_local svyopts `svyopts'
+        c_local svytype `svytype'
         c_local vcetype `vcetype'
         exit
     }
@@ -249,19 +249,8 @@ program Check_vce_balance_gen
 end
 
 program Parse_vceopt
-    // handle cov/nocov
-    _parse comma vcetype 0 : 0
-    syntax [, NOCOV COV * ]
-    if `"`options'"'!="" {
-        local 0 `", `options'"'
-    }
-    else local 0 ""
-    if "`cov'`nocov'"!="" { // return vce() with cov/nocov removed
-        c_local vce `"`vcetype'`0'"'
-    }
-    c_local cov `cov'
-    c_local nocov `nocov'
     // split vcetype [args]
+    _parse comma vcetype 0 : 0
     gettoken vcetype vcearg : vcetype
     mata: st_local("vcearg", strtrim(st_local("vcearg")))
     // vce(svy)
@@ -318,27 +307,37 @@ program Parse_vceopt_jack
     c_local vcevars `cluster'
 end
 
-program Obtain_bwat   // returns bwidth, bwadjust, n, at
+program Obtain_bwat // may update bwidth, bwadjust, n, at
+    version 14
+    local version : di "version " string(_caller()) ":"
+    // determine whether grid or bandwidth needs to be determined
     gettoken BWAT   0 : 0
     gettoken subcmd 0 : 0
     if "`subcmd'"=="quantile" exit
     if "`subcmd'"=="lorenz" exit
     if "`subcmd'"=="share" exit
     if "`subcmd'"=="tip" exit
+    if "`subcmd'"=="pw" exit
     if "`subcmd'"=="summarize" local bwopt bwidth(str)
     else {
         if "`subcmd'"=="density" local bwopt bwidth(str)
         local atopt n(passthru) at(passthru)
     }
-    syntax [anything] [if] [in] [fw iw pw] [, ///
-        _vcevars(str) _vcetype(str) _svysubpop(str) ///
-        `bwopt' `atopt' * ]
+    _parse comma lhs 0 : 0
+    syntax [, `bwopt' `atopt' noBWFIXed ///
+        _vcevars(str) _vcetype(str) _svysubpop(str) * ]
     local getat 0
     if "`atopt'"!="" {
         if `"`at'"'=="" local getat 1
         local options `n' `at' `options'
     }
     local getbw 0
+    if "`bwfixed'"!="" {
+        local bwopt
+        if `"`bwidth'"'!="" {
+            local options bwidth(`bwidth') `options'
+        }
+    }
     if "`bwopt'"!="" {
         local getbw 1
         if `"`bwidth'"'!="" {
@@ -366,28 +365,29 @@ program Obtain_bwat   // returns bwidth, bwadjust, n, at
         }
     }
     if `getat'==0 & `getbw'==0 exit
+    // run dstat to determine grid and bandwidth
     gettoken BW BWAT : BWAT
     gettoken AT      : BWAT
     if `getat' & `getbw' local tmp "evaluation grid and bandwidth"
     else if `getbw'      local tmp "bandwidth"
     else                 local tmp "evaluation grid"
-    di as txt "(running {bf:dstat} to obtain `tmp')"
-    marksample touse
     if `"`_vcetype'"'=="svy" {
-        if `"`weight'"'!="" {
-            di as err "weights not allowed with {bf:vce(svy)}"
-            exit 198
-        }
-        tempvar svysub wvar
-        _svy_setup `touse' `svysub' `wvar', svy `_svysubpop'
-        qui replace `touse' = 0 if `svysub'==0
-        local wgt [pw = `wvar']
+        di as txt "(running {bf:dstat_svyr} to obtain `tmp')"
+        quietly `version' svy, `_svysubpop' vce(linearized): /*
+            */ dstat_svyr `subcmd' `lhs', `options'
+    }
+    else if `"`_vcevars'"'!="" {
+        di as txt "(running {bf:dstat} to obtain `tmp')"
+        local 0 `lhs', `options'
+        syntax [anything] [if] [in] [fw iw pw] [, * ]
+        marksample touse
+        markout `touse' `_vcevars', strok
+        quietly dstat `subcmd' `anything' if `touse' [`weight'`exp'], `options'
     }
     else {
-        loca wgt [`weight'`exp']
-        markout `touse' `_vcevars', strok
+        di as txt "(running {bf:dstat} to obtain `tmp')"
+        quietly dstat `subcmd' `lhs', `options'
     }
-    qui Estimate `subcmd' `anything' if `touse' `wgt', `options'
     if `getat' { 
         matrix `AT' = e(at)
         c_local at at(`AT')
@@ -400,21 +400,22 @@ program Obtain_bwat   // returns bwidth, bwadjust, n, at
     }
 end
 
-program dstat_SVYR, eclass
+program SVY_linearized, eclass
     local version : di "version " string(_caller()) ":"
     gettoken svyopts cmdline : 0
     nobreak {
         _svyset get strata 1
         if `"`r(strata1)'"'=="" {
-            // must set strata so that _robust (which is called by svy) does not 
-            // assume the mean of the scores variables to be zero; this is relevant
-            // for unnormalized statistics (totals, frequencies)
+            // must set strata so that _robust (which is called by svy) does
+            // not assume the mean of the scores variables to be zero; this
+            // is relevant for unnormalized statistics (totals, frequencies)
             tempname cons
             quietly gen byte `cons' = 1
             _svyset set strata 1 `cons'
         }
         capture noisily break {
-            `version' svy linearized, noheader notable `svyopts': dstat_svyr `cmdline'
+            `version' svy linearized, noheader notable `svyopts': /*
+                */ dstat_svyr `cmdline'
         }
         local rc = _rc
         if `"`cons'"'!="" {
@@ -423,15 +424,16 @@ program dstat_SVYR, eclass
         }
         if `rc' exit `rc'
     }
-    tempname b
-    mat `b' = e(b)
-    mata: ds_svylbl_b_undo() // returns k_eq
-    ereturn repost b=`b', rename
-    eret scalar k_eq = `k_eq'
+end
+
+program SVY_cleanup, eclass
+    args nocov
     eret local cmd "dstat"
+    eret local cmd0 ""
     eret local cmdname ""
-    eret local command
+    eret local command ""
     eret local V_modelbased "" // remove matrix e(V_modelbased)
+    if "`nocov'"!="" Remove_Cov
 end
 
 program Remove_Cov, eclass
@@ -499,23 +501,20 @@ program Predict
     // by default, IFs will be set only within e(sample); when -if/in- is 
     // specified, IFs will be set within the scope of -if/in- (i.e. IFs will be
     // set to zero for obs outside e(sample) but within -if/in-)
-    tempname b
-    if `"`e(cmd)'"'=="dstat_svyr" {
-        mat `b' = e(b)
+    version 14
+    local version : di "version " string(_caller()) ":"
+    if `"`e(cmd)'"'!="dstat" {
+        if `"`e(cmd0)'"'!="dstat_svyr" {
+            di as err "last dstat results not found"
+            exit 301
+        }
     }
-    else if `"`e(cmd)'"'=="dstat" {
-        mat `b' = e(b)
-        mata: ds_svylbl_b()
-        local bmat b(`b')
-    }
-    else {
-        di as err "last dstat results not found"
-        exit 301
-    }
-    syntax [anything] [if] [in], [ SCores RIF COMpact QUIetly ]
-    _score_spec `anything', scores `bmat'
+    tempname rcurrent
+    _return hold `rcurrent'
+    syntax [anything] [if] [in], [ SCores RIF SCAling(passthru) COMpact QUIetly ]
+    _score_spec `anything', ignoreeq
     local vlist `s(varlist)'
-    Predict_compute_IFs, generate(`vlist', `rif' `compact') // updates vlist
+    `version' Predict_IFs, generate(`vlist', `rif' `scaling' `compact')
     if `"`if'`in'"'!="" {
         tempvar tmp
         foreach v of local vlist {
@@ -527,183 +526,74 @@ program Predict
     if "`quietly'"=="" {
         describe `vlist'
     }
+    _return restore `rcurrent'
 end
 
-program Predict_compute_IFs
+program Predict_IFs
+    version 14
+    local version : di "version " string(_caller()) ":"
     syntax [, generate(passthru) ]
-    // check subcommand
-    local subcmd `e(subcmd)'
-    Parse_subcmd `subcmd'
+    local predict `generate'
+    local prefix `"`e(prefix)'"'
     
-    // determine estimation sample
-    tempvar touse
+    // estimation sample (and weights in case of svy)
+    tempname touse
+    local TOUSE `touse'
     qui gen byte `touse' = e(sample)==1
-    if `"`e(subpop)'"'!="" {
-        // restrict estimation sample to subpop; only relevant after survey estimation
-        tempvar touse0
-        qui gen byte `touse0' = `touse'
-        local 0 `"`e(subpop)'"'
-        syntax [varname(default=none)] [if]
-        if `"`varlist'"'!="" {
-            qui replace `touse' = `touse' & `varlist'!=0 & `varlist'<.
-        }
-        if `"`if'"'!="" {
-            tempname tmp
-            rename `touse' `tmp'
-            qui gen byte `touse' = 0
-            qui replace `touse' = `tmp' `if'
-            drop `tmp'
-        }
-    }
     qui count if `touse'
     if r(N)==0 {
-        di as err "could not identify estimation sample; computation of influence functions failed"
+        di as err "computation of influence functions failed; " /*
+            */ "cannot identify estimation sample"
         exit 498
     }
-    // compile commandline
-    if "`subcmd'"=="summarize" {
-        local cmdline `e(slist)'
+    if `"`prefix'"'=="svy" {
+        if `"`e(subpop)'"'!="" local subpop subpop(`e(subpop)')
+        tempvar subuse wvar
+        _svy_setup `touse' `subuse' `wvar', svy calibrate `subpop'
+        if `"`r(poststrata)'"'!="" {
+            local wvar0 `wvar'
+            tempname wvar
+            svygen post double `wvar' `wgt' [iw=`wvar0'] if `touse'==1, /*
+                */ posts(`r(poststrata)') postw(`r(postweight)')
+        }
+        local wtexp [iw=`wvar']
+        local TOUSE `subuse'
     }
-    else {
-        local cmdline `e(depvar)'
-    }
-    if `"`e(wtype)'"'!="" {
-        local cmdline `cmdline' [`e(wtype)'`e(wexp)'] // what about complex weights in svy?
-    }
-    local cmdline `cmdline' if `touse', nose `generate' `e(nocasewise)' /*
-        */ qdef(`e(qdef)') `e(hdtrim)' `e(mqopts)' /*
-        */ vformat(`e(vformat)') `e(novalues)' 
-    // - over()
-    if `"`e(over)'"'!="" {
-        local over
-        if `"`e(over_select)'"'!="" {
-            local over select(`e(over_select)')
-        }
-        if `"`e(over_contrast)'"'!="" {
-            if `"`e(over_contrast)'"'=="total" {
-                local over `over' contrast
-            }
-            else {
-                local over `over' contrast(`e(over_contrast)')
-            }
-            local over `over' `e(over_ratio)'
-        }
-        local over `over' `e(over_accumulate)'
-        if `"`over'"'!="" {
-            local over over(`e(over)', `over')
-        }
-        else {
-            local over over(`e(over)')
-        }
-        local cmdline `cmdline' `over' `e(total)'
-        if `"`e(balance)'"'!="" {
-            local balance `e(balmethod)':`e(balance)'
-            if `"`e(balopts)'`e(balref)'"'!="" {
-                local balance `balance', `e(balopts)'
-                if `"`e(balref)'"'!="" local balance `balance' reference(`e(balref)') 
-            }
-            local cmdline `cmdline' balance(`balance')
-        }
-
-    }
-    // - density estimation
-    if `"`e(kernel)'"'!="" {
-        local cmdline `cmdline' kernel(`e(kernel)') adaptive(`e(adaptive)')/*
-            */ napprox(`e(napprox)') pad(`e(pad)') `e(exact)'
-        capt confirm matrix e(bwidth)
-        if _rc==1 exit _rc
+    else local wtopt [fw iw pw]
+    
+    // compile command line
+    local 0 `"`e(cmdline)'"'
+    if inlist(`"`prefix'"', "bootstrap", "jackknife") {
+        capt _on_colon_parse `0' // cmdline may include prefix
         if _rc==0 {
-            tempname BW
-            matrix `BW' = e(bwidth)
-            local cmdline `cmdline' bwidth(`BW') 
-        }
-        else {
-            local cmdline `cmdline' bwidth(`e(bwmethod)') 
-        }
-        if `"`e(boundary)'"'!="" {
-            local cmdline `cmdline' ll(`e(ll)') ul(`e(ul)') boundary(`e(boundary)')
+            local 0 `"`s(after)'"'
         }
     }
-    // evaluation points
-    capt confirm matrix e(at)
-    if _rc==1 exit _rc
-    if _rc==0 {
-        tempname AT
-        matrix `AT' = e(at)
-        local cmdline `cmdline' at(`AT')
-    }
-    // - density
-    if "`subcmd'"=="density" {
-        local cmdline `cmdline' `e(unconditional)'
-    }
-    // - histogram
-    else if "`subcmd'"=="histogram" {
-        local cmdline `cmdline' `e(proportion)' `e(percent)' `e(frequency)'/*
-            */ `e(unconditional)'
-    }
-    // - cdf/ccdf
-    else if inlist("`subcmd'","cdf","ccdf") {
-        local cmdline `cmdline' `e(percent)' `e(frequency)' `e(mid)'/*
-            */ `e(floor)' `e(discrete)' `e(ipolate)' `e(unconditional)'
-    }
-    // - proportion
-    else if "`subcmd'"=="proportion" {
-        if `"`e(categorical)'"'=="" {
-            local cmdline `cmdline' nocategorical
-        }
-        local cmdline `cmdline' `e(percent)' `e(frequency)' `e(unconditional)'
-    }
-    // - quantile
-    else if "`subcmd'"=="quantile" {
-        // (none)
-    }
-    // - lorenz
-    else if "`subcmd'"=="lorenz" {
-        local cmdline `cmdline' `e(gap)' `e(sum)' `e(generalized)'/*
-            */ `e(absolute)' `e(percent)'
-        if `"`e(byvar)'"'!="" {
-            local cmdline `cmdline' byvar(`e(byvar)')
-        }
-    }
-    // - share
-    else if "`subcmd'"=="share" {
-        local cmdline `cmdline' `e(proportion)' `e(percent)' `e(sum)'/*
-            */ `e(average)' `e(generalized)' 
-        if `"`e(byvar)'"'!="" {
-            local cmdline `cmdline' byvar(`e(byvar)')
-        }
-    }
-    // - tip
-    else if "`subcmd'"=="tip" {
-        local cmdline `cmdline' `e(pstrong)' `e(absolute)' pline(`e(pline)')
-    }
-    // - summarize
-    else if "`subcmd'"=="summarize" {
-        local cmdline `cmdline' `e(relax)' `e(pstrong)'
-        if `"`e(byvar)'"'!="" {
-            local cmdline `cmdline' byvar(`e(byvar)')
-        }
-        if `"`e(pline)'"'!="" {
-            local cmdline `cmdline' pline(`e(pline)')
-        }
-    }
+    gettoken cmd 0 : 0 // remove dstat or dstat_svyr
+    syntax [anything] [if] [in] `wtopt' [, /*
+        */ NOSE vce(passthru) Generate(passthru) rif(passthru) * ]
+    if `"`weight'"'!="" local wtexp [`weight'`exp']
+    local cmdline dstat `anything' if `TOUSE' `wtexp', nose `predict' `options'
+    
     // compute IFs
     tempname ecurrent b
     mat `b' = e(b)
     _estimates hold `ecurrent', restore
-    /*qui*/ Estimate `subcmd' `cmdline'
+    di as txt "(rerunning {bf:dstat} to obtain IFs)"
+    quietly `cmdline'
     mat `b' = mreldif(`b',e(b)) // returns missing if non-conformable
     capt assert (`b'[1,1]<1e-15)
     if _rc==1 exit _rc
     if _rc {
-        di as err "inconsistent re-estimation results; computation of influence functions failed"
+        di as err "computation of influence functions failed; " /*
+            */ "could not replicate original results"
         exit 498
     }
     c_local vlist `e(generate)'
-    if `"`touse0'"'!="" {
-        // fill in zeros outside of subpop; only relevant after survey estimation
+    if `"`subpop'"'!="" {
+        // fill in zeros outside of subpop (only relevant after svy)
         foreach v in `e(generate)' {
-            qui replace `v' = 0 if `touse0' & `touse'==0
+            qui replace `v' = 0 if `touse' & !`subuse'
         }
     }
 end
@@ -765,13 +655,15 @@ program Set_CI, eclass
 end
 
 program Parse_citype
-    capt n syntax [, normal logit probit atanh log ]
+    capt n syntax [, NORMal logit probit atanh log ///
+        AGRESti exact JEFFreys wilson ]
     if _rc==1 exit _rc
     if _rc {
         di as error "error in option {bf:citype()}"
         exit 198
     }
-    local citype `normal' `logit' `probit' `atanh' `log'
+    local citype `normal' `logit' `probit' `atanh' `log' `agresti' `exact'/*
+        */ `jeffreys' `wilson'
     if `:list sizeof citype'>1 {
         di ar error "only one {it:method} allowed in {bf:citype()}"
         exit 198
@@ -794,15 +686,16 @@ program Replay
     }
     local options `level' `citype' `options'
     Set_CI, `level' `citype'
-    if c(noisily) {
-        _Replay, `graph' `options'
-    }
+    _Replay, `graph' `options'
     if "`graph'"!="" {
+        tempname rcurrent
+        _return hold `rcurrent'
         Graph, `graph2'
+        _return restore `rcurrent'
     }
 end
 
-program _Replay
+program _Replay, rclass
     local subcmd `"`e(subcmd)'"'
     syntax [, citype(passthru) noHeader NOTABle TABle ///
         NOPValues PValues cref GRaph vsquish * ]
@@ -923,7 +816,13 @@ program _Replay
                 }
                 else local cimatrix cimatrix(e(ci))
                 if `"`e(citype)'"'!="normal" {
-                    local cimatrix `cimatrix' cititle(`e(citype)' transformed)
+                    local citi `"`e(citype)'"'
+                    if      `"`citi'"'=="agresti"  local citi "Agresti-Coull"
+                    else if `"`citi'"'=="exact"    local citi "Clopper–Pearson"
+                    else if `"`citi'"'=="jeffreys" local citi "Jeffreys"
+                    else if `"`citi'"'=="wilson"   local citi "Wilson"
+                    else local citi `"`citi' transformed"'
+                    local cimatrix `cimatrix' cititle(`citi')
                 }
             }
         }
@@ -935,6 +834,7 @@ program _Replay
             if "`CI'"!="" mata: ds_drop_cref("`CI'", 0, 1)
         }
         _Replay_table "`B'" "`V'" `nopvalues' `vmatrix' `cimatrix' `options'
+        return add
         if c(stata_version)<15 {
             if `"`citype'"'!="" /// user specified citype()
                 & `"`e(citype)'"'!="normal" {
@@ -945,8 +845,8 @@ program _Replay
                     if _rc==1 exit _rc
                 }
                 if _rc==0 {
-                    di as txt "(table displays untransformed CIs; Stata 15 or" /*
-                        */ " newer required for transformed CIs in output table)"
+                    di as txt "(table displays normal CIs; Stata 15 or" /*
+                        */ " newer required for other CI types in output table)"
                 }
             }
         }
@@ -1014,9 +914,10 @@ program Graph
     
     // syntax
     syntax [, Level(passthru) citype(passthru) VERTical HORizontal ///
-        MERge flip BYStats BYStats2(str) NOSTEP STEP NOREFline REFline(str) ///
-        SELect(str) GSELect(str) PSELect(str) cref ///
+        MERge OVERLay flip BYStats BYStats2(str) NOSTEP STEP ///
+        NOREFline REFline(str) SELect(str) GSELect(str) PSELect(str) cref ///
         BYOPTs(str) PLOTLabels(str asis) * ]
+    if "`overlay'"!="" local merge merge
     _Graph_parse_select "" `"`select'"'
     _Graph_parse_select g `"`gselect'"'
     _Graph_parse_select p `"`pselect'"'
@@ -1376,7 +1277,7 @@ program Graph
     // draw graph
     if `"`byopts'"'!="" local byopts byopts(`byopts')
     local plots `plots', `at' `bopts' `legendoff' `byopts' `options'
-    // di `"`plots'"'
+    //di `"`plots'"'
     coefplot `plots'
 end
 
@@ -1537,7 +1438,19 @@ program _Graph_Get_CI, eclass
     mata: ds_Get_CI("`CI'", `level', "`citype'", `scale')
 end
 
-program Estimate_PW, eclass
+program Estimate
+    gettoken subcmd 0 : 0
+    if "`subcmd'"=="pw" {
+        _Estimate_PW `0'
+    }
+    else {
+        _Estimate `subcmd' `0'
+    }
+    c_local generate_quietly `generate_quietly'
+    c_local markesample `markesample'
+end
+
+program _Estimate_PW, eclass
     // syntax
     syntax varlist(numeric) [if] [in] [fw iw pw] [, ///
         Statistic(str) LOwer UPper DIAGonal Over(str asis) * ]
@@ -1587,9 +1500,15 @@ program Estimate_PW, eclass
         }
     }
     
-    // run dstat summarize and relabel results
-    Estimate summarize `stats' `if' `in' [`weight'`exp'], `options'
+    // run dstat summarize 
+    _Estimate summarize `stats' `if' `in' [`weight'`exp'], `options'
     c_local generate_quietly `generate_quietly'
+    if `"`markesample'"'!="" {
+        c_local markesample `markesample'
+        exit
+    }
+    
+    // relabel results
     tempname b
     matrix `b' = e(b)
     matrix coln `b' = `cnames'
@@ -1605,7 +1524,7 @@ program Estimate_PW, eclass
     eret local title `"`statistic'"'
 end
 
-program Estimate, eclass
+program _Estimate, eclass
     // syntax
     gettoken subcmd 0 : 0
     local lhs varlist(numeric fv)
@@ -1635,12 +1554,12 @@ program Estimate, eclass
         local opts n(numlist int >=1 max=1) at(str) /*
             */ range(numlist min=2 max=2 >=0 <=1) /*
             */ gap sum GENERALized ABSolute PERcent /*
-            */ BYvar(varname) Zvar(varname) // zvar() is old syntax
+            */ BYvar(varname numeric) Zvar(varname numeric) // zvar() is old syntax
     }
     else if "`subcmd'"=="share" {
         local opts n(numlist int >=1 max=1) at(str) /*
             */ PROPortion PERcent sum AVErage GENERALized /*
-            */ BYvar(varname) Zvar(varname) // zvar() is old syntax
+            */ BYvar(varname numeric) Zvar(varname numeric) // zvar() is old syntax
     }
     else if "`subcmd'"=="tip" {
         local opts n(numlist int >=1 max=1) at(str) /*
@@ -1649,7 +1568,8 @@ program Estimate, eclass
     }
     else if "`subcmd'"=="summarize" {
         local lhs anything(id="varlist")
-        local opts relax BYvar(varname) Zvar(varname) /* zvar() is old syntax
+        local opts relax /*
+            */ BYvar(varname) Zvar(varname) /* zvar() is old syntax
             */ PLine(passthru) PSTRong
     }
     else exit 499
@@ -1658,8 +1578,10 @@ program Estimate, eclass
             qdef(numlist max=1 int >=0 <=11) ///
             HDQuantile HDTrim HDTrim2(numlist max=1) MQuantile MQOPTs(str) ///
             Over(str) TOTal BALance(str) ///
-            vce(str) NOSE Level(cilevel) ///
+            vce(str) NOSE NOCOV COV Level(cilevel) ///
             Generate(passthru) rif(str) Replace ///
+            noBWFIXed /// does nothing at this point
+            markesample(name) /// undocumented: mark estimation sample and exit
             `opts' * ]
     if "`byvar'"=="" local byvar `zvar' // support for old syntax
     Parse_over `over'
@@ -1799,7 +1721,14 @@ program Estimate, eclass
         Parse_sum "`byvar'" "`pline'" "`plvar'" `anything'
             // returns varlist, vlist, slist, slist2, yvars, plvars
     }
-    Parse_vce "`subcmd'" `vce'
+    if "`cov'"!="" & "`nocov'"!="" {
+        di as err "only one of {bf:cov} and {bf:nocov} allowed"
+        exit 198
+    }
+    if `"`subcmd'"'!="summarize" & "`cov'"=="" {
+        local nocov nocov
+    }
+    Parse_vce `vce'
     if `"`balance'"'!="" {
         if "`over'"=="" {
             di as err "{bf:balance()} requires {bf:over()}"
@@ -1848,12 +1777,24 @@ program Estimate, eclass
     // sample and weights
     if "`nocasewise'"=="" {
         marksample touse
-        markout `touse' `yvars'
+        if "`yvars'"!="" {
+            markout `touse' `yvars', strok
+        }
     }
     else marksample touse, novarlist
-    markout `touse' `over' `bal_varlist'
+    if "`over'"!="" {
+        markout `touse' `over'
+    }
+    if "`bal_varlist'"!="" {
+        markout `touse' `bal_varlist'
+    }
     if "`clustvar'"!="" {
         markout `touse' `clustvar', strok
+    }
+    if `"`markesample'"'!="" {
+        rename `touse' `markesample'
+        c_local markesample `markesample'
+        exit
     }
     if "`weight'"!="" {
         capt confirm variable `exp'
@@ -2012,10 +1953,22 @@ program Estimate, eclass
                 }
                 mata: st_local("CIF", tokens(st_local("IFs"))[`k'])
                 if "`rif'"!="" {
-                    qui replace `CIF' = `IF' * `_W'[1,`j'] + `b'[1,`i'] if `ifexp'
+                    if "`scaling'"=="total" {
+                        qui replace `CIF' = `IF' ///
+                            + `b'[1,`i'] / `_W'[1,`j'] if `ifexp'
+                    }
+                    else {
+                        qui replace `CIF' = `IF' * `_W'[1,`j'] ///
+                            + `b'[1,`i'] if `ifexp'
+                    }
                 }
-                else if "`CIF'"!="`IF'" {
-                    qui replace `CIF' = `IF' if `ifexp'
+                else {
+                    if "`scaling'"=="mean" {
+                        qui replace `CIF' = `IF' * `_W'[1,`j'] if `ifexp'
+                    }
+                    else if "`CIF'"!="`IF'" {
+                        qui replace `CIF' = `IF' if `ifexp'
+                    }
                 }
                 mata: ds_fix_nm("nm", "`gid'", "`total'"!="")
                 if "`rif'"!="" lab var `CIF' "RIF of _b[`nm']"
@@ -2030,14 +1983,23 @@ program Estimate, eclass
             foreach IF of local IFs {
                 gettoken nm coln : coln
                 local ++i
-                qui replace `IF' = `IF' * `W' ///
-                    + (`b'[1,`i'] - `IFtot'[1,`i']) if `touse'
+                if "`scaling'"=="total" {
+                    qui replace `IF' = `IF' ///
+                        + (`b'[1,`i'] - `IFtot'[1,`i']) / `W' if `touse'
+                }
+                else {
+                    qui replace `IF' = `IF' * `W' ///
+                        + (`b'[1,`i'] - `IFtot'[1,`i']) if `touse'
+                }
                 lab var `IF' "RIF of _b[`nm']"
             }
         }
         else {
             local i 0
             foreach IF of local IFs {
+                if "`scaling'"=="mean" {
+                    qui replace `IF' = `IF' * `W' if `touse'
+                }
                 gettoken nm coln : coln
                 local ++i
                 if `IFtot'[1,`i']!=0 lab var `IF' "score of _b[`nm']"
@@ -2069,7 +2031,6 @@ program Estimate, eclass
     if "`nose'"=="" {
         eret local vcetype "`vcetype'"
         eret local vce "`vce'"
-        eret local vcesvy "`vcesvy'"
         eret scalar df_r = `df_r'
         if "`vce'"=="cluster" {
             eret local clustvar "`clustvar'"
@@ -2314,20 +2275,26 @@ program Parse_over
 end
 
 program Parse_rif
-    syntax [anything(name=rif)] [, COMpact QUIetly ]
+    syntax [anything(name=rif)] [, SCAling(passthru) COMpact QUIetly ]
     c_local rif
     if `"`rif'"'=="" exit
-    c_local generate generate(`rif', rif `compact' `quietly')
+    c_local generate generate(`rif', rif `scaling' `compact' `quietly')
 end
 
 program Parse_generate
     syntax [, generate(str) replace ]
     local 0 `"`generate'"'
-    syntax [anything(name=generate)] [, rif COMpact QUIetly ]
+    syntax [anything(name=generate)] [, rif SCAling(str) COMpact QUIetly ]
     if `"`generate'"'=="" {
         c_local generate
         exit
     }
+    Parse_generate_scaling, `scaling'
+    if "`scaling'"=="" {
+        if "`rif'"!="" local scaling mean
+        else           local scaling total
+    }
+    c_local scaling `scaling'
     c_local generate_quietly `quietly'
     c_local rif `rif'
     c_local compact `compact'
@@ -2344,6 +2311,16 @@ program Parse_generate
     foreach v of local generate {
         confirm new var `v'
     }
+end
+
+program Parse_generate_scaling
+    syntax [, Total Mean ]
+    local scaling `total' `mean'
+    if `:list sizeof scaling'>1 {
+        di as err "scaling(): only one of total and mean allowed"
+        exit 198
+    }
+    c_local scaling `scaling'
 end
 
 program Parse_at // returns atmat="matrix" if at is matrix, else expands numlist
@@ -2499,24 +2476,20 @@ program Parse_sum_tokenize
 end
 
 program Parse_vce
-    gettoken subcmd 0 : 0
-    _parse comma vce 0 : 0
+    local vce `0'
     // vce type
-    if `"`vce'"'==substr("analytic", 1, strlen(`"`vce'"')) local vce "analytic"
+    if `"`vce'"'==substr("analytic", 1, strlen(`"`vce'"')) {
+        local vce "analytic"
+    }
     else if `"`vce'"'!="none" {
         gettoken vce arg : vce
-        if `"`vce'"'==substr("cluster", 1, max(2,strlen(`"`vce'"'))) local vce "cluster"
+        if `"`vce'"'==substr("cluster", 1, max(2,strlen(`"`vce'"'))) {
+            local vce "cluster"
+        }
         else {
             di as err `"vce(`vce'`arg') not allowed"'
             exit 198
         }
-    }
-    // options
-    capt n syntax [, NOCOV COV ]
-    if _rc==1 exit _rc
-    if _rc {
-        di as err "error in option {bf:vce()}"
-        exit _rc
     }
     // vce: none
     if `"`vce'"'=="none" {
@@ -2524,18 +2497,10 @@ program Parse_vce
         c_local vce
         c_local vcetype
         c_local clustvar
-        c_local vcenocov
         exit
     }
     // vce: other
     c_local vce `vce'
-    // options
-    if "`cov'"!="" & "`nocov'"!="" {
-        di as err "{bf:vce()}: only one of {bf:cov} and {bf:nocov} allowed"
-        exit 198
-    }
-    if `"`subcmd'"'!="summarize" & "`cov'"=="" local nocov nocov
-    c_local vcenocov `nocov'
     // cluster
     if "`vce'"=="cluster" {
         local 0 `"`arg'"'
@@ -2545,7 +2510,6 @@ program Parse_vce
             di as err "error in option {bf:vce()}"
             exit 198
         }
-        local arg
         c_local vcetype Robust
         c_local clustvar `varlist'
     }
@@ -2902,6 +2866,7 @@ void ds_parse_stats(`Int' n)
     asarray(A, "cv"        , "1")       // coefficient of variation
     asarray(A, "lvar"      , "1")       // logarithmic variance
     asarray(A, "vlog"      , "1")       // variance of logarithm
+    asarray(A, "sdlog"     , "1")      // standard deviation of logarithm
     asarray(A, "top"       , "10,0,100") // top share
     asarray(A, "bottom"    , "40,0,100") // bottom share
     asarray(A, "mid"       , "40,0,100:90,0,100") // mid share
@@ -2919,20 +2884,20 @@ void ds_parse_stats(`Int' n)
     asarray(A, "gshare"    , ".,0,100;.,0,100") // percentile share (generalized)
     asarray(A, "ashare"    , ".,0,100;.,0,100") // percentile share (average)
     // inequality decomposition
-    asarray(A, "gw_gini"   , "by;0")    // weighted avg of within-group Gini
-    asarray(A, "b_gini"    , "by;0")    // between Gini coefficient
-    asarray(A, "gw_mld"    , "by")      // weighted avg of within-group MLD
-    asarray(A, "w_mld"     , "by")      // within MLD
-    asarray(A, "b_mld"     , "by")      // between MLD
-    asarray(A, "gw_theil"  , "by")      // weighted avg of within-group Theil
-    asarray(A, "w_theil"   , "by")      // within Theil index
-    asarray(A, "b_theil"   , "by")      // between Theil index
-    asarray(A, "gw_ge"     , "by;1")    // weighted avg of within-group GE
-    asarray(A, "w_ge"      , "by;1")    // within generalized entropy
-    asarray(A, "b_ge"      , "by;1")    // between generalized entropy
-    asarray(A, "gw_vlog"   , "by;1")    // weighted avg of within-group vlog
-    asarray(A, "w_vlog"    , "by;1")    // within vlog
-    asarray(A, "b_vlog"    , "by;1")    // between vlog
+    asarray(A, "gw_gini"   , "bys;0")   // weighted avg of within-group Gini
+    asarray(A, "b_gini"    , "bys;0")   // between Gini coefficient
+    asarray(A, "gw_mld"    , "bys")     // weighted avg of within-group MLD
+    asarray(A, "w_mld"     , "bys")     // within MLD
+    asarray(A, "b_mld"     , "bys")     // between MLD
+    asarray(A, "gw_theil"  , "bys")     // weighted avg of within-group Theil
+    asarray(A, "w_theil"   , "bys")     // within Theil index
+    asarray(A, "b_theil"   , "bys")     // between Theil index
+    asarray(A, "gw_ge"     , "bys;1")   // weighted avg of within-group GE
+    asarray(A, "w_ge"      , "bys;1")   // within generalized entropy
+    asarray(A, "b_ge"      , "bys;1")   // between generalized entropy
+    asarray(A, "gw_vlog"   , "bys;1")   // weighted avg of within-group vlog
+    asarray(A, "w_vlog"    , "bys;1")   // within vlog
+    asarray(A, "b_vlog"    , "bys;1")   // between vlog
     // concentration
     asarray(A, "gci"       , "by;0")    // Gini concentration index
     asarray(A, "aci"       , "by;0")    // absolute Gini concentration index
@@ -2965,7 +2930,7 @@ void ds_parse_stats(`Int' n)
     asarray(A, "rsquared"  , "by")      // R squared
     asarray(A, "slope"     , "by")      // slope of linear regression
     asarray(A, "b"         , "by")      // same as slope
-    asarray(A, "cohend"    , "by;2")    // Cohen's d
+    asarray(A, "cohend"    , "bys;2")   // Cohen's d
     asarray(A, "covar"     , "by;1")    // covariance
     asarray(A, "spearman"  , "by")      // spearman rank correlation
     asarray(A, "taua"      , "by;0")    // Kendall's tau-a
@@ -2980,12 +2945,12 @@ void ds_parse_stats(`Int' n)
     asarray(A, "entropy"   , "0,0,.")   // Shannon entropy
     asarray(A, "hill"      , "1,0,.")   // Hill number
     asarray(A, "renyi"     , "1,0,.")   // Rényi entropy
-    asarray(A, "mindex"    , "by;0,0,.") // mutual information
-    asarray(A, "uc"        , "by")      // uncertainty coefficient (symmetric)
-    asarray(A, "ucl"       , "by")      // uncertainty coefficient (left)
-    asarray(A, "ucr"       , "by")      // uncertainty coefficient (right)
-    asarray(A, "cramersv"  , "by;0,0,.") // Cramér's V
-    asarray(A, "dissim"    , "by")      // (generalized) dissimilarity index
+    asarray(A, "mindex"    , "bys;0,0,.") // mutual information
+    asarray(A, "uc"        , "bys")     // uncertainty coefficient (symmetric)
+    asarray(A, "ucl"       , "bys")     // uncertainty coefficient (left)
+    asarray(A, "ucr"       , "bys")     // uncertainty coefficient (right)
+    asarray(A, "cramersv"  , "bys;0,0,.") // Cramér's V
+    asarray(A, "dissim"    , "bys")     // (generalized) dissimilarity index
     asarray(A, "or"        , "by")      // odds ratio (for 2x2 table)
     asarray(A, "rr"        , "by")      // risk ratio (for 2x2 table)
     return(A)
@@ -3076,7 +3041,7 @@ void _ds_parse_stats_k(`Stats' S, `Int' k, `SS' s0, `SS' s, `SS' o0, `SS' mask)
     // s expanded name
     // o arguments as specified (including parentheses)
     `Bool' br
-    `Int'  i, n, j, nj, yj
+    `Int'  i, n, j, nj
     `SS'   o, y
     `RS'   mi
     `SR'   args, opts
@@ -3111,27 +3076,24 @@ void _ds_parse_stats_k(`Stats' S, `Int' k, `SS' s0, `SS' s, `SS' o0, `SS' mask)
         }
         mi = M[i,1]
         // by
-        if (mi==.a) {
+        if (mi==.a | mi==.b) {
             if (j>nj) y = S.yvar
             else {
                 if (strtoreal(args[j])<.) y = S.yvar 
                 else {
-                    y = args[j]
-                    yj = _st_varindex(y, st_global("c(varabbrev)")=="on")
-                    if (yj>=.) _ds_parse_stats_err(s0+o0,
-                               sprintf("variable {bf:%s} not found", y))
-                    y = st_varname(yj)
-                    j++     // [move to next argument only of by is provided!]
+                    y = _ds_parse_stats_getvar(args[j], s0, o0)
+                    j++  // [move to next argument only of by is provided!]
                 }
             }
             if (y=="") _ds_parse_stats_err(s0+o0, 
                        "{it:by} or {bf:by()} required")
+            _ds_parse_stats_isnumvar(y, s0, o0, mi==.b)
             if (!anyof(S.yvars, y)) S.yvars = (S.yvars, y)
             opts[i] = "by" + strofreal(selectindex(S.yvars:==y))
             continue
         }
         // pline (use negative index if plvar)
-        if (mi==.b) {
+        if (mi==.c) {
             if (j>nj) {
                 if (S.plvar=="") {
                     if (S.pline=="") _ds_parse_stats_err(s0+o0,
@@ -3156,11 +3118,8 @@ void _ds_parse_stats_k(`Stats' S, `Int' k, `SS' s0, `SS' s, `SS' o0, `SS' mask)
                 opts[i] = "pl" + args[j]
             }
             else {
-                y = args[j]
-                yj = _st_varindex(y, st_global("c(varabbrev)")=="on")
-                if (yj>=.) _ds_parse_stats_err(s0+o0, 
-                           sprintf("variable {bf:%s} not found", y))
-                y = st_varname(yj)
+                y = _ds_parse_stats_getvar(args[j], s0, o0)
+                _ds_parse_stats_isnumvar(y, s0, o0)
                 if (!anyof(S.yvars, y)) {
                     S.yvars  = (S.yvars, y)
                     S.plvars = (S.plvars, y)
@@ -3193,12 +3152,32 @@ void _ds_parse_stats_k(`Stats' S, `Int' k, `SS' s0, `SS' s, `SS' o0, `SS' mask)
                   s  + "(" + invtokens(opts, ",") + ")"
 }
 
+`SS' _ds_parse_stats_getvar(`SS' y, `SS' s0, `SS' o0)
+{
+    `Int' j
+    
+    j = _st_varindex(y, st_global("c(varabbrev)")=="on")
+    if (j>=.) {
+        _ds_parse_stats_err(s0+o0, sprintf("variable {bf:%s} not found", y))
+    }
+    return(st_varname(j))
+}
+
+void _ds_parse_stats_isnumvar(`SS' y, `SS' s0, `SS' o0, | `Bool' strok)
+{
+    if (strok==`TRUE')  return
+    if (st_isnumvar(y)) return
+    _ds_parse_stats_err(s0+o0, sprintf("string variables not allowed" +
+            "; {bf:%s} is a string variable", y))
+}
+
 `RM' _ds_parse_stats_mask(`SS' mask)
 {   //      mask = grp1;grp2;...      (grp can also just be a single arg)
     // with grp# = arg1:arg2:...      (group of tied arguments)
     // with arg# = value[,min[,max]]  (min=. mean no min)
     // with value = "by"   (optional byvar)  => will be coded as .a
-    //            = "pl"   (pl)              => will be coded as .b
+    //            = "bys"  (strvar allowed)  => will be coded as .b
+    //            = "pl"   (pl)              => will be coded as .c
     //            = .      (required numeric argument)
     //            = #      (optional argument; # serves as default)
     //            = .z     (optional argument; no default)
@@ -3231,8 +3210,9 @@ void _ds_parse_stats_k(`Stats' S, `Int' k, `SS' s0, `SS' s, `SS' o0, `SS' mask)
     `Int' n
     `SR'  args
     
-    if (arg=="by") return((.a, ., .))    // byvar
-    if (arg=="pl") return((.b, ., .))    // pline
+    if (arg=="by")  return((.a, ., .))    // byvar
+    if (arg=="bys") return((.b, ., .))    // byvar (str ok)
+    if (arg=="pl")  return((.c, ., .))    // pline
     args = tokens(subinstr(arg,","," ")) // #,#,# (assuming 0 to 3 elements)
     n = length(args)
     if (n==0) return((.,.,.))
@@ -3350,109 +3330,212 @@ void ds_slist_expand()
 }
 
 // --------------------------------------------------------------------------
-// support for svy
-// --------------------------------------------------------------------------
-
-void ds_svylbl_b()
-{
-    `SM' cstripe
-    
-    cstripe = st_matrixcolstripe(st_local("b"))
-    cstripe[,1] = cstripe[,1] :+ "@" :+ cstripe[,2]
-    cstripe[,2] = J(rows(cstripe), 1, "_cons")
-    st_matrixcolstripe(st_local("b"), cstripe)
-}
-
-void ds_svylbl_b_undo()
-{
-    `RC' pos
-    `SM' cstripe
-    
-    cstripe = st_matrixcolstripe(st_local("b"))
-    pos = strpos(cstripe[,1], "@")
-    cstripe[,2] = substr(cstripe[,1],pos:+1,.)
-    cstripe[,1] = substr(cstripe[,1],1,pos:-1)
-    st_local("k_eq", strofreal(rows(uniqrows(cstripe[,1]))))
-    st_matrixcolstripe(st_local("b"), cstripe)
-}
-
-// --------------------------------------------------------------------------
 // computation of transformed CIs
 // --------------------------------------------------------------------------
 
-void ds_Get_CI(`SS' cimat, `RS' level0, `SS' citype, `RC' scale)
+void ds_Get_CI(`SS' cimat, `RS' level, `SS' citype, `RC' scale)
 {
-    `Int' i, r 
-    `RS'  level
-    `RR'  b, df, se, z
-    `RM'  CI
-    `SM'  cstripe
+    `RS'   p
+    `RR'   b, df, se
+    `RM'   CI
+    `SM'   cstripe
     
     // obtain b and se
     b = st_matrix("e(b)")
     cstripe = st_matrixcolstripe("e(b)")
     se = sqrt(diagonal(st_matrix("e(V)")))'
     if (length(se)==0) se = st_matrix("e(se)")
-    r = length(b)
-    // obtain critical value
-    level = 1 - (1 - level0/100)/2
+    // obtain df
     df = .
     if (st_global("e(mi)")=="mi") {
         if      (st_matrix("e(df_mi)")!=J(0,0,.))   df = st_matrix("e(df_mi)")
         else if (st_numscalar("e(df_r)")!=J(0,0,.)) df = st_numscalar("e(df_r)")
     }
     else if (st_numscalar("e(df_r)")!=J(0,0,.))     df = st_numscalar("e(df_r)")
-    if (length(df)==1) z = df>2e17 ? invnormal(level) : invttail(df, 1-level)
-    else {
-        z = J(1, r, .)
-        for (i=1; i<=r; i++) {
-            z[i] = df[i]>2e17 ? invnormal(level) : invttail(df[i], 1-level)
-        }
-    }
+    // alpha / 2
+    p = (100 - level)/200
     // compute ci
-    if (citype=="normal") {
-        CI = (b :- z:*se \ b :+ z:*se)
-    }
+    if (citype=="normal") CI = _ds_Get_CI_normal(b, se, df, p)
     else {
         if (scale!=1) {
             b = b / scale
             se = se / scale
         }
-        if (citype=="logit") { // logit
-            z = z :* se :/ (b:* (1 :- b))
-            CI = invlogit(logit(b) :- z \ logit(b) :+ z)
-            if (hasmissing(CI)) {
-                _ds_Get_CI_editif(CI, b, 0)
-                _ds_Get_CI_editif(CI, b, 1)
-            }
-        }
-        else if (citype=="probit") { // probit
-            z = z :* se :/ normalden(invnormal(b))
-            CI = normal(invnormal(b) :- z \ invnormal(b) :+ z)
-            if (hasmissing(CI)) {
-                _ds_Get_CI_editif(CI, b, 0)
-                _ds_Get_CI_editif(CI, b, 1)
-            }
-        }
-        else if (citype=="atanh") { // atanh
-            z = z :* se :/ (1 :- b:^2)
-            CI = tanh(atanh(b) :- z \ atanh(b) :+ z)
-            if (hasmissing(CI)) {
-                _ds_Get_CI_editif(CI, b, -1)
-                _ds_Get_CI_editif(CI, b,  1)
-            }
-        }
-        else if (citype=="log") { // log
-            z = z :* se :/ b
-            CI = exp(ln(b) :- z \ ln(b) :+ z)
-            if (hasmissing(CI)) _ds_Get_CI_editif(CI, b, 0)
-        }
+        if      (citype=="logit")    CI = _ds_Get_CI_logit(b, se, df, p)
+        else if (citype=="probit")   CI = _ds_Get_CI_probit(b, se, df, p)
+        else if (citype=="atanh")    CI = _ds_Get_CI_atanh(b, se, df, p)
+        else if (citype=="log")      CI = _ds_Get_CI_log(b, se, df, p)
+        else if (citype=="agresti")  CI = _ds_Get_CI_agresti(b, se, df, p)
+        else if (citype=="exact")    CI = _ds_Get_CI_exact(b, se, df, p)
+        else if (citype=="jeffreys") CI = _ds_Get_CI_jeffreys(b, se, df, p)
+        else if (citype=="wilson")   CI = _ds_Get_CI_wilson(b, se, df, p)
         else exit(499)
         if (scale!=1) CI = CI * scale
     }
     // return result
     st_matrix(cimat, CI)
     st_matrixcolstripe(cimat, cstripe)
+}
+
+`RM' _ds_Get_CI_normal(`RR' b, `RR' se, `RV' df, `RS' p)
+{
+    `RR' z
+    `RM' CI
+    
+    z  = _ds_Get_CI_t(df, p)
+    CI = b :- z:*se \ b :+ z:*se
+    return(CI)
+}
+
+`RM' _ds_Get_CI_logit(`RR' b, `RR' se, `RV' df, `RS' p)
+{
+    `RR' z
+    `RM' CI
+    
+    z  = _ds_Get_CI_t(df, p) :* se :/ (b:* (1 :- b))
+    CI = invlogit(logit(b) :- z \ logit(b) :+ z)
+    _ds_Get_CI_edit01(CI, b)
+    return(CI)
+}
+
+`RM' _ds_Get_CI_probit(`RR' b, `RR' se, `RV' df, `RS' p)
+{
+    `RR' z
+    `RM' CI
+    
+    z  = _ds_Get_CI_t(df, p) :* se :/ normalden(invnormal(b))
+    CI = normal(invnormal(b) :- z \ invnormal(b) :+ z)
+    _ds_Get_CI_edit01(CI, b)
+    return(CI)
+}
+
+`RM' _ds_Get_CI_atanh(`RR' b, `RR' se, `RV' df, `RS' p)
+{
+    `RR' z
+    `RM' CI
+    
+    z  = _ds_Get_CI_t(df, p) :* se :/ (1 :- b:^2)
+    CI = tanh(atanh(b) :- z \ atanh(b) :+ z)
+    if (hasmissing(CI)) {
+        _ds_Get_CI_editif(CI, b, -1)
+        _ds_Get_CI_editif(CI, b,  1)
+    }
+    return(CI)
+}
+
+`RM' _ds_Get_CI_log(`RR' b, `RR' se, `RV' df, `RS' p)
+{
+    `RR' z
+    `RM' CI
+    
+    z  = _ds_Get_CI_t(df, p) :* se :/ b
+    CI = exp(ln(b) :- z \ ln(b) :+ z)
+    if (hasmissing(CI)) _ds_Get_CI_editif(CI, b, 0)
+    return(CI)
+}
+
+`RM' _ds_Get_CI_agresti(`RR' b, `RR' se, `RV' df, `RS' p)
+{
+    `RR' n, k, pr, z
+    `RM' CI
+    
+    n  = _ds_Get_CI_n(b, se, df, p)
+    k  = n :* b
+    z  = invnormal(1-p)
+    n  = n :+ z^2
+    k  = k :+ z^2/2
+    pr = k :/ n
+    z  = z * sqrt((pr :* (1 :- pr)) :/ n)
+    CI = pr - z \ pr + z
+    _ds_Get_CI_edit01(CI, b)
+    return(CI)
+}
+
+`RM' _ds_Get_CI_exact(`RR' b, `RR' se, `RV' df, `RS' p)
+{
+    `RR' n, k, v1, v2, v3, v4, Fa, Fb
+    `RM' CI
+    
+    n  = _ds_Get_CI_n(b, se, df, p)
+    k  = n :* b
+    v1 = 2 * k
+    v2 = 2 * (n :- k :+ 1)
+    v3 = 2 * (k :+ 1)
+    v4 = 2 * (n - k)
+    Fa = v1 :* invF(v1, v2, p)
+    Fb = v3 :* invF(v3, v4, 1-p)
+    CI = Fa :/ (v2 :+ Fa) \ Fb :/ (v4 :+ Fb)
+    _ds_Get_CI_edit01(CI, b)
+    return(CI)
+}
+
+`RM' _ds_Get_CI_jeffreys(`RR' b, `RR' se, `RV' df, `RS' p)
+{
+    `RR' n, k, a1, b1
+    `RM' CI
+    
+    n  = _ds_Get_CI_n(b, se, df, p)
+    k  = n :* b
+    a1 = k :+ 0.5
+    b1 = n :- k :+ 0.5
+    CI = invibeta(a1, b1, p) \ invibetatail(a1, b1, p)
+    _ds_Get_CI_edit01(CI, b)
+    return(CI)
+}
+
+`RM' _ds_Get_CI_wilson(`RR' b, `RR' se, `RV' df, `RS' p)
+{
+    `RS' z
+    `RR' n, n1, n2, d
+    `RM' CI
+    
+    n  = _ds_Get_CI_n(b, se, df, p)
+    z  = invnormal(1-p)
+    n1 = b + z^2 :/ (2 :* n)
+    n2 = z * sqrt((b :* (1 :- b)) :/ n :+ (z :/ (2 :* n)):^2)
+    d  = 1 :+ z^2 :/ n
+    CI = (n1 - n2) :/ d \ (n1 + n2) :/ d
+    _ds_Get_CI_edit01(CI, b)
+    return(CI)
+}
+
+`RR' _ds_Get_CI_t(`RV' df, `RS' p)
+{
+    `Int' i
+    `RR'  z
+    
+    i = length(df)
+    if (i==1) {
+        return(df>2e17 ? invnormal(1-p) : invttail(df, p))
+    }
+    z = J(1, i, .)
+    for (; i; i--) {
+        z[i] = df[i]>2e17 ? invnormal(1-p) : invttail(df[i], p)
+    }
+    return(z)
+}
+
+`RR' _ds_Get_CI_n(`RR' b, `RR' se, `RV' df, `RS' p)
+{
+    `RR' n
+    
+    if      (st_global("e(wtype)")=="fweight") n = st_matrix("e(sumw)")
+    else if (st_global("e(wtype)")=="iweight") n = st_matrix("e(sumw)")
+    else                                       n = st_matrix("e(nobs)")
+    if (st_global("e(vce)")=="analytic") {
+        if (st_global("e(wtype)")!="pweight") return(n)
+    }
+    n = (b:* (1 :- b)) :/ se:^2
+    n = n :* (invnormal(1-p) :/ _ds_Get_CI_t(df, p)):^2
+    return(n)
+}
+
+void _ds_Get_CI_edit01(`RM' CI, `RR' b)
+{
+    if (hasmissing(CI)) {
+        _ds_Get_CI_editif(CI, b, 0)
+        _ds_Get_CI_editif(CI, b, 1)
+    }
 }
 
 void _ds_Get_CI_editif(`RM' CI, `RR' b, `RS' v)
@@ -4686,7 +4769,7 @@ void dstat()
         if (D.noIF==0) D.mvj = J(1, D.nvars, NULL)
     }
     st_numscalar(st_local("W"), D.W)
-    if (st_local("yvars")!="") st_view(D.Y, ., st_local("yvars"), D.touse)
+    ds_view(D.Y, tokens(st_local("yvars")), D.touse)
     
     // over
     D.ovar = st_local("over")
@@ -4849,7 +4932,33 @@ void dstat()
     }
     ds_recenter_IF(D)
     if (D.nose) return
-    ds_vce(D, st_local("clustvar"), st_local("vcenocov")!="")
+    ds_vce(D, st_local("clustvar"), st_local("nocov")!="")
+}
+
+void ds_view(`RM' Y, `SR' yvars, `Int' touse)
+{
+    `Int' i
+    
+    i = length(yvars)
+    if (i==0) return
+    for (;i;i--) {
+        if (st_isstrvar(yvars[i])) {
+            // replace string variable with numeric tempvar containing
+            // group IDs
+            yvars[i] = _ds_view_destring(yvars[i], touse)
+        }
+    }
+    st_view(Y, ., yvars, touse)
+}
+
+`SS' _ds_view_destring(`SS' yvar0, `Int' touse)
+{
+    `SS' yvar
+    
+    yvar = st_tempname()
+    st_store(., st_addvar("double", yvar), touse,
+        mm_group(st_sdata(., yvar0, touse)))
+    return(yvar)
 }
 
 void ds_store_eqvec(`Data' D, `RR' vec, `SS' nm)
@@ -8614,6 +8723,21 @@ void __ds_sum_vlog(`Bool' btw, `Data' D, `Grp' G, `Int' i, `RS' df)
     else {
         ds_set_IF(D, G, i, (c*z:^2 :- D.b[i]) / G.W)
     }
+}
+
+void ds_sum_sdlog(`Data' D, `Grp' G, `Int' i, `RS' df)
+{
+    ds_sum_vlog(D, G, i, df)
+    if (D.b[i]==0) return
+    D.b[i] = sqrt(D.b[i])
+    if (D.noIF) return
+    D.IF[,i] = D.IF[,i] / (2 * D.b[i])
+}
+
+`BoolC' _ds_sum_sdlog_invalid(`Data' D, `Int' j, `RC' X, `RS' df)
+{
+    pragma unused df
+    return(_ds_sum_invalid(D, j, "sdlog", ln(X)))
 }
 
 void ds_sum_top(`Data' D, `Grp' G, `Int' i, `RS' p)

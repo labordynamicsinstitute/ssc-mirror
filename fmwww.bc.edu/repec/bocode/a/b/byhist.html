@@ -1,0 +1,63 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>byhist</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Graph interlaced histograms: for comparing histograms by a categorical variable</u></b>
+<p>
+    <b>byhist</b> <i>varname</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] [<b>, by(</b><i>varname</i><b>)</b> { <b><u>freq</u></b><b>uency</b> |<b><u>frac</u></b><b>tion</b> |
+            <b><u>dens</u></b><b>ity</b> } <b>name(</b>name_option<b>)</b> <b>tw(</b>twoway_options<b>)</b>]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>byhist</b> makes histograms, with frequencies (optionally fraction/density)
+    of one variable optionally shown by categories of another variable.
+    fweights, aweights, and pweights are allowed (at user's own risk).
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>by</b> specifies a variable by which to compute histograms. Options after a
+        comma within the parentheses are passed to twoway_bar.
+<p>
+    <b><u>freq</u></b><b>uency</b> |<b><u>frac</u></b><b>tion</b> | <b><u>dens</u></b><b>ity</b> are as in histogram.
+<p>
+    <b>name</b> names the graph something other than "Graph"; see name_option.
+<p>
+    <b>tw(</b>twoway_options<b>)</b> passes options to twoway_bar. Note that options passed
+        by default may be superseded in this way, for example y axis labels,
+        but some added options may be ignored as a result of existing options
+        (e.g. yscale will not override the range specified by the existing y
+        axis labels).
+<p>
+    <b>tw?(</b>twoway_options<b>)</b> passes options to twoway_bar. This is a set of
+        options <b>tw1(</b>twoway_options<b>)</b>, <b>tw2(</b>twoway_options<b>)</b>, <b>tw3(</b>
+        twoway_options<b>)</b>, et cetera, that pass twoway_options to the first set
+        of bars, the second set of bars, the third set of bars, and so on.
+        See the second example below.
+<p>
+    Other options are passed to twoway__histogram_gen.
+<p>
+<b><u>Examples</u></b>
+<p>
+    sysuse auto, clear
+    byhist mpg, by(foreign)
+<p>
+    sysuse nlsw88, clear
+    byhist wage [fw=hours], by(married) frac
+    la var married ""
+    byhist wage [fw=hours], by(married) frac
+    byhist wage [fw=hours], by(married) frac tw1(color(blue))
+        tw2(color(cyan))
+<p>
+<b><u>Author</u></b>
+<p>
+    Austin Nichols
+    austinnichols@gmail.com
+<p>
+<b><u>Also see:</u></b> 
+<p>
+ Manual: <b>[R] graph twoway bar</b>
+<p>
+ Online:  help for histogram, twoway bar; bihist (if installed; install)
+<p>
+</pre>

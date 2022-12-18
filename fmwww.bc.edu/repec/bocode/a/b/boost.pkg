@@ -1,0 +1,33 @@
+d 'BOOST': module to perform boosted regression
+d
+d      boost implements the MART boosting algorithm described in
+d Hastie et al. (2001).    boost accommodates Gaussian (normal),
+d logistic, Poisson and multinomial regression.    The algorithm is
+d implemented as a C++ plugin and requires Stata 16 or higher to   
+d run.	  By default the model is fit using the first 80% of the
+d data (training data). This	percentage can be changed through
+d the option trainfraction(). To ensure that the    training data
+d are random 80% sort the data in random order before running
+d boost. 
+d
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20201109
+d
+d Author: Matthias Schonlau, University of Waterloo
+d Support: email schonlau@@uwaterloo.ca
+d
+f boost.ado
+f boost_logistic.do
+f boost_normal.do
+f boost_predict.ado
+f boost.sthlp
+f ../i/influence_barchart.ado
+f ../i/influence_delete.ado
+f ../i/influence_barchart.sthlp
+g WIN64 boost_win64.plugin boost_plugin.plugin
+g MACINTEL64 boost_mac64.plugin boost_plugin.plugin
+g OSX.X8664 boost_mac64.plugin boost_plugin.plugin
+g LINUX64 boost_linux64.plugin boost_plugin.plugin
+h boost_plugin.plugin

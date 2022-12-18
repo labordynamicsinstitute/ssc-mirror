@@ -1,0 +1,93 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>bmjcip</b>                                                  (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Format confidence intervals and P-values for medical journals</u></b>
+<p>
+        <b>bmjcip</b> <i>estvarname</i> <i>ciminvarname</i> <i>cimaxvarname</i> [ <i>pvarname</i> ] [ ,
+                     <b><u>cf</u></b><b>ormat(</b><i>%fmt</i><b>)</b> ]
+<p>
+    where <i>estvarname</i>, <i>ciminvarname</i>, <i>cimaxvarname</i> and <i>pvarname</i> are numeric
+    variable names, and <i>%fmt</i> is a numeric display format.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>bmjcip</b> reformats a list of numeric variables, containing estimates,
+    confidence limits and (optionally) <i>P</i>-values, to string variables,
+    containing the same values formatted for presentation in medical
+    journals.  The new string variables replace the old numeric variables,
+    and have the same names, variable labels, and positions in the dataset.
+    <b>bmjcip</b> is usually used in output datasets (or resultssets) produced by
+    the <b>parmest</b> package, and the reformatted string variables are later
+    output using the <b>listtex</b> package for input to Microsoft Word.  It
+    requires the <b>sdecode</b> package in order to work.  The <b>sdecode</b>, <b>parmest</b> and 
+    <b>listtex</b> packages can all be downloaded from SSC.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>cformat(</b><i>%fmt</i><b>)</b> specifies a display format, used for the estimates and
+        confidence limits.  However, <b>bmjcip</b> also adds parentheses and commas
+        to the confidence limits, as expected by medical journals.  The
+        <i>P</i>-value is formatted using a separate rule, not corresponding exactly
+        to any Stata display format.  (See <b>Remarks</b> below.)
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    Guidelines for presentation of confidence intervals in medical journals
+    is given in Altman <i>et al.</i> (2000).  The name <b>bmjcip</b> was chosen because
+    these guidelines were written originally for the British Medical Journal
+    (BMJ) group of journals.
+<p>
+    The presentation of <i>P</i>-values is still subject to some controversy, even
+    among statisticians.  However, <b>bmjcip</b> presents a <i>P</i>-value of 1 as 1.0, a
+    <i>P</i>-value less than 1 and no less than .00001 as a left-justified decimal
+    number with no zero before the decimal point, and a <i>P</i>-value below 0.00001
+    and greater than 0 in the format <i>x.y</i>x10-<i>z</i> (where <i>x</i> and <i>y</i> are digits and <i>z</i>
+    is an integer), and a <i>P</i>-value of 0 as 0.  Note that, if the <i>P</i>-values are
+    output by <b>listtex</b> and converted into Microsoft Word tables, then the user
+    must convert each "-<i>z</i>" to a superscript by hand.
+<p>
+    If the user wishes to keep the original numeric variables, then the user
+    may use <b>clonevar</b> to make new numeric variables that are copies of the
+    original variables, and then reformat these to string variables using
+    <b>bmjcip</b>.
+<p>
+    <b>bmjcip</b> is not a satisfactory long-term solution to the problem of
+    formatting confidence intervals and <i>P</i>-values.  However, most medical
+    sector scientists want to publish tables in the BMJ and other medical
+    periodicals without waiting for such a solution.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>. bmjcip estimate min95 max95 p</b>
+<p>
+        <b>. bmjcip estimate min95 max95 p, cformat(%10.3f)</b>
+<p>
+        <b>. bmjcip estimate min95 max95, cf(%10.1f)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, National Heart and Lung Institute, Imperial College London,
+    UK.
+    Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Altman, D. G., D. Machin, T. N Bryant and M. J Gardner.  2000.
+        <i>Statistics with Confidence</i>.  2nd ed.  London, UK: British Medical
+        Journal.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+     Manual: <b>[D] destring</b>, <b>[D] clonevar</b>, <b>[D] format</b>
+    On-line: help for <b>tostring</b>, <b>destring</b>, <b>clonevar</b>, <b>format</b>
+             help for <b>sdecode</b>, <b>parmest</b>, <b>listtex</b> if installed
+</pre>

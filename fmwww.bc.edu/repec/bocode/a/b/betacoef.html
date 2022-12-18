@@ -1,0 +1,30 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>betacoef</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Retrieve beta coefficients after regress, ivreg, ivreg2</u></b>
+<p>
+        <b>betacoef</b>
+<p>
+<b><u>Description</u></b> 
+<p>
+    <b>betacoef</b> computes the beta coefficients from the previous regression
+    (estimated by <b>regress</b>, <b>ivreg</b> or <b>ivreg2</b>) and returns them in r(beta). The
+    regression may use weights (except probability weights (pw), which are
+    not supported by <b>summarize</b>). As only the original regression coefficient
+    point estimates are used in the computation, the form of standard errors
+    does not matter. For compatibility with version 7, the beta coefficient
+    for the constant term (if present) is set to zero rather than missing.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Christopher F Baum, Boston College
+    baum@bc.edu
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line: help for regress
+</pre>

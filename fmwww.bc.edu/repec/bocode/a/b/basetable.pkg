@@ -1,0 +1,25 @@
+d 'BASETABLE': module to compare a set of risk factors or effects with respect to a categorical variable
+d
+d  A single command for building most tables like eg baseline
+d tables  used in medical and epidemiological literature. 
+d
+d KW: baseline
+d KW: tables
+d KW: data management
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20210529
+d
+d Author: Niels Henrik Bruun, Aarhus University
+d Support: email nhbr@@ph.au.dk
+d
+f basetable.ado
+f basetable.sthlp
+f ../l/ltoxl_v13.mata
+f ../l/ltoxl_v14.mata
+f ../l/lbasetable.mlib
+f ../l/lbasetable.mata
+f ../l/lmatrixtools.mata
+f ../l/lmatrixtools.mlib
+f basetable_example_data.ado
