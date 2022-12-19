@@ -36,6 +36,7 @@ p fileutils module for faster file navigation
 p fillmissing module to fill missing values in numeric or string variables
 p filtertrace module to trace filter or contingency questions
 p find module to find matching strings across files in the current directory
+p find_denom module to find minimum sample size from percentages
 p find_index module to determine the index (observation number) of an observation that satisfies a specified condition
 p finddup module to find non-unique values or observations
 p findname module to list variables matching name patterns or other properties

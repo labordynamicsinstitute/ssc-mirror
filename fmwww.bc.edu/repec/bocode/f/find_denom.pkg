@@ -1,0 +1,19 @@
+d 'FIND_DENOM': module to find minimum sample size from percentages
+d
+d     find_denom reports minimum sample size and minimum
+d frequencies given one or more percentages	rounded to some
+d precision or resolution. 
+d
+d KW: percentages
+d KW: reporting
+d KW: tabulation
+d
+d Requires: Stata version 9
+d
+d Distribution-Date: 20221218
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f find_denom.ado
+f find_denom.sthlp

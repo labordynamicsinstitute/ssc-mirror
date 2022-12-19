@@ -1,4 +1,4 @@
-*! synth2 0.0.1 Guanpeng Yan and Qiang Chen 09/22/2022
+*! synth2 1.0.0 Guanpeng Yan and Qiang Chen 12/17/2022
 capture program drop synth2
 program synth2, eclass sortpreserve
 	version 16
@@ -140,8 +140,8 @@ program synth2, eclass sortpreserve
 		qui levelsof `timeVarStr' if `timeVar' < `trperiod', local(time_pre) clean
 		qui levelsof `timeVarStr' if `timeVar' >= `trperiod', local(time_post) clean
 		qui levelsof `timeVarStr' if `timeVar' == `trperiod', local(time_tr) clean
-	}	
-	qui cap synth `anything', trunit(`trunit') trperiod(`trperiod') `xperiod' `mspeperiod' `customV' `margin' `maxiter' `sigf' `bound' `nested' `allopt'
+	}
+	qui cap varabbrev synth `anything', trunit(`trunit') trperiod(`trperiod') `xperiod' `mspeperiod' `customV' `margin' `maxiter' `sigf' `bound' `nested' `allopt'
 	if (_rc){
 		error _rc
 		exit
@@ -214,7 +214,7 @@ program synth2, eclass sortpreserve
 	}
 	di
 	frame `frame'{
-		di _newline as txt "Prediction results in the posttreatment period:"
+		di _newline as txt "Prediction results in the posttreatment periods:"
 		mata: synth2_print(st_sdata(., "`timeVarStr'"), ("Time", "Actual Outcome", " Synthetic Outcome", " Treatment Effect"), ///
 			st_data(., "`depvar' pred·`depvar' tr·`depvar'"), ///
 			selectindex((st_data(., "`panelVar'") :== `trunit') :& (st_data(., "`timeVar'") :>= `trperiod')), 1, (13, 17, 16), 0, 0, 1)
@@ -253,7 +253,7 @@ program synth2, eclass sortpreserve
 			frame `frame': qui levelsof `panelVarStr' if `panelVar' == `loounit', local(unit_loo) clean
 			di as res "`unit_loo'"  as txt "..." _continue
 			qui levelsof `panelVar' if (`panelVar' != `trunit') & (`panelVar' != `loounit'), local(remunitlist)
-			qui cap synth `anything', trunit(`trunit') trperiod(`trperiod') counit(`remunitlist') `xperiod' `mspeperiod' `customV' `margin' `maxiter' `sigf' `bound' `nested' `allopt'
+			qui cap varabbrev synth `anything', trunit(`trunit') trperiod(`trperiod') counit(`remunitlist') `xperiod' `mspeperiod' `customV' `margin' `maxiter' `sigf' `bound' `nested' `allopt'
 			if(_rc){
 			    error _rc
 				exit
@@ -383,7 +383,7 @@ program synth2_placebo, eclass sortpreserve
 		foreach unit_pbo in `unit_pboList'{
 			di as res "`unit_pbo'"  as txt "..." _continue
 			qui frame `frame': levelsof `panelVar' if `panelVarStr' == "`unit_pbo'", local(pbounit) clean
-			qui cap synth `anything', trunit(`pbounit') trperiod(`trperiod') `xperiod' `mspeperiod' `customV' `margin' `maxiter' `sigf' `bound' `nested' `allopt'
+			qui cap varabbrev synth `anything', trunit(`pbounit') trperiod(`trperiod') `xperiod' `mspeperiod' `customV' `margin' `maxiter' `sigf' `bound' `nested' `allopt'
 			if _rc {
 			    error _rc
 				exit
@@ -409,7 +409,7 @@ program synth2_placebo, eclass sortpreserve
 			mata: printf(stritrim(sprintf( ///
 			"{p 0 6 2}{txt}Note: (1) Using all control units, the probability of obtaining a post/pretreatment MSPE ratio as large as {res}`unit_tr'{txt}'s is{res}%10.4f{txt}.{p_end}\n", mean((st_matrix("mspe")[1, 3] :<= st_matrix("mspe")[. , 3])))))
 			mata: printf(stritrim(sprintf( ///
-			"{p 6 6 2}{txt}(2) Excluding control units with pretreatment MSPE {res}`cutoff'{txt} times larger than the treated unit, the probability of obtaining a post/pretreatment MSPE ratio as large as California's is {res}%10.4f{txt}.{p_end}\n", mean((st_matrix("mspe_cut")[1, 3] :<= st_matrix("mspe_cut")[. , 3])))))
+			"{p 6 6 2}{txt}(2) Excluding control units with pretreatment MSPE {res}`cutoff'{txt} times larger than the treated unit, the probability of obtaining a post/pretreatment MSPE ratio as large as {res}`unit_tr'{txt}'s is {res}%10.4f{txt}.{p_end}\n", mean((st_matrix("mspe_cut")[1, 3] :<= st_matrix("mspe_cut")[. , 3])))))
 			di "{p 6 6 2}{txt}(3) The pointwise p-values below are computed by excluding control units with pretreatment MSPE {res}`cutoff'{txt} times larger than the treated unit.{p_end}"
 			di "{p 6 6 2}{txt}(4) There are total{res}", wordcount("`unit_pboRmv'"), "{txt}units with pretreatment MSPE {res}`cutoff'{txt} times larger than the treated unit, including {res}`unit_pboRmv'{txt}.{p_end}"
 		}
@@ -482,7 +482,7 @@ program synth2_placebo, eclass sortpreserve
 			loc pos = `pos' - 1
 			loc xlinePbo: word `pos' of `temp'
 			di as res "`time_pbo'" as txt "..." _continue
-			qui cap synth `anything', trunit(`trunit') trperiod(`pboperiod') `xperiod' `mspeperiod' `customV' `margin' `maxiter' `sigf' `bound' `nested' `allopt'
+			qui cap varabbrev synth `anything', trunit(`trunit') trperiod(`pboperiod') `xperiod' `mspeperiod' `customV' `margin' `maxiter' `sigf' `bound' `nested' `allopt'
 			if _rc {
 			    error _rc
 				exit
@@ -889,6 +889,7 @@ mata:
 		pvalM[indexRow, .] = pval
 	}
 end
+* 1.0.0 Address the compatibility issue of varabbreviation
 * 0.0.2 Adjust the input of numlist of covariates
 * 0.0.1 Fix the issue of parameter transfer in the placebo test
 * 0.0.0 Submit the initial version of synth2
