@@ -1,0 +1,27 @@
+d 'ELIX22': module to compute Elixhauser comorbidity measures (version 2022.1)
+d
+d  elix22 computes Elixhauser comorbidities based on ICD-10-CM
+d codes valid from October 2015 through September 2022.  This
+d updated Elixhauser version (2022.1) was developed as part of the
+d Healthcare Cost and Utilization Project (HCUP), a
+d Federal-State-Industry partnership sponsored by the Agency for
+d Healthcare Research and Quality. The number of comorbidity
+d measures increases from 29, in the original Elixhauser
+d specifications (Elixhauser et al. 1998), to 38 starting in
+d v2021.1, with three measures added, five measures modified to
+d create 12 more specific measures, and one measure discontinued. 
+d
+d KW: Elixhauser
+d KW: comorbidity
+d KW: ICD-10CM
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20221220
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f elix22.ado
+f elix22.sthlp
+f elix22_example_data.dta

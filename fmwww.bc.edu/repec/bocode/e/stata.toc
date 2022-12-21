@@ -28,6 +28,7 @@ p elapse module to calculate elapsed time in procedure
 p elasticregress module to perform elastic net regression, lasso regression, ridge regression
 p electool module containing toolkit to analyze electoral data
 p elife module to model annual increments of life expectancy
+p elix22 module to compute Elixhauser comorbidity measures (version 2022.1)
 p elixhauser module to calculate Elixhauser index of comorbidity
 p ellip module to graph confidence ellipses (version 8)
 p ellip6 module to plot confidence ellipses (version 6)

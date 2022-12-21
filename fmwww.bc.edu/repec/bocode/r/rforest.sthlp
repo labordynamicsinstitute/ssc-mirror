@@ -139,7 +139,7 @@ The default value is 0, which indicates that the maximum height is unlimited.
 {phang}
 {opt variance} sets the minimum proportion of the variance on all the data that needs to be present at a node in order for splitting to be performed in regression trees. 
 If the variance of the dependent variable is {cmd:a} on the full dataset, and this parameter is set to {cmd:b}, then a node will only be considered 
-for splitting if the variance of the dependent variable at this node is at least {cmd:a * b}.
+for splitting if the variance of the dependent variable at this node is at least {cmd:a * b}. 
 
 {dlgtab:Other}
 
@@ -282,3 +282,7 @@ or 16,120,000 entries in total.
 
 {pstd} Eibe Frank, Mark A. Hall, and Ian H. Witten (2016). The WEKA Workbench. 
 Online Appendix for "Data Mining: Practical Machine Learning Tools and Techniques", Morgan Kaufmann, Fourth Edition, 2016. {p_end}
+
+{title:Citing rforest}
+
+{pstd} Schonlau M, Zou R Y. The Random Decision Forest Algorithm for Statistical Learning. The Stata Journal.  Mar 2020. 20(1), 3–29. {p_end}
