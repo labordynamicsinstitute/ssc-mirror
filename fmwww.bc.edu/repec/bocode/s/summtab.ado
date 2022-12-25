@@ -1,9 +1,9 @@
-*!version7.0 17Jun2022
+*!version8.0 21Dec2022
 
 /* -----------------------------------------------------------------------------
 ** PROGRAM NAME: summtab
-** VERSION: 7.0
-** DATE: JUN 17, 2022
+** VERSION: 8.0
+** DATE: DEC 21, 2022
 ** -----------------------------------------------------------------------------
 ** CREATED BY: JOHN GALLIS
 ** DEDICATED TO THE MEMORY OF TIRZAH ELISE GALLIS
@@ -61,6 +61,10 @@
 					   THE # (WHICH IS 100%) WITH A ZERO VALUE.
 		JUN 17, 2022 - ADDED FUNCTIONALITY TO INCLUDE STRING VARIABLES AS CATEGORICAL VARIABLES
 					 - FOOTNOTES CAN NOW BE ADDED TO THE TABLE WITH THE FOOTNOTE() OPTION
+		DEC 21, 2022 - SUMMTAB NOW ALLOWS FOR SUMMARIZING THE "MISSING" CATEGORY OF A "BY" VARIABLE USING THE BYMISS OPTION
+					 - ALSO, THE BYLABEL OPTION ALLOWS FOR THE LABEL OF THE "BY" VARIABLE TO BE INCLUDED AT THE TOP OF THE TABLE
+					 - VARIABLES WHICH ARE ENTIRELY MISSING ARE NOW SHOWN IN THE TABLE WHEN THE CATMISSTYPE(NONE) OPTION IS SELECTED
+					 - THE TABLE HEADER NOW REPEATS ACROSS PAGES FOR MULTI-PAGE TABLES
 ** -----------------------------------------------------------------------------
 ** OPTIONS: SEE HELP FILE
 ** -----------------------------------------------------------------------------
@@ -71,10 +75,10 @@
 program define summtab
 	version 15
 	#delimit ;
-	syntax [if] [in], [by(varname) total contvars(varlist) catvars(varlist) meanrow catrow mean median range pnonmiss pmiss rowperc catmisstype(string) pval 
+	syntax [if] [in], [by(varname) bylabel bymiss total contvars(varlist) catvars(varlist) meanrow catrow mean median range pnonmiss pmiss rowperc catmisstype(string) pval 
 								contptype(integer 1) catptype(integer 1) clustpval clustid(varname) wts(varname) wtfreq(string) fracfmt(integer 2)
 								mnfmt(integer 2) medfmt(integer 1) rangefmt(integer 1) pnonmissfmt(integer 1) pmissfmt(integer 1) catfmt(integer 1) pfmt(integer 3)
-								title(string) directory(string) word wordname(string) excel excelname(string) replace append sheetname(string) footnote(string) *]
+								title(string) DIRectory(string) word wordname(string) excel excelname(string) replace append sheetname(string) footnote(string) *]
 	
 	;
 	#delimit cr
@@ -102,6 +106,14 @@ program define summtab
 	
 	if "`meanrow'" == "meanrow" & ("`median'" == "median" | "`range'" == "range" | "`pnonmiss'" == "pnonmiss") {
 		di as error "If using 'meanrow' option, only 'mean' can be specified" 
+		exit 198
+	}
+	if "`bylabel'" == "bylabel" & ("`by'" == "") {
+		di as error "The bylabel option may only be specified if the by option is also specified"
+		exit 198
+	}
+	if "`bymiss'" == "bymiss" & ("`by'" == "") {
+		di as error "The bymiss option may only be specified if the by option is also specified"
 		exit 198
 	}
 	
@@ -159,8 +171,14 @@ program define summtab
 	
 	/* BY OPTION SPECIFIED ||||||||||||||||||||||||||||||||||| */
 	if "`by'" != "" {
-		qui tab `by'
+		if "`bymiss'" == "bymiss" {
+			qui tab `by', missing
+		}
+		else {
+			qui tab `by'
+		}
 		local n_cats = r(r)
+		
 	
 	/* LOGIC FOR INCLUDING OR EXCLUDING A TOTAL COLUMN */
 		if "`total'" == "total" {
@@ -197,15 +215,32 @@ program define summtab
 		else if "`sheetname'" != "" {
 			qui putexcel set `excelname', modify sheet("`sheetname'", replace)
 		}
-		qui putexcel A1 = " "
-		qui putexcel A2 = " "
+		if "`by'" != "" &  "`bylabel'" == "bylabel" { 
+			qui putexcel A1 = " "
+			qui putexcel A2 = " "
+			qui putexcel A3 = " "
+		}
+		else {
+			qui putexcel A1 = " "
+			qui putexcel A2 = " "
+		}
 	}
 
 	/* for word table ||||||||||||||||||||||||||||||| */
-	if "`word'" == "word" {
-		putdocx table tbl1 = (2,`col'), border(all, nil) memtable layout(fixed)
-		putdocx table tbl1(1,1) = (" "), halign(left) border(top) colspan(2)
-		putdocx table tbl1(2,1) = (" "), halign(left) border(bottom) colspan(2)
+	if "`by'" != "" &  "`bylabel'" == "bylabel" { 
+		if "`word'" == "word" {
+			putdocx table tbl1 = (3,`col'), border(all, nil) memtable layout(fixed)
+			putdocx table tbl1(1,1) = (" "), halign(left) border(top) colspan(2)
+			putdocx table tbl1(2,1) = (" "), halign(left) border(top) colspan(2)
+			putdocx table tbl1(3,1) = (" "), halign(left) border(bottom) colspan(2)
+		}
+	}
+	else {
+		if "`word'" == "word" {
+			putdocx table tbl1 = (2,`col'), border(all, nil) memtable layout(fixed)
+			putdocx table tbl1(1,1) = (" "), halign(left) border(top) colspan(2)
+			putdocx table tbl1(2,1) = (" "), halign(left) border(bottom) colspan(2)
+		}
 	}
 
 /* |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| */
@@ -216,8 +251,26 @@ program define summtab
 	
 	/* BY OPTION SPECIFIED ||||||||||||||||||||||||||||||||||| */
 	if "`by'" != "" {
-		qui levelsof `by', local(`by'_g)
+		if "`bymiss'" == "bymiss" {
+			qui levelsof `by', missing local(`by'_g)
+		}
+		else {
+			qui levelsof `by', local(`by'_g)
+		}
 		local lbe: value label `by' 
+		
+		if "`bylabel'" == "bylabel" {
+			local coltospan = `col'-`c_col'
+			local variable_lab: variable label `by'
+			if "`word'" == "word" {
+				putdocx table tbl1(1,`c_col') = ("`variable_lab'"), colspan(`coltospan') halign(center) border(top) valign(center)
+			}
+			if "`excel'" == "excel" {
+				local letter : word `coltospan' of `c(ALPHA)'
+				qui putexcel (B1:`letter'1), merge
+				qui putexcel B1 = "`variable_lab'", hcenter
+			}
+		}
 		
 		foreach l of local `by'_g {
 			if "`lbe'" != ""{	
@@ -229,14 +282,26 @@ program define summtab
 			
 			/* for word table ||||||||||||||||||||||||||||||| */
 			if "`word'" == "word" {
-				putdocx table tbl1(1,`c_col') = ("`var_lab'"), halign(center) border(top) colspan(1) valign(center) 
+				if "`bylabel'" == "bylabel" {
+					putdocx table tbl1(2,`c_col') = ("`var_lab'"), halign(center) border(top) colspan(1) valign(center) 
+				}
+				else {
+					putdocx table tbl1(1,`c_col') = ("`var_lab'"), halign(center) border(top) colspan(1) valign(center) 
+				}
 			}
 		
 			/* for excel table ||||||||||||||||||||||||||||||| */
 			if "`excel'" == "excel" {
-				local i = `i' + 1
-				local letter : word `i' of `c(ALPHA)'
-				qui putexcel `letter'1 = "`var_lab'", hcenter
+				if "`bylabel'" == "bylabel" {
+					local i = `i' + 1
+					local letter : word `i' of `c(ALPHA)'
+					qui putexcel `letter'2 = "`var_lab'", hcenter
+				}
+				else {
+					local i = `i' + 1
+					local letter : word `i' of `c(ALPHA)'
+					qui putexcel `letter'1 = "`var_lab'", hcenter
+				}
 			}
 			/* ||||||||||||||||||||||||||||||||||||||||||||||| */
 			
@@ -246,18 +311,28 @@ program define summtab
 			else {
 				quietly: sum if `by' == `l'
 			}
-			local obs_`l' = r(N)
+			local obs_ = r(N)
 			
 			/* for word table ||||||||||||||||||||||||||||||| */
 			if "`word'" == "word" {
-				putdocx table tbl1(2,`c_col') = ("(N = `obs_`l'')"), halign(center) border(bottom) colspan(1) valign(center) 
+				if "`bylabel'" == "bylabel" {
+					putdocx table tbl1(3,`c_col') = ("(N = `obs_')"), halign(center) border(bottom) colspan(1) valign(center) 
+				}
+				else {
+					putdocx table tbl1(2,`c_col') = ("(N = `obs_')"), halign(center) border(bottom) colspan(1) valign(center) 
+				}
 			}
 			local ++c_col
 			
 			/* for excel table ||||||||||||||||||||||||||||||| */
 			if "`excel'" == "excel" {
-				qui putexcel `letter'2 = "(N = `obs_`l'')", hcenter
-			}
+				if "`bylabel'" == "bylabel" {
+					qui putexcel `letter'3 = "(N = `obs_')", hcenter
+				}
+				else {
+					qui putexcel `letter'2 = "(N = `obs_')", hcenter
+				}
+			}	
 			/* ||||||||||||||||||||||||||||||||||||||||||||||| */
 		}
 	
@@ -273,16 +348,28 @@ program define summtab
 			
 			/* for word table ||||||||||||||||||||||||||||||| */
 			if "`word'" == "word" {
-				putdocx table tbl1(1,`c_col') = ("Total"), halign(center) border(top) colspan(1) valign(center) 
-				putdocx table tbl1(2,`c_col') = ("(N = `obs_all')"), halign(center) border(bottom) colspan(1) valign(center) 
+				if "`bylabel'" == "bylabel" {
+					putdocx table tbl1(2,`c_col') = ("Total"), halign(center) border(top) colspan(1) valign(center) 
+					putdocx table tbl1(3,`c_col') = ("(N = `obs_all')"), halign(center) border(bottom) colspan(1) valign(center) 
+				}
+				else {
+					putdocx table tbl1(1,`c_col') = ("Total"), halign(center) border(top) colspan(1) valign(center) 
+					putdocx table tbl1(2,`c_col') = ("(N = `obs_all')"), halign(center) border(bottom) colspan(1) valign(center) 
+				}
 			}
 		
 			/* for excel table ||||||||||||||||||||||||||||||| */
 			if "`excel'" == "excel" {
 				local i = `i' + 1
 				local letter : word `i' of `c(ALPHA)'
-				qui putexcel `letter'1 = "Total", hcenter
-				qui putexcel `letter'2 = "(N = `obs_all')", hcenter
+				if "`bylabel'" == "bylabel" {
+					qui putexcel `letter'2 = "Total", hcenter
+					qui putexcel `letter'3 = "(N = `obs_all')", hcenter
+				}
+				else {
+					qui putexcel `letter'1 = "Total", hcenter
+					qui putexcel `letter'2 = "(N = `obs_all')", hcenter
+				}
 			}
 			/* ||||||||||||||||||||||||||||||||||||||||||||||| */
 		}
@@ -293,16 +380,29 @@ program define summtab
 				
 			/* for word table ||||||||||||||||||||||||||||||| */
 			if "`word'" == "word" {
-				putdocx table tbl1(1,`c_col') = (" "), halign(right) border(top) 
-				putdocx table tbl1(2,`c_col') = ("p-value"), halign(center) border(bottom)
+				if "`bylabel'" == "bylabel" {
+					putdocx table tbl1(2,`c_col') = (" "), halign(right) border(top) 
+					putdocx table tbl1(3,`c_col') = ("p-value"), halign(center) border(bottom)
+				}
+				else {
+					
+					putdocx table tbl1(1,`c_col') = (" "), halign(right) border(top) 
+					putdocx table tbl1(2,`c_col') = ("p-value"), halign(center) border(bottom)
+				}
 			}
 				
 			/* for excel table ||||||||||||||||||||||||||||||| */
 			if "`excel'" == "excel" {
 				local i = `i' + 1
 				local letter : word `i' of `c(ALPHA)'
-				qui putexcel `letter'1 = " "
-				qui putexcel `letter'2 = "p-value", hcenter
+				if "`bylabel'" == "bylabel" {
+					qui putexcel `letter'2 = " "
+					qui putexcel `letter'3 = "p-value", hcenter
+				}
+				else {
+					qui putexcel `letter'1 = " "
+					qui putexcel `letter'2 = "p-value", hcenter					
+				}
 			}
 			/* ||||||||||||||||||||||||||||||||||||||||||||||| */
 		}
@@ -372,8 +472,12 @@ program define summtab
 /* |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 |||||||||||||||||||||||||||||||||||CONTINUOUS VARIABLE LOOP ||||||||||||||||||||||||||||||||||
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| */
-	
-	local j=2
+	if "`bylabel'" == "bylabel" {
+		local j=3
+	}
+	else {
+		local j=2
+	}
 	local q=1
 	foreach cv of local contvars {
 	
@@ -489,7 +593,12 @@ program define summtab
 			
 			/* BY OPTION SPECIFIED ||||||||||||||||||||||||||||||||||| */
 			if "`by'" != "" {
-				qui levelsof `by', local(over_group)
+				if "`bymiss'" == "bymiss" {
+					qui levelsof `by', missing local(over_group)
+				}
+				else {
+					qui levelsof `by', local(over_group)
+				}
 				foreach i of local over_group {
 					/* WEIGHT OPTION SPECIFIED ||||||||||||||||||||||| */
 					if "`wts'" != "" {
@@ -779,7 +888,12 @@ program define summtab
 			
 			/* BY OPTION SPECIFIED ||||||||||||||||||||||||||||||||||| */
 			if "`by'" != "" {
-			qui levelsof `by', local(over_group)
+				if "`bymiss'" == "bymiss" {
+					qui levelsof `by', missing local(over_group)
+				}
+				else {
+					qui levelsof `by', local(over_group)
+				}
 				foreach i of local over_group {
 				
 					/* WEIGHT OPTION SPECIFIED ||||||||||||||||||||||| */
@@ -1027,7 +1141,12 @@ program define summtab
 			
 			/* BY OPTION SPECIFIED ||||||||||||||||||||||||||||||||||| */
 			if "`by'" != "" {
-			qui levelsof `by', local(over_group)
+				if "`bymiss'" == "bymiss" {
+					qui levelsof `by', missing local(over_group)
+				}
+				else {
+					qui levelsof `by', local(over_group)
+				}
 				foreach i of local over_group {
 					/* WEIGHT OPTION SPECIFIED ||||||||||||||||||||||| */
 					if "`wts'" != "" {
@@ -1214,7 +1333,12 @@ program define summtab
 			
 			/* BY OPTION SPECIFIED ||||||||||||||||||||||||||||||||||| */
 			if "`by'" != "" {
-			qui levelsof `by', local(over_group)
+				if "`bymiss'" == "bymiss" {
+					qui levelsof `by', missing local(over_group)
+				}
+				else {
+					qui levelsof `by', local(over_group)
+				}
 				foreach i of local over_group {
 					/* WEIGHT OPTION SPECIFIED ||||||||||||||||||||||| */
 					if "`wts'" != "" {
@@ -1433,16 +1557,25 @@ program define summtab
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| */
 	if "`contvars'" != "" local ++row
 	
+	if "`bylabel'" == "bylabel" & "`excel'" == "excel" {
+		local ++row
+	}
+	
 
 /* |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 ||||||||||||||||||||||||||||||||||| CATEGORICAL VARIABLE LOOP ||||||||||||||||||||||||||||||||
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| */
 	foreach cv of local catvars{
 		if "`catmisstype'" == "none" {
-			qui levelsof `cv', local(cols) 
-			qui tabcount2 `cv', v1(`cols') zero matrix(Mat)
-			local MAT=rowsof(Mat)
-			local categories = `MAT'+1
+			qui levelsof `cv', local(cols)
+			if `"`cols'"' == "" {
+				local categories = 1
+			}
+			else {
+				qui tabcount2 `cv', v1(`cols') zero matrix(Mat)
+				local MAT=rowsof(Mat)
+				local categories = `MAT'+1
+			}
 		}
 		else if "`catmisstype'" == "missperc" {
 			qui tab `cv', miss
@@ -1451,6 +1584,10 @@ program define summtab
 		else if "`catmisstype'" == "missnoperc" {
 			qui tab `cv', miss
 			local categories = r(r)+1
+			qui levelsof `cv', local(cols)
+			if `"`cols'"' == "" {
+				local categories = 1
+			}
 		}
 		/* for word table ||||||||||||||||||||||||||||||| */
 		if "`word'" == "word" {
@@ -1461,7 +1598,6 @@ program define summtab
 				putdocx table tbl2(`row',.), addrows(`categories')
 			}
 		}
-		
 		
 		*label categorical variable
 		local var_lab : variable label `cv'
@@ -1552,10 +1688,6 @@ program define summtab
 			
 		}
 		
-		
-
-		/* START HERE */
-		
 		/* June 9, 2020 */
 		if (`categories' == 3 | `categories' == 2) & "`catrow'" == "catrow" {
 		}
@@ -1567,20 +1699,21 @@ program define summtab
 			local ++row
 		}
 		
-		
-		
 		local m 1
 		local cur_col 1
 		
-		
-		
 		/* BY OPTION SPECIFIED ||||||||||||||||||||||||||||||||||| */
 		if "`by'" != "" {
-			qui levelsof `by', local(over_group)
+			if "`bymiss'" == "bymiss" {
+				qui levelsof `by', missing local(over_group)
+			}
+			else {
+				qui levelsof `by', local(over_group)
+			}
 			foreach i of local over_group{
 				local r = `row'
 				
-				if "`catmisstype'" == "none" {
+				if "`catmisstype'" == "none" | ("`catmisstype'" == "missnoperc" & `categories' == 1) {
 					qui levelsof `cv', local(c_l)
 				}
 				else if "`catmisstype'" == "missperc" {
@@ -1589,8 +1722,6 @@ program define summtab
 				else if "`catmisstype'" == "missnoperc" {
 					qui levelsof `cv', local(c_l) miss
 				}
-				
-				
 				
 				local lbe: value label `cv' 
 				local k = 1
@@ -1604,7 +1735,6 @@ program define summtab
 				    local c_l=substr("`temporary'",2,1)
 				}
 				
-				
 				local s=1
 				local v=`j'
 				foreach c of local c_l {
@@ -1617,7 +1747,7 @@ program define summtab
 					}
 					/* MOVING WEIGHT VS. NONWEIGHT CODE */
 					
-					if "`catmisstype'" == "none" {
+					if "`catmisstype'" == "none" | ("`catmisstype'" == "missnoperc" & `categories' == 1) {
 						qui levelsof `cv', local(rows1)
 						if "`catrow'" == "catrow" & `categories' == 2 {
 						    qui fre `cv', includelabeled nol
@@ -1626,9 +1756,14 @@ program define summtab
 							local two = substr("`temporary'",2,1)
 							local rows1="`one'" + " " + "`two'"
 						}
-						qui levelsof `by', local(cols1)
-						if "`wts'" != "" qui tabcount2 `cv' `by' [aweight=`wts'], v1(`rows1') v2(`cols1') matrix(M) zero
-						else qui tabcount2 `cv' `by', v1(`rows1') v2(`cols1') matrix(M) zero
+						if "`bymiss'" == "bymiss" {
+							qui levelsof `by', missing local(cols1)
+						}
+						else {	
+							qui levelsof `by', local(cols1)
+						}
+						if "`wts'" != "" qui tabcount2 `cv' `by' [aweight=`wts'], v1(`rows1') v2(`cols1') matrix(M) zero missing
+						else qui tabcount2 `cv' `by', v1(`rows1') v2(`cols1') matrix(M) zero missing
 					}
 					
 					else if "`catmisstype'" == "missperc" {
@@ -1638,13 +1773,25 @@ program define summtab
 					
 					else if "`catmisstype'" == "missnoperc" {
 						qui levelsof `cv', local(rows1)
-						qui levelsof `by', local(cols1)
+						if "`bymiss'" == "bymiss" {
+							qui levelsof `by', missing local(cols1)
+						}
+						else {	
+							qui levelsof `by', local(cols1)
+						}
 						if "`wts'" != "" {
-							qui tabcount2 `cv' `by' [aweight=`wts'], v1(`rows1') v2(`cols1') matrix(M1) zero
+							qui tabcount2 `cv' `by' [aweight=`wts'], v1(`rows1') v2(`cols1') matrix(M1) zero missing
+							if "`bymiss'" != "bymiss" {
+								capture drop if `by' == .
+							}
 							qui tab `cv' `by' [aweight=`wts'], matcell(M2) miss
+						
 						}
 						else {
-							qui tabcount2 `cv' `by', v1(`rows1') v2(`cols1') matrix(M1) zero
+							qui tabcount2 `cv' `by', v1(`rows1') v2(`cols1') matrix(M1) zero missing
+							if "`bymiss'" != "bymiss" {
+								capture drop if `by' == .
+							}
 							qui tab `cv' `by', matcell(M2) miss							
 						}
 						
@@ -1653,7 +1800,7 @@ program define summtab
 					}
 					
 					
-					if "`catmisstype'" == "none" | "`catmisstype'" == "missperc" {
+					if "`catmisstype'" == "none" | "`catmisstype'" == "missperc" | ("`catmisstype'" == "missnoperc" & `categories' == 1) {
 						if "`catrow'" == "catrow" & (`categories' == 3 | `categories' == 2) {
 							local k=2
 						}
@@ -1680,7 +1827,7 @@ program define summtab
 						local p_n ")"
 						local perc "%"
 						
-							*set frequency to missing if it's a column of zeroes
+						*set frequency to missing if it's a column of zeroes
 						if "`wts'" != "" {
 							if "`wtfreq'" == "off" {
 								local freqperc `pt_1'`perc'
@@ -1730,8 +1877,9 @@ program define summtab
 						
 						matrix M3 = M2[`Mcount',1...]
 						matrix X1 = M3*.
+						
 						*June 17, 2022 - String variables put missing data first
-						qui ds `cv', has(type 1/100)
+						qui ds `cv', has(type string)
 						if "`r(varlist)'" == "" {
 							matrix M4 = M1\X1
 						}
@@ -1824,7 +1972,7 @@ program define summtab
 			
 			/* LOGIC FOR INCLUDING OR EXCLUDING A TOTAL COLUMN */
 			if "`total'" == "total" {
-				if "`catmisstype'" == "none" {
+				if "`catmisstype'" == "none" | ("`catmisstype'" == "missnoperc" & `categories' == 1) {
 					qui levelsof `cv', local(c_l)
 				}
 				else if "`catmisstype'" == "missperc" {
@@ -1844,12 +1992,16 @@ program define summtab
 					local temporary: di `r(lab_valid)'
 				    local c_l = substr("`temporary'",2,1)
 				}
+				
+				if `categories' == 1 {
+					local d = `cur_col'
+				}
 				local ++d
 
 				local r=`row'
 				foreach c of local c_l {
 					/* WEIGHT OPTION SPECIFIED ||||||||||||||||||||||| */
-					if "`catmisstype'" == "none" {
+					if "`catmisstype'" == "none" | ("`catmisstype'" == "missnoperc" & `categories' == 1) {
 						qui levelsof `cv', local(rows1)
 						if "`catrow'" == "catrow" & `categories' == 2 {
 						    qui fre `cv', includelabeled nol
@@ -1858,8 +2010,8 @@ program define summtab
 							local two = substr("`temporary'",2,1)
 							local rows1="`one'" + " " + "`two'"
 						}
-						if "`wts'" != "" qui tabcount2 `cv'  [aweight=`wts'], v1(`rows1') matrix(M) zero
-						else qui tabcount2 `cv' , v1(`rows1') matrix(M) zero
+						if "`wts'" != "" qui tabcount2 `cv'  [aweight=`wts'], v1(`rows1') matrix(M) zero missing
+						else qui tabcount2 `cv' , v1(`rows1') matrix(M) zero missing
 					}
 					
 					else if "`catmisstype'" == "missperc" {
@@ -1870,18 +2022,18 @@ program define summtab
 					else if "`catmisstype'" == "missnoperc" {
 						qui levelsof `cv', local(rows1)
 						if "`wts'" != "" {
-							qui tabcount2 `cv' [aweight=`wts'], v1(`rows1') v2(`cols1') matrix(M1) zero
+							qui tabcount2 `cv' [aweight=`wts'], v1(`rows1') v2(`cols1') matrix(M1) zero missing
 							qui tab `cv' [aweight=`wts'], matcell(M2) miss
 						}
 						else {
-							qui tabcount2 `cv', v1(`rows1') v2(`cols1') matrix(M1) zero
+							qui tabcount2 `cv', v1(`rows1') v2(`cols1') matrix(M1) zero missing
 							qui tab `cv', matcell(M2) miss							
 						}
 						local Mcount = rowsof(M2)
 					}
 					
 					
-					if "`catmisstype'" == "none" | "`catmisstype'" == "missperc" {
+					if "`catmisstype'" == "none" | "`catmisstype'" == "missperc" | ("`catmisstype'" == "missnoperc" & `categories' == 1) {
 						if "`catrow'" == "catrow" & (`categories' == 3 | `categories' == 2) {
 							local k=2
 						}
@@ -1957,8 +2109,9 @@ program define summtab
 						
 						matrix M3 = M2[`Mcount',1...]
 						matrix X1 = M3*.
+						
 						*June 17, 2022 - String variables put missing data first
-						qui ds `cv', has(type 1/100)
+						qui ds `cv', has(type string)
 						if "`r(varlist)'" == "" {
 							matrix M4 = M1\X1
 						}
@@ -2021,7 +2174,7 @@ program define summtab
 			
 			local r = `row'
 				
-			if "`catmisstype'" == "none" {
+			if "`catmisstype'" == "none" | ("`catmisstype'" == "missnoperc" & `categories' == 1) {
 				qui levelsof `cv', local(c_l)
 			}
 			else if "`catmisstype'" == "missperc" {
@@ -2057,7 +2210,7 @@ program define summtab
 				}
 				
 				/* WEIGHT OPTION SPECIFIED ||||||||||||||||||||||| */
-					if "`catmisstype'" == "none" {
+					if "`catmisstype'" == "none" | ("`catmisstype'" == "missnoperc" & `categories' == 1) {
 						qui levelsof `cv', local(rows1)
 						if "`catrow'" == "catrow" & `categories' == 2 {
 						    qui fre `cv', includelabeled nol
@@ -2066,8 +2219,8 @@ program define summtab
 							local two = substr("`temporary'",2,1)
 							local rows1="`one'" + " " + "`two'"
 						}
-						if "`wts'" != "" qui tabcount2 `cv' [aweight=`wts'], v1(`rows1') matrix(M) zero
-						else qui tabcount2 `cv', v1(`rows1') matrix(M) zero
+						if "`wts'" != "" qui tabcount2 `cv' [aweight=`wts'], v1(`rows1') matrix(M) zero missing
+						else qui tabcount2 `cv', v1(`rows1') matrix(M) zero missing
 					}
 						
 						else if "`catmisstype'" == "missperc" {
@@ -2078,11 +2231,11 @@ program define summtab
 						else if "`catmisstype'" == "missnoperc" {
 							qui levelsof `cv', local(rows1)
 							if "`wts'" != "" {
-								qui tabcount2 `cv' [aweight=`wts'], v1(`rows1') matrix(M1) zero
+								qui tabcount2 `cv' [aweight=`wts'], v1(`rows1') matrix(M1) zero missing
 								qui tab `cv' [aweight=`wts'], matcell(M2) miss
 							}
 							else {
-								qui tabcount2 `cv', v1(`rows1')matrix(M1) zero
+								qui tabcount2 `cv', v1(`rows1') matrix(M1) zero missing
 								qui tab `cv', matcell(M2) miss							
 							}
 							
@@ -2091,7 +2244,7 @@ program define summtab
 						}
 						
 						
-						if "`catmisstype'" == "none" | "`catmisstype'" == "missperc" {
+						if "`catmisstype'" == "none" | "`catmisstype'" == "missperc" | ("`catmisstype'" == "missnoperc" & `categories' == 1) {
 							if "`catrow'" == "catrow" & (`categories' == 3 | `categories' == 2) {
 								local k=2
 							}
@@ -2169,8 +2322,9 @@ program define summtab
 							
 							matrix M3 = M2[`Mcount',1...]
 							matrix X1 = M3*.
+							
 							*June 17, 2022 - String variables put missing data first
-							qui ds `cv', has(type 1/100)
+							qui ds `cv', has(type string)
 							if "`r(varlist)'" == "" {
 								matrix M4 = M1\X1
 							}
@@ -2269,7 +2423,6 @@ program define summtab
 	}
 
 	if "`wordname'" == ""{
-
 		local wordname "table1.docx"
 	}
 	
@@ -2279,11 +2432,8 @@ program define summtab
 		if "`word'" == "word" {
 			putdocx table tbl3 = (1,`col'), border(all, nil) memtable layout(fixed)
 			putdocx table tbl3(1,1) = ("`footnote'"), halign(left) border(top) colspan(`col')
-		}
-	
-	/* for word table ||||||||||||||||||||||||||||||| */
-		if "`word'" == "word" {
-			putdocx table tbl12 = (3,1), border(all, nil) /*headerrow(1)*/ layout(fixed) cellspacing(0.01)
+
+			putdocx table tbl12 = (3,1), border(all, nil) headerrow(1) layout(fixed) cellspacing(0.01)
 			putdocx table tbl12(1,1) = table(tbl1)
 			putdocx table tbl12(2,1) = table(tbl2)
 			putdocx table tbl12(3,1) = table(tbl3)
@@ -2292,7 +2442,7 @@ program define summtab
 	}
 	else if "`footnote'" == "" {
 		if "`word'" == "word" {
-			putdocx table tbl12 = (2,1), border(all, nil) /*headerrow(1)*/ layout(fixed) cellspacing(0.01)
+			putdocx table tbl12 = (2,1), border(all, nil) headerrow(1) layout(fixed) cellspacing(0.01)
 			putdocx table tbl12(1,1) = table(tbl1)
 			putdocx table tbl12(2,1) = table(tbl2), border(bottom)
 			putdocx save `wordname', `replace' `append'
@@ -2464,7 +2614,7 @@ program tabcount2, byable(recall)
 						local var1: word 1 of `varlist'
 						local var2: word 2 of `varlist'
 						if "`var2'" != "" {
-							qui ds `var1', has(type 1/100)
+							qui ds `var1', has(type string)
 							* June 17, 2022 - Allow processing of string variables for categories
 							if "`r(varlist)'" == "" {
 								su `wt' if `var1' != . & `var2' != ., meanonly
@@ -2477,7 +2627,7 @@ program tabcount2, byable(recall)
 						
 						else if "`var2'" == "" {
 							* June 17, 2022 - Allow processing of string variables for categories
-							qui ds `var1', has(type 1/100)
+							qui ds `var1', has(type string)
 							if "`r(varlist)'" == "" {
 								su `wt' if `var1' != ., meanonly
 							}

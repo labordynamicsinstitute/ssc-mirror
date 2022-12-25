@@ -47,7 +47,7 @@ stat({help worldstat##options:statistic_name}) [{it:options}]
 {synopt :{cmdab:cn:ame}}adds country names to the {help spmap:map} produced as output
 {p_end}
 {...}
-{synopt :{cmdab:map:only}}prints only the geographical output while suppressing the time series graph
+{synopt :*}Any other options permitted by {help spmap} will be passed to calls of spmap
 {p_end}
 {...}
 {synoptline}
@@ -66,7 +66,7 @@ World Bank.
  
  {p 6 6 2}
 The {hi:worldstat} module is not demanding of computer hard disk space, as all statistics and map files are accessed remotely, and are, by default, not saved to the hard disk.  For the full list 
-of indicators which can be accessed, visit {browse "http://worldbank.270a.info/classification/indicator.html"} or see the {help wbopendata} help file.
+of indicators which can be accessed, visit {browse "http://data.worldbank.org/indicator/all"}.
 
 
 
@@ -90,11 +90,11 @@ of the region defined in {it:place_name}. One of the following options must be s
 
  {p 6 6 2}
 {cmd:statistic_name} The statistic of interest which is to be downloaded from the World Bank Data Bank.  This may be one of the following options (where  only the short code is required), or any other indicator from the
-World Bank Data Base.  If a short-cut for the indicator of interest is not provided in the following table, the indicator's complete {browse "http://worldbank.270a.info/classification/indicator.html":WB Code} is required.
+World Bank Data Base.  If a short-cut for the indicator of interest is not provided in the following table, the indicator's complete {browse "http://data.worldbank.org/indicator/all":WB Code} is required.
 
            Short-cut    WB Code				Description
            {hline 80}
-              {cmd:GDP}       {it:NY.GDP.PCAP.KD}      GDP per capita (constant 2000 US$)
+              {cmd:GDP}       {it:gdppckd}             Gross Domestic Product (per capita)
               {cmd:MMR}       {it:SH.STA.MMRT}         Maternal mortality ratio (modeled estimate, per  
 					     100,000 live births)
               {cmd:EDUP}      {it:SE.PRM.NENR}         School enrollment, primary (% net)
@@ -105,6 +105,7 @@ World Bank Data Base.  If a short-cut for the indicator of interest is not provi
               {cmd:CAB}       {it:BN.CAB.XOKA.GD.ZS}   Current account balance (% of GDP)
               {cmd:FDI}       {it:BX.KLT.DINV.CD.WD}   Foreign direct investment, net inflows (BoP, 
 					     current US$)
+              {cmd:GDP2}      {it:NY.GDP.PCAP.KD}      GDP per capita (constant 2000 US$)
               {cmd:INF}       {it:FP.CPI.TOTL.ZG}      Inflation, consumer prices (annual %)
               {cmd:ODA}       {it:DT.ODA.ODAT.PC.ZS}   Net ODA received per capita (current US$) 
               {cmd:HIV}       {it:SH.DYN.AIDS.ZS}      Prevalence of HIV, total (% of population ages 
@@ -119,7 +120,7 @@ World Bank Data Base.  If a short-cut for the indicator of interest is not provi
               {cmd:IMM}        {it:SH.IMM.IDPT}        Immunization DPT, (% children aged 12-23 months)			  
            {hline 80}
 		note: This is a very small subset of the total Data Bank.  The entire 
-		Data Bank is available at {browse "http://worldbank.270a.info/classification/indicator.html"}.
+		Data Bank is available at {browse "http://data.worldbank.org/indicator/all"}.
 {pmore}
 
  {p 6 6 2}
@@ -133,8 +134,7 @@ data, they must enter si.pov.gini as the {help worldstat##options:statistic_name
  {p 6 6 2}
 {cmdab:cn:ame} Allows for country names to be included as labels on the {help spmap:country maps} produced. 
 
- {p 6 6 2}
-{cmdab:map:only} Only the part of the graphical output which corresponds to geographical data is displayed.  The map is printed, and time series graphs are not included.
+
 
 {marker examples}{...}
 {title:Examples}
@@ -147,7 +147,7 @@ data, they must enter si.pov.gini as the {help worldstat##options:statistic_name
     {hline}
 {pstd}Visualise maternal mortality per capita for the entire world {p_end}
 
-{phang2}{cmd:. worldstat world, stat(FERT)}{p_end}
+{phang2}{cmd:. worldstat world, stat(FERT) fcolor(Pastel2)}{p_end}
 
     {hline}
 
@@ -179,7 +179,7 @@ Online:  {manhelp graph G}, {help wbopendata}, {help spmap},
 {title:Author}
 
 {pstd}
-Damian C. Clarke, The University of Oxford. {browse "mailto:damian.clarke@economics.ox.ac.uk":damian.clarke@economics.ox.ac.uk}
+Damian Clarke, University of Chile. {browse "mailto:dclarke@fen.uchile.cl":dclarke@fen.uchile.cl}
 {p_end}
 
 

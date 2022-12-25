@@ -1,9 +1,9 @@
-*!version3.0 17Jun2022
+*!version7.0 21Dec2022
 
 /* -----------------------------------------------------------------------------
 ** PROGRAM NAME: summtab2
-** VERSION: 3.0
-** DATE: JUN 17, 2022
+** VERSION: 7.0
+** DATE: DEC 21, 2022
 ** -----------------------------------------------------------------------------
 ** CREATED BY: JOHN GALLIS
 ** DEDICATED TO THE MEMORY OF TIRZAH ELISE GALLIS
@@ -17,8 +17,8 @@
 		DEC 01, 2020 - UPDATING CODE SO THAT IF 0 INDIVIDUALS HAVE THE "YES" LEVEL OF THE
 					   VARIABLE, THE CATROW OPTION REPORTS 0 (0.0%), RATHER THAN REPORTING 
 					   THE # (WHICH IS 100%) WITH A ZERO VALUE.
-		JUN 17, 2022 - ADDED FUNCTIONALITY TO INCLUDE STRING VARIABLES AS CATEGORICAL VARIABLES
-					 - FOOTNOTES CAN NOW BE ADDED TO THE TABLE WITH THE FOOTNOTE() OPTION
+**		DEC 22, 2022 - UPDATES CONSISTENT WITH SUMMTAB UPDATES; SEE CODE FILE FOR SUMMTAB FOR 
+**					   LIST OF UPDATES
 ** -----------------------------------------------------------------------------
 ** OPTIONS: SEE HELP FILE
 ** -----------------------------------------------------------------------------
@@ -29,10 +29,10 @@
 program define summtab2
 	version 15
 	#delimit ;
-	syntax [if] [in], [by(varname) total vars(varlist) type(numlist) meanrow catrow mean median range pnonmiss pmiss rowperc catmisstype(string) pval 
+	syntax [if] [in], [by(varname) bylabel bymiss total vars(varlist) type(numlist) meanrow catrow mean median range pnonmiss pmiss rowperc catmisstype(string) pval 
 								contptype(integer 1) catptype(integer 1) clustpval clustid(varname) wts(varname) wtfreq(string) fracfmt(integer 2)
 								mnfmt(integer 2) medfmt(integer 1) rangefmt(integer 1) pnonmissfmt(integer 1) pmissfmt(integer 1) catfmt(integer 1) pfmt(integer 3)
-								title(string) directory(string) word wordname(string) excel excelname(string) replace append sheetname(string) footnote(string) *]
+								title(string) DIRectory(string) word wordname(string) excel excelname(string) replace append sheetname(string) footnote(string) *]
 	
 	;
 	#delimit cr
@@ -73,6 +73,14 @@ program define summtab2
 	
 	if "`meanrow'" == "meanrow" & ("`median'" == "median" | "`range'" == "range" | "`pnonmiss'" == "pnonmiss") {
 		di as error "If using 'meanrow' option, only 'mean' can be specified" 
+		exit 198
+	}
+	if "`bylabel'" == "bylabel" & ("`by'" == "") {
+		di as error "The bylabel option may only be specified if the by option is also specified"
+		exit 198
+	}
+	if "`bymiss'" == "bymiss" & ("`by'" == "") {
+		di as error "The bymiss option may only be specified if the by option is also specified"
 		exit 198
 	}
 	
@@ -130,7 +138,12 @@ program define summtab2
 	
 	/* BY OPTION SPECIFIED ||||||||||||||||||||||||||||||||||| */
 	if "`by'" != "" {
-		qui tab `by'
+		if "`bymiss'" == "bymiss" {
+			qui tab `by', missing
+		}
+		else {
+			qui tab `by'
+		}
 		local n_cats = r(r)
 	
 	/* LOGIC FOR INCLUDING OR EXCLUDING A TOTAL COLUMN */
@@ -173,11 +186,22 @@ program define summtab2
 	}
 
 	/* for word table ||||||||||||||||||||||||||||||| */
-	if "`word'" == "word" {
-		putdocx table tbl1 = (2,`col'), border(all, nil) memtable layout(fixed)
-		putdocx table tbl1(1,1) = (" "), halign(left) border(top) colspan(2)
-		putdocx table tbl1(2,1) = (" "), halign(left) border(bottom) colspan(2)
+	if "`by'" != "" &  "`bylabel'" == "bylabel" { 
+		if "`word'" == "word" {
+			putdocx table tbl1 = (3,`col'), border(all, nil) memtable layout(fixed)
+			putdocx table tbl1(1,1) = (" "), halign(left) border(top) colspan(2)
+			putdocx table tbl1(2,1) = (" "), halign(left) border(top) colspan(2)
+			putdocx table tbl1(3,1) = (" "), halign(left) border(bottom) colspan(2)
+		}
 	}
+	else {
+		if "`word'" == "word" {
+			putdocx table tbl1 = (2,`col'), border(all, nil) memtable layout(fixed)
+			putdocx table tbl1(1,1) = (" "), halign(left) border(top) colspan(2)
+			putdocx table tbl1(2,1) = (" "), halign(left) border(bottom) colspan(2)
+		}
+	}
+
 
 /* |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| */
 
@@ -187,8 +211,27 @@ program define summtab2
 	
 	/* BY OPTION SPECIFIED ||||||||||||||||||||||||||||||||||| */
 	if "`by'" != "" {
-		qui levelsof `by', local(`by'_g)
-		local lbe: value label `by' 
+		if "`bymiss'" == "bymiss" {
+			qui levelsof `by', missing local(`by'_g)
+		}
+		else {
+			qui levelsof `by', local(`by'_g)
+		}
+		local lbe: value label `by'
+	
+		
+		if "`bylabel'" == "bylabel" {
+			local coltospan = `col'-`c_col'
+			local variable_lab: variable label `by'
+			if "`word'" == "word" {
+				putdocx table tbl1(1,`c_col') = ("`variable_lab'"), colspan(`coltospan') halign(center) border(top) valign(center)
+			}
+			if "`excel'" == "excel" {
+				local letter : word `coltospan' of `c(ALPHA)'
+				qui putexcel (B1:`letter'1), merge
+				qui putexcel B1 = "`variable_lab'", hcenter
+			}
+		}
 		
 		foreach l of local `by'_g {
 			if "`lbe'" != ""{	
@@ -200,14 +243,26 @@ program define summtab2
 			
 			/* for word table ||||||||||||||||||||||||||||||| */
 			if "`word'" == "word" {
-				putdocx table tbl1(1,`c_col') = ("`var_lab'"), halign(center) border(top) colspan(1) valign(center) 
+				if "`bylabel'" == "bylabel" {
+					putdocx table tbl1(2,`c_col') = ("`var_lab'"), halign(center) border(top) colspan(1) valign(center) 
+				}
+				else {
+					putdocx table tbl1(1,`c_col') = ("`var_lab'"), halign(center) border(top) colspan(1) valign(center) 
+				}
 			}
 		
 			/* for excel table ||||||||||||||||||||||||||||||| */
 			if "`excel'" == "excel" {
-				local i = `i' + 1
-				local letter : word `i' of `c(ALPHA)'
-				qui putexcel `letter'1 = "`var_lab'", hcenter
+				if "`bylabel'" == "bylabel" {
+					local i = `i' + 1
+					local letter : word `i' of `c(ALPHA)'
+					qui putexcel `letter'2 = "`var_lab'", hcenter
+				}
+				else {
+					local i = `i' + 1
+					local letter : word `i' of `c(ALPHA)'
+					qui putexcel `letter'1 = "`var_lab'", hcenter
+				}
 			}
 			/* ||||||||||||||||||||||||||||||||||||||||||||||| */
 			
@@ -217,18 +272,28 @@ program define summtab2
 			else {
 				quietly: sum if `by' == `l'
 			}
-			local obs_`l' = r(N)
+			local obs_ = r(N)
 			
 			/* for word table ||||||||||||||||||||||||||||||| */
 			if "`word'" == "word" {
-				putdocx table tbl1(2,`c_col') = ("(N = `obs_`l'')"), halign(center) border(bottom) colspan(1) valign(center) 
+				if "`bylabel'" == "bylabel" {
+					putdocx table tbl1(3,`c_col') = ("(N = `obs_')"), halign(center) border(bottom) colspan(1) valign(center) 
+				}
+				else {
+					putdocx table tbl1(2,`c_col') = ("(N = `obs_')"), halign(center) border(bottom) colspan(1) valign(center) 
+				}
 			}
 			local ++c_col
 			
 			/* for excel table ||||||||||||||||||||||||||||||| */
 			if "`excel'" == "excel" {
-				qui putexcel `letter'2 = "(N = `obs_`l'')", hcenter
-			}
+				if "`bylabel'" == "bylabel" {
+					qui putexcel `letter'3 = "(N = `obs_')", hcenter
+				}
+				else {
+					qui putexcel `letter'2 = "(N = `obs_')", hcenter
+				}
+			}	
 			/* ||||||||||||||||||||||||||||||||||||||||||||||| */
 		}
 	
@@ -244,16 +309,28 @@ program define summtab2
 			
 			/* for word table ||||||||||||||||||||||||||||||| */
 			if "`word'" == "word" {
-				putdocx table tbl1(1,`c_col') = ("Total"), halign(center) border(top) colspan(1) valign(center) 
-				putdocx table tbl1(2,`c_col') = ("(N = `obs_all')"), halign(center) border(bottom) colspan(1) valign(center) 
+				if "`bylabel'" == "bylabel" {
+					putdocx table tbl1(2,`c_col') = ("Total"), halign(center) border(top) colspan(1) valign(center) 
+					putdocx table tbl1(3,`c_col') = ("(N = `obs_all')"), halign(center) border(bottom) colspan(1) valign(center) 
+				}
+				else {
+					putdocx table tbl1(1,`c_col') = ("Total"), halign(center) border(top) colspan(1) valign(center) 
+					putdocx table tbl1(2,`c_col') = ("(N = `obs_all')"), halign(center) border(bottom) colspan(1) valign(center) 
+				}
 			}
 		
 			/* for excel table ||||||||||||||||||||||||||||||| */
 			if "`excel'" == "excel" {
 				local i = `i' + 1
 				local letter : word `i' of `c(ALPHA)'
-				qui putexcel `letter'1 = "Total", hcenter
-				qui putexcel `letter'2 = "(N = `obs_all')", hcenter
+				if "`bylabel'" == "bylabel" {
+					qui putexcel `letter'2 = "Total", hcenter
+					qui putexcel `letter'3 = "(N = `obs_all')", hcenter
+				}
+				else {
+					qui putexcel `letter'1 = "Total", hcenter
+					qui putexcel `letter'2 = "(N = `obs_all')", hcenter
+				}
 			}
 			/* ||||||||||||||||||||||||||||||||||||||||||||||| */
 		}
@@ -264,16 +341,29 @@ program define summtab2
 				
 			/* for word table ||||||||||||||||||||||||||||||| */
 			if "`word'" == "word" {
-				putdocx table tbl1(1,`c_col') = (" "), halign(right) border(top) 
-				putdocx table tbl1(2,`c_col') = ("p-value"), halign(center) border(bottom)
+				if "`bylabel'" == "bylabel" {
+					putdocx table tbl1(2,`c_col') = (" "), halign(right) border(top) 
+					putdocx table tbl1(3,`c_col') = ("p-value"), halign(center) border(bottom)
+				}
+				else {
+					
+					putdocx table tbl1(1,`c_col') = (" "), halign(right) border(top) 
+					putdocx table tbl1(2,`c_col') = ("p-value"), halign(center) border(bottom)
+				}
 			}
 				
 			/* for excel table ||||||||||||||||||||||||||||||| */
 			if "`excel'" == "excel" {
 				local i = `i' + 1
 				local letter : word `i' of `c(ALPHA)'
-				qui putexcel `letter'1 = " "
-				qui putexcel `letter'2 = "p-value", hcenter
+				if "`bylabel'" == "bylabel" {
+					qui putexcel `letter'2 = " "
+					qui putexcel `letter'3 = "p-value", hcenter
+				}
+				else {
+					qui putexcel `letter'1 = " "
+					qui putexcel `letter'2 = "p-value", hcenter					
+				}
 			}
 			/* ||||||||||||||||||||||||||||||||||||||||||||||| */
 		}
@@ -347,6 +437,8 @@ local q=1
 
 local w = 1
 local x = 0
+* want to add an extra row to excel file if "bylabel" and it's the first iteration
+local y = 0
 foreach t of local type {
 	if `t' == 1 {
 		local cv: word `w' of `vars'
@@ -430,7 +522,12 @@ foreach t of local type {
 		local ++q
 		
 		/* for excel file */
-		local j=`row'+2
+		if "`bylabel'" == "bylabel" {
+			local j=`row'+3
+		}
+		else {
+			local j=`row'+2
+		}
 		
 
 		local var_lab : variable label `cv'
@@ -476,7 +573,12 @@ foreach t of local type {
 			
 			/* BY OPTION SPECIFIED ||||||||||||||||||||||||||||||||||| */
 			if "`by'" != "" {
-				qui levelsof `by', local(over_group)
+				if "`bymiss'" == "bymiss" {
+					qui levelsof `by', missing local(over_group)
+				}
+				else {
+					qui levelsof `by', local(over_group)
+				}
 				foreach i of local over_group {
 					/* WEIGHT OPTION SPECIFIED ||||||||||||||||||||||| */
 					if "`wts'" != "" {
@@ -766,7 +868,12 @@ foreach t of local type {
 			
 			/* BY OPTION SPECIFIED ||||||||||||||||||||||||||||||||||| */
 			if "`by'" != "" {
-			qui levelsof `by', local(over_group)
+				if "`bymiss'" == "bymiss" {
+					qui levelsof `by', missing local(over_group)
+				}
+				else {
+					qui levelsof `by', local(over_group)
+				}
 				foreach i of local over_group {
 				
 					/* WEIGHT OPTION SPECIFIED ||||||||||||||||||||||| */
@@ -1014,7 +1121,12 @@ foreach t of local type {
 			
 			/* BY OPTION SPECIFIED ||||||||||||||||||||||||||||||||||| */
 			if "`by'" != "" {
-			qui levelsof `by', local(over_group)
+				if "`bymiss'" == "bymiss" {
+					qui levelsof `by', missing local(over_group)
+				}
+				else {
+					qui levelsof `by', local(over_group)
+				}
 				foreach i of local over_group {
 					/* WEIGHT OPTION SPECIFIED ||||||||||||||||||||||| */
 					if "`wts'" != "" {
@@ -1201,7 +1313,12 @@ foreach t of local type {
 			
 			/* BY OPTION SPECIFIED ||||||||||||||||||||||||||||||||||| */
 			if "`by'" != "" {
-			qui levelsof `by', local(over_group)
+				if "`bymiss'" == "bymiss" {
+					qui levelsof `by', missing local(over_group)
+				}
+				else {
+					qui levelsof `by', local(over_group)
+				}
 				foreach i of local over_group {
 					/* WEIGHT OPTION SPECIFIED ||||||||||||||||||||||| */
 					if "`wts'" != "" {
@@ -1428,10 +1545,15 @@ foreach t of local type {
 	else if `t' == 2 {
 		local cv: word `w' of `vars'
 		if "`catmisstype'" == "none" {
-			qui levelsof `cv', local(cols) 
-			qui tabcount2 `cv', v1(`cols') zero matrix(Mat)
-			local MAT=rowsof(Mat)
-			local categories = `MAT'+1
+			qui levelsof `cv', local(cols)
+			if `"`cols'"' == "" {
+				local categories = 1
+			}
+			else {
+				qui tabcount2 `cv', v1(`cols') zero matrix(Mat)
+				local MAT=rowsof(Mat)
+				local categories = `MAT'+1
+			}
 		}
 		else if "`catmisstype'" == "missperc" {
 			qui tab `cv', miss
@@ -1440,6 +1562,10 @@ foreach t of local type {
 		else if "`catmisstype'" == "missnoperc" {
 			qui tab `cv', miss
 			local categories = r(r)+1
+			qui levelsof `cv', local(cols)
+			if `"`cols'"' == "" {
+				local categories = 1
+			}
 		}
 		
 		/* we don't want to add rows if the last variable summarized was categorical
@@ -1453,7 +1579,7 @@ foreach t of local type {
 		if `prev' == 1 {
 			local ++row
 		}
-	
+		
 		/* for word table ||||||||||||||||||||||||||||||| */
 		if "`word'" == "word" {
 			if (`categories' == 3 | `categories' == 2) & "`catrow'" == "catrow" {
@@ -1464,21 +1590,30 @@ foreach t of local type {
 			}
 		}
 		
-		
-		
-		
-		
 		*label categorical variable
 		local var_lab : variable label `cv'
 		if "`var_lab'" == ""{
 			local var_lab `cv'
 		}
 		
+		/* for excel file */
+		if "`bylabel'" == "bylabel" {
+			local j=`row'+3
+		}
+		else {
+			local j=`row'+2
+		}
+		
 		/* for excel table ||||||||||||||||||||||||||||||| */
 		if "`excel'" == "excel" {
 			local i=1
 			local letter : word `i' of `c(ALPHA)'
-			local exc = `row' + 2
+			if "`bylabel'" == "bylabel" {
+				local exc = `row' + 3
+			}
+			else {
+				local exc = `row' + 2
+			}
 			qui putexcel `letter'`exc' = "`var_lab'"
 		}
 		/* ||||||||||||||||||||||||||||||||||||||||||||||| */
@@ -1546,7 +1681,12 @@ foreach t of local type {
 				
 				/* for excel table ||||||||||||||||||||||||||||||| */
 				if "`excel'" == "excel" {
-					local s=`row' + 2
+					if "`bylabel'" == "bylabel" {
+						local s=`row' + 3
+					}
+					else {
+						local s=`row' + 2
+					}
 					local col2=`col'-1
 					local letter: word `col2' of `c(ALPHA)'
 					qui putexcel `letter'`s' = "`p'", right
@@ -1556,10 +1696,6 @@ foreach t of local type {
 			}
 			
 		}
-		
-		
-
-		/* START HERE */
 		
 		/* June 9, 2020 */
 		if (`categories' == 3 | `categories' == 2) & "`catrow'" == "catrow" {
@@ -1572,20 +1708,21 @@ foreach t of local type {
 			local ++row
 		}
 		
-		
-		
 		local m 1
 		local cur_col 1
 		
-		
-		
 		/* BY OPTION SPECIFIED ||||||||||||||||||||||||||||||||||| */
 		if "`by'" != "" {
-			qui levelsof `by', local(over_group)
+			if "`bymiss'" == "bymiss" {
+				qui levelsof `by', missing local(over_group)
+			}
+			else {
+				qui levelsof `by', local(over_group)
+			}
 			foreach i of local over_group{
 				local r = `row'
 				
-				if "`catmisstype'" == "none" {
+				if "`catmisstype'" == "none" | ("`catmisstype'" == "missnoperc" & `categories' == 1) {
 					qui levelsof `cv', local(c_l)
 				}
 				else if "`catmisstype'" == "missperc" {
@@ -1594,8 +1731,6 @@ foreach t of local type {
 				else if "`catmisstype'" == "missnoperc" {
 					qui levelsof `cv', local(c_l) miss
 				}
-				
-				
 				
 				local lbe: value label `cv' 
 				local k = 1
@@ -1610,9 +1745,7 @@ foreach t of local type {
 				    local c_l=substr("`temporary'",2,1)
 				}
 				
-				/* for excel file */
-				local j=`row'+2
-				
+			
 				
 				local s=1
 				local v=`j'
@@ -1626,7 +1759,7 @@ foreach t of local type {
 					}
 					/* MOVING WEIGHT VS. NONWEIGHT CODE */
 					
-					if "`catmisstype'" == "none" {
+					if "`catmisstype'" == "none" | ("`catmisstype'" == "missnoperc" & `categories' == 1) {
 						qui levelsof `cv', local(rows1)
 						if "`catrow'" == "catrow" & `categories' == 2 {
 						    qui fre `cv', includelabeled nol
@@ -1635,9 +1768,14 @@ foreach t of local type {
 							local two = substr("`temporary'",2,1)
 							local rows1="`one'" + " " + "`two'"
 						}
-						qui levelsof `by', local(cols1)
-						if "`wts'" != "" qui tabcount2 `cv' `by' [aweight=`wts'], v1(`rows1') v2(`cols1') matrix(M) zero
-						else qui tabcount2 `cv' `by', v1(`rows1') v2(`cols1') matrix(M) zero
+						if "`bymiss'" == "bymiss" {
+							qui levelsof `by', missing local(cols1)
+						}
+						else {	
+							qui levelsof `by', local(cols1)
+						}
+						if "`wts'" != "" qui tabcount2 `cv' `by' [aweight=`wts'], v1(`rows1') v2(`cols1') matrix(M) zero missing
+						else qui tabcount2 `cv' `by', v1(`rows1') v2(`cols1') matrix(M) zero missing
 					}
 					
 					else if "`catmisstype'" == "missperc" {
@@ -1647,13 +1785,24 @@ foreach t of local type {
 					
 					else if "`catmisstype'" == "missnoperc" {
 						qui levelsof `cv', local(rows1)
-						qui levelsof `by', local(cols1)
+						if "`bymiss'" == "bymiss" {
+							qui levelsof `by', missing local(cols1)
+						}
+						else {	
+							qui levelsof `by', local(cols1)
+						}
 						if "`wts'" != "" {
-							qui tabcount2 `cv' `by' [aweight=`wts'], v1(`rows1') v2(`cols1') matrix(M1) zero
+							qui tabcount2 `cv' `by' [aweight=`wts'], v1(`rows1') v2(`cols1') matrix(M1) zero missing
+							if "`bymiss'" != "bymiss" {
+								capture drop if `by' == .
+							}
 							qui tab `cv' `by' [aweight=`wts'], matcell(M2) miss
 						}
 						else {
-							qui tabcount2 `cv' `by', v1(`rows1') v2(`cols1') matrix(M1) zero
+							qui tabcount2 `cv' `by', v1(`rows1') v2(`cols1') matrix(M1) zero missing
+							if "`bymiss'" != "bymiss" {
+								capture drop if `by' == .
+							}
 							qui tab `cv' `by', matcell(M2) miss							
 						}
 						
@@ -1662,7 +1811,7 @@ foreach t of local type {
 					}
 					
 					
-					if "`catmisstype'" == "none" | "`catmisstype'" == "missperc" {
+					if "`catmisstype'" == "none" | "`catmisstype'" == "missperc" | ("`catmisstype'" == "missnoperc" & `categories' == 1)  {
 						if "`catrow'" == "catrow" & (`categories' == 3 | `categories' == 2) {
 							local k=2
 						}
@@ -1689,7 +1838,7 @@ foreach t of local type {
 						local p_n ")"
 						local perc "%"
 						
-							*set frequency to missing if it's a column of zeroes
+						*set frequency to missing if it's a column of zeroes
 						if "`wts'" != "" {
 							if "`wtfreq'" == "off" {
 								local freqperc `pt_1'`perc'
@@ -1738,8 +1887,9 @@ foreach t of local type {
 						
 						matrix M3 = M2[`Mcount',1...]
 						matrix X1 = M3*.
+						
 						*June 17, 2022 - String variables put missing data first
-						qui ds `cv', has(type 1/100)
+						qui ds `cv', has(type string)
 						if "`r(varlist)'" == "" {
 							matrix M4 = M1\X1
 						}
@@ -1794,7 +1944,12 @@ foreach t of local type {
 						
 						/* for excel table ||||||||||||||||||||||||||||||| */
 						if "`excel'" == "excel" {
-							local s = `r' + 2
+							if "`bylabel'" == "bylabel" {
+								local s=`r' + 3
+							}
+							else {
+								local s=`r' + 2
+							}
 							local letter : word `d' of `c(ALPHA)' 
 							if (`categories' == 3 | `categories' == 2) & "`catrow'" == "catrow" qui putexcel `letter'`s' = "`var_lab'"
 							else qui putexcel `letter'`s' = "      `ct'"
@@ -1813,7 +1968,12 @@ foreach t of local type {
 					
 					/* for excel table ||||||||||||||||||||||||||||||| */
 					if "`excel'" == "excel" {
-						local s=`r' + 2
+						if "`bylabel'" == "bylabel" {
+							local s=`r' + 3
+						}
+						else {
+							local s=`r' + 2
+						}
 						local letter: word `d' of `c(ALPHA)'
 						qui putexcel `letter'`s' = "`freqperc'", right
 					}
@@ -1852,12 +2012,16 @@ foreach t of local type {
 					local temporary: di `r(lab_valid)'
 				    local c_l = substr("`temporary'",2,1)
 				}
+				
+				if `categories' == 1 {
+					local d = `cur_col'
+				}
 				local ++d
 
 				local r=`row'
 				foreach c of local c_l {
 					/* WEIGHT OPTION SPECIFIED ||||||||||||||||||||||| */
-					if "`catmisstype'" == "none" {
+					if "`catmisstype'" == "none" | ("`catmisstype'" == "missnoperc" & `categories' == 1) {
 						qui levelsof `cv', local(rows1)
 						if "`catrow'" == "catrow" & `categories' == 2 {
 						    qui fre `cv', includelabeled nol
@@ -1889,7 +2053,7 @@ foreach t of local type {
 					}
 					
 					
-					if "`catmisstype'" == "none" | "`catmisstype'" == "missperc" {
+					if "`catmisstype'" == "none" | "`catmisstype'" == "missperc" | ("`catmisstype'" == "missnoperc" & `categories' == 1)  {
 						if "`catrow'" == "catrow" & (`categories' == 3 | `categories' == 2) {
 							local k=2
 						}
@@ -1966,15 +2130,15 @@ foreach t of local type {
 						
 						matrix M3 = M2[`Mcount',1...]
 						matrix X1 = M3*.
+						
 						*June 17, 2022 - String variables put missing data first
-						qui ds `cv', has(type 1/100)
+						qui ds `cv', has(type string)
 						if "`r(varlist)'" == "" {
 							matrix M4 = M1\X1
 						}
 						else {
 							matrix M4 = X1\M1
 						}
-						
 						
 						local perc_1 = M4[`k',1]
 						local perc_1 = strltrim("`perc_1'")
@@ -2016,7 +2180,12 @@ foreach t of local type {
 
 					/* for excel table ||||||||||||||||||||||||||||||| */
 					if "`excel'" == "excel" {
-						local s=`r' + 2
+						if "`bylabel'" == "bylabel" {
+							local s=`r' + 3
+						}
+						else {
+							local s=`r' + 2
+						}
 						local letter: word `d' of `c(ALPHA)'
 						qui putexcel `letter'`s' = "`freqperc'", right
 					}
@@ -2031,7 +2200,7 @@ foreach t of local type {
 			
 			local r = `row'
 				
-			if "`catmisstype'" == "none" {
+			if "`catmisstype'" == "none" | ("`catmisstype'" == "missnoperc" & `categories' == 1) {
 				qui levelsof `cv', local(c_l)
 			}
 			else if "`catmisstype'" == "missperc" {
@@ -2053,9 +2222,7 @@ foreach t of local type {
 				local temporary: di `r(lab_valid)'
 				local c_l=substr("`temporary'",2,1)
 			}
-
-			/* for excel file */
-			local j=`row'+2
+		
 			
 			local s=1
 			local v=`j'
@@ -2070,7 +2237,7 @@ foreach t of local type {
 				}
 				
 				/* WEIGHT OPTION SPECIFIED ||||||||||||||||||||||| */
-					if "`catmisstype'" == "none" {
+					if "`catmisstype'" == "none" | ("`catmisstype'" == "missnoperc" & `categories' == 1) {
 						qui levelsof `cv', local(rows1)
 						if "`catrow'" == "catrow" & `categories' == 2 {
 						    qui fre `cv', includelabeled nol
@@ -2104,7 +2271,7 @@ foreach t of local type {
 						}
 						
 						
-						if "`catmisstype'" == "none" | "`catmisstype'" == "missperc" {
+						if "`catmisstype'" == "none" | "`catmisstype'" == "missperc" | ("`catmisstype'" == "missnoperc" & `categories' == 1)  {
 							if "`catrow'" == "catrow" & (`categories' == 3 | `categories' == 2) {
 								local k=2
 							}
@@ -2182,8 +2349,9 @@ foreach t of local type {
 							
 							matrix M3 = M2[`Mcount',1...]
 							matrix X1 = M3*.
+						
 							*June 17, 2022 - String variables put missing data first
-							qui ds `cv', has(type 1/100)
+							qui ds `cv', has(type string)
 							if "`r(varlist)'" == "" {
 								matrix M4 = M1\X1
 							}
@@ -2237,7 +2405,12 @@ foreach t of local type {
 					
 					/* for excel table ||||||||||||||||||||||||||||||| */
 					if "`excel'" == "excel" {
-						local s = `r' + 2
+						if "`bylabel'" == "bylabel" {
+							local s=`r' + 3
+						}
+						else {
+							local s=`r' + 2
+						}
 						local letter : word `d' of `c(ALPHA)'
 						if (`categories' == 3 | `categories' == 2) & "`catrow'" == "catrow" qui putexcel `letter'`s' = "`var_lab'"
 						else qui putexcel `letter'`s' = "      `ct'"
@@ -2255,7 +2428,12 @@ foreach t of local type {
 				
 				/* for excel table ||||||||||||||||||||||||||||||| */
 				if "`excel'" == "excel" {
-					local s=`r' + 2
+					if "`bylabel'" == "bylabel" {
+						local s=`r' + 3
+					}
+					else {
+						local s=`r' + 2
+					}
 					local letter: word `d' of `c(ALPHA)'
 					qui putexcel `letter'`s' = "`freqperc'", right
 				}
@@ -2274,6 +2452,7 @@ foreach t of local type {
 	}
 	local ++w
 	local ++x
+	local ++y
 }
 /* |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 ||||||||||||||||||||||||||||||||||| CATEGORICAL VARIABLE LOOP END ||||||||||||||||||||||||||||
@@ -2290,21 +2469,17 @@ foreach t of local type {
 	}
 
 	if "`wordname'" == ""{
-
 		local wordname "table1.docx"
 	}
 	
 	/* for word table ||||||||||||||||||||||||||||||| */
-	*footnotes: June 17, 2022
+	*footnotes; June 17, 2022
 	if "`footnote'" != "" {
 		if "`word'" == "word" {
 			putdocx table tbl3 = (1,`col'), border(all, nil) memtable layout(fixed)
 			putdocx table tbl3(1,1) = ("`footnote'"), halign(left) border(top) colspan(`col')
-		}
-	
-	/* for word table ||||||||||||||||||||||||||||||| */
-		if "`word'" == "word" {
-			putdocx table tbl12 = (3,1), border(all, nil) /*headerrow(1)*/ layout(fixed) cellspacing(0.01)
+			
+			putdocx table tbl12 = (3,1), border(all, nil) headerrow(1) layout(fixed) cellspacing(0.01)
 			putdocx table tbl12(1,1) = table(tbl1)
 			putdocx table tbl12(2,1) = table(tbl2)
 			putdocx table tbl12(3,1) = table(tbl3)
@@ -2313,13 +2488,12 @@ foreach t of local type {
 	}
 	else if "`footnote'" == "" {
 		if "`word'" == "word" {
-			putdocx table tbl12 = (2,1), border(all, nil) /*headerrow(1)*/ layout(fixed) cellspacing(0.01)
+			putdocx table tbl12 = (2,1), border(all, nil) headerrow(1) layout(fixed) cellspacing(0.01)
 			putdocx table tbl12(1,1) = table(tbl1)
 			putdocx table tbl12(2,1) = table(tbl2), border(bottom)
 			putdocx save `wordname', `replace' `append'
 		}
 	}
-		
 	
 
 	if "`pval'" == "pval" & "`mean'" != "mean" {
@@ -2486,7 +2660,7 @@ program tabcount2, byable(recall)
 						local var1: word 1 of `varlist'
 						local var2: word 2 of `varlist'
 						if "`var2'" != "" {
-							qui ds `var1', has(type 1/100)
+							qui ds `var1', has(type string)
 							* June 17, 2022 - Allow processing of string variables for categories
 							if "`r(varlist)'" == "" {
 								su `wt' if `var1' != . & `var2' != ., meanonly
@@ -2494,12 +2668,10 @@ program tabcount2, byable(recall)
 							else {
 								su `wt' if `var1' != "" & `var2' != ., meanonly
 							}
-							
 						}
-						
 						else if "`var2'" == "" {
 							* June 17, 2022 - Allow processing of string variables for categories
-							qui ds `var1', has(type 1/100)
+							qui ds `var1', has(type string)
 							if "`r(varlist)'" == "" {
 								su `wt' if `var1' != ., meanonly
 							}

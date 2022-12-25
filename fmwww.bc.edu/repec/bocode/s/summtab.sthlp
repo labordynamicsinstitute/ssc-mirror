@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 7.0.0 17Jun2022}
+{* *! version 8.0.0 21Dec2022}
 {cmd:help summtab}
 {hline}
 
@@ -27,6 +27,8 @@
 
 {syntab:Column Options}
 {synopt :{cmd:by(}{it:varname})}Variable by which to stratify the summaries; if not specified, defaults to providing only the overall summaries{p_end}
+{synopt :{cmd:bymiss}}Display missing values of the stratification variable as a separate category{p_end}
+{synopt :{cmd:bylabel}}Display the label of the stratification variable above the categories{p_end}
 {synopt :{cmd:total}}Display a total (overall) column{p_end}
 
 {syntab:Statistic Options}
@@ -53,7 +55,7 @@
 {synopt :{cmd:pfmt(}{it:integer})}Number of digits to display after the decimal point for p-values; default is 3; maximum is 8{p_end}
 
 {syntab:Output Options}
-{synopt :{cmd:directory(}{it:string})}The directory in which the results are saved; if not specified, defaults to current working directory{p_end}
+{synopt :{cmdab:dir:ectory(}{it:string})}The directory in which the results are saved; if not specified, defaults to current working directory{p_end}
 {synopt :{cmd:title(}{it:string})}Table title, to put at the top of the output Word document; defaults to Table 1{p_end}
 {synopt :{cmd:footnote(}{it:string})}Table footnote, to put below the table in the output Word document; defaults to no footnote{p_end}
 {synopt :{cmd:word}}If specified, a Word document will be output{p_end}
@@ -90,7 +92,7 @@ For example, one option, {cmd:landscape}, will change the page orientation from 
 {pstd}
 {cmd:summtab} summarizes a list of continuous and/or categorical variables overall and/or by a categorical
 stratification variable, and then outputs the results in a nicely-formatted, publication-quality
-table in a Word document, using the new Stata command {help putdocx}.  The program can also output
+table in a Word document, using the Stata command {help putdocx}.  The program can also output
 the results to an Excel document using {help putexcel}.  {cmd:summtab} requires
 Stata version 15.
 
@@ -119,8 +121,7 @@ The options are 1 = chi-square test; 2 = Fisher's exact test;
 {cmd:catmisstype(}{it:string}) specifies how to handle missing values for categorical variables.
 The options are "none" = Missing values are not summarized (default); "missperc" = Missing values are treated as another
  category and included in the percent of the total; "missnoperc" = Missing values are treated as another category, but
- are not included in the percent of the total. Note that if your "by" variable contains missing values you would like to 
- summarize, please first reformat them as non-missing values (e.g., change . to 99, and label 99 as missing).{p_end}
+ are not included in the percent of the total.{p_end}
  
   {phang}
 {cmd:wtfreq(}{it:string}) specifies how to handle cell frequencies for categorical variables when weights are used.

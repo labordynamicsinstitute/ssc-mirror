@@ -27,7 +27,7 @@ program define hkstock
          }
 
          if "`filename'" == "" {
-                local filename hkstock
+                local filename `code'
          }
 		 local HN "Stocks listed in Mainland and Hong Kong at the same time"
 		 local hN "Stocks listed in Mainland and Hong Kong at the same time"
@@ -92,10 +92,11 @@ program define hkstock
                 compress
                 label var stkcd stockcode
                 label var stknm stockname
+				
         }
 
-        
         save `"`path'/`filename'.dta"', replace
+        
 end
 
 mata
