@@ -24,7 +24,7 @@ program define hktrade
 	}
 
 	syntax anything(name = list), [ path(string)]
-	local address "https://web.ifzq.gtimg.cn/appstock/app/kline/kline?_var=kline_day1980&"
+	local address "https://web.ifzq.gtimg.cn/appstock/app/kline/kline?_var=kline_day&"
 
 	if `"`path'"' != "" {
 		cap mkdir `"`path'"'
@@ -46,11 +46,11 @@ program define hktrade
                         while length("`code'") < 5 {
                                         local code = "0" + "`code'"
 										}
-						local z=2010
+						local z=2015
 						clear
 						set obs 1
-						local x=`z'+14 
-						local url "`address'param=hk`code',day,`z'-01-01,`x'-12-31,10000,&r=0.016412179353956224"
+						local x=`z'+8 
+						local url "`address'param=hk`code',day,`z'-01-01,`x'-12-31,2000,&r=0.28157849668305523"
 						gen v = fileread("`url'")
 						if length(v) < 2500{
 										disp as error `"`code' is an invalid stock code"'
@@ -75,11 +75,11 @@ program define hktrade
 						save `"`code'_`z'"', replace
 						clear
 						
-					    forvalues y = 1980(15)1995 {
+					    forvalues y = 1980(5)2010 {
 												clear
 												set obs 1
-												local x=`y'+14 
-												local url "`address'param=hk`code',day,`y'-01-01,`x'-12-31,10000,&r=0.016412179353956224"
+												local x=`y'+4 
+												local url "`address'param=hk`code',day,`y'-01-01,`x'-12-31,2000,&r=0.28157849668305523"
 
 												gen v = fileread("`url'")
 												if length(v) < 2500{
@@ -104,23 +104,34 @@ program define hktrade
 												compress
 												save `"`code'_`y'"', replace
 												clear
-												}	
+												}		
 						
 
-					use `"`code'_2010"', clear
+					use `"`code'_2015"', clear
 					cap append using `code'_1980.dta
+					cap append using `code'_1985.dta
+					cap append using `code'_1990.dta
 					cap append using `code'_1995.dta
+					cap append using `code'_2000.dta
+					cap append using `code'_2005.dta
+					cap append using `code'_2010.dta
+					cap append using `code'_2015.dta
 					cap erase `code'_1980.dta
+					cap erase `code'_1985.dta
+					cap erase `code'_1990.dta
 					cap erase `code'_1995.dta
+					cap erase `code'_2000.dta
+					cap erase `code'_2005.dta
 					cap erase `code'_2010.dta
+					cap erase `code'_2015.dta
 					gen code=`code'
 					format %05.0f code
 					sort date 
 					order code
 					destring _all,replace
 					compress
-					save `"`path'/`code'"', replace
-					noi disp as text `"file `code'.dta has been generated"'
+					save `"`path'/`code'_trade"', replace
+					noi disp as text `"file `code'_trade.dta has been generated"'
 											}						
 					
 							}			

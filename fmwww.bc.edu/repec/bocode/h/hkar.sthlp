@@ -13,7 +13,7 @@
 {title:Syntax}
 
 {p 8 18 2}
-{cmdab:hkar} {it: code}{cmd:,}
+{cmdab:hkar} {it: codelist}{cmd:,}
 [{it:options}]
 
 {synoptset 36 tabbed}{...}
@@ -59,6 +59,12 @@ The Hong Kong stock code has a length of 5. If you enter an insufficient length,
 {pstd}
 It will extract a list of historical financial data for code you entered.
 
+{phang}
+{stata `"hkar 1 3"'}
+{p_end}
+
+{pstd}
+It will extract various lists of historical financial data for code you entered.
 
 {phang}
 {stata `"hkar 00395, path(D:/temp/)"'}

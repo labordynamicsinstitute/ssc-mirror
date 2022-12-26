@@ -161,8 +161,8 @@ program define hkar
 				format %05.0f code
 				order code
 				compress
-				save `"`path'/0`code'"', replace
-				noi disp as text `"file 0`code'.dta has been generated"'
+				save `"`path'/0`code'_ar"', replace
+				noi disp as text `"file 0`code'_ar.dta has been generated"'
 			}
 			}
 
