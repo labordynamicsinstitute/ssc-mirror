@@ -7,13 +7,13 @@
 
 
 {phang}
-{bf:hktrade} {hline 2} Downloads historical stock transaction records for Hong Kong listed companies from Tencent.com.
+{bf:hktrade} {hline 2} Downloads historical stock or index transaction records for Hong Kong listed companies from Tencent.com.
 
 
 {title:Syntax}
 
 {p 8 18 2}
-{cmdab:hktrade} {it: code}{cmd:,}
+{cmdab:hktrade} {it: codelist}{cmd:,}
 [{it:options}]
 
 {synoptset 36 tabbed}{...}
@@ -39,6 +39,12 @@
 
 {pstd}Note: The leading zeros in each code can be omitted. {p_end}
 
+{pstd} {hi:Index Codes and Index Names:} {p_end}
+{pstd} {hi:hkHSI} Hang Seng Index {p_end}
+{pstd} {hi:hkHSCCI} Red Chip Index {p_end}
+{pstd} {hi:hkHSCEI} State Enterprise Index {p_end}
+{pstd} {hi:hkHSTECH} Hang Seng Technology Index {p_end}
+
 {pstd}{it:path} specifies the folder where the output .dta files are to be saved. The folder can be either existed or a new folder. If the folder specified does not exist, {cmd: hktrade} will create it automatically.{p_end}
 
 
@@ -59,6 +65,19 @@ The Hong Kong stock code has a length of 5. If you enter an insufficient length,
 {pstd}
 It will extract a list of all the transaction records for code you entered.
 
+{phang}
+{stata `"hktrade 1 99"'}
+{p_end}
+
+{pstd}
+It will extract various lists of all the transaction records for code you entered.
+
+{phang}
+{stata `"hktrade hkHSI"'}
+{p_end}
+
+{pstd}
+It will obtain the historical transaction information of the Hang Seng Index.
 
 {phang}
 {stata `"hktrade 00395, path(D:/temp/)"'}

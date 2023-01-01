@@ -1,6 +1,6 @@
 *! Attaullah Shah ;  Email: attaullah.shah@imsciences.edu.pk ; * Support website: www.FinTechProfessor.com
 
-*!Version 4.8 : Dec 23, 2022 : Option newey(0) would default to standard errors. This is has been fixed.
+*!Version 4.8 : Dec 27, 2022 : Option newey(0) would default to standard errors. This is has been fixed.
 * Version 4.7 : Jan 07, 2022 : When data had duplicates, the fitted and residual were not calculated for each obs. This has been fixed.
 * Version 4.6 : Oct 13, 2021 : Added [aweights] and noconstant to fmb
 * Version 4.5 : Feb 17, 2021 : Shanken license updated
@@ -33,7 +33,7 @@ prog asreg, byable(onecall) sortpreserve eclass
 		RMSE			///
 		RECursive		///
 		FMB				///
-		newey(str)      ///
+		newey(int -999) ///
 		first    		///
 		save(string)	///
 		KEEP(string)	///
@@ -179,15 +179,15 @@ prog asreg, byable(onecall) sortpreserve eclass
 			}
 			
 			**change
-			if ("`newey'" == "0") {
-				loc robust robust
-				loc newey 0
-			}
-				
-			if (`newey' != 0) {
-				loc mindif = `newey' - `minimum' +1
-				loc minimum = `mindif'
-			}
+				if (`newey' == 0) {
+					loc robust robust
+					loc newey 0
+				}
+					
+				if (`newey' != 0) & (`newey' != -999) {
+					loc mindif = `newey' - `minimum' +1
+					loc minimum = `mindif'
+				}
 
 			if ("`noconstant'" == "") {
 				tempvar _CONS
@@ -197,15 +197,15 @@ prog asreg, byable(onecall) sortpreserve eclass
 				loc _b_cons _b_cons
 			}
 
-			if ("`newey'" ! = "0") | ("`robust'" ! = "") loc se se
+			if (`newey' ! = -999) | ("`robust'" ! = "") loc se se
 
 			if ("`se'" != "") {
 				
-				if (`newey' != 0) & ("`robust'" != "") {
+				if (`newey' != -999) & ("`robust'" != "") {
 					dis as error "Option newey() and robust cannot be combined"
 					exit
 				}
-				if (`newey' != 0) local se_text "Newey adj. Std. errors of "
+				if (`newey' != -999) local se_text "Newey adj. Std. errors of "
 				else if ("`robust'" != "") local se_text "Robust Std. errors of "
 				else local se_text "Standard Std. errors of "
 
@@ -376,7 +376,7 @@ prog asreg, byable(onecall) sortpreserve eclass
 	} 
 
 	else { 
-		if ("`newey'" == "0") {
+		if (`newey' == 0) {
 				loc robust robust
 				loc newey 0
 		}
@@ -387,7 +387,7 @@ prog asreg, byable(onecall) sortpreserve eclass
 		sort `timevar'
 		local nvars : word count `varlist'
 
- 		if ("`newey'" != "" ) {
+ 		if (`newey' != -999 ) {
 			
 			if (`newey'< 0) { 
 				di in red `"newey(`newey') invalid lag selected"'

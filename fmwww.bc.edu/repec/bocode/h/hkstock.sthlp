@@ -34,6 +34,7 @@
 {pstd} {hi:ETF}:Hong Kong Stock Connect ETF Fund {p_end}
 {pstd} {hi:H}:Stocks listed in Mainland and Hong Kong at the same time {p_end}
 {pstd} {hi:Option}:Hong Kong Warrants {p_end}
+{pstd} {hi:Index'}:Hong Kong Index {p_end}
 
 
 
@@ -69,6 +70,13 @@ It will extract a list of all the stock codes and stock names for all the firms 
 
 {pstd}
 It will extract a list of all the stock codes and stock names for all the Hong Kong's Warrants.
+
+{phang}
+{stata `"hkstock Option etf"'}
+{p_end}
+
+{pstd}
+It will extract a list of all the stock codes and stock names for all the Hong Kong's Warrants and ETF.
 
 {phang}
 {stata `"hkstock STOCK, path(D:/temp/) filename("stock")"'}

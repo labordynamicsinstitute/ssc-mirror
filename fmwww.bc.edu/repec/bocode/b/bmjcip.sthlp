@@ -7,7 +7,8 @@ help for {cmd:bmjcip}{right:(Roger Newson)}
 
 {p 8 21 2}
 {cmd:bmjcip} {varlist} {ifin}
-[ , {cmdab:cf:ormat(}{it:%fmt}{cmd:)} {cmdab:xmls:ub} {cmdab:es:ub(}{it:esubstitution_rule}{cmd:)} {cmdab:elz:ero}
+[ , {cmdab:cf:ormat(}{it:%fmt}{cmd:)} {cmdab:pf:ormat(}{it:%fmt}{cmd:)}
+{cmdab:xmls:ub} {cmdab:es:ub(}{it:esubstitution_rule}{cmd:)} {cmdab:elz:ero}
 {cmdab:sta:rvar(}{varname}{cmd:)}
 {cmdab:pr:efix(}{it:string}{cmd:)} {cmdab:su:ffix(}{it:string}{cmd:)}
 {cmdab:ppr:efix(}{it:string}{cmd:)} {cmdab:psu:ffix(}{it:string}{cmd:)}
@@ -81,10 +82,17 @@ The {helpb sdecode}, {helpb parmest} and {helpb listtab} packages can all be dow
 {phang}
 {cmd:cformat(}{it:%fmt}{cmd:)} specifies a {help format:display format},
 used for the estimates and confidence limits.
+The estimates and confidence limits may then be reformatted using a separate rule,
+specified by the {cmd:esub()} option.
 However, {cmd:bmjcip} also adds parentheses and commas to the confidence limits,
 as expected by medical journals.
-The {it:P}-value and {it:Q}-value are formatted using a separate rule,
-not corresponding exactly to any Stata {help format:display format}.
+
+{phang}
+{cmd:pformat(}{it:%fmt}{cmd:)} specifies a {help format:display format},
+used for the {it:P}-value and {it:Q}-value.
+If absent, then {cmd:pformat(%-10.2g)} is the default.
+The {it:P}-value and {it:Q}-value may then be reformatted using a separate rule,
+specified by the {cmd:esub()} option.
 (See {hi:Remarks} below.)
 
 {phang}
@@ -246,7 +254,9 @@ downloadable from {help ssc:SSC}.
 
 {pstd}
 The presentation of {it:P}-values (including {it:Q}-values) is still subject to some controversy, even among statisticians.
-However, {cmd:bmjcip} initially converts a {it:P}-value of 1 to {cmd:1.0},
+This was why the {cmd:pformat()} option was provided,
+defaulting to {cmd:pformat(%-10.2g)}.
+~Under this default, {cmd:bmjcip} initially converts a {it:P}-value of 1 to {cmd:1.0},
 a {it:P}-value less than 1 and no less than .00001 to a left-justified decimal number
 with no zero before the decimal point,
 a {it:P}-value below 0.00001 and greater than 0 to the format {it:x.y}{cmd:e-}{it:z}

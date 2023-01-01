@@ -46,6 +46,9 @@ program define hkstock
 		 local OptionN "Hong Kong Warrants"
 		 local optionN "Hong Kong Warrants"
 		 local OPTIONN "Hong Kong Warrants"
+		 local indexN "Hong Kong Index"
+		 local IdenxN "Hong Kong Index"
+		 local INDEXN "Hong Kong Index"
 		 
 		 
          qui {
@@ -59,6 +62,7 @@ program define hkstock
 						else if "`name'" == "H"|"`name'" =="h" local fs = "b:DLMK0101"
 						else if "`name'" == "Option"|"`name'" =="option"|"`name'" =="OPTION" local fs = "m:128+t:6"
                         else if "`name'" == "Stock"|"`name'" =="stock"|"`name'" =="STOCK" local fs = "m:128+t:3,m:128+t:4,m:128+t:1,m:128+t:2"
+						else if "`name'" == "index"|"`name'" =="Index"|"`name'" =="INDEX" local fs = "m:124,m:125,m:305"
                         else {
                                 disp as error `"`name' is an invalid CODE. the Code must be the following:"'
 								disp as error `"Main: Hong Kong Main Board Listed Firms"'
@@ -67,6 +71,7 @@ program define hkstock
 								disp as error `"H:Stocks listed in Mainland and Hong Kong at the same time"'
 								disp as error `"Stock:all Hong Kong Securities"'
 								disp as error `"Option:Hong Kong Warrants"'
+								disp as error `"index:Hong Kong Index"'
                                 exit 601
                         }
 
@@ -79,23 +84,24 @@ program define hkstock
                         gen stknm = ustrregexs(1) if ustrregexm(v, `""f14":"(.*?)""')
                         gen stkcd = ustrregexs(1) if ustrregexm(v, `""f12":"(.*?)""')
                         drop v
-                        destring stkcd, replace
-                        format %05.0f stkcd
+                        cap destring stkcd, replace
+                        cap format %05.0f stkcd
                         save `"``name''"', replace
 						noi di "You've got the names and codes for ``name'N'"
+						compress
+						label var stkcd stockcode
+						label var stknm stockname
+						save `"`path'/`name'.dta"', replace
                 }
                 
-                clear
+                /*clear
                 foreach name in `code' {
                         append using `"``name''"'
-                }
-                compress
-                label var stkcd stockcode
-                label var stknm stockname
-				
+                }*/
+                
         }
 
-        save `"`path'/`filename'.dta"', replace
+        
         
 end
 

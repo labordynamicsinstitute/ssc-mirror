@@ -10,7 +10,7 @@ version 11.0;
   by the British Medical Journal (BMJ) and other medical journals
   for use in tables.
 *!Author: Roger Newson
-*!Date: 10 October 2022
+*!Date: 28 December 2022
 */
 
 * Check dependencies *;
@@ -22,12 +22,13 @@ if trim(`"`r(incomplete)'"')=="sdecode" {;
   error 498;
 };
 
-syntax varlist(min=1 max=5) [if] [in] [, CFormat(string) XMLSub ESub(string) ELZero
+syntax varlist(min=1 max=5) [if] [in] [, CFormat(string) PFormat(string) XMLSub ESub(string) ELZero
   STArvar(varname string) PRefix(string) SUffix(string) PPRefix(string) PSUffix(string)
   REFexp(string asis) REFLabel(string)
   HEadline(string) ];
 /*
  cformat() is the format for the confidence limits and estimates.
+ pformat() is the format for the P-values and Q-values.
  xmlsub specifies that the substrings "&", &<" and ">" will be substituted
   with the XML entity references "&amp;", "&lt;" and "&gt;", respectively.
  esub() specifies how to substitute strings "e+" and "e-",
@@ -69,10 +70,11 @@ else {;
   local qvalue: word 5 of `varlist';
 };
 
-* Assign default CI format if necessary *;
-if "`cformat'"=="" & "`estimate'"!="" {;
+* Assign default CI and P formats if necessary *;
+if `"`cformat'"'=="" & "`estimate'"!="" {;
   local cformat: format `estimate';
 };
+if `"`pformat'"'=="" local pformat "%-10.2g";
 
 *
  Set default for esub() and check for illegal values
@@ -115,11 +117,11 @@ qui {;
     sdecode `cimax' if `touse' & !missing(`cimax'), format(`cformat') replace ftrim `xmlsub' esub(`esub',`elzero') suffix(")");
   };
   if "`pvalue'"!="" {;
-    sdecode `pvalue' if `touse' & !missing(`pvalue'), format(%-10.2g) replace `xmlsub' ftrim esub(`esub',`elzero');
+    sdecode `pvalue' if `touse' & !missing(`pvalue'), format(`pformat') replace `xmlsub' ftrim esub(`esub',`elzero');
     format `pvalue' %-10s;
   };
   if "`qvalue'"!="" {;
-    sdecode `qvalue' if `touse' & !missing(`qvalue'), format(%-10.2g) replace `xmlsub' ftrim esub(`esub',`elzero');
+    sdecode `qvalue' if `touse' & !missing(`qvalue'), format(`pformat') replace `xmlsub' ftrim esub(`esub',`elzero');
     format `qvalue' %-10s;
   };
 };
