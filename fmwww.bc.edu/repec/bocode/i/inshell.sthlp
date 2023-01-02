@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.7  29 Nov 2022}{...}
+{* *! version 2.8  15 Dec 2022}{...}
 {viewerjumpto "Syntax" "inshell##syntax"}{...}
 {viewerjumpto "Description" "inshell##description"}{...}
 {viewerjumpto "Remarks" "inshell##remarks"}{...}
@@ -61,14 +61,14 @@ Because shell code uses the same dollar sign alphanumeric notation (and often th
 and because all commands must pass through this pre-processor before they are executed, Stata will attempt to perform macro substitution upon each and every substring that could be a valid name for a Stata {cmd:global}.
 This will happen regardless of whether commands are sent via {cmd:shell}, {cmd:inshell} or any other package.
 Therefore if your code is intended to reference a variable within the shell's environment you will need to {it:escape} expressions of the form
-{cmd:$var1} or {cmd:${var2}} to {cmd:\$var1} or {cmd:\${var2}}. For instance, to print the {bf:$PATH} variable on {bf:macOS} and {bf:Linux}:{p_end}
+{cmd:$var1} or {cmd:${var2}} to {cmd:\$var1} or {cmd:\${var2}}. For instance, to print the {bf:$PATH} on {bf:macOS} and {bf:Linux}:{p_end}
 
 {p 8 8 2}
 {cmd:. inshell echo \$PATH}{bind:        }{it:({stata inshell echo \$PATH:click to run})}{p_end}
 
 {p 6 4 3}
 In this case it is necessary to use the single backslash ({cmd:\}) to {it:escape} the dollar sign ({cmd:$}) otherwise Stata will look for a {cmd:global} macro named {cmd:PATH}.
-If it does not exist, Stata will replace that part of the command with a zero-length string because the macro substitution will result in an empty value being passed to what Stata interprets as its own {cmd:global} variable.
+If it does not exist, Stata will replace that part of the command with a zero-length string because the macro substitution will result in an empty value being passed to what Stata interprets as its own {cmd:global} macro.
 
 {p 6 4 3}
 However, any dollar signs ({cmd:$}) used for command substitution or in another setting {it:not} directly followed by a letter or an underscore ({cmd:_}) need {it:not} be escaped. To use command substitution:{p_end}
@@ -253,13 +253,13 @@ The {cmd:exit} in the command above is neither of the Stata commands {helpb exit
 
 {p 6 4 2}When using {bf:PowerShell} on {bf:macOS} in {it:inline} mode, which is to say issuing commands to PowerShell when it is {ul:not} the default shell,
 single quotes ({cmd:'}) are required to surround all dollar sign alphanumeric notation expressions, which as in all cases must also be escaped with a backslash ({cmd:\}).
-For instance, to print the {bf:$PATH} variable:{p_end}
+For instance, to print the {bf:$PATH}:{p_end}
 
 {p 8 8 2}{cmd}{...}
 . inshell /usr/local/bin/pwsh -Command '\$ENV:PATH'{p_end}
 
 {p 8 8 6}{res}{...}
-/usr/local/microsoft/powershell/7:/usr/bin:/bin:/usr/sbin:/sbin:/Applications/Stata/utilities/java/macosx-x64/zulu-jdk17.0.4/bin{p_end}
+/usr/local/microsoft/powershell/7:/usr/bin:/bin:/usr/sbin:/sbin:/Applications/Stata/utilities/java/macosx-x64/zulu-jdk17.0.5/bin{p_end}
 
 {p 6 4 2}{txt}{...}
 However, if {bf:PowerShell} is your {it:default shell} (set either by {cmd:global} shell macro {cmd:S_SHELL} or as your system's default shell) they are not required (nor is {bf:-Command} nor the path to the {bf:PowerShell} executable).
@@ -269,13 +269,13 @@ See {help inshell##sshell:S_SHELL global macro} for more details.{p_end}
 . inshell \$ENV:PATH{p_end}
 
 {p 8 8 6}{res}{...}
-/usr/local/microsoft/powershell/7:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin{p_end}
+/usr/local/microsoft/powershell/7:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Applications/Stata/utilities/java/macosx-x64/zulu-jdk17.0.5/bin{p_end}
 
 {p 6 4 2}{txt}{...}
-Some other special characters that do not form part of a single expression will often need to be surrounded by single quotes. For instance, to print the {bf:$PATH} variable and split it by parsing on a colon ({cmd::}):{p_end}
+Some other special characters that do not form part of a single expression will often need to be surrounded by single quotes. For instance, to print the {bf:$PATH} and split it by parsing on a colon ({cmd::}):{p_end}
 
 {p 8 8 2}{cmd}{...}
-. inshell /usr/local/bin/pwsh -Command '\$ENV:PSModulePath' -split \':\'{p_end}
+. inshell /usr/local/bin/pwsh -Command '\$ENV:PATH' -split \':\'{p_end}
 {p 16 16 2}{txt}{...}
 {it:or}{p_end}
 {p 8 8 2}{cmd}{...}
@@ -287,7 +287,7 @@ Some other special characters that do not form part of a single expression will 
 /bin{break}
 /usr/sbin{break}
 /sbin{break}
-/Applications/Stata/utilities/java/macosx-x64/zulu-jdk17.0.4/bin
+/Applications/Stata/utilities/java/macosx-x64/zulu-jdk17.0.5/bin
 {p_end}
 
 {p 6 4 2}{txt}{...}
@@ -307,7 +307,7 @@ After each of these commands the version number can be obtained like so:{p_end}
 {p 12 12 2}{cmd:"you are using version `:word 1 of `r(no3)''.`:word 2 of `r(no3)''.`:word 3 of `r(no3)'' of Microsoft PowerShell"}{p_end}
 
 {p 8 8 6}{res}{...}
-you are using version 7.2.6 of Microsoft PowerShell{p_end}
+you are using version 7.3.1 of Microsoft PowerShell{p_end}
 
 {p 6 4 2}{txt}{...}
 Standalone pipes and Math class expressions also require single-quoting, like so:{p_end}
@@ -351,7 +351,7 @@ the result may look something like this:{p_end}
 
 {p 8 8 6}{res:[32;1mMajor  Minor  Patch  PreReleaseLabel BuildLabel[0m}{p_end}
 {p 8 8 6}{res:[32;1m-----  -----  -----  --------------- ----------[0m}{p_end}
-{p 8 8 6}{res:7{space 6}2{space 6}6}{p_end}
+{p 8 8 6}{res:7{space 6}3{space 6}1}{p_end}
 
 {p 6 4 2}{txt}{...}
 The cryptographic sequences at the beginning and end of the first two lines are in this case meant to display the output in bold and green font and should not be visible as text.{p_end}
@@ -371,14 +371,14 @@ Because these control sequences can cause such pervasive aberrations {hline 2} i
 
 {p 8 8 6}{res:Major  Minor  Patch  PreReleaseLabel BuildLabel}{p_end}
 {p 8 8 6}{res:-----  -----  -----  --------------- ----------}{p_end}
-{p 8 8 6}{res:7{space 6}2{space 6}6}{p_end}
+{p 8 8 6}{res:7{space 6}3{space 6}1}{p_end}
 
 {p 6 4 2}{txt}{...}
-Users should also be aware that lines of {cmd:inshell} commands should not contain any Stata comments as they will simply be included as part of the command sent to {cmd:inshell}.
+Users should also be aware that lines of {cmd:inshell} commands should not contain any Stata comments as they will be included as part of the command sent to {cmd:inshell}.
 
 {p 6 4 2}{txt}{...}
 It is the author's goal to make {cmd:inshell} compatible with a wide variety of shells and operating systems.
-At present (on {bf:macOS} and {bf:Linux}) it has been tested with {bf:bash}, {bf:dash}, {bf:ksh}, {bf:ksh93}, {bf:mksh}, {bf:oil/osh}, {bf:tcsh}, {bf:yash}, and {bf:zsh},
+At present (on {bf:macOS} and {bf:Linux}) it has been tested with {bf:bash}, {bf:dash}, {bf:ksh}, {bf:ksh93}, {bf:mksh}, {bf:oil/osh}, {bf:oksh}, {bf:tcsh}, {bf:yash}, and {bf:zsh},
 as well as {bf:Microsoft PowerShell}, and should also work with {bf:ash}, {bf:csh}, and {bf:sh}.
 It is not fully compatible with {bf:fish}, the "friendly interactive shell."
 Although it has not been extensively tested on {bf:Microsoft Windows} it will work with both {bf:Windows Command} shell {bf:(cmd.exe)} and {bf:Microsoft PowerShell}.{p_end}
@@ -388,11 +388,37 @@ Although it has not been extensively tested on {bf:Microsoft Windows} it will wo
 
 {p 6 4 3}
 Because of the various limitations noted above, the user is advised to store their commands in an external script and use {cmd:inshell} to execute that script as in {help inshell##syntax:syntax 3}.
+However, such an external script cannot reference Stata macros, unless they are passed to them via an export command ({help inshell##env:see Environment}). For example, if an external script contained the following lines:
+
+{space 8}{hline 18} {it:example shell script content} {hline 18}
+{* example_start - file}{...}
+{space 8}{text}{...}
+{it:#!/bin/sh}
+{cmd}{...}
+{space 8}echo $PATH
+{space 8}echo \$PATH
+{text}{...}
+{* example_end}{...}
+{space 8}{hline 66}
+
+{p 6 4 3}
+and was executed as in {help inshell##syntax:syntax 3} the result would look something like this:{p_end}
+
+{p 8 8 2}
+{result:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Applications/Stata/utilities/java/macosx-x64/zulu-jdk17.0.5/bin}{p_end}
+{p 8 8 2}
+{result:$PATH}{p_end}
+
+{p 6 4 3}
+as if it were executed directly from the shell in a terminal emulator.{p_end}
+
+{p 8 8 2}
 Note that the script file need not be executable in order to function.{p_end}
 
 {p 6 4 3}
-When Stata is launched from a terminal emulator, it naturally exists at a level closer to the operating system,
-and that fact is reflected in the relaxed requirements with regards to quoting and escaping as well as the sourcing of a wider range of configuration files.{p_end}
+When Stata is launched from a terminal emulator, its interface with the shell is an {it:interactive}, as opposed to the {it:non-interactive} interface in the GUI application,
+and therefore it will source the appropriate configuration files, such as {bf:.zshrc} for {bf:zsh} and {bf:.bashrc} for {bf:bash}.
+Despite this, variables defined within {bf:.zshenv} (for {bf:zsh}) will be accessible to both the GUI and console instances.{p_end}
 
 {p 6 4 3}
 As noted above Stata's implementation of the shell has no interactive abilities and the information printed to the {cmd:Results} window may contain garbled or otherwise unprintable text.
@@ -408,7 +434,7 @@ It is necessary to use a wrapper program to do so because {bf:cd} operating syst
 It confirms the existence of the specified directory beforehand and it even also allows the use of the out-of-date command {cmd:chdir}.
 Most importantly, it allows changing directory to paths referenced by variables set within the user's environment.
 As in all cases, these variables must be referenced using escaped dollar signs ({cmd:\$}) ({help inshell##notation:see Notation}).
-For example, if the user wanted to {cmd:cd} to the temporary directory, often set as the {bf:$TMPDIR} variable:{p_end}
+For example, if the user wanted to {cmd:cd} to the temporary directory, often set in {bf:$TMPDIR}:{p_end}
 
 {p 8 8 2}
 {cmd:. inshell cd \$TMPDIR}{p_end}
@@ -444,8 +470,11 @@ For more information about {cmd:S_SHELL} {manpage D 800:{it:see page 793}} in th
 {title:Options}
 
 {p 6 4 3}
-{cmd:inshell} allows its users to set several options that control its behavior through a series of {cmd:global} macros. These options are currently only available for users of {bf:macOS} and {bf:Linux} systems.
-They can be safely set on {bf:Windows} systems but will not function. It is recommended to set these options within the user's {cmd:profile.do} file so that they persist across launches of Stata.{p_end}
+{cmd:inshell} allows its users to set several options that control its behavior through a series of {cmd:global} macros.
+It is recommended to set these options within the user's {cmd:profile.do} ({help profile:see profile}) so that they persist across each launch of Stata.{p_end}
+
+{p 6 4 3}
+The following two options are currently only available for users of {bf:macOS} and {bf:Linux} systems. They can be safely set on {bf:Windows} systems but will not function.{p_end}
 
 {p 6 4 3}
 {cmd:INSHELL_PATHEXT} {hline 2} this option allows the user to add a single directory to the beginning of their {bf:$PATH}.
@@ -453,7 +482,7 @@ They can be safely set on {bf:Windows} systems but will not function. It is reco
 Once this is set, absolute paths to commands found along the user's {it:extended} {bf:$PATH} are no longer necessary.{p_end}
 
 {p 6 4 3}
-{cmd:INSHELL_TERM} {hline 2} this option allows the user to specify an alternative {bf:$TERM} variable, as GUI instances often leave this variable unset.
+{cmd:INSHELL_TERM} {hline 2} this option allows the user to specify an alternative {bf:$TERM}, as GUI instances of Stata often leave this variable unset.
 Valid values for {bf:$TERM} are often found in {it:/usr/share/terminfo}. Some suggested values are "xterm" or "dumb".{p_end}
 
 {p 6 4 3}
@@ -466,7 +495,7 @@ require Stata to be force quit when they are executed, for example {bf:vim} or {
 {p 6 4 3}
 {bf:Toggle options} {hline 2}
 The following options can be toggled on by setting the value of the corresponding {cmd:global} macro to {it:any} value.
-If the option's name contains the word "{bf:ENABLE}" or "{bf:SET}" it will enable the option, whereas if it contains "{bf:DISABLE}", setting it will disable the option. All options are toggled off by default.{p_end}
+If the option's name contains the word {bf:ENABLE} or {bf:SET} it will enable the option, whereas if it contains {bf:DISABLE}, setting it will disable the option. All options are toggled off by default.{p_end}
 
 {p 6 4 3}
 To unset the option clear the macro.
@@ -477,33 +506,38 @@ Because {cmd:inshell} only checks whether or not the macro exists, setting the m
 It is toggled off by default. If this option is set, its functionality will take precedence over otherwise legitimately issued commands.
 For instance, if the option is toggled on and the current directory contains a sub-directory named "ls,"
 if the user issues the command {cmd:inshell ls}, rather than listing the files in the current directory using the {bf:ls} command, {cmd:inshell} will issue the {cmd:cd} command to the directory named "ls".
-Note that though this function will work in do-files, it is intended for interactive use.{p_end}
+Note that although this function will work in do-files, it is intended for interactive use.{p_end}
 
 {p 6 4 3}
 {cmd:INSHELL_DISABLE_REFOCUS} {hline 2} After each {cmd:inshell} command focus is redirected to the {cmd:Results} window.
 This either may not perform as intended on all systems or may become a nuisance if it is unwanted and therefore this option is offered to disable it.{p_end}
 
 {p 6 4 3}
-{cmd:INSHELL_DISABLE_LONGCMDSMG} {hline 2} If a command is greater than 300 characters in length, {cmd:inshell} displays a suggestion to store that command as a script file. By setting this option this message will no longer be displayed.{p_end}
+{cmd:INSHELL_DISABLE_LONGCMDSMG} {hline 2} If a command is greater than 300 characters in length, {cmd:inshell} displays a suggestion to store that command as a script file.
+By setting this option this message will no longer be displayed.{p_end}
 
 {p 6 4 3}
-{cmd:INSHELL_ESCTAB_SIZE} {hline 2} This option allows the user to specify the number of spaces into which horizontal tabs (ASCII character code 9) are translated. The default is 4.{p_end}
+{cmd:INSHELL_TAB_SPACES} {hline 2} This option allows the user to specify the number of spaces into which horizontal tabs (ASCII character code 9) are translated in the {it:{res:standard output}}.
+If it is not set horizontal tabs will remain as such and no conversion to spaces  (ASCII character code 32) will occur.
+This must be taken into consideration for any string parsing of {it:{res:standard output}}, as tabs occupy only 1 character length.
+Tabs in the {it:{err:standard error}} are always converted into {bf:4} spaces.
+{p_end}
 
 {p 6 4 3}
-{cmd:INSHELL_SETSHELL_CSH} {hline 2} This option {it:must} be set if the user's default shell is either {bf:csh} or {bf:tcsh}. However, if global macro {cmd:S_SHELL} is set to a {bf:csh}-type shell, this option is not required.{p_end}
+{cmd:INSHELL_SETSHELL_CSH} {hline 2} This option {it:must} be set if the user's {it:default} shell is either {bf:csh} or {bf:tcsh}. However, if global macro {cmd:S_SHELL} is set to a {bf:csh}-type shell, this option is not required.{p_end}
 
 {marker diagnostics}{...}
 {title:Diagnostics}
 
 {p 6 4 3}
-{cmd:inshell} contains a program which performs a series of diagnostic routines and which can be run by typing {cmd:inshell} {cmdab:diag:nostics}.
+{cmd:inshell} contains a program which performs a series of diagnostic routines and which can be with {cmd:inshell} {cmdab:diag:nostics}.
 The screen will be cleared and the current settings of the macro options will be displayed.
 If it is set, it will also display the value of the {cmd:global} shell macro {cmd:S_SHELL}.
-It will then display which shell is in use along with its version number and the absolute path to the shell.{p_end}
+It will then display which shell is in use along with its version number and the absolute path to the shell. If the system's default shell is a {bf:csh}-type shell, it will check that the {cmd:INSHELL_SETSHELL_CSH} option is properly set.{p_end}
 
 {p 6 4 3}
-It will then display the value of your {bf:$PATH}, and if the {cmd:inshell} path extension macro option {cmd:INSHELL_PATHEXT} is set,
-the path it contains will be verified and the {it:extended} {bf:$PATH} when using {cmd:inshell} will be displayed.
+It will then display the {bf:$PATH}, and if the {cmd:inshell} path extension macro option {cmd:INSHELL_PATHEXT} is set,
+the existence of the path it contains will be verified and the {it:extended} {bf:$PATH} when using {cmd:inshell} will be displayed.
 If the difference between the two {bf:$PATH}s is equal to the value of {cmd:INSHELL_PATHEXT}, a green check mark will appear.{p_end}
 
 {p 6 4 3}
@@ -526,10 +560,12 @@ This diagnostics routine is currently only available for users of {bf:macOS} or 
 {synopt:{cmd:r(errln)}}the total number of lines of {it:{err:standard error}} captured{p_end}
 {synopt:{cmd:r(stderr)}}all of the lines of {it:{err:standard error}} condensed into a single line{p_end}
 {synopt:{cmd:r(rc)}}the shell's native return code produced by {it:commands}, in the event of an error{p_end}
+{synopt:{cmd:r(cmd)}}the command sent to the shell, after all macro expansion occurs. This does not contain any commands related to the global macro options for exporting a new {bf:$PATH} or {bf:$TERM}{p_end}
+
 {p2colreset}{...}
 
 {p 6 4 3}
-Often lines of {it:{res:standard output}} or {it:{err:standard error}} can be blank and, because Stata cannot store empty macros, these blank lines cannot be stored in {cmd:r()}.
+Often, lines of {it:{res:standard output}} or {it:{err:standard error}} can be blank and, because Stata cannot store empty macros, these blank lines cannot be stored in {cmd:r()}.
 For that reason {cmd:inshell} preserves the sequential numerical ordering of the lines captured into {cmd:r(no1)} to {cmd:r(no{text}{it:m}{cmd:)}} or {cmd:r(err1)} to {cmd:r(err{text}{it:m}{cmd:)}}. If {cmd:r(no)} = {it:m}
 there will exist {it:m} non-empty lines {cmd:r(no1)}, ... , {cmd:r(no}{it:(m-1)}{cmd:)}, {cmd:r(no}{it:m}{cmd:)}.
 However, for completeness, the entire {it:{res:standard output}} and {it:{err:standard error}} including blank lines will be stored in the Mata string column vectors {bf:M} and {bf:N}, respectively.{p_end}

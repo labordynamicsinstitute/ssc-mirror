@@ -23,6 +23,9 @@ if [ "${os}" != "Windows" ]; then
       cat "${tempdir}/inshell_demo_log_${date}.txt"
       rm "${tempdir}/inshell_demo_log_${date}.txt"
       pwd
+      echo
+      echo "\n this script with exit with a return code of 99. This is not an error."
+      (exit 99)
     fi
   elif [ -f "/usr/local/bin/stata-${flavor}" ]; then
     if [ -f "${tempdir}/about.do" ]; then
@@ -30,9 +33,12 @@ if [ "${os}" != "Windows" ]; then
       cat "${tempdir}/inshell_demo_log_${date}.txt"
       rm "${tempdir}/inshell_demo_log_${date}.txt"
       pwd
+      echo "\n this script with exit with a return code of 99. This is not an error."
+      (exit 99)
     fi
   elif [ ! -f "/usr/local/bin/stata-${flavor}" ] && [ ! -f "$(which stata-"${flavor}")" ]; then
     echo "a command line instance of Stata was not found on this system"
+    (exit 1)
   fi
 
 fi
