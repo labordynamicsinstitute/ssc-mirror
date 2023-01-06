@@ -1,0 +1,17 @@
+d 'PRETTY_BASELINE': module to make a commonly encountered table of baseline characteristics
+d
+d  this routine makes a commonly encountered table of baseline
+d characteristics 
+d
+d KW: descriptive table
+d KW: baseline characteristics
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20230105
+d
+d Author: Rafael Gafoor, University College London
+d Support: email r.gafoor@@ucl.ac.uk
+d
+f pretty_baseline.ado
+f pretty_baseline.sthlp

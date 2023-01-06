@@ -1,0 +1,29 @@
+d 'DISCRATES': module to provide estimation and statistical test for gross and net discrimination rates
+d
+d   discrates calculates the gross and net discrimination rate for
+d a paired-test correspondence or audit design (application of
+d minority and majority applicant for one offer). Therefore the
+d input data has to be in a binary form indicating a response (n/y)
+d to the minority (minority_response) or majority applicant
+d (majority_response) for one offer. Gross discrimination of the
+d minority applicant is the situation, where the majority applicant
+d gets a response whereas the minority applicant did not. Net
+d discrimination is just the difference between the gross
+d discrimination estimates of the minority and majority applicants.
+d To test for gross discrimination of the minority applicant a
+d one-sided one-proportion z-test testing the H0 of no gross
+d discrimination (= 0). A McNemar test is used to test for net
+d discrimination. 
+d
+d KW: discrimination rate
+d KW: paired tests
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20230105
+d
+d Author: Andreas Schneck, Ludwig-Maximilians-University Munich 
+d Support: email andreas.schneck@@lmu.de
+d
+f discrates.ado
+f discrates.sthlp

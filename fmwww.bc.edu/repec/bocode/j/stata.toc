@@ -1,3 +1,4 @@
+p jaccard module to calculate Jaccard similarity or dissimilarity of sets
 p jarowinkler module to calculate the Jaro-Winkler distance between strings
 p jb module to perform Jarque-Bera test for normality on series
 p jb6 modules to perform Jarque-Bera test for normality 

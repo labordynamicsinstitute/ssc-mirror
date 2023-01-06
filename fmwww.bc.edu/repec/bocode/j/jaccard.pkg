@@ -1,0 +1,26 @@
+d 'JACCARD': module to calculate Jaccard similarity or dissimilarity of sets
+d
+d  jaccard calculates the Jaccard measure of similarity of two or
+d more sets, or its complement,  and plots results in a tabular bar
+d chart.  Set membership is specified by a bundle of indicator 
+d variables.  Optionally, the count in each intersection may be
+d plotted instead.  For sets A, B  the number of elements in their
+d intersection is divided by the number of elements in their  union
+d to give a measure between 0 (A and B are disjoint) and 1 (A and B
+d are identical). 
+d
+d KW: Jaccard
+d KW: similarity
+d KW: dissimilarity
+d KW: graphics
+d KW: clustering
+d
+d Requires: Stata version 11, tabplot from SSC (q.v.), labmask from SJ
+d
+d Distribution-Date: 20230105
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f jaccard.ado
+f jaccard.sthlp
