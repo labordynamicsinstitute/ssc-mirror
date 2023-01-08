@@ -1,0 +1,19 @@
+d 'TREECLUSTER': module for plotting clustered trees
+d
+d      The command plots hierarchical data in a tree cluster
+d layout. The last layer determines the    placement of higher tier
+d "parent" layers.  The tree layout can be switched between
+d horizontal	Cartesian and circular Polar coodinates. 
+d
+d KW: graphics
+d KW: treecluster
+d
+d Requires: Stata version 15 and palettes, colrspace from SSC
+d
+d Distribution-Date: 20230107
+d
+d Author: Asjad Naqvi, WU Vienna
+d Support: email asjadnaqvi@@gmail.com
+d
+f treecluster.ado
+f treecluster.sthlp

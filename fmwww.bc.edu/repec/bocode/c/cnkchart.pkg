@@ -1,0 +1,20 @@
+d 'CNKCHART': module to draw candlestick chart with Chinese stock prices
+d
+d  cnkchart draws a candlestick chart with Chinese stock prices 
+d
+d KW:  China
+d KW: firms
+d KW: graphics
+d
+d Requires: Stata version 17 
+d
+d Distribution-Date: 20221124
+d
+d Author: Chuntao Li, Zhongnan Univ. of Econ. & Law 
+d Support: email chtl@@zuel.edu.cn
+d
+d Author: Yizhuo Fang, Zhongnan Univ. of Econ. & Law 
+d Support: email 13608671126@@163.com
+d
+f cnkchart.ado
+f cnkchart.sthlp

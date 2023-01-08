@@ -1,9 +1,14 @@
-*! sankey v1.0 13 Oct 2022. Beta release.
+*! sankey v1.1 13 Dec 2022
 *! Asjad Naqvi 
+
+*v1.1 13 Dec 2022. valformat() renamed to format(). offset() option added to displaced x-axis for rotated labels.
+*v1.0 08 Dec 2022. Beta release.
+
+* A detailed Medium guide on Sankey diagrams is here:
+* https://medium.com/the-stata-guide/stata-graphs-sankey-diagram-ecddd112aca1
 
 
 cap program drop sankey
-
 
 program sankey, sortpreserve
 
@@ -12,8 +17,9 @@ version 15
 	syntax varlist(numeric max=1) [if] [in], From(varname) To(varname) by(varname) ///
 		[ palette(string) smooth(numlist >=1 <=8) gap(real 2) RECENter(string) colorby(string)  alpha(real 75) ]  ///
 		[ LABAngle(string) LABSize(string) LABPOSition(string) LABGap(string) SHOWTOTal  ] ///
-		[ VALSize(string)  VALCONDition(string) VALFormat(string) VALGap(string) NOVALues ]  ///
+		[ VALSize(string)  VALCONDition(string) format(string) VALGap(string) NOVALues ]  ///
 		[ LWidth(string) LColor(string)  ]  ///
+		[ offset(real 0) ]  ///  // added options v1.1
 		[ title(passthru) subtitle(passthru) note(passthru) scheme(passthru) name(passthru) xsize(passthru) ysize(passthru)		] 
 		
 
@@ -40,7 +46,7 @@ preserve
 
 	keep if `touse'
 	keep `varlist' `from' `to' `by'
-
+	
 	collapse (sum) `varlist', by(`from' `to' `by')
 	
 	ren `by' x1
@@ -145,28 +151,53 @@ preserve
 
 		
 			if "`x'" == "`y'" {  // check if the groups are equal
-
+			
+			// di "`x', `y'"
+			
 				// in layer range	
 				summ y1 if lab=="`x'" & layer==`left' & x==`left', meanonly   
+				if r(N) > 0 {	
 					local y1max `r(max)'
 					local y1min `r(min)'
-
+				}
+				else {
+					local y1max 0
+					local y1min 0
+				}
 					
 				summ y2 if lab=="`x'" & layer==`left' & x==`left', meanonly   
+				if r(N) > 0 {
 					local y2max `r(max)'
 					local y2min `r(min)'
+				}
+				else {
+					local y2max 0
+					local y2min 0
+				}
 					
 				local l1max = max(`y1max',`y2max')
 				local l1min = min(`y1min',`y2min')
 				
 				// out layer range		
 				summ y1 if lab=="`x'" & layer==`right' & x==`left', meanonly 
+				if r(N) > 0 {	
 					local y1max `r(max)'
 					local y1min `r(min)'
+				}
+				else {
+					local y1max 0
+					local y1min 0
+				}
 
 				summ y2 if lab=="`x'" & layer==`right' & x==`left', meanonly 
+				if r(N) > 0 {
 					local y2max `r(max)'
-					local y2min `r(min)'	
+					local y2min `r(min)'
+				}
+				else {
+					local y2max 0
+					local y2min 0
+				}	
 					
 				local l2max = max(`y1max',`y2max')
 				local l2min = min(`y1min',`y2min')				
@@ -503,8 +534,8 @@ preserve
 		local labcon "if val `valcondition'"
 	}
 	
-	if "`valformat'" == "" local valformat "%12.0f"	
-	format val `valformat'
+	if "`format'" == "" local format "%12.0f"	
+	format val `format'
 	
 	if "`valgap'" 	 == "" local valgap 2
 	
@@ -512,7 +543,7 @@ preserve
 	local yrange = r(max)
 	
 	if "`showtotal'" != "" {
-		gen lab2 = lab + " (" + string(sums, "`valformat'") + ")"
+		gen lab2 = lab + " (" + string(sums, "`format'") + ")"
 		local lab lab2
 	}
 	else {
@@ -527,6 +558,12 @@ preserve
 	}
 	
 	
+	// offset
+	
+	summ x, meanonly
+	local xrmin = r(min)
+	local xrmax = r(max) + ((r(max) - r(min)) * `offset' / 100) 
+	
 	
 	// final plot
 		
@@ -538,7 +575,7 @@ preserve
 			, ///
 				legend(off) ///
 					xlabel(, nogrid) ylabel(0 `yrange' , nogrid)     ///
-					xscale(off) yscale(off)	 ///
+					xscale(off range(`xrmin' `xrmax')) yscale(off)	 ///
 					`title' `subtitle' `note' `scheme' `name' ///
 					`xsize' `ysize'
 

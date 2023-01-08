@@ -1,9 +1,10 @@
+*! version 1.3  6Jan2023
 * Authors:
 * Chuntao Li, Ph.D. , China Stata Club(爬虫俱乐部)(chtl@hust.edu.cn)
-* Yuan Xue, China Stata Club(爬虫俱乐部)(xueyuan@hust.edu.cn)
+* Yuan Xue, China Stata Club(爬虫俱乐部)(xueyuan19920310@163.com)
 * July 13rd, 2017
 * Updated on November 27th, 2018
-* Updated on June 9th, 2022
+* Updated on June 10th, 2022
 * Program written by Dr. Chuntao Li and Yuan Xue
 * Report summary statistics to formatted table in DOCX file.
 * Can only be used in Stata version 15.0 or above
@@ -158,7 +159,7 @@ program define sum2docx
 			putdocx save `"`using'"', append(`append2')
 		}
 	}
-	di as txt `"summary statistics have been written to file {browse "`using'"}"'
+	di as txt `"Summary statistics table has been written to file {browse "`using'"}."'
 end
 
 mata

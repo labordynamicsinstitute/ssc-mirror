@@ -1,8 +1,8 @@
+*! version 1.4  6Jan2023
 * Authors:
 * Chuntao Li, Ph.D. , China Stata Club(爬虫俱乐部)(chtl@hust.edu.cn)
 * Zijian LI, China Stata Club(爬虫俱乐部)(jeremylee_41@163.com)
-* Yuan Xue, China Stata Club(爬虫俱乐部)(xueyuan@hust.edu.cn)
-* Updated on June 9th, 2022
+* Yuan Xue, China Stata Club(爬虫俱乐部)(xueyuan19920310@163.com)
 program define t2docx
 
 	if _caller() < 15.0 {
@@ -234,7 +234,7 @@ program define t2docx
 			putdocx save `"`using'"', append(`append2')
 		}
 	}
-	di as txt `"t-test table have been written to file {browse "`using'"}"'
+	di as txt `"T-test table has been written to file {browse "`using'"}."'
 end
 
 mata

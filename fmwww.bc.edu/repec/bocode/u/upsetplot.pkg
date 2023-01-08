@@ -1,0 +1,33 @@
+d 'UPSETPLOT': module to show Euler or Venn diagrams mapped to bar charts, upsetplot style
+d
+d  upsetplot produces a bar chart alternative to Euler or Venn
+d diagrams showing the frequencies (or more generally abundances)
+d of subsets of observations as defined jointly by a bundle of
+d numeric indicator variables and possibly a weight variable. The
+d plot resembles what have been called UpSetPlots elsewhere. The
+d display uses various subcommands of graph twoway.  The most
+d distinctive feature is a matrix- or table-like legend below the
+d bar chart with marker symbols shown on each row whenever any
+d indicator is 1 in a subset. Correspondingly, absence of a marker
+d symbol implies that that indicator is 0 in that subset. The
+d reduced dataset used by upsetplot may be saved for future work. 
+d
+d KW: upsetplot
+d KW: Euler diagram
+d KW: Venn diagram
+d KW: bar charts
+d KW: graphics
+d KW: genomics 
+d
+d Requires: Stata version 8.2
+d
+d Distribution-Date: 20230107
+d
+d Author: Tim Morris, MRC Clinical Trials Unit at UCL
+d Support: email T.Morris@@ctu.mrc.ac.uk
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f upsetplot.ado
+f upsetplot.sthlp

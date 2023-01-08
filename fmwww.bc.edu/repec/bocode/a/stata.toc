@@ -88,6 +88,7 @@ p artbin module to compute extended sample size for randomised trials with binar
 p ascii module to display the ASCII character set
 p asciiplot module to generate ASCII character map
 p ascol module to convert frequency of stock returns or stock prices
+p ascvd module to compute ACC/AHA 10-year risk for an initial hard atherosclerotic cardiovascular disease (ASCVD) event
 p asdoc module to create high-quality tables in MS Word from Stata output
 p asgen module to generate weighted average mean using an existing variable as weight
 p ashell module to capture output from OS shell command

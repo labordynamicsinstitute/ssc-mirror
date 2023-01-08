@@ -1,12 +1,13 @@
+*! version 1.4  6Jan2023
 * Authors:
 * Chuntao Li, Ph.D. , China Stata Club(爬虫俱乐部)(chtl@hust.edu.cn)
 * Zhengxuan Zhao, China Stata Club(爬虫俱乐部)(Zhengxuan_ZHAO@foxmail.com)
 * Haitao Si, China Stata Club(爬虫俱乐部)(sht_finance@foxmail.com)
-* Updated by Yuan Xue, China Stata Club(爬虫俱乐部)(xueyuan@hust.edu.cn)
+* Updated by Yuan Xue, China Stata Club(爬虫俱乐部)(xueyuan19920310@163.com)
 * August 4th, 2017
 * Updated on November 27th, 2018
 * Updated on November 12th, 2020
-* Updated on June 9th, 2022
+* Updated on June 10th, 2022
 * Program written by Dr. Chuntao Li, Zhengxuan Zhao, Haitao Si and updated by Yuan Xue
 * Report correlation matrix to formatted table in DOCX file.
 * Can only be used in Stata version 15.0 or above
@@ -270,7 +271,7 @@ program define corr2docx
 			putdocx save `"`using'"', append(`append2')
 		}
 	}
-	di as txt `"correlation matrix have been written to file {browse "`using'"}"'
+	di as txt `"Correlation matrix has been written to file {browse "`using'"}."'
 end
 
 cap mata mata drop token_number()

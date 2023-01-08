@@ -16,6 +16,7 @@ p uniquestrata module to abort the program if the specified variables don't coll
 p unitab program to display a univariate table for a binary outcome variable
 p univar module to generate univariate summary with box-and-whiskers plot
 p univstat module to produce summary statistics in matrix form
+p upsetplot module to show Euler or Venn diagrams mapped to bar charts, upsetplot style
 p urcovar module to perform Elliott-Jansson test for unit roots with stationary covariates
 p usagelog module to log usage of Stata programs in an existing text file
 p usd module to get US dollar exchange rates from the Federal Reserve

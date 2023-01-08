@@ -1,10 +1,11 @@
+*! version 1.4  6Jan2023
 * Authors:
 * Chuntao Li, Ph.D. , China Stata Club(爬虫俱乐部)(chtl@hust.edu.cn)
-* Yuan Xue, China Stata Club(爬虫俱乐部)(xueyuan@hust.edu.cn)
+* Yuan Xue, China Stata Club(爬虫俱乐部)(xueyuan19920310@163.com)
 * July 13rd, 2017
 * Updated on December 27th, 2018
 * Updated on November 12th, 2020
-* Updated on June 9th, 2022
+* Updated on June 10th, 2022
 * Program written by Dr. Chuntao Li and Yuan Xue
 * Report regression table to formatted table in DOCX file.
 * Can only be used in Stata version 15.0 or above
@@ -513,7 +514,7 @@ program define reg2docx
 			putdocx save `"`using'"', append(`append2')
 		}
 	}
-	di as txt `"regression table have been written to file {browse "`using'"}"'
+	di as txt `"Regression table has been written to file {browse "`using'"}."'
 end
 
 mata

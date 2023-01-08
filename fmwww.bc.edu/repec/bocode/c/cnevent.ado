@@ -4,7 +4,7 @@
 * January 23rd, 2022
 * Program written by Dr. Chuntao Li and Yizhuo Fang
 * Carry out a standard market model event study with Chinese publicly listed firms and calculate the abnormal returns and cumulative abnormal returns for each event.
-* Can only be used in Stata version 16.0 or above
+* Can only be used in Stata version 17.0 or above
 
 
 cap program drop cnevent
@@ -338,10 +338,10 @@ program define cnevent
 		}
 		rename (v1 v2) (`car' ``eventdate'')
 		if ``eve_window_s'' < 0{
-		twoway line `car' ``eventdate'' ,ytitle(`car'%) xline(0,lc(red))
+		twoway line `car' ``eventdate'' ,ytitle(CAAR) xline(0,lc(red))
 		}
 		else{
-		twoway line `car' ``eventdate'' ,ytitle(`car'%)     
+		twoway line `car' ``eventdate'' ,ytitle(CAAR)     
 		}
 	   		tokenize "`carg'", parse(",")
 			local `name' `1'

@@ -153,6 +153,7 @@ p cngcode module to geocode Chinese addresses
 p cngdf module to calculate any base period GDP deflator for China
 p cnindex module to download historical stock quotations from Chinese market
 p cnintraday module to Download intraday stock quotations for a list of stock codes in a given date from SinaFinance
+p cnkchart module to draw candlestick chart with Chinese stock prices
 p cnmapsearch module to extract the specified information by keyword in a certain geographic range
 p cnormp module to evaluate censored normal distribution
 p cns module to compute Consensus Measure for Ordinal Scales

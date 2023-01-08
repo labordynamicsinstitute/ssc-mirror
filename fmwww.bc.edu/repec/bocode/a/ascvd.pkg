@@ -1,0 +1,25 @@
+d 'ASCVD': module to compute ACC/AHA 10-year risk for an initial hard atherosclerotic cardiovascular disease (ASCVD) event
+d
+d  ascvd computes 10-year risk for an initial hard atherosclerotic
+d cardiovascular disease (ASCVD) event (defined as first occurrence
+d of non-fatal myocardial infarction, congestive heart disease
+d death, or fatal or nonfatal stroke), based on American College of
+d Cardiology/American Heart Association (ACC/AHA) guidelines (Goff
+d et al. 2014). ascvdi is the immediate form of ascvd; see immed. 
+d
+d KW: Framingham Heart Study
+d KW: Cardiovascular disease
+d KW: Risk prediction
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20230107
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f ascvd.ado
+f ascvd.sthlp
+f ascvdi.ado
+f ascvdi.sthlp
+f ../e/example_ascvd.dta

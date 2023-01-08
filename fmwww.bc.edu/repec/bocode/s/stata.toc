@@ -326,6 +326,7 @@ p summtab module to compute summary statistics overall and/or across levels of a
 p sumscale module to generate summated scales
 p sumstats module to produce tables of summary statistics
 p sumup module to compute summary statistics by group
+p sunburst module for (half) sunburst plots
 p supclust module to build superordinate categories
 p supercompress module to to run compress on all datasets in a folder and its subfolders
 p supsmooth module to perform Friedman's super smoother
