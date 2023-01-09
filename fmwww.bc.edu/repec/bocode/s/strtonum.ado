@@ -1,6 +1,7 @@
-*! Part of package matrixtools v. 0.28
+*! Part of package matrixtools v. 0.29
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
 *! 2021-01-29 option label and extend added
+* TODO Sometimes unnecessary value labels are added/inherited
 
 program define strtonum
 	version 12.1

@@ -1,5 +1,6 @@
-*!version 0.2.6  2021-05-24 > Bug in basetable_parser(): basetable::n_pct_by_value() not called when value ends on r. Thanks to Kasper Norman
-*!version 0.2.6  2021-04-15 > NoTotal and NoPvalue now also for toxl
+*! version 0.2.8  2022-04-20 > Option noTOPcount now only for first row
+* version 0.2.6  2021-05-24 > Bug in basetable_parser(): basetable::n_pct_by_value() not called when value ends on r. Thanks to Kasper Norman
+* version 0.2.6  2021-04-15 > NoTotal and NoPvalue now also for toxl
 * version 0.2.4 2020-10-08 > Bug in basetable::n_pct_by_value() fixed
 * version 0.2.4 2020-10-07 > Fisher's exact test as option
 * version 0.2.3 2019-09-13 > 95% ci for geometric mean is added (gci)
@@ -23,7 +24,7 @@ mata:
 	class basetable {
 		private: 
 			string scalar colvar, nfmt, pctfmt, pvfmt, categorical_report 
-			real scalar valuewidth, pv_on_top, no_small, missing, smooth_width, exact, topcount
+			real scalar valuewidth, pv_on_top, no_small, missing, smooth_width, exact
 			string matrix n_pct_by_base()
 			real matrix summarize_by()
 			string scalar missings()
@@ -48,11 +49,20 @@ mata:
 												this.str_in, 95, 0, 0, 0, 0, 0, 1)
 			counts = lm.values()
 			if ( counts[1] < this.no_small & counts[1]  > 0 ) {
-				txt = sprintf(". / %1.0f (.)", counts[1] + counts[2]) 
+				/*
+                txt = sprintf(". / %1.0f (.)", counts[1] + counts[2]) 
+                */
+                txt = sprintf(". / %s (.)", strofreal(counts[1] + counts[2], this.nfmt)) 
 			} else {
+                /*
 				txt = sprintf("%1.0f / %1.0f (%4.2f)", counts[2], 
 							counts[1] + counts[2], 
 							counts[2] / (counts[1] + counts[2]) * 100)
+                */
+				txt = sprintf("%s / %s (%s)", 
+                            strofreal(counts[2], this.nfmt), 
+							strofreal(counts[1] + counts[2], this.nfmt), 
+							strofreal(counts[2] / (counts[1] + counts[2]) * 100, this.pctfmt))
 			}
 			return(txt)
 		}
@@ -79,9 +89,8 @@ mata:
 									real scalar missing,
 									| string scalar str_if, 
 									string scalar str_in,
-                                    real scalar exact,
-									string scalar categorical_report,
-                                    real scalar topcount
+                  real scalar exact,
+									string scalar categorical_report
 									)
 		{
 			string scalar col_by
@@ -94,7 +103,7 @@ mata:
 			col_by = st_varlabel(this.colvar)
 			if ( col_by == "" ) col_by = this.colvar
 			if ( col_by != "  " ) col_by = sprintf("Columns by: %s", col_by)
-            else col_by = "Variables"
+      else col_by = "Variables"
 			this.output = col_by, nhb_sae_labelsof(colvar), "Total", "P-value"
 			this.valuewidth = cols(this.output) - 2
 			this.no_small = no_small
@@ -104,9 +113,8 @@ mata:
 			this.str_if_base = str_if
 			this.str_if = str_if
 			this.str_in = str_in
-            this.exact = exact < . ? exact : 0
+      this.exact = exact < . ? exact : 0
 			this.categorical_report = rowsum(categorical_report :== ("n", "p")) ? categorical_report : ""
-            this.topcount = topcount
 		}
 
 		void basetable::log_print(	|string scalar style,
@@ -120,16 +128,22 @@ mata:
 									real scalar show_total)
 		{
 			real rowvector slct_columns
+      real colvector slct
 			string scalar str_regex
 			string colvector lines
+      string matrix to_print
 			
 			if ( show_total ) str_regex = "^Total$"
 			if ( show_pv ) str_regex = "^P-value$"
 			if ( show_total & show_pv ) str_regex = "^Total$|^P-value$"
 			
 			slct_columns = this.regex_select_columns(str_regex)
-
-			lines = nhb_mt_mata_string_matrix_styled(this.output[., slct_columns], 
+      to_print = this.output
+      slct = select(1::rows(to_print), strmatch(to_print[.,1], "  *"))
+      if (style == "md" & slct != J(0, 1, .) ) {
+        to_print[slct,1] = "*" :+ substr(to_print[slct,1],3,.) :+ "*"
+      }
+			lines = nhb_mt_mata_string_matrix_styled(to_print[., slct_columns], 
 				style, ("-", ""), 1, caption, top, undertop, bottom, filename, replace)
 		}
 
@@ -169,7 +183,7 @@ mata:
 						+ strofreal(prp, this.pctfmt) + J(1, C, ")"), "")
 			}
 			row = this.missing ? row, this.missings(this.colvar) : row
-			if ( this.topcount ) this.output =  this.output \ row 
+      this.output =  this.output \ row
 		}
 
 		string matrix basetable::n_pct_by_base( string scalar varname, 
@@ -721,7 +735,7 @@ mata:
 												real scalar missing,
 												string scalar str_if, 
 												string scalar str_in,
-                                                real scalar exact,
+                        real scalar exact,
 												string scalar categorical_report,
 												real scalar topcount
 												)
@@ -748,9 +762,9 @@ mata:
         }
         
 		if ( _st_varindex(lst[1]) >= . ) _error(sprintf(`"First part in arguments "%s" must be variable."', lst[1]))
-		tbl.setup_tbl(lst[1], nfmt, pctfmt, pvfmt, pv_on_top, no_small, ///
-			smooth_width, missing, str_if, str_in, exact, categorical_report, topcount)
-		tbl.n_pct()
+    tbl.setup_tbl(lst[1], nfmt, pctfmt, pvfmt, pv_on_top, no_small, ///
+      smooth_width, missing, str_if, str_in, exact, categorical_report)
+		if ( topcount ) tbl.n_pct()
 		for(r=2;r<=cols(lst);r++){
 			if ( regexm(lst[r], "^\[(.*)\]") ) {			// header, handles local if
 				arguments = strtrim(tokensplit(regexs(1), ","))

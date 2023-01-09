@@ -1,7 +1,9 @@
-*! Part of package matrixtools v. 0.28
+*! Part of package matrixtools v. 0.29
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
 *! 2020-06-10 > frequency weights are now working
 
+* TODO: Return nx table (to integrate with regmat)
+* TODO: Oneway crossmat with by-option for varlist (to integrate with regmat) 
 * TODO crossmat option hide
 * TODO Tests (trend? comparison) for one variable tables
 

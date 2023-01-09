@@ -1,3 +1,6 @@
+*! Part of package matrixtools v. 0.29
+*! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
+
 program define _gmarktop
 	version 13
 	gettoken type 0 : 0

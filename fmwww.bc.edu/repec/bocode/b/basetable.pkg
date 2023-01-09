@@ -9,10 +9,10 @@ d KW: data management
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20210529
+d Distribution-Date: 20230108
 d
-d Author: Niels Henrik Bruun, Aarhus University
-d Support: email nhbr@@ph.au.dk
+d Author: Niels Henrik Bruun, Aalborg University Hospital
+d Support: email niels.henrik.bruun@@gmail.com
 d
 f basetable.ado
 f basetable.sthlp

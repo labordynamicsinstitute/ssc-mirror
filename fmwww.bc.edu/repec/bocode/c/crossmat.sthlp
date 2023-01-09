@@ -1,8 +1,5 @@
 {smcl}
 {* *! version 0.23}{...}
-{vieweralsosee "" "--"}{...}
-{vieweralsosee "Install command2" "ssc install command2"}{...}
-{vieweralsosee "Help command2 (if installed)" "help command2"}{...}
 {viewerjumpto "Syntax" "crossmat##syntax"}{...}
 {viewerjumpto "Description" "crossmat##description"}{...}
 {viewerjumpto "Examples" "crossmat##examples"}{...}

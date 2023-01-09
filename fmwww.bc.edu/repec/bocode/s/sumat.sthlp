@@ -46,37 +46,39 @@ Only if {opt row:by} and/or {opt col:by} is used{p_end}
 {synopt:{opt f:ull}}Get all summary rows even if they are empty. 
 Option only if {opt row:by} or {opt col:by} is set.
 Is set by default if both {opt row:by} and {opt col:by} is set{p_end}
-{synopt:{opt nol:abel}} Do not use variable labels and value labels as row and 
+{synopt:{opt nol:abel}}Do not use variable labels and value labels as row and 
 column eq and names{p_end}
 {synopt:{opt h:ide(integer)}}To use pseudo percentiles. 
 Pseudo percentiles are found by sorting the values and averaging a number of 
 values around each position. The averages are used to get percentiles
 Specify the non negative integer to average around. 
 Default is zero, i.e. use original values{p_end}
-{synopt:{opt v:erbose}} Show underlying Stata commands used. Sometimes only Mata 
+{synopt:{opt v:erbose}}Show underlying Stata commands used. Sometimes only Mata 
 code is used{p_end}
-{synopt:{opt tr:ansposed}} Transpose the returned matrix{p_end}
+{synopt:{opt tr:ansposed}}Transpose the returned matrix{p_end}
 {synoptline}
 {syntab:Matprint options}
-{synopt:{opt s:tyle(string)}} Style for output. One of the values {bf:smcl} (default), 
+{synopt:{opt s:tyle(string)}}Style for output. One of the values {bf:smcl} (default), 
 {bf:csv} (semicolon separated style), 
 {bf:latex or tex} (latex style),
 {bf:html} (html style) and
 {bf:md} (markdown style, experimental) 
 {p_end}
-{synopt:{opt d:ecimals(string)}} Matrix of integers specifying numbers of 
+{synopt:{opt d:ecimals(string)}}Matrix of integers specifying numbers of 
 decimals at cell level. If the matrix is smaller than the data matrix the right
 most column is copied to get the same number of columns. 
 And likewise for the bottom row{p_end}
-{synopt:{opt ti:tle(string)}} Title/caption for the matrix output{p_end}
-{synopt:{opt to:p(string)}} String containing text prior to table content.
+{synopt:{opt ti:tle(string)}}Title/caption for the matrix output{p_end}
+{synopt:{opt to:p(string)}}String containing text prior to table content.
 Default is dependent of the value of the style option{p_end}
 {synopt:{opt u:ndertop(string)}} String containing text between header and table 
 content.
 Default is dependent of the value of the style option{p_end}
-{synopt:{opt b:ottom(string)}} String containing text after to table content.
+{synopt:{opt b:ottom(string)}}String containing text after to table content.
 Default is dependent of the value of the style option{p_end}
-{synopt:{opt r:eplace}} Delete an existing {help using:using} file before adding table{p_end}
+{synopt:{opt r:eplace}}Delete an existing {help using:using} file before adding table{p_end}
+{synopt:{opt noe:qstrip}}Do not remove duplicate successive roweq or coleq values{p_end}
+{synopt:{opt noz:ero}}Do not show zeros in output{p_end}
 {synopthdr:version 13 and up}
 {synopt:{opt toxl:(string)}}A string containing up to 5 values separated 
 	by a comma. The values are:{break}
@@ -190,10 +192,8 @@ in current directory:{p_end}
 
 {phang}{bf:Author:}{break}
  	Niels Henrik Bruun, {break}
-	Section for General Practice, {break}
-	Dept. Of Public Health, {break}
-	Aarhus University
+	Aalborg University Hospital
 {p_end}
 {phang}{bf:Support:} {break}
-	{browse "mailto:niels.henrik.bruun@gmail.com":nhbr@ph.au.dk}
+	{browse "mailto:niels.henrik.bruun@gmail.com":niels.henrik.bruun@gmail.com}
 {p_end}

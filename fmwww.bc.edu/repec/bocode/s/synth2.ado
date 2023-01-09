@@ -1,5 +1,5 @@
-*! synth2 1.0.0 Guanpeng Yan and Qiang Chen 12/17/2022
-capture program drop synth2
+*! synth2 2.0.0 Guanpeng Yan and Qiang Chen 01/06/2023
+
 program synth2, eclass sortpreserve
 	version 16
 	preserve
@@ -25,6 +25,7 @@ program synth2, eclass sortpreserve
 		placebo(string) ///
 		loo ///
 		frame(string) ///
+		SAVEGraph(string) ///
 		noFIGure ///
 		]
 	local panelVar "`r(panelvar)'"
@@ -304,8 +305,15 @@ program synth2, eclass sortpreserve
 		}
 	}
 	/* Display graphs */
-	if "`figure'" == "" foreach graph in `graphlist'{
-		capture graph display `graph'
+	if "`figure'" == "" {
+		if "`savegraph'" == "" foreach graph in `graphlist'{
+			capture graph display `graph'
+		}
+		else{
+			di
+			ereturn local graphlist "`graphlist'"
+			synth2_savegraph `savegraph'
+		}
 	}
 	ereturn clear
 	capture ereturn matrix pval = pval
@@ -313,6 +321,7 @@ program synth2, eclass sortpreserve
 	ereturn matrix bal = balance
 	ereturn matrix U_wt= weight_unit
 	ereturn matrix V_wt = V_wt
+	capture ereturn local graph "`graphlist'"
 	ereturn local frame "`framename'"
 	ereturn local time_post "`time_post'"
 	ereturn local time_pre "`time_pre'"
@@ -339,7 +348,16 @@ program synth2, eclass sortpreserve
 	di _newline as txt "Finished."
 end
 
-capture program drop synth2_placebo
+program synth2_savegraph
+	version 16
+	preserve
+	syntax [anything], [asis replace]
+	foreach graph in `e(graphlist)'{
+		capture graph display `graph'
+		graph save `anything'_`graph', `asis' `replace' 
+	}
+end
+
 program synth2_placebo, eclass sortpreserve
 	version 16
 	preserve
@@ -524,7 +542,6 @@ program synth2_placebo, eclass sortpreserve
 end
 
 **# Balance
-capture program drop synth2_balance
 program synth2_balance
 	version 16
 	preserve
@@ -889,6 +906,7 @@ mata:
 		pvalM[indexRow, .] = pval
 	}
 end
+* 2.0.0 Enhance the functionality of saving graphs
 * 1.0.0 Address the compatibility issue of varabbreviation
 * 0.0.2 Adjust the input of numlist of covariates
 * 0.0.1 Fix the issue of parameter transfer in the placebo test

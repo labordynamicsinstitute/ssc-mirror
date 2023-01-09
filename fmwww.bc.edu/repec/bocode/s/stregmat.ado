@@ -19,8 +19,10 @@
 * 2018-12-03 > Fixed: keep b implies selecting se(b) BUG!
 * 2018-06-05 > Created
 
-program define regmat, rclass
+program define stregmat, rclass
 	version 12.1
+  
+  st_is 2 analysis
 
 	if `c(version)' >= 13 set prefix regmat
 
@@ -31,7 +33,6 @@ program define regmat, rclass
 	
 	local 0 `s(before)'
 	syntax [using], /*
-		*/Outcomes(varlist min=1) /*
 		*/Exposures(varlist min=1 fv) /*
 		*/[ /*
             */Adjustments(string asis) /*
@@ -57,7 +58,7 @@ program define regmat, rclass
             */noZero /*
             */toxl(passthru) /*
 		*/]
-
+s
 	if "`verbose'" != "" macro dir
 	
 	if `"`adjustments'"' == "" local adjustments  `""""'
@@ -108,15 +109,13 @@ program define regmat, rclass
 	local eform = ("`eform'" != "") // 2018-12-16
 	
 	mata: __regressions = J(0,length(tokens(`"`adjustments'"')),"")
-	foreach outcome in `outcomes' {
-		foreach exposure in `exposures' {
-			mata _row = J(1,0,"")
-			foreach adj in `adjustments' {
-				mata _row = _row, `"`_cmd' `outcome' `exposure' `adj' `s(if)' `s(in)' `__postcmd' `_options'"'
-			}
-			mata __regressions = __regressions \ _row
-		}
-	}
+  foreach exposure in `exposures' {
+    mata _row = J(1,0,"")
+    foreach adj in `adjustments' {
+      mata _row = _row, `"`_cmd' `outcome' `exposure' `adj' `s(if)' `s(in)' `__postcmd' `_options'"'
+    }
+    mata __regressions = __regressions \ _row
+  }
 	mata: __regmattbl = nhb_mt_run_regressions(__regressions, "`base'" == "", ///
   `eform', __showcode, __addquietly, `"`btext'"', __names)
     
@@ -129,6 +128,7 @@ program define regmat, rclass
 	}
 	mata: __regmattbl = nhb_mt_tolabels(__regmattbl, "`labels'" != "")
 	mata: __regmattbl = __regmattbl.regex_select(__str_slct, __keep, 1, 0)
+  mata: __regmattbl.row_equations("")
 	mata: __regmattbl.to_matrix("r(regmat)")
 
 	*** matprint ***************************************************************
@@ -161,10 +161,10 @@ mata
 		for(c=1;c<=C;c++) {
 			column.clear()
 			for(r=1;r<=R;r++) {
-				if ( regexm(tokens(regs[r,c])[3], "^(.+)\.(.+)$") ) {
+				if ( regexm(tokens(regs[r,c])[2], "^(.+)\.(.+)$") ) {
 					exposure = regexs(2)
 				} else {
-					exposure = tokens(regs[r,c])[3]
+					exposure = tokens(regs[r,c])[2]
 				}
 				rc = nhb_sae_logstatacode(regs[r,c], __showcode, __addquietly)
 				tmp = nhb_mc_post_ci_table(eform, st_numscalar("c(level)"))

@@ -1,6 +1,8 @@
-*! Part of package matrixtools v. 0.28
+*! Part of package matrixtools v. 0.29
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
-*! 2021-01-03 toxl added
+*! 2023-01-01 > Option nozero added
+*! 2022-12-23 > FIXED: lower value in idi is wrong: sysuse auto, clear; sumat price, stat(idi, p10 p90)
+*2021-01-03 > toxl added
 *2019-03-14 > Option transposed added
 *2017-10-09 > If only one variable is chosen, row names are set to row equations. And row euations are removed
 *2017-10-08 > Option COLby added
@@ -36,7 +38,9 @@ program define sumat, rclass
 			*/Undertop(passthru) /*
 			*/Bottom(passthru) /*
 			*/Replace /*
-            */toxl(passthru) /*
+			*/noEqstrip /*
+			*/noZero /*
+      */toxl(passthru) /*
 		*/]
 
 	if `hide' < 0 {
@@ -61,7 +65,8 @@ program define sumat, rclass
 	else mata: __sumat.transposed().to_matrix("r(sumat)")
 	
 	*** matprint ***************************************************************
-	matprint r(sumat) `using',	`style' `decimals' `title' `top' `undertop' `bottom' `replace' `toxl'
+	matprint r(sumat) `using',	`style' `decimals' `title' `top' `undertop' ///
+    `bottom' `replace' `eqstrip' `zero' `toxl'
 	****************************************************************************
 	capture drop __if_in
 	capture mata: mata drop __add_quietly

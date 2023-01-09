@@ -1,12 +1,14 @@
-*! Part of package matrixtools v. 0.28
+*! Part of package matrixtools v. 0.29
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
-*! 2021-01-03 toxl added
-* 2020-03-05 empty rownames not printet
-* 2020-03-05 option no rowlabels
-* 2019-06-11 Caption/Title added
-* 2018-09-09 Option for removing row header from print
-* 2017-01-06 Rewritten 
+*! 2023-01-01 > Option nozero added
+* 2021-01-03 > toxl added
+* 2020-03-05 > empty rownames not printet
+* 2020-03-05 > option no rowlabels
+* 2019-06-11 > Caption/Title added
+* 2018-09-09 > Option for removing row header from print
+* 2017-01-06 > Rewritten 
 * TODO: To word?
+* TODO: hide zeros
 program define matprint
 	version 12.1
 	syntax anything(name=matrixexpression) [using/]/*
@@ -21,9 +23,10 @@ program define matprint
 			*/Bottom(string) /*
 			*/Replace /*
 			*/noEqstrip /*
+			*/noZero /*
 			*/Hidesmall(integer 0) /*
 			*/noCleanupmata /*
-            */toxl(passthru) /*
+      */toxl(passthru) /*
 		*/]
 
 	if "`title'" != "" local caption `"`title'"'
@@ -37,6 +40,7 @@ program define matprint
 	// Returned lines lines are accessible from Mata in variable __mp_lm
 	mata: __mp_lm = nhb_mt_labelmatrix()
 	mata: __mp_lm.from_matrix("`matrixname'")
+  if `"`zero'"' != "" mata: __mp_lm.values(__mp_lm.values() :/ (__mp_lm.values() :!= 0))
 	if "`rowheaders'" != "" {
 		mata: __mp_lm.row_equations("")
 		mata: __mp_lm.row_names("")

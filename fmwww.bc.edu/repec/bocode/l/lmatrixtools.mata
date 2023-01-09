@@ -1,9 +1,16 @@
-*! Part of package matrixtools v. 0.28
+*! Part of package matrixtools v. 0.29
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
+*!2022-12-23 > Bug in nhb_sae_summary_row() for idi
+*!2022-12-29 > nhb_mt_tolabels() added
+*!2022-12-29 > nhb_mt_run_regressions() added
+*!2022-09-01 > nhb_mc_post_ci_table() set to handle t-dist fpr p-value
+*!2022-04-19 > fixed minor bug for caption in cl_mt_mata_string_matrix_styled 
+*!2021-07-06 > nhb_mc_post_ci_table() modified, if and following line in one, base ci set to missing
 *!2021-05-10 > nhb_mt_labelmatrix::append() handles being empty at start
 *!2021-05-10 > nhb_mt_labelmatrix::add_sideways() handles being empty at start
 *!2021-03-01 > function nhb_muf_xlcolumn_nbr() added
-*!2021-02-27 > class nhb_mt_onewai() added
+*2021-02-27 > class nhb_mt_onewai() added
+*2021-11-10 > nhb_sae_str2varlabels() added
 *2021-02-17 > nhb_mt_chi2tabulate::set() making error for string variables
 *2021-01-29 > nhb_sae_outliers() added
 *2020-12-27 > cl_mt_mata_string_matrix_styled::to_html_lines() modified
@@ -1237,7 +1244,7 @@ end
 mata:
 	class cl_mt_mata_string_matrix_styled
 	{
-    	// properties
+    // properties
 		private:
 			void new(), reset()
 			real scalar headerheight
@@ -1245,24 +1252,24 @@ mata:
 			string scalar caption, style
 			string colvector top, undertop, bottom
 		public:
-            string_matrix()
+      string_matrix()
 			justify(), headerheight(), style()
 			caption(), top(), undertop(), bottom()
-        // methods
+    // methods
 		private:
 			string colvector matrix_to_colvector()
-            string matrix justified_matrix()
+      string matrix justified_matrix()
 			string colvector to_smcl_lines(), to_csv_lines(), to_latex_lines(), to_html_lines(), to_md_lines()
 		public:
-            string colvector styled_lines()
+      string colvector styled_lines()
 			void print()
 	}
 
 		void cl_mt_mata_string_matrix_styled::new()
 		{
 			this.reset()
-            this.style = ""
-            this.string_matrix = J(0, 0, "")
+      this.style = ""
+      this.string_matrix = J(0, 0, "")
 		}
 
 		void cl_mt_mata_string_matrix_styled::reset()
@@ -1325,14 +1332,14 @@ mata:
 		{
         	//When style is set, all other properties are reset
 			if ( style != "" ) {
-                if ( ! any(style :== ("smcl", "csv", "html", "htm", "latex", "tex", "md")) ) {
-                    printf(`"{error:The value of "style" must be one of smcl, csv, html, latex or tex, or md. Not %s}\n"', style)
-                    printf(`"{error:"style" is set to smcl}\n"')
-                    this.style = "smcl"
-                }
-            	this.style = style
-                this.reset()
-                if ( headerheight != . ) this.headerheight(headerheight)
+        if ( ! any(style :== ("smcl", "csv", "html", "htm", "latex", "tex", "md")) ) {
+            printf(`"{error:The value of "style" must be one of smcl, csv, html, latex or tex, or md. Not %s}\n"', style)
+            printf(`"{error:"style" is set to smcl}\n"')
+            this.style = "smcl"
+        }
+        this.style = style
+        this.reset()
+        if ( headerheight != . ) this.headerheight(headerheight)
 			} else return(this.style)
 		}
 		
@@ -1365,43 +1372,44 @@ mata:
 			real scalar C, R, r, c
 			string matrix fmt, justified, strmat
 			
-            strmat = this.string_matrix()
-            if ( columnwidth == J(1,0,.) ) columnwidth = colmax(strlen(strmat))
-            
-            R = rows(strmat)
-            C = cols(strmat)
-            columnwidth = nhb_mt_resize_matrix(columnwidth, R, C)
-            this.justify = nhb_mt_resize_matrix(justify, R, C)
-            fmt = "%" :+ this.justify :+ strofreal(columnwidth) :+ (stataversion() > 1400 ? "us" : "s")
-            justified = J(R, C, "")
-            for(c=1; c <= C; c++){
-                for(r=1; r <= R; r++){
-                    justified[r,c] = sprintf(fmt[r,c], strmat[r,c])
-                }
-            }
-            return(justified)
+      strmat = this.string_matrix()
+      if ( columnwidth == J(1,0,.) ) columnwidth = colmax(strlen(strmat))
+      
+      R = rows(strmat)
+      C = cols(strmat)
+      columnwidth = nhb_mt_resize_matrix(columnwidth, R, C)
+      this.justify = nhb_mt_resize_matrix(justify, R, C)
+      fmt = "%" :+ this.justify :+ strofreal(columnwidth) :+ (stataversion() > 1400 ? "us" : "s")
+      justified = J(R, C, "")
+      for(c=1; c <= C; c++){
+          for(r=1; r <= R; r++){
+              justified[r,c] = sprintf(fmt[r,c], strmat[r,c])
+          }
+      }
+      return(justified)
 		}
 		
 		string colvector cl_mt_mata_string_matrix_styled::to_smcl_lines()
 		{
-			real scalar C
-			real rowvector cw
-			
-			C = cols(this.justified_matrix())
-			cw = strlen(this.justified_matrix()[1,.])
-			if ( this.top() == J(0,1,"") ) this.top( (sum(cw[1..C] :+ 2) - 2) * "{c -}" )
-			if ( this.caption() != "" ) this.top( sprintf("{bf:%s}:", this.caption()) \ this.top() )
-			if ( this.undertop() == J(0,1,"") ) this.undertop( (sum(cw[1..C] :+ 2) - 2) * "{c -}" )
-			if ( this.bottom() == J(0,1,"") ) this.bottom( (sum(cw[1..C] :+ 2) - 2) * "{c -}" )
-			return(this.matrix_to_colvector(this.justified_matrix(), "", "  ", ""))
+			real scalar R, hh
+      string colvector top, undertop, bottom, lines
+
+      lines = this.matrix_to_colvector(this.justified_matrix(), "", "  ", "")
+			if ( this.top() == J(0,1,"") ) top = strlen(lines[1]) * "{c -}"
+			if ( this.caption() != "" ) top = sprintf("{bf:%s}:", this.caption()) \ top
+			if ( this.undertop() == J(0,1,"") ) undertop = strlen(lines[1]) * "{c -}"
+			if ( this.bottom() == J(0,1,"") ) bottom = strlen(lines[1]) * "{c -}"
+      R = rows(lines)
+      hh = this.headerheight()
+			if ( undertop != "" & hh ) lines = lines[1..hh] \ undertop \ lines[hh+1..R]
+			if ( top != "" ) lines = top \ lines
+			if ( bottom != "" ) lines = lines \ bottom
+      return(lines)
 		}
 
 		string colvector cl_mt_mata_string_matrix_styled::to_csv_lines(|string scalar separator)
 		{
-			this.top("")
-			this.undertop("")
-			this.bottom("")
-            if ( separator == "" ) separator = ";"
+      if ( separator == "" ) separator = ";"
 			return(this.matrix_to_colvector(this.justified_matrix(), "", separator, ""))
 		}
 
@@ -1409,13 +1417,13 @@ mata:
 		{
 			// http://texblog.net/latex-archive/uncategorized/symbols/
 			// backslash \ and ampersand & not included due to tables
-            //DONE: headerheight
-            //TODO: two blanks indention replaced with \quad 
-            real scalar r
-			string colvector lines
+      //DONE: headerheight
+      //TODO: two blanks indention replaced with \quad 
+      real scalar r, R, hh
+			string colvector top, undertop, bottom, lines
 			string matrix justify, special_chars, strmat
             
-            strmat = this.justified_matrix()
+      strmat = this.justified_matrix()
 
 			special_chars = "#", "$", "%", "_", "{", "}", "^"
 			special_chars = special_chars', "\" :+ special_chars'
@@ -1426,144 +1434,165 @@ mata:
 				lines = subinstr(lines, special_chars[r,1], special_chars[r,2])
 			}
 
-            if ( this.top() == J(0,1,"") ) {
-                this.top( "\begin{table}[h]" \ "\centering" )
-                if ( this.caption() != "" ) this.top( this.top() \ sprintf("\caption{%s}", this.caption()) )
-                justify = nhb_mt_resize_matrix(this.justify(), 1, cols(strmat))
-                justify = editvalue(justify, "", "r")
-                justify = editvalue(justify, "-", "l")
-                justify = editvalue(justify, "~", "c")
-                justify =  this.matrix_to_colvector(justify, "", "", "")
-                this.top( this.top() \ sprintf("\begin{tabular}{%s}", justify) \ "\hline" \ "\hline" )
-            }
-			if ( this.undertop() == J(0,1,"") ) this.undertop( "\hline" )
-			if ( this.bottom() == J(0,1,"") ) this.bottom( "\hline" \ "\hline" \ "\end{tabular}" \ "\end{table}" )
+      if ( this.top() == J(0,1,"") ) {
+          top = "\begin{table}[h]" \ "\centering"
+          if ( this.caption() != "" ) top = top \ sprintf("\caption{%s}", this.caption())
+          justify = nhb_mt_resize_matrix(this.justify(), 1, cols(strmat))
+          justify = editvalue(justify, "", "r")
+          justify = editvalue(justify, "-", "l")
+          justify = editvalue(justify, "~", "c")
+          justify =  this.matrix_to_colvector(justify, "", "", "")
+          top = top \ sprintf("\begin{tabular}{%s}", justify) \ "\hline" \ "\hline" 
+      }
+			if ( this.undertop() == J(0,1,"") ) undertop = "\hline"
+			if ( this.bottom() == J(0,1,"") ) bottom = "\hline" \ "\hline" \ "\end{tabular}" \ "\end{table}"
+      R = rows(lines)
+      hh = this.headerheight()
+			if ( undertop != "" & hh ) lines = lines[1..hh] \ undertop \ lines[hh+1..R]
+			if ( top != "" ) lines = top \ lines
+			if ( bottom != "" ) lines = lines \ bottom
 			return(lines)
 		}
 
 		string colvector cl_mt_mata_string_matrix_styled::to_html_lines()
 		{
-            //DONE: headerheight
-            real scalar r, c, R, C, adjust
-            string scalar id, htxt
-			string colvector style, lines
+      //DONE: headerheight
+      real scalar r, c, R, C, hh, adjust
+      string scalar id, htxt
+			string colvector style, top, undertop, bottom, lines
 			string matrix justify, strmat
             
-            strmat = this.justified_matrix()
-            R = rows(strmat)
-            C = cols(strmat)
-            justify = nhb_mt_resize_matrix(this.justify(), R, C)
-            
-            id = "tbl" + strofreal(
-                    date(c("current_date"), "DMY") * 10e7 
-                    + clock(c("current_time"), "hms") 
-                    + hash1(strmat) 
-                    + hash1(this.caption)
-                    , "%18.0f")
-            style = J(R, 1, "")
-            for(r=1;r<=R;r++){
-                if ( r <= this.headerheight() ) {
-                    htxt = "tbody"
-                    adjust = 0
-                } else {
-                    htxt = "tbody"
-                    adjust = this.headerheight()
-                }
-                for(c=1;c<=C;c++){
-                    if ( justify[r,c] == "" ) {
-                        style[r] = style[r] + sprintf(`" #%s %s>tr:nth-child(%f)>td:nth-child(%f){text-align: right;}"',
-                                                id, htxt, r - adjust, c)
-                    } else if ( justify[r,c] == "-" ) {
-                        style[r] = style[r] + sprintf(`" #%s %s>tr:nth-child(%f)>td:nth-child(%f){text-align: left;}"', 
-                                                id, htxt, r - adjust, c)
-                    } else if ( justify[r,c] == "~" ) {
-                        style[r] = style[r] + sprintf(`" #%s %s>tr:nth-child(%f)>td:nth-child(%f){text-align: center;}"', 
-                                                id, htxt, r - adjust, c)
-                    }
-                }
-            }
-			if ( this.headerheight() ) style[1..this.headerheight()] = subinstr(style[1..this.headerheight()], "td", "th")
+      hh = this.headerheight()
+      strmat = this.justified_matrix()
+      R = rows(strmat)
+      C = cols(strmat)
+      justify = nhb_mt_resize_matrix(this.justify(), R, C)
+      
+      id = "tbl" + strofreal(
+              date(c("current_date"), "DMY") * 10e7 
+              + clock(c("current_time"), "hms") 
+              + hash1(strmat) 
+              + hash1(this.caption)
+              , "%18.0f")
+      style = J(R, 1, "")
+      for(r=1;r<=R;r++){
+          if ( r <= hh ) {
+              htxt = "tbody"
+              adjust = 0
+          } else {
+              htxt = "tbody"
+              adjust = hh
+          }
+          for(c=1;c<=C;c++){
+              if ( justify[r,c] == "" ) {
+                  style[r] = style[r] + sprintf(`" #%s %s>tr:nth-child(%f)>td:nth-child(%f){text-align: right;}"',
+                                          id, htxt, r - adjust, c)
+              } else if ( justify[r,c] == "-" ) {
+                  style[r] = style[r] + sprintf(`" #%s %s>tr:nth-child(%f)>td:nth-child(%f){text-align: left;}"', 
+                                          id, htxt, r - adjust, c)
+              } else if ( justify[r,c] == "~" ) {
+                  style[r] = style[r] + sprintf(`" #%s %s>tr:nth-child(%f)>td:nth-child(%f){text-align: center;}"', 
+                                          id, htxt, r - adjust, c)
+              }
+          }
+      }
+			if ( hh ) style[1..hh] = subinstr(style[1..hh], "td", "th")
             style = `"<style>"' \
                         style \
                         sprintf(`"#%s {width: 95%%; margin-left: auto; margin-right: auto;}"', id) \ 
                         sprintf(`"#%s tr:last-child>th{border-bottom: 2px solid black;}"', id) \ 
                         `"</style>"'
-            if ( this.headerheight() ) { 		
-                if ( this.top() == J(0,1,"") ) this.top( style \ sprintf(`"<table id=%s width="95%%">"', id) \ `"<thead>"' )
-                if ( this.undertop() == J(0,1,"") ) this.undertop( `"</thead>"' \ `"<tbody>"' )
+            if ( hh ) { 		
+                if ( this.top() == J(0,1,"") ) top = style \ sprintf(`"<table id=%s width="95%%">"', id) \ `"<thead>"'
+                if ( this.undertop() == J(0,1,"") ) undertop = `"</thead>"' \ `"<tbody>"'
             } else {
-                if ( this.top() == J(0,1,"") ) this.top( style \ sprintf(`"<table id=%s width="95%%">"', id)  \ `"<tbody>"')
+                if ( this.top() == J(0,1,"") ) top = style \ sprintf(`"<table id=%s width="95%%">"', id)  \ `"<tbody>"'
             }
-			if (this.caption() != "" ) this.top( this.top() \ sprintf("<caption>%s</caption>", this.caption()) )
-			if ( this.bottom() == J(0,1,"") ) this.bottom( `"</tbody>"' \ "</table>" )
+			if (this.caption() != "" ) top = top \ sprintf("<caption>%s</caption>", this.caption())
+			if ( this.bottom() == J(0,1,"") ) bottom = `"</tbody>"' \ "</table>" 
 
-			lines = this.matrix_to_colvector(this.justified_matrix(), 
-                "<tr><td>", "</td><td>", "</td></tr>")
-            lines = regexr(lines, "^<tr><td>(  )", "<tr><td>&nbsp;&nbsp; ")
-			if ( this.headerheight() ) lines[1..this.headerheight()] = subinstr(lines[1..this.headerheight()], "td>", "th>")
+			lines = this.matrix_to_colvector(strmat, "<tr><td>", "</td><td>", "</td></tr>")
+      lines = regexr(lines, "<tr><td>  ", "<tr><td>&nbsp;&nbsp; ")
+			if ( hh ) lines[1..hh] = subinstr(lines[1..hh], "td>", "th>")
+      //R = rows(lines)
+      hh = this.headerheight()
+			if ( undertop != "" & hh ) lines = lines[1..hh] \ undertop \ lines[hh+1..R]
+			if ( top != "" ) lines = top \ lines
+			if ( bottom != "" ) lines = lines \ bottom
 			return(lines)
 		}
 
 		string colvector cl_mt_mata_string_matrix_styled::to_md_lines()
 		{
-			real scalar r, c, R, C
-            real rowvector cw
-            string rowvector header
-			string colvector lines, tmp
+			real scalar r, c, R, C, hh, hh2
+      real rowvector cw
+      string scalar innerline, outerline
+      string rowvector header
+			string colvector lines, top, undertop, bottom, tmp
 			string matrix M, original
 			
+      original = this.string_matrix()
 			M = this.string_matrix()
-            original = this.string_matrix()
 			R = rows(M)
 			C = cols(M)
 		
-			if ( this.headerheight() == 2 ) {	// Q&D: md do not show/handle coleq
-                header = J(1,C,"")
-                for(c=1;c<=C;c++) {
-                    header[c] = M[1,c] != "" ? M[1,c] :+ ": " :+ M[2,c] : M[2,c]
-                }
+			if ( hh2 = (this.headerheight() == 2) ) {	// Q&D: md do not show/handle coleq
+        header = J(1,C,"")
+        for(c=1;c<=C;c++) {
+            header[c] = M[1,c] != "" ? M[1,c] :+ ": " :+ M[2,c] : M[2,c]
+        }
 				this.headerheight(1)
 				M = M[2..R, .]
 				R = R - 1
-                M[1,.] = header
+        M[1,.] = header
 			}
-            this.string_matrix(M)
-            M = this.justified_matrix(J(1,0,.))
-            cw = strlen(M[1,.])
+      this.string_matrix(M)
+      M = this.justified_matrix(J(1,0,.))
+      cw = strlen(M[1,.])
 			// Left align strip columns
 			M = nhb_mt_resize_matrix(nhb_sae_str_mult_matrix("  ", this.justify() :== ""), R, C) :+ M
 			M = M :+ nhb_mt_resize_matrix(nhb_sae_str_mult_matrix("  ", this.justify() :== "-"), R, C)
 
 			lines = this.matrix_to_colvector(M, "", 4*" ", "")
 			tmp = lines[1]
-            if ( !this.headerheight() ) tmp = tmp \ "" 
+      if ( !this.headerheight() ) tmp = tmp \ "" 
 			for(r=2;r<=R;r++) {
 				tmp = tmp \ lines[r] 
 				if ( r < R ) tmp = tmp \ ""
 			}
-            this.string_matrix(original)
 
 			lines = tmp
+      innerline = "" \ this.matrix_to_colvector((cw :+ 2) :* "-", "", 4*" ", "")
+      outerline = "" \ strlen(lines[1]) * "-"
 			if ( this.top() == J(0,1,"") ) {
-            	if (this.headerheight() ) this.top( "" \ strlen(lines[1]) * "-" )
-                else this.top( "" \ this.matrix_to_colvector((cw :+ 2) :* "-", "", 4*" ", "") )
-            }
-			if ( this.undertop() == J(0,1,"") ) this.undertop( this.matrix_to_colvector((cw :+ 2) :* "-", "", 4*" ", "") )
+          if (this.headerheight() ) top = outerline
+          else top = innerline
+      }
+			if ( this.undertop() == J(0,1,"") ) undertop = innerline
 			if ( this.bottom() == J(0,1,"") ) {
-            	if (this.headerheight() ) this.bottom( "" \ strlen(lines[1]) * "-" )
-                else this.bottom( "" \ this.matrix_to_colvector((cw :+ 2) :* "-", "", 4*" ", "") )
-            }
-			if ( this.caption() != "" ) this.bottom( this.bottom() \ sprintf("Table: %s\n", this.caption()) )
-            this.string_matrix(original)
+          if (this.headerheight() ) bottom = outerline
+          else bottom = innerline
+      }
+			if ( this.caption() != "" ) bottom = bottom \ sprintf("Table: %s\n", this.caption())
+      R = rows(lines)
+      hh = this.headerheight()
+			if ( undertop != "" & hh ) lines = lines[1..hh] \ undertop \ lines[hh+1..R]
+			if ( top != "" ) lines = top \ lines
+			if ( bottom != "" ) lines = lines \ bottom
+      
+      if ( hh2 ) {
+        this.string_matrix(original)
+        this.headerheight(2)        
+      }
 			return(lines)
 		}
 
 		void cl_mt_mata_string_matrix_styled::print()
 		{
 			real scalar r
-            string scalar lines
-			
-            lines = this.styled_lines()
+      string scalar lines
+
+      lines = this.styled_lines()
 			for(r=1;r<=rows(lines);r++){
 				printf("%s\n", lines[r])
 			}
@@ -1585,14 +1614,7 @@ mata:
 			} else if ( this.style() == "md" ) {
 				lines = this.to_md_lines()
 			} else lines = J(0,1,"")
-			R = rows(lines)
-            hh = this.headerheight()
-			if ( this.undertop != "" & hh ) {
-				lines = lines[1..hh] \ this.undertop \ lines[hh+1..R]
-			}
-			if ( this.top != "" ) lines = top \ lines
-			if ( this.bottom != "" ) lines = lines \ this.bottom
-            return(lines)
+      return(lines)
 		}
 
 	
@@ -1669,16 +1691,59 @@ mata:
 		class cl_mt_mata_string_matrix_styled scalar sms
 		
 		sms.string_matrix(M)
-        sms.style(style)
-        sms.justify(justify)
+    sms.style(style)
+    sms.justify(justify)
 		sms.headerheight(headerheight == . ? 1 : headerheight)
 		if (caption != `""') sms.caption(caption)
 		if (top != `""') sms.top(strtrim(top) != "" ? tokens(top)' : top)
 		if (undertop != `""') sms.undertop(strtrim(undertop) != "" ? tokens(undertop)' : undertop)
 		if (bottom != `""') sms.bottom(strtrim(bottom) != "" ? tokens(bottom)' : bottom)
-        if ( savefile != `""' ) nhb_msa_string_colvector_to_file(savefile, sms.styled_lines(), overwrite)
-        sms.print()
+    if ( savefile != `""' ) nhb_msa_string_colvector_to_file(savefile, sms.styled_lines(), overwrite)
+    sms.print()
 		return(sms)
+	}
+  
+   class nhb_mt_labelmatrix nhb_mt_tolabels(	
+     class nhb_mt_labelmatrix mat_tbl,
+    |real scalar uselbl,
+    real scalar userows
+    )
+	{
+		real scalar c, C
+		string scalar varnametxt, varvaluetxt
+		string colvector eq, nms
+
+		if ( userows) {
+			eq = mat_tbl.row_equations()
+			nms = mat_tbl.row_names()
+		} else {
+			eq = mat_tbl.column_equations()
+			nms = mat_tbl.column_names()
+		}
+		C = rows(eq)
+		if ( uselbl ) for(c=1;c<=C;c++) eq[c] = st_varlabel(eq[c])
+		for(c=1;c<=C;c++) {
+			if ( regexm(nms[c], "([0-9]+)b?\.(.+)$") ) {
+				if ( uselbl ) {
+					varnametxt = st_varlabel(regexs(2))
+					if ( st_varvaluelabel(regexs(2)) != "" ) {
+						varvaluetxt = nhb_sae_labelsof(regexs(2), 
+														strtoreal(regexs(1)))
+					} else {
+						varvaluetxt = regexs(1)
+					}
+				} else {
+					varnametxt = regexs(2)
+					varvaluetxt = regexs(1)
+				}
+				nms[c] = sprintf("%s (%s)", varnametxt, varvaluetxt)
+			} else {
+				if ( uselbl ) nms[c] = st_varlabel(nms[c])
+			}
+		}
+		mat_tbl.row_equations(eq)
+		mat_tbl.row_names(nms)
+		return(mat_tbl)
 	}
 end
 
@@ -1780,7 +1845,8 @@ mata:
 						} else if ( regexm(strtrim(strlower(stats[c])), "^[var|variance]$") ) {
 							values[c] = nhb_sae_num_scalar("r(Var)")
 						} else if ( regexm(strtrim(strlower(stats[c])), "^cv$") ) {
-							values[c] = nhb_sae_num_scalar("r(sd)") / nhb_sae_num_scalar("r(mean)")
+                            stats[c] = "CV(%)"
+							values[c] = nhb_sae_num_scalar("r(sd)") / nhb_sae_num_scalar("r(mean)") * 100
 						} else if ( regexm(strtrim(strlower(stats[c])), "^semean$") ) {
 							values[c] = nhb_sae_num_scalar("r(sd)") / sqrt(nhb_sae_num_scalar("r(N)"))
 						} else if ( regexm(strtrim(strlower(stats[c])), "^median$") ) {
@@ -1799,9 +1865,11 @@ mata:
 								c++
 								C++
 							}
-						} else if ( regexm(strtrim(strlower(stats[c])), "^idi$") ) {
-							stats[c] = "idi 10%"
+						} else if ( regexm(strtrim(strlower(stats[c])), "^idr$") ) {
 							values[c] = pct_tiles[90] - pct_tiles[10]
+            } else if ( regexm(strtrim(strlower(stats[c])), "^idi$") ) {
+							stats[c] = "idi 10%"
+							values[c] = pct_tiles[10]
 							if ( c == C ) {
 								stats = stats, "idi 90%"
 								values[c] = values, pct_tiles[90]
@@ -2152,39 +2220,62 @@ mata:
 	
 	string colvector nhb_sae_isnumvarvector(string colvector varnames)
 	{
-		real scalar r, R
-		real colvector slct
-		
-		R = rows(varnames)
-		slct = J (R,1,.)
-		for(r=1;r<=R;r++) slct[r] = st_isnumvar(varnames[r])
-		return(select(varnames, slct))
+    real scalar r, R
+    real colvector slct
+
+    R = rows(varnames)
+    slct = J (R,1,.)
+    for(r=1;r<=R;r++) slct[r] = st_isnumvar(varnames[r])
+    return(select(varnames, slct))
 	}
     
-    colvector nhb_sae_outliers(
-        /*
-            top outliers sorted descending by value counts (highest first)
-            bottom outliers sorted ascending by value counts (lowest first)
-        */
-        string scalar vn,
-        | real scalar slct,
-        string scalar str_if,
-        string scalar str_in
-        )
-    {
-        real scalar R
-    	real colvector values, uniqvalues
-        
-        if (slct >= . ) slct = 5
-        values = nhb_sae_variable_data(vn, str_if, str_in)
-        uniqvalues = select(uniqvalues=uniqrows(values), uniqvalues :< .)
-        R = rows(uniqvalues)
-        if (abs(slct) < R) {
-            count = rowsum(J(R, 1, values') :== uniqvalues)
-            if (slct > 0 ) return(sort((uniqvalues, count), 2)[R..(R-slct+1), 1])
-            else return(sort((uniqvalues, count), 2)[1..(-slct), 1])
-        } else return(.)
-    }    
+  colvector nhb_sae_outliers(
+      /*
+          top outliers sorted descending by value counts (highest first)
+          bottom outliers sorted ascending by value counts (lowest first)
+      */
+      string scalar vn,
+      | real scalar slct,
+      string scalar str_if,
+      string scalar str_in
+      )
+  {
+      real scalar R
+    real colvector values, uniqvalues
+      
+      if (slct >= . ) slct = 5
+      values = nhb_sae_variable_data(vn, str_if, str_in)
+      uniqvalues = select(uniqvalues=uniqrows(values), uniqvalues :< .)
+      R = rows(uniqvalues)
+      if (abs(slct) < R) {
+        count = rowsum(J(R, 1, values') :== uniqvalues)
+        if (slct > 0 ) return(sort((uniqvalues, count), 2)[R..(R-slct+1), 1])
+        else return(sort((uniqvalues, count), 2)[1..(-slct), 1])
+      } else return(.)
+  }
+    
+  string colvector nhb_sae_str2varlabels(string colvector nms, |string scalar out_tmplt)
+  {
+    real scalar c, C
+    string scalar varnametxt, varvaluetxt
+    string colvector lbls
+
+    if ( out_tmplt == "" ) out_tmplt = "%s[%s]"
+    C = rows(nms)
+    lbls = J(C,1,"")
+    for(c=1;c<=C;c++) {
+      if ( regexm(nms[c], "^([0-9]+)b?n?\.(.+)$") ) {
+      if ( _st_varindex(regexs(2)) < . ) {
+        varnametxt = st_varlabel(regexs(2))
+        if ( st_varvaluelabel(regexs(2)) != "" ) {
+          varvaluetxt = nhb_sae_labelsof(regexs(2),strtoreal(regexs(1)))
+        } else varvaluetxt = regexs(2)
+          lbls[c] = sprintf(out_tmplt, varnametxt, varvaluetxt)
+        }
+      } else lbls[c] = _st_varindex(nms[c]) < . ? st_varlabel(nms[c]) : "Not var."
+    }
+    return(lbls)
+  }
 end
 
 
@@ -2450,12 +2541,14 @@ mata:
 		b = st_matrix("e(b)")'
 		se_b = sqrt(diagonal(st_matrix("e(V)")))
 		test = b :/ se_b
-		if ( (df = nhb_sae_num_scalar("e(df_r)")) != . ) 
-		zt = invttail(df, cip)
-		else zt = invnormal(1-cip)
-		lb = b - zt :* se_b
-		ub = b + zt :* se_b
-		pv = 2 :* normal(-abs(b :/ se_b))
+    df = nhb_sae_num_scalar("e(df_r)")
+    zt = df == . ? invnormal(1-cip) : invttail(df, cip)
+		//if ( (df = nhb_sae_num_scalar("e(df_r)")) != . ) zt = invttail(df, cip)
+		//else zt = invnormal(1-cip)
+		se_b = se_b :/ (se_b :!= 0)
+		lb = (b - zt :* se_b) :/ (se_b :!= 0)
+		ub = (b + zt :* se_b) :/ (se_b :!= 0)
+		pv = df == . ? 2 :* normal(-abs(b :/ se_b)) : 2 :* ttail(df, abs(b :/ se_b))
 		if ( eform ) out.values( (exp((b, se_b, lb, ub)), pv) )
 		else out.values( (b, se_b, lb, ub, pv) )
 		out.row_equations(st_global("e(depvar)"))

@@ -18,7 +18,7 @@
 {marker syntax}{...}
 {title:Syntax}
 {p 8 17 2}
-{cmdab:matprint} matrixname [{help using}] [[{cmd:,} {it:options}]
+{cmdab:matprint} matrixname [{help using}] [{cmd:,} {it:options}]
 
 {synoptset 20 tabbed}{...}
 {synopthdr}
@@ -46,6 +46,7 @@ Default is dependent of the value of the style option{p_end}
 Default is dependent of the value of the style option{p_end}
 {synopt:{opt r:eplace}}Delete an existing {help using:using} file before adding table{p_end}
 {synopt:{opt noe:qstrip}}Do not remove duplicate successive roweq or coleq values{p_end}
+{synopt:{opt noz:ero}}Do not show zeros in output{p_end}
 {synopt:{opt h:idesmall(integer)}}If set hide all values below the set value.
 Default is the value 0, ie no hidding{p_end}
 {synopt:{opt noc:leanmata}}For debugging. Do not delete Mata values and instances{p_end}
@@ -90,6 +91,10 @@ matching the size of the data matrix is used.
 {pstd}
 {cmd:matprint} has the concept of styles (for smcl, html, tex/latex, md for 
 markdown and csv) and a simple setting of decimals.
+
+{pstd}
+{cmd:matprint} can be used to export the content to Excel and saved in named 
+sheets using the option {opt toxl:}.
 
 {pstd}
 {cmd:matprint} is highly integrated with {help log2markup:log2markup} such that

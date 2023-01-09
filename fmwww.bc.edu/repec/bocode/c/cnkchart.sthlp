@@ -16,7 +16,7 @@
 {marker description}{...}
 {title:Description}
 
-{pstd}{it:code} is a stock code or index code to be draw. For the code, there will be a Candlestick Chart as an output containing containing the trading information for that stock.{p_end}
+{pstd}{it:code} is a stock code or index code to be draw. For the code, there will be a Candlestick Chart as an output containing the trading information for that stock.{p_end}
 
 {marker Option}{...}
 {title:Option}

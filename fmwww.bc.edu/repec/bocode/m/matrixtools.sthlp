@@ -3,13 +3,19 @@
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Install log2markup" "ssc install log2markup"}{...}
 {vieweralsosee "Help log2markup (if installed)" "help log2markup"}{...}
+{vieweralsosee "" "--"}{...}
+{vieweralsosee "Help confmat" "help confmat"}{...}
 {vieweralsosee "Help crossmat" "help crossmat"}{...}
 {vieweralsosee "Help dummynizer" "help dummynizer"}{...}
+{vieweralsosee "Help filaby" "help filaby"}{...}
+{vieweralsosee "Help marktop" "help marktop"}{...}
 {vieweralsosee "Help matprint" "help matprint"}{...}
 {vieweralsosee "Help mat2xl" "help matprint"}{...}
 {vieweralsosee "Help matrix2stata" "help matrix2stata"}{...}
-{vieweralsosee "Help onewai" "help onewai"}{...}
 {vieweralsosee "Help metadata" "help metadata"}{...}
+{vieweralsosee "Help onewai" "help onewai"}{...}
+{vieweralsosee "Help regmat" "help regmat"}{...}
+{vieweralsosee "Help stregmat" "help stregmat"}{...}
 {vieweralsosee "Help strofnum" "help strofnum"}{...}
 {vieweralsosee "Help strtonum" "help strtonum"}{...}
 {vieweralsosee "Help subselect" "help subselect"}{...}
@@ -25,11 +31,20 @@ present and style Stata and Mata matrices.
 
 {marker description}{...}
 {title:Description}
+
 {pstd}Commands to build, present and style Stata matrices and present data in 
 easy ways. And using Mata to do so.
 Most of the commands relies heavily on the Mata code in lmatrixtools.mlib.
 The sourcecode to lmatrixtools.mlib is in lmatrixtools.mata.
 {p_end}
+
+{pstd}{help confmat:confmat}
+Given a binary variable for the gold standard and a binary variable for 
+the test {cmd:confmat} returns sensitivity, specificity, prevalence, accuracy, 
+ppv and npv (ie derived values from the confusion matrix) with confidence intervals.
+When a binary grouping variable is specified in option {opt by:} the 
+confusion matrix for each grouping values is reported as well as comparison tests.
+ 
 
 {pstd}{help crossmat:crossmat} is wrapper for {help tabulate:tabulate}. 
 All tables possible from {help tabulate:tabulate} are accessible as Stata 
@@ -40,6 +55,12 @@ matrix syntax.{p_end}
 
 {pstd}{help filaby:filaby} marks for each value of first variable first and 
 last value for second variable within a frame of maxdist.{p_end}
+
+{pstd}{help marktop:marktop}
+A categorical variable is collapsed into a new variable keeping the {opt top} 
+most frequent and/or a subsample of old variable values as single values while 
+collapsing the remaining values into one value with a common label.
+ 
 
 {pstd}{help matprint:matprint} presents Stata matrices in the log.
 It has a simple but powerfull way of setting decimals cellwise.
@@ -70,7 +91,9 @@ However, here all results are gathered in matrices.
 Input is either a matrix of n's, means and standard deviations or n's, means 
 and standard deviations given separately.{p_end}
 
-{pstd}{help regmat:regmat} is prefix command to a regression template.{break}
+{pstd}{help regmat:regmat} (regression with specified outcome) and 
+{help stregmat:stregmat} (stset regression date) are prefix command to a 
+regression template.{break}
 A regression template is simply a regression command.{break}
 Each combination of one outcome variable, one exposure variable and one 
 adjustment set is inserted just after the regression command.{break}

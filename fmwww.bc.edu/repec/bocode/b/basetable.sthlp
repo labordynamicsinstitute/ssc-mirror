@@ -49,44 +49,54 @@ specify a csv file to save the csv output in.{p_end}
 {synopthdr:Arguments}
 {synoptline}
 	{synopt :{opt column_variable}}The first argument must be a (categorical) 
-    variable for subgrouping or the text _none for no column variable.{p_end}
+    variable for subgrouping or the text "_none" for no column variable.{p_end}
 	
     {synopt :{opt summary_variables}}The rest of the arguments are either 
     variable names or variable lists followed by with suboptions inside 
     parentheses or headers. 
     
-	{p 34 36}* Headers (in square brackets) - Header text possibly ending with a 
-    hashtag (#) for a subcount separated by a comma (,) optionally a separator 
-    text for the rest of the columns and optionally a local if condition 
-    (The subcount from the hashtag matches the sub condition){p_end}
+	{p 34 36}* Headers (in square brackets) - 
+    Headers are set by a text string in square brackets. 
+    The syntax for the string inside the square brackets is:{break}
+        {cmd:title_text [#] [, local_if]}{break}
+    The different parts of the string are:{break}{break}
+    - The title_text is a plain text string.{break}
+    - The hashtag (#) is an option for adding a sub-count.{break}
+    - The local_if is a Stata if expression.{break}
+    - The sub-count from the hashtag matches the sub-condition.
+    {p_end}
     
-	{p 34 36}* Categorical variables followed by (in parentheses):{break}
-	  - r, R = Report row percentages in the report table{break}
-	  - c, C = Report column percentages in the report table{break}
-	  - label value = Show only the row for the selected value in the report table.
-        There can a second argument separated by a comma: r, R, c, C as 
-		above or a ci for a Wald confidence interval{p_end}
-        {p 36 36}The p-value is by default from a chisquare test. 
+	{p 34 36}* Categorical variables are specified by their name followed by 
+    an option string in brackets.
+    Possible option strings are:{break}
+	  - r or R (row percentages){break}
+	  - c or C (column percentages){break} 
+	  - or label value (Show only the row for this value).
+      After a comma, a second argument can be added: r, R, c, C as above, or a ci
+      for a Wald confidence interval.{p_end}
+        {p 36 36}The p-value is by default from a chi-square test.
         Fisher's exact test can be chosen instead by option {opt e:xact}.{p_end}
 
-    {p 34 36}* continuous variables followed by (in parentheses):{break}
-	  - a numeric {help format:format} (eg %6.2f) and eventually a local report specification 
-	    separated with a comma. {p_end}
-		{p 38 40}Types of report specifications are:{break}
-	    sd (mean and sd, default), {break}
-		ci (mean and confidence interval), {break} 
-		gci (geometric mean and confidence interval), {break} 
-		pi (mean and prediction interval), {break}
-		iqr (median and interquartile range), {break}
-		iqi (median and interquartile interval), {break}
-		idr (median and interdecentile range), {break}
-		idi (median and interdecentile interval), {break}
-		imr (median and range), or {break}
-		imi (median, min, and max), {p_end}
-		{p 36 36}When mean is reported the p-value is based on a ANOVA test, 
-		and when median is reported the p-value is based on a Kruskal Wallis test.{p_end}
-        {p 36 36}Centile calculation are similar to {help centile}, 
-        not {help summarize}. {p_end}
+    {p 34 36}* Continuous variables are specified by their name followed by 
+    an option string in brackets.{break}
+    An option string is a numeric format (eg %6.2f) and possibly, a local report 
+    specification separated after a comma.{break}
+    Types of report specifications are:{break}
+        - sd (mean and sd, default),{break}
+        - ci (mean and confidence interval),{break}
+        - gci (geometric mean and confidence interval),{break}
+        - pi (mean and prediction interval),{break}
+        - iqr (median and interquartile range),{break}
+        - iqi (median and interquartile interval),{break}
+        - idr (median and interdecentile range),{break}
+        - idi (median and interdecentile interval),{break}
+        - imr (median and range), or{break}
+        - imi (median, min, and max){p_end}
+    {p 36 36}When the mean is reported the p-value is based on an ANOVA 
+    test, and when the median is reported the p-value is based on a Kruskal 
+    Wallis test.{p_end}
+    {p 36 36}Centile calculation are similar to {help centile}, 
+    not {help summarize}. {p_end}
 {synoptline}
 {p2colreset}{...}
 
@@ -97,34 +107,31 @@ specify a csv file to save the csv output in.{p_end}
 	{synopt :{opt l:og}}Show the underlying Stata output{p_end}
 	{synopt :{opt n:thousands}}Add thousands separator to n values{p_end}
 	{synopt :{opt pc:tformat}}Alter the format used for the percentages for the 
-	categorical summary variables. The argument must be a numeric format{p_end}
+        categorical summary variables. The argument must be a numeric format{p_end}
 	{synopt :{opt pv:format}}Alter the format used for the P value.
-	The argument must be a numeric format. There is suboption {opt t:op} placing 
-	the p-value at the top{p_end}
-	{synopt:{opt e:xact}[{opt (#)}]}report Fisher's exact test instead of chisquare tests. 
-	{opt e:xact}[{opt (#)}] displays the significance
-	calculated by Fisher's exact test and may be applied to r x c as well as to
-	2 x 2 tables.  For 2 x 2 tables, both one- and two-sided probabilities
-	are displayed.  For r x c tables, two-sided probabilities are displayed.
-	The optional positive integer {it:#} is a multiplier on the
-	amount of memory that the command is permitted to consume. 
-	The default is 1 and 0 means no exact test.{p_end}
+        The argument must be in a numeric format. There is sub-option {opt t:op} placing 
+        the p-value at the top{p_end}
+	{synopt:{opt e:xact}{opt (#)}}report Fisher's exact test instead of 
+        chi-square tests. 
+        The recommended value is 1 and 0 means no exact test.{break}
+        If an error occurs, try with 5 and higher numbers. See {help tabulate:tabulate}.{p_end}
 	{synopt :{opt c:ontinuousreport}}Specify overall default continuous report. 
-				The values must be one of sd, iqr, iqi, idr, idi, imr, imi, ci, gci or pi{p_end}
+        The values must be one of sd, iqr, iqi, idr, idi, imr, imi, ci, gci or pi{p_end}
 	{synopt :{opt ca:tegoricalreport}}Specify overall default categorical report. 
-				The values to set is n for count or p for percentages. 
-				Default	is count (percentages){p_end}
-	{synopt :{opt notop:count}}Exclude first row with count and percentages for 
+        The values to set is n for count or p for percentages. 
+        Default	is count (percentages).{p_end}
+	{synopt :{opt notop:count}}Exclude the first row with count and percentages for 
     row columns{p_end}
-	{synopt:{opt cap:tion(string)}}Caption for the output. Same as {opt ti:tle}{p_end}
-	{synopt:{opt ti:tle(string)}}Title for the output. Same as {opt cap:tion}.
-				{opt ti:tle} overwrites {opt cap:tion}{p_end}
-	{synopt:{opt to:p(string)}}String containing text prior to table content.
+  {synopt :{opt not:otal}}Exclude the Total column.{p_end}
+  {synopt :{opt nop:value}}Exclude the P-value column.{p_end}
+	{synopt:{opt cap:tion(string)}}Caption for the output. Same as the {opt ti:tle} option.{p_end}
+	{synopt:{opt ti:tle(string)}}Title for the output. Same as the {opt cap:tion} option.
+        The {opt ti:tle} option overwrites the {opt cap:tion} option.{p_end}
+	{synopt:{opt to:p(string)}}A string containing text prior to table content.
 	Default is dependent of the value of the style option{p_end}
-	{synopt:{opt u:ndertop(string)}}String containing text between header and table 
-	content.
-	Default is dependent of the value of the style option{p_end}
-	{synopt:{opt b:ottom(string)}}String containing text after to table content.
+	{synopt:{opt u:ndertop(string)}}A string containing text between header and table 
+        content. Default is dependent of the value of the style option{p_end}
+	{synopt:{opt b:ottom(string)}}A string containing text after to table content.
 	Default is dependent of the value of the style option{p_end}
 	{synopt :{opt m:issing}}Show missing report to the right of the table{p_end}
 	{synopt :{opt sm:all}}Specify the limit for being small wrt. hidesmall. Default is 5.{p_end}
@@ -141,13 +148,16 @@ specify a csv file to save the csv output in.{p_end}
 	If an existing file should be replaced in the process, replace should be set{p_end}
 	
 {synopthdr:version 13 and up}
-{synopt:{opt toxl:(string)}}A string containing up to 5 values separated 
+{synopt:{opt toxl:(string)}}A string containing up to 5 values, separated 
 	by a comma. The values are:{break}
-	* path and filename on the excel book to save in. Excel book suffix is set/reset to {cmd:xls} for Stata 13 and to {cmd:xlsx} for Stata 14 and above{break}
-	* the sheet name to save output in{break}
-	* (Optional) replace - replace/overwrite the content in the sheet{break}
-	* (Optional) row, column numbers for the upper right corner of the table in the sheet{break}
-	* (Optional) columnn widths in parentheses. If more columns than widths the last column width is used for the rest
+	- path and filename on the excel book to save in. Excel book suffix is 
+      set/reset to {cmd:xls} for Stata 13 and to {cmd:xlsx} for Stata 14 and above{break}
+	- the sheet name to save output in{break}
+	- (Optional) replace - replace/overwrite the content in the sheet{break}
+	- (Optional) row, column numbers for the upper right corner of the table in 
+      the sheet{break}
+	- (Optional) columnn widths in parentheses. If more columns than widths the 
+      last column width is used for the rest
 	{p_end}
 {synoptline}
 {p2colreset}{...}

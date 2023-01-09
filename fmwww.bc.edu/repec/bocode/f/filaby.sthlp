@@ -53,7 +53,7 @@ of variable 1 is marked in variables {opt stub_first} and {opt stub_last}
 {break}{stata "list, noobs sepby(id)"}
 
 
-{pstd}Generate example data:
+{pstd}Using {cmd:filaby} to create time blocks of max length 5 within each id:
 {break}{stata "filaby id time, maxdist(5) stub(my)"}
 {break}{stata "list, noobs sepby(id)"}
 

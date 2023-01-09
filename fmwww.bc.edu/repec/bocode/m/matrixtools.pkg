@@ -17,10 +17,10 @@ d KW: summary statistics
 d
 d Requires: Stata version 12 
 d
-d Distribution-Date: 20210607
+d Distribution-Date: 20230108
 d
-d Author: Niels Henrik Bruun, Aarhus University
-d Support: email nhbr@@ph.au.dk
+d Author: Niels Henrik Bruun, Aalborg University Hospital
+d Support: email niels.henrik.bruun@@gmail.com
 d
 f matrixtools.sthlp
 f ../_/_gmarktop.ado

@@ -29,12 +29,24 @@ observational studies
 {it:drop(string)}
 {help regmat##matprint:{it:Matprint options}}] {cmd:,} {it: regression template}
 
+{p 8 17 2}
+{cmdab:stregmat} [using]{cmd:,} 
+{it:exposures}(varlist)
+[{it:adjustements}(varlist strings)
+{it:noquietly}
+{it:labels}
+{it:base}
+{it:keep(string)}
+{it:drop(string)}
+{help regmat##matprint:{it:Matprint options}}] {cmd:,} {it: regression template}
+
 {synoptset 30 tabbed}{...}
 {p2colset 6 30 30 2}
 {synopthdr}
 {synoptline}
 {syntab:Main options}
-{synopt:{opt o:utcomes(varlist)}}A non-empty varlist of outcome variables. 
+{synopt:{opt o:utcomes(varlist)}}Not for {cmd:stregmat}.
+A non-empty varlist of outcome variables. 
 An outcome is the dependent variable in a regression.{p_end}
 {synopt:{opt e:xposures(varlist)}}A non-empty varlist of outcome variables.
 Exposures are variables of whiech estimates are to be reported.{p_end}
@@ -81,6 +93,8 @@ Default is dependent of the value of the style option.{p_end}
 {synopt:{opt b:ottom(string)}} String containing text after to table content.
 Default is dependent of the value of the style option.{p_end}
 {synopt:{opt r:eplace}} Delete an existing {help using:using} file before adding table.{p_end}
+{synopt:{opt noe:qstrip}}Do not remove duplicate successive roweq or coleq values{p_end}
+{synopt:{opt noz:ero}}Do not show zeros in output{p_end}
 {synopthdr:version 13 and up}
 {synopt:{opt toxl:(string)}}A string containing up to 5 values separated 
 	by a comma. The values are:{break}
@@ -97,12 +111,12 @@ Default is dependent of the value of the style option.{p_end}
 {marker description}{...}
 {title:Description}
 {pstd}
-{cmd:regmat} is prefix command to a regression template.{break}
+{cmd:regmat} and {cmd:stregmat} are prefix commands to a regression template.{break}
 A regression template is simply a regression command.{break}
-Each combination of one outcome variable, one exposure variable and one 
-adjustment set is inserted just after the regression command.{break}
+Each combination of one outcome variable ({cmd:regmat} only), one exposure 
+variable and one adjustment set is inserted just after the regression command.{break}
 Then all regression estimates of exposures are placed in a matrix ordered by 
-outcome and exposure variables rowwise and adjustment columnwise.
+outcome ({cmd:regmat} only) and exposure variables rowwise and adjustment columnwise.
 
 {pstd}
 The resulting matrix is saved in the {help return:return list} for further 
@@ -117,7 +131,7 @@ Together with the {help basetable:basetable} the command {cmd:regmat}
 generates the two typical tables for reporting epidemiological research.
 
 {marker examples}{...}
-{title:Examples}
+{title:{cmd:regmat} example}
 
 {pstd}Get example data:{p_end}
 
@@ -146,7 +160,22 @@ in current directory:{p_end}
 {phang}To see Excel workbook (stata 14 and up):{p_end}
 {phang}{stata shell tbls.xlsx}{p_end}
 
+{title:{cmd:stregmat} example}
 
+{pstd}Get example data:{p_end}
+
+{phang}{stata `"webuse hypoxia, clear"'}{p_end}
+
+{pstd}Declare data to be survival-time data and declare the failure event of 
+interest, that is, the event to be modeled{p_end}
+
+{phang}{stata `"stset dftime, failure(failtype==1)"'}{p_end}
+
+{pstd}Estimate the crude and adjusted ({it:age} and {it:hgb}) effects of 
+{it:hp5} and  and {it:ifp} in a competing-risks model with failtype==2 as the 
+competing event{p_end}
+
+{phang}{stata `"stregmat,exposures(hp5 ifp) adjustments("" "age hgb") eform btext(sHz) names("crude", "adjusted"): stcrreg, compete(failtype==2)"'}{p_end}
 
 {marker results}{...}
 {title:Stored results}

@@ -1,10 +1,14 @@
-*! Package basetable v 0.2.6
+*! Package basetable v 0.2.8
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
-*!version 0.2.6  2021-05-24 > Bug in basetable_parser(): basetable::n_pct_by_value() not called when value ends on r. Thanks to Kasper Norman
-*!version 0.2.6  2021-04-15 > NoTotal and NoPvalue now also for toxl
- 
+*version 0.2.8  2022-12-28 > category row titles in italics for style markdown see code in ::log_print()
+*version 0.2.8  2022-12-22 > Bug in option toxl fixed. Now more tables can be saved in the same sheet 
+*version 0.2.8  2022-04-20 > Option noTOPcount now only for first row
 * TODO: Count unique by
-*version 0.2.5a  2021-01-28 > Bug fixes
+*version 0.2.7  2021-11-19 > number format and pct format for missing report too 
+*version 0.2.7  2021-11-19 > Help rewritten 
+*version 0.2.6  2021-05-24 > Bug in basetable_parser(): basetable::n_pct_by_value() not called when value ends on r. Thanks to Kasper Norman
+*version 0.2.6  2021-04-15 > NoTotal and NoPvalue now also for toxl
+*version 0.2.5a 2021-01-28 > Bug fixes
 *version 0.2.5  2020-12-28 > Converted to ltoxl_v1[34].mata and added columnwidth for toxl
 *version 0.2.5  2020-12-07 > varlists instead of varnames
 *version 0.2.5  2020-12-07 > First variable _none

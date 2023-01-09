@@ -1,4 +1,4 @@
-*! Part of package matrixtools v. 0.28
+*! Part of package matrixtools v. 0.29
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
 * 2020-08-23 added
 * 2020-06-29 created
@@ -44,17 +44,18 @@ mata:
 		void xlsetup13::set_xl()
 		{
 			if ( fileexists(this.xlfile()) ) {
-                this.xl.load_book(this.xlfile())
+        this.xl.load_book(this.xlfile())
 				if ( all(xl.get_sheets() :!= this.sheet()) ) {
 					this.xl.add_sheet(this.sheet())
 				} else {
-					if ( this.replacesheet ) {
-						xl.set_sheet(this.sheet())
-						this.xl.clear_sheet(this.sheet())
-					} else {
-						_error(sprintf("Excel sheet |%s| is already in |%s|", 
+          /*
+					if ( !this.replacesheet & this.start == (1,1) ) {
+            _error(sprintf("Excel sheet |%s| is already in |%s|", 
 										this.sheet(), this.xlfile()))
-					}
+          }
+          */
+          xl.set_sheet(this.sheet())
+          if ( this.replacesheet ) this.xl.clear_sheet(this.sheet())
 				}
 			} else this.xl.create_book(this.xlfile(), this.sheet())				
 			this.xl_is_set = 1
@@ -89,8 +90,8 @@ mata:
 			if ( replacesheet != . ) this.replacesheet = replacesheet != 0
 			if ( this.xl_is_set ) {
             	this.set_xl()
-                this.xl.put_string(this.start[1], this.start[2], strmat)
-                this.xl.close_book()
+              this.xl.put_string(this.start[1], this.start[2], strmat)
+              this.xl.close_book()
             }
 		}
 

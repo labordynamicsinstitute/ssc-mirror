@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.0.0 12 Aug 2021}{...}
+{* *! version 2.0.0 6 Jan 2023}{...}
 {cmd:help synth2} 
 {hline}
 {vieweralsosee "" "--"}{...}
@@ -27,7 +27,7 @@
 {opt trp:eriod(#)}
 [{it:options}]
 
-{synoptset 60 tabbed}{...}
+{synoptset 70 tabbed}{...}
 {synopthdr}
 {synoptline}
 {syntab:Model}
@@ -53,8 +53,10 @@
 {synopt:{cmdab: loo}}Robustness test that excludes one unit in the donor pool with nonzero weight{p_end}
 
 {syntab:Reporting}
-{synopt:{opt frame(framename)}}create a Stata frame storing dataset with generated variables including counterfactual predictions, treatment effects, and results from placebo tests and/or robustness test if implemented{p_end}
+{synopt:{opt frame(framename)}}create a Stata frame storing dataset with generated variables including counterfactual predictions, treatment effects, 
+and results from placebo tests and/or robustness test if implemented{p_end}
 {synopt:{opt nofig:ure}}Do not display figures. The default is to display all figures.{p_end}
+{synopt:{cmdab:saveg:raph}([{it:prefix}], [{cmdab:asis} {cmdab:replace}])}Save all produced graphs to the current path.{p_end}
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}{helpb xtset} {it:panelvar} {it:timevar} must be used to declare a balanced panel dataset in the usual long form; see {manhelp xtset XT:xtset}. {p_end}
@@ -68,7 +70,7 @@ As a wrapper program for {helpb synth} implementing synthetic control method (SC
 in-time placebo test using a fake treatment time, and leave-one-out robustness test that excludes one control unit with nonzero weight at a time. 
 {cmd:synth2} produces a series of graphs for visualization along the way. 
 The command {helpb synth} (available from Statistical Software Components) is required. 
-See Yan and Chen (2021) for more details.
+See Yan and Chen (2023) for more details.
 
 {marker requird}{...}
 {title:Required Settings}
@@ -186,6 +188,12 @@ treatment effects, and results from placebo tests and/or robustness test if impl
 {opt nofigure} Do not display figures. The default is to display all figures from the estimation results, 
 placebo tests and robustness test if available.
 
+{phang}
+{cmdab:savegraph}([{it:prefix}], [{cmdab:asis} {cmdab:replace}]) automatically and iteratively calls the {helpb graph save} to save all produced graphs to the current path,
+where {it: prefix} specifies the prefix added to {it: _graphname} to form a file name, that is, the graph named {it: graphname} is stored as {it: prefix_graphname}.gph.
+{cmdab:asis} and {cmdab:replace} are options passed to {helpb graph save}; for details, see {manhelp graph G-2: graph save}. 
+Note that this option only applies when {opt nofigure} is not specified.
+
 {marker examples}{...}
 {title:Example: estimating the effect of California's tobacco control program (Abadie, Diamond, and Hainmueller 2010)}
 
@@ -196,15 +204,19 @@ placebo tests and robustness test if available.
 {phang2}{cmd:. synth2 cigsale lnincome age15to24 retprice beer cigsale(1988) cigsale(1980) cigsale(1975), trunit(3) trperiod(1989) xperiod(1980(1)1988) nested allopt} {p_end}
 
 {phang2}* Implement in-space placebo test using fake treatment units with pretreatment MSPE 2 times smaller than or equal to that of the treated unit{p_end}
-{phang2}* For illustration, we drop the "allopt" option to save time. The "allopt" option is recommended for the most accurate results if time permits. {p_end}
+{phang2}* For illustration, we drop the "allopt" option to save time. The "allopt" option is recommended for the most accurate results if time permits{p_end}
 {phang2}* To assure convergence, we change the default option "sigf(7)" (7 significant figures) to "sigf(6)". {p_end}
 {phang2}{cmd:. synth2 cigsale lnincome age15to24 retprice beer cigsale(1988) cigsale(1980) cigsale(1975), trunit(3) trperiod(1989) xperiod(1980(1)1988) nested placebo(unit cut(2))  sigf(6)}{p_end}
 
 {phang2}* Implement in-time placebo test using the fake treatment time 1985 and dropping the covariate cigsale(1988) {p_end}
 {phang2}{cmd:. synth2 cigsale lnincome age15to24 retprice beer cigsale(1980) cigsale(1975), trunit(3) trperiod(1989) xperiod(1980(1)1984) nested placebo(period(1985))} {p_end}
 
-{phang2}* Implement leave-one-out robustness test, and create a Stata frame "california" storing generated variables{p_end}
-{phang2}{cmd:. synth2 cigsale lnincome age15to24 retprice beer cigsale(1988) cigsale(1980) cigsale(1975), trunit(3) trperiod(1989) xperiod(1980(1)1988) nested loo frame(california)}{p_end}
+{phang2}* Implement leave-one-out robustness test, create a Stata frame "california" storing generated variables, 
+and save all produced graphs to the current path{p_end}
+{phang2}{cmd:. synth2 cigsale lnincome age15to24 retprice beer cigsale(1988) cigsale(1980) cigsale(1975), trunit(3) trperiod(1989) xperiod(1980(1)1988) nested loo frame(california) savegraph(california, replace)}{p_end}
+
+{phang2}* Combine all produced graphs{p_end}
+{phang2}{cmd:. graph combine `e(graph)', cols(2) altshrink} {p_end}
 
 {phang2}* Change to the generated Stata frame "california" {p_end}
 {phang2}{cmd:. frame change california}{p_end}
@@ -243,6 +255,7 @@ placebo tests and robustness test if available.
 {synopt:{cmd:e(time_pre)}}pretreatment periods{p_end}
 {synopt:{cmd:e(time_post)}}posttreatment periods{p_end}
 {synopt:{cmd:e(frame)}}name of Stata frame storing generated variables{p_end}
+{synopt:{cmd:e(graphnames)}}names of all produced graphs{p_end}
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Matrices}{p_end}
@@ -273,8 +286,7 @@ Abadie, A. and Gardeazabal, J. 2003. Economic Costs of Conflict: A Case Study of
 {it:American Economic Review} 93(1): 113-132.
 
 {phang}
-Yan, G. and Chen, Q. 2021. synth2: Synthetic Control Method with Placebo Tests, Robustness Test and Visualization. 
-{it:Shandong University Working Paper}.
+{browse "https://github.com/GuanpengYan/synth2/blob/main/2023-01-06_synth2_sJournal.pdf": Yan, G. and Chen, Q. 2023. synth2: Synthetic Control Method with Placebo Tests, Robustness Test and Visualization.{it:Shandong University Working Paper}}.
 
 {marker author}{...}
 {title:Author}
@@ -287,4 +299,10 @@ guanpengyan@yeah.net{break}
 Qiang Chen, Shandong University, CN{break}
 qiang2chen2@126.com{break}
 {browse "http://www.econometrics-stata.com":www.econometrics-stata.com}{break}
+
+{marker alsosee}{...}
+{title:Also see}
+
+{phang}Help: {help synth} (SSC), {help allsynth} (SSC, if installed), {help synth_runner} (SSC, if installed), and {help scul}(SSC, if installed).{p_end}
+
 
