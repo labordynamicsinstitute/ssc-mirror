@@ -1,0 +1,40 @@
+d 'XTGRANGERT': module for improved Granger non-causality testing in heterogeneous and homogeneous panel data
+d
+d  xtgrangert performs the Half-Panel Jackknife (HPJ) Wald-type
+d test for Granger non-causality, developed by Juodis, Karavias,
+d and Sarafidis (Empirical Economics, 2021).  This test offers
+d superior size and power performance, which stems from the use of
+d a pooled estimator with a (NT)^(1/2) rate of convergence.  The
+d test has two other useful properties; it can be used in
+d multivariate systems and it has power against both homogeneous as
+d well as heterogeneous alternatives.  The command also reports
+d results for the HPJ estimator. 
+d
+d KW: Granger causality
+d KW: panel data
+d KW: heterogeneous panels
+d
+d Requires: Stata version 12 
+d
+d Distribution-Date: 20230108
+d
+d Author: Jiaqi Xiao, University of Birmingham
+d Support: email Jxx963@@outlook.com
+d
+d Author: Yiannis Karavias, University of Birmingham
+d Support: email i.Karavias@@bham.ac.uk
+d
+d Author: Vasilis Sarafidis, BI Norwegian Business School
+d Support: email vasilis.sarafidis@@gmail.com
+d
+d Author: Arturas Juodis, Free University of Amsterdam
+d Support: email a.juodis@@uva.nl
+d
+d Author: Jan Ditzen, Free University of Bozen-Bolzano
+d Support: email jan.ditzen@@unibz.it
+d
+f xtgrangert.ado
+f xtgrangert_p.ado
+f xtgrangert.sthlp
+f xtgrangert_example.dta
+f xtgrangert_example.do

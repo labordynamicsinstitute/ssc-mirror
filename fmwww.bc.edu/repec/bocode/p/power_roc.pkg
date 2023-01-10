@@ -1,0 +1,56 @@
+d 'POWER_ROC': module to compute power and sample-size analysis for receiver operating characteristic (ROC) analysis
+d
+d  The power roc package is helpful for planning studies that use
+d receiver operating characteristic (ROC) curves to evaluate the
+d accuracy of diagnostic tests. An advantage of ROC curves for
+d evaluating the accuracy of diagnostic tests is that it
+d incorporates both sensitivity (the probability of a test
+d detecting disease when the patient actually has the disease) and
+d specificity (the probability that the test is negative when the
+d patient is actually disease-free), into a single measure of
+d accuracy. power roc is loosely based upon the code used in the
+d SAS® macro ROCPOWER (Zepp 1995). power oneroc computes sample
+d size or power for a one-sample receiver operating characteristic
+d (ROC) analysis. Variance functions are computed using either the
+d method described in Obuchowski, Lieber and Wians (2004) for
+d continuous and ordinal data assuming a binormal distibution (the
+d default), or the method described by Hanley and McNeil (1982) for
+d continuous data which is based on the Mann-Whitney version of the
+d rank-sum test. power tworoc computes sample size or power for a
+d two-sample receiver operating characteristic (ROC) analysis. 
+d When there is no correlation corr(0) between the two alternative
+d AUCs (auc1 and auc2), power tworoc computes sample size (power)
+d for an independent two-sample test. When the correlation does not
+d equal 0, power tworoc computes sample size (power) for a paired
+d two-sample test. As with power oneroc, variance functions are
+d computed using either the method described in Obuchowski, Lieber
+d and Wians (2004) for continuous and ordinal data assuming a
+d binormal distribution (the default), or the method described by
+d Hanley and McNeil (1982) for only continuous data which is based
+d on the Mann-Whitney version of the rank-sum test. Sample size can
+d be computed given power, and power can be computed given sample
+d size. Results can be displayed in a table (default) and on a
+d graph ([PSS-2] power, graph). 
+d
+d KW: ROC curve
+d KW: area under the curve
+d KW: power
+d KW: sample size
+d KW: one-sample
+d KW: two-sample
+d KW: paired two-sample
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20221111
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f power_cmd_oneroc.ado
+f power_cmd_oneroc_init.ado
+f power_cmd_tworoc.ado
+f power_cmd_tworoc_init.ado
+f power_roc.sthlp
+f power_oneroc.sthlp
+f power_tworoc.sthlp

@@ -1,12 +1,14 @@
-*! version 1.0.5  15aug2011  CFBaum   
+*! version 1.0.7  09jan2023  CFBaum   
 * from xttest1 v1.0.3 and sureg
-* following Greene, 2000, p. 601
+* following Greene, 2000, p. 601 and Pesaran, 2015
 * 1.0.1 published SJ-1, st0004
 * 1.0.1: allow xtgls
 * 1.0.2: mod to correct handling of unbalanced panels, trap errors of too few common obs
 * 1.0.3: trap inadequate matsize
 * 1.0.4: allow ivreg2
 * 1.0.5: reduce criterion for singularity
+* 1.0.6: allow xtreg, re; disable invertibility check
+* 1.0.7: trap error 2001 as well
 
 program define xttest2, rclass
 	version 6.0
@@ -74,20 +76,27 @@ program define xttest2, rclass
 		error 908
 		}
 	capt mat accum `cov' = __e*,dev noc
-	if _rc == 2000 {
-			di in r _n "Error: too few common observations across panel."
-			error 2000
+//  matlist `cov'
+	if _rc == 2000 | _rc== 2001 {
+			di in r _n "Error: too few common observations across panel to compute full rank VCE."
+			su __e*
+			error _rc
 			}	
+
+// no need to check invertibility
+/*
 	mat `de' = det(`cov')
 	local det = `de'[1,1]
 	if abs(`det')<1.0e-37 {
 			di in r _n "Correlation matrix of residuals is singular."
 			error 131
 			}
-	local nbal "`r(N)'"
+*/
+	local nbal "`r(N)'"	
 * code adapted from sureg BP test
 	di " "
 	di in gr "Correlation matrix of residuals:"
+matlist `cov'
     mat `cor' = corr(`cov')
     mat list `cor', nohead format(%9.4f)
 

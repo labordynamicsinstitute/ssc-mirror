@@ -66,6 +66,7 @@ p xtgcause module to test for Granger non-causality in heterogeneous panels
 p xtgeebcv module to compute bias-corrected (small-sample) standard errors for generalized estimating equations
 p xtglsr module to calculate robust, or cluster-robust variance after xtgls
 p xtgranger module for improved Granger non-causality testing in heterogeneous and homogeneous panel data
+p xtgrangert module for improved Granger non-causality testing in heterogeneous and homogeneous panel data
 p xtgraph module to produce graphs of cross-sectional time series (xt) data
 p xtheckmanfe module to fit panel data models in the presence of endogeneity and selection
 p xthrtest module to perform Born & Breitung Bias-corrected HR-test for first order panel serial correlation
