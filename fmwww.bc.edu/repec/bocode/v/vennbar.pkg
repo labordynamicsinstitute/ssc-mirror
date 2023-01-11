@@ -1,0 +1,34 @@
+d 'VENNBAR': module to show Euler or Venn diagrams mapped to bar or dotcharts
+d
+d  vennbar produces a bar or dot chart alternative to Euler or Venn
+d diagrams showing the	frequencies (or more generally abundances)
+d of subsets of observations as defined  jointly by a bundle of
+d numeric indicator variables. Commonly, but not necessarily,
+d subset frequencies (or abundances) are already in a  variable in
+d the dataset. If so, that variable should be specified as
+d frequency or analytic  weights. If no weights are specified,
+d vennbar counts observations for you.	The display by default uses
+d graph hbar but may optionally be recast as using graph  bar
+d (which is not usually advised) or as using graph dot (which may
+d appeal).  The  reduced dataset used by vennbar may be saved for
+d future work. 
+d
+d KW: vennbar
+d KW: Euler diagram
+d KW: Venn diagram
+d KW: bar charts
+d KW: graphics
+d KW: genomics 
+d
+d Requires: Stata version 8.2
+d
+d Distribution-Date: 20230110
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+d Author: Tim Morris, MRC Clinical Trials Unit at UCL
+d Support: email T.Morris@@ctu.mrc.ac.uk
+d
+f vennbar.ado
+f vennbar.sthlp

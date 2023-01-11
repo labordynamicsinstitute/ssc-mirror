@@ -33,6 +33,7 @@ p vclose module to close viewer windows
 p vecar module to estimate vector autoregressive (VAR) models
 p vecar6 module to estimate vector autoregressive (VAR) models (version 6)
 p vececm module to estimate vector error correction models (ECMs)
+p vennbar module to show Euler or Venn diagrams mapped to bar or dotcharts
 p venndiag module to generate Venn diagrams
 p veracrypt module to mount or dismount a VeraCrypt volume
 p viewresults module to display results of a command in the Viewer
