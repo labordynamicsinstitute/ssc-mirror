@@ -1,4 +1,4 @@
-*! rcm 3.0.0 Guanpeng Yan and Qiang Chen Oct. 11 2022
+*! rcm 4.0.0 Guanpeng Yan and Qiang Chen Jan. 07 2023
 
 cap program drop rcm
 program rcm, eclass sortpreserve
@@ -21,6 +21,7 @@ program rcm, eclass sortpreserve
 		grid(passthru) ///
 		placebo(string) ///
 		frame(string) ///
+		SAVEGraph(string) ///
 		seed(integer 1) ///
 		fill(string) ///
 		noFIGure ///
@@ -64,7 +65,7 @@ program rcm, eclass sortpreserve
 		loc framename "`frame'"
 	}
 	/* Check trunit() */
-	qui levelsof `panelVar', local(unit_n)
+	mata: rcm_levelsof("`panelVar'", "unit_n")
 	loc check: list trunit in unit_n
 	if `check' == 0 {
 		di as err "invalid trunit() -- treatment unit not found in {it:panelvar}"
@@ -88,7 +89,7 @@ program rcm, eclass sortpreserve
 		}
 	}
 	/* Check trperiod() */
-	qui levelsof `timeVar', local(time_n)
+	mata: rcm_levelsof("`timeVar'", "time_n")
 	loc check: list trperiod in time_n
 	if `check' == 0 {
 		di as err "invalid trperiod() -- treatment period not found in {it:timelvar}"
@@ -96,7 +97,7 @@ program rcm, eclass sortpreserve
 	}
 	/* Check preperiod() */
 	if "`preperiod'" != "" {
-		qui levelsof `timeVar' if `timeVar' < `trperiod', local(time_pre)
+		mata: rcm_levelsofsel("`timeVar'", "time_pre", st_data(., "`timeVar'"):<`trperiod')
 		loc check: list preperiod in time_pre
 		if `check' == 0 {
 			di as err "invalid preperiod() -- at least one of pretreatment periods that not found in {it:timevar} or not ahead of treatment period"
@@ -109,7 +110,7 @@ program rcm, eclass sortpreserve
 	}
 	/* Check postperiod() */
 	if "`postperiod'" != "" {
-		qui levelsof `timeVar' if `timeVar' >= `trperiod', local(time_post)
+		mata: rcm_levelsofsel("`timeVar'", "time_post", st_data(., "`timeVar'") :>= `trperiod')
 		loc check: list posof "`trperiod'" in postperiod
 		if `check' != 1 {
 			di as err "invalid postperiod() -- treatment period should be the first period of posttreatment periods"
@@ -206,10 +207,10 @@ program rcm, eclass sortpreserve
 		}
 		qui tsset `timeVar'
 		qui tostring `timeVar', gen(`timeVarStr') usedisplayformat force
-		qui levelsof `timeVarStr', local(time_all) clean
-		qui levelsof `timeVarStr' if `timeVar' < `trperiod', local(time_pre) clean
-		qui levelsof `timeVarStr' if `timeVar' >= `trperiod', local(time_post) clean
-		qui levelsof `timeVarStr' if `timeVar' == `trperiod', local(time_tr) clean
+		mata: rcm_slevelsof("`timeVarStr'", "time_all")
+		mata: rcm_slevelsofsel("`timeVarStr'", "time_pre", st_data(., "`timeVar'") :< `trperiod')
+		mata: rcm_slevelsofsel("`timeVarStr'", "time_post", st_data(., "`timeVar'") :>= `trperiod')
+		mata: rcm_slevelsofsel("`timeVarStr'", "time_tr", st_data(., "`timeVar'") :== `trperiod')
 		mata: rcm("`timeVar'", "`varlist'", "`unit_all'", "`unit_tr'", "`time_all'", "`time_tr'", ///
 			"`criterion'", "`method'", "`estimate'","`scope'", "`detail'"== ""? 0 : 1, "`grid'", `fold', `seed')
 		if _rc {
@@ -249,7 +250,7 @@ program rcm, eclass sortpreserve
 	loc graphlist ""
 	if("`figure'" == ""){
 		frame `frame' {
-			qui levelsof `timeVar', local(temp) clean
+			mata: rcm_levelsof("`timeVar'", "temp")
 			loc pos: list posof "`trperiod'" in temp
 			loc pos = `pos' - 1
 			loc xline: word `pos' of `temp'
@@ -276,8 +277,13 @@ program rcm, eclass sortpreserve
 		cap mat pval = e(pval)
 	}
 	/* Display graphs */
-	if "`figure'" == "" foreach graph in `graphlist' {
-		cap graph display `graph'
+	if "`savegraph'" == "" foreach graph in `graphlist'{
+		capture graph display `graph'
+	}
+	else{
+		di
+		ereturn local graphlist "`graphlist'"
+		rcm_savegraph `savegraph'
 	}
 	di _newline as txt "Finished."
 	if("`estimate'" == "lasso") ereturn post b
@@ -286,6 +292,7 @@ program rcm, eclass sortpreserve
 	cap if rowsof(mspe) > 1 ereturn matrix mspe = mspe
 	ereturn matrix info = info
 	ereturn matrix pred = pred
+	cap ereturn loc graph "`graphlist'"
 	ereturn loc frame "`framename'"
 	if("`method'" == "lasso"){
 		ereturn loc seed "`seed'"
@@ -329,7 +336,16 @@ program rcm, eclass sortpreserve
 	ereturn scalar att = att
 end
 
-cap program drop rcm_placebo
+program rcm_savegraph
+	version 16
+	preserve
+	syntax [anything], [asis replace]
+	foreach graph in `e(graphlist)'{
+		capture graph display `graph'
+		graph save `anything'_`graph', `asis' `replace' 
+	}
+end
+
 program rcm_placebo, eclass sortpreserve
 	version 16
 	loc trperiod = `e(trperiod)'
@@ -353,7 +369,7 @@ program rcm_placebo, eclass sortpreserve
 		tempvar timeVarStr
 		qui tostring `timeVar', gen(`timeVarStr') usedisplayformat force
 		qui levelsof `timeVar' if `timeVarStr' == "`time_tr'", local(trperiod) clean
-		qui levelsof `timeVar', local(temp) clean
+		mata: rcm_levelsof("`timeVar'", "temp")
 		loc pos: list posof "`trperiod'" in temp
 		loc pos = `pos' - 1
 		loc xline_tr: word `pos' of `temp'
@@ -439,7 +455,7 @@ program rcm_placebo, eclass sortpreserve
 		if("`period'" != ""){
 			di _newline as txt "Implementing in-time placebo test using fake treatment time " _continue
 			foreach pboperiod in `period'{
-			    qui levelsof `timeVar', local(time_n)
+				mata: rcm_levelsof("`timeVar'", "time_n")
 				loc check: list pboperiod in time_n
 				if `check' == 0 {
 					di _newline as err "placebo() invalid -- invalid fake period `pboperiod'"
@@ -489,6 +505,46 @@ end
 
 version 16
 mata:
+	real matrix rcm_uniqrows(real matrix m){
+		tmp = J(0, 1, .)
+		for(i = 1;i<=rows(m); i++){
+			if(i == 1) tmp = tmp\m[i,.]
+			else{
+				if(sum(tmp:==m[i,.])==0) tmp = tmp\m[i,.]
+			}
+		}
+		return(tmp)
+	}
+	string matrix rcm_suniqrows(string matrix m){
+		tmp = J(0, 1, "")
+		for(i = 1;i<=rows(m); i++){
+			if(i == 1) tmp = tmp\m[i,.]
+			else{
+				if(sum(tmp:==m[i,.])==0) tmp = tmp\m[i,.]
+			}
+		}
+		return(tmp)
+	}
+	void rcm_levelsof(string scalar varname, string scalar localname){
+		st_local(localname, "")
+		tmp = rcm_uniqrows(st_data(., varname)); 
+		for(i=1; i<=rows(tmp);i++) st_local(localname, st_local(localname) + (i==1?"":" ")+ strofreal(tmp[i]))
+	}
+	void rcm_levelsofsel(string scalar varname, string scalar localname, real matrix selvar){
+		st_local(localname, "")
+		tmp = rcm_uniqrows(st_data(selectindex(selvar), varname)); 
+		for(i=1; i<=rows(tmp);i++) st_local(localname, st_local(localname) + (i==1?"":" ")+ strofreal(tmp[i]))
+	}
+	void rcm_slevelsof(string scalar varname, string scalar localname){
+		st_local(localname, "")
+		tmp = rcm_suniqrows(st_sdata(., varname));
+		for(i=1; i<=rows(tmp); i++) st_local(localname, st_local(localname) + (i==1?"":" ") + tmp[i])
+	}
+	void rcm_slevelsofsel(string scalar varname, string scalar localname, real matrix selvar){
+		st_local(localname, "")
+		tmp = rcm_suniqrows(st_sdata(selectindex(selvar), varname)); 
+		for(i=1; i<=rows(tmp);i++) st_local(localname, st_local(localname) + (i==1?"":" ")+ tmp[i])
+	}
 	string matrix rcm_paste(string scalar vars, string matrix units){
 		tempvar = tokens(vars)
 		result = J(rows(units)*cols(tempvar), 1, "")
@@ -578,7 +634,7 @@ mata:
 		for(j = 1; j <= cols(colnames) - 1; j++) printf(sprintf("{hline %g}", wideM[j] + 2))
 		printf(sprintf("{hline %g}\n", extend))
 		if(isMean == 1){
-			printf(stritrim(sprintf("{p 0 6 2}{txt}Note: The average treatment effect over the posttreatment period is{res} %10.4f{txt}.\n", 
+			printf(stritrim(sprintf("{p 0 6 2}{txt}Note: The average treatment effect over the posttreatment period is{res} %10.4f{txt}.{p_end}\n", 
 				meanM[., 3])))
 			if(saveatt == 1) st_numscalar("att", meanM[., 3])
 		}
@@ -1056,6 +1112,7 @@ mata:
 end
 
 * Version history
+* 4.0.0 Add the functionality of saving graphs, and fix some bugs
 * 3.0.0 
 * 2.0.0 Optimize the result displayed
 * 1.0.1 Add two-sided p-value, right-sided p-value and left-sided p-value

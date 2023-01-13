@@ -219,6 +219,12 @@ from multiple variable characteristics.
 {synopt:{cmd:r(ncol)}}total number of columns in table{p_end}
 {p2colreset}{...}
 
+{synoptset 15 tabbed}{...}
+{p2col 5 15 19 2: Macros}{p_end}
+{synopt:{cmd:r(varlist)}}input {varlist}{p_end}
+{synopt:{cmd:r(tcolseq)}}list of table column sequences corresponding to input {varlist}{p_end}
+{p2colreset}{...}
+
 {pstd}
 The total number of rows in the table {cmd:r(nrow)}
 is equal to the sum of {cmd:r(nhead)}, {cmd:r(nbody)}, and {cmd:r(nfoot)}

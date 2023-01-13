@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.0 01 Nov 2021}{...}
+{* *! version 4.0.0 07 Jan 2023}{...}
 {cmd:help rcm} 
 {hline}
 {vieweralsosee "" "--"}{...}
@@ -32,8 +32,8 @@
 {synoptline}
 {syntab:Model}
 {synopt:{opth cou:nit(numlist:numlist)}}control units to be used as the donor pool{p_end}
-{synopt:{opth prep:eriod(numlist:numlist)}}pretreatment periods before the intervention occurred{p_end}
-{synopt:{opth postp:eriod(numlist:numlist)}}posttreatment periods when and after the intervention occurred{p_end}
+{synopt:{opth prep:eriod(numlist:numlist)}}pre-treatment periods before the intervention occurred{p_end}
+{synopt:{opth postp:eriod(numlist:numlist)}}post-treatment periods when and after the intervention occurred{p_end}
 
 {syntab:Optimization}
 {synopt:{opt sc:ope(p_min p_max)}}range of the number of selected predictors{p_end}
@@ -46,11 +46,12 @@
 {synopt:{opt fill(fil_method)}}method used to fill in missing values{p_end}
 
 {syntab:Placebo Test}
-{synopt:{cmdab: placebo}([{opth unit unit(numlist)} {opth period(numlist)} {opt cut:off(#_c)}])}placebo test using fake treatment units and/or times{p_end}
+{synopt:{cmdab: placebo}([{opth unit unit(numlist)} {opth period(numlist)} {opt cut:off(#_c)}])}placebo test using fake treatment unit and/or time{p_end}
 
 {syntab:Reporting}
 {synopt:{opt frame(framename)}}create a Stata frame storing generated variables in wide form including counterfactual predictions, treatment effects, and results from placebo tests if implemented{p_end}
 {synopt:{opt nofig:ure}}Do not display figures. The default is to display all figures.{p_end}
+{synopt:{cmdab:saveg:raph}([{it:prefix}], [{cmdab:asis} {cmdab:replace}])}Save all produced graphs to the current path.{p_end}
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}{helpb xtset} {it:panelvar} {it:timevar} must be used to declare a panel dataset in the usual long form; see {manhelp xtset XT:xtset}. 
@@ -66,14 +67,14 @@ which exploits cross-sectional correlation to construct counterfactual outcomes 
 Available methods for model selection include best subset, lasso, forward stepwise and backward stepwise regression, while available selection criteria include AICc, AIC, BIC, MBIC and CV (cross-validation).
 Covariates ({indepvars}) are allowed to further improve counterfactual prediction as proposed by Hsiao and Zhou (2019). 
 The {cmd:rcm} command produces a series of graphs for visualization along the way. 
-For statistical inference, the in-space placebo test using fake treatment units and the in-time placebo test using a fake treatment time can be implemented. 
-For a detailed guidence to the usage of {cmd:rcm}, see Yan and Chen (2022).
+For statistical inference, both in-space placebo test using fake treatment units and in-time placebo test using a fake treatment time can be implemented. 
+For a detailed guidence to the usage of {cmd:rcm}, you may refer to Yan and Chen (2021).
 
 {marker requird}{...}
 {title:Required Settings}
 
 {p 4 4 2}
-{cmd:rcm} automatically reshapes the panel dataset from the long form to the wide form before implementation, 
+{cmd:rcm} automatically reshapes the panel dataset from long to wide form before implementation, 
 where {depvar} of the treated unit is transformed to be the response and {depvar} of the control units are transformed to be predictors. 
 If {indepvars} are specified, {indepvars} of all units are transformed to be predictors during this process.
 
@@ -97,7 +98,7 @@ Step 1: Select the suboptimal models
 {pmore}
 {cmd:rcm} selects a series of suboptimal models, each contains a unique subset of predictors. 
 The exact procedure for selecting the suboptimal model depends on the selection method specified by {opt method(sel_method)}. 
-Available selection methods include best subset, lasso, forward stepwise and backward stepwise selections; see details below. 
+Available selection methods include best subset, lasso, forward stepwise and backward stepwise selections; see below for details. 
 
 {pstd}
 Step 2: Select the optimal model from the suboptimal models
@@ -120,12 +121,12 @@ the donor pool defaults to all available units other than the treated unit.
 The previous option {opth ctrlunit:(numlist:numlist)} is deprecated, but continues to work just like the current option {opth counit:(numlist:numlist)}.
 
 {phang} 
-{opth preperiod:(numlist:numlist)} a list of pretreatment periods as {it:{help numlist:numlist}} given in the time variable specified in {helpb xtset} {it:timevar}.
+{opth preperiod:(numlist:numlist)} a list of pre-treatment periods as {it:{help numlist:numlist}} given in the time variable specified in {helpb xtset} {it:timevar}.
 If no {bf:preperiod} is specified, {bf:preperiod} defaults to the entire pre-intervention period, 
 which ranges from the earliest time period available in the time variable to the period immediately prior to the intervention.
 
 {phang} 
-{opth postperiod:(numlist:numlist)} a list of posttreatment periods (when and after the intervention occurred) as {it:{help numlist:numlist}} given in the time variable specified in {helpb xtset} {it:timevar}. 
+{opth postperiod:(numlist:numlist)} a list of post-treatment periods (when and after the intervention occurred) as {it:{help numlist:numlist}} given in the time variable specified in {helpb xtset} {it:timevar}. 
 If no {bf:postperiod} is specified, {bf:postperiod} defaults to the entire post-intervention period, which ranges from the time period when the intervention occurred to the last time period available in the time variable.
 
 {dlgtab:Optimization}
@@ -209,7 +210,7 @@ If {bf:fill(linear)} is specified, then missing values are replaced by linear in
 Beware that these two methods for filling in missing values are rough, and only provided for convenience. If no {opt fill(fil_method)} is specified, then missing values are left unchanged.
 
 {p 8 8 2}
-Note that {cmd:rcm} generally allows for missing values in the pretreatment period, although it may be difficult to perform cross-validation for lasso.
+Note that {cmd:rcm} generally allows for missing values in the pre-treatment periods, although it may be difficult to perform cross-validation for lasso.
 However, if the selected predictors include missing values in the post-treatment periods, then there will be missing values in the counterfactual predictions and treatment effects as well.
 {p_end}
 
@@ -219,16 +220,16 @@ However, if the selected predictors include missing values in the post-treatment
 {cmdab: placebo}([{opth unit unit(numlist)} {opth period(numlist)} {opt cutoff(#_c)}]) specifies the types of placebo tests to be performed; otherwise, no placebo test will be implemented.
 
 {phang2} 
-{bf:unit} and {opth unit(numlist)} specifies the in-space placebo test using fake treatment units in the donor pool, 
+{bf:unit} and {opth unit(numlist)} specifies placebo tests using fake treatment units in donor pool, 
 where {bf:unit} uses all fake treatment units and {opth unit(numlist)} uses a list of fake treatment units specified by {it:{help numlist:numlist}}.
 These two options iteratively assign the treatment to control units where no intervention actually occurred, 
-and calculate the p-values of the treatment effects. Note that only one of {bf:unit} and {opth unit(numlist)} can be specified.
+and calculate the p-value of the treatment effect. Note that only one of {bf:unit} and {opth unit(numlist)} can be specified.
 
 {phang2} 
-{opth period:(numlist:numlist)} specifies the in-time placebo test using fake treatment times (more than one fake treatment time can be specified). This option assigns the treatment to time periods prior to the intervention, when no treatment actually ocurred.
+{opth period:(numlist:numlist)} specifies placebo tests using fake treatment times. This option assigns the treatment to time periods previous to the intervention, when no treatment actually ocurred.
 
 {phang2} 
-{opt cutoff(#_c)} specifies a cutoff threshold that discards fake treatment units with pretreatment MSPE {it:#_c} times larger than that of the treated unit, where {it:#_c} must be a real number greater than or equal to 1. 
+{opt cutoff(#_c)} specifies a cutoff threshold that discards fake treatment units with pre-treatment MSPE {it:#_c} times larger than that of the treated unit, where {it:#_c} must be a real number greater than or equal to 1. 
 This option only applies when {bf:unit} or {opth unit(numlist)} is specified. If this option is not specified, then no fake treatment units are discarded.
 
 {dlgtab:Reporting}  
@@ -239,18 +240,24 @@ This option only applies when {bf:unit} or {opth unit(numlist)} is specified. If
 {phang}
 {opt nofigure} Do not display figures. The default is to display all figures for estimation results and placebo tests if available.
 
+{phang}
+{cmdab:savegraph}([{it:prefix}], [{cmdab:asis} {cmdab:replace}]) automatically and iteratively calls the {helpb graph save} to save all produced graphs to the current path,
+where {it: prefix} specifies the prefix added to {it: _graphname} to form a file name, that is, the graph named {it: graphname} is stored as {it: prefix_graphname}.gph.
+{cmdab:asis} and {cmdab:replace} are options passed to {helpb graph save}; for details, see {manhelp graph G-2: graph save}. 
+Note that this option only applies when {opt nofigure} is not specified.
+
 {marker examples}{...}
 {title:Example 1: estimating the impact of political integration of Hong Kong with mainland China in 1997q3 (Hsiao et al., 2012)}
 
 {phang2}{cmd:. use growth, clear}{p_end}
 {phang2}{cmd:. xtset region time}{p_end}
 
-{phang2}* Show the unit number of Hong Kong and the treatment periods{p_end}
+{phang2}* Show the unit number of Hong Kong and treatment periods{p_end}
 {phang2}{cmd:. label list}{p_end}
 {phang2}{cmd:. display tq(1997q3)}{p_end}
 {phang2}{cmd:. display tq(2003q4)}{p_end}
 
-{phang2}* Replicate results in Hsiao et al.(2012) with specified control units and designated posttreatment periods{p_end}
+{phang2}* Replicate results in Hsiao et al.(2012) with specified control units and designated post-treatment periods{p_end}
 {phang2}{cmd:. rcm gdp, trunit(9) trperiod(150) counit(4 10 12 13 14 19 20 22 23 25) postperiod(150/175)}{p_end}
 
 {phang2}* Use post-lasso OLS with LOOCV and all control units,
@@ -263,7 +270,7 @@ and create a Stata frame "growth_wide" storing generated variables in wide form 
 {phang2}* Change back to the default Stata frame {p_end}
 {phang2}{cmd:. frame change default}{p_end}
 
-{phang2}* Implement the in-space placebo test using all fake treatment units in the donor pool{p_end}
+{phang2}* Implement a placebo test using all fake treatment units in the donor pool{p_end}
 {phang2}{cmd:. rcm gdp, trunit(9) trperiod(150) postperiod(150/175) method(lasso) criterion(cv) placebo(unit)}{p_end}
 
 {title:Example 2: estimating the impact of economic integration between Hong Kong and mainland China in 2004q1 (Hsiao et al., 2012)}
@@ -278,10 +285,10 @@ and create a Stata frame "growth_wide" storing generated variables in wide form 
 {phang2}* Replicate results in Hsiao et al.(2012) with all control units{p_end}
 {phang2}{cmd:. rcm gdp, trunit(9) trperiod(176) method(best)}{p_end}
 
-{phang2}* Use post-lasso OLS with LOOCV, and create a Stata frame "growth_wide" storing generated variables in the wide form{p_end}
+{phang2}* Use post-lasso OLS with LOOCV, and create a Stata frame "growth_wide" storing generated variables in wide form{p_end}
 {phang2}{cmd:. rcm gdp, trunit(9) trperiod(176) method(lasso) criterion(cv) frame(growth_wide)}{p_end}
 
-{phang2}* Implement the in-space placebo test using all fake treatment units in the donor pool, and the in-time placebo test using the fake treatment time 2002q1{p_end}
+{phang2}* Implement placebo tests using all fake treatment units in the donor pool, and fake treatment time 2002q1{p_end}
 {phang2}{cmd:. display tq(2002q1)}{p_end}
 {phang2}{cmd:. rcm gdp, trunit(9) trperiod(176) method(lasso) criterion(cv) placebo(unit period(168))}{p_end}
 
@@ -299,13 +306,13 @@ and create a Stata frame "growth_wide" storing generated variables in wide form 
 {phang2}* Use three covariates as additional predictors{p_end}
 {phang2}{cmd:. rcm gdp infrate trade industry, tru(17) trp(1990) me(lasso) cr(cv) fold(10)}{p_end}
 
-{phang2}* Fill in missing values by sample means for each units, and implement the in-space placebo tests using fake treatment units with pretreatment MSPE 10 times smaller than or equal to that of the treated unit{p_end}
+{phang2}* Fill in missing values by sample means for each units, and implement placebo tests using the fake treatment units with pre-treatment MSPE 10 times smaller than or equal to that of the treated unit{p_end}
 {phang2}{cmd:. rcm gdp infrate trade industry, tru(17) trp(1990) me(lasso) cr(cv) fold(10) fill(mean) placebo(unit cut(10))}{p_end}
 
-{phang2}* Fill in missing values by sample means for each units, and implement the in-time placebo test with the fake treatment time 1980{p_end}
+{phang2}* Fill in missing values by sample means for each units, and implement a placebo test with fake treatment time 1980{p_end}
 {phang2}{cmd:. rcm gdp infrate trade industry, tru(17) trp(1990) me(lasso) cr(cv) fold(10) fill(mean) placebo(period(1980))}{p_end}
 
-{phang2}* Fill in missing values by linear interpolation for each units, and create a Stata frame "WestGermany_wide" storing generated variables in the wide form{p_end}
+{phang2}* Fill in missing values by linear interpolation for each units, and create a Stata frame "WestGermany_wide" storing generated variables in wide form{p_end}
 {phang2}{cmd:. rcm gdp infrate trade industry, tru(17) trp(1990) me(lasso) cr(cv) fold(10) fill(linear) frame(WestGermany_wide)}{p_end}
 
 {marker results}{...}
@@ -355,6 +362,7 @@ and create a Stata frame "growth_wide" storing generated variables in wide form 
 {synopt:{cmd:e(estimate)}}method for estimating the optimal model for counterfactual predictions{p_end}
 {synopt:{cmd:e(seed)}}seed used by the random number generator for reproducible results{p_end}
 {synopt:{cmd:e(frame)}}name of Stata frame storing generated variables in wide form{p_end}
+{synopt:{cmd:e(graph)}}names of all produced graphs{p_end}
 {synopt:{cmd:e(properties)}}{bf:b V}{p_end}
 
 {synoptset 20 tabbed}{...}
@@ -393,8 +401,7 @@ Wang, Hanseng, Bo Li and Chenlei Leng. 2009. Shrinkage tuning parameter selectio
 {it:Journal of Royal Statistical Society, Series B} 71(3): 671-683.
 
 {phang}
-Yan, Guanpeng, and Qiang Chen. 2022. rcm: A Stata Command for Regression Control Method. 
-{it:Stata Journal} forthcoming.
+{browse "https://journals.sagepub.com/doi/pdf/10.1177/1536867X221140960": Yan, Guanpeng, and Qiang Chen (2022). rcm: A command for the regression control method. {it:The Stata Journal} 22(4): 842–883.}
 
 {marker author}{...}
 {title:Author}

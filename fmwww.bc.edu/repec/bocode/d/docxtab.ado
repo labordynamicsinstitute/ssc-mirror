@@ -5,7 +5,7 @@ version 16.0;
  List the variables in varlist as a table
  to a putdocx table.
  *! Author: Roger Newson
-*! Date: 13 December 2022
+*! Date: 11 January 2023
 *;
 
 syntax [ varlist (min=1) ] [if] [in] , TABlename(name)
@@ -216,6 +216,15 @@ if "`trowseq'"!="" qui {;
 foreach X in ncol nrow nfoot lfoot ffoot nhead lhead fhead nbody lbody fbody {;
   return scalar `X'=``X'';
 };
+return local varlist "`varlist'";
+* Table column sequences *;
+local tcolseq "";
+forv i1=1(1)`nvar' {;
+  local i2 = `i1' + ("`obsno'"!="");
+  local tcolseq "`tcolseq' `i2'";
+};  
+local tcolseq: list clean tcolseq;
+return local tcolseq "`tcolseq'";
 
 
 end;

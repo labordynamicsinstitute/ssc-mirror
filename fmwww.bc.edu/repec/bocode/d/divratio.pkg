@@ -1,0 +1,23 @@
+d 'DIVRATIO': module for estimating diversion ratios and willingness-to-pay from a semiparametric choice model 
+d
+d   divratio estimates diversion ratios and willingness-to-pay
+d metrics using the semiparametric choice model presented in Raval,
+d Rosenbuam, and Tenn (2017). 
+d
+d KW: diversion ratio
+d KW: willingness-to-pay
+d KW: choice model
+d
+d Requires: Stata version 14.2
+d
+d Distribution-Date: 20230112
+d
+d Author: Chris Lau, US Federal Trade Commission
+d Support: email chris.vlau@@gmail.com
+d
+f divratio.ado
+f divratio.sthlp
+f ../s/sim_data.dta
+f divratio_template.do
+f divratio_documentation.pdf
+f ../c/create)sim_data.R

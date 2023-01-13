@@ -38,6 +38,7 @@ p scheme-tfl module to provide graph scheme, based on Transport for London's cor
 p scheme_rbn1mono module to provide minimal monochrome graphics schemes
 p scheme_scientific module to provide a graphic scheme favored by many scientific journals
 p scheme_tufte module to provide a Tufte-inspired graphics scheme
+p scheme_ukri module to provide graphics scheme for UK Research and Innovation (UKRI) guidelines
 p schemepack module providing ready-to-use graph schemes
 p scls module to perform symmetrically censored least squares
 p scm module to process data for Social Cognitive Mapping
