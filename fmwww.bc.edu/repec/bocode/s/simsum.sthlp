@@ -1,26 +1,42 @@
 {smcl}
-{* 23nov2015, Ian White}
-{hline}
-help for {hi:simsum}{right:Ian White}
-{hline}
+{* v2.0  13jan2023  Ian White}{...}
+{viewerjumpto "Syntax" "simsum##syntax"}{...}
+{viewerjumpto "Main options" "simsum##main_options"}{...}
+{viewerjumpto "Data checking options" "simsum##check_options"}{...}
+{viewerjumpto "Calculation options" "simsum##calc_options"}{...}
+{viewerjumpto "Options specifying degrees of freedom" "simsum##df_options"}{...}
+{viewerjumpto "Performance measure options" "simsum##pm_options"}{...}
+{viewerjumpto "Display options" "simsum##display_options"}{...}
+{viewerjumpto "Output data set options" "simsum##output_options"}{...}
+{viewerjumpto "Example" "simsum##example"}{...}
+{viewerjumpto "Errata" "simsum##errata"}{...}
+{viewerjumpto "References" "simsum##refs"}{...}
+{viewerjumpto "Author and updates" "simsum##updates"}{...}
+{title:Title}
 
-{title:Analyses of simulation studies including Monte Carlo error}
+{phang}{hi:simsum} - Analyses of simulation studies including Monte Carlo error
+
 
 {title:Introduction}
 
 {p 4 4 2}
 The program {cmd:simsum} computes performance measures for 
 simulation studies in which each simulated data set yields point estimates by one or more analysis 
-methods. Bias, empirical standard error and precision relative to a reference method can be computed 
-for each method.
+methods. 
+Bias, empirical standard error, precision relative to a reference method and mean squared error can be computed for each method.
 If, in addition, model-based standard errors are available then {cmd:simsum} can compute 
 the average model-based standard error, 
 the relative error in the model-based standard error, the coverage of nominal confidence intervals, 
 and the power to reject a null hypothesis. 
 Monte Carlo errors are available for all estimated quantities.
 
+{p 4 4 2}
+The methods are described in a {help simsum##White++10:Stata Journal article}. 
+Please also see our {help simsum##Morris++19:tutorial} on simulation studies.
+If you use this programme in a publication, please cite the {help simsum##White++10:Stata Journal article}. 
 
-{title:Syntax}
+
+{title:Syntax}{marker syntax}
 
 {p 4 4 2}
 Data may be in a wide or long format. 
@@ -47,7 +63,7 @@ where {it:estvarname} is a variable containing the point estimates,
 The {it:options} are described below.
 
 
-{title:Main options}
+{title:Main options}{marker main_options}
 
 {phang} {cmd:true(}{it:expression}{cmd:)} gives the true value of the parameter. 
 This is used in calculations of bias and coverage and is required whenever these performance measures are requested.
@@ -72,7 +88,7 @@ are formed by adding the given suffix to the names of the variables containing t
 It may be combined with {cmdab:sep:refix(}{cmd:)} but not with {cmd:se(}{cmd:)}.
 
 
-{title:Data checking options}
+{title:Data checking options}{marker check_options}
 
 {phang} {cmd:graph} requests a descriptive graph of standard errors against point estimates.
 
@@ -93,7 +109,7 @@ Otherwise the program halts with an error. (Missing values are always dropped.)
 {phang} {cmd:listmiss} lists observations with missing point estimates and/or standard errors.
 
 
-{title:Calculation options}
+{title:Calculation options}{marker calc_options}
 
 {phang} {cmd:level(}#{cmd:)} specifies the confidence level for coverages and powers. Default is {cmd:$level}.
 
@@ -112,8 +128,10 @@ as the root mean squared value (the default) or as the arithmetic mean.
 With data in wide format, {it:string} must be a variable name. 
 With data in long format, {it:string} must be a value of the method variable; if the value is labelled then the label must be used.
 
+{phang} {cmd:null(}#{cmd:)} specifies the null value against which power will be calculated. 
 
-{title:Options specifying degrees of freedom}
+
+{title:Options specifying degrees of freedom}{marker df_options}
 
 {phang} Degrees of freedom are used in calculating coverages and powers.
 
@@ -129,15 +147,17 @@ by adding the given suffix to the names of the variables containing the point es
 It may be combined with {cmd:dfprefix()} but not with {cmd:df()}.
 
 
-{title:Performance measure options}
+{title:Performance measure options}{marker pm_options}
 
-{p}If none of the following options is specified, then all available performance measures are computed.
+{phang}If none of the following options is specified, then all available performance measures are computed.
 
 {phang} {cmd:bsims} reports the number of simulations with non-missing point estimates.
 
 {phang} {cmd:sesims} reports the number of simulations with non-missing standard errors.
 
 {phang} {cmd:bias} estimates the bias in the point estimates.
+
+{phang} {cmd:mean} estimates the mean of the point estimates.
 
 {phang} {cmd:empse} estimates the empirical standard error -- the standard deviation of the point estimates.
 
@@ -147,16 +167,38 @@ This calculation is slow: omitting it can reduce run time by up to 90%.
 
 {phang} {cmd:mse} estimates the mean squared error.
 
+{phang} {cmd:rmse} estimates the root mean squared error.
+
 {phang} {cmd:modelse} estimates the model-based standard error. See {cmd:modelsemethod()} above.
+
+{phang} {cmd:ciwidth} estimates the mean confidence interval width. 
 
 {phang} {cmd:relerror} estimates the proportional error in the model-based standard error, using the empirical standard error as gold standard.
 
 {phang} {cmd:cover} estimates the coverage of nominal confidence intervals at the specified level.
 
-{phang} {cmd:power} estimates the power to reject the null hypothesis that the true parameter is zero, at the specified level.
+{phang} {cmd:power} estimates the power to reject the null hypothesis at the specified level.
+The null hypothesis is that the true parameter is the value specified by the {cmd:null()} option, or zero if this is not specified.
+
+{phang}The table below shows which performance measures require the true value specified by {cmd:true()} and which require the standard error specified by {cmd:se()}, {cmd:seprefix()} or {cmd:sesuffix()}:
+
+{col 8} {col 23} true {col 39} se
+{col 8} bsims {col 25}  {col 40} 
+{col 8} sesims {col 25}  {col 40} x
+{col 8} bias {col 25} x {col 40} 
+{col 8} mean {col 25}  {col 40} 
+{col 8} empse {col 25}  {col 40}
+{col 8} relprec {col 25}  {col 40} 
+{col 8} mse {col 25} x {col 40} 
+{col 8} rmse {col 25} x {col 40} 
+{col 8} modelse {col 25}  {col 40} x
+{col 8} ciwidth {col 25}  {col 40} x
+{col 8} relerror {col 25}  {col 40} x
+{col 8} cover {col 25} x {col 40} x
+{col 8} power {col 25}  {col 40} x
 
 
-{title:Display options}
+{title:Display options}{marker display_options}
 
 {phang} {cmd:nolist} suppresses listing of the results, and is only allowed when {cmd:clear} or {cmd:saving()} is specified.
 
@@ -176,7 +218,7 @@ Defaults are the existing format of the [first] estimate variable for (1) and (2
 {phang} {cmdab:ab:breviate(}#{cmd:)} invokes this {cmd:list} option when printing the results.
 
 
-{title:Output data set options}
+{title:Output data set options}{marker output_options}
 
 {phang} {cmd:clear} loads the performance measure data into memory.
 
@@ -191,7 +233,7 @@ transposes the output data set so that performance measures are columns and meth
 (only useful with {cmd:clear} or {cmd:saving()}).
 
 
-{title:Example}
+{title:Example}{marker example}
 
 {phang}This example uses data in long format stored in MIsim.dta:
 
@@ -204,6 +246,36 @@ transposes the output data set so that performance measures are columns and meth
 {phang}{cmd:. simsum b*, se(se*) true(0.5) mcse format(%7.0g)}
 
 
-{title:Author}
+{title:Errata}{marker errata}
 
-{phang}Ian White, MRC Biostatistics Unit, Cambridge, UK; ian.white@mrc-bsu.cam.ac.uk.
+{phang} One formula is written wrongly in the Stata Journal article, but the correct formula is used in the program. 
+This is in the fourth equation on page 378, giving the MC error for the model-based standard error under the {cmd:modelsemethod(mean)} option.
+The denominator n in this formula should be n(n-1).
+
+{phang} Until v0.18, the formula for the MCSE of the relative precision used (n-2) in the denominator. This is now (n-1) as in the Stata Journal article. The difference is unlikely to have any practical importance.
+
+
+{title:References}{marker refs}
+
+{phang}{marker White++10}
+White IR. 
+simsum: Analyses of simulation studies including Monte Carlo error. 
+Stata J. 2010;10:369-385. 
+{browse "http://www.stata-journal.com/article.html?article=st0200"}
+
+{phang}{marker Morris++19}
+Morris TP, White IR, Crowther MJ. 
+Using simulation studies to evaluate statistical methods. 
+Stat Med. 2019;38(11):2074-2102. 
+{browse "http://doi.wiley.com/10.1002/sim.8086"}
+
+
+{title:Author and updates}{marker updates}
+
+{phang}Ian White, MRC Clinical  Trials Unit at UCL, London, UK. 
+Email {browse "mailto:ian.white@ucl.ac.uk":ian.white@ucl.ac.uk}.
+
+{phang}You can get the latest version of this and my other Stata software from github. 
+See {browse "https://github.com/UCL/simsum"}.
+
+

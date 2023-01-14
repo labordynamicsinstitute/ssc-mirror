@@ -1,0 +1,16 @@
+d 'ROWSUM': module for summing up values of observations and saving results to a new observation
+d
+d   rowsum sums the values of multiple observations. It then
+d generates a new observation and assigns the summed value to it. 
+d
+d KW: data management
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20230113
+d
+d Author: Pengzhan Qian, , Queen Mary University of London
+d Support: email p.qian@@qmul.ac.uk
+d
+f rowsum.ado
+f rowsum.sthlp

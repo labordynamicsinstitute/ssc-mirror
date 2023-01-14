@@ -216,6 +216,7 @@ p rotate2 module to produce sorted and labeled rotated matrix
 p rowmat_utils module to perform parallel computation on sequences of matrices in Mata
 p rowranks module to create row ranks of a set of variables 
 p rowsort module to row sort a set of integer variables
+p rowsum module for summing up values of observations and saving results to a new observation
 p rpaxioms module to test and evaluate axioms of revealed preferences
 p rpme module to compute Robust Pareto midpoint estimator
 p rpnfcn module to provide a Mata generic function evaluator based on Reverse Polish Notation
