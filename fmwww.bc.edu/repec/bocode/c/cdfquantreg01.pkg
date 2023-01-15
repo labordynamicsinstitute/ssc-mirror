@@ -1,0 +1,76 @@
+d 'CDFQUANTREG01': module for estimating generalized linear models for doubly-bounded random variables with finite-tailed cdf-quantile distributions
+d
+d  cdfquantreg01 estimates generalized linear models with
+d finite-tailed cdf-quantile distributions for doubly-bounded
+d random variables. It assumes that the dependent variable's values
+d are in the [0,1] interval, i.e., it can handle zeros and ones in
+d the data. These two- and three-parameter distributions are
+d especially useful for modeling quantiles, and have very flexible
+d shapes.  They enable a wide variety of quantile regression models
+d with predictors for the location, skew, and dispersion
+d parameters, and simple interpretations of those parameters. 
+d Users may specify separate submodels for the location, skew, and
+d dispersion parameters, with different or overlapping sets of
+d predictors in each. 
+d
+d KW: generalized linear models
+d KW: binary random variables
+d KW: cdf-quantile distributions
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 
+d
+d Author: Michael Smithson, Australian National University
+d Support: email Michael.Smithson@@anu.edu.au
+d
+f cdfquantreg01.ado
+f cdfquantreg01.sthlp
+f ../a/asinhasinhinnerv2.ado
+f ../a/asinhasinhinnerv3.ado
+f ../a/asinhasinhinnerw2.ado
+f ../a/asinhasinhinnerw3.ado
+f ../a/asinhasinhouterv2.ado
+f ../a/asinhasinhouterv3.ado
+f ../a/asinhasinhouterw2.ado
+f ../a/asinhasinhouterw3.ado
+f ../a/asinhcauchyinnerv2.ado
+f ../a/asinhcauchyinnerv3.ado
+f ../a/asinhcauchyinnerw2.ado
+f ../a/asinhcauchyinnerw3.ado
+f ../a/asinhcauchyouterv2.ado
+f ../a/asinhcauchyouterv3.ado
+f ../a/asinhcauchyouterw2.ado
+f ../a/asinhcauchyouterw3.ado
+f cauchitasinhinnerv2.ado
+f cauchitasinhinnerv3.ado
+f cauchitasinhinnerw2.ado
+f cauchitasinhinnerw3.ado
+f cauchitasinhouterv2.ado
+f cauchitasinhouterv3.ado
+f cauchitasinhouterw2.ado
+f cauchitasinhouterw3.ado
+f cauchitcauchyinnerv2.ado
+f cauchitcauchyinnerv3.ado
+f cauchitcauchyinnerw2.ado
+f cauchitcauchyinnerw3.ado
+f cauchitcauchyouterv2.ado
+f cauchitcauchyouterv3.ado
+f cauchitcauchyouterw2.ado
+f cauchitcauchyouterw3.ado
+f cdfquantreg01.ado
+f cdfquantreg01.sthlp
+f cdfquantreg01_margins.sthlp
+f cdfquantreg01_mf.ado
+f cdfquantreg01_p.ado
+f cdfquantreg01_postestimation.sthlp
+f ../t/t2t2innerv2.ado
+f ../t/t2t2innerv3.ado
+f ../t/t2t2innerw2.ado
+f ../t/t2t2innerw3.ado
+f ../t/t2t2outerv2.ado
+f ../t/t2t2outerv3.ado
+f ../t/t2t2outerw2.ado
+f ../t/t2t2outerw3.ado
+f ../y/YoonData2.dta
+f ../s/Stata_FTCDFQ_Distributions_Vignette.pdf

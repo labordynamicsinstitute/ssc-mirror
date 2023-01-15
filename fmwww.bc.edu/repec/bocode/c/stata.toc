@@ -29,6 +29,7 @@ p cddens module to estimate a Density under Measurement Error using Auxiliary In
 p cdecompose module to estimate canonical permanent-transitory state space models
 p cdfplot module to plot a cumulative distribution function
 p cdfquantreg module for estimating generalized linear models for doubly-bounded random variables with cdf-quantile distributions
+p cdfquantreg01 module for estimating generalized linear models for doubly-bounded random variables with finite-tailed cdf-quantile distributions
 p cdo module to get an update when the dofile stalls 
 p cdout module to display the current working directory
 p cdreg module to estimate Linear Regression under Measurement Error using Auxiliary Information
