@@ -1,0 +1,24 @@
+d 'IPWLOGIT': module to fit marginal logistic regression by inverse probability weighting
+d
+d  : ipwlogit fits marginal logistic regression of a binary
+d dependent variable on a treatment variable, possibly adjusting
+d for control variables by inverse probability weighting (IPW). The
+d resulting estimate can be interpreted as a marginal (log) odds
+d ratio of a positive outcome. The treatment variable can be
+d categorical, continuous, or discrete. 
+d
+d KW: marginal logistic regression
+d KW: marginal odds ratio
+d KW: inverse probability weighting
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20230116
+d
+d Author: Ben Jann, University of Bern
+d Support: email jann@@unibe.ch
+d
+f ipwlogit.ado
+f ../_/_ipwlogit_svy.ado
+f ipwlogit.sthlp
+f ipwlogit.zip

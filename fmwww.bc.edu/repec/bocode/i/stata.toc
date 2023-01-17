@@ -51,6 +51,7 @@ p inequal7 module to compute measures of inequality
 p inflate module to inflate variables to real dollars using the CPI-U series
 p ingap module to insert gap observations into a data set before output by listtex
 p inlist2 module to create an inlist() dummy, without the inlist() limitations
+p inmor module to compute marginal odds ratios after model estimation
 p inorm module to perform multiple imputation using Schafer's method
 p insheetjson module for importing tabular data from JSON sources on the internet
 p inshell module to send commands to the shell as well as capture and print their standard output, standard error, and native shell return codes
@@ -87,6 +88,7 @@ p ipfraking module to perform iterative proportional fitting, aka raking
 p ipfweight module to create adjustment weights for surveys
 p ipshin module to perform Im-Pesaran-Shin panel unit root test
 p ipwbreg module to compute inverse propensity weights from Bernoulli regression
+p ipwlogit module to fit marginal logistic regression by inverse probability weighting
 p iquantile module to calculate interpolated quantiles
 p ira module to calculate rwg and related interrater agreement indices
 p irax module to perform isotonic regression analysis

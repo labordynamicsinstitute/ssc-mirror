@@ -1,0 +1,27 @@
+d 'INMOR': module to compute marginal odds ratios after model estimation
+d
+d  lnmor is a post-estimation command to compute (adjusted)
+d marginal odds ratios after logit or probit using G-computation.
+d By default, lnmor obtains marginal ORs by applying fractional
+d logit to averaged counterfactual predictions from the original
+d model. Alternatively, for continuous predictors, lnmor can obtain
+d derivative-based or discrete-change-based marginal ORs. 
+d
+d KW: marginal odds ratio
+d KW: G-computation
+d KW: logistic regression
+d KW: logit
+d KW: probit
+d
+d Requires: Stata version 15 and  moremata from SSC (q.v.)
+d
+d Distribution-Date: 20230116
+d
+d Author: Ben Jann, University of Bern
+d Support: email jann@@unibe.ch
+d
+f inmor.ado
+f inmor_svyr.ado
+f inmor_svyb.ado
+f inmor.sthlp
+f inmor.zip

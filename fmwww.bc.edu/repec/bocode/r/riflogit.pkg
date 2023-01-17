@@ -1,0 +1,24 @@
+d 'RIFLOGIT': module to fit unconditional logistic regression
+d
+d  riflogit fits an unconditional logistic regression by applying
+d least-squares estimation to the RIF (recentered influence
+d function) of the marginal log odds of a positive outcome. The
+d exponents of the coefficients have an (approximate) marginal odds
+d ratio interpretation. 
+d
+d KW: unconditional logistic regression
+d KW: marginal odds ratio
+d KW: recentered influence function
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20230116
+d
+d Author: Ben Jann, University of Bern
+d Support: email jann@@unibe.ch
+d
+f ../v/riflogit.ado
+f ../v/riflogit_p.ado
+f ../v/riflogit_RIF.ado
+f ../v/riflogit.sthlp
+f ../v/riflogit.zip
