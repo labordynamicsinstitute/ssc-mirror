@@ -75,6 +75,7 @@ void stpm2_ml_hazard(transmorphic scalar M,
 		PS->xb0 = moptimize_util_xb(M,b,3)
 		PS->expxb0 = exp((*PS).xb0)
 	}
+
 	lnfj = (*PS).d :*(log((*PS).dxb) :+ (*PS).xb) :-(*PS).expxb
 	if ((*PS).delentry) lnfj = lnfj :+ ((*PS).calct0):* (*PS).expxb0
 	if (todo==0) return
@@ -348,7 +349,7 @@ void stpm2_ml_normal_rs(transmorphic scalar M,
 		PS->xb0 = moptimize_util_xb(M,b,3)
 	}
 
-	lnf = (*PS).d :*(log((*PS).bhazard :+ (*PS).dxb:*normalden((*PS).xb):/((*PS).t):*normal(-(*PS).xb))) :+
+	lnf = (*PS).d :*(log((*PS).bhazard :+ (*PS).dxb:*normalden((*PS).xb):/((*PS).t):/normal(-(*PS).xb))) :+
 			lnnormal(-(*PS).xb)
 	if ((*PS).delentry) lnf = lnf :- ((*PS).calct0):* lnnormal(-(*PS).xb0)
 }

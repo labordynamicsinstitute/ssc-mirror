@@ -1,4 +1,4 @@
-*! version 1.7.4 12Feb2019
+*! version 1.7.6 18Jan2023
 /*
 History
 PL 12mar2019: meansurv with no timevar opton and td effects.

@@ -170,6 +170,7 @@ p lms module to perform least median squares regression fit
 p lmsrd module to compute Spurious Regression Diagnostic after OLS Regression
 p lmtest module to perform Lagrange multiplier test after constrained maximum likelihood estimation
 p lmztest module to test for Zipf´s law
+p lnmor module to compute marginal odds ratios after model estimation
 p loasampsi module to compute power and sample size for limits of agreement (LOA) analysis
 p localp module for kernel-weighted local polynomial smoothing  
 p locpr module for semi-parametric estimation

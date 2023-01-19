@@ -17,8 +17,8 @@ d
 d Author: Ben Jann, University of Bern
 d Support: email jann@@unibe.ch
 d
-f ../v/riflogit.ado
-f ../v/riflogit_p.ado
-f ../v/riflogit_RIF.ado
-f ../v/riflogit.sthlp
-f ../v/riflogit.zip
+f riflogit.ado
+f riflogit_p.ado
+f riflogit_RIF.ado
+f riflogit.sthlp
+f riflogit.zip

@@ -72,6 +72,7 @@ with a maximum of {cmd:time5({help stmerlin##mt_opts:{it:mt_opts}})}{p_end}
 {marker displayopts}{...}
 {synopthdr:display options}
 {synoptline}
+{synopt :{opt eform}}display exponentiated coefficients{p_end}
 {synopt :{opt showmerlin}}display the underlying {helpb merlin} model syntax{p_end}
 {synoptline}
 {p2colreset}{...}
@@ -187,6 +188,8 @@ rather than the default of log time.
 
 {marker display_details}{...}
 {dlgtab:Display}
+
+{phang}{opt eform} displays exponentiated coefficients for the main linear predictor.
 
 {phang}{opt showmerlin} displays the full {helpb merlin} model syntax.
 

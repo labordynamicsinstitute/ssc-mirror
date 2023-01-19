@@ -294,7 +294,8 @@ option would not be weakly coarser than the group variable.
 {p 4 8}
 {cmd:count_switchers_contr}: when this option is specified,
 the command counts the number of switchers for which counterfactual trends
-are estimated accounting for the controls requested in {cmd:trends_nonparam(}{it:varlist}{cmd:)}
+are estimated accounting for the controls requested in
+{cmd:trends_nonparam(}{it:varlist}{cmd:)}
 or {cmd:trends_lin(}{it:varlist}{cmd:)}.
 Assume one works with a county*year data set,
 to study the effect of a treatment taking values in {0,1,...10}.
@@ -303,17 +304,22 @@ allowing for state-specific trends.
 There may be a county going from, say,
 8 to 9 units of treatment between t-1 and t,
 while no other county in the same state receives 8 units of treatment at both dates.
-Then, one cannot estimate that county's counterfactual trend controlling for state-specific trends.
+Then, one cannot estimate that county's
+counterfactual trend controlling for state-specific trends.
 Instead, the command uses
-by default counties from other states receiving 8 units of treatment at both dates to estimate that county's counterfactual trend.
+by default counties from other states receiving 8 units of
+treatment at both dates to estimate that county's counterfactual trend.
 Similarly, assume one would like to allow for county-specific linear trends,
 but that same county is never observed with 8 units of treatment at two counsecutive dates.
 Then, the linear trend of that county's outcome with 8 units of treatment cannot be estimated.
 Instead, to estimate that county's linear trend the command uses the average linear trend across
 all counties observed with 8 units of treatment at at least two counsecutive dates.
-On the other hand, if the {cmd:always_trends_nonparam} or {cmd:always_trends_lin} option is specified,
-counties for which the counterfactual trend cannot be estimated controlling for state-specific trends are dropped from the estimation.
-The {cmd:count_switchers_contr} option allows one to know for how many switchers counterfactual trends
+On the other hand, if the {cmd:always_trends_nonparam} or
+{cmd:always_trends_lin} option is specified,
+counties for which the counterfactual trend cannot be estimated controlling
+for state-specific trends are dropped from the estimation.
+The {cmd:count_switchers_contr} option allows one to know
+for how many switchers counterfactual trends
 cannot be estimated accounting for the controls requested in
 {cmd:trends_nonparam(}{it:varlist}{cmd:)}
 or {cmd:trends_lin(}{it:varlist}{cmd:)}
@@ -769,13 +775,17 @@ and an error message will let you know about that.
 
 {p 4 4}
 The command can compute the DIDM estimator,
-controlling for other treatments that may change over the panel, as proposed by de Chaisemartin and D'Haultfoeuille (2020c).
+controlling for other treatments that may change over the panel,
+as proposed by de Chaisemartin and D'Haultfoeuille (2020c).
 In that case, let {it:othertreat} be a variable containing the other treatment, and let
 {it:fd_othertreat} be the first difference of that other treatment.
 To compute the estimator proposed by de Chaisemartin and D'Haultfoeuille (2020c),
-one should write {cmd:if_first_diff(}{it:fd_othertreat==0}{cmd:)} {cmd:trends_nonparam(}{it:othertreat}{cmd:)} in the command's options.
+one should write {cmd:if_first_diff(}{it:fd_othertreat==0}{cmd:)}
+{cmd:trends_nonparam(}{it:othertreat}{cmd:)}
+{cmd:always_trends_nonparam} in the command's options.
 With two rather than one other treatments,
-one should write {cmd:if_first_diff(}{it:fd_othertreat1==0&fd_othertreat2==0}{cmd:)} {cmd:trends_nonparam(}{it:othertreats}{cmd:)}
+one should write {cmd:if_first_diff(}{it:fd_othertreat1==0&fd_othertreat2==0}{cmd:)}
+{cmd:trends_nonparam(}{it:othertreats}{cmd:)} {cmd:always_trends_nonparam}
 in the command's options,
 where othertreats is generated as follows:
 {cmd:egen othertreats=group(othertreat1 othertreat2)}.
@@ -830,15 +840,19 @@ you can decrease the number of replications.
 You can also speed it up when the {cmd:robust_dynamic} option is specified.
 In staggered adoption designs with a binary treatment, you just need to define
 a variable
-Cohort equal to the time period when group g first gets treated (and to 0 if group g never gets treated). Then, you need to run {cmd:did_multiplegt}
+Cohort equal to the time period when group g first gets treated
+(and to 0 if group g never gets treated).
+Then, you need to run {cmd:did_multiplegt}
 with Cohort instead of G as the group variable.
 If the number of groups is large in your application,
 using this strategy can divide the computing time by more than 10.
 In more complicated designs with a non-binary and/or non-staggered treatment,
 the Cohort variable needs to be defined as follows: {cmd:egen Cohort=group(D1 F increase)},
 where:
-D1 is a time-invariant variable equal to group g's treatment at the first period it appears in the data;
-F is a time-invariant variable equal to the first time period where group g's treatment changes (and to 0 if group g's treatment never changes);
+D1 is a time-invariant variable equal to group g's treatment
+at the first period it appears in the data;
+F is a time-invariant variable equal to the first time period
+where group g's treatment changes (and to 0 if group g's treatment never changes);
 increase is a variable equal to 1 if on average across all time periods,
 group g's treatments are strictly higher than D1, and to 0 otherwise.
 If the {cmd:trends_non_param} option is specified,
@@ -852,7 +866,8 @@ Then, you will need to bootstrap the command yourself to obtain standard errors.
 To do so, you just need to: i) preserve the data;
 ii) draw a bootstrap sample using the {cmd:bsample}
 command (you can cluster the bootstrap, say, at the group level); iii)
-run {cmd:did_multiplegt} with Cohort as the group variable; iv) store the estimates somewhere;
+run {cmd:did_multiplegt} with Cohort as the group variable;
+iv) store the estimates somewhere;
 v) restore your data; vi) replicate i) to v), say,
 100 times; vii) use the standard error of your estimates across the 100 replications to estimate their actual standard errors.
 {p_end}
@@ -868,6 +883,16 @@ cohorts cannot be written as simple averages of groups with time-invariant weigh
 and one can show that imposing parallel trends at the group level is not equivalent to imposing it at the cohort level.
 Without controls or linear trends, differences are likely to be small, however.
 With controls or linear trends, differences may be larger.
+{p_end}
+ 
+{p 4 4}
+{it:Is {cmd:did_multiplegt} compatible with the {cmd:honestdid} command?}
+{p_end}
+
+{p 4 4}
+Yes, it is.
+You can find an example of how to use {cmd:honestdid} after {cmd:did_multiplegt}
+{browse "https://github.com/mcaceresb/stata-honestdid#staggered-timing-1":here}.
 {p_end}
 
 

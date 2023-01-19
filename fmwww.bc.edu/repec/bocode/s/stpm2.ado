@@ -1,6 +1,8 @@
-*! version 1.7.5 May2021
+*! version 1.7.6 18Jan2023
 /*
 History
+PL 18Jan2023: Error when fitting relative survival models with scale(normal)
+PL 24May2021: could get conformability error if expanding data after stset. Now fixed.
 PL 17May2021: added noheader and nocoef option 
 PL 20Mar2020: user-specififed knots for tvc fix
 PL 02Jul2018: Now autimatically uses the oldest option if Stata version < 15.1
@@ -165,8 +167,13 @@ local cmdline `"stpm2 `0'"'
 	tempname initmat Rinv_bh R_bh rmatrix
 	
 /* Marksample and mlopts */	
+
+
 	marksample touse
-	qui replace `touse' = 0  if _st==0 | `touse' == .
+  
+
+  
+	qui replace `touse' = 0  if _st==0 | `touse' == . | _st==.
 	
 	qui count if `touse'
 	local nobs=r(N)
@@ -198,6 +205,8 @@ local cmdline `"stpm2 `0'"'
 	else {
 		gen `touse2' = `touse'
 	}
+  
+
 
 /* Drop previous created _rcs and _d_rcs variables */
 	capture drop _rcs* 
@@ -948,7 +957,7 @@ local cmdline `"stpm2 `0'"'
 	
 /* initial values fit a Cox model with (linear time-dependent covariates) */
 /* Taken from Patrick Roystons stpm code */	
-		
+	
 	/* !! PR */ if "`verbose'"=="verbose" display as txt "Obtaining Initial Values"
 	if "`lininit'" == "" {
 		if "`tvc'" != "" {
@@ -1049,6 +1058,9 @@ local cmdline `"stpm2 `0'"'
 				}
 			}
 			/* !! PR */ if "`verbose'"=="verbose" display as txt "Obtaining Initial Values"
+      
+      
+      
 			if "`oldest'" == "" {
 				if "`mlmethod'" == "" {
 					if inlist("`scale'","hazard","odds","normal") {
@@ -1075,7 +1087,6 @@ local cmdline `"stpm2 `0'"'
 				local userinfo userinfo(`stpm2_struct')
 			
 				mata stpm2_setup("`stpm2_struct'")		
-
 				qui ml model `iml' stpm2_ml`addilf'_`scale'`rs'() ///
 					(xb: =  `varlist' `initrcslist', `constant' `offopt') ///
 					`thetaeq' ///

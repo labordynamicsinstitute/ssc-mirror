@@ -96,10 +96,11 @@
 {synoptset 29 tabbed}{...}
 {synopthdr:options}
 {synoptline}
-{synopt:{opth n(#)}}sample size of simulated dataset{p_end}
+{synopt:{opt aj}}use the Aalen-Johansen estimator for transition probabilities; see details{p_end}
 {synopt:{opt sim:ulate}}calculate predictions using large-sample simulation; see details{p_end}
 {synopt:{opt latent}}use latent times as the method of simulation; see details{p_end}
-{synopt:{opt aj}}use the Aalen-Johansen estimator for transition probabilities; see details{p_end}
+{synopt:{opth n(#)}}sample size of simulated dataset{p_end}
+{synopt:{opth chintpoints(#)}}number of Gauss-Legendre quadrature points; see details{p_end}
 {synopt:{opt save(name, [replace])}}save each simulated dataset used to calculate predictions and confidence intervals; see details{p_end}
 {synopt:{opth seed(#)}}set the simulation seed{p_end}
 {synoptline}
@@ -513,9 +514,13 @@ will use the estimated parameter vector every time.
 {dlgtab:Options}
 
 {phang}
-{opt n(#)} defines the number of individual simulated trajectories through the multi-state model which are used to calculate predictions 
-under the large-sample simulation approach. The default is {cmd:n(100,000)} unless {cmd:ci} is specified, then it is {cmd:n(10,000)}. 
-Accuracy increases with a higher sample, reducing Monte Carlo error, but increasing computation time.
+{opt aj} specifies a hybrid Aalen-Johansen estimator be used to calculate predictions, instead of either numerical integration or 
+large-sample simulation. This method uses the non-parametric formula for the AJ estimator, but uses parametric estimates of the 
+transition-specific cumulatve hazard functions from the fitted {cmd:models()}, or stacked model, as the ingredients, rather 
+than the non-parametric Nelson-Aalen estimates. This approach assumes constant hazards between timepoints, and hence more 
+timepoints should be used when calculating predictions, i.e. at least {cmd:obs(100)}. This option is only valid with 
+Markov models so can't currently be used with a {cmd:reset} model. The {cmd:aj} method is substantially faster than the 
+large-sample simulation approach.
 
 {phang}
 {opt simulate} forces {cmd:predictms} to use large-sample simulation to calculate predictions, rather than numerical integration 
@@ -530,13 +535,16 @@ total hazard, and a multinomial draw to determine the event that occured, based 
 methods will give essentially identical results, but the Beyersmann method is generally more computationally efficient.
 
 {phang}
-{opt aj} specifies a hybrid Aalen-Johansen estimator be used to calculate predictions, instead of either numerical integration or 
-large-sample simulation. This method uses the non-parametric formula for the AJ estimator, but uses parametric estimates of the 
-transition-specific cumulatve hazard functions from the fitted {cmd:models()}, or stacked model, as the ingredients, rather 
-than the non-parametric Nelson-Aalen estimates. This approach assumes constant hazards between timepoints, and hence more 
-timepoints should be used when calculating predictions, i.e. at least {cmd:obs(100)}. This option is only valid with 
-Markov models so can't currently be used with a {cmd:reset} model. The {cmd:aj} method is substantially faster than the 
-large-sample simulation approach.
+{opt n(#)} defines the number of individual simulated trajectories through the multi-state model which are used to calculate predictions 
+under the large-sample simulation approach. The default is {cmd:n(100,000)} unless {cmd:ci} is specified, then it is {cmd:n(10,000)}. 
+Accuracy increases with a higher sample, reducing Monte Carlo error, but increasing computation time.
+
+{phang}
+{opt chintpoints(#)} defines the number of Gauss-Legendre quadrature points used to calculate any analytically intractible integrals. 
+Numerical integration is required in the default prediction method for survival, competing risks and illness-death settings, and for 
+simulating transition times from spline and complex time-dependent models. The defaukt is {bf:chintpoints(30)}. It is good 
+practice to increase this number to ensure the predictions are reliable. Accuracy increases with a higher number, but increasing 
+computation time.
 
 {phang}
 {opt save(name, [replace])} saves the simulated trajectories dataset(s) generated when using large-sample simulation to calculate predictions and 
@@ -655,7 +663,7 @@ to a patient aged 50, with confidence intervals:{p_end}
 {title:Authors}
 
 {phang}
-Michael J. Crowther (1,2,*), Paul C. Lambert (2,3)
+Michael J. Crowther (1,*), Paul C. Lambert (2,3)
 {p_end}
 
 {phang}

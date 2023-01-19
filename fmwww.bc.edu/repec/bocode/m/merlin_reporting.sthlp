@@ -31,6 +31,7 @@ reporting of results{p_end}
 {synopt :{opt nocnsr:eport}}do not display constraints{p_end}
 {synopt :{opt nohead:er}}do not display header above parameter table{p_end}
 {synopt :{opt notable}}do not display parameter tables{p_end}
+{synopt :{opt eform}}display exponenitated coefficients{p_end}
 {synoptline}
 
 
@@ -61,6 +62,9 @@ that reports the final log-likelihood value, number of observations, etc.
 
 {phang}
 {opt notable} suppresses the parameter table.
+
+{phang}
+{opt eform} display exponentiated coefficients for the main linear predictor
 
 
 {marker remarks}{...}

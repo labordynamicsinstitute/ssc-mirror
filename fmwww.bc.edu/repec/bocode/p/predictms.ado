@@ -1,7 +1,9 @@
-*! version 4.4.0 22dec2021 MJC
+*! version 4.4.1  17jan2023 MJC
 
 /*
 History - multistate/predictms
+17jan2023: version 4.4.1 - chintpoints() option added to allow the user to specify the number of 
+						   quadrature points used in any numerical integrations
 22dec2021: version 4.4.0 - Cox model is now supported with predictms (ci's not supported yet)
                          - added moremata check
 02sep2021: version 4.3.1 - bug fix, graphms ignored extra options; now fixed
@@ -155,75 +157,77 @@ MJC 31mar2015: version 1.0.0
 
 program define predictms, sortpreserve properties(st) rclass
 	version 15.1
-	syntax 						, 		///
-                                                                        ///
-                [							///
-                        TRANSMatrix(string)				///	-transition matrix-
-                        SINGLEEVENT					///	-a single event survival model was fitted-
-                        CR						/// -competing risks model was fitted-
-                                                                        ///
-                        PROBability					/// -transition probabilities-
-                        LOS								///	-calculate length of stay in each state-
-                        RMST							///	-restricted mean survival time-
-                        VISIT							/// -prob. of ever visiting each state within time window-
-                        HAZard							/// -transition-specific hazard functions- 
-                        SURVival						/// -transition-specific survival functions-
-                        USERFunction(string)			///	-name of Mata function-
-                        USERLink(string)				///	-link function to apply to Mata function-
-                                                                                        ///
-                        MODels(string)					///	-est store objects-		
-                                                                                        ///
-                        FROM(numlist >0 asc int)		/// -starting state for predictions-
-                        TIMEvar(varname numeric)		///	-prediction times-
-                        LTruncated(numlist >=0 max=1)	///	-time at which observations become at risk-
-                        OBS(string)						///	-Number of time points to calculate predictions at between mint() and maxt()-
-                        MINT(string)					///	-minimum time to calculate predictions at-
-                        MAXT(string)					///	-maximum time to calculate predictions at-
-                                                                                        ///
-                        SEED(string)					///	-pass to set seed-
-                        N(string)						/// -sample size-
-                        SIMulate						/// -use simulation instead of numerical integration-
-                        LATENT							/// -use latent times simulation-
-                        AJ								///	-use AJ estimator-
-                                                                                        ///
-                        M(numlist >=20 int max=1)		/// -number of parameter samples from MVN-
-                        CI								/// -calculate confidence intevals-
-                        BOOTstrap						///	-use parametric bootstrap for cis-
-                        PERCentile						///	-calculate confidence intervals using percentiles-
-                        NOVCV(string)					/// -transitions to skip VCV when calculating CIs-
-                        Level(cilevel)					/// -level for CIs-
-                                                                                        ///
-                        DIFFerence						///	-calculate differences of predictions between at() and at2()-
-                        RATIO							///	-calculate ratio of predictions between at() and at2()-
-                        ATREFerence(string)				///	-reference at for contrasts-
-                                                                                        ///
-                        STANDardise						/// -standardise predictions-
-                        STANDIF(string)					///	-restricts observations to standardise over-
-                                                                                        ///
-                        RESET							///	-use clock reset approach in simulations-
-                        TSCALE2(string)					/// -transition models on a second timescale-
-                        TIME2(string)					/// -time to add to main timescale-
-                        TSRESET(string)					/// -transition-specific resets-
-                                                                                        ///
-                        OUTsample						///	-out of sample predictions-
-                        SAVE(string)					///	-save each simulated dataset from point estimates and CI calculations-
-                                                                                        ///
-                                                                                        ///
-                        SURVSIM(string)					/// -not documented-
-                        SURVSIMTOUSE(string)			/// -not documented-
-                                                                                        ///
-                                                                                        ///
-                        DEVCODE1(string)				/// -not documented-
-                        DEVCODE2(string)				/// -not documented-
-                        DEVCODE3(string)				/// -not documented-
-                        DEVCODE9(string)				/// -not doc-
-                                                                                        ///
-                        INTERACTIVE JSONPATH(string) 	///
-                                                                                        ///
-                        *								/// -infinite ats-
-                ]
+	syntax 			, 		///
+                                                ///
+        [					///
+                TRANSMatrix(string)		/// -transition matrix-
+                SINGLEEVENT			/// -a single event survival model was fitted-
+                CR				/// -competing risks model was fitted-
+                                                ///
+                PROBability			/// -transition probabilities-
+                LOS				/// -calculate length of stay in each state-
+                RMST				/// -restricted mean survival time-
+                VISIT				/// -prob. of ever visiting each state-
+                HAZard				/// -transition-specific hazard functions- 
+                SURVival			/// -transition-specific survival functions-
+                USERFunction(string)		/// -name of Mata function-
+                USERLink(string)		/// -link function to apply to Mata function-
+                                                ///
+                MODels(string)			/// -est store objects-		
+                                                ///
+                FROM(numlist >0 asc int)	/// -starting state for predictions-
+                TIMEvar(varname numeric)	/// -prediction times-
+                LTruncated(numlist >=0 max=1)	/// -time at which observations become at risk-
+                OBS(string)			/// -Number of time points-
+                MINT(string)			/// -minimum time to calculate predictions at-
+                MAXT(string)			/// -maximum time to calculate predictions at-
+                                                ///
+                SEED(string)			/// -pass to set seed-
+                N(string)			/// -sample size-
+                SIMulate			/// -use simulation-
+                LATENT				/// -use latent times simulation-
+                AJ				/// -use AJ estimator-
+                                                ///
+                M(numlist >=20 int max=1)	/// -number of parameter samples from MVN-
+                CI				/// -calculate confidence intevals-
+                BOOTstrap			/// -use parametric bootstrap for cis-
+                PERCentile			/// -use percentile based cis-
+                NOVCV(string)			/// -transitions to skip VCV when calculating CIs-
+                Level(cilevel)			/// -level for CIs-
+                                                ///
+                DIFFerence			/// 
+                RATIO				///
+                ATREFerence(string)		/// -reference at for contrasts-
+                                                ///
+                STANDardise			/// -standardise predictions-
+                STANDIF(string)			///
+                                                ///
+                RESET				/// -use clock reset approach in simulations-
+                TSCALE2(string)			/// -transition models on a second timescale-
+                TIME2(string)			/// -time to add to main timescale-
+                TSRESET(string)			/// -transition-specific resets-
+                                                ///
+                CHINTPoints(numlist max=1 >0 int)       ///
+                                                ///
+                OUTsample			///
+                SAVE(string)			///
+                                                ///
+                                                ///
+                SURVSIM(string)			/// -not documented-
+                SURVSIMTOUSE(string)		/// -not documented-
+                                                ///
+                                                ///
+                DEVCODE1(string)		/// -not documented-
+                DEVCODE2(string)		/// -not documented-
+                DEVCODE3(string)		/// -not documented-
+                DEVCODE9(string)		/// -not doc-
+                                                ///
+                INTERACTIVE JSONPATH(string) 	///
+                                                ///
+                *				/// -infinite ats-
+        ]
 					
-	//================================================================================================================================================//
+	//====================================================================//
 	// Preliminaries
 	
 	capture which merlin
@@ -400,6 +404,10 @@ program define predictms, sortpreserve properties(st) rclass
 		}				
 	}
 
+        if "`chintpoints'"=="" {
+                local chintpoints = 30
+        }
+        
 	// Checks for interactive options
 	if "`jsonpath'" != "" & "`interactive'" == "" {
 		di as error "You have used the jsonpath option without using the interactive option."
@@ -427,7 +435,7 @@ program define predictms, sortpreserve properties(st) rclass
 	}
 
 	
-	//===================================================================================================================//
+	//====================================================================//
 	
 	//core method choices
 	
@@ -436,7 +444,7 @@ program define predictms, sortpreserve properties(st) rclass
 		local bootstrap bootstrap
 	}
 	
-	//===================================================================================================================//
+	//====================================================================//
 	//parse ats
 	
 	//check at#()
@@ -600,7 +608,7 @@ program define predictms, sortpreserve properties(st) rclass
 	}
 	
 	
-	//=====================================================================================================================================================//
+	//====================================================================//
 	//CORE
 		
 		// models framework
