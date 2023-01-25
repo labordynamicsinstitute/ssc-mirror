@@ -12,19 +12,17 @@ help for {cmd:docxtab} {right:(Roger Newson)}
   {cmdab:headf:ormat}{cmd:(}{it:cell_fmt_options}{cmd:)} {cmdab:footf:ormat}{cmd:(}{it:cell_fmt_options}{cmd:)}
   {cmdab:tcol:chars}{cmd:(}{it:namelist}{cmd:)}
   {cmdab:trow:seq}{cmd:(}{newvar}{cmd:)}
-  {it:table_data_options}
+  {it:table_options}
   ]
 
 {pstd}
 where {it:tablename} is a table name for a generated table acceptable to {helpb putdocx_table:putdocx table},
 {it:cell_fmt_options} are cell format options recognized by {helpb putdocx table},
-and {it:table_data_options} are any options acceptable to the command 
+and {it:table_options} are any options acceptable to the command 
 
 {pstd}
-{cmd:putdocx table tablename = data(}{varlist}{cmd:)} [ , {cmd:varnames} {cmd:obsno} {it:table_options} ]
+{cmd:putdocx table tablename = data(}{varlist}{cmd:)} [ , {it:table_options} ]
 
-{pstd}
-including {cmd:varnames} and {cmd:obsno}.
 
 {title:Description}
 
@@ -36,7 +34,7 @@ extracted from {help char:variable characteristics}.
 These characteristics may be multiple
 (allowing multiple header and footer rows),
 and each characteristic may be set for multiple variables by the {help ssc:SSC} package {helpb chardef}.
-The generated {cmd:.docx} table table can then be modified using other {helpb putdocx_table:putdocx table} commands,
+The generated {cmd:.docx} table can then be modified using other {helpb putdocx_table:putdocx table} commands,
 to change the formatting of rows, columns, or cells.
 
 
@@ -229,13 +227,15 @@ from multiple variable characteristics.
 The total number of rows in the table {cmd:r(nrow)}
 is equal to the sum of {cmd:r(nhead)}, {cmd:r(nbody)}, and {cmd:r(nfoot)}
 (the numbers of rows in the table head, body, and foot, respectively),
-plus one more row of variable names if the option {cmd:varnames} is specified.
+plus one more row of variable names if the {cmd:varnames} option is specified,
+plus one more row if the {cmd:title()} option is specified,
+plus one more row if the {cmd:note()} option is specified.
 The total number of columns in the table {cmd:r(ncol)}
 is equal to the total number of variables in the input {varlist},
 plus one more column of table body row sequence numbers,
 if the {cmd:obsno} option is specified.
 The options {cmd:varnames} and {cmd:obsno}
-will probably not be necessary very often.
+will probably not be used very often.
 
 
 {title:Author}

@@ -1,5 +1,10 @@
-*! sunburst v1.0 24 Dec 2022. Beta release.
+*! sunburst v1.2 22 Jan 2023.
 *! Asjad Naqvi 
+
+* v1.2 22 Jan 2023: colorby() added. colorprop added. threshold() collapse fixed.
+* v1.1 14 Jan 2023: fixed draw order. added error checks. added fade option. for format check. Rest of check. 
+* v1.0 24 Dec 2022: Beta release.
+
 
 * A Step-by-step guide for a basic version is on Medium:
 * https://medium.com/the-stata-guide/stata-graphs-half-sunburst-plot-19131cf40446
@@ -11,9 +16,11 @@ program sunburst, sortpreserve
 version 15
  
 	syntax varlist(numeric max=1) [if] [in], by(varlist) ///
-		[ RADius(numlist) palette(string) colorby(string) THRESHold(numlist max=1 >=0) share format(str) LABCONDition(string) step(real 5)]   ///
+		[ RADius(numlist) palette(string) THRESHold(numlist max=1 >=0) share format(str) LABCONDition(numlist max=1 >=0) step(real 5)]   ///
 		[ LWidth(numlist) LColor(string) LABSize(numlist) aspect(real 0.5) xsize(real 2) ysize(real 1)  ]   ///
-		[ legend(passthru) title(passthru) subtitle(passthru) note(passthru) scheme(passthru) name(passthru) text(passthru) ] 
+		[ legend(passthru) title(passthru) subtitle(passthru) note(passthru) scheme(passthru) name(passthru) text(passthru) ] ///
+		[ fade(real 60) ]  ///  // v1.1 options
+		[ colorby(string) colorprop ]  // v1.2 updates
 		
 	
 		
@@ -24,8 +31,26 @@ version 15
 		exit
 	}
 	
-	marksample touse, strok
+	// check errors
 	
+	
+	if "`colorby'" != "" {
+		if !inlist("`colorby'", "name") {
+			di as error "Wrong colorby() option specified. Correct options are {it:name}. See {stata help sunburst:help file}."
+			exit
+		}
+	}
+	
+	
+	if "`format'" != "" {
+		if substr("`format'",1,1)!= "%" {
+			di as error "Please specify the correct format as %#.#x, for example, %15.0f. See {stata help format} for details."
+			exit
+		}
+	}
+	
+	
+	marksample touse, strok
 	
 
 qui {
@@ -102,7 +127,7 @@ preserve
 		}
 		
 		if `raderror' == 1 {
-			di as error "The radius order is not correctly specified."
+			di as error "The radius() order should be from smallest to largest."
 			exit
 		}
 	}
@@ -118,70 +143,111 @@ preserve
 	// and move on	
 	if "`threshold'"=="" local threshold = 0
 	
+	collapse (sum) value, by(`vars') // added the double collapse to get the threshold right for higher tiers (v1.2)
+	
 	if `len' > 1 {  // only if there is more than one layer, then collpse categories
 		gen tag`sec' = .
 		levelsof `sec' , local(lvls)
 
 		foreach x of local lvls {
-			replace tag`sec' = 1 if `sec'=="`x'" & value < `threshold'
-			replace `last' = "Rest of `x'" if tag`sec'==1 &  `sec' =="`x'"
+			count if `sec'=="`x'" & value <= `threshold'
+			if r(N) > 1 {
+				replace tag`sec' = 1 if `sec'=="`x'" & value <= `threshold'
+				replace `last' = "Rest of `x'" if tag`sec'==1 &  `sec' =="`x'"
+			}
 		}
 	}
 	
-	collapse (mean) value, by(`vars')
+	collapse (sum) value, by(`vars')
 
 	gen var0 = "Total"
-	egen double val0 = sum(value)  // global total
+	egen long val0 = sum(value)  // global total
+	format val0 %15.0fc
 
+
+	
 	if `len' > 1 {
 		forval i = 1/`second' {   
 			local j = `i' - 1
-			bysort var`j' var`i' : egen double val`i' = sum(value)
+			bysort var`j' var`i' : egen long val`i' = sum(value)
+			format val`i' %15.0fc
 		}
 	}
 
 	ren value val`len'  // individual total
 	order var* val*
 		
-	// get the first row correct
-	if `len' > 1 {
-		forval i = 0/`second' {
-			local variables `variables' var`i'
-		}
+	// define the new sorting here
+	forval i = 1/`len' {
+		local mysort `mysort' -val`i'
 	}
-	else {
-		local variables var0 var1
-	}
-
-	gsort `variables' - val`len'
-	bysort `variables': gen rank = _n
-
+	
+	gsort `mysort' 
 	gen order0 = 1 in 1
-	gen order`len' = _n
 
-	if `len' > 1 {	
-		forval i = 1/`second' {
+	
+	*if `len' > 1 {	
+		forval i = 1/`len' {
 			
 			local j = `i' - 1
 			local bylist `bylist' var`j'
-			
-			
+				
 			egen tag`i' = tag(var`j' var`i')
 			gen order`i' = sum(var`i'!=var`i'[_n-1]  )	
-			replace order`i' = . if tag`i'!=1
-			drop tag`i'
 			
-			encode var`i', gen(l`i'name)  // patch higher tier ids to lower tiers
+			if "`colorby'" == "name" {
+				encode var`i', gen(l`i'name)  // patch higher tier ids to lower tiers	
+			}
+			else {
+				gen l`i'name = order`i'
+			}
+			
+			
 		}
+	/*
 	}
 	else {
-		encode var1, gen(l1name)
+		egen tag1 = tag(var0 var1)
+		gen order1 = sum(var1!=var1[_n-1]  )	
+		
+		if "`colorby'" == "name" {
+			encode var1, gen(l1name)  // patch higher tier ids to lower tiers	
+		}
+		else {
+			gen l1name = order1
+		}		
+	
 	}
+	*/
 
-	sort `variables' order`len'
+	
+	
+	sort order`len'
 	drop if order`len' ==.	
 	
-	// pad the first row
+				// get the first row correct
+	if `len' > 1 {
+		forval i = 0/`second' {
+		local variables `variables' order`i'
+	}
+	}
+	else {
+		local variables order0 order1
+	}
+	
+	bysort `variables': gen rank = _n
+	
+	drop if order`len' ==.	
+	
+	
+	if `len' > 1 {	
+		forval i = 1/`second' {	
+			replace order`i' = . if tag`i'!=1
+		}
+	}
+	drop tag*
+	
+	// duplicate the first row
 	expand 2 in 1
 
 	local obs = _N
@@ -239,6 +305,8 @@ preserve
 		replace l1name =  l1name[_n+1]	
 	}
 	
+	
+	
 	drop if layer==0 // clean above already
 	drop rank
 
@@ -252,7 +320,8 @@ preserve
 	gen seq = .  // order of points
 	sort layer 
 	
-
+	
+	
 	*******************************
 	**** Process the layers		***
 	*******************************	
@@ -341,18 +410,17 @@ preserve
 	}	
 
 
-	// labels
-	replace share = share * 100
-	
-	if "`format'"== "" {
-		if "`share'" == "" {
+	*** define format options
+	if "`format'"  == "" {
+		if "`share'"  == "" {
 			local format %9.0fc
-		}		
-		else {			
+		}
+		else {
 			local format %5.2f
 		}
-	}
-		
+	}	
+	
+	
 	gen varstr = ""
 	
 	forval i = 1/`len' {
@@ -360,7 +428,7 @@ preserve
 			replace varstr = var + " (" + string(val, "`format'") + ")"  if id==1 & layer==`i'
 		}
 		else {
-			replace varstr = var + " (" + string(share, "`format'") + "%)"  if id==1 & layer==`i'
+			replace varstr = var + " (" + string(share * 100, "`format'") + "%)"  if id==1 & layer==`i'
 		}
 	}	
 		
@@ -375,6 +443,7 @@ preserve
 	gen angle2 = .
 		replace angle2 = (angle  * (180 / _pi))       if angle <= _pi & id==1 & quad==1
 		replace angle2 = (angle  * (180 / _pi)) - 180 if angle <= _pi & id==1 & quad==2
+
 
 		
 	***********************
@@ -444,10 +513,10 @@ preserve
 		local labs`len' 1.5
 	}	
 	
-	
 	if "`lcolor'" == "" local lcolor white
 	
-	
+**# drawing
+
 	// base layers
 	if `len' ==1 {
 		levelsof l1name if layer==1, local(lvls)
@@ -480,34 +549,33 @@ preserve
 
 	local fill = 100 - (5 * `len')  
 	
-	if `len' <=2 {
+	if `len' <= 2 {
+		
 		local level`len'
 
 		levelsof l1name if layer==`len' , local(lvl1)   
 		local i1 = r(r)
 
 		foreach x of local lvl1 {			// loop over first layer
+		
 			
-			if "`colorby'"=="base" | "`colorby'"=="" {
-				colorpalette `palette', `poptions' n(`i1') nograph
-				local level`len' `level`len'' (area y x if layer==`len' & l1name==`x', nodropbase fi(`fill') fc("`r(p`x')'") lc(`lcolor') lw(`lw`len'')) ||				
-				
-			}
-			
-			if "`colorby'"=="level" | "`colorby'"=="layer"  {
+			if "`colorprop'"!=""  {
 			
 				qui levelsof order if layer==`len' & l1name==`x', local(lvl`len')   
 				local i`len' = r(r)
 				local c`len' = 1
 				foreach z of local lvl`len' { 
-					di "`x' -  `c`len''"
 						
 					colorpalette `palette', `poptions' n(`i1') nograph
-					colorpalette "`r(p`x')'" gs14, n(`i`len'') nograph // scale the colors
+					colorpalette "`r(p`x')'" "`r(p`x')'%`fade'", n(`i`len'') nograph // scale the colors
 					local level`len' `level`len'' (area y x if layer==`len' & l1name==`x' & order==`z', nodropbase fi(`fill') fc("`r(p`c`len'')'") lc(`lcolor') lw(`lw`len'')) ||
 						
 					local ++c`len'		
 				}
+			}
+			else {
+				colorpalette `palette', `poptions' n(`i1') nograph
+				local level`len' `level`len'' (area y x if layer==`len' & l1name==`x', nodropbase fi(`fill') fc("`r(p`x')'") lc(`lcolor') lw(`lw`len'')) ||				
 			}
 		}
 	}
@@ -518,13 +586,7 @@ preserve
 
 		foreach x of local lvl1 {			// loop over first layer
 			
-			if "`colorby'"=="base" | "`colorby'"=="" {
-				colorpalette `palette', `poptions' n(`i1') nograph
-				local level`len' `level`len'' (area y x if layer==`len' & l1name==`x', nodropbase fi(`fill') fc("`r(p`x')'") lc(`lcolor') lw(`lw`len'')) ||				
-				
-			}
-			
-			if "`colorby'"=="level" | "`colorby'"=="layer"  {
+			if "`colorprop'"!=""  {
 				qui levelsof l`second'name if layer==`len' & l1name==`x', local(lvl`second')   
 				local i`second' = r(r)
 				local c`second' = 1
@@ -536,7 +598,7 @@ preserve
 					foreach z of local lvl`len' {  // loop over last year
 						
 						colorpalette `palette', `poptions' n(`i1') nograph
-						colorpalette "`r(p`x')'" gs14, n(`i`len'') nograph // scale the colors
+						colorpalette "`r(p`x')'" "`r(p`x')'%`fade'", n(`i`len'') nograph // scale the colors
 						local level`len' `level`len'' (area y x if layer==`len' & l1name==`x' & l`second'name==`y' & order==`z', nodropbase fi(`fill') fc("`r(p`c`len'')'") lc(`lcolor') lw(`lw`len'')) ||
 						
 						local ++c`len'		
@@ -544,18 +606,23 @@ preserve
 				local ++c`second'
 				}
 			}
+			else {
+				colorpalette `palette', `poptions' n(`i1') nograph
+				local level`len' `level`len'' (area y x if layer==`len' & l1name==`x', nodropbase fi(`fill') fc("`r(p`x')'") lc(`lcolor') lw(`lw`len'')) ||			
+				
+			}
 		}
 	}		
 	
 	
-		
 	// labels level 1 to (n-1)
 	if "`labcondition'"  != "" {
 		if "`share'" == "" {
-			local labcon "& val `labcondition'"
+			local labcon "& val >= `labcondition'"
 		}
 		else {
-			local labcon "& share `labcondition'"
+			local labshare = `labcondition' / 100
+			local labcon "& share >= `labshare'"
 		}
 	}
 
@@ -582,10 +649,8 @@ preserve
 			local lab`len' `lab`len'' (scatter ylab xlab if order== `x' & layer==`len' & quad==1 `labcon', mc(none) mlabel(varstr) mlabangle(`r(mean)') mlabpos(0) mlabsize(`labs`len''))  ||
 
 	}	
-
 	
 	*** Final plot
-	
 	
 	twoway ///
 		`level`len'' ///

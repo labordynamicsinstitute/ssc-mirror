@@ -1,5 +1,5 @@
 {smcl}
-{* 18nov2019}{...}
+{* 17dec2022}{...}
 {hline}
 help for {hi:hettreatreg}
 {hline}
@@ -39,7 +39,7 @@ help for {hi:hettreatreg}
 {pstd} {cmd:hettreatreg} represents OLS estimates of the effect of a binary treatment as a weighted average of the average
 treatment effect on the treated (ATT) and the average treatment effect on the untreated (ATU).  The program estimates
 the OLS weights on these parameters, computes the associated model diagnostics, and reports the implicit OLS estimate
-of the average treatment effect (ATE).  See Sloczynski (2019) for the underlying theoretical results and further details.
+of the average treatment effect (ATE).  See Sloczynski (2022) for the underlying theoretical results and further details.
 
 {pstd} The options {cmd:outcome} and {cmd:treatment} are required.  They are used to designate an outcome variable
 and a treatment variable, respectively.  The treatment variable must be binary and coded 0 for the untreated
@@ -49,27 +49,29 @@ units and 1 for the treated units.  {it:indepvars} is a list of control variable
 treatment variable.  {it:P(d=1)} and {it:P(d=0)} are the sample proportions of treated and untreated units,
 respectively.  {it:w1} and {it:w0} are the OLS weights on ATT and ATU, respectively.  {it:delta} is a diagnostic
 for interpreting OLS as ATE.  {it:ATE}, {it:ATT}, and {it:ATU} are the implicit OLS estimates of the corresponding
-parameters.  See Sloczynski (2019) for further details.
+parameters.  See Sloczynski (2022) for further details.
 
 {pstd} If the option {cmd:noisily} is specified, {cmd:hettreatreg} also displays the usual regression output, as obtained
 by {cmd:regress}.  The option {cmd:vce} specifies the type of standard error for {cmd:regress}.  Using {cmd:outreg2}
 provides the same output after {cmd:regress} and {cmd:hettreatreg}, with {cmd:hettreatreg} offering the additional advantage of
-reporting the diagnostics from Sloczynski (2019), including the OLS weights on ATT and ATU.  See an example
+reporting the diagnostics from Sloczynski (2022), including the OLS weights on ATT and ATU.  See an example
 below.  Statistical inference may proceed using {cmd:bootstrap}.  An example is also provided below.
 
-{pstd} If you use this program in your work, please cite Sloczynski (2019).
+{pstd} If you use this program in your work, please cite Sloczynski (2022).
 
 
 {title:References}
 
 {phang}
-Sloczynski, Tymon (2019). "Interpreting OLS Estimands When Treatment Effects Are Heterogeneous: Smaller Groups Get Larger
-Weights." Available at {browse "http://people.brandeis.edu/~tslocz/Sloczynski_paper_regression.pdf"}.
+Sloczynski, Tymon (2022). "Interpreting OLS Estimands When Treatment Effects Are Heterogeneous: Smaller Groups Get Larger
+Weights." {it:Review of Economics and Statistics} 104(3), 501{c 150}509. Available at {browse "https://doi.org/10.1162/rest_a_00953"}.
 
 
 {title:Examples}
 
-        {com}. {stata "use http://people.brandeis.edu/~tslocz/nswcps.dta, clear"}
+        {com}. {stata "ssc install hettreatreg, all"}
+
+        . {stata "use nswcps, clear"}
 
         . {stata "regress re78 treated age-re75, vce(robust)"}
 

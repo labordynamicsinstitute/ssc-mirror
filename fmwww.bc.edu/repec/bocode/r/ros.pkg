@@ -1,0 +1,35 @@
+d 'ROS': module for estimation of regression order statistics
+d
+d  The command ros is for estimating upper reference bounds for a
+d dataset with possibly non-detectable/censored values	  and
+d possibly contaminated in the upper end.    The upper reference
+d bounds are from the mean and standard deviation from regressing
+d the observed values on the	empirical (normal) z-values.  The
+d mean and the standard deviation estimated from ros are the
+d intercept and slope of    the regression.  Box-Cox optimization
+d is done by choosing a transformation with a high R square from
+d the	 regressions.	 A dataset can have non-detectable/censored
+d values to the left and can also be contaminated to right by
+d non-healthy	 participants, so it might be only a small linear
+d part of the qnorm scatter plot that is acceptable for estimation.
+d    This means that some of the estimated upper bounds are
+d extrapolations from the acceptable part.  The estimated, not	 
+d extrapolated, upper bounds, are similar to the empirical
+d percentiles. 
+d
+d KW: regression
+d KW: order statistics
+d KW: reference bounds
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20230124
+d
+d Author: Niels Henrik Bruun, Aalborg University Hospital
+d Support: email niels.henrik.bruun@@gmail.com
+d
+f ros.ado
+f ros.sthlp
+f ../b/boxcoxsim.ado
+f ../b/boxcoxsim.sthlp
+f ../s/savonaNADA.dta

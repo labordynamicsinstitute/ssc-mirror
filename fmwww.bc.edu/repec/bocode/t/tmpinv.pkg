@@ -1,4 +1,4 @@
-d 'TMPINV': module to solve an under-, over- and identified Transaction Matrix (TM) problem with the help of the Moore-Penrose pseudoinverse, singular value decomposition (SVD), an F-test from linear regression/t-test of mean normalized RMSE, and results adjustment for extreme values
+d 'TMPINV': module to solve an under-, over- and identified Transaction Matrix (TM) problem with the help of the Moore-Penrose pseudoinverse, singular value decomposition (SVD), an F-test from linear regression/t-test of mean normalized RMSE, and results adjustment for extreme values.
 d
 d  The algorithm solves "hybrid" linear programming-least squares
 d (LP-LS) Transaction Matrix (TM) problems with the help of the
@@ -20,7 +20,7 @@ d KW: singular value decomposition
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20221018
+d Distribution-Date: 20230124
 d
 d Author: Ilya Bolotov, Prague University of Economics and Business
 d Support: email ilya.bolotov@@vse.cz

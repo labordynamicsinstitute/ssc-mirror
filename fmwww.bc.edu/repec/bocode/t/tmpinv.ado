@@ -164,8 +164,11 @@ mata set matastrict on
 			r = d[2,1] - d[1,1] + (rows(RHS) > lim ? /*subM*/ 2 : /*full*/ 1)
 			c = d[2,2] - d[1,2] + (rows(RHS) > lim ? /*subM*/ 2 : /*full*/ 1)
 			/* selection from known values (if applicable)                    */
-			if (rows(RHS_V)) v = (RHS_V\J(rows(X)*cols(X)-rows(RHS_V),1,.))[
-			                 colshape(colshape(1..length(X),cols(X))[|d|],1)]
+			if (rows(RHS_V)) v = colshape((colshape((RHS_V\J(rows(X)*cols(X)-
+			                     rows(RHS_V),1,.))[
+			                     colshape(colshape(1..length(X),cols(X))[|d|],1)
+			                     ],c-(tmp=rows(RHS) > lim ? 1 : 0)),
+			                     J(r-tmp,tmp,.)\J(tmp,c,.)), tmp)
 			/* M, C, S -> `a`                                                 */
 			C = I(r)#J(1,c,1)\J(1,r,1)#I(c)
 			S = (rows(LHS_S) ? LHS_S[1..r,1]\
@@ -204,13 +207,14 @@ mata set matastrict on
 			    (tmp=(b-a*(S=svsolve(a,b,.,tol)))[1..r+c]),tmp) /
 			    rows(b) / variance(b))
 			if(lim > 2 & rows(RHS_V)) {              /* if `V` are defined    */
-				S = (RHS_V\J(cols(LHS_S),1,0)),S
+				S = (v\J(cols(LHS_S),1,0)),S
 				e = .\e
-				while(iter & e[rows(e)] >= e[2] | rows(e) < iter + 2) {
+				while((iter=iter == 1 ? 500 : iter) & e[rows(e)] >= e[2]       &
+				      rows(e) < iter + 2) {
 					e = e\sqrt(cross((tmp=(b-a*(S=S,svsolve(
 					        (a,(J(r+c,1,0)\select(
 					        (tmp=S[,max((1,cols(S)-1))]-S[,cols(S)])[1..r*c],
-					        rowmissing(RHS_V) :== 0))),
+					        rowmissing(v) :== 0))),
 					        b,., tol
 					    )[1..cols(a)])[,cols(S)])[1..r+c]),tmp)                /
 					    rows(b) / variance(b))

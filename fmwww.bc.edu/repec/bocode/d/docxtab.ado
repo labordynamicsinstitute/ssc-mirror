@@ -5,7 +5,7 @@ version 16.0;
  List the variables in varlist as a table
  to a putdocx table.
  *! Author: Roger Newson
-*! Date: 11 January 2023
+*! Date: 20 January 2023
 *;
 
 syntax [ varlist (min=1) ] [if] [in] , TABlename(name)
@@ -14,7 +14,7 @@ syntax [ varlist (min=1) ] [if] [in] , TABlename(name)
   HEADformat(string asis) FOOTFormat(string asis)
   TCOLchars(namelist)
   TROWseq(name)
-  varnames obsno
+  varnames obsno title(passthru) note(passthru)
   *
  ];
 *
@@ -28,7 +28,7 @@ syntax [ varlist (min=1) ] [if] [in] , TABlename(name)
     containing corresponding column formats.
   trowseq() specifies a generated variable
     containing the table row sequence for each observation.
-  Other options (including varnames and obsno) are passed to putdocx table.
+  Other options (including varnames, obsno, title(), and note()) are passed to putdocx table.
 *;
 
 
@@ -65,7 +65,7 @@ else {;
 };
 * Initialise cumulative number of rows *;
 scal `nrow'=0;
-* First and last head rows *;
+* Initialise first and last head rows *;
 if `nhead'==0 {;
   scal `fhead'=.;
   scal `lhead'=.;
@@ -75,7 +75,7 @@ else {;
   scal `lhead'=`nrow'+`nhead';
   scal `nrow'=`lhead';
 };
-* First and last body rows *;
+* Initialise first and last body rows *;
 if `nbody'==0 {;
   scal `fbody'=.;
   scal `lbody'=.;
@@ -85,7 +85,7 @@ else {;
   scal `lbody'=`nrow'+`nbody';
   scal `nrow'=`lbody';
 };
-* First and last foot rows *;
+* Initialise first and last foot rows *;
 if `nfoot'==0 {;
   scal `ffoot'=.;
   scal `lfoot'=.;
@@ -95,20 +95,28 @@ else {;
   scal `lfoot'=`nrow'+`nfoot';
   scal `nrow'=`lfoot';
 };
+* Update if title() option is present *;
+if `"`title'"'!="" {;
+  foreach X in nrow lfoot ffoot lhead fhead lbody fbody {;
+    scal ``X''=``X''+1;
+  };
+};
+* Update if note() option is present *;
+if `"`note'"'!="" scal `nrow'=`nrow'+1;
 
 
 * 
  Create initial table with just internal cells
+ and title and note rows (if present)
 *;
 putdocx table `tablename'=data(`varlist') if `touse',
-  `varnames' `obsno' `options';
+  `varnames' `obsno' `title' `note' `options';
 
 
 *
  Count rows and columns
- (which may be affected by the options varnames and obsno,
- respectively)
- and modify output scalars for foot rows accordingly.
+ (which may be affected by the options varnames, title, and/or note for rows
+ and obsno for columns)
 *;
 qui putdocx describe `tablename';
 scal `nrow'=r(nrows);
@@ -120,15 +128,32 @@ scal `ncol'=r(ncols);
 *;
 tempname cellcur;
 if `nhead'>0 {;
-  forv i1=`=`nhead''(-1)1 {;
-    local charcur: word `i1' of `headchars';
-    putdocx table `tablename'(1, .), addrows(1, before);
-    forv i2=1(1)`nvar' {;
-      local varcur: word `i2' of `varlist';
-      mata: st_strscalar("`cellcur'",st_global("`varcur'[`charcur']"));
-      local i3=`ncol'-`nvar'+`i2';
-      putdocx table `tablename'(1, `i3') = (`cellcur');
+  if `"`title'"'=="" {;
+    * Add rows at top of table *;
+    forv i1=`=`nhead''(-1)1 {;
+      local charcur: word `i1' of `headchars';
+      putdocx table `tablename'(1, .), addrows(1, before);
+      forv i2=1(1)`nvar' {;
+        local varcur: word `i2' of `varlist';
+        mata: st_strscalar("`cellcur'",st_global("`varcur'[`charcur']"));
+        local i3=`ncol'-`nvar'+`i2';
+        putdocx table `tablename'(1, `i3') = (`cellcur');
+      };
     };
+  };
+  else {;
+    * Add rows after title row *;
+    forv i1=1(1)`=`nhead'' {;
+      local charcur: word `i1' of `headchars';
+      putdocx table `tablename'(1, .), addrows(1, after);
+      forv i2=1(1)`nvar' {;
+        local varcur: word `i2' of `varlist';
+        mata: st_strscalar("`cellcur'",st_global("`varcur'[`charcur']"));
+        local i3=`ncol'-`nvar'+`i2';
+        putdocx table `tablename'(2, `i3') = (`cellcur');
+      };
+    };
+  
   };
 };
 
@@ -146,17 +171,35 @@ scal `ncol'=r(ncols);
 *;
 tempname cellcur;
 if `nfoot'>0 {;
-  local nrowtemp=`nrow';
-  forv i1=1(1)`=`nfoot'' {;
-    local charcur: word `i1' of `footchars';
-    putdocx table `tablename'(`nrowtemp', .), addrows(1, after);
-    local nrowtemp=`nrowtemp'+1;
-    forv i2=1(1)`nvar' {;
-      local varcur: word `i2' of `varlist';
-      mata: st_strscalar("`cellcur'",st_global("`varcur'[`charcur']"));
-      local i3=`ncol'-`nvar'+`i2';
-      putdocx table `tablename'(`nrowtemp', `i3') = (`cellcur');
+  if `"`note'"'=="" {;
+    * Add rows after end of table *;
+    local nrowtemp=`nrow';
+    forv i1=1(1)`=`nfoot'' {;
+      local charcur: word `i1' of `footchars';
+      putdocx table `tablename'(`nrowtemp', .), addrows(1, after);
+      local nrowtemp=`nrowtemp'+1;
+      forv i2=1(1)`nvar' {;
+        local varcur: word `i2' of `varlist';
+        mata: st_strscalar("`cellcur'",st_global("`varcur'[`charcur']"));
+        local i3=`ncol'-`nvar'+`i2';
+        putdocx table `tablename'(`nrowtemp', `i3') = (`cellcur');
+      };   
     };
+  };
+  else {;
+    * Add rows before note row *;
+    local nrowtemp=`nrow';
+    forv i1=1(1)`=`nfoot'' {;
+      local charcur: word `i1' of `footchars';
+      putdocx table `tablename'(`nrowtemp', .), addrows(1, before);
+      local nrowtemp=`nrowtemp'+1;
+      forv i2=1(1)`nvar' {;
+        local varcur: word `i2' of `varlist';
+        mata: st_strscalar("`cellcur'",st_global("`varcur'[`charcur']"));
+        local i3=`ncol'-`nvar'+`i2';
+        putdocx table `tablename'(`=`nrowtemp'-1', `i3') = (`cellcur');
+      };   
+    };  
   };
 };
 
@@ -168,8 +211,9 @@ qui putdocx describe `tablename';
 scal `nrow'=r(nrows);
 scal `ncol'=r(ncols);
 if `nfoot'>0 {;
-  scal `ffoot'=`nrow'-`nfoot'+1;
-  scal `lfoot'=`nrow';
+  local notepres=`"`note'"'!="";
+  scal `ffoot'=`nrow'-`notepres'-`nfoot'+1;
+  scal `lfoot'=`nrow'-`notepres';
 };
 
 
@@ -204,8 +248,9 @@ if "`tcolchars'"!="" {;
 *;
 if "`trowseq'"!="" qui {;
   gene byte `trowseq'=1 if `touse';
-  if "`varnames'"=="" replace `trowseq'=sum(`trowseq')+`nhead' if `touse';
-  else replace `trowseq'=sum(`trowseq')+`nhead'+1 if `touse';
+  replace `trowseq'=sum(`trowseq')+`nhead' if `touse';
+  if `"`varnames'"'!="" replace `trowseq'=`trowseq'+1 if `touse';
+  if `"`title'"'!="" replace `trowseq'=`trowseq'+1 if `touse';
   lab var `trowseq' "Table row sequence number";
 };
 
