@@ -19,6 +19,7 @@ p dbmscopybatch module to produce a batch file for DBMS/Copy
 p dbnomics module for DB.nomics, the world's economic database
 p dcreate module to create efficient designs for discrete choice experiments
 p ddf2dct module to facilitate infiling US Government data distributed with a DDF
+p ddml module for Double/Debiased Machine Learning
 p deci module to perform Variable Base conversion
 p decomp module to compute decompositions of earnings gaps
 p decompose module to compute decompositions of wage differentials 

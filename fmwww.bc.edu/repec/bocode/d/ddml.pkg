@@ -1,0 +1,59 @@
+d 'DDML': module for Double/Debiased Machine Learning
+d
+d  The package ddml implements Double/De-biased Machine Learning
+d for Stata. Five different econometric models are supported,
+d allowing for flexible estimation of causal effects of possibly
+d endogenous variables in settings with unknown functional forms
+d and/or many exogenous variables. ddml is compatible with many
+d existing supervised machine learning programs in Stata. 
+d
+d KW: machine learning
+d KW: double de-biased machine learning
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20230125
+d
+d Author: Achim Ahrens, ETH Zürich
+d Support: email achim.ahrens@@gess.ethz.ch
+d
+d Author: Christian B. Hansen, University of Chicago
+d Support: email Christian.Hansen@@chicagobooth.edu
+d
+d Author: Mark E Schaffer, Heriot-Watt University
+d Support: email m.e.schaffer@@hw.ac.uk
+d
+d Author: Thomas Wiemann, University of Chicago
+d Support: email  wiemann@@uchicago.edu
+d
+f DoubleML_repl.R
+f DoubleML_repl.do
+f DoubleML_results.csv
+f ../_/_ddml_allcombos.ado
+f ../_/_ddml_copy.ado
+f ../_/_ddml_crossfit.ado
+f ../_/_ddml_describe.ado
+f ../_/_ddml_drop.ado
+f ../_/_ddml_estimate_ate_late.ado
+f ../_/_ddml_estimate_linear.ado
+f ../_/_ddml_export.ado
+f ../_/_ddml_extract.ado
+f ../_/_ddml_nnls.ado
+f ../_/_ddml_nnls_p.ado
+f ../_/_ddml_overlap.ado
+f ../_/_ddml_sample.ado
+f ../_/_ddml_save.ado
+f ../_/_ddml_use.ado
+f ../c/crossfit.ado
+f ../c/crossfit.sthlp
+f ddml.ado
+f ddml.sthlp
+f ddml_cert.do
+f ddml_extract.sthlp
+f doubleml_cert.log
+f ../l/lddml.do
+f ../l/lddml.mlib
+f ../q/qddml.ado
+f ../q/qddml.sthlp
+f ../q/qddml_cert.do
+f ../q/qddml_cert.log
