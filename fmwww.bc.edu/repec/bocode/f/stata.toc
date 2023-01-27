@@ -121,5 +121,6 @@ p fvfix module to compute the future value of a series of equal payments (cash f
 p fview module to find and view a file
 p fvprevar module to extend fvrevar generating permanent result variables
 p fvregen module to regenerate factor variables in a parmest output dataset
+p fvstrip module for removing b/n/o factor variable operators from varlists 
 p fvvar module to compute the future value of a series of payments (cash flows)
 p fxbcr Module to Estimate Benefit-Cost Ratio (BCR)

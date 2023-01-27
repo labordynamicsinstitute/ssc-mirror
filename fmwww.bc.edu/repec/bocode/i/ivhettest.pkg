@@ -11,18 +11,23 @@ d variables.  The test flavors vary  according to the choice of
 d indicator variables	and the choice of test statistics.  Under
 d the null of no heteroskedasticity,  the test statistic is
 d distributed as chi-sq with degrees of freedom =  number of
-d indicator variables.	This is version 1.1.9 of ivhettest, 
-d updated from that published in Stata Journal, 3(1). 
+d indicator variables.	This is version 1.2.0 of ivhettest, 
+d updated from that published in Stata Journal, 3(1). The routine
+d now supports factor variables. 
 d
 d KW: instrumental variables
 d KW: heteroskedasticity
+d KW: Pagan-Hall test
 d
-d Requires: Stata version 7.0
+d Requires: Stata version 12.0
 d
-d Distribution-Date: 20220318
+d Distribution-Date: 20230126
 d
 d Author: Mark E Schaffer, Heriot-Watt University
 d Support: email m.e.schaffer@@hw.ac.uk
 d
 f ivhettest.ado
-f ivhettest.hlp
+f ivhettest.sthlp
+f ../f/fvstrip.ado
+f ../f/fvstrip.sthlp
+f ivhettest_cs.do

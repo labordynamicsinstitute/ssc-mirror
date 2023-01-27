@@ -119,12 +119,11 @@
 	collect style row stack, nobinder indent
 	collect style header result, level(hide)
 
-
-
 	foreach k of  global levels_by_var{
-		collect label levels  `by' `k' "`by_var_label_`k'' `new_by_label_`k''"
+		collect label levels  `by' `k' "`by_var_label_`k'' `new_by_label_`k''", modify
 	}
-	
+
+
 	collect label levels `by' .m "Total N = `total' (100%)", modify 
 	collect style cell cell_type[column-header] /*#`by'[.m]#`by'[0]#`by'[1]*/,  font(, size(9) bold)
 	collect style cell colname[name1 name2], font(, bold)

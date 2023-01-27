@@ -21,10 +21,13 @@ d KW: censored data
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20220712
+d Distribution-Date: 20230126
 d
-d Author:  Jake Orchard
-d Support: email  orchard.jake@@gmail.com 
+d Author: James McDonald, Brigham Young University
+d Support: email james_mcdonald@@byu.edu
+d
+d Author:  Jacob Triplett
+d Support: email  jacobwtriplett@@icloud.com
 d
 f gintreg.ado
 f gintreg.sthlp

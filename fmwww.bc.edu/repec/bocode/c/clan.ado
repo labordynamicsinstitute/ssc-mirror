@@ -1,19 +1,21 @@
 
-*!version 1.2.2 24May2021
+*!version 1.3.1 17Jan2023
 
 /* -----------------------------------------------------------------------------
 ** PROGRAM NAME: clan
-** VERSION: 1.2.2
-** DATE: 24 May 2021
+** VERSION: 1.3.1
+** DATE: 17 Jan 2023
 ** -----------------------------------------------------------------------------
-** CREATED BY: STEPHEN NASH, JENNIFER THOMPSON, BAPTISTE LAURENT
+** CREATED BY: STEPHEN NASH, JENNIFER THOMPSON, BAPTISTE LEURENT
 ** -----------------------------------------------------------------------------
 ** PURPOSE: To conduct cluster level analysis of a cluster randomised trial
 ** -----------------------------------------------------------------------------
-** UPDATES: 
+** UPDATES:
+** v1.3.1: Renaming rater/rated to irr/rd, and scale() to per()
+**
+** v1.2.2
 ** Option to rescale of follow up time added
 ** Effect for mean difference renamed to meand from mean
-** Recoded to call glm with different families in the first stage regression
 ** -----------------------------------------------------------------------------
 
 */
@@ -40,10 +42,6 @@ prog define clan , eclass
 		preserve // We're going to change the data - drop rows and create new vars
 		capture keep if `touse' // Get rid of un-needed obs now
 		
-		/* WANT TO TRY OT CHANGE THIS: WHAT IF THERE IS A _I VAR IN VARLIST?*/
-		* Sort out the factor variable nightmare
-			cap drop _I*
-			*xi `varlist' , noomit
 
 		* Check no interactions
 			if strmatch(`"`varlist'"' , "*#*") {
@@ -53,9 +51,9 @@ prog define clan , eclass
 		
 		** Drop any row with missing data for any covariate, outcome, arm or strata
 			local vlist_no_i_dot = subinstr(`"`varlist'"' , "i." , "" , .)
-				foreach v of varlist `vlist_no_i_dot' `trt' `strata' `cluster' {
-					drop if missing(`v')
-				}
+			foreach v of varlist `vlist_no_i_dot' `arm' `strata' `cluster' {
+				drop if missing(`v')
+			}
 
 		** Check that there are observations
 			count
@@ -72,8 +70,8 @@ prog define clan , eclass
 
 	
 		* Check effect is valid
-			if inlist(`"`effect'"', "rr", "rd", "rater", "rated", "meand") == 0 {
-				dis as error "Unrecognised {bf:effect} option"
+			if inlist(`"`effect'"', "rr", "rd", "irr", "ird", "meand") == 0 {
+				dis as error "Unrecognised {bf:effect} option. Should be one of {bf:rr}, {bf:rd}, {bf:irr}, {bf:ird} or {bf:meand}"
 				exit 198
 			}
 
@@ -129,7 +127,7 @@ prog define clan , eclass
 			else local adjusted = 0
 		
 		**Create a macro with ratio of diff for eff text in output
-			if inlist(`"`effect'"', "rr", "rater") ==1 local comptype "ratio"
+			if inlist(`"`effect'"', "rr", "irr") ==1 local comptype "ratio"
 			else local comptype "diff."
 		
 		** Calculate the upper tail area to use in the calculation of the CI
@@ -153,7 +151,7 @@ prog define clan , eclass
 			if inlist(`"`effect'"', "rd", "rr") == 1 {
 				clanbin `0'
 			}
-			else if inlist(`"`effect'"', "rated", "rater") == 1 {
+			else if inlist(`"`effect'"', "ird", "irr") == 1 {
 				clanrate `0'
 				local fuptime `r(fuptime)'
 				local scale `r(scale)'
@@ -215,18 +213,16 @@ prog define clan , eclass
 					local num_clv_this_fv = 0
 					local simple_var = substr("`v'" , 3 , . )
 					levelsof `simple_var' , local(var_levels)
-						local num_levs = r(r)
 
-					foreach j of local var_levels { // Old
+					foreach j of local var_levels { // var levels
 						local total_sd = 0
 						
-						foreach i of local cluster_levels {
+						foreach i of local cluster_levels { // clusters
 							sum `j'.`simple_var' if `cluster' == `i'
 							local total_sd = `total_sd' + r(Var)
 						} // end i loop
 						
 						if `total_sd' == 0 { // We've found a cluster-level variable
-						*noi dis "Got one : `v'" 
 							local num_cluster_covars = `num_cluster_covars' + 1
 							local num_clv_this_fv = `num_clv_this_fv' + 1
 						} // end if
@@ -272,7 +268,7 @@ prog define clan , eclass
 			gen `obs' = 1 
 
 		*Variable to count exposure of each observation
-			if inlist(`"`effect'"', "rated", "rater") == 1 {
+			if inlist(`"`effect'"', "ird", "irr") == 1 {
 				gen `exposure' = `fuptime' / `scale'
 				local exposureoption `"exposure(`exposure')"'
 			}
@@ -317,7 +313,7 @@ prog define clan , eclass
 		
 		* If we'll be taking logs, add 0.5 to all if one cluster prev is zero
 		* Calculate residual
-			if inlist(`"`effect'"', "rr", "rater") == 1 {
+			if inlist(`"`effect'"', "rr", "irr") == 1 {
 				gen byte `zero' = 1 if `outcome' == 0 // Marks cells with zero cases
 				gen `howmanyzeros' = sum(`zero') // Makes a running total of number of cells with zero prev
 				if `howmanyzeros'[_N] > 0.5  { // Look at just the end of the running total
@@ -342,7 +338,7 @@ prog define clan , eclass
 			gen double `actual_cs' = `outcome' / `exposure' // For saving display
 			forvalues i = 0/1{	
 				ameans `actual_cs' if `arm' == `i'
-					if inlist(`"`effect'"', "rr", "rater") == 1 local actual_cs`i' = r(mean_g)
+					if inlist(`"`effect'"', "rr", "irr") == 1 local actual_cs`i' = r(mean_g)
 					else local actual_cs`i' = r(mean)
 			}
 	
@@ -367,7 +363,7 @@ prog define clan , eclass
 				scalar `beta_lci' = `beta' - invttail(`df', `uppertail') * `se'
 				scalar `beta_uci' = `beta' + invttail(`df', `uppertail') * `se'
 				
-			if inlist(`"`effect'"', "rr", "rater") == 1 {
+			if inlist(`"`effect'"', "rr", "irr") == 1 {
 				scalar `beta' = exp(`beta')
 				scalar `beta_lci' = exp(`beta_lci')
 				scalar `beta_uci' = exp(`beta_uci')
@@ -398,7 +394,7 @@ prog define clan , eclass
 			if "`saving'" != ""  {
 				local savevars `cluster' `arm' `strata' `outcome'  `exposure' `obs' `actual_cs'
 				if `adjusted' == 1  local savevars `savevars' `cs'
-				if inlist(`"`effect'"', "rr", "rater") == 1 local savevars `savevars' `csformodel'
+				if inlist(`"`effect'"', "rr", "irr") == 1 local savevars `savevars' `csformodel'
 				keep `savevars'
 				rename `obs' clustersize
 				
@@ -406,7 +402,7 @@ prog define clan , eclass
 					rename `actual_cs' prevalence
 					drop `exposure'
 				}
-				else if  inlist(`"`effect'"', "rater", "rated") == 1 {
+				else if  inlist(`"`effect'"', "irr", "ird") == 1 {
 					rename `actual_cs' rate
 					rename `exposure' fuptime
 				}
@@ -495,8 +491,6 @@ prog define clan , eclass
 			.`Tab'.titles  "" "Estimate" "Std. Err." "t" "df" "P>|t|"  `"[`level'% Conf. Interval]"' ""
 			.`Tab'.sep, middle
 
-			*if length("`statistic'")>18 local ab_statistic = substr("`statistic'",1,11)+".."
-			*else local ab_statistic "`statistic'"
 
 			.`Tab'.row `"`efftype'"' /*
 					*/ "" /*
@@ -538,10 +532,15 @@ prog define clan , eclass
 
 			.`Tab'.sep, bottom
 			
-			
+		*Footnotes
 			if (`df_penal'>0)  noi dis as text "Note: Degrees of freedom adjusted " ///
 				"for the cluster covariate(s): `name_cluster_covars'" 
+			if  inlist(`"`effect'"', "irr", "ird") == 1 {
+				if (`scale') != 1 noi dis as text "Note: Rates are per `scale'"	
+				}		
 			if "`saving'" != "" noi dis as text "Cluster level dataset saved in `savingfile'"
+		
+			
 			
 end
 
@@ -587,21 +586,21 @@ program clanrate, rclass
                 exit 498
         }
 	
-	* Check scale is correctly specified
+	* Check scale is correctly specified (per())
 		if length(`"`scaleopt'"') > 0 {
 			local scaleopt = subinstr(`"`scaleopt'"', " ","",.)
 			
-			if substr(`"`scaleopt'"',1,6) != "scale(" {
-				dis as error "Option {bf:fuptime} invalid"
+			if substr(`"`scaleopt'"',1,4) != "per(" {
+				dis as error "Invalid option in {bf:fuptime}"
 				exit 119
 			}
 			
 			if substr(`"`scaleopt'"',- 1,1) != ")" {
-				dis as error "Option {bf:fuptime} invalid"
+				dis as error "Invalid option in {bf:fuptime}"
 				exit 119
 			}		
 			
-			local scale = substr(`"`scaleopt'"',7, length(`"`scaleopt'"') - 7)
+			local scale = substr(`"`scaleopt'"',5, length(`"`scaleopt'"') - 5)
 			confirm number `scale'
 			if `scale' <=0 {
 				error 109

@@ -1,0 +1,18 @@
+d 'FVSTRIP': module for removing b/n/o factor variable operators from varlists 
+d
+d   fvstrip is a utility for removing the b/n/o factor variable
+d operators from a varlist.  With the expand option, it    will
+d expand the varlist if not already expanded. 
+d
+d KW: programming
+d KW: factor variables
+d
+d Requires: Stata version 11.0
+d
+d Distribution-Date: 20230126
+d
+d Author: Mark E Schaffer, Heriot-Watt University
+d Support: email m.e.schaffer@@hw.ac.uk
+d
+f fvstrip.ado
+f fvstrip.sthlp

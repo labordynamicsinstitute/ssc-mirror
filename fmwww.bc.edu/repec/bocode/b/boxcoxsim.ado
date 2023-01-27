@@ -1,6 +1,7 @@
 * for test of ros command 
-capture program drop boxcoxsim
+*capture program drop boxcoxsim
 program define boxcoxsim, rclass
+  version 12
   syntax, [n(integer 200) Mean(real 4) SD(real 1) Theta(real 1) nd(integer 0) ///
     Outlierpct(real 0) OMean(real 10) OSD(real 2) OTheta(real 1) ///
     Fmt(string) Percentiles(numlist >0 <100 sort) Clear]
@@ -32,7 +33,8 @@ program define boxcoxsim, rclass
     qui generate `nrm2' = rnormal(`omean', `osd')
     if "`otheta'" == "0" qui replace `nrm2' = exp(`nrm2')
     else qui replace `nrm2' = `nrm2' ^ `otheta' / abs(`otheta')
-    generate y = cond(runiform(0,1) < `= 1 - `outlierpct'', `nrm1', `nrm2')
+    *generate y = cond(runiform(0,1) < `= 1 - `outlierpct'', `nrm1', `nrm2')
+	generate y = cond(runiform() < `= 1 - `outlierpct'', `nrm1', `nrm2')
   }
   else generate y = `nrm1'
   

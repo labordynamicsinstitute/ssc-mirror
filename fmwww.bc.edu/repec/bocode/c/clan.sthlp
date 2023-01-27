@@ -1,5 +1,5 @@
 ﻿{smcl}
-{* *! version 1.0.6)}
+{* *! version 1.1)}
 {hline}
 {cmd:help clan}{right: ({})}
 {hline}
@@ -46,9 +46,9 @@ clusters{p_end}
 {p2coldent :* {opth eff:ect(clan##effspec:effect)}}the effect estimate you want to produce{p_end}
 {synopt :{opth str:ata(varname)}}variable defining the (single) 
 stratification factor used in the trial{p_end}
-{synopt :{cmdab:fup:time(}{it:{help varname}} [, {cmd:scale(}{it:#}{cmd:)])}}variable describing the follow-up 
-time in trials where the outcome is a rate (events/person-time) and rescaling 
-option {p_end}
+{synopt :{cmdab:fup:time(}{it:{help varname}} [, {cmd:per(}{it:#}{cmd:)])}}variable describing the follow-up 
+time in trials where the outcome is a rate (events/person-time) and
+unit option {p_end}
 {synopt :{opt plot}}produce a scatter plot of cluster summaries
 {p_end}
 {synopt: {cmdab:sav:ing(}{it:{help filename}} [{cmd:, replace}]{cmd:)}}
@@ -67,8 +67,8 @@ contain interactions{p_end}
 {synoptline}
 {synopt :{opt rr}}risk ratio{p_end}
 {synopt :{opt rd}}risk difference{p_end}
-{synopt :{opt rater}}rate ratio{p_end}
-{synopt :{opt rated}}rate difference{p_end}
+{synopt :{opt irr}}incidence rate ratio{p_end}
+{synopt :{opt ird}}incidence rate difference{p_end}
 {synopt :{opt meand}}mean difference{p_end}
 {synoptline}
 
@@ -89,7 +89,7 @@ as independent observations.
 
 {pstd}
 If any independent variables are included, an appropriate regression 
-model (logistic, linear, or Poisson) is run on the outcome with the 
+model (linear, logistic, or Poisson) is run on the outcome with the 
 independent variables and strata variable but {it:without} the arm 
 variable and {it:ignoring} clustering. The residuals are then summarised 
 by cluster. If no independent variables are included, the outcome itself 
@@ -126,7 +126,7 @@ clusters. It must be a numeric variable
 
 {phang}
 {opt eff:ect(effect)} specifies which measure of effect you wish to 
-calculate. If {it:rr} or {it:rater} are specified, the confidence 
+calculate. If {it:rr} or {it:irr} are specified, the confidence 
 interval will be calculated on the log scale and the estimate will be
  the ratio of geometric means of the cluster summaries. If any 
  cluster has zero events, 0.5 will be added to all cluster totals to
@@ -138,10 +138,11 @@ stratification used in the trial randomisation. Only one
 stratification factor is permitted. It must be a numeric categorical variable
 
 {phang}
-{cmdab: fup:time(}{it:{help varname}}[{cmd:, scale(}{it:#}{cmd:)}]{cmd:)} specifies 
-the length of time each participant or cluster was in the study; this is required to 
-calculate rate differences and ratios. {it:varname} is the variable containing 
-the follow up time. scale(#) gives a rescaling factor for this follow-up time
+{cmdab: fup:time(}{it:{help varname}}[{cmd:, per(}{it:#}{cmd:)}]{cmd:)} specifies the length of time each participant or cluster was in the 
+study; this is required to 
+calculate incidence rate differences and ratios. {it:varname} is the 
+variable containing the follow up time. {opt per(#)} displays 
+rates per # person-time 
 
 {phang}
 {opt plot} produces a scatter plot of the cluster summaries used to 
@@ -207,8 +208,8 @@ are not interpretable{p_end}
 {p2col 7 20 24 2: Depending on effect specified:}{p_end}
 {synopt:{cmd:e(rd)}}estimated risk difference{p_end}
 {synopt:{cmd:e(rr)}}estimated risk ratio{p_end}
-{synopt:{cmd:e(rated)}}estimated rate difference{p_end}
-{synopt:{cmd:e(rater)}}estimated rate ratio{p_end}
+{synopt:{cmd:e(ird)}}estimated incidence rate difference{p_end}
+{synopt:{cmd:e(irr)}}estimated incidence rate ratio{p_end}
 {synopt:{cmd:e(meand)}}estimated mean difference{p_end}
 
 {p2col 5 20 24 2: Macros}{p_end}
@@ -250,8 +251,12 @@ S Bennett, T Parpia, R Hayes, and S Cousens. Methods for the analysis
 
 {title:Authors}
 
-Stephen Nash, Jennifer Thompson, Baptiste Leurent
-London School of Hygiene and Tropical Medicine
-London, UK
+Jennifer Thompson
+London School of Hygiene and Tropical Medicine, London, UK
 jennifer.thompson@lshtm.ac.uk
-baptiste.leurent@lshtm.ac.uk
+
+Stephen Nash 
+
+Baptiste Leurent
+University College London, London, UK
+baptiste.leurent@ucl.ac.uk

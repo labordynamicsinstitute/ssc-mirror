@@ -1,4 +1,4 @@
-*! ivhettest 1.1.10 18mar2022
+*! ivhettest 1.2.0 24jan2023
 *! author mes
 * Implements Pagan-Hall (1983) heteroskedasticity tests for IV plus related statistics.
 * Notation largely follows White (1982).
@@ -14,16 +14,17 @@
 * 1.1.8   Fixed bug in re-refined [sic] trap
 * 1.1.9   Fixed bug in handling varnames that had "_cons" in them
 * 1.1.10  Enabled use after ivreg2h
+* 1.2.0   Version set to 12, fv use enabled by cfb; now requires mes fvstrip
 
 program define ivhettest, rclass
-	version 7.0
-	local version 1.1.10
+	version 12.0
+	local version 1.2.0
 
-	syntax [varlist(default=none)] [if] [in] [, ivlev ivsq ivcp fitlev fitsq /*
+	syntax [varlist(default=none fv)] [if] [in] [, ivlev ivsq ivcp fitlev fitsq /*
 		*/ ph phnorm phsym nr2 bpg all ] 
 
 	if "`e(cmd)'" != "ivreg" & "`e(cmd)'" != "ivreg2" & "`e(cmd)'" != "ivreg28" /*
-		*/ & "`e(cmd)'" != "ivreg29" & "`e(cmd)'" != "ivgmm0" & "`e(cmd)'" != "regress" ///
+		*/ & "`e(cmd)'" != "ivreg29" & "`e(cmd)'" != "ivregress" & "`e(cmd)'" != "regress" ///
 		& "`e(cmd)'" != "ivreg2h" {
 		error 301
 	}
@@ -83,9 +84,9 @@ di in r "Weights not allowed in current implementation"
 		error 197
 	}
 
-
 	tempname b
 	mat `b' = e(b)
+
 	local cn : colnames `b'
 	local cn_ct = colsof(`b')
 	tokenize `cn'
@@ -101,6 +102,25 @@ di in r "Weights not allowed in current implementation"
 		local xvars_ct = `cn_ct'
 		local xvars "`cn'"
 	}
+//	di "xvars: `xvars'"
+//	di in r "`xvars_ct'"
+// strip the FVs and unused interactions from the xvars
+// mes routine to remove base, omitted FVs
+	fvstrip `xvars', dropomit onebyone
+	loc sxvars `r(varlist)'
+// di "fvstrip varlist: `sxvars'"
+	local nrvars : word count `sxvars' 
+// di "`sxvars'"
+	loc xvars
+	loc nx
+	foreach v in `sxvars' {
+		fvrevar `v'
+		loc xvars "`xvars' `r(varlist)'"
+		loc nx = `nx'+1
+	}
+// di "xvars: `xvars'"
+	loc xvars_ct = `nx'
+//	di in r "`xvars_ct'"
 
 	if "`e(cmd)'" != "regress" {
 		local insts "`e(insts)'"
@@ -111,10 +131,26 @@ di in r "Weights not allowed in current implementation"
 		local phnorm
 		local phsym
 	}
+	
+// strip the FVs and unused interactions from the insts
+// su `insts'
+// mes routine to remove base, omitted FVs
+	fvstrip `insts', dropomit onebyone
+	loc sinsts `r(varlist)'
+// di "fvstrip varlist: `sinsts'"
+	local nrvars : word count `sinsts' 
+// di "`nrvars'"
+	loc insts
+	foreach v in `sinsts' {
+		fvrevar `v'
+		loc insts "`insts' `r(varlist)'"
+	}
+// di "insts: `insts'"
+
 	gen byte `touse' = e(sample)
 	scalar `N' = e(N)
 	gen byte `one' = 1
-
+	
 * Fetch residuals and generate squares, sigma2, 3rd & 4th moments, etc.
 	qui predict double `e' if `touse', res
 	qui gen double `e2' = `e' * `e'
@@ -152,6 +188,8 @@ di in r "Weights not allowed in current implementation"
 		tokenize `insts'
 		local i = 1
 		local nrvars : word count `insts' 
+// di " insts: `insts'"
+// su `insts'
 		while `i' <= `nrvars' {
 			tempvar vn
 			qui gen double `vn' = ``i''
@@ -165,6 +203,12 @@ di in r "Weights not allowed in current implementation"
 		}
 		qui _rmcoll `psi'
 		local psi `r(varlist)'
+//		di "ivlev `psi'"
+// cfb zap o. variables here
+// mes routine
+		fvstrip `psi', dropomit onebyone
+		loc psi `r(varlist)'
+// di "ivlev `psi'"
 	}
 
 	if "`ivcp'" != "" {
@@ -188,12 +232,14 @@ di in r "Weights not allowed in current implementation"
 		local psi `*'
 		qui _rmcoll `psi'
 		local psi `r(varlist)'
+// di "ivcp `psi'"
 	}
 
 * Generate Xu, regressors * error.
 * Constant included if present.
 	tokenize `xvars'
 	local i = 1
+// di in r "`xvars_ct | `xvars''"
 	while `i' <= `xvars_ct' {
 		tempvar y
 		qui gen double `y' = ``i'' * `e'
@@ -215,11 +261,14 @@ di in r "Weights not allowed in current implementation"
 			local Xhat "`Xhat' ``i''"
 		}
 		else {
-			estimates hold `regest'
+// cfb 2023
+			_estimates hold `regest'
 			qui regress ``i'' `insts' if `touse'
+// su _*
 			tempvar xh
 			qui predict double `xh' if `touse', xb
-			estimates unhold `regest'
+// cfb 2023
+			_estimates unhold `regest'
 			local Xhat "`Xhat' `xh'"
 		}
 		local i = `i' + 1
@@ -243,6 +292,7 @@ di in r "Weights not allowed in current implementation"
 			qui gen double `yhat2'=`yhat'^2
 			local psi "`yhat' `yhat2'"
 		}
+//	di "fitlev: `psi'"
 	}
 
 * NOW add the one column to Xhat if it belongs there, and then inverse of cross-product matrix
@@ -407,3 +457,4 @@ di in g "Ho: Disturbance is homoskedastic"
 	}
 
 end
+

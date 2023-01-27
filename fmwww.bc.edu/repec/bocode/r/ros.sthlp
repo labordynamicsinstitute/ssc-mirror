@@ -233,7 +233,7 @@ see {help boxcoxsim:boxcoxsim}.{p_end}
 standard deviation of 1 for the log-transformed data, 
 see {help boxcoxsim:boxcoxsim}.{break}
 There are 55% of the observations below the lower detection line.{p_end}
-{phang}{stata `". boxcoxsim, n(200) nd(55) theta(0) mean(2) sd(1) outlierpct(0) clear"'}{p_end}
+{phang}{stata `". boxcoxsim, n(200) nd(55) theta(0) mean(4) sd(1) outlierpct(0) clear"'}{p_end}
 {phang}To visualize the data set.{p_end}
 {phang}{stata `". hist yc, norm ylabel(none) xtitle(normal values)"'}{p_end}
 {phang}Run the {cmd:ros} command to assess the data{p_end}
@@ -265,7 +265,7 @@ that a good cut-off would be between 5.5 and 6.5. The value 6 is tried.
 {phang}In the rsqrtheta graph, there is little difference between the lowest and 
 highest rsquare, so most transformations would do. We choose the value 1.{p_end}
 {phang}Run the {cmd:ros} command to assess data with some contamination by outliers.{p_end}
-{phang}{stata `". ros yc if yc < 6, censor(censored) rsqrtheta scatter"'}{p_end}
+{phang}{stata `". ros yc if yc < 6, censor(censored) scatter"'}{p_end}
 
 
 {title:Stored results}

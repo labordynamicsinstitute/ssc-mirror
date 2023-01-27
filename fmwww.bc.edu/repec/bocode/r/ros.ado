@@ -58,16 +58,27 @@ program define ros, rclass
   matlist ros, cspec(& %20s & %12.2f & %12.2f &) rspec(||`nrowssep'|)
   
   R2_theta `varlist' `censor' `if', start(`start') step(`step') stop(`end')
-  matrix rsqrtheta = r(rsqrtheta)[1..., 1],  r(rsqrtheta)[1..., 4],  r(rsqrtheta)[1..., 5]
+  matrix rsqrtheta = r(rsqrtheta)
+  matrix rsqrtheta = rsqrtheta[1..., 1],  rsqrtheta[1..., 4],  rsqrtheta[1..., 5]
   mata: rsqrtheta = st_matrix("rsqrtheta")[., 1..2]
   mata: st_local("nrowssep", (rows(rsqrtheta) - 1) * "&")
   matlist rsqrtheta, names(columns) underscore ///
     cspec(& %12.3f & %12.3f & %10.0f &) rspec(||`nrowssep'|)
   if "`rsqrtheta'" != "" {
+	matrix _tmp = rsqrtheta
+	svmat double _tmp
+    twoway line _tmp1 _tmp2, ytitle(R{sub:adj}{sup:2}) ///
+      name(`y'_R2_theta, replace) ylabel(, format(%5.3f)) xmtick(##2, grid) ///
+      xlabel(`start'(`step')`end', format(%4.2f) ///
+      glwidth(medium) glcolor(gs4) glpattern(dot)) ///
+	  xtitle(theta) ytitle(Rsquared)
+	drop _tmp?
+	/*
     twoway line matamatrix(rsqrtheta) Rsquared theta, ytitle(R{sub:adj}{sup:2}) ///
       name(`y'_R2_theta, replace) ylabel(, format(%5.3f)) xmtick(##2, grid) ///
       xlabel(`start'(`step')`end', format(%4.2f) ///
       glwidth(medium) glcolor(gs4) glpattern(dot))
+	*/
     }
   return matrix rsqrtheta = rsqrtheta
 
@@ -105,8 +116,9 @@ program define criterias, rclass
   return scalar rossd = _b[`2']
   return scalar r2_a = e(r2_a)
   quietly estat ic
-  return scalar AIC = (r(S)[1,5])
-  return scalar BIC = (r(S)[1,6])
+  matrix S = r(S)
+  return scalar AIC = (S[1,5])
+  return scalar BIC = (S[1,6])
 end
 
 program define predictions, rclass
