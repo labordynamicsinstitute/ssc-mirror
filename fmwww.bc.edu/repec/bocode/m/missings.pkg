@@ -12,7 +12,7 @@ d KW: drop
 d KW: data management
 d KW: missing values
 d
-d Requires: Stata version 9
+d Requires: Stata version 12
 d
 d Distribution-Date: 20170511
 d
