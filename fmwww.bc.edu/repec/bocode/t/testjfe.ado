@@ -54,6 +54,7 @@ program testjfe, rclass
 	
 	
 	marksample touse
+	if "`covariates'"!="" markout `touse' `covariates'
 	preserve
 	qui keep if `touse'
 	qui _rmcoll `covariates',forcedrop
@@ -185,8 +186,11 @@ program testjfe, rclass
 			tempname splinecoeffs
 			matrix `splinecoeffs'=0
 			foreach var of varlist `splineseries' {
-				matrix `splinecoeffs'= _b[`var'],`splinecoeffs'
+				*matrix `splinecoeffs'= _b[`var'],`splinecoeffs'
+				matrix `splinecoeffs'= `splinecoeffs',_b[`var']
 			}
+			* now remove the zero in the first term:
+			matrix `splinecoeffs'=`splinecoeffs'[1,2...]
 		}
 		
 		* find series terms actually included
@@ -274,6 +278,7 @@ program testjfe, rclass
 	
 	*mata `S2' = (`S21',`S22')*`G'
 	mata `S2' = (`S21'*`G1')+(`S22'*`G2')
+	
 	mata mata drop `G1' `G2'
 	
 		mata `S'=`S1'-`S2'
@@ -296,6 +301,8 @@ program testjfe, rclass
 	}
 	else return local numericalissues = 0
 	local pvalue1=1-chi2(`ktilde',`teststat')
+	display "fit test stat: " `teststat'
+	display "fit df: " `ktilde'
 	local pfitstr= "fit-based p-value: " +string(`pvalue1',"%5.3f")
 	* get slope-based p-value
 	mata `S1'=`X':*`uhat'
