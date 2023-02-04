@@ -1,10 +1,11 @@
-*! egranger version 1.0.5  20Nov2012
+*! egranger version 1.0.6  03Jan2023
 *! author Mark Schaffer
 * snippets of code used from dfuller.ado for Stata 9
 * Version notes
 * 1.0.4		Fixed bad bug in 2-step ECM - should have been including _lagged_ difference of x
 * 1.0.5     Fixed another bad bag - was undercounting the number of cointegrated series by 1
 *           Added saved value of number of series as macro NS
+* 1.06      Reversed "bug" fix of 1.0.4 - lags of D.x now correctly specified.
 program define egranger, eclass
 	version 9.0
 	syntax varlist(ts) [if] [in] [, TRend QTRend Lags(int 0) REGress ecm ]
@@ -184,10 +185,10 @@ program define egranger, eclass
 	else {
 
 		if `lags' == 0 {
-			qui regress D.`y' L._egresid LD.(`x')
+			qui regress D.`y' D.(`x') L._egresid
 		}
 		else {
-			qui regress D.`y' L._egresid L(1/`lags')D.`y' L(1/`lags')D.(`x')
+			qui regress D.`y' L(0/`lags')D.(`x') L(1/`lags')D.`y' L._egresid
 		}
 		local N2 = e(N)
 		est store _egranger2
