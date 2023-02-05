@@ -1,4 +1,4 @@
-*! Part of package matrixtools v. 0.29
+*! Part of package matrixtools v. 0.30
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
 *! 2023-01-01 > Option nozero added
 *! 2022-12-23 > FIXED: lower value in idi is wrong: sysuse auto, clear; sumat price, stat(idi, p10 p90)

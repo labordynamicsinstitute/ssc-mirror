@@ -14,8 +14,8 @@ BEGIN
                 label("Check for Updates") onpush(program check_sub_ver)
 
         BUTTON   bt_refs      @        _xls  @         @, ///
-                label("Basic SUBSIM References") onpush(view browse "http://www.subsim.org/manuals.htm")
-        BUTTON   bt_www         @        _xls  @         @, label("Go to SUBSIM Website") onpush(view browse "http://www.subsim.org")
+                label("Basic SUBSIM References") onpush(view help subsim)
+        BUTTON   bt_www         @        _xls  @         @, label("Go to SUBSIM Website") onpush(view browse www.subsimorg.ipage.com)
 
 END
 

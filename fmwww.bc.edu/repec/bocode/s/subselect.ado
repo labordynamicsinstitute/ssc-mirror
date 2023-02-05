@@ -1,10 +1,10 @@
-*! Part of package matrixtools v. 0.29
+*! Part of package matrixtools v. 0.30
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
 *! 2022-06-20 > generate + replace
 *! 2022-06-20 > using(use) + clear
 *! 2022-06-20 > keep/drop (generate optional)
 *! 2022-06-20 > varlist instead of varlist
-* 2022-02-10 > Recoded using Stata code instead of nhb_sae_subselect()
+*! 2022-02-10 > Recoded using Stata code instead of nhb_sae_subselect()
 * 2018-08-21 > Added
 
 *TODO short name sbs

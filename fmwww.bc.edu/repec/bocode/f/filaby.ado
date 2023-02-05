@@ -1,4 +1,4 @@
-*! Part of package matrixtools v. 0.29
+*! Part of package matrixtools v. 0.30
 *! Support: Niels Henrik Bruun, nbru@rn.dk
 
 *capture program drop filaby
@@ -13,9 +13,10 @@ program define filaby, sortpreserve
     
     mata: st_local("is_str", strofreal(st_isstrvar(`"`1'"')))
     if `is_str' {
-        tempvar num`1' 
-        encode `1', generate(`num`1'')
-        local 1 `num`1''
+        tempvar id 
+        generate `id' = _n
+        bysort `1' (`2'): replace `id' = `id'[1]
+        local 1 `id'
     }
     
     mata: filaby(`"`1' `2'"', `maxdist', "`stub'")
@@ -44,3 +45,36 @@ mata:
       nhb_sae_addvars((stub + "_first", stub + "_last"), first_last)
   }
 end
+
+
+exit
+
+capture program drop filaby
+clear
+set obs 200000
+set seed 123
+generate id = string(_n, "%06.0f")
+generate date1 = runiformint(mdy(1,1,2010), mdy(12,31,2020))
+format %tdCCYY-NN-DD date1
+generate exp = runiformint(1,10)
+expand exp
+drop exp
+generate time = runiformint(1,6)
+bysort id: replace time = sum(time)
+*hist time
+*su time
+generate date = date1 + time
+format %tdCCYY-NN-DD date
+drop time date1
+bysort id (date): generate dieddt = cond(runiform() < 0.10, date[_N] + runiformint(0,5), .)
+bysort id (dieddt): replace dieddt = dieddt[1]
+format %tdCCYY-NN-DD dieddt
+
+filaby id date, maxdist(5) stub(my)
+
+generate died_within_7_days = dieddt - date < 8 & my_last
+bysort id died_within_7_days: generate N = _N if died_within_7_days
+sort id date
+bysort id (date): generate diedlow = dieddt - date[1] < 8
+bysort id (date): generate diedhigh = dieddt - date[_N] < 8
+tab N

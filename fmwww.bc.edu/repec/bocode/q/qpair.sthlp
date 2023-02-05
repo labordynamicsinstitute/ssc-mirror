@@ -1,5 +1,5 @@
 {smcl}
-{* *! Version 1.0 08FEB2021}{...}
+{* *! Version 1.21 01FEB2023}{...}
 
 {title:Title}
 
@@ -14,7 +14,7 @@
 {cmdab:qpair} {ifin}
 {cmd:,}
 {cmdab:fir:st(varlist)} {cmdab:sec:ond(varlist)} {cmdab:nfa:ctor(#)} [{cmdab:ext:raction(string)} {cmdab:rot:ation(string)} 
-{cmdab:app:roach(string)} {cmdab:sco:re(string)} {cmdab:es:ize(string)} {cmdab:bip:olar(string)} {cmdab:stl:ength(#)}] 
+{cmdab:app:roach(string)} {cmdab:sco:re(string)} {cmdab:es:ize(string)} {cmdab:bip:olar(string)} {cmdab:stl:ength(#)} {cmdab:min:imum}] 
 
 {p}
 {bf:varlist} includes Q-sorts that need to be factor-analyzed.
@@ -24,10 +24,9 @@
 {pstd}
 {cmd:qpair} performs by-person factor analysis on paired Q-sorts. The command performs factor 
 analysis on pairs of Q-sorts (matched Q-sorts) using either principal factor, iterated 
-principal factor, or principal-component factor extraction methods.{p_end} 
-
+principal factor, or principal-component factor extraction methods.
 {cmd:qpair} is also able to rotate factors using all factor rotation techniques available in 
-Stata (orthogonal and oblique) including varimax, quartimax, equamax, obminin, and promax.{p_end} 
+Stata (orthogonal and oblique) including varimax, quartimax, equamax, obminin, and promax. 
 {cmd:qpair} displays the eigenvalues of the correlation matrix, the factor loadings, 
 and the uniqueness of the variables. It also provides number of Q-sorts loaded on each 
 factor, distinguishing statements for each factor, and consensus statements. 
@@ -85,6 +84,8 @@ scores for each bipolar factor seperately. This option works only with Brown’s
 {synopt:{opt any #}}any integer number more than 0 indicates number of negative loadings required for a bipolar factor.{p_end}
 
 {synopt :{opt stl:ength(#)}}it identifies the maximum length of characters for each statement to be displayed; {ul:the default length is 50 characters}.{p_end}
+
+{synopt :{opt min:imum}}a minimum amount of output is displayed which includes factor scores, distinguishing statements, and consensus statements}.{p_end}
 
 {title: Options for factor extraction}
 
@@ -192,10 +193,13 @@ Same as above to use {bf:regression} factor scores
 {title:References}
 
 {pstd}
-{bf:Akhtar-Danesh N.} qfactor: A command for Q-methodology analysis. {it:The Stata Journal}. 2018;18(2):432-446.
+{bf:Akhtar-Danesh, N., & Wingreen, SC.} qpair: A command for analyzing paired Q-sorts in Q-methodology. {it:The Stata Journal}. 2022;22(4):884-907.
 
 {pstd}
-{bf:Akhtar-Danesh, N., & Wingreen, SC.} How to analyze change in perception from paired Q-sorts. {it:Communication in Statistics- Theory and Methods}. 2020;doi:10.1080/03610926.2020.1845734
+{bf:Akhtar-Danesh, N., & Wingreen, SC.} How to analyze change in perception from paired Q-sorts. {it:Communication in Statistics- Theory and Methods}. 2022;51(16):5681-5691.
+
+{pstd}
+{bf:Akhtar-Danesh N.} qfactor: A command for Q-methodology analysis. {it:The Stata Journal}. 2018;18(2):432-446.
 
 {pstd}
 {bf:Wingreen, SC., & Blanton, JE.} IT professionals' person–organization fit with IT training and development priorities. {it:Information Systems Journal}. 2018;28(2):294-317.

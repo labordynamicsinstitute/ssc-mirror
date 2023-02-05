@@ -17,32 +17,37 @@ d KW: summary statistics
 d
 d Requires: Stata version 12 
 d
-d Distribution-Date: 20230108
+d Distribution-Date: 20230204
 d
 d Author: Niels Henrik Bruun, Aalborg University Hospital
 d Support: email niels.henrik.bruun@@gmail.com
 d
 f matrixtools.sthlp
 f ../_/_gmarktop.ado
+f ../c/confmat.ado
+f ../c/confmat.sthlp
+f ../c/confusionmatrix.mata
 f ../c/crossmat.ado
 f ../c/crossmat.sthlp
 f ../d/dummynizer.ado
 f ../d/dummynizer.sthlp
 f ../f/filaby.ado
 f ../f/filaby.sthlp
-f matprint.ado
-f matprint.sthlp
 f marktop.sthlp
-f matrix2stata.ado
-f matrix2stata.sthlp
 f mat2xl.ado
 f mat2xl.sthlp
+f matprint.ado
+f matprint.sthlp
+f matrix2stata.ado
+f matrix2stata.sthlp
 f metadata.ado
 f metadata.sthlp
 f ../o/onewai.ado
 f ../o/onewai.sthlp
 f ../r/regmat.ado
 f ../r/regmat.sthlp
+f ../s/stregmat.ado
+f ../s/stregmat.sthlp
 f ../s/strofnum.ado
 f ../s/strofnum.sthlp
 f ../s/strtonum.ado

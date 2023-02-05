@@ -1,4 +1,4 @@
-*! Part of package matrixtools v. 0.29
+*! Part of package matrixtools v. 0.30
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
 *!2022-12-23 > Bug in nhb_sae_summary_row() for idi
 *!2022-12-29 > nhb_mt_tolabels() added

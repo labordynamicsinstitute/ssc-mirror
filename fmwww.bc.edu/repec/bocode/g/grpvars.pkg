@@ -22,8 +22,8 @@ d Requires: Stata version 12
 d
 d Distribution-Date: 20220129
 d
-d Author: Gorkem Aksaray , Koc University
-d Support: email gaksaray@@ku.edu.tr
+d Author: Gorkem Aksaray , Trinity College Dublin
+d Support: email aksarayg@@tcd.ie
 d
 f grpvars.ado
 f grpvars.sthlp

@@ -1,3 +1,7 @@
+*! Part of package matrixtools v. 0.30
+*! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
+* 2023-02-04 Bug wrt include fixed
+* 2023-01-07 Created
 /*
 cls
 capture program drop confmat
@@ -68,7 +72,8 @@ program define confmat, rclass
   *mata mata drop _* _*()
 end
 
-include "C:/Users/sttp/Documents/nhb/STATA/ado_nhb/confusion_matrix.mata"
+mata st_local( "__confusion_matrix_mata", findfile("confusion_matrix.mata"))
+include `"`__confusion_matrix_mata'"'
 
 mata:
 	void conf_mat_is_binary(string scalar varname) 

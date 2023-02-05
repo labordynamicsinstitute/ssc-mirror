@@ -1,11 +1,11 @@
-*! version 1.10 12MAY2022
+*! version 1.21 01FEB2023
 
 program define qpair, rclass 
 version 12.0
 
-syntax [if] [in], FIRst(varlist) SECond(varlist) NFActor(integer) ///
-                 [EXTraction(string)] [ROTation(string)] [APProach(string)] ///
-				 [SCOre(string)] [ESize(string)] [BIPolar(string)] [STLength(string)]
+syntax [if] [in], FIRst(varlist) SECond(varlist) NFActor(integer) [EXTraction(string)] ///
+                 [ROTation(string)] [APProach(string)]  [SCOre(string)] ///
+				 [ESize(string)] [BIPolar(string)] [STLength(string)] [MINimum]
 preserve
 
 foreach var in `first' `second' {
@@ -83,7 +83,17 @@ qui replace diff`i'=rankdiff`i'
 }
 drop rankdiff*
 
-factor diff*, fa($n) `extraction'  /*Choose factor extractin technique*/
+dis ""
+dis "       ******************************************************************"
+dis "          ******** FACTOR EXTRACTION METHOD =" " `extraction' *********"
+dis "       ******************************************************************"
+
+if "`minimum'" !="" {
+	qui factor diff*, fa($n) `extraction'  /*Choose factor extractin technique*/
+}
+else {
+	factor diff*, fa($n) `extraction'  /*Choose factor extractin technique*/
+}
 matrix unrotated=e(L)
 matrix unique=e(Psi) /* These 4 line calculate communality for each subject*/
 qui matrix unique=unique'
@@ -100,8 +110,12 @@ if "`rotation'"=="none" {
 matrix rotated=e(L) /*To save unrotated factor loadings*/
 }
 else {
-rotate, `rotation' normalize /*Rotating the extracted factors*/
-
+	if "`minimum'" !="" {
+	qui rotate, `rotation' normalize /*Rotating the extracted factors*/
+	}
+	else {
+	rotate, `rotation' normalize /*Rotating the extracted factors*/
+}
 matrix rotated=e(r_L) /*To save rotated factor loadings*/
 }
 //
@@ -182,10 +196,11 @@ qui replace Qfactor= `i' if loaded`i'==1
 //
 qui gen Qsort=_n
 format f1-f$n %5.2g
+if "`minimum'" =="" {
 dis ""
 dis   "********** Q-SORTS LOADED ON EACH FACTOR **********"
 list Qsort f1-f$n loaded1-loaded$n if f1 <., noobs sep(0)
-
+}
 
 /*Next step: standardise the factor score*/
 
@@ -310,7 +325,17 @@ di  "************************************************************************"
 di  "************************** APPROACH II WAS USED ***************************"
 di  "************************************************************************"
 
-factor `first', fa($n) `extraction'  
+dis ""
+dis "       ******************************************************************"
+dis "          ******** FACTOR EXTRACTION METHOD =" " `extraction' *********"
+dis "       ******************************************************************"
+
+if "`minimum'" !="" {
+	qui factor `first', fa($n) `extraction' 
+} 
+else {
+	factor `first', fa($n) `extraction'
+}
 matrix unrotated=e(L)
 matrix unique=e(Psi) /* These 4 line calculate communality for each subject*/
 qui matrix unique=unique'
@@ -327,8 +352,12 @@ if "`rotation'"=="none" {
 matrix rotated=e(L) /*To save unrotated factor loadings*/
 }
 else {
-rotate, `rotation' normalize /*Rotating the extracted factors*/
-
+	if "`minimum'" !="" {	
+	qui rotate, `rotation' normalize /*Rotating the extracted factors*/
+}
+else {
+	rotate, `rotation' normalize /*Rotating the extracted factors*/
+}
 matrix rotated=e(r_L) /*To save rotated factor loadings*/
 }
 //
@@ -410,10 +439,11 @@ qui replace Qfactor= `i' if loaded`i'==1
 //
 qui gen Qsort=_n
 format f* %5.2g
+if "`minimum'" =="" {
 dis ""
 dis   "********** Q-SORTS LOADED ON EACH FACTOR **********"
 list Qsort f* loaded* if f1 <., noobs sep(0)
-
+}
 
 /*Next step: standardise the factor score*/
 
@@ -491,7 +521,7 @@ drop zdiff*
 sort StatNo, stable
 dis ""
 dis ""
-dis "       ************** z_scores and ranks for all Statements  **************"
+dis "       ******** z_scores and ranks for all Statements at baseline ********"
 list StatNo zscore1-F$n if F1<. , noobs sep(0)
 
 /*Saving unrotated Factor loadings, factor scores and Factor variable, etc.*/
@@ -569,25 +599,29 @@ local k= dim2[`i',1]
 qui recode rankAfter* (`l'/`j'=`k')	
 }		
 //
-drop After* zAfter*
+drop After* 
 ren rankAfter* F*_2
 
 /*Writing Distinguishing Statements*/
 order _all, seq
 forvalues i=1/$n {
+qui gen str4 Difference="NS"
+qui replace Difference="Sig.*" if abs(zscore`i'-zAfter`i')>=.8
 dis ""
 dis ""
-dis "    **** Factor Scores for Distinguishing Statements for Factor `i' ****"
+dis "    **** Factor Scores for Distinguishing Statements for Factor `i' at Baseline (_1) and Follow-up (_2) ***"
 dis ""
 dis "                      Number of Q-sorts loaded on Factor `i'= " fcount`i'  
 gsort -F`i'_1 /*to sort ranks in decending order*/
-list StatNo statement F`i'* if F1_1<. & ds`i'==$n-1, noobs sep(0)
+list StatNo statement F`i'* Difference if F1_1<. & ds`i'==$n-1, ab(12) noobs sep(0)
+dis "     *Significant difference is based on a large effect size (i.e., Cohen's d= 0.80)"
+drop Difference
 } 
 //
 sort StatNo, stable
 
 dis ""
-dis "    ******** Factor Scores for all Statements for all Factors ********"
+dis "        *** Factor Scores for all Statements for all Factors at Baseline (_1) and Follow-up (_2) ***"
 list StatNo statement F* if F1_1<. , noobs sep(0)
 
 //Storing Factor Loadings matrix

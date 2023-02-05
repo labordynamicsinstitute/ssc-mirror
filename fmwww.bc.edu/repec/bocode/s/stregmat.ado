@@ -1,4 +1,4 @@
-*! Part of package matrixtools v. 0.29
+*! Part of package matrixtools v. 0.30
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
 *! 2023-01-01 > Option nozero added
 *! 2022-12-29 > st_ regressions added as stregmat
@@ -6,9 +6,9 @@
 *! 2022-12-29 > When convergence isn't achieved, missings are inserted
 *! 2022-12-29 > run_regressions renamed to nhb_mt_run_regressions and moved to matrixtools
 *! 2022-12-29 > tolabels renamed to nhb_mt_tolabels and moved to matrixtools
-*! 2021-01-03 > Option names for alternative adjustment names
-*! 2021-01-03 > toxl added
-*! 2021-01-03 > Option btext for alternative column name for b added
+* 2021-01-03 > Option names for alternative adjustment names
+* 2021-01-03 > toxl added
+* 2021-01-03 > Option btext for alternative column name for b added
 * TODO: n and x as option in front of regmat table - Based on crossmat
 * TODO: Enter adjustments variables at a level, force certain adjustment variables
 * TODO: Option summary (sumat) of outcome by values of exposure
