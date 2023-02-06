@@ -1,16 +1,10 @@
 d 'FRAGTEXTAB': module to fragmentize LaTeX tables exported by collect suite of commands
 d
-d   Stata 17 introduced collect suite of commands (collect, table,
-d and etable), all of which can export as LaTeX files.	  TeX
-d options include tableonly for exporting only the table to the
-d specified file, which is useful for including the    table in a
-d LaTeX document via \input{} command.	However, the output
-d includes a table environment in addition to	 the tabular
-d environment, which prevents using more advanced LaTeX packages
-d such as threeparttable.  There is no	  option to "fragmentize",
-d i.e., to suppress the table's opening and closing specifications.
-d    fragtextab does just that!  It essentially takes a .tex file,
-d and throws everything out except the tabular section/ 
+d  fragtextab fragmentizes LaTeX tables exported by the collect
+d suite of commands introduced in Stata 17. It takes a .tex file
+d and keeps only the tabular section. This is useful for including
+d a table in a LaTeX document via \input{} command while also
+d wrapping it in more advanced table environments. 
 d
 d KW: table processing
 d KW: LaTeX 
