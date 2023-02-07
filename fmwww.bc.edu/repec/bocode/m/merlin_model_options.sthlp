@@ -96,7 +96,7 @@ specifications. By default, they are created and indexed by model, component and
 {title:Examples}
 
 {phang}
-For detailed examples, see {bf:{browse "https://www.mjcrowther.co.uk/software/merlin":mjcrowther.co.uk/software/merlin}}.
+For detailed examples, see {bf:{browse "https://reddooranalytics.se/products/merlin":reddooranalytics.se/products/merlin}}.
 
 {pstd}Setup{p_end}
 {phang2}{cmd:. use http://fmwww.bc.edu/repec/bocode/s/stjm_pbc_example_data, clear}{p_end}

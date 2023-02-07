@@ -17,7 +17,7 @@ program merlin_parse, rclass
         local 0 : copy local ZERO
         syntax [anything] [if] [in] [, PREDICT PREDTOUSE(varname) *]
 
-		local ZERO `"`anything' `if' `in', `predict' `options'"'
+	local ZERO `"`anything' `if' `in', `predict' `options'"'
         
         local DVOPTS                                    ///
                         Family(passthru)                ///
@@ -44,6 +44,7 @@ program merlin_parse, rclass
                         FROM(string)                    ///
                         METHod(string)                  ///
                         NOLOg           LOg             ///
+                        NOVCE                           ///
 			scores(string)			/// nodoc
                                                          // blank
 
@@ -100,12 +101,14 @@ program merlin_parse, rclass
                         EXCALIBUR			/// NODOC
                         GALAHAD				/// NODOC
                         BORS				/// NODOC
-                        SAGRAMORE			/// nodoc
+                        SAGRAMORE			/// NODOC
+                        MORDRED                         /// NODOC
                                                         ///
                         TRANSMATrix(string)		/// NODOC
                         ICCRfudge			/// NODOC
                         IINTPoints(passthru)		/// NODOC
                         PCHINTPoints(passthru)		/// NODOC
+                        INDICATOR(varname)              ///
                                                          // blank
 
         _parse expand EQ GL : ZERO,                     ///
@@ -134,6 +137,7 @@ program merlin_parse, rclass
                 local linklist `linklist' `"`s(link)'"'
                 local mweight`i' `s(mweight)'
                 local failure`i' `s(failure)'
+                local reffailure`i' `s(reffailure)'
                 local ltruncated`i' `s(ltruncated)'
                 local linterval`i' `s(linterval)'
                 local rcsopts`i' `s(rcsopts)'
@@ -190,9 +194,9 @@ program merlin_parse, rclass
 		
         }
 
-		local neq = `EQ_n'
-		local options : copy local GL_op
-		return local hasopts =  "`options'"!="" 
+        local neq = `EQ_n'
+        local options : copy local GL_op
+        return local hasopts =  "`options'"!="" 
 		
         _get_diopts diopts options, `options'
         local 0 `", `NOSTART' `options'"'
@@ -206,7 +210,7 @@ program merlin_parse, rclass
 
         // parse globally specified equation options
         local 0 `", `options'"'
-        syntax [, `DVOPTS' `OPTS' `EVALTYPE' NOVCE *]	//novce fudge
+        syntax [, `DVOPTS' `OPTS' `EVALTYPE' *]
         if !inlist("`method'", "", "ml") {
                 di as err "invalid {bf:method()} option;"
                 di as err "option {bf:`method'} not allowed"
@@ -255,8 +259,9 @@ program merlin_parse, rclass
                 IINTPoints(int 35)					 ///
                 WEIGHTS(varlist) SHOWinit UPDATEMC DEBUG 		 ///
                 RANDOM PENalty(string) LAMBDA(string) LOSS 		 ///
-                ARTHUR EXCALIBUR GALAHAD BORS SAGRAMORE			 ///
+                ARTHUR EXCALIBUR GALAHAD BORS SAGRAMORE	MORDRED		 ///
                 TRANSMATrix(string) ICCRfudge 				 ///
+                INDICATOR(varname)                                       ///
                 MORGANA(string)						 ///
                 RESTARTValues(string) APSTARTValues(string) ZEROS	 ///
                 PREDICT PTVAR(string) NPREDICT(string) 			 /// -predictions-
@@ -344,7 +349,8 @@ program ParseDist, sclass
                 MATCHby(string)		///
                 RE(string) 		///
                 Quantile(string) 	///
-                NORESIDual		///	-gp-
+                NORESIDual		/// gp
+                REFFAILure(string)      /// notdoc
                 *			/// rp aft opts
         ]
         sreturn local failure `failure'
@@ -352,6 +358,7 @@ program ParseDist, sclass
         sreturn local linterval `linterval'
         sreturn local rcsopts `options'
         sreturn local dapmodel `dapmodel'
+        sreturn local reffailure `reffailure'
         local family `anything'
         
         local dapnotallowed = 0

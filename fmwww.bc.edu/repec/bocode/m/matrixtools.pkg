@@ -26,7 +26,7 @@ f matrixtools.sthlp
 f ../_/_gmarktop.ado
 f ../c/confmat.ado
 f ../c/confmat.sthlp
-f ../c/confusionmatrix.mata
+f ../c/confusion_matrix.mata
 f ../c/crossmat.ado
 f ../c/crossmat.sthlp
 f ../d/dummynizer.ado

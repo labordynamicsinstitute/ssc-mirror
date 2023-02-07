@@ -2053,7 +2053,7 @@ mata:
 				N_iter=100
 			}
 		
-			dif_results = dif(Q, G, diflist, logL, dif_format, dif_tw, dif_colours , N_iter, crit_ll, theta_nip, Theta_id, Theta_dup, point_Uigc, point_Fg, upd_quad_betw_em, N_iter_NRF, crit_par, eap_names, dif_cleargraphs)
+			dif_results = dif(Q, G, diflist, logL, dif_format, dif_tw, dif_colours , N_iter, crit_ll, theta_nip, Theta_id, Theta_dup, point_Uigc, point_Fg, upd_quad_betw_em, N_iter_NRF, crit_par, eap_names, dif_cleargraphs,check_a)
 		
 			st_matrix("dif_results",dif_results)
 			st_matrixcolstripe("dif_results", (J(8,1,""),("LR","p-value","P-DIF|GR","P-DIF|GF","E(parR,GR)","E(parF,GR)","E(parR,GF)","E(parF,GF)")'))
@@ -2707,7 +2707,7 @@ mata:
 		
 	}
 	
-	real matrix dif(_Q, _G ,string colvector diflist, real colvector logL , string scalar dif_format , string scalar dif_tw, string matrix dif_colours, real scalar N_iter, real scalar crit_ll, real scalar theta_nip, real colvector Theta_id, real colvector Theta_dup, pointer matrix point_Uigc, pointer matrix point_Fg, real scalar upd_quad_betw_em, real scalar N_iter_NRF, real scalar crit_par, string matrix eap_names, real scalar dif_cleargraphs){
+	real matrix dif(_Q, _G ,string colvector diflist, real colvector logL , string scalar dif_format , string scalar dif_tw, string matrix dif_colours, real scalar N_iter, real scalar crit_ll, real scalar theta_nip, real colvector Theta_id, real colvector Theta_dup, pointer matrix point_Uigc, pointer matrix point_Fg, real scalar upd_quad_betw_em, real scalar N_iter_NRF, real scalar crit_par, string matrix eap_names, real scalar dif_cleargraphs, real scalar check_a){
 		
 		class ITEMS scalar Q
 		Q=_Q
@@ -2759,7 +2759,7 @@ mata:
 									
 			Gdif=cloneG(G)
 
-			em_results				= em(Qdif, Gdif, 0, N_iter, 0, ".", crit_ll, 0 , 1 ,"", theta_nip,J(0,0,.),"", Theta_id, Theta_dup, ".", point_Uigc_dif, point_Fg  , upd_quad_betw_em, N_iter_NRF, crit_par)
+			em_results				= em(Qdif, Gdif, 0, N_iter, 0, ".", crit_ll, 0 , 1 ,"", theta_nip,J(0,0,.),"", Theta_id, Theta_dup, ".", point_Uigc_dif, point_Fg  , upd_quad_betw_em, N_iter_NRF, crit_par, check_a)
 			
 			Q_DIF_GR.put(Q_DIF_GR.pars,i, Qdif.get(Qdif.pars, I))
 			Q_DIF_GR.put(Q_DIF_GR.m_curr,i, Qdif.get(Qdif.m_curr, I))

@@ -47,9 +47,11 @@ a simple {varlist}, to directly specifying spline or fractional polynomial funct
 {synopt :{opt tvctime}}use splines of time rather than log time for time-dependent effects{p_end}
 {synopt :{opt noorth:og}}turns off the default orthogonalisation of any spline terms{p_end}
 {synopt :{opth bh:azard(varname)}}expected event rate at event times, invokes a relative survival model{p_end}
+{synopt :{opt chintp:oints(#)}}set the number of integration points to calculate the cumulative hazard function{p_end}
 {synopt:{bf:time#(}{help stmerlin##mt_opts:{it:mt_opts}})}define two to five additional timescales modelled with restricted cubic 
 splines, specified with {cmd:time2({help stmerlin##mt_opts:{it:mt_opts}})}, 
 with a maximum of {cmd:time5({help stmerlin##mt_opts:{it:mt_opts}})}{p_end}
+
 {synoptline}
 {p2colreset}{...}
 
@@ -92,7 +94,7 @@ or in alternative ways using {helpb merlin}'s linear predictor syntax. For predi
 {pstd}
 The {helpb merlin} command fits an extremely broad class of mixed effects regression models for linear, non-linear and 
 user-defined outcomes. For full details and many tutorials, take a look at the accompanying website: 
-{browse "https://www.mjcrowther.co.uk/software/merlin":mjcrowther.co.uk/software/merlin}
+{browse "https://reddooranalytics.se/products/merlin":{bf:reddooranalytics.se/products/merlin}}
 {p_end}
 
 
@@ -139,7 +141,7 @@ event times. Boundary knots are placed at the minimum and maximum event times.
 log [cumulative] hazard function when using {cmd:distribution(rp)} or {cmd:distribution(rcs)}. Must include boundary 
 knots. Knots should be specified in increasing order.
 
-{phang2}defines the knot locations (cut-points) the baseline function for {cmd:distribution(pwexponential)}. Knots should 
+{phang2}defines the knot locations (cut-points) of the baseline function for {cmd:distribution(pwexponential)}. Knots should 
 be specified in increasing order.
 
 {phang}{opt tvc(varlist)} specifies the variables that have time-dependent effects. Time-dependent effects are fitted 
@@ -156,6 +158,10 @@ the default of log time.
 
 {phang}{opth bhazard(varname)} invokes a relative survival (excess hazard) model, by specifying the expected event rate in the reference 
 population at the observed event times.
+
+{phang}
+{opt chintpoints(#)} defines the number of Gauss-Legendre integration (quadrature) points used to calculate analytically intractable 
+cumulative hazard functions. Default is {cmd:chintpoints(30)}
 
 {marker multitime_details}{...}
 {dlgtab:Multiple timescales}
@@ -221,3 +227,4 @@ Red Door Analytics AB{p_end}
 Stockholm, Sweden{p_end}
 {p 5 12 2}
 michael@reddooranalytics.se{p_end}
+

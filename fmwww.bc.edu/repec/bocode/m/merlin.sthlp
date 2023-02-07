@@ -115,7 +115,7 @@ There are many more on the way.
 
 {pstd}
 For full details and many tutorials, take a look at 
-{bf:{browse "https://www.mjcrowther.co.uk/software/merlin":merlin's homepage}}.
+{bf:{browse "https://reddooranalytics.se/products/merlin":merlin's homepage}}.
 
 
 {marker options}{...}
@@ -146,7 +146,7 @@ control how the results of estimation are displayed.  See
 
 {phang}
 These examples are intended for quick reference.  For detailed examples, see the 
-{bf:{browse "https://www.mjcrowther.co.uk/software/merlin/tutorials_stata":merlin tutorial homepage}}.
+{bf:{browse "https://reddooranalytics.se/products/merlin":merlin homepage}}.
 
 {phang}
 {ul:{bf:Example 1: Linear regression}}
@@ -222,5 +222,5 @@ application to estimating clinically useful measures of effect differences. {bro
 
 {phang}
 Weibull CE, Lambert PC, Eloranta S, Andersson TM-L, Dickman PW, {bf:Crowther MJ}. A multi-state model incorporating 
-estimation of excess hazards and multiple time scales. {browse "https://onlinelibrary.wiley.com/doi/10.1002/sim.8894":{it:Statistics in Medicine} 2021; (In Press)}.
+estimation of excess hazards and multiple time scales. {browse "https://onlinelibrary.wiley.com/doi/10.1002/sim.8894":{it:Statistics in Medicine} 2021;40(9):2139-2154}.
 {pstd}

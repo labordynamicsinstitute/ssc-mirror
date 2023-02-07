@@ -17,8 +17,8 @@ Syntax for predictions following a {helpb stmerlin} model
 {cmd:predict}
 {it:newvarname}
 {ifin} [{cmd:,}
-{it:{help merlin_postestimation##statistic:statistic}}
-{it:{help merlin_postestimation##opts_table:options}}]
+{it:{help stmerlin_postestimation##statistic:statistic}}
+{it:{help stmerlin_postestimation##opts_table:options}}]
 
 
 {marker statistic}{...}
@@ -170,7 +170,7 @@ that it {cmd:at1()} and {cmd:at2()} are specified, then {cmd:zeros} applies to b
 {phang}
 {cmd:ci} specifies that confidence intervals are calculated for the predicted {it:statistic}. The multivariate delta 
 method (i.e. {cmd:predictnl}) is used for all calculations, except when a {cmd:family(cox)} model has been fitted, 
-in which case boostrapping is used. The calculated confidence intervals are generated in {it:newvarname_lci} 
+in which case bootstrapping is used. The calculated confidence intervals are generated in {it:newvarname_lci} 
 and {it:newvarname_uci}.
 
 {phang}

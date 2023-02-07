@@ -1,8 +1,11 @@
-*! version 2.2.1 02dec2021 MJC
+*! version 2.2.3  06feb2023 MJC
 
 /*
 History
-MJC 02dec2021: version 2.2.1 - bug fix: would error out when no covariates specified; now fixed
+MJC 06feb2023: version 2.2.3 - added error check for delayed entry
+MJC 12oct2022: version 2.2.2 - bug fix; touse caused predictions to fail
+MJC 02dec2021: version 2.2.1 - bug fix: would error out when no covariates 
+                               specified; now fixed
 MJC 16dec2020: version 2.2.0 - synced & doc'd distribution(pwexponential)
 MJC 03oct2020: version 2.1.0 - now requires merlin 1.12.0:
                                  --> requires Stata 15.1
@@ -160,14 +163,16 @@ program Estimate, eclass
                 di as error "distribution(`distribution') not supported"
                 exit 198
         }
-        
-        //sample
-        marksample touse
-        local ifin "if `touse'"
-        
+                
         //delayed entry
         qui su _t0 `ifin', meanonly
-        if `r(max)'>0 {
+        if (`r(min)'==0 & `r(max)'>0) {
+                di as error "{p}delayed entry detected for a subset of " ///
+                        "observations; must be all or none{p_end}"
+                exit 198
+        }
+        
+        if `r(max)'>0 & `r(min)'>0 {
                 local ltruncated ltruncated(_t0)
                 di as text "note; a delayed entry model is being fitted"
         }
@@ -272,7 +277,7 @@ program Estimate, eclass
         }
 
         //===================================================================//
-	// merlin
+		// merlin
 			
         if "`debug'"!="" {
                 di "`merlincp'"

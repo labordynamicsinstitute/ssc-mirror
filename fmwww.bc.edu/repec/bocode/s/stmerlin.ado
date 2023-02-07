@@ -43,6 +43,9 @@ program Estimate, eclass
                         EFORM                                   ///
                                                                 ///
                         FROM(passthru)			        ///
+                        CHINTPoints(passthru)                   ///
+                        EVALtype(passthru)                      ///
+                        NOGEN                                   ///
                         *					/// -mlopts-
                 ]						//
 
@@ -55,19 +58,47 @@ program Estimate, eclass
         local l = length("`family'")
         if substr("exponential",1,max(1,`l'))=="`family'" {
                 local family exponential	
-                local evaltype evaltype(gf2)
+                if "`evaltype'"=="" {
+                        if "`bhazard'"=="" {
+                                local evaltype evaltype(gf2)
+                        }
+                        else {
+                                local evaltype evaltype(gf0)
+                        }
+                }
         }
         else if substr("pwexponential",1,max(3,`l'))=="`family'" {
                 local family pwexponential	
-                local evaltype evaltype(gf2)
+                if "`evaltype'"=="" {
+                        if "`bhazard'"=="" {
+                                local evaltype evaltype(gf2)
+                        }
+                        else {
+                                local evaltype evaltype(gf0)
+                        }
+                }
         }
         else if substr("weibull",1,max(1,`l'))=="`family'" {
                 local family weibull
-                local evaltype evaltype(gf2)
+                if "`evaltype'"=="" {
+                        if "`bhazard'"=="" {
+                                local evaltype evaltype(gf2)
+                        }
+                        else {
+                                local evaltype evaltype(gf0)
+                        }
+                }
         }
         else if substr("gompertz",1,max(2,`l'))=="`family'" {
                 local family gompertz
-                local evaltype evaltype(gf2)
+                if "`evaltype'"=="" {
+                        if "`bhazard'"=="" {
+                                local evaltype evaltype(gf2)
+                        }
+                        else {
+                                local evaltype evaltype(gf0)
+                        }
+                }
         }
         else if substr("ggamma",1,max(2,`l'))=="`family'" {
                 local family ggamma
@@ -80,19 +111,46 @@ program Estimate, eclass
         }
         else if "rcs"=="`family'" {
                 local family loghazard
-                local evaltype evaltype(gf2)
+                if "`evaltype'"=="" {
+                        if "`bhazard'"=="" {
+                                local evaltype evaltype(gf2)
+                        }
+                        else {
+                                local evaltype evaltype(gf0)
+                        }
+                }
         }
         else if "addrcs"=="`family'" {
                 local family hazard
-                local evaltype evaltype(gf2)
+                if "`evaltype'"=="" {
+                        if "`bhazard'"=="" {
+                                local evaltype evaltype(gf2)
+                        }
+                        else {
+                                local evaltype evaltype(gf0)
+                        }
+                }
         }
         else if "rp"=="`family'" {
                 local family rp
-                local evaltype evaltype(gf2)
+                if "`evaltype'"=="" {
+                        if "`bhazard'"=="" {
+                                local evaltype evaltype(gf1)
+                        }
+                        else {
+                                local evaltype evaltype(gf0)
+                        }
+                }
         }
         else if "`family'"=="cox" {
                 local family cox
-                local evaltype evaltype(gf2)
+                if "`bhazard'"!="" {
+                        di as error "{bf:bhazard()} not supported with the Cox model"
+                        exit 198
+                }
+                if "`evaltype'"=="" {
+                        local evaltype evaltype(gf2)
+                }
         }
         else {
                 di as error "distribution(`distribution') not supported"
@@ -333,6 +391,7 @@ program Estimate, eclass
                                 `nolog'													///
                                 `evaltype'												///
                                 `mlopts'												///
+                                `chintpoints'                                                   ///
                                 `eform'
                                 
                         tempname init init2
@@ -452,6 +511,7 @@ program Estimate, eclass
                         `nolog'						///
                         `evaltype'					///
                         `mlopts'					///
+                        `chintpoints'                                   ///
                         `eform'
                 tempname init init2
                 mat `init2' = e(b)
@@ -471,12 +531,15 @@ program Estimate, eclass
         merlin 	(_t `vars' `tvcs' `multitimes' `rcsbase' `origifin',    ///
                 `familydef' `timevar' `noconstant') if _st==1,		///
                 bors							///
+                `nogen'                                                 ///
                 `from' 							///
                 `debug'							///
                 `level' 						///
                 `nolog'							///
                 `evaltype'						///
                 `mlopts'						///
+                `chintpoints'                                           ///
+                `evaltype'                                              ///
                 `eform'                                                 //
 
 

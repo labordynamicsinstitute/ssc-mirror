@@ -1,7 +1,16 @@
-*! version 2.2.0  17jan2023 MJC
+*! version 2.3.0  06feb2023 MJC
 
 /*
 History
+06feb2023 version 2.3.0 
+- help file link fixes
+- chintpoints() now added and doc'd in stmerlin help file
+- error check added within rcs(..,df(#)) for repeated knots
+- z-scores and p-values now shown when option eform is used
+- bug fix: introduced in v2.0.0, predict with option marginal erroneously 
+  returned fixedonly predictions; now fixed
+- bug fix: stmerlin with option bhazard() would tend to not converge due to 
+  calling analytic derivatives in situations where it shouldn't; now fixed
 17jan2023 version 2.2.0 - eform added to merlin & stmerlin
                         - bug fixes for ob. level models
 18mar2022 version 2.1.5 - bug fix; family(rp,...) models could error out when 
@@ -426,7 +435,7 @@ program Display
         local Nrelevels = `e(Nlevels)'-1
         
         if "`eform'"!="" {
-                local exp exp
+                local exp exp prob
         }
         
         local plus

@@ -467,6 +467,7 @@ program Predict
                                         `reffects'					///
                                         `reses'						///
                                         `devcodes'					///
+                                        indicator(`e(indicator)')                       ///    
                                         `debug'                                         //
                                         
                         //tidy up constraints

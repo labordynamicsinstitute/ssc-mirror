@@ -200,7 +200,7 @@ The command syntax of {cmd:merlin} is fully specified by the {it:models} and the
 
 {pstd}
 For full details and many tutorials, take a look at the accompanying website: 
-{browse "https://www.mjcrowther.co.uk/software/merlin":mjcrowther.co.uk/software/merlin}
+{browse "https://reddooranalytics.se/products/merlin":reddooranalytics.se/products/merlin}
 
 
 {marker options}{...}
@@ -425,7 +425,7 @@ log cumulative hazard function. Must include boundary knots. Knots should be spe
 {title:Examples}
 
 {phang}
-For detailed examples, see {bf:{browse "https://www.mjcrowther.co.uk/software/merlin":mjcrowther.co.uk/software/merlin}}.
+For detailed examples, see {bf:{browse "https://reddooranalytics.se/products/merlin":reddooranalytics.se/products/merlin}}.
 
 
 {title:Author}
@@ -462,5 +462,5 @@ application to estimating clinically useful measures of effect differences. {bro
 
 {phang}
 Weibull CE, Lambert PC, Eloranta S, Andersson TM-L, Dickman PW, {bf:Crowther MJ}. A multi-state model incorporating 
-estimation of excess hazards and multiple time scales. {browse "https://onlinelibrary.wiley.com/doi/10.1002/sim.8894":{it:Statistics in Medicine} 2021; (In Press)}.
+estimation of excess hazards and multiple time scales. {browse "https://onlinelibrary.wiley.com/doi/10.1002/sim.8894":{it:Statistics in Medicine} 2021;40(9):2139-2154}.
 {pstd}

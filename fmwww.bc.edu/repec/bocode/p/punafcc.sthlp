@@ -330,8 +330,8 @@ Example
 {p2col 5 20 24 2: Macros}{p_end}
 {synopt:{cmd:r(atzero)}}{cmd:at()} option for Scenario 0{p_end}
 {synopt:{cmd:r(atspec)}}{cmd:atspec()} option{p_end}
-{synopt:{cmd:r(atzero_exp)}}{cmd:expression()} option for Scenario 0/Scenario 0 rate ratio{p_end}
-{synopt:{cmd:r(atspec_exp)}}{cmd:expression()} option for Scenario 0/Scenario 1 rate ratio{p_end}
+{synopt:{cmd:r(exp_atzero)}}{cmd:expression()} option for Scenario 0/Scenario 0 rate ratio{p_end}
+{synopt:{cmd:r(exp_atspec)}}{cmd:expression()} option for Scenario 0/Scenario 1 rate ratio{p_end}
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Matrices}{p_end}
@@ -362,8 +362,8 @@ If {cmd:post} is specified, {cmd:punafcc} also saves the following in {cmd:e()}:
 {synopt:{cmd:e(predict)}}program used to implement {cmd:predict}{p_end}
 {synopt:{cmd:e(atzero)}}{cmd:at()} option for Scenario 0{p_end}
 {synopt:{cmd:e(atspec)}}{cmd:atspec()} option{p_end}
-{synopt:{cmd:e(atzero_exp)}}{cmd:expression()} option for Scenario 0/Scenario 0 rate ratio{p_end}
-{synopt:{cmd:e(atspec_exp)}}{cmd:expression()} option for Scenario 0/Scenario 1 rate ratio{p_end}
+{synopt:{cmd:e(exp_atzero)}}{cmd:expression()} option for Scenario 0/Scenario 0 rate ratio{p_end}
+{synopt:{cmd:e(exp_atspec)}}{cmd:expression()} option for Scenario 0/Scenario 1 rate ratio{p_end}
 {synopt:{cmd:e(properties)}}{cmd:b V}{p_end}
 
 {synoptset 20 tabbed}{...}
@@ -386,8 +386,8 @@ and available{p_end}
 {title:Author}
 
 {pstd}
-Roger Newson, Imperial College London, UK.{break}
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, King's College London, UK.{break}
+Email: {browse "mailto:roger.newson@kcl.ac.uk":roger.newson@kcl.ac.uk}
 
 
 {title:References}

@@ -7,7 +7,7 @@ version 14.0;
   of a model whose predicted values are case-control or survival rate ratios that can be logged,
   and calculate a confidence interval for the population attributable fraction.
 *! Author: Roger Newson
-*! Date: 08 December 2016
+*! Date: 05 February 2023
 */
 
 syntax [if] [in] [pweight aweight fweight iweight], [ , Level(cilevel) post * ];
@@ -208,7 +208,7 @@ else {;
             if missing(`scenval') {;
               scal `scenval'=el(`atmat',1,`i2');
             };
-            else {;
+            else if !missing(el(`atmat',1,`i2')) {;
               scal `scenval'=`scenval'*el(`atmat',1,`i2');
             };
           };
