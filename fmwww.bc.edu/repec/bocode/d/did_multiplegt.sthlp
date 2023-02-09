@@ -1041,12 +1041,12 @@ if strictly more than one bootstrap replication was run.
 {p_end}
 
 {p 4 8}
-{cmd:e(estimates)}: column vector containing all the point estimates and placebos requested,
+{cmd:e(didmgt_estimates)}: column vector containing all the point estimates and placebos requested,
 if strictly more than one bootstrap replication was run.
 {p_end}
 
 {p 4 8}
-{cmd:e(variances)}: column vector containing the variances of all the point estimates and placebos requested,
+{cmd:e(didmgt_variances)}: column vector containing the variances of all the point estimates and placebos requested,
 if strictly more than one bootstrap replication was run.
 {p_end}
 

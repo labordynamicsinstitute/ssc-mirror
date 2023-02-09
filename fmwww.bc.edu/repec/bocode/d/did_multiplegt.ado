@@ -873,6 +873,10 @@ matrix rownames didmgt_results= `rownames'
 noisily matlist didmgt_results, title("DID estimators of the instantaneous treatment effect, of dynamic treatment effects if the dynamic option is used, and of placebo tests of the parallel trends assumption if the placebo option is used. The estimators are robust to heterogeneous effects, and to dynamic effects if the robust_dynamic option is used.")
 matrix didmgt_b2=didmgt_results[1...,1..1]
 ereturn matrix didmgt_estimates=didmgt_b2
+** AJOUT MELITINE **************************************************************
+** The matrices returned for results and variances have been renamed "didmgt_estimates" and "didmgt_variances". But, for compatibility with old do files, we create the same matrices, names "estimates" and "variances".
+matrix didmgt_b2=didmgt_results[1...,1..1]
+ereturn matrix estimates=didmgt_b2
 if "`average_effect'"!=""&"`covariances'"!=""{
 matrix didmgt_var2=J(`placebo'+`dynamic'+2,1,0)
 forvalue i=1/`=`placebo'+`dynamic'+2'{
@@ -886,7 +890,10 @@ matrix didmgt_var2[`i',1]=didmgt_results[`i',2]^2
 }
 }
 matrix rownames didmgt_var2= `rownames'
+// For compatibility with old do files:
+matrix compatibility_variances = didmgt_var2
 ereturn matrix didmgt_variances=didmgt_var2
+ereturn matrix variances= compatibility_variances
 ereturn local cmd "did_multiplegt"
 }
 }
