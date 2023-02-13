@@ -30,7 +30,7 @@ help for {cmd:qregplot}{right:Fernando Rios Avila}
 
 {phang}{cmd:qregplot} graphs the coefficients of a quantile regression produces by various 
 programs that produce quantile coefficients including, qreg, bsqreg, sqreg,
-mmqreg and rifhdreg (for unconditional quantiles).{p_end}
+mmqreg, smqreg, sivqr, and rifhdreg (for unconditional quantiles).{p_end}
 
 {phang}{cmd:qregplot} Works in a similar way as {help grqreg}, but provides added options
 to give the user more control on the creation of the requested figures, also allowing 
@@ -180,53 +180,60 @@ Setup. {p_end}
 {pstd} Same as above but using own titles for figures 1 and 2, written in two lines {p_end}
 {phang2}{bf: {stata qregplot age education  children, from(qp) label mtitles("Age in years since 1980 I want this to be long" "Years of education, including Highschool and college") labelopt(lines(2)) }}  
 
-{pstd} Using alternative Estimation, bsqreg {p_end}
+{pstd} Using alternative estimator, bsqreg {p_end}
 {phang2}
 {bf: {stata bsqreg wage age education i.married children i.county}} {p_end}
 {phang2}
 {bf: {stata qregplot age education i.married children, q(5(5)95)  }}
 
-{pstd} Using alternative Estimation, qrprocess (if installed) {p_end}
+{pstd} Using alternative estimator, qrprocess (if installed) {p_end}
 {phang2}
 {bf: {stata qrprocess wage age education i.married children i.county}} {p_end}
 {phang2}
 {bf: {stata qregplot age education i.married children, q(5(5)95)  }}
 
-{pstd} Using alternative Estimation, qreg2 (if installed) {p_end}
+{pstd} Using alternative estimator, qreg2 (if installed) {p_end}
 {phang2}
 {bf: {stata qreg2 wage age education i.married children i.county}} {p_end}
 {phang2}
 {bf: {stata qregplot age education i.married children, q(5(5)95)  }}
 
-{pstd} Using alternative Estimation, ivqreg2 (if installed) {p_end}
+{pstd} Using alternative estimator, ivqreg2 (if installed) {p_end}
 {phang2}
 {bf: {stata ivqreg2 wage age education married  , inst(age education married   children)}} {p_end}
 {phang2}
 {bf: {stata qregplot age education married , q(5(5)95)  }}
 
-{pstd} Using alternative Estimation, xtqreg (if installed) {p_end}
+{pstd} Using alternative estimator, xtqreg (if installed) {p_end}
 {phang2}
 {bf: {stata xtqreg wage age education i.married children , i(county) }} {p_end}
 {phang2}
 {bf: {stata qregplot age education i.married children, q(5(5)95)  }}
 
-{pstd} Using alternative Estimation, mmqreg (if installed) {p_end}
+{pstd} Using alternative estimator, mmqreg (if installed) {p_end}
 {phang2}
 {bf: {stata mmqreg wage age education i.married children }} {p_end}
 {phang2}
 {bf: {stata qregplot age education i.married children, q(5(5)95)  }}
 
-{pstd} Using alternative Estimation, sqreg {p_end}
+{pstd} Using alternative estimator, sqreg {p_end}
 {phang2}
 {bf: {stata sqreg wage age education i.married children i.county, q(10 25 50 75 90)}} {p_end}
 {phang2}
 {bf: {stata qregplot age education i.married children,   }}
 
-{pstd} Using alternative Estimation, rifhdreg {p_end}
+{pstd} Using alternative estimator, rifhdreg {p_end}
 {phang2}
 {bf: {stata rifhdreg wage age education i.married children i.county, rif(q(50)) }} {p_end}
 {phang2}
 {bf: {stata qregplot age education i.married children, q(5(5)95)  }}
+
+{pstd} Using alternative estimator, sivqr {p_end}
+{phang2}
+{bf: {stata sivqr  wage age education married children , q(50) }} {p_end}
+{phang2}
+{bf: {stata qregplot age education married children, q(5(5)95)  }}
+
 
 {pstd} Storing regressions information in memory {p_end}
 {phang2}
@@ -266,4 +273,4 @@ friosavi@levy.org
 {title:Also see}
 
 {p 4 13 2}help for {help qreg}, {help qreg2}, {help ivqreg2}, {help qrprocess}, 
-{help bsqreg}, {help sqreg}, {help rifhdreg}, {help xtqreg}, {help mmqreg} {p_end}
+{help bsqreg}, {help sqreg}, {help rifhdreg}, {help xtqreg}, {help mmqreg}, {help sivqr} {p_end}

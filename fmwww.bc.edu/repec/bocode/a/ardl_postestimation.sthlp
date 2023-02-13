@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.5  29mar2022}{...}
+{* *! version 1.0.6  06feb2023}{...}
 {title:Title}
 
 {phang}
@@ -62,6 +62,8 @@ See the {help ardl##abbreviations:abbreviations section of ardl}.
 where criticial values and approximate p-values for the F and t-statistics are obtained via the 
 response surface regressions results of {help ardl##KS2020:Kripfganz and Schneider (2020)}.
 See {help ardlbounds} for more information on how the critical values are obtained.
+{help ardl##KS2022:Kripfganz and Schneider (2022, section 2.4)} provide a discussion
+and step-by-step guide for the bounds test.
 
 {pstd}
 You must use one of the options {opt ec} or {opt ec1} in your {cmd:ardl} model for bounds test-related statistics to be available.
@@ -73,7 +75,7 @@ However, {cmd:estat ectest} displays the F-statistic and t-statistic as well as 
 {p 4 13 2}
 {bf:{ul:Warning}:} The Kripfganz/Schneider critical values and p-values are obtained on the basis of the
 methodology used as of the release date of command version 1.0.3 (June 2020)
-and are still applicable as of the release date of this command version (1.0.5, March 2022).
+and are still applicable as of the release date of this command version (1.0.6, February 2023).
 Compared to version 1.0.2 (September 2018), version 1.0.3 introduces very slight changes in the
 computed statistics.
 Future versions of {cmd:ardl} may reflect further potential methodological refinements.

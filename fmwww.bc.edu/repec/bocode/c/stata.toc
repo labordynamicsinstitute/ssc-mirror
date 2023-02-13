@@ -53,6 +53,7 @@ p cflpois module to calculate confidence limits for rates based on Poisson outco
 p cfout module to compare two datasets, saving a list of differences
 p cfvars module to compare variable name lists in two data sets
 p cgroup module to group contiguous observations with identical values of a varlist
+p cgssm module implementing the contrasting groups' standard setting method
 p chaid module to conduct chi-square automated interaction detection
 p chaidforest module to conduct random forest ensemble classification based on chi-square automated interaction detection (CHAID) as base learner
 p changemean module to compute Income and Inequality Contribution on Poverty Variation

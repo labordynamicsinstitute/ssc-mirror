@@ -1,5 +1,5 @@
 *! xthst
-*! Version 1.4 - 08.01.2021
+*! Version 1.5 - 11.02.2022
 *! Tore Bersvendsen (University of Agder) tore.bersvendsen@uia.no
 *! Jan Ditzen (Free University of Bozen-Bolzano) jan.ditzen@unibz.it, www.jan.ditzen.net 
 
@@ -13,6 +13,7 @@ Version History
 	- 28.01.2020 - corrected output with tempvars and cross-sectional variables
 	- 13.05.2020 - added comparehac option and xthst_compare program
 	- 08.01.2021 - bug if CSA used, all variables were removed.
+	- 11.02.2022 - bug with new xtcd2 version fixed
 */
 
 capture program drop xthst
@@ -767,7 +768,10 @@ program define xthst_compare
 		if `xtcd2' == 1 {
 			foreach var in `varlist' {
 				qui xtcd2 `var' `if' , noest
-				if `r(p)' <  `=1-`c(level)'/100' {
+				tempname mrp srp
+				matrix `mrp' = r(p)
+				scalar `srp' = `mrp'[1,1]
+				if `srp' <  `=1-`c(level)'/100' {
 					local CSDList "`CSDList' `var'"
 				}
 			}

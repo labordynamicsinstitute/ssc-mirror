@@ -1,0 +1,43 @@
+d 'PIP': module to access poverty and inequality data from the World Bank's Poverty and Inequality Platform (PIP)
+d
+d  The pip command allows Stata users to compute poverty and
+d inequality indicators for more than 160 countries and regions
+d included in the World Bank’s database of household surveys. It
+d has the same functionality as the PIP website. PIP is a
+d computational tool that allows users to estimate poverty rates
+d for regions, sets of countries or individual countries, over time
+d and at any poverty line. 
+d
+d KW: poverty
+d KW: inequality
+d KW: poverty rate
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20230212
+d
+d Author: R. Andrés Castañeda , The World Bank
+d Support: email  acastanedaa@@worldbank.org
+d
+f pip.ado
+f pip.sthlp
+f pip_cache.ado
+f pip_cite.ado
+f pip_cl.ado
+f pip_clean.ado
+f pip_cleanup.ado
+f pip_countries.sthlp
+f pip_drop_frames.ado
+f pip_drop.ado
+f pip_examples.ado
+f pip_gh.ado
+f pip_info.ado
+f pip_install.ado
+f pip_new_session.ado
+f pip_note.sthlp
+f pip_povcalnet_format.ado
+f pip_query.ado
+f pip_set_server.ado
+f pip_ssc.ado
+f pip_tables.ado
+f pip_versions.ado

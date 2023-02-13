@@ -78,6 +78,7 @@ p phenotype module to simulate disease status and censored age for family data
 p piaactools module to provide PIAAC tools
 p pieplot module to plot pie charts of categorical frequencies  
 p pindex module to compute targeted price indices
+p pip module to access poverty and inequality data from the World Bank's Poverty and Inequality Platform (PIP)
 p pipe module to perform a curve-free dual-agent dose-escalation design
 p pisareg module to perform linear regression with PISA data and plausible values
 p pisatools module to facilitate analysis of the data from the PISA OECD study

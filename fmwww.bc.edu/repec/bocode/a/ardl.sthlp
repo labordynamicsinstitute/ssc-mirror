@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.5  29mar2022}{...}
+{* *! version 1.0.6  06feb2023}{...}
 {title:Title}
 
 {phang}
@@ -267,7 +267,6 @@ Remarks are presented under the following headings:
     {help ardl##errorcorrectionterm:The error-correction term}
     {help ardl##boundstest:Bounds test for a level relationship}
     {help ardl##pureAR:Pure autoregressive processes}
-    {help ardl##postestimation:Postestimation}
 
 {* foldend}{* foldbeg}{* * * REMARKS INTRODUCTION * * *}{marker introduction}{...}
 {title:Introduction}
@@ -276,7 +275,10 @@ Remarks are presented under the following headings:
 A autoregressive distributed lag (ARDL) model of order {it:p} and {it:q}, denoted ARDL({it:p},{it:q}) regresses the dependent variable on {it:p} of its own lags and on {it:q} lags of one or more additional regressors.
 Multiple regressors are allowed to have different lag orders, in which case the model becomes an ARDL(p, q_1, ..., q_k) model, where  k is the number of non-deterministic regressors.
 ARDL models can, among other things, be used for the estimation and testing of level relationships.
+
+{pstd}
 Key contributions in this area are {help ardl##PS1999:Pesaran and Shin (1999)} and {help ardl##PSS2001:Pesaran, Shin and Smith (1999)}.
+For an exposition of the econometrics of ARDL models and their implementation in this command, see {help ardl##KS2022:Kripfganz and Schneider (2022)}.
 For a succinct exposition of ARDL models in the context of cointegration, see {help ardl##HW2005:Hassler and Wolters (2005, 2006)}.
 
 {* foldend}{* foldbeg}{* * * REMARKS TERMINOLOGY * * *}{marker terminology}{...}
@@ -369,6 +371,8 @@ Whereas the specification of deterministics has considerable implications for th
 In the conditional ARDL modelling approach proposed by PSS, for example, cases 2 and 3 and cases 4 and 5 are based on identical linear regressions of the first-difference equation.
 The distinction within each case-pair concerns the interpretation of the deterministic terms, i.e. whether they are considered to be part of the long-run relationship or not.
 Accordingly, the asymptotic distribution for the test for a levels-relationship advanced in PSS is different for each case.
+{help ardl##KS2022:Kripfganz and Schneider (2022, section 2.4)} discuss model deterministics
+in the context of ARDL modelling.
 
 {* foldend}{* foldbeg}{* * * REMARKS LONGRUNCOEFFICIENTS * * *}{marker longruncoefficients}{...}
 {title:Long-run coefficients expressed in time t or t-1}
@@ -414,6 +418,12 @@ With a lag order of zero for the x-regressor (ARDL(1,0)), the above equations be
 {pstd}
 (FDF0b) and (FDF1b) are identical equations since b_0 * x(t) = b_0 * x(t-1) + b_0 * x(t) - b_0 * x(t-1) = b_0 * x(t-1) + b_0 * dx(t).
 
+{pstd}
+Presenting a model in error-correction form (options {opt ec} or {opt ec1}) takes virtually no
+computational time, except for the case of equations like (ECF1b), i.e., when using the
+error-correction form with the long-run coefficients expressed in time t-1 (option {opt ec1})
+{it:and} when there is at least one zero-lag regressor. The internal reformulation of (FDF0b) as (FDF1b)
+currently carries some computational cost for models with many regressors and lags.
 
 {* foldend}{* foldbeg}{* * * REMARKS ERRORCORRECTIONTERM * * *}{marker errorcorrectionterm}{...}
 {title:The error-correction term}
@@ -453,20 +463,20 @@ Option {opt ec} of {cmd:predict}, by contrast, calculates L.ln_consump - 0.964 *
 See {help ardl_postestimation:ardl postestimation}.
 The adjustment term in this example is (a_1 - 1) = -(1 - a_1) = -0.297
 
-
 {* foldend}{* foldbeg}{* * * REMARKS BOUNDSTEST * * *}{marker boundstest}{...}
 {title:Bounds test for a level relationship}
 
 {pstd}
 For testing using critical values and approximate p-values based on response surface regressions from
-{help ardl##KS2020:KS} for the PSS bounds testing procedure, use {cmd:estat ectest}.
-See {help ardl_postestimation##ectest:ardl postestimation}.
+{help ardl##KS2020:KS} for the PSS bounds testing procedure, use {cmd:estat ectest};
+see {help ardl_postestimation##ectest:ardl postestimation}.
+{help ardl##KS2022:Kripfganz and Schneider (2022, section 2.4)} provide a discussion
+and step-by-step guide for the bounds test.
+
+{pstd}
 The superseded command {cmd:estat btest} displays CVs using tabulations
 from {help ardl##PSS2001:PSS} and {help ardl##N2005:NAR}.
 See {help ardl_legacy##btest:ardl legacy}.
-
-{marker pureAR}{...}
-{smcl}
 
 {* foldend}{* foldbeg}{* * * REMARKS PUREAR * * *}{marker pureAR}{...}
 {title:Pure autoregressive processes}
@@ -507,8 +517,12 @@ slight deviations may occur.
 {* foldend}{* foldbeg}{* * * EXAMPLES * * *}{marker examples}{...}
 {title:Examples}
 
+{pstd}
+Besides this example section, you may also refer to {help ardl##KS2022:Kripfganz and Schneider (2022)}
+who discuss the empirical example given in {help ardl##PSS2001:PSS} by re-estimating it using {cmd:ardl}.
+
 {phang}
-We use Stata's example data set 'lutkepohl2' that contains quarterly data for German aggregate income,
+Here we use Stata's example data set 'lutkepohl2' that contains quarterly data for German aggregate income,
 investment, and consumption. We estimate an ARDL model in levels-form using the optimal number of lags according to BIC.
 
 {phang2}{stata webuse lutkepohl2:. webuse lutkepohl2}{p_end}
@@ -663,7 +677,12 @@ Freie Universitaet Berlin, Working Paper No.2005/22.
 {phang}
 Kripfganz, S. and D. Schneider (2020): Response surface regressions for critical value
 bounds and approximate p-values in equilibrium correction models.
-Oxford Bulletin of Economics and Statistics, 82 (6), 1456-1481. https://doi.org/10.1111/obes.12377
+Oxford Bulletin of Economics and Statistics, 82 (6), 1456-1481. DOI: {browse "https://doi.org/10.1111/obes.12377":10.1111/obes.12377}
+
+{marker KS2022}{...}
+{phang}
+Kripfganz, S. and D. Schneider (2022) ardl: Estimating autoregressive distributed lag and equilibrium correction models. Research Center for Policy Design Discussion Paper TUPD-2022-006, Tohoku University.
+Available at {browse "https://www2.econ.tohoku.ac.jp/~PDesign/dp/TUPD-2022-006.pdf"}
 
 {marker L2005}{...}
 {phang}

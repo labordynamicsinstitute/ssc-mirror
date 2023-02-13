@@ -1,0 +1,28 @@
+d 'MIESIZE': module to estimate effect sizes from multiply imputed data
+d
+d  miesize is a Stata program which calculates effect sizes for a
+d binary variable from multiply imputed data in wide format. The
+d estimates and standard errors (used to calculate the confidence
+d intervals) are recombined using Rubin's rules (Rubin 2004). These
+d rules are applied such that the average point estimate for the
+d effect size is calculated from the imputed datasets. The pooled
+d standard error, and hence 95% confidence intervals, are
+d calculated in such a way that accounts for both variance between
+d the imputed datasets, as well as the variance within them. Pooled
+d effect-sizes and confidence intervals for Cohen's d (Cohen 1988),
+d Hedges' g (Hedges 1981) and Glass' Delta (Smith and Glass 1977)
+d are given. 
+d
+d KW: effect size
+d KW: multiple imputation
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20230212
+d
+d Author: Paul A Tiffin,  Department of Health Sciences, University of York
+d Support: email paul.tiffin@@york.ac.uk 
+d
+f miesize.ado
+f miesize.sthlp
+f miesize_validation_do_v15.do

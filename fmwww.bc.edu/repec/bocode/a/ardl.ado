@@ -1,4 +1,4 @@
-*! version 1.0.5  29mar2022  sk dcs
+*! version 1.0.6  06feb2023  sk dcs
 
 program define ardl , eclass sortpreserve byable(recall)
 
@@ -39,7 +39,7 @@ program define ardl , eclass sortpreserve byable(recall)
         // DISPLAY ESTIMATION OUTPUT
         if ("`e(cmd)'" != "ardl") error 301
 
-        if `c(noisily)' _ardl_display `0'
+        _ardl_display `0'
         exit
     }
 
@@ -74,6 +74,7 @@ program define ardl , eclass sortpreserve byable(recall)
                                        noHEader                              ///  do not display regression table header
                                        BTest                                 ///  (no longer documented) display bounds test
                                        DOTs                                  ///
+                                       nlcom                                 ///  invisible to user
                                        /// nosign                                ///
                                        * ]                                   //   Stata display options
 
@@ -189,6 +190,9 @@ program define ardl , eclass sortpreserve byable(recall)
 
     if "`maxcombs'"=="" local maxcombs `maxcombs_default`fast''
 	
+    local usenlcom 0
+    if "`nlcom'"!="" local usenlcom 1
+
     //      MARK SAMPLE
     tsset , noquery
     
@@ -440,6 +444,7 @@ program define ardl , eclass sortpreserve byable(recall)
 
         // TRANSFORMING REGRESSION OUTPUT FROM EC TO EC1: ADDING COLLINEAR SR-COEFS
         if "`ec1'"!="" {
+
             local nlcomexp "(L_`depvar': _b[L.`depvar'])"
             foreach curvar in `lrxvars' {
                 if substr("`curvar'", 1, 2)=="L." {
@@ -468,9 +473,16 @@ program define ardl , eclass sortpreserve byable(recall)
                     local nlcomexp "`nlcomexp' (D_`var`i'': _b[`var`i''])"  // 0-lag regressors
                 }
             }
+            local junk : subinstr local nlcomexp "(" "(" , all count(local ec1_numnondetexog)
             
-            foreach curvar in `exog' `trendvar' `_cons'{
-                local nlcomexp "`nlcomexp' (`curvar': _b[`curvar'])"
+            foreach curvar in `exog' `trendvar' `_cons' {
+                if strpos("`curvar'", ".") {  // for exog vars with ts ops
+                    local curvar2 : subinstr local curvar "." "_"
+                    local nlcomexp "`nlcomexp' (`curvar2': _b[`curvar'])"
+                }
+                else {
+                    local nlcomexp "`nlcomexp' (`curvar': _b[`curvar'])"
+                }
             }
 
             capture nlcom `nlcomexp', level(`level') noheader iter(1000)
@@ -487,19 +499,35 @@ program define ardl , eclass sortpreserve byable(recall)
             tempname b_ec1 V_ec1
             matrix `b_ec1' = r(b)
             matrix `V_ec1' = r(V)
-            
             local cnames : colnames r(b)
+            local i 1
 			foreach cn of local cnames {
-				if !inlist("`cn'", "_cons", "`trendvar'") {
-					local cn2 : subinstr local cn "_" "."  // translating first underscore only which separates the TS operator
+                // translate underscores back to dots for ts ops where appropriate
+                if `i'<=`ec1_numnondetexog' {
+                    // translate first underscore which separates the TS operator
+                    // do this for all vars that are not exit or deterministics
+					local cn2 : subinstr local cn "_" "."
 				}
-				else {
-					local cn2 `cn'
+				else {  // exog vars and deterministics
+                    // never translate underscore in _cons and trendvar (which does not allow for ts ops)
+                    // exog vars that have ts ops need to get translated back
+                    //   the condition is that the current colstripe differs from the orig exog var colstripe
+                    //   (e.g. "L_myexogvar" is not found in "exog1 L.myexogvar"
+                    if !inlist("`cn'", "_cons", "`trendvar'") & "`: list cn & exog'"=="" {
+                        // for exog vars with ts ops
+                        local cn2 : subinstr local cn "_" "."
+                    }
+                    else {
+                        // deterministics or exog vars that do not have ts ops
+                        local cn2 `cn'
+                    }
 				}
 				local cnames2 `cnames2' `cn2'          //   not a problem if variable names contain underscores
+                
+                local ++i
 			}
 			local cnames `cnames2'
-			
+
             matrix colnames `b_ec1' = `cnames'
             matrix rownames `V_ec1' = `cnames'
             matrix colnames `V_ec1' = `cnames'
@@ -514,7 +542,7 @@ program define ardl , eclass sortpreserve byable(recall)
 
         }
 
-        // NLCOM TO MOVE TO ERROR-CORRECTION FORM
+        // MOVE TO ERROR-CORRECTION FORM
         //   note: case II: _cons    gets moved to lr-relationship
         //         case IV: trendvar gets moved to lr-relationship
         local regvars : colnames e(b)
@@ -524,32 +552,38 @@ program define ardl , eclass sortpreserve byable(recall)
         local numnonlrvars : word count `nonlrvars'
 
         tempname b1 V1 V2 b_sr V_sr b_ec V_ec
-
-        local nlcomexp "(L_`depvar': _b[L.`depvar'])"
-        foreach curvar in `lrxvars' `lrdetvar' {  //
-            local curvar_ : subinstr local curvar "." "_"
-            local nlcomexp "`nlcomexp' (`curvar_': -_b[`curvar'] / _b[L.`depvar'])"
-
-        }
-
-        foreach curvar in `nonlrvars' {
-            local curvar_ : subinstr local curvar "." "_"
-            local nlcomexp `nlcomexp' (`curvar_': _b[`curvar'])
-        }
         
-        capture nlcom `nlcomexp', level(`level') noheader iter(1000)
-            // long-run coefficients and standard errors (delta method)
-        if _rc {
-            disp as error `"{bf:nlcom} exited with error."'
-            if _rc==498 {
-                disp as error `"If your independent variables are on vastly different scales,"'
-                disp as error `"consider rescaling them before running {bf:ardl}."'
-            }
-            exit _rc
-        }
+        if `usenlcom' {
+            local nlcomexp "(L_`depvar': _b[L.`depvar'])"
+            foreach curvar in `lrxvars' `lrdetvar' {  //
+                local curvar_ : subinstr local curvar "." "_"
+                local nlcomexp "`nlcomexp' (`curvar_': -_b[`curvar'] / _b[L.`depvar'])"
 
-        matrix `b_ec' = r(b)
-        matrix `V_ec' = r(V)
+            }
+
+            foreach curvar in `nonlrvars' {
+                local curvar_ : subinstr local curvar "." "_"
+                local nlcomexp `nlcomexp' (`curvar_': _b[`curvar'])
+            }
+
+            capture nlcom `nlcomexp', level(`level') noheader iter(1000)
+                // long-run coefficients and standard errors (delta method)
+            if _rc {
+                disp as error `"{bf:nlcom} exited with error."'
+                if _rc==498 {
+                    disp as error `"If your independent variables are on vastly different scales,"'
+                    disp as error `"consider rescaling them before running {bf:ardl}."'
+                }
+                exit _rc
+            }
+            
+            matrix `b_ec' = r(b)
+            matrix `V_ec' = r(V)
+        }
+        else {
+            mata : calc_nlcom("`b_ec'", "`V_ec'", `numxvars', "`lrdetvar'", `numnonlrvars')
+                // defines matrices `b_ec', `V_ec'
+        }
 
         local matlabels `lrvars' `lrdetvar' `nonlrvars'
         
@@ -654,7 +688,7 @@ program define ardl , eclass sortpreserve byable(recall)
     ereturn local estat_cmd   ardl_estat
     ereturn local title      `"`title'"'
     ereturn local model      `"`model'"'
-    ereturn local cmdversion  1.0.5
+    ereturn local cmdversion  1.0.6
     ereturn local cmdline    `"`cmd' `cmdline_orig'"'
     ereturn local cmd         "`cmd'"
     
@@ -679,7 +713,7 @@ program define ardl , eclass sortpreserve byable(recall)
     }
     
 
-    if `c(noisily)' _ardl_display , `diopts' `ctable' `header' `btest'
+    _ardl_display , `diopts' `ctable' `header' `btest'
 
 end // fold
 
@@ -698,7 +732,7 @@ program define _ardl_display
 	if _rc local nomodeltest nomodeltest
 	
     _coef_table_header , `header' `nomodeltest'
-	
+
 	disp ""
 	
 	if "`ctable'"!="noctable" _coef_table , `options'
@@ -1106,7 +1140,65 @@ mata:
 		}
 		return(vecout)
 	}
-	
+
+    void calc_nlcom(string scalar b_ec_tmp, string scalar V_ec_tmp, real scalar numxvars, string scalar lrdetvar, real scalar numnonlrvars) {
+        
+        real scalar    numregs, numdiv, div
+        real rowvector transvec
+        real matrix    b, V
+        
+        b = st_matrix("e(b)")
+        V = st_matrix("e(V)")
+
+        if (lrdetvar!="") {
+            // must reorder if deterministic terms go into LR
+            // either trend or _cons goes into the LR (never both)
+            // trend, if present, is in second but last pos, _cons is last
+            
+            // note: numxvars may be zero
+            
+            numregs = cols(b)
+            
+            lrdetpos = numregs
+            if (lrdetvar!="_cons")
+                lrdetpos = lrdetpos - 1
+            pvec = (1..(numxvars+1) , lrdetpos)
+
+            if (lrdetvar=="_cons") {
+                if (numregs>(numxvars+2)) // not true if no trend, no exog, and all xvars have zero lags
+                    pvec = (pvec , (numxvars+2)..(numregs-1))
+            } else { // trend
+                if (numregs==(numxvars+3)) { // _cons must be in the model, and is the only additional regressor
+                    pvec = (pvec , numregs)
+                } else {
+                    pvec = (pvec , (numxvars+2)..(numregs-2), numregs)
+                }
+            }
+
+            b = b[pvec]
+            V = V[pvec', pvec]
+        }
+
+
+        numdiv = numxvars + (lrdetvar!="")
+        if (numdiv>0) {
+            div = -1 / b[1,1]
+            transvec = (1, J(1, numdiv, div), J(1, numnonlrvars, 1))
+            st_matrix(b_ec_tmp,  transvec :* b)
+
+            G = diag(transvec)
+            G[|2,1 \ numdiv+1,1|] = b[2..(numdiv+1)]' :/ b[1,1]^2
+            st_matrix(V_ec_tmp,  G * V * G')
+        }
+        else {
+            st_matrix(b_ec_tmp, b)
+            st_matrix(V_ec_tmp, V)
+        }
+        
+        return
+    }
+
+
 end // fold
 
 

@@ -134,6 +134,7 @@ p mice module for multiple imputation of missing values
 p mice7 module for multiple imputation of missing values (version 7)
 p mict module to provide Multiple imputation for Categorical Time-series
 p midas module for meta-analytical integration of diagnostic test accuracy studies 
+p miesize module to estimate effect sizes from multiply imputed data
 p mif2dta module convert MapInfo Interchange Format boundary files to Stata boundary files
 p miinc module to conduct multi-model inference using information criteria 
 p mim module to analyse and manipulate multiply imputed datasets

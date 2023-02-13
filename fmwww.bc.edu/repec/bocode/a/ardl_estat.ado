@@ -1,4 +1,4 @@
-*! version 1.0.5  29mar2022  sk dcs
+*! version 1.0.6  06feb2023  sk dcs
 
 program ardl_estat , sortpreserve
 

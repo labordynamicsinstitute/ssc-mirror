@@ -1,4 +1,5 @@
-*! version 1.11  (AUG 2022) Corrects for IF with strings
+*! version 1.21  (Feb 2023) Adds smqreg and sivqr
+* version 1.2  (Dec 2022) Options for Other Range plots
 * version 1.1  (APR 2022) Adds new options and default
 * version 1.05  (Feb 2022) adds Name
 * version 1.04  (August 2021) Modify stripper
@@ -60,12 +61,12 @@ program define grqreg_x, rclass
 		grcopt(string asis)              /// Options for GRcombine plot
 		TWOpt(string asis) 				/// Options for two way plot
 		seed(string asis)			    /// If one uses bsreg
-		savemat						/// If one wants to save the results as matrices in r()
+		savemat							/// If one wants to save the results as matrices in r()
 		estore(string asis)				/// If one wants to save the results in e() (est store)
 		esave(string asis)				/// If one wants to save the results as str (est save)
 		from(string asis)				/// if you have stored coefficients
-		label					    /// 
-		labelopt(string asis) *    ///
+		label					    	/// 
+		labelopt(string asis) *    		///
 		MTITLEs(passthru)  ]
 		/// Mtitles, when wanting to add titles to all other options
 		*name(passthru)              ///
@@ -103,10 +104,10 @@ program define grqreg_x, rclass
 	}
 		
 	if !inlist("`e(cmd)'","qreg","bsqreg","mmqreg","rifhdreg","qrprocess","sqreg") & ///
-		!inlist("`e(cmd)'","bsrifhdreg","qreg2","xtqreg","ivqreg2")	{
-	    display in red "This command can only be used after -qreg- ,-bsqreg-, -sqreg-, -mmqreg- or -rifhdreg- "
-		display in red "-bsrifhdreg-, -qreg2-, -qrprocess-, -xtqreg-, -ivqreg2- "
-		display in red "If you have suggestions for adding other -quantile/type- regressions, contact me at friosa@gmail.com"
+		!inlist("`e(cmd)'","bsrifhdreg","qreg2","xtqreg","ivqreg2","smqreg","sivqr")	{
+	    display in red "This command can only be used after -qreg- ,-bsqreg-, -sqreg-, -mmqreg- or -rifhdreg- " _n ///
+						"-bsrifhdreg-, -qreg2-, -qrprocess-, -xtqreg-, -ivqreg2-, `smqreg' " _n
+						"If you have suggestions for adding other -quantile/type- regressions, contact me at friosa@gmail.com"
 		error 10
 	}
 	/*else {
@@ -126,12 +127,9 @@ program define grqreg_x, rclass
 	}
 	
 	if inlist("`e(cmd)'","qreg","bsqreg","mmqreg","qrprocess") | ///
-	   inlist("`e(cmd)'","qreg2","xtqreg","ivqreg2") {
-	   	local cmdline `e(cmdline)'
-	   	gettoken cmd xvars:cmdline
-	    *local xvars `=subinstr("`e(cmdline)'","`e(cmd)'","",1)'
+	   inlist("`e(cmd)'","qreg2","xtqreg","ivqreg2" ) {
+	    local xvars `=subinstr("`e(cmdline)'","`e(cmd)'","",1)'
 	 	qui:qreg_stripper `xvars'
-		return list
 		** estimate all variables
 		local cmd  `e(cmd)'
 		local xvar `r(xvar)'
@@ -142,12 +140,38 @@ program define grqreg_x, rclass
 		local wgt  `r(wgt)'
 		
 	}
+	** Modify so it can also capture instruments...
+	if inlist("`e(cmd)'","smqreg") {
+	    local xvars `=subinstr("`e(cmdline)'","`e(cmd)'","",1)'
+	 	qui:qreg_stripper `xvars'
+		** estimate all variables
+		local cmd  `e(cmd)'
+		local xvar `r(xvar)'
+		local yvar `r(yvar)'
+		local qnt  `r(qnt)'
+		local oth  `r(oth)'
+		local ifin `r(ifin)'
+		local wgt  `r(wgt)'
+		
+	}
+	if inlist("`e(cmd)'","sivqr") {
+	    ** estimate all variables
+		local cmd  `e(cmd)'
+		local xvar `e(exogr)'
+		local evar `e(instd)'
+		local yvar `e(depvar)'
+		local zvar `e(insts)'
+		local qnt  `e(q)'
+		**local oth  `r(oth)' <- request change
+		**local ifin `r(ifin)'<- request change
+		
+		local wgt  `e(wexp)'`e(wtype)'
+
+		
+	}
 	if inlist("`e(cmd)'","sqreg") { 
 		tempname aux2
-		local cmdline `e(cmdline)'
-	   	gettoken cmd xvars:cmdline
-	    *local xvars `=subinstr("`e(cmdline)'","`e(cmd)'","",1)'
-		*local xvars `=subinstr("`e(cmdline)'","`e(cmd)'","",1)'
+	    local xvars `=subinstr("`e(cmdline)'","`e(cmd)'","",1)'
 		qui:ereturn display
 		matrix `aux2'=r(table)
 	    qui:sqreg_stripper `xvars'
@@ -164,10 +188,7 @@ program define grqreg_x, rclass
 	}
 	if inlist("`e(cmd)'","rifhdreg","bsrifhdreg") {
 		
-	    *local xvars `=subinstr("`e(cmdline)'","`e(cmd)'","",1)'
-		local cmdline `e(cmdline)'
-	   	gettoken cmd xvars:cmdline
-	    *local xvars `=subinstr("`e(cmdline)'","`e(cmd)'","",1)'
+	    local xvars `=subinstr("`e(cmdline)'","`e(cmd)'","",1)'
 	    qui:rifhdreg_stripper `xvars'
 		local cmd  `e(cmd)'
 		local xvar `r(xvar)'
@@ -181,8 +202,9 @@ program define grqreg_x, rclass
 	}
  
 	
+	
 	** verify variables in list exist.
-	ms_fvstrip `xvar', expand dropomit
+	ms_fvstrip `xvar' `evar', expand dropomit
 	local xlist `r(varlist)'
 		
 	if "`varlist'"!="" {
@@ -244,6 +266,7 @@ program define grqreg_x, rclass
 	if inlist("`cmd'","qrprocess","qreg2","xtqreg","ivqreg2") {
 	    foreach q of local qlist {
 		    local qrq = `q'/100
+			
  			qui:`cmd' `yvar' `xvar' `ifin' `wgt',  `oth' q(`qrq')
 			qui:ereturn display
 			matrix `aux'=r(table)
@@ -260,6 +283,56 @@ program define grqreg_x, rclass
 		}
 	}
 	******************************************
+	if inlist("`cmd'","smqreg") {
+		local bw0 = `e(bw)'
+		tempname binit
+	    foreach q of local qlist {
+			local cnt = `cnt'+1
+		    if `cnt'>1 qui:`cmd' `yvar' `xvar' `ifin' `wgt',  `oth' q(`q') bw(`bw0') from(`binit')
+			else       qui:`cmd' `yvar' `xvar' `ifin' `wgt',  `oth' q(`q') bw(`bw0') 
+			matrix `binit' = e(b)
+			
+			qui:ereturn display
+			matrix `aux'=r(table)
+			matrix coleq `aux'=""
+			matrix `qq'=nullmat(`qq') \ `q' 
+			matrix `bs'=nullmat(`bs') \ `aux'["b" ,"`qtc':"]
+			matrix `ll'=nullmat(`ll') \ `aux'["ll","`qtc':"]
+			matrix `ul'=nullmat(`ul') \ `aux'["ul","`qtc':"]
+			if "`ols'"!="" {
+				matrix `bso'=nullmat(`bso') \ `olsaux'["b" ,":"]
+				matrix `llo'=nullmat(`llo') \ `olsaux'["ll",":"]
+				matrix `ulo'=nullmat(`ulo') \ `olsaux'["ul",":"]
+			}
+		}
+	}
+	
+	if inlist("`cmd'","sivqr") {
+		tempname binit
+		matrix `binit' =e(b)
+		
+	    foreach q of local qlist {
+			local cnt = `cnt'+1
+		    local qrq = `q'/100			
+			
+			if "`evar'"!="" qui:sivqr `yvar' `xvar' (`evar' = `zvar') `ifin' `wgt',  `oth' q(`qrq') init("`binit'")		
+			else            qui:sivqr `yvar' `xvar'                   `ifin' `wgt',  `oth' q(`qrq') init("`binit'")		
+			matrix `binit' =e(b)
+			qui:ereturn display
+			matrix `aux'=r(table)
+			matrix coleq `aux'=""
+			matrix `qq'=nullmat(`qq') \ `q' 
+			matrix `bs'=nullmat(`bs') \ `aux'["b" ,"`qtc':"]
+			matrix `ll'=nullmat(`ll') \ `aux'["ll","`qtc':"]
+			matrix `ul'=nullmat(`ul') \ `aux'["ul","`qtc':"]
+			if "`ols'"!="" {
+				matrix `bso'=nullmat(`bso') \ `olsaux'["b" ,":"]
+				matrix `llo'=nullmat(`llo') \ `olsaux'["ll",":"]
+				matrix `ulo'=nullmat(`ulo') \ `olsaux'["ul",":"]
+			}
+		}
+	}
+	****
 	if inlist("`cmd'","sqreg") {
 	    forvalues iq = 1/`n_q' {
 		    local q:word `iq' of `q_s'
@@ -520,9 +593,10 @@ program define qrgraph,
 			[ vlist(string) cons  ols raopt(str asis ) lnopt(str asis ) ///
 			   grcopt(str asis )	twopt(str asis ) ///
 			   mtitles(str asis)    ///
+			   rplot(string) ///
 			   label labelopt(str asis )   *]
 			
-				
+if "`rplot'"=="" local rplot rarea				
 	/*
 			qrgraph `varlist',  from(`from') `cons'  `e(ols)' raopt(`raopt') lnopt(`lnopt') grcopt(`grcopt')  twopt(`twopt') ///
 							matrixlist(e(qq) e(bs) e(ll) e(ul)) matrixols(e(bso) e(llo) e(ulo)) xlist(`e(xlist)')
@@ -615,16 +689,18 @@ program define qrgraph,
 		****		
 		label var `sbs'1 "Quantile"
 		tempname m`cnt'
+		
 		if `gcnt'>1 {
 
-			twoway  (rarea `sbs'3 `sbs'4 `sbs'1 , `raopt' ) || ///
+			twoway  (`rplot' `sbs'3 `sbs'4 `sbs'1 , `raopt' ) || ///
 				   (line `sbs'2 `sbs'1, lp(solid) `lnopt') `olsci' , ///
 				   name(`m`cnt'', replace) legend(off) nodraw ///
 				   title(`vlab') `twopt' 
 			local grcmb	 `grcmb' `m`cnt''
 		}
 		else {
-		    twoway  (rarea `sbs'3 `sbs'4 `sbs'1 , `raopt' ) || ///
+		
+		    twoway  (`rplot' `sbs'3 `sbs'4 `sbs'1 , `raopt' ) || ///
 				   (line `sbs'2 `sbs'1, lp(solid) `lnopt') `olsci' , ///
 				   legend(off)   ///
 				   title(`vlab') `twopt'  `options'

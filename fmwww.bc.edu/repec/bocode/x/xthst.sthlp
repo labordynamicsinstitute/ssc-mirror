@@ -1,7 +1,7 @@
 {smcl}
 {hline}
-help {hi:xthst}{right: v. 1.4 - 08. January 2021}
-{right:SJ21-1: st0xx}
+help {hi:xthst}{right: v. 1.5 - 11. Feburary 2022}
+{right:SJ21-1: st0627}
 {hline}
 {title:Title}
 
@@ -311,7 +311,7 @@ Journal of Econometrics 142, pp 50 - 93.{p_end}
 
 {marker about}{title:About}
 {p 4}Tore Bersvendsen (Department of Research and innovation, Kristiansand Municipality, Norway){p_end}
-{p 4}Email: {browse "mailto:Tore.Bersvendsen@kristiansand.kommune.no":Tore.Bersvendsen@kristiansand.kommune.no}{p_end}
+{p 4}Email: {browse "mailto:tore.Bersvendsen@kristiansand.kommune.no":Tore.Bersvendsen@kristiansand.kommune.no}{p_end}
 
 {p 4}Jan Ditzen (Free University of Bozen-Bolzano){p_end}
 {p 4}Email: {browse "mailto:jan.ditzen@unibz.it":jan.ditzen@unibz.it}{p_end}
@@ -329,7 +329,7 @@ Bersvendsen, Ditzen. 2021. Testing for slope heterogeneity in Stata. The Stata J
 
 
 {marker vhist}{title:Version History}
-{p 4 8}This version: 1.3 - 08 January 2021{p_end}
+{p 4 8}This version: 1.4 - 08 January 2021{p_end}
 {p 8 10} - If option {cmd:crosssectional()} used, {cmd:xthst} used the variables defined by 
 {cmd:crosssectional()} to test for slope heterogeneity.
 {p_end}
