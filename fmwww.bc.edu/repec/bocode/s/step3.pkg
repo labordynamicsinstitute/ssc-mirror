@@ -1,0 +1,27 @@
+d 'STEP3': module to relate latent class membership to external variables
+d
+d  step3 relates latent class membership to external variables
+d (either covariates or distal outcomes), taking into account
+d misclassification errors.  For the analysis of covariates, the
+d command performs the third step of the ML procedure described by
+d Vermunt (2010), whereas for distal outcomes the command uses the
+d BCH method (Bolck et al., 2004), which is more robust for
+d continuous and count outcomes (Bakk & Kuha, 2021). Although step3
+d also executes the second step of these stepwise procedures (with
+d modal assignment), the first step (i.e., latent class or latent
+d profile analysis without covariates/distal outcomes) must be
+d performed separately. This can be done with any command, as long
+d as it produces membership posterior probabilities. 
+d
+d KW: latent class analysis
+d KW: stepwise proceddure
+d
+d Requires: Stata version 15.1
+d
+d Distribution-Date: 20230214
+d
+d Author: Giovanbattista Califano, University of Naples Federico II
+d Support: email giovanbattista.califano@@unina.it
+d
+f step3.ado
+f step3.sthlp

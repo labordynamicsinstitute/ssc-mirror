@@ -268,6 +268,7 @@ p stcstat2 module to compute Harrell's c-index for flexible parametric models
 p std_beta module to calculate centered and standardized coefficients after estimation
 p stddiff module to compute Standardized differences for continuous and categorical variables
 p stdtable module to standardize cross-tabulations to pre-specified row and column totals
+p step3 module to relate latent class membership to external variables
 p stgenreg module to fit general parametric survival models
 p stgit module to retrieve information about a Git repository
 p stipw module to estimate inverse probability weighted parametric survival models with variance obtained via M-estimation

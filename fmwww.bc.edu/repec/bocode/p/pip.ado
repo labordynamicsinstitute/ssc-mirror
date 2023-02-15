@@ -52,15 +52,15 @@ VERsion(string)                ///
 IDEntity(string)               ///
 RELease(numlist)               ///
 TABle(string)                  ///
+path(string)                   ///
 ] 
 
 if ("`pause'" == "pause") pause on
 else                      pause off
 set checksum off
 
-qui {
 	//========================================================
-	// Frames
+	// housekeeping
 	//========================================================
 	local curframe = c(frame)
 	
@@ -80,9 +80,27 @@ qui {
 		exit
 	}
 	
+	if regexm("`subcommand'", "^install") {
+		local sscmd: word 2 of `subcommand'
+		noi pip_install `sscmd', path(`path') `pause'
+		exit
+	}
+	
+	if regexm("`subcommand'", "^uninstall") {
+		pip_install uninstall, path(`path') `pause'
+		exit
+	}
+	
+	if regexm("`subcommand'", "^update") {
+		noi pip_update, path(`path') `pause'
+		exit
+	}
+	
 	// ------------------------------------------------------------------------
 	// New session procedure
 	// ------------------------------------------------------------------------
+	
+qui {
 	
 	if ("${pip_cmds_ssc}" == "") {
 		pip_new_session , `pause'
@@ -864,6 +882,8 @@ Notes:
 
 Version Control:
 
+*! version 0.9.2                 <2023Feb14>
+*! -- improve installation and update features
 *! version 0.9.0                  <2023Feb09>
 *! -- Update help file
 *! version 0.3.9                  <2022Dec16>
