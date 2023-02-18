@@ -2,7 +2,7 @@
 *! "r_ml_stata_cv"
 *! Author: Giovanni Cerulli
 *! Version: 9
-*! Date: 15 July 2022 
+*! Date: 13 February 2023 
 ********************************************************************************
 
 ********************************************************************************
@@ -245,7 +245,7 @@ di " "
 
 noi di "{ul:Cross-validation results}"
 di " "
-noi di "Accuracy measure = rate correct matches" _continue
+noi di "Accuracy measure = explained variance" _continue
 noi di _col(45) "Number of folds = " e(N_FOLDS)
 noi di "Best grid index = " e(BEST_INDEX) _continue
 noi di _col(45) "Optimal tree depth = " e(OPT_MAX_DEPTH)

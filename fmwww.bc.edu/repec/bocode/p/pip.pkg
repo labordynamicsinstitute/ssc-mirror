@@ -14,7 +14,7 @@ d KW: poverty rate
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20230214
+d Distribution-Date: 20230217
 d
 d Author: R. Andrés Castañeda , The World Bank
 d Support: email  acastanedaa@@worldbank.org
@@ -30,6 +30,7 @@ f pip_countries.sthlp
 f pip_drop_frames.ado
 f pip_drop.ado
 f pip_examples.ado
+f pip_find_src.ado
 f pip_gh.ado
 f pip_info.ado
 f pip_install.ado
@@ -40,4 +41,5 @@ f pip_query.ado
 f pip_set_server.ado
 f pip_ssc.ado
 f pip_tables.ado
+f pip_update.ado
 f pip_versions.ado
