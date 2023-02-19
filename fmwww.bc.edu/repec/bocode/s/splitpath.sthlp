@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.1 06jul2021}{...}
+{* *! version 1.1.0 16feb2023}{...}
 {viewerjumpto "Title" "docd##title"}{...}
 {viewerjumpto "Syntax" "docd##syntax"}{...}
 {viewerjumpto "Description" "docd##description"}{...}

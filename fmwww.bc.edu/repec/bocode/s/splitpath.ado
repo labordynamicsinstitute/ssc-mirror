@@ -1,7 +1,8 @@
-*! version 1.0.1  06jul2021  hendri.adriaens@centerdata.nl
+*! version 1.1.0  16feb2023  hendri.adriaens@centerdata.nl
 // based on function project_pathname from the project package
 program define splitpath, rclass
 
+	version 17
 	args path
 	
 	// to avoid macro expansion problems

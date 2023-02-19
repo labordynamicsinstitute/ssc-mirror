@@ -8,14 +8,10 @@ d ambiguities, aggregates codes to higher levels, and provides the
 d official code description in Portuguese and English. The command
 d works with all revisions of the CAE. 
 d
-d KW: ARIMA
-d KW: seasonal time series
-d KW: panel data
-d KW: stationarity
 d
 d Requires: Stata version 15 and savesome from SSC (q.v.)
 d
-d Distribution-Date: 20220219
+d Distribution-Date: 20230218 
 d
 d Author:   BPLIM, Banco de Portugal 
 d Support: email bplim@@bportugal.pt

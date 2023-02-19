@@ -1,0 +1,18 @@
+d 'REPLACEN': module to replace contents in exactly n observations
+d
+d   replacen executes the replace command, but checks whether
+d exactly n observations have been modified. If not, an    error is
+d issued. 
+d
+d KW: data management
+d KW: replace
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20230218
+d
+d Author: Hendri Adriaens,  Centerdata, The Netherlands
+d Support: email  hendri.adriaens@@centerdata.nl
+d
+f replacen.ado
+f replacen.sthlp

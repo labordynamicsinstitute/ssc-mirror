@@ -10,9 +10,9 @@ d
 d KW: programming
 d KW: do-files
 d
-d Requires: Stata version ??
+d Requires: Stata version 17
 d
-d Distribution-Date: 20210707
+d Distribution-Date: 20230218
 d
 d Author: Hendri Adriaens,  Centerdata, The Netherlands
 d Support: email  hendri.adriaens@@centerdata.nl

@@ -135,6 +135,7 @@ p renvarlab module to rename variables, with option of using variable labels to 
 p reorder module to reorder variables in dataset, reversibly
 p repest module to run estimations with weighted replicate samples and plausible values
 p replacebylab module to replace values by drawing on value labels
+p replacen module to replace contents in exactly n observations
 p report module to produce tables for XML
 p reporterror module to estimate true distribution from noisy measurements
 p repsample module to perform representative sampling from a population or theoretical distributions

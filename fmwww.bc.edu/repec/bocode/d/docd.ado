@@ -1,9 +1,11 @@
-*! version 1.0.1  06jul2021  hendri.adriaens@centerdata.nl
+*! version 1.1.0  16feb2023  hendri.adriaens@centerdata.nl
 program define docd
+	version 17
 
-	splitpath "`1'"
+	gettoken path 0 : 0
+	splitpath "`path'"
 
-	local current "`c(pwd)'" 
+	local current "`c(pwd)'"
 	
 	// Change the working directory to the path of the do-file
 	capture cd "`r(directory)'"
@@ -16,7 +18,7 @@ program define docd
 	// the end of the program, even if an error occurs. So we
 	// need to capture the error, but that also stops output
 	// to the screen, which we need to turn on using "noisily".
-	capture noisily do "`r(filename)'" `2' `3' `4' `5' `6' `7' `8' `9' `10' `11'
+	capture noisily do "`r(filename)'" `0'
 
 	// Remember the error
 	local error = _rc
