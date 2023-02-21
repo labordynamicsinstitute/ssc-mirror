@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1 13aug2022}{...}
+{* *! version 1.1 2_feb_2023}{...}
 {title:Title}
 
 {phang}
@@ -22,7 +22,7 @@
 {synopt:{opt i:var(varname)}}Declares the Panel ID variable{p_end}
 {synopt:{opt t:var(varname)}}Declares the time variable{p_end}
 {synopt:{opt g:var(varname)}}Provides the cohort variable{p_end}
-{synopt:{opt never}}Request using Never treated as control group. Default is using not yet treated{p_end}
+{synopt:{opt never}}Request using Never treated as control group. Default is using not yet treated. Using this, will exclude g-1 period from the interactions {p_end}
 {synopt:{opt group}}Request using Group fixed effects instead of Panel ID fixed effects. In linear models, with balanaced panel, estimates are numerically identical{p_end}
 {synopt:{opt method(method name)}}Request other methods for the estimation of ATT's. For example {cmd:poisson} or {cmd:logit}. Default is linear regression model.{p_end}
 
@@ -67,7 +67,7 @@ and time are used, thus considering only the never treated as controls, followin
 
 {pstd}
 The first version of this command came out as one of my attempts of learning some of the new DID methods. For a while, most of my efforts were centered on {cmd:drdid} and {cmd:csdid}. 
-However, the methodology proposed by Prof. Wooldridge has mportant advantages over other methods, which called my applied econometrician's attention. 
+However, the methodology proposed by Prof. Wooldridge has important advantages over other methods, which called my applied econometrician's attention. 
 
 {pstd}The two most important advantages are: 
 

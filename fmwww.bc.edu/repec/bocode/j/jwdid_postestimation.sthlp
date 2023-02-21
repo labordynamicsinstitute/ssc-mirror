@@ -52,7 +52,8 @@ Also, all errors are my own. And this code was not necessarily checked by Prof W
 
 {phang} Setup: Estimation of ATTGTs without controls using not-yet treated groups
 
-{phang}{stata "use https://friosavila.github.io/playingwithstata/drdid/mpdta.dta, clear"}
+{phang}{stata "ssc install frause"}{p_end}
+{phang}{stata "frause mpdta.dta, clear"}{p_end}
 
 {phang}{stata "jwdid lemp, ivar(countyreal) tvar(year) gvar(first_treat)"}{p_end}
 
