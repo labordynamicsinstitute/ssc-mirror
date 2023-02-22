@@ -1,6 +1,6 @@
 {smcl}
 {hline}
-{hi:help xtcse2}{right: v. 1.02 - 11. January 2021}
+{hi:help xtcse2}{right: v. 1.03 - February 2023}
 {hline}
 {title:Title}
 
@@ -18,7 +18,6 @@
 {cmd:size(real)}
 {cmd:tuning(real)}
 {cmd:lags(integer)}
-{cmdab:sames:ample}
 ]
 
 {p 4 4}Data has to be {cmd:xtset} before using {cmd:xtcse2}; see {help tsset}.
@@ -26,8 +25,9 @@
 If {it:varlist} if left empty, {cmd:xtcse2} predicts residuals from the
 last estimation command,
 see {help predict}.
-{cmd:xtcse2} restricts the panel to the same number of time series per cross-sectional 
-unit if the panel is unbalanced.{p_end}
+{cmd:xtcse2} uses an expectation–maximization (EM) algorithm
+ to impute missing values if the panel is unbalanced.
+ {p_end}
 
 {title:Contents}
 
@@ -60,11 +60,11 @@ Therefore a confidence interval is more informative when estimating alpha.{p_end
 As a default it uses {help xtcd2} to test for weak cross-sectional dependence.
 For a discussion of {cmd:xtdcce2} and {cmd:xtcd2} see Ditzen (2018,2019).{p_end}
 
-{p 4 4}If the panel is unbalanced or observations are missing for a specific cross-section 
-unit-time combination, then the sample is restricted to the union of all time periods across
-cross-sectional units using {help xtbalance2}.
-For unbalanced panels with many missings or a variable with many missings, many
-observations might be lost.{p_end}
+{p 4 4}
+In case of unbalanced panels an Expected Maximisation algorithm taken from
+{help xtnumfac} is used.
+{help xtcd2} imputes values independently from {help xtcse2} and therefore results can differ.
+{p_end}
 
 {marker options}{title:Options}
 
@@ -90,9 +90,6 @@ standard error and confidence interval for exponent in residuals. Default is 0.{
 
 {p 4 8}{cmd:lags(integer)} number of lags (or training period) for calculation of 
 recursive residuals when estimating the exponent after a regression with weakly exogenous regressors.{p_end}
-
-{p 4 8}{cmdab:sames:ample} If {cmd:xtcse2} detects an unbalanced panel, it tries to create a balanced subsample using {help xtbalance2}.
-If {cmdab:sames:ample} is used, then CD test will be applied to the balanced subsample.{p_end}
 
 {marker model}{title:Econometric Model and Estimation of the Exponent}
 

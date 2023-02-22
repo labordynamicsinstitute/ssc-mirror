@@ -1,7 +1,8 @@
-*! cgssm package v. 0.1
+*! version 0.2 2023-01-23 Niels Henrik Bruun
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
-*! 2023-02-10	Created
-
+*! 2023-02-21 v0.2  Adding graph options are now working (Thank you to Eric Melse)
+*! 2023-02-21 v0.2  functionality for weights added (Thank you to Eric Melse)
+* 2023-02-10 v0.1   created
 
 
 * 2002 Brandon - Two Versions of the Contrasting-Groups Standard-Setting Method: A Review
@@ -44,7 +45,7 @@ program define cgssmi, rclass
       */ * /*
     */]
 
-  _get_gropts , graphopts(`options') gettwoway
+  _get_gropts , graphopts(`options')
 
   if "`cpformat'" != "" {
     capture confirm format `cpformat'
@@ -97,7 +98,7 @@ program define cgssmi, rclass
       (function y=normalden(x,`m2',`sd2'), range(`lb' `ub')), `xline' ///
       subtitle(`pfcut' `fp' `fn', ring(0) position(11) size(small)) ///
       legend(order(`header' 1 "`refname'" 2 "`compname'")) ///
-      yscale(off) `s(twowayopts)'
+      yscale(off) `s(graphopts)'
     `gr_txt'
     return local graph_text = `"`gr_txt'"'
   }

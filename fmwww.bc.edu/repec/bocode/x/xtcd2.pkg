@@ -11,9 +11,9 @@ d KW:  panel data
 d KW: cross sectional dependence
 d KW: Pesaran
 d
-d Requires: Stata version 10
+d Requires: Stata version 14
 d
-d Distribution-Date: 20210816
+d Distribution-Date: 20230221
 d
 d Author: Jan Ditzen, Free University of Bozen-Bolzano
 d Support: email  jan.ditzen@@unibz.it

@@ -346,13 +346,16 @@ end
 ** xtdcce2_mm_which2 program
 capture mata mata drop xtdcce2_mm_which2()
 mata:
-	function xtdcce2_mm_which2(source,search,|real scalar exact )
+	function xtdcce2_mm_which2(sourceo,searcho,|real scalar exact )
 	{		
+		search = searcho
+		source = sourceo
 		if (eltype(source):=="string") {
 			source = strlower(source)
-			search = strlower(search)
 		}		
-
+		if (eltype(search):=="string") {
+			search = strlower(search)
+		}
 		sums = 0
 		for (i=1;i<=length(search);i++) {
 			sums = sums + sum(source:==search[i])
@@ -404,15 +407,19 @@ mata:
 	}
 end
 
+
+
 capture mata mata drop xtdcce2_mm_which2f()
 mata:
 	function xtdcce2_mm_which2f(source,search )
 	{		
 		real matrix output
+		
 		search_N = rows(search)
 		output = J(search_N,1,0)
 		source_N = rows(source)
-	
+
+
 		i = 1
 		
 		while (i<=search_N) {
@@ -480,17 +487,17 @@ end
 ** option numberonly gives only lag number in cross_structure
 capture program drop xtdcce2_csa
 program define xtdcce2_csa, rclass
-	syntax varlist(ts) , idvar(varlist) tvar(varlist) cr_lags(numlist) touse(varlist) csa(string) [cluster(varlist) numberonly tousets(varlist)]
-		tsrevar `varlist'
+	syntax varlist(ts) , idvar(varlist) tvar(varlist) cr_lags(numlist) touse(varlist) csa(string) [cluster(varlist) numberonly tousets(varlist) rcceindex rcce(string) ]
+		
 		
 		if "`tousets'" == "" {
 			local tousets "`touse'"
 		}
-		
-		local varlist `r(varlist)'
+		tsrevar `varlist'
+		local cvarlist `r(varlist)'
 		
 		local c_i = 1
-		foreach var in `varlist' {
+		foreach var in `cvarlist' {
 			if "`cluster'" != "" {
 				local clusteri = word("`cluster'",`c_i')
 				if "`clusteri'" == "" {
@@ -551,7 +558,7 @@ program define xtdcce2_csa, rclass
 				}
 				
 				if "`numberonly'" == "" {
-					local cross_structure "`cross_structure' `=word("`varlist'",`i')'(`lagi'; `clusteri')"
+					local cross_structure "`cross_structure' `=word("`cvarlist'",`i')'(`lagi'; `clusteri')"
 				}
 				else {
 				    local cross_structure "`cross_structure' `lagi'"			
@@ -559,7 +566,7 @@ program define xtdcce2_csa, rclass
 			}
 			else {
 			    if "`numberonly'" == "" {
-					local cross_structure "`cross_structure' `=word("`varlist'",`i')'(`lagi')"	
+					local cross_structure "`cross_structure' `=word("`cvarlist'",`i')'(`lagi')"	
 				}
 				else {
 					local cross_structure "`cross_structure' `lagi'"	
@@ -568,6 +575,9 @@ program define xtdcce2_csa, rclass
 			
 			local i = `i' + 1
 		}
+
+
+
 		local i = 1
 		foreach var in `clistfull' {
 			*rename `var' `csa'_`i'
@@ -576,9 +586,308 @@ program define xtdcce2_csa, rclass
 			local clistn `clistn' `csa'_`i'
 			local i = `i' + 1
 		}
+		
+		if "`rcce'`rcceindex'" != "" {
+			/// clistfull needs to be Fhat 
+			/// add option to select the criterion
+			/// add check that xtnumfac is required
+		
+			tempname numfac 
+
+			if "`rcceindex'" != "" & "`rcce'" == "" {
+				local rcce criterion("ER")
+			}
+			local 0 , `rcce'
+			syntax [anything], [Criterion(string) npc(real 0) SCale] 
+			
+			if "`criterion'"!= "" & `npc' > 0 {
+				disp "rcce(criterion()) and rcce(npc()) cannot be combined. npc(`npc') ignored"
+				local npc ""
+			}
+			if "`criterion'" == "" & `npc' == 0 local criterion "ER"
+ 			if "`criterion'" == "none" local criterion ""
+			
+			if "`criterion'" != "" {
+				local criterion = strlower("`criterion'")
+				/*foreach nname in pc1 pc2 pc3 ic1 ic2 ic3 er gr gos ed {
+					if "`nname'" == "`criterion'" local crit = `s'
+					local s = `s' + 1
+				}*/
+				if "`criterion'" == "er" local crit = 1
+				else local crit = 2 
+			}
+			else if `npc' > 0 {
+				local crit = 0
+				local criterion "none"
+				if `npc' > wordcount("`clistn'") {				
+					local npc = wordcount("`clistn'")
+				}
+			}
+			else {
+				local crit = 8
+			}
+			if "`scale'" != "" local scale "`cvarlist'"
+			noi mata xtdcce2_rcce("`clistn'","`scale'","`touse'","`idvar' `tvar'",`crit',`npc',"`csa'","`numfac'")
+			drop `clistn'
+			unab clistn: `csa'*
+			return local NumPc = `numfac' 
+			return local Type "`criterion'"
+			local cross_structure 0
+		}
 				
 	return local varlist "`clistn'"
 	return local cross_structure "`cross_structure'"
+end
+
+// -------------------------------------------------------------------------------------------------
+// regularised CCE program
+// -------------------------------------------------------------------------------------------------
+
+capture mata mata drop xtdcce2_rcce()
+mata:
+	function xtdcce2_rcce(string scalar varnames, string scalar cvarlist, string scalar tousen, string scalar idtn,real scalar criterion,real scalar npc, string scalar csnames, string scalar numnames)
+	{
+		"start rcce"
+		idt = st_data(.,idtn,tousen)
+		idx = panelsetup(idt[.,1],1)
+		N = panelstats(idx)[1]
+		T = panelstats(idx)[3]
+		T_min = panelstats(idx)[3]
+		T_max = panelstats(idx)[4]
+		
+		ZbarL = st_data(.,varnames,tousen)
+
+		if (cvarlist != "") {
+			Z = st_data(.,cvarlist,tousen)
+		}
+		"data loaded"
+		Sigma = J(cols(ZbarL),cols(ZbarL),0)
+		T_min,T_max
+		if (T_min:==T_max) {
+			Zbar = panelsubmatrix(ZbarL,1,idx)
+			if (cvarlist != "") {
+				"scale"
+				for (i=1;i<=N;i++) {
+					Zi = panelsubmatrix(Z,i,idx)					
+					ZZ = Zi:-Zbar
+					Sigma = Sigma :+ quadcross(ZZ,ZZ)
+				}
+			}
+			"Zbar loaded"
+		}
+		else {
+			Zbar = J(T_max,cols(ZbarL),.)
+			for (i=1;i<=N;i++) {
+				Ti = panelsubmatrix(idt[.,2],i,idx)	
+
+				Zbari = panelsubmatrix(ZbarL,i,idx)
+				ZZbar = Zbar[Ti,.]
+				idxZ = selectindex(ZZbar:==.)
+				idxT = Ti[idxZ]
+				Zbar[idxiT,.] = Zbari[idxZ,.] 
+				
+				if (cvarlist!="") {
+					Zi = panelsubmatrix(Z,i,idx)					
+					ZZ = Zi:-Zbari
+					Sigma[Ti,.] = Sigma[Ti,.] :+ quadcross(ZZ,ZZ)
+				}
+				if (hasmissing(Tr)==0 & cvarlist == "") i = N+1
+			}
+		}
+		if (cvarlist == "") {
+			F = Zbar
+		}
+		else {
+			Sigma = Sigma / (N*T_max)
+			Sigma1 = invsym(sqrt(Sigma))			
+			F = Zbar*Sigma1'
+		}
+		"F is"
+		F
+		///fullsvd(quadcross(F,F)/T_max, uu_k, mus ,junk2)
+		///ER = J(1,MaxNumPC,.)   		 
+    	///for (mm1=MaxNumPC; mm1>=1; mm1--) {
+        ///	ER[mm1]       = mus[mm1]/mus[mm1+1]
+        ///}
+   		///mockEV = mean(vec(Z):^2)/ln(min(N,T_min));
+    	///ER = (mockEV/mus[1], ER)
+    	///maxindex(ER,1,NumPC,junk2)    	  
+    	"criterion"
+    	criterion
+    	if (criterion > 0) {
+    		allICs0  = numfac_int(F,cols(ZbarL))    
+    		allICs0		
+    		best_numfac0 = bestnum_ic_int(allICs0)
+			///best_numfac = (best_numfac0, allICs0[10,1])
+			NumPC = best_numfac0[criterion]
+
+    	}   	
+    	if (npc > 0) NumPC = npc
+
+    	"NumPC"
+    	NumPC
+    	
+    	/// Get eigenvectors and then real part
+    	eigensystem(quadcross(F',F')/T_max,Evec=.,Eval=.)
+
+    	Evec = Re(Evec)
+    	    	
+		Fr = sqrt(T) * Evec[.,1..NumPC]  
+		
+    	/// Return to Stata
+		idxv = st_addvar("double",csnames:+ strofreal((1..NumPC)))
+		real matrix viewM, Vi
+		st_view(viewM,.,idxv,tousen)
+
+		if (T_min:==T_max) {
+			for (i=1;i<=N;i++) {
+				panelsubview(Vi,viewM,i,idx)	
+				Vi[.,.] = Fr
+			}
+		}
+		else {
+			for (i=1;i<=N;i++) {
+				panelsubview(Vi,viewM,i,idx)
+				Ti = panelsubmatrix(idt[.,2],i,idx)		
+				Vi[Ti,.] = Fr[Ti,.]				
+			}
+		}
+		
+    	st_numscalar(numnames,NumPC)
+	}
+
+end
+
+
+*** From xtnumfac
+mata:
+function numfac_int(X0_s, kmax0)  {
+	"start numfac int"
+// numfac_int calculates the Bai&Ng (2002) and Ahn&Horenstein (2013) ICs for 
+// the number of factors.
+// It has two inputs:
+//   X0:    A TxN matrix containing the data of interest.
+//   kmax0: The maximum number of factors to consider.
+// The output is a matrix providing the IC values for factor models with 
+// k=1,2,...,kmax0 factors in its rows. The columns correspond to the following
+// statistics: 1:PC_p1,...,6:IC_p3, 7:ER, 8:GR, 9: GOS
+	T     = rows(X0_s)
+	N     = cols(X0_s)
+    minNT = min((N, T))
+
+    /// add zero mean column to X0 to ensure max number of factors can be used; see Remark 6, Juodis (2022)
+    seed = rseed()
+    X0 = X0_s,(rowsum(X0_s):* (2*runiformint(rows(X0_s),1,0,1):-1)):/cols(X0_s)
+    rseed(seed)
+	missind = X0 :== .
+	missnum = sum(sum(missind)')
+	st_numscalar("e(missnum)", missnum)
+	
+	if ( missnum == 0) {
+		if (T > N) {
+				xx         = cross(X0,X0)
+				fullsvd(xx:/(N*T), junk1, mus, junk2) // N x N
+			} 
+		else {  
+				xx         = cross(X0',X0')
+				fullsvd(xx:/(N*T), junk1, mus ,junk2) // T x T	 
+		}	
+	}
+	else {
+		obsind  = J(T,N,1) - missind
+		
+	    X0mean  = J(T,1,1) * mean(editmissing(X0,0))
+		X0      = editmissing(X0,0) + X0mean:*missind
+		
+		conv_crit = (X0 - X0mean):^2
+		conv_crit = mean(mean(conv_crit)')
+		upd       = conv_crit
+		while (upd > 0.001*conv_crit) {
+			X0_old = X0
+			if (T > N) {
+				xx         = cross(X0,X0)
+				fullsvd(xx:/(N*T), vee_k, mus, junk2)
+				vee_k = vee_k[.,1..(kmax0+5)]
+				uu_k  = X0*vee_k/sqrt(N*T)
+			} 
+			else {  
+				xx         = cross(X0',X0')
+				fullsvd(xx:/(N*T), uu_k, mus ,junk2)
+				uu_k  = uu_k[.,1..(kmax0+5)]
+				vee_k = X0'*uu_k/sqrt(N*T)
+			}
+			X0  = X0_old:*obsind + (uu_k*vee_k'):*missind:*sqrt(N*T)
+			upd = mean(mean(abs(X0-X0_old))')
+		}	
+	}		
+		
+
+    V_val     = J(1,kmax0+1,.)
+
+    // These are the three penalties (without mm0 or the estimate of sig2)
+    penalties = ((N+T)/(N*T)*ln((N*T)/(N+T)) \ (N+T)/(N*T)*ln(minNT) \ ln(minNT)/minNT)
+	
+    for (mm0=kmax0; mm0>=1; mm0--) {
+    	V_val[mm0]    = sum(mus[mm0+1..minNT])
+       	
+    }
+    V_val
+	if (kmax0+2<minNT) {
+		V_val[kmax0+1] = sum(mus[kmax0+2..minNT])
+	}
+	else {
+		V_val[kmax0+1] = .
+	}
+
+    V0               = mean(vec(X0):^2)
+   
+// Now do Ahn&Horenstein
+    ER       = J(1,kmax0,.)
+    GR       = J(1,kmax0,.)
+    mutildes = (J(1,kmax0,.), mus[kmax0+1]/V_val[kmax0+1])
+    for (mm1=kmax0; mm1>=1; mm1--) {
+         ER[mm1]       = mus[mm1]/mus[mm1+1]
+         mutildes[mm1] = mus[mm1]/V_val[1,mm1]
+         GR[mm1]       = ln(1+mutildes[mm1])/ln(1+mutildes[mm1+1])
+    }
+    mockEV      = V0/ln(minNT);
+    ER          = (mockEV/mus[1], ER)
+    GR          = (ln(1 + mockEV)/ln(1+ mutildes[1]), GR)
+
+
+	allICs0 = ER \ GR
+
+	return(allICs0)
+}
+
+// mata drop bestnum_ic_int()
+function bestnum_ic_int(allICs1) 
+{
+// bestnum_ic_int picks an estimate for the number of factors from a matrix with IC
+// values for n increasing number of factors (starting at 0).
+// The function has one input:
+//   - allICs1: a matrix containing the ICs corresponding to different
+//              numbers of factors (in cols) for different ICs (rows).  
+//              We assume that the first 6 rows are the Bai&Ng ICs whereas 
+//              rows 7 and 8 are those of Ahn and Horenstein;
+//				row 9 is the selection criterion used by GOS.
+// The function output is a 1x8 vector of estimates for the number of factors.
+	best_numfac0 = J(1,2,.)
+	tempmin     = .
+	///for (jj=1; jj<=2; jj++) {
+	///	minindex(allICs1[jj,.], 1, tempmin, junk1)
+	///	best_numfac0[jj] = tempmin-1
+    ///}	
+	for (jj=1; jj<=2; jj++) {
+		maxindex(allICs1[jj,.], 1, tempmin, junk1)
+		best_numfac0[jj] = tempmin-1
+    }
+// selection rule for number of factors is: first number for which the difference is smaller than zero. 
+// Here we count how many are larger than zero, which is eqaul to k(min|stat<0) because we have possibility of no factors as well.
+    ///best_numfac0[9] = sum(allICs1[9,.]:>0)
+
+	return(best_numfac0)
+}
 end
 
 ** 11. xtdcce2_csa creates cross-sectional averages
@@ -590,7 +899,8 @@ mata:
 									string scalar idvar,		///
 									string scalar residname,	///
 									real matrix xtdcce2_ebi,	///
-									string scalar wbadj)
+									string scalar wbadj,		///
+									|real scalar xb)
 	
 	{
 		real matrix id
@@ -598,6 +908,8 @@ mata:
 		real matrix csa
 		real matrix residuals
 		
+		if (args()<7) xb = 0
+
 		vars = st_data(.,st_tsrevar(tokens(varnames)),touse)
 
 		nocsa = 1
@@ -621,14 +933,21 @@ mata:
 			/// partial out
 			varsi = vars[(index[i,1]..index[i,2]),.]
 			
-			if (nocsa==0) {
+			if (nocsa==0 ) {
 				csai = csa[(index[i,1]..index[i,2]),.]
 				tmp_xp = quadcross(csai,varsi)
 				tmp_csa = quadcross(csai,csai)
 				varsi = (varsi - csai*m_xtdcce_solver(tmp_csa,tmp_xp))	
 			}
-			residuals[(index[i,1]..index[i,2]),.] = varsi[.,1] - varsi[.,(2..K+1)] * xtdcce2_ebi[i,(1..K)]'
 			
+			if (xb == 0) {
+				residuals[(index[i,1]..index[i,2]),.] = varsi[.,1] - varsi[.,(2..K+1)] * xtdcce2_ebi[i,(1..K)]'
+			}
+			else if (xb == 1 ) {
+				/// here xb
+				residuals[(index[i,1]..index[i,2]),.] = varsi[.,(2..K+1)] * xtdcce2_ebi[i,(1..K)]'
+			}
+
 			if (wbadj[1,1] == "wildbootstrap") {
 				varsii = varsi[.,(2..K+1)] 
 				h = diagonal(varsii* m_xtdcce_inverter(quadcross(varsii,varsii)) * varsii')
@@ -692,15 +1011,18 @@ end
 *** program to copy mata content into variables given id and t variables
 capture mata mata drop xtdcce2_mata2stata()
 mata:
-	function xtdcce2_mata2stata (string scalar varnames, real matrix source, string scalar idtstata, real matrix idtmata, string scalar touse , real scalar single)
+	function xtdcce2_mata2stata (string scalar varnames, real matrix source, string scalar idtstata, real matrix idtmata, string scalar touse , real scalar type,|real matrix numb)
+		/// type: 0 residual, 1 coeff
 	{
 		/// check that varnames and source have same number of columns
-		if (cols(tokens(varnames))!=cols(source)) {
+		varnames
+		if ((cols(tokens(varnames))!=cols(source)) * (type != 3)) {
 			varnames = varnames[1,1]:+(strofreal(1..cols(source)))	
 		}
 		else {
 			varnames = tokens(varnames)
 		}
+
 		st_addvar("double", varnames)
 		
 		real matrix vars
@@ -721,46 +1043,94 @@ mata:
 		j = 1
 		real matrix varsi
 		///real mateix varsim
-		if (single == 0) {
-			while (i<=N) {
+		///if (type == 0) {
+		while (i<=N) {
+			
+			idi = Ni[i]
+			check = Nim:==idi
+			if (sum(check) > 0) {
 				
-				idi = Ni[i]
-				check = Nim:==idi
-				if (sum(check) > 0) {
-					idim_pos = xtdcce_selectindex(Nim:==idi)				
+				/// ith element from Stata part, find in mata range
+				/// find element in mata list
+				/// select rows in mata list
+				firstindex = selectindex(idtmata[.,1]:==idt[index[i,1],1])[1,1]
+				indexmi = selectindex(indexm[.,1]:==firstindex)
+				panelsubview(varsi,vars,i,index)
+				varsim = panelsubmatrix(source,indexmi,indexm)
+				
+				if (type==2) {
+					varsim = sqrt(diagonal(varsim))'
+				}
+				if (type==3) {
+					///varsim = (varsim)'
+					varsim = varsim[numb[1],numb[2]]
 					
+				}
+				/// check dimensions
+				if (rows(varsim) ==1) {
+					varsim = J(rows(varsi),1,varsim)					
+					varsi[.,.] = varsim
+				}
+				else if (rows(varsim):==rows(varsi)) {
+					varsi[.,.] = varsim
+				}
+				else  {
+					
+					idim_pos = xtdcce_selectindex(Nim:==idi)			
+				
 					indexi = index[i,.]
 					indexim = indexm[idim_pos,.]				
-					
+				
 					/// get t indicator
 					ti = idt[|indexi[1,1],2 \ indexi[1,2],2|]
 					tim = idtmata[|indexim[1,1],2 \ indexim[1,2],2|]
 					t_unionm = xtdcce2_mm_which2f(tim,ti)
 					t_unionm = t_unionm[xtdcce_selectindex(t_unionm)]
 					t_union = xtdcce2_mm_which2f(ti,tim)
-					panelsubview(varsi,vars,i,index)
-					varsim = panelsubmatrix(source,j,indexm)
 					varsi[t_union,.] = varsim[t_unionm,.]
-					
-					j++
 				}
-				i++
-			}
-		}
-		else {
-			while (i <= N) {
-				idi = Ni[i]
-				check = Nim:==idi
-				if (sum(check) > 0) {
-					idim_pos = xtdcce_selectindex(Nim:==idi)				
-					
-					indexi = index[i,.]
-					indexim = indexm[idim_pos,.]	
-					
-				}
-				
-			}			
 			
+			}
+			i++
 		}
 	}
+
+end
+
+
+/// EM program from xtnumfac
+capture mata mata drop xtdcce2_EM()
+mata:
+	function xtdcce2_EM(real matrix X0,real scalar N,real scalar T, real scalar kmax0,|string scalar msg_text)
+	{
+		if (args()==5) stata(sprintf(`"noi disp as smcl in gr " Missing values imputed for %s." "',msg_text))
+
+		missind = X0 :== .
+		obsind  = J(T,N,1) - missind
+		
+	    X0mean  = J(T,1,1) * mean(editmissing(X0,0))
+		X0      = editmissing(X0,0) + X0mean:*missind
+		
+		conv_crit = (X0 - X0mean):^2
+		conv_crit = mean(mean(conv_crit)')
+		upd       = conv_crit
+		while (upd > 0.001*conv_crit) {
+			X0_old = X0
+			if (T > N) {
+				xx         = cross(X0,X0)
+				fullsvd(xx:/(N*T), vee_k, mus, junk2)
+				vee_k = vee_k[.,1..(kmax0+5)]
+				uu_k  = X0*vee_k/sqrt(N*T)
+			} 
+			else {  
+				xx         = cross(X0',X0')
+				fullsvd(xx:/(N*T), uu_k, mus ,junk2)
+				uu_k  = uu_k[.,1..(kmax0+5)]
+				vee_k = X0'*uu_k/sqrt(N*T)
+			}
+			X0  = X0_old:*obsind + (uu_k*vee_k'):*missind:*sqrt(N*T)
+			upd = mean(mean(abs(X0-X0_old))')
+		}
+		return(X0)
+	}	
 end

@@ -1,18 +1,21 @@
-*! xtcse2, version 1.02, Jan 2021
+*! xtcse2, version 1.03, Feb 2023
 *! author Jan Ditzen
 *! www.jan.ditzen.net - jan.ditzen@unibz.it
 /*
 Changelog
 **********1.01*****************************
 - support for unbalanced panels
-**********1.02 - xx.0x.2019
+**********1.02 
 - added support for residuals (BKP 2019)
 - bug fixes
 - added option no center
 - added xtbalance2 to balance paneldataset. automatically balances with respect to N.
+**********1.03*****************************
+- unbalanced panels are now imputed rather than using xtbalance2.
+- removed option samesample. xtcd2 and xtcse2 impute panel independently.
 */
 program define xtcse2, rclass
-	syntax [varlist(default=none ts)] [if], [pca(integer 4) STANDardize nocd inprog size(real 0.1) tuning(real 0.5) Reps(integer 0) RESidual lags(integer 0) NOCENTER SAMESample ]
+	syntax [varlist(default=none ts)] [if], [pca(integer 4) STANDardize nocd inprog size(real 0.1) tuning(real 0.5) Reps(integer 0) RESidual lags(integer 0) NOCENTER  ]
 	version 14
 	
 	tempname xtdcceest xtdcceesttouse
@@ -22,6 +25,8 @@ program define xtcse2, rclass
 	
 		qui{		
 		
+		local varlisto `varlist'
+
 		tempvar touseAll 
 		if "`varlist'" == "" {
 			tempvar varl
@@ -40,10 +45,6 @@ program define xtcse2, rclass
 			keep `if'
 		}
 		
-		if "`samesample'" == "" {
-			local noadjust "noadjust"
-		}
-
 		keep if `touseAll'
 		
 		*** Get info
@@ -71,27 +72,28 @@ program define xtcse2, rclass
 			xtset2 if `touse' , checkvars(`res')
 
 			if "`r(balanced)'" != "strongly balanced" {
+				/*
 				cap which xtbalance2
-
+				/// HERE TSFILL, FULL
 				if _rc != 0 {
 					noi disp as smcl "Please install {help xtbalance2} to balance unbalanced panel."
 					noi disp as smcl `"Install from {net "des xtbalance2, from(https://janditzen.github.io/xtbalance2/)":github} or {stata ssc install xtbalance2:SSC}"'
 					error 199
 				}
-
 				tempname touse2
 				xtbalance2 `res' , gen(`touse2')
-				replace `touse' = `touse2'
-				drop `touse2' `tmpid' `tmpt'
+				*/
+				qui tsfill, full
+				
+				replace `touse' = 1 if `touse' == .
+				drop `tmpid' `tmpt'
 
 				** correct minimum
 				egen `tmpid' = group(`idvar') if `touse'
 				egen `tmpt' = group(`tvar') if `touse'
 				local isbalanced `isbalanced' `res'
 
-				if "`noadjust'" == "" {
-					replace `tousecd' = `touse'
-				}
+				
 			}
 
 			if "`residual'" == "" {
@@ -122,8 +124,11 @@ program define xtcse2, rclass
 
 				mata `xx' = st_data(.,"`res'","`touse'")
 				mata `xx' = colshape(`xx',`T')'
-
 				mata st_local("Nt",strofreal(cols(`xx'))) 
+
+				if "`isbalanced'" != "" {
+					mata `xx' = xtdcce2_EM(`xx',`Nt',`T',`pca',"`res'")
+				}
 				
 				if `Nt' < `T' {
 					mata eigensystem(`xx''*`xx',`eigenvec'=.,`eigenval'=.)
@@ -179,7 +184,7 @@ program define xtcse2, rclass
 				local Nt = `r(max)'
 			}
 			*** CD Test
-			if "`cd'" == "" & "`inprog'" == "" {		
+			/*if "`cd'" == "" & "`inprog'" == "" {		
 				cap xtcd2 `res' if `tousecd', noest
 				if _rc == 199 {
 					noi display as error "xtcd2 not installed" 
@@ -195,11 +200,12 @@ program define xtcse2, rclass
 					scalar `CDp' = r(p)
 				}
 			}
+			*/
 			mata `ResultMatrix'[(1..4),`run'] = `alphas' 
 			mata `ResultMatrix'[(7,8),`run'] = (`Nt' \ `T')
-			if "`cd'" == "" {
-				mata `ResultMatrix'[(5,6),`run'] = (`=r(CD)' \ `=r(p)') 
-			}
+			*if "`cd'" == "" {
+			*	mata `ResultMatrix'[(5,6),`run'] = (`=r(CD)' \ `=r(p)') 
+			*}
 			
 			local run = `run' + 1
 			drop `touse' `tmpid' `tmpt'
@@ -324,10 +330,18 @@ program define xtcse2, rclass
 		}
 	}
 	if "`isbalanced'" != "" & "`noadjust'" != "" {
-		noi disp "Panel balanced for variables: `isbalanced'."
+		noi disp "Imputed variables `isbalanced'."
 	}
 
 	if "`cd'" == "" {
+		if "`cd'" == "" & "`inprog'" == "" {	
+			xtcd2 `varlisto'
+			tempname cdres cdpres
+			matrix `cdres' = r(CD)
+			matrix `cdpres' = r(p)
+		}
+
+		/*
 		di ""
 		di as text "Pesaran (2015) test for weak cross-sectional dependence."
 		di as text "H0: errors are weakly cross-sectional dependent."
@@ -348,6 +362,7 @@ program define xtcse2, rclass
 			xtdcce_output_tableCD `var' `col_i' `CDm' `CDpm' `Nm' `Tm' `var'	 
 		}
 		di as text "{hline `col_i'}{c BT}{hline `=`maxline'-`col_i'-22'}"
+		*/
 	}
 	
 	if "`nocenter'" == "" {
@@ -357,10 +372,6 @@ program define xtcse2, rclass
 		noi disp "Variables are standardized."
 	}
 
-	if "`isbalanced'" != "" & "`noadjust'" == "" {
-		noi disp "Panel balanced for variables: `isbalanced'."
-	}
-	
 	*** Return
 
 	if rowsof(`alpha_circ') == 1 {
@@ -386,16 +397,18 @@ program define xtcse2, rclass
 		return matrix T = `Tm'	
 	}
 	if "`cd'" == "" & "`inprog'" == "" {
-		if colsof(`CDm') == 1 {
-			scalar `CDm' = `CDm'[1,1]
-			return scalar CD = `CDm'
-			scalar `CDpm' = `CDpm'[1,1]
-			return scalar CDp = `CDpm'
-		}
-		else {
-			return matrix CD = `CDm'
-			return matrix CDp = `CDpm'
-		}
+		*if colsof(`CDm') == 1 {
+		*	scalar `CDm' = `CDm'[1,1]
+		*	return scalar CD = `CDm'
+		*	scalar `CDpm' = `CDpm'[1,1]
+		*	return scalar CDp = `CDpm'
+		*}
+		*else {
+		*	return matrix CD = `CDm'
+		*	return matrix CDp = `CDpm'
+		*}
+		return matrix CD = `cdres'
+		return matrix CDp = `cdpres'
 	}
 	
 	

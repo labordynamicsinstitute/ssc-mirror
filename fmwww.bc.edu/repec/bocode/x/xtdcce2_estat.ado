@@ -2,6 +2,7 @@
 estat for xtdcce2
 Requires xtdcce2 version 1.2
 Changelog
+20.02.2023 - added option dropzero
 12.01.2017 - fixed bug if ts vars used
 16.10.2017 - fixed bug in box
 24.07.2020 - added options ebi and ebistructure
@@ -9,7 +10,7 @@ Changelog
 
 *capture program drop xtdcce2_estat
 program define xtdcce2_estat , rclass
-	syntax anything [if] [in] , [Combine(string asis) Individual(string asis) nomg CLEARGraph fmt(string) ]
+	syntax anything [if] [in] , [Combine(string asis) Individual(string asis) nomg CLEARGraph fmt(string) dropzero * ]
 	
 	marksample touse , nov
 
@@ -20,7 +21,7 @@ program define xtdcce2_estat , rclass
 				local fmt "%9.3f"
 			}
 			
-			local mg_vars `e(lr_mg)' `e(p_mg_vars) '
+			local mg_vars `e(lr_mg)' `e(p_mg_vars)' `e(p_mg_vars)'
 			local mg_vars: list uniq mg_vars
 					
 			local pooled_vars `e(p_pooled_vars)' `e(lr_pooled)'
@@ -182,6 +183,9 @@ program define xtdcce2_estat , rclass
 				disp "x implies coefficient is omitted (missing)."
 			
 	}
+	else if "`anything'" == "bootstrap" {
+		bootstrap_xtdcce2 , `options'
+	}
 	else {
 		
 		gettoken type vars : anything 
@@ -190,7 +194,7 @@ program define xtdcce2_estat , rclass
 			exit 498
 		}
 
-		if "`e(cmd)'" != "xtdcce2" {
+		if "`e(cmd)'" != "xtdcce2" & "`e(cmd)'" != "xtdcce2fast" {
 			display as error "Only after xtdcce2, last command is `e(cmd)'"
 			exit
 		}
@@ -208,11 +212,11 @@ program define xtdcce2_estat , rclass
 			sort `e(idvar)' `e(tvar)'
 			predict `coeff' if `touse' , coeff
 			if "`vars'" == "" {
-				local graph_vars_pooled `e(p_pooled_vars)'
-				local graph_vars_mg `e(p_mg_vars)' 
+				local graph_vars_pooled `e(p_pooled_vars)' 
+				local graph_vars_mg `e(p_mg_vars)' `e(p_lr_vars_mg)' 
 			}
 			else {
-				local mg `e(p_mg_vars)'
+				local mg `e(p_mg_vars)' `e(p_lr_vars_mg)' 
 				local graph_vars_mg: list anything & mg
 				local pooled `e(p_pooled_vars)'
 				local graph_vars_pooled : list anything & pooled
@@ -229,9 +233,10 @@ program define xtdcce2_estat , rclass
 					if "`cleargraph'" == "" {
 						local gbar `"`ylines' ytitle("")   nodraw title("`var'") note("Mean: `=string(_b[`var'])'" "SE: `=string(_se[`var'])'") `individual' "'
 					}
+					if "`dropzero'" != "" local dropzeroc & `coeff'_`s_var' != 0
 					local varname = strtoname("`var'")
 					sort `e(idvar)' `e(tvar)'
-					graph bar `coeff'_`s_var' if `touse' , over(`idvar', label(nolabels)) name(`varname', replace) `gbar'
+					graph bar `coeff'_`s_var' if `touse' `dropzeroc' , over(`idvar', label(nolabels)) name(`varname', replace) `gbar'
 					local graph_list `graph_list' `varname'
 				}
 				if "`cleargraph'" == "" {
@@ -262,11 +267,13 @@ program define xtdcce2_estat , rclass
 				scalar cv = invnorm(1 - ((100-`c(level)')/100)/2)
 				predict `se' if `touse'  , se
 				predict `coeff' if `touse' , coeff
+				*noi sum `coeff'* `se'*
+				*noi disp "vars: `graph_vars_mg' - `anything' - `mg'"
 				foreach var in `graph_vars_mg' {
 					local s_var = subinstr("`var'",".","_",.)
 					qui gen `s_var'_up = `coeff'_`s_var' + cv * `se'_`s_var' if `touse'
 					qui gen `s_var'_lo = `coeff'_`s_var' - cv * `se'_`s_var' if `touse'
-					
+					*noi sum `s_var'_up `s_var'_lo
 					if "`nomg'" == "" {
 						local mg_mean = _b[`var']
 						local mg_up = `mg_mean' + cv * _se[`var']
@@ -276,12 +283,12 @@ program define xtdcce2_estat , rclass
 					if "`cleargraph'" == "" {
 						local grcap `"legend(off) `ylines' nodraw  ytitle("") title("`var'") note("Mean: `=string(_b[`var'])'" "SE: `=string(_se[`var'])'")"'
 					}				
-					
+					if "`dropzero'" != "" local dropzeroc & `coeff'_`s_var' != 0
 					local varname = strtoname("`var'")
 					
 					twoway	(scatter `coeff'_`s_var' `idvar' , m(X)  ) /*
 							 */ (rcap `s_var'_up `s_var'_lo `idvar' , lp(dash) ) /*
-							*/ if `touse' , name(rc`varname', replace) `grcap' `individual'
+							*/ if `touse' `dropzeroc' , name(rc`varname', replace) `grcap' `individual'
 					local graph_list `graph_list' rc`varname' 
 
 				}

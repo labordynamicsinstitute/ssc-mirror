@@ -1,8 +1,8 @@
 {smcl}
 {hline}
-{hi:help xtdcce2}{right: v. 3.0 - 16. August 2021}
+{hi:help xtdcce2}{right: v. 4.0 - xxx. xxx 202x}
 {right:SJ18-3: st0536}
-{right:SJ21-3: st0xxx}
+{right:SJ21-3: st0536_1}
 {hline}
 {title:Title}
 
@@ -33,12 +33,14 @@ with a large number of observations over groups and time periods.{p_end}
 {cmdab:pooledt:rend}
 {cmdab:jack:knife}
 {cmdab:rec:ursive}
+{cmdab:mgmis:sing}
 {cmdab:expo:nent}
 {cmdab:xtcse2:options(string)}
 {cmd:nocd}
 {cmdab:showi:ndividual}
 {cmd:fullsample}
 {cmd:fast}
+{cmd:fast2}
 {cmdab:blockdiag:use}
 {cmdab:nodim:check}
 {cmd:useqr}
@@ -52,6 +54,8 @@ with a large number of observations over groups and time periods.{p_end}
 {synoptline}
 {synopt:{cmd:cr_lags(}{help numlist})}number of lags of cross-section averages{p_end}
 {synopt:{cmdab:cl:ustercr(}{help varlist})}name of cluster variable(s), only for {cmd:clustercrosssectional}{p_end}
+{synopt:{cmd:rcce}}use regularized CCE, see Juodis (2022) with the ER criterion from Ahn and Horenstein (2013) to select the number of eigenvectors for static panels, see {help xtdcce2##rcce:details}.{p_end}
+{synopt:{cmd:rcce(options)}}as {cmd:rcce} but with further options options, see {help xtdcce2##options:Options}.{p_end}
 {synoptline}
 {p2colreset}{...}
 
@@ -75,6 +79,9 @@ and note on {help xtdcce2##collinearity:collinearity issues}.{break}
 {p 4}{help xtdcce2##SpeedLargePanels:Large panels and speed}{p_end}
 {p 4}{help xtdcce2##saved_vales:Saved Values}{p_end}
 {p 4}{help xtdcce2##postestimation: Postestimation commands}{p_end}
+{p 8}{help xtdcce2##postestpredict: predict}{p_end}
+{p 8}{help xtdcce2##postestestat: estat}{p_end}
+{p 8}{help xtdcce2##postestboot: bootstrap}{p_end}
 {p 4}{help xtdcce2##examples:Examples}{p_end}
 {p 4}{help xtdcce2##references:References}{p_end}
 {p 4}{help xtdcce2##about:About}{p_end}
@@ -97,21 +104,29 @@ c) The Cross-Sectional ARDL (CS-ARDL, Chudik et. al 2016) estimator using an ARD
 {p 4 4}For a further discussion see Ditzen (2019).
 Additionally {cmd:xtdcce2} tests for cross sectional dependence (see {help xtcd2}) and 
 estimates the exponent of the cross sectional dependence alpha (see {help xtcse2}).
+{cmd:xtdcce2} also implements the regularized CCE estimator from Juodis (2022) for static panels. 
 It also supports instrumental variable estimations (see {help ivreg2}).{p_end}
 
 
 {marker options}{title:Options}
 
-{p 4 8}{cmdab:cr:osssectional(}{help varlist}{cmd:cr1 [,cr_lags(#)])} defines the variables which are added as cross sectional averages to the equation. 
+{p 4 8}{cmdab:cr:osssectional(}{help varlist}{cmd:cr1 [,cr_lags(#)} {cmd:rcce[(}{cmdab:c:riterion(string)} {cmdab:sc:ale}{cmd: npc(real)]])}  defines the variables which are added as cross sectional averages to the equation. 
 Variables in {cmd:crosssectional()} may be included in {cmd:pooled()}, {cmd:exogenous_vars()}, {cmd:endogenous_vars()} and {cmd:lr()}. 
 Variables in {cmd: crosssectional()} are partialled out, the coefficients not estimated and reported.{p_end}
 {p 8 8}{cmd:crosssectional}(_all) adds all variables as cross sectional averages. 
 No cross sectional averages are added if {cmd:crosssectional}(_none) is used, which is equivalent to {cmd:nocrosssectional}.
 {cmd:crosssectional}() is a required option but can be substituted by {cmd:nocrosssectional}.{break}
-If {cmd:cr(..., cr_lags())} is used, then the global option {cmd:cr_lags()} (see below) is ignored.{p_end}
+If {cmd:cr(..., cr_lags())} is used, then the global option {cmd:cr_lags()} (see below) is ignored.{break}
+{cmd:rcce[}{cmdab:c:riterion(string)} {cmdab:sc:ale}{cmd: nps(real)]} invokes regularized cross-section averages from Juodis (2022) for {bf:static panels}. 
+The number of common factors in the cross-section averages is estimated and 
+then the respective number of eigenvectors from the cross-section averages is used. For more details see {help xtdcce2##rcce:details}.{break}
+Detailed Options are:{p_end}
+{col 12}{cmd:criterion(er|gr)} specifies criterion to identify number of common factors using the ER or GR criterion from Ahn and Horenstein (2013), see {help xtnumfac}.
+{col 12}{cmd:scale} scales cross-section averages, see Juodis (2022).
+{col 12}{cmd:npc(real)} specifies number of eigenvectors without estimating it. Cannot be combined with {cmd:criterion}.
 
 {p 4 8}{cmdab:globalcr:osssectional(}{help varlist}{cmd:cr1 [,cr_lags(#)])} define global cross-section averages.
-{cmd:global} cross-section averages are cross-section averages based on observeations which are excluded using {help if} statements.
+{cmd:global} cross-section averages are cross-section averages based on observations which are excluded using {help if} statements.
 If {cmd:cr(..., cr_lags())} is used, then the global option {cmd:cr_lags()} (see below) is ignored.{p_end}
 
 {p 4 8}{cmdab:cluster:osssectional(}{help varlist}{cmd:cr1 [,cr_lags(#)] clustercr(varlist))} are clustered or local cross-section averages. 
@@ -141,9 +156,13 @@ Results will be equivalent to the Mean Group estimator.{p_end}
 
 {p 4 8 12}{cmdab:noconst:ant} suppresses the constant term.{p_end}
 
+{p 4 8 12}{cmdab:mgmis:sing} if it is not possible to estimate individual coefficient for a cross-section
+because of missing data or perfect collinearity, individual coefficient is excluded for MG estimation.
+Coefficient will still be displayed as zero in e(bi). {p_end}
+
 {p 4 8 12}{cmd:pooledvce(}{it:type}{cmd:)} specifies the variance estimator for pooled regression.
 The default is the non-parametric variance estimator from Pesaran (2006). 
-{it:type} can be {cmd:nw} for Newey West heteogeneinty robust standard errors (Pesaran 2006) or
+{it:type} can be {cmd:nw} for Newey West heteroscedasticity autocorrelation robust standard errors (Pesaran 2006) or
 {cmd:wpn} for fixed T adjusted standard errors from Westerlund et. al (2019).{p_end}
 
 {p 4 8}{cmd:xtdcce2} supports IV regressions using {help ivreg2}. 
@@ -203,6 +222,8 @@ even if {cmd:fullsample} is used.
 {p_end}
 
 {p 4 8 12}{cmd:fast} omit calculation of unit specific standard errors.{p_end}
+
+{p 4 8 12}{cmd:fast2} use {help xtdcce2fast} instead of {cmd:xtdcce2}.{p_end}
 
 {p 4 8 12}{cmdab:blockdiag:use} uses {help mata blockdiag} 
 rather than an alternative algorithm. 
@@ -279,7 +300,7 @@ On the other hand a dataset with lets say N = 30 and T = 34 would qualify as app
 For consistency of the cross sectional specific estimates, the matrix z = (z(1,1),...,z(N,T)) has to be of full column rank.
 This condition is checked for each cross section. 
 {cmd:xtdcce2} will return a warning if z is not full column rank. 
-It will, however, continue estimating the cross sectional sepecific coefficients and then calculate the mean group estimates,
+It will, however, continue estimating the cross sectional specific coefficients and then calculate the mean group estimates,
 see {help xtdcce2##collinearity: collinearity issues}.
 The mean group estimates will be consistent.
 For further reading see, Chudik, Pesaran (2015, Journal of Econometrics), Assumption 6 and page 398.{p_end}
@@ -288,7 +309,7 @@ For further reading see, Chudik, Pesaran (2015, Journal of Econometrics), Assump
 The rank condition can fail if the constant is partialled out and one or more variables are binary.
 In this case {cmd:xtdcce2} restarts, however forces the constant to be calculated.{p_end}
 
-{p 4 4}The follwing models can be estimated:{p_end}
+{p 4 4}The following models can be estimated:{p_end}
 
 {p 2}{ul: i) Mean Group}{p_end}
 
@@ -338,7 +359,7 @@ The constant is pooled by using the option {cmd:pooledconstant}. {p_end}
 The default is the non-parametric variance estimator from Pesaran (2006), Eq. 67 - 69. 
 The non-parametric estimator takes the difference between the mean group and individual coefficients into account.
 Therefore a mean group regression is performed in the background.
-The first alternative estimator is the Newey West type heteroskedasticity robust standard errors from 
+The first alternative estimator is the Newey West type heteroscedasticity and auto correlation robust standard errors from 
 Pesaran (2006), Eq. 51, 52 and 74. 
 The length of the window size is defined as round(4*(T/100)^(2/9)) and follows the convention in 
 for HAC standard errors (see Bai and Ng, 2004). 
@@ -353,9 +374,10 @@ This estimator heteroscedasticity robust and allows for panels with a fixed time
 Endogenous variables (to be instrumented) are defined in {varlist}2 and their instruments are defined in {varlist}_iv.{p_end}
 {p 4}{help xtdcce2##example_iv:See example}{p_end}
 
-{marker pmg}{p 2}{ul: vi) Error Correction Models (Pooled Mean Group Estimator)}{p_end}
+{marker pmg}{p 2}{ul: vi) Cross-Section Augmented Error Correction Models (CS-ECM)}{p_end}
 
-{p 4 4} As an intermediate between the mean group and a pooled estimation, Shin et. al (1999) differentiate between homogenous long run and heterogeneous short run effects.
+{p 4 4} Two version of the CS-ECM are supported. 
+The Pooled Mean Group model, which is an intermediate between the mean group and a pooled estimation, Shin et. al (1999) differentiate between homogenous long run and heterogeneous short run effects.
 Therefore the model includes mean group as well as pooled coefficients.
 Equation (1) (without the lag of the explanatory variable x and for a better readability without the cross sectional averages) is transformed into an ARDL model:{p_end}
 
@@ -376,6 +398,10 @@ The advantage estimating equation (7) by OLS is that it is possible to use IV re
 The variance/covariance matrix is calculated using the delta method,
 for a further discussion, see Ditzen (2018).{p_end}
 {p 4}{help xtdcce2##example_pmg:See example}{p_end}
+
+{p 4 4}The restriction of homogenous long run relationships can be relaxed. 
+This is then an unrestricted CS-ECM.
+The results are equivalent to an CS-ARDL if only one lag is used.{p_end}
 
 {marker csdl}{p 2}{ul: vii) Cross-Section Augmented Distributed Lag (CS-DL)}{p_end}
 
@@ -399,6 +425,7 @@ The variance/covariance matrix is estimated as in the case of a Mean Group Estim
 {p 4}{help xtdcce2##example_csdl:See example}{p_end}
 
 {marker ardl}{p 2}{ul: viii) Cross-Section Augmented ARDL (CS-ARDL)}{p_end}
+
 {p 4 4}As an alternative approach the long run coefficients can be estimated by first estimating the short run coefficients and then the long run coefficients. 
 For a general ARDL(py,px) model including cross-sectional averages such as:{p_end}
 
@@ -419,6 +446,20 @@ lx is a variable containing the first lag of x (lx = L.x).{break}
 The disadvantage of this approach is, that py and px need to be known.
 The variance/covariance matrix is calculated using the delta method, see Ditzen (2019).{p_end}
 {p 4}{help xtdcce2##example_ardl:See example}{p_end}
+
+{p 2}{ul: ix) Regularized CCE}{p_end}{marker rcce}
+{p 4 4}The CCE approach can involve a large number of cross-section averages which is larger than the number of factors and 
+can lead to a non-trivial bias for the pooled and mean group estimator, see Karabiyik et. al. (2017).
+Juodis (2022) propose a solution for linear static panels which uses singular value decomposition to remove redundant singular values in the cross-section averages.
+The so-called rCCE method involves the following steps:
+{p_end}
+
+{p 12 14}1. Calculate cross-sectional averages.{p_end}
+{p 12 14}2. Estimate number of common factors using the ER or GR criterion from Ahn and Horenstein (2013).{p_end}
+{p 12 14}3. Replace the cross-sectional averages with eigenvectors from the cross-section averages. The eigenvectors are the eigenvectors of the largest eigenvalues and the number is obtained in step 2.{p_end}
+
+{p 4 4}The method requires bootstrapped standard errors, see {help xtdcce2##postestboot:bootstrapping}.{p_end}
+{p 4}{help xtdcce2##example_rcce:See example}{p_end}
 
 {p 2}{ul:Coefficient of Determination (R2)}{p_end}
 {marker R2}
@@ -517,7 +558,7 @@ with {help reg} or {help xtmg}.
 The reasons are that {cmd:xtdcce2}, partialles out the 
 cross-sectional averages and enforces the use of doubles, both is 
 not done in {cmd:xtmg}. 
-In addition it use as a default a different alogorithm to invert matrices.{p_end}
+In addition it use as a default a different algorithm to invert matrices.{p_end}
 
 {p 4 4}The use of factor variables together with cross-sectional averages 
 can lead to collineaity issues. For example in a dataset with the time identifier 
@@ -531,7 +572,7 @@ cross-sectional averages. {p_end}
 
 {p 4 4}The common correlated effects estimators are designed for large panels. 
 This means the number of cross-sectional units and the time periods {cmd:xtdcce2} 
-is converging to infinty, resulting in a large number of observations.
+is converging to infinity, resulting in a large number of observations.
 {cmd:xtdcce2} has some limitations in its functionality with such large panels, 
 partly from its design, partly limitations arising from Stata.
 While the former slows down the estimation, the latter makes an estimation impossible.
@@ -553,10 +594,10 @@ If the number of cross-sectional units is very large, {cmd:xtdcce2} cannot post
 this matrix and aborts with an error. 
 The same problems arise when {cmd:xtdcce2} uses Stata commands such as {help rmcoll}
 to check for collinearities.
-In addition collinearity checks can be computatinally intensive for large panels and slow 
-an estiamtion significantly down.{p_end}
+In addition collinearity checks can be computationally intensive for large panels and slow 
+an estimation significantly down.{p_end}
 
-{p 4 4}To circument the speed and the size issue, 
+{p 4 4}To circumvent the speed and the size issue, 
 {cmd:xtdcce2} contains a program called {help xtdcce2fast}. 
 {cmd:xtdcc2fast} can only estimate a mean group model and does no collinearity checks. 
 Only the mean group coefficients are saved in {cmd:e()}, individual coefficients 
@@ -605,12 +646,12 @@ are saved in a {cmd:mata} matrix.{p_end}
 {col 8}{cmd: e(omitted_var_i)}{col 27} matrix of omitted variables on cross-section - variable level
 {col 8}{cmd: e(version)}{col 27} xtdcce2 version, if {stata xtdcce2, version} used
 {col 8}{cmd: e(cr_lags}{col 27} structure of lags of cross-section averages
-{col 8}{cmd: e(csa){col 27} cross-section averages
-{col 8}{cmd: e(gcr_lags}{col 27} structure of lags of global cross-section averages
-{col 8}{cmd: e(gcsa){col 27} global cross-section averages
-{col 8}{cmd: e(ccr_lags}{col 27} structure of lags of clustered/local cross-section averages
-{col 8}{cmd: e(ccsa){col 27} clustered/local cross-section averages
-{col 8}{cmd: e(ccsa_cluster){col 27} cluster variable(s) for clustered cross-section averages
+{col 8}{cmd: e(csa)}{col 27} cross-section averages
+{col 8}{cmd: e(gcr_lags)}{col 27} structure of lags of global cross-section averages
+{col 8}{cmd: e(gcsa)}{col 27} global cross-section averages
+{col 8}{cmd: e(ccr_lags)}{col 27} structure of lags of clustered/local cross-section averages
+{col 8}{cmd: e(ccsa)}{col 27} clustered/local cross-section averages
+{col 8}{cmd: e(ccsa_cluster)}{col 27} cluster variable(s) for clustered cross-section averages
 
 {col 4} Matrices
 {col 8}{cmd: e(b)}{col 27} coefficient vector 
@@ -628,7 +669,8 @@ are saved in a {cmd:mata} matrix.{p_end}
 {marker postestimation}{title:Postestimation Commands}
 
 {p 4 4}{cmd: predict} and {cmd: estat} can be used after {cmd: xtdcce2}. 
-
+Bootstrapping standard errors and confidence intervals is possible using {cmd:estat bootstrap}.{p_end}
+{marker postestpredict}
 {p 2}{ul: predict}{p_end}
 {p 4 4}The syntax for {cmd:predict} is:{p_end}
 
@@ -657,7 +699,7 @@ The following Table summarizes the differences with the command line {cmd:xtdcce
 {col 10}2. {stata predict partial, partial} {col 43}2. {stata gen xb2 = coeff_x * x}
 {col 10}3. {stata gen xb = coeff_x * partial_x} {col 43}
 
-{p 8 8}{cmd:xtdcce2} is able to calculte both residuals from equation (1). 
+{p 8 8}{cmd:xtdcce2} is able to calculate both residuals from equation (1). 
 {cmd:predict} {newvar} , {cmdab:r:esiduals} calculates e(i,t).
 That is, the residuals of the regression with the cross sectional averages partialled out.
 {cmd:predict} {newvar} , {cmdab:cfr:esiduals} calculates u(i,t) = g(i)*f(g) + e(i,t). 
@@ -679,6 +721,7 @@ and ytilde and xtilde are y and x with the common factors partialled out:{p_end}
 {col 11} gamma(i)*f(t) + e(i,t) {col 37}{cmd:cfresiduals} 
 
 {p 2}{ul: estat}{p_end}
+{marker postestestat}
 {p 4 4}{cmd: estat} can be used display the structure or values of individual coefficients and
 to create a box, bar or range plot. {p_end}
 
@@ -710,9 +753,43 @@ is pooled.{p_end}
 {col 8}{cmdab:c:ombine}{cmd:({it:string})}{col 27} passes options for combined graphs; see {help twoway_options}
 {col 8}{cmd:nomg}{col 27} mean group point estimate and confidence interval are not included in bar and range plot graphs
 {col 8}{cmdab:clearg:raph}{col 27} clears the option of the graph command and is best used in combination with the {cmd:combine()} and {cmd:individual()} options
+{col 8}{cmd:dropzero}{col 27} does not display coefficients with zeros in bar or rcap graphs.
 {hline}
 
 {p 4} The name of the combined graph is saved in {cmd:r(graph_name)}.{p_end}
+
+{p 2}{ul: Bootstrapping}{p_end}
+{marker postestboot}
+{p 4 4}{cmd:xtdcce2} can bootstrap confidence intervals and standard errors. 
+It supports two types of bootstraps: the {it:wild} bootstrap and the {it:cross-section} bootstrap.
+The syntax is:{p_end}
+
+{p 6 13}{cmd: estat bootstrap , [options]}{p_end}
+
+{col 6}Options{col 25} Description
+{hline}
+{col 8}{cmd:reps(integer)}{col 27}Number of repetitions. Default 100.
+{col 8}{cmd:seed(string)}{col 27}Set seed, see {help seed}.
+{col 8}{cmdab:w:ild}{col 27}Use wild bootstrap rather than cross-section bootstrap.
+{col 8}{cmdab:cfr:esdiduals}{col 27}Use residuals including common factors for wild bootstrap.
+{col 8}{cmdab:p:ercentile}{col 27}Bootstrap confidence intervals.
+{col 8}{cmdab:showi:ndividual}{col 27}show unit specific results.
+{hline}
+
+{p 4 4}{cmd:estat bootstrap} implements two types of bootstraps, the {it:wild} bootstrap and the {it:cross-section} bootstrap.
+The {it:cross-section} bootstrap is the default.{p_end}
+
+{p 4 4}The cross-section bootstrap draws with replacement from the cross-sectional dimension. 
+That is it draws randomly cross-sectional units with their entire time series. 
+It then estimates the model using {cmd:xtdcce2}. 
+The cross-section bootstrap has been proposed in Westerlund et. al. (2019) or Goncalves and Perron (2014).{p_end}
+
+{p 4 4}The wild bootstrap is a slower from of the wild bootstrap implemented in {help boottest} (Roodman et. al. 2019). 
+It reweighs the residuals with Rademacher weights from the initial regression, recalculates the dependent variable and then 
+runs {cmd:xtdcce2}.{p_end}
+
+{p 4 4}The default is to bootstrap standard errors and then use the bootstrapped standard errors to calculate the confidence intervals.
+Option {cmd:percentile} directly bootstraps confidence intervals.{p_end}
 
 
 {marker examples}{title:Examples}
@@ -770,10 +847,10 @@ To estimate the mean group coefficients consistently, the number of lags is set 
 
 {p 4}{ul: Using predict}{p_end}
 
-{p 4 4}{cmd:predict, {it:[options]}} can be used to predict the lienar prediction, the residuals, coefficients and the partialled out variables.
+{p 4 4}{cmd:predict, {it:[options]}} can be used to predict the linear prediction, the residuals, coefficients and the partialled out variables.
 To predict the residuals, options {cmd:residuals} is used:{p_end}
 
-{p 8}{stata predict residuas, residuals}{p_end}
+{p 8}{stata predict residuals, residuals}{p_end}
 
 {p 4 4}The residuals do not contain the partialled out factors, that is they are e(i,t) in equation (1) and (2). 
 To estimate u(i,t), the error term containing the common factors, option {cmd:cfresiduals} is used:{p_end}
@@ -796,14 +873,12 @@ mean group estimate:{p_end}
 {p 4 4}Then a regression on the variables would lead to the same results as above.{break}
 If the option {cmd:replace} is used, then the {newvar} is replaced if it exists.{p_end}
 
-
 {marker example_pooled}{p 4}{ul: Pooled Estimations}{p_end}
 
 {p 4 4}All coefficients can be pooled by including them in {cmd:pooled({varlist})}.
 The constant is pooled by using the {cmd:pooledconstant} option:{p_end}
 
 {p 8}{stata xtdcce2 d.log_rgdpo L.log_rgdpo log_hc log_ck log_ngd , reportc cr(d.log_rgdpo L.log_rgdpo  log_hc log_ck log_ngd) pooled(L.log_rgdpo  log_hc log_ck log_ngd) cr_lags(3) pooledconstant}.{p_end}
-
 
 {marker example_iv}{p 4}{ul: Instrumental Variables}{p_end}
 
@@ -814,7 +889,6 @@ Using the lagged level of physical capital as an instrument for the contemporane
 {p 8}{stata xtdcce2 d.log_rgdpo L.log_rgdpo log_hc log_ck log_ngd  (log_ck = L.log_ck), reportc cr(d.log_rgdpo L.log_rgdpo  log_hc log_ck log_ngd) cr_lags(3) ivreg2options(nocollin noid)}.{p_end}
 
 {p 4 4}Further {cmd:ivreg2} options can be passed through using {cmd:ivreg2options}. Stored values in {cmd:e()} from {cmd:ivreg2options} can be posted using the option {cmd:fulliv}.
-
 
 {marker example_pmg}{p 4}{ul: Error Correction Models (Pooled Mean Group Estimator)}{p_end}
 
@@ -832,7 +906,6 @@ A second option is {cmd:xtpmgnames} in order to match the naming convention from
 {p 8}{stata xtdcce2 d.c d.pi d.y if year >= 1962 , lr(L.c pi y) p(L.c pi y) cr(_all) cr_lags(2) lr_options(nodivide)}{p_end}
 
 {p 8}{stata xtdcce2 d.c d.pi d.y if year >= 1962 , lr(L.c pi y) p(L.c pi y) cr(_all) cr_lags(2) lr_options(xtpmgnames)}{p_end}
-
 
 {marker example_csdl}{p 4}{ul: Cross-Section Augmented Distributed Lag (CS-DL)}{p_end}
 
@@ -856,7 +929,6 @@ number refers to the first variable defined in {cmd:cr()}, the second to the sec
 {p 8}{stata xtdcce2 d.y dp d.gd L(0/2).d.(dp d.gd), cr(d.y dp d.gd) cr_lags(0 3 3) fullsample}{p_end}
 
 {p 4 4}Note, the {cmd:fullsample} option is used to reproduce the results in Chudik et. al (2013).{p_end} 
-
 
 {marker example_ardl}{p 4}{ul: Cross-Section Augmented ARDL (CS-ARDL)}{p_end}
 
@@ -883,8 +955,37 @@ If the lag of {it:dp} is called {it:ldp}, then the variables need to be enclosed
 
 {p 8}{stata xtdcce2 d.y , lr(L(1/3).d.y L(0/3).dp L(0/3).d.gd) lr_options(ardl) cr(d.y dp d.gd) cr_lags(3) fullsample}{p_end}
 
+{marker example_rcce}{p 4}{ul: Regularized CCE and bootstrapping}{p_end}
+
+{p 4 4}The regularized CCE approach is only possible for static models.
+To estimate a static model of growth on human, physical captial and population growth, we can use:{p_end}
+
+{p 8}{stata xtdcce2 log_rgdpo log_hc log_ck log_ngd , cr(log_rgdpo log_hc log_ck log_ngd, rcce)}{p_end}
+
+{p 4 4}{cmd:xtdcce2} selects the first and second eigenvector of the cross-section averages and adds it as a variable.
+The selection criterion is the ER criterion from Ahn and Horenstein (2013). 
+To use the GR criterion instead, the option {cmd:criterion(gr)} is used:{p_end}
+
+{p 8}{stata xtdcce2 log_rgdpo log_hc log_ck log_ngd , cr(log_rgdpo log_hc log_ck log_ngd, rcce(criterion(gr)))}{p_end}
+
+{p 4 4}Three regularized cross-section averages are added. 
+To ensure standard errors are correct, a bootstrap is run with a fixed seed:{p_end}
+
+{p 8}{stata estat bootstrap, seed(123)}{p_end}
+
+{p 4 4}To run a wild bootstrap and bootstrap confidence intervals, the options {cmd:wild} and {cmd:percentile} are added:{p_end}
+
+{p 8}{stata estat bootstrap, seed(123) wild percentile}{p_end}
+
+{p 4 4}Instead of specifing the criteria to estimate the number of eigenvectors of the rcce approach, we can hard set it using the option {cmd:npc()}:{p_end}
+
+{p 8}{stata xtdcce2 log_rgdpo log_hc log_ck log_ngd , cr(log_rgdpo log_hc log_ck log_ngd, rcce(npc(3)))}{p_end}
 
 {marker references}{title:References}
+
+{p 4 8}Ahn, S. C., & Horenstein, A. R. 2013. 
+Eigenvalue ratio test for the number of factors. 
+Econometrica, 81(3), 1203–1227.{p_end}
 
 {p 4 8}Baum, C. F., M. E. Schaffer, and S. Stillman 2007.
 Enhanced routines for instrumental variables/generalized method of moments estimation and testing.
@@ -905,12 +1006,13 @@ Journal of Econometrics 188(2): 393-420.{p_end}
 Long-Run Effects in Large Heterogeneous Panel Data Models with Cross-Sectionally Correlated Errors
 Essays in Honor of Aman Ullah. 85-135.{p_end}
 
-{p 4 8}Bai, J. and Ng, S. 2004.
-A panic attack on unit roots and cointegration. Econometrica 72: 1127-1177.{p_end}
+{p 4 8}Ditzen, J. 2018. 
+Estimating Dynamic Common Correlated Effcts in Stata. 
+The Stata Journal, 18:3, 585 - 617.{p_end}
 
-{p 4 8}Ditzen, J. 2018. Estimating Dynamic Common Correlated Effcts in Stata. The Stata Journal, 18:3, 585 - 617.{p_end}
-
-{p 4 8}Ditzen, J. 2021. Estimating long run effects and the exponent of cross-sectional dependence: an update to xtdcce2. The Stata Journal 21:3.{p_end}
+{p 4 8}Ditzen, J. 2021. 
+Estimating long run effects and the exponent of cross-sectional dependence: an update to xtdcce2. 
+The Stata Journal 21:3.{p_end}
 
 {p 4 8}Eberhardt, M. 2012.
 Estimating panel time series models with heterogeneous slopes.
@@ -923,9 +1025,21 @@ Journal of Econometrics 158: 160 - 172.{p_end}
 {p 4 8}Feenstra, R. C., R. Inklaar, and M. Timmer. 2015.
 The Next Generation of the Penn World Table. American Economic Review. www.ggdc.net/pwt{p_end}
 
+{p 4 8}Goncalves, S., & Perron, B. 2014. 
+Bootstrapping factor-augmented regression models. 
+Journal of Econometrics, 182(1), 156–173.{p_end}
+
 {p 4 8}Jann, B. 2005. 
 moremata: Stata module (Mata) to provide various functions. 
-Available from http://ideas.repec.org/c/boc/bocode/s455001.html.
+Available from http://ideas.repec.org/c/boc/bocode/s455001.html.{p_end}
+
+{p 4 8}Juodis, A. 2022. 
+A regularization approach to common correlated effects estimation.
+Journal of Applied Econometrics, 37(4), 788– 810.{p_end}
+
+{p 4 8}Karabıyık, H., Reese, S., & Westerlund, J. 2017. 
+On the role of the rank condition in cce estimation of factor-augmented panel regressions.
+Journal of Econometrics, 197(1), 60–64.{p_end}
 
 {p 4 8}Pesaran, M. H. 2006.
 Estimation and inference in large heterogeneous panels with a multifactor error structure.
@@ -934,6 +1048,10 @@ Econometrica 74(4): 967-1012.{p_end}
 {p 4 8}Pesaran, M. H., and R. Smith. 1995.
 Econometrics Estimating long-run relationships from dynamic heterogeneous panels.
 Journal of Econometrics 68: 79-113.{p_end}
+
+{p 4 8}Roodman, D., Nielsen, M. Ø., MacKinnon, J. G., & Webb, M. D. 2019. 
+Fast and wild: Bootstrap inference in Stata using boottest. 
+The Stata Journal, 19(1), 4–60.{p_end}
 
 {p 4 8}Shin, Y., M. H. Pesaran, and R. P. Smith. 1999.
 Pooled Mean Group Estimation of Dynamic Heterogeneous Panels.
@@ -949,9 +1067,11 @@ Journal of Applied Econometrics: 1-6.{p_end}
 {p 4}Email: {browse "mailto:jan.ditzen@unibz.it":jan.ditzen@unibz.it}{p_end}
 {p 4}Web: {browse "www.jan.ditzen.net":www.jan.ditzen.net}{p_end}
 
-{p 4 8}I am grateful to Arnab Bhattacharjee, David M. Drukker, Markus Eberhardt, Tullio Gregori, 
-, Sebastian Kripfganz,
+{p 4 8}I am grateful to Arnab Bhattacharjee, David M. Drukker, Markus Eberhardt, Tullio Gregori,
+Sebastian Kripfganz,
 Erich Gundlach, 
+Achim Ahrens,
+Kyle McNabb,
 Sean Holly and Mark Schaffer, to the participants of the
 2016 Stata Users Group meeting in London, 2018 Stata User Group meeting in Zuerich,
  and two anonymous referees of The Stata Journal for many valuable comments and suggestions.
@@ -970,7 +1090,15 @@ and beta versions including a full history of
 xtdcce2 from {stata "net from http://www.ditzen.net/Stata/xtdcce2_beta"}.{p_end}
 
 {marker ChangLog}{title:Version History}
-{p 4 8}This version: 3.0 - 16. August 2021{p_end}
+{p 4 8}This version: 4.0 -Feb 2022{p_end}
+{p 8 10} - bootstrap support{p_end}
+{p 8 10} - added option {cmd:mgmissing}{p_end}
+{p 8 10} - added option rcce{p_end}
+{p 8 10} - added option {cmd:fast2}{p_end}
+{p 8 10} - fixed error when pooled and ardl used.{p_end}
+{p 4 8}Version 3.0 to 3.01{p_end}
+{p 8 10} - error if abbreviation is cr() used fixed.{p_end}
+{p 4 8}Version 2.0 to 3.0{p_end}
 {p 8 10} - improved support for factor variables.{p_end}
 {p 8 10} - fix for mm_which2.{p_end}
 {p 8 10} - message for large panels.{p_end}

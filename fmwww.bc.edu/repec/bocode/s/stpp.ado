@@ -1,4 +1,4 @@
-*! version 1.2.6 2022-04-06
+*! version 1.2.7 2023-02-21
 
 program define stpp, rclass sortpreserve
   version 16.0
@@ -16,6 +16,7 @@ program define stpp, rclass sortpreserve
                    dropexpected                                         ///
                    ederer2                                              ///
                    FH                                                   ///
+                   FRame(string)                                        ///
                    LEVel(real `c(level)')                               ///
                    INDWeights(varname)                                  ///
                    LIST(numlist ascending >0)                           ///
@@ -129,6 +130,17 @@ program define stpp, rclass sortpreserve
       exit 198
     }
   }
+  
+// frames
+  if "`frame'" != "" {
+    getframeoptions `frame'    
+  } 
+  mata: st_local("frameexists",strofreal(st_frameexists(st_local("resframe"))))
+  if `frameexists' & "`framereplace'" != "" {
+    frame drop `resframe'
+  }  
+  
+ 
 *******************	
 // popmort file ///
 *******************
@@ -222,7 +234,7 @@ program define stpp, rclass sortpreserve
   mata: stpp()
   return add
   
-  if "`by'" != "" & "`list'" != ""  {
+  if "`list'" != ""  {
   	quietly {
   	  matrix colnames PP=`by' time PP PP_lci PP_uci	
   	  return matrix PP=PP
@@ -240,6 +252,7 @@ program define stpp, rclass sortpreserve
 	    }
 	  }
   }  
+  
 
   // merge in results  
   tempvar tmplink
@@ -420,6 +433,14 @@ program define stpp, rclass sortpreserve
     di as input "File `dofilename' has been created"
   }
 end
+
+program define getframeoptions
+  syntax [anything], [replace ]
+  c_local resframe       `anything'
+  c_local framereplace   `replace'
+end
+
+
 version 16.0
 set matastrict on
 mata:
@@ -463,6 +484,7 @@ struct stpp_info {
                         hascrudeprob,     // calculate crude probabilities
                         hasdeathprob,     // calculate net and All-cause death probs 
                         haslist,          // display at specific time points
+                        hasframe,         // write result to a frame
                         hasflemhar,       // Fleming Harrington   
                         hasminexpsurv,    // has minimum expected survival
                         minexpsurv,       // values of minimum expected survival  
@@ -484,7 +506,8 @@ struct stpp_info {
                         pmrate,           // rate variable in popmort file
                         pmage2,           // age variable in popmort2 file
                         pmyear2,          // year variable in popmort2 file
-                        pmrate2           // rate variable in popmort2 file                  
+                        pmrate2,          // rate variable in popmort2 file                  
+                        resframe
                   
   real         matrix   list              // list of times to display                  
   
@@ -609,6 +632,7 @@ function PP_Get_stpp_info()
   S.hasdeathprob   = st_local("deathprob") != ""
   S.hasflemhar     = st_local("fh") != ""
   S.hasminexpsurv  = st_local("minexpsurv") != ""
+  S.hasframe       = st_local("frame") != ""
   S.pmage          = st_local("pmage")
   S.pmyear         = st_local("pmyear")
   S.pmother        = tokens(st_local("pmother"))
@@ -621,6 +645,8 @@ function PP_Get_stpp_info()
   S.haspopmort2    = st_local("using2") != ""
   S.dropexpected   = st_local("dropexpected") != ""
 
+  if(S.hasframe) S.resframe = st_local("resframe")  
+  
 // read in popmort2 options  
   if(S.haspopmort2) {
     S.pmage2         = st_local("pmage2")
@@ -1249,7 +1275,9 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
 
   real scalar         i, k, j
 
-  string scalar       method, bytext, rmatname, agestand
+  string scalar       method, bytext, rmatname, agestand, currentframe
+  
+  string matrix       newvars
   
   transmorphic matrix RS_list_matrix, AC_list_matrix, 
                       CP_can_list_matrix, CP_oth_list_matrix
@@ -1339,47 +1367,76 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
       }
       printf("{txt}{hline 11}{c +}{hline 26}\n\n")
       stata("return clear")
-      
-      if(!S.hasby) rmatname = "r(PP)"
-      else rmatname = "r(PP" + strofreal(k) + ")"
-      st_matrix(rmatname,asarray(RS_list_matrix,k))
-     
+
       if(S.hasby) {
          tempPP = tempPP \ (J(rows(asarray(RS_list_matrix,k)),1,S.bylevels[k,]),asarray(RS_list_matrix,k))
+         rmatname = "r(PP" + strofreal(k) + ")"
+         st_matrix(rmatname,tempPP)      
       }
+      else tempPP = asarray(RS_list_matrix,k) 
 
       if(S.hasallcause) {
-        if(!S.hasby) rmatname = "r(AC)"
-        else rmatname = "r(AC" + strofreal(k) + ")"
-        st_matrix(rmatname,asarray(AC_list_matrix,k))
         if(S.hasby) {
-           tempAC = tempAC \ (J(rows(asarray(AC_list_matrix,k)),1,S.bylevels[k,]),asarray(AC_list_matrix,k))
+          tempAC = tempAC \ (J(rows(asarray(AC_list_matrix,k)),1,S.bylevels[k,]),asarray(AC_list_matrix,k))
+          rmatname = "r(AC" + strofreal(k) + ")"
+          st_matrix(rmatname,tempAC)
         }
+        else tempAC = asarray(AC_list_matrix,k)
       }
 
       if(S.hascrudeprob) {
       	if(!S.hasby) rmatname = "r(CP_can)"
         else rmatname = "r(CP_can" + strofreal(k) + ")"
-        st_matrix(rmatname,asarray(CP_can_list_matrix,k))
         if(S.hasby) {
            tempCP_can = tempCP_can \ (J(rows(asarray(CP_can_list_matrix,k)),1,S.bylevels[k,]),asarray(CP_can_list_matrix,k))
         }
+        else tempCP_can = asarray(CP_can_list_matrix,k) 
+        st_matrix(rmatname,tempCP_can)
+       
         if(S.CP_calcother) {
       	  if(!S.hasby) rmatname = "r(CP_oth)"
           else rmatname = "r(CP_oth" + strofreal(k) + ")"
-          st_matrix(rmatname,asarray(CP_oth_list_matrix,k))
           if(S.hasby) {
              tempCP_oth = tempCP_oth \ (J(rows(asarray(CP_oth_list_matrix,k)),1,S.bylevels[k,]),asarray(CP_oth_list_matrix,k))
           }        	
+          else tempCP_oth = asarray(CP_oth_list_matrix,k) 
+          st_matrix(rmatname,tempCP_oth)
         }
       }
     }
   }
-  if(S.hasby) {
-    st_matrix("PP",tempPP)
-    if(S.hasallcause) st_matrix("AC",tempAC)
-    if(S.hascrudeprob) st_matrix("CP_can",tempCP_can)  
-    if(S.CP_calcother) st_matrix("CP_oth",tempCP_oth)
+  st_matrix("PP",tempPP)
+  if(S.hasallcause) st_matrix("AC",tempAC)
+  if(S.hascrudeprob) st_matrix("CP_can",tempCP_can)  
+  if(S.CP_calcother) st_matrix("CP_oth",tempCP_oth)
+
+  
+  // write result to a frame
+  if(S.hasframe) {
+    currentframe = st_framecurrent()
+    st_framecreate(S.resframe)
+    st_framecurrent(S.resframe)
+    newvars = (S.byvars,"time","PP","PP_lci","PP_uci")
+    (void) st_addvar("double", newvars)
+    st_addobs(rows(tempPP)) 
+    st_store(.,newvars,.,tempPP)
+    
+    if(S.hasallcause) {
+      newvars = ("AC","AC_lci","AC_uci")
+      (void) st_addvar("double", newvars)
+      st_store(.,newvars,.,tempAC[,(2+S.Nbyvars:*S.hasby)..cols(tempAC)])
+    }
+    if(S.hascrudeprob) {
+      newvars = ("CP_can","CP_can_lci","CP_can_uci")
+      (void) st_addvar("double", newvars)
+      st_store(.,newvars,.,tempCP_can[,(2+S.Nbyvars:*S.hasby)..cols(tempAC)])
+      if(S.CP_calcother) {
+        newvars = ("CP_oth","CP_oth_lci","CP_oth_uci")
+        (void) st_addvar("double", newvars)        
+        st_store(.,newvars,.,tempCP_oth[,(2+S.Nbyvars:*S.hasby)..cols(tempAC)])
+      }
+    }
+    st_framecurrent(currentframe)
   }
 }
 

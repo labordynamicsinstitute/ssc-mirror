@@ -17,6 +17,7 @@ Oct   2018 - changed xtdcce2133 to xtdcce2 in line 37
 02.03.2020 - when xtpmg names used, error occured with PutCoeff mata program
 04.03.2020 - fixed error when rec used.  Thanks to Gergio Tullio for the pointer.
 22.01.2021 - fixed error when fullsample and if used; Thanks to Gergio Tullio for the pointer.
+26.05.2022 - added option cov, only for xtdcce2fast
 */
 *capture program drop xtdcce2_p
 program define xtdcce2_p
@@ -38,7 +39,7 @@ include "`r(fn)'"
 
 capture program drop xtdcce2_p_int
 program define xtdcce2_p_int 
-	syntax newvarname(max=1 generate) [in] [if] , [Residuals xb COEFFicient stdp se partial CFResiduals xb2 wildbootstrap ]
+	syntax newvarname(max=1 generate) [in] [if] , [Residuals xb COEFFicients stdp se partial CFResiduals xb2 wildbootstrap cov(string) ]
 	
 	* marksample for in if of predict command; does not take e(sample) into account,
 	* add additional variable smpl. will be used for calculation of cross-sectional averages and partialling out
@@ -48,33 +49,97 @@ program define xtdcce2_p_int
 
 	if "`e(cmd)'" == "xtdcce2fast" {
 		
-		*if "`xb'`coefficient'"
+		local cnt = wordcount("`residuals' `xb' `xb2' `coefficients' `stdp' `se' `partial' `cfresiduals'") 
+		if `cnt' > 1 {
+			display "{err}only one statistic may be specified"
+			exit 498
+
+		}
+		else if `cnt' == 0 & "`cov'" == "" {
+			local xb xb
+			disp "Option xb assumed."
+		}
+
+
+		if wordcount("`stdp'  `partial'")> 0 {
+			display "Option `stdp'`se'`partial' not supported."
+			exit 498
+
+		}
+
+		if "`residuals'" != ""  local type = 0
+		if "`cfresiduals'" != ""  local type = -1
+		if "`xb'" != "" local type = -1
+		if "`coefficients'" != "" local type = 1
+		if "`se'" != "" local type = 2
+		if "`xb2'" != "" local type = -1
+		if "`cov'" != "" local type = -2
 		qui{			
-			if ("`e(posttype)'" == "mata" | "`e(posttype)'" == "frame") & "`wildbootstrap'" == "" {
+			if (("`e(postresults)'" == "mata" | "`e(postresults)'" == "frame") & "`wildbootstrap'" == "" &  `type' != -1) {
+				drop `varlist'
 				local newvar `varlist'
-				
+				if (`type' >0) {
+					
+					local vars = subinstr("`e(p_mg_vars)'","_cons","",.)
+					local hasc = 0
+					if regexm("`e(p_mg_vars)'","_cons") == 1 local hasc = 1
+
+					tsunab vars: `vars'
+					if `hasc' == 1 local vars `vars' _cons
+					*** extend varlist to all variables
+					mata st_local("newvar",invtokens(strtoname("`newvar'_":+tokens("`vars'"))))
+				}
+
 				qui xtset
 				local idvar "`r(panelvar)'"
 				local tvar "`r(timevar)'"	
 				
-				if "`e(posttype)'" == "frame" {
+				if "`e(postresults)'" == "frame" & `type' == 0 {
 					tempname frlink
 					frlink 1:1 `id' `tvar' , from(xtdcce2fast) gen(`frlink')
 					frget `newvar' = residuals , from(`frlink')
 				}
-				else if "`e(posttype)'" == "mata" {
-					putmata xtdcce2fast_p = (`idvar' `tvar' `tousecr' `touse'), replace						
-					mata xtdcce2_mata2stata("`newvar'",xtdcce2fast_p[.,(5)],"`idvar' `tvar'",xtdcce2fast_p[.,(1,2)],"`touse'",0)
+				else if "`e(postresults)'" == "mata" {
+					if `type' == 0 {
+						putmata xtdcce2fast_pn = (`idvar' `tvar' `tousecr' `touse'), replace
+						mata xtdcce2_mata2stata("`newvar'",xtdcce2fast_p[.,(5)],"`idvar' `tvar'",xtdcce2fast_pn[.,(1,2)],"`touse'",`type')		
+					}
+					else if `type' == 2 {
+						
+						
+						mata xtdcce2_mata2stata("`newvar'",xtdcce2fast_Vi[.,2..cols(xtdcce2fast_Vi)],"`idvar' `tvar'",xtdcce2fast_Vi[.,1],"`touse'",2) 
+						
+					}
+					else if `type' == -2 {
+						local v1 = word("`cov'",1)
+						local v2 = word("`cov'",2)
+	
+						local tmp `e(indepvar)'
+						local v1: list posof "`v1'" in tmp
+						local v2: list posof "`v2'" in tmp
+						
+						mata xtdcce2_mata2stata("`newvar'",xtdcce2fast_Vi[.,2..cols(xtdcce2fast_Vi)],"`idvar' `tvar'",xtdcce2fast_Vi[.,1],"`touse'",3,(`v1',`v2')) 
+
+					}
+					else {
+						mata xtdcce2_mata2stata("`newvar'",xtdcce2fast_bi,"`idvar' `tvar'",xtdcce2fast_order,"`touse'",`type')	
+					}
+					
 				}
 				
 			}
 			else {
+
+				if "`coeff'" != "" {
+					noi disp "Option coeff requires results stored in mata."
+					exit 199
+				}
 				local newvar `varlist'
 				
 				local lr "`e(lr)'"		
 							
 				*** parse cmd line
-				tokenize "`e(cmdline)'", p(",")
+				tokenize `"`e(cmdline)'"', p(",")
 				local lhsrhs `1'
 				
 				gettoken cmd lhsrhs: lhsrhs		
@@ -112,7 +177,7 @@ program define xtdcce2_p_int
 				
 				tempname smplcr
 				gen  `smplcr' = 1
-				tokenize "`e(cmdline)'", p(",")
+				tokenize `"`e(cmdline)'"', p(",")
 				
 				if regexm("`3'","fullsample") == 1 {
 					if "`e(p_if)'" != "" {
@@ -123,16 +188,19 @@ program define xtdcce2_p_int
 						*replace `smplcr' = `smpl' 
 					}
 				}
-					
-				if regexm("`2'","noconst*") == 0 {
+				
+				if regexm("`3'","noconst*") == 0 {
 					tempname constant
 					gen double `constant'  = 1
 				}
+				if regexm("`3'","pooledc*") == 1 {
+					noi disp "Cannot use predict with pooledconstant."
+					exit 199
+				}
 				
-				
-				if "`e(csa)'" != "" {
+				if "`e(csa)'" != "" {	
 					tempname csa
-					xtdcce2_csa `e(csa)' , idvar(`idvar') tvar(`tvar') cr_lags(`e(cr_lags)') touse(`smplcr') csa(`csa') 
+					xtdcce2_csa `e(csa)' , idvar(`idvar') tvar(`tvar') cr_lags(`e(cr_lags)') touse(`smplcr') csa(`csa') `e(rcce_options)'
 					local csa `r(varlist)'					
 					
 				}
@@ -154,12 +222,24 @@ program define xtdcce2_p_int
 				
 				if "`cfresiduals'" != "" {
 					local clistfull ""
+					local lhsrhs `lhsrhs' `constant'
+				}
+				else if "`xb'" != "" {
+					local lhsrhs `lhsrhs' `constant' 
+				}
+				else if "`xb2'" != "" {
+					local xb xb
+					local clistfull ""
+					local lhsrhs `lhsrhs' `constant'
+				}
+				else {
+					local clistfull `clistfull' `constant'
 				}
 				markout `touse' `lhsrhs' `lr' `clistfull'
 				replace `touse' = `touse' * e(sample) * `smpl'
 				*noi disp "touse partia"
 				*noi tab `touse'
-				mata xtdcce2_error_calc("`lhsrhs' `lr' ","`clistfull' `constant'","`touse'","`idvar'","`newvar'",xtdcce2fast_bi,"`wildbootstrap'")
+				noi mata xtdcce2_error_calc("`lhsrhs' `lr' ","`clistfull'","`touse'","`idvar'","`newvar'",xtdcce2fast_bi,"`wildbootstrap'", "`xb'"!="")
 			}
 		}
 	}
@@ -170,7 +250,7 @@ program define xtdcce2_p_int
 			exit
 		}
 		
-		local nopts : word count `residuals' `xb' `xb2' `coefficient' `stdp' `se' `partial' `cfresiduals'
+		local nopts : word count `residuals' `xb' `xb2' `coefficients' `stdp' `se' `partial' `cfresiduals'
 		if `nopts' >1 {
 			display "{err}only one statistic may be specified"
 			exit 498
@@ -285,7 +365,7 @@ program define xtdcce2_p_int
 			
 			local constant_type = `e(constant_type)'
 			
-			**add long coefficients if ardl or ecm (then ec term) to mg or pooled
+			**add long coefficientss if ardl or ecm (then ec term) to mg or pooled
 			** if pooled, then variable will be in pooled
 			** if MG, then variable will not be in MG
 			** for ecm: add only ec term
@@ -463,7 +543,7 @@ program define xtdcce2_p_int
 				if "`e(csa)'" != "" {
 					
 					tempname csa
-					xtdcce2_csa `e(csa)' , idvar(`idvar') tvar(`tvar') cr_lags(`e(cr_lags)') touse(`smplcr') csa(`csa') tousets(`smpl')
+					xtdcce2_csa `e(csa)' , idvar(`idvar') tvar(`tvar') cr_lags(`e(cr_lags)') touse(`smplcr') csa(`csa') tousets(`smpl') `e(rcce_options)'
 					local csa `r(varlist)'													
 				}
 				if "`e(gcsa)'" != "" {
@@ -594,9 +674,9 @@ program define xtdcce2_p_int
 					mata xtdcce2_wbsadj("`newvar'"," `mg_vars' `pooled_vars'","`idvar' `tvar'","`touse'")
 				}
 			}
-			if "`coefficient'" == "coefficient" | "`se'" == "se" {
+			if "`coefficients'" == "coefficients" | "`se'" == "se" {
 				drop `newvar'
-				if "`coefficient'" == "coefficient" {
+				if "`coefficients'" == "coefficients" {
 					local coeffse "Coeff" 
 				}
 				else {

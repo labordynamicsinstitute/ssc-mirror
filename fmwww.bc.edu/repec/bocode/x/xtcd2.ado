@@ -1,4 +1,4 @@
-*! xtcd2 2.3 Feb 2021
+*! xtcd2 4.0 Feb 2023
 *! author Jan Ditzen
 *! see viewsource xtcd2.ado for more info.
 
@@ -39,37 +39,94 @@ Changelog:
 	25.02.2020 Added ts support
 	08.02.2021 Added Juodis, Reese weighted CD test (cdw), repetions and pea
 	23.02.2021 Added option noadjust; do not remove means from vars; now standard to remove means!
+	23.09.2022 Improved calculation for unbalanced panels, fixed bug that CD test statistic becomes 1, added EM algorithm from xtnumfac for CDstar test
+	04.11.2022 Added seed() option to control seed for CDW test.
 	*/
 cap program drop xtcd2
 program define xtcd2, rclass
-	syntax [varlist(default=none ts max=1)] [if] [, KDENsity name(string) rho NOESTimation VERsion contour(string) CONTOURmap order(varlist max=1) heatplot(string) HEATPLOTmap cdw reps(integer 1) pea NOADJust ]
+syntax [anything] [if] , [repeatoutput VERsion *]
+		version 14
+
+	if "`version'" != "" {
+		di in gr "Version 4.0"
+		*ereturn clear
+		return local version 4.0
+		exit	
+	}
+
+	if "`repeatoutput'" == "" {
+		xtcd2_int `anything' `if' , `options'
+	}
+
+	xtcd2_output
+	return add
+end
+
+cap program drop xtcd2_int
+program define xtcd2_int, rclass
+	syntax [varlist(default=none ts)] [if] [, KDENsity name(string) rho ///
+			NOESTimation /// not needed anymore
+			 contour(string) CONTOURmap order(varlist max=1) heatplot(string) HEATPLOTmap reps(integer 1) NOADJust ///
+			/// repeat output
+			repeatoutput ///
+			/// defactor variable first
+			DEFACtor ///
+			/// which method
+			pea  pesaran cdw cdstar pca(real 4)) ///
+			///
+			seed(string) ///
+			/// loop method for unbalanced panels
+			loop ]
 	
-	version 10
+
 	
-	if "`contour'`contourmap'" != "" & "`heatplot'`heatplotmap'" != "" {
+	if "`repeatoutput'" != "" {
+		xtcd2_output
+		exit
+	}
+
+	if `pca' < 1 {
+		noi disp "Option pca() must be larger than zero."
+		error 199
+	}
+	
+	if "`contour'`contourmap'" != "" & "`heatplot'`heatplotmap'" != ""  {
 		noi disp "Options heatplot and contour cannot combined"
 		exit
 	}
 	
-	
-	
-	if "`version'" != "" {
-			di in gr "Version 1.22"
-			*ereturn clear
-			ereturn local version 1.22
-			exit	
+	local methods ""
+	if "`pesaran'`cdw'`pea'`cdstar'" == "" {
+		local methods "CD CDw CDwplus CDstar"
+		local pesaran pesaran
+		local cdw cdw
+		local pea pea
+		local cdstar cdstar
 	}
+	else {
+		if "`pesaran'" != "" local methods `methods' CD
+		if "`cdw'" != "" | "`pea'" != "" local methods `methods' CDw
+		if "`pea'" != "" local methods `methods' CDwplus
+		if "`cdstar'" != "" local methods `methods' CDstar
+	}
+
+	if "`cdw'" != "" & "`seed'" != "" {
+		set seed `seed'
+	}
+
+	*if regexm("`methods'","CDw") & 	`reps' == 1 local reps = 30
+
+	
 	
 	tempvar id_n time_new 
 	
-	display as text "Pesaran (2015) test for weak cross-sectional dependence."
 	preserve
 		if "`if'" != "" {
 			qui keep `if'
 		}
 		
 		** Check which estimation command
-		if "`noestimation'" == ""  & "`varlist'" == "" {
+		if "`varlist'" == "" {
 			*** xtdcce2
 			if regexm("`e(cmd)'","xtdcce2") == 1 {
 				local restype residuals
@@ -83,6 +140,7 @@ program define xtcd2, rclass
 				local restype residuals
 				disp in smcl "Residuals calculated using {it: predict, residuals}."
 			}
+			local residual_name "residuals"
 		}
 		
 		if "`noadjust'" == "" {
@@ -91,30 +149,20 @@ program define xtcd2, rclass
 		else {
 			local noadjust = 1
 		}
-
-		tsrevar `varlist'
-		local varlist `r(varlist)'
+		tsunab varlist :  `varlist', min(0)
+	
+		if "`varlist'" == "" {
+			tempname varlist
 				
-		**Check if estimation
-		if "`noestimation'" == "" {
-			** Drop observations not in estimation
-
-			if "`varlist'" == "" {
-				tempname varlist
+			predict `varlist'  , `restype'
+			qui keep if e(sample)
 				
-				predict `varlist'  , `restype'
-				
-			}
-			qui keep if e(sample) & `varlist' != .
 		}
-		else if "`noestimation'" != "" {
-			*display "No Postestimation - missing values of variable `varlist' dropped." , _continue
-			qui keep if `varlist' != .
-		}
+		
+		*}
 		**Test if sample exists
 		qui sum `varlist'
 		if "`r(N)'" == "0" {
-
 			display in red "Error: no sample set"
 			exit
 		}
@@ -131,7 +179,9 @@ program define xtcd2, rclass
 		if  "`balanced'" != "strongly balanced" {
 			local balanced = 0
 			**Fill Panel such that panel has entries for any year and id
-			tsfill, full			
+			timer on 97
+			tsfill, full
+			timer off 97			
 			display  "Unbalanced panel detected, test adjusted."
 			}
 		if "`balanced'" == "strongly balanced" {
@@ -155,192 +205,163 @@ program define xtcd2, rclass
 		qui putmata `RhoID' = `id' , replace
 		mata `RhoID' = uniqrows(`RhoID')
 		
-		*** if reps > 1, enforce cdw, otherwise test results will be the same for all draws
-		if `reps' > 1 {
-			local cdw cdw
-		}
+		tempname CD CDp rhoMat
+		noi mata xtcd2_CD("`varlist'",`N',`T',`balanced',`noadjust',`pca',"`methods'",("`defactor'"!=""),`reps',"`CD'","`CDp'",("`rho'`heatplot'`heatplotmap'`kdensity'`contour'"!= ""),`rhoMat'=.,("`loop'"!=""))
 
-		mata CD = J(`reps',1,.)
 
-		*** repetitions start here:
-		forvalues r = 1(1)`reps' {
 
-			*** create TxN matrix
-			qui putmata r= `varlist'  , replace
-			*** r has now each cross-section unit as a column
-			mata: r = colshape(r,`T')'
-			
-			*** Juodis, Reese weighted CD test
-			if "`cdw'" != "" {
-				*** draw rademacher weights and multiply with r.
-				tempname weights
-				mata `weights' = 2*runiformint(1,`N',0,1):-1
-				mata r = r:*`weights'
-			}
-			*** rewrite xtcdw2_make rho, which returns:
-			*CD test stat,
-			*matrix of rhos
-			mata: RHO = xtcd2_make_rho(r,`N',`T',`balanced',`noadjust')
-			
-			mata: CDr = sqrt(2/(`N'*(`N'-1)))*sum(RHO) // equation 62 and 69 in Chudik, Pesaran (2013) - note: the sqrt(T) from 62 is missing and moved to calculations above
-			
-			*** correct rho for later use
-			mata: RHO_output = RHO / sqrt(2*`T')
+		**** Return
+		return clear
 
-			*** RHO has only elements for i=2,..,N, j=1,..,i-1
-			if "`pea'" != "" {
-				mata rabs = abs(RHO_output) 
-				mata CDr = CDr + sum(rabs:*(rabs:> 2*sqrt(log(`N'))/`T'))
-			} 
-			
-			mata CD[`r'] = CDr
-		}	
+		return matrix CD = `CD', copy
+		return matrix p = `CDp', copy
+		return local methods "`methods'"
+		return hidden local varlist "`varlist'"
+		return hidden local residual_name "`residual_name'"
+		return hidden local pesaran "`pesaran'"
+		return hidden local cdw "`cdw'"
+		return hidden local pea "`pea'"
+		return hidden local cdstar "`cdstar'"
+		return hidden local npca "`pca'"
+		return hidden local CDN_g "`N'"
+		return hidden local CDT "`T'"
 
-		if "`cdw'" != "" {
-			if "`pea'" != "" {
-				local with "{break}  with power enhancement approach (Fan et. al. 2015)"
-			}
-			display as text in smcl  "Weighted CD statistic from Juodis, Reese (2019)`with' used."
-		}
-		else if ("`pea'") != "" {
-			display as text in smcl "Power enhancement approach (Fan et. al. 2015) used."
-		}
-		
-		mata CD = sum(CD)/sqrt(`reps')
-
-		mata: st_numscalar("CD", CD)
-		scalar p_value = 2*(1-normal(abs(CD)))
-		disp ""
-		display as text "H0: errors are weakly cross-sectional dependent." , 
-		return scalar p = p_value
-		return scalar CD = CD
-		if "`cdw'" == "" {
-			display _col(9) "CD = " _col(14) in gr %-9.3f CD
-		}
-		else {
-			display _col(8) "CDw = " _col(14) in gr %-9.3f CD
-		}
-		display _col(4) "p-value = " _col(14) in gr %-9.3f p_value
-		
-		if "`reps'" > "1" {
-			display _col(6) "Reps. =" _col(14) in gr %-10.0f `reps'
-		}
-		
-	
-				
 		*** here order program
 		if "`order'" != "" {
-			*noi tab `order'
-			*codebook `order'
-			mata RHO_output= xtcd2_rho_order(RHO_output,"`order'","`id'")
-			
-			mata `RhoID' = RHO_output[.,cols(RHO_output)]
-			mata RHO_output = RHO_output[.,(1..cols(RHO_output)-1)]
-			
+			tempname rho_tmp
+			foreach var in `varlist' {
+				mata `rho_tmp' = asarray(`rhoMat',"`var'")
+				mata `rho_tmp' = xtcd2_rho_order(`rho_tmp',"`order'","`id'")
+				mata `RhoID'_`var' = `rho_tmp'[.,cols(`rho_tmp')]
+				mata asarray(`rhoMat',`rho_tmp'[.,1..cols(`rho_tmp')-1],"`var'")
+			}
 		}		
 		
 		
 		if "`kdensity'" == "kdensity" {
-			mata: rho_all = colshape(RHO,1) / sqrt(2*`T')
-			drop _all
-			getmata rho_all, replace
-			qui sum rho_all, detail
-			foreach s in mean min max p25 p50 p75 {
-				local s`s' : di %9.3f `r(`s')'
-				local s`s' = trim("`s`s''") 
+			tempname rho_tmp
+			foreach var in `varlist' {
+				mata `rho_tmp' = asarray(`rhoMat',"`var'")
+				mata: `rho_tmp'  = colshape(`rho_tmp' ,1) / sqrt(2*`T')
+				drop _all
+				getmata `rho_tmp' , replace
+				qui sum `rho_tmp' , detail
+				foreach s in mean min max p25 p50 p75 {
+					local s`s' : di %9.3f `r(`s')'
+					local s`s' = trim("`s`s''") 
+				}
+				local sN: di %9.0f `r(N)'
+				local sN = trim("`sN'")
+				tempname CDi pi
+				scalar `CDi' = `CD'["`var'",1]
+				scalar `pi' = `CDp'["`var'",1]
+				local cd: di %9.3f  `CDi'
+				local cd = trim("`cd'")
+				local pval: di %9.3f  `pi'
+				local pval = trim("`pval'")
+				if "`name'" != "" {
+					local graphname name(`name'_`var' , replace) nodraw
+				}
+				else if wordcount("`varlist'") > 1 {
+					local graphname name(`var', replace)
+				}
+				qui kdensity `rho_tmp' , xtitle({&rho}{sub:ij}) title(Cross-Sectional Correlations) `graphname' ///
+					note("{bf:Statistics:} CD = `cd', p-value: `pval'" "Obs: `sN', Mean: `smean'" "Min: `smin', Max: `smax'" "Percentiles:" "25%: `sp25' , 50%: `sp50', 75:% `sp75'")  
 			}
-			local sN: di %9.0f `r(N)'
-			local sN = trim("`sN'")
-			local cd: di %9.3f  CD
-			local cd = trim("`cd'")
-			local pval: di %9.3f  p_value
-			local pval = trim("`pval'")
-			if "`name'" != "" {
-				local graphname name(`name' , replace) nodraw
-			}
-			qui kdensity rho_all, xtitle({&rho}{sub:ij}) title(Cross-Sectional Correlations) `graphname' ///
-				note("{bf:Statistics:} CD = `cd', p-value: `pval'" "Obs: `sN', Mean: `smean'" "Min: `smin', Max: `smax'" "Percentiles:" "25%: `sp25' , 50%: `sp50', 75:% `sp75'")  
 		}	
 		
-		if "`rho'" == "rho" {	
-			mata: st_matrix("rho",RHO_output)
-			return matrix rho = rho
+		if "`rho'" != "" {
+			tempname rho_tmp
+			local NumVar = wordcount("`varlist'")
+			foreach var in `varlist' {
+				mata st_matrix("`rho_tmp'",asarray(`rhoMat',"`var'"))
+				if `NumVar' > 1 {
+					return matrix rho_`var' = `rho_tmp'
+				}
+				else {
+					return matrix rho = `rho_tmp'
+				}
+			}
 		}
+
+		
 		
 	restore
 	
 
 	
 	if "`contour'`contourmap'`heatplot'`heatplotmap'" != "" {
+		tempname rho_tmp
 		qui {
-			preserve
-				clear
-				local 0 ", `contour' `heatplot'"
+			foreach var in `varlist' {
+				mata `rho_tmp' = asarray(`rhoMat',"`var'")
+				preserve
+					clear
+					local 0 ", `contour' `heatplot'"
 
-				syntax [anything] , [ABSolute interp(string) levels(real 0) yscale(string) * ]
+					syntax [anything] , [ABSolute interp(string) levels(real 0) yscale(string) * ]
 
-				if "`absolute'" != "" {
-					mata RHO_output = abs(RHO_output)
-				}
-				
-				if `levels' == 0 {
-					if `N' < 30 {
-						local levels = `N'
+					if "`absolute'" != "" {
+						mata `rho_tmp' = abs(`rho_tmp')
+					}
+					
+					if `levels' == 0 {
+						if `N' < 30 {
+							local levels = `N'
+						}
+						else {
+							local levels = 30
+						}				
+					}
+					
+					if "`interp'" == "" {
+						local interp "none"
+					}
+					
+					if "`yscale'" == "" {
+						local yscale  "reverse"
+					}
+					
+					///mata _makesymmetric(RHO_output) 
+					mata `rho_tmp' = xtcd2_rho_sym(`rho_tmp')	
+					mata `rho_tmp' = xtcd2_lowersym(`rho_tmp')
+					
+					tempname ordermat
+					mata `ordermat' = (1::rows(`rho_tmp'))
+					
+					mata st_local("namelist",(invtokens("rho_" :+ strofreal(`ordermat')')))
+					
+					
+					
+					getmata ( `namelist' ) = `rho_tmp' id1=`ordermat'
+					
+					reshape long rho_ , i(id1) j(id2)
+					rename rho_ rho
+					label var id1 "`id'"
+					label var id2 "`id'"
+					sort id1 id2
+					
+					if "`name'" != "" & wordcount("`varlist'") == 1 {
+						local graphname name(`name') 
+					}	
+					else  {
+						local graphname name(`var')
+					}
+					
+					noi dis ""
+					
+
+					if "`contour'`contourmap'" != "" {
+						twoway contour rho id1 id2 , interp(`interp') `options' level(`levels') yscale(`yscale') `graphname'
 					}
 					else {
-						local levels = 30
-					}				
-				}
-				
-				if "`interp'" == "" {
-					local interp "none"
-				}
-				
-				if "`yscale'" == "" {
-					local yscale  "reverse"
-				}
-				
-				///mata _makesymmetric(RHO_output) 
-				mata RHO_output = xtcd2_rho_sym(RHO_output)	
-				mata RHO_output = xtcd2_lowersym(RHO_output)
-				
-				tempname ordermat
-				mata `ordermat' = (1::rows(RHO_output))
-				
-				mata st_local("namelist",(invtokens("rho_" :+ strofreal(`ordermat')')))
-				
-				
-				
-				getmata ( `namelist' ) = RHO_output id1=`ordermat'
-				
-				reshape long rho_ , i(id1) j(id2)
-				rename rho_ rho
-				label var id1 "`id'"
-				label var id2 "`id'"
-				sort id1 id2
-				
-				if "`name'" != "" {
-					local graphname name(`name') 
-				}	
-				
-				noi dis ""
-				
 
-				if "`contour'`contourmap'" != "" {
-					twoway contour rho id1 id2 , interp(`interp') `options' level(`levels') yscale(`yscale') `graphname'
-				}
-				else {
-
-					heatplot rho id1 id2 ,  `options' level(`levels') yscale(`yscale') `graphname'
-				}
-			restore
+						heatplot rho id1 id2 ,  `options' level(`levels') yscale(`yscale') `graphname'
+					}
+				restore
+			}
 		}
 	}
-	
-	
-	foreach s in r i j sumij sqsumi_2 sqsumj_2 RHO nonmissing T_nonmissing RHO_output CD `RhoID' rabs {
-			capture mata mata drop `s'
-		}
 	
 end
 
@@ -348,59 +369,315 @@ end
 findfile "xtdcce2_auxiliary.ado"
 include "`r(fn)'"
 
+/// output program
+cap program drop xtcd2_output
+program define xtcd2_output
+	disp ""
+	disp as text "Testing for weak cross-sectional dependence (CSD)"
+	disp as text "{col 4}H0: weak cross-section dependence"
+	disp as text "{col 4}H1: strong cross-section dependence"
 
-capture mata mata drop xtcd2_make_rho()
+	local firstline "{col 16}{c |}"
+	local nums = 0
+	local coli_start = 15
+	local coli = `coli_start' + 5
+	local step = 14
+
+	tempname CD CDp
+	matrix `CD' = r(CD)
+	matrix `CDp' = r(p)
+	
+	local methods: colnames `CD'
+	local varlist: rownames `CD'
+
+	foreach type in `methods' {
+		
+		local firstline "`firstline'  {col `coli'} `type'"
+		local coli = `coli' + `step'	
+		local nums = `nums' + 1
+	}
+	
+
+	disp as text "{hline 15}{c TT}{hline `=`nums'*`step''}"
+	disp as text "`firstline'"
+	disp as text "{hline 15}{c +}{hline `=`nums'*`step''}"
+	local i = 1
+	foreach var in `varlist' {
+		local listi1 ""
+		local listi2 ""
+		local j = 1
+		
+		foreach ests in `methods' {
+			local val1 : disp %7.2f `CD'[`i',`j']
+			local listi1 `"`listi1' {col `=`coli_start'+(`j'-1)*`step'+1'} `val1'"'
+
+			local val2 : disp %4.3f `CDp'[`i',`j']
+			local listi2 `"`listi2' {col `=`coli_start'+(`j'-1)*`step'+1'} (`val2')"'
+			*disp as text "{col `=`coli_start'+(`j'-1)*`step''}" as result %7.2g  _continue
+			local j = `j' + 1
+		}
+		if "`r(residual_name)'" != "" local var "`r(residual_name)'"
+		disp as text  abbrev("`var'",13) "{col `=`coli_start'+1'}{c |}"  as result "`listi1'"
+		disp as text "{col `=`coli_start'+1'}{c |}" as result "`listi2'"
+		local i = `i' + 1
+	}
+	local NumVar = `j'
+
+	disp as text "{hline 15}{c BT}{hline `=`nums'*`step''}"
+	*disp as text "Under null, CD ~ N(0,1)."
+	disp as text "p-values in parenthesis."
+
+	disp as text "References"
+	if "`r(pesaran)'" != ""  disp as smcl "  CD: {col 13} Pesaran ({help xtcd2##Pesaran2015:2015}, {help xtcd2##Pesaran2021:2021})"
+	if "`r(cdw)'" != "" disp as smcl "  CDw: {col 13} Juodis, Reese ({help xtcd2##JR2021:2021})"
+	if "`r(pea)'" != "" disp as smcl "  CDw+: {col 13} CDw with power enhancement from Fan et. al. ({help xtcd2##Fan2015:2015})"
+	if "`r(cdstar)'" != "" disp as smcl "  CD*: {col 13} Pesaran, Xie ({help xtcd2##PesaranXie2021:2021}) with `r(npca)' PC(s)"
+end
+
+/// program to calculate CD tests
+capture mata mata drop xtcd2_CD()
 mata:
-	function xtcd2_make_rho (real matrix r,
+	function xtcd2_CD (		string scalar data_names,
 							real scalar N,
 							real scalar T,
 							real scalar balanced,
-							real scalar stand )
+							real scalar stand,
+							real scalar numpca,
+							string scalar methods,
+							real scalar defac,
+							real scalar reps,
+							string scalar CD_return,
+							string scalar CDp_return,
+							real scalar returnrho,
+							real matrix rho,
+							real matrix loop )
 	{
-		RHO = J(N,N,.)
-		maxi = N - 1
 
+		data = st_data(.,data_names)
+		K = cols(data)
+		if (returnrho == 1) {
+			rho = asarray_create()
+		}
+
+		/// which methods
+		names = J(0,1,"")
+
+		methods = tokens(methods)
+		if (sum(methods:=="CD")==1) {
+			cdpes = 1
+			names = names \ "CD"
+		}
+		if (sum(methods:=="CDw")==1) {
+			cdw = 1
+			names = names \ "CDw"
+		}
+		if (sum(methods:=="CDwplus")==1)  {
+			pea = 1
+			names = names \ "CDw+"
+		}
+		if (sum(methods:=="CDstar")==1) {
+			cdstar = 1
+			names = names \ "CD*"
+		}
+
+		CD = J(K,1,.)
+		CD_star = J(K,1,.)
+		CD_w = J(K,reps,.)
+		CD_pea = J(K,reps,.) 
+		rng = rseed()
+
+		/// inital CD test
+		for (i=1;i<=K;i++) {			
+			/// reset seed
+			rseed(rng)
+			data_start = colshape(data[.,i],T)'
+			for (r=1;r<=reps;r++) {
+				
+				/// standard CD stat
+				if (r == 1) {
+					rho_i = xtcd2_rho(data_start,N,T,stand,balanced,loop)
+					CD[i,1] = sqrt(2/(N*(N-1))) * sum(rho_i)					
+				}
+
+				if (cdw==1 | pea == 1) {
+
+					data_cdw = data_start :* (2*runiformint(1,N,0,1):-1)
+					rho_cdw = xtcd2_rho(data_cdw,N,T,stand,balanced,loop)
+					CD_w[i,r] = sqrt(2/(N*(N-1))) * sum(rho_cdw)
+				}
+
+				if ((cdstar==1 & r==1) | defac == 1) {
+					xtcd2_cdstar(data_start,N,T,numpca,loop,defac,stand,i,r,rho_i=rho_i,CD=CD,CD_w=CD_w,CD_star=CD_star)
+				}				
+				
+				if (pea == 1) {
+					rabs = abs(rho_i)
+					/// use correction Pesaran, Xie (2021)
+					crit =  2*sqrt(log(N)/T) 
+					crit2 = (rabs:>crit)					
+					CD_pea[i,r] = CD_w[i,r] :+ sum(rabs:*(crit2)) 
+				}
+				rho_i = rho_i / sqrt(2*T)
+				
+				if (returnrho == 1 & r==1) {
+					asarray(rho,tokens(data_names)[i],rho_i)
+				}
+			}
+
+		}
+
+		CDo = J(K,0,.)
+		if (cdpes == 1) CDo = CDo,CD
+		if (cdw == 1) CDo = CDo, rowsum(CD_w) / sqrt(reps)
+		if (pea == 1) CDo = CDo, rowsum(CD_pea) / sqrt(reps)
+		if (cdstar == 1) CDo = CDo, CD_star[.,1]
+		
+		CDp = 2*(1:-normal(abs(CDo)))
+		
+		st_matrix(CD_return,CDo)
+		st_matrix(CDp_return,CDp)
+		
+		cols = J(rows(names),1,""),(names)
+		rows = J(K,1,""),tokens(data_names)'
+
+		st_matrixrowstripe(CD_return,rows)
+		st_matrixrowstripe(CDp_return,rows)
+
+		st_matrixcolstripe(CD_return,cols)
+		st_matrixcolstripe(CDp_return,cols)
+
+	}
+end
+
+capture mata mata drop xtcd2_cdstar()
+mata:
+	function xtcd2_cdstar( ///
+				real matrix data_start,real scalar N, real scalar T,real scalar numpca,real scalar loop, real scalar defac, real scalar stand,real scalar i, real scalar r, ///
+				real matrix rho_i, real matrix CD, real matrix CD_w, real matrix CD_star)
+		{
+			meanM = mean(data_start)
+			sqrtM = sqrt(diagonal(quadvariance(data_start)))'
+			
+			if (hasmissing(data_start)) {
+				meanM = quadcolsum(data_start):/quadcolsum(data_start!=.)
+				sqrtM = colsum((data_start :- meanM):^2):/quadcolsum(data_start!=.)
+			}			
+			
+			data_ii = (data_start:-meanM):/sqrtM
+
+			if (hasmissing(data_ii)==1) data_ii = xtdcce2_EM(data_ii,N,T,numpca,"CD*")
+			data_i2 = data_ii * data_ii'			
+			eigensystem(data_i2,evec=.,eval=.)
+			
+			f = evec[.,numpca..1]
+
+			fx = J(T,1,1),f
+			fx = Re(fx)
+
+			beta = qrinv(quadcross(fx,fx))*quadcross(fx,data_ii)
+			res = data_ii :- fx*beta
+
+			rho_defac = xtcd2_rho(res,N,T,stand,balanced,loop)
+			CD_defac = sqrt(2/(N*(N-1))) * sum(rho_defac)
+
+			/// update CD if defactored residuals used; might need to remove later?
+			if (defac == 1) {
+				if (r == 1) {							
+					CD[i,1] = sqrt(2/(N*(N-1))) * sum(rho_defac)
+				}
+				if (cdw==1 | pea == 1) {
+					data_cdw = res :* (2*runiformint(1,N,0,1):-1)
+					rho_cdw = xtcd2_rho(data_cdw,N,T,stand,balanced,loop)
+					CD_w[i,r] = sqrt(2/(N*(N-1))) * sum(rho_cdw)
+				}
+
+				/// update rho
+				rho_i = rho_defac
+			}
+
+			betai = beta[2..rows(beta),.]
+
+			betaij = betai*betai':/N
+
+			betasum = sqrt(diagonal(betaij))
+
+			/// what does this step do???
+			gamma = qrinv(diag(betasum))*betai
+
+			sgm = sqrt(mean(res:^2))
+			eps = res :/ sgm
+			phi = mean((gamma:/sgm)')'
+			ai = (1:-(gamma:*sgm)'*phi)*1/sqrt(N)
+			ewt = sum(ai:^2)
+
+			ai2 = ai
+			CD_star[i,1] = (CD_defac+sqrt(T/2)*(1:-ewt))/ewt
+		}
+end
+
+
+
+capture mata mata drop xtcd2_rho()
+mata:
+	function xtcd2_rho (real matrix r, real scalar N, real scalar T, real scalar stand,balanced,real scalar loop)	
+	{
+		
 		
 		if (stand == 0) {
 			meanM = mean(r)
 		}
 		else {
-			meanM = J(N,1,0)
+			meanM = J(1,N,0)
 		}
+		
+		if ((balanced == 0 & hasmissing(meanM) == 0 & loop == 0) | (nonmissing(r)==0)) {
+			RHO = quadcorrelation(r :- meanM)*sqrt(T)
+			RHO = sublowertriangle(RHO)'
+			_diag(RHO, 0)
+		}
+		else {
+			meanM = quadcolsum(r) :/quadcolsum(r:!=.)
+			RHO = quadcorrelation(r :- meanM)*sqrt(T)
+			RHO = sublowertriangle(RHO)'
+			_diag(RHO, 0)
 
-		for (i=1; i<=maxi; i++) {
-			minj = i + 1
-			for (j = minj; j<=N; j++) {
-				if (i<j) {
-					if (balanced == 1) {
-						ri = r[,i] :- meanM[i]
-						rj = r[,j] :- meanM[j]
-						sumij = ri'rj
-						sqsumi_2 = sqrt(ri'ri)
-						sqsumj_2 = sqrt(rj'rj)
-						//from p. 34 of Chudik, Pesaran (2013), sqrt added to use same CD equation at the end for balanced and unbalanced data
-						RHO[i,j] =sumij /(sqsumi_2*sqsumj_2)*sqrt(T) 					
-					}
-					if (balanced == 0) {
-						// Create dummy vector which contains nonmissings
-						nonmissing = rownonmissing(r[,i]):*rownonmissing(r[,j])
-						T_nonmissing = sum(nonmissing)
-						// Clean Data, i.e. correct missing values into zeros
-						ri = editmissing(r[,i],0) :- meanM[i]
-						rj = editmissing(r[,j],0) :- meanM[j]
-						ub_i = ri'*nonmissing / T_nonmissing
-						ub_j = rj'*nonmissing / T_nonmissing
-						u_i = ri :- ub_i
-						u_j = rj :- ub_j
-						// from p. 42 of Chudik, Pesaran (2013) - note: sqrt(T) is added here!
-						RHO[i,j] =u_i'*u_j /(sqrt(u_i'*u_i)*sqrt(u_j'*u_j))*sqrt(T_nonmissing) 
+			if (hasmissing(RHO) | loop == 1) {
+				if (hasmissing(RHO))  {
+					
+					maxi = N - 1
+					RHO = J(N,N,.)
+					r2 = editmissing(r,0)
+					
+					for (i=1; i<=maxi; i++) {
+						minj = i + 1
+						for (j = minj; j<=N; j++) {
+							if (i<j) {
+								// Create dummy vector which contains nonmissings
+								nonmissing = rownonmissing(r[,i]):*rownonmissing(r[,j])
+								T_nonmissing = sum(nonmissing)
+								// Clean Data, i.e. correct missing values into zeros
+								///ri = editmissing(r[,i],0) :- meanM[i]
+								///rj = editmissing(r[,j],0) :- meanM[j]
+								ri = r2[,i] :- meanM[i]
+								rj = r2[,j] :- meanM[j]
+								ub_i = ri'*nonmissing / T_nonmissing
+								ub_j = rj'*nonmissing / T_nonmissing
+								u_i = ri :- ub_i
+								u_j = rj :- ub_j
+								// from p. 42 of Chudik, Pesaran (2013) - note: sqrt(T) is added here!
+								RHO[i,j] =u_i'*u_j /(sqrt(u_i'*u_i)*sqrt(u_j'*u_j))*sqrt(T_nonmissing) 
+								
+							}
+						}
 					}
 				}
 			}
 		}
+		
 		return(RHO)	
 	}
 end
+
 
 cap mata mata drop xtcd2_rho_order()
 mata:

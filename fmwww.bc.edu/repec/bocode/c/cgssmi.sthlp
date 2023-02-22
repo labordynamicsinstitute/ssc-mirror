@@ -15,7 +15,7 @@
 
 {pstd}{cmdab:cgssm} for datasets in wide format
 
-{p 8 17 2}{cmdab:cgssm} varlist(min=2 max=2 numeric fv) [{help if}] [{help in}]
+{p 8 17 2}{cmdab:cgssm} varlist(min=2 max=2 numeric fv) [{help if}] [{help in}]  [{help weight}]
 [{cmd:,} {it:options}]
 
 {pstd}{cmdab:cgssm} for datasets in long format
@@ -66,7 +66,10 @@ The default is %6.1f
 
 {synoptline}
 {p2colreset}{...}
+  {marker weight}{...}
 {p 4 6 2}
+  {opt aweight}s, {opt fweight}s, and {opt iweight}s are allowed.
+  {p_end}
 
 {marker description}{...}
 {title:Description}

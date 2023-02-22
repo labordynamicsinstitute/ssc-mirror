@@ -1,6 +1,6 @@
-*! bootstrap_xtdcce2 0.1 - 23.02.2020
+*! bootstrap_xtdcce2 1.0 - 20.02.2023
 *! author Jan Ditzen
-*! www.jan.ditzen.net - j.ditzen@hw.ac.uk
+*! www.jan.ditzen.net - jan.ditzen@unibz.it
 /*
 Version History
 	- 23.01.2020: - variances posted in V rather than only standard errors in bSE; old results are put into V_modelbased
@@ -9,10 +9,12 @@ Version History
 */
 cap program drop bootstrap_xtdcce2
 program define bootstrap_xtdcce2, eclass
-	syntax , [reps(integer 100) seed(string) CFResiduals Percentile SHOWIndividual cross ]
+	syntax , [reps(integer 100) seed(string) CFResiduals Percentile SHOWIndividual Wild ]
 	disp as text "(running on xtdcce2 sample)"
 	disp ""
 	qui{
+	
+		if "`wild'" == "" local cross cross
 		*** save est results
 		tempname EResults EResultsToUse V_modelbased
 		local coln : colnames e(b)
@@ -153,7 +155,7 @@ program define bootstrap_xtdcce2, eclass
 			}
 			
 			else {
-				noi disp as text "Bootstrap replications (", _c			
+				noi disp as text "Cross-sectional Bootstrap replications (", _c			
 				noi disp as result "`reps'", _c
 				noi disp as text ") using `cfname'"
 				

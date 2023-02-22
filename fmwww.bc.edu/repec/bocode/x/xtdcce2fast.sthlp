@@ -22,9 +22,12 @@ A faster version of {help xtdcce2}{p_end}
 {cmd:lr}({varlist})
 {cmd:lr_options}({it:string}) 
 {cmdab:noconst:ant}
+{cmd:pooled}
+{cmd:pooledconstant}
+{cmd:pooledvce({it:string})}
 {cmd:fullsample}
 {cmdab:not:able}
-{cmd:cd}
+{cmd:nocd}
 {cmd:postframe}
 {cmd:nopost}
 ]{p_end}
@@ -63,31 +66,41 @@ It fits the following estimation methods:{p_end}
 {p 8 8}
 i) The Mean Group Estimator (MG, Pesaran and Smith 1995).{break}
 ii) The Common Correlated Effects Estimator (CCE, Pesaran 2006),{break} 
-iii) The Dynamic Common Correlated Effects Estimator (DCCE, Chudik and Pesaran 2015), and{p_end}
+iii) The Dynamic Common Correlated Effects Estimator (DCCE, Chudik and Pesaran 2015){break}
+iv) The regularised CCE (rCCE, Juodis 2022), and{p_end}
 {p 4 4}For a dynamic model, several methods to estimate long run effects are possible:{p_end}
 {p 8 8} a) The Cross-Sectional Augmented Distributed Lag (CS-DL, Chudik et. al 2016) estimator which directly estimates the long run coefficients
-from a dynamic equation, and {break}
-b) The Cross-Sectional ARDL (CS-ARDL, Chudik et. al 2016) estimator using an ARDL model.{p_end}
+from a dynamic equation,{break}
+b) The Cross-Sectional ARDL (CS-ARDL, Chudik et. al 2016) estimator using an ARDL model and,{break}
+c) The Cross-sectional Augmented Error Correction model.{p_end}
 {p 4 4}For a further discussion see Ditzen (2021).
-Additionally {cmd:xtdcce2fast} can test for cross sectional dependence (see {help xtcd2}).{p_end}
+{cmd:xtdcce2fast} automatically tests for cross sectional dependence (see {help xtcd2}).{p_end}
 
 {p 4 4}For an overview of the models and their explanation see {help xtdcce2}.{p_end}
 
 {p 4 4}{cmd:xtdcce2fast} is an optimized version for speed and large datasets. 
 In comparison to {help xtdcce2} it does not perform {ul:any} collinearity checks
-does {ul:not} support pooled estimations and instrumental variable regressions.
+does {ul:not} support instrumental variable regressions.
+Pooled regressions are possible, but only for the entire set of variables.
 It also stores some estimation results in {help mata} rather than {cmd:e()} to 
 circumvent some restrictions on matrix dimensions in Stata, see {help limits}.{p_end}
 
 {marker options}{title:Options}
 
-{p 4 8}{cmdab:cr:osssectional(}{help varlist}{cmd:cr1 [,cr_lags(#)])} defines the variables which are added as cross sectional averages to the equation. 
+{p 4 8}{cmdab:cr:osssectional(}{help varlist}{cmd:cr1 [,cr_lags(#)} {cmd:rcce[(}{cmdab:c:riterion(string)} {cmdab:sc:ale}{cmd: npc(real)]])}  defines the variables which are added as cross sectional averages to the equation. 
 Variables in {cmd:crosssectional()} may be included in {cmd:pooled()}, {cmd:exogenous_vars()}, {cmd:endogenous_vars()} and {cmd:lr()}. 
 Variables in {cmd: crosssectional()} are partialled out, the coefficients not estimated and reported.{p_end}
 {p 8 8}{cmd:crosssectional}(_all) adds all variables as cross sectional averages. 
 No cross sectional averages are added if {cmd:crosssectional}(_none) is used, which is equivalent to {cmd:nocrosssectional}.
 {cmd:crosssectional}() is a required option but can be substituted by {cmd:nocrosssectional}.{break}
-If {cmd:cr(..., cr_lags())} is used, then the global option {cmd:cr_lags()} (see below) is ignored.{p_end}
+If {cmd:cr(..., cr_lags())} is used, then the global option {cmd:cr_lags()} (see below) is ignored.{break}
+{cmd:rcce[}{cmdab:c:riterion(string)} {cmdab:sc:ale}{cmd: nps(real)]} invokes regularized cross-section averages from Juodis (2022) for {bf:static panels}. 
+The number of common factors in the cross-section averages is estimated and 
+then the respective number of eigenvectors from the cross-section averages is used. For more details see {help xtdcce2##rcce:details}.{break}
+Detailed Options are:{p_end}
+{col 12}{cmd:criterion(er|gr)} specifies criterion to identify number of common factors using the ER or GR criterion from Ahn and Horenstein (2013), see {help xtnumfac}.
+{col 12}{cmd:scale} scales cross-section averages, see Juodis (2022).
+{col 12}{cmd:npc(real)} specifies number of eigenvectors without estimating it. Cannot be combined with {cmd:criterion}.
 
 {p 4 8}{cmdab:globalcr:osssectional(}{help varlist}{cmd:cr1 [,cr_lags(#)])} define global cross-section averages.
 {cmd:global} cross-section averages are cross-section averages based on observeations which are excluded using {help if} statements.
@@ -112,9 +125,19 @@ Results will be equivalent to the Mean Group estimator.{p_end}
 
 {p 4 8 12}{cmdab:noconst:ant} suppresses the constant term.{p_end}
 
+{p 4 8 12}{cmd:pooled} treats all variables as homogenous coefficients.
+The constant is still heterogenous.{p_end}
+
+{p 4 8 12}{cmd:pooledvce(np|nw)} which variance estimator to use, 
+{it:np} is the default and the non parametric estimator from Pesaran (2006).
+{it:nw} is the HAC robust Newey West type estimator.{p_end}
+
+{p 4 8 12}{cmd:pooledconstant} homogenous constant.{p_end}
+
 {p 4 8}{cmd:xtdcce2fast} is able to estimate long run coefficients. 
-Two models are supported:
-The CS-DL (see {help xtdcce2##csdl: xtdcce2, csdl}) 
+Three models are supported:
+The CS-ECM (see {help xtdcce2##pmg:xtdcce2, ecm}, with heterogenous long run relationship),
+CS-DL (see {help xtdcce2##csdl: xtdcce2, csdl}) 
 and CS-ARDL method (see {help xtdcce2##ardl: xtdcce2, ardl}) as developed in Chudik et. al 2016. 
 No options for the CS-DL model are necessary.{p_end}
 
@@ -126,6 +149,7 @@ No options for the CS-DL model are necessary.{p_end}
 	divided by the sum of the coefficients of the dependent variable.{break}
 	{cmd:lr_options}({it:string}), options for the long run coefficients. Options are:{break}{break}{p_end}
 	{col 12}{cmd:ardl} estimates the CS-ARDL estimator. For further details see {help xtdcce2##ardl:xtdcce2, ardl}.
+	{col 12}{cmd:ecm} estimates the CS-ECM estimator, the default.
 	{col 12}{cmd:nodivide} coefficients are not divided by the error correction speed of adjustment vector. Equation (7) is estimated, see {help xtdcce2##pmg:xtdcce2, pmg}.
 	{col 12}{cmd:nominus} does not subtract -1 from the coefficient of the dependent variable.
 
@@ -142,7 +166,7 @@ even if {cmd:fullsample} is used.
 
 {p 4 8}{cmdab:not:able} do not display output.{p_end}
 
-{p 4 8}{cmd:cd} calculate CD test statistic, see {help xtcd2}.{p_end}
+{p 4 8}{cmd:nocd} do not calculate CD test statistic, see {help xtcd2}.{p_end}
 
 {p 4 8}{cmd:postframe} save predicted values to frame. Speeds up {help predict}.{p_end}
 
@@ -192,7 +216,7 @@ even if {cmd:fullsample} is used.
 
 {marker postestimation}{title:Postestimation Commands}
 
-{p 4 4}{cmd: predict} and {cmd: estat} can be used after {cmd: xtdcce2fast}. 
+{p 4 4}{cmd: predict}, {cmd: estat} and {cmd: estat bootstrap} can be used after {cmd: xtdcce2fast}. 
 
 {p 2}{ul: predict}{p_end}
 {p 4 4}The syntax for {cmd:predict} is:{p_end}
@@ -201,9 +225,17 @@ even if {cmd:fullsample} is used.
 
 {col 6}Options {col 25} Description
 {hline}
+{col 8}{cmd:xb}{col 27} calculate linear prediction on partialled out variables
+{col 8}{cmd:xb2}{col 27} calculate linear prediction on non partialled out variables
 {col 8}{cmdab:r:esiduals}{col 27} calculate residuals (e(i,t))
+{col 8}{cmdab:cfr:esiduals}{col 27} calculate residuals including the common factors (u(i,t))
+{col 8}{cmdab:coeff:icients}{col 27} a variable with the estimated cross section specific values for all coefficients is created. The name of the new variable is {newvar}_{varname}.
+{col 8}{cmd:se}{col 27} as {cmd: coefficient}, but with standard error instead.
+{col 8}{cmd:cov(v1 v2)} returns the covariance of the coefficients of {it:v1} and  {it:v2}.
 {col 8}{cmd:replace}{col 27} replace the variable if existing.
 {hline}
+
+{p 4 4}For a detailed discussion of the postestimation options see {help xtdcce2##postestimation:xtddce2 postestimation}.{p_end}
 
 {p 2}{ul: estat}{p_end}
 {p 4 4}{cmd: estat} {cmdab:ebis:tructure} displays the structure for each cross-sectional unit.
@@ -302,6 +334,10 @@ If the lag of {it:dp} is called {it:ldp}, then the variables need to be enclosed
 
 {marker references}{title:References}
 
+{p 4 8}Ahn, S. C., & Horenstein, A. R. (2013). 
+Eigenvalue ratio test for the number of factors. 
+Econometrica, 81(3), 1203-1227.{p_end}
+
 {p 4 8}Baum, C. F., M. E. Schaffer, and S. Stillman 2007.
 Enhanced routines for instrumental variables/generalized method of moments estimation and testing.
 Stata Journal 7(4): 465-506{p_end}
@@ -341,7 +377,11 @@ The Next Generation of the Penn World Table. American Economic Review. www.ggdc.
 
 {p 4 8}Jann, B. 2005. 
 moremata: Stata module (Mata) to provide various functions. 
-Available from http://ideas.repec.org/c/boc/bocode/s455001.html.
+Available from http://ideas.repec.org/c/boc/bocode/s455001.html.{p_end}
+
+{p 4 8}Juodis A. 2022. 
+A regularization approach to common correlated effects estimation.
+Journal of Applied Econometrics, 37(4), 788–810.{p_end}
 
 {p 4 8}Pesaran, M. H. 2006.
 Estimation and inference in large heterogeneous panels with a multifactor error structure.
@@ -350,6 +390,10 @@ Econometrica 74(4): 967-1012.{p_end}
 {p 4 8}Pesaran, M. H., and R. Smith. 1995.
 Econometrics Estimating long-run relationships from dynamic heterogeneous panels.
 Journal of Econometrics 68: 79-113.{p_end}
+
+{p 4 8}Roodman, D., Nielsen, M. Ø., MacKinnon, J. G., & Webb, M. D. 2019. 
+Fast and wild: Bootstrap inference in Stata using boottest. 
+The Stata Journal, 19(1), 4–60.{p_end}
 
 {p 4 8}Shin, Y., M. H. Pesaran, and R. P. Smith. 1999.
 Pooled Mean Group Estimation of Dynamic Heterogeneous Panels.
