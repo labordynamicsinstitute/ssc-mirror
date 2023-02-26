@@ -1,6 +1,6 @@
 
 ** Author: Federico Belotti, Giulia Mancini and Giovanni Vecchi
-*! version 3.1.6 - 20jul2022
+*! version 3.1.7 - 17nov2022
 *! See the end of ado file for versioning
 
 /* TODO: Look at pshare (BJ), update DASP */
@@ -143,6 +143,7 @@ gettoken graph gph_options : graph, parse(",")
 ParseG, `graph'
 ** Get s(macros) from parsing
 if "`s(itc)'"!="" loc _itc_trim_extent `s(itc)'
+if "`s(hoc)'"!="" loc _hoc_trim_extent `s(hoc)'
 if "`s(qqplot)'"!="" loc _qqplot "`s(qqplot)'"
 if "`s(plinevar)'"!= "" local _g_plinevar "`s(plinevar)'"
 if "`_g_plinevar'"=="" local _g_plinevar 0
@@ -151,7 +152,11 @@ if "`s(_table_note)'"!= "" local _g_table_note "`s(_table_note)'"
 if "`s(itc_stat)'"!= "" local _itc_stat "`s(itc_stat)'"
 if "`s(itc_abs)'"!= "" local _itc_abs "`s(itc_abs)'"
 if "`_itc_abs'"=="abs" local _itc_abs 1
-else local _itc_abs 0
+else if "`_itc_abs'"!="abs" & "`s(hoc)'"=="" local _itc_abs 0
+if "`s(hoc_stat)'"!= "" local _hoc_stat "`s(hoc_stat)'"
+if "`s(hoc_abs)'"!= "" local _hoc_abs "`s(hoc_abs)'"
+if "`_hoc_abs'"=="abs" local _hoc_abs 1
+else local _hoc_abs 0
 
 ***********************************************
 ****** Parsing of method() and zscore() *******
@@ -191,7 +196,7 @@ loc touse `back_touse'
 
 
 
-if "`_itc_trim_extent'" == "" {
+if ("`_itc_trim_extent'" == "" & "`_hoc_trim_extent'" == "") {
 
 	/* Initialize _out variable */
 	/* Check before if -clear- has been specified */
@@ -468,7 +473,7 @@ if "`_itc_trim_extent'" == "" {
 			di in gr "The best normalization will be selected among: ln, bcox and sqrt"
 		}
 
-		di in gr "Finding best normalization ..."
+		noi di in gr "Finding best normalization ..."
 		m _P_d_dfs = J(0,1,.)
 		m _Transf = J(0,1,"")
 		m _Transf_ti = J(0,1,"")
@@ -871,147 +876,316 @@ else {
 		}
 	}
 
-	/// QUIETLY FROM NOW ON
+
+
+	if "`_itc_trim_extent'" != "" {
+
+		/// QUIETLY FROM NOW ON
 		qui {
+			/// Compute welfare indicators (pre-incidental trimming)
 
-	/// Compute welfare indicators (pre-detection)
+			/// Here we need to sort stable for gini se computation
+			/// Only Gini computations have their own data input strategy
+			/// For all other computation use data from _out_getdata()
+			`noi' m _od = _out_getdata("`j'", "`wvar'", "`weight_type'", "`touse'")
 
-	/// Here we need to sort stable for gini se computation
-	/// Only Gini computations have their own data input strategy
-	/// For all other computation use data from _out_getdata()
-	`noi' m _od = _out_getdata("`j'", "`wvar'", "`weight_type'", "`touse'")
+			// Here the trimiming() function needs to stay on its own due to the sort, stable needed for gini
+			// Actually we pass the _od structure to collect info
+			// that can be used in subsequent functions though. Think about adding Atkinson and other indicators
 
-	// Here the trimiming() function needs to stay on its own due to the sort, stable needed for gini
-	// Actually we pass the _od structure to collect info
-	// that can be used in subsequent functions though. Think about adding Atkinson and other indicators
+			/// Move out top extreme values
+			preserve
+			sort `j', stable
+			tempvar sort_index
+			gen `sort_index' = _n if `touse'
+			gsort - `sort_index'
 
-	/// Move out top extreme values
-	preserve
-	sort `j', stable
-	tempvar sort_index
-	gen `sort_index' = _n if `touse'
-	gsort -`sort_index'
+			`noi' m  _top_extremes = _out_trimming("`j'", "`wvar'", "`weight_type'", "`touse'", _od, "no", `_itc_trim_extent', "`sort_index'", "`_itc_stat'", `_itc_abs', "`_g_pline'", `_g_plinevar')
+			restore
 
-	`noi' m  _top_extremes = _out_trimming("`j'", "`wvar'", "`weight_type'", "`touse'", _od, "no", `_itc_trim_extent', "`sort_index'", "`_itc_stat'", `_itc_abs', "`_g_pline'", `_g_plinevar')
-	restore
+			/// Move out bottom extreme values
+		 	preserve
+			sort `j', stable
+			tempvar sort_index
+			gen `sort_index' = _n if `touse'
 
-	/// Move out bottom extreme values
- 	preserve
-	sort `j', stable
-	tempvar sort_index
-	gen `sort_index' = _n if `touse'
+			`noi' m  _bottom_extremes = _out_trimming("`j'", "`wvar'", "`weight_type'", "`touse'", _od, "no", `_itc_trim_extent', "`sort_index'", "`_itc_stat'", `_itc_abs', "`_g_pline'", `_g_plinevar')
+			restore
 
-	`noi' m  _bottom_extremes = _out_trimming("`j'", "`wvar'", "`weight_type'", "`touse'", _od, "no", `_itc_trim_extent', "`sort_index'", "`_itc_stat'", `_itc_abs', "`_g_pline'", `_g_plinevar')
-	restore
-
-	tempvar _top_extremes _bottom_extremes _psample_t _psample_b
-	getmata (`_top_extremes' `_psample_t') = _top_extremes  (`_bottom_extremes' `_psample_b') = _bottom_extremes, force
+			tempvar _top_extremes _bottom_extremes _psample_t _psample_b
+			getmata (`_top_extremes' `_psample_t') = _top_extremes  (`_bottom_extremes' `_psample_b') = _bottom_extremes, force
 
 
-	if `_itc_abs' == 1 {
-		label var `_psample_t' "Discarded observations"
-		//
-		if `_itc_trim_extent'<3 loc _gxlab "1(1)`_itc_trim_extent', glwidth(vthin) labsi(*.8)"
-		else loc _gxlab ", glwidth(vthin) labsi(*.8)"
-		loc _itc_tab_rowtitle " Discarded obs"
+			if `_itc_abs' == 1 {
+				label var `_psample_t' "Discarded observations"
+				//
+				if `_itc_trim_extent'<3 loc _gxlab "1(1)`_itc_trim_extent', glwidth(vthin) labsi(*.8)"
+				else loc _gxlab ", glwidth(vthin) labsi(*.8)"
+				loc _itc_tab_rowtitle " Discarded obs"
+			}
+			else {
+				label var `_psample_t' "Discarded observations (%)"
+				loc _gxlab ", grid glwidth(vthin) labsi(*.8)"
+				loc _itc_tab_rowtitle " Discarded obs (%)"
+			}
+
+			if "`_itc_stat'" != "mean" local _mult100 "100*"
+			replace `_top_extremes' = `_mult100' `_top_extremes'
+			label var `_top_extremes' "Top outliers"
+			replace `_bottom_extremes' = `_mult100' `_bottom_extremes'
+			label var `_bottom_extremes' "Bottom outliers"
+
+
+		} /* close qui */
+
+		// Display table
+		tempname do_select _top_extremes_tab _bottom_extremes_tab _itc_table round_perc itcdiff min_itcdiff
+
+		cap gen `round_perc' = round(`_psample_t') if `_psample_t'!=.
+		cap gen double `itcdiff' = abs(`_psample_t' - `round_perc') if `_psample_t'!=.
+		cap bys `round_perc': egen double `min_itcdiff' = min(`itcdiff') if `_psample_t'!=.
+		cap gen `do_select' = (`min_itcdiff' == `itcdiff') if `_psample_t'!=.
+
+		mkmat `_top_extremes' if `do_select'==1, mat(`_top_extremes_tab')
+		mkmat `_bottom_extremes' if `do_select'==1, mat(`_bottom_extremes_tab')
+
+		mat _itc_table = `_bottom_extremes_tab', `_top_extremes_tab'
+		mat colnames _itc_table = "Bottom" "Top"
+		forv rr = 0/`_itc_trim_extent' {
+			loc _ict_table_rowlab "`_ict_table_rowlab' `rr'"
+		}
+		mat rownames _itc_table = `_ict_table_rowlab'
+		if inlist("`_itc_stat'", "mean", "gini", "theil") mat coleq _itc_table = `"`=proper("`_itc_stat'")'"' `"`=proper("`_itc_stat'")'"'
+		else if inlist("`_itc_stat'", "atk0")  mat coleq _itc_table = "A(0.125)" "A(0.125)"
+		else if inlist("`_itc_stat'", "atk1")  mat coleq _itc_table = "A(1)" "A(1)"
+		else if inlist("`_itc_stat'", "atk2")  mat coleq _itc_table = "A(2)" "A(2)"
+		else mat coleq _itc_table = `"`=upper("`_itc_stat'")'"' `"`=upper("`_itc_stat'")'"'
+
+		// Get and adjust the table's format
+		if "`_itc_stat'"!="mean" {
+			gettoken sfmt_int sfmt_dec: sfmt, parse(".")
+			if regexm("`sfmt_dec'", "2")==1 loc sfmt %6`sfmt_dec'
+			else if regexm("`sfmt_dec'", "3")==1 loc sfmt %7`sfmt_dec'
+			else if regexm("`sfmt_dec'", "4")==1 loc sfmt %8`sfmt_dec'
+			*di "`sfmt'"
+		}
+		di ""
+		matlist _itc_table, format(`sfmt') twidth(18) border(b) aligncolnames(center) /*row(Statistics)*/ tind(1) title("{ul: Incremental trimming curve for `j'}:") noblank  row("`_itc_tab_rowtitle'") showcoleq(c)
+
+		if "`gph_options'" == "" {
+
+			if "`_itc_stat'"=="gini" loc _ytit "Gini coefficient (%)"
+			if "`_itc_stat'"=="mean" loc _ytit "Mean"
+			if "`_itc_stat'"=="h" loc _ytit "Poverty headcount ratio (%)"
+			if "`_itc_stat'"=="pg" loc _ytit "Poverty gap index (%)"
+			if "`_itc_stat'"=="pg2" loc _ytit "Poverty gap squared index (%)"
+			if "`_itc_stat'"=="mld" loc _ytit "Mean logarithmic deviation index (%)"
+			if "`_itc_stat'"=="theil" loc _ytit "Theil index (%)"
+			if "`_itc_stat'"=="cv2" loc _ytit "Squared coefficient of variation (%)"
+			if "`_itc_stat'"=="atk0" loc _ytit "Atkinson index (%) - A(0.125)"
+			if "`_itc_stat'"=="atk1" loc _ytit "Atkinson index (%) - A(1)"
+			if "`_itc_stat'"=="atk2" loc _ytit "Atkinson index (%) - A(2)"
+
+			twoway line `_top_extremes' `_bottom_extremes' `_psample_t', sort ///
+				lc(red*1.25 black) lw(medthick medthick) lp(solid -) ///
+				graphregion(fcolor(white)) legend(col(2) size(*.8)) ///
+				ylab(,angle(h) format(%12.0gc) grid glwidth(vthin) labsi(*.8)) ///
+				ytit(`_ytit', si(*.8)) ///
+				xlab(`_gxlab') ///
+				xtit(, si(*.8)) note("`_g_table_note'", size(*.7) span)
+		}
+		else {
+			twoway line `_top_extremes' `_bottom_extremes' `_psample_t' `gph_options'
+		}
+
+		***** Here excel() option in action
+		*** todo: allow excel() when by is used. Multiple sheets?
+		if "`excel'"!="" {
+			gettoken savename replace: excel, parse(",")
+			local savename = subinstr("`savename'", " ", "", .)
+			local replace = subinstr("`replace'", ",", "", .)
+			local replace = strtrim("`replace'")
+			m _out_excel("`savename'", "`replace'", "yes", "")
+		}
+
+		******************************
+		******** POST RESULTS ********
+		******************************
+		eret clear
+
+		return local cmd "outdetect"
+		*return mat b`_bylev' = __ind`_bylev'
+		return mat out = _itc_table
+
+		qui count if `touse_raw'==1
+		return scalar N_raw = r(N)
 	}
-	else {
-		label var `_psample_t' "Discarded observations (%)"
-		loc _gxlab ", grid glwidth(vthin) labsi(*.8)"
-		loc _itc_tab_rowtitle " Discarded obs (%)"
+	else if "`_hoc_trim_extent'" != "" {
+
+		/// QUIETLY FROM NOW ON
+		qui {
+			/// Compute welfare indicators (pre-hoc detection)
+
+			/// Here we need to sort stable for gini se computation
+			/// Only Gini computations have their own data input strategy
+			/// For all other computation use data from _out_getdata()
+			`noi' m _od = _out_getdata("`j'", "`wvar'", "`weight_type'", "`touse'")
+
+			// Here the trimiming() function needs to stay on its own due to the sort, stable needed for gini
+			// Actually we pass the _od structure to collect info
+			// that can be used in subsequent functions though. Think about adding Atkinson and other indicators
+
+			/// Move out top extreme values
+			preserve
+			sort `j', stable
+			tempvar sort_index
+			gen `sort_index' = _n if `touse'
+			gsort - `sort_index'
+
+			`noi' m _top_extremes = _out_hoc("`j'", "`wvar'", "`weight_type'", "`touse'", _od, "no", `_hoc_trim_extent', "`sort_index'", "`_hoc_stat'", `_hoc_abs', "`_g_pline'", `_g_plinevar', 0)
+			restore
+
+			/// Move out bottom extreme values
+		 	preserve
+			sort `j', stable
+			tempvar sort_index
+			gen `sort_index' = _n if `touse'
+
+			`noi' m _bottom_extremes = _out_hoc("`j'", "`wvar'", "`weight_type'", "`touse'", _od, "no", `_hoc_trim_extent', "`sort_index'", "`_hoc_stat'", `_hoc_abs', "`_g_pline'", `_g_plinevar', 0)
+			restore
+
+			tempvar _top_extremes _bottom_extremes _psample_t _psample_b
+			getmata (`_top_extremes' `_psample_t') = _top_extremes  (`_bottom_extremes' `_psample_b') = _bottom_extremes, force
+
+
+			if `_hoc_abs' == 1 {
+				label var `_psample_t' "Discarded observations"
+
+				if `_hoc_trim_extent'<=15 loc _gxlab "1/`_hoc_trim_extent'"
+				else if `_hoc_trim_extent'>15 & `_hoc_trim_extent'<=30 loc _gxlab "1(2)`_hoc_trim_extent', labsi(*.8)"
+				else if `_hoc_trim_extent'>30 & `_hoc_trim_extent'<=60 loc _gxlab "1(3)`_hoc_trim_extent', labsi(*.8)"
+				loc _hoc_tab_xtitle "Discarded observations"
+			}
+			else {
+				label var `_psample_t' "Discarded observations (%)"
+				loc _gxlab ", grid glwidth(vthin) labsi(*.8)"
+				loc _hoc_tab_xtitle " Discarded obs (%)"
+			}
+
+			if "`_hoc_stat'" != "mean" local _mult100 "100*"
+			replace `_top_extremes' = `_mult100' `_top_extremes'
+			label var `_top_extremes' "Influence (%)"
+			replace `_bottom_extremes' = `_mult100' `_bottom_extremes'
+			label var `_bottom_extremes' "Influence (%)"
+
+		} /* close qui */
+
+
+		// Display table
+		tempname do_select _top_extremes_tab _bottom_extremes_tab _hoc_table round_perc hocdiff min_hocdiff
+
+		/* The following is not needed here - absolute imposed in the ParseITC_HOC
+
+		cap gen `round_perc' = round(`_psample_t') if `_psample_t'!=.
+		cap gen double `hocdiff' = abs(`_psample_t' - `round_perc') if `_psample_t'!=.
+		cap bys `round_perc': egen double `min_hocdiff' = min(`hocdiff') if `_psample_t'!=.
+		cap gen `do_select' = (`min_hocdiff' == `hodiff') if `_psample_t'!=.
+		*/
+
+		mkmat `_top_extremes' if `_psample_t'!=., mat(`_top_extremes_tab')
+		mkmat `_bottom_extremes' if `_psample_t'!=., mat(`_bottom_extremes_tab')
+
+		mat _hoc_table = `_bottom_extremes_tab', `_top_extremes_tab'
+		mat colnames _hoc_table = "Bottom" "Top"
+		forv rr = 1/`_hoc_trim_extent' {
+			loc _ict_table_rowlab "`_ict_table_rowlab' `rr'"
+		}
+		mat rownames _hoc_table = `_ict_table_rowlab'
+		if inlist("`_hoc_stat'", "mean", "gini", "theil") mat coleq _hoc_table = `"`=proper("`_hoc_stat'")'"' `"`=proper("`_hoc_stat'")'"'
+		else if inlist("`_hoc_stat'", "atk0")  mat coleq _hoc_table = "A(0.125)" "A(0.125)"
+		else if inlist("`_hoc_stat'", "atk1")  mat coleq _hoc_table = "A(1)" "A(1)"
+		else if inlist("`_hoc_stat'", "atk2")  mat coleq _hoc_table = "A(2)" "A(2)"
+		else mat coleq _hoc_table = `"`=upper("`_hoc_stat'")'"' `"`=upper("`_hoc_stat'")'"'
+
+		// Get and adjust the table's format
+		if "`_hoc_stat'"!="mean" {
+			gettoken sfmt_int sfmt_dec: sfmt, parse(".")
+			if regexm("`sfmt_dec'", "2")==1 loc sfmt %6`sfmt_dec'
+			else if regexm("`sfmt_dec'", "3")==1 loc sfmt %7`sfmt_dec'
+			else if regexm("`sfmt_dec'", "4")==1 loc sfmt %8`sfmt_dec'
+			*di "`sfmt'"
+		}
+		di ""
+
+		matlist _hoc_table, format(`sfmt') twidth(18) border(b) aligncolnames(center) /*row(Statistics)*/ tind(1) title("{ul: Influence curve for `j'}:") noblank  row("`_hoc_tab_rowtitle'") showcoleq(c)
+
+		if "`gph_options'" == "" {
+
+			if "`_hoc_stat'"=="gini" loc _ytit "Gini coefficient"
+			if "`_hoc_stat'"=="mean" loc _ytit "Mean"
+			if "`_hoc_stat'"=="h" loc _ytit "Poverty headcount ratio"
+			if "`_hoc_stat'"=="pg" loc _ytit "Poverty gap index"
+			if "`_hoc_stat'"=="pg2" loc _ytit "Poverty gap squared index"
+			if "`_hoc_stat'"=="mld" loc _ytit "Mean logarithmic deviation index"
+			if "`_hoc_stat'"=="theil" loc _ytit "Theil index"
+			if "`_hoc_stat'"=="cv2" loc _ytit "Squared coefficient of variation"
+			if "`_hoc_stat'"=="atk0" loc _ytit "Atkinson index - A(0.125)"
+			if "`_hoc_stat'"=="atk1" loc _ytit "Atkinson index - A(1)"
+			if "`_hoc_stat'"=="atk2" loc _ytit "Atkinson index - A(2)"
+
+			tempname gbottom gtop
+			twoway scatter `_bottom_extremes' `_psample_t', sort ///
+				mcol(black) msym(S) ///
+				graphregion(fcolor(white)) legend(col(2) size(*.8)) ///
+				ylab(,angle(h) format(%12.0gc) grid glwidth(vthin) labsi(*.8)) ///
+				xlab(`_gxlab') name(`gbottom', replace) xti("Influential observations (bottom)", si(*.8)) yti("`=ustrunescape("IF\u0302")' (%) for the `_ytit'") nodraw
+
+
+			scatter `_top_extremes' `_psample_t', sort ///
+				mcol(black) msym(S) ///
+				graphregion(fcolor(white)) legend(col(2) size(*.8)) ///
+				ylab(,angle(h) format(%12.0gc) grid glwidth(vthin) labsi(*.8)) ///
+				xlab(`_gxlab') name(`gtop', replace) xti("Influential observations (top)", si(*.8)) yti("`=ustrunescape("IF\u0302")' (%) for the `_ytit'") xsc(reverse) nodraw
+
+			gr combine `gbottom' `gtop', ycommon  plotregion(fcolor(white) margin(zero)) graphregion(fcolor(white) margin(zero))
+
+			/*
+			twoway line `_top_extremes' `_bottom_extremes' `_psample_t', sort ///
+				lc(red*1.25 black) lw(medthick medthick) lp(solid -) ///
+				graphregion(fcolor(white)) legend(col(2) size(*.8)) ///
+				ylab(,angle(h) format(%12.0gc) grid glwidth(vthin) labsi(*.8)) ///
+				ytit(`_ytit', si(*.8)) ///
+				xlab(`_gxlab') ///
+				xtit(, si(*.8)) note("`_g_table_note'", size(*.7) span)
+			*/
+		}
+		else {
+			twoway line `_top_extremes' `_bottom_extremes' `_psample_t' `gph_options'
+		}
+
+		***** Here excel() option in action
+		*** todo: allow excel() when by is used. Multiple sheets?
+		if "`excel'"!="" {
+			gettoken savename replace: excel, parse(",")
+			local savename = subinstr("`savename'", " ", "", .)
+			local replace = subinstr("`replace'", ",", "", .)
+			local replace = strtrim("`replace'")
+			m _out_excel("`savename'", "`replace'", "", "yes")
+		}
+
+		******************************
+		******** POST RESULTS ********
+		******************************
+		eret clear
+
+		return local cmd "outdetect"
+		*return mat b`_bylev' = __ind`_bylev'
+		return mat out = _hoc_table
+
+		qui count if `touse_raw'==1
+		return scalar N_raw = r(N)
+
 	}
-
-	if "`_itc_stat'" != "mean" local _mult100 "100*"
-	replace `_top_extremes' = `_mult100' `_top_extremes'
-	label var `_top_extremes' "Top outliers"
-	replace `_bottom_extremes' = `_mult100' `_bottom_extremes'
-	label var `_bottom_extremes' "Bottom outliers"
-
-
-
-	} /* close qui */
-
-	// Display table
-	tempname do_select _top_extremes_tab _bottom_extremes_tab _itc_table round_perc itcdiff min_itcdiff
-
-	cap gen `round_perc' = round(`_psample_t') if `_psample_t'!=.
-	cap gen double `itcdiff' = abs(`_psample_t' - `round_perc') if `_psample_t'!=.
-	cap bys `round_perc': egen double `min_itcdiff' = min(`itcdiff') if `_psample_t'!=.
-	cap gen `do_select' = (`min_itcdiff' == `itcdiff') if `_psample_t'!=.
-
-	mkmat `_top_extremes' if `do_select'==1, mat(`_top_extremes_tab')
-	mkmat `_bottom_extremes' if `do_select'==1, mat(`_bottom_extremes_tab')
-
-	mat _itc_table = `_bottom_extremes_tab', `_top_extremes_tab'
-	mat colnames _itc_table = "Bottom" "Top"
-	forv rr = 0/`_itc_trim_extent' {
-		loc _ict_table_rowlab "`_ict_table_rowlab' `rr'"
-	}
-	mat rownames _itc_table = `_ict_table_rowlab'
-	if inlist("`_itc_stat'", "mean", "gini", "theil") mat coleq _itc_table = `"`=proper("`_itc_stat'")'"' `"`=proper("`_itc_stat'")'"'
-	else if inlist("`_itc_stat'", "atk0")  mat coleq _itc_table = "A(0.125)" "A(0.125)"
-	else if inlist("`_itc_stat'", "atk1")  mat coleq _itc_table = "A(1)" "A(1)"
-	else if inlist("`_itc_stat'", "atk2")  mat coleq _itc_table = "A(2)" "A(2)"
-	else mat coleq _itc_table = `"`=upper("`_itc_stat'")'"' `"`=upper("`_itc_stat'")'"'
-
-	// Get and adjust the table's format
-	if "`_itc_stat'"!="mean" {
-		gettoken sfmt_int sfmt_dec: sfmt, parse(".")
-		if regexm("`sfmt_dec'", "2")==1 loc sfmt %6`sfmt_dec'
-		else if regexm("`sfmt_dec'", "3")==1 loc sfmt %7`sfmt_dec'
-		else if regexm("`sfmt_dec'", "4")==1 loc sfmt %8`sfmt_dec'
-		*di "`sfmt'"
-	}
-	di ""
-	matlist _itc_table, format(`sfmt') twidth(18) border(b) aligncolnames(center) /*row(Statistics)*/ tind(1) title("{ul: Incremental trimming curve for `j'}:") noblank  row("`_itc_tab_rowtitle'") showcoleq(c)
-
-	if "`gph_options'" == "" {
-
-		if "`_itc_stat'"=="gini" loc _ytit "Gini coefficient (%)"
-		if "`_itc_stat'"=="mean" loc _ytit "Mean"
-		if "`_itc_stat'"=="h" loc _ytit "Poverty headcount ratio (%)"
-		if "`_itc_stat'"=="pg" loc _ytit "Poverty gap index (%)"
-		if "`_itc_stat'"=="pg2" loc _ytit "Poverty gap squared index (%)"
-		if "`_itc_stat'"=="mld" loc _ytit "Mean logarithmic deviation index (%)"
-		if "`_itc_stat'"=="theil" loc _ytit "Theil index (%)"
-		if "`_itc_stat'"=="cv2" loc _ytit "Squared coefficient of variation (%)"
-		if "`_itc_stat'"=="atk0" loc _ytit "Atkinson index (%) - A(0.125)"
-		if "`_itc_stat'"=="atk1" loc _ytit "Atkinson index (%) - A(1)"
-		if "`_itc_stat'"=="atk2" loc _ytit "Atkinson index (%) - A(2)"
-
-		twoway line `_top_extremes' `_bottom_extremes' `_psample_t', sort ///
-			lc(red*1.25 black) lw(medthick medthick) lp(solid -) ///
-			graphregion(fcolor(white)) legend(col(2) size(*.8)) ///
-			ylab(,angle(h) format(%12.0gc) grid glwidth(vthin) labsi(*.8)) ///
-			ytit(`_ytit', si(*.8)) ///
-			xlab(`_gxlab') ///
-			xtit(, si(*.8)) note("`_g_table_note'", size(*.7) span)
-	}
-	else {
-		twoway line `_top_extremes' `_bottom_extremes' `_psample_t' `gph_options'
-	}
-
-	***** Here excel() option in action
-	*** todo: allow excel() when by is used. Multiple sheets?
-	if "`excel'"!="" {
-		gettoken savename replace: excel, parse(",")
-		local savename = subinstr("`savename'", " ", "", .)
-		local replace = subinstr("`replace'", ",", "", .)
-		local replace = strtrim("`replace'")
-		m _out_excel("`savename'", "`replace'", "yes")
-	}
-
-	******************************
-	******** POST RESULTS ********
-	******************************
-	eret clear
-
-	return local cmd "outdetect"
-	*return mat b`_bylev' = __ind`_bylev'
-	return mat out = _itc_table
-
-	qui count if `touse_raw'==1
-	return scalar N_raw = r(N)
 
 }
 
@@ -1020,7 +1194,7 @@ else {
 ********* DESTRUCTOR *********
 ******************************
 
-loc _mat_ "__ind_pre`_bylev' __ind_trim`_bylev' __ind`_bylev' _out_detected`_bylev' _vv _aa _itc_table __ind_ss`_bylev' __ind_s`_bylev' __ind_trim_ss`_bylev' __ind_trim_s`_bylev' __ind_pre_ss`_bylev' __ind_pre_s`_bylev'"
+loc _mat_ "__ind_pre`_bylev' __ind_trim`_bylev' __ind`_bylev' _out_detected`_bylev' _vv _aa _itc_table _hoc_table __ind_ss`_bylev' __ind_s`_bylev' __ind_trim_ss`_bylev' __ind_trim_s`_bylev' __ind_pre_ss`_bylev' __ind_pre_s`_bylev'"
 foreach _m of local _mat_ {
 	cap matrix drop `_m'
 }
@@ -1043,9 +1217,14 @@ end
 /* ----------------------------------------------------------------- */
 
 program define ParseG, sclass
-	syntax [, ITCccc ITC(string) QQplot * ]
+	syntax [, ITCccc IFCccc ITC(string) IFC(string) QQplot * ]
+
+	// Trick: just create loc hoc and hocccc for avoiding changing all
+	if "`ifc'"!="" local hoc "`ifc'"
+	if "`ifcccc'"!="" local hocccc "`ifcccc'"
 
 	if "`itcccc'"!="" local itc "5:gini"
+	if "`hocccc'"!="" local hoc "10:gini"
 
 	if "`itc'"!="" {
 		gettoken itc itc_options : itc, parse(":")
@@ -1055,10 +1234,20 @@ program define ParseG, sclass
 			loc itc 5
 		}
 		if "`itc_options'"!="" local itc_options = subinstr("`itc_options'", ":", "", .)
-		ParseITC, `itc_options'
+		ParseITC_HOC, `itc_options'
+	}
+	if "`hoc'"!="" {
+		gettoken hoc hoc_options : hoc, parse(":")
+		cap confirm n `hoc'
+		if _rc != 0 {
+			if "`hoc_options'"=="" & "`hoc'"!="" loc hoc_options "`hoc'"
+			loc hoc 5
+		}
+		if "`hoc_options'"!="" local hoc_options = subinstr("`hoc_options'", ":", "", .)
+		ParseITC_HOC, `hoc_options' hoc
 	}
 	if `"`options'"' != "" {
-		di as error "Specified graph option is not allowed"
+		di as error "Specified graph suboption is not allowed"
 		exit 198
 	}
 	local wc : word count `itc' `qqplot'
@@ -1070,12 +1259,19 @@ program define ParseG, sclass
 	}
 
 	if "`itc'"!="" sret local itc = `itc'
+	if "`hoc'"!="" sret local hoc = `hoc'
 	if "`qqplot'"!="" sret local qqplot "`qqplot'"
 
 end
 
-program define ParseITC, sclass
-	syntax [, ABSolute Mean GIni MLD THeil CV2 ATK0 ATK1 ATK2 H PG PG2 PLine(string) ]
+program define ParseITC_HOC, sclass
+	syntax [, ABSolute Mean GIni MLD THeil CV2 ATK0 ATK1 ATK2 H PG PG2 PLine(string) HOC ]
+
+	** For hoc: only inequality indexes are available
+	if "`hoc'"!="" & "`mean'`h'`pg'`pg2'"!="" {
+		di as error "ifc() not available for the `mean'`h'`pg'`pg2' indicator"
+		exit 198
+	}
 
 	local wc : word count `mean' `gini' `mld' `theil' `cv2' `h' `pg' `pg2' `atk0' `atk1' `atk2'
 	if `wc' > 1 {
@@ -1135,9 +1331,16 @@ program define ParseITC, sclass
 		}
 	}
 
-	sret local itc_stat "`stat'"
-	if "`absolute'"!= "" sret local itc_abs "abs"
-
+	if "`hoc'"=="" {
+		sret local itc_stat "`stat'"
+		if "`absolute'"!= "" sret local itc_abs "abs"
+	}
+	else {
+		** For hoc: only abs is available
+		local absolute absolute
+		sret local hoc_stat "`stat'"
+		if "`absolute'"!= "" sret local hoc_abs "abs"
+	}
 
 end
 
@@ -1384,3 +1587,4 @@ exit
 ** version 3.1.4 - 8apr2021 - Now also Atkinson class can be exploited for ITC.
 ** version 3.1.5 - 27may2021 - Added the generate() option to get out the normalized variable.
 ** version 3.1.6 - 20jul2022 - Bug fixes on weighted standard deviation and Q statistic
+** version 3.1.7 - 17nov2022 - Add the ifc() option for plotting the Cowell and Flachaire (2007) IF curve. See Cowell and Flachaire (2007, JOE) pag. 1067

@@ -84,9 +84,10 @@ If you see an error or bug, Please let me know.
 {marker examples}{...}
 {title:Examples}
 
-{phang}
-{stata "use https://friosavila.github.io/playingwithstata/drdid/mpdta.dta, clear"}
-{p_end}
+
+{phang}{stata "ssc install frause"}{p_end}
+{phang}{stata "frause mpdta.dta, clear"}{p_end}
+
 
 Simple DID using not-treated as controls
 

@@ -1,4 +1,5 @@
-*! v1.3 FRA. Corrects Never
+*! v1.31 FRA. Prepares for jwdid_plot
+* v1.3 FRA. Corrects Never
 * v1.2 FRA. some beutification
 * v1.1 FRA. Adds margins event with labels
 * v1 8/5/2022 FRA. Adds margins the right way
@@ -45,6 +46,8 @@ program jwdid_simple, rclass
 		return matrix table = `table'
 		return matrix b = `b'
 		return matrix V = `V'
+		return local cmd jwdid_estat
+		return local agg simple
 end
 
 program jwdid_group, rclass
@@ -74,7 +77,8 @@ program jwdid_group, rclass
 		return matrix table = `table'
 		return matrix b = `b'
 		return matrix V = `V'
-		
+		return local agg group
+		return local cmd jwdid_estat
 		capture drop __group__
 end
 
@@ -97,6 +101,7 @@ syntax, [* post estore(str) esave(str) replace]
 		matrix `V' = e(V)
 		ereturn display
 		
+		
 		if "`estore'"!="" est store `estore'
 		if "`esave'"!="" est save `estore', `replace'
 		if "`post'"=="" qui:est restore `lastreg'
@@ -104,7 +109,8 @@ syntax, [* post estore(str) esave(str) replace]
 		return matrix table = `table'
 		return matrix b = `b'
 		return matrix V = `V'
-
+		return local agg calendar
+		return local cmd jwdid_estat
 		capture drop __calendar__
 end
 
@@ -122,22 +128,23 @@ syntax, [* post estore(str) esave(str) replace]
 		
 		*qui:replace __event__ =__event__ - 1 if  __event__ <0
 		if "`e(type)'"=="notyet" {
-		qui:margins , subpop(if __etr__==1) at(__tr__=(0 1)) ///
+			qui:margins , subpop(if __etr__==1) at(__tr__=(0 1)) ///
 				over(__event__) noestimcheck contrast(atcontrast(r)) `options' post
 		}
 		else if "`e(type)'"=="never" {
 			capture drop __event2__
 			qui:sum __event__, meanonly
 			local rmin = r(min)
-			qui:gen __event2__=__event__-r(min)
-			qui:levelsof __event2__, local(lv)
+			qui:replace __event__=__event__-r(min)
+			qui:levelsof __event__, local(lv)
 			foreach i of local lv {
-				label define __event2__ `i' "`=`i'+`rmin''", modify
+				label define __event__ `i' "`=`i'+`rmin''", modify
 			}
-			label values __event2__ __event2__
+			label values __event__ __event__
 			qui:margins , subpop(if __tr__==1) at(__tr__=(0 1)) ///
-				over(__event2__) noestimcheck contrast(atcontrast(r)) `options' post
+				over(__event__) noestimcheck contrast(atcontrast(r)) `options' post
 		}
+		
 		
 		tempname table b V			
 		matrix `table' = r(table)
@@ -152,6 +159,7 @@ syntax, [* post estore(str) esave(str) replace]
 		return matrix table = `table'
 		return matrix b = `b'
 		return matrix V = `V'
- 
-		capture drop __event__
+		return local agg event
+		return local cmd jwdid_estat
+		*capture drop __event__
 end

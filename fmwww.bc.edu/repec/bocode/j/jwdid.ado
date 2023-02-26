@@ -7,12 +7,18 @@
 
 program jwdid, eclass
 	version 14
-	syntax varlist [if] [in] [pw], [Ivar(varname) cluster(varname) ] Tvar(varname) Gvar(varname) [never group method(name) nocorr]
+	syntax varlist [if] [in] [pw], [Ivar(varname) cluster(varname) ] [Tvar(varname) time(varname)] Gvar(varname) [never group method(name) nocorr]
 	marksample  touse
 	markout    `touse' `ivar' `tvar' `gvar'
 	gettoken y x:varlist 
 	
-	easter_egg
+	if "`tvar'`time'"=="" {
+		display in red "option time/tvar() required"
+		error 198
+	}
+	if "`tvar'"=="" local tvar `time'
+	
+	*easter_egg
 	** Count gvar
 	/*qui:count if `gvar'==0 & `touse'==1 
 	if `r(N)'==0 {
@@ -52,10 +58,18 @@ program jwdid, eclass
 			local xxvar _x_*
 	}
 	***
+	mata: st_view(xs1 =.,.,"`gvar'","`touse'")
+	mata: st_view(xs2 =.,.,"`tvar'","`touse'")
+	mata: xs = uniqrows((xs1\xs2))
+	mata: xs=select(xs,(xs:>0))
+	mata: gap=min((xs[2..rows(xs),1]:-xs[1..rows(xs)-1,1]))
+	mata: st_local("gap",strofreal(gap))
+	mata: mata drop xs gap xs1 xs2
+	***
 	foreach i of local glist {
 		foreach j of local tlist {
 			if "`never'"!="" {
-				if (`i'-1)!=`j' {
+				if (`i'-`gap')!=`j' {
 				local xvar `xvar' c.__tr__#i`i'.`gvar'#i`j'.`tvar' ///
 							      c.__tr__#i`i'.`gvar'#i`j'.`tvar'#c.(`xxvar') 
 							  
@@ -89,8 +103,6 @@ program jwdid, eclass
 	if "`cluster'"=="" & "`ivar'"=="" local cvar 
 	if "`cluster'"=="" & "`ivar'"!="" local cvar `ivar'
 	if "`cluster'"!="" local cvar `cluster'
-	
-	
 	
 	if "`method'"=="" {
 		if "`group'"=="" {

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2  8/4/2022 Finally A version}{...}
+{* *! version 2.1  2/23/2023 }{...}
 {title:{cmd:csdid postestimation}: Post-estimation utilities for CSDID}
 
 {it:{bf:Aggregations and Pretrend testing}}
@@ -118,7 +118,14 @@ estimated results left by {cmd: csdid}, {cmd: csdid_estat} and {cmd: csdid_stats
 {synopt:group(#)}When using {cmd:csdid_plot} after {cmd:csdid} or after {cmd:csdid_stats attgt}, one can produce dynamic type
 plots for each group/cohort. In that case, one needs to indicate which {it:group(#)} to plot.
 
+{synopt:pstyle[1|2](stype)} This can be used to choose an overall style for the figure colors. Default is p1 for pstyle1 and p2 for pstyle2. pstyle2 is only used for event style plots.
+
+{synopt:color[1|2](colorstyle)} This can be used to choose a color for areas of the figures. It superseeds pstyle if a color is defined, but complements it if using transparency or intencity. Default depends on the type of graph style, but is set at %40 for rspike.
+
+{synopt:lwidth[1|2](options)} This can be used to select width of line in figure. It affects the tickness of the countours of Area type plots. Default depends on the type of graph style.
+
 {pstd}Other {cmd:twoway graph} options are allowed.
+
 
 {marker remarks}{...}
 {title:Remarks}
@@ -163,7 +170,8 @@ If you do, please cite his software. See references section.
 {title:Examples}
 
 {phang}
-{stata "use https://friosavila.github.io/playingwithstata/drdid/mpdta.dta, clear"}
+{stata "ssc install frause"}
+{stata "frause mpdta.dta, clear"}
 
 {pstd}Estimation of all ATTGT's using Doubly Robust IPW (DRIPW) estimation method. Saving RIF in disk {p_end}
 

@@ -1,0 +1,25 @@
+d 'EACF': module to compute Extended Sample Autocorrelation Function
+d
+d  eacf computes the Extended Sample Autocorrelation Function. This
+d approach was put forward by Tsay, Ruey S. and George C. Tiao in
+d their paper 1984 JASA "Consistent Estimates of Autoregressive
+d Parameters and Extended Sample Autocorrelation Function for
+d Stationary and Nonstationary ARMA Models". 
+d
+d KW: time series
+d KW: autocorrelation
+d KW: sample autocorrelation function
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20230225
+d
+d Author:  Haowen Zheng,  Lingnan College, Sun Yat-Sen University, China
+d Support: email   zhenghw25@@mail2.sysu.edu.cn
+d
+f eacf.ado
+f eacf.sthlp
+f ../l/leacf_acf.mlib
+f ../l/leacf_calculate.mlib
+f eacf_mata_files.zip
+f ../s/seriesA.dta

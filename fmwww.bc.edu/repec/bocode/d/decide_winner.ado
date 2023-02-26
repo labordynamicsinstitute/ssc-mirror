@@ -1,4 +1,5 @@
-*!  Version 1.0.2 28-03-2022 
+*!  Version 1.0.3 08-02-2023
+* Version 1.0.2 28-03-2022 
 * Version 1.0.1 09-07-2021 
 
 program define decide_winner , rclass  
@@ -11,8 +12,8 @@ if inlist("`type'" , "tf" ,  "ts" , "c")  {
 		if _rc!=0 {
 		return local errorvar `out'
 		exit 
+			}
 		}
-	}
 
 if inlist("`type'" , "tf" ,  "ts" )  { 
 		cap confirm variable `tdvar'_j 
@@ -51,18 +52,46 @@ local checktdvar=substr("`tdvar'", 1 , 1)
 	local errortdvar = inlist("`checktdvar'" , "<" , ">" )
 	if `errortdvar'!=1 {
 	return scalar errortdvar = 1
-	exit 
-	}
-
-local checkmargin=substr("`tdvar'", 2, .) 
-	cap confirm number `checkmargin'
-	if _rc!=0 {
-	return scalar errormargin = 1
 	exit
 	}
 
+if substr("`tdvar'",2,1)=="=" {
 
-qui gen X_comp`i'=(`out'_i - `out'_j `tdvar')+(`out'_j - `out'_i `tdvar')*-1 if !missing(`out'_i , `out'_j) 
+	local checkmargin=substr("`tdvar'", 3, .) 
+	cap confirm number `checkmargin'
+	if _rc!=0 {
+		return scalar errormargin = 1
+		exit
+		}
+
+	local gol=substr("`tdvar'",1,2)
+	local marg=substr("`tdvar'",3,.)
+	local tdvar `gol'float(`marg')
+	}
+
+else { 
+	
+	local checkmargin=substr("`tdvar'", 2, .) 
+	cap confirm number `checkmargin'
+	if _rc!=0 {
+		return scalar errormargin = 1
+		exit
+		}
+	
+	local gol=substr("`tdvar'",1,1)
+	local marg=substr("`tdvar'",2,.)
+	local tdvar `gol'float(`marg')
+	}
+
+cap confirm integer number `checkmargin' 
+	if _rc!=0 {
+	cap confirm double v `out'_i `out'_j
+	if _rc!=0 {
+	return scalar marginwarning = 1
+	}
+	}
+
+qui gen X_comp`i'=(float(`out'_i - `out'_j)`tdvar')+(float(`out'_j - `out'_i)`tdvar')*-1 if !missing(`out'_i , `out'_j) 
 local notype=0 
 		}		
 * --------------------------------------
@@ -78,7 +107,7 @@ local repev=substr("`type'",2,.)
 cap confirm  variable `out'`repev'_i
 	if _rc!=0 {
 	return local errorvar `out'`repev'
-	exit 
+	exit
 	}
 	
 /* Event qualifies only if it occurs during the shared follow up of two patients...set events after the end of shared follow up to 0 */
@@ -92,7 +121,7 @@ forvalues r=1/`repev' {
 	cap confirm  variable `out'`r'_i
 		if _rc!=0 {
 		return local errorvar `out'`r'
-		exit 
+		exit
 		}
 	
 	qui replace `out'`r'_i=0 if `fu_min'<`tdvar'`r'_i & !missing(`fu_min', `tdvar'`r'_i)

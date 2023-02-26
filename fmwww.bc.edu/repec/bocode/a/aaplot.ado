@@ -1,3 +1,4 @@
+*! 1.0.3 NJC 25 Feb 2023 
 *! 1.0.2 NJC 4 Dec 2015 
 *! 1.0.1 NJC 22 May 2011 
 *! 1.0.0 NJC 21 May 2011 
@@ -61,7 +62,7 @@ program aaplot
 			local aval1 = trim("`aval1'") 
 			local bval1 = trim("`bval1'") 
 			local rsqval1 = trim("`rsqval1'") 
-			local op1 = cond(`sign1' >= 0, "+", "-")
+			local op1 = cond(`sign1' >= 0, "+", "{&minus}")
 
 			if `roman' { 
 				local desc1 "`Y' = `aval1' `op1' `bval1' `X'    R{sup:2} = `rsqval1'%" 
@@ -86,8 +87,8 @@ program aaplot
 			local bval2 = trim("`bval2'") 
 			local cval2 = trim("`cval2'") 
 			local rsqval2 = trim("`rsqval2'") 
-			local op1 = cond(`sign1' >= 0, "+", "-")
-			local op2 = cond(`sign2' >= 0, "+", "-")
+			local op1 = cond(`sign1' >= 0, "+", "{&minus}")
+			local op2 = cond(`sign2' >= 0, "+", "{&minus}")
 
 			if `roman' { 
 				local desc2 "`Y' = `aval2' `op1' `bval2' `X' `op2' `cval2' `X'{sup:2}   R{sup:2} = `rsqval2'%" 

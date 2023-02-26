@@ -1,18 +1,15 @@
-*! v1.22 Even more graph options
-* v1.21 other Graph options
-* v1.2  Compatible with new Group Averages
-* v1.1  Problem with TM TP
+* v1 Clone for jwdid
 /*capture program drop  csdid_plot
 capture program drop  adds
-capture program drop csdid_default
-capture program drop csdid_default
+capture program drop jwdid_default
+capture program drop jwdid_default
 capture program drop csdid_plot_event
 capture program drop csdid_plot_group
 capture program drop isgroup_eq
 capture program drop csdid_plot_calendar
 capture program drop _matrix_list*/
 
-program csdid_agg_cat, sclass
+program jwdid_agg_cat, sclass
 ** levels for agg 
 	syntax , [agg(str) ragg(str) eagg(str)]
 
@@ -37,173 +34,118 @@ program csdid_agg_cat, sclass
 	sreturn local agg_cat = `agg_cat'
 end
 
-program csdid_plot, rclass
+program jwdid_plot, rclass
 	syntax, [*]
 	local cmd `r(cmd)'
 	local agg `r(agg)'
-	tempname  b V table bb vv
+	tempname  b V table
 	matrix `b' = r(b)
 	matrix `V' = r(V)
-	matrix `bb' = r(bb)
-	matrix `vv' = r(vv)
 	matrix `table' = r(table)
-	
-	capture noisily csdid_plot_wh, `options'
+	capture noisily jwdid_plot_wh, `options'
 	return local cmd `cmd'
 	return local agg `agg'
 	
 	return matrix b     =`b'
 	return matrix V 	=`V'
-	return matrix b     =`bb'
-	return matrix vv 	=`vv'
 	return matrix table =`table'
-	
 end 
 
-program csdid_plot_wh
+program jwdid_plot_wh
 	syntax, [style(passthru) title(passthru) name(passthru) Group(str) ///
 							 ytitle(passthru) xtitle(passthru)	///
 							 legend(passthru) agg(str) * ]
-	tempvar mm 
+	tempvar mm  b
 	tempvar kk
 	
-	csdid_agg_cat, agg(`agg') ragg(`r(agg)') eagg(`e(agg)')
+	jwdid_agg_cat, agg(`agg') ragg(`r(agg)') eagg(`e(agg)')
 	
 	if `s(agg_cat)'==2 {
 		
-		if "`e(agg)'"=="event" {
-			 qui:csdid
-			 local evlist = subinstr("`:colname r(table)'","T","",.)
-			 local evlist = subinstr("`evlist'","m","-",.)
-			 local evlist = subinstr("`evlist'","p","+",.)
-			 matrix `mm'=r(table)'
-			 matrix `mm'=`mm'[3...,....]
-		}
-		else if "`r(agg)'"=="event" {		 
-			 local evlist = subinstr("`:colname r(table)'","T","",.)
-			 local evlist = subinstr("`evlist'","m","-",.)
-			 local evlist = subinstr("`evlist'","p","+",.)
-			 matrix `mm'=r(table)'
-			 matrix `mm'=`mm'[3...,....]
+		matrix `b'=r(table)
+		
+		local coln:colname `b'
+ 
+		local coln= subinstr("`coln'","r2vs1._at@","",.)
+		local coln= subinstr("`coln'","bn","",.)
+		local coln= subinstr("`coln'",".__event__","",.)
+ 			 
+		matrix `mm'=r(table)'
+ 
+		foreach i of local coln {
+			local ll:label (__event__) `i'
+			local lcoln `lcoln' `ll'
 		}
 		tempvar mm1 mm2 mm3 mm4 mm5 mm6
 		qui:tsvmat `mm', name(`mm1' `mm2' `mm3' `mm4' `mm5' `mm6')
 		qui:gen `kk' =.
- 		foreach i of local evlist {
-		 	if !inlist("`i'","Pre_avg","Post_avg")  {
-				local k = `k'+1
-				qui:replace `kk'=`i' in `k'
-			} 	
-		}
 				
-		csdid_plot_event `kk'  `mm1'  `mm5' `mm6'	, ///
-					  `style' `title' `name'  `ytitle'	`xtitle' `legend'	`options'    
-	 
+ 		foreach i of local lcoln {
+		 	    local k = `k'+1
+			qui:replace `kk'=`i' in `k'
+		}
+	
+		jwdid_plot_event `kk'  `mm1'  `mm5' `mm6'	, ///
+					`style' `title' `name'  `ytitle'	`xtitle' `legend'	`options'    
 	}
 	
 	else if `s(agg_cat)'==4 {
-		if "`e(agg)'"=="group" {
-			 qui:csdid
-			 local evlist :colname r(table)
-			 matrix `mm'=r(table)'
-		}
-		else if "`r(agg)'"=="group" {		 
-			 local evlist :colname r(table)
-			 matrix `mm'=r(table)'
-		}
+		* if "`e(agg)'"=="group" {
+		matrix `b'=r(table)
 		
+		local coln:colname `b'
+ 
+		local coln= subinstr("`coln'","r2vs1._at@","",.)
+		local coln= subinstr("`coln'","bn","",.)
+		local coln= subinstr("`coln'",".__group__","",.)
+ 		
+		matrix `mm'=r(table)'
+		 
 		tempvar mm1 mm2 mm3 mm4 mm5 mm6
 		qui:tsvmat `mm', name(`mm1' `mm2' `mm3' `mm4' `mm5' `mm6')
 		
 		qui:gen str `kk' =""
-		foreach i of local evlist {
+		foreach i of local coln {
 		 	local k = `k'+1
 		 	qui:replace `kk'="`i'" in `k'
 		}
 		tempname k2
 		qui:encode `kk', gen(`k2')
 		 
-		csdid_plot_group `k2'  `mm1'  `mm5' `mm6'	, ///
-						 `style' `title' `name'  `ytitle'	`xtitle' `legend'	 `options'  
-		 
-	}
-	
-	else if `s(agg_cat)'==3 {
-		if "`e(agg)'"=="calendar" {
-			 qui:csdid
-			 local evlist :colname r(table)
-			 matrix `mm'=r(table)'
-		}
-		else if "`r(agg)'"=="calendar" {		 
-			 local evlist :colname r(table)
-			 matrix `mm'=r(table)'
-		}
-		
-		tempvar mm1 mm2 mm3 mm4 mm5 mm6
-		qui:tsvmat `mm', name(`mm1' `mm2' `mm3' `mm4' `mm5' `mm6')
-		
-		qui:gen str `kk' =""
-		foreach i of local evlist {
-		 	local k = `k'+1
-		 	qui:replace `kk'="`i'" in `k'
-		}
-		tempname k2
-		qui:encode `kk', gen(`k2')
-		 
-		
-		csdid_plot_calendar `k2'  `mm1'  `mm5' `mm6'	, ///
-					`style'  `title' `name'  `ytitle'	`xtitle' `legend' `options'		   
+		jwdid_plot_group `k2'  `mm1'  `mm5' `mm6'	, ///
+					`style' `title' `name'  `ytitle'	`xtitle' `legend'	 `options'  
 		*drop `mm'? 
 	}
 	
-	else if `s(agg_cat)'==1 {
-		* First check all info from e(b)
-		if "`e(agg)'"=="attgt" {
-			 qui:csdid
-			 local evlist : colname e(b)
-			 local evqlist: coleq e(b)
-			 matrix `mm'=r(table)'
-			 matrix roweq `mm'=`evqlist'
-			 matrix `mm'=`mm'[1..rowsof(`mm')/2,....]			
-		}
-		else if "`r(agg)'"=="attgt" {		 
-			 local evlist : colname r(b)
-			 local evqlist: coleq r(b)
-			 matrix `mm'=r(table)'
-			 matrix roweq `mm'=`evqlist'
-			 matrix `mm'=`mm'[1..rowsof(`mm')/2,....]			
-		}
-//////////////////////////
-		if "`group'"=="" {
-			display "Please specify group"
-			error 1
-		}
-		else {
-			numlist "`group'"
-			isgroup_eq, group(`group') eqlist(`evqlist')
- 		}
-//////////////////////////
-// Break down matrix and create list. 
-		tempname nmm
-		_matrix_list, group(`group') matrix(`mm')  nmatrix(`nmm')
-		local evlist `s(mt0t1)'
-		adds local mt0t1
+	else if `s(agg_cat)'==3 {
+		*if "`e(agg)'"=="calendar"  
 		
-		tempvar nmm1 nmm2 nmm3 nmm4 nmm5 nmm6
-		qui:tsvmat `nmm', name(`nmm1' `nmm2' `nmm3' `nmm4' `nmm5' `nmm6')
-						
-		qui:gen `kk' =.
-		foreach i of local evlist {
+		matrix `b'=r(table)
+		
+		local coln:colname `b'
+ 
+		local coln= subinstr("`coln'","r2vs1._at@","",.)
+		local coln= subinstr("`coln'","bn","",.)
+		local coln= subinstr("`coln'",".__calendar__","",.)
+ 		
+		matrix `mm'=r(table)'
+		
+		tempvar mm1 mm2 mm3 mm4 mm5 mm6
+		qui:tsvmat `mm', name(`mm1' `mm2' `mm3' `mm4' `mm5' `mm6')
+		
+		qui:gen str `kk' =""
+		foreach i of local coln {
 		 	local k = `k'+1
-		 	qui:replace `kk'=`i' in `k'
+		 	qui:replace `kk'="`i'" in `k'
 		}
 		tempname k2
-				*sum `kk'  `nmm'1  `nmm'5 `nmm'6
-		csdid_plot_event `kk'  `nmm1'  `nmm5' `nmm6' , ///
+		qui:encode `kk', gen(`k2')
+		 
+		jwdid_plot_calendar `k2'  `mm1'  `mm5' `mm6'	, ///
 					`style'	  `title' `name'  `ytitle'	`xtitle' `legend' `options'		   
-		*drop `nmm'? 	
-		
+		*drop `mm'? 
 	}
+	
 end
 
 /***
@@ -264,7 +206,7 @@ end
 
  
 
-program csdid_default, sclass
+program jwdid_default, sclass
 	syntax, [style(str) PSTYle1(str) color1(str) ///
 						PSTYLE2(str) color2(str) ///
 						LWidth1(str) lwidth2(str) ///
@@ -317,23 +259,43 @@ program csdid_default, sclass
 	sreturn local delse `options'
 end
 
- 
+ program define tsvmat
+        syntax anything, name(string)
+        version 7
+		 
+        local nx = rowsof(matrix(`anything'))
+        local nc = colsof(matrix(`anything'))
+        ***************************************
+        // here is where the safegards will be done.
+        if _N<`nx' {
+            display as result "Expanding observations to `nx'"
+                set obs `nx'
+        }
+        // here we create all variables
+        foreach i in `name' {
+			local j = `j'+1
+			qui:gen `type' `i'=matrix(`anything'[_n,`j'])			
+        }
+        // here is where they are renamed.
 
-program csdid_plot_event 
-	syntax varlist,  [style(passthru) title(passthru) name(passthru) ///
-								ytitle(passthru) xtitle(passthru)	///
-								legend(passthru) * ]
+end
+
+
+program jwdid_plot_event 
+	syntax varlist, [style(passthru) title(passthru) name(passthru) ///
+					ytitle(passthru) xtitle(passthru)	///
+					legend(passthru) *  ]
 	gettoken t rest:varlist
 	gettoken b rest:rest
 	gettoken ll rest:rest 
 	gettoken uu rest:rest 
-		
+	
 	** defaults
 	if `"`xtitle'"'=="" local xtitle xtitle("Periods to Treatment")
 	if `"`ytitle'"'=="" local ytitle ytitle("ATT")
 	
 	if `"`legend'"'=="" local legend legend(order(1 "Pre-treatment" 3 "Post-treatment"))
-	csdid_default , `options' `style'
+	jwdid_default , `options' `style'
 	
 	local gf11  `s(df11)'
 	local gf12 `s(df12)'
@@ -341,18 +303,19 @@ program csdid_plot_event
 	local gf22 `s(df22)'
 	local style `s(style)'
 	local dels  `s(delse)'
- 	two   (`style'  `ll' `uu' `t'  if `t'<=-1 , `gf11') ///
-		  (scatter  `b'      `t'   if `t'<=-1 , `gf12')  ///
+ 	two   (`style'  `ll' `uu' `t'  if `t'<-1 , `gf11') ///
+		  (scatter  `b'      `t'   if `t'<-1 , `gf12')  ///
 		  (`style'  `ll' `uu' `t'  if `t'>-1, `gf21')  ///
 		  (scatter  `b'      `t'   if `t'>-1, `gf22') , ///
 		   `legend'  `xtitle' `ytitle' ///
 		  yline(0 , lp(dash) lcolor(black)) `title' `name'  `dels'
+ 
 end
 
 
 
-program csdid_plot_group
-	syntax varlist, [ style(str) title(passthru) name(passthru)	///
+program jwdid_plot_group
+	syntax varlist, [title(passthru) name(passthru)	///
 								ytitle(passthru) xtitle(passthru) * ]
 	gettoken t rest:varlist
 	gettoken b rest:rest
@@ -372,7 +335,7 @@ program csdid_plot_group
 	
 	local xlab `xlab' `=`j'+1' " "
 	
-	csdid_default , `options' `style'
+	jwdid_default , `options' `style'
 	local gf11  `s(df11)'
 	local gf12 `s(df12)'
 	
@@ -383,13 +346,12 @@ program csdid_plot_group
 		  (scatter  `b'      `t'   , `gf12' ) , ///
 		  legend(off) `xtitle'  `ytitle'  ///
 		  yline(0 , lp(dash) lcolor(black)) `title' `name' xlabel(`xlab') `dels'
-	}
 	
 end
 
 
-program csdid_plot_calendar
-	syntax varlist, [style(str) title(passthru) name(passthru)	///
+program jwdid_plot_calendar
+	syntax varlist, [title(passthru) name(passthru)	///
 								ytitle(passthru) xtitle(passthru) * ]
 	gettoken t rest:varlist
 	gettoken b rest:rest
@@ -410,7 +372,7 @@ program csdid_plot_calendar
 
 	local xlab `xlab' `=`j'+1' " "
 	
-	csdid_default , `options' `style'
+	jwdid_default , `options' `style'
 	local gf11  `s(df11)'
 	local gf12 `s(df12)'
 	
@@ -422,7 +384,6 @@ program csdid_plot_calendar
 		  (scatter  `b'      `t'   , `gf12'  ) , ///
 		  legend(off) `xtitle'  `ytitle'  ///
 		  yline(0 , lp(dash) lcolor(black)) `title' `name' xlabel(`xlab') `dels'
-		  
 end
 
 
