@@ -1,41 +1,41 @@
-/* 
+/*
   prismscore.dlg
-*/  
+*/
 
 VERSION 17
 
-		INCLUDE 				_std_mlarge	
+		INCLUDE 				_std_mlarge
 		POSITION				. 		. 		480 	560
 		DIALOG 		main, 		tabtitle("Main")							 ///
 								label("prismscore 1.1 - Calculate PRISM Scores")
-			
+
 ********************************************************************************
 
 BEGIN
 
 		GROUPBOX	main			20		10		210		160,			 ///
-								label("PRISM III")								
+								label("PRISM III")
 		TEXT		tx_neuro		+20		+20		150		.,				 ///
-								label("Neurologic Score Variable:")				
+								label("Neurologic Score Variable:")
 		EDIT		ed_neuro		@		+20		150		.,				 ///
-								error("Neurologic Score Variable")				
+								error("Neurologic Score Variable")
 		TEXT		tx_nonneuro		@		+20		180		.,				 ///
-								label("Non-Neurologic Score Variable:")			
+								label("Non-Neurologic Score Variable:")
 		EDIT		ed_nonneuro		@		+20		150		.,				 ///
-								error("Non-Neurologic Score Variable")			
+								error("Non-Neurologic Score Variable")
 		TEXT		tx_total		@		+20		150		.,				 ///
-								label("PRISM III Score Variable:")				
+								label("PRISM III Score Variable:")
 		EDIT		ed_total		@		+20		150		.,				 ///
-								error("PRISM III Score Variable")				
+								error("PRISM III Score Variable")
 		GROUPBOX	gb_mainiv		+210	10		210		160,			 ///
-								label("PRISM IV")								
+								label("PRISM IV")
 		CHECKBOX	ck_privopt		+20		+20		180		.,				 ///
 								label("Calculate PRISM IV Score")			 ///
 								onclickon(program prismshow)				 ///
 								onclickoff(program prismhide) 				 ///
-								option( prismiv)						
+								option( prismiv)
 		TEXT		tx_privvar		@		+40		150		.,				 ///
-								label("PRISM IV Score Variable:")				
+								label("PRISM IV Score Variable:")
 		EDIT		ed_privvar		@		+20		150		.,				 ///
 								error("PRISM IV Score Variable")
 
@@ -44,12 +44,12 @@ END
 ********************************************************************************
 
 		DIALOG 		variable, 	tabtitle("Variables")						 ///
-								label("prismscore - Calculate PRISM Scores") 
+								label("prismscore - Calculate PRISM Scores")
 BEGIN
 *------------------------------------------------------------------------------*
 		GROUPBOX	gb_age			20		10		440		80,				 ///
 								label("Age - Coded Age or both DoB and DoA")
-								
+
 		TEXT		tx_age			40		+20		120		.,				 ///
 								label("Coded Age:")
 		VARNAME		vn_age			40		+20		120		.,				 ///
@@ -184,11 +184,11 @@ BEGIN
 							first label("cells / mm3")
 		RADIO		rb_wbc_2		30		+20		120		.,				 ///
 							last label("1000 cells / mm3") option(wbcunit(1000))
-*------------------------------------------------------------------------------*							
+*------------------------------------------------------------------------------*
 		GROUPBOX	gb_plt			170		10		140		70,				 ///
 							label("Platelet Units")
 		RADIO		rb_plt_1		+10		+20		120		.,				 ///
-							first label("cells / mm3") 
+							first label("cells / mm3")
 		RADIO		rb_plt_2		@		+20		120		.,				 ///
 							last label("1000 cells / mm3") option(pltunit(1000))
 *------------------------------------------------------------------------------*
@@ -198,14 +198,14 @@ BEGIN
 							first label("Imperial")
 		RADIO		rb_si_2			@		+20		120		.,				 ///
 							last label("SI") option(si )
-*------------------------------------------------------------------------------*							
+*------------------------------------------------------------------------------*
 		GROUPBOX	gb_temp			20		90		140		70,				 ///
 							label("Temperature Units")
 		RADIO		rb_temp_1		30		+20		120		.,				 ///
 							first label("Celsius")
 		RADIO		rb_temp_2		30		+20		120		.,				 ///
 							last label("Fahrenheit") option(fahrenheit)
-*------------------------------------------------------------------------------*							
+*------------------------------------------------------------------------------*
 		GROUPBOX	gb_opt			20		180		440		200,			 ///
 							label("Options")
 		CHECKBOX	ck_trac			30		+20		120		.,				 ///

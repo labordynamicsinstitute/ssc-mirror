@@ -1,5 +1,5 @@
-*! nehurdle v1.1.0
-*! 29 June 2018
+*! nehurdle v1.1.1
+*! 01 March 2023
 *! Alfonso Sanchez-Penalver
 *! Version history at the bottom
 
@@ -135,7 +135,8 @@ program define nehurdle_est_trunc, eclass byable(recall) sortpreserve
 		vce(passthru)															///
 		Level(passthru)															///
 		OFFset(passthru)														///
-		EXPosure(passthru) *													///
+		EXPosure(passthru)														///
+		NRTOLerance(real 1e-12) *												///
 	]
 	
 	// Temporary variables and names
@@ -148,7 +149,7 @@ program define nehurdle_est_trunc, eclass byable(recall) sortpreserve
 	if `r(N)' == 0 error 2000
 
 	// Checking syntax of ml options
-	mlopts mlopts, `options'
+	mlopts mlopts, nrtolerance(`nrtolerance') `options'
 	local cns `s(constraints)'
 	
 	gettoken y x : varlist
@@ -381,7 +382,8 @@ program define nehurdle_est_tobit, eclass byable(recall) sortpreserve
 			vce(passthru)														///
 			Level(passthru)														///
 			OFFset(passthru)													///
-			EXPosure(passthru) *												///
+			EXPosure(passthru)													///
+			NRTOLerance(real 1e-12) *											///
 		]
 	
 	tempvar y1 res2
@@ -391,7 +393,7 @@ program define nehurdle_est_tobit, eclass byable(recall) sortpreserve
 	if `r(N)' == 0 error 2000
 
 	// Checking syntax of ml options
-	mlopts mlopts, `options'
+	mlopts mlopts, nrtolerance(`nrtolerance') `options'
 	local cns `s(constraints)'
 	
 	// parse the varlist
@@ -535,7 +537,8 @@ program define nehurdle_est_heckman, eclass byable(recall) sortpreserve
 			vce(passthru)														///
 			Level(passthru)														///
 			OFFset(passthru)													///
-			EXPosure(passthru) *												///
+			EXPosure(passthru)													///
+			NRTOLerance(real 1e-12) *											///
 		]
 	// Temporary variables and names
 	tempvar y1 dy res1 res1sq res2 res2sq
@@ -572,7 +575,7 @@ program define nehurdle_est_heckman, eclass byable(recall) sortpreserve
 	if `r(N)' == 0 error 2000
 
 	// Checking syntax of ml options
-	mlopts mlopts, `options'
+	mlopts mlopts, nrtolerance(`nrtolerance') `options'
 	local cns `s(constraints)'
 	
 	if "`weight'" != "" local wgt "[`weight' `exp']"
@@ -787,3 +790,4 @@ end
 // Version 1.0.0 uses lf evaluators for all models and specifications
 // Version 1.1.0 uses lf2 evaluators for all models and specifications and
 //		no longer performs the LR test for the correlation in the Heckman
+// Version 1.1.1 sets the default nrtolerance to 1e-12

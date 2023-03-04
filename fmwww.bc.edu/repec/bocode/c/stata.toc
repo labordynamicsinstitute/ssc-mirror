@@ -158,6 +158,7 @@ p cnintraday module to Download intraday stock quotations for a list of stock co
 p cnkchart module to draw candlestick chart with Chinese stock prices
 p cnmapsearch module to extract the specified information by keyword in a certain geographic range
 p cnormp module to evaluate censored normal distribution
+p cnpoi module to extract the specified information by keywords or types in a Chinese city
 p cns module to compute Consensus Measure for Ordinal Scales
 p cnsrsig module to evaluate validity of restrictions on a regression
 p cnssc module to mirror SSC Archive in China 

@@ -1,14 +1,38 @@
-*! | Version: 1.1 | Last Updated: Nov 28, 2022
+*! | Version: 1.2 | Last Updated: Feb 28, 2023
 /*----------------------------------------------------------------------------*\
 |   PRISM Score Calculator - a statistical package designed to calculate       |
 |       PRISM III & IV scores.                                                 |
 |                                                                              |
 |   For help, please see help prismscore.                                      |
+|   Additional information available at:                                       |
+|       https://azamfirei.com/prism-score                                      |
 |                                                                              |
-|   Version: 1.1 | Created: Jul 28, 2022 | Last Updated: Nov 28, 2022          |
+|   Version: 1.2 | Created: Jul 28, 2022 | Last Updated: Feb 28, 2023          |
 |   Author: Razvan Azamfirei - stata@azamfirei.com                             |
 |                                                                              |
+|   CHANGELOG:                                                                 |
+|       - Version 1.2:                                                         |
+|           Updated HR OOR forvalues                                           |
 |                                                                              |
+|       - Version 1.1:                                                         |
+|           Minor bugs and fixes                                               |
+|           Updated documentation                                              |
+|           Code linting                                                       |
+|                                                                              |
+|   LICENSE:                                                                   |
+|   Copyright 2022 Razvan Azamfirei                                            |
+|                                                                              |
+|       Licensed under the Apache License, Version 2.0 (the"License"); you may |
+|       not use this file except in compliance with the License. You may obtain|
+|       a copy of the License at:                                              |
+|           http://www.apache.org/licenses/LICENSE-2.0                         |
+|       Unless required by applicable law or agreed to in writing, software    |
+|       distributed under the License is distributed on an "AS IS" BASIS,      |
+|       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or        |
+|       implied.                                                               |
+|                                                                              |
+|    See the License for the specific language governing permissions and       |
+|    limitations under the License.                                            |
 \*----------------------------------------------------------------------------*/
 cap program drop    prismscore
     program         prismscore
@@ -16,23 +40,30 @@ cap program drop    prismscore
         if (c(stata_version) < 17) {
             di as txt "Note: this command is written " ///
             "and comprehensively tested for Stata release 17.0 or higher."
-            di as txt "The command was tested on Stata 12.0 with no "///
+            di as txt "The command was tested on Stata 12.0 with no " ///
             "issues. However, a comprehensive validation was not performed."
-            di as txt "The command might not work properly with " ///
+            if (c(stata_version) >= 12) {
+                di as txt "There are no technical reasons preventing this " ///
+            "command from working with Stata version `c(stata_version)'. "  ///
+            "However no guarantees are made."
+            }
+            else{
+                di as txt "The command might not work properly with " ///
             "Stata version `c(stata_version)'"
+                }
             loc vers = c(stata_version)
         }
         else loc vers 17
     version `vers'
-    
+
     novarabbrev {
-    qui {   
+    qui {
 ********************************************************************************
- 
+
     tempvar ageIV calculated_age age dob doa
     loc l_catvar3 sbp gcs hr pupils
     loc l_numvar3 temp  ph  bicarb  pco2 pao2 glucose potassium creatinine  ///
-            bun wbc plt 
+            bun wbc plt
     loc l_numvar3opt templow phhigh bicarbhigh pt ptt
     loc l_catvar4 cpr cancer risk source
     loc l_scores sbp_score temperature_score hr_score acidosis_score        ///
@@ -46,7 +77,7 @@ cap program drop    prismscore
             wbcoption plateletoption            ///
             noimputationoption validationoption ///
             suppressoption                      ///
-            traceoption 
+            traceoption
     loc l_results neuroscore nonneuroscore prismintermediate ///
             prismfinal totalscore
     loc l_scalars intercept agecoef0 agecoef1 agecoef2 agecoef3 sourcecoef0 ///
@@ -60,8 +91,8 @@ cap program drop    prismscore
             phoor1 co2oor0 co2oor1 pco2oor0 pco2oor1 pao2oor0 pao2oor1      ///
             potoor0 potoor1 age0 age1 age2 age3 age4 age5 age6 age7 age8
     loc helpme "See help prismscore for more details."
-    
-********************************************************************************    
+
+********************************************************************************
 
     syntax newvarlist(min=1 max=4 generate) [if] [in],      ///
         [age(varname num)] [dob(varname)] [doa(varname)]    ///
@@ -82,14 +113,14 @@ cap program drop    prismscore
             [WBCUnit(int 1)] [PLTUnit(int 1)]               ///
             [NOIMPutation] [NOVALidation]                   ///
             [SUPPress] [SUPPRESSAll]                        ///
-        [TRACE]     
-    
+        [TRACE]
+
         marksample touse, nov
 
-********************************************************************************    
-    
+********************************************************************************
+
 /// Get Option State
- 
+
     tempname `l_options'
     tempvar `l_results'
 
@@ -105,7 +136,7 @@ cap program drop    prismscore
     }
     else {
         sca noimputationoption = 0
-    }   
+    }
     if "`suppressall'" != "" {
         sca suppressoption = 2
     }
@@ -114,7 +145,7 @@ cap program drop    prismscore
     }
     if "`suppress'" == "" & "`suppressall'" == "" {
         sca suppressoption = 0
-    }   
+    }
     if "`novalidation'" == "" {
         sca validationoption = 1
     }
@@ -142,7 +173,7 @@ cap program drop    prismscore
     else {
         sca tempoption = 0
     }
-    
+
 *------------------------------------------------------------------------------*
 *   Parses varlist - Counts total number of variables, assign each variable a  *
 *   number corresponding to its position and then assigns final vars.          *
@@ -152,7 +183,7 @@ cap program drop    prismscore
 *                                                                              *
 *       2. If calculating PRISM III scores you need to have 3 variables.       *
 *------------------------------------------------------------------------------*
-    
+
     loc i = 0
     cap {
         foreach var in `varlist' {
@@ -162,7 +193,7 @@ cap program drop    prismscore
     }
     if prismivoption == 1 {
         if `i' == 1 {
-            loc prismivvar `newvar_1' // Holds PRISM IV score 
+            loc prismivvar `newvar_1' // Holds PRISM IV score
         }
         if inlist(`i',2,3) {
             di as err "You must specify either 1 or 4 new" _continue
@@ -212,7 +243,7 @@ cap program drop    prismscore
     }
     foreach num_var in `l_numvar3opt' dob doa age { // Generates "optional"
         cap {                                       // PRISM III num vars
-            gen ``num_var'_i' = ``num_var'' 
+            gen ``num_var'_i' = ``num_var''
             tempvar `num_var'
             gen ``num_var'' = ``num_var'_i'
             drop ``num_var'_i'
@@ -220,11 +251,11 @@ cap program drop    prismscore
         continue
     }
 
-    foreach num_var in `l_numvar3' {        // Generates required PRISM III 
+    foreach num_var in `l_numvar3' {        // Generates required PRISM III
         gen ``num_var'_i' = ``num_var''     // num vars
         tempvar `num_var'
         gen ``num_var'' = ``num_var'_i'
-        drop ``num_var'_i' 
+        drop ``num_var'_i'
     }
     foreach score in `l_scores' {       // Generates placeholders for PRISM III
         gen ``score'' = 0               // sub-scores
@@ -243,7 +274,7 @@ cap program drop    prismscore
                 err 102
             }
         }
-        if noimputationoption == 1 {    
+        if noimputationoption == 1 {
             foreach score in `l_scores4' {
                 gen ``score'' = . if `touse'
             }
@@ -256,7 +287,7 @@ cap program drop    prismscore
     }
 //  Sets coefficients and bounds
 
-    tempname `l_scalars' 
+    tempname `l_scalars'
 
         // PRISM IV coefficients - Change this
         sca intercept = -5.776
@@ -275,7 +306,7 @@ cap program drop    prismscore
         sca nonneurocoef = 0.163
 
         /// PRISM III & IV age bounds
-        
+
         sca age0 = 0    // 0 days
         sca age1 = 14   // 14 days
         sca age2 = 15   // 15 days
@@ -285,8 +316,8 @@ cap program drop    prismscore
         sca age6 = 366  // 1 year + 1 day
         sca age7 = 4380 // 12 years
         sca age8 = 4381 // 12 years + 1 day
-        
-        
+
+
         // PRISM III vital bounds
         sca sbp0 = 40
         sca sbp1 = 45
@@ -306,8 +337,8 @@ cap program drop    prismscore
 
         //  PRISM III lab bounds - must be float or else comparison will not work
         //  close to the boundries because of how STATA stores numbers
-        
-        sca ph0 = float(7.0) 
+
+        sca ph0 = float(7.0)
         sca ph1 = float(7.28)
         sca ph2 = float(7.48)
         sca ph3 = float(7.55)
@@ -339,7 +370,7 @@ cap program drop    prismscore
         sca sbpoor0 = float(0)
         sca sbpoor1 = float(300)
         sca hroor0 = float(0)
-        sca hroor1 = float(300)
+        sca hroor1 = float(350)
         sca gcsoor0 = float(3)
         sca gscoor1 = float(15)
         sca phoor0 = float(6.5)
@@ -360,12 +391,12 @@ cap program drop    prismscore
         sca bunoor1 = float(150)
         sca tmpoor0 = float(25.0)
         sca tmpoor1 = float(45.0)
-        
+
 
 //  Replaces bounds for lab values in SI units and temperature in F.
 
         // Rather than converting the underlying values, I'm just setting new
-        // bounds; cleaner and less resource-intensive 
+        // bounds; cleaner and less resource-intensive
 
     if sioption == 1 {
         sca glu0 = float(11.0)
@@ -384,7 +415,7 @@ cap program drop    prismscore
 
     if tempoption == 1 {
         sca tmp0 = float(91.4)
-        sca tmp1 = float(104.0) 
+        sca tmp1 = float(104.0)
         sca tmpoor0 = float(77.0)
         sca tmpoor1 = float(113.0)
     }
@@ -506,7 +537,7 @@ if noimputationoption == 0 {
             else {
                 sca ag3 = 1
             }
-        sca ag4 = ag2 + ag3 
+        sca ag4 = ag2 + ag3
             // If 2 both dob and doa exist, if 1 only one exists. If 0, none
         if ag1 == 1 & ag4 == 0 {
             sca agecase = 1 // Only categorical age is specified
@@ -587,28 +618,28 @@ if noimputationoption == 0 {
         sca ag2 = 0
         sca ag3 = 0
         sca ag4 = 0
-        
+
             cap {
                 conf v `pt'
             }
                 if _rc != 0 {
                     sca rc1 = 1
                 }
-                
+
             cap {
                 conf v `ptt'
             }
                 if _rc != 0 {
                     sca rc2 = 1
                 }
-                
-            sca rc3 = rc1 + rc2 
+
+            sca rc3 = rc1 + rc2
             if rc3 == 2 {
                 di as err "You must specify either PT or PTT. `helpme'"
                 err 102
             }
-            else {      
-                if rc1 == 1 {   
+            else {
+                if rc1 == 1 {
                     replace `pt' = .
                 }
                 if rc2 == 1 {
@@ -623,7 +654,7 @@ if noimputationoption == 0 {
             }
 
         if prismivoption == 1 {
-            cou if !inlist(`source', 0, 1, 2, 3, .) 
+            cou if !inlist(`source', 0, 1, 2, 3, .)
             if r(N) != 0 {
                 di as err "source is not in the correct format. `helpme'"
                 err 499
@@ -649,8 +680,8 @@ if noimputationoption == 0 {
                 }
             }
         }
-    }   // If errors are suppressed, generates empty vars for missing variables 
-    if suppressoption == 2 { 
+    }   // If errors are suppressed, generates empty vars for missing variables
+    if suppressoption == 2 {
         foreach var in `l_allvars' {
             cap {
                 conf v ``var''
@@ -726,17 +757,17 @@ if noimputationoption == 0 {
     replace `hr_score' = 3 if ((`age' == 0 & inrange(`hr', hr4, hr5)) |      ///
         (`age' == 1 & inrange(`hr', hr4, hr5)) |                             ///
         (`age' == 2 & inrange(`hr', hr2, hr3)) |                             ///
-        (`age' == 3 & inrange(`hr', hr0, hr1))) & `hr' != . 
+        (`age' == 3 & inrange(`hr', hr0, hr1))) & `hr' != .
     replace `hr_score' = 4 if ((`age' == 0 & hr > hr5) |                     ///
         (`age' == 1 & `hr' > hr5) | (`age' == 2 & `hr' > hr3) |              ///
         (`age' == 3 & `hr' > hr1)) & `hr' != .
 
     replace `pupils_score' = 7 if `pupils' == 1
-    replace `pupils_score' = 11 if `pupils' == 2 
+    replace `pupils_score' = 11 if `pupils' == 2
     replace `pupils_score' = 0 if `pupils' == 0
 
     replace `acidosis_score' = 2 if (inrange(`ph', ph0, ph1) |               ///
-        inrange(`bicarb', bicarb0, bicarb1)) 
+        inrange(`bicarb', bicarb0, bicarb1))
     replace `acidosis_score' = 6 if (`ph' < ph0 | `bicarb' < bicarb0 )       ///
         & `ph' != . & `bicarb' != .
 
@@ -750,10 +781,10 @@ if noimputationoption == 0 {
     replace `bicarb_score' = 4 if (`bicarbhigh' > bicarb2                    ///
         & `bicarbhigh' != .) | (`bicarb' > bicarb2 & `bicarb' != .)
 
-    replace `pao2_score' = 3 if inrange(`pao2', pao20, pao21) 
-    replace `pao2_score' = 6 if `pao2' < pao20 & `pao2' != .    
+    replace `pao2_score' = 3 if inrange(`pao2', pao20, pao21)
+    replace `pao2_score' = 6 if `pao2' < pao20 & `pao2' != .
 
-    replace `wbc_score' = 4 if `wbc' < wbc0 
+    replace `wbc_score' = 4 if `wbc' < wbc0
     replace `coag_score' = 3 if (`age' == 0 & ((inrange(`pt', pt0, .) &      ///
         !inlist(`pt',pt0)) | ((inrange(`ptt', ptt1, .) &                     ///
         !inlist(`ptt',ptt1))))) | (inrange(`age', 1, 3) &                    ///
@@ -766,14 +797,14 @@ if noimputationoption == 0 {
 
     replace `creatinine_score' = 2 if ((`age' == 0 & `creatinine' > cr0) |   ///
         (inrange(`age', 1, 2) & `creatinine' > cr1) |                        ///
-        (`age' == 3 & `creatinine' > cr2)) & `creatinine' != . 
+        (`age' == 3 & `creatinine' > cr2)) & `creatinine' != .
 
     replace `bun_score' = 3 if ((`age' == 0 & `bun' > bun0) |                ///
         (inrange(`age', 1, 3) & `bun' > bun1)) & `bun' != .
 
     replace `platelet_score' = 2 if inrange(`plt', plt2, plt3)
     replace `platelet_score' = 4 if inrange(`plt', plt0, plt1)
-    replace `platelet_score' = 5 if `plt' < plt0 & `plt' != . 
+    replace `platelet_score' = 5 if `plt' < plt0 & `plt' != .
 
 ********************************************************************************
 
@@ -795,8 +826,8 @@ if noimputationoption == 0 {
             replace `neuroscore' = . if `missingcheck3' != 0
             replace `nonneuroscore' = . if `missingcheck3' != 0
             replace `totalscore' = . if `missingcheck3' != 0
-    }   
-    cap {   
+    }
+    cap {
         replace `neurovar' = `neuroscore'
         replace `nonneurovar' = `nonneuroscore'
         replace `totalvar' = `totalscore'
@@ -815,14 +846,14 @@ if noimputationoption == 0 {
         gen double `prismfinal' = 100 / (1 + exp(-`prismintermediate')) if `touse'
 
             // Rounds result to make it look pretty
-        replace `prismfinal' = round(`prismfinal', 0.01) 
+        replace `prismfinal' = round(`prismfinal', 0.01)
         if noimputationoption == 1 {
             tempvar missingcheck4
             egen `missingcheck4' = rowmiss(`cpr' `cancer' `risk' `source')
             replace `prismfinal' = . if `missingcheck4' != 0 | `missingcheck3' != 0
         }
             // Places temporary variable into the permanent one
-        replace `prismivvar' = `prismfinal' 
+        replace `prismivvar' = `prismfinal'
     }
 ********************************************************************************
     if traceoption == 1 {
@@ -843,17 +874,3 @@ if noimputationoption == 0 {
 di as text _newline "Calculation completed successfully." _continue
 restore, not
 end
-
-/*
-This program is free software: you can redistribute it and/or modify it under 
-the terms of the GNU General Public License as published by the Free Software 
-Foundation, either version 3 of the License, or (at your option) any later 
-version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY 
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A 
-PARTICULAR PURPOSE. See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along with 
-this program. If not, see <https://www.gnu.org/licenses/>.
-*/ 

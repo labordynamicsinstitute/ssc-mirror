@@ -1,8 +1,10 @@
 {smcl}
-{* *! version 1.0.3  12feb2021}{...}
+{* *! version 1.3.1  28feb2023}{...}
 {* *! Sebastian Kripfganz, www.kripfganz.de}{...}
 {* *! Vasilis Sarafidis, sites.google.com/view/vsarafidis}{...}
 {vieweralsosee "xtivdfreg" "help xtivdfreg"}{...}
+{vieweralsosee "spxtivdfreg" "help spxtivdfreg"}{...}
+{vieweralsosee "spxtivdfreg postestimation" "help spxtivdfreg_postestimation"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[R] predict" "help predict"}{...}
 {vieweralsosee "[R] ivregress postestimation" "help ivregress_postestimation"}{...}
@@ -12,7 +14,7 @@
 {viewerjumpto "References" "xtivdfreg_postestimation##references"}{...}
 {title:Title}
 
-{p2colset 5 35 37 2}{...}
+{p2colset 5 33 35 2}{...}
 {p2col :{bf:xtivdfreg postestimation} {hline 2}}Postestimation tools for xtivdfreg{p_end}
 {p2colreset}{...}
 
@@ -111,6 +113,20 @@ Hansen tests of overidentifying restrictions
 {pstd}
 The overidentification test statistic is constructed as a quadratic form of the moment functions with an asymptotically optimal weighting matrix. The latter is based on the first-stage residuals.
 The test is not valid and therefore not reported for a model with heterogeneous slopes that is estimated with the mean-group estimator.
+
+
+{marker results}{...}
+{title:Saved results}
+
+{pstd}
+{cmd:estat overid} saves the following in {cmd:r()}:
+
+{synoptset 20 tabbed}{...}
+{p2col 5 20 24 2: Scalars}{p_end}
+{synopt:{cmd:r(chi2)}}Hansen's J-statistic{p_end}
+{synopt:{cmd:r(df)}}degrees of freedom of Hansen's J-test{p_end}
+{synopt:{cmd:r(p)}}p-value of Hansen's J-test{p_end}
+{p2colreset}{...}
 
 
 {marker authors}{...}

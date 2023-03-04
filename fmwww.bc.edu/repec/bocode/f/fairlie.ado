@@ -1,4 +1,4 @@
-*! version 1.0.6  20may2008  Ben Jann
+*! version 1.0.7  16jun2008  Ben Jann
 program define fairlie, rclass
     version 9.2
     capt syntax [, Level(passthru) noLEgend ]
@@ -187,7 +187,7 @@ prog def Display
         local fmt "%9.0g"
     }
     di as txt _col(`col') "N of obs G=0    `space'= " as res `fmt' e(N_0)
-    di as txt _col(`col') "N of obs G=0    `space'= " as res `fmt' e(N_1)
+    di as txt _col(`col') "N of obs G=1    `space'= " as res `fmt' e(N_1)
     di as txt _col(`col') "Pr(Y!=0|G=0)    `space'= " as res `fmt' e(pr_0)
     di as txt _col(`col') "Pr(Y!=0|G=1)    `space'= " as res `fmt' e(pr_1)
     di as txt _col(`col') "Difference      `space'= " as res `fmt' e(diff)

@@ -1,4 +1,4 @@
-*! version 1.0.3  12feb2021
+*! version 1.3.1  28feb2023
 *! Sebastian Kripfganz, www.kripfganz.de
 *! Vasilis Sarafidis, sites.google.com/view/vsarafidis
 
@@ -7,14 +7,11 @@
 
 program define xtivdfreg_estat, rclass
 	version 13.0
-	if "`e(cmd)'" != "xtivdfreg" {
+	if !inlist("`e(cmd)'", "xtivdfreg", "spxtivdfreg") {
 		error 301
 	}
 	gettoken subcmd rest : 0, parse(" ,")
 	if "`subcmd'" == substr("overid", 1, max(4, `: length loc subcmd')) {
-		loc subcmd			"overid"
-	}
-	if "`subcmd'" != "" {
 		xtivdfreg_estat_`subcmd' `rest'
 	}
 	else {

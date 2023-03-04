@@ -1,14 +1,12 @@
 {smcl}
-{* 19may2008}{...}
-{cmd:help fairlie}
+{* 27feb2023}{...}
+{cmd:help fairlie}{...}
+{right:{browse "http://github.com/benjann/fairlie/"}}
 {hline}
 
 {title:Title}
 
-{p2colset 5 17 19 2}{...}
-{p2col :{hi:fairlie} {hline 2}}Nonlinear decomposition of binary outcome
-differentials{p_end}
-{p2colreset}{...}
+{pstd}{hi:fairlie} {hline 2} Nonlinear decomposition of binary outcome
 
 
 {title:Syntax}
@@ -77,8 +75,7 @@ use post-estimation commands such as {cmd:test} or {cmd:lincom} after
 
 {pstd}
 The implementation of the decomposition technique closely follows the
-suggestions provided by Fairlie (2003). The paper can be downloaded
-from {browse "http://ssrn.com/abstract=497302"}. If weights are specified,
+suggestions provided by Fairlie (2003). If weights are specified,
 a modified algorithm is used for the computation of the detailed
 decomposition (see below).
 
@@ -89,7 +86,7 @@ sample is drawn from the larger group. Since the results depend on
 the specific sample, the process is repeated and mean results
 are reported. Use {cmd:reps()} to specify the number of desired
 replications. Set the random-number seed for replicable
-results; see help {helpb generate}.
+results; see help {helpb set seed}.
 
 {pstd}
 The separate contributions from independent variables or groups of
@@ -273,50 +270,51 @@ of {helpb logit} or {helpb probit}.
 {title:References}
 
 {phang}
-Fairlie, Robert W. (1999). The Absence of the African-American Owned Business: An Analysis
-of the Dynamics of Self-Employment. Journal of Labor Economics 17(1): 80-108.
-{p_end}
+    Fairlie, Robert W. (1999). The Absence of the African-American Owned Business: An Analysis
+    of the Dynamics of Self-Employment. Journal of Labor
+    Economics 17(1): 80-108. {browse "http://doi.org/10.1086/209914":DOI:10.1086/209914}
+    {p_end}
 {phang}
-Fairlie, Robert W. (2003). An Extension of the Blinder-Oaxaca Decomposition Technique to
-Logit and Probit Models. Economic Growth Center,
-Yale University Discussion Paper No. 873.
-{p_end}
+    Fairlie, Robert W. (2003). An Extension of the Blinder-Oaxaca Decomposition Technique to
+    Logit and Probit Models. Economic Growth Center,
+    Yale University Discussion Paper No. 873. {browse "http://ideas.repec.org/p/egc/wpaper/873.html"}
+    {p_end}
 {phang}
-Fairlie, Robert W. (2005). An extension of the Blinder-Oaxaca decomposition technique to
-logit and probit models. Journal of Economic and Social Measurement
-30: 305-316.
-{p_end}
+    Fairlie, Robert W. (2005). An extension of the Blinder-Oaxaca decomposition technique to
+    logit and probit models. Journal of Economic and Social Measurement
+    30: 305-316. {browse "http://doi.org/10.3233/JEM-2005-0259":DOI:10.3233/JEM-2005-0259}
+    {p_end}
 {phang}
-Gomulka, Joanna, and Nicholas Stern (1990). The Employment of Married
-Women in the United Kingdom 1970-83. Economica 57: 171-199.
-{p_end}
+    Gomulka, Joanna, and Nicholas Stern (1990). The Employment of Married
+    Women in the United Kingdom 1970-83. Economica 57: 171-199. {browse "http://doi.org/10.2307/2554159":DOI:10.2307/2554159}
+    {p_end}
 {phang}
-Yun, Myeong-Su (2003). Decomposing Differences in the First Moment.
-IZA Discussion Paper No. 877.
-{p_end}
+    Yun, Myeong-Su (2003). Decomposing Differences in the First Moment.
+    IZA Discussion Paper No. 877. {browse "http://ideas.repec.org/p/iza/izadps/dp877.html"}
+    {p_end}
 
 
 {title:Author}
 
 {pstd}
-Ben Jann, ETH Zurich, jannb@ethz.ch
+Ben Jann, University of Bern, ben.jann@unibe.ch
 
 {pstd}Thanks for citing this software as follows:
 
 {pmore}
-Jann, B. (2006). fairlie: Stata module to generate nonlinear decomposition of
-binary outcome differentials. Available from
-http://ideas.repec.org/c/boc/bocode/s456727.html.
+    Jann, B. (2006). fairlie: Stata module to generate nonlinear decomposition of
+    binary outcome differentials. Available from
+    http://ideas.repec.org/c/boc/bocode/s456727.html.
 
 
 {title:Acknowledgments}
 
 {pstd}
-I thank Sonia Bhalotra, Rob Fairlie, Julia Horstschräer, George Leckie,
-and Steven Samuels for their comments and suggestions.
+    I thank Sonia Bhalotra, Rob Fairlie, Julia Horstschr{c a:}er, George Leckie,
+    and Steven Samuels for their comments and suggestions.
 
 
 {title:Also see}
 
 {p 4 13 2}
-Online:  help for {helpb logit}, {helpb probit}, {helpb generate}
+Online:  help for {helpb logit}, {helpb probit}, {helpb set seed}

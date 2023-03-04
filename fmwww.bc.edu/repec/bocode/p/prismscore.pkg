@@ -11,9 +11,9 @@ d KW: mortality risk
 d KW: outcome
 d KW: pediatric
 d
-d Requires: Stata version 17
+d Requires: Stata version 12
 d
-d Distribution-Date: 20221212
+d Distribution-Date: 20230303
 d
 d Author: Razvan Azamfirei,  Johns Hopkins University School of Medicine
 d Support: email stata@@azamfirei.com

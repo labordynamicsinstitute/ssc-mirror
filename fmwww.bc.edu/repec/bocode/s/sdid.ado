@@ -1,5 +1,5 @@
 *! sdid: Synthetic Difference-in-Differences
-*! Version 1.2.0 July 12, 2022
+*! Version 2.0.0 February 24, 2023
 *! Author: Pailañir Daniel, Clarke Damian
 *! dpailanir@fen.uchile.cl, dclarke@fen.uchile.cl
 
@@ -8,6 +8,9 @@ Versions
 1.0.0 Apr 04, 2022: Original version, staggered adoption [SSC]
 1.1.0 May 13, 2022: Correction for 13.0 Mata, bug fix, adding if/in
 1.2.0 Jul 12, 2022: Exporting additional details         [SSC]
+1.3.0 Jul 13, 2022: Addition of DiD and SC methods
+1.4.0 Jan 15, 2023: Standard error for each adoption (Bootstrap only)
+2.0.0 Feb 24, 2023: Standard error for each adoption (Bootstrap, placebo, jackknife) [SSC]
 */
 
 cap program drop sdid
@@ -21,12 +24,14 @@ version 13.0
     reps(integer 50)
     covariates(string asis)
     graph
+    g1on
     g1_opt(string asis)
     g2_opt(string asis)
     unstandardized
     graph_export(string asis)
     msize(passthru)
     mattitles
+    method(string asis)
     ]
     ;
 #delimit cr  
@@ -54,8 +59,8 @@ else {
     tokenize `varlist'
 }
 
-if !inlist("`vce'", "bootstrap", "jackknife", "placebo") {
-    dis as error "vce() must be one of bootstrap, jackknife or placebo."
+if !inlist("`vce'", "bootstrap", "jackknife", "placebo","noinference") {
+    dis as error "vce() must be one of bootstrap, jackknife, placebo or noinference."
     exit 198
 }
 
@@ -176,13 +181,14 @@ if (length("`if'")+length("`in'")>0) {
 *------------------------------------------------------------------------------*
 tempvar treated ty tyear n
 qui gen `ty' = `3' if `4'==1 
-qui bys `2': egen `treated' = max(`4') 
-qui by  `2': egen `tyear'   = min(`ty') 
+qui bys `2': egen `treated' = max(`4') if `touse'
+qui by  `2': egen `tyear'   = min(`ty') if `touse'
 
 if (length("`if'")+length("`in'")>0) {
     preserve
     qui keep if `touse'
 }
+
 sort `3' `treated' `2'
 if "`mattitles'"!="" {
     if `stringvar'==1 qui levelsof `groupvar' if `treated'==0
@@ -259,14 +265,25 @@ if (length("`if'")+length("`in'")>0) {
     qui keep if `touse'
 }
 
+if "`method'"==""     local m=1
+if "`method'"=="sdid" local m=1
+if "`method'"=="did"  local m=2
+if "`method'"=="sc"   local m=3
+
 
 **IDs (`2') go in twice here because we are not resampling
 mata: data = st_data(.,("`1' `2' `2' `3' `4' `treated' `tyear' `conts'"))
-mata: ATT = synthdid(data, 0, ., ., `control_opt', `jk')
+mata: ATT = synthdid(data, 0, ., ., `control_opt', `jk', `m')
+
 mata: OMEGA  = st_matrix("omega")
 mata: LAMBDA = st_matrix("lambda")
 mata: tau    = st_matrix("tau") 
 mata: st_local("ATT", strofreal(ATT))
+
+if "`jk'"=="1" {
+    mata: se_tau = st_matrix("se_i")
+    mata: st_matrix("se_tau",se_tau)
+}
 
 qui count if `3'==`mint'                 //total units
 local N=r(N)
@@ -277,6 +294,8 @@ local tr=r(N)
 local newtr=`co'-`tr'+1                 //start of treated units
 qui levelsof `3', local(ttime)          //T
 local T: word count `r(levels)'
+local Ntotal=`N'*`T'                    //total observations
+
 matrix ttime = J(`T',1,.)
 local jj=1
 foreach l of local ttime {
@@ -300,6 +319,7 @@ if (length("`if'")+length("`in'")>0) {
     restore
 }
 
+if "`vce'"!="noinference" {
 *--------------------------------------------------------------------------*
 * (3) Standard error: bootstrap
 *--------------------------------------------------------------------------*
@@ -308,6 +328,8 @@ if "`vce'"=="bootstrap" {
     local b = 1
     local B = `reps'
     mata: ATT_b = J(`B', 1, .)
+    mata: tau_b = J(1, 2, .)
+    mata: se_tau = J(`nadop', 1, .)
 	
     dis "Bootstrap replications (`reps'). This may take some time."
     dis "----+--- 1 ---+--- 2 ---+--- 3 ---+--- 4 ---+--- 5"
@@ -334,16 +356,31 @@ if "`vce'"=="bootstrap" {
             mata: indicator=smerge(bsam_id, (ori_id, ori_pos))
             mata: OMEGAB=OMEGA[(indicator\rows(OMEGA)),]		
             mata: data = st_data(.,("`1' `cID' `2' `3' `4' `treated' `tyear' `conts'"))
-            mata: ATT_b[`b',] = synthdid(data,1,OMEGAB,LAMBDA,`control_opt',`jk')
+            mata: ATT_b[`b',] = synthdid(data,1,OMEGAB,LAMBDA,`control_opt',`jk',`m')
+			
+            *taus for adoption times
+            mata: ty = uniqrows(select(data[,7], data[,5]:==1))
+            mata: ty_taus = (ty , st_matrix("tau_i"))
+            mata: tau_b =  (tau_b\ty_taus)
+			
             local ++b
         }
         restore
     }
 	
+    *SE for adoption times
+    local i=1
+    foreach tr of local tryear {
+        mata: nr_tau = rows(select(tau_b[,2], tau_b[,1]:==`tr'))
+        mata: vect_tau = select(tau_b[,2], tau_b[,1]:==`tr')
+        mata: se_tau[`i',1] = sqrt((nr_tau-1)/nr_tau) * sqrt(variance(vec(vect_tau)))
+        mata: st_matrix("se_tau",se_tau)	
+        local ++i
+    }
+	
     mata: se = sqrt((`B'-1)/`B') * sqrt(variance(vec(ATT_b)))
     mata: st_local("se", strofreal(se)) 
 }
-    	
 *--------------------------------------------------------------------------*
 * (4) Standard error: placebo
 *--------------------------------------------------------------------------*
@@ -352,6 +389,8 @@ else if "`vce'"=="placebo" {
     local b = 1
     local B = `reps'
     mata: ATT_p = J(`B', 1, .)
+    mata: tau_p = J(1, 2, .)
+    mata: se_tau = J(`nadop', 1, .)
 	
     dis "Placebo replications (`reps'). This may take some time."
     dis "----+--- 1 ---+--- 2 ---+--- 3 ---+--- 4 ---+--- 5"
@@ -359,18 +398,20 @@ else if "`vce'"=="placebo" {
     while `b'<=`B' {
         preserve
         qui keep if `touse'
-	sort `3' `2'
 		
         keep `1' `2' `3' `4' `tyear' `conts'
-        tempvar r rand id
-        qui gen `r'=runiform() in 1/`co'
-        bys `2': egen `rand'=sum(`r')
-        qui drop if `tyear'!=.        //drop treated units
-        egen `id' = group(`rand')     //gen numeric order by runiform variable
+		qui drop if `tyear'!=.        //drop treated units
 
+        tempvar r rand id
+		sort `3' `2'
+        qui gen `r'=runiform() in 1/`co'		
+        bys `2': egen `rand'=sum(`r')				
+        egen `id' = group(`rand')     //gen numeric order by runiform variable
+		
         local i=1
         forvalues y=`newtr'/`co' {
             qui replace `tyear'=tryears[`i',1] if `id'==`y'
+			
             local ++i
         }
 
@@ -384,31 +425,66 @@ else if "`vce'"=="placebo" {
         mata: indicator=smerge(psam_id, (ori_id, ori_pos))
         mata: OMEGAP=OMEGA[(indicator\rows(OMEGA)),]
         mata: data = st_data(.,("`1' `2' `2' `3' `4' `treated' `tyear' `conts'"))
-        mata: ATT_p[`b',] = synthdid(data,1,OMEGAP,LAMBDA,`control_opt',`jk')
+        mata: ATT_p[`b',] = synthdid(data,1,OMEGAP,LAMBDA,`control_opt',`jk',`m')
+		
+        *taus for adoption times
+        mata: ty = uniqrows(select(data[,7], data[,5]:==1))
+        mata: ty_taus = (ty, st_matrix("tau_i"))
+        mata: tau_p =  (tau_p\ty_taus)
+		
         local ++b
         restore
+    }
+	
+    *SE for adoption times
+    local i=1
+    foreach tr of local tryear {
+        mata: nr_tau = rows(select(tau_p[,2], tau_p[,1]:==`tr'))
+        mata: vect_tau = select(tau_p[,2], tau_p[,1]:==`tr')
+        mata: se_tau[`i',1] = sqrt((nr_tau-1)/nr_tau) * sqrt(variance(vec(vect_tau)))
+        mata: st_matrix("se_tau",se_tau)	
+        local ++i
     }
 	
     mata: se = sqrt((`B'-1)/`B') * sqrt(variance(vec(ATT_p)))
     mata: st_local("se", strofreal(se))
 }
-
+}
 *--------------------------------------------------------------------------*
 * (5) Return output
 *--------------------------------------------------------------------------*
 ereturn clear
 
-matrix tau=(tau,adoption)
-qui levelsof `2'
+*for esttab and eststo
+if "`vce'"!="noinference" {
+matrix b=`ATT'
+matrix V=`se'^2
+matrix colnames b=`4'
+matrix rownames b=`1'
+matrix colnames V=`4'
+matrix rownames V=`4'
+ereturn post b V, depname(`1') obs(`Ntotal')
+}
+
+if "`vce'"!="noinference" {
+	matrix tau=(tau,se_tau,adoption)
+	matrix colnames tau = Tau Std.Err. Time
+}
+
+else {
+	matrix tau=(tau,adoption)
+	matrix colnames tau = Tau Time
+}
+
+qui levelsof `2' if `touse'
 local nclust: word count `r(levels)'
 
-
+if "`vce'"=="noinference" local se=.
 ereturn scalar se     =`se' 
 ereturn scalar ATT    =`ATT'
 ereturn scalar reps   =`reps'
 ereturn scalar N_clust=`nclust'
 
-matrix colnames tau = Tau Time
 if "`mattitles'"!="" {
         local rn ""
         foreach n of local rnames {
@@ -444,18 +520,32 @@ local LCI=`ATT'+invnormal(0.025)*`se'
 local UCI=`ATT'+invnormal(0.975)*`se'
 
 
+if ("`method'"=="sdid" | "`method'"=="" ) {
+    local tabletitle "Synthetic Difference-in-Differences Estimator"
+    local tablefootnote "Refer to Arkhangelsky et al., (2020) for theoretical derivations."
+}
+if ("`method'"=="did") {
+    local tabletitle "Difference-in-Differences Estimator"
+    local tablefootnote
+}
+if ("`method'"=="sc") {
+    local tabletitle "Synthetic Control"
+    local tablefootnote
+}
+
+
 
 di as text ""
 di as text ""
-di as text "Synthetic Difference-in-Differences Estimator" 
+di as text "`tabletitle'" 
 di as text ""
 di as text "{hline 13}{c TT}{hline 63}"
 di as text %12s abbrev("`1'",12) " {c |}     ATT     Std. Err.     t      P>|t|    [95% Conf. Interval]" 
 di as text "{hline 13}{c +}{hline 63}"
-di as text "   treatment" " {c |} " as result %9.5f `ATT' "  " %9.5f `se' %9.2f `t' %9.3f `pval' "   " %9.5f `LCI' "   " %9.5f `UCI'
+di as text %12s abbrev("`4'",12) " {c |} " as result %9.5f `ATT' "  " %9.5f `se' %9.2f `t' %9.3f `pval' "   " %9.5f `LCI' "   " %9.5f `UCI'
 di as text "{hline 13}{c BT}{hline 63}"
 di as text "95% CIs and p-values are based on Large-Sample approximations."
-di as text "Refer to Arkhangelsky et al., (2020) for theoretical derivations." 
+di as text "`tablefootnote'" 
 
 *--------------------------------------------------------------------------*
 * (6) Graphing
@@ -488,85 +578,86 @@ if length("`graph'")!=0 {
 
     local TAU=1
     foreach time of local tryear {
-        preserve
-        qui keep if (`tyear'==. | `tyear'==`time') & `touse'
-        qui levelsof `2' if `tyear'==`time', local(tr_unit)
-        qui levelsof `2', local(id2)
-        qui count if `tyear'==`time' & `3'==`time'
-        local Ntr=r(N)
-        qui merge m:1 `3' using `lambda_weights_`time'', nogen
+        if "`g1on'"=="g1on" {
+            preserve
+            qui keep if (`tyear'==. | `tyear'==`time') & `touse'
+            qui levelsof `2' if `tyear'==`time', local(tr_unit)
+            qui levelsof `2', local(id2)
+            qui count if `tyear'==`time' & `3'==`time'
+            local Ntr=r(N)
+            qui merge m:1 `3' using `lambda_weights_`time'', nogen
 
-        mata: Z=J(`N',5,.)
-        local i=1
-        foreach s of local id2 {
-            qui sum `1' if `3'>=`time' & `2'==`s'
-            mata: Z[`i',1]=`r(mean)'
-            local ++i
-        }
+            mata: Z=J(`N',5,.)
+            local i=1
+            foreach s of local id2 {
+                qui sum `1' if `3'>=`time' & `2'==`s'
+                mata: Z[`i',1]=`r(mean)'
+                local ++i
+            }
 
-        tempvar Y_lambda
-        qui gen `Y_lambda'=`1'*weight_lambda_`time'		
+            tempvar Y_lambda
+            qui gen `Y_lambda'=`1'*weight_lambda_`time'		
 
-        local i=1
-        foreach s of local id2 {
-            qui sum `Y_lambda' if `3'<`time' & `2'==`s'
-            mata: Z[`i',2]=`r(mean)' * `r(N)'
-            mata: Z[`i',4]=`s'
-            local ++i
-        }
+            local i=1
+            foreach s of local id2 {
+                qui sum `Y_lambda' if `3'<`time' & `2'==`s'
+                mata: Z[`i',2]=`r(mean)' * `r(N)'
+                mata: Z[`i',4]=`s'
+                local ++i
+            }
 
-        mata: Z[,3]=Z[,1]-Z[,2]
-        mata: delta_tr=J(1,`Ntr',.)
-        local i=1
-        foreach s of local tr_unit {
-            mata: delta_tr[1,`i']=select(Z[,3],Z[,4]:==`s')
-            local ++i
-        }	
+            mata: Z[,3]=Z[,1]-Z[,2]
+            mata: delta_tr=J(1,`Ntr',.)
+            local i=1
+            foreach s of local tr_unit {
+                mata: delta_tr[1,`i']=select(Z[,3],Z[,4]:==`s')
+                local ++i
+            }	
 
-        mata: Z[,5]=J(`N',1,sum(delta_tr)/`Ntr')-Z[,3]
-        clear
-
-        mata: difference=Z[,5]
-        mata: state=Z[,4]
-        mata: omega=weight_omega_`time'
-        getmata difference state, force
+            mata: Z[,5]=J(`N',1,sum(delta_tr)/`Ntr')-Z[,3]
+            clear
+            mata: difference=Z[,5]
+            mata: state=Z[,4]
+            mata: omega=weight_omega_`time'
+            getmata difference state, force
        
-        local tr_u `tr_u' `tr_unit' 
-        foreach s of local tr_u {
-            qui drop if state==`s'
-        }
+            local tr_u `tr_u' `tr_unit' 
+            foreach s of local tr_u {
+                qui drop if state==`s'
+            }
 
-        getmata omega, force
-        qui drop if state==.
-        gen order=_n
-        mata: st_local("tau", strofreal(tau[`TAU',]))
+            getmata omega, force
+            qui drop if state==.
+            gen order=_n
+            mata: st_local("tau", strofreal(tau[`TAU',]))
 
-        order difference order state
-        local xlabs
+            order difference order state
+            local xlabs
 
-        if `stringvar'== 0 {
-            qui levelsof state, local(sgroup)
-            foreach s of local sgroup {
-                qui sum order if state == `s'
-                local oN = r(mean)
-                if r(mean)!= . {
-                    local xlabs `xlabs' `oN' "`s'"
+            if `stringvar'== 0 {
+                qui levelsof state, local(sgroup)
+                foreach s of local sgroup {
+                    qui sum order if state == `s'
+                    local oN = r(mean)
+                    if r(mean)!= . {
+                        local xlabs `xlabs' `oN' "`s'"
+                    }
                 }
             }
+            if `stringvar'==1 {
+                qui merge 1:m state using `stateString'
+                qui keep if _merge==3
+                qui levelsof stateName, local(sgroup)
+                foreach s of local sgroup {
+                    qui sum order if stateName == `"`s'"'
+                    local oN = r(mean)
+                    if r(mean)!= . {
+                        local xlabs `xlabs' `oN' "`s'"
+                    }
+                }            
+            }
         }
-        if `stringvar'==1 {
-            qui merge 1:m state using `stateString'
-            qui keep if _merge==3
-            qui levelsof stateName, local(sgroup)
-            foreach s of local sgroup {
-                qui sum order if stateName == `"`s'"'
-                local oN = r(mean)
-                if r(mean)!= . {
-                    local xlabs `xlabs' `oN' "`s'"
-                }
-            }            
-        }
-
+		
         if length(`"`graph_export'"')!=0 {
             _graph_Name `graph_export'
             local gstub = r(gstub)
@@ -578,21 +669,22 @@ if length("`graph'")!=0 {
         }
         else local ex=0
 
-        if length(`"`msize'"')==0 local ms msize(tiny)
-        else local ms `msize'
-        
-        lab var difference "Difference"
-        lab var order "Group"
-        #delimit ;
-        twoway scatter difference order if omega!=0 [aw=omega], `ms'
-            || scatter difference order if omega==0, m(X) 
-            xlabel(`xlabs', angle(vertical) labs(vsmall) valuelabel)
-            yline(`tau', lc(red)) 
-            `g1_opt' name(g1_`time', replace) legend(off);
-        #delimit cr
-        if `ex'==1 graph export "`gstub'weights`time'`suffix'", replace
-        
-        restore
+        if "`g1on'"=="g1on" {
+            if length(`"`msize'"')==0 local ms msize(tiny)
+            else local ms `msize'
+            lab var difference "Difference"
+            lab var order "Group"
+            #delimit ;
+            twoway scatter difference order if omega!=0 [aw=omega], `ms'
+                || scatter difference order if omega==0, m(X) 
+                xlabel(`xlabs', angle(vertical) labs(vsmall) valuelabel)
+                yline(`tau', lc(red)) 
+                `g1_opt' name(g1_`time', replace) legend(off);
+            #delimit cr
+            if `ex'==1 graph export "`gstub'weights`time'`suffix'", replace
+            restore
+        }
+		
         local ++TAU
         
         preserve
@@ -617,10 +709,16 @@ if length("`graph'")!=0 {
         mat coln Yco`time' = Yco`time' 
         mat coln Ytr`time' = Ytr`time' 
 		
+		matrix diff`time' = Ytr`time'-Yco`time'
+		mat coln diff`time' = Diff`time'
+		
+        local timelambda "|| area lambda `3', yaxis(2) lp(solid) ylabel(0(1)3, axis(2)) yscale(off axis(2))"
+        if "`method'"=="sc" local timelambda 
+		
         #delimit ;
-        twoway line `Y_omega'Control `3', yaxis(1) lp(solid)
+        twoway line `Y_omega'Control `3', yaxis(1) lp(dash)
             || line `Y_omega'Treated `3', yaxis(1) lp(solid)
-    	    || area lambda `3', yaxis(2) lp(solid) ylabel(0(1)5, axis(2)) yscale(off axis(2))
+    	    `timelambda'
             || , 
             xline(`time', lc(red)) legend(order(1 "Control" 2 "Treated") pos(12) col(2))
            `g2_opt' name(g2_`time', replace);
@@ -640,7 +738,18 @@ if length("`graph'")!=0 {
     }
     mkmat _all, matrix(series)
     restore
-    ereturn matrix series series
+	
+    preserve
+    clear
+    qui svmat ttime, names(col)
+    foreach time of local tryear {
+        qui svmat diff`time', names(col)
+    }
+    mkmat _all, matrix(difference)
+    restore
+	
+	ereturn matrix series series
+    ereturn matrix difference difference
 }
 end
 
@@ -693,7 +802,7 @@ end
 * (7) indicator of year treated (if treated)
 * (8+) any controls
 mata:
-    real scalar synthdid(matrix data, inference, OMEGA, LAMBDA, controls, jk) {
+    real scalar synthdid(matrix data, inference, OMEGA, LAMBDA, controls, jk, mt) {
         data  = sort(data, (6,2,4))
         units = panelsetup(data,2)
         NT = panelstats(units)[,3]
@@ -723,9 +832,11 @@ mata:
         
         //Find years which change treatment
         trt = select(uniqrows(data[,7]),uniqrows(data[,7]):!=.)
+		
         //Iterate over years, calculating each estimate
         tau    = J(rows(trt),1,.)
         tau_wt = J(1,rows(trt),.)
+		
         if (inference==0) {
             Omega = J(Nco, rows(trt),.)
             Lambda = J(NT, rows(trt),.)
@@ -762,7 +873,14 @@ mata:
             prediff = select(diff,dropc:==0)
             sig_t = sqrt(variance(prediff))
             EtaLambda = 1e-6
-            EtaOmega = (yNtr*yTpost)^(1/4)
+            
+            if (mt!=3) {
+                EtaOmega = (yNtr*yTpost)^(1/4)
+            }
+            if (mt==3) {
+                EtaOmega = 1e-6
+            }
+			
             yZetaOmega  = EtaOmega*sig_t
             yZetaLambda = EtaLambda*sig_t
             //Generate Y matrices
@@ -778,17 +896,30 @@ mata:
             //Calculate input matrices (pre-treatment and averages)
             A_l = Y0[,1..Npre]:-mean(Y0[,1..Npre])
             b_l = promt:-mean(promt)
-            A_o = Y0[,1..Npre]':-mean(Y0[,1..Npre]')
-            b_o = mean(Y1[.,1..Npre])':-mean(mean(Y1[.,1..Npre])')
+			
+            if (mt!=3) {
+                A_o = Y0[,1..Npre]':-mean(Y0[,1..Npre]')
+                b_o = mean(Y1[.,1..Npre])':-mean(mean(Y1[.,1..Npre])')
+            }
+            if (mt==3) {
+                A_o = Y0[,1..Npre]'
+                b_o = mean(Y1[.,1..Npre])'
+            }			
 	
             //Calculate Tau for t
-            if (inference==1) {
+            if (inference==1 & mt!=2) {
                 lambda_l = select(LAMBDA'[.,1::Npre],LAMBDA'[,rows(LAMBDA)]:==trt[yr])
                 l_o = select(OMEGA'[.,1::yNco],OMEGA'[,rows(OMEGA)]:==trt[yr])
                 lambda_o = sum_norm(l_o) //update so prior weights sum to 1
             }
+			
             else {
-                lambda_l = J(1,cols(A_l),1/cols(A_l))
+                if (mt==3) {
+                    lambda_l = J(1,cols(A_l),0)
+                }
+                if (mt!=3) {
+                    lambda_l = J(1,cols(A_l),1/cols(A_l))
+                }
                 lambda_o = J(1,cols(A_o),1/cols(A_o))
             }
             mindec = (1e-5*sig_t)^2
@@ -817,11 +948,15 @@ mata:
                 eta_o = Npre*yZetaOmega^2
                 eta_l = yNco*yZetaLambda^2
 			
-                //update wights
-                lambda_l = fw(A_l,b_l,lambda_l,eta_l)
+                //update wights: sdid and sc
+                if (mt!=2) {
+                    if (mt==1) {
+                        lambda_l = fw(A_l,b_l,lambda_l,eta_l)
+                    }
+                    lambda_o = fw(A_o,b_o,lambda_o,eta_o)
+                }
                 err_l    = (A_l, b_l)*(lambda_l' \ -1)
-                lambda_o = fw(A_o,b_o,lambda_o,eta_o)
-                err_o    = (A_o, b_o)*(lambda_o' \ -1)	
+                err_o    = (A_o, b_o)*(lambda_o' \ -1)
 				
                 while (t<maxiter & (t<2 | dd>mindec)) {
                     t++		
@@ -840,14 +975,24 @@ mata:
 					
                     Ybeta_A_l = Ybeta[1::yNco,1::Npre]:-mean(Ybeta[1::yNco,1::Npre])
                     Ybeta_b_l = Ybeta[1::yNco,Npre+1]:-mean(Ybeta[1::yNco,Npre+1])
-                    Ybeta_A_o = Ybeta[1::yNco,1::Npre]':-mean(Ybeta[1::yNco,1::Npre]')
-                    Ybeta_b_o = (Ybeta[yNco+1,1::Npre])':-mean((Ybeta[yNco+1,1::Npre])')
+                    if (mt!=3) {
+                       Ybeta_A_o = Ybeta[1::yNco,1::Npre]':-mean(Ybeta[1::yNco,1::Npre]')
+                       Ybeta_b_o = (Ybeta[yNco+1,1::Npre])':-mean((Ybeta[yNco+1,1::Npre])')
+                    }
+                    if (mt==3) {
+                       Ybeta_A_o = Ybeta[1::yNco,1::Npre]'
+                       Ybeta_b_o = (Ybeta[yNco+1,1::Npre])'
+                    }
 				
-                    lambda_l = fw(Ybeta_A_l,Ybeta_b_l,lambda_l,eta_l)
+                    if (mt!=2) {
+                        if (mt==1) {
+                            lambda_l = fw(Ybeta_A_l,Ybeta_b_l,lambda_l,eta_l)
+                        }
+                        lambda_o = fw(Ybeta_A_o,Ybeta_b_o,lambda_o,eta_o)
+                    }
                     err_l    = (Ybeta_A_l,Ybeta_b_l)*(lambda_l' \ -1)
-                    lambda_o = fw(Ybeta_A_o,Ybeta_b_o,lambda_o,eta_o)
                     err_o    = (Ybeta_A_o,Ybeta_b_o)*(lambda_o' \ -1)
-					
+
                     vals[1,t]=yZetaOmega^2*(lambda_o*lambda_o')+yZetaLambda^2*(lambda_l*lambda_l')+
                               (err_o'*err_o)/Npre+(err_l'*err_l)/yNco
                     if (t>1) dd = vals[1,t-1] - vals[1,t]
@@ -867,16 +1012,19 @@ mata:
             }
 			
             if (controls==0 | controls==1) {
-                //Find optimal weight matrices
-                eta_o = Npre*yZetaOmega^2
-                eta_l = yNco*yZetaLambda^2
-                lambda_l = lambda(A_l,b_l,lambda_l,eta_l,yZetaLambda,100,mindec)
-                lambda_l = sspar(lambda_l)
-                lambda_l = lambda(A_l, b_l, lambda_l,eta_l,yZetaLambda, 10000,mindec)
-                
-                lambda_o = lambda(A_o, b_o, lambda_o,eta_o,yZetaOmega, 100,mindec)
-                lambda_o = sspar(lambda_o)
-                lambda_o = lambda(A_o, b_o, lambda_o,eta_o,yZetaOmega, 10000,mindec)
+                if (mt!=2) {
+                    //Find optimal weight matrices
+                    eta_o = Npre*yZetaOmega^2
+                    eta_l = yNco*yZetaLambda^2
+                    if (mt==1) {
+                        lambda_l = lambda(A_l,b_l,lambda_l,eta_l,yZetaLambda,100,mindec)
+                        lambda_l = sspar(lambda_l)
+                        lambda_l = lambda(A_l, b_l, lambda_l,eta_l,yZetaLambda, 10000,mindec)
+                    }
+                    lambda_o = lambda(A_o, b_o, lambda_o,eta_o,yZetaOmega, 100,mindec)
+                    lambda_o = sspar(lambda_o)
+                    lambda_o = lambda(A_o, b_o, lambda_o,eta_o,yZetaOmega, 10000,mindec)
+                }
                 if (inference==0) {
                     Lambda[.,yr] =  (lambda_l' \ J(Npost,1,.))
                     Omega[.,yr] = lambda_o'
@@ -901,7 +1049,9 @@ mata:
             tau_aux    = J(rows(trt),1,.)
             tau_wt_aux = J(1,rows(trt),.)
             ATT_aux = J(N,1,.)
-        
+            tau_aux_j = J(2,N,.)
+			se_aux_j = J(rows(trt),1,.)
+
             yNco_ori=yNco
             ind=(1::yNco)
             for (i=1; i<=N; ++i) {
@@ -951,8 +1101,15 @@ mata:
                         promt_aux = mean(Y0_aux[,(Npre+1)::yNT]')'
                         A_l_aux = Y0_aux[,1..Npre]:-mean(Y0_aux[,1..Npre])
                         b_l_aux = promt_aux:-mean(promt_aux)
-                        A_o_aux = Y0_aux[,1..Npre]':-mean(Y0_aux[,1..Npre]')
-                        b_o_aux = mean(Y1_aux[.,1..Npre])':-mean(mean(Y1_aux[.,1..Npre])')
+						
+                        if (mt!=3) {
+                           A_o_aux = Y0_aux[,1..Npre]':-mean(Y0_aux[,1..Npre]')
+                           b_o_aux = mean(Y1_aux[.,1..Npre])':-mean(mean(Y1_aux[.,1..Npre])')
+                        }
+                        if (mt==3) {
+                           A_o_aux = Y0_aux[,1..Npre]'
+                           b_o_aux = mean(Y1_aux[.,1..Npre])'
+                        }
 					
                         K = cols(data_aux)
                         A = J((K-7),1,NULL)
@@ -1014,20 +1171,33 @@ mata:
                         tau_wt_aux[yr] = yNtr*Npost	
                     }				
                 }
+				tau_aux_j[,i] = tau_aux
                 tau_wt_aux = tau_wt_aux/sum(tau_wt_aux')
                 ATT_aux[i] = tau_wt_aux*tau_aux	
             }
+			
+            // SE for any adoption
+            for (i=1; i<=rows(trt); ++i) {
+                se_aux_j[i,] = sqrt(((N-1)/N) * (N - 1) * variance(vec(tau_aux_j[i,])))
+            }
+			
             se_j = sqrt(((N-1)/N) * (N - 1) * variance(vec(ATT_aux)))
             st_local("se", strofreal(se_j))
+            st_matrix("se_i", se_aux_j)
         }
 		
         tau_wt = tau_wt/sum(tau_wt')
         ATT = tau_wt*tau
+		
         if (inference==0) {
             st_matrix("omega" ,Omega)
             st_matrix("lambda",Lambda)
             st_matrix("tau"   ,tau)
             st_matrix("beta"  ,Beta)	
+        }
+        if (inference==1 & jk!=1) {
+            tau_i = tau
+            st_matrix("tau_i",tau_i)
         }
         return(ATT)
     }
@@ -1164,5 +1334,4 @@ mata:
         Yprojected = Y[.,1]-X*Beta
 }
 end
-
 

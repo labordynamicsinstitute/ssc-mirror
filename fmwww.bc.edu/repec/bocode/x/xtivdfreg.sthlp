@@ -1,8 +1,10 @@
 {smcl}
-{* *! version 1.0.3  12feb2021}{...}
+{* *! version 1.3.1  28feb2023}{...}
 {* *! Sebastian Kripfganz, www.kripfganz.de}{...}
 {* *! Vasilis Sarafidis, sites.google.com/view/vsarafidis}{...}
 {vieweralsosee "xtivdfreg postestimation" "help xtivdfreg_postestimation"}{...}
+{vieweralsosee "spxtivdfreg" "help spxtivdfreg"}{...}
+{vieweralsosee "spxtivdfreg postestimation" "help spxtivdfreg_postestimation"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[R] regress" "help regress"}{...}
 {vieweralsosee "[R] ivregress" "help ivregress"}{...}
@@ -20,7 +22,7 @@
 {viewerjumpto "References" "xtivdfreg##references"}{...}
 {title:Title}
 
-{p2colset 5 20 22 2}{...}
+{p2colset 5 18 20 2}{...}
 {p2col :{bf:xtivdfreg} {hline 2}}Defactored IV estimation of large panel data models{p_end}
 {p2colreset}{...}
 
@@ -53,6 +55,7 @@ INCLUDE help shortdes-displayoptall
 
 {syntab:Optimization}
 {synopt:{opt noeig:ratio}}do not use the eigenvalue ratio test to determine the number of factors{p_end}
+{synopt:{opt std}}extract factors from standardized variables{p_end}
 {p2coldent :# {opt iter:ate(#)}}specifies maximum {it:#} of iterations{p_end}
 {p2coldent :# {opt ltol:erance(#)}}tolerance for the objective function{p_end}
 {p2coldent :# {opt nodot:s}}do not display dots for the iteration steps{p_end}
@@ -67,8 +70,8 @@ Typical use is {cmd:absorb(}{it:{help xtset:panelvar}}{cmd:)} or {cmd:absorb(}{i
 {p 4 6 2}
 {it:iv_spec} is
 
-{p 8 8 2}
-{varlist} [{cmd:,} {opt fvar(fvars)} {opt l:ags(#)} {opt fact:max(#)} [{cmdab:no:}]{opt eig:ratio} [{cmdab:no:}]{opt double:defact}]
+{p 8 12 2}
+{varlist} [{cmd:,} {opt fvar(fvars)} {opt l:ags(#)} {opt fact:max(#)} [{cmdab:no:}]{opt eig:ratio} [{cmd:no}]{opt std} [{cmdab:no:}]{opt double:defact}]
 
 {p 4 6 2}
 You must {cmd:xtset} your data before using {cmd:xtivdfreg}; see {helpb xtset:[XT] xtset}.{p_end}
@@ -86,9 +89,12 @@ See {helpb xtivdfreg postestimation} for features available after estimation.{p_
 {title:Description}
 
 {pstd}
-{cmd:xtivdfreg} implements the instrumental variables (IV) estimator for large panel data models, as developed by Norkute, Sarafidis, Yamagata, and Cui (2020) and Cui, Norkute, Sarafidis, and Yamagata (2020).
+{cmd:xtivdfreg} implements the instrumental variables (IV) estimator for large panel data models, as developed by Norkute, Sarafidis, Yamagata, and Cui (2020) and Cui, Norkute, Sarafidis, and Yamagata (2022).
 The instruments are defactored to control for a multifactor error structure. Heterogeneous slope coefficients can be allowed using a mean-group (MG) estimator.
 The command accommodates unbalanced panel data and permits highly flexible instrumentation strategies. Examples in Kripfganz and Sarafidis (2021) illustrate several features of {cmd:xtivdfreg}.
+
+{pstd}
+An extension of the estimator to models with spatially lagged variables is implemented in {helpb spxtivdfreg}.
 
 
 {marker options}{...}
@@ -100,8 +106,8 @@ The command accommodates unbalanced panel data and permits highly flexible instr
 {cmd:absorb(}{it:{help reghdfe##absvar:absvars}}{cmd:)} specifies categorical variables that identify the fixed effects to be absorbed; see {helpb reghdfe:reghdfe} (if installed).
 
 {phang}
-{cmd:iv(}{varlist} [{cmd:,} {opt fvar(fvars)} {opt l:ags(#)} {opt fact:max(#)} [{cmdab:no:}]{opt eig:ratio} [{cmdab:no:}]{opt double:defact}]{cmd:)} specifies instrumental variables. One can specify as many sets of instruments as required.
-Variables in the same set are defactored jointly. External variables that are not part of the regression model can also be used as instruments in {it:varlist}.
+{cmd:iv(}{varlist} [{cmd:,} {opt fvar(fvars)} {opt l:ags(#)} {opt fact:max(#)} [{cmdab:no:}]{opt eig:ratio} [{cmd:no}]{opt std} [{cmdab:no:}]{opt double:defact}]{cmd:)} specifies instrumental variables.
+One can specify as many sets of instruments as required. Variables in the same set are defactored jointly. External variables that are not part of the regression model can also be used as instruments in {it:varlist}.
 
 {pmore}
 {opt fvar(fvars)} specifies that factors are extracted from the variables in {it:fvars}. The default is to extract factors from all variables in {it:varlist}.
@@ -116,6 +122,9 @@ The variables at each lag order are defactored separately with factors extracted
 {pmore}
 {opt noeigratio} and {opt eigratio} request to either use a fixed number of factors as specified with suboption {opt factmax(#)} or to use the Ahn and Horenstein (2013) eigenvalue ratio test to compute the number of factors.
 {cmd:eigratio} is the default unless otherwise specified with the global option {cmd:noeigratio}.
+
+{pmore}
+{opt std} and {opt nostd} request to compute factors from either standardized or nonstandardized variables. {cmd:nostd} is the default unless otherwise specified with the global option {cmd:std}.
 
 {pmore}
 {opt doubledefact} requests to include {it:fvars} in a further defactorization stage of the entire model for the first-stage estimator. All sets of instruments that are included in this defactorization stage are jointly defactored,
@@ -164,6 +173,9 @@ The default is set by the global option [{cmd:no}]{cmd:doubledefact}.
 By default, the eigenvalue ratio test of Ahn and Horenstein (2013) is used to compute the number of factors for each estimation stage and each set of instruments.
 
 {phang}
+{opt std} requests to compute factors from standardized variables (requires Stata version 16.1 or higher).
+
+{phang}
 {opt iterate(#)} specifies the maximum number of iterations for the extraction of factors. If convergence is declared before this threshold is reached, it will stop when convergence is declared.
 The default is the number set using {helpb set maxiter}. This option has no effect with strongly balanced panel data, in which case any iterations are redundant.
 
@@ -172,6 +184,7 @@ The default is the number set using {helpb set maxiter}. This option has no effe
 
 {phang}
 {opt nodots} requests not to display dots for the iteration steps. By default, one dot character is displayed for each iteration step. This option has no effect with strongly balanced panel data.
+
 
 {marker remarks}{...}
 {title:Remarks}
@@ -200,6 +213,11 @@ For example, {cmd:iv(}{it:varlist}{cmd:, fvar(}{it:fvars}{cmd:) lags(2))} specif
 {cmd:L}{it:#}{cmd:.(}{it:varlist}{cmd:)} is defactored with factors extracted from {cmd:L}{it:#}{cmd:.(}{it:fvars}{cmd:)}.
 However, the number of factors is restricted to be the same and, if different based on the Ahn and Horenstein (2013) algorithm, is chosen as the maximum of the numbers that are obtained separately for each lag.
 The number of factors can differ across different sets of instruments if multiple {cmd:iv()} options are specified.
+
+{pstd}
+Principal-components analysis can be sensitive to the scale of the data. For this reason, the command allows to compute factors from standardized variables. The standardization is computed separately for each time period.
+The global option option {opt std} switches on the standardization for all variables in both defactorization stages for the first-stage IV estimator.
+For the first defactorization stage, this can be switched on or off separately for each set of instruments.
 
 {pstd}
 When the estimation sample is not strongly balanced, an iterative EM algorithm is applied to extract the factors, following Stock and Watson (1998) and Bai, Liao, and Yang (2015).
@@ -307,6 +325,12 @@ The standard error of the constant term is computed using the influence-function
 {pstd}To update the {cmd:xtivdfreg} package to the latest version, type{p_end}
 {phang2}. {stata `"net install xtivdfreg, from("http://www.kripfganz.de/stata/") replace"'}{p_end}
 
+{pstd}If the connection to the previous website fails, alternatively type{p_end}
+{phang2}. {stata ssc install xtivdfreg, replace}{p_end}
+
+{pstd}
+The SSC version is less frequently updated and may not be the latest available version. The current version of the {cmd:xtivdfreg} package requires Stata version 13 or higher. Some options require a more recent version.
+
 
 {marker authors}{...}
 {title:Authors}
@@ -316,6 +340,12 @@ Sebastian Kripfganz, University of Exeter, {browse "http://www.kripfganz.de"}
 
 {pstd}
 Vasilis Sarafidis, BI Norwegian Business School, {browse "https://sites.google.com/view/vsarafidis"}
+
+
+{title:Acknowledgements}
+
+{pstd}
+{cmd:xtivdfreg} is not an official Stata command. It is a free contribution to the research community. Please cite Kripfganz and Sarafidis (2021), as provided in the references list just below.
 
 
 {marker references}{...}
@@ -332,14 +362,14 @@ Unbalanced panel data models with interactive effects.
 In: {it:The Oxford Handbook of Panel Data}, ed. B. H. Baltagi. Oxford University Press: 149-170.
 
 {phang}
-Cui, G., M. Norkute, V. Sarafidis, and T. Yamagata. 2020.
+Cui, G., M. Norkute, V. Sarafidis, and T. Yamagata. 2022.
 Two-stage instrumental variable estimation of linear panel data models with interactive effects.
-{it:ISER Discussion Paper} 1101.
+{it:Econometrics Journal} 25: 340-361.
 
 {phang}
 Kripfganz, S., and V. Sarafidis. 2021.
-Instrumental variable estimation of large-T panel data models with common factors.
-{it:Accepted for publication in the Stata Journal}.
+Instrumental-variable estimation of large-T panel-data models with common factors.
+{it:Stata Journal} 21: 659-686.
 
 {phang}
 Kripfganz, S., and C. Schwarz. 2019.
@@ -355,9 +385,3 @@ Instrumental variable estimation of dynamic linear panel data models with defact
 Stock, J. H., and M. W. Watson. 1998.
 Diffusion indexes.
 {it:NBER Working Paper} 6702.
-
-
-{title:Acknowledgements}
-
-{pstd}
-{cmd:xtivdfreg} is not an official Stata command. It is a free contribution to the research community. Please cite Kripfganz and Sarafidis (2020), as provided in the references list just above.

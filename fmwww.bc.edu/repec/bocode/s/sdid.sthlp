@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0 April 01, 2022}
+{* *! version 2.0.0 February 23, 2024}
 {title:Title}
 
 {p 4 4 2}
@@ -19,10 +19,13 @@
 Optional {it:type} can be specified, as either "optimized" (the default) or "projected", which is preferable in certain circumstances. {p_end}
 {synopt :{opt seed}({it:#})} set random-number seed to #.{p_end}
 {synopt :{opt reps}({it:#})} repetitions for bootstrap and placebo inference.{p_end}
-{synopt :{opt graph}} if this option is specified, graphs will be displayed in the style of figure 1 from {help sdid##SDID2021:Arkhangelsky et al. (2021)}{p_end}
+{synopt :{opt method(type)}} Allows for an estimation method to be requested.  {it: type} can be "sdid" (which is estimated by default), "did" (for standard difference-in-differencs) or "sc" (for standard synthetic control).{p_end}
+{synopt :{opt graph}} if this option is specified, graphs will be displayed in the style of figure 1 from {help sdid##SDID2021:Arkhangelsky et al. (2021)}.{p_end}
+{synopt :{opt g1on}} If graphing is requested, this option activates the unit-specific weight graph.{p_end}
 {synopt :{opt g1_opt}({it:{help twoway_options:graph options}})} option to modify the appearance of the unit-specific weight graph.{p_end}
 {synopt :{opt g2_opt}({it:{help twoway_options:graph options}})} option to modify the appearance of the outcome trend graphs.{p_end}
 {synopt :{opt graph_export}({it:string}, {it:{help graph export:type}})} option allowing for generated graphs to be saved to the disk.{p_end}
+{synopt :{opt msize(markersizestyle)}}{it: markersizestyle} allows you to modify the size of the marker for graph 1.{p_end}
 {synopt :{opt unstandardized}} In the case of "optimized" covariates, by default covariates will be standardized as z-scores,
 unless the unstandardized option is specified.{p_end}
 {synopt :{opt mattitles}} Requests that weights returned in matrices are accompanied by the name
@@ -45,6 +48,7 @@ of the groupvar corresponding to each weight.{p_end}
  between treated units and synthetic control units, where synthetic control units are chosen as an optimally weighted function
  of untreated units (unit-specific weights) and pre-treatment times (time-specific weights).  The {cmd:sdid} command exactly implements
  the procedures described in Arkhangelsky et al. (2021).  The exact estimation procedure implemented by {cmd:sdid} is described in their Algorithm 1.
+ Further discussion of this procedure and its implementation in Stata is available in "Synthetic Difference-in-Differences Estimation" (Clarke et al., 2023).
 {p_end}
 
 {pstd}
@@ -53,7 +57,8 @@ estimation procedure in cases of staggered-adoption designs, where treated units
 time, while control units never adopt.  {cmd:sdid} seamlessly estimates treatment effects in cases with both single-time periods of treatment and
 multiple-time periods of treatment.  In the latter case, rather than calculating a single unit and time-specific weight vector,
 an optimal unit and time-specific weight vector is calculated for each adoption period.  The reported average treatment effect
-on the treated (ATT) in the staggered adoption design is the weighted estimand described in Arkhangelsky et al. (2021), Appendix A.
+on the treated (ATT) in the staggered adoption design is the weighted estimand described in Arkhangelsky et al. (2021), Appendix A. Additionally,
+adoption-period specific estimates and their standard errors are returned after estimation.
 {p_end} 
 
 {pstd}
@@ -73,7 +78,6 @@ which case jackknife will provide a more (computationally) feasible inference pr
 output documenting optimal weights, as well as matched treatment and synthetic control trends underlying the synthetic
 difference-in-differences framework.  Details related to covariates and graphical options are described at more length below.
 {p_end}
-
 
 
 {marker options}{...}
@@ -117,7 +121,19 @@ inclusion of redundant covariates.
 {pstd}
 {p_end}
 {phang}
+{opt method}({it:type}) this option allows for alternative estimation methods to be performed.  Allowed {it:type}s are "sdid" (synthetic difference-in-differences)
+"did (standard difference-in-differences) or "sc" (standard synthetic control).  
+If this option is not included, sdid is assumed by default.
+
+{pstd}
+{p_end}
+{phang}
 {opt graph} if this option is specified, graphs will be displayed showing unit and time weights as well as outcome trends as per figure 1 from {help sdid##SDID2021:Arkhangelsky et al. (2021)}.
+
+{pstd}
+{p_end}
+{phang}
+{opt g1on} this option activates the unit-specific weight graph. By default g1 is off, as this graph can take considerable time to generate where a large number of control units are present.
 
 {pstd}
 {p_end}
@@ -137,6 +153,11 @@ These options adjust the underlying line plot, so should be consistent with twow
 {opt graph_export}({it:string}, {it:{help graph export:type}}) Graphs will be saved as weightsYYYY and trendsYYYY for each of the unit-specific weights and outcome trends respectively, where YYYY refers to each treatment adoption period.
 Two graphs will be generated for each treatment adoption period. If this option is specified, type must be specified, which refers to a valid Stata graph {it:{help graph export:type}} (eg ".eps", ".pdf", and so forth).
 Optionally, a stub can be specified, in which case this will be prepended to exported graph names.
+
+{pstd}
+{p_end}
+{phang}
+{opt msize}({it:{help markersizestyle:size of marker}}) allows you to modify the size of the marker for graph 1.
 
 {pstd}
 {p_end}
@@ -169,7 +190,7 @@ order based on the unit variable, if this variable is in string format.
 {synopt:{cmd:e(ATT)}}ATT {p_end}
 {synopt:{cmd:e(se)}}Standard error {p_end}
 {synopt:{cmd:e(reps)}}Number of bootstrap/placebo replications {p_end}
-{synopt:{cmd:e(N_clust)}}Number of clusters {p_end}	  
+{synopt:{cmd:e(N_clust)}}Number of clusters {p_end}
 
 
 {synoptset 20 tabbed}{...}
@@ -183,12 +204,13 @@ order based on the unit variable, if this variable is in string format.
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Matrices}{p_end}
-{synopt:{cmd:e(tau)}}tau estimator for each adoption time-period{p_end}
+{synopt:{cmd:e(tau)}}tau estimator for each adoption time-period, along with its standard error{p_end}
 {synopt:{cmd:e(lambda)}}lambda weights (time-specific weights){p_end}
 {synopt:{cmd:e(omega)}}omega weights (unit-specific weights){p_end}
 {synopt:{cmd:e(adoption)}}adoption times{p_end}
-{synopt:{cmd:e(beta)}}beta vector of corresponding to covariates{p_end}
-{synopt:{cmd:e(series)}}control and treatment series of the graphs{p_end}
+{synopt:{cmd:e(beta)}}beta vector of corresponding to covariates (only returned when the covariates option is indicated){p_end}
+{synopt:{cmd:e(series)}}control and treatment series of the graphs (only returned when the graph option is indicated) {p_end}
+{synopt:{cmd:e(difference)}}difference between treatment and control series (only returned when the graph option is indicated){p_end}
 
 {pstd}
 {p_end}
@@ -244,6 +266,11 @@ American Economic Review.
 {phang}
 S. Bhalotra, D. Clarke, J. Gomes, and A. Venkataramani. 2020. {browse "https://conference.iza.org/conference_files/Gender_2021/clarke_d24360.pdf": {it:Maternal Mortality and Women's Political Participation}.}
 Centre for Economic Policy Research Discussion Paper. 
+{p_end}
+
+{phang}
+D. Clarke, D Pailañir, S. Athey and G. Imbens. 2023. {browse "https://docs.iza.org/dp15907.pdf": {it:Synthetic Difference-in-Differences Estimation}.}
+IZA Discussion Paper. 
 {p_end}
 
 {phang}

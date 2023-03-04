@@ -1,0 +1,33 @@
+d 'CNPOI': module to extract the specified information by keywords or types in a Chinese city
+d
+d  POI(Point of Interest) is the general name of one or some kind
+d of things we are interested in,such as schools,    hospitals,
+d restaurants, high-speed railway stations, etc.  Each POI usually
+d contains name, address, category,    coordinates and other
+d informations.  These data and information are often of great
+d significance in our research.    Gaode Map API is widely used in
+d China.  cnpoi is used to get information about keywords which you
+d are interested in    in the city from Gaode Map API.	The content
+d of keywords or the types are specified by users.  Before using
+d this	  command, a Gaodekey secret key from Gaode Map API is
+d needed. 
+d
+d KW:  China
+d KW: geography
+d KW: points of interest
+d
+d Requires: Stata version 17 
+d
+d Distribution-Date: 20230303
+d
+d Author: Chuntao Li, Zhongnan Univ. of Econ. & Law 
+d Support: email chtl@@zuel.edu.cn
+d
+d Author:  Zeyuan Guo, Zhongnan Univ. of Econ. & Law 
+d Support: email guozeyuan4513@@163.com
+d
+d Author:  Kong Meng, Zhongnan Univ. of Econ. & Law 
+d Support: email mengkong147@@163.com
+d
+f cnpoi.ado
+f cnpoi.sthlp

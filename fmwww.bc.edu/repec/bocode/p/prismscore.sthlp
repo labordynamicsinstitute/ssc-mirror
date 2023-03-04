@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 21 Jul 2022}{...}
+{* *! version 1.2.1 1 Mar 2023}{...}
 {viewerdialog "prismscore" "dialog prismscore"}{...}
 {viewerjumpto "Syntax" "./prismscore##syntax"}{...}
 {viewerjumpto "Syntax Details" "./prismscore##syntaxd"}{...}
@@ -7,7 +7,8 @@
 {viewerjumpto "Options" "./prismscore##options"}{...}
 {viewerjumpto "Remarks" "./prismscore##remarks"}{...}
 {viewerjumpto "Custom Implementations" "./prismscore##custom"}{...}
-{viewerjumpto "License" "./prismscore##License"}{...}
+{viewerjumpto "Citation" "./prismscore##citation"}{...}
+{viewerjumpto "License" "./prismscore##citation"}{...}
 {viewerjumpto "Variable Coding Reference" "./prismscore##variable"}{...}
 {title:Title}
 
@@ -28,23 +29,27 @@
 
 {synoptset 20 tabbed}{...}
 {marker new_varlist}{...}
-{syntab: {bf:new_varlist} - will contain the calculated score; need to specifiy either 1, 3 or 4 variables:}
+{syntab:{bf:New Variables}}
+
+{phang} The new variables will contain the calculated scores. Depending on the scenario, you will need to specify either 1, 3, or 4 options.{p_end}
+
+{synopthdr: Scenarios}
 {synoptline}
-
-{syntab:{bf:PRISM III}}
-
+{syntab:PRISM III}
 {synopt:3 variables} new variables must follow this order: neurologic_score nonneurologic_score total_score{p_end}
-{p2line}
-
-{syntab:{bf:PRISM IV}}
-
+{syntab:PRISM IV}
 {synopt:1 variable} new variable will contain {ul:{bf:only}} the PRISM IV score.{p_end}
 {synopt:4 variables} new variables must follow this order: neurologic_score nonneurologic_score total_score prism4_score{p_end}
-{p2colreset}{...} 
+{p2colreset}{...}
 {synoptline}
 
-
 {synoptset 20 tabbed}{...}
+{syntab:{bf:Variable Lists}}
+
+{synopt: {help prismscore##p3v:{it:PRISM III Variable List}}} See Below {p_end}
+{synopt: {help prismscore##p4v:{it:PRISM IV Variable List}}}See Below{p_end}
+{syntab:{bf:Options}}
+
 {synopthdr}
 {synoptline}{marker p3v}{...}
 {syntab:{bf:PRISM III} (required)}
@@ -59,6 +64,7 @@
 {p2line}
 {synopt:{opt temp(varname)}} temperature variable. If {opt templow} is used, then {opt temp} designates the high temperature variable{p_end}
 {synoptset 20 notes}{...}
+
 {synopt: {it:Optional}} {p_end}
 {p2line}
 {synopt:{opt templ:ow(varname)}} temperature variable. If {opt templow} is used, then {opt temp} designates the high temperature variable{p_end}
@@ -83,6 +89,7 @@
 {p2line}
 {synopt:{opt phh:igh(varname)}} pH variable; if {opt phhigh} is used, then {opt ph} designates the low pH variable. {p_end}
 {synopt:{opt bicarbh:igh(varname)}} designates the bicarbonate variable. if {opt bicarbhigh} is used, then it designates the low bicarbonate variable {p_end}
+
 {synoptset 20 tabbed}{...}
 {synopt:Laboratory Values} {p_end}
 {p2line}
@@ -94,7 +101,8 @@
 {synopt:{opt plt(varname)}} Platelet Count variable in cells/mm3. {p_end}
 {p2line}
 {marker p4v}
-{syntab:{bf:PRISM IV} (optional)} 
+{syntab:{bf:PRISM IV} (optional)}
+
 {synopt:{opt prism:iv}} calculates the PRISM IV % mortality.{p_end}
 
 {synoptset 20 notes}{...}
@@ -104,23 +112,77 @@
 {synopt:{opt cpr(varname)}} CPR status. {p_end}
 {synopt:{opt can:cer(varname)}} cancer status.{p_end}
 {synopt:{opt risk(varname)}} low-risk system of primary dysfunction status. {p_end}
+{p2line}
 
 {syntab:{bf:Additional Options}}
-{p2line}
+{synoptline}
 {synoptset 20 tabbed}{...}
+{syntab:Unit Options}
 {synopt:{opt si}} will calculate scores based on SI Lab values. {p_end}
 {synopt:{opt pltu:nit(integer)}} allows specifying a different platelet count unit.{p_end}
 {synopt:{opt wbcu:nit(integer)}} allows specifying a different WBC unit.{p_end}
 {synopt:{opt FAHR:enheit}} allows specifying a different temperature unit.{p_end}
 
-{syntab:{bf:Debugging Options}}
-{p2line}
+{syntab:Debugging Options}
 {synopt:{opt trace}} enables the trace option for the command. Useful in case of unexpected errors. {p_end}
 {synopt:{opt supp:ress}} suppresses warnings regarding data imputation. {p_end}
 {synopt:{opt suppressa:ll}} suppress all errors and data validation functions. {p_end}
 {synopt:{opt noimp:utation}} shows missing score if any variables are missing. {p_end}
 {synopt:{opt noval:idation}} supresses out-of-range data checks. If this is not specified, values that are out-of-range will be considered missing. {p_end}
 {synoptline}
+
+{synoptset 20 tabbed}{...}
+{syntab:{bf:PRISM III Variable List}}
+
+{synopthdr}
+{synoptline}{marker p3v}{...}
+{syntab:Age - Must specify either {opt age} or both {opt dob} and {opt doa}}
+{synopt:{opt age(varname)}} age variable. Requires special coding.{p_end}
+{synopt:{opt dob(varname)}} date of birth variable {p_end}
+{synopt:{opt doa(varname)}} date of admission variable {p_end}
+
+{syntab:Temperature}
+{synopt:{opt temp(varname)}} temperature variable. If {opt templow} is used, then {opt temp} designates the high temperature variable{p_end}
+
+{synopt: {it:Optional}} {p_end}
+{synopt:{opt templ:ow(varname)}} temperature variable. If {opt templow} is used, then {opt temp} designates the high temperature variable{p_end}
+
+{syntab:Additional Vitals}
+{synopt:{opt sbp(varname)}} systolic blood pressure variable. {p_end}
+{synopt:{opt hr(varname)}} heart rate variable. {p_end}
+{synopt:{opt gcs(varname)}} Glasgow Coma Score variable. {p_end}
+{synopt:{opt pup:ils(varname)}} number of pupils > 3mm and fixed. {p_end}
+
+{syntab:Acid-Base Status}
+{synopt:{opt ph(varname)}} pH variable; if {opt phhigh} is used, then {opt ph} designates the low pH variable. {p_end}
+{synopt:{opt bicarb(varname)}} designates the bicarbonate variable; if {opt bicarbhigh} is used, then it designates the low bicarbonate variable {p_end}
+{synopt:{opt pc:o2(varname)}} PCO2 variable. {p_end}
+{synopt:{opt pa:o2(varname)}} PaO2 variable. {p_end}
+
+{synopt: {it:Optional}} {p_end}
+{synopt:{opt phh:igh(varname)}} pH variable; if {opt phhigh} is used, then {opt ph} designates the low pH variable. {p_end}
+{synopt:{opt bicarbh:igh(varname)}} designates the bicarbonate variable. if {opt bicarbhigh} is used, then it designates the low bicarbonate variable {p_end}
+
+{synoptset 20 tabbed}{...}
+{syntab:Laboratory Values}
+{synopt:{opt glu:cose(varname)}} glucose variable in mg/dL. {p_end}
+{synopt:{opt pot:assium(varname)}} potassium variable in mmol/L. {p_end}
+{synopt:{opt cr:eatinine(varname)}} creatinine variable in mg/dL. {p_end}
+{synopt:{opt bun(varname)}} BUN variable in mg/dL. {p_end}
+{synopt:{opt wbc(varname)}} WBC variable in cells/mm3. {p_end}
+{synopt:{opt plt(varname)}} Platelet Count variable in cells/mm3. {p_end}
+{synoptline}
+{marker p4v}
+{syntab:{bf:PRISM IV Variable List}}
+
+{synopthdr}
+{synoptline}
+{synopt:{opt sou:rce(varname)}} admission source. Requires special coding. {p_end}
+{synopt:{opt cpr(varname)}} CPR status. {p_end}
+{synopt:{opt can:cer(varname)}} cancer status.{p_end}
+{synopt:{opt risk(varname)}} low-risk system of primary dysfunction status. {p_end}
+{synoptline}
+
 {p2colreset}{...}
 {p 4 6 2}
 
@@ -129,17 +191,15 @@
 {pstd}
 
 {pstd}
-{cmd:prismscore} calculates PRISM III and PRISM IV scores. The scores are outcome prognostication tools that have been used 
+{cmd:prismscore} calculates PRISM III and PRISM IV scores. The scores are outcome prognostication tools that have been used
 extensively in clinical care and research to calculate the expected mortality and control for illness severity in pediatric intensive care units.{p_end}
 
-
-{pstd} {bf:For more help see the {browse "https://razvanazamfirei.github.io/prism-score/":Online Documentation}.}{p_end}
-
+{pstd}See {help "./prismscore##citation":Citation} for proper attribution.{p_end}
 
 {marker options}{...}
 {title:Options}
 
-{phang} 
+{phang}
 For all required variables, if there is data missing you will receive a warning. The calculation will still be performed using normal values for the age group. See options  {opt suppress} and {opt suppressall} for more information.{p_end}
 
 {dlgtab:Main}
@@ -150,8 +210,8 @@ For all required variables, if there is data missing you will receive a warning.
 {dlgtab:PRISM III}
 
 {phang}
-{opt age}(varname numeric) designates the age variable. Age must be coded as: 
-{bf:0} = (<- - 14 days] | {bf:1} = (14 days - 1 month) | {bf:2} = [1 month - 12 months) | {bf:3} = [12 months - 12 years) | {bf:4} = [12 years ->). Alternatively use {opt dob} and {opt doa} for automatic calculations of age. 
+{opt age}(varname numeric) designates the age variable. Age must be coded as:
+{bf:0} = (<- - 14 days] | {bf:1} = (14 days - 1 month) | {bf:2} = [1 month - 12 months) | {bf:3} = [12 months - 12 years) | {bf:4} = [12 years ->). Alternatively use {opt dob} and {opt doa} for automatic calculations of age.
 This is recommended if the age is not already appropriately coded.{p_end}
 
 {phang}
@@ -166,14 +226,17 @@ This is recommended if the age is not already appropriately coded.{p_end}
 {opt sbp(varname numeric)} designates the systolic blood pressure variable.{p_end}
 
 {phang}
-{opt hr(varname numeric)} designates the heart rate variable.{p_end} 
+{opt hr(varname numeric)} designates the heart rate variable.{p_end}
+
 {phang}
-{opt gcs(varname integer)} designates the Glascow Coma Score variable.{p_end} 
+{opt gcs(varname integer)} designates the Glascow Coma Score variable.{p_end}
+
 {phang}
 {opt pupils(varname integer)} designates the variable containing the number of pupils >3mm and fixed.{p_end}
 
 {phang}
-{opt temp(varname numeric)} designates the temperature variable. If there is only one temperature recorded, the command will use the recorded temperature for both high and low temperature calculations. If both a high and a low temperature value are recorded, specify {opt templow}.{p_end}
+{opt temp(varname numeric)} designates the temperature variable. If there is only one temperature recorded, the command will use the recorded temperature for both high and low temperature calculations. If both a high and a low
+temperature value are recorded, specify {opt templow}.{p_end}
 
 {phang}
 {opt templow(varname numeric)} designates the low temperature variable. If both {opt temp} and {opt templow} are specified, the command will compare the values and will use the highest value for high temperature calculations and the lowest value for the low temperature calculations.{p_end}
@@ -185,13 +248,16 @@ This is recommended if the age is not already appropriately coded.{p_end}
 both high and low pH calculations. If both a high and a low pH value are recorded, specify {opt phhigh}.{p_end}
 
 {phang}
-{opt phhigh(varname numeric)} designates the high ph variable. If both {opt ph} and {opt phhigh} are specified, the command will compare the values and will use the highest value for high ph calculations and the lowest value for the low ph calculations.{p_end}
+{opt phhigh(varname numeric)} designates the high ph variable. If both {opt ph} and {opt phhigh} are specified, the command will compare the values and will use the highest value for high ph calculations
+and the lowest value for the low ph calculations.{p_end}
 
 {phang}
-{opt bicarb(varname numeric)} designates the HCO3-/CO2 variable. If there is only one bicarbonate value recorded, the command will use the recorded bicarbonate values for both high and low bicarbonate calculations. If both a high and a low bicarbonate value are recorded, specify {opt bicarbhigh}.{p_end}
+{opt bicarb(varname numeric)} designates the HCO3-/CO2 variable. If there is only one bicarbonate value recorded, the command will use the recorded bicarbonate values for both high and low bicarbonate calculations.
+If both a high and a low bicarbonate value are recorded, specify {opt bicarbhigh}.{p_end}
 
 {phang}
-{opt bicarbhigh(varname numeric)} designates the high HCO3-/CO2 variable. If both {opt bicarb} and {opt bicarbhigh} are specified, the command will compare the values and will use the highest value for high bicarbonate calculations and the lowest value for the low bicarbonate calculations.{p_end}
+{opt bicarbhigh(varname numeric)} designates the high HCO3-/CO2 variable. If both {opt bicarb} and {opt bicarbhigh} are specified, the command will compare the values and will use the highest
+value for high bicarbonate calculations and the lowest value for the low bicarbonate calculations.{p_end}
 
 {phang}
 {opt pco2(varname numeric)} designates the PCO2 variable; not to be confused with the bicarb variable.{p_end}
@@ -270,7 +336,7 @@ both high and low pH calculations. If both a high and a low pH value are recorde
 	{col 35} {it:(min) - (max)}
 	{hline 45}
 	Systolic BP{col 35}0{col 40} -{col 45}300
-	Heart Rate{col 35}0{col 40} -{col 45}300
+	Heart Rate{col 35}0{col 40} -{col 45}350
 	Temperature - C{col 35}25{col 40} -{col 45}45
 	Temperature - F{col 35}77{col 40} -{col 45}113
 	pH{col 35}6.5{col 40} -{col 45}7.9
@@ -296,12 +362,12 @@ both high and low pH calculations. If both a high and a low pH value are recorde
 	{col 30}2{col 45}>  1 month & <= 1 year
 	{col 30}3{col 45}>  1 year & < 12 years
 	{col 30}4{col 45}>= 12 years
-	
+
 	Source{col 30}0{col 45}Operating Room or PACU
 	{col 30}1{col 45}Another Hospital
 	{col 30}2{col 45}Inpatient Unit
 	{col 30}3{col 45}Emergency Department
-	
+
 	CPR{col 30}0{col 45}No
 	{col 30}1{col 45}Yes
 
@@ -317,12 +383,12 @@ both high and low pH calculations. If both a high and a low pH value are recorde
 {title:Custom Implementations}
 
 {pstd}
-Some groups have modified the coefficients attributed to each of the variables in the PRISM IV score calculation. The coefficients used in this command are the ones reported in Pollack 2016. If you wish to change them, you have to modify the 
-prismscore.ado file. 
+Some groups have modified the coefficients attributed to each of the variables in the PRISM IV score calculation. The coefficients used in this command are the ones reported in Pollack 2016. If you wish to change them, you have to modify the
+prismscore.ado file.
 I am not offering a command-based option to prevent inadvertent changes by inexperienced users. If you are having issues with this, please email me and I'm happy to help. {p_end}
 
 {pstd}
-{it:Instructions}{break}Open the prism.ado file. Locate the section containing the PRISM IV coefficients (line 210); alternatively search for {hi:CHANGE THIS}. Modify the coefficients as needed and reload the program. 
+{it:Instructions}{break}Open the prism.ado file. Locate the section containing the PRISM IV coefficients (line 292); alternatively search for {hi:CHANGE THIS}. Modify the coefficients as needed and reload the program.
 The following commands should be helpful:
 
 {phang}
@@ -348,6 +414,15 @@ The following commands should be helpful:
 
 {pstd}
 
+{marker citation}{...}
+{title:Citation}
+
+{pstd}
+Please cite this command as:
+
+{pstd}
+Azamfirei, Razvan; Mennie, Colleen; Fackler, James; Kudchadkar, Sapna R. Development of a Stata Command for Pediatric Risk of Mortality Calculation. Pediatric Critical Care Medicine 24(3):p e162-e163, March 2023. | DOI: {browse "https://doi.org/10.1097/PCC.0000000000003149":10.1097/PCC.0000000000003149}
+
 {title:Author}
 {p}
 
@@ -356,6 +431,11 @@ Email: {browse "mailto:stata@azamfirei.com":stata@azamfirei.com}
 
 {marker License}{...}
 {title:License}
-{p} This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.{p_end}
-See the GNU General Public {browse "gnu.org/licenses/gpl-3.0.html":License} for more details.
+{p}{hi:Copyright 2022 Razvan Azamfirei}
+
+{pstd}Licensed under the Apache License, Version 2.0 (the"License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: {p_end}
+
+{pstd}{browse "https://www.apache.org/licenses/LICENSE-2.0":http://www.apache.org/licenses/LICENSE-2.0}{p_end}
+
+{pstd}Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.{p_end}
+{pstd} See the License for the specific language governing permissions and limitations under the License. {p_end}

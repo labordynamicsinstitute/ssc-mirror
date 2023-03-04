@@ -1,4 +1,4 @@
-*! version 1.0.3  12feb2021
+*! version 1.3.1  28feb2023
 *! Sebastian Kripfganz, www.kripfganz.de
 *! Vasilis Sarafidis, sites.google.com/view/vsarafidis
 
@@ -8,15 +8,15 @@
 *** citation ***
 
 /*	Kripfganz, S., and V. Sarafidis. 2021.
-	Instrumental variable estimation of large-T panel data models with common factors.
-	Accepted for publication in the Stata Journal.		*/
+	Instrumental-variable estimation of large-T panel-data models with common factors.
+	Stata Journal 21: 659-686.		*/
 
 *** version history at the end of the file ***
 
 program define xtivdfreg, eclass prop(xt)
 	version 13.0
 	if replay() {
-		if "`e(cmd)'" != "xtivdfreg" {
+		if !inlist("`e(cmd)'", "xtivdfreg", "spxtivdfreg") {
 			error 301
 		}
 		xtivdfreg_parse_display `0'
@@ -31,7 +31,7 @@ program define xtivdfreg, eclass prop(xt)
 	}
 	else {
 		_xt, treq
-		syntax varlist(num ts fv) [if] [in] [, *]
+		syntax varlist(num ts fv) [if] [in] [, SPVARLIST(passthru) SPREGNAMES(passthru) *]
 		xtivdfreg_parse_display , `options'
 		loc diopts			`"`s(diopts)'"'
 		if `"`s(cformat)'"' != "" {
@@ -41,6 +41,10 @@ program define xtivdfreg, eclass prop(xt)
 		loc mopt			"`s(mopt)'"
 		loc doubledefact	= cond("`s(mg)'" == "", "DOUBLEdefact", "noDOUBLEdefact")
 		xtivdfreg_iv `doubledefact' `varlist' `if' `in', mopt(`mopt') `s(mg)' `s(options)'
+		if "`spvarlist'" != "" {
+			xtivdfreg_sp , `spvarlist' `spregnames'
+			loc diopts		"`diopts' neq(2)"
+		}
 
 		eret loc vcetype	"Robust"
 		eret loc marginsok	"XB default"
@@ -55,13 +59,14 @@ program define xtivdfreg, eclass prop(xt)
 	}
 end
 
-program define xtivdfreg_iv, eclass
+program define xtivdfreg_iv, eclass sort
 	version 13.0
 	gettoken fsyntax 0 : 0
 	syntax varlist(num ts fv) [if] [in] , MOPT(name) [	Absorb(varlist num fv)		///
 														noCONStant					///
 														FACTmax(integer 4)			///
 														noEIGratio					///
+														STD							///
 														FSTAGE						///
 														FSTEP						/// historical since version 1.0.2
 														MG							///
@@ -80,6 +85,8 @@ program define xtivdfreg_iv, eclass
 	if `fv' {
 		_fv_check_depvar `depvar'
 	}
+	_rmdcoll `depvar' `indepvars', `constant'
+	loc indepvars		"`r(varlist)'"
 	loc regnames		"`indepvars'"
 	if "`constant'" != "" {
 		mata: xtivdfreg_init_cons(`mopt', "off")		// constant term
@@ -111,11 +118,12 @@ program define xtivdfreg_iv, eclass
 	if "`eigratio'" != "" {
 		mata: xtivdfreg_init_eigratio(`mopt', "off")
 	}
+	loc standardize		= ("`std'" != "")
 	loc ivnum			= 0
 	loc ivset			= 0
 	while `"`options'"' != "" {
 		loc ++ivset
-		xtivdfreg_parse_options , factmax(`factmax') `eigratio' `doubledefact' `options'
+		xtivdfreg_parse_options , factmax(`factmax') `eigratio' `std' `doubledefact' `options'
 		forv l = 0 / `s(lags)' {
 			loc ++ivnum
 			loc ivset`ivnum'	= `ivset'
@@ -124,7 +132,12 @@ program define xtivdfreg_iv, eclass
 			loc factmax`ivnum'	= `s(factmax)'
 			loc eigratio`ivnum'	"`s(eigratio)'"
 			loc double`ivnum'	= (`l' == 0 & "`s(doubledefact)'" == "on")
+			loc std`ivnum'		= ("`s(std)'" == "on")
+			loc ivnames`ivnum'	"`s(ivvarnames)'"
 			markout `touse' `ivvars`ivnum'' `factvars`ivnum''
+			if !`standardize' & `std`ivnum'' {
+				loc standardize		= 1
+			}
 		}
 		loc options			`"`s(options)'"'
 	}
@@ -169,7 +182,9 @@ program define xtivdfreg_iv, eclass
 				loc factvars`k'_a		"`factvars`k'_a' `factvar`k'_`j'_a'"
 			}
 			mata: xtivdfreg_init_ivvars(`mopt', `k', "`ivvars`k'_a'")		// demeaned instrumental variables
-			mata: xtivdfreg_init_ivvars_factvars(`mopt', `k', "`factvars`k'_a'")		// demeaned defactoring variables
+			if !`std`k'' {
+				mata: xtivdfreg_init_ivvars_factvars(`mopt', `k', "`factvars`k'_a'")		// demeaned defactoring variables
+			}
 			mata: xtivdfreg_init_ivvars_factmax(`mopt', `k', `factmax`k'')
 			mata: xtivdfreg_init_ivvars_eigratio(`mopt', `k', "`eigratio`k''")
 			mata: xtivdfreg_init_ivvars_group(`mopt', `k', `ivset`k'')
@@ -190,6 +205,7 @@ program define xtivdfreg_iv, eclass
 			di as err "if the problem persists, type {stata reghdfe, version} to check for other required packages"
 			exit 199
 		}
+		_rmcoll i.(`absorb')
 		if "`indepvars'" != "" {
 			forv j = 1 / `: word count `indepvars'' {
 				tempvar indepvar`j'_a
@@ -224,7 +240,9 @@ program define xtivdfreg_iv, eclass
 			mata: xtivdfreg_hdfe_var = xtivdfreg_hdfe.partial_out("`factvars`k''")
 			mata: st_store(xtivdfreg_hdfe.sample, st_addvar("double", tokens("`factvars`k'_a'")), xtivdfreg_hdfe_var)
 			mata: xtivdfreg_init_ivvars(`mopt', `k', "`ivvars`k'_a'")		// demeaned instrumental variables
-			mata: xtivdfreg_init_ivvars_factvars(`mopt', `k', "`factvars`k'_a'")		// demeaned defactoring variables
+			if !`std`k'' {
+				mata: xtivdfreg_init_ivvars_factvars(`mopt', `k', "`factvars`k'_a'")		// demeaned defactoring variables
+			}
 			mata: xtivdfreg_init_ivvars_factmax(`mopt', `k', `factmax`k'')
 			mata: xtivdfreg_init_ivvars_eigratio(`mopt', `k', "`eigratio`k''")
 			mata: xtivdfreg_init_ivvars_group(`mopt', `k', `ivset`k'')
@@ -237,6 +255,37 @@ program define xtivdfreg_iv, eclass
 	}
 	if "`factvars'" != "" {
 		mata: xtivdfreg_init_factvars(`mopt', "`factvars'")
+	}
+
+	*--------------------------------------------------*
+	*** standardization ***
+	if `standardize' {
+		sort `_dta[_TStvar]' `_dta[_TSpanel]'
+		forv k = 1 / `ivnum' {
+			if `std`k'' {
+				foreach var in `factvars`k'_a' {
+					tempname std`var'
+					cap by `_dta[_TStvar]': egen `std`var'' = std(`var') if `touse'
+					if _rc == 190 {
+						di as err "option std requires Stata 16.1 (with latest updates) or higher"
+						exit 199
+					}
+					loc stdvars`k'		"`stdvars`k'' `std`var''"
+					if "`std'" != "" & `double`k'' {
+						loc stdvars			"`stdvars' `std`var''"
+					}
+				}
+			}
+		}
+		sort `_dta[_TSpanel]' `_dta[_TStvar]'
+		forv k = 1 / `ivnum' {
+			if `std`k'' {
+				mata: xtivdfreg_init_ivvars_factvars(`mopt', `k', "`stdvars`k''")		// standardized defactoring variables
+			}
+		}
+		if "`stdvars'" != "" {
+			mata: xtivdfreg_init_factvars(`mopt', "`factvars'")
+		}
 	}
 
 	*--------------------------------------------------*
@@ -284,8 +333,19 @@ program define xtivdfreg_iv, eclass
 						loc fact1			= r(fact1)
 					}
 				}
-				loc ivlist`ivset`k'' "`ivvars`k''"
-				loc factlist`ivset`k'' "`factvars`k''"
+				if "`ivnames`k''" != "" {
+					loc ivlist`ivset`k'' "`ivnames`k''"
+					if "`ivvars`k''" == "`factvars`k''" {
+						loc factlist`ivset`k'' "`ivnames`k''"
+					}
+					else {
+						loc factlist`ivset`k'' "`factvars`k''"
+					}
+				}
+				else {
+					loc ivlist`ivset`k'' "`ivvars`k''"
+					loc factlist`ivset`k'' "`factvars`k''"
+				}
 			}
 		}
 		if "`factvars'" != "" {
@@ -470,23 +530,60 @@ program define xtivdfreg_init, sclass
 end
 
 *==================================================*
+**** adjustment for spatial regressors ****
+program define xtivdfreg_sp, eclass
+	version 13.0
+	syntax [, SPVARLIST(varlist num ts) SPREGNAMES(varlist num ts fv)]
+
+	tempname b V
+	mat `b'				= e(b)
+	mat `V'				= e(V)
+	loc regnames		: coln `b'
+	foreach spvar of var `spvarlist' {
+		gettoken spregname spregnames : spregnames
+		loc regnames		: subinstr loc regnames "`spvar'" "", w
+		loc regnames		: subinstr loc regnames "o.`spvar'" "", w
+		loc regnames		"`regnames' W:`spregname'"
+	}
+	loc cons			"_cons"
+	loc hascons			: list cons in regnames
+	loc K				= colsof(`b')
+	loc Ksp				: word count `spvarlist'
+	if `hascons' {
+		if `K' == `Ksp' + 1 {
+			mata: st_matrix("`b'", st_matrix("`b'")[1, (`K', `K'-`Ksp'..`K'-1)])
+			mata: st_matrix("`V'", st_matrix("`V'")[(`K' \ `K'-`Ksp'::`K'-1), (`K', `K'-`Ksp'..`K'-1)])
+		}
+		else {
+			mata: st_matrix("`b'", st_matrix("`b'")[1, (1..`K'-`Ksp'-1, `K', `K'-`Ksp'..`K'-1)])
+			mata: st_matrix("`V'", st_matrix("`V'")[(1::`K'-`Ksp'-1 \ `K' \ `K'-`Ksp'::`K'-1), (1..`K'-`Ksp'-1, `K', `K'-`Ksp'..`K'-1)])
+		}
+	}
+	mat coln `b'		= `regnames'
+	mat coln `V'		= `regnames'
+	mat rown `V'		= `regnames'
+	eret repost b = `b' V = `V', ren
+end
+
+*==================================================*
 **** syntax parsing of options for instruments ****
 program define xtivdfreg_parse_options, sclass
 	version 13.0
 	sret clear
-	syntax , FACTmax(integer) [noEIGratio DOUBLEdefact IV(string) *]
+	syntax , FACTmax(integer) [noEIGratio DOUBLEdefact STD IV(string) *]
 
 	if `"`iv'"' != "" {
 		loc eigratio		= cond("`eigratio'" == "", "noEIGratio", "EIGratio")
 		loc doubledefact	= cond("`doubledefact'" == "", "DOUBLEdefact", "noDOUBLEdefact")
-		xtivdfreg_parse_iv `factmax' `eigratio' `doubledefact' `iv'
+		loc std				= cond("`std'" == "", "STD", "noSTD")
+		xtivdfreg_parse_iv `factmax' `eigratio' `doubledefact' `std' `iv'
 	}
 	else {
 		di as err `"`options' invalid"'
 		exit 198
 	}
 
-	sret loc options		`"`options'"'
+	sret loc options	`"`options'"'
 end
 
 *==================================================*
@@ -496,7 +593,9 @@ program define xtivdfreg_parse_iv, sclass
 	gettoken factmax 0 : 0
 	gettoken esyntax 0 : 0
 	gettoken fsyntax 0 : 0
-	syntax varlist(num ts fv), [FVAR(varlist num ts fv) Lags(integer 0) FACTmax(integer `factmax') `esyntax' `fsyntax']
+	gettoken ssyntax 0 : 0
+	syntax varlist(num ts fv), [FVAR(varlist num ts fv) Lags(integer 0) FACTmax(integer `factmax') `esyntax' `fsyntax' `ssyntax'		///
+								VARNames(string)]																						// undocumented
 
 	if `lags' < 0 {
 		di as err "option lags() incorrectly specified -- outside of allowed range"
@@ -508,6 +607,7 @@ program define xtivdfreg_parse_iv, sclass
 	}
 	loc eigratio		= cond(("`esyntax'" == "noEIGratio" & "`eigratio'" == "") | ("`esyntax'" == "EIGratio" & "`eigratio'" != ""), "on", "off")
 	loc doubledefact	= cond(("`fsyntax'" == "noDOUBLEdefact" & "`doubledefact'" == "") | ("`fsyntax'" == "DOUBLEdefact" & "`doubledefact'" != ""), "on", "off")
+	loc std				= cond(("`ssyntax'" == "noSTD" & "`std'" == "") | ("`ssyntax'" == "STD" & "`std'" != ""), "on", "off")
 	if "`s(fvops)'" == "true" {
 		fvexpand `varlist'
 		loc varlist			"`r(varlist)'"
@@ -543,6 +643,8 @@ program define xtivdfreg_parse_iv, sclass
 		}
 	}
 
+	sret loc ivvarnames	"`varnames'"
+	sret loc std		"`std'"
 	sret loc doubledefact "`doubledefact'"
 	sret loc eigratio	"`eigratio'"
 	sret loc factmax	"`factmax'"
@@ -555,6 +657,15 @@ end
 
 *==================================================*
 *** version history ***
+* version 1.3.1  28feb2023  model stability checks implemented for estat impact; short-run impacts for lagged dependent variable in estat impact suppressed
+* version 1.3.0  26feb2023  options tlags() and sptlags() added to spxtivdfreg; options lr and post added to estat impact
+* version 1.2.5  03jan2023  varlist and option constant added to estat impact; Delta method standard errors implemented for estat impact
+* version 1.2.4  22dec2022  postestimation command estat impact added for spxtivdfreg
+* version 1.2.3  17dec2022  postestimation command predict added for spxtivdfreg
+* version 1.2.2  04dec2022  option std added; suboption splags added to option iv() in spxtivdfreg; bug with option absorb() fixed
+* version 1.2.1  28nov2022  various bugs fixed with spxtivdfreg; option spiv() integrated in option iv()
+* version 1.2.0  21nov2022  command spxtivdfreg added
+* version 1.1.0  01sep2022  speed improvements; bug fixed with large data sets
 * version 1.0.3  12feb2021  Stata Journal version; suboption fvar() for option iv() added
 * version 1.0.2  24jan2021  option fstep replaced by option fstage
 * version 1.0.1  10oct2020  bug fixed with interaction terms as instruments

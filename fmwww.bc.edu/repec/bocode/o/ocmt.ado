@@ -1,5 +1,8 @@
-*! ocmt v0.8 JOtero and HNunez 20jun2020
+*! wocmt v0.8 JOtero and HNunez 03mar2023
 
+* Version history
+* 0.9 Added Wvar option to perform estimation using WLS with analytic weights
+*     Observations are weighted inversely using the square root of Wvar
 
 capture program drop ocmt
 program define ocmt, rclass
@@ -9,6 +12,7 @@ syntax varlist(min=1 numeric ts fv) [if] [in] [, ///
                                            SIGnif(integer -1) ///
 										   Delta1(real -1) Delta2(real -1) ///
                                            Zvar(varlist numeric ts fv) ///
+										   Wvar(string) ///
 										   ]
 
 marksample touse
@@ -47,6 +51,8 @@ local numvars  : word count `varlist'
 local numxvars : word count `xvars'
 local numzvars : word count `zvar'
 
+local numwvars = cond("`wvar'" == "", 0, 1)
+
 local n = `numxvars'
 
 local pval1 = `pvalue'/(`n'^(`delta1'-1))
@@ -77,9 +83,14 @@ else if `numzvars'==0 {
 local chosen ""	
 forvalues i = 1/`numxvars' {
 	local var`i' : word `i' of `xvars'
-		
-	qui reg `depvar' `var`i'' `zvar' if `touse'
 	
+	if `numwvars' == 0 {
+		qui reg `depvar' `var`i'' `zvar' if `touse'
+	}
+	else if `numwvars' >0 {
+	    qui reg `depvar' `var`i'' `zvar' if `touse' [aw=1/`wvar']
+	}
+
 	local tstat = abs(_b[`var`i'']/_se[`var`i''])
 						
 	// display "tstat " `tstat' " t_threshold1 " `t_threshold1'
@@ -104,9 +115,21 @@ if `numchosen' == 0 {
 	display as result  _dup(78) "-"
 	display as result  _dup(78) "-"
 	display as result "One Covariate at a Time Multiple Testing (OCMT)"
+	if `numwvars' == 0 {
+		display as result "Estimation using OLS"
+	}
+	else if `numwvars' >0 {
+			display as result "Estimation using WLS with analytic weights"
+	}
 	display as result "Chosen regressors: Includes only constant (and preselected variables if any)"
 	display as result  _dup(78) "-"
-	reg `depvar' `zvar' if `touse'
+
+	if `numwvars' == 0 {
+		reg `depvar' `zvar' if `touse'
+	}
+	else if `numwvars' >0 {
+		reg `depvar' `zvar' if `touse' [aw=1/`wvar']
+	}
 	exit
 }
 	
@@ -126,8 +149,13 @@ forvalues j = 2/`n' {
 	
 		local var`i' : word `i' of `xvars'
 
-		qui reg `depvar' `chosen`j'' `var`i'' `zvar' if `touse'
-	
+		if `numwvars' == 0 {
+			qui reg `depvar' `chosen`j'' `var`i'' `zvar' if `touse'
+		}
+		else if `numwvars' >0 {
+			qui reg `depvar' `chosen`j'' `var`i'' `zvar' if `touse' [aw=1/`wvar']
+		}
+		
 		local tstat = abs(_b[`var`i'']/_se[`var`i''])
 						
 		// display "tstat " `tstat' " t_threshold2 " `t_threshold2'
@@ -156,9 +184,21 @@ forvalues j = 2/`n' {
 	display as result  _dup(78) "-"
 	display as result  _dup(78) "-"
 	display as result "One Covariate at a Time Multiple Testing (OCMT)"
+	if `numwvars' == 0 {
+		display as result "Estimation using OLS"
+	}
+	else if `numwvars' >0 {
+			display as result "Estimation using WLS with analytic weights"
+	}
 	display as result "Chosen model after " `laststage' " stages"
 	display as result  _dup(78) "-"
-	reg `depvar' `chosen' `zvar' if `touse'
+
+	if `numwvars' == 0 {
+		reg `depvar' `chosen' `zvar' if `touse'
+	}
+	else if `numwvars' >0 {
+		reg `depvar' `chosen' `zvar' if `touse' [aw=1/`wvar']
+	}
 	continue, break
 	}
 }

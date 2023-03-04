@@ -7,6 +7,9 @@ d instruments are defactored to control for a multifactor error
 d structure. Heterogeneous slope coefficients can be allowed using
 d a mean-group estimator. The command accommodates unbalanced panel
 d data and permits highly flexible instrumentation strategies. 
+d spxtivdfreg implements an extended version of the estimator for
+d spatial panel data models. The calculation of direct, indirect,
+d and total impacts is implemented as a postestimation feature. 
 d
 d KW:  IV
 d KW: panel data
@@ -14,7 +17,7 @@ d KW: mean-group estimator
 d
 d Requires: Stata version 13 and reghdfe, ftools from SSC (q.v.)
 d
-d Distribution-Date: 20210224
+d Distribution-Date: 20230303
 d
 d Author:  Sebastian Kripfganz, University of Exeter Business School
 d Support: email S.Kripfganz@@exeter.ac.uk
@@ -27,5 +30,10 @@ f xtivdfreg.sthlp
 f xtivdfreg_p.ado
 f xtivdfreg_estat.ado
 f xtivdfreg_postestimation.sthlp
+f ../s/spxtivdfreg.ado
+f ../s/spxtivdfreg.sthlp
+f ../s/spxtivdfreg_p.ado
+f ../s/spxtivdfreg_estat.ado
+f ../s/spxtivdfreg_postestimation.sthlp
 f ../l/lxtivdfreg.mlib
 f xtivdfreg_example.dta

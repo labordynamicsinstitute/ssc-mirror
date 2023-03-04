@@ -39,6 +39,9 @@ based on Chudik, Kapetanios and Pesaran (2018).
 {opt z:var(varlist)} list of known preselected variables. No need to include the intercept term.
 
 {phang}
+{opt w:var(string)} variable name to perform weighted least squares using analytic weights. Both dependent and independent variables (including the intercept) are weighted inversely by the square root of {opt w:var(string)}; see {help regress}
+
+{phang}
 {opt sig:nif(integer)} specifies the statistical significance level.
 For example, 1% must be entered as 1. By default a level of 5% is used.
 

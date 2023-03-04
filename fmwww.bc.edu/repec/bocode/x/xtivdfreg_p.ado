@@ -1,4 +1,4 @@
-*! version 1.0.3  12feb2021
+*! version 1.3.1  28feb2023
 *! Sebastian Kripfganz, www.kripfganz.de
 *! Vasilis Sarafidis, sites.google.com/view/vsarafidis
 
@@ -7,6 +7,9 @@
 
 program define xtivdfreg_p, sort
 	version 13.0
+	if "`e(cmd)'" != "xtivdfreg" {
+		error 301
+	}
 	syntax [anything] [if] [in] [, XB *]
 	loc 0				`"`anything' `if' `in' , `options'"'
 	loc options			"Residuals"
