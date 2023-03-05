@@ -1,4 +1,4 @@
-*! version 4.0.5  24aug2011  Ben Jann
+*! version 4.0.8  28feb2023  Ben Jann
 
 program define oaxaca, byable(recall) properties(svyj svyb)
     version 9.2
@@ -87,23 +87,49 @@ prog Display, eclass
             ereturn repost b = `b', rename
         }
     }
-
-    _coef_table_header
-    if `"`e(prefix)'"'=="" {
-        local col 51
-        local space ""
-        local fmt 10
+    
+    if c(stata_version)<14 {
+        if `"`e(prefix)'"'=="" {
+            local w1 15
+            local c1 51
+            local c2 = `c1' + `w1' + 1
+            local w2 10
+            local c3 = `c2' + 2
+        }
+        else {
+            local w1 18
+            local c1 49
+            local c2 = `c1' + `w1' + 1
+            local w2 9
+            local c3 = `c2' + 2
+        }
+        _coef_table_header
     }
     else {
-        local col 49
-        local space "   "
-        local fmt 9
+        local hflex 1
+        if      c(stata_version)<17            local hflex 0
+        else if d(`c(born_date)')<d(13jul2021) local hflex 0
+        local w1 17
+        local c1 49
+        local c2 = `c1' + `w1' + 1
+        local w2 10
+        local c3 = `c2' + 2
+        if `hflex' local headopts head2left(`w1') head2right(`w2')
+        else       local headopts
+        _coef_table_header, `headopts'
+        if `hflex' {
+            // if _coef_table_header used more space than allocated
+            local offset1 = max(0, `s(head2_left)' - `w1')
+            local offset2 = max(0, `s(head2_right)' - `w2')
+            local c1 = `c1' - `offset1' - `offset2'
+            local c2 = `c2' - `offset2'
+        }
     }
-    di as txt _col(`col') "Model           `space'= " as res %`fmt's e(model)
+    di as txt _col(`c1') "Model" _col(`c2') "=" _col(`c3') as res %`w2's e(model)
     di as txt "Group 1: `e(by)' = " as res e(group_1) ///
-       as txt _col(`col') "N of obs 1      `space'= " as res %`fmt'.0g e(N_1)
+       as txt _col(`c1') "N of obs 1" _col(`c2') "=" _col(`c3') as res %`w2'.0g e(N_1)
     di as txt "Group 2: `e(by)' = " as res e(group_2) ///
-       as txt _col(`col') "N of obs 2      `space'= " as res %`fmt'.0g e(N_2)
+       as txt _col(`c1') "N of obs 2" _col(`c2') "=" _col(`c3') as res %`w2'.0g e(N_2)
     di ""
 
     eret display, `level' `eform'
@@ -495,7 +521,7 @@ program define OAXACA
         if "`qui'"!="" {
             di as err "specify -noisily- to view model estimation output"
         }
-        di as err "specify -relax- to ingnore"
+        di as err "specify -relax- to ignore"
         exit 499
     }
 
@@ -1303,8 +1329,11 @@ void oaxaca_normalize()
                 err = (normi[1]=="_cons" ? any(rowsum(X):!=1) :
                     mreldif(rowsum(X),st_data(., normi[1],
                         st_local("subpop" + strofreal(j))))>1e-7)
-                if (err) _error(3498, "inconsistent dummy set: " +
+                if (err) {
+                    printf("{err}inconsistent dummy set: %s\n", 
                         oaxaca_invtokens(normi[|2 \ k+1|]))
+                    exit(3498)
+                }
             }
         }
     }

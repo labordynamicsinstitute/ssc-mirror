@@ -39,7 +39,7 @@ based on Chudik, Kapetanios and Pesaran (2018).
 {opt z:var(varlist)} list of known preselected variables. No need to include the intercept term.
 
 {phang}
-{opt w:var(string)} variable name to perform weighted least squares using analytic weights. Both dependent and independent variables (including the intercept) are weighted inversely by the square root of {opt w:var(string)}; see {help regress}
+{opt w:var(string)} variable name to perform weighted least squares using analytic weights. Both dependent and independent variables (including the intercept) are weighted by the square root of {opt w:var(string)}; see {help regress}
 
 {phang}
 {opt sig:nif(integer)} specifies the statistical significance level.
@@ -72,7 +72,7 @@ We illustrate the use of {cmd:ocmt} with the following example using the followi
 {phang2}{bf:. {stata "gen x9 = rnormal()":gen x9 = rnormal()}}{p_end}
 {phang2}{bf:. {stata "gen x10 = rnormal()":gen x10 = rnormal()}}{p_end}
 {phang2}{bf:. {stata "gen z1 = rnormal()":gen z1 = rnormal()}}{p_end}
-{phang2}{bf:. {stata "gen w1 = rnormal()":gen w1 = rnormal()}}{p_end}
+{phang2}{bf:. {stata "gen w1 = runiform()":gen w1 = runiform()}}{p_end}
 {phang2}{bf:. {stata "gen y = 2 + 0.8*x1 + x2 - 3*x5 + x8 - 2*z1 + rnormal()":gen y = 2 + 0.8*x1 + x2 - 3*x5 + x8 - 2*z1 + rnormal()}}{p_end}
 {phang2}{bf:. {stata "tsset t":tsset t}}{p_end}
 

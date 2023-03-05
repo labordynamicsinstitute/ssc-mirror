@@ -4,18 +4,16 @@ d    oneclick By entering your control variables, the oneclick
 d command helps you to select all true subsets of the control	
 d variables and add them to the regression in turn, and at the end
 d only the combinations at the level of significance you are   
-d satisfied with are listed. It is important to note that the
-d tuples command must be downloaded in advance. This command is a  
-d  new development based on the tuples command and it's very
-d useful, especially when we do not know what control variables are
-d    appropriate. 
+d satisfied with are listed.  This command is a    new development
+d and it's very useful, especially when we do not know what control
+d variables are    appropriate. 
 d
 d KW: model selection
 d KW: control variables
 d
-d Requires: Stata version 16 and tuples from SSC (q.v.)
+d Requires: Stata version 14 
 d
-d Distribution-Date: 20221030
+d Distribution-Date: 20230304
 d
 d Author: Shutter Zor	 , Wuhan Textile University
 d Support: email Shutter_Z@@outlook.com

@@ -1,16 +1,33 @@
 *===================================================================================*
-* Ado-file: OneClick Version 4.2 
+* Ado-file: OneClick Version 5
 * Author: Shutter Zor(左祥太)
 * Affiliation: School of Accountancy, Wuhan Textile University
 * E-mail: Shutter_Z@outlook.com 
-* Date: 2022/10/30                                          
+* Date: 2023/3/4
+* Update: drop tuples command and set a new method to select subsets                                          
 *===================================================================================*
 
+*- Decimal-to-Binary function
+capture program drop bin_transfer
+program define bin_transfer, rclass
+	version 14
+	args dec_num
+	local bin_num ""
+	local remainder 0
+	while `dec_num' > 0 {
+		local remainder = mod(`dec_num', 2)
+		local bin_num "`remainder'`bin_num'"
+		local dec_num = floor(`dec_num'/2)
+	}
+	return local binary "`bin_num'"
+end
+
+*- Main function
 capture program drop oneclick
 program define oneclick
-	version 16.0
+	version 14
 	
-	syntax varlist(min=3) [if] [in],			///
+	syntax varlist(min=3 fv ts),			    ///
 			Method(string)						///
 			Pvalue(real)						///
 			FIXvar(varlist fv ts)				///
@@ -22,32 +39,50 @@ program define oneclick
 
 	gettoken y ctrlvar : varlist
 	gettoken x otherx : fixvar
+	tokenize "`ctrlvar'"
 	
 	preserve
 		qui gen subset = ""
 		qui gen positive = .
 		
-		* judge osb num
-		tuples `ctrlvar'
-		local n = _N
-		if `ntuples' > `n' {
-			qui set obs `ntuples'
+		* computer combination
+		local CtrlLen = wordcount("`ctrlvar'")
+		local temp = ustrregexra("`ctrlvar'"," ","")
+		local Lenth = 2^`CtrlLen'
+		forvalues i = 1/`Lenth' {
+			local Combo ""
+			bin_transfer `i'
+			forvalues j = 1/`CtrlLen' {
+				if substr(r(binary),-`j',1) == "1" {
+					local addword "``j''"
+					local Combo "`Combo' `addword'"
+				}
+			}
+			local Combo`i' = "`Combo'"
 		}
-		if `ntuples' <= `n' {
+		
+		*- set obs num
+		local n = _N
+		if `Lenth' > `n' {
+			qui set obs `Lenth'
+		}
+		if `Lenth' <= `n' {
 			qui set obs `n'
 		}
 		
-		local minutes = int(`ntuples'/60) + 1
+		local minutes = int(`Lenth'/300) + 1
 		dis "This will probably take you up to `minutes' minutes"
+		dis _newline(1) "The program is working:"
 		
 		* select
-		forvalues i = 1/`ntuples' {
-			local percentcurrent = floor(`i' / `ntuples' * 100) 
-			dis "`percentcurrent'% calculation has been completed"
-			
+		timer clear 1
+		timer on 1
+		forvalues i = 1/`Lenth' {
+			_dots `dotDisplay' 0
+
 			quietly {
 			
-				`method' `y' `fixvar' `tuple`i'', `options'
+				`method' `y' `fixvar' `Combo`i'', `options'
 			
 				local distribution_v = _b[`x']/_se[`x']
 				if "`zvalue'" == "" & !missing(e(df_r)){
@@ -59,11 +94,16 @@ program define oneclick
 
 				local ifsignificant = cond(`pv'<`pvalue',1,0)
 				
-				replace subset = "`tuple`i''" in `i' if `ifsignificant'
+				replace subset = "`Combo`i''" in `i' if `ifsignificant'
 				replace positive = 1 in `i' if `ifsignificant' & `distribution_v'>0
 				replace positive = 0 in `i' if `ifsignificant' & `distribution_v'<0
 			}
+			
+			local dotDisplay = `dotDisplay' + 1
 		}
+		timer off 1
+		qui timer list 1
+		dis _newline "Time=" r(t1) "S"
 		
 		* drop 
 		quietly {
@@ -78,7 +118,7 @@ program define oneclick
 			local negativeNum = r(N)
 		}
 			
-		dis "A total of `totalNum' significant groups: `positiveNum' positive, `negativeNum' negative"
+		dis _newline(1) "A total of `totalNum' significant groups: `positiveNum' positive, `negativeNum' negative"
 	restore
 end
 

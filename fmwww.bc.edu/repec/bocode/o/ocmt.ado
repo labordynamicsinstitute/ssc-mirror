@@ -2,7 +2,7 @@
 
 * Version history
 * 0.9 Added Wvar option to perform estimation using WLS with analytic weights
-*     Observations are weighted inversely using the square root of Wvar
+*     Observations are weighted using the square root of Wvar
 
 capture program drop ocmt
 program define ocmt, rclass
@@ -88,7 +88,7 @@ forvalues i = 1/`numxvars' {
 		qui reg `depvar' `var`i'' `zvar' if `touse'
 	}
 	else if `numwvars' >0 {
-	    qui reg `depvar' `var`i'' `zvar' if `touse' [aw=1/`wvar']
+	    qui reg `depvar' `var`i'' `zvar' if `touse' [aw=`wvar']
 	}
 
 	local tstat = abs(_b[`var`i'']/_se[`var`i''])
@@ -128,7 +128,7 @@ if `numchosen' == 0 {
 		reg `depvar' `zvar' if `touse'
 	}
 	else if `numwvars' >0 {
-		reg `depvar' `zvar' if `touse' [aw=1/`wvar']
+		reg `depvar' `zvar' if `touse' [aw=`wvar']
 	}
 	exit
 }
@@ -153,7 +153,7 @@ forvalues j = 2/`n' {
 			qui reg `depvar' `chosen`j'' `var`i'' `zvar' if `touse'
 		}
 		else if `numwvars' >0 {
-			qui reg `depvar' `chosen`j'' `var`i'' `zvar' if `touse' [aw=1/`wvar']
+			qui reg `depvar' `chosen`j'' `var`i'' `zvar' if `touse' [aw=`wvar']
 		}
 		
 		local tstat = abs(_b[`var`i'']/_se[`var`i''])
@@ -197,7 +197,7 @@ forvalues j = 2/`n' {
 		reg `depvar' `chosen' `zvar' if `touse'
 	}
 	else if `numwvars' >0 {
-		reg `depvar' `chosen' `zvar' if `touse' [aw=1/`wvar']
+		reg `depvar' `chosen' `zvar' if `touse' [aw=`wvar']
 	}
 	continue, break
 	}

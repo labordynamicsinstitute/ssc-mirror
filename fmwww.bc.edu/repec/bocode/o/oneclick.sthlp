@@ -37,10 +37,9 @@ much as possible to speed up the calculations.
 {cmd:oneclick} By entering your control variables, the {it:oneclick} command
 helps you to select all true subsets of the control variables and add them to 
 the regression in turn, and at the end only the combinations at the level of 
-significance you are satisfied with are listed. It is important to note that 
-the {hi:tuples} command must be downloaded in advance. This command is a new 
-development based on the {hi:tuples} command and it's very useful, especially 
-when we do not know what control variables are appropriate.
+significance you are satisfied with are listed. I constructed the subset 
+filtering method from scratch based on the bitmap algorithm, which is faster 
+than {it:tuples}.
 {p_end}
 
 
@@ -113,7 +112,12 @@ E-mail: {browse "mailto:Shutter_Z@outlook.com":Shutter_Z@outlook.com}. {break}
 {p 4 4 2}
 Thank you to Professor {hi:Yujun,Lian (arlionn)} for his programming syntax guidance and 
 Professor {hi:Christopher F. Baum} for his careful bug checking.
+{p_end}
+{p 4 4 2}
 Thanks to Bilibili users for their suggestions on the initial construction of 
 this project.
+{p_end}
+{p 4 4 2}
+Thanks to my learning ability.
 {p_end}
 

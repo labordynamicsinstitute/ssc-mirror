@@ -1,6 +1,7 @@
 {smcl}
-{* 27apr2011}{...}
-{hi:help oaxaca}
+{* 28feb2023}{...}
+{hi:help oaxaca}{...}
+{right:{browse "http://github.com/benjann/oaxaca/"}}
 {hline}
 
 {title:Title}
@@ -369,7 +370,9 @@ the associated variables contain non-missing values for all observations in
 both groups.
 
 {phang}
-{opt noisily} displays the models' estimation output.
+{opt noisily} displays the models' estimation output. (Note that, depending on
+context, these models will be estimated in a way such that the displayed 
+standard errors are not valid.)
 
 {phang} {opt relax} causes {cmd:oaxaca} to continue its computations even
 if coefficients are dropped from the models (e.g. due to collinearity) or
@@ -521,7 +524,7 @@ Problem in Detailed Wage Decompositions. Economic Inquiry 43: 766-772.
 
 {title:Author}
 
-{p 4 4 2}Ben Jann, Institute of Sociology, University of Bern, jann@soz.unibe.ch
+{p 4 4 2}Ben Jann, University of Bern, ben.jann@unibe.ch
 
 
 {title:Also see}
