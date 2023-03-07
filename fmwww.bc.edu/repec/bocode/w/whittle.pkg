@@ -1,8 +1,8 @@
 d 'WHITTLE': module to compute long-memory parameter via Whittle method
 d
-d  the Whittle routine	implements the local Whittle and exact
-d local Whittle estimators of the order of fractional integration
-d of a time series. 
+d  The Whittle routine implements the local Whittle and exact local
+d Whittle estimators of the order of fractional integration of a
+d time series. 
 d
 d KW: long memory
 d KW: Whittle
@@ -10,7 +10,7 @@ d KW: fractional integration
 d
 d Requires: Stata version 
 d
-d Distribution-Date: 20210112
+d Distribution-Date: 20230306
 d
 d Author: Christopher F Baum, Boston College
 d Support: email baum@@bc.edu

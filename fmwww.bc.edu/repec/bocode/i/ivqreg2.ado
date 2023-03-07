@@ -1,4 +1,4 @@
-* Version 2.6 - 29 Sep 2021
+* Version 2.7 - 03 Mar 2023
 * By J.M.C. Santos Silva
 * Please email jmcss@surrey.ac.uk for help and support
 
@@ -23,7 +23,7 @@ conv_nrtol(real 1e-6) tracelevel(string) quickd from(string) MUsigma  ///
 
 marksample touse
 markout `touse' `instruments'
-tempname  _y _rhs bb vold _u b g fsd s_hat CC C X fsd1 ones G O fsdu fsdg fsdv g31 g32 _u2 _uv _v U fiu fiv A V bpost V_location V_scale Q OM _uf _uvf
+tempname  _y _rhs  bb vold _u b g fsd s_hat CC C X fsd1 ones G O fsdu fsdg fsdv g31 g32 _u2 _uv _v U fiu fiv A AA V bpost V_location V_scale Q OM _uf _uvf
 gettoken _y _rhs: varlist
 
 unab _rhs :  `_rhs'
@@ -67,8 +67,11 @@ if ("`winitial'"=="") local winitial="identity"
 if ("`from'"=="") {
 if ("`musigma'"=="") {
 qui ivreg `_y' (`_rhs' = `instruments') if `touse'
-mat `b'=e(b)
-qui predict double `_uf' if `touse', res    
+qui mat `b'=e(b)
+qui predict double `_uf' if `touse', res 
+qui mat `AA'=`b'[1,1..`wx']
+local  names : colfullnames `AA'
+local _rhs `names'   
 qui g double `_uvf'=abs(`_uf')
 qui ivreg  `_uvf' (`_rhs' = `instruments') if `touse'
 mat `g'=e(b)

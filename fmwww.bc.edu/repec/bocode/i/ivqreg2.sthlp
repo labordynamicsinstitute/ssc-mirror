@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.4 29 Sep 2021}{...}
+{* *! version 1.5 4 Mar 2023}{...}
 {cmd:help ivqreg2} 
 
 {hline}
@@ -93,20 +93,20 @@ dealings in the software.
 {title:Examples}
 
     {hline}
-{pstd}Setup{p_end}        
-{phang2}{cmd:. use https://people.brandeis.edu/~kgraddy/datasets/fishdata.dta}{p_end}
+{pstd}Setup: import Kathryn Graddy's fish data{p_end}        
+{cmd:. import delimited "https://tinyurl.com/Graddy-data"}
 
 {pstd}Structural quantile functions for a range of quantiles using stormy and rainy as instruments for price{p_end}
-{phang2}{cmd:. ivqreg2 qty price, inst(stormy rainy) q(0.15 .25 .5 .75 .85)}{p_end}
+. {stata ivqreg2 qty price, inst(stormy rainy) q(0.15 .25 .5 .75 .85)}
 
 {pstd}Same regression as above but including day dummies as controls{p_end}
-{phang2}{cmd:. ivqreg2 qty price day*, inst(stormy rainy day*) q(0.15 .25 .5 .75 .85)}{p_end}
+. {stata ivqreg2 qty price day*, inst(stormy rainy day*) q(0.15 .25 .5 .75 .85)}
 
 {pstd}Structural median using stormy as an instrument for price; location and scale estimates are reported{p_end}
-{phang2}{cmd:. ivqreg2 qty price, inst(stormy) ls}{p_end}
+. {stata ivqreg2 qty price, inst(stormy) ls}
 
 {pstd}Restricted regression quantiles for a range quantiles{p_end}
-{phang2}{cmd:. ivqreg2 qty price,  q(0.1(0.1).9)}{p_end}
+. {stata ivqreg2 qty price,  q(0.1(0.1).9)}
 
     {hline}
 

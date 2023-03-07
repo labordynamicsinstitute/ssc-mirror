@@ -3,7 +3,8 @@
 *! 1.0.1 15apr2019
 *! 1.0.2 26apr2019  remove adjust option
 *! 1.0.3 20jun2019  add logic from gphudak
-*! 1.0.4 01nov2019   ensure that d=1 is not passed to fracdiff
+*! 1.0.4 01nov2019  ensure that d=1 is not passed to fracdiff
+*! 1.0.5 06mar2023  return scalars to enable rolling
 
 capt prog drop whittle
 mata:mata clear
@@ -80,7 +81,14 @@ di as res _dup(60) "-"
 return local cmdname "whittle"
 return local varname `varlist'
 mat `whit' = `whit''
+ret scalar N = `whit'[1,1]
+ret scalar power = `whit'[2,1]
+ret scalar trunc = `whit'[3,1]
+ret scalar d = `whit'[4,1]
+ret scalar se = `whit'[5,1]
+ret scalar ase  = `whit'[6,1]
 ret matrix whittle `whit'
+
 
 end
 
