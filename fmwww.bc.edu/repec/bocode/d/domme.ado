@@ -1,4 +1,6 @@
-*! domme version 1.1.0 2/7/2023 Joseph N. Luchman
+*! domme version 1.1.1 3/7/2023 Joseph N. Luchman
+
+capture include dominance.mata, adopath																	// include Mata-based dominance code
 
 program define domme, eclass 																			// ~ history and version information at end of file ~
 
@@ -24,7 +26,7 @@ program define domme, eclass 																			// ~ history and version informa
 		ROPts(string) ADDConstr(numlist)] 																//addconstr() and extraconstr() undocumented - for use in possible extensions
 
 	/*exit conditions*/
-	capture which lb_dominance.mlib																		//is -domin- present?
+	capture which dominance.mata																		//is -domin- present?
 
 
 	if _rc { 																							//if -domin- cannot be found, tell user to install it.
@@ -1056,10 +1058,13 @@ end
    // 1.0.1 - April 17, 2021 (initiating new versioning: #major.#minor.#patch)
    -update to documentation for SJ article
    -bug fix on constraint dropping with all() option and use with xi:
-   // 1.1.0 - February 7, 2023
-   -leverage dominance() function in -domin-; create own function to function passing; Mata struct to handle input specs
-   - -domin- now a dependency.
-   - use an AssociativeArray to map parameters/parameter sets to constraints in a way that is conformable with -domin-
-   - extensive documentation update
-   - fixed complete dominance table display; retains equation name and adds informative prefix
+---
+ domme version 1.1.0 - February 7, 2023
+ - leverage dominance() function in -domin-; create own function to function passing; Mata struct to handle input specs
+ - -domin- now a dependency.
+ - use an AssociativeArray to map parameters/parameter sets to constraints in a way that is conformable with -domin-
+ - extensive documentation update
+ - fixed complete dominance table display; retains equation name and adds informative prefix
+ // 1.1.1 - March 7, 2023
+ - call 'dominance.mata' as opposed to using 'lb_dominance.mlib' to allow backward compatability
 */

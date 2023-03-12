@@ -260,6 +260,8 @@ regarding plotting dummies with {help grqreg} when using factor notation. {p_end
 
 {p}The usual disclaimer applies.{p_end}
 
+{p}And if interested or curious about smqreg, shoot me an email.{p_end}
+
 {marker Author}{...}
 {title:Author}
 

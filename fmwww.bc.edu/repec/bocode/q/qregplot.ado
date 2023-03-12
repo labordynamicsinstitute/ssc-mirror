@@ -1,4 +1,5 @@
-*! version 1.21  (Feb 2023) Adds smqreg and sivqr
+*! version 1.22  (Marcj 2023) Small changes to SIVQR weights, Ifs and ins
+* version 1.21  (Feb 2023) Adds smqreg and sivqr
 * version 1.2  (Dec 2022) Options for Other Range plots
 * version 1.1  (APR 2022) Adds new options and default
 * version 1.05  (Feb 2022) adds Name
@@ -11,23 +12,7 @@
 * This is an attempt to "update" grqreg by allowing for factor notation,
 * providing more flexibility in how plots are generated. (and how are options used)
 * and allowing the command to be used after other commands including mmqreg, qrprocess and rifhdreg (for uqreg)
-* Potentially i can add qreg2 and xtqreg, but only after the cmdlines are fixed.
-/*capture program drop qregplot
-capture program drop grqreg_x
-capture program drop qreg_stripper
-capture program drop is_vlist_in_xlist
-capture program drop estore
-capture program drop mynlist
-capture program drop qrgraph
-capture program drop rifhdreg_stripper
-capture program drop rif_stripper
-capture program drop sqreg_stripper
-capture program drop short_local
-capture program drop label_var_lab
-capture program drop raopt_default 
-capture program drop lnopt_default 
-capture program drop reg_default 
-capture program drop twopt_default*/
+
 
 ** This little piece of code "prevents"  loosing all!
 program define qregplot, rclass
@@ -162,10 +147,9 @@ program define grqreg_x, rclass
 		local yvar `e(depvar)'
 		local zvar `e(insts)'
 		local qnt  `e(q)'
-		**local oth  `r(oth)' <- request change
-		**local ifin `r(ifin)'<- request change
-		
-		local wgt  `e(wexp)'`e(wtype)'
+		local oth  `e(oth)'
+		local ifin `e(ifin)'
+		local wgt  [`e(wtype)'`e(wexp)']
 
 		
 	}
@@ -284,12 +268,14 @@ program define grqreg_x, rclass
 	}
 	******************************************
 	if inlist("`cmd'","smqreg") {
-		local bw0 = `e(bw)'
+		local bw0 = `e(bw)'		
 		tempname binit
-	    foreach q of local qlist {
+		foreach q of local qlist {
 			local cnt = `cnt'+1
-		    if `cnt'>1 qui:`cmd' `yvar' `xvar' `ifin' `wgt',  `oth' q(`q') bw(`bw0') from(`binit')
-			else       qui:`cmd' `yvar' `xvar' `ifin' `wgt',  `oth' q(`q') bw(`bw0') 
+			if `cnt'==1 qui:qreg `yvar' `xvar' `ifin' `wgt',  q(`q') 
+			matrix `binit' = e(b)
+		    qui:`cmd' `yvar' `xvar' `ifin' `wgt',  `oth' q(`q') bw(`bw0') from(`binit')
+			*qui:`cmd' `yvar' `xvar' `ifin' `wgt',  `oth' q(`q') bw(`bw0') 
 			matrix `binit' = e(b)
 			
 			qui:ereturn display
@@ -360,13 +346,14 @@ program define grqreg_x, rclass
 	 
 	
  	if "`estore'"!="" {
-	    estore, qq(`qq') bs(`bs')   ll(`ll')   ul(`ul')    xlist(`xlist') ///
-					     bso(`bso') llo(`llo') ulo(`ulo') `ols'
+	    estore, qq(`qq') bs(`bs') ll(`ll') ul(`ul') xlist(`xlist') ///
+				bso(`bso') llo(`llo') ulo(`ulo') `ols' cmdqreg(`cmd')
 		est store `estore'
 	}
 	
 	if "`esave'"!="" {
-	    estore, qq(`qq') bs(`bs') ll(`ll') ul(`ul') xlist(`xlist') bso(`bso') llo(`llo') ulo(`ulo') `ols'
+	    estore, qq(`qq') bs(`bs') ll(`ll') ul(`ul') xlist(`xlist') ///
+		        bso(`bso') llo(`llo') ulo(`ulo') `ols' cmdqreg(`cmd')
 		est save `esave'
 	}
 	
@@ -374,11 +361,13 @@ program define grqreg_x, rclass
 end
 
 program define estore, eclass
-	syntax, xlist(string) qq(string) bs(string) ll(string) ul(string) [bso(string) llo(string) ulo(string) ols]
+	syntax, xlist(string) qq(string) bs(string) ll(string) ul(string) cmdqreg(string) ///
+		    [bso(string) llo(string) ulo(string)  ols]
 	tempname b
 	matrix `b'=1
 	ereturn post `b'
 	ereturn local cmd qregplot
+	ereturn local cmdqreg `cmdqreg'
 	ereturn local xlist `xlist'
 	ereturn matrix qq `qq'
 	ereturn matrix bs `bs'
