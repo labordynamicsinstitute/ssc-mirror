@@ -35,29 +35,57 @@ combination(2,x) is the number of pairs of x, which is n!/2!(n-2)! = n*(n-1)/2
       return(ari)
   }
 
+
+real matrix function ARIptest (string rowvar, string colvar, string touse, real scalar nperm, real scalar ari) {
+  rv = st_data(., rowvar   , touse)
+  cv = st_data(., colvar, touse)
+
+  dims = max((max(rv), max(cv)))
+  results = J(nperm,1,.)
+
+  for (i=1; i<=nperm; i++) {
+    cv[.,.] = jumble(cv)
+    tabmat = J(dims,dims,0)
+    for (j=1; j<=length(rv); j++) {
+      tabmat[rv[j],cv[j]] = 1 + tabmat[rv[j],cv[j]]
+    }
+    results[i] = ARI(tabmat)
+  }
+  results = results[order(results,1)]
+  return(
+    (1+sum(results  :>= ari))/nperm , // P is <= than this
+    results[floor(0.95*nperm)]        // 95 percentile
+    )
+}
+
 end
 
    
 
 program ari, rclass
 version 9.0
-   syntax varlist [if] [in] [, VERsion]
-   tokenize `varlist'
-   local rowvar `1'
-   macro shift
-   local colvar `1'
-   tempname tabmat retval
+syntax varlist [if] [in] [, VERsion Permute(real 0)]
+tokenize `varlist'
+local rowvar `1'
+macro shift
+local colvar `1'
+tempname tabmat retval pret pval p95
 
-   if ("`version'"!="") di "$Id: ari.ado,v 1.4 2012/07/16 14:09:20 brendan Exp $"
+if ("`version'"!="") di "$Id: ari.ado,v 1.5 2018/10/26 08:32:54 brendan Exp brendan $"
 
-   marksample touse
-   
-   /* di "Tabulating raw data:" */
-   qui tab `rowvar' `colvar' if `touse',  matcell(`tabmat')
-   
-   
-   mata: st_numscalar("`retval'",ARI(st_matrix("`tabmat'")))
-   di "Adjusted Rand Index: " %7.4f `retval'
-   return scalar ari = `retval'
+marksample touse
+
+qui tab `rowvar' `colvar' if `touse',  matcell(`tabmat')
+
+mata: st_numscalar("`retval'",ARI(st_matrix("`tabmat'")))
+di "Adjusted Rand Index: " %7.4f `retval'
+if (`permute' != 0) {
+  mata: st_matrix("`pret'",ARIptest("`rowvar'", "`colvar'", "`touse'", `permute', `=`retval''))
+  return scalar arip = `pret'[1,1]
+  return scalar arip95 = `pret'[1,2]
+  di "95% percentile of ARI using " `permute' " permutations: " `pret'[1,2]
+  di "P(A>a) <= " `pret'[1,1]
+}
+return scalar ari = `retval'
 end
    

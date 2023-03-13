@@ -23,6 +23,10 @@
 {synopt :{opt pwd:ist(matname)}} store the
 pairwise distances in {it:matname}, as a symmetric matrix. Will be
 created or overwritten. {p_end}
+
+{synopt :{opt ref(integer)}} (Optional) compare all sequences to the first N sequences, instead of calculating all pairwise distances. {p_end}
+{synopt :{opt MA:window(integer)}} (Optional) Moving average window to smooth transition rates over (defaults to (3 1 3)). See the {cmd:window()} option of {help tssmooth ma}. {p_end}
+
 {synoptline} {p2colreset}{...}
 
 

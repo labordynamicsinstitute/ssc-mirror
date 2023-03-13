@@ -20,8 +20,8 @@
 {synopthdr:options}
 {synoptline}
 {syntab:Required}
-{synopt :{opt nsp:ells(string)}} Name the variable which stores the number of spells{p_end}
-{synopt :{opt nst:ates(string)}} Name the variable which stores the number of states{p_end}
+{synopt :{opt nsp:ells(#)}} Name the variable which stores the number of spells{p_end}
+{synopt :{opt nst:ates(#)}} Name the variable which stores the number of states{p_end}
 {synopt :{opt pws:im(string)}} Name the matrix which will store the similarities or distances{p_end}
 
 {syntab:Optional}
@@ -90,9 +90,9 @@ Beyond the Core Program}, Springer
 
 {title:Examples}
 
-{phang}{cmd:. combinprep, state(m) length(l) idvar(id) nsp(nspells) }{p_end}
+{phang}{cmd:. cal2spell, state(m) spell(sp) length(l) nsp(nspells) }{p_end}
 
 {phang}{cmd:. local nsp = r(maxspells)}{p_end}
 {phang}{cmd:. local nel = r(nels)}{p_end}
 
-{phang}{cmd:. combinadd m1-l`nsp', pwsim(xtd) nspells(nspells) nstates(`nel') rtype(d)}{p_end}
+{phang}{cmd:. combinadd sp1-l`nsp', pwsim(xtd) nspells(nspells) nstates(`nel') rtype(d)}{p_end}

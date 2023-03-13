@@ -1,10 +1,8 @@
-/* Copyright 2007 Brendan Halpin brendan.halpin@ul.ie
+/* Copyright 2007-2017 Brendan Halpin brendan.halpin@ul.ie
    Distribution is permitted under the terms of the GNU General Public Licence
 */
 #delimit ;
 
-capture program drop omav;
-capture program drop omamatv3;
 program omamatv3, plugin;
 
    mata:;
@@ -15,15 +13,15 @@ program omamatv3, plugin;
      }
      end;
    
-program define omav;
+program define sdhollister;
 version 9;
    syntax varlist [if] [in] [using/] ,
      SUBSmat(string)
-     INDel(real)
      PWDist(string)
      LENgth(string)
-     [FACexp(real 0.5)
-     REFstr(integer 0) WORkspace DUps STAndard(string)] ;
+     TIMEcost(real)  /* x in formula */
+     LOCalcost(real) /* y in formula */
+     [WORkspace STAndard(string) DUps];
 
   local norm 0;
    if ("`standard'"=="longer") {;
@@ -39,42 +37,46 @@ version 9;
       di "Not normalising distances with respect to length";
       };
    
-   if ("`dups'"=="") {;
-     local dups 0;
-     };
-     else {;
-     local dups 1;
-     };
-
-
+   
    marksample touse, novarlist; // novarlist mean keep cases with missing vars
-   preserve;
-   keep if `touse';
+
+   tempname twtype;
+   local twtype 4;    
+   
    tempvar idvar;
    tempvar lengthvar;
    gen `lengthvar' = `length';
    tempname indelcost;
-   scalar `indelcost' = `indel';
+   scalar `indelcost' = 0.0;
 
+   /* tempvar hol_x; */
+   /* scalar `hol_x' = `timecost'; */
+   /* tempvar hol_y; */
+   /* scalar `hol_y' = `localcost'; */
+   local hol_x = `timecost';
+   local hol_y = `localcost';
+   
+
+   
    local printworkspace 0;
    if "`workspace'" ~= "" {;
       local printworkspace 1;
       };
 
+   
    local adjdur 1;
+   local facexp 1;
 
    tempname ndups;
    tempname first;
-   
+
+   preserve;
+
    gen `idvar'=_n;
-
-   if (`dups'==0) {;
-
 
    sort `varlist';
    //                   mkmat `idvar';
    mata: st_matrix("`idvar'", st_data(.,"`idvar'"));
-
    by `varlist': gen `ndups' = _N;
    by `varlist': gen `first' = _n==1;
 
@@ -84,16 +86,10 @@ version 9;
 
    // mkmat `ndups';
    mata: st_matrix("`ndups'", st_data(.,"`ndups'"));
-      };
    
-   local ncols `refstr';
-   if `ncols' == 0 {;
-     local ncols = _N;
-     };
 
-  
-   //matrix `pwdist' = J(_N,`ncols',0);
-   mata: st_matrix("`pwdist'", J(`=_N',`ncols',0));
+   // matrix `pwdist' = J(_N,_N,0);
+   mata: st_matrix("`pwdist'",   J(`=_N',`=_N',0));
    
      /* Arguments hardcoded into omamatv3:
      0: substitution matrix name
@@ -118,21 +114,19 @@ version 9;
       };
 
    plugin call omamatv3 `idvar' `lengthvar' `varlist',
-                        `subsmat' `indelcost' subsrows `pwdist' `adjdur' `printworkspace' `facexp' 1 1 0 `refstr' 1 1 `norm';
-
-   if (`dups'==0) {;
-      capture mata mata which mm_expand();
-      if _rc {;                                                                              
-         di as error "mm_expand() from -moremata- is required; type -ssc install moremata- to obtain it";
-         di as error "Alternatively, use the {cmd:dups} option to treat duplicate sequences";
-         exit 499;           
+     `subsmat' `indelcost' subsrows `pwdist' `adjdur' `printworkspace' `facexp' `twtype' 0 0 0
+     `hol_x' `hol_y' `norm'
+     ;
+   capture mata mata which mm_expand();
+   if _rc {;                                                                              
+      di as error "mm_expand() from -moremata- is required; type -ssc install moremata- to obtain it";
+      exit 499;           
       };
-
-      mata: `pwdist'= expandpwdist(st_matrix("`pwdist'"),st_matrix("`idvar'"),st_matrix("`ndups'"));
-      mata: st_matrix("`pwdist'",`pwdist');
-      mata: mata drop `pwdist'; // Drop the mata copy of the PWdist matrix, no longer needed & potentially large
-                  
-      };
+   mata: `pwdist'= expandpwdist(st_matrix("`pwdist'"),st_matrix("`idvar'"),st_matrix("`ndups'"));
+   mata: st_matrix("`pwdist'",`pwdist');
    restore;
-
+   
+   
 end;
+   
+

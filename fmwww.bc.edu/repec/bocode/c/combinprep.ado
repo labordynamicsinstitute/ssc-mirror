@@ -2,6 +2,7 @@ capture program drop combinprep
 program define combinprep, rclass
 version 9.0
    syntax, STate(string) length(string) IDvar(varname) NSPells(string)
+   di "note: compinprep.ado continues to work, but cal2spell.ado supersedes it"
    tempvar spno l
    
    

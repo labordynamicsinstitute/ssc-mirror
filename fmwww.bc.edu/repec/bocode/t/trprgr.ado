@@ -143,7 +143,7 @@ local ceilingxs `ceiling'
               local floorxs `r(min)'
                noisily display in blue "Warning: Min t-rate(`origin',`dest') is less than floor: `r(min)' < `floor'"
                }
-            line `trpr'`dest' period if state==`origin', clcolor(red) nodraw yscale(range(`floor' 1)) ylabel(`floor'(0.025)1.0) ytitle("`yt'"`textsize') xtitle("`xt'"`textsize') `options' name(`graphof_`origin'_`dest'', replace)
+            line `trpr'`dest' period if state==`origin', lwidth(*2) nodraw yscale(range(`floor' 1)) ylabel(`floor'(0.025)1.0) ytitle("`yt'"`textsize') xtitle("`xt'"`textsize') `options' name(`graphof_`origin'_`dest'', replace)
             }
          if (`origin'!=`dest') {
             qui su `trpr'`dest' if state==`origin'
@@ -166,6 +166,11 @@ if (`ceilingxs' != `ceiling') {
   di "CEILING exceeded: `ceilingxs'"
 }
 di "Combining graphs"
-graph combine `gcom'
+
+if ("`options'" != "") {
+  local options ", `options'"
+}
+
+graph combine `gcom' `options'
    restore
 end

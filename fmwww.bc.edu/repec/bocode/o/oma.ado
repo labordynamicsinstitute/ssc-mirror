@@ -1,9 +1,22 @@
 /* Copyright 2007 Brendan Halpin brendan.halpin@ul.ie
    Distribution is permitted under the terms of the GNU General Public Licence
 
-   $Id: oma.ado,v 1.16 2015/02/14 11:21:40 brendan Exp $
+   $Id: oma.ado,v 1.19 2019/05/07 12:59:56 brendan Exp $
 
    $Log: oma.ado,v $
+   Revision 1.19  2019/05/07 12:59:56  brendan
+   Summary: Code to deal properly with duplicates when using reference sequences
+
+   Revision 1.18  2017/02/06 10:39:23  brendan
+   Summary: Changed refstr to ref, changed normalisation to default cleanly
+   to none
+
+   * oma.ado: Summary: refstr now sets
+   dups
+
+   Revision 1.17  2017/02/06 09:11:00  brendan
+   Summary: refstr now sets dups
+
    Revision 1.16  2015/02/14 11:21:40  brendan
    Summary: Bypass Stata matrix to lift 11k limit
 
@@ -56,6 +69,19 @@ program omamatv3, plugin;
      return(output[invorder(seqid), invorder(seqid)])
      }
      end;
+
+   // Version for reference sequence working, expand rows only   
+   mata:;
+   real matrix function expandpwdistRowOnly(real matrix raw, real matrix seqid, real matrix nd, real scalar head)
+     {
+     reflines = raw[1..head, .]
+     rawlines = raw[(head+1)..cols(raw), .]
+     ncols = J(1,cols(raw),1)
+     output = mm_expand(raw,nd,ncols,1)
+     output = output[invorder(seqid), .]
+     return(output)
+     }
+     end;
    
 program define oma;
 version 9;
@@ -64,31 +90,38 @@ version 9;
      INDel(real)
      PWDist(string)
      LENgth(string)
-     [REFstr(integer 0)
+     [REF(integer 0)
        WORkspace DUps STAndard(string) VERsion];
       
    if ("`version'" != "") {;
-      di "OMA version: \$Id: oma.ado,v 1.16 2015/02/14 11:21:40 brendan Exp $";
+      di "OMA version: \$Id: oma.ado,v 1.19 2019/05/07 12:59:56 brendan Exp $";
       };
       
-   local norm 1;
+
+  local norm 0;
    if ("`standard'"=="longer") {;
       local norm 1;
       };
-   else if (inlist("`standard'","longer","none")) {;
-         local norm 0;
-         };
-      else {;
-         di "Normalising distances with respect to length";
-         };
-   
-   
+   else if (inlist("`standard'","none")) {;
+      local norm 0;
+      };
+   if (`norm'==1) {;
+      di "Normalising distances with respect to length";
+      };
+   else {;
+      di "Not normalising distances with respect to length";
+      };
+
    if ("`dups'"=="") {;
      local dups 0;
      };
      else {;
      local dups 1;
      };
+
+   /* if (`ref'!=0) {; */
+   /*   local dups 1; */
+   /*   }; */
 
 
    marksample touse, novarlist; // novarlist mean keep cases with missing vars
@@ -115,13 +148,21 @@ version 9;
 
    if (`dups'==0) {;
 
+   // Generate a variable that will sort the ref seqs at the top
+   // and prevent them from being id-ed as duplicates
+   tempvar refmark;
+   gen `refmark' = _N;
+   if (`ref'!=0) {;
+     replace `refmark' = _n if _n<=`ref';
+   };
 
-   sort `varlist';
+
+   sort `refmark' `varlist';
    //                   mkmat `idvar';
    mata: st_matrix("`idvar'", st_data(.,"`idvar'"));
 
-   by `varlist': gen `ndups' = _N;
-   by `varlist': gen `first' = _n==1;
+   by `refmark' `varlist': gen `ndups' = _N;
+   by `refmark' `varlist': gen `first' = _n==1;
 
    qui count if `first';
    di "`r(N)' unique observations";
@@ -132,7 +173,7 @@ version 9;
       };
    
    //this setting needs to be here since _N has changed
-   local ncols `refstr';
+   local ncols `ref';
    if `ncols' == 0 {;
      local ncols = _N;
      };
@@ -164,7 +205,7 @@ version 9;
       };
 
    plugin call omamatv3 `idvar' `lengthvar' `varlist',
-                        `subsmat' `indelcost' subsrows `pwdist' `adjdur' `printworkspace' `exponent' 1 0 0 `refstr' 1 1 `norm';
+                        `subsmat' `indelcost' subsrows `pwdist' `adjdur' `printworkspace' `exponent' 1 0 0 `ref' 1 1 `norm';
 
    if (`dups'==0) {;
       capture mata mata which mm_expand();
@@ -174,7 +215,15 @@ version 9;
          exit 499;           
       };
 
-      mata: `pwdist'= expandpwdist(st_matrix("`pwdist'"),st_matrix("`idvar'"),st_matrix("`ndups'"));
+      if (`ref'==0) {;
+      noi di "TEST: not ref and not dup";
+        mata: `pwdist'= expandpwdist(st_matrix("`pwdist'"),st_matrix("`idvar'"),st_matrix("`ndups'"));
+        };
+      else {;
+      noi di "TEST: ref and not dup";
+      noi di "Editing in process: trying to fix mm_expand for REF option";
+        mata: `pwdist'= expandpwdistRowOnly(st_matrix("`pwdist'"),st_matrix("`idvar'"),st_matrix("`ndups'"),`ref');
+      };
       mata: st_matrix("`pwdist'",`pwdist');
       mata: mata drop `pwdist'; // Drop the mata copy of the PWdist matrix, no longer needed & potentially large
    };

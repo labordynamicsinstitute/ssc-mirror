@@ -15,43 +15,51 @@ end
 
 mata:
 
-   // Setup and work through all the pairs, calculating the DH distance
-real matrix function dynhamming (string vl, string sm, real scalar nstates, real scalar buzz) {
-  real scalar i,j,k;
-  real matrix subsmat, resmat;
+  // Setup and work through all the pairs, calculating the DH distance
+real matrix function dynhamming (string vl, string sm, real scalar nstates, real scalar buzz, real scalar nrefs) {
+  real scalar i,j,k
+  real matrix subsmat, resmat
 
-  st_view(data = .,.,(tokens(vl)));
-  maxwidth = cols(data);
-  nobs = rows(data);
-  resmat = J(nobs,nobs,0);
+  st_view(data = .,.,(tokens(vl)))
+  maxwidth = cols(data)
+  nobs = rows(data)
+  resmat = J(nobs, (nrefs==0 ? nobs : nrefs), 0)
 
-// (N*T) * N transition probability matrix
-  subsmat = st_matrix(sm);
+  // (N*T) * N transition probability matrix
+  subsmat = st_matrix(sm)
 
-// add p_{ij} to p_{ji} : would  "x :+ x'" be better
-      for (i = 1;i<maxwidth;i++) {
-         for (j = 1;j<=nstates;j++) {
-            subsmat[j + (i-1)*nstates, j] = 2*subsmat[j + (i-1)*nstates, j]; // for buzz, diagonal
-            for (k = j+1;k<=nstates;k++) {
-               subsmat[j + (i-1)*nstates, k] = subsmat[j + (i-1)*nstates, k] + subsmat[k + (i-1)*nstates, j];
-               subsmat[k + (i-1)*nstates, j] = subsmat[j + (i-1)*nstates, k];
-               }
-            }
-         }
-      
-// Get the DH distance for each pair
-      for (i = 1;i <= nobs;i++) {
-         for (j = i + 1;j <= nobs;j++) { // Note: explicitly leave a zero in diagonal
-            resmat[i,j] = dynhammingdistance(i, j, data, subsmat, nstates, maxwidth, buzz);
-            }
-         if (buzz==1) {
-            resmat[i,i] = dynhammingdistance(i, i, data, subsmat, nstates, maxwidth, buzz);
-            }
-         }
-      
-  resmat = resmat + resmat';
+  // add p_{ij} to p_{ji} : would  "x :+ x'" be better
+  for (i = 1;i<maxwidth;i++) {
+    for (j = 1;j<=nstates;j++) {
+      subsmat[j + (i-1)*nstates, j] = 2*subsmat[j + (i-1)*nstates, j] // for buzz, diagonal
+      for (k = j+1;k<=nstates;k++) {
+        subsmat[j + (i-1)*nstates, k] = subsmat[j + (i-1)*nstates, k] + subsmat[k + (i-1)*nstates, j]
+        subsmat[k + (i-1)*nstates, j] = subsmat[j + (i-1)*nstates, k]
+      }
+    }
+  }
+
+  if (nrefs==0) {
+    // Get the DH distance for each pair
+    for (i = 1;i <= nobs;i++) {
+      for (j = i + 1;j <= nobs;j++)
+        { // Note: explicitly leave a zero in diagonal
+          resmat[i,j] = dynhammingdistance(i, j, data, subsmat, nstates, maxwidth, buzz)
+        }
+      if (buzz==1) {
+        resmat[i,i] = dynhammingdistance(i, i, data, subsmat, nstates, maxwidth, buzz)
+      }
+    }
+    resmat = resmat + transposeonly(resmat)
+  } else {
+    for (i = 1;i <= nobs;i++) {
+      for (j = 1;j <= nrefs;j++)
+        {
+          resmat[i,j] = dynhammingdistance(i, j, data, subsmat, nstates, maxwidth, buzz)
+        }
+    }
+  }
   return(resmat)
-
 }
 
 
@@ -96,30 +104,34 @@ end
 capture program drop dynhamming
 program define dynhamming
 version 9
-   syntax varlist , PWDist(string)  [DUps BUzz MAwindow(integer 3)]
-   
-   // Facility to over-ride exclusion of duplicates
-   // Nov 14 2011 : there is a bug here, in that without
-   // exclusion of duplicates, matches between duplicates
-   // (in some cases) do not return zero. When duplicates
-   // are excluded and then expanded, this doesn't seem to
-   // happen.
-   
-   if ("`dups'"=="") {
-      local dups 0
-      }
-   else {
-      local dups 1
-      }
-   
-   if ("`buzz'"=="") {
-      local buzz 0
-      }
-   else {
-      local buzz 1
-      }
+syntax varlist , PWDist(string)  [DUps BUzz MAwindow(integer 3) REF(integer 0)]
 
-   tempname subsmat
+// Facility to over-ride exclusion of duplicates
+// Nov 14 2011 : there is a bug here, in that without
+// exclusion of duplicates, matches between duplicates
+// (in some cases) do not return zero. When duplicates
+// are excluded and then expanded, this doesn't seem to
+// happen.
+
+if ("`dups'"=="") {
+  local dups 0
+}
+else {
+  local dups 1
+}
+
+if (`ref'!=0) {
+  local dups 1
+}
+   
+if ("`buzz'"=="") {
+  local buzz 0
+}
+else {
+  local buzz 1
+}
+
+tempname subsmat
 
    // Generate the dynamic transition probability matrix
    qui maketrpr `varlist', mat(`subsmat') ma(`mawindow')
@@ -154,7 +166,7 @@ version 9
       }
    
    // Apply it to the data, via Mata function
-   mata `pwdist' = dynhamming("`varlist'","`subsmat'",`nstates',`buzz')
+   mata `pwdist' = dynhamming("`varlist'","`subsmat'",`nstates',`buzz',`ref')
    // Save the distances (duplicates unexpanded)
    mata: st_matrix("`pwdist'",`pwdist')
 

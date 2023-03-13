@@ -2,7 +2,7 @@
 {* Copyright 2012 Brendan Halpin brendan.halpin@ul.ie }
 {* Distribution is permitted under the terms of the GNU General Public Licence }
 {* 10June2012}{...}
-{cmd:help dynhamming}
+{cmd:help mktrpr}
 {hline}
 
 {title:Title}

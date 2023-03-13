@@ -27,8 +27,8 @@ this regard.
 {pstd}Some of the distance measures deal with duplicates efficiently
 (i.e., by not re-estimating the distances redundantly). This facility
 requires the mata function {cmd:mm_expand()} from Ben Jann's
-{cmd:moremata} package. You can install this by doing {cmd:ssc install
-moremata}.
+{cmd:moremata} package. You can install this by doing
+{cmd:ssc install moremata}.
 
 {title:Author}
 
@@ -38,51 +38,51 @@ moremata}.
 {title:Also see}
 
 {psee}Distance measures: {p_end}
-{col 5}{bf:{help hamming}}{...}
-{col 20}Hamming distance
+{col 5}{bf:{help sdhamming}}{...}
+{pstd}Hamming distance{p_end}
 {col 5}{bf:{help oma}}{...}
-{col 20}Optimal Matching Algorithm
+{pstd}Optimal Matching Algorithm{p_end}
 {col 5}{bf:{help omav}}{...}
-{col 20}Halpin's duration-adjusted OM
-{col 5}{bf:{help hollister}}{...}
-{col 20}Hollister's "Localised OM"
+{pstd}Halpin's duration-adjusted OM{p_end}
+{col 5}{bf:{help sdhollister}}{...}
+{pstd}Hollister's "Localised OM"{p_end}
 {col 5}{bf:{help dynhamming}}{...}
-{col 20}An implementation of Lesnard's Dynamic Hamming measure
+{pstd}An implementation of Lesnard's Dynamic Hamming measure{p_end}
 {col 5}{bf:{help twed}}{...}
-{col 20}Time-Warp Edit Distance
+{pstd}Time-Warp Edit Distance{p_end}
 {col 5}{bf:{help combinadd}}{...}
-{col 20}Elzinga's number of common subsequences measure, duration-weighted
+{pstd}Elzinga's number of common subsequences measure, duration-weighted{p_end}
 
 {psee}Utilities: {p_end}
 {col 5}{bf:{help combinprep}}{...}
-{col 20}Change data from wide calendar to wide spell format (needed for {cmd:combinadd})
+{pstd}Change data from wide calendar to wide spell format (needed for {cmd:combinadd}){p_end}
 {col 5}{bf:{help trans2subs}}{...}
-{col 20}Generate substitution costs for OM and related distances based on observed transition rates
+{pstd}Generate substitution costs for OM and related distances based on observed transition rates{p_end}
 {col 5}{bf:{help maketrpr}}{...}
-{col 20}Calculate smoothed time-dependent transition rates (needed for {cmd:dynhamming})
-{col 5}{bf:{help stripe}}{...}
-{col 20}Generates a string representation of the sequence
+{pstd}Calculate smoothed time-dependent transition rates (needed for {cmd:dynhamming}){p_end}
+{col 5}{bf:{help sdstripe}}{...}
+{pstd}Generates a string representation of the sequence{p_end}
 {col 5}{bf:{help metricp}}{...}
-{col 20}Tests distance matrices for the triangle inequality
+{pstd}Tests distance matrices for the triangle inequality{p_end}
 {col 5}{bf:{help permtab}}{...}
-{col 20}Compare two cluster solutions by permuting one to maximise the agreement (very slow for >10 class solutions)
-{col 5}{bf:{help permtabga}}{...}
-{col 20}A version of {cmd:permtab} appropriate for larger cluster solutions (uses genetic algorithm)
+{pstd}Compare two cluster solutions by permuting one to maximise the agreement{p_end}
 {col 5}{bf:{help ari}}{...}
-{col 20}Calculate the Adjusted Rand Index of agreement between two cluster solutions
+{pstd}Calculate the Adjusted Rand Index of agreement between two cluster solutions{p_end}
 {col 5}{bf:{help corrsqm}}{...}
-{col 20}Calculate the correlation between two distance matrices
+{pstd}Calculate the correlation between two distance matrices{p_end}
 {col 5}{bf:{help nspells}}{...}
-{col 20}Calculate the number of spells in a sequence
+{pstd}Calculate the number of spells in a sequence{p_end}
 {col 5}{bf:{help cumuldur}}{...}
-{col 20}Calculate the cumulative duration in each state
-{col 5}{bf:{help entropy}}{...}
-{col 20}Calculate the Shannon entropy of a sequence 
+{pstd}Calculate the cumulative duration in each state{p_end}
+{col 5}{bf:{help sdentropy}}{...}
+{pstd}Calculate the Shannon entropy of a sequence {p_end}
+{col 5}{bf:{help sddiscrep}}{...}
+{pstd}Calculate the Studer Discrepancy{p_end}
 
 {psee}Visualisation: {p_end}
-{col 5}{bf:{help chronogram}}{...}
-{col 20}Graph the time-dependent state distribution
+{col 5}{bf:{help sdchronoplot}}{...}
+{pstd}Graph the time-dependent state distribution{p_end}
+{col 5}{bf:{help sdindexplot}}{...}
+{pstd}Indexplots graph trajectories, maintaining individual detail.{p_end}
 {col 5}{bf:{help trprgr}}{...}
-{col 20}Graph the time-dependent structure of transitions
-{col 5}{bf:{help sqindexplot}}{...}
-{col 20}SADI doesn't do indexplots, since it is hard to beat {help sqindexplot} from {search SQOM}
+{pstd}Graph the time-dependent structure of transitions{p_end}

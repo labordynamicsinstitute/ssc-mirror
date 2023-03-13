@@ -4,8 +4,11 @@
    Jul 19 2008 08:23:29
    copy of timewarp.ado
 
-   $Id: twed.ado,v 1.13 2015/02/14 11:25:23 brendan Exp $
+   $Id: twed.ado,v 1.14 2017/02/06 10:41:20 brendan Exp $
    $Log: twed.ado,v $
+   Revision 1.14  2017/02/06 10:41:20  brendan
+   Summary: refstr to ref
+
    Revision 1.13  2015/02/14 11:25:23  brendan
    Summary: Bypass Stata matrix to lift 11k limit, add DUPS option
 
@@ -62,18 +65,18 @@ version 9;
      NU(real)
      PWDist(string)
      LENgth(string)
-     [REFstr(integer 0) WORkspace DUps STAndard(string) VERsion] ;
+     [REF(integer 0) WORkspace DUps STAndard(string) VERsion] ;
 
    if ("`version'" != "") {;
-   di "TWED version: \$Id: twed.ado,v 1.13 2015/02/14 11:25:23 brendan Exp $";
+   di "TWED version: \$Id: twed.ado,v 1.14 2017/02/06 10:41:20 brendan Exp $";
       };
       
    
-   local norm 1;
+   local norm 0;
    if ("`standard'"=="longer") {;
       local norm 1;
       };
-   else if (inlist("`standard'","longer","none")) {;
+   else if (inlist("`standard'","=none")) {;
       local norm 0;
       };
    if (`norm'==1) {;
@@ -87,6 +90,10 @@ version 9;
      local dups 0;
      };
      else {;
+     local dups 1;
+     };
+
+   if (`ref'!=0) {;
      local dups 1;
      };
 
@@ -136,7 +143,7 @@ version 9;
       };
    
    //this setting needs to be here since _N has changed
-   local ncols `refstr';
+   local ncols `ref';
    if `ncols' == 0 {;
      local ncols = _N;
      };
@@ -169,7 +176,7 @@ version 9;
 
    plugin call omamatv3 `idvar' `lengthvar' `varlist',
      `subsmat' `indelcost' subsrows `pwdist' `adjdur' `printworkspace' `facexp'
-     `twtype' `lambda' `nu' `refstr' 1 1 `norm';
+     `twtype' `lambda' `nu' `ref' 1 1 `norm';
 
    if (`dups'==0) {;
       capture mata mata which mm_expand();

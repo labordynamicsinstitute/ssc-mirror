@@ -26,6 +26,13 @@
 {synopt :{opt id:var(varname)}} ID variable{p_end}
 {synopt :{opt nsp:ells(varname)}} number-of-spells variable (will be created){p_end}
 
+{title:Note}
+
+{pstd}{cmd:combinprep} continues to work but {hlp:cal2spell} supersedes
+it. {cmd:cal2spell} retains both calendar variables and spell variables
+in the same dataset whereas {cmd:combinprep} replaces the calendar with
+the spell representation. {p_end}
+
 {title:Description}
 
 {pstd}{cmd:combinprep} takes sequence data in wide calendar format

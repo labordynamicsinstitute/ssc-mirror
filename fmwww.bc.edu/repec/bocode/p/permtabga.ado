@@ -3,7 +3,7 @@
 */
    /*
 
-   $Id: permtabga.ado,v 1.4 2014/03/30 17:12:04 brendan Exp $
+   $Id: permtabga.ado,v 1.7 2017/07/05 08:31:52 brendan Exp $
 
    Dec  6 2010 20:57:22
    
@@ -208,17 +208,23 @@
        return(pvmax)
       }
    
-   void permute_square_table_ga (string matrix tabmat) {
-      real which, grandtotal
-      real matrix permmax
-      which = 2
-      // Read stata matrix into mata
-      G=st_matrix(tabmat)
-      
-      if (rows(G)!=cols(G)) {
-         _error("Table isn't square")
-         }
-      
+void permute_square_table_ga (string matrix tabmat, real nodisplay) {
+  real which, grandtotal
+  real matrix permmax
+  which = 2
+  // Read stata matrix into mata
+  G=st_matrix(tabmat)
+  
+  if (rows(G)!=cols(G)) {
+    "Table isn't square, padding with zeros"
+    if (rows(G)<cols(G)) {
+      G = G \ J(cols(G)-rows(G),cols(G),0)
+    }
+    else {
+      G = G , J(rows(G),rows(G)-cols(G),0)
+    }
+  }
+
       grandtotal=sum(G)
       permmax=range(1,rows(G),1)
       
@@ -244,14 +250,15 @@
       // Report max and permutation
       printf("Kappa max: %6.4f\n",kmax)
       printf("Permutation vector:\n")
-      permmax
+      permmax'
       
-      // Show permuted and original crosstab matrices
-      printf("Permuted table:\n")
-      G[.,permmax]
-      printf("Original table:\n")
-      G
-      
+// Show permuted and original crosstab matrices
+      if (nodisplay==0) {
+        printf("Permuted table:\n")
+        G[.,permmax]
+        printf("Original table:\n")
+        G
+      }
       recodestr = ""
       for (i=1;i<=rows(permmax);i++) {
          recodestr = recodestr + strofreal(permmax[i]) + "=" + strofreal(i) + " "
@@ -264,7 +271,9 @@ end
 /* capture program drop permtabga */
 program permtabga
 version 9.0
-   syntax varlist [if] [in] [, newvar(namelist max=1) gen(namelist max=1)]
+di as error "Obsolete: use permtab with algorithm(ga) option instead"
+exit 499
+   syntax varlist [if] [in] [, newvar(namelist max=1) gen(namelist max=1) NODIsplay]
    tokenize `varlist'
    local rowvar `1'
    macro shift
@@ -274,15 +283,27 @@ version 9.0
 
    marksample touse
    
+   if ("`nodisplay'"'!="") {
+     local nodisplay 1
+   }
+   else {
+     local nodisplay 0
+   }
    di "Tabulating raw data:"
-   tab `rowvar' `colvar' if `touse',  matcell(`tabmat')
+   if ("`nodisplay'"'=="1") {
+     qui tab `rowvar' `colvar' if `touse',  matcell(`tabmat')
+   }
+   else {
+     tab `rowvar' `colvar' if `touse',  matcell(`tabmat')
+   }
+
 
    ari `rowvar' `colvar'
    
    scalar `nrows' = rowsof(`tabmat')
    di "Calculating permutation:"
    
-   mata: permute_square_table_ga("`tabmat'")
+   mata: permute_square_table_ga("`tabmat'", `nodisplay')
    if "`newvar'"=="" {
      local newvar `gen'
    }

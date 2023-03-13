@@ -31,10 +31,12 @@ length, a variable or a constant if sequence length is fixed{p_end}
 pairwise distances in {it:matname}, as a symmetric matrix. Will be
 created or overwritten. {p_end}
 
+{synopt :{opt ref(integer)}} (Optional) compare all sequences to the first N sequences, instead of calculating all pairwise distances. {p_end}
+
 {syntab:Work-space} {synopt :{opt wor:kspace}} (Optional) Causes the internal
 workspace matrices to be shown for each sequence comparison. {p_end}
 
-{syntab:Normalisation} {synopt :{opt STA:ndard}} (Optional) If "longer", normalise by the length of the longer sequence, if "none" do no normalisation. Defaults to "longer". {p_end}
+{syntab:Normalisation} {synopt :{opt STA:ndard}} (Optional) If "longer", normalise by the length of the longer sequence, if "none" do no normalisation. Defaults to "none". {p_end}
 
 
 {synoptline} {p2colreset}{...}

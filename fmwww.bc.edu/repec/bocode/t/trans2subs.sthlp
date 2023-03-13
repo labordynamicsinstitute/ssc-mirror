@@ -82,5 +82,6 @@ http://www.stat.ruhr-uni-bochum.de/pub/tda/doc/tman63/d06070205.zip{p_end}
 {phang}{cmd:. matrix list smat}{p_end}
 {phang}{cmd:. trans2subs s, id(id) subs(smat) diag}{p_end}
 {phang}{cmd:. matrix list smat2}{p_end}
+{phang}{cmd:. reshape wide}{p_end}
 
 {phang}{p_end}

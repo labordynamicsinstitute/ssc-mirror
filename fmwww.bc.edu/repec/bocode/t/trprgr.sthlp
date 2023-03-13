@@ -1,7 +1,7 @@
 {smcl}
-{* Copyright 2012 Brendan Halpin brendan.halpin@ul.ie }
+{* Copyright 2012-2017 Brendan Halpin brendan.halpin@ul.ie }
 {* Distribution is permitted under the terms of the GNU General Public Licence }
-{* 10Jun2012}{...}
+{* 06Jun2017}{...}
 {cmd:help trprgr}
 {hline}
 
@@ -19,8 +19,6 @@
 {synoptset 22 tabbed}{...}
 {synopthdr:options}
 {synoptline}
-{syntab:ID}
-{synopt :{opt ID(varname)}} A unique case-id variable. Required. {p_end}
 {syntab:Optional}
 {synopt :{opt FL:oor(real)}} Lowest transition rate for diagonal graphs. {p_end}
 {synopt :{opt CEI:ling(real)}} Highest transition rate for off-diagonal graphs. {p_end}

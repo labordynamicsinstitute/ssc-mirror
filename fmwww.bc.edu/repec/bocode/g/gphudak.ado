@@ -1,9 +1,11 @@
-*! version 1.1.2   25jun2006      C F Baum/VWiggins   SSC distribution
+*! version 1.2.0   12mar2023      C F Baum/VWiggins   SSC distribution
 *  rev 1.1.1 0421 correction to pval of asy z
 *  rev 1.1.2 Stata 8 syntax, make byable(recall) and onepanel
+*  rev 1.2.0 Stata 12 syntax, rclass, allow ts, rename result d
 
-program define gphudak, eclass byable(recall)
-	version 8.2
+capt prog drop gphudak
+program define gphudak, rclass byable(recall)
+	version 12
 
 	syntax varlist(ts max=1) [if] [in] [ , Powers(numlist >0 <1) ]  
 
@@ -39,7 +41,7 @@ program define gphudak, eclass byable(recall)
 		capture noisily GPHEst1 ``i'' `varlist' `touse'
 		if !_rc {
 			capture mat `gph'[`i',1] = r(power), r(nord),   /*
-				*/ r(gph), r(se), r(t), r(p), r(ase),   /*
+				*/ r(d), r(se), r(t), r(p), r(ase),   /*
 				*/ r(tasy), r(pasy)		
 		}
 		else {
@@ -51,11 +53,18 @@ program define gphudak, eclass byable(recall)
 	di _dup(78) in gr "-"
 
 	mat `gph' = `gph''
-//	estimates clear
-	ereturn local depvar `varlist'
-	ereturn scalar N_powers = `N_power'
-	ereturn local power `power'
-	ereturn matrix gph `gph'
+	return local depvar `varlist'
+	return scalar N_powers = `N_power'
+	return matrix gph `gph'
+	return scalar power = r(power)
+	return scalar nord = r(nord)
+    return scalar d = r(d)
+    return scalar se = r(se)
+    return scalar t =r(t)
+    return scalar p = r(p)
+    return scalar ase = r(ase)
+    return scalar tasy = r(tasy)
+    return scalar pasy = r(pasy)
 	
 end
 
@@ -79,20 +88,20 @@ program define GPHEst1, rclass
 		local enn=int(r(N)^`power')+1
 		regress `lpg' `lsin' if `touse' & `n' < `enn'
 
-		return scalar gph = -_b[`lsin']
+		return scalar d = -_b[`lsin']
 		mat `vcv'=e(V)
 		return scalar se = _se[`lsin']
-		return scalar t = return(gph)/return(se)
+		return scalar t = return(d)/return(se)
 		return scalar p = tprob(e(df_r),return(t))
 		return scalar ase = _pi*sqrt(`vcv'[1,1]/(6.0*e(rmse)^2))
-		return scalar tasy = return(gph)/return(ase)
+		return scalar tasy = return(d)/return(ase)
 		return scalar pasy = 2*normprob(-abs(return(tasy)))
 		return scalar nord = `enn'
 		return scalar power = `power'
 	} 
 	
 	di in gr " " %4.2g `power' in ye  " "  %6.0f return(nord)	/*
-		*/ " "  %8.0g return(gph) " "  %8.4g return(se) 	/*
+		*/ " "  %8.0g return(d) " "  %8.4g return(se) 	/*
 		*/ "  " %9.4f return(t)   "  " %6.3f return(p)	/*
 		*/ "  " %8.4g return(ase) "  " %9.4f return(tasy) 	/*
 		*/ "  " %6.3f return(pasy)
