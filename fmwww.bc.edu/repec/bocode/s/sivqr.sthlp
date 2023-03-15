@@ -5,8 +5,8 @@
 {viewerjumpto "Syntax" "sivqr##syntax"}{...}
 {viewerjumpto "Description" "sivqr##description"}{...}
 {viewerjumpto "Options" "sivqr##options"}{...}
-{viewerjumpto "Stored results" "sivqr##results"}{...}
 {viewerjumpto "Examples" "sivqr##examples"}{...}
+{viewerjumpto "Stored results" "sivqr##results"}{...}
 {viewerjumpto "Author" "sivqr##author"}{...}
 {viewerjumpto "References" "sivqr##references"}{...}
 {title:Title}

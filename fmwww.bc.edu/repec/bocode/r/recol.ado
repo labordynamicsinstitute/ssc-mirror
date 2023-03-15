@@ -112,6 +112,7 @@ program recol
 
 	// optional compress
 	if "`compress'" != "" {
+		drop __*
 		di as result "Compressing data"
 		compress
 	}

@@ -1,7 +1,18 @@
-*! version 1.1.0  22jan2022
+*! version 1.1.2  15feb2023  kaplandm.github.io  (new: qregplot compatibility!)
 program sivqr, eclass properties(svyb) byable(recall)
  version 11
  if (!replay()) {
+  * Check for i. and give instructions: ibn. and noconstant
+  tempname chki chkibn
+  local `chki' = strpos(`"`0'"',"i.")
+  if (``chki'') {
+    di as error "To use {bf:i.} factor variable syntax for regressors, instead use {bf:ibn.} and add the {bf:noconstant} option"
+  }
+  local `chkibn' = strpos(`"`0'"',"ibn.")
+
+  * Save for e(cmdline)
+  local 00 `"sivqr `0'"'
+
   * Parse variables with _iv_parse (as in ivregress.ado)
   _iv_parse `0'
   tempname lhs Xendo Xexog Zexcl
@@ -14,8 +25,17 @@ program sivqr, eclass properties(svyb) byable(recall)
     // could just stop and say to run qreg, but maybe some people want smoothed QR
   }
 
-  * Parse rest of arguments
+  * Parse arguments for qregplot
+  tempname qregplot_ifin qregplot_oth
+  syntax [if] [in] [pweight iweight fweight/] , Quantile(real) *
+  local `qregplot_ifin' `if' `in'
+  local `qregplot_oth' `options'
+
+  * Parse arguments for sivqr
   syntax [if] [in] [pweight iweight fweight/] , Quantile(real) [Bandwidth(real -112358) Level(cilevel) Reps(integer 0) LOGiterations noCONstant SEED(integer 112358) INITial(string) noDOTS]
+  if (``chkibn''>0 & "`constant'"!="noconstant") {
+    di as error "To use {bf:ibn.} factor variable syntax for regressors, add the {bf:noconstant} option"
+  }
   if (`quantile'<=0) {
     di as error "{bf:quantile(`quantile')} is out of range: must be >0"
     exit 198
@@ -135,6 +155,7 @@ program sivqr, eclass properties(svyb) byable(recall)
   if (`reps'>1) {
     ereturn local vcetype Bootstrap
   }
+  ereturn local cmdline `"`00'"'
   ereturn local cmd "sivqr" // should be last to store (according to ereturn entry in Stata Manual)
  }
  else { // replay
@@ -164,6 +185,10 @@ program sivqr, eclass properties(svyb) byable(recall)
     di as text "Instrumented:  " e(instd)
     di as text "Instruments:   " e(insts)
   }
+
+  * To help compatibility with qregplot
+  ereturn local ifin ``qregplot_ifin''
+  ereturn local oth  ``qregplot_oth''
 end
 *
 *
@@ -216,7 +241,7 @@ void sivqrmain(string scalar Yname, string matrix Dname, string matrix Xexogname
   }
 
   if (db<cols(X)) {
-    _error("The matrix (row vector) named in the initial() option is too short.")
+    _error("The matrix (row vector) named in the initial() option is too short; may be due to perfect multicollinearity (try running qreg or ivregress to see if any regressors are dropped due to perfect multicollinearity, then re-run sivqr without those variables)")
   }
   else if (db>cols(X)) {
     _error("The matrix (row vector) named in the initial() option is too long.")
@@ -395,7 +420,10 @@ real colvector sivqrest(real scalar tau, real colvector Y, real matrix X, real m
   } //end while loop
 
   if (hcur>HMAX) {
-    printf("error in solvenl()")
+    printf("error in solvenl()\n")
+    if (lastec==21) {
+      printf("May be due to perfect multicollinearity; try running qreg or ivregress to see if any regressors are dropped due to perfect multicollinearity, then re-run sivqr without those variables.\n")
+    }
     _error(lastec, lastet)
   }
 

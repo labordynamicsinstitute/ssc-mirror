@@ -1,9 +1,18 @@
 /* Copyright 2007 Brendan Halpin brendan.halpin@ul.ie
    Distribution is permitted under the terms of the GNU General Public Licence
 
-   $Id: oma.ado,v 1.19 2019/05/07 12:59:56 brendan Exp $
+   $Id: oma.ado,v 1.21 2023/03/13 09:35:31 brendan Exp $
 
    $Log: oma.ado,v $
+   Revision 1.21  2023/03/13 09:35:31  brendan
+   Summary: Removed commented debug lines
+
+   * oma.ado: Summary: Commented out
+   debug "noi di" commands
+
+   Revision 1.20  2023/03/13 09:25:23  brendan
+   Summary: Commented out debug "noi di" commands
+
    Revision 1.19  2019/05/07 12:59:56  brendan
    Summary: Code to deal properly with duplicates when using reference sequences
 
@@ -94,7 +103,7 @@ version 9;
        WORkspace DUps STAndard(string) VERsion];
       
    if ("`version'" != "") {;
-      di "OMA version: \$Id: oma.ado,v 1.19 2019/05/07 12:59:56 brendan Exp $";
+      di "OMA version: \$Id: oma.ado,v 1.21 2023/03/13 09:35:31 brendan Exp $";
       };
       
 
@@ -216,12 +225,9 @@ version 9;
       };
 
       if (`ref'==0) {;
-      noi di "TEST: not ref and not dup";
         mata: `pwdist'= expandpwdist(st_matrix("`pwdist'"),st_matrix("`idvar'"),st_matrix("`ndups'"));
         };
       else {;
-      noi di "TEST: ref and not dup";
-      noi di "Editing in process: trying to fix mm_expand for REF option";
         mata: `pwdist'= expandpwdistRowOnly(st_matrix("`pwdist'"),st_matrix("`idvar'"),st_matrix("`ndups'"),`ref');
       };
       mata: st_matrix("`pwdist'",`pwdist');

@@ -1,32 +1,31 @@
-// Apr  2 2014
+// Mar 12 2023
 // Brendan Halpin brendan.halpin@ul.ie
 
-/* This file runs through most of the functionality of the SADI package
-for Stata, to demonstrate some of its uses. 
+version 10.0
 
-It uses the McVicar/Anyadike-Danes data, representing 72 months of the
-labour market history of young people in Northern Ireland. Thanks guys.
 
-Duncan McVicar and Michael Anyadike-Danes (2002), Predicting Successful
-and Unsuccessful Transitions from School to Work Using Sequence Methods,
-Journal of the Royal Statistical Society (Series A), 165, pp317-334.
-
-*/
-
+// This file runs through most of the functionality of the SADI package
+// for Stata, to demonstrate some of its uses.
+//
+// Because it calculates several distance matrices, it takes several minutes to run.
+// 
+// It uses the McVicar/Anyadike-Danes data, representing 72 months of the
+// labour market history of young people in Northern Ireland. Thanks guys.
+// 
+// Duncan McVicar and Michael Anyadike-Danes (2002), Predicting Successful
+// and Unsuccessful Transitions from School to Work Using Sequence Methods,
+// Journal of the Royal Statistical Society (Series A), 165, pp317-334.
 
 use mvad
-
 sort id
 
 // Use the substitution matrix from the MVAD paper
-#delimit ;
-matrix mvdanes = (0,1,1,2,1,3 \
-                  1,0,1,2,1,3 \
-                  1,1,0,2,1,2 \
-                  2,2,2,0,1,1 \
-                  1,1,1,1,0,2 \
-                  3,3,2,1,2,0 );
-#delimit cr
+matrix mvdanes = (0,1,1,2,1,3 \ ///
+                  1,0,1,2,1,3 \ ///
+                  1,1,0,2,1,2 \ ///
+                  2,2,2,0,1,1 \ ///
+                  1,1,1,1,0,2 \ ///
+                  3,3,2,1,2,0 )
 
 set matsize 4000
 
@@ -145,21 +144,16 @@ tab nsp
 
 // 1: Chronogram
 
-sdchronogram state*, by(o8, legend(off)) name(chronogram, replace)
+sdchronoplot state*, by(o8, legend(off)) name(chronogram, replace)
 
-// 2: indexplot (uses sqindexplot from SQOM package)
+// 2: indexplot 
 
 //    Generate a maximal clustering (as many clusters as distinct sequences)
 //    This allows us to order sequences within clusters such that 
 //    subcluster-structure is preserved
 cluster generate o999 = groups(750), name(oma) ties(fewer)
 
-// Reshape long and register it as an SQ-structured data set
-preserve
-reshape long state, i(id) j(m)
-sqset state id m
-sqindexplot, by(o8, note("") legend(off)) order(o999) name(indexplot, replace)
-restore
+sdindexplot state*, by(o8, note("") legend(off)) order(o999) name(indexplot, replace)
 
 // 3: Transition pattern
 trprgr state*, gmax(485)

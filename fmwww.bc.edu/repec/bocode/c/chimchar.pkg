@@ -1,0 +1,24 @@
+d 'CHIMCHAR': module to thoroughly clean string variables
+d
+d  chimchar stands for CHanging IMpractical CHARacters. It removes
+d characters from string variables that can impede functions like
+d {opt destring} and {opt reclink}. You can choose to remove only
+d special characters, remove both special characters and numeric
+d characters, or remove all non-numeric characters altogether. If
+d letters are not removed, special characters that are based on
+d Latin letters are replaced with their closest ASCII (plain Latin)
+d letter counterpart(s); for example, "Æ", "š" and "ĸ" would
+d become "ae", "s", and "k", respectively. 
+d
+d KW:  text processing
+d KW: Unicode
+d
+d Requires: Stata version 14 
+d
+d Distribution-Date: 20230314
+d
+d Author: Tommy Morgan, Brigham Young University
+d Support: email morganto@@student.byu.edu
+d
+f chimchar.ado
+f chimchar.sthlp

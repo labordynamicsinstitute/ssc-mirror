@@ -1,5 +1,6 @@
-v 3
-d Brendan Halpin, University of Limerick
-d e-mail: brendan.halpin@@ul.ie
-d
+0
+1
+2
+3
 p sadi Sequence analysis distance measures
+p sivqr module to perform smoothed IV quantile regression

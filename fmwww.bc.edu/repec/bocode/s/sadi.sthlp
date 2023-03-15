@@ -1,7 +1,7 @@
 {smcl}
-{* Copyright 2007-2012 Brendan Halpin brendan.halpin@ul.ie }
+{* Copyright 2007-2023 Brendan Halpin brendan.halpin@ul.ie }
 {* Distribution is permitted under the terms of the GNU General Public Licence }
-{* 17June2012}{...}
+{* 13March2023}{...}
 {cmd:help sadi}
 {hline}
 
@@ -29,6 +29,9 @@ this regard.
 requires the mata function {cmd:mm_expand()} from Ben Jann's
 {cmd:moremata} package. You can install this by doing
 {cmd:ssc install moremata}.
+
+{ptsd}Some of the graphics commands depend on Ben Jann's {cmd:heatplot},
+{cmd:palettes} and {cmd:colrspace} packages. These can be installed from SSC. 
 
 {title:Author}
 
