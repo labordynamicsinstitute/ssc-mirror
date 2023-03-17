@@ -1,5 +1,7 @@
+*! version 1.0.4 Stephen P. Jenkins, March 2023
+*! 	Squash bug in return scalar for I(0.25)
 *! version 1.0.3 Stephen P. Jenkins, March 2020
-*! 		 Address a version 14 formatting issue in -tabdisp-
+*! 	 Address a version 14 formatting issue in -tabdisp-
 *! version 1.0.2 Stephen P. Jenkins, January 2020
 *!       Add Hplus and Hminus options 
 *! version 1.0.1 Stephen P. Jenkins, January 2020
@@ -531,8 +533,8 @@ quietly {
 
 	return scalar i0d = `i0d'[1] 
 	return scalar i0u = `i0u'[1] 
-	return scalar ioneqd = `ithreeqd'[1] 
-	return scalar ionequ = `ithreequ'[1] 
+	return scalar ioneqd = `ioneqd'[1] 
+	return scalar ionequ = `ionequ'[1] 
 	return scalar ihalfd = `ihalfd'[1] 
 	return scalar ihalfu = `ihalfu'[1] 		
 	return scalar ithreeqd = `ithreeqd'[1] 

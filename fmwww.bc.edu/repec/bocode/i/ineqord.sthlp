@@ -2,7 +2,7 @@
 {* *! version 1.0.3  March 2020}{...}
 
 {hline}
-help for {hi:ineqord}{right:Stephen P. Jenkins (March 2020)}
+help for {hi:ineqord}{right:Stephen P. Jenkins (March 2023)}
 {hline}
 
 {viewerdialog ineqord "dialog ineqord"}{...}
@@ -479,7 +479,10 @@ London School of Economics and Political Science (LSE)
 Arthur Grimes and Florencia Tranquilli, both of Motu Research (Wellington, New Zealand).
 Benoît-Paul Hébert pointed out an issue with {cmd:levelsof} that affected users
 with a Stata version below 15.1 (now addressed), and commented on the help-file 
-text. An anonymous referee also made helpful comments.
+text. An anonymous referee also made helpful comments. The initial version of {cmd:ineqord}
+released via the Stata Journal and SSC had a minor bug: the returned scalar value
+for the Cowell-Flachaire index I(0.25) was the value for I(0.75). This has been
+corrected. Thank you to anonymous correspondent "Sion" for the bug report.
 
 {marker references}{...}
 {title:References}
