@@ -1,3 +1,4 @@
+*! 1.0.1 Ariel Linden 17Mar2023 // fixed typo in cmr_cancer_nsitu 
 *! 1.0.0 Ariel Linden 05Dec2022
 
 capture program drop elix22
@@ -1073,7 +1074,7 @@ version 11.0
 		replace cmr_htn_uncx = 0 if cmr_htn_cx == 1
 		replace cmr_cancer_solid = 0 if cmr_cancer_mets == 1
 		replace cmr_cancer_nsitu = 0 if cmr_cancer_mets == 1
-		replace cmr_cancer_nsit = 0 if cmr_cancer_solid == 1
+		replace cmr_cancer_nsitu = 0 if cmr_cancer_solid == 1
 		replace cmr_liver_mld = 0 if cmr_liver_sev == 1
 		replace cmr_renlfl_mod = 0 if cmr_renlfl_sev == 1
 		

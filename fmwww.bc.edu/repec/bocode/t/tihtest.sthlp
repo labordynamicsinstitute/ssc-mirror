@@ -35,7 +35,7 @@
 
 {syntab:SE/Robust}
 {synopt:{cmdab:vce(}{it:{help tihtest##vce_options:vcetype}})}{it:vcetype} may be {opt oim} or {opt r:obust}{p_end}
-{synopt :{opt r:obust}}synonym for {cmd:vce(robust)}{p_end} 
+{synopt :{opt r:obust}}synonym for {cmd:vce(robust)}{p_end}
 {syntab:Reporting}
 {synopt :{opt display:estimates}}show full and pairwise estimates{p_end}
 {synopt :{opt level(#)}}set confidence interval level; default is {cmd:level(95)}{p_end}
@@ -63,9 +63,9 @@ Panel and time variables must be specified. Use {helpb xtset}.{p_end}
 {title:Description}
 
 {pstd}
-{cmd:tihtest} performs the Bartolucci et al. (2013) 
+{cmd:tihtest} performs the Bartolucci et al. (2015)
 	test for time invariant unobserved heterogeneity in Generalized Linear Models (GLMs) for panel data. To this aim,
-	this version fits full and pairwise Conditional Maximum Likelihood (CML) estimators for the logit, ordered logit, 
+	this version fits full and pairwise Conditional Maximum Likelihood (CML) estimators for the logit, ordered logit,
 	Poisson and Gaussian linear models.
 
 {title:Options}
@@ -73,13 +73,13 @@ Panel and time variables must be specified. Use {helpb xtset}.{p_end}
 {dlgtab:Models}
 
 {phang}
-{opt model(model)} specifies the {it: model} to be estimated as: Gaussian fixed-effects linear model ({opt cnormal}), fixed-effects logit model ({opt clogit}), fixed-effects ordered logit model ({opt cologit}), 
-fixed-effects Poisson model ({opt cpoisson}). The default is {opt cnormal}. 
+{opt model(model)} specifies the {it: model} to be estimated as: Gaussian fixed-effects linear model ({opt cnormal}), fixed-effects logit model ({opt clogit}), fixed-effects ordered logit model ({opt cologit}),
+fixed-effects Poisson model ({opt cpoisson}). The default is {opt cnormal}.
 
 {dlgtab:Starting values}
 {marker from_maximize_option}
 {phang}
-{opt from(init_spec [, from_options])} specifies initial values for the coefficients.  
+{opt from(init_spec [, from_options])} specifies initial values for the coefficients.
 You can specify the initial values in one of three ways: by specifying the name of a
 vector containing the initial values (e.g., {cmd:from(b0)}, where {cmd:b0} is a
 properly labeled vector); by specifying coefficient names with the values
@@ -92,7 +92,7 @@ problems.
 {synopt :{it: from_options}}description{p_end}
 {synoptline}
 {synopt :{cmd:skip}}specifies that any parameters found in the specified initialization
-vector that are not also found in the model be ignored.  
+vector that are not also found in the model be ignored.
 The default action is to issue an error message.{p_end}
 {synopt :{cmd:copy}}specifies that the list of values or the initialization
 vector be copied into the initial-value vector by position rather than
@@ -102,7 +102,7 @@ by name.{p_end}
 
 {phang}
 {opt nosearch} determines that no attempts are made to improve on the initial
-values via a search technique. In this case, the initial values become the 
+values via a search technique. In this case, the initial values become the
 starting values.
 
 {phang}
@@ -115,7 +115,7 @@ on. The default is 10.
 
 {phang}
 {opt rescale} determines whether rescaling is attempted. Rescaling is a deterministic method.
-It also usually improves initial values, and usually reduces the number of subsequent iterations 
+It also usually improves initial values, and usually reduces the number of subsequent iterations
 required by the optimization technique.
 {marker vce_options}{...}
 
@@ -130,7 +130,7 @@ square root of the variances (diagonal elements) of the VCE.
 {synoptset 32}{...}
 {synopt :{it:vcetype}}description{p_end}
 {synoptline}
-{synopt :{cmd:oim}}observed information matrix (OIM). see {help vcetype}. Even if {opt oim} is specified and the OIM VCE is displayed 
+{synopt :{cmd:oim}}observed information matrix (OIM). see {help vcetype}. Even if {opt oim} is specified and the OIM VCE is displayed
 (and reported), the tih test will be performed using the clustered sandwich estimator where {it:clustvar} is {it:panelvar}.  {p_end}
 {synopt :{cmdab:r:obust}}clustered sandwich estimator where {it:clustvar} is {it:panelvar}, where {it:panelvar} has been specified through {help xtset}. In this case the resulting (co)variance matrix will also contain the covariance between the full and pairwise estimators.{p_end}
 {p2colreset}{...}
@@ -138,19 +138,19 @@ square root of the variances (diagonal elements) of the VCE.
 {dlgtab:Reporting}
 
 {phang}
-{opt displayestimates} allows the user to display estimation results. 
+{opt displayestimates} allows the user to display estimation results.
 
 {phang}
 {opt level(#)}; see {helpb estimation options##level():[R] estimation options}.
 
 {phang}
-{opt postscore} save observation-by-observation scores in the estimation results list. 
-All evaluators are of type {cmd:gf2}, thus scores are defined as the derivative of the objective function 
+{opt postscore} save observation-by-observation scores in the estimation results list.
+All evaluators are of type {cmd:gf2}, thus scores are defined as the derivative of the objective function
 with respect to the {help mf_moptimize##def_K:coefficients}.
 
 {phang}
-{opt posthessian} save the Hessian corresponding to the full set of coefficients 
-in the estimation results list. The Hessian is defined as the second derivative of 
+{opt posthessian} save the Hessian corresponding to the full set of coefficients
+in the estimation results list. The Hessian is defined as the second derivative of
 the objective function with respect to the {help mf_moptimize##def_K:coefficients}.
 
 {dlgtab:Maximization}
@@ -171,19 +171,22 @@ options are seldom used.
 {opt allbase:levels};
     see {helpb estimation options##display_options:[R] estimation options}.
 
-	
+
 {title:Remarks}
 {marker tihtest_remarks}{...}
 
 {pstd}
-It is worth noting that this version of {cmd:tihtest} works only in the case of balanced panel data.{p_end}
+This version of {cmd:tihtest} does not handle unbalanced panel data.{p_end}
 
 
 {title:References}
 
 {pstd}
-Bartolucci, F., Belotti, F., Peracchi, F., (2013). Testing for time-invariant unobserved heterogeneity in 
-generalized linear models for panel data. EIEF Working paper 12.{p_end}
+If you find {cmd:tihtest} useful, please cite:{p_end}
+
+{pstd}
+Bartolucci, F., Belotti, F., Peracchi, F., (2015). Testing for time-invariant unobserved heterogeneity in
+generalized linear models for panel data. Journal of Econometrics, 184, 111-123.{p_end}
 
 {title:Examples}
 
@@ -273,9 +276,9 @@ generalized linear models for panel data. EIEF Working paper 12.{p_end}
 {title:Authors}
 
 {pstd}Federico Belotti{p_end}
-{pstd}Centre for Economic and International Studies, University of Rome Tor Vergata{p_end}
+{pstd}Department of Economics and Finance, University of Rome Tor Vergata{p_end}
 {pstd}Rome, Italy{p_end}
-{pstd}federico.belotti@uniroma2.it{p_end}
+{pstd}federico.belotti at uniroma2.it{p_end}
 
 
 {title:Also see}

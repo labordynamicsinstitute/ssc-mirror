@@ -11,7 +11,7 @@ d KW: graphics
 d
 d Requires: Stata version 11.2 and ivreghdfe, reghdfe, ftools, ivreg2, ranktest from SSC (q.v.)
 d
-d Distribution-Date: 20220809
+d Distribution-Date: 20230318
 d
 d Author: Simon Freyaldenhoven, Federal Reserve Bank of Philadelphia
 d Support: email simon.freyaldenhoven@@phil.frb.org
@@ -32,6 +32,8 @@ f ../_/_eventivstatic.ado
 f ../_/_eventols.ado
 f ../_/_eventolsstatic.ado
 f xtevent.sthlp
+f ../g/get_unit_time_effects.ado
+f ../g/get_unit_time_effects.sthlp
 f xteventplot.ado
 f xteventplot.sthlp
 f xteventtest.ado

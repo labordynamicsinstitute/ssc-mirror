@@ -1,5 +1,5 @@
-*! version 1.0 20jun2013
-*! version 1.0.1 27jun2013 Some bug fixes. Now -tihtest- works for both stata 11 and 12
+*! version 1.1 20feb2023
+*! Federico Belotti
 
 program define tihtest, rclass byable(onecall) prop(xt /*svyb svyj swml*/)
 
@@ -8,10 +8,10 @@ program define tihtest, rclass byable(onecall) prop(xt /*svyb svyj swml*/)
     }
 
     version 11
-                
+
         if replay() {
-            if _by() { 
-                error 190 
+            if _by() {
+                error 190
             }
             if "`r(cmd)'" != "tihtest" {
                 error 301
@@ -19,10 +19,10 @@ program define tihtest, rclass byable(onecall) prop(xt /*svyb svyj swml*/)
                 DiSpLaY `0'
                 exit
             }
-		
+
     if _by() {
         by `_byvars' `_byrc0': tihtest_est `0'
-    }       
+    }
     else tihtest_est `0'
     version 11: return local cmdline `"tihtest `0'"'
 	return add
@@ -39,7 +39,7 @@ syntax varlist(min=2 fv ts) [if] [in] [aweight fweight pweight/] , [ Model(strin
                         TECHnique(string) ITERate(integer 100) NOWARNing DIFFICULT NOLOG ///
                         TRace GRADient SHOWSTEP HESSian SHOWTOLerance TOLerance(real 1e-6) ///
                         LTOLerance(real 1e-7) NRTOLerance(real 1e-5) ///
-                        NOSEARCH REPEAT(integer 10) RESTART RESCale POSTSCORE POSTHESSian *] 
+                        NOSEARCH REPEAT(integer 10) RESTART RESCale POSTSCORE POSTHESSian *]
 
 
 local vv : di "version " string(max(11,c(stata_version))) ", missing:"
@@ -47,8 +47,8 @@ local __cmdline "`0'"
 
 /// Manage Mata function according to Stata version
 local __version = round(c(stata_version))
-	
-*** Check for Panel setup                             
+
+*** Check for Panel setup
 _xt, trequired
 
 *** Marksample:
@@ -60,14 +60,14 @@ _get_diopts diopts options, `options'
 *** Parsing model
 ParseMod model : `"`model'"'
 
-*** Fixed effects: we do not allow for constant term 
+*** Fixed effects: we do not allow for constant term
 local noconstant "noconstant"
 
 *** Display results behavior
 if "`displayestimates'"=="" local nolog "nolog"
 
-*************** Errors ************* 
-/*   
+*************** Errors *************
+/*
 if "`model'"=="tfe" & "`nocons'"!="" {
     noi di as err "nocons option not allowed with tfe model."
     error 198
@@ -79,7 +79,7 @@ if "`model'"=="tfe" & "`nocons'"!="" {
 ******* Assigns objects to correctly create _InIt_OpTiMiZaTiOn() and _PoSt_ReSuLt_of_EsTiMaTiOn() structures **********
 ***********************************************************************************************************************
 
-*** Locals 
+*** Locals
 if "`technique'"=="" local technique "nr"
 if "`difficult'"!="" local difficult "hybrid"
 else local difficult "m-marquardt"
@@ -127,9 +127,9 @@ gettoken lhs rhs: varlist
 **************************************************************************************************************
 **************** Check for panel setup and perform checks necessary for weighted estimation ******************
 **************************************************************************************************************
-     
-    *** Check for panel setup                
-	_xt, trequired 
+
+    *** Check for panel setup
+	_xt, trequired
 	local id: char _dta[_TSpanel]
 	local time: char _dta[_TStvar]
 	tempvar temp_id temp_t Ti
@@ -137,13 +137,13 @@ gettoken lhs rhs: varlist
 	sort `temp_id' `time'
 	qui by `temp_id': g `temp_t' = _n if `temp_id'!=.
 
-	qui xtset 
+	qui xtset
 	if "`r(balanced)'" != "strongly balanced" {
 		di as error "The panel data must be strongly balanced"
 		error 459
 	}
-		
-	********************** Display info ********************** 
+
+	********************** Display info **********************
 	tempvar Ti T_new
 	tempname g_min g_avg g_max N_g N Tcon Tbar
 	sort `temp_id' `temp_t'
@@ -170,9 +170,9 @@ gettoken lhs rhs: varlist
 	qui summ `T_new'
 	scalar `Tbar' = 1/r(mean)
 	qui drop `T_new'
-	
+
 	local lxtset "`temp_id' `temp_t'"
-	
+
 	*** Set up weights
 	if "`weight'" != "" local __equal "="
 
@@ -181,11 +181,11 @@ gettoken lhs rhs: varlist
 ***********************************************************************
 *** (Note: Also remove base collinear variables if fv are specified)
 
-	local fvops = "`s(fvops)'" == "true" 
+	local fvops = "`s(fvops)'" == "true"
 	if `fvops'==1 {
-	   local vv_fv : di "version " string(max(11,`c(version_rng)')) ", missing:"	   
+	   local vv_fv : di "version " string(max(11,`c(version_rng)')) ", missing:"
 	   ********* Factor Variables parsing ****
-	   `vv_fv' _fv_check_depvar `lhs'	   
+	   `vv_fv' _fv_check_depvar `lhs'
 	   local fvars "rhs"
 	   foreach l of local fvars {
 	   	if "`l'"=="rhs" local fv_nocons "`nocons'"
@@ -212,14 +212,14 @@ gettoken lhs rhs: varlist
 	   				else local _inter "`_inter'`r(op`lev')'.`r(name`lev')'"
 	   			}
 	   			local _`l'_tempnames "`_`l'_tempnames' `_inter'"
-	   			local _`l'_ntemp "`_`l'_ntemp' `:word `_var' of `_`l'_temp''"						
+	   			local _`l'_ntemp "`_`l'_ntemp' `:word `_var' of `_`l'_temp''"
 	   		}
 	   	}
 	   	*** Remove duplicate names (Notice that collinear regressor other than fv base levels are removed later)
 	   	local _`l'_names: list uniq _`l'_tempnames
 	   	*** Update fvars components after fv parsing
 	   	local `l' "`_`l'_ntemp'"
-	   }	
+	   }
 	}
 
 *** Test for missing values in dependent and independent variables
@@ -247,17 +247,17 @@ if "`weight'" != "" {
 	}
 	if `panel_sd_max' == . {
 		display as error "The dataset in memory is not a panel dataset."
-		error 198		
+		error 198
 	}
 }
-	
+
 *** Parsing vce options
 
 	local crittype "Log-likelihood"
-	
+
 	cap _vce_parse, opt(OIM Robust) old	///
 	: [`weight' `__equal' `exp'], `vce' `robust'
-	
+
 	if _rc == 0 {
 		local vce "`r(vce)'"
 		if "`vce'" == "" local vce "oim"
@@ -272,11 +272,11 @@ if "`weight'" != "" {
 			local clustervar "`id'"
 			local crittype "Log-pseudolikelihood"
 		}
-		*if "`vce'"=="opg" local vcetype "OPG"	
+		*if "`vce'"=="opg" local vcetype "OPG"
 	}
 
 *** Remove collinearity
-	_rmcollright `rhs' if `touse' [`weight' `__equal' `exp'], `noconstant' 	
+	_rmcollright `rhs' if `touse' [`weight' `__equal' `exp'], `noconstant'
 	local rhs "`r(varlist)'"
 	if `fvops'==0 local _rhs_names "`rhs'"
 	local _k_final: word count `_rhs_names'
@@ -287,7 +287,7 @@ if "`weight'" != "" {
 
 if "`model'"=="clogit" {
 
-		tempname init_beta 					
+		tempname init_beta
 		if "`from'"=="" {
 			cap qui logit `lhs' `rhs', nocons iter(50)
 			if _rc != 0 qui reg `lhs' `rhs', nocons
@@ -296,13 +296,13 @@ if "`model'"=="clogit" {
 			`vv' mat coleq `init_beta' = "Clogit"
 		}
 		else {
-			`vv' mat colnames `init_beta' = `_rhs_names' 
+			`vv' mat colnames `init_beta' = `_rhs_names'
 			`vv' mat coleq `init_beta' = "Clogit"
 			local arg `from'
 			`vv' _mkvec `init_beta', from(`arg') update error("from()")
 		}
 		eret clear
-		
+
 		******************** This block MUST be included for each estimator ***********************
 		local _params_list "init_beta"
 		local _params_num = 1
@@ -310,27 +310,27 @@ if "`model'"=="clogit" {
 		/// Structure definition for initialisation
 		mata: _tihtest_SV = J(1, st_numscalar("InIt_nparams"), _tihtest_starting_values`__version'())
 		foreach _params of local _params_list {
-			mata: _tihtest_SV = _tihtest_StArTiNg_VaLuEs`__version'("``_params''", `_params_num', _tihtest_SV)	
+			mata: _tihtest_SV = _tihtest_StArTiNg_VaLuEs`__version'("``_params''", `_params_num', _tihtest_SV)
 			** The following to check the content of the structure ** Just for debugging
 			*mata: liststruct(_tihtest_SV)
 			local _params_num = `_params_num' + 1
-		}		
+		}
 		local InIt_evaluator "clogit"
-		local InIt_evaluatortype "gf2"	
-		*** Get numb of categories 
+		local InIt_evaluatortype "gf2"
+		*** Get numb of categories
 		qui levelsof `lhs', l(_lncat)
 		scalar _ncat = `:word count `_lncat''
-		*** Collect InIt options and args	
+		*** Collect InIt options and args
 		mata: _tihtest_InIt_OpT = _tihtest_InIt_OpTiMiZaTiOn`__version'()
 		** The following to check the content of the structure ** Just for debugging
 		*mata: liststruct(_tihtest_InIt_OpT)
-		*******************************************************************************************	
-			
+		*******************************************************************************************
+
 } // Close model option
 
 if "`model'"=="cologit" {
 
-		tempname init_beta 					
+		tempname init_beta
 		if "`from'"=="" {
 			cap qui ologit `lhs' `rhs', iter(50)
 			if _rc != 0 {
@@ -341,18 +341,18 @@ if "`model'"=="cologit" {
 				mat `init_beta' = e(b)
 				mat `init_beta' = `init_beta'[1,"`lhs':"]
 			}
-	
+
 			`vv' mat colnames `init_beta' =`_rhs_names'
 			`vv' mat coleq `init_beta' = "Cologit"
 		}
 		else {
-			`vv' mat colnames `init_beta' = `_rhs_names' 
+			`vv' mat colnames `init_beta' = `_rhs_names'
 			`vv' mat coleq `init_beta' = "Cologit"
 			local arg `from'
 			`vv' _mkvec `init_beta', from(`arg') update error("from()")
 		}
 		eret clear
-		
+
 		******************** This block MUST be included for each estimator ***********************
 		local _params_list "init_beta"
 		local _params_num = 1
@@ -360,27 +360,27 @@ if "`model'"=="cologit" {
 		/// Structure definition for initialisation
 		mata: _tihtest_SV = J(1, st_numscalar("InIt_nparams"), _tihtest_starting_values`__version'())
 		foreach _params of local _params_list {
-			mata: _tihtest_SV = _tihtest_StArTiNg_VaLuEs`__version'("``_params''", `_params_num', _tihtest_SV)	
+			mata: _tihtest_SV = _tihtest_StArTiNg_VaLuEs`__version'("``_params''", `_params_num', _tihtest_SV)
 			** The following to check the content of the structure ** Just for debugging
 			*mata: liststruct(_tihtest_SV)
 			local _params_num = `_params_num' + 1
-		}	
+		}
 		local InIt_evaluator "cologit"
 		local InIt_evaluatortype "gf2"
-		*** Get numb of categories 
+		*** Get numb of categories
 		qui levelsof `lhs', l(_lncat)
 		scalar _ncat = `:word count `_lncat''
-		*** Collect InIt options and args	
+		*** Collect InIt options and args
 		mata: _tihtest_InIt_OpT = _tihtest_InIt_OpTiMiZaTiOn`__version'()
 		** The following to check the content of the structure ** Just for debugging
 		*mata: liststruct(_tihtest_InIt_OpT)
-		*******************************************************************************************	
-			
+		*******************************************************************************************
+
 } // Close model option
 
 if "`model'"=="cpoisson" {
 
-		tempname init_beta 					
+		tempname init_beta
 		if "`from'"=="" {
 			cap qui poisson `lhs' `rhs', nocons iter(50)
 			if _rc != 0 qui reg `lhs' `rhs', nocons
@@ -389,13 +389,13 @@ if "`model'"=="cpoisson" {
 			`vv' mat coleq `init_beta' = "Cpoisson"
 		}
 		else {
-			`vv' mat colnames `init_beta' = `_rhs_names' 
+			`vv' mat colnames `init_beta' = `_rhs_names'
 			`vv' mat coleq `init_beta' = "Cpoisson"
 			local arg `from'
 			`vv' _mkvec `init_beta', from(`arg') update error("from()")
 		}
 		eret clear
-		
+
 		******************** This block MUST be included for each estimator ***********************
 		local _params_list "init_beta"
 		local _params_num = 1
@@ -403,25 +403,25 @@ if "`model'"=="cpoisson" {
 		/// Structure definition for initialisation
 		mata: _tihtest_SV = J(1, st_numscalar("InIt_nparams"), _tihtest_starting_values`__version'())
 		foreach _params of local _params_list {
-			mata: _tihtest_SV = _tihtest_StArTiNg_VaLuEs`__version'("``_params''", `_params_num', _tihtest_SV)	
+			mata: _tihtest_SV = _tihtest_StArTiNg_VaLuEs`__version'("``_params''", `_params_num', _tihtest_SV)
 			** The following to check the content of the structure ** Just for debugging
 			*mata: liststruct(_tihtest_SV)
 			local _params_num = `_params_num' + 1
-		}		
+		}
 		local InIt_evaluator "cpoisson"
-		local InIt_evaluatortype "gf2"	
-		*** Collect InIt options and args	
+		local InIt_evaluatortype "gf2"
+		*** Collect InIt options and args
 		mata: _tihtest_InIt_OpT = _tihtest_InIt_OpTiMiZaTiOn`__version'()
 		** The following to check the content of the structure ** Just for debugging
 		*mata: liststruct(_tihtest_InIt_OpT)
-		*******************************************************************************************	
-			
+		*******************************************************************************************
+
 } // Close model option
 
-if "`model'"=="cnormal" { 
+if "`model'"=="cnormal" {
 
-	qui {	
-			tempvar mean_`lhs' dem_`lhs' 
+	qui {
+			tempvar mean_`lhs' dem_`lhs'
 			by `temp_id': egen double `mean_`lhs'' = mean(`lhs')
 			gen double `dem_`lhs'' = `lhs' - `mean_`lhs''
 			local demrhs ""
@@ -431,8 +431,8 @@ if "`model'"=="cnormal" {
 				gen double `dem_`var'' = `var' - `mean_`var''
 				local demrhs "`demrhs' `dem_`var''"
 			}
-			
-			tempvar diff_`lhs' 
+
+			tempvar diff_`lhs'
 			xtset
 			gen double `diff_`lhs'' = d.`lhs'
 			local diff_rhs ""
@@ -444,10 +444,10 @@ if "`model'"=="cnormal" {
 			marksample dtouse
 			markout `dtouse' `diff_`lhs'' `diff_rhs'
 	}
-	
-	tempname init_beta init_sigma2				
-	if "`from'"=="" { 
-		qui reg `dem_`lhs'' `demrhs', nocons 
+
+	tempname init_beta init_sigma2
+	if "`from'"=="" {
+		qui reg `dem_`lhs'' `demrhs', nocons
 		mat `init_beta' = e(b)
 		`vv' mat colnames `init_beta' =`_rhs_names'
 		`vv' mat coleq `init_beta' = "Cnormal"
@@ -456,13 +456,13 @@ if "`model'"=="cnormal" {
 		`vv' mat coleq `init_sigma2' = "Sigma2"
 	}
 	else {
-		`vv' mat colnames `init_beta' = `_rhs_names' 
+		`vv' mat colnames `init_beta' = `_rhs_names'
 		`vv' mat coleq `init_beta' = "Cnormal"
 		local arg `from'
 		`vv' _mkvec `init_beta', from(`arg') update error("from()")
 	}
 	eret clear
-	
+
 	******************** This block MUST be included for each estimator ***********************
 	local _params_list "init_beta init_sigma2"
 	local _params_num = 1
@@ -470,19 +470,19 @@ if "`model'"=="cnormal" {
 	/// Structure definition for initialisation
 	mata: _tihtest_SV = J(1, st_numscalar("InIt_nparams"), _tihtest_starting_values`__version'())
 	foreach _params of local _params_list {
-		mata: _tihtest_SV = _tihtest_StArTiNg_VaLuEs`__version'("``_params''", `_params_num', _tihtest_SV)	
+		mata: _tihtest_SV = _tihtest_StArTiNg_VaLuEs`__version'("``_params''", `_params_num', _tihtest_SV)
 		** The following to check the content of the structure ** Just for debugging
 		*mata: liststruct(_tihtest_SV)
 		local _params_num = `_params_num' + 1
-	}		
+	}
 	local InIt_evaluator "cnormal"
-	local InIt_evaluatortype "gf0"	
-	*** Collect InIt options and args	
+	local InIt_evaluatortype "gf0"
+	*** Collect InIt options and args
 	mata: _tihtest_InIt_OpT = _tihtest_InIt_OpTiMiZaTiOn`__version'()
 	** The following to check the content of the structure ** Just for debugging
 	*mata: liststruct(_tihtest_InIt_OpT)
 	*******************************************************************************************
-	
+
 } // Close model option
 
 if "`model'"!="cnormal" local evarlist "`lhs' `rhs'"
@@ -495,7 +495,7 @@ else {
 ///////////////////////////////////////////////////////////////////
 ////////////////////////// Estimation /////////////////////////////
 ///////////////////////////////////////////////////////////////////
-	
+
 	*** Collect post-results options
 	mata: _tihtest_PoSt_OpT = _tihtest_InIt_PoSt_ReSuLt`__version'()
 	*mata: liststruct(_tihtest_PoSt_OpT)
@@ -511,8 +511,8 @@ return local cmd "tihtest"
 return local depvar "`lhs'"
 return local model "`model'"
 return local ivar `id'
-return local tvar `time'  
-return local covariates "`_rhs_names'" 
+return local tvar `time'
+return local covariates "`_rhs_names'"
 return scalar Tbar = `Tbar'
 return scalar Tcon = `Tcon'
 return scalar g_min = `g_min'
@@ -525,26 +525,26 @@ return scalar stat = stat
 return scalar df = df
 
 if "`displayestimates'"!="" {
-	
+
 	if "`model'"!= "cnormal" {
 		mat colnames b = `_rhs_names' `_rhs_names'
 		mat colnames V = `_rhs_names' `_rhs_names'
 		mat rownames V = `_rhs_names' `_rhs_names'
-		
+
 		foreach __estimator in Full Pairwise {
 			forvalues __i = 1/`_k_final' {
 				local __colnames "`__colnames' `__estimator'"
 			}
 		}
 		mat coleq b = `__colnames'
-		mat coleq V = `__colnames' 
+		mat coleq V = `__colnames'
 		mat roweq V = `__colnames'
 	}
 	else {
 		mat colnames b = `_rhs_names' sigma_e2 `_rhs_names' sigma_e2
 		mat colnames V = `_rhs_names' sigma_e2 `_rhs_names' sigma_e2
 		mat rownames V = `_rhs_names' sigma_e2 `_rhs_names' sigma_e2
-		
+
 		local _k_finalnorm = `_k_final'+1
 		foreach __estimator in Full Pairwise {
 			forvalues __i = 1/`_k_finalnorm' {
@@ -552,8 +552,8 @@ if "`displayestimates'"!="" {
 			}
 		}
 		mat coleq b = `__colnames'
-		mat coleq V = `__colnames' 
-		mat roweq V = `__colnames'			
+		mat coleq V = `__colnames'
+		mat roweq V = `__colnames'
 	}
 
 	if "`model'"=="clogit" local title "Fixed-effects logit"
@@ -564,12 +564,12 @@ if "`displayestimates'"!="" {
 	DiSpLaY, level(`level') model(`model') depvar(`lhs') covariates(`rhs') title(`title') ///
 			 nobs(`N') esample(`touse') ivar(`id') tvar(`time') ///
 			 gmin(`g_min') gavg(`g_avg') gmax(`g_max') ngroups(`N_g') retvce(`vce') ///
-			 retvcetype(`vcetype') retcmdline(`__cmdline') `postscore' `posthessian' `diopts' 
-	
+			 retvcetype(`vcetype') retcmdline(`__cmdline') `postscore' `posthessian' `diopts'
+
 }
 
 di ""
-di in gr "Bartolucci-Belotti-Peracchi test for time invariant heterogeneity" 
+di in gr "BBP test for time invariant heterogeneity"
 di in gr "    Ho: " in yel "time invariant heterogeneity"
 di in gr "	  Outcome variable: " in yel "`model'"
 di in gr "	  Model specification: " in yel "`lhs' = `_rhs_names'"
@@ -578,10 +578,10 @@ di in gr "    chi2(" in yel df in gr ") = " in yel %9.2f stat
 di in gr "    Prob > chi2 = " in yel %6.4f  chi2tail(df,stat)
 if "`model'" == "cnormal" {
 di ""
-di "Note: the test is performed excluding sigma_e2"	
+di "Note: the test is performed excluding sigma_e2"
 }
 __tietest_destructor
-        
+
 end
 
 
@@ -591,39 +591,39 @@ program define DiSpLaY, eclass
 				  title(string) nobs(string) esample(string) ivar(string) tvar(string) ///
 				  gmin(string) gavg(string) gmax(string) ngroups(string) retvce(string) ///
 				  retvcetype(string) retcmdline(string) postscore posthessian *]
-				
-		_get_diopts diopts, `options' 
-		
+
+		_get_diopts diopts, `options'
+
 		local _nobs = `nobs'
 		local _esample = `esample'
 		local _gmin = `gmin'
 		local _gavg = `gavg'
 		local _gmax = `gmax'
 		local _ngroups = `ngroups'
-		
+
 		#delimit ;
 		di as txt _n "`title' model" _col(54) "Number of obs " _col(68) "=" /*
  		*/ _col(70) as res %9.0g `_nobs';
-        di in gr "Group variable: " in ye abbrev("`ivar'",12) 
+        di in gr "Group variable: " in ye abbrev("`ivar'",12)
            in gr _col(51) "Number of groups" _col(68) "="
                  _col(70) in ye %9.0g `_ngroups';
-        di in gr "Time variable: " in ye abbrev("`tvar'",12)                    
+        di in gr "Time variable: " in ye abbrev("`tvar'",12)
            in gr _col(55) in gr "Panel length" _col(68) "="
                  _col(70) in ye %9.0g `_gmax' _n;
         /*di       _col(64) in gr "avg" _col(68) "="
                  _col(70) in ye %9.1f `e(g_avg)' ;
         di       _col(64) in gr "max" _col(68) "="
-                 _col(70) in ye %9.0g `e(g_max)' _n */;				                            
+                 _col(70) in ye %9.0g `e(g_max)' _n */;
 		#delimit cr
-		
+
 		eret clear
 		ereturn post b V, esample(`esample') obs(`_nobs') dep(`lhs')
 		ereturn local cmd "tihtest"
 		eret local cmdline "`retcmdline'"
 		ereturn local model "`model'"
 		ereturn local ivar "`ivar'"
-		ereturn local tvar "`tvar'"  
-		ereturn local covariates "`rhs'" 
+		ereturn local tvar "`tvar'"
+		ereturn local covariates "`rhs'"
 		ereturn local vce "`retvce'"
 		if "`retvcetype'"!="" ereturn local vcetype "`retvcetype'"
 		ereturn local title "`title' model"
@@ -640,7 +640,7 @@ program define DiSpLaY, eclass
 			ereturn matrix hessian_full = _hessian1
 			ereturn matrix hessian_pair = _hessian2
 		}
-				
+
 		_coef_table, neq(2)
 
 
@@ -659,7 +659,7 @@ program define ParseMod
 		di as error "model(`options') not allowed"
 		exit 198
 	}
-	
+
 	local wc : word count `clogit' `cologit' `cpoisson' `cnormal'
 
 	if `wc' > 1 {
@@ -671,7 +671,7 @@ program define ParseMod
 	if `wc' == 0 {
 		c_local `returmac' cnormal
 	}
-	else	c_local `returmac' `clogit'`cologit'`cpoisson'`cnormal' 
+	else	c_local `returmac' `clogit'`cologit'`cpoisson'`cnormal'
 
 end
 
@@ -696,4 +696,4 @@ foreach n of local _matrices {
 end
 
 
-exit 
+exit

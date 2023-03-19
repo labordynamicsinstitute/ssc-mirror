@@ -1,4 +1,4 @@
-* xteventplot.ado 2.1.0 Aug 1 2022
+* xteventplot.ado 2.2.0 Mar 15 2023
 
 version 11.2
 
@@ -49,7 +49,6 @@ program define xteventplot
 	*/
 	
 	* Capture errors
-	
 	if "`=e(cmd2)'"!="xtevent" {
 		di as err "{cmd:xteventplot} only available after {cmd:xtevent}"
 		exit 301
@@ -107,8 +106,8 @@ program define xteventplot
 	
 	if "`ci'"=="noci" di as txt _n "option {bf:noci} has been specified. Confidence intervals won't be displayed"
 	if "`supt'"=="nosupt" di as txt _n "option {bf:nosupt} has been specified. Sup-t confidence intervals won't be displayed or calculated"
-	if "`zeroline'"=="nozeroline" di as txt _n "option {bf:nozeroline} has been specified. The reference line at 0 won't be displayed"
-	if "`minus1label'"=="nominus1label" di as txt _n "option {bf:nominus1label} has been specified. The label for the value of the depedent variable at event-time = -1 won't be displayed"
+	if "`nozeroline'"=="nozeroline" di as txt _n "option {bf:nozeroline} has been specified. The reference line at 0 won't be displayed"
+	if "`nominus1label'"=="nominus1label" di as txt _n "option {bf:nominus1label} has been specified. The label for the value of the depedent variable at event-time = -1 won't be displayed"
 	if "`prepval'"=="noprepval" di as txt _n "option {bf:noprepval} has been specified. The p-value for a pretrends test won't be displayed"
 	if "`postpval'"=="nopostpval" di as txt _n "option {bf:nopostpval} has been specified. The p-value for a test of effects leveling-off won't be displayed"
 	
@@ -387,7 +386,7 @@ program define xteventplot
 	
 	if `"`smpath'"'!="" {	
 		* "
-		di _n "Note: Smoothest line drawn for system confidence level = `=c(level)'"
+		di _n "Note: Smoothest line drawn for system confidence level = `=c(level)'%"
 		parsesmpath `smpath'
 		loc postwindow = r(postwindow)	
 		loc maxorderinput=r(maxorder) 
@@ -414,7 +413,8 @@ program define xteventplot
 		}
 		
 		tempname omitmat			
-		matrix `omitmat' = (`komitcomma')			
+		matrix `omitmat' = (`komitcomma')		
+		
 		if `postwindow'!=0 | "`kmiss'"!="." {
 			* Coefs													
 			gen byte `fid' = !inlist(`kxaxis',`kmiss')
@@ -443,8 +443,8 @@ program define xteventplot
 		}			
 		
 		_return restore smpathparse			
-		cap qui mata:	polyline(1-st_numscalar("c(level)")/100,"r(maxiter)","r(technique)",dhat,Vhat0,"r(maxorder)",errorcodem=.,errorcodep=.,convergedm=.,convergedp=.,maxedout=.,param=.,WB=.)	
-	
+		cap noi mata:	polyline(1-st_numscalar("c(level)")/100,"r(maxiter)","r(technique)",dhat,Vhat0,"r(maxorder)",errorcodem=.,errorcodep=.,convergedm=.,convergedp=.,maxedout=.,param=.,WB=.,Wcrit=.,orderout=.)		
+
 		mata: st_numscalar("maxedout",maxedout)		
 
 		if !maxedout {
@@ -459,32 +459,39 @@ program define xteventplot
 			mata: st_numscalar("errorcodem",errorcodem)
 			mata: st_numscalar("errorcodep",errorcodep)
 			
-			if (errorcodem!=. & errorcodem !=0) | (errorcodep!=. & errorcodep !=0) {				
-				if (errorcodem == 8 | errorcodep ==8) {
+			if (errorcodem!=. & errorcodem !=0 & errorcodep!=. & errorcodep !=0) {				
+				if (errorcodem == 8 & errorcodep ==8) {
 					* This one is common so separate warning
 					di "Warning: Smoothest path optimization found a flat region."
 				}
 				else {
 					loc errorcodem = errorcodem
 					loc errorcodep = errorcodep
-					di "Warning: Smoothest path optimization returned an error code. Results for the smoothest path are approximate. Try changing the optimization options"
-					di in smcl "Error code = `errorcodem'. See {help mf_optimize##r_error} to see what that means."
+					di as txt _n "The optimization to calculate the smoothest path returned an error code."
+					di as txt "Smoothest path won't be displayed."
+					di as txt "Try changing the optimization options. For example, try -smpath(scatter, tech(dfp)-."
+					di in smcl _n "Error code = `errorcodem'. See {help mf_optimize##r_error} to see what that means."
 					di in smcl "Error code = `errorcodep'. See {help mf_optimize##r_error} to see what that means."
 				}
 			}
-			mata: mata drop p `fidget'		
-				
-			if "`plottype'"=="scatter" {
-				loc smgraph "scatter `smline' `kxaxis', pstyle(p2)"
+			else {
+				if "`plottype'"=="scatter" {
+					loc smgraph "scatter `smline' `kxaxis', pstyle(p2)"
+				}
+				else if  "`plottype'"=="line" {
+					loc smgraph "line `smline' `kxaxis', pstyle(p1line)"
+				}
 			}
-			else if  "`plottype'"=="line" {
-				loc smgraph "line `smline' `kxaxis', pstyle(p1line)"
-			}			
+			
+			mata: mata drop p `fidget'			
+						
 		}
 		else { 
 			di as txt _n "Could not find a polynomial with order<=maxorder through the Wald confidence region."
+			di as txt "Smoothest path won't be displayed."
 			loc smgraph ""			
-		}		
+		}
+		
 			
 		mata: mata drop dhat Vhat Vhat0 convergedm convergedp errorcodem errorcodep param maxedout 	
 	}
@@ -570,11 +577,11 @@ program define xteventplot
 	
 	* Line at zero by default, unless supressed
 	
-	if "`zeroline'"=="nozeroline" loc zeroline ""
+	if "`nozeroline'"=="nozeroline" loc zeroline ""
 	else loc zeroline "yline(0, lpattern(dash) lstyle(refline))"
 
 	* Label for value of y at -1 by default, unless supressed
-	if "`minus1label'"=="nominus1label" loc ylab ""
+	if "`nominus1label'"=="nominus1label" loc ylab ""
 	else loc ylab "ylab(#5 0 `y1plot')"	
 
 	tw  `smgraph' `smplotopts' || `cigraph' `ciplotopts' || `cigraphsupt' `suptciplotopts' || `cmdov' , xtitle("") ytitle("") `xaxis' pstyle(p1) `ylab' `note' msymbol(circle triangle_hollow) `scatterplotopts' || `addplots'	|| `trendplot' `trendplotopts' ||,`zeroline' `options' `legend'
@@ -585,7 +592,7 @@ end
 cap program drop parsesmpath
 program define parsesmpath, rclass
 
-	syntax [anything] , [maxiter(integer 100) technique(string) postwindow(real 0) maxorder(integer 10)]
+	syntax [anything] , [maxiter(integer 100) TECHnique(string) postwindow(real 0) maxorder(integer 10)]
 	
 	return local plottype "`anything'"	
 	return scalar maxiter=`maxiter'
@@ -595,7 +602,7 @@ program define parsesmpath, rclass
 		exit 301
 	}
 	return scalar postwindow = `postwindow'
-	if "`technique'"=="" loc technique "dfp"
+	if "`technique'"=="" loc technique "nr 5 bfgs"
 	return local technique "`technique'"
 	return scalar maxorder = `maxorder'
 end	
@@ -702,7 +709,7 @@ mata
 			XX = 2*F'*Vhatinv*F
 			Xy = 2*F'*Vhatinv*dhat
 			A = (XX, Anorm' \ Anorm, J(rows(normalization),rows(normalization),0))
-			b = (Xy \ J(rows(normalization),rows(normalization),0))
+			b = (Xy \ J(rows(normalization),1,0))
 			
 			aL = qrsolve(A,b)
 			a = aL[1..r+1]
@@ -721,6 +728,8 @@ mata
 		Wstart = 1e6
 		
 		r=0
+		
+		printf("Wald Critical Value %f\n",Wcrit)
 		while (r<=maxorder & Wstart > Wcrit) {
 			printf("Order %f\n",r)
 			polywaldmin(trfit=.,W0=.,a=.,F=.,dhat,Vhatinv,normalization,r)
@@ -776,21 +785,21 @@ mata
 		i.Ab = Anorm[.,1..cols(Anorm)-pn-1]
 		i.A1 = Anorm[.,cols(Anorm)-pn..cols(Anorm)-1]
 		i.A2 = Anorm[.,cols(Anorm)]
-		
+				
 		i.Fb = F[.,1..cols(F)-pn-1]
 		i.F1 = F[.,cols(F)-pn..cols(F)-1]
 		i.F2 = F[.,cols(F)]
-		
-		i.d0 = (i.F2-i.F1*pinv(i.A1)*i.A2)'*Vhatinv*(i.F2-i.F1*pinv(i.A1)*i.A2)
-		
+
+		i.d0 = (i.F2-i.F1*pinv(i.A1)*i.A2)'*Vhatinv*(i.F2-i.F1*pinv(i.A1)*i.A2)		
+				
 		S = optimize_init()
 		optimize_init_evaluator(S,&b2m())
 		optimize_init_which(S,"min")
-		optimize_init_params(S,a[1..order-1,1]')
 		optimize_init_argument(S,1,i)
 		optimize_init_technique(S,tech)
+		optimize_init_params(S,a[1..cols(F)-pn-1,1]')		
 		optimize_init_conv_maxiter(S,maxiter)
-		optimize_init_conv_nrtol(S,1e-3)
+		optimize_init_conv_nrtol(S,1e-6)
 		optimize_init_singularHmethod(S, "hybrid")
 		(void) _optimize(S)
 		rc = optimize_result_errorcode(S) 
@@ -804,7 +813,7 @@ mata
 		S = optimize_init()
 		optimize_init_evaluator(S,&b2p())
 		optimize_init_which(S,"min")
-		optimize_init_params(S,a[1..order-1,1]')
+		optimize_init_params(S,a[1..cols(F)-pn-1,1]')
 		optimize_init_argument(S,1,i)
 		optimize_init_technique(S,tech)
 		optimize_init_conv_maxiter(S,maxiter)
@@ -886,18 +895,21 @@ mata
 					real scalar convergedp,
 					real scalar maxedout,
 					real matrix param,
-					real matrix WB)
+					real matrix WB,
+					real matrix Wcrit,
+					real scalar orderout)
 	{
 		real matrix Vhatinv, F, a, delta, pos
-		real scalar normalization, Wcrit, W0, order, maxiter, maxorder
+		real scalar normalization, W0, order, maxiter, maxorder, pn
 		string scalar tech
 		
 		Vhatinv = pinv(Vhat)
 		pos = dhat:==0
 		normalization=selectindex(pos)
 		maxorder = st_numscalar(Maxorder)
+		pn = rows(normalization)
 		
-		Wcrit=invchi2(rows(dhat),1-alpha)		
+		Wcrit=invchi2(rows(dhat)-pn,1-alpha)		
 		
 		findorder(trfit=.,W0=.,order=.,F=.,a=.,dhat,Vhatinv,normalization,maxorder,Wcrit)
 		if (order==0) {
@@ -913,7 +925,7 @@ mata
 			delta=dhat
 		
 			Anorm = F[normalization,.]
-			pn = rows(normalization)
+			
 				
 			maxiter = st_numscalar(Maxiter)
 		
@@ -930,8 +942,10 @@ mata
 			}
 			
 			param=F*aresult
-			WB = (dhat-trfit)'*Vhatinv*(dhat-trfit)
+			WB = (dhat-param)'*Vhatinv*(dhat-param)
 		}
+		
+		orderout = order
 			
 	}
 		

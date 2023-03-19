@@ -1,4 +1,4 @@
-* xteventtest.ado 2.1.0 Aug 1 2022
+*! xteventtest.ado 2.2.0 Mar 15 2023
 
 version 11.2
 
@@ -79,7 +79,7 @@ program define xteventtest, rclass
 		}
 		else {
 			loc overidpre=e(overidpre)
-			loc overidpost=e(overidpost)
+			loc overidpost=e(overidpost)+1
 		}
 	}
 		
