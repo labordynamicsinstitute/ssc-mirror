@@ -30,8 +30,9 @@ help for {hi:hammock}{right:{hi: Matthias Schonlau}}
 {synopt :{opt col:orlist(str)}} Default color and colors for highlighting {p_end}
 
 {syntab :Manipulating Spacing and Layout}
-{synopt :{opt bar:width(real)}} Change width of the plot elements to reduce clutter {p_end}
 {synopt :{opt spa:ce(real)}} Control fraction of space allocated to labels rather than to graph elements {p_end}
+{synopt :{opt bar:width(real)}} Change width of the plot elements to reduce clutter {p_end}
+{synopt :{opt minbar:freq(int)}} Specify minimum bar width {p_end}
 {synopt :{opt labelopt(str)}} Pass options to {it:{help added_text_options}}, e.g. to manipulate label text size{p_end}
 
 {syntab :Other options}
@@ -131,6 +132,20 @@ Space can be removed by using negative values as in {it:space(-0.1)}.
  The relative width of any two bars is not affected.  For example, 0.5 means half as large as the default width.
   The default is 1.0. The value of {it: barwidth} should be greater than 0, 
   and in most cases should be smaller or equal to 1.0.
+
+{phang}
+{opt minbarfreq} specifies the minimum width of the bars.
+ If a bar is barely visible because it contains too few observations, 
+ it may be useful to increase the width of barely visible bars. 
+ The minimum bar width is not specified directly; 
+ instead all frequencies below the specified minimum are increased. 
+ All bars corresponding to fewer than {it:minbarfreq} observations are displayed as if they contained {it:minbarfreq} observations.
+ By default, {it:minbarfreq} equals 1 observation.  
+ In other words, by default this option has no effect.
+ 
+ {pmore}
+ During highlighting, bars may consist of multiple segments with different colors. 
+ In that case, {it:minbarfreq} is applied to each color segment separately.
   
 {phang}
 {opt labelopt} specifies optional arguments to the labels.

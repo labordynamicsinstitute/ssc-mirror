@@ -1,7 +1,7 @@
 program define hammock
-*! 1.2.1    Nov 15, 2022: rectangle is default shape, space allowed w/o label, update helpfile
+*! 1.2.2    Jan 27, 2023: minbarfreq option added
 	version 14.2
-	syntax varlist [if] [in], [  Missing BARwidth(real 1) /// 
+	syntax varlist [if] [in], [  Missing BARwidth(real 1) MINBARfreq(int 1) /// 
 		hivar(str) HIVALues(numlist  missingokay) SPAce(real 0.0) LABel labelopt(str) SAMEscale(varlist) ///
 		ASPECTratio(real 0.72727) COLorlist(str) shape(str) * ]
 
@@ -109,9 +109,11 @@ program define hammock
 	} 	
 
 	* graphx is important for unique identification 
+	* contract creates _freq variable
 	contract std_y `std_ylag' `graphx' colorgroup
 	* scatter std_y  `graphx'
 
+	qui replace _freq=max(`minbarfreq',_freq)
 
 	
 	*** preparation for graph 
@@ -1079,3 +1081,4 @@ end
 //*! 1.1.4    July 7 2022: missing values can now be highlighted
 //*! 1.2.0    August 11, 2022: shape rectangle added 
 //*! 1.2.1    Nov 15, 2022: rectangle is default shape, space allowed w/o label, update helpfile
+//*! 1.2.2    Jan 27, 2023: minbarfreq option added

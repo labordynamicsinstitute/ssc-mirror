@@ -39,7 +39,7 @@ program define hktrade
         disp `"`path'"'
 	}
 	
-	if `"`fqt'"' == "" {
+	if `"`fqt'"' == ""|`"`fqt'"' == "d"|`"`fqt'"' == "D" {
 		local klt "101"
 	} 
 
@@ -71,8 +71,9 @@ program define hktrade
 								local real_time=(clock("`c(current_date)' `c(current_time)'", "DMY hms" )/1000 - clock("2 Jan 1970", "DMY" )/1000+57600)*1000+int(43*runiform() )
 								local url "`address'`code'`t_add'`real_time'"
 								copy "`url'" temp.txt,replace
-								set obs 1
-								gen v =fileread("temp.txt")									
+								clear
+								set obs 1  
+								gen v =fileread("temp.txt")	 
 								if length(v) < 2500{
 												disp as error `"`code' is an invalid stock code"'
 												exit 601
@@ -96,11 +97,6 @@ program define hktrade
 										drop _var1
 										rename _all (date open close high low volume Turnover amplitude price_limit change_amount turnover_rate)
 
-
-										gen time= date(date,"YMD")
-										format %dCY-N-D time
-										order time
-										drop date
 										destring _all,replace
 										compress
 										save "2004", replace
@@ -126,18 +122,23 @@ program define hktrade
 										
 										split _var1,p(",")
 										drop _var1
-										rename _all (date open close high low volume Turnover amplitude price_limit change_amount turnover_rate)
-
-
+										rename _all (date open close high low volume Turnover amplitude price_limit change_amount turnover_rate)	
+										
+										destring _all,replace
+										compress
+										cap append using 2004.dta
+										cap erase 2004.dta
+										
 										gen time= date(date,"YMD")
 										format %dCY-N-D time
 										order time
 										drop date
-										destring _all,replace
-										compress
-										
-										cap append using 2004.dta
-										cap erase 2004.dta
+										gen code="`code'"
+										order code
+										label variable price_limit "Unit:%"
+										label variable amplitude "Unit:%"
+										label variable turnover_rate "Unit:%"
+										save `"`path'/`code'_trade"', replace
 										noi disp as text `"file `code'_trade.dta has been generated"'
 								}
 								
@@ -157,7 +158,7 @@ program define hktrade
 										drop _var1
 										rename _all (date open close high low volume Turnover amplitude price_limit change_amount turnover_rate)
 
-
+									
 									gen time= date(date,"YMD")
 									format %dCY-N-D time
 									order time
@@ -166,6 +167,9 @@ program define hktrade
 									compress
 									gen code="`code'"
 									order code
+									label variable price_limit "Unit:%"
+									label variable amplitude "Unit:%"
+									label variable turnover_rate "Unit:%"
 									save `"`path'/`code'_trade"', replace
 									noi disp as text `"file `code'_trade.dta has been generated"'
 								}

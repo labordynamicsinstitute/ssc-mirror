@@ -20,7 +20,7 @@
 {synoptset 36 tabbed}{...}
 {synopthdr}
 {synoptline}
-{synopt:{opt fqt(frequency)}}Specify transaction frequency. w stands for week, m stands for month, the default is day-level data{p_end}
+{synopt:{opt fqt(frequency)}}Specify transaction frequency. d or D stands for day, w or W stands for week, m or M stands for month, the default is day-level data{p_end}
 {synopt:{opt path(foldername)}}Specify a folder where output .dta files will be saved in{p_end}
 
 
@@ -41,7 +41,7 @@
 
 {pstd}Note: The leading zeros in each code can be omitted. {p_end}
 {pstd}{it:path} specifies the folder where the output .dta files are to be saved. The folder can be either existed or a new folder. If the folder specified does not exist, {cmd: hktrade} will create it automatically.{p_end}
-{pstd}{it:fqt} specifies transaction frequency. w stands for week, m stands for month, the default is day-level data.{p_end}
+{pstd}{it:fqt} specifies transaction frequency. d or D stands for day, w or W stands for week, m or M stands for month, the default is day-level data.{p_end}
 
 
 {title:Examples}
@@ -62,10 +62,11 @@ It will extract a list of all the transaction records for code you entered.
 
 {phang}
 {stata `"hktrade 1 99"'}
-{p_end}
+{p_end}  
 
 {pstd}
 It will extract various lists of all the transaction records for code you entered.
+
 
 {phang}
 {stata `"hktrade 2,fqt(w)"'}
