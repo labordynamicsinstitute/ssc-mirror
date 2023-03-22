@@ -1,5 +1,5 @@
 {smcl}
-{* 30nov2022/10dec2022}{...}
+{* 30nov2022/10dec2022/21mar2023}{...}
 {hline}
 help for {hi:upsetplot}
 {hline}
@@ -223,7 +223,7 @@ get you closer to conforming with a widespread if unimaginative convention.
 spikes connecting markers in the legend. The default is {cmd:lc(gs8)}.  
 
 {p 4 4 2}
-{it:graph_options} are other options of {help graphb}. An example might be 
+{it:graph_options} are other options of {helpb graph}. An example might be 
 {cmd:name()}. Note that {cmd:graph} may not be especially smart 
 about any space needed above the highest bar label, so you may need 
 two passes and a call to {cmd:yscale()} to extend the axis.
