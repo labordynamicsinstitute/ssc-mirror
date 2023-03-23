@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0 16feb2023}{...}
+{* *! version 1.0.1 16mar2023}{...}
 {viewerjumpto "Title" "replacen##title"}{...}
 {viewerjumpto "Syntax" "replacen##syntax"}{...}
 {viewerjumpto "Description" "replacen##description"}{...}

@@ -1,10 +1,8 @@
-*! version 1.0.0  16feb2023  hendri.adriaens@centerdata.nl
+*! version 1.0.1  22mar2023  hendri.adriaens@centerdata.nl
 program define replacen
 	version 17
 	gettoken n 0 : 0
-	display "`n'"
 	gettoken vname : 0
-	display "`vname'"
 	tempvar old
 	quietly clonevar `old' = `vname'
 	replace `0'
