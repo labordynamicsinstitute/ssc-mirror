@@ -25,7 +25,7 @@ d KW: quantiles,
 d
 d Requires: Stata version 14 and moremata, coefplot from SSC (q.v.)
 d
-d Distribution-Date: 20221217
+d Distribution-Date: 20230324
 d
 d Author: Ben Jann, University of Bern
 d Support: email jann@@soz.unibe.ch

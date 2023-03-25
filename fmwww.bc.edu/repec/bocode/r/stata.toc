@@ -69,6 +69,7 @@ p rdecompose module to implements Gupta's rate decomposition method for aggregat
 p rdesigni module to perform design analysis
 p rdexo module to produces relevant estimates for testing the external validity of LATE
 p rdiff module to calculate 95% confidence intervals for the differences of binomial proportions
+p rdmse module to estimate the mean squared error of a local polynomial regression discontinuity or regression kink estimator
 p rdpermute module to perform a permutation test for the Regression Kink (RK) and Regression Discontinuity (RD) Design
 p rdplot module to graph residual distribution after regression-type command
 p rdpower module to perform power calculations for random designs

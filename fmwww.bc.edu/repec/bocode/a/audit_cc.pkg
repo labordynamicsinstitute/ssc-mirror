@@ -1,0 +1,26 @@
+d 'AUDIT_CC': module for analysis of matched case-control audits of cervical cancer screening
+d
+d  audit_cc analyzes analysis of matched case-control audits of
+d cervical cancer screening.   The data must be in long format (see
+d help reshape), with each screening test on a separate line. Women
+d with no    screening event must be included in the data set with
+d a single record where the date and result of the test are   
+d missing. Each matched group must contain one case and one or more
+d controls matched on age and, if necessary, other   
+d characteristics. 
+d
+d KW: case-control studies
+d KW: audits
+d KW: cancer screening
+d
+d Requires: Stata version 16.1
+d
+d Distribution-Date: 20230324
+d
+d Author: Milena Falcaro, King's College London
+d Support: email milena.falcaro@@kcl.ac.uk
+d
+f audit_cc.ado
+f audit_cc.sthlp
+f ../e/Examples_audit_cc.do
+f auditdata.dta

@@ -1,0 +1,42 @@
+d 'RDMSE': module to estimate the mean squared error of a local polynomial regression discontinuity or regression kink estimator
+d
+d  This program computes the (asymptotic) mean squared error (MSE)
+d of a local polynomial regression discontinuity or regression kink
+d estimator as proposed by Pei, Lee, Card, Weber (2022), "Local
+d Polynomial Order in Regression Discontinuity Designs."  It
+d displays and returns the estimated MSE for the conventional
+d estimator and its bias-corrected counterpart as defined by
+d Calonico, Cattaneo, Titiunik (2014), "Robust Nonparametric
+d Confidence Intervals for Regression Discontinuity Designs." The
+d program builds on the 2014 version of the Stata command
+d --rdrobust-- by Sebastian Calonico, Matias Cattaneo and Rocío
+d Titiunik. 
+d
+d KW: MSE
+d KW: local polynomial
+d KW: regression discontinuity
+d KW: regression kink 
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20230324
+d
+d Author: Zhuan Pei, Cornell University
+d Support: email zhuan.pei@@cornell.edu
+d
+f rdmse.ado
+f rdmse.sthlp
+f ../a/altfrdbwselect.ado
+f ../a/altrdbwselect.ado
+f ../a/altrdvce.ado
+f ../k/kconst.ado
+f rdmsef.ado
+f rdmses_cct2014.ado
+f rdmses.ado
+f rdmses2s.ado
+f rdmses2s.ado
+f ../a/altrdvce.mo
+f ../k/kweight.mo
+f rdvce.mo
+f regconst.mo
+f rdrobust_senate.dta
