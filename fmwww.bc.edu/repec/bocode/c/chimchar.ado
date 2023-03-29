@@ -61,7 +61,7 @@ program define chimchar
 			replace `strvar' = subinstr(`strvar', "Æ", "ae", .)
 			replace `strvar' = subinstr(`strvar', "Ø", "o", .)
 			replace `strvar' = subinstr(`strvar', "Ð", "d", .)
-			replace `strvar' = subinstr(`strvar', "ß", "s", .)
+			replace `strvar' = subinstr(`strvar', "ß", "ss", .)
 			replace `strvar' = subinstr(`strvar', "æ", "ae", .)
 			replace `strvar' = subinstr(`strvar', "ø", "o", .)
 			replace `strvar' = subinstr(`strvar', "Ð", "d", .)
