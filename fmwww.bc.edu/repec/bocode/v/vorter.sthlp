@@ -4,15 +4,15 @@
 
 {title:Title}
 
-{p 5 12 2}
+{p 4 12 2}
 {cmd:vorter} {hline 2} Reorder variables in dataset based on sorted 
 values
 
 
 {title:Syntax}
 
-{p 5 12 2}
-Order based on values in observation
+{p 4 12 2}
+Order variables by values in observation
 
 {p 8 16 2}
 {cmd:vorter} [{cmd:+}|{cmd:-}] {varlist} 
@@ -20,8 +20,8 @@ Order based on values in observation
 [{cmd:, not} {it:{help order:order-options}}]
 
 
-{p 5 12 2}
-Order based on statistic
+{p 4 12 2}
+Order variables by statistic
 
 {p 8 16 2}
 {cmd:vorter} [{cmd:+}|{cmd:-}] 
@@ -30,21 +30,23 @@ Order based on statistic
 [{cmd:, not} {it:{help order:order-options}}]
 
 
-{p 5 12 2}
-Order randomly
+{p 4 12 2}
+Order variables randomly
 
 {p 8 16 2}
 {cmd:vorter} [{cmd:+}|{cmd:-}] {cmd:({ul:rand}om)} {varlist} 
 [{cmd:, not} {it:{help order:order-options}}]
 
-{marker stat}
-{p 5 8 2}
+
+{...}
+{marker stat}{...}
+{p 4 8 2}
 where {it:statspec} is {it:stat} [{cmd:,} {opt m:issing}], 
 and {it:stat} is one of {opt m:ean}, {opt cou:nt}, {opt ma:x}, 
 {opt mi:n}, {opt su:m}, {opt sd} or {opt v:ariance}. If  
 suboption {opt m:issing} is specified with {opt mean}, 
 {opt max}, {opt min} or {opt sum}, missing values are 
-terated as such. Default is to ignore missing values. Option 
+treated as such. Default is to ignore missing values. Option 
 {opt missing} may not be specified with any other {it:stat}. 
 
 
@@ -139,10 +141,10 @@ Matrices{p_end}
 {title:Acknowledgments}
 
 {pstd}
-Tam·s Keller suggested ordering variables randomly.
+Tam√°s Keller suggested ordering variables randomly.
 
 {pstd}
-A question from an anynymous poster and answers by Joseph Coveney 
+A question from an anonymous poster and answers by Joseph Coveney 
 and Jorge Eduardo Perez Perez to 
 {browse "http://www.statalist.org/forums/forum/general-stata-discussion/general/1306002-sort-on-the-number-of-observations":Statalist}
 stimulated sorting on statistics.
@@ -155,7 +157,8 @@ posted by Pedro Nakashima.
 
 {title:Author}
 
-{pstd}Daniel Klein, University of Kassel, klein.daniel.81@gmail.com
+{pstd}Daniel Klein{break}
+klein.daniel.81@gmail.com
 
 
 {title:Also see}

@@ -1,9 +1,9 @@
-*!version 1.0.1, 12 Oct 2022
+*! version 1.0.2, 29 March 2023 
 * analysis of matched case-control audits of cervical cancer screening
 
 capture program drop audit_cc
 #delimit cr
-prog def audit_cc
+prog def audit_cc, rclass
 
 	    version 16.1
 	
@@ -31,10 +31,9 @@ prog def audit_cc
 		NOHeader                                   ///                     
         ]
 
-
 		
 qui {
-	
+
 tokenize `varlist'
 local case="`1'"
 		
@@ -506,7 +505,12 @@ di as text _n "{c TLC}{hline 34}{c TRC}" _n ///
    "{c BLC}{hline 34}{c BRC}"
 
 tempname rtable H R
+
+qui count if one_record_per_woman==1 & `agegp'~=.
+qui return scalar N=r(N)  
+
 qui levelsof `agegp', local(age_levels)
+
 
 foreach i of local age_levels {
 		
@@ -686,6 +690,13 @@ restore
 
 }
 
+ereturn clear
+return local tlc_cutpoints "`tlcutpoints'"
+return local age_cutpoints "`agecutpoints'"
+return local cmdline `"audit_cc `0'"'
+return local cmd "audit_cc"
+
+
 end
 
 ***********************
@@ -750,7 +761,6 @@ end
 
 
 ***********************
-
 
 cap program drop pdocx2
 program def pdocx2

@@ -47,6 +47,7 @@ p dfgls module to compute Dickey-Fuller/GLS unit root test
 p dfl module to estimate DiNardo, Fortin and Lemieux Counterfactual Kernel Density
 p dfsummary module to compute the (Augmented) Dickey-Fuller unit-root test and reports a summary table for different lags
 p dftol module to compute distribution-free tolerance intervals
+p dgraph module for t test plots and tables
 p diagma module for the split component synthesis method of diagnostic meta-analysis
 p diagram module to analyze executed ado programs and produce a dynamic profile diagram 
 p diagreg module to compute Model Selection Diagnostic Criteria

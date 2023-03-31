@@ -1,18 +1,17 @@
-*! version 1.1.2  27apr2022  Gorkem Aksaray <gaksaray@ku.edu.tr>
-*!
-*! Syntax
-*! ------
-*!   frapply [framename1] [if] [in] [, into(framename2, [replace CHange]) QUIetly]
-*!           [: commandlist]
-*!
-*!   where the syntax of commandlist is
-*!
-*!     command [ |> command [ |> command [...]]]
-*!
-*!   and comand is any Stata command.
+*! version 1.1.6  25mar2023  Gorkem Aksaray <aksarayg@tcd.ie>
 *!
 *! Changelog
 *! ---------
+*!   [1.1.6]
+*!     - frapply now returns r-class results, in addition to e-class results if
+*!       any, stored by the last command in commandlist.
+*!   [1.1.5]
+*!     - Using ||-operator of twoway syntax in command list was causing an error.
+*!       This is now fixed.
+*!   [1.1.4]
+*!     - More robust prefix parsing.
+*!   [1.1.3]
+*!     - More efficient frame copying to achieve slightly faster frapply.
 *!   [1.1.2]
 *!     - Revised parsing of command list again to allow for "empty pipes".
 *!       The command list can now start with |>, end with |>, and have
@@ -31,7 +30,7 @@
 *!     - Initial SSC release.
 
 capture program drop frapply
-program define frapply
+program define frapply, rclass
     version 16.0
     
     // parse prefix and command(s)
@@ -71,10 +70,10 @@ program define frapply
     }
     
     // run command(s)
-    frame `cframe' {
-        preserve
-        quietly capture keep `in' `if'
-        
+    tempname tempframe
+    frame copy `cframe' `tempframe'
+    frame `tempframe' {
+        qui capture keep `in' `if'
         while `"`command'"' != "" {
             gettoken part command : command, parse("|")
             if `"`part'"' == "|" & substr(`"`command'"', 1, 1) == ">" {
@@ -84,26 +83,31 @@ program define frapply
             if substr(`"`command'"', 1, 2) == "|>" | `"`command'"' == "" {
                 gettoken sep command : command, parse("|")
                 gettoken sep command : command, parse(">")
-                `quietly' `cmd' `part'
+                `quietly' `cmd'`part'
                 local cmd ""
+                if `"`command'"' == "" {
+                    return add
+                }
             }
             else {
-                local cmd `"`cmd' `part'"'
+                local cmd `"`cmd'`part'"'
             }
         }
-        frput, into(`intoname') `intoreplace'
-        restore
     }
+    frame copy `tempframe' `intoname', `intoreplace'
     capture frame `intochange' `intoname'
 end
 
 capture program drop parse_prefix
 program define parse_prefix, rclass
     version 16.0
-    gettoken from 0 : 0
+    gettoken from 0 : 0, parse(" ,")
     capture confirm frame `from'
     if !_rc frame `from' {
         syntax [if] [in] [, into(string asis) QUIetly]
+    }
+    else if !inlist("`from'", "", ",", "if", "in") {
+        confirm frame `from'
     }
     else {
         local 0 "`from' `0'"
@@ -134,15 +138,4 @@ program define parse_into, rclass
     return local name "`name'"
     return local change "`change'"
     return local replace "`replace'"
-end
-
-capture program drop frput
-program frput
-    version 16.0
-    syntax [varlist] [if] [in], into(name local) [replace]
-
-    tempname tmpframe
-    frame put `varlist' `if' `in', into(`tmpframe')
-    frame copy `tmpframe' `into', `replace'
-
 end

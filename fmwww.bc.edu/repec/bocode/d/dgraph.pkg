@@ -1,0 +1,23 @@
+d 'DGRAPH': module for t test plots and tables
+d
+d  This package generates a stacked coefficient plot for two-tailed
+d t-tests. It is very useful for showcasing, through a very simple
+d line of code, a graphical representation of covariates imbalance
+d between groups. Several dependent variables can be tested in a
+d single run. Results can be stored in a LaTeX table. 
+d
+d KW: t-tests
+d KW: graphics
+d KW: coefficient plot
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20230330
+d
+d Author: Diego Ciccia, NA
+d Support: email cicciadiego99@@gmail.com
+d
+f dgraph.ado
+f dgraph.sthlp
+f dgraph_example.do
+f ../a/auditdata.dta

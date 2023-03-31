@@ -1,0 +1,20 @@
+d 'PINOCCHIO': module that randomly generates false econometric statements
+d
+d  Pinocchio functions as a stochastic producer of spurious
+d econometric assertions, while the accurate statements are
+d itemized in the help file. Its purpose is conceived as both a
+d revision aid and a repository of key concepts to retain.  It is
+d recommended to set a random seed every time Stata is initiated. 
+d
+d KW: econometrics
+d KW: fallacies
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20230330
+d
+d Author: Marco Santacroce, EUI
+d Support: email Marco.SANTACROCE@@eui.eu
+d
+f pinocchio.ado
+f pinocchio.sthlp
