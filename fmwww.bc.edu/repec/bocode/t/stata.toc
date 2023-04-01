@@ -137,6 +137,7 @@ p ttab module to produce formatted tables with t-test for two-groups mean-compar
 p ttable module to produce Mean Comparison for many variables between two groups with formatted table output
 p ttable2 module to produce Mean Comparison for many variables between two groups with formatted table output
 p ttable3 module to perform Mean or Median Comparison 
+p tteir module to prepare time-to-event data for incidence rates
 p ttestex module to perform t-tests and export the results to excel for multiple dependent and by multiple binary variables/across sub-samples
 p ttestplus module to automate t-tests
 p ttesttable module to compute differences in means by groups including the T-test

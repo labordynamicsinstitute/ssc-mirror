@@ -1,0 +1,24 @@
+d 'TTEIR': module to prepare time-to-event data for incidence rates
+d
+d   The command tteir is a wrapper for the use of stset, stsplit,
+d and collapse as described in sections 4.3 to 4.5 in	 Royston
+d and Lambert (2011) to prepare time-to-event datasets for poisson
+d regressions with piecewise constant	 incidence rates.  A
+d piecewise constant incidence rate for an interval can be
+d interpreted as the average hazard rate    for that same interval.
+d  The main idea is to get a minimal but sufficient dataset for
+d analysis. 
+d
+d KW: time-to-event data
+d KW: survival data
+d KW: poisson regression
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20230531
+d
+d Author: Niels Henrik Bruun, Aalborg University Hospital
+d Support: email niels.henrik.bruun@@gmail.com
+d
+f tteir.ado
+f tteir.sthlp
