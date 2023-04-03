@@ -1,6 +1,7 @@
 *! version 0.1 2023-02-22 Niels Henrik Bruun
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
-*! 2023-02-22 v0.1   created
+*! 2023-04-01 v0.11  Bug fix
+*  2023-02-22 v0.1   created
 
 program define tteir
   version 12
@@ -35,17 +36,19 @@ program define tteir
     if "`quietly'" == "" local QUI quietly
     `QUI' {
       stset `varlist', `failure' `origin' `enter' `exit' `scale' `id'
-      if `mininterval' > 0 {        
-        quietly summarize _d
-        local nintervals = max(floor(`r(sum)' / `mininterval'), 1)
-      }
-      if `nintervals' > 1 {
-        equal_n_events, nintervals(`nintervals')
-        local at at(`r(lst)')
-      }
-      else {
-        quietly summarize _t
-        local at at(`=r(max) + 1')
+      if `mininterval' > 0 | `nintervals' > 0 {        
+        if `mininterval' > 0 {        
+          quietly summarize _d
+          local nintervals = max(floor(`r(sum)' / `mininterval'), 1)
+        }
+        if `nintervals' > 1 {
+          equal_n_events, nintervals(`nintervals')
+          local at at(`r(lst)')
+        }
+        else {
+          quietly summarize _t
+          local at at(`=r(max) + 1')
+        }
       }
       
       if !regexm("`every'", "^every\(\ *\.\ *\)$") stsplit _start, `at' `every' `trim' `after'
