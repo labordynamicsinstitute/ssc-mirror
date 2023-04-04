@@ -41,11 +41,12 @@ d KW: out-of-sample forecast
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20230118
+d Distribution-Date: 20230403
 d
 d Author: Alfonso Ugarte Ruiz , BBVA Research 
 d Support: email alfonso.ugarte@@bbva.com
 d
+f xtoos.sthlp
 f xtoos_i.ado
 f xtoos_i.sthlp
 f xtoos_t.ado
