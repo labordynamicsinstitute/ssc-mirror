@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 13feb2023}{...}
+{* *! version 1.1 20mar2023}{...}
 {viewerdialog step3 "dialog step3"}{...}
 {viewerjumpto "Syntax" "step3##syntax"}{...}
 {viewerjumpto "Description" "step3##description"}{...}
@@ -14,7 +14,7 @@
 {title:Syntax}
 {p}
 
-{cmd:step3} {varlist}{cmd:,} {opt posterior(stub)} [{opt base(#)} {opt rrr} {opt diff} {opt iter(#)} {opt distal} {opt id(varname)}]
+{cmd:step3} {varlist}{cmd:,} {opt posterior(stub)} {opt id(varname)} [{opt distal} {opt uneq} {opt base(#)} {opt rrr} {opt diff} {opt iter(#)}]
  
 {marker description}{...}
 {title:Description}
@@ -23,20 +23,28 @@
 {cmd:step3} is a bias-adjusted method to relate latent class membership to external variables, which can be either covariates or distal outcomes.
 
 {pstd}
-For the analysis of covariates, the command performs the third step of the ML procedure described by Vermunt (2010).
-Conversely, for distal outcomes the command uses the BCH method (Bolck et al., 2004), which is more robust in most cases (Bakk & Kuha, 2021), especially for continuous and count outcomes.
+The command performs the ML three-step procedure described by Vermunt (2010) with modal assignment.
+The first step - latent class analysis without covariates/distal outcomes - must be performed separately.
+This can be done with any command, as long as it produces membership posterior probabilities.
 
 {pstd}
-Although {cmd:step3} also executes the second step of these stepwise procedures (with modal assignment), the first step (i.e., latent class or latent profile analysis without covariates/distal outcomes) must be performed separately.
-This can be done with any command, as long as it produces membership posterior probabilities.
+In addition, the program quietly runs a test to ensure that the composition of the classes does not change after adding covariates/distal outcomes to the model.
+If the composition does change, the command will execute the analysis with classical proportional assignment, estimating the variances with the sandwich estimator.
 
 {marker options}{...}
 {title:Options}
 
-{phang}{opt posterior(stub)} is required. It specifies the prefix of the membership posterior probabilities estimated in the first step.
-To avoid errors, it is advisable to use a prefix in the first step that followed by {it:*} only returns the posterior probability variables.
+{phang}{opt posterior(stub)} is required. It specifies the prefix for the membership posterior probabilities estimated in the first step.
+To avoid errors, it is advisable to choose a prefix that only returns the posterior probability variables when followed by {it:*}.
 
-{phang}{opt base(#)} specifies the class that will be the base outcome; default is {opt base(1)}.
+{phang}{opt id(varname)} is required. It specifies the identifier variable for observations.
+
+{phang}{opt distal} specifies that the variable in {varlist} is the outcome of latent classes rather than a covariate.
+In {varlist} it is advisable to use the appropriate {it:i.} operator before a factor variable to prevent errors.
+
+{phang}{opt uneq} specifies to relax the assumption of equal variances across classes.
+
+{phang}{opt base(#)} specifies the reference class that will be used as the base outcome; default is {opt base(1)}.
  
 {phang}{opt rrr} will report the results in relative risk ratios.
 
@@ -44,45 +52,42 @@ To avoid errors, it is advisable to use a prefix in the first step that followed
 
 {phang}{opt iter(#)} specifies the maximum number of iterations; default is {opt iter(20)}.
 
-{phang}{opt distal} specifies that the variables in {varlist} are outcomes of latent classes rather than covariates.
-
-{phang}{opt id(varname)} is required when the option {opt distal} is on. It specifies the identifier variable for cases/subjects.
-
 {marker example}{...}
 {title:Example}
 
 {phang}Setup
 
-{phang2}{cmd:. webuse mus03sub, clear}
+{phang2}{cmd:. webuse gsem_lca2.dta, clear}
 
-{phang2}{cmd:. gen obs = _n}
+{phang}Three categories of diabetes based on glucose, insulin, and sspg
 
-{phang}Mixture of three distributions of totchr
-
-{phang2}{cmd:. gsem (totchr <-), lclass(Class 3) emopts(iter(250))}
+{phang2}{cmd:. gsem (glucose insulin sspg <-), lclass(C 3) lcinvariant(none) covstructure(e._OEn, un)}
 
 {phang}Posterior class membership probabilities
 
-{phang2}{cmd:. predict p_*, classposteriorpr}
+{phang2}{cmd:. predict pr_*, classposteriorpr}
 
-{phang}Use age, income, and sex as predictors of class membership
+{phang}Use relwgt as predictor of class membership with classic modal assignment
 
-{phang2}{cmd:. step3 age income i.sex, posterior(p_) rrr}
+{phang2}{cmd:. egen max = rowmax(pr_*)}
 
-{phang}Use lmedexp as outcome of class membership
+{phang2}{cmd:. generate modal_class = 1}
 
-{phang2}{cmd:. step3 lmedexp, posterior(p_) distal id(obs)}
+{phang2}{cmd:. replace modal_class = 2 if max == pr_2}
+
+{phang2}{cmd:. replace modal_class = 3 if max == pr_3}
+
+{phang2}{cmd:. mlogit modal_class relwgt}
+
+{phang}Use relwgt as predictor of class membership with step3
+
+{phang2}{cmd:. step3 relwgt, posterior(pr_) id(patient)}
+
+{phang}Although the latent profiles are well differentiated (Entropy > 0.8), the results of the analysis using the classic modal assignment are slightly underestimated.
+This phenomenon is more evident and problematic at lower entropy levels.
 
 {marker reference}{...}
 {title:Reference}
-
-{phang}Bakk, Z., & Kuha, J. (2021).
-{browse "https://doi.org/10.1111/bmsp.12227": Relating latent class membership to external variables: An overview}.
-{it:British Journal of Mathematical and Statistical Psychology}, {it:74}(2), 340–362.
-
-{phang}Bolck, A., Croon, M., & Hagenaars, J. (2004).
-{browse "https://www.jstor.org/stable/25791751":Estimating Latent Structure Models with Categorical Variables: One-Step Versus Three-Step Estimators}.
-{it:Political Analysis}, {it:12}(1), 3–27.
 
 {phang}Vermunt, J. K. (2010).
 {browse "https://jeroenvermunt.nl/lca_three_step.pdf":Latent class modeling with covariates: Two improved three-step approaches}.

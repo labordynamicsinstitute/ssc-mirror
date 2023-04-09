@@ -1,0 +1,27 @@
+d 'CHATGPT': module to allow users to interact with ChatGPT within Stata software and receive advice about Stata
+d
+d    chatgpt uses the API
+d Key(https://platform.openai.com/account/api-keys) provided by
+d OpenAI to create an interface that	allows users to have a
+d conversation with ChatGPT within Stata software.  chatgpt can not
+d only provide quick responses	  to Stata-related content, but it
+d also supports in-context learning, just like when users use
+d ChatGPT on the official    website(https://chat.openai.com/chat).
+d This makes it easier to have a continuous and in-depth discussion
+d about a Stata    technical issue. 
+d
+d KW: chatGPT
+d KW: artificial intellgence
+d
+d Requires: Stata version 14 for Windows
+d
+d Distribution-Date: 20230408
+d
+d Author: Chuntao Li, China Stata Club
+d Support: email  chtl@@zuel.edu.cn
+d
+d Author:  Xueren Zhang, China Stata Club
+d Support: email  snowmanzhang@@whu.edu.cn
+d
+f chatgpt.ado
+f chatgpt.sthlp

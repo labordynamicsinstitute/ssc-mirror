@@ -21,13 +21,13 @@ d KW: code best practices
 d
 d Requires: Stata version 16, Python, pandas package 
 d
-d Distribution-Date: 20221210
+d Distribution-Date: 20230408
 d
 d Author: DIME Analytics, The World Bank, DECIE
 d Support: email dimeanalytics@@worldbank.org
 d
-f ../l/lint.ado
-f ../l/lint.sthlp
+ ../l/lint.ado
+ ../l/lint.sthlp
 f stata_linter_correct.py
 f stata_linter_detect.py
 f stata_linter_utils.py

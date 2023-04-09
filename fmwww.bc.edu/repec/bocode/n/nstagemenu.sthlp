@@ -19,13 +19,13 @@
 {title:Description}
 
 {pstd}
-{cmd:nstagemenubeta on} turns on the {cmd:n-stage trial} menu.  A new item,
+{cmd:nstagemenu on} turns on the {cmd:n-stage trial} menu.  A new item,
 {cmd:n-stage trial}, appears in the User menu on the main menu bar.  To
 access the facility, click on {cmd:User} > {cmd:n-stage trial} >
 {cmd:Multi-Stage Trial Designs}.
 
 {pstd}
-{cmd:nstagemenubeta off} removes {cmd:n-stage trial} from the User menu.
+{cmd:nstagemenu off} removes {cmd:n-stage trial} from the User menu.
 
 
 {title:Authors}

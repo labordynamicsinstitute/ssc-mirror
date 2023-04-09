@@ -1,8 +1,9 @@
 {smcl}
-{* *! version 3.0.0 26sep2014}{...}
+{* *! version 5.0.0 27sep2021}{...}
 {cmd:help nstagedlg}{right: ({browse "http://www.stata-journal.com/article.html?article=st0175_1":SJ15-2: st0175_1})}
 {hline}
 
+{marker overview}{...}
 {title:Overview}
 
 {pstd}
@@ -55,6 +56,7 @@ In what follows, most of the defaults are provided for the purpose of
 illustration.  They are not necessarily appropriate for your trial.
 
 
+{marker design}{...}
 {title:Design parameter panel}
 
 {phang}
@@ -101,6 +103,7 @@ If control of the FWER has been specified, non-binding boundaries are assumed to
 ensure strong control. This option has no impact when I and D differ, since non-
 binding boundaries are assumed in this case by default.
 
+{marker opchar}{...}
 {title:Operating characteristics panel}
 
 {phang}
@@ -131,6 +134,7 @@ stage should differ and should be reduced with each successive stage.
 the intermediate stages and test for D events at the final stage, considered
 independently.  Values at each intermediate stage may differ.
 
+{marker outcomes}{...}
 {title:Intermediate outcome and primary outcome panels}
 
 {phang}
@@ -178,6 +182,11 @@ p-values for each interim stage analysis, separated by spaces. These should be
 monotonically increasing.
 
 {title:References}
+
+{phang}
+Choodari-Oskooei, B., M.R. Sydes, P. Royston, M.K.B Parmar. 2022. 
+{browse "https://link.springer.com/referenceworkentry/10.1007/978-3-319-52677-5_110-1":Multi-arm Multi-stage (MAMS) Platform Randomized Clinical Trials}.
+{it:Principles and Practice of Clinical Trials}. Piantadosi, S., Meinert, C.L. (eds) Springer, Cham.
 
 {phang}
 Bratton, D. J., B. Choodari-Oskooei, P. Royston. 2015. 

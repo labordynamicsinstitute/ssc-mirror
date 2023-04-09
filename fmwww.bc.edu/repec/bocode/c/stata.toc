@@ -65,6 +65,7 @@ p charlson module to calculate Charlson index of comorbidity
 p charon module to redistribute deaths by ill-defined causes and garbage codes
 p chartab module to tabulate character frequency counts
 p charutil module of utilities for working with characteristics 
+p chatgpt module to allow users to interact with ChatGPT within Stata software and receive advice about Stata
 p checkfor2 module to check whether a variable exists or not in a dataset
 p checkipaddresses module to detect Fraud in Online Surveys by Tracing and Scoring IP Addresses
 p checkreg3 module to check identification status of simultaneous equations system

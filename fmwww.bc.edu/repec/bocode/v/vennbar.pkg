@@ -32,3 +32,5 @@ d Support: email T.Morris@@ctu.mrc.ac.uk
 d
 f vennbar.ado
 f vennbar.sthlp
+f ../s/sortmean.ado
+f ../s/sortmean.sthlp

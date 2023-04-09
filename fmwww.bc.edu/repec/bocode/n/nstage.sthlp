@@ -1,7 +1,11 @@
 {smcl}
-{* 10Oct2013}{...}
+{* 04oct2021}{...}
 {cmd:help nstage}{right: ({browse "http://www.stata-journal.com/article.html?article=st0175_1":SJ15-2: st0175_1})}
 {hline}
+{viewerjumpto "Overview of MAMS designs" "nstagedlg##overview"}{...}
+{viewerjumpto "Design parameters" "nstagedlg##design"}{...}
+{viewerjumpto "Operating characteristics" "nstagedlg##opchar"}{...}
+{viewerjumpto "Intermediate and primary outcomes" "nstagedlg##outcomes"}{...}
 
 {title:Title}
 
@@ -19,11 +23,11 @@
 {opt al:pha(numlist)}
 {opt o:mega(numlist)}
 {opt ar:ms(numlist)}
-{opt hr0(# [#])}
-{opt hr1(# [#])}
-{opt t(# [#])} [{it:options}]
+{opt hr0(# #)}
+{opt hr1(# #)}
+{opt t(# #)} [{it:options}]
 
-{synoptset 18 tabbed}{...}
+{synoptset 20 tabbed}{...}
 {synopthdr}
 {synoptline}
 {p2coldent:* {opt n:stage(#)}}{it:#} = J, the number of trial stages{p_end}
@@ -42,13 +46,15 @@
 {synopt :{opt nof:wer}}suppress the calculation of the familywise error rate{p_end}
 {synopt :{opt sim:corr(#)}}number of replicates in the simulations to estimate the correlation structure{p_end}
 {synopt :{opt corr(#)}}correlation between treatment effects on I and D outcomes at a fixed time point or, if {cmd:simcorr()} is specified, the correlation between survival times on the I (excluding D) and D outcomes{p_end}
-{synopt :{opt esb(string[,stop])}}assess for evidence of overwhelming efficacy at interim stages when lack-of-benefit assessments occur, with the efficacy stopping rule specified by the user{p_end}
+{synopt :{opt seed(#)}}sets random number seed for simulation of correlations to {it:#}{p_end}
+{synopt :{cmd:esb(}{it:string}[{cmd:,stop)}]}assess for evidence of overwhelming efficacy (ESB) at interim stages when lack-of-benefit assessments occur, with the efficacy stopping rule specified by the user{p_end}
 {synopt :{opt nonbind:ing:}}assume non-binding stopping boundaries for lack-of-benefit{p_end}
 {synopt :{opt fwer:control(#)}}search for a design which strongly controls the FWER at the specified level{p_end}
+{synopt :{opt old}}calculate sample size using the old algorithm (nstage version 4.0 or earlier){p_end}
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
-* {opt nstage(#)}, {opt accrue(numlist)}, {opt alpha(numlist)}, {opt omega(numlist)}, {opt arms(numlist)}, {opt hr0(# [#])}, {opt hr1(# [#])}, and {opt t(# [#])} are required.
+* required.
 
 
 {title:Description}
@@ -62,26 +68,64 @@ al. (2011) for details of the design and some examples; see Barthel, Royston,
 and Parmar (2009) and Bratton, Choodari-Oskooei, and Royston (2015) for
 further explanations of Stata-related aspects and details of algorithms used.
 
+{pstd}
+Note that in nstage version 5.0, the algorithm for sample size calculation has
+been modified to improve the accuracy of the type 1 and type 2 errors. For a given
+design, the change produces slightly larger numbers of patients and events
+than before. See also option {opt old}.
+
+
+{title:Further resources}
+
+{pstd}
+Panels (mentioned below) refer to items of the nstage dialog provided by
+{helpb nstagedlg}.
+
+{pstd}
+See [link to come when available] for an introductory tutorial on MAMS designs.
+
+{pstd}
+See {help nstagedlg##overview:Overview of MAMS designs} for general concepts.
+
+{pstd}
+See {help nstagedlg##design:Design parameter panel} for a description
+of the parameters required in a MAMS design.
+
+{pstd}
+See {help nstagedlg##opchar:Operating characteristics panel} for how to
+define the operating characteristics of a MAMS trial. The task is more complex 
+than for a "standard" time-to-event trial.
+
+{pstd}
+See {help nstagedlg##outcomes:Intermediate outcome and primary outcome panels}
+for how to set up the I (intermediate) and D (definitive or primary) outcomes
+and related parameters for a trial.
+
 
 {title:Options}
 
 {phang}
-{opt nstage(#)} specifies the number of trial stages, J.  {cmd:nstage()} is
-required.
+{opt nstage(#)} specifies the number of trial stages, denoted by J in the
+notation of Royston et al (2011). {cmd:nstage()} is required.
 
 {phang}
 {opt accrue(numlist)} specifies the rate per unit of trial time (see
-{cmd:tunit()}) at which patients enter the trial during each stage.  The
-patients are assumed to be allocated in the ratio (control arm:experimental
-arm: ...) of 1:A:...:A, where A is the allocation ratio defined by
-{cmd:aratio()}.  {cmd:accrue()} is required.
+{cmd:tunit()}) at which patients enter the trial during each stage.
+See also {cmd:aratio()}.  {cmd:accrue()} is required.
+
+{phang}
+{opt aratio(#)} defines the allocation ratio, that is the number of patients
+allocated to each experimental arm per control arm patient.  For example,
+{it:#} = 0.5 means that one patient is allocated to each experimental
+arm for every two patients allocated to control. The default is {cmd:aratio(1)},
+meaning equal allocation to all arms. {cmd:aratio()} is required.
 
 {phang}
 {opt alpha(numlist)} specifies the one-sided significance level at each stage.
 The arms are compared pairwise with control on the intermediate outcome for
 the first J - 1 stages, whereas the comparison is on the primary outcome at
-the Jth stage.  Significance levels should decrease with each stage.
-{cmd:alpha()} is required.
+the Jth stage. Significance levels should decrease with each stage. {cmd:alpha()}
+is required.
 
 {phang}
 {opt omega(numlist)} specifies the power (one minus the type 2 error
@@ -94,40 +138,42 @@ recruiting patients at each stage.  The number at each stage cannot exceed the
 number at the previous stage, because arms can only be "dropped" (not added).
 For example, {cmd:arms(4 3 2)} would say that in a three-stage trial of four
 arms, only three survived to the second stage, and only two survived to the
-final stage.  {cmd:arms()} is required.
+final stage. {cmd:arms()} is required.
+
+{pmore}
+Note that {it:numlist} provides a "guess" at how many experimental arms
+will "survive" to each successive stage. The true numbers are of course
+unknown. It may be desirable to carry out sensitivity analyses of the
+required sample size and events across a reasonable range of {it:numlist}
+choices.
 
 {phang}
 {opt hr0(# [#])} specifies the hazard ratios under the null hypothesis for the
-I outcome and D outcome, respectively.  Typically, these values are both 1.
-{cmd:hr0()} is required.
+I outcome and D outcome, respectively. For a one-stage trial, only one {it:#}
+is required. Typically, each {it:#} is 1. {cmd:hr0()} is required.
 
 {phang}
 {opt hr1(# [#])} specifies the hazard ratios under the alternative hypothesis
-for the I outcome and D outcome, respectively.  Typically, the size of the
-targeted effect is larger for the I outcome than the D outcome.  {cmd:hr1()}
-is required.
+for the I outcome and D outcome, respectively. For a one-stage trial, only
+one {it:#} is required. Typically, the magnitude of the targeted hazard ratio
+is larger for the I outcome than the D outcome. {cmd:hr1()} is required.
 
 {phang}
 {opt t(# [#])} defines the times corresponding to the survival probabilities
-in {cmd:s()} for an I event and a D event, respectively.  If the default
-values of 0.5 for {cmd:s()} are used, then the required values of {cmd:t()}
-are the median survival times for each type of outcome.  Note that the
-survival distribution for both types of events is assumed to be exponential.
-{cmd:t()} is required.
+in {cmd:s()} for an I event and a D event, respectively. For a one-stage trial,
+only one {it:#} is required. If the default values of 0.5 for {cmd:s()} are
+used, the required values of {cmd:t()} are the median survival times for each
+type of outcome. Note that the survival distribution for both types of outcome
+is assumed to be exponential. {cmd:t()} is required.
 
 {phang}
 {opt s(# [#])} defines the survival probability for an I event and a D event,
 respectively, that is, the probability of no event in intervals defined by
-{cmd:t()}.  For example, {cmd:s(0.5 0.75)} would say that the survival
-probability in the relevant interval was 0.5 for I outcomes and 0.75 for D
-outcomes.  The default is {cmd:s(0.5 0.5)}.
-
-{phang}
-{opt aratio(#)} specifies the allocation ratio (number of patients allocated
-to each experimental arm per control arm patient).  For example,
-{cmd:aratio(0.5)} specifies that one patient is allocated to each experimental
-arm for every two patients allocated to control.  The default is
-{cmd:aratio(1)} (equal allocation to all arms).
+{cmd:t()}. For a one-stage trial, only one {it:#} is required. For example,
+{cmd:s(0.5 0.75)} means that the survival probability in the relevant
+interval is 0.5 for I outcomes and 0.75 for D outcomes.
+The default is {cmd:s(0.5)} for one-stage trials and {cmd:s(0.5 0.5)}
+for two-stage trials.
 
 {phang}
 {opt tunit(#)} defines the code for units of trial time.  The codes are
@@ -175,30 +221,42 @@ overall type I error rate and power of the design.  This option does not need
 to be specified if the I and D outcomes are identical.
 
 {phang}
-{opt esb(string[,stop])} specifies that each interim stage is to be assessed against 
-efficacy bounds. The efficacy stopping rules available are as follows. 
-{cmd:hp[=#]} specifies the Haybittle-Peto stopping rule, with # the constant 
-one-sided p-value for stages 1 to J-1 (default p=0.0005 if # unspecified.) 
-{cmd:obf} specifies an O'Brien-Fleming-type stopping rule, which takes the final 
-stage significance level for lack-of-benefit to generate efficacy bounds for 
-each stage using an alpha-spending function (See Lan and DeMets, 1993).
-{cmd:custom=#...#} specifies custom p-values for each interim stage. P-values 
+{opt seed(#)} sets the random number seed for simulation of correlations to
+{it:#}, where {it:#} is a positive whole number. Setting the seed ensures
+that the results are reproducible. Default is {cmd:seed(-1)}, meaning no seed
+is set.
+
+{phang}
+{cmd:esb(}{it:string}[{cmd:,stop)}] specifies that each interim stage is to
+be assessed against efficacy bounds. The efficacy stopping rules available
+with {it:string} are as follows. {cmd:hp[=#]} specifies the Haybittle-Peto
+stopping rule, with # the constant one-sided p-value for stages 1 to J-1
+(default p=0.0005 if # unspecified.) {cmd:obf} specifies an
+O'Brien-Fleming-type stopping rule, which takes the final stage significance
+level for lack-of-benefit to generate efficacy bounds for each stage using
+an alpha-spending function (see Lan and DeMets, 1993).
+
+{pmore}
+{cmd:custom=#...#} specifies custom p-values for each interim stage. The p-values 
 must be one-sided and non-decreasing. When estimating the operating characteristics
 of the design, the program assumes the trial continues with the remaining arms 
-should any research arm cross the efficacy bound. However the option {cmd:stop} 
+should any research arm cross the efficacy bound. However, the sub-option {cmd:stop} 
 specifies that the trial should terminate recruitment to all research arms should 
 any cross the efficacy bound at an interim stage.
 
 {phang}
 {opt nb} specifies that nstage should assume non-binding stopping boundaries for
-lack-of-benefit when estimating the operating characteristics of the design. If 
-unspecified nstage assumes the stopping boundaries are binding.
+lack-of-benefit when estimating the operating characteristics of the design. This
+means that accrual to the arm(s) in question continues. If {opt nb) is
+unspecified, {cmd:nstage} assumes the stopping boundaries are binding and accrual
+ceases when the lack of benefit (LOB) boundary is crossed.
 
 {phang}
-{opt fwercontrol(#)} instructs nstage to perform an iterative search to identify 
-the value of alpha at stage J which will control the FWER at the value # 
-specified by the user. The output produced by nstage calculates the sample size 
-and operating characteristics of the design which coontrols the FWER.
+{opt fwercontrol(#)} controls the familywise error rate (FWER) at {it:#}.
+It instructs {cmd:nstage} to perform an iterative search to identify the value
+of alpha at stage J which controls the FWER as required. The sample size and operating
+characteristics of the resulting design are presented. Note that the identified
+value of alpha replaces the final value specified in {opt alpha()}.
 
 {phang}
 {opt fwerreps(#)} indicates the number of replicates carried out by the simulation
@@ -206,6 +264,13 @@ procedure to calculate the FWER. The default is set to 250,000 for designs stopp
 early for lack-of-benefit only and 1,000,000 for designs which also stop early 
 for efficacy. Reducing the number of replicates will result in a faster procedure 
 but at the cost of precision.
+
+{phang}
+{opt old} applies the 'old' algorithm for sample size calculation, which results
+in somewhat less accurate type 1 and type 2 error probabilities. Use of {opt old}
+generates sample sizes that are a little too small for a given alpha and power.
+Default when {opt old} is not specified is to apply the updated, more accurate
+algorithm. This option is provided mainly for pedagogic purposes.
 
 
 {title:Remarks}
@@ -240,7 +305,7 @@ Three-arm, three-stage design with identical I and D outcomes:{p_end}
 
 {pstd}
 Six-arm, five-stage design with different I and D outcomes:{p_end}
-{phang2}{bf:. {stata nstage, accrue(87 87 87 87 87) arms(6 6 5 4 3) alpha(0.5 0.25 0.1 0.05 0.025) hr0(1 1) hr1(0.75 0.75) omega(0.95 0.95 0.95 0.95 0.90) t(8 16) s(0.5 0.5) aratio(0.5) corr(0.5) nstage(5) tstop(27) tunit(3) simcorr(1000)}}{p_end}
+{phang2}{bf:. {stata nstage, accrue(87 87 87 87 87) arms(6 6 5 4 3) alpha(0.5 0.25 0.1 0.05 0.025) hr0(1 1) hr1(0.75 0.75) omega(0.95 0.95 0.95 0.95 0.90) t(8 16) s(0.5 0.5) aratio(0.5) corr(0.5) nstage(5) tstop(30) tunit(3) simcorr(1000)}}
 
 {pstd}
 Five-arm, four-stage design with different I and D outcomes, efficacy stopping boundaries specified, and the FWER to be controlled at 2.5%:{p_end}
@@ -283,6 +348,11 @@ Scalars:
 {title:References}
 
 {phang}
+Choodari-Oskooei, B., M.R. Sydes, P. Royston, M.K.B Parmar. 2022. 
+{browse "https://link.springer.com/referenceworkentry/10.1007/978-3-319-52677-5_110-1":Multi-arm Multi-stage (MAMS) Platform Randomized Clinical Trials}.
+{it:Principles and Practice of Clinical Trials}. Piantadosi, S., Meinert, C.L. (eds) Springer, Cham.
+
+{phang}
 Bratton, D. J., B. Choodari-Oskooei, P. Royston. 2015. 
 {browse "http://www.stata-journal.com/article.html?article=st0176_1":A menu-driven facility for sample-size calculation in multiarm multistage randomized controlled trials with time-to-event outcomes: Update}.
 {it:Stata Journal} 15: 350-368.
@@ -296,6 +366,10 @@ Barthel, F. M.-S., P. Royston, and M. K. B. Parmar. 2009.
 Royston, P., F. M.-S. Barthel, M. K. B. Parmar, B. Choodari-Oskooei, and
 V. Isham. 2011. Designs for clinical trials with time-to-event outcomes
 based on stopping guidelines for lack of benefit. {it:Trials} 12: 81.
+
+
+{title:Video tutorial}
+{browse "https://www.mrcctu.ucl.ac.uk/our-research/methodology/design/more-about-mams/mams-workshop-videos-nstage-examples/"}
 
 
 {title:Authors}

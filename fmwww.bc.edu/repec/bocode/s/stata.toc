@@ -3,4 +3,7 @@
 2
 3
 p sadi Sequence analysis distance measures
+p sankey module for Sankey diagrams 
 p sivqr module to perform smoothed IV quantile regression
+p stata_linter module providing a tool to detect and correct bad Stata coding practices
+p step3 module to relate latent class membership to external variables

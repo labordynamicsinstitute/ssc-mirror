@@ -1,3 +1,4 @@
+*! 1.3.0 NJC 29 Mar 2023 
 *! 1.2.0 NJC 10 Dec 2022 
 *! 1.1.0 TJM 6 Dec 2022
 *! 1.0.0 NJC 30 Nov 2022
@@ -22,6 +23,7 @@ program upsetplot
 	labelopts(str asis)     /// 
 	spikeopts(str asis)     /// 
 	matrixopts(str asis)    /// 
+        select(numlist)         /// 
 	savedata(str asis) *] 
 	
 	/// syntax check 
@@ -166,6 +168,17 @@ program upsetplot
 	/// graph 
 	quietly keep in 1/`N'
 	
+	quietly if "`select'" != "" { 
+		tempvar tokeep 
+		gen byte `tokeep' = 0 
+
+		foreach s of local select { 
+			replace `tokeep' = 1 in `s' 
+		}
+
+		keep if `tokeep' 
+	} 
+
 	if "`gsort'" == "" gsort - _count
 	else if inlist("`gsort'", "_count", "_percent") gsort - `gsort'
 	else gsort `gsort'

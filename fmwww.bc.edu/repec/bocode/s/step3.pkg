@@ -14,11 +14,11 @@ d performed separately. This can be done with any command, as long
 d as it produces membership posterior probabilities. 
 d
 d KW: latent class analysis
-d KW: stepwise proceddure
+d KW: stepwise procedure
 d
 d Requires: Stata version 15.1
 d
-d Distribution-Date: 20230214
+d Distribution-Date: 20230408
 d
 d Author: Giovanbattista Califano, University of Naples Federico II
 d Support: email giovanbattista.califano@@unina.it

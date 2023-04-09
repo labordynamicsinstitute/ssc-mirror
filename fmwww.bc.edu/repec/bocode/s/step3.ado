@@ -1,5 +1,5 @@
 * Bias-Adjusted 3Step Latent Class Analysis
-* v1.0 – 13feb2023
+* v1.1 – 20mar2023
 * Written by Giovanbattista Califano
 * Dept. Agricultural Sciences – Economics and Policy Group
 * University of Naples "Federico II"
@@ -8,11 +8,14 @@
 cap program drop step3
 program step3
 version 15.1
-syntax varlist(numeric fv), posterior(string) [base(integer 1) rrr distal id(string) diff iter(integer 20)]
+syntax varlist(numeric fv), posterior(string) id(string) [base(integer 1) rrr uneq distal diff iter(integer 20)]
 
-if "`distal'" !="" & "`id'"=="" {
-display as error "option id() required"
-exit 198
+local fvops = "`s(fvops)'"
+
+local n_var = `:word count `varlist''
+if "`distal'" !="" & `n_var' > 1 {
+display as error "one outcome at a time with option 'distal'"
+exit
 }
 
 local k = 0
@@ -20,14 +23,48 @@ foreach var of varlist `posterior'* {
 local ++k
 }
 
-cap qui drop prob_w_* prob_x_* temp_* L_CLASS
+local code = 0
 
-tempvar max inversep order
+if "`distal'"=="" & "`uneq'"=="" {
+local code = 11
+local unequal = ""
+}
+else if "`distal'"=="" & "`uneq'"!="" {
+local code = 11
+local unequal = "lcinvariant(none)"
+}
+else if "`distal'"!="" & "`uneq'"==""{
+local code = 12
+local unequal = ""
+}
+else if "`distal'"!="" & "`uneq'"!=""{
+local code = 12
+local unequal = "lcinvariant(none)"
+}
+
+local oddsr = ""
+local active = "legend: (multinomial) log-odds"
+
+if "`rrr'" !="" {
+    local oddsr = "eform"
+    local active "legend: odds/relative risk ratios"
+}
+
+cap qui drop prob_w_*
+cap qui drop prob_x_*
+cap qui drop temp_*
+cap qui drop L_CLASS
+cap qui drop CPP_*
+cap qui drop ___c*
+cap qui drop modal_CLASS
+
+tempvar max obs1 obs2 class
 qui egen `max' = rowmax(`posterior'*)
 qui gen L_CLASS = 0
 
 forvalues c = 1/`k' {
 qui replace L_CLASS = `c' if `max'==`posterior'`c'
+qui gen CPP_1_`c' = `posterior'`c'
    }
 
 local first = "1"
@@ -81,14 +118,21 @@ forvalues t=1/`k' {
    matrix D[`t',`s'] = e(b)/dist_x[`t',1]
    }
 }
-   
+
 matrix logit_modal = [`result']
 forvalues x=1/`k' {
    forvalues y = 1/`k' {
    matrix logit_modal[`y',`x'] = D[`y',`x']/D[`y',`base']
    matrix logit_modal[`y',`x'] = ln(logit_modal[`y',`x'])
+   if logit_modal[`y',`x'] == . {
+    matrix logit_modal[`y',`x'] = 0
+   }
    }
 }
+
+***************
+*** CODE 1- ***
+***************
 
 local constraints = ""
   forvalues i=1/`k' {
@@ -100,41 +144,163 @@ local constraints = ""
     }
 }
 
-  if "`distal'"=="" {
-    gsem `constraints' (class <- `varlist'),mlogit lclass(class `k', base(`base')) nocapslatent nocnsr notable `diff' vce(robust) emopts(iterate(`iter'))
+        *** CODE 11 ***
 
-    if "`rrr'"=="" {
-    est tab, d(i.class) star(0.10 0.05 0.01) b(%9.3f) title("Bias-Adjusted 3Step ML Results: `varlist' -> Classes") noomitted style(columns)
-    di "active: multinomial log-odds"
+if `code'==11 {
+    gsem `constraints' (class <- `varlist'), lclass(class `k', base(`base')) nocapslatent nocnsr notable `diff' vce(robust) emopts(iterate(`iter')) startvalues(classid L_CLASS) `unequal'
+    qui predict CPP_2_*, classposteriorpr
 
-  }
-  else { 
-      est tab, d(i.class) star(0.10 0.05 0.01) b(%9.3f) title("Bias-Adjusted 3Step ML Results: `varlist' -> Classes") noomitted eform style(columns)
-      di "active: relative risk ratios"
-  }
+    est tab, d(i.class) star(0.10 0.05 0.01) b(%9.3f) title("Bias-Adjusted 3Step ML Results: `varlist' -> Classes") noomitted `oddsr' noempty
+    di as text "`active'"
 }
-else { 
-    matrix Dinv = inv(D)
-    qui reshape long `posterior', i(`id') j(`order')
-    qui gen `inversep'=0
-    forval i=1/`k'{
-        forval j=1/`k'{
-        qui replace `inversep'=Dinv[`i',`j'] if L_CLASS == `i' & `order' == `j'
+
+        *** CODE 12 ***
+
+else if `code'==12 { 
+gsem `constraints' (`varlist' <-), lclass(class `k', base(`base')) nocapslatent nocnsr notable `diff' vce(robust) emopts(iterate(`iter')) `unequal'
+qui predict CPP_2_*, classposteriorpr
+
+if "`fvops'" != "true" {
+    est tab, k(`varlist':) b(%9.3f) se(%9.3f) title("Bias-Adjusted 3Step ML Results: Classes -> `varlist'") noomitted noempty
+
+local wald = ""
+forval i = 1/`k' {
+    local wald "`wald'[`varlist']:`i'.class"
+    if `i' < `k' {
+        local wald "`wald'="
     }
 }
 
+mat PWCchi = J(`k',`k',.)
+mat PWCp = J(`k',`k',.)
+local rownames = ""
+local colnames = ""
+forval i = 1/`k' {
+    local ii = `i'+1
+    forval j = `ii'/`k' {
+    qui test [`varlist']:`i'.class=[`varlist']:`j'.class
+    mat PWCchi[`j',`i'] = r(chi2)
+    mat PWCp[`j',`i'] = r(p)
+    }
+    local rownames = "`rownames' Class`i'"
+    local colnames = "`colnames' Class`i'"
+}
+di ""
+di ""
+di as text "Wald Tests"
+di ""
+di as text "Total"
+test "`wald'"
+    mat rown PWCchi = `rownames'
+    mat coln PWCchi = `colnames'
+    mat rown PWCp = `rownames'
+    mat coln PWCp = `colnames'
+di ""
+di as text "Pairwise comparisons: chi2( 1)"
+mat list PWCchi, format(%10.2f) noheader
+di ""
+di as text "Pairwise comparisons: Prob > chi2"
+mat list PWCp, format(%10.3f) noheader
+}
+  else  {
+ 
+  unopvarlist `varlist'
+  local unop = "`r(varlist)'"
+  qui levelsof `r(varlist)', local(levels)
+  foreach l of local levels {
+    local tab_`l' "`l'.`unop':i.class "
+    local estab "`estab'`tab_`l''"
+}
 
-foreach w in `varlist' {
-    qui regress `w' i.L_CLASS [iw=`inversep'], vce(cluster `id')
+est tab, k(`estab') b(%9.3f) se(%9.3f) title("Bias-Adjusted 3Step ML Results: Classes -> `varlist'") noempty noomitted `oddsr'
+di as text "`active'"
+
+foreach l of local levels {
+    local wald_`l' ""
+    forval i = 1/`k' {    
+    local wald_`l' "`wald_`l''[`l'.`unop']:`i'.class"
+    if `i' < `k' {
+       local wald_`l' "`wald_`l''="
+    }
+}
+
+qui test "`wald_`l''"
+if r(df) > 0 {
     di ""
-    di "Bias-Adjusted BCH Results: Classes -> `w'"
-    pwcompare L_CLASS, group eff bonferroni
- }  
-cap qui drop `inversep'
-qui reshape wide
+    di as text "Wald Test for level `l' of `varlist'"
+    test "`wald_`l''"
+ }
+}
+
+}
+}
+
+                *** CCTEST ***
+qui gen `obs1' = _n
+qui reshape long CPP_1_ CPP_2_, i(`obs1') j(___c2)
+qui gen `obs2' = _n
+qui ren (CPP_1_ CPP_2_) (CPP_1 CPP_2)
+qui reshape long CPP_, i(`obs2') j(___c1)
+qui reg CPP_ i.___c1##i.___c2, vce(cluster `id')
+mat CCTEST = r(table)
+local pvalue = CCTEST[4,2]
+qui reshape wide CPP_, i(`obs2') j(___c1)
+drop `obs2'
+qui reshape wide CPP_1 CPP_2, i(`obs1') j(___c2)
+
+if `pvalue' < 0.1 {
+    di ""
+    di as error "The original composition of latent classes has likely changed"
+  }
+if `pvalue' < 0.1 & "`uneq'"=="" {
+    di as error "– try with option 'uneq'"
   }
 
+                *** Classic Proportional with sandwich ***
 
-cap qui drop prob_w_* prob_x_* temp_* L_CLASS
+if `pvalue' < 0.1 & "`uneq'"!="" {
+    di as text "– estimating with classic proportional assignment..."
+    sleep 3000
+    qui reshape long CPP_1, i(`obs1') j(modal_CLASS)
+
+    if "`distal'" == "" {
+        qui mlogit modal_CLASS `varlist' [iw=CPP_1], vce(cluster `id') b(`base')
+        di ""
+        est tab, star(0.10 0.05 0.01) b(%9.3f) title("3Step Results: `varlist' -> Classes") noomitted `oddsr' noempty
+        di as text "`active'"
+        di as text "Note: Results from classical proportional assignment; variances estimated using the sandwich estimator for clustered and weighted observations"
+    } 
+
+    if "`distal'" != "" {
+        if "`fvops'" != "true" {
+            qui reg `varlist' i.modal_CLASS [iw=CPP_1], vce(cluster `id')
+            di ""
+            di as text "3Step Results: Classes -> `varlist'"
+            pwcompare modal_CLASS, group bonferroni ateq
+            di as text "Note: Results from classical proportional assignment; variances estimated using the sandwich estimator for clustered and weighted observations"
+        }
+        else {
+            qui mlogit `unop' i.modal_CLASS [iw=CPP_1], vce(cluster `id') b(`base') 
+            di ""
+            di as text "3Step Results: Classes -> `varlist'"
+            pwcompare modal_CLASS, group bonferroni ateq
+            di as text "Note: Results from classical proportional assignment; variances estimated using the sandwich estimator for clustered and weighted observations"  
+
+
+        }    
+
+    }
+qui reshape wide    
+}
+     
+
+
+cap qui drop prob_w_*
+cap qui drop prob_x_*
+cap qui drop temp_*
+cap qui drop L_CLASS
+cap qui drop CPP_*
+cap qui drop ___c*
+cap qui drop modal_CLASS
 
 end

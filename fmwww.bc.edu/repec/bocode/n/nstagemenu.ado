@@ -1,4 +1,4 @@
-*! version 1.0.5 10Aug2017
+*! version 1.0.6 10Aug2022
 
 program define nstagemenu
 version 10.0
@@ -21,7 +21,7 @@ global S_NSTAGEMENU "on"
 window menu append submenu "stUser" "n-stage trial"
 window menu append item "n-stage trial" "Multi stage trial designs" "db nstage"
 window menu refresh
-di as txt _n "nstage version 4.0.1, September 2019." _n
+di as txt _n "nstage version 5.0, October 2021." _n
 di as txt "Software written at the MRC Clinical Trials Unit at UCL, London."
 di as txt "{hline 64}" _n "n-stage trial design menu on.  The menubar has been changed." _n "{hline 64}" 
 end

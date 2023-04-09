@@ -1,5 +1,5 @@
 {smcl}
-{* 30nov2022/10dec2022/21mar2023}{...}
+{* 30nov2022/10dec2022/21mar2023/2apr2023}{...}
 {hline}
 help for {hi:upsetplot}
 {hline}
@@ -17,6 +17,7 @@ help for {hi:upsetplot}
 {opt fillin}
 {opt percent}
 {opt pcformat(str)}
+{opt select(numlist)} 
 {break}
 {opt varlabels}
 {opt sep:arator(str)}
@@ -148,6 +149,14 @@ counts (frequencies}.
 {cmd:pcformat()} specifies a display format for percents in listings and
 plots. The default is {cmd:%2.1f}.  This option has no effect without
 {cmd:percent}.
+
+{p 4 4 2}
+{cmd:select()} specifies that only first so many bars be shown. That is, 
+without this option the bars that would be shown are considered to be 
+numbered 1, 2, 3 and so on, from left to right. {cmd:select(1/10)} would 
+reduce the display the first 10 bars. Typically, this option would be used 
+to select the most frequent subsets, but the syntax allows any integer 
+{help numlist}. 
 
 
 {p 0 0 2}{it:Detail of display}
@@ -394,6 +403,9 @@ name.
 
 {p 4 8 2}{cmd:. upsetplot nev_mar c_city collgrad south, varlabels baropts(`toptitle' `bcolour') name(UP10, replace)}{p_end}
 
+{p 4 8 2}{cmd:. sortmean nev_mar c_city collgrad south, desc}{p_end}
+{p 4 8 2}{cmd:. upsetplot `sortlist', varlabels baropts(`toptitle' `bcolour') name(UP11, replace)}{p_end}  
+
 
 {title:Authors}
 
@@ -404,15 +416,26 @@ tim.morris@ucl.ac.uk
 n.j.cox@durham.ac.uk
 
 
+{title:Acknowledgments}
+
+{p 4 4 2}Various threads on Statalist contributed directly or indirectly
+to the development of this command. 
+
+
 {title:Also see}
 
 {p 4 4 2}Help for{break}
+{help sortmean} (if installed){break} 
 {help groups} ({it:Stata Journal}) (if installed){break}
 {help vennbar} (if installed){break}
-{help jaccard} (if installed)
+{help jaccard} (if installed){break}
+{help findname} ({it:Stata Journal}) (if installed){break}
+{help vorter} (if installed) 
 
 
 {title:Remarks} 
+
+{it:Explanation and advice} 
 
 {p 4 4 2}
 {cmd:upsetplot} requires a bundle of numeric variables with values 0 or
@@ -443,6 +466,36 @@ Similarly, three such variables have eight possible binary
 concatenations 000, 001, 010, 011, 100, 101, 110, 111 and decimal
 equivalents 0 to 7. More generally, {it:k} such variables define
 2^{it:k} possible subsets. 
+
+
+{it:Pre-processing} 
+
+{p 4 4 2}
+The order of variables presented determines the order in which they are
+shown in the key. Choosing a suitable order is considered to be the user's
+responsibility. For example, if the data were medical symptoms exhibited
+by patients, a substantive grouping (say, cardiovascular symptoms all
+together) could make analytical sense. Otherwise, ordering variables by
+their means (equivalently, the frequency or abundance of states coded as
+1) may be helpful. A utility {help sortmean} is distributed as ancillary 
+with this package and an example above shows its use. See also 
+{help vorter} from SSC. 
+
+{p 4 4 2}
+Variables that are identically 0 or 1, at least in the data being shown, 
+are not always useful and so might be omitted. {help findname} (Cox
+2010, and {cmd:search findname, sj} for updates) can be used to find
+such variables through options {cmd:all(@ == 0)} or {cmd:all(@ == 1)}. 
+Such calls can be extended to check for missing values, which this 
+command will ignore any way. 
+
+{p 4 4 2}
+Various {help egen} functions can be useful in selecting observations 
+of particular interest. Thus {cmd:rowtotal()} yielding totals of 2 or
+more would identify occurrence of two or more conditions simultaneously. 
+
+
+{it:Historical remarks and literature survey} 
 
 {p 4 4 2}
 The elementary but fundamental idea of representing true (or present) as
@@ -665,7 +718,12 @@ visualization of intersecting sets and their properties.
 {p 4 8 2}
 Cox, N.J. 2007. 
 Stata tip 52: Generating composite categorical variables. 
-{it:Stata Journal} 7: 582{c -}583.     
+{it:Stata Journal} 7: 582{c -}583.  
+
+{p 4 8 2}
+Cox, N.J. 2010. 
+Speaking Stata: Finding variables. 
+{it:Stata Journal} 10: 281{c -}296.  
 
 {p 4 8 2}
 Cox, N.J. 2016. 
