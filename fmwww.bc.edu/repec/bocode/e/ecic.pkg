@@ -1,0 +1,29 @@
+d 'ECIC': module to perform estimation and inference for changes in changes at extreme quantiles
+d
+d  This command estimates quantile treatment effects (QTE) at
+d extreme quantiles via changes in changes (CIC) based on Sasaki
+d and Wang (2022).  The designed setting requires that all the
+d units are untreated in the first period (T=0), all the units in
+d the control group (G=0) remain untreated in the second period
+d (T=1), and all the units in the treatment group (G=1) receive
+d treatments in the second period (T=1). The command assumes
+d repeated cross-sections. To accommodate covariates, one can run
+d preliminary regression of the outcome Y on covariates X.  Replace
+d Y with the residuals in the ecic command. 
+d
+d KW: quantile estimation
+d KW: extreme quantiles
+d KW: quantile treatment effects
+d
+d Requires: Stata version 14.2
+d
+d Distribution-Date: 20230410
+d
+d Author: Yuya Sasaki, Department of Economics, Vanderbilt University
+d Support: email yuya.sasaki@@gmail.com
+d
+d Author: Yulong Wang, Syracuse University 
+d Support: email ywang402@@syr.edu
+d
+f ecic.ado
+f ecic.sthlp

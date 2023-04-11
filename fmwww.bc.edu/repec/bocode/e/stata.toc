@@ -6,6 +6,7 @@ p ebalfit module to perform entropy balancing
 p ebct module to perform entropy reweighting to create balanced samples for continuous treatments
 p ebreg module to compute Robust Empirical Bayes Confidence Intervals
 p ebrowse module to to display variables in the Data Editor, ordered by varlist
+p ecic module to perform estimation and inference for changes in changes at extreme quantiles
 p eclpci module to compute Exact and Approximate Confidence Limits for Poisson Counts
 p eclplot module to generate estimates and confidence limits plots
 p edfreg module to make corrections for statistical inference with robust or clustered covariance matrices
