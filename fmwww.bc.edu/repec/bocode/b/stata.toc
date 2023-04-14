@@ -84,6 +84,8 @@ p btobit module to produce a test of the tobit specification
 p buckley module to implement Buckley-James method for analysing censored data
 p bugsdat module to convert a Stata datafile into the S-plus format used in Winbugs
 p bugwrite module to write data from Stata into a format compatible with WinBUGS 
+p bumparea module to produce bump area graphs
+p bumpline module to produce bump line graphs
 p bunching module to use bunching to partially and point identify the elasticity of income with respect to tax rates
 p bundle module to bundle image files in a web page using base64 encoding
 p butterworth module to implement Butterworth square-wave highpass filter for timeseries data

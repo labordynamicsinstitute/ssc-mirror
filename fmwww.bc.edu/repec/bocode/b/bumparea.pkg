@@ -1,0 +1,16 @@
+d 'BUMPAREA': module to produce bump area graphs
+d
+d  This program produces bump area graphs. 
+d
+d KW: graphics
+d KW: maps
+d
+d Requires: Stata version 15 and colorpalettes, colrspace from SSC (q.v.)
+d
+d Distribution-Date: 20230413
+d
+d Author: Asjad Naqvi, WU Vienna
+d Support: email asjadnaqvi@@gmail.com
+d
+f bumparea.ado
+f bumparea.sthlp
