@@ -1,7 +1,7 @@
 capture program drop rforest
 
 program define rforest, eclass
-*! version 2.0.2 Dez 19, 2022   minor change helpfile
+*! version 2.0.3  Apr 13, 2023   error msg for predict if label values>32char
 	version 15.0
 	
 	syntax varlist(min=2) [if] [in] [,type(string) ITERations(int 100) ///
@@ -72,6 +72,7 @@ program define rforest, eclass
 		di as error "The dependent variable `y' contains missing values"
 		exit 416  // missing value encountered in variable
 	}
+	check_length_labels `y'
 											 						
 	if ("`type'" == "class"){
 		quietly count
@@ -110,7 +111,31 @@ program define rforest, eclass
 	ereturn matrix importance = VariableImportance
 	
 end
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// gives error if a value label exceeds 32 characters
+// the java call for "predict" cannot handle this
+program check_length_labels
+	syntax varlist , [  max(int 32) ]
+	foreach myvar of varlist `varlist' {
+		//di "`myvar'"
+		local g : value label `myvar'
+		if "`g'"!="" {
+			qui levelsof `myvar', local(mylevs)
+			foreach lev in `mylevs' {
+				local l : label `g' `lev'
+				//di "`l'"
+				if ustrlen("`l'")>`max' {
+					di as error "`myvar': value label has more than 32 characters."
+					error 459
+				}
+			}
+		}
+	}
+	di as res "" // turn black color back on
+end 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Version History
+// version 2.0.3  Apr 13, 2023   error msg for predict if label values>32char
 // version 2.0.2 Dez 19, 2022   minor change helpfile
 // version 2.0.1 Sep 19, 2022: default numvars set to floor(sqrt(number of vars))
 // version 2.0.0 Mar 2022: fixed Java bug; related to not being able to predict on unseen data
