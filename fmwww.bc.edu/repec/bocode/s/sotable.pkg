@@ -1,0 +1,24 @@
+d 'SOTABLE': module to produce tests and confidence bands for multiple comparisons of two-sided or one-sided hypotheses
+d
+d    sotable provides max-t test statistics and max-t confidence
+d bands for multiple comparisons of two-sided or one-sided
+d hypotheses. 
+d
+d KW: one-sided testing
+d KW: multiple comparisons
+d KW: confidence bands
+d KW: simultaneous inference
+d KW: multiple testing
+d KW: max-t
+d KW: simultaneous tests
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20140621
+d
+d Author: David M. Drukker, Sam Houston State University
+d Support: email dxd070@@shsu.edu
+d
+f sotable.ado
+f sotable.sthlp
+f sotable_getextract.ado
