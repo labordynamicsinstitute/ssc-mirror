@@ -1,7 +1,9 @@
 {smcl}
-{* *! version 2  01Feb2021}{...}
+{* *! version 2  09Feb2023}{...}
 {vieweralsosee "[XT] xtreg" "help xtreg"}{...}
 {vieweralsosee "[ME] mixed" "help mixed"}{...}
+{vieweralsosee "[ME] menl" "help menl"}{...}
+{vieweralsosee "runmixregls" "help runmixregls"}{...}
 {vieweralsosee "runmlwin" "help runmlwin"}{...}
 {vieweralsosee "gllamm" "help gllamm"}{...}
 {viewerjumpto "Syntax" "runmixregmls##syntax"}{...}
@@ -35,8 +37,16 @@ where {varlist} specifies variables in the mean function.
 {synopt:{opt w:ithin}{cmd:(}{varlist}[{cmd:,} {cmdab:nocons:tant}]{cmd:)}}specify variables in within-group variance function{p_end}
 
 {syntab:Random effects/Residuals}
-{synopt:{opt reffects}{cmd:(}{it:stub{bf:*}}{cmd:)}}retrieve standardized random-location and random-scale effects{p_end}
-{synopt:{opth residuals(newvar)}}retrieve standardized residual errors{p_end}
+{synopt:{opth meanxb(newvar)}}mean function linear prediction for the fixed portion only{p_end}
+{synopt:{opth meanfitted(newvar)}}mean function fitted values based on the fixed portion linear prediction plus contributions based on the predicted random location effects{p_end}
+{synopt:{opth bgvariancefitted(newvar)}}between-group variance function variance implied by the random effects{p_end}
+{synopt:{opth wgvariancexb(newvar)}}within-group variance function linear prediction for the fixed portion only{p_end}
+{synopt:{opth wgvarianceeta(newvar)}}within-group variance function linear prediction for the fixed portion plus predicted random scale effect{p_end}
+{synopt:{opth wgvariancefitted(newvar)}}within-group variance function exponentiated linear prediction for the fixed portion plus predicted random scale effect{p_end}
+{synopt:{opt reffects}{cmd:(}{it:stub{bf:*}}{cmd:)}}standardized random-location and random-scale effects{p_end}
+{synopt:{opt reunstandard}{cmd:(}{it:stub{bf:*}}{cmd:)}}unstandardized random-location and random-scale effects{p_end}
+{synopt:{opth residuals(newvar)}}standardized residual errors{p_end}
+{synopt:{opth runstandard(newvar)}}unstandardized residual errors{p_end}
 
 {syntab:Integration}
 {synopt:{opt noadapt}}do not perform adaptive Gaussian quadrature {p_end}
@@ -119,13 +129,39 @@ specifies the variables with random coefficients.
 {opt within}{cmd:(}{varlist}[{cmd:,} {cmdab:nocons:tant}]{cmd:)}
 specifies the variables in the within-group variance function.
 
-{dlgtab:Random effects/Residuals}
+{dlgtab:Postestimation prediction tools}
+
+{phang}
+{opth meanxb(newvar)} calculates the mean function linear prediction for the fixed portion only. This is equivalent to fixing the random location effects in the model to their theoretical (prior) mean value of 0.
+
+{phang}
+{opth meanfitted(newvar)} calculates the mean function fitted values based on the fixed portion linear prediction plus contributions based on the predicted random location effects.
+
+{phang}
+{opth bgvariancefitted(newvar)} calculates the between-group variance function variance implied by the random location effects.
+
+{phang}
+{opth wgvariancexb(newvar)} calculates the within-group variance function linear prediction for the fixed portion only. This is equivalent to fixing the random scale effect in the function to its theoretical (prior) mean value of 0.
+
+{phang}
+{opth wgvarianceeta(newvar)} calculates the within-group variance function linear prediction for the fixed portion plus the predicted random scale effect.
+
+{phang}
+{opth wgvariancefitted(newvar)} calculates the within-group variance function exponentiated linear prediction for the fixed portion plus the predicted random scale effect.
+
 
 {phang}
 {opt reffects}{cmd:(}{it:stub{bf:*}}{cmd:)}
 retrieves the best linear unbiased predictions (BLUPs) of the standardized random effects from MIXREGMLS.
-BLUPs are also known as empirical Bayes estimates. The sampling variances and covariances are also returned. 
-Postestimation, the standard errors can be calculated as the square root of the sampling variances.
+BLUPs are also known as empirical Bayes estimates. The sampling variances, covariances and SEs are also returned. 
+
+{phang}
+{opt reunstandard}{cmd:(}{it:stub{bf:*}}{cmd:)}
+retrieve unstandardized random-location and random-scale effects.
+The sampling variances, covariances and SEs are also returned.
+
+{phang}
+{opth runstandard(newvar)} retrieves the residual errors from MIXREGMLS.
 
 {phang}
 {opth residuals(newvar)} retrieves the standardized residual errors from MIXREGMLS.
@@ -275,19 +311,22 @@ e_ij are the observation-specific errors.
 The u_j and v_j are modeled as correlated.
 
 {pstd}
-When the predicted random effects are requested, these will be predicted standardized random effects theta_u_j and theta_v_j, calculated as follows:
+For computational reasons, MIXREGLS estimates a reparameterised version of the above model where a Cholesky decomposition is applied to the 2x2 random effects covariance matrix S leading to S = L*L’ where L is a lower triangular matrix.
+The associated random effects are then standardized independent standard normal variates theta_u_j and theta_v_j.
+While the random effects variances and covariance returned by MIXREGLS are on the metric of the original parameterisation, the predicted random effects are on the reparametrized metric and so are predicted standardized random effects.
+The predicted unstandardized random effects are calculated by applying L to the predicted standardize random effects.
 
 {pmore}
-theta_u_j = u_j/sigma_u
+u_j = sigma_u * theta_u_j
 
 {pmore}
-theta_v_j = v_j/sigma_v
+v_j = (sigma_uv / sigma_v) * theta_u_j + sqrt(sigma_v^2 – sigma_vw^2 / sigma_u^2) * theta_v_j
 
 {marker remarks_rc_model}{...}
 {title:Remarks on the random-coefficient mixed-effects location scale model}
 
 {pstd}
-The random-coefficient mixed-effects location scale model fitted by MIXREGLS consists of two functions
+The random-coefficient mixed-effects location scale model fitted by MIXREGMLS consists of two functions
 
 {p 8 12 2}
 (1) the mean function,
@@ -359,16 +398,9 @@ e_ij are the observation-specific errors.
 The u0_j, u1_j and v_j are modeled as correlated
 
 {pstd}
-When the predicted random effects are requested, these will be predicted standardized random effects theta_u0_j, theta_u1_j and theta_v_j, calculated as follows
+When the predicted random effects are requested, these will be predicted standardized random effects theta_u0_j, theta_u1_j and theta_v_j. 
+The predicted unstandardized random effects are calculated by applying L from the Cholesky decomposition of the 3*3 random effect covariance matrix to the predicted standardized random effects.
 
-{pmore}
-theta_u0_j = u0_j/sigma_u0
-
-{pmore}
-theta_u1_j = u1_j/sigma_u1
-
-{pmore}
-theta_v_j = v_j/sigma_v
 
 {marker remarks_first_time}{...}
 {title:Remarks on getting runmixregmls working for the first time}
@@ -455,14 +487,17 @@ Random-scale variance
 {pstd}Declare panel variable to be school{p_end}
 {phang2}{bf:{stata "xtset school":. xtset school}}
 
-{pstd}Fit the two-level random-intercept mixed-effects location scale model with no covariances{p_end}
+{pstd}Fit the two-level random-intercept mixed-effects location scale model with no covariates{p_end}
 {phang2}{bf:{stata "runmixregmls normexam":. runmixregmls normexam}}
 
-{pstd}Refit the model adding covariances to the mean model{p_end}
+{pstd}Refit the model adding covariates to the mean model{p_end}
 {phang2}{bf:{stata "runmixregmls normexam standlrt girl":. runmixregmls normexam standlrt girl}}
 
-{pstd}Refit the model adding covariances to the within-group variance function{p_end}
+{pstd}Refit the model adding covariates to the within-group variance function{p_end}
 {phang2}{bf:{stata "runmixregmls normexam standlrt girl, within(standlrt girl)":. runmixregmls normexam standlrt girl, within(standlrt girl)}}
+
+{pstd}Refit the model and calculate the unstandardized random effects and residual errors{p_end}
+{phang2}{bf:{stata "runmixregmls normexam standlrt girl, within(standlrt girl) reunstandard(u) runstandard(e)":. runmixregmls normexam standlrt girl, within(standlrt girl) reunstandard(u) runstandard(e)}}
 
 {pstd}Refit the model adding a random coefficient{p_end}
 {phang2}{bf:{stata "runmixregmls normexam standlrt girl, between(standlrt)":. runmixregmls normexam standlrt girl, between(standlrt)}}
@@ -568,8 +603,8 @@ URL: {browse "http://www.jstatsoft.org/v52/i12":http://www.jstatsoft.org/v52/i12
 {title:Also see}
 
 {psee}
-Manual:  {bf:[XT] xtreg} {bf:[ME] mixed} 
+Manual:  {bf:[XT] xtreg} {bf:[ME] mixed} {bf:[ME] menl} 
 
 {psee}
-Online:  {manhelp xtreg XT}, {manhelp mixed ME}, {bf:{help runmixregls}}, {bf:{help runmlwin}}, {bf:{help gllamm}}
+Online:  {manhelp xtreg XT}, {manhelp mixed ME}, {manhelp menl ME}, {bf:{help runmixregls}}, {bf:{help runmlwin}}, {bf:{help gllamm}}
 {p_end}

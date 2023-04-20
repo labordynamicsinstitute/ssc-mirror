@@ -1,7 +1,9 @@
 {smcl}
-{* *! version 2  01Fen2021}{...}
+{* *! version 2  09Feb2023}{...}
 {vieweralsosee "[XT] xtreg" "help xtreg"}{...}
 {vieweralsosee "[ME] mixed" "help mixed"}{...}
+{vieweralsosee "[ME] menl" "help menl"}{...}
+{vieweralsosee "runmixregmls" "help runmixregmls"}{...}
 {vieweralsosee "runmlwin" "help runmlwin"}{...}
 {vieweralsosee "gllamm" "help gllamm"}{...}
 {viewerjumpto "Syntax" "runmixregls##syntax"}{...}
@@ -36,9 +38,19 @@ where {varlist} specifies variables in the mean function.
 {synopt:{cmdab: a:ssociation(}{it:{help runmixregls##atype:atype}}{cmd:)}}specify the group-level association between the (log of the) within-group variance and the random-location effects;
 default is {cmd:association(linear)}{p_end}
 
-{syntab:Random effects/Residuals}
-{synopt:{opt reffects}{cmd:(}{it:stub{bf:*}}{cmd:)}}retrieve standardized random-location and random-scale effects{p_end}
-{synopt:{opth residuals(newvar)}}retrieve standardized residual errors{p_end}
+{syntab:Postestimation prediction tools}
+
+{synopt:{opth meanxb(newvar)}}mean function linear prediction for the fixed portion only{p_end}
+{synopt:{opth meanfitted(newvar)}}mean function fitted values based on the fixed-portion linear prediction plus the predicted random location effect{p_end}
+{synopt:{opth bgvariancexb(newvar)}}between-group variance function linear prediction{p_end}
+{synopt:{opth bgvariancefitted(newvar)}}between-group variance function exponentiated linear prediction{p_end}
+{synopt:{opth wgvariancexb(newvar)}}within-group variance function linear prediction for the fixed portion only{p_end}
+{synopt:{opth wgvarianceeta(newvar)}}within-group variance function linear prediction for the fixed portion plus contributions based on the predicted random effects{p_end}
+{synopt:{opth wgvariancefitted(newvar)}}within-group variance function exponentiated linear prediction for the fixed portion plus contributions based on the predicted random effects{p_end}
+{synopt:{opt reffects}{cmd:(}{it:stub{bf:*}}{cmd:)}}standardized random-location and random-scale effects{p_end}
+{synopt:{opt reunstandard}{cmd:(}{it:stub{bf:*}}{cmd:)}}unstandardized random-location and random-scale effects{p_end}
+{synopt:{opth residuals(newvar)}}standardized residual errors{p_end}
+{synopt:{opth runstandard(newvar)}}unstandardized residual errors{p_end}
 
 {syntab:Integration}
 {synopt:{opt noadapt}}do not perform adaptive Gaussian quadrature {p_end}
@@ -152,17 +164,44 @@ specifies the variables in the within-group variance function.
 {cmd:association(linear)} is the default.
 
 
-{dlgtab:Random effects/Residuals}
+{dlgtab:Postestimation prediction tools}
+
+{phang}
+{opth meanxb(newvar)} calculates the mean function linear prediction for the fixed portion only. This is equivalent to fixing the random location effect in the model to its theoretical (prior) mean value of 0.
+
+{phang}
+{opth meanfitted(newvar)} calculates the mean function fitted values based on the fixed portion linear prediction plus the predicted random location effect.
+
+{phang}
+{opth bgvariancexb(newvar)} calculates the between-group variance function linear prediction.
+
+{phang}
+{opth bgvariancefitted(newvar)} calculates the between-group variance function exponentiated linear prediction.
+
+{phang}
+{opth wgvariancexb(newvar)} calculates the within-group variance function linear prediction for the fixed portion only. This is equivalent to fixing all random effects in the function to their theoretical (prior) mean value of 0.
+
+{phang}
+{opth wgvarianceeta(newvar)} calculates the within-group variance function linear prediction for the fixed portion plus contributions based on the predicted random effects.
+
+{phang}
+{opth wgvariancefitted(newvar)} calculates the within-group variance function exponentiated linear prediction for the fixed portion plus contributions based on the predicted random effects.
 
 {phang}
 {opt reffects}{cmd:(}{it:stub{bf:*}}{cmd:)}
 retrieves the best linear unbiased predictions (BLUPs) of the standardized random effects from MIXREGLS.
-BLUPs are also known as empirical Bayes estimates. The sampling variances and covariances are also returned. 
-Postestimation, the standard errors can be calculated as the square root of the sampling variances.
+BLUPs are also known as empirical Bayes estimates. The sampling variances, covariances and SEs are also returned. 
+
+{phang}
+{opt reunstandard}{cmd:(}{it:stub{bf:*}}{cmd:)}
+calculates the unstandardized random-location and random-scale effects.
+The sampling variances, covariances and SEs are also returned.
 
 {phang}
 {opth residuals(newvar)} retrieves the standardized residual errors from MIXREGLS.
 
+{phang}
+{opth runstandard(newvar)} calculates the unstandardized residual errors, that is, response minus the mean fitted values.
 
 {dlgtab:Integration}
 
@@ -314,6 +353,15 @@ The theta_u_j and theta_v_j are modeled as independent.
 The optional association between the (log of the) within-group variance and the random-location effects is induced by the optional appearance of theta_u_j in the within-group variance function.
 
 {pstd}
+When the predicted random effects are requested, these will be predicted standardized random effects theta_u_j and theta_v_j. The predicted unstandardized random effects are calculated as follows
+
+{pmore}
+u_j = sigma_u_ij*theta_u_j
+
+{pmore}
+v_j = al*theta_u_j + aq*theta_u_j^2 + sigma_v*theta_v_j  
+
+{pstd}
 See {help runmixregls##HN2013:Hedeker and Nordgren 2013} for further details on the mixed-effects location scale model.
 
 {marker remarks_first_time}{...}
@@ -416,6 +464,10 @@ Random-scale standard deviation
 {pstd}Refit the model adding covariates to the within-group variance function{p_end}
 
 {phang2}{bf:{stata "runmixregls normexam standlrt girl, within(standlrt girl)":. runmixregls normexam standlrt girl, within(standlrt girl)}}
+
+{pstd}Refit the model and calculate the unstandardized random effects and residual errors{p_end}
+
+{phang2}{bf:{stata "runmixregls normexam standlrt girl, within(standlrt girl) reunstandard(u) runstandard(e)":. runmixregls normexam standlrt girl, within(standlrt girl) reunstandard(u) runstandard(e)}}
 
 {title:Example: Replicate Hedeker and Nordgren 2013 (pages 10-18)}
 
@@ -568,8 +620,8 @@ URL: {browse "http://www.jstatsoft.org/v52/i12":http://www.jstatsoft.org/v52/i12
 {title:Also see}
 
 {psee}
-Manual:  {bf:[XT] xtreg} {bf:[ME] mixed} 
+Manual:  {bf:[XT] xtreg} {bf:[ME] mixed} {bf:[ME] menl} 
 
 {psee}
-Online:  {manhelp xtreg XT}, {manhelp mixed ME}, {bf:{help runmixregls}}, {bf:{help runmlwin}}, {bf:{help gllamm}}
+Online:  {manhelp xtreg XT}, {manhelp mixed ME}, {manhelp menl ME}, {bf:{help runmixregmls}}, {bf:{help runmlwin}}, {bf:{help gllamm}}
 {p_end}

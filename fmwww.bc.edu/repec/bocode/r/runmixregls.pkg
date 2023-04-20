@@ -40,7 +40,7 @@ d KW: gllamm
 d 
 d Requires: Stata version 12.0 or higher
 d 
-d Distribution-Date: 20210204
+d Distribution-Date: 20230319
 d 
 d Author: George Leckie, Centre for Multilevel Modelling, University of Bristol
 d Support: email g.leckie@bristol.ac.uk
@@ -80,5 +80,13 @@ g OSX.X8664 ../m/mixregls_plugin.mac mixregls.plugin
 g OSX.X8664 ../m/mixreg_plugin.mac mixreg.plugin
 G OSX.X8664 ../m/mixregls_lib.mac mixregls.dynlib
 G OSX.X8664 ../m/mixreg_lib.mac mixreg.dynlib
+g MACARM64 ../m/mixregls_plugin.arm64 mixregls.plugin
+g MACARM64 ../m/mixreg_plugin.arm64 mixreg.plugin
+G MACARM64 ../m/mixregls_lib.arm64 mixregls.dynlib
+G MACARM64 ../m/mixreg_lib.arm64 mixreg.dynlib
+g OSX.ARM64 ../m/mixregls_plugin.arm64 mixregls.plugin
+g OSX.ARM64 ../m/mixreg_plugin.arm64 mixreg.plugin
+G OSX.ARM64 ../m/mixregls_lib.arm64 mixregls.dynlib
+G OSX.ARM64 ../m/mixreg_lib.arm64 mixreg.dynlib
 h mixregls.plugin
 h mixreg.plugin

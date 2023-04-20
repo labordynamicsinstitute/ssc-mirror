@@ -1,4 +1,4 @@
-*! runmixregmls.ado, George Leckie and Chris Charlton, 01Feb2021
+*! runmixregmls.ado, George Leckie and Chris Charlton, 09Feb2023
 ****************************************************************************
 * -runmixregmls-
 ****************************************************************************
@@ -23,8 +23,16 @@ program define Estimate, eclass sortpreserve
       Between(string) ///
       Within(string) ///
       ///
+      meanxb(namelist min=1 max=1) ///
+      meanfitted(namelist min=1 max=1) ///
+      bgvariancefitted(namelist min=1 max=1) ///
+      wgvariancexb(namelist min=1 max=1) ///
+      wgvarianceeta(namelist min=1 max=1) ///
+      wgvariancefitted(namelist min=1 max=1) ///
       reffects(namelist min=1 max=1) ///
+      reunstandard(namelist min=1 max=1) ///
       residuals(namelist min=1 max=1) ///
+      runstandard(namelist min=1 max=1) ///
       ///
       noADAPT ///
       INTPoints(numlist >0 integer min=1 max=1) ///
@@ -94,50 +102,80 @@ program define Estimate, eclass sortpreserve
     
     * For MLS ncov is always 1
     local ncov = 1
-/*
-    
-    * Parse reffects and reses
-    if ("`reffects'"~="") {
-      tokenize `reffects'
-      local reffect_1_b "`1'"
-      local reffect_2_b "`2'"
-      local reffect_1_var "`1'_var"
-      local reffect_1_2_cov "`1'_`2'_cov"
-      local reffect_2_var "`2'_var"
-      local reffect_1_se "`1'_se"
-      local reffect_2_se "`2'_se"
-      confirm new variable `reffect_1_b'
-      confirm new variable `reffect_2_b'
-      confirm new variable `reffect_1_var'
-      confirm new variable `reffect_1_2_cov'
-      confirm new variable `reffect_2_var'
-      confirm new variable `reffect_1_se'      
-      confirm new variable `reffect_2_se'      
+
+    * Option dependancies
+    if ("`residuals'" ~= "") { //residuals depends on runstandard and wgvariancefitted (if not returned from plugin)
+      if ("`runstandard'" == "") {
+        tempvar runstandard
+      }
+      if ("`wgvariancefitted'" == "") {
+        tempvar wgvariancefitted
+      }
     }
 
-*/
+    if ("`runstandard'" ~= "" & "`meanfitted'" == "") { // runstandard depends on meanfitted
+      tempvar meanfitted
+    }
 
-    * Parse reffects and reses
-    if ("`reffects'"~="") {
-      local reffect_1_b "`reffects'0"
-      local reffect_2_b "`reffects'1"
-      local reffect_1_var "`reffects'0_var"
-      local reffect_1_2_cov "`reffects'0_1_cov"
-      local reffect_2_var "`reffects'1_var"
-      local reffect_1_se "`reffects'0_se"
-      local reffect_2_se "`reffects'1_se"
-      confirm new variable `reffect_1_b'
-      confirm new variable `reffect_2_b'
-      confirm new variable `reffect_1_var'
-      confirm new variable `reffect_1_2_cov'
-      confirm new variable `reffect_2_var'
-      confirm new variable `reffect_1_se'      
-      confirm new variable `reffect_2_se'      
+    if ("`meanfitted'" ~= "") {
+      if ("`meanxb'" == "") { // meanfitted depends on meanxb
+        tempvar meanxb
+      }
+
+      if ("`reunstandard'" == "") { // meanfitted depends on reunstandard
+        tempvar reunstandard
+      }
+    }
+
+    if ("`wgvariancefitted'" ~= "" & "`wgvarianceeta'" == "") { // wgvariancefitted depends on wgvarianceeta
+      tempvar wgvarianceeta
+    }
+
+    if ("`wgvarianceeta'" ~= "") {
+      if ("`wgvariancexb'" == "") { // wgvarianceeta depends on wgvariancexb
+        tempvar wgvariancexb
+      }
+
+      if ("`reunstandard'" == "") { // wgvarianceeta depends on reunstandard
+        tempvar reunstandard
+      }
+    }
+
+    if ("`reunstandard'" ~= "" & "`reffects'" == "") { // reunstandard depends on reffects
+      tempvar reffects
     }
 
     * Parse residuals
-    if ("`residuals'"~="") {
+    if ("`residuals'" ~= "") {
       confirm new variable `residuals'
+    }
+
+    if ("`meanxb'" ~= "") {
+      confirm new variable `meanxb'
+    }
+
+    if ("`meanfitted'" ~= "") {
+      confirm new variable `meanfitted'
+    }
+
+    if ("`runstandard'" ~= "") {
+      confirm new variable `runstandard'
+    }
+
+    if ("`wgvarianceeta'" ~= "") {
+      confirm new variable `wgvarianceeta'
+    }
+
+    if ("`wgvariancexb'" ~= "") {
+      confirm new variable `wgvariancexb'
+    }
+
+    if ("`wgvariancefitted'" ~= "") {
+      confirm new variable `wgvariancefitted'
+    }
+
+    if ("`bgvariancefitted'" ~= "") {
+      confirm new variable `bgvariancefitted'
     }
 
     * Parse estimation options
@@ -156,7 +194,7 @@ program define Estimate, eclass sortpreserve
     //if ("`bcons'"=="") local bnames "`bvars' _cons"
     if ("`bcons'"=="") local bnames "_cons `bvars'"
     if ("`bcons'"=="noconstant") local bnames "`bvars'"
-	
+
     * Add in covariance terms
     local bnames_short "`bnames'"
     local bnames ""
@@ -169,7 +207,7 @@ program define Estimate, eclass sortpreserve
           if (`i' < `j') local bnames "`bnames' cov(`var1',`var2')"
         }
       }
-    }	
+    }
 
     * Swap back if enabling permutation
     // if ("`wcons'"=="") local wnames "`wvars' _cons"
@@ -180,12 +218,12 @@ program define Estimate, eclass sortpreserve
     if (`ncov'==1 | `ncov'==2) {
       foreach var1 of local bnames_short {
         local anames "`anames' cov(`var1',scale)"
-      }		
+      }
     }
     if (`ncov'==2) {
       foreach var1 of local bnames_short {
         local anames "`anames' quadratic_`var1'"
-      }			
+      }
     }
     
     local sname "sigma2"
@@ -220,8 +258,8 @@ program define Estimate, eclass sortpreserve
     * Sort the data according to the data hierarchy
     * sort `id' _sortindex
     * drop _sortindex
-       
-    
+
+
     ****************************************************************************
     * (2) PREPARE INPUTS FOR THE MIXREGLS DEFINITION FILE
     ****************************************************************************
@@ -274,7 +312,7 @@ program define Estimate, eclass sortpreserve
       local v = 1
       foreach var2 of local allvars {
         if "`var1'"=="`var2'" {
-          matrix `mvarsfields' = (nullmat(`mvarsfields'), `v')      
+          matrix `mvarsfields' = (nullmat(`mvarsfields'), `v')
         }
         local v = `v' + 1
       }
@@ -286,7 +324,7 @@ program define Estimate, eclass sortpreserve
       local v = 1
       foreach var2 of local allvars {
         if "`var1'"=="`var2'" {
-          matrix `bvarsfields' = (nullmat(`bvarsfields'), `v')      
+          matrix `bvarsfields' = (nullmat(`bvarsfields'), `v')
         }
         local v = `v' + 1
       }
@@ -298,7 +336,7 @@ program define Estimate, eclass sortpreserve
       local v = 1
       foreach var2 of local allvars {
         if "`var1'"=="`var2'" {
-          matrix `wvarsfields' = (nullmat(`wvarsfields'), `v')      
+          matrix `wvarsfields' = (nullmat(`wvarsfields'), `v')
         }
         local v = `v' + 1
       }
@@ -312,7 +350,7 @@ program define Estimate, eclass sortpreserve
     
     **************************************
     * Group Information
-    **************************************    
+    **************************************
     
     tempname N_g
     tempname g_min
@@ -321,7 +359,7 @@ program define Estimate, eclass sortpreserve
     
     **************************************
     * Model 1 parameter estimates
-    **************************************    
+    **************************************
     
     tempname dev_1
     
@@ -347,7 +385,7 @@ program define Estimate, eclass sortpreserve
 
     **************************************
     * Model 2 parameter estimates
-    **************************************    
+    **************************************
 
     tempname dev_2    
     
@@ -374,7 +412,7 @@ program define Estimate, eclass sortpreserve
 
     **************************************
     * Model 3 parameter estimates
-    **************************************    
+    **************************************
 
     tempname dev_3    
     
@@ -411,31 +449,76 @@ program define Estimate, eclass sortpreserve
     tempname re_2
     scalar `re_2' = 0
     tempname re_3
-    if "`reffects'"~="" {
+    if ("`reffects'"~="") {
       scalar `re_3' = 1
 
       local numre = `R' + (1 - `RNINT') + 1
       local numrev = `numre' * (`numre' + 1) / 2
       forvalues i = 0/`=`numre'-1' {
         local reffect_b "`reffects'`i'"
+        confirm new variable `reffect_b'
         quietly generate `reffect_b' = .
         local allvars `allvars' `reffect_b'
       }
+      foreach var of local bnames_short {
+        local i : list posof "`var'" in bnames_short
+        label var `reffects'`i' "EB std. location r.e. for `var'"
+      }
+      label var `reffects'`=`numre'-1' "EB std. scale r.e."
+
       forvalues i = 0/`=`numre'-1' {
         forvalues j = 0/`i' {
-          if `i' == `j' {
-            local reffect_var "`reffects'`i'_cov"
+          if (`i' == `j') {
+            local reffect_var "`reffects'`i'_var"
+            confirm new variable `reffect_var'
+            quietly generate `reffect_var' = .
+            local allvars `allvars' `reffect_var'
+            local reffect_se "`reffects'`i'_se"
+            confirm new variable `reffect_se'
           }
           else {
-            local reffect_var "`reffects'`i'_`j'_var"
+            local reffect_cov "`reffects'`i'_`j'_cov"
+            confirm new variable `reffect_cov'
+            quietly generate `reffect_cov' = .
+            local allvars `allvars' `reffect_cov'
           }
-          quietly generate `reffect_var' = .
-          local allvars `allvars' `reffect_var'
+        }
+      }
+      foreach var1 of local bnames_short {
+        local i : list posof "`var1'" in bnames_short
+        label var `reffects'`=`i'-1'_var "EB std. location r.e. for `var1' sampling variance"
+        foreach var2 of local bnames_short {
+          local j : list posof "`var2'" in bnames_short
+          if (`i' > `j') {
+            label var `reffects'`=`i'-1'_`=`j'-1'_cov "EB std. location r.e. for `var1' `var2' sampling covariance"
+          }
         }
       }
     }
     else {
-        scalar `re_3' = 0
+      scalar `re_3' = 0
+    }
+
+    if ("`reunstandard'" ~= "") {
+      forvalues i = 0/`=`numre'-1' {
+        local reffectun_b "`reunstandard'`i'"
+        confirm new variable reffectun_b
+      }
+
+      forvalues i = 0/`=`numre'-1' {
+        forvalues j = 0/`i' {
+          if (`i' == `j') {
+            local reffectun_var "`reunstandard'`i'_var"
+            confirm new variable `reffectun_var'
+            local reffectun_se "`reunstandard'`i'_se"
+            confirm new variable `reffectun_se'
+          }
+          else {
+            local reffectun_cov "`reunstandard'`i'_`j'_cov"
+            confirm new variable `reffectun_cov'
+          }
+        }
+      }
     }
 
     tempname res_1
@@ -444,13 +527,13 @@ program define Estimate, eclass sortpreserve
     scalar `res_2' = 0
     tempname res_3
     if ("`residuals'"~="") {
-        scalar `res_3' = 1
-        quietly generate `residuals' = .
-        label var `residuals' "Standardized residual"
-        local allvars `allvars' `residuals'
+      scalar `res_3' = 1
+      quietly generate `residuals' = .
+      label var `residuals' "Standardized residuals"
+      local allvars `allvars' `residuals'
     }
     else {
-        scalar `res_3' = 0
+      scalar `res_3' = 0
     }
 
     tempname niter_1
@@ -466,27 +549,19 @@ program define Estimate, eclass sortpreserve
     timer off 99
     quietly timer list
     local time = r(t99)
-    timer clear 99    
-
-    /*
-    if ("`reffects'"~="") {
-      quietly generate `reffect_1_se' = sqrt(`reffect_1_var')
-      label var `reffect_1_se' "EB std. location r.e. std. err."
-      quietly generate `reffect_2_se' = sqrt(`reffect_2_var')
-      label var `reffect_2_se' "EB std. scale r.e. std. err."
-      quietly drop `reffect_1_var' `reffect_1_2_cov' `reffect_2_var'
-    }
+    timer clear 99
 
     if ("`reffects'"~="") {
-      tempvar _sortindex
-      quietly gen `_sortindex' = _n 
-      quietly bysort id (`reffect_1_b'): replace `reffect_1_b' = `reffect_1_b'[1] if `reffect_1_b'==.
-      quietly bysort id (`reffect_2_b'): replace `reffect_2_b' = `reffect_2_b'[1] if `reffect_2_b'==.
-      quietly bysort id (`reffect_1_se'): replace `reffect_1_se' = `reffect_1_se'[1] if `reffect_1_se'==.
-      quietly bysort id (`reffect_2_se'): replace `reffect_2_se' = `reffect_2_se'[1] if `reffect_2_se'==.
-      sort `_sortindex'
+      forvalues i = 0/`=`numre'-1' {
+        quietly generate `reffects'`i'_se = sqrt(`reffects'`i'_var)
+      }
+
+      foreach var of local bnames_short {
+        local i : list posof "`var'" in bnames_short
+        label var `reffects'`=`i'-1'_se "EB std. location r.e. for `var' std.err."
+      }
+      label var `reffects'`=`numre'-1'_se "EB std. scale r.e. for std. err."
     }
-    */
 
     ****************************************************************************
     * (5) RETRIEVE MODEL ESTIMATES
@@ -500,7 +575,7 @@ program define Estimate, eclass sortpreserve
      * 0 0 0 0 1 0
      * 0 1 0 0 0 0
      * 0 0 1 0 0 0
-	
+
     tempname perm1
     tempname perm2
     tempname perm3
@@ -518,7 +593,7 @@ program define Estimate, eclass sortpreserve
       matrix `perm1'[`i', `j'] = 1
       matrix `perm2'[`i', `j'] = 1
       matrix `perm3'[`i', `j'] = 1
-      local ++i        
+      local ++i
     }
     if `RNINT' == 0 {
       matrix `perm1'[`i', `PINCINT' + `R' + 1] = 1
@@ -530,7 +605,7 @@ program define Estimate, eclass sortpreserve
       matrix `perm1'[`i', `j'] = 1
       matrix `perm2'[`i', `j'] = 1
       matrix `perm3'[`i', `j'] = 1
-      local ++i        
+      local ++i
     }
     matrix `perm1'[`i', `PINCINT' + `RINCINT' + 1] = 1
     if `SNINT' == 0 {
@@ -541,12 +616,12 @@ program define Estimate, eclass sortpreserve
     forvalues j = `=`PINCINT' + `RINCINT' + 1'/`=`PINCINT' + `RINCINT' + `S'' {
       matrix `perm2'[`i', `j'] = 1
       matrix `perm3'[`i', `j'] = 1
-      local ++i        
+      local ++i
     }
 
     forvalues j = `=`PINCINT' + `RINCINT' + `SINCINT' + 1'/`=`PINCINT' + `RINCINT' + `SINCINT' + `nassoc'' {
       matrix `perm3'[`i', `j'] = 1
-      local ++i        
+      local ++i
     }
 
     matrix `perm3'[`i', `PINCINT' + `RINCINT'  + `SINCINT' + `nassoc' + 1] = 1
@@ -560,7 +635,7 @@ program define Estimate, eclass sortpreserve
     matrix `V_3' = `perm3'' * `V_3' * `perm3'
 
     */
-	
+
     matrix colnames `b_1' = `names_1'
     matrix rownames `b_1' = y1
     matrix coleq `b_1' = `eqnames_1'
@@ -577,7 +652,7 @@ program define Estimate, eclass sortpreserve
     matrix rownames `V_2' = `names_2'
     matrix roweq `V_2' = `eqnames_2'
     matrix colnames `V_2' = `names_2'
-    matrix coleq `V_2' = `eqnames_2'    
+    matrix coleq `V_2' = `eqnames_2'
 
     matrix colnames `b_3' = `names_3'
     matrix rownames `b_3' = y1
@@ -587,6 +662,211 @@ program define Estimate, eclass sortpreserve
     matrix roweq `V_3' = `eqnames_3'
     matrix colnames `V_3' = `names_3'
     matrix coleq `V_3' = `eqnames_3'
+
+    *****************************************************************************
+    * CALCULATE RESIDUALS IF THESE HAVE BEEN REQUESTED AND NOT ALREADY CALCULATED
+    *****************************************************************************
+    capture assert `residuals' == . | `residuals' == 0
+    if (_rc == 0) { // Residuals were not returned from plugin
+      local noresi = 1
+    }
+    else {
+      local noresi = 0
+    }
+
+    if ("`reunstandard'" ~= "") {
+      tempname cov
+      matrix `cov' = J(`=`:list sizeof bnames_short'+1', `=`:list sizeof bnames_short'+1', 0)
+      foreach var1 of local bnames_short {
+        local i : list posof "`var1'" in bnames_short
+        foreach var2 of local bnames_short {
+          local j : list posof "`var2'" in bnames_short
+          if (`i' == `j') {
+            matrix `cov'[`i', `j'] = `b_3'[1, "Between:var(`var1')"]
+          }
+          else {
+            matrix `cov'[`i', `j'] = `b_3'[1, "Between:cov(`var1', `var2')"]
+          }
+        }
+        matrix `cov'[`i', `=`:list sizeof bnames_short'+1'] = `b_3'[1, "Covariance:cov(`var1', scale)"]
+        matrix `cov'[`=`:list sizeof bnames_short'+1', `i'] = `b_3'[1, "Covariance:cov(`var1', scale)"]
+      }
+      matrix `cov'[`=`:list sizeof bnames_short'+1', `=`:list sizeof bnames_short'+1'] = `b_3'[1, "Scale:sigma2"]
+      tempname chol
+      matrix `chol' = cholesky(`cov')
+      forvalue i = 1/`:rowsof `chol'' {
+        quietly generate `reunstandard'`=`i'-1' = 0
+        forvalue j = 1/`i' {
+          quietly replace `reunstandard'`=`i'-1' = `reunstandard'`=`i'-1' + `reffects'`=`j'-1' * `chol'[`i', `j']
+        }
+        if (`i' ~= `:rowsof `chol'') {
+          label var `reunstandard'`=`i'-1' "EB unstd. location r.e."
+        }
+        else {
+          label var `reunstandard'`=`i'-1' "EB unstd. scale r.e."
+        }
+      }
+
+      tempvar reunstandardintermediate
+      forvalue i = 1/`:rowsof `chol'' {
+        forvalue j = 1/`i' {
+          if (`i' == `j') {
+            local out_ele = "`reunstandardintermediate'`=`i'-1'_var"
+          }
+          else {
+            local out_ele = "`reunstandardintermediate'`=`i'-1'_`=`j'-1'_cov"
+          }
+          quietly generate `out_ele' = 0
+          forvalue k = 1/`:rowsof `chol'' {
+            if (`j' == `k') {
+              local in_ele = "`reffects'`=`k'-1'_var"
+            }
+            else {
+              if (`j' > `k') {
+                local in_ele = "`reffects'`=`j'-1'_`=`k'-1'_cov"
+              }
+              else {
+                local in_ele = "`reffects'`=`k'-1'_`=`j'-1'_cov"
+              }
+            }
+            if (`chol'[`i', `k'] ~= 0) {
+              quietly replace `out_ele' = `out_ele' + `chol'[`i', `k'] * `in_ele'
+            }
+          }
+        }
+      }
+
+      forvalue i = 1/`:rowsof `chol'' {
+        forvalue j = 1/`i' {
+          if (`i' == `j') {
+            local out_ele = "`reunstandard'`=`i'-1'_var"
+          }
+          else {
+            local out_ele = "`reunstandard'`=`i'-1'_`=`j'-1'_cov"
+          }
+          quietly generate `out_ele' = 0
+          forvalue k = 1/`:rowsof `chol'' {
+            if (`i' == `k') {
+              local in_ele = "`reunstandardintermediate'`=`k'-1'_var"
+            }
+            else {
+              if (`i' > `k') {
+                local in_ele = "`reunstandardintermediate'`=`i'-1'_`=`k'-1'_cov"
+              }
+              else {
+                local in_ele = "`reunstandardintermediate'`=`k'-1'_`=`i'-1'_cov"
+              }
+            }
+            if (`chol'[`j', `k'] ~= 0) {
+              quietly replace `out_ele' = `out_ele' + `in_ele' * `chol'[`j', `k']
+            }
+          }
+        }
+      }
+
+      foreach var1 of local bnames_short {
+        local i : list posof "`var1'" in bnames_short
+        label var `reunstandard'`i'_var "EB unstd. location r.e. for `var1' sampling variance"
+        foreach var2 of local bnames_short {
+          label var `reffects'`=`i'-1' "EB std. location r.e. for `var'"
+          local j : list posof "`var2'" in bnames_short
+          if (`i' > `j') {
+            label var `reunstandard'`=`i'-1'_`=`j'-1'_cov "EB unstd. location r.e. for `var1' `var2' sampling covariance"
+          }
+        }
+      }
+
+      forvalue i = 1/`:rowsof `chol'' {
+        quietly generate `reunstandard'`=`i'-1'_se = sqrt(`reunstandard'`=`i'-1'_var)
+      }
+
+      foreach var of local bnames_short {
+        local i : list posof "`var'" in bnames_short
+        label var `reunstandard'`=`i'-1'_se "EB unstd. location r.e. for `var' std. err."
+      }
+      label var `reunstandard'`=`numre'-1'_se "EB unstd. scale r.e. for std. err."
+
+    }
+
+    if ("`bgvariancefitted'" ~= "") {
+      quietly generate `bgvariancefitted' = 0
+      foreach var1 of local bnames_short {
+        local i : list posof "`var1'" in bnames_short
+        foreach var2 of local bnames_short {
+          local j : list posof "`var2'" in bnames_short
+          if (`i' == `j') {
+            quietly replace `bgvariancefitted' = `bgvariancefitted' + `b_3'[1, "Between:var(`var1')"] * (`var1'^2)
+          }
+          else {
+            quietly replace `bgvariancefitted' = `bgvariancefitted' + `b_3'[1, "Between:cov(`var1', `var2')"] * `var1' * `var2'
+          }
+        }
+      }
+      label var `bgvariancefitted' "BG var. fun."
+    }
+
+    if ("`wgvariancexb'" ~= "") {
+      quietly generate `wgvariancexb' = 0
+      foreach var of local wnames {
+        if ("`var'" == "_cons") {
+          quietly replace `wgvariancexb' = `wgvariancexb' + `b_3'[1, "Within:_cons"]
+        }
+        else {
+          quietly replace `wgvariancexb' = `wgvariancexb' + `b_3'[1, "Within:`var'"]*`var'
+        }
+      }
+      label var `wgvariancexb' "WG var. fun.: Linear prediction, fixed portion only"
+    }
+
+    if ("`wgvarianceeta'" ~= "") {
+      quietly generate `wgvarianceeta' = `wgvariancexb' + `reunstandard'`=`numre'-1'
+      label var `wgvarianceeta' "WG var. fun.: Linear prediction"
+    }
+
+    if ("`wgvariancefitted'" ~= "") {
+      quietly generate `wgvariancefitted' = exp(`wgvarianceeta')
+      label var `wgvariancefitted' "WG var. fun.: Exp. Linear prediction"
+    }
+
+    if ("`meanxb'" ~= "") {
+      quietly generate `meanxb' = 0
+      foreach var of local mnames {
+        if ("`var'" == "_cons") {
+          quietly replace `meanxb' = `meanxb' + `b_3'[1, "Mean:_cons"]
+        }
+        else {
+          quietly replace `meanxb' = `meanxb' + `b_3'[1, "Mean:`var'"]*`var'
+        }
+      }
+      label var `meanxb' "Mean fun.: Linear prediction, fixed portion only"
+    }
+
+    if ("`meanfitted'" ~= "") {
+      tempvar xu
+      quietly generate `xu' = 0
+      foreach var of local bnames_short {
+        local i : list posof "`var'" in bnames_short
+        if ("`var'" == "_cons") {
+          quietly replace `xu' = `xu' + `reunstandard'`=`i'-1'
+        }
+        else {
+          quietly replace `xu' = `xu' + `reunstandard'`=`i'-1'*`var'
+        }
+      }
+      quietly generate `meanfitted' = `meanxb' + `xu'
+      label var `meanfitted' "Mean fun.: Linear prediction"
+    }
+
+    if ("`runstandard'" ~= "") {
+      quietly generate `runstandard' = (`response'- `meanfitted')
+      label var `runstandard' "Unstandardized residuals"
+    }
+
+    if ("`residuals'"~="") {
+      if (`noresi' == 1) {
+        quietly replace `residuals' = `runstandard' / sqrt(`wgvariancefitted')
+      }
+    }
 
     **************************************
     * LOG-LIKELIHOODS AND ITERATIONS
@@ -611,7 +891,7 @@ program define Estimate, eclass sortpreserve
     tempname b V
     matrix `b' = `b_3'
     matrix `V' = `V_3'
-	
+
     ereturn post `b' `V'
     tempname V check_pd
     matrix `V' = e(V)
@@ -788,15 +1068,15 @@ program define Replay
     ;
 
     display
-    _col(1)  as txt "Integration points =" _col(22) as res %10.0g `e(n_quad)'                                                                           
+    _col(1)  as txt "Integration points =" _col(22) as res %10.0g `e(n_quad)'
     ;
 
     display
-    _col(1)  as txt "Log Likelihood     =" _col(22) as res %10.9g e(ll)                                                                                   
+    _col(1)  as txt "Log Likelihood     =" _col(22) as res %10.9g e(ll)
     ;
 
     display
-    _col(1)  as txt "Deviance           =" _col(22) as res %10.9g e(deviance)                                                                                   
+    _col(1)  as txt "Deviance           =" _col(22) as res %10.9g e(deviance)
     ;
 
     #delimit cr
