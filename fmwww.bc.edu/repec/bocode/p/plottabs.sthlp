@@ -21,6 +21,7 @@
 
 {p 8 17 2}
 {cmdab:plott:abs} {it:{help varname}} {ifin}
+[{it:{help plottabs##weight:weight}}]
 [, options]
 
 {p 8 17 2}where {it:{help varname}} is the conditioning variable. 
@@ -30,7 +31,7 @@
 {p2line}
 {syntab :Basic options}
 {p2col:{cmdab:ov:er(}{it:{help varname}})}an alternative way to specify the conditioning variable{p_end}
-{p2col:{cmdab:out:put(}{it:output_type})}specify the {it:output_type} to be plotted:  {cmdab:fre:quency}(default)/{cmdab:sha:re}/{cmdab:cum:mulative}{p_end}
+{p2col:{cmdab:out:put(}{it:output_type})}specify the {it:output_type} to be plotted:  {cmdab:fre:quency}(default)/{cmdab:sha:re}/{cmdab:cum:ulative}{p_end}
 {p2col:{cmdab:gr:aph(}{it:graph_type})}specify the {it:{help twoway}} {it:graph_type}:  {bf:line}(default)/{bf:bar}/{bf:connected}/{bf:scatter}/etc.{p_end}
 
 {syntab :Memory/data management}
@@ -56,7 +57,11 @@ INCLUDE help gr_baropt
 {p2line}
 {p2colreset}{...}
 {p 4 6 2}
-{it:{help varname}} needs to be specified (one way or the other) to produce a new plot. It does not need to be specified when displaying plots that are already stored in the memory (using the option {cmdab:plot:only}).
+{it:{help varname}} needs to be specified (one way or the other) to produce a new plot. It does not need to be specified when displaying plots that are already stored in the memory (using the option {cmdab:plot:only})..{p_end}
+{marker weight}{...}
+{p 4 6 2}
+{opt fweight}s, {opt aweight}s, and {opt iweight}s are allowed;
+see {help weight}.
 
 
 {marker description}{...}
@@ -67,7 +72,7 @@ INCLUDE help gr_baropt
 
 {pstd}
 By default, {bf:plottabs} produces frequencies of observations conditional on the unique values of {it:{help varname}}.
-Setting the {it:output_type} to {cmdab:sha:re} produces relative shares, and {cmdab:cum:mulative} produces cummulative shares instead.  
+Setting the {it:output_type} to {cmdab:sha:re} produces relative shares, and {cmdab:cum:ulative} produces cumulative shares instead.  
 
 {pstd}
 {bf:plottabs} avoids time-consuming memory operations performed by native graphing commands. By leveraging the data {it:{help frame}} environment, it proves extremely fast in large datasets (up to {bf:300-times faster} than native commands).
@@ -89,12 +94,12 @@ Setting the {it:output_type} to {cmdab:sha:re} produces relative shares, and {cm
 {phang2}{cmd:. plottabs mpg, graph(bar)}{p_end}
 
     {hline}
-    Compare cummulative shares of two groups:
+    Compare cumulative shares of two groups:
  
 {phang2}{cmd:. clear all}{p_end}
 {phang2}{cmd:. sysuse auto}{p_end}
-{phang2}{cmd:. plottabs mpg if foreign == 0, output(cummulative) connect(stairstep) plname(Domestic)}{p_end}
-{phang2}{cmd:. plottabs mpg if foreign == 1, output(cummulative) connect(stairstep) plname(Foreign)}{p_end}
+{phang2}{cmd:. plottabs mpg if foreign == 0, output(cumulative) connect(stairstep) plname(Domestic)}{p_end}
+{phang2}{cmd:. plottabs mpg if foreign == 1, output(cumulative) connect(stairstep) plname(Foreign)}{p_end}
 
     {hline}
     Combine two {it:output_types} in a graph with a custom {it:{help scheme}}:
@@ -103,7 +108,7 @@ Setting the {it:output_type} to {cmdab:sha:re} produces relative shares, and {cm
 {phang2}{cmd:. clear all}{p_end}
 {phang2}{cmd:. sysuse auto}{p_end}
 {phang2}{cmd:. plottabs mpg, graph(bar)}{p_end}
-{phang2}{cmd:. plottabs mpg, output(cummulative) connect(stairstep) legend(off) scheme(gg_tableau) yaxis(2)}{p_end}
+{phang2}{cmd:. plottabs mpg, output(cumulative) connect(stairstep) legend(off) scheme(gg_tableau) yaxis(2)}{p_end}
 
     {hline}
     Combine multiple graphs from the {bf:plot suite}:
@@ -151,8 +156,8 @@ To access the plotted data, switch to the respective frame:
 
 {phang2}{cmd:. clear all}{p_end}
 {phang2}{cmd:. sysuse auto}{p_end}
-{phang2}{cmd:. plottabs mpg if foreign==0, out(cumm) connect(stairstep) pln(Domestic)}{p_end}
-{phang2}{cmd:. plottabs mpg if foreign==1, out(cumm) connect(stairstep) pln(Foreign) scheme(economist)}{p_end}
+{phang2}{cmd:. plottabs mpg if foreign==0, out(cum) connect(stairstep) pln(Domestic)}{p_end}
+{phang2}{cmd:. plottabs mpg if foreign==1, out(cum) connect(stairstep) pln(Foreign) scheme(economist)}{p_end}
 
 {phang2}{cmd:. frame change frame_pt}{p_end}
 {phang2}{cmd:. browse}{p_end}
