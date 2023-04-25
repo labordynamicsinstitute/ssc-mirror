@@ -1,4 +1,4 @@
-*! | Version: 1.2 | Last Updated: Feb 28, 2023
+*! | Version: 1.2.1 | Last Updated: Apr 21, 2023
 /*----------------------------------------------------------------------------*\
 |   PRISM Score Calculator - a statistical package designed to calculate       |
 |       PRISM III & IV scores.                                                 |
@@ -7,12 +7,15 @@
 |   Additional information available at:                                       |
 |       https://azamfirei.com/prism-score                                      |
 |                                                                              |
-|   Version: 1.2 | Created: Jul 28, 2022 | Last Updated: Feb 28, 2023          |
+|   Version: 1.2.1 | Created: Jul 28, 2022 | Last Updated: Apr 21, 2023        |
 |   Author: Razvan Azamfirei - stata@azamfirei.com                             |
 |                                                                              |
 |   CHANGELOG:                                                                 |
+|       - Version 1.2.1:                                                       |
+|           Updated minimum dialog version                                     |
+|                                                                              |
 |       - Version 1.2:                                                         |
-|           Updated HR OOR forvalues                                           |
+|           Updated HR out-of-range values                                     |
 |                                                                              |
 |       - Version 1.1:                                                         |
 |           Minor bugs and fixes                                               |

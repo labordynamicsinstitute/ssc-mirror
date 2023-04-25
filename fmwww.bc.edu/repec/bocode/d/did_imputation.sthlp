@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1 2021-05-19}{...}
+{* *! version 3 2023-04-23}{...}
 {vieweralsosee "reghdfe" "help reghdfe"}{...}
 {vieweralsosee "event_plot" "help event_plot"}{...}
 {viewerjumpto "Syntax" "did_imputation##syntax"}{...}
@@ -12,7 +12,7 @@
 {title:Title}
 
 {pstd}
-{bf:did_imputation} - Treatment effect estimation and pre-trend testing in event studies: difference-in-differences designs with staggered adoption of treatment, using the imputation approach of Borusyak, Jaravel, and Spiess (2021)
+{bf:did_imputation} - Treatment effect estimation and pre-trend testing in event studies: difference-in-differences designs with staggered adoption of treatment, using the imputation approach of Borusyak, Jaravel, and Spiess (April 2023)
 
 {marker syntax}{...}
 {title:Syntax}
@@ -35,11 +35,15 @@
 {it: Note}: {cmd:did_imputation} requires a recent version of {help reghdfe}. If you get error messages (e.g. {it:r(123)} or {it:"verbose must be between 0 and 5"}), please (re)install {cmd:reghdfe} to make sure you have the most recent version.
 {p_end}
 
+{phang}
+{it: Note}: Before emailing the authors about errors, please read the {help did_imputation##bugs:Bug reporting} section of this helpfile.
+{p_end}
+
 {marker description}{...}
 {title:Description}
 
 {pstd}
-{bf:did_imputation} estimates the effects of a binary treatment with staggered rollout allowing for arbitrary heterogeneity and dynamics of causal effects, using the imputation estimator of Borusyak et al. (2021).
+{bf:did_imputation} estimates the effects of a binary treatment with staggered rollout allowing for arbitrary heterogeneity and dynamics of causal effects, using the imputation estimator of Borusyak et al. (2023).
 {p_end}
 
 {pstd}
@@ -68,7 +72,7 @@ To make "event study" plots, please use the accompanying command {help event_plo
 {p_end}
 
 {marker impfails}{...}
-{title:What If Imputation Is Not Possible}
+{title:What if imputation is not possible}
 
 {phang}The imputation step (Step 2) is not always possible for all treated observations:{p_end}
 {phang2}- With unit FEs, imputation is not possible for units treated in all periods in the sample;{p_end}
@@ -78,7 +82,7 @@ in a period when all units have already been treated (and if there are never-tre
 {phang2}- Similar issues arise with other covariates in the model of Y(0).{p_end}
 
 {phang}This is a fundamental issue: the model you specified does not allow to find unbiased estimates of treatment effects
-for those observations (without restrictions on treatment effects; see Borusyak et al. 2021).
+for those observations (without restrictions on treatment effects; see Borusyak et al. 2023).
 
 {phang}
 If this problem arises (i.e. there is at least one treated observation that enters one of the estimands of interest with a non-zero weight
@@ -115,7 +119,7 @@ For example, a unit-specific trend is not possible to estimate if only one pre-t
 guaranteed that the command will throw an error.
 {p_end}
 
-{phang}{opt timec:ontrols(varlist)}} list of continuous controls (often time-invariant) to be included {it:interacted} with period dummies.
+{phang}{opt timec:ontrols(varlist)} list of continuous controls (often time-invariant) to be included {it:interacted} with period dummies.
 E.g. with {opt timecontrols(population)} the regression includes {it:i.year#c.population}.
 (For binary controls interacted with period dummies, use the {opt fe} option.){p_end}
 
@@ -150,6 +154,13 @@ If {opt wtr} or estimation weights are specified, the researcher needs to make s
 for the relevant units---otherwise proper balancing is impossible and an error will be thrown.
 Note that excluded units will still be used in Step 1 (e.g. to recover the period FEs) and for pre-trend tests.{p_end}
 
+{phang}{opt het:by(varname)}: reports estimands separately by subgroups defined by the discrete (non-negative integer or string) 
+variable provided. Use this option or {opt project} for treatment effect heterogeneity analyses.{p_end}
+
+{phang}{opt pro:ject(varlist)}: projects (i.e., regresses) treatment effect estimates on a set of numeric variables provided 
+and reports the constant and slope coefficients. The variables should not be collinear. 
+Use this option or {opt hetby} for treatment effect heterogeneity analyses.{p_end}
+
 {phang}{opt minn(#)}: the minimum effective number (i.e. inverse Herfindahl index) of treated observations,
 below which a coefficient is suppressed and a warning is issued. 
 The inference on coefficients which are based on a small number of observations is unreliable. The default is {opt minn(30)}.
@@ -164,7 +175,7 @@ please specify the sample explicitly if using one of those options and you get a
 The command will pretend that treatment happened {opt shift} periods earlier for each treated unit.{p_end}
 {phang2}- Do NOT use this option for pre-trend testing;
 use it if anticipation effects are expected in your setting.
-(This option {it:can} be used for a placebo test but we recommend a pretrend test instead; see Section 4.4 of Borusyak et al. 2021.){p_end}
+(This option {it:can} be used for a placebo test but we recommend a pretrend test instead; see Section 4.4 of Borusyak et al. 2023.){p_end}
 {phang2}- The command's output will be labeled relative to the shifted treated date {it:Ei}-shift.
 For example, with {opt horizons(0/10)} {opt shift(3)} you will get coeffieints {it:_b[tau0]}...{it:_b[tau10]} where tau{it:h}
 is the effect {it:h} periods after the shifted treatment. That is, {it:tau1} corresponds to the average anticipation effect 2 periods before
@@ -173,20 +184,23 @@ the actual treatment, while {it:tau8} to the average effect 5 periods after the 
 {phang}{opt pre:trends(integer)}: if some value {it:k}>0 is specified, the command will performs a test for parallel trends,
 by a {bf:separate} regression on nontreated observations only: of the outcome on the dummies for 1,...,{it:k} periods before treatment,
 in addition to all the FE and controls. The coefficients are reported as {bf:pre}{it:1},...,{bf:pre}{it:k}.
-The F-statistic, pvalue, and degrees-of-freedom as reported in {res:e(pre_F)}, {res:e(pre_p)}, and {res:e(pre_df)} resp.{p_end}
+The F-statistic (corresponding to the cluster-robust Wald test), corresponding pvalue, and degrees-of-freedom are reported in {res:e(pre_F)}, 
+{res:e(pre_p)}, and {res:e(pre_df)} resp.{p_end}
 {phang2}- Use a reasonable number of pre-trends, do not use all of the available ones unless you have a really large never-treated group. With too many pre-trend coefficients, the power of the joint test will be lower.{p_end}
 {phang2}- The entire sample of nontreated observations is always used for pre-trend tests, regardless of {opt hbalance} and other options that restrict the sample for post-treatment effect estimation.{p_end}
 {phang2}- The number of pretrend coefficients does not affect the post-treatment effect estimates, which are always computed under the assumption of parallel trends and no anticipation.{p_end}
 {phang2}- The reference group for the pretrend test is all periods more than {it:k} periods prior to the event date (and all never-treated
 observations, if available).{p_end}
 {phang2}- Because of this reference group, it is expected that the SE are the largest for pre1 (opposite from some conventional tests).{p_end}
+{phang2}- This is only one of many tests for the parallel trends and no anticipation assumptions. Others are easy to implement manually; please see
+the paper for the discussion.{p_end}
 
 {dlgtab:Standard errors}
 
 {phang}{opt clus:ter(varname)}: cluster SE within groups defined by this variable. Default is {it:i}. {p_end}
 
 {phang}{opt avgeff:ectsby(varlist)}: Use this option (and/or {opt leaveout}) if you have small cohorts of treated observations, and after reviewing
-Section 4.3 of Borusyak et al. (2021). In brief, SE computation requires averaging the treatment effects by groups of treated observations.{p_end}
+Section 4.3 of Borusyak et al. (2023). In brief, SE computation requires averaging the treatment effects by groups of treated observations.{p_end}
 {phang2}- These groups should be large enough, so that there is no downward bias from overfitting. {p_end}
 {phang2}- But the larger they are, the more conservative SE will be, unless treatment effects are homogeneous within these groups. {p_end}
 {phang2}- The varlist in {opt avgeffectsby} defines these groups.{p_end}
@@ -197,7 +211,7 @@ Section 4.3 of Borusyak et al. (2021). In brief, SE computation requires averagi
 
 {phang}{opt leaveout}: {it:Recommended option}. In particular, use it (and/or {opt avgeffectsby}) if you have small cohorts of treated observations.
 The averages of treatment effects will be computed excluding the own unit (or, more generally, cluster).
-See Section 4.3 of Borusyak et al. (2021) for details.{p_end}
+See Section 4.3 of Borusyak et al. (2023) for details.{p_end}
 
 {phang}{opt alpha(real)}: confidence intervals will be displayed corresponding to that significance level. Default is 0.05.{p_end}
 
@@ -214,13 +228,20 @@ Recall that the imputation estimator is a linear estimator that can be represent
 {phang2}- These weights are applied on top of any {help did_imputation##weights:estimation weights}.{p_end}
 {phang2}- For treated observations these weights equal to the corresponding {opt wtr} - that's why the estimator is unbiased
 under arbitrary treatment effect heterogeneity.{p_end}
-{phang2}- If a weighted average is estimated (i.e. {opt sum} is not specified), the weights add up to one across all treated observations.{p_end}
-{phang2}- For diff-in-diffs (i.e. with unit and period FEs), weights add up to zero for every unit and time period.{p_end}
+{phang2}- If a weighted average is estimated (i.e. {opt sum} is not specified) and there are no estimation weights, 
+the weights add up to one across all treated observations.{p_end}
+{phang2}- With unit and period FEs, weights add up to zero for every unit and time period (when weighted by estimation weights).{p_end}
 
 {phang}{opt loadw:eights(varlist)}: use this to speed up the analysis of different outcome variables with an identical specification
 on an identical sample. To do so, provide the set of the weight variables (__w*, but can be renamed),
 saved using the {opt saveweights} option when running the analysis for the first outcome.
 [Warning: the validity of the weights is assumed and not double-checked.] [Currently works only if the varnames are not __w*]{p_end}
+
+{phang}{opt saver:esid(name)}: if specified, a new variable {it:name}_* is generated for each estimand (e.g. {it:name}_tau0) to store 
+model residuals used in the computation of standard errors. For untreated observations, they are residuals from the estimation step. For 
+treated observations, they are the epsilon-tildes from the BJS Theorem 3 (based on the {opt avgeffectsby} option) or the leave-out
+versions from Appendix A.6. The residuals may be heterogeneous across estimands in general --- see equation (8) in the paper
+which depends on the estimator weights, and thus on the estimand. This option can be helpful for reproducing the standard errors manually.{p_end}
 
 {phang}{opt delta(integer)}: indicates that one period should correpond to {opt delta} steps of {it:t} and {it:Ei}. 
 Default is 1, except when the time dimension of the data is set (via {help tsset} or {help xtset});
@@ -236,7 +257,7 @@ Defaults are 10^-6 and 100, resp. If convergence is not achieved otherwise, try 
 {marker weights}{...}
 {title:Estimation weights}
 
-{phang} Estimation weights (e.g. {opt aw} but can be {opt iw} or {opt fw}) play two roles: 
+{phang} Estimation weights (only {opt aw} or {opt iw} are allowed) play two roles: 
 
 {p2col 5 8 8 0 : 1.}Step 1 estimation is done by a weighted regression. This is most efficient when the variance
 of the error terms is inversely proportionate to the weights.
@@ -264,6 +285,8 @@ Instead specify the estimand of your interest via {opt wtr}.{p_end}
 {pmore3}- If {opt horizons} is specified, the program returns {bf:tau}{it:h} for each {it:h} in the list of horizons.{p_end}
 {pmore3}- If multiple {opt wtr} are specified, the program returns {bf:tau_}{it:v} for each {it:v} in the list of {opt wtr} variables. {p_end}
 {pmore3}- Otherwise the single returned coefficient is called {bf:tau}. {p_end}
+{pmore3}- If {opt hetby} is specified, the coefficient names are appended with underscore and the values of the grouping variable. For instance, with {opt hetby(female)} where {it:female} takes values 0 and 1, the command will return {bf:tau}{it:h}_0 and {bf:tau}{it:h}_1 for each horizon, corresponding to average treatment effects by horizon and sex.{p_end}
+{pmore3}- If {opt project} is specified, the coefficient names are appended with underscore and the constant plus the list of slope coefficients. For instance, with {opt project(female income)}, the command will return {bf:tau}{it:h}{bf:_cons}, {bf:tau}{it:h}{bf:_female}, and {bf:tau}{it:h}{bf:_income}.{p_end}
 {pmore3}- In addition, if {cmd:pretrends} is specified, the command returns {bf:pre}{it:h} for each pre-trend coefficient {it:h}=1..{opt pretrends}. {p_end}
 {pmore3}- And if {cmd:controls} is specified, the command returns the coefficients on those controls. (Estimated fixed effects, {cmd:unitcontrols}, and {cmd:timecontrols} are not reported in the {cmd:e(b)}.){p_end}
 {synopt:{cmd:e(V)}}Corresponding variance-covariance matrix {p_end}
@@ -328,6 +351,20 @@ Instead specify the estimand of your interest via {opt wtr}.{p_end}
         {cmd:. rename __* myweights* // optional}
         {cmd:. did_imputation Y2 i t Ei, horizons(0/10) loadweights(myweights*)}
 		
+{phang}12) {ul:Treatment effect heterogeneity}: {p_end}
+{pmore}To estimate heterogeneity by individual's sex {it:female}, you can obtain individual treatment effect estimates 
+(via {opt saveestimates}) and simply run a second-step regression of the estimates on {it:female}: {p_end}
+{pmore}{cmd:. did_imputation Y i t Ei, saveestimates(tau)}{p_end}
+{pmore}{cmd:. reg tau female} (DON'T DO THIS!){p_end}
+
+{pmore}HOWEVER, standard errors will be incorrect. Instead, use {opt hetby} or {opt project}:{p_end}
+{pmore}{cmd:. did_imputation Y i t Ei, hetby(female)}{p_end}
+{pmore}will produce the ATT for males (tau_0) and females (tau_1). Alternatively,{p_end}
+{pmore}{cmd:. did_imputation Y i t Ei, project(female)}{p_end}
+{pmore}will produce the ATT for males (tau_cons) and the difference in ATTs between females and males (tau_female).{p_end}
+
+{pmore}Both options can be combined with {opt horizons} to do heterogeneity analysis within each horizon.{p_end}
+		
 {phang}21) {ul:Repeated cross-sections}: {p_end}
 {pmore}When in each period you have a different sample of individiuals {it:i} in the same groups (e.g. regions), 
 replace individual FEs with group FEs and consider clustering at the regional level:{p_end}
@@ -355,13 +392,13 @@ outside the estimation sample for the current {opt wtr} {p_end}
 {phang}- Verify that the unit ID variable is numeric{p_end}
 {phang}- In Stata 13 there may be a problem with the {opt df} option of {cmd:test} {p_end}
 {phang}- {opt loadweights} doesn't work when the weights are saved with the default names {it:__w*}{p_end}
-{phang}- Allow for designs in which treatment switches on and off{p_end}
 {phang}- Allow for designs in which treatment is not binary{p_end}
 {phang}- Add a check that ranges of {opt t} and {opt Ei} match{p_end}
 
 {pstd}
 If you are interested in discussing these or others, please {help did_imputation##author:contact me}.
 
+{marker bugs}{...}
 {title:Bug reporting}
 
 {phang}If you get an error message, please:{p_end}
@@ -380,7 +417,7 @@ the treatment dummy can be obtained as {it:t>=Ei}{p_end}
 {title:References}
 
 {phang}
-Borusyak, Kirill, Xavier Jaravel, and Jann Spiess (2021). "Revisiting Event Study Designs: Robust and Efficient Estimation," Working paper.
+Borusyak, Kirill, Xavier Jaravel, and Jann Spiess (2023). "Revisiting Event Study Designs: Robust and Efficient Estimation," Working paper.
 {p_end}
 
 {title:Acknowledgements}

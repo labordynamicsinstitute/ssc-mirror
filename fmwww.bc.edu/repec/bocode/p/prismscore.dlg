@@ -2,7 +2,7 @@
   prismscore.dlg
 */
 
-VERSION 17
+VERSION 12
 
 		INCLUDE 				_std_mlarge
 		POSITION				. 		. 		480 	560
