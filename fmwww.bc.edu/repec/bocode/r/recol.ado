@@ -39,29 +39,52 @@ program recol
 			tempvar slen maxslen
 			if "`full'" == "" {
 				// longest string in the column - short version
-				qui gen `slen' = strlen(`v') in 1/`first_section'
+				// creating a new variable takes forever even if most values are missing
+				// put it into a mata matrix to speed things up
+				putmata `v' in 1/`first_section'
+				// get the length of each string in the vector
+				mata: len_vec = strlen(`v')
+				// get the max length of the strings
+				mata: max_len = colmax(len_vec)
+				// put the max value into a local (must be a string)
+				mata: st_local("contents", strofreal(max_len))
+				// delete the mata matrix
+				mata: mata drop `v'
+				// side note: it is possible that this part was not the slow part
+				// instead it may have been the egen maxslen part below that always ran
 			}
 			else {
 				// longest string in the column - full version
 				qui gen `slen' = strlen(`v')
+				qui egen `maxslen' = max(`slen')
+				local contents = `maxslen'[1]
 			}
-			qui egen `maxslen' = max(`slen')
-			local contents = `maxslen'[1]
 		}
 
 		// if date
+		// unaffected by the "full" option
 		else if regexm("`fmt'", "^%[td]") {
 			tempvar datestr dstrlen
 			if "`full'" == "" {
 				// make the string version of the date - short version
 				qui gen `datestr' = string(`v', "`fmt'") in 1/`first_section'
+				// new column to mata
+				putmata `datestr' in 1/`first_section'
 			}
 			else {
 				// make the string version of the date - full version
 				qui gen `datestr' = string(`v', "`fmt'")
+				// new column to mata
+				putmata `datestr'
 			}
-			qui egen `dstrlen' = max(strlen(`datestr'))
-			local contents = `dstrlen'[1]
+			// get the length of each string in the vector
+			mata: len_vec = strlen(`datestr')
+			// get the max length of the strings
+			mata: max_len = colmax(len_vec)
+			// put the max value into a local (must be a string)
+			mata: st_local("contents", strofreal(max_len))
+			// delete the mata matrix
+			mata: mata drop `datestr'
 		}
 
 		// other numeric
@@ -104,10 +127,7 @@ program recol
 		char `v'[_de_col_width_] `display_width'
 
 		// print progress
-		di as text "Width set to " ///
-		as result "`new_width'" ///
-		as text _col(18) ": " ///
-		as result "`v'"
+		di as text "Width set to " as result "`new_width'" as text _col(18) ": " as result "`v'"
 	}
 
 	// optional compress

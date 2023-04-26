@@ -217,6 +217,7 @@ p lstack module to stack variables with labelled _stack
 p lstrfun module to modify long local macros 
 p ltable2 module to generate life tables for rare events
 p ltimbimata module containing six general-purpose Mata functions
+p ltop module to divide a dataset list into pages without splitting internal by-groups
 p luvain module to find communities in weighted graph
 p lvalues module for letter value calculation
 p lvr2plot2 module to produce leverage versus squared residual plot with Cook's D

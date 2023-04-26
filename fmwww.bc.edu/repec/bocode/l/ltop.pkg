@@ -1,0 +1,24 @@
+d 'LTOP': module to divide a dataset list into pages without splitting internal by-groups
+d
+d     ltop ("lines to pages") creates a page-number variable,
+d dividing the	    dataset (or its by-groups) into pages, with a
+d maximum number of lines per	   page, optionally with internal
+d by-groups which will not be split between	 pages.  ltop is
+d designed for use when outputting datasets to multi-page     
+d tables, using the SSC packages chardef, listtab, and docxtab. The
+d user may	weight pages, in case different font sizes are to
+d be used, or in case the      first line of each internal by-group
+d is preceded by a gap line. 
+d
+d KW: data management
+d KW: display
+d
+d Requires: Stata version 16 
+d
+d Distribution-Date: 20230425
+d
+d Author: Roger Newson,  King's College London
+d Support: email roger.newson@@kcl.ac.uk
+d
+f ltop.sthlp
+f ltop.ado

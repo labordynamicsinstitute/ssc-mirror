@@ -1,0 +1,34 @@
+d 'POSW_POSIS': module to implement the partialling-out estimator based on iterative sure independence screening
+d
+d   posis implements the partialling-out estimator based on
+d iterative sure independence screening. posw implements the 
+d Partialling-out estimator based on stepwise-BIC or
+d stepwise-testing. 
+d
+d KW: partialling-out
+d KW: Neyman orthogonal estimators
+d KW: stepwise methods
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20230425
+d
+d Author: David M. Drukker, Sam Houston State University
+d Support: email dxd070@@shsu.edu
+d
+d Author: Di Liu, StataCorp
+d Support: email dliu@@stata.com
+d
+f posis.ado
+f posis.sthlp
+f posw.ado
+f posw.sthlp
+f ../i/isis.ado
+f ../i/isis.sthlp
+f pocvsw.ado
+f poswbic_gmm_logit.ado
+f poswbic_gmm_pois.ado
+f ../s/stepbic.ado
+f ../s/steptest.ado
+f posis.pdf
+f posw.pdf

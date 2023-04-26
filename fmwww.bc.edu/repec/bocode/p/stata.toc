@@ -107,6 +107,7 @@ p poparms module for potential outcome parameter estimation
 p popsim module to simulate completed fertility and birth intervals for two generations
 p postrcspline module containing post-estimation commands for models using a restricted cubic spline
 p postrri module to calculate posterior relative risks
+p posw_posis module to implement the partialling-out estimator based on iterative sure independence screening
 p povcalnet module to access World Bank Global Poverty and Inequality measures
 p povdeco module to calculate poverty indices with decomposition by subgroup
 p poverty module to calculate poverty measures
