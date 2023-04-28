@@ -20,7 +20,12 @@ While the `ssc` command in Stata will continue to go to the original location, y
 net install a2reg, from(https://raw.githubusercontent.com/labordynamicsinstitute/ssc-mirror/2021-12-21/fmwww.bc.edu/repec/bocode/a)
 ```
 
-where the date `2021-12-21` corresponds to an existing tag. More streamlined functionality is forthcoming.
+where the date `2021-12-21` corresponds to an existing tag. Also see [`ssc2`](https://github.com/labordynamicsinstitute/stata-ssc2/) for more streamlined functionality:
+
+```
+* ssc2 may be installed directly from GitHub
+net install ssc2, all replace from("https://raw.githubusercontent.com/labordynamicsinstitute/stata-ssc2/master")
+```
 
 ## How to clone this repository
 
