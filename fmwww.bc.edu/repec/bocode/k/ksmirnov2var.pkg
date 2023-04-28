@@ -1,0 +1,18 @@
+d 'KSMIRNOV2VAR': module to perform the Kolmogorov-Smirnov test of the equality of distributions for two variables. 
+d
+d  ksmirnov2var performs the Kolmogorov-Smirnov test of the
+d equality of distributions for two variables. 
+d
+d KW: descriptive statistics
+d KW: Komolgorov-Smirnov test
+d KW: distributions
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20230427
+d
+d Author:  Michael Makovi ,  N/A
+d Support: email mbmakovi@@gmail.com
+d
+f ksmirnov2var.sthlp
+f ksmirnov2var.ado

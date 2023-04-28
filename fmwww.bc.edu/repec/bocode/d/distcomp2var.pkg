@@ -1,0 +1,19 @@
+d 'DISTCOMP2VAR': module to compare the distributions of two variables
+d
+d  distcomp2var compares the distributions of two variables. 
+d distcomp2var is similar to comparing the means of two variables
+d with ttest varname1 == varname2, except distcomp2var will 
+d compare their distributions. 
+d
+d KW: descriptive statistics
+d KW: distributions
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20230427
+d
+d Author:  Michael Makovi ,  N/A
+d Support: email mbmakovi@@gmail.com
+d
+f distcomp2var.sthlp
+f distcomp2var.ado

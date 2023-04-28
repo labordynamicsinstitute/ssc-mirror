@@ -1,4 +1,4 @@
-*! version 1.2.7 2023-02-21
+*! version 1.2.8 2023-04-19
 
 program define stpp, rclass sortpreserve
   version 16.0
@@ -33,12 +33,15 @@ program define stpp, rclass sortpreserve
                    VERBOSE                                              ///
                    GRAPHName(string)                                    /// 
                    GRAPH                                                ///	
-                   GRAPHCode(string)                                    /// 	   
+                   GRAPHCode(string)                                    ///
+                   *                                                    ///
                    ]
   st_is 2 analysis
   marksample touse, novarlist
   qui replace `touse' = 0  if _st==0 | _st==. 	
 	
+  local otheroptions `options'
+
 // id variable
   if `"`_dta[st_id]'"' == "" {
   di as err "stpp requires that you have previously stset an id() variable"
@@ -140,7 +143,7 @@ program define stpp, rclass sortpreserve
     frame drop `resframe'
   }  
   
- 
+
 *******************	
 // popmort file ///
 *******************
@@ -206,10 +209,10 @@ program define stpp, rclass sortpreserve
   qui gen `attyear' = year(`datediag' + (_t+1)*365.25)  if `touse'
   summ `attyear' if `touse', meanonly
   local maxattyear = min(`r(max)',`pmmaxyear')	
-  
+
   tempname popmortframe
   frame create `popmortframe'
-  frame `popmortframe': use "`usingfilename'" if               ///
+  frame `popmortframe': qui use "`usingfilename'" if               ///
 	                   inrange(`pmage',`minage',`maxattage') &   ///
 	                   inrange(`pmyear',`minyear',`maxattyear')  
   if "`using2'" != "" {
@@ -229,9 +232,10 @@ program define stpp, rclass sortpreserve
     }
   } 
 	
-  clear results
+  return clear
 	
   mata: stpp()
+
   return add
   
   if "`list'" != ""  {
@@ -291,6 +295,12 @@ program define stpp, rclass sortpreserve
 *******************	
   if "`graph'"!="" | "`graphname'"!="" | "`graphcode'"!="" {
     quietly {
+      _get_gropts, graphopts(`otheroptions') getallowed(legend xtitle ytitle title)
+
+      if `"`s(ytitle)'"' == "" local ytitle ytitle("Marginal Relative Survival")
+      if `"`s(xtitle)'"' == "" local xtitle xtitle("Time since diagnosis (years)")
+      if `"`s(legend)'"' !=""  local haslegend haslegend
+	  set trace off
       preserve
         keep if `touse'
         tempvar group
@@ -322,6 +332,9 @@ program define stpp, rclass sortpreserve
           local note note(" " "{bf:Note:}Standardised using `indweights'.")
         }
 
+        
+        
+        
         forvalues i=1/`Nofgroups' {
           forvalues j=1/`Nofby' {
             if `Nofby'>1 {
@@ -359,22 +372,25 @@ program define stpp, rclass sortpreserve
           local graphlinetextforwrite=`"`graphlinetextforwrite'"'+"(line `RS_newvarname' _t  if __group==`i', sort connect(J ...) pstyle(p`i'line) color("+char(34)+"%80"+char(34)+") "+`"`xlabelpart1forwrite'"'+")"
 				  
 				  
-           local legendtext `legendtext' `=`Nofgroups'+`i'' `"`bytext`i''"' `i' "95% CI"	
+           local legendtext `legendtext' `=`Nofgroups'+`i'' `"`bytext`i''"' 
          }
 	     // DROP LEGEND IF NO BY??
-         if `Nofgroups'>1 {
-           local legend legend(order(`legendtext') region(color(none)) ring(0) pos(1) cols(2))
-         }
-         else {
-           local legend legend(off)
-         }
+		 if "`haslegend'" == "" {
+           if `Nofgroups'>1 {
+             local legend legend(order(`legendtext') region(color(none)) ring(0) pos(7) cols(1))
+           }
+           else {
+             local legend legend(off)
+           }
+		 }
          tempvar new
          bys `by': gen `new'=1 if _n==1
 		 expand 2 if `new'==1, gen(new)
 		 replace _t=0 if new==1
-		 replace `RS_newvarname'=1 if new==1
-		 replace `RS_newvarname'_lci=1 if new==1 
-		 replace `RS_newvarname'_uci=1 if new==1
+		 local repvalue = cond("`deathprob'"=="",1,0)
+		 replace `RS_newvarname'=`repvalue'     if new==1
+		 replace `RS_newvarname'_lci=`repvalue' if new==1
+		 replace `RS_newvarname'_uci=`repvalue' if new==1
 		 
 		 if "`graphname'"!="" {
            local namepart name(`graphname')
@@ -385,9 +401,7 @@ program define stpp, rclass sortpreserve
 
          twoway `graphareatext' `graphlinetext',  ylabel(0(.25)1, angle(h) ///
          format(%3.2f) grid) /// 
-         ytitle(`"Marginal relative survival"' `"`ytitle'"') ///
-         xtitle(`"Time since diagnosis (years)"') ///
-         subtitle(`"`subtitle'"') ///
+         `otheroptions' `ytitle' `xtitle'   ///
          `legend'	plotregion(margin(zero)) `note' `namepart' 
 			
        restore
@@ -413,24 +427,24 @@ program define stpp, rclass sortpreserve
          file write graphcode _tab(1) "bys `by': gen \`new'=1 if _n==1" _n	
          file write graphcode _tab(1) "expand 2 if \`new'==1, gen(\`new2')" _n	
          file write graphcode _tab(1) "replace _t=0 if \`new2'==1" _n	
-         file write graphcode _tab(1) "replace `RS_newvarname'=1 if \`new2'==1" _n	
-         file write graphcode _tab(1) "replace `RS_newvarname'_lci=1 if \`new2'==1" _n	
-         file write graphcode _tab(1) "replace `RS_newvarname'_uci=1 if \`new2'==1 " _n		
+         file write graphcode _tab(1) "replace `RS_newvarname'=`repvalue' if \`new2'==1" _n	
+         file write graphcode _tab(1) "replace `RS_newvarname'_lci=`repvalue' if \`new2'==1" _n	
+         file write graphcode _tab(1) "replace `RS_newvarname'_uci=`repvalue' if \`new2'==1 " _n		
          file write graphcode "//GRAPH TEXT - RAREA FOR CIs, LINE FOR POINT ESTIMATES, XLABELS FOR THE RISKTABLE" _n		
          file write graphcode "//MODIFY THIS TEXT TO MAKE CHANGES TO THE GRAPH" _n
          file write graphcode `"//E.G DELETE FROM THE FIRST XLABEL UP TO AND INCLUDING "XOVERHANG" TO REMOVE THE RISKTABLE"' _n				
          file write graphcode _tab(1) `"twoway `graphareatextforwrite' `graphlinetextforwrite',  ylabel(0(.25)1, angle(h) ///"' _n 
          file write graphcode _tab(1) "format(%3.2f) grid) ///" _n 
-         file write graphcode _tab(1) `"ytitle(`"Marginal relative survival"' `"`ytitle'"') ///"' _n 
-         file write graphcode _tab(1) `"xtitle(`"Time since diagnosis"') ///"'	_n
-         file write graphcode _tab(1) `"subtitle(`"`subtitle'"') ///"' _n 
+         file write graphcode _tab(1) `"`ytitle' ///"' _n 
+         file write graphcode _tab(1) `"`xtitle' ///"'	_n
          file write graphcode _tab(1) `"`legend' plotregion(margin(zero)) `note' `namepart'"' _n 		
          file write graphcode "restore" _n
          file close graphcode
          //doedit ".\__stpp_graph_code_.do"
+         di as input "File `dofilename' has been created"
+
        }
     }
-    di as input "File `dofilename' has been created"
   }
 end
 

@@ -80,6 +80,7 @@ p disjoint module to generate end variable demarcating disjoint spells
 p dissim module to calculate dissimilarity index
 p distan module to generate similarity measures
 p distcomp module to compare distributions
+p distcomp2var module to compare the distributions of two variables
 p distinct module to display distinct values of variables
 p distmatch module to perform distance matching based on latitudes and longitudes
 p distplot module to generate distribution function plot
