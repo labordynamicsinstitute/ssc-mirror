@@ -116,6 +116,7 @@ p grep module to search within your datasets for keywords
 p grexport module to produce a resultset of graph contents
 p grfreq module to plot proportion of one variable by categories of another
 p gridsearch module to optimize tuning parameter levels with a grid search
+p grinset module to add a graph as an inset to another graph
 p grlogit module to plot logit of a variable by categories of another variable
 p grmatgroups module to produce a scatter plot matrix with different marker symbols according to another variable
 p grnote module to add text and lines to graphs
