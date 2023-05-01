@@ -10,9 +10,9 @@ d
 d KW: machine learning
 d KW: double de-biased machine learning
 d
-d Requires: Stata version 14
+d Requires: Stata version 14 and pystacked from SSC (q.v.)
 d
-d Distribution-Date: 20230125
+d Distribution-Date: 20230430
 d
 d Author: Achim Ahrens, ETH Zürich
 d Support: email achim.ahrens@@gess.ethz.ch

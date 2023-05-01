@@ -1,7 +1,7 @@
 {smcl}
-{* *! version 18Aug2022}{...}
+{* *! version 1april2023}{...}
 {hline}
-{cmd:help pystacked}{right: v0.4.3}
+{cmd:help pystacked}{right: v0.7.1}
 {hline}
 
 {title:Title}
@@ -34,9 +34,21 @@ algorithms.
 {pstd}
 {opt pystacked} requires at least Stata 16 (or higher),  
 a Python installation and scikit-learn (0.24 or higher). {opt pystacked}
-has been tested with scikit-learn 0.24, 1.0, 1.1.0, 1.1.1 and 1.1.2.
+has been 
+{browse "https://github.com/aahrens1/pystacked/tree/main/cert":tested} 
+with scikit-learn 0.24.2, 1.0.2, 1.1.3, and 1.2.1.
 See {helpb python:here} and {browse "https://blog.stata.com/2020/08/18/stata-python-integration-part-1-setting-up-stata-to-use-python/":here} 
 for how to set up Python for Stata on your system.
+
+{pstd}
+{opt pystacked} is compatible with {helpb ddml} and {helpb qddml} for 
+Double/Debiased Machine Learning. 
+{helpb ddml} implements algorithms for causal inference aided by supervised
+machine learning.
+
+{pstd}
+Check our {browse "https://statalasso.github.io/":website} for more information 
+and regular updates.
 
 {marker methodopts}{...}
 {title:Contents}
@@ -60,7 +72,9 @@ for how to set up Python for Stata on your system.
 {title:Syntax overview}
 
 {pstd}
-There are two alternative syntaxes. The {ul:first syntax} is:
+There are two alternative syntaxes, which offer the same 
+functionality, but are provided for accommodate different tastes.
+The {ul:first syntax} is:
 
 {p 8 14 2}
 {cmd:pystacked}
@@ -106,17 +120,15 @@ The {ul:second syntax} is:
 The first syntax uses {opt methods(string)} to select base learners, where
 {it:string} is a list of base learners.
 Options are passed on to base learners via {opt cmdopt1(string)}, 
-{opt cmdopt2(string)} to {opt cmdopt10(string)}. 
-That is, up to 
-10 base learners can be specified and options are passed on in the order in which
+{opt cmdopt2(string)}, etc. 
+That is, base learners can be specified and options are passed on in the order in which
 they appear in {opt methods(string)} (see {helpb pystacked##base_learners_opt:Command options}).
 Likewise, the {opt pipe*(string)} option can be used 
 for pre-processing predictors within Python on the fly (see {helpb pystacked##pipelines:Pipelines}).
 Furthermore, {opt xvars*(varlist)} allows to specify a learner-specific varlist of predictors.
 
 {pstd}
-The second syntax imposes no limit on the number of base learners (aside from the increasing
-computational complexity). Base learners are added before the comma 
+In the second syntax, base learners are added before the comma 
 using {opt method(string)} together with {opt opt(string)} and separated by
 "||". 
 
@@ -136,7 +148,7 @@ options passed to the base learners, see {helpb pystacked##base_learners_opt:Com
 {p_end}
 {synopt:{opt pipe*(string)}}
 pipelines passed to the base learners, see {helpb pystacked##pipelines:Pipelines}.
-Regularized linear learners use the {it:stdscaler} pipeline by default, which
+Linear learners use the {it:stdscaler} pipeline by default, which
 standardizes the predictors. To suppress this, use {it:nostdscaler}.
 For other learners, there is no default pipeline.
 {p_end}
@@ -149,7 +161,8 @@ See {helpb pystacked##predictors:here}.
 {synoptline}
 {pstd}
 {it:Note:} {opt *} is replaced
-with 1 to 10. The number refers to the order given 
+the the learner index, i.e., the number refers to the 
+order given 
 in {opt methods(string)}.
 
 {marker syntax2}{...}
@@ -195,10 +208,10 @@ final estimator used to combine base learners.
 The default is non-negative least squares without an intercept 
 and the additional constraint that weights sum to 1 ({it:nnls1}). 
 Alternatives are {it:nnls0} (non-negative least squares without intercept 
-without the sum-to-one constraint), 
-Alternatives are {it:singlebest}
-(use base learner with minimum MSE),
-{it:ols} (ordinary least squares) or
+and without the sum-to-one constraint), 
+{it:singlebest} (use base learner with minimum MSE),
+{it:ols} (ordinary least squares),
+{it:ls1} (least squares without an intercept and with the sum-to-one constraint), or
 {it:ridge} for (logistic) ridge, which is the
 sklearn default. For more information, 
 see {helpb pystacked##section_stacking:here}.
@@ -206,28 +219,48 @@ see {helpb pystacked##section_stacking:here}.
 {synopt:{opt nosavep:red}} do not save predicted values
 (do not use if {cmd:predict} is used after estimation)
 {p_end}
-{synopt:{opt nosavet:ransform}} do not save predicted values
+{synopt:{opt nosaveb:asexb}} do not save predicted values
 of each base learner 
-(do not use if {cmd:predict} with {opt transf:orm} is used after estimation)
+(do not use if {cmd:predict} with {opt base:xb} is used after estimation)
 {p_end}
 {synopt:{opt njobs(int)}} 
 number of jobs for parallel computing. The default is 0 (no parallelization), 
 -1 uses all available CPUs, -2 uses all CPUs minus 1. 
 {p_end}
 {synopt:{opt backend(string)}} 
-joblib backend used for parallelization; the default is 'loky' under Linux/MacOS
-and 'threading' under Windows. 
+joblib backend used for parallelization; the default is 'threading'. 
 See {browse "https://scikit-learn.org/stable/modules/generated/sklearn.utils.parallel_backend.html":here} for more information.
 {p_end}
 {synopt:{opt folds(int)}} 
 number of folds used for cross-validation (not relevant for voting); 
-default is 5
+default is 5. Ignored if {opt foldvar(varname)} if specified.
+{p_end}
+{synopt:{opt foldvar(varname)}} 
+integer fold variable for cross-validation.
+{p_end}
+{synopt:{opt bfolds(int)}} 
+number of folds used for {it:base learners} that use 
+cross-validation (e.g. {it:lassocv}); 
+default is 5.  
+{p_end}
+{synopt:{opt norandom}} 
+folds are created using the ordering of the data. 
+{p_end}
+{synopt:{opt noshuffle}} 
+cross-validation folds for {it:base learners} that use 
+cross-validation (e.g. {it:lassocv}) are based on 
+ordering of the data. 
 {p_end}
 {synopt:{opt sparse}} 
 converts predictor matrix to a sparse matrix. This will only lead to speed improvements
 if the predictor matrix is sufficiently sparse. Not all learners support sparse matrices
 and not all learners will benefit from sparse matrices in the same way. You can also 
 use the sparse pipeline to use sparse matrices for some learners, but not for others.
+{p_end}
+{synopt:{opt showc:oefs}} 
+shows, for each base learner, the coefficient estimates (in the case of ols, 
+logit, regularized regression) or variable importance measures 
+(random forests and gradient boosting)
 {p_end}
 {synopt:{opt pyseed(int)}} 
 set the Python seed. Note that since {cmd:pystacked} uses
@@ -239,6 +272,18 @@ sufficient, as the Python seed is generated automatically. 2) Setting {opt pysee
 with any positive integer {it:x} allows to control the Python seed 
 directly. 3) {opt pyseed(0)} sets the seed to None in Python.
 The default is {opt pyseed(-1)}.
+{p_end}
+{synopt:{opt print:opt}} 
+prints the default options for specified learners.
+Only one learner can be specified.
+This is for information only.
+No estimation is done.
+{p_end}
+{synopt:{opt show:opt}} 
+prints the options passed on to Python.
+{p_end}
+{synopt:{opt showp:y}} 
+prints Python messages.
 {p_end}
 {synoptline}
 
@@ -270,11 +315,15 @@ ensure that sum(weights)=1.
 {ul:Postestimation tables}
 
 {pstd}
-After estimation, {opt pystacked} can report a table of in-sample
+After estimation, {opt pystacked} with the {opt table} option
+will report a table of in-sample
+(both cross-validated and full-sample-refitted)
 and, optionally, out-of-sample (holdout sample) performance
 for both the stacking regression and the base learners.
-For regression problems, the table reports the MSPE (mean squared prediction error);
-for classification problems, a confusion matrix is reported.
+The available tables types are either a table of root mean squared prediction errors
+({opt table(rmspe)}, the default for regression problems)
+or a confusion matrix ({opt table(confusion)}),
+the default for classification problems.
 The default holdout sample used for out-of-sample performance with the {opt holdout} option
 is all observations not included in the estimation.
 Alternatively, the user can specify the holdout sample explicitly
@@ -287,7 +336,7 @@ Table syntax:
 
 {p 8 14 2}
 {cmd:pystacked} {bind:[{cmd:,}}
-{opt tab:le}
+{opt table}[{cmd:(}{it:options}{cmd:)}]
 {opt holdout}[{cmd:(}{it:varname}{cmd:)}]
 ]
 
@@ -328,7 +377,7 @@ Graph syntax:
 {ul:Prediction}
 
 {pstd}
-To get predicted values:
+To get stacking predicted values:
 
 {p 8 14 2}
 {cmd:predict}
@@ -336,7 +385,9 @@ To get predicted values:
 [{cmd:if} {it:exp}] [{cmd:in} {it:range}]
 {bind:[{cmd:,}}
 {opt pr}
+{opt class}
 {opt xb}
+{opt resid}
 ]
 
 {pstd}
@@ -347,27 +398,40 @@ To get fitted values for each base learner:
 {it:type} {it:stub} 
 [{cmd:if} {it:exp}] [{cmd:in} {it:range}]
 {bind:[{cmd:,}}
-{opt transf:orm}
+{opt base:xb}
+{opt cv:alid}
 ]
 
 {synoptset 20}{...}
 {synopthdr:Option}
 {synoptline}
-{synopt:{opt pr}}
-predicted probability (classification only)
-{p_end}
 {synopt:{opt xb}}
-the default; predicted value (regression) or predicted class (classification)
+predicted value; the default for regression
 {p_end}
-{synopt:{opt transf:orm}}
-predicted values for each base learner
+{synopt:{opt pr}}
+predicted probability; the default for classification
+{p_end}
+{synopt:{opt class}}
+predicted class
+{p_end}
+{synopt:{opt resid}}
+residuals
+{p_end}
+{synopt:{opt base:xb}}
+predicted values for each base learner. By default, the 
+predicted values from re-fitting base learners on the full estimation sample
+are returned.
+{p_end}
+{synopt:{opt cv:alid}}
+cross-validated predicted values. 
+Currently only supported if combined with {opt base:xb}.
 {p_end}
 {synoptline}
 
 {pstd}
 {it:Note:} Predicted values (in and out-sample)
-are calculated when {cmd:pystacked}
-is run and stored in Python memory. {cmd:predict} pulls the
+are calculated and stored in Python memory
+when {cmd:pystacked} is run. {cmd:predict} pulls the
 predicted values from Python memory and saves them in 
 Stata memory. This means that no changes on the data
 in Stata memory should be made {it:between} {cmd:pystacked} call
@@ -467,7 +531,7 @@ Methods {it:ols} {break}
 {it:Documentation:} {browse "https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html":linear_model.LinearRegression}
 
 {pstd}
-{stata "_pyparse, type(reg) method(ols) print":Show options}
+{stata "pystacked, type(reg) method(ols) printopt":Show options}
 
 {pstd}
 {ul:Logistic regression} {break}
@@ -476,7 +540,7 @@ Type: {it:class} {break}
 Documentation: {browse "https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html":linear_model.LogisticRegression}
 
 {pstd}
-{stata "_pyparse, type(class) method(logit) print":Show options}
+{stata "pystacked, type(class) method(logit) printopt":Show options}
 
 {pstd}
 {ul:Penalized regression with information criteria} {break}
@@ -485,7 +549,7 @@ Type: {it:reg} {break}
 Documentation: {browse "https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LassoLarsIC.html":linear_model.LassoLarsIC}
 
 {pstd}
-{stata "_pyparse, type(reg) method(lassoic) print":Show options}
+{stata "pystacked, type(reg) method(lassoic) printopt":Show options}
 
 {pstd}
 {ul:Penalized regression with cross-validation} 
@@ -496,9 +560,9 @@ Type: {it:regress} {break}
 Documentation: {browse "https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.ElasticNetCV.html":linear_model.ElasticNetCV}  
 
 {pstd}
-{stata "_pyparse, type(reg) method(lassocv) print":Show lasso options} {break}
-{stata "_pyparse, type(reg) method(ridgecv) print":Show ridge options} {break}
-{stata "_pyparse, type(reg) method(elasticcv) print":Show elastic net options}
+{stata "pystacked, type(reg) method(lassocv) printopt":Show lasso options} {break}
+{stata "pystacked, type(reg) method(ridgecv) printopt":Show ridge options} {break}
+{stata "pystacked, type(reg) method(elasticcv) printopt":Show elastic net options}
 
 {pstd}
 {ul:Penalized logistic regression with cross-validation} {break}
@@ -507,9 +571,9 @@ Type: {it:class} {break}
 Documentation: {browse "https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegressionCV.html":linear_model.LogisticRegressionCV}
 
 {pstd}
-{stata "_pyparse, type(class) method(lassocv) print":Show lasso options} {break}
-{stata "_pyparse, type(class) method(ridgecv) print":Show ridge options} {break}
-{stata "_pyparse, type(class) method(elasticcv) print":Show elastic options}
+{stata "pystacked, type(class) method(lassocv) printopt":Show lasso options} {break}
+{stata "pystacked, type(class) method(ridgecv) printopt":Show ridge options} {break}
+{stata "pystacked, type(class) method(elasticcv) printopt":Show elastic options}
 
 {pstd}
 {ul:Random forest classifier} {break}
@@ -518,7 +582,7 @@ Type: {it:class} {break}
 Documentation: {browse "https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html":ensemble.RandomForestClassifier}
 
 {pstd}
-{stata "_pyparse, type(class) method(rf) print":Show options}
+{stata "pystacked, type(class) method(rf) printopt":Show options}
 
 {pstd}
 {ul:Random forest regressor} {break}
@@ -527,7 +591,7 @@ Type: {it:reg} {break}
 Documentation: {browse "https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html":ensemble.RandomForestRegressor}
 
 {pstd}
-{stata "_pyparse, type(reg) method(rf) print":Show options}
+{stata "pystacked, type(reg) method(rf) printopt":Show options}
 
 {pstd}
 {ul:Gradient boosted regression trees} {break}
@@ -536,7 +600,7 @@ Type: {it:reg} {break}
 Documentation: {browse "https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html":ensemble.GradientBoostingRegressor}
 
 {pstd}
-{stata "_pyparse, type(reg) method(gradboost) print":Show options}
+{stata "pystacked, type(reg) method(gradboost) printopt":Show options}
 
 {pstd}
 {ul:Linear SVM (SVR)} {break}
@@ -545,7 +609,7 @@ Type: {it:reg} {break}
 Documentation: {browse "https://scikit-learn.org/stable/modules/generated/sklearn.svm.LinearSVR.html":svm.LinearSVR}
 
 {pstd}
-{stata "_pyparse, type(reg) method(linsvm) print":Show options}
+{stata "pystacked, type(reg) method(linsvm) printopt":Show options}
 
 {pstd}
 {ul:SVM (SVR)} {break}
@@ -554,7 +618,7 @@ Type: {it:class} {break}
 Documentation: {browse "https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html":svm.SVR}
 
 {pstd}
-{stata "_pyparse, type(reg) method(svm) print":Show options}
+{stata "pystacked, type(reg) method(svm) printopt":Show options}
 
 {pstd}
 {ul:SVM (SVC)} {break}
@@ -563,7 +627,7 @@ Type: {it:reg} {break}
 Documentation: {browse "https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html":svm.SVC}
 
 {pstd}
-{stata "_pyparse, type(class) method(svm) print":Show options}
+{stata "pystacked, type(class) method(svm) printopt":Show options}
 
 {pstd}
 {ul:Neural net classifier (Multi-layer Perceptron)} {break}
@@ -572,7 +636,7 @@ Type: {it:class} {break}
 Documentation: {browse "https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html":sklearn.neural_network.MLPClassifier}
 
 {pstd}
-{stata "_pyparse, type(class) method(nnet) print":Show options}
+{stata "pystacked, type(class) method(nnet) printopt":Show options}
 
 {pstd}
 {ul:Neural net regressor (Multi-layer Perceptron)} {break}
@@ -581,7 +645,7 @@ Type: {it:reg} {break}
 Documentation: {browse "https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPRegressor.html":sklearn.neural_network.MLPRegressor}
 
 {pstd}
-{stata "_pyparse, type(reg) method(nnet) print":Show options}
+{stata "pystacked, type(reg) method(nnet) printopt":Show options}
 
 {marker predictors}{...}
 {title:Learner-specific predictors}
@@ -674,21 +738,29 @@ by town{p_end}
 {pstd}
 Stacking regression with lasso, random forest and gradient boosting.
 {p_end}
-{phang2}. {stata "pystacked medv crim-lstat, type(regress) pyseed(123) methods(lassocv rf gradboost)"}{p_end}
+{phang2}. {stata "set seed 123"}{p_end}
+{phang2}. {stata "pystacked medv crim-lstat, type(regress) methods(lassocv rf gradboost)"}{p_end}
 
 {pstd}
 The weights determine how much each base learner contributes
 to the final stacking prediction.{p_end}
 
 {pstd}
-Request the MSPE table (in-sample only):{p_end}
+Display for each learner the coefficient estimates (logit, 
+regularized regression, ols) or 
+variable importance measures (random forest, gradient boosting).{p_end}
+{phang2}. {stata "pystacked, showcoef"}{p_end}
+
+{pstd}
+Request the root MSPE table (in-sample only):{p_end}
 {phang2}. {stata "pystacked, table"}{p_end}
 
 {pstd}
 Re-estimate using the first 400 observations, and
-request the MSPE table. Both in-sample and
-the default holdout sample (all unused observations) are reported.:{p_end}
-{phang2}. {stata "pystacked medv crim-lstat if _n<=400, type(regress) pyseed(123) methods(lassocv rf gradboost)"}{p_end}
+request the root MSPE table.
+RMSPEs for both in-sample (both refitted and cross-validated)
+and the default holdout sample (all unused observations) are reported.:{p_end}
+{phang2}. {stata "pystacked medv crim-lstat if _n<=400, type(regress) methods(lassocv rf gradboost)"}{p_end}
 {phang2}. {stata "pystacked, table holdout"}{p_end}
 
 {pstd}
@@ -700,25 +772,30 @@ Storing the predicted values:{p_end}
 {phang2}. {stata "predict double yhat, xb"}{p_end}
 
 {pstd}
+Storing the cross-validated predicted values:{p_end}
+{phang2}. {stata "predict double yhat_cv, xb cvalid"}{p_end}
+
+{pstd}
 We can also save the predicted values of each base learner:{p_end}
-{phang2}. {stata "predict double yhat, transform"}{p_end}
+{phang2}. {stata "predict double yhat, basexb"}{p_end}
 
 {pstd}
 {ul:Learner-specific predictors (Syntax 1)}
 
 {pstd}
-{cmd:pystacked} allows to use different sets of predictors 
+{cmd:pystacked} allows the use of different sets of predictors 
 for each base learners. For example, 
 linear estimators might perform better if interactions are 
 provided as inputs. Here, we use interactions and 2nd-order polynomials
 for the lasso, but not for the other base learners. 
 {p_end}
-{phang2}. {stata "pystacked medv crim-lstat, type(regress) pyseed(123) methods(ols lassocv rf) xvars2(c.(crim-lstat)# #c.(crim-lstat))"}{p_end}
+{phang2}. {stata "set seed 123"}{p_end}
+{phang2}. {stata "pystacked medv crim-lstat, type(regress) methods(ols lassocv rf) xvars2(c.(crim-lstat)# #c.(crim-lstat))"}{p_end}
 
 {pstd}
 The same can be achieved using pipelines which create polynomials on-the-fly in Python. 
 {p_end}
-{phang2}. {stata "pystacked medv crim-lstat, type(regress) pyseed(123) methods(ols lassocv rf) pipe2(poly2)"}{p_end}
+{phang2}. {stata "pystacked medv crim-lstat, type(regress) methods(ols lassocv rf) pipe2(poly2)"}{p_end}
 
 {pstd}
 {ul:Learner-specific predictors (Syntax 2)}
@@ -726,8 +803,8 @@ The same can be achieved using pipelines which create polynomials on-the-fly in 
 {pstd}
 We demonstrate the same using the alternative syntax, which is often more handy:
 
-{phang2}. {stata "pystacked medv crim-lstat || m(ols) || m(lassocv) xvars(c.(crim-lstat)# #c.(crim-lstat)) || m(rf) || , type(regress) pyseed(123)"}{p_end}
-{phang2}. {stata "pystacked medv crim-lstat || m(ols) || m(lassocv) pipe(poly2) || m(rf) || , type(regress) pyseed(123)"}{p_end}
+{phang2}. {stata "pystacked medv crim-lstat || m(ols) || m(lassocv) xvars(c.(crim-lstat)# #c.(crim-lstat)) || m(rf) || , type(regress)"}{p_end}
+{phang2}. {stata "pystacked medv crim-lstat || m(ols) || m(lassocv) pipe(poly2) || m(rf) || , type(regress) "}{p_end}
 
 {pstd}
 {ul:Options of base learners (Syntax 1)}
@@ -738,7 +815,7 @@ we change the maximum tree depth for the random forest. Since random forest is
 the third base learner, we use {opt cmdopt3(max_depth(3))}.
 {p_end}
 
-{phang2}. {stata "pystacked medv crim-lstat, type(regress) pyseed(123) methods(ols lassocv rf) pipe1(poly2) pipe2(poly2) cmdopt3(max_depth(3))"}{p_end}
+{phang2}. {stata "pystacked medv crim-lstat, type(regress) methods(ols lassocv rf) pipe1(poly2) pipe2(poly2) cmdopt3(max_depth(3))"}{p_end}
 
 {pstd}
 You can verify that the option has been passed to Python correctly:
@@ -753,7 +830,7 @@ The same results as above can be achieved using the alternative syntax, which
 imposes no limit on the number of base learners.
 {p_end}
 
-{phang2}. {stata "pystacked medv crim-lstat || m(ols) pipe(poly2) || m(lassocv) pipe(poly2) || m(rf) opt(max_depth(3)) , type(regress) pyseed(123)"}{p_end}
+{phang2}. {stata "pystacked medv crim-lstat || m(ols) pipe(poly2) || m(lassocv) pipe(poly2) || m(rf) opt(max_depth(3)) , type(regress)"}{p_end}
 
 {pstd}
 {ul:Single base learners}
@@ -763,7 +840,18 @@ You can use {cmd:pystacked} with a single base learner.
 In this example, we are using a conventional random forest:
 {p_end}
 
-{phang2}. {stata "pystacked medv crim-lstat, type(regress) pyseed(123) methods(rf)"}{p_end}
+{phang2}. {stata "set seed 123"}{p_end}
+{phang2}. {stata "pystacked medv crim-lstat, type(regress) methods(rf)"}{p_end}
+
+{pstd}
+Show the variable importance measure by predictor.{p_end}
+{phang2}. {stata "pystacked, showcoef"}{p_end}
+
+{pstd}
+We can also run ordinary least squares, display
+the coefficient estimates and compare to {helpb regress}.{p_end}
+{phang2}. {stata "pystacked medv crim-lstat, type(regress) methods(ols) showcoef"}{p_end}
+{phang2}. {stata "reg medv crim-lstat"}{p_end}
 
 {pstd}
 {ul:Voting}
@@ -772,7 +860,8 @@ In this example, we are using a conventional random forest:
 You can also use pre-defined weights. Here, we assign weights of 0.5 to OLS, 
 .1 to the lasso and, implicitly, .4 to the random foreset.
 {p_end}
-{phang2}. {stata "pystacked medv crim-lstat, type(regress) pyseed(123) methods(ols lassocv rf) pipe1(poly2) pipe2(poly2) voting voteweights(.5 .1)"}{p_end}
+{phang2}. {stata "set seed 123"}{p_end}
+{phang2}. {stata "pystacked medv crim-lstat, type(regress) methods(ols lassocv rf) pipe1(poly2) pipe2(poly2) voting voteweights(.5 .1)"}{p_end}
 
 {marker example_spam}{...}
 {title:Classification Example using Spam data}
@@ -820,7 +909,8 @@ Throughout this example, we add the option {opt njobs(4)}, which enables
 parallelization with 4 cores. 
 
 {pstd}We consider three base learners: logit, random forest and gradient boosting:{p_end}
-{phang2}. {stata "pystacked v58 v1-v57, type(class) pyseed(123) methods(logit rf gradboost) njobs(4) pipe1(poly2)"}{p_end}
+{phang2}. {stata "set seed 123"}{p_end}
+{phang2}. {stata "pystacked v58 v1-v57, type(class) methods(logit rf gradboost) njobs(4) pipe1(poly2)"}{p_end}
 
 {pstd}{ul:Out-of-sample classification.} 
 
@@ -830,7 +920,7 @@ parallelization with 4 cores.
 {phang2}. {stata "sort u"}{p_end}
 
 {pstd}Estimation on the first 2000 observations.{p_end}
-{phang2}. {stata "pystacked v58 v1-v57 if _n<=2000, type(class) pyseed(123) methods(logit rf gradboost) njobs(4) pipe1(poly2)"}{p_end}
+{phang2}. {stata "pystacked v58 v1-v57 if _n<=2000, type(class) methods(logit rf gradboost) njobs(4) pipe1(poly2)"}{p_end}
 
 {pstd}We can get both the predicted probabilities or the predicted class:{p_end}
 {phang2}. {stata "predict spam, class"}{p_end}
@@ -897,9 +987,26 @@ For further information, see
 To install/update {cmd:pystacked}, type {p_end}
 {phang2}. {stata "net install pystacked, from(https://raw.githubusercontent.com/aahrens1/pystacked/main) replace"}{p_end}
 
-{marker misc}{title:References}
-{marker Harrison1978}{...}
+{marker misc}{title:Miscellaneous}
 
+{title:Website}
+
+{pstd}
+Check our {browse "https://statalasso.github.io/":website} for more information 
+and regular updates.
+
+{title:Github}
+
+{pstd}
+Our Github repository with our code is available 
+{browse "https://github.com/aahrens1/pystacked":here}.
+You can use the "Issues" section to contact us. 
+The "cert" folder includes scripts which we use to test
+our program.
+
+{title:References}
+
+{marker Harrison1978}{...}
 {pstd}
 Harrison, D. and Rubinfeld, D.L (1978). Hedonic prices and the 
 demand for clean air. {it:J. Environ. Economics & Management},
@@ -919,7 +1026,8 @@ Wolpert, David H. Stacked generalization. {it:Neural networks} 5.2 (1992): 241-2
 {title:Contact}
 
 {pstd}
-If you encounter an error, contact us via email. If you have a question, you 
+If you encounter an error, contact us via email or
+Github Issues. If you have a question, you 
 can also post on Statalist (please tag @Achim Ahrens). 
 
 {title:Acknowledgements}
@@ -934,6 +1042,14 @@ Marco Alfano for feedback.
 All remaining errors are our own. 
 
 {title:Citation}
+
+{pstd}
+Ahrens, A., Hansen, C.B. and Schaffer, M.E., 2022. 
+pystacked: Stacking generalization and machine learning in Stata.
+{browse "https://arxiv.org/abs/2301.09397":arxiv link}.
+
+{pstd}
+A bibtex file is available {browse "https://statalasso.github.io/dta/pystacked.bib":here}.
 
 {pstd}
 Please also cite scikit-learn; see {browse "https://scikit-learn.org/stable/about.html"}.

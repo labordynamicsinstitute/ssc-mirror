@@ -1,158 +1,263 @@
-*! pystacked v0.4.3
-*! last edited: 18Aug2022
+*! pystacked v0.7.1
+*! last edited: 1april2023
 *! authors: aa/ms
 
 // parent program
 program define pystacked, eclass
     version 16.0
 
-    // only print options
+    // exception for printoption which can be called w/o variables
     tokenize `"`0'"', parse(",")
     local beforecomma `1'
     macro shift
     local restargs `*'
-    if (strpos("`restargs'","print"))==0 {
+    local printopt_on = strpos("`restargs'","print")!=0
 
+    if ~replay() {
         // no replay - must estimate
-        if ~replay() {
-            _pystacked `0'
-        }
-
-        // save for display results
-        tempname weights_mat
-        mat `weights_mat'=e(weights)
-        local base_est `e(base_est)'
-        local nlearners    = e(mcount)
-
-        // parse and check for graph/table options
-        // code borrowed from _pstacked below - needed to accommodate syntax #2
-        if ~replay() {
-            tokenize "`0'", parse(",")
-            local beforecomma `1'
-            macro shift
-            local restargs `*'
-            local 0 `beforecomma'
-            syntax anything(name=beforeifinweight) [if] [in] [aweight fweight]
-            local ifinweight `if' `in' `weight' `exp'
-            tokenize `beforeifinweight', parse("|")
-            local mainargs `1'
-            local 0 `mainargs' `ifinweight' `restargs'
-        }
-        syntax [anything]  [if] [in] [aweight fweight] ,     ///
-                    [                                        ///
-                        GRAPH1                                /// vanilla option, abbreviates to "graph"
-                        HISTogram                            /// report histogram instead of default ROC
-                        graph(string asis)                    /// for passing options to graph combine
-                        lgraph(string asis)                    /// for passing options to the graphs of the learners
-                        TABle                                /// 
-                        HOLDOUT1                            /// vanilla option, abbreviates to "holdout"
-                        holdout(varname)                    ///
-                        *                                    ///
-                    ]
-        
-        // display results
-        if `"`graph'`graph1'`lgraph'`histogram'`table'"' == "" {
-
-            di
-            di as res "Stacking weights:"
-            di as text "{hline 17}{c TT}{hline 21}"
-            di as text "  Method" _c
-            di as text _col(18) "{c |}      Weight"
-            di as text "{hline 17}{c +}{hline 21}"
-
-            forvalues j=1/`nlearners' {
-                local b : word `j' of `base_est'
-                di as text "  `b'" _c
-                di as text _col(18) "{c |}" _c
-                di as res %15.7f el(`weights_mat',`j',1)
-            }
-        }
-
-        // graph/table block
-        if `"`graph'`graph1'`lgraph'`histogram'`table'"' ~= "" {
-            pystacked_graph_table,                            ///
-                `holdout1' holdout(`holdout')                ///
-                `graph1'                                    ///
-                `histogram'                                    ///
-                goptions(`graph') lgoptions(`lgraph')        ///
-                `table'
-        }
-        
-        // print MSPE table for regression problem
-        if "`table'" ~= "" & "`e(type)'"=="reg" {
-            tempname m w
-            mat `m' = r(m)
-            
-            di
-            di as text "MSPE: In-Sample and Out-of-Sample"
-            di as text "{hline 17}{c TT}{hline 35}"
-            di as text "  Method" _c
-            di as text _col(18) "{c |} Weight   In-Sample   Out-of-Sample"
-            di as text "{hline 17}{c +}{hline 35}"
-            
-            di as text "  STACKING" _c
-            di as text _col(18) "{c |}" _c
-            di as text "    .  " _c
-            di as res  _col(30) %7.3f el(`m',1,1) _col(44) %7.3f el(`m',1,2)
-            
-            forvalues j=1/`nlearners' {
-                local b : word `j' of `base_est'
-                di as text "  `b'" _c
-                di as text _col(18) "{c |}" _c
-                di as res _col(20) %5.3f el(`weights_mat',`j',1) _c
-                di as res _col(30) %7.3f el(`m',`j'+1,1) _col(44) %7.3f el(`m',`j'+1,2)
-            }
-
-            // add to estimation macros
-            ereturn mat mspe = `m'
-        }
-        
-        // print confusion matrix for classification problem
-        if "`table'" ~= "" & "`e(type)'"=="class" {
-            tempname m w
-            mat `m' = r(m)
-            
-            di
-            di as text "Confusion matrix: In-Sample and Out-of-Sample"
-            di as text "{hline 17}{c TT}{hline 42}"
-            di as text "  Method" _c
-            di as text _col(18) "{c |} Weight      In-Sample       Out-of-Sample"
-            di as text _col(18) "{c |}             0       1         0       1  "
-            di as text "{hline 17}{c +}{hline 42}"
-            
-            // di as text "  STACKING" _c
-            // di as text _col(16) "0 {c |}" _c
-            // di as text "    .  " _c
-            // di as res  _col(27) %7.0f 1234567 _col(35) %7.0f 1234567 _col(45) %7.0f 1234567 _col(53) %7.0f 1234567
-            di as text "  STACKING" _c
-            di as text _col(16) "0 {c |}" _c
-            di as text "    .  " _c
-            di as res  _col(27) %7.0f el(`m',1,1) _col(35) %7.0f el(`m',1,2) _col(45) %7.0f el(`m',1,3) _col(53) %7.0f el(`m',1,4)
-            di as text "  STACKING" _c
-            di as text _col(16) "1 {c |}" _c
-            di as text "    .  " _c
-            di as res  _col(27) %7.0f el(`m',2,1) _col(35) %7.0f el(`m',2,2) _col(45) %7.0f el(`m',2,3) _col(53) %7.0f el(`m',2,4)
-            
-            forvalues j=1/`nlearners' {
-                local b : word `j' of `base_est'
-                di as text "  `b'" _c
-                di as text _col(16) "0 {c |}" _c
-                di as res  _col(20) %5.3f el(`weights_mat',`j',1) _c
-                local r = 2*`j' + 1
-                di as res  _col(27) %7.0f el(`m',`r',1) _col(35) %7.0f el(`m',`r',2) _col(45) %7.0f el(`m',`r',3) _col(53) %7.0f el(`m',`r',4)
-                di as text "  `b'" _c
-                di as text _col(16) "1 {c |}" _c
-                di as res  _col(20) %5.3f el(`weights_mat',`j',1) _c
-                local r = 2*`j' + 2
-                di as res  _col(27) %7.0f el(`m',`r',1) _col(35) %7.0f el(`m',`r',2) _col(45) %7.0f el(`m',`r',3) _col(53) %7.0f el(`m',`r',4)
-            }
-            
-            // add to estimation macros
-            ereturn mat confusion = `m'
-        }
+        _pystacked `0'
+    }
+    else if replay() & `printopt_on' {
+        // just print options and leave
+        _pyparse `0'
+        exit
     }
     else {
-        _pyparse `0'
+        // replay - check that pystacked estimation is in memory
+        if "`e(cmd)'"~="pystacked" {
+            di as err "last estimates not found"
+            exit 301
+        }
+    }
+
+    // save for display results
+    tempname weights_mat
+    mat `weights_mat'=e(weights)
+    local base_est `e(base_est)'
+    local nlearners    = e(mcount)
+
+    // parse and check for graph/table options
+    // code borrowed from _pstacked below - needed to accommodate syntax #2
+    if ~replay() {
+        tokenize "`0'", parse(",")
+        local beforecomma `1'
+        macro shift
+        local restargs `*'
+        local 0 `beforecomma'
+        syntax anything(name=beforeifinweight) [if] [in] [aweight fweight]
+        if "`weight'"!="" {
+            local ifinweight `if' `in' [`weight' `exp']
+        }
+        else {
+            local ifinweight `if' `in' `weight' `exp'
+        }
+        tokenize `beforeifinweight', parse("|")
+        local mainargs `1'
+        local 0 `mainargs' `ifinweight' `restargs'
+    }
+    syntax [anything]  [if] [in] [aweight fweight] ,    ///
+                [                                       ///
+                    GRAPH1                              /// vanilla option, abbreviates to "graph"
+                    HISTogram                           /// report histogram instead of default ROC
+                    graph(string asis)                  /// for passing options to graph combine
+                    lgraph(string asis)                 /// for passing options to the graphs of the learners
+                    TABLE1                              ///
+                    table(string)                       /// rmspe or confusion
+                    HOLDOUT1                            /// vanilla option, abbreviates to "holdout"
+                    holdout(varname)                    ///
+                    CValid                              ///
+                    NOESTIMATE                          /// suppress call to run_stacked; no estimates, only parses
+                    SHOWCoefs                           ///
+                    PRINTopt                            ///
+                    *                                   ///
+                ]
+
+    if "`printopt'"!="" local noestimate noestimate
+    
+    // default reg table = rmspe
+    // default class table = confusion
+    // table1 = "table" or ""
+    // table = rmspe or confusion
+    if "`table'"~="" & "`table1'"~="" {
+        di as err "error - multiple table options specified"
+        exit 198
+    }
+    if "`table'"~="" & "`table'"~="rmspe" & "`table'"~="confusion" {
+        di as err "error - option table(`table') not supported"
+        exit 198
+    }
+    if "`table'"=="confusion" & "`e(type)'"=="reg" {
+        di as err "error - confusion table available for classification problems only"
+        exit 198
+    }
+    // if table1 and table both blank, set macro table to default type
+    if "`table1'"~="" & "`table'"=="" {
+        if "`e(type)'"=="reg" {
+            local table rmspe
+        }
+        else {
+            local table confusion
+        }           
+    }
+    // from here, table is the macro indicating table type
+    
+    // display results
+    if `"`graph'`graph1'`lgraph'`histogram'`table'`noestimate'"' == "" {
+
+        di
+        di as res "Stacking weights:"
+        di as text "{hline 17}{c TT}{hline 21}"
+        di as text "  Method" _c
+        di as text _col(18) "{c |}      Weight"
+        di as text "{hline 17}{c +}{hline 21}"
+
+        forvalues j=1/`nlearners' {
+            local b : word `j' of `base_est'
+            di as text "  `b'" _c
+            di as text _col(18) "{c |}" _c
+            di as res %15.7f el(`weights_mat',`j',1)
+        }
+    }
+
+    // display results
+    if "`showcoefs'"!="" & "`noestimate'" == "" {
+
+        forvalues i = 1(1)`e(mcount)' {
+
+            if (`e(has_coefs`i')') {
+
+                // get learner
+
+                local thislearner : word `i' of `e(base_est)'
+                // get coefficient matrix
+                tempname coefs_mat
+                mat `coefs_mat'=e(coefs`i')
+
+                // add constant as a name if it's there
+                local thexvars `e(xvars_o`i')'
+                if (`e(has_intercept`i')') local thexvars `thexvars' _cons
+
+                // save number of coefficients and number of var names
+                local coef_nums = rowsof(`coefs_mat')
+                local varname_count : word count `thexvars'
+
+                // get max string length of variables
+                local maxstrlen = 17
+                foreach i in `thexvars' {
+                    local thisstrlen = strlen("`i'")
+                    if (`thisstrlen'>`maxstrlen'-2) local maxstrlen = `thisstrlen'+2
+                }
+                local maxstrlen = `maxstrlen'+2
+
+                // which type of coefficients are shown
+                local coeftype Coefficients
+                if regexm("rf gradboost","`thislearner'") {
+                    local coeftype Variable importance
+                }
+
+                // only display if # names = # coefs
+                if (`coef_nums' == `varname_count') {
+                    di
+                    di as res "`coeftype' `thislearner'`i':"
+                    di as text "{hline `=`maxstrlen'-1'}{c TT}{hline 21}"
+                    di as text "  Predictor  " _c
+                    di as text _col(`maxstrlen') "{c |}      Value"
+                    di as text "{hline `=`maxstrlen'-1'}{c +}{hline 21}"
+
+                    forvalues j=1/`coef_nums' {
+                        local thisxvar : word `j' of `thexvars'
+                        di as text "  `thisxvar'" _c
+                        di as text _col(`maxstrlen') "{c |}" _c
+                        di as res %15.7f el(`coefs_mat',`j',1)
+                    }
+                }
+                if "`e(type)'"=="class" & regexm("lassocv ridgecv elasticcv logit","`thislearner'") {
+                    di "" _c
+                    di as text "Note: " _c
+                    di as text "Coefficients correspond to decision boundary function."
+                }
+            }
+        }   
+    }
+
+    // graph/table block
+    if `"`graph'`graph1'`lgraph'`histogram'`table'"' ~= "" {
+        pystacked_graph_table,                          ///
+            `holdout1' holdout(`holdout')               ///
+            `cvalid'                                    ///
+            `graph1'                                    ///
+            `histogram'                                 ///
+            goptions(`graph') lgoptions(`lgraph')       ///
+            table(`table')
+    }
+    
+    // print RMSPE table if specified
+    if "`table'"=="rmspe" {
+        tempname m w
+        mat `m' = r(m)
+        
+        di
+        di as text "RMSPE: In-Sample, CV, Holdout"
+        di as text "{hline 17}{c TT}{hline 47}"
+        di as text "  Method" _c
+        di as text _col(18) "{c |} Weight   In-Sample        CV         Holdout"
+        di as text "{hline 17}{c +}{hline 47}"
+        
+        di as text "  STACKING" _c
+        di as text _col(18) "{c |}" _c
+        di as text "    .  " _c
+        di as res  _col(30) %7.3f el(`m',1,1) _col(43) %7.3f el(`m',1,2) _col(56) %7.3f el(`m',1,3)
+        
+        forvalues j=1/`nlearners' {
+            local b : word `j' of `base_est'
+            di as text "  `b'" _c
+            di as text _col(18) "{c |}" _c
+            di as res _col(20) %5.3f el(`weights_mat',`j',1) _c
+            di as res _col(30) %7.3f el(`m',`j'+1,1) _col(43) %7.3f el(`m',`j'+1,2) _col(56) %7.3f el(`m',`j'+1,3)
+        }
+
+        // add to estimation macros
+        ereturn mat rmspe = `m'
+    }
+    
+    // print confusion matrix if specified
+    if "`table'"=="confusion" {
+        tempname m w
+        mat `m' = r(m)
+        
+        di
+        di as text "Confusion matrix: In-Sample, CV, Holdout"
+        di as text "{hline 17}{c TT}{hline 59}"
+        di as text "  Method" _c
+        di as text _col(18) "{c |} Weight      In-Sample             CV             Holdout"
+        di as text _col(18) "{c |}             0       1         0       1         0       1"
+        di as text "{hline 17}{c +}{hline 59}"
+        
+        di as text "  STACKING" _c
+        di as text _col(16) "0 {c |}" _c
+        di as text "    .  " _c
+        di as res  _col(27) %7.0f el(`m',1,1) _col(35) %7.0f el(`m',1,2) _col(45) %7.0f el(`m',1,3) _col(53) %7.0f el(`m',1,4) _col(63) %7.0f el(`m',1,5) _col(71) %7.0f el(`m',1,6)
+        di as text "  STACKING" _c
+        di as text _col(16) "1 {c |}" _c
+        di as text "    .  " _c
+        di as res  _col(27) %7.0f el(`m',2,1) _col(35) %7.0f el(`m',2,2) _col(45) %7.0f el(`m',2,3) _col(53) %7.0f el(`m',2,4) _col(63) %7.0f el(`m',2,5) _col(71) %7.0f el(`m',2,6)
+        
+        forvalues j=1/`nlearners' {
+            local b : word `j' of `base_est'
+            di as text "  `b'" _c
+            di as text _col(16) "0 {c |}" _c
+            di as res  _col(20) %5.3f el(`weights_mat',`j',1) _c
+            local r = 2*`j' + 1
+            di as res  _col(27) %7.0f el(`m',`r',1) _col(35) %7.0f el(`m',`r',2) _col(45) %7.0f el(`m',`r',3) _col(53) %7.0f el(`m',`r',4) _col(63) %7.0f el(`m',`r',5) _col(71) %7.0f el(`m',`r',6)
+            di as text "  `b'" _c
+            di as text _col(16) "1 {c |}" _c
+            di as res  _col(20) %5.3f el(`weights_mat',`j',1) _c
+            local r = 2*`j' + 2
+            di as res  _col(27) %7.0f el(`m',`r',1) _col(35) %7.0f el(`m',`r',2) _col(45) %7.0f el(`m',`r',3) _col(53) %7.0f el(`m',`r',4) _col(63) %7.0f el(`m',`r',5) _col(71) %7.0f el(`m',`r',6)
+        }
+        
+        // add to estimation macros
+        ereturn mat confusion = `m'
     }
 end
 
@@ -167,75 +272,86 @@ version 16.0
     local restargs `*'
     local 0 `beforecomma'
     syntax anything(name=beforeifinweight) [if] [in] [aweight fweight]
-    local ifinweight `if' `in' `weight' `exp'
+            if "`weight'"!="" {
+                local ifinweight `if' `in' [`weight' `exp']
+            }
+            else {
+                local ifinweight `if' `in' `weight' `exp'
+            }
     tokenize `beforeifinweight', parse("|")
     local mainargs `1'
     local 0 `mainargs' `ifinweight' `restargs'
     local doublebarsyntax = ("`2'"=="|")*("`3'"=="|")
+    if `doublebarsyntax'==0 {
+        // required to allow for numbered options
+        syntax varlist(min=2 fv) [if] [in] [aweight fweight] [, Methods(string) TYpe(string) *]
+        // set default
+        if ("`type'"=="") {
+            local type reg
+            local typeopt type(reg)
+        }
+        if ("`methods'"=="") {
+            if (substr("`type'",1,5)=="class") {
+                local methods logit lassocv gradboost
+            }
+            else {
+                local methods ols lassocv gradboost
+            }
+            local methodsopt methods(`methods')
+        }
+        forv i = 1/`:list sizeof methods' {
+            local numopts `numopts' cmdopt`i'(string asis) pipe`i'(string asis) xvars`i'(varlist fv)
+        }
+    }
     syntax varlist(min=2 fv) [if] [in] [aweight fweight], ///
                 [ ///
-                    type(string) /// classification or regression
-                    finalest(string) ///
-                    njobs(int 0) ///
-                    folds(int 5) ///
+                    TYpe(string) /// classification or regression
+                    FINALest(string) ///
+                    NJobs(int 0) ///
+                    Folds(int 5) ///
+                    FOLDVar(varname) ///
+                    PREFit ///
+                    BFolds(int 5) ///
+                    NORANDOM ///
+                    NOSHUFFLE ///
                     ///
                     ///
-                    pyseed(integer -1) ///
+                    PYSeed(integer -1) ///
                     PRINTopt ///
                     NOSAVEPred ///
-                    NOSAVETransform ///
+                    NOSAVETransform /// legacy option
+                    NOSAVEBasexb /// equivalent to old NOSAVETransform
                     ///
-                    voting ///
+                    VOTing ///
                     ///
                     VOTEType(string) ///
                     VOTEWeights(numlist >0) ///
                     debug ///
                     Methods(string) ///
-                    cmdopt1(string asis) ///
-                    cmdopt2(string asis) ///
-                    cmdopt3(string asis) ///
-                    cmdopt4(string asis) ///
-                    cmdopt5(string asis) ///
-                    cmdopt6(string asis) ///
-                    cmdopt7(string asis) ///
-                    cmdopt8(string asis) ///
-                    cmdopt9(string asis) ///
-                    cmdopt10(string asis) ///
-                    pipe1(string asis) ///
-                    pipe2(string asis) ///
-                    pipe3(string asis) ///
-                    pipe4(string asis) ///
-                    pipe5(string asis) ///
-                    pipe6(string asis) ///
-                    pipe7(string asis) ///
-                    pipe8(string asis) ///
-                    pipe9(string asis) ///
-                    pipe10(string asis) ///
-                    xvars1(varlist fv) ///
-                    xvars2(varlist fv) ///
-                    xvars3(varlist fv) ///
-                    xvars4(varlist fv) ///
-                    xvars5(varlist fv) ///
-                    xvars6(varlist fv) ///
-                    xvars7(varlist fv) ///
-                    xvars8(varlist fv) ///
-                    xvars9(varlist fv) ///
-                    xvars10(varlist fv) ///
+                    `numopts' ///
                     ///
-                    SHOWPywarnings ///
+                    SHOWPymessages ///
                     backend(string) ///
                     ///
                     /// options for graphing; ignore here
-                    GRAPH1                                /// vanilla option, abbreviates to "graph"
-                    HISTogram                            /// report histogram instead of default ROC
-                    graph(string asis)                    /// for passing options to graph combine
-                    lgraph(string asis)                    /// for passing options to the graphs of the learners
-                    table                                /// 
-                    HOLDOUT1                            /// vanilla option, abbreviates to "holdout"
-                    holdout(varname)                    ///
-                    SParse                                ///
-                    SHOWOPTions                         ///
+                    GRAPH1                                  /// vanilla option, abbreviates to "graph"
+                    HISTogram                               /// report histogram instead of default ROC
+                    graph(string asis)                      /// for passing options to graph combine
+                    lgraph(string asis)                     /// for passing options to the graphs of the learners
+                    TABle                                   /// 
+                    HOLDOUT1                                /// vanilla option, abbreviates to "holdout"
+                    holdout(varname)                        ///
+                    CValid                                  ///
+                    SHOWCoefs                               ///
+                    SParse                                  ///
+                    SHOWOPTions                             ///
+                    NOESTIMATE                              /// suppress call to run_stacked; no estimates, only parses
                 ]
+
+    if `"`methods'"'=="" local methods `methods0'
+    if "`printopt'"!="" {
+        local noestimate noestimate
+    }
 
     ** set data signature for pystacked_p;
     * need to do this before temp vars are created
@@ -244,6 +360,14 @@ version 16.0
     `dqui'  datasignature set
     `dqui' datasignature report
 
+    if ("`exp'"!="") {
+        tempvar wvar
+        local wvar_t = subinstr("`exp'","=","",.)
+        local wvar_t = subinstr("`wvar_t'"," ","",.)
+        gen `wvar'=`wvar_t'
+    }
+
+    * set defaults
     if "`type'"=="" local type reg
     if substr("`type'",1,3)=="reg" {
         local type reg
@@ -255,6 +379,15 @@ version 16.0
         di as err "type(`type') not recognized"
         exit 198
     }
+    if ("`methods'"=="") {
+        if ("`type'"=="class") {
+            local methods logit lassocv gradboost
+        }
+        else {
+            local methods ols lassocv gradboost
+        }
+        local methodsopt methods(`methods')
+    }
 
     * set the Python seed using randomly drawn number 
     if `pyseed'<0 {
@@ -265,19 +398,18 @@ version 16.0
     if "`finalest'"=="" {
         local finalest nnls1
     }
-
-    if "`backend'"=="" {
-        if "`c(os)'"=="Windows" {
-            local backend threading
-        }
-        else {
-            local backend loky
-        }
+    * legacy option
+    if "`nosavetransform'"~="" {
+        local nosavebasexb nosavebasexb
+        local nosavetransform
     }
+
+    if "`backend'"=="" local backend threading
     if "`backend'"!="loky"&"`backend'"!="multiprocessing"&"`backend'"!="threading" {
         di as err "backend not supported"
         exit 198
     }
+    //local backend threading
 
     if "`votetype'"!="" {
         local voting voting
@@ -295,21 +427,16 @@ version 16.0
         }
     } 
 
-    if (`doublebarsyntax'==0)&("`methods'"=="") {
-        if ("`type'"=="reg") {
-            local methods ols lassocv gradboost
-        }
-        else {
-            local methods logit lassocv gradboost
-        }
+    python clear
+
+    pystacked_check_python
+    qui findfile pystacked.py
+    cap python script "`r(fn)'", global
+    if _rc != 0 {
+        noi disp "Error loading Python Script for pystacked."
+        error 199
     }
-    if (`doublebarsyntax'==0)&("`methods'"!="") {
-        local mcount : word count `methods'
-        if `mcount'>10 {
-            di as err "more than 10 methods specified, but only up to 10 supported using this syntax"
-            di as err "use e.g. 'pystacked y x* || m(rf) || m(lassocv) || ...' to specify as many base learners as you want"
-        }
-    }
+    python: from pystacked import *
 
     // get sklearn version
     python: from sklearn import __version__ as sklearn_version
@@ -325,18 +452,40 @@ version 16.0
 
     // mark sample 
     marksample touse
-    markout `touse' `varlist'
+    markout `touse' `varlist' `wvar'
     qui count if `touse'
     local N        = r(N)
+
+    // generate fold var
+    if "`foldvar'"=="" {
+        *** gen folds
+        tempvar uni cuni fid
+        if "`norandom'"~="" {
+            qui gen `uni' = _n
+        }
+        else {
+            qui gen double `uni' = runiform() if `touse'
+        }
+        qui cumul `uni' if `touse', gen(`cuni')
+        qui gen int `fid' = ceil(`folds'*`cuni') if `touse'
+    }
+    else {
+        tempvar fid
+        gen int `fid'=`foldvar'
+    }
+
+    tempvar id 
+    gen long `id'=_n
+    local shuffle=("`noshuffle'"=="")
 
     ******** parse options using _pyparse.ado ********************************* 
 
     if `doublebarsyntax' {
         // Syntax 2
-        syntax_parse `beforeifinweight' , type(`type') touse(`touse') sklearn1(`sklearn_ver1') sklearn2(`sklearn_ver2') sklearn3(`sklearn_ver3')
+        syntax_parse `beforeifinweight' , type(`type') touse(`touse') sklearn1(`sklearn_ver1') sklearn2(`sklearn_ver2') sklearn3(`sklearn_ver3') `printopt'
         local allmethods `r(allmethods)'
         local allpyopt `r(allpyopt)'
-        local mcount = `r(mcount)'
+        local mcount : word count `allmethods'
         local allpipe (
         forvalues i = 1(1)`mcount' {
             local opt`i' `r(opt`i')'
@@ -351,12 +500,13 @@ version 16.0
     else {
         // Syntax 1
         local allmethods `methods'
+        local mcount : word count `allmethods'
         local allpipe (
-        forvalues i = 1(1)10 {
+        forvalues i = 1(1)`mcount' {
             local method : word `i' of `allmethods'
             if "`method'"!="" {
                 local mcount = `i'
-                _pyparse , `cmdopt`i'' type(`type') method(`method') sklearn1(`sklearn_ver1') sklearn2(`sklearn_ver2') sklearn3(`sklearn_ver3')
+                _pyparse , `cmdopt`i'' type(`type') method(`method') sklearn1(`sklearn_ver1') sklearn2(`sklearn_ver2') sklearn3(`sklearn_ver3') `printopt'
                 if `i'==1 {
                     local allpyopt [`r(optstr)'
                 }
@@ -366,10 +516,11 @@ version 16.0
                 local opt`i' `cmdopt`i'' 
                 local method`i' `method'
                 local pyopt`i' `r(optstr)'
-                if strpos("`pipe`i''","stdscaler")==0 & strpos("lassoic lassocv ridgecv elasticcv","`method'")!=0 {
-                    * stdscaler is added by default for linear regularized estimators
+                ** if (no)stdscaler isn't included, add it at the end for linear estimators
+                if strpos("`pipe`i''","stdscaler")==0 & strpos("lassoic lassocv ridgecv elasticcv logit","`method'")!=0 {
                     local pipe`i' `pipe`i'' stdscaler
                 }
+                ** remove 'nostdscaler'
                 local pipe`i' = subinstr("`pipe`i''","nostdscaler","",.)
                 if "`pipe`i''"=="" local pipe`i' passthrough
                 local allpipe `allpipe' '`pipe`i''', 
@@ -401,6 +552,7 @@ version 16.0
         if "`xvars`i''"=="" {
             local xvars`i' `xvars'
         }
+        local xvars_orig`i' `xvars`i''
         ** expand each varlist, and strip out variables with "o" and "b" prefix
         fvstrip `xvars`i'' if `touse', dropomit expand
         local xvars`i' `r(varlist)'
@@ -455,37 +607,45 @@ version 16.0
     qui gen byte `esample' = `touse'
     ereturn post, depname(`yvar') esample(`esample') obs(`N')
 
-    python: run_stacked(    ///
-                    "`type'",    ///
-                    "`finalest'", ///
-                    "`allmethods'", ///
-                    "`yvar_t'", ///
-                    "`xvars_all_t'",    ///
-                    "`training_var'", ///
-                    ///
-                    "`allpyopt'", ///
-                    "`allpipe'", ///
-                    "`allxvars_t'", ///
-                    ///  
-                    "`touse'", ///
-                    `pyseed', ///
-                    "`nosavepred'", ///
-                    "`nosavetransform'", ///
-                    "`voting'" , ///
-                    "`votetype'", ///
-                    "`voteweights'", ///
-                    `njobs' , ///
-                    `folds', ///
-                    "`showpywarnings'", ///
-                    "`backend'", ///
-                    "`sparse'", ///
-                    "`showoptions'" ///
-                    )
-
+    if "`noestimate'"=="" {
+        python: run_stacked( ///
+                        "`type'",    ///
+                        "`finalest'", ///
+                        "`allmethods'", ///
+                        "`yvar_t'", ///
+                        "`xvars_all_t'", ///
+                        "`wvar'", ///
+                        "`training_var'", ///
+                        ///
+                        "`allpyopt'", ///
+                        "`allpipe'", ///
+                        "`allxvars_t'", ///
+                        ///  
+                        "`touse'", ///
+                        `pyseed', ///
+                        "`nosavepred'", ///
+                        "`nosavebasexb'", ///
+                        "`voting'" , ///
+                        "`votetype'", ///
+                        "`voteweights'", ///
+                        `njobs' , ///
+                        "`fid'", ///
+                        "`prefit'", ///
+                        `bfolds', ///
+                        `shuffle', ///
+                        "`id'", ///
+                        "`showpymessages'", ///
+                        "`backend'", ///
+                        "`sparse'", ///
+                        "`showoptions'" ///
+                        )
+    }
     ereturn local cmd        pystacked
     ereturn local predict    pystacked_p
     ereturn local depvar    `yvar'
-    ereturn local type        `type'
+    ereturn local type      `type'
+    if "`voting'"~=""		ereturn local finalest voting
+    else					ereturn local finalest `finalest'
 
     forvalues i = 1(1)`mcount' {
         local opt`i' = stritrim("`opt`i''")
@@ -494,6 +654,7 @@ version 16.0
         ereturn local pyopt`i' `pyopt`i''    
         ereturn local pipe`i' `pipe`i''    
         ereturn local xvars`i' `xvars`i''
+        ereturn local xvars_o`i' `xvars_orig`i''
     }
     ereturn scalar mcount = `mcount'
 
@@ -502,7 +663,7 @@ end
 // parses Syntax 2
 program define syntax_parse, rclass
 
-    syntax [anything(everything)] , type(string) touse(varname) sklearn1(real) sklearn2(real) sklearn3(real)
+    syntax [anything(everything)] , type(string) touse(varname) sklearn1(real) sklearn2(real) sklearn3(real) `printopt'
 
     // save y x and if/in    
     tokenize `anything', parse("|")
@@ -532,7 +693,7 @@ program define syntax_parse, rclass
         }
         local pipeline = subinstr("`pipeline'","nostdscaler","",.)
         if "`pipeline'"=="" local pipeline passthrough
-        _pyparse , `options' type(`type') method(`method') sklearn1(`sklearn1') sklearn2(`sklearn2')
+        _pyparse , `options' type(`type') method(`method') sklearn1(`sklearn1') sklearn2(`sklearn2') `printopt'
         return local pyopt`i' `r(optstr)'
         return local pipe`i' `pipeline'
         return local xvars`i' `xvars'
@@ -557,21 +718,28 @@ end
 program define pystacked_graph_table, rclass
     version 16.0
     syntax ,                                ///
-                [                            ///
+                [                           ///
                     HOLDOUT1                /// vanilla option, abbreviates to "holdout"
+                    CValid                  ///
                     holdout(varname)        ///
-                    GRAPH1                    /// vanilla option, abbreviates to "graph"
-                    HISTogram                /// report histogram instead of default ROC
-                    goptions(string asis)    ///
-                    lgoptions(string asis)    ///
-                    table                    /// 
+                    GRAPH1                  /// vanilla option, abbreviates to "graph"
+                    HISTogram               /// report histogram instead of default ROC
+                    goptions(string asis)   ///
+                    lgoptions(string asis)  ///
+                    table(string)           ///
                 ]
 
     // any graph options implies graph
     local graphflag = `"`graph1'`histogram'`goptions'`lgoptions'"'~=""
     
+    // sample variable, holdout check, graph title
     if "`holdout'`holdout1'"=="" {
-        local title In-sample
+        if "`cvalid'"== "" {
+            local title In-sample
+        }
+        else {
+            local title In-sample (CV)
+           }
         tempvar touse
         qui gen `touse' = e(sample)
     }
@@ -620,130 +788,136 @@ program define pystacked_graph_table, rclass
         // complete graph title
         local title `title' Predictions
             
-        tempvar stacking_p stacking_r
+        tempvar stacking_p stacking_r stacking_p_cv stacking_r_cv
         predict double `stacking_p'
         label var `stacking_p' "Prediction: Stacking Regressor"
         qui gen double `stacking_r' = `y' - `stacking_p'
-        qui predict double `stacking_p', transform
+        qui predict double `stacking_p', basexb
+        qui predict double `stacking_p_cv', basexb cv
         forvalues i=1/`nlearners' {
             local lname : word `i' of `learners'
             label var `stacking_p'`i' "Prediction: `lname'"
-            tempvar stacking_r`i'
+            label var `stacking_p_cv'`i' "Prediction (CV): `lname'"
+            tempvar stacking_r`i' stacking_r_cv`i'
             qui gen double `stacking_r`i'' = `y' - `stacking_p'`i'
+            qui gen double `stacking_r_cv`i'' = `y' - `stacking_p_cv'`i'
         }
+        // assemble stacked CV prediction
+        qui gen double `stacking_p_cv'=0
+        forvalues i=1/`nlearners' {
+            qui replace `stacking_p_cv' = `stacking_p_cv' + `stacking_p_cv'`i' * `weights'[`i',1]
+        }
+        label var `stacking_p_cv' "Prediction (CV): Stacking Regressor"
+        qui gen double `stacking_r_cv' = `y' - `stacking_p_cv'
     
+        // graph variables
+        if "`cvalid'"=="" {
+            local xvar stacking_p
+        }
+        else {
+            local xvar stacking_p_cv
+        }
         tempname g0
         if `graphflag' {
-            twoway (scatter `stacking_p' `y') (line `y' `y') if `touse'        ///
-                ,                                                            ///
-                legend(off)                                                    ///
-                title("STACKING")                                            ///
-                `lgoptions'                                                    ///
-                nodraw                                                        ///
+            twoway (scatter ``xvar'' `y') (line `y' `y') if `touse'         ///
+                ,                                                           ///
+                legend(off)                                                 ///
+                title("STACKING")                                           ///
+                `lgoptions'                                                 ///
+                nodraw                                                      ///
                 name(`g0', replace)
             local glist `g0'
             forvalues i=1/`nlearners' {
                 tempname g`i'
                 local lname : word `i' of `learners'
                 local w : di %5.3f el(`weights',`i',1)
-                twoway (scatter `stacking_p'`i' `y') (line `y' `y') if `touse'    ///
-                    ,                                                            ///
-                    legend(off)                                                    ///
-                    title("Learner: `lname'")                                    ///
-                    `lgoptions'                                                    ///
-                    subtitle("weight = `w'")                                    ///
-                    nodraw                                                        ///
+                twoway (scatter `stacking_p'`i' `y') (line `y' `y') if `touse'      ///
+                    ,                                                               ///
+                    legend(off)                                                     ///
+                    title("Learner: `lname'")                                       ///
+                    `lgoptions'                                                     ///
+                    subtitle("weight = `w'")                                        ///
+                    nodraw                                                          ///
                     name(`g`i'', replace)
                 local glist `glist' `g`i''
             }
         
-            graph combine `glist'                                        ///
-                            ,                                            ///
-                            title("`title'")                            ///
+            graph combine `glist'                                           ///
+                            ,                                               ///
+                            title("`title'")                                ///
                             `goptions'
-        }
-        
-        if "`table'"~="" {
-            
-            // save in matrix
-            tempname m m_in m_out
-            
-            // column for in-sample MSPE
-            qui sum `stacking_r' if e(sample)
-            mat `m_in' = r(sd) * sqrt( (r(N)-1)/r(N) )
-            forvalues i=1/`nlearners' {
-                qui sum `stacking_r`i'' if e(sample)
-                mat `m_in' = `m_in' \ (r(sd) * sqrt( (r(N)-1)/r(N) ))
-            }
-            
-            // column for OOS MSPE
-            if "`holdout'`holdout1'"~="" {
-                // touse is the holdout indicator
-                qui sum `stacking_r' if `touse'
-                mat `m_out' = r(sd) * sqrt( (r(N)-1)/r(N) )
-                forvalues i=1/`nlearners' {
-                    qui sum `stacking_r`i'' if `touse'
-                    mat `m_out' = `m_out' \ (r(sd) * sqrt( (r(N)-1)/r(N) ))
-                }
-            }
-            else {
-                mat `m_out' = J(`nlearners'+1,1,.)
-            }
-            
-            mat `m' = `m_in' , `m_out'
-            mat colnames `m' = MSPE_in MSPE_out
-            mat rownames `m' = STACKING `learners'
-            
-            return matrix m = `m'
-    
         }
     }
     else {
         // classification problem
         
-        tempvar stacking_p stacking_c
-        predict double `stacking_p', pr
+        tempvar stacking_p stacking_c stacking_p_cv stacking_c_cv stacking_r  stacking_r_cv
+        qui predict double `stacking_p', pr
         label var `stacking_p' "Predicted Probability: Stacking Regressor"
-        predict double `stacking_c', class
+        qui gen double `stacking_r' = `y' - `stacking_p'
+        qui predict double `stacking_c', class
         label var `stacking_c' "Predicted Classification: Stacking Regressor"
-        qui predict double `stacking_p', pr transform
-        qui predict double `stacking_c', class transform
-
+        qui predict double `stacking_p', pr basexb
+        qui predict double `stacking_c', class basexb
+        qui predict double `stacking_p_cv', pr basexb cv
+        qui predict double `stacking_c_cv', class basexb cv
+ 
         forvalues i=1/`nlearners' {
             local lname : word `i' of `learners'
             label var `stacking_p'`i' "Predicted Probability: `lname'"
             label var `stacking_c'`i' "Predicted Classification: `lname'"
+            label var `stacking_p_cv'`i' "Predicted Probability (CV): `lname'"
+            label var `stacking_c_cv'`i' "Predicted Classification (CV): `lname'"
+            tempvar stacking_r`i' stacking_r_cv`i'
+            qui gen double `stacking_r`i'' = `y' - `stacking_p'`i'
+            qui gen double `stacking_r_cv`i'' = `y' - `stacking_p_cv'`i'
+       }
+        // assemble stacked CV prediction
+        qui gen double `stacking_p_cv'=0
+        forvalues i=1/`nlearners' {
+            qui replace `stacking_p_cv' = `stacking_p_cv' + `stacking_p_cv'`i' * `weights'[`i',1]
         }
+        label var `stacking_p_cv' "Predicted Probability (CV): Stacking Regressor"
+        qui gen double `stacking_r_cv' = `y' - `stacking_p_cv'
+        qui gen byte `stacking_c_cv' = `stacking_p_cv' >= 0.5
+        qui replace `stacking_c_cv' = . if `stacking_p_cv'==.
         
         if `graphflag' & "`histogram'"=="" {                            /// default is ROC
             // complete graph title
             local title `title' ROC
         
+            // graph variables
+            if "`cvalid'"=="" {
+                local xvar stacking_p
+            }
+            else {
+                local xvar stacking_p_cv
+            }
             tempname g0
-            roctab `y' `stacking_p',                                    ///
-                graph                                                    ///
-                title("STACKING")                                        ///
-                `lgoptions'                                                ///
-                nodraw                                                    ///
+            roctab `y' ``xvar'',                                    ///
+                graph                                               ///
+                title("STACKING")                                   ///
+                `lgoptions'                                         ///
+                nodraw                                              ///
                 name(`g0', replace)
             local glist `g0'
             forvalues i=1/`nlearners' {
                 tempname g`i'
                 local lname : word `i' of `learners'
-                roctab `y' `stacking_p'`i',                                ///
-                    graph                                                ///
-                    title("Learner: `lname'")                            ///
-                    `lgoptions'                                            ///
-                    nodraw                                                ///
+                roctab `y' `stacking_p'`i',                         ///
+                    graph                                           ///
+                    title("Learner: `lname'")                       ///
+                    `lgoptions'                                     ///
+                    nodraw                                          ///
                     name(`g`i'', replace)
                 local glist `glist' `g`i''
             }
-            graph combine `glist'                                        ///
-                            ,                                            ///
-                            title("`title'")                            ///
+            graph combine `glist'                                   ///
+                            ,                                       ///
+                            title("`title'")                        ///
                             `goptions'
         }
-        else if "`histogram'"~="" {                                        /// histogram
+        else if "`histogram'"~="" {                                 /// histogram
             // complete graph title
             local title `title' predicted probabilities
 
@@ -755,94 +929,152 @@ program define pystacked_graph_table, rclass
                 local ystyle freq
             }
             
+            // graph variables
+            if "`cvalid'"=="" {
+                local xvar stacking_p
+            }
+            else {
+                local xvar stacking_p_cv
+            }
             tempname g0
-            qui histogram `stacking_p',                                    ///
-                title("STACKING")                                        ///
+            qui histogram `stacking_p',                                 ///
+                title("STACKING")                                       ///
                 `ystyle'                                                ///
                 start(0)                                                ///
-                `lgoptions'                                                ///
-                nodraw                                                    ///
+                `lgoptions'                                             ///
+                nodraw                                                  ///
                 name(`g0', replace)
             local glist `g0'
             forvalues i=1/`nlearners' {
                 tempname g`i'
                 local lname : word `i' of `learners'
-                qui histogram `stacking_p'`i',                            ///
-                    title("Learner: `lname'")                            ///
+                qui histogram `stacking_p'`i',                          ///
+                    title("Learner: `lname'")                           ///
                     `ystyle'                                            ///
                     start(0)                                            ///
-                    `lgoptions'                                            ///
-                    nodraw                                                ///
+                    `lgoptions'                                         ///
+                    nodraw                                              ///
                     name(`g`i'', replace)
                 local glist `glist' `g`i''
             }
-            graph combine `glist'                                        ///
-                            ,                                            ///
+            graph combine `glist'                                       ///
+                            ,                                           ///
                             title("`title'")                            ///
                             `goptions'
         }
+    }
+    
+    // assemble table
+    if "`table'"=="rmspe" {
+        
+        // save in matrix
+        tempname m m_in m_cv m_out
+        
+        // column for in-sample RMSPE
+        qui sum `stacking_r' if e(sample)
+        mat `m_in' = r(sd) * sqrt( (r(N)-1)/r(N) )
+        forvalues i=1/`nlearners' {
+            qui sum `stacking_r`i'' if e(sample)
+            mat `m_in' = `m_in' \ (r(sd) * sqrt( (r(N)-1)/r(N) ))
+        }
+        
+        // column for in-sample RMSPE
+        qui sum `stacking_r_cv' if e(sample)
+        mat `m_cv' = r(sd) * sqrt( (r(N)-1)/r(N) )
+        forvalues i=1/`nlearners' {
+            qui sum `stacking_r_cv`i'' if e(sample)
+            mat `m_cv' = `m_cv' \ (r(sd) * sqrt( (r(N)-1)/r(N) ))
+        }
+        
+        // column for OOS MSPE
+        if "`holdout'`holdout1'"~="" {
+            // touse is the holdout indicator
+            qui sum `stacking_r' if `touse'
+            mat `m_out' = r(sd) * sqrt( (r(N)-1)/r(N) )
+            forvalues i=1/`nlearners' {
+                qui sum `stacking_r`i'' if `touse'
+                mat `m_out' = `m_out' \ (r(sd) * sqrt( (r(N)-1)/r(N) ))
+            }
+        }
+        else {
+            mat `m_out' = J(`nlearners'+1,1,.)
+        }
+        
+        mat `m' = `m_in' , `m_cv', `m_out'
+        mat colnames `m' = RMSPE_in RMSPE_cv RMSPE_out
+        mat rownames `m' = STACKING `learners'
+        
+        return matrix m = `m'
 
-        if "`table'"~="" {
+    }
+    else if "`table'"=="confusion" {
             
-            // save in matrix
-            tempname m mrow
-            
-            // stacking rows
+        // save in matrix
+        tempname m mrow
+        
+        // stacking rows
+        forvalues r=0/1 {
+            qui count if `y'==0 & `stacking_c'==`r' & e(sample)
+            local in_0    = r(N)
+            qui count if `y'==1 & `stacking_c'==`r' & e(sample)
+            local in_1    = r(N)
+            qui count if `y'==0 & `stacking_c_cv'==`r' & e(sample)
+            local cv_0    = r(N)
+            qui count if `y'==1 & `stacking_c_cv'==`r' & e(sample)
+            local cv_1    = r(N)
+            if "`holdout'`holdout1'"~="" {
+                // touse is the holdout indicator
+                qui count if `y'==0 & `stacking_c'==`r' & `touse'
+                local out_0    = r(N)
+                qui count if `y'==1 & `stacking_c'==`r' & `touse'
+                local out_1    = r(N)
+            }
+            else {
+                local out_0 = .
+                local out_1 = .
+            }
+            mat `mrow' = `in_0', `in_1', `cv_0', `cv_1', `out_0', `out_1'
+            mat `m' = nullmat(`m') \ `mrow'
+        }
+        
+        // base learner rows
+        forvalues i=1/`nlearners' {
+        
             forvalues r=0/1 {
-                qui count if `y'==0 & `stacking_c'==`r' & e(sample)
+                qui count if `y'==0 & `stacking_c'`i'==`r' & e(sample)
                 local in_0    = r(N)
-                qui count if `y'==1 & `stacking_c'==`r' & e(sample)
+                qui count if `y'==1 & `stacking_c'`i'==`r' & e(sample)
                 local in_1    = r(N)
+                qui count if `y'==0 & `stacking_c_cv'`i'==`r' & e(sample)
+                local cv_0    = r(N)
+                qui count if `y'==1 & `stacking_c_cv'`i'==`r' & e(sample)
+                local cv_1    = r(N)
                 if "`holdout'`holdout1'"~="" {
                     // touse is the holdout indicator
-                    qui count if `y'==0 & `stacking_c'==`r' & `touse'
+                    qui count if `y'==0 & `stacking_c'`i'==`r' & `touse'
                     local out_0    = r(N)
-                    qui count if `y'==1 & `stacking_c'==`r' & `touse'
+                    qui count if `y'==1 & `stacking_c'`i'==`r' & `touse'
                     local out_1    = r(N)
                 }
                 else {
                     local out_0 = .
                     local out_1 = .
                 }
-                mat `mrow' = `in_0', `in_1', `out_0', `out_1'
-                mat `m' = nullmat(`m') \ `mrow'
+                mat `mrow' = `in_0', `in_1', `cv_0', `cv_1', `out_0', `out_1'
+                mat `m' = `m' \ `mrow'
             }
-            
-            // base learner rows
-            forvalues i=1/`nlearners' {
-            
-                forvalues r=0/1 {
-                    qui count if `y'==0 & `stacking_c'`i'==`r' & e(sample)
-                    local in_0    = r(N)
-                    qui count if `y'==1 & `stacking_c'`i'==`r' & e(sample)
-                    local in_1    = r(N)
-                    if "`holdout'`holdout1'"~="" {
-                        // touse is the holdout indicator
-                        qui count if `y'==0 & `stacking_c'`i'==`r' & `touse'
-                        local out_0    = r(N)
-                        qui count if `y'==1 & `stacking_c'`i'==`r' & `touse'
-                        local out_1    = r(N)
-                    }
-                    else {
-                        local out_0 = .
-                        local out_1 = .
-                    }
-                    mat `mrow' = `in_0', `in_1', `out_0', `out_1'
-                    mat `m' = `m' \ `mrow'
-                }
-            }
-            
-            local rnames STACKING_0 STACKING_1
-            forvalues i=1/`nlearners' {
-                local lname : word `i' of `learners'
-                local rnames `rnames' `lname'_0 `lname'_1
-            }
-            mat rownames `m' = `rnames'
-            mat colnames `m' = in_0 in_1 out_0 out_1
-            
-            return matrix m = `m'
-    
         }
+        
+        local rnames STACKING_0 STACKING_1
+        forvalues i=1/`nlearners' {
+            local lname : word `i' of `learners'
+            local rnames `rnames' `lname'_0 `lname'_1
+        }
+        mat rownames `m' = `rnames'
+        mat colnames `m' = in_0 cv_1 in_0 cv_1 out_0 out_1
+        
+        return matrix m = `m'
+
     }
     
 end
@@ -886,46 +1118,46 @@ end
 program define fvstrip, rclass
     version 11.2
     syntax [anything] [if] , [ dropomit expand onebyone NOIsily ]
-    if "`expand'"~="" {                                                //  force call to fvexpand
+    if "`expand'"~="" {                                             //  force call to fvexpand
         if "`onebyone'"=="" {
             fvexpand `anything' `if'                                //  single call to fvexpand
             local anything `r(varlist)'
         }
         else {
             foreach vn of local anything {
-                fvexpand `vn' `if'                                    //  call fvexpand on items one-by-one
+                fvexpand `vn' `if'                                  //  call fvexpand on items one-by-one
                 local newlist    `newlist' `r(varlist)'
             }
             local anything    : list clean newlist
         }
     }
-    foreach vn of local anything {                                    //  loop through varnames
-        if "`dropomit'"~="" {                                        //  check & include only if
+    foreach vn of local anything {                                  //  loop through varnames
+        if "`dropomit'"~="" {                                       //  check & include only if
             _ms_parse_parts `vn'                                    //  not omitted (b. or o.)
             if ~`r(omit)' {
-                local unstripped    `unstripped' `vn'                //  add to list only if not omitted
+                local unstripped    `unstripped' `vn'               //  add to list only if not omitted
             }
         }
-        else {                                                        //  add varname to list even if
-            local unstripped        `unstripped' `vn'                //  could be omitted (b. or o.)
+        else {                                                      //  add varname to list even if
+            local unstripped        `unstripped' `vn'               //  could be omitted (b. or o.)
         }
     }
 // Now create list with b/n/o stripped out
     foreach vn of local unstripped {
-        local svn ""                                            //  initialize
+        local svn ""                                                //  initialize
         _ms_parse_parts `vn'
-        if "`r(type)'"=="variable" & "`r(op)'"=="" {            //  simplest case - no change
+        if "`r(type)'"=="variable" & "`r(op)'"=="" {                //  simplest case - no change
             local svn    `vn'
         }
-        else if "`r(type)'"=="variable" & "`r(op)'"=="o" {        //  next simplest case - o.varname => varname
+        else if "`r(type)'"=="variable" & "`r(op)'"=="o" {          //  next simplest case - o.varname => varname
             local svn    `r(name)'
         }
-        else if "`r(type)'"=="variable" {                        //  has other operators so strip o but leave .
+        else if "`r(type)'"=="variable" {                           //  has other operators so strip o but leave .
             local op    `r(op)'
             local op    : subinstr local op "o" "", all
             local svn    `op'.`r(name)'
         }
-        else if "`r(type)'"=="factor" {                            //  simple factor variable
+        else if "`r(type)'"=="factor" {                             //  simple factor variable
             local op    `r(op)'
             local op    : subinstr local op "b" "", all
             local op    : subinstr local op "n" "", all
@@ -938,7 +1170,7 @@ program define fvstrip, rclass
                 local op    : subinstr local op "b" "", all
                 local op    : subinstr local op "n" "", all
                 local op    : subinstr local op "o" "", all
-                local opv    `op'.`r(name`i')'                    //  operator + . + varname
+                local opv    `op'.`r(name`i')'                     //  operator + . + varname
                 if `i'==1 {
                     local svn    `opv'
                 }
@@ -961,485 +1193,48 @@ program define fvstrip, rclass
         }
         local stripped `stripped' `svn'
     }
-    local stripped    : list retokenize stripped                        //  clean any extra spaces
+    local stripped    : list retokenize stripped                   //  clean any extra spaces
     
-    if "`noisily'"~="" {                                            //  for debugging etc.
+    if "`noisily'"~="" {                                           //  for debugging etc.
 di as result "`stripped'"
     }
 
-    return local varlist    `stripped'                                //  return results in r(varlist)
+    return local varlist    `stripped'                             //  return results in r(varlist)
 end
 
+cap program drop pystacked_check_python
+program define pystacked_check_python
+// code adapted from nwxtregress :)
+    qui {
+        cap python query
+        if _rc == 0 {
+            cap python which numpy
+            local HasNumpy = _rc    
 
-*===============================================================================
-* Python helper function
-*===============================================================================
+            cap python which scipy
+            local HasScipy = _rc
 
-version 16.0
-python:
+            cap python which sfi
+            local HasSfi = _rc
 
-### Import required Python modules
-import sfi
-import numpy as np
-import __main__
-import warnings
-from sklearn.pipeline import make_pipeline,Pipeline
-from sklearn.neural_network import MLPRegressor,MLPClassifier
-from sklearn.preprocessing import StandardScaler,PolynomialFeatures,OneHotEncoder
-from sklearn.compose import ColumnTransformer
-from sklearn.impute import SimpleImputer,KNNImputer
-from sklearn.linear_model import LassoLarsIC,LassoCV,LogisticRegression,LogisticRegressionCV,LinearRegression
-from sklearn.linear_model import RidgeCV,ElasticNetCV
-from sklearn.ensemble import StackingRegressor,StackingClassifier
-from sklearn.ensemble import VotingRegressor,VotingClassifier
-from sklearn.ensemble import RandomForestRegressor,RandomForestClassifier
-from sklearn.ensemble import GradientBoostingRegressor,GradientBoostingClassifier
-from sklearn.base import TransformerMixin,BaseEstimator
-from sklearn.svm import LinearSVR,LinearSVC,SVC,SVR
-from sklearn.utils import check_X_y,check_array
-from sklearn.utils.validation import check_is_fitted
-from scipy.sparse import coo_matrix,csr_matrix,issparse
-from scipy.optimize import minimize 
-from scipy.optimize import nnls 
-from sklearn import __version__ as sklearn_version
-from scipy import __version__ as scipy_version
-from numpy import __version__ as numpy_version
-from sys import version as sys_version
-from sklearn.utils import parallel_backend
+            cap python which sklearn
+            local HasSkl = _rc
 
-### Define required Python functions/classes
+            if `=`HasNumpy'+`HasSfi'+`HasScipy'+`HasSkl'' > 0 {
+                noi disp as smcl "{cmd:pystacked} option {it:python} requires the following Python packages:"
+                if `HasNumpy' != 0 noi disp "  numpy"
+                if `HasScipy' != 0 noi disp "  scipy"
+                if `HasSfi' != 0 noi disp "  sfi"
+                if `HasSkl' != 0 noi disp "  sklearn"
+                noi disp "Please install them before using the option {it:pystacked}."
+            }
+        *   exit
+        }
+        else {
+            noi disp as error "Error loading Python."
+            error 199
+        }
+    }   
 
-class SingleBest(BaseEstimator):
-    _estimator_type="regressor"
-    def fit(self, X, y):
-        X, y = check_X_y(X, y, accept_sparse=True)
-        self.is_fitted_ = True
-        ncols = X.shape[1]
-        lowest_mse = np.Inf
-        for i in range(ncols):
-            this_mse=np.mean((y-X[:, i]) ** 2)
-            if this_mse < lowest_mse:
-                lowest_mse = this_mse
-                best = i
-        self.best = best
-        coef = np.zeros(ncols)
-        coef[best] = 1
-        self.coef_ = coef
-        return self
-    def predict(self, X):
-        X = check_array(X, accept_sparse=True)
-        check_is_fitted(self, 'is_fitted_')
-        return X[:,self.best]
-
-class ConstrLS(BaseEstimator):
-    _estimator_type="regressor"
-    def fit(self, X, y):
-
-        X,y = check_X_y(X,y, accept_sparse=True)
-        xdim = X.shape[1]
-
-        #Use nnls to get initial guess
-        coef0, rnorm = nnls(X,y)
-
-        #Define minimisation function
-        def fn(coef, X, y):
-            return np.linalg.norm(X.dot(coef) - y)
-
-        #Constraints and bounds
-        cons = {'type': 'eq', 'fun': lambda coef: np.sum(coef)-1}
-        bounds = [[0.0,None] for i in range(xdim)] 
-
-        #Do minimisation
-        fit = minimize(fn,coef0,args=(X, y),method='SLSQP',bounds=bounds,constraints=cons)
-        self.coef_ = fit.x
-        self.is_fitted_ = True
-        return self
-        
-    def predict(self, X):
-        X = check_array(X, accept_sparse=True)
-        check_is_fitted(self, 'is_fitted_')
-        return np.matmul(X,self.coef_)
-
-class ConstrLSClassifier(ConstrLS):
-    _estimator_type="classifier"
-    def predict_proba(self, X):
-        return self.predict(X)
-
-class LinearRegressionClassifier(LinearRegression):
-    _estimator_type="classifier"
-    def predict_proba(self, X):
-        return self.predict(X)
-
-class SparseTransformer(TransformerMixin):
-    def fit(self, X, y=None, **fit_params):
-        return self
-    def transform(self, X, y=None, **fit_params):
-        return csr_matrix(X)
-
-def get_index(lst, w):
-    #
-    #return indexes of where elements in 'w' are stored in 'lst'
-    #
-    lst = lst.split(" ")
-    w = w.split(" ")
-    sel = []
-    for i in range(len(w)):
-        if w[i] in lst:
-            ix = lst.index(w[i]) 
-            sel.append(ix)
-    return(sel)
-
-def build_pipeline(pipes,xvars,xvar_sel):
-    #
-    #builds the pipeline for each base learner
-    #pipes = string with pipes
-    #xvars = string with all predictors (expanded original names)
-    #xvar_sel = string with to-be-selected predictors
-    #
-    ll = []
-    if xvar_sel!="":
-        sel_ix = get_index(xvars,xvar_sel)
-        ct = ColumnTransformer([("selector", "passthrough", sel_ix)],remainder="drop")
-        #print(xvars.split(" "))
-        #print(xvar_sel)
-        #print(sel_ix)
-        #print([xvars.split(" ")[i] for i in sel_ix])
-        ll.append(("selector",ct))
-    pipes = pipes.split()
-    for p in range(len(pipes)):
-        if pipes[p]=="stdscaler":
-            ll.append(('stdscaler',StandardScaler()))
-        elif pipes[p]=="stdscaler0":
-            ll.append(('stdscaler',StandardScaler(with_mean=False)))
-        elif pipes[p]=="dense":
-            ll.append(('dense',DenseTransformer()))
-        elif pipes[p]=="sparse":
-            ll.append(('sparse',SparseTransformer()))
-        elif pipes[p]=="onehot":
-            ll.append(('onehot',OneHotEncoder()))
-        elif pipes[p]=="minmaxscaler":
-            ll.append(('minmaxscaler',MinMaxScaler()))
-        elif pipes[p]=="medianimputer":
-            ll.append(('medianimputer',SimpleImputer(strategy='median')))
-        elif pipes[p]=="knnimputer":
-            ll.append(('knnimputer',KNNImputer()))
-        elif pipes[p]=="poly2":
-            ll.append(('poly2',PolynomialFeatures(degree=2,include_bias=False)))
-        elif pipes[p]=="poly3":
-            ll.append(('poly3',PolynomialFeatures(degree=3,include_bias=False)))
-        elif pipes[p]=="interact":
-            ll.append(('interact',PolynomialFeatures(include_bias=False,interaction_only=True)))
-    return ll
-
-def run_stacked(type, # regression or classification 
-    finalest, # final estimator
-    methods, # list of base learners
-    yvar, # outcome
-    xvars, # predictors (temp names)
-    training, # marks holdout sample
-    allopt, # options for each learner
-    allpipe, # pipes for each learner
-    allxvar_sel, # subset predictors for each learner (expanded var names)
-    touse, # sample
-    seed, # seed
-    nosavepred,nosavetransform, # store predictions
-    voting,votetype,voteweights, # voting
-    njobs, # number of jobs
-    nfolds, # number of folds
-    showpywarnings, # show warnings?
-    parbackend, # backend
-    sparse, # sparse predictor 
-    showopt #
-    ):
-    
-    if int(format(sklearn_version).split(".")[1])<24 and int(format(sklearn_version).split(".")[0])<1:
-        sfi.SFIToolkit.stata('di as err "pystacked requires sklearn 0.24.0 or higher. Please update sklearn."')
-        sfi.SFIToolkit.stata('di as err "See instructions on https://scikit-learn.org/stable/install.html, and in the help file."')
-        sfi.SFIToolkit.error(198)
-
-    # Set random seed
-    if seed>0:
-        rng=np.random.RandomState(seed)
-    else: 
-        rng=None
-    
-    if showpywarnings=="":
-        warnings.filterwarnings('ignore')
-    
-    if njobs==0: 
-        nj = None 
-    else: 
-        nj = njobs
-        
-    ##############################################################
-    ### load data                                                 ###
-    ##############################################################    
-
-    y = np.array(sfi.Data.get(yvar,selectvar=touse))
-    x = np.array(sfi.Data.get(xvars,selectvar=touse))
-    # If missings are present, need to specify they are NaNs.
-    x_0 = np.array(sfi.Data.get(xvars,missingval=np.nan))
-
-    if sparse!="":
-        x = coo_matrix(x).tocsc()
-
-    ##############################################################
-    ### prepare fit                                               ###
-    ##############################################################
-
-    # convert strings to python objects
-    methods = methods.split()
-    allopt = eval(allopt)
-    allpipe = eval(allpipe)
-    allxvar_sel = eval(allxvar_sel)
-
-    # print options:
-    if showopt!="":
-        sfi.SFIToolkit.displayln("")
-        for m in range(len(methods)):
-            opt = allopt[m]
-            sfi.SFIToolkit.displayln("Base learner: "+methods[m])
-            for i in opt:
-                subopt_name = opt[i]
-                sfi.SFIToolkit.stata('di as text "'+str(i)+' = " _c')
-                sfi.SFIToolkit.stata('di as text "'+str(opt[i])+'; " _c')
-            sfi.SFIToolkit.displayln("")
-            sfi.SFIToolkit.displayln("")
-
-    est_list = []
-    for m in range(len(methods)):
-        if type=="reg":
-            if methods[m]=="ols":
-                opt =allopt[m]
-                newmethod = build_pipeline(allpipe[m],xvars,allxvar_sel[m])
-                newmethod.append(('ols',LinearRegression(**opt)))
-            if methods[m]=="lassoic":
-                opt =allopt[m]
-                newmethod = build_pipeline(allpipe[m],xvars,allxvar_sel[m])
-                newmethod.append(('lassolarsic',LassoLarsIC(**opt)))
-            if methods[m]=="lassocv":
-                opt =allopt[m]
-                newmethod= build_pipeline(allpipe[m],xvars,allxvar_sel[m])
-                newmethod.append(('lassocv',ElasticNetCV(**opt)))
-            if methods[m]=="ridgecv":
-                opt =allopt[m]
-                newmethod = build_pipeline(allpipe[m],xvars,allxvar_sel[m])
-                newmethod.append(('lassocv',ElasticNetCV(**opt)))
-            if methods[m]=="elasticcv":
-                opt =allopt[m]
-                newmethod = build_pipeline(allpipe[m],xvars,allxvar_sel[m])
-                newmethod.append(('lassocv',ElasticNetCV(**opt)))
-            if methods[m]=="rf":
-                opt =allopt[m]
-                newmethod = build_pipeline(allpipe[m],xvars,allxvar_sel[m])
-                newmethod.append(('rf',RandomForestRegressor(**opt)))
-            if methods[m]=="gradboost":
-                opt =allopt[m]
-                newmethod = build_pipeline(allpipe[m],xvars,allxvar_sel[m])
-                newmethod.append(('gbr',GradientBoostingRegressor(**opt)))
-            if methods[m]=="svm":
-                opt =allopt[m]
-                newmethod = build_pipeline(allpipe[m],xvars,allxvar_sel[m])
-                newmethod.append(('svm', SVR(**opt)))
-            if methods[m]=="linsvm":    
-                opt =allopt[m]
-                newmethod = build_pipeline(allpipe[m],xvars,allxvar_sel[m])
-                newmethod.append(('linsvm',LinearSVR(**opt)))
-            if methods[m]=="nnet":    
-                opt =allopt[m]
-                newmethod = build_pipeline(allpipe[m],xvars,allxvar_sel[m])
-                newmethod.append(('mlp',MLPRegressor(**opt)))
-        elif type=="class":
-            if methods[m]=="logit":
-                opt =allopt[m]
-                newmethod = build_pipeline(allpipe[m],xvars,allxvar_sel[m])
-                newmethod.append(('lassocv',LogisticRegression(**opt)))
-            if methods[m]=="lassoic":
-                sfi.SFIToolkit.stata("di as err lassoic not supported with type(class)")
-                sfi.SFIToolkit.error()
-            if methods[m]=="lassocv":
-                opt =allopt[m]
-                newmethod = build_pipeline(allpipe[m],xvars,allxvar_sel[m])
-                newmethod.append(('lassocv',LogisticRegressionCV(**opt)))
-            if methods[m]=="ridgecv":
-                opt =allopt[m]
-                newmethod = build_pipeline(allpipe[m],xvars,allxvar_sel[m])
-                newmethod.append(('lassocv',LogisticRegressionCV(**opt)))
-            if methods[m]=="elasticcv":
-                opt =allopt[m]
-                newmethod = build_pipeline(allpipe[m],xvars,allxvar_sel[m])
-                newmethod.append(('lassocv',LogisticRegressionCV(**opt)))
-            if methods[m]=="rf":
-                opt =allopt[m]
-                newmethod = build_pipeline(allpipe[m],xvars,allxvar_sel[m])
-                newmethod.append(('rf',RandomForestClassifier(**opt)))
-            if methods[m]=="gradboost":
-                opt =allopt[m]
-                newmethod = build_pipeline(allpipe[m],xvars,allxvar_sel[m])
-                newmethod.append(('gradboost',GradientBoostingClassifier(**opt)))
-            if methods[m]=="svm":    
-                opt =allopt[m]
-                newmethod = build_pipeline(allpipe[m],xvars,allxvar_sel[m])
-                newmethod.append(('svm',SVC(**opt)))
-            if methods[m]=="linsvm":
-                opt =allopt[m]
-                newmethod = build_pipeline(allpipe[m],xvars,allxvar_sel[m])
-                newmethod.append(('linsvm',LinearSVC(**opt)))
-            if methods[m]=="nnet":    
-                opt =allopt[m]
-                newmethod = build_pipeline(allpipe[m],xvars,allxvar_sel[m])
-                newmethod.append(('mlp',MLPClassifier(**opt)))
-        else: 
-            sfi.SFIToolkit.stata('di as err "method not known"') 
-            #"
-            sfi.SFIToolkit.error()
-        est_list.append((methods[m]+str(m),Pipeline(newmethod)))
-
-    if finalest == "nnls0" and type == "class": 
-        fin_est = LinearRegressionClassifier(fit_intercept=False,positive=True)
-    elif finalest == "nnls_sk" and type == "class": 
-        fin_est = LinearRegressionClassifier(fit_intercept=False,positive=True)
-    elif finalest == "nnls1" and type == "class": 
-        fin_est = ConstrLSClassifier()
-    elif finalest == "ridge" and type == "class": 
-        fin_est = LogisticRegression()
-    elif finalest == "nnls0" and type == "reg": 
-        fin_est = LinearRegression(fit_intercept=False,positive=True)
-    elif finalest == "nnls_sk" and type == "reg": 
-        fin_est = LinearRegression(fit_intercept=False,positive=True)
-    elif finalest == "nnls1" and type == "reg": 
-        fin_est = ConstrLS()
-    elif finalest == "ridge" and type == "reg": 
-        fin_est = RidgeCV()
-    elif finalest == "singlebest" and type == "reg": 
-        fin_est = SingleBest()
-    elif finalest == "ols" and type == "class": 
-        fin_est = LinearRegressionClassifier()    
-    elif finalest == "ols" and type == "reg": 
-        fin_est = LinearRegression()    
-    else:
-        sfi.SFIToolkit.stata('di as err "final estimator not supported with type()"')
-        #"
-        sfi.SFIToolkit.error(198)
-
-    # if single base learner, use voting with weight = 1
-    if len(methods)==1:
-        voting="voting"
-        voteweights=""
-        votetype="soft"
-        sfi.SFIToolkit.stata('di as text "Single base learner: no stacking done."')
-        #"
-
-    if voting=="" and type=="reg":
-        model = StackingRegressor(
-                       estimators=est_list,
-                       final_estimator=fin_est,
-                       n_jobs=nj,
-                       cv=nfolds
-                )
-    elif voting=="" and type=="class":
-        model = StackingClassifier(
-                       estimators=est_list,
-                       final_estimator=fin_est,
-                       n_jobs=nj,
-                       cv=nfolds
-                )
-    elif voting!="":
-        if voteweights!="":
-            vweights = voteweights.split(" ")
-            if len(vweights)!=len(methods)-1:
-                sfi.SFIToolkit.stata('di as err "numlist in voteweights should be number of base learners - 1"')
-                #"
-                sfi.SFIToolkit.error(198)                
-            vweights = [float(i) for i in vweights]
-            vw_sum = sum(vweights)
-            if vw_sum>1:
-                sfi.SFIToolkit.stata('di as err "sum of voting weights larger than 1."')
-                #"
-                sfi.SFIToolkit.error(198)
-            vweights.append(1-vw_sum)
-        else: 
-            vweights=None
-        if type=="reg":
-            model = VotingRegressor(
-                           estimators=est_list,
-                           n_jobs=nj,
-                           weights=vweights
-                    )
-        else: 
-            model = VotingClassifier(
-                           estimators=est_list,
-                           n_jobs=nj, 
-                           voting=votetype,
-                           weights=vweights
-                    )
-
-    ##############################################################
-    ### fitting; save predictions in __main__                   ###
-    ##############################################################
-
-    # Train model on training data
-    if type=="class":
-        y=y!=0
-    with parallel_backend(parbackend):
-        model = model.fit(x,y)
-
-    # for NNLS: standardize coefficients to sum to one
-    if voting=="":
-        w = model.final_estimator_.coef_
-        if len(w.shape)==1:
-            sfi.Matrix.store("e(weights)",w)
-        else:
-            sfi.Matrix.store("e(weights)",w[0])
-    elif vweights!=None: 
-        w = np.array(vweights)
-        sfi.Matrix.store("e(weights)",w)
-    else:
-        w = np.array([1/len(methods)]*len(methods))
-        sfi.Matrix.store("e(weights)",w)
-        
-    sfi.Macro.setGlobal("e(base_est)"," ".join(methods))  
-
-    __main__.type = type
-
-    if nosavepred=="" or nosavetransform=="":
-        # Track NaNs
-        x0_hasnan = np.isnan(x_0).any(axis=1)
-        # Set any NaNs to zeros so that model.predict(.) won't crash
-        x_0 = np.nan_to_num(x_0)
-
-    if nosavepred == "" or nosavetransform == "":
-        __main__.model_object = model
-        __main__.model_xvars = xvars
-        __main__.model_methods = methods
-
-    if nosavepred == "":
-        if type=="class" and finalest[0:4]=="nnls":
-            pred = model.predict_proba(x_0)>0.5
-        else:
-            pred = model.predict(x_0)
-        # Set any predictions that should be missing to missing (NaN)
-        if type=="class":
-            pred = pred.astype(np.float32)
-        pred[x0_hasnan] = np.nan
-        __main__.predict = pred
-
-    if nosavepred == "" and type =="class" and votetype!="hard":
-        pred_proba = model.predict_proba(x_0)
-        # Set any predictions that should be missing to missing (NaN)
-        pred[x0_hasnan] = np.nan
-        __main__.predict_proba = pred_proba
-
-    if nosavetransform == "":
-        transf = model.transform(x_0)
-        # Set any predictions that should be missing to missing (NaN)
-        transf[x0_hasnan] = np.nan
-        __main__.transform = transf
-
-    # save versions of Python and packages
-    sfi.Macro.setGlobal("e(sklearn_ver)",format(sklearn_version))
-    sfi.Macro.setGlobal("e(numpy_ver)",format(numpy_version))
-    sfi.Macro.setGlobal("e(scipy_ver)",format(scipy_version))
-    sfi.Macro.setGlobal("e(python_ver)",format(sys_version))
 
 end
