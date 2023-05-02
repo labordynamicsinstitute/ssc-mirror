@@ -17,7 +17,7 @@ d KW: Python
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20230430
+d Distribution-Date: 20230501
 d
 d Author: Achim Ahrens, ETH Zürich
 d Support: email achim.ahrens@@gess.ethz.ch
@@ -29,6 +29,8 @@ d Author: Mark E Schaffer, Heriot-Watt University
 d Support: email m.e.schaffer@@hw.ac.uk
 d
 f pystacked.ado
+f pystacked.py
 f pystacked.sthlp
 f pystacked_p.ado
+f pystacked_p.py
 f ../_/_pyparse.ado
