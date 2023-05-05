@@ -8,7 +8,6 @@
 			alpha(string)]
 */
 program posw
-version 16
 	
 	if (replay()) {
 		Display `0'

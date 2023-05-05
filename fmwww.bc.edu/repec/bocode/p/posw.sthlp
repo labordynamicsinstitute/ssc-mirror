@@ -99,12 +99,12 @@ is {cmd:0.05}.
 on classroom and home nitrogen oxide using stepwise-BIC  to select
 controls{p_end}
 {phang2}{cmd:. posw react no2_class no2_home,}
-    {cmd:controls(i.(meducation overweight msmoke sex) noise sev* age)}
+    {cmd:controls(i.(meducation overweight msmoke sex) noise_school sev_home sev_school age)}
     {cmd:model(linear)}
 
 {pstd}As above but use stepwise-testing to select controls{p_end}
 {phang2}{cmd:. posw react no2_class no2_home,}
-    {cmd:controls(i.(meducation overweight msmoke sex) noise sev* age)}
+    {cmd:controls(i.(meducation overweight msmoke sex) noise_school sev_home sev_school age)}
     {cmd:model(linear)} {cmd:method(test)}
 
 {marker results}{...}

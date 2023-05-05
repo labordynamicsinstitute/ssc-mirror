@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.7 22jan2016}{...}
+{* *! version 1.12 04may2023}{...}
 {vieweralsosee "[SVY] svy" "help svy"}{...}
 {vieweralsosee "[R] pisastats" "help pisastats"}{...}
 {vieweralsosee "[R] pisareg" "help pisareg"}{...}
@@ -33,8 +33,7 @@
 {synopthdr}
 {synoptline}
 {syntab:Main}
-{synopt :{bf:{ul:est}imate(}stata: {it:{help repest##e_cmd:e_cmd}} [,{it:e_cmd_options}]{bf:)}}runs stata estimation command {it:{help repest##e_cmd:e_cmd}} with options {it:e_cmd_options}. {p_end}
-{synopt :{bf:{ul:est}imate(}{it:{help repest##n_cmd:n_cmd}} [,{it:n_cmd_options}]{bf:)}}runs built-in command {it:{help repest##n_cmd:n_cmd}} with options {it:n_cmd_options}. {p_end}
+{synopt :{bf:{ul:est}imate(}{it:cmd} [,{it:cmd_options}]{bf:)}}runs estimation command {it:cmd} with options {it:cmd_options}. {p_end}
 
 {synoptset 40 tabbed}{...}
 {syntab:Optional}
@@ -52,7 +51,7 @@ saves results to disk.{p_end}
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
-{bf:ALL}, {bf:IALS}, {bf:IELS}, {bf:PIAAC}, {bf:PISA}, {bf:PISA2015}, {bf:PISAOOS}, {bf:SVY}, {bf:TALISSCH} and {bf:TALISTCH}  are valid {it:{help repest##svyname:svynames}}. Option {bf:svyparms()} is required with {bf:SVY}.
+{bf:PIAAC}, {bf:PISA}, {bf:SVY}, {bf:TALISTCH}, and many other survey names are valid - see {it:{help repest##svyname:svynames}}. Option {bf:svyparms()} is required with {bf:SVY}.
 {p_end}
 {p 4 6 2}
 You have to specify one {bf:{ul:est}imate()} option.
@@ -64,18 +63,18 @@ You have to specify one {bf:{ul:est}imate()} option.
 {pstd}
 {cmd:repest}  estimates statistics using replicate weights (BRR weights, Jackknife replicate 
 weights,...), thus accounting for complex survey designs in the estimation of sampling 
-variances. It is specially designed to be used with the IELS, PIAAC, PISA and TALIS datasets produced by 
-the OECD, but works for ALL and IALS datasets as well.  It also allows for analyses with multiply imputed variables (plausible values); where 
+variances. It was originally designed to be used with the PIAAC, PISA and TALIS datasets produced by 
+the OECD, but works for many other educational large-scale surveys as well.  It also allows for analyses with multiply imputed variables (plausible values); where 
 plausible values are included in a {help repest##pv:pvvarlist},  the average estimator across plausible values is 
 reported and the imputation error is added to the variance estimator.
 
 {marker svyname}{...}
 {pstd}
 {it:svyname} is a shortcut for declaring survey settings. Use {it:svyname} to indicate the data 
-source. {it:svyname}  must be equal to {bf:ALL}, {bf:IALS}, {bf:IELS}, {bf:PIAAC}, {bf:PISA}, {bf:PISA2015}, {bf:PISAOOS}, {bf:TALISSCH} 
-(for TALIS data, using school weights) or {bf:TALISTCH} (for TALIS data, using teacher weights).
+source. {it:svyname}  must be equal to one of the supported survey datasets: {bf:ALL}, {bf:IALS}, {bf:ICCS}, {bf:ICILS}, {bf:IELS}, {bf:PIAAC}, {bf:PIRLS}, {bf:PISA}, {bf:PISAOOS}, 
+{bf:SSES}, {bf:TALISSCH}, {bf:TALISTCH}, {bf:TALISEC_STAFF}, {bf:TALISEC_LEADER}, {bf:TIMSS} 
+(see {help repest##svyremarks:remarks}, below, for the corresponding definitions and parameters). 
 In addition, {it:svyname} can be equal to {bf:SVY}: in this case, you must specify survey settings using option {bf:svyparms()}.
-Also see {help repest##svyremarks:remarks} below.
 
 {marker options}{...}
 {title:Options}
@@ -83,37 +82,34 @@ Also see {help repest##svyremarks:remarks} below.
 {dlgtab:Main}
 
 {phang}
-{bf:{ul:est}imate(}stata: {it:{help repest##e_cmd:e_cmd}} 
-[,{it:e_cmd_options}]{bf:)} runs stata estimation command {it:{help repest##e_cmd:e_cmd}} 
-with options {it:e_cmd_options}.
+{bf:{ul:est}imate(}{it:cmd} 
+[,{it:cmd_options}]{bf:)} runs estimation command {it:cmd} 
+with options {it:cmd_options}.
 
 {pmore}
-{marker e_cmd}{...}
-{it:e_cmd} can be any {help estimation command:estimation command}  that posts results in {bf:e(b)} 
+{it:cmd} can be any {help estimation command:estimation command}  that posts results in {bf:e(b)} 
 and accepts {help weight:pweights} or {help weight:aweights}, including 
-user-defined {help program:e-class programs} (see {help repest##remarks:remarks} below). 
-Options for {it:e_cmd} must be declared after 
-a comma, as in the original syntax of {it:e_cmd}. Weights are used but should not be declared, as they are passed to the estimation command from the survey 
-settings.  Optional {ifin} statements are not to be included in {it:e_cmd} and 
+user-defined {help program:e-class programs} (see {help repest##remarks:remarks} below). In addition, {it:cmd} can be 
+equal to {bf:means}, {bf:freq}, {bf:corr}, {bf:summarize} or {bf:quantiletable} (see {help repest##n_cmd:below}).
+Options for {it:cmd} must be declared after 
+a comma, as in the original syntax of {it:cmd}. Weights are used but should not be declared, as they are passed to the estimation command from the survey 
+settings.  Optional {ifin} statements are not to be included in {it:cmd} and 
 should be declared after the command {cmd:repest}. 
 
 {pmore}
-As a Stata 11 command, {cmd: repest} runs any {it:e_cmd} assuming Stata version 11.0. 
-To change this, a {cmd: version ##:} prefix can be included in the {it:e_cmd} 
-(as in {cmd: repest PIAAC, estimate(stata: version 13: ivregress}{it:...}{cmd:)}.
+A {cmd: version ##:} prefix can be included in the {it:cmd} statement 
+(as in {cmd: repest PIAAC, estimate(version 13: ivregress}{it:...}{cmd:)}.
 Most other {help prefix:prefix commands} cannot be included. 
 
 {pmore}
-{help varlist: varlists} within {it:e_cmd} or {it:e_cmd_options} that include plausible values 
+{help varlist: varlists} within {it:cmd} or {it:cmd_options} that include plausible values 
 should be specified as {help repest##pv:pvvarlists}. {help varlist: varlists}
 and {help repest##pv:pvvarlists} can contain {help fvvarlist:factor variables}.
 
-{phang}
-{bf:{ul:est}imate(}{it:{help repest##n_cmd:n_cmd}} [,{it:n_cmd_options}]{bf:)} runs built-in command {it:{help repest##n_cmd:n_cmd}} with options {it:n_cmd_options}.
-
 {pmore}
 {marker n_cmd}{...}
-{it:n_cmd} refers to predefined commands for standard descriptive analyses. The following {it:n_cmd} exist: 
+{bf:means}, {bf:freq}, {bf:corr}, {bf:summarize} or {bf:quantiletable}  are special
+ commands for standard descriptive analyses: 
 
 {phang2}
 {bf:means} {help repest##pv:pvvarlist} {bf:[, pct]} 
@@ -146,7 +142,7 @@ correlations (see {help pwcorr:pwcorr}). The default is to delete observations l
 {synopthdr:{space 12} statname}
 {space 12}{synoptline}
 {synopt:{space 12}{bf:mean}}mean{p_end}
-{synopt:{space 12}{bf:sd}}standard deviation{p_end}
+{synopt:{space 12}{bf:sd}}standard deviation (the sample standard deviation is computed; for an unbiased estimator of the population standard deviation, use {bf:sd_ub}){p_end}
 {synopt:{space 12}{bf:kurtosis}}kurtosis {p_end}
 {synopt:{space 12}{bf:skewness}}skewness {p_end}
 {synopt:{space 12}{bf:min}}minimum{p_end}
@@ -160,7 +156,9 @@ correlations (see {help pwcorr:pwcorr}). The default is to delete observations l
 {synopt:{space 12}{bf:p90}}90th percentile {p_end}
 {synopt:{space 12}{bf:p95}}95th percentile {p_end}
 {synopt:{space 12}{bf:p99}}99th percentile {p_end}
-{synopt:{space 12}{bf:Var}}variance{p_end}
+{synopt:{space 12}{bf:iqr}}inter-quartile range (p75 - p25) {p_end}
+{synopt:{space 12}{bf:idr}}inter-decile range (p90 - p10) {p_end}
+{synopt:{space 12}{bf:Var}}variance (the sample variance is computed; for an unbiased estimator of the population variance, use {bf:Var_ub}){p_end}
 {synopt:{space 12}{bf:sum}}sum of variable{p_end}
 {synopt:{space 12}{bf:N}}number of observations{p_end}
 {synopt:{space 12}{bf:sum_w}}sum of the weights{p_end}
@@ -183,6 +181,10 @@ is in the bottom quantile category of {it:index}.
 {bf:{ul:su}mmarize(}{it:var1}{bf:)} adds to the results the mean and standard deviation of {it:var1}.
 {bf:{ul:reg}ress(}{it:var2 var3}{bf:)} adds to the results the r-squared from the regression of {it:var2} on {it:var3}.
 {bf:test} adds to the results the difference between the average of {it:outcome} in the top {it:index} quantile category and the average of {it:outcome} in the bottom {it:index} quantile category.
+
+{pmore}
+{it:Note:} while {bf:corr} and {bf:summarize} look similar to regular stata r-class commands, it is not possible, in general, to use r-class command within repest. These commands have therefore been adapted and their syntax may differ from the usual syntax. For example, it is not possible to abbreviate {bf:summarize} or to type {bf:correlate} instead of {bf:corr}.
+
  
 {dlgtab:Other}
 
@@ -204,6 +206,10 @@ numerical. If more than one variable is specified, {help repest##of_options:long
 {phang2}
 {bf:test} computes the difference between estimates obtained for the 
 highest and the lowest values of {it:varname}. It is useful to test for differences. Also see {help repest##results_options:results(combine())}.
+
+{pmore}
+{it:Note:} Use {bf:by()} if sources of sampling uncertainty are independent across groups, e.g. {bf:by(cnt)}. Use {bf:over()} if each subset does not corresponds to an independent sample, particularly if you want to test for differences across subsets, e.g. {bf:over(gender, test)}.
+
 
 {phang}
 {marker results_options}{...}
@@ -291,6 +297,61 @@ skills, that allow estimates to be unbiased by measurement error.
 exist in the dataset in use). These parameters can be overridden by values set in option {bf:svyparms({it:{help repest##svy_options:svy_options}})}.  {p_end}
 
 {p2colset 10 45 45 15} 
+
+{p 10 10 15}{bf:ALL}: Adult Literacy and Lifeskills Survey{p_end}
+{p 10 10 15}{bf:IALS}: International Adult Literacy Survey{p_end}
+{p2line}
+{p2col:Final weight} {bf:popwt}{p_end}
+{p2col:Replicate weights} {bf:REPLIC1-REPLIC30}{p_end}
+{p2col:Variance factor} Jackknife 2 {p_end}
+{p2col:Number of replications} 30 {p_end}
+{p2col:Number of plausible values} 10{p_end}
+
+
+{p 10 10 15}{bf:ICCS}: International Civics and Citizenship Study {p_end}
+{p 10 10 15}{bf:ICILS}: International Computer and Information Literacy Study {p_end}
+{p2line}
+{p2col:Final weight*} {bf:TOTWGTS}{p_end}
+{p2col:Replicate weights*} {bf:SRWGT1-SRWGT75}{p_end}
+{p2col:Variance method} Jackknife 2 {p_end}
+{p2col:Number of replications} 75 {p_end}
+{p2col:Number of plausible values} 5 {p_end}
+{p 10 10 15}*To use teacher weights, use {bf:ICCS_T} or {bf:ICILS_T}. For school weights, use {bf:ICCS_C} or {bf:ICILS_C}.
+
+{p 10 10 15}{bf:IELS}: International Early Learning Study {p_end}
+{p2line}
+{p2col:Final weight} {bf:CHILDWGT}{p_end}
+{p2col:Replicate weights} {bf:SRWGT1-SRWGT92}{p_end}
+{p2col:Variance method} balanced repeated replication with Fay's adjustment {p_end}
+{p2col:Fay's parameter} 0.5{p_end}
+{p2col:Number of replications} 92 {p_end}
+{p2col:Number of plausible values} 5 {p_end}
+{p2col:Primary sampling unit (for flags)} {bf:IDCNTRY IDCENTRE}{p_end}
+
+{p 10 10 15}{bf:PIRLS}: Progress in International Literacy Study {p_end}
+{p 10 10 15}{bf:TIMSS}: Trends in International Mathematics and Science Study {p_end}
+{p2line}
+{p2col:Final weight*} {bf:WGT}{p_end}
+{p2col:Replicate weights*} {bf:JR1-JR150}{p_end}
+{p2col:Variance method} JRR {p_end}
+{p2col:Number of replications} 150 {p_end}
+{p2col:Number of plausible values} 5 {p_end}
+{p 10 10 15}*final and replicate weights must be generated prior to running repest, using the following code :
+{p_end}
+
+
+{asis}
+gen WGT = TOTWGT  	// note: use TOTWGT for student weights, SCHWGT for school weights, MATWGT for math teacher weights, etc.
+  forval i = 1/75 {
+     local j = 75 + `i'
+     gen JR`i' = WGT
+     replace JR`i' = 2*WGT*JKREP if JKZONE == `i'
+     gen JR`j' = WGT
+     replace JR`j' = 2*WGT*(1-JKREP) if JKZONE == `i'
+     }
+{smcl}
+
+
 {p 10 10 15}{bf:PISA2015}: Programme for International Student Assessment{p_end}
 {p2line}
 {p2col:Final weight} {bf:w_fstuwt}{p_end}
@@ -312,7 +373,6 @@ exist in the dataset in use). These parameters can be overridden by values set i
 {p2col:Primary sampling unit (for flags)} {bf:cnt schoolid}{p_end}
 {p 10 15 15}{it:Note}: with PISA 2015 data, {bf: repest} automatically changes to {bf:PISA2015} options. {p_end}
 
-
 {p 10 10 15}{bf:PISAOOS}: PISA for Development - assessment of out-of-school youth {p_end}
 {p2line}
 {p2col:Final weight} {bf:spfwt0}{p_end}
@@ -320,6 +380,14 @@ exist in the dataset in use). These parameters can be overridden by values set i
 {p2col:Variance factor} Jackknife 1 {p_end}
 {p2col:Number of replications} 30 {p_end}
 {p2col:Number of plausible values} 10 {p_end}
+
+{p 10 10 15}{bf:SSES}: Survey of Social and Emotional Skills  {p_end}
+{p2line}
+{p2col:Final weight} {bf:WT2019}{p_end}
+{p2col:Replicate weights} {bf:rwgt1-rwgt76}{p_end}
+{p2col:Variance method} balanced repeated replication with Fay's adjustment {p_end}
+{p2col:Fay's parameter} 0.5{p_end}
+{p2col:Number of replications} 76{p_end}
 
 {p 10 10 15}{bf:TALISTCH}: Teaching and Learning International Survey (teacher weights){p_end}
 {p2line}
@@ -373,32 +441,11 @@ When Jacknife 1 and 2 country samples are pooled, the adjustment factor is compu
 of 79/80 and 1, with mixture weights proportional to the share of the sample from Jackknife 1 countries; 
 this share is computed using {bf:spfwt0} weights.
 
-
-{p 10 10 15}{bf:ALL}: Adult Literacy and Lifeskills Survey{p_end}
-{p 10 10 15}{bf:IALS}: International Adult Literacy Survey{p_end}
-{p2line}
-{p2col:Final weight} {bf:popwt}{p_end}
-{p2col:Replicate weights} {bf:REPLIC1-REPLIC30}{p_end}
-{p2col:Variance factor} Jackknife 2 {p_end}
-{p2col:Number of replications} 30 {p_end}
-{p2col:Number of plausible values} 10{p_end}
-
-{p 10 10 15}{bf:IELS}: International Early Learning Study {p_end}
-{p2line}
-{p2col:Final weight} {bf:CHILDWGT}{p_end}
-{p2col:Replicate weights} {bf:SRWGT1-SRWGT92}{p_end}
-{p2col:Variance method} balanced repeated replication with Fay's adjustment {p_end}
-{p2col:Fay's parameter} 0.5{p_end}
-{p2col:Number of replications} 92 {p_end}
-{p2col:Number of plausible values} 5 {p_end}
-{p2col:Primary sampling unit (for flags)} {bf:IDCNTRY IDCENTRE}{p_end}
-
-
 {p 10 10 15}{bf:SVY}: User-defined survey settings (requires option {bf:{ul:svy}parms()}){p_end}
 {p2line}
 {p2col:Final weight} set by suboption {bf:final_weight_name({it:string})} {p_end}
 {p2col:Replicate weights} set by suboption {bf:rep_weight_name({it:string})} {p_end}
-{p2col:Variance factor} set by suboption {bf:variance_factor(#)}  {p_end}
+{p2col:Variance factor} set by suboption {bf:variancefactor(#)}  {p_end}
 {p2col:Number of replications} set by suboption {bf:NREP(#)}  {p_end}
 {p2col:Number of plausible values} set by suboption {bf:NBpv(#)}  {p_end}
 
@@ -453,6 +500,7 @@ User-defined commands must accept aweights or pweights. A typical syntax stateme
 {phang}{cmd:. repest PIAAC, estimate(stata: reg lnwage pvlit@ yrsqual) by(cnt) outfile(wagereturns)}{p_end}
 {phang}{cmd:. use wagereturns, clear}{p_end}
 {phang}{cmd:. export excel using wagereturns.xls, first(var)}{p_end}
+
     {hline}
 {pstd}User-defined estimation command: 1. simultaneous weighted quantile regressions{p_end}
 

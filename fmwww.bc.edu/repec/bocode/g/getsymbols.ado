@@ -1,3 +1,4 @@
+*! getsymbols, version 1.2, <<<<May 2023; it fixes an issue with Stata 18
 *! getsymbols, version 1.1, <<<<May 2021
 *! getsymbols, version 1.0, <<<<Oct 2017
 * In May 2021 Yahoo Finance changed  its url data repository:
@@ -5,12 +6,13 @@
 *     to    "https://query1.finance.yahoo.com/v7/finance/chart/"
 
 * Author: C. Alberto Dorantes, Ph.D.  Monterrey Tech, Querétaro Campus, México
+*         cdorante@tec.mx
 
 capture program drop getsymbols
 program def getsymbols, rclass
-version 11.0
+version 13.0
 
-syntax anything(name=lista), [database(string)] [GOogle] [YAhoo] [VANtage]  [CURrency(string)] [fm(integer 1)] [fd(integer 1)] [fy(integer 1990)] [lm(integer 12)] [ld(integer 31)] [ly(integer 2099)] [FRequency(string)] [price(string)] [KEEPall] [CASEwise] [clear] [apikey(string)]
+syntax anything(name=lista), [database(string)] [GOogle] [YAhoo] [VANtage] [QUAndl]  [CURrency(string)] [fm(integer 1)] [fd(integer 1)] [fy(integer 1990)] [lm(integer 12)] [ld(integer 31)] [ly(integer 2099)] [FRequency(string)] [price(string)] [KEEPall] [CASEwise] [clear] [apikey(string)]
 tempname i j NP simbolo stsimbolo ticks freq vari datevar listavar source urlgoogle urlquandl urlyahoo inidate enddate
 tempfile arch1 archivo
 tempvar temp1
@@ -40,12 +42,16 @@ else if (`f2'>date(c(current_date),"DMY") & `ly'!=2099) {
   display "You specified a future date, so the last date was changed to today's date"
 } 
 
-local source="Quandl"
+*local source="Quandl"
+local source="Yahoo"
+
 if "`google'"!="" {
+  display as error "Unfortunately, Google API was discontinued; you can use yahoo (default), quandl or vantage as alternatives"	
   local source="Google"
+  exit
 }
-if "`yahoo'"!="" {
-  local source="Yahoo"
+if "`quandl'"!="" {
+  local source="Quandl"
 }
 
 if "`vantage'"!="" {
@@ -73,7 +79,6 @@ local ticks=""
   }	
 
 if "`source'"=="Yahoo" {
-
   local datestr1="`fd'/`fm'/`fy'"
   local period1: di %22.0f (date("`datestr1'","DMY")-3653)*(86400)
   * 86400=24*60*60
@@ -135,7 +140,7 @@ else {
 foreach simbolo in `lista'{
   tempfile stockquote
   if "`source'"=="Yahoo" {
-     capture quietly copy "`urlyahoo'`simbolo'?interval=3mo " `stockquote'
+     capture quietly copy "`urlyahoo'`simbolo'?interval=3mo" `stockquote'
 	 if _rc==0 {
 	   if "`price'"=="" local keepall="keepall" 
 	   quietly: mata: m_getsymbol("`urlyahoo'", "`simbolo'","`period1'", "`period2'","`freq'", "`keepall'", "`price'") 
@@ -154,17 +159,17 @@ foreach simbolo in `lista'{
   
   if "`source'"=="Google" {
     local url = "`urlgoogle'"
-    capture quietly copy "`url'`simbolo'&startdate=`fm'/`fd'/`fy'&enddate=`lm'/`ld'/`ly'&collapse=`freq'&output=csv " `stockquote'
+    capture quietly copy "`url'`simbolo'&startdate=`fm'/`fd'/`fy'&enddate=`lm'/`ld'/`ly'&collapse=`freq'&output=csv" `stockquote'
 	*display "`url'`simbolo'&startdate=`fm'/`fd'/`fy'&enddate=`lm'/`ld'/`ly'&collapse=`freq'&output=csv "
   }
   else if "`source'"=="Quandl" {
   local url = "`urlquandl'`database'/"
   if "`apikey'"=="" {
-    capture quietly copy "`url'`simbolo'.csv?start_date=`fy'-`fm'-`fd'&end_date=`ly'-`lm'-`ld'&order=asc&collapse=`freq' " `stockquote'
+    capture quietly copy "`url'`simbolo'.csv?start_date=`fy'-`fm'-`fd'&end_date=`ly'-`lm'-`ld'&order=asc&collapse=`freq'" `stockquote'
 	*display "url: `url'`simbolo'.csv?start_date=`fy'-`fm'-`fd'&end_date=`ly'-`lm'-`ld'&order=asc&collapse=`freq' "
   } 
   else {
-    capture quietly copy "`url'`simbolo'.csv?start_date=`fy'-`fm'-`fd'&end_date=`ly'-`lm'-`ld'&order=asc&collapse=`freq'&api_key=`apikey' " `stockquote'
+    capture quietly copy "`url'`simbolo'.csv?start_date=`fy'-`fm'-`fd'&end_date=`ly'-`lm'-`ld'&order=asc&collapse=`freq'&api_key=`apikey'" `stockquote'
 	*display "url: `url'`simbolo'.csv?start_date=`fy'-`fm'-`fd'&end_date=`ly'-`lm'-`ld'&order=asc&collapse=`freq'&api_key=`apikey' "
   }
   }
@@ -202,13 +207,13 @@ foreach simbolo in `lista'{
       local func="DIGITAL_CURRENCY_WEEKLY" 
    }
    if (("`frequency'"=="d" | "`frequency'"=="m" | "`frequency'"=="w" | "`frequency'"=="q" | "`frequency'"=="a") & ("`currency'"==""))  {
-     capture quietly copy "`url'`func'&symbol=`simbolo'&outputsize=full&datatype=csv&apikey=`apikey' " `stockquote'
+     capture quietly copy "`url'`func'&symbol=`simbolo'&outputsize=full&datatype=csv&apikey=`apikey'" `stockquote'
 	}
    else if 	(("`frequency'"=="d" | "`frequency'"=="m" | "`frequency'"=="w" | "`frequency'"=="q" | "`frequency'"=="a") & ("`currency'"!=""))  {
-     capture quietly copy "`url'`func'&symbol=`simbolo'&market=`currency'&datatype=csv&apikey=`apikey' " `stockquote'
+     capture quietly copy "`url'`func'&symbol=`simbolo'&market=`currency'&datatype=csv&apikey=`apikey'" `stockquote'
    }
    else {
-     capture quietly copy "`url'`func'&symbol=`simbolo'&interval=`frequency'&outputsize=full&datatype=csv&apikey=`apikey' " `stockquote'
+     capture quietly copy "`url'`func'&symbol=`simbolo'&interval=`frequency'&outputsize=full&datatype=csv&apikey=`apikey'" `stockquote'
    
    }
     *display "`url'`func'&symbol=`simbolo'&market=`currency'&datatype=csv&apikey=`apikey' " 

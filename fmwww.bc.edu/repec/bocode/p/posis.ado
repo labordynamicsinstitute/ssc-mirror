@@ -1,4 +1,4 @@
-*!version 1.0.0  28may2021
+*!version 1.0.0  03may2023
 /*
 	purpose:
 		partialling-out estimator based on iterative sure independene
@@ -27,7 +27,7 @@
 
 */
 program posis
-version 16
+	version 16
 	
 	if (replay()) {
 		Display `0'

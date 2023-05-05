@@ -1,4 +1,4 @@
-*!version 1.0.0  13apr2021
+*!version 1.0.0  03may2023
 /*
 	syntax:
 		pocvsw depvar dvars [if] [in], 		///
@@ -8,6 +8,7 @@
 			alpha(string)]
 */
 program pocvsw
+	version 16
 	
 	if (replay()) {
 		Display `0'

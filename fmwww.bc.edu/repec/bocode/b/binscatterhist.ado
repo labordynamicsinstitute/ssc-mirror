@@ -1,4 +1,4 @@
-*! version 3.3 Oct2022  Matteo Pinna, matteo.pinna@gess.ethz.ch
+*! version 4.0 May2023  Matteo Pinna, matteo.pinna@gess.ethz.ch
 
 * Versions:
 * version 1.1 partly fixes the display of multiple graphs, sets default values for xmin and ymin, add twoway general options to the histograms and solves some bugs in the error messages
@@ -14,6 +14,8 @@
 * version 3.1 fixes an issue in trasmitting graph options to addplot and add info on correct format of legend
 * version 3.2 missing brace added
 * version 3.3 fixes bug in sample reporting for binsreg option and an issue with the legend
+* version 4.0 adds the scatter option for a binscatter within a scatter, in addition to msize and boxposition options.
+
 /*
 This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.  
 The full legal text as well as a human-readable summary can be accessed at http://creativecommons.org/licenses/by-nc-sa/4.0/
@@ -33,15 +35,16 @@ local stata_version=c(version)
 		Nquantiles(integer 20) GENxq(name) discrete xq(varname numeric) MEDians ///
 		CONTROLs(varlist numeric ts fv) absorb(varlist) noAddmean REGtype(string) ///
 		LINEtype(string) rd(numlist ascending) reportreg ///
-		COLors(string) MColors(string) LColors(string) Msymbols(string) ///
+		COLors(string) MColors(string) LColors(string) Msymbols(string) msize(string) ///
 		savegraph(string) savedata(string) replace ///
 		nofastxtile randvar(varname numeric) randcut(real 1) randn(integer -1) ///
 		/* OPTIONS */ nbins(integer 20) create_xq x_q(varname numeric) symbols(string) method(string) unique(string) ///
 		/* scatterpoints creation */ binsreg ///
 		/* standard errors */ CLUSTer(varname) vce(string) ///
-		/* coefficient display */ COEFficient(string) xcoef(string) ycoef(string) sample Pvalue ci(string) stars(string) ///
-		/* histogram options */ HISTogram(string) XMin(string) YMin(string) xhistbarheight(string) yhistbarheight(string) xhistbarwidth(string) yhistbarwidth(string) xhistbins(string) yhistbins(string) ///
+		/* coefficient display */ COEFficient(string) BOXPOSition(string) sample Pvalue ci(string) stars(string) ///
+		/* histogram options */ HISTogram(string) xmin(string) ymin(string) xhistbarheight(string) yhistbarheight(string) xhistbarwidth(string) yhistbarwidth(string) xhistbins(string) yhistbins(string) ///
 		/* histogram esthetic options */ xcolor(string) xcfcolor(string) xfintensity(string) xlcolor(string) xlwidth(string) xlpattern(string) xlalign(string) xlstyle(string) xbstyle(string) xpstyle(string) ycolor(string) ycfcolor(string) yfintensity(string) ylcolor(string) ylwidth(string) ylpattern(string) ylalign(string) ylstyle(string) ybstyle(string) ypstyle(string) ///
+		/* background scatter options*/ scatter(string) scattermsymbols(string) scattermcolor(string) scattermsize(string) ///
 		/* options legacy */ name(string) legacy(string) ///
 		*]
 		
@@ -225,7 +228,7 @@ local stata_version=c(version)
 			confirm new file `"`savedata'.do"'
 		}
 	}
-
+	
 	* Mark sample (reflects the if/in conditions, and includes only nonmissing observations) - the sample must also exclude singletons if a reghdfe is run
 		if `"`absorb'"'!="" {
 			if ("`regtype'"=="")|("`regtype'"=="reghdfe") {
@@ -240,6 +243,17 @@ local stata_version=c(version)
 	local samplesize=r(N)
 	local touse_first=_N-`samplesize'+1
 	local touse_last=_N
+
+	* Bins adjustment based on scatter (after sample size)
+	if ("`scatter'"!="") {
+	local nquantiles2=`nquantiles'
+		if ("`scatter'"=="N") | ("`scatter'"=="n") {
+			local nquantiles=`samplesize'
+		}	
+		if ("`scatter'"!="N") & ("`scatter'"!="n") {
+			local nquantiles=`scatter'
+		}	
+	}
 	
 	* Check number of unique byvals & create local storing byvals
 	if "`by'"!="" {
@@ -359,8 +373,6 @@ local stata_version=c(version)
 		local x_r `x_var'
 		local y_vars_r `y_vars'
 	}
-	
-
 	****** Regressions for fit lines ******
 	if ("`reportreg'"=="") | (("`reportreg'"!="") & ("`binsreg'"!="")) local reg_verbosity "quietly"
 
@@ -476,7 +488,6 @@ local stata_version=c(version)
 	}
 
 	******* Define the bins *******
-	
 	* Specify and/or create the xq var, as necessary
 	if "`xq'"=="" {
 
@@ -486,7 +497,7 @@ local stata_version=c(version)
 			
 			* Check whether the number of unique values > nquantiles, or <= nquantiles
 			capture mata: characterize_unique_vals_sorted("`x_r'",`touse_first',`touse_last',`nquantiles')
-			
+
 			if (_rc==0) { /* number of unique values <= nquantiles, set to discrete */
 				local discrete discrete
 				if ("`genxq'"!="") di as text `"note: the x-variable has fewer unique values than the number of bins specified (`nquantiles').  It will therefore be treated as discrete, and genxq() will be ignored"'
@@ -527,7 +538,7 @@ local stata_version=c(version)
 		else { /* discrete is specified, xq() & genxq() are not */
 		
 			if ("`controls'`absorb'"!="") di as text "warning: discrete is specified in combination with controls() or absorb(). note that binning takes places after residualization, so the residualized x-variable may contain many more unique values."
-
+			
 			capture mata: characterize_unique_vals_sorted("`x_r'",`touse_first',`touse_last',`=`samplesize'/2')
 		
 			if (_rc==0) {
@@ -549,12 +560,11 @@ local stata_version=c(version)
 		}
 	}
 	else {
-
 		if !(`touse_first'==1 & word("`:sortedby'",1)=="`xq'") sort `touse' `xq'
 		
 		* set nquantiles & boundaries
 		mata: characterize_unique_vals_sorted("`xq'",`touse_first',`touse_last',`=`samplesize'/2')
-		
+
 		if (_rc==0) {
 			local nquantiles=r(r)
 			if ("`by'"=="") {
@@ -571,7 +581,7 @@ local stata_version=c(version)
 			error _rc
 		}
 	}
-
+	
 	********** Compute scatter points **********
 
 	if ("`by'"!="") {
@@ -666,13 +676,29 @@ local stata_version=c(version)
 	local num_mcolor=wordcount(`"`mcolors'"')
 	local num_lcolor=wordcount(`"`lcolors'"')
 
+	* markers adjustments based on scatter - basically switch the moptions from scatter to binscatter and viceversa (plus setting the default) (this should be after the section above on graphing but before the prepare connect & msymbol)
+	if ("`scatter'"!="") {
+	* save the binned scatter options 
+	local binnedmsymbols "`msymbols'"
+	local binnedmcolors "`mcolors'"
+	local binnedmsize "`msize'"
 
+	* transfer the scattermoptions to the main scatter
+	local msymbols "Oh"
+	local mcolors "gray%30"
+	local msize "tiny"
+	if ("`scattermsymbols'"!="") local msymbols "`scattermsymbols'"
+	if ("`scattermcolors'"!="") local mcolors "`scattermcolor'"
+	if ("`scattermsize'"!="") local msize "`scattermsize'"
+	} 
+	
 	* Prepare connect & msymbol options
 	if ("`linetype'"=="connect") local connect "c(l)"
 	if "`msymbols'"!="" {
 		local symbol_prefix "msymbol("
 		local symbol_suffix ")"
 	}
+
 	
 	*** Prepare scatters
 	
@@ -723,10 +749,11 @@ local stata_version=c(version)
 			}
 			
 			* Add options
-			local scatter_options `connect' mcolor(`: word `c' of `mcolors'') lcolor(`: word `c' of `lcolors'') `symbol_prefix'`: word `c' of `msymbols''`symbol_suffix'
+			if ("`msize'"!="") local addmsize "msize(`msize')" /* to add msize to the scatter options in the scatters local */
+			local scatter_options `connect' `addmsize' mcolor(`: word `c' of `mcolors'') lcolor(`: word `c' of `lcolors'') `symbol_prefix'`: word `c' of `msymbols''`symbol_suffix'
 			local scatters `scatters', `scatter_options')
 			if ("`savedata'"!="") local savedata_scatters `savedata_scatters', `scatter_options')
-		
+	
 			/*
 			* Add legend
 			if "`by'"=="" {
@@ -1219,8 +1246,14 @@ local stata_version=c(version)
 				local sampsize=e(N)
 				}		
 			}
-			if ("`xcoef'"!="") local xmin_coef=`xcoef'
-			if ("`ycoef'"!="") local ymin_coef=`ycoef'
+			if "`boxposition'"!="" {
+			local counter_box=0
+				foreach value in `boxposition'{
+				local counter_box=`counter_box'+1
+					if (`counter_box'==1) local xmin_coef=`value'
+					if (`counter_box'==2) local ymin_coef=`value'
+				}
+			}
 			
 		* Label
 		local sign="="
@@ -1262,19 +1295,18 @@ local stata_version=c(version)
 		}
 	}
 	*
-	
+
 	* Legend
 	local check_legend=strpos("`options'","legend")
 	if "`check_legend'"=="0" local legendoff="legend(off)"
-	
 	* Display the graph
 	if ("`histogram'"!="") {
-	local graphcmd twoway `scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') `addname' `options' `coefficient_report' nodraw `legendoff'
-	if ("`savedata'"!="") local savedata_graphcmd twoway `savedata_scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle' `addname' `options' `coefficient_report'
+	local graphcmd twoway `scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') `addname' `options' `coefficient_report' nodraw `legendoff' `options_scatter' `legacy' 
+	if ("`savedata'"!="") local savedata_graphcmd twoway `savedata_scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle' `addname' `options' `coefficient_report' 
 	}
 	if ("`histogram'"=="") {
-	local graphcmd twoway `scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `addname' `options' `coefficient_report' `legendoff'
-	if ("`savedata'"!="") local savedata_graphcmd twoway `savedata_scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `addname' `options' `coefficient_report' 
+	local graphcmd twoway `scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `addname' `options' `coefficient_report' `legendoff' `options_scatter' `legacy'
+	if ("`savedata'"!="") local savedata_graphcmd twoway `savedata_scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `addname' `options' `coefficient_report'
 	}
 	`graphcmd'
 	if ("`histogram'"!="") {
@@ -1291,7 +1323,38 @@ local stata_version=c(version)
 		addplot `name_addplot': bar `t_d_`y_vars'' `t_b_`y_vars'', horizontal base(`xmin') barwidth(`temp_barwidth2') /* general options */ `ycolor' `ycfcolor' `yfintensity' `ylcolor' `ylwidth' `ylpattern' `ylalign' `ylstyle' `ybstyle' `ypstyle' `ybstyle' `ycolor_default'/* add histogram */ `options' `legendoff'
 		}
 	}
-	
+	if ("`scatter'"!="") {
+		if ("`if'"!="") local add2if "[`if']"
+		if ("`in'"!="") local add2in "[`in']"
+		if ("`aweight'"!="") local add2aweight "[aw=`aweight']"
+		if ("`fweight'"!="") local add2fweight "[fw=`fweight']"
+		if ("`by'"!="") local add2by "by(`by')"
+		local add2nquantiles "Nquantiles(`nquantiles2')"
+		if ("`genxq'"!="") local add2genxq "GENxq(`genxq')"
+		if ("`controls'"!="") local add2controls "CONTROLs(`controls')"
+		if ("`absorb'"!="") local add2absorb "`absorb'"
+		if ("`regtype'"!="") local add2regtype "REGtype(`regtype')"
+		if ("`linetype'"!="") local add2linetype "LINEtype(`linetype')"
+		if ("`rd'"!="") local add2rd "rd(`rd')"
+		if ("`binnedmcolors'"!="") local add2mcolors "mcolors(`binnedmcolors')" /* binned mcolor */
+		if ("`binnedmcolors'"=="") local add2mcolors "mcolors(navy)" /* binned mcolor */
+		if ("`binnedmsymbols'"!="") local add2msymbols "msymbols(`binnedmsymbols')" /* binned msymbol */
+		if ("`binnedmsymbols'"=="") local add2msymbols "msymbols(Oh)" /* binned msymbol */
+		if ("`binnedmsize'"!="") local add2msize "msize(`binnedmsize')" /* binned msize */
+		if ("`binnedmsize'"=="") local add2msize "msize(small)" /* binned msize */
+		if ("`randvar'"!="") local add2randvar "randvar(`randvar')"
+		if ("`randcut'"!="") local add2randcut "randcut(`randcut')"
+		if ("`randn'"!="") local add2randn "randn(`randn')"
+		if ("`nbins'"!="") local add2nbins "nbins(`nbins')"
+		if ("`method'"!="") local add2method "method(`method')"
+		if ("`unique'"!="") local add2unique "unique(`unique')"
+		if ("`name'"!="") local add2name "name(`name')"
+		if ("`legacy'"!="") local add2legacy "legacy(`legacy')"
+		
+		
+		macro drop xq discrete
+		addplot_scatter `varlist' `add2if' `add2in' `add2aweight' `add2fweight', `add2by' `add2nquantiles' `add2genxq' `add2controls' `add2absorb' `add2regtype' `add2linetype' `add2rd' `add2randvar' `add2randcut' `add2randn' `add2nbins' `add2x_q' `add2method' `add2unique' `add2name' `add2legacy' `binsreg' `nofastxtile' `medians' `noaddmean' `create_xq' `add2mcolors' `add2msize' `add2msymbols'
+		}
 
 	* Save graph
 	if `"`savegraph'"'!="" {
@@ -1340,7 +1403,6 @@ end
 **********************************
 
 * Helper programs
-
 program define means_in_boundaries, rclass
 	version 12.1
 
@@ -1589,3 +1651,541 @@ void characterize_unique_vals_sorted(string scalar var, real scalar first, real 
 }
 
 end
+
+***** Helper (recursive) binscatter
+cap program drop addplot_scatter
+program define addplot_scatter, rclass sortpreserve
+
+local stata_version=c(version)
+
+	version 12.1
+	syntax varlist(min=2 numeric) [if] [in] [aweight fweight], [by(varname) ///
+		Nquantiles(integer 20) GENxq(name) discrete xq(varname numeric) MEDians ///
+		CONTROLs(varlist numeric ts fv) absorb(varlist) noAddmean REGtype(string) ///
+		LINEtype(string) rd(numlist ascending) reportreg ///
+		COLors(string) MColors(string) LColors(string) Msymbols(string) msize(string) ///
+		savegraph(string) savedata(string) replace ///
+		nofastxtile randvar(varname numeric) randcut(real 1) randn(integer -1) ///
+		/* OPTIONS */ nbins(integer 20) create_xq x_q(varname numeric) symbols(string) method(string) unique(string) ///
+		/* scatterpoints creation */ binsreg ///
+		/* standard errors */ CLUSTer(varname) vce(string) ///
+		/* coefficient display */ COEFficient(string) xcoef(string) ycoef(string) sample Pvalue ci(string) stars(string) ///
+		/* histogram options */ HISTogram(string) XMin(string) YMin(string) xhistbarheight(string) yhistbarheight(string) xhistbarwidth(string) yhistbarwidth(string) xhistbins(string) yhistbins(string) ///
+		/* histogram esthetic options */ xcolor(string) xcfcolor(string) xfintensity(string) xlcolor(string) xlwidth(string) xlpattern(string) xlalign(string) xlstyle(string) xbstyle(string) xpstyle(string) ycolor(string) ycfcolor(string) yfintensity(string) ylcolor(string) ylwidth(string) ylpattern(string) ylalign(string) ylstyle(string) ybstyle(string) ypstyle(string) ///
+		/* background scatter options*/   ///
+		/* options legacy */ name(string) legacy(string) ///
+		*]
+	set more off
+	* Parse varlist into y-vars and x-var
+	local x_var=word("`varlist'",-1)
+	local y_vars=regexr("`varlist'"," `x_var'$","")
+	local ynum=wordcount("`y_vars'")
+	
+	* Create convenient weight local
+	if ("`weight'"!="") local wt [`weight'`exp']
+	
+	* Mark sample (reflects the if/in conditions, and includes only nonmissing observations) - the sample must also exclude singletons if a reghdfe is run
+		if `"`absorb'"'!="" {
+			if ("`regtype'"=="")|("`regtype'"=="reghdfe") {
+			cap qui reghdfe `y_vars', absorb(`absorb')
+			tempvar singleton_dropped
+			cap qui gen `singleton_dropped'=1 if e(sample)
+			}			
+		}
+	marksample touse
+	markout `touse' `by' `xq' `controls' `absorb' `addvce' `addresid' `singleton_dropped', strok
+	qui count if `touse'
+	local samplesize=r(N)
+	local touse_first=_N-`samplesize'+1
+	local touse_last=_N
+	* Check number of unique byvals & create local storing byvals
+	if "`by'"!="" {
+		local byvarname `by'
+	
+		capture confirm numeric variable `by'
+		if _rc {
+			* by-variable is string => generate a numeric version
+			tempvar by
+			tempname bylabel
+			egen `by'=group(`byvarname'), lname(`bylabel')
+		}
+		
+		local bylabel `:value label `by'' /*catch value labels for numeric by-vars too*/ 
+		
+		tempname byvalmatrix
+		qui tab `by' if `touse', nofreq matrow(`byvalmatrix')
+		
+		local bynum=r(r)
+		forvalues i=1/`bynum' {
+			local byvals `byvals' `=`byvalmatrix'[`i',1]'
+		}
+	}
+	else local bynum=1
+
+	******  Name  ******
+		if ("`name'"!="") {
+		local addname="name(`name')"
+		}
+	* Isolate name from name local, solving a conflict with addplot
+	tempvar comma_pos
+	gen `comma_pos'=strpos("`name'",",")
+	replace `comma_pos'=`comma_pos'-1
+	local name_addplot=substr("`name'",1,`comma_pos')
+		
+	******  Standard errors  ******
+		
+		if ("`cluster'"!="") {
+		local addcluster="cluster(`cluster')"
+		}
+		if ("`vce'"!="") {
+		local addvce="vce(`vce')"
+		}
+
+	******  Confidence interval  ******
+		if ("`ci'"!="") {
+		local addci="level(`ci')"
+		}	
+	
+	****** Save constant if binsreg is run 
+	if ("`reportreg'"=="") | (("`reportreg'"!="") & ("`binsreg'"=="")) local binsreg_verbosity "quietly"
+	if ("`binsreg'"!="") `binsreg_verbosity' {
+		if `"`absorb'"'!="" {
+		local absorb "absorb(`absorb')"
+			if ("`regtype'"=="")|("`regtype'"=="reghdfe") {
+			local regtype "reghdfe"
+			local addresid="resid"
+			}
+			if ("`regtype'"=="areg") {
+			local regtype "areg"
+			}
+		}
+		else {
+			local regtype "reg"
+		}
+	
+		if ("`binsreg_verbosity'"=="quietly") capture `regtype' `y_vars' `x_var' `controls' `wt' if `touse', `absorb' `addcluster' `addvce'
+			else capture noisily `regtype' `y_vars' `x_var' `controls' `wt' if `touse', `absorb' `addcluster' `addvce'	
+	mat binsreg_eb=e(b)
+	mat binsreg_eV=e(V)
+	mat mat_edf_r=e(df_r)
+	local binsreg_edf_r=mat_edf_r[1,1]
+	local binsreg_const=binsreg_eb[1,"_cons"] 	
+	}
+	*
+	
+	******  Create residuals  ******
+	
+	if (`"`controls'`absorb'"'!="") quietly {
+	
+		* Parse absorb to define the type of regression to be used
+		if `"`absorb'"'!="" {
+		local absorb "absorb(`absorb')"
+			if ("`regtype'"=="")|("`regtype'"=="reghdfe") {
+			local regtype "reghdfe"
+			local addresid="resid"
+			}
+			if ("`regtype'"=="areg") {
+			local regtype "areg"
+			}
+		}
+		else {
+			local regtype "reg"
+		}
+		
+		* Generate residuals
+		local firstloop=1
+		foreach var of varlist `x_var' `y_vars' {
+			tempvar residvar 
+			`regtype' `var' `controls' `wt' if `touse', `absorb' `addcluster' `addvce' `addresid' `addci'
+			predict `residvar' if e(sample), residuals
+			if ("`addmean'"!="noaddmean") {
+				summarize `var' `wt' if `touse', meanonly
+				replace `residvar'=`residvar'+r(mean)
+			}
+			
+			label variable `residvar' "`var'"
+			if `firstloop'==1 {
+				local x_r `residvar'
+				local firstloop=0
+			}
+			else local y_vars_r `y_vars_r' `residvar'
+		}
+		
+	}
+	else { 	/*absorb and controls both empty, no need for regression*/
+		local x_r `x_var'
+		local y_vars_r `y_vars'
+	}
+	****** Regressions for fit lines ******
+	if ("`reportreg'"=="") | (("`reportreg'"!="") & ("`binsreg'"!="")) local reg_verbosity "quietly"
+
+	if inlist("`linetype'","lfit","qfit") `reg_verbosity' {
+
+		* If doing a quadratic fit, generate a quadratic term in x
+		if "`linetype'"=="qfit" {
+			tempvar x_r2
+			gen `x_r2'=`x_r'^2
+		}
+		
+		* Create matrices to hold regression results
+		tempname e_b_temp
+		forvalues i=1/`ynum' {
+			tempname y`i'_coefs
+		}
+		
+		* LOOP over by-vars
+		local counter_by=1
+		if ("`by'"=="") local noby="noby"
+		foreach byval in `byvals' `noby' {
+		
+			* LOOP over rd intervals
+			tokenize  "`rd'"
+			local counter_rd=1	
+				
+			while ("`1'"!="" | `counter_rd'==1) {
+			
+				* display text headers
+				if "`reportreg'"!="" {
+					di "{txt}{hline}"
+					if ("`by'"!="") {
+						if ("`bylabel'"=="") di "-> `byvarname' = `byval'"
+						else {
+							di "-> `byvarname' = `: label `bylabel' `byval''"
+						}
+					}
+					if ("`rd'"!="") {
+						if (`counter_rd'==1) di "RD: `x_var'<=`1'"
+						else if ("`2'"!="") di "RD: `x_var'>`1' & `x_var'<=`2'"
+						else di "RD: `x_var'>`1'"
+					}
+				}
+				
+				* set conditions on reg
+				local conds `touse'
+				
+				if ("`by'"!="" ) local conds `conds' & `by'==`byval'
+				
+				if ("`rd'"!="") {
+					if (`counter_rd'==1) local conds `conds' & `x_r'<=`1'
+					else if ("`2'"!="") local conds `conds' & `x_r'>`1' & `x_r'<=`2'
+					else local conds `conds' & `x_r'>`1'
+				}
+					
+				* LOOP over y-vars
+				local counter_depvar=1
+				foreach depvar of varlist `y_vars_r' {
+				
+					* display text headers
+					if (`ynum'>1) {
+						if ("`controls'`absorb'"!="") local depvar_name : var label `depvar'
+						else local depvar_name `depvar'
+						di as text "{bf:y_var = `depvar_name'}"
+					}
+					
+					* perform regression
+					if ("`reg_verbosity'"=="quietly") capture reg `depvar' `x_r2' `x_r' `wt' if `conds', `addcluster' `addvce'
+					else capture noisily reg `depvar' `x_r2' `x_r' `wt' if `conds', `addcluster' `addvce'
+					* store results
+					if (_rc==0) matrix e_b_temp=e(b)
+					else if (_rc==2000) {
+						if ("`reg_verbosity'"=="quietly") di as error "no observations for one of the fit lines. add 'reportreg' for more info."
+						
+						if ("`linetype'"=="lfit") matrix e_b_temp=.,.
+						else /*("`linetype'"=="qfit")*/ matrix e_b_temp=.,.,.
+					}
+					else {
+						error _rc
+						exit _rc
+					}
+					
+					* relabel matrix row			
+					if ("`by'"!="") matrix roweq e_b_temp = "by`counter_by'"
+					if ("`rd'"!="") matrix rownames e_b_temp = "rd`counter_rd'"
+					else matrix rownames e_b_temp = "="
+					
+					* save to y_var matrix
+					if (`counter_by'==1 & `counter_rd'==1) matrix `y`counter_depvar'_coefs'=e_b_temp
+					else matrix `y`counter_depvar'_coefs'=`y`counter_depvar'_coefs' \ e_b_temp
+					
+					* increment depvar counter
+					local ++counter_depvar
+				}
+			
+				* increment rd counter
+				if (`counter_rd'!=1) mac shift
+				local ++counter_rd
+				
+			}
+			
+			* increment by counter
+			local ++counter_by
+			
+		}
+	
+		* relabel matrix column names
+		forvalues i=1/`ynum' {
+			if ("`linetype'"=="lfit") matrix colnames `y`i'_coefs' = "`x_var'" "_cons"
+			else if ("`linetype'"=="qfit") matrix colnames `y`i'_coefs' = "`x_var'^2" "`x_var'" "_cons"
+		}
+	
+	}
+
+	******* Define the bins *******
+		
+	* Specify and/or create the xq var, as necessary
+	if "`xq'"=="" {
+		if !(`touse_first'==1 & word("`:sortedby'",1)=="`x_r'") sort `touse' `x_r'
+	
+		if "`discrete'"=="" { /* xq() and discrete are not specified */
+			* Check whether the number of unique values > nquantiles, or <= nquantiles
+			capture mata: characterize_unique_vals_sorted("`x_r'",`touse_first',`touse_last',`nquantiles')		
+			if (_rc==0) { /* number of unique values <= nquantiles, set to discrete */
+				local discrete discrete
+				if ("`genxq'"!="") di as text `"note: the x-variable has fewer unique values than the number of bins specified (`nquantiles').  It will therefore be treated as discrete, and genxq() will be ignored"'
+
+				local xq `x_r'
+				local nquantiles=r(r)
+				if ("`by'"=="") {
+					tempname xq_boundaries xq_values
+					matrix `xq_boundaries'=r(boundaries)		
+					matrix `xq_values'=r(values)
+				}
+			}
+			else if (_rc==134) { /* number of unique values > nquantiles, perform binning */
+				if ("`genxq'"!="") local xq `genxq'
+				else tempvar xq
+	
+				if ("`fastxtile'"!="nofastxtile") fastxtile `xq' = `x_r' `wt' in `touse_first'/`touse_last', nq(`nquantiles') randvar(`randvar') randcut(`randcut') randn(`randn')
+				else xtile `xq' = `x_r' `wt' in `touse_first'/`touse_last', nq(`nquantiles')
+
+				if ("`by'"=="") {
+					mata: characterize_unique_vals_sorted("`xq'",`touse_first',`touse_last',`nquantiles')
+					if (r(r)!=`nquantiles') {
+						di as text "warning: nquantiles(`nquantiles') was specified, but only `r(r)' were generated. see help file under nquantiles() for explanation."
+						local nquantiles=r(r)
+					}
+
+					tempname xq_boundaries xq_values
+					matrix `xq_boundaries'=r(boundaries)		
+					matrix `xq_values'=r(values)
+				}
+			}
+			else {
+				error _rc
+			}
+
+		}
+		
+		else { /* discrete is specified, xq() & genxq() are not */
+		
+			if ("`controls'`absorb'"!="") di as text "warning: discrete is specified in combination with controls() or absorb(). note that binning takes places after residualization, so the residualized x-variable may contain many more unique values."
+			
+			capture mata: characterize_unique_vals_sorted("`x_r'",`touse_first',`touse_last',`=`samplesize'/2')
+		
+			if (_rc==0) {
+				local xq `x_r'
+				local nquantiles=r(r)
+				if ("`by'"=="") {
+					tempname xq_boundaries xq_values
+					matrix `xq_boundaries'=r(boundaries)		
+					matrix `xq_values'=r(values)
+				}
+			}
+			else if (_rc==134) {
+				di as error "discrete specified, but number of unique values is > (sample size/2)"
+				exit 134
+			}
+			else {
+				error _rc
+			}
+		}
+	}
+	else {
+
+		if !(`touse_first'==1 & word("`:sortedby'",1)=="`xq'") sort `touse' `xq'
+
+		* set nquantiles & boundaries
+		mata: characterize_unique_vals_sorted("`xq'",`touse_first',`touse_last',`=`samplesize'/2')
+
+		if (_rc==0) {
+			local nquantiles=r(r)  
+			if ("`by'"=="") {
+				tempname xq_boundaries xq_values
+				matrix `xq_boundaries'=r(boundaries)		
+				matrix `xq_values'=r(values)
+			}
+		}
+		else if (_rc==134) {
+			di as error "discrete specified, but number of unique values is > (sample size/2)"
+			exit 134
+		}
+		else {
+			error _rc
+		}
+	}
+
+	********** Compute scatter points **********
+
+	if ("`by'"!="") {
+		sort `touse' `by' `xq'
+		tempname by_boundaries
+		mata: characterize_unique_vals_sorted("`by'",`touse_first',`touse_last',`bynum')
+		matrix `by_boundaries'=r(boundaries)
+	}
+
+	forvalues b=1/`bynum' {
+		if ("`by'"!="") {
+			mata: characterize_unique_vals_sorted("`xq'",`=`by_boundaries'[`b',1]',`=`by_boundaries'[`b',2]',`nquantiles')
+			tempname xq_boundaries xq_values
+			matrix `xq_boundaries'=r(boundaries)
+			matrix `xq_values'=r(values)
+		}
+		/* otherwise xq_boundaries and xq_values are defined above in the binning code block */
+
+		* Define x-means
+		tempname xbin_means
+		if ("`discrete'"=="discrete") {
+			matrix `xbin_means'=`xq_values'
+		}
+		else {
+			means_in_boundaries `x_r' `wt', bounds(`xq_boundaries') `medians'
+			matrix `xbin_means'=r(means)
+		}
+
+		* LOOP over y-vars to define y-means
+		local counter_depvar=0
+		foreach depvar of varlist `y_vars_r' {
+			local ++counter_depvar
+
+			means_in_boundaries `depvar' `wt', bounds(`xq_boundaries') `medians'
+
+			* store to matrix
+			if (`b'==1) {
+				tempname y`counter_depvar'_scatterpts
+				matrix `y`counter_depvar'_scatterpts' = `xbin_means',r(means)
+			}
+			else {
+				* make matrices conformable before right appending			
+				local rowdiff=rowsof(`y`counter_depvar'_scatterpts')-rowsof(`xbin_means')
+				if (`rowdiff'==0) matrix `y`counter_depvar'_scatterpts' = `y`counter_depvar'_scatterpts',`xbin_means',r(means)
+				else if (`rowdiff'>0)  matrix `y`counter_depvar'_scatterpts' = `y`counter_depvar'_scatterpts', ( (`xbin_means',r(means)) \ J(`rowdiff',2,.) )
+				else /*(`rowdiff'<0)*/ matrix `y`counter_depvar'_scatterpts' = ( `y`counter_depvar'_scatterpts' \ J(-`rowdiff',colsof(`y`counter_depvar'_scatterpts'),.) ) ,`xbin_means',r(means)
+			}
+		}
+	}
+
+
+	*********** With Binsreg ***********
+	if "`binsreg'"=="binsreg" {	/* This saves the matrix of scatterpoints from binsreg and replaces the one from binscatterhist */	
+	if "`nquantiles'"!="" local addnbins "nbins(`nquantiles')"
+	tempfile binsreg_points
+	qui binsreg `y_vars' `x_var' `controls' `wt' if `touse', `addnbins' savedata(`binsreg_points')
+	preserve
+	use `binsreg_points', clear
+	mkmat dots_x dots_fit, matrix(`y1_scatterpts')
+	qui ereplace dots_binid=max(dots_binid)
+	local binsreg_nbins=dots_binid[1]
+	restore
+		if "`binsreg_nbins'"!="`nquantiles'" {
+		di as error "Binsreg is selecting `binsreg_nbins' bins, update your nquantiles option or replace with `binsreg_nbins'"
+		exit
+		}
+	}	
+	*
+
+	*********** Perform Graphing ***********
+
+	* If rd is specified, prepare xline parameters
+	if "`rd'"!="" {
+		foreach xval in "`rd'" {
+			local xlines `xlines' xline(`xval', lpattern(dash) lcolor(gs8))
+		}
+	}
+
+	* Fill colors if missing
+	if `"`colors'"'=="" local colors ///
+		navy maroon forest_green dkorange teal cranberry lavender ///
+		khaki sienna emidblue emerald brown erose gold bluishgray ///
+		/* lime magenta cyan pink blue */
+	if `"`mcolors'"'=="" {
+		if (`ynum'==1 & `bynum'==1 & "`linetype'"!="connect") local mcolors `: word 1 of `colors''
+		else local mcolors `colors'
+	}
+	if `"`lcolors'"'=="" {
+		if (`ynum'==1 & `bynum'==1 & "`linetype'"!="connect") local lcolors `: word 2 of `colors''
+		else local lcolors `colors'
+	}
+	local num_mcolor=wordcount(`"`mcolors'"')
+	local num_lcolor=wordcount(`"`lcolors'"')
+
+
+	* Prepare connect & msymbol options
+	if ("`linetype'"=="connect") local connect "c(l)"
+	if "`msymbols'"!="" {
+		local symbol_prefix "msymbol("
+		local symbol_suffix ")"
+	}
+	
+	*** Prepare scatters
+	
+	* c indexes which color is to be used
+	local c=0
+	
+	local counter_series=0
+	
+	* LOOP over by-vars
+	local counter_by=0
+	if ("`by'"=="") local noby="noby"
+	foreach byval in `byvals' `noby' {
+		local ++counter_by
+		
+		local xind=`counter_by'*2-1
+		local yind=`counter_by'*2
+
+		* LOOP over y-vars
+		local counter_depvar=0
+		foreach depvar of varlist `y_vars' {
+			local ++counter_depvar
+			local ++c
+			
+			* LOOP over rows (each row contains a coordinate pair)
+			local row=1
+			local xval=`y`counter_depvar'_scatterpts'[`row',`xind']
+			local yval=`y`counter_depvar'_scatterpts'[`row',`yind']
+			
+			if !missing(`xval',`yval') {
+				local ++counter_series
+				local scatters `scatters' (scatteri
+				if ("`savedata'"!="") {
+					if ("`by'"=="") local savedata_scatters `savedata_scatters' (scatter `depvar' `x_var'
+					else local savedata_scatters `savedata_scatters' (scatter `depvar'_by`counter_by' `x_var'_by`counter_by'
+				}
+			}
+			else {
+				* skip the rest of this loop iteration
+				continue
+			}
+			
+			while (`xval'!=. & `yval'!=.) {
+				local scatters `scatters' `yval' `xval'
+			
+				local ++row
+				local xval=`y`counter_depvar'_scatterpts'[`row',`xind']
+				local yval=`y`counter_depvar'_scatterpts'[`row',`yind']
+			}
+			
+			* Add options
+			if ("`msize'"!="") local addmsize "msize(`msize')" /* to add msize to the scatter options in the scatters local */
+			local scatter_options `connect' `addmsize' mcolor(`: word `c' of `mcolors'') lcolor(`: word `c' of `lcolors'') `symbol_prefix'`msymbols'`symbol_suffix'
+			local scatters `scatters', `scatter_options')
+			if ("`savedata'"!="") local savedata_scatters `savedata_scatters', `scatter_options')
+		
+
+		}
+		
+	}
+	addplot: `scatters', norescaling
+
+end
+*********************	
+	

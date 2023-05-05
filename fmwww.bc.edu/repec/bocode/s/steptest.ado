@@ -1,4 +1,4 @@
-*!version 1.0.0  26oct2020
+*!version 1.0.0  03may2023
 /*
 	syntax:
 	
@@ -7,6 +7,7 @@
 			 [if] [in] [weight], [options]
 */
 program steptest
+	version 16
 					// parse syntax
 	ParseSyntax `0'
 	local always `r(always)'

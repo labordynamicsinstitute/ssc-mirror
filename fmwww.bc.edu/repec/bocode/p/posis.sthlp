@@ -151,13 +151,13 @@ in the model. The default is none.
 on classroom and home nitrogen oxide using BIC-lasso-based iterative sure
 independence screening  to select controls{p_end}
 {phang2}{cmd:. posis react no2_class no2_home,}
-    {cmd:controls(i.(meducation overweight msmoke sex) noise sev* age)}
+    {cmd:controls(i.(meducation overweight msmoke sex) noise_school sev_home sev_school age)}
     {cmd:model(linear)}
 
 {pstd}As above but use BIC-stepwise-based iterative sure independence screening
 to select controls{p_end}
 {phang2}{cmd:. posis react no2_class no2_home,}
-    {cmd:controls(i.(meducation overweight msmoke sex) noise sev* age)}
+    {cmd:controls(i.(meducation overweight msmoke sex) noise_school sev_home sev_school age)}
     {cmd:model(linear)} {cmd:method(stepbic)}
 
 {marker results}{...}

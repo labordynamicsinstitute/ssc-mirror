@@ -1,6 +1,7 @@
 *﻿*Author: Clément de Chaisemartin
 **1st version: November 8th 2019
-**This version: October 14th 2022
+**This version: May 2nd 2023
+** Adding double at lines 214 and 980.
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Program #1: Does sanity checks and time consuming data manipulations, calls did_multiplegt_results, and stores estimates and standard errors in e() and puts them on a graph //////
@@ -210,7 +211,7 @@ replace d_sq_XX=d_sq_XX[_n-1] if `2'==`2'[_n-1]
 *Y, G, T, D variables
 
 gen outcome_XX=`1'
-egen group_XX=group(`2')
+egen double group_XX=group(`2')
 egen time_XX=group(`3')
 gen treatment_XX=`4'
 
@@ -976,7 +977,7 @@ scalar did_multiplegt_check=1
 // Creating the Y, G, T, D variables
 	
 	gen outcome_XX=`1'
-	gen group_XX=`2'
+	gen double group_XX=`2'
 	egen time_XX=group(`3')
 	gen treatment_XX=`4'
 

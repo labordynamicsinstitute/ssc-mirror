@@ -1,5 +1,6 @@
-*!version 1.0.0  3aug2020
+*!version 1.0.0  03may2023
 program stepbic
+	version 16
 					// parse syntax
 	ParseSyntax `0'
 	local always `r(always)'

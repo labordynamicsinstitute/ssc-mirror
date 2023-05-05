@@ -1,4 +1,4 @@
-*!*** version 1.11.2 06012019
+*!*** version 1.12.1 03052023
 
 ** L256 over(var) conditionn dans average 23/03
 ** L260 correction display average long_over: line 260 is now ignored and even deleted (29/05/15)  -- 16 apr 2015
@@ -41,6 +41,11 @@
 ** coverage option with tests made compatible with earlier versions of stata.
 **inclusion of TALIS3S - 18/4/2019
 *condition on weights being not missing (FLAG) l 794-5
+**inclusion of SSES - 16/3/2021
+* inclusion of idr, iqr in summarize - 18/4/2023
+* IEA surveys: ICCS, ICILS, PIRLS, TIMSS - 18/4/2023
+* make stata: prefix optional - 3/5/2023
+*TODO
 
 global regressions_command="cnsreg etregress glm intreg nl regress tobit truncreg" ///
 	+" sem  stcox  streg biprobit cloglog  hetprobit logistic logit   probit scobit"  /// 
@@ -788,7 +793,7 @@ end
 cap program drop repest_flags
 program define repest_flags,rclass
 	syntax [varlist(default=none fv)]  [if] [in] [pweight aweight]  ,    [mingroups(integer 5) minind(integer 30) binarytest] 
-	if "${svyname}"=="TALISTCH" | "${svyname}"=="STAFF_TALISEC" | "${svyname}"=="TALISEC_LEADER" local mingroups = 10
+	if "${svyname}"=="TALISTCH" | "${svyname}"=="STAFF_TALISEC" | "${svyname}"=="TALISEC_STAFF" local mingroups = 10
 	if "${svyname}"=="TALISSCH" | "${svyname}"=="LEADER_TALISEC" | "${svyname}"=="TALISEC_LEADER" local minind = 10
   	if "`varlist'"!="" {
 		if "`if'"!="" local if="`if' & missing(`varlist')==0 & missing(`=substr("`exp'",2,.)')==0"
@@ -801,7 +806,7 @@ program define repest_flags,rclass
 		capture assert inlist(`varlist',`min_value',`max_value') `if'
 		local isbinary= (_rc==0)
 		}
-	if "${svyname}"=="PISA" | "${svyname}"=="PISA2015" | "${svyname}"=="TALISTCH" | "${svyname}"=="IELS"  | "${svyname}"=="STAFF_TALISEC" | "${svyname}"=="TALISEC_LEADER" {	
+	if "${svyname}"=="PISA" | "${svyname}"=="PISA2015" | "${svyname}"=="TALISTCH" | "${svyname}"=="IELS"  | "${svyname}"=="STAFF_TALISEC" | "${svyname}"=="TALISEC_STAFF" {	
 		if "`binarytest'"!="" & "`isbinary'"=="1" & "`varlist'"!="" {
 			qui count  `if' & `varlist'==`min_value'
 			local nobs0 = r(N)
@@ -1003,7 +1008,7 @@ program define repest_parser, rclass
 				}
 		}	
 	else {
-		error 198
+		gettoken command  command_options : estimate,  parse(",")
 		}
 	
 	if regexm("`estimate'","^freq") & regexm("`command_options'", "levels\(")==0 {
@@ -1092,12 +1097,40 @@ program define repest_parser, rclass
 			local NREP = 80
 			local keepsvy "vemethodn"
 			}
+		else if "${svyname}"=="SSES" {
+			local NBpv=1
+			local final_weight_name="WT2019"
+			local rep_weight_name="rwgt"	
+			local variancefactor=1/2 
+			local NREP = 76
+			}
 		else if "${svyname}"=="ALL" | "${svyname}"=="IALS" {
 			local NBpv=10*(`pv_here'==1)+1*(`pv_here'==0)
 			local final_weight_name="weight"
 			local rep_weight_name="REPLIC"	
 			local variancefactor = 1 
 			local NREP = 30
+			}
+		else if "${svyname}"=="ICCS" | "${svyname}"=="ICILS" {
+			local NBpv=5*(`pv_here'==1)+1*(`pv_here'==0)
+			local final_weight_name="TOTWGTS"
+			local rep_weight_name="SRWGT"	
+			local variancefactor = 1 
+			local NREP = 75
+			}
+		else if "${svyname}"=="ICCS_T" | "${svyname}"=="ICILS_T" {
+			local NBpv=5*(`pv_here'==1)+1*(`pv_here'==0)
+			local final_weight_name="TOTWGTT"
+			local rep_weight_name="TRWGT"	
+			local variancefactor = 1 
+			local NREP = 75
+			}
+		else if "${svyname}"=="ICCS_C" | "${svyname}"=="ICILS_C" {
+			local NBpv=5*(`pv_here'==1)+1*(`pv_here'==0)
+			local final_weight_name="TOTWGTC"
+			local rep_weight_name="CRWGT"	
+			local variancefactor = 1 
+			local NREP = 75
 			}
 		else if "${svyname}"=="IELS"  {
 			local NBpv=5*(`pv_here'==1)+1*(`pv_here'==0)
@@ -1131,6 +1164,13 @@ program define repest_parser, rclass
 			local groupflag_name="idcentre"
 			local keepsvy "idcentre"
 			local NREP = 92
+			}
+		else if "${svyname}"=="TIMSS" | "${svyname}"=="PIRLS" {
+			local NBpv=5*(`pv_here'==1)+1*(`pv_here'==0)
+			local final_weight_name="WGT"
+			local rep_weight_name="JR"	
+			local variancefactor = 1/2
+			local NREP = 150
 			}
 		else if "${svyname}"!="SVY" error 198
 		if "`svyparms'" != "" {
@@ -1686,14 +1726,14 @@ program define repest_summarize,eclass
 	syntax varlist [if] [in] [aweight pweight] , stats(string) [flag coverage]
 	// check syntax
  	foreach stat in `stats' {
-		if regexm("mean sd min max sum_w p1 p5 p10 p25 p50 p75 p90 p95 p99 skewness kurtosis sum N Var","`stat'") != 1 {
+		if regexm("mean sd min max sum_w p1 p5 p10 p25 p50 p75 p90 p95 p99 skewness kurtosis sum N Var iqr idr sd_ub Var_ub","`stat'") != 1 {
 			di as error `"estimate suboption stats must contain elements computed in stata's summarize command"'
 			error 198
 			}
 		}
 	// summarize options	
 	if "`stats'" == "mean" local sumoptions = ", meanonly"
-	else if (regexm("`stats'","p") == 1 | regexm("`stats'","k") == 1)  local sumoptions = ", detail"
+	else if (regexm("`stats'","p") == 1 | regexm("`stats'","k") == 1 | "`stats'" == "idr" | "`stats'" == "iqr" )  local sumoptions = ", detail"
 	// compute stats
 	foreach outcome in `varlist' {
 		qui: su `outcome' [aw `exp'] `if' `in' `sumoptions'
@@ -1713,6 +1753,10 @@ program define repest_summarize,eclass
 			if `r(N)' == 0 scalar ``outcome'_`stat'' = .
 			else if "`stat'" == "sd" & `r(N)' != 0 scalar ``outcome'_`stat'' = `r(sd)'*sqrt((`r(N)'-1)/`r(N)')
 			else if "`stat'" == "Var" & `r(N)' != 0 scalar ``outcome'_`stat'' = `r(Var)'*(`r(N)'-1)/`r(N)'
+			else if "`stat'" == "idr" & `r(N)' != 0 scalar ``outcome'_`stat'' = `r(p90)' - `r(p10)'
+			else if "`stat'" == "iqr" & `r(N)' != 0 scalar ``outcome'_`stat'' = `r(p75)' - `r(p25)'
+			else if "`stat'" == "sd_ub" & `r(N)' != 0 scalar ``outcome'_`stat'' = `r(sd)'
+			else if "`stat'" == "Var_ub" & `r(N)' != 0 scalar ``outcome'_`stat'' = `r(Var)'
 			else scalar ``outcome'_`stat'' = r(`stat')
 			}
 			

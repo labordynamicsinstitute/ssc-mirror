@@ -1,4 +1,4 @@
-*! version 1.0.2  13feb2023
+*! version 1.0.2  03may2023
 /*
 purpose : 
 
@@ -61,6 +61,8 @@ syntax :
 					// main program
 					//-----------------------------------//
 program isis
+	version 16
+
 	if (replay()) {
 		Display
 	}

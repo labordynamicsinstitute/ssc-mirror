@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.0  23jun2016}{...}
+{* *! version 2.1.0  4may2023}{...}
 
 {viewerjumpto "Syntax" "getsymbols##syntax"}{...}
 {viewerjumpto "Description" "getsymbols##description"}{...}
@@ -8,7 +8,7 @@
 {title:Title}
 
 {phang}
-{bf:getsymbols} {hline 2} collects and integrates one or more series from Quandl.com, Google Finance, Yahoo Finance, and Alpha Vantage.  
+{bf:getsymbols} {hline 2} collects and integrates one or more series from Yahoo Finance!, Quandl.com, and Alpha Vantage.  
 
 {marker syntax}{...}
 {title:Syntax}
@@ -19,10 +19,10 @@
 {synoptset 38 tabbed}{...}
 {synopthdr}
 {synoptline}
-{synopt :{opt go:ogle}}if google is specified, then the source will be Google Finance; the default source is Quandl.com. {p_end}
-{synopt :{opt ya:hoo}}if yahoo is specified, then the source will be Yahoo Finance; the default source is Quandl.com.{p_end}
-{synopt :{opt van:tage}}if vantage is specified, then the source will be Alpha Vantage. This option works for Stata 15. For Stata 13 and 14 it is necessary to do a Java configuration.
- Send an email to cdorante@itesm.mx to request instructions for this configuration. {p_end}
+{synopt :{opt ya:hoo}}if yahoo is specified, then the source will be Yahoo Finance!; this is the default option.{p_end}
+{synopt :{opt qun:dle}}if qundle is specified, then the source will be Quandl.com; the default source is Yahoo Finance!.{p_end}
+{synopt :{opt van:tage}}if vantage is specified, then the source will be Alpha Vantage. This option works for Stata 15 and up. For Stata 13 and 14 it is necessary to do a Java configuration.
+ Send an email to cdorante@tec.mx to request instructions for this configuration. {p_end}
 {synopt :{opt cur:rency(string)}}currency of the criptocurrency quotation in case of downloading a criptocurrency from Alpha Vantage. To see the list of cryptocurrencies check the Alpha Vantage site at https://www.alphavantage.co/ {p_end}
 {synopt :{opt database(string)}}name of the Quandl database to be used. The default is the WIKI database, which contains US stock data. To see which databases can be used check the Quandl site at https:/www.quandl.com/search. This option only applies for the Quandl sourcey.  {p_end}
 {synopt :{opt fm(#)}}first month (from 1 to 12). The default value is 1{p_end}
@@ -32,7 +32,7 @@
 {synopt :{opt ld(#)}}last day (from 1 to 31). The default value is 31{p_end}
 {synopt :{opt ly(#)}}last year. The default is 2099, which will be the current year{p_end}
 {synopt :{opt fr:equency(d|w|m|q|1min|5min|15min|30min)}}frequency of the data: d for daily (the default value); w for weekly; m for monthly. Only for vantage source has the frequencies 1min, 5min, 15min, 30min. 
- Google usually has only daily stock data. {p_end}
+ {p_end}
 {synopt :{opt price(string)}}if price is specified, then this price variable will be used to calculate period simple and continuously compounded returns. Also, if price is specified only that price series will be downloaded even though the source might have other variables such as open, high, low, etc. {p_end}
 {synopt :{opt keep:all}}if the price option is specified and the keepall option is specified, then besides calculating returns with the price variale, all variables of the series will be kept.
   If price option is specified and keepall is not specified, then only the price variable will be downloaded and corresponding returns will be calculated. {p_end}
@@ -45,15 +45,14 @@
 {title:Description}
 
 {pstd}
-{cmd:getsymbols} collects and integrates time series of symbols (e.g. stock tickers, indexes, economic series) from any of the following sources: Quandl, Yahoo Finance, Google Finance and Alpha Vantage. The symbols must be
+{cmd:getsymbols} collects and integrates time series of symbols (e.g. stock tickers, indexes, economic series) from any of the following sources: Quandl, Yahoo Finance, and Alpha Vantage. The symbols must be
 equal to those used in the corresponding source. 
 Quandl is a repository of hundreds of free and premium databases, and each database usually has many series. Examples of FREE Quandl databases  
 are: WIKI, Chicago Mercantile Exchange Futures, Chicago Board Options Exchange, Federal Reserve Economic Data, London Stock Exchange, Franfurt Stock Exchange, Tokyo Stock Exchange, National Stock Exchange of India, NASDAQ OMX Global Index Data, 
 Yale Department of Economics, World Bank databases, etc. 
-Google Finance has only stock daily data from several countries.
 Yahoo Finance has stock quotes and market indexes, and ETF's from many countries.
 Alpha Vantage has stock quotes, market indexes, and also cryptocurrency quotes.
- This command works with Stata 13 or above.
+ This command works with Stata 13 and above.
 
 
 {marker examples}{...}
@@ -105,17 +104,6 @@ Returns are calculated automatically and the return variables will start with r_
 In this case, returns are calculated using the value variable, which is already a return (annual). Then, in this case, the returns calculated are monthly percentage increases of annual rates. {p_end}
 {phang}{cmd:. getsymbols INTGSTUSM193N INTGSTAUM193N, database("FRED")  frequency(m) price(value) clear} {p_end}
 
-{pstd} Collects online daily stock data (Apple, Microsoft, General Electric, General Motors, and Wal-Mart) from Google Finance from Jan 3, 2012 to the most recent day. 
-Returns are calculated automatically and the returns variables will start with r_* {p_end}
-{phang}{cmd:. getsymbols AAPL MSFT GE GM WMT, google fm(3) fd(1) fy(2012) clear} {p_end}
-
-{pstd} Collects online daily German stock data (Volkswagen, SAP, Siemens) from Google Finance from Jan 3, 2012 to the most recent day. 
-Returns are calculated automatically and the returns variables will start with r_* {p_end}
-{phang}{cmd:. getsymbols FRA:VOW FRA:SAP FRA:SIE, google fm(3) fd(1) fy(2012) clear} {p_end}
-
-{pstd} Collects online daily Mexican stock data (América Móvil, Bimbo, CEMEX) from Google Finance from Jan 3, 2012 to the most recent day. Returns are calculated automatically and the return variables will start with r_* {p_end}
-{phang}{cmd:. getsymbols BMV:AMXL BMV:BIMBOA BMV:CEMEXCPO, google fm(3) fd(1) fy(2012) clear} {p_end}
-
 {pstd} Collects online daily quotations of the cryptocurrencies Bitcoin and Etherium from Alpha Vantage. {p_end}
 {phang}{cmd:. getsymbols BTC ETH, vantage currency(MXN) apikey(USERAPIKEY)  clear } {p_end}
 
@@ -146,5 +134,5 @@ Returns are calculated automatically and the returns variables will start with r
 
 {title: Author}
 
-Carlos Alberto Dorantes, Tecnológico de Monterrey, Querétaro Campus, Querétaro, México.
-Email: cdorante@itesm.mx
+Carlos Alberto Dorantes, TecnolÃ³gico de Monterrey, QuerÃ©taro Campus, QuerÃ©taro, MÃ©xico.
+Email: cdorante@tec.mx

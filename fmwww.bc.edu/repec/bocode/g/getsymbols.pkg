@@ -2,7 +2,7 @@ d 'GETSYMBOLS': module to collect and integrate one or more series from Quandl.c
 d
 d   getsymbols collects and integrates time series of symbols (e.g.
 d stock tickers, indexes, economic series) from any of the
-d following sources:	Quandl, Yahoo Finance, Google Finance and
+d following sources:	Yahoo Finance, Quandl, Google Finance and
 d Alpha Vantage. The symbols must be equal to those used in the
 d corresponding source.  Quandl is a	repository of hundreds of
 d free and premium databases, and each database usually has many
@@ -20,14 +20,14 @@ d above.
 d
 d KW: data management
 d KW: stock ticker
+d KW: Yahoo Finance
 d KW: Quandl
-d KW: Yahoo FInance
 d KW: Google Finance
 d KW: Alpha Vantage
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20210524
+d Distribution-Date: 20230504
 d
 d Author: Alberto Dorantes, Tecnológico de Monterrey
 d Support: email cdorante@@itesm.mx

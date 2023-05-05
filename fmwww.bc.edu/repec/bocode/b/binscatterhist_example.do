@@ -1,4 +1,4 @@
-*! version 3.2 Oct2022  Matteo Pinna, matteo.pinna@gess.ethz.ch
+*! version 4.0 may2023  Matteo Pinna, matteo.pinna@gess.ethz.ch
 
 /*
 This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.  
@@ -53,9 +53,9 @@ replace tenure=abs(tenure)
 binscatterhist wage tenure, controls(age) histogram(wage tenure) ymin(8) coef(0.01) pvalue sample binsreg
 graph export "example8.png", replace
 
-
-
-
+* Adding the option scatter(N) we can add a background binned scatterplot with number of bins equal to the sample size, or directly time the desired number.
+binscatterhist wage tenure, absorb(grade) vce(robust) coef(0.01) ci(95) pvalue sample xmin(-10) ymin(-10) histogram(wage tenure)  xhistbarheight(15) yhistbarheight(15) xhistbins(40) yhistbins(40) scatter(N)
+graph export "example9.png", replace
 
 
 

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 3.3 Oct2022}{...}
+{* *! version 4.0 May2023}{...}
 {viewerjumpto "Syntax" "binscatterhist##syntax"}{...}
 {viewerjumpto "Description" "binscatterhist##description"}{...}
 {viewerjumpto "Options" "binscatterhist##options"}{...}
@@ -66,16 +66,22 @@ where {it:varlist} is
 {synopt :{opt p:value}}reports the pvalue of the regression on residualized variables {p_end}
 {synopt :{opt sample}}reports the sample size of the regression on residualized variables{p_end}
 {synopt :{opth stars(stars)}}signals p-value using stars; stars can be: {bf:nostars}, {bf:1} (*5% **1%), {bf:2} (+10% *5% **1%), {bf:3} (+10% *5% **1% ***0.1%), {bf:4} (*5% **1% ***0.1%); default is {bf:stars(1)}{p_end}
-{synopt :{opth xcoef(value)}}sets x-axis position for coefficient box {p_end}
-{synopt :{opth ycoef(value)}}sets y-axis position for coefficient box  {p_end}
+{synopt :{opth boxpos:ition(x y)}}sets x and y position for the text box{p_end}
 
 {syntab :Graph Style}
 {synopt :{cmdab:col:ors(}{it:{help colorstyle}list}{cmd:)}}ordered list of colors{p_end}
 {synopt :{cmdab:mc:olors(}{it:{help colorstyle}list}{cmd:)}}overriding ordered list of colors for the markers{p_end}
 {synopt :{cmdab:lc:olors(}{it:{help colorstyle}list}{cmd:)}}overriding ordered list of colors for the lines{p_end}
 {synopt :{cmdab:m:symbols(}{it:{help symbolstyle}list}{cmd:)}}ordered list of symbols{p_end}
+{synopt :{cmdab:msize(}{it:{help markersizestyle}list}{cmd:)}}size of markers{p_end}
 {synopt :{it:{help twoway_options}}}{help title options:titles}, {help legend option:legends}, {help axis options:axes}, added {help added line options:lines} and {help added text options:text},
 	{help region options:regions}, {help name option:name}, {help aspect option:aspect ratio}, etc.{p_end}
+
+{syntab :Background scatter}
+{synopt :{opth scatter(bins)}} if bins="N", it creates a scatterplot of the graphed variables, otherwise, a binned scatterplot with the specified number of bin.{p_end}
+{synopt :{cmdab:scattermsymbols(}{it:{help symbolstyle}list}{cmd:)}}ordered list of symbols for background scatter{p_end}
+{synopt :{cmdab:scattermcolors(}{it:{help colorstyle}list}{cmd:)}}overriding ordered list of colors for the markers of the background scatter{p_end}
+{synopt :{cmdab:scattermsize(}{it:{help markersizestyle}list}{cmd:)}}size of markers for background scatter{p_end}
 
 {syntab :Histogram}
 {synopt :{opth hist:ogram(varlist)}}plots a histogram for earliest vars {bf:(max=2)}. Selected variables have to be the scattered ones{p_end}
@@ -265,6 +271,8 @@ Specifically, a bin may contain a discontinuity within its range, and therefore 
 
 {phang}{opth stars(stars)} signals p-value using stars; stars can be: {bf:nostars}, {bf:1} (*5% **1%), {bf:2} (+10% *5% **1%), {bf:3} (+10% *5% **1% ***0.1%), {bf:4} (*5% **1% ***0.1%); default is {bf:stars(1)}.
 
+{phang}{opth boxpos:ition(x y)} sets x and y position for the text box (both have to be set)
+
 
 {dlgtab:Graph Style}
 
@@ -274,7 +282,9 @@ Specifically, a bin may contain a discontinuity within its range, and therefore 
 
 {phang}{cmdab:lc:olors(}{it:{help colorstyle}list}{cmd:)} specifies an ordered list of colors for the line of each series, which overrides any list provided in {opt colors()}
 
-{phang}{cmdab:m:symbols(}{it:{help symbolstyle}list}{cmd:)} specifies an ordered list of symbols for each series
+{phang}{cmdab:msy:mbols(}{it:{help symbolstyle}list}{cmd:)} specifies an ordered list of symbols for each series
+
+{phang}{cmdab:msi:ze(}{it:{help markersizestyle}list}{cmd:)} size of markers for background scatter
 
 {phang}{it:{help twoway_options}}:
 
@@ -284,6 +294,17 @@ binned scatter plot.
 {pmore}These can be used to control the graph {help title options:titles},
 {help legend option:legends}, {help axis options:axes}, added {help added line options:lines} and {help added text options:text},
 {help region options:regions}, {help name option:name}, {help aspect option:aspect ratio}, etc.
+
+
+{dlgtab:Background scatter}
+
+{phang}{opth scat:ter(bins)} if bins="N", it creates a scatterplot of the graphed variables, otherwise, a binned scatterplot with the specified number of bins
+
+{phang}{cmdab:scattermsymbols(}{it:{help symbolstyle}list}{cmd:)}ordered list of symbols for background scatter
+
+{phang}{cmdab:scattermcolors(}{it:{help colorstyle}list}{cmd:)} overriding ordered list of colors for the markers of the background scatter
+
+{phang}{cmdab:scattermsize(}{it:{help markersizestyle}list}{cmd:)} size of markers for background scatter
 
 {dlgtab:Histogram}
 
@@ -441,7 +462,8 @@ used each age as a discrete bin, since there are fewer than 20 unique values.){p
 {phang2}. {stata replace tenure=abs(tenure)}{p_end}
 {phang2}. {stata binscatterhist wage tenure, controls(age) histogram(wage tenure) ymin(8) coef(0.01) pvalue sample binsreg}{p_end}
 
-
+{pstd} Adding the option scatter(N) we can add a background binned scatterplot with number of bins equal to the sample size, or directly time the desired number{p_end}
+{phang2}. {stata binscatterhist wage tenure, absorb(grade) vce(robust) coef(0.01) ci(95) pvalue sample xmin(-10) ymin(-10) histogram(wage tenure)  xhistbarheight(15) yhistbarheight(15) xhistbins(40) yhistbins(40) scatter(N)}{p_end}
 
 {marker saved_results}{...}
 {title:Saved Results}
@@ -476,6 +498,6 @@ rather than {bf:r(graphcmd)} in order to avoid truncation due to Stata's charact
 {marker acknowledgements}{...}
 {title:Acknowledgements}
 
-{pstd} The author would like to thank one anonymous referee, Elliott Ash, Chistopher Baum, Suresh Naidu, Sergio Galletta, Malka Guillot, Susanna B. Berkouwer, Guohui Jiang, Jack Glaser and Fabián Enrique Gonzáles for useful feedback and bug finding.
+{pstd} The author would like to thank one anonymous referee, Elliott Ash, Chistopher Baum, Suresh Naidu, Sergio Galletta, Malka Guillot, Susanna B. Berkouwer, Guohui Jiang, Jack Glaser,Fabián Enrique Gonzáles and Guillermo Cruces for useful feedback and bug finding.
 
 {pstd}The present version of {cmd:binscatterhist} is based on a program in Michael Stepner (2013): "BINSCATTER: Stata module to generate binned scatterplots" - https://EconPapers.repec.org/RePEc:boc:bocode:s457709; a program by Ben Jann (2014): "ADDPLOT: Stata module to add twoway plot objects to an existing twoway graph," Statistical Software Components S457917, Boston College Department of Economics, revised 28 Jan 2015 <https://ideas.repec.org/c/boc/bocode/s457917.html>; and uses the BINSREG program: Cattaneo, M. D., R. K. Crump, M. H. Farrell, and Y. Feng. 2019b.  Binscatter Regressions. arXiv:1902.09615.
