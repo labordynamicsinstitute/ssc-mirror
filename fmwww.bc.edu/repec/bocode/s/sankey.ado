@@ -1,17 +1,14 @@
-*! sankey v1.31 (04 Apr 2023)
-*! Asjad Naqvi 
+*! sankey v1.5 (30 Apr 2023)
+*! Asjad Naqvi (asjadnaqvi@gmail.com)
 
-*v1.31 04 Apr 2023: fix to how colors are defined.
-*v1.3  26 Feb 2023: sortby() option added. Node bundling.
-*v1.21 15 Feb 2023: labcolor() added, gap fix
-*v1.2  02 Feb 2023: Outgoing flows now displace properly. Categories going to empty and starting from empty added. Various fixes
-*v1.1  13 Dec 2022: valformat() renamed to format(). offset() option added to displaced x-axis for rotated labels.
-*v1.0  08 Dec 2022: Beta release.
-
-// ToDo:
-// flatten layers for drawing.
-// add options to highlight certain streams
-// Add options to label layers at the bottom like in on the alluvial package.
+*v1.5  (30 Apr 2023): add labprop, titleprop, labscale, novalright novalleft, sortby(, reverse) options, nolab
+*v1.4  (23 Apr 2023): fix unbalanced. fixed gaps. Added column labels. Add custom color option.
+*v1.31 (04 Apr 2023): fix to how colors are defined.
+*v1.3  (26 Feb 2023): sortby() option added. Node bundling.
+*v1.21 (15 Feb 2023): labcolor() added, gap fix
+*v1.2  (02 Feb 2023): Outgoing flows now displace properly. Categories going to empty and starting from empty added. Various fixes
+*v1.1  (13 Dec 2022): valformat() renamed to format(). offset() option added to displaced x-axis for rotated labels.
+*v1.0  (08 Dec 2022): Beta release.
 
 
 // A detailed Medium guide on Sankey diagrams is here:
@@ -25,12 +22,14 @@ program sankey, sortpreserve
 version 15
  
 	syntax varlist(numeric max=1) [if] [in], From(varname) To(varname) by(varname) ///
-		[ palette(string) smooth(numlist >=1 <=8) gap(real 5) RECENter(string) colorby(string)  alpha(real 75) ]  ///
+		[ palette(string) smooth(numlist >=1 <=8) gap(real 5) RECENter(string) colorby(string) alpha(real 75) ]  ///
 		[ LABAngle(string) LABSize(string) LABPOSition(string) LABGap(string) SHOWTOTal  ] ///
 		[ VALSize(string)  VALCONDition(real 0) format(string) VALGap(string) NOVALues ]  ///
-		[ LWidth(string) LColor(string)  ]  ///
-		[ offset(real 0) LABColor(string) ]  ///  // added options v1.1
-		[ sortby(string) BOXWidth(string)	 ]  ///  // added options v1.3
+		[ LWidth(string) LColor(string)  	 ]  ///
+		[ offset(real 0) LABColor(string) 	 ]  ///  // added v1.1
+		[ sortby(string) BOXWidth(string)	 ]  ///  // added v1.3
+		[ wrap(real 7) CTITLEs(string asis) CTGap(real -5) CTSize(real 2.5) colorvar(varname) colorvarmiss(string) colorboxmiss(string)  ] ///  // v1.4 options
+		[ valprop labprop labscale(real 0.3333) NOVALRight NOVALLeft NOLABels ]      ///  // v1.5
 		[ title(passthru) subtitle(passthru) note(passthru) scheme(passthru) name(passthru) xsize(passthru) ysize(passthru)		] 
 		
 
@@ -44,21 +43,55 @@ version 15
 	
 	marksample touse, strok
 	
+	
+	// error checks
+	if "`colorby'" != "" & "`colorvar'" != "" {
+		di as err "Both colorby() and colorvar() are not allowed."
+		exit 198
+	}
+	
+	if "`novalleft'" != "" & "`novalright'" != "" {
+		di as err "Both {it:novalleft} and {it:novalright} are not allowed. If you want to hide values use the {it:novalues} option instead."
+		exit 198
+	}	
+	
+	if "`colorvar'" != "" {
+		tempvar _temp
+		qui gen `_temp' = mod(`colorvar',1)
+		summ `_temp', meanonly
+		if r(max) > 0 {
+			di as err "colorvar() needs to be integers starting at 1."
+			exit 198
+		}
+	}
+	
 
-// layer = combination of x pairs
-// x     = points in the vertical for each id
-// grp   = a set of labels which are together
-// id    = sequence of points that form a shape.
+	// layer = combination of x pairs
+	// x     = points in the vertical for each id
+	// grp   = a set of labels which are together
+	// id    = sequence of points that form a shape.
 
 
 
 qui {
 preserve 	
-
-	keep if `touse'
-	keep `varlist' `from' `to' `by'
 	
-	collapse (sum) `varlist', by(`from' `to' `by')
+	keep if `touse'
+	
+	drop if `varlist' ==.
+	
+	if "`colorvar'" != "" {
+		ren `colorvar' clrlvl
+		recode clrlvl . = 0
+	}
+	else {
+		gen clrlvl = .
+	}
+	
+	
+	keep `varlist' `from' `to' `by' clrlvl
+	
+	collapse (sum) `varlist' (mean) clrlvl , by(`from' `to' `by')
 	
 	ren `by' x1
 	summ x1, meanonly
@@ -69,8 +102,9 @@ preserve
 	ren `from' 		lab1
 	ren `to'		lab2
 	ren `varlist' 	val1
+	
 	gen val2 	=   val1
-
+	
 	
 	gen x2 = x1 + 1
 	
@@ -91,6 +125,8 @@ preserve
 		summ x2, meanonly
 		local lastlvl = r(max)
 
+		
+		
 		// get the order of layer 0
 		egen tag1 = tag(lab1) if x2==1
 		recode tag1 (0=.) if x2!=1
@@ -104,6 +140,8 @@ preserve
 		if "`sortby'" == "name" {
 			sort x1 order1 lab2		// alphabetical
 		}
+		
+		
 	
 		// fix the remaining layers
 		levelsof x2, local(lvls)
@@ -124,17 +162,60 @@ preserve
 				gen     name`x' = lab2 if x2==`x'
 				replace name`x' = lab1 if x2==`y'
 
-				if "`sortby'" == "" | "`sortby'" == "value" {
+				
+						
+				
+				if "`sortby'" == "" {
 					sort name`x' sort`x' val2	// numerical
 				}
-				if "`sortby'" == "name" {
-					sort name`x' sort`x' lab2	// alphabetical
+				else {
+					tokenize "`sortby'", p(",")
+					local stype  `1'
+					local srev   `3'	
+					
+					
+					if ("`srev'" != "" & "`srev'" != "reverse") {
+						di as error "Valid options are sortby(name, reverse) or  sortby(value, reverse)."
+						exit 
+					}
+					
+					if "`stype'" == "value" {
+						if "`srev'" != "reverse" {
+							sort name`x' sort`x' val2	// numerical
+						}
+						else {
+							gsort name`x' sort`x' -val2	// numerical reverse
+						}
+					}
+					
+					if "`stype'" == "name" {
+						if "`srev'" != "reverse" {
+							sort name`x' sort`x' lab2	// alphabetical
+						}
+						else {
+							gsort name`x' sort`x' -lab2	// alphabetical reverse
+						}
+					}
 				}
 				
 				by name`x': replace sort`x' = sort`x'[1]
 
 				replace order2 = sort`x' if x2==`x'
 				replace order1 = sort`x' if x2==`y'
+				
+				
+				// new routine for the correct order			
+
+				levelsof name`x' if order1==. & x2==`y', local(new)
+				
+				
+				summ sort`x', meanonly
+				local counter = r(max) + 1
+				
+				foreach z of local new {
+					replace order1 = `counter' if order1==. &  x2==`y'
+					local counter = `counter' + 1
+				}
 				
 				drop name* tag* sort*
 			
@@ -143,13 +224,11 @@ preserve
 
 	sort x1 order1 order2
 
-	// check for blank orders (this can occur if categories are starting in the middle)
-	replace order1 = order1[_n-1] + 1 if order1==.
-	
 	
 	// check point after sorting
 	gen id = _n
 	order id
+	
 	
 	egen grp1 = group(x1 order1)  // out grp by layer
 	egen grp2 = group(x1 order2)  //  in grp by layer
@@ -167,33 +246,20 @@ preserve
 	
 	reshape long x val lab grp y order, i(id layer) j(tt)
 	drop tt
-	
-
 	sort layer x y
 	by layer x: gen y1 = y[_n-1]
 	
 	recode y1 (.=0)
 	ren y y2
-
-	order layer grp id order lab x y1 y2 val
-
-    
-	// lines added below
 	drop grp
-	egen grp = group(order)
-
-	order layer  id lab grp x y1 y2 val	
 	
-	
+	order layer  id lab x y1 y2 val	
 	
 	//////////////////////////// alignment fix for varying group sizes
 	
-
+	
 	sort layer id x
-
-	local mark1 0
-	local mark2 0
-
+	
 	levelsof layer
 	
 	if `r(r)' > 1 {
@@ -203,36 +269,40 @@ preserve
 			
 			local here = `i' - 1
 			local next = `i'
-					
+			
+			local mark1 0
+			local mark2 0
+			
 			levelsof id if layer==`i', local(lvls)
 			
 			foreach x of local lvls {
 				
 				// value originating
-				summ grp if id==`x' & layer==`i' & x==`here'			    , meanonly
+				summ order if id==`x' & layer==`i' & x==`here'			      , meanonly
 				local mygrp = r(mean)
-				summ val if id==`x' & layer==`i' & x==`here' & grp==`mygrp' , meanonly
+				summ val if id==`x' & layer==`i' & x==`here' & order==`mygrp' , meanonly
 				local myval = r(sum)
 				
 				// total value of ending group
-				summ grp if id==`x' & layer==`i' & x==`next'	, meanonly
+				summ order if id==`x' & layer==`i' & x==`next'	, meanonly
 				local togrp = r(mean)
-				summ val if 		  layer==`i' & x==`next' & grp==`togrp' , meanonly
+				summ val if 		  layer==`i' & x==`next' & order==`togrp' , meanonly
 				local toval = r(sum)
 				
 				
 				// sending value of ending group
 				local j = `i' + 1
-				summ val if 		  layer==`j' & x==`next' & grp==`togrp' , meanonly
+				summ val if 		  layer==`j' & x==`next' & order==`togrp' , meanonly
 				local outval = r(sum)
 
 				
 				if (`toval' >= `outval') {
 					local off  = `toval' - `outval'  
-							
+
 					if !inlist(`togrp',`mark1') {
-						qui replace y1 = y1 + `off' if layer==`j' & x==`next' & grp>`togrp' 
-						qui replace y2 = y2 + `off' if layer==`j' & x==`next' & grp>`togrp' 
+						
+						qui replace y1 = y1 + `off' if layer==`j' & x==`next' & order>`togrp' 
+						qui replace y2 = y2 + `off' if layer==`j' & x==`next' & order>`togrp' 
 						local mark1 `mark1', `togrp'
 					}
 					
@@ -242,23 +312,24 @@ preserve
 					local off  = `outval' - `toval'  
 
 					if !inlist(`togrp',`mark2') {
-						qui replace y1 = y1 + `off' if layer==`i' & x==`next' & grp>=`togrp' 
-						qui replace y2 = y2 + `off' if layer==`i' & x==`next' & grp>=`togrp' 
+						
+						qui replace y1 = y1 + `off' if layer==`i' & x==`next' & order>=`togrp' 
+						qui replace y2 = y2 + `off' if layer==`i' & x==`next' & order>=`togrp' 
 						local mark2 `mark2', `togrp'
 					}
+				
 				}
 			}	
 		}	
 	}
 
 	
-//// add gaps
-	
+	//// add gaps
 	
 	sort layer id x
 	
 	cap drop tag
-	egen tag = tag(layer x grp  )
+	egen tag = tag(layer x order)
 
 	sort layer x order id 
 	by layer x: replace tag = sum(tag)	
@@ -278,14 +349,15 @@ preserve
 	}	
 	
 	local propgap = `hival' * `gap' / 100
-	gen offset = (tag - 1) * `propgap' 
+	gen offset = (order - 1) * `propgap' 
 	
 	replace y1 = y1 + offset
 	replace y2 = y2 + offset
 
-
 	
-///////////////////////////	
+	
+	
+	///////////////////////////	
 	
 	*** transform the groups to be at the mid points	
 
@@ -310,12 +382,11 @@ preserve
 
 		foreach y of local lleft {  // left
 			foreach x of local lright {      // right
-			
+					
 				if "`x'" == "`y'" {  // check if the groups are equal
 				
-					di "I am here"
 					// in layer range	
-					summ y1 if order==`x' & layer==`left' & x==`left' 
+					summ y1 if order==`x' & layer==`left' & x==`left', meanonly 
 						local y1max = cond(r(N) > 0, r(max), 0)
 						local y1min = cond(r(N) > 0, r(min), 0)		
 
@@ -359,7 +430,7 @@ preserve
 	
 	replace y1t = y1 if y1t==.
 	replace y2t = y2 if y2t==.
-
+	
 	drop y1 y2
 
 	ren y1t y1	
@@ -559,7 +630,7 @@ preserve
 
 	*** fix boxes
 						
-	sort layer grp x y1 y2
+	sort layer order x y1 y2
 	bysort x labels: egen ymin = min(y1)
 	bysort x labels: egen ymax = max(y2)
 	
@@ -584,39 +655,71 @@ preserve
 			local poptions `3'
 		}
 
+		
 		if "`colorby'" == "layer" | "`colorby'" == "level" {
 			local switch 1
 		}
-		else {
+		if "`colorby'" == "" {
 			local switch 0
 		}		
+		
+		if "`colorvar'" != "" {
+			local switch 2
+		}
 
 	sort layer x order xtemp y1temp y2temp
 
 
 	// boxes
 
-	if "`boxwidth'"    == "" local boxwidth 3.2
+	if "`boxwidth'"    	== "" local boxwidth 3.2
+	if "`colorboxmiss'" == "" local colorboxmiss gs10
 	
 	local boxes
 
-	levelsof wedge, local(lvls)
-	local items = r(r)
 
+
+	levelsof wedge, local(lvls)
+	local items = r(r)		
+
+	
+	if `switch' == 2 {
+		summ clrlvl, meanonly
+		local items = r(max)
+	}
+	
+	local zz = 1
 
 	foreach x of local lvls {
 
+
+		if `switch' == 0 { 	
+			summ clrgrp if wedge==`x', meanonly
+			local clr = r(mean) 
+		}
 		if `switch' == 1 { 		// by layer
 			summ x if wedge==`x', meanonly
 			local clr = r(mean) + 1
 		}
-		else {  				// by category
-			summ clrgrp if wedge==`x', meanonly
-			local clr = r(mean) 
+
+		if `switch' == 2 { 	
+			summ clrlvl if  wedge==`x', meanonly	
+			local clr = r(max)
+			
+			local ++zz
 		}
+				
+			if `clr' > 0 {
+				colorpalette `palette' , n(`items') nograph `poptions'
+				local myclr  `r(p`clr')'
+			}
+			else {
+				local myclr  `colorboxmiss'
+			}
 		
-		colorpalette `palette' , n(`items') nograph `poptions'
-		local boxes `boxes' (rspike ymin ymax x if wedge==`x' & tagw==1, lcolor("`r(p`clr')'%100") lw(`boxwidth')) ||
+		
+		
+		local boxes `boxes' (rspike ymin ymax x if wedge==`x' & tagw==1, lcolor("`myclr'%100") lw(`boxwidth')) ||
 		
 	}
 
@@ -625,6 +728,8 @@ preserve
 	if "`lcolor'"    == "" local lcolor white
 	if "`labcolor'"  == "" local labcolor black
 	if "`lwidth'"    == "" local lwidth none	
+	if "`colorvarmiss'" == "" local colorvarmiss gs12
+	
 	
 	levelsof wedge
 	local groups = r(r)
@@ -636,22 +741,61 @@ preserve
 
 	foreach x of local lvls {
 		
-		if `switch' == 1 {		 	// by layer
-			qui sum layer if id==`x'
-		}
-		else {  					// by category
+		if `switch' == 0 {	 {  					// by category
 			qui sum x if id==`x'
 			qui sum clrgrp if id==`x' & x == r(min)
 		}
+		if `switch' == 1 {		 	// by layer
+			qui sum layer if id==`x'
+		}
+		
+		if `switch' == 2 {		 	// by layer
+			qui sum x if id==`x'
+			qui sum clrlvl if id==`x' & x == r(min)
+		}
+		
 		
 		if r(N) > 0 {
 			local clr = r(mean)
-		colorpalette `palette' , n(`items') nograph `poptions'
+			
+			if `clr' > 0 {
+				colorpalette `palette' , n(`items') nograph `poptions'
+				local myclr  `r(p`clr')'
+			}
+			else {
+				local myclr  `colorvarmiss'
+			}
 		
-			local shapes `shapes' (rarea y1temp y2temp xtemp if id==`x', lc(`lcolor') lw(`lwidth') fi(100) fcolor("`r(p`clr')'%`alpha'"))  ||
+			local shapes `shapes' (rarea y1temp y2temp xtemp if id==`x', lc(`lcolor') lw(`lwidth') fi(100) fcolor("`myclr'%`alpha'"))  ||
 		}
 	}	
+	
+	
+	**** fix the title lists
+	
+	if `"`ctitles'"' != "" {
+		
+		local clabs `"`ctitles'"'
+		local len : word count `clabs'
+
+
+		gen title_x 	= .
+		gen title_y 	= `ctgap' in 1/`len'
+		gen title_name 	= ""
+
+
+		forval i = 1/`len' {
+			replace title_x = `i' - 1 in `i' 
 			
+			local aa : word `i' of `clabs'
+			replace title_name =  `"`:word `i' of `clabs''"' in `i'
+		}
+	}
+	
+
+
+	
+	
 	**** PLOT EVERYTHING ***
 	
 	if "`labangle'" 	== "" local labangle 90
@@ -663,24 +807,103 @@ preserve
 	if "`format'" 		== "" local format "%12.0f"	
 	format val `format'
 	
+	
 
 	summ ymax, meanonly
 	local yrange = r(max)
 	
-	if "`showtotal'" != "" {
-		gen lab2 = lab + " (" + string(sums, "`format'") + ")"
-		local lab lab2
+
+	
+	
+	*local wrap2 = `wrap' + 2
+	*replace lab2 = substr(lab2, 1, `wrap') + "`=char(10)`=char(39)'" + substr(lab2, `wrap2', .)  if tag==1
+
+	**** arc labels
+	
+	if "`valprop'" != "" {
+		summ val if tag==1, meanonly
+		gen labwgt = `valsize' * (val / r(max))^`labscale' if midp!=.
 	}
 	else {
-		local lab lab
-	}
+		gen labwgt = 1 if midp!=.
+	}	
 	
 	if "`novalues'" == "" {
-		local values `values' (scatter midp   x    if val >= `valcondition', msymbol(none) mlabel(val) mlabsize(`valsize') mlabpos(3) mlabgap(`valgap') mlabcolor(`labcolor')) ///
+		if "`valprop'" == "" {
+			
+			if  "`novalleft'" == "" {
+				local values `values' (scatter midp   x    if val >= `valcondition', msymbol(none) mlabel(val) mlabsize(`valsize') mlabpos(3) mlabgap(`valgap') mlabcolor(`labcolor')) ///
+			
+			}
+			
+			if  "`novalright'" == "" {
+				local values `values' (scatter midpin xin  if val >= `valcondition', msymbol(none) mlabel(val) mlabsize(`valsize') mlabpos(9) mlabgap(`valgap') mlabcolor(`labcolor')) ///
+			
+			}
+		}
+		else {
+			
+			levelsof id, local(lvls)
+			
+			foreach x of local lvls {
+				summ labwgt if id==`x', meanonly
+				local labsz = r(mean)
+			
+				if  "`novalleft'" == "" {
+					local values `values' (scatter midp   x    if val >= `valcondition' & id==`x', msymbol(none) mlabel(val) mlabsize(`labsz') mlabpos(3) mlabgap(`valgap') mlabcolor(`labcolor')) ///
+				
+				}
+			
+				if  "`novalright'" == "" {
+					local values `values' (scatter midpin xin  if val >= `valcondition' & id==`x', msymbol(none) mlabel(val) mlabsize(`labsz') mlabpos(9) mlabgap(`valgap') mlabcolor(`labcolor')) ///
+				
+				}
+			}
+			
+		}		
+	}
+
+	
+	**** box labels
+	
+	if "`nolabels'" == "" {
+		if "`showtotal'" != "" {
+			gen lab2 = lab + " (" + string(sums, "`format'") + ")" if tag==1
+		}
+		else {
+			gen lab2 = lab if tag==1
+		}
 		
-		local values `values' (scatter midpin xin  if val >= `valcondition', msymbol(none) mlabel(val) mlabsize(`valsize') mlabpos(9) mlabgap(`valgap') mlabcolor(`labcolor')) ///
+		
+		if "`labprop'" != "" {
+			summ sums if tag==1, meanonly
+			gen titlewgt = `valsize' * (sums / r(max))^`labscale' if tag==1
+			
+			levelsof id, local(lvls)
+			
+			foreach x of local lvls {
+				summ titlewgt if id==`x', meanonly
+				local titlez = r(mean)
+				
+				local boxlabel `boxlabel' (scatter midy x if tag==1 & val >= `valcondition' & id==`x',  msymbol(none) mlabel(lab2) mlabsize(`titlez') mlabpos(`labposition') mlabgap(`labgap') mlabangle(`labangle') mlabcolor(`labcolor')) ///
+			
+			}
+			
+		}
+		else {
+			
+			local boxlabel (scatter midy x if tag==1 & val >= `valcondition',  msymbol(none) mlabel(lab2) mlabsize(`labsize') mlabpos(`labposition') mlabgap(`labgap') mlabangle(`labangle') mlabcolor(`labcolor')) ///
+			
+		}	
+	}
+	
+	**** column labels 
+	
+	if `"`ctitles'"' != "" {
+		local lvllab (scatter title_y title_x, msymbol(none) mlabel(title_name) mlabpos(0) mlabsize(`ctsize')) ///
 		
 	}
+
 	
 	// offset
 	
@@ -693,8 +916,9 @@ preserve
 	twoway ///
 		`shapes' ///
 		`boxes'  ///
-			(scatter midy   x if tag==1 & val >= `valcondition',  msymbol(none) mlabel(`lab') mlabsize(`labsize') mlabpos(`labposition') mlabgap(`labgap') mlabangle(`labangle') mlabcolor(`labcolor')) ///
+			`boxlabel' ///
 			`values' ///
+			`lvllab' ///
 			, ///
 				legend(off) ///
 					xlabel(, nogrid) ylabel(0 `yrange' , nogrid)     ///

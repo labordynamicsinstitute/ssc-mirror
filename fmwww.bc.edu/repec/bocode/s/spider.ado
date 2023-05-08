@@ -1,6 +1,8 @@
-*! spider v1.0 13 Oct 2022. Beta release.
+*! spider v1.1 22 Dec 2022. Minor fixes.
 *! Asjad Naqvi 
 
+* v1.1 22 Dec 2022. Minor fixes.
+* v1.0 13 Oct 2022. Beta release.
 
 **********************************
 * Step-by-step guide on Medium   *
@@ -24,10 +26,10 @@ version 15
 		[ legend(passthru) title(passthru) subtitle(passthru) note(passthru) scheme(passthru) name(passthru)		] 
 		
 		// TODO: 
-		// 	ROTATELABel: allow label rotations
-		// 	POLYgon    : replace circles with polygons
-		//  legend(passthru) not working. If labels have spaces, it breaks down. Check and fix.
-		
+		// ROTATELABel: allow label rotations
+		// POLYgon    : replace circles with polygons
+		// legend(passthru) not working. If labels have spaces, it breaks down. Check and fix.
+		// add a by() option for long data
 		
 	// check dependencies
 	cap findfile colorpalette.ado
@@ -39,7 +41,7 @@ version 15
 	
 	cap findfile labmask.ado
 	if _rc != 0 {
-		qui ssc install labutil, replace // sneaky install ;)
+		qui ssc install labutil, replace 
 	}		
 	
 	marksample touse, strok
@@ -452,9 +454,9 @@ restore
 
 	cap confirm var _id
 	if _rc!=0 gen _id = .
-	cap drop _m
+	cap drop _merge
 	merge m:1 _id using `mysplines'	
-	cap drop _m
+	cap drop _merge
 
 	
 end

@@ -513,10 +513,7 @@ qui {
 		
 			
 		/////
-		
-		di "xcategories = `xcats'"
-		di "ycategories = `ycats'"
-		
+				
 
 		local xlen : word count `xcats'
 		local ylen : word count `ycats'	

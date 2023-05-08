@@ -1,7 +1,7 @@
 {smcl}
-{* 04Apr2023}{...}
+{* 30Apr2023}{...}
 {hi:help sankey}{...}
-{right:{browse "https://github.com/asjadnaqvi/stata-sankey":sankey v1.31 (GitHub)}}
+{right:{browse "https://github.com/asjadnaqvi/stata-sankey":sankey v1.5 (GitHub)}}
 
 {hline}
 
@@ -11,17 +11,15 @@
 {p 8 15 2}
 
 {cmd:sankey} {it:value} {ifin}, {cmdab:f:rom}({it:var}) {cmdab:t:o}({it:var}) {cmd:by}({it:var}) 
-                {cmd:[} 
-                  {cmd:palette}({it:str}) {cmd:colorby}({it:layer}|{it:level}) {cmd:smooth}({it:1-8}) {cmd:gap}({it:num}) {cmdab:recen:ter}({it:mid}|{it:bot}|{it:top}) 
-                  {cmdab:laba:ngle}({it:str}) {cmdab:labs:ize}({it:str}) {cmdab:labpos:ition}({it:str}) {cmdab:labg:ap}({it:str}) {cmdab:showtot:al}
-                  {cmdab:vals:ize}({it:str}) {cmdab:valcond:ition}({it:num}) {cmd:format}({it:str}) {cmdab:valg:ap}({it:str}) {cmdab:noval:ues}
-                  {cmdab:lw:idth}({it:str}) {cmdab:lc:olor}({it:str}) {cmd:alpha}({it:num}) {cmd:offset}({it:num}) {cmd:sortby}({it:value}|{it:name}) {cmdab:boxw:idth}({it:str})
-                  {cmd:title}({it:str}) {cmd:subtitle}({it:str}) {cmd:note}({it:str}) {cmd:scheme}({it:str}) {cmd:name}({it:str}) {cmd:xsize}({it:num}) {cmd:ysize}({it:num}) 
-                {cmd:]}
-
+            {cmd:[} {cmd:palette}({it:str}) {cmd:colorby}({it:layer}|{it:level}) {cmd:colorvar}({it:var}) {cmd:colorvarmiss}({it:str}) {cmd:colorboxmiss}({it:str})
+              {cmd:smooth}({it:1-8}) {cmd:gap}({it:num}) {cmdab:recen:ter}({it:mid}|{it:bot}|{it:top}) {cmdab:ctitle:s}({it:list}) {cmdab:ctg:ap}({it:num}) {cmdab:cts:ize}({it:num})
+              {cmdab:laba:ngle}({it:str}) {cmdab:labs:ize}({it:str}) {cmdab:labpos:ition}({it:str}) {cmdab:labg:ap}({it:str}) {cmdab:showtot:al}
+              {cmdab:vals:ize}({it:str}) {cmdab:valcond:ition}({it:num}) {cmd:format}({it:str}) {cmdab:valg:ap}({it:str}) {cmdab:noval:ues}
+              {cmd:labprop} {cmd:titleprop} {cmd:labscale}({it:num}) {cmdab:novalr:ight} {cmdab:novall:eft} {cmdab:nolab:els}
+              {cmdab:lw:idth}({it:str}) {cmdab:lc:olor}({it:str}) {cmd:alpha}({it:num}) {cmd:offset}({it:num}) {cmd:sortby}({it:value}|{it:name} [{it:, reverse}]) {cmdab:boxw:idth}({it:str})
+              {cmd:title}({it:str}) {cmd:subtitle}({it:str}) {cmd:note}({it:str}) {cmd:scheme}({it:str}) {cmd:name}({it:str}) {cmd:xsize}({it:num}) {cmd:ysize}({it:num}) {cmd:]}
 
 {p 4 4 2}
-Please note that {opt sankey} is under active development and not all possible combinations and variations have been added.
 Please report errors/bugs/enhancement requests on {browse "https://github.com/asjadnaqvi/stata-sankey/issues":GitHub}. 
 
 
@@ -29,18 +27,27 @@ Please report errors/bugs/enhancement requests on {browse "https://github.com/as
 {synopthdr}
 {synoptline}
 
-{p2coldent : {opt sankey value, from() to() by()}}The command requires a numeric variable. Both {cmd:from()} and {cmd:to()} can contain numeric, labeled or string variables.
-The {cmd:by()} variable contains a layer variable which ideally should be numeric. If strings are used, then 
-please make sure that the spellings for categories are consistent since each unique name is assumed a separate category.{p_end}
+{p2coldent : {opt sankey value, from() to() by()}}The command requires a numeric variable. Both {opt from()} and {opt to()} can contain numeric, labeled or string variables.
+The {opt by()} variable contains a layer variable which ideally should be numeric. If strings are used, then please make sure that the spellings for categories are 
+consistent since each unique name is assumed a separate category.{p_end}
 
 {p2coldent : {opt palette(name)}}Color name is any named scheme defined in the {stata help colorpalette:colorpalette} package. Default is {stata colorpalette tableau:{it:tableau}}.{p_end}
 
 {p2coldent : {opt sortby(option)}}Users can sort the data by {ul:value} or {ul:name}. The {opt sortby(value)} arranges the data using a numerical sort, while {opt sortby(name)}
-arranges them alphabetically.{p_end}
+arranges them alphabetically. Both can be combined with reverse, {opt sortby(value, reverse)} or {opt sortby(name, reverse)}. Please note that the sorting will still
+respect the bundling of the nodes, which has priority for determining the order based on closeness of categories. Therefore, {opt sortby()} and will only sort 
+if there is space to sort!{p_end}
 
 {p2coldent : {opt colorby(option)}}Users can color the diagram by {ul:layer} instead of the default where each unique name is taken as a unique color category.
-The {it:layer} option is determined by the {cmd:by()} variable, and it will give each 
-layer a unique color.{p_end}
+The {it:layer} option is determined by the {opt by()} variable, and it will give each layer a unique color. Alternatively, use the {opt colorvar()} option below.{p_end}
+
+{p2coldent : {opt colorvar(var)}}Users can color the diagram by {ul:variable}. The variable should contain integer values starting from 1. Any categories that are not assigned
+a color will be automatically grayed out. The color of these categories can be controlled using the option below. Note that either {opt colorvar()} or {opt colorby()}
+can be specified.{p_end}
+
+{p2coldent : {opt colorvarmiss(str)}}Define the colors of the flows of the missing categories not defined in {opt colorvar()}. Default is {opt colorvarmiss(gs12)}.{p_end}
+
+{p2coldent : {opt colorboxmiss(str)}}Define the colors of the boxes of the missing categories not defined in {opt colorvar()}. Default is {opt colorboxmiss(gs10)}.{p_end}
 
 {p2coldent : {opt smooth(num)}}This option allows users to smooth out the spider plots connections. It can take on values between 1 to 8, where 1 is for straight lines, while 
 is 8 shows steps. The middle range between 3-6 gives more curvy links. The default value is {opt smooth(4)}.{p_end}
@@ -53,35 +60,67 @@ This is mostly an aesthetic choice. Default value is {opt recen(mid)}.{p_end}
 {p2coldent : {opt alpha(num)}}The transparency control of the area fills. The value ranges from 0-100, where 0 is no fill and 100 is fully filled.
 Default value is {opt alpha(75)} for 75% transparency.{p_end}
 
-{p2coldent : {opt lw:idth(str)}}The outline width of the area fills. Default is {cmd:lw(none)}. This implies that they are turned off by default.{p_end}
+{p2coldent : {opt lw:idth(str)}}The outline width of the area fills. Default is {opt lw(none)}. This implies that they are turned off by default.{p_end}
 
-{p2coldent : {opt lc:olor(str)}}The outline color of the area fills. Default is {cmd:lc(white)}.{p_end}
+{p2coldent : {opt lc:olor(str)}}The outline color of the area fills. Default is {opt lc(white)}.{p_end}
 
-{p2coldent : {opt labs:ize(str)}}The size of the category labels. Default is {cmd:labs(2)}.{p_end}
 
-{p2coldent : {opt laba:ngle(str)}}The angle of the category labels. Default is {cmd:laba(90)} for vertical labels.{p_end}
+{p 4 4 2}{ul:{it:Boxes}}
 
-{p2coldent : {opt labc:olor(str)}}The color of the category labels. Default is {cmd:labc(black)}.{p_end}
+{p2coldent : {opt labs:ize(str)}}The size of the category labels. Default is {opt labs(2)}.{p_end}
 
-{p2coldent : {opt labpos:ition(str)}}The position of the category labels. Default is {cmd:labpos(0)} for centered.{p_end}
+{p2coldent : {opt labprop}}Scale the labels based on the relative stocks.{p_end}
 
-{p2coldent : {opt labg:ap(str)}}The gap of the category labels from the mid point of the wedges. Default is {cmd:labg(0)} for no gap.
-If the label angle is change to horitzontal or the label position is changed from 0, then {cmd:labg()} can be used to fine-tune the placement.{p_end}
+{p2coldent : {opt labscale(num)}}Scaling factor of the labels. Default is {opt labscale(0.3333)}. Changing the value will change the relative
+weights of the smaller and higher values. This is an advanced option therefore use with caution.{p_end}
+
+{p2coldent : {opt laba:ngle(str)}}The angle of the category labels. Default is {opt laba(90)} for vertical labels.{p_end}
+
+{p2coldent : {opt labc:olor(str)}}The color of the category labels. Default is {opt labc(black)}.{p_end}
+
+{p2coldent : {opt nolab:els}}Hide the box labels.{p_end}
+
+{p2coldent : {opt labpos:ition(str)}}The position of the category labels. Default is {opt labpos(0)} for centered.{p_end}
+
+{p2coldent : {opt labg:ap(str)}}The gap of the category labels from the mid point of the wedges. Default is {opt labg(0)} for no gap.
+If the label angle is change to horitzontal or the label position is changed from 0, then {opt labg()} can be used to fine-tune the placement.{p_end}
 
 {p2coldent : {opt showtot:al}}Display the category totals on the node boxes.{p_end}
 
-{p2coldent : {opt boxw:idth(str)}Width of the node boxes. Default is {boxw(3.2)}.{p_end}
+{p2coldent : {opt boxw:idth(str)}}Width of the node boxes. Default is {opt boxw(3.2)}.{p_end}
 
-{p2coldent : {opt vals:ize(str)}}The size of the displayed values. Default is {cmd:vals(1.5)}.{p_end}
 
-{p2coldent : {opt valcond:ition(num)}}This option can be specified to only display values >={it:num}, e.g. {opt valcond(100)} implies >= 100.
-This option can be used to reduce the number of labels displayed especially if there are many very small categories that make the figure look messy.{p_end}
+{p 4 4 2}{ul:{it:Column titles}}
 
-{p2coldent : {opt format(str)}}The format of the displayed values. Default is {opt format(%12.0f)}.{p_end}
+{p2coldent : {opt ctitle:s(list)}}Give a list of column names. Names can either be defined as {opt ctitle("name1 name2 name3 ...")} or if there are spaces in 
+names as {opt ctitle("My name1" "My name2" "My name3" "...")}. Please make sure names are not very long and match the number of columns.{p_end}
+
+{p2coldent : {opt cts:ize(num)}}The size of the column titles. Default is {opt cts(2.5)}.{p_end}
+
+{p2coldent : {opt ctg:ap(num)}}The gap of the column titles. Default is {opt ctg(-5)}.{p_end}
+
+
+{p 4 4 2}{ul:{it:Values}}
+
+{p2coldent : {opt vals:ize(str)}}The size of the displayed values. Default is {opt vals(1.5)}.{p_end}
+
+{p2coldent : {opt valprop}}Scale the values based on the relative flows.{p_end}
 
 {p2coldent : {opt noval:ues}}Hide the values.{p_end}
 
-{p2coldent : {opt offset(num)}}The value, in percentage of x-axis width, to extend the x-axis on the right-hand side. Default is {cmd:offset(0)}.
+{p2coldent : {opt novalr:ight}}Hide values on the right. Cannot be combined with {opt novall}.{p_end}
+
+{p2coldent : {opt novall:eft}}Hide values on the left. Cannot be combined with {opt novalr}.{p_end}
+
+{p2coldent : {opt valcond:ition(num)}}This option can be specified to only display values >={it:num}, e.g. {opt valcond(100)} implies >= 100. This option
+can be used to reduce the number of labels displayed especially if there are several very small categories that might make the figure look messy.{p_end}
+
+{p2coldent : {opt format(str)}}The format of the displayed values. Default is {opt format(%12.0f)}.{p_end}
+
+
+{p 4 4 2}{ul:{it:Miscellaneous}}
+
+{p2coldent : {opt offset(num)}}The value, in percentage of x-axis width, to extend the x-axis on the right-hand side. Default is {opt offset(0)}.
 This option is highly useful especially if labels are rotated with custom positions.{p_end}
 
 {p2coldent : {opt title()}, {opt subtitle()}, {opt note()}}These are standard twoway graph options.{p_end}
@@ -97,7 +136,7 @@ This is particularly helpful if several layers are plotted.{p_end}
 
 {title:Dependencies}
 
-The {browse "http://repec.sowi.unibe.ch/stata/palettes/index.html":palette} package (Jann 2018, 2022) is required for {cmd:sankey}:
+The {browse "http://repec.sowi.unibe.ch/stata/palettes/index.html":palette} package (Jann 2018, 2022) is required for {opt sankey}:
 
 {stata ssc install palettes, replace}
 {stata ssc install colrspace, replace}
@@ -110,11 +149,12 @@ Even if you have these installed, it is highly recommended to update the depende
 See {browse "https://github.com/asjadnaqvi/stata-sankey":GitHub} for examples.
 
 
-
 {hline}
 
 {title:Version history}
 
+- {bf:1.5}  : Added {opt labprop}, {opt titleprop}, {opt labscale()}, {opt valnoright}, {opt valnoleft}, {opt sortby(, reverse)}.
+- {bf:1.4}  : Fixed the unbalanced panels. Fixed gaps between categories. Add column labels option. Added custom colors option.
 - {bf:1.3}  : Node bundling added to align nodes across groups. Options {opt sortby()} and {opt boxwidth()} added.
 - {bf:1.21} : Bug fixes for 1.2. {opt labcolor()} added.
 - {bf:1.2}  : Unbalanced in-coming and out-going groups now properly displace. Groups ending and starting in the middle now allowed.
@@ -124,8 +164,8 @@ See {browse "https://github.com/asjadnaqvi/stata-sankey":GitHub} for examples.
 
 {title:Package details}
 
-Version      : {bf:sankey} v1.31
-This release : 04 Apr 2023
+Version      : {bf:sankey} v1.5
+This release : 30 Apr 2023
 First release: 08 Dec 2022
 Repository   : {browse "https://github.com/asjadnaqvi/stata-sankey":GitHub}
 Keywords     : Stata, graph, sankey
@@ -151,5 +191,5 @@ Please submit bugs, errors, feature requests on {browse "https://github.com/asja
 {title:Other visualization packages}
 
 {psee}
-    {helpb arcplot}, {helpb alluvial}, {helpb bimap}, {helpb circlebar}, {helpb circlepack}, {helpb clipgeo}, {helpb delaunay}, {helpb joyplot}, 
+    {helpb arcplot}, {helpb alluvial}, {helpb bimap}, {helpb bumparea}, {helpb bumpline}, {helpb circlebar}, {helpb circlepack}, {helpb clipgeo}, {helpb delaunay}, {helpb joyplot}, 
 	{helpb marimekko}, {helpb sankey}, {helpb schemepack}, {helpb spider}, {helpb streamplot}, {helpb sunburst}, {helpb treecluster}, {helpb treemap}

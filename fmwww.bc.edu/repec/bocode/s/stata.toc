@@ -7,6 +7,7 @@ p sankey module for Sankey diagrams
 p scatterfit module to produce scatter plots with fit lines
 p sivqr module to perform smoothed IV quantile regression
 p sotable module to produce tests and confidence bands for multiple comparisons of two-sided or one-sided hypotheses
+p spider module for spider plots
 p stata_linter module providing a tool to detect and correct bad Stata coding practices
 p step3 module to relate latent class membership to external variables
 p stpp module to compute Pohar-Perme non-parametric estimate of marginal relative (net) survival
