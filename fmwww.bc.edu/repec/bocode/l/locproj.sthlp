@@ -277,7 +277,7 @@ in percentage terms, this option should be specified as fact(100).{p_end}
 
 (https://sites.google.com/site/oscarjorda/home/local-projections?pli=1)
 
-{p 4 8 2}{cmd:. use "http://cameron.econ.ucdavis.edu/aed/AED_INTERESTRATES.dta"}{p_end}
+{p 4 8 2}{cmd:. use AED_INTERESTRATES.dta}{p_end}
 
 {title:Example 1.1 Defining the basic specific options}
 
@@ -296,7 +296,7 @@ Which would also be equivalent to the following (explicit specification):
 
 {p 4 8 2}{cmd:. locproj gs10, shock(gs1)}{p_end}
 
-A most interesting specification would include lags of the dependent variable and of the shock, and would specify a response horizon. 
+A more interesting specification would include lags of the dependent variable and of the shock, and would specify a response horizon. 
 All the next six examples do those things and are exactly equivalent:
 
 {p}{it: Automatic specification}
@@ -338,7 +338,7 @@ The Jordà example requires using Newey-West as the estimation method, which con
 If we want to take a look at the regression output for each one of the horizons of the IRF we can use the option noisily. The regression
 outputs displayed are not the direct outputs from whatever estimation method we are using, but a simplified output table. 
 The reason for this is that {cmd: locproj} uses temporary variables whose given names do not have any meaning and would be difficult to 
-understand. {cmd: locproj} generates a new output table with variable names related to the variables list defined by the user. 
+understand. {cmd: locproj} generates a new output table with variable names related to the variable list defined by the user. 
 
 {p 4 8 2}{cmd:. locproj gs10 l(0/4).dgs1, h(12) m(newey) hopt(lag) tr(cmlt) yl(3) noisily}{p_end}
 
@@ -366,7 +366,7 @@ In order to express the result in percentage terms, we also make use of the opti
 by a factor of 100. We are going to estimate the IRF of a shock of the variable {bf:aaa} into the variable
 {bf:baa}:{p_end}
 
-{p 4 8 2}{cmd:. gen lnaaa = ln(aaa) - ln(l.aaa)}{p_end}
+{p 4 8 2}{cmd:. gen lnaaa = ln(aaa)}{p_end}
 
 {bf:log-differences:}
 
@@ -483,19 +483,30 @@ Next, we keep only nonmissing observations in resid_full i.e. 1969m1 - 2007m12
 
 {p 4 8 2}{cmd:. keep if resid_full != .}{p_end}
 
+We need to declare the time series variable
+
+{p 4 8 2}{cmd:. tsset date}{p_end}
+
 {p}For estimating the IRF using OLS we need to take into consideration that in the example, the response horizon starts at {it:hor = 1}. However, for exactly replicating the example, we need to use the one-step ahead 
 forecast of UNRATE as the dependent variable instead of UNRATE. We also use Newey-West as the variance-covariance estimation method, which requires defining the option {opt lag()} in Newey-West, and thus, we need to use the option
 {opt hopt()} in our {cmd:locproj} command:
 
 {p 4 8 2}{cmd:. locproj f.UNRATE DFF l(1/4).DFF l(1/4).UNRATE, h(0/15) hopt(lag) m(newey) z}{p_end}
 
-{p}For replicating the instrumental variable IRF, we use the option {opt met()} specifying that the method is {it:ivregress gmm}. Notice that in this case the {opt meth()} option should include the {it:gmm} sub-method.
+{p}For replicating the instrumental variable IRF example, we use the option {opt met()} specifying that the method is {it:ivregress gmm}. Notice that in this case the {opt meth()} option should include the {it:gmm} sub-method.
 Additionally, we need to define the instrument(s) for the shock, which in this case corresponds to the variable {it:resid_full}. Moreover, we define as an estimation method option the variance-covariance estimator {it: hac nwest} in the following way:{p_end}
 
 {p 4 8 2}{cmd:. locproj f.UNRATE l(0/4).DFF l(1/4).UNRATE, h(0/15) met(ivregress gmm) instr(resid_full) vce(hac nwest) z}{p_end}
 
-Or equivalently, using the explicit specification alternative:
-{p 4 8 2}{cmd:. locproj f.UNRATE, s(DFF) sl(4) yl(4) h(0/15) met(ivregress gmm) instr(resid_full) vce(hac nwest) z}{p_end}
+{p}In this particular case, if we want to replicate the Jordà example using the {opt ylags()} option would be a bit tricky, since the dependent variable 
+is {bf:f.UNRATE}, but the lags of the variable {bf:UNRATE} in the original specification are {bf:(1/4)}. 
+If we were to specify {opt ylags(4)} then we would actually be including lags {bf:(0/3)} 
+given the forecast of the dependent variable. Therefore, in this case, it would be more convenient to include the lags of the variable {bf:UNRATE} 
+in the main {it:varlist} or even as control variables with the option {opt controls()}:{p_end}
+
+{p 4 8 2}{cmd:. locproj f.UNRATE l(1/4).UNRATE, s(DFF) sl(4) h(0/15) met(ivregress gmm) instr(resid_full) vce(hac nwest) z}{p_end}
+
+{p 4 8 2}{cmd:. locproj f.UNRATE, s(DFF) sl(4) controls(l(1/4).UNRATE) h(0/15) met(ivregress gmm) instr(resid_full) vce(hac nwest) z}{p_end}
 
 
 {synoptline}
@@ -507,6 +518,10 @@ Or equivalently, using the explicit specification alternative:
 {p 4 8 2}{cmd:. use "http://data.macrohistory.net/JST/JSTdatasetR5.dta"}{p_end}
 
 {p 4 8 2}{cmd:. merge 1:1 year iso using "RecessionDummies.dta", nogen}{p_end}
+
+We need to declare the panel data variables:
+
+{p 4 8 2}{cmd:. xtset ifs year}{p_end}
 
 We also need to drop WWI and WWII years from JST dataset:
 
@@ -554,6 +569,7 @@ the ratio {bf:(dm+dsd)}:{p_end}
 
 {p 4 8 2}{cmd:. use "http://data.macrohistory.net/JST/JSTdatasetR5.dta"}{p_end}
 {p 4 8 2}{cmd:. merge 1:1 year iso using "RecessionDummies.dta", nogen}{p_end}
+{p 4 8 2}{cmd:. xtset ifs year}{p_end}
 
 We also need to drop WWI and WWII years from JST dataset:
 
