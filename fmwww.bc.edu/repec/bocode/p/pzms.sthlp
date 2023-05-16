@@ -36,7 +36,7 @@
 {synopt:{opt pzrange:(# #)}}the range for the placebo zone{p_end}
 {synopt:{opt p:(#)}}the polynomial orders to be considered for estimation{p_end}
 {synopt:{opt deriv:(#)}}specifies the order of the derivative of the regression functions to be estimated{p_end}
-{synopt:{opt pzstenum:(#)}}the number of placebo zone iterations to be performed{p_end}
+{synopt:{opt pzstepnum:(#)}}the number of placebo zone iterations to be performed{p_end}
 {synopt:{opt pzstepsize:(#)}}the distance between consecutive placebo thresholds{p_end}
 {synopt:{opt bwstepnum:(#)}}the number of bandwidths to be considered between {bf:minbw} and {bf:maxbw}{p_end}
 {synopt:{opt bwstepsize:(#)}}the increase in bandwidth between candidate estimators{p_end}
@@ -81,8 +81,7 @@ is selected as the preferred specification.
 If this is not specified, it will be set at 0.1*{bf:maxbw}.
 
 {phang}
-{opt pzrange(# #)} the range of the placebo zone, which must include {bf:c(#)} in its interior after trimming {bf:pzrange} by the value specified in 
-{bf:maxbw(#)}. The default is the full range of the running variable.
+{opt pzrange(# #)} the range of the placebo zone, which must include {bf:c(#)} in its interior. The default is the full range of the running variable.
 
 {phang}
 {opt p(#)} polynomial order for the RDD/RKD candidate specifications. Under the default (1) pzms will consider linear candidate specifications. If 2 
@@ -110,12 +109,11 @@ See also {bf:pzstepnum}.
 {opt bwstepsize(#)} the increase in bandwidth (in units of the running variable) between the candidate estimators considered. See also {bf:bwstepnum}. 
 
 {phang}
-{opt nolog} if specified, an iteration log will be not be displayed as the algorithm works through the placebo zone.
+{opt nolog} if specified, an iteration log will not be displayed as the algorithm works through the placebo zone.
 
 {phang}
 {opt vce(vce type)} this allows the user to specify the type of standard errors. Any vce that is available for the Stata command {stata help regress:regress} can 
-be used (ols, robust, cluster {it:clustvar}, bootstrap, jackknife, hc2, or hc3). A typical choice would be vce(cluster {it:runvar}). The default is 
-homoscedastic standard errors. 
+be used (ols, robust, cluster {it:clustvar}, bootstrap, jackknife, hc2, or hc3). The default is homoscedastic standard errors. 
 
 {phang}
 {opt covs(varlist)} specifies the covariates to include in the candidate specifications. If this option is chosen, the algorithm 
@@ -157,7 +155,7 @@ variable to the left of the cut-off be dropped. The second # specifies that obse
 cut-off be dropped. This option can be used as an ad hoc solution to threshold bunching or other non-compliance issues.
 
 {phang}
-{opt mcustom#(# #, {it{mcustom_options})} this allows the user to include additional specifications in the candidate set with custom features. You can 
+{opt mcustom#:(# #, mcustom_options)} this allows the user to include additional specifications in the candidate set with custom features. You can 
 specify up to 10 custom models by using mcustom1(), mcustom2() etc. This first argument in {bf:mcustom} is the polynomial order on the left of the 
 treatment threshold and the second argument is the polynomial order on the right. For example, if we wanted to estimate a model that is linear on the 
 left and quadratic on the right, we would specify {bf:mcustom(1 2)}. Polynomials of any order (including zero) up to 10 are allowed.
@@ -178,8 +176,7 @@ left and quadratic on the right, we would specify {bf:mcustom(1 2)}. Polynomials
 {title:Remarks}
 
 {pstd}
-This program is in the beta-phase of development. If you find any bugs, have questions, or want to provide feedback, please get in touch with us at 
-Nathan.Kettlewell@uts.edu and Peter.Siminski@uts.edu.au.
+If you find any bugs, have questions, or want to provide feedback, please get in touch with us at Nathan.Kettlewell@uts.edu and Peter.Siminski@uts.edu.au.
 
 {pstd}
 Warning regarding default settings: While we have tried to select defaults that are reasonable, based on our experience with the algorithm, we strongly 
@@ -225,6 +222,7 @@ thresholds. You may also want to apply the same criteria in specifying {bf:bwste
 {synopt:{opt e(pz_altp):}}lower bound p-value using Kettlewell & Siminksi (2022) randomization inference method{p_end}
 {synopt:{opt e(pz_alt_se):}}the standard error using Kettlewell & Siminksi (2022) randomization inference method{p_end}
 {synopt:{opt e(pz_altp_sum):}}upper bound p-value using Kettlewell & Siminksi (2022) randomization inference method{p_end}
+{synopt:{opt e(pz_rmse):}}RMSE of optimal specification in the placebo trials{p_end}
 {synopt:{opt e(pz_winbw):}}the bandwidth of the optimal specification{p_end}
 {synopt:{opt e(pz_bwstepsize):}}the value used for {bf:bwstepsize}{p_end}
 {synopt:{opt e(pz_pzstepsize):}}the value used for {bf:pzstepsize}{p_end}

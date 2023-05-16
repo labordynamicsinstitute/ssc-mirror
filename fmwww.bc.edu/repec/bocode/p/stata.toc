@@ -139,6 +139,7 @@ p predxcat module to calculate predicted means, medians, or proportions for nomi
 p predxcon module to calculate predicted means, medians, or proportions for a continuous X variable
 p prepar module to write code and data file needed to process variables in PARSCALE
 p preparation module to facilitate a one-by-one observation of varlist to make it easier to control data and labels
+p pretrends module to produce power calculations for pre-trends tests
 p pretty_baseline module to make a commonly encountered table of baseline characteristics
 p primes module to generate prime numbers
 p printgph module to execute command for each matching file

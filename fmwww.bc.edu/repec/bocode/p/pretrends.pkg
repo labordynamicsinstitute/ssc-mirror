@@ -1,0 +1,24 @@
+d 'PRETRENDS': module to produce power calculations for pre-trends tests
+d
+d  The pretrends package provides tools for power calculations for
+d pre-trends tests, and visualization of possible violations of
+d parallel trends. Calculations are based on Roth (2022). This is
+d the Stata version of the R package of the same name. 
+d
+d KW:  pretrends
+d KW: power calculations
+d KW: causal inference
+d
+d Requires: Stata version 15.1
+d
+d Distribution-Date: 20230515
+d
+d Author: Mauricio Caceres Bravo, Brown University
+d Support: email mauricio.caceres.bravo@@gmail.com
+d
+d Author:  Jonathan Roth, Brown University
+d Support: email jonathan_roth@@brown.edu
+d
+f pretrends.ado
+f pretrends.sthlp
+f ../l/lpretrends.mlib

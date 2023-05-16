@@ -73,7 +73,7 @@ calculation of {it:cn}. Default is to use the first 4 components.{p_end}
 
 {p 4 8}{cmdab:stand:ardize} standardizes variables.{p_end}
 
-{p 4 8}{cmd:nocenter} do not center variables.{p_end} 
+{p 4 8}{cmd:nocenter} do not center variables.{p_end}
 
 {p 4 8}{cmd:nocd} suppresses test for cross-sectional dependence using {help xtcd2}.{p_end}
 
@@ -271,7 +271,7 @@ Journal of Applied Econometrics 31: 929-960.{p_end}
 
 {p 4 8}Bailey, N., G. Kapetanios and M. H. Pesaran. 2019.
 Exponent of Cross-sectional Dependence for Residuals.
-Sankhya B. The Indian Journal of Statistics: forthcoming.{p_end}
+Sankhya B. The Indian Journal of Statistics: 81(4) p. 46-102.{p_end}
 
 {p 4 8}Chudik, A., M. H. Pesaran and E. Tosetti. 2011. 
 Weak and strong cross-section dependence and estimation of large panels.
@@ -323,7 +323,9 @@ Ditzen, J. 2019. xtcse2: Estimating Exponent of Cross-Sectional Dependence in la
 .{p_end}
 
 {marker ChangLog}{title:Changelog}
-{p 4 8}This version: 1.2 - 11. January 2021{p_end}
+{p 8 8}Version 1.3 - May 2023{p_end}
+{p 8 8}- nocenter affects xtcd2 as well{p_end}
+{p 4 8}Version 1.2 - 11. January 2021{p_end}
 {p 8 8}- added support for residuals{p_end}
 {p 8 8}- bug fixed{p_end}
 {p 8 8}- added option {cmd:nocenter}{p_end}

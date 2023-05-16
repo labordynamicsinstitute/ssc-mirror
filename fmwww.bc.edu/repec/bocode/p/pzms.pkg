@@ -22,7 +22,7 @@ d KW: treatment effects
 d
 d Requires: Stata version 12.1
 d
-d Distribution-Date: 20220911
+d Distribution-Date: 20230515
 d
 d Author:   Nathan Kettlewell, University of Technology Sydney
 d Support: email  Nathan.Kettlewell@@uts.edu.au
@@ -34,3 +34,4 @@ f pzms.ado
 f pzms_custom.ado
 f pzms.sthlp
 f pzms_example_data.dta
+f ../k/kettlewell_siminski_pzms_paper.pdf
