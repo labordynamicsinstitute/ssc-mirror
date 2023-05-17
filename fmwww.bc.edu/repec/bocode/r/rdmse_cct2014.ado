@@ -8,6 +8,9 @@
 *Fixed bug when subsetting syntax ("if" or "in") is used in the command
 *Per Kit Baum's suggestion, changed program from eclass to rclass
 
+*version 1.4 May 2023
+*Fixed bug with storing AMSE estimates in r()
+
 capture program drop rdmse_cct2014
 program define rdmse_cct2014, rclass
 	version 15.0
@@ -19,9 +22,19 @@ program define rdmse_cct2014, rclass
 	local y `1'
 	local x `2'
 	
-	if ("`fuzzy'"=="") rdmses_cct2014 `y' `x' if `marked', c(`c') deriv(`deriv') p(`p') h(`h') b(`b') kernel(`kernel') scalepar(`scalepar')
-	else rdmsef_cct2014 `y' `x' if `marked', c(`c') fuzzy(`fuzzy') deriv(`deriv') p(`p') h(`h') b(`b') kernel(`kernel') scalepar(`scalepar')
-
+	if ("`fuzzy'"=="") {
+	
+			rdmses_cct2014 `y' `x' if `marked', c(`c') deriv(`deriv') p(`p') h(`h') b(`b') kernel(`kernel') scalepar(`scalepar')
+			return scalar amse_cl = r(amse_cl)
+			
+						}
+			
+	else {
+	
+			rdmsef_cct2014 `y' `x' if `marked', c(`c') fuzzy(`fuzzy') deriv(`deriv') p(`p') h(`h') b(`b') kernel(`kernel') scalepar(`scalepar')
+			return scalar amse_F_cl = r(amse_F_cl)
+			
+		}	
 end
 
 

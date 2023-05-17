@@ -13,6 +13,9 @@
 *Per Kit Baum's suggestion, changed program from eclass to rclass
 *These changes do not affect any calculation
 
+*version 2.4 May 2023
+*Fixed bug with storing AMSE estimates in r()
+
 set type double
 capture program drop rdmse
 program define rdmse, rclass
@@ -27,12 +30,28 @@ program define rdmse, rclass
 	local x `2'
 	
 	if ("`twosided'"=="") {
-		if ("`fuzzy'"=="") rdmses `y' `x' if `marked', c(`c') deriv(`deriv') p(`p') h(`h') b(`b') kernel(`kernel') scalepar(`scalepar')
-		else rdmsef `y' `x' if `marked', c(`c') fuzzy(`fuzzy') deriv(`deriv') p(`p') h(`h') b(`b') kernel(`kernel') scalepar(`scalepar')
+		if ("`fuzzy'"=="") {
+				rdmses `y' `x' if `marked', c(`c') deriv(`deriv') p(`p') h(`h') b(`b') kernel(`kernel') scalepar(`scalepar')
+				return scalar amse_cl = r(amse_cl)
+				return scalar amse_bc = r(amse_bc)
+							}
+		else {
+				rdmsef `y' `x' if `marked', c(`c') fuzzy(`fuzzy') deriv(`deriv') p(`p') h(`h') b(`b') kernel(`kernel') scalepar(`scalepar')
+				return scalar amse_F_cl = r(amse_F_cl)
+				return scalar amse_F_bc = r(amse_F_bc)	
+			}
 							}
 							
 	else {
-		if ("`fuzzy'"=="") rdmses2s `y' `x' if `marked', c(`c') deriv(`deriv') pl(`pl') pr(`pr') hl(`hl') hr(`hr') bl(`bl') br(`br') kernel(`kernel') scalepar(`scalepar')
+		if ("`fuzzy'"=="") {
+		
+				rdmses2s `y' `x' if `marked', c(`c') deriv(`deriv') pl(`pl') pr(`pr') hl(`hl') hr(`hr') bl(`bl') br(`br') kernel(`kernel') scalepar(`scalepar')
+				return scalar amse_l_cl = r(amse_l_cl)
+				return scalar amse_r_cl = r(amse_r_cl)	
+				return scalar amse_l_bc = r(amse_l_bc)
+				return scalar amse_r_bc = r(amse_r_bc)		
+							
+							}
 		else {
 			di "The {cmd:fuzzy()} option is not allowed with {cmd:twosided}. See help file for details."
 			}
