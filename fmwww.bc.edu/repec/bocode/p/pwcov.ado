@@ -1,4 +1,5 @@
-*! pwcov 1.0.1  CFBaum  22jul2006
+*! pwcov 1.1.1  CFBaum 18 May 2023  
+*! pwcov 1.0.1  22jul2006  
 program pwcov, rclass
 	version 9.2
 	syntax varlist(min=2) [if] [in] [fweight pweight/], [PRINT] [SAVE]
@@ -27,13 +28,13 @@ program pwcov, rclass
 	
 	mata: pwcov("`varlist'","`varlist1'","`touse'","`exp'")
 
-	if "`print'" == "print" {
 		mat colnames cov = `varlist'
 		mat rownames cov = `varlist'
+		if "`print'" == "print" {
 		if "`weight'" != "" {
 			local wexp "[ `weight' = `exp' ]" 
 		}
-		mat list cov, ti("Pairwise covariances  `wexp'")
+		mat list cov, ti("Pairwise VCE  `wexp'")
 	}
 	
 return matrix pwcov = cov
@@ -48,8 +49,8 @@ void pwcov( string scalar vname,
   {
 	string rowvector vars, vars1
 	string scalar v, v1
-	real scalar k
-	real matrix pwcov,two, Y
+	real scalar i, j, k, var
+	real matrix pwcov, two, vv, Y
   
 	vars = tokens(vname)
 	v = vars[|1,.|]
@@ -72,9 +73,12 @@ void pwcov( string scalar vname,
 	pwcov= J(k,k,.)
 	e = 1
 	for(i=1;i<=k-1;i++) {
+		vv = variance(X[.,i],W)
+		pwcov[i,i] = vv[1,1]
   		for(j=i+1;j<=k;j++) {
   			two = variance((X[.,i],X[.,j]),W)
 	  		pwcov[j,i] = two[2,1]
+			pwcov[i,j] = two[2,1]
 	  		if (vname1 ~= "") {	
 // number of elements entering covariance
   				Y[e,1] = i
@@ -85,7 +89,9 @@ void pwcov( string scalar vname,
   			}
   		}
   	}
-  st_matrix("cov",pwcov)
+	vv = variance(X[.,k],W)
+	pwcov[i,i] = vv[1,1]
+	st_matrix("cov",pwcov)
   }
  end
  
