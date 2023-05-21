@@ -7,7 +7,7 @@ version 16.0;
   saved to a disk file, or written to memory
   (overwriting any pre-existing data set in memory).
 *! Author: Roger Newson
-*! Date: 06 April 2020
+*! Date: 19 May 2023
 */
 
 syntax anything(name=clist id=clist equalok)  [if] [in] [aw fw iw pw] [,
@@ -228,7 +228,7 @@ if(`"`saving'"'!=""){;
 local oldframe=c(frame);
 tempname tempframe;
 if `"`framename'"'!="" {;
-  frame copy `oldframe' `tempframe', `framereplace';
+  qui frame copy `oldframe' `tempframe', `framereplace';
 };
 
 *
