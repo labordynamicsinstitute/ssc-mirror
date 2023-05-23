@@ -2,6 +2,7 @@
 {* *! version 1.0.0 2021-02-28}{...}
 {vieweralsosee "streg" "help streg"}{...}
 {vieweralsosee "stpm2" "help stpm2"}{...}
+{vieweralsosee "stpm3" "help stpm3"}{...}
 {vieweralsosee "predictms" "help predictms"}{...}
 {viewerjumpto "Syntax" "standsurv##syntax"}{...}
 {viewerjumpto "Description" "standsurv##description"}{...}
@@ -34,6 +35,8 @@
 {synopt:{opt crmod:els(modellist)}}names of competing risk models{p_end}
 {synopt:{opt crudepr:ob}}calculate crude probabilities{p_end}
 {synopt:{opt f:ailure}}calculate standardised failure function (1-S(t)){p_end}
+{synopt:{opt fr:ame(framename)}}save predictions to a frame{p_end}
+{synopt:{opt nogen}}do not generate at() option variables{p_end}
 {synopt:{opt genind(stub)}}output individual predictions{p_end}
 {synopt:{opt h:azard}}calculate hazard function of standardised survival curve{p_end}
 {synopt:{opt indw:eights(varname)}}variable containing weights (for external standardisation){p_end}
@@ -43,9 +46,11 @@
 {synopt:{opt no:des(#)}}number of nodes for numerical integration (default 30){p_end}
 {synopt:{opt ode}}use ordinary differential equations for some integrations{p_end}
 {synopt:{opt odeoptions(options)}}options for ordinary differential equations{p_end}
+{synopt:{opt over(varlist)}}estimate effects at unique values of {it:varlist}{p_end}
 {synopt:{opt rmst}}calculate restricted mean survival time{p_end}
 {synopt:{opt rmft}}calculate restricted mean failure time{p_end}
 {synopt:{opt se}}calculates standard errors for each at{it:n}() option and for contrasts{p_end}
+{synopt:{opt storeg(name)}}stores derivatives for each at option{p_end}
 {synopt:{opt stub2(name)}}override the default stubnames{it:n}() option for competing risks{p_end}
 {synopt:{opt ti:mevar(varname)}}time variable used for predictions (default _t){p_end}
 {synopt:{opt toff:set(varname)}}time offset when multiple models{p_end}
@@ -60,8 +65,8 @@
 {pstd}
 {cmd:standsurv} is a postestimation command that calculates various standardized 
 (marginal) measures after fitting a parametric survival model. These include 
-standardized survival functions and a variety of funtions of standardized survival
-functions and contrasts of these functons. These function include
+standardized survival functions and a variety of functions of standardized survival
+functions and contrasts of these functions. These functions include
 the failure and hazard functions restricted mean survival time and centiles
 of the marginal failure function. 
 {p_end}
@@ -80,14 +85,21 @@ cumulative incidence functions and other useful measures.
 {p_end}
 
 {pstd}
-Survival model estimation commands supported include {cmd:stpm2}, {cmd:strcs}, and {cmd:streg}. 
+Survival model estimation commands supported include {cmd:stpm2}, {cmd:stpm3}, {cmd:strcs}, and {cmd:streg}. 
 Note generalized gamma models are not currently implemented for {cmd:streg} models.
 {p_end}
 
 {pstd}
-Factor variables are not supported and so you must create dummy variables when 
-fitting the models. 
+Factor variables are only supported for {cmd:stpm3} models.
+For other models you will need to create dummy variables and interactions 
+yourself when fitting the models. 
 {p_end}
+
+{pstd}
+By default new variables are saved to the original dataset.
+However, it is advised that you use the frame option to save results to a new frame.
+{p_end}
+
 
 {pstd}
 {cmd:standsurv} creates the following variables by default. However, it is recommended 
@@ -166,7 +178,7 @@ If the {cmd:userfunctionvar()} option is specified then the following variables 
 {title:Options}
 
 {phang}
-{opt at1(varname # [varname # ..], suboptions)}{it:..}{opt at n(varname # [varname # ..], suboptions)}
+{opt at1(varname # [varname # ..], suboptions)}{it:..}{opt atn(varname # [varname # ..], suboptions)}
 specifies covariates to fix at specific values when averaging predictions. 
 For example, if {cmd:x} denotes a binary covariate and you want to standardise
 over all other variables in the model then using {cmd:at1(x 0) at2(x 1)} will give
@@ -183,6 +195,11 @@ This can be useful when there are interactions: consider a model with
 between {cmd:treat} and {cmd:age}. When standardising for {cmd:treat=0} and {cmd:treat=1}, 
 the {cmd:at()} options should be {cmd: at1(treat 0 treat_age 0)} and 
 {cmd: at2(treat 1 treat_age = age)}.
+
+{pmore}
+If you use {cmd:stpm3} then it is advised you use factor variables when using
+interactions. This makes specification of the {cmd_at()} options much easier,
+particularly when there are interactions.
 
 {pmore}
 There are some suboptions. These are,
@@ -206,12 +223,12 @@ are being used for all {bf: at()} options then the main {bf: indweights()} optio
 be used.
 
 {phang3}
-{opt attimevar(varname)} specified a different time variables for each at option.
-Here you should be carful with contrasts. One use of different timevars is conditional survival.
+{opt attimevar(varname)} specifies a different time variables for each {cmd:at}{it:i}{cmd:()} option.
+Here you should be careful with contrasts. 
 
 {phang}
 {opt atvars(stub | newvarnames)} gives the names of the new variables to be
-created for each {cmd:at}{it:i}{cmd:()) option. 
+created for each {cmd:at}{it:i}{cmd:()} option. 
 This can be specified as a {it:varlist} equal to the number of at() 
 options or a {it:stub} where new variables are named {it:stub}{bf:1} - 
 {it:stub}{bf:n}. If this option is not specified, the names default to 
@@ -260,7 +277,7 @@ The names default to {bf:_contrast1} to {bf:_contrast}{it:n-1}.
 
 {phang}
 {opt crmodels(modellist)} gives the names of the cause-specifc models for 
-competing risks. Each model nees to have been saved using {cmd:estimates store}.
+competing risks. Each model needs to have been saved using {cmd:estimates store}.
 
 {phang}
 {opt crudeprob} calculates crude probabilities. This assumes that a relative 
@@ -272,9 +289,9 @@ given using the {cmd:expsurv()} option.
 works with the rmst and rmft options.
 
 {phang}
-{opt expsurv(suboptions)} indicates that expected survial should be calculated
-and then compbined with the model based (relative) survival estimates to give
-all cause survival. There are a number of suboptions, which are,
+{opt expsurv(suboptions)} indicates that expected survival should be calculated
+and then combined with the model based (relative) survival estimates to give
+all cause survival. There are a number of suboptions,
 
 {phang2}
 {opt agediag(varname)} gives the variable giving the age at diagnosis in years 
@@ -284,7 +301,7 @@ is assumed that individuals were diagnosed on their birthday, so avoid this if p
 {phang2}
 {opt datediag(varname)} gives the variable giving the date at diagnosis  
 for subjects in the study population. If you do not have exact dates then you 
-still need to specify yhis option. For example, if you had dates in months 
+still need to specify this option. For example, if you had dates in months 
 and years you could use
 
 {phang3}
@@ -306,9 +323,8 @@ not be stored. The names can be specified as a {it:varlist} equal to the number
 of {cmd:at()} options or a {it:stub} where new variables are named {it:stub}{bf:1} - 
 {it:stub}{bf:n}. 
 	
-
 {phang2}
-{opt pmage(varname)} gives the age variable in the population mortality file.
+{opt pmage(varname)} gives the name of the age variable in the population mortality file.
 	
 {phang2}
 {opt pmmaxage(varname)} gives the maximum age in the population mortality file.
@@ -331,7 +347,7 @@ deprivation etc.
 that standsurv requires the expected mortality rate and not the expected survival.
 
 {phang2}
-{opt pmyear(varname)} gives the calendar year variable in the population 
+{opt pmyear(varname)} gives the name of the calendar year variable in the population 
 mortality file.
 
 {phang2}
@@ -345,6 +361,28 @@ The default is one year.
 {opt failure} calculates the standardised failure function rather than
 the standardised survival function.
 
+{phang}
+{opt frame(framename, options)} specifies the name of the frame to store the predictions.
+The default name is {it:stpm2_pred}. Options are,
+
+{phang2}
+{opt merge} merge predictions into frame {it:framename}. This will extract the
+time variable from the {it:framename} automatically.
+
+{phang2}
+{opt mergecreate} is a convenience option when writing predictions in a loop.
+If the frame does not exist it will be created. 
+If the frame does exists then the {cmd:timevar()} option will be ignored
+and predictions merged into {it:framename}.
+
+{phang2}
+{opt replace} replace the existing frame {it:framename} is it exists.
+
+{phang}
+{opt nogen} Does not generate variables for each {cmd:at()} option. This is only
+relevent when using the contrast() option and you are not interested 
+in the predictions for each {cmd:at} option.
+  
 {phang}
 {opt genind(stubname)} outputs the predictions for each individual, i.e. the 
 predicted values that feed into the average. Standsurv is concerned with marginal 
@@ -366,7 +404,7 @@ but a weighted mean with weights, S(t). The weights are time-dependent.
 {opt level(#)} sets the confidence level; default is level(95) or as set by {help set level}.
 
 {phang}
-{opt lincom(#...#)} calculates a linear combination of at{it:n}} options. As an example, if
+{opt lincom(#...#)} calculates a linear combination of at{it:n} options. As an example, if
 there were two at() options then {bf:lincom(1 -1)} would calculate the difference in the
 standardized estimate. This would be the same as using the {bf:contrast(difference)} option.
 Note that in the competing risks setting the number of values in the lincom() options
@@ -375,7 +413,7 @@ In such as case the first value corresponds to at1 competing risk model 1 and th
 second value to at1 competing risk model 2, i.e. the values correspond to the order in which
 the new standardized variables are created. For example with two competing risk models and
 two at() options combined with the {bf:cif} option, {bf:lincom(1 1 0 0)} would sum the CIFs
-for cause 1 and 2.
+for cause 1 and 2 for {cmd:at1}.
 
 {phang}
 {opt lincomvar(newvarname)} gives the new variable to create when
@@ -386,12 +424,13 @@ using the {bf:lincom()} option.
 (Stefanski and Boos 2002) rather than the delta-method.
 
 {phang}
-{opt nodes(#)} number of nodes when performing numerical integration to
-calculate the restricted mean survival time.
+{opt nodes(#)} number of nodes when performing numerical integration using
+Gaussian quadrature to calculate the restricted mean survival time.
 
 {phang}
 {opt ode} use ordinary differential equations (Dormand Prince 45) for numerical integration.
-Currently just implemented for cumulative incidence functions and crude probabilities.
+This the default and only option for various predictions and so only relevent
+when the default is Gaussian quadrature.
 
 {phang}
 {opt odeoptions(options)} Various options for ordinary differential equations.
@@ -415,7 +454,7 @@ Currently just implemented for cumulative incidence functions and crude probabil
 {opt pshrink(#)} power using when decreasing step size.
 
 {phang2}
-{opt reltol(#)} relative tolerance - default 1e-4.
+{opt reltol(#)} relative tolerance - default 1e-5.
 
 {phang2}
 {opt safety(#)} safety factor - default 1.
@@ -425,6 +464,11 @@ Currently just implemented for cumulative incidence functions and crude probabil
 
 {phang2}
 {opt verbose} output details for each step.
+
+{phang}
+{opt over(varlist)} specifies that separate standardized estimates are obtained
+for the groups defined by {it:varlist}.  The variables need not be
+covariates in your model.  
 
 {phang}
 {opt per(#)} multiplies predictions by {it:#}. For example, when predicting 
@@ -447,6 +491,11 @@ See Andersen (2013).
 {phang}
 {opt se} calculates the standard error  for each standardised
 function or contrast. This is stored using the suffix {bf:_se}.
+
+{phang}
+{opt storeg(name)} store the derivatives of the standsardized estimate w.r.t each 
+of the model parameters. This can be useful if you need to combine results from 
+multiple standsurv calls.
 
 {phang}
 {opt stub2} Overide default stub names{bf:_se}.
@@ -484,6 +533,8 @@ a difference  between two standardized function is shown below
 {cmd:function user_eg(at) {c -(}}{break}
 {space 4}{cmd:return(at[2] - at[1])}{break}
 {cmd:{c )-}}{break}
+
+{phang2}
 {cmd:end}{break}
 
 {phang2}
@@ -517,32 +568,29 @@ For some more detailed examples see {browse "https://pclambert.net/software/stan
 {pstd}Obtain standardised curves for {bf:hormon=0} and {bf:hormon=1}.
 In each case the survival curves are the average of the 686
 survival curves using the observed covariate values except for {bf:hormon}.{p_end}
-{phang}{stata ". standsurv, atvars(S0a S1a) at1(hormon 0) at2(hormon 1) timevar(timevar) ci"}
+{phang}{stata ". standsurv, atvars(S0a S1a) at1(hormon 0) at2(hormon 1) timevar(timevar) ci frame(f1,replace)"}
 
 {pstd}Plot standardised curves:{p_end}
-{phang}{stata ". line S0a S1a timevar"}
+{phang}{stata ". frame f1: line S0a S1a timevar"}
 
 {pstd}Obtain standardised curves for {bf:hormon=0} and {bf:hormon=1}, but apply the covariate distribution amongst those with {bf:hormon=1}.{p_end}
-{phang}{stata ". standsurv if hormon==1, atvars(S0b S1b) at1(hormon 0) at2(hormon 1) timevar(timevar) ci"}
+{phang}{stata ". standsurv if hormon==1, atvars(S0b S1b) at1(hormon 0) at2(hormon 1) timevar(timevar) ci frame(f2, replace)"}
 
 {pstd}Plot standardised curves:{p_end}
-{phang}{stata ". line S0b S1b timevar"}
+{phang}{stata ". frame f2: line S0b S1b timevar"}
 
 {pstd}Obtain standardised curves for {bf:hormon=0} and {bf:hormon=1}, and calculate difference in standardised survival curves and 95 confidence interval.
 
-{phang}{stata ". standsurv, atvars(S0c S1c) at1(hormon 0) at2(hormon 1) timevar(timevar) ci contrast(difference) contrastvar(Sdiffc)"}
+{phang}{stata ". standsurv, atvars(S0c S1c) at1(hormon 0) at2(hormon 1) timevar(timevar) ci contrast(difference) contrastvar(Sdiffc) frame(f3, replace)"}
 
 {pstd}Plot difference in standardised curves and 95% confidence interval:{p_end}
-{phang}{stata ". line Sdiffc* timevar"}
-
-
-
+{phang}{stata ". frame f3: line Sdiffc* timevar"}
 
 {title:Authors}
 
 {pstd}Paul C. Lambert{p_end}
 {pstd}Biostatistics Research Group{p_end}
-{pstd}Department of Health Sciences{p_end}
+{pstd}Department of Population Health Sciences{p_end}
 {pstd}University of Leicester{p_end}
 {pstd}{it: and}{p_end}
 {pstd}Department of Medical Epidemiology and Biostatistics{p_end}

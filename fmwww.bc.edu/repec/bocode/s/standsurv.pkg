@@ -21,9 +21,9 @@ d KW: survival
 d KW: survival function
 d KW: hazard function
 d
-d Requires: Stata version 15.1
+d Requires: Stata version 16
 d
-d Distribution-Date: 20211219
+d Distribution-Date: 20230522
 d
 d Author: Paul Lambert, University of Leicester
 d Support: email paul.lambert@@le.ac.uk
