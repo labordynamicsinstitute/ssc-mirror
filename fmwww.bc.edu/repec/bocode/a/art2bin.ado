@@ -53,7 +53,10 @@ For given sample size N, the programme estimates power. For continuity corrected
 
 Syntax art2bin p0 p1 [, margin(#) n0(#) n1(#) ar(#) alpha(#) power(#) nvmethod(#) onesided]
 ******************************************************************************************************************************** */
-*!version 1.00  08oct2021  EMZ   Release
+*!version 1.01  09june2022
+* version 1.01  09june2022 EMZ   Changed p to pi in hypothesis tests.  Removed warning if p1 + m lies outside (0,1) as per 	
+*					             Ab's suggestion.
+* version 1.00  08oct2021  EMZ   Release
 * version 0.16  21oct2021  EMZ   Changed some wording of the error messages.
 * version 0.15  07oct2021  EMZ   Changed version date
 * version 0.14  16sep2021  EMZ   From PR testing: put version statements in to program and all subroutines. Changed comments to refer to 
@@ -111,7 +114,7 @@ version 8
 				  
 
 ********************************************************************************
-	if "`version'"=="" local version "binary version 2.0 08nov2021"
+	if "`version'"=="" local version "binary version 2.0.2 23may2023"
 ********************************************************************************
 
 	if `alpha'<=0 | `alpha'>=1 { 
@@ -266,8 +269,7 @@ if !mi("`unfavourable'") & !mi("`favourable'") {
 		local w2 `p1'
 		
 		local threshold = `w1' + `margin'
-		if (`threshold' < 0 | `threshold' > 1) di "{it: WARNING: p1 + margin is not in (0,1)}"
-		
+				
 	if mi("`favourable'`unfavourable'") { // infer outcome direction if not specified
 	
 		if `w2' < `threshold' local trialoutcome = "Unfavourable"
@@ -308,12 +310,12 @@ if !mi("`unfavourable'") & !mi("`favourable'") {
 			local trialtype "Substantial-superiority"
 		}
 		if "`trialoutcome'" == "Unfavourable" {
-			local H0 = "H0: p2-p1>= `margin'"
-			local H1 = "H1: p2-p1< `margin'"
+			local H0 = "H0: pi2-pi1 >= `margin'"
+			local H1 = "H1: pi2-pi1 < `margin'"
 		}
 		else if "`trialoutcome'" == "Favourable" {
-			local H0 = "H0: p2-p1<= `margin'"
-			local H1 = "H1: p2-p1> `margin'"
+			local H0 = "H0: pi2-pi1 <= `margin'"
+			local H1 = "H1: pi2-pi1 > `margin'"
 		}
 
 

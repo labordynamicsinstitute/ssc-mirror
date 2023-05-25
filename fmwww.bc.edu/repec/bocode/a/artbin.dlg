@@ -1,6 +1,7 @@
 /*
 artbin
 
+VERSION 2.2 EMZ 16june2022.// Changed 'proportions' to 'anticipated probabilities'
 VERSION 2.1 EMZ 16sep2021. // Added ltfu() option.
 VERSION 2.0 EMZ 20may2021. // Removed ngroups from the dialogue box and rearranged layout of set up boxes/options.  Removed score box being ticked as 
                               default.  Uses artbin_v127.
@@ -38,24 +39,25 @@ BEGIN
  /*--+----1----+----2----+----3----+----4----+----5----+----6----+----7----+*/
  
  GROUPBOX gb_setup    	10      10      _iwd    _ht14h, label("Set-up")	
- TEXT tx_pro		15	30	90	., label("Proportions")
- EDIT vl_pr		    110	@	120	., label("Proportions")	option(pr)
+ TEXT tx_pro		15	30	90	., label("Anticipated")
+ TEXT tx_pro2		15	45	90	., label("probabilities")
+ EDIT vl_pr		    110	40	120	., label("Anticipated probabilities")	option(pr)
  TEXT tx_margin		250	@	120	., label("Margin (NI/SS only)")
  EDIT vl_margin	    370	@	100	., label("Margin") option(margin)
- RADIO r1_fav		15	60	120 ., first label("Favourable") option(fav)
+ RADIO r1_fav		15	72	120 ., first label("Favourable") option(fav)
  RADIO r2_unfav		110	@	110	., last label("Unfavourable") option(unfav)
  TEXT tx_all		250	@	120	., label("Allocation ratios") 
  EDIT vl_aratios	370	@	100	., label("aratios") option(aratios) 
- RADIO r1_rpow		15	90	120	., first label("Specify power") option(rpow)
+ RADIO r1_rpow		15	102	120	., first label("Specify power") option(rpow)
  RADIO r2_samp		110	@	130	., last label("Specify sample size") option(samp) 
  TEXT tx_pow		250	@	120	., label("Power or N")
  EDIT vl_pow		370	@	100	., label("power") default(0.8) option(pow)
- TEXT tx_alp		15	120	90	., label("Alpha")
+ TEXT tx_alp		15	128	90	., label("Alpha")
  EDIT vl_alpha	    110	@	120	., label("alpha") default(0.05) option(alpha)
  CHECKBOX ck_ones   250	@	150 ., label("One-sided test (alpha)") option(ones) 
- CHECKBOX ck_trend	15	150	170	., label("Trend") option(trend) onclickon("script dose_on") onclickoff("script dose_off")
- TEXT tx_doses		70 @	90	., label("Dose")
- EDIT vl_doses	110	@	120	., label("Dose") option(doses)
+ CHECKBOX ck_trend	15	157	170	., label("Trend") option(trend) onclickon("script dose_on") onclickoff("script dose_off")
+ TEXT tx_doses		70 156	90	., label("Dose")
+ EDIT vl_doses	110	156	120	., label("Dose") option(doses)
  TEXT tx_ltfu		250	@	120	., label("Loss to follow-up")
  EDIT vl_ltfu		370	@	100	., label("ltfu") option(ltfu)
  

@@ -1,4 +1,6 @@
-*!version 2.0.0 EMZ    08nov2021
+*!version 2.0.2 EMZ    23may2023
+* version 2.0.1 EMZ    09june2022 
+* version 2.0.0 EMZ    08nov2021
 * version 1.2.13EMZ    08nov2021
 * version 1.2.12EMZ    04nov2021
 * version 1.2.11EMZ    21oct2021
@@ -30,6 +32,10 @@
 *	History
 	
 /*
+2.0.2   23may2023   ltfu() bux fix (previously applied to SS but not to power)
+2.0.1   09june2022  Removal of comma in between anticipated probabilities in output table.  Replaced p's with pi's in output table hypothesis test.  	
+					Minor formatting to output table.  Allowed onesided for >2 groups if trend/dose specified.  Removed warning if p1 + m lies 
+					outside (0,1) as per Ab's suggestion.
 2.0.0   08nov2021   Release
 1.2.13  08nov2021   Minor change to favourable/unfavourable text in output table
 1.2.12  04nov2021   Fixed so that returned results for number of events -r(D)- is unrounded.
@@ -157,7 +163,7 @@ syntax , PR(numlist min=2 >0 <1) [ Margin(numlist max=1) ALpha(real 0.05) ARatio
 	DIstant(numlist max=1) LTFU(numlist max=1 >0 <1)]
 
 
-local version "binary version 2.0 08nov2021"
+local version "binary version 2.0.2 23may2023"
 
 numlist "`pr'"
 local npr: word count `pr'
@@ -392,8 +398,6 @@ if !mi("`unfavourable'") & !mi("`favourable'") {
 		local w2 `2'
 
 		local threshold = `w1' + `margin'
-		if (`threshold' < 0 | `threshold' > 1) di "{it: WARNING: p1 + margin is not in (0,1)}"
-		
 		
 		
 	if mi("`favourable'`unfavourable'") { // infer outcome direction if not specified
@@ -436,12 +440,12 @@ if !mi("`unfavourable'") & !mi("`favourable'") {
 			local trialtype "substantial-superiority"
 		}
 		if "`trialoutcome'" == "unfavourable" {
-			local H0 = "H0: p2-p1>= `margin'"
-			local H1 = "H1: p2-p1< `margin'"
+			local H0 = "H0: pi2 - pi1 >= `margin'"
+			local H1 = "H1: pi2 - pi1 < `margin'"
 		}
 		else if "`trialoutcome'" == "favourable" {
-			local H0 = "H0: p2-p1<= `margin'"
-			local H1 = "H1: p2-p1> `margin'"
+			local H0 = "H0: pi2 - pi1 <= `margin'"
+			local H1 = "H1: pi2 - pi1 > `margin'"
 		}
 	}
 	
@@ -483,7 +487,7 @@ if !mi("`unfavourable'") & !mi("`favourable'") {
 *	  local nvm `r(nvm)'
 *	  local method`nvm' "`r(vmethod)'"
 	  local Alpha `r(alpha)'
-	  local tit2 "unconditional comparison of 2 binomial proportions P1 and P2"
+	  local tit2 "unconditional comparison of 2 binomial proportions"
 	  local allocr "`r(allocr)'"
 	  local D `r(Dart)'                                                        
 	  *di `D'
@@ -507,7 +511,7 @@ if !mi("`unfavourable'") & !mi("`favourable'") {
 *	  frac_ddp `w2' 3
       local w2dp : di %-6.3f `w2'
 *	  local w2dp `r(ddp)'
-	  local altp "`w1dp', `w2dp'"
+	  local altp "`w1dp' `w2dp'"
 	  local off 40
       local longstring 38
       local maxwidth 78
@@ -540,8 +544,8 @@ if `ccorrect' & (`ngroups'>2) {
 	di as err "Correction for continuity not allowed in comparison of > 2 groups"
 	exit 198
 }
-if `onesided' & (`ngroups'>2) {
-	di as err "One-sided not allowed in comparison of > 2 groups"
+if `onesided' & (`ngroups'>2 & (mi("`trend'") & mi("`doses'"))) {
+	di as err "One-sided not allowed in comparison of > 2 groups unless trend/doses specified"
 	exit 198
 }
 
@@ -571,7 +575,7 @@ else local sided two
 local Power `power'	/* as supplied */
  
  if "`margin'"!="" & "`margin'"!="0" { 
-	local tit2 "comparison of 2 binomial proportions P1 and P2"
+	local tit2 "comparison of 2 binomial proportions"
 	
 	/* Method of estimating event probabilities for the purpose of estimating
 		the variance of the difference in proportions under the null hypothesis H0 */
@@ -677,7 +681,7 @@ else {                                                                          
 		qui replace `PI'=`1' in `i'
 		if `i'>1 {
 			frac_ddp `1' 3
-			local altp `altp', `r(ddp)'
+			local altp `altp' `r(ddp)'
 		}
 		macro shift
 	}
@@ -971,7 +975,8 @@ local maxwidth 78
 local artcalcused "k-arm"
 }
 
-
+* Account for loss to follow up
+if !mi("`ltfu'") local n = `n' /(1 - `ltfu')
 
 * Change rounding option so rounds UP to the nearest integer if noround is not specified - PER GROUP, FOR ALL ARMS (incl results from art2bin)
 
@@ -988,7 +993,6 @@ if `npr'==2 & `nar'==1 {
 * (otherwise artbin, pr(.15 .15) margin(.1) aratio(1 1.5) vs. artbin, pr(.15 .15) margin(.1) aratio(2 3) doea not give the same answer:
 * the latter is over-rounded so gives a higher SS)
 
-
 if `allr1'!=1 {
 	local baseallr = `allr1'
 	forvalues r=1/`npr' {
@@ -996,9 +1000,6 @@ if `allr1'!=1 {
 	}
 	local totalallr = `totalallr'/`baseallr'
 }
-
-* Account for loss to follow up
-if !mi("`ltfu'") local n = `n' /(1 - `ltfu')
 
 	local nbygroup=`n'/`totalallr'
 	
@@ -1069,7 +1070,7 @@ di as text "Number of groups" _col(`off') as res "`npr'"
 if `ngroups' == 2 {
     di as text "Favourable/unfavourable outcome" _col(`off') as res "`trialoutcome'"
 	if `infer'==1 {
-		di as text _col(`off') "{it:Inferred by the program}"
+		di as res _col(`off') "{it:Inferred by the program}"
 *		di as text _col(`off') "{it:To override use the force option}"
 	}
 }
@@ -1115,7 +1116,7 @@ if `ssize'==0 {
  	return scalar power=`power'
  	local mess (designed)
 }
-if !mi("`ltfu'") di as text _n "Loss to follow up assumed:" _col(`off') as text "`ltfuperc'"
+if !mi("`ltfu'") di as text _n "Loss to follow up assumed:" _col(`off') as res "`ltfuperc'"
 di as text _n "Total sample size `mess'" _col(`off') as res `n' 
 di as text _n "Sample size per group `mess'" _col(`off') as res `ntable'
 di as text "Expected total number of events" _col(`off') as res "`Dtable'" " 

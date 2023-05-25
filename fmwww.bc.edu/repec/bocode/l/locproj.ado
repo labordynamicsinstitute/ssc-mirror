@@ -362,9 +362,11 @@ qui {
 		}
 
 ******************************************************************************************************************************************
-
+		fvexpand ``y'`h''
+		loc ytemp=r(varlist)
+		
 		`noisily' estout `y'`h', cells("b(label(Coefficient)) se(label(Std.Err.)) t(fmt(2) label(t-stat)) p(fmt(3) label(p-value)) ci_l ci_u") ///
-		substitute("`ltr'" "`ltrn'") nobase varwidth(20) title("`trn`h''") mlabels("") 
+		substitute("`ltr'" "`ltrn'" "``y'`h''" "`trn`h''") nobase varwidth(20) title("`trn`h''") mlabels("") 
 	}
 }
 

@@ -1,15 +1,15 @@
 {smcl}
-{* *! version 0.2 28oct2021}{...}
+{* *! version 0.4 23may2023}{...}
 {vieweralsosee "Main artbin help page" "artbin"}{...}
 {title:Title}
 
 {phang}
-{bf:What's new in artbin} {hline 2} Changes from {cmd:artbin} version 1.1.2 to version 2.0
+{bf:What's new in artbin} {hline 2} Changes from {cmd:artbin} version 1.1.2 to version 2.0.2
 
 {title:New features}
 
 {pstd}
-A {opt margin(#)} option for 2-arm trials has been included.
+A {opt margin(#)} option for 2-group trials has been included.
 {p_end}
 {pstd}
 The user can now specify whether the outcome is {opt favourable} or {opt unfavourable} for a
@@ -41,7 +41,7 @@ A loss to follow-up option is now available ({opt ltfu(#)}).
 accomodate the following changes. 
 
 {pstd}  The syntax for {cmd: artbin} has been updated to include a {opt margin(#)} option for 2-
-arm trials. For a non-inferiority/substantial-superiority trial the program will use {cmd:pr(p1 p2)} AND the new
+group trials. For a non-inferiority/substantial-superiority trial the program will use {cmd:pr(p1 p2)} AND the new
 option {opt margin(#)}.  For example, in the previous version ({cmd:artbin 1.1.2}) the syntax {cmd:artbin, pr(.2 .3) ni(1)} 
 will now be specified as {cmd:artbin, pr(.2 .2) margin(.1)}. The option {opt ni()} is now redundant.
 
@@ -51,7 +51,7 @@ will now be {cmd:artbin, pr(.1 .2) local}, for example.
 
 {pstd} The user is to identify whether the outcome is {opt favourable} or {opt unfavourable} in the context of a trial.  With this information
 plus the {opt margin} the program will then determine the type of trial (i.e. non-inferiority/substantial-superiority/superiority). If the user does
-specify {opt favourable/unfavourable} the program will check the assumptions, the not then the program will infer it.  The {opt force} 
+specify {opt favourable/unfavourable} the program will check the assumptions, if not then the program will infer it.  The {opt force} 
 option can be used to override the program's inference of the favourability status, for example in the design of observational studies.
 
 {pstd} The {opt wald} option has also been included for the Wald test, as an alternative to the default score test.
@@ -59,15 +59,17 @@ option can be used to override the program's inference of the favourability stat
 {pstd} Sample size per group is now reported, and rounding up to the nearest integer is performed per group. A {opt noround} option has been included for the case when the user does not want {cmd: artbin} to round the calculated sample size. 
 A loss to follow-up option is now available ({opt ltfu(#)}).
 
-{pstd} The option {opt conditional} always implies the {opt local} option as there is no conditional distant option available in {cmd:artbin}. If the {opt conditional} option is selected then the default non-local alternatives will 
-be changed to {opt local}.
+{pstd} The option {opt condit} always implies the {opt local} option as there is no conditional distant option available in {cmd:artbin}. If the {opt condit} option is selected then {opt local} will be used (instead of the default {opt distant}).
 
-{pstd} The allocation ratio calculation has been adjusted as sample size per group is now reported, and the expected number of events is calculated using the rounded sample size (unless the {opt noround} option for 
+{pstd} The allocation ratio reects the fact that sample size is now rounded upwards in
+each group rather than overall, and the expected number of events is calculated using the rounded sample size (unless the {opt noround} option for 
 calculated sample size is used).
 
 {pstd} Earlier versions of {cmd: artbin} required a number of yes/no options to be specified numerically,
 e.g. {opt onesided(1)} or {opt onesided(0)}. In updating the syntax, we have enabled the more standard options e.g. 
 {opt onesided} and {opt ccorrect}, but the numerical version of the syntax is retained if the user wishes to use it.
+
+{pstd} {opt onesided} is permitted for more than 2 groups if {opt trend} or {opt dose} is specified.
 
 {pstd} The number of groups is taken as the number of proportions in all cases and the {opt ngroups(#)} option is now redundant. 
 The mandatory option {opt pr()} is now a numlist instead of a string.
@@ -80,15 +82,15 @@ Minor formatting was also made to the existing allocation ratio, alpha, linear t
 version numbering output. Sample size per group is reported, and the returned values 
 have been streamlined to only include results as opposed to user-inputted options.
 
-{pstd} The text output has been changed from {it:p0} and {it:p1} to {it:p1} and {it:p2}.
-Therefore the control group event probability for non-inferiority trials is {it:p1}.  
+{pstd} The text output has been changed from {it:p0} and {it:p1} to {it:pi1} and {it:pi2}.
+Therefore the control group event probability for non-inferiority trials is {it:pi1}.  
 
 {title:Program structure}
 
 {pstd}
-{cmd:artbin} calls a subroutine {cmd:art2bin} for all 2-arm trials, which also allows for substantial-superiority
+{cmd:artbin} calls a subroutine {cmd:art2bin} for all 2-group trials, which also allows for substantial-superiority
 trials. Previously {cmd:art2bin} was only called for non-inferiority trials in {cmd:artbin},
-now it is called for all 2-arm trials. {cmd:art2bin} can be used as a standalone but we do not
+now it is called for all 2-group trials. {cmd:art2bin} can be used as a standalone but we do not
 recommend this.
 
 {title:Authors}

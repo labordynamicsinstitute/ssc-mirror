@@ -1,10 +1,10 @@
 {smcl}
-{* *! version 0.5 28oct2021}{...}
+{* *! version 0.7 23may2023}{...}
 {vieweralsosee "sampsi (if installed)" "sampsi"}{...}
 {vieweralsosee "power (if installed)" "power"}{...}
-{vieweralsosee "artbinwhatsnew" "artbin_whatsnew"}{...}
+{vieweralsosee "artbin_whatsnew" "artbin_whatsnew"}{...}
 {viewerjumpto "Description" "art##description"}{...}
-{viewerjumpto "Changes from artbin version 1.1.2 to version 2.0" "art##whatsnew"}{...}
+{viewerjumpto "Changes from artbin version 1.1.2 to version 2.0.1" "art##whatsnew"}{...}
 {viewerjumpto "References" "art##refs"}{...}
 {viewerjumpto "Author and updates" "art##updates"}{...}
 {viewerjumpto "Also see" "art##also_see"}{...}
@@ -24,11 +24,11 @@ a survival or a binary outcome.
 
 {pstd}
 {bf:ART} is a suite of programs for the calculation of sample size or power for complex clinical trial designs under a
-survival time or binary outcome.  The package is able to handle noninferiority/substantial-superiority 2-arm designs and superiority trials
+survival time or binary outcome.  The package is able to handle noninferiority/substantial-superiority 2-group designs and superiority trials
 with {it:k}-groups.
 
 
-{title:Changes from {bf:{help artbin:artbin}} version 1.1.2 to version 2.0}{marker whatsnew}
+{title:Changes from {bf:{help artbin:artbin}} version 1.1.2 to version 2.0.2}{marker whatsnew}
 
 {pstd} For the complete list of changes please see {bf:{help artbin_whatsnew:artbin_whatsnew}}.  The main changes are listed below.
 
@@ -36,11 +36,11 @@ with {it:k}-groups.
 {bf: New features:}
 
 {pstd}
-A {opt margin(#)} option for 2-arm trials has been included.
+A {opt margin(#)} option for 2-group trials has been included.
 {p_end}
 {pstd}
 The user can now specify whether the outcome is {opt favourable} or {opt unfavourable} for a
-2-arm trial.
+2-group trial.
 {p_end}
 {pstd}
 The {opt wald} option has also been included for the Wald test.
@@ -68,7 +68,7 @@ A loss to follow-up option is now available ({opt ltfu(#)}).
 accomodate the following changes. 
 
 {pstd}  The syntax for {cmd: artbin} has been updated to include a {opt margin(#)} option for 2-
-arm trials. For a non-inferiority/substantial-superiority trial the program will use {cmd:pr(p1 p2)} AND the new
+group trials. For a non-inferiority/substantial-superiority trial the program will use {cmd:pr(p1 p2)} AND the new
 option {opt margin(#)}.  For example, in the previous version ({cmd:artbin 1.1.2}) the syntax {cmd:artbin, pr(.2 .3) ni(1)} 
 will now be specified as {cmd:artbin, pr(.2 .2) margin(.1)}. The option {opt ni()} is now redundant.
 
@@ -78,7 +78,7 @@ will now be {cmd:artbin, pr(.1 .2) local}, for example.
 
 {pstd} The user is to identify whether the outcome is {opt favourable} or {opt unfavourable} in the context of a trial.  With this information
 plus the {opt margin} the program will then determine the type of trial (i.e. non-inferiority/substantial-superiority/superiority). If the user does
-specify {opt favourable/unfavourable} the program will check the assumptions, the not then the program will infer it.  The {opt force} 
+specify {opt favourable/unfavourable} the program will check the assumptions, if not then the program will infer it.  The {opt force} 
 option can be used to override the program's inference of the favourability status, for example in the design of observational studies.
 
 

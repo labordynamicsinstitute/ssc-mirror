@@ -48,6 +48,8 @@ the horizon in the case that the shock variable(s) is included with a lag and no
 the response at {it:hor = 0} would be equal to 0 and an extra period will be added to final horizon period. {p_end}
 
 
+{p 4 8 2}Note: {cmd:locproj} requires package {cmd:estout} to be installed. See help {help estout} or click on {stata "ssc install estout"} to install.{p_end}
+
 {marker syntax}{...}
 {title:Syntax}
 
@@ -198,7 +200,8 @@ include them alongside the rest of {cmd:locproj} options.{p_end}
 that must change with every step/horizon of the IRF {it:h = 0...hor}.{p_end}
 
 {synopt:{opt noi:sily}}If this option is specified, the command displays a regression output for each one of the horizons. If this option 
-is not specified the command only returns a matrix with the IRF, its standard error and the confidence bands. {p_end}
+is not specified the command only returns a matrix with the IRF, its standard error and the confidence bands. {cmd:locproj} requires 
+package {cmd:estout} to be installed. See help {help estout} or click on {stata "ssc install estout"} to install {p_end}
 
 
 {syntab:{bf:IRF Options:}}

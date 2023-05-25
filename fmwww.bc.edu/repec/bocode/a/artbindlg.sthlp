@@ -1,11 +1,12 @@
 {smcl}
-{* *! version 1.10 10nov2021}{...}
+{* *! version 1.13 23may2023}{...}
 {* 23dec2014}{...}
 {vieweralsosee "sampsi (if installed)" "sampsi"}{...}
 {viewerjumpto "Definitions and usage" "artbindlg##def"}{...}
 {viewerjumpto "Combination of options" "artbindlg##combinationsofoptions"}{...}
 {viewerjumpto "Examples" "artbindlg##examples"}{...}
 {viewerjumpto "References" "artbindlg##refs"}{...}
+{viewerjumpto "Citation" "artbindlg##citation"}{...}
 {viewerjumpto "Authors" "artbindlg##authors"}{...}
 {viewerjumpto "Also see" "artbindlg##alsosee"}{...}
 
@@ -19,32 +20,33 @@
 {title:Definitions and usage}
 
 {p 0 4}
-{cmd:Proportions} specifies the proportions to be compared. {it: p1} is the anticipated proportion in the control
-arm and {it: p2}, {it:p3}, ... are the anticipated proportions in the
-intervention arms.
+{cmd:Anticipated probabilities} specifies the anticipated probabilities to be compared. {it: pi1^a} is the anticipated probability in the control
+group and {it: pi2^a}, {it:pi3^a}, ... are the anticipated probabilities in the
+treatment groups.
 {p_end}
 
 {p 0 4}
-{cmd:Margin (NI/SS only)} is used with two-arm trials and must be specified if a non-inferiority or
+{cmd:Margin (NI/SS only)} is used with two-group trials and must be specified if a non-inferiority or
 substantial-superiority trial is being designed. The default margin is {it:# = 0},
 denoting a superiority trial.  If the event of interest is unfavourable, the null hypothesis
-for all these designs is {it:p2 – p1 >= m}, where {it:m} is the
-pre-specified margin. The alternative hypothesis is {it:p2 – p1 < m}.
-{it:m < 0} denotes a non-inferiority trial, whereas {it:m > 0} denotes
-a substantial-superiority trial. If on the other hand the event of interest is favourable, the above
+for all these designs is {it:pi2 – pi1 >= m}, where {it:m} is the
+pre-specified margin. The alternative hypothesis is {it:pi2 – pi1 < m}.
+{it:m > 0} denotes a non-inferiority trial, whereas {it:m < 0} denotes
+a substantial-superiority trial.  If on the other hand the event of interest is favourable, the above
 inequalities are reversed. The null hypothesis for all these designs
-is then {it:p2 – p1 <= m} and the alternative hypothesis is
-{it:p2 – p1 > m}. {it:m > 0} denotes a non-inferiority trial,
-while {it:m < 0} denotes a substantial-superiority trial.  The hypothesised margin for the 
-difference in proportions, {it:#}, must lie between -1 and 1. If {it:p1 + m} 
-(the null value of {it:p2}) lies outside (0,1), a warning is issued.
+is then {it:pi2 – pi1 <= m} and the alternative hypothesis is
+{it:pi2 – pi1 > m}. {it:m < 0} denotes a non-inferiority trial,
+while {it:m > 0} denotes a substantial-superiority trial.
+The hypothesised margin for the difference in anticipated probabilities, {it:#}, must lie
+between -1 and 1. 
 {p_end}
 
 {p 0 4}
-{cmd:Favourable or Unfavourable} are used with two-arm trials
-to specify whether the outcome is favourable or unfavourable.
+{cmd:Favourable or Unfavourable} are used with two-group trials
+to specify whether the outcome is {opt favourable} or {opt unfavourable}.
 If either option is used, {cmd:artbin} checks the assumptions;
-otherwise, it infers the favourability status.
+otherwise, it infers the favourability status.  Both American and 
+English spellings are allowed.
 {p_end}
 
 {p 0 4}
@@ -71,7 +73,7 @@ power.
 
 {p 0 4}
 {cmd:Dose} A quantity assigned to each group which represents the 
-dose of some medication or other measure of the level of the intervention 
+dose of some medication or other measure of the level of the treatment 
 received by the subjects in that group. If you specify a dose level for any 
 group, you must specify a level for every group. A {opt trend} test is assumed with 
 score proportional to the dose levels.
@@ -89,8 +91,10 @@ to follow-up is 20%, then 0.2 should be inputted.
 {p_end}
 
 {p 0 4}
-{cmd:One-sided test} specifies that the trial will be analysed using a one-sided significance test.
-The default is a two-sided test.
+{cmd:One-sided test} is used for two-group trials and for trend tests in multi-group trials. 
+It specifies that the significance level given by {opt alpha()} is one-sided. 
+Otherwise, the value of {opt alpha()} is halved to give a one-sided significance level. 
+Thus for example {opt alpha(0.05)} is exactly the same as {opt alpha(0.025)} {opt onesided}.
 {p_end}
 
 {p 0 4}
@@ -152,11 +156,11 @@ in {opt aratios()} than in {opt pr()}.
 
 {hi:Example 1}
 
-Proportions		0.2 0.3         Margin (NI/SS only)     0
-Favourable              Yes             Allocation ratios	[Default]
-Specify power		Yes             Power or N		0.8	
-Alpha			0.05            One-sided test	        No 
-Trend		        No              Dose                    Ltfu   
+Anticipated probabilities  0.2 0.3      Margin (NI/SS only)     0
+Favourable                 Yes          Allocation ratios	[Default]
+Specify power		   Yes          Power or N		0.8	
+Alpha			   0.05         One-sided test	        No 
+Trend		           No           Dose                    Ltfu   
 
     
 Score test (default)  Yes   Wald test No   Local alternatives No   Conditional test No  
@@ -164,9 +168,9 @@ Continuity Correction No    Do not round No
              
 {hi:Result}
 
-. artbin, pr(.2 .3) margin(0) alpha(0.05) power(0.8) fav
+. artbin, pr(0.2 0.3) alpha(0.05) power(0.8) fav
 
-ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.0 08nov2021)
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.0.2 23may2023)
 ------------------------------------------------------------------------------
 A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
 Ella Marley-Zagar and Ian White
@@ -177,12 +181,12 @@ Number of groups                       2
 Favourable/unfavourable outcome        favourable
 Allocation ratio                       equal group sizes
 Statistical test assumed               unconditional comparison of 2
-                                        binomial proportions P1 and P2
+                                        binomial proportions
                                         using the score test
 Local or distant                       distant
 Continuity correction                  no
 
-Anticipated event probabilities        0.200 , 0.300 
+Anticipated event probabilities        0.200  0.300 
 
 Alpha                                  0.050 (two-sided)
                                        (taken as .025 one-sided)
@@ -194,16 +198,17 @@ Sample size per group (calculated)     294 294
 Expected total number of events        147.00   
 ------------------------------------------------------------------------------
 
+
 Machin et. al. 2008 (Table 3.1, p. 38) gives n = 294 per group.
 
 
 {hi:Example 2}
 
-Proportions		0.1 0.2 0.3 0.4  Margin (NI/SS only)    [Default]
-Favourable              n/a              Allocation ratios	[Default]
-Specify power		Yes              Power or N		0.9	
-Alpha			0.05             One-sided test	        No 
-Trend		        No               Dose                   Ltfu    
+Anticipated probabilities  0.1 0.2 0.3 0.4  Margin (NI/SS only)  [Default]
+Favourable                 n/a              Allocation ratios	 [Default]
+Specify power		   Yes              Power or N		 0.9	
+Alpha			   0.05             One-sided test	 No 
+Trend		           No               Dose                 Ltfu    
 
     
 Score test (default)  Yes   Wald test No   Local alternatives Yes   Conditional test No  
@@ -211,9 +216,9 @@ Continuity Correction No    Do not round No
 
 {hi:Result}
 
-. artbin, pr(.1 .2 .3 .4) local alpha(0.05) power(0.9)
+. artbin, pr(0.1 0.2 0.3 0.4) local alpha(0.05) power(0.9)
 
-ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.0 08nov2021)
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.0.2 23may2023)
 ------------------------------------------------------------------------------
 A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
 Ella Marley-Zagar and Ian White
@@ -229,7 +234,7 @@ Statistical test assumed               unconditional comparison of 4
 Local or distant                       local
 Continuity correction                  no
 
-Anticipated event probabilities        0.100, 0.200, 0.300, 0.400
+Anticipated event probabilities        0.100 0.200 0.300 0.400
 
 Alpha                                  0.050 (two-sided)
 Power (designed)                       0.900
@@ -245,9 +250,9 @@ Expected total number of events        54.00
 
 As Example 2 but with Trend checked (doses unspecified)
 
-. artbin, pr(.1 .2 .3 .4) local alpha(0.05) power(0.9) trend
+. artbin, pr(0.1 0.2 0.3 0.4) local alpha(0.05) power(0.9) trend
 
-ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.0 08nov2021)
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.0.2 23may2023)
 ------------------------------------------------------------------------------
 A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
 Ella Marley-Zagar and Ian White
@@ -264,7 +269,7 @@ Local or distant                       local
 Continuity correction                  no
 Linear trend test: doses are           1, 2, 3, 4
 
-Anticipated event probabilities        0.100, 0.200, 0.300, 0.400
+Anticipated event probabilities        0.100 0.200 0.300 0.400
 
 Alpha                                  0.050 (two-sided)
 Power (designed)                       0.900
@@ -280,19 +285,19 @@ Expected total number of events        40.00
 
 As Example 1 but assuming a non-inferiority design and wald test
 
-Proportions		0.2 0.2         Margin (NI/SS only)     0.1
-Unfavourable            Yes             Allocation ratios	[Default]
-Specify power		Yes             Power or N		0.8	
-Alpha			0.05            One-sided test	        No 
-Trend		        No              Dose                    Ltfu   
+Anticipated probabilities  0.2 0.2      Margin (NI/SS only)     0.1
+Unfavourable               Yes          Allocation ratios	[Default]
+Specify power		   Yes          Power or N		0.8	
+Alpha			   0.05         One-sided test	        No 
+Trend		           No           Dose                    Ltfu   
 
     
 Score test (default)  No   Wald test Yes   Local alternatives No   Conditional test No  
 Continuity Correction No    Do not round No
 
-. artbin, pr(.2 .2) margin(.1) alpha(0.05) power(0.8) unf wald
+. artbin, pr(0.2 0.2) margin(0.1) alpha(0.05) power(0.8) unf wald
 
-ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.0 08nov2021)
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.0.2 23may2023)
 ------------------------------------------------------------------------------
 A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
 Ella Marley-Zagar and Ian White
@@ -303,14 +308,14 @@ Number of groups                       2
 Favourable/unfavourable outcome        unfavourable
 Allocation ratio                       equal group sizes
 Statistical test assumed               unconditional comparison of 2
-                                        binomial proportions P1 and P2
+                                        binomial proportions
                                         using the wald test
 Local or distant                       distant
 Continuity correction                  no
-Null hypothesis H0:                    H0: p2-p1>= .1
-Alternative hypothesis H1:             H1: p2-p1< .1
+Null hypothesis H0:                    H0: pi2 - pi1 >= .1
+Alternative hypothesis H1:             H1: pi2 - pi1 < .1
 
-Anticipated event probabilities        0.200 , 0.200 
+Anticipated event probabilities        0.200  0.200 
 
 Alpha                                  0.050 (two-sided)
                                        (taken as .025 one-sided)
@@ -329,9 +334,13 @@ Expected total number of events        100.80
 {phang}
 Machin, D., Campbell, M.J., Tan S.B. and Tan S.H. 2008. Sample Size Tables for Clinical Studies, Third Edition. Wiley.
 
-{phang}
-Marley-Zagar E, White IR, Royston P, Barthel F M-S, Parmar M, Babiker AG. {cmd: artbin}: Extended sample size for randomised 
-trials with binary outcomes.  Stata Journal, in preparation.
+{marker citation}{...}
+{title:Citation}
+
+{phang}If you find this command useful, please cite it as below: 
+
+{phang}Ella Marley-Zagar, Ian R. White, Patrick Royston, Friederike M.-S. Barthel, Mahesh K B Parmar, Abdel G. Babiker. artbin: Extended sample size for randomised trials with binary outcomes. Stata J 2023:1;24-52.
+{browse "https://journals.sagepub.com/doi/pdf/10.1177/1536867X231161971"}
 
 {marker authors}{...}
 {title:Authors and Updates}

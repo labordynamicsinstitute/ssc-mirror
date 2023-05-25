@@ -1,5 +1,5 @@
 {smcl}
-{* 17apr2018}{...}
+{* 23may2023}{...}
 
 {title:Title}
 
@@ -13,6 +13,12 @@
 This file summarizes changes made to ART since its general release on 01nov2004.
 Please refer to individual ART dialogs and help files for further information.
 Most recent changes are listed first.
+
+
+{hline 8} {hi:update 23may2023} {hline}
+
+{phang}
+1.	Substantial update to {help artbin}.  See {help artbin_whatsnew} for details.
 
 
 {hline 8} {hi:update 17apr2018} {hline}
@@ -134,3 +140,9 @@ trials in which several experimental arms are compared with a control arm.
 
 {pstd}Patrick Royston, MRC Clinical Trials Unit at UCL{break}
 {browse "mailto:j.royston@ucl.ac.uk":Patrick Royston}
+
+{pstd}Ella Marley-Zagar, MRC Clinical Trials Unit at UCL{break}
+{browse "mailto:e.marley-zagar@ucl.ac.uk":Ella Marley-Zagar}
+
+{pstd}Ian White, MRC Clinical Trials Unit at UCL{break}
+{browse "mailto:ian.white@ucl.ac.uk":Ian White}

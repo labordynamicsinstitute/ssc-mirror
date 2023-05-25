@@ -24,7 +24,7 @@ d KW: treatment cross-over
 d
 d Requires: Stata version 9
 d
-d Distribution-Date: 20220528
+d Distribution-Date: 20230524
 d
 d Author: Abdel Babiker,  MRC Clinical Trials Unit at UCL
 d Support: email a.babiker@@ucl.ac.uk
@@ -64,3 +64,4 @@ f artsurvdlg.sthlp
 f artwhatsnew.sthlp
 f artbin_whatsnew.sthlp
 f ../_/_artset.idlg
+f artbin_examples.do
