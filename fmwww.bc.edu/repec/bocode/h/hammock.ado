@@ -1,8 +1,10 @@
 program define hammock
-*! 1.2.2    Jan 27, 2023: minbarfreq option added
+*! 1.2.4   May 24, 2023: label_min_dist option
 	version 14.2
 	syntax varlist [if] [in], [  Missing BARwidth(real 1) MINBARfreq(int 1) /// 
-		hivar(str) HIVALues(numlist  missingokay) SPAce(real 0.0) LABel labelopt(str) SAMEscale(varlist) ///
+		hivar(str) HIVALues(numlist  missingokay) SPAce(real 0.0) ///
+		LABel labelopt(str) label_min_dist(real 3.0) ///
+		SAMEscale(varlist) ///
 		ASPECTratio(real 0.72727) COLorlist(str) shape(str) * ]
 
 	confirm numeric variable `varlist'
@@ -78,6 +80,7 @@ program define hammock
 	if `same' local addtmp = `"samescale(`samescale')"'  // if `same' specify this option
 	transform_variable_range `varlist', same(`same') addlabel(`addlabel') ///
 		rangeexpansion(`rangeexpansion') mat_label_coord("`label_coord'") miss(`missing') `addtmp'
+	if (`addlabel')  decide_label_too_close ,  mat_label_coord("`label_coord'") min_distance(`label_min_dist')
 	
 	* construct xlabel
 	local i=1
@@ -231,8 +234,8 @@ program  compute_addlabeltext, rclass
 		tokenize `label_text', parse(`separator')
 		local addlabeltext="text("   // no space between "text" and "("
 		forval j=1/`n_labels' { 
-			if (`mat_label_coord'[`j',2] !=0) { 
-				/*crucial if matrix has empty rows, otherwise graph disappears*/
+			if (`mat_label_coord'[`j',2] !=0 &  `mat_label_coord'[`j',3]!=0) { 
+				/* 2nd col==0 crucial if matrix has empty rows, otherwise graph disappears*/
 				local pos=`j'*2-1  /* positions 1,3,5,7, ...  */
 				// text to plot ="``pos''"      y = `mat_label_coord'[`j',1]        x= `mat_label_coord'[`j',2]  
 				// the matrix needs to be evaluated as  `=matrixelem'  ; otherwise just the name of the matrix elem appears
@@ -246,11 +249,12 @@ program  compute_addlabeltext, rclass
 		return local addlabeltext=`"`addlabeltext'"' // does not allow empty "" returns
 end 
 /**********************************************************************************/
-* creates matrix with coordinates for labels
+* creates matrix with coordinates for labels 
 * on exit: label_text : single string separated by `separator; of all labels
-* on exit: label_coord: matrix with one row for each label and two columns containing x and y coordinates
+* on exit: label_coord: matrix with one row for each label and two columns containing x and y coordinates, 
+*      and "." for the first label of a new variable
 *      where the xcoordinates range from 1...(#variables( and the y coordinates from 1..(# labels for corresponding variable)
-* on exit: label_coord: a single string with "y1 x1 y2 x2 ... y_nlabel x_nlabel" . For later use with tokenize
+* on exit: label_text: a single string with "y1 x1 y2 x2 ... y_nlabel x_nlabel". For later use with tokenize
 program define list_labels, rclass
    version 7
    syntax varlist , separator(string)
@@ -260,7 +264,7 @@ program define list_labels, rclass
    n_level_program `varlist'
    local n_level= r(n_level)
       
-   matrix `label_coord'=J(`n_level',2,0)
+   matrix `label_coord'=J(`n_level',3,0)
    local label_text ""
    local i=0   /* the ith variable (for x-axis) */
    local offset=0  /* sum of the number of levels in previous x-variables */
@@ -275,8 +279,16 @@ program define list_labels, rclass
 		local w=`one_ylabel'[`j',1]
       	matrix `label_coord'[`offset'+`j',2]=`i'
 		matrix `label_coord'[`offset'+`j',1]=`w'
+		if (`j'==1) {  
+			* This marks when a new variable starts. Needed in decide_labels_too_close
+			matrix `label_coord'[`offset'+`j',3]=.
+		}
 		if "`g'"!="" {
 			local l : label `g' `w'
+			if ("`l'"=="") {
+				di as error "A label value for `g' has only white space, creating problems"
+				di as res ""  // any subsequent statements are in result mode (in black)
+			}
 			local label_text "`label_text'`l'`separator'"
 		}
 		else {	
@@ -287,7 +299,6 @@ program define list_labels, rclass
       }
       local offset=`offset'+`n_one_ylabel'
    }
- 
    return matrix label_coord `label_coord'
    return local label_text `"`label_text'"' 
 
@@ -1066,6 +1077,38 @@ program transform_variable_range
 		
 	} 	
 end
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// purpose :  	decide whether the  label distance on the y-axis is too close. If yes, set mat_label_coord[,3]==0
+//				This has to happen *after* transforming variables to have a range between 0 and 100
+// input :      mat_label_coord[,3] has "." for the first element of each variable (where no distances are computed)
+//              min_distance: minimum distance between labels  (on a scale from 0-100)
+// assume :		labels are sorted in ascending order
+// output:      mat_label_coord[,3] contains decision (0= do not plot, 1= plot, .= bottom most label )
+program decide_label_too_close 
+	version 16.0
+	syntax ,  mat_label_coord(str) min_distance(real)
+
+	local n_labels = rowsof(`mat_label_coord') 
+	local add_dist=0  // previous distance to previously plotted label
+	forval j = 2 / `n_labels' {
+		if (`mat_label_coord'[`j',3]!=.) {
+			/* if not the first label of a new variable,  distance = y_current - y_last */
+			local distance= `add_dist' + (`mat_label_coord'[`j',1]- `mat_label_coord'[`j'-1,1])
+			if (`distance'<`min_distance') {
+				matrix `mat_label_coord'[`j',3]=0  // do not plot
+				local add_dist= `distance' // distance to previously plotted label
+			}
+			else {
+				matrix `mat_label_coord'[`j',3]= 1
+				local add_dist=0
+			} 
+		 }
+		else {
+			local add_dist=0  // reset add_dist for new variable
+		}
+	}
+	
+end 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //Version 
 //*! 1.0.0   21 February 2003 Matthias Schonlau 
@@ -1082,3 +1125,5 @@ end
 //*! 1.2.0    August 11, 2022: shape rectangle added 
 //*! 1.2.1    Nov 15, 2022: rectangle is default shape, space allowed w/o label, update helpfile
 //*! 1.2.2    Jan 27, 2023: minbarfreq option added
+//*! 1.2.3    Apr 12, 2023: Added warning if label value contains only white space
+//*! 1.2.4   May 24, 2023: label_min_dist option

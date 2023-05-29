@@ -1,9 +1,9 @@
-*!version5.1 03Dec2021
+*!version5.2 23May2023
 
 /* -----------------------------------------------------------------------------
 ** PROGRAM NAME: xtgeebcv
-** VERSION: 5.1
-** DATE: DEC 03, 2021
+** VERSION: 5.2
+** DATE: MAY 23, 2023
 ** -----------------------------------------------------------------------------
 ** CREATED BY: JOHN GALLIS, FAN LI, LIZ TURNER
 ** -----------------------------------------------------------------------------
@@ -30,6 +30,7 @@
 			Apr 05, 2021 - Modifying the trace in the MBN correction so it lines up with what is in Morel et al. (2003) rather than what is in Li and Redden (2015)
 						 - Only slightly changes the standard error.
 			Dec 03, 2021 - Program wasn't allowing for intercept-only models. Now updated to allow for intercept-only model.
+			May 23, 2023 - Updating program to allow for different ways of computing degrees of freedom
 **			
 ** -----------------------------------------------------------------------------
 ** OPTIONS: SEE HELP FILE
@@ -41,7 +42,7 @@ program define xtgeebcv, eclass
 	
 	#delimit ;
 	syntax varlist(fv min=1) [if] [in], 
-		cluster(varname) [family(string) link(string) stderr(string) statistic(string) corr(string) eform *]
+		cluster(varname) [family(string) link(string) stderr(string) statistic(string) corr(string) dfmethod(string) dfspec(integer 0) eform *]
 	;
 	#delimit cr
 	
@@ -55,6 +56,8 @@ program define xtgeebcv, eclass
 	
 	if "`statistic'" == "" local statistic "t"
 	if "`corr'" == "" local corr "exch"
+	if "`dfmethod'" == "" local dfmethod "cluster"
+	
 	
 	/* \\\\\ CREATING TEMPFILE SO THAT THE USER GETS THEIR FULL DATASET BACK AT THE END \\\\
 	\\\\\\\\ EVEN IF MISSING VALUES ARE DELETED \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ */
@@ -91,8 +94,27 @@ program define xtgeebcv, eclass
 		local i = `i' + 1
 	}
 	
+	*save varlist for dropping extraneous variables later
+	local newvarlistb = "`newvarlist'"
+	
 	*newvarlist only contains non-zero parameters
 	local newvarlist: list newvarlist - subtractlist
+	
+	* number of cluster-level covariates for degrees of freedom adjustment
+	preserve
+	collapse (sd) `newvarlist', by(`cluster')
+	qui drop `cluster'
+	collapse (sum) `newvarlist'
+	foreach var in `newvarlist' {
+		if `var' != 0 {
+			qui drop `var'
+		}
+	}
+	qui des, short
+	local ncoef2 `r(k)'
+	*add 1 for the intercept
+	local ncoef2 = `ncoef2' + 1
+	restore
 	
 	/* \\\\\ INFORMATIONAL MESSAGES \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ */
 	local famlink: list family | link
@@ -233,6 +255,8 @@ program define xtgeebcv, eclass
 		qui mkmat _first _last, matrix(beginend)
 	restore
 	
+	
+	
 	/* \\\\\\\\\\\\\\\\\\\\\\\\\\\ RUN MATA PROGRAM \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ */
 	mata: gee("`newvarlist'","beginend","clust","Beta","Beta2",`wcorr',`phi',"`famlink'")
 	/* \\\\\\\ ADD INTERCEPT TO END OF VARLIST \\\\\\\\\\\\ */
@@ -254,7 +278,22 @@ program define xtgeebcv, eclass
 		if "`stderr'" == "`bcv'" {
 			
 			/* \\\\\\\ DEGREES OF FREEDOM FOR THE T DISTRIBUTION \\\\\\\\ */
-			local dof=nclust[1,1]-ncoef[1,1]
+			if "`dfmethod'" == "all" {
+				local dof=nclust[1,1]-ncoef[1,1]
+			}
+			else if "`dfmethod'" == "cluster" {
+				local dof=nclust[1,1]-`ncoef2'
+			}
+			else if "`dfmethod'" == "specify" {
+				local dof=nclust[1,1]-`dfspec'
+			}
+			else {
+				di as error "Invalid df method selected; reverting to cluster-level covariates"
+				local dof=nclust[1,1]-`ncoef2'
+			}
+			
+			local nclust = nclust[1,1]
+			local ncoef = ncoef[1,1]
 
 			/* \\\\\\ UPDATE STANDARD ERRORS WITH BIAS CORRECTION \\\\\\ */
 			
@@ -397,7 +436,22 @@ program define xtgeebcv, eclass
 				if "`bcv'" != "rb" {
 					di as text " "
 					di as text "`name' bias-corrected standard errors"
-					di as text "t-statistic with K - p degrees of freedom"
+					if "`dfmethod'" == "all" {
+						di as text "t-statistic with K - p (`nclust' - `ncoef' = `dof') degrees of freedom"
+						di as text "where K is the number of clusters and p is the number of covariates plus the intercept"
+					}
+					else if "`dfmethod'" == "cluster" {
+						di as text "t-statistic with K - p (`nclust' - `ncoef2' = `dof') degrees of freedom"
+						di as text "where K is the number of clusters and p is the number of cluster-level covariates plus the intercept"
+					}
+					else if "`dfmethod'" == "specify" {
+						di as text "t-statistic with K - p (`nclust' - `dfspec' = `dof') degrees of freedom"
+						di as text "where K is the number of clusters and p is specified by the user"
+					}
+					else {
+						di as text "t-statistic with K - p (`nclust' - `ncoef2' = `dof') degrees of freedom"
+						di as text "where K is the number of clusters and p is the number of cluster-level covariates plus the intercept"
+					}
 					if `dof' <= 0 {
 						di as error "Warning: Degrees of freedom for t distribution ≤ 0"
 					}
@@ -405,7 +459,22 @@ program define xtgeebcv, eclass
 				else {
 					di as text " "
 					di as text "Robust standard errors not multiplied by √K/(K-1)"
-					di as text "t-statistic with K - p degrees of freedom"
+					if "`dfmethod'" == "all" {
+						di as text "t-statistic with K - p (`nclust' - `ncoef' = `dof') degrees of freedom"
+						di as text "where K is the number of clusters and p is the number of covariates plus the intercept"
+					}
+					else if "`dfmethod'" == "cluster" {
+						di as text "t-statistic with K - p (`nclust' - `ncoef2' = `dof') degrees of freedom"
+						di as text "where K is the number of clusters and p is the number of cluster-level covariates plus the intercept"
+					}
+					else if "`dfmethod'" == "specify" {
+						di as text "t-statistic with K - p (`nclust' - `dfspec' = `dof') degrees of freedom"
+						di as text "where K is the number of clusters and p is specified by the user"
+					}
+					else {
+						di as text "t-statistic with K - p (`nclust' - `ncoef2' = `dof') degrees of freedom"
+						di as text "where K is the number of clusters and p is the number of cluster-level covariates plus the intercept"
+					}
 					if `dof' <= 0 {
 						di as error "Warning: Degrees of freedom for t distribution ≤ 0"
 					}
@@ -442,13 +511,19 @@ program define xtgeebcv, eclass
 		exit 198
 	}
 	
+	*dropping extraneous variables to output dataset
+	foreach var in `newvarlistb' {
+		if substr("`var'",1,3) == "_x_" {
+			drop `var'
+		}
+	}
+	
 end
 
 
 /* |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 |||||||||||||||||||| MATA PROGRAM ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| */
-capture mata: mata drop gee()
 mata:
 matrix gee(string scalar newvarlist, string scalar beginend, string scalar cluster, string scalar Beta, string scalar Beta2, scalar wcorr, scalar phi, string scalar famlink) {
 	

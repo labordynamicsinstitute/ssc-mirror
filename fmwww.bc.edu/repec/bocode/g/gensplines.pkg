@@ -1,0 +1,21 @@
+d 'GENSPLINES': module to generate various spline basis functions
+d
+d   gensplines calculates various types of spline basis functions.
+d This includes splines based on truncated powers, restricted cubic
+d splines, B-splines, M-splines, I-splines and, natural splines. 
+d In addition, gensplines will calculate derivatives and integrals
+d of the spline functions. There are various options to control to
+d number and location of the knots.Keywords: survival, survival
+d function, hazard function 
+d
+d
+d Requires: Stata version 16.1
+d
+d Distribution-Date: 20230528
+d
+d Author: Paul Lambert, University of Leicester
+d Support: email paul.lambert@@le.ac.uk
+d
+f gensplines.ado
+f ../l/lgensplines.mlib
+f gensplines.sthlp

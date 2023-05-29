@@ -1,0 +1,26 @@
+d 'POWER_LOA': module to compute power and sample size for limits of agreement (LOA) analysis
+d
+d  power loa computes sample size at a specified power, and power
+d at a specified sample size, for Bland and Altman's (1986) limits
+d of agreement (LOA) analysis, according to the method developed by
+d Lu et al. (2016). Briefly, upper and lower confidence limits are
+d computed for both upper and lower LOAs. If the maximum allowable
+d mean difference (delta) falls between the upper confidence limit
+d of the upper LOA and the lower confidence limit of the lower LOA,
+d the two measurements are considered to be in agreement.
+d Otherwise, they are considered not to be in agreement. The
+d results produced by power loa are identical to those produced by
+d the PASS Sample Size Software and the R package blandPower.	
+d
+d KW:  limits of agreement; Bland and Altman plot; Sample size; Power
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20230528
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f power_cmd_loa.ado
+f power_cmd_loa_init.ado
+f power_loa.sthlp

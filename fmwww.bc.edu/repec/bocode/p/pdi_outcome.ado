@@ -1,3 +1,4 @@
+*! version 1.1, Chao Wang, 24/05/2023
 *! version 1.0, Chao Wang, 25/05/2022
 * calculates contribution to polytomous discrimination index (PDI) for a specific level of outcome
 * see: Dover, DC, Islam, S, Westerhout, CM, Moore, LE, Kaul, P, Savu, A. Computing the polytomous discrimination index. Statistics in Medicine. 2021; 40: 3667– 3681. https://doi.org/10.1002/sim.8991
@@ -70,7 +71,7 @@ frame `_temp' {
 
 
 tempname freq
-qui tab `depvar', matcell(`freq')
+qui tab `depvar' if `touse', matcell(`freq')
 local combinations=1
 forvalues i=1/`num_outcomes' {
 	local combinations=`combinations'*`freq'[`i',1]

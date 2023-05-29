@@ -1,6 +1,6 @@
 *! version 1.0.4  07oct2022  I I Bolotov
 program define arimaauto, rclass byable(recall)
-	version 15.0
+	version 15.1
 	/*
 		Finds the best [S]ARIMA[X] model with the help of the Hyndman-Khandakar 
 		algorithm through stepwise traversing of the model space or a bulk      

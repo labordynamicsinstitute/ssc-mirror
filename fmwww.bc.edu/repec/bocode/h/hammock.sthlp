@@ -33,6 +33,7 @@ help for {hi:hammock}{right:{hi: Matthias Schonlau}}
 {synopt :{opt spa:ce(real)}} Control fraction of space allocated to labels rather than to graph elements {p_end}
 {synopt :{opt bar:width(real)}} Change width of the plot elements to reduce clutter {p_end}
 {synopt :{opt minbar:freq(int)}} Specify minimum bar width {p_end}
+{synopt :{opt label_min_dist(real)}} Specify minimum distance between two labels on the same axis{p_end}
 {synopt :{opt labelopt(str)}} Pass options to {it:{help added_text_options}}, e.g. to manipulate label text size{p_end}
 
 {syntab :Other options}
@@ -146,6 +147,19 @@ Space can be removed by using negative values as in {it:space(-0.1)}.
  {pmore}
  During highlighting, bars may consist of multiple segments with different colors. 
  In that case, {it:minbarfreq} is applied to each color segment separately.
+  
+{phang}
+{opt label_min_dist} specifies the minimum distance between two labels on the same axis.
+A label is associated with each unique value of a variable.  
+When (numerical) variables have values close to each other, overplotting of labels may occur.  
+This option prevents overplotting by selectively not plotting some labels. 
+The bottom most label is always plotted, and any additional label above is only plotted if 
+it is at least {it:label_min_dist} away from the closest label below.  
+Labels are plotted on a scale from 0 (bottom label) to 100 (top label). 
+By default, a label must be at least 3 units (out of 100) away from the closest label below.
+Specifying {it:label_min_dist=0} will plot all labels.
+Specifying {it:label_min_dist=100} will plot only the bottom and the top label.
+This option has no effect unless {it:label} is specified.
   
 {phang}
 {opt labelopt} specifies optional arguments to the labels.

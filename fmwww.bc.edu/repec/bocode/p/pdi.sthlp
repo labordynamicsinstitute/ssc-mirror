@@ -1,5 +1,6 @@
 {smcl}
 {* *! version 1.0 Chao Wang 25/05/2022}{...}
+{* *! version 1.1 Chao Wang 24/05/2023}{...}
 {cmd:help pdi}
 {hline}
 
@@ -20,7 +21,10 @@ PDI is a measure that extends the well-known binary discrimination measure c-sta
 
 {pstd}
 Overall and PDI for each outcome are calculated. The {varlist}  
-must include at least two variables: the outcome variable as the first variable with outcome categories in the format of 1, 2, 3... etc. This  is followed by the predictions for each category such as pr1, pr2, pr3... etc.
+must include at least two variables: the outcome variable as the first variable with outcome categories in the format of 1, 2, 3... etc. This is followed by the predictions for each category such as pr1, pr2, pr3... etc.
+
+{pstd}
+The program may fail if there are too many distinct values of predicted probabilities, due to the matrix dimension limit in Stata. If this occurs, try doing some rounding for the prediction variables.
 
 {title:Examples}
 

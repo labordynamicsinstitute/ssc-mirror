@@ -55,7 +55,7 @@ p pcpanel module to perform power calculations for randomized experiments with p
 p pctrim module to trim variables based on percentiles
 p pdc module for computing the Proportion of Days Covered (of a medication)
 p pdfplot module to Plot a Distribution's Probability Density Function
-p pdi module  to calculate the polytomous discrimination index (PDI)
+p pdi module to calculate the polytomous discrimination index (PDI)
 p pdplot module to produce Pareto dot plot
 p pdslasso module for post-selection and post-regularization OLS or IV estimation and inference
 p peerreview module to randomly assign papers to peers for review
@@ -115,6 +115,7 @@ p povguide module to generate the U.S. Poverty Guideline value for a given famil
 p povimp module to provide poverty estimates in the absence of actual consumption data
 p povtime module to compute aggregate intertemporal poverty measures (poverty in a panel accounting for time)
 p power_diagnostic module to compute power and sample size for sensitivity and specificity of a diagnostic test
+p power_loa module to compute power and sample size for limits of agreement (LOA) analysis
 p power_oneroc module to compute power and sample size for a one-sample ROC test
 p power_roc module to compute power and sample-size analysis for receiver operating characteristic (ROC) analysis
 p power_swgee module to compute power (under both a Z and t distribution) for cluster randomized stepped wedge designs 

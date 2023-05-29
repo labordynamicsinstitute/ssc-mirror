@@ -31,6 +31,7 @@ p geninteract module to generate N-way interaction terms
 p genqreg module to perform Generalized Quantile Regression 
 p genscore module to generate a score
 p genspec module to implement a General-to-Specific modelling algorithm
+p gensplines module to generate various spline basis functions
 p genstack module to generate Twoway Stacked Charts
 p genstest module to perform generalized S tests for models in the generalized method of moments framework
 p gentrun module to generate truncated normal variate

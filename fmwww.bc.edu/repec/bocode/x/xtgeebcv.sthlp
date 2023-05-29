@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 5.1.0 03Dec2021}
+{* *! version 5.2.0 23May2023}
 {cmd:help xtgeebcv}
 {hline}
 
@@ -29,6 +29,8 @@ combinations of family and link allowed.{p_end}
 {synopt :{cmd:stderr(}{it:string})}Standard error to compute; default is Kauermann-Carroll (kc).  See table below for full list of bias-corrected standard errors available.{p_end}
 {synopt :{cmd:statistic(}{it:string)}}Specifies the test. Specifying "statistic(t)" requests the Wald t-test (the default).  Alternatively, the user may specify "statistic(z)" to report 
 the Wald z-test instead of the Wald t-test.{p_end}
+{synopt :{cmd:dfmethod(}{it:string)}}Specifies the computation of the degrees of freedom. More information provided in the explanations seciton below.{p_end}
+{synopt :{cmd:dfspec(}{it:integer)}}Only specified for "dfmethod(specify)". More information provided in the explanations section below.{p_end}
 {synopt :{cmd:corr(}{it:string)}}Specifies the type for the working correlation; default is exchangeable (exch). Independence (ind) may also be specified{p_end}
 
 {phang}
@@ -49,6 +51,9 @@ by the user.
 
 {marker description}{...}
 {title:Description}
+
+{pstd}
+{hi: Updates as of May 23, 2023}: {cmd:xtgeebcv} was now allows for additional degrees of freedom adjustments for the t-statistic, with the default being the number of clusters minus the number of cluster-level covariates (including the intercept). 
 
 {pstd}
 {hi: Updates as of December 03, 2021}: {cmd:xtgeebcv} was not allowing for intercept-only models.  The code has now been updated to permit the use of intercept-only models.
@@ -107,7 +112,7 @@ The following options are available for {cmd:family} and {cmd:link}.
 {center:gaussian   identity}
 {center:{hline 20}}
 
-{phang}
+{pstd}
 For bias-corrected standard errors, the following options are available in {cmd:stderr}.  Note that the robust standard 
 errors (SEs) provided by {cmd:xtgeebcv} will differ from Stata's default robust standard errors by a factor of 
 sqrt((K-1)/K), where K is the number of clusters.  This is because Stata automatically applies a correction of sqrt(K/(K-1)) to 
@@ -122,7 +127,7 @@ Thus, all the bias-corrected standard errors we implement in this program are ba
 without the sqrt(K/(K-1)) correction.
 
 
-{center:Options    Description}
+{center:Options    Description                                          }
 {center:{hline 65}}
 {center:rb         Robust (sandwich) SEs                             }                
 {center:df         Degrees-of-freedom correction                     }
@@ -137,6 +142,17 @@ The degrees-of-freedom correction is computed by multiplying the (uncorrected) r
 error by K/(K-p), where K is the number of clusters and p is the number of regression parameters.
 More detailed information on the other corrections can be found in 
 {help xtgeebcv##LR2015:Li and Redden (2015)} or {help xtgeebcv##GLT2020:Gallis et al. (2020)}.
+
+{pstd}
+The following options are available for the dfmethod option. The default option is "cluster". In all cases,
+degrees of freedom for the t-test is defined by the number of clusters minus the option specified below:
+
+{center:Options    Description                                                                            }
+{center:{hline 100}}
+{center:cluster    Subtract the number of cluster-level covariates plus the intercept                     }                
+{center:all        Subtract the number of covariates plus the intercept                                   }
+{center:specify    Subtract the number specified by the user through the dfspec() option. Default is 0    }
+{center:{hline 100}}
 
 
 {marker example}{...}
