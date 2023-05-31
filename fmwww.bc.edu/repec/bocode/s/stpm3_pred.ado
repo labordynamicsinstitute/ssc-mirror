@@ -1,4 +1,4 @@
-*! version 1.00 2023-05-23
+*! version 1.01 2023-05-29
 
 program stpm3_pred, sortpreserve
   version 16.1

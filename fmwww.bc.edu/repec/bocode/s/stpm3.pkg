@@ -12,10 +12,12 @@ d interaction much easier. Post-estimation commands allow various
 d predictions to be obtained. These can be saved to a new frame.
 d The use of extended functions enables simple predictions from
 d complex models involving non-linear effects, interactions and
-d time-dependent effects.Requires: Stata version 16.1 
+d time-dependent effects. 
 d
 d
-d Distribution-Date: 20230528
+d Requires: Stata version 16.1
+d
+d Distribution-Date: 20230530
 d
 d Author: Paul Lambert, University of Leicester
 d Support: email paul.lambert@@le.ac.uk
