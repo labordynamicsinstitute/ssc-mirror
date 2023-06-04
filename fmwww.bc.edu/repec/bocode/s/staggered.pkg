@@ -1,0 +1,34 @@
+d 'STAGGERED': module implementing R staggered package based on Roth and Sant'Anna (2023)
+d
+d  The staggered package computes the efficient estimator for
+d settings with randomized treatment timing, based on the
+d theoretical results in Roth and Sant'Anna (2023). If units are
+d randomly (or quasi-randomly) assigned to begin treatment at
+d different dates, the efficient estimator can potentially offer
+d substantial gains over methods that only impose parallel trends.
+d The package also allows for calculating the generalized
+d difference-in-differences estimators of Callaway and Sant'Anna
+d (2020) and Sun and Abraham (2020) and the
+d simple-difference-in-means as special cases. This is the Stata
+d version of the R package of the same name. 
+d
+d KW: staggered treatment
+d KW: generalized DiD
+d
+d Requires: Stata version 14.1
+d
+d Distribution-Date: 20230603
+d
+d Author: Mauricio Caceres Bravo, Brown University
+d Support: email mauricio.caceres.bravo@@gmail.com
+d
+d Author:  Jonathan Roth, Brown University
+d Support: email jonathan_roth@@brown.edu
+d
+d Author: Pedro H.C. Sant'Anna, Vanderbilt University
+d Support: email pedro.h.santanna@@vanderbilt.edu
+d
+f staggered.ado
+f staggered.mata
+f staggered.sthlp
+f ../l/lstaggered.mlib

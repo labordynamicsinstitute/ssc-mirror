@@ -8,6 +8,7 @@ p scatterfit module to produce scatter plots with fit lines
 p sivqr module to perform smoothed IV quantile regression
 p sotable module to produce tests and confidence bands for multiple comparisons of two-sided or one-sided hypotheses
 p spider module for spider plots
+p staggered module implementing R staggered package based on Roth and Sant'Anna (2023)
 p standsurv module to compute standardized (marginal) survival and related functions
 p stata_linter module providing a tool to detect and correct bad Stata coding practices
 p step3 module to relate latent class membership to external variables

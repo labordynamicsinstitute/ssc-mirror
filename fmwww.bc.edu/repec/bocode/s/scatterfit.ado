@@ -1,7 +1,7 @@
-*! version 1.6.1   Leo Ahrens   leo@ahrensmail.de
+*! version 1.6.3   Leo Ahrens   leo@ahrensmail.de
 
 program define scatterfit
-version 13.1
+version 15
 	
 *-------------------------------------------------------------------------------
 * syntax and options
@@ -182,8 +182,8 @@ if "`regparameters'"!="" {
 		dis as error "Regression parameters can only be plotted for a linear fit."
 		exit 498
 	}
-	if strpos("`regparameters'","sig") & !strpos("`regparameters'","coef") {
-		dis as error "{bf:regparameters({it:sig})} requires {bf:regparameters({it:coef})}"
+	if (strpos("`regparameters'","sig") | strpos("`regparameters'","pval") | strpos("`regparameters'","se")) & !strpos("`regparameters'","coef") {
+		dis as error "{bf:regparameters({it:sig})}, {bf:regparameters({it:se})}, and {bf:regparameters({it:pval})} can only be used together with {bf:regparameters({it:coef})}"
 		exit 498
 	}
 	if strpos("`regparameters'","int") & "`bymethod'"!="interact" {
@@ -543,7 +543,7 @@ if "`regparameters'"!="" {
 			local `par' "<.00001"
 		}
 		else {
-			local `par' "{&cong} 0"
+			local `par' "{&cong}0"
 		}
 		if strpos("``par''","000000") & "``par''"!="<.00001" {
 			foreach zz of numlist 1/9 {
@@ -977,7 +977,7 @@ if "`regparameters'"!="" {
 			if `binarydv'==1 local adjr2par `adjr2par' {it:Pseudo R2`parbylabn`bynum2''}`r2`bynumname''
 		}
 		* observations 
-		if strpos("`regparameters'","nobs") local nobspar "`nobspar' {it:N`parbylabn`bynum2''}`nobs`bynumname''"
+		if strpos("`regparameters'","nobs") local nobspar `nobspar' {it:N`parbylabn`bynum2''}`nobs`bynumname''
 	}
 
 	foreach bynum2 in `bynum' {
@@ -995,7 +995,7 @@ if "`regparameters'"!="" {
 				local sepvalpar`bynum2' " (`separ`bynum2''`leerz'`pvalpar`bynum2'')"
 			}
 			
-			if `binarydv'==0 local whatcoef {it:ß`parbylab`bynum2''}
+			if `binarydv'==0 local whatcoef {it:{&beta}`parbylab`bynum2''}
 			if `binarydv'==1 local whatcoef {it:{&delta}Pr/{&delta}x`parbylab`bynum2''}
 			local coefpar`bynum2' `whatcoef'`coef`bynum2''`sigstar`bynum2''
 			local jcoefpar`bynum2' `coefpar`bynum2''`sepvalpar`bynum2''
@@ -1022,7 +1022,7 @@ if "`regparameters'"!="" {
 								if `siglevel`bynum2'_`bynum3''==.01 local sigstar`bynum2'_`bynum3' ***
 							}
 							if strpos("`regparameters'","pval") local intpvalpar`bynum2'_`bynum3' " ({it:p}`pval`bynum2'_`bynum3'')"
-							if `binarydv'==0 local whatcoef {it:ß`parbylab`bynum2''}-{it:ß`parbylab`bynum3''}
+							if `binarydv'==0 local whatcoef {it:{&beta}`parbylab`bynum2''}-{it:ß`parbylab`bynum3''}
 							if `binarydv'==1 local whatcoef {it:{&delta}Pr/{&delta}x`parbylab`bynum2''}-{it:{&delta}Pr/{&delta}x`parbylab`bynum3''}
 							
 							local intcoefpar`bynum2'_`bynum3' `whatcoef'`coef`bynum2'_`bynum3''`sigstar`bynum2'_`bynum3''`intpvalpar`bynum2'_`bynum3''
@@ -1048,8 +1048,8 @@ if "`regparameters'"!="" {
 	else {
 		foreach ee in `coefsepvalparcollect' {
 			local coefpar `" `coefpar' "`coef`ee''" "'
-			local coefpar `" `coefpar' "`se`ee''" "'
-			local coefpar `" `coefpar' "`pval`ee''" "'
+			if strpos("`regparameters'","se") local coefpar `" `coefpar' "`se`ee''" "'
+			if strpos("`regparameters'","pval") local coefpar `" `coefpar' "`pval`ee''" "'
 		}
 	}
 
@@ -1213,7 +1213,6 @@ tw `sce' `sc' `ci' `pl', `lscatteropts'
 restore
 }
 end
-
 
 
 

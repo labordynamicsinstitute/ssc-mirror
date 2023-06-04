@@ -1,10 +1,13 @@
-*! version on 1.0 27feb2020
+*! version on 1.1 27feb2020
 
 /*
 
  Uses https://github.com/taynaud/python-louvain to apply the Luvain method which 
  is a fast algorithm to find the community structure in a weighted network which
  optimizes modularity. 
+ v1.1 Changed nx.draw_networkx_labels(G,pos, with_labels=True, font_color='red', font_size='10')
+	to
+	nx.draw_networkx_labels(G,pos, font_color='red', font_size='10')
 
  */
 
@@ -88,7 +91,7 @@ def luvain(g):
 			list_nodes = [nodes for nodes in partition.keys() if partition[nodes] == com]
 			nx.draw_networkx_nodes(G, pos, list_nodes, node_size = 500, node_color = str(count / size) )
 			nx.draw_networkx_edges(G, pos, alpha=.4, width=1,edge_color='g')
-			nx.draw_networkx_labels(G,pos, with_labels=True,font_color='red', font_size='10')
+			nx.draw_networkx_labels(G,pos, font_color='red', font_size='10')
 		#get stata's working directory
 		ourpwd = macro.getGlobal('c(pwd)')
 		#save figure
