@@ -1,5 +1,6 @@
 *! version 0.1 2023-02-22 Niels Henrik Bruun
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
+*! 2023-06-07 v0.12  Option at(failures) returns strata id's, not times
 *! 2023-04-01 v0.11  Bug fix
 *  2023-02-22 v0.1   created
 
@@ -51,12 +52,15 @@ program define tteir
         }
       }
       
-      if !regexm("`every'", "^every\(\ *\.\ *\)$") stsplit _start, `at' `every' `trim' `after'
-      else stsplit, at(failures) riskset(_start)
+	  tempname strata
+      if !regexm("`every'", "^every\(\ *\.\ *\)$") {
+	  	stsplit `strata', `at' `every' `trim' `after'
+	  }
+      else stsplit, at(failures) riskset(`strata')
       generate  _futm = _t - _t0
       format _futm %8.3f
       
-      collapse (max) _stop=_t (count) _total=_d (sum) _x=_d _futm, by(_start `by')
+      collapse (min) _start=_t0 (max) _stop=_t (count) _total=_d (sum) _x=_d _futm, by(`strata' `by')
       sort `by' _start 
     } 
 end
