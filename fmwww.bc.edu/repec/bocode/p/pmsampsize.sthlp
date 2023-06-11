@@ -14,8 +14,9 @@
 {title:Syntax}
 
 {p 8 17 2}
-{cmd:pmsampsize} , {opt type(string)} {opt rsq:uared(real)} {opt par:ameters(int)} 
-	[{opt s:hrinkage(real 0.9)} {opt rate(real 0)} {opt meanf:up(real 0)} {opt time:point(real 0)} 
+{cmd:pmsampsize} , {opt type(string)} 
+	[{opt rsq:uared(real 0)} {opt par:ameters(int 0)} {opt n(int 0)} {opt s:hrinkage(real 0.9)} 
+	{opt rate(real 0)} {opt meanf:up(real 0)} {opt time:point(real 0)} 
 	{opt int:ercept(real 0)} {opt sd(real 0)} {opt prev:alence(real 0)} {opt mmoe(real 1.1)}
 	{opt cstat:istic(real 0)} 
 	{opt seed(int 123456)}]
@@ -26,6 +27,7 @@
 {synopt :{opt type(string)}}specifies the type of analysis for which sample size is being calculated{p_end}
 {synopt :{opt rsq:uared(real)}}expected value of the (Cox-Snell) R-squared of the developed model, based on previous evidence (e.g. an existing model){p_end}
 {synopt :{opt par:ameters(int)}}number of candidate predictor parameters for potential inclusion in the developed model{p_end}
+{synopt :{opt n(int)}}fixed sample size of existing dataset to be used for new model development{p_end}
 {synopt :{opt s:hrinkage(real 0.9)}}desired level of shrinkage (a measure of overfitting) in the developed model{p_end}
 {synopt :{opt rate(real)}}overall event rate, for the survival (time-to-event) outcome of interest{p_end}
 {synopt :{opt meanf:up(real)}}mean follow-up time, for the survival (time-to-event) outcome of interest{p_end}
@@ -87,6 +89,11 @@ See references below for further information.
 {marker options}{...}
 {title:Binary outcome options}
 
+{phang}{opt n(int)} specifies the fixed sample size of an existing dataset to be used for the new model development. 
+When using this option {cmd: pmsampsize} calculates the maximum number of candidate predictor parameters that can be considered for potential inclusion in the new prediction model given the fixed sample size of the available dataset.
+Remember that the number of candidate predictor parameters is often greater than the number of candidate predictors, as categorical and continous predictors often require two or more parameters to be estimated.
+Only one of the {opt parameters()} or {opt n()} options may be specified.
+
 {phang}{opt prevalence(real)} specifies the overall outcome proportion (for a prognostic model) or overall prevalence (for a diagnostic model) expected within the model development dataset. 
 This should be derived based on previous studies in the same population.
 
@@ -139,6 +146,13 @@ We can use this C-statistic along with the prevalence to approximate the Cox-Sne
 Use {cmd: pmsampsize} with the {opt cstatistic()} option instead of {opt rsquared()} option. {p_end}
 {phang2}{cmd:. }{stata pmsampsize, type(b) cstatistic(0.89) parameters(24) prevalence(0.174)}{p_end}
 
+{pstd}Now lets assume we have an existing dataset for developing a new multivariable prediction model, i.e. we have a fixed sample size (N). 
+Given a fixed sample size we can use pmsampsize to calculate the maximum number of candidate predictor parameters that can be considered during model development using the existing dataset. 
+To do this we use the {opt n()} option and do not specify the {opt parameters()} option. 
+{p_end}
+{phang2}{cmd:. }{stata pmsampsize, type(b) rsquared(0.288) n(662) prevalence(0.174)}
+{p_end}
+
 {phang}
 {bf:Survial outcomes (Cox prediction models)}
 
@@ -168,6 +182,7 @@ We know an existing prediction model in the same field has an R-squared adjusted
 {synopt:{cmd:r(final_shrinkage)}}Expected shrinkage required{p_end}
 {synopt:{cmd:r(r2)}}Specified R-squared adjusted{p_end}
 {synopt:{cmd:r(max_r2)}}Maximum Cox-Snell R-squared possible (binary & survival models){p_end}
+{synopt:{cmd:r(nag_r2)}}Nagelkerke's R-squared given inputs (binary & survival models){p_end}
 {synopt:{cmd:r(EPP)}}Events per Predictor Parameter (binary & survival models){p_end}
 {synopt:{cmd:r(events)}}Minimum number of events required assuming input outcome proportion or outcome prevalence (binary & survival models){p_end}
 {synopt:{cmd:r(prevalence)}}Overall prevalence (binary models){p_end}
@@ -189,15 +204,12 @@ We know an existing prediction model in the same field has an R-squared adjusted
 
 {title:Authors}
 
-{phang}Joie Ensor, Keele University {break}
-j.ensor@keele.ac.uk{p_end}
-
-{phang}Richard D Riley, Keele University {break}
-r.riley@keele.ac.uk{p_end}
+{phang}Joie Ensor, University of Birmingham {break}
+j.ensor@bham.ac.uk{p_end}
 
 {title:Acknowledgements}
 
-{phang}With thanks to Gary Collins, Glen Martin & Kym Snell for helpful feedback{p_end}
+{phang}With thanks to Richard D Riley, Gary Collins, Glen Martin & Kym Snell{p_end}
 
 {marker reference}{...}
 {title:References}

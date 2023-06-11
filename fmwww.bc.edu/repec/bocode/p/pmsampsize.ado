@@ -19,22 +19,40 @@
 *	- added function to allow user to specify 	 *
 *	C-statistic instead of R-sq					 *
 *	- added addtional parameter checks			 *
+*  Updated: 13/08/21							 *
+*	- added N option for binary outcomes         *
+*	allowing estimation of max number of p       *
+*	that can be estimated in model dev 			 *
+*  Updated: 20/11/21							 *
+*	- added Nagelkerke's R-sq to output table    *
+*	- added printout of criteria info & noprint  *
+*	option to suppress this info 				 *
+*	Updated: 1/12/21							 *
+*	- edit to criteria 2 for continuous outcomes *
+*	to round up n 								 *
+*	Updated: 12/2/22							 *
+*	- fix to criteria 4 for continuous outcomes  *
+*	using variance 								 *
+*	Updated: 9/6/23								 *
+*	- altered output for binary crit.3 shrinkage *
 *												 *
-*  1.1.0 J. Ensor								 *
+*  1.3.0 J. Ensor								 *
 **************************************************
 
-*! 1.1.0 J.Ensor 17May2021
+*! 1.3.0 J.Ensor 09Jun2023
+
 
 program define pmsampsize, rclass
 
 version 12.1
 
 /* Syntax
-	CONTINUOUS = use pmsampsize for continuous outcome model sample size
-	SURVIVAL = use pmsampsize for survival outcome model sample size
-	BINARY = use pmsampsize for binary outcome model sample size
+	C = use pmsampsize for continuous outcome model sample size
+	S = use pmsampsize for survival outcome model sample size
+	B = use pmsampsize for binary outcome model sample size
 	RSQUARED = R-sq adjusted
 	PARAMETERS = number of parameters to be estimated in model
+	N = fixed sample size of existing dataset for development
 	SHRINKAGE = required shrinkage of development model
 	PREVALENCE = prevalence of outcome
 	RATE = overall event rate (for survival models)
@@ -46,15 +64,17 @@ version 12.1
 				in the mean blood pressure in the target population
 	MMOE = set MMOE threshold for acceptable precision of intercept 95% CI
 	CSTATISTIC = approximates R-sq adjusted from C-stat and prevalence
-	SEED = set seed for calculation of approx. R-sq from C-stat			
+	SEED = set seed for calculation of approx. R-sq from C-stat	
+	NOPRINT = Suppress criteria descriptions in output 
 */
 
-syntax ,   PARameters(int) TYPE(string) ///
+syntax ,   TYPE(string) ///
 			[RSQuared(real 0) Shrinkage(real 0.9) ///
+			Parameters(int 0) N(int 0) ///
 			CSTATistic(real 0) SEED(int 123456) ///
 			RATE(real 0) MEANFup(real 0) TIMEpoint(real 0) ///
 			INTercept(real 0) SD(real 0) ///
-			PREValence(real 0) MMOE(real 1.1)]
+			PREValence(real 0) MMOE(real 1.1) noPRINT]
 
 
 ***********************************************
@@ -78,16 +98,39 @@ if "`type'"=="b" {
 			error 103
 		}
 	}
-		
-	binary_samp_size, rsq(`rsquared') par(`parameters') prev(`prevalence') ///
-		s(`shrinkage') 
 	
+	if `n'!=0 {
+		
+		if `parameters'!=0 {
+			di as err "Only one of parameters() or n() can be specified"
+			error 103
+		}
+		
+		binary_ss_fixed_n, rsquared(`rsquared') n(`n') prevalence(`prevalence')
+/*
+		return scalar int_amoe = r(int_amoe)
+		return scalar int_uci = r(int_uci)
+		return scalar int_lci = r(int_lci)
+*/
+	}
+	else {
+		if `parameters'==0 {
+			di as err "One of parameters() or n() must be specified"
+			error 103
+		}
+		else {
+			binary_samp_size, rsq(`rsquared') par(`parameters') prev(`prevalence') ///
+				s(`shrinkage') 
+		}
+	}
+		
 	// return list
 	return scalar final_shrinkage = r(final_shrinkage)
 	return scalar sample_size = r(sample_size)
 	return scalar parameters = r(parameters)
 	return scalar r2 = r(r2a)
 	return scalar max_r2 = r(max_r2a)
+	return scalar nag_r2 = r(nag_r2)
 	return scalar events = r(events)
 	return scalar EPP = r(EPP)
 	return scalar prevalence = r(prevalence)
@@ -134,6 +177,7 @@ if "`type'"=="b" {
 	return scalar parameters = r(parameters)
 	return scalar r2 = r(r2a)
 	return scalar max_r2 = r(max_r2a)
+	return scalar nag_r2 = r(nag_r2)
 	return scalar events = r(events)
 	return scalar EPP = r(EPP)
 	return scalar rate = r(rate)
@@ -149,6 +193,9 @@ if "`type'"=="b" {
 		error 499
 		}
 	
+	if "`print'"!="noprint" {
+		criteria_print, type("`type'")
+	}
 ***********************************************
 		
 end
@@ -214,6 +261,8 @@ local n3 = `parameters'
 	local lnLnull = (`E1'*(ln(`E1'/`n1')))+((`n1'-`E1')*(ln(1-(`E1'/`n1'))))
 	local max_r2a = (1- exp((2*`lnLnull')/`n1'))
 	local DImax_r2a : di %4.3f `max_r2a'
+	local nag_r2 = `r2a'/`max_r2a'
+	local DInag_r2 : di %4.3f `nag_r2'
 	
 	if `max_r2a'<`r2a' {
 		di as err "User specified R-squared adjusted is larger than the maximum possible R-squared (=`max_r2a') as defined by equation 23 (Riley et al. 2018)"
@@ -238,16 +287,25 @@ local n3 = `parameters'
 	local epp3 = `E3'/`parameters'
 	local EPP_3 = round(`epp3',.01)
 	
-	if `shrinkage_2'> `shrinkage' {
-		local shrinkage_3 = `shrinkage_2'
+	if `n2'>`n1' {
+		local n2_high = 1
 		}
-		else {
-			local shrinkage_3 = `shrinkage'
+	
+	local n_so_far = max(`n1',`n2')	
+	if `n3'< `n_so_far' {
+		local shrinkage_3 = .
+		}
+		else if (`n2_high'==1) {
+			local shrinkage_3 = `shrinkage_2'
 			}
+			else {
+				local shrinkage_3 = `shrinkage_1'
+				}
+			
 		
 // minimum n 
 local nfinal = max(`n1',`n2',`n3')
-local shrinkage_final = `shrinkage_3'
+local shrinkage_final = max(`shrinkage_1',`shrinkage_2',`shrinkage_3')
 local DIshrinkage_1 : di %4.3f `shrinkage_1'
 local DIshrinkage_2 : di %4.3f `shrinkage_2'
 local DIshrinkage_3 : di %4.3f `shrinkage_3'
@@ -262,6 +320,7 @@ return scalar sample_size = `nfinal'
 return scalar parameters = `parameters'
 return scalar r2a = `r2a'
 return scalar max_r2a = `max_r2a'
+return scalar nag_r2 = `nag_r2'
 return scalar events = `E_final'
 return scalar EPP = `EPP_final'
 return scalar prevalence = `prevalence'
@@ -271,7 +330,7 @@ di as txt "NB: Assuming 0.05 acceptable difference in apparent & adjusted R-squa
 di as txt "NB: Assuming 0.05 margin of error in estimation of intercept"
 di as txt "NB: Events per Predictor Parameter (EPP) assumes prevalence = `prevalence'"
 local res 1 2 3 final 
-matrix Results = J(4,6,.)
+matrix Results = J(4,7,.)
 local i=0
 foreach r of local res {
 	local ++i
@@ -280,12 +339,15 @@ foreach r of local res {
 	matrix Results[`i',3] = `parameters'
 	matrix Results[`i',4] = `DIr2a'
 	matrix Results[`i',5] = `DImax_r2a'
-	matrix Results[`i',6] = `EPP_`r''
+	matrix Results[`i',6] = `DInag_r2'
+	matrix Results[`i',7] = `EPP_`r''
 	}
-	mat colnames Results = "Samp_size" "Shrinkage" "Parameter" "Rsq" "Max_Rsq" "EPP"
-	mat rownames Results = "Criteria 1" "Criteria 2" "Criteria 3" "Final"
+	mat colnames Results = "Samp_size" "Shrinkage" "Parameter" "CS_Rsq" "Max_Rsq" "Nag_Rsq" "EPP"
+	mat rownames Results = "Criteria 1" "Criteria 2" "Criteria 3" "Final SS"
+	// alternative more informative criteria names for output table 
+	*mat rownames Results = "1.Shrinkage" "2.App-Adj" "3.Intercept" "Final SS"
 
-matlist Results, lines(rowtotal)
+matlist Results, lines(rowtotal) aligncolnames(r)
 
 return mat results = Results
 
@@ -296,6 +358,7 @@ di "with `di_E_final' events (assuming an outcome prevalence = `prevalence'), an
 end 	
 
 ******* end of binary
+* pmsampsize, type(b) rsquared(0.65) parameters(24) prevalence(0.51) noprint s(.8)
 
 ******* start of continuous
 program define continuous_samp_size, rclass
@@ -367,7 +430,7 @@ local n1 = `parameters'+2
 				}
 		
 	// criteria 2 - small absolute difference in r-sq adj & r-sq app
-	local n2 = 1+((`parameters'*(1-`r2a'))/0.05)
+	local n2 = ceil(1+((`parameters'*(1-`r2a'))/0.05))
 	local shrinkage_2 = 1 + ((`parameters'-2)/(`n2'*(ln(1-((`r2a'*(`n2'-`parameters'-1))+`parameters')/(`n2'-1)))))
 	local spp_2 = `n2'/`parameters'
 	local SPP_2 = round(`spp_2',.01)
@@ -407,15 +470,15 @@ local n1 = `parameters'+2
 	// criteria 4 - precise estimation of intercept
 	local n4 = max(`n1',`n2',`n3')
 	local df = `n4'-`parameters'-1
-	local uci = `intercept'+((((`sd'*(1-`r2a'))/`n4')^.5)*(invttail(`df',0.025)))
-	local lci = `intercept'-((((`sd'*(1-`r2a'))/`n4')^.5)*(invttail(`df',0.025)))
+	local uci = `intercept'+((((`sd'^2*(1-`r2a'))/`n4')^.5)*(invttail(`df',0.025)))
+	local lci = `intercept'-((((`sd'^2*(1-`r2a'))/`n4')^.5)*(invttail(`df',0.025)))
 	local int_mmoe = `uci'/`intercept'
 	if `int_mmoe'>`mmoe' {
 		while `int_mmoe'>`mmoe' {
 			local ++n4
 			local df = `n4'-`parameters'-1
-			local uci = `intercept'+((((`sd'*(1-`r2a'))/`n4')^.5)*(invttail(`df',0.025)))
-			local lci = `intercept'-((((`sd'*(1-`r2a'))/`n4')^.5)*(invttail(`df',0.025)))
+			local uci = `intercept'+((((`sd'^2*(1-`r2a'))/`n4')^.5)*(invttail(`df',0.025)))
+			local lci = `intercept'-((((`sd'^2*(1-`r2a'))/`n4')^.5)*(invttail(`df',0.025)))
 			local int_mmoe = `uci'/`intercept'
 			
 				if `int_mmoe'<=`mmoe' { 
@@ -474,9 +537,9 @@ foreach r of local res {
 	matrix Results[`i',5] = `SPP_`r''
 	}
 	mat colnames Results = "Samp_size" "Shrinkage" "Parameter" "Rsq" "SPP"
-	mat rownames Results = "Criteria 1" "Criteria 2" "Criteria 3" "Criteria 4 *" "Final"
+	mat rownames Results = "Criteria 1" "Criteria 2" "Criteria 3" "Criteria 4 *" "Final SS"
 
-matlist Results, lines(rowtotal)
+matlist Results, lines(rowtotal) aligncolnames(r)
 
 return mat results = Results
 
@@ -547,6 +610,8 @@ local events = ceil(`rate'*`tot_per_yrs')
 	local lnLnull = (`events'*(ln(`events'/`n')))-`events'
 	local max_r2a = (1- exp((2*`lnLnull')/`n'))
 	local DImax_r2a : di %4.3f `max_r2a'
+	local nag_r2 = `r2a'/`max_r2a'
+	local DInag_r2 : di %4.3f `nag_r2'
 	
 	if `max_r2a'<`r2a' {
 		di as err "User specified R-squared adjusted is larger than the maximum possible R-squared (=`DImax_r2a') as defined by equation 23 (Riley et al. 2018)"
@@ -605,6 +670,7 @@ return scalar sample_size = `nfinal'
 return scalar parameters = `parameters'
 return scalar r2a = `r2a'
 return scalar max_r2a = `max_r2a'
+return scalar nag_r2 = `nag_r2'
 return scalar events = `E_final'
 return scalar EPP = `EPP_final'
 return scalar rate = `rate'
@@ -617,7 +683,7 @@ di as txt "NB: Assuming 0.05 acceptable difference in apparent & adjusted R-squa
 di as txt "NB: Assuming 0.05 margin of error in estimation of overall risk at time point = `timepoint'"
 di as txt "NB: Events per Predictor Parameter (EPP) assumes overall event rate = `rate'"
 local res 1 2 3 final 
-matrix Results = J(4,6,.)
+matrix Results = J(4,7,.)
 local i=0
 foreach r of local res {
 	local ++i
@@ -626,12 +692,13 @@ foreach r of local res {
 	matrix Results[`i',3] = `parameters'
 	matrix Results[`i',4] = `DIr2a'
 	matrix Results[`i',5] = `DImax_r2a'
-	matrix Results[`i',6] = `EPP_`r''
+	matrix Results[`i',6] = `DInag_r2'
+	matrix Results[`i',7] = `EPP_`r''
 	}
-	mat colnames Results = "Samp_size" "Shrinkage" "Parameter" "Rsq" "Max_Rsq" "EPP"
-	mat rownames Results = "Criteria 1" "Criteria 2" "Criteria 3 *" "Final"
+	mat colnames Results = "Samp_size" "Shrinkage" "Parameter" "CS_Rsq" "Max_Rsq" "Nag_Rsq" "EPP"
+	mat rownames Results = "Criteria 1" "Criteria 2" "Criteria 3 *" "Final SS"
 
-matlist Results, lines(rowtotal)
+matlist Results, lines(rowtotal) aligncolnames(r)
 
 return mat results = Results
 
@@ -722,3 +789,221 @@ syntax ,  Cstatistic(real) PREValence(real) [SEED(int 123456)]
 	
 end
 
+/*
+cstat2rsq , c(.8) prev(.018) //seed(1234)
+ret list
+*/
+
+******* start of binary fixed n program
+program define binary_ss_fixed_n, rclass
+
+version 12.1
+
+/* Syntax
+	RSQUARED = R-sq adjusted
+	N = fixed sample size available for model development 
+	PREVALENCE = prevalence of outcome 
+	SHRINKAGE = required shrinkage of development model
+*/
+
+syntax ,  RSQuared(real) N(int) ///
+			PREValence(real) [Shrinkage(real 0.9)] 
+
+// check inputs
+	if `rsquared'>=0 & `rsquared'<=1 { 
+		}
+		else {
+			di as err "R-sq must lie in the interval [0,1]"
+			error 459
+			}
+			
+	if `prevalence'>=0 & `prevalence'<=1 { 
+		}
+		else {
+			di as err "Prevalence must lie in the interval [0,1]"
+			error 459
+			}
+			
+	if `n'>0 { 
+		}
+		else {
+			di as err "N (sample size) must be greater than 0"
+			error 459
+			}
+			
+	if `shrinkage'>=0 & `shrinkage'<=1 { 
+		}
+		else {
+			di as err "Shrinkage must lie in the interval [0,1]"
+			error 459
+			}
+			
+local r2a = `rsquared'
+local DIr2a : di %5.4f `r2a'
+
+
+	// criteria 1 - shrinkage
+	local p1 = floor((`n'*((`shrinkage'-1)*(ln(1-(`r2a'/`shrinkage'))))))
+	local shrinkage_1 = `shrinkage'
+	local E1 = `n'*`prevalence'
+	local epp1 = `E1'/`p1'
+	local EPP_1 = round(`epp1',.01)
+	local n1 = `n'
+	
+	// criteria 2 - small absolute difference in r-sq adj
+	local lnLnull = (`E1'*(ln(`E1'/`n')))+((`n'-`E1')*(ln(1-(`E1'/`n'))))
+	local max_r2a = (1- exp((2*`lnLnull')/`n'))
+	local DImax_r2a : di %4.3f `max_r2a'
+	local nag_r2 = `r2a'/`max_r2a'
+	local DInag_r2 : di %4.3f `nag_r2'
+	
+	if `max_r2a'<`r2a' {
+		di as err "User specified R-squared adjusted is larger than the maximum possible R-squared (=`max_r2a') as defined by equation 23 (Riley et al. 2018)"
+		error 499
+		}
+	
+	local s_4_small_diff = (`r2a'/(`r2a'+(0.05*`max_r2a')))
+
+		local p2 = floor((`n'*((`s_4_small_diff'-1)*(ln(1-(`r2a'/`s_4_small_diff'))))))
+		local shrinkage_2 = `s_4_small_diff'
+		
+		
+		local E2 = `n'*`prevalence'
+		local epp2 = `E2'/`p2'
+		local EPP_2 = round(`epp2',.01)
+		local n2 = `n'
+		
+	// criteria 3 - precise estimation of the intercept
+	local n3 = ceil((((1.96/0.05)^2)*(`prevalence'*(1-`prevalence'))))
+	
+	local shrinkage_3 = max(`shrinkage_2',`shrinkage')
+	
+	if `n'<`n3' {
+		local p3 = floor((`n3'*((`shrinkage_3'-1)*(ln(1-(`r2a'/`shrinkage_3'))))))
+		//local p3 = min(`p1',`p2')
+		local E3 = `n3'*`prevalence'
+		local epp3 = `E3'/`p3'
+		local EPP_3 = round(`epp3',.01)
+		
+	}
+	else {
+		local n3 = `n'
+		local amoe = (1.96*((`prevalence'*(1-`prevalence'))/`n')^0.5)
+		local uci = `prevalence'+(1.96*((`prevalence'*(1-`prevalence'))/`n')^0.5)
+		local lci = `prevalence'-(1.96*((`prevalence'*(1-`prevalence'))/`n')^0.5)
+		
+		local p3 = min(`p1',`p2')
+		local E3 = `n'*`prevalence'
+		local epp3 = `E3'/`p3'
+		local EPP_3 = round(`epp3',.01)
+		local int_amoe = round(`amoe',.001)
+		local int_uci = round(`uci',.001)
+		local int_lci = round(`lci',.001)
+	}
+	
+	
+		
+		
+// minimum p 
+local pfinal = min(`p1',`p2',`p3')
+local shrinkage_final = `shrinkage_3'
+local DIshrinkage_1 : di %4.3f `shrinkage_1'
+local DIshrinkage_2 : di %4.3f `shrinkage_2'
+local DIshrinkage_3 : di %4.3f `shrinkage_3'
+local DIshrinkage_final : di %4.3f `shrinkage_final'
+local E_final = `n'*`prevalence'
+local epp_final = `E_final'/`pfinal'
+local EPP_final = round(`epp_final',.01)
+
+// return list
+if `n'<`n3' {
+		local pfinal = `p3'
+		local nfinal = `n3'
+		local E_final = `n3'*`prevalence'
+		local epp_final = `E_final'/`pfinal'
+		local EPP_final = round(`epp_final',.01)
+		return scalar sample_size = `n3'
+	}
+	else {
+		local nfinal = `n'
+		return scalar sample_size = `n'
+		return scalar int_amoe = `int_amoe'
+		return scalar int_uci = `int_uci'
+		return scalar int_lci = `int_lci'
+	}
+return scalar final_shrinkage = `shrinkage_final'
+return scalar parameters = `pfinal'
+return scalar r2a = `r2a'
+return scalar max_r2a = `max_r2a'
+return scalar nag_r2 = `nag_r2'
+return scalar events = `E_final'
+return scalar EPP = `EPP_final'
+return scalar prevalence = `prevalence'
+
+
+// output table & assumptions
+di as txt "NB: Assuming 0.05 acceptable difference in apparent & adjusted R-squared"
+// remove this note as N is fixed and not depedent on MMOE==0.05
+*di as txt "NB: Assuming 0.05 margin of error in estimation of intercept"
+di as txt "NB: Events per Predictor Parameter (EPP) assumes prevalence = `prevalence'"
+local res 1 2 3 final 
+matrix Results = J(4,7,.)
+local i=0
+foreach r of local res {
+	local ++i
+	matrix Results[`i',1] = `n`r''
+	matrix Results[`i',2] = `DIshrinkage_`r''
+	matrix Results[`i',3] = `p`r'' 
+	matrix Results[`i',4] = `DIr2a'
+	matrix Results[`i',5] = `DImax_r2a'
+	matrix Results[`i',6] = `DInag_r2'
+	matrix Results[`i',7] = `EPP_`r''
+	}
+	mat colnames Results = "Samp_size" "Shrinkage" "Parameter" "Rsq" "Max_Rsq" "Nag_Rsq" "EPP"
+	mat rownames Results = "Criteria 1" "Criteria 2" "Criteria 3 *" "Final"
+
+matlist Results, lines(rowtotal)
+
+return mat results = Results
+
+local di_E_final = ceil(`E_final')
+di _n "Maximum number of predictor parameters that could be estimated during new model development "
+di "based on user inputs = `pfinal', with `di_E_final' events (assuming an outcome prevalence = `prevalence') & an EPP = `EPP_final'"
+if `n'<`n3' {
+	di _n "* n set to `nfinal' to ensure at least 0.05 absolute margin of error in estimation of intercept"
+	}
+	else {
+		// added note specifying the MMOE for the given fixed N input
+		di _n "* 95% CI for overall risk = (`int_lci', `int_uci'), for true value of `prevalence', sample size n=`n'"
+		di "Absolute margin of error = `int_amoe' "
+	}
+end 	
+
+******* end of binary fixed n program
+
+******* start of program to print criteria info 
+program define criteria_print, rclass
+
+version 12.1
+
+/* Syntax
+	TYPE = model type 
+*/
+
+syntax ,  TYPE(string) 
+
+if "`type'"!="c" {
+	di _n "Criteria 1 - small overfitting defined as expected shrinkage of predictor effects by 10% or less"
+	di "Criteria 2 - small absolute difference in model's apparent and adjusted Nagelkerke's R-squared "
+	di "Criteria 3 - precise estimation of the average outcome risk in the population"
+}
+else {
+	di _n "Criteria 1 - small overfitting defined as expected shrinkage of predictor effects by 10% or less"
+	di "Criteria 2 - small absolute difference in model's apparent and adjusted Nagelkerke's R-squared "
+	di "Criteria 3 - precise estimation of the residual standard deviation"
+	di "Criteria 4 - precise estimation of the average outcome value"
+}
+
+end
+
+******* end of criteria_print program
