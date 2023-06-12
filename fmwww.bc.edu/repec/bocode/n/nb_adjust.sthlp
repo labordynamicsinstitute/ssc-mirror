@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.02; July 29 2015, Dirk Enzmann}{...}
+{* *! version 2.1  11-Jun-20233, Dirk Enzmann}{...}
 {hi:help nb_adjust}
 {hline}
 
@@ -116,6 +116,10 @@ the extended {help missing} value .o in variable {cmd:{it:newvar}}) by using the
 option {opt rem:ove}. In this case, the option {opt la:rge(#)} will have no
 effect. Note, however, that values to be censored or removed must always
 be > {cmd:small}.
+
+{pstd} An example showing how to apply outlier detection and outlier adjustment of
+negative binomial distributed counts for the estimation of rates of reporting
+criminal victimizations to the police is shown in Section 3 of Enzmann ({browse "http://dx.doi.org/10.13140/RG.2.2.11653.32483":2023}).
 
 
 {title:Options}
@@ -250,8 +254,8 @@ removed by setting them to the extended missing value .o.
 {pstd}Because the outlier threshold of 12 is smaller than the minimal size of
 adjusted values specified by the option {opt la:rge(15)}, the lower bound
 of adjusted values was reduced to the outlier threshold of 12. The commands
--{cmd:fre}- (if necessary, -{net "describe fre, from(http://fmwww.bc.edu/RePEc/bocode/f)":fre}-
-will be installed by the first call to {cmd:nb_adjust}) and -{help summarize:sum}- show
+{cmd:fre} (if necessary, {net "describe fre, from(http://fmwww.bc.edu/RePEc/bocode/f)":fre}
+will be installed by the first call to {cmd:nb_adjust}) and {help summarize:sum} show
 the effect of adjusting and removing the 9 outliers:
 
     {stata fre moves* }
@@ -288,9 +292,18 @@ the effect of adjusting and removing the 9 outliers:
 {synopt:{cmd:r(method)}}method to define outliers (rule-based or fixed){p_end}
 
 
+{title:References}
+
+{p 4 7 2}Enzmann, D. (2023). {it:Reporting Rates as an Indicator of Ignorance: Issues of Measurement and Design}. Hamburg: University of Hamburg, Institute of 
+Criminal Sciences. [{browse "http://dx.doi.org/10.13140/RG.2.2.11653.32483":http://dx.doi.org/10.13140/RG.2.2.11653.32483}]{p_end}
+
+
 {title:Requires}
 
-{pstd} {cmd:nb_adjust} requires the SSC package {hi:moremata} ({net "describe moremata, from(http://fmwww.bc.edu/RePEc/bocode/m)":click here}).
+{pstd} {cmd:nb_adjust} requires the SSC packages {net "describe fre, from(http://fmwww.bc.edu/RePEc/bocode/f)":fre}, 
+{net "describe elabel, from(http://fmwww.bc.edu/RePEc/bocode/e)":elabel}, 
+and {net "describe moremata, from(http://fmwww.bc.edu/RePEc/bocode/m)":moremata}. If
+necessary they will be installed by the first call of {bf:nb_adjust}.
 
 
 {title:Author}

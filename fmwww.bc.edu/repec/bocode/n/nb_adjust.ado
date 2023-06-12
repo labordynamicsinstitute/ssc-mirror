@@ -1,4 +1,4 @@
-*! version 2.02  29-Jul-2015, Dirk Enzmann
+*! version 2.1  11-Jun-2023, Dirk Enzmann
 *! Adjust or remove outliers of a negative binomial distributed variable
 
 // Main Program
@@ -10,6 +10,9 @@
 * Install -fre- if necessary:
 cap which fre
 if _rc ssc install fre
+* Install -elabel- if necessary:
+cap which elabel
+if _rc ssc install elabel
 * Install -moremata- if necessary:
 cap mata: mm_which(0)
 if _rc ssc install moremata
@@ -93,309 +96,355 @@ program nb_adjust, rclass byable(onecall)
   else gen `bygr' = 1
   if ("`generate'" != "") {
     qui clonevar `generate' = `varlist'
-    qui replace `generate' = .
+    qui replace `generate' = . if `generate' < .
+    // remove characteristics of `generate':
+    tempvar nochar
+    qui gen `nochar' = .
+    char rename `generate' `nochar'
+    drop `nochar'
+    // assign value labels of `varlist' to `generate':
+    cap elabel list (`varlist')
+    if !_rc {
+      cap elabel copy (`varlist') `generate'
+      lab val `generate' `generate'
+    }
   }
-  qui levelsof `bygr' if `touse', local(K)
-  local ngr : word count `K'
-  local step = 0
-  qui gen `touseby' = .
-
-  * Repeat the following for each group defined by -by:- :
-  foreach k of local K {
-    local ++step
-    if "`_byvars'" != "" {
-      di "{hline}" _n as res "-> `_byvars' = `: label (`bygr') `k''"
-    }
-
-    * Remove extreme values (> limit) if limit > 0:
-    sca `n_extreme' = 0
-    if (`limit' > 0) {
-      qui sum `varlist' if `varlist' > `limit' & `touse' & `bygr'==`k'
-      sca `n_extreme' = r(N)
-      qui replace `touse' = 0 if (`varlist' > `limit') & `touse' & `bygr'==`k'
-      if `n_extreme' > 0 {
-        if ("`detail'") == "" {
-          di _n "Cases greater than limit `limit':" _c
-          table `varlist' if (`varlist' > `limit') & `varlist' < . & `bygr'==`k', row cell(12)
-        }
-        if `n_extreme' == 1 {
-          if ("`generate'" != "") {
-            di _n as res `n_extreme' " extreme value greater than " ///
-              "`limit' has been removed and set to .r in `generate'."
-          }
-          else {
-            di _n as res `n_extreme' " extreme value greater than " ///
-               "`limit' has temporarily been removed."
-          }
-        }
-        else {
-          if ("`generate'" != "") {
-            di _n as res `n_extreme' " extreme values greater than " ///
-               "`limit' have been removed and set to .r in `generate'."
-          }
-          else {
-            di _n as res `n_extreme' " extreme values greater than " ///
-               "`limit' have temporarily been removed."
-          }
-        }
-      }
-    }
-
-    sca `low' = `large'
-    sca `thout' = `threshold'
+  qui sum `touse', meanonly
+  if `r(max)'==0 {
+    sum `varlist' if `touse'
+    di as text _n "No observations."
+    di as text "New variable {bf:`generate'} is identical to `varlist'."
+    local ngr = 0
+    sca `low' = .
+    sca `thout' = .
     sca `nout' = .
     sca `pmisfit' = .
     sca `nadj' = .
+    sca `n_extreme' = .
     local notify = ""
-
-    * newvar = varlist if mean of varlist = 0:
-    qui sum `varlist' if `touse' & `bygr'==`k', meanonly
-    if r(mean) == 0 {
-      fre `varlist' if `touse' & `bygr'==`k'
-      di as text "(Note: `varlist' is zero for all observations!)"
-      sca `n' = r(N)
-      sca `low' = 0
-      sca `mu' = 0
-      sca `size' = 0
-      sca `nout' = 0
-      sca `nadj' = 0
-      sca `pmisfit' = 0
-      qui gen `nvar' = `varlist' if `touse' & `bygr'==`k'
-      qui recode `nvar' (. = .r) if missing(`nvar') & !missing(`varlist') & `bygr'==`k'
-    }
-    else {
-      * Determine n and parameter size and mu using -nbreg-:
-      qui nbreg `varlist' if `touse' & `bygr'==`k', d(c)
-      sca `n' = e(N)
-      sca `mu' = exp(_b[_cons])
-      sca `size' = `mu'/e(delta)
-
-      * Determine threshold thout and adjust, censor, or remove outliers:
-      qui replace `touseby' = `touse'
-      qui replace `touseby' = 0 if `bygr' != `k'
-      mata: nb_adj("`varlist'","`nvar'","`touseby'", `=`thout'', `=`small'', ///
-                   `=`low'',`=`n'',`=`mu'',`=`size'', `=`replicates'', ///
-                   "`remove'", "`censor'")
-      qui replace `nvar' = `varlist' if (`varlist' > .) & `bygr'==`k'
-      qui recode `nvar' (. = .r) if missing(`nvar') & !missing(`varlist') & `bygr'==`k'
-      label variable `nvar' "`varlist' adjusted"
-    }
-    if "`generate'" != "" qui replace `generate' = `nvar' if `bygr'==`k'
-
-    * Output of results:
-    if ("`detail'" == "" & `mu' > 0) fre `varlist' if `touse' & `bygr'==`k'
-    sum `varlist' if `touse' & `bygr'==`k'
-    di _n as text "Analysis of outliers:" ///
-       _n as res "Outliers > threshold (" `thout' "): n = " `nout' " (" ///
-       %5.3f `pmisfit' "%)"
-
-    if "`remove'" == "" & "`censor'" == "" {
-      if (`nout' > 0) {
-        if ("`notify'" != "") {
-          if (`thout' < `small') {
-            di as text "`notify' lower bound has been set to " ///
-                       `""small" = "' `small' ")"
+    sca `n' = 0
+    sca `low' = .
+    sca `mu' = .
+    sca `size' = .
+    sca `nout' = .
+    sca `nadj' = .
+    sca `pmisfit' = .
+  }
+  else {
+    qui levelsof `bygr' if `touse', local(K)
+    local ngr : word count `K'
+  }
+  local step = 0
+  qui gen `touseby' = .
+   
+  if `ngr' > 0 {
+    * Repeat the following for each group defined by -by:- :
+    foreach k of local K {
+      local ++step
+      if "`_byvars'" != "" {
+        di "{hline}" _n as res "-> `_byvars' = `: label (`bygr') `k''"
+      }
+    
+      * Remove extreme values (> limit) if limit > 0:
+      sca `n_extreme' = 0
+      if (`limit' > 0) {
+        qui sum `varlist' if `varlist' > `limit' & `touse' & `bygr'==`k'
+        sca `n_extreme' = r(N)
+        qui replace `touse' = 0 if (`varlist' > `limit') & `touse' & `bygr'==`k'
+        if `n_extreme' > 0 {
+          if ("`detail'") == "" {
+            di _n "Cases greater than limit `limit':" _c
+            table `varlist' if (`varlist' > `limit') & `varlist' < . & `bygr'==`k', row cell(12)
+          }
+          if `n_extreme' == 1 {
+            if ("`generate'" != "") {
+              di _n as res `n_extreme' " extreme value greater than " ///
+                "`limit' has been removed and set to .r in `generate'."
+            }
+            else {
+              di _n as res `n_extreme' " extreme value greater than " ///
+                 "`limit' has temporarily been removed."
+            }
           }
           else {
-            di as text "`notify' lower bound has been set to " ///
-                       "outlier threshold)"
+            if ("`generate'" != "") {
+              di _n as res `n_extreme' " extreme values greater than " ///
+                 "`limit' have been removed and set to .r in `generate'."
+            }
+            else {
+              di _n as res `n_extreme' " extreme values greater than " ///
+                 "`limit' have temporarily been removed."
+            }
           }
         }
-        if ("`detail'" == "") {
-          if (`nout' == 1) {
-            di _n as text "Summary of `varlist' with " ///
-               as res `nout' as text " outlier removed:"
-          }
-          else {
-            di _n as text "Summary of `varlist' with " ///
-               as res `nout' as text " outliers removed:"
-          }
-          sum `varlist' if `varlist' <= `thout' & `touse' & `bygr'==`k'
+      }
+    
+      sca `low' = `large'
+      sca `thout' = `threshold'
+      sca `nout' = .
+      sca `pmisfit' = .
+      sca `nadj' = .
+      local notify = ""
+    
+      * newvar = varlist if mean of varlist = 0:
+      qui sum `varlist' if `touse' & `bygr'==`k', meanonly
+/*      
+      if r(N)==0 {
+        if `bygr'>1 {
+           "{bf:`varlist'} has no observations in by-group `k'."
         }
-        if (`nadj' > 0) {
+        else di as err "{bf:`varlist'} has no observations."
+        exit 2000
+      }
+*/      
+      if r(mean) == 0 {
+        fre `varlist' if `touse' & `bygr'==`k'
+        di as text "(Note: `varlist' is zero for all observations!)"
+        sca `n' = r(N)
+        sca `low' = 0
+        sca `mu' = 0
+        sca `size' = 0
+        sca `nout' = 0
+        sca `nadj' = 0
+        sca `pmisfit' = 0
+        qui gen `nvar' = `varlist' if `touse' & `bygr'==`k'
+        qui recode `nvar' (. = .r) if missing(`nvar') & !missing(`varlist') & `bygr'==`k'
+      }
+      else {
+        * Determine n and parameter size and mu using -nbreg-:
+        qui nbreg `varlist' if `touse' & `bygr'==`k', d(c)
+        sca `n' = e(N)
+        sca `mu' = exp(_b[_cons])
+        sca `size' = `mu'/e(delta)
+    
+        * Determine threshold thout and adjust, censor, or remove outliers:
+        qui replace `touseby' = `touse'
+        qui replace `touseby' = 0 if `bygr' != `k'
+        mata: nb_adj("`varlist'","`nvar'","`touseby'", `=`thout'', `=`small'', ///
+                     `=`low'',`=`n'',`=`mu'',`=`size'', `=`replicates'', ///
+                     "`remove'", "`censor'")
+        qui replace `nvar' = `varlist' if (`varlist' > .) & `bygr'==`k'
+        qui recode `nvar' (. = .r) if missing(`nvar') & !missing(`varlist') & `bygr'==`k'
+        label variable `nvar' "`varlist' adjusted"
+      }
+      if "`generate'" != "" qui replace `generate' = `nvar' if `bygr'==`k'
+    
+      * Output of results:
+      if ("`detail'" == "" & `mu' > 0) fre `varlist' if `touse' & `bygr'==`k'
+      sum `varlist' if `touse' & `bygr'==`k'
+      di _n as text "Analysis of outliers:" ///
+         _n as res "Outliers > threshold (" `thout' "): n = " `nout' " (" ///
+         %5.3f `pmisfit' "%)"
+    
+      if "`remove'" == "" & "`censor'" == "" {
+        if (`nout' > 0) {
+          if ("`notify'" != "") {
+            if (`thout' < `small') {
+              di as text "`notify' lower bound has been set to " ///
+                         `""small" = "' `small' ")"
+            }
+            else {
+              di as text "`notify' lower bound has been set to " ///
+                         "outlier threshold)"
+            }
+          }
           if ("`detail'" == "") {
-            di _n as text "Outliers and adjusted values:" _c
-            table `nvar' `varlist' if `varlist' > max(`thout', `small') ///
-                  & `touse' & `bygr'==`k', row col
+            if (`nout' == 1) {
+              di _n as text "Summary of `varlist' with " ///
+                 as res `nout' as text " outlier removed:"
+            }
+            else {
+              di _n as text "Summary of `varlist' with " ///
+                 as res `nout' as text " outliers removed:"
+            }
+            sum `varlist' if `varlist' <= `thout' & `touse' & `bygr'==`k'
           }
-          if (`nadj' == 1) {
-            if ("`generate'" != "") {
+          if (`nadj' > 0) {
+            if ("`detail'" == "") {
+              di _n as text "Outliers and adjusted values:" _c
+              table `nvar' `varlist' if `varlist' > max(`thout', `small') ///
+                    & `touse' & `bygr'==`k', row col
+            }
+            if (`nadj' == 1) {
+              if ("`generate'" != "") {
+                di _n as text "Summary of `generate' with " ///
+                   as res `nadj' as text " outlier adjusted:"
+              }
+              else {
+                di _n as text "Summary of `varlist' with " ///
+                   as res `nadj' as text " outlier temporarily adjusted:"
+              }
+            }
+            else {
+              if ("`generate'" != "") {
               di _n as text "Summary of `generate' with " ///
-                 as res `nadj' as text " outlier adjusted:"
+                 as res `nadj' as text " outliers adjusted:"
+              }
+              else {
+                di _n as text "Summary of `varlist' with " ///
+                   as res `nadj' as text " outliers temporarily adjusted:"
+              }
             }
-            else {
-              di _n as text "Summary of `varlist' with " ///
-                 as res `nadj' as text " outlier temporarily adjusted:"
-            }
-          }
-          else {
             if ("`generate'" != "") {
-            di _n as text "Summary of `generate' with " ///
-               as res `nadj' as text " outliers adjusted:"
+              sum `generate' if `touse' & `bygr'==`k'
+              label variable `generate' "`varlist' with outliers adjusted"
             }
             else {
-              di _n as text "Summary of `varlist' with " ///
-                 as res `nadj' as text " outliers temporarily adjusted:"
+              sum `nvar' if `touse' & `bygr'==`k'
             }
           }
+        }
+        if (`nadj' == 0) {
           if ("`generate'" != "") {
+            di _n as text "Summary of `generate' (no outliers to adjust):"
             sum `generate' if `touse' & `bygr'==`k'
             label variable `generate' "`varlist' with outliers adjusted"
           }
           else {
+            di _n as text "Summary of `varlist' (no outliers to adjust):"
             sum `nvar' if `touse' & `bygr'==`k'
           }
         }
       }
-      if (`nadj' == 0) {
-        if ("`generate'" != "") {
-          di _n as text "Summary of `generate' (no outliers to adjust):"
-          sum `generate' if `touse' & `bygr'==`k'
-          label variable `generate' "`varlist' with outliers adjusted"
-        }
-        else {
-          di _n as text "Summary of `varlist' (no outliers to adjust):"
-          sum `nvar' if `touse' & `bygr'==`k'
-        }
-      }
-    }
-    else if "`censor'" == "censor" {
-      if (`nout' > 0) {
-        if ("`notify'" != "") {
-          if (`thout' < `small') {
-            di as text "`notify' lower bound has been set to " ///
-                       `""small" = "' `small' ")"
+      else if "`censor'" == "censor" {
+        if (`nout' > 0) {
+          if ("`notify'" != "") {
+            if (`thout' < `small') {
+              di as text "`notify' lower bound has been set to " ///
+                         `""small" = "' `small' ")"
+            }
+            else {
+              di as text "`notify' lower bound has been set to " ///
+                         "outlier threshold)"
+            }
           }
-          else {
-            di as text "`notify' lower bound has been set to " ///
-                       "outlier threshold)"
-          }
-        }
-        if ("`detail'" == "") {
-          if (`nout' == 1) {
-            di _n as text "Summary of `varlist' with " ///
-               as res `nout' as text " outlier removed:"
-          }
-          else {
-            di _n as text "Summary of `varlist' with " ///
-               as res `nout' as text " outliers removed:"
-          }
-          sum `varlist' if `varlist' <= `thout' & `touse' & `bygr'==`k'
-        }
-        if (`nadj' > 0) {
           if ("`detail'" == "") {
-            di _n as text "Outliers censored:" _c
-            table `nvar' `varlist' if `varlist' > max(`thout', `small') ///
-                  & `touse' & `bygr'==`k', col
+            if (`nout' == 1) {
+              di _n as text "Summary of `varlist' with " ///
+                 as res `nout' as text " outlier removed:"
+            }
+            else {
+              di _n as text "Summary of `varlist' with " ///
+                 as res `nout' as text " outliers removed:"
+            }
+            sum `varlist' if `varlist' <= `thout' & `touse' & `bygr'==`k'
           }
-          if (`nadj' == 1) {
-            if ("`generate'" != "") {
+          if (`nadj' > 0) {
+            if ("`detail'" == "") {
+              di _n as text "Outliers censored:" _c
+              table `nvar' `varlist' if `varlist' > max(`thout', `small') ///
+                    & `touse' & `bygr'==`k', col
+            }
+            if (`nadj' == 1) {
+              if ("`generate'" != "") {
+                di _n as text "Summary of `generate' with " ///
+                   as res `nadj' as text " outlier censored:"
+              }
+              else {
+                di _n as text "Summary of `varlist' with " ///
+                   as res `nadj' as text " outlier temporarily censored:"
+              }
+            }
+            else {
+              if ("`generate'" != "") {
               di _n as text "Summary of `generate' with " ///
-                 as res `nadj' as text " outlier censored:"
+                 as res `nadj' as text " outliers censored:"
+              }
+              else {
+                di _n as text "Summary of `varlist' with " ///
+                   as res `nadj' as text " outliers temporarily censored:"
+              }
             }
-            else {
-              di _n as text "Summary of `varlist' with " ///
-                 as res `nadj' as text " outlier temporarily censored:"
-            }
-          }
-          else {
             if ("`generate'" != "") {
-            di _n as text "Summary of `generate' with " ///
-               as res `nadj' as text " outliers censored:"
+              sum `generate' if `touse' & `bygr'==`k'
+              label variable `generate' "`varlist' with outliers censored"
             }
             else {
-              di _n as text "Summary of `varlist' with " ///
-                 as res `nadj' as text " outliers temporarily censored:"
+              sum `nvar' if `touse' & `bygr'==`k'
             }
           }
+        }
+        if (`nadj' == 0) {
           if ("`generate'" != "") {
+            di _n as text "Summary of `generate' (no outliers to censor):"
             sum `generate' if `touse' & `bygr'==`k'
             label variable `generate' "`varlist' with outliers censored"
           }
           else {
+            di _n as text "Summary of `varlist' (no outliers to censor):"
             sum `nvar' if `touse' & `bygr'==`k'
           }
         }
       }
-      if (`nadj' == 0) {
-        if ("`generate'" != "") {
-          di _n as text "Summary of `generate' (no outliers to censor):"
-          sum `generate' if `touse' & `bygr'==`k'
-          label variable `generate' "`varlist' with outliers censored"
+      else if ("`remove'" == "remove") {
+        if (`nout' > 0) & ("`notify'" != "") & (`thout' < `small') {
+          di as text "`notify' Outlier threshold not used because it is less " ///
+                     `"than "small" = "' `small' "!)"
         }
-        else {
-          di _n as text "Summary of `varlist' (no outliers to censor):"
-          sum `nvar' if `touse' & `bygr'==`k'
-        }
-      }
-    }
-    else if ("`remove'" == "remove") {
-      if (`nout' > 0) & ("`notify'" != "") & (`thout' < `small') {
-        di as text "`notify' Outlier threshold not used because it is less " ///
-                   `"than "small" = "' `small' "!)"
-      }
-      if (`nadj' > 0) {
-        if ("`detail'" == "") & ("`generate'" != "") {
+        if (`nadj' > 0) {
+          if ("`detail'" == "") & ("`generate'" != "") {
+            if (`nadj' == 1) {
+              di _n as res "1 value > " max(`thout', `small') ///
+                 " has been set to missing (.o) in `generate'."
+            }
+            else {
+              di _n as res `nadj' " values > " max(`thout', `small') ///
+                 " have been set to missing (.o) in `generate'."
+            }
+            di _n as text "Outliers removed:" _c
+            table `nvar' `varlist' if `nvar' == .o & `bygr'==`k', col
+          }
           if (`nadj' == 1) {
-            di _n as res "1 value > " max(`thout', `small') ///
-               " has been set to missing (.o) in `generate'."
+            if "`generate'" != "" {
+              di _n as text "Summary of `generate' with " as res 1 ///
+                 as text " outlier set to .o:"
+            }
+            else {
+              di _n as text "Summary of `varlist' with " as res 1 ///
+                 as text " outlier temporarily set to missing:"
+            }
           }
           else {
-            di _n as res `nadj' " values > " max(`thout', `small') ///
-               " have been set to missing (.o) in `generate'."
+            if "`generate'" != "" {
+              di _n as text "Summary of `generate' with " as res `nadj' ///
+                 as text " outliers set to .o:"
+            }
+            else {
+              di _n as text "Summary of `varlist' with " as res `nadj' ///
+                 as text " outliers temporarily set to missing:"
+            }
           }
-          di _n as text "Outliers removed:" _c
-          table `nvar' `varlist' if `nvar' == .o & `bygr'==`k', col
-        }
-        if (`nadj' == 1) {
           if "`generate'" != "" {
-            di _n as text "Summary of `generate' with " as res 1 ///
-               as text " outlier set to .o:"
-          }
-          else {
-            di _n as text "Summary of `varlist' with " as res 1 ///
-               as text " outlier temporarily set to missing:"
-          }
-        }
-        else {
-          if "`generate'" != "" {
-            di _n as text "Summary of `generate' with " as res `nadj' ///
-               as text " outliers set to .o:"
-          }
-          else {
-            di _n as text "Summary of `varlist' with " as res `nadj' ///
-               as text " outliers temporarily set to missing:"
-          }
-        }
-        if "`generate'" != "" {
-          label variable `generate' "`varlist' with outliers set to .o"
-          sum `generate' if `touse' & `bygr'==`k'
-        }
-        else {
-          sum `nvar' if `touse' & `bygr'==`k'
-        }
-      }
-      else {
-        if ("`detail'" == "") {
-          if ("`generate'" != "") {
-            di _n as text "Summary of `generate' (no outliers to remove):"
+            label variable `generate' "`varlist' with outliers set to .o"
             sum `generate' if `touse' & `bygr'==`k'
           }
           else {
-            di as text "No outliers to remove."
+            sum `nvar' if `touse' & `bygr'==`k'
           }
         }
-        if ("`generate'" != "") {
-          label variable `generate' "`varlist' with outliers set to .o"
+        else {
+          if ("`detail'" == "") {
+            if ("`generate'" != "") {
+              di _n as text "Summary of `generate' (no outliers to remove):"
+              sum `generate' if `touse' & `bygr'==`k'
+            }
+            else {
+              di as text "No outliers to remove."
+            }
+          }
+          if ("`generate'" != "") {
+            label variable `generate' "`varlist' with outliers set to .o"
+          }
         }
       }
+      if ("`_byvars'" != "" & `step' < `ngr') di
+      drop `nvar'
     }
-    if ("`_byvars'" != "" & `step' < `ngr') di
-    drop `nvar'
-  }
+    
+    if !(`nadj' == 0 & ("`remove'" != "" |"`censor'" != "") & "`detail'" != "")  di _n "{hline}"
+    else di "{hline}"
 
-  if !(`nadj' == 0 & ("`remove'" != "" |"`censor'" != "") & "`detail'" != "")  di _n "{hline}"
-  else di "{hline}"
+  }
 
   return scalar nadj = `nadj'
   return scalar low = `low'
