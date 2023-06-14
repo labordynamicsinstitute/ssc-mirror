@@ -1,5 +1,9 @@
-*!! lcaentropy.ado version 1.0.0
-*!! RA Medeiros 8sep2022
+*!! lcaentropy.ado version 1.0.1
+*!! v1.0.1 RA Medeiros 12jun2023
+* v1.0.0  RA Medeiros 8sep2022
+
+version 15.0
+
 program define lcaentropy, rclass
 	version 15.0
 	syntax  [, force] 
@@ -33,11 +37,14 @@ program define lcaentropy, rclass
 		capture confirm new variable `prvars'
 	}
 	
-	predict double `pr'_* if e(sample), classposteriorpr 
+	capture: predict double `pr'_* if e(sample), classposteriorpr 
+	if _rc!=0 {
+		predict double `pr'_* if e(sample), classposteriorpr
+	}
 	unab prvars: `pr'_*
 	
 	foreach var in `prvars'	{
-		quietly: count if ln(`var')==.
+		quietly: count if ln(`var')==. & e(sample)
 		if r(N)!=0 {
 			display as error "`: variable label `var'' contains probabilities sufficiently close to 0" _n ///
 				"to result in missing values of ln(pr) in " r(N) " cases." 

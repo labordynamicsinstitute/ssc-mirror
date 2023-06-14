@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.1  11-Jun-20233, Dirk Enzmann}{...}
+{* *! version 2.12  12-Jun-20233, Dirk Enzmann}{...}
 {hi:help nb_adjust}
 {hline}
 
@@ -119,7 +119,7 @@ be > {cmd:small}.
 
 {pstd} An example showing how to apply outlier detection and outlier adjustment of
 negative binomial distributed counts for the estimation of rates of reporting
-criminal victimizations to the police is shown in Section 3 of Enzmann ({browse "http://dx.doi.org/10.13140/RG.2.2.11653.32483":2023}).
+criminal victimizations to the police is shown in Section 3 of Enzmann ({browse "http://dx.doi.org/10.13140/RG.2.2.20133.68328":2023}).
 
 
 {title:Options}
@@ -295,7 +295,7 @@ the effect of adjusting and removing the 9 outliers:
 {title:References}
 
 {p 4 7 2}Enzmann, D. (2023). {it:Reporting Rates as an Indicator of Ignorance: Issues of Measurement and Design}. Hamburg: University of Hamburg, Institute of 
-Criminal Sciences. [{browse "http://dx.doi.org/10.13140/RG.2.2.11653.32483":http://dx.doi.org/10.13140/RG.2.2.11653.32483}]{p_end}
+Criminal Sciences. [{browse "http://dx.doi.org/10.13140/RG.2.2.20133.68328":http://dx.doi.org/10.13140/RG.2.2.20133.68328}]{p_end}
 
 
 {title:Requires}

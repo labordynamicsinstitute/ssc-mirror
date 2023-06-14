@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0 7sep2022}{...}
+{* *! version 1.0.1 12jun2023}{...}
 {vieweralsosee "gsem" "help gsem"}{...}
 {vieweralsosee "gsem postestimation" "help gsem_postestimation"}{...}
 {viewerjumpto "Syntax" "lcaentropy##syntax"}{...}

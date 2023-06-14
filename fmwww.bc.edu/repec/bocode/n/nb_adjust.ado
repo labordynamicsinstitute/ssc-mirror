@@ -1,4 +1,4 @@
-*! version 2.1  11-Jun-2023, Dirk Enzmann
+*! version 2.11  12-Jun-2023, Dirk Enzmann
 *! Adjust or remove outliers of a negative binomial distributed variable
 
 // Main Program
