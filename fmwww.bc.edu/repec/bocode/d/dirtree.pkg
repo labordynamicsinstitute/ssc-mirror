@@ -1,0 +1,20 @@
+d 'DIRTREE': module to display the content of a directory as a tree
+d
+d  dirtree shows inside Stata the content of a directory, including
+d sub-directories, as a tree. By default, files that can be opened
+d in Stata are shown as clickable links. 
+d
+d KW: directory
+d KW: folder
+d KW: files
+d KW: tree
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20200927
+d
+d Author: Maarten L. Buis, University of Konstanz
+d Support: email maarten.buis@@uni-konstanz.de
+d
+f dirtree.ado
+f dirtree.sthlp

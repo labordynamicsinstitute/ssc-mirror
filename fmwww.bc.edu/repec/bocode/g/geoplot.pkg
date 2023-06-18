@@ -1,0 +1,33 @@
+d 'GEOPLOT': module to draw maps
+d
+d  geoplot draws maps from shape files and other datasets. The
+d procedure is to first create one or several frames containing the
+d source data using geoframe and then apply geoplot to plot the
+d data from these frames. Multiple layers of elements such as
+d regions, borders, lakes, roads, labels, and symbols can be freely
+d combined. The look of the elements (e.g. their color) can be
+d varied depending on the values of variables. 
+d
+d KW: maps
+d KW: spatial data
+d KW: choropleth maps
+d
+d Requires: Stata version 17 and moremata, palettes, colrspace from SSC (q.v.)
+d
+d Distribution-Date: 20230617
+d
+d Author: Ben Jann, University of Bern
+d Support: email jann@@soz.unibe.ch
+d
+f geoplot.ado
+f geoplot.sthlp
+f geoframe.ado
+f geoframe.sthlp
+f ../_/__geoplot_layer.ado
+f ../_/_geoframe_generate_plevel.ado
+f ../_/_geoframe_spjoin.ado
+f ../_/_geoplot_bar.ado
+f ../_/_geoplot_label.ado
+f ../_/_geoplot_pie.ado
+f ../_/_geoplot_symbol.ado
+f geoplot.zip

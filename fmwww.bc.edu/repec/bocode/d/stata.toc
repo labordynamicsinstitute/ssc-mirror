@@ -74,6 +74,7 @@ p directma module to conducts multiple pair-wise meta-analysis (head-to-head com
 p dirifit module to fit a Dirichlet distribution
 p dirlist module to retrieve directory information
 p dirtools modules to manage files in the working directory
+p dirtree module to display the content of a directory as a tree
 p discrates module to provide estimation and statistical test for gross and net discrimination rates
 p discrepancy module to implement a pseudo-ANOVA method for partitions of pairwise distance matrices
 p disjoint module to generate end variable demarcating disjoint spells
