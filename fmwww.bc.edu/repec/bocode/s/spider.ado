@@ -1,8 +1,10 @@
-*! spider v1.1 22 Dec 2022. Minor fixes.
-*! Asjad Naqvi 
+*! spider v1.21 (10 June 2023)
+*! Asjad Naqvi (asjadnaqvi@gmail.com)
 
-* v1.1 22 Dec 2022. Minor fixes.
-* v1.0 13 Oct 2022. Beta release.
+* v1.21 (10 Jun 2023): Options added: ralabcolor() ralabangle().
+* v1.2  (20 May 2023): Major fixes to the legend.
+* v1.1  (22 Dec 2022): Minor fixes.
+* v1.0  (13 Oct 2022): Beta release.
 
 **********************************
 * Step-by-step guide on Medium   *
@@ -23,12 +25,14 @@ version 15
 		[ RAnge(numlist min=2 max=2) cuts(real 6) smooth(numlist max=1 >=0 <=1) raformat(string)  RALABSize(string) ] ///
 		[ LWidth(string) MSYMbol(string) MSize(string) MLWIDth(string)  											] /// // spider properties
 		[ CColor(string) CWidth(string)	SColor(string) SWidth(string) SLABSize(string)								] /// // circle = C, spikes = S
-		[ legend(passthru) title(passthru) subtitle(passthru) note(passthru) scheme(passthru) name(passthru)		] 
+		[ title(passthru) subtitle(passthru) note(passthru) scheme(passthru) name(passthru)		] /// 
+		[ NOLEGend LEGPOSition(real 6) LEGCOLumns(real 5) LEGSize(real 2.2) xsize(real 1) ysize(real 1) ] ///  // v1.2 updates.
+		[ RALABColor(string) RALABAngle(string) ]  // v1.21 options
 		
 		// TODO: 
 		// ROTATELABel: allow label rotations
 		// POLYgon    : replace circles with polygons
-		// legend(passthru) not working. If labels have spaces, it breaks down. Check and fix.
+		// legend(passthru) not working. If labels have breaks, it breaks down. Check and fix.
 		// add a by() option for long data
 		
 	// check dependencies
@@ -270,14 +274,15 @@ preserve
 	}
 
 	/////////////////
-	//   legend	   //  // legend passthru not working. deal with later
+	//   legend	   //  
 	/////////////////	
 	
-			
-	// local legend		
-	// local legend `"`legend'"'
 
-	// if "`legend'" == "" {
+	if "`nolegend'" != "" {
+		local mylegend legend(off)
+				
+	}
+	else {
 	
 		forval i = 1/`length' {
 			
@@ -287,10 +292,12 @@ preserve
 			local entries `" `entries' `j'  "`varn'"  "'
 		}
 	
-		local rows = cond(`length' <= 5, 1, 2)
+
+		local mylegend legend(order("`entries'") pos(`legposition') size(`legsize') col(`legcolumns')) 
+		
+	}
 	
-		local legend legend(order("`entries'") pos(6) size(2.5) row(`rows')) 
-	// }
+
 	
 
 
@@ -300,8 +307,9 @@ preserve
 	//////////////////////
 	
 	local axisr = 100 * (1.3)
-	if "`ralabsize'" == "" local ralabsize = 1.8
-	
+	if "`ralabsize'"  == "" local ralabsize = 1.8
+	if "`ralabcolor'" == "" local ralabcolor black
+	if "`ralabangle'" == "" local ralabangle 0
 
     twoway	///
 			`circle' 	///
@@ -309,15 +317,15 @@ preserve
 			`spider'	///
 			`spider2'	///
 			`labs' 		///
-			(scatter yvar xvar, mc(none) mlab(xlab) mlabpos(0) mlabsize(`ralabsize'))  ///
+			(scatter yvar xvar, mc(none) mlab(xlab) mlabpos(0) mlabsize(`ralabsize') mlabcolor(`ralabcolor') mlabangle(`ralabangle') )  ///
 						,    ///
-						aspect(1) xsize(1) ysize(1) ///	
+						aspect(1) xsize(`xsize') ysize(`ysize') ///	
 						xlabel(-`axisr' `axisr') ///
 						ylabel(-`axisr' `axisr') ///
 							xscale(off) yscale(off)	///
 							xlabel(, nogrid) ylabel(, nogrid) ///
-							`legend' ///
-							`title' `subtitle' `note' `scheme' 
+							`mylegend' ///
+							`title' `subtitle' `note' `scheme' `name'
 								
 									
 			
@@ -428,7 +436,6 @@ preserve
 
 		}
 	
-
 		**** calculate the Cs
 
 		gen Cx`x' = (((`t2' - t`x') / (`t2' - `t1')) * `B1x') + (((t`x' - `t1') / (`t2' - `t1')) * `B2x')
