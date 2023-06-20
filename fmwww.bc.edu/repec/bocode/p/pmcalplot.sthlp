@@ -27,7 +27,10 @@ General options available for all outcome types are given below.
 {synopt :{opt nost:atistics}}suppresses display of performance statistics{p_end}
 {synopt :{opt r:ange(# #)}}a range describing the square size of the plot region{p_end}
 {synopt :{opt sc:atteropts(string)}}twoway options to affect rendition of the groups{p_end}
-{synopt :{opt ci:opts(string)}}twoway options to affect rendition of the confidence intervals{p_end}
+{synopt :{opt nosm:oother}}suppresses display of the smoother{p_end}
+{synopt :{opt nosmootherci}}suppresses display of the CI for the smoother{p_end}
+{synopt :{opt sm:ootheropts(string)}}twoway options to affect rendition of the smoother{p_end}
+{synopt :{opt smootherci:opts(string)}}twoway options to affect rendition of the CI for the smoother{p_end}
 {synopt :{opt keep}}returns variables for the expected, observed & risk groups{p_end}
 {synopt :{opt zoom}}zooms the graph area to fit the risk groups and their CI's{p_end}
 {synopt :{it:twoway_options}}all other twoway options{p_end}
@@ -48,14 +51,13 @@ The second variable must represent the event indicator i.e. the observed outcome
 {synopt :{opt b:in(int 10)}}number of bins used to group patients average observed & expected probabilities{p_end}
 {synopt :{opt cut:points(numlist)}}unequal cutpoints used to group patients average observed & expected probabilities{p_end}
 {synopt :{opt ci}}displays 95% confidence intervals for groups{p_end}
-{synopt :{opt nol:owess}}suppresses display of the lowess smoother{p_end}
+{synopt :{opt ci:opts(string)}}twoway options to affect rendition of the confidence intervals{p_end}
 {synopt :{opt nosp:ike}}suppresses display of the spike plot{p_end}
-{synopt :{opt lo:wessopts(string)}}twoway options to affect rendition of the lowess smoother{p_end}
 {synopt :{opt sp:ikeopts(string)}}twoway options to affect rendition of the spike plot{p_end}
 {synoptline}
 
 {phang}
-{bf:Survial outcomes (Cox prediction models)}
+{bf:Survial outcomes (Cox/RP prediction models)}
 
 {pstd}
 For survial outcomes {it:varlist} must consist of only one variable; the first variable must represent the predicted probabilities from the model (a variable in the range [0,1]). 
@@ -72,8 +74,10 @@ NOTE: Predicted probabilites provided in {it:varlist} must represent the probabi
 {synopt :{opt b:in(int 10)}}number of bins used to group patients average observed & expected probabilities{p_end}
 {synopt :{opt cut:points(numlist)}}unequal cutpoints used to group patients average observed & expected probabilities{p_end}
 {synopt :{opt ci}}displays 95% confidence intervals for groups{p_end}
+{synopt :{opt ci:opts(string)}}twoway options to affect rendition of the confidence intervals{p_end}
 {synopt :{opt nosp:ike}}suppresses display of the spike plot{p_end}
 {synopt :{opt sp:ikeopts(string)}}twoway options to affect rendition of the spike plot{p_end}
+{synopt :{opt tte:smoothergroups(int 5)}}number of groups used to estimate the smoother for TTE outcomes{p_end}
 {synoptline}
 
 {phang}
@@ -89,9 +93,7 @@ The second variable must represent the observed outcome values.
 {synoptline}
 {synopt :{opt cont:inuous}}option required to tell {cmd: pmcalplot} continuous outcomes are being used{p_end}
 {synopt :{opt p(int 0)}}number of variables used in development model{p_end}
-{synopt :{opt nol:owess}}suppresses display of the lowess smoother{p_end}
 {synopt :{opt noh:ist}}suppresses display of the histograms for observed and expected outcomes{p_end}
-{synopt :{opt lo:wessopts(string)}}twoway options to affect rendition of the lowess smoother{p_end}
 {synopt :{opt obshi:stopts(string)}}twoway options to affect rendition of the histogram of observed values{p_end}
 {synopt :{opt exphi:stopts(string)}}twoway options to affect rendition of the histogram of expected values{p_end}
 {synoptline}
@@ -101,8 +103,7 @@ The second variable must represent the observed outcome values.
 
 {pstd}{cmd: pmcalplot} produces a calibration plot of observed against expected probabilities for assessment of prediction model performance. 
 Calibration is plotted in groups across the risk spectrum as recommended in the TRIPOD guidelines, and confidence intervals for the groupings can also be displayed (NB: not for continuous outcomes). 
-Further, a spike plot of the distribution of events and non-events can be displayed on the plot, as well as a lowess smoother allowing assessment of the calibration at the individual patient level 
-[NB: Spike plot and lowess smoother for survival outcomes is work in progress]. 
+Further, a spike plot of the distribution of events and non-events can be displayed on the plot, as well as a smoother allowing assessment of the calibration at the individual patient level. 
 For continuous outcomes a histogram of observed and expected values can be displayed on the corresponding axes.
 Additionally, common prediction model performance statistics can also be displayed on the plot, quantifying the models performance. 
 
@@ -117,12 +118,20 @@ However it can also be used during model development to check the apparent perfo
 {phang}{opt range(# #)} specifies a new plot range given two real numbers. The plot range must lie within the bounds of 0 and 1 for binary and survival outcome models. For continuous outcome models the range is dependent on the outcome measure.
 Both axes are forced to have the same range so that the plot remains square in line with the TRIPOD guidelines. The default range is 0 to 1 for binary & survival outcome models.
 
-{phang}{opt zoom} automatically 'zooms' the plot range to fit the risk groups and their CI's. Lowess and spike plots are only plotted within the 'zoomed' ranged. The {opt range()} option overides {opt zoom}. 
+{phang}{opt zoom} automatically 'zooms' the plot range to fit the risk groups and their CI's. Smoother and spike plots are only plotted within the 'zoomed' ranged. The {opt range()} option overides {opt zoom}. 
 Useful for prediction models with a narrow range of predictions.
 
 {phang}{opt scatteropts(string)} specifies any additional options to describe the rendition of the scatter plot. See {helpb scatter}.
 
 {phang}{opt ciopts(string)} specifies any additional options to describe the rendition of the confidence intervals. See {helpb twoway_rspike}.
+
+{phang}{opt nosmoother} specifies that the smoother not be calculated and displayed on the calibration plot (note this may be computationally faster for large datasets).
+
+{phang}{opt nosmootherci} specifies that the 95% confidence interval for the smoother not be calculated and displayed on the calibration plot.
+
+{phang}{opt smootheropts(string)} specifies any additional options to describe the rendition of the smoother. See {helpb twoway_line}.
+
+{phang}{opt smootherciopts(string)} specifies any additional options to describe the rendition of the 95% CI for the smoother. See {helpb twoway_rarea}.
 
 {phang}{opt keep} specifies that variables for the expected, observed & risk groups defined by {cmd: pmcalplot} be retained in the dataset after the program terminates.
 
@@ -140,11 +149,7 @@ It is advisable not to use the {opt cutpoints()} option unless the model has pre
 
 {phang}{opt ci} specifies that 95% confidence intervals for the observed proportions be added to the plot.
 
-{phang}{opt nolowess} specifies that the lowess smoother not be calculated and displayed on the calibration plot (note this may be computationally faster).
-
 {phang}{opt nospike} specifies that the spike plot not be displayed on the calibration plot.
-
-{phang}{opt lowessopts(string)} specifies any additional options to describe the rendition of the lowess smoother. See {helpb lowess}.
 
 {phang}{opt spikeopts(string)} specifies any additional options to describe the rendition of the spike plot. See {helpb twoway_rspike}.
 
@@ -160,6 +165,10 @@ Please consult the TRIPOD guidelines if unsure. See {helpb sts_list}, {helpb sts
 
 {phang}{opt lp(varname numeric)} if a variable containing the linear predictor values for patients in the dataset is provided, then some performance statistics can be displayed on the plot. 
 Such a variable should be available as it is used in the calculation of predicted/expected risks which must be given in {it:varlist} for survival outcome models.
+The linear predictor variable must be given for the smoother to be calculated and displayed for survival/TTE outcomes.
+
+{phang}{opt ttesmoothergroups(int 10)} specifies the number of groups used to estimate the smoother via pseudo-values. The default is five groups.
+If the dataset is sufficiently large it is recommended to use 10 or more groups. 
 
 {phang}{opt bin(int 10)} specifies the number of equally sized percentiles to divide the predicted risks into. The default is to divide the predicted risks into 10 equally sized groups.
 
@@ -181,10 +190,6 @@ It is advisable not to use the {opt cutpoints()} option unless the model has pre
 
 {phang}{opt p(int 0)} if the number of variables included in the development model is provided, then R-squared adjusted can additionally be calculated and displayed on the plot. 
 NOTE: p is the number of variables in the published model to be validated.
-
-{phang}{opt nolowess} specifies that the lowess smoother not be calculated and displayed on the calibration plot (note this may be computationally faster).
-
-{phang}{opt lowessopts(string)} specifies any additional options to describe the rendition of the lowess smoother. See {helpb lowess}.
 
 {phang}{opt nohist} specifies that the histograms not be displayed on the calibration plot.
 
@@ -287,25 +292,21 @@ Telling {cmd: pmcalplot} the number of factors in the model also allows R-square
 
 {title:Authors}
 
-{phang}Joie Ensor, Keele University {break}
-j.ensor@keele.ac.uk{p_end}
-
-{phang}Kym IE. Snell, Keele University{p_end}
-
-{phang}Emma C. Martin, University of Leicester{p_end}
+{phang}Joie Ensor, University of Birmingham {break}
+j.ensor@bham.ac.uk{p_end}
 
 {title:Acknowledgements}
 
-{phang}With thanks to Kenneth Pihl, Rebecca Whittle & Rupert Major for helpful feedback{p_end}
+{phang}With thanks to Emma Martin, Kenneth Pihl, Rebecca Whittle & Rupert Major for helpful feedback{p_end}
 
 {marker reference}{...}
 {title:References}
 
 {p 5 12 2}
-Ensor J, Snell KIE, Martin EC. Investigation of prediction model performance with Stata: pmstats and pmcalplot. 2018; {it:In preparation}.{p_end}
+Ensor J. Calibration plots of prediction model performance in Stata using pmcalplot. {it:In preparation}.{p_end}
 
 {title:Also see}
 
 {psee}
-Online: {helpb twoway_options}, {helpb lowess}, {helpb roctab}
+Online: {helpb twoway_options}, {helpb running}
 {p_end}

@@ -12,24 +12,42 @@
 *  Updated: 2/4/2019 											 *
 *	- removed width default in histograms for cont outcomes		 *
 *  Updated: 23/12/2019											 *
-*	- updated range() option to ensure plotting of lowess 		 *
+*	- updated range() option to ensure plotting of smoother 	 *
 *		& spike plot inside range only							 *
 *	- updated range() option to ensure correct scaling of spike  *
 *		plot at any range										 *
 *	- updated graph axes defaults when using range()			 *
 *	- added 'zoom' option, which automatically scales the plot 	 *
-*		to fit all groupings & CI's (lowess & spikes plotted	 *
+*		to fit all groupings & CI's (smoother & spikes plotted	 *
 *		within this zoomed range only)							 *
 *	- updated survival plot: displays groupings at 1 if all 	 *
 *		patients had an event before the time point of interest  *
 *	- updated survival plot to allow spike plot					 *
+*	Updated: 17/12/2021											 *
+*	- fixing bug in the spike plots								 *
+*	Updated: 13/01/2022											 *
+*	- CI for smoother for binary outcomes						 *
+*   Updated: 04/05/2022											 *
+*	- uses pmcstat to calc c-stat now for binary outcomes 		 *
+*	 giving dramatic speed increase with large datasets 		 *
+*  Updated: 12/06/2023											 *
+*	ADDED:													  	 *
+*	- fix to R2 calculation for cont. outcomes using corr 		 *
+*	- switch smoother to running, allowing CIs (only bin.)		 *
+*	- addplot option (only added to cont. for now)				 *
+*	- nosmootherci option (to turn off the CI for the smoother)	 *
+*	- smootherciopts option 									 *
+*   Updated: 14/06/2023											 *
+*	- added smoother & CI for survival outcomes 				 *
+*	- added option to alter rendition of survival smoother 		 *
+*	- added ttesmoothergroups() to define bins for smoother      *
+*	- updated "lowess" language to "smoother" in general		 *	
 *																 *
-*  2.1.0 J. Ensor								 				 *
+*  2.2.1 J. Ensor								 				 *
 ******************************************************************
 
-*! 2.1.0 J.Ensor 23Dec2019
+*! 2.2.1 J.Ensor 14Jun2023
 
-capture program drop pmcalplot
 program define pmcalplot, rclass
 
 version 12.1						
@@ -42,12 +60,12 @@ version 12.1
 					& expected probabilities
 	CUTpoints = A numeric list of cutpoints based on risk to be used instead
 		of equally sized bins. Real numbers in the interval [0,1].
-	NOLowess = Remove lowess line
-	NOSpike = Remove spike plot
+	NOSMoother = Remove smoother line
+	NOSPike = Remove spike plot
 	CI = add 95% CI's for the groups (CI's for proportions)
 	SCatteropts = twoway options to affect rendition of the groups
 	Range = a range for the plot describing the square size of the plot
-	LOwessopts = twoway options to affect rendition of the lowess line
+	SMootheropts = twoway options to affect rendition of the smoother line
 	SPikeopts = twoway options to affect rendition of the spikes
 	CIopts = twoway options to affect rendition of the confidence intervals
 	* = all other twoway options e.g. titles, legends (defaults apply otherwise)
@@ -64,18 +82,20 @@ version 12.1
 
 */
 	syntax varlist(min=1 max=2 numeric) [if] [in], [Bin(int 10) ///
-						CUTpoints(numlist >=0 <=1 sort) noLowess noSpike ///
-						CI SCatteropts(string asis) ///
+						CUTpoints(numlist >=0 <=1 sort) noSMoother noSPike ///
+						CI noSMOOTHERCI SCatteropts(string asis) ///
 						Range(numlist min=2 max=2 sort) ///
-						LOwessopts(string asis) SPikeopts(string asis) ///
-						CIopts(string asis) noStatistics SURVival ///
-						Timepoint(int 1) KEEP CONTinuous noHist ///
+						SMootheropts(string asis) SMOOTHERCIopts(string asis) ///
+						SPikeopts(string asis) CIopts(string asis) noStatistics SURVival ///
+						Timepoint(int 1) KEEP CONTinuous noHist ADDPLOT(string asis) ///
 						OBSHIstopts(string asis) EXPHIstopts(string asis) ///
-						P(int 0) LP(varname numeric) ZOOM *] 
+						P(int 0) LP(varname numeric) TTEsmoothergroups(int 5) ZOOM *] 
 
 //SET UP TEMPVARS
 tempvar binvar obs obsn exp binvar2 exp2 events nonevents outcomp ///
-			lci uci obsse lowvar spikejitter binary_lp thresh
+			lci uci obsse lowvar spikejitter binary_lp thresh lowvar_se ///
+			lowvar_lci lowvar_uci histbinvar histeventn histnoneventn histexp ///
+			droplinebase pseudo groups
 
 // check on the if/in statement
 marksample touse
@@ -202,11 +222,7 @@ if "`survival'"!="survival" & "`continuous'"!="continuous" {
 
 ******************** SURVIVAL OUTCOMES
 if "`survival'"=="survival" & "`continuous'"!="continuous" {
-	// Lowess for survival not incorportated yet 
-	// turn off lowess
-	local lowess = "nolowess"
-	*local spike = "nospike"
-
+	
 	********************
 	// check if user specified cutpoints
 	if "`cutpoints'"!="" {
@@ -279,9 +295,6 @@ if "`survival'"!="survival" & "`continuous'"=="continuous" {
 	qui gen `obs' = `2' if `touse'
 	qui gen `exp' = `1' if `touse'
 	
-	// Lowess for continuous data possible, but computationally intensive!
-	*local lowess = "nolowess"
-	
 	// turn spike plot off as continuous outcomes uses histograms
 	local spike = "nospike"
 	
@@ -296,7 +309,7 @@ if "`range'"!="" {
 		gettoken first second : range
 		local minr = `first'
 		local maxr = `second'
-		di as err _n "WARNING: Plot range has been manually restricted. Be aware that information may lie outside of this range." _n "Groupings & CI's will not be displayed if they lie outside of the specified range" _n "Further, lowess values outside of the specified range will not be plotted"
+		di as err _n "WARNING: Plot range has been manually restricted. Be aware that information may lie outside of this range." _n "Groupings & CI's will not be displayed if they lie outside of the specified range" _n "Further, smoother values outside of the specified range will not be plotted"
 		
 		local range_diff = abs(`maxr'-`minr')
 		local adj = `minr' -(.05*`range_diff')
@@ -310,7 +323,7 @@ if "`range'"!="" {
 			qui gen `spikejitter' = `1'+(runiform()*0.00001)
 			}
 		
-		local sp1 = cond("`spike'"=="nospike","",`"|| rspike `events' `nonevents' `spikejitter' if (`spikejitter'<`maxr') & (`spikejitter'>`minr'), yline(`adj') text(`adjdown' `maxr' "1", place(n)) text(`adjup' `maxr' "0", place(s)) lw(thin) lcol(maroon) `spikeopts'"')
+		local sp1 = cond("`spike'"=="nospike","",`"|| rspike `events' `nonevents' `spikejitter' if (`spikejitter'<`maxr') & (`spikejitter'>`minr') & (`touse'), yline(`adj') text(`adjdown' `maxr' "1", place(n)) text(`adjup' `maxr' "0", place(s)) lw(thin) lcol(maroon) `spikeopts'"')
 		local ci1 = cond("`ci'"=="ci","|| rspike `uci' `lci' `exp' if (`exp'<=`maxr') & (`exp'>=`minr') & (`uci'<=`maxr') & (`uci'>=`minr') & (`lci'<=`maxr') & (`lci'>=`minr'), lcol(forest_green) `ciopts'","")
 		}
 		else if "`range'"=="" & "`continuous'"=="continuous" {
@@ -350,7 +363,7 @@ if "`range'"!="" {
 						}
 				
 				local ci1 = cond("`ci'"=="ci","|| rspike `uci' `lci' `exp' if (`exp'<=`maxr') & (`exp'>=`minr'), lcol(forest_green) `ciopts'","") 
-				di as err _n "WARNING: Plot range has been manually restricted. Be aware that information may lie outside of this range." _n "Lowess & Spike plot values may lie outside of the plot range when using zoom option"
+				di as err _n "WARNING: Plot range has been manually restricted. Be aware that information may lie outside of this range." _n "Smoother & Spike plot values may lie outside of the plot range when using zoom option"
 		
 				local range_diff = abs(`maxr'-`minr')
 				local adj = `minr' -(.05*`range_diff')
@@ -364,7 +377,7 @@ if "`range'"!="" {
 					qui gen `spikejitter' = `1'+(runiform()*0.00001)
 					}
 		
-				local sp1 = cond("`spike'"=="nospike","",`"|| rspike `events' `nonevents' `spikejitter' if (`spikejitter'<`maxr') & (`spikejitter'>`minr'), yline(`adj') text(`adjdown' `maxr' "1", place(n)) text(`adjup' `maxr' "0", place(s)) lw(thin) lcol(maroon) `spikeopts'"')
+				local sp1 = cond("`spike'"=="nospike","",`"|| rspike `events' `nonevents' `spikejitter' if (`spikejitter'<`maxr') & (`spikejitter'>`minr') & (`touse'), yline(`adj') text(`adjdown' `maxr' "1", place(n)) text(`adjup' `maxr' "0", place(s)) lw(thin) lcol(maroon) `spikeopts'"')
 				}
 				else {
 					local minr = 0
@@ -377,35 +390,86 @@ if "`range'"!="" {
 						qui gen `spikejitter' = `1'+(runiform()*0.00001)
 						}
 					
-					local sp1 = cond("`spike'"=="nospike","",`"|| rspike `events' `nonevents' `spikejitter' if (`spikejitter'<`maxr') & (`spikejitter'>`minr'), yline(-.05) text(-.04 `maxr' "1", place(n)) text(-.06 `maxr' "0", place(s)) lw(thin) lcol(maroon) `spikeopts'"')
+					local sp1 = cond("`spike'"=="nospike","",`"|| rspike `events' `nonevents' `spikejitter' if (`spikejitter'<`maxr') & (`spikejitter'>`minr') & (`touse'), yline(-.05) text(-.04 `maxr' "1", place(n)) text(-.06 `maxr' "0", place(s)) lw(thin) lcol(maroon) `spikeopts'"')
 					local ci1 = cond("`ci'"=="ci","|| rspike `uci' `lci' `exp' if (`exp'<=`maxr') & (`exp'>=`minr') & (`uci'<=`maxr') & (`uci'>=`minr') & (`lci'<=`maxr') & (`lci'>=`minr'), lcol(forest_green) `ciopts'","")
 					}
 
 					
-// derive and save lowess curve variable
-if "`lowess'"!="nolowess" {
-	lowess `2' `1' if `touse', nog gen(`lowvar')
+// derive and save smoother variable
+if "`smoother'"!="nosmoother" {
+	if "`survival'"!="survival" & "`continuous'"!="continuous" {
+		qui running `2' `1' if `touse', span(1) ci generate(`lowvar') gense(`lowvar_se') replace nog
+		qui gen `lowvar_lci' = `lowvar' - (1.96*`lowvar_se')
+		qui replace `lowvar_lci'=0 if `lowvar_lci'<0
+		qui gen `lowvar_uci' = `lowvar' + (1.96*`lowvar_se')
+		qui replace `lowvar_uci'=1 if `lowvar_uci'>1
+	}
+	if "`survival'"=="survival" {
+		if "`lp'"!="" {
+			qui egen `groups' = cut(`lp') if `touse', group(`ttesmoothergroups')
+			qui replace `groups' = `groups' + 1
+			
+			forvalues i = 1/`ttesmoothergroups' {
+				* generate pseudo values at t years
+				tempvar pseudo`i'
+				qui capture stpci if `groups' == `i', at(`timepoint') gen(`pseudo`i'') 
+				if _rc {
+					di as err "Sample size is too small to allow estimation of the smoother using `ttesmoothergroups' groups and may lead to inappropriate smoothers/CIs. Try reducing the number of groups using ttesmoothergroups()"
+					}
+			}
+
+			* merge pseudo observations into a single variable
+			qui gen `pseudo' = .
+			forvalues i = 1/`ttesmoothergroups' {
+				qui replace `pseudo' = `pseudo`i'' if `groups' == `i'
+			}
+
+			qui running `pseudo' `1' if `touse', span(1) ci generate(`lowvar') gense(`lowvar_se') replace nog
+			qui gen `lowvar_lci' = `lowvar' - (1.96*`lowvar_se')
+			qui replace `lowvar_lci'=0 if `lowvar_lci'<0
+			qui gen `lowvar_uci' = `lowvar' + (1.96*`lowvar_se')
+			qui replace `lowvar_uci'=1 if `lowvar_uci'>1
+		}
+		else {
+			local smoother = "nosmoother"
+			di as inp "NB: LP variable not provided therefore smoother cannot be calculated/displayed"
+		}
 	}
 
-// graph command locals (all combinations of hist/lowess or not)
-local lo1 = cond("`lowess'"=="nolowess","","|| line `lowvar' `1' if (`lowvar'<=`maxr') & (`lowvar'>=`minr') & (`1'<=`maxr') & (`1'>=`minr'), sort lcol(midblue) `lowessopts'")
+	if "`continuous'"=="continuous" {
+		qui running `2' `1' if `touse', span(1) ci generate(`lowvar') gense(`lowvar_se') replace nog
+		qui gen `lowvar_lci' = `lowvar' - (1.96*`lowvar_se')
+		*qui replace `lowvar_lci'=0 if `lowvar_lci'<0
+		qui gen `lowvar_uci' = `lowvar' + (1.96*`lowvar_se')
+		*qui replace `lowvar_uci'=1 if `lowvar_uci'>1
+	}
 	
+	}
+
+// graph command locals (all combinations of hist/smoother or not)
+if "`smootherci'"!="nosmootherci" {
+local lo1 = cond("`smoother'"=="nosmoother","","|| line `lowvar' `1' if (`lowvar'<=`maxr') & (`lowvar'>=`minr') & (`1'<=`maxr') & (`1'>=`minr') & (`touse'), sort lcol(midblue) `smootheropts' || rarea `lowvar_uci' `lowvar_lci' `1' if `touse', sort fc(midblue%20) lc(midblue%20) `smootherciopts'")
+}
+else {
+local lo1 = cond("`smoother'"=="nosmoother","","|| line `lowvar' `1' if (`lowvar'<=`maxr') & (`lowvar'>=`minr') & (`1'<=`maxr') & (`1'>=`minr') & (`touse'), sort lcol(midblue) `smootheropts'")
+}
+
 // create local to manage the legend ordering
-if ("`lowess'"=="nolowess") & ("`ci'"=="ci") {
+if ("`smoother'"=="nosmoother") & ("`ci'"=="ci") {
 	local leglaborder "1 2 3"
 	local labs "lab(1 Reference) lab(2 Groups) lab(3 95% CIs) "
 	}
-	else if ("`lowess'"=="") & ("`ci'"=="") {
+	else if ("`smoother'"=="") & ("`ci'"=="") {
 		local leglaborder "1 2 3"
-		local labs "lab(1 Reference) lab(2 Groups) lab(3 Lowess)"
+		local labs "lab(1 Reference) lab(2 Groups) lab(3 Smoother)"
 		}
-		else if ("`lowess'"=="nolowess") & ("`ci'"=="")  {
+		else if ("`smoother'"=="nosmoother") & ("`ci'"=="")  {
 			local leglaborder "1 2"
 			local labs "lab(1 Reference) lab(2 Groups)"
 			}
 			else {
 				local leglaborder "1 2 3 4"
-				local labs "lab(1 Reference) lab(2 Groups) lab(3 95% CIs) lab(4 Lowess)"
+				local labs "lab(1 Reference) lab(2 Groups) lab(3 95% CIs) lab(4 Smoother)"
 				} 
 
 				 
@@ -414,7 +478,7 @@ if "`statistics'"!="nostatistics"  {
 	// stats for binary outcomes
 	if "`survival'"!="survival" & "`continuous'"!="continuous" {
 		* calculating linear predictor
-		qui gen `binary_lp' = ln(`1'/(1-`1'))
+		qui gen `binary_lp' = ln(`1'/(1-`1')) if `touse'
 
 		* calculating c-slope
 		qui logistic `2' `binary_lp' if `touse', coef 
@@ -438,8 +502,8 @@ if "`statistics'"!="nostatistics"  {
 		return scalar eo_ratio = `eo'
 
 		* c-index
-		qui roctab `2' `1' if `touse'
-		local cstat = r(area) 
+		qui pmcstat `binary_lp' `2' if `touse'
+		local cstat = r(cstat) 
 		local cstat : di %4.3f `cstat'
 		return scalar cstat = `cstat'
 		
@@ -476,7 +540,8 @@ if "`statistics'"!="nostatistics"  {
 		return scalar cslope = `cslope'
 		
 		* r-sq
-		local r2 = `e(r2)'
+		qui corr `2' `1' if `touse' 
+		local r2 = r(rho)^2
 		if `p'!=0 {
 			* r-sq adjusted
 			local r2a = (((`n'-1)*`r2')-`p')/(`n'-`p'-1)
@@ -533,7 +598,7 @@ if "`continuous'"=="continuous" {
 			msym(Oh) graphr(col(white)) ///
 			xlab(#5) ylab(#5) nodraw ///
 			ytitle("") xtitle("") aspect(1)	legend(off) saving(`sc_graph', replace) ///
-							`scatteropts' `options' `ci1' `lo1'  `st1' 
+							`scatteropts' `options' `ci1' `st1' `addplot'  `lo1'
 		
 		qui twoway histogram `obs', graphr(col(white))  xlab(minmax, angle(v) ///
 			format(%3.2f)) xsca(reverse) ylab(#5) ysca() ytitle("Observed") xtitle("") ///
@@ -545,7 +610,7 @@ if "`continuous'"=="continuous" {
 
 		* Combine the above plots in one plot. 
 		graph combine `obs_graph'.gph `sc_graph'.gph `exp_graph'.gph, hole(3) imargin(1 0 1 0) ///
-		graphregion(margin(l=1 r=3)) xsize(4) ysize(4) graphr(col(white)) `options'
+		graphregion(margin(l=1 r=3)) xsize(4) ysize(4) graphr(col(white)) `options' 
 		}
 		else {
 			graph twoway function y=x, range(`minr' `maxr') lp(-) || ///
@@ -555,7 +620,7 @@ if "`continuous'"=="continuous" {
 			ytitle("Observed") xtitle("Expected") aspect(1) ///
 					legend(pos(3) order(`leglaborder') ///
 							`labs' col(1) size(small)) ///
-							`scatteropts' `options' `ci1' `lo1'  `st1' 
+							`scatteropts' `options' `ci1' `st1' `addplot' `lo1' 
 			}
 		}
 		
@@ -589,45 +654,208 @@ if "`keep'"=="keep" {
 				}	
 			}
 	}
-	
+
 end 	
 
 // END OF PROGRAM
 *********************************************************************************
 
-*******************************************************************************
-*********************************************************************************
-*********************************************************************************
-// STATA DATASET EXAMPLES - all apparent performance examples
-********************************************************************************
+program define pmcstat, rclass
 
+/* Syntax
+	VARLIST = A list of two variables, the linear predictor for the model,
+			and the event indicator (observed outcome)
+	NOPRINT = suppress the onscreen output of performance stats
+	MATRIX = specify the name of a matrix storing the performance stats 
+*/
+
+syntax varlist(min=1 max=2 numeric) [if] [in], [noPRINT  ///
+				MATrix(name local) FASTER]
+
+*********************************************** SETUP/CHECKS
+*SET UP TEMPs
+tempvar p rank_disc rank2_disc diff_disc inv_outcome rank_cord rank2_cord diff_cord
+
+// check on the if/in statement 
+marksample touse
+qui count if `touse'
+local samp=r(N)
+if `r(N)'==0 { 
+	di as err "if statement identifies subgroup with no data?"
+	error 2000
+	}
+	
+// parse varlist
+tokenize `varlist' , parse(" ", ",")
+local lp = `"`1'"'
+local outcome = `"`2'"'
+
+// generate probabilities
+qui gen `p' = exp(`lp')/(1+exp(`lp'))
+
+// run checks on user input variables in varlist
+// check if user has input both LP and obs (for binary outcome)
+local varcountcheck: word count `varlist'
+
+if `varcountcheck'!=2 {
+	di as err "Varlist must contain two variables. Linear predictor values, followed by observed outcomes (binary variable) are required"
+	error 102
+	}
+
+// check outcome is binary
+cap assert `outcome'==0 | `outcome'==1 if `touse'
+        if _rc~=0 {
+                noi di as err "Event indicator `outcome' must be coded 0 or 1"
+                error 450
+        }
+
+
+*********************************************** C-STAT
+
+if "`faster'"=="faster" {
+	// check for packages 
+	local packs gtools
+	foreach pkg of local packs {
+		capture which `pkg'
+		if _rc==111 {	
+			ssc install `pkg'
+			}
+		}
+		
+	// discordant pairs
+	hashsort `p' `outcome' 		// add if/in statements throughout?
+	qui gen `rank_disc' = _n
+
+	hashsort `outcome' `p' `rank_disc'
+	qui gen `rank2_disc' = _n
+
+	qui gen `diff_disc' = (`rank_disc' - `rank2_disc') if `outcome'==0
+
+	// concordant pairs
+	qui gen `inv_outcome' = (`outcome'==0)
+	hashsort `p' `inv_outcome'
+	qui gen `rank_cord' = _n
+
+	hashsort `inv_outcome' `p' `rank_cord'
+	qui gen `rank2_cord' = _n
+
+	qui gen `diff_cord' = (`rank_cord' - `rank2_cord') if `inv_outcome'==0
+
+	// total possible pairs
+	qui gstats sum `outcome' if `outcome'!=. , meanonly
+	local obs = r(N)
+	local events = r(sum)
+	local nonevents = r(N) - r(sum)
+	local pairs = `events'*`nonevents'  
+
+	// compute c-stat (allowing for ties)
+	qui gstats sum `diff_disc'
+	local disc = r(sum)
+	qui gstats sum `diff_cord'
+	local cord = r(sum)
+
+	local ties = `pairs'-`disc'-`cord'
+
+	local cstat = (`cord'+(0.5*`ties'))/(`pairs')
+	}
+	else {
+		// discordant pairs
+		sort `p' `outcome' 		// add if/in statements throughout?
+		qui gen `rank_disc' = _n if `touse'
+
+		sort `outcome' `p' `rank_disc' 
+		qui gen `rank2_disc' = _n if `touse'
+
+		qui gen `diff_disc' = (`rank_disc' - `rank2_disc') if (`outcome'==0) & (`touse')
+
+		// concordant pairs
+		qui gen `inv_outcome' = (`outcome'==0)
+		sort `p' `inv_outcome' 
+		qui gen `rank_cord' = _n if `touse'
+
+		sort `inv_outcome' `p' `rank_cord' 
+		qui gen `rank2_cord' = _n if `touse'
+
+		qui gen `diff_cord' = (`rank_cord' - `rank2_cord') if `inv_outcome'==0
+
+		// total possible pairs
+		qui su `outcome' if (`outcome'!=.) & (`touse'), meanonly
+		local obs = r(N)
+		local events = r(sum)
+		local nonevents = r(N) - r(sum)
+		local pairs = `events'*`nonevents'  
+
+		// compute c-stat (allowing for ties)
+		qui su `diff_disc' if `touse'
+		local disc = r(sum)
+		qui su `diff_cord' if `touse'
+		local cord = r(sum)
+
+		local ties = `pairs'-`disc'-`cord'
+
+		local cstat = (`cord'+(0.5*`ties'))/(`pairs')
+	}
+
+***************************************** OUTPUT
+
+// Creating matrix of results
+	local res cstat  
+
+	tempname rmat
+	matrix `rmat' = J(1,5,.)
+	local i=0
+	foreach r of local res {
+		local ++i
+		matrix `rmat'[`i',1] = `obs'
+		matrix `rmat'[`i',2] = ``r''
 /*
-// a couple of example datasets free from stata
-// EXAMPLE DATASET 1			
-
-webuse lbw, clear
-expand 2, gen(val1)
-expand 2, gen(val2)
-replace val1 = 0 if val2==1
-replace val2 = 0 if val1==1
-
-logistic low age lwt i.race smoke ptl ht ui if val1==0
-
-predict p_dev
-predict xb_dev, xb
-
-pmcalplot low p_dev if val1==0, name(EX1a, replace) graphr(col(white)) ci 
-
-logistic low xb_dev if val1==0, coef //offset(xb_dev)
-replace xb_dev = xb_dev*1.111 if val1==1
-replace xb_dev = xb_dev - 0.55 if val2==1
-
-predict p_val
-
-pmcalplot low p_val if val1==1, name(EX1b, replace) graphr(col(white)) ci 
-pmcalplot low p_val if val2==1, name(EX1c, replace) graphr(col(white)) ci 
-
-ret list
+		matrix `rmat'[`i',3] = ``r'_se'
+		matrix `rmat'[`i',4] = ``r'_lb'
+		matrix `rmat'[`i',5] = ``r'_ub'
+*/
+		//local rown "`rown' `r'"
+		}
+		mat colnames `rmat' = Obs Estimate SE Lower_CI Upper_CI
+		mat rownames `rmat' = "C-Statistic" //`rown'
+		
+// print matrix 
+if "`matrix'"!="" {
+			matrix `matrix' = `rmat'
 			
-* relyplot, gr(10) ci aspect(1)
-*******************************************************************************
+			//return matrix `matrix' = `rmat' 
+			if "`print'"!="noprint" {
+				//di as res _n "Discrimination statistics ..."
+				matlist `matrix', border(all) //format(%9.3f)
+							
+				}
+				*return matrix `matrix' = `rmat'
+			}
+			else { 
+				if "`print'"!="noprint" {
+					//di as res _n "Discrimination statistics ..."
+					matlist `rmat', border(all) //format(%9.3f)
+							
+					}
+				*return matrix rmat = `rmat'
+				}
+				
+// Return scalars
+local res cstat cord disc ties  obs
+ 
+		foreach r of local res {
+			return scalar `r' = ``r''
+			}
+			
+		if "`matrix'"!="" {
+		    matrix `matrix' = `rmat'
+			return matrix `matrix' = `rmat'
+		}
+		else {
+		    return matrix rmat = `rmat'
+		}
+		
+
+end
+
+
+
