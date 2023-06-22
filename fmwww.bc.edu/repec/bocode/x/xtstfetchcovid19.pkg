@@ -1,0 +1,33 @@
+d 'XTSTFETCHCOVID19': module to Download COVID-19 Datasets from the COVID-19 Data Hub
+d
+d  xtstfetchcovid19 downloads COVID-19 datasets from the COVID-19
+d Data Hub.  The command xtstfetchcovid19 allows to download
+d COVID-19/CORONAVIRUS/SARS-CoV-2 datasets in Stata format at 3
+d different levels of granularity: country-level data (level 1),
+d state-level data (level 2) and city-level data (level 3). It
+d permits to obtain time series and panel datasets on numerous
+d variables, such as: the number confirmed cases, deaths, recovered
+d cases, tests, vaccines, people vaccinated, hospitalized patients,
+d people in intensive care unit, latitude, longitude, population,
+d key google mobility, key apple mobility, etc. The downloaded
+d datasets can be aggregated at any frequency: daily, weekly,
+d monthly, yearly, etc. Cross-sections of the datasets can also be
+d obtained after transforming the downloaded data. All these
+d datasets come from the COVID-19 Data Hub which is a website
+d dedicated to make integrated COVID-19 data available to the wider
+d community of researchers around the world for a deeper insight
+d into COVID-19. 
+d
+d KW: COVID-19
+d KW: data management
+d KW: panel data
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20230621
+d
+d Author: Diallo Ibrahima Amadou
+d Support: email zavren@@gmail.com
+d
+f xtstfetchcovid19.ado
+f xtstfetchcovid19.sthlp
