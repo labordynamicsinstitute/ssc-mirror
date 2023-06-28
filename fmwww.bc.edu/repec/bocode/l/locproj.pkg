@@ -4,64 +4,37 @@ d  locproj estimates linear and non-linear Impulse Response
 d Functions (IRF) based on the local projections methodology first
 d proposed by Jordà (2005).  The procedure allows easily
 d implementation of several options used in the growing literature
-d of local projections. locproj generates temporary variables with
-d the necessary transformations of the response variable in order
-d to estimate the IRF in the desired transformation option, such as
+d of local projections. It generates temporary variables with the
+d necessary transformations of the response variable in order to
+d estimate the IRF in the desired transformation option, such as
 d levels, logs, differences, log-differences, cumulative changes or
-d cumulative log-differences.  For every option, the procedure also
-d generates temporary variables with the corresponding
-d transformation of the dependent variable needed in case the user
-d wants to include lags of the dependent variable that are
-d consistent with the chosen transformation. locproj allows the
-d user to choose different estimation methods for both time series
-d and panel data, including some instrumental variables methods
-d currently available in Stata such as ivregress or xtivreg.
-d locproj reports the IRF, together with its standard error and
-d confidence interval, as an output matrix and through an IRF
-d graph.  The user can easily choose different options for the
-d desired IRF graph, as well as other options to save and use the
-d results. The options allow defining the desired specification in
-d a fully automatic or in a more explicit way, with many
-d alternatives in between. If the user chooses the automatic
-d specification, the syntax is very close to a typical regression
-d command in Stata, with the only restriction that LOCPROJ
-d interprets the variable that corresponds to the shock (impulse)
-d as the one just after the dependent variable or its lagged terms,
-d and only that one variable represents the shock. Alternatively,
-d the user can choose to explicitly define the shock variable (or
-d variables), the number of lags of the shock, the number of lags
-d of the dependent variable, and the control variables. As
-d mentioned before, the user can play with alternatives between the
-d fully automatic or the fully explicit, depending on which option
-d is easier or more convenient to use. The explicit option is
-d recommended when the shock should include more than one variable,
-d for instance, an additional non-linear term, or an interaction
-d with another variable. locproj uses the Stata command lincom to
-d estimate the response to the shock variable or variables,
-d allowing to estimate responses to linear combinations of
-d variables, including interactions with factor or continuous
-d variables. Importantly, it also allows the use of marginal
-d effects instead of regression coefficients, which is highly
-d convenient when the response variable is binary and the user
-d wants to estimate the response as a probability.  In the latter
-d case, locproj makes use of the Stata command margins, which could
-d further facilitate the estimation of responses when the shock
-d corresponds to an interaction of variables (factor or continuous)
-d instead of just a single variable. 
-d
+d cumulative log-differences.	It allows choosing different
+d estimation methods for both time series and panel data, including
+d some instrumental variables methods . It also allows the use of
+d marginal effects instead of regression coefficients, which is
+d highly convenient when the response variable is binary and the
+d user wants to estimate the response as a probability.   It
+d reports the IRF, together with its standard error and confidence
+d interval, as an output matrix and through an IRF graph. The user
+d can easily choose different options for the desired IRF graph, as
+d well as several other options to save and use the results.  The
+d module also includes a post-estimation command called lpgraph
+d that allows plotting together IRFs estimated by different models. d
 d KW: local projections
 d KW: impulse response functions
 d KW: IRF
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20230524
+d Distribution-Date: 20230627
 d
 d Author: Alfonso Ugarte Ruiz , BBVA Research 
 d Support: email alfonso.ugarte@@bbva.com
 d
 f locproj.ado
 f locproj.sthlp
+f lpgraph.ado
+f lpgraph.sthlp
 f ../a/AED_INTERESTRATES.DTA
 f ../j/JSTdatasetR5.dta
 f lpiv_15Mar2022.dta

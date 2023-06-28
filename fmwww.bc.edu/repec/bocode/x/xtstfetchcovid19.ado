@@ -1,7 +1,7 @@
-*! xtstfetchcovid19 version 1.0.0
+*! xtstfetchcovid19 version 1.0.1
 *! Downloads Data from COVID-19 Data Hub 
 *! Diallo Ibrahima Amadou
-*! All comments are welcome, 09Jun2023
+*! All comments are welcome, 23Jun2023
 
 
 

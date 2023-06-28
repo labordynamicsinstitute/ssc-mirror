@@ -1,5 +1,5 @@
 {smcl}
-{* version 1.0.0, 09Jun2023 }{...}
+{* version 1.0.1, 23Jun2023 }{...}
 {cmd:help xtstfetchcovid19}
 {hline}
 
@@ -548,8 +548,7 @@ community, to overcome {it:COVID-19} and to help in solving other challenging cu
 {pstd}
 I thank Emanuele Guidotti, David Ardia and all the Team of the {it:COVID-19 Data Hub} {it:website} for writing and making their 
 programs, data, articles and {it:webpage} publicly available. This current {hi:Stata} package is based and inspired by their 
-works. I would also like to, additionally, thank Emanuele Guidotti for the many fruitful exchanges we had during the 
-building process of the package. The usual disclaimers apply: all errors and imperfections in this package are mine and 
+works. The usual disclaimers apply: all errors and imperfections in this package are mine and 
 all comments are very welcome.
 
 
