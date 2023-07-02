@@ -1,0 +1,21 @@
+d 'TREE': module to model decision trees
+d
+d  Facilitates the modeling of decision trees, and the evaluation
+d of payoff variables toward the roots of trees according to given
+d probability values. Facilitates the process of populating the
+d initial (terminal node) payoff values and probability values
+d within Stata. Also models hierarchical structures as trees,
+d calculating sums and means toward the roots. 
+d
+d KW: decision trees
+d KW: payoff values
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20230701
+d
+d Author: David Kantor
+d Support: email kantor.d@@att.net
+d
+f tree.ado
+f tree.sthlp

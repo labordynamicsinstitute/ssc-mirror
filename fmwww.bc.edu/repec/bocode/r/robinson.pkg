@@ -1,0 +1,29 @@
+d 'ROBINSON': module to compute Robinson's coefficient of agreement
+d
+d  robinson computes Robinson's coefficient of agreement between 2
+d or more raters (Robinson 1957). In the case of two raters, the
+d coefficient is linearly related to the intraclass correlation
+d (ICC) coefficient for a two-way mixed effects model by: ICC = (2
+d * A) - 1, where A is Robinson's agreement coefficient. In the
+d case of more than 2 raters, ICC = (k * A - 1) / (k - 1), where k
+d is the number of raters and A is Robinson's coefficient. The only
+d difference between the ICC and Robinson's agreement coefficient
+d is that the range of values of the ICC is -1 to 1, while the
+d range of values of the agreement coefficient is 0 to 1 (Robinson
+d 1957). 
+d
+d KW: Robinson
+d KW: agreement
+d KW: reliability
+d KW: measure of agreement
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20230701
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f robinson.ado
+f robinson.sthlp
+f robinson.dta

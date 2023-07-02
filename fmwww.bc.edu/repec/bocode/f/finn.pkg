@@ -1,0 +1,29 @@
+d 'FINN': module to compute Finn's coefficient of reliability
+d
+d  finn computes Finn's reliability coefficient (Finn 1970).
+d Although initially designed for categorical (sequential integer)
+d ratings (e.g. 1,2,3,4,5), Gwet (2021) has generalized Finn's
+d coefficient to accommodate continuous (quantitative) ratings. 
+d The coefficient, which is also known in the literature as a
+d Within-Group Inter-Rater Reliability statistic, may be considered
+d an alternative to the intraclass correlation coefficient (ICC)
+d for estimating inter-rater reliability. The statistic may be
+d helpful when the sample is either small or not sufficiently
+d diverse -- which will result in a very low ICC, even though there
+d may be a good-to-high correlation between ratings. 
+d
+d KW: Finn
+d KW: reliability
+d KW: measure of agreement
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20230701
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f finn.ado
+f finn.sthlp
+f ../e/example7_1.dta
+f ../e/example7_3.dta

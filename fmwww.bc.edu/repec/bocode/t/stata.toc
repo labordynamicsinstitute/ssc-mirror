@@ -108,6 +108,7 @@ p traveltime module to generate travel time and travel distance information
 p treatoprobit module to estimate a treatment effects model for a binary endogenous treatment on an ordered outcome
 p treatoprobitsim module to estimate a treatment effects model for a binary endogenous outcome and ordered outcome using a latent factor structure
 p treatrew module to estimate Average Treatment Effects by reweighting on propensity score
+p tree module to model decision trees
 p treecluster module for plotting clustered trees
 p treemap module for treemaps
 p treeplot module to graph a tree in Stata

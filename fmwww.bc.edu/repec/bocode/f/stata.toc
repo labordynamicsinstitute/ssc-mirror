@@ -44,6 +44,7 @@ p findregex module to find variable names matching a regular expression pattern
 p findsysmis module to find system missing values in a list of variables
 p findunique module to display combinations of unique identifiers in a dataset.
 p findval module to find a specific value
+p finn module to compute Finn's coefficient of reliability
 p firstdigit module to analyse first digits of numeric variables 
 p firthfit module to compute model fit for Firth's logit models
 p firthlogit module to calculate bias reduction in logistic regression

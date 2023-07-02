@@ -192,6 +192,7 @@ p rmpw module to implement the RMPW method of causal mediation analysis to decom
 p rmse module to calculate raw or adjusted RMSE (Root MSE)
 p rnd modules for random number generation
 p robbox module to compute generalized box plots
+p robinson module to compute Robinson's coefficient of agreement
 p robit module to estimate robit regression for binary outcomes
 p robjb module to compute Brys et al. (2008) robust Jarque-Bera Normality test
 p roblpr module to estimate long memory in a set of timeseries
