@@ -1,4 +1,4 @@
-*! version 1.0.1  19jun2023  Ben Jann
+*! version 1.0.5  02jul2023  Ben Jann
 
 /*
     Syntax:
@@ -88,7 +88,7 @@ program _layer
     gettoken frame 0 : 0, parse(" ,")
     local hasSHP 0
     local TYPE
-    local OPTS LABel(str asis)
+    local OPTS LABel(str asis) Feature(passthru)
     local hasPLV 0
     local PLVopts
     local WGT
@@ -146,10 +146,10 @@ program _layer
         if `"`fcolor'"'!="" mata: _get_colors("fcolor")
         marksample touse, novarlist
         // feature
-        geoframe get feature, l(FEATURE)
-        if `"`FEATURE'"'=="water" {
+        if `"`feature'"'=="" geoframe get feature, l(feature)
+        else                 _parse_feature, `feature'
+        if `"`feature'"'=="water" {
             if `"`color'"'==""  local color color("135 206 235") // SkyBlue
-            if `"`lwidth'"'=="" local lwidth lwidth(vthin)
             if `"`plottype'"'=="area" {
                 if "`fintensity'"=="" local fintensity fintensity(50)
             }
@@ -366,9 +366,9 @@ program _layer
             mata: _z_cuts("`CUTS'", "`Zvar'", "`L_WVAR'", "`touse'") /* returns
                 CUTS, cuts, levels */
             if "`discrete'"!="" _z_labels `Zvar' `cuts' // returns zlabels
-            _z_categorize `CUTS', levels(`levels') zvar(`Zvar') gen(`ZVAR')/*
-                */ touse(`touse') ztouse(`ztouse') `discrete' /* returns
-                    zlevels nobs nmiss discrete */
+            _z_categorize `CUTS', levels(`levels') zvar(`Zvar')/*
+                */ gen(`ZVAR') touse(`touse') ztouse(`ztouse') `discrete'
+                /* returns zlevels nobs nmiss discrete */
         }
     }
     // copy data into main frame
@@ -458,7 +458,7 @@ program _layer
         }
         if "`FINTENSITY'"=="" local opts finten(100) `opts'
         if "`LWIDTH'"=="" {
-            local opts lwidth(thin) `opts'
+            local opts lwidth(.15) `opts'
             if `hasZ' & `"`fcolor'"'=="" local opts lcolor(%0) `opts'
         }
         if "`LPATTERN'"=="" local opts lpattern(solid) `opts'
@@ -466,7 +466,7 @@ program _layer
     else if "`plottype'"'=="line" {
         local opts `opts' cmissing(n)
         if "`COLOR'"=="" local opts lcolor(gray) `opts'
-        if "`LWIDTH'"==""   local opts lwidth(thin) `opts'
+        if "`LWIDTH'"==""   local opts lwidth(.15) `opts'
         if "`LPATTERN'"=="" local opts lpattern(solid) `opts'
     }
     if `hasMLAB' {
@@ -644,6 +644,11 @@ program _layer
     }
     c_local plot `plot'
     c_local p `p'
+end
+
+program _parse_feature
+    syntax [, feature(str) ]
+    c_local feature `"`feature'"'
 end
 
 program _parse_size
@@ -860,10 +865,10 @@ program _z_parse_missing
     local options color(`color') `options'
     if `"`plottype'"'=="area" {
         local options cmissing(n) nodropbase lalign(center) finten(100)/*
-            */ lwidth(thin) lpattern(solid) lcolor(%0) `options'
+            */ lwidth(.15) lpattern(solid) lcolor(%0) `options'
     }
     else if "`plottype'"'=="line" {
-        local options cmissing(n) lwidth(thin) lpattern(solid) `options'
+        local options cmissing(n) lwidth(.15) lpattern(solid) `options'
     }
     c_local missing `options'
     c_local missing_color `"`color'"'
@@ -993,6 +998,7 @@ void _z_cuts(string scalar CUTS, string scalar zvar, string scalar wvar,
     if (discrete) { // discrete specified
         C = mm_unique(st_data(., zvar, touse))
         C = select(C, C:<.) // remove missing codes
+        if (length(C)==0) C = J(0,1,.) // select() may return 0x0
         st_matrix(CUTS, C')
         st_local("cuts", invtokens(strofreal(C)'))
         st_local("levels", strofreal(length(C)))
@@ -1089,16 +1095,18 @@ void _z_categorize(real scalar k, real scalar discrete, string scalar cuts,
     N = J(1, k, .)
     st_view(Z=., ., zvar, touse)
     st_view(T=., ., ztmp, touse)
-    if (!discrete) c0 = C[k+1]
-    for (i=k;i;i--) {
-        if (discrete) p = selectindex(Z:==C[i])
-        else {
-            c1 = c0; c0 = C[i]
-            if (i==1) p = selectindex(Z:>=c0 :& Z:<=c1)
-            else      p = selectindex(Z:> c0 :& Z:<=c1)
+    if (k) {
+        if (!discrete) c0 = C[k+1]
+        for (i=k;i;i--) {
+            if (discrete) p = selectindex(Z:==C[i])
+            else {
+                c1 = c0; c0 = C[i]
+                if (i==1) p = selectindex(Z:>=c0 :& Z:<=c1)
+                else      p = selectindex(Z:> c0 :& Z:<=c1)
+            }
+            N[i] = n = length(p)
+            if (n) T[p] = J(n,1,i)
         }
-        N[i] = n = length(p)
-        if (n) T[p] = J(n,1,i)
     }
     p = selectindex(Z:>=.)
     m = length(p)
@@ -1106,7 +1114,8 @@ void _z_categorize(real scalar k, real scalar discrete, string scalar cuts,
         T[p] = J(m,1,0) // set missings to 0
         st_local("zlevels", invtokens(strofreal(0..k)))
     }
-    else st_local("zlevels", invtokens(strofreal(1..k)))
+    else if (k) st_local("zlevels", invtokens(strofreal(1..k)))
+    else        st_local("zlevels", "")
     st_local("nobs", invtokens(strofreal(N)))
     st_local("nmiss", strofreal(m))
 }

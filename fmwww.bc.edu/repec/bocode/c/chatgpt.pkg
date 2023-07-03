@@ -13,9 +13,9 @@ d
 d KW: chatGPT
 d KW: artificial intellgence
 d
-d Requires: Stata version 14 for Windows
+d Requires: Stata version 16
 d
-d Distribution-Date: 20230408
+d Distribution-Date: 20230702
 d
 d Author: Chuntao Li, China Stata Club
 d Support: email  chtl@@zuel.edu.cn
@@ -24,4 +24,5 @@ d Author:  Xueren Zhang, China Stata Club
 d Support: email  snowmanzhang@@whu.edu.cn
 d
 f chatgpt.ado
+f chatgpt_script.py
 f chatgpt.sthlp

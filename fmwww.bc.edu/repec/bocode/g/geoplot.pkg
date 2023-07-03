@@ -14,7 +14,7 @@ d KW: choropleth maps
 d
 d Requires: Stata version 17 and moremata, palettes, colrspace from SSC (q.v.)
 d
-d Distribution-Date: 20230621
+d Distribution-Date: 20230702
 d
 d Author: Ben Jann, University of Bern
 d Support: email jann@@soz.unibe.ch
@@ -24,10 +24,10 @@ f geoplot.sthlp
 f geoframe.ado
 f geoframe.sthlp
 f ../_/__geoplot_layer.ado
-f ../_/_geoframe_generate_plevel.ado
-f ../_/_geoframe_spjoin.ado
+f ../l/lgeoplot_source.sthlp
 f ../_/_geoplot_bar.ado
 f ../_/_geoplot_label.ado
 f ../_/_geoplot_pie.ado
 f ../_/_geoplot_symbol.ado
+f ../l/lgeoplot.mlib
 f geoplot.zip
