@@ -1,7 +1,8 @@
 *! Attaullah Shah ;  Email: attaullah.shah@imsciences.edu.pk ; * Support website: www.FinTechProfessor.com
 
-*!Version 4.8 : Dec 27, 2022 : Option newey(0) would default to standard errors. This is has been fixed.
-* Version 4.7 : Jan 07, 2022 : When data had duplicates, the fitted and residual were not calculated for each obs. This has been fixed.
+*!Version 4.8 : Jul 02, 2023 : Time labels were incorrectly displayed with fmb first options. Fixed now.
+
+* Version 4.7: Jan 07, 2022 : When data had duplicates, the fitted and residual were not calculated for each obs. This has been fixed.
 * Version 4.6 : Oct 13, 2021 : Added [aweights] and noconstant to fmb
 * Version 4.5 : Feb 17, 2021 : Shanken license updated
 * Version 4.4 : Feb 09, 2021 : Issue with by groups regressions solved : Also, removed the select index pointer
@@ -33,7 +34,7 @@ prog asreg, byable(onecall) sortpreserve eclass
 		RMSE			///
 		RECursive		///
 		FMB				///
-		newey(int -999) ///
+		newey(int 0)    ///
 		first    		///
 		save(string)	///
 		KEEP(string)	///
@@ -43,9 +44,8 @@ prog asreg, byable(onecall) sortpreserve eclass
 		EXclude(str)	///
 		] 
 
-	if ("`shanken'" != "") {
-		
-		if ("`fmb'" == "") {
+	if "`shanken'" != "" {
+		if "`fmb'" == "" {
 			dis as error "Option Shanken() can be used only with option fmb"
 			exit
 		}
@@ -58,11 +58,11 @@ prog asreg, byable(onecall) sortpreserve eclass
 			}
 			else {
 				loc colS = colsof(`shanken')
-				
+				dis "`varlist'"
 				loc nRHS : word count `varlist'
 
 
-				if (`colS' != `=`nRHS'-1') {
+				if `colS' != `=`nRHS'-1' {
 					dis as error "The covariance matrix `shanken' has `colS' columns"
 					dis as error "whereas you have entered `=`nRHS'-1' right hand-side variables"
 					dis as error "Columns of matrix `shanken' and the right hand-side variables should be equal in number"
@@ -74,8 +74,8 @@ prog asreg, byable(onecall) sortpreserve eclass
 
 	}
 	marksample touse
-	if ("`fmb'" == "") {
-		if ("`window'" != "") {
+	if "`fmb'" == "" {
+		if "`window'"!=""{
 		    loc window = subinstr("`window'", ",", " ", .)
 			local nwindow : word count `window'
 			if !inrange(`nwindow', 2, 3) {
@@ -84,14 +84,14 @@ prog asreg, byable(onecall) sortpreserve eclass
 				dis as error " Or three arguments : rangeevar, length of the backward, and the forward windows e.g., {opt window(year -10 20)}"
 				exit
 			}
-			else if (`nwindow' == 2) {
+			else if `nwindow'==2 {
 				tokenize `window'
 				gettoken    rangevar window : window
 				gettoken  bw window : window
 				confirm number `bw'
 				confirm numeric variable `rangevar'
 			}
-			else if (`nwindow' == 3) {
+			else if `nwindow' == 3 {
 				local rangevar : word 1 of `window'
 				local bw : word 2 of `window'
 				local fw : word 3 of `window'
@@ -105,7 +105,7 @@ prog asreg, byable(onecall) sortpreserve eclass
 					exit
 				}
 
-				if (`fw' == 0) {
+				if `fw' == 0 {
 					loc fw
 					loc bw = abs(`bw')
 				}
@@ -113,7 +113,7 @@ prog asreg, byable(onecall) sortpreserve eclass
 
 
 
-			if ("`recursive'" != "") {
+			if "`recursive'"~=""{
 				local recursive = 1000000
 			}
 			else{
@@ -124,7 +124,7 @@ prog asreg, byable(onecall) sortpreserve eclass
 
 		}
 
-		if ("`exclude'" != "") {
+		if "`exclude'" != "" {
 		    loc exclude = subinstr("`exclude'", ",", " ", .)
 			local nexclude : word count `exclude'
 			if !inlist(`nexclude', 3) {
@@ -143,7 +143,7 @@ prog asreg, byable(onecall) sortpreserve eclass
 			local xhigh : word 3 of `exclude'
 			confirm number `xlow'
 			confirm number `xhigh'
-			if (`xlow' > `xhigh') {
+			if `xlow' > `xhigh' {
 				dis as error "Invalide exclude range!"
 				dis as text "The second argument of exclude should be lower than the third argument"
 				exit
@@ -155,7 +155,7 @@ prog asreg, byable(onecall) sortpreserve eclass
 		gettoken lhsvar rhs : varlist
 		loc varlist "`lhsvar' `rhs'"
 		qui {
-			if ("`rmse'" != "") {
+			if "`rmse'"!="" {
 				qui gen double _rmse = .
 				label var _rmse "Root-mean-squared error"
 				local _b_rmse _rmse
@@ -168,7 +168,7 @@ prog asreg, byable(onecall) sortpreserve eclass
 			gen double _adjR2	= .
 			label var _adjR2 "Adjusted R-squared"
 
-			if ("`rhs'" != "") {
+			if "`rhs'" != "" {
 
 				foreach var of varlist `rhs'{
 					gen double _b_`var'=.
@@ -177,19 +177,12 @@ prog asreg, byable(onecall) sortpreserve eclass
 
 				}
 			}
-			
-			**change
-				if (`newey' == 0) {
-					loc robust robust
-					loc newey 0
-				}
-					
-				if (`newey' != 0) & (`newey' != -999) {
-					loc mindif = `newey' - `minimum' +1
-					loc minimum = `mindif'
-				}
+			if `newey' != 0 {
+				loc mindif = `newey' - `minimum' +1
+				loc minimum = `mindif'
+			}
 
-			if ("`noconstant'" == "") {
+			if "`noconstant'" == "" {
 				tempvar _CONS
 				qui gen `_CONS' = 1
 				gen double _b_cons = .
@@ -197,19 +190,18 @@ prog asreg, byable(onecall) sortpreserve eclass
 				loc _b_cons _b_cons
 			}
 
-			if (`newey' ! = -999) | ("`robust'" ! = "") loc se se
+			if "`newey'" ! = "0" | "`robust'" ! = "" loc se se
 
-			if ("`se'" != "") {
-				
-				if (`newey' != -999) & ("`robust'" != "") {
+			if "`se'"!=""{
+				if `newey' != 0 & "`robust'" != "" {
 					dis as error "Option newey() and robust cannot be combined"
 					exit
 				}
-				if (`newey' != -999) local se_text "Newey adj. Std. errors of "
-				else if ("`robust'" != "") local se_text "Robust Std. errors of "
+				if `newey' != 0 local se_text "Newey adj. Std. errors of "
+				else if "`robust'" != "" local se_text "Robust Std. errors of "
 				else local se_text "Standard Std. errors of "
 
-				if ("`rhs'" != "") {
+				if "`rhs'" != "" {
 					foreach var of varlist `rhs'{
 						gen _se_`var'=.
 						label var _se_`var' "`se_text'`var'"
@@ -217,7 +209,7 @@ prog asreg, byable(onecall) sortpreserve eclass
 					}
 				}
 
-				if ("`noconstant'" == "") { 
+				if "`noconstant'" == "" { 
 					gen _se_cons = .
 					label var _se_cons "`se_text'constant"
 					loc _se_cons _se_cons
@@ -233,15 +225,15 @@ prog asreg, byable(onecall) sortpreserve eclass
 			local ResultsVars "_Nobs _R2 _adjR2   `b_rvsvars' `_b_cons' `_se_rvsvars'  `fitres' `_b_rmse'"
 		}
 
-		if ("`timevar'" != "") {
+		if "`timevar'" != "" {
 			local by "`timevar'"
 		}
 		
-		if ("`_byvars'" != "") {
+		if "`_byvars'"!="" {
 			local by "`_byvars'"
 		}
 		
-		if ("`by'" == "") {
+		if "`by'"=="" {
 			tempvar by
 			qui gen `by' = 1
 		}
@@ -263,7 +255,7 @@ prog asreg, byable(onecall) sortpreserve eclass
 				loc dt = 3
 				tempvar touse2
 
-				if ("`fw'" == "") qui bysort `__GByVars' `rangevar' : gen `touse2' = _n == _N
+				if "`fw'" == "" qui bysort `__GByVars' `rangevar' : gen `touse2' = _n == _N
 				else            qui bysort `__GByVars' `rangevar' : gen `touse2' = _n == 1
 			} 
 		}
@@ -271,9 +263,9 @@ prog asreg, byable(onecall) sortpreserve eclass
 
 
 
-		if ("`bw'" != "") {
+		if "`bw'" != "" {
 
-			if ("`fw'" == "") {
+			if "`fw'" == "" {
 				mata: ASREGW(				///
 					"`varlist' `_CONS'",  	///
 					"`__GByVars'" ,		   	///
@@ -294,9 +286,9 @@ prog asreg, byable(onecall) sortpreserve eclass
 					"`exclude'"				///
 					)
 
-				if ("`dt'" == "3") {
+				if "`dt'" == "3" {
 
-					if ("`fitted'" != "") {
+					if "`fitted'" != "" {
 						loc removeFitted _fitted
 						loc removeResiduals _residuals
 
@@ -308,7 +300,7 @@ prog asreg, byable(onecall) sortpreserve eclass
 						qui bys `__GByVars' `rangevar': replace `v' =`v'[_N]
 					}
 					
-					if ("`fitted'" != "") gen_residual_fitted `rhs', depvar(`lhsvar') constant(`_b_cons')
+					if "`fitted'" != "" gen_residual_fitted `rhs', depvar(`lhsvar') constant(`_b_cons')
 
 				}
 
@@ -335,7 +327,7 @@ prog asreg, byable(onecall) sortpreserve eclass
 					"`touse2'",				///
 					"`exclude'"				///
 					)
-				if ("`dt'" == "3") {
+				if "`dt'" == "3" {
 					foreach v of varlist `ResultsVars' {
 						qui bys `__GByVars' `rangevar': replace `v' =`v'[1]
 					}
@@ -363,7 +355,7 @@ prog asreg, byable(onecall) sortpreserve eclass
 				)
 		}
 		cap qui label variable `generate' "`stat' of `varlist' in a rol. window"
-		if ("`keep'" != "") {
+		if "`keep'"!="" {
 			local keep _fitted
 			qui cap unab v : _se_*
 			cap confirm var _fitted 
@@ -376,10 +368,6 @@ prog asreg, byable(onecall) sortpreserve eclass
 	} 
 
 	else { 
-		if (`newey' == 0) {
-				loc robust robust
-				loc newey 0
-		}
 		marksample touse
 		preserve
 		qui _xt
@@ -387,14 +375,10 @@ prog asreg, byable(onecall) sortpreserve eclass
 		sort `timevar'
 		local nvars : word count `varlist'
 
- 		if (`newey' != -999 ) {
-			
-			if (`newey'< 0) { 
-				di in red `"newey(`newey') invalid lag selected"'
-				exit 198
-			}
+		if `newey'< 0 { 
+			di in red `"newey(`newey') invalid lag selected"'
+			exit 198
 		}
-		else loc newey 0
 
 		gettoken lhsvar rhs : varlist
 
@@ -441,7 +425,7 @@ prog asreg, byable(onecall) sortpreserve eclass
 			gen _TimeVar = .
 			gen _obs     = .
 
-			if ("`noconstant'" == "") {
+			if "`noconstant'" == "" {
 				gen _Cons = .
 				loc _constant _Cons
 				loc cons ":cons"
@@ -472,21 +456,9 @@ prog asreg, byable(onecall) sortpreserve eclass
 			qui save "`save'", replace
 		}
 
-		if ("`first'" != "") {
-
-			foreach v of varlist `ResultsVars' {
-				qui format %8.0g `v'
-			}
-
-			display "{title:First stage Fama-McBeth regression results}"
-			capture qui rename _TimeVar `timevar'
-
-			loc ResultsVars = subinstr("`ResultsVars'", "_TimeVar", "`timevar'", 1)
-
-			list `ResultsVars' in 1 / `periods' , noobs mean separator(0)
-		}
-
-		if ("`newey'" == "0") 	mata: fmb_with_se("`b_rvsvars'", "`noconstant'")
+		if ("`first'" != "") report_first_stage_fmb `ResultsVars', timevar(`timevar')
+		
+		if (`newey' == 0) 	mata: fmb_with_se("`b_rvsvars'", "`noconstant'")
 
 		else mata: fmb_with_newey("`b_rvsvars' `_constant'", `newey')
 
@@ -495,17 +467,14 @@ prog asreg, byable(onecall) sortpreserve eclass
 			local Labels "`Labels' :`var'"
 		}
 
-
 		qui sum _R2
 		ereturn local avgr2 = r(mean)
 		qui sum _adjR2, meanonly
-
+		
 		ereturn local r2_a = r(mean)
-
 		restore		
 
-
-		if ("`shanken'" != "") {
+		if "`shanken'" != "" {
 
 			mata: shanken_se("v", "b", "`shanken'", `periods',  "`c(os)'")
 		}
@@ -532,7 +501,7 @@ prog asreg, byable(onecall) sortpreserve eclass
 		ereturn scalar r2 = `avgR2'
 		ereturn scalar r2_a = `adjR2'
 
-		if (`newey' == 0) {
+		if `newey' == 0 {
 			if "`shanken'" == "" {
 				ereturn local vcetype "Fama-MacBeth"
 				local title "Fama-MacBeth (1973) Two-Step procedure"
@@ -574,7 +543,7 @@ prog asreg, byable(onecall) sortpreserve eclass
 		ereturn display, level(95)
 
 
-		if ("`save'" != "") {
+		if "`save'" != "" {
 
 			preserve
 
@@ -595,15 +564,14 @@ end
 program define gen_residual_fitted
 
 	syntax varlist, depvar(str) [constant(str) ] 
-	
 	if "`constant'" == "" local constant 0
+
 
 	local sum_notation `constant'
 
 	foreach v of local varlist {
 		local sum_notation `sum_notation' + (`v' * _b_`v')
 	}
-	
 	qui cap replace _fitted    = `sum_notation'     if _fitted       == .
 	qui cap replace _residuals = `depvar' - _fitted if _residuals    == .
 end
@@ -623,4 +591,45 @@ program define asreg_aweights
 
 	}			
 
+end
+
+
+* report first stage fmb regressions: Version 1.0 July 2, 2023
+program define report_first_stage_fmb
+
+	syntax varlist, TIMEvar(varlist)
+	preserve
+	qui keep `varlist'
+	qui drop if _obs == .
+	foreach v of varlist `varlist' {
+		qui format %8.0g `v'
+	}
+	
+	display "{title:First stage Fama-McBeth regression results}"
+	capture qui rename _TimeVar `timevar'
+	capture qui rename _Cons constant
+	capture qui rename _R2 R²
+	capture qui rename _adjR2 adjR²
+	capture qui rename _obs N
+	
+	qui ds _b_*
+	loc betas `r(varlist)'
+	
+	foreach var of varlist `betas' {
+		loc newName = subinstr("`var'", "_b_", "β_", 1)
+		qui rename `var' `newName'
+		loc varlist = subinstr("`varlist'", "`var'", "`newName'", 1)
+		dis "`newName'"
+		
+	}
+	
+	loc varlist = subinstr("`varlist'", "_TimeVar", "`timevar'", 1)
+	loc varlist = subinstr("`varlist'", "_Cons", "constant", 1)
+	loc varlist = subinstr("`varlist'", "_R2", "R²", 1)
+	loc varlist = subinstr("`varlist'", "_adjR2", "adjR²", 1)
+	loc varlist = subinstr("`varlist'", "_obs", "N", 1)
+	
+
+	list `varlist'  , noobs mean separator(0)
+	restore
 end

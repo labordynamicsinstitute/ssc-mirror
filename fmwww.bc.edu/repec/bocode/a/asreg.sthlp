@@ -1,6 +1,6 @@
 {smcl}
-{right:version:  4.7}
-{cmd:help asreg} {right:Jan 07, 2022}
+{right:version:  4.8}
+{cmd:help asreg} {right:Dec 23, 2022}
 {hline}
 {viewerjumpto "Options" "asreg##options"}{...}
 {viewerjumpto "fmb" "asreg##fmb"}{...}
@@ -283,16 +283,18 @@ years 1940, 1941, 1942, 1943, 1944, 1945, and 1945 will be excluded. {p_end}
 {marker fmb}
 {title:FMB: Fama and McBeth(1973) regression}
 
-{p 4 4 2} Option {cmd: fmb} applies a two-step Fama-McBeth procedure. The first step involves the estimation of N cross-sectional regressions and the second steps involves T time-series
-averages of the coefficients of the N-cross-sectional regressions. The standard errors are adjusted for cross-sectional dependence. This is generally an acceptable solution when
-there is a large number of cross-sectional units and a relatively small time series for each cross-sectional unit. However, if both cross-sectional and time-series dependence are
-suspected in the data set, then Newey-West consistent standard errors can be used. {cmd:asreg} uses the first method as a default. {p_end}
+{p 4 4 2} Option {cmd: fmb} applies a two-step Fama-McBeth procedure.{break} 
+• The first step involves estimating {bf:N} cross-sectional regressions. {break}
+• The second step involves taking {bf:T} time-series averages of the coefficients from the {bf:N} cross-sectional regressions.{break}
+The standard errors are adjusted for cross-sectional dependence. This is generally an acceptable solution when there is a large number of cross-sectional units and a relatively small time series for each cross-sectional unit. However, if both cross-sectional and time-series dependence are suspected in the data set, then Newey-West consistent standard errors can be used. {help asreg} uses the first method as a default.
+ {p_end}
 
-{p 4 4 2} {cmd:asreg} with option {cmd: fmb} is very similar to {stata "ssc des xtfmb" : xtfmb} program that was written by Daniel Hoechle, with the
-following three major differences: (i) {cmd:fmb} estimates the cross-sectional regressions using Mata language, while {cmd:xtfmb} does that using the {help statsby} command. In case the data
-set is very large, this makes a huge difference in the run-time of the two programs. (ii) {cmd: fmb} allows estimation of Newey-West standard errors even if the data set has time-series gaps while 
-{cmd:xtfmb} exits with an error message if the data has time-series gaps. (iii) {cmd: fmb} allows saving coefficients of the first stage regression with the option
-{opt save(filename)} to the current folder.
+{p 4 4 2} {cmd:asreg} with option {cmd: fmb} is very similar to {stata "ssc des xtfmb":xtfmb} program written by Daniel Hoechle. However, there are
+ three major differences: {p_end}
+
+{p 8 8 2} 1. {cmd:asreg} estimates the cross-sectional regressions using Mata language, while {cmd:xtfmb} does that using the {help statsby} command. This difference in implementation can have a significant impact on the run time of the two programs, with {help asreg} typically being much faster for large datasets.{break}
+2. {help asreg} allows estimation of Newey-West standard errors even if the data set has time-series gaps. xtfmb, on the other hand, will exit with an error message if the data has time-series gaps. {break}
+3. {help asreg}  allows saving the coefficients of the first stage regression to a file using the {opt save(filename)} option. This can be useful for debugging or for further analysis.
 
 {marker save}
 {p 4 4 2} {opt  6. save(filename)}: Option {opt save} is used only when option {opt fmb} is used. Option {opt save} saves the first stage regression coefficients of the Fama-McBeth 

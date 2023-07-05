@@ -115,6 +115,7 @@ p povguide module to generate the U.S. Poverty Guideline value for a given famil
 p povimp module to provide poverty estimates in the absence of actual consumption data
 p povtime module to compute aggregate intertemporal poverty measures (poverty in a panel accounting for time)
 p power_diagnostic module to compute power and sample size for sensitivity and specificity of a diagnostic test
+p power_icc module to compute power and sample size for one-way random-effects intraclass correlation
 p power_loa module to compute power and sample size for limits of agreement (LOA) analysis
 p power_oneroc module to compute power and sample size for a one-sample ROC test
 p power_roc module to compute power and sample-size analysis for receiver operating characteristic (ROC) analysis

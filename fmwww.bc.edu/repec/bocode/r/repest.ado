@@ -1,4 +1,4 @@
-*!*** version 1.12.1 03052023
+*!*** version 1.12.2 04072023
 
 ** L256 over(var) conditionn dans average 23/03
 ** L260 correction display average long_over: line 260 is now ignored and even deleted (29/05/15)  -- 16 apr 2015
@@ -45,8 +45,7 @@
 * inclusion of idr, iqr in summarize - 18/4/2023
 * IEA surveys: ICCS, ICILS, PIRLS, TIMSS - 18/4/2023
 * make stata: prefix optional - 3/5/2023
-*TODO
-
+* correction bug freq          - 3/7/2023
 global regressions_command="cnsreg etregress glm intreg nl regress tobit truncreg" ///
 	+" sem  stcox  streg biprobit cloglog  hetprobit logistic logit   probit scobit"  /// 
 	+" clogit mlogit mprobit ologit oprobit slogit gnbreg nbreg poisson  tnbreg"  ///
@@ -1012,8 +1011,8 @@ program define repest_parser, rclass
 		}
 	
 	if regexm("`estimate'","^freq") & regexm("`command_options'", "levels\(")==0 {
-			if regexm("`command'","(.*)(freq)(.*)") local varname=regexs(3)
-			local varname=regexr("`varname'","@","1")
+			 if regexm("`command'","^repest_freq(.*)") local varname=regexs(1)
+     	 local varname=regexr("`varname'","@","1")
 			qui levelsof `varname', local(temp) clean
 			if "`command_options'"!="" local command_options "`command_options' levels(`temp')"
 			else   local command_options ",levels(`temp')"

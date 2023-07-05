@@ -15,3 +15,4 @@ p step3 module to relate latent class membership to external variables
 p stpm3 module to fit flexible parametric survival models
 p stpp module to compute Pohar-Perme non-parametric estimate of marginal relative (net) survival
 p streamplot module to produce streamplots
+p styletextab module to style LaTeX tables exported by collect suite of commands

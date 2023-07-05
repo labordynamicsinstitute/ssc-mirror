@@ -1,0 +1,31 @@
+d 'POWER_ICC': module to compute power and sample size for one-way random-effects intraclass correlation
+d
+d  power icc computes sample size or power for a one-way
+d random-effects intraclass correlation, according to Equation 7 of
+d Zou (2012), which is equivalent to that given by Walter et al.
+d (1998) who derived the formulas from a hypothesis testing
+d perspective. power icc is useful for computing power/sample size
+d under three different scenarios; (1) when "n" subjects are each
+d rated by the same "k" raters (inter-rater reliability), (2) a
+d single subject is assessed repeatedly on each of several
+d occasions (test-retest reliability) or (3), when replicates
+d consisting of different occasions are taken on different subjects
+d by a single rater (Shoukri et al 2004). 
+d
+d KW: power
+d KW: intraclass correlation
+d KW: inter-rater reliability
+d KW: agreement
+d KW: reliability
+d KW: measure of agreement
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20230704
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f ../r/power_cmd_icc.ado
+f ../r/power_cmd_icc_init.ado
+f ../r/power_icc.sthlp
