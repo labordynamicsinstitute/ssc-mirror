@@ -171,6 +171,7 @@ p mktab module to print table of estimates in delimited or screen-presentation f
 p mlad module to perform maximum likelihood using automatic differentiation
 p mlboolean module to implement Boolean logit and probit
 p mlcoint module to compute Johansen cointegration tests
+p mlmr2 module to compute r-squared measures for models estimated by mixed
 p mlogitroc module to calculate multiclass ROC Curves and AUC from Multinomial Logistic Regression
 p mlogpred module to produce predicted probabilities after mlogit and svymlog
 p mlowess module for lowess smoothing with multiple predictors

@@ -1,0 +1,27 @@
+d 'TITEBETA': module to conduct toxicity monitoring for phase 2 (and 3) trials 
+d
+d      titebeta is a routine for safety monitoring of late onset
+d toxicities in phase 2 (and 3)    clinical trials.  It calculates
+d the posterior probability that the toxicity event rate exceeds   
+d a limit, based on censored data for toxicities and a beta prior. 
+d Data are entered as a list of    two variables, with the first
+d depvar being a 0/1 toxicity outcome, and the second {indepvar}   
+d being an elapsed time variable. The calculation uses the
+d weighting scheme described by Cheung &    Thall (Biometrics,
+d 2002), for the simple case that considers only toxicity
+d monitoring, and not complex	 trial outcomes. 
+d
+d KW: toxicity
+d KW: clinical trials
+d KW: monitoring
+d KW: beta prior
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20230707
+d
+d Author: E. Paul Wileyto, University of Pennsylvania
+d Support: email epw@@pennmedicine.upenn.edu
+d
+f titebeta.ado
+f titebeta.sthlp
