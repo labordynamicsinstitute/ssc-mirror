@@ -67,7 +67,7 @@ It will extract a list of historical financial data for code you entered.
 It will extract various lists of historical financial data for code you entered.
 
 {phang}
-{stata `"hkar 00395, path(D:/temp/)"'}
+{stata `"hkar 00395, path(D:/temp)"'}
 {p_end}
 
 {pstd}

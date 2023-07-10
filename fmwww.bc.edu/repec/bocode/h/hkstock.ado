@@ -29,6 +29,9 @@ program define hkstock
          if "`filename'" == "" {
                 local filename `code'
          }
+		 
+
+		 
 		 local HN "Stocks listed in Mainland and Hong Kong at the same time"
 		 local hN "Stocks listed in Mainland and Hong Kong at the same time"
 		 local MainN "Hong Kong Main Board Listed Firms"
@@ -40,14 +43,14 @@ program define hkstock
 		 local ETFN "Hong Kong Connect ETF Fund"
 		 local EtfN "Hong Kong Connect ETF Fund"
 		 local etfN "Hong Kong Connect ETF Fund"
-		 local StockN "all Hong Kong Securities"
-		 local STOCKN "all Hong Kong Securities"
-		 local stockN "all Hong Kong Securities"
-		 local OptionN "Hong Kong Warrants"
-		 local optionN "Hong Kong Warrants"
-		 local OPTIONN "Hong Kong Warrants"
+		 local StockN "all Hong Kong Stocks"
+		 local STOCKN "all Hong Kong Stocks"
+		 local stockN "all Hong Kong Stocks"
+		 local warrantN "Hong Kong Warrants"
+		 local WarrantN "Hong Kong Warrants"
+		 local WARRANTN "Hong Kong Warrants"
 		 local indexN "Hong Kong Index"
-		 local IdenxN "Hong Kong Index"
+		 local IndexN "Hong Kong Index"
 		 local INDEXN "Hong Kong Index"
 		 
 		 
@@ -60,7 +63,7 @@ program define hkstock
                         else if "`name'" == "Growth"|"`name'" =="growth"|"`name'" =="GROWTH" local fs = "m:128+t:4"
 						else if "`name'" == "ETF"|"`name'" =="etf"|"`name'" =="Etf" local fs = "b:MK0837,b:MK0838"
 						else if "`name'" == "H"|"`name'" =="h" local fs = "b:DLMK0101"
-						else if "`name'" == "Option"|"`name'" =="option"|"`name'" =="OPTION" local fs = "m:128+t:6"
+						else if "`name'" == "warrant"|"`name'" =="Warrant"|"`name'" =="WARRANT" local fs = "m:128+t:6"
                         else if "`name'" == "Stock"|"`name'" =="stock"|"`name'" =="STOCK" local fs = "m:128+t:3,m:128+t:4,m:128+t:1,m:128+t:2"
 						else if "`name'" == "index"|"`name'" =="Index"|"`name'" =="INDEX" local fs = "m:124,m:125,m:305"
                         else {
@@ -70,7 +73,7 @@ program define hkstock
 								disp as error `"ETF:Hong Kong Connect ETF Fund"'
 								disp as error `"H:Stocks listed in Mainland and Hong Kong at the same time"'
 								disp as error `"Stock:all Hong Kong Securities"'
-								disp as error `"Option:Hong Kong Warrants"'
+								disp as error `"warrant:Hong Kong Warrants"'
 								disp as error `"index:Hong Kong Index"'
                                 exit 601
                         }
@@ -86,12 +89,19 @@ program define hkstock
                         drop v
                         cap destring stkcd, replace
                         cap format %05.0f stkcd
-                        save `"``name''"', replace
-						noi di "You've got the names and codes for ``name'N'"
 						compress
-						label var stkcd stockcode
-						label var stknm stockname
+						label var stkcd "Stock Code"
+						label var stknm "Stock Name"
+						
+// 						if "`name'" == "warrant"|"`name'" =="Warrant"|"`name'" =="WARRANT"{
+// 							rename stkcd warrcd
+// 							rename stknm warrnm
+// 							label var warrcd warrantcode
+// 							label var warrnm warrantname
+// 						}
+
 						save `"`path'/`name'.dta"', replace
+						noi di "You've got the names and codes for ``name'N' and saved in `path'"
                 }
                 
                 /*clear

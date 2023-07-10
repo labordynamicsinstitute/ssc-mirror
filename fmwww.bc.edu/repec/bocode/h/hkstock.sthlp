@@ -1,5 +1,6 @@
 {smcl}
 {* 12Nov2022}{...}
+{* Updated on Apr 20th, 2023}{...}
 {cmd:help hkstock}{right: }
 {hline}
 
@@ -20,7 +21,6 @@
 {synopthdr}
 {synoptline}
 {synopt:{opt path(foldername)}}Specify a folder where output .dta files will be saved in{p_end}
-{synopt:{opt filename(name)}}Name the file according to the name entered{p_end}
 
 
 {synoptline}
@@ -33,8 +33,8 @@
 {pstd} {hi:Growth}:Hong Kong's Growth Enterprise Market Securities {p_end}
 {pstd} {hi:ETF}:Hong Kong Stock Connect ETF Fund {p_end}
 {pstd} {hi:H}:Stocks listed in Mainland and Hong Kong at the same time {p_end}
-{pstd} {hi:Option}:Hong Kong Warrants {p_end}
-{pstd} {hi:Index'}:Hong Kong Index {p_end}
+{pstd} {hi:Warrant}:Hong Kong Warrants {p_end}
+{pstd} {hi:Index}:Hong Kong Index {p_end}
 
 
 
@@ -45,7 +45,6 @@
 {pstd} The folders can be either existed or not. {p_end}
 {pstd} If the folder specified does not exist, {cmd:hkstock} will create it automatically. {p_end}
 
-{pstd}{it:filename} generates the filename according to the name entered {p_end}
 
 
 {title:Examples}
@@ -65,21 +64,21 @@ It will extract a list of all the codes and names for the securities listed in H
 It will extract a list of all the stock codes and stock names for all the firms listed in Hong Kong's Growth Enterprise Market.
 
 {phang}
-{stata `"hkstock OPTION"'}
+{stata `"hkstock WARRANT"'}
 {p_end}
 
 {pstd}
 It will extract a list of all the stock codes and stock names for all the Hong Kong's Warrants.
 
 {phang}
-{stata `"hkstock Option etf"'}
+{stata `"hkstock Warrant etf"'}
 {p_end}
 
 {pstd}
 It will extract a list of all the stock codes and stock names for all the Hong Kong's Warrants and ETF.
 
 {phang}
-{stata `"hkstock STOCK, path(D:/temp/) filename("stock")"'}
+{stata `"hkstock STOCK, path(D:/temp)"'}
 {p_end}
 
 {pstd}

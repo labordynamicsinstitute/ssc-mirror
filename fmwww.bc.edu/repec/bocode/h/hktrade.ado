@@ -1,3 +1,4 @@
+
 * Authors:
 * Chuntao Li, Ph.D. , China Stata Club(爬虫俱乐部)(chtl@zuel.edu.cn)
 * Xiuping Mao, Ph.D. , China Stata Club(爬虫俱乐部)(xiuping_mao@126.com)
@@ -50,103 +51,9 @@ program define hktrade
 	if `"`fqt'"' == "m"|`"`fqt'"' == "M"  {
 		local klt "103"
 	} 
-	
-	if `"`fqt'"' != ""&`"`warrant'"' != ""  {
-		disp as error "fqt() is only for stock data;warrant() is only for warrant data.Cannot be selected at the same time."
-		exit 9
-	} 
-	
-	if `"`fqt'"' == "" & `"`warrant'"' == ""{
-				noisily di as error "error: must specify at least one option of fqt and warrant
-		  exit 198
-	    }
-	
-	**********option************
-	if `"`warrant'"' == "True"|`"`warrant'"' == "true" |`"`warrant'"' == "t" |`"`warrant'"' == "T"{
-		local address "https://datacenter.eastmoney.com/securities/api/data/v1/get?reportName=RPT_HK_STRUCTURED_LIST&columns=SECUCODE%2CSECURITY_CODE%2CSECURITY_NAME%2CSECURITY_TYPE%2CEXPIRE_DATE%2CSTRIKE_PRICE%2CSTRIKE_PRICE_CURRENCY%2CSWAP_RATIO%2CUNDERLYING_CODE%2CUNDERLYING_NAME%2CISSUE_PRICE%2CTOTAL_ISSUE_SIZE%2CSP_CLASSIF_NAME&quoteColumns=&filter=(UNDERLYING_CODE%3D%22" 
-		local t_add "%22)(SECURITY_TYPE%20in%20(%22001001%22%2C%22001002%22))&pageNumber=1&pageSize=300&sortTypes=-1&sortColumns=EXPIRE_DATE&source=F10&client=PC"
-		tempfile temp
-		foreach code in `list' {
-                
-					qui{											
-							if length("`code'") >5 {
-                                        disp as error `"`code' is an invalid stock code"'
-                                        exit 601
-                                } 
-							while length("`code'") < 5 {
-                                        local code = "0" + "`code'"
-										}
-										
-								
-								local url "`address'`code'`t_add'"
-								copy "`url'" temp.txt,replace
-								clear
-								set obs 1  
-								gen v =fileread("temp.txt")	 
-								if length(v) < 120{
-												disp as error `"There is no warrant information for `code'."'
-												exit 601
-													}  	
- 								replace v = ustrregexs(1) if ustrregexm(v, `"\"data\"\:\[\{\"(.*)"')
-								
-
-								cap split v,p(`",""')
- 								drop v
- 								sxpose,clear
-								replace _var1=subinstr(_var1,`"""',"",.)
-								replace _var1=subinstr(_var1,":","",.)
-								replace _var1=subinstr(_var1,"SECUCODE","",.)
-								replace _var1=subinstr(_var1,"SECURITY_CODE","",.)
-								replace _var1=subinstr(_var1,"SECURITY_NAME","",.)
-								replace _var1=subinstr(_var1,"SECURITY_TYPE","",.)
-								replace _var1=subinstr(_var1,"EXPIRE_DATE","",.)
-								replace _var1=subinstr(_var1,"UNDERLYING_NAME","",.)
-								replace _var1=subinstr(_var1,"ISSUE_PRICE","",.)
-								replace _var1=subinstr(_var1,"TOTAL_ISSUE_SIZE","",.)
-								replace _var1=subinstr(_var1,"STRIKE_PRICE","",.)
-								replace _var1=subinstr(_var1,"SWAP_RATIO","",.)
-								
-								drop if ustrregexm(_var1, "SP")
-								drop if ustrregexm(_var1, "HK")
-								drop if ustrregexm(_var1, "CODE")
-								
-								forvalues i=1/9{
-                                        gen v`i'= _var1[_n+`i']
-                                                                        }
-								keep if mod(_n,9)==1
-								drop v9
-								drop if v8==""
-								rename _all (code_name warrant_name type time strike_price Exchange_ratio name issue_price total_issuance)
-								label variable Exchange_ratio "Unit:%"								
-								label variable strike_price "Unit:Hong Kong dollar"
-								label variable issue_price "Unit:Hong Kong dollar"
-								label variable total_issuance "Unit:copies"
-								
-								replace time=subinstr(time,"000000","",.)
-								gen Deadline= date(time,"YMD")
-								format %dCY-N-D Deadline
-								drop time
-								drop type
-								gen code="`code'"
-								order code name Deadline
-
-								destring _all,replace
-								compress
-								cap erase temp.txt
-								save `"`path'/`code'_warrant"', replace
-								noi disp as text `"file `code'_warrant.dta has been generated"'
-		
-							} 
-							}
-							}
-	
-	
-	
 
 	
 	
-	**********stock*************
-	if `"`fqt'"' == "d"|`"`fqt'"' == "D"|`"`fqt'"' == "w"|`"`fqt'"' == "m"|`"`fqt'"' == "W"|`"`fqt'"' == "M"{
 	    
 	local address "http://97.push2his.eastmoney.com/api/qt/stock/kline/get?secid=116." 
 	local t_add "&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61&klt=`klt'&fqt=0&end=20500101&lmt=10000&_="
@@ -171,7 +78,8 @@ program define hktrade
 								clear
 								set obs 1  
 								gen v =fileread("temp.txt")	 
-								if length(v) < 2500{
+								if length(v) < 500{
+												cap erase temp.txt
 												disp as error `"`code' is an invalid stock code or fqt() syntax error"'
 												exit 601
 													}  	
@@ -232,12 +140,21 @@ program define hktrade
 										drop date
 										gen code="`code'"
 										order code
-										label variable price_limit "Unit:%"
-										label variable amplitude "Unit:%"
-										label variable turnover_rate "Unit:%"
+										label variable code "Stock Code"
+										label variable time "Trading Date"
+										label variable open "Opening Price"
+										label variable close "Closing Price"
+										label variable high "Highest Price"
+										label variable low "Lowest Price"
+										label variable volume "Number Of Shares Traded"
+										label variable Turnover "Transaction Amount"
+										label variable amplitude "Stock Price Volatility (Unit:%)"
+										label variable price_limit "Price Changes In Percent (Unit:%)"
+										label variable change_amount "Price Change"
+										label variable turnover_rate "Turnover Rate (Unit:%)"
 										cap erase temp.txt
 										save `"`path'/`code'_trade"', replace
-										noi disp as text `"file `code'_trade.dta has been generated"'
+										noi disp as text `"file `code'_trade.dta has been generated and saved in `path'"'
 								}
 								
 								else{
@@ -265,17 +182,28 @@ program define hktrade
 									compress
 									gen code="`code'"
 									order code
-									label variable price_limit "Unit:%"
-									label variable amplitude "Unit:%"
-									label variable turnover_rate "Unit:%"
+									label variable code "Stock Code"
+									label variable time "Trading Date"
+									label variable open "Opening Price"
+									label variable close "Closing Price"
+									label variable high "Highest Price"
+									label variable low "Lowest Price"
+									label variable volume "Number Of Shares Traded"
+									label variable Turnover "Transaction Amount"
+									label variable amplitude "Stock Price Volatility (Unit:%)"
+									label variable price_limit "Price Changes In Percent (Unit:%)"
+									label variable change_amount "Price Change"
+									label variable turnover_rate "Turnover Rate (Unit:%)"
+									
+									
 									cap erase temp.txt
 									save `"`path'/`code'_trade"', replace
-									noi disp as text `"file `code'_trade.dta has been generated"'
+									noi disp as text `"file `code'_trade.dta has been generated and saved in `path'"'
 								}
 																
 						}
 							}		
-	}
+	
 	
 end
 
