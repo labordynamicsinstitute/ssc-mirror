@@ -188,8 +188,8 @@ program mlmr2, rclass sortpreserve
 						}
 						else {
 							if strpos("`v'","#")==0 {
-								loc v2 = subinstr("`v'","_",".",1)
-								loc crvlist2 = strltrim(`"`crvlist2' `v2'"')
+								loc v_2 = subinstr("`v'","_",".",1)
+								loc crvlist2 = strltrim(`"`crvlist2' `v_2'"')
 							}
 							else {
 								loc tempv = subinstr("`v'","#"," ",.)
@@ -198,20 +198,20 @@ program mlmr2, rclass sortpreserve
 									loc y = subinstr("`x'","c.","",1)
 									loc w`i' = strltrim(`"`w`i'' `y'"')
 								}
-								loc v2 = subinstr(strltrim("`w`i''")," ","#",.)
-								loc crvlist2 = strltrim(`"`crvlist2' `v2'"')
+								loc v_2 = subinstr(strltrim("`w`i''")," ","#",.)
+								loc crvlist2 = strltrim(`"`crvlist2' `v_2'"')
 								loc i = `i'+1
 							}
 						}
 					}
 					loc frvlist2 = strltrim(subinstr("`crvlist2'","bn.",".",.))
-					qui fvrevar `crvlist2'
+					qui fvrevar `frvlist2'
 					loc fvrvlist2 = "`r(varlist)'"
 					loc i = 1
 					foreach var of varlist `fvrvlist2' {
 						tempvar v`i'_12 v`i'_2m2
 						cap egen double `v`i'_2m2' = mean(`var') if e(sample)==1, by(`id')
-						cap gen double `v`i'_12' = `var'-`v`i'_2m' if e(sample)==1
+						cap gen double `v`i'_12' = `var'-`v`i'_2m2' if e(sample)==1
 						loc fvrvlist12 = strltrim(`"`fvrvlist12' `v`i'_12'"')
 						loc fvrvlist22 = strltrim(`"`fvrvlist22' `v`i'_2m2'"')
 						loc i =`i'+1
@@ -245,8 +245,8 @@ program mlmr2, rclass sortpreserve
 					}
 					else {
 						if strpos("`v'","#")==0 {
-							loc v2 = subinstr("`v'","_",".",1)
-							loc crvlist2 = strltrim(`"`crvlist2' `v2'"')
+							loc v_2 = subinstr("`v'","_",".",1)
+							loc crvlist2 = strltrim(`"`crvlist2' `v_2'"')
 						}
 						else {
 							loc tempv = subinstr("`v'","#"," ",.)
@@ -255,20 +255,20 @@ program mlmr2, rclass sortpreserve
 								loc y = subinstr("`x'","c.","",1)
 								loc w`i' = strltrim(`"`w`i'' `y'"')
 							}
-							loc v2 = subinstr(strltrim("`w`i''")," ","#",.)
-							loc crvlist2 = strltrim(`"`crvlist2' `v2'"')
+							loc v_2 = subinstr(strltrim("`w`i''")," ","#",.)
+							loc crvlist2 = strltrim(`"`crvlist2' `v_2'"')
 							loc i = `i'+1
 						}
 					}
 				}
 				loc frvlist2 = strltrim(subinstr("`crvlist2'","bn.",".",.))
-				qui fvrevar `crvlist2'
+				qui fvrevar `frvlist2'
 				loc fvrvlist2 = "`r(varlist)'"
 				loc i = 1
 				foreach var of varlist `fvrvlist2' {
 					tempvar v`i'_12 v`i'_2m2
 					cap egen double `v`i'_2m2' = mean(`var') if e(sample)==1, by(`id')
-					cap gen double `v`i'_12' = `var'-`v`i'_2m' if e(sample)==1
+					cap gen double `v`i'_12' = `var'-`v`i'_2m2' if e(sample)==1
 					loc fvrvlist12 = strltrim(`"`fvrvlist12' `v`i'_12'"')
 					loc fvrvlist22 = strltrim(`"`fvrvlist22' `v`i'_2m2'"')
 					loc i =`i'+1
@@ -493,8 +493,8 @@ program mlmr2, rclass sortpreserve
 						}
 						else {
 							if strpos("`v'","#")==0 {
-								loc v2 = subinstr("`v'","_",".",1)
-								loc crvlist2 = strltrim(`"`crvlist2' `v2'"')
+								loc v_2 = subinstr("`v'","_",".",1)
+								loc crvlist2 = strltrim(`"`crvlist2' `v_2'"')
 							}
 							else {
 								loc tempv = subinstr("`v'","#"," ",.)
@@ -503,14 +503,14 @@ program mlmr2, rclass sortpreserve
 									loc y = subinstr("`x'","c.","",1)
 									loc w`i' = strltrim(`"`w`i'' `y'"')
 								}
-								loc v2 = subinstr(strltrim("`w`i''")," ","#",.)
-								loc crvlist2 = strltrim(`"`crvlist2' `v2'"')
+								loc v_2 = subinstr(strltrim("`w`i''")," ","#",.)
+								loc crvlist2 = strltrim(`"`crvlist2' `v_2'"')
 								loc i = `i'+1
 							}
 						}
 					}
 					loc frvlist2 = strltrim(subinstr("`crvlist2'","bn.",".",.))
-					qui fvrevar `crvlist2'
+					qui fvrevar `frvlist2'
 					loc fvrvlist2 = "`r(varlist)'"
 					loc i = 1
 					foreach var of varlist `fvrvlist2' {
@@ -556,8 +556,8 @@ program mlmr2, rclass sortpreserve
 					}
 					else {
 						if strpos("`v'","#")==0 {
-							loc v2 = subinstr("`v'","_",".",1)
-							loc crvlist2 = strltrim(`"`crvlist2' `v2'"')
+							loc v_2 = subinstr("`v'","_",".",1)
+							loc crvlist2 = strltrim(`"`crvlist2' `v_2'"')
 						}
 						else {
 							loc tempv = subinstr("`v'","#"," ",.)
@@ -566,14 +566,14 @@ program mlmr2, rclass sortpreserve
 								loc y = subinstr("`x'","c.","",1)
 								loc w`i' = strltrim(`"`w`i'' `y'"')
 							}
-							loc v2 = subinstr(strltrim("`w`i''")," ","#",.)
-							loc crvlist2 = strltrim(`"`crvlist2' `v2'"')
+							loc v_2 = subinstr(strltrim("`w`i''")," ","#",.)
+							loc crvlist2 = strltrim(`"`crvlist2' `v_2'"')
 							loc i = `i'+1
 						}
 					}
 				}
 				loc frvlist2 = strltrim(subinstr("`crvlist2'","bn.",".",.))
-				qui fvrevar `crvlist2'
+				qui fvrevar `frvlist2'
 				loc fvrvlist2 = "`r(varlist)'"
 				loc i = 1
 				foreach var of varlist `fvrvlist2' {
@@ -644,8 +644,8 @@ program mlmr2, rclass sortpreserve
 						}
 						else {
 							if strpos("`v'","#")==0 {
-								loc v3 = subinstr("`v'","_",".",1)
-								loc crvlist3 = strltrim(`"`crvlist3' `v3'"')
+								loc v_3 = subinstr("`v'","_",".",1)
+								loc crvlist3 = strltrim(`"`crvlist3' `v_3'"')
 							}
 							else {
 								loc tempv = subinstr("`v'","#"," ",.)
@@ -654,14 +654,14 @@ program mlmr2, rclass sortpreserve
 									loc y = subinstr("`x'","c.","",1)
 									loc w`i' = strltrim(`"`w`i'' `y'"')
 								}
-								loc v3 = subinstr(strltrim("`w`i''")," ","#",.)
-								loc crvlist3 = strltrim(`"`crvlist3' `v3'"')
+								loc v_3 = subinstr(strltrim("`w`i''")," ","#",.)
+								loc crvlist3 = strltrim(`"`crvlist3' `v_3'"')
 								loc i = `i'+1
 							}
 						}
 					}
 					loc frvlist3 = strltrim(subinstr("`crvlist3'","bn.",".",.))
-					qui fvrevar `crvlist3'
+					qui fvrevar `frvlist3'
 					loc fvrvlist3 = "`r(varlist)'"
 					loc i = 1
 					foreach var of varlist `fvrvlist3' {
@@ -707,8 +707,8 @@ program mlmr2, rclass sortpreserve
 					}
 					else {
 						if strpos("`v'","#")==0 {
-							loc v3 = subinstr("`v'","_",".",1)
-							loc crvlist3 = strltrim(`"`crvlist3' `v3'"')
+							loc v_3 = subinstr("`v'","_",".",1)
+							loc crvlist3 = strltrim(`"`crvlist3' `v_3'"')
 						}
 						else {
 							loc tempv = subinstr("`v'","#"," ",.)
@@ -717,14 +717,14 @@ program mlmr2, rclass sortpreserve
 								loc y = subinstr("`x'","c.","",1)
 								loc w`i' = strltrim(`"`w`i'' `y'"')
 							}
-							loc v3 = subinstr(strltrim("`w`i''")," ","#",.)
-							loc crvlist3 = strltrim(`"`crvlist3' `v3'"')
+							loc v_3 = subinstr(strltrim("`w`i''")," ","#",.)
+							loc crvlist3 = strltrim(`"`crvlist3' `v_3'"')
 							loc i = `i'+1
 						}
 					}
 				}
 				loc frvlist3 = strltrim(subinstr("`crvlist3'","bn.",".",.))
-				qui fvrevar `crvlist3'
+				qui fvrevar `frvlist3'
 				loc fvrvlist3 = "`r(varlist)'"
 				loc i = 1
 				foreach var of varlist `fvrvlist3' {
@@ -1027,8 +1027,8 @@ program mlmr2, rclass sortpreserve
 						}
 						else {
 							if strpos("`v'","#")==0 {
-								loc v2 = subinstr("`v'","_",".",1)
-								loc crvlist2 = strltrim(`"`crvlist2' `v2'"')
+								loc v_2 = subinstr("`v'","_",".",1)
+								loc crvlist2 = strltrim(`"`crvlist2' `v_2'"')
 							}
 							else {
 								loc tempv = subinstr("`v'","#"," ",.)
@@ -1037,14 +1037,14 @@ program mlmr2, rclass sortpreserve
 									loc y = subinstr("`x'","c.","",1)
 									loc w`i' = strltrim(`"`w`i'' `y'"')
 								}
-								loc v2 = subinstr(strltrim("`w`i''")," ","#",.)
-								loc crvlist2 = strltrim(`"`crvlist2' `v2'"')
+								loc v_2 = subinstr(strltrim("`w`i''")," ","#",.)
+								loc crvlist2 = strltrim(`"`crvlist2' `v_2'"')
 								loc i = `i'+1
 							}
 						}
 					}
 					loc frvlist2 = strltrim(subinstr("`crvlist2'","bn.",".",.))
-					qui fvrevar `crvlist2'
+					qui fvrevar `frvlist2'
 					loc fvrvlist2 = "`r(varlist)'"
 					loc i = 1
 					foreach var of varlist `fvrvlist2' {
@@ -1096,8 +1096,8 @@ program mlmr2, rclass sortpreserve
 					}
 					else {
 						if strpos("`v'","#")==0 {
-							loc v2 = subinstr("`v'","_",".",1)
-							loc crvlist2 = strltrim(`"`crvlist2' `v2'"')
+							loc v_2 = subinstr("`v'","_",".",1)
+							loc crvlist2 = strltrim(`"`crvlist2' `v_2'"')
 						}
 						else {
 							loc tempv = subinstr("`v'","#"," ",.)
@@ -1106,14 +1106,14 @@ program mlmr2, rclass sortpreserve
 								loc y = subinstr("`x'","c.","",1)
 								loc w`i' = strltrim(`"`w`i'' `y'"')
 							}
-							loc v2 = subinstr(strltrim("`w`i''")," ","#",.)
-							loc crvlist2 = strltrim(`"`crvlist2' `v2'"')
+							loc v_2 = subinstr(strltrim("`w`i''")," ","#",.)
+							loc crvlist2 = strltrim(`"`crvlist2' `v_2'"')
 							loc i = `i'+1
 						}
 					}
 				}
 				loc frvlist2 = strltrim(subinstr("`crvlist2'","bn.",".",.))
-				qui fvrevar `crvlist2'
+				qui fvrevar `frvlist2'
 				loc fvrvlist2 = "`r(varlist)'"
 				loc i = 1
 				foreach var of varlist `fvrvlist2' {
@@ -1192,8 +1192,8 @@ program mlmr2, rclass sortpreserve
 						}
 						else {
 							if strpos("`v'","#")==0 {
-								loc v3 = subinstr("`v'","_",".",1)
-								loc crvlist3 = strltrim(`"`crvlist3' `v3'"')
+								loc v_3 = subinstr("`v'","_",".",1)
+								loc crvlist3 = strltrim(`"`crvlist3' `v_3'"')
 							}
 							else {
 								loc tempv = subinstr("`v'","#"," ",.)
@@ -1202,14 +1202,14 @@ program mlmr2, rclass sortpreserve
 									loc y = subinstr("`x'","c.","",1)
 									loc w`i' = strltrim(`"`w`i'' `y'"')
 								}
-								loc v3 = subinstr(strltrim("`w`i''")," ","#",.)
-								loc crvlist3 = strltrim(`"`crvlist3' `v3'"')
+								loc v_3 = subinstr(strltrim("`w`i''")," ","#",.)
+								loc crvlist3 = strltrim(`"`crvlist3' `v_3'"')
 								loc i = `i'+1
 							}
 						}
 					}
 					loc frvlist3 = strltrim(subinstr("`crvlist3'","bn.",".",.))
-					qui fvrevar `crvlist3'
+					qui fvrevar `frvlist3'
 					loc fvrvlist3 = "`r(varlist)'"
 					loc i = 1
 					foreach var of varlist `fvrvlist3' {
@@ -1261,8 +1261,8 @@ program mlmr2, rclass sortpreserve
 					}
 					else {
 						if strpos("`v'","#")==0 {
-							loc v3 = subinstr("`v'","_",".",1)
-							loc crvlist3 = strltrim(`"`crvlist3' `v3'"')
+							loc v_3 = subinstr("`v'","_",".",1)
+							loc crvlist3 = strltrim(`"`crvlist3' `v_3'"')
 						}
 						else {
 							loc tempv = subinstr("`v'","#"," ",.)
@@ -1271,14 +1271,14 @@ program mlmr2, rclass sortpreserve
 								loc y = subinstr("`x'","c.","",1)
 								loc w`i' = strltrim(`"`w`i'' `y'"')
 							}
-							loc v3 = subinstr(strltrim("`w`i''")," ","#",.)
-							loc crvlist3 = strltrim(`"`crvlist3' `v3'"')
+							loc v_3 = subinstr(strltrim("`w`i''")," ","#",.)
+							loc crvlist3 = strltrim(`"`crvlist3' `v_3'"')
 							loc i = `i'+1
 						}
 					}
 				}
 				loc frvlist3 = strltrim(subinstr("`crvlist3'","bn.",".",.))
-				qui fvrevar `crvlist3'
+				qui fvrevar `frvlist3'
 				loc fvrvlist3 = "`r(varlist)'"
 				loc i = 1
 				foreach var of varlist `fvrvlist3' {
@@ -1357,8 +1357,8 @@ program mlmr2, rclass sortpreserve
 						}
 						else {
 							if strpos("`v'","#")==0 {
-								loc v4 = subinstr("`v'","_",".",1)
-								loc crvlist4 = strltrim(`"`crvlist4' `v4'"')
+								loc v_4 = subinstr("`v'","_",".",1)
+								loc crvlist4 = strltrim(`"`crvlist4' `v_4'"')
 							}
 							else {
 								loc tempv = subinstr("`v'","#"," ",.)
@@ -1367,14 +1367,14 @@ program mlmr2, rclass sortpreserve
 									loc y = subinstr("`x'","c.","",1)
 									loc w`i' = strltrim(`"`w`i'' `y'"')
 								}
-								loc v4 = subinstr(strltrim("`w`i''")," ","#",.)
-								loc crvlist4 = strltrim(`"`crvlist4' `v4'"')
+								loc v_4 = subinstr(strltrim("`w`i''")," ","#",.)
+								loc crvlist4 = strltrim(`"`crvlist4' `v_4'"')
 								loc i = `i'+1
 							}
 						}
 					}
 					loc frvlist4 = strltrim(subinstr("`crvlist4'","bn.",".",.))
-					qui fvrevar `crvlist4'
+					qui fvrevar `frvlist4'
 					loc fvrvlist4 = "`r(varlist)'"
 					loc i = 1
 					foreach var of varlist `fvrvlist4' {
@@ -1426,8 +1426,8 @@ program mlmr2, rclass sortpreserve
 					}
 					else {
 						if strpos("`v'","#")==0 {
-							loc v4 = subinstr("`v'","_",".",1)
-							loc crvlist4 = strltrim(`"`crvlist4' `v4'"')
+							loc v_4 = subinstr("`v'","_",".",1)
+							loc crvlist4 = strltrim(`"`crvlist4' `v_4'"')
 						}
 						else {
 							loc tempv = subinstr("`v'","#"," ",.)
@@ -1436,14 +1436,14 @@ program mlmr2, rclass sortpreserve
 								loc y = subinstr("`x'","c.","",1)
 								loc w`i' = strltrim(`"`w`i'' `y'"')
 							}
-							loc v4 = subinstr(strltrim("`w`i''")," ","#",.)
-							loc crvlist4 = strltrim(`"`crvlist4' `v4'"')
+							loc v_4 = subinstr(strltrim("`w`i''")," ","#",.)
+							loc crvlist4 = strltrim(`"`crvlist4' `v_4'"')
 							loc i = `i'+1
 						}
 					}
 				}
 				loc frvlist4 = strltrim(subinstr("`crvlist4'","bn.",".",.))
-				qui fvrevar `crvlist4'
+				qui fvrevar `frvlist4'
 				loc fvrvlist4 = "`r(varlist)'"
 				loc i = 1
 				foreach var of varlist `fvrvlist4' {
@@ -1822,8 +1822,8 @@ program mlmr2, rclass sortpreserve
 						}
 						else {
 							if strpos("`v'","#")==0 {
-								loc v2 = subinstr("`v'","_",".",1)
-								loc crvlist2 = strltrim(`"`crvlist2' `v2'"')
+								loc v_2 = subinstr("`v'","_",".",1)
+								loc crvlist2 = strltrim(`"`crvlist2' `v_2'"')
 							}
 							else {
 								loc tempv = subinstr("`v'","#"," ",.)
@@ -1832,14 +1832,14 @@ program mlmr2, rclass sortpreserve
 									loc y = subinstr("`x'","c.","",1)
 									loc w`i' = strltrim(`"`w`i'' `y'"')
 								}
-								loc v2 = subinstr(strltrim("`w`i''")," ","#",.)
-								loc crvlist2 = strltrim(`"`crvlist2' `v2'"')
+								loc v_2 = subinstr(strltrim("`w`i''")," ","#",.)
+								loc crvlist2 = strltrim(`"`crvlist2' `v_2'"')
 								loc i = `i'+1
 							}
 						}
 					}
 					loc frvlist2 = strltrim(subinstr("`crvlist2'","bn.",".",.))
-					qui fvrevar `crvlist2'
+					qui fvrevar `frvlist2'
 					loc fvrvlist2 = "`r(varlist)'"
 					loc i = 1
 					foreach var of varlist `fvrvlist2' {
@@ -1897,8 +1897,8 @@ program mlmr2, rclass sortpreserve
 					}
 					else {
 						if strpos("`v'","#")==0 {
-							loc v2 = subinstr("`v'","_",".",1)
-							loc crvlist2 = strltrim(`"`crvlist2' `v2'"')
+							loc v_2 = subinstr("`v'","_",".",1)
+							loc crvlist2 = strltrim(`"`crvlist2' `v_2'"')
 						}
 						else {
 							loc tempv = subinstr("`v'","#"," ",.)
@@ -1907,14 +1907,14 @@ program mlmr2, rclass sortpreserve
 								loc y = subinstr("`x'","c.","",1)
 								loc w`i' = strltrim(`"`w`i'' `y'"')
 							}
-							loc v2 = subinstr(strltrim("`w`i''")," ","#",.)
-							loc crvlist2 = strltrim(`"`crvlist2' `v2'"')
+							loc v_2 = subinstr(strltrim("`w`i''")," ","#",.)
+							loc crvlist2 = strltrim(`"`crvlist2' `v_2'"')
 							loc i = `i'+1
 						}
 					}
 				}
 				loc frvlist2 = strltrim(subinstr("`crvlist2'","bn.",".",.))
-				qui fvrevar `crvlist2'
+				qui fvrevar `frvlist2'
 				loc fvrvlist2 = "`r(varlist)'"
 				loc i = 1
 				foreach var of varlist `fvrvlist2' {
@@ -2001,8 +2001,8 @@ program mlmr2, rclass sortpreserve
 						}
 						else {
 							if strpos("`v'","#")==0 {
-								loc v3 = subinstr("`v'","_",".",1)
-								loc crvlist3 = strltrim(`"`crvlist3' `v3'"')
+								loc v_3 = subinstr("`v'","_",".",1)
+								loc crvlist3 = strltrim(`"`crvlist3' `v_3'"')
 							}
 							else {
 								loc tempv = subinstr("`v'","#"," ",.)
@@ -2011,14 +2011,14 @@ program mlmr2, rclass sortpreserve
 									loc y = subinstr("`x'","c.","",1)
 									loc w`i' = strltrim(`"`w`i'' `y'"')
 								}
-								loc v3 = subinstr(strltrim("`w`i''")," ","#",.)
-								loc crvlist3 = strltrim(`"`crvlist3' `v3'"')
+								loc v_3 = subinstr(strltrim("`w`i''")," ","#",.)
+								loc crvlist3 = strltrim(`"`crvlist3' `v_3'"')
 								loc i = `i'+1
 							}
 						}
 					}
 					loc frvlist3 = strltrim(subinstr("`crvlist3'","bn.",".",.))
-					qui fvrevar `crvlist3'
+					qui fvrevar `frvlist3'
 					loc fvrvlist3 = "`r(varlist)'"
 					loc i = 1
 					foreach var of varlist `fvrvlist3' {
@@ -2076,8 +2076,8 @@ program mlmr2, rclass sortpreserve
 					}
 					else {
 						if strpos("`v'","#")==0 {
-							loc v3 = subinstr("`v'","_",".",1)
-							loc crvlist3 = strltrim(`"`crvlist3' `v3'"')
+							loc v_3 = subinstr("`v'","_",".",1)
+							loc crvlist3 = strltrim(`"`crvlist3' `v_3'"')
 						}
 						else {
 							loc tempv = subinstr("`v'","#"," ",.)
@@ -2086,14 +2086,14 @@ program mlmr2, rclass sortpreserve
 								loc y = subinstr("`x'","c.","",1)
 								loc w`i' = strltrim(`"`w`i'' `y'"')
 							}
-							loc v3 = subinstr(strltrim("`w`i''")," ","#",.)
-							loc crvlist3 = strltrim(`"`crvlist3' `v3'"')
+							loc v_3 = subinstr(strltrim("`w`i''")," ","#",.)
+							loc crvlist3 = strltrim(`"`crvlist3' `v_3'"')
 							loc i = `i'+1
 						}
 					}
 				}
 				loc frvlist3 = strltrim(subinstr("`crvlist3'","bn.",".",.))
-				qui fvrevar `crvlist3'
+				qui fvrevar `frvlist3'
 				loc fvrvlist3 = "`r(varlist)'"
 				loc i = 1
 				foreach var of varlist `fvrvlist3' {
@@ -2180,8 +2180,8 @@ program mlmr2, rclass sortpreserve
 						}
 						else {
 							if strpos("`v'","#")==0 {
-								loc v4 = subinstr("`v'","_",".",1)
-								loc crvlist4 = strltrim(`"`crvlist4' `v4'"')
+								loc v_4 = subinstr("`v'","_",".",1)
+								loc crvlist4 = strltrim(`"`crvlist4' `v_4'"')
 							}
 							else {
 								loc tempv = subinstr("`v'","#"," ",.)
@@ -2190,14 +2190,14 @@ program mlmr2, rclass sortpreserve
 									loc y = subinstr("`x'","c.","",1)
 									loc w`i' = strltrim(`"`w`i'' `y'"')
 								}
-								loc v4 = subinstr(strltrim("`w`i''")," ","#",.)
-								loc crvlist4 = strltrim(`"`crvlist4' `v4'"')
+								loc v_4 = subinstr(strltrim("`w`i''")," ","#",.)
+								loc crvlist4 = strltrim(`"`crvlist4' `v_4'"')
 								loc i = `i'+1
 							}
 						}
 					}
 					loc frvlist4 = strltrim(subinstr("`crvlist4'","bn.",".",.))
-					qui fvrevar `crvlist4'
+					qui fvrevar `frvlist4'
 					loc fvrvlist4 = "`r(varlist)'"
 					loc i = 1
 					foreach var of varlist `fvrvlist4' {
@@ -2255,8 +2255,8 @@ program mlmr2, rclass sortpreserve
 					}
 					else {
 						if strpos("`v'","#")==0 {
-							loc v4 = subinstr("`v'","_",".",1)
-							loc crvlist4 = strltrim(`"`crvlist4' `v4'"')
+							loc v_4 = subinstr("`v'","_",".",1)
+							loc crvlist4 = strltrim(`"`crvlist4' `v_4'"')
 						}
 						else {
 							loc tempv = subinstr("`v'","#"," ",.)
@@ -2265,14 +2265,14 @@ program mlmr2, rclass sortpreserve
 								loc y = subinstr("`x'","c.","",1)
 								loc w`i' = strltrim(`"`w`i'' `y'"')
 							}
-							loc v4 = subinstr(strltrim("`w`i''")," ","#",.)
-							loc crvlist4 = strltrim(`"`crvlist4' `v4'"')
+							loc v_4 = subinstr(strltrim("`w`i''")," ","#",.)
+							loc crvlist4 = strltrim(`"`crvlist4' `v_4'"')
 							loc i = `i'+1
 						}
 					}
 				}
 				loc frvlist4 = strltrim(subinstr("`crvlist4'","bn.",".",.))
-				qui fvrevar `crvlist4'
+				qui fvrevar `frvlist4'
 				loc fvrvlist4 = "`r(varlist)'"
 				loc i = 1
 				foreach var of varlist `fvrvlist4' {
@@ -2359,8 +2359,8 @@ program mlmr2, rclass sortpreserve
 						}
 						else {
 							if strpos("`v'","#")==0 {
-								loc v5 = subinstr("`v'","_",".",1)
-								loc crvlist5 = strltrim(`"`crvlist5' `v5'"')
+								loc v_5 = subinstr("`v'","_",".",1)
+								loc crvlist5 = strltrim(`"`crvlist5' `v_5'"')
 							}
 							else {
 								loc tempv = subinstr("`v'","#"," ",.)
@@ -2369,14 +2369,14 @@ program mlmr2, rclass sortpreserve
 									loc y = subinstr("`x'","c.","",1)
 									loc w`i' = strltrim(`"`w`i'' `y'"')
 								}
-								loc v5 = subinstr(strltrim("`w`i''")," ","#",.)
-								loc crvlist5 = strltrim(`"`crvlist5' `v5'"')
+								loc v_5 = subinstr(strltrim("`w`i''")," ","#",.)
+								loc crvlist5 = strltrim(`"`crvlist5' `v_5'"')
 								loc i = `i'+1
 							}
 						}
 					}
 					loc frvlist5 = strltrim(subinstr("`crvlist5'","bn.",".",.))
-					qui fvrevar `crvlist5'
+					qui fvrevar `frvlist5'
 					loc fvrvlist5 = "`r(varlist)'"
 					loc i = 1
 					foreach var of varlist `fvrvlist5' {
@@ -2434,8 +2434,8 @@ program mlmr2, rclass sortpreserve
 					}
 					else {
 						if strpos("`v'","#")==0 {
-							loc v5 = subinstr("`v'","_",".",1)
-							loc crvlist5 = strltrim(`"`crvlist5' `v5'"')
+							loc v_5 = subinstr("`v'","_",".",1)
+							loc crvlist5 = strltrim(`"`crvlist5' `v_5'"')
 						}
 						else {
 							loc tempv = subinstr("`v'","#"," ",.)
@@ -2444,14 +2444,14 @@ program mlmr2, rclass sortpreserve
 								loc y = subinstr("`x'","c.","",1)
 								loc w`i' = strltrim(`"`w`i'' `y'"')
 							}
-							loc v5 = subinstr(strltrim("`w`i''")," ","#",.)
-							loc crvlist5 = strltrim(`"`crvlist5' `v5'"')
+							loc v_5 = subinstr(strltrim("`w`i''")," ","#",.)
+							loc crvlist5 = strltrim(`"`crvlist5' `v_5'"')
 							loc i = `i'+1
 						}
 					}
 				}
 				loc frvlist5 = strltrim(subinstr("`crvlist5'","bn.",".",.))
-				qui fvrevar `crvlist5'
+				qui fvrevar `frvlist5'
 				loc fvrvlist5 = "`r(varlist)'"
 				loc i = 1
 				foreach var of varlist `fvrvlist5' {

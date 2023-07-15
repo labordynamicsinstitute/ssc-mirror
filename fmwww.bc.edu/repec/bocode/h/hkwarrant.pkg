@@ -1,0 +1,27 @@
+d 'HKWARRANT': module to download warrant or warrant's information associated with the codes you entered from Eastmoney.com
+d
+d   hkwarrant is used to download warrant or warrant's information
+d associated with a list of Hong    Kong public firms from Hong
+d Kong Stock Exchange. The generated warrant information includes  
+d  deadline, warrant name, strike price, exchange ratio, etc. 
+d
+d KW: data management
+d KW: Hong Kong
+d KW: stocks
+d KW: warrants
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20230709
+d
+d Author: Chuntao Li, China Stata Club
+d Support: email  chtl@@zuel.edu.cn
+d
+d Author:  Xiuping Mao, China Stata Club
+d Support: email   xiuping_mao@@126.com
+d
+d Author: Tianyao Luo, China Stata Club
+d Support: email  cnl1426@@163.com
+d
+f hkwarrant.ado
+f hkwarrant.sthlp
