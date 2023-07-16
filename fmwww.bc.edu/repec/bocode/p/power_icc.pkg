@@ -26,6 +26,6 @@ d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org
 d
-f ../r/power_cmd_icc.ado
-f ../r/power_cmd_icc_init.ado
-f ../r/power_icc.sthlp
+f power_cmd_icc.ado
+f power_cmd_icc_init.ado
+f power_icc.sthlp

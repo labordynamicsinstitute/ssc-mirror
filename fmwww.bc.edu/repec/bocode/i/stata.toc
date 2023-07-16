@@ -78,6 +78,7 @@ p invgammafit module to fit a two-parameter inverse gamma distribution
 p invgaussfit module to fit a two-parameter inverse Gaussian distribution
 p iop module to to compute different measures of inequality of opportunity for dichotomous, ordered and continuous outcome variables
 p iot module to estimate Leontief Input-Output Table
+p iota module to compute the iota coefficient of interrater agreement for interval or nominal multivariate observations
 p ipabcstats module to compare survey and back check data, producing an Excel output of comparisons and error rates
 p ipdfc module to reconstruct individual participant data from a published Kaplan-Meier curve
 p ipdforest module to produce forest plot for individual patient data IPD meta-analysis (one stage)

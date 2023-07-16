@@ -1,0 +1,39 @@
+d 'IOTA': module to compute the iota coefficient of interrater agreement for interval or nominal multivariate observations
+d
+d  iota computes the iota coefficient of interrater agreement
+d proposed by Janson and Olsson (2001). This measure of agreement
+d is an extension of Cohen's (1960) kappa for univariate (single
+d depvar) nominal data and Berry and Mielke's (1988) generalization
+d of Cohen's kappa agreement measure to univariate (single depvar)
+d interval level data to the multivariate case. As described by
+d Janson and Olsson (2001), their proposed extension of Cohen's
+d agreement measure is applicable to interobserver agreement in the
+d case where a set of two or more judges (sampled from a larger
+d population of possible judges) have rated a set of targets
+d (sampled from a larger population of targets) on several
+d dimensions or variables. The basic assumptions are that targets
+d are independent and that judges have operated independently. When
+d there are two judges and one variable, iota is exactly equivalent
+d to Cohen's (1960) kappa. And when there is one variable and
+d several judges, iota exactly equals Berry and Mielke's (1988) R
+d and also Conger's (1980) "Fleiss exact" coefficient — a
+d modification of a measure originally proposed by Fleiss (1971). 
+d
+d KW: iota coefficient
+d KW: interrater agreement
+d KW:  interrater reliability
+d KW: Cohen’s kappa
+d KW: intraclass coefficient
+d KW: multivariate
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20230715
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f iota.ado
+f iota.sthlp
+f iota_nominal.dta
+f iota_interval.dta
