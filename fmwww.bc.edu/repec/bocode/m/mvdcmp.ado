@@ -1,11 +1,15 @@
 program define mvdcmp
-*! version 2.0 8apr2022 Dan Powers & Hirotoshi Yoshioka
-////////////////////////////////////////////////////////////////////////////////////
-//  -mvdcmpgroup- (now appears to work with Stata 15)
-// 27Jan22 added error message to flag non-binary coded (0/1) grouping variable
+*! version 3.0 10jul2023 Dan Powers 
+//////////////////////////////////////////////////////////////////////////////////////////////
+// 10jul23 logit, svylogit, probit, svyprobit implemented in glm to handle fractional response
+// 30jun23 added support for svy models 
+// 20jun23 default difference = higher value outcome - lower value outcome
+// 26may23 added conformability for postestimation commands like -estout- and r(table)
+// 27jan22 added error message to flag non-binary coded (0/1) grouping variable
+//  -mvdcmpgroup- (works in version 15+)
 // 19Jun19 nbreg? (revert to version 12)
 // 19Jun19 fixed: parameter name problem in nbreg resulting in Stata version changes 
-// broke: the norm option (devcon)
+// broke: the norm option (devcon) OK in Stata version 15+
 // solution: force version 12 in nbreg
 // fixed output format 12feb2019
 // reformated output table for long variable names 08aug2018
@@ -16,7 +20,7 @@ program define mvdcmp
 // changed ereturns e(Var) to e(V) and e(Coef) to e(b)
 // version 10 added 17sept2010 
 // e(sample) added  06apr2010
-/////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
 version 15.0
 gettoken mvdcmp_cmd model:0, parse(":")
 gettoken grp 1:mvdcmp_cmd, parse(",")
@@ -26,35 +30,57 @@ gettoken cmd model:model
 gettoken model moptions:model, parse(",")
 gettoken moptions moptions:moptions, parse(",")
 nobreak {
-global mvdcmp_grp `grp'
-local 0 `model', by(`grp') `options' `moptions'  
-if ("`cmd'"=="logit"){
-logitDecomp `0'
+	global mvdcmp_grp `grp'
+	local 0 `model', by(`grp') `options' `moptions'  
+	
+	if ("`cmd'"=="logit"){
+	logitDecomp `0'
 }
-else if ("`cmd'"=="poisson"){
-PoissonDecomp `0'
+	else if ("`cmd'"=="poisson"){
+	PoissonDecomp `0'
 }
-else if ("`cmd'"=="probit"){
-probitDecomp `0'
+	else if ("`cmd'"=="probit"){
+	probitDecomp `0'
 }
-else if ("`cmd'"=="nbreg"){
-nbregDecomp `0'
+	else if ("`cmd'"=="nbreg"){
+	nbregDecomp `0'
 }
-else if ("`cmd'"=="cloglog"){
-CLLDecomp `0'
+	else if ("`cmd'"=="cloglog"){
+	CLLDecomp `0'
 }
-else if substr("`cmd'",1,3)=="reg" {
-linearDecomp `0'
+	else if substr("`cmd'",1,3)=="reg" {
+	linearDecomp `0'
+}
+
+// add calls for svy-weighted data
+
+	else if ("`cmd'"=="svylogit"){
+	svylogitDecomp `0'
+}
+	else if ("`cmd'"=="svyprobit"){
+	svyprobitDecomp `0'
+}
+	else if ("`cmd'"=="svypoisson"){
+	svyPoissonDecomp `0'
+}
+	else if ("`cmd'"=="svyregress"){
+	svylinearDecomp `0'
+}
+	else if ("`cmd'"=="svynbreg"){
+	svynbregDecomp `0'
+}
+	else if ("`cmd'"=="svycloglog"){
+	svyCLLDecomp `0'
 }
 
 else{
-di as error "mvdcmp only accepts regress, logit, probit, poisson, nbreg, and cloglog commands"
-macro drop mvdcmp_*
+	di as error "mvdcmp only accepts regress, svyregress, logit, svylogit, probit, svyprobit, poisson, svypoisson, nbreg, svynbreg, cloglog and svycloglog commands"
+	macro drop mvdcmp_*
  }
 }
 end
 
-program linearDecomp 
+program linearDecomp, eclass 
 syntax anything(id="varlist") [fw pw aw iw] , BY(varname) ///
     [REVerse NORmal(string) Scale(integer 1) CLUSter(varname) ROBust]
 
@@ -72,39 +98,44 @@ macro drop mvdcmp_*
   }
 else {
 
-gettoken cmd newvarlist:newvarlist
-set trace off
-tempvar _cons
-gen `_cons'=1
-gettoken depvar varlist:anything
-local weight [`weight'`exp']
-
-*****Means, determining high-low order
-if substr("`weight'",2,2)=="pw" | substr("`weight'",2,2)=="fw" ///
- | substr("`weight'",2,2)=="aw" | substr("`weight'",2,2)=="iw" {
+	gettoken cmd newvarlist:newvarlist
+	tempvar _cons
+	gen `_cons'=1
 	gettoken depvar varlist:anything
-	local tempweight [`weight'`exp']
-	gettoken w1 wv: tempweight, parse("=")
-	gettoken wv wv: wv
-	gettoken wv test: wv, parse("]")
-}
-else {
-tempvar wv
-gen `wv' = 1
-}
+	local weight [`weight'`exp']
+
+	if substr("`weight'",2,2)=="pw" | substr("`weight'",2,2)=="fw" | ///
+	   substr("`weight'",2,2)=="aw" | substr("`weight'",2,2)=="iw" {
+		gettoken depvar varlist:anything
+		local tempweight [`weight'`exp']
+		gettoken w1 wv: tempweight, parse("=")
+		gettoken wv wv: wv
+		gettoken wv test: wv, parse("]")
+		}
+	else {
+		tempvar wv
+		gen `wv' = 1
+	}
 
 
+// Empirical means: determining high-low response outcome
 
-// Means, determining high-low order (regress only)
 forvalue row = 1/2 {
-mata: wv`row'=0
-mata: st_view(wv`row', ., (tokens("`wv'")), "`touse'")
-mata: dv`row'=0
-mata: st_view(dv`row', ., (tokens("`depvar'")), "`touse'")
-mata: m`row'=sum(dv`row':*wv`row')/sum(wv`row')
-mata: st_matrix("m`row'", m`row')
-local m`row' = m`row'[1,1]
+	local val =  `matrix'[`row',1]
+	mata: wv`row'=0
+	mata: st_view(wv`row', ., (tokens("`wv'")), "`touse'")
+	mata: dv`row'=0
+	mata: st_view(dv`row', ., (tokens("`depvar'")), "`touse'")
+	    tempvar t_dep`row'
+       	qui egen `t_dep`row'' = total(`depvar' * `wv') if `by' == `val'
+        tempvar t_exp`row'
+        qui egen `t_exp`row'' = total(`wv') if `by' == `val'
+        tempvar rate`row'
+        qui gen `rate`row'' = `t_dep`row''/`t_exp`row''
+	  	sum `rate`row'' if `by'==`val', meanonly
+		local m`row' = r(mean) 
     }
+
 
 if (`m2'>=`m1' & "`reverse'"=="") | (`m2'<`m1' & "`reverse'"!="") {
         local val0 = `matrix'[2,1]
@@ -114,35 +145,33 @@ if (`m2'>=`m1' & "`reverse'"=="") | (`m2'<`m1' & "`reverse'"!="") {
         local val0 = `matrix'[1,1]
         local val1 = `matrix'[2,1]
         }
+				
 //handle model options robust and cluster
+
 if ("`robust'"!="")  {
   local ropt = "robust"
-  }
+	}
   else { 
   local ropt = ""
-  }
+	}
 
 if ("`cluster'"!="") {
-  local copt = "cluster(`varname')"
-  }
+  local copt = "cluster(`cluster')"
+	}
   else { 
   local copt = ""
- }
- 
+	}
 
 //estimation by group 
 
-
 forval i = 0/1 {
-
 qui regress `depvar' `varlist' `weight' if `by'==`val`i'' , `ropt' `copt' 
 
-////
 local normal`i' `normal'
 if "`normal`i''"!=""{
-local j 0
-local k 0
-while (1) {
+	local j 0
+	local k 0
+	while (1) {
         if "`normal`i''" == "" continue, break
         gettoken gvars normal`i': normal`i', parse("|")
         unab gvars: `gvars'
@@ -150,10 +179,10 @@ while (1) {
         local gvars`++j' `gvars'
         if "`normal`i''"!=""{
         gettoken bar normal`i' : normal`i', parse("|")
-        }
+			}
         local nnormal `++k'
-        }
-}
+         }
+	}
 global mvdcmp_lab`i' "`by'==`val`i''"
 
 local df`i' = e(df_m)
@@ -164,6 +193,7 @@ qui replace `touse'=1 if `by'==`val`i''
 
 mata: x`i'=0
 mata: b`i'=st_matrix("e(b)")
+mata: varb`i'=st_matrix("e(V)")
 local modvarlist: colnames e(b)
 local cons _cons
 local modvarlist2: list modvarlist - cons
@@ -171,29 +201,33 @@ mata: st_view(x`i', ., (tokens("`modvarlist2'"), "`_cons'"), "`touse'")
 //
 if substr("`weight'",2,2)=="pw" | substr("`weight'",2,2)=="fw" | ///
    substr("`weight'",2,2)=="iw" | substr("`weight'",2,2)=="aw" {
-gettoken temp wv : weight, parse("=")
-gettoken temp wv : wv
-gettoken tempwv wv : wv, parse("]")
-mata: wv`i'=0
-mata: st_view(wv`i', ., (tokens("`tempwv'")), "`touse'")
-}
+		gettoken temp wv : weight, parse("=")
+		gettoken temp wv : wv
+		gettoken tempwv wv : wv, parse("]")
+		mata: wv`i'=0
+		mata: st_view(wv`i', ., (tokens("`tempwv'")), "`touse'")
+	}
 else{
-tempvar tempwv
-gen `tempwv' = 1
-mata: wv`i'=0
-mata: st_view(wv`i', ., (tokens("`tempwv'")), "`touse'")
-}
-
-
-mata: xMean`i'=mean(x`i':*wv`i'):/mean(wv`i')
-mata: varb`i'=st_matrix("e(V)")
+	tempvar tempwv
+	gen `tempwv' = 1
+	mata: wv`i'=0
+	mata: st_view(wv`i', ., (tokens("`tempwv'")), "`touse'")
+	}
+mata: xMean`i'=mean(x`i', wv`i')
 }
 
 if `df0'!=`df1' {
         di as error "Number of regressors differs between the groups"
         di as error "Perhaps a variable was dropped in one of the groups defined by `by'"
         exit
-}
+	}
+
+// global mean return: default: differece = higher-outcome - lower-outcome 20230620
+// empirical means (unscaled)
+
+global mvdcmp_mu1 = `val0' * `m1'   +  `val1' * `m2'    
+global mvdcmp_mu0 = `val1' * `m1'   +  `val0' * `m2' 
+
 
 nobreak {
 mata:Wdx=Wdx_F(xMean0, xMean1, b0)
@@ -232,49 +266,44 @@ macro drop mvdcmp_*
 }
 end
 
-program logitDecomp, eclass
-syntax anything(id="varlist") [fw pw iw], BY(varname) ///
-[REVerse NORmal(string) Scale(integer 1) CLUster(varname) ROBust] 
+// svy R E G R E S S
+
+program svylinearDecomp, eclass 
+syntax anything(id="varlist")  , BY(varname) [REVerse NORmal(string) Scale(integer 1)]
 
 tempname matrix
+// check if 2 x 1 matrix is returned
 capture tab `by', matrow(`matrix')
-// check if returned matrix and rows=2
-if _rc==0 & r(r) != 2  {
-  di as error "group variable (i.e., `by') must have exactly two categories coded 0 and 1"
+if _rc==0 & r(r)!=2 {
+  di as error "group variable (i.e., `by') must have only two categories coded 0 and 1"
 macro drop mvdcmp_*
-}
+  }
 // check if matrix elements are each 0 or 1
 if `matrix'[1,1] ! = 0 & `matrix'[2,1] ! = 1 {
   di as error "group variable (i.e., `by') must be coded 0/1"
 macro drop mvdcmp_*
-}
-
+  }
 else {
-tempvar _cons
-gen `_cons'=1
-gettoken depvar varlist:anything
-local weight [`weight'`exp']
-if   substr("`weight'",2,2)=="pw" | substr("`weight'",2,2)=="fw" |  ///
-     substr("`weight'",2,2)=="iw" {
-gettoken depvar varlist:anything
-local tempweight [`weight'`exp']
-gettoken w1 wv: tempweight, parse("=")
-gettoken wv wv: wv
-gettoken wv test: wv, parse("]")
-}
-else{
-tempvar wv
-gen `wv' = 1
-}
+
+	gettoken cmd newvarlist:newvarlist
+	tempvar _cons
+	gen `_cons'=1
+	gettoken depvar varlist:anything
+	
+// Empirical means: determining high-low value response  
+
 forvalue row = 1/2 {
-mata:wv`row'=0
-mata:st_view(wv`row', ., (tokens("`wv'")), "`touse'")
-mata:dv`row'=0
-mata:st_view(dv`row', ., (tokens("`depvar'")), "`touse'")
-mata:m`row'=sum(dv`row':*wv`row')/sum(wv`row')
-mata:st_matrix("m`row'", m`row')
-local m`row' = m`row'[1,1]
+	local val =  `matrix'[`row',1]
+	mata: dv`row'=0
+	mata: st_view(dv`row', ., (tokens("`depvar'")), "`touse'")
+// svy
+        tempvar rate`row'
+        qui gen `rate`row'' = `depvar' if `by' == `val'
+	  	qui svy: mean `rate`row'' if `by'==`val'
+		local m`row' = e(b)[1,1]
     }
+
+
 if (`m2'>=`m1' & "`reverse'"=="") | (`m2'<`m1' & "`reverse'"!="") {
         local val0 = `matrix'[2,1]
         local val1 = `matrix'[1,1]
@@ -283,7 +312,171 @@ if (`m2'>=`m1' & "`reverse'"=="") | (`m2'<`m1' & "`reverse'"!="") {
         local val0 = `matrix'[1,1]
         local val1 = `matrix'[2,1]
         }
+				
+//estimation by group 
+// 
+di "               "
+di "svy information"
+svyset
+
+// descriptives outcome
+forval i = 0/1 {
+	svy: mean `depvar' if `by' == `val`i''	
+	qui svy: regress `depvar' `varlist' if `by'==`val`i'' 
+local wv = e(wvar)      // use for svy:mean estimation & args to subroutines
+
+local normal`i' `normal'
+if "`normal`i''"!=""{
+	local j 0
+	local k 0
+	while (1) {
+        if "`normal`i''" == "" continue, break
+        gettoken gvars normal`i': normal`i', parse("|")
+        unab gvars: `gvars'
+        devcon, group(`gvars') nonoise
+        local gvars`++j' `gvars'
+        if "`normal`i''"!=""{
+        gettoken bar normal`i' : normal`i', parse("|")
+			}
+        local nnormal `++k'
+         }
+	}
+global mvdcmp_lab`i' "`by'==`val`i''"
+
+local df`i' = e(df_m)
+
+tempvar touse
+gen `touse'=0
+qui replace `touse'=1 if `by'==`val`i''
+
+mata: x`i'=0
+mata: b`i'=st_matrix("e(b)")
+mata: varb`i'=st_matrix("e(V)")
+local modvarlist: colnames e(b)
+local cons _cons
+local modvarlist2: list modvarlist - cons
+mata: st_view(x`i', ., (tokens("`modvarlist2'"), "`_cons'"), "`touse'")
+mata: wv`i'= 0
+mata: st_view(wv`i', ., (tokens("`wv'")), "`touse'")  // wv0 & wv1 -> to subroutines
+local vlist "`modvarlist2' `_cons'"
+qui svy: mean `vlist' if `by' == `val`i''
+mata: xMean`i' = st_matrix("e(b)")
+}
+
+
+if `df0'!=`df1' {
+        di as error "Number of regressors differs between the groups"
+        di as error "Perhaps a variable was dropped in one of the groups defined by `by'"
+        exit
+	}
+
+// global mean return: default: differece = higher-outcome - lower-outcome 20230620
+// empirical means (unscaled)
+
+global mvdcmp_mu1 = `val0' * `m1'   +  `val1' * `m2'    
+global mvdcmp_mu0 = `val1' * `m1'   +  `val0' * `m2' 
+
+
+nobreak {
+mata:Wdx=Wdx_F(xMean0, xMean1, b0)
+mata:Wdb=Wdb_F(b0, b1, xMean1)
+mata:wbA=dwA_F(b0, b1, xMean1)
+mata:wbB=dwB_F(b0, b1, xMean1)
+mata:dWx=dW_F(b0, xMean0, xMean1)
+mata:E=mean(CDF_Linear(x0, b0, wv0))/mean(wv0) - mean(CDF_Linear(x1, b0, wv1))/mean(wv1)
+mata:C=mean(CDF_Linear(x1, b0, wv1))/mean(wv1) - mean(CDF_Linear(x1, b1, wv1))/mean(wv1)
+mata:PDF0=PDF_Linear(wv0)
+mata:PDF1=PDF_Linear(wv1)
+mata:dCdb1=dCdb1(x1, Wdb, wbA, wv1, PDF1, C)
+mata:dCdb2=dCdb2(x1, Wdb, wbB, wv1, PDF1, C)
+mata:dEdb=dEdb(x0, x1, Wdx, dWx, E, wv0, wv1, PDF0, PDF1)
+mata:Var_E_k=varcomp(dEdb, varb0)
+mata:seWdx=colsum(sqrt(diag(Var_E_k)))
+mata:Var_C_k=varcoef(dCdb1, dCdb2, varb0, varb1)
+mata:seWdb=colsum(sqrt(diag(Var_C_k)))
+mata:dCdb0A=dCdbA(x1, wv1, PDF1)
+mata:dCdb0B=dCdbA(x1, wv1, PDF1)
+mata:dEdb0=dEdb0(x0,x1,wv0,wv1, PDF0, PDF1)
+mata:sE0=sqrt(varE(dEdb0, varb0))
+mata:sC0=sqrt(varC(varb0, varb1, dCdb0A, dCdb0B))
+mata:temp=J(cols(dEdb),cols(dEdb),0)
+mata:eV=((dEdb,temp)\(dCdb1,dCdb2))*(varb0,temp\temp,varb1)*((dEdb,temp)\(dCdb1,dCdb2))'
+mata:sR0=sqrt(sum(eV))
+eret clear
+global mvdcmp_scale `scale'
+global mvdcmp_varlist `modvarlist2'
+global mvdcmp_nvarlist "`modvarlist2' _cons"
+global mvdcmp_depvar `depvar'
+setresult
+displayresult
+macro drop mvdcmp_*
+ }
+}
+end
+
+// now implemented as glm (for fractional regression)
+
+program logitDecomp, eclass
+syntax anything(id="varlist") [fw pw iw aw], BY(varname) ///
+[REVerse NORmal(string) Scale(integer 1) CLUster(varname) ROBust] 
+
+tempname matrix
+capture tab `by', matrow(`matrix')
+// check if returned matrix and rows=2
+if _rc==0 & r(r) != 2  {
+  di as error "group variable (i.e., `by') must have exactly two categories coded 0 and 1"
+	macro drop mvdcmp_*
+	}
+// check if matrix elements are each 0 or 1
+if `matrix'[1,1] ! = 0 & `matrix'[2,1] ! = 1 {
+  di as error "group variable (i.e., `by') must be coded 0/1"
+macro drop mvdcmp_*
+	}
+
+else {
+	tempvar _cons
+	gen `_cons'=1
+	gettoken depvar varlist:anything
+	local weight [`weight'`exp']
+	if  substr("`weight'",2,2)=="pw" | substr("`weight'",2,2)=="fw" |  ///
+		substr("`weight'",2,2)=="iw" | substr("`weight'",2,2)=="aw" {
+	gettoken depvar varlist:anything
+	local tempweight [`weight'`exp']
+	gettoken w1 wv: tempweight, parse("=")
+	gettoken wv wv: wv
+	gettoken wv test: wv, parse("]")
+		}
+else{
+	tempvar wv
+	gen `wv' = 1
+	}
+forvalue row = 1/2 {
+	local val =  `matrix'[`row',1]
+	mata:wv`row'=0
+	mata:st_view(wv`row', ., (tokens("`wv'")), "`touse'")
+	mata:dv`row'=0
+	mata:st_view(dv`row', ., (tokens("`depvar'")), "`touse'")
+		tempvar t_dep`row'
+       	qui egen `t_dep`row'' = total(`depvar' * `wv') if `by' == `val'
+        tempvar t_exp`row'
+        qui egen `t_exp`row'' =  total(`wv')  if `by' == `val'
+        tempvar rate`row'
+        qui gen `rate`row'' = `t_dep`row''/`t_exp`row'' if `by' == `val'
+	  	sum `rate`row'' if `by'==`val', meanonly
+		local m`row' = r(mean)
+    }
+
+if (`m2'>=`m1' & "`reverse'"=="") | (`m2'<`m1' & "`reverse'"!="") {
+        local val0 = `matrix'[2,1]
+        local val1 = `matrix'[1,1]
+    }
+    else {
+        local val0 = `matrix'[1,1]
+        local val1 = `matrix'[2,1]
+        }
+		
 // handle model options robust and cluster
+
 if ("`robust'"!="")  {
   local ropt = "robust"
   }
@@ -292,15 +485,16 @@ if ("`robust'"!="")  {
   }
 
 if ("`cluster'"!="") {
-  local copt = "cluster(`varname')"
+  local copt = "cluster(`cluster')"
   }
   else { 
   local copt = ""
  }
 
-// estimation by group
+// estimation by group (changed to glm)
+
 forval i = 0/1 {
-qui logit `depvar' `varlist' `weight' if `by'==`val`i'' , `ropt' `copt'
+  qui glm `depvar' `varlist' `weight' if `by'==`val`i'' , `ropt' `copt' family(b) link(logit) 
 local normal`i' `normal'
 if "`normal`i''"!=""{
 local j 0
@@ -324,45 +518,57 @@ gen `touse'=0
 qui replace `touse'=1 if `by'==`val`i''
 mata: x`i'=0
 mata: b`i'=st_matrix("e(b)")
+mata: varb`i'=st_matrix("e(V)")
 local modvarlist: colnames e(b)
 local cons _cons
 local modvarlist2: list modvarlist - cons
 mata: st_view(x`i', ., (tokens("`modvarlist2'"), "`_cons'"), "`touse'")
 mata: wv`i'=0
 mata: st_view(wv`i', ., (tokens("`wv'")), "`touse'")
-mata: xMean`i'=mean(x`i')
-mata: xMean`i'=mean(x`i':*wv`i'):/mean(wv`i')
-mata: varb`i'=st_matrix("e(V)")
+mata: xMean`i' = mean(x`i',wv`i')
 }
+
 //check if the number of independent variables
 //included in each model is identical
+
 if `df0'!=`df1' {
         di as error "Number of regressors differs between the groups"
         di as error "Perhaps a variable was dropped in one of the groups defined by `by'"
         macro drop mvdcmp_*
         exit
 }
+
+// global mean return: default difference  = higher outcome - lower outcome 20230620
+// empirical means (unscaled)
+
+global mvdcmp_mu1 = `val0' * `m1'   +  `val1' * `m2'    
+global mvdcmp_mu0 = `val1' * `m1'   +  `val0' * `m2' 
+
 nobreak {
 mata:Wdx=Wdx_F(xMean0, xMean1, b0)
 mata:Wdb=Wdb_F(b0, b1, xMean1)
 mata:wbA=dwA_F(b0, b1, xMean1)
 mata:wbB=dwB_F(b0, b1, xMean1)
 mata:dWx=dW_F(b0, xMean0, xMean1)
+// 
 mata:E=mean(CDF_lgt(x0, b0, wv0))/mean(wv0) - mean(CDF_lgt(x1, b0, wv1))/mean(wv1)
 mata:C=mean(CDF_lgt(x1, b0, wv1))/mean(wv1) - mean(CDF_lgt(x1, b1, wv1))/mean(wv1)
-mata:PDF00=PDF_lgt(x0, b0, wv0)  /*changed from 0 to 00 20100917*/
-mata:PDF10=PDF_lgt(x1, b0, wv1)  /*changed from 1 to 10 20100917*/
-mata:PDF11=PDF_lgt(x1, b1, wv1)  /*newly added 20100917*/
-mata:dCdb1=dCdb1(x1, Wdb, wbA, wv1, PDF10, C) /*changed from 1 to 10 20100917*/
-mata:dCdb2=dCdb2(x1, Wdb, wbB, wv1, PDF11, C) /*changed from 1 to 11 20100917*/
-mata:dEdb=dEdb(x0, x1, Wdx, dWx, E, wv0, wv1, PDF00, PDF10) /*changed here too 20100917*/
+mata:PDF00=PDF_lgt(x0, b0, wv0)  
+mata:PDF10=PDF_lgt(x1, b0, wv1)  
+mata:PDF11=PDF_lgt(x1, b1, wv1)  
+mata:dCdb1=dCdb1(x1, Wdb, wbA, wv1, PDF10, C) // 
+mata:dCdb2=dCdb2(x1, Wdb, wbB, wv1, PDF11, C) // 
+mata:dEdb=dEdb(x0, x1, Wdx, dWx, E, wv0, wv1, PDF00, PDF10) // 
+// 
 mata:Var_E_k=varcomp(dEdb, varb0)
 mata:seWdx=colsum(sqrt(diag(Var_E_k)))
 mata:Var_C_k=varcoef(dCdb1, dCdb2, varb0, varb1)
 mata:seWdb=colsum(sqrt(diag(Var_C_k)))
-mata:dCdb0A=dCdbA(x1, wv1, PDF10) /*changed 1 to 10 20100917*/
-mata:dCdb0B=dCdbA(x1, wv1, PDF11) /*changed 1 to 11 20100917*/
-mata:dEdb0=dEdb0(x0,x1,wv0,wv1, PDF00, PDF10) /*changed here 20100917*/
+//
+mata:dCdb0A=dCdbA(x1, wv1, PDF10) // 
+mata:dCdb0B=dCdbA(x1, wv1, PDF11) //
+mata:dEdb0=dEdb0(x0,x1,wv0,wv1, PDF00, PDF10) 
+// 
 mata:sE0=sqrt(varE(dEdb0, varb0))
 mata:sC0=sqrt(varC(varb0, varb1, dCdb0A, dCdb0B))
 mata:temp=J(cols(dEdb),cols(dEdb),0)
@@ -380,8 +586,152 @@ macro drop mvdcmp_*
  }
 end
 
+// svy L O G I T
+
+program svylogitDecomp, eclass
+syntax anything(id="varlist"), BY(varname) [REVerse NORmal(string) Scale(integer 1)] 
+
+tempname matrix
+capture tab `by', matrow(`matrix')
+// check if returned matrix and rows=2
+if _rc==0 & r(r) != 2  {
+  di as error "group variable (i.e., `by') must have exactly two categories coded 0 and 1"
+	macro drop mvdcmp_*
+	}
+// check if matrix elements are each 0 or 1
+if `matrix'[1,1] ! = 0 & `matrix'[2,1] ! = 1 {
+  di as error "group variable (i.e., `by') must be coded 0/1"
+macro drop mvdcmp_*
+	}
+
+else {
+	tempvar _cons
+	gen `_cons'=1
+	gettoken depvar varlist:anything
+
+forvalue row = 1/2 {
+	
+	local val =  `matrix'[`row',1]
+	mata:dv`row'=0
+	mata:st_view(dv`row', ., (tokens("`depvar'")), "`touse'")
+ 	 qui svy: mean `depvar' if `by'==`val'
+	 local m`row' = e(b)[1,1]		
+    }
+
+if (`m2'>=`m1' & "`reverse'"=="") | (`m2'<`m1' & "`reverse'"!="") {
+        local val0 = `matrix'[2,1]
+        local val1 = `matrix'[1,1]
+    }
+    else {
+        local val0 = `matrix'[1,1]
+        local val1 = `matrix'[2,1]
+        }
+		
+// estimation by group
+di "               "
+di "svy information"
+svyset
+
+forval i = 0/1 {
+// descriptives outcome
+	svy: mean `depvar' if `by' == `val`i''	
+	qui svy: glm `depvar' `varlist' if `by'==`val`i'' , family(b) link(logit) 
+
+local wv = e(wvar)
+
+local normal`i' `normal'
+if "`normal`i''"!=""{
+local j 0
+local k 0
+while (1) {
+        if "`normal`i''" == "" continue, break
+        gettoken gvars normal`i': normal`i', parse("|")
+        unab gvars: `gvars'
+        qui devcon, group(`gvars') nonoise
+        local gvars`++j' `gvars'
+        if "`normal`i''"!=""{
+        gettoken bar normal`i' : normal`i', parse("|")
+        }
+        local nnormal `++k'
+     }
+}
+global mvdcmp_lab`i' "`by'==`val`i''"
+local df`i' = e(df_m)
+tempvar touse
+gen `touse'=0
+qui replace `touse'=1 if `by'==`val`i''
+mata: x`i'=0
+mata: b`i'=st_matrix("e(b)")
+mata: varb`i'=st_matrix("e(V)")
+mata: wv`i'= 0
+mata: st_view(wv`i', ., (tokens("`wv'")), "`touse'")
+local modvarlist: colnames e(b)
+local cons _cons
+local modvarlist2: list modvarlist - cons
+mata: st_view(x`i', ., (tokens("`modvarlist2'"), "`_cons'"), "`touse'")
+local vlist "`modvarlist2' `_cons'"
+qui svy: mean `vlist' if `by' == `val`i''
+mata: xMean`i' = st_matrix("e(b)")
+}
+
+//check if the number of independent variables
+//included in each model is identical
+
+if `df0'!=`df1' {
+        di as error "Number of regressors differs between the groups"
+        di as error "Perhaps a variable was dropped in one of the groups defined by `by'"
+        macro drop mvdcmp_*
+        exit
+}
+
+// global mean return: default difference  = higher outcome - lower outcome 20230620
+// empirical means (unscaled)
+
+global mvdcmp_mu1 = `val0' * `m1'   +  `val1' * `m2'    
+global mvdcmp_mu0 = `val1' * `m1'   +  `val0' * `m2' 
+
+nobreak {
+mata:Wdx=Wdx_F(xMean0, xMean1, b0)
+mata:Wdb=Wdb_F(b0, b1, xMean1)
+mata:wbA=dwA_F(b0, b1, xMean1)
+mata:wbB=dwB_F(b0, b1, xMean1)
+mata:dWx=dW_F(b0, xMean0, xMean1)
+// svy: 
+mata:E=mean(CDF_lgt(x0, b0, wv0))/mean(wv0) - mean(CDF_lgt(x1, b0, wv1))/mean(wv1) 
+mata:C=mean(CDF_lgt(x1, b0, wv1))/mean(wv1) - mean(CDF_lgt(x1, b1, wv1))/mean(wv1)
+mata:PDF00=PDF_lgt(x0, b0, wv0)  // 
+mata:PDF10=PDF_lgt(x1, b0, wv1)  // 
+mata:PDF11=PDF_lgt(x1, b1, wv1)  // 
+mata:dCdb1=dCdb1(x1, Wdb, wbA, wv1, PDF10, C) // 
+mata:dCdb2=dCdb2(x1, Wdb, wbB, wv1, PDF11, C) // 
+mata:dEdb=dEdb(x0, x1, Wdx, dWx, E, wv0, wv1, PDF00, PDF10) // 
+mata:Var_E_k=varcomp(dEdb, varb0)
+mata:seWdx=colsum(sqrt(diag(Var_E_k)))
+mata:Var_C_k=varcoef(dCdb1, dCdb2, varb0, varb1)
+mata:seWdb=colsum(sqrt(diag(Var_C_k)))
+mata:dCdb0A=dCdbA(x1, wv1, PDF10) // 
+mata:dCdb0B=dCdbA(x1, wv1, PDF11) // 
+mata:dEdb0=dEdb0(x0,x1,wv0,wv1, PDF00, PDF10) //  
+mata:sE0=sqrt(varE(dEdb0, varb0))
+mata:sC0=sqrt(varC(varb0, varb1, dCdb0A, dCdb0B))
+mata:temp=J(cols(dEdb),cols(dEdb),0)
+mata:eV=((dEdb,temp)\(dCdb1,dCdb2))*(varb0,temp\temp,varb1)*((dEdb,temp)\(dCdb1,dCdb2))'
+mata:sR0=sqrt(sum(eV))
+eret clear
+global mvdcmp_scale `scale'
+global mvdcmp_varlist `modvarlist2'
+global mvdcmp_nvarlist "`modvarlist2' _cons"
+global mvdcmp_depvar `depvar'
+setresult
+displayresult
+macro drop mvdcmp_*
+  }
+ }
+end
+
+
 program probitDecomp, eclass
-syntax anything(id="varlist") [fw pw iw], BY(varname) ///
+syntax anything(id="varlist") [fw pw iw aw], BY(varname) ///
 [,REVerse NORmal(string) Scale(integer 1) CLUSter(varname) ROBust]
 tempname matrix
 capture tab `by', matrow(`matrix')
@@ -390,37 +740,48 @@ if _rc==0 & r(r)!=2  {
   di as error "group variable (i.e., `by') must have exactly two categories coded 0 and 1"
 macro drop mvdcmp_*
  }
+ 
 // check if matrix elements are each 0 or 1
+
 if `matrix'[1,1] ! = 0 & `matrix'[2,1] ! = 1 {
   di as error "group variable (i.e., `by') must be coded 0/1"
 macro drop mvdcmp_*
 }
 
 else{
-tempvar _cons
-gen `_cons'=1
-gettoken depvar varlist:anything
-local weight [`weight'`exp']
-if substr("`weight'",2,2)=="pw" | substr("`weight'",2,2)=="fw" | substr("`weight'",2,2)=="iw" {
-gettoken depvar varlist:anything
-local tempweight [`weight'`exp']
-gettoken w1 wv: tempweight, parse("=")
-gettoken wv wv: wv
-gettoken wv test: wv, parse("]")
-}
-else{
-tempvar wv
-gen `wv' = 1
-}
+	tempvar _cons
+	gen `_cons'=1
+	gettoken depvar varlist:anything
+	local weight [`weight'`exp']
+	if substr("`weight'",2,2)=="pw" | substr("`weight'",2,2)=="fw" ///
+	 | substr("`weight'",2,2)=="iw" | substr("`weight'",2,2)=="aw" {
+	gettoken depvar varlist:anything
+	local tempweight [`weight'`exp']
+	gettoken w1 wv: tempweight, parse("=")
+	gettoken wv wv: wv
+	gettoken wv test: wv, parse("]")
+	}
+	else{
+		tempvar wv
+		gen `wv' = 1
+	}
+	
 forvalue row = 1/2 {
-mata:wv`row'=0
-mata:st_view(wv`row', ., (tokens("`wv'")), "`touse'")
-mata:dv`row'=0
-mata:st_view(dv`row', ., (tokens("`depvar'")), "`touse'")
-mata:m`row'=sum(dv`row':*wv`row')/sum(wv`row')
-mata:st_matrix("m`row'", m`row')
-local m`row' = m`row'[1,1]
+	local val =  `matrix'[`row',1]
+	mata:wv`row'=0
+	mata:st_view(wv`row', ., (tokens("`wv'")), "`touse'")
+	mata:dv`row'=0
+	mata:st_view(dv`row', ., (tokens("`depvar'")), "`touse'")
+	tempvar t_dep`row'
+       	qui egen `t_dep`row'' = total(`depvar' * `wv') if `by' == `val'
+        tempvar t_exp`row'
+        qui egen `t_exp`row'' = total(`wv') if `by' == `val'
+        tempvar rate`row'
+        qui gen `rate`row'' = `t_dep`row''/`t_exp`row''
+	  	sum `rate`row'' if `by'==`val', meanonly
+		local m`row' = r(mean)
     }
+	
 if (`m2'>=`m1' & "`reverse'"=="") | (`m2'<`m1' & "`reverse'"!="") {
         local val0 = `matrix'[2,1]
         local val1 = `matrix'[1,1]
@@ -431,6 +792,7 @@ if (`m2'>=`m1' & "`reverse'"=="") | (`m2'<`m1' & "`reverse'"!="") {
         }
 
 // handle model options robust and cluster
+
 if ("`robust'"!="")  {
   local ropt = "robust"
   }
@@ -439,16 +801,16 @@ if ("`robust'"!="")  {
   }
 
 if ("`cluster'"!="") {
-  local copt = "cluster(`varname')"
+  local copt = "cluster(`cluster')"
   }
   else { 
   local copt = ""
  }
   
+// estimation by group (implemented in glm)
 
-// estimation by group
 forval i = 0/1 {
-qui probit `depvar' `varlist' `weight' if `by'==`val`i'' , `ropt' `copt'
+ qui glm `depvar' `varlist' `weight' if `by'==`val`i'' , `ropt' `copt' family(b) link(probit)
 local normal`i' `normal'
 if "`normal`i''"!=""{
 local j 0
@@ -473,15 +835,14 @@ gen `touse'=0
 qui replace `touse'=1 if `by'==`val`i''
 mata: x`i'=0
 mata: b`i'=st_matrix("e(b)")
+mata: varb`i'=st_matrix("e(V)")
 local modvarlist: colnames e(b)
 local cons _cons
 local modvarlist2: list modvarlist - cons
 mata: st_view(x`i', ., (tokens("`modvarlist2'"), "`_cons'"), "`touse'")
 mata: wv`i'=0
 mata: st_view(wv`i', ., (tokens("`wv'")), "`touse'")
-mata: xMean`i'=mean(x`i')
-mata: xMean`i'=mean(x`i':*wv`i'):/mean(wv`i')
-mata: varb`i'=st_matrix("e(V)")
+mata: xMean`i' = mean(x`i', wv`i')
 }
 //check if the number of independent variables
 //included in each model is identical
@@ -491,32 +852,38 @@ if `df0'!=`df1' {
         macro drop mvdcmp_*
         exit
 }
+
+// global mean return: default difference  = higher outcome - lower outcome 20230620
+// empirical means (unscaled)
+global mvdcmp_mu1 = `val0' * `m1'   +  `val1' * `m2'    
+global mvdcmp_mu0 = `val1' * `m1'   +  `val0' * `m2'
+
 nobreak{
-mata:Wdx=Wdx_F(xMean0, xMean1, b0)
-mata:Wdb=Wdb_F(b0, b1, xMean1)
-mata:wbA=dwA_F(b0, b1, xMean1)
-mata:wbB=dwB_F(b0, b1, xMean1)
-mata:dWx=dW_F(b0, xMean0, xMean1)
-mata:E=mean(CDF_probit(x0, b0, wv0))/mean(wv0) - mean(CDF_probit(x1, b0, wv1))/mean(wv1)
-mata:C=mean(CDF_probit(x1, b0, wv1))/mean(wv1) - mean(CDF_probit(x1, b1, wv1))/mean(wv1)
-mata:PDF00=PDF_probit(x0, b0, wv0)  /*changed from 0 to 00 20100917*/
-mata:PDF10=PDF_probit(x1, b0, wv1)  /*changed from 1 to 10 20100917*/
-mata:PDF11=PDF_probit(x1, b1, wv1)  /*newly added 20100917*/
-mata:dCdb1=dCdb1(x1, Wdb, wbA, wv1, PDF10, C) /*changed from 1 to 10 20100917*/
-mata:dCdb2=dCdb2(x1, Wdb, wbB, wv1, PDF11, C) /*changed from 1 to 11 20100917*/
-mata:dEdb=dEdb(x0, x1, Wdx, dWx, E, wv0, wv1, PDF00, PDF10) /*changed here too 20100917*/
-mata:Var_E_k=varcomp(dEdb, varb0)
-mata:seWdx=colsum(sqrt(diag(Var_E_k)))
-mata:Var_C_k=varcoef(dCdb1, dCdb2, varb0, varb1)
-mata:seWdb=colsum(sqrt(diag(Var_C_k)))
-mata:dCdb0A=dCdbA(x1, wv1, PDF10) /*changed 1 to 10 20100917*/
-mata:dCdb0B=dCdbA(x1, wv1, PDF11) /*changed 1 to 11 20100917*/
-mata:dEdb0=dEdb0(x0,x1,wv0,wv1, PDF00, PDF10) /*changed here 20100917*/
-mata:sE0=sqrt(varE(dEdb0, varb0))
-mata:sC0=sqrt(varC(varb0, varb1, dCdb0A, dCdb0B))
-mata:temp=J(cols(dEdb),cols(dEdb),0)
-mata:eV=((dEdb,temp)\(dCdb1,dCdb2))*(varb0,temp\temp,varb1)*((dEdb,temp)\(dCdb1,dCdb2))'
-mata:sR0=sqrt(sum(eV))
+	mata:Wdx=Wdx_F(xMean0, xMean1, b0)
+	mata:Wdb=Wdb_F(b0, b1, xMean1)
+	mata:wbA=dwA_F(b0, b1, xMean1)
+	mata:wbB=dwB_F(b0, b1, xMean1)
+	mata:dWx=dW_F(b0, xMean0, xMean1)
+	mata:E=mean(CDF_probit(x0, b0, wv0))/mean(wv0) - mean(CDF_probit(x1, b0, wv1))/mean(wv1)
+	mata:C=mean(CDF_probit(x1, b0, wv1))/mean(wv1) - mean(CDF_probit(x1, b1, wv1))/mean(wv1)
+	mata:PDF00=PDF_probit(x0, b0, wv0)  // 
+	mata:PDF10=PDF_probit(x1, b0, wv1)  // 
+	mata:PDF11=PDF_probit(x1, b1, wv1)  // 
+	mata:dCdb1=dCdb1(x1, Wdb, wbA, wv1, PDF10, C) // 
+	mata:dCdb2=dCdb2(x1, Wdb, wbB, wv1, PDF11, C) // 
+	mata:dEdb=dEdb(x0, x1, Wdx, dWx, E, wv0, wv1, PDF00, PDF10) // 
+	mata:Var_E_k=varcomp(dEdb, varb0)
+	mata:seWdx=colsum(sqrt(diag(Var_E_k)))
+	mata:Var_C_k=varcoef(dCdb1, dCdb2, varb0, varb1)
+	mata:seWdb=colsum(sqrt(diag(Var_C_k)))
+	mata:dCdb0A=dCdbA(x1, wv1, PDF10) //
+	mata:dCdb0B=dCdbA(x1, wv1, PDF11) //
+	mata:dEdb0=dEdb0(x0, x1, wv0, wv1, PDF00, PDF10) //
+	mata:sE0=sqrt(varE(dEdb0, varb0))
+	mata:sC0=sqrt(varC(varb0, varb1, dCdb0A, dCdb0B))
+	mata:temp=J(cols(dEdb),cols(dEdb),0)
+	mata:eV=((dEdb,temp)\(dCdb1,dCdb2))*(varb0,temp\temp,varb1)*((dEdb,temp)\(dCdb1,dCdb2))'
+	mata:sR0=sqrt(sum(eV))
 eret clear
 global mvdcmp_scale `scale'
 global mvdcmp_varlist `modvarlist2'
@@ -529,59 +896,220 @@ macro drop mvdcmp_*
 }
 end
 
-program PoissonDecomp, eclass
-syntax anything(id="varlist") [fw pw iw], BY(varname) [OFFset(varname) ///
- REVerse NORmal(string) Scale(integer 1) CLUSter(varname)  ROBust]
-if ("`offset'"==""){
-tempvar offset
-gen `offset'=0
-}
+// svy P R O B I T
+
+program svyprobitDecomp, eclass
+syntax anything(id="varlist"), BY(varname) [REVerse NORmal(string) Scale(integer 1)] 
+
+// pweight from e(wvar) is used for means of x's 
 tempname matrix
 capture tab `by', matrow(`matrix')
-if _rc==0 & r(r)!=2 {
-di as error "group variable (i.e., `by') must take exactly two values coded 0 and 1"
-macro drop mvdcmp_*
-}
+// check if returned matrix and rows=2
+if _rc==0 & r(r) != 2  {
+  di as error "group variable (i.e., `by') must have exactly two categories coded 0 and 1"
+	macro drop mvdcmp_*
+	}
 // check if matrix elements are each 0 or 1
 if `matrix'[1,1] ! = 0 & `matrix'[2,1] ! = 1 {
   di as error "group variable (i.e., `by') must be coded 0/1"
 macro drop mvdcmp_*
+	}
+
+else {
+	tempvar _cons
+	gen `_cons'=1
+	gettoken depvar varlist:anything
+	
+forvalue row = 1/2 {
+	local val =  `matrix'[`row',1]
+	mata:dv`row'=0
+	mata:st_view(dv`row', ., (tokens("`depvar'")), "`touse'")	
+        tempvar rate`row'
+        qui gen `rate`row'' = `depvar' if `by' == `val'
+	  	qui svy: mean `rate`row'' if `by'==`val'
+		local m`row' = e(b)[1,1]			
+    }
+
+
+if (`m2'>=`m1' & "`reverse'"=="") | (`m2'<`m1' & "`reverse'"!="") {
+        local val0 = `matrix'[2,1]
+        local val1 = `matrix'[1,1]
+      }
+    else {
+        local val0 = `matrix'[1,1]
+        local val1 = `matrix'[2,1]
+      }
+		
+// estimation by group
+di "               "
+di "svy information"
+svyset
+
+forval i = 0/1 {
+// descriptives outcome
+	svy: mean `depvar' if `by' == `val`i''
+	qui svy: glm `depvar' `varlist' if `by'==`val`i'' , family(b) link(probit)
+// get pweight (from svy cmd)
+local wv = e(wvar)
+local normal`i' `normal'
+if "`normal`i''"!=""{
+local j 0
+local k 0
+while (1) {
+        if "`normal`i''" == "" continue, break
+        gettoken gvars normal`i': normal`i', parse("|")
+        unab gvars: `gvars'
+        qui devcon, group(`gvars') nonoise
+        local gvars`++j' `gvars'
+        if "`normal`i''"!=""{
+        gettoken bar normal`i' : normal`i', parse("|")
+        }
+        local nnormal `++k'
+     }
+}
+global mvdcmp_lab`i' "`by'==`val`i''"
+local df`i' = e(df_m)
+tempvar touse
+gen `touse'=0
+qui replace `touse'=1 if `by'==`val`i''
+mata: x`i'=0
+mata: b`i'=st_matrix("e(b)")
+mata: varb`i'=st_matrix("e(V)")
+local modvarlist: colnames e(b)
+local cons _cons
+local modvarlist2: list modvarlist - cons
+mata: st_view(x`i', ., (tokens("`modvarlist2'"), "`_cons'"), "`touse'")
+mata: wv`i'= 0
+mata: st_view(wv`i', ., (tokens("`wv'")), "`touse'")
+local vlist "`modvarlist2' `_cons'"
+ qui svy: mean `vlist' if `by' == `val`i''
+mata: xMean`i' = st_matrix("e(b)")
+}
+
+//check if the number of independent variables
+//included in each model is identical
+
+if `df0'!=`df1' {
+        di as error "Number of regressors differs between the groups"
+        di as error "Perhaps a variable was dropped in one of the groups defined by `by'"
+        macro drop mvdcmp_*
+        exit
+}
+
+// global mean return: default difference  = higher outcome - lower outcome 20230620
+// empirical means (unscaled)
+
+global mvdcmp_mu1 = `val0' * `m1'   +  `val1' * `m2'    
+global mvdcmp_mu0 = `val1' * `m1'   +  `val0' * `m2' 
+
+// svy: 
+nobreak{
+	mata:Wdx=Wdx_F(xMean0, xMean1, b0)
+	mata:Wdb=Wdb_F(b0, b1, xMean1)
+	mata:wbA=dwA_F(b0, b1, xMean1)
+	mata:wbB=dwB_F(b0, b1, xMean1)
+	mata:dWx=dW_F(b0, xMean0, xMean1)
+	mata:E=mean(CDF_probit(x0, b0, wv0))/mean(wv0) - mean(CDF_probit(x1, b0, wv1))/mean(wv1)
+	mata:C=mean(CDF_probit(x1, b0, wv1))/mean(wv1) - mean(CDF_probit(x1, b1, wv1))/mean(wv1)
+	mata:PDF00=PDF_probit(x0, b0, wv0)  // 
+	mata:PDF10=PDF_probit(x1, b0, wv1)  // 
+	mata:PDF11=PDF_probit(x1, b1, wv1)  // 
+	mata:dCdb1=dCdb1(x1, Wdb, wbA, wv1, PDF10, C) // 
+	mata:dCdb2=dCdb2(x1, Wdb, wbB, wv1, PDF11, C) // 
+	mata:dEdb=dEdb(x0, x1, Wdx, dWx, E, wv0, wv1, PDF00, PDF10) // 
+	mata:Var_E_k=varcomp(dEdb, varb0)
+	mata:seWdx=colsum(sqrt(diag(Var_E_k)))
+	mata:Var_C_k=varcoef(dCdb1, dCdb2, varb0, varb1)
+	mata:seWdb=colsum(sqrt(diag(Var_C_k)))
+	mata:dCdb0A=dCdbA(x1, wv1, PDF10) //
+	mata:dCdb0B=dCdbA(x1, wv1, PDF11) //
+	mata:dEdb0=dEdb0(x0,x1,wv0,wv1, PDF00, PDF10) //
+	mata:sE0=sqrt(varE(dEdb0, varb0))
+	mata:sC0=sqrt(varC(varb0, varb1, dCdb0A, dCdb0B))
+	mata:temp=J(cols(dEdb),cols(dEdb),0)
+	mata:eV=((dEdb,temp)\(dCdb1,dCdb2))*(varb0,temp\temp,varb1)*((dEdb,temp)\(dCdb1,dCdb2))'
+	mata:sR0=sqrt(sum(eV))
+eret clear
+global mvdcmp_scale `scale'
+global mvdcmp_varlist `modvarlist2'
+global mvdcmp_nvarlist "`modvarlist2' _cons"
+global mvdcmp_depvar `depvar'
+setresult
+displayresult
+macro drop mvdcmp_*
+  }
+}
+end
+
+// Poisson
+
+program PoissonDecomp, eclass
+syntax anything(id="varlist") [fw pw iw], BY(varname) [OFFset(varname) ///
+ REVerse NORmal(string) Scale(integer 1) CLUSter(varname)  ROBust]
+if ("`offset'"==""){
+	tempvar offset
+	gen `offset'=0
+	}
+tempname matrix
+capture tab `by', matrow(`matrix')
+if _rc==0 & r(r)!=2 {
+	di as error "group variable (i.e., `by') must take exactly two values coded 0 and 1"
+macro drop mvdcmp_*
+}
+// check if matrix elements are each 0 or 1
+if `matrix'[1,1] ! = 0 & `matrix'[2,1] ! = 1 {
+	di as error "group variable (i.e., `by') must be coded 0/1"
+macro drop mvdcmp_*
 }
 else{
-tempvar _cons
-gen `_cons'=1
-gettoken depvar varlist:anything
-local weight [`weight'`exp']
-if substr("`weight'",2,2)=="pw" | substr("`weight'",2,2)=="fw" | substr("`weight'",2,2)=="iw" {
-     local tempweight [`weight'`exp']
-     gettoken w1 wv: tempweight, parse("=")
-     gettoken wv wv: wv
-     gettoken wv test: wv, parse("]")
+	tempvar _cons
+	gen `_cons'=1
+	gettoken depvar varlist:anything
+	local weight [`weight'`exp']
+	if substr("`weight'",2,2)=="pw" | substr("`weight'",2,2)=="fw" | substr("`weight'",2,2)=="iw" {
+		local tempweight [`weight'`exp']
+		gettoken w1 wv: tempweight, parse("=")
+		gettoken wv wv: wv
+		gettoken wv test: wv, parse("]")
    }
-else {
-  tempvar wv
-  gen `wv' = 1
+	else {
+	tempvar wv
+	gen `wv' = 1
  }
 
+// Empirical means: high and low valued outcomes 
+
 forvalue row = 1/2 {
-mata:wv`row'=0
-mata:st_view(wv`row', ., (tokens("`wv'")), "`touse'")
-mata:dv`row'=0
-mata:st_view(dv`row', ., (tokens("`depvar'")), "`touse'")
-mata:m`row'=sum(dv`row':*wv`row')/sum(wv`row')
-mata:st_matrix("m`row'", m`row')
-local m`row' = m`row'[1,1]
+	local val =  `matrix'[`row',1]
+	mata:wv`row'=0
+	mata:st_view(wv`row', ., (tokens("`wv'")), "`touse'")
+	mata:dv`row'=0
+	mata:st_view(dv`row', ., (tokens("`depvar'")), "`touse'")
+	mata:off`row'=0
+	mata:st_view(off`row', ., "`offset'", "`touse'")
+		tempvar t_dep`row'
+       	qui egen `t_dep`row'' = total(`depvar' * `wv') if `by' == `val'
+        tempvar t_exp`row' 
+        qui egen `t_exp`row'' = total(`wv' * exp(`offset')) if `by' == `val'
+        tempvar rate`row'
+        qui gen `rate`row'' = `t_dep`row''/`t_exp`row''
+	  	sum `rate`row'' if `by'==`val', meanonly
+		local m`row' = r(mean)	
     }
-if substr("`weight'",2,2)=="pw" | substr("`weight'",2,2)=="fw" | substr("`weight'",2,2)=="iw" {
+
+
+ if substr("`weight'",2,2)=="pw" | substr("`weight'",2,2)=="fw" | substr("`weight'",2,2)=="iw" {
     gettoken temp wv : weight, parse("=")
     gettoken temp wv : wv
     gettoken tempwv wv : wv, parse("]")
 }
-else{
-  tempvar tempwv
-  gen `tempwv' = 1
-}
+	else{
+	tempvar tempwv
+	gen `tempwv' = 1
+	}
 
+// default: higher outcome - lower outcome 
+	
 if (`m2'>=`m1' & "`reverse'"=="") | (`m2'<`m1' & "`reverse'"!="") {
         local val0 = `matrix'[2,1]
         local val1 = `matrix'[1,1]
@@ -592,6 +1120,7 @@ if (`m2'>=`m1' & "`reverse'"=="") | (`m2'<`m1' & "`reverse'"!="") {
         }
 
 // handle model options robust and cluster
+
 if ("`robust'"!="")  {
   local ropt = "robust"
   }
@@ -600,15 +1129,16 @@ if ("`robust'"!="")  {
   }
 
 if ("`cluster'"!="") {
-  local copt = "cluster(`varname')"
+  local copt = "cluster(`cluster')"
   }
   else { 
   local copt = ""
  }
 
 // estimation by group
+
 forval i = 0/1 {
-qui poisson `depvar' `varlist' `weight' if `by'==`val`i'' , offset(`offset') `ropt' `copt'
+ qui poisson `depvar' `varlist' `weight' if `by'==`val`i'' , offset(`offset') `ropt' `copt'
 local normal`i' `normal'
 if "`normal`i''"!=""{
 local j 0
@@ -633,18 +1163,17 @@ gen `touse'=0
 qui replace `touse'=1 if `by'==`val`i''
 mata: x`i'=0
 mata: b`i'=st_matrix("e(b)")
+mata: varb`i'=st_matrix("e(V)")
 local modvarlist: colnames e(b)
 local cons _cons
 local modvarlist2: list modvarlist - cons
 mata: st_view(x`i', ., (tokens("`modvarlist2'"), "`_cons'"), "`touse'")
 mata: wv`i'=0
 mata: st_view(wv`i', ., (tokens("`tempwv'")), "`touse'")
-mata: xMean`i'=mean(x`i')
 mata: xMean`i'=mean(x`i':*wv`i'):/mean(wv`i')
-mata: varb`i'=st_matrix("e(V)")
 mata: off`i'=0
 mata: st_view(off`i', ., "`offset'", "`touse'")
-mata: off`i'=exp(off`i')
+mata: off`i'=exp(off`i') // exposure
 }
 //check if the number of independent variables
 //included in each model is identical
@@ -654,31 +1183,37 @@ if `df0'!=`df1' {
         macro drop mvdcmp_*
         exit
 }
+
+// global mean return: default difference  = higher outcome - lower outcome 20230620
+// empirical means (unscaled)
+global mvdcmp_mu1 = `val0' * `m1'   +  `val1' * `m2'    
+global mvdcmp_mu0 = `val1' * `m1'   +  `val0' * `m2'
+
 nobreak{
-mata:Wdx=Wdx_F(xMean0, xMean1, b0)
-mata:Wdb=Wdb_F(b0, b1, xMean1)
-mata:wbA=dwA_F(b0, b1, xMean1)
-mata:wbB=dwB_F(b0, b1, xMean1)
-mata:dWx=dW_F(b0, xMean0, xMean1)
-mata:E=mean(pois(x0, b0, off0, wv0))/mean(wv0:*off0) - mean(pois(x1, b0, off1, wv1))/mean(wv1:*off1)
-mata:C=mean(pois(x1, b0, off1, wv1))/mean(wv1:*off1) - mean(pois(x1, b1, off1, wv1))/mean(wv1:*off1)
-mata:PDF00=pois(x0, b0, off0,wv0) /*PDFs changed for poisson 20100917*/
-mata:PDF10=pois(x1, b0, off1,wv1)
-mata:PDF11=pois(x1, b1, off1,wv1)
-**************************************************CHANGE DP 07/09/10******* wv for off***
+	mata:Wdx=Wdx_F(xMean0, xMean1, b0)
+	mata:Wdb=Wdb_F(b0, b1, xMean1)
+	mata:wbA=dwA_F(b0, b1, xMean1)
+	mata:wbB=dwB_F(b0, b1, xMean1)
+	mata:dWx=dW_F(b0, xMean0, xMean1)
+	mata:E=mean(pois(x0, b0, off0, wv0))/mean(wv0:*off0) - mean(pois(x1, b0, off1, wv1))/mean(wv1:*off1)
+	mata:C=mean(pois(x1, b0, off1, wv1))/mean(wv1:*off1) - mean(pois(x1, b1, off1, wv1))/mean(wv1:*off1)
+	mata:PDF00=pois(x0, b0, off0, wv0) // 
+	mata:PDF10=pois(x1, b0, off1, wv1)
+	mata:PDF11=pois(x1, b1, off1, wv1)
+//   
 mata:dCdb1=dCdb1Pois(x1, Wdb, wbA, wv1, off1, PDF10, C)
 mata:dCdb2=dCdb2Pois(x1, Wdb, wbB, wv1, off1, PDF11, C)
 mata:dEdb=dEdbPois(x0, x1, Wdx, dWx, E, wv0, wv1, off0, off1, PDF00, PDF10)
-******************************************************************************************
+//
 mata:Var_E_k=varcomp(dEdb, varb0)
 mata:seWdx=colsum(sqrt(diag(Var_E_k)))
 mata:Var_C_k=varcoef(dCdb1, dCdb2, varb0, varb1)
 mata:seWdb=colsum(sqrt(diag(Var_C_k)))
-**************************************************CHANGE DP 07/09/10******** (as above)*****
+// 
 mata:dCdb0A=dCdbAPois(x1, wv1, off1, PDF10)
 mata:dCdb0B=dCdbAPois(x1, wv1, off1, PDF11)
 mata:dEdb0=dEdb0Pois(x0,x1,wv0,wv1,off0, off1, PDF00, PDF10)
-******************************************************************************************
+//
 mata:sE0=sqrt(varE(dEdb0, varb0))
 mata:sC0=sqrt(varC(varb0, varb1, dCdb0A, dCdb0B))
 mata:temp=J(cols(dEdb),cols(dEdb),0)
@@ -696,17 +1231,171 @@ macro drop mvdcmp_*
 }
 end
 
+// svy P O I S S O N 
+
+program svyPoissonDecomp, eclass
+syntax anything(id="varlist"), BY(varname) [OFFset(varname) REVerse NORmal(string) Scale(integer 1)]
+if ("`offset'"==""){
+	tempvar offset
+	gen `offset'=0
+	}
+tempname matrix
+capture tab `by', matrow(`matrix')
+if _rc==0 & r(r)!=2 {
+	di as error "group variable (i.e., `by') must take exactly two values coded 0 and 1"
+macro drop mvdcmp_*
+}
+// check if matrix elements are each 0 or 1
+if `matrix'[1,1] ! = 0 & `matrix'[2,1] ! = 1 {
+	di as error "group variable (i.e., `by') must be coded 0/1"
+macro drop mvdcmp_*
+}
+else{
+	tempvar _cons
+	gen `_cons'=1
+	gettoken depvar varlist:anything
+
+forvalue row = 1/2 {
+	local val =  `matrix'[`row',1]
+	mata:dv`row'=0
+	mata:st_view(dv`row', ., (tokens("`depvar'")), "`touse'")
+	mata:off`row'=0
+	mata:st_view(off`row', ., "`offset'", "`touse'")
+		tempvar t_dep`row'
+       	qui gen `t_dep`row'' = `depvar' if `by' == `val'
+		qui svy: poisson `depvar' if `by' == `val' , offset("`offset'")
+		local m`row' = exp(e(b)[1,1])
+    }
+	
+// default: higher outcome - lower outcome 
+	
+if (`m2'>=`m1' & "`reverse'"=="") | (`m2'<`m1' & "`reverse'"!="") {
+        local val0 = `matrix'[2,1]
+        local val1 = `matrix'[1,1]
+    }
+    else {
+        local val0 = `matrix'[1,1]
+        local val1 = `matrix'[2,1]
+        }
+		
+// estimation by group
+di "               "
+di "svy information"
+svyset
+forval i = 0/1 {
+	svy: poisson `depvar' if `by'==`val`i'' , offset(`offset') irr
+	qui svy: poisson `depvar' `varlist' if `by'==`val`i'' , offset(`offset') 
+// get pwweight
+local wv = e(wvar)
+local normal`i' `normal'
+if "`normal`i''"!=""{
+local j 0
+local k 0
+while (1) {
+        if "`normal`i''" == "" continue, break
+        gettoken gvars normal`i': normal`i', parse("|")
+        unab gvars: `gvars'
+        qui devcon, group(`gvars') nonoise
+        local gvars`++j' `gvars'
+        if "`normal`i''"!=""{
+        gettoken bar normal`i' : normal`i', parse("|")
+        }
+        local nnormal `++k'
+        }
+}
+
+global mvdcmp_lab`i' "`by'==`val`i''"
+local df`i' = e(df_m)
+tempvar touse
+gen `touse'=0
+qui replace `touse'=1 if `by'==`val`i''
+mata: x`i'=0
+mata: b`i'=st_matrix("e(b)")
+mata: varb`i'=st_matrix("e(V)")
+local modvarlist: colnames e(b)
+local cons _cons
+local modvarlist2: list modvarlist - cons
+mata: st_view(x`i', ., (tokens("`modvarlist2'"), "`_cons'"), "`touse'")
+mata: wv`i'= 0
+mata: st_view(wv`i', ., (tokens("`wv'")), "`touse'")
+// svy means 
+local vlist "`modvarlist2' `_cons'"
+qui svy: mean `vlist' if `by' == `val`i''
+mata: xMean`i' = st_matrix("e(b)")
+mata: off`i'=0
+mata: st_view(off`i', ., "`offset'", "`touse'")
+mata: off`i'=exp(off`i') // exposure
+}
+
+
+//check if the number of independent variables
+//included in each model is identical
+if `df0'!=`df1' {
+        di as error "Number of regressors differs between the groups"
+        di as error "Perhaps a variable was dropped in one of the groups defined by `by'"
+        macro drop mvdcmp_*
+        exit
+}
+
+// global mean return: default difference  = higher outcome - lower outcome 20230620
+// empirical means (unscaled)
+global mvdcmp_mu1 = `val0' * `m1'   +  `val1' * `m2'    
+global mvdcmp_mu0 = `val1' * `m1'   +  `val0' * `m2'
+
+nobreak{
+	mata:Wdx=Wdx_F(xMean0, xMean1, b0)
+	mata:Wdb=Wdb_F(b0, b1, xMean1)
+	mata:wbA=dwA_F(b0, b1, xMean1)
+	mata:wbB=dwB_F(b0, b1, xMean1)
+	mata:dWx=dW_F(b0, xMean0, xMean1)
+	mata:E=mean(pois(x0, b0, off0, wv0))/mean(wv0:*off0) - mean(pois(x1, b0, off1, wv1))/mean(wv1:*off1)
+	mata:C=mean(pois(x1, b0, off1, wv1))/mean(wv1:*off1) - mean(pois(x1, b1, off1, wv1))/mean(wv1:*off1)
+	mata:PDF00=pois(x0, b0, off0, wv0) // 
+	mata:PDF10=pois(x1, b0, off1, wv1)
+	mata:PDF11=pois(x1, b1, off1, wv1)
+//  
+mata:dCdb1=dCdb1Pois(x1, Wdb, wbA, wv1, off1, PDF10, C)
+mata:dCdb2=dCdb2Pois(x1, Wdb, wbB, wv1, off1, PDF11, C)
+mata:dEdb=dEdbPois(x0, x1, Wdx, dWx, E, wv0, wv1, off0, off1, PDF00, PDF10)
+//
+mata:Var_E_k=varcomp(dEdb, varb0)
+mata:seWdx=colsum(sqrt(diag(Var_E_k)))
+mata:Var_C_k=varcoef(dCdb1, dCdb2, varb0, varb1)
+mata:seWdb=colsum(sqrt(diag(Var_C_k)))
+// 
+mata:dCdb0A=dCdbAPois(x1, wv1, off1, PDF10)
+mata:dCdb0B=dCdbAPois(x1, wv1, off1, PDF11)
+mata:dEdb0=dEdb0Pois(x0,x1,wv0,wv1,off0, off1, PDF00, PDF10)
+//
+mata:sE0=sqrt(varE(dEdb0, varb0))
+mata:sC0=sqrt(varC(varb0, varb1, dCdb0A, dCdb0B))
+mata:temp=J(cols(dEdb),cols(dEdb),0)
+mata:eV=((dEdb,temp)\(dCdb1,dCdb2))*(varb0,temp\temp,varb1)*((dEdb,temp)\(dCdb1,dCdb2))'
+mata:sR0=sqrt(sum(eV))
+eret clear
+global mvdcmp_scale `scale'
+global mvdcmp_varlist `modvarlist2'
+global mvdcmp_nvarlist "`modvarlist2' _cons"
+global mvdcmp_depvar `depvar'
+setresult
+displayresult
+macro drop mvdcmp_*
+ }
+}
+end
+
+// nbreg
 
 program nbregDecomp, eclass
-// use old version for nbreg
+// force version 12 for nbreg
 version 12
 //
 syntax anything(id="varlist") [fw pw iw], BY(varname) [OFFset(varname) ///
 REVerse NORmal(string) Scale(integer 1) CLUSter(varname) ROBust]
-if ("`offset'"==""){
-tempvar offset
-gen `offset'=0
-}
+	if ("`offset'"==""){
+	tempvar offset
+	gen `offset'=0
+	}
 tempname matrix
 capture tab `by', matrow(`matrix')
 if _rc==0 & r(r)!=2 {
@@ -719,39 +1408,47 @@ if `matrix'[1,1] ! = 0 & `matrix'[2,1] ! = 1 {
 macro drop mvdcmp_*
 }
 else{
-tempvar _cons
-gen `_cons'=1
-gettoken depvar varlist:anything
-local weight [`weight'`exp']
-if substr("`weight'",2,2)=="pw" | substr("`weight'",2,2)=="fw" | substr("`weight'",2,2)=="iw" {
-local tempweight [`weight'`exp']
-gettoken w1 wv: tempweight, parse("=")
-gettoken wv wv: wv
-gettoken wv test: wv, parse("]")
-}
-else{
-tempvar wv
-gen `wv' = 1
-}
+	tempvar _cons
+	gen `_cons'=1
+	gettoken depvar varlist:anything
+	local weight [`weight'`exp']
+		if substr("`weight'",2,2)=="pw" | substr("`weight'",2,2)=="fw" | substr("`weight'",2,2)=="iw" {
+		local tempweight [`weight'`exp']
+		gettoken w1 wv: tempweight, parse("=")
+		gettoken wv wv: wv
+		gettoken wv test: wv, parse("]")
+	}
+	else{
+		tempvar wv
+		gen `wv' = 1
+	}
 forvalue row = 1/2 {
-mata:wv`row'=0
-mata:st_view(wv`row', ., (tokens("`wv'")), "`touse'")
-mata:dv`row'=0
-mata:st_view(dv`row', ., (tokens("`depvar'")), "`touse'")
-mata:m`row'=sum(dv`row':*wv`row')/sum(wv`row')
-mata:st_matrix("m`row'", m`row')
-local m`row' = m`row'[1,1]
+	local val =  `matrix'[`row',1]
+	mata:wv`row'=0
+	mata:st_view(wv`row', ., (tokens("`wv'")), "`touse'")
+	mata:dv`row'=0
+	mata:st_view(dv`row', ., (tokens("`depvar'")), "`touse'")
+	mata:off`row'=0
+	mata:st_view(off`row', ., "`offset'", "`touse'")
+		tempvar t_dep`row'
+       	qui egen `t_dep`row'' = total(`depvar' * `wv') if `by' == `val'
+        tempvar t_exp`row' 
+        qui egen `t_exp`row'' = total(`wv' * exp(`offset')) if `by' == `val'
+        tempvar rate`row'
+        qui gen `rate`row'' = `t_dep`row''/`t_exp`row''
+	  	sum `rate`row'' if `by'==`val', meanonly
+		local m`row' = r(mean)
     }
 
 if substr("`weight'",2,2)=="pw" | substr("`weight'",2,2)=="fw" | substr("`weight'",2,2)=="iw" {
-gettoken temp wv : weight, parse("=")
-gettoken temp wv : wv
-gettoken tempwv wv : wv, parse("]")
+	gettoken temp wv : weight, parse("=")
+	gettoken temp wv : wv
+	gettoken tempwv wv : wv, parse("]")
 }
-else{
-tempvar tempwv
-gen `tempwv' = 1
-}
+	else{
+		tempvar tempwv
+		gen `tempwv' = 1
+	}
 
 if (`m2'>=`m1' & "`reverse'"=="") | (`m2'<`m1' & "`reverse'"!="") {
         local val0 = `matrix'[2,1]
@@ -761,6 +1458,7 @@ if (`m2'>=`m1' & "`reverse'"=="") | (`m2'<`m1' & "`reverse'"!="") {
         local val0 = `matrix'[1,1]
         local val1 = `matrix'[2,1]
         }
+		
 // handle robust and cluster options
 
 if ("`robust'"!="")  {
@@ -771,7 +1469,7 @@ if ("`robust'"!="")  {
   }
 
 if ("`cluster'"!="") {
-  local copt = "cluster(`varname')"
+  local copt = "cluster(`cluster')"
   }
   else { 
   local copt = ""
@@ -779,7 +1477,7 @@ if ("`cluster'"!="") {
 
 // estimation by group
 forval i = 0/1 {
-qui nbreg `depvar' `varlist' `weight' if `by'==`val`i'', offset(`offset') `ropt' `copt'
+ qui nbreg `depvar' `varlist' `weight' if `by'==`val`i'', offset(`offset') `ropt' `copt'
 local normal`i' `normal'
 if "`normal`i''"!=""{
 local j 0
@@ -804,30 +1502,26 @@ gen `touse'=0
 qui replace `touse'=1 if `by'==`val`i''
 mata: x`i'=0
 local modvarlist: colnames e(b)
-// di "`modvarlist'"
 local cons _cons
 local modvarlist2: list modvarlist - cons /*get rid of the first cons*/
-// di "`modvarlist2'"
 // fix problem due to renaming of scale parameter in Stata 15
 local cons2 _cons
 //local cons2 lnalpha
 local modvarlist2: list modvarlist2 - cons2 /*get rid of lnalpha*/
-//di "`modvarlist2'"
 mata: st_view(x`i', ., (tokens("`modvarlist2'"), "`_cons'"), "`touse'")
 mata: b=st_matrix("e(b)")
 mata: b`i'=0
 mata: st_subview(b`i', b, 1,((1\cols(b)-1)))
 mata: wv`i'=0
 mata: st_view(wv`i', ., (tokens("`tempwv'")), "`touse'")
-mata: xMean`i'=mean(x`i')
-mata: xMean`i'=mean(x`i':*wv`i'):/mean(wv`i')
+mata: xMean`i'=mean(x`i', wv`i')
 mata: varb=st_matrix("e(V)")
 mata: varb`i'=0
 mata: st_subview(varb`i', varb, (1,rows(varb)-1),((1\cols(varb)-1)))
 mata: off`i'=0
 mata: st_view(off`i', ., "`offset'", "`touse'")
-/// calculating exposure from log exposure
-mata: off`i'=exp(off`i')
+/// calculating exposure from offset
+mata: off`i'= exp(off`i')
 ///
 }
 
@@ -839,6 +1533,12 @@ if `df0'!=`df1' {
         macro drop mvcdmp_*
         exit
 }
+
+// global mean return
+// empirical means (unscaled)
+global mvdcmp_mu1 = `val0' * `m1'   +  `val1' * `m2'    
+global mvdcmp_mu0 = `val1' * `m1'   +  `val0' * `m2'
+
 nobreak {
 mata:Wdx=Wdx_F(xMean0, xMean1, b0)
 mata:Wdb=Wdb_F(b0, b1, xMean1)
@@ -847,10 +1547,10 @@ mata:wbB=dwB_F(b0, b1, xMean1)
 mata:dWx=dW_F(b0, xMean0, xMean1)
 mata:E=mean(pois(x0, b0, off0, wv0))/mean(wv0:*off0) - mean(pois(x1, b0, off1, wv1))/mean(wv1:*off1)
 mata:C=mean(pois(x1, b0, off1, wv1))/mean(wv1:*off1) - mean(pois(x1, b1, off1, wv1))/mean(wv1:*off1)
-mata:PDF00=pois(x0, b0, off0,wv0) /*PDFs changed for nbreg 20100917*/
+mata:PDF00=pois(x0, b0, off0,wv0) // 
 mata:PDF10=pois(x1, b0, off1,wv1)
 mata:PDF11=pois(x1, b1, off1,wv1)
-***************************************************************CHANGED 07/09/10 DP*********
+//
 mata:dCdb1=dCdb1Pois(x1, Wdb, wbA, wv1, off1, PDF10, C)
 mata:dCdb2=dCdb2Pois(x1, Wdb, wbB, wv1, off1, PDF11, C)
 mata:dEdb=dEdbPois(x0, x1, Wdx, dWx, E, wv0, wv1, off0, off1, PDF00, PDF10)
@@ -861,7 +1561,7 @@ mata:seWdb=colsum(sqrt(diag(Var_C_k)))
 mata:dCdb0A=dCdbAPois(x1, wv1, off1, PDF10)
 mata:dCdb0B=dCdbAPois(x1, wv1, off1, PDF11)
 mata:dEdb0=dEdb0Pois(x0, x1, wv0, wv1, off0, off1, PDF00, PDF10)
-********************************************************************************************
+//
 mata:sE0=sqrt(varE(dEdb0, varb0))
 mata:sC0=sqrt(varC(varb0, varb1, dCdb0A, dCdb0B))
 mata:temp=J(cols(dEdb),cols(dEdb),0)
@@ -869,15 +1569,180 @@ mata:eV=((dEdb,temp)\(dCdb1,dCdb2))*(varb0,temp\temp,varb1)*((dEdb,temp)\(dCdb1,
 mata:sR0=sqrt(sum(eV))
 eret clear
 global mvdcmp_scale `scale'
+//
 global mvdcmp_varlist `modvarlist2'
 global mvdcmp_nvarlist "`modvarlist2' _cons"
 global mvdcmp_depvar `depvar'
 setresult
 displayresult
 macro drop mvdcmp_*
-}
+ }
 }
 end
+
+// svy N B R E G
+
+program svynbregDecomp, eclass
+// force version 12 for nbreg
+version 12
+//
+syntax anything(id="varlist"), BY(varname) [OFFset(varname) REVerse NORmal(string) Scale(integer 1)]
+	if ("`offset'"==""){
+	tempvar offset
+	gen `offset'=0
+	}
+tempname matrix
+capture tab `by', matrow(`matrix')
+if _rc==0 & r(r)!=2 {
+di as error "group variable (i.e., `by') must take exactly two values coded 0 and 1"
+macro drop mvdcmp_*
+}
+// check if matrix elements are each 0 or 1
+if `matrix'[1,1] ! = 0 & `matrix'[2,1] ! = 1 {
+  di as error "group variable (i.e., `by') must be coded 0/1"
+macro drop mvdcmp_*
+}
+else{
+	tempvar _cons
+	gen `_cons'=1
+	gettoken depvar varlist:anything
+
+forvalue row = 1/2 {
+	local val =  `matrix'[`row',1]
+	mata:dv`row'=0
+	mata:st_view(dv`row', ., (tokens("`depvar'")), "`touse'")
+	mata:off`row'=0
+	mata:st_view(off`row', ., "`offset'", "`touse'")
+		tempvar t_dep`row'
+       	qui gen `t_dep`row'' = `depvar' if `by' == `val'
+		qui svy: nbreg `depvar' if `by' == `val' , offset("`offset'")
+		local m`row' = exp(e(b)[1,1])
+    }
+
+
+if (`m2'>=`m1' & "`reverse'"=="") | (`m2'<`m1' & "`reverse'"!="") {
+        local val0 = `matrix'[2,1]
+        local val1 = `matrix'[1,1]
+    }
+    else {
+        local val0 = `matrix'[1,1]
+        local val1 = `matrix'[2,1]
+        }
+		
+// estimation by group
+di "               "
+di "svy information"
+svyset
+forval i = 0/1 {
+	svy: nbreg `depvar' if `by'==`val`i'' , offset(`offset') irr
+qui svy: nbreg `depvar' `varlist' if `by'==`val`i'', offset(`offset') 
+local wv = e(wvar)
+local normal`i' `normal'
+if "`normal`i''"!=""{
+local j 0
+local k 0
+while (1) {
+        if "`normal`i''" == "" continue, break
+        gettoken gvars normal`i': normal`i', parse("|")
+        unab gvars: `gvars'
+        qui devcon, group(`gvars') equations(1) nonoise
+        local gvars`++j' `gvars'
+        if "`normal`i''"!=""{
+        gettoken bar normal`i' : normal`i', parse("|")
+        }
+        local nnormal `++k'
+        }
+}
+
+global mvdcmp_lab`i' "`by'==`val`i''"
+local df`i' = e(df_m)
+tempvar touse
+gen `touse'=0
+qui replace `touse'=1 if `by'==`val`i''
+mata: x`i'=0
+local modvarlist: colnames e(b)
+local cons _cons
+local modvarlist2: list modvarlist - cons /*get rid of the first cons*/
+// fix problem due to renaming of scale parameter in Stata 15
+local cons2 _cons
+//local cons2 lnalpha
+local modvarlist2: list modvarlist2 - cons2 /*get rid of lnalpha*/
+mata: st_view(x`i', ., (tokens("`modvarlist2'"), "`_cons'"), "`touse'")
+mata: b=st_matrix("e(b)")
+mata: b`i'=0
+mata: st_subview(b`i', b, 1,((1\cols(b)-1)))
+mata: varb=st_matrix("e(V)")
+mata: varb`i'=0
+mata: st_subview(varb`i', varb, (1,rows(varb)-1),((1\cols(varb)-1)))
+mata: wv`i'=0
+mata: st_view(wv`i', ., (tokens("`wv'")), "`touse'")
+// svy means 
+local vlist "`modvarlist2' `_cons'"
+qui svy: mean `vlist' if `by' == `val`i''
+mata: xMean`i' = st_matrix("e(b)")
+mata: off`i'=0
+mata: st_view(off`i', ., "`offset'", "`touse'")
+/// calculating exposure from offset
+mata: off`i'= exp(off`i')
+///
+}
+
+//check if the number of independent variables
+//included in each model is identical
+if `df0'!=`df1' {
+        di as error "Number of regressors differs between the groups"
+        di as error "Perhaps a variable was dropped in one of the groups defined by `by'"
+        macro drop mvcdmp_*
+        exit
+}
+
+// global mean return
+// empirical means (unscaled)
+global mvdcmp_mu1 = `val0' * `m1'   +  `val1' * `m2'    
+global mvdcmp_mu0 = `val1' * `m1'   +  `val0' * `m2'
+
+nobreak {
+mata:Wdx=Wdx_F(xMean0, xMean1, b0)
+mata:Wdb=Wdb_F(b0, b1, xMean1)
+mata:wbA=dwA_F(b0, b1, xMean1)
+mata:wbB=dwB_F(b0, b1, xMean1)
+mata:dWx=dW_F(b0, xMean0, xMean1)
+mata:E=mean(pois(x0, b0, off0, wv0))/mean(wv0:*off0) - mean(pois(x1, b0, off1, wv1))/mean(wv1:*off1)
+mata:C=mean(pois(x1, b0, off1, wv1))/mean(wv1:*off1) - mean(pois(x1, b1, off1, wv1))/mean(wv1:*off1)
+mata:PDF00=pois(x0, b0, off0,wv0) // 
+mata:PDF10=pois(x1, b0, off1,wv1)
+mata:PDF11=pois(x1, b1, off1,wv1)
+//
+mata:dCdb1=dCdb1Pois(x1, Wdb, wbA, wv1, off1, PDF10, C)
+mata:dCdb2=dCdb2Pois(x1, Wdb, wbB, wv1, off1, PDF11, C)
+mata:dEdb=dEdbPois(x0, x1, Wdx, dWx, E, wv0, wv1, off0, off1, PDF00, PDF10)
+mata:Var_E_k=varcomp(dEdb, varb0)
+mata:seWdx=colsum(sqrt(diag(Var_E_k)))
+mata:Var_C_k=varcoef(dCdb1, dCdb2, varb0, varb1)
+mata:seWdb=colsum(sqrt(diag(Var_C_k)))
+mata:dCdb0A=dCdbAPois(x1, wv1, off1, PDF10)
+mata:dCdb0B=dCdbAPois(x1, wv1, off1, PDF11)
+mata:dEdb0=dEdb0Pois(x0, x1, wv0, wv1, off0, off1, PDF00, PDF10)
+//
+mata:sE0=sqrt(varE(dEdb0, varb0))
+mata:sC0=sqrt(varC(varb0, varb1, dCdb0A, dCdb0B))
+mata:temp=J(cols(dEdb),cols(dEdb),0)
+mata:eV=((dEdb,temp)\(dCdb1,dCdb2))*(varb0,temp\temp,varb1)*((dEdb,temp)\(dCdb1,dCdb2))'
+mata:sR0=sqrt(sum(eV))
+eret clear
+global mvdcmp_scale `scale'
+//
+global mvdcmp_varlist `modvarlist2'
+global mvdcmp_nvarlist "`modvarlist2' _cons"
+global mvdcmp_depvar `depvar'
+setresult
+displayresult
+macro drop mvdcmp_*
+ }
+}
+end
+
+// cloglog
 
 program CLLDecomp, eclass
 syntax anything(id="varlist") [fw pw iw], BY(varname) ///
@@ -894,34 +1759,40 @@ if `matrix'[1,1] ! = 0 & `matrix'[2,1] ! = 1 {
 macro drop mvdcmp_*
 }
 else{
-gettoken cmd newvarlist:newvarlist
-tempvar _cons
-gen `_cons'=1
-gettoken depvar varlist:anything
-local weight [`weight'`exp']
+	gettoken cmd newvarlist:newvarlist
+	tempvar _cons
+	gen `_cons'=1
+	gettoken depvar varlist:anything
+	local weight [`weight'`exp']
 
-*****Means, determining high-low order
-if substr("`weight'",2,2)=="pw" | substr("`weight'",2,2)=="fw" | substr("`weight'",2,2)=="iw" {
-gettoken depvar varlist:anything
-local tempweight [`weight'`exp']
-gettoken w1 wv: tempweight, parse("=")
-gettoken wv wv: wv
-gettoken wv test: wv, parse("]")
+	if substr("`weight'",2,2)=="pw" | substr("`weight'",2,2)=="fw" | substr("`weight'",2,2)=="iw" {
+		gettoken depvar varlist:anything
+		local tempweight [`weight'`exp']
+		gettoken w1 wv: tempweight, parse("=")
+		gettoken wv wv: wv
+		gettoken wv test: wv, parse("]")
 }
-else{
-tempvar wv
-gen `wv' = 1
-}
+	else{
+		tempvar wv
+		gen `wv' = 1
+	}
 
-*****Means, determining high-low order
+// outcome means -- determining high-low order
+
 forvalue row = 1/2 {
-mata:wv`row'=0
-mata:st_view(wv`row', ., (tokens("`wv'")), "`touse'")
-mata:dv`row'=0
-mata:st_view(dv`row', ., (tokens("`depvar'")), "`touse'")
-mata:m`row'=sum(dv`row':*wv`row')/sum(wv`row')
-mata:st_matrix("m`row'", m`row')
-local m`row' = m`row'[1,1]
+	local val =  `matrix'[`row',1]
+	mata:wv`row'=0
+	mata:st_view(wv`row', ., (tokens("`wv'")), "`touse'")
+	mata:dv`row'=0
+	mata:st_view(dv`row', ., (tokens("`depvar'")), "`touse'")
+		tempvar t_dep`row'
+       	qui egen `t_dep`row'' = total(`depvar' * `wv') if `by' == `val'
+        tempvar t_exp`row'
+        qui egen `t_exp`row'' = total(`wv') if `by' == `val'
+        tempvar rate`row'
+        qui gen `rate`row'' = `t_dep`row''/`t_exp`row''
+	  	sum `rate`row'' if `by'==`val', meanonly
+		local m`row' = r(mean)
     }
 if (`m2'>=`m1' & "`reverse'"=="") | (`m2'<`m1' & "`reverse'"!="") {
         local val0 = `matrix'[2,1]
@@ -933,6 +1804,7 @@ if (`m2'>=`m1' & "`reverse'"=="") | (`m2'<`m1' & "`reverse'"!="") {
         }
 
 // handle model options robust and cluster
+
 if ("`robust'"!="")  {
   local ropt = "robust"
   }
@@ -941,13 +1813,14 @@ if ("`robust'"!="")  {
   }
 
 if ("`cluster'"!="") {
-  local copt = "cluster(`varname')"
+  local copt = "cluster(`cluster')"
   }
   else { 
   local copt = ""
  }
 
 // estimation by group
+
 forval i = 0/1 {
 	qui cloglog `depvar' `varlist' `weight' if `by'==`val`i'' , `ropt' `copt'
 local normal`i' `normal'
@@ -976,14 +1849,14 @@ qui replace `touse'=1 if `by'==`val`i''
 
 mata: x`i'=0
 mata: b`i'=st_matrix("e(b)")
+mata: varb`i'=st_matrix("e(V)")
 local modvarlist: colnames e(b)
 local cons _cons
 local modvarlist2: list modvarlist - cons
 mata: st_view(x`i', ., (tokens("`modvarlist2'"), "`_cons'"), "`touse'")
 mata: wv`i'=0
 mata: st_view(wv`i', ., (tokens("`wv'")), "`touse'")
-mata: xMean`i'=mean(x`i':*wv`i'):/mean(wv`i')
-mata: varb`i'=st_matrix("e(V)")
+mata: xMean`i'=mean(x`i', wv`i')
 }
 
 if `df0'!=`df1' {
@@ -993,41 +1866,189 @@ if `df0'!=`df1' {
         exit
 }
 
+// global mean return
+// empirical means (unscaled)
+global mvdcmp_mu1 = `val0' * `m1'   +  `val1' * `m2'    
+global mvdcmp_mu0 = `val1' * `m1'   +  `val0' * `m2'
+
 nobreak{
-mata:Wdx=Wdx_F(xMean0, xMean1, b0)
-mata:Wdb=Wdb_F(b0, b1, xMean1)
-mata:wbA=dwA_F(b0, b1, xMean1)
-mata:wbB=dwB_F(b0, b1, xMean1)
-mata:dWx=dW_F(b0, xMean0, xMean1)
-mata:E=mean(CDF_CLL(x0, b0, wv0))/mean(wv0) - mean(CDF_CLL(x1, b0, wv1))/mean(wv1)
-mata:C=mean(CDF_CLL(x1, b0, wv1))/mean(wv1) - mean(CDF_CLL(x1, b1, wv1))/mean(wv1)
-mata:PDF00=PDF_CLL(x0, b0, wv0) /*PDFs modified for CLL 20100917*/
-mata:PDF10=PDF_CLL(x1, b0, wv1)
-mata:PDF11=PDF_CLL(x1, b1, wv1)
-mata:dCdb1=dCdb1(x1, Wdb, wbA, wv1, PDF10, C)
-mata:dCdb2=dCdb2(x1, Wdb, wbB, wv1, PDF11, C)
-mata:dEdb=dEdb(x0, x1, Wdx, dWx, E, wv0, wv1, PDF00, PDF10)
-mata:Var_E_k=varcomp(dEdb, varb0)
-mata:seWdx=colsum(sqrt(diag(Var_E_k)))
-mata:Var_C_k=varcoef(dCdb1, dCdb2, varb0, varb1)
-mata:seWdb=colsum(sqrt(diag(Var_C_k)))
-mata:dCdb0A=dCdbA(x1, wv1, PDF10)
-mata:dCdb0B=dCdbA(x1, wv1, PDF11)
-mata:dEdb0=dEdb0(x0,x1,wv0,wv1, PDF00, PDF10)
-mata:sE0=sqrt(varE(dEdb0, varb0))
-mata:sC0=sqrt(varC(varb0, varb1, dCdb0A, dCdb0B))
-mata:temp=J(cols(dEdb),cols(dEdb),0)
-mata:eV=((dEdb,temp)\(dCdb1,dCdb2))*(varb0,temp\temp,varb1)*((dEdb,temp)\(dCdb1,dCdb2))'
-mata:sR0=sqrt(sum(eV))
-eret clear
-global mvdcmp_scale `scale'
-global mvdcmp_varlist `modvarlist2'
-global mvdcmp_nvarlist "`modvarlist2' _cons"
-global mvdcmp_depvar `depvar'
+	mata:Wdx=Wdx_F(xMean0, xMean1, b0)
+	mata:Wdb=Wdb_F(b0, b1, xMean1)
+	mata:wbA=dwA_F(b0, b1, xMean1)
+	mata:wbB=dwB_F(b0, b1, xMean1)
+	mata:dWx=dW_F(b0, xMean0, xMean1)
+	mata:E=mean(CDF_CLL(x0, b0, wv0))/mean(wv0) - mean(CDF_CLL(x1, b0, wv1))/mean(wv1)
+	mata:C=mean(CDF_CLL(x1, b0, wv1))/mean(wv1) - mean(CDF_CLL(x1, b1, wv1))/mean(wv1)
+	mata:PDF00=PDF_CLL(x0, b0, wv0) // 
+	mata:PDF10=PDF_CLL(x1, b0, wv1)
+	mata:PDF11=PDF_CLL(x1, b1, wv1)
+	mata:dCdb1=dCdb1(x1, Wdb, wbA, wv1, PDF10, C)
+	mata:dCdb2=dCdb2(x1, Wdb, wbB, wv1, PDF11, C)
+	mata:dEdb=dEdb(x0, x1, Wdx, dWx, E, wv0, wv1, PDF00, PDF10)
+	mata:Var_E_k=varcomp(dEdb, varb0)
+	mata:seWdx=colsum(sqrt(diag(Var_E_k)))
+	mata:Var_C_k=varcoef(dCdb1, dCdb2, varb0, varb1)
+	mata:seWdb=colsum(sqrt(diag(Var_C_k)))
+	mata:dCdb0A=dCdbA(x1, wv1, PDF10)
+	mata:dCdb0B=dCdbA(x1, wv1, PDF11)
+	mata:dEdb0=dEdb0(x0,x1,wv0,wv1, PDF00, PDF10)
+	mata:sE0=sqrt(varE(dEdb0, varb0))
+	mata:sC0=sqrt(varC(varb0, varb1, dCdb0A, dCdb0B))
+	mata:temp=J(cols(dEdb),cols(dEdb),0)
+	mata:eV=((dEdb,temp)\(dCdb1,dCdb2))*(varb0,temp\temp,varb1)*((dEdb,temp)\(dCdb1,dCdb2))'
+	mata:sR0=sqrt(sum(eV))
+	eret clear
+	global mvdcmp_scale `scale'
+	global mvdcmp_varlist `modvarlist2'
+	global mvdcmp_nvarlist "`modvarlist2' _cons"
+	global mvdcmp_depvar `depvar'
 setresult
 displayresult
 macro drop mvdcmp*
+	}
 }
+end
+
+// svy  C L O G L O G
+
+program svyCLLDecomp, eclass
+syntax anything(id="varlist"), BY(varname) ///
+[REVerse  NORmal(string)  Scale(integer 1)]
+tempname matrix
+capture tab `by', matrow(`matrix')
+if _rc==0 & r(r)!=2 {
+di as error "group variable (i.e., `by') must take exactly two values coded 0 and 1"
+macro drop mvdcmp_*
+}
+// check if matrix elements are each 0 or 1
+if `matrix'[1,1] ! = 0 & `matrix'[2,1] ! = 1 {
+  di as error "group variable (i.e., `by') must be coded 0/1"
+macro drop mvdcmp_*
+}
+else{
+	gettoken cmd newvarlist:newvarlist
+	tempvar _cons
+	gen `_cons'=1
+	gettoken depvar varlist:anything
+
+// outcome means -- determining high-low order
+		
+forvalue row = 1/2 {
+	local val =  `matrix'[`row',1]
+	mata:dv`row'=0
+	mata:st_view(dv`row', ., (tokens("`depvar'")), "`touse'")	
+        tempvar rate`row'
+        qui gen `rate`row'' = `depvar' if `by' == `val'
+	  	qui svy: mean `rate`row'' if `by'==`val'
+		local m`row' = e(b)[1,1]			
+    }	
+		
+if (`m2'>=`m1' & "`reverse'"=="") | (`m2'<`m1' & "`reverse'"!="") {
+        local val0 = `matrix'[2,1]
+        local val1 = `matrix'[1,1]
+    }
+    else {
+        local val0 = `matrix'[1,1]
+        local val1 = `matrix'[2,1]
+        }
+
+
+di "               "
+di "svy information"
+svyset
+// estimation by group
+forval i = 0/1 {
+// descriptives outcome
+svy: mean `depvar' if `by' == `val`i''
+ qui svy: cloglog `depvar' `varlist' if `by'==`val`i'' 
+// get pweight (from svy cmd)
+local wv = e(wvar)
+local normal`i' `normal'
+if "`normal`i''"!=""{
+	local j 0
+	local k 0
+while (1) {
+        if "`normal`i''" == "" continue, break
+        gettoken gvars normal`i': normal`i', parse("|")
+        unab gvars: `gvars'
+        devcon, group(`gvars') nonoise
+        local gvars`++j' `gvars'
+        if "`normal`i''"!=""{
+        gettoken bar normal`i' : normal`i', parse("|")
+        }
+        local nnormal `++k'
+        }
+}
+
+global mvdcmp_lab`i' "`by'==`val`i''"
+local df`i' = e(df_m)
+
+tempvar touse
+gen `touse'=0
+qui replace `touse'=1 if `by'==`val`i''
+
+mata: x`i'=0
+mata: b`i'=st_matrix("e(b)")
+mata: varb`i'=st_matrix("e(V)")
+local modvarlist: colnames e(b)
+local cons _cons
+local modvarlist2: list modvarlist - cons
+mata: st_view(x`i', ., (tokens("`modvarlist2'"), "`_cons'"), "`touse'")
+mata: wv`i'=0
+mata: st_view(wv`i', ., (tokens("`wv'")), "`touse'")
+// svy means 
+local vlist "`modvarlist2' `_cons'"
+qui svy: mean `vlist' if `by' == `val`i''
+mata: xMean`i' = st_matrix("e(b)")
+}
+
+if `df0'!=`df1' {
+        di as error "Number of regressors differs between the groups"
+        di as error "Perhaps a variable was dropped in one of the groups defined by `by'"
+        macro drop mvdcmp_*
+        exit
+}
+
+// global mean return
+// empirical means (unscaled)
+global mvdcmp_mu1 = `val0' * `m1'   +  `val1' * `m2'    
+global mvdcmp_mu0 = `val1' * `m1'   +  `val0' * `m2'
+
+nobreak{
+	mata:Wdx=Wdx_F(xMean0, xMean1, b0)
+	mata:Wdb=Wdb_F(b0, b1, xMean1)
+	mata:wbA=dwA_F(b0, b1, xMean1)
+	mata:wbB=dwB_F(b0, b1, xMean1)
+	mata:dWx=dW_F(b0, xMean0, xMean1)
+	mata:E=mean(CDF_CLL(x0, b0, wv0))/mean(wv0) - mean(CDF_CLL(x1, b0, wv1))/mean(wv1)
+	mata:C=mean(CDF_CLL(x1, b0, wv1))/mean(wv1) - mean(CDF_CLL(x1, b1, wv1))/mean(wv1)
+	mata:PDF00=PDF_CLL(x0, b0, wv0) // 
+	mata:PDF10=PDF_CLL(x1, b0, wv1)
+	mata:PDF11=PDF_CLL(x1, b1, wv1)
+	mata:dCdb1=dCdb1(x1, Wdb, wbA, wv1, PDF10, C)
+	mata:dCdb2=dCdb2(x1, Wdb, wbB, wv1, PDF11, C)
+	mata:dEdb=dEdb(x0, x1, Wdx, dWx, E, wv0, wv1, PDF00, PDF10)
+	mata:Var_E_k=varcomp(dEdb, varb0)
+	mata:seWdx=colsum(sqrt(diag(Var_E_k)))
+	mata:Var_C_k=varcoef(dCdb1, dCdb2, varb0, varb1)
+	mata:seWdb=colsum(sqrt(diag(Var_C_k)))
+	mata:dCdb0A=dCdbA(x1, wv1, PDF10)
+	mata:dCdb0B=dCdbA(x1, wv1, PDF11)
+	mata:dEdb0=dEdb0(x0,x1,wv0,wv1, PDF00, PDF10)
+	mata:sE0=sqrt(varE(dEdb0, varb0))
+	mata:sC0=sqrt(varC(varb0, varb1, dCdb0A, dCdb0B))
+	mata:temp=J(cols(dEdb),cols(dEdb),0)
+	mata:eV=((dEdb,temp)\(dCdb1,dCdb2))*(varb0,temp\temp,varb1)*((dEdb,temp)\(dCdb1,dCdb2))'
+	mata:sR0=sqrt(sum(eV))
+	eret clear
+	global mvdcmp_scale `scale'
+	global mvdcmp_varlist `modvarlist2'
+	global mvdcmp_nvarlist "`modvarlist2' _cons"
+	global mvdcmp_depvar `depvar'
+setresult
+displayresult
+macro drop mvdcmp*
+	}
 }
 end
 
@@ -1100,26 +2121,30 @@ global mvdcmp_Cl = Cl[1,1]*$mvdcmp_scale
 global mvdcmp_Ch = Ch[1,1]*$mvdcmp_scale
 global mvdcmp_Rl = Rl[1,1]*$mvdcmp_scale
 global mvdcmp_Rh = Rh[1,1]*$mvdcmp_scale
-/*****summary stats added 20100918 start***********************/
+//
 global mvdcmp_E = E[1,1]*$mvdcmp_scale
 global mvdcmp_C = C[1,1]*$mvdcmp_scale
 global mvdcmp_R = R[1,1]*$mvdcmp_scale
 global mvdcmp_seE = sE0[1,1]*$mvdcmp_scale
 global mvdcmp_seC = sC0[1,1]*$mvdcmp_scale
 global mvdcmp_seR = sR0[1,1]*$mvdcmp_scale
-/*****summary stats added 20100918 end***********************/
+//
 global mvdcmp_nvar: word count $mvdcmp_nvarlist
 global mvdcmp_nvar2 = $mvdcmp_nvar - 1
+// output means (weighted & offset)
+global mvdcmp_mu0 = $mvdcmp_mu0 * $mvdcmp_scale
+global mvdcmp_mu1 = $mvdcmp_mu1 * $mvdcmp_scale
+//
 forval i = 1/$mvdcmp_nvar {
 global mvdcmp_varname`i' : word `i' of $mvdcmp_nvarlist
 }
-forval i = 1/$mvdcmp_nvar {
-local cvarlist `cvarlist' E:${mvdcmp_varname`i'}
-}
-forval i = 1/$mvdcmp_nvar {
-local cvarlist `cvarlist' C:${mvdcmp_varname`i'}
-}
-local cvarlist `cvarlist' Summary:E Summary:C Summary:R /****************20100917*/
+		forval i = 1/$mvdcmp_nvar {
+		local cvarlist `cvarlist' E:${mvdcmp_varname`i'}
+	}
+		forval i = 1/$mvdcmp_nvar {
+		local cvarlist `cvarlist' C:${mvdcmp_varname`i'}
+	}
+local cvarlist `cvarlist' Summary:E Summary:C Summary:R //
 mat coln DCE = $mvdcmp_nvarlist
 mat rown DCE = estimate
 mat coln CWdb = $mvdcmp_nvarlist
@@ -1131,23 +2156,23 @@ mat rown VarCk = $mvdcmp_nvarlist
 mat coln seWdx=$mvdcmp_nvarlist
 mat coln seWdb=$mvdcmp_nvarlist
 forval i = 1/$mvdcmp_nvar {
-global mvdcmp_DCE`i'=DCE[1,`i']*$mvdcmp_scale
-global mvdcmp_seWdx`i'=seWdx[1,`i']*$mvdcmp_scale
-global mvdcmp_ZEWdx`i'=ZEWdx[1,`i']
-global mvdcmp_PZE`i'= 2*normal(-abs(${mvdcmp_ZEWdx`i'}))
-global mvdcmp_El`i'= (${mvdcmp_DCE`i'} + invnormal(.025)*${mvdcmp_seWdx`i'})
-global mvdcmp_Eh`i'= (${mvdcmp_DCE`i'} + invnormal(.975)*${mvdcmp_seWdx`i'})
-global mvdcmp_PCTcom`i'=PCTcom[1,`i']
-global mvdcmp_CWdb`i'=CWdb[1,`i']*$mvdcmp_scale
-global mvdcmp_seWdb`i'=seWdb[1,`i']*$mvdcmp_scale
-global mvdcmp_ZCWdb`i'=ZCWdb[1,`i']
-global mvdcmp_PZC`i'=2*normal(-abs(${mvdcmp_ZCWdb`i'}))
-global mvdcmp_Cl`i'= (${mvdcmp_CWdb`i'}-1.96*${mvdcmp_seWdb`i'})
-global mvdcmp_Ch`i'= (${mvdcmp_CWdb`i'}+1.96*${mvdcmp_seWdb`i'})
-global mvdcmp_PCTcoe`i'=PCTcoe[1,`i']
-}
-mata:Coef=DCE,CWdb,E,C,R /*************E, C, R added 20100917*/
-************create new e(V) 20100919 start*************************
+	global mvdcmp_DCE`i'=DCE[1,`i']*$mvdcmp_scale
+	global mvdcmp_seWdx`i'=seWdx[1,`i']*$mvdcmp_scale
+	global mvdcmp_ZEWdx`i'=ZEWdx[1,`i']
+	global mvdcmp_PZE`i'= 2*normal(-abs(${mvdcmp_ZEWdx`i'}))
+	global mvdcmp_El`i'= (${mvdcmp_DCE`i'} + invnormal(.025)*${mvdcmp_seWdx`i'})
+	global mvdcmp_Eh`i'= (${mvdcmp_DCE`i'} + invnormal(.975)*${mvdcmp_seWdx`i'})
+	global mvdcmp_PCTcom`i'=PCTcom[1,`i']
+	global mvdcmp_CWdb`i'=CWdb[1,`i']*$mvdcmp_scale
+	global mvdcmp_seWdb`i'=seWdb[1,`i']*$mvdcmp_scale
+	global mvdcmp_ZCWdb`i'=ZCWdb[1,`i']
+	global mvdcmp_PZC`i'=2*normal(-abs(${mvdcmp_ZCWdb`i'}))
+	global mvdcmp_Cl`i'= (${mvdcmp_CWdb`i'}-1.96*${mvdcmp_seWdb`i'})
+	global mvdcmp_Ch`i'= (${mvdcmp_CWdb`i'}+1.96*${mvdcmp_seWdb`i'})
+	global mvdcmp_PCTcoe`i'=PCTcoe[1,`i']
+	}
+mata:Coef=DCE,CWdb,E,C,R // E, C, R added 20100917
+// create new e(V) 20100919 start
 mata:VarE=J(${mvdcmp_nvar}*2+3,1,0)
 mata:VarE[${mvdcmp_nvar}*2+1,1]=sE0^2
 mata:VarC=J(${mvdcmp_nvar}*2+3,1,0)
@@ -1162,34 +2187,38 @@ mata:st_matrix("eV", eV)
 mat coln Coef = `cvarlist'
 mat coln eV = `cvarlist'
 mat rown eV = `cvarlist'
-
-************create new e(V) 20100919 end*************************
-********************************************new 20100917 start
+// create new e(V) 20100919 end
+// new 20100917 start
 tempvar touse
 gen `touse' = $mvdcmp_grp
 tempname b V
 matrix `b' = Coef
 matrix `V' = eV
 eret post `b' `V', esample(`touse')
-
-********************************************new 20100917 end
+// new 20100917 end
 eret local low $mvdcmp_lab1
 eret local high $mvdcmp_lab0
-eret local indvar="$mvdcmp_varlist"
+eret local indvar = "$mvdcmp_varlist"
 eret local depvar $mvdcmp_depvar
 eret scalar scale = $mvdcmp_scale
 eret scalar N = $mvdcmp_N
 eret local cmd = "mvdcmp"
+// 2023/05/26  for convenience/conformability
+eret local cvarlist `cvarlist'
+//
 end
 
 program displayresult, eclass
 local format
 {
-        
-		di as text "Version 2.0"
-        di %10s as text "Decomposition Results"               as text %55s    "Number of obs =   "   as res %7s "$mvdcmp_N"
-        di as text "{hline 31}{hline 71}"
-        di as text "Reference group (A): " as res "`e(high)'"  as text " ---  Comparison group (B): " as res "`e(low)'""
+      
+		di 
+        di %10s as text "Decomposition Results"               as text %55s    "Number of obs =   "   as res %-30.0gc $mvdcmp_N
+        di as text "{hline 31}{hline 72}"
+		di %30s as text "Reference group  (A):" as res "`e(high)'"  %20s as text "Mean = " as res %-8.4fc $mvdcmp_mu0 
+//		di %30s as text "Reference group  (A):" as res $mvdcmp_lab0  %20s as text "Mean = " as res %-8.2fc $mvdcmp_mu0 		
+di %30s as text "Comparison group (B):" as res "`e(low)'"  %20s as text "Mean = " as res %-8.4fc $mvdcmp_mu1
+//		di %30s as text "Comparison group (B):" as res $mvdcmp_lab1  %20s as text "Mean = " as res %-8.2fc $mvdcmp_mu1
         di as text "{hline 31}{c TT}{hline 71}"
         di as text %30s "$mvdcmp_depvar", _col(30) as text "{c |}" _col(11) as text %11s "Coef." _col(22) as text %11s "Std. Err." _col(29) as text %8s "z" _col(38) /*
         */ as text %9s "P>|z|" _col(47) as text %24s "[95% Conf. Interval]" _col(71) as text %8s "Pct."
@@ -1225,6 +2254,7 @@ forval i = 1/$mvdcmp_nvar {
 }
         di as text "{hline 31}{c BT}{hline 71}"
 }
+mata: mata drop *
 end
 
 ******************************
@@ -1232,6 +2262,7 @@ end
 *   common mata functions    *
 *                            *
 ******************************
+
 mata:
 function Wdx_F(real matrix xMean0, real matrix xMean1, real matrix b0)
 		{
@@ -1329,6 +2360,7 @@ return(dCdb1)
 	}
 end
 
+
 // fixed Poisson beginning here
 mata:
 function dCdb1Pois(real matrix x1, real matrix Wdb, real matrix wbA, real matrix weight, real matrix off, real matrix PDF, real scalar C)
@@ -1342,6 +2374,7 @@ function dCdb1Pois(real matrix x1, real matrix Wdb, real matrix wbA, real matrix
 return(dCdb1)
 	}
 end
+
 // ending here
 
 mata:
@@ -1434,7 +2467,6 @@ return(dCdba)
 	}
 end
 
-
 mata:
 function dCdbAPois(x, weight, off, PDF) {
 		dCdba=J(1, cols(x), .)
@@ -1490,10 +2522,12 @@ end
 
 ******************************
 *                            *
-*           PDFs/CDFs         *
+*           PDFs/CDFs        *
 *                            *
 ******************************
+
 //Linear CDF
+
 mata:
 function CDF_Linear(real matrix x, real matrix b, real matrix weight)
 	{
@@ -1503,6 +2537,7 @@ return(F)
 end
 
 //Linear pdf
+
 mata:
 function PDF_Linear(real matrix weight)
 	{
@@ -1511,17 +2546,19 @@ return(f)
 	}
 end
 
-//Logistic CDF
+//Logistic CDF 
+
 mata:
 function CDF_lgt(real matrix x, real matrix b, real matrix weight)
 	{
 		xb=x*b'
-		 F=(exp(xb):/ (1:+exp(xb))):*weight
+		F=(exp(xb):/ (1:+exp(xb))):*weight
 return(F)
 	}
 end
 
-//Logistic pdf
+//Logistic pdf 
+
 mata:
 function PDF_lgt(real matrix x, real matrix b, real matrix weight)
 	{
@@ -1531,7 +2568,8 @@ return(f)
 	}
 end
 
-//Poisson/nbreg pdf & CDF
+// Poisson/nbreg pdf & CDF
+
 mata:
 function pois(real matrix x, real matrix b, real matrix off, real matrix weight)
 	{
@@ -1541,7 +2579,8 @@ return(F)
 	}
 end
 
-//probit CDF
+// probit CDF
+
 mata:
 function CDF_probit(real matrix x, real matrix b, real matrix weight)
 	{
@@ -1552,6 +2591,7 @@ return(F)
 end
 
 // probit pdf
+
 mata:
 function PDF_probit(real matrix x, real matrix b, real matrix weight)
 	{
@@ -1562,6 +2602,7 @@ return(f)
 end
 
 // CLL CDF
+
 mata:
 function CDF_CLL(real matrix x, real matrix b, real matrix weight)
 	{
@@ -1572,6 +2613,7 @@ return(F)
 end
 
 // CLL pdf
+
 mata:
 function PDF_CLL(real matrix x, real matrix b, real matrix weight)
 	{
@@ -1580,4 +2622,5 @@ function PDF_CLL(real matrix x, real matrix b, real matrix weight)
 return(f)
 	}
 end
+
 //////////////// end subroutines /////////////

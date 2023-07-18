@@ -1,0 +1,32 @@
+d 'MAXWELL': module  for computing Maxwell's random error (RE) coefficient of agreement between 2 raters for binary data 
+d
+d  maxwell computes Maxwell's random error (RE) coefficient of
+d agreement between 2 raters on a binary variable (Maxwell 1977).
+d The RE coefficient measures the excess of agreement over
+d disagreement between two raters. It is attractive because of the
+d weak assumptions in its derivation: doubtful cases are resolved
+d in a truly random way without reference to prior probabilities of
+d incidence, and allowance is made for the possibility that
+d “a”, the probability of agreement between raters, may differ
+d from cases in which an outcome is positive to those in which it
+d is negative (Maxwell 1977). maxwelli is the immediate form of
+d maxwell; see immed. 
+d
+d KW: Maxwell’s random error coefficient
+d KW: binary measurements
+d KW: interrater agreement
+d KW: interrater reliability
+d KW: Cohen’s kappa
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20230717
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f maxwell.ado
+f maxwell.sthlp
+f maxwelli.ado
+f maxwelli.sthlp
+f maxwell.dta
