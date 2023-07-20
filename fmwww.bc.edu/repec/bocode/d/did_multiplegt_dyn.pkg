@@ -1,0 +1,39 @@
+d 'DID_MULTIPLEGT_DYN': module to estimate event-study Difference-in-Difference (DID) estimators in designs with multiple groups and periods, with a potentially non-binary treatment that may increase or decrease multiple times
+d
+d	did_multiplegt_dyn estimates the effect of a treatment on
+d an outcome, using group-(e.g. county- or state-) level panel	 
+d data with multiple groups and periods.  It computes the DID
+d event-study estimators introduced in de Chaisemartin and   
+d D'Haultfoeuille (2020a).  did_multiplegt_dyn can be used with a
+d binary and absorbing (staggered) treatment but it can also	be
+d used with a non-binary treatment that can increase or decrease
+d multiple times, even if lagged treatments affect the	  outcome,
+d and if the current and lagged treatments have heterogeneous
+d effects, across space and/or over time.  The	  event-study
+d estimators computed by the command rely on a no-anticipation and
+d parallel trends assumptions. 
+d
+d KW: DID
+d KW: multiple periods
+d KW: event study
+d KW: non-binary treatment
+d
+d Requires: Stata version 12 
+d
+d Distribution-Date: 20230719
+d
+d Author:  Clément de Chaisemartin,  Economics Department, Sciences Po
+d Support: email  chaisemartin.packages@@gmail.com
+d
+d Author:   Xavier D'Haultfoeuille, CREST-ENSAE
+d Support: email   xavier.dhaultfoeuille@@ensae.fr
+d
+d Author:  Mélitine Malézieux, Economics Department, Sciences Po
+d Support: email  melitine.malezieux@@sciencespo.fr
+d
+d Author:  Doulo Sow, CREST-ENSAE
+d Support: email   doulo.sow@@ensae.fr
+d
+f did_multiplegt_dyn.ado
+f did_multiplegt_dyn.sthlp
+f ../f/favara_imbs_did_multiplegt_dyn.dta
