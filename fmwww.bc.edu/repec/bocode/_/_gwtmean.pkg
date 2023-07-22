@@ -1,12 +1,19 @@
 d '_GWTMEAN': module containing extensions to generate to implement weighted mean
 d
-d egen newvar = wtmean(exp), weight(...) allows a weight option.  
+d  egen newvar = wtmean(exp), weight(...) allows a weight option.  
 d If the weight option is omitted, then the action and results are
 d identical to egen mean. 
 d
-d Distribution-Date: 20010605
+d KW: extensions to generate
+d KW: weights
+d KW: mean
 d
-d Author: David Kantor, Institute for Policy Studies, Johns Hopkins University
-d Support: email dkantor@@jhu.edu
+d Requires: Stata version 14.2
+d
+d Distribution-Date: 20230721
+d
+d Author: David Kantor
+d Support: email  kantor.d@@att.net
 d
 f _gwtmean.ado
+f _gwtmean.sthlp

@@ -351,8 +351,19 @@ at the location specified in {it:path}.
 {title:Example: estimating the effect of banking deregulations on loans volume, using the data of Favara and Imbs (2015)}
 
 {p 4 4}
-The data for this example can be downloaded
-{browse "https://drive.google.com/file/d/1VgNUWNwxyNhChE1xzVvr387V2zeGAi9u/view?usp=drive_link/favara_imbs_did_multiplegt_dyn":here}
+The data for this example can be downloaded by running:
+{p_end}
+
+{p 4 4}
+ssc install did_multiplegt_dyn
+{p_end}
+
+{p 4 4}
+net get did_multiplegt_dyn
+{p_end}
+
+{p 4 4}
+use favara_imbs_did_multiplegt_dyn.dta, clear
 {p_end}
 
 {p 4 4}

@@ -1,0 +1,29 @@
+d 'PCM': module to estimate the parameters of a Partial Credit Model (PCM) or of a Rating Scale Model (RSM)
+d
+d  pcm estimates the parameters of a Partial Credit Model (PCM) or
+d of a Rating Scale Model (RSM).  Parameters are estimated using
+d Marginal Maximum Likelihood (MML).  Several graphical
+d representations can be easily obtained: comparison bserved and
+d theorical Item Characteristic Curves (ICC), Map difficulty
+d parameters/Scores, results of the split tests, and information
+d function (for the scale and by item). pcm allow equating two sets
+d of items. 
+d
+d KW: Partial Credit Model
+d KW: Rating Scale Model
+d KW: Rasch analysis
+d KW: Equating
+d KW: Rasch Measurement Theory
+d
+d Requires: Stata version 14, genscore and gengroup from SSC (q.v.)
+d
+d Distribution-Date: 20230721
+d
+d Author: Jean-Benoit Hardouin , University of Nantes, France
+d Support: email jean-benoit.hardouin@@univ-nantes.fr
+d
+d Author: Myriam Blanchin, University of Nantes, France
+d Support: email myriam.blanchin@@univ-nantes.fr
+d
+f pcm.ado
+f pcm.sthlp

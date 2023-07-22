@@ -45,6 +45,7 @@ p pcdid module to perform principal components difference-in-differences
 p pcdsearch module to extract code lists from primary care databases
 p pchipolate module for piecewise cubic Hermite interpolation
 p pciplot module to plot pointwise confidence intervals
+p pcm module to estimate the parameters of a Partial Credit Model (PCM) or of a Rating Scale Model (RSM)
 p pcmdif module to for diagnosing and considering a potential differential item functioning (DIF) when analysing patient reported outcomes using partial credit models
 p pcmodel module to estimate parameters of a Partial Credit Model or a Rating Scale Model by MML
 p pcmtest module to  test the fit of a Partial Credit Model or a Rating Scale Model estimated using pcmodel

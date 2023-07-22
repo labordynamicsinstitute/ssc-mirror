@@ -13,6 +13,12 @@
 designs with multiple groups and periods.
 {p_end}
 
+{p 4 8}
+To estimate event-study/dynamic effects,
+we recommend using the much faster {cmd:did_multiplegt_dyn} command,
+available from the ssc repository.
+{p_end}
+
 {marker syntax}{...}
 {title:Syntax}
 

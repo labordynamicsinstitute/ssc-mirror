@@ -871,6 +871,11 @@ local rownames "`rownames' Placebo_`i'"
 }
 matrix colnames didmgt_results  = "Estimate" "SE" "LB CI" "UB CI" "N" "Switchers"
 matrix rownames didmgt_results= `rownames'
+display _newline
+di as input " "
+display _newline
+di as input "To estimate event-study/dynamic effects, "
+di as input "we recommend using the much faster did_multiplegt_dyn command, available from the ssc repository."
 noisily matlist didmgt_results, title("DID estimators of the instantaneous treatment effect, of dynamic treatment effects if the dynamic option is used, and of placebo tests of the parallel trends assumption if the placebo option is used. The estimators are robust to heterogeneous effects, and to dynamic effects if the robust_dynamic option is used.")
 matrix didmgt_b2=didmgt_results[1...,1..1]
 ereturn matrix didmgt_estimates=didmgt_b2
