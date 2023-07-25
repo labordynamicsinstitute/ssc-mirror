@@ -1,0 +1,25 @@
+d 'MFCURVE': module for plotting results from multifactorial research designs
+d
+d  mfcurve plots an outcome across multifactorial treatment
+d combinations. The ado facilitates the visualization of results
+d from factorial survey experiments, conjoint analysis, and other
+d related research designs. mfcurve produces a plot that consists
+d of two subgraphs: an upper panel, displaying the mean outcome per
+d group; and a lower panel, indicating the presence/absence of each
+d factor level. The graph mimics the aesthetics of a specification
+d curve but displays effect variation across treatment
+d specifications (instead of variation across model
+d specifications). 
+d
+d KW: multifactorial designs
+d KW: graphics 
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20230724
+d
+d Author:  Daniel Krähmer, Ludwig-Maximilians-Universität München
+d Support: email 	Daniel.Kraehmer@@soziologie.uni-muenchen.de
+d
+f mfcurve.ado
+f mfcurve.sthlp

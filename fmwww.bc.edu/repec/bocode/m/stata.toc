@@ -115,6 +115,7 @@ p metastrong module for estimating the proportion of true effect sizes above or 
 p metatef module to perform IPD meta analysis of an interaction between treatment and a continuous covariate
 p metatrend module to implement regression methods for detecting trends in cumulative meta-analysis
 p metatrim module to perform nonparametric analysis of publication bias
+p mfcurve module for plotting results from multifactorial research designs
 p mfelogit module to estimate marginal effects (AME) and average treatment effects (ATE) in fixed effect logit models
 p mfilegr module to view and save multiple graphs with filenames based on a numeric identifier
 p mfpi module for modelling and displaying interactions
