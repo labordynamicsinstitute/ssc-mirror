@@ -1,9 +1,9 @@
-*!version8.0 21Dec2022
+*!version8.1 27Jun2023
 
 /* -----------------------------------------------------------------------------
 ** PROGRAM NAME: summtab
-** VERSION: 8.0
-** DATE: DEC 21, 2022
+** VERSION: 8.1
+** DATE: JUN 27, 2023
 ** -----------------------------------------------------------------------------
 ** CREATED BY: JOHN GALLIS
 ** DEDICATED TO THE MEMORY OF TIRZAH ELISE GALLIS
@@ -65,6 +65,8 @@
 					 - ALSO, THE BYLABEL OPTION ALLOWS FOR THE LABEL OF THE "BY" VARIABLE TO BE INCLUDED AT THE TOP OF THE TABLE
 					 - VARIABLES WHICH ARE ENTIRELY MISSING ARE NOW SHOWN IN THE TABLE WHEN THE CATMISSTYPE(NONE) OPTION IS SELECTED
 					 - THE TABLE HEADER NOW REPEATS ACROSS PAGES FOR MULTI-PAGE TABLES
+		JUN 27, 2023 - ADDED OPTION TO EXTRACT LABELS FROM NOTES RATHER THAN LABELS; PARTICULARLY USEFUL FOR LONG LABELS
+					 - ADDED CHECK THAT THE "FRE" FUNCTION IS INSTALLED
 ** -----------------------------------------------------------------------------
 ** OPTIONS: SEE HELP FILE
 ** -----------------------------------------------------------------------------
@@ -78,12 +80,11 @@ program define summtab
 	syntax [if] [in], [by(varname) bylabel bymiss total contvars(varlist) catvars(varlist) meanrow catrow mean median range pnonmiss pmiss rowperc catmisstype(string) pval 
 								contptype(integer 1) catptype(integer 1) clustpval clustid(varname) wts(varname) wtfreq(string) fracfmt(integer 2)
 								mnfmt(integer 2) medfmt(integer 1) rangefmt(integer 1) pnonmissfmt(integer 1) pmissfmt(integer 1) catfmt(integer 1) pfmt(integer 3)
-								title(string) DIRectory(string) word wordname(string) excel excelname(string) replace append sheetname(string) footnote(string) *]
+								title(string) DIRectory(string) word wordname(string) excel excelname(string) replace append sheetname(string) footnote(string) labelnote *]
 	
 	;
 	#delimit cr
-	
-	
+
 /* ERROR MESSAGES */	
 	if "`pnonmiss'" == "pnonmiss" & "`pmiss'" == "pmiss" {
 		di as error "pnonmiss and pmiss cannot be specified at the same time"
@@ -135,6 +136,15 @@ program define summtab
 	if "`catrow'" == "catrow" & "`catmisstype'" != "none" {
 		di as error "catrow option only works if catmisstype = none"
 		exit 198
+	}
+	
+	*check if "fre" program is installed if catrow is secified
+	if "`catrow'" == "catrow" {
+		capture which fre
+		if _rc {
+			di as error "package -fre- is required; click this link to install: {stata ssc install fre:auto-install fre}"
+			exit 499
+		}
 	}
 	
 	/* CLEAR PUTDOCX */
@@ -549,9 +559,20 @@ program define summtab
 		
 		local ++q
 
-		local var_lab : variable label `cv'
-		if "`var_lab'" == ""{
-			local var_lab `cv'
+		if "`labelnote'" == "labelnote" {
+			local var_lab = `"``cv'[note1]'"'
+			if "`var_lab'" == ""{
+				local var_lab : variable label `cv'
+				if "`var_lab'" == ""{
+					local var_lab `cv'
+				}
+			}
+		}
+		else {
+			local var_lab : variable label `cv'
+			if "`var_lab'" == ""{
+				local var_lab `cv'
+			}
 		}
 		
 		/* for excel table ||||||||||||||||||||||||||||||| */
@@ -1600,10 +1621,22 @@ program define summtab
 		}
 		
 		*label categorical variable
-		local var_lab : variable label `cv'
-		if "`var_lab'" == ""{
-			local var_lab `cv'
+		if "`labelnote'" == "labelnote" {
+			local var_lab = `"``cv'[note1]'"'
+			if "`var_lab'" == ""{
+				local var_lab : variable label `cv'
+				if "`var_lab'" == "" {
+					local var_lab `cv'
+				}
+			}
 		}
+		else {
+			local var_lab : variable label `cv'
+			if "`var_lab'" == ""{
+				local var_lab `cv'
+			}
+		}
+		
 		
 		/* for excel table ||||||||||||||||||||||||||||||| */
 		if "`excel'" == "excel" {

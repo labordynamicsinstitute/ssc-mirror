@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 7.0.0 21Dec2022}
+{* *! version 8.1.0 27Jun2023}
 {cmd:help summtab2}
 {hline}
 
@@ -57,6 +57,7 @@
 {synopt :{cmd:pfmt(}{it:integer})}Number of digits to display after the decimal point for p-values; default is 3; maximum is 8{p_end}
 
 {syntab:Output Options}
+{synopt :{cmd:labelnote}}Use the variable note to define the variable label; useful for long labels that should not be truncated at 80 characters{p_end}
 {synopt :{cmdab:dir:ectory(}{it:string})}The directory in which the results are saved; if not specified, defaults to current working directory{p_end}
 {synopt :{cmd:title(}{it:string})}Table title, to put at the top of the output Word document; defaults to Table 1{p_end}
 {synopt :{cmd:footnote(}{it:string})}Table footnote, to put below the table in the output Word document; defaults to no footnote{p_end}

@@ -1,9 +1,9 @@
-*!version7.0 21Dec2022
+*!version8.1 27Jun2023
 
 /* -----------------------------------------------------------------------------
 ** PROGRAM NAME: summtab2
-** VERSION: 7.0
-** DATE: DEC 21, 2022
+** VERSION: 8.1
+** DATE: JUN 27, 2023
 ** -----------------------------------------------------------------------------
 ** CREATED BY: JOHN GALLIS
 ** DEDICATED TO THE MEMORY OF TIRZAH ELISE GALLIS
@@ -19,6 +19,8 @@
 					   THE # (WHICH IS 100%) WITH A ZERO VALUE.
 **		DEC 22, 2022 - UPDATES CONSISTENT WITH SUMMTAB UPDATES; SEE CODE FILE FOR SUMMTAB FOR 
 **					   LIST OF UPDATES
+**		JUN 27, 2023 - UPDATES CONSISTENT WITH SUMMTAB UPDATES; SEE CODE FILE FOR SUMMTAB FOR 
+**					   LIST OF UPDATES; UPDATING VERSION NUMBER TO BE CONSISTENT WITH SUMMTAB
 ** -----------------------------------------------------------------------------
 ** OPTIONS: SEE HELP FILE
 ** -----------------------------------------------------------------------------
@@ -32,7 +34,7 @@ program define summtab2
 	syntax [if] [in], [by(varname) bylabel bymiss total vars(varlist) type(numlist) meanrow catrow mean median range pnonmiss pmiss rowperc catmisstype(string) pval 
 								contptype(integer 1) catptype(integer 1) clustpval clustid(varname) wts(varname) wtfreq(string) fracfmt(integer 2)
 								mnfmt(integer 2) medfmt(integer 1) rangefmt(integer 1) pnonmissfmt(integer 1) pmissfmt(integer 1) catfmt(integer 1) pfmt(integer 3)
-								title(string) DIRectory(string) word wordname(string) excel excelname(string) replace append sheetname(string) footnote(string) *]
+								title(string) DIRectory(string) word wordname(string) excel excelname(string) replace append sheetname(string) footnote(string) labelnote *]
 	
 	;
 	#delimit cr
@@ -43,13 +45,6 @@ program define summtab2
 		di as error "Number of elements in type option must equal number of variables in vars option"
 		exit 198
 	}
-	
-	/* now depends on fre package to get zero rows */
-	capture which fre
-	if _rc {
-	    ssc install fre
-	}
-	
 	
 /* ERROR MESSAGES */	
 	if "`pnonmiss'" == "pnonmiss" & "`pmiss'" == "pmiss" {
@@ -102,6 +97,16 @@ program define summtab2
 	if "`catrow'" == "catrow" & "`catmisstype'" != "none" {
 		di as error "catrow option only works if catmisstype = none"
 		exit 198
+	}
+	
+	/* now depends on fre package to get zero rows */
+	*check if "fre" program is installed if catrow is secified
+	if "`catrow'" == "catrow" {
+		capture which fre
+		if _rc {
+			di as error "package -fre- is required; click this link to install: {stata ssc install fre:auto-install fre}"
+			exit 499
+		}
 	}
 	
 	/* CLEAR PUTDOCX */
@@ -189,16 +194,16 @@ program define summtab2
 	if "`by'" != "" &  "`bylabel'" == "bylabel" { 
 		if "`word'" == "word" {
 			putdocx table tbl1 = (3,`col'), border(all, nil) memtable layout(fixed)
-			putdocx table tbl1(1,1) = (" "), halign(left) border(top) colspan(2)
-			putdocx table tbl1(2,1) = (" "), halign(left) border(top) colspan(2)
-			putdocx table tbl1(3,1) = (" "), halign(left) border(bottom) colspan(2)
+			putdocx table tbl1(1,1) = (" "), halign(left)  colspan(2)
+			putdocx table tbl1(2,1) = (" "), halign(left)  colspan(2)
+			putdocx table tbl1(3,1) = (" "), halign(left)  colspan(2)
 		}
 	}
 	else {
 		if "`word'" == "word" {
 			putdocx table tbl1 = (2,`col'), border(all, nil) memtable layout(fixed)
-			putdocx table tbl1(1,1) = (" "), halign(left) border(top) colspan(2)
-			putdocx table tbl1(2,1) = (" "), halign(left) border(bottom) colspan(2)
+			putdocx table tbl1(1,1) = (" "), halign(left)  colspan(2)
+			putdocx table tbl1(2,1) = (" "), halign(left)  colspan(2)
 		}
 	}
 
@@ -224,7 +229,7 @@ program define summtab2
 			local coltospan = `col'-`c_col'
 			local variable_lab: variable label `by'
 			if "`word'" == "word" {
-				putdocx table tbl1(1,`c_col') = ("`variable_lab'"), colspan(`coltospan') halign(center) border(top) valign(center)
+				putdocx table tbl1(1,`c_col') = ("`variable_lab'"), colspan(`coltospan') halign(center)  valign(center)
 			}
 			if "`excel'" == "excel" {
 				local letter : word `coltospan' of `c(ALPHA)'
@@ -244,10 +249,10 @@ program define summtab2
 			/* for word table ||||||||||||||||||||||||||||||| */
 			if "`word'" == "word" {
 				if "`bylabel'" == "bylabel" {
-					putdocx table tbl1(2,`c_col') = ("`var_lab'"), halign(center) border(top) colspan(1) valign(center) 
+					putdocx table tbl1(2,`c_col') = ("`var_lab'"), halign(center)  colspan(1) valign(center) 
 				}
 				else {
-					putdocx table tbl1(1,`c_col') = ("`var_lab'"), halign(center) border(top) colspan(1) valign(center) 
+					putdocx table tbl1(1,`c_col') = ("`var_lab'"), halign(center)  colspan(1) valign(center) 
 				}
 			}
 		
@@ -277,10 +282,10 @@ program define summtab2
 			/* for word table ||||||||||||||||||||||||||||||| */
 			if "`word'" == "word" {
 				if "`bylabel'" == "bylabel" {
-					putdocx table tbl1(3,`c_col') = ("(N = `obs_')"), halign(center) border(bottom) colspan(1) valign(center) 
+					putdocx table tbl1(3,`c_col') = ("(N = `obs_')"), halign(center)  colspan(1) valign(center) 
 				}
 				else {
-					putdocx table tbl1(2,`c_col') = ("(N = `obs_')"), halign(center) border(bottom) colspan(1) valign(center) 
+					putdocx table tbl1(2,`c_col') = ("(N = `obs_')"), halign(center)  colspan(1) valign(center) 
 				}
 			}
 			local ++c_col
@@ -310,12 +315,12 @@ program define summtab2
 			/* for word table ||||||||||||||||||||||||||||||| */
 			if "`word'" == "word" {
 				if "`bylabel'" == "bylabel" {
-					putdocx table tbl1(2,`c_col') = ("Total"), halign(center) border(top) colspan(1) valign(center) 
-					putdocx table tbl1(3,`c_col') = ("(N = `obs_all')"), halign(center) border(bottom) colspan(1) valign(center) 
+					putdocx table tbl1(2,`c_col') = ("Total"), halign(center)  colspan(1) valign(center) 
+					putdocx table tbl1(3,`c_col') = ("(N = `obs_all')"), halign(center)  colspan(1) valign(center) 
 				}
 				else {
-					putdocx table tbl1(1,`c_col') = ("Total"), halign(center) border(top) colspan(1) valign(center) 
-					putdocx table tbl1(2,`c_col') = ("(N = `obs_all')"), halign(center) border(bottom) colspan(1) valign(center) 
+					putdocx table tbl1(1,`c_col') = ("Total"), halign(center)  colspan(1) valign(center) 
+					putdocx table tbl1(2,`c_col') = ("(N = `obs_all')"), halign(center)  colspan(1) valign(center) 
 				}
 			}
 		
@@ -342,13 +347,13 @@ program define summtab2
 			/* for word table ||||||||||||||||||||||||||||||| */
 			if "`word'" == "word" {
 				if "`bylabel'" == "bylabel" {
-					putdocx table tbl1(2,`c_col') = (" "), halign(right) border(top) 
-					putdocx table tbl1(3,`c_col') = ("p-value"), halign(center) border(bottom)
+					putdocx table tbl1(2,`c_col') = (" "), halign(right)  
+					putdocx table tbl1(3,`c_col') = ("p-value"), halign(center) 
 				}
 				else {
 					
-					putdocx table tbl1(1,`c_col') = (" "), halign(right) border(top) 
-					putdocx table tbl1(2,`c_col') = ("p-value"), halign(center) border(bottom)
+					putdocx table tbl1(1,`c_col') = (" "), halign(right) 
+					putdocx table tbl1(2,`c_col') = ("p-value"), halign(center) 
 				}
 			}
 				
@@ -374,8 +379,8 @@ program define summtab2
 
 		/* for word table ||||||||||||||||||||||||||||||| */
 		if "`word'" == "word" {
-			putdocx table tbl1(1,`c_col') = ("Total"), halign(center) border(top) colspan(1) valign(center) 
-			putdocx table tbl1(2,`c_col') = ("(N = `obs_all')"), halign(center) border(bottom) colspan(1) valign(center) 
+			putdocx table tbl1(1,`c_col') = ("Total"), halign(center)  colspan(1) valign(center) 
+			putdocx table tbl1(2,`c_col') = ("(N = `obs_all')"), halign(center)  colspan(1) valign(center) 
 		}
 		/* for excel table ||||||||||||||||||||||||||||||| */
 		if "`excel'" == "excel" {
@@ -501,6 +506,10 @@ foreach t of local type {
 				else if "`mean'" != "mean" & "`median'" != "median" & "`range'" == "range" & ("`pnonmiss'" == "pnonmiss" | "`pmiss'" == "pmiss") {
 					putdocx table tbl2(`row',.), addrows(3)		
 				}
+				else if "`mean'" != "mean" & "`median'" != "median" & "`range'" != "range" & ("`pnonmiss'" != "pnonmiss" | "`pmiss'" != "pmiss") {
+					di as error "Must specify at least one summary measure for continuous variables"
+					exit 198
+				}
 			}
 		}
 		
@@ -530,9 +539,20 @@ foreach t of local type {
 		}
 		
 
-		local var_lab : variable label `cv'
-		if "`var_lab'" == ""{
-			local var_lab `cv'
+		if "`labelnote'" == "labelnote" {
+			local var_lab = `"``cv'[note1]'"'
+			if "`var_lab'" == ""{
+				local var_lab : variable label `cv'
+				if "`var_lab'" == ""{
+					local var_lab `cv'
+				}
+			}
+		}
+		else {
+			local var_lab : variable label `cv'
+			if "`var_lab'" == ""{
+				local var_lab `cv'
+			}
 		}
 		
 		/* for excel table ||||||||||||||||||||||||||||||| */
@@ -1591,9 +1611,20 @@ foreach t of local type {
 		}
 		
 		*label categorical variable
-		local var_lab : variable label `cv'
-		if "`var_lab'" == ""{
-			local var_lab `cv'
+		if "`labelnote'" == "labelnote" {
+			local var_lab = `"``cv'[note1]'"'
+			if "`var_lab'" == ""{
+				local var_lab : variable label `cv'
+				if "`var_lab'" == "" {
+					local var_lab `cv'
+				}
+			}
+		}
+		else {
+			local var_lab : variable label `cv'
+			if "`var_lab'" == ""{
+				local var_lab `cv'
+			}
 		}
 		
 		/* for excel file */
@@ -2478,9 +2509,8 @@ foreach t of local type {
 		if "`word'" == "word" {
 			putdocx table tbl3 = (1,`col'), border(all, nil) memtable layout(fixed)
 			putdocx table tbl3(1,1) = ("`footnote'"), halign(left) border(top) colspan(`col')
-			
-			putdocx table tbl12 = (3,1), border(all, nil) headerrow(1) layout(fixed) cellspacing(0.01)
-			putdocx table tbl12(1,1) = table(tbl1)
+			putdocx table tbl12 = (3,1), border(all, nil) headerrow(1) layout(fixed)
+			putdocx table tbl12(1,1) = table(tbl1), border(top, single) border(bottom, single)
 			putdocx table tbl12(2,1) = table(tbl2)
 			putdocx table tbl12(3,1) = table(tbl3)
 			putdocx save `wordname', `replace' `append'
@@ -2488,8 +2518,8 @@ foreach t of local type {
 	}
 	else if "`footnote'" == "" {
 		if "`word'" == "word" {
-			putdocx table tbl12 = (2,1), border(all, nil) headerrow(1) layout(fixed) cellspacing(0.01)
-			putdocx table tbl12(1,1) = table(tbl1)
+			putdocx table tbl12 = (2,1), border(all, nil) headerrow(1) layout(fixed)
+			putdocx table tbl12(1,1) = table(tbl1), border(top, single) border(bottom, single)
 			putdocx table tbl12(2,1) = table(tbl2), border(bottom)
 			putdocx save `wordname', `replace' `append'
 		}
