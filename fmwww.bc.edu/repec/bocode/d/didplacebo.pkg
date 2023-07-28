@@ -1,0 +1,39 @@
+d 'DIDPLACEBO': module for  in-time, in-space and mixed placebo tests for estimating difference-in-differences (DID) models
+d
+d      didplacebo implements placebo tests for estimating
+d difference-in-differences (DID) models, where policy adoption may
+d be	synchronized or staggered.  In particular, didplacebo
+d performs in-time placebo tests using fake treatment times,
+d in-space    placebo tests using fake treatment units (randomly
+d selected), and mixed placebo tests using both fake treatment
+d units and    times (both randomly selected).	Moreover,
+d didplacebo produces convenient graphs for visualization. 
+d
+d KW: difference in differences
+d KW: DiD
+d KW: placebo
+d KW: graphics
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20230727
+d
+d Author:  Qiang Chen, Shandong University
+d Support: email qiang2chen2@@126.com
+d
+d Author:  Ji Qi, Shandong University
+d Support: email miracle4556@@163.com
+d
+d Author:  Guanpeng Yan , Shandong University of Finance and Economics 
+d Support: email guanpengyan@@yeah.net
+d
+f didplacebo.ado
+f didplacebo.sthlp
+f ../t/tofirsttreat.ado
+f ../t/tofirsttreat.sthlp
+f ../x/xtrantreat.ado
+f ../x/xtrantreat.sthlp
+f ../x/xtshuffle.ado
+f ../x/xtshuffle.sthlp
+f ../b/bbb.dta
+f ../c/cao_chen.dta

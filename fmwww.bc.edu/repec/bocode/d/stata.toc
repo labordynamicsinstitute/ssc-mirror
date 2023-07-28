@@ -61,6 +61,7 @@ p did2s module to estimate a TWFE model using the two-stage difference-in-differ
 p did_imputation module to perform treatment effect estimation and pre-trend testing in event studies
 p did_multiplegt module to estimate sharp Difference-in-Difference designs with multiple groups and periods
 p did_multiplegt_dyn module to estimate event-study Difference-in-Difference (DID) estimators in designs with multiple groups and periods, with a potentially non-binary treatment that may increase or decrease multiple times
+p didplacebo module for  in-time, in-space and mixed placebo tests for estimating difference-in-differences (DID) models
 p didq module to compute treatment effects under alternative Parallel-q assumptions
 p difd module to evaluate test items for differential item functioning (DIF)
 p difdetect module to detect and adjust for differential item functioning (DIF)
