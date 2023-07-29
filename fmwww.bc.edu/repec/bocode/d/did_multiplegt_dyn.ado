@@ -1,5 +1,5 @@
 *﻿* did_multiplegt_dyn : did_multiplegt, robust to dynamic effects and with asymptotic variances
-** This version : July 18th, 2023
+** This version : July 28th, 2023
 ** Modified and commented by Clément.
 
 ********************************************************************************
@@ -170,6 +170,11 @@ gen d_sq_XX_temp=`4' if time_XX==min_time_d_nonmiss_XX
 bys `2': egen d_sq_XX=mean(d_sq_XX_temp)
 drop d_sq_XX_temp 
 
+// Modif Doulo: Create a new variable containing the integer levels of d_sq_XX, in the case of non-integer averages of d_sq_XX.
+capture drop d_sq_int_XX
+egen d_sq_int_XX = group(d_sq_XX)
+
+
 ////// If the option drop_larger_lower was specified, drop (g,t) cells such that at t, g has experienced both a strictly lower and a strictly higher treatment than its baseline treatment. //
 
 gen diff_from_sq_XX=(`4'-d_sq_XX)
@@ -227,6 +232,13 @@ if r(N)==0{
 
 	exit
 }
+
+// Modif Mélitine : this to be put higher, so that T_max_XX is realistic
+////// For each value of the baseline treatment, we drop time periods such that we do not have any control with that baseline treatment after that period //
+//// Watch out: this means the panel is no longer balanced, though it is balanced within values of the baseline treatment //
+gen never_change_d_XX=1-ever_change_d_XX
+bys time_XX d_sq_XX `trends_nonparam': egen controls_time_XX=max(never_change_d_XX)
+drop if controls_time_XX==0
 
 ////// Computing t_min_XX, T_max_XX, and replacing F_g_XX by last period plus one for those that never change treatment //
 sum time_XX
@@ -293,11 +305,14 @@ bys group_XX: egen d_sq_XX_new=mean(d_sq_XX)
 drop d_sq_XX
 rename d_sq_XX_new d_sq_XX
 
+// Modif Mélitine : initial place of this code
+/*
 ////// For each value of the baseline treatment, we drop time periods such that we do not have any control with that baseline treatment after that period //
 //// Watch out: this means the panel is no longer balanced, though it is balanced within values of the baseline treatment //
 gen never_change_d_XX=1-ever_change_d_XX
 bys time_XX d_sq_XX `trends_nonparam': egen controls_time_XX=max(never_change_d_XX)
 drop if controls_time_XX==0
+*/
 
 ////// Defining N_gt, the weight of each cell (g,t) //
 gen N_gt_XX=1
@@ -443,7 +458,12 @@ local store_singular_XX ""
 local store_noresidualization_XX ""
 
 ////// Storing the different possible values of the status quos //
-levelsof d_sq_XX, local(levels_d_sq_XX)
+//levelsof d_sq_XX, local(levels_d_sq_XX)
+
+// Modif Doulo: use the new variable (d_sq_int_XX) containing integers levels of d_sq_XX, and replace all d_sq_XX==`l' by d_sq_int_XX==`l' 
+
+levelsof d_sq_int_XX, local(levels_d_sq_XX)
+
 
 foreach l of local levels_d_sq_XX {
 	tempfile data_XX
@@ -451,13 +471,16 @@ foreach l of local levels_d_sq_XX {
 // A baseline treatment is relevant iff it is taken by at least two groups with different values of F_g_XX
 // and non-missing diff_y_XX, otherwise we do not need to perform the residualization for this specific baseline treatment.
 
-tab F_g_XX if d_sq_XX==`l' 
+scalar store_singular_`l'_XX = 0 
+//tab F_g_XX if d_sq_XX==`l' 
+tab F_g_XX if d_sq_int_XX==`l'  
+
 scalar useful_res_`l'_XX = `r(r)'
 	if (scalar(useful_res_`l'_XX)>1){
 
 // Isolate the observations used in the computation of theta_d
 
-keep if ever_change_d_XX==0&diff_y_XX!=.&fd_X_all_non_missing_XX==1&d_sq_XX==`l'
+keep if ever_change_d_XX==0&diff_y_XX!=.&fd_X_all_non_missing_XX==1&d_sq_int_XX==`l'
 
 
 // Using the matrix accum function, to regress the first difference of outcome on the first differences of covariates. We will obtain the vectors of coefficients \theta_d s, where d indexes values of the baseline treatment.
@@ -466,7 +489,8 @@ capture matrix accum overall_XX = diff_y_wXX `mycontrols_XX'
 scalar rc_XX=_rc
 
 if scalar(rc_XX)!=0{
-local store_singular_XX = "`store_singular_XX' `l'"
+//local store_singular_XX = "`store_singular_XX' `l'" //Moved to line 515
+scalar store_singular_`l'_XX = 1
 local store_noresidualization_XX "`store_noresidualization_XX' `l'"
 scalar useful_res_`l'_XX=1
 }
@@ -486,7 +510,8 @@ matrix coefs_sq_`l'_XX = invsym(didmgt_XX)*didmgt_Xy
 			scalar det_XX = det(didmgt_XX)
 
 		if (abs(scalar(det_XX))<=10^(-16)){ 
-					local store_singular_XX = "`store_singular_XX' `l'"
+					//local store_singular_XX = "`store_singular_XX' `l'" ////Moved to line 515
+					scalar store_singular_`l'_XX = 1
 					scalar drop det_XX
 		}
 
@@ -501,6 +526,16 @@ use "`data_XX'.dta", clear
 }
 
 }
+//Modif Doulo: Fill up store_singular_XX, with correct values of statu quo and not the levels
+levelsof d_sq_XX, local(levels_d_sq_bis_XX)
+scalar index_sing_XX = 0
+foreach l of local levels_d_sq_bis_XX {
+scalar index_sing_XX = scalar(index_sing_XX)+1
+if(scalar(store_singular_`=index_sing_XX'_XX) == 1){
+local store_singular_XX = "`store_singular_XX' `l'"
+}
+}
+
 
 //Display errors if one of the Denoms is not defined
 if ("`store_singular_XX'"!=""){
@@ -518,7 +553,7 @@ if ("`store_singular_XX'"!=""){
 
 // Values of baseline treatment such that residualization could not be performed at all are dropped.
 foreach l of local store_noresidualization_XX {
-drop if d_sq_XX==`l'
+drop if d_sq_int_XX==`l'
 }
 
 } // end of the if "`controls'" !="" condition
@@ -965,7 +1000,7 @@ matrix mat_res_XX[`=l_XX' + 1 + `i',5]=N_placebo_`i'_XX
 if N_switchers_placebo_`i'_XX==0|N_placebo_`i'_XX==0{
 	di as error "Placebo_"`i' " cannot be estimated."
 	di as error "There is no switcher or no control"
-	di as error "for this effect."
+	di as error "for this placebo."
 }
 }
 }
@@ -1400,9 +1435,6 @@ capture drop mat_res_XX1 mat_res_XX2 mat_res_XX3 mat_res_XX4 mat_res_XX5 mat_res
 svmat mat_res_XX //rename the obtained variables ? yes!
 ////Doulo: use forvalue instead of foreach
 
-/*foreach var of varlist mat_res_XX*{
-replace `var'=0 if mat_res_XX7==0 // artificially replacing the result of average effect by 0
-}*/
 
 forvalue index=1/6{
 replace mat_res_XX`index'=0 if mat_res_XX7==0 // artificially replacing the result of average effect by 0
@@ -1431,7 +1463,6 @@ sort time_to_treat
 
 if ("`graph_off'"==""){
 if "`graphoptions'"==""{
-////Doulo: change up_CI to up_CI_95
 twoway (connected point_estimate time_to_treat, lpattern(solid)) (rcap up_CI_95 lb_CI_95 time_to_treat), xlabel(`=-l_placebo_XX'[1]`=l_XX') xtitle("Relative time to last period before treatment changes (t=0)", size(large)) title("DID, from last period before treatment changes (t=0) to t", size(large)) graphregion(color(white)) plotregion(color(white)) legend(off)
 }
 else{
@@ -1483,8 +1514,10 @@ program did_multiplegt_dyn_core, eclass
 if "`switchers_core'"=="in"{
 scalar l_u_a_XX=min(`effects', L_u_XX)
 
-if `placebo'!=0&L_placebo_u_XX!=.&L_placebo_u_XX!=0{
+if `placebo'!=0{
+	if L_placebo_u_XX!=.&L_placebo_u_XX!=0{
 	scalar l_placebo_u_a_XX=min(`placebo', L_placebo_u_XX)
+	}
 	}
 
 	scalar increase_XX=1
@@ -1493,14 +1526,17 @@ if `placebo'!=0&L_placebo_u_XX!=.&L_placebo_u_XX!=0{
 if "`switchers_core'"=="out"{
 scalar l_u_a_XX=min(`effects', L_a_XX)
 
-if `placebo'!=0&L_placebo_a_XX!=.&L_placebo_a_XX!=0{
+if `placebo'!=0{
+	if L_placebo_a_XX!=.&L_placebo_a_XX!=0{
 	scalar l_placebo_u_a_XX=min(`placebo', L_placebo_a_XX)
+	}
 	}
 
 scalar increase_XX=0
 }
 
-levelsof d_sq_XX, local(levels_d_sq_XX)
+//levelsof d_sq_XX, local(levels_d_sq_XX)
+levelsof d_sq_int_XX, local(levels_d_sq_XX)
 
 *****  Estimating the DID_{+,l}s or the DID_{-,l}s *****************************
 
@@ -1559,7 +1595,7 @@ gen diff_X`count_controls'_`i'_XX=`var' - L`i'.`var'
 foreach l of local levels_d_sq_XX { 
 	if (scalar(useful_res_`l'_XX)>1){ 
 
-replace diff_y_`i'_XX = diff_y_`i'_XX - coefs_sq_`l'_XX[`=`count_controls'',1]*diff_X`count_controls'_`i'_XX if d_sq_XX==`l' 
+replace diff_y_`i'_XX = diff_y_`i'_XX - coefs_sq_`l'_XX[`=`count_controls'',1]*diff_X`count_controls'_`i'_XX if d_sq_int_XX==`l' 
 
 ////// N.B. : in the above line, we do not add "&diff_X`count_controls'_`i'_XX!=." because we want to exclude from the estimation any first/long-difference for which the covariates are missing.
 }
@@ -1700,7 +1736,8 @@ gen delta_D_`i'_cum_temp_XX = N_gt_XX/N`=increase_XX'_`i'_XX*[sum_treat_until_`i
 
 
 ****************************Placebos****************************
-if `placebo'!=0&`=l_placebo_u_a_XX'>=1{
+if `placebo'!=0{
+	if `=l_placebo_u_a_XX'>=1{
 forvalue i=1/`=l_placebo_u_a_XX'{
 
 **Needed to compute placebos
@@ -1752,7 +1789,7 @@ gen diff_X_`count_controls'_placebo_`i'_XX = L`=2*`i''.`var' - L`i'.`var'
 foreach l of local levels_d_sq_XX {
 	if (scalar(useful_res_`l'_XX)>1){ 
 
-		replace diff_y_pl_`i'_XX = diff_y_pl_`i'_XX - coefs_sq_`l'_XX[`=`count_controls'',1]*diff_X_`count_controls'_placebo_`i'_XX if d_sq_XX==`l' 
+		replace diff_y_pl_`i'_XX = diff_y_pl_`i'_XX - coefs_sq_`l'_XX[`=`count_controls'',1]*diff_X_`count_controls'_placebo_`i'_XX if d_sq_int_XX==`l' 
 
 	}
 }
@@ -1854,7 +1891,7 @@ gen delta_D_pl_`i'_cum_temp_XX = N_gt_XX/N`=increase_XX'_placebo_`i'_XX*[sum_tre
 }
 
 } //End of loop on placebos
-
+}
 } //End of condition checking if we can compute at least one placebo
 
 *** For the estimation of \hat{\delta} ***

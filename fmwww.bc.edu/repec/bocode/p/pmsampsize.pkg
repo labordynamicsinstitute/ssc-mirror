@@ -34,8 +34,8 @@ d Requires: Stata version 12.1
 d
 d Distribution-Date: 20230610
 d
-d Author: Joie Ensor, Keele University
-d Support: email j.ensor@@keele.ac.uk
+d Author: Joie Ensor, Institute of Applied Health Research, University of Birmingham
+d Support: email j.ensor@@bham.ac.uk
 d
 f pmsampsize.ado
 f pmsampsize.sthlp

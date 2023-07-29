@@ -1,0 +1,26 @@
+d 'PMVALSAMPSIZE': module to calculate the minimum sample size required for external validation of a multivariable prediction model
+d
+d  pmvalsampsize computes the minimum sample size required for the
+d external validation of an existing multivariable prediction model
+d using the criteria proposed by Archer et al. and Riley et al. 
+d pmvalsampsize can currently be used to calculate the minimum
+d sample size for the external validation of models with continuous
+d or binary outcomes. A series of criteria define the sample size
+d needed to ensure precise estimation of key measures of prediction
+d model performance, allowing conclusions to be drawn about whether
+d the model is potentially accurate and useful in a given
+d population of interest. 
+d
+d KW: sample size
+d KW: external validation
+d KW: prediction model
+d
+d Requires: Stata version 12.1
+d
+d Distribution-Date: 20230728
+d
+d Author: Joie Ensor, Institute of Applied Health Research, University of Birmingham
+d Support: email j.ensor@@bham.ac.uk
+d
+f pmvalsampsize.ado
+f pmvalsampsize.sthlp
