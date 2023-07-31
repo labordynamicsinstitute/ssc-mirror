@@ -1,4 +1,4 @@
-*! ivreg2_p 1.0.9 25Jan2015
+*! ivreg2_p 1.0.10 30jul2023
 *! author mes
 * 1.0.1: 25apr2002 original version
 * 1.0.2: 28jun2005 version 8.2
@@ -11,6 +11,7 @@
 *                  and added labelling of created residual variable
 * 1.0.9: 25Jan2015 Rewrite to accommodate new ivreg2 with legacy support;
 *                  passes control to matching ivreg2x_p predict program.
+* 1.0.10:30Jul2023 Change version of ivreg211_p to 11.2, tsrevar->fvrevar to handle FVs (cfb0)
 
 program define ivreg2_p
 
@@ -40,9 +41,10 @@ di as err "Error - ivreg2 estimation missing e(ivreg2cmd) macro"
 end
 
 
-* Main/current predict program
+* Main/current predict program: upgrade to v11.2 for FV handling
 program define ivreg211_p
-	version 8.2
+//	version 8.2
+	version 11.2
 	syntax newvarname [if] [in] , [XB Residuals stdp]
 	marksample touse, novarlist
 
@@ -73,13 +75,15 @@ di in gr "(option xb assumed; fitted values)"
 			tempname ivres
 			gen byte `esample' = e(sample)
 
-* Need to strip out time series operators 
+* Need to strip out time series operators *** and FVs ***
 			local lhs "`e(depvar)'"
-			tsrevar `lhs', substitute
+//			tsrevar `lhs', substitute
+			fvrevar `lhs', substitute
 			local lhs_t "`r(varlist)'"
 
 			local rhs : colnames(e(b))
-			tsrevar `rhs', substitute
+//			tsrevar `rhs', substitute
+			fvrevar `rhs', substitute
 			local rhs_t "`r(varlist)'"
 
 			if "`e(partial1)'" != "" {
@@ -88,7 +92,8 @@ di in gr "(option xb assumed; fitted values)"
 			else {
 				local partial "`e(partial)'"
 			}
-			tsrevar `partial', substitute
+//			tsrevar `partial', substitute
+			fvrevar `partial', substitute
 			local partial_t "`r(varlist)'"
 
 			if ~e(partialcons) {
@@ -128,7 +133,8 @@ di in red "Option `type' not supported with -partial- option"
 	else if "`type'" == "residuals" {
 		tempname lhs lhs_t xb
 		local lhs "`e(depvar)'"
-		tsrevar `lhs', substitute
+//		tsrevar `lhs', substitute
+		fvrevar `lhs', substitute
 		local lhs_t "`r(varlist)'"
 		qui _predict `typlist' `xb' if `touse'
 		gen `typlist' `varlist'=`lhs_t'-`xb'
