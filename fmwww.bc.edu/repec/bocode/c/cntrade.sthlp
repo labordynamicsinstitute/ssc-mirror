@@ -94,7 +94,11 @@ The code will be the file name, with .dta as the extension. In China, stocks are
 {pstd}Yuan Xue{p_end}
 {pstd}China Stata Club(爬虫俱乐部){p_end}
 {pstd}Wuhan, China{p_end}
-{pstd}xueyuan@hust.edu.cn{p_end}
+{pstd}xueyuan19920310@163.com{p_end}
+
+{pstd}Yiming Zhou{p_end}
+{pstd}China Stata Club(爬虫俱乐部){p_end}
+{pstd}Wuhan, China{p_end}
 
 {title:Also see}
 

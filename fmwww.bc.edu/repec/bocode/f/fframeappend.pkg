@@ -1,14 +1,14 @@
-d 'FFRAMEAPPEND': module to append data frame to currently active data frame
+d 'FFRAMEAPPEND': module to append data frames to currently active data frame
 d
-d  fframeappend appends variables in the "using frame" to the
-d currently active frame.  If no optional variable list is provided
-d all variables and observations in the “using frame” will be
-d appended to the currently active frame.  The new observations
-d will be at the bottom of the currently active frame.	Variables
-d in the currently active frame are automatically promoted
-d following the promotion rules of Stata’s “replace” command.
-d  The ordering of variables in the currently active frames is
-d preserved. 
+d  fframeappend appends variables in the “using frames” to the
+d currently active frame.  If no optional variable list is
+d provided, all variables and observations in the “using
+d frames” will be appended to the currently active frame.  The
+d new observations will be at the bottom of the currently active
+d frame. Variables in the currently active frame are automatically
+d promoted following the promotion rules of Stata’s “replace”
+d command. The ordering of variables in the currently active frames
+d is preserved. 
 d
 d KW: frames
 d KW: data management
@@ -16,7 +16,7 @@ d KW: append
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20230303
+d Distribution-Date: 20230731
 d
 d Author: Jürgen Wiemers, Institute for Employment Research (IAB), Germany
 d Support: email   Juergen.Wiemers@@iab.de

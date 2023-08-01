@@ -23,7 +23,7 @@ p fdta module to change contents of string variables
 p fedit module to find and edit text file from within Stata
 p feldti module to compare two independent coefficients of reliability
 p fese module to calculate standard errors for fixed effects
-p fframeappend module to append data frame to currently active data frame
+p fframeappend module to append data frames to currently active data frame
 p fgt_ci module to calculate and decompose Foster–Greer–Thorbecke (and standard) concentration indices
 p fgtest module to Compute Farrar-Glauber Multicollinearity Chi2, F, t Tests
 p fhsae module to fit an area level Fay-Herriot model
