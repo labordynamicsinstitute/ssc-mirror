@@ -1,13 +1,9 @@
-*! version 1.5 September 5, 2013 @ 16:39:52
-*! Sumarize information on (person specific) sequences
+*! version 1.6 August 1, 2023 @ 17:12:06 UK
+*! Summarize information on (person specific) sequences
 
-* version 1.0 Original SJ contribution
-* version 1.1 GraphWithWlines crashed if sqvar had no value labels -> fixed
-* version 1.2 By-option didn't worked -> fixed
-* version 1.3 By-option still don't worked -> fixed
-* version 1.4 Oh my god: By-option still doesn't worked -> fixed
-* version 1.5 Allowing line options lpattern, lcolor, lstyle 
-	
+// Version control now by git
+
+
 program define sqparcoord
 version 9
 	syntax [if] [in] ///
@@ -65,13 +61,13 @@ version 9
 		// Drop Sequences with Gaps 
 		if "`gapinclude'" == "" {
 			tempvar lcensor rcensor gap
-			by `_dta[SQiis]' (`_dta[SQtis]'), sort: gen `lcensor' = sum(!mi(`_dta[SQis]'))
-			by `_dta[SQiis]' (`_dta[SQtis]'): gen `rcensor' = sum(mi(`_dta[SQis]'))
-			by `_dta[SQiis]' (`_dta[SQtis]'): ///
+			by `byvars' `_dta[SQiis]' (`_dta[SQtis]'), sort: gen `lcensor' = sum(!mi(`_dta[SQis]'))
+			by `byvars' `_dta[SQiis]' (`_dta[SQtis]'): gen `rcensor' = sum(mi(`_dta[SQis]'))
+			by `byvars' `_dta[SQiis]' (`_dta[SQtis]'): ///
 			  replace `rcensor' = ((_N-_n) == (`rcensor'[_N]-`rcensor'[_n])) & mi(`_dta[SQis]')
-			by `_dta[SQiis]' (`_dta[SQtis]'): ///
+			by `byvars' `_dta[SQiis]' (`_dta[SQtis]'): ///
 			  gen `gap' = sum(mi(`_dta[SQis]') & `lcensor' & !`rcensor')
-			by `_dta[SQiis]' (`_dta[SQtis]'): ///
+			by `byvars' `_dta[SQiis]' (`_dta[SQtis]'): ///
 			  replace `touse' = 0 if `gap'[_N]>0
 		}
 		keep if `touse'
@@ -83,23 +79,23 @@ version 9
 		// Stretch Scale for option SO
 		if "`so'" == "so" {
 			tempvar order howmany
-			by `_dta[SQiis]' (`_dta[SQtis]'), sort: ///
+			by `byvars' `_dta[SQiis]' (`_dta[SQtis]'), sort: ///
 			  keep if `_dta[SQis]' ~= `_dta[SQis]'[_n-1]
-			by `_dta[SQiis]' (`_dta[SQtis]'), sort: gen `howmany' = _N
+			by `byvars' `_dta[SQiis]' (`_dta[SQtis]'), sort: gen `howmany' = _N
 			expand 2 if `howmany' == 1
-			by `_dta[SQiis]' (`_dta[SQtis]'), sort: replace `_dta[SQtis]' = _n
-			by `_dta[SQiis]', sort: gen `order' = (_n-1)/(_N-1)
+			by `byvars' `_dta[SQiis]' (`_dta[SQtis]'), sort: replace `_dta[SQtis]' = _n
+			by `byvars' `_dta[SQiis]', sort: gen `order' = (_n-1)/(_N-1)
 		}
 		
 		// Sequence-Frequency Data
 		tempvar n
 		keep `_dta[SQiis]' `_dta[SQtis]' `_dta[SQis]' `order' `byvars'
 		reshape wide `_dta[SQis]' `order' , i(`_dta[SQiis]') j(`_dta[SQtis]')
-		bysort `_dta[SQis]'*: gen `n' = _N
-		bysort `_dta[SQis]'*: keep if _n==1
+		bysort `byvars' `_dta[SQis]'*: gen `n' = _N
+		bysort `byvars' `_dta[SQis]'*: keep if _n==1
 
 		// Option ranks
-		if "`ranks'" != "" KeepRanks `n', ranks(`ranks')
+		if "`ranks'" != "" KeepRanks `n', ranks(`ranks') by(`byvars')
 
 		// Prepare random number for option offset
 		if "`offset'" != "" {
@@ -175,15 +171,20 @@ end
 	
 // Selects Ranks according to rank-Options
 program KeepRanks
-	syntax varname, ranks(string)
-	tempvar rank tieshelp tiesrank select
-	by `varlist', sort: gen int `rank' = _n==1
-	gen int `tieshelp' = _N+1 - _n
-	replace `rank' = sum(`rank')
-	replace `rank' = `rank'[_N] +1  - `rank'
-	sort `tieshelp'
-	gen `tiesrank' = `tieshelp' if `rank'!=`rank'[_n-1] & `rank' <= `tieshelp'
-	by `rank', sort: replace `rank' = `tiesrank'[1]
+	syntax varname, ranks(string) [ by(varlist) ]
+	tempvar rank tieshelp tiesrank select 
+	if "`by'" == "" {
+		tempvar by
+		gen byte `by' = 1
+	}
+	
+	by `by' `varlist', sort: gen int `rank' = _n==1
+	by `by': gen int `tieshelp' = _N+1 - _n
+	by `by': replace `rank' = sum(`rank')
+	by `by': replace `rank' = `rank'[_N] +1  - `rank'
+	sort `by' `tieshelp'
+	by `by': gen `tiesrank' = `tieshelp' if `rank'!=`rank'[_n-1] & `rank' <= `tieshelp'
+	by `by' `rank', sort: replace `rank' = `tiesrank'[1]
 	gen int `select' = 0
 	foreach r of local ranks {
 		replace `select' = 1 if `rank'  == `r'

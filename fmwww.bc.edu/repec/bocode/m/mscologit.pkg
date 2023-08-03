@@ -1,0 +1,43 @@
+d 'MSCOLOGIT': module to estimate multiscale ordered logit model 
+d
+d    mscologit fits the multiscale ordered logit model that
+d expresses the association between covariates indepvars and an   
+d ordinal outcome variable. mscologit is a generalization of the
+d standard proportional odds ordered logit model, but unlike	the
+d standard model, mscologit accommodates the presence of multiple
+d response scales to measure the same rating dimension in    the
+d data, as when response formats for the same rating question
+d differ across surveys or survey waves. Alternative outcome   
+d variables are listed as depvars, but typically there is but one
+d valid observation in depvars for each row of data (e.g.,   
+d because each survey respondent had been presented with one
+d particular response format in a particular survey, country,	
+d survey wave, or sample split).    mscologit is a derivative of
+d the proportional odds model, and is sharing all features of this
+d ordered logit model.	  mscologit permits to relax the parallel
+d lines assumption of the proportional odds model through its lo
+d and up options,    whereby a multiscale variant of the
+d generalized ordered logit model (Fu 1998, Williams 2006, 2016,
+d Fullerton 2009, Agresti    2010, Fullerton and Xu 2016) may be
+d estimated. As a wrapper for meglm, gllamm, and runmlwin,
+d mscologit also permits to    implement multilevel specifications
+d of the multiscale ordered logit model; in the current
+d implementation, up to 5    hierarchical levels may be specified
+d in mscologit. 
+d
+d KW: ordered logit model
+d KW: multiple scales
+d KW: generalized ordered logit model 
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20230802
+d
+d Author: Markus Gangl, Goethe University Frankfurt am Main
+d Support: email mgangl@@soz.uni-frankfurt.de
+d
+f mscologit.ado
+f mscolog_ll.ado
+f mscologit.sthlp
+f ../g/gss_illustration.do
+f ../g/GSS1984.dta

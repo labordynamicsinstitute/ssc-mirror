@@ -1,0 +1,25 @@
+d 'BHAPKAR': module to compute Bhapkar's test of marginal homogeneity between two raters for categorical observations
+d
+d  bhapkar computes Bhapkar's chi-squared statistic to assess the
+d marginal homogeneity (agreement) between two raters on
+d categorical data (Bhapkar 1966). If the associated p-value is
+d significant (e.g. < 0.05), we reject the hypothesis of equal
+d marginal distributions.  That is, we do not accept the notion
+d that there is agreement between the two raters. Conversely, a
+d non-significant p-value can be interpreted as the two raters
+d having equal marginal distributions (i.e. interrater agreement). 
+d
+d KW: Bhapkar's test of marginal homogeneity
+d KW: categorical data
+d KW: interrater agreement,interrater reliability
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20230802
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f bhapkar.ado
+f bhapkar.sthlp
+f ../v/vision.dta

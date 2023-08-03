@@ -1,4 +1,4 @@
-*! version 1.8   Leo Ahrens   leo@ahrensmail.de
+*! version 1.8.3   Leo Ahrens   leo@ahrensmail.de
 
 program define scatterfit
 version 15
@@ -24,39 +24,61 @@ LEGINside LEGSize(string)
 MWeighted MSize(string) MLabel(varlist max=1)
 scale(string) XYSize(string)
 PLOTScheme(string asis) COLorscheme(string asis) CINTensity(numlist max=1)
-opts(string asis)
+opts(string asis) slow
 
 /* legacy and dev */
 BINARYModel(string)
 polybw(numlist max=1) 
 COVariates(varlist) ABSorb(varlist)
 coef COEFPos(string) COEFPLace(string)
-loud
 ] ;
 
 #delimit cr
 
 *-------------------------------------------------------------------------------
-* install dependencies
+* prep dependencies
 *-------------------------------------------------------------------------------
 
-local gtoolsu = 0
-local paletteu = 0
-foreach package in reghdfe gtools ftools labmask {
+// install
+foreach package in reghdfe ftools labmask {
 	capture which `package'
-	if _rc==111 & "`package'"=="gtools" local gtoolsu = 1 
 	if _rc==111 ssc install `package', replace
 }
-if `gtoolsu'==1 gtools, upgrade
+if "`slow'"=="" {
+	capture which gtools
+	if _rc==111 {
+		ssc install gtools, replace 
+		gtools, upgrade
+	}
+}
 capture which colorpalette
-if _rc==111 local paletteu = 1
-if `paletteu'==1 ssc install colrspace, replace
-if `paletteu'==1 ssc install palettes, replace
-capture set scheme plotplain
-if _rc==111 ssc install blindschemes, replace
-if inlist("`fitmodel'","quantile","mmreg") {
+if _rc==111 {
+	ssc install colrspace, replace
+	ssc install palettes, replace
+}
+capture findfile blindschemes.sthlp
+if _rc!=0 {
+	capture set scheme plotplain
+	if _rc==111 ssc install blindschemes, replace
+}
+if strpos("`fitmodel'","quantile") | strpos("`fitmodel'","mmreg") {
 	capture which robreg
 	if _rc==111 ssc install robreg, replace
+}
+
+// prep no gtools option 
+if "`slow'"!="" {
+	local lvlsof levelsof
+	local sumd sum 
+	local sumd2 , d
+	local ggen egen
+	local duplrep duplicates report
+}
+else {
+	local lvlsof glevelsof
+	local sumd gstats sum
+	local ggen gegen
+	local duplrep gdistinct
 }
 
 
@@ -121,13 +143,11 @@ if "`binarymodel'"!="" & !("`binarymodel'"=="logit" | "`binarymodel'"=="probit")
 	di as error "{bf:binarymodel()} must contain logit or probit."
 	exit 498
 }
-if "`if'"!="" {
-    gduplicates report `y' `if' & !mi(`y'), fast
-}
-else {
-    gduplicates report `y' `if' if !mi(`y'), fast
-}
-local yvalcount = r(unique_value)
+if "`if'"!="" local ifhelp &
+if "`if'"=="" local ifhelp if
+`duplrep' `y' `if' `ifhelp' !mi(`y')
+if "`slow'"=="" local yvalcount = r(ndistinct)
+if "`slow'"!="" local yvalcount = r(unique_value)
 if `yvalcount'==2 {
 	if "`controls'`fcontrols'"!="" {
 		di as error "You are using a binary dependent variable with control variables. The scatter points may be unsuited."
@@ -304,7 +324,7 @@ keep `x' `y' `by' `controls' `fcontrols' `binvar' `mlabel' `weightname' `cluster
 // check if suitable by variable is specified, generate one otherwise
 local isthereby = 0
 if "`by'"!="" {
-	levelsof `by', local(byvals)
+	`lvlsof' `by', local(byvals)
 	local byvalcount: word count `byvals'
 	if `byvalcount'!=1 {
 		local isthereby = 1
@@ -321,7 +341,7 @@ if `isthereby'==0 {
 capture confirm numeric variable `by'
 if _rc {
 	rename `by' oldby
-	gegen `by' = group(oldby)
+	`ggen' `by' = group(oldby)
 	labmask `by', values(oldby)
 }
 
@@ -333,7 +353,7 @@ if `isthereby'==1 {
 }
 
 // by locals
-levelsof `by', local(bynum)
+`lvlsof' `by', local(bynum)
 if `isthereby'==1 & "`bymethod'"=="stratify" {
 	local bynumalt `bynum'
 }
@@ -360,12 +380,12 @@ if `isthereby'==1 {
 // check if dependent variable is binary & transform into a dummy if required
 if `yvalcount'==2 local binarydv = 1
 if `yvalcount'!=2 local binarydv = 0
-if `binarydv'==1 glevelsof `y', local(yval)
+if `binarydv'==1 `lvlsof' `y', local(yval)
 capture confirm numeric variable `y'
 if `binarydv'==1 & ("`yval'"!="0 1" | _rc) {
 	local ylab: variable label `y'
 	rename `y' old`y'
-	gegen `y' = group(old`y')
+	`ggen' `y' = group(old`y')
 	replace `y' = `y'-1
 	lab var `y' "`ylab'"
 }
@@ -383,7 +403,7 @@ if `binarydv'==1 {
 	else {
 		local ylabber old`y'
 	}
-	levelsof `ylabber', local(oldyvals)
+	`lvlsof' `ylabber', local(oldyvals)
 	foreach kk in `oldyvals' {
 		local ylab: label (`ylabber') `kk'
 	}
@@ -409,8 +429,17 @@ if `isthereby'==1 {
 
 // standardize x and y
 if "`standardize'"!="" {
-	if `binarydv'==0 gstats transform (standardize) `y' `x' `w', replace
-	if `binarydv'==1 gstats transform (standardize) `x' `w', replace
+	if "`slow'"=="" {
+		if `binarydv'==0 gstats transform (standardize) `y' `x' `w', replace labelformat(#sourcelabel#)
+		if `binarydv'==1 gstats transform (standardize) `x' `w', replace labelformat(#sourcelabel#)
+	}
+	else {
+		if `binarydv'==0 local stdlist `y'	
+		foreach bb in `x' `stdlist' {
+			sum `bb' `w'
+			replace `bb' = (`bb'-r(mean))/r(sd)
+		}
+	}
 }
 
 
@@ -422,7 +451,16 @@ if "`binned'"!="" {
 	if "`nquantiles'"=="" local nquantiles 30
 	if "`binvar'"=="" {
 		if "`discrete'"=="" & "`unibin'"=="" { // quantiles
-			gquantiles `x'_q = `x' `w', xtile nq(`nquantiles') `byparen'  
+			if "`slow'"=="" {
+				gquantiles `x'_q = `x' `w', xtile nq(`nquantiles') `byparen'  
+			}
+			else {
+				gen `x'_q = .
+				foreach bynum2 in `bynum' {
+					xtile `x'_q`bynum2' = `x' if `by'==`bynum2' `w', nq(`nquantiles')
+					replace  `x'_q = `x'_q`bynum2' if `by'==`bynum2'
+				}
+			}
 		}
 		else if "`unibin'"=="" {  // discrete
 			clonevar `x'_q = `x'  
@@ -435,14 +473,14 @@ if "`binned'"!="" {
 			range binrange r(min) r(max) `unibin'
 			foreach bb of numlist 1/`unibin' {
 				local bincount = `bincount'+1
-				qui sum binrange if _n==`bb'+1
+				qui sum binrange if _n==`bb'+1, meanonly
 				local binrange1 = r(mean)
-				qui sum binrange if _n==`bb'
+				qui sum binrange if _n==`bb', meanonly
 				replace `x'_q = `bb' if `x'>=r(mean) & `x'<`binrange1'
 			}
 		}
 	}
-	if "`binvar'"!="" {
+	else {
 		clonevar `x'_q = `binvar'
 	}
 }
@@ -452,7 +490,7 @@ if "`binned'"=="" & "`mweighted'"!="" {
 }
 
 if "`binned'"!="" | "`mweighted'"!="" {
-	gegen xbin = group(`x'_q `by')
+	`ggen' xbin = group(`x'_q `by')
 }
 
 
@@ -562,7 +600,7 @@ if `ownpred_plot'==1 | "`regparameters'"!="" {
 *-------------------------------------------------------------------------------
 
 if "`regparameters'"!="" {
-
+	
 	// gather regression parameters
 	foreach bynum2 in `bynumalt' {
 		if `isthereby'==1 & "`bymethod'"=="stratify" local bynumname `bynum2'
@@ -613,7 +651,6 @@ if "`regparameters'"!="" {
 					if !strpos("`intmargchecker'","`bynum3'`bynum2'") {
 						local intmargchecker "`intmargchecker' `bynum2'`bynum3'"
 						local coef`bynum2'_`bynum3' = _b[`count'._at]-_b[`count2'._at]
-						dis `" test _b[`count'._at] = _b[`count2'._at]  "'
 						test _b[`count'._at] = _b[`count2'._at]
 						local pval`bynum2'_`bynum3' = r(p)
 						local parbyintcompiler `parbyintcompiler' coef`bynum2'_`bynum3' pval`bynum2'_`bynum3'
@@ -631,6 +668,9 @@ if "`regparameters'"!="" {
 	}
 
 	// round and store parameters
+	if `isthereby'!=1 | (!strpos("`regparameters'","pval") & !strpos("`regparameters'","se") & ///
+	!strpos("`regparameters'","r2") & !strpos("`regparameters'","nobs")) local space " "
+	
 	foreach bynum2 in `bynum' {
 		foreach par in coef pval se {
 			local parbycompiler `parbycompiler' `par'`bynum2'
@@ -670,15 +710,15 @@ if "`regparameters'"!="" {
 		cap if strpos("``par'string'","e") & ``par''<0 local smallround`par' = -1
 		local `par' = round(``par'',``par'round')
 		if `smallround`par''==0 {
-			local `par' "=``par''"
+			local `par' "`space'=`space'``par''"
 		}
 		else if `smallround`par''==1 {
-			local `par' "<.00001"
+			local `par' "`space'<`space'.00001"
 		}
 		else {
-			local `par' "{&cong}0"
+			local `par' "`space'{&cong}`space'0"
 		}
-		if strpos("``par''","000000") & "``par''"!="<.00001" {
+		if strpos("``par''","000000") & "``par''"!="`space'<`space'.00001" {
 			foreach zz of numlist 1/9 {
 				if substr("``par''",`zz',1)=="." local dotpos = `zz'
 			}
@@ -703,8 +743,8 @@ if `ownpred_plot'==1 {
 	
 	// get x var
 	if "`controls'`fcontrols'"!="" & "`binned'"==""  {
-		reghdfe `x' `controls' `w', `hdfeabsorb' res(`x'2)
-		sum `x' `w'
+		reghdfe `x' `controls' `w', `hdfeabsorb' res(`x'2) nosample
+		sum `x' `w', meanonly
 		replace `x'2 = `x'2 + r(mean)
 	}
 	else {
@@ -732,7 +772,7 @@ if `ownpred_plot'==1 {
 		range range`bynum2' r(min) r(max) `margpoints'
 		foreach p of numlist 1/`margpoints' {
 			local mcount = `mcount'+1
-			qui sum range`bynum2' if _n==`p'
+			qui sum range`bynum2' if _n==`p', meanonly
 			local ranger`mcount' = r(mean)
 			local margat`bynum2' `margat`bynum2'' `ranger`mcount''
 		}
@@ -763,8 +803,8 @@ if "`controls'`fcontrols'"!="" {
 			gen `v'_r = .
 			foreach bynum2 in `bynumalt' {
 				if "`bymethod'"=="stratify" local ifbysetting if `by'==`bynum2'
-				reghdfe `v' `controls' `ifbysetting' `w', `hdfeabsorb' res(`v'_r`bynum2')
-				sum `v' `ifbysetting' `w'
+				reghdfe `v' `controls' `ifbysetting' `w', `hdfeabsorb' res(`v'_r`bynum2') nosample
+				sum `v' `ifbysetting' `w', meanonly
 				replace `v'_r = `v'_r`bynum2' + r(mean) `ifbysetting'
 			}
 		}
@@ -783,9 +823,9 @@ if "`controls'`fcontrols'"!="" {
 					replace `y'_r`bynum2' = `y'_r`bynum2' - _b[`v']*`v' `ifbysetting'
 				}
 			}
-			sum `y' `w' `ifbysetting'
+			sum `y' `w' `ifbysetting', meanonly
 			local adjm = r(mean)
-			sum `y'_r`bynum2' `w' `ifbysetting'
+			sum `y'_r`bynum2' `w' `ifbysetting', meanonly
 			replace `y'_r`bynum2' = `y'_r`bynum2' + (`adjm'-r(mean)) `ifbysetting'
 			replace `y'_r = `y'_r`bynum2' `ifbysetting'
 		}
@@ -800,10 +840,10 @@ if "`controls'`fcontrols'"!="" {
 
 if "`binned'"!="" {
 	if "`binmethod'"=="" local binmethod mean
-	gegen `y'_mean = `binmethod'(`y') `w', by(xbin)
-	gegen `x'_mean = `binmethod'(`x') `w', by(xbin)
-	if "`mweighted'"!="" gegen scw = count(`y'), by(xbin)
-	gegen tag = tag(xbin) if !mi(`y'_mean)
+	`ggen' `y'_mean = `binmethod'(`y') `w', by(xbin)
+	`ggen' `x'_mean = `binmethod'(`x') `w', by(xbin)
+	if "`mweighted'"!="" `ggen' scw = count(`y'), by(xbin)
+	`ggen' tag = tag(xbin) if !mi(`y'_mean)
 	replace `y'_mean = . if tag!=1
 }
 
@@ -978,8 +1018,8 @@ else {
 
 // marker size weight
 if "`mweighted'"!="" {
-	if "`binned'"=="" gegen scw = count(`y'), by(xbin)
-	sum scw 
+	if "`binned'"=="" `ggen' scw = count(`y'), by(xbin)
+	sum scw, meanonly
 	replace scw = scw/r(mean)
 	local scw [w=scw]
 }
@@ -1033,7 +1073,7 @@ local wherecoef = 0
 if "`regparameters'"!="" {
 	
 	// figure out where to position the box
-	gstats sum `yplot'
+	`sumd' `yplot' `sumd2'
 	local ymax = r(max)
 	local ymin = r(min)
 	local y25 = r(p25)
@@ -1042,7 +1082,7 @@ if "`regparameters'"!="" {
 	local y75larger = r(N)
 	count if `yplot'<`y25'
 	local y25smaller = r(N)
-	gstats sum `xplot'
+	`sumd' `xplot' `sumd2'
 	local xmax = r(max)
 	local xmin = r(min)
 	local xmean = r(mean)
@@ -1169,7 +1209,7 @@ if "`regparameters'"!="" {
 								if `siglevel`bynum2'_`bynum3''==.01 local sigstar`bynum2'_`bynum3' ***
 							}
 							if strpos("`regparameters'","pval") local intpvalpar`bynum2'_`bynum3' " ({it:p}`pval`bynum2'_`bynum3'')"
-							if `binarydv'==0 | "`fitmodel'"=="lpm" local whatcoef {it:{&beta}`parbylab`bynum2''}-{it:ß`parbylab`bynum3''}
+							if `binarydv'==0 | "`fitmodel'"=="lpm" local whatcoef {it:{&beta}`parbylab`bynum2''}-{it:{&beta}`parbylab`bynum3''}
 							if `binarydv'==1 & "`fitmodel'"!="lpm" local whatcoef {it:{&delta}Pr/{&delta}x`parbylab`bynum2''}-{it:{&delta}Pr/{&delta}x`parbylab`bynum3''}
 							
 							local intcoefpar`bynum2'_`bynum3' `whatcoef'`coef`bynum2'_`bynum3''`sigstar`bynum2'_`bynum3''`intpvalpar`bynum2'_`bynum3''
@@ -1255,11 +1295,11 @@ if `isthereby'==0 {
 }
 
 if `isthereby'==1 {
-	gegen distinctby = group(`by')
+	`ggen' distinctby = group(`by')
 	sum distinctby
 	local maxdistinctby = r(max)
 	local coln = 0
-	levelsof `by', local(bynum)
+	`lvlsof' `by', local(bynum)
 	foreach bynum2 in `bynum' {
 		if `isbyvarlabeled'==1 local legbyvarl`bynum2' `bylab`bynum2''
 		if `isbyvarlabeled'==0 local legbyvarl`bynum2' `by'==`bynum2'
@@ -1407,6 +1447,7 @@ tw `xdistr' `sce' `sc' `cis' `pl', `lscatteropts'
 restore
 }
 end
+
 
 
 

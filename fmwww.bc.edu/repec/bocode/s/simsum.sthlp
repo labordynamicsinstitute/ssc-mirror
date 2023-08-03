@@ -1,4 +1,5 @@
 {smcl}
+{* updated 12jun2023  Ian White}{...}
 {* v2.0  13jan2023  Ian White}{...}
 {viewerjumpto "Syntax" "simsum##syntax"}{...}
 {viewerjumpto "Main options" "simsum##main_options"}{...}
@@ -11,6 +12,7 @@
 {viewerjumpto "Example" "simsum##example"}{...}
 {viewerjumpto "Errata" "simsum##errata"}{...}
 {viewerjumpto "References" "simsum##refs"}{...}
+{viewerjumpto "Citation" "simsum##citation"}{...}
 {viewerjumpto "Author and updates" "simsum##updates"}{...}
 {title:Title}
 
@@ -31,9 +33,8 @@ and the power to reject a null hypothesis.
 Monte Carlo errors are available for all estimated quantities.
 
 {p 4 4 2}
-The methods are described in a {help simsum##White++10:Stata Journal article}. 
+This is a user-written command: please cite {help simsum##citation:our paper}, which also gives more details of the methods.
 Please also see our {help simsum##Morris++19:tutorial} on simulation studies.
-If you use this programme in a publication, please cite the {help simsum##White++10:Stata Journal article}. 
 
 
 {title:Syntax}{marker syntax}
@@ -270,12 +271,26 @@ Stat Med. 2019;38(11):2074-2102.
 {browse "http://doi.wiley.com/10.1002/sim.8086"}
 
 
+{title:Citation}{marker citation}
+
+{phang}If you find this command useful, please cite it as below (and please check for updates): 
+
+{phang}White IR. 
+simsum: Analyses of simulation studies including Monte Carlo error. 
+Stata J. 2010; 10: 369-385. 
+{browse "http://www.stata-journal.com/article.html?article=st0200"}
+
+
 {title:Author and updates}{marker updates}
 
 {phang}Ian White, MRC Clinical  Trials Unit at UCL, London, UK. 
 Email {browse "mailto:ian.white@ucl.ac.uk":ian.white@ucl.ac.uk}.
 
-{phang}You can get the latest version of this and my other Stata software from github. 
-See {browse "https://github.com/UCL/simsum"}.
+{phang}You can get the latest version of this package by visiting {browse "https://github.com/UCL/simsum"}
+or within Stata by running 
+{stata "net from https://raw.githubusercontent.com/UCL/simsum/main/package/"}.
+
+{phang}You can browse my other Stata software using 
+{stata "net from http://www.homepages.ucl.ac.uk/~rmjwiww/stata/"}.
 
 

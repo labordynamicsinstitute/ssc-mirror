@@ -33,6 +33,7 @@ p betterbar module to produce bar graphs with optional standard error bars and c
 p bfmcorr module for correcting surveys using tax data 
 p bgshade module to add background shading to twoway plots using either dummy variable(s) denoting shaded areas and/or precoded NBER recessions
 p bgtest module to calculate Breusch-Godfrey test for serial correlation
+p bhapkar module to compute Bhapkar's test of marginal homogeneity between two raters for categorical observations
 p bhatt module to compute Bhattacharyya Coefficient and Bhattacharyya Distance statistics of distribution overlap
 p biasepi module to perform simple bias analysis, multidimensional bias analysis, and multiple bias modeling
 p bibrep module to produce a bibliometric report on a single senior researcher
