@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0  04jul2023}{...}
+{* *! version 1.1  07jul2023}{...}
 {viewerjumpto "Syntax" "styletextab##syntax"}{...}
 {viewerjumpto "Description" "styletextab##description"}{...}
 {viewerjumpto "Options" "styletextab##options"}{...}
@@ -29,9 +29,11 @@
 {synoptline}
 {synopt:{opt frag:ment}}keep only LaTeX {it:tabular} environment{p_end}
 {synopt:{opt table:only}}keep only LaTeX {it:table} environment{p_end}
-{synopt:[{opt no:]}{opt book:tabs}}specify whether to use LaTeX booktabs rules (default is {opt booktabs}){p_end}
+{synopt:[{cmd:no}]{opt book:tabs}}specify whether to use LaTeX booktabs rules (default is {opt booktabs}){p_end}
 {synopt:{opt lab:el}{cmd:(}{it:marker}{cmd:)}}label the table for cross-referencing{p_end}
 {synopt:{opt ls:cape}}wrap the table in a LaTeX {it:landscape} environment{p_end}
+{synopt:{opt geometry}[{cmd:(}{it:pkgopts}{cmd:)}]}load LaTeX geometry package to customize page layout{p_end}
+{synopt:{opt lipsum}[{cmd:(}{it:pkgopts}{cmd:)}]}load LaTeX lipsum package to produce dummy text{p_end}
 {synopt:{opt before:text}{cmd:(}{it:string}{cmd:)}}add text before table{p_end}
 {synopt:{opt after:text}{cmd:(}{it:string}{cmd:)}}add text after table{p_end}
 
@@ -54,7 +56,7 @@ It can save the output to any .tex file specified by the {opt saving()} option.
 The file suffixes are optional, as .tex is assumed by default.
 If the {opt using} option is not provided,
 {cmd:styletextab} assumes the intention to modify the most recently exported LaTeX table.
-Similarly, if the {opt saving} option is omitted,
+Similarly, if the {opt saving()} option is omitted,
 {cmd: styletextab} assumes the intention to overwrite the original file.
 
 
@@ -89,7 +91,24 @@ Similarly, if the {opt saving} option is omitted,
 {cmd:lscape} invokes LaTeX's {bf:pdflscape} package to wrap the table in a landscape layout. This makes it easier to view tables that are too wide to fit in a portait page (for example, regression comparison tables with more than 5-6 models).
 
 {phang}
-{cmd:beforetext(}string{cmd:)} and {cmd:aftertext(}string{cmd:)} add separate lines of text before and after the table (relevant only if {opt fragment} and {opt tableonly} options are omitted).
+{cmd:geometry}[{cmd:(}{it:pkgopts}{cmd:)}] invokes LaTeX's
+{browse "https://ftp.heanet.ie/mirrors/ctan.org/tex/macros/latex/contrib/geometry/geometry.pdf":geometry}
+package to customize page layout.
+The default is to insert {bf:geometry} package by itself without any option. Alternatively, use {it:pkgopts} to specify package options.
+
+{phang}
+{cmd:lipsum}[{cmd:(}{it:pkgopts}{cmd:)}] invokes LaTeX's
+{browse "https://ftp.heanet.ie/mirrors/ctan.org/tex/macros/latex/contrib/lipsum/lipsum.pdf":lipsum}
+package to produce dummy text in {opt beforetext()} and {opt aftertext()}.
+This is useful for simulating content around a table to visualize how it would appear within a document.
+The default is to insert {bf:lipsum} package by itself without any option. Alternatively, use {it:pkgopts} to specify package options.
+
+{phang}
+{cmd:beforetext(}string{cmd:)} and {cmd:aftertext(}string{cmd:)}
+add the text {it:string} before and after the table
+(relevant only if {opt fragment} and {opt tableonly} options are omitted).
+{cmd:beforetext()} and {cmd:aftertext()} may be repeated
+to add multiple paragraphs separated by an empty line.
 
 
 {marker remarks}{...}
@@ -131,7 +150,7 @@ by wrapping tables within the {bf:\landscape} environment of
 
 {pstd}
 {cmd:styletextab} operates by dissecting a .tex table file into its constituent sections
-and utilizes {help file} commands to reformat and improve the look of the tables.
+and utilizing {help file} commands to reformat and improve the look of the tables.
 An advantage of {cmd:styletextab} is its ability to transition seamlessly between
 different modes without the need to recreate the table from scratch.
 
@@ -157,19 +176,31 @@ different modes without the need to recreate the table from scratch.
 {pstd}Switch to landscape and save it as a different file:{p_end}
 {phang}{cmd:. styletextab using mytable, saving(mytable_lscape) lscape}{p_end}
 
-{pstd}Add a label marker, and some text before and after table:{p_end}
+{pstd}Add a label marker and some text before and after the table:{p_end}
 {phang}{cmd:. styletextab, {space 41} ///}{p_end}
 {phang}{cmd:> {space 4}label(fig:reg1){space 35} ///}{p_end}
 {phang}{cmd:> {space 4}before(Table~\ref{fig:reg1} presents regressions.) ///}{p_end}
 {phang}{cmd:> {space 4}after(This text comes after Table~\ref{fig:reg1}.)}{p_end}
 
-{pstd}Table environment only:{p_end}
-{phang}{cmd:. styletextab, tableonly}{p_end}
-{pstd}{it:(going back to standalone document from mytable.tex would keep caption and footnotes)}
+{pstd}Add multiple paragraphs of text and increase page margins:{p_end}
+{phang}{cmd:. styletextab, {space 52} ///}{p_end}
+{phang}{cmd:> {space 4}label(fig:reg1){space 46} ///}{p_end}
+{phang}{cmd:> {space 4}geometry(margin=1in){space 41} ///}{p_end}
+{phang}{cmd:> {space 4}lipsum(auto-lang=true){space 39} ///}{p_end}
+{phang}{cmd:> {space 4}before(\section*{Regression models}){space 25} ///}{p_end}
+{phang}{cmd:> {space 4}before(Table~\ref{fig:reg1} presents regressions.{space 12} ///}{p_end}
+{phang}{cmd:> {space 11}These regressions are very interesting. \lipsum[1]){space 3} ///}{p_end}
+{phang}{cmd:> {space 4}before(Let's see how they look:){space 29} ///}{p_end}
+{phang}{cmd:> {space 4}after(This text comes after Table~\ref{fig:reg1}. \lipsum[2]) ///}{p_end}
+{phang}{cmd:> {space 4}after(\lipsum[3])}{p_end}
 
-{pstd}Tabular environment only:{p_end}
+{pstd}Keep the {it:table} environment only:{p_end}
+{phang}{cmd:. styletextab, tableonly}{p_end}
+{pstd}{it:(going back to the standalone document format from mytable.tex would retain the caption and footnotes)}
+
+{pstd}Keep the {it:tabular} environment only:{p_end}
 {phang}{cmd:. styletextab, fragment}{space 1}{p_end}
-{pstd}{it:(going back to standalone document from mytable.tex would not include caption and footnotes)}
+{pstd}{it:(going back to the standalone document format from mytable.tex would discard the caption and footnotes)}
 
 
 {marker author}{...}

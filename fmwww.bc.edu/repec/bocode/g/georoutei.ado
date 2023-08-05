@@ -1,9 +1,9 @@
 **************************************************
 ** Sylvain Weber, Martin Péclat & August Warren **
-**        This version: January 5, 2022         **
+**        This version: August 2, 2023          **
 **************************************************
 
-*! version 4.0 by Sylvain Weber, Martin Péclat & August Warren 22nov2021
+*! version 4.1 by Sylvain Weber, Martin Péclat & August Warren 02aug2023
 /*
 Revision history:
 - version 1.1 (2nov2016):
@@ -38,6 +38,11 @@ Revision history:
 	  "publicTransportTimeTable".
 	- Possibility to use hereid(APP ID) and herecode(APP CODE) instead of 
 	  herekey(API KEY) suppressed.
+- version 4.1 (02aug2023)
+	- Adjustments following HERE migration from https://developer.here.com to https://platform.here.com:
+		- URL links for geocoding
+		- Columns in JSON requests
+		- Method for controlling HERE credentials
 */
 
 
@@ -80,11 +85,14 @@ if _rc==111 {
 
 *HERE credentials must be valid and internet connection is required
 *Check HERE credentials using a (wrong) query
-local here_check = "https://geocoder.ls.hereapi.com/6.2/geocode.json?searchtext=outofearth&apiKey=`herekey'"
+*local here_check = "https://geocoder.ls.hereapi.com/6.2/geocode.json?searchtext=outofearth&apiKey=`herekey'" // developer
+local here_check = "https://geocode.search.hereapi.com/v1/geocode?q=paris&apiKey=`herekey'" // platform
 tempvar checkok 
 qui: gen str240 `checkok' = ""
-qui: insheetjson `checkok' using "`here_check'", columns("Response:MetaInfo:Timestamp") flatten replace
-if `checkok'[1]=="" {
+*qui: insheetjson `checkok' using "`here_check'", columns("Response:MetaInfo:Timestamp") flatten replace // developer
+qui: insheetjson `checkok' using "`here_check'", columns("items:1:address:countryCode") flatten replace // platform
+*if `checkok'[1]=="" {
+if `checkok'[1]!="FRA" {
 	*Check internet connection
 	preserve
 	cap: webuse auto, clear
@@ -279,7 +287,8 @@ if inlist("`tmode'","publicTransit","pedestrian","bicycle") & "`avoid'"!="" {
 
 *** Calculate travel distance and time ***
 *Prepare url links
-local xy_url = "https://geocoder.ls.hereapi.com/6.2/geocode.json?responseattributes=matchCode&searchtext="
+*local xy_url = "https://geocoder.ls.hereapi.com/6.2/geocode.json?responseattributes=matchCode&searchtext=" // developer
+local xy_url = "https://geocode.search.hereapi.com/v1/geocode?q=" // platform
 local here_key = "&apiKey=`herekey'"
 
 *Addresses to xy-coordinates (only if addresses are provided, skipped if xy-coordinates are provided)
@@ -293,9 +302,14 @@ foreach p in start end {
 		local xy_request = "`xy_url'" + geturi("`coords'") + "`here_key'"
 		#d ;
 		qui: insheetjson `tmp_x' `tmp_y' using "`xy_request'", 
+			/* 
 			columns("Response:View:1:Result:1:Location:DisplayPosition:Latitude" 
 					"Response:View:1:Result:1:Location:DisplayPosition:Longitude"
-			) 
+			) // developer
+			*/
+			columns("items:1:position:lat" 
+					"items:1:position:lng"
+			) // platform
 			flatten replace
 		;
 		#d cr
@@ -348,6 +362,11 @@ while `tmp_distance'[1]!="[]" { // iterate until the last section of the route
 		if "`km'"=="" local tmpd = `tmpd' + real(`tmp_distance'[1])/1609.344
 		if "`km'"=="km" local tmpd = `tmpd' + real(`tmp_distance'[1])/1000
 		local tmpt = `tmpt' + real(`tmp_time'[1])/60
+	}
+	if `tmp_distance'[1]=="" {
+		local tmpd = .
+		local tmpt = .
+		qui: replace `tmp_distance' = "[]" in 1
 	}
 }
 local distance: di %8.2f `tmpd'

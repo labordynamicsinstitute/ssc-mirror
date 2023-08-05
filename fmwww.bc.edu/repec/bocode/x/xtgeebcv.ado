@@ -1,9 +1,9 @@
-*!version5.2 23May2023
+*!version5.3 03Aug2023
 
 /* -----------------------------------------------------------------------------
 ** PROGRAM NAME: xtgeebcv
-** VERSION: 5.2
-** DATE: MAY 23, 2023
+** VERSION: 5.3
+** DATE: AUGUST 03, 2023
 ** -----------------------------------------------------------------------------
 ** CREATED BY: JOHN GALLIS, FAN LI, LIZ TURNER
 ** -----------------------------------------------------------------------------
@@ -31,6 +31,7 @@
 						 - Only slightly changes the standard error.
 			Dec 03, 2021 - Program wasn't allowing for intercept-only models. Now updated to allow for intercept-only model.
 			May 23, 2023 - Updating program to allow for different ways of computing degrees of freedom
+			Aug 03, 2023 - Updating program to allow for abbreviations in the family and link names, and abbreviations of options
 **			
 ** -----------------------------------------------------------------------------
 ** OPTIONS: SEE HELP FILE
@@ -42,22 +43,64 @@ program define xtgeebcv, eclass
 	
 	#delimit ;
 	syntax varlist(fv min=1) [if] [in], 
-		cluster(varname) [family(string) link(string) stderr(string) statistic(string) corr(string) dfmethod(string) dfspec(integer 0) eform *]
+		CLuster(varname) [Family(string) Link(string) STDerr(string) STATistic(string) corr(string) DFMethod(string) DFSpec(integer 0) eform *]
 	;
 	#delimit cr
 	
 	marksample touse
 	/* \\\\\\\ SET STRING DEFAULTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ */
 	if "`family'" == "" local family "binomial"
+	else if inlist("`family'","b","bi","bin","bino","binom","binomi","binomia","binomial") local family "binomial"
+	else if inlist("`family'","g","ga","gau","gaus","gauss","gaussi","gaussia","gaussian") local family "gaussian"
+	else if inlist("`family'","nor","norm","norma","normal") local family "gaussian"
+	else if inlist("`family'","p","po","poi","pois","poiss","poisso","poisson") local family "poisson"
+	else {
+		di as error "Invalid family specification for xtgeebcv; see help file for options."
+		exit 198
+	}
 	if "`link'" == "" & "`family'"=="binomial"  local link "logit"
-	if "`link'" == "" & "`family'"=="poisson" local link "log"
-	if "`link'" == "" & "`family'"=="gaussian" local link "identity"
+	else if "`link'" == "" & "`family'"=="poisson" local link "log"
+	else if "`link'" == "" & "`family'"=="gaussian" local link "identity"
+	else if inlist("`link'","i","id","ide","iden","ident","identi","identit","identity") local link "identity"
+	else if inlist("`link'","log") local link "log"
+	else if inlist("`link'","logi","logit") local link "logit"
+	else {
+		di as error "Invalid link specification for xtgeebcv; see help file for options."
+		exit 198
+	}
+	
+	if "`family'" == "gaussian" & "`link'" == "identity" {	
+	}
+	else if "`family'" == "poisson" & inlist("`link'","log","identity") {
+	}
+	else if "`family'" == "binomial" & inlist("`link'","log","logit","identity") {
+	}
+	else {
+		di as error "Invalid family-link combination for xtgeebcv; see help file for options."
+		exit 198
+	}
+	
 	if "`stderr'" == "" local stderr "kc"
+
+	if "`stderr'" != "rb" & "`stderr'" != "df" & "`stderr'" != "kc" & "`stderr'" != "md" & "`stderr'" != "fg" & "`stderr'" != "mbn" {
+		di as err "Invalid standard error specification; see help file for options."
+		exit 198
+	}
 	
 	if "`statistic'" == "" local statistic "t"
+	if "`statistic'" != "t" & "`statistic'" != "z" {
+		di as err "Invalid statistic specification; see help file for options."
+		exit 198
+	}
 	if "`corr'" == "" local corr "exch"
-	if "`dfmethod'" == "" local dfmethod "cluster"
-	
+	if "`dfmethod'" != "" & "`statistic'" == "z" {
+		di as error "Note: dfmethod option not used when statistic = z"
+	}
+	if "`dfmethod'" == "" local dfmethod "cluster"	
+	if "`dfmethod'" != "specify" & "`dfmethod'" != "all" & "`dfmethod'" != "cluster" {
+		di as error "Invalid df method selected; see help file for options."
+		exit 198
+	}
 	
 	/* \\\\\ CREATING TEMPFILE SO THAT THE USER GETS THEIR FULL DATASET BACK AT THE END \\\\
 	\\\\\\\\ EVEN IF MISSING VALUES ARE DELETED \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ */
@@ -287,10 +330,6 @@ program define xtgeebcv, eclass
 			else if "`dfmethod'" == "specify" {
 				local dof=nclust[1,1]-`dfspec'
 			}
-			else {
-				di as error "Invalid df method selected; reverting to cluster-level covariates"
-				local dof=nclust[1,1]-`ncoef2'
-			}
 			
 			local nclust = nclust[1,1]
 			local ncoef = ncoef[1,1]
@@ -504,11 +543,6 @@ program define xtgeebcv, eclass
 				_coef_table, `eform' level(`level')
 			}
 		}
-	}
-	
-	if "`stderr'" != "rb" & "`stderr'" != "df" & "`stderr'" != "kc" & "`stderr'" != "md" & "`stderr'" != "fg" & "`stderr'" != "mbn" {
-		di as err "Invalid standard error specification.  See help manual for options."
-		exit 198
 	}
 	
 	*dropping extraneous variables to output dataset

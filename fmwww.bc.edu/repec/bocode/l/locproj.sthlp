@@ -50,7 +50,6 @@ the response at {it:hor = 0} would be equal to 0 and an extra period will be add
 {p 4 8 2}{bf:Remark:} If the shock includes an interaction with a categorical variable, then we must use one of the options
 {opt lcs()} or {opt margins()}.{p_end}
 
-{p 4 8 2}{bf:Note:} {cmd:locproj} requires package {cmd:estout} to be installed. See help {help estout} or click on {stata "ssc install estout"} to install.{p_end}
 
 {marker syntax}{...}
 {title:Syntax}
@@ -204,8 +203,7 @@ enter them alongside the rest of {cmd:locproj} options.{p_end}
 that must change with every step/horizon of the IRF {it:h = 0...hor}.{p_end}
 
 {synopt:{opt noi:sily}}If this option is specified, the command displays a regression output for each one of the horizons. If this option 
-is not specified the command only returns a matrix with the IRF, its standard error and the confidence bands. {cmd:locproj} requires 
-package {cmd:estout} to be installed. See help {help estout} or click on {stata "ssc install estout"} to install {p_end}
+is not specified the command only returns a matrix with the IRF, its standard error and the confidence bands. {p_end}
 
 
 {syntab:{bf:IRF Options:}}
@@ -351,7 +349,7 @@ outputs displayed are not the direct outputs from whatever estimation method we 
 The reason for this is that {cmd: locproj} uses temporary variables whose given names do not have any meaning and would be difficult to 
 understand. {cmd: locproj} generates a new output table with variable names related to the variable list defined by the user. 
 
-{p 4 8 2}{cmd:. locproj gs10 l(0/4).dgs1, h(12) m(newey) hopt(lag) tr(cmlt) yl(3) noisily}{p_end}
+{p 4 8 2}{cmd:. locproj gs10 l(0/4).gs1, h(12) m(newey) hopt(lag) yl(3) noisily}{p_end}
 
 
 {title:Example 1.5. Use of the transformation options}
@@ -459,19 +457,16 @@ they use the "fixed-effect" estimator and a cluster-robust covariance matrix. Th
 they y-axis title, the x-axis label and the title of the graph:{p_end}
 
 {it:Using the transformation option transf() and the fully explicit options:}
-{p 4 8 2}{cmd:. locproj lgdpr, s(l.d.stir) c(l(1/3).d.lcpi) tr(diff) h(4) yl(3) sl(3) fe cluster(iso) z conf(90) gropt(ylabel(-0.4(0.2)0.2) ytitle(Percent)) tti(Year) title(Response of GDPR to 1pp shock to STIR (Cholesky))}{p_end}
+{p 4 8 2}{cmd:. locproj lgdpr, s(l.d.stir) c(l(1/3).d.lcpi) tr(diff) h(4) yl(3) sl(2) fe cluster(iso) z conf(90) gropt(ylabel(-0.4(0.2)0.2) ytitle(Percent)) tti(Year) title(Response of GDPR to 1pp shock to STIR (Cholesky))}{p_end}
 
 {it:Using the existing differentiated variables and a fully automatic specification:}
 {p 4 8 2}{cmd:. locproj l(0/3).dlgdpr l(1/3).dstir l(1/3).d.lcpi, fe cluster(iso) h(4) z conf(90) gropt(ylabel(-0.4(0.2)0.2) ytitle(Percent)) tti(Year) title(Response of GDPR to 1pp shock to STIR (Cholesky))}{p_end}
-
-{it:Directly differentiating the dependent variable and explicit options for the shock and control variables:}
-{p 4 8 2}{cmd:. locproj l(0/3).d.lgdpr, s(l.d.stir) sl(3) c(l(1/3).d.lcpi) fe cluster(iso) h(4) z conf(90) gropt(ylabel(-0.4(0.2)0.2) ytitle(Percent)) tti(Year) title(Response of GDPR to 1pp shock to STIR (Cholesky))}{p_end}
 
 {it:Using the transformation option transf() and the fully automatic options:}
 {p 4 8 2}{cmd:. locproj l(0/3).lgdpr l(1/3).d.stir l(1/3).d.lcpi, fe cluster(iso) tr(diff) h(4) z conf(90) gropt(ylabel(-0.4(0.2)0.2) ytitle(Percent)) tti(Year) title(Response of GDPR to 1pp shock to STIR (Cholesky))}{p_end}
 
 {it:Using the transformation option transf() and a combination of automatic and explicit options:}
-{p 4 8 2}{cmd:. locproj lgdpr l.d.stir l(1/3).d.lcpi, h(4) yl(3) sl(3) fe cluster(iso) tr(diff) z conf(90) gropt(ylabel(-0.4(0.2)0.2) ytitle(Percent)) tti(Year) title(Response of GDPR to 1pp shock to STIR (Cholesky))}{p_end}
+{p 4 8 2}{cmd:. locproj lgdpr l.d.stir l(1/3).d.lcpi, h(4) yl(3) sl(2) fe cluster(iso) tr(diff) z conf(90) gropt(ylabel(-0.4(0.2)0.2) ytitle(Percent)) tti(Year) title(Response of GDPR to 1pp shock to STIR (Cholesky))}{p_end}
 
 {p}In all the previous equivalent five examples, the shock variable is included with a lag and no contemporaneous term (L.D.stir), and thus, the response at {it:hor = 0} is equal to 0 and an extra period is added to 
 the final horizon period.{p_end}
@@ -480,7 +475,7 @@ the final horizon period.{p_end}
 {p}Alternatively, in the next example, when estimating the response of CPI to the short-term interest rate, we just need to change the dependent variable to CPI instead of GDPR in any of the previous examples. 
 We also need to change the number of lags of the control variable, which in this case is the GDP, from (0/3) to (1/3) in order to specify a Cholesky decomposition.{p_end}
 
-{p 4 8 2}{cmd:. locproj lcpi, s(l.d.stir) c(l(0/3).d.lgdpr) tr(diff) h(4) yl(3) sl(3) fe cluster(iso) z conf(90) gropt(ytitle(Percent)) tti(Year) title(Response of CPI to 1pp shock to STIR (Cholesky))}{p_end}
+{p 4 8 2}{cmd:. locproj lcpi, s(l.d.stir) c(l(0/3).d.lgdpr) tr(diff) h(4) yl(3) sl(2) fe cluster(iso) z conf(90) gropt(ytitle(Percent)) tti(Year) title(Response of CPI to 1pp shock to STIR (Cholesky))}{p_end}
 
 
 {p}Finally, in the final exercise, the shock variable is the same as the dependent variable, so it is more convenient to use an explicit option 

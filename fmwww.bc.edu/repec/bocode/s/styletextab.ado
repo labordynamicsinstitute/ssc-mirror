@@ -1,17 +1,33 @@
-*! version 1.0  04jul2023  Gorkem Aksaray <aksarayg@tcd.ie>
+*! version 1.1  07jul2023  Gorkem Aksaray <aksarayg@tcd.ie>
 *! Restyle LaTeX tables exported by the collect suite of commands
 *! 
 *! Changelog
 *! ---------
+*!   [1.1]
+*!     - Allow for multiple paragraphs of text before and after table.
+*!     - Added lipsum() and geometry() options.
 *!   [1.0]
 *!     - Initial public release.
 
 capture program drop styletextab
 program styletextab, rclass
     version 18
-    syntax [using/] [, SAVing(string asis)                  ///
-                       FRAGment TABLEonly LScape noBOOKtabs ///
-                       LABel(string) BEFOREtext(string) AFTERtext(string)]
+    syntax [using/] [, SAVing(string asis)                      ///
+                       FRAGment TABLEonly LScape noBOOKtabs     ///
+                       LABel(string)                            ///
+                       BEFOREtext0(string) AFTERtext0(string)   ///
+                       BEFOREtext1(string) AFTERtext1(string)   ///
+                       BEFOREtext2(string) AFTERtext2(string)   ///
+                       BEFOREtext3(string) AFTERtext3(string)   ///
+                       BEFOREtext4(string) AFTERtext4(string)   ///
+                       BEFOREtext5(string) AFTERtext5(string)   ///
+                       BEFOREtext6(string) AFTERtext6(string)   ///
+                       BEFOREtext7(string) AFTERtext7(string)   ///
+                       BEFOREtext8(string) AFTERtext8(string)   ///
+                       BEFOREtext9(string) AFTERtext9(string)   ///
+                       geometry GEOMETRY2(string)               ///
+                       lipsum LIPSUM2(string)                   ///
+                    ]
     
     if `"`using'"' == "" {
         if `"`s(filename)'"' == "" {
@@ -81,6 +97,9 @@ program styletextab, rclass
     
     * preamble
     file write `tf' "\documentclass{article}" _n
+    if "`geometry'`geometry2'" != "" {
+        file write `tf' "\usepackage[`geometry2']{geometry}" _n
+    }
     if "`lscape'" != "" {
         file write `tf' "\usepackage{pdflscape}" _n
     }
@@ -92,12 +111,20 @@ program styletextab, rclass
     file write `tf' "\usepackage{amsmath}" _n
     file write `tf' "\usepackage{ulem}" _n
     file write `tf' "\usepackage[table]{xcolor}" _n
+    if "`lipsum'`lipsum2'" != "" {
+        file write `tf' "\usepackage[`lipsum2']{lipsum}" _n
+    }
     
     file write `tf' "\begin{document}" _n
     
     * beforetext
-    if "`beforetext'" != "" {
-        file write `tf' _n "`beforetext'" _n(2)
+    if "`beforetext0'" != "" {
+        forvalues i = 0/9 {
+            if "`beforetext`i''" != "" {
+                file write `tf' _n "`beforetext`i''" _n
+            }
+        }
+        file write `tf' _n
     }
     
     } // tableonly
@@ -185,8 +212,13 @@ program styletextab, rclass
     if "`tableonly'" == "" {
     
     * aftertex
-    if "`aftertext'" != "" {
-        file write `tf' _n "`aftertext'" _n(2)
+    if "`aftertext0'" != "" {
+        forvalues i = 0/9 {
+            if "`aftertext`i''" != "" {
+                file write `tf' _n "`aftertext`i''" _n
+            }
+        }
+        file write `tf' _n
     }
     
     file write `tf' "\end{document}" _n

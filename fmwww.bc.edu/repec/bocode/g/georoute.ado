@@ -1,9 +1,9 @@
 **************************************************
 ** Sylvain Weber, Martin Péclat & August Warren **
-**        This version: January 5, 2022         **
+**        This version: August 2, 2023          **
 **************************************************
 
-*! version 4.0 by Sylvain Weber, Martin Péclat & August Warren 05jan2022
+*! version 4.1 by Sylvain Weber, Martin Péclat & August Warren 02aug2023
 /*
 Revision history:
 - version 1.1 (2nov2016):
@@ -47,6 +47,12 @@ Revision history:
 	  "publicTransportTimeTable".
 	- Possibility to use hereid(APP ID) and herecode(APP CODE) instead of 
 	  herekey(API KEY) suppressed.
+- version 4.1 (02aug2023)
+	- Adjustments following HERE migration from https://developer.here.com to https://platform.here.com:
+		- URL links for geocoding
+		- Columns in JSON requests
+		- Method for controlling HERE credentials
+		- Query score [0-1] instead of match code [1,2,3,4]
 */
 
 
@@ -100,11 +106,14 @@ if _rc==111 {
 
 *HERE credentials must be valid and internet connection is required
 *Check HERE credentials using a (wrong) query
-local here_check = "https://geocoder.ls.hereapi.com/6.2/geocode.json?searchtext=outofearth&apiKey=`herekey'"
-tempvar checkok
+*local here_check = "https://geocoder.ls.hereapi.com/6.2/geocode.json?searchtext=outofearth&apiKey=`herekey'" // developer
+local here_check = "https://geocode.search.hereapi.com/v1/geocode?q=paris&apiKey=`herekey'" // platform
+tempvar checkok 
 qui: gen str240 `checkok' = ""
-qui: insheetjson `checkok' using "`here_check'", columns("Response:MetaInfo:Timestamp") flatten replace
-if `checkok'[1]=="" {
+*qui: insheetjson `checkok' using "`here_check'", columns("Response:MetaInfo:Timestamp") flatten replace // developer
+qui: insheetjson `checkok' using "`here_check'", columns("items:1:address:countryCode") flatten replace // platform
+*if `checkok'[1]=="" {
+if `checkok'[1]!="FRA" {
 	*Check internet connection
 	preserve
 	cap: webuse auto, clear
@@ -507,25 +516,25 @@ if "`coordinates'"!="" {
 		if "`startxy'"=="" {
 			cap: drop `start'_x
 			cap: drop `start'_y
-			cap: drop `start'_match
-			confirm new var `start'_x `start'_y `start'_match
+			cap: drop `start'_score
+			confirm new var `start'_x `start'_y `start'_score
 		}
 		if "`endxy'"=="" {
 			cap: drop `end'_x
 			cap: drop `end'_y
-			cap: drop `end'_match
-			confirm new var `end'_x `end'_y `end'_match
+			cap: drop `end'_score
+			confirm new var `end'_x `end'_y `end'_score
 		}
 	}
 	if "`startxy'"=="" {
 		qui: gen `start'_x = ""
 		qui: gen `start'_y = ""
-		qui: gen `start'_match = ""
+		qui: gen `start'_score = ""
 	}
 	if "`endxy'"=="" {
 		qui: gen `end'_x = ""
 		qui: gen `end'_y = ""
-		qui: gen `end'_match = ""
+		qui: gen `end'_score = ""
 	}
 	if ("`startxy'"!="" & "`endxy'"!="") {
 		if !`warnings' {
@@ -538,22 +547,22 @@ if "`coordinates'"!="" {
 
 if "`coordinates'"=="" {
 	if "`startxy'"=="" {
-		tempvar start_match
-		qui: gen `start_match' = ""
+		tempvar start_score
+		qui: gen `start_score' = ""
 	}
 	if "`endxy'"=="" {
-		tempvar end_match
-		qui: gen `end_match' = ""
+		tempvar end_score
+		qui: gen `end_score' = ""
 	}
 }
 
 *** Calculate travel distance and time ***
 
 *Create temporary variables that will be used for insheetjson in following loop
-tempvar tmp_x tmp_y tmp_matchlevel
+tempvar tmp_x tmp_y tmp_scorelevel
 qui: gen str240 `tmp_x' = ""
 qui: gen str240 `tmp_y' = ""
-qui: gen str240 `tmp_matchlevel' = ""
+qui: gen str240 `tmp_scorelevel' = ""
 tempvar tmp_time tmp_distance
 qui: gen str240 `tmp_distance' = ""
 qui: gen str240 `tmp_time' = ""
@@ -586,7 +595,8 @@ forv i = 1/`=_N' {
 		if !`dtimevar' local dtimeapi = "`dtimeapi'"
 
 		*Prepare url links
-		local xy_url = "https://geocoder.ls.hereapi.com/6.2/geocode.json?responseattributes=matchCode&searchtext="
+		*local xy_url = "https://geocoder.ls.hereapi.com/6.2/geocode.json?responseattributes=matchCode&searchtext=" // developer
+		local xy_url = "https://geocode.search.hereapi.com/v1/geocode?q=" // platform
 		local here_key = "&apiKey=`herekey'"
 		local route_url = "https://router.hereapi.com/v8/routes?apiKey=`herekey'"
 		local heresummary = "summary"
@@ -602,11 +612,17 @@ forv i = 1/`=_N' {
 				local coords = ``p'_address'[`i']
 				local xy_request = "`xy_url'" + geturi("`coords'") + "`here_key'"
 				#d ;
-				qui: insheetjson `tmp_x' `tmp_y' `tmp_matchlevel' using "`xy_request'", 
+				qui: insheetjson `tmp_x' `tmp_y' `tmp_scorelevel' using "`xy_request'", 
+					/*
 					columns("Response:View:1:Result:1:Location:DisplayPosition:Latitude" 
 							"Response:View:1:Result:1:Location:DisplayPosition:Longitude" 
 							"Response:View:1:Result:1:MatchCode"
-							) 
+							) // developer
+					*/
+					columns("items:1:position:lat" 
+							"items:1:position:lng"
+							"items:1:scoring:queryScore"
+					) // platform
 					flatten replace
 				;
 				#d cr
@@ -615,15 +631,15 @@ forv i = 1/`=_N' {
 				if "`coordinates'"!="" & "``p'xy'"=="" {
 					qui: replace ``p''_x = `tmp_x'[1] in `i'
 					qui: replace ``p''_y = `tmp_y'[1] in `i'
-					qui: replace ``p''_match = `tmp_matchlevel'[1] in `i'
+					qui: replace ``p''_score = `tmp_scorelevel'[1] in `i'
 				}
 				if "`coordinates'"=="" & "``p'xy'"=="" {											
-					qui: replace ``p'_match' = `tmp_matchlevel'[1] in `i'
+					qui: replace ``p'_score' = `tmp_scorelevel'[1] in `i'
 				}
 				*Empty temporary variables before next loop
 				qui: replace `tmp_x' = ""
 				qui: replace `tmp_y' = ""
-				qui: replace `tmp_matchlevel' = ""
+				qui: replace `tmp_scorelevel' = ""
 			}
 			if "``p'xy'"!="" {
 				local `p'_coord = ``p'_xy'[`i']
@@ -644,7 +660,7 @@ forv i = 1/`=_N' {
 			if inlist("`tmodeapi'","publicTransit") {
 				local route_request = "`route_url'" + "&origin=" + "`s'" + "&destination=" + "`e'" + "&return=travelSummary&departureTime=`dtimeapi'"
 			}
-			
+
 			local tmpd = 0
 			local tmpt = 0
 			local j = 0
@@ -662,6 +678,11 @@ forv i = 1/`=_N' {
 					if "`km'"=="" local tmpd = `tmpd' + real(`tmp_distance'[1])/1609.344
 					if "`km'"=="km" local tmpd = `tmpd' + real(`tmp_distance'[1])/1000
 					local tmpt = `tmpt' + real(`tmp_time'[1])/60
+				}
+				if `tmp_distance'[1]=="" {
+					local tmpd = .
+					local tmpt = .
+					qui: replace `tmp_distance' = "[]" in 1
 				}
 			}
 			qui: replace `distance' = `tmpd' in `i'
@@ -683,6 +704,7 @@ if "`coordinates'"!="" {
 			la var ``p''_x "x-coordinate of `=cond("`p'"=="start","starting","ending")' address"
 			qui: destring ``p''_y, replace
 			la var ``p''_y "y-coordinate of `=cond("`p'"=="start","starting","ending")' address"
+			/*
 			la var ``p''_match "Match code for `=cond("`p'"=="start","starting","ending")' address"
 			qui: replace ``p''_match = "1" if ``p''_match=="exact"
 			qui: replace ``p''_match = "2" if ``p''_match=="ambiguous"
@@ -692,6 +714,8 @@ if "`coordinates'"!="" {
 			cap: la drop matchcode
 			la def matchcode 1 "exact" 2 "ambiguous" 3 "upHierarchy" 4 "ambiguousUpHierarchy"
 			la val ``p''_match matchcode
+			*/
+			la var ``p''_score "Query score [0-1] for `=cond("`p'"=="start","starting","ending")' address"
 		}
 	}
 }
@@ -700,30 +724,30 @@ la var `diagnostic' "Diagnostic code (georoute)"
 qui: replace `diagnostic' = 0 if !mi(`distance')
 if "`coordinates'"=="" {
 	if "`startaddress'"!="" & "`endaddress'"!="" {
-		qui: replace `diagnostic' = 1 if mi(`distance') & !mi(`start_match') & !mi(`end_match')
-		qui: replace `diagnostic' = 2 if mi(`distance') & (mi(`start_match') | mi(`end_match'))
+		qui: replace `diagnostic' = 1 if mi(`distance') & !mi(`start_score') & !mi(`end_score')
+		qui: replace `diagnostic' = 2 if mi(`distance') & (mi(`start_score') | mi(`end_score'))
 	}
 	if "`startxy'"!="" & "`endaddress'"!="" {
-		qui: replace `diagnostic' = 1 if mi(`distance') & `start_xy'!="," & !mi(`end_match')
-		qui: replace `diagnostic' = 2 if mi(`distance') & mi(`end_match')
+		qui: replace `diagnostic' = 1 if mi(`distance') & `start_xy'!="," & !mi(`end_score')
+		qui: replace `diagnostic' = 2 if mi(`distance') & mi(`end_score')
 	}
 	if "`startaddress'"!="" & "`endxy'"!="" {
-		qui: replace `diagnostic' = 1 if mi(`distance') & !mi(`start_match') & `end_xy'!=","
-		qui: replace `diagnostic' = 2 if mi(`distance') & mi(`start_match')
+		qui: replace `diagnostic' = 1 if mi(`distance') & !mi(`start_score') & `end_xy'!=","
+		qui: replace `diagnostic' = 2 if mi(`distance') & mi(`start_score')
 	}
 }
 if "`coordinates'"!="" {
 	if "`startaddress'"!="" & "`endaddress'"!="" {
-		qui: replace `diagnostic' = 1 if mi(`distance') & !mi(`start'_match) & !mi(`end'_match)
-		qui: replace `diagnostic' = 2 if mi(`distance') & (mi(`start'_match) | mi(`end'_match))
+		qui: replace `diagnostic' = 1 if mi(`distance') & !mi(`start'_score) & !mi(`end'_score)
+		qui: replace `diagnostic' = 2 if mi(`distance') & (mi(`start'_score) | mi(`end'_score))
 	}
 	if "`startxy'"!="" & "`endaddress'"!="" {
-		qui: replace `diagnostic' = 1 if mi(`distance') & `start_xy'!="," & !mi(`end'_match)
-		qui: replace `diagnostic' = 2 if mi(`distance') & mi(`end'_match)
+		qui: replace `diagnostic' = 1 if mi(`distance') & `start_xy'!="," & !mi(`end'_score)
+		qui: replace `diagnostic' = 2 if mi(`distance') & mi(`end'_score)
 	}
 	if "`startaddress'"!="" & "`endxy'"!="" {
-		qui: replace `diagnostic' = 1 if mi(`distance') & !mi(`start'_match) & `end_xy'!=","
-		qui: replace `diagnostic' = 2 if mi(`distance') & mi(`start'_match)
+		qui: replace `diagnostic' = 1 if mi(`distance') & !mi(`start'_score) & `end_xy'!=","
+		qui: replace `diagnostic' = 2 if mi(`distance') & mi(`start'_score)
 	}
 }
 if "`startxy'"!="" & "`endxy'"!="" {

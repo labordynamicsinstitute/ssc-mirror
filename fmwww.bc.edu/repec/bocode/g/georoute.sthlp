@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 4.0 05jan2022}{...}
+{* *! version 4.1 02aug2023}{...}
 {cmd:help georoute}{right: ({browse "https://doi.org/10.1177/1536867X221083857":SJ22-1: dm0092_1})}
 {hline}
 
@@ -53,7 +53,7 @@ Command with immediate arguments:{p_end}
 {p2coldent: ° {opth di:stance(newvar)}}new variable to record travel distance{p_end}
 {p2coldent: ° {opth ti:me(newvar)}}new variable to record travel time{p_end}
 {p2coldent: ° {opth diag:nostic(newvar)}}new variable to record diagnostic code{p_end}
-{p2coldent: ° {opt co:ordinates(str1 str2)}}prefixes of new variables to record coordinates and match code{p_end}
+{p2coldent: ° {opt co:ordinates(str1 str2)}}prefixes of new variables to record coordinates and query score{p_end}
 {p2coldent: ° {opt replace}}overwrite existing variables{p_end}
 
 {syntab:Reporting}
@@ -248,16 +248,14 @@ named {cmd:georoute_diagnostic}.
 
 {phang}
 {cmd:coordinates(}{it:str1 str2}{cmd:)} creates new variables
-{it:str1}{cmd:_x}, {it:str1}{cmd:_y}, {it:str1}{cmd:_match},
-{it:str2}{cmd:_x}, {it:str2}{cmd:_y}, and {it:str2}{cmd:_match}, which contain
-the coordinates and the match code of the starting ({it:str1}{cmd:_x},
-{it:str1}{cmd:_y}, {it:str1}{cmd:_match}) and ending ({it:str2}{cmd:_x},
-{it:str2}{cmd:_y}, {it:str2}{cmd:_match}) addresses.  This option is
+{it:str1}{cmd:_x}, {it:str1}{cmd:_y}, {it:str1}{cmd:_score},
+{it:str2}{cmd:_x}, {it:str2}{cmd:_y}, and {it:str2}{cmd:_score}, which contain
+the coordinates and the query score of the starting ({it:str1}{cmd:_x},
+{it:str1}{cmd:_y}, {it:str1}{cmd:_score}) and ending ({it:str2}{cmd:_x},
+{it:str2}{cmd:_y}, {it:str2}{cmd:_score}) addresses.  This option is
 irrelevant if geographical coordinates (rather than addresses) are provided.
-By default, coordinates and match code are not saved.  The match code
-indicates how well the result matches the request in a 4-point scale: {cmd:1}
-= {cmd:exact}, {cmd:2} = {cmd:ambiguous}, {cmd:3} = {cmd:upHierarchy}, and
-{cmd:4} = {cmd:ambiguousUpHierarchy}.
+By default, coordinates and query score are not saved.  The query score is a value 
+from 0 to 1 representing the percentage of the input that matched the returned address.
 
 {phang}
 {opt replace} specifies that the variables in {cmd:distance()}, {cmd:time()},
@@ -296,7 +294,7 @@ observations were discarded and why.
 {pstd}Input some data{p_end}
 {phang2}{cmd:. input str60 address1 str60 address2 str20 vehicle}{p_end}
 {phang2}{cmd:. "Rue de la Tambourine 17, 1227 Carouge, Switzerland" "Rue Abram-Louis Breguet 2, 2000 Neuchatel, Switzerland" "car"}{p_end}
-{phang2}{cmd:. "Rue de la Tambourine 17, 1227 Carouge, Switzerland" "Rue Abram-Louis Breguet 2, 2000 Neuchatel, Switzerland" "publicTransport"}{p_end}
+{phang2}{cmd:. "Rue de la Tambourine 17, 1227 Carouge, Switzerland" "Rue Abram-Louis Breguet 2, 2000 Neuchatel, Switzerland" "publicTransit"}{p_end}
 {phang2}{cmd:. "Rue de la Tambourine 17, 1227 Carouge, Switzerland" "Rue Abram-Louis Breguet 2, 2000 Neuchatel, Switzerland" "bicycle"}{p_end}
 {phang2}{cmd:. "1003 Lausanne, Switzerland" "74500 Evian, France" "car"}{p_end}
 {phang2}{cmd:. "Paris, France" "New York, USA" "car"}{p_end}

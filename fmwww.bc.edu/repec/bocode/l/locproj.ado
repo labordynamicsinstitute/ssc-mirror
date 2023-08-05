@@ -1,7 +1,6 @@
+*! version 2 August 03 2023
 * First Version May 10 2023
-* This Version June 26 2023
-
-program locproj, rclass
+program locproj, eclass
 version 13.0:
 
 	syntax varlist (fv ts) [if] [in], [Hor(numlist integer) Shock(varlist fv ts) Controls(varlist fv ts) FControls(varlist fv ts) Met(string) /*
@@ -148,12 +147,14 @@ if `iv'==1 & "`instr'"=="" {
 
 *********************************************************************************************************************************************
 *********************************************************************************************************************************************
+
 * levels
 if "`transf'"==""|"`transf'"=="level" {
 	forvalues h = `hran' {
+		loc m = `h'+`chl'
 		tempvar y_h`h'
 		qui gen `y_h`h'' = f`h'.`y'		
-		loc trn`h' "`y'_h`h'"
+		loc trn`h' "`y'_h`m'"
 	}
 	if `ylags'==0 loc ly
 	if `ylags'>0 loc ly L(1/`ylags').`y'
@@ -168,9 +169,10 @@ else if "`transf'"=="diff" {
 	loc ltr=r(varlist)
 	loc ltrn "D.`y'"
 	forvalues h = `hran' {
+		loc m = `h'+`chl'
 		tempvar dy_h`h'
 		qui gen `dy_h`h'' = f`h'.`y' - l.f`h'.`y' 
-		loc trn`h' "D.`y'_h`h'"
+		loc trn`h' "D.`y'_h`m'"
 	}
 	if `ylags==0' loc yl
 	if `ylags'>0 loc ly L(1/`ylags').`dy'
@@ -185,9 +187,10 @@ else if "`transf'"=="cmlt" {
 	loc ltr=r(varlist)
 	loc ltrn "D.`y'"
 	forvalues h = `hran' {
+		loc m = `h'+`chl'
 		tempvar cy_h`h'
 		qui gen `cy_h`h'' = f`h'.`y' - l.`y' 
-		loc trn`h' "cml_`y'_h`h'"
+		loc trn`h' "cml_`y'_h`m'"
 	}
 	if `ylags==0' loc yl
 	if `ylags'>0 loc ly L(1/`ylags').`dy'
@@ -201,9 +204,10 @@ if "`transf'"=="logs" {
 	loc ltr=r(varlist)
 	loc ltrn "ln`y'"
 	forvalues h = `hran' {
+		loc m = `h'+`chl'
 		tempvar lny_h`h'
 		qui gen `lny_h`h'' = ln(f`h'.`y')		
-		loc trn`h' "ln`y'_h`h'"
+		loc trn`h' "ln`y'_h`m'"
 	}
 	if `ylags'==0 loc ly
 	if `ylags'>0 loc ly L(1/`ylags').`lny'
@@ -218,9 +222,10 @@ else if "`transf'"=="logs diff" {
 	loc ltr=r(varlist)
 	loc ltrn "D.ln`y'"
 	forvalues h = `hran' {
+		loc m = `h'+`chl'
 		tempvar dlny_h`h'
 		qui gen `dlny_h`h'' = ln(f`h'.`y') - ln(l.f`h'.`y') 
-		loc trn`h' "D.ln`y'_h`h'"
+		loc trn`h' "D.ln`y'_h`m'"
 	}
 	if `ylags==0' loc yl
 	if `ylags'>0 loc ly L(1/`ylags').`dlny'
@@ -235,9 +240,10 @@ else if "`transf'"=="logs cmlt" {
 	loc ltr=r(varlist)
 	loc ltrn "D.ln`y'"
 	forvalues h = `hran' {
+		loc m = `h'+`chl'
 		tempvar clny_h`h'
 		qui gen `clny_h`h'' = ln(f`h'.`y') - ln(l.`y')
-		loc trn`h' "cml_ln`y'_h`h'"
+		loc trn`h' "cml_ln`y'_h`m'"
 	}
 	if `ylags==0' loc yl
 	if `ylags'>0 loc ly L(1/`ylags').`dlny'
@@ -272,6 +278,11 @@ label var `birf' "`label'"
 *********************************************************************************************************************************************
 qui {
 	forval h=`hran' {
+		if `hs'==0 loc k=`h'+ 1 +`chl'
+		else loc k=`h'+`chl'
+
+		tempname b`h' V`h'
+		
 		if "`hopt'"!="" {
 			if "`fcontrols'"=="" `met' ``y'`h'' `s' `ls' `ly' `c' `if' `in', `hopt'(`h') `mopt' `options'
 			else qui `met' ``y'`h'' `s' `ls' `ly' `c' f`h'.(`fcontrols') `if' `in', `hopt'(`h') `mopt' `options'
@@ -284,19 +295,21 @@ qui {
 			if "`fcontrols'"=="" `met' ``y'`h'' `s' `ls' `ly' `c' `if' `in', `mopt' `options'
 			else qui `met' ``y'`h'' `s' `ls' `ly' `c' f`h'.(`fcontrols') `if' `in', `mopt' `options'
 		}
-		loc df = e(df_m)
-		if `df'==.  loc df = e(df)
 		
-		estimates store `y'`h'
+        matrix `b`h'' = e(b)
+        matrix `V`h'' = e(V)
+		loc cfn : colfullnames e(b)
+		
+		local cfn=regexr("`cfn'","`ltr'","`ltrn'")
+		if `ylags'>1 {
+			forval p=2/`ylags' {
+				local cfn=regexr("`cfn'","`p'\.`ltr'","`p'.`ltrn'")
+			}	
+		}
+        matrix colnames `b`h'' = `cfn'
+        matrix rownames `V`h'' = `cfn'
+        matrix colnames `V`h'' = `cfn'
 
-		if `chl'==0 {
-			if `hs'==0 loc k=`h'+1
-			else loc k=`h'
-		}
-		else {
-			if `hs'==0 loc k=`h'+2
-			else loc k=`h'+1
-		}
 *********************************************************************************************************************************************
 		
 		if "`margins'"=="margins" {
@@ -365,19 +378,17 @@ qui {
 		}
 
 ******************************************************************************************************************************************
-		fvexpand ``y'`h''
-		loc ytemp=r(varlist)
-		
-		`noisily' estout `y'`h', cells("b(label(Coefficient)) se(label(Std.Err.)) t(fmt(2) label(t-stat)) p(fmt(3) label(p-value)) ci_l ci_u") ///
-		substitute("`ltr'" "`ltrn'" "``y'`h''" "`trn`h''") nobase varwidth(20) title("`trn`h''") mlabels("") 
+		ereturn post `b`h'' `V`h''
+        `noisily' di "`trn`h''"
+		`noisily' _coef_table
 	}
+
 }
 
-if `chl'==1 {
-	loc h1 = `h1'+1
-	loc hor = `hor'+1
-	loc hran `hs'/`hor'	
-}
+loc h1 = `h1'+`chl'
+loc hor = `hor'+`chl'
+loc hran `hs'/`hor'	
+
 
 mkmat `birf' if _n<=`h1', mat(BIRF)
 mkmat `seirf' if _n<=`h1', mat(SEIRF)
@@ -468,8 +479,6 @@ if "`panvar'"=="_id_" {
 	qui tsset `timevar'
 }
 
-drop _est*
-
-return matrix irf IRF
+ereturn matrix irf IRF
 
 end
