@@ -53,6 +53,7 @@ p bipolate module to perform bivariate interpolation and smooth surface fitting 
 p birthsim module to simulate completed fertility and birth intervals
 p bitobit module to perform bivariate Tobit regression
 p bivpoisson module to perform seemingly unrelated count regression
+p bivpoisson_ate module to estimate Average Treatment Effects in Seemingly Unrelated Count Regression
 p bking module to implement Baxter-King filter for timeseries data
 p bkrosenblatt module for Blum, Kiefer and Rosenblatt test of bivariate independence
 p blandaltman module to create Bland-Altman plots featuring differences or %differences or ratios, with options to add a variety of lines and intervals

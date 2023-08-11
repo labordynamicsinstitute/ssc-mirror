@@ -1,0 +1,36 @@
+d 'BIVPOISSON_ATE': module to estimate Average Treatment Effects in Seemingly Unrelated Count Regression
+d
+d  When we encounter correlated count-valued outcomes y1 in
+d {0,1,...,M} and y2 in {0,1,...,M}, the identification and
+d estimation of average treatment effects (ATEs) need to account
+d for the correlation structure of the data-generating process. As
+d illustrated by Fisher, Terza, and Zhang (2022), the Stata command
+d bivpoisson estimates deep parameters in count-valued seemingly
+d unrelated regression (count SUR) models via fully parametric MLE.
+d The postestimation command bivpoisson_ate supports the estimation
+d of ATEs, the standard errors of ATEs, and its p-values in our
+d count SUR model. An example is provided to estimate the ATEs of
+d private insurance status on the numbers of physician office
+d visits and non-physician health professional office visits within
+d two weeks. The user will specify outcome y1, outcome y2, a policy
+d variable (must be placed at the first place of the independent
+d variable list), and two vectors of control variables. 
+d
+d KW: average treatment effects
+d KW: count data
+d KW: seemingly unrelated regressions
+d
+d Requires: Stata version 17 and bivpoisson from SSC (q.v.)
+d
+d Distribution-Date: 20230810
+d
+d Author:  Abbie Zhang, Boston University
+d Support: email  abbiezha@@bu.edu
+d
+d Author: James Fisher, NA
+d Support: email  jamescdf@@gmail.com
+d
+f bivpoisson_ate.ado
+f bivpoisson_ate.sthlp
+f bivpoisson_ate_example.do
+f ../h/Health_Data.dta

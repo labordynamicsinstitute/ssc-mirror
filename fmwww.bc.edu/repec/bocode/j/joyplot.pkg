@@ -9,10 +9,12 @@ d KW: ridgeline plot
 d
 d Requires: Stata version 15 and palettes, colrspace from SSC
 d
-d Distribution-Date: 20230618	
+d Distribution-Date: 20230810	
 d
 d Author: Asjad Naqvi, WU Vienna
 d Support: email asjadnaqvi@@gmail.com
 d
 f joyplot.ado
 f joyplot.sthlp
+f ../r/ridgeline.ado
+f ../r/ridgeline.sthlp

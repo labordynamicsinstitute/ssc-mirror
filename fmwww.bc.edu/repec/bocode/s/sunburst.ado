@@ -1,9 +1,11 @@
-*! sunburst v1.2 22 Jan 2023.
-*! Asjad Naqvi 
+*! sunburst v1.4 (05 Aug 2023)
+*! Asjad Naqvi (asjadnaqvi@gmail.com)
 
-* v1.2 22 Jan 2023: colorby() added. colorprop added. threshold() collapse fixed.
-* v1.1 14 Jan 2023: fixed draw order. added error checks. added fade option. for format check. Rest of check. 
-* v1.0 24 Dec 2022: Beta release.
+* v1.4 (05 Aug 2023): Stabilized the sorting to ensure consistency. Added label controls. labprop, saving(), labscale() points() added.
+* v1.3 (23 Jun 2023): labcolor(), cfill(), fixed precision issues. 
+* v1.2 (22 Jan 2023): colorby() added. colorprop added. threshold() collapse fixed.
+* v1.1 (14 Jan 2023): fixed draw order. added error checks. added fade option. for format check. Rest of check. 
+* v1.0 (24 Dec 2022): Beta release.
 
 
 * A Step-by-step guide for a basic version is on Medium:
@@ -18,10 +20,11 @@ version 15
 	syntax varlist(numeric max=1) [if] [in], by(varlist) ///
 		[ RADius(numlist) palette(string) THRESHold(numlist max=1 >=0) share format(str) LABCONDition(numlist max=1 >=0) step(real 5)]   ///
 		[ LWidth(numlist) LColor(string) LABSize(numlist) aspect(real 0.5) xsize(real 2) ysize(real 1)  ]   ///
-		[ legend(passthru) title(passthru) subtitle(passthru) note(passthru) scheme(passthru) name(passthru) text(passthru) ] ///
+		[ legend(passthru) title(passthru) subtitle(passthru) note(passthru) scheme(passthru) name(passthru) text(passthru) saving(passthru) ] ///
 		[ fade(real 60) ]  ///  // v1.1 options
-		[ colorby(string) colorprop ]  // v1.2 updates
-		
+		[ colorby(string) colorprop ] ///  // v1.2 updates
+		[ LABColor(string) cfill(string) ]  ///  // v1.3 updates
+		[ LABLayer(numlist) points(real 100) labprop labscale(real 1) ]   // v1.4
 	
 		
 	// check dependencies
@@ -32,8 +35,7 @@ version 15
 	}
 	
 	// check errors
-	
-	
+
 	if "`colorby'" != "" {
 		if !inlist("`colorby'", "name") {
 			di as error "Wrong colorby() option specified. Correct options are {it:name}. See {stata help sunburst:help file}."
@@ -161,16 +163,12 @@ preserve
 	collapse (sum) value, by(`vars')
 
 	gen var0 = "Total"
-	egen long val0 = sum(value)  // global total
-	format val0 %15.0fc
-
-
+	egen double val0 = sum(value)  // global total
 	
 	if `len' > 1 {
 		forval i = 1/`second' {   
 			local j = `i' - 1
-			bysort var`j' var`i' : egen long val`i' = sum(value)
-			format val`i' %15.0fc
+			bysort var`j' var`i' : egen double val`i' = sum(value)
 		}
 	}
 
@@ -179,21 +177,18 @@ preserve
 		
 	// define the new sorting here
 	forval i = 1/`len' {
-		local mysort `mysort' -val`i'
+		local mysort `mysort' -val`i' var`i'
 	}
 	
 	gsort `mysort' 
 	gen order0 = 1 in 1
-
 	
-	*if `len' > 1 {	
 		forval i = 1/`len' {
 			
 			local j = `i' - 1
-			local bylist `bylist' var`j'
-				
+						
 			egen tag`i' = tag(var`j' var`i')
-			gen order`i' = sum(var`i'!=var`i'[_n-1]  )	
+			gen order`i' = sum(tag`i')  
 			
 			if "`colorby'" == "name" {
 				encode var`i', gen(l`i'name)  // patch higher tier ids to lower tiers	
@@ -202,25 +197,12 @@ preserve
 				gen l`i'name = order`i'
 			}
 			
-			
 		}
-	/*
-	}
-	else {
-		egen tag1 = tag(var0 var1)
-		gen order1 = sum(var1!=var1[_n-1]  )	
-		
-		if "`colorby'" == "name" {
-			encode var1, gen(l1name)  // patch higher tier ids to lower tiers	
-		}
-		else {
-			gen l1name = order1
-		}		
 	
-	}
-	*/
 
 	
+	
+		
 	
 	sort order`len'
 	drop if order`len' ==.	
@@ -247,6 +229,8 @@ preserve
 	}
 	drop tag*
 	
+	
+	
 	// duplicate the first row
 	expand 2 in 1
 
@@ -260,6 +244,8 @@ preserve
 	replace rank   = 0 in `obs'
 	sort order`len'
 		
+		
+	
 	// calculate the shares
 	forval i = 0/`len' {
 		gen double share`i' = val`i' / val0 if order`i'!=.
@@ -272,6 +258,8 @@ preserve
 		}
 		drop theta`i'_temp
 	}
+	
+	
 
 	// generate the end points of the pie in polar coordinates
 	forval i = 0/`len' {
@@ -279,18 +267,24 @@ preserve
 		gen double y`i' = `rad`i'' * sin(theta`i')
 	}	
 	
+	
+	
 	gen id = _n
 
-	reshape long var val order share theta x y , i(id *name rank) j(layer) string
+
+	reshape long var val order share theta x y, i(id *name rank) j(layer) string
 	destring layer, replace force
 
 	sort layer id order
-	count
+	*count
 	drop if order==.
 	drop id
 
 	replace order = order + 1
 
+	
+	
+	
 	bysort layer: replace var    =   var[_n+1]			
 	bysort layer: replace val    =   val[_n+1]	
 	bysort layer: replace share  = share[_n+1]		
@@ -351,7 +345,9 @@ preserve
 			
 	****** get the arcs right
 
-	local addobs 100
+	
+	
+	local addobs `points'
 
 	expand `addobs' if id==4  & layer==`z' // & inlist(quad, 1,2)
 
@@ -384,7 +380,7 @@ preserve
 	
 	local inner = `z' - 1
 	
-	local labrad`z' =  `rad`inner'' + (`rad`z'' - `rad`inner'') * 0.50  // place the labels center
+	local labrad`z' =  `rad`inner'' + (`rad`z'' - `rad`inner'') * 0.50  // place the labels in the center
 
 	levelsof order if layer==`z' , local(lvls)
 	local items = r(r) - 1 
@@ -419,19 +415,32 @@ preserve
 			local format %5.2f
 		}
 	}	
-	
-	
+
+
+
 	gen varstr = ""
 	
 	forval i = 1/`len' {
 		if "`share'" == "" {
-			replace varstr = var + " (" + string(val, "`format'") + ")"  if id==1 & layer==`i'
+			replace varstr = var + " (" + string(val, "`format'") + ")"  if id==1 & layer==`i' 
 		}
 		else {
 			replace varstr = var + " (" + string(share * 100, "`format'") + "%)"  if id==1 & layer==`i'
 		}
 	}	
+
+	
+	if "`lablayer'" != "" {
+		local lablayer : subinstr local lablayer " " ",", all 
 		
+		forval i = 1/`len' {
+			replace varstr = var if !inlist(`i', `lablayer') &  id==1 & layer==`i'
+		}
+		
+	}	
+	
+	
+	
 	// generate the quadrants	
 	cap drop quad
 	gen quad = .  // quadrants
@@ -490,7 +499,8 @@ preserve
 	if "`labsize'" != "" {
 		local lbcount : word count `labsize'
 		if `lbcount' < `len' {
-			noi di in yellow "Warning: fewer label sizes specified than the number of layers."
+			noi di in red "Warning: fewer label sizes specified than the number of layers."
+			exit 198
 		}
 		
 		if `len' > 1 {
@@ -513,9 +523,10 @@ preserve
 		local labs`len' 1.5
 	}	
 	
-	if "`lcolor'" == "" local lcolor white
+	if "`lcolor'"   == "" local lcolor   white
+	if "`labcolor'" == "" local labcolor black
+	if "`cfill'"    == "" local cfill    white
 	
-**# drawing
 
 	// base layers
 	if `len' ==1 {
@@ -631,24 +642,54 @@ preserve
 			qui levelsof order if layer==`i' & tag==1, local(lvls)
 
 			foreach x of local lvls {
+				
+				if "`labprop'" != "" {
+					
+					summ share if order== `x' & layer==`i' & tag==1, meanonly
+					
+					local mylabs = `labs`i'' * sqrt(5 * `r(mean)' ^ `labscale')
+				}
+				else {
+					local mylabs `labs`i'' 
+				}
+				
+				
 				summ angle2 if order== `x' & tag==1 & layer==`i', meanonly
-				local labs `labs' (scatter ylab xlab if order== `x'  & layer==`i' & tag==1 `labcon' , mc(none) mlabel(varstr) mlabangle(`r(mean)')  mlabpos(0) mlabsize(`labs`i''))  ||
+				
+				local labs `labs' (scatter ylab xlab if order== `x'  & layer==`i' & tag==1 `labcon' , mc(none) mlabel(varstr) mlabcolor(`labcolor') mlabangle(`r(mean)')  mlabpos(0) mlabsize(`mylabs'))  ||
+				
 			}
 		}	
 	}
 
+	
 	// labels level n
 	qui levelsof order if layer==`len' & tag==1, local(lvls)
 
 	foreach x of local lvls {
 		
+		
+		if "`labprop'" != "" {
+					
+			summ share if order== `x' & layer==`len' & tag==1, meanonly
+					
+			local mylabs = `labs`len'' * sqrt(5 * `r(mean)' ^ `labscale')
+		}
+		else {
+			local mylabs `labs`len'' 
+		}
+		
+		
 		summ angle2 if order== `x' & tag==1 & layer==`len' , meanonly
 		
-			local lab`len' `lab`len'' (scatter ylab xlab if order== `x' & layer==`len' & quad==2 `labcon', mc(none) mlabel(varstr) mlabangle(`r(mean)') mlabpos(0) mlabsize(`labs`len''))  ||
+			local lab`len' `lab`len'' (scatter ylab xlab if order== `x' & layer==`len' & quad==2 `labcon', mc(none) mlabel(varstr) mlabcolor(`labcolor') mlabangle(`r(mean)') mlabpos(0) mlabsize(`mylabs'))  ||
 	
-			local lab`len' `lab`len'' (scatter ylab xlab if order== `x' & layer==`len' & quad==1 `labcon', mc(none) mlabel(varstr) mlabangle(`r(mean)') mlabpos(0) mlabsize(`labs`len''))  ||
+			local lab`len' `lab`len'' (scatter ylab xlab if order== `x' & layer==`len' & quad==1 `labcon', mc(none) mlabel(varstr) mlabcolor(`labcolor') mlabangle(`r(mean)') mlabpos(0) mlabsize(`mylabs'))  ||
 
 	}	
+	
+	
+	di "Check 1"
 	
 	*** Final plot
 	
@@ -657,14 +698,15 @@ preserve
 		`level' ///
 		`lab`len''	 ///
 		`labs'	 ///
-			(function  sqrt(`rad0'^2 - (x)^2), recast(area) fc(white) fi(100) lw(0.15) lc(white) range(-`rad0' `rad0'))  ///
+			(function  sqrt(`rad0'^2 - (x)^2), recast(area) fc(`cfill') fi(100) lw(0.15) lc(`cfill') range(-`rad0' `rad0'))  ///
 			, 															///
 			aspect(`aspect') xsize(`xsize') ysize(`ysize') 								///
 			yscale(off) xscale(off) legend(off) 						///
 			xlabel(-`rad`len'' `rad`len'', nogrid) ylabel(0 `rad`len'', nogrid)	///
-			`text' `title' `note' `subtitle' `name' `scheme'
+			`text' `title' `note' `subtitle' `name' `scheme' `saving'
 	
-		
+
+	*/
 restore	
 }
 
