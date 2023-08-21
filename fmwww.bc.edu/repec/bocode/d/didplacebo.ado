@@ -1,4 +1,4 @@
-*! didplacebo 1.0.0 2023.07.22
+*! didplacebo 1.0.1 2023.08.19
 prog def didplacebo, eclass
 	version 16
     qui xtset
@@ -50,11 +50,9 @@ prog def didplacebo, eclass
 	else loc treatvartip "`treatvar'"
 **# Store treatment effect
 	loc treff = _b["`treatvartip'"]
-	
 	tempname pbounitp pbotimeci pbomixp1 pbomixp2 pbomixp3 b V
 	mata: data = st_data(., "`panelvar' `timevar' `treatvar'"); 
-	qui levelsof `panelvar', local(units)
-	mata: units = strtoreal(tokens(st_local("units")))
+	mata: units = uniqrows(data[., 1])';
 **# In-time Placebo Test
 	if "`pbotime'" != "" {
 		preserve
@@ -110,26 +108,21 @@ prog def didplacebo, eclass
 			di
 			mata: printf("{txt}Implementing" + ("`i'"!="1"? ("`i'"=="2" ? " unrestricted " : " restricted ") : " ") + "mixed placebo test for" + ("`i'"!="1"? " staggered ": " standard ") + "DID (version {res}" + "`i'" + "{txt}) using both fake treatment units and times:\n")
 			if "`ranunitnum'" == "" {
-				qui levelsof `panelvar' if `treatvar' == 1, local(units_tr)
-				qui loc ranunitnum = wordcount("`units_tr'")
+				mata: units_tr = uniqrows(select(data[., 1], data[., 3]))';
+				mata: ranunitnum = cols(units_tr);
 			}
-			mata: ranunitnum = strtoreal(st_local("ranunitnum"))
+			else mata: ranunitnum = strtoreal(st_local("ranunitnum"));
 			if "`rantimescope'" == "" {
-				qui levelsof `timevar', local(times)
-				qui local timenum = wordcount("`times'")
-				qui local timelb = word("`times'", 1)
-				qui local timeub = word("`times'", `timenum')
-				qui levelsof `timevar' if `timevar' >= `timelb' & `timevar' <= `timeub', local(times_ltd)
+				mata: time = uniqrows(data[., 2])'; timelb = min(time); timeub = max(time);
 			}
-			else mata: tmp = tokens("`rantimescope'"); st_local("timelb", tmp[1]); st_local("timeub", tmp[2]);
+			else mata: tmp = tokens("`rantimescope'"); timelb = strtoreal(tmp[1]); timeub = strtoreal(tmp[2]);
 			mata: printf(("`i'"!="3"?"{hline 34}{c TT}{hline 38}\n": "{hline 38}\n"))
 			mata: printf(("`i'"!="3"?"{txt}   The number of units randomly   {c |}     The range within which fake      \n": "{txt}     The range within which fake      \n"))
 			mata: printf(("`i'"!="3"?"{txt} selected as fake treatment units {c |} treatment times are randomly selected\n":"{txt} treatment times are randomly selected\n"))
 			mata: printf(("`i'"!="3"?"{hline 34}{c +}{hline 38}\n":"{hline 38}\n"))
-			mata: if("`i'"!="3") printf("%18.0f{space 16}{c |}", ranunitnum); printf("%~38uds\n", ("[" + st_local("timelb") + ", " + st_local("timeub") + "]"));
+			mata: if("`i'"!="3") printf("%18.0f{space 16}{c |}", ranunitnum); printf("%~38uds\n", ("[" + strofreal(timelb) + ", " + strofreal(timeub) + "]"));
 			mata: printf(("`i'"!="3"?"{hline 34}{c BT}{hline 38}\n":"{hline 38}\n"))
-			qui levelsof `timevar' if `timevar' >= `timelb' & `timevar' <= `timeub', local(times_ltd)
-			mata: times_ltd = strtoreal(tokens(st_local("times_ltd")))
+			mata: times_ltd = uniqrows(select(data[., 2], (data[., 2]:>=timelb):&(data[.,2]:<=timeub)))';
 			mata: CoefOfPboMix`i' = didplacebo_mixPBOTEST(data, "`panelvar'", "`timevar'", "`treatvar'", "`treatvartip'", ranunitnum, units, times_ltd, "`cmdline'", strtoreal("`repeat'"), strtoreal("`seed'"), strtoreal("`i'"))
 			frame `frame': mata: st_store(., st_addvar("double", "CoefOfPboMix`i'"), CoefOfPboMix`i')
 			mata: st_local("pbomixp", (("`i'" == "1") ? "`pbomixp1'" : (("`i'" == "2") ? "`pbomixp2'" : "`pbomixp3'")))
@@ -143,7 +136,7 @@ prog def didplacebo, eclass
 			mata: st_local("gphtitle", ("`i'"!="1"? ("`i'"=="2" ? "Unrestricted " : "Restricted ") : "") + "Mixed Placebo Test for" + ("`i'"!="1"? " Staggered ": " Standard ") + "DID")
 			frame `frame': graph twoway (kdensity CoefOfPboMix`i') ///
 				(histogram CoefOfPboMix`i', fcolor(gs8%50) lcolor(white) lalign(center) below), ///
-				xline(0,lp(dash)) xline(`treff', lp(solid)) xtitle("distribution of placebo effects") ytitle("density") xsc(r(-`xmax' `xmax')) ///
+				xline(0, lp(dash)) xline(`treff', lp(solid)) xtitle("distribution of placebo effects") ytitle("density") xsc(r(-`xmax' `xmax')) ///
 				legend(order(1 "Kernel density estimate" 2 "Histogram") position(6) rows(1)) name(pbomix`i', replace) nodraw title("`gphtitle'")
 			local graphlist = "`graphlist' pbomix`i'"
 			restore
@@ -336,4 +329,5 @@ mata:
 	}
 end
 * Version history
+* 1.0.1 Fix the issue of excessive treated units causing the program to be unable to run
 * 1.0.0 Submit the initial version

@@ -48,6 +48,7 @@ p wridit module to generate weighted ridits
 p writeinput module  to write dataset in memory to new do-file as an input command
 p writekml module to write Keyhole Markup Language file 
 p writepsfrag module to translate Stata text to EPS
+p wscv module to compute the within-subject coefficient of variation
 p wtd module to produce analysis of waiting time distribution
 p wtd_perc module to calculate percentile of inter-arrival density based on the parametric Waiting Time Distribution (WTD)
 p wtdttt module to estimate parameters of the ordinary and reverse Waiting Time Distribution (WTD) by maximum likelihood

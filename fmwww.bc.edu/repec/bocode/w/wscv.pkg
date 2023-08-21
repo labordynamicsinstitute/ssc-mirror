@@ -1,0 +1,40 @@
+d 'WSCV': module to compute the within-subject coefficient of variation
+d
+d  wscv computes the within-subject coefficient of variation (WSCV)
+d among two or more repeated tests or ratings. The WSCV is widely
+d used as a measure of reliability and reproducibility for
+d interval-level (continuous) data in medical and biological
+d science. Quan and Shih (1996) recommend the WSCV as an
+d alternative to the intraclass correlation (ICC) to assess
+d reproducibility of a measurement when the study population is
+d homogeneous. In such cases, the ICC (which relies on
+d between-subject variation) will produce a low estimate, whereas
+d the WSCV is unaffected. wscv uses the "within-subject standard
+d deviation method" for computing WSCV, as described in Bland &
+d Altman (1996). Two alternative computation approaches are the
+d "root mean square method" and "logarithmic method" as described
+d in Bland (2006). All methods appear to produce similar point
+d estimates, but there are various approaches to computing
+d confidence intervals that produce different results. wscv
+d computes confidence intervals based on the delta method (Quan and
+d Shih 1996), but I recommend using the bootstrap as shown in the
+d example below. The smaller the WSCV, the better the
+d reproducibility. Estimates produced by wscv can be multiplied by
+d 100 to provide results as a percentage. 
+d
+d KW: within-subject coefficient of variation
+d KW: reliability
+d KW: reproducibility
+d KW:  interrater agreement
+d KW: interrater reliability
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20230820
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f wscv.ado
+f wscv.sthlp
+f ../l/lungfunctiomn.dta

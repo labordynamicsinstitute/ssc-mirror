@@ -83,7 +83,8 @@ linear predictions of observed response variables, or other such functions.
 {cmd:eta} calculates the fitted linear prediction.
 
 {phang} 
-{cmd:survival} calculates the survival function. 
+{cmd:survival} calculates the survival function. If you have fitted a relative survival model, then this 
+represents the relative survival function.
 
 {phang} 
 {cmd:cif} calculates the cumulative incidence function at time {it:t}, where {it:t} is the time at which predictions are made. 

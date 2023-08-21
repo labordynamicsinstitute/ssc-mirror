@@ -23,17 +23,17 @@
 
 {phang}
 {cmd:ecic} estimates quantile treatment effects (QTE) at extreme quantiles via changes in changes (CIC) based on
-{browse "https://doi.org/10.48550/arXiv.2211.14870":Sasaki and Wang (2022)}.
+{browse "https://doi.org/10.1080/07350015.2023.2249509":Sasaki and Wang (Forthcoming)}.
 The designed setting requires that all the units are untreated in the first period ({cmd:T}=0), 
 all the units in the control group ({cmd:G=0}) remain untreated in the second period ({cmd:T}=1), and
 all the units in the treatment group ({cmd:G=1}) receive treatments in the second period ({cmd:T}=1).
 The command assumes repeated cross sections.
 
 {phang}
-To accommodate covariates, one can run preliminary regression of the outcome {it:Y} on covariates {it:X}.
+To accommodate covariates, one can run preliminary regression of the outcome {it:Y} on covariates {it:X} within each ({it:G},{it:T}) pair.
 Replace {it:Y} by the residuals in the {cmd:ecic} command.
 This residualized procedure is theoretically supported by
-{browse "https://doi.org/10.48550/arXiv.2211.14870":Sasaki and Wang (2022; Sec. 6)}.
+{browse "https://doi.org/10.1080/07350015.2023.2249509":Sasaki and Wang (Forthcoming; Sec. 6)}.
 
 
 {marker options}{...}
@@ -54,7 +54,15 @@ a covariate {cmd:X},
 control/treatment group indicator {cmd:G} = 0, 1, and
 time variable {cmd:T} = 0, 1:
 
-{phang}{cmd:. regress Y X}{p_end}
+{phang}{cmd:. gen Y_resid = 0}{p_end}
+{phang}{cmd:. foreach g of numlist 0/1 {c -(}}{p_end}
+{phang}{cmd:. {space 1}  foreach t of numlist 0/1 {c -(}}{p_end}
+{phang}{cmd:. {space 3} regress Y X if G==`g' & T==`t'}{p_end}
+{phang}{cmd:. {space 3} predict temp_Y_resid if G==`g' & T==`t', residuals}{p_end}
+{phang}{cmd:. {space 3} replace Y_resid = temp_Y_resid if G==`g' & T==`t'}{p_end}
+{phang}{cmd:. {space 3} drop temp_Y_resid}{p_end}
+{phang}{cmd:. {space 1}  {c )-}}{p_end}
+{phang}{cmd:. {c )-}}{p_end}
 {phang}{cmd:. predict resid_Y, residuals}{p_end}
 {phang}{cmd:. ecic resid_Y G T, q(0.98)}{p_end}
 
@@ -130,8 +138,8 @@ Functions
 
 {title:Reference}
 
-{p 4 8}Sasaki, Y. and Y. Wang 2022. Extreme Changes in Changes. arXiv:2211.14870 
-{browse "https://doi.org/10.48550/arXiv.2211.14870":Link to Paper}.
+{p 4 8}Sasaki, Y. and Y. Wang. Extreme Changes in Changes. Journal of Business & Economic Statistics, Forthcoming. 
+{browse "https://doi.org/10.1080/07350015.2023.2249509":Link to Paper}.
 {p_end}
 
 

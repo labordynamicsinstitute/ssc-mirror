@@ -108,7 +108,8 @@ program merlin_parse, rclass
                         ICCRfudge			/// NODOC
                         IINTPoints(passthru)		/// NODOC
                         PCHINTPoints(passthru)		/// NODOC
-                        INDICATOR(varname)              ///
+                        INDICATOR(varname)              /// NODOC
+                        MODELLABELS(string)             /// NODOC
                                                          // blank
 
         _parse expand EQ GL : ZERO,                     ///
@@ -139,6 +140,7 @@ program merlin_parse, rclass
                 local failure`i' `s(failure)'
                 local reffailure`i' `s(reffailure)'
                 local ltruncated`i' `s(ltruncated)'
+		local margltruncated`i' `s(margltruncated)'
                 local linterval`i' `s(linterval)'
                 local rcsopts`i' `s(rcsopts)'
                 local loglfunction`i' `s(loglfunction)'
@@ -196,7 +198,7 @@ program merlin_parse, rclass
 
         local neq = `EQ_n'
         local options : copy local GL_op
-        return local hasopts =  "`options'"!="" 
+        return local hasopts =  `"`options'"'!="" 
 		
         _get_diopts diopts options, `options'
         local 0 `", `NOSTART' `options'"'
@@ -261,7 +263,7 @@ program merlin_parse, rclass
                 RANDOM PENalty(string) LAMBDA(string) LOSS 		 ///
                 ARTHUR EXCALIBUR GALAHAD BORS SAGRAMORE	MORDRED		 ///
                 TRANSMATrix(string) ICCRfudge 				 ///
-                INDICATOR(varname)                                       ///
+                INDICATOR(varname) MODELLABELS(string)                   ///
                 MORGANA(string)						 ///
                 RESTARTValues(string) APSTARTValues(string) ZEROS	 ///
                 PREDICT PTVAR(string) NPREDICT(string) 			 /// -predictions-
@@ -318,7 +320,7 @@ program merlin_parse, rclass
         return local mlvce      `"`vce'"'
         return local nolog      `"`nolog'"'
         return local diopts     `"`diopts' `eform'"'
-		
+	return local modellabels `"`modellabels'"'	
         return local mftodrop 	`mftodrop'
         return local mfzeros 	"`zeros'"
 end
@@ -336,7 +338,7 @@ program ParseDist, sclass
         local 0 `family'
         syntax anything, [		///
                 FAILure(varname) 	///
-                LTruncated(varname)	///
+                LTruncated(string)	///
                 LInterval(varname)	///
                 LLFunction(string) 	///
                 HFunction(string) 	///
@@ -354,13 +356,17 @@ program ParseDist, sclass
                 *			/// rp aft opts
         ]
         sreturn local failure `failure'
-        sreturn local ltruncated `ltruncated'
         sreturn local linterval `linterval'
         sreturn local rcsopts `options'
         sreturn local dapmodel `dapmodel'
         sreturn local reffailure `reffailure'
         local family `anything'
         
+	local 0 `ltruncated'
+	syntax [varlist(default=empty max=1)] , [MARGinal]
+	sreturn local ltruncated `varlist'
+	sreturn local margltruncated = "`marginal'"!=""
+		
         local dapnotallowed = 0
         local nocons = 0
         local tag = 0

@@ -12,7 +12,6 @@ prog def xtshuffle, sortpreserve
 		exit 198
 		}
     }
-	qui levelsof `id', local(units)
 	cap qui ds `generate'
 	if "`r(varlist)'" == "`generate'" {
 		di as err "variable {bf:`generate'} already defined"
@@ -20,16 +19,16 @@ prog def xtshuffle, sortpreserve
 	}
 	qui fillin `id' `time'
 	qui sort  `time' `id'
-	mata: units = strtoreal(tokens(st_local("units")));
-	mata: xtshuffle("`id'", "`time'", "`varlist'", units, "`generate'");
+	mata: xtshuffle("`id'", "`time'", "`varlist'", "`generate'");
 	qui drop if _fillin == 1
 	qui drop _fillin
 end
 
 mata:
-	real matrix xtshuffle(string scalar panelvar, string scalar timevar, string scalar treatvar, real matrix units, string scalar genvar){
-		real matrix units_random, data; real scalar unitnum;
+	real matrix xtshuffle(string scalar panelvar, string scalar timevar, string scalar treatvar, string scalar genvar){
+		real matrix units, units_random, data; real scalar unitnum;
 		data = st_data(., panelvar + " " + timevar + " " + treatvar);
+		units = uniqrows(data[., 1])';
 		units_random = jumble(units');
 		unitnum = cols(units);
 		data[, 1] = J(rows(data)/unitnum, 1, units_random);

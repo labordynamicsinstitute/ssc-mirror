@@ -1,7 +1,7 @@
 {smcl}
 {hline}
 {hi:help simulate2}{right: v. 1.03 - 21. January 2022}
-{hi:help psimulate2}{right: v. 1.06 - 21. January 2022}
+{hi:help psimulate2}{right: v. 1.08 - 15. August 2023}
 
 {hline}
 {title:Title}
@@ -44,6 +44,9 @@
 {synopt:{opt seeds:ave(options)}}saves the used seeds, see {help simulate2##SeedSaving: saving seeds}{p_end}
 {synopt:{opt seedstream(integer)}}starting seedstream, only {cmd:psimulate2}{p_end}
 {synopt:{opt nocl:s}}do not refresh window (only {cmd:psimulate2}){p_end}
+{synopt:{opt onlydots}}display dots rather than output window. Recommended for server use.{p_end}
+{synopt:{opt docmd(string)}}Alterantive command to call do files.{p_end}
+{synopt:{opt globalid(string)}}Sets id for simulation run. Necessary if multiple instances of {cmd:psimulate2} are run on the same machine.{p_end}
 {synoptline}
 {p2colreset}{...}	
 		
@@ -292,13 +295,11 @@ It starts with the 10th observation in frame {it:seedframe}
 for the first draw of the program called by {cmd:simulate2}.
 It then continues with observations 11 for draw number 2.
 
-
 {pmore}
 {cmd:seed(}{it:_current}{cmd:)} allows the usage of {cmd:psimulate2} in loops.
 It uses the current seed options as a starting seed for {cmd:psimulate2}. 
 This allows {cmd:psimulate2} to be nested within loops. 
 See {help simulate2##psimLoop: psimulate2 in loops}.
-
 
 {phang}
 {cmd:seedstream(}{it:integer}{cmd:)} is a convience option for {cmd:psimulate2}.
@@ -353,6 +354,10 @@ it is not possible to start a .bat file from this folder.
 In this case {cmd:temppath()} is required.
 {cmd:psimulate2} cleans up the temp folder before using it. 
 All files starting with {it:psim2_} are removed.
+If more than one instance of {cmd:psimulate2} is run in parallel and the same path to save temporary files 
+is used, then option {cmd:globalid()} is required
+to avoid files being overwritten. 
+See {help psimulate2##ExampleUnix:Examples}.
 
 {phang}
 {cmd:parallel(#2, processors(integer))} sets the maximum number of processors 
@@ -362,6 +367,23 @@ For example if Stata MP with 4 cores is used and two parallel instance of {cmd:p
 then the remaining two cores can be used for each instance. 
 The default is 1, meaning that {cmd:psimulate} only one processor is available to
 each Stata instance.
+
+{phang}
+{ul:Server specific options}. 
+{cmd:psimualte2} can be used on Unix servers but some further options might be required.
+
+{phang}
+{cmd:docmd(string)} specifies an alternative command to run do files. 
+For example on a Ubuntu system, {cmd:docmd(stata)} is necessary to start a do file.
+
+{phang}
+{cmd:onlydots} instead of the progress window dots are displayed. 
+The option is intended to minimize the size of log files.
+
+{phang}
+Multiple instances of {cmd:psimulate2} can be run on the same machine. 
+If the same path to save temporary files is used, files may be overwritten.
+{cmd:globalid(integer)} specifies the number of the parallel instance to avoid files being overwritten.
 
 
 {marker SavedValuse}{title:Saved Values}
@@ -377,25 +399,27 @@ each Stata instance.
 {marker examples}{title:Examples}
 {pstd}
 Make a dataset containing the OLS coefficient, standard error, the current time
-and save the seeds in a frame called {it:seed_frame}. Perform the experiment 1000 times:
+and save the seeds in a frame called {it:seed_frame}. 
+Perform the experiment 1000 times:
 
 	{cmd:program define testsimul, rclass}
 		{cmd:version {ccl stata_version}}
 		{cmd:syntax anything}
 		{cmd:clear}
 		{cmd:set obs `anything'}
-		{cmd:gen x = rnormal(1,4)}
-		{cmd:gen y = 2 + 3*x + rnormal()}
+		{cmd:gen x = rnormal(1,4)}}
+		{cmd:gen e = normal()}
+		{cmd:gen y = 2 + 3*x + e}
 		{cmd:reg y x}
 		{cmd:matrix b = e(b)}
 		{cmd:matrix se = e(V)}
 		{cmd:ereturn clear}
 		{cmd:return scalar b = b[1,1]}
 		{cmd:return scalar V = se[1,1]}
-		{cmd:return local time "`r(current_time)'"}
+		{cmd:return local time "`c(current_time)'"}
 	{cmd:end}
 	{phang}
-	{cmd:. simulate2 time = r(time) b = r(b) V = r(V), reps(1000) saveseed(seed_frame,frame): testsimul 100}
+	{cmd:. simulate2 time = r(time) b = r(b) V = r(V), reps(1000) seedsave(seed_frame,frame): testsimul 100}
 	
 {pstd}
 Now we can pick up the seeds and re-do the experiment for the first 500 repetitions:
@@ -469,8 +493,95 @@ current seed of the parent instance as an initial seed for all child instances.
 Each child instance will still have a different seed stream to ensure the random 
 number draws are different.{p_end}
 
+{marker ExampleUnix}
+{pstd}
+{ul:Example for Unix Servers - efficient use of {cmd:psimulate2}}
+
+{pstd}
+Let's assume we want to run the example above, but we want to run the simulation with 20, 50 100 and 1000 observations. 
+We also want to compare results if errors are standard normal and uniform distributed. 
+Option {cmd:uniform} is added to the {cmd:testsimul} program:
+
+	{cmd:program define testsimul, rclass}
+		{cmd:version {ccl stata_version}}
+		{cmd:syntax anything, [uniform]}
+		{cmd:clear}
+		{cmd:set obs `anything'}
+		{cmd:gen x = rnormal(1,4)}
+		{cmd:if "`uniform'"== "" gen e = normal()}
+		{cmd:else  gen e = runiform(-1,1)}
+		{cmd:gen y = 2 + 3*x + e}
+		{cmd:reg y x}
+		{cmd:matrix b = e(b)}
+		{cmd:matrix se = e(V)}
+		{cmd:ereturn clear}
+		{cmd:return scalar b = b[1,1]}
+		{cmd:return scalar V = se[1,1]}
+		{cmd:return local time "`c(current_time)'"}
+	{cmd:end}
+
+{pstd}
+We can use a - say Ubuntu - Unix server with a total of 20 cores and we want to use all of them.
+Stata is installed on the machine and can be started from the command line with the command {it:stata}.
+A folder to store temporary files is created in the home directory and called {it:tmp}.
+
+{pstd}
+To run the simulations, we write two do files, one for the DGP with standard normal errors, one for the DGP with uniform errors.
+The do files are called {it:spec1.do} and {it:spec2.do}.
+Both do files include a loop over the set of number of observations and save the simulated results.
+The simulation is repeated 1000 times with 9 parallel instances:
+
+	{ul:spec1.do}
+	{cmd:clear}
+	{cmd:set seed 12345}
+	{cmd:foreach N in 20 50 100 1000 {c -(}   }
+		{cmd: psimulate2 , reps(1000) parallel(9, temppath("/home/tmp")) seed(_current) onlydots globalid(1) docmd(stata): testsimul `N' }
+		{cmd: save res_`N'_spec1}
+	{cmd: {c )-} }
+
+{pstd}
+To run the second specification, we add the option {cmd:uniform} and alter the filename of the dataset with the Monte Carlo results:
+
+	{ul:spec2.do}
+	{cmd:clear}
+	{cmd:set seed 678910}
+	{cmd:foreach N in 20 50 100 1000 {c -(}   }
+		{cmd: psimulate2 , reps(1000) parallel(9, temppath("/home/tmp")) seed(_current) onlydots globalid(2) docmd(stata): testsimul `N' , uniform}
+		{cmd: save res_`N'_spec2}
+	{cmd: {c )-} }	
+
+{pstd}
+The {it:spec1.do} and {it:spec2.do} do files can run on the server at the same time and we make optimal use of the 20 cores.
+Depending on the server, it might be necessary to write a batch file which allocates memory, number of cores and run time for each do file.
+After the simulations are run, there should be a total of 8 files, 4 for each specification.
+
+{pstd}
+Next we discuss the options in detail:
+
+{phang}
+{cmd:parallel(9, temppath("/home/tmp"))} sets the number of parallel instances to 9. 
+Each do file then uses in total 10 cores.
+The option {cmd:temppath()} specifies the path to save temporary files which needs to be set to be read and writeable.
+
+{phang}
+{cmd:seed(_current)} ensures that the seed is altered for the different values, see {help simulate2##psimLoop: psimulate2 in loops}.
+Otherwise the first 20 observations if N=50 would be the same as the observations of the case N=20.
+
+{phang}
+{cmd:onlydots} helps to reduce the size of the log files. Instead of an overview of the progress, only dots are displayed.
+
+{phang}
+{cmd:globalid()} sets the id for each of the instances of {cmd:psimualte2}. 
+All temporary files are named {it:psim2#Instance_} and thus it is ensured that no temporary file is overwritten.
+Alternatively we could specify a temporary path (eg: "/home/tmp/tmp_1") for each do file/specification.
+
+{phang}
+{cmd:docmd(stata)} specifies the command a do file is started with from the command line/within Stata. 
+On our Ubuntu server, new do files are started with {it:stata "home/dofiles/dofile.do"} and we need to specify the command to do so.
+
+
 {marker knownproblems}{title:Known Problems and Issues}
-{p 8 8} - On some Windows installations the temporary folder is locked. In this 
+{p 8 8} - On some Windows installations or servers the default temporary folder is locked or not accessible. In this 
 case Stata and psimulate2 cannot write any files in the temporary folder. 
 Option {cmd:temppath()} can be used to set an alternative temporary folder.{p_end}
 {p 8 8} - psimulate2 can crash if the temporary path or any other path it writes on
@@ -479,7 +590,8 @@ Google. A fix is to pause those services.{p_end}
 {p 8 8} - psimulate2 has problems with long names, such as variable names or
 command names. In such cases it tends to shorten the names which might cause interruptions in the code.
 The best solution is to shorten the names.{p_end}
-{p 8 8} - Some servers require the {cmd:nocls} function to run {cmd:psimulate2}.{p_end}
+{p 8 8} - Unix servers require the {cmd:nocls} function to run {cmd:psimulate2}.{p_end}
+{p 8 8} - The {cmd:onlydots} options should be used with servers tpo avoid large log files.{p_end}
 
 {marker install}{title:How to install}
 
@@ -501,10 +613,16 @@ Kit Baum initiated the integration of MacOS and Unix and assisted in the impleme
 Michael Porst and 
 Gabriel Chodorow-Reich provided much valued feedback.
 I am grateful for all of their help.
-All remaining errors are my own.{p_end}
+All remaining errors are my own.
+I do not take over responsibility for any computer crashes, lost work or financial losses following the use of {cmd:(p)simulate2}.{p_end}
+
 
 {title:Change Log}
 
+{p 4}Version 1.07 to 1.08{p_end}
+{p 8 8}- added options {cmd:onlydots}, {cmd:docmd()} and {cmd:globalid} to improve support for servers{p_end}
+{p 4}Version 1.06 to 1.07{p_end}
+{p 8 8}- fix in program lines with more than 250 characters (thanks to Gabriel Chodorow-Reich){p_end}
 {p 4}Version 1.05 to 1.06{p_end}
 {p 8 8}- various small bug fixes (thanks to Gabriel Chodorow-Reich){p_end}
 {p 4}Version 1.04 to 1.05{p_end}

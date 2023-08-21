@@ -1,4 +1,4 @@
-*! version 1.01 2023-05-29
+*! version 1.02 2023-08-16
 
 program stpm3, eclass byable(onecall)
 	version 16.1
@@ -125,7 +125,8 @@ program Estimate, eclass
   if `"`tvc'"' != "" local tvcopt tvc(`tvc')  
   
   // add to touse (for missing covariates)
-  markout `touse' `model_vars'
+  markout `touse' `model_vars' 
+  
   
   qui count if `touse'
 	local Nobs=r(N)  
@@ -142,7 +143,8 @@ program Estimate, eclass
   if "`ttrans'" == "" local ttrans lnt
 // bhazard  
   if "`bhazard'" != "" {
-    if `touse' & missing(`bhazard') == 1 {
+    qui count if missing(`bhazard') & `touse'
+    if `r(N)' {
       di as err "background hazard contains missing values"
       exit
     }
@@ -799,6 +801,7 @@ program define stpm3_gen_extended_functions, rclass
   }
   local model_vars `model_vars' `ef_varlist'
   local model_vars: list uniq model_vars
+  
   // send back to main stpm3 program
   c_local ef_varlist `ef_varlist'
   foreach v in `ef_varlist' {

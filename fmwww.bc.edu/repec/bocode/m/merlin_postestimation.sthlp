@@ -45,6 +45,7 @@ where {it:newvarsspec} is {it:stub}{cmd:*} or {it:{help newvarlist}}.
 {syntab:Main}
 {synopt :{opt mu}}expected value of {depvar}; the default{p_end}
 {synopt :{opt eta}}expected value of complex predictor{p_end}
+{synopt :{opt dens:ity}}density function{p_end}
 {synopt :{opt surv:ival}}survivor function{p_end}
 {synopt :{opt totalsurv:ival}}all-cause survivor function{p_end}
 {synopt :{opt cif}}cumulative incidence function{p_end}
@@ -121,9 +122,15 @@ linear predictions of observed response variables, or other such functions.
 {phang} 
 {cmd:eta} calculates the fitted linear prediction.
 
+{phang}
+{cmd:density} calculates the density function.  This prediction is computed 
+using the current values of the observed variables, including the dependent 
+variable.
+
 {phang} 
 {cmd:survival} calculates the survival function. If you have fitted a competing risks model, then this will represent 
-cause-specific survival.
+cause-specific survival. If you have fitted a relative survival model, then this will represent the relative 
+survival function.
 
 {phang} 
 {cmd:totalsurvival} calculates the all-cause survival function at time {it:t}, where {it:t} is the time at which predictions are made. 

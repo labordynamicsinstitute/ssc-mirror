@@ -1,5 +1,5 @@
 *! parallelise simulate2
-*! Version 1.06 - 21.01.2022
+*! Version 1.08 - 15.08.2023
 *! by Jan Ditzen - www.jan.ditzen.net
 /* changelog
 To version 1.01
@@ -21,6 +21,11 @@ To version 1.05
 	- 02.08.2021 	- bug fix in exepath
 To version 1.06
 	- 21.01.2022  - bug fix in temppath
+To version 1.07
+	- 24.01.2022 	- bug fix if program has more than 250 characters
+To version 1.08
+	- 18.07.2023 	- added option onlydots: display only dots for parallel simulate. better for servers
+	- 31.07.2023  - added options docmd() and globalid()
 
 
 */
@@ -47,6 +52,9 @@ program psimulate2 , rclass
 						NOCls				/// do not refresh windows
 						simulate			/// use simulate rather than simulate2
 						seedstream(integer 0) /// first seedstream
+						ONLYDOTS 		/// show only dots
+						docmd(string)		/// alternative command line to call do files
+						globalid(string)	/// set id if psimulate run in parallel; default is empty
 		]
 		
 		local 0 `parallel'
@@ -68,13 +76,14 @@ program psimulate2 , rclass
 			local temppath `"`c(tmpdir)'"'
 		}
 		
-		if "`nocls'" == "" {
+		if "`nocls'`onlydots'" == "" {
 			local cls cls
 		}
 		if "`c(mode)'" == "batch" {
 			** If run in batch mode, do not use cls
 			local cls ""
 		}
+		if "`docmd'" == "" local docmd "do"
 		*** which simulate is used
 		if "`simulate'" == "" {
 			** make sure even if simulate not used but version < 16, use simulate
@@ -92,12 +101,15 @@ program psimulate2 , rclass
 			local whichsim "simulate"
 		}
 		
+		global psim2_id `globalid'
+		local psim2_id $psim2_id
+		
 		*** remove p2sim files from folder
-		local files: dir `"`temppath'"' files "psim2_*" 
+		local files: dir `"`temppath'"' files "psim2`psim2_id'_*" 
 		foreach file in `files' {
 			erase "`temppath'/`file'" 
 		}
-		cap erase "`temppath'/lpsim2_matafunc.mlib"
+		cap erase "`temppath'/lpsim2`psim2_id'_matafunc.mlib"
 		*** Get exe path
 		if "`exe'" == "" {
 			psim2_getExePath
@@ -109,7 +121,7 @@ program psimulate2 , rclass
 
 		*** Copy mata matrices
 		local matamatsave = 0
-		cap erase "`temppath'/psim2_matamat.mmat"
+		cap erase "`temppath'/psim2`psim2_id'_matamat.mmat"
 		
 		*** Process seed options
 		*** 1. neither frame nor dta used, then seed(seed rng seedstream)
@@ -165,8 +177,8 @@ program psimulate2 , rclass
 				else {
 					tokenize `anything'				
 					if "`frame'" != "" {
-						frame `1': save "`temppath'/psim2_seed", replace
-						local seed `"`temppath'/psim2_seed `2' `3' `4' , dta"'
+						frame `1': save "`temppath'/psim2`psim2_id'_seed", replace
+						local seed `"`temppath'/psim2`psim2_id'_seed `2' `3' `4' , dta"'
 						local seedstartop `"start(\`=\`repscum'+\`startseednum'-1')"'
 					}
 					else if "`dta'" != "" {
@@ -185,7 +197,7 @@ program psimulate2 , rclass
 				local sseedframe "`frame'"
 				local sseedappend "`append'"
 				
-				local seedsave  `"`temppath'/psim2_seedsave_\`inst' , seednumber(\`repscum')"'
+				local seedsave  `"`temppath'/psim2`psim2_id'_seedsave_\`inst' , seednumber(\`repscum')"'
 			}			
 		}
 		else {
@@ -198,7 +210,7 @@ program psimulate2 , rclass
 		}
 		
 		*** save dta
-		save "`temppath'/psim2_start", replace emptyok
+		save "`temppath'/psim2`psim2_id'_start", replace emptyok
 		
 		*** Number of replications for each
 		local repsavg = floor(`reps'/`instance')
@@ -219,22 +231,22 @@ program psimulate2 , rclass
 			if "`whichsim'" == "simulate2" {
 				psim2_WriteDofile 	`exp_list' , ///
 									/// sim2 options
-									saving("`temppath'/psim2_results_`inst'", replace) reps(`repsi')  ///
+									saving("`temppath'/psim2`psim2_id'_results_`inst'", replace) reps(`repsi')  ///
 									perindicator(100, perindicpath(`"`temppath'"') performid(`inst')) ///
 									seed("`seed'" "`seedstartop'") seedsave("`seedsave'") seedstream(`seedstream')	///
 									/// writeBatch options
 									id(`inst')  processors(`processors')  ///
-									startdta(psim2_start)  temppath(`temppath') ///
+									startdta(psim2`psim2_id'_start)  temppath(`temppath') ///
 									: `after'
 			}
 			else {
 				psim2_WriteDofile 	`exp_list' , ///
 									/// sim options
-									saving("`temppath'/psim2_results_`inst'", replace) reps(`repsi')  ///
+									saving("`temppath'/psim2`psim2_id'_results_`inst'", replace) reps(`repsi')  ///
 									`seed' 	///
 									/// writeBatch options
 									id(`inst')  processors(`processors') simulate ///
-									startdta(psim2_start)  temppath(`temppath') ///
+									startdta(psim2`psim2_id'_start)  temppath(`temppath') ///
 									: `after'
 			}
 			local repscum = `repscum'+`repsi'
@@ -257,12 +269,12 @@ program psimulate2 , rclass
 			forvalues inst = 1(1)`instance' {
 			*	noi disp `"command line to execute: winexec `exepath' `winexec_e' do  "`temppath'psim2_DoFile_`inst'.do" "'
 			*	local lastcmd `"winexec `exepath' `winexec_e' do  "`temppath'psim2_DoFile_`inst'.do" "'
-				winexec `exepath' `winexec_e' do  "`temppath'/psim2_DoFile_`inst'.do"
+				winexec `exepath' `winexec_e' `docmd'  "`temppath'/psim2`psim2_id'_DoFile_`inst'.do"
 			}
 		}
 		else {
 			forvalues inst = 1(1)`instance' {
-				local line "`line' (`exepath' do  "`temppath'/psim2_DoFile_`inst'.do" &)"
+				local line "`line' (`exepath' `docmd'  "`temppath'/psim2`psim2_id'_DoFile_`inst'.do" &)"
 				if `inst' != `instance'  {
 					local line "`line' ; "
 				}
@@ -284,13 +296,13 @@ program psimulate2 , rclass
 			sleep `sleeptime'
 			
 			forvalues inst = 1(1)`instance' {
-				if fileexists("`temppath'/psim2_performance_`inst'.mmat") == 1 {
-					cap qui mata mata matuse "`temppath'/psim2_performance_`inst'", replace
+				if fileexists("`temppath'/psim2`psim2_id'_performance_`inst'.mmat") == 1 {
+					cap qui mata mata matuse "`temppath'/psim2`psim2_id'_performance_`inst'", replace
 					if _rc != 0 {
 						** build in artifical sleep
-						noi disp "error in saving psim2_performance_`inst'"
+						noi disp "error in saving psim2`psim2_id'_performance_`inst'"
 						sleep 1000
-						cap qui mata mata matuse "`temppath'/psim2_performance_`inst'", replace
+						cap qui mata mata matuse "`temppath'/psim2`psim2_id'_performance_`inst'", replace
 					}
 					qui mata st_local("done_`inst'",strofreal(p2sim_performance[1,1]))
 					qui mata st_local("reps_`inst'",strofreal(p2sim_performance[1,2]))
@@ -325,29 +337,33 @@ program psimulate2 , rclass
 			local exp_finish_time = `nowtime'+`exp_time_left'
 			
 			`cls'
-			noi disp as text ""
-			noi disp "psimulate2 - parallelise `whichsim'"
-			noi disp as text  ""
-			local aftertt = strtrim(`"`after'"'')
-			noi disp as text `"command: `aftertt' "'
-			noi disp as text ""
-			noi disp as text  "Timings (hour, minute, sec):"  _col(40) "Estimated:"
-			noi disp as text  "  Average Run: " _col(24) %tcHH:MM:SS.sss `avg_run' _col(40) "  Time left (min):" _col(60) %tcHH:MM:SS `exp_time_left' 
-			noi disp as text  "  Time Elapsed:" _col(24) %tcHH:MM:SS  `time_elapsed' _col(40) "  finishing time:" _col(60) %tcHH:MM:SS `exp_finish_time'
-			noi disp ""	
-			if "`whichsim'" == "simulate2" {
-				forvalues inst = 1(1)`instance' {
-					noi disp as text  "Instance `inst':"
-					noi disp as text "  Done " %9.2f `=`done_`inst''/`reps_`inst''*100' "%" _col(20) "(`done_`inst''/`reps_`inst'')"
+			if "`onlydots'" == "" {
+				noi disp as text ""
+				noi disp "psimulate2 - parallelise `whichsim'"
+				noi disp as text  ""
+				local aftertt = strtrim(`"`after'"'')
+				noi disp as text `"command: `aftertt' "'
+				noi disp as text ""
+				noi disp as text  "Timings (hour, minute, sec):"  _col(40) "Estimated:"
+				noi disp as text  "  Average Run: " _col(24) %tcHH:MM:SS.sss `avg_run' _col(40) "  Time left (min):" _col(60) %tcHH:MM:SS `exp_time_left' 
+				noi disp as text  "  Time Elapsed:" _col(24) %tcHH:MM:SS  `time_elapsed' _col(40) "  finishing time:" _col(60) %tcHH:MM:SS `exp_finish_time'
+				noi disp ""	
+				if "`whichsim'" == "simulate2" {
+					forvalues inst = 1(1)`instance' {
+						noi disp as text  "Instance `inst':"
+						noi disp as text "  Done " %9.2f `=`done_`inst''/`reps_`inst''*100' "%" _col(20) "(`done_`inst''/`reps_`inst'')"
+					}
+					noi disp as text "Total"
+					noi disp as text "  Done " %9.2f `=`reps_done'/`reps'*100' "%" _col(20) "(`reps_done'/`reps')"
 				}
-				noi disp as text "Total"
-				noi disp as text "  Done " %9.2f `=`reps_done'/`reps'*100' "%" _col(20) "(`reps_done'/`reps')"
+				else {
+					noi disp as text "  simulate does not allow for process indication. Please wait."
+				}
+				local sleeptime = `avg_run' * `reps' / 100 
 			}
 			else {
-				noi disp as text "  simulate does not allow for process indication. Please wait."
+				noi disp "." , _c
 			}
-			local sleeptime = `avg_run' * `reps' / 100 
-			
 			*** wait at least 0.25 sec
 			if `sleeptime' < 250 {
 				local sleeptime = 250
@@ -355,11 +371,13 @@ program psimulate2 , rclass
 			else if `sleeptime' > 60000 {
 				local sleeptime = 59999
 			}
-			noi disp ""
-			noi disp as text "Current Time: `c(current_time)' - next refresh in " %tcSS.ss `sleeptime' " sec."
-			if `seednote' == 1 {
-				noi disp as text "No seed set. If psimulate is used in a loop, "
-				noi disp as text "all iterations of the loop will have the Stata default seed."
+			if "`onlydots'" == "" {
+				noi disp ""
+				noi disp as text "Current Time: `c(current_time)' - next refresh in " %tcSS.ss `sleeptime' " sec."
+				if `seednote' == 1 {
+					noi disp as text "No seed set. If psimulate is used in a loop, "
+					noi disp as text "all iterations of the loop will have the Stata default seed."
+				}
 			}
 			sleep `sleeptime'
 		}
@@ -367,7 +385,7 @@ program psimulate2 , rclass
 		noi disp "Click on link to open log file: "
 		di as text "Log files "
 		forvalues inst = 1(1)`instance' {
-			if fileexists("psim2_DoFile_`inst'.log") == 1 {
+			if fileexists("psim2`psim2_id'_DoFile_`inst'.log") == 1 {
 				disp as smcl _col(5) "Instance `inst':" _col(20) `"{view psim2_DoFile_`inst'.log: Log File}"'
 			}	
 		}
@@ -377,9 +395,9 @@ program psimulate2 , rclass
 		
 			if "`sseeddest'" != "" {
 				clear
-				use "`temppath'/psim2_seedsave_1"
+				use "`temppath'/psim2`psim2_id'_seedsave_1"
 				forvalues inst = 2(1)`instance' {
-					append using "`temppath'/psim2_seedsave_`inst'", force
+					append using "`temppath'/psim2`psim2_id'_seedsave_`inst'", force
 				}
 				
 				if "`sseedframe'" == "" {
@@ -390,8 +408,8 @@ program psimulate2 , rclass
 				}
 				else {
 					if "`sseedappend'" != "" {
-						frame `sseeddest': save "`temppath'/psim2_oldseed", replace	
-						append using "`temppath'/psim2_oldseed"
+						frame `sseeddest': save "`temppath'/psim2`psim2_id'_oldseed", replace	
+						append using "`temppath'/psim2`psim2_id'_oldseed"
 					}
 					cap frame drop `sseeddest'
 					frame copy `c(frame)' `sseeddest'
@@ -400,9 +418,9 @@ program psimulate2 , rclass
 			}
 			*** Collect data
 			clear
-			use "`temppath'/psim2_results_1"
+			use "`temppath'/psim2`psim2_id'_results_1"
 			forvalues inst = 2(1)`instance' {
-				qui append using "`temppath'/psim2_results_`inst'", force
+				qui append using "`temppath'/psim2`psim2_id'_results_`inst'", force
 			}
 			
 			if "`saving'" != "" { 
@@ -416,8 +434,8 @@ program psimulate2 , rclass
 							if regexm("`r(frames)'","`anything'") == 0 {
 								frame create `anything'
 							}
-							frame `anything': save "`temppath'/psim2_oldframe", replace	emptyok
-							append using "`temppath'/psim2_oldframe"
+							frame `anything': save "`temppath'/psim2`psim2_id'_oldframe", replace	emptyok
+							append using "`temppath'/psim2`psim2_id'_oldframe"
 						}
 					cap frame drop `anything'
 					frame copy `c(frame)' `anything'
@@ -451,12 +469,14 @@ program define psim2_WriteDofile
 		local after `"`s(after)'"'
         	local 0 `"`s(before)'"'
 
+        	local psim2_id $psim2_id
+
 		syntax [anything(name=explist equalok)], id(string) startdta(string) temppath(string) processors(integer) seedstream(integer)  [simulate] *  
 		
 		local sim2_options `options'
 		
 		local path `"`temppath'"'
-        	local doFileName "psim2_DoFile_`id'.do"
+        	local doFileName "psim2`psim2_id'_DoFile_`id'.do"
 		
 		tempname dofile
 		
@@ -473,7 +493,7 @@ program define psim2_WriteDofile
 		file write `dofile' `"disp "File was written `c(current_time)'""' _n
 
 		if "`pnames'"  != "" {
-			file write `dofile' `"include `"`temppath'/psim2_programs.do"'"' _n
+			file write `dofile' `"include `"`temppath'/psim2`psim2_id'_programs.do"'"' _n
 		}
 		
 		**** If Stata MP, use only one core:
@@ -507,19 +527,20 @@ program define psim2_WriteDofile
 		**** set new ado path to library in do file
 		mata mata memory
 		if `r(Nf_def)' > 0 {
-			cap lmbuild lpsim2_matafunc , dir(`temppath') replace		
+			cap lmbuild lpsim2`psim2_id'_matafunc , dir(`temppath') replace		
 			if _rc != 0 {
 				sleep 200
-				cap lmbuild lpsim2_matafunc , dir(`temppath') replace	
+				cap lmbuild lpsim2`psim2_id'_matafunc , dir(`temppath') replace	
 			}	
 			file write `dofile' `"adopath + "`temppath'""' _n
+			file write `dofile' `"mata mata mlib index"' _n
 		}
 		
 		**** Mata programs
 		mata mata memory
 		if  `r(Nm)' > 0 {
-			mata mata matsave "`temppath'/psim2_matamat.mmat" *, replace
-			file write `dofile' `"mata mata matuse "`temppath'/psim2_matamat.mmat", replace"' _n
+			mata mata matsave "`temppath'/psim2`psim2_id'_matamat.mmat" *, replace
+			file write `dofile' `"mata mata matuse "`temppath'/psim2`psim2_id'_matamat.mmat", replace"' _n
 		} 
 		
 		/*
@@ -539,12 +560,13 @@ program define psim2_WriteDofile
 			macro shift
 		}
 		*/
+		
 		**** Open Dataset
 		file write `dofile'  `"use "`temppath'/`startdta'""' _n
 		
 		**** Do cmd
 		if "`simulate'" == "" {
-			file write `dofile' `"simulate2 `explist' , inpsim2 `options' : `after'"' _n
+			file write `dofile' `"simulate2 `explist' , inpsim2 psim2_id(`psim2_id') `options' : `after'"' _n
 		}
 		else {
 			file write `dofile' `"set rng mt64s"' _n
@@ -553,7 +575,7 @@ program define psim2_WriteDofile
 			file write `dofile'	`"mata p2sim_performance = -999, -999 "' _n
 			file write `dofile'	`"mata p2sim_lastrng = "\`c(rng_current)'""' _n
 			file write `dofile' `"mata p2sim_lastseed = "\`c(rngstate)'" , "\`c(rngseed_mt64s)'""' _n
-			file write `dofile' `"mata mata matsave "`temppath'/psim2_performance_`id'" p2sim_performance p2sim_lastseed p2sim_lastrng , replace "' _n
+			file write `dofile' `"cap mata mata matsave "`temppath'/psim2`psim2_id'_performance_`id'" p2sim_performance p2sim_lastseed p2sim_lastrng , replace "' _n
 		}
 		**** Close do file
 		file close `dofile'	
@@ -571,7 +593,7 @@ program define psim2_getExePath, rclass
 	else {
 		if "`c(os)'" == "Windows" {							
 			if `c(SE)' == 1 & `c(MP)' == 0 {
-					local type SE
+					dlocal type SE
 			}
 			else if `c(MP)' == 1 {
 					local type MP
@@ -620,18 +642,20 @@ end
 
 program define psim2_programlist, rclass
 	syntax [anything] , temppath(string)
-		
+	
+	local psim2_id $psim2_id
+
 	log
 	local logname "`r(filename)'"
 	cap log close
 	local linesize `c(linesize)'
 	set linesize 250
-	log using "`temppath'/psim2_plog", replace text nomsg
+	log using "`temppath'/psim2`psim2_id'_plog", replace text nomsg
 	program dir
 	log close
 	set linesize `linesize'
 	tempname file nextline
-	file open `file' using `"`temppath'/psim2_plog.log"' , read
+	file open `file' using `"`temppath'/psim2`psim2_id'_plog.log"' , read
     	file read `file' line
 	while r(eof)==0 {
         local line `"  `macval(line)'"'
@@ -652,22 +676,22 @@ program define psim2_programlist, rclass
 	if "`pnames'" != "" {
 		*local appendreplace "replace"
 		tempname dofilenew
-		file open `dofilenew' using "`temppath'/psim2_programs.do" , write text replace
+		file open `dofilenew' using "`temppath'/psim2`psim2_id'_programs.do" , write text replace
 		
 		
 		foreach prog in `pnames' {
 			local linesize `c(linesize)'
 			set linesize 250
-			log using "`temppath'/psim2_tmp_program.log" , text nomsg replace
+			log using "`temppath'/psim2`psim2_id'_tmp_program.log" , text nomsg replace
 			cap noi program list `prog'
 			log close
 			set linesize `linesize'
 			if _rc == 0 {
-				file open `file' using `"`temppath'/psim2_tmp_program.log"' , read
+				file open `file' using `"`temppath'/psim2`psim2_id'_tmp_program.log"' , read
 				file read `file' line
 				
 				/// Open it the second time and shift one line down to check if line was cut off
-				file open `nextline' using `"`temppath'/psim2_tmp_program.log"' , read
+				file open `nextline' using `"`temppath'/psim2`psim2_id'_tmp_program.log"' , read
 				file read `nextline' next
 				file read `nextline' next
 				
@@ -692,7 +716,8 @@ program define psim2_programlist, rclass
 							if regexm(`"`n1'"',">") == 1 {
 								local rest = strtrim(`"`rest'"')
 								*local n2 = strtrim(`"`n2'"')
-								local n2 = subinstr(`"`n2'"',"  ","",1)
+								*local n2 = subinstr(`"`n2'"',"  ","",1)
+								local n2 = strltrim(`"`n2'"')
 								file write `dofilenew' `"`macval(rest)'`macval(n2)'"' _n
 								
 								/// now shift both files one line down

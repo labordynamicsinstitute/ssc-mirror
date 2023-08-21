@@ -49,7 +49,7 @@ program Estimate, eclass
                         *					/// -mlopts-
                 ]						//
 
-	//====================================================================//		
+	//===================================================================//		
 	// error checks and setup
 		
         local vars `anything'
@@ -135,7 +135,7 @@ program Estimate, eclass
                 local family rp
                 if "`evaltype'"=="" {
                         if "`bhazard'"=="" {
-                                local evaltype evaltype(gf1)
+                                local evaltype evaltype(gf2)
                         }
                         else {
                                 local evaltype evaltype(gf0)
@@ -199,7 +199,7 @@ program Estimate, eclass
         //final family
         local familydef family(`family', failure(_d) `bhazard' `ltruncated' `df1' `knots1' `noorthog1')
 							
-	//==================================================================================================================================//
+	//===================================================================//
 	// build tvcs
 		
         //tvcs
@@ -247,7 +247,7 @@ program Estimate, eclass
                 local timevar timevar(_t)
         }
 		
-	//==================================================================================================================================//
+	//===================================================================//
 	// additional timescales
 		
         forval ts = 2/5 {
@@ -520,7 +520,7 @@ program Estimate, eclass
                 local from from(`init')
         }
 		
-	//==============================================================================================================================================//
+	//===================================================================//
 	// merlin
 
         if "`showmerlin'"!="" | "`debug'"!="" {

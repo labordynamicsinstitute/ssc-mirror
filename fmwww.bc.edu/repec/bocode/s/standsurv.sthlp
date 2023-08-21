@@ -18,6 +18,13 @@
 {marker syntax}{...}
 {title:Syntax}
 
+
+{p 8 15 2}
+{cmd:standsurv}
+{c -(}{it:{help newvarlist##stub*:stub}}{cmd:*} | {it:{help newvar}} | {it:{help newvarlist}}{c )-}
+{ifin}
+[{cmd:,}  [{it:options}]
+
 {synoptset 29 tabbed}{...}
 {synopthdr}
 {synoptline}
@@ -105,6 +112,8 @@ However, it is advised that you use the frame option to save results to a new fr
 {cmd:standsurv} creates the following variables by default. However, it is recommended 
 that you use the {cmd:atvar()}, {cmd:contrastvar()}, {cmd:lincomvar()} and {cmd:userfunctionvar()} options
 to give more meaningful variable names.
+Note that you can now specify new variables names before the comma, as an alternative to 
+using the {cmd:atvars()} option.
 {p_end}
 
 {phang2}

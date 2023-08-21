@@ -107,7 +107,6 @@ p dolog modules to execute commands from a file with logging
 p dologx modules to execute commands from a file with logging
 p domdiag module to construct dominance diagrams 
 p domin module to conduct dominance analysis 
-p domme module to conduct dominance analysis with multiple equation models
 p doparser module to look for dta-files used in do-files
 p doptimal module to find the D-optimal Design for Dose Ranging studies
 p doseresponse module to estimate dose-response function through adjustment for the generalized propensity score 

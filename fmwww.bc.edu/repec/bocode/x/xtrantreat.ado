@@ -12,24 +12,18 @@ prog def xtrantreat, sortpreserve
 		exit 198
 		}
     }
-	qui levelsof `id', local(units)
-	mata: units = strtoreal(tokens(st_local("units")))
-	if "`ranunitnum'" == "" {
-		qui levelsof `id' if `varlist' == 1, local(units_tr)
-		qui loc ranunitnum = wordcount("`units_tr'")
-	}
-	mata: ranunitnum = strtoreal(st_local("ranunitnum"))
-	if "`rantimescope'" == "" {
-		qui levelsof `time', local(times)
-		qui local timenum = wordcount("`times'")
-		qui local timelb = word("`times'", 1)
-		qui local timeub = word("`times'", `timenum')
-		qui levelsof `time' if `time' >= `timelb' & `time' <= `timeub', local(times_ltd)
-	}
-	else mata: tmp = tokens("`rantimescope'"); st_local("timelb", tmp[1]); st_local("timeub", tmp[2]);
-	qui levelsof `time' if `time' >= `timelb' & `time' <= `timeub', local(times_ltd)
-	mata: times_ltd = strtoreal(tokens(st_local("times_ltd")));
 	mata: data = st_data(., "`id' `time' `varlist'");
+	mata: units = uniqrows(data[., 1])';
+	if "`ranunitnum'" == "" {
+		mata: units_tr = uniqrows(select(data[., 1], data[., 3]))';
+		mata: ranunitnum = cols(units_tr);
+	}
+	else mata: ranunitnum = strtoreal(st_local("ranunitnum"));
+	if "`rantimescope'" == "" {
+		mata: time = uniqrows(data[., 2])'; timelb = min(time); timeub = max(time);
+	}
+	else mata: tmp = tokens("`rantimescope'"); timelb = strtoreal(tmp[1]); timeub = strtoreal(tmp[2]);
+	mata: times_ltd = uniqrows(select(data[., 2], (data[., 2]:>=timelb):&(data[.,2]:<=timeub)))';
 	mata: xtrantreat(data, "`varlist'", ranunitnum, units, times_ltd, strtoreal("`method'"), "`generate'");
 end
 mata:

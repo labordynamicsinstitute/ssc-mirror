@@ -45,6 +45,7 @@ program simulate2
 			SEEDSave(string)		/// seed save option
 			perindicator(string)		/// save every x-th file as indicator for progress
 			inpsim2				/// indicator for psim2
+			psim2_id(string)		/// id when using psimulate2
 			/// rest
 			 *                               ///
                 ]
@@ -475,7 +476,7 @@ program simulate2
 		*** run first performance check
 		if "1" == "`perfomnumsi'" {
 			qui mata p2sim_performance = 1 , `reps'
-			qui mata mata matsave "`perindicpath'/psim2_performance_`performid'" p2sim_performance , replace						 
+			qui mata mata matsave "`perindicpath'/psim2`psim2_id'_performance_`performid'" p2sim_performance , replace						 
 			local perfomnumsi = `perfomnumsi' + `perfomnums'
 		}
 		
@@ -566,10 +567,10 @@ program simulate2
 				if `"`perindicator'"' != "" {
 					if `i' == `perfomnumsi' {
 						qui mata p2sim_performance = `i', `reps'
-						cap qui mata mata matsave `"`perindicpath'/psim2_performance_`performid'"' p2sim_performance , replace
+						cap qui mata mata matsave `"`perindicpath'/psim2`psim2_id'_performance_`performid'"' p2sim_performance , replace
 						if _rc != 0 {
 						sleep 50
-							cap qui mata mata matsave `"`perindicpath'/psim2_performance_`performid'"' p2sim_performance , replace
+							cap qui mata mata matsave `"`perindicpath'/psim2`psim2_id'_performance_`performid'"' p2sim_performance , replace
 						}
 						local perfomnumsi = `perfomnumsi' + `perfomnums'
 					}
@@ -650,11 +651,11 @@ program simulate2
 			qui mata p2sim_lastseed = "`c(rngstate)'" , "`c(rngseed_mt64s)'"
 			qui mata p2sim_lastrng = "`c(rng_current)'"
 			
-			cap qui mata mata matsave "`perindicpath'/psim2_performance_`performid'" p2sim_performance p2sim_lastseed p2sim_lastrng, replace
+			cap qui mata mata matsave "`perindicpath'/psim2`psim2_id'_performance_`performid'" p2sim_performance p2sim_lastseed p2sim_lastrng, replace
 			if _rc != 0 {
 				local try = 0
 				while _rc != 0 & `try' < 100 {
-					cap qui mata mata matsave "`perindicpath'/psim2_performance_`performid'" p2sim_performance p2sim_lastseed p2sim_lastrng,  replace
+					cap qui mata mata matsave "`perindicpath'/psim2`psim2_id'_performance_`performid'" p2sim_performance p2sim_lastseed p2sim_lastrng,  replace
 					sleep 100
 				}
 			}

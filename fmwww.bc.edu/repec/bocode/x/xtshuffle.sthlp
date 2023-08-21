@@ -21,7 +21,7 @@
 {marker syntax}{...}
 {title:Syntax}
 {p 8 17 2}
-{cmdab:xtshuffle} {varname} {cmd:,} {opth i:d(panelvar)} {opt t:ime(timevar)} [{opth gen:erate(newvarname)}]
+{cmdab:xtshuffle} {varname} [{cmd:,} {opth i:d(panelvar)} {opt t:ime(timevar)} {opth gen:erate(newvarname)}]
 
 {marker description}{...}
 {title:Description}

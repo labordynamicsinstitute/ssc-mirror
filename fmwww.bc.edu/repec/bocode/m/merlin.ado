@@ -1,7 +1,14 @@
-*! version 2.3.0  06feb2023 MJC
+*! version 2.4.0  16aug2023 MJC
 
 /*
 History
+2.4.0
+- bhazard() with loglogistic, gamma, lognormal should've thrown an error as it 
+  wasn't supported; now it is!
+- bug fix; multilevel bernoulli would fail - now fixed
+- left-truncation with a multilevel survival models has been re-written
+- general tidying & improvements under the hood
+- density added to predict
 06feb2023 version 2.3.0 
 - help file link fixes
 - chintpoints() now added and doc'd in stmerlin help file
@@ -294,7 +301,7 @@ program merlin, eclass
         capture noisily Estimate `GML' `0'
         local rc = c(rc)
         if "`c(prefix)'"!="morgana" {
-                capture mata: merlin_cleanup("`GML'")
+                capture n mata: merlin_cleanup("`GML'")
                 capture drop `GML'*
                 capture mata: mata drop chazf hazf loglf
         }
@@ -315,7 +322,7 @@ program Estimate, eclass
 
         Fit `0'		//!! should leave behind diopts
 
-	mata: merlin_ereturn("`GML'")
+		mata: merlin_ereturn("`GML'")
 		
         if "`c(prefix)'"!="morgana" {
                 Display, `diopts'
@@ -338,14 +345,15 @@ program Fit, eclass sortpreserve
         local mlopts    `"`r(mlopts)'"'
         local mlvce     `"`r(mlvce)'"'
         local mlwgt     `"`r(mlwgt)'"'
-        local mlcns		`"`r(constr)'"'
+        local mlcns	`"`r(constr)'"'
         local mlinitcns	`"`r(initconstr)'"'
         local nolog     `"`r(nolog)'"'
         local mlprolog  `"`r(mlprolog)'"'
 	local mftodrop  `r(mftodrop)'
         c_local diopts  `"`r(diopts)'"'
-        local mlfrom  `"`r(mlfrom)'"'
+        local mlfrom    `"`r(mlfrom)'"'
         local mlzeros	`"`r(mlzeros)'"'
+        local modellabels `"`r(modellabels)'"'
         if "`mlcns'" != "" {
                 local cnsopt constraint(`mlcns')
         }
@@ -408,6 +416,7 @@ program Fit, eclass sortpreserve
         ereturn local from = "`mlfrom'"!=""
         ereturn local hasopts = `hasopts'
         ereturn local cmd merlin
+        ereturn local modellabels "`modellabels'"
         cap mata: mata drop `mftodrop'
         if "`mlcns'" != "" {
                 cap constraint drop `mlcns'
@@ -457,11 +466,16 @@ program Display
         
         local spflag = 0
 		
-        forval mod=1/`e(Nmodels)' {
-        
-                local y : word 1 of `e(response`mod')'
-                if "`y'"=="" {
-                        local y null
+        forval mod = 1/`e(Nmodels)' {
+                
+                if "`e(modellabels)'"!="" {
+                        local y : word `mod' of `e(modellabels)'
+                }
+                else {
+                        local y : word 1 of `e(response`mod')'
+                        if "`y'"=="" {
+                                local y null
+                        }
                 }
                 _diparm __lab__, label("`y':") eqlabel
                 

@@ -134,6 +134,7 @@ p renfiles module providing a convenient way to change filenames for (a matched 
 p rensheet module to edit variable names and labels
 p renvarlab module to rename variables, with option of using variable labels to create new variable names
 p reorder module to reorder variables in dataset, reversibly
+p repeatability module to compute the repeatability coefficient
 p repest module to run estimations with weighted replicate samples and plausible values
 p replacebylab module to replace values by drawing on value labels
 p replacen module to replace contents in exactly n observations

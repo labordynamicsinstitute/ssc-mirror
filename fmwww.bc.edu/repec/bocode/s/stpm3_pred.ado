@@ -1,4 +1,4 @@
-*! version 1.01 2023-05-29
+*! version 1.02 2023-08-16
 
 program stpm3_pred, sortpreserve
   version 16.1
@@ -28,6 +28,7 @@ program stpm3_pred, sortpreserve
                                SE                     ///
                                SETBaseline            ///
                                SURVival               ///
+                               /*TOFFset(string)*/    ///
                                CPNames(string)        ///
                                CRNames(string)        ///
                                TIMEVAR(string)        ///
@@ -43,7 +44,9 @@ program stpm3_pred, sortpreserve
   local hasif = "`if'`in'" != ""        
   
   marksample touse, novarlist
-        
+
+  
+  
   qui count if `touse'
   if r(N)==0 error 2000 
 
@@ -102,34 +105,14 @@ program stpm3_pred, sortpreserve
     local allmodelvars `e(model_vars)'
   }
   
+  
+  
 // Parse various options
   if "`contrast'" != "" getcontrastoptions, `contrast'
   Parse_ODEoptions, `odeoptions'
   
-// whether derivatives of spines varaibles are required
-  if `Nmodels' == 1 {
-    if("`e(scale)'" == "lncumhazard")    {
-      local needsode = wordcount("`rmst'`rmft'`crudeprob'`centilenospace'") == 1
-      local needsdxb1 = "`hazard'`lnhazard'" != "" | `needsode'
-    }
-    else if("`e(scale)'" == "lnhazard")  {
-      local needsode = wordcount("`survival'`failure'`cumhazard'`rmst'`rmft'`crudeprob'`centilenospace'") == 1
-      local needsdxb1 0
-    }
-    else if("`e(scale)'" == "lnodds")   {
-      local needsode = wordcount("`rmst'`rmft'`centilenospace'") == 1
-      local needsdxb1 = "`hazard'`lnhazard'" != "" | `needsode'    
-    }
-    else if("`e(scale)'" == "probit")   {
-      local needsode = wordcount("`rmst'`rmft'`centilenospace'") == 1
-      local needsdxb1 = "`hazard'`lnhazard'" != "" | `needsode'    
-    }    
-  }
-  else {
-    local needsode 1
-    if inlist("`e(scale)'","lncumhazard","lnodds","probit") local needsdxb 1
-  }
-  
+
+  // centile option
   if "`centile'" != "" Parse_centile_options `centile'
 
 // get variable type (factor or variable)
@@ -209,13 +192,17 @@ program stpm3_pred, sortpreserve
     }
     if "`framemerge'" != "" & "`notimevaropt'" == "" {
       di as error "Do not specify timevar() when using frame(.., merge)"
-      
+      exit 198
+    }
+    if "`framemerge'" != "" & `hasif' {
+      di as error "Do not use if/in with framemerge"
+      exit 198
     }
   }
   
   tempvar t lnt 
   
-  if "`timevar'" != "" stpm3_Parsetimevar `timevar'
+  if "`timevar'" != "" stpm3_Parsetimevar `timevar' 
   else local timevalues 0
   local hastimevar = `timevalues'==0 & "`centile'" == ""
   //if `timevalues' {
@@ -243,7 +230,7 @@ program stpm3_pred, sortpreserve
       exit 198  
     }
     local 0 `2'`3'
-    syntax ,[ATIF(string) ATTIMEVAR(string) SETBasline ZEROS OBSvalues]    // could add atmean option??
+    syntax ,[ATIF(string) ATTIMEVAR(string) SETBasline ZEROS OBSvalues TOFFset(string)]    // could add atmean option??
     if "`zeros'" != "" local setbaseline setbaseline
     if `hasif' & `"`atif'"' != "" {
       di as error "You can either use an if statement or the atif() suboptions" _newline ///
@@ -264,7 +251,7 @@ program stpm3_pred, sortpreserve
         exit 198
     }       
     if "`attimevar'" != "" {
-      stpm3_Parsetimevar `attimevar', atn(`i')
+      stpm3_Parsetimevar `attimevar' if `touse', atn(`i')
       if `timevalues`i'' & "`merge`" != "" {
         if ("`timevalues`i'_to'" == "`timevalues`i'_from'") {
           tempvar tt`i'
@@ -291,7 +278,8 @@ program stpm3_pred, sortpreserve
         local timevalues`i'_gen     `timevalues_gen'  
         local timevalues`i'_single  `timevalues_single'    
         local timevalues`i' 1
-        local hastimevar 0      
+        local hastimevar 0
+        if "`merge'" != "" confirm new variable `timevalues`i'_gen'
       }
       else {
         local timevalues`i' 0
@@ -309,6 +297,35 @@ program stpm3_pred, sortpreserve
 
 // observed values
     if "`obsvalues'" != "" local obsvalues`i' obsvalues`i'
+    
+// toffset option
+  if "`toffset'" != "" {
+    //if `Nmodels'==1 {
+      //di as error "toffset option only used with more than one model."
+      //exit 198
+    //}
+    if wordcount("`toffset'") != `Nmodels' {
+      di as error "the number of arguments in the toffset() option should be the same as the number of models"
+      di as error "Use . (or 0) if you want to use the main timescale"
+      exit 198
+    }    
+    local j 1
+    foreach toff in `toffset' {
+      if "`toff'" == "." local toffset`i'_m`j' = 0
+      else {
+        capture confirm number `toff'
+        if _rc {
+          di as error "Invalid numeric value in toffset() option)"
+          exit 198
+        }
+        else local toffset`i'_m`j' `toff'
+      }
+      local j = `j' + 1
+    }
+    local hastoffset 1
+  }
+  
+
 
 // main at option
     local at`i'opt = subinstr("`at`i'opt'","="," = ",.)
@@ -360,6 +377,32 @@ program stpm3_pred, sortpreserve
   //    exit 198
   //  }
   //}
+  
+// whether derivatives of spines varaibles are required
+  if `Nmodels' == 1 {
+    if("`e(scale)'" == "lncumhazard")    {
+      local needsode = wordcount("`rmst'`rmft'`crudeprob'`centilenospace'") == 1
+      if "`hastoffset'" != "" & wordcount("`survival'`failure'") == 1 local needsode 1
+      local needsdxb1 = "`hazard'`lnhazard'" != "" | `needsode'
+    }
+    else if("`e(scale)'" == "lnhazard")  {
+      local needsode = wordcount("`survival'`failure'`cumhazard'`rmst'`rmft'`crudeprob'`centilenospace'") == 1
+      local needsdxb1 0
+    }
+    else if("`e(scale)'" == "lnodds")   {
+      local needsode = wordcount("`rmst'`rmft'`centilenospace'") == 1
+      local needsdxb1 = "`hazard'`lnhazard'" != "" | `needsode'    
+    }
+    else if("`e(scale)'" == "probit")   {
+      local needsode = wordcount("`rmst'`rmft'`centilenospace'") == 1
+      local needsdxb1 = "`hazard'`lnhazard'" != "" | `needsode'    
+    }    
+  }
+  else {
+    local needsode 1
+    if inlist("`e(scale)'","lncumhazard","lnodds","probit") local needsdxb 1
+  }    
+  
   
   if "`atreference'" != "1" {
     capture numlist "`atreference'", min(1) max(1) range(>0)
@@ -460,7 +503,7 @@ program stpm3_pred, sortpreserve
     }
     if "`centile'" == "" {
       if `timevalues`i''==0 & "`framemerge'" == "" local timevartmp`i' `timevar`i''
-      gen `touse_timevar`i'' = !missing(`timevartmp`i'')
+      gen `touse_timevar`i'' = !missing(`timevartmp`i'') & `touse'
       local timevarlist `timevarlist' `timevartmp`i''
     }
     else {
@@ -584,10 +627,12 @@ program stpm3_pred, sortpreserve
           gen `timevartmp`i'' = 1
         }
       
+        if "`hastoffset'" != "" local toffsetopt toffset(`toffset`i'_m`m'')
         stpm3_gensplines, `knotsopt' `tvcopt'               ///
                           type(`e(splinetype)') hasdelentry(0)     ///
                           ttrans(`e(ttrans)') degree(`e(degree)')  ///
-                          timevar(`timevartmp`i'') scale(`e(scale)')
+                          timevar(`timevartmp`i'') scale(`e(scale)') ///
+                          `toffsetopt'
         tempvar tnot0_`i'
         qui gen byte `tnot0_`i'' = `timevartmp`i''>0
         local tnot0list `tnot0list' `tnot0_`i''                          
@@ -636,7 +681,11 @@ program stpm3_pred, sortpreserve
     ///***********************TVC******************************
     local knots_tvc`m'      `e(knots_tvc)'     
     local splinelist_tvc`m' `e(splinelist_tvc)'
-    local dftvc`m' = wordcount("`splinelist_tvc`m''") // update when separate knots
+    local splinevars_tvc`m' `e(splinevars_tvc)'
+
+
+    local dftvc`m' = wordcount("`splinevars_tvc`m''") // update when separate knots
+    
     local hastvc`m' = "`e(tvc)'" != ""
     local hasoffset`m' = "`e(offset)'" != ""    
     local hasconstant`m' = "`e(constant)'" == ""
@@ -698,17 +747,17 @@ program stpm3_pred, sortpreserve
 // frame for results
   if "`merge'" == "" {  
     if "`framemerge'" == "" {
-      if `hastimevar' & "`centile'" == "" {
-        frame put `timevarlist' `framecopy' if `touse_timevar1', into(`resframe')
+      if /*`hastimevar' &*/ "`centile'" == "" {
+        frame put `timevarlist' `framecopy' `touse' if `touse_timevar1' & `touse', into(`resframe')
         local timevarfinal `timevarlist'
         foreach tv in `timevarlist' {
           note `tv': stpm3_timevar
         }
       }
       else if "`centype'" == "variable" {
-        frame put `centilewritelist' `framecopy' if `touse_centile1', into(`resframe')
+        frame put `centilewritelist' `framecopy' if `touse_centile1' & `touse', into(`resframe')
       }
-      else frame create `resframe'
+      //else frame create `resframe'
     }
     else {
       forvalues i = 1/`Natoptions' {
@@ -720,22 +769,32 @@ program stpm3_pred, sortpreserve
     frame `resframe' {
       forvalues i = 1/`Natoptions' {
         if "`centile'" == "" {
+          //if `timevalues`i''==1 & "`framemerge'"=="" {
+          //  local nopt = cond("`timevalues`i'_n'"!="","n(`timevalues`i'_n')","")
+          //  if "`nopt'" == "" & ("`timevalues`i'_from'"=="`timevalues`i'_to'") local nopt n(`Nat`i'')
+          //  local stepopt = cond("`timevalues`i'_step'"!="","step(`timevalues`i'_step')","")
+          //  capture confirm variable `timevalues`i'_gen'
+          //  if _rc {
+          //    timevalues_gen `timevalues`i'_gen', from(`timevalues`i'_from') ///
+          //                                          to(`timevalues`i'_to')     ///
+          //                                          `nopt' `stepopt' `timevalues`i'_single'
+          //  }
+          //  local timevar`i' `timevalues`i'_gen'
+          //  local timevarfinal `timevarfinal' `timevar`i''          
+          // }
+
           if `timevalues`i''==1 & "`framemerge'"=="" {
-            local nopt = cond("`timevalues`i'_n'"!="","n(`timevalues`i'_n')","")
-            if "`nopt'" == "" & ("`timevalues`i'_from'"=="`timevalues`i'_to'") local nopt n(`Nat`i'')
-            local stepopt = cond("`timevalues`i'_step'"!="","step(`timevalues`i'_step')","")
-            capture confirm variable `timevalues`i'_gen'
+            capture confirm var `timevalues`i'_gen' 
             if _rc {
-              timevalues_gen `timevalues`i'_gen', from(`timevalues`i'_from') ///
-                                                    to(`timevalues`i'_to')     ///
-                                                    `nopt' `stepopt' `timevalues`i'_single'
+              gen `timevalues`i'_gen' = `timevartmp`i''
             }
-  
             local timevar`i' `timevalues`i'_gen'
-            local timevarfinal `timevarfinal' `timevar`i''          
+            local timevarfinal `timevarfinal' `timevar`i''
           }
+
+          if "`framemerge'" == "" local addtouse & `touse' 
           tempvar tnot0_`i'
-          gen byte `tnot0_`i'' = `timevar`i''>0 & !missing(`timevar`i'')
+          gen byte `tnot0_`i'' = `timevar`i''>0 & !missing(`timevar`i'') `addtouse'
           local results_write `results_write' `tnot0_`i''     
           foreach tv in `timevarfinal ' {
             note `tv': stpm3_timevar
@@ -810,13 +869,18 @@ program stpm3_pred, sortpreserve
         if "`centile'" == "" {
           capture confirm variable `timevalues`i'_gen', exact
           if _rc {        
-            local nopt = cond("`timevalues`i'_n'"!="","n(`timevalues`i'_n')","")
-            local stepopt = cond("`timevalues`i'_step'"!="","step(`timevalues`i'_step')","")
-            timevalues_gen `timevalues`i'_gen', from(`timevalues`i'_from') ///
-                                                to(`timevalues`i'_to')     ///
-                                                `nopt' `stepopt' `timevalues`i'_single'
+            //local nopt = cond("`timevalues`i'_n'"!="","n(`timevalues`i'_n')","")
+            //local stepopt = cond("`timevalues`i'_step'"!="","step(`timevalues`i'_step')","")
+            //timevalues_gen `timevalues`i'_gen', from(`timevalues`i'_from') ///
+            //                                    to(`timevalues`i'_to')     ///
+            //                                    `nopt' `stepopt' `timevalues`i'_single'
+            capture confirm var  `timevalues`i'_gen' 
+            if _rc {
+              gen `timevalues`i'_gen' = `timevartmp`i''
+            }
+            local timevar`i' `timevalues`i'_gen'
+            local timevarfinal `timevarfinal' `timevar`i''
           }
-          local timevar`i' `timevalues`i'_gen'
         }
         else {
           if "`centype'" == "numlist" {
@@ -828,7 +892,7 @@ program stpm3_pred, sortpreserve
       }
       if "`centile'" == "" {
         local timevarfinal `timevarfinal' `timevar`i''                                              
-        gen byte `tnot0_`i'' = `timevar`i''>0 & !missing(`timevar`i'')
+        gen byte `tnot0_`i'' = `timevar`i''>0 & !missing(`timevar`i'') & `touse'
         local results_write `results_write' `tnot0_`i''
       }
       else {
@@ -974,7 +1038,9 @@ end
 ////////////////////////////////////////////
 
 program define stpm3_Parsetimevar
-  syntax anything, [n(string) STep(string) gen(string) single atn(integer 0)]
+  syntax anything [if][in], [n(string) STep(string) gen(string) single atn(integer 0)]
+  
+  marksample touse
   if "`atn'" == "0" local atn
   capture confirm variable `anything'
   if _rc {

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.1 March 7, 2023 J. N. Luchman}{...}
+{* *! version 1.1.2 August 14, 2023 J. N. Luchman}{...}
 {cmd:help domme}
 
 {title:Title}
@@ -46,8 +46,8 @@ Because it is possible to submit only sets of parameter estimates, the
 initial parameter estimates specification statement is optional. {p_end}
 
 {p 4 6 2}
-{cmd:domme} requires installation of the {cmd:domin} package 
-(install {stata ssc install domin:here}). {p_end}
+{cmd:domme} requires installation of the {cmd:moremata} package 
+(install {stata ssc install moremata:here}). {p_end}
 
 
 {title:Table of Contents}
@@ -356,11 +356,11 @@ constraints. Use {help constraint dir} to list all defined constraints in memory
 
 {phang} Additional discussion of results, options, and conceptual issues on: 
 
-{phang}{browse "http://github.com/jluchman/domme/blob/master/README.md"}
+{phang}{browse "https://github.com/fmg-jluchman/domin/wiki"}
 
 {phang} Please report bugs, requests for features, and contribute to as well as follow on-going development of {cmd:domme} on:
 
-{phang}{browse "http://github.com/jluchman/domme"}
+{phang}{browse "http://github.com/jluchman/domin"}
 
 {title:Article}
 

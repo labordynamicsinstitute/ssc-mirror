@@ -203,6 +203,7 @@ p moreobs module to add observations to dataset
 p moss module to find multiple occurrences of substrings
 p motivate module providing motivation to users
 p motivatedolly module to provide quotes, lyrics and links to motivational songs from Dolly Parton 
+p mountainplot module to produce folded empirical distribution function curves (mountain plots)
 p movavg module using Mata to generate Moving Averages
 p movestay module for maximum likelihood estimation of endogenous regression switching models
 p mpi module to compute the Alkire-Foster multidimensional poverty measures and their decomposition by deprivation indicators and population sub-groups

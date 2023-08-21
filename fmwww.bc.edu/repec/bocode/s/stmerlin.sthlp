@@ -63,6 +63,8 @@ with a maximum of {cmd:time5({help stmerlin##mt_opts:{it:mt_opts}})}{p_end}
 {synopt :{opth moffset(varname)}}defines the offset to be taken away ("minused") from {cmd:_t} to define the additional timescale{p_end}
 {synopt :{opth df(#)}}degrees of freedom for timescale spline function{p_end}
 {synopt :{opt knots(knots_list)}}knot locations for the timescale spline function{p_end}
+{synopt :{opt time}}use splines of time rather than log time for 
+the timescale{p_end}
 {synopt :{opth tvc(varlist)}}time-dependent effects on the additional timescale{p_end}
 {synopt :{opth dftvc(numlist)}}degrees of freedom for each time-dependent effect{p_end}
 {synopt :{opt tvctime}}use splines of time rather than log time for time-dependent effects{p_end}
@@ -179,6 +181,8 @@ spline terms. Internal knots are placed at centiles of the event times. Boundary
 
 {phang}{opt knots(knots_list)} defines the knot locations for the spline functions used to model the additional timescale. Must include 
 boundary knots. Knots should be specified in increasing order.
+
+{phang}{opt time} specifies that restricted cubic splines of time are used to model the additional timescale, rather than the default of log time.
 
 {phang}{opt tvc(varlist)} specifies the variables that have time-dependent effects on the additional timescale. Time-dependent effects 
 are fitted using restricted cubic splines of time or log time (the default). The degrees of freedom are specified using the 

@@ -21,7 +21,7 @@
 {marker syntax}{...}
 {title:Syntax}
 {p 8 17 2}
-{cmdab:tofirsttreat} {varname} {cmd:,} [{opth i:d(panelvar)} {opth t:ime(timevar)} {opth gen:erate(newvar)}]
+{cmdab:tofirsttreat} {varname} [{cmd:,} {opth i:d(panelvar)} {opth t:ime(timevar)} {opth gen:erate(newvar)}]
 
 {marker description}{...}
 {title:Description}

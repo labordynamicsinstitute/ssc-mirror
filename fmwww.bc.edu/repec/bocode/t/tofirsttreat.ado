@@ -12,16 +12,14 @@ prog def tofirsttreat, sortpreserve
 		exit 198
 		}
     }
-	qui levelsof `id', local(units)
-	mata: units = strtoreal(tokens(st_local("units")))
 	mata: data = st_data(., "`id' `time' `varlist'");
+	mata: units = uniqrows(data[., 1])'
 	mata: tofirsttreat(data, "`varlist'", units, "`generate'")
 end
 
 mata:
 	real matrix tofirsttreat(real matrix data, string scalar treatvar, real matrix units, string scalar genvar){
-		real scalar time_max, i; real matrix data_tmp, data_sum, info, key, data_sum_random, data_res;
-		time_max = max(data[., 2]');
+		real scalar i; real matrix data_tmp, data_sum, info, key, data_sum_random, data_res;
 		data_tmp = select(data, data[.,3]);
 		_sort(data_tmp, (1,2,3));
 		info = panelsetup(data_tmp, 1, 2);

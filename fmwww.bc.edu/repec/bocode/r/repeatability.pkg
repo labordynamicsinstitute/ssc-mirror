@@ -1,0 +1,34 @@
+d 'REPEATABILITY': module to compute the repeatability coefficient
+d
+d  repeatability computes the repeatability coefficient (RC) which
+d has been described as the "consistency of quantitative results
+d obtained when the same imaging test is performed at  short
+d intervals on the same subjects or test objects using the same
+d equipment in the same center" (Barnhart & Barboriak 2009), or
+d interpreted as the "smallest detectable difference between a test
+d and retest measurement for a given subject, defined as a
+d 100(1−α/2)% quantile of the distribution of test-retest
+d differences" (Baumgartner et. al. 2018). More specifically, the
+d interpretation of RC is that the difference between any two
+d readings on the same subject is expected to be from −RC to RC
+d for 95% (or whatever level is specified) of subjects (Barnhart &
+d Barboriak 2009; Bland & Altman 1996).  repeatability computes
+d confidence intervals based on the chi2 method described by
+d Barnhart & Barboriak (2009), but I recommend using the bootstrap
+d as shown in the example below. 
+d
+d KW: repeatability coefficient
+d KW: quantitative data
+d KW: interrater agreement
+d KW: interrater reliability
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20230820
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f repeatability.ado
+f repeatability.sthlp
+f ../l/lungfunction.dta

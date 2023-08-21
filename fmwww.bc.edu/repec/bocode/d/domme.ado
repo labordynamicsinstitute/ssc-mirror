@@ -1,6 +1,6 @@
-*! domme version 1.1.1 3/7/2023 Joseph N. Luchman
+*! domme version 1.1.2 8/14/2023 Joseph N. Luchman
 
-capture include dominance.mata, adopath																	// include Mata-based dominance code
+capture include dominance0.mata, adopath																// include Mata-based dominance code
 
 program define domme, eclass 																			// ~ history and version information at end of file ~
 
@@ -26,13 +26,13 @@ program define domme, eclass 																			// ~ history and version informa
 		ROPts(string) ADDConstr(numlist)] 																//addconstr() and extraconstr() undocumented - for use in possible extensions
 
 	/*exit conditions*/
-	capture which dominance.mata																		//is -domin- present?
+	capture which lmoremata.mlib																		//is -moremata- present?
 
 
 	if _rc { 																							//if -domin- cannot be found, tell user to install it.
 
-		display "{err}Module {cmd:domin} not found.  Install " ///
-			"{cmd:domin} here {stata ssc install domin}."
+		display "{err}Module {cmd:moremata} not found.  Install " ///
+			"{cmd:moremata} here {stata ssc install moremata}."
 
 		exit 198
 
@@ -582,7 +582,7 @@ program define domme, eclass 																			// ~ history and version informa
 		mata: model_specs.constraint_list = tokens(st_local("nobrkt_constrs"))
 		mata: model_specs.built_in_cons = st_numscalar(st_local("consfs"))
 
-		mata: dominance(model_specs, &domme_call(), ///
+		mata: dominance0(model_specs, &domme_call(), ///
 		st_local("conditional'"), st_local("complete"), ///
 		st_local("ivs"), ///
 		st_numscalar(st_local("allfs")), ///
@@ -1067,4 +1067,7 @@ end
  - fixed complete dominance table display; retains equation name and adds informative prefix
  // 1.1.1 - March 7, 2023
  - call 'dominance.mata' as opposed to using 'lb_dominance.mlib' to allow backward compatability
+ // 1.1.2 - August 14, 2023
+ - migrated to a sub-method in the -domin- module
+ - call temporary 'dominance0.mata' (v 0.0) for time being until re-designed similar to -domin- to use 'dominance.mata' versions > 0.0
 */

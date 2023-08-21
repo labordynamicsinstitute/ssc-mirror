@@ -28,7 +28,9 @@ for some examples.
 {synoptset 29 tabbed}{...}
 {synopthdr}
 {synoptline}
-{synopt:{opt bhaz:ard(varname)}}relative survival models with baseline{varname}{p_end}
+{synopt:{opt allknots(numlist)}}knot locations for baseline hazard{p_end}
+{synopt:{opt allknotstvc(numlist)}}knot locations for time-dependent effects{p_end}
+{synopt:{opt bhaz:ard(varname)}}relative survival models with backgound rates {varname}{p_end}
 {synopt:{opt bknots(# #)}}location of boundary knots{p_end}
 {synopt:{opt bknotstvc(# #)}}location of boundary knots for time-dependent effects{p_end}
 {synopt:{opt deg:ree(#)}}degree when using B-splines{p_end}
@@ -90,6 +92,23 @@ For some tutorials and examples, see
 {title:Options}
 
 {dlgtab:Model}
+{phang}
+{opt allknots(# [# ...])} specifies knot locations for the baseline function, 
+as opposed to the default locations set by {cmd:df()}. 
+This option lists all knots including boundary knots.
+When specifying the knots, these are defined on the time scale by default.
+When {cmd:stpm3} uses a log transformation of time, the values inputted will
+be log transformed. Alternatively, the knots can be specified on the log scale using
+the {cmd:lntime} suboption or as percentiles of the distribution of event times
+using the {cmd:percentile}  suboption.
+
+{phang}
+{opt allknotstvc(numlist)} or {opt allknotstvc(varname # [#..#] ... varname # [#..#])}
+defines the knot locatations for time-dependent effects.
+This option lists all knots including boundary knots.
+The first syntax uses the same knots positions for all variables listed in {cmd:tvc()}.
+The second syntax allows different knot positions to be specified for each
+variable included in {cmd:tvc()}.
 
 {phang}
 {opt bhazard(varname)} is used when fitting relative survival models.
@@ -136,7 +155,7 @@ If using the second syntax, separate degrees of freedon can be listed for
 each covriate listed in the {cmd:tvc()} option.
 
 {phang}
-{opt knots(# [# ...])} specifies knot locations for the baseline function, 
+{opt knots(# [# ...])} specifies internal knot locations for the baseline function, 
 as opposed to the default locations set by {cmd:df()}. 
 When specifying the knots, these are defined on the time scale by default.
 When {cmd:stpm3} uses a log transformation of time, the values inputted will
@@ -146,7 +165,7 @@ using the {cmd:percentile}  suboption.
 
 {phang}
 {opt knotstvc(numlist)} or {opt knotstvc(varname # [#..#] ... varname # [#..#])}
-defines the knot locatations for time-dependent effects.
+defines the internal knot locatations for time-dependent effects.
 The first syntax uses the same knots positions for all variables listed in {cmd:tvc()}.
 The second syntax allows different knot positions to be specified for each
 variable included in {cmd:tvc()}.

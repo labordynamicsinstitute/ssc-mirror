@@ -20,7 +20,8 @@ program define stpm3_gensplines,
                  subcentile(string)             ///
                  nolocalreturn                  ///
                  scale(string)                  ///
-				 wtvar(string)                  ///
+                 toffset(string)                ///
+                 wtvar(string)                  ///
                  ]
 
   local tt `varlist'    
@@ -28,15 +29,16 @@ program define stpm3_gensplines,
 
 // ttrans() option
   tempvar tt tt0 
-  if "`timevar'" == "" local timevar _t
-  if "`ttrans'" == "lnt"       qui gen double `tt' = ln(`timevar') if `touse'
-  else if "`ttrans'" == "none" qui gen double `tt' = `timevar'     if `touse'
+  if "`toffset'" == "" local toffset 0
+  if "`timevar'" == "" local timevar _t + `toffset'
+  if "`ttrans'" == "lnt"       qui gen double `tt' = ln(`timevar' + `toffset') if `touse'
+  else if "`ttrans'" == "none" qui gen double `tt' = `timevar' + `toffset'    if `touse'
   else qui gen double `tt' = `ttrans' if `touse'
   
   // should not work with timevar option
   if `hasdelentry' {
-    if "`ttrans'" == "lnt"       qui gen double `tt0' = ln(_t0) if `touse' 
-    else if "`ttrans'" == "none" qui gen double `tt0' = _t0     if `touse'
+    if "`ttrans'" == "lnt"       qui gen double `tt0' = ln(_t0 + `toffset') if `touse' 
+    else if "`ttrans'" == "none" qui gen double `tt0' = _t0 + `toffset'    if `touse'
     else {
       local ttrans0 = subinstr("`ttrans'","_t","_t0")
       qui gen double `tt0' = `ttrans0'    if `touse'    

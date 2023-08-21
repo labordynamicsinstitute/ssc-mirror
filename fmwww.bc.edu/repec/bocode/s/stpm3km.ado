@@ -54,8 +54,8 @@ program define stpm3km
       qui predict `PI' if `touse', xbnotime merge
     }
     else {
-      gen `TPI' = `pitime'
-      qui predict `PI' if `touse', xb timevar(`TPI') merge      
+      gen `TPI' = `pitime' if `touse'
+      qui predict `PI' , xb timevar(`TPI') merge      
     }
 	  local haspi haspi
 	  local varlist `PI'

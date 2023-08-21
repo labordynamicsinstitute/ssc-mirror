@@ -227,6 +227,14 @@ so use the main {cmd:timevar()} option unless you have a good reason not to.
 {opt setbaseline} See main {cmd: setbaseline} option. 
 
 {phang3}
+{opt toffset(# ..)} This option can be used in a competing risks when
+you want to offset the time variable by a certain amount. It is most
+commonly used in a competing risks setting when the models use different
+time scales. For example, cause 1 is time since diagnosis and cause 2 is
+attained age. Then using {cmd:toffset(0 50)} would use the original
+time scale for cause 1 and predict for a 50 year old for cause 2.
+
+{phang3}
 {opt zeros} A synonym for {cmd:setbaseline}. 
 
 {phang2}

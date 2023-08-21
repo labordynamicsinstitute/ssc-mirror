@@ -1,7 +1,7 @@
-*! version 1.0 2023-05-21
+*! version 1.02 2023-08-16
 program define standsurv, rclass sortpreserve
   version 16.1
-  syntax [if] [in],                   ///
+  syntax [anything] [if] [in],        ///
     [                                 ///  
         ATVars(string)                /// list or stub for at variables
         ATReference(integer 1)        /// reference at() - default 1
@@ -170,10 +170,9 @@ program define standsurv, rclass sortpreserve
   }
   
   // nogen option
-
   if "`gen'" != "" {
-    if "`contrast'" == "" {
-      di as error "Only use the nogen option when in combination with the contrast option."
+    if "`contrast'" == "" | "`lincom'" == "" {
+      di as error "Only use the nogen option when in combination with the contrast or lincom options."
       exit 198
     }
     if "`atvars'" != "" {
@@ -562,6 +561,13 @@ program define standsurv, rclass sortpreserve
   
 // names of new variables
 // ######## UPDATE for MSMODELS if stub2name used
+  if  "`anything'" != "" {
+  	if "`atvars'" != "" {
+  	  di as err "You can't specify new varible names and the atvar option"
+	  exit 198
+	}
+	else local atvars `anything'
+  }
   if "`atvars'" == "" {
     if ((`Nmsmodels' == 1 & "`crudeprob'" == "") | /// 
        ((`Ncrmodels' > 1 & "`cif'" == "")  & "`crudeprobpart'" == "")) {
@@ -570,7 +576,6 @@ program define standsurv, rclass sortpreserve
       }
     }
     else {
-      set trace on
       forvalues i = 1/`N_at_options' {
         foreach s in `stub2' {
           local at_varnames `at_varnames' _at`i'_`s'

@@ -1,4 +1,4 @@
-adopath + "C:\Users\\`c(username)\'\Dropbox (Heriot-Watt University Team)\Ditzen\Research\StataCode\simulate2\ado"
+adopath + "....\simulate2\ado"
 cap program drop simulate2
 cap program drop psimulate2
 clear all
@@ -35,13 +35,13 @@ frame copy `c(frame)' simulate, replace
 simulate2 , reps(`runs') seed(123) seedsave(seed1, frame) saving(simulate2, frame): testsimul 200
 
 ** Two instances with psimulate2
-psimulate2 , reps(`runs') seed(123) p(2, temppath("C:\LocalStore\jd71\temp")) seedsave(seed, frame) saving(total, frame): testsimul 200
+psimulate2 , reps(`runs') seed(123) p(2, temppath("...\temp")) seedsave(seed, frame) saving(total, frame): testsimul 200
 
 ** Now run two with 500 and compare them to the results from before. Use the same seeds again
 local runs = 500
-psimulate2 , reps(`runs') seed(seed seed rng seedstream, frame) p(2, temppath("C:\LocalStore\jd71\temp"))  saving(first, frame): testsimul 200
+psimulate2 , reps(`runs') seed(seed seed rng seedstream, frame) p(2, temppath("...\temp"))  saving(first, frame): testsimul 200
 
-psimulate2 , reps(`runs') seed(seed seed rng seedstream, frame start(501) ) p(2, temppath("C:\LocalStore\jd71\temp")) saving(second, frame) : testsimul 200
+psimulate2 , reps(`runs') seed(seed seed rng seedstream, frame start(501) ) p(2, temppath("...\temp")) saving(second, frame) : testsimul 200
 
 ** Check results for _n > 500
 sum b V 
@@ -59,9 +59,9 @@ frame simulate2: sum b V if _n  <= 500
 ** To obtain the same results, use seeds saved in seed 1 from simulate2
 ** Now run two with 500 and compare them to the results from before. Use the same seeds again
 local runs = 500
-psimulate2 , reps(`runs') seed(seed1 seed rng seedstream, frame) p(2, temppath("C:\LocalStore\jd71\temp"))  saving(first, frame): testsimul 200
+psimulate2 , reps(`runs') seed(seed1 seed rng seedstream, frame) p(2, temppath("...\temp"))  saving(first, frame): testsimul 200
 
-psimulate2 , reps(`runs') seed(seed1 seed rng seedstream, frame start(501) ) p(2, temppath("C:\LocalStore\jd71\temp")) saving(second, frame) : testsimul 200
+psimulate2 , reps(`runs') seed(seed1 seed rng seedstream, frame start(501) ) p(2, temppath("...\temp")) saving(second, frame) : testsimul 200
 
 frame second: sum b V 
 frame simulate: sum b V if _n > 500

@@ -21,6 +21,7 @@ program Predict
                                                                 /// statistics
                                 MU                                      ///
                                 ETA                                     ///
+                                DENSity                                 ///
                                 SURVival                                ///
 				TOTALSURVival		                ///
 				CIF			                ///
@@ -66,7 +67,7 @@ program Predict
 				ETARatio				///
 									///
                                 INTPoints(numlist int max=1 >0) 	///
-				CHINTPoints(numlist int max=1 >15)	///	-overrides those use in estimation-
+				CHINTPoints(numlist int max=1 >15)	///	-overrides those used in estimation-
 									///
 				DEBUG					///	NOTDOC
 				BLUPIF(string)				///
@@ -111,6 +112,7 @@ program Predict
         }
         local STAT      `mu'            	///
                         `eta'           	///
+                        `density'               ///
                         `survival'      	///
 			`totalsurvival'		///
 			`cif'			///
@@ -140,13 +142,35 @@ program Predict
                         `reses'			//
 						
         opts_exclusive "`STAT'"
-
+        
+        if "`e(predictnotok)'"!="" {
+                local notok = 0
+                foreach pred in `e(predictnotok)' {
+                        if "`pred'"=="`STAT'" {
+                                local notok = 1
+                        }
+                }
+                if `notok' {
+                        di as error "prediction {bf:`STAT'} not allowed"
+                        exit 198
+                }
+        }
+        
         if "`STAT'" == "" {
-                di as txt "(option {bf:mu} assumed)"
-                local STAT mu
+                if "`e(cmd2)'"=="stexcess" |    ///
+                        "`e(cmd2)'"=="stmerlin" |       ///
+                        "`e(cmd2)'"=="stmixed" {
+                        local STAT survival
+                        di as txt "(option {bf:survival} assumed)"
+                }
+                else {                
+                        di as txt "(option {bf:mu} assumed)"
+                        local STAT mu
+                }
         }
 
-        if ("`marginal'"!="" | "`reffects'"!="" | "`reses'"!="" | "`fitted'"!="") & "`e(levelvars)'"=="" {
+        if ("`marginal'"!="" | "`reffects'"!="" | "`reses'"!="" ///
+                | "`fitted'"!="") & "`e(levelvars)'"=="" {
                 di as error "marginal/reffects/reses/fitted require random effects in your model"
                 exit 1986
         }
@@ -156,7 +180,8 @@ program Predict
                 exit 198
         }
         
-        if (strpos("`STAT'","difference") | strpos("`STAT'","ratio")) & ("`at1'"=="" | "`at2'"=="") {
+        if (strpos("`STAT'","difference") | strpos("`STAT'","ratio")) ///
+                & ("`at1'"=="" | "`at2'"=="") {
                 di as error "at1() and at2() required with ?ratio and ?difference predictions"
                 exit 198
         }
@@ -166,17 +191,20 @@ program Predict
                 exit 198
         }
         
-        if "`ltruncated'"!="" & "`STAT'"!="survival" & "`STAT'"!="cif" & "`STAT'"!="totalsurvival" {
+        if "`ltruncated'"!="" & "`STAT'"!="survival" &  ///
+                "`STAT'"!="cif" & "`STAT'"!="totalsurvival" {
                 di as error "ltruncated() can only be used with survival/totalsurvival/cif"
                 exit 198
         }
         
         if "`standardise'"!="" {
-                if "`STAT'"=="hazard" | "`STAT'"=="hdifference" | "`STAT'"=="hratio" {
+                if "`STAT'"=="hazard" | "`STAT'"=="hdifference" | ///
+                        "`STAT'"=="hratio" {
                         di as error "standardise not supported with `STAT'"
                         exit 198
                 }
-                if "`STAT'"=="chazard" | "`STAT'"=="chdifference" | "`STAT'"=="chratio" {
+                if "`STAT'"=="chazard" | "`STAT'"=="chdifference" | ///
+                        "`STAT'"=="chratio" {
                         di as error "standardise not supported with `STAT'"
                         exit 198
                 }
@@ -187,7 +215,8 @@ program Predict
         }
 		
         if "`e(family1)'"=="cox" {
-                if ("`STAT'"=="rmst" | "`STAT'"=="rmft" | "`STAT'"=="timelost") {
+                if ("`STAT'"=="rmst" | "`STAT'"=="rmft" | ///
+                        "`STAT'"=="timelost") {
                         di as error "`STAT' not currently available with family(cox)"
                         exit 198
                 }
@@ -245,7 +274,12 @@ program Predict
                 _stubstar2names `newvar', nvars(1)
         }
         local newvar `s(varlist)'	
-		
+
+        if "`e(failure`outcome')"=="" & "`STAT'"=="density" {
+                di as error "{bf:density} currently only allowed with survival outcomes"
+                exit 198
+        }
+        
         // postestimation sample
         
         tempname touse
@@ -404,7 +438,8 @@ program Predict
                 
                 //handle overoutcome()
                 if "`overoutcome'"!="" {
-                        local copyat `at'						//prevents overoutcome's at() overiding main one
+                        local copyat `at'	//prevents overoutcome's at() 
+                                                //overiding main one
                         local 0 `overoutcome'
                         syntax anything , [AT(string)]
                         confirm integer number `anything'
@@ -431,55 +466,13 @@ program Predict
                 }
 
                 //==========================================================================================//
-                                        
-                if !strpos("`STAT'","difference") & !strpos("`STAT'","ratio") & "`ltruncated'"=="" {
+                // main prediction call
                 
-                        //get coefficients and refill struct
-                        tempname best
-                        mat `best' = e(b)
-                        
-                        //remove any options
-                        local cmd `e(cmdline)'
-                        gettoken merlin cmd : cmd
-                        gettoken cmd rhs : cmd, parse(",") bind
-                        if substr("`rhs'",1,1)=="," {
-                                local opts substr("`rhs'",2,.)
-                                local 0 , `opts'
-                                syntax , [COVariance(passthru) REDISTribution(passthru) DF(passthru) Weights(passthru) *]
-                                local opts `covariance' `redistribution' `df' `weights'
-                        }
-
-                        //recall merlin
-                        tempname tousem
-                        quietly `noisily' merlin_parse `GML' , touse(`tousem') : `cmd'  ///
-                                                             , 				///
-                                        `opts'						///
-                                        predict 					///
-                                        predtouse(`touse')			        ///
-                                        nogen 						///
-                                        from(`best') 				        ///
-                                        `intmethods' 				        ///
-                                        `intpoints' 				        ///
-                                        `pchintpoints'				        ///	
-                                        `ptvar'						///
-                                        `standardise'				        ///
-                                        `passtmat'					///
-                                        `reffects'					///
-                                        `reses'						///
-                                        `devcodes'					///
-                                        indicator(`e(indicator)')                       ///    
-                                        `debug'                                         //
-                                        
-                        //tidy up constraints
-                        local mlcns		`"`r(constr)'"'
-                        if "`mlcns'" != "" {
-                                cap constraint drop `mlcns'
-                        }
-
-                        mata: merlin_predict("`GML'","`newvar'","`touse'","`STAT'","`xbtype'")
-
-                }
-                else if strpos("`STAT'","difference") {
+                
+                // first handles special cases which call nested predict statements
+                // else calls core predict
+                
+                if strpos("`STAT'","difference") {
                         
                         local diff survival
                         if "`STAT'"=="hdifference" {
@@ -498,9 +491,12 @@ program Predict
                                 local diff eta
                         }
                         
-                        predictnl double `newvar' = predict(`diff' `xbtype' at(`at1') timevar(`timevar') `globalopts') 	///
-                                             - predict(`diff' `xbtype' at(`at2') timevar(`timevar') `globalopts')	///
-                                             if `touse'
+                        predictnl double `newvar' =                        ///
+                                predict(`diff' `xbtype' at(`at1')          ///
+                                        timevar(`timevar') `globalopts')   ///
+                              - predict(`diff' `xbtype' at(`at2')          ///
+                                        timevar(`timevar') `globalopts')   ///
+                              if `touse'
                 }
                 else if strpos("`STAT'","ratio") {
                         
@@ -526,58 +522,176 @@ program Predict
                         }
                         
                         if "`e(family1)'"=="cox" {
-                                predictnl double `newvar' = exp(predict(`ratio' `xbtype' at(`at1') timevar(`timevar') `globalopts')     ///
-                                                     - 	predict(`ratio' `xbtype' at(`at2') timevar(`timevar') `globalopts')) 	        ///
-                                          if `touse'
+                                predictnl double `newvar' =                ///
+                                     exp(predict(`ratio' `xbtype'          ///
+                                        at(`at1') timevar(`timevar')       ///
+                                        `globalopts')                      ///
+                                     -  predict(`ratio' `xbtype'           ///
+                                        at(`at2') timevar(`timevar')       ///
+                                        `globalopts')) 	                   ///
+                                     if `touse'
                         }
                         else {
-                                predictnl double `newvar' = 	predict(`ratio' `xbtype' at(`at1') timevar(`timevar') `globalopts') 	///
-                                                        /       predict(`ratio' `xbtype' at(`at2') timevar(`timevar') `globalopts') 	///
-                                                          if `touse'
+                                predictnl double `newvar' = 	        ///
+                                        predict(`ratio' `xbtype'        ///
+                                                at(`at1')               ///
+                                                timevar(`timevar')      ///
+                                                `globalopts') 	        ///
+                                      / predict(`ratio' `xbtype'        ///
+                                                at(`at2')               ///
+                                                timevar(`timevar')      ///
+                                                `globalopts') 	        ///
+                                        if `touse'
                         }
                         
-                }		
-                else {
-                        //ltruncated
+                }
+                else if "`ltruncated'"!="" {
+
                         if "`STAT'"=="survival" {
-                                predictnl double `newvar' = predict(survival `xbtype' at(`at') timevar(`timevar') `globalopts') ///
-                                                     / predict(survival `xbtype' at(`at') timevar(`ltruncated') `globalopts') 	///
-                                                     if `touse'
+                                predictnl double `newvar' =             ///
+                                        predict(survival `xbtype'       ///
+                                                at(`at')                ///
+                                                timevar(`timevar')      ///
+                                                `globalopts')           ///
+                                      / predict(survival `xbtype'       ///
+                                                at(`at')                ///
+                                                timevar(`ltruncated')   ///
+                                                `globalopts') 	        ///
+                                        if `touse'
                         }
                         else if "`STAT'"=="totalsurvival" {
-                                predictnl double `newvar' = predict(totalsurvival `xbtype' at(`at') timevar(`timevar') `globalopts')    ///
-                                                     / predict(totalsurvival `xbtype' at(`at') timevar(`ltruncated') 	`globalopts') 	///
-                                                     if `touse'
+                                predictnl double `newvar' =             ///
+                                        predict(totalsurvival `xbtype'  ///
+                                                at(`at')                ///
+                                                timevar(`timevar')      ///
+                                                `globalopts')           ///
+                                      / predict(totalsurvival `xbtype'  ///
+                                                at(`at')                ///
+                                                timevar(`ltruncated')   ///
+                                                `globalopts') 	        ///
+                                        if `touse'
                         }
-                        else {
-                                predictnl double `newvar' = (	predict(cif `xbtype' at(`at') timevar(`timevar') `globalopts')     ///
-                                                     - predict(cif `xbtype' at(`at') timevar(`ltruncated') `globalopts'))          ///
-                                                     / predict(totalsurvival `xbtype' at(`at') timevar(`ltruncated') `globalopts') ///
-                                                     if `touse'
+                        else {  //cif 
+                                predictnl double `newvar' =             ///
+                                        (predict(cif `xbtype' at(`at')  ///
+                                                timevar(`timevar')      ///
+                                                `globalopts')           ///
+                                       - predict(cif `xbtype' at(`at')  ///
+                                                timevar(`ltruncated')   ///
+                                                `globalopts'))          ///
+                                       / predict(totalsurvival `xbtype' ///
+                                                at(`at')                ///
+                                                timevar(`ltruncated')   ///
+                                                `globalopts')           ///
+                                       if `touse'
                         }
                 }
+                else if "`STAT'"=="hazard" & "`xbtype'"=="marginal" {
+                        
+                        predictnl double `newvar' =                     ///
+                                predict(density marginal                ///
+                                        at(`at')                        ///
+                                        timevar(`timevar')              ///
+                                        `globalopts')                   ///
+                              / predict(survival marginal               ///
+                                        at(`at')                        ///
+                                        timevar(`timevar')              ///
+                                        `globalopts')                   ///
+                                if `touse'  
+                        
+                }
+                else {
                 
+                        //get coefficients and refill struct
+                        tempname best
+                        mat `best' = e(b)
+                        
+                        //remove any options
+                        local cmd `e(cmdline)'
+                        gettoken merlin cmd : cmd
+                        gettoken cmd rhs : cmd, parse(",") bind
+                        if substr("`rhs'",1,1)=="," {
+                                local opts substr("`rhs'",2,.)
+                                local 0 , `opts'
+                                syntax , [                               ///
+                                                COVariance(passthru)     ///
+                                                REDISTribution(passthru) ///
+                                                DF(passthru)             ///
+                                                Weights(passthru)        ///
+                                                *                        ///
+                                         ]
+                                local opts `covariance' `redistribution' ///
+                                                `df' `weights'
+                        }
+
+                        //recall merlin
+                        tempname tousem
+                        quietly `noisily' merlin_parse `GML' ,          ///
+                                                touse(`tousem') : `cmd' ///
+                                                             , 		///
+                                        `opts'				///
+                                        predict 			///
+                                        predtouse(`touse')		///
+                                        nogen 				///
+                                        from(`best') 			///
+                                        `intmethods' 			///
+                                        `intpoints' 			///
+                                        `pchintpoints'			///	
+                                        `ptvar'				///
+                                        `standardise'			///
+                                        `passtmat'			///
+                                        `reffects'			///
+                                        `reses'				///
+                                        `devcodes'			///
+                                        indicator(`e(indicator)')       ///
+                                        `debug'                         //
+                                        
+                        //tidy up constraints
+                        local mlcns		`"`r(constr)'"'
+                        if "`mlcns'" != "" {
+                                cap constraint drop `mlcns'
+                        }
+
+                        mata: merlin_predict("`GML'","`newvar'",        ///
+                                        "`touse'","`STAT'","`xbtype'")
+
+                }	
+                //done predicting
+                
+                //now t0 fixes
                 //handle special cases at time = 0, mainly for log(t) issues
-                if  "`e(family1)'"!="cox" {
-                        if ("`STAT'"=="survival" | "`STAT'"=="totalsurvival") & "`ltruncated'"=="" {
+                if  "`e(family`outcome')'"!="cox" {
+                        if ("`STAT'"=="survival" |                      ///
+                                "`STAT'"=="totalsurvival") &            ///
+                                "`ltruncated'"=="" {
                                 quietly replace `newvar' = 1 if `timevar'==0
                         }
-                        else if ("`STAT'"=="survival" | "`STAT'"=="totalsurvival") & "`ltruncated'"!="" {
-                                quietly replace `newvar' = 1 if `timevar'==`ltruncated' & !missing(`timevar')
+                        else if ("`STAT'"=="survival" |                 ///
+                                        "`STAT'"=="totalsurvival") &    ///
+                                        "`ltruncated'"!="" {
+                                quietly replace `newvar' = 1 if         ///
+                                        `timevar'==`ltruncated' &       ///
+                                        !missing(`timevar')
                         }
                         else if "`STAT'"=="cif" & "`ltruncated'"!="" {
-                                quietly replace `newvar' = 0 if `timevar'==`ltruncated' & !missing(`timevar')
+                                quietly replace `newvar' = 0 if         ///
+                                        `timevar'==`ltruncated' &       ///
+                                        !missing(`timevar')
                         }
-                        else if ("`STAT'"=="cif" | "`STAT'"=="chazard"          ///
-                                | "`STAT'"=="rmst" | "`STAT'"=="sdifference"    ///
-                                | "`STAT'"=="cifdifference"                     ///
-                                | "`STAT'"=="rmstdifference") {
+                        else if ("`STAT'"=="cif" |                      ///
+                                        "`STAT'"=="chazard" |           ///
+                                        "`STAT'"=="rmst" |              ///
+                                        "`STAT'"=="sdifference" |       ///
+                                        "`STAT'"=="cifdifference" |     ///
+                                        "`STAT'"=="rmstdifference") {
                                 quietly replace `newvar' = 0 if `timevar'==0
                         }
                 }
                 MISSMSG `newvar'
 
         }
+        
+        // predictions with confidence intervals
         else {
                 
                 if "`e(family1)'"!="cox" {
@@ -606,6 +720,7 @@ program Predict
                                           `globalopts')						///
                                           `close'						///
                                   if `touse', ci(`newvar'_lci `newvar'_uci)
+                        
                         if "`func'"=="log(" {
                                 qui {
                                         replace `newvar' = exp(`newvar')

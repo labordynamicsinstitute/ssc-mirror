@@ -38,8 +38,8 @@
     ereturn local  cmd  "ecic"
  
     ereturn display
-	di "*  ecic is based on Sasaki, Y. & Wang, Y. (2022): Extreme Changes in Changes."
-	di "   arXiv:2211.14870."
+	di "*  ecic is based on Sasaki, Y. & Wang, Y: Extreme Changes in Changes."
+	di "   Journal of Business & Economic Statistics, Forthcoming."
 end
 ////////////////////////////////////////////////////////////////////////////////
  
