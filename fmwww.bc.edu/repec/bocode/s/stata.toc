@@ -5,6 +5,7 @@
 p sadi Sequence analysis distance measures
 p sankey module for Sankey diagrams 
 p scatterfit module to produce scatter plots with fit lines
+p setroot module to find the root path of a project and set it as a global variable
 p simsum module to perform analyses of simulation studies including Monte Carlo error
 p simulate2 module enhancing and parallelising simulate
 p sivqr module to perform smoothed IV quantile regression

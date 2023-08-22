@@ -1,0 +1,20 @@
+d 'SETROOT': module to find the root path of a project and set it as a global variable
+d
+d   Use setroot to improve the reproductibility of your research,
+d by ensuring that all code and files are accessed with    respect
+d to the top-level directory of your project, instead of using
+d hardcoded or relative paths. 
+d
+d KW: programming
+d KW: reproducibility
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20230821
+d
+d Author: Sergio Correia, Board of Governors of the Federal Reserve System
+d Support: email sergio.correia@@gmail.com
+d
+f setroot.ado
+f setroot.sthlp
+f ../r/require-sj.pdf

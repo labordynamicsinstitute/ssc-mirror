@@ -1,0 +1,22 @@
+d 'REQUIRE': module to ensure that installed packages have a minimum or exact version.
+d
+d    Use require to help the reproductibility of your research, by
+d ensuring that people that run your code are using    compatible
+d versions of the packages you use (either minimum versions, of
+d exact versions). 
+d
+d KW: programming
+d KW: reproducibility
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20230821
+d
+d Author: Sergio Correia, Board of Governors of the Federal Reserve System
+d Support: email sergio.correia@@gmail.com
+d
+d Author: Matthew P. Seay, Board of Governors of the Federal Reserve System
+d Support: email matt.seay@@frb.gov
+d
+f require.ado
+f require.sthlp

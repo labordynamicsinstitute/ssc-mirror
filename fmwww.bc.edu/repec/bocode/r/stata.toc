@@ -141,6 +141,7 @@ p replacen module to replace contents in exactly n observations
 p report module to produce tables for XML
 p reporterror module to estimate true distribution from noisy measurements
 p repsample module to perform representative sampling from a population or theoretical distributions
+p require module to ensure that installed packages have a minimum or exact version.
 p reset module to calculate specification tests in regression analysis
 p reset2 module to calculate specification tests in 2SLS-IV regression analysis
 p resetxt Module to Compute Panel Data REgression Specification Error Tests (RESET)

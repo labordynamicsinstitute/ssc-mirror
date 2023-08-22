@@ -18,11 +18,13 @@ class Factor
 	`String'				method				// Hash fn used
 	//`Vector'				sorted_levels
 	`Boolean'				is_sorted			// Is varlist==sorted(varlist)?
-	`String'				sortedby			// undocumented; save sort order of dataset
+	`StringRowVector'		sortedby			// undocumented; save sort order of dataset
 	`Boolean'				panel_is_setup
+	`Boolean'				levels_as_keys		// when running F3=join_factors(F1, F2), use the levels of F1/F2 as keys for F3 (useful when F1.keys is missing)
 
 	`Void'					new()
-	`Void'					panelsetup()		// aux. vectors
+	`Void'					swap()
+	virtual `Void'			panelsetup()		// aux. vectors
 	`Void'					store_levels()		// Store levels in the dta
 	`Void'					store_keys()		// Store keys & format/lbls
 	`DataFrame'				sort()				// Initialize panel view
@@ -33,17 +35,17 @@ class Factor
 	`Boolean'				equals()			// True if F1 == F2
 
 	`Void'					__inner_drop()		// Adjust to dropping obs.
-	`Vector'				drop_singletons()	// Adjust to dropping obs.
-	`Void'					drop_obs()			// Adjust to dropping obs.
+	virtual `Vector'		drop_singletons()	// Adjust to dropping obs.
+	virtual `Void'			drop_obs()			// Adjust to dropping obs.
 	`Void'					keep_obs()			// Adjust to dropping obs.
 	`Void'					drop_if()			// Adjust to dropping obs.
 	`Void'					keep_if()			// Adjust to dropping obs.
 	`Boolean'				is_id()				// 1 if all(F.counts:==1)
 
 	`Vector'				intersect()			// 1 if Y intersects with F.keys
-	
-	`Dict'					extra				// extra information
-	
+	virtual `Void'			cleanup_before_saving() // set .vl and .extra to missing
+
+	`Dict'					extra				// keep for compatibility with reghdfe v5
 }
 
 
@@ -57,8 +59,32 @@ class Factor
 	inv_p = J(0, 1, .)
 	touse = ""
 	panel_is_setup = 0
-	extra = asarray_create("string", 1, 20)
 	is_sorted = 0
+	extra = asarray_create("string", 1, 20) // keep for compatibility with reghdfe v5
+}
+
+
+`Void' Factor::swap(`Factor' other)
+{
+	::swap(this.num_levels, other.num_levels)
+	::swap(this.num_obs, other.num_obs)
+	::swap(this.touse, other.touse)
+	::swap(this.varlist, other.varlist)
+	::swap(this.varformats, other.varformats)
+	::swap(this.varlabels, other.varlabels)
+	::swap(this.varvaluelabels, other.varvaluelabels)
+	::swap(this.vartypes, other.vartypes)
+	::swap(this.vl, other.vl)
+	::swap(this.levels, other.levels)
+	::swap(this.keys, other.keys)
+	::swap(this.counts, other.counts)
+	::swap(this.info, other.info)
+	::swap(this.p, other.p)
+	::swap(this.inv_p, other.inv_p)
+	::swap(this.method, other.method)
+	::swap(this.is_sorted, other.is_sorted)
+	::swap(this.sortedby, other.sortedby)
+	::swap(this.panel_is_setup, other.panel_is_setup)
 }
 
 
@@ -333,6 +359,7 @@ class Factor
 }
 
 
+// KEPT ONLY FOR BACKWARDS COMPAT
 `Vector' Factor::drop_singletons(| `Vector' fweight,
                                    `Boolean' zero_threshold)
 {
@@ -420,6 +447,12 @@ class Factor
 }
 
 
+`Void' Factor::cleanup_before_saving()
+{
+	this.vl = this.extra = .
+}
+
+
 // Main functions -------------------------------------------------------------
 
 `Factor' factor(`Varlist' varnames,
@@ -434,7 +467,7 @@ class Factor
 	`Factor'				F
 	`Varlist'				vars
 	`DataFrame'				data
-	`Integer'				i
+	`Integer'				i, k
 	`Boolean'				integers_only
 	`Boolean'				touse_is_selectvar
 	`String'				var, lbl
@@ -450,6 +483,7 @@ class Factor
 	}
 
 	vars = tokens(invtokens(varnames))
+	k = cols(vars)
 
 	// touse is a string with the -touse- variable (a 0/1 mask), unless
 	// we use an undocumented feature where it is an observation index
@@ -480,10 +514,13 @@ class Factor
 		            vars, touse)
 	}
 
-	F.sortedby = st_macroexpand("`" + ": sortedby" + "'")
-	if (!F.is_sorted) {
-		F.is_sorted = strpos(F.sortedby, invtokens(vars)) == 1
+	F.sortedby = tokens(st_macroexpand("`" + ": sortedby" + "'"))
+	
+	if (!F.is_sorted & cols(F.sortedby)) {
+		i = min((k, cols(F.sortedby)))
+		F.is_sorted = vars == F.sortedby[1..i]
 	}
+
 	if (!F.is_sorted & integers_only & cols(data)==1 & rows(data)>1) {
 		F.is_sorted = all( data :<= (data[| 2, 1 \ rows(data), 1 |] \ .) )
 	}
@@ -492,7 +529,7 @@ class Factor
 	F.varformats = F.varlabels = F.varvaluelabels = F.vartypes = J(1, cols(vars), "")
 	F.vl = asarray_create("string", 1)
 	
-	for (i = 1; i <= cols(vars); i++) {
+	for (i = 1; i <= k; i++) {
 		var = vars[i]
 		F.varformats[i] = st_varformat(var)
 		F.varlabels[i] = st_varlabel(var)
@@ -525,7 +562,7 @@ class Factor
                  `Varlist' vars, 			// hack
                  `DataCol' touse)		 	// hack
 {
-	`Factor'				F, F1, F2
+	`Factor'				F
 	`Integer'				num_obs, num_vars
 	`Integer'				i
 	`Integer'				limit0
@@ -599,10 +636,7 @@ class Factor
 	// Hack: alternative approach
 	// all(delta :< num_obs) --> otherwise we should just run hash1
 	if (base_method == "mata" & method == "hash1" & integers_only & num_vars > 1 & cols(vars)==num_vars & num_obs > 1e5 & all(delta :< num_obs)) {
-		F1 = factor(vars[1], touse, verbose, "mata", sort_levels, 1, ., save_keys)
-		F2 = factor(vars[2..num_vars], touse, verbose, "mata", sort_levels, count_levels, ., save_keys)
-		F = join_factors(F1, F2, count_levels, save_keys)
-		F1 = F2 = Factor() // clear
+		F = _factor_alt(vars[1], vars[2..num_vars], touse, verbose, sort_levels, count_levels, save_keys)
 		method = "join"
 	}
 	else if (method == "hash0") {
@@ -635,6 +669,22 @@ class Factor
 }
 
 
+`Factor' _factor_alt(`Varname' first_var,
+					 `Varlist' other_vars,
+					 `DataCol' touse,
+					 `Boolean' verbose,
+					 `Boolean' sort_levels,
+					 `Boolean' count_levels,
+					 `Boolean' save_keys)
+{
+	`Factor'				F, F1, F2
+	F1 = factor(first_var, touse, verbose, "mata", sort_levels, 1, ., save_keys)
+	F2 = factor(other_vars, touse, verbose, "mata", sort_levels, count_levels, ., save_keys)
+	F = join_factors(F1, F2, count_levels, save_keys)
+	return(F)
+}
+
+
 `Factor' join_factors(`Factor' F1,
                       `Factor' F2, 
                     | `Boolean' count_levels,
@@ -660,8 +710,12 @@ class Factor
 		_error(123, "join_factors() with save_keys==1 requires the -keys- vector")
 	}
 
-	vars = invtokens((F1.varlist, F2.varlist))
-	is_sorted = (F1.sortedby == F2.sortedby) & (strpos(F2.sortedby, vars)==1)
+	is_sorted = 0
+	if (F1.sortedby == F2.sortedby & cols(F1.sortedby) > 0) {
+		vars = F1.varlist, F2.varlist
+		i = min(( cols(vars) , cols(F1.sortedby) ))
+		is_sorted = vars == F1.sortedby[1..i]
+	}
 
 	F1.panelsetup()
 	Y = F1.sort(F2.levels)
@@ -773,8 +827,8 @@ class Factor
     F.num_levels = num_levels
     F.method = "join"
     F.sortedby = F1.sortedby
-    F.varlist = tokens(vars)
-    if (levels_as_keys) asarray(F.extra, "levels_as_keys", 1)
+    F.varlist = vars
+    F.levels_as_keys = levels_as_keys
 
     if (!is_sorted) levels = F1.invsort(levels)
     if (count_levels) counts = counts[| 1 \ num_levels |]
