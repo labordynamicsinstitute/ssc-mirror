@@ -125,6 +125,7 @@ p ivglog module to estimate inverse Gaussian distribution-log link MLE model
 p ivgmm0 module to perform instrumental variables via GMM
 p ivgravity module containing method-of-moment IV estimators of exponential-regression models with two-way fixed effects from a cross-section of data on dyadic interactions and endogenous covariates
 p ivhettest module to perform Pagan-Hall and related heteroskedasticity tests after IV 
+p ivmediate module to perform Causal mediation analysis in instrumental-variables regressions
 p ivolsdec module to produce decomposition of the IV-OLS coefficient gap
 p ivpermute module to estimate nearly collinear robust instrumental variables regression
 p ivpois module to estimate an instrumental variables Poisson regression via GMM

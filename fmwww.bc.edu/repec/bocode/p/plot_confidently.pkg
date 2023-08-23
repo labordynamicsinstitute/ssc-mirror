@@ -1,0 +1,21 @@
+d 'PLOT_CONFIDENTLY': module to visualize the mean and confidence interval of a specified variable
+d
+d   plot_confidently allows users to visualize the mean and
+d confidence interval of a specified variable, with options for up 
+d   to two levels of disaggregation. 
+d
+d KW: graphics
+d KW: confidence intervals
+d
+d Requires: Stata version 17 and coefplot from SSC (q.v.)
+d
+d Distribution-Date: 20230822
+d
+d Author:  Zaeen de Souza, Frontline Impact
+d Support: email  zaeen@@frontline-impact.com
+d
+d Author:  Kabira Namit, World Bank
+d Support: email knamit@@worldbank.org
+d
+f plot_confidently.ado
+f plot_confidently.sthlp

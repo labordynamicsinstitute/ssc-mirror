@@ -1,0 +1,37 @@
+d 'IVMEDIATE': module to perform Causal mediation analysis in instrumental-variables regressions
+d
+d  ivmediate implements the causal mediation analysis framework for
+d linear IV models introduced by Dippel et al. (2019). It estimates
+d three effects: i) the total effect of a single treatment T on an
+d outcome Y, where T is instrumented with a single IV Z, that is, a
+d variable that affects Y only through T, ii) the direct effect of
+d T on Y net of the effect of a mediator variable M, and iii) the
+d indirect effect (mediation effect) of a third variable M through
+d which T affects Y. The command allows for unpacking the treatment
+d effect from a standard IV regression into the direct and indirect
+d effects of (potentially) endogenous treatment and mediator
+d variables without the need for an additional instrument for the
+d mediator variable. This compares with frameworks that require an
+d instrument for the mediator (Frölich and Huber 2017; Jun et al.
+d 2016) or those where random assignment of the treatment is
+d assumed (Imai, Keele, and Tingley 2010). 
+d
+d KW: causal mediation
+d KW: instrumental variables
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20230822
+d
+d Author:   Christian Dippel,   UCLA Anderson School of Management
+d Support: email   christian.dippel@@anderson.ucla.edu
+d
+d Author:   Andreas Ferrara,  University of Pittsburgh
+d Support: email   a.ferrara@@pitt.edu
+d
+d Author:   Stephan Heblich, University of Toronto
+d Support: email  stephan.heblich@@utoronto.ca
+d
+f ivmediate.ado
+f ivmediate.sthlp
+f ipehd_qje2009_master.dta
