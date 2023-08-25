@@ -238,7 +238,7 @@ void boottestOLS::InitVars(pointer(real matrix) scalar pRperp) {  // pRperp is f
       if (parent->granularjk)
         invMg = Xg
       else
-        XXg = XinvHg = smatrix(parent->Nstar)
+        XXg = XinvHg = Xg
       negR1AR1 = - *pR1AR1
       for (g=parent->Nstar; g; g--) {
         S = parent->NClustVar? parent->infoBootData[g,1] \ parent->infoBootData[g,2] : g\g
@@ -640,7 +640,7 @@ void boottestOLS::MakeResiduals(real scalar _jk) {
   if (_jk) {
     m = parent->small? sqrt((parent->Nstar - 1) / parent->Nstar) : 1
     
-    if (parent->purerobust)  // somwhat faster handling classic hc3
+    if (parent->purerobust)  // somewhat faster handling classic hc3
       if (rows(R1perp)) {
         Xt1 = *pX12B(*parent->pX1, *parent->pX2, t1)
         u1ddot[2].M = m * ((invMg.M :* (u1ddot.M + Xt1)) - Xt1)
@@ -2316,6 +2316,7 @@ void boottest::MakeInterpolables() {
 // Construct stuff that depends linearly or quadratically on r and doesn't depend on v. No interpolation.
 void boottest::_MakeInterpolables(real colvector r) {
   real scalar d, c, _jk; real colvector uXAR; pointer (real matrix) scalar pustarXAR, ptmp
+
   if (ML)
     uXAR = *pSc * (AR = *pA * *pR')
   else {
@@ -2500,7 +2501,7 @@ void boottest::MakeNonWREStats(real scalar w) {
     if (df == 1) {  // optimize for one null constraint
       denom.M = *pR * *pAR
       denom.M = ML? denom.M * (v_sd * v_sd) : denom.M :* colsum(*pustar :* *pustar)
-      storeWtGrpResults(pDist, w,  numerw :/ sqrt(denom.M))
+      storeWtGrpResults(pDist, w, numerw :/ sqrt(denom.M))
       if (w==1)
         statDenom = denom.M[1]  // original-sample denominator
     } else {
@@ -2588,7 +2589,7 @@ real matrix boottest::crosstabFE(real colvector v, real matrix info) {
   retval = J(NFE, rows(info), 0)
   if (haswt) {
     vw = v :* sqrtwt
-    if (cols(info) | rows(info)==rows(v))
+    if (cols(info) & rows(info)!=rows(v))
       for (i=cols(retval);i;i--) {
         _FEID = panelsubmatrix(*pFEID, i, info)
         _v    = panelsubmatrix(vw    , i, info)
@@ -2601,7 +2602,7 @@ real matrix boottest::crosstabFE(real colvector v, real matrix info) {
       for (i=cols(retval);i;i--)
         retval[(*pFEID)[i],i] = vw[i]
   } else
-    if (cols(info) | rows(info)==rows(v))
+    if (cols(info) & rows(info)!=rows(v))
       for (i=cols(retval);i;i--) {
         _FEID = panelsubmatrix(*pFEID, i, info)
         _v    = panelsubmatrix(v     , i, info)
