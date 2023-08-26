@@ -1,17 +1,24 @@
 d 'MOUNTAINPLOT': module to produce folded empirical distribution function curves (mountain plots)
 d
-d  mountainplot produces mountainplots as proposed by Monti (1995).
-d A mountainplot is a graphical representation of an empirical
-d cumulative distribution function in which percentile values above
-d 50 are "folded" (i.e. subtracted from 100 in order to produce a
-d reverse ordering). The resulting graphic resembles a mountain
-d where the peak is approximately at the median.  Monti (1995)
-d suggests that mountain plots allow the user to perform the
-d following: (1) determine the median; (2) determine the range; (3)
-d determine the central or tail percentiles of any magnitude; (4)
-d observe outliers; (5) observe unusual gaps in the data; (6)
-d examine the data for symmetry; (7) compare several distributions,
-d and (8) visually gauge the sample size. 
+d  mountainplot produces mountain plots for variables in a varlist
+d as proposed by Monti (1995), and mountain plots for differences
+d between variables in a varlist as proposed by Krouwer and Monti
+d (1995).  A mountainplot is a graphical representation of an
+d empirical cumulative distribution function in which percentile
+d values above 50 are "folded" (i.e. subtracted from 100 in order
+d to produce a reverse ordering). The resulting graphic resembles a
+d mountain where the peak is approximately at the median. Monti
+d (1995) suggests that mountain plots allow the user to perform the
+d following: (1) determine the median, (2) determine the range, (3)
+d determine the central or tail percentiles of any magnitude, (4)
+d observe outliers, (5) observe unusual gaps in the data, (6)
+d examine the data for symmetry, (7) compare several distributions
+d and (8), visually gauge the sample size. Krouwer and Monti (1995)
+d propose creating a mountain plot as a complementary to the Bland
+d and Altman plot (Bland and Altman 1986).  Here, the mountain plot
+d represents the percentile difference between a new test and a
+d reference test (Y-axis).  This percentile difference is then
+d plotted against the difference between the two tests (X-axis). 
 d
 d KW: cumulative distribution function
 d KW: mountain plot
@@ -20,7 +27,7 @@ d KW: quantile plot
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20230820
+d Distribution-Date: 20230825
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org
