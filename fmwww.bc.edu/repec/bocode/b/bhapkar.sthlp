@@ -1,8 +1,8 @@
 {smcl}
-{* *! version 1.0.0 31July2023}{...}
+{* *! version 1.1.0 25Aug2023}{...}
 {title:Title}
 
-{p2colset 5 17 18 2}{...}
+{p2colset 5 16 17 2}{...}
 {p2col:{hi:bhapkar} {hline 2}} Bhapkar's test of marginal homogeneity between two raters for categorical observations {p_end}
 {p2colreset}{...}
 
@@ -10,11 +10,19 @@
 {marker syntax}{...}
 {title:Syntax}
 
-{p 8 14 2}
-{cmd:bhapkar}
-{it:{help varname:rater1}} 
-{it:{help varname:rater2}} 
-{ifin}
+{pstd}
+Using data stored in memory
+
+{p 8 17 2}
+{cmd:bhapkar} {it:{help varname:rater1}} {it:{help varname:rater2}} {ifin}
+
+
+{pstd}
+Immediate form of {cmd:bhapkar} referring to a saved symmetrical matrix
+
+{p 8 17 2}
+{cmd:bhapkari} {it:matname}
+
 
 
 {p2colreset}{...}
@@ -42,13 +50,18 @@ p-value can be interpreted as the two raters having equal marginal distributions
 {pstd}These data are ratings of unaided distance vision between left and right eye of 7477 female employees in Royal Ordnance factories between 1943 and 1946.{p_end}
 {phang2}{cmd:. bhapkar reye leye}{p_end}
 
+{pstd}Referring to a matrix using {cmd:bhapkari}{p_end}
+{phang2}{cmd:. matrix input eye = (1520, 266, 124, 66 \ 234, 1512, 432, 78 \ 117, 362, 1772, 205 \ 36, 82, 179, 492)}{p_end}
+{phang2}{cmd:. bhapkari eye}{p_end}
+
+
 
 
 {marker results}{...}
 {title:Stored results}
 
 {pstd}
-{cmd:bhapkar} stores the following in {cmd:r()}:
+{cmd:bhapkar} and {cmd:bhapkari} store the following in {cmd:r()}:
 
 {synoptset 16 tabbed}{...}
 {p2col 5 16 20 2: Scalars}{p_end}

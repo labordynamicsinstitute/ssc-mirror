@@ -15,11 +15,13 @@ d KW: interrater agreement,interrater reliability
 d
 d Requires: Stata version 12
 d
-d Distribution-Date: 20230802
+d Distribution-Date: 20230826
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org
 d
 f bhapkar.ado
 f bhapkar.sthlp
+f bhapkari.ado
+f bhapkari.sthlp
 f ../v/vision.dta
