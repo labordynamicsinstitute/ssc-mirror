@@ -30,6 +30,7 @@ f ppmlhdfe.sthlp
 f ppmlhdfe_header.ado
 f ppmlhdfe_p.ado
 f ppmlhdfe.mata
+f ../r/reghdfe5.mata
 f ppmlhdfe_functions.mata
 f ppmlhdfe_separation_relu.mata
 f ppmlhdfe_separation_simplex.mata
