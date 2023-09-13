@@ -1,0 +1,287 @@
+/*
+To-Do/further improvements: 	
+								Add another tab to launch the other dialogs for the other commands to make SGPV the central dialog.
+								Add input checks for the options nullhi and nulllo together with the coefficient-option to support better multiple null-hypotheses.
+								Enable likelihood option only if Matrix option is selected.
+*/
+/*
+sgpv dialog version 1.2, 27.12.2020, Sven-Kristjan Bormann
+for sgpv version 1.2
+
+To install in User Statistics menu via Stata commands:
+  
+  . window menu append item "stUserStatistics" "SGPV (Main Command) (&sgpv)" "db sgpv"
+
+  . window menu refresh
+
+To permanently install, place the commands in your -profile.do- file.
+
+
+*/
+
+VERSION 12.0
+POSITION . . 420 400
+INCLUDE _std_xlarge
+//INCLUDE _ht320
+//INCLUDE header
+OK ok1,      label("OK")
+CANCEL can1, label("Cancel")
+SUBMIT sub1, label("Submit") 
+HELP hlp1,   view("help sgpv")  
+RESET res1
+COPY copy1
+INCLUDE levels_list
+
+//Copied from format.dlg
+SCRIPT PREINIT
+BEGIN
+        create STRING formatString
+        setscale_hadj resource FORMAT_DLG_HSCALE
+END
+
+LIST bonus_action
+BEGIN
+	script fdrisk_off
+	script fdrisk_off
+	script fdrisk_on
+	script fdrisk_on	 
+END
+
+
+DIALOG main, label("sgpv 1.2 - Second Generation P-Values") tabtitle("Main")
+BEGIN
+
+	GROUPBOX gp_calcfor 		5 	5 		410 	110, label("Calculate SGPVs for:")
+	RADIO 	r1 				_lft	20		50 		., first label("Replay") onclickon(script replay_on) ///
+													tooltip("Replay the previous estimation command and calculate the SGPVs and bonus statistics for it.")
+	RADIO 	r2 				+70		@ 	 	150 	., 	middle label("Stored Estimate") onclickon(script estimate_on) ///
+														tooltip("Calculate SGPVs for a previously stored estimate.")
+	COMBOBOX cb_estimate 	80	 	_ss	 	150		., dropdown content(estimates) option(estimate)
+
+	RADIO 	r3 				+180 	20	 	@ 		., middle label("Matrix") onclickon(script matrix_on)
+	COMBOBOX cb_matrix	 	@ 		_ss 	150	 	., dropdown content(matrix) option(matrix) ///
+														tooltip("The selected needs to have the same layout as the matrix r(table) which is returned by Stata estimation commands. See the help file for more information.")
+	RADIO 	r4  			10 		_ls 	150		 ., last label("Estimation command") onclickon(script cmd_on) ///
+														tooltip("Enter the estimation command for which you want to calculate the SGPVs and bonus statistcs.")
+	EDIT ed_cmd 			@ 		_ss 	400 	., label(resource LBL_STATA_COMMAND_TO_RUN) 
+	
+	CHECKBOX ck_coefficient 10  	_ls 	400 	., label(resource ESTIMATES_TABLE_OPT_CK_KEEP) ///
+														clickon(main.vl_coefficient.enable) clickoff(main.vl_coefficient.disable)
+	VARLIST vl_coefficient 	@ 		_ss 	@ 		., option(coefficient) numeric ///
+														tooltip("The variable name needs to be exactly the same as returned by estimation output in the matrix r(table). If you did not use factor-variable notation, then the names are identical to the variable names. Otherwise you have to use the factor-variable notation e.g. 1.foreign if you estimated 'reg price mpg i.foreign'.")
+	TEXT tx_coefficient 	@ 		_ss		@ 		., label(resource ESTIMATES_TABLE_OPT_TX_KEEP)
+	TEXT tx_coefficient2 	@ 		_vss 	@ 		., label(resource ESTIMATES_TABLE_OPT_TX_KEEP2)
+	TEXT tx_coefficient3    @		_ss		@		., label("Only one of these specifications can be used at the same time.")
+	CHECKBOX ck_noconstant  @		_ls 	@		., label(resource LBL_NOCONSTANT) option(noconstant) tooltip("Do not calculate SGPVs, delta-gaps and Fdrs for the constant term.")
+	//TEXT tx_coefficient3	@		_vss	@		., label("The variable name needs to be exactly the same as returned by estimation output in the matrix r(table). If you did not use factor-variable notation, then the names are identical to the variable names.  For example: 1.foreign ")
+	
+	GROUPBOX gb_null 		5 		_ls 	410 	140, label("Null-Hypothesis Interval(s)")
+	TEXT tx_nulllo 			15 		_ss 	170 	., label("Lower Bound(s)") 
+	EDIT ed_nulllo 			@ 		_ss		 170 	 ., option(nulllo) default(0) tooltip("The default value 0 is just meant to be used for an easier beginning when starting to use SGPVs. Please change this value to something more reasonable. Using this default value will always result in having SGPVs of value 0 or 0.5!")
+	
+	TEXT tx_nullhi 			+220 	-20 	170 	., label("Upper Bound(s)") 
+	EDIT ed_nullhi 			@ 		_ss 	170 	., option(nullhi) default(0) tooltip("The default value 0 is just meant to be used for an easier beginning when starting to use SGPVs. Please change this value to something more reasonable. Using this default value will always result in having SGPVs of value 0 or 0.5!")
+	
+	TEXT tx_null1			15		_ls		390		., label("To have an individual null-hypothesis for each coefficient,")
+	TEXT tx_null2			@		_vss	@		., label("you need to separate the bounds with spaces.")
+	TEXT tx_null3			@		_vss	@ 		., label("The number of bounds need to match the number of coefficients.")
+
+END
+
+DIALOG rpt, tabtitle("Reporting")
+BEGIN
+
+	GROUPBOX gb_display		_top	_lft 	405		210,label("Display options")
+	COMBOBOX  sp_level    _top      +20      _spwd   ., dropdown label(resource LBL_TX_LEVEL) default(c(level)) /// 
+															contents(levels) option(level)
+	TEXT     tx_level     _spsep  @       _spr2	., label(resource LBL_TX_LEVEL) 
+	CHECKBOX ck_quiet 		+100 	@ 	100 	.,  label("Quietly") option(quiet) tooltip("Do not display estimation results.")
+	CHECKBOX ck_nonull		@	_ms    	200		.,  label("No 0 Point Null-Hypothesis warnings") option(nonullwarnings) ///
+															tooltip("Deactive the warning messages shown when using the default point 0 null-hypothesis.")
+	
+	TEXT tx_matlist 		15 		_ms 	200 	., label("Result Matrix format:")
+	EDIT ed_matlist 		@ 		_ss 	320 	., option(matlistopt) ///
+														tooltip("Change the format of the displayed matrix. The same options as for the command matlist can be used.")
+	BUTTON bu_matlist 		+330	@ 		60 		., label("Help") onpush("view help matlist") 
+			
+	TEXT tx_bonus 			15 		_ss 	150 	., label("Bonus Statistics:")
+	CHECKBOX ck_deltagap	@		_ss 	100		., label("Delta-gap") option(deltagap) tooltip("Calculate the delta-gap.") ///
+														onclickon(script deltagap_on) onclickoff(script deltagap_off)
+	CHECKBOX ck_fdrisk		90		@		50		., label("Fdrisk") option(fdrisk) tooltip("Calculate the false discovery risk (fdr).") ///
+														onclickon(script fdrisk_on) onclickoff(script fdrisk_off)
+	CHECKBOX ck_all			150		@		50		., label("All") option(all) tooltip("Calculate both the delta-gap and the false discovery risk.") ///
+														onclickon(script all_on) onclickoff(script all_off)
+	
+	TEXT     tx_format    	15    	+25     200    .,   label(Format result matrix elements:) 
+	EDIT     ed_format    	@       _ss     320   .,    label(resource LBL_FORMAT) option(format) default(%5.4f) ///
+													 tooltip("Specify the format for displaying the individual elements of the result matrix.   This option is NOT identical to the option above, but works independently of it. Setting the format option via the option above overrides the setting here and also changes the format of the column names.")
+	BUTTON   bu_format    350  @       60      .,    label(resource LBL_BU_CREATE) onpush(script showFormatDialog) tooltip(resource LBL_CREATE_DISPLAY_FORMAT)
+	
+	GROUPBOX gb_fdrisk 	 _top	220	405 	120, label("Fdrisk options")
+	CHECKBOX ck_truncnormal 	15	_ls 	200		., label("Truncated Normal distribution") option(truncnormal) ///
+													tooltip("Use the truncated normal distribution for the nullspace and alternative parameter space.")
+	EDIT ed_pi0              200  	@      50   ., option(pi0) default(0.5) numonly tooltip("This value can be only between 0 and 1 (exclusive).")
+	TEXT tx_pi0           	+55 	@    	120   ., label("Prior probability of H0")
+	
+	CHECKBOX ck_likelihood 	15	_ls 	150	., 	label("Likelihood support interval") option(likelihood) ///
+													onclickon(script likelihood_on) onclickoff(script likelihood_off) ///
+													tooltip("Set if a likelihood support interval (LSI) with level 1/k was used to calculate the interval estimated.")
+	EDIT ed_likelihood      15  _ss      @    ., option(likelihood) error(No Interval level for the Likelihood-Support-Interval set) ///
+													tooltip("Set the interval level for the Likelihood-Support-Interval(LSI). The level should be set equal to the level of the LSI which was used to calculate the lower and upper bound of the estimated coefficients for the supplied matrix.")											
+	
+
+
+END
+
+
+//Copied from format.dlg
+SCRIPT showFormatDialog 
+BEGIN
+        create CHILD format_chooser
+        format_chooser.setExitString formatString
+        format_chooser.setExitAction "rpt.ed_format.setvalue class formatString.value"
+END
+
+
+SCRIPT replay_on
+BEGIN
+	main.cb_estimate.disable
+	main.cb_matrix.disable
+	main.ed_cmd.disable
+END
+
+SCRIPT estimate_on
+BEGIN
+	main.cb_estimate.enable
+	main.cb_matrix.disable
+	main.ed_cmd.disable
+END
+
+SCRIPT matrix_on
+BEGIN
+	main.cb_estimate.disable
+	main.cb_matrix.enable
+	main.ed_cmd.disable
+	rpt.ck_likelihood.enable
+END
+
+SCRIPT cmd_on
+BEGIN
+	main.cb_estimate.disable
+	main.cb_matrix.disable
+	main.ed_cmd.enable
+END
+
+SCRIPT likelihood_on
+BEGIN
+	rpt.ed_likelihood.enable
+	rpt.sp_level.disable
+END
+
+SCRIPT likelihood_off
+BEGIN
+	rpt.ed_likelihood.disable
+	rpt.sp_level.enable
+END
+
+//(De-)activate display of bonus statistic options  
+
+SCRIPT deltagap_on
+BEGIN
+	rpt.ck_fdrisk.disable
+	rpt.ck_all.disable
+END
+
+SCRIPT deltagap_off
+BEGIN
+	rpt.ck_all.enable
+	rpt.ck_fdrisk.enable
+END
+
+SCRIPT fdrisk_on
+BEGIN
+	rpt.ck_deltagap.disable
+	rpt.ck_all.disable
+	script fdrisk_options_on
+END
+
+SCRIPT fdrisk_off
+BEGIN
+	rpt.ck_deltagap.enable
+	rpt.ck_all.enable
+	script fdrisk_options_off
+END
+
+SCRIPT all_on
+BEGIN
+	rpt.ck_deltagap.disable
+	rpt.ck_fdrisk.disable
+	program fdrisk_options_on
+END
+
+SCRIPT all_off
+BEGIN
+	script fdrisk_options_off
+	rpt.ck_deltagap.enable
+	rpt.ck_fdrisk.enable
+END
+
+PROGRAM fdrisk_options_on
+BEGIN
+	rpt.ck_truncnormal.enable
+	/*if !main.cb_matrix.isenabled() {
+		 rpt.ck_likelihood.disable
+	}*/
+	rpt.ck_likelihood.enable
+	rpt.ed_pi0.enable
+END
+
+SCRIPT fdrisk_options_off
+BEGIN
+	rpt.ck_truncnormal.disable
+	rpt.ck_likelihood.disable
+	rpt.ed_pi0.disable
+END
+
+
+
+
+
+PROGRAM sgpv_options
+BEGIN
+	put "sgpv "
+	
+	beginoptions		
+		optionarg main.cb_matrix
+		optionarg main.cb_estimate
+		optionarg main.vl_coefficient
+		option 	  main.ck_noconstant
+		optionarg /hidedefault main.ed_nullhi
+		optionarg /hidedefault main.ed_nulllo
+		
+		option rpt.ck_quiet
+		option rpt.ck_nonull
+		
+		optionarg rpt.ed_matlist
+		option rpt.ck_deltagap
+		option rpt.ck_fdrisk
+		option rpt.ck_all
+		optionarg /hidedefault rpt.ed_format
+		
+		option rpt.ck_truncnormal
+		optionarg rpt.ed_likelihood
+		optionarg /hidedefault rpt.sp_level
+		optionarg /hidedefault rpt.ed_pi0
+	endoptions
+END
+
+PROGRAM command // inspired by the structure used in bootstrap.dlg
+BEGIN
+	put /program sgpv_options
+	
+	if main.ed_cmd.isenabled(){
+		put " " ": "
+		put main.ed_cmd
+	} 
+END
+

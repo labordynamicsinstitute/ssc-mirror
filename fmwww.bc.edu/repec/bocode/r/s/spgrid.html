@@ -1,0 +1,335 @@
+<pre>
+{É}
+<b>help spgrid</b>                                                       Version 1.0.1
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>spgrid</b> -- Generates two-dimensional grids for spatial data analysis
+<p>
+<p>
+<a name="syntax"></a><b><u>Syntax</u></b>
+<p>
+        <b>spgrid</b> [using <i>studyregion</i>] [<b>,</b> <i>options</i>]
+<p>
+<p>
+<a name="options1"></a>    <i>options</i><i>                             </i> Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>sh</u></b><b>ape(</b><i>gcs</i><b>)</b>                         grid cell shape, where <i>gcs</i> is one of
+                                           the following: <b><u>he</u></b><b>xagonal</b>
+                                           (default), <b><u>sq</u></b><b>uare</b>
+      <b><u>res</u></b><b>olution(a</b><i>#</i>|<b>w</b><i>#</i><b>)</b>                  grid resolution
+      <b><u>xd</u></b><b>im(</b><i>#</i><b>)</b>                            number of grid columns
+      <b><u>yd</u></b><b>im(</b><i>#</i><b>)</b>                            number of grid rows
+      <b><u>u</u></b><b>nit(</b><i>string</i><b>)</b>                       grid unit of measurement
+<p>
+    Rectangular study region
+      <b><u>xr</u></b><b>ange(</b><i>xmin xmax</i><b>)</b>                  minimum and maximum coordinates of
+                                           the horizontal side of the study
+                                           region
+      <b><u>yr</u></b><b>ange(</b><i>ymin ymax</i><b>)</b>                  minimum and maximum coordinates of
+                                           the vertical side of the study
+                                           region
+<p>
+    Non-rectangular study region
+      <b>mapid(</b><i>mapid</i><b>)</b>                       set to <i>mapid</i> the name of the
+                                           variable that, in the output
+                                           dataset <i>gridpoints</i>, stores the
+                                           identifier of the study region
+                                           polygon corresponding to each grid
+                                           cell
+      <b><u>mapex</u></b><b>clude(</b><i>mapex</i><b>)</b>                  exclude from the analysis the
+                                           subareas of the study region
+                                           defined in Stata dataset <i>mapex</i>
+      <b><u>idex</u></b><b>clude</b>                          exclude subareas defined in dataset
+                                           <i>mapex</i> on the basis of their
+                                           identifier
+<p>
+    Reporting
+      <b><u>d</u></b><b>ots</b>                               display job progression dots
+      <b><u>noverb</u></b><b>ose</b>                          suppress display of job progression
+<p>
+    Saving results
+    * <b><u>c</u></b><b>ells(</b><i>gridcells</i><b>)</b>                   save grid cells definition to Stata
+                                           dataset <i>gridcells</i>
+    * <b><u>p</u></b><b>oints(</b><i>gridpoints</i><b>)</b>                 save grid cells identifiers and grid
+                                           points coordinates to Stata
+                                           dataset <i>gridpoints</i>
+      <b>compress</b>                           save only valid grid cells
+      <b>replace</b>                            overwrite datasets <i>gridpoints</i> and
+                                           <i>gridcells</i> if already existing
+    -------------------------------------------------------------------------
+    * Required option
+<p>
+<p>
+<a name="desc"></a><b><u>Description</u></b>
+<p>
+    <b>spgrid</b> generates two-dimensional grids that can be used by other Stata
+    programs to carry out several kinds of spatial data analysis, e.g.,
+    kernel density and intensity estimation for two-dimensional spatial point
+    patterns as implemented in the user-written Stata program spkde.
+<p>
+    In the context of spatial data analysis, a <i>grid</i> is a regular tessellation
+    of a given two-dimensional study region that divides it into a set of
+    contiguous <i>cells</i> whose centers are referred to as the <i>grid points</i> (Sahr
+    <i>et al.</i> 2003).
+<p>
+    <b>spgrid</b> can generate both hexagonal and square grids, i.e., grids whose
+    cells are either hexagonal or square. In general, hexagonal grids have
+    better properties than square grids. In particular, hexagonal cells offer
+    a more compact tessellation of the plane, have a lower perimeter-to-area
+    ratio - which potentially reduces bias due to edge effects - and have
+    uniform adjacency, i.e., each of them has six adjacent neighbors in
+    symmetrically equivalent positions (Sahr <i>et al.</i> 2003; de Sousa <i>et al.</i>
+    2006; Birch <i>et al.</i> 2007).
+<p>
+    <b>spgrid</b> can generate grids covering both rectangular study regions and
+    non-rectangular study regions. The latter can be made of one or more
+    polygons, and include one or more gaps - i.e., subareas to be excluded
+    from the analysis.
+<p>
+<p>
+<a name="section01"></a><b><u>Rectangular study regions</u></b>
+<p>
+    To generate a grid covering a rectangular study region:
+<p>
+         o  Specify the size of the study region with options <b>xrange(</b><i>xmin</i>
+            <i>xmax</i><b>)</b> and <b>yrange(</b><i>ymin ymax</i><b>)</b>.
+<p>
+         o  Specify the shape of the grid cells with option <b>shape(</b><i>gcs</i><b>)</b>.
+<p>
+         o  Specify the size of the grid cells, either direcly with option
+            <b>resolution(a</b><i>#</i>|<b>w</b><i>#</i><b>)</b>, or indirectly with one of options <b>xdim(</b><i>#</i><b>)</b> and
+            <b>ydim(</b><i>#</i><b>)</b>.
+<p>
+<p>
+<a name="section02"></a><b><u>Non-rectangular study regions</u></b>
+<p>
+    To generate a grid covering a non-rectangular study region:
+<p>
+         o  Specify the using dataset <i>studyregion</i>, i.e., the dataset that
+            defines the study region.
+<p>
+         o  Specify the shape of the grid cells with option <b>shape(</b><i>gcs</i><b>)</b>.
+<p>
+         o  Specify the size of the grid cells, either direcly with option
+            <b>resolution(a</b><i>#</i>|<b>w</b><i>#</i><b>)</b>, or indirectly with one of options <b>xdim(</b><i>#</i><b>)</b> and
+            <b>ydim(</b><i>#</i><b>)</b>.
+<p>
+         o  If needed, specify the subareas of the study region to be
+            excluded from the analysis with option <b>mapexclude(</b><i>mapex</i><b>)</b> - and,
+            possibly, option <b>idexclude</b>.
+<p>
+<p>
+<a name="section03"></a><b><u>Input datasets</u></b>
+<p>
+    As mentioned above, when requested to generate a grid covering a
+    non-rectangular study region, <b>spgrid</b> requires that the using dataset
+    <i>studyregion</i> be specified. Whenever the study region contains gaps - i.e.,
+    subareas to be excluded from the analysis - the dataset <i>mapex</i> must also
+    be specified via option <b>mapexclude(</b><i>mapex</i><b>)</b>.
+ 
+    <i>studyregion</i> is a Stata dataset that contains the definition of the
+    polygon(s) making up the study region of interest. Such definition must
+    follow the format of a spmap <i>basemap</i> dataset.
+<p>
+    <i>mapex</i> is a Stata dataset that contains the definition of the subareas of
+    <i>studyregion</i> to be excluded from the analysis. Such definition must follow
+    the format of a spmap <i>basemap</i> dataset.
+<p>
+<p>
+<a name="section04"></a><b><u>Output datasets</u></b>
+<p>
+    <b>spgrid</b> routinely generates two Stata datasets that can then be used by
+    other Stata programs to carry out several kinds of spatial data analysis:
+    <i>gridcells</i> and <i>gridpoints</i>.
+<p>
+    <i>gridcells</i> is a Stata dataset that contains the definition of the cells
+    making up the grid. Its format corresponds to that of a spmap <i>basemap</i>
+    dataset.
+ 
+    <i>gridpoints</i> is a Stata dataset that contains the identifiers of the grid
+    cells and the coordinates of the corresponding grid points. Specifically,
+    <i>gridpoints</i> includes the following variables:
+<p>
+         o  <b>spgrid_id</b> is a numeric variable that uniquely identifies the
+            cells making up the grid.
+<p>
+         o  <b>spgrid_xdim</b> is an integer variable that identifies the
+            x-dimension (column) of each grid cell.
+<p>
+         o  <b>spgrid_ydim</b> is an integer variable that identifies the
+            y-dimension (row) of each grid cell.
+<p>
+         o  <b>spgrid_status</b> is an indicator variable that takes value 1 when
+            the corresponding grid cell is valid - i.e., lies within the
+            study region - and value 0 otherwise.
+<p>
+         o  <b>spgrid_xcoord</b> is a numeric variable that contains the
+            x-coordinate of each grid point.
+<p>
+         o  <b>spgrid_ycoord</b> is a numeric variable that contains the
+            y-coordinate of each grid point.
+<p>
+         o  <i>mapid</i> is a numeric variable - specified via option <b>mapid(</b><i>mapid</i><b>)</b> -
+            that contains the identifier of the study region polygon
+            corresponding to each grid cell.
+<p>
+<p>
+<a name="options2"></a><b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>shape(</b><i>gcs</i><b>)</b> specifies the shape of the grid cells.
+<p>
+        <b>shape(hexagonal)</b> is the default and requests that the grid cells be
+            hexagonal.
+<p>
+        <b>shape(square)</b> requests that the grid cells be square.
+<p>
+    <b>resolution(a</b><i>#</i>|<b>w</b><i>#</i><b>)</b> specifies the resolution of the grid, i.e., the size of
+        the grid cells.
+<p>
+        <b>resolution(a</b><i>#</i><b>)</b> requests that the grid cells have area <i>#</i>.
+<p>
+        <b>resolution(w</b><i>#</i><b>)</b> requests that the grid cells have width <i>#</i>. When option
+            <b>shape(hexagonal)</b> is specified, the cell width corresponds to the
+            diameter of the circle inscribed in the hexagon. When option
+            <b>shape(square)</b> is specified, the cell width corresponds to the
+            length of the side of the square.
+<p>
+    <b>xdim(</b><i>#</i><b>)</b> specifies the number of grid columns.
+<p>
+    <b>ydim(</b><i>#</i><b>)</b> specifies the number of grid rows.
+<p>
+    <b>unit(</b><i>string</i><b>)</b> specifies the unit of measurement (e.g., miles, kilometers,
+        meters, pixels) of the grid. The default is a generic <b>unit(units)</b>.
+<p>
+        +--------------------------+
+    ----+ Rectangular study region +-----------------------------------------
+<p>
+    <b>xrange(</b><i>xmin xmax</i><b>)</b> specifies the minimum (<i>xmin</i>) and the maximum (<i>xmax</i>)
+        coordinates of the horizontal side of the study region.
+<p>
+    <b>yrange(</b><i>ymin ymax</i><b>)</b> specifies the minimum (<i>ymin</i>) and the maximum (<i>ymax</i>)
+        coordinates of the vertical side of the study region.
+<p>
+<p>
+        +------------------------------+
+    ----+ Non-rectangular study region +-------------------------------------
+<p>
+    <b>mapid(</b><i>mapid</i><b>)</b> specifies the name of the numeric variable that, in dataset
+        <i>gridpoints</i>, will contain the identifier of the study region polygon
+        corresponding to each grid cell. The default is <b>mapid(spgrid_mapid)</b>.
+<p>
+    <b>mapexclude(</b><i>mapex</i><b>)</b> requests that the subareas of the study region defined
+        in dataset <i>mapex</i> be excluded from the analysis.
+<p>
+    <b>idexclude</b> requests that the subareas of the study region defined with
+        option <b>mapexclude(</b><i>mapex</i><b>)</b> be excluded from the analysis not on the
+        basis of their geometry (the default), but on the basis of their
+        identifier.
+<p>
+        +-----------+
+    ----+ Reporting +--------------------------------------------------------
+<p>
+    <b>dots</b> requests that job progression dots be displayed.
+<p>
+    <b>noverbose</b> requests that the display of every indicator of job progression
+        be suppressed.
+<p>
+        +----------------+
+    ----+ Saving results +---------------------------------------------------
+<p>
+    <b>cells(</b><i>gridcells</i><b>)</b> requests that the definition of the grid cells be saved
+        to dataset <i>gridcells</i>.
+<p>
+    <b>points(</b><i>gridpoints</i><b>)</b> requests that the identifiers of the grid cells and
+        the coordinates of the corresponding grid points be saved to dataset
+        <i>gridpoints</i>.
+<p>
+    <b>compress</b> requests that only the valid grid cells be saved to datasets
+        <i>gridcells</i> and <i>gridpoints</i>.
+<p>
+    <b>replace</b> requests that datasets <i>gridcells</i> and <i>gridpoints</i> be overwritten if
+        already existing.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+<b>    . spgrid, xrange(0 500) yrange(0 200) resolution(w10)   ///</b>
+<b>        cells("GridCells.dta") points("GridPoints.dta")     ///</b>
+<b>        replace dots</b>
+<b>    . use "GridPoints.dta", clear</b>
+<b>    . spmap using "GridCells.dta", id(spgrid_id)</b>
+<p>
+<b>    . spgrid, xrange(0 500) yrange(0 200) shape(square) xdim(50)   ///</b>
+<b>        cells("GridCells.dta") points("GridPoints.dta")            ///</b>
+<b>        replace dots</b>
+<b>    . use "GridPoints.dta", clear</b>
+<b>    . spmap using "GridCells.dta", id(spgrid_id)</b>
+<p>
+<b>    . spgrid using "Italy-OutlineCoordinates.dta",   ///</b>
+<b>        resolution(w10) unit(kilometers)             ///</b>
+<b>        cells("Italy-GridCells.dta")                 ///</b>
+<b>        points("Italy-GridPoints.dta")               ///</b>
+<b>        replace dots</b>
+<b>    . use "Italy-GridPoints.dta", clear</b>
+<b>    . spmap using "Italy-GridCells.dta", id(spgrid_id)   ///</b>
+<b>        polygon(data("Italy-OutlineCoordinates.dta")     ///</b>
+<b>        ocolor(red) osize(thick))</b>
+<p>
+<b>    . spgrid using "Italy-OutlineCoordinates.dta",   ///</b>
+<b>        resolution(w10) unit(kilometers)             ///</b>
+<b>        cells("Italy-GridCells.dta")                 ///</b>
+<b>        points("Italy-GridPoints.dta")               ///</b>
+<b>        replace compress dots</b>
+<b>    . use "Italy-GridPoints.dta", clear</b>
+<b>    . spmap using "Italy-GridCells.dta", id(spgrid_id)   ///</b>
+<b>        polygon(data("Italy-OutlineCoordinates.dta")     ///</b>
+<b>        ocolor(red) osize(medthick))</b>
+<p>
+<b>    . spgrid using "Italy-OutlineCoordinates.dta",   ///</b>
+<b>        resolution(w10) unit(kilometers)             ///</b>
+<b>        mapexclude("Italy-Exclude.dta")              ///</b>
+<b>        cells("Italy-GridCells.dta")                 ///</b>
+<b>        points("Italy-GridPoints.dta")               ///</b>
+<b>        replace compress dots</b>
+<b>    . use "Italy-GridPoints.dta", clear</b>
+<b>    . spmap using "Italy-GridCells.dta", id(spgrid_id)   ///</b>
+<b>        polygon(data("Italy-OutlineCoordinates.dta")     ///</b>
+<b>        ocolor(red) osize(medthick))</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Maurizio Pisati
+    Department of Sociology and Social Research
+    University of Milano Bicocca - Italy
+    maurizio.pisati@unimib.it
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Birch, C.P.D., Oom, S.P. and J.A. Beecham. 2007. Rectangular and
+        Hexagonal Grids Used for Observation, Experiment and Simulation in
+        Ecology. <i>Ecological Modelling</i> 206: 347-359.
+<p>
+    de Sousa, L., Nery, F., Sousa, R. and J. Matos. 2006. Assessing the
+        Accuracy of Hexagonal versus Square Tiled Grids in Preserving DEM
+        Surface Flow Directions. In <i>Proceedings of the 7th International</i>
+        <i>Symposium on Spatial Accuracy Assessment in Natural Resources</i> <i>and</i>
+        <i>Environmental Sciences</i>, 5-7 July, Lisboa, Portugal, ed. M. Caetano
+        and M. Pinho, 191-200.
+<p>
+    Sahr, K., White, D. and A.J. Kimerling. 2003. Geodesic Discrete Global
+        Grid Systems. <i>Cartography and Geographic Information</i> <i>Science</i> 30:
+        121-134.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>spkde</b> (if installed), <b>spmap</b> (if installed)
+</pre>

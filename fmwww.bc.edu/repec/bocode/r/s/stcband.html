@@ -1,0 +1,121 @@
+<pre>
+help for <b>stcband</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>stcband</b> --     Hall-Wellner and equal precision confidence band for the
+                     survival and cumulative hazard function
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>stcband</b> [<i>if</i>] [<i>in</i>] [<b>,</b> <b>nair</b> <b><u>tlo</u></b><b>wer(</b><i>#</i><b>)</b> <b><u>tup</u></b><b>per(</b><i>#</i><b>)</b> <b>na</b> <b><u>tran</u></b><b>sform(</b><i>string</i><b>)</b>
+               <b><u>genlo</u></b><b>w(</b>newvar<b>)</b> <b><u>genhi</u></b><b>gh(</b>newvar<b>)</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <b><u>nog</u></b><b>raph</b> <i>twoway_options</i>
+               ]
+<p>
+<p>
+    <i>options</i>                        Description
+    -------------------------------------------------------------------------
+    Options
+      <b>nair</b>                         specify equal precision (Nair) confidence
+                                     band be computed. Default is
+                                     Hall-Wellner confidence band
+      <b><u>tlow</u></b><b>er</b>                       specify the lower time boundary for
+                                     confidence band. Default is the smallest
+                                     time event
+      <b><u>tup</u></b><b>per</b>                       specify the upper time boundary for
+                                     confidence band. Default is the largest
+                                     time event
+      <b>na</b>                           compute confidence band for the cumulative
+                                     hazard function
+      <b><u>tran</u></b><b>sform</b>                    produce <i>log</i>, <i>linear</i> or <i>arcsine</i> transformed
+                                     confidence band. Default is <i>log</i>
+      <b><u>genlo</u></b><b>w</b>                       create a variable saving lower confidence
+                                     band
+      <b><u>genhi</u></b><b>gw</b>                      create a variable saving upper confidence
+                                     band
+      <b><u>l</u></b><b>evel</b>                        set confidence level. Values allowed are
+                                     90, 95 and 99. Default is 95
+      <b><u>nog</u></b><b>raph</b>                      suppress graph
+<p>
+<p>
+    Y-Axis, X-Axis, Legend
+      <i>twoway_options</i>               some of the options documented in
+                                     <b>[G]</b> <i>twoway_options</i>
+<p>
+    Add plot
+      <b>plot(</b><i>plot</i><b>)</b> <b>addplot(</b><i>plot</i><b>)</b>     add other plots to generated graph
+    -------------------------------------------------------------------------
+<p>
+    You must <b>stset</b> your data before using <b>stcband</b>; see <b>stset</b>.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>stcband</b> graphs and optionally saves the confidence bands for the survival
+function.
+<p>
+The usual pointwise confidence intervals for the survival function are valid
+for a single fixed time. Often limits which contain <i>S(t)</i> for all <i>t</i> in an
+interval [<i>tlow,tup</i>] are of interest. Two important types of confidence bands
+are the Hall-Wellner bands (Hall and Wellner, 1980) and the equal precision
+bands (Nair,1984).  To construct these confidence bands critical values are
+taken from <i>NairTables.dta</i> or <i>HallWellnerTables.dta</i> (<i>see reference</i>).  There are
+three possible forms for the confidence bands: linear, log-minus-log and
+arcsine-square root transformed.
+<p>
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+            use "C:\Data\BMT", clear
+            stset Time2,failure(DeathRelapse)
+<p>
+<p>
+    Graph equal precision 95% confidence band in time interval 100 - 600 in
+patients with acute lymphoblastic leukemia
+<p>
+            stcband if Dis==1, nair tlower(100) tupper(600) xla(0(100)600)
+                    yla(0(.2)1, gstyle(minor))
+<p>
+<p>
+    Generate and graph Hall-Wellner 95% confidence band in time interval 100 -
+600
+<p>
+            stcband if Dis==1, tlower(100) tupper(600) genlo(lohw_band)
+                    genhi(uphw_band) xla(0(100)600) yla(0(.2)1, gstyle(minor))
+<p>
+<p>
+    Graph simultaneously pointwise log-log confidence interval and Hall-Wellner
+arcsine transformed 95% confidence band
+<p>
+            sts gen pw_lo=lb(s) pw_hi= ub(s) if Dis==1
+            stcband if Dis==1, tlower(100) tupper(600) xla(0(100)600)
+                    transform(arcsine) yla(0(.2)1, gstyle(minor))
+                    legend(ring(0) pos(7) size(*.7)) plot(line pw_hi pw_lo _t
+                    if _t&lt;600, sort c(J J) lc(red red))
+<p>
+<p>
+Downloading ancillary files in one of your <b>`"`c(adopath)'"'</b> directory you can
+run this example.
+<p>
+          <i>(</i><i>click to run</i><i>)</i>
+<p>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    <b>[ST] sts gen</b>
+<p>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+Klein JP, and Moeschberger ML: Survival Analysis: techniques for Censored and
+Truncated Data - 2nd ed., pp. 109 - 117.  New York: Springer-Verlag, 2003
+<p>
+<b><u>Authors</u></b>
+<p>
+Enzo Coviello (enzo.coviello@alice.it)
+</pre>

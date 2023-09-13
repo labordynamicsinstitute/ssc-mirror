@@ -1,0 +1,59 @@
+<pre>
+<b>help spmat export</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>spmat export</b> -- Save the spatial-weighting matrix <b>W</b> contained in an <b>spmat</b>
+                      object to disk as a space-delimited text file
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>spmat</b> <b><u>ex</u></b><b>port</b> <i>objname</i> <b>using</b> <i>filename</i> [<b>,</b> <i>options</i>]
+<p>
+<p>
+    <i>options</i>                       Description
+    -------------------------------------------------------------------------
+      <b>noid</b>                        do not save place IDs
+      <b>nlist</b>                       save the matrix as a neighbor list
+      <b>replace</b>                     replace <i>filename</i>
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>spmat export</b> saves the spatial-weighting matrix <b>W</b> contained in the <b>spmat</b>
+    object <i>objname</i> to disk as a space-delimited text file.  The first line of
+    the file contains the number of columns of <b>W</b> and, if applicable, the
+    lower and upper band.  The spatial-weighting matrix is then written
+    row-by-row, with the place identifiers recorded in the first column.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>noid</b> specifies that place identifiers not be saved.
+<p>
+    <b>nlist</b> specifies that the matrix be written in the neighbor-list format.
+        The first line of the file will contain the total number of places
+        and, if the matrix is banded, the lower and upper band.  Each
+        remaining line will list a place ID followed by its neighbors, if
+        any.
+<p>
+    <b>replace</b> allows <i>filename</i> to be overwritten if it already exists.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    Setup
+        <b>. spmat use cobj using pollute.spmat</b>
+<p>
+    Save the spmat object <b>cobj</b> to disk
+        <b>. spmat export cobj using cobj.txt</b>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>spmat</b>, <b>spreg</b>, <b>spivreg</b>, <b>spmap</b>, <b>shp2dta</b>, <b>mif2dta</b> (if installed)
+<p>
+</pre>

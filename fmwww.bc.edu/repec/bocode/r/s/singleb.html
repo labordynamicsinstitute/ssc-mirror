@@ -1,0 +1,64 @@
+<pre>
+<b>help singleb</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>singleb</b> --    Contingent Valuation using Single-Bounded Dichotomous
+                   Choice
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>singleb</b> <i>varlist</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] [<b>,</b> <b>level(</b><i>#</i><b>)</b> <b>noconstant</b>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    This command uses maximum likelihood (under the assumption of normality)
+    to estimate the single-bounded dichotomous choice model for contingent
+    valuation (Cameron and James, 1987). This command provides an alternative
+    to the estimation via <b>probit</b>.  The main advantage of this procedure is
+    that we directly obtain point estimates (and standard errors) of the
+    marginal effect that a change in the explanatory variable has on WTP.
+<p>
+<b><u>Remarks</u></b>
+<p>
+    The first variable in <i>varlist</i> should be the bid variable. The second
+    variable should be the dummy for the response to the dichotomous choice
+    question. The remaining variables will be interpreted as covariates or
+    control variables.
+<p>
+    For the constant only model the constant represents the mean WTP. For the
+    model with explanatory variables the mean WTP can be obtained by
+    multiplying the mean vector of explanatory variables by the vector of
+    estimated coefficients.
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>. singleb bid response</b>
+<p>
+        <b>. singleb bid response x1 x2</b>
+<p>
+    Use file singleb.dta to do the examples
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Alejandro Lopez-Feldman
+    Centro de Investigacion y Docencia Economicas, CIDE
+    Email:  lopezfeldman@gmail.com
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Cameron, T. and M. James. 1987. Estimation Methods for "Closed-Ended"
+        Contingent Valuation Surveys. <i>Review of Economics and Statistics</i> 69:
+        269-276.
+<p>
+<p>
+<p>
+<b><u>Acknowledgments</u></b>
+<p>
+    I thank Brett Day for sharing the Stata code that helped me to get
+</pre>

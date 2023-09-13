@@ -1,0 +1,114 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>stcompet</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Generate Cumulative Incidence in presence of Competing Events</u></b>
+<p>
+    <b>stcompet</b> <i>newvar</i> <b>=</b> { <b>ci</b> | <b>se</b> | <b>hi</b> | <b>lo</b> [[<i>newvar</i> <b>=</b> <i>...</i>] [<i>...</i>] ] [<b>if</b> <i>exp</i>] [<b>in</b>
+             <i>range</i>] <b>,</b> <b>compet1(</b><i>numlist</i><b>)</b> [<b>compet2(</b><i>numlist</i><b>)</b> <b>compet3(</b><i>numlist</i><b>)</b>
+             <b>compet4(</b><i>numlist</i><b>)</b> <b>compet5(</b><i>numlist</i><b>)</b> <b>compet6(</b><i>numlist</i><b>)</b> <b>by(</b><i>varname</i><b>)</b>
+             <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> ]
+<p>
+<p>
+<p>
+<b>stcompet</b> is for use with survival-time data; see help st. You must have <b>stset</b>
+your data before using this command; see help stset.
+In previous <b>stset</b> you must specify <b><u>f</u></b><b>ailure(</b><i>varname</i><b>==</b><i>numlist</i> <b>)</b> where <i>numlist</i>
+refers to the event of interest.
+<p>
+<p>
+Examples:
+<p>
+    Generate variables containing Cumulative Incidence and Standard Error
+            . stset survtime, f(event==1)
+            . stcompet CumInc = ci SError = se, compet1(2) compet2(4)
+<p>
+    Generate variables containing Cumulative Incidence Confidence Bounds
+            . stcompet High = hi Low = lo, compet1(2) compet2(4)
+<p>
+    Note that each created variable contains functions for all competing events
+    : i.e.  event of interest and events in compet# options. So if you want
+    graph functions relating to each event you need to type:
+ 
+            . gen CumInc1 = CumInc if event==1
+            . gen CumInc2 = CumInc if event==2
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+In survival or cohort studies the failure of an individual may be one of
+several distinct failure types. In such a situation we observe an event of
+interest and one or more competing events whose occurrence precludes or alters
+the probability of occurence of the first one.  <b>stcompet</b> creates variables
+containing Cumulative Incidence, a function that in this case appropriately
+estimates the probability of occurrence of each endpoint, corresponding
+Standard Error and Confidence Bounds.
+The values in <i>numlist</i> of the previous <b>stset</b> are assumed as occurrence of event
+of interest.  In <b>compet#()</b> options you can specify <i>numlist</i> relating to the
+occurrence of up to six competing events.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>compet1(</b><i>numlist</i><b>)</b> is not an option because at least one event must to compete
+    with the event of interest. A failure of a competing event occurs whenever
+    <i>failvar</i> specified in previous <b>stset</b> takes on any of the values of this
+    <i>numlist</i>.
+<p>
+<b>compet2(</b><i>numlist</i><b>)</b><i>...</i><b>compet6(</b><i>numlist</i><b>)</b> are optional. Each <i>numlist</i> refers to a
+    failure for other competing events.
+<p>
+<b>by(</b><i>varname</i><b>)</b> produces separate functions by making separate calculations for
+    each group identified by equal values of the <b>by()</b> variable taking on
+    integer or string values.
+<p>
+<b>level(</b><i>#</i><b>)</b> specifies the confidence level, in percent, for the pointwise
+    confidence interval around the cumulative incidence functions; see help 
+    level.
+<p>
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+Cumulative Incidence is estimated by summing up to <i>t</i>    S<i>(t-1)</i> * h'<i>(t)</i>,   
+where S<i>(t-1)</i> is the KME of the overall survival function and h'<i>(t)</i> is the
+cause-specific hazard at the time  <i>t</i>
+<p>
+Standard errors are computed according to the formula in Marubini &amp; Valsecchi
+(1995) p. 341. They derive the estimator using delta method.
+Applying delta method Choudhury obtains an other formula presented as Dinse and
+Larson's variance estimator of the Cumulative Incidence. He provides also Splus
+codes to compute it. In my checks, using these codes in Splus, standard errors
+are exactly the same as computed using Marubini &amp; Valsecchi's formula in Stata.
+<p>
+Choudhury proposed and showed that log(-log) trasformation improve coverage
+accuracy of the confidence intervals. So they are estimated using formula 4 of
+his article.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual:  <b>[R] st sts</b>, <b>[R] st sts generate</b>, <b>[R] st sts graph</b>
+On-line:  help for sts, stset
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+1 - Marubini E., Valsecchi M.G. Analysing Survival Data from Clinical Trials
+    and Observational Studies. Wiley: Chichester, 1995.
+<p>
+2 - Choudhury J.B. Non-parametric confidence interval estimation for competing
+    risks analysis: application to contraceptive data. Statistics in Medicine
+    2002; 21: 1129-1144.
+<p>
+3 - Gooley T.A., Leisenring W. Crowley J. Storer B.E. Estimation of failure
+    probabilities in the presence of competing risks: new representations of
+    old estimators. Statistics in Medicine 1999; 18: 695-706.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+        Enzo Coviello, Azienda U.S.L. BA/1, Italy
+        coviello@mythnet.it
+</pre>

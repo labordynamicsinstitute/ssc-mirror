@@ -1,7 +1,7 @@
-*! version 1.0.5  02jul2023  Ben Jann
+*! version 1.1.0  11sep2023  Ben Jann
 
 program geoframe
-    version 17
+    version 16.1
     gettoken subcmd 0 : 0, parse(" ,")
     _parse_subcmd `subcmd'
     _geoframe_`subcmd' `macval(0)'
@@ -22,6 +22,7 @@ program _parse_subcmd
     else if `"`0'"'==substr("describe",  1, max(1,`l')) local 0 describe
     else if `"`0'"'==substr("generate",  1, max(1,`l')) local 0 generate
     else if `"`0'"'==substr("bbox",      1, max(2,`l')) local 0 bbox
+    else if `"`0'"'==substr("symbol",    1, max(3,`l')) local 0 symbol
     else if `"`0'"'==substr("rename",    1, max(3,`l')) local 0 rename
     else if `"`0'"'==substr("duplicate", 1, max(3,`l')) local 0 duplicate
     else if `"`0'"'==substr("relink",    1, max(3,`l')) local 0 relink
@@ -90,6 +91,7 @@ program _geoframe_create
             di as err "(error in {bf:shpfile()})"
             exit _rc
         }
+        mata: _add_path_and_sfx_to_shpf("SHP_using", "using")
     }
     
     // read data into frame and apply settings
@@ -116,23 +118,24 @@ program _geoframe_create
                 _geoframe_set coordinates `coordinates'
                 _geoframe_set area `area'
                 _geoframe_set feature `feature'
-                // check whether shapefile is declared in characteristics
-                if "`type'"=="unit" {        // only do this if type=unit
-                    if `hasSHP'==0 {         // only if shpfile() not specified
-                        if "`shpfile'"=="" { // only noshpfile not specified
-                            __geoframe_create_hasshpf `"`macval(using)'"'
+                // check whether shapefile is available
+                if "`type'"=="unit" {
+                    if `hasSHP'==0 & "`shpfile'"=="" {
+                        if `hasUSING' {
+                            __geoframe_create_hasshpf `macval(using)'
                         }
                     }
                 }
                 // read shapefile and establish linkage
                 if `hasSHP' {
+                    di as txt `"(reading shapes from `macval(SHP_using)')"'
                     if "`SHP_frame'"=="" local SHP_frame "`frame'_shp"
                     else if "`SHP_frame'"=="`frame'" {
                         di as err "name for shape frame and"/*
                             */ " name for main frame may not be the same"
                         exit 498
                     }
-                    _geoframe_create `SHP_frame' using `macval(SHP_using)'/*
+                    _geoframe_create `SHP_frame' using `"`macval(SHP_using)'"'/*
                         */, type(shape) id(`SHP_id') sid(`SHP_sid') pid(`SHP_pid')/*
                         */  plevel(`SHP_plevel') coordinates(`SHP_coord')/*
                         */  feature(`SHP_feat') `replace'/*
@@ -206,18 +209,12 @@ program __geoframe_create_parse_shpf
 end
 
 program __geoframe_create_hasshpf
-    args path
-    local shpf: char _dta[sp__shp_dta]
-    if `"`shpf'"'=="" exit // no shape file
-    if `"`macval(path)'"'!="" mata: _add_path_to_shpf("shpf", "path")
+    if `"`macval(0)'"'=="" exit
+    mata: st_local("shpf", pathrmsuffix(st_local("0")) + "_shp.dta")
     capt confirm file `"`macval(shpf)'"'
     if _rc==1 exit 1
-    if _rc {
-        di as txt `"(shape file '`macval(shpf)'' not found)"'
-        exit
-    }
-    di as txt `"(reading shapes from `macval(shpf)')"'
-    c_local SHP_using `"`"`macval(shpf)'"'"'
+    if _rc exit
+    c_local SHP_using `"`macval(shpf)'"'
     c_local hasSHP 1
 end
 
@@ -276,7 +273,7 @@ program _geoframe_link
     if `"`clean'`clean2'"'!="" {
         geoframe clean, quietly `clean2'
     }
-    di as txt "(link to frame {cmd:`shpframe'} added)"
+    di as txt "(link to frame {bf:`shpframe'} added)"
 end
 
 program __geoframe_link_parse_clean
@@ -795,9 +792,240 @@ program _geoframe_generate_plevel
     }
 end
 
+program _geoframe_bbox
+    syntax name(id="newname" name=newname) [if] [in] [, by(varname numeric)/*
+        */ ROTate CIRcle n(numlist int max=1 >0) hull PADding(real 0) replace ]
+    if "`hull'"!="" & "`circle'"!="" {
+        di as err "only one of {bf:circle} and {bf:hull} allowed"
+        exit 198
+    }
+    if "`hull'"!=""        local btype 3
+    else if "`circle'"!="" local btype 2
+    else if "`rotate'"!="" local btype 1
+    else                   local btype 0
+    if "`n'"=="" local n 100
+    if "`replace'"=="" confirm new frame `newname'
+    // mark sample
+    marksample touse
+    if "`by'"!="" markout `touse' `by'
+    // find shapes
+    local cframe `"`c(frame)'"'
+    geoframe get id, l(ID0)
+    geoframe get type, l(type) 
+    if "`type'"!="shape" geoframe get shpframe, local(shpframe)
+    if `"`shpframe'"'=="" {
+        geoframe get coordinates, l(XY) strict
+        markout `touse' `XY'
+        local shpframe `"`cframe'"'
+        local BY `by'
+        local ID `ID0'
+    }
+    else {
+        geoframe get linkname, local(lnkvar) strict
+        frame `shpframe' {
+            qui frget `touse' = `touse', from(`lnkvar')
+            qui replace `touse' = 0 if `touse'>=.
+            geoframe get coordinates, l(XY) strict
+            markout `touse' `XY'
+            geoframe get id, l(ID)
+            if "`by'"!="" {
+                if "`by'"=="`ID0'" & "`ID'"!="" local BY `ID'
+                else {
+                    tempvar BY
+                    qui frget `BY' = `by', from(`lnkvar')
+                }
+            }
+        }
+    }
+    // prepare new frame
+    tempname newframe
+    frame create `newframe' double(_ID _X _Y)
+    // obtain boxes/MECs
+    frame `shpframe' {
+        if "`BY'"!="" {
+            if "`BY'"=="`ID'" {
+                mata: _bbox2("`newframe'", `"`XY'"', "`touse'",/*
+                     */ `btype', `n', `padding', "`BY'")
+            }
+            else {
+                qui levelsof `BY' if `touse', local(bylvls)
+                foreach lvl of local bylvls {
+                    mata: _bbox1("`newframe'", `"`XY'"', "`touse'",/*
+                         */ `btype', `n', `padding', "`BY'", `lvl')
+                }
+            }
+        }
+        else {
+            mata: _bbox1("`newframe'", `"`XY'"', "`touse'",/*
+                 */ `btype', `n', `padding')
+        }
+    }
+    // cleanup
+    frame `newframe' {
+        qui compress _ID
+        __geoframe_set_type shape
+        capt confirm new frame `newname'
+        if _rc==1 exit 1
+        if _rc frame drop `newname'
+        frame rename `newframe' `newname'
+        di as txt "(new frame "/*
+            */ `"{stata geoframe describe `newname':{bf:`newname'}}"'/*
+            */ " created)"
+    }
+end
+
+program _geoframe_symbol
+    syntax name(id="newname" name=name) [if] [in] [, * ]
+    __geoframe_symbol `name' `if' `in', `options'
+end
+
+program _geoframe_symboli
+    syntax anything(id="newname") [, * ]
+    gettoken name anything : anything
+    confirm name `name'
+    numlist `"`anything'"', min(3)
+    __geoframe_symbol `name' `r(numlist)', `options'
+end
+
+program __geoframe_symbol
+    syntax anything [if] [in] [, replace/*
+        */ SHape(passthru) SIze(passthru) OFFset(passthru) ANGle(passthru)/*
+        */ ratio(passthru) n(passthru) ]
+    gettoken newname anything : anything
+    if "`replace'"=="" confirm new frame `newname'
+    // generate symbols
+    if `: list sizeof anything' {
+        if `"`if'"'!="" {
+            di as err "if not allowed"
+            exit 101
+        }
+        if `"`in'"'!="" {
+            di as err "in not allowed"
+            exit 101
+        }
+        tempname frame
+        frame create `frame' double(_X _Y SIZE)
+        while (`"`anything'"'!="") {
+            gettoken x anything : anything
+            local x = real(`"`x'"')
+            gettoken y anything : anything
+            local y = real(`"`y'"')
+            gettoken size anything : anything
+            local size = real(`"`size'"')
+            frame post `frame' (`x') (`y') (`size')
+        }
+        local size size(SIZE)
+    }
+    else {
+        local frame `"`c(frame)'"'
+        geoframe get id, l(ID)
+    }
+    tempname newframe
+    _geoplot_symbol . . `frame' `if' `in', _frameonly(`newframe' `ID')/*
+        */ `shape' `size' `offset' `angle' `ratio' `n'
+    // cleanup
+    frame `newframe' {
+        drop W
+        order _ID
+        __geoframe_set_type shape
+        capt confirm new frame `newname'
+        if _rc==1 exit 1
+        if _rc frame drop `newname'
+        frame rename `newframe' `newname'
+        di as txt "(new frame "/*
+            */ `"{stata geoframe describe `newname':{bf:`newname'}}"'/*
+            */ " created)"
+    }
+end
+
+program _geoframe_collapse
+    __geoframe_collapse 0 `0'
+end
+
+program _geoframe_contract
+    __geoframe_collapse 1 `0'
+end
+
+program __geoframe_collapse
+    gettoken contract 0 : 0
+    local cframe `"`c(frame)'"'
+    gettoken frame 0 : 0, parse(" ,")
+    frame `frame' {
+        local opts COordinates(passthru) SELect(passthru) id(varname)/*
+            */ GENerate GENerate2(str)
+        if `contract' {
+            syntax [if] [in] [fw] [, `opts' * ]
+        }
+        else {
+            syntax anything(equalok id="clist") [if] [in] [aw fw iw pw] [,/*
+                */ `opts' cw ]
+        }
+        if `"`generate2'"'!="" local generate generate
+        if "`id'"!="" {
+            if `"`generate'"'!="" {
+                di as err "generate() and id() not both allowed"
+                exit 198
+            }
+            if `"`select'"'!="" {
+                di as err "select() not allowed together with id()"
+                exit 198
+            }
+            if `"`coordinates'"'!="" {
+                di as err "coordinates() not allowed together with id()"
+                exit 198
+            }
+            local ID `id'
+        }
+        else {
+            if `"`generate'"'!="" {
+                __geoframe_collapse_parse_gen `generate2' /*
+                    returns generate, replace, set */
+                local ID `generate'
+                local novarnote
+            }
+            else {
+                tempname ID
+                local replace
+                local set noset
+                local novarnote novarnote
+            }
+            geoframe spjoin `cframe' `ID' `if' `in',/*
+                */ `select' `coordinates' `replace' `set' `novarnote'
+        }
+    }
+    tempname frame1
+    frame copy `frame' `frame1'
+    frame `frame1' {
+        marksample touse
+        qui keep if `touse' & `ID'<.
+        if `contract' {
+            contract `ID' [`weight'`exp'], `options'
+        }
+        else {
+            collapse `anything' [`weight'`exp'], by(`ID') fast `cw'
+        }
+        geoframe get id, local(id)
+        if `"`id'"'!="`ID'" {
+            geoframe set id `ID'
+        }
+    }
+    geoframe copy `frame1' *, exclude(`ID') quietly
+    if `r(k)'==1 di as txt "(variable " _c
+    else         di as txt "(variables " _c
+    di as res r(newlist) as txt " added to frame {bf:`cframe'})"
+end
+
+program __geoframe_collapse_parse_gen
+    syntax [name] [, replace noset ]
+    if "`namelist'"=="" local namelist _ID // default
+    c_local generate `namelist'
+    c_local replace `replace'
+    c_local set `set'
+end
+
 program _geoframe_spjoin
-    syntax [namelist(min=1 max=2)] [if] [in] [,/*
-        */ COordinates(varlist min=2 max=2) replace noset ]
+    syntax [namelist(min=1 max=2)] [if] [in] [, SELect(str asis) /*
+        */ COordinates(varlist min=2 max=2) replace noset NOVARNOTE ]
     marksample touse
     gettoken shpframe namelist : namelist
     gettoken id       namelist : namelist
@@ -805,7 +1033,7 @@ program _geoframe_spjoin
     if "`replace'"=="" confirm new variable `id'
     if `"`coordinates'"'!="" local xy `coordinates'
     else geoframe get coordinates, l(xy) strict
-    markout `touse' `coordinates'
+    markout `touse' `xy'
     local frame `"`c(frame)'"'
     local TOUSE
     frame `shpframe' {
@@ -815,13 +1043,22 @@ program _geoframe_spjoin
             geoframe get shpframe, local(shpframe2)
             if `"`shpframe2'"'!="" {
                 tempvar TOUSE
-                qui gen `TOUSE' = 1
+                if `"`select'"'!="" {
+                    qui gen byte `TOUSE' = 0
+                    qui replace `TOUSE' = 1 if (`select')
+                }
+                else qui gen byte `TOUSE' = 1
                 geoframe get linkname, local(lnkvar) strict
                 frame `shpframe2' {
                     qui frget `TOUSE' = `TOUSE', from(`lnkvar')
                     qui replace `TOUSE' = 0 if `TOUSE'>=.
                 }
                 local shpframe `shpframe2'
+            }
+            else if `"`select'"'!="" {
+                tempvar TOUSE
+                qui gen byte `TOUSE' = 0
+                qui replace `TOUSE' = 1 if (`select')
             }
         }
     }
@@ -856,83 +1093,9 @@ program _geoframe_spjoin
     rename `Id' `id'
     if "`set'"=="" {
         geoframe set id `id'
-        if "`coordinates'"!="" geoframe set coordinates `xy'
     }
-    di as txt "(variable {bf:`id'} added to frame {bf:`frame'})"
-end
-
-program _geoframe_bbox
-    syntax name(id="newname" name=newname) [if] [in] [, by(varname numeric)/*
-        */ ROTate CIRcle n(numlist int max=1 >0) hull PADding(real 0) replace ]
-    if "`hull'"!="" & "`circle'"!="" {
-        di as err "only one of {bf:circle} and {bf:hull} allowed"
-        exit 198
-    }
-    if "`hull'"!=""        local btype 3
-    else if "`circle'"!="" local btype 2
-    else if "`rotate'"!="" local btype 1
-    else                   local btype 0
-    if "`n'"=="" local n 100
-    if "`replace'"=="" confirm new frame `newname'
-    // mark sample
-    marksample touse
-    if "`by'"!="" markout `touse' `by'
-    // find shapes
-    local cframe `"`c(frame)'"'
-    geoframe get type, l(type)
-    if "`type'"!="shape" geoframe get shpframe, local(shpframe)
-    if `"`shpframe'"'=="" {
-        geoframe get coordinates, l(XY) strict
-        markout `touse' `XY'
-        local shpframe `"`cframe'"'
-        local BY `by'
-    }
-    else {
-        geoframe get linkname, local(lnkvar) strict
-        frame `shpframe' {
-            qui frget `touse' = `touse', from(`lnkvar')
-            qui replace `touse' = 0 if `touse'>=.
-            geoframe get coordinates, l(XY) strict
-            markout `touse' `XY'
-            if "`by'"!="" {
-                tempvar BY
-                qui frget `BY' = `by', from(`lnkvar')
-            }
-        }
-    }
-    // prepare new frame
-    tempname newframe
-    frame create `newframe'
-    frame `newframe' {
-        qui gen double _ID = .
-        qui gen double _X  = .
-        qui gen double _Y  = .
-    }
-    // obtain boxes/MECs
-    frame `shpframe' {
-        if "`BY'"!="" {
-            qui levelsof `BY' if `touse', local(bylvls)
-            foreach lvl of local bylvls {
-                mata: _bbox("`newframe'", `"`XY'"', "`touse'", `lvl',/*
-                     */ `btype', `n', `padding', "`BY'")
-            }
-        }
-        else {
-            mata: _bbox("`newframe'", `"`XY'"', "`touse'", .,/*
-                 */ `btype', `n', `padding')
-        }
-    }
-    // cleanup
-    frame `newframe' {
-        qui compress _ID
-        __geoframe_set_type shape
-        capt confirm new frame `newname'
-        if _rc==1 exit 1
-        if _rc frame drop `newname'
-        frame rename `newframe' `newname'
-        di as txt "(new frame "/*
-            */ `"{stata geoframe describe `newname':{bf:`newname'}}"'/*
-            */ " created)"
+    if "`novarnote'"=="" {
+        di as txt "(variable {bf:`id'} added to frame {bf:`frame'})"
     }
 end
 
@@ -1147,8 +1310,13 @@ program __geoframe_get_coordinates
         else                     local VARS _X _Y
         capt confirm numeric variable `VARS', exact
         if _rc==1 exit _rc
-        if _rc==0 {
-            local exp `VARS'
+        if _rc==0 local exp `VARS'
+        else if inlist(`"`type'"',"","unit") { // check alternative names
+            if `"`type'"'=="unit" local VARS _X _Y
+            else                  local VARS _CX _CY
+            capt confirm numeric variable `VARS', exact
+            if _rc==1 exit _rc
+            if _rc==0 local exp `VARS'
         }
     }
     if "`flip'"!="" geoframe flip `exp', local(exp)
@@ -1276,7 +1444,7 @@ program _geoframe_unlink
     }
     __geoframe_set_shpframe
     __geoframe_set_linkname
-    di as txt "(link to frame {cmd:`shpframe'} removed)"
+    di as txt "(link to frame {bf:`shpframe'} removed)"
 end
 
 program _geoframe_attach
@@ -1551,16 +1719,26 @@ program _check_types
     exit 499 // TYPE is bite => recast
 end
 
-version 17
+version 16.1
 mata:
 mata set matastrict on
 
-void _add_path_to_shpf(string scalar shpf, string scalar path0)
+void _add_path_and_sfx_to_shpf(string scalar shpf, string scalar mainf)
 {
-    string scalar path, fn
+    string scalar path, fn, SHPF
+    pragma unset path
+    pragma unset fn
     
-    pathsplit(st_local(path0), path="", fn="")
-    st_local(shpf, pathjoin(path, st_local(shpf)))
+    SHPF = st_local(shpf)
+    if (pathsuffix(SHPF)=="") SHPF = SHPF + ".dta"
+    pathsplit(SHPF, path, fn)
+    if (path=="") { // shape file has no path
+        pathsplit(st_local(mainf), path, fn)
+        if (path!="") { // main file has path
+            SHPF = pathjoin(path, SHPF)
+        }
+    }
+    st_local(shpf, SHPF)
 }
 
 void _flip(string scalar nm)
@@ -1688,13 +1866,14 @@ void _spjoin(string scalar frame, string scalar id1, string scalar xy1,
     if (pl!="") st_view(PL=., ., pl, touse)
     else        PL = J(0,1,.)
     st_framecurrent(frame)
+    stata("*") // fixes an issue with frames and views; may become redundant
     st_view(XY1=., ., xy1, touse1)
     st_store(., id1, touse1, geo_spjoin(XY1, ID, PID, XY, PL))
 }
 
-void _bbox(string scalar frame, string scalar xy, string scalar touse,
-     real scalar id, real scalar btype, real scalar k, real scalar pad,
-     | string scalar BY)
+void _bbox1(string scalar frame, string scalar xy, string scalar touse,
+     real scalar btype, real scalar k, real scalar pad,
+     | string scalar BY, real scalar id)
 {
     string scalar  cframe
     real scalar    n, n0, n1
@@ -1715,6 +1894,45 @@ void _bbox(string scalar frame, string scalar xy, string scalar touse,
     n1 = n0 + n; n0 = n0 + 1
     st_store((n0,n1), "_ID", J(n, 1, id))
     st_store((n0,n1), ("_X","_Y"), PT)
+    st_framecurrent(cframe)
+}
+
+void _bbox2(string scalar frame, string scalar xy, string scalar touse,
+     real scalar btype, real scalar k, real scalar pad, string scalar BY)
+{   // BY equal to ID; assuming data ordered by ID
+    string scalar  cframe
+    real scalar    n, n0, n1, i
+    real matrix    XY, ID, a, b
+    real colvector N
+    pointer (real matrix) colvector PT
+
+    // data
+    st_view(XY=., ., xy, touse)
+    st_view(ID=., ., BY, touse)
+    a = selectindex(_mm_unique_tag(ID))
+    n = rows(a)
+    if (n<=1) b = rows(XY)
+    else      b = a[|2 \. |] :- 1 \ rows(XY)
+    // generate shapes
+    N = J(n,1,.)
+    PT = J(n,1,NULL)
+    for (i=n;i;i--) {
+        if      (btype==3) PT[i] = &__bbox_hull(XY[|a[i],1\b[i],.|], pad)
+        else if (btype==2) PT[i] = &__bbox_mec(XY[|a[i],1\b[i],.|], k, pad)
+        else               PT[i] = &__bbox(XY[|a[i],1\b[i],.|], btype, pad)
+        N[i] = rows(*PT[i])
+    }
+    // store shapes
+    cframe = st_framecurrent()
+    st_framecurrent(frame)
+    n1 = st_nobs()
+    st_addobs(sum(N))
+    for (i=1;i<=n;i++) {
+        n0 = n1 + 1
+        n1 = n0 + N[i] - 1
+        st_store((n0,n1), "_ID", J(n1-n0+1, 1, ID[a[i]]))
+        st_store((n0,n1), ("_X","_Y"), *PT[i])
+    }
     st_framecurrent(cframe)
 }
 

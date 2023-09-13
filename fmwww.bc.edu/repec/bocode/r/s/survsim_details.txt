@@ -1,0 +1,12 @@
+TITLE: `SURVSIM' : module to simulate survival/time-to-event data
+
+DESCRIPTION/AUTHOR: survsim simulates survival data from a parametric distribution, 
+a user-defined distribution, a cause-specific hazards competing risks model, a general 
+multi-state model, or from an estimated -merlin- model. Baseline covariates and 
+time-dependent effects can be specified when defining a data-generating model. 
+Delayed entry/left truncation is allowed.
+
+Author: Michael J. Crowther, Red Door Analytics
+Support: email michael@reddooranalytics.se
+
+Requires: Stata version 14.2

@@ -1,5 +1,5 @@
 *﻿* did_multiplegt_dyn : did_multiplegt, robust to dynamic effects and with asymptotic variances
-** This version : July 28th, 2023
+** This version : September 4th, 2023
 ** Modified and commented by Clément.
 
 ********************************************************************************
@@ -299,20 +299,15 @@ replace outcome_XX=. if F_g_XX==T_max_XX+1&time_XX>max_time_d_nonmiss_XX
 replace trunc_control_XX=max_time_d_nonmiss_XX+1 if F_g_XX==T_max_XX+1
 
 ////// Balancing the panel //
+// Modification proposed by Diego, if there is already a variable name _merge in the user's data set 
+cap rename _merge _merge_og
+
 fillin group_XX time_XX
 capture drop d_sq_XX_new
 bys group_XX: egen d_sq_XX_new=mean(d_sq_XX)
 drop d_sq_XX
 rename d_sq_XX_new d_sq_XX
 
-// Modif Mélitine : initial place of this code
-/*
-////// For each value of the baseline treatment, we drop time periods such that we do not have any control with that baseline treatment after that period //
-//// Watch out: this means the panel is no longer balanced, though it is balanced within values of the baseline treatment //
-gen never_change_d_XX=1-ever_change_d_XX
-bys time_XX d_sq_XX `trends_nonparam': egen controls_time_XX=max(never_change_d_XX)
-drop if controls_time_XX==0
-*/
 
 ////// Defining N_gt, the weight of each cell (g,t) //
 gen N_gt_XX=1
@@ -677,7 +672,7 @@ forvalue i=1/`=l_XX'{
 	capture drop U_Gg_var_`i'_in_XX
 	capture drop U_Gg_var_`i'_out_XX
 	capture drop U_Gg_var_glob_`i'_XX
-	capture drop U_Gg_var_global_eff`i'_sqrd_XX
+	capture drop U_Gg_var_glob_eff`i'_sqrd_XX
 	
 	gen U_Gg`i'_plus_XX = 0
 	gen U_Gg`i'_minus_XX = 0
@@ -700,25 +695,25 @@ if l_placebo_XX!=0{
 
 	forvalue i=1/`=l_placebo_XX'{	
 	
-	capture drop U_Gg_placebo_`i'_plus_XX  
-	capture drop U_Gg_placebo_`i'_global_XX
-	capture drop U_Gg_placebo_`i'_minus_XX 
+	capture drop U_Gg_pl_`i'_plus_XX  
+	capture drop U_Gg_pl_`i'_global_XX
+	capture drop U_Gg_pl_`i'_minus_XX 
 	capture drop DID_placebo_`i'_XX
 	capture drop N_placebo_`i'_XX
-	capture drop U_Gg_var_placebo_`i'_in_XX
-	capture drop U_Gg_var_placebo_`i'_out_XX
+	capture drop U_Gg_var_pl_`i'_in_XX
+	capture drop U_Gg_var_pl_`i'_out_XX
 	capture drop U_Gg_var_glob_pl_`i'_XX
-	capture drop U_Gg_var_global_placebo_`i'_2_XX
+	capture drop U_Gg_var_glob_pl_`i'_2_XX
 	capture drop count`i'_pl_plus_XX
 	capture drop  count`i'_pl_minus_XX
 	capture drop count`i'_pl_global_XX
 	
-	gen U_Gg_placebo_`i'_plus_XX   = 0
-	gen U_Gg_placebo_`i'_minus_XX   = 0
+	gen U_Gg_pl_`i'_plus_XX   = 0
+	gen U_Gg_pl_`i'_minus_XX   = 0
 	scalar N1_placebo_`i'_XX=0
 	scalar N0_placebo_`i'_XX=0
-	gen U_Gg_var_placebo_`i'_in_XX=0
-	gen U_Gg_var_placebo_`i'_out_XX=0
+	gen U_Gg_var_pl_`i'_in_XX=0
+	gen U_Gg_var_pl_`i'_out_XX=0
 	scalar sum_for_var_placebo_in_XX=0
 	scalar sum_for_var_placebo_out_XX=0
 	gen count`i'_pl_plus_XX = 0
@@ -767,9 +762,9 @@ if l_placebo_XX!=0{
 
 	forvalue i=1/`=l_placebo_u_a_XX'{	
 		if N1_placebo_`i'_XX!=0{
-				replace U_Gg_placebo_`i'_plus_XX  = U_Gg_placebo_`i'_XX
+				replace U_Gg_pl_`i'_plus_XX  = U_Gg_placebo_`i'_XX
 				replace count`i'_pl_plus_XX= count`i'_pl_core_XX
-				replace U_Gg_var_placebo_`i'_in_XX=U_Gg_placebo_`i'_var_XX
+				replace U_Gg_var_pl_`i'_in_XX=U_Gg_pl_`i'_var_XX
 				
 				if "`normalized'"!=""{
 					scalar delta_D_pl_`i'_in_XX = delta_norm_pl_`i'_XX
@@ -817,9 +812,9 @@ if l_placebo_XX!=0{
 
 	forvalue i=1/`=l_placebo_u_a_XX'{
 	if N0_placebo_`i'_XX!=0{
-			replace U_Gg_placebo_`i'_minus_XX  = -U_Gg_placebo_`i'_XX
+			replace U_Gg_pl_`i'_minus_XX  = -U_Gg_placebo_`i'_XX
 			replace count`i'_pl_minus_XX= count`i'_pl_core_XX
-			replace U_Gg_var_placebo_`i'_out_XX=U_Gg_placebo_`i'_var_XX
+			replace U_Gg_var_pl_`i'_out_XX=U_Gg_pl_`i'_var_XX
 			
 			if "`normalized'"!=""{
 					scalar delta_D_pl_`i'_out_XX = delta_norm_pl_`i'_XX
@@ -956,8 +951,8 @@ if l_placebo_XX!=0{
 
 forvalue i=1/`=l_placebo_XX'{	
 
-gen U_Gg_placebo_`i'_global_XX = (N1_placebo_`i'_XX/(N1_placebo_`i'_XX+N0_placebo_`i'_XX))*U_Gg_placebo_`i'_plus_XX  +(N0_placebo_`i'_XX/(N1_placebo_`i'_XX+N0_placebo_`i'_XX))*U_Gg_placebo_`i'_minus_XX 
-replace U_Gg_placebo_`i'_global_XX=. if first_obs_by_gp_XX==0
+gen U_Gg_pl_`i'_global_XX = (N1_placebo_`i'_XX/(N1_placebo_`i'_XX+N0_placebo_`i'_XX))*U_Gg_pl_`i'_plus_XX  +(N0_placebo_`i'_XX/(N1_placebo_`i'_XX+N0_placebo_`i'_XX))*U_Gg_pl_`i'_minus_XX 
+replace U_Gg_pl_`i'_global_XX=. if first_obs_by_gp_XX==0
 
 gen count`i'_pl_global_XX=max(count`i'_pl_plus_XX, count`i'_pl_minus_XX)
 
@@ -967,7 +962,7 @@ if "`normalized'"!=""{
 
 // Summing them to obtain the DID_pl
 
-egen DID_placebo_`i'_XX = total(U_Gg_placebo_`i'_global_XX) 
+egen DID_placebo_`i'_XX = total(U_Gg_pl_`i'_global_XX) 
 replace  DID_placebo_`i'_XX= DID_placebo_`i'_XX/G_XX
 scalar DID_placebo_`i'_XX = DID_placebo_`i'_XX
 
@@ -1018,9 +1013,9 @@ gen U_Gg_var_glob_`i'_XX = U_Gg_var_`i'_in_XX * (scalar(N1_`i'_XX)/(scalar(N1_`i
 
 
 if "`cluster'"==""{
-	gen U_Gg_var_global_eff`i'_sqrd_XX = U_Gg_var_glob_`i'_XX^2*first_obs_by_gp_XX
+	gen U_Gg_var_glob_eff`i'_sqrd_XX = U_Gg_var_glob_`i'_XX^2*first_obs_by_gp_XX
 
-	sum U_Gg_var_global_eff`i'_sqrd_XX
+	sum U_Gg_var_glob_eff`i'_sqrd_XX
 	scalar sum_for_var_`i'_XX=r(sum)/G_XX^2
 }
 
@@ -1078,13 +1073,13 @@ if ("`switchers'"==""&(N1_placebo_`i'_XX!=0|N0_placebo_`i'_XX!=0))|("`switchers'
 
 // Estimating \hat{\sigma}^2_l
 
-gen U_Gg_var_glob_pl_`i'_XX = U_Gg_var_placebo_`i'_in_XX * (N1_placebo_`i'_XX/(N1_placebo_`i'_XX+N0_placebo_`i'_XX)) + U_Gg_var_placebo_`i'_out_XX* (N0_placebo_`i'_XX/(N1_placebo_`i'_XX+N0_placebo_`i'_XX))
+gen U_Gg_var_glob_pl_`i'_XX = U_Gg_var_pl_`i'_in_XX * (N1_placebo_`i'_XX/(N1_placebo_`i'_XX+N0_placebo_`i'_XX)) + U_Gg_var_pl_`i'_out_XX* (N0_placebo_`i'_XX/(N1_placebo_`i'_XX+N0_placebo_`i'_XX))
 
 if "`cluster'"==""{
 
-gen U_Gg_var_global_placebo_`i'_2_XX = U_Gg_var_glob_pl_`i'_XX^2*first_obs_by_gp_XX
+gen U_Gg_var_glob_pl_`i'_2_XX = U_Gg_var_glob_pl_`i'_XX^2*first_obs_by_gp_XX
 
-sum U_Gg_var_global_placebo_`i'_2_XX
+sum U_Gg_var_glob_pl_`i'_2_XX
 scalar sum_for_var_placebo_`i'_XX=r(sum)/G_XX^2
 }
 
@@ -1742,24 +1737,22 @@ forvalue i=1/`=l_placebo_u_a_XX'{
 
 **Needed to compute placebos
 capture drop diff_y_pl_`i'_XX
-capture drop diff_y_placebo_temp_`i'_XX
-capture drop U_Gg_placebo_`i'_temp_XX
+capture drop U_Gg_pl_`i'_temp_XX
 capture drop U_Gg_placebo_`i'_XX
 capture drop U_Gg_pl_`i'_temp_var_XX
-capture drop U_Gg_placebo_`i'_var_XX
-capture drop U_Gg_placebo_`i'_var_2_XX
+capture drop U_Gg_pl_`i'_var_XX
 capture drop mean_diff_y_pl_`i'_d_sq_t_XX
 capture drop mean_diff_y_pl_`i'_nd_sq_t_XX
 capture drop count_diff_y_pl_`i'_d_sq_t_XX
 capture drop count_diff_y_pl_`i'_nd_sq_t_XX
-capture drop distance_to_switch_placebo_`i'_XX
-capture drop never_change_d_placebo_`i'_XX
+capture drop dist_to_switch_pl_`i'_XX
+capture drop never_change_d_pl_`i'_XX
 capture drop N`=increase_XX'_t_placebo_`i'_XX
 capture drop N`=increase_XX'_t_placebo_`i'_g_XX
 capture drop N_gt_control_placebo_`i'_XX
 capture drop dummy_U_Gg_pl_`i'_XX 
-capture drop never_change_d_placebo_`i'_wXX
-capture drop distance_to_switch_placebo_`i'_wXX
+capture drop never_change_d_pl_`i'_wXX
+capture drop dist_to_switch_pl_`i'_wXX
 // Create long-differences for the placebos
 xtset group_XX time_XX
 
@@ -1800,18 +1793,18 @@ foreach l of local levels_d_sq_XX {
 
 ////// Identifying the control (g,t)s in the estimation of placebo i //
 
-bys group_XX: gen never_change_d_placebo_`i'_XX=never_change_d_`i'_XX*(diff_y_pl_`i'_XX!=.) 
-gen never_change_d_placebo_`i'_wXX=never_change_d_placebo_`i'_XX*N_gt_XX
+bys group_XX: gen never_change_d_pl_`i'_XX=never_change_d_`i'_XX*(diff_y_pl_`i'_XX!=.) 
+gen never_change_d_pl_`i'_wXX=never_change_d_pl_`i'_XX*N_gt_XX
 
-bys time_XX d_sq_XX `trends_nonparam': egen N_gt_control_placebo_`i'_XX=total(never_change_d_placebo_`i'_wXX) 
+bys time_XX d_sq_XX `trends_nonparam': egen N_gt_control_placebo_`i'_XX=total(never_change_d_pl_`i'_wXX) 
 
 ///// Binary variable indicating whether group g is l periods away from switch & (diff_y_pl_`i'_XX!=.) is well defined. //
 
-gen distance_to_switch_placebo_`i'_XX=distance_to_switch_`i'_XX*(diff_y_pl_`i'_XX!=.)
-gen distance_to_switch_placebo_`i'_wXX= distance_to_switch_placebo_`i'_XX*N_gt_XX
+gen dist_to_switch_pl_`i'_XX=distance_to_switch_`i'_XX*(diff_y_pl_`i'_XX!=.)
+gen dist_to_switch_pl_`i'_wXX= dist_to_switch_pl_`i'_XX*N_gt_XX
 ///// Computing N^1_{t,l} or N^0_{t,l}. 
 
-bys time_XX: egen N`=increase_XX'_t_placebo_`i'_XX=total(distance_to_switch_placebo_`i'_wXX)
+bys time_XX: egen N`=increase_XX'_t_placebo_`i'_XX=total(dist_to_switch_pl_`i'_wXX)
 
 ///// Computing N^1_l or N^0_l. //
 
@@ -1823,7 +1816,7 @@ forvalue t=`=t_min_XX'/`=T_max_XX'{
 
 ///// Computing N^0_{t,l,g} or N^1_{t,l,g}. 
 
-bys time_XX d_sq_XX `trends_nonparam': egen N`=increase_XX'_t_placebo_`i'_g_XX=total(distance_to_switch_placebo_`i'_wXX)
+bys time_XX d_sq_XX `trends_nonparam': egen N`=increase_XX'_t_placebo_`i'_g_XX=total(dist_to_switch_pl_`i'_wXX)
 
 ///// Computing the mean of first or long-differences of outcomes for non-treated and for treated separately - will be useful for the computation of the variance // + //Weighting the means
 
@@ -1832,22 +1825,22 @@ gen diff_y_pl_`i'_N_gt_XX=N_gt_XX*diff_y_pl_`i'_XX
 capture drop dof_diff_y_pl_`i'_N_gt_XX
 gen dof_diff_y_pl_`i'_N_gt_XX=(N_gt_XX!=0&diff_y_pl_`i'_XX!=.)
 
-bys time_XX d_sq_XX `trends_nonparam' : egen mean_diff_y_pl_`i'_nd_sq_t_XX=mean(diff_y_pl_`i'_N_gt_XX) if never_change_d_placebo_`i'_XX==1&N`=increase_XX'_t_placebo_`i'_XX>0&N`=increase_XX'_t_placebo_`i'_XX!=.
+bys time_XX d_sq_XX `trends_nonparam' : egen mean_diff_y_pl_`i'_nd_sq_t_XX=mean(diff_y_pl_`i'_N_gt_XX) if never_change_d_pl_`i'_XX==1&N`=increase_XX'_t_placebo_`i'_XX>0&N`=increase_XX'_t_placebo_`i'_XX!=.
 
-bys time_XX d_sq_XX `trends_nonparam' : egen count_diff_y_pl_`i'_nd_sq_t_XX=total(dof_diff_y_pl_`i'_N_gt_XX) if diff_y_pl_`i'_XX!=.&never_change_d_placebo_`i'_XX==1&N`=increase_XX'_t_placebo_`i'_XX>0&N`=increase_XX'_t_placebo_`i'_XX!=.
+bys time_XX d_sq_XX `trends_nonparam' : egen count_diff_y_pl_`i'_nd_sq_t_XX=total(dof_diff_y_pl_`i'_N_gt_XX) if diff_y_pl_`i'_XX!=.&never_change_d_pl_`i'_XX==1&N`=increase_XX'_t_placebo_`i'_XX>0&N`=increase_XX'_t_placebo_`i'_XX!=.
 
-bys time_XX d_sq_XX `trends_nonparam' : egen mean_diff_y_pl_`i'_d_sq_t_XX=mean(diff_y_pl_`i'_N_gt_XX) if distance_to_switch_placebo_`i'_XX==1 
+bys time_XX d_sq_XX `trends_nonparam' : egen mean_diff_y_pl_`i'_d_sq_t_XX=mean(diff_y_pl_`i'_N_gt_XX) if dist_to_switch_pl_`i'_XX==1 
 
-bys time_XX d_sq_XX `trends_nonparam' : egen count_diff_y_pl_`i'_d_sq_t_XX=total(dof_diff_y_pl_`i'_N_gt_XX) if distance_to_switch_placebo_`i'_XX==1
+bys time_XX d_sq_XX `trends_nonparam' : egen count_diff_y_pl_`i'_d_sq_t_XX=total(dof_diff_y_pl_`i'_N_gt_XX) if dist_to_switch_pl_`i'_XX==1
 
 ///// If the Placebos effect could be estimated (as there are switchers), we compute the U_Gg. //
 gen dummy_U_Gg_pl_`i'_XX = (`i'<=T_g_XX-1)
 
 
 if (N`=increase_XX'_placebo_`i'_XX!=0){
-	gen U_Gg_placebo_`i'_temp_XX = dummy_U_Gg_pl_`i'_XX*(G_XX / N`=increase_XX'_placebo_`i'_XX) * N_gt_XX * [distance_to_switch_placebo_`i'_XX - (N`=increase_XX'_t_placebo_`i'_g_XX/N_gt_control_placebo_`i'_XX) * never_change_d_placebo_`i'_XX]*diff_y_pl_`i'_XX 
+	gen U_Gg_pl_`i'_temp_XX = dummy_U_Gg_pl_`i'_XX*(G_XX / N`=increase_XX'_placebo_`i'_XX) * N_gt_XX * [dist_to_switch_pl_`i'_XX - (N`=increase_XX'_t_placebo_`i'_g_XX/N_gt_control_placebo_`i'_XX) * never_change_d_pl_`i'_XX]*diff_y_pl_`i'_XX 
 
-	bysort group_XX : egen U_Gg_placebo_`i'_XX=total(U_Gg_placebo_`i'_temp_XX)
+	bysort group_XX : egen U_Gg_placebo_`i'_XX=total(U_Gg_pl_`i'_temp_XX)
 
 	replace U_Gg_placebo_`i'_XX= U_Gg_placebo_`i'_XX*first_obs_by_gp_XX
 
@@ -1855,21 +1848,21 @@ if (N`=increase_XX'_placebo_`i'_XX!=0){
 	capture drop count`i'_pl_core_XX
 
 	gen count`i'_pl_core_XX=0
-	replace count`i'_pl_core_XX= N_gt_XX if (U_Gg_placebo_`i'_temp_XX!=.&U_Gg_placebo_`i'_temp_XX!=0|(U_Gg_placebo_`i'_temp_XX==0&diff_y_pl_`i'_XX==0&(distance_to_switch_placebo_`i'_XX!=0|(N`=increase_XX'_t_placebo_`i'_g_XX!=0&never_change_d_placebo_`i'_XX!=0))))
+	replace count`i'_pl_core_XX= N_gt_XX if (U_Gg_pl_`i'_temp_XX!=.&U_Gg_pl_`i'_temp_XX!=0|(U_Gg_pl_`i'_temp_XX==0&diff_y_pl_`i'_XX==0&(dist_to_switch_pl_`i'_XX!=0|(N`=increase_XX'_t_placebo_`i'_g_XX!=0&never_change_d_pl_`i'_XX!=0))))
 
 	// Initializing the U_{G,g,l}_var at 0 //
 	gen U_Gg_pl_`i'_temp_var_XX =0
 	
-	replace U_Gg_pl_`i'_temp_var_XX =  dummy_U_Gg_pl_`i'_XX*(G_XX / N`=increase_XX'_placebo_`i'_XX) * [distance_to_switch_placebo_`i'_XX - (N`=increase_XX'_t_placebo_`i'_g_XX/N_gt_control_placebo_`i'_XX) * never_change_d_placebo_`i'_XX] * (time_XX>=`=`i'+2'&time_XX<=T_g_XX) * (diff_y_pl_`i'_N_gt_XX -mean_diff_y_pl_`i'_nd_sq_t_XX)*sqrt(count_diff_y_pl_`i'_nd_sq_t_XX/(count_diff_y_pl_`i'_nd_sq_t_XX-1)) if never_change_d_placebo_`i'_XX==1&count_diff_y_pl_`i'_nd_sq_t_XX>1&count_diff_y_pl_`i'_nd_sq_t_XX!=.
+	replace U_Gg_pl_`i'_temp_var_XX =  dummy_U_Gg_pl_`i'_XX*(G_XX / N`=increase_XX'_placebo_`i'_XX) * [dist_to_switch_pl_`i'_XX - (N`=increase_XX'_t_placebo_`i'_g_XX/N_gt_control_placebo_`i'_XX) * never_change_d_pl_`i'_XX] * (time_XX>=`=`i'+2'&time_XX<=T_g_XX) * (diff_y_pl_`i'_N_gt_XX -mean_diff_y_pl_`i'_nd_sq_t_XX)*sqrt(count_diff_y_pl_`i'_nd_sq_t_XX/(count_diff_y_pl_`i'_nd_sq_t_XX-1)) if never_change_d_pl_`i'_XX==1&count_diff_y_pl_`i'_nd_sq_t_XX>1&count_diff_y_pl_`i'_nd_sq_t_XX!=.
 
-	replace U_Gg_pl_`i'_temp_var_XX= dummy_U_Gg_pl_`i'_XX*(G_XX / N`=increase_XX'_placebo_`i'_XX) * [distance_to_switch_placebo_`i'_XX - (N`=increase_XX'_t_placebo_`i'_g_XX/N_gt_control_placebo_`i'_XX) * never_change_d_placebo_`i'_XX] * (time_XX>=`=`i'+2'&time_XX<=T_g_XX) * diff_y_pl_`i'_N_gt_XX  if never_change_d_placebo_`i'_XX==1&count_diff_y_pl_`i'_nd_sq_t_XX==1
+	replace U_Gg_pl_`i'_temp_var_XX= dummy_U_Gg_pl_`i'_XX*(G_XX / N`=increase_XX'_placebo_`i'_XX) * [dist_to_switch_pl_`i'_XX - (N`=increase_XX'_t_placebo_`i'_g_XX/N_gt_control_placebo_`i'_XX) * never_change_d_pl_`i'_XX] * (time_XX>=`=`i'+2'&time_XX<=T_g_XX) * diff_y_pl_`i'_N_gt_XX  if never_change_d_pl_`i'_XX==1&count_diff_y_pl_`i'_nd_sq_t_XX==1
 	
-	replace U_Gg_pl_`i'_temp_var_XX= dummy_U_Gg_pl_`i'_XX*(G_XX / N`=increase_XX'_placebo_`i'_XX) * [distance_to_switch_placebo_`i'_XX - (N`=increase_XX'_t_placebo_`i'_g_XX/N_gt_control_placebo_`i'_XX) * never_change_d_placebo_`i'_XX] * (time_XX>=`=`i'+2'&time_XX<=T_g_XX) * (diff_y_pl_`i'_N_gt_XX - mean_diff_y_pl_`i'_d_sq_t_XX) * sqrt(count_diff_y_pl_`i'_d_sq_t_XX/(count_diff_y_pl_`i'_d_sq_t_XX-1)) if distance_to_switch_placebo_`i'_XX==1&count_diff_y_pl_`i'_d_sq_t_XX>1&count_diff_y_pl_`i'_d_sq_t_XX!=.
+	replace U_Gg_pl_`i'_temp_var_XX= dummy_U_Gg_pl_`i'_XX*(G_XX / N`=increase_XX'_placebo_`i'_XX) * [dist_to_switch_pl_`i'_XX - (N`=increase_XX'_t_placebo_`i'_g_XX/N_gt_control_placebo_`i'_XX) * never_change_d_pl_`i'_XX] * (time_XX>=`=`i'+2'&time_XX<=T_g_XX) * (diff_y_pl_`i'_N_gt_XX - mean_diff_y_pl_`i'_d_sq_t_XX) * sqrt(count_diff_y_pl_`i'_d_sq_t_XX/(count_diff_y_pl_`i'_d_sq_t_XX-1)) if dist_to_switch_pl_`i'_XX==1&count_diff_y_pl_`i'_d_sq_t_XX>1&count_diff_y_pl_`i'_d_sq_t_XX!=.
 
-	replace U_Gg_pl_`i'_temp_var_XX= dummy_U_Gg_pl_`i'_XX*(G_XX / N`=increase_XX'_placebo_`i'_XX) * [distance_to_switch_placebo_`i'_XX - (N`=increase_XX'_t_placebo_`i'_g_XX/N_gt_control_placebo_`i'_XX) * never_change_d_placebo_`i'_XX] * (time_XX>=`=`i'+2'&time_XX<=T_g_XX) * diff_y_pl_`i'_N_gt_XX if distance_to_switch_placebo_`i'_XX==1&count_diff_y_pl_`i'_d_sq_t_XX==1
+	replace U_Gg_pl_`i'_temp_var_XX= dummy_U_Gg_pl_`i'_XX*(G_XX / N`=increase_XX'_placebo_`i'_XX) * [dist_to_switch_pl_`i'_XX - (N`=increase_XX'_t_placebo_`i'_g_XX/N_gt_control_placebo_`i'_XX) * never_change_d_pl_`i'_XX] * (time_XX>=`=`i'+2'&time_XX<=T_g_XX) * diff_y_pl_`i'_N_gt_XX if dist_to_switch_pl_`i'_XX==1&count_diff_y_pl_`i'_d_sq_t_XX==1
 
 	// Summing the U_{G,g,l}s over time periods for each group //
-	bys group_XX: egen U_Gg_placebo_`i'_var_XX=total(U_Gg_pl_`i'_temp_var_XX)
+	bys group_XX: egen U_Gg_pl_`i'_var_XX=total(U_Gg_pl_`i'_temp_var_XX)
 
 	//End of placebos computation 
 
@@ -1884,7 +1877,7 @@ if "`normalized'"!=""{
 
 	bys group_XX : egen sum_treat_until_`i'_pl_XX = total(treatment_XX - d_sq_XX) if time_XX>=F_g_XX&time_XX<=F_g_XX-1+`i'&diff_y_pl_`i'_XX!=.&S_g_XX==increase_XX
 
-gen delta_D_pl_`i'_cum_temp_XX = N_gt_XX/N`=increase_XX'_placebo_`i'_XX*[sum_treat_until_`i'_pl_XX* S_g_XX + (1-S_g_XX)*(-sum_treat_until_`i'_pl_XX)] if distance_to_switch_placebo_`i'_XX==1
+gen delta_D_pl_`i'_cum_temp_XX = N_gt_XX/N`=increase_XX'_placebo_`i'_XX*[sum_treat_until_`i'_pl_XX* S_g_XX + (1-S_g_XX)*(-sum_treat_until_`i'_pl_XX)] if dist_to_switch_pl_`i'_XX==1
 
 	sum  delta_D_pl_`i'_cum_temp_XX
 	scalar delta_norm_pl_`i'_XX = r(sum)

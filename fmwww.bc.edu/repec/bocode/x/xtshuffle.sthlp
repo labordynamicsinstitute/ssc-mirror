@@ -30,7 +30,7 @@
 {cmd:xtshuffle} shuffles the variable {varname} in a panel dataset blockwise along the dimension of panel variable. 
 A typical scenario of application is in implementing in-space placebo test for difference-in-differences (DID) models. 
 In that case, the treatment variable is randomly shuffled blockwise to generate fake treatment units, whereas the treatment times are kept the same. 
-Note that {cmd:xtshuffle} is applicable to both standard DID models with synchronized adoption and staggered DID models with staggered adoption. 
+Note that {cmd:xtshuffle} is applicable to both the standard DID design with synchronized adoption and the staggered DID design with staggered adoption. 
  
 {marker options}{...}
 {title:Options}
@@ -79,6 +79,9 @@ If {opth generate(newvarname)} is not specified, the shuffled version of {varnam
 
 {phang}
 Beck, T., Levine, R., and Levkov, A. 2010. Big bad banks? The winners and losers from bank deregulation in the United States. {it:Journal of Finance} 65(5): 1637-1667.
+
+{phang}
+Chen, Q., Qi, J., and Yan, G. 2023. didplacebo: Implementing placebo tests for difference-in-differences estimations. {it:Shandong University working paper}.
 
 {marker author}{...}
 {title:Author}

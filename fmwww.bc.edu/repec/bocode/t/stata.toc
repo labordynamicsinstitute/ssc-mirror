@@ -52,6 +52,7 @@ p texdoc module to create a LaTeX document including Stata output
 p texify module to compile a LaTeX document
 p texmerge module to merge many .tex files into one and then compile the final file to .pdf
 p texresults module to create external file of LaTeX macros with results
+p texresults2 module to create external file of LaTex macros with results
 p texsave module to save a dataset in LaTeX format
 p textbarplot module to produce horizontal text and bar plot
 p texteditors module -- some notes on text editors for Stata users

@@ -15,6 +15,16 @@ program runmlwin_verinfo, rclass
 	capture plugin call runmlwin_getversion, `"`anything'"' "`ver1'" "`ver2'" "`ver3'" "`ver4'"
 	if c(rc) == 199 {
 		display as error "Warning: getversion plugin could not be loaded"
+		tempfile verinfo
+		shell "`anything'" --version > "`verinfo'"
+		file open f using "`verinfo'", read
+		file read f version
+		file close f
+		local pos = strpos("`version'", ".")
+		local ver1 = substr("`version'", 1, `=`pos'-1')
+		local ver2 = substr("`version'", `=`pos'+1', .)
+		local ver3 = 0
+		local ver4 = 0
 	}
 	display as text "Version: " `ver1' as text "." `ver2' as text "." `ver3' as text "." `ver4'
 	

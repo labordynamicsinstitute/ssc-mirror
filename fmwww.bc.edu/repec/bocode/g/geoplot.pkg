@@ -12,9 +12,9 @@ d KW: maps
 d KW: spatial data
 d KW: choropleth maps
 d
-d Requires: Stata version 17 and moremata, palettes, colrspace from SSC (q.v.)
+d Requires: Stata version 16.1 and moremata, palettes, colrspace from SSC (q.v.)
 d
-d Distribution-Date: 20230702
+d Distribution-Date: 20230912
 d
 d Author: Ben Jann, University of Bern
 d Support: email jann@@soz.unibe.ch

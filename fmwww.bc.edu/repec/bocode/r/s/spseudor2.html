@@ -1,0 +1,78 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help for spseudor2</b> 
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>spseudor2 --- Calculates goodness-of-fit measures in spatial</b>
+        <b>autoregressive models</b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+    <b>spseudor2,</b> <b>wmat(</b><i>name</i><b>)</b>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>spseudor2</b> calculates two so-called pseudo R2 measures to assess goodness
+    of fit in spatial autoregressive models estimated by spatial two stage
+    least squares or spatial GMM. The first measure is computed as the square
+    of the correlation between the predicted and observed values of the
+    dependent variable. The other one is calculated as the ratio of the
+    variance of the predicted values to the variance of the observed values
+    of the dependent variable.
+<p>
+    In calculating the predicted values of the dependent variable, <b>spseudor2</b>
+    takes into account the fact that the spatially lagged dependent variable
+    is endogenous.
+<p>
+    <b>N.B.:</b>  <b>spseudor2</b> is intended to work after ivregress and ivreg29 and
+    requires at least Stata 10.1.
+<p>
+        Also, <b>spseudor2</b> assumes that the spatially lagged dependent variable
+        precedes all other endogenous variables, if any, and is the first
+        variable of the listed right-hanside variables in the model.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +---------+
+    ----+ Options +----------------------------------------------------------
+<p>
+    <b>wmat(</b><i>name</i><b>)</b> indicates the name of the spatial weights matrix used in the
+    spatial autoregressive model estimation. The matrix must have been saved
+    to a Mata file.
+<p>
+<p>
+<b><u>Saved Results</u></b>
+<p>
+<b>spseudor2</b> saves the following results in <b>r()</b>:
+<p>
+Scalars        
+   <b>r(sqcorr)</b>      The square of the correlation between the predicted and obser
+&gt; ved values of the dependent variable
+   <b>r(varRatio)</b>    The ratio of the variance of the predicted value to the varia
+&gt; nce of the observed value of the dependent variable
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    <b>. spseudor2, wmat(winvecon)</b>
+<p>
+    Go to  http://stasacode.com for more examples as to how to add the
+        calculated goodness-of-fit measures to estimation results for model
+        comparison purposes.
+<p>
+ 
+<b><u>Author</u></b>
+<p>
+    <b>P. Wilner Jeanty</b>, Dept. of Agricultural, Environmental, and Development
+    Economics,
+    The Ohio State University
+<p>
+    Email to jeanty.1@osu.edu
+<p>
+<p>
+<p>
+</pre>

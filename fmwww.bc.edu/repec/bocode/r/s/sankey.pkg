@@ -1,0 +1,17 @@
+d 'SANKEY': module for Sankey diagrams 
+d
+d  SANKEY: A Stata program for Sankey diagrams. See the help file
+d (help sankey) for details after installation. 
+d
+d KW: graphics
+d KW: sankey
+d
+d Requires: Stata version 15 and palettes, colrspace from SSC
+d
+d Distribution-Date: 20230810
+d
+d Author: Asjad Naqvi, WU Vienna
+d Support: email asjadnaqvi@@gmail.com
+d
+f sankey.ado
+f sankey.sthlp

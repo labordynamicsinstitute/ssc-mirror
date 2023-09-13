@@ -1,0 +1,127 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>svyselmlog</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Selectivy-adjusted equation based in the multinomial logit for survey data</u></b>
+<p>
+        <b>svyselmlog</b> <i>depvar</i> [<i>varlist</i>]<b>,</b> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>,</b> <b><u>sel</u></b><b>ect(</b>[<i>depvar_s</i>]
+                <i>varlist_s</i> <b>)</b> [<b><u>meth</u></b><b>od</b>(<i>sel_method</i>) <b><u>show</u></b><b>mlogit</b>
+                <b><u>mlop</u></b><b>tions</b>(<i>mlogit_options</i>) <b>gen</b>(<i>newvarname</i>) <b><u>boot</u></b><b>strap</b>(<i># of</i>
+                <i>replications</i>) <b><u>f</u></b><b>orce</b> <b><u>q</u></b><b>uiet</b>]
+<p>
+        
+        
+  where <i>sel_meth</i> is one of the following selectivity correction methods:
+<p>
+        
+    <b>lee</b> Lee (1983), Econometrica
+<p>
+        
+    <b>dmf</b> Dubin and McFadden (1984), Econometrica
+<p>
+        
+    <b>dhl (# [all])</b> Dahl (2002), Econometrica. Where <b>#</b> is the order of the
+        polinomial used in the conditional probability of observing the
+        selected outcome. The option <b>all</b> includes the conditional
+        probabilites of both, the selected and non-selected outcomes in
+        polinomial form of degree <b>#</b>.
+<p>
+        
+    <b>dmf2</b> Bourguignon, Fournier and Gurgand (2004), CREST Working Paper.
+<p>
+<p>
+        <b>svyselmlog</b> requires that the survey design variables be identified usin
+&gt; g <b>svyset</b>, see help svyset
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+        
+    <b>svyselmlog</b> estimates selectivity-adjusted regression models using a
+    multinomial logit for complex survey data.
+<p>
+        
+    <b>svyselmlog</b> estimates all the parameters of the following model:
+<p>
+                Main equation: y_j = Xb_j + u_{1j}
+                
+                Selection equation: y_j is observed if V_j &gt; max{V_i} for all i
+&gt;  different from j
+        
+        where: V_j = Zd_j + u_{2j} 
+                 Corr(u_{1j},u_{2j}) = rho   
+        
+        
+    Selectivity bias is corrected using the conditional probabilities based
+    on the multinomial logit. In the syntax for <b>svyselmlog</b>, depvar and
+    varlist are the dependent variable (y_j) and regressors (X) for the main
+    equations, respectively; depvar_m and varlist_m are the discrete choice
+    variable and regressors in the selection equation.  The outcome variable
+    (y_j) is observed for only one value of the discrete variable (depvar_m),
+    therefore depvar should have missing values for all other values of
+    depvar_m.
+<p>
+        
+    Since <b>svyselmlog</b> is based on <b>selmlog</b> (see help selmlog; available from 
+    M. Gurgand), it allows several forms of selection correction methods as
+    reviewed in Bourguignon, Fournier and Gurgand (2004).  Given J different
+    choices in the multinomial model, <b>svyselmlog</b> estimates a series of
+    variables labelled _mk , k = 1...J containing the conditional
+    probablities following the chosen parameterization method. In a
+    seconds-step the _mk variables are used as selectivity-controls in the
+    main equation.
+<p>
+        
+    The reported standard errors do not account for the two-step nature of
+    the procedure (i.e. they are not consistent), however their empirical
+    distribution can be obtained using bootstrap methods. Bootstapping within
+    a complex survey design has to account for stratification and clustering;
+    the <b>bootstrap</b> option used in <b>svyselmlog</b> accounts for this using 
+    svybsamp2, therefore svybsamp2 must be intalled (see:<b>  ssc install</b>
+    <b>svybsamp2</b>).
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        
+    <b>method</b> (<i>sel_method</i>) specifies the selection-adjustment method that should
+        be used to generate the _mk controls.  If no <b>method</b> is selected <b>dmf2</b>
+        is used as the default option.
+<p>
+        
+    <b>showmlogit</b> reports the estimated selection equation (multinomial logit)
+<p>
+        
+    <b>mloptions</b>(<i>mlogit_options</i>) parse the specified options as described in 
+        svymlogit to the multinomial logit estimation.
+<p>
+        
+    <b>gen</b> (<i>newvarname</i>) generates a series of new variables equal to _mk
+<p>
+        
+    <b>bootstrap</b> (<i># of replications</i>) reports the bootstrapped standard errors
+        out of # replications. <b>svybsamp2</b> must be installed.
+<p>
+    <b>force</b> forces the estimation even in the presence of strata with a singel
+        PSU (singleton). This option temporary drops the singleton(s) from
+        the estimation, reporting how many singleton strata and observations
+        were eliminated from the estimation.  {p 4 8 2} <b>quiet</b> suppresses the
+        message indicating the current re-sampling # within the <b>bootstrap</b>
+        estimation.  Examples {p 4 4 2} <b>svyselmlog wage x1 x2,</b>
+        <b>select(occupation x1 x2 z1 z2) meth(dhl(3 all))</b> {p 4 4 2} <b>svyselmlog</b>
+        <b>wage x1 x2, select(occupation x1 x2 z1 z2) meth(dmf) boot(100) quiet</b>
+        References {p 4 8 2} Bourguignon, F., Fournier, M. and Gurgand, M.
+        (2004) `Selection bias correction based on the multinomial logit
+        model: Monte-Carlo comparisons', Mimeo DELTA, Paris {p 4 8 2} Dahl,
+        G.B. (2002) `Mobility and the return to education: testing a Roy
+        model with multiple markets', Econometrica, vol. 70, 6.  {p 4 8 2}
+        Dubin, J.A. and McFadden, D. (1984) `An econometric analysis of
+        residential electric appliance holdings and consumption',
+        Econometrica, vol. 52, 2.  {p 4 8 2}Lee, L.F. (1983) `Generalized
+        econometric models with selectivity', Econometrica, vol. 51, pp.
+        507-512.  Author Rafael E. De Hoyos, Faculty of Economics, University
+        of Cambridge. red29@cam.ac.uk Also see Manual:  <b>[U] 23 Estimation and</b>
+        <b>post-estimation commands</b> <b>[SVY] svy estimators</b> Online:  help for 
+        selmlog (if installed), svybsamp2 (if installed), svyset, svyheckman,
+</pre>

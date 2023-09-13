@@ -1,0 +1,38 @@
+d 'SWAIN': module to correct the SEM chi-square overidentification test in small sample sizes or complex models
+d
+d  swain and swaini provide a suite of corrections to the
+d chi-square overidentification test (i.e., likelihood ratio test
+d of fit) for structural equation models whether with or without
+d latent variables. The chi-square statistic is asymptotically
+d correct; however, it does not behave as expected in small samples
+d and/or when the model is complex (cf. Herzog, Boomsma, &
+d Reinecke, 2007).  In situations where the ratio of the sample
+d size to the number of parameters estimated is relatively small,
+d the chi-square test will tend to overreject correctly specified
+d models. Applied researchers should thus use a statistic having a
+d more appropriate Type 1 reject error rate to judge model fit in
+d finite samples (Bastardoz & Antonakis, 2014, 2016). The module
+d provides three corrections: (a) the Swain (1975) scaling factor
+d (see Herzog & Boomsma, 2009; Herzog, et al., 2007); (b) an
+d empirical correction T(MLEC1) by Yuan, Tian, and Yanagihara
+d (2015), and (c) the F-test, which can be thought of as the small
+d sample correction to the chi-square test (McNeish, 2020). 
+d
+d KW: structural equation modeling
+d KW: sem
+d KW: overidentification test
+d
+d Requires: Stata version 16.1
+d
+d Distribution-Date: 20200827
+d
+d Author: John Antonakis , University of Lausanne
+d Support: email john.antonakis@@unil.ch
+d
+d Author: Nicolas Bastardoz, University of Lausanne
+d Support: email nicolas.bastardoz@@unil.ch
+d
+f swain.ado
+f swain.sthlp
+f swaini.ado
+f swaini.sthlp

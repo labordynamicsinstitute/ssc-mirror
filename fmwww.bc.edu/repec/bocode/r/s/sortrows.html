@@ -1,0 +1,78 @@
+<pre>
+<b>help sortrows</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>sortrows</b> -- Sort data within rows
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>sortrows</b> <i>varlist</i>, {<b><u>r</u></b><b>eplace</b> | <b><u>gen</u></b><b>erate(</b><i>newvarlist</i><b>)</b>} <b><u>mi</u></b><b>ssing</b> <b><u>desc</u></b><b>ending</b>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>sortrows</b> sorts observations row-wise and either generates new variables
+    to hold the sorted values or replaces the existing variables. The
+    variables are sorted in ascending order in the order of the the variable
+    list.  Both numeric and string variables can be sorted, though all
+    variables in the varlist must be either numeric or string.  If it is
+    given a numeric variable list of several  types or a string variable list
+    of different lengths, it will recast all the variables in the list to the
+    largest type using decompress.
+<p>
+This requires Stata 9 since it uses Mata to perform the sorting.
+<p>
+<b><u>Option</u></b>
+<p>
+    <b>replace</b> specifies that the sorted values should replace those of the
+        existing variables.
+<p>
+    <b>generate(</b><i>newvarlist</i><b>)</b> specifies the new variables to hold the sorted
+        values.
+<p>
+    <b>missing</b> move all missing values or "" to the last variables.
+<p>
+    <b>descending</b> sort in descending order.
+<p>
+<b><u>Example</u></b>
+<p>
+. list a b c d
+<p>
+     +---------------+
+     | a   b   c   d |
+     |---------------|
+  1. | 9   3   0   2 |
+  2. | 2   3   8   0 |
+  3. | 2   9   2   1 |
+  4. | 1   5   4   2 |
+  5. | 7   7   1   6 |
+     +---------------+
+<p>
+. sortrows a b c d, replace
+<p>
+. list a b c d
+<p>
+     +---------------+
+     | a   b   c   d |
+     |---------------|
+  1. | 0   2   3   9 |
+  2. | 0   2   3   8 |
+  3. | 1   2   2   9 |
+  4. | 1   2   4   5 |
+  5. | 1   6   7   7 |
+     +---------------+
+<p>
+<b><u>Notes</u></b>
+<p>
+This is a similar command to Nicholas Cox's sortrows.
+<p>
+<b><u>Author</u></b>
+<p>
+    Jeffrey Arnold
+    jeffrey.arnold@gmail.com
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>sort</b>, <b>gsort</b>, <b>egen</b>, <b>rowsort</b>
+</pre>

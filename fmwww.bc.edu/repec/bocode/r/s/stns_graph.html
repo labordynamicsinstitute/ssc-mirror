@@ -1,0 +1,344 @@
+<pre>
+<b><u>Title</u></b>
+<p>
+    stns graph --      Graph the net survival and net cumulative hazard
+                         functions
+<p>
+<p>
+<a name="syntax"></a><b><u>Syntax</u></b>
+<p>
+        <b>stns</b> <b><u>g</u></b><b>raph</b> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>                              Description
+    -------------------------------------------------------------------------
+    Main
+      <b>age(</b><i>varname</i><b>=</b><i>name</i><b>)</b>                  varname specifies the age variable
+                                           in the dataset; name that in the
+                                           ratetable
+      <b>period(</b><i>varname</i><b>=</b><i>name</i><b>)</b>               varname specifies the survival time
+                                           variable in the dataset; name that
+                                           in the ratetable
+      <b>rate(</b><i>name</i><b>)</b>                         name specifies the rate variable in
+                                           the ratetable
+      <b><u>st</u></b><b>rata(</b><i>varlist</i><b>)</b>                    stratifies on different groups of
+                                           <i>varlist</i>
+<p>
+      <b>by(</b><i>varlist</i><b>)</b>                        estimates and graph separate
+                                           functions for each group formed by
+                                           <i>varlist</i>
+      <b>ci</b>                                 shows pointwise confidence bands
+<p>
+    Options
+      <b><u>sur</u></b><b>vival</b>                           graphs net survival function; the
+                                           default
+      <b><u>fail</u></b><b>ure</b>                            graphs net failure function
+      <b><u>cumh</u></b><b>az</b>                             graphs net cumulative hazard
+                                           function
+<p>
+      <b><u>sep</u></b><b>arate</b>                           shows curves on separate graphs;
+                                           default is to show curves one on
+                                           top of another
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>                           sets confidence level; default is
+                                           <b>level(95)</b>
+      <b>per(</b><i>#</i><b>)</b>                             units to be used in reported rates
+      <b><u>nosh</u></b><b>ow</b>                             does not show st setting information
+      <b><u>tma</u></b><b>x(</b><i>#</i><b>)</b>                            shows graph for t &lt;= <i>#</i>
+      <b><u>tmi</u></b><b>n(</b><i>#</i><b>)</b>                            shows graph for t &gt;= <i>#</i>
+<p>
+      <b><u>atr</u></b><b>isk</b>                             shows numbers at risk at beginning
+                                           of each interval
+      <b><u>out</u></b><b>file(</b><i>filename</i><i>)</i>                  saves the net survival function in
+                                           the filename.dta database
+      <b><u>cen</u></b><b>sored(</b><b><u>s</u></b><b>ingle)</b>                   show one hash mark at each censoring
+                                           time, no matter what number is
+                                           censored
+      <b><u>cen</u></b><b>sored(</b><b><u>n</u></b><b>umber)</b>                   shows one hash mark at each
+                                           censoring time and number censored
+                                           above hash mark
+      <b><u>cen</u></b><b>sored(</b><b><u>m</u></b><b>ultiple)</b>                 shows multiple hash marks for
+                                           multiple censoring at the same
+                                           time
+      <b><u>censo</u></b><b>pts(</b><i>hash_options</i><b>)</b>             affects rendition of hash marks
+<p>
+    At-risk table
+      <b><u>riskt</u></b><b>able</b>                          shows table of number at risk
+                                           beneath graph
+      <b><u>riskt</u></b><b>able(</b><i>risk_spec</i><b>)</b>               shows customized table of number at
+                                           risk beneath graph
+      <b><u>atriskop</u></b><b>ts(</b><i>marker_label_options</i><b>)</b>   affects rendition of numbers at risk
+<p>
+    Plot
+      <b><u>ploto</u></b><b>pts(</b><i>cline_options</i><b>)</b>            affects rendition of plotted lines
+      <b><u>plot</u></b><i><u>#</u></i><b>opts(</b><i>cline_options</i><b>)</b>           affects rendition of <i>#</i>th plotted
+                                           line; may not be combined with
+                                           <b>separate</b>
+<p>
+    CI plot
+      <b><u>ciop</u></b><b>ts(</b><i>area_options</i><b>)</b>               affects rendition of confidence
+                                           bands
+      <b><u>ci</u></b><i><u>#</u></i><b>opts(</b><i>area_options</i><b>)</b>              affects rendition of <i>#</i>th confidence
+                                           band; may not be combined with
+                                           <b>separate</b>
+<p>
+    Add plots
+      <b>addplot(</b><i>plot</i><b>)</b>                      adds other plots to the generated
+                                           graph
+<p>
+    Y axis, X axis, Titles, Legend, Overall
+      <i>twoway_options</i>                     any options documented in <b>[G-3]</b>
+                                           <i>twoway_options</i>
+      <b><u>byop</u></b><b>ts(</b><i>byopts</i><b>)</b>                     how subgraphs are combined, labeled,
+                                           etc.
+    -------------------------------------------------------------------------
+<p>
+<a name="risk_spec"></a>    where <i>risk_spec</i> is
+<p>
+            [<i>numlist</i>][<b>,</b> <i>table_options</i> <b>group(</b><i>group</i><b>)</b>]
+<p>
+        <i>numlist</i> specifies the points at which the number at risk is to be
+        evaluated, <i>table_options</i> customizes the table of number at risk, and
+        <b>group(</b><i>group</i><b>)</b> specifies a specific group/row for <i>table_options</i> to be
+        applied.
+<p>
+<a name="table_options"></a>    <i>table_options</i>                        Description
+    -------------------------------------------------------------------------
+    Main
+      <i>axis_label_options</i>                 controls table by using axis
+                                           labeling options; seldom used
+      <b>order(</b><i>order_spec</i><b>)</b>                  selects which rows appear and their
+                                           order
+      <b><u>rightt</u></b><b>itles</b>                        places titles on right side of the
+                                           table
+      <b><u>fail</u></b><b>events</b>                         shows number failed in the at-risk
+                                           table
+      <i>text_options</i>                       affects rendition of table elements
+                                           and titles
+<p>
+    Row titles
+      <b><u>rowt</u></b><b>itle(</b>[<i>text</i>][<b>,</b> <i>rtext_options</i>]<b>)</b>  changes title for a row
+<p>
+    Title
+      <b>title(</b>[<i>text</i>][<b>,</b> <i>ttext_options</i>]<b>)</b>     changes overall table title
+    -------------------------------------------------------------------------
+<p>
+<a name="order_spec"></a>    where <i>order_spec</i> is
+<p>
+        <i>#</i> [<b>"</b><i>text</i><b>"</b> [<b>"</b><i>text</i><b>"</b> ...]] [...]
+<p>
+<a name="text_options"></a>    <i>text_options</i>                         Description
+    -------------------------------------------------------------------------
+    <b>size(</b><i>textsizestyle</i><b>)</b>                  size of text
+    <b>color(</b><i>colorstyle</i><b>)</b>                    color of text
+    <b>justification(</b><i>justificationstyle</i><b>)</b>    text left-justified, centered,
+                                           right-justified
+    <b>format(</b><i>%fmt</i><b>)</b>                         format values per <b>%</b><i>fmt</i>
+    <b><u>topg</u></b><b>ap(</b><i>relativesize</i><b>)</b>                 margin above rows
+    <b><u>bottomg</u></b><b>ap(</b><i>relativesize</i><b>)</b>              margin beneath rows
+<p>
+    <b>style(</b><i>textstyle</i><b>)</b>                     overall style of text
+    -------------------------------------------------------------------------
+    <b>style()</b> does not appear in the dialog box.
+<p>
+<a name="rtext_options"></a>    <i>rtext_options</i>                        Description
+    -------------------------------------------------------------------------
+    <b>size(</b><i>textsizestyle</i><b>)</b>                  size of text
+    <b>color(</b><i>colorstyle</i><b>)</b>                    color of text
+    <b>justification(</b><i>justificationstyle</i><b>)</b>    text left-justified, centered,
+                                           right-justified
+    <b>at(</b><i>#</i><b>)</b>                                override x position of titles
+    <b><u>topg</u></b><b>ap(</b><i>relativesize</i><b>)</b>                 margin above rows
+<p>
+    <b>style(</b><i>textstyle</i><b>)</b>                     overall style of text
+    -------------------------------------------------------------------------
+    <b>style()</b> does not appear in the dialog box.
+<p>
+<a name="ttext_options"></a>    <i>ttext_options</i>                        Description
+    -------------------------------------------------------------------------
+    <b>size(</b><i>textsizestyle</i><b>)</b>                  size of text
+    <b>color(</b><i>colorstyle</i><b>)</b>                    color of text
+    <b>justification(</b><i>justificationstyle</i><b>)</b>    text left-justified, centered,
+                                           right-justified
+    <b>at(</b><i>#</i><b>)</b>                                override x position of titles
+    <b><u>topg</u></b><b>ap(</b><i>relativesize</i><b>)</b>                 margin above rows
+    <b><u>bottomg</u></b><b>ap(</b><i>relativesize</i><b>)</b>              margin beneath rows
+<p>
+    <b>style(</b><i>textstyle</i><b>)</b>                     overall style of text
+    -------------------------------------------------------------------------
+    <b>style()</b> does not appear in the dialog box.
+<p>
+<a name="group"></a>    <i>group</i>                                Description
+    -------------------------------------------------------------------------
+    <i>#rownum</i>                              specifies group by row number in
+                                           table
+    <i>value</i>                                specifies group by value of group
+    <i>label</i>                                specifies group by text of value
+                                           label associated with group
+    -------------------------------------------------------------------------
+<p>
+<a name="hash_options"></a>    <i>hash_options</i>                         Description
+    -------------------------------------------------------------------------
+    <i>line_options</i>                         changes look of dropped lines
+    <i>marker_label_options</i>                 adds marker labels; any options
+                                           documented in <b>[G-3]</b>
+                                           <i>marker_label_options</i>, except
+                                           <b>mlabel()</b>
+    -------------------------------------------------------------------------
+<p>
+    <b>risktable()</b> may be repeated and is merged-explicit group; see repeated
+      options.
+    You must <b>stset</b> your data before using <b>stns graph</b>; see <b>[ST] stset</b>.
+<p>
+<p>
+<a name="description"></a><b><u>Description</u></b>
+<p>
+    <b>stns graph</b> graphs the estimated net survival (failure) function or the
+    estimated net cumulative (integrated) hazard function. See stns for an
+    introduction to this command and <b>[ST] sts graph</b> for details about
+    graphical options.
+<p>
+<p>
+<a name="options"></a><b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>age</b>, <b>period</b>, <b>rate</b>, and <b>strata</b> are required to estimate the net
+        survival/failure function or net cumulative hazard stratified on
+        variables in <i>varlist</i>.
+<p>
+    <b>by(</b><i>varlist</i><b>)</b> estimates a separate function for each by-group and plots all
+        the functions on one graph. By-groups are identified by equal values
+        of the variables in <i>varlist</i>.
+<p>
+    <b>ci</b> includes pointwise confidence bands. The default is not to produce
+        these bands.
+<p>
+    <b>survival</b>, <b>failure</b>, and <b>cumhaz</b> specify the function to graph.
+<p>
+        <b>survival</b> specifies that the net survival function be plotted. This
+            option is the default if a function is not specified.
+<p>
+        <b>failure</b> specifies that the net failure function, 1 - S(t+0), be
+            plotted.
+<p>
+        <b>cumhaz</b> specifies that the estimate of the net cumulative hazard
+            function be plotted.
+<p>
+    <b>separate</b> is meaningful only with <b>by()</b>; it requests that each group be
+        placed on its own rather than one on top of the other. Sometimes
+        curves have to be placed on separate graphs -- such as when you
+        specify <b>ci</b> -- because otherwise it would be too confusing.
+<p>
+<p>
+        +---------+
+    ----+ Options +----------------------------------------------------------
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the confidence level, as a percentage, for the
+        pointwise confidence interval around the net survival, net failure,
+        or net cumulative hazard function; see <b>[R] level</b>.
+<p>
+    <b>per(</b><i>#</i><b>)</b> specifies the units used to report the net survival or failure
+        rates. For example, if the analysis time is in years, specifying
+        <b>per(100)</b> results in rates per 100 person-years.
+<p>
+    <b>noshow</b> prevents <b>stns graph</b> from showing the key st variables. This option
+        is seldom used because most people type <b>stset, show</b> or <b>stset, noshow</b>
+        to set whether they want to see these variables mentioned at the top
+        of the output of every st command; see <b>[ST] stset</b>.
+<p>
+    <b>tmax(</b><i>#</i><b>)</b> specifies that the plotted curve be graphed only for t &lt;= <i>#</i>. This
+        option does not affect the calculation of the function, rather the
+        portion that is displayed.
+<p>
+    <b>tmin(</b><i>#</i><b>)</b> specifies that the plotted curve be graphed only for t &gt;= <i>#</i>. This
+        option does not affect the calculation of the function, rather the
+        portion that is displayed.
+<p>
+    <b>atrisk</b> specifies that the numbers at risk at the beginning of each
+        interval be shown on the plot. The numbers at risk are shown as small
+        numbers beneath the flat parts of the plotted function.
+<p>
+    <b>censored(single</b> | <b>number</b> | <b>multiple)</b> specifies that hash marks be placed
+        on the graph to indicate censored observations.
+<p>
+        <b>censored(single)</b> places one hash mark at each censoring time,
+            regardless of the number of censorings at that time.
+<p>
+        <b>censored(number)</b> places one hash mark at each censoring time and
+            displays the number of censorings about the hash mark.
+<p>
+        <b>censored(multiple)</b> places multiple hash marks for multiple censorings
+            at the same time. For instance, if 3 observations are censored at
+            time 5, three hash marks are placed at time 5. <b>censored(multiple)</b>
+            is intended for use when there are few censored observations; if
+            there are too many censored observations, the graph can look bad.
+            In such cases, we recommend that <b>censored(number)</b> be used.
+<p>
+    <b>censopts(</b><i>hash_options</i><b>)</b> specifies options that affect how the hash marks
+        for censored observations are rendered; see <b>[G-3]</b> <i>line_options</i>. When
+        combined with <b>censored(number)</b>, <b>censopts()</b> also specifies how the
+        count of censoring is rendered; see <b>[G-3]</b> <i>marker_label_options</i>,
+        except <b>mlabel()</b> is not allowed.
+<p>
+<p>
+        +---------------+
+    ----+ At-risk table +----------------------------------------------------
+<p>
+    <b>risktable</b>[<b>(</b>[<i>numlist</i>][<b>,</b> <i>table_options</i>]<b>)</b>] displays a table showing the
+        number at risk beneath the plot. <b>risktable</b> may not be used with
+        <b>separate</b>.
+<p>
+    <b>atriskopts(</b><i>marker_label_options</i><b>)</b> specifies options that affect how the
+        numbers at risk are rendered; see <b>[G-3]</b> <i>marker_label_options</i>. This
+        option implies the <b>atrisk</b> option.
+<p>
+    See <b>[ST] sts graph</b> for more details about these options.
+<p>
+<p>
+<p>
+        +-------------------------------------------------------------------+
+    ----+ Plot, CI plot, Add plots, Y axis, X axis, Titles, Legend, Overall +
+<p>
+    See <b>[ST] sts graph</b> for details about these options.
+<p>
+<p>
+<a name="examples"></a><b><u>Example: Graphing the net cumulative hazard function</u></b>
+<p>
+    Setup
+        <b>. use rdata</b>
+        <b>. stset survtime, failure(cens==1) id(id)</b>
+<p>
+    Suppress showing st settings
+        <b>. stset, noshow</b>
+<p>
+    Graph the net survival function for the two categories of <b>sex</b>
+        <b>. stns graph using myslopop, age(agediag=age) period(datediag=year)</b>
+            <b>rate(rate) strata(sex) by(sex)</b>
+<p>
+    Now graph the net cumulative hazard functions for the two categories of
+    <b>sex</b>
+        <b>. stns graph, cumhaz by(sex)</b>
+<p>
+<p>
+<b><u>Example: Adding an at-risk table</u></b>
+<p>
+    Graph the net survival functions for the two categories of <b>sex</b> in one
+    plot, including an at-risk table below the graph
+        <b>. stns graph, by(sex) risktable</b>
+<p>
+    Same as above, but put the legend inside the plot rather than below it
+        <b>. stns graph, by(sex) risktable</b> <b>legend(ring(0) position(2) rows(2))</b>
+<p>
+    Graph the net survival functions for the two categories of <b>sex</b> in one
+    plot, including an at-risk table below the graph and using the specified
+    row titles and order of rows for the at-risk table
+        <b>. stns graph, by(sex)</b> <b>risktable(, order(1 "male" 2 "female"))</b>
+<p>
+    Same as above, but left-justify the row titles in the at-risk table
+        <b>. stns graph, by(sex)</b> <b>risktable(, order(1 "male" 2 "female")</b>
+            <b>rowtitle(, justification(left)))</b>
+<p>
+    Same as above, but align the table title with the rwo titles
+        <b>. stns graph, by(sex)</b> <b>risktable(, order(1 "male" 2 "female")</b>
+            <b>rowtitle(, justification(left))</b> <b>title(, at(rowtitle)))</b>
+</pre>

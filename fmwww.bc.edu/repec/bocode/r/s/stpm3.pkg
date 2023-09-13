@@ -1,0 +1,40 @@
+d 'STPM3': module to fit flexible parametric survival models
+d
+d  stpm3  fits flexible parametric survival models (Royston-Parmar
+d models). The models use spline functions to model the effect of
+d the time scale. stpm3 extends various features available in
+d stpm2. Survival models can be fitted on the log cumulative hazard
+d scale, the log cumulative odds scale, the standard normal deviate
+d (probit) scale. stpm3 can also fit models on the log hazard
+d scale. stpm2 can fit relative survival models. stpm3 has extended
+d functions available, which make fitting non-linear effects and
+d interaction much easier. Post-estimation commands allow various
+d predictions to be obtained. These can be saved to a new frame.
+d The use of extended functions enables simple predictions from
+d complex models involving non-linear effects, interactions and
+d time-dependent effects. 
+d
+d
+d Requires: Stata version 16.1
+d
+d Distribution-Date: 20230820
+d
+d Author: Paul Lambert, University of Leicester
+d Support: email paul.lambert@@le.ac.uk
+d
+f stpm3.ado
+f stpm3_competing_risks_eg.ado
+f stpm3_fpgen.ado
+f stpm3_gensplines.ado
+f stpm3_polygen.ado
+f stpm3_pred.ado
+f stpm3_predictions_eg.ado
+f stpm3_userfunc.ado
+f stpm3km.ado
+f ../l/lstpm3.mlib
+f stpm3.sthlp
+f stpm3_competing_risks.sthlp
+f stpm3_extfunctions.sthlp
+f stpm3_postestimation.sthlp
+f stpm3_predictions.sthlp
+f stpm3km.sthlp

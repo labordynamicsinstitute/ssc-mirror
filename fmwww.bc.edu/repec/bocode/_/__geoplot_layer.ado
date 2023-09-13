@@ -1,4 +1,4 @@
-*! version 1.0.5  02jul2023  Ben Jann
+*! version 1.1.1  12sep2023  Ben Jann
 
 /*
     Syntax:
@@ -27,7 +27,7 @@
     Outline of a (case 1) program making used of __geoplot_layer:
 
     program _geoplot_mylayer
-        version 17
+        version 16.1
         gettoken layer 0 : 0
         gettoken p 0 : 0
         gettoken frame 0 : 0
@@ -46,7 +46,7 @@
 */
 
 program __geoplot_layer
-    version 17
+    version 16.1
     gettoken i 0 : 0
     if `i' {
         _layeri `0'
@@ -88,12 +88,12 @@ program _layer
     gettoken frame 0 : 0, parse(" ,")
     local hasSHP 0
     local TYPE
-    local OPTS LABel(str asis) Feature(passthru)
+    local OPTS LABel(str asis) Feature(passthru) box BOX2(str) SELect(str asis)
     local hasPLV 0
     local PLVopts
     local WGT
     local MLABopts
-    local Zopts COLORVar(varname numeric)/*
+    local Zopts COLORVar(varname numeric fv)/*
         */ LEVels(str) cuts(numlist sort min=2) DISCRete MISsing(str asis) /*
         */ COLor(passthru) LWidth(passthru) LPattern(passthru)
     local Zel color lwidth lpattern
@@ -103,7 +103,8 @@ program _layer
         local hasSHP 1
         local OPTS `OPTS' SIze(str asis) lock wmax WMAX2(numlist max=1 >0)/*
             */ COORdinates(namelist min=2 max=2) id(name)/*
-            */ CENTRoids(varlist numeric min=2 max=2) area(varname numeric)
+            */ CENTRoids(varlist numeric min=2 max=2) area(varname numeric)/*
+            */ LColor(passthru)
         local WGT [iw/]
         if `"`plottype'"'=="area" {
             local hasPLV 1
@@ -136,14 +137,22 @@ program _layer
     // collect info from syntax, frame and possible shpframe
     frame `frame' {
         // syntax
-        qui syntax [varlist(default=none max=1 numeric)] [if] [in] `WGT' [,/*
-            */`OPTS' `Zopts' `PLVopts' `MLABopts' * ]
+        qui syntax [varlist(default=none max=1 numeric fv)] [if] [in] `WGT'/*
+            */ [, `OPTS' `Zopts' `PLVopts' `MLABopts' * ]
+        // check zvar
+        if `"`colorvar'"'!="" local zvar `colorvar'
+        else                  local zvar `varlist'
+        _parse_zvar `zvar' // returns zvar, discrete
+        local hasZ = `"`zvar'"'!=""
+        // varia
+        if `"`box2'"'!="" local box box
         local hasMLAB = `"`mlabel'"'!=""
         local cuts: list uniq cuts
         _parse_size `size' // => size, s_max, s_scale
         local hasSIZE = `"`size'"'!=""
         _parse_levels `levels' // => levels, method, l_wvar
         if `"`fcolor'"'!="" mata: _get_colors("fcolor")
+        // sample
         marksample touse, novarlist
         // feature
         if `"`feature'"'=="" geoframe get feature, l(feature)
@@ -154,10 +163,6 @@ program _layer
                 if "`fintensity'"=="" local fintensity fintensity(50)
             }
         }
-        // check zvar
-        if `"`colorvar'"'!="" local zvar `colorvar'
-        else                  local zvar `varlist'
-        local hasZ = `"`zvar'"'!=""
         // check shpframe
         if `hasSHP' {
             geoframe get shpframe, local(shpframe)
@@ -341,8 +346,18 @@ program _layer
             local TGT `TGT' MLAB
         }
         else local mlabcolor
+        // select option
+        if `"`select'"'!="" {
+            tempname touse2
+            qui gen byte `touse2' = 0
+            qui replace `touse2' = 1 if `touse' & (`select')
+            if `hasSHP' {
+                local org `org' `touse2'
+                local tgt `tgt' `touse2'
+            }
+        }
         // inject colors
-        _process_coloropts options, `options'
+        _process_coloropts options, `lcolor' `options'
         if `"`fcolor'"'!="" local fcolor fcolor(`fcolor')
     }
     // put frames together and categorize zvar
@@ -363,13 +378,15 @@ program _layer
             }
             else local ztouse `touse'
             tempname CUTS
-            mata: _z_cuts("`CUTS'", "`Zvar'", "`L_WVAR'", "`touse'") /* returns
+            mata: _z_cuts("`CUTS'", "`Zvar'", "`L_WVAR'", "`ztouse'") /* returns
                 CUTS, cuts, levels */
             if "`discrete'"!="" _z_labels `Zvar' `cuts' // returns zlabels
             _z_categorize `CUTS', levels(`levels') zvar(`Zvar')/*
                 */ gen(`ZVAR') touse(`touse') ztouse(`ztouse') `discrete'
                 /* returns zlevels nobs nmiss discrete */
         }
+        // select
+        if `"`select'"'!="" local touse `touse2'
     }
     // copy data into main frame
     local n0 = _N + 1
@@ -446,26 +463,28 @@ program _layer
             if `"`color'"'=="" local color `"`mlabcolor'"'
         }
         // - process missing
-        if `nmiss' _z_parse_missing `plottype', `missing'
+        if `nmiss' _z_parse_missing `plottype' `hasMLAB', `missing'
     }
     else local zlevels 0
     // Set default options
     if `"`plottype'"'=="area" {
         local opts cmissing(n) nodropbase lalign(center) `opts'
         if "`COLOR'"=="" {
-            local opts lcolor(gray) `opts'
+            if `"`lcolor'"'=="" local opts lcolor(gray) `opts'
             if `"`fcolor'"'=="" local opts fcolor(none) `opts'
         }
         if "`FINTENSITY'"=="" local opts finten(100) `opts'
         if "`LWIDTH'"=="" {
-            local opts lwidth(.15) `opts'
-            if `hasZ' & `"`fcolor'"'=="" local opts lcolor(%0) `opts'
+            if "`COLOR'"!="" & `"`fcolor'`lcolor'"'=="" {
+                local opts lwidth(0) lcolor(%0) `opts' // turn lines off
+            }
+            else local opts lwidth(.15) `opts'
         }
         if "`LPATTERN'"=="" local opts lpattern(solid) `opts'
     }
     else if "`plottype'"'=="line" {
         local opts `opts' cmissing(n)
-        if "`COLOR'"=="" local opts lcolor(gray) `opts'
+        if "`COLOR'"=="" & `"`lcolor'"'=="" local opts lcolor(gray) `opts'
         if "`LWIDTH'"==""   local opts lwidth(.15) `opts'
         if "`LPATTERN'"=="" local opts lpattern(solid) `opts'
     }
@@ -474,9 +493,14 @@ program _layer
         if "`mlabvposition'"!="" local opts `opts' mlabvposition(MLABPOS)
         if "`mlabformat'"!=""    local opts `opts' mlabformat(`mlabformat')
     }
+    // add box (below)
+    if "`box'"!="" {
+        _box `p' `n0' `n1' `"`TYPE'"', `box2'
+        qui replace LAYER = `layer' in `n1'/l
+    }
+    else local plot
     // compile plot
     if `hasWGT' local in inrange(_n,`n0',`n1')) | (_n<3)
-    local plot
     local p0 = `p' + 1
     gettoken pl0 : plevels
     foreach pl of local plevels {
@@ -495,7 +519,9 @@ program _layer
         foreach i of local zlevels {
             local IFF `iff'
             if `hasZ' {
-                if `i'==0 local OPTS `missing' // missing
+                if `i'==0 {
+                    local OPTS `opts' `missing' // missing
+                }
                 else {
                     local OPTS
                     foreach el of local ZEL {
@@ -552,12 +578,10 @@ program _layer
             local CUTS: copy local cuts
             _label_separate `label' // => lab_keys, lab_lbls
             if "`nolabel'"!="" local zlabels: copy local cuts
-            local i 0
             foreach key of local lkeys {
-                local ++i
                 gettoken Nobs NOBS : NOBS
-                gettoken mid CUTS : CUTS
-                local mid `: di `format' `mid''
+                gettoken i CUTS : CUTS
+                local mid `: di `format' `i''
                 gettoken lab zlabels : zlabels
                 capt confirm number `lab'
                 if _rc==0 {
@@ -591,7 +615,7 @@ program _layer
                 local lb  `: di `format' `LB''
                 local ub  `: di `format' `UB''
                 mata: _get_lbl("`i'", "lab_keys", "lab_lbls", `""(@lb,@ub]""')
-                local lbl: subinstr local lbl "@lab" "`lb'-`ub'", all
+                local lbl: subinstr local lbl "@lab" "`lb' - `ub'", all
                 local lbl: subinstr local lbl "@lb" "`lb'", all
                 local lbl: subinstr local lbl "@ub" "`ub'", all
                 local lbl: subinstr local lbl "@mid" "`mid'", all
@@ -621,7 +645,7 @@ program _layer
         local legend `p1' `label'
         local lsize 1
     }
-    // return results
+    // set chars
     if `layer'<. {
         char LAYER[Keys_`layer'] `keys'
         char LAYER[Legend_`layer'] `legend'
@@ -642,8 +666,24 @@ program _layer
             }
         }
     }
+    // returns
     c_local plot `plot'
     c_local p `p'
+end
+
+program _parse_zvar
+    if "`0'"=="" exit
+    if substr("`0'",1,2)=="i." {    // i.zvar
+        c_local zvar = substr("`0'",3,.)
+        c_local discrete discrete
+        exit
+    }
+    capt confirm variable `0'
+    if _rc==1 exit _rc
+    if _rc {
+        di as err `"`0' not allowed"'
+        exit 198
+    }
 end
 
 program _parse_feature
@@ -799,6 +839,7 @@ program _z_colors
         */ `opacity' `intensity' `options'
     local color `"`r(p)'"'
     local pclass `"`r(pclass)'"'
+    if `"`pclass'"'=="" & `discrete' local pclass "categorical"
     local l: list sizeof color
     if `l'==0 {
         c_local `nm'
@@ -856,20 +897,21 @@ program _z_recycle
 end
 
 program _z_parse_missing
-    _parse comma plottype 0 : 0
-    syntax [, NOLABel LABel(str asis) first nogap COLor(str asis) * ]
+    gettoken plottype 0 : 0
+    gettoken hasMLAB 0 : 0, parse(", ")
+    syntax [, NOLABel LABel(str asis) first nogap COLor(str asis)/*
+        */ MLABColor(passthru) * ]
     _add_quotes label `label'
     if `"`label'"'=="" local label `""no data""'
-    _process_coloropts options, `options'
+    _process_coloropts options, `mlabcolor' `options'
+    mata: _get_colors("color")
     if `"`color'"'=="" local color gs14
+    if `hasMLAB' {
+        if `"`mlabcolor'"'=="" {
+            local options mlabcolor(`color') `options'
+        }
+    }
     local options color(`color') `options'
-    if `"`plottype'"'=="area" {
-        local options cmissing(n) nodropbase lalign(center) finten(100)/*
-            */ lwidth(.15) lpattern(solid) lcolor(%0) `options'
-    }
-    else if "`plottype'"'=="line" {
-        local options cmissing(n) lwidth(.15) lpattern(solid) `options'
-    }
     c_local missing `options'
     c_local missing_color `"`color'"'
     c_local missing_lab   `"`label'"'
@@ -962,7 +1004,36 @@ program _process_coloropts // pass standard color options through ColrSpace
     c_local `nm' `OPTS' `options'
 end
 
-version 17
+program _box
+    // syntax
+    _parse comma args 0 : 0
+    gettoken p      args : args
+    gettoken n0     args : args
+    gettoken n1     args : args
+    gettoken TYPE   args : args
+    syntax [, ROTate CIRcle hull PADding(passthru) n(passthru) line/*
+        */ box BOX2(passthru) SIze(passthru) COLORVar(passthru) * ]
+    if `"`box'`box2'`size'`colorvar'"'!="" {
+        di as err "box(): invalid syntax"
+        exit 198
+    }
+    // copy relevant data into new frame
+    tempname XY
+    frame create `XY'
+    mata: _box_copy_XY("`XY'", `n0', `n1', "`TYPE'"=="pc")
+    // generate frame containing box
+    tempname BOX
+    frame `XY': qui geoframe bbox `BOX', `rotate' `circle' `hull' `padding' `n'
+    // compile plot
+    if "`line'"!="" local plottype line
+    else            local plottype area
+    _layer `plottype' . `p' `BOX', `options'
+    // returns
+    c_local plot `plot'
+    c_local p `p'
+end
+
+version 16.1
 mata:
 mata set matastrict on
 
@@ -1257,6 +1328,21 @@ void  _get_lbl(string scalar key, string scalar keys, string scalar lbls,
     }
     if (i>n) st_local("lbl", def)
     else st_local("lbl", tokens(st_local(lbls))[i])
+}
+
+void _box_copy_XY(string scalar frame, real scalar n0, real scalar n1,
+    real scalar pc)
+{
+    real matrix   XY
+    string scalar cframe
+
+    XY = st_data((n0,n1), ("X","Y"))
+    if (pc) XY = XY \ st_data((n0,n1), ("X2","Y2"))
+    cframe = st_framecurrent()
+    st_framecurrent(frame)
+    st_addobs(rows(XY))
+    st_store(., st_addvar("double", ("_X","_Y")), XY)
+    st_framecurrent(cframe)
 }
 
 end

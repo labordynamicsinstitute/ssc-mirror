@@ -1,0 +1,116 @@
+<pre>
+<b>help sdlim</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    sdlim -- Rescaled standard deviations for limited variables
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+    Syntax 1: Rescaled standard deviations for many variables
+<p>
+        <b>sdlim</b> <i>varlist</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] <b>,</b> <b><u>l</u></b><b>imits(</b># #<b>)</b>} [ <b><u>sim</u></b><b>ulate(</b># #<b>)</b>}
+                 <b>keep</b>]
+<p>
+<p>
+    Syntax 2: Rescaled standard deviations by groups
+<p>
+        <b>sdlim</b> <i>varname</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] <b>,</b> <b>by(</b><i>varname</i> <b>)</b> [ <b><u>l</u></b><b>imits(</b># #<b>)</b>}
+                 <b><u>sim</u></b><b>ulate(</b># #<b>)</b>} <b>keep</b>]
+<p>
+    <b>aweight</b>s, and <b>fweight</b>s are allowed; see weight.
+<p>
+    <b>by</b> is allowed; see by.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>sdlim</b> rescales the standard deviation of a variable such that the result
+    is the proportion of the raw standard deviation at the maximum standard
+    deviation for a given mean.
+<p>
+    The theoretical maximum of the standard deviation of the variable X with
+    mean = mean(X) is
+<p>
+        max(SD) = sqrt((min(X) - mean(X)) * (mean(X)-max(X)) * N/(N-1))
+<p>
+    The formula assumes that the mimimum and the maximum of X is known and
+    fixed. This is the case for variables measured with a rating scale, for
+    example.
+<p>
+    <b>sdlim</b> has two syntaxes. Syntax 1 is used to to rescale the standard
+    deviations of various variables. In this case the option <b>limits()</b> <i>must</i> be
+    used. Syntax 2 is used to rescale the standard deviation of <i>one</i> variable
+    for different groups. In this case the option <b>by()</b> is required, while the
+    specification of a <i>varlist</i> behind the command is not allowed.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>limits(</b><i># #</i><b>)</b> is used to set the theoretical limits of the variable(s) for
+        which the standard deviation should be rescaled. Limits are set by
+        two interger numbers. The first number is the theoretical minimum of
+        the variable the second number is the theoretical maximum. Results
+        are omitted if variables contain values outside its theoretical
+        boundaries. Note that the option is required if the command is given
+        without option <b>by()</b> (i.e. for Syntax 1). For Syntax 2 <b><u>l</u></b><b>imits(# #)</b>
+        defaults to the minimum and maximum value of varname over all
+        by-groups.
+<p>
+    <b>by(</b><i>varname</i><b>)</b> is used to compare rescaled standard deviations between
+        groups defined by categories of varname. With option by(), rescaling
+        of standard deviation can be done for only one variable.
+<p>
+    <b>simulate(</b><i># #</i><b>)</b> uses a simulation to rescale the standard deviation of a
+        variable measured with a limited rating scale. The simulation assumes
+        a latent variable with the mean of the observed variable and a given
+        standard deviation. It further assumes that all values of the latent
+        variable that exceed the specified limits are set to the highest and
+        lowest value of the observed variable. Inside the parentheses the
+        option requires two numbers. The first number is the number of
+        observations used in the simulation, the second number is the
+        standard deviation of the latent variable.
+<p>
+    <b>keep</b> is used to keep in memory the results of <b>sdlim</b> as a Stata data set
+        (i.e. a resultsset)
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. sysuse auto</b>
+    <b>. sdlim rep78, l(1 5)</b>
+    <b>. sdlim rep78, by(for)</b>
+    <b>. sdlim rep78, by(for) l(1 9)</b>
+<p>
+    <b>. sdlim rep78, by(for) l(1 9) sim(1000 2)</b>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>sdlim</b> does not save returns. However with option <b>keep</b> keep the results
+    are kept in memory as a resultsset.
+<p>
+<b><u>Acknowledgment</u></b>
+<p>
+    The formula for the maximum standard deviation is published in Kalmijn,
+    Wim and Ruut Veenhoven, 2005: Measuring inequality of happiness in
+    nations. In search for proper statistics. Journal of Happiness Studies 6,
+    357-396 (Special issue on "Inequality of Happiness in nations").
+<p>
+    The two methods for rescaling of standard deviations are discussed by
+    Delhey, Jan and Kohler, Ulrich: Is Happiness Inequality Immune to Income
+    Inequality? New Evidence through Instrument-Effect-Corrected Standard
+    Deviations. This article is currently under review in Social Science
+    Research.
+<p>
+<b><u>Author</u></b>
+<p>
+Ulrich Kohler, WZB
+kohler@wzb.eu
+<p>
+<p>
+<b><u>Also see</u></b>
+Manual:  <b>[R] summarize</b>
+<p>
+<p>
+</pre>

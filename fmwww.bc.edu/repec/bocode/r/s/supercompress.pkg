@@ -1,0 +1,20 @@
+d 'SUPERCOMPRESS': module to to run compress on all datasets in a folder and its subfolders
+d
+d  supercompress is a command designed for organizations that 1)
+d work with very large datasets and 2) experience data constraints.
+d It attempts to reduce the amount of memory used by your data by
+d running Stata's native compress command on every Stata dataset it
+d can find within a given folder and all of its subfolders. 
+d
+d KW: data management
+d KW: compress
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20221126
+d
+d Author: Tommy Morgan, Brigham Young University
+d Support: email morganto@@student.byu.edu
+d
+f supercompress.ado
+f supercompress.sthlp

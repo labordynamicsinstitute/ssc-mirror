@@ -1,0 +1,142 @@
+<pre>
+<b>help spmat permute</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>spmat permute</b> -- Reorder the rows and columns of the spatial-weighting
+                       matrix <b>W</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>spmat</b> <b><u>per</u></b><b>mute</b> <i>objname</i> <i>varname</i>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>spmat permute</b> reorders the rows and columns of the spatial-weighting
+    matrix <b>W</b> contained in the <b>spmat</b> object <i>objname</i>.  <i>varname</i> is the Stata
+    variable containing the permutation vector, where the <i>i</i>th observation in
+    <i>varname</i> specifies the new column index of <b>W</b>; see [M-1] permutation for a
+    detailed discussion.
+<p>
+    <b>spmat permute</b> prepares a general spatial-weighting matrix for more
+    efficient storage; see <i>Remarks</i> in <b>spmat tobanded</b> for details.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    We use a simple example to illustrate how <b>spmat permute</b> works.  Given the
+    spatial-weighting matrix <b>W</b>,
+<p>
+            +-             -+
+            | 0  1  0  0  1 |
+            | 1  0  0  1  0 |
+            | 0  0  0  0  1 |
+            | 0  1  0  0  0 |
+            | 1  0  1  0  0 |
+            +-             -+
+<p>
+    and the permutation vector <b>p</b> = (3, 5, 1, 2, 4), we can use Mata to
+    reorder the rows and columns of <b>W</b> by performing the operation
+<p>
+            <b>W = W[p, p]</b>
+<p>
+    which results in <b>W</b> being
+<p>
+            +-             -+
+            | <b>0</b>  1  0  0  0 |
+            | 1  <b>0</b>  1  0  0 |
+            | 0  1  <b>0</b>  1  0 |
+            | 0  0  1  <b>0</b>  1 |
+            | 0  0  0  1  <b>0</b> |
+            +-             -+
+<p>
+    where we highlighted the main diagonal.  Note that all the 1s are now
+    clustered around the main diagonal.  We can now use <b>spmat tobanded</b> to
+    store the permuted matrix <b>W</b> in a banded form.
+<p>
+    <b>spmat permute</b> requires that the permutation vector be stored in the Stata
+    variable <i>varname</i>.  Assume that we now have the unpermuted matrix <b>W</b> stored
+    in the <b>spmat</b> object <b>cobj</b>.  The matrix represents contiguity information
+    for the following data:
+<p>
+            +----------------+
+            |   id  distance |
+            |----------------|
+            |   79      5.23 |
+            |   82     27.56 |
+            |  100         0 |
+            |  114      1.77 |
+            |  140     20.47 |
+            +----------------+
+<p>
+    where the variable <b>distance</b> measures the distance from the centroid of
+    place with <b>id</b> = <b>100</b> to the centroids of all the other places.  We sort
+    the data on <b>distance</b> and generate the permutation vector <b>p = _n</b>, which is
+    just a running index 1, ..., 5:
+<p>
+            +--------------------+
+            |   id  distance   p |
+            |--------------------|
+            |  100         0   1 |
+            |  114      1.77   2 |
+            |   79      5.23   3 |
+            |  140     20.47   4 |
+            |   82     27.56   5 |
+            +--------------------+
+<p>
+    We obtain our permutation vector by sorting the data back to the original
+    order based on the <b>id</b> variable:
+<p>
+            +--------------------+
+            |   id  distance   p |
+            |--------------------|
+            |   79      5.23   3 |
+            |   82     27.56   5 |
+            |  100         0   1 |
+            |  114      1.77   2 |
+            |  140     20.77   4 |
+            +--------------------+
+<p>
+    Now coding <b>spmat permute cobj p</b> will reorder the rows and columns of <b>W</b> in
+    exactly the same way as the Mata code above did.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    ---------------------------------------------------------------------------
+    Setup
+<p>
+        <b>. use pollute</b>
+        <b>. spmat use cobj using pollute.spmat</b>
+        <b>. spmat summarize cobj</b>
+<p>
+    Create the permutation vector p
+<p>
+        <b>. gen p = _n</b>
+        <b>. sort longitude latitude</b>
+        <b>. gen dist = sqrt( (longitude-longitude[1])^2 +</b>
+            <b>(latitude-latitude[1])^2 )</b>
+        <b>. sort dist</b>
+<p>
+    Permute the matrix
+<p>
+        <b>. spmat permute cobj p</b>
+<p>
+    Band the matrix if possible
+<p>
+        <b>. spmat summarize cobj, banded</b>
+        <b>. if `r(canband)'==1 spmat tobanded cobj, dtr(`r(lband)' `r(uband)')</b>
+            <b>replace</b>
+        <b>. spmat summarize cobj</b>
+<p>
+   ----------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>spmat</b>, <b>spreg</b>, <b>spivreg</b>, <b>spmap</b>, <b>shp2dta</b>, <b>mif2dta</b> (if installed)
+<p>
+</pre>

@@ -1,0 +1,212 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help stjm11 postestimation</b>                          also see: <b>stjm11</b>, <b>stjmgraph</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>stjm11 postestimation</b> -- Post-estimation tools for stjm11
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    The following standard post-estimation commands are available:
+<p>
+    command          description
+    -------------------------------------------------------------------------
+INCLUDE help post_estat
+INCLUDE help post_estimates
+INCLUDE help post_lincom
+INCLUDE help post_lrtest
+INCLUDE help post_nlcom
+        <b>predict</b>      predictions, residuals etc
+INCLUDE help post_predictnl
+INCLUDE help post_test
+INCLUDE help post_testnl
+    -------------------------------------------------------------------------
+<p>
+<a name="predict"></a><p>
+<p>
+<b><u>Syntax for predict</u></b>
+<p>
+    Syntax for obtaining best linear unbiased predictions (BLUPs) of random
+        effects, or the BLUPs' standard errors
+<p>
+        <b>predict</b> {<i>stub</i><b>*</b>|<i>newvarlist</i>} <b>,</b> {<b><u>ref</u></b><b>fects</b> | <b><u>rese</u></b><b>s</b>}
+<p>
+<p>
+    Syntax for obtaining other predictions
+<p>
+        <b>predict</b> <i>newvar</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>statistic</i> <i>options</i>]
+<p>
+<p>
+    <i>statistic</i>                        Description
+    -------------------------------------------------------------------------
+    Longitudinal
+      <b><u>l</u></b><b>ongitudinal</b>                   longitudinal submodel
+      <b><u>r</u></b><b>esiduals</b>                      longitudinal residuals, response minus
+                                       fitted values
+      <b><u>rsta</u></b><b>ndard</b>                      standardised residuals
+<p>
+    Survival
+      <b><u>h</u></b><b>azard</b>                         hazard
+      <b><u>s</u></b><b>urvival</b>                       survival S(t)
+      <b><u>cumh</u></b><b>azard</b>                      cumulative hazard
+      <b><u>mart</u></b><b>ingale</b>                     martingale-like residuals
+      <b><u>dev</u></b><b>iance</b>                       deviance residuals
+<p>
+    Random effects
+      <b><u>ref</u></b><b>fects</b>                       best linear unbiased predictions (BLUPS)
+                                       of the random effects
+      <b><u>rese</u></b><b>s</b>                          standard errors of the best linear
+                                       unbiased predictions (BLUPS) of the
+                                       random effects
+    -------------------------------------------------------------------------
+<p>
+    <i>options</i>                          Description
+    -------------------------------------------------------------------------
+      <b>xb</b>                             see description below
+      <b><u>fit</u></b><b>ted</b>                         fitted values, linear predictor of the
+                                       fixed portion plus contributions based
+                                       on predicted random effects
+      <b>m(</b><i>#</i><b>)</b>                           number of draws from the estimated
+                                       random effects variance-covariance
+                                       matrix in survival sub-model
+                                       predictions
+      <b>at(</b><i>varname # </i>[<i>varname # </i>...]<b>)</b>  predict at values of specified
+                                       covariates
+      <b>ci</b>                             calculate confidence intervals
+      <b><u>time</u></b><b>var(</b><i>varname</i><b>)</b>               time variable used for predictions
+                                       (defaults: <b>_t0</b> for longitudinal
+                                       sub-model, <b>_t</b> for survival sub-model)
+      <b><u>meast</u></b><b>ime</b>                       evaluate predictions at measurements,
+                                       <b>_t0</b>
+      <b><u>survt</u></b><b>ime</b>                       evaluate predictions at survival times,
+                                       <b>_t</b>
+      <b><u>zero</u></b><b>s</b>                          sets all covariates to zero (baseline
+                                       prediction)
+      <b><u>lev</u></b><b>el(</b><i>#</i><b>)</b>                       sets confidence level (default 95)
+    -------------------------------------------------------------------------
+    Statistics are available both in and out of sample; type <b>predict</b> <i>...</i> <b>if</b>
+      <b>e(sample)</b> <i>...</i> if wanted only for the estimation sample.
+<p>
+<p>
+<b><u>Options for predict</u></b>
+<p>
+        +--------------+
+    ----+ Longitudinal +-----------------------------------------------------
+<p>
+    <b>longitudinal</b> predicts the fitted values for the longitudinal submodel. If
+        <b>xb</b> is specified (the default) then only contributions from the fixed
+        portion of the model are included. If<b> fitted</b> is specified then
+        estimates of the random effects are also included.
+<p>
+    <b>residuals</b> calculates residuals, equal to the longitudinal response minus
+        fitted values. By default, the fitted values take into account the
+        random effects.
+<p>
+    <b>rstandard</b> calculates standardized residuals, equal to the residuals
+        multiplied by the inverse square root of the estimated error
+        covariance matrix.
+<p>
+        +----------+
+    ----+ Survival +---------------------------------------------------------
+<p>
+    <b>hazard</b> calculates the predicted hazard.
+<p>
+    <b>survival</b> calculates each observation's predicted survival probability.
+<p>
+    <b>cumhazard</b> calculates the predicted cumulative hazard.
+<p>
+    <b>martingale</b> calculates martingale-like residuals.
+<p>
+    <b>deviance</b> calculates deviance residuals.
+<p>
+        +----------------+
+    ----+ Random effects +---------------------------------------------------
+<p>
+    <b>reffects</b> calculates best linear unbiased predictions (BLUPs) of the
+        random effects. You must specify q new variables, where q is the
+        number of random effects terms in the model (or level).  However, it
+        is much easier to just specify stub* and let Stata name the variables
+        stub1...stubq for you.
+<p>
+    <b>reffects</b> calculates the standard errors of the best linear unbiased
+        predictions (BLUPs) of the random effects. You must specify q new
+        variables, where q is the number of random effects terms in the model
+        (or level).  However, it is much easier to just specify stub* and let
+        Stata name the variables stub1...stubq for you.
+<p>
+        +------------+
+    ----+ Subsidiary +-------------------------------------------------------
+<p>
+    <b>xb</b> specifies predictions based on the fixed portion of the model when a
+        longitudinal option is chosen. When the prediction option is <b>hazard</b>,
+        <b>survival</b> or <b>cumhazard</b>, the predictions are based on the average of
+        the fixed portion plus <b>m</b> draws from the estimated random effects
+        variance-covariance matrix.
+<p>
+    <b>fitted</b> linear predictor of the fixed portion plus contributions based on
+        predicted random effects.
+<p>
+    <b>m</b> specifies the number of draws from the estimated random effects
+        variance-covariance matrix in survival sub-model predictions when <b>xb</b>
+        is chosen.
+<p>
+    <b>at(</b><i>varname # </i>[<i> varname # </i>...]<b>)</b> requests that the covariates specified by
+        the listed <i>varname</i>(s) be set to the listed <i>#</i> values. For example,
+        <b>at(x1 1 x3 50)</b> would evaluate predictions at <b>x1</b> = 1 and <b>x3</b> = 50. This
+        is a useful way to obtain out of sample predictions. Note that if
+        <b>at()</b> is used together with <b>zeros</b> all covariates not listed in <b>at()</b>
+        are set to zero. If <b>at()</b> is used without <b>zeros</b> then all covariates
+        not listed in <b>at()</b> are set to their sample values. See also <b>zeros</b>.
+<p>
+    <b>ci</b> calculate a confidence interval for the requested statistic and stores
+        the confidence limits in <i>newvar</i><b>_lci</b> and <i>newvar</i><b>_uci</b>.
+<p>
+    <b>timevar(</b><i>varname</i><b>)</b> defines the variable used as time in the predictions.
+        This is useful for large datasets where for plotting purposes
+        predictions are only needed for 200 observations for example.  Note
+        that some caution should be taken when using this option as
+        predictions may be made at whatever covariate values are in the first
+        200 rows of data.  This can be avoided by using the <b>at()</b> option
+        and/or the <b>zeros</b> option to define the covariate patterns for which
+        you require the predictions.
+<p>
+    <b>meastime</b> evaluate predictions at measurement times i.e. <b>_t0</b>.
+<p>
+    <b>survtime</b> evaluate predictions at survival times i.e. <b>_t</b>.
+<p>
+    <b>zeros</b> sets all covariates to zero (baseline prediction). For example,
+        <b>predict s0, survival zeros</b> calculates the baseline survival function.
+        See also <b>at()</b>.
+<p>
+    <b>level(</b><i>#</i><b>)</b> sets the confidence level; default is <b>level(95)</b> or as set by <b>set</b>
+        <b>level</b>.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    Load simulated example dataset:
+    . use http://fmwww.bc.edu/repec/bocode/s/stjm_example
+<p>
+    stset the data:
+    . stset stop, enter(start) f(event=1) id(id)
+<p>
+    Joint model with a random intercept in the longitudinal submodel, and
+    association based on the current value. No covariates in either submodel.
+    . stjm11 long_response, panel(id) survmodel(weibull) gh(5) ffracpoly(1)
+<p>
+    Predict the marginal survival function.
+    . predict s1, survival
+<p>
+    Predict the longitudinal fitted values including fixed effects and
+    contributions from the random effects.
+    . predict longfitvals, longitudinal fitted
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>stjm11</b>; <b>stjmgraph</b>
+<p>
+</pre>

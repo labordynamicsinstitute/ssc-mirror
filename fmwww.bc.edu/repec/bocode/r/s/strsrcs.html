@@ -1,0 +1,160 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>strsrcs</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Flexible parametric models for survival-time data with background mortality</u></b>
+<p>
+        <b>strsrcs</b>  [<i>varlist</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <i>model_complexity</i>
+                <b><u>bhaz</u></b><b>ard(</b><i>varname</i><b>)</b> <b><u>sc</u></b><b>ale(</b><i>hazard|odds</i><b>)</b> <b>strata(</b><i>strata_varlist</i><b>)</b>
+                <b><u>nocons</u></b><b>tant</b> <b><u>snocons</u></b><b>tant</b> <b>orthog</b> <b><u>ef</u></b><b>orm</b> <b>inits(</b><i>name</i><b>)</b>
+                <i>maximize_options</i> ]
+<p>
+    where <i>model_complexity</i> is one of
+<p>
+        { <b>df(</b><i>#</i><b>)</b>} <b>knots(</b><i>knotlist</i><b>)</b>} }
+<p>
+<p>
+    <b>strsrcs</b> is for use with survival-time data; see help st.  You must <b>stset</b>
+    your data before using <b>strsrcs</b>; see help stset.
+<p>
+    <b>strsrcs</b> shares the features of all estimation commands; see help estcom.
+<p>
+<p>
+    The syntax of predict following <b>strsrcs</b> is
+<p>
+        <b>predict</b> <i>newvarname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <i>statistic</i> <b>ci</b> <b><u>lev</u></b><b>el(</b><i>value</i><b>)</b>
+<p>
+<p>
+    where <i>statistic</i> is
+<p>
+        <b><u>s</u></b><b>urvival</b> - predicted relative survival
+<p>
+        <b><u>h</u></b><b>azard</b> - predicted excess hazard rate
+<p>
+        <b><u>hr</u></b><b>atio</b> - predicted excess hazard rate ratio (NOTE:Only valid when one
+                            covariate is modelled)
+<p>
+<p>
+    These statistics are available both in and out of sample; type "<b>predict</b>
+    <i>...</i> <b>if e(sample)</b> <i>...</i>" if wanted only for the estimation sample.
+<p>
+Predictions are obtained using the delta method implemented using predictnl.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>strsrcs</b> fits spline-based distributional models to right censored data
+    taking background mortality into account. varlist is a set of covariates.
+<p>
+<p>
+<p>
+<b><u>Options for </u></b><b><u>strsrcs</u></b>
+<p>
+    <b>df(</b><i>#</i><b>)</b> specifies the degrees of freedom for the natural spline function. #
+        must be between 2 and 6. The <b>knots()</b> option is not applicable and the
+        knots are placed at the following centiles of the distribution of the
+        uncensored event [i.e. where _d==1] log times:
+<p>
+        ---------------------------
+        df        Centile positions
+        ---------------------------
+         1        (no knots)
+         2        50
+         3        33 67
+         4        25 50 75
+         5        20 40 60 80
+         6        17 33 50 67 83
+        &gt;6        (not allowed)
+        ---------------------------
+<p>
+<p>
+    <b>knots(</b><i>knotlist</i><b>)</b> knot placement that defines the internal knot positions
+        for the spline.  The values in knotlist are taken to be centile
+        positions in the distribution of the uncensored event [i.e. where
+        _d==1] log times.
+<p>
+<p>
+    <b>bhazard(</b><i>varname</i><b>)</b> gives the variable name for the baseline hazard at
+        death/censoring.  This option is compulsary, but a variable
+        containing only zeros can be specified if 'standard' survival models
+        are required as in stpm.
+<p>
+    <b>scale(</b><i>hazard|odds</i><b>)</b> is not optional and specifies the scale of the model.
+        The hazard and odds options fit models on the scale of the log
+        cumulative hazard or the log cumulative odds of failure,
+        respectively.
+<p>
+    <b>strata(</b><i>strata_varlist</i><b>)</b> stratifies the spline functions according to the
+        variables in strat_varlist.  This allows time-dependant effects for a
+        variety of covariates and and is of particular use in assessing the
+        assumption of proportional excess hazards or proportional odds.
+<p>
+    <b>noconstant</b> specifies that a constant term is not included in the baseline
+        part of the model.
+<p>
+    <b>snoconstant</b> specifies that a constant term is not included for the spline
+        terms.
+<p>
+    <b>orthog</b> creates orthogonalized basis functions. All basis functions higher
+        than the first (linear) function are uncorrelated and have mean 0 and
+        standard deviation 1. The linear function is also uncorrelated with
+        the higher-basis functions.
+<p>
+    <b>eform</b> displays the exponentiated coefficients and corresponding standard
+        errors and confidence intervals.
+<p>
+    <b>inits(</b><i>name</i><b>)</b> specifies a user defined set of initial values, where <i>name</i> is
+        the name of the matrix where these values are stored.
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the confidence level, in percent, for confidence
+        intervals.  The default is <b>level(95)</b> or as set by <b>set level</b>; see help
+        level.
+<p>
+    <i>maximize_options</i> control the maximization process; see help maximize.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. strsrcs sex, bhazard(rate) df(2) scale(odds)</b>
+                [assess sex on the odds scale assuming proportional odds]
+    <b>. strsrcs, bhazard(rate) df(2) scale(odds) strata(sex)</b>
+                [assess sex on the odds scale assuming sex is dependent on time
+&gt; ]
+    <b>. strsrcs age, bhaz(rate) df(6) sc(hazard) strata(sex)</b>
+                [assess age and sex on the hazard scale assuming age has propor
+&gt; tional hazards and sex is time dependent]
+    <b>. predict s, survival ci</b>
+                [output the relative survival estimate (with confidence interva
+&gt; l) into new variable <i>s(s_lci &amp; s_uci)</i>]
+    <b>. predict haz, h ci level(99)</b>
+                [output the excess hazard (with confidence interval at the 99% 
+&gt; level) into new variable <i>haz(haz_lci &amp; haz_uci)</i>]
+<p>
+<p>
+<b><u>Auxiliary ado-files</u></b>
+<p>
+        rcs strsrcs_mlo strsrcs_mlh strsrcs_pred
+<p>
+<b><u>Author</u></b>
+<p>
+    Chris Nelson, University of Leiceser, UK.  cn46@le.ac.uk
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Nelson, C. P., Lambert, P. C., Squire, I. S. and Jones, D. R. 2007. Flexibl
+&gt; e parametric models for relative survival, with application 
+    in coronary heart disease.  Statistics in Medicine 26: 5486-5498.
+<p>
+    Royston, P. 2001. Flexible alternatives to the Cox model, and more.  Stata 
+&gt; Journal 1: 1-28.
+<p>
+    Royston, P. and M. K. B. Parmar. 2002. Flexible proportional-hazards and pr
+&gt; oportional-odds models for censored survival data, with
+    application to prognostic modelling and estimation of treatment effects.  S
+&gt; tatistics in Medicine 21: 2175-2197.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

@@ -1,0 +1,290 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>sparkline</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Sparkline-type plots</u></b>
+<p>
+        <b>sparkline</b> <i>yvarlist xvar</i> [<i>if</i>] [<i>in</i>] [ <b>,</b> <b>by(</b><i>varname</i> [<b>,</b> <i>byopts</i>]<b>)</b>
+            <b><u>sep</u></b><b>arate(</b><i>varname</i><b>)</b> <b><u>h</u></b><b>eight(</b><i>#</i><b>)</b> <b><u>lim</u></b><b>its(</b><i>min max</i><b>)</b> <b><u>f</u></b><b>ormat(</b><i>fmt</i><b>)</b>
+            <b><u>ext</u></b><b>remes</b>[<b>(</b><i>scatter_options</i><b>)</b>] <b>extremeslabel</b>[<b>(</b><i>marker_label_options</i><b>)</b>]
+            <b>flipy</b> <b>variablelabels</b> <i>line_options</i> ]
+<p>
+<p>
+        <b>sparkline</b> <i>yvar xvar</i> [<i>if</i>] [<i>in</i>] [ <b>,</b> <b>over(</b><i>varname</i><b>)</b> <b>by(</b><i>varname</i> [<b>,</b>
+            <i>byopts</i>]<b>)</b> <b><u>sep</u></b><b>arate(</b><i>varname</i><b>)</b> <b><u>h</u></b><b>eight(</b><i>#</i><b>)</b> <b><u>lim</u></b><b>its(</b><i>min max</i><b>)</b> <b><u>f</u></b><b>ormat(</b><i>fmt</i><b>)</b>
+            <b><u>ext</u></b><b>remes</b>[<b>(</b><i>scatter_options</i><b>)</b>] <b>extremeslabel</b>[<b>(</b><i>marker_label_options</i><b>)</b>]
+            <b>flipy</b> <b>variablelabels</b> <i>line_options</i> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>sparkline</b> graphs sparkline-type plots for one or more y variables against
+    a single x variable. Typically, plots for different y variables or for
+    different subsets of one y variable are stacked vertically into one
+    image.  Commonly, but not necessarily, such plots are multiple time
+    series, so that the x variable is a time variable.
+<p>
+<p>
+<b><u>Slogans</u></b>
+<p>
+    Graphics can be shrunk way down.
+                                                E.R. Tufte (1983/2001, p.169)
+<p>
+    Wider-than-tall shapes usually make it easier for the eye to follow from
+        left to right.
+                                                J.W. Tukey (1977, p.129)
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>sparkline</b> takes its name from the discussion in Tufte (2006, pp.44-63).
+    Sparklines are typically simple in design, sparing of space and rich in
+    data, but they include several quite different kinds of graph otherwise.
+    The most common kind of example, however, shows several wider-than-tall
+    time series stacked vertically. By any reasonably broad definition,
+    sparklines have long been standard in several fields, including
+    climatology, ecology (e.g. pollen diagrams) and physiology (notably
+    electroencephalography and electrocardiography).  Tufte provided an
+    memorable and evocative new name and an excellent provocative discussion.
+<p>
+    <b>sparkline</b> is intended to support certain line plots and related graphs
+    presented in a sparkline style.  The implementation is indicative, not
+    definitive. It is not the intention that <b>sparkline</b> provides Stata support
+    for every kind of graph discussed elsewhere under this heading.
+    Conversely, <b>sparkline</b> supports some kinds of graphs that might not be
+    considered sparklines in Tufte's sense.
+<p>
+    There are two leading situations in which <b>sparkline</b> may be useful. In
+    both there is a single x variable. As mentioned, x is commonly but not
+    necessarily a time variable.
+<p>
+        One y variable and a subdivision by a third variable into subsets
+        (e.g. panel data). The subdivision is usually indicated to <b>sparkline</b>
+        by the <b>over()</b> option.
+<p>
+        Two or more y variables.
+<p>
+    In both situations, subsets or variables are plotted separately and
+    stacked vertically.  Values are scaled to (value - minimum) / (maximum -
+    minimum) so that they lie in [0,1] and each subset or variable is
+    assigned the same vertical space. Axis labelling is, however, in terms of
+    the observed or optionally specified minimum and maximum.
+<p>
+    Know that <i>multiple</i> subsets or variables on the y axis are plotted centred
+    on y = 1, 2, 3, etc. Otherwise data are plotted as supplied.
+<p>
+    Note that it is not an error to specify a single variable y without the
+    <b>over()</b> option. The plot so produced would have the same style as other
+    plots produced by <b>sparkline</b> but contain only a single set of values. More
+    usefully, subplots could be produced by also using the <b>by()</b> option. Note
+    that specifying <b>by()</b> does not itself trigger scaling to [0,1].
+<p>
+    Some sparkline displays show elaborate mixes of text and graphical
+    displays and would require more complex Stata code or more work
+    integrating text and graphics than is supported here. The Examples
+    indicate that previously prepared value labels may be used to carry
+    further text. The same device could be used with variable labels. See
+    also Cox (2008, 2009).
+<p>
+    For other broadly similar plots, see in addition to Tufte's references
+    and the page cited below on his website
+<p>
+        climatology examples: Lamb (1972)
+<p>
+        aligned bar charts: Mackinlay (1986)
+<p>
+        survey plots: Lohninger (1994), Hoffman and Grinstein (2002, p.57)
+        and Grinstein et al. (2002, pp.143, 152, 155, 158, 162, 163, 166)
+<p>
+        table lens: Rao and Card (1994), Pirolli and Rao (1996)
+<p>
+        multiline graphs: Hoffman and Grinstein (2002, p.52)
+<p>
+    Note 21 Jan 2013: more references will be added.
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>over()</b> indicates a third variable (e.g. a panel identifier) to subdivide
+        data. This option may only be used when there is a single y variable.
+<p>
+    <b>by()</b> is the usual by_option provided for completeness. Typically it is
+        less useful than the <b>over()</b> option for producing sparklines, but it
+        may be combined with two or more y variables. See Remarks above and
+        Examples below.
+<p>
+    <b>separate()</b> indicates that data are to be shown differently for different
+        values of its argument. Otherwise it has no effect on values shown.
+<p>
+    <b>height()</b> specifies the height of each vertical zone within which each of
+        the multiple variables or subsets is shown. The default is 0.7, so
+        that each series takes up 70% of the available space.
+<p>
+    <b>limits()</b> specifies minimum and maximum to use in scaling all subsets or
+        variables. The default is to use the observed minimum and maximum in
+        each case. Typically this option is useful when values are broadly
+        similar in each case and it is desired to specify exactly similar
+        vertical scales or just to ensure that axis labels are simple.
+        Placement of labels can be based on knowing that series are centred
+        at y = 1, 2, 3, ... and that minimum and maximum are plotted at half
+        the height above and half the height below those levels. See also
+        <b>height()</b> option above.
+<p>
+        Note that it is not possible to specify a different minimum and
+        minimum for different subsets or variables. Note also that there is
+        no check on whether the specified minimum and maximum are exceeded by
+        any of the data. The latter imparts both some risk (of overlapping
+        series) and some flexibility.
+<p>
+    <b>format()</b> specifies a numeric format controlling the display of axis
+        labels showing the maximum and minimum of each series.  The default
+        is the display format of the first y variable specified. See help for
+        format.
+<p>
+    <b>extremes</b> specifies that the minimum and maximum of each subset or
+        variable be flagged by marker symbols. The default symbol is O.
+        <i>scatter_options</i> may be specified to tune the display. See help for 
+        scatter.
+<p>
+    <b>extremeslabel</b> specifies that the minimum and maximum of each subset or
+        variable be shown as marker labels. By default minima are shown at
+        clock position 4 and maxima at clock position 10.
+        <i>marker_label_options</i> may be specified to tune the display. See help
+        for marker_label_options. That said, fine tuning with the Graph
+        Editor may also be desired if this option is found useful.
+<p>
+    <b>flipy</b> specifies that what is shown on the left-hand y axis (axis 1) be
+        shown on the right-hand axis (axis 2), and vice versa.
+<p>
+    <b>variablelabels</b> specifies that variable labels be shown to describe two or
+        more y variables. The default is to use variable names.
+<p>
+    <i>line_options</i> are options of line.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. set scheme s1color</b>
+<p>
+    <b>. webuse grunfeld, clear</b>
+    <b>. sparkline invest mvalue kstock year if company == 1</b>
+    <b>. sparkline invest year, over(company)</b>
+    <b>. sparkline invest year, over(company) extremes</b>
+<p>
+    <b>. sparkline invest year, by(company) extremes</b>
+    <b>. sparkline invest year, by(company, col(2) compact) subtitle(, pos(9)</b>
+        <b>ring(1) nobexpand bcolor(none) placement(e)) extremes ysc(log)</b>
+    <b>. sparkline invest mvalue kstock year, by(company) xtitle("") extremes</b>
+    <b>. sparkline invest mvalue kstock year, by(company, note("")) xtitle("")</b>
+        <b>extremes extremeslabel ysc(r(0.3 3.7))</b>
+<p>
+    <b>. bysort company (year) : gen clabel= string(invest[_N], "%9.0g") + " " +</b>
+        <b>string(company)</b>
+    <b>. * for labmask: net describe gr0034,</b>
+        <b>from(http://www.stata-journal.com/software/sj8-2)</b>
+    <b>. labmask company, values(clabel)</b>
+    <b>. sparkline invest year, over(company) flipy xtick(1935/1954)</b>
+        <b>xla(1935(5)1950 1954, tlength(*1.6)) extremes</b>
+<p>
+    <b>. sysuse auto, clear</b>
+    <b>. gen gpm = 1/mpg</b>
+    <b>. sort rep78 gpm weight</b>
+    <b>. gen observation = _n</b>
+    <b>. sparkline rep78 gpm weight observation, separate(rep78) recast(connect)</b>
+        <b>xla(1 10(10)70 74)</b>
+<p>
+    <b>. * iris data in Stata 11 up</b>
+    <b>. webuse iris, clear</b>
+    <b>. pca sep* pet*</b>
+    <b>. predict PC1</b>
+    <b>. sparkline sep* pet* PC1, separate(iris) recast(scatter) legend(on</b>
+        <b>row(1)) lc(none ..) ms(Oh Dh Th) variablelabels format(%3.1f)</b>
+    <b>. sparkline sep* pet* PC1, separate(iris) recast(scatter) legend(on</b>
+        <b>row(1)) lc(none ..) ms(Oh Dh Th)</b> <b>yla(1 "sepal length" 2 "sepal width"</b>
+        <b>3 "petal length" 4 "petal width", axis(2)) subtitle(all measurements</b>
+        <b>in cm, place(w) size(*0.8)) format(%3.1f) yli(1.5 2.5 3.5,</b>
+        <b>lstyle(grid)) flipy</b>
+<p>
+    <b>. * stocks data in Stata 12 up</b>
+    <b>. webuse stocks, clear</b>
+    <b>. sparkline toyota nissan honda t</b>
+    <b>. sparkline toyota nissan honda t, limits(-0.2 0.2)</b>
+    <b>. sparkline toyota nissan honda t, limits(-0.2 0.2) height(0.8) yla(0.6</b>
+        <b>"-0.2" 1 "0" 1.4 "0.2" 1.6 "-0.2" 2 "0" 2.4 "0.2" 2.6 "-0.2" 3 "0"</b>
+        <b>3.4 "0.2", axis(2) labgap(*1) ticks) yli(1.5 2.5, lstyle(grid))</b>
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+    Nicholas J. Cox
+    Durham University
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Acknowledgments</u></b> 
+<p>
+    Ariel Linden and Vince Wiggins provided encouragement.
+<p>
+<p>
+<b><u>References</u></b> 
+<p>
+    Cox, N.J. 2008.  Speaking Stata: Between tables and graphs.  <i>Stata</i>
+        <i>Journal</i> 8: 269-289.
+        http://www.stata-journal.com/sjpdf.html?articlenum=gr0034
+<p>
+    Cox, N.J. 2009.  Speaking Stata: Paired, parallel, or profile plots for
+        changes, correlations, and other comparisons.  <i>Stata Journal</i> 9:
+        621-639.  http://www.stata-journal.com/article.html?article=gr0041
+<p>
+    Grinstein, G.G., Hoffman, P.E., Pickett, R.M. and Laskowski, S.J.  2002.
+        Benchmark development for the evaluation of visualization for data
+        mining.  In Fayyad, U., Grinstein, G.G. and Wierse, A. (Eds).
+        <i>Information visualization in data mining and knowledge discovery.</i>
+        San Francisco: Morgan Kaufmann, 129-176.
+<p>
+    Hoffman, P.E. and Grinstein, G.G. 2002.  A survey of visualizations for
+        high-dimensional data mining.  In Fayyad, U., Grinstein, G.G. and
+        Wierse, A. (Eds).  <i>Information visualization in data mining and</i>
+        <i>knowledge discovery.</i>  San Francisco: Morgan Kaufmann, 47-82.
+<p>
+    Lamb, H.H. 1972.  <i>Climate: present, past and future. Volume 1:</i>
+        <i>Fundamentals and climate now.</i>  London: Methuen.
+<p>
+    Lohninger, H. 1994.  INSPECT: A program system to visualize and interpret
+        chemical data.  <i>Chemometrics and Intelligent Laboratory Systems</i> 22:
+        147-153.
+<p>
+    Mackinlay, J.D. 1986.  Automating the design of graphical presentations
+        of relational information.  <i>ACM Transactions on Graphics</i> 5: 111-141.
+<p>
+    Pirolli, P. and Rao, R. 1996.  Table lens as a tool for making sense of
+        data.  In Catarci, T., Costabilem, M.F., Levialdi, S. and Santucci,
+        G. (Eds) <i>Workshop on Advanced Visual Interfaces: AVI-96.</i>  New York:
+        Association for Computing Machinery, 67-80.
+<p>
+    Rao, R. and Card, S.K. 1994.  The table lens: merging graphical and
+        symbolic representations in an interactive focus+context
+        visualization for tabular information.  <i>Proceedings of CHI '94, ACM</i>
+        <i>Conference on Human Factors in Computing Systems</i> New York:
+        Association for Computing Machinery, 318-322 and 481-482.
+<p>
+    Tufte, E.R. 1983, 2nd edition 2001.  <i>The visual display of quantitative</i>
+        <i>information.</i> Cheshire, CT:  Graphics Press.
+<p>
+    Tufte, E.R. 2006. <i>Beautiful evidence.</i> Cheshire, CT:  Graphics Press.
+<p>
+    Sparkline theory and practice.
+        http://www.edwardtufte.com/bboard/q-and-a-fetch-msg?msg_id=0001OR
+        (accessed 15 January 2013)
+<p>
+    Tukey, J.W. 1977.  <i>Exploratory data analysis.</i> Reading, MA:
+        Addison-Wesley.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  line, tsline, xtline, dotplot, stripplot (if installed), tabplot
+             (if installed)
+<p>
+</pre>

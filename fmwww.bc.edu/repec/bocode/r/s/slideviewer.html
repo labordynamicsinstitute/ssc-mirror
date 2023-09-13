@@ -1,0 +1,55 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>slideviewer</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u> Stata module to manage SMCL files displayed in the viewer</u></b>
+<p>
+    <b>slideviewer</b> <i>slidename</i> [ <b>,</b> <b><u>p</u></b><b>ost</b> <b><u>s</u></b><b>ubdir</b>(<i>filepath</i>) ]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>slideviewer</b> allows for subdirectory navigation of directories to display
+    SMCL files in Stata.  This can be used to show a series of linked SMCL
+    files (like in a slideshow or presentation using the Viewer) that are
+    stored in sub-directories.  Also- The <b>post</b> option can used to post
+    results or tracking information in r-class scalars that can be used to
+    make the slide more interactive (like in a interactive tutorial presented
+    in a series of Viewer slides ).
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b><u>s</u></b><b>ubdir</b> defines the subdirectory that linked slides are stored in.  The
+        default sub-directory, if none is specified, is called "ignore".  If
+        you create a sub-folder (of the pwd) named "ignore" and put your
+        linked SMCL files there, the program will discover these files when
+        navigating across SMCL files.  (By "linked" SMCL files, I mean files
+        that are pointed at by some clickable link in another slide)
+<p>
+    <b><u>p</u></b><b>ost</b> stores the last slide viewed or clicked in `r(lastslide)' and the
+        global macro <b>totalscore</b> in the macro `r(totalscore)'.  These results
+        could be used to track, store, or help guide other slides --
+        especially in the context of some linked SMCL files being used to
+        guide a user through a tutorial or self-assessment.
+<p>
+<b><u>Examples</u></b>
+<p>
+slideviewer slide_next, subdir("C:\ado\myfiles\")
+<p>
+*Putting this code in a SMCL file:
+<p>
+        {stata "slideviewer slide99, post":Next Slide} 
+  
+    produces a link that navigates the user to slide99.smcl in the
+        subdirectory "ignore" and posts the r-class scalars for other use.
+<p>
+<b><u>Author</u></b>
+<p>
+    Eric A. Booth, Texas A&amp;M University
+    ebooth@tamu.edu
+    ebooth@ppri.tamu.edu
+    http://www.eric-a-booth.com
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

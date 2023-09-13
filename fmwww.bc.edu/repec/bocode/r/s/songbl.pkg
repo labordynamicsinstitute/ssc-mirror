@@ -1,0 +1,28 @@
+d 'SONGBL': module to search and share Stata resources and blogs
+d
+d   Search and share Stata resources and blogs within Stata Command
+d Window. The Stata blog resources    include WeChat official
+d account, Stata club, lianxh, etc. 
+d
+d KW: Stata resources
+d KW: blogs
+d
+d Requires: Stata version 16 and the ability to read Chinese
+d
+d Distribution-Date: 20220409
+d
+d Author: Song Bolin, Shenzhen University
+d Support: email 779330159@@qq.com
+d
+f songbl.ado
+f songbl.sthlp
+f songbl_cie.sthlp
+f songbl_cn.sthlp
+f songbl_dir.sthlp
+f songbl_excel.sthlp
+f songbl_fy.sthlp
+f songbl_get.sthlp
+f songbl_install.sthlp
+f songbl_paper.sthlp
+f songbl_ssc.sthlp
+f songbl_ssci.sthlp

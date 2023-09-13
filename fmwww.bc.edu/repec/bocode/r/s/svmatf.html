@@ -1,0 +1,75 @@
+<pre>
+.-
+help for ^svmatf^
+.-
+<p>
+Saves a matrix to a file
+----------------------------
+<p>
+    ^svmatf^ ^, mat() fil(string) [row(string) varn(string) verb ]
+<p>
+Description
+-----------
+<p>
+^svmatf^ saves a matrix as a dataset. It can be saved
+as a separate dataset - or it can be added to an 
+existing dataset.
+<p>
+The matrix can be added at the bottom (append) or
+to the right of existing observations. 
+<p>
+<p>
+Options
+-------
+<p>
+^mat(^matrix^)^ specifies the matrix that is to be saved
+<p>
+^fil(string)^ is the name of the file that will contain
+the matrix. If it exists, the data are appended.
+<p>
+^row^ specifies the variable name that will hold the
+row numbers
+<p>
+^varn^ specifies the variable names of the matrix 
+columns. If not specified, they will be taken from
+the column names of the matrix
+<p>
+^verb^ is for verbose output, mostly debugging purposes.
+<p>
+Remarks 
+-------
+^svmatf^ can be used to store a series of related matrices 
+stacked on top of each other in one file. 
+<p>
+The example shows how to compare results from a logistic regression 
+models with different covariates.
+<p>
+<p>
+Examples
+--------
+<p>
+        .logit astma age gender
+        .lrmatx
+        .mat astma=r(or),r(ci)
+        .svmatf , mat(astma) fil(result.dta) 
+<p>
+        .logit astma age gender region
+        .lrmatx
+        .mat astma=r(or),r(ci)
+        .svmatf , mat(astma) fil(result.dta) 
+<p>
+        .logit astma age gender region hayfever
+        .lrmatx
+        .mat astma=r(or),r(ci)
+        .svmatf , mat(astma) fil(result.dta)  
+<p>
+<p>
+Authors
+-------
+<p>
+    Jan Brogger, University of Bergen, Norway
+    jan.brogger@@med.uib.no
+<p>
+<p>
+<p>
+</pre>

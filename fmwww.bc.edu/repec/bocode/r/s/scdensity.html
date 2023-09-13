@@ -1,0 +1,94 @@
+<pre>
+<p>
+-------------------------------------------------------------------------------
+help <b>scdensity</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Univariate self-consistent density estimation</u></b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>scdensity</b> <i>varname</i> [<i>if</i>] [<i>in</i>] [ <b>,</b> <b><u>g</u></b><b>enerate(</b><i>newvar1 </i>[<i>newvar2</i>]<b>)</b> <b>n(</b><i>#</i><b>)</b>
+                 <b><u>r</u></b><b>ange(</b><i># #</i><b>)</b> <b><u>nog</u></b><b>raph</b> <b>name(</b><i>name</i>[<b>,</b><i> replace</i>]<b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>scdensity</b> is an implementation of the self-consistent density estimator
+    as described in Bernacchia &amp; Pigolotti (2011).  The self-consistent
+    method is a non-parametric way to estimate a density from a number of
+    data points without relying on any a-priori fixation of parameters like
+    smoothing parameters in kernel density estimation, for example.
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b><u>g</u></b><b>enerate()</b> generates new variable(s). One or two (new) variable names can
+        be specified. If one name is specified, <b>scdensity</b> saves the density
+        estimate in a new variable. If two variables are requested, <b>scdensity</b>
+        saves the density estimate and the grid points, at which the density
+        is evaluated.
+<p>
+    <b>n()</b> Number of grid points to be used at which the density is evaluated.
+        If the number of data points is greater than N=1000, the number of
+        grid points defaults to n=1000. If the number of data points is lower
+        than N=1000, the number of grid points defaults to n=N.  If a number
+        larger than the actual sample size is requested, n is set to N.
+<p>
+    <b><u>r</u></b><b>ange()</b> Defines the grid range at which the density is to be evaluated.
+        Per default, the endpoints of the evaluation grid are determined by
+        the minimum and maximum value of the actual data points and the
+        <b><u>r</u></b><b>ange()</b> option can be used to change this default behavior.  The
+        input of two numbers is required with the first one being the minimum
+        and the second one being the maximum of the range.
+<p>
+    <b><u>nog</u></b><b>raph</b> Suppresses the graph. This can be useful in combination with the
+        <b>generate()</b> option.
+<p>
+    <b>name()</b> Name of the graph.
+<p>
+<b><u>Saved results</u></b> 
+<p>
+    <b>scdensity</b> saves the following in <b>r()</b>:
+<p>
+    Scalars   
+      <b>r(n_points)</b>    Number of evaluation points
+      <b>r(range_min)</b>   Minimum grid point
+      <b>r(range_max)</b>   Maximum grid point
+<p>
+<b><u>Dependencies</u></b>
+<p>
+    <b>scdensity</b> requires <b>moremata</b> (Jann 2005), available from SSC.  Type -ssc
+        install moremata- in Stata to obtain it. Also, <b>scdensity</b> requires
+        Stata version 9.2 or higher.
+<p>
+<b><u>Example</u></b>
+<p>
+    . webuse nhanes2
+<p>
+    . scdensity height
+<p>
+<b><u>References</u></b> 
+<p>
+    Bernacchia, A. &amp; Pigolotti, S. (2011). Self-Consistent Method For Density
+    Estimation <i>Journal of the Royal Statistical Society B, 73(3)</i>, 407-422.
+<p>
+    Jann, B. (2005). "MOREMATA: Stata module (Mata) to provide various
+    functions," <i>Statistical Software Components S455001, Boston College</i>
+    <i>Department of Economics</i>, revised 19 Feb 2009.
+<p>
+<b><u>Acknowledgment</u></b> 
+<p>
+    I am thankful to Alberto Bernacchia (Yale University) for helpful
+    discussions and sharing his R code.
+<p>
+<b><u>Author</u></b>
+<p>
+    Joerg Luedicke
+    Yale University and University of Florida
+    United States
+    email: joerg.luedicke@ufl.edu
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

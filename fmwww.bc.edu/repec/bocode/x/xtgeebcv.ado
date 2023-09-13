@@ -1,9 +1,9 @@
-*!version5.3 03Aug2023
+*!version5.4 07Sep2023
 
 /* -----------------------------------------------------------------------------
 ** PROGRAM NAME: xtgeebcv
-** VERSION: 5.3
-** DATE: AUGUST 03, 2023
+** VERSION: 5.4
+** DATE: SEPTEMBER 07, 2023
 ** -----------------------------------------------------------------------------
 ** CREATED BY: JOHN GALLIS, FAN LI, LIZ TURNER
 ** -----------------------------------------------------------------------------
@@ -32,6 +32,7 @@
 			Dec 03, 2021 - Program wasn't allowing for intercept-only models. Now updated to allow for intercept-only model.
 			May 23, 2023 - Updating program to allow for different ways of computing degrees of freedom
 			Aug 03, 2023 - Updating program to allow for abbreviations in the family and link names, and abbreviations of options
+			Sep 07, 2023 - Program updated to re-output scalars and macros necessary for proper functioning of postestimation commands such as margins
 **			
 ** -----------------------------------------------------------------------------
 ** OPTIONS: SEE HELP FILE
@@ -464,8 +465,21 @@ program define xtgeebcv, eclass
 			if "`statistic'" == "t" {
 				matrix b=e(b)
 				matrix V=e(V)
-				ereturn post b V, dof(`dof') esample(`touse')
+				/* re-adding estimation results after post, so that margins and other postestimation commands work correctly */
+				foreach xyz in cmdline depvar cmd marginsnotok predict estat_cmd link corr family ivar model scale {
+					local `xyz'1 = e(`xyz')
+				}
+				foreach xyz in df_m chi2 p df_pear N N_g g_max g_min g_avg tol dif phi deviance dispers chi2_dev chi2_dis rc rank {
+					local `xyz'2 = e(`xyz')
+				}
+				ereturn post b V, dof(`dof') esample(`touse') buildfv
 				ereturn matrix varNaive = varNaive
+				foreach xyz in cmdline depvar cmd marginsnotok predict estat_cmd link corr family ivar model scale {
+					ereturn local `xyz' "``xyz'1'"
+				}
+				foreach xyz in df_m chi2 p df_pear N N_g g_max g_min g_avg tol dif phi deviance dispers chi2_dev chi2_dis rc rank {
+					ereturn scalar `xyz' = ``xyz'2'
+				}
 				if "`bcv'" != "rb" ereturn matrix varrb = varrb
 				if "`bcv'" != "df" ereturn matrix vardf = vardf
 				if "`bcv'" != "kc" ereturn matrix varkc = varkc
@@ -524,8 +538,20 @@ program define xtgeebcv, eclass
 			else if "`statistic'"=="z" {
 				matrix b=e(b)
 				matrix V=e(V)
-				ereturn post b V, esample(`touse')
+				foreach xyz in cmdline depvar cmd marginsnotok predict estat_cmd link corr family ivar model scale {
+					local `xyz'1 = e(`xyz')
+				}
+				foreach xyz in df_m chi2 p df_pear N N_g g_max g_min g_avg tol dif phi deviance dispers chi2_dev chi2_dis rc rank {
+					local `xyz'2 = e(`xyz')
+				}
+				ereturn post b V, esample(`touse') buildfv
 				ereturn matrix varNaive = varNaive
+				foreach xyz in cmdline depvar cmd marginsnotok predict estat_cmd link corr family ivar model scale {
+					ereturn local `xyz' "``xyz'1'"
+				}
+				foreach xyz in df_m chi2 p df_pear N N_g g_max g_min g_avg tol dif phi deviance dispers chi2_dev chi2_dis rc rank {
+					ereturn scalar `xyz' = ``xyz'2'
+				}
 				if "`bcv'" != "rb" ereturn matrix varrb = varrb
 				if "`bcv'" != "df" ereturn matrix vardf = vardf
 				if "`bcv'" != "kc" ereturn matrix varkc = varkc

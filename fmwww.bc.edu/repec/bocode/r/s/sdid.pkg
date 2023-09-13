@@ -1,0 +1,30 @@
+d 'SDID': module to perform synthetic difference-in-differences estimation, inference, and visualization
+d
+d  The sdid command implements the synthetic
+d difference-in-differences method of Arkhangelsky et al. (AER,
+d 2021) for Stata. The program generates the ATT estimate derived
+d in Arkhangelsky et al. (2021), and conducts inference following
+d their bootstrap, placebo, or jackknife methods. The command
+d allows for multiple treatment dates and multiple treatment units
+d directly, as well as cases with only a single treatment unit.  As
+d well as estimation and inference, the sdid command includes a
+d number of graphical output options to summarize the synthetic
+d difference-in-differences estimator.	
+d
+d KW: difference-in-differences
+d KW: DiD
+d KW: synthetic
+d KW: Arkhangelsky
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20230303
+d
+d Author: Daniel Pailañir, Universidad de Santiago de Chile
+d Support: email dpailanir@@fen.uchile.cl
+d
+d Author: Damian Clarke, Universidad de Santiago de Chile
+d Support: email dclarke@@fen.uchile.cl
+d
+f sdid.ado
+f sdid.sthlp

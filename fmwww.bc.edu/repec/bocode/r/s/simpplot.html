@@ -1,0 +1,174 @@
+<pre>
+<b>help simpplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>simpplot</b> -- Plot describing p-values from a simulation by comparing
+                  nominal significance levels with the coverages
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>simpplot</b> <i>varlist</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i> ]
+<p>
+          
+<a name="options"></a>        <i>options</i>                 description 
+        -------------------------------------------------------------------
+        <b>main#opt(</b>graph_opts <b>)</b>   options governing the look the #th variable 
+        <b>ra(</b><i>off</i> | <i>graph_opts</i><b>)</b>    options governing the look of the Monte
+                                Carlo region of acceptance
+        <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>                set confidence level for the Monte Carlo 
+                                region of acceptance; default is <b>level(95)</b>
+        <b>ref0(</b><i>off</i> | <i>graph_opts</i><b>)</b>  options governing the look of a reference
+                                line
+        <b>noresid</b>                 displays the observed coverage against 
+                                nominal significance levels; default is to 
+                                display the deviations from the nominal 
+                                significance level against the nominal 
+                                significance level
+                                region of acceptance
+        <b>by(</b><i>varlist</i> [<b>,</b> <i>byopts</i>]<b>)</b>  option for repeating simpplot command
+        <b><u>gen</u></b><b>erate(</b><i>newvars</i><b>)</b>       specifies that the residuals or observed 
+                                coverages and optionally the x-coordinate, 
+                                upper and lower bound of the Monte Carlo 
+                                region of are to be stored
+        <b>addplot(</b><i>plot</i><b>)</b>           add other plots to the graph
+        other graph options 
+        -------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>simpplot</b> describes the results of a simulation that inspects the coverage
+    of a statistical test. If a null-hypothesis is true than a statistical
+    test at a 5% siginificance level should reject the true null hypothesis
+    in 5% of the replications. In a simulation we can make sure that the null
+    hypothesis is true in the "population", draw many times from that
+    "population", perform the test in each of these "samples", and count how
+    many times the null hypothesis is rejected.  The proportion of
+    replications in which the hypothesis was rejected is our estimate of the
+    coverage of the test, and this coverage should be close to the nominal
+    siginficance level. There is nothing special about the 5% significance
+    level other than that it is the conventional level in many disciplines.
+    We could just as easily look at the coverage of tests at a 1%, 2%, 10%,
+    or any other significance level. <b>simpplot</b> displays by default the
+    deviations from the nominal significance level against the entire range
+    of possible nominal significance levels. It also displays the range
+    (Monte Carlo region of acceptance) within which we can reasonably expect
+    these deviations to remain if the test is well behaved.
+<p>
+    If a test is well behaved than the p-values of that test of a true
+    null-hypothesis should follow a standard uniform distribution. That way
+    1% of the replication will have a p-value less than 0.01, 5% of the
+    replications will have a p-value less than 0.05, 10% will have a p-value
+    less than 0.10, etc. So whichever significance level we choose, we will
+    on average reject the null hypothesis the right number of times.  One
+    could see the graph produced by <b>simpplot</b> as a graphical test whether the
+    distribution of p-values follows a standard uniform distribution.
+<p>
+    The Monte Carlo region of acceptance is the area of the graph where we
+    would expect most simulations (by default 95%) to be if we were repeating
+    our simulation experiment many times and we were simulating a well
+    behaved test. If we did a simulation with <i>n</i> replication, than for a given
+    nominal significance level <i>a</i> we would expect the number of rejections to
+    follow a binomial(<i>n</i>,<i>a</i>) distribution. This is what is being used to
+    compute the end points of the region of accpetance.
+<p>
+<p>
+<b><u>options</u></b>
+<p>
+    <b>main#opt(</b><i>graph_opts</i><b>)</b> options governing the look of the #th variable
+        specified in <i>varlist</i>. the relevant options are listed in 
+        twoway_scatter.
+<p>
+    <b>ra(</b><i>off </i>|<i> graph_opts</i><b>)</b> options governing the look of the Monte Carlo region
+        of acceptance. One can suppres the display (and computation) of the
+        Monte Carlo region of acceptance by specifying <b>ra(off)</b>.
+        Alternatively, one can specify options that change the look of the
+        region of acceptance. The relevant options are listed in 
+        twoway_rarea.
+<p>
+    <b>level(</b><i>#</i><b>)</b> set confidence level for the Monte Carlo region of acceptance;
+        default is level(95)
+<p>
+    <b>ref0(</b><i>off </i>|<i> graph_opts</i><b>)</b> options governing the look of a reference line. By
+        default this is a horizontal line at 0. If the <b>noresid</b> option is
+        specified than the reference line is a diagonal line from 0,0 to 1,1.
+        One can suppres the reference line by specifying <b>ref0(off)</b>.
+        Alternatively, one can specify options than change the look of the
+        reference line. The relevant options are listed in twoway_line.
+<p>
+    <b>noresid</b> displays the observed coverage against nominal significance
+        levels; default is to display the deviations from the nominal
+        significance level against the nominal significance level.
+<p>
+    <b>by(</b><i>varlist</i> [<b>,</b> <i>byopts</i>]<b>)</b> Option by() draws separate plots within one graph.
+        The <i>byopts</i> are documented in by_option.
+<p>
+    <b><u>gen</u></b><b>erate(</b><i>newvars</i><b>)</b> specifies that the residuals (the default) or coverages
+        (when the <b>noresid</b> option has been specified) for each variable in
+        <i>varlist</i> is to be stored. If the number of <i>newvars</i> is the number of
+        variables in <i>varlist</i> + 3, than the x-coordinate, the upper and lower
+        bound of the Monte Carlo region of acceptance are also stored.
+<p>
+        So if one uses <b>simpplot</b> to display <i>k</i> p-values, than one can specify
+        either <i>k</i> or <i>k</i> + 3 <i>newvars</i>. The first <i>k</i> <i>newvars</i> will contain the
+        residuals or coverages of the corresponding p-value in <i>varlist</i>. The
+        <i>k</i>+1th newvar will contain the x-coordinate for the Monte Carlo region
+        of acceptance, the <i>k</i>+2th and <i>k</i>+3th will contain respectively the
+        lower and upper bound of that area.
+<p>
+    <b>addplot(</b><i>plot</i><b>)</b> allows adding more graph twoway plots to the graph
+<p>
+    other graph options
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    In this example we test how well a t-test performs when the data is from
+    a non-Gaussian (some prefer to say non-normal) distribution, in this case
+    a Chi-square distribution with 2 degrees of freedom. We know that the
+    mean of that distribution is 2, so a t-test whether the mean equals 2 is
+    a test of a true null-hypothesis. We also look at how well this test
+    performs in different sample sizes. In a sample size of 50 the test does
+    not perform too well, the true null-hypothesis is too often rejected, but
+    a sample size of a 500 seems already big enough for this test to work.
+<p>
+<p>
+<b>    program drop _all</b>
+<b>    program define sim, rclas</b>
+<b>        drop _all</b>
+<b>        set obs 500</b>
+<b>        gen x = rchi2(2)</b>
+<b>        </b>
+<b>        ttest x=2 in 1/50</b>
+<b>        return scalar p50 = r(p)</b>
+<b>        </b>
+<b>        ttest x=2 </b>
+<b>        return scalar p500 = r(p)</b>
+<b>    end</b>
+<p>
+<b>    set seed 12345</b>
+<b>    simulate p50=r(p50) p500=r(p500), ///</b>
+<b>             reps(5000) : sim </b>
+<p>
+<b>    label var p50 "N=50"</b>
+<b>    label var p500 "N=500"</b>
+<b>        </b>
+<b>    simpplot p50 p500, main1opt(mcolor(red)) ///</b>
+<b>                       main2opt(mcolor(blue))</b>
+<p>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Maarten L. Buis
+    Wissenschaftszentrum Berlin für Sozialforschung, WZB
+    Research unit Skill Formation and Labor Markets
+    maarten.buis@wzb.eu
+<p>
+<p>
+<b><u>Also see:</u></b>
+<p>
+</pre>

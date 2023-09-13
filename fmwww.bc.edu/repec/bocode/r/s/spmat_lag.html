@@ -1,0 +1,41 @@
+<pre>
+<b>help spmat lag</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>spmat lag</b> -- Create a spatial lag variable
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>spmat lag</b> [<i>type</i>] <i>newvar objname varname</i>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>spmat lag</b> creates a new variable that is a product of the
+    spatial-weighting matrix contained in the <b>spmat</b> object <i>objname</i> and the
+    variable <i>varname</i>.  Algebraically, <b>spmat lag</b> computes <b>W*y</b>, where <b>W</b> is the
+    spatial-weighting matrix and <b>y</b> is the variable.
+<p>
+    The default storage type is <b>float</b>. Specify <b>double</b> for the <i>type</i> to store
+    the result in double precision.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    Setup
+        <b>. use pollute</b>
+        <b>. spmat use cobj using pollute.spmat</b>
+<p>
+    Create the variable <b>pollution_w</b> containing a spatial lag of variable
+    <b>pollution</b>
+        <b>. spmat lag double pollution_w cobj pollution</b>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>spmat</b>, <b>spreg</b>, <b>spivreg</b>, <b>spmap</b>, <b>shp2dta</b>, <b>mif2dta</b> (if installed)
+<p>
+</pre>

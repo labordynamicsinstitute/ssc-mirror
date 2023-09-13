@@ -1,0 +1,100 @@
+<pre>
+<b>help sqtab</b>                                                      (SJ6-4: st0111)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>sqtab</b> -- Tabulate sequences
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>sqtab</b> [<i>varname</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    <b>ranks(</b><i>numlist</i><b>)</b>        restrict tabulation on most frequent <i>numlist</i>
+    <b>se</b>                    apply same-elements similarity
+    <b>so</b>                    apply same-order similarity
+    <b>nosort</b>                do not sort according to frequency
+    <b>gapinclude</b>            include sequences with gaps in the tabulation
+    <b><u>subseq</u></b><b>uence(</b><i>a</i><b>,</b><i>b</i><b>)</b>      use only subsequence between positions a and b
+    <i>tabulate_options</i>      any options documented in <b>tabulate</b>
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>sqtab</b> displays frequency tables of all sequences in the dataset.
+    Sequences are described by listing the first 38 positions of each
+    sequence.
+<p>
+    If the optional variable name is specified, a cross tabulation of the
+    sequences with the specified variable will be produced.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>ranks(</b><i>numlist</i><b>)</b> is used to restrict the output to the most frequent
+        sequences. <i>numlist</i> refers to the position of the sequences in the
+        sorted frequency table. Hence, <b>ranks(1)</b> refers to the most frequent
+        sequence only, whereas <b>ranks(1/10)</b> refers to the 10 most frequent
+        sequences. You can also specify <b>ranks(2(2)20)</b>.
+<p>
+    <b>se</b> is used to request a frequency table, where similar sequences have
+        been grouped together beforehand. The concept for similarity used
+        with the option <b>so</b> is called same elements similarity, because it
+        treats sequences that consist of the same elements as identical.
+        Hence, with this option the sequence B-A-A-B would be treated as
+        identical to A-B-B-A, because both sequences consist of the elements
+        A and B.
+<p>
+    <b>so</b> is used to request a frequency table, where similar sequences have
+        been grouped together beforehand. The concept for similarity used
+        with the option <b>so</b> is called same order similarity, because it treats
+        sequences where the elements appear in the same order. The sequence
+        A-B-B-A would be treated identical to A-B-A-A, because the elements A
+        and B appear in the same order in both sequences (first A, then B,
+        and then A again).
+<p>
+    <b>nosort</b> changes the default of listing sequences in the table according to
+        their frequency. This change is reasonable, because many sequences
+        are probably unique. The option <b>nosort</b> turns this default behavior
+        off.
+<p>
+    <b>gapinclude</b> is used to include sequences with gaps in the tabulation. The
+        default behavior is to drop sequences with gaps from the tabulation,
+        because they cannot be used in the program <b>sqom</b>.  The term gap refers
+        only to missing values on the element variable within a sequence.
+        Sequences with missing values at the beginning and at the end of a
+        sequence are included in any case. See sq for details.
+<p>
+    <b>subsequence(a,b)</b> is used to include only the part of the sequence that is
+        between position a and b, whereby a and b refer to the position
+        defined in the order variable.
+<p>
+    <i>tabulate_options</i> are any of the options documented in <b>tabulate oneway</b> or 
+        <b>tabulate twoway</b>.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ulrich Kohler, WZB, kohler@wzb.eu
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. sqtab</b>
+<p>
+    <b>. sqtab, so ranks(1/20)</b>
+<p>
+    <b>. sqtab, se nosort</b>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[D] tabulate</b>
+<p>
+    Online: <b>sq</b>, <b>sqdemo</b>, <b>sqset</b>, <b>sqdes</b>, <b>sqegen</b>, <b>sqstat</b>, <b>sqindexplot</b>, 
+             <b>sqparcoord</b>, <b>sqom</b>, <b>sqclusterdat</b>, <b>sqclustermat</b>
+</pre>

@@ -358,7 +358,7 @@ See {it:{help runmlwin##downloading_runmlwin:Remarks on {cmd:runmlwin} installat
 {pstd}
 A comprehensive range of {cmd:runmlwin} examples and a user forum are available at:
 
-{p 8 12 2}{browse "http://www.bristol.ac.uk/cmm/software/runmlwin":http://www.bristol.ac.uk/cmm/software/runmlwin}
+{p 8 12 2}{browse "https://www.bristol.ac.uk/cmm/software/runmlwin":https://www.bristol.ac.uk/cmm/software/runmlwin}
 
 
 {marker options}{...}
@@ -925,7 +925,7 @@ For example, it is not possible to see for how many iterations a model has been 
 
 {pmore}
 This option can also be used in conjunction with running Stata in batch mode in an environment without an interactive session. 
-Examples of this would be running Stata from a task scheduler (see {browse "http://www.stata.com/support/faqs/win/batch.html":http://www.stata.com/support/faqs/win/batch.html}) 
+Examples of this would be running Stata from a task scheduler (see {browse "https://www.stata.com/support/faqs/win/batch.html":https://www.stata.com/support/faqs/win/batch.html}) 
 or submitting jobs to a cluster.
 When this option is used any error messages produced by MLwiN are displayed in Stata after the model is run.
 
@@ -1047,7 +1047,7 @@ In order to get {cmd:runmlwin} working, you must:
 {pstd}
 If you don't have the latest version of MLwiN, visit:
 
-{p 8 12 2}{browse "http://www.bristol.ac.uk/cmm/software/mlwin":http://www.bristol.ac.uk/cmm/software/mlwin}. 
+{p 8 12 2}{browse "https://www.bristol.ac.uk/cmm/software/mlwin":https://www.bristol.ac.uk/cmm/software/mlwin}. 
 
 {pstd}
 MLwiN is free for UK academics (thanks to support from the UK Economic and Social Research Council).
@@ -1328,7 +1328,7 @@ Multilevel models are complex, often involving multiple sets of random effects a
 Users may sometimes run into MLwiN error messages.
 Help for a range of common MLwiN error messages are provided on the MLwiN website:
 
-{p 8 12 2}{browse "http://www.bristol.ac.uk/cmm/software/support/support-faqs/errors.html#errormessage":http://www.bristol.ac.uk/cmm/software/support/support-faqs/errors.html#errormessage}
+{p 8 12 2}{browse "https://www.bristol.ac.uk/cmm/software/support/support-faqs/errors.html#errormessage":https://www.bristol.ac.uk/cmm/software/support/support-faqs/errors.html#errormessage}
 {p_end}
 
 
@@ -1344,29 +1344,29 @@ See {it:{help runmlwin##downloading_runmlwin:Remarks on installing runmlwin}} ab
 {pstd}Two-level models{p_end}
     {hline}
 {pstd}Setup{p_end}
-{phang2}{bf:{stata "use http://www.bristol.ac.uk/cmm/media/runmlwin/tutorial, clear":. use http://www.bristol.ac.uk/cmm/media/runmlwin/tutorial, clear}}
+{phang2}{bf:{stata "use https://www.bristol.ac.uk/cmm/media/runmlwin/tutorial, clear":. use https://www.bristol.ac.uk/cmm/media/runmlwin/tutorial, clear}}
 
 {pstd}Two-level random-intercept model, analogous to xtreg (fitted using IGLS){break}
-{it:(See Section {browse "http://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.2.5":2.5} of the MLwiN User Manual)}{p_end}
+{it:(See Section {browse "https://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.2.5":2.5} of the MLwiN User Manual)}{p_end}
 {phang2}{bf:{stata "runmlwin normexam cons standlrt, level2(school: cons) level1(student: cons) nopause":. runmlwin normexam cons standlrt, level2(school: cons) level1(student: cons) nopause}}
 
 {pstd}Two-level random-intercept and random-slope (coefficient) model (fitted using IGLS){break}
-{it:(See Section {browse "http://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.4.4":4.4} of the MLwiN User Manual)}{p_end}
+{it:(See Section {browse "https://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.4.4":4.4} of the MLwiN User Manual)}{p_end}
 {phang2}{bf:{stata "runmlwin normexam cons standlrt, level2 (school: cons standlrt) level1 (student: cons) nopause":. runmlwin normexam cons standlrt, level2 (school: cons standlrt) level1 (student: cons) nopause}}
 
 {pstd}Refit the model, where this time we additionally calculate the level 2 residuals (fitted using IGLS){break}
-{it:(See Section {browse "http://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.4.4":4.4} of the MLwiN User Manual)}{p_end}
+{it:(See Section {browse "https://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.4.4":4.4} of the MLwiN User Manual)}{p_end}
 {phang2}{bf:{stata "runmlwin normexam cons standlrt, level2 (school: cons standlrt, residuals(u)) level1 (student: cons) nopause":. runmlwin normexam cons standlrt, level2 (school: cons standlrt, residuals(u)) level1 (student: cons) nopause}}
 
 {pstd}Two-level random-intercept and random-slope (coefficient) model with a complex level 1 variance function (fitted using IGLS){break}
-{it:(See Section {browse "http://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.7.3":7.3} of the MLwiN User Manual)}{p_end}
+{it:(See Section {browse "https://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.7.3":7.3} of the MLwiN User Manual)}{p_end}
 {phang2}{bf:{stata "matrix A = (1,1,0,0,0,1)":. matrix A = (1,1,0,0,0,1)}}{p_end}
 {phang2}{bf}{stata "runmlwin normexam cons standlrt girl, level2(school: cons standlrt) level1(student: cons standlrt girl, elements(A)) nopause":. runmlwin normexam cons standlrt girl,}
 {stata "runmlwin normexam cons standlrt girl, level2(school: cons standlrt) level1(student: cons standlrt girl, elements(A)) nopause":level2(school: cons standlrt) level1(student: cons standlrt girl, elements(A)) nopause}{sf}
 
 {pstd}Two-level random-intercept and random-slope (coefficient) model using MCMC
 (where we first fit the model using IGLS to obtain initial values for the MCMC chains){break}
-{it:(See Section {browse "http://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/mcmc-web.pdf#chapter.6":6.0} of the MLwiN MCMC Manual)}{p_end}
+{it:(See Section {browse "https://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/mcmc-web.pdf#chapter.6":6.0} of the MLwiN MCMC Manual)}{p_end}
 {phang2}{bf:{stata "runmlwin normexam cons standlrt, level2 (school: cons standlrt) level1 (student: cons) nopause":. runmlwin normexam cons standlrt, level2 (school: cons standlrt) level1 (student: cons) nopause}}{p_end}
 {phang2}{bf}{stata "runmlwin normexam cons standlrt, level2 (school: cons standlrt) level1 (student: cons) mcmc(on) initsprevious nopause":. runmlwin normexam cons standlrt,}
 {stata "runmlwin normexam cons standlrt, level2 (school: cons standlrt) level1 (student: cons) mcmc(on) initsprevious nopause":level2 (school: cons standlrt) level1 (student: cons) mcmc(on) initsprevious nopause}{sf}
@@ -1374,10 +1374,10 @@ See {it:{help runmlwin##downloading_runmlwin:Remarks on installing runmlwin}} ab
 {pstd}Multivariate response models{p_end}
     {hline}
 {pstd}Setup{p_end}
-{phang2}{bf:{stata "use http://www.bristol.ac.uk/cmm/media/runmlwin/gcsemv1, clear":. use http://www.bristol.ac.uk/cmm/media/runmlwin/gcsemv1, clear}}
+{phang2}{bf:{stata "use https://www.bristol.ac.uk/cmm/media/runmlwin/gcsemv1, clear":. use https://www.bristol.ac.uk/cmm/media/runmlwin/gcsemv1, clear}}
 
 {pstd}Random-intercept bivariate response model (fitted using IGLS){break}
-{it:(See Section {browse "http://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.14.3":14.3} of the MLwiN User Manual)}{p_end}
+{it:(See Section {browse "https://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.14.3":14.3} of the MLwiN User Manual)}{p_end}
 {phang2}{bf}{stata "runmlwin (written cons female, eq(1)) (csework cons female, eq(2)), level2(school: (cons, eq(1)) (cons, eq(2))) level1(student: (cons, eq(1)) (cons, eq(2))) nopause":. runmlwin (written cons female, eq(1))}
 {stata "runmlwin (written cons female, eq(1)) (csework cons female, eq(2)), level2(school: (cons, eq(1)) (cons, eq(2))) level1(student: (cons, eq(1)) (cons, eq(2))) nopause":(csework cons female,}
 {stata "runmlwin (written cons female, eq(1)) (csework cons female, eq(2)), level2(school: (cons, eq(1)) (cons, eq(2))) level1(student: (cons, eq(1)) (cons, eq(2))) nopause":eq(2)), level2(school: (cons, eq(1)) (cons, eq(2))) level1(student:}
@@ -1386,10 +1386,10 @@ See {it:{help runmlwin##downloading_runmlwin:Remarks on installing runmlwin}} ab
 {pstd}Cross-classified models{p_end}
     {hline}
 {pstd}Setup{p_end}
-{phang2}{bf:{stata "use http://www.bristol.ac.uk/cmm/media/runmlwin/xc, clear":. use http://www.bristol.ac.uk/cmm/media/runmlwin/xc, clear}}
+{phang2}{bf:{stata "use https://www.bristol.ac.uk/cmm/media/runmlwin/xc, clear":. use https://www.bristol.ac.uk/cmm/media/runmlwin/xc, clear}}
 
 {pstd}Two-way cross-classified model (fitted using MCMC where starting values for the MCMC chains are manually specified by the user){break}
-{it:(See Section {browse "http://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/mcmc-web.pdf#section.15.4":15.4} of the MLwiN MCMC Manual)}{p_end}
+{it:(See Section {browse "https://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/mcmc-web.pdf#section.15.4":15.4} of the MLwiN MCMC Manual)}{p_end}
 {phang2}{bf:{stata "matrix b = (0,.33,.33,.33)":. matrix b = (0,.33,.33,.33)}}{p_end}
 {phang2}{bf:{stata "runmlwin attain cons, level3(sid: cons) level2(pid: cons) level1(pupil: cons) mcmc(cc) initsb(b) nopause":. runmlwin attain cons, level3(sid: cons) level2(pid: cons) level1(pupil: cons) mcmc(cc) initsb(b) nopause}}
 
@@ -1399,18 +1399,18 @@ See {it:{help runmlwin##downloading_runmlwin:Remarks on installing runmlwin}} ab
 {pstd}Binary response multilevel models{p_end}
     {hline}
 {pstd}Setup{p_end}
-{bf}{phang2}{stata "use http://www.bristol.ac.uk/cmm/media/runmlwin/bang, clear":. use http://www.bristol.ac.uk/cmm/media/runmlwin/bang, clear}{p_end}
+{bf}{phang2}{stata "use https://www.bristol.ac.uk/cmm/media/runmlwin/bang, clear":. use https://www.bristol.ac.uk/cmm/media/runmlwin/bang, clear}{p_end}
 {phang2}{stata "generate lc1 = (lc==1)":. generate lc1 = (lc==1)}{p_end}
 {phang2}{stata "generate lc2 = (lc==2)":. generate lc2 = (lc==2)}{p_end}
 {phang2}{stata "generate lc3plus = (lc>=3)":. generate lc3plus = (lc>=3)}{sf}
 
 {pstd}Two-level random intercepts logit model (fitted using IGLS MQL1) {break}
-{it:(See Section {browse "http://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.9.3":9.3} of the MLwiN User Manual)}{p_end}
+{it:(See Section {browse "https://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.9.3":9.3} of the MLwiN User Manual)}{p_end}
 {phang2}{bf}{stata "runmlwin use cons lc1 lc2 lc3plus age, level2(district: cons) level1(woman) discrete(distribution(binomial) link(logit) denominator(cons)) nopause":. runmlwin use cons lc1 lc2 lc3plus age, level2(district: cons) level1(woman)}
 {stata "runmlwin use cons lc1 lc2 lc3plus age, level2(district: cons) level1(woman) discrete(distribution(binomial) link(logit) denominator(cons)) nopause":discrete(distribution(binomial) link(logit) denominator(cons)) nopause}{sf}
 
 {pstd}Two-level random intercepts logit model (fitted using IGLS PQl2 where IGLS MQL1 estimates from previous model are used as initial values){break}
-{it:(See Section {browse "http://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.9.3":9.3} of the MLwiN User Manual)}{p_end}
+{it:(See Section {browse "https://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.9.3":9.3} of the MLwiN User Manual)}{p_end}
 {phang2}{bf}{stata "runmlwin use cons lc1 lc2 lc3plus age, level2(district: cons) level1(woman) discrete(distribution(binomial) link(logit) denominator(cons) pql2) initsprevious nopause":. runmlwin use cons lc1 lc2 lc3plus age}
 {stata "runmlwin use cons lc1 lc2 lc3plus age, level2(district: cons) level1(woman) discrete(distribution(binomial) link(logit) denominator(cons) pql2) initsprevious nopause":, level2(district: cons)}
 {stata "runmlwin use cons lc1 lc2 lc3plus age, level2(district: cons) level1(woman) discrete(distribution(binomial) link(logit) denominator(cons) pql2) initsprevious nopause":level1(woman) discrete(distribution(binomial) link(logit)}
@@ -1422,7 +1422,7 @@ See {it:{help runmlwin##downloading_runmlwin:Remarks on installing runmlwin}} ab
 {stata "runmlwin use cons lc1 lc2 lc3plus age, level2(district: cons) level1(woman) discrete(distribution(binomial) link(probit) denominator(cons) pql2) nopause":discrete(distribution(binomial) link(probit) denominator(cons) pql2) nopause}{sf}
 
 {pstd}Two-level random intercepts probit model (fitted using MCMC where IGLS PQL2 estimates from previous model are used as initial values){break}
-{it:(See Section {browse "http://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/mcmc-web.pdf#section.10.2":10.2} of the MLwiN MCMC Manual)}{p_end}
+{it:(See Section {browse "https://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/mcmc-web.pdf#section.10.2":10.2} of the MLwiN MCMC Manual)}{p_end}
 {phang2}{bf}{stata "runmlwin use cons lc1 lc2 lc3plus age, level2(district: cons) level1(woman) discrete(distribution(binomial) link(probit) denominator(cons)) mcmc(on) initsprevious nopause":. runmlwin use cons lc1 lc2 lc3plus age,}
 {stata "runmlwin use cons lc1 lc2 lc3plus age, level2(district: cons) level1(woman) discrete(distribution(binomial) link(probit) denominator(cons)) mcmc(on) initsprevious nopause":level2(district: cons) level1(woman)}
 {stata "runmlwin use cons lc1 lc2 lc3plus age, level2(district: cons) level1(woman) discrete(distribution(binomial) link(probit) denominator(cons)) mcmc(on) initsprevious nopause":discrete(distribution(binomial) link(probit)}
@@ -1432,13 +1432,13 @@ See {it:{help runmlwin##downloading_runmlwin:Remarks on installing runmlwin}} ab
 {pstd}Unordered multinomial response models{p_end}
     {hline}
 {pstd}Setup{p_end}
-{bf}{phang2}{stata "use http://www.bristol.ac.uk/cmm/media/runmlwin/bang, clear":. use http://www.bristol.ac.uk/cmm/media/runmlwin/bang, clear}{p_end}
+{bf}{phang2}{stata "use https://www.bristol.ac.uk/cmm/media/runmlwin/bang, clear":. use https://www.bristol.ac.uk/cmm/media/runmlwin/bang, clear}{p_end}
 {phang2}{stata "generate lc1 = (lc==1)":. generate lc1 = (lc==1)}{p_end}
 {phang2}{stata "generate lc2 = (lc==2)":. generate lc2 = (lc==2)}{p_end}
 {phang2}{stata "generate lc3plus = (lc>=3)":. generate lc3plus = (lc>=3)}{sf}
 
 {pstd}Two-level random intercepts unordered multinomial model (fitted using IGLS MQL1) {break}
-{it:(See Section {browse "http://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.10.5":10.5} of the MLwiN User Manual)}{p_end}
+{it:(See Section {browse "https://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.10.5":10.5} of the MLwiN User Manual)}{p_end}
 {phang2}{bf}{stata "runmlwin use4 cons lc1 lc2 lc3plus, level2(district: cons) level1(woman) discrete(distribution(multinomial) link(mlogit) denom(cons) basecategory(4)) nopause":. runmlwin use4 cons lc1 lc2 lc3plus, level2(district: cons)}
 {stata "runmlwin use4 cons lc1 lc2 lc3plus, level2(district: cons) level1(woman) discrete(distribution(multinomial) link(mlogit) denom(cons) basecategory(4)) nopause":level1(woman) discrete(distribution(multinomial) link(mlogit) denom(cons)}
 {stata "runmlwin use4 cons lc1 lc2 lc3plus, level2(district: cons) level1(woman) discrete(distribution(multinomial) link(mlogit) denom(cons) basecategory(4)) nopause":basecategory(4)) nopause}{sf}
@@ -1446,7 +1446,7 @@ See {it:{help runmlwin##downloading_runmlwin:Remarks on installing runmlwin}} ab
 {pstd}Ordered multinomial response models{p_end}
     {hline}
 {pstd}Setup{p_end}
-{bf}{phang2}{stata "use http://www.bristol.ac.uk/cmm/media/runmlwin/alevchem, clear":. use http://www.bristol.ac.uk/cmm/media/runmlwin/alevchem, clear}{p_end}
+{bf}{phang2}{stata "use https://www.bristol.ac.uk/cmm/media/runmlwin/alevchem, clear":. use https://www.bristol.ac.uk/cmm/media/runmlwin/alevchem, clear}{p_end}
 {phang2}{stata "egen school = group(lea estab)":. egen school = group(lea estab)}{p_end}
 {phang2}{stata "generate gcseav =  gcse_tot/gcse_no":. generate gcseav =  gcse_tot/gcse_no}{p_end}
 {phang2}{stata "egen gcseav_rank = rank(gcseav)":. egen gcseav_rank = rank(gcseav)}{p_end}
@@ -1454,12 +1454,12 @@ See {it:{help runmlwin##downloading_runmlwin:Remarks on installing runmlwin}} ab
 {phang2}{stata "generate gcseavnormal = invnorm(gcseav_uniform)":. generate gcseavnormal = invnorm(gcseav_uniform)}{sf}
 
 {pstd}Two-level random intercepts ordered multinomial model with common coefficients for predictor variable gcseavnormal (fitted using IGLS PQL2){break}
-{it:(See Section {browse "http://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.11.4":11.4} of the MLwiN User Manual)}{p_end}
+{it:(See Section {browse "https://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.11.4":11.4} of the MLwiN User Manual)}{p_end}
 {phang2}{bf:. runmlwin a_point cons (gcseavnormal, contrast(1/5)), level2(school: (cons, contrast(1/5))) level1(pupil) discrete(distribution(multinomial) link(ologit) denom(cons) base(6) pql2) nopause}{p_end}
 {phang2}{it:({stata "runmlwin a_point cons (gcseavnormal, contrast(1/5)), level2(school: (cons, contrast(1/5))) level1(pupil) discrete(distribution(multinomial) link(ologit) denom(cons) base(6) pql2) nopause":Click to run})}
  
 {pstd}Two-level random intercepts ordered multinomial model with separate coefficients for predictor variable gcseavnormal (fitted using IGLS PQL2){break}
-{it:(See Section {browse "http://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.12.3":12.3} of the MLwiN User Manual)}{p_end}
+{it:(See Section {browse "https://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.12.3":12.3} of the MLwiN User Manual)}{p_end}
 {phang2}{bf}{stata "runmlwin a_point cons gcseavnormal, level2(school: (cons, contrast(1/5))) level1(pupil) discrete(distribution(multinomial) link(ologit) denom (cons) base(6) pql2) nopause":. runmlwin a_point cons gcseavnormal, }
 {stata "runmlwin a_point cons gcseavnormal, level2(school: (cons, contrast(1/5))) level1(pupil) discrete(distribution(multinomial) link(ologit) denom (cons) base(6) pql2) nopause":level2(school: (cons,}
 {stata "runmlwin a_point cons gcseavnormal, level2(school: (cons, contrast(1/5))) level1(pupil) discrete(distribution(multinomial) link(ologit) denom (cons) base(6) pql2) nopause":contrast(1/5))) level1(pupil) discrete(distribution(multinomial)}
@@ -1468,17 +1468,17 @@ See {it:{help runmlwin##downloading_runmlwin:Remarks on installing runmlwin}} ab
 {pstd}Count data model{p_end}
     {hline}
 {pstd}Setup{p_end}
-{bf}{phang2}{stata "use http://www.bristol.ac.uk/cmm/media/runmlwin/mmmec, clear":. use http://www.bristol.ac.uk/cmm/media/runmlwin/mmmec, clear}{p_end}
+{bf}{phang2}{stata "use https://www.bristol.ac.uk/cmm/media/runmlwin/mmmec, clear":. use https://www.bristol.ac.uk/cmm/media/runmlwin/mmmec, clear}{p_end}
 {phang2}{stata "generate lnexpected = ln(exp)":. generate lnexpected = ln(exp)}{sf}
 
 {pstd}Three-level random intercepts Poisson model (fitted using RIGLS MQL1) {break}
-{it:(See Section {browse "http://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.12.3":12.3} of the MLwiN User Manual)}{p_end}
+{it:(See Section {browse "https://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.12.3":12.3} of the MLwiN User Manual)}{p_end}
 {phang2}{bf}{stata "runmlwin obs cons uvbi, level3(nation: cons) level2(region: cons) level1(county) discrete(distribution(poisson) offset(lnexpected)) rigls nopause":. runmlwin obs cons uvbi, level3(nation: cons) }
 {stata "runmlwin obs cons uvbi, level3(nation: cons) level2(region: cons) level1(county) discrete(distribution(poisson) offset(lnexpected)) rigls nopause":level2(region: cons) level1(county)}
 {stata "runmlwin obs cons uvbi, level3(nation: cons) level2(region: cons) level1(county) discrete(distribution(poisson) offset(lnexpected)) rigls nopause":discrete(distribution(poisson) offset(lnexpected)) rigls nopause}{sf}
 
 {pstd}Three-level random intercepts Poisson model (fitted using MCMC where IGLS MQL1 estimates from previous model are used as initial values){break}
-{it:(See Section {browse "http://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/mcmc-web.pdf#section.11.3":11.3} of the MLwiN MCMC Manual)}{p_end}
+{it:(See Section {browse "https://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/mcmc-web.pdf#section.11.3":11.3} of the MLwiN MCMC Manual)}{p_end}
 {phang2}{bf:. runmlwin obs cons uvbi, level3(nation: cons) level2(region: cons) level1(county) discrete(distribution(poisson) offset(lnexpected)) mcmc(burnin(5000) chain(50000) refresh(500)) initsprevious nopause}{p_end}
 {phang2}{it:({stata "runmlwin obs cons uvbi, level3(nation: cons) level2(region: cons) level1(county) discrete(distribution(poisson) offset(lnexpected)) mcmc(burnin(5000) chain(50000) refresh(500)) initsprevious nopause":Click to run})}
 
@@ -1488,19 +1488,19 @@ See {it:{help runmlwin##downloading_runmlwin:Remarks on installing runmlwin}} ab
 {pstd}Multivariate discrete and mixed response models{p_end}
     {hline}
 {pstd}Setup{p_end}
-{bf}{phang2}{stata "use http://www.bristol.ac.uk/cmm/media/runmlwin/tutorial, clear":. use http://www.bristol.ac.uk/cmm/media/runmlwin/tutorial, clear}{p_end}
+{bf}{phang2}{stata "use https://www.bristol.ac.uk/cmm/media/runmlwin/tutorial, clear":. use https://www.bristol.ac.uk/cmm/media/runmlwin/tutorial, clear}{p_end}
 {phang2}{stata "generate binexam = (normexam>0)":. generate binexam = (normexam>0)}{p_end}
 {phang2}{stata "generate binlrt = (standlrt>0)":. generate binlrt = (standlrt>0)}{sf}
 
 {pstd}Two-level bivariate binary response probit model (fitted using IGLS MQL1) {break}
-{it:(See Section {browse "http://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.14.5":14.5} of the MLwiN User Manual)}{p_end}
+{it:(See Section {browse "https://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.14.5":14.5} of the MLwiN User Manual)}{p_end}
 {phang2}{bf}{stata "runmlwin (binexam cons, equation(1)) (binlrt cons, equation(2)), level1(student:) discrete(distribution(binomial binomial) link(probit) denominator(cons cons)) nosort nopause":. runmlwin (binexam cons, equation(1)) }
 {stata "runmlwin (binexam cons, equation(1)) (binlrt cons, equation(2)), level1(student:) discrete(distribution(binomial binomial) link(probit) denominator(cons cons)) nosort nopause":(binlrt cons, equation(2)), level1(student:) }
 {stata "runmlwin (binexam cons, equation(1)) (binlrt cons, equation(2)), level1(student:) discrete(distribution(binomial binomial) link(probit) denominator(cons cons)) nosort nopause":discrete(distribution(binomial binomial) }
 {stata "runmlwin (binexam cons, equation(1)) (binlrt cons, equation(2)), level1(student:) discrete(distribution(binomial binomial) link(probit) denominator(cons cons)) nosort nopause":link(probit) denominator(cons cons)) nosort nopause}{sf}
  
 {pstd}Two-level mixed bivariate continuous and binary response probit model (fitted using IGLS MQL1) {break}
-{it:(See Section {browse "http://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.14.5":14.5} of the MLwiN User Manual)}{p_end}
+{it:(See Section {browse "https://www.bristol.ac.uk/cmm/software/mlwin/download/2-26/manual-web.pdf#section.14.5":14.5} of the MLwiN User Manual)}{p_end}
 {phang2}{bf:. runmlwin (normexam cons, equation(1)) (binlrt cons, equation(2)), level1(student:(cons, equation(1)) (cons, equation(2))) discrete(distribution(normal binomial) link(probit) denominator(cons cons)) nosort nopause}{p_end}
 {phang2}
 {it:({stata "runmlwin (normexam cons, equation(1)) (binlrt cons, equation(2)), level1(student:(cons, equation(1)) (cons, equation(2))) discrete(distribution(normal binomial) link(probit) denominator(cons cons)) nosort nopause":Click to run})}
@@ -1510,7 +1510,7 @@ See {it:{help runmlwin##downloading_runmlwin:Remarks on installing runmlwin}} ab
 {pstd}
 A full range of {cmd:runmlwin} examples using both (R)IGLS and MCMC is available at:
 
-{p 8 12 2}{browse "http://www.bristol.ac.uk/cmm/software/runmlwin/examples/":http://www.bristol.ac.uk/cmm/software/runmlwin/examples/}
+{p 8 12 2}{browse "https://www.bristol.ac.uk/cmm/software/runmlwin/examples/":https://www.bristol.ac.uk/cmm/software/runmlwin/examples/}
 
 {pstd}
 These include do-files which allow you to replicate all the analyses reported in the MLwiN User Manual (Rasbash et al., 2012)
@@ -1521,51 +1521,51 @@ The log files for these two manuals are presented below.
 
 {pstd}MLwiN User Manual{p_end}
 {phang2}1 - Introducing Multilevel Models{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/2_Introduction_to_Multilevel_Modelling.do":2 - Introduction to Multilevel Modelling}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/3_Residuals.do":3 - Residuals}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/4_Random_Intercept_and_Random_Slope_Models.log":4 - Random Intercept and Random Slope Models}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/5_Graphical_Procedures_for_Exploring the Model.log":5 - Graphical Procedures for Exploring the Model}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/6_Contextual_Effects.log":6 - Contextual Effects}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/7_Modelling_the_Variance_as_a_Function_of_Explanatory_Variables.log":7 - Modelling the Variance as a Function of Explanatory Variables}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/8_Getting_Started_with_your_Data.log":8 - Getting Started with your Data}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/9_Logistic_Models_for_Binary_and_Binomial_Responses.log":9 - Logistic Models for Binary and Binomial Responses}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/10_Multinomial_Logistic_Models_for_Unordered_Categorical_Responses.log":10 - Multinomial Logistic Models for Unordered Categorical Responses}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/11_Fitting_an_Ordered_Category_Response_Model.log":11 - Fitting an Ordered Category Response Model}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/12_Modelling_Count_Data.log":12 - Modelling Count Data}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/13_Fitting_Models_to_Repeated_Measures_Data.log":13 - Fitting Models to Repeated Measures Data}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/14_Multivariate_Response_Models.log":14 - Multivariate Response Models}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/15_Diagnostics_for_Multilevel_Models.log":15 - Diagnostics for Multilevel Models}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/16_An_Introduction_to_Simulation_Methods_of_Estimation.log":16 - An Introduction to Simulation Methods of Estimation}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/2_Introduction_to_Multilevel_Modelling.do":2 - Introduction to Multilevel Modelling}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/3_Residuals.do":3 - Residuals}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/4_Random_Intercept_and_Random_Slope_Models.log":4 - Random Intercept and Random Slope Models}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/5_Graphical_Procedures_for_Exploring the Model.log":5 - Graphical Procedures for Exploring the Model}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/6_Contextual_Effects.log":6 - Contextual Effects}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/7_Modelling_the_Variance_as_a_Function_of_Explanatory_Variables.log":7 - Modelling the Variance as a Function of Explanatory Variables}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/8_Getting_Started_with_your_Data.log":8 - Getting Started with your Data}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/9_Logistic_Models_for_Binary_and_Binomial_Responses.log":9 - Logistic Models for Binary and Binomial Responses}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/10_Multinomial_Logistic_Models_for_Unordered_Categorical_Responses.log":10 - Multinomial Logistic Models for Unordered Categorical Responses}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/11_Fitting_an_Ordered_Category_Response_Model.log":11 - Fitting an Ordered Category Response Model}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/12_Modelling_Count_Data.log":12 - Modelling Count Data}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/13_Fitting_Models_to_Repeated_Measures_Data.log":13 - Fitting Models to Repeated Measures Data}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/14_Multivariate_Response_Models.log":14 - Multivariate Response Models}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/15_Diagnostics_for_Multilevel_Models.log":15 - Diagnostics for Multilevel Models}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/16_An_Introduction_to_Simulation_Methods_of_Estimation.log":16 - An Introduction to Simulation Methods of Estimation}{p_end}
 {phang2}17 - Bootstrap Estimation{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/18_Modelling_Cross-classified_Data.log":18 - Modelling Cross-classified Data}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/18_Modelling_Cross-classified_Data.log":18 - Modelling Cross-classified Data}{p_end}
 {phang2}19 - Multiple Membership Models{p_end}
 
 {pstd}MLwiN MCMC Manual{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/1_Introduction_to_MCMC_Estimation_and_Bayesian_Modelling.log":1 - Introduction to MCMC Estimation and Bayesian Modelling}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/2_Single_Level_Normal_Response_Modelling.log":2 - Single Level Normal Response Modelling}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/3_Variance_Components_Models.log":3 - Variance Components Models}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/4_Other_Features_of_Variance_Components_Models.log":4 - Other Features of Variance Components Models}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/5_Prior_Distributions,_Starting_Values_and_Random_Number_Seeds.log":5 - Prior Distributions, Starting Values and Random Number Seeds}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/6_Random_Slopes_Regression_Models.log":6 - Random Slopes Regression Models}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/7_Using_the_WinBUGS_Interface_in_MLwiN.log":7 - Using the WinBUGS Interface in MLwiN}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/8_Running_a_Simulation_Study_in_MLwiN.log":8 - Running a Simulation Study in MLwiN}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/9_Modelling_Complex_Variance_at_Level_1_Heteroscedasticity.log":9 - Modelling Complex Variance at Level 1 - Heteroscedasticity}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/10_Modelling_Binary_Responses.log":10 - Modelling Binary Responses}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/11_Poisson_Response_Modelling.log":11 - Poisson Response Modelling}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/12_Unordered_Categorical_Responses.log":12 - Unordered Categorical Responses}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/13_Ordered_Categorical_Responses.log":13 - Ordered Categorical Responses}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/14_Adjusting_for_Measurement_Errors_in_Predictor_Variables.log":14 - Adjusting for Measurement Errors in Predictor Variables}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/15_Cross_Classified_Models.log":15 - Cross Classified Models}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/16_Multiple_Membership_Models.log":16 - Multiple Membership Models}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/17_Modelling_Spatial_Data.log":17 - Modelling Spatial Data}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/18_Multivariate_Normal_Response_Models_and_Missing_Data.log":18 - Multivariate Normal Response Models and Missing Data}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/19_Mixed_Response_Models_and_Correlated_Residuals.log":19 - Mixed Response Models and Correlated Residuals}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/20_Multilevel_Factor_Analysis_Modelling.log":20 - Multilevel Factor Analysis Modelling}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/21_Using_Structured_MCMC.log":21 - Using Structured MCMC}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/22_Using_the_Structured_MVN_framework_for_models.log":22 - Using the Structured MVN framework for models}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/23_Using_Orthogonal_fixed_effect_vectors.log":23 - Using Orthogonal fixed effect vectors}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/24_Parameter_expansion.log":24 - Parameter expansion}{p_end}
-{phang2}{stata "view http://www.bristol.ac.uk/cmm/media/runmlwin/25_Hierarchical_Centring.log":25 - Hierarchical Centring}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/1_Introduction_to_MCMC_Estimation_and_Bayesian_Modelling.log":1 - Introduction to MCMC Estimation and Bayesian Modelling}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/2_Single_Level_Normal_Response_Modelling.log":2 - Single Level Normal Response Modelling}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/3_Variance_Components_Models.log":3 - Variance Components Models}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/4_Other_Features_of_Variance_Components_Models.log":4 - Other Features of Variance Components Models}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/5_Prior_Distributions,_Starting_Values_and_Random_Number_Seeds.log":5 - Prior Distributions, Starting Values and Random Number Seeds}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/6_Random_Slopes_Regression_Models.log":6 - Random Slopes Regression Models}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/7_Using_the_WinBUGS_Interface_in_MLwiN.log":7 - Using the WinBUGS Interface in MLwiN}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/8_Running_a_Simulation_Study_in_MLwiN.log":8 - Running a Simulation Study in MLwiN}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/9_Modelling_Complex_Variance_at_Level_1_Heteroscedasticity.log":9 - Modelling Complex Variance at Level 1 - Heteroscedasticity}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/10_Modelling_Binary_Responses.log":10 - Modelling Binary Responses}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/11_Poisson_Response_Modelling.log":11 - Poisson Response Modelling}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/12_Unordered_Categorical_Responses.log":12 - Unordered Categorical Responses}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/13_Ordered_Categorical_Responses.log":13 - Ordered Categorical Responses}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/14_Adjusting_for_Measurement_Errors_in_Predictor_Variables.log":14 - Adjusting for Measurement Errors in Predictor Variables}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/15_Cross_Classified_Models.log":15 - Cross Classified Models}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/16_Multiple_Membership_Models.log":16 - Multiple Membership Models}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/17_Modelling_Spatial_Data.log":17 - Modelling Spatial Data}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/18_Multivariate_Normal_Response_Models_and_Missing_Data.log":18 - Multivariate Normal Response Models and Missing Data}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/19_Mixed_Response_Models_and_Correlated_Residuals.log":19 - Mixed Response Models and Correlated Residuals}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/20_Multilevel_Factor_Analysis_Modelling.log":20 - Multilevel Factor Analysis Modelling}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/21_Using_Structured_MCMC.log":21 - Using Structured MCMC}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/22_Using_the_Structured_MVN_framework_for_models.log":22 - Using the Structured MVN framework for models}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/23_Using_Orthogonal_fixed_effect_vectors.log":23 - Using Orthogonal fixed effect vectors}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/24_Parameter_expansion.log":24 - Parameter expansion}{p_end}
+{phang2}{stata "view https://www.bristol.ac.uk/cmm/media/runmlwin/25_Hierarchical_Centring.log":25 - Hierarchical Centring}{p_end}
  
  
 {marker saved_results}{...}
@@ -1670,7 +1670,7 @@ The Centre has been based at the University of Bristol since 2005.
 {pstd}
 The Centre’s website:
 
-{p 8 12 2}{browse "http://www.bristol.ac.uk/cmm":http://www.bristol.ac.uk/cmm}
+{p 8 12 2}{browse "https://www.bristol.ac.uk/cmm":https://www.bristol.ac.uk/cmm}
 
 {pstd}
 contains much of interest, including new developments, and details of courses and workshops.
@@ -1680,7 +1680,7 @@ maintenance downloads, and documentation.
 {pstd}
 The Centre also runs a free online multilevel modelling course:
 
-{p 8 12 2}{browse "http://www.bristol.ac.uk/cmm/learning/course.html":http://www.bristol.ac.uk/cmm/learning/course.html}
+{p 8 12 2}{browse "https://www.bristol.ac.uk/cmm/learning/course.html":https://www.bristol.ac.uk/cmm/learning/course.html}
 
 {pstd}
 which contains modules starting from an introduction to quantitative research progressing to multilevel modelling of 
@@ -1698,7 +1698,7 @@ Please cite it as such:
 
 {p 8 12 2}
 Leckie, G. and Charlton, C. 2013. {cmd:runmlwin} - A Program to Run the MLwiN Multilevel Modelling Software from within Stata. Journal of Statistical Software, 52 (11),1-40.{break}
-{browse "http://www.jstatsoft.org/v52/i11":http://www.jstatsoft.org/v52/i11}
+{browse "https://www.jstatsoft.org/v52/i11":https://www.jstatsoft.org/v52/i11}
 
 {pstd}Similarly, please also cite the MLwiN software:
 
@@ -1718,7 +1718,7 @@ Browne, W.J. 2012. MCMC Estimation in MLwiN, v2.26. Centre for Multilevel Modell
 {pstd}Please use the {cmd:runmlwin} user forum to post any questions you have about {cmd:runmlwin}.
 We will try to answer your questions as quickly as possible, but where you know the answer to another user's question please also reply to them!
 
-{p 8 12 2}{browse "http://www.cmm.bristol.ac.uk/forum/viewforum.php?f=3":http://www.cmm.bristol.ac.uk/forum/}
+{p 8 12 2}{browse "https://www.cmm.bristol.ac.uk/forum/viewforum.php?f=3":https://www.cmm.bristol.ac.uk/forum/}
 
 
 {marker authors}{...}
@@ -1757,18 +1757,18 @@ Users are also encouraged to check their results with those produced by other st
 
 {p 4 8 2}
 Browne, W.J. 2012. MCMC Estimation in MLwiN, v2.26.  Centre for Multilevel Modelling, University of Bristol.{break}
-{browse "http://www.bristol.ac.uk/cmm/software/mlwin/download/manuals.html":http://www.bristol.ac.uk/cmm/software/mlwin/download/manuals.html}
+{browse "https://www.bristol.ac.uk/cmm/software/mlwin/download/manuals.html":https://www.bristol.ac.uk/cmm/software/mlwin/download/manuals.html}
 
 {p 4 8 2}
 Leckie, G. and Charlton, C. 2013. {cmd:runmlwin} - A Program to Run the MLwiN Multilevel Modelling Software from within Stata. Journal of Statistical Software, 52 (11),1-40.{break}
-{browse "http://www.jstatsoft.org/v52/i11":http://www.jstatsoft.org/v52/i11}
+{browse "https://www.jstatsoft.org/v52/i11":https://www.jstatsoft.org/v52/i11}
 
 {p 4 8 2}
 Rabe-Hesketh, S. and Skrondal, A. 2012. Multilevel and Longitudinal Modeling using Stata (Third Edition). College Station, TX: Stata Press.
 
 {p 4 8 2}
 Rasbash, J., Steele, F., Browne, W.J. and Goldstein, H. 2012. A User’s Guide to MLwiN, v2.26. Centre for Multilevel Modelling, University of Bristol.{break}
-{browse "http://www.bristol.ac.uk/cmm/software/mlwin/download/manuals.html":http://www.bristol.ac.uk/cmm/software/mlwin/download/manuals.html}
+{browse "https://www.bristol.ac.uk/cmm/software/mlwin/download/manuals.html":https://www.bristol.ac.uk/cmm/software/mlwin/download/manuals.html}
 
 
 {title:Also see}

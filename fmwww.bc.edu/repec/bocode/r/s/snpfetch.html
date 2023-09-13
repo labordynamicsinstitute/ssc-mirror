@@ -1,0 +1,75 @@
+<pre>
+<b>help snpfetch</b>                                                    (version 1.2) 
+Daniel Elwood Cook {Danielecook@gmail.com}                   www.Elwoodcook.com
+-------------------------------------------------------------------------------
+<p>
+    <b>snpfetch</b>--<b> Retreive information from dbSNP for a set of SNP id's. The</b>
+    <b>following information is retrieved:</b>
+<p>
+         Gene Name
+         Gene ID
+         Chromosome
+         Base Pair Position
+         Alleles
+         Heterozygosity
+         Locus type
+         Orientation of Strand
+         Species
+         Validated SNP
+         Minimum Probability
+         Maximum Probability
+<p>
+<a name="syntax"></a><b><u>Syntax</u></b>
+<p>
+    <b>snpfetch</b> rs_list <i>, bundle(integer)</i> <i>assembly(string)</i>
+<p>
+<a name="description"></a><b><u>Description</u></b>
+<p>
+    <b>snpfetch</b> uses the efetch utilities provided by the NCBI (National Center
+    for Biotechnology Information) to retrieve information for a given list
+    of SNPs (Single Nucleotide Polymorphims).
+<p>
+    You should use <b>snpfetch</b> for data management/retrieval purposes primarily.
+    It creates several variables with set names and fills them with data. It
+    will <b>overwrite</b> pre-existing data in these variables.
+<p>
+    (example: Gene_ID, Chr_ID, Alleles).
+<p>
+    Ideally, you'll use this plugin to annotate a dataset you have by running
+    it on only the set of snps from the set and merging or by taking care
+    with the names of the variables in your set.
+<p>
+    <b>snpfetch</b> can handle duplicates.
+<p>
+<p>
+<p>
+<a name="usage"></a><b><u>Usage</u></b>
+<p>
+    Follow the command with the name of a variable specifying a list of SNPs.
+    Your list can be numeric, ignoring the rs prefix, or a string with or
+    without the rs prefix.
+<p>
+    <b>snpfetch</b> will work with both and download a large amount of data for each
+    set.
+<p>
+    The option<b> bundle</b> can be used to adjust how many records Stata will
+    attempt to download at once.<b>  snpfetch</b> works by downloading a set of
+    records for your list of snps, parsing each set out, add the data to your
+    dataset, and move onto the next set. This was necessary due to string
+    length limitations within Stata.
+<p>
+    The option<b> assembly</b> can be used to specify different reference assemblies
+    to retrieve data from. If not specified, the assembly is set to
+    "GRCh37.p5" (This is the latest human reference assemblies).
+<p>
+    <b>Important!</b> If you are retrieving data for organisms other than humans,
+    you must specify the name of the assembly.
+<p>
+    For more information on assemblies, see:
+<p>
+    GRCh37.p5 -
+    http://www.ncbi.nlm.nih.gov/projects/genome/assembly/grc/human/
+<p>
+    HuRef - http://huref.jcvi.org/
+<p>
+</pre>

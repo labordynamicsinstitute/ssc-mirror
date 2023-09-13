@@ -1,0 +1,96 @@
+<pre>
+<b>help spmat summarize</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>spmat summarize</b> -- Summarize the spatial-weighting matrix <b>W</b> contained in
+                         an <b>spmat</b> object
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>spmat</b> <b><u>su</u></b><b>mmarize</b> <i>objname</i> [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>                       Description
+    -------------------------------------------------------------------------
+      <b><u>li</u></b><b>nks</b>                       report links
+      <b><u>det</u></b><b>ail</b>                      display detailed summary of links
+      <b><u>band</u></b><b>ed</b>                      display banded information
+      <b><u>btr</u></b><b>uncate(</b><i>b B</i><b>)</b>              bin truncation
+      <b><u>dtr</u></b><b>uncate(</b><i>l u</i><b>)</b>              diagonal truncation
+      <b><u>vtr</u></b><b>uncate(</b><i>#</i><b>)</b>                value truncation
+    -------------------------------------------------------------------------
+    Only one of <b>banded</b>, <b>btruncate()</b>, <b>dtruncate()</b>, or <b>vtruncate()</b> may be
+      specified.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>spmat summarize</b> summarizes the spatial-weighting matrix <b>W</b> contained in
+    the <b>spmat</b> object <i>objname</i>.  If the object contains an <i>n</i> x <i>n</i> matrix, the
+    user can optionally request summary statistics that show whether the
+    matrix can be stored in a banded form.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>links</b> requests that <b>spmat summarize</b> reports links rather than the default
+        values.  This option is useful for summarizing contiguity matrices.
+<p>
+    <b>detail</b> requests a detailed tabulation of links.  <b>detail</b> will also display
+        IDs of observations with the minimum and maximum number of links.
+<p>
+    <b>banded</b> reports the bands for the matrix that has already a (possibly)
+        banded structure but is stored in an <i>n</i> x <i>n</i> form.
+<p>
+    <b>truncate()</b> options report the bands for the matrix after its values have
+        been changed to zero according to one of the truncation criterion.
+<p>
+        <b>btruncate(</b><i>b B</i><b>)</b> partitions the values of <b>W</b> into <i>B</i> bins and truncates
+        to zero those entries that fall into bin <i>b</i> or below.
+<p>
+        <b>dtruncate(</b><i>l u</i><b>)</b> truncates to zero the values of <b>W</b> that fall <i>l</i>
+        diagonals below and <i>u</i> diagonals above the main diagonal.  Neither
+        value can be greater than <b>floor((cols(W)-1)/4)</b>.
+<p>
+        <b>vtruncate(</b><i>#</i><b>)</b> truncates to zero the values of <b>W</b> that are less than or
+        equal to #.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    Setup
+        <b>. spmat use cobj using pollute.spmat</b>
+<p>
+    Summarize the contiguity matrix contained in the spmat object <b>cobj</b>
+        <b>. spmat summarize cobj, links</b>
+<p>
+<p>
+<a name="saved_results"></a><b><u>Saved results</u></b>
+<p>
+    <b>spmat summarize</b> saves the following in <b>r()</b>:
+<p>
+    Scalars        
+      <b>r(b)</b>                number of rows in <b>W</b>
+      <b>r(n)</b>                number of columns in <b>W</b>
+      <b>r(lband)</b>            lower band of <b>W</b>
+      <b>r(uband)</b>            upper band of <b>W</b>
+      <b>r(min)</b>              minimum of <b>W</b>
+      <b>r(min0)</b>             minimum element &gt; 0 in <b>W</b>
+      <b>r(mean)</b>             mean of <b>W</b>
+      <b>r(max)</b>              maximum of <b>W</b>
+      <b>r(lmin)</b>             minimum number of neighbors in <b>W</b>
+      <b>r(lmean)</b>            mean number of neighbors in <b>W</b>
+      <b>r(lmax)</b>             maximum number of neighbors in <b>W</b>
+      <b>r(ltotal)</b>           total number of neighbors in <b>W</b>
+      <b>r(eig)</b>              <b>1</b> if object contains eigenvalues, <b>0</b> otherwise
+      <b>r(canband)</b>          <b>1</b> if <b>W</b> can be banded based on <b>r(lband)</b> and
+                            <b>r(uband)</b>, <b>0</b> otherwise
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>spmat</b>, <b>spreg</b>, <b>spivreg</b>, <b>spmap</b>, <b>shp2dta</b>, <b>mif2dta</b> (if installed)
+<p>
+</pre>

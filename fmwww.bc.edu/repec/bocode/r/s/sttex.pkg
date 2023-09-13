@@ -1,0 +1,29 @@
+d 'STTEX': module to integrate Stata results into a LaTeX document
+d
+d  sttex- is a command to process a LaTeX source file containing
+d blocks of Stata code. -sttex. will extract the Stata commands
+d into a do-file, run the do-file, and then weave the LaTeX source
+d and the Stata output into a target LaTeX document. Optionally,
+d -sttex- also typesets the LaTeX document and displays the
+d resulting PDF. Various tags can be used within the LaTeX source
+d file to define the information that will be processed by -sttex-.
+d A main feature of -sttex- is that it detects whether Stata code
+d changed between calls. If the code did not change, execution of
+d Stata commands will be skipped to save computer time. It is also
+d possible to partition a source file into independent sections,
+d such that only the sections affected by changes will be executed. d
+d KW:  LaTeX
+d KW: dynamic document
+d KW: weaving
+d KW: Stata output
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20221018
+d
+d Author: Ben Jann, University of Bern
+d Support: email jann@@soz.unibe.ch
+d
+f sttex.ado
+f sttex.sthlp
+f sttex.zip

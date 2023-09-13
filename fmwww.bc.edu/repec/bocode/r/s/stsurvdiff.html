@@ -1,0 +1,65 @@
+<pre>
+<b>help stsurvdiff</b> 
+                                                        also see:  sts generate
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>stsurvdiff</b> -- Difference between two Kaplan-Meier survival curves
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>stsurvdiff</b> <i>varname</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+<p>
+    <i>options</i>                        Description
+    -------------------------------------------------------------------------
+      <b><u>g</u></b><b>enerate(</b><i>stubname</i><b>)</b>           defines the stub-name for variables
+                                     containing results created by <b>stsurvdiff</b>
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>                     sets the confidence level of the CI for
+                                     the difference in survival curves
+      <b><u>s</u></b><b>mooth</b>                       smooths the difference and its standard
+                                     error as a function of time (<b>_t</b>)
+    -------------------------------------------------------------------------
+<p>
+    You must <b>stset</b> your data before using <b>stsurvdiff</b>; see <b>[ST] stset</b>.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>stsurvdiff</b> computes the difference in the Kaplan-Meier survival curves,
+    and a pointwise confidence interval, at the two levels of a binary
+    "treatment" variable, <i>varname</i>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>generate(</b><i>stubname</i><b>)</b> defines the stub-name for variables containing results
+        created by <b>stsurvdiff</b>. For example, if <i>stubname</i> is <b>diff</b>, four new
+        variables are created, with names <b>diff</b>, <b>diff_se</b>, <b>diff_lci</b> and
+        <b>diff_uci</b>, respectively.
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the percent confidence level for the pointwise
+        confidence interval of the difference in survival functions. The
+        default <i>#</i> is 95%.
+<p>
+    <b>smooth</b> applies a running-line smooth (see running) to the difference in
+        survival curves and its standard error.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>. stsurvdiff treat</b>
+        <b>. stsurvdiff treat, generate(diff) level(99) smooth</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Patrick Royston, MRC Clinical Trials Unit, London, UK.  (
+    pr@ctu.mrc.ac.uk)
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

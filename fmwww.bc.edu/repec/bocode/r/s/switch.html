@@ -1,0 +1,41 @@
+<pre>
+<b>help switch</b>                                                      also see:  if 
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>switch</b> --   Specifiy corresponding values to evaluated cases (more
+                  efficient than consecutive <i>if</i> statements)
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>switch</b> {anything} <b>,</b> <b><u>ca</u></b><b>ses(</b><i>string</i><b>)</b> <b><u>val</u></b><b>ues(</b><i>string</i><b>)</b>
+<p>
+    <i>options</i>                Description
+    -------------------------------------------------------------------------
+      <b><u>ca</u></b><b>ses(</b><i>string</i><b>)</b>        the possible cases given to {opth switch},
+                             separated by a space.
+      <b><u>val</u></b><b>ues(</b><i>string</i><b>)</b>       the matching values (in corresponding order) to
+                             the cases supplied, separated by a space.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>switch</b> matches a given variable case to a given case-value set and stores
+    the result (the matching value) in a local variable called <i>switch_return</i>.
+    If no match is made, the local variable <i>switch_return</i> is set to (string)
+    <i>no_swatch</i>.
+<p>
+<b><u>Examples</u></b>
+<p>
+    ---------------------------------------------------------------------------
+    <b>. switch C, cases(A B C) values(20 30 40)</b>
+    switch matched C to a value of 40
+    ---------------------------------------------------------------------------
+    <b>. switch _8A, cases(_8A 50 _$_) values(1 2 3)</b>
+    switch matched _8A to a value of 1
+    ---------------------------------------------------------------------------
+    <b>. switch 100, cases(_8A 50 _$_) values(1 2 3)</b>
+    switch found no matching value for 100
+    ---------------------------------------------------------------------------
+</pre>

@@ -1,0 +1,99 @@
+<pre>
+<p>
+^sf36v2^ program
+___________________
+<p>
+<p>
+sf36v2 calculates the ^SF36 version 2 score^ (SF36) from your records
+<p>
+-------------------------------------------------------------------------------
+&gt; ----------
+^DISCLAIMER^: 
+Terms and Conditions for Using the 36-Item Short Form Health Survey apply
+In order to use the SF-36 Health Survey and scoring algorithms you must registe
+&gt; r at:
+http://www.qualitymetric.com/DefaultPermissions/RequestInformation/tabid/233/De
+&gt; fault.aspx
+Every effort is made to test code as thoroughly as possible but user must accep
+&gt; t
+responsibility for use
+-------------------------------------------------------------------------------
+&gt; ----------
+<p>
+<p>
+Syntax: 
+<p>
+^sf36v2^ , acute ref(population) fsc(year) details suffix(text) 
+<p>
+^acute^ specifies that the data refer to acute (1 week recall) form of the SF36
+&gt;  score 
+        If this option is not specified, the score is used assuming that the da
+&gt; ta have
+        been collected using the standard (4 week recall) form
+<p>
+^ref(^population^)^ can be used to specify the reference population and year
+                                        default reference population is US 1998
+&gt; . The program supports
+                                        US 1998 and JP 2002 reference populatio
+&gt; ns 
+                
+^fsc(^year^) can be used to specify which factor score coefficients have to be 
+&gt; used
+             for the computation of the physical and mental component score. De
+&gt; fault
+                         coefficients are 1990 coefficients
+<p>
+^details^ will produce a table with the norms and factor score coeffients which
+          have been used for the calculation                     
+<p>
+^suffix(^text^)^ allows use of suffixes to the variable names specified below
+ 
+                  
+Examples: 
+<p>
+^sf36v2^, ref(US 1998)  
+^sf36v2^, acute d
+^sf36v2^, ref(JP 2002) FCS(1995) suf(1y)                                       
+&gt;              
+<p>
+<p>
+Note:
+The variables containing the information for the calculation need first to be 
+named as defined below. Suffixes may be specified as wished (see options above)
+&gt; . 
+<p>
+PF01-PF10: Physical Functioning Questions 1-10
+RP01-RP04: Role-Physical Questions 1-4
+BP01-BP02: Bodily Pain Questions 1-2
+GH01-GH05: General Health Questions 1-5
+VT01-VT04: Vitality Questions 1-4
+SF01-SF02: Social Functioning Questions 1-2
+RE01-RE03: Role-Emotional Questions 1-3
+MH01-MH05: Mental Health Questions 1-5
+HT: Reported Health Transition
+<p>
+<p>
+Treatment of Missing Data:
+A scale score is calculated if a respondent answered at least half of the items
+&gt;  in 
+a multi-item scale (or half plus one in case of odd nr. of items)
+<p>
+<p>
+<p>
+References and norms: 
+<p>
+US norms according to:
+Ware JE, Kosinski M, Dewey JE. How to Score Version 2 of the SF-36 (R) Health S
+&gt; urvey. 
+Lincon, RI: QualityMetric Incorporated, 2000.
+<p>
+Japanese norms according to:
+Fukuhara S, Suzukamo Y. Manual of SF-36v2 Japanese version: Institute for Healt
+&gt; h 
+Outcomes &amp; Process Evaluation Research, Kyoto, 2004
+<p>
+________________________________________________________
+AO Clinical Investigation and Documentation
+Program author: Monica Daigl 
+Date: 22.09.2010 
+</pre>

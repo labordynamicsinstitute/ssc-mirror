@@ -1,0 +1,17 @@
+d 'SPIDER': module for spider plots
+d
+d  This is a Stata package for plotting spider plots.  The command
+d is based on the following guide on Medium: Spider plots. 
+d
+d KW: graphics
+d KW: spider plots. radar plots
+d
+d Requires: Stata version 15 and palettes, colrspace from SSC
+d
+d Distribution-Date: 20230810
+d
+d Author: Asjad Naqvi, WU Vienna
+d Support: email asjadnaqvi@@gmail.com
+d
+f spider.ado
+f spider.sthlp

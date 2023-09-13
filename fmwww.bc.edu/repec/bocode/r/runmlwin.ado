@@ -1,4 +1,4 @@
-*! runmlwin.ado, George Leckie and Chris Charlton, 17Jun2019
+*! runmlwin.ado, George Leckie and Chris Charlton, 08Sep2023
 program runmlwin, eclass
   if c(stata_version) >= 15 local user user
   if _caller() >= 12 version 12.0, `user'
@@ -37,9 +37,9 @@ program Estimates, eclass sortpreserve
   * Separate off options
   local maxlevels 1
   gettoken comma tmpstr : 0, parse(",") bind
-  while strpos("`tmpstr'", "level") != 0 {
-    local tmpstr = substr("`tmpstr'", strpos("`tmpstr'", "level") + 5, .)
-    local lev = substr("`tmpstr'", 1, strpos("`tmpstr'", "(") - 1)
+  while strpos(`"`tmpstr'"', "level") != 0 {
+    local tmpstr = substr(`"`tmpstr'"', strpos(`"`tmpstr'"', "level") + 5, .)
+    local lev = substr(`"`tmpstr'"', 1, strpos(`"`tmpstr'"', "(") - 1)
     * Check this really is a level option
     if `=real("`lev'")' != . {
       if `lev' > `maxlevels' {
@@ -105,7 +105,7 @@ program Estimates, eclass sortpreserve
       local versionok = 1
       local versionold = 0
       if (`majorver' < 2) | (`majorver' == 2 & `minorver' < 36) local versionok = 0
-      if (`majorver' < 3) | (`majorver' == 3 & `minorver' < 03) local versionold = 1
+      if (`majorver' < 3) | (`majorver' == 3 & `minorver' < 05) local versionold = 1
       if `versionok' == 0 {
         display as error "runmlwin assumes MLwiN version 2.36 or higher. You can download the latest version of MLwiN at:" _n "https://www.bristol.ac.uk/cmm/software/mlwin/download/upgrades.html." _n "If you want to ignore this warning and attempt to continue anyway you can use the noversioncheck option"
         exit 198
@@ -113,10 +113,12 @@ program Estimates, eclass sortpreserve
       if `versionold' == 1 display as error "WARNING: Your version of MLwiN is out of date. You can download the latest version of MLwiN at:" _n "https://www.bristol.ac.uk/cmm/software/mlwin/download/upgrades.html"
     }
     local mlwinversion `majorver'.`minorver'
-    if "`mlwinversion'" ~= "..." { // No version information found
-      if `mlwinversion' < 3 {
-        local doublevar 0
-      }
+    capture confirm number `mlwinversion' // Check version number is valid
+    if _rc { // if not replace with missing
+      local mlwinversion .
+    }
+    if `mlwinversion' < 3 {
+      local doublevar 0
     }
   }
 
@@ -2438,7 +2440,6 @@ program Estimates, eclass sortpreserve
     if "`tempmat'" == "" file write `macro1' "NOTE   Don't use worksheet for matrix storage" _n "MEMS 1" _n(2)
     else file write `macro1' "NOTE   Use worksheet for matrix storage" _n "MEMS 0" _n(2)
 
-    file write `macro1' "MONI 0" _n
     file write `macro1' "MARK 0" _n
     if "`batch'" ~= "" {
       file write `macro1' "NOTE divert error messages to a file" _n "ERRO 0" _n
@@ -2791,9 +2792,11 @@ program Estimates, eclass sortpreserve
         if `reseton' == 1 {
           file write `macro1' "NOTE   Specify element reset options for variance-covariance matrices" _n
           forvalues l = `maxlevels'(-1)1 {
-            if "`reset`l''"=="all" file write `macro1' "RESE `l' 0" _n
-            if "`reset`l''"=="variances" file write `macro1' "RESE `l' 1" _n
-            if "`reset`l''"=="none" file write `macro1' "RESE `l' 2" _n
+            local ll = `l'
+            if ("`mtype'"=="multivariate" | "`mtype'"=="multinomial") local ++ll
+            if "`reset`l''"=="all" file write `macro1' "RESE `ll' 0" _n
+            if "`reset`l''"=="variances" file write `macro1' "RESE `ll' 1" _n
+            if "`reset`l''"=="none" file write `macro1' "RESE `ll' 2" _n
           }
           file write `macro1' "" _n
         }
@@ -2863,7 +2866,6 @@ program Estimates, eclass sortpreserve
       file write `macro1' "BATC 1" _n
       if ("`inits'"~="" & ("`link'"=="ologit"|"`link'"=="oprobit"|"`link'"=="ocloglog")) file write `macro1' "SUMM" _n // This is a fix as the ordered model forgets its structure when initial values have been specified
       file write `macro1' "NEXT" _n
-      file write `macro1' "MONI 1" _n
       file write `macro1' "ITNU 0 b21" _n
       file write `macro1' "CONV b22" _n
 
@@ -3943,10 +3945,10 @@ program Estimates, eclass sortpreserve
   else {
     if "`mlwinpath'"=="" {
       di as error "You must specify the file address for MLwiN.exe using either:" _n(2)
-      di as error "(1) the mlwinpath() option; for example mlwinpath(C:\Program Files\MLwiN v3.03\mlwin.exe)" _n
-      di as error "(2) a global called MLwiN_path; for example: . global MLwiN_path C:\Program Files\MLwiN v3.03\mlwin.exe" _n(2)
+      di as error "(1) the mlwinpath() option; for example mlwinpath(C:\Program Files\MLwiN v3.07\mlwin.exe)" _n
+      di as error "(2) a global called MLwiN_path; for example: . global MLwiN_path C:\Program Files\MLwiN v3.07\mlwin.exe" _n(2)
       di as error "We recommend (2) and that the user places this global macro command in profile.do, see help profile." _n(2)
-      di as error "IMPORTANT: Make sure that you are using the latest version of MLwiN. This is available at: http://www.bristol.ac.uk/cmm/MLwiN/index.shtml" _n
+      di as error "IMPORTANT: Make sure that you are using the latest version of MLwiN. This is available at: https://www.bristol.ac.uk/cmm/MLwiN/index.shtml" _n
 
       exit 198
     }
@@ -4171,6 +4173,9 @@ program Estimates, eclass sortpreserve
   if "`tempmat'" == "" ereturn scalar tempmat = 0
   else ereturn scalar tempmat = 1
 
+  if ("`cc'"~="") local classtype "(cross-classified)"
+  else local classtype "(hierarchical)"
+
   if ("`distribution'"~="multinomial") ereturn local depvars `response'
   if ("`distribution'"=="multinomial") ereturn local depvars :list uniq response
 
@@ -4190,15 +4195,15 @@ program Estimates, eclass sortpreserve
     ereturn local respcategories `responsecats'
   }
 
-  if ("`e(distribution)'"=="normal")                  ereturn local title Normal response model
-  if ("`e(distribution)'"=="binomial")                ereturn local title Binomial `e(link)' response model
-  if ("`e(distribution)'"=="multinomial" & ("`e(link)'"=="mlogit"))   ereturn local title Unordered multinomial logit response model
-  if ("`e(distribution)'"=="multinomial" & ("`e(link)'"=="ologit"))   ereturn local title Ordered multinomial logit response model
-  if ("`e(distribution)'"=="multinomial" & ("`e(link)'"=="oprobit"))  ereturn local title Ordered multinomial probit response model
-  if ("`e(distribution)'"=="multinomial" & ("`e(link)'"=="ocloglog")) ereturn local title Ordered multinomial cloglog response model
-  if ("`e(distribution)'"=="poisson")                 ereturn local title Poisson response model
-  if ("`e(distribution)'"=="nbinomial")                 ereturn local title Negative binomial response model
-  if (wordcount("`e(distribution)'")>1)                 ereturn local title Multivariate response model
+  if ("`e(distribution)'"=="normal")                  ereturn local title Normal response model `classtype'
+  if ("`e(distribution)'"=="binomial")                ereturn local title Binomial `e(link)' response model `classtype'
+  if ("`e(distribution)'"=="multinomial" & ("`e(link)'"=="mlogit"))   ereturn local title Unordered multinomial logit response model `classtype'
+  if ("`e(distribution)'"=="multinomial" & ("`e(link)'"=="ologit"))   ereturn local title Ordered multinomial logit response model `classtype'
+  if ("`e(distribution)'"=="multinomial" & ("`e(link)'"=="oprobit"))  ereturn local title Ordered multinomial probit response model `classtype'
+  if ("`e(distribution)'"=="multinomial" & ("`e(link)'"=="ocloglog")) ereturn local title Ordered multinomial cloglog response model `classtype'
+  if ("`e(distribution)'"=="poisson")                 ereturn local title Poisson response model `classtype'
+  if ("`e(distribution)'"=="nbinomial")                 ereturn local title Negative binomial response model `classtype'
+  if (wordcount("`e(distribution)'")>1)                 ereturn local title Multivariate response model `classtype'
 
   * Level IDs
   ereturn local level1var `lev1id'
@@ -4276,7 +4281,8 @@ program Estimates, eclass sortpreserve
 
       use `savechainnames' using "`savechains'", clear
       foreach stat in meanmcse sd mode ess lb ub rl1 rl2 bd pvalmean pvalmedian pvalmode {
-        mat `stat' = e(b)
+        matrix `stat' = J(1, `temp', .)
+        matrix colnames `stat' = `chainnames'
       }
 
       local acfpoints = 100
@@ -5081,7 +5087,7 @@ program define runmlwin_calcresiduals
     file write `macro1' "TAKE G29[4] '`lev`level'id'' G29[3] G29[2]" _n
     file write `macro1' "ERAS G29[3] G29[4]" _n
   }
-  if "`mmid'" ~= "" {
+  else if "`mmid'" ~= "" {
     file write `macro1' "ERAS G29[1]" _n
     foreach varname of varlist `mmid' {
       file write `macro1' "APPE G29[1] '`varname'' G29[1]" _n
@@ -5090,6 +5096,7 @@ program define runmlwin_calcresiduals
     file write `macro1' "OMIT 0 G29[2] G29[2]" _n
   }
   else file write `macro1' "UNIQ '`lev`level'id'' G29[2]" _n
+  file write `macro1' "OMIT missing G29[2] G29[2]" _n
   // Temporary rename level ID column so there isn't a duplicate
   file write `macro1' "NAME '`lev`level'id'' '_`lev`level'id''" _n
   file write `macro1' "NAME G29[2] '`lev`level'id''" _n

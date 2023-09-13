@@ -1,0 +1,55 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>solvcui</b>, <b>solvqui</b>                             (Author:  David Harrison)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Find real roots of cubic and quadratic polynomials</u></b>
+<p>
+    <b>solvcui</b> <i>a b c d</i>
+<p>
+    <b>solvcui</b> <i>e f g</i>
+<p>
+    <b>solvqui</b> <i>a b c</i>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>solvcui</b> finds the real roots of a cubic polynomial of the form
+<p>
+        <i>a</i>x³ + <i>b</i>x² + <i>c</i>x + <i>d</i> = 0 (first syntax)
+<p>
+    or
+<p>
+        x³ + <i>e</i>x² + <i>f</i>x + <i>g</i> = 0 (second syntax)
+<p>
+    <b>solvqui</b> finds the real roots of a quadratic polynomial of the form
+<p>
+        <i>a</i>x² + <i>b</i>x + <i>c</i> = 0
+<p>
+    Both commands use formulae designed to minimize roundoff error. No output
+    is displayed to the screen, but the roots are returned as scalars in
+    ascending order in <b>r(x1)</b>, <b>r(x2)</b> and (for <b>solvcui</b>) <b>r(x3)</b>; see help return.
+    Complex roots return missing. The commands are immediate, all their
+    arguments are numbers; see help immed.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. solvcui 2 -7 7 -2</b>
+<p>
+    <b>. solvcui -6 11 -6</b>
+<p>
+    <b>. solvqui 1 -9 20</b>
+<p>
+<p>
+<b><u>Maintainer</u></b>
+<p>
+    David A. Harrison
+    Intensive Care National Audit &amp; Research Centre
+    david@icnarc.org
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  help for return, immed
+</pre>

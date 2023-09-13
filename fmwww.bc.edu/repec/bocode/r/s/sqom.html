@@ -1,0 +1,185 @@
+<pre>
+<b>help sqom</b>                                                        SJ6-4: st0111)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>sqom</b> -- Optimal matching of sequences
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>sqom</b> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>                                 Description
+    -------------------------------------------------------------------------
+    <b><u>indel</u></b><b>cost(</b><i>#</i><b>)</b>                            set indel costs to <i>#</i>
+    <b><u>sub</u></b><b>cost(</b><i>#</i>|<i>implied formula</i>|<i>matexp</i>|<i>matname</i><b>)</b>
+                                              specify substitution costs
+    <b>name(</b><i>varname</i><b>)</b>                           specify substitution costs
+    <b><u>ref</u></b><b>seqid(</b><i>spec</i><b>)</b>                          select reference sequence
+    <b>full</b>                                    calculate full dissimilarity
+                                              matrix between sequences
+    <b>k(</b><i>#</i><b>)</b>                                    restrict indels (to save
+                                              calculation time)
+    <b><u>st</u></b><b>andard(</b><i>#</i>|<b>cut</b>|<b>longer</b>|<b>longest</b>|<b>none)</b>     standardization of sequences of
+                                              different length
+    <b><u>subseq</u></b><b>uence(</b><i>a</i><b>,</b><i>b</i><b>)</b>                        use only subsequence between
+                                              positions a and b
+    <b><u>ideal</u></b><b>type(</b><i>spec</i><b>)</b>                         compare with a specified ideal
+                                              typical sequence
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>sqom</b> performs optimal matching of sequences. The command uses the
+    Needleman-Wunsch algorithm to find the alignment between two sequences
+    that have the lowest Levenshtein distance. The Levenshtein distances are
+    then stored for further use.
+<p>
+    By default, all sequences are compared to the most frequent sequence and
+    the resulting distances are stored in a variable. It is, however,
+    possible to compare all sequences with a preselected reference distance
+    or to compare all sequences with every other sequence. In the latter
+    case, the resulting distances are stored in a Stata variable.
+<p>
+    Comparing all sequences with any other sequence is computationally
+    intensive.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>indelcost(</b><i>#</i><b>)</b> specifies the cost attached to an insertion or deletion of
+        an alignment. The default is <b>indelcost(1)</b>.
+<p>
+    <b><u>sub</u></b><b>cost(</b>#|<i>implied formula</i>|<i>matexp</i>|<i>matname</i>} specifies the cost attached to
+        a substitution in an alignment. Substitution costs may be specified
+        as real number, as implied formula, or as full matrix.  Specifying
+        substitution cost as, for example, <b>subcost(3)</b> will attach the cost of
+        3 to any substitution necessary in an alignment, regardless of how
+        similar the substituted values may be. The default is two times the
+        value specified as indel cost.  A full substitution cost matrix can
+        be specified either by specifying the name of a matrix containing the
+        substitution cost or by typing valid matrix syntax into the option
+        itself.  The matrix has to be a symmetric n*n matrix, where n is the
+        number of different elements in all sequences.
+<p>
+        <i>implied formula</i> generates substitution costs based on the data. The
+        implied formula is specified with a keyword. The following keywords
+        are allowed
+<p>
+<i> implied formula</i>
+    -------------------------------------------------------------------------
+    <b>rawdistance</b>           use the absolute value of the difference between
+                            the numeric values representing the respective
+                            elements
+    <b>meanprobdistance</b>      calculates symmetric substitiution cost matrix
+                            based on the mean of the transitions'
+                            probabilities <i>(p)</i> in the data between every two
+                            neighboring elements in the sequences. The
+                            substitution costs between elements x and y are
+                            defined by: SC(x,y) = SC(y,x) = 2-p(x,y)-p(y,x)
+                            if x is not equal to y, otherwise 0.
+    <b>minprobdistance</b>       calculates symmetric substitiution cost matrix
+                            based on the transitions' probabilities <i>(p)</i> in
+                            the data between every two neighboring elements
+                            in sequences. The substitution cost matrix
+                            contains the minimal substitution costs for each
+                            pair of symmetric transitions: SC(x,y) = SC(y,x)
+                            = min(1-p(x,y),1-p(y,x))*2 if x is not equal to
+                            y, otherwise 0.
+    <b>maxprobdistance</b>       calculates symmetric substitiution cost matrix
+                            based on the transitions' probabilities <i>(p)</i> in
+                            the data between every two neighboring elements
+                            in sequences. The substitution cost matrix
+                            contains the maximal substitution costs for each
+                            pair of symmetric transitions: SC(x,y) = SC(y,x)
+                            = max(1-p(x,y),1-p(y,x))*2 if x is not equal to
+                            y, otherwise 0.
+    -------------------------------------------------------------------------
+        The substitution costs in last three cases have values between 0 and
+        2
+<p>
+        Specifying a full substitution cost matrix or generating a data based
+        substitution cost matrix can increase the running time of the program
+        considerably.  Option <b>k()</b> might be considered for <b>sqom</b> with full
+        substitution cost matrix.
+<p>
+ 
+    <b>name(</b><i>varname</i><b>)</b> is used to specify the name of the variable in which the
+        distances are stored. If not specified, <b>_SQdist</b> is used. The
+        automatically generated distance variable will get overwritten
+        without warning whenever a <b>sqom</b> command without <b>name()</b> is invoked.
+<p>
+    <b>refseqid(</b><i>spec</i><b>)</b> is used to select the reference sequence against which all
+        sequences in the dataset are being tested. Within the parentheses, an
+        existing value of the sequence identifier has to be stated.
+<p>
+    <b>full</b> is used to perform optimal matching for all sequences in the dataset
+        against any other. The results of these comparisons are stored in the
+        distance matrix "SQdist". Specifying the option <b>full</b> will increase
+        the running time of the program considerably. Option <b>k()</b> might be
+        used for <b>sqom</b> with <b>full</b>.
+<p>
+        Two companion programs, sqclusterdat and sqclustermat, help to
+        further analyze the distance matrix produced with<b> sqom, full</b>.
+<p>
+    <b>k(</b><i>#</i><b>)</b> is used to speed up the calculation of the optimal matching
+        algorithm. Within the parentheses, an integer positive number between
+        1 and the number of positions of the longest sequence can be given.
+        The speed up will be higher with small numbers.  Very small numbers
+        can have the effect that the algorithm doesn't find the best
+        alignment between some sequences, and this problem tends to increase
+        if substitution costs are high relative to indel costs.
+<p>
+        Note: The implementation of the <b>k()</b> is based partly on the source
+        code of TDA, written by Goetz Rohwer and Ulrich Poetter. TDA is a
+        very powerful program for transitory data analysis. It is programmed
+        in C and distributed as freeware under the terms of the General
+        Public License. It is downloadable from 
+        http://www.stat.ruhr-uni-bochum.de/tda.html.
+<p>
+    <b><u>st</u></b><b>andard(</b>#|<b>cut</b>|<b>longer</b>|<b>longest</b>|<b>none)</b> is used to define the standardization
+        of the resulting distances. With <b>standard(#)</b> all sequences are cut to
+        the length <i>#</i>.  The keyword <b>cut</b> automatically cuts all sequences to
+        the length of the shortest sequence in the dataset. <b>standard(longer)</b>
+        divides all distances by the length of the longer sequence of the
+        respective alignment. <b>standard(longest)</b> divides all distances by the
+        length of the longest sequence in the dataset; this is the default.
+        <b>none</b> is specified if no standardization is needed.
+<p>
+    <b>subsequence(a,b)</b> is used to include only the part of the sequence that is
+        between position a and b, whereby a and b refer to the position
+        defined in the order variable.
+<p>
+    <b>idealtype(spec)</b> allows to specify an ideal typical sequence against which
+        all sequences are compared. To specify the sequence use
+        element[:repetitions] [element:repetitions]. For example, with
+        <b>idealtype(3:20 5 1:20 3:20)</b> you specifiy an ideal typical sequence of
+        length 61. The ideal typical sequence starts with element 3 over 20
+        positions, followed by one position of elment 5, 20 positions of
+        element 1 and finally again 20 positions of element 3.
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Ulrich Kohler, WZB, kohler@wz-berlin.de
+    Magdalena Luniak, WZB, luniak@wz-berlin.de
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. sqom, name(mydist)</b>
+    <b>. sqindexplot, order(mydist)</b>
+<p>
+    <b>. sqom, full k(2)</b>
+    <b>. sqclustermat ward, name(mydist2)</b>
+    <b>. sqindexplot, order(mydist2)</b>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: <b>sq</b>, <b>sqdemo</b>, <b>sqset</b>, <b>sqdes</b>, <b>sqegen</b>, <b>sqstat</b>, <b>sqindexplot</b>, 
+             <b>sqparcoord</b>, <b>sqom</b>, <b>sqclusterdat</b>, <b>sqclustermat</b>
+</pre>

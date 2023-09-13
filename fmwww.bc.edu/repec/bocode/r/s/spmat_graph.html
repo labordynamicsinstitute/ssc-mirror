@@ -1,0 +1,70 @@
+<pre>
+<b>help spmat graph</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>spmat graph</b> -- Draw an intensity plot of the spatial-weighting matrix <b>W</b>
+                     contained in an <b>spmat</b> object
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>spmat</b> <b><u>gr</u></b><b>aph</b> <i>objname</i> [<b>,</b> <i>options</i>]
+<p>
+<p>
+    <i>options</i>                            Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>bl</u></b><b>ocks(</b>[<b>(</b><i>stat</i><b>)</b>] <i>p</i><b>)</b>               plot matrix in <i>p</i> x <i>p</i> blocks
+<p>
+    Y axis, X axis, Titles, Legend, Overall
+      <i>twoway_options</i>                   any options other than <b>by()</b> documented
+                                         in <b>[G] </b><i>twoway_options</i>
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>spmat graph</b> draws an intensity plot of the spatial-weighting matrix <b>W</b>
+    contained in the <b>spmat</b> object <i>objname</i>.  Zero elements are plotted in
+    white; the remaining elements are partitioned into 16 bins of equal
+    length and assigned gray-scale colors <b>gs0</b>-<b>gs15</b>; see <b>[G]</b> <i>colorstyle</i>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>blocks()</b> divides the matrix into blocks of size <i>p</i> and plots block
+        maximums.  To plot a statistic other than the default maximum,
+        specify the optional <i>stat</i> argument. For example, to plot block
+        medians, specify <b>blocks((p50)</b> <i>p</i><b>)</b>.  The supported statistics include
+        those returned by <b>summarize, detail</b>; see <b>summarize</b> for a complete
+        list.
+<p>
+        +-----------------------------------------+
+    ----+ Y axis, X axis, Titles, Legend, Overall +--------------------------
+<p>
+    <i>twoway_options</i> are any of the options documented in <b>[G]</b> <i>twoway_options</i>,
+        excluding <b>by()</b>.  These include options for titling the graph (see <b>[G]</b>
+        <i>title_options</i>) and for saving the graph to disk (see <b>[G]</b>
+        <i>saving_option</i>).
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    Setup
+        <b>. spmat use cobj using pollute.spmat</b>
+<p>
+    Plot the contiguity matrix contained in the spmat object <b>cobj</b> in 5 x 5
+    blocks
+        <b>. spmat graph cobj, blocks(5)</b>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>spmat</b>, <b>spreg</b>, <b>spivreg</b>, <b>spmap</b>, <b>shp2dta</b>, <b>mif2dta</b> (if installed)
+<p>
+</pre>

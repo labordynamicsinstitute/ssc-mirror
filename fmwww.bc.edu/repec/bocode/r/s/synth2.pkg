@@ -1,0 +1,30 @@
+d 'SYNTH2': module to implement synthetic control method (SCM) with placebo tests, robustness test and visualization
+d
+d   As a wrapper program for synth implementing synthetic control
+d method (SCM), synth2 provides convenient utilities to automate
+d in-space placebo test using fake treatment	units, in-time
+d placebo test using a fake treatment time, and leave-one-out
+d robustness test that excludes one control unit with nonzero
+d weight at a time.  synth2 produces a	  series of graphs for
+d visualization along the way.	The command synth (available from
+d Statistical Software Components) is required.  See Yan and Chen
+d (2021) for more    details. 
+d
+d KW: synthetic control
+d KW: program evaluation
+d KW: placebo tests
+d
+d Requires: Stata version 16 and synth from SSC (q.v.)
+d
+d Distribution-Date: 20230108
+d
+d Author:  Guanpeng Yan, Shandong University
+d Support: email  guanpengyan@@mail.sdu.edu.com
+d
+d Author:  Qiang Chen, Shandong University
+d Support: email qiang2chen2@@126.com
+d
+f synth2.ado
+f synth2.sthlp
+f synth2_example.do
+f smoking.dta

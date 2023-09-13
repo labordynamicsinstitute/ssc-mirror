@@ -64,6 +64,9 @@ If {opt id(panelvar)} is not specified, {helpb xtset} must be used to declear a 
 {phang}
 Beck, T., Levine, R., and Levkov, A. 2010. Big bad banks? The winners and losers from bank deregulation in the United States. {it:Journal of Finance} 65(5): 1637-1667.
 
+{phang}
+Chen, Q., Qi, J., and Yan, G. 2023. didplacebo: Implementing placebo tests for difference-in-differences estimations. {it:Shandong University working paper}.
+
 {marker author}{...}
 {title:Author}
 

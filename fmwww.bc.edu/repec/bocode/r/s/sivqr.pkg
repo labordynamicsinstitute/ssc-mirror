@@ -1,0 +1,28 @@
+d 'SIVQR': module to perform smoothed IV quantile regression
+d
+d  sivqr estimates quantile regression models in which one or more
+d of the regressors are endogenously determined.  It is like qreg,
+d but allowing for instrumental variables to address endogeneity. 
+d Or, it is like ivregress, but estimating structural coefficients
+d or causal effects at different levels quantiles) of unobserved
+d heterogeneity (rank variable).  As with both qreg and ivregress,
+d the structural model is implicitly linear in the regressors,	but
+d those regressors may themselves be nonlinear functions of
+d variables in the raw data.  The estimator uses smoothing to
+d improve both computational speed and statistical precision.  The
+d methodology was proposed and studied by Kaplan and Sun (2017). 
+d
+d KW: quantile regression
+d KW: endogeneity
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20230314
+d
+d Author: David M. Kaplan, University of Missouri
+d Support: email kaplandm@@missouri.edu
+d
+f sivqr.ado
+f sivqr.sthlp
+f sivqr_examples.do
+f sivqr_examples_init.do

@@ -1,0 +1,74 @@
+<pre>
+<b>help spmat note</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>spmat note</b> -- Manipulate note attached to an <b>spmat</b> object
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+    Append text to the note in <i>objname</i>
+<p>
+        <b>spmat note</b> <i>objname</i> <b>: "</b><i>text</i><b>"</b>
+<p>
+<p>
+    Replace the note associated with <i>objname</i>
+<p>
+        <b>spmat note</b> <i>objname</i> <b>: "</b><i>text</i><b>"</b> <b>, replace</b>
+<p>
+<p>
+    Display the note associated with <i>objname</i>
+<p>
+        <b>spmat note</b> <i>objname</i>
+<p>
+<p>
+    Drop the note associated with <i>objname</i>
+<p>
+        <b>spmat note</b> <i>objname</i> <b>drop</b>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>spmat note</b> manipulates the note associated with the <b>spmat</b> object <i>objname</i>.
+    Unlike in Stata datasets, <b>spmat</b> objects can have only one note associated
+    with them.  It is possible to store multiple comments by repeatedly
+    appending text to the note.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    Setup
+        <b>. spmat use cobj using pollute.spmat</b>
+<p>
+    Add a note to the spmat object <b>cobj</b>
+        <b>. spmat note cobj: "Simulated data for spmat"</b>
+<p>
+    Display the note
+        <b>. spmat note cobj</b>
+           Simulated data for spmat
+<p>
+    Append another comment to the note
+        <b>. spmat note cobj: "- queen contiguity"</b>
+<p>
+    Display the note
+        <b>. spmat note cobj</b>
+           Simulated data for spmat - queen contiguity
+<p>
+    Replace the note
+        <b>. spmat note cobj: `"Is this "queen" contiguity?"', replace</b>
+          
+    Display the note
+        <b>. spmat note cobj</b>
+           Is this "queen" contiguity?
+<p>
+    Drop the note
+        <b>. spmat note cobj drop</b>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>spmat</b>, <b>spreg</b>, <b>spivreg</b>, <b>spmap</b>, <b>shp2dta</b>, <b>mif2dta</b> (if installed)
+<p>
+</pre>

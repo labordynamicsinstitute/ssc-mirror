@@ -1,0 +1,127 @@
+<pre>
+<b>help sregress</b> 
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>sregress</b> --   S-robust regression
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>sregress</b> <i>depvar</i> [<i>indepvars</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <i>option</i>]
+<p>
+    <i>options</i>                 Description
+    -------------------------------------------------------------------------
+<p>
+      <b><u>noc</u></b><b>onstant</b>            suppress constant term
+      <b>outlier</b>               generate outlyingness measures
+      <b>graph</b>                 generate the outlier identification graphical
+                              tool
+      <b>replic</b>                set the number of sub-sampling to consider
+<p>
+<p>
+    -------------------------------------------------------------------------
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>sregress</b> fits an S-estimator of regression of <i>depvar</i> on <i>varlist</i>.  An
+    S-estimator of regression is a robust fitting approach which minimizes a
+    (rho) function of the regression residuals which is even, non decreasing
+    for positive values and less increasing than the square function. The
+    function used here is a Tukey Biweight leading to a Guassian efficiency
+    of 28.7%
+<p>
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +-------+
+    ----+ Model +------------------------------------------------------------
+<p>
+    <b>noconstant</b>; see <b>[R] estimation options</b>.
+<p>
+<p>
+        +-----------+
+    ----+ Algorithm +--------------------------------------------------------
+<p>
+    <b>graph</b>; Displays a graphic where outliers are flagged according to their
+        type.
+<p>
+    <b>outlier</b>; Four outlyingness measures are calculated. The first (S_stdres)
+        contains the robust standardized residuals, the second (S_outlier)
+        flags outliers in the vertical dimension (i.e. observations
+        associated with robust standardized residual larger than 2.25), the
+        third (Robust_distance) contains robust distances and the fourth
+        (MCD_outlier) flags outliers in the horizontal dimension (i.e.
+        observations associated with robust distances larger than the 97.5th
+        percentile of a Chi-quared).
+<p>
+    <b>replic</b>; The number of subsets associated to the underlying algorithm is
+        set by default using the formula
+        replic=log(1-0.99)/log(1-(1-0.2)^(<i>p</i>+1)) where <i>p</i> is the number of
+        explanatory variables. This can be changed using the replic option.
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+<p>
+    <b>sregress</b> saves the following in <b>e()</b>:
+<p>
+    Scalars   
+      <b>e(scale)</b>       robust residual scale
+      <b>e(N)</b>           number of observations
+      <b>e(df_m)</b>        model degrees of freedom
+      <b>e(df_r)</b>        residual degrees of freedom
+<p>
+    Macros    
+      <b>e(cmd)</b>         <b>sregress</b>
+      <b>e(properties)</b>  <b>b V</b>
+<p>
+    Matrices  
+      <b>e(b)</b>           coefficient vector
+      <b>e(V)</b>           variance-covariance matrix of the estimators
+<p>
+    Functions 
+      <b>e(sample)</b>      marks estimation sample
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    Setup
+        <b>. webuse auto</b>
+<p>
+    Robust regression
+        <b>. xi: sregress price mpg headroom trunk weight length turn</b>
+            <b>displacement gear_ratio i.rep78 foreign</b>
+<p>
+    Same as above, but asking for outlyingness measures
+        <b>. xi: sregress price mpg headroom trunk weight length turn</b>
+            <b>displacement gear_ratio i.rep78 foreign, outliers</b>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+<p>
+    Dehon, C., Gassner, M. and Verardi, V. (2008), "Beware of "Good" Outliers
+    and Overoptimistic Conclusions", forthcoming in the Oxford Bulletin of
+    Economics and Statistics
+<p>
+    Rousseeuw, P. J. and Yohai, V. (1987), "Robust Regression by Means of
+    S-estimators", in Robust and Nonlinear Time Series Analysis, edited by J.
+    Franke, W. Härdle and D. Martin, Lecture Notes in Statistics No. 26,
+    Springer Verlag, Berlin, pp. 256-272.
+<p>
+    Rousseeuw, P. J. and van Zomeren, B. (1990), "Unmasking Multivariate
+    Outliers and Leverage Points", Journal of the American Statistical
+    Association, 85, pp. 633-639.
+<p>
+    Salibian-Barrera, M. and Yohai, V. (2006). "A fast algorithm for
+    S-regression estimates". Journal of Computational and Graphical
+    Statistics, 15, 414-427.
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>[R] qreg</b>, <b>[R] regress</b>;
+             <b>[R] rreg</b>, mmregress, mregress, msregress, mcd
+<p>
+</pre>

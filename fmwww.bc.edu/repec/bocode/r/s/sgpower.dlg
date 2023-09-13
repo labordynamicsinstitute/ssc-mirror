@@ -1,0 +1,105 @@
+/*
+sgpower dialog version 1.05, 24.12.2020, Sven-Kristjan Bormann
+for sgpower version 1.05
+
+To install in User Statistics menu via Stata commands:
+  
+  . window menu append item "stUserStatistics" "SGPV Power Calculations (&sgpower)" "db sgpower"
+
+  . window menu refresh
+
+To permanently install, place the commands in your -profile.do- file.
+*/
+
+VERSION 12.0
+INCLUDE _std_small
+INCLUDE header
+HELP hlp1,   view("help sgpower")  
+RESET res1
+*SUBMIT sub1, label("Submit")
+
+SCRIPT INIT
+BEGIN
+	main.sp_level.disable
+	main.ed_likelihood.disable
+END
+/*
+LIST inttype_list
+BEGIN
+	confidence
+	likelihood
+END
+*/
+DIALOG main, label("Sgpower 1.05 - SGPV Power Calculations") tabtitle("Main")
+BEGIN
+	TEXT tx_true 		20    _top   120    ., label("True value")
+	EDIT ed_true 		 @    _ss    120    ., numonly option(true) error("A true value is required.") tooltip("The true value of a parameter for which the power function should be calculated.")
+	
+	TEXT tx_se			+140  _top    80    ., label("Standard Error")
+	EDIT ed_se			@     _ss     @     ., option(stderr) default(1) numonly
+	
+	CHECKBOX ck_bonus   +90    @     100   ., label("Bonus statistics") option(bonus) ///
+											tooltip("Display additional statistics")
+	
+	GROUPBOX gb_null	 _lft  _xls   140   120, label("Null-Hypothesis Interval")
+	TEXT tx_nulllo 		+10   _ss 	 120     ., label("Lower Bound") 
+	EDIT ed_nulllo	 	@     _ss    @     ., option(nulllo) numonly ///
+											error("A lower bound for the null interval is required.")
+	
+	TEXT tx_nullhi	 	@   	_ls    @    ., label("Upper Bound")
+	EDIT ed_nullhi	 	@     _ss     @    ., option(nullhi)  numonly ///
+											error("An upper bound for the null interval is required.")
+					
+	CHECKBOX ck_level       +140   -70      170    ., label("Confidence Interval Level:")  onclickon(script confidence_on) onclickoff(script confidence_off)
+	SPINNER  sp_level    	@      _ss      @   .,   label(resource LBL_TX_LEVEL) default(c(level)) /// 
+														min(5) max(100) option(level)	
+	CHECKBOX ck_likelihood		  @    _ls     170   ., label("Likelihood support interval level:") onclickon(script likelihood_on) onclickoff(script likelihood_off)
+	EDIT ed_likelihood         @    _ss      @    ., option(likelihood) error(No Interval level for the Likelihood-Support-Interval set) tooltip("Set the interval level for the Likelihood-Support-Interval(LSI).")
+	
+END
+
+SCRIPT confidence_on
+BEGIN
+	main.sp_level.enable
+	main.ck_likelihood.disable
+END
+
+SCRIPT confidence_off
+BEGIN
+	main.sp_level.disable
+	main.ck_likelihood.enable
+END
+
+SCRIPT likelihood_on
+BEGIN
+	main.ed_likelihood.enable
+	main.ck_level.disable
+END
+
+SCRIPT likelihood_off
+BEGIN
+	main.ed_likelihood.disable
+	main.ck_level.enable
+END
+
+PROGRAM command
+BEGIN
+	put "sgpower "
+	beginoptions
+		 require main.ed_true
+		 optionarg main.ed_true
+		 
+		 require main.ed_nulllo
+		 optionarg main.ed_nulllo
+		 
+		 require main.ed_nullhi
+		 optionarg main.ed_nullhi
+		 
+		 optionarg main.sp_level /hidedefault
+		 optionarg main.ed_likelihood
+				 
+		 optionarg main.ed_se
+		 option main.ck_bonus
+	endoptions
+
+END

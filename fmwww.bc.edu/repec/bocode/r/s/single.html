@@ -1,0 +1,44 @@
+<pre>
+<b>help single</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>machado</b> --     Single index estimation method from Ichimura (1993)
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>single</b> <i>depvar</i> [<i>indepvars</i>] {if} [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Model
+      <b>h</b>                    Bandwidth of the single estimation method
+      <b>m</b>                    Number of iterations
+      <b>q</b>                    Number of quantiles computed for Machado-Mata
+                            method
+      <b>variance</b>             Estimation of variance (1 = yes)
+      <b>method</b>               Method of estimation (see below)
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>machado</b> Estimates the beta-coefficients of the single index method from
+    Ichimura. The method is fit for probit estimation and estimates the
+    probit model for normalization. The coefficient of the first regresor and
+    the constant arre normalized. Note that the first regressor need to be a
+    continuous variable.
+<p>
+<b><u>Options</u></b>
+<p>
+        +-------+
+    ----+ Model +------------------------------------------------------------
+<p>
+    <b>h</b> The bandwidth. The default is 0.2
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>. single y x1 x2 x3 x4, h(0.4)</b>
+<p>
+</pre>

@@ -1,0 +1,50 @@
+<pre>
+.-
+help for ^summdate^
+.-
+<p>
+Summarizing date variable
+-------------------------
+<p>
+    ^summdate^ datevar [^if^ exp] [^in^ range] [weight] 
+<p>
+<p>
+Description
+-----------
+<p>
+^summdate^ (minimally) summarizes a numeric variable with a date format. 
+<p>
+<p>
+Remarks 
+------- 
+<p>
+^summarize^ ignores date formats, even with the ^format^ option. This 
+command detects the date format of a date variable and uses it to report 
+the mean, minimum and maximum. The number of observations and the standard 
+deviation are reported as numbers. 
+<p>
+<p>
+Examples
+--------
+<p>
+    . ^summdate date^
+<p>
+<p>
+Acknowledgements
+----------------
+<p>
+        Fred Wolfe found a bug in an earlier version. 
+<p>
+<p>
+Author
+------
+<p>
+         Nicholas J. Cox, University of Durham, U.K.
+         n.j.cox@@durham.ac.uk
+<p>
+<p>
+Also see
+--------
+<p>
+ On-line: help for @summarize@ 
+</pre>

@@ -1,0 +1,175 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help supclust</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Build superordinate categories from classification variables</u></b>
+<p>
+        <b>supclust</b> <i>varlist</i> [<i>if</i>] [<i>in</i>] <b>,</b> <b><u>g</u></b><b>enerate(</b><i>newvar</i><b>)</b> [ <b><u>alt</u></b><b>ernating</b> <b><u>m</u></b><b>issing</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>supclust</b> may be used to build superordinate categories based on the
+    values of two or more classification variables. This would be a useful
+    procedure if, for example, you want to identify distinct clusters in a
+    trading network based on the identification codes of sellers and buyers.
+    Another application would be the identification of related entries in a
+    telephone register, based on a common telephone number or address.
+<p>
+    Note that <i>varlist</i> must specify at least two classification variables.
+    The variables may be numeric or string. However, if the <b>alternating</b>
+    option is specified, all variables must be numeric.
+<p>
+    <b>supclust</b> has to do quite a bit of iterating and sorting, depending on the
+    maximum length of the paths by which the observations are connected
+    within the clusters. <b>supclust</b> may therefore take a while to finish if it
+    is applied to a large and complex dataset.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>generate(</b><i>newvar</i><b>)</b> is required and stores unique identifiers for the
+        superordinate clusters in <i>newvar</i>. <i>newvar</i> will identify the clusters
+        using consecutive integers starting at 1.
+<p>
+    <b>alternating</b> causes <b>supclust</b> to match values across classification
+        variables. The default is to treat the classification variables as
+        representing independent classifications. If the <b>alternating</b> option
+        is specified, all variables in <i>varlist</i> must be numeric.
+<p>
+        Suppose, for example, you have a dataset in which each observation
+        represents an economic transaction between a seller and a buyer. If
+        the sellers and the buyers are from two distinct populations, then
+        use the default algorithm to identify the clusters. If, however,
+        sellers and buyers are drawn from the same population, that is, if
+        specific actors can appear both as sellers <i>and</i> buyers, then the
+        <b>alternating</b> option should be specified. Note that in this case it is
+        important to use unique identification numbers for the actors,
+        independent of their appearance as sellers or as buyers.
+<p>
+    <b>missing</b> specifies that observations with missing values be included in
+        the computations. The default is to exclude such cases. If included,
+        missing values are treated being different from one another, that is,
+        cases with missing values are not necessarily interpreted as
+        belonging to the same cluster.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        . input id1 id2
+<p>
+                   id1        id2
+          1. 1  1
+          2. 2  1
+          3. 2  2
+          4. 3  2
+          5. 3  4
+          6. 4  5
+          7. 5  3
+          8. 6  6
+          9. 6  .
+         10. .  .
+         11. end
+        
+        . supclust id1 id2, generate(a)
+        4 clusters in 8 observations
+<p>
+        . list id1 id2 a, clean
+        
+               id1   id2   a 
+          1.     1     1   1 
+          2.     2     1   1 
+          3.     2     2   1 
+          4.     3     2   1 
+          5.     3     4   1 
+          6.     4     5   2 
+          7.     5     3   3 
+          8.     6     6   4 
+          9.     6     .   . 
+         10.     .     .   . 
+<p>
+        . supclust id1 id2, generate(b) alternating
+        2 clusters in 8 observations
+<p>
+        . list id1 id2 b, clean
+        
+               id1   id2   b 
+          1.     1     1   1 
+          2.     2     1   1 
+          3.     2     2   1 
+          4.     3     2   1 
+          5.     3     4   1 
+          6.     4     5   1 
+          7.     5     3   1 
+          8.     6     6   2 
+          9.     6     .   . 
+         10.     .     .   . 
+<p>
+        . supclust id1 id2, generate(c) missing
+        5 clusters in 10 observations
+<p>
+        . list id1 id2 c, clean
+        
+               id1   id2   c 
+          1.     1     1   1 
+          2.     2     1   1 
+          3.     2     2   1 
+          4.     3     2   1 
+          5.     3     4   1 
+          6.     4     5   2 
+          7.     5     3   3 
+          8.     6     6   4 
+          9.     6     .   4 
+         10.     .     .   5 
+<p>
+        . clear
+        
+        . input id1 id2 id3
+<p>
+                   id1        id2        id3
+          1. 1  1  1
+          2. 2  1  2
+          3. 3  2  2
+          4. 4  3  3
+          5. end
+        
+        . supclust id1 id2, generate(a)
+        3 clusters in 4 observations
+<p>
+        . list id1 id2 id3 a, clean
+        
+               id1   id2   id3   a 
+          1.     1     1     1   1 
+          2.     2     1     2   1 
+          3.     3     2     2   2 
+          4.     4     3     3   3 
+<p>
+        . supclust id1 id2 id3, generate(b)
+        2 clusters in 4 observations
+<p>
+        . list id1 id2 id3 b, clean
+        
+               id1   id2   id3   b 
+          1.     1     1     1   1 
+          2.     2     1     2   1 
+          3.     3     2     2   1 
+          4.     4     3     3   2 
+<p>
+<p>
+<b><u>Saved Results</u></b>
+<p>
+    Scalars:
+<p>
+    <b>r(N)</b>        number of observations
+    <b>r(N_clust)</b>  number of clusters
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

@@ -113,7 +113,13 @@ prog def didplacebo, eclass
 			}
 			else mata: ranunitnum = strtoreal(st_local("ranunitnum"));
 			if "`rantimescope'" == "" {
-				mata: time = uniqrows(data[., 2])'; timelb = min(time); timeub = max(time);
+				mata: time = uniqrows(data[., 2])'; 
+				mata: data_tmp = select(data, data[.,3]);
+				mata: _sort(data_tmp, (1,2,3));
+				mata: info = panelsetup(data_tmp, 1, 2);
+				mata: data_sum = data_tmp[info[.,1],1..2];
+				mata: timelb = ("`i'"=="1"? sort(time', 1)[2, .]:min(data_sum[., 2])); 
+				mata: timeub = ("`i'"=="1"? max(time):max(data_sum[., 2])); 
 			}
 			else mata: tmp = tokens("`rantimescope'"); timelb = strtoreal(tmp[1]); timeub = strtoreal(tmp[2]);
 			mata: printf(("`i'"!="3"?"{hline 34}{c TT}{hline 38}\n": "{hline 38}\n"))

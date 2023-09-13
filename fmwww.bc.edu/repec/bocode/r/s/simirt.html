@@ -1,0 +1,172 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>simirt</b>                                            Jean-Benoit Hardouin
+-------------------------------------------------------------------------------
+<p>
+<b><u>Simulation of IRT models</u></b>
+<p>
+        <b>simirt</b> [, <b><u>nbo</u></b><b>bs</b>(<i>#</i>) <b><u>d</u></b><b>im</b>(<i># [#]</i>) <b>mu</b>(<i># [#]</i>) <b>cov</b>(<i># [# #]</i>)
+              <b><u>dif</u></b><b>f</b>(<i>list_of_values_or_expression</i>) <b><u>dis</u></b><b>c</b>(<i>list_of_values</i>)
+              <b>pmin</b>(<i>list_of_values</i>) <b>pmax</b>(<i>list_of_values</i>) <b>acc</b>(<i>list_of_values</i>)
+              <b>rsm1</b>(<i>list_of_values</i>) <b>rsm2</b>(<i>list_of_values</i>) <b><u>thr</u></b><b>eshold</b> <b>clear</b>
+              <b><u>sto</u></b><b>re</b>(<i>filename</i>) <b><u>rep</u></b><b>lace</b> <b><u>pref</u></b><b>ix</b>(<i>string [string]</i> <b>draw</b> <b><u>gr</u></b><b>oup</b>(<i>#</i>)
+              <b><u>del</u></b><b>tagroup</b>(<i>#</i>)])
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>simirt</b> allows creating a new dataset of responses to items simulated by
+        an unidimensional IRT model. The model can be dichotomous (Rasch,
+        OPLM, Birnbaum, 3PLM, 4PLM, 5PAM) or polytomous (Rating Scale
+        Model-RSM). It is possible to simulate two sets of items linked, for
+        each of them, to a specific latent trait (who can be correlated).
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>nbobs</b>(<i>#</i>) specifies the number of individuals to simulate.  By default,
+        2000 individuals are simulated.
+<p>
+    <b>dim</b>(<i># [#]</i>) specifies the number of items linked to the first latent trait
+        (and optionally to the second one). If this option is not defined,
+        the <b>simirt</b> command simulates only one latent trait with a number of
+        items equal to the number of values defined in the <b>diff</b> option (at
+        least one of these two options must be defined).
+<p>
+    <b>mu</b>(<i># [#]</i>) specifies the mean(s) of each simulated latent trait(s).
+<p>
+    <b>cov</b>(<i># [# #]</i>) defines the covariance matrix of the latent trait(s). If
+        there is only one latent, <b>cov</b> is composed of the variance of this
+        one, else, <b>cov</b> is composed of the variance of the first latent,
+        followed by the variance of the second latent trait, and of the
+        covariance.
+<p>
+    <b>diff</b>(<i>list_of_values_or_expression</i>) defines the values of the difficulty
+        parameters as a list of values (with a number of elements equal to
+        the total number of items), or as an expression like<i> uniform #A #B</i>
+        (to define these parameters as uniformly distributed in <i>]#A;#B[)</i>, or
+        like <i>gauss #M #V</i> (to define these parameters as the percentiles of
+        the gaussian distribution with mean <i>#M</i> and variance <i>#V</i>). If there is
+        two latent traits, the expressions are defined as <i>uniform #A1 #B1 #A2</i>
+        <i>#B2</i> and<i> gauss #M1 #V1 #M2 #V2</i>. If this option is not defined (but the
+        <b>dim</b> option is), these parameters are defined among a standardized
+        gaussian distribution.
+<p>
+    <b>disc</b>(<i>list_of_values</i>) defines the discriminating values of the items (by
+        default, these parameters are fixed to 1).
+<p>
+    <b>pmin</b>(<i>list_of_values</i>) defines the minimal probability of positive
+        responses for each item (by default, these parameters are fixed to
+        0).
+<p>
+    <b>pmax</b>(<i>list_of_values</i>) defines the maximal probability of positive
+        responses for each item (by default, these parameters are fixed to
+        1).
+<p>
+    <b>acc</b>(<i>list_of_values</i>) defines the accelerating parameters for each item (by
+        default, these parameters are fixed to 1).
+<p>
+    <b>rsm1</b>(<i>list_of_values</i>) and <b>rsm2</b>(<i>list_of_values</i>) defines the parameters
+        corresponding to the modalities 2 to K (bigger modality) for each
+        item of the first scale (<b>rsm1</b>) or of the second scale (<b>rsm2</b>). If none
+        of these two options is specified, the data are dichotomous ones. The
+        <b>rsm1</b> and <b>rsm2</b> options cannot be combined with the <b>disc</b>, <b>pmin</b>, <b>pmax</b>,
+        <b>acc</b> and <b>draw</b> options.
+<p>
+    <b>threshold</b> simulates the responses of each individuals directly from the
+        latent trait.  In a dichotomous model (<b>disc</b>, <b>pmin</b>, <b>pmax</b> and <b>acc</b>
+        options are not allowed), the response 1 if given as soon the latent
+        trait of the individual is greater than the difficulty parameter of
+        the item (defined with the <b>diff</b> option).  In a polytomous model , a
+        modality of response is given as soon the latent trait of the
+        individual is greater than the difficulties of this modality. The
+        difficulty of a modality is computed by the difficulty of the item
+        plus the sum of the tau paramaters (defined with the <b>rsm1</b> and <b>rsm2</b>
+        options) from tau2 to the tau parameter corresponding to the chosen
+        modality. In this case, the tau parameters must be positive reals.
+<p>
+    <b>clear</b> does not restore the initial dataset at the end of the command (at
+        least one of the <b>clear</b> and <b>store</b> options must be defined).
+<p>
+    <b>store</b>(<i>filename</i>) defines the file where the new dataset will be stored (at
+        least one of the <b>clear</b> and <b>store</b> options must be defined).
+<p>
+    <b>replace</b>, associated to <b>store</b>, allows replacing the file defined by <b>store</b>,
+        if it already exist.
+<p>
+    <b>prefix</b>(<i>string [string]</i>]) allows defining the prefix to use for the names
+        of the items. The <i>string</i> cannot contain space(s). By default, the
+        used prefix is "item" in the unidimensional case, and "itemA" and
+        "itemB" in the bidimensional case. A number follows these prefixes.
+<p>
+    <b>draw</b>, in the unidimensional case, this option allows drawing the Items
+        Characteristic Curves on a graph.
+<p>
+    <b>group</b> defines, in the unidimensional case, two groups of patients, for
+        example a "treated" group (coded 1) and a "reference" group (coded
+        0). <b>group</b> defines the expected proportion of individuals of the first
+        group.
+<p>
+    <b>deltagroup</b> defines, in the unidimensional case, the difference between
+        the means of the latent trait between the two groups defined by the
+        <b>group</b> option. This option is disabled if the <b>group</b> option is not
+        defined. The variance of the latent trait is considered as equal in
+        the two groups.
+<p>
+<b><u>Outputs</u></b>
+<p>
+    <b>r(nbobs)</b>: Number of simulated individuals.
+<p>
+    <b>r(mean_#)</b>: Empirical mean of the #th latent trait.
+<p>
+    <b>r(var_#)</b>: Empirical variance of the #th latent trait.
+<p>
+    <b>r(cov_12)</b>: Empirical covariance between the two latent traits (if there
+        is two simulated dimensions).
+<p>
+    <b>r(rho)</b>: Empirical correlation coefficient between the two latent traits
+        (if there is two simulated dimensions).
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. simirt , dim(7) clear</b> /*simulates data by a Rasch model*/
+<p>
+    <b>. simirt , diff(gauss 0 1) dim(7) disc(.8 1.2 1.4 .6 1.4 1.0 1.1) clear</b>
+        /*simulates data by a Birnbaum model*/
+<p>
+    <b>. simirt , diff(uniform -2 3 0 1) dim(7 7) cov(2 4 1) clear</b>/* simulates
+        data with a bidimensional latent trait*/
+<p>
+    <b>. simirt , dim(7) clear group(.5) deltagroup(1)</b> /*simulates data by a
+        Rasch model, with two groups of approximate equal size of patients
+        and a difference between the means of the latent trait for the two
+        groups of 1*/
+<p>
+    <b>. simirt , dim(7) clear rsm(1 .5 .2)</b> /*Data simulated by a RSM. Each item
+        has until 5 modalities*/
+<p>
+<b><u>Notes about the models</u></b>
+<p>
+    <b>Rasch model</b>: By default, you can describe only the <b>diff</b> option.
+<p>
+    <b>Birnbaum model and OPLM</b>: By default, the <b>diff</b> and the <b>disc</b> options must
+        be defined.
+<p>
+    <b>3-PLM</b>: By default, the <b>diff</b>, the <b>disc</b> and the <b>pmin</b> options must be
+        defined.
+<p>
+    <b>4-PLM</b>: By default, the <b>diff</b>, the <b>disc</b>, the <b>pmin</b> and the <b>pmax</b> options must
+        be defined.
+<p>
+    <b>5-PM</b>: The <b>diff</b>, the <b>disc</b>, the <b>pmin</b>, the <b>pmax</b> and the <b>acc</b> options must be
+        defined.
+<p>
+    <b>RSM</b>: The <b>rsm1</b> [and eventually the <b>rsm2</b>] option(s) must be defined. The
+        <b>disc</b>, the <b>pmin</b>, the <b>pmax</b> and the <b>acc</b> options cannot be defined.
+<p>
+<b><u>Author</u></b>
+<p>
+    Jean-Benoit Hardouin, Regional Health Observatory (ORS) - 1, rue Porte
+        Madeleine - BP 2439 - 45032 Orleans Cedex 1 - France. You can contact
+        the author at jean-benoit.hardouin@orscentre.org and visit the
+        websites AnaQol and FreeIRT
+<p>
+</pre>

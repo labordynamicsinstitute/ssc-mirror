@@ -1,0 +1,97 @@
+<pre>
+<b>help shellout</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>shellout</b> -- Opens documents and their programs from inside Stata.
+<p>
+<p>
+<b><u>Multiple Syntax</u></b>
+<p>
+    <b>shellout</b> <i>application</i> [, cd]
+    where <i>application</i> is the name of a software application to be opened.
+<p>
+    <b>shellout</b> [using] <i>filename</i> [, cd]
+    where <i>filename</i> takes the form of a document with a known extension, such
+    as .doc, .do, .dta, .txt, .xls, .xml, etc.
+<p>
+<p>
+<b><u>Options</u></b>
+    <b>cd</b> should not be used, except to tell Stata that the program in question
+    is located in the current directory.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>shellout</b> opens a document from inside Stata without having to specify the
+    exact file path of the program. It also opens an application with or
+    without specifying a file document to be opened.
+<p>
+    <b>shellout</b> is a shell wrapper designed for Windows XP/NT. Unlike shell,
+    implements a nested DOS command. The DOS Window is told to close itself.
+<p>
+    <b>shellout</b> was originally written to accompany <b>outreg2</b> for automatic
+    opening of non-Stata documents.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>shellout</b> wsestata.exe
+    <b>shellout</b> using myfile.xml
+    <b>shellout</b> using "c:\myfolder\myfile.doc"
+    <b>shellout</b> myfile.xml
+    <b>shellout</b> me.do
+<p>
+    The first line will open another Stata executable.
+    The second line will open a document named myfile.xml in Excel.
+    The third line will open a document named myfile.doc in Word.
+    The fourth line will do the same thing without invoking the "using"
+    syntax.
+    The fifth line is the equivalent of -do me- in another Stata executable,
+    or was it -run me-....
+<p>
+<p>
+<b><u>Parameters</u></b>
+<p>
+    A parameter is any value passed into a batch script. <b>shellout</b> will work
+    with parameters in the following examples (assuming you have Stata SE)
+<p>
+    <b>shellout</b> shellout wsestata.exe shellout wsestata.exe shellout
+        wsestata.exe
+    <b>shellout</b> wsestata di "Bite Me"
+    <b>shellout</b> notepad "Bite Me"
+<p>
+    The first line will open three Stata executables in a daisy-chain.
+    The second line will open a Stata executable with a "Bite Me" message.
+    The third line will open a (new) notepad file called "Bite Me".
+<p>
+<p>
+<b><u>Advanced Parameters</u></b>
+<p>
+    You can save a batch of parameters in a file and invoke it under <b>shellout</b>
+    much like calling upon a do-file. Learn some DOS commands if you want to
+    implement it.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+          Roy Wada
+          roywada@hotmail.com
+          
+<p>
+<b><u>Also see</u></b>
+<p>
+         <b>[D] Shell</b>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+</pre>

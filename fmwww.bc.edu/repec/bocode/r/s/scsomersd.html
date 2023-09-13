@@ -1,0 +1,295 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>scsomersd</b>, <b>sccendif</b> and <b>sccenslope</b>                      (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Rank statistics for scenario comparisons</u></b>
+<p>
+        <b>scsomersd</b> <i>y0</i> [ <i>y1</i> ] [<i>weight</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <b><u>swe</u></b><b>ight(</b><i>expression</i><b>)</b> <b><u>nyv</u></b><b>ar(</b>
+                     <i>newvar</i><b>)</b> <b><u>nwei</u></b><b>ght(</b><i>newvar</i><b>)</b> <b><u>ncfw</u></b><b>eight(</b><i>newvar</i><b>)</b> <b>nobs(</b><i>newvar</i><b>)</b>
+                     <b><u>nsce</u></b><b>n(</b><i>newvar</i><b>)</b> <i>somersd_options</i>
+<p>
+        <b>sccendif</b> <i>y0</i> [ <i>y1</i> ] [<i>weight</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <b><u>swe</u></b><b>ight(</b><i>expression</i><b>)</b> <b><u>nyv</u></b><b>ar(</b>
+                     <i>newvar</i><b>)</b> <b><u>nwei</u></b><b>ght(</b><i>newvar</i><b>)</b> <b><u>ncfw</u></b><b>eight(</b><i>newvar</i><b>)</b> <b>nobs(</b><i>newvar</i><b>)</b>
+                     <b><u>nsce</u></b><b>n(</b><i>newvar</i><b>)</b> <i>cendif_options</i>
+<p>
+        <b>sccenslope</b> <i>y0</i> [ <i>y1</i> ] [<i>weight</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <b><u>swe</u></b><b>ight(</b><i>expression</i><b>)</b> <b><u>nyv</u></b><b>ar(</b>
+                     <i>newvar</i><b>)</b> <b><u>nwei</u></b><b>ght(</b><i>newvar</i><b>)</b> <b><u>ncfw</u></b><b>eight(</b><i>newvar</i><b>)</b> <b>nobs(</b><i>newvar</i><b>)</b>
+                     <b><u>nsce</u></b><b>n(</b><i>newvar</i><b>)</b> <i>censlope_options</i>
+<p>
+    where <i>y0</i> and <i>y1</i> are either <i>varname</i>s or numbers, <i>somersd_options</i> is a list
+    of options for <b>somersd</b> other than <b>funtype()</b>, <i>cendif_options</i> is a list of
+    options for <b>cendif</b> other than <b>funtype()</b> and <b>by()</b>, and <i>censlope_options</i> is
+    a list of options for <b>censlope</b> other than <b>funtype()</b>.
+<p>
+    <b>fweight</b>s, <b>iweight</b>s, and <b>pweight</b>s are allowed; see weight.  However,
+    cluster frequency weights must be specified using the <b>cfweight()</b> option
+    of <b>somersd</b>, <b>cendif</b> and <b>censlope</b>.
+<p>
+    <b>bootstrap</b>, <b>by</b>, <b>jackknife</b>, and <b>statsby</b> are allowed.  See prefix.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>scsomersd</b>, <b>sccendif</b> and <b>sccenclope</b> compute confidence intervals for rank
+    statistics comparing scenarios.  Scenarios are alternative versions of
+    the data, differing in the values of sampling probability weights and/or
+    in the values of an outcome variable.  The scenario-comparison rank
+    statistics compare 2 scenarios, denoted Scenario 0 and Scenario 1,
+    derived from the dataset in the memory, in a temporary extended dataset
+    with 1 observation per original observation per scenario.  <b>scsomersd</b>
+    estimates the Somers' <i>D</i> or Kendall tau-a of the outcome variable, and
+    <b>sccendif</b> and <b>sccenslope</b> estimate the Hodges-Lehmann percentile
+    differences of the outcome variable, with respect to scenario membership.
+    Examples of between-scenario rank statistics include the Gini coefficient
+    of inequality, the population attributable risk (PAR), percentiles of
+    weighted and/or clustered samples, and Hodges-Lehmann percentile
+    differences between paired samples.  <b>scsomersd</b>, <b>sccendif</b> and <b>sccenclope</b>
+    use the packages <b>somersd</b> and <b>expgen</b>, which must be installed in order for
+    the programs to work, and can be downloaded from SSC.
+<p>
+<p>
+<b><u>Options for use with </u></b><b><u>scsomersd</u></b><b><u>, </u></b><b><u>sccendif</u></b><b><u> and </u></b><b><u>sccenslope</u></b>
+<p>
+    <b>sweight(</b><i>expression</i><b>)</b> specifies the weight expression for use in Scenario
+        1.  The type of weights (<b>fweight</b>s, <b>pweight</b>s or <b>iweight</b>s), and the
+        weight expression for use in Scenario 0, are specified in the weight
+        expression supplied to the command.  If <b>sweight()</b> is not specified,
+        then the weight expression for Scenario 1 is set to the weight
+        expression for Scenario 0.  Note that both scenario weight
+        expressions are interpreted as importance weights, and that cluster
+        frequency weights must be specified using the <b>cfweight()</b> option of 
+        <b>somersd</b>, <b>cendif</b> and <b>censlope</b>.
+<p>
+    <b>nyvar(</b><i>newvar</i><b>)</b> specifies the name of the temporary variable, in the
+        expanded dataset with 1 observation per original observation per
+        scenario, containing the outcome or <i>Y</i>-values for use in the scenario
+        comparison.  In observations in Scenario 0, the value of this
+        variable is equal to the variable (or number) <i>y0</i>.  In observations in
+        Scenario 1, the value of this variable is equal to the variable (or
+        number) <i>y1</i>.  In default, the name is set to <b>_yvar</b>.
+<p>
+    <b>nweight(</b><i>newvar</i><b>)</b> specifies the name of the temporary variable, in the
+        expanded dataset with 1 observation per original observation per
+        scenario, containing the scenario-specific weights for use in the
+        scenario comparison.  These weights are equal to the weight
+        expression passed to the command, in observations in Scenario 0, and
+        equal to the weight expression specified by <b>sweight()</b>, in
+        observations in Scenario 1.  In default, the name is set to <b>_weight</b>.
+<p>
+    <b>ncfweight(</b><i>newvar</i><b>)</b> specifies the name of the temporary variable, in the
+        expanded dataset with 1 observation per original observation per
+        scenario, containing the cluster frequency weights for use in the
+        scenario comparison, specified in the <b>cfweight()</b> option of <b>somersd</b>, 
+        <b>cendif</b> and <b>censlope</b>.  These cluster frequency weights belong to
+        clusters in the original dataset, if a <b>cluster()</b> option is specified.
+        Otherwise, they belong to clusters in the extended two-scenario
+        dataset corresponding to the observations in the original dataset.
+        In default, the name is set to <b>_cfweight</b>.
+<p>
+    <b>nobs(</b><i>newvar</i><b>)</b> specifies the name of the temporary variable, in the
+        expanded dataset with 1 observation per original observation per
+        scenario, containing the sequential order of the observation, in the
+        original dataset, corresponding to each observation in the extended
+        dataset.  In default, the name is set to <b>_obs</b>.
+<p>
+    <b>nscen(</b><i>newvar</i><b>)</b> specifies the name of the temporary variable, in the
+        expanded dataset with 1 observation per original observation per
+        scenario, containing the scenario indicator of each observation in
+        the extended dataset.  In the case of <b>scsomersd</b> and <b>sccenslope</b>, this
+        temporary variable is an indicator of membership of Scenario 0, equal
+        to 0 for observations in Scenario 1, and 1 for observations in
+        Scenario 0.  In the case of <b>sccendif</b>, this temporary variable is an
+        indication of membership of Scenario 1, equal to 0 for observations
+        in Scenario 0, and 1 for observations in Scenario 1.  In default, the
+        name is set to <b>_scen0</b> by <b>scsomersd</b> and <b>sccenslope</b>, and to <b>_scen1</b> by
+        <b>sccendif</b>.
+<p>
+    <i>somersd_options</i>, <i>cendif_options</i> and <i>censlope_options</i> specify lists of
+        options, to be passed to <b>somersd</b>, <b>cendif</b> and <b>censlope</b>, respectively.
+        These options must not include the <b>funtype()</b> option, which is set
+        automatically to <b>funtype(vonmises)</b>.  In the case of <b>sccendif</b>, these
+        options must not include the <b>by()</b> option, which is set automatically
+        to the name of the Scenario 1 membership indicator variable specified
+        by the <b>nsscen()</b> option.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>scsomersd</b>, <b>sccendif</b> and <b>sccenslope</b> work by calling <b>somersd</b>, <b>cendif</b> and 
+    <b>censlope</b>, respectively, in a temporary extended dataset, with 1
+    observation per original observation per scenario.  This temporary
+    dataset is generated using the <b>expgen</b> package, downloadable from SSC.  It
+    contains temporary variables, which are the outcome variable,
+    scenario-specific weight variable, cluster frequency weight variable,
+    observation sequence variable, and scenario membership indicator
+    variable.  The outcome variable is equal to the input variable (or
+    number) <i>y0</i> for observations in scenario 0.  For observations in Scenario
+    1, the outcome variable is equal to the input variable (or number) <i>y1</i>, if
+    specified, and otherwise is equal to the input variable (or number) <i>y0</i>.
+    <b>sccomersd</b> calls <b>somersd</b> to estimate the Somers' <i>D</i>, or Kendall's tau-a, of
+    the outcome variable, with respect to membership of Scenario 0 instead of
+    Scenario 1.  <b>sccendif</b> and <b>sccenslope</b> call <b>cendif</b> and <b>censlope</b>,
+    respectively, to estimate the Hodges-Lehmann percentile differences
+    between observations in Scenario 0 and observations in Scenario 1.  In
+    all cases, the observations of the temporary extended dataset are
+    clustered, and the confidence interval calculation assumes that clusters
+    are sampled from a population of clusters, instead of assuming that
+    observations are sampled from a population of observations.  Clusters are
+    defined using the variable specified by the input <b>cluster()</b> option, if
+    one is supplied, and otherwise are defined using the original-observation
+    sequence variable specified by the <b>nobs()</b> option.
+<p>
+    Scenario comparison statistics include a large number of commonly used
+    statistics as special cases.  Examples include the Gini inequality
+    coefficient, the population attributable risk (PAR), percentiles
+    estimated from samples which may be clustered and/or weighted by sampling
+    probability, and Hodges-Lehmann percentile differences between paired
+    samples.
+<p>
+    The commands <b>sccenslope</b> and <b>sccendif</b> estimate the same parameters
+    {Hodges-Lehmann percentile differences), with confidence intervals
+    calculated by the same formulas.  However, <b>sccendif</b> uses the <b>cendif</b>
+    algorithm, which uses less computer time in small samples, and <b>sccenslope</b>
+    uses the <b>censlope</b> algorithm, which uses less computer time in large
+    samples.  For more details on the formulas, see the on-line and .pdf
+    documentation for <b>cendif</b> and <b>censlope</b>.
+<p>
+    The <b>somersd</b>, <b>cendif</b> and <b>censlope</b> commands are part of the <b>somersd</b>
+    package.  The <b>somersd</b> and <b>expgen</b> packages are downloadable from SSC.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    The following example estimates the Gini inequality coefficient for wages
+    in the <b>womenwage</b> data.  In this case, Scenario 0 is a fantasy lottery in
+    which each woman has a number of tickets proportional to her wage, and
+    Scenario 1 is a second fantasy lottery in which each woman has one
+    ticket, whatever her wage, even if it is zero.  The Gini inequality
+    coefficient is reported as Somers' <i>D</i>, and is the difference between 2
+    probabilities, namely the probability that the winner of the first
+    lottery has a higher wage than the winner of the second lottery and the
+    probability that the winner of the second lottery has a higher wage than
+    the winner of the first lottery.  This difference is always non-negative,
+    but is higher in populations with more unequal wage distributions.
+<p>
+        <b>. webuse womenwage, clear</b>
+        <b>. describe</b>
+        <b>. scsomersd wage [pwei=wage], swei(1) transf(z) tdist</b>
+<p>
+    The following example estimates the unstandardized population
+    attributable risk (PAR) of case status with respect to exposure in the
+    <b>ugdp</b> data.  In this case, Scenario 0 is the sample we have, in which some
+    subjects are exposed, and Scenario 1 is a fantasy sample, in which no
+    subjects are exposed.  The PAR is then the difference between the
+    proportion of subjects which are cases in Scenario 0 and the proportion
+    of subjects which are cases in Scenario 1.  This difference between
+    proportions is reported as Somers' <i>D</i>.  Note that the population
+    attributable risk (PAR) is a between-scenario difference, and is not the
+    same parameter as a population attributable fraction (PAF), which is
+    equal to one minus a between-scenario ratio, and which can be estimated
+    using the <b>punaf</b> package, downloadable from SSC.
+<p>
+        <b>. webuse ugdp, clear</b>
+        <b>. sort age exposed case</b>
+        <b>. describe</b>
+        <b>. list, sepby(age)</b>
+        <b>. scsomersd case [pwei=1], sweight(exposed==0) cfwei(pop) tdist</b>
+            <b>transf(z)</b>
+<p>
+    The following example estimates the age-standardized population
+    attributable risk (PAR) in the <b>ugdp</b> data.  We first define the total
+    numbers of subjects by age group, and by age group and exposure, in the
+    variables <b>wfreq</b> and <b>wxfreq</b>, respectively.  The ratio <b>dswei=wfreq/wxfreq</b>
+    is a direct standardization weight, standardizing from the sampled
+    population at each exposure level to a target population, with the same
+    age distribution as the total dataset at all exposure levels combined.
+    We then input these direct standardization weights to <b>scsomersd</b> to define
+    a difference between the prevalences of case status between Scenario 0
+    (the existing sample) and Scenario 1 (a fantasy sample with the same age
+    distribution and no exposure).
+<p>
+        <b>. webuse ugdp, clear</b>
+        <b>. sort age exposed case</b>
+        <b>. by age: egen wfreq=total(pop)</b>
+        <b>. by age exposed: egen wxfreq=total(pop)</b>
+        <b>. gene dswei=wfreq/wxfreq</b>
+        <b>. describe</b>
+        <b>. list, sepby(age exposed)</b>
+        <b>. scsomersd case [pwei=1], sweight(dswei*(exposed==0)) cfwei(pop)</b>
+            <b>tdist transf(z)</b>
+<p>
+    The following example measures percentile prices (in dollars) of cars in
+    the <b>auto</b> data.  First, we define a string variable <b>firm</b>, containing, for
+    each car, the firm that made the car.  We then calculate 2 sets of
+    percentile car prices (the 25th percentile, the median and the 75th
+    percentile), each defined as a percentile difference between car prices
+    under Scenario 0 (the sample of cars in the dataset) and Scenario 1 (a
+    fantasy scenario in which all cars have zero price).  The first set of
+    percentiles are unweighted, with confidence intervals calculated assuming
+    that car models have been sampled from a population of car models.  The
+    second set of percentiles are weighted by the car's volume in cubic
+    inches (<b>displacement</b>), with confidence intervals calculated using the
+    option <b>cluster(firm)</b>, assuming that firms have been sampled from a
+    population of firms.
+<p>
+        <b>. webuse auto, clear</b>
+        <b>. gene firm=word(make,1)</b>
+        <b>. lab var firm "Firm"</b>
+        <b>. sort foreign firm make</b>
+        <b>. describe</b>
+        <b>. tab firm, m</b>
+        <b>. sccendif price 0, tdist centile(25(25)75)</b>
+        <b>. sccendif price 0 [pwei=displacement], tdist centile(25(25)75)</b>
+            <b>cluster(firm)</b>
+<p>
+    The following example uses the <b>bpwide</b> data, with 1 observation for each
+    of a sample of fictional patients, and data on blood pressures before and
+    after an unidentified treatment.  We measure the Hodges-Lehmann median
+    difference between post-treatment and pre-treatment blood pressures in
+    the paired sample, with confidence intervals calculated to allow for the
+    non-independence of paired blood pressures from the same patient.  This
+    median difference is reported as a median slope, together with the mean
+    sign of all treated-untreated differences (between the same or different
+    patients), which is reported as Somers' <i>D</i>.
+<p>
+        <b>. webuse bpwide, clear</b>
+        <b>. sccenslope bp_after bp_before, tdist</b>
+<p>
+    The following example uses the same <b>bpwide</b> data, and calculates the
+    median pairwise difference between post-treatment and pre-treatment blood
+    pressures from the same patient (reported as a median slope), together
+    with the mean sign of those differences (reported as Somers' <i>D</i>).
+<p>
+        <b>. webuse bpwide, clear</b>
+        <b>. gene bp_diff=bp_after-bp_before</b>
+        <b>. lab var bp_diff "After-before blood pressure difference"</b>
+        <b>. sccenslope bp_diff 0, tdist</b>
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>scsomersd</b> saves in <b>e()</b> the estimation results from the <b>somersd</b> command
+    that it calls.  <b>sccendif</b> saves in <b>r()</b>, and optionally in <b>e()</b>, the results
+    from the <b>cendif</b> command that it calls.  <b>sccenslope</b> saves in <b>r()</b>, and in
+    <b>e()</b>, the results from the <b>censlope</b> command that it calls.  However, in
+    all cases, the estimation sample indicator <b>e()</b> indicates, in each
+    observation, the presence of that observation in Scenario 0, and is not
+    affected by the presence of the same observation in Scenario 1.
+    Observations present in one scenario may be absent in the other, due to
+    zero sampling probability weights.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, National Heart and Lung Institute, Imperial College London,
+    UK.
+    Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+     Manual: <b>[R] spearman</b>, <b>[R] ranksum</b>, <b>[R] signrank</b>, <b>[R] roc</b>, <b>[R] centile</b>
+    Online:  <b>ktau</b>, <b>ranksum</b>, <b>signrank</b>, <b>roc</b>, <b>centile</b>
+             <b>somersd</b>, <b>cendif</b>, <b>censlope</b>, <b>expgen</b>, <b>punaf</b> if installed
+</pre>

@@ -1,0 +1,422 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>seqlogit postestimation</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>seqlogit postestimation</b> -- Postestimation tools for seqlogit
+<p>
+<b><u>Description</u></b>
+<p>
+post estimation tools specifically for seqlogit:
+<p>
+    <b>seqlogitdecomp</b> Makes a graph showing a decomposition of the effect of a
+    variable on the highest achieved level of the dependent variable into
+    effects of that variable on passing each transition and the importance of
+    that transition as described in (Buis 2010).
+<p>
+    <b>uhdesc</b> creates a table of describtive statistics of the unobserved
+    variable at each transition. This is only available when the <b>sd()</b> option
+    was used for seqlogit.
+<p>
+    <b>seqlogit_sensitivity</b> is strictly speaking not a tool, but a helpfile
+    showing how to run a sensitivity analysis with <b>seqlogit</b>.
+<p>
+<p>
+The following standard postestimation commands are also available:
+<p>
+    command         description
+    -------------------------------------------------------------------------
+INCLUDE help post_estat
+INCLUDE help post_estimates
+INCLUDE help post_lincom
+INCLUDE help post_lrtest
+INCLUDE help post_margins
+INCLUDE help post_nlcom
+      <b>predict</b>       predictions
+INCLUDE help post_predictnl
+INCLUDE help post_suest
+INCLUDE help post_test
+INCLUDE help post_testnl
+    -------------------------------------------------------------------------
+<p>
+<p>
+<p>
+<a name="seqlogitdecomp"></a>-------------------------------------------------------------------------------
+help for <b>seqlogitdecomp</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Syntax for seqlogitdecomp</u></b>
+<p>
+        <b>seqlogitdecomp</b> <b>[</b> varlist <b>]</b> <b>,</b> <b>[</b> <b>overat(</b><i>overatlist</i><b>)</b> { <b><u>tab</u></b><b>le</b> | <b>area</b> }
+                 <b>marg</b> <b>at(</b><i>atlist</i><b>)</b> <b><u>subt</u></b><b>itle(</b><i>titlelist</i><b>)</b> <b><u>eql</u></b><b>abel(</b><i>labellist</i><b>)</b>
+                 <b>eqlegend</b> <b><u>xl</u></b><b>ine(</b><i>linearg</i><b>)</b> <b><u>yl</u></b><b>ine(</b><i>linearg</i><b>)</b> <b><u>ti</u></b><b>tle(</b><i>title</i><b>)</b>
+                 <b><u>na</u></b><b>me(</b><i>name</i><b>,</b><i> replace</i><b>)</b> <b><u>ysc</u></b><b>ale(</b><i>axis_suboptions</i><b>)</b>
+                 <b><u>xsc</u></b><b>ale(</b><i>axis_suboptions</i><b>)</b> <b><u>ysiz</u></b><b>e(</b><i>#</i><b>)</b> <b><u>xsiz</u></b><b>e(</b><i>#</i><b>)</b> <b>format(</b>%fmt<b>)</b> <b>z</b> <b>]</b>
+<p>
+<b><u>Description</u></b>
+<p>
+    The idea behind a sequential logit model is that it models the influence
+    of explanatory/independent/right-hand-side/x variables on the probability
+    of passing a set of transitions. For example, one can model the process
+    of attaining education as two transitions: a transition between finishing
+    high school or not, and a transition between wheter one went to college
+    or not given that one finished high school. If we assign a value to each
+    of these end states --- in the case of education those would typically be
+    (pseudo-)years of education --- than one can also study the effect of the
+    explanatory variables on the expected final outcome.
+<p>
+    The aim of <b>seqlogitdecomp</b> is to study the relationship between the
+    effects on each transition and the effects on the final outcome. It turns
+    out (Buis 2010) that these total effects --- that is, the marginal
+    effect, which is the derivative of the expected final outcome with
+    respect to the explanatory variables --- are a weighted sum of the
+    effects on each transition.
+<p>
+    If these transition specific effects are measured in terms of log odds
+    ratios, than the weight assigned to each transition is the product of
+    three elements: the proportion at risk, the variance, and the expected
+    gain from passing. So a tranisition becomes more important if more people
+    have to face that transition. The variance component of the weight is a
+    function that is small when virtually everybody passes a transition or
+    everybody fails a transition, and is large when the probability of
+    passing is about 50%. So, a transition does not add much to the total
+    effect if virtually everybody passes or fails that transition. Finally, a
+    transition becomes more important if the expected gain from passing
+    increases.
+<p>
+    If these transition specifc effects are measured in terms of marginal
+    effects, than the weights assigned to each transition are the product of
+    two elements: the proportion at risk, and the expected gain from passing.
+<p>
+    <b>seqlogitdecomp</b> displays a graph or a table showing a decomposition of the
+    effect of a variable on the final outcome into effects of the variable on
+    passing each transition and the importance of each transition (the
+    weight) as described in (Buis 2010). For the graph the variable whose
+    effect will be decomposed is specified in the <b>ofinterest()</b> option in 
+    <b>seqlogit</b>.  For the table the variable is specified as the <i>varlist</i>, the
+    default is all variables in the <b>seqlogit</b> model.
+<p>
+    The effect on the expected value can differ between groups in the
+    population, for example cohorts. The default graph is designed to show
+    how these differences are due to differences in effects on the
+    transitions across groups and differences in the importance of each
+    transition across groups. To continue the example: the effect of parental
+    status can change over cohorts, and {seqlogitdecomp} will tell the extend
+    to which this is due to changes in the effects on the transitions between
+    levels of education or changes in the importance of each transition. The
+    graph that will be displayed with the <b>area</b> option shows the contribution
+    of each transition without splitting it up into weights and effects.
+<p>
+    The table is designed to show this extra detail of this decomposition
+    without the comparison of groups. It will show the effects on each
+    transition, the weights and their components, the probabiltiy of passing
+    each transition, and the effect on the final outcome. It also shows the
+    standard errors for each of these components except for those components
+    that are by definition fixed and thus not uncertain, e.g.  the proportion
+    at risk at the first transitions, which is by definition 1.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +--------------+
+    ----+ Main options +-----------------------------------------------------
+<p>
+    <b>overat(</b><i>overlist</i><b>)</b> Specifies the values of the explanatory variables of the
+        groups that are to be compared. It cannot be specified in combination
+        with the <b>table</b> or <b>area</b> option. It overrides any value specified in
+        the <b>at</b> option. Each comparison is seperated by a comma. The syntax
+        for <i>overlist</i> is:
+<p>
+        <i>varname_1</i> # [<i>varname_2</i> # [...]], <i>varname_1</i> # [<i>varname_2</i> # [...]],
+        [...]
+<p>
+    <b>at(</b><i>atlist</i><b>)</b> specifies the values at which the equations are evaluated.
+        The syntax for <i>atlist</i> is: <i>varname</i> # [<i>varname</i> # ...]. The equations
+        will be evaluated at the mean values of any of the variables not
+        specified in <b>at</b> if those variables are not categorical factor
+        variables. For cateforical factor variables the default is the
+        minimum (the first category).
+<p>
+        Say the dependent variable is highest achieved level of education,
+        which is influenced by child's Socio Economic Status (ses) and cohort
+        (coh) and the interaction between ses and coh (c.ses#c.coh). We want
+        to compare the decomposition of the effect of ses over different
+        cohorts for mean value of ses. Say that coh has only three values: 1,
+        2, and 3 and the mean value of ses is .5. Than the <b>overat</b> and {otp
+        at} options would read:
+<p>
+        overat( coh 1, coh 2, coh 3 ) at( ses .5 )
+<p>
+    <b>marg</b> specifies that the transition specific effects are marginal effects
+        instead of log odds ratios. This option may not be specified in
+        combination witht the <b>area</b> option.
+<p>
+    <b>table</b> specifies that the decomposition is to be displayed as a table
+        instead of a graph. It consists of multiple calls to margins, and it
+        can take a while to run. The default is to show an array of
+        rectangles whose width represents the weight of a transition and the
+        height the effect.
+<p>
+    <b>area</b> specifies that an area graph is displayed showing the contribution
+        of each transition. The default is to show an array of rectangles
+        whose width represents the weight of a transition and the height the
+        effect, thus splitting each transitions contribution in an effect and
+        a weight.
+<p>
+    <b>format(</b>%fmt<b>)</b> specifies the format used to display the results in the
+        table. This option can only be specified in combination with the
+        <b>table</b> option.
+<p>
+    <b>z</b> specifies that z-values are displayed instead of standard errors. This
+        option can only be specified in combination with the <b>table</b> option.
+<p>
+<p>
+        +---------------+
+    ----+ Graph options +----------------------------------------------------
+<p>
+    The graph options cannot be specified in combination with the <b>table</b>
+    option.
+<p>
+    <b><u>subt</u></b><b>itel(</b><i>titlelist</i><b>)</b> specifies the titles above each group, cohort in the
+        example above. The syntax of<i> titlelist</i> is "string" "string" [...].
+        The number of titles must equal the number of groups. This option may
+        not be specified in combination with the <b>area</b> option.
+<p>
+    <b><u>eql</u></b><b>abel(</b><i>labellist</i><b>)</b> specifies labels for each transition.  The syntax of
+        <i>labellist</i> is "string" "string" [...]. The number of labels must equal
+        the number of transitions. If one wants to let the label span more
+        than one line, one can use `" "string1" "string2" "'.
+<p>
+    <b>eqlegend</b> specifies that a legend is used to identify the different
+        transitions. By default the transitions are identified using titles
+        on the right of the graph.
+<p>
+    <b><u>xl</u></b><b>ine(</b><i>numlist</i><b>)</b> see: added line options
+<p>
+    <b><u>yl</u></b><b>ine(</b><i>numlist</i><b>)</b> see: added line options
+<p>
+    <b><u>ti</u></b><b>tle(</b><i>title</i><b>)</b> see: title_options
+<p>
+    <b><u>na</u></b><b>me(</b><i>name</i><b>,</b><i> replace</i><b>)</b> see: name_option
+<p>
+    <b><u>[y|x]sc</u></b><b>ale(</b><i>axis sub options</i><b>)</b> see: axis_scale_options
+<p>
+    <b><u>[y|x]lab</u></b><b>le(</b><i>rule_or_values</i><b>)</b> see: axis_options
+<p>
+    <b>[y|x]title(</b><i>title</i><b>)</b> see: axis_title_options
+<p>
+    <b><u>[y|x]siz</u></b><b>e(</b><i>#</i><b>)</b> see: region_options
+<p>
+<p>
+<b><u>Example</u></b>
+<b>    use "http://fmwww.bc.edu/repec/bocode/g/gss.dta", clear</b>
+<b>                </b>
+<b>    recode degree 4=3</b>
+<b>    label define degree 0 "lt high school" ///</b>
+<b>                        1 "high school"    ///</b>
+<b>                        2 "junior college" ///</b>
+<b>                        3 "college", modify</b>
+<b>    label value degree degre</b>
+<p>
+<b>    seqlogit degree south                   ///</b>
+<b>         c.coh##c.coh if black == 0 ,       ///</b>
+<b>         tree(0 : 1 2 3 , 1 : 2 3 , 2 : 3 ) ///</b>
+<b>         ofinterest(paeduc)                 ///</b>
+<b>         over(c.coh##c.coh)                 ///</b>
+<b>         levels(0=9, 1=12, 2=14, 3=16)</b>
+<p>
+<b>    seqlogitdecomp, overat(coh 1.5,       ///</b>
+<b>                           coh 2.5,       ///</b>
+<b>                           coh 3.5,       ///</b>
+<b>                           coh 4.5,       ///</b>
+<b>                           coh 5.5,       ///</b>
+<b>                           coh 6.5)       ///</b>
+<b>       at(south 0 paeduc 12)              ///</b>
+<b>       yline(0) xline(0)                  ///</b>
+<b>       subtitle("1915" "1925" "1935"      ///</b>
+<b>                "1945" "1955" "1965")     ///</b>
+<b>       eqlabel(`""less than high school" "versus" "high school or more""' ///</b>
+<b>               `""high school" "versus" "any college""'                   ///</b>
+<b>               `""junior college" "versus" "college""' )</b>
+<b>                </b>
+<b>    seqlogitdecomp paeduc, table     ///</b>
+<b>       at(coh 1.5 south 0 paeduc 12) </b>
+<b>        </b>
+<b>    seqlogitdecomp,  area                                                 ///</b>
+<b>       at(south 0 paeduc 12)                                              ///</b>
+<b>       eqlabel(`""less than high school" "versus" "high school or more""' ///</b>
+<b>               `""high school" "versus" "any college""'                   ///</b>
+<b>               `""junior college" "versus" "college""' )                  ///</b>
+<b>       xlab(2 "1920" 3 "1930" 4 "1940" 5 "1950" 6 "1960" 7 "1970")        ///</b>
+<b>       xtitle("year of birth")</b>
+<p>
+<p>
+<a name="uhdesc"></a>-------------------------------------------------------------------------------
+help for <b>uhdesc</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Syntax for uhdesc</u></b>
+<p>
+        <b>uhdesc</b> <b>,</b> <b>[</b> <b>at(</b><i>atlist</i><b>)</b> <b>overat(</b><i>overatlist</i><b>)</b> <b><u>l</u></b><b>evels(</b><i>levellist</i><b>)</b>
+                 <b>overlab(</b><i>stringlist</i><b>)</b> <b>draws(</b><i>#</i><b>)</b> ]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>uhdesc</b> creates a table of describtive statistics of the unobserved
+    variable at each transition. This is only available when the <b>sd()</b> option
+    was used for seqlogit.  When the <b>sd()</b> option is specified one is
+    estimating the parameters that would occur if there is an unobserved
+    variable, which is normally distributed, wich at the first transition has
+    a mean of zero, a standard deviation as specified in the <b>sd()</b> option, and
+    is uncorrelated witht the observed covariates, and one correctly
+    controlled for this unobserved variable. The consequences of such an
+    unobserved variable and the way to estimate the parameters in such a
+    scenario are discussed in (Buis 2011). The aim of <b>uhdesc</b> is to show what
+    happens to this unobserved variable at the different transitions, and
+    thus get an insight into why the estimates in the scenario are different
+    (or not) from a regular sequential logit.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>overat(</b><i>overlist</i><b>)</b> Specifies the values of the explanatory variables of the
+        groups that are to be compared. It overrides any value specified in
+        the <b>at</b> option. Each comparison is seperated by a comma. The syntax
+        for <i>overlist</i> is:
+<p>
+        <i>varname_1</i> # [<i>varname_2</i> # [...]], <i>varname_1</i> # [<i>varname_2</i> # [...]],
+        [...]
+<p>
+    <b>at(</b><i>atlist</i><b>)</b> specifies the values at which the equations are evaluated.
+        The syntax for <i>atlist</i> is: <i>varname</i> # [<i>varname</i> # ...]. The equations
+        will be evaluated at the mean values of any of the variables not
+        specified in <b>at</b>.
+<p>
+        Say the dependent variable is highest achieved level of education,
+        which is influenced by child's Socio Economic Status (ses) and cohort
+        (coh) and the interaction between ses and coh (_ses_X_coh). We want
+        to compare the decomposition of the effect of ses over different
+        cohorts for mean value of ses. Say that coh has only three values: 1,
+        2, and 3 and the mean value of ses is .5. Than the <b>overat</b> and {otp
+        at} options would read:
+<p>
+        overat( coh 1, coh 2, coh 3 ) at( ses .5 )
+<p>
+        Notice that the values for the interaction term need not be specified
+        in the <b>overat()</b> option, as long as it was created using the <b>over()</b>
+        option in seqlogit.
+<p>
+    <b>overlab(</b><i>stringlist</i><b>)</b> specifies the label that is to be attached to each
+        group specified in the <b>overatlist()</b> option. Spaces are not allowed
+        but an _ will be displayed as an space. The number of labels has to
+        be the same as the number of groups specified in the <b>overatlist()</b>
+        option.
+<p>
+        To continue the example above: Say that a value of 1 on the variable
+        coh corresponds to the cohort born in 1950, a value 2 corresponds to
+        the cohort born in 1970, the value 3 corresponds to the cohort born
+        in 1990, then the {cmd overlab()} option would read:
+<p>
+        overlab(1950 1970 1990)
+<p>
+    <b><u>l</u></b><b>evels(</b><i>levellist</i><b>)</b> specifies the values attached to each level of the
+        dependent variable. If it is not specified the values of the
+        dependent variabel will be used. The syntax for <i>levels</i> is: # = # [, #
+        = #, ...]
+<p>
+<b><u>Example</u></b>
+<p>
+<b>    sysuse nlsw88, clear</b>
+<b>    gen ed = cond(grade&lt; 12, 1, ///</b>
+<b>             cond(grade==12, 2, ///</b>
+<b>             cond(grade&lt;16,3,4))) if grade &lt; .</b>
+<b>    gen byr = (1988-age-1950)/10</b>
+<b>    gen white = race == 1 if race &lt; .</b>
+<p>
+<b>    seqlogit ed byr south,                   ///   </b>
+<b>             ofinterest(white) over(byr)     ///</b>
+<b>             tree(1 : 2 3 4, 2 : 3 4, 3 : 4) ///</b>
+<b>             or sd(1)</b>
+<b>    </b>
+<b>    uhdesc</b>
+<p>
+<p>
+<p>
+<a name="predict"></a>-------------------------------------------------------------------------------
+help for <b>predict</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Syntax for predict</u></b>
+<p>
+        <b>predict</b> [<i>type</i>] <i>newvar</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>statistic</i> <b><u>o</u></b><b>utcome(</b><i>#</i><b>)</b> <b><u>trans</u></b><b>ition(</b><i>#</i><b>)</b>
+                <b><u>c</u></b><b>hoice(</b><i>#</i><b>)</b> <b><u>eq</u></b><b>uation(</b><i>#</i><b>)</b> <b>levels(</b><i>levellist</i><b>)</b> ]
+<p>
+    <i>statistic</i>       Description
+    -------------------------------------------------------------------------
+      <b>xb</b>            xb, fitted values
+      <b>stdp</b>          standard error of the prediction
+      <b><u>trp</u></b><b>r</b>          probability of passing transition
+      <b><u>tra</u></b><b>trisk</b>      proportion of respondents at risk of passing transition
+      <b><u>trv</u></b><b>ar</b>         variance of the indicator variable indicating whether or
+                      not the respondent passed the transition
+      <b><u>trg</u></b><b>ain</b>        difference in expected highest achieved level between
+                      those that pass the transition and those that do not
+      <b><u>trw</u></b><b>eight</b>      weight assigned to transition if transition specific
+                      effects are log odds ratios
+      <b><u>trmw</u></b><b>eight</b>     weight assigned to transition if transition specific
+                      effects are marginal effects
+      <b><u>treff</u></b><b>ect</b>      contribution of transition to the total effect.
+      <b><u>p</u></b><b>r</b>            probability that an outcome is the highest achieved
+                      outcome.
+      <b>y</b>             expected highest achieved level
+      <b><u>eff</u></b><b>ect</b>        Effect of variable of interest on expected highest
+                      achieved level. This variable is specified in the
+                      <b>ofinterest()</b> option in <b>seqlogit</b>. Interactions with the
+                      variables specified in the <b>over()</b> option of <b>seqlogit</b>
+                      are automatically taken into account.
+      <b><u>resid</u></b><b>uals</b>     difference between highest achieved level and expected
+                      highest achieved level.
+      <b><u>sc</u></b><b>ore</b>         first derivative of the log likelihood with respect to
+                      the linear predictor.
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Options for predict</u></b>
+<p>
+    <b><u>trans</u></b><b>ition(</b><i>#</i><b>)</b> specifies the transition, 1 is the first transition
+        specified in the <b>tree</b> option in <b>seqlogit</b>, 2 the second, etc.
+<p>
+    <b>choice(</b><i>#</i><b>)</b> specifies the choice within the transition, 0 is the choice
+        (the reference category), 1 the second, etc.
+<p>
+    <b><u>eq</u></b><b>uation(</b><i>#</i><b>)</b> specifies the equation, #1 is the first equation, #2 the
+        second, etc.
+<p>
+    <b><u>l</u></b><b>evels(</b><i>levellist</i><b>)</b> specifies the values attached to each level of the
+        dependent variable. If it is not specified the values of the
+        dependent variabel will be used. The syntax for <i>levels</i> is: # = # [, #
+        = #, ...]
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Buis, Maarten L. 2010 ``Chapter 6, Not all transitions are equal: The
+    relationship between inequality of educational opportunities and
+    inequality of educational outcomes'', In:  Buis, Maarten L. ``Inequality
+    of Educational Outcome and Inequality of Educational Opportunity in the
+    Netherlands during the 20th Century''.  PhD thesis.  
+    http://www.maartenbuis.nl/dissertation/chap_6.pdf
+<p>
+    Buis, maarten L. 2011 ``The Consequences of Unobserved Heterogeneity in a
+    Sequential Logit Model'', Research in Social Stratification and Mobility,
+    29(3), pp. 247-262.  http://dx.doi.org/10.1016/j.rssm.2010.12.006
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: help for <b>seqlogit</b>, <b>estimates</b>, <b>lincom</b>, <b>lrtest</b>, <b>mfx</b>, <b>nlcom</b>, 
+             <b>predictnl</b>, <b>suest</b>, <b>test</b>, <b>testnl</b>
+<p>
+</pre>

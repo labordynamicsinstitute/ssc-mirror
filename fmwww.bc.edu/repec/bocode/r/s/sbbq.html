@@ -1,0 +1,111 @@
+<pre>
+<p>
+<b>help sbbq</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>sbbq</b> -- Identify turning points in time series using the BBQ algorithm
+        (Harding and Pagan, 2002)
+<p>
+                                        
+<b><u>Syntax</u></b>
+<p>
+        <b>sbbq</b> [<i>varname</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+      <b><u>w</u></b><b>indow(</b><i>#</i><b>)</b>            window over which local minima and maxima are
+                            computed; default is <b>window(2)</b>
+      <b><u>p</u></b><b>hase(</b><i>#</i><b>)</b>             minimum phase length; default is <b>phase(2)</b>
+      <b><u>c</u></b><b>ycle(</b><i>#</i><b>)</b>             minimum cycle length; default is <b>cycle(5)</b>
+    -------------------------------------------------------------------------
+    <b>by</b> is allowed; see <b>[D] by</b>.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>sbbq</b> generates a new variable "<i>varname</i><b>_point</b>".  Observation <i>j</i> of the new
+    variable equals 1 if <i>varname</i>[<i>j</i>] is a peak, -1 if <i>varname</i>[<i>j</i>] is a trough,
+    and 0 otherwise.
+<p>
+    The algorithm identifies potential turning points as the local minima and
+    maxima in the series. Candidate points must then satisfy two conditions:
+    phases are at least <i>p</i> quarters long, and complete cycles are at least <i>c</i>
+    quarters long.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>window(</b><i>#</i><b>)</b> determines the number of observations # on both sides over
+        which local minima and maxima are computed.  Following Harding and
+        Pagan (2002), the default is # = 2.
+<p>
+        A candidate peak is an observation <i>j</i> for which
+        <i>varname</i>[<i>j - #</i>], ..., <i>varname</i>[<i>j - 1</i>] &lt; <i>varname</i>[<i>j</i>] &gt;
+        <i>varname</i>[<i>j + 1</i>], ..., <i>varname</i>[<i>j + #</i>].
+<p>
+        A candidate trough is an observation <i>k</i> for which
+        <i>varname</i>[<i>k - #</i>], ..., <i>varname</i>[<i>k - 1</i>] &gt; <i>varname</i>[<i>k</i>] &lt;
+        <i>varname</i>[<i>k + 1</i>], ..., <i>varname</i>[<i>k + #</i>].
+<p>
+    <b>phase(</b><i>#</i><b>)</b> imposes that every phase is at least # quarters long. In
+        business cycle analysis, a phase is an expansion or a contraction.
+        The default is # = 2.
+<p>
+    <b>cycle(</b><i>#</i><b>)</b> imposes that every cycle is at least # quarters long. A cycle is
+        the period between two peaks or two troughs. The default is # = 5.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    In their article, Harding and Pagan (2002) use the insights of Bry and
+    Boschan (1971) to produce a business cycle dating algorithm based on
+    quarterly data. BBQ stands for "Bry and Boschan Quarterly".
+    Nothing prevents the use of this program with monthly data, provided that
+    the appropriate options (window, phase, and cycle) are specified.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    <b>. sysuse gnp96, clear</b>
+<p>
+    <b>. generate lgnp = log(gnp96)</b>
+<p>
+    <b>. sbbq lgnp, w(2) p(2)</b>
+<p>
+    <b>. egen min_lgnp = min(lgnp)</b>
+<p>
+    <b>. list date lgnp_point if inlist(lgnp_point,1,-1)</b>
+<p>
+    <b>. tsline lgnp ||</b>
+        <b>pcspike min_lgnp date lgnp date if lgnp_point==1 ||</b>
+        <b>pcspike min_lgnp date lgnp date if lgnp_point==-1,</b>
+        <b>lpattern(dash) leg(order(2 "Peaks" 3 "Troughs"))</b>
+        <b>ti("Turning Points in US LogGNP")</b>
+<p>
+                   
+<b><u>Author</u></b>
+<p>
+    Philippe Bracke, London School of Economics, UK
+    p.bracke@lse.ac.uk
+<p>
+                
+<b><u>References</u></b>
+<p>
+    Bry, G., and C. Boschan (1971).  Cyclical Analysis of Time Series:
+        Selected Procedures and Computer Programs, NBER, New York.
+<p>
+    Engel, James (2005). Business Cycle Dating Programs,
+        http://www.ncer.edu.au/data
+<p>
+    Harding, D. and A. Pagan (2002).  "Dissecting the cycle: A methodological
+        investigation," Journal of Monetary Economics, 49: 365–81.
+<p>
+<p>
+<b><u>Acknowledgement</u></b>
+<p>
+    The GAUSS code made available by James Engel (2005) was essential in
+    helping the author writing this program.
+    John C. Bluedorn and Andrea Pescatori provided very useful suggestions to
+</pre>

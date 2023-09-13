@@ -1,0 +1,26 @@
+d 'SYSPORT': module to zip system directories for porting to another machine
+d
+d	sysport inputs a list of one or more sysdir code words for
+d system      directories and saves the corresponding directories
+d to a zip file,      in which the system directories can be ported
+d to another machine.	   This is very useful if a user wants to
+d port the user's add-on      packages to another machine, which
+d may have no internet access or      restricted internet access,
+d so the user may not be able to install      add-on packages using
+d net or ssc. 
+d
+d KW: SSC
+d KW: packages
+d KW: adopath
+d KW: plus
+d KW: personal
+d
+d Requires: Stata version 10 
+d
+d Distribution-Date: 20211211
+d
+d Author: Roger Newson,  King's College London
+d Support: email roger.newson@@kcl.ac.uk
+d
+f sysport.sthlp
+f sysport.ado

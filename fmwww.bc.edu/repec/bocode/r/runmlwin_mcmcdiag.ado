@@ -1,4 +1,4 @@
-*! runmlwin_mcmcdiag.ado, Chris Charlton and George Leckie, 19May2016
+*! runmlwin_mcmcdiag.ado, Chris Charlton and George Leckie, 08Sep2023
 program runmlwin_mcmcdiag, rclass byable(recall)
 	if _caller() >= 12 version 12.0
 	if _caller() <= 9 version 9.0 

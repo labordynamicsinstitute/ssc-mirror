@@ -1,0 +1,40 @@
+<pre>
+<b>help spmat use</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>spmat use</b> -- Load an <b>spmat</b> object into memory
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>spmat use</b> <i>objname</i> <b>using</b> <i>filename</i> [<b>, replace</b>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>spmat use</b> creates the <b>spmat</b> object <i>objname</i> from the file <i>filename</i>
+    previously saved with <b>spmat save</b>.  <b>replace</b> permits <b>spmat use</b> to overwrite
+    <i>objname</i> if it already exists.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    Setup
+        <b>. clear all</b>
+        <b>. set memory 50m</b>
+        <b>. use pollute</b>
+        <b>. spmat contiguity cobj using pollutexy, id(id) normalize(minmax)</b>
+        <b>. spmat save cobj using cobj.spmat</b>
+        <b>. spmat drop cobj</b>
+<p>
+    Create the spmat object <b>cobj</b> from the file <b>cobj.spmat</b>
+        <b>. spmat use cobj using cobj.spmat</b>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>spmat</b>, <b>spreg</b>, <b>spivreg</b>, <b>spmap</b>, <b>shp2dta</b>, <b>mif2dta</b> (if installed)
+<p>
+</pre>

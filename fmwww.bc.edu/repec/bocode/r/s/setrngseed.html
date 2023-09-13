@@ -1,0 +1,111 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>setrngseed</b>                                
+-------------------------------------------------------------------------------
+<p>
+<b><u>Set random-number seed using random integer from random.org</u></b>
+<p>
+        <b>setrngseed</b> [<b>,</b> <i>options</i>]
+<p>
+<p>
+        <i>options</i>              description
+       ------------------------------------------------------------
+        <i>none</i>                 set seed
+<p>
+        <b><u>v</u></b><b>erify</b>               set seed, but first verify random.org working
+<p>
+        <b><u>q</u></b><b>uery</b>                do not set seed; report random.org quota
+        <b><u>noset</u></b><b>seed</b>            do not set seed, report it instead
+       ------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    Typing <b>setrngseed</b> without arguments is an alternative to using Stata's 
+    set seed command.  <b>setrngseed</b> obtains truely random integers from 
+    www.random.org and uses those results to set the seed of Stata's
+    pseudo-random-number generator.
+<p>
+    www.random.org will currently deliver roughly 32,000 seeds per 24-hour
+    period.  You can visit www.random.org and purchase additional random
+    numbers should you need them, which is unlikely, or to make a donation in
+    support of their efforts.
+<p>
+    <b>setrngseed</b> is usually used without any options being specified.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>verify</b> specifies that before setting the seed, <b>setrngseed</b> verify that
+        www.random.org is working as <b>setrngseed</b> expects.  This involves
+        obtaining two rather than one random number and so consumes your
+        24-hour quota more quickly.
+<p>
+        www.random.org is a separate organization from www.stata.com, and
+        thus they could change the way their site operates.  When option
+        <b>verify</b> is specified, <b>setrngseed</b> requests two random numbers and
+        verifies that they are different from each other.
+<p>
+    <b>query</b> does not set the random-number seed.  It instead reports the number
+        of seeds www.random.org would supply remaining in your 24-hour quota.
+<p>
+    <b>nosetseed</b> does not set the random-number seed.  It instead reports the
+        seed that would have been set.  <b>nosetseed</b> is used in debugging
+        <b>setrngseed</b>.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>setrngseed</b> sets the Stata's random-number seed randomly based on
+    measurements of atmospheric noise obtained from the website 
+    www.random.org.
+<p>
+    As of September 30, 2010, www.random.org has a quota system in which each
+    IP address starts off with a quota of 1,000,000 random bits which is
+    topped off with up to 200,000 bits each 24-hour period.  <b>setrngseed</b> uses
+    31 bits each time it sets Stata's random-number seed, so your quota
+    starts off with approximately 32,258 seeds and is topped off with up to
+    6,451 seeds per day.  Additional random bits can be purchased through the
+    website.
+<p>
+<p>
+    <b>setrngseed</b> will very likely break if www.random.org changes the protocol
+    for obtaining random numbers.  If <b>setrngseed</b> fails repeatedly, please
+    send the the authors email, but only after checking your current
+    random-bit allowance with <b>setrngseed, query</b>.
+<p>
+<p>
+<b><u>Methods and formulas</u></b>
+<p>
+    A random integer between -1,000,000,000 and +1,000,000,000 is obtained
+    from random.org, 1,000,000,000 is added to it, and that number is used to
+    set the random-number seed.
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>setrngseed</b> saves the following in <b>r()</b>:
+<p>
+    Scalars   
+      <b>r(seed)</b>        value returned by the web service (only if <b>query</b> has not
+                       been specified)
+      <b>r(quota)</b>       your current IP's quota (only if <b>query</b> has been
+                       specified)
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Antoine Terracol, Université Paris 1
+    terracol@univ-paris1.fr
+<p>
+    William Gould, StataCorp
+    wgould@stata.com
+<p>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual: <b>[R] set seed</b>, <b>[D] generate</b>
+<p>
+    Online: help for set seed, random numbers
+</pre>

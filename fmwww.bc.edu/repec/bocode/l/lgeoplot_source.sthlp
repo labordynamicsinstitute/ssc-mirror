@@ -13,7 +13,7 @@
 *!     {helpb lgeoplot_source##geo_welzl:geo_welzl()}
 *! {asis}
 
-version 17
+version 16.1
 
 *! {smcl}
 *! {marker geo_area}{bf:geo_area()}{asis}
@@ -956,7 +956,7 @@ end
 
 *! {smcl}
 *! {marker geo_symbol}{bf:symbol()}{asis}
-*! version 1.0.1  01jul2023  Ben Jann
+*! version 1.0.2  06jul2023  Ben Jann
 *!
 *! Returns the coordinates of a selected symbol
 *!
@@ -1037,7 +1037,7 @@ real matrix _geo_symbol_arc(| real scalar n0, string scalar arg)
     return((cos(r), sin(r)))
 }
 
-real matrix _geo_symbol_pentagram(| real scalar n, string scalar arg)
+real matrix _geo_symbol_star(| real scalar n, string scalar arg)
 {
     real matrix XY, xy
     pragma unused n
@@ -1054,7 +1054,7 @@ real matrix _geo_symbol_pentagram(| real scalar n, string scalar arg)
     return(XY)
 }
 
-real matrix _geo_symbol_hexagram(| real scalar n, string scalar arg)
+real matrix _geo_symbol_star6(| real scalar n, string scalar arg)
 {
     real matrix XY, xy
     pragma unused n
@@ -1069,6 +1069,24 @@ real matrix _geo_symbol_hexagram(| real scalar n, string scalar arg)
     XY = colshape(((XY[5::6,] \ XY[1::4,]), xy[1::6,]), 2)
     XY = XY \ XY[1,] // last point = first point
     return(XY)
+}
+
+real matrix _geo_symbol_hexagram(| real scalar n, string scalar arg)
+{
+    real matrix XY
+    pragma unused n
+    pragma unused arg
+    
+    XY = _geo_symbol_star6()
+    return(XY[(1,5,9,1),] \ (.,.) \ XY[(7,11,3,7),])
+}
+
+real matrix _geo_symbol_pentagram(| real scalar n, string scalar arg)
+{
+    pragma unused n
+    pragma unused arg
+    
+    return(_geo_symbol_star()[(1,5,9,3,7,1),])
 }
 
 real matrix _geo_symbol_pin(| real scalar n0, string scalar arg)
@@ -1108,15 +1126,15 @@ real matrix _geo_symbol_pin2(| real scalar n0, string scalar arg)
     }
     if (n0>=.) n = max((4, ceil(a * 100)))
     else       n = n0
-    // outer polygon
+    // outer polygon (counterclockwise)
     c = 2 - a
     r = rangen(-asin(a/c), pi()+asin(a/c), n+1)
     xy0 = a * (cos(r),sin(r))
     xy0[,2] = xy0[,2] :+ c
     xy0 = xy0 \ (0,0) \ xy0[1,] 
     xy0 = xy0, J(rows(xy0),1,0) // plevel=0
-    // inner polygon
-    r = rangen(0, 1, n+1) * (2 * pi())
+    // inner polygon (clockwise)
+    r = rangen(1, 0, n+1) * (2 * pi())
     xy1 = (0.5*a) * (cos(r), sin(r))
     xy1[,2] = xy1[,2] :+ c
     xy1 = (.,.) \ xy1

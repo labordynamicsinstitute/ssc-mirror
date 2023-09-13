@@ -1,0 +1,17 @@
+d 'SUNBURST': module for (half) sunburst plots
+d
+d   The command is based on the following guide on Medium:
+d Half-sunburst plots. 
+d
+d KW: graphics
+d KW: sunburst
+d
+d Requires: Stata version 15 and palettes, colrspace from SSC
+d
+d Distribution-Date: 20230810
+d
+d Author: Asjad Naqvi, WU Vienna
+d Support: email asjadnaqvi@@gmail.com
+d
+f sunburst.ado
+f sunburst.sthlp

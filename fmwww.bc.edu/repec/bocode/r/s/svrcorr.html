@@ -1,0 +1,102 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>svrcorr</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Correlations of variables for survey data, with with replication-based standard</u></b>
+<b><u>&gt;  errors</u></b>
+<p>
+<p>
+        <b>svrcorr</b>  [<i>varlist</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b>pw</b> <b><u>o</u></b><b>bs</b> <b>sig</b> <b><u>p</u></b><b>rint(</b><i>#</i><b>)</b> <b><u>st</u></b><b>ar(</b><i>#</i><b>)</b>
+                 <b><u>b</u></b><b>onferroni</b> <b><u>sid</u></b><b>ak</b>
+<p>
+<p>
+<b>by</b> <i>...</i> <b>:</b> may be used with the above commands; see by.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>svrcorr</b> displays the correlation matrix for <i>varlist</i> or, if <i>varlist</i> is not
+specified, for all variables in the data.  Observations are excluded from the
+calculation due to missing values on a casewise basis, unless the <b>pw</b> option is
+specified.
+<p>
+Significance levels of the correlations are based on standard errors that are
+calculated using a series of user-supplied replication weights, by balanced
+repeated replication (BRR) or the survey jackknife (JK1, JK2, or JKn).  This is
+an alternate method to the Taylor series linearization methods used by Stata's 
+svy commands.  See survwgt for details on the creation of weights and
+estimation of variances with replication.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>pw</b> specifies that observations are to be excluded from the calculations on a
+    pairwise basis.  The default is casewise.
+<p>
+<b>obs</b> adds a line to each row of the matrix reporting the number of observations
+    used in calculating the correlation coefficient.
+<p>
+<b>sig</b> adds a line to each row of the matrix reporting the significance level of
+    each correlation coefficient.
+<p>
+<b>print(</b><i>#</i><b>)</b> specifies the significance level of correlation coefficients to be
+    printed.  Coefficients with larger significance levels are left blank.
+    <b>print(10)</b> or <b>print(.1)</b> would list only coefficients significant at the 10%
+    level or better.
+<p>
+<b>star(</b><i>#</i><b>)</b> specifies the significance level of coefficients to be starred.
+    <b>star(5)</b> or <b>star(.05)</b> would star all coefficients significant at the 5%
+    level or better.
+<p>
+<b>bonferroni</b> makes the Bonferroni adjustment to calculated significance levels.
+    This affects printed significance levels and the <b>print()</b> and <b>star()</b>
+    options.  <b>"pwcorr, print(.05) bonferroni"</b> prints coefficients with
+    Bonferroni-adjusted significance levels of .05 or less.
+<p>
+<b>sidak</b> makes the Sidak adjustment to calculated significance levels.  This
+    affects printed significance levels and the <b>print()</b> and <b>star()</b> options.
+    <b>"pwcorr, print(.05) sidak"</b> prints coefficients with Sidak-adjusted
+    significance levels of .05 or less.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        {inp:. svrcorr dvcrate medage
+<p>
+        . svrcorr mrgrate dvcrate medage, pw obs sig
+<p>
+<p>
+<p>
+<b><u>Methods and formulae</u></b>
+<p>
+See survwgt for details of the replication methods.
+<p>
+For calculation of variances and significances, the correlations are first
+transformed using Fisher's Z transformation, in order to normalize the
+distribution.
+<p>
+<p>
+<b><u>Saved Results</u></b>
+<p>
+<b>svrcorr</b> saves in r() the following for the last-calculated correlation:
+<p>
+        rho  the estimated correlation coefficient
+        N    the number of observations
+        p    the p-level
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+These commands consists largely of the ado file code from official Stata's
+<b>pwcorr</b> command.  I would like to thank Bobby Gutierrez at StataCorp for advice
+on implementation of BRR.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+        Nick Winter
+        Cornell University
+        nw53@cornell.edu
+<p>
+</pre>

@@ -1,0 +1,119 @@
+<pre>
+{*.* !22 January 2010} <b> help sixplot</b>
+-------------------------------------------------------------------------------
+    Title
+<p>
+<b><u> Syntax</u></b>
+<p>
+        <b>sixplot</b><i>varlist</i> [<i>if</i>] [<i>in</i>]
+<p>
+<b><u> Description</u></b>
+<p>
+    <b>sixplot</b> displays six diagnostic and descriptive graphs for a single
+    variable formatted as a 2 row, 3 column array.  The arguments are <i>varname</i>
+    and <i>sequence variable</i>.  If no <i>sequence variable</i> is named, the program
+    plots <i>varname</i> versus the sequence the data are stored in.
+<p>
+    The plot in the (1,1) position is a <b>sequence plot</b> of <i>varname</i> versus the
+        sequence.
+<p>
+    The plot in the (1,2) position is a <b>residual versus fitted plot</b> of the
+        regression of <i>varname</i> versus sequence.
+<p>
+    The plot in the (1,3) position is a <b>boxplot</b> of <i>varname</i>.
+<p>
+    The plot in the (2,1) position is a <b>first difference plot</b> of <i>varname</i>
+        versus sequence.
+<p>
+    The plot in the (2,2) position is a <b>histogram</b> of <i>varname</i>.
+<p>
+    The plot in the (2,3) position is a <b>normal quantile plot</b> of <i>varname</i>.
+<p>
+    The default is to conduct these analyses for all observations in the data
+    set in the order they are recorded.  If you sort the data, the analysis
+    will be conducted on that order.
+<p>
+    The sequence plot allows you to examine the data for drift over the
+    sequence (presumably time).  This graph also displays the linear fit line
+    and a 95% forecast interval.  Observations outside the shaded line are
+    candidates for inspection as outliers.  If you plot more than 300
+    observations, the plot is blurred and I suggest you use batches of 300.
+<p>
+    The rvfplot displays the residuals versus the fitted values and allows
+    you to check for outliers and patterns such as unequal variance over
+    fitted values.  Clear patterns suggest you should look closely at your
+    model. It also displays limits of 2*rmse as a guide.
+<p>
+    The boxplot shows quartiles and outliers.
+<p>
+    The first difference plot checks for changes in the data.
+<p>
+    The histogram provides a picture of the distribution of <i>varname</i>.  It has
+    10 bins, which you may wish to change in further analysis.  It should be
+    roughly symmetric if the data are normal.  Do not get overly concerned
+    with apparent departures from symmetry if your data set is small.
+<p>
+    The normal quantile plot gives a graphical diagnostic of normality.  If
+    the plot suggests non-normality, there may be concern about the validity
+    of procedures such as confidence intervals.
+<p>
+    <b>Caution:</b>  If the data set is large, the sequence plot and the first
+    difference plot may be blurred and difficult to interpret.  We suggest
+    examining the data in batches of 300 or so using the <i>in 1/300</i> option.
+    Sixplot does not superimpose a normal plot on the histogram.
+<p>
+<b><u> Examples</u></b>
+<p>
+        -----------------------------------------------------------------------
+        Setup
+        <b>. sysuse uslifeexp.dta</b>
+        <b>. sixplot le_male</b>
+        <b>. sixplot le_female</b>
+<p>
+    The data set gives life expectancy by sex and race from 1900 to 1999.
+    The above commands provide a sixplot for these years.
+<p>
+        Setup
+    <b>. sysuse nlsw88.dta</b>
+    <b>. sixplot wage</b>
+<p>
+    This data has over 2000 observations and blurs the information on the
+    plots.  There is no obvious time relation here.
+<p>
+    <b>. sixplot wage in 1/300</b>
+<p>
+    The "in" restriction can be repeated as 301/600, etc.
+<p>
+    <b>Notes</b>
+<p>
+    These plots were cited in Good and Hardin's book as the fourplot.  I have
+    added the rvfplot and boxplot.  This seems to have originated in the
+    <i>Engineering Statistics Handbook</i> section 4.4.5.3, from NIST (available
+    online from www.itl.nist.gov/div898/handbook/)
+<p>
+    <b>Author</b> Peter. A. Lachenbruch, Oregon State University, Corvallis,
+    peter.lachenbruch@oregonstate.edu
+<p>
+    <b>Acknowledgement</b> I thank Nick Cox and Vince Wiggns who made several useful
+    and important suggestions to improve the ado file.
+<p>
+    <b>References</b>
+<p>
+    Good, P.I. and Hardin, J. W. (2009) <i>Common Errors in Statistics (and how</i>
+    <i>to avoid them</i>} New York:  Wiley
+ 
+<p>
+    NIST <i>Engineering Statistics Handbook</i> downloaded Jan 4, 2010 - see section
+    4.4.5.3
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+<p>
+</pre>

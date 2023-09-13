@@ -1,0 +1,48 @@
+<pre>
+<b>help spmat getmatrix</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>spmat getmatrix</b> -- Copy a matrix contained in an <b>spmat</b> object to a Mata
+                         matrix
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>spmat</b> <b><u>getmat</u></b><b>rix</b> <i>objname</i> [<i>matname</i>] [<b>,</b> <i>options</i>]
+<p>
+<p>
+    <i>options</i>              Description
+    -------------------------------------------------------------------------
+      <b>id(</b><i>vecname</i><b>)</b>        name of a Mata vector to contain IDs
+      <b>eig(</b><i>vecname</i><b>)</b>       name of a Mata vector to contain eigenvalues
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>spmat getmatrix</b> copies the spatial-weighting matrix <b>W</b> contained in the
+    <b>spmat</b> object <i>objname</i> to the Mata matrix <i>matname</i>.  The place identifiers
+    and the eigenvalues of <b>W</b> can be optionally saved to Mata vectors.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+    Setup
+        <b>. spmat use cobj using pollute.spmat</b>
+<p>
+    Copy the contiguity matrix contained in the spmat object <b>cobj</b> to the Mata
+    matrix <b>mymat</b>
+        <b>. spmat getmatrix cobj mymat</b>
+<p>
+    Copy the eigenvalues contained in the spmat object <b>cobj</b> to the Mata
+    vector <b>myeig</b>
+        <b>. spmat getmatrix cobj, eig(myeig)</b>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>spmat</b>, <b>spreg</b>, <b>spivreg</b>, <b>spmap</b>, <b>shp2dta</b>, <b>mif2dta</b> (if installed)
+<p>
+</pre>

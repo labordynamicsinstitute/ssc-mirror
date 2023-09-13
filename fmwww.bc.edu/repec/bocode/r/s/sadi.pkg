@@ -1,0 +1,99 @@
+d 'SADI': module to compute Sequence Analysis Distance Measures
+d
+d  Several measures of distance between pairs of sequences,
+d including  the simple Hamming distance, the optimal matching
+d distance and its  variant, OMv, as described in Halpin,
+d {it:Sociological Methods and	Research}, 2010, Hollister's
+d localised OM, Lesnard's dynamic Hamming  distance, Time-Warp Edit
+d Distance and a version of Elzinga's number of  common
+d subsequences for duration-weighted spell data. {p_end}  Several
+d utilities are also included. 
+d
+d KW:  sequence analysis
+d KW: distance
+d KW: edit distance
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20230314
+d
+d Author: Brendan Halpin, University of Limerick, Ireland
+d Support: email brendan.halpin@@ul.ie
+d
+f sadi.sthlp
+f ../a/adjusted_rand_index.mata
+f ../a/ari.ado
+f ../a/ari.sthlp
+f ../c/cal2spell.ado
+f ../c/cal2spell.sthlp
+f ../c/combinadd.ado
+f ../c/combinadd.sthlp
+f ../c/combinprep.ado
+f ../c/combinprep.sthlp
+f ../c/corrsqm.ado
+f ../c/corrsqm.sthlp
+f ../c/cumuldur.ado
+f ../c/cumuldur.sthlp
+f ../d/distances.do
+f ../d/dynhamming.ado
+f ../d/dynhamming.sthlp
+f ../e/elzspelladd.c
+f ../m/maketrpr.ado
+f ../m/maketrpr.sthlp
+f ../m/metricp.ado
+f ../m/metricp.sthlp
+f ../m/mvad.dta
+f ../n/ndsub.ado
+f ../n/ndsub.sthlp
+f ../n/nspells.ado
+f ../n/nspells.sthlp
+f ../o/oma.ado
+f ../o/oma.sthlp
+f ../o/omamatv3.c
+f ../o/omav.ado
+f ../o/omav.sthlp
+f ../p/permtab.ado
+f ../p/permtab.sthlp
+f ../p/permtabga.ado
+f sdchronogram.ado
+f sdchronogram.sthlp
+f sdchronoplot.ado
+f sdchronoplot.sthlp
+f sddiscrep.ado
+f sddiscrep.sthlp
+f sdentropy.ado
+f sdentropy.sthlp
+f sdhamming.ado
+f sdhamming.sthlp
+f sdhollister.ado
+f sdhollister.sthlp
+f sdindexplot.ado
+f sdindexplot.sthlp
+f sdplot.ado
+f sdstripe.ado
+f sdstripe.sthlp
+f stplugin.c
+f stplugin.h
+f ../t/trans2subs.ado
+f ../t/trans2subs.sthlp
+f ../t/trprgr.ado
+f ../t/trprgr.sthlp
+f ../t/turbulence.ado
+f ../t/turbulence.sthlp
+f ../t/twed.ado
+f ../t/twed.sthlp
+f ../u/uthash.h
+g WIN ../o/omamatv3.w32.plugin omamatv3.plugin
+g WIN64A ../o/omamatv3.w64.plugin omamatv3.plugin
+g LINUX ../o/omamatv3.linux.plugin omamatv3.plugin
+g LINUX64 ../o/omamatv3.linux64.plugin omamatv3.plugin
+g MACINTEL64 ../o/omamatv3.plugin.x86_64 omamatv3.plugin
+g MACARM64 ../o/omamatv3.plugin.arm64 omamatv3.plugin
+h omamatv3.plugin
+g WIN ../e/elzspelladd.w32.plugin elzspelladd.plugin
+g WIN64A ../e/elzspelladd.w64.plugin elzspelladd.plugin
+g LINUX ../e/elzspelladd.linux.plugin elzspelladd.plugin
+g LINUX64 ../e/elzspelladd.linux64.plugin elzspelladd.plugin
+g MACINTEL64 ../e/elzspelladd.plugin.x86_64 elzspelladd.plugin
+g MACARM64 ../e/elzspelladd.plugin.arm64 elzspelladd.plugin
+h elzspelladd.plugin

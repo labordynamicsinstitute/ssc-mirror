@@ -1,0 +1,88 @@
+<pre>
+<b>help sliceplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>sliceplot</b> -- time series or other plot in slices
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>sliceplot</b> <i>plottype</i> <i>yvarlist</i> <i>xvar</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+        where <i>plottype</i> is a <b>twoway</b> plottype.
+<p>
+    <i>options</i>                        Description
+    -------------------------------------------------------------------------
+    Slicing options
+      <b>at()</b>                         values marking ends of slices
+      <b>unequal</b>                      slices may use unequal scales
+      <b>length()</b>                     maximum length of slices
+      <b>slices()</b>                     number of slices
+<p>
+    Standard graph options
+      <b>combine()</b>                    control graph combine
+      <i>twoway_options</i>               affect other features of graph
+<p>
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>sliceplot</b> produces a time series or other plot divided into a series of
+    slices and then combined. The horizontal variable may be any numeric
+    variable, but the program is motivated by the case of time series plots
+    that would benefit from a short and wide scale.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +-----------------+
+    ----+ Slicing options +--------------------------------------------------
+<p>
+    <b>at()</b> specifies cut points for the ends of each slice as values of the
+        <i>x</i>-axis variable.  Values outside the range of the data will be
+        ignored with a warning.
+<p>
+    <b>unequal</b> applies with <b>at()</b>. It specifies that unequal scales should be
+        used on slices of different length.  The default is to use
+        (approximately) the same scale. A common application is to show more
+        interesting values at a greater magnification than others.
+<p>
+    <b>slices()</b> specifies the number of slices.
+<p>
+    <b>length()</b> specifies the maximum length of each slice in units of the
+        <i>x</i>-axis variable. The default is 100.
+<p>
+        +------------------------+
+    ----+ Standard graph options +-------------------------------------------
+<p>
+    <b>combine()</b> specifies options of graph combine. The defaults are
+        <b>imargin(zero) cols(1)</b>.
+<p>
+    <i>twoway_options()</i> are options of graph twoway controlling other features
+        of the graph.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. sliceplot line sunspots year, slices(4)</b>
+<p>
+    <b>. sliceplot line sunspots year, at(1800 1900 1950 2003) unequal</b>
+<p>
+    <b>. sliceplot rarea sunspots mean year, at(1800 1900 1950 2003) unequal</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, Durham University
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[G] twoway</b>, <b>[G] graph combine</b>
+<p>
+    Online:  <b>twoway</b>, <b>graph combine</b>
+</pre>

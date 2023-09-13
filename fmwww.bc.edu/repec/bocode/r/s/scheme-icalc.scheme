@@ -1,0 +1,65 @@
+#include s1mono
+
+linepattern p1line  solid
+linepattern p2line  dash
+linepattern p3line  longdash
+linepattern p4line  shortdash
+linepattern p5line  tight_dot
+linepattern p6line  "_...."
+linepattern p7line  "--...."
+linepattern p8line  "_..-.."
+linepattern p9line  "--...__" 
+linepattern p10line "..---.."
+linepattern p11line  solid
+linepattern p12line  dash
+linepattern p13line  longdash 
+linepattern p14line  shortdash 
+linepattern p15line  tight_dot
+
+
+color pline black
+color p11line  gs9
+color p12line  gs9
+color p13line  gs9
+color p14line  gs9
+color p15line  gs9
+
+linepattern p1  solid
+linepattern p2  dash
+linepattern p3  longdash
+linepattern p4  shortdash
+linepattern p5  tight_dot
+linepattern p6  "_...."
+linepattern p7  "--...."
+linepattern p8  "_..-.."
+linepattern p9  "--...__" 
+linepattern p10 "..---.."
+linepattern p11  solid
+linepattern p12  dash
+linepattern p13  longdash 
+linepattern p14  shortdash 
+linepattern p15  tight_dot
+
+
+color p black
+color p11  gs9
+color p12  gs9
+color p13  gs9
+color p14  gs9
+color p15  gs9
+
+symbol p1 none
+symbol p2 none
+symbol p3 none
+symbol p4 none
+symbol p5 none
+symbol p6 none
+symbol p7 none
+symbol p8 none
+symbol p9 none
+symbol p10 none
+symbol p11 none
+symbol p12 none
+symbol p13 none
+symbol p14 none
+symbol p15 none

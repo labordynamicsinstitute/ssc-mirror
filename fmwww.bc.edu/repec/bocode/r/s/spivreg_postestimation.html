@@ -1,0 +1,95 @@
+<pre>
+<b>help spivreg postestimation</b>                                also see:  <b>spivreg</b>  
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>spivreg postestimation</b> -- Postestimation tools for spivreg
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    The following postestimation commands are available after <b>spivreg</b>:
+<p>
+    command          description
+    -------------------------------------------------------------------------
+INCLUDE help post_estat
+INCLUDE help post_estimates
+INCLUDE help post_lincom
+INCLUDE help post_lrtest
+INCLUDE help post_nlcom
+        <b>predict</b>      predicted values
+INCLUDE help post_predictnl
+INCLUDE help post_test
+INCLUDE help post_testnl
+    -------------------------------------------------------------------------
+<p>
+<p>
+<a name="predict"></a><b><u>Syntax for predict</u></b>
+<p>
+        <b>predict</b> [<i>type</i>] <i>newvar</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>statistic</i>]
+<p>
+    <i>statistic</i>        Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>na</u></b><b>ive</b>          predictions based on the observed values of <b>y</b>; the
+                       default
+      <b>xb</b>             linear prediction
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Options for predict</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>naive</b> predicted values based on the observed values of <b>y</b>, <b>Y</b>*<b>g</b> +
+        <i>lambda</i>*<b>W</b>*<b>y</b> + <b>X</b>*<b>b</b>.
+<p>
+    <b>xb</b> calculates the linear prediction <b>X</b>*<b>b</b>.
+<p>
+<p>
+<a name="remarks"></a><b><u>Remarks</u></b>
+<p>
+    The methods implemented in <b>predict</b> after <b>spivreg</b> are documented in
+    Drukker, Prucha, and Raciborski (2011) which can be downloaded from 
+    http://econweb.umd.edu/~prucha/Papers/WP_spivreg_2011.pdf.
+<p>
+    The predictor computed by the option <b>naive</b> will generally be biased; see
+    Kelejian and Prucha (2007) for an explanation.
+<p>
+    See Remarks in <b>spreg postestimation</b> for a more detailed discussion of
+    biased and unbiased spatial predictors.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    Setup
+        <b>. use pollute</b>
+        <b>. spmat use cobj using pollute.spmat</b>
+        <b>. spivreg pollution area (factories = penalties), id(id) dlmat(cobj)</b>
+            <b>elmat(cobj)</b>
+<p>
+    Obtain predicted values based on the observed values of <b>y</b>
+        <b>. predict yhat</b>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Drukker, D. M., I. R. Prucha, and R. Raciborski. 2011.  A command for
+        estimating spatial-autoregressive models with spatial autoregressive
+        disturbances and additional endogenous variables.  Working paper, The
+        University of Maryland, Department of Economics, 
+        http://econweb.umd.edu/~prucha/Papers/WP_spivreg_2011.pdf.
+<p>
+    Kelejian H. H., and I. R. Prucha. 2007. The relative efficiencies of
+        various predictors in spatial econometric models containing spatial
+        lags.  <i>Regional Science and Urban Economics</i> 37, 363-374.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>spivreg</b>, <b>spreg</b> (if installed)
+<p>
+</pre>

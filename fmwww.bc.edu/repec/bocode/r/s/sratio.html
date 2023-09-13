@@ -1,0 +1,86 @@
+<pre>
+<b>help sratio</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>sratio</b> -- Displays a table of ratio study statistics, particularly for
+                evaluating mass appraisal performance
+    
+<b><u>Syntax</u></b>
+<p>
+        <b>sratio</b> <i>varlist</i> [<i>if</i>] [<i>in</i>] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>             Description
+    -------------------------------------------------------------------------
+    Options
+      <b><u>s</u></b><b>ample</b>            displays general information about the sample
+      <b><u>as</u></b><b>sess</b>            displays measures of appraisal level
+      <b><u>rel</u></b><b>iable</b>          displays measures of reliability
+      <b><u>uni</u></b><b>form</b>           displays primary measures of appraisal uniformity
+      <b><u>disp</u></b><b>erse</b>          displays detailed measures of dispersion
+      <b>coc</b>               displays measures of concentration
+      <b><u>br</u></b><b>ief</b>             displays measures of assessment, primary measures of
+                          uniformity, and measures of reliability
+      <b><u>det</u></b><b>ail</b>            displays in detail all measures of appraisal level
+                          and uniformity; by default if no other option is
+                          specified.
+      <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>          sets confidence level(in percent); default is
+                          <b>level(95)</b> or as set by <b>set level</b>; see <b>level</b>
+      <b>ioc(</b><i>#</i><b>)</b>            sets the low and upper limit of the desired
+                          concentration interval; default is <b>ioc (0.90 1.10)</b>
+      <b>pioc(</b><i>#</i><b>)</b>           sets the desired concentration level in term of
+                          percentages (values between 0 and 100); default is
+                          <b>pioc (10)</b>
+    -------------------------------------------------------------------------
+    <b>by</b> may be used with <b>sratio</b>; see <b>by</b>.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>sratio</b> calculates and displays a variety of ratio study statistics in a
+    single table. These include measures of appraisal level, appraisal
+    uniformity (dispersion and concentration), and reliability.
+<p>
+    With the <b>by</b> option, <b>sratio</b> allows you to display the output by categories
+    of a grouping variable.
+<p>
+    With the different options available, <b>sratio</b> allows more flexibility in
+    terms of the measures of performance presented.
+<p>
+    <b>sratio</b> takes, as input, a list of two scale variables that have positive
+    values.<b>sratio</b> implicitly computes the ratio of these two variables by
+    dividing the first variable (the numerator) by the second variable
+    (denominator) on the list provided (<i>varlist</i>). In appraisal ratio studies,
+    the numerator could be the appraisal or assessment value and the
+    denominator could be the market value.
+<p>
+<b><u>Examples</u></b>
+<p>
+<b>. sratio  AppraisedValue SalePrice </b>
+<b>. by  Strata, sort : sratio  AppraisedValue SalePrice</b>
+<b>. sratio  AppraisedValue SalePrice, brief</b>
+<b>. sratio  AppraisedValue SalePrice, assess</b>
+<b>. sratio  AppraisedValue SalePrice, level(90) ioc(0.80 1.10) pioc(10 20 30 35) </b>
+<p>
+<b><u>Author</u></b> 
+<p>
+    Benmamoun, Mamoun, Public Policy Research Center, University of Missouri
+    – St. Louis , Saint Louis, MO, U.S.A.  Email  vmamoun@yahoo.com if you
+    observe any problem or if you have any comment or question.
+<p>
+<b><u>Remarks</u></b> 
+ 
+    For detailed information on ratio statistics for mass appraisal, see
+    "International Association of Assessing Officers. 1999. Standard on ratio
+    studies. Chicago: International Association of Assessing Officers."
+<p>
+<b><u>Acknowledgement</u></b> 
+<p>
+    I would like to acknowledge Steve Gardner of the Public Policy Research
+    Center at the University of Missouri – St. Louis for his mentorship and
+    training in this area of research.
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>summarize</b>, <b>tabstat</b>, <b>ci</b> , <b>centile</b>, <b>tcod</b>
+</pre>

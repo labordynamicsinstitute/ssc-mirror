@@ -117,6 +117,7 @@ p itvalpctile module for estimation of interval-valued percentiles (quantiles) f
 p ivactest module to perform Cumby-Huizinga test for autocorrelation after IV/OLS estimation
 p ivbounds module providing instrumental variable method to bound treatment-effects estimates with potentially misreported and endogenous program participation
 p ivcheck module to choose between OLS and contaminated IV
+p ivcloglog module to estimate a complementary log-log model with continuous endogenous covariates, instrumented via the control function approach
 p ivcrc module to implement the instrumental variables correlated random coefficients estimator 
 p ivdesc module to profile compliers and non-compliers for instrumental variable analysis
 p ivendog module to calculate Durbin-Wu-Hausman endogeneity test after ivreg

@@ -1,0 +1,21 @@
+d 'TEXRESULTS2': module to create external file of LaTex macros with results
+d
+d    The original Texresults command was created by Alvaro Carril
+d to store results computed in Stata as Latex	 macros in a text
+d file. The external text file can be used in LaTeX to to reference
+d results by their macro. 
+d
+d KW: LaTeX
+d KW: results
+d KW: tables
+d
+d Requires: Stata version 16 and reghdfe, ftools, ppmlhdfe, gtools from SSC (q.v.)
+d
+d Distribution-Date: 20230825
+d
+d Author: Gabrielle Sorresso , Cornell University
+d Support: email gns36@@cornell.edu
+d
+f texresults2.ado
+f texresults2.sthlp
+f texresults2_example.do

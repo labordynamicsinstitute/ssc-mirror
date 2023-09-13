@@ -1,0 +1,431 @@
+<pre>
+<b>help synth</b> 
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>synth</b> --       Synthetic control methods for comparative case studies
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+      <b>synth</b> <i>depvar</i> <i>predictorvars</i> , <b><u>tru</u></b><b>nit</b>(<i>#</i>) <b><u>trp</u></b><b>eriod</b>(<i>#</i>) [ <b><u>cou</u></b><b>nit</b>(<i>numlist</i>)
+        <b>xperiod</b>(<i>numlist</i>)<b> mspeperiod</b>()<b> resultsperiod</b>()<b> nested allopt</b>
+        <b>unitnames</b>(<i>varname</i>) <b><u>fig</u></b><b>ure</b> <b><u>k</u></b><b>eep</b>(<i>file</i>)<b> customV</b>(<i>numlist</i>) <i>optsettings</i> ]
+<p>
+    Dataset must be declared as a (balanced) panel dataset using<b> tsset</b>
+    <i>panelvar</i> <i>timevar</i>; see tsset.  Variables specified in <i>depvar</i> and
+    <i>predictorvars</i> must be numeric variables; abbreviations are not allowed.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>synth</b> implements the synthetic control method for causal inference in
+    comparative case studies. <b>synth</b> estimates the effect of an intervention
+    of interest by comparing the evolution of an aggregate outcome <i>depvar</i> for
+    a unit affected by the intervention to the evolution of the same
+    aggregate outcome for a synthetic control group. <b>synth</b> constructs this
+    synthetic control group by searching for a weighted combination of
+    control units chosen to approximate the unit affected by the intervention
+    in terms of the outcome predictors.  The evolution of the outcome for the
+    resulting synthetic control group is an estimate of the counterfactual of
+    what would have been observed for the affected unit in the absence of the
+    intervention. <b>synth</b> can also be used to conduct a variety of placebo and
+    permutation tests that produce informative inference regardless of the
+    number of available comparison units and the number of available
+    time-periods. See Abadie and Gardeazabal (2003) and Abadie, Diamond, and
+    Hainmueller (2010) for details.
+<p>
+<b><u>Required Settings</u></b>
+<p>
+<a name="predoptions"></a>    <b>depvar</b> the outcome variable.
+<p>
+    <b>predictorvars</b> the list of predictor variables. By default, all predictor
+        variables are averaged over the entire pre-intervention period, which
+        ranges from the earliest time period available in the panel time
+        variable specified in<b> tsset</b> <i>timevar</i> to the period immediately prior
+        to the intervention specified in<b> trperiod</b>. Missing values are ignored
+        in the averages.
+ 
+        The user has two options to flexibly specify the time periods over
+        which predictors are averaged:
+<p>
+          (1)<b> xperiod</b>(<i>numlist</i>) allows to specify a common period over which
+          all predictors should be averaged; see below for details.
+<p>
+          (2) For each particular predictor the user can specify the period
+          over which the variable will be averaged. For this,<b> synth</b> uses a
+          specialized syntax.  The time period is specified in parenthesis
+          directly following the variable name, e.g. varname(<i>period</i>) with no
+          blanks between the variable name and its <i>period</i>. <i>period</i> can contain
+          either a single period, a numlist of periods, or several periods
+          concatenated by a "&amp;".  The periods refer to the panel time
+          variable specified in<b> tsset</b> <i>timevar</i>. For example, assume the time
+          periods are given in years, and there are four predictors X1, X2,
+          X3, and X4 then:
+<p>
+          <b>. synth Y X1(1980) X2(1982&amp;1986&amp;1988) X3(1980(1)1990) X4</b>
+<p>
+          indicates that:
+            <b>X1(1980)</b>: the value of the variable X1 in the year 1980 is
+            entered as a predictor.
+<p>
+            <b>X2(1982&amp;1986&amp;1988)</b>: the value of the variable X2 averaged over
+            the years 1982, 1986, and 1988 is entered as a predictor.
+<p>
+            <b>X3(1980(1)1990)</b>: the value of the variable X3 averaged over the
+            years 1980,1981,...,1990 is entered as a predictor.
+<p>
+            <b>X4</b>: since no variable specific period is provided, the value of
+            the variable X4 is averaged either over the entire pretreatment
+            period (default) or the period specified in<b> xperiod</b>(<i>numlist</i>) and
+            then entered as a predictor.
+<p>
+    <b>trunit</b>(<i>#</i>) the unit number of the unit affected by the intervention as
+        given in the panel id variable specified in<b> tsset</b> <i>panelvar</i>; see 
+        tsset. Notice that only a single unit number can be specified. If the
+        intervention of interest affected several units the user may chose to
+        combine these units first and then treat them as a single unit
+        affected by the intervention.
+<p>
+    <b>trperiod</b>(<i>#</i>) the time period when the intervention occurred. The time
+        period refers to the panel time variable specified in<b> tsset</b> <i>timevar</i>;
+        see tsset. Only a single number can be specified.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>counit</b>(<i>numlist</i>) a list of unit numbers for the control units as given in
+        the panel id variable specified in<b> tsset</b> <i>panelvar</i>; see tsset.
+        <b>counit()</b> should be specified as a list of integer numbers (see 
+        numlist) and contain at least two control units.  The list of control
+        units specified constitute what is called the `donor pool', the set
+        of potential control units out of which the synthetic control unit is
+        constructed.  Notice that<b> counit</b> is optional, if no<b> counit</b> is
+        specified, the donor pool defaults to all units available in the
+        panel id variable specified in<b> tsset</b>, excluding the unit affected by
+        the intervention specified in<b> trunit</b>.
+<p>
+    <b>xperiod</b>(<i>numlist</i>) a list of time periods over which the predictor
+        variables specified in <i>predictorvars</i> are averaged. The list of time
+        periods refers to the panel time variable specified in<b> tsset</b> <i>timevar</i>.
+        For example, if the specified panel time variable is given in years,
+        <b>xperiod</b>(1980(1)1988) indicates that the predictor variables are
+        averaged over all years from 1980, 1981,...,1988. See numlist on how
+        to specify lists of numbers.
+ 
+        If no<b> xperiod</b> is specified,<b> xperiod</b> defaults to the entire
+        pre-intervention period, which by default ranges from the earliest
+        time period available in the panel time variable to the period
+        immediately prior to the intervention. Notice that the period of the
+        intervention itself is excluded from the average and missing entries
+        are ignored.  Also notice that variable-specific time periods always
+        take precedence over<b> xperiod</b>.  Usually,<b> xperiod</b> is specified to
+        contain a number of pre-intervention periods, although
+        post-intervention time periods could be included if the predictors
+        are not affected by the intervention.
+<p>
+    <b>mspeperiod</b>(<i>numlist</i>) a list of pre-intervention time periods over which
+        the mean squared prediction error (MSPE) should be minimized. The
+        list of time periods refers to the panel time variable specified in
+        <b>tsset</b> <i>timevar</i>; see tsset. The MSPE refers to the squared deviations
+        between the outcome for the treated unit and the synthetic control
+        unit summed over all pre-intervention periods specified in
+        <i>mspeperiod(numlist)</i>. See numlist on how to specify lists of numbers.
+        If no<b> mspeperiod()</b> is specified,<b> mspeperiod()</b> defaults to the entire
+        pre-intervention period ranging from the earliest time period
+        available in the panel time variable to the period immediately prior
+        to the intervention. Notice that the period of the intervention
+        itself is excluded from<b> mspeperiod()</b>.  Usually, the<b> mspeperiod()</b> is
+        specified to cover the whole pre-treatment period up to the time of
+        the intervention, but other choices are possible.
+<p>
+<p>
+    <b>resultsperiod</b>(<i>numlist</i>) a list of time periods over which the results of
+        <b>synth</b> should be obtained in the optional figure (see<b> figure</b>), the
+        optional results dataset (see <b>keep</b>), and the return matrices (see
+        <b>ereturn results</b>)). The list of time periods refers to the panel time
+        variable specified in<b> tsset</b> <i>timevar</i>.  If no<b> resultsperiod</b> is
+        specified,<b> resultsperiod</b> defaults to the entire period, which by
+        default ranges from the earliest to the latest time period available
+        in the panel time variable.
+<p>
+    <b>nested</b> by default<b> synth</b> uses a data-driven regression based method to
+        obtain the variable weights contained in the V-matrix. This method
+        relies on a constrained quadratic programming routine, that finds the
+        best fitting W-weights conditional on the regression based V-matrix.
+        This procedure is fast and often yields satisfactory results in terms
+        of minimizing the MSPE.  Specifying <b>nested</b> will lead to better
+        performance, however, at the expense of additional computing time.
+        If <b>nested</b> is specified <b>synth</b> embarks on an fully nested optimization
+        procedure that searches among all (diagonal) positive semidefinite
+        V-matrices and sets of W-weights for the best fitting convex
+        combination of the control units.  The fully nested optimization
+        contains the regression based V as a starting point, but often
+        produces convex combinations that achieve even lower MSPE. If<b> customV</b>
+        is specified and<b> nested</b> is specified, the user supplied V-matrix form
+        the starting point for the nested optimization.  All parameters of
+        both optimizers can be tuned by the user depending on his application
+        (see <i>optimset</i>).
+<p>
+    <b>allopt</b> if nested is specified (see <b>nested</b>) the user can also specify
+        <b>allopt</b> if she is willing to trade-off even more computing time in
+        order to gain fully robust results. Sometimes the search space may
+        contain local minima such that the nested optimization procedure
+        starting from the regression based V-matrix may not find the global
+        minimum in the parameter space.<b>  allopt</b> provides a robustness check
+        by running the nested optimization three times using three different
+        starting points (the regression based V, equal V-weights, and a third
+        procedure that uses Stata's ml search procedure to find good starting
+        values.<b>  synth</b> returns the best result of all three attempts. This
+        option usually will take three times the amount of computing time
+        compared to the<b> nested</b> option.  Often<b> allopt</b> will lead to no
+        improvement over just the<b> nested</b> method, but sometime<b> allopt</b> produces
+        even better results.
+<p>
+    <b>unitnames</b>(<i>varname</i>) a string variable that contains unit names. The unit
+        names refer to the unit numbers in the panel id variable specified in
+        <b>tsset</b> <i>pvar</i>; see tsset. If<b> unitnames</b> is provided the results will be
+        displayed with unit numbers labeled by their respective unit names.
+        So for example, if the user has two variables in his dataset called
+        country_numbers (numeric) and country_names (string),
+        <b>unitnames(country_names)</b> could be specified to display the results
+        using country names instead of numbers. Alternatively, if the user
+        does not specify<b> unitnames</b>, but his panel id variable is labeled, the
+        labels from the latter will be used.
+<p>
+    <b>figure</b> if specified <b>synth</b> produces a line plot with outcome trends for
+        the treated unit and the synthetic control unit for the years
+        specified in <i>resultsperiod()</i>.
+<p>
+    <b>keep(</b><i>filename</i><b>)</b> saves a dataset with the results in the file<i> filename</i><b>.dta</b>.
+        This dataset can be used to further process the results.
+<p>
+        If <b>keep(</b><i>filename</i><b>)</b> is specified, <i>filename</i><b>.dta</b> will hold the following
+        variables:
+<p>
+        <b>_time:</b>
+            A variable that contains the respective time period
+            (from the<b> tsset</b> panel time variable (<i>timevar</i>)) for
+            all periods specified in <i>resultsperiod()</i>.
+<p>
+        <b>_Y_treated:</b>
+            The observed outcome <i>depvar</i> for the treated unit
+            specified in <i>tr()</i> for each time period specified in
+            <i>resultsperiod()</i>.
+<p>
+        <b>_Y_synthetic:</b>
+            The estimated outcome <i>depvar</i> for the synthetic
+            control unit estimated using the convex combination
+            of the control units specified in <i>co()</i> for each time
+            period specified in <i>resultsperiod()</i>.
+<p>
+        <b>_Co_Number:</b>
+            A variable that contains the unit number (from the
+            <b>tsset</b> panel unit variable (<i>panelvar</i>) for each
+            control unit specified in <i>co()</i>. If unit names are
+            supplied via <i>conames()</i> the unit numbers will be
+            labeled accordingly (each control unit number is
+            labeled with its respective name from <i>conames()</i>.
+<p>
+        <b>_W_weight:</b>
+            A variable that contains the estimated unit weight
+            for each control units specified in <i>co()</i>.
+<p>
+    <b>replace</b> replaces the dataset specified in <b>keep(</b><i>filename</i><b>)</b> if it already
+        exists.
+<p>
+    <b>customV</b>(<i>numlist</i>) by default<b> synth</b> uses a data-driven regression based
+        method to obtain the variable weights contained in the V-matrix.
+        <b>customV</b>() gives the user the option to supply custom V-Weights
+        instead.  Notice that the V-weights determine the predictive power of
+        the respective variable for the outcome of interest over the
+        pre-intervention period. Highly predictive variables should be given
+        a high weight, so that the unit affected by the intervention and the
+        synthetic control unit match strongly on this predictor.  Weights are
+        specified as a list with weights appearing in the same order as the
+        predictors listed in <i>predictorvars</i>.  One weight must be supplied for
+        each predictor. See the papers in the references for details. For
+        now, only one weight per variable is allowed (the V matrix is
+        diagonal), but future releases will allow non-diagonal V matrices to
+        be supplied.
+<p>
+<a name="osettings"></a><p>
+<b><u>Optimization Settings:</u></b>
+  -----------------------------------------------------------------------------
+Control parameters for the <i> constrained quadratic optimization routine</i>:
+<p>
+     The constrained quadratic optimization routine is based on an algorithm
+     that uses the interior point method to solve the constrained quadratic
+     programming problem (see Vanderbei 1999 for more details on the interior
+     point method).  It is implemented via a C++ plugin and has the following
+     tuning parameters:
+<p>
+        <b>margin(</b><i>real</i><b>)</b> Margin for constraint violation tolerance. Default is 5
+        percent (ie. 0.05).
+        <b>maxiter(</b><i>#</i><b>)</b> Maximum number of iterations. Default is 1000.
+        <b>sigf(</b><i>#</i><b>)</b> Precision (no of significant figures). Default is 7.
+        <b>bound(</b><i>#</i><b>)</b> Clipping bound for the variables. Default is 10.
+<p>
+<p>
+Additional control parameters for the <i> nested optimization routine</i>:
+<p>
+     If<b> nested</b> is specified, a nested optimization will be performed using
+     the constrained quadratic programming routine and Stata's ml optimizer.
+     By default,<b> synth</b> uses the maximize default settings. The user may tune
+     the maximize settings depending on his application (e.g. like synth ...
+     , iterate(20) ).
+  -----------------------------------------------------------------------------
+<p>
+<b><u>Saved Results</u></b>
+<p>
+    By default, <b>synth</b> ereturns the following matrices, which can be displayed
+        by typing<b> ereturn list</b> after<b> synth</b> is finished (also see ereturn).
+<p>
+        <b>e(V_matrix):</b>
+          A diagonal matrix that contains the normalized variable weights in
+          the diagonal.
+<p>
+        <b>e(X_balance) :</b>
+          A matrix that juxtaposes the predictor values for the unit affected
+          by the intervention and the synthetic control unit. The matrix has
+          two columns (treated and synthetic) and as many rows as predictors.
+<p>
+        <b>e(W_weights) :</b>
+          A matrix that contains the unit numbers and unit weights, ie. the
+          relative contribution of each control unit to the synthetic control
+          unit.  The matrix has two column and as many rows as control units.
+<p>
+        <b>e(Y_treated) :</b>
+          A matrix that contains the values of the response variable for the
+          treated unit for each time period.  The matrix has one column and
+          as many rows as time periods specified in <b>resultsperiod()</b>.
+<p>
+        <b>e(Y_synthetic) :</b>
+          A matrix that contains the values of the response variable for the
+          synthetic control unit for each time period.  The matrix has one
+          column and as many rows as time periods specified in
+          {cmd:resultsperiod().
+<p>
+        <b>e(RMSPE) :</b>
+          A one by one matrix that contains the Root Mean Squared Prediction
+          Error (RMSPE)}.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    Load Example Data: This panel dataset contains information for 39 US
+        States for the years 1970-2000 (see Abadie, Diamond, and Hainmueller
+        (2010) for details).
+    . sysuse smoking
+<p>
+    Declare the dataset as panel:
+    . tsset state year
+<p>
+    Example 1 - Construct synthetic control group:
+    synth cigsale beer(1984(1)1988) lnincome retprice age15to24 cigsale(1988)
+        cigsale(1980) cigsale(1975), trunit(3) trperiod(1989)
+<p>
+        In this example, the unit affected by the intervention is unit no 3
+        (California) in the year 1989.  The donor pool (since no<b> counit()</b> is
+        specified) defaults to the control units 1,2,4,5,...,39 ( ie. the
+        other 38 states in the dataset).  Since no<b> xperiod()</b> is provided, the
+        predictor variables for which no variable specific time period is
+        specified (retprice, lnincome, and age15to24) are averaged over the
+        entire pre-intervention period up to the year of the intervention
+        (1970,1981,...,1988).  The beer variable has the time period
+        (1984(1)1988) specified, meaning that it is averaged for the periods
+        1984,1985,...,1988. The variable cigsale will be used three times as
+        a predictor using the values from periods 1988, 1980, and 1975
+        respectively.  The MSPE is minimized over the entire pretreatment
+        period, because<b> mspeperiod()</b> is not provided. By default, results are
+        displayed for the period from 1970,1971,...,2000 period (the earliest
+        and latest year in the dataset).
+<p>
+    Example 2 - Construct synthetic control group:
+    synth cigsale beer lnincome(1980&amp;1985) retprice cigsale(1988)
+        cigsale(1980) cigsale(1975), trunit(3) trperiod(1989) fig
+<p>
+        This example is similar to example 1, but now beer is averaged over
+        the entire pretreatment period while lnincome is only averaged over
+        the periods 1980 and 1985.  Since no data is available for beer prior
+        to 1984,<b> synth</b> will inform the user that there is missing data for
+        this variable and that the missing values are ignored in the
+        averaging. A results figure is also requested using the<b> fig</b> option.
+<p>
+    Example 3 - Construct synthetic control group:
+    synth cigsale retprice cigsale(1970) cigsale(1979) , trunit(33)
+        counit(1(1)20) trperiod(1980) fig resultsperiod(1970(1)1990)
+<p>
+        In this example, the unit affected by the intervention is state no
+        33, and the donor pool of potential control units is restricted to
+        states no 1,2,...,20.  The intervention occurs in 1980, and results
+        are obtained for the 1970,1971,...,1990 period.
+<p>
+    Example 4 - Construct synthetic control group:
+    synth cigsale retprice cigsale(1970) cigsale(1979) , trunit(33)
+        counit(1(1)20) trperiod(1980) resultsperiod(1970(1)1990) keep(resout)
+<p>
+        This example is similar to example 2 but<b> keep(resout)</b> is specified
+        and thus<b> synth</b> will save a dataset named resout.dta in the current
+        Stata working directory (type<b> pwd</b> to see the path of your working
+        directory). This dataset contains the result from the current fit and
+        can be used for further processing. Also to easily access results
+        recall that<b> synth</b> routinely returns all result matrices. These can be
+        displayed by typing<b> ereturn list</b> after <b>synth</b> has terminated.
+<p>
+    Example 5 - Construct synthetic control group:
+    synth cigsale beer lnincome retprice age15to24 cigsale(1988)
+        cigsale(1980) cigsale(1975) , trunit(3) trperiod(1989)
+        xperiod(1980(1)1988) nested
+<p>
+        This is again example 2, but the<b> nested</b> option is specified, which
+        may produce lower loss at the expense of additional computing time.
+        Also,<b> xperiod()</b> is specified indicating that predictors are averaged
+        for the 1980,1981,...,1988 period.
+<p>
+    Example 5 – Run placebo in space:
+    <b>. tempname resmat</b>
+        <b>forvalues i = 1/4 {</b>
+        <b>synth cigsale retprice cigsale(1988) cigsale(1980) cigsale(1975) ,</b>
+        <b>trunit(`i') trperiod(1989) xperiod(1980(1)1988)</b>
+        <b>matrix `resmat' = nullmat(`resmat') \ e(RMSPE)</b>
+        <b>local names `"`names' `"`i'"'"'</b>
+        <b>}</b>
+        <b>mat colnames `resmat' = "RMSPE"</b>
+        <b>mat rownames `resmat' = `names'</b>
+        <b>matlist `resmat' , row("Treated Unit")</b>
+<p>
+        This is a code example to run placebo studies by iteratively
+        reassigning the intervention in space to the first four states. To do
+        so, we simply run a four loop each where the <b>trunit()</b> setting is
+        incremented in each iteration. Thus, in the first run of<b> synth</b> state
+        number one is assigned to the intervention, in the second run state
+        number two, etc, etc. In each run we store the RMSPE and display it
+        in a matrix at the end.
+<p>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Abadie, A., Diamond, A., and J. Hainmueller. 2010. Synthetic Control
+        Methods for Comparative Case Studies: Estimating the Effect of
+        California's Tobacco Control Program.<i>  Journal of the American</i>
+        <i>Statistical Association</i> 105(490): 493-505.
+<p>
+    Abadie, A. and Gardeazabal, J. 2003. Economic Costs of Conflict:  A Case
+        Study of the Basque Country. American Economic Review 93(1): 113-132.
+<p>
+    Vanderbei, R.J. 1999. LOQO: An interior point code for quadratic
+        programming.<i>  Optimization Methods and Software</i> 11: 451-484.
+<p>
+<b><u>Authors</u></b>
+<p>
+      Jens Hainmueller, jhainm@mit.edu
+      MIT
+<p>
+      Alberto Abadie, alberto_abadie@harvard.edu
+      Harvard University
+<p>
+      Alexis Diamond, adiamond@fas.harvard.edu
+      IFC
+</pre>

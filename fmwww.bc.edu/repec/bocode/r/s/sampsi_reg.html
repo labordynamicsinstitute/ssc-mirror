@@ -1,0 +1,97 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>sampsi_reg</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u> Calculates Sample Size or Power for Simple Linear Regression</u></b>
+<p>
+        <b>sampsi_reg</b> [, <b>null(</b><i>#</i><b>)</b> <b>alt(</b><i>#</i><b>)</b> <b>n1(</b><i>#</i><b>)</b> <b>sd1(</b><i>#</i><b>)</b> <b><u>a</u></b><b>lpha(</b><i>#</i><b>)</b> <b><u>p</u></b><b>ower(</b><i>#</i><b>)</b>
+                      <b><u>s</u></b><b>olve(</b><i>string</i><b>)</b> <b>sx(</b><i>#</i><b>)</b> <b>sy(</b><i>#</i><b>)</b> <b><u>var</u></b><b>method(</b><i>string</i><b>)</b> <b>yxcorr(</b><i>#</i><b>)</b>
+                      <b>onesided</b> } ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>sampsi_reg</b> calculates the power and sample size for a simple linear regression.
+The theory behind this command is described in Dupont and Plummer (1998) Power
+and Sample Size Calculations for Studies involving Linear Regression,
+Controlled Clinical Trials 19:589-601.
+<p>
+The calculations require an estimate of the residual standard error. There are
+three methods for doing this: enter the estimate directly; enter the standard
+deviation of the Y's; or enter the correlation between Y and X values.
+<p>
+This command can be combined with <b>samplesize</b> in order to look at multiple
+calculations and to plot the results.
+<p>
+<b><u>Updating this command</u></b>
+<p>
+To obtain the latest version click the following to uninstall the old version
+ssc uninstall sampsi_reg
+And click here to install the new version
+ssc install sampsi_reg
+<p>
+<b><u>Options</u></b>
+<p>
+<b>null(</b><i>#</i><b>)</b> specifies the "null slope".
+<p>
+<b>alt(</b><i>#</i><b>)</b> specifies the "alternative slope".
+<p>
+<b>n1(</b><i>#</i><b>)</b> size of sample.
+<p>
+<b>sd1(</b><i>#</i><b>)</b> standard deviation of the residuals.
+<p>
+<b><u>a</u></b><b>lpha(</b><i>#</i><b>)</b> significance level of test; default is <b>a(0.05)</b>.
+<p>
+<b><u>p</u></b><b>ower(</b><i>#</i><b>)</b> power of test; default is <b>p(0.9)</b>.
+<p>
+<b><u>s</u></b><b>olve(</b><i>string</i><b>)</b> specifies whether to solve for the sample size or power; default
+is <b>s(n)</b> solves for n and the only other choice is <b>s(power)</b> solves for power.
+<p>
+<b>sx(</b><i>#</i><b>)</b> the standard deviation of the X's.
+<p>
+<b>sy(</b><i>#</i><b>)</b> the standard deviation of the Y's.
+<p>
+<b>yxcorr(</b><i>#</i><b>)</b> the correlation between Y's and X's.
+<p>
+<b><u>var</u></b><b>method(</b><i>string</i><b>)</b> specifies the method for calculating the residual standard
+deviation.  <b>varmethod(</b><i>r</i><b>)</b> uses the Y-X correlation and <b>varmethod(</b><i>sdy</i><b>)</b> uses the
+standard deviation of the Y's, the default uses a direct estimate of the
+residual sd <b>sd1(</b><i>#</i><b>)</b>.
+<p>
+<b>onesided</b> one-sided test; default is two-sided.
+<p>
+<b><u>Examples</u></b>
+<p>
+Calculate power for a two-sided test:
+<p>
+  sampsi_reg, null(0) alt(0.25) n(100) sx(0.25) yxcorr(0.2) varmethod(r)
+  s(power)
+<p>
+Compute sample size:
+<p>
+  sampsi_reg, null(0) alt(0.25) sx(0.25) sy(1) varmethod(r) s(n)
+<p>
+When specifying the variance of the y's you must have a <b>varmethod</b> option
+  WRONG: sampsi_reg, null(0) alt(5) sx(0.5) sy(12.3)
+  CORRECT: sampsi_reg, null(0) alt(5) sx(0.5) sy(12.3) var(sdy)
+<p>
+<b><u>Author</u></b>
+<p>
+Adrian Mander, MRC Biostatistics Unit, Cambridge, UK.
+<p>
+Email adrian.mander@mrc-bsu.cam.ac.uk
+<p>
+<b><u>See Also</u></b>
+Related commands:
+<p>
+  sampsi, samplesize (if installed), sampclus (if installed), xsampsi (if
+  installed), artmenu (if installed)
+<p>
+<p>
+<p>
+<p>
+<p>
+ 
+<p>
+</pre>

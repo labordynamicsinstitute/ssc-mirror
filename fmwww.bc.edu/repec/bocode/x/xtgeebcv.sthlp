@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 5.3.0 03Aug2023}
+{* *! version 5.4.0 07Sep2023}
 {cmd:help xtgeebcv}
 {hline}
 
@@ -51,6 +51,9 @@ by the user.
 
 {marker description}{...}
 {title:Description}
+
+{pstd}
+{hi: Updates as of September 07, 2023}: {cmd:xtgeebcv} has been updated to re-output scalars and macros necessary for proper functioning of postestimation commands, such as {cmd:margins}. 
 
 {pstd}
 {hi: Updates as of August 03, 2023}: {cmd:xtgeebcv} now allows for abbreviations of option names and arguments to some options, and also gives more helpful error messages. 

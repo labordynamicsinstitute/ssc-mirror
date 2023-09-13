@@ -1,0 +1,88 @@
+<pre>
+<b>help soepdo</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>soepdo</b> -- Retrieval of SOEP drop-outs made easy
+<p>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+    <b>soepdo</b> [<b>namelist</b>] , <b><u>s</u></b><b>oepdir()</b> <b><u>y</u></b><b>perg()</b> [<b><u>e</u></b><b>rhebj()</b>]
+<p>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>soepdo</b> is intended for people who need to build datasets which contain
+    drop-outs from the German Socio-Economic Panel Study (SOEP Group, 2001).
+    In the current version only the retrieval of variables in <i>YPBRUTTO</i> is
+    supported.
+<p>
+    Where appropriate the options are named as the variables in <i>YPBRUTTO</i>
+    which are used as criterium for inclusion of observation in your dataset.
+<p>
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>namelist</b> is optional. One may specify variables from <i>YPBRUTTO</i> here which
+        are than included in the new dataset. If no variables are given, all
+        variables from <i>YPBRUTTO</i> are included. PERSNR, ERHEBJ and YPERG are
+        always included.
+<p>
+    <b><u>s</u></b><b>oepdir</b> is mandatory. It tells <b>soepdo</b> the path to the directory where
+        SOEP files are stored.
+<p>
+    <b><u>y</u></b><b>perg</b> is manadatory. Here one specifies the reasons for drop-outs in
+        terms of YPERG (see Frick and Haisken-DeNew, 2005). If no integer is
+        given, no observations will be in your dataset.
+<p>
+    <b><u>e</u></b><b>rhebj</b> is optional. Some drop-outs can occur multiple times per person,
+        e.g. moving abroad. By default, <b>soepdo</b> will keep all observations but
+        one may specify <b>e(</b><i>last</i><b>)</b> or <b>e(</b><i>first</i><b>)</b> to keep only the first or the
+        last drop-out in terms of ERHEBJ.
+<p>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Please send your suggestions and comments to:
+<p>
+        Tim Stegmann
+        Institute for Work, Skills and Training(IAQ)
+        University of Duisburg-Essen
+        45117 Essen
+        Germany
+<p>
+        E-Mail: tim.stegmann@uni-due.de
+<p>
+<p>
+<p>
+<b><u>History</u></b>
+<p>
+    Version 1.1.1
+<p>
+        - <b>varlist</b> is now <b>namelist</b>
+        - fixed some typos in help file
+<p>
+<p>
+<b><u>Disclaimer</u></b>
+<p>
+    This software comes "as is" without warrenty. Use at your own risk.
+<p>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Haisken-DeNew, J. P. &amp; Frick, J. R. (ed.)(2005): DTC. Desktop Companion
+        to the German Socio-Economic Panel Study (SOEP). Version 8. Berlin:
+        Deutsches Institut für Wirtschaftsforschung
+<p>
+    SOEP Group (2001): The German Socio-Economic Panel (GSOEP) after more
+        than 15 years -- Overview. <i>Vierteljahreshefte zur</i>
+        <i>Wirtschaftsforschung</i>, 70(1), 7-14
+<p>
+</pre>
