@@ -1,4 +1,4 @@
-*! savewsz.ado, Chris Charlton and George Leckie, 19May2016
+*! savewsz.ado, Chris Charlton and George Leckie, 08Sep2023
 program savewsz,
 	version 9.0
 	syntax [anything(equalok everything)] [, FORCERecast batch plugin noLabel VERsion(integer 4) noCOMPress mlwinpath VIEWMacro replace]
@@ -49,7 +49,7 @@ program savewsz,
 		if (`r(ver1)' < 2) | (`r(ver1)' == 2 & `r(ver2)' < 20) local versionok = 0
 
 		if `versionok' == 0 {
-			display as error "savewsz requires MLwiN version 2.20 or higher. You can download the latest version of MLwiN at: http://www.bristol.ac.uk/cmm/software/mlwin/download/upgrades.html"
+			display as error "savewsz requires MLwiN version 2.20 or higher. You can download the latest version of MLwiN at: https://www.bristol.ac.uk/cmm/software/mlwin/download/upgrades.html"
 			exit 198
 		}
 		local mlwinversion `r(ver1)'.`r(ver2)'
@@ -112,7 +112,7 @@ program savewsz,
 			di as error "(1) the mlwinpath() option; for example mlwinpath(C:\Program Files (x86)\MLwiN v2.31\i386\mlwin.exe)" _n
 			di as error "(2) a global called MLwiN_path; for example: . global MLwiN_path C:\Program Files (x86)\MLwiN v2.31\i386\mlwin.exe" _n(2) 
 			di as error "We recommend (2) and that the user places this global macro command in profile.do, see help profile." _n(2)
-			di as error "IMPORTANT: Make sure that you are using the latest version of MLwiN. This is available at: http://www.bristol.ac.uk/cmm/MLwiN/index.shtml" _n
+			di as error "IMPORTANT: Make sure that you are using the latest version of MLwiN. This is available at: https://www.bristol.ac.uk/cmm/MLwiN/index.shtml" _n
 
 			exit 198
 		}

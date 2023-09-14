@@ -100,7 +100,7 @@ In order to get {cmd:savewsz} working, the user must then:
 {pstd}
 If you don't have the latest version of MLwiN, visit:
 
-{p 8 12 2}{browse "http://www.bristol.ac.uk/cmm/software/mlwin":http://www.bristol.ac.uk/cmm/software/mlwin}. 
+{p 8 12 2}{browse "https://www.bristol.ac.uk/cmm/software/mlwin":https://www.bristol.ac.uk/cmm/software/mlwin}. 
 
 {pstd}
 MLwiN is free for UK academics (thanks to support from the UK Economic and Social Research Council).
@@ -145,7 +145,7 @@ The Centre has been based at the University of Bristol since 2005.
 {pstd}
 The Centre’s website:
 
-{p 8 12 2}{browse "http://www.bristol.ac.uk/cmm":http://www.bristol.ac.uk/cmm}
+{p 8 12 2}{browse "https://www.bristol.ac.uk/cmm":https://www.bristol.ac.uk/cmm}
 
 {pstd}
 contains much of interest, including new developments, and details of courses and workshops.
@@ -155,7 +155,7 @@ maintenance downloads, and documentation.
 {pstd}
 The Centre also runs a free online multilevel modelling course:
 
-{p 8 12 2}{browse "http://www.bristol.ac.uk/cmm/learning/course.html":http://www.bristol.ac.uk/cmm/learning/course.html}
+{p 8 12 2}{browse "https://www.bristol.ac.uk/cmm/learning/course.html":https://www.bristol.ac.uk/cmm/learning/course.html}
 
 {pstd}
 which contains modules starting from an introduction to quantitative research progressing to multilevel modelling of 
@@ -173,7 +173,7 @@ Please cite it as such:
 
 {p 8 12 2}
 Leckie, G. and Charlton, C. 2013. {cmd:runmlwin} - A Program to Run the MLwiN Multilevel Modelling Software from within Stata. Journal of Statistical Software, 52 (11),1-40.
-{browse "http://www.jstatsoft.org/v52/i11":http://www.jstatsoft.org/v52/i11}
+{browse "https://www.jstatsoft.org/v52/i11":https://www.jstatsoft.org/v52/i11}
 
 {pstd}Similarly, please also cite the MLwiN software:
 
@@ -193,7 +193,7 @@ Browne, W.J. 2012. MCMC Estimation in MLwiN, v2.26. Centre for Multilevel Modell
 {pstd}Please use the {cmd:runmlwin} user forum to post any questions you have about {cmd:runmlwin}.
 We will try to answer your questions as quickly as possible, but where you know the answer to another user's question please also reply to them!
 
-{p 8 12 2}{browse "http://www.cmm.bristol.ac.uk/forum/viewforum.php?f=3":http://www.cmm.bristol.ac.uk/forum/}
+{p 8 12 2}{browse "https://www.cmm.bristol.ac.uk/forum/viewforum.php?f=3":https://www.cmm.bristol.ac.uk/forum/}
 
 
 {marker authors}{...}

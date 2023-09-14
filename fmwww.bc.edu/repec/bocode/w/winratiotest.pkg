@@ -10,7 +10,7 @@ d KW: prioritized outcomes
 d
 d Requires: Stata version 12
 d
-d Distribution-Date: 20230225
+d Distribution-Date: 20230913
 d
 d Author: John Gregson, Medical Statistics Department, London School of Hygiene and Tropical Medicine
 d Support: email John.Gregson@@lshtm.ac.uk
@@ -19,6 +19,8 @@ d Author: Tim Collier, Medical Statistics Department, London School of Hygiene a
 d Support: email Tim.Collier@@lshtm.ac.uk
 d
 f winratiotest.ado
+f winratiopower.ado
 f ../d/decide_winner.ado
 f winratiotest.sthlp
-f winratiotest_example.dta
+f winratiopower.sthlp
+f win_ratio_example.dta
