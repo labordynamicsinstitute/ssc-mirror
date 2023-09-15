@@ -1,0 +1,45 @@
+<header>
+<mkproject> boilerplate
+<version> 2.0.0
+<label> research log
+<description>
+{pstd} 
+This template starts a research log. Here you keep track of what you are doing
+and why.
+</description>
+</header>
+# Research log: [project name]
+
+## <date>: Preliminaries
+
+
+
+### Authors:
+
+authors with affiliation and email
+
+
+
+### Preliminary research question:
+
+
+
+### Data:
+
+data, where and how to get it, when we got it
+
+
+
+### Intended conference:
+
+conference, deadline
+
+
+
+### Intended Journal
+
+journal, requirements, e.g. max word count
+
+
+
+

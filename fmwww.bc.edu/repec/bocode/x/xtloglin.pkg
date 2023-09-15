@@ -1,0 +1,26 @@
+d 'XTLOGLIN': module to perform robust Lagrange multiplier test of linear and log-linear models against Box-Cox alternatives after regress or xtreg
+d
+d      xtloglin implements a Lagrange multiplier test for testing
+d the null of linear and log-linear regression models	 against
+d Box-Cox alternatives. The test can be run after regress or xtreg
+d and is based on a non-linear	  instrumental variables estimator
+d of the Box-Cox model proposed by Amemiya and Powell (1981). For
+d further    details, please see Vincent, D., UK Stata Conference
+d 2023. 
+d
+d KW: regression
+d KW: panel data
+d KW: Lagrange multiplier
+d KW: log-linear model
+d KW: Box-Cox transformation
+d
+d Requires: Stata version 15.1
+d
+d Distribution-Date: 20230914
+d
+d Author: David Vincent , DV Econometrics
+d Support: email dvincent@@dveconometrics.co.uk 
+d
+f xtloglin.ado
+f xtloglin.sthlp
+f ../s/Stata_UK23_Vincent.pdf

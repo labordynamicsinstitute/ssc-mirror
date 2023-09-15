@@ -358,7 +358,7 @@ search method often works best.
 {pstd}
 To trigger simulation, include the {cmdab:red:raws()} option. This sets the number of draws per observation
 at each level, along with
-the type of sequence (Halton, Hammersley, generalized Halton, pseudorandom), whether antithetics are also drawn, and, in the Halton and Hammersley caes,
+the type of sequence (Halton, Hammersley, generalized Halton, pseudorandom), whether antithetics are also drawn, and, in the Halton and Hammersley cases,
 whether and how the sequences should be scrambled. (See Gates 2006 for more on all these concepts except scrambling, for which see Kolenikov 2012.)
 For (generalized) Halton and Hammersley sequences, it is preferable to make the number of draws prime, to insure more variable coverage of the
 distribution from observation to observation, making coverage more uniform overall. Increasing the 
@@ -503,17 +503,21 @@ is needed, i.e., the number of observations that are censored in at least three 
 draws is 
 sometimes necessary for convergence and can even speed it by improving search precision. On the other hand, especially when the number of observations is
 high, convergence can be achieved, at some loss in precision, with remarkably few draws per observations--as few as 5 when the sample size is 10,000 (Cappellari and Jenkins
-2003). And taking more draws can also greatly extend execution time.{p_end}
-{phang2}3. If getting many "(not concave)" messages, try the {opt diff:icult} option, which instructs {cmd:ml} to 
+2003). And taking fewer draws can slash execution time.{p_end}
+{phang2}3. Under the same circumstances, in Stata 15 or later, you can also specify {cmdab:ghkd:raws(0)}. This tells {cmd:cmp} to dispense with the GHK algorithm
+for computing cumulative multivariate normal distributions and instead use quadrature, as implemented by the built-in {help mf_mvnormal:mvnormal()} family
+of functions. When it works, this can run much faster. However, for cumulative probabilities that are close to zero, the functions sometimes return zero or small negative 
+values, which have undefined log likelihoods. If this happens, {cmd:cmp} will fail with the "initial values not feasible" message.{p_end}
+{phang2}4. If getting many "(not concave)" messages, try the {opt diff:icult} option, which instructs {cmd:ml} to 
 use a different search algorithm in non-concave regions.{p_end}
-{phang2}4. If the search appears to be converging in likelihood--if the log likelihood is hardly changing in each iteration--and yet fails to converge, try 
+{phang2}5. If the search appears to be converging in likelihood--if the log likelihood is hardly changing in each iteration--and yet fails to converge, try 
 adding a {opt nrtol:erance(#)} or {opt nonrtol:erance} option to the command line after the comma. These are {cmd:ml} options that control when convergence is declared. (See
 {help cmp##ml_opts:ml_opts}, below.) By default, {cmd:ml} declares convergence when the log likelihood is changing very little with successive iterations (within
 tolerances adjustable with the {opt tol:erance(#)} and {opt ltol:erance(#)} options) {it:and} when the calculated gradient vector is close enough to zero. 
 In some difficult problems, such as ones with nearly collinear regressors, the imprecision of floating point numbers prevents {cmd:ml} from quite satisfying the second criterion. 
 It can be loosened by using the {opt nrtol:erance(#)} to set the scaled gradient tolerance to a value larger than its default of 1e-5, or eliminated altogether
 with {opt nonrtol:erance}. Because of the risks of collinearity, {cmd:cmp} warns when the condition number of an equation's regressor matrix exceeds 20 (Greene 2000, p. 40).{p_end}
-{phang2}5. Try {cmd:cmp}'s interactive mode, via the {opt inter:active} option. This
+{phang2}6. Try {cmd:cmp}'s interactive mode, via the {opt inter:active} option. This
 allows the user to interrupt maximization by hitting Ctrl-Break or its equivalent, investigate and adjust the current solution, and then restart
 maximization by typing {help ml:ml max}. Techniques for exploring and changing the current solution include displaying the current coefficient and gradient vectors 
 (with {cmd:mat list $ML_b} or {cmd:mat list $ML_g}) and running {help ml:ml plot}. See {help ml:help ml}, {bf:[R] ml}, and 
@@ -590,13 +594,18 @@ to compute the first derivatives of the likelihood numerically instead of using 
 estimation but occassionally improves convergence.
 
 {phang}{cmdab:ghkd:raws(}[#]{cmd: , }[{opt type(halton | hammersley | ghalton | random)} {opt anti:thetics} {opt scr:amble(sqrt | negsqrt | fl)} ]{cmd:)} governs the draws used in GHK simulation of 
-higher-dimensional cumulative multivariate normal distributions. It is similar to the {opt red:raws} option. However, it takes at most one number;
+higher-dimensional cumulative multivariate normal distributions--or specifies using quadrature rather than the GHK algorithm. It is similar to the {opt red:raws} option. However, it takes at most one number;
 if it, or the entire option, is omitted, the number of draws is set rather arbitrarily to twice the square root of the number of observations 
 for which the simulation is needed. (Simulated maximum likelihood is consistent as long as the number of draws rises with the square root of the 
 number of observations. In practice, a higher number of observations often reduces the number of draws per observation needed
 for reliable results. Train 2009, p. 252.) As in the {cmdab:red:raws()} option, the optional {opt type(string)} suboption specifies the type of sequence in 
 the GHK simulation, {cmd:halton} being the default;
-{opt anti:thetics} requests antithetic draws; and {opt scr:amble()} applies a scrambler. 
+{opt anti:thetics} requests antithetic draws; and {opt scr:amble()} applies a scrambler.
+
+{pmore}In Stata 15 and later, {cmdab:ghkd:raws(0)} instructs {cmd:cmp} to discard
+the GHK algorithm in favor of quadrature, as implemented in the built-in {help mf_mvnormal:mvnormal()} family
+of functions. When it works, this can run much faster. However, for cumulative probabilities that are close to zero, the functions sometimes return zero or small negative 
+values, which have undefined log likelihoods. If this happens, {cmd:cmp} will fail with the "initial values not feasible" message.
 
 {phang}{opt nodr:op} prevents the dropping of regressors from equations in which they receive missing standard errors in initial single-equation 
 fits. It also prevents the removal of collinear variables.
@@ -711,10 +720,10 @@ variance is estimated:
 {synopt :{opt lnl}}observation-level log likelihood (in hierarchical models, averaged over groups){p_end}
 {synopt :{opt sc:ores}}derivative of the log likelihood with respect to xb or parameter{p_end}
 {synopt :{opt re:siduals}}residuals relative to linear prediction{p_end}
-{synopt :{cmd:pr}[{cmd:(}{it:a b}{cmd:)}]}probability of positive outcome (probit), given outcome (ordered probit, multinomial), or linear predictor being in given range (otherwise). Omitting {cmd:(}{it:a b}{cmd:)} defaults to {cmd:(0 .)}, meaning positive values{p_end}
+{synopt :{cmd:pr}[{cmd:(}{it:a b}{cmd:)}]}probability of positive outcome (probit) or given outcome (ordered probit, multinomial) or linear predictor being in given range (otherwise). Omitting {cmd:(}{it:a b}{cmd:)} defaults to {cmd:(0 .)}{p_end}
 {synopt :{cmd:e}[{cmd:(}{it:a b}{cmd:)}]}truncated expected value: E[y|{it:a}<y<{it:b}]. Omitting {cmd:(}{it:a b}{cmd:)} defaults to {cmd:(. .)}, meaning unbounded{p_end}
 {synopt :{cmd:ystar(}{it:a b}{cmd:)}}censored expected value: E(y*), y* = max({it:a}, min(y, {it:b})){p_end}
-{synopt :{cmdab:cond:ition(}{it:c d} [, {cmdab:eq:uation(#}{it:eqno}|{it:eqname}{cmd:)}]{cmd:)}}condition a {cmd:pr}, {cmd:e}, or {cmd:ystar} statistic on bounding another equation's continuous (latent) outcome between {it:c} and {it:d}{p_end}
+{synopt :{cmdab:cond:ition(}{it:c d} [, {cmdab:eq:uation(#}{it:eqno}|{it:eqname}{cmd:)}]{cmd:)}}condition a {cmd:pr}, {cmd:e}, or {cmd:ystar} statistic on bounding another equation's (latent) linear predictor between {it:c} and {it:d}{p_end}
 {synopt :{opt o:utcome}{cmd:(}{it:outcome}{cmd:)}}specify outcome(s), for ordered probit only{p_end}
 {synopt :{opt nooff:set}}ignore any {opt offset()} or {opt exposure()} variable{p_end}
 {synopt :{opt red:ucedform}}predict based on reduced form; relevant for linear systems{p_end}
@@ -732,7 +741,8 @@ on the bounding of another equation's outcome (or latent variable). E.g., one ca
 score is between 4 and 8 (with something like {cmd: pr(5 10) eq(math) cond(4 8, eq(reading))}), or her expected math score conditioned the same way
 ({cmd:e eq(math) cond(4 8, eq(reading))}), or even her expected math score when both variables are so bounded ({cmd:e(5 10) eq(math) cond(4 8, eq(reading))}). Probability
 estimates for (ordered) probit equations can be conditioned too. To condition on a censored variable being within a certain range, refer to the associated cut points for its hypothesized
-latent variable, whether it is fixed (in probit, tobit, and interval regressions) or estimated (ordered probit). The Heckman selection model examples below illustrate.
+latent variable, whether it is fixed (in probit, tobit, and interval regressions) or estimated (ordered probit). For example, to condition on a probit-modeled outcome
+{it:x} being 0 or 1, respectively, use {cmd:cond(. 0, eq(x))} or {cmd:cond(0 ., eq(x))}. The Heckman selection model examples below illustrate.
 
 {pstd}
 {it:eqno} can be an equation name (if not set explicitly, an equation's name is that of its dependent variable). Or it can be an equation number preceded by a 

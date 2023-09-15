@@ -82,6 +82,7 @@ p xtivdfreg module to perform defactored instrumental variables estimation of la
 p xtivreg2 module to perform extended IV/2SLS, GMM and AC/HAC, LIML and k-class regression for panel data models
 p xtivreg28 module to perform extended IV/2SLS, GMM and AC/HAC, LIML and k-class regression for panel data models (version 8)
 p xtkr module to implement the Keane and Runkle estimator for dynamic panel data models
+p xtloglin module to perform robust Lagrange multiplier test of linear and log-linear models against Box-Cox alternatives after regress or xtreg
 p xtlsdvc module to estimate bias corrected LSDV dynamic panel data models
 p xtmg module to estimate panel time series models with heterogeneous slopes 
 p xtmipolateu module to replace missing values in a time series, two- or multidimensional varlist with interpolated (extrapolated) ones 

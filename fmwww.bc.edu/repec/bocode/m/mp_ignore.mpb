@@ -1,0 +1,15 @@
+<header>
+<mkproject> boilerplate
+<version> 2.0.0
+<label> .ignore file for git, ignores everything in directory data, and all .dta and .csv files
+<description>
+{pstd} 
+This is a template for a .ignore file. This is what {browse "https://git-scm.com/":git}
+uses to know what files it will not track. It will ignore anything in the directory
+{it:data}, and all .dta and .csv files. It prevents that someone accidentally puts
+individual level data on a place like github.
+</description>
+</header>
+data/
+*.dta
+*.csv

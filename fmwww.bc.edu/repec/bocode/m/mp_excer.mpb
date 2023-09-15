@@ -1,0 +1,41 @@
+<header>
+<mkproject> boilerplate
+<version> 2.0.0
+<label> course exercise
+<description>
+{pstd} 
+This a a template for a .do file that a student can use to do an
+exercise in a course.
+</description>
+</header>
+capture log close
+log using <stub>.txt, replace text
+
+// ---------------------------------------------------------------------------
+// course        : 
+// exercise      : 
+// name          : 
+// student number: 
+// ---------------------------------------------------------------------------
+
+version <stata_version>
+clear all
+<as of 16>frames reset
+macro drop _all
+
+*use [original_data_file.dta]
+
+// exercise 1 ................................................................
+
+/*
+Answer
+*/
+
+// exercise 2 ................................................................
+
+/*
+Answer
+*/
+
+log close
+exit

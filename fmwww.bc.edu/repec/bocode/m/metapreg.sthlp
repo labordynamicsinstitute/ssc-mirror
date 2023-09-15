@@ -1,8 +1,11 @@
 {smcl}
-{* *! version 3.0.0 27Mar2023}{...}
+{* *! version 3.0.1 14Sep2023}{...}
 {viewerdialog metapreg "dialog metapreg"}{...}
 {vieweralsosee "[ME] meqrlogit" "help meqrlogit"}{...}
 {vieweralsosee "[ME] meqrlogit" "mansection ME meqrlogit"}{...}
+{vieweralsosee "" "--"}{...}
+{vieweralsosee "[ME] melogit" "help melogit"}{...}
+{vieweralsosee "[ME] melogit" "mansection ME melogit"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[R] binreg" "help binreg"}{...}
 {vieweralsosee "[R] binreg" "mansection R binreg"}{...}
@@ -47,7 +50,7 @@ The first covariate must be a binary variable in {cmd: comparative} analysis, an
 In {cmd:mcbnetwork} or {cmd:pcbnetwork} studies, two first string covariates required are; {it: index} variable (multi-category; with at least 2 levels) and the {it:comparator} variable.
 
 {p 8 8 2}
-{cmd:The variable names should not contain underscores}.{p_end}
+{cmd:The variable names and the group names in the string variables should not contain underscores}.{p_end}
 
 {marker description}{...}
 {title:Description}
@@ -89,8 +92,8 @@ The command requires Stata 14.1 or later versions.
 
 {synopt :{opth m:odel(metapreg##modeltype:type[, modelopts])}}specifies the type of model to fit; default is {cmd:model(random)}. 
 {help metapreg##optimization_options:modelopts} control the control the optimization process{p_end}
-{synopt :{opth des:ign(metapreg##designtype:design[, baselevel(label)])}}specifies the type of the studies or design of meta-analysis; default is {cmd:design(independent)}. 
-{cmd:baselevel(label)}is relevant in abnetwork meta-analysis and indicates the label of the reference level of the covariate of interest. {p_end}
+{synopt :{opth des:ign(metapreg##designtype:design[, designopts])}}specifies the type of the studies or design of meta-analysis; default is {cmd:design(basic)}. 
+{help metapreg##design_options:designopts} are relevant in abnetwork and comparative meta-analysis.{p_end}
 {synopt :{opt nomc}}informs the program not to perform {cmd:m}odel {cmd:c}omparison with likelihood-ratio tests comparison for the specified model with other simpler models{p_end}
 {synopt :{opth by:(varname:byvar)}}specificies the stratifying variable for which the margins are estimated {p_end}
 {synopt : {opt int:eraction}}directs the model to include interaction terms between the first covariate and each of the remaining covariates{p_end}
@@ -114,6 +117,7 @@ for the individuals({it:icytpe}) studies or the overall({it:ociytpe}) summaries 
 {synopt :{opt summary:only}}requests to show only the summary estimates{p_end}
 {synopt :{opth outp:lot(metapreg##outplot:abs|rr)}}specifies to display/plot absolute/relative measures; default is {cmd:outplot(abs)}{p_end}
 {synopt :{opth down:load(path)}}specify the location where a copy of data used to plot the forest plot should be stored {p_end}
+{synopt :{opt sm:ooth}}requests the study-specific smooth estimates {p_end}
 
 {synoptline}
 {syntab:Table}
@@ -159,7 +163,7 @@ be comma separated.{p_end}
 {synopthdr :design}
 {synoptline}
 
-{synopt :{opt basic}} notifies the program to perform a basic/typical meta-analysis. The program expects atleast {cmd: n N} to be specified {p_end}
+{synopt :{opt general}} notifies the program to perform a general/typical meta-analysis. The program expects atleast {cmd: n N} to be specified {p_end}
 {synopt :{opt comparative}} notifies the program that the data is from comparative studies. The program expects atleast {cmd: n N bicat} to be specified {p_end}
 {synopt :{opt pcbnetwork}} notifies the program that the data is from paired studies. The program expects atleast {cmd: a b c d index comparator} to be is supplied{p_end}
 {synopt :{opt mcbnetwork}} notifies the program that the data is from matched studies. The program expects atleast {cmd: ab ac n index comparator} to be is supplied{p_end}
@@ -173,7 +177,7 @@ be comma separated.{p_end}
 
 {synopt :{opt random|mixed}}fits a {cmd:random}-effects or {cmd:mixed}-effects logistic-normal model{p_end}
 {synopt :{opt fixed}}fits a {cmd:fixed}-effects logistic regression model{p_end}
-{synopt :{opt exact}}uses the exact binomial distribution{p_end}
+{synopt :{opt hexact}}uses the exact binomial distribution{p_end}
 
 {synoptline}
 
@@ -256,19 +260,22 @@ the maximization process during refinement of starting values
 {marker options}{...}
 {title:Options}
 
-{dlgtab:Design}
+{marker design_options}{...}
+{dlgtab:Design options}
 
 {phang}
-{opt design(type, baselevel(label))} specifies the type of the studies or design of the meta-analysis to perform. 
+{opt design(type, designopts)} specifies the type of the studies or design of the meta-analysis to perform. 
 {it:design} is one of the following {cmd:basic},
-{cmd:comparative}, {cmd:mcbnetwork}, {cmd:pcbnetwork} and {cmd:abnetwork}. 
+{cmd:comparative}, {cmd:mcbnetwork}, {cmd:pcbnetwork} and {cmd:abnetwork}. {opt designopts} specifies the options that give the user
+more control parameterization of the comparative and abnetwork model. 
 
 {pmore}
-{cmd:design(basic)} request for a basic meta-analysis. The required {it:{vars}} has the form {cmd: n N}.
+{cmd:design(basic)} requests for a basic meta-analysis. The required {it:{vars}} has the form {cmd: n N}.
 
 {pmore}
 {cmd:design(comparative)} indicates that the data is from comparative studies i.e there are two rows of data per each {cmd: studyid}. The required {it:{vars}} has the form {cmd: n N bicat} 
-where {it:bicat} is the first covariate which should be a string variable with two levels.
+where {it:bicat} is the first covariate which should be a string variable with two levels. When there are two random effects in the model, their covariance structure can be
+specified as {it:independent} with {cmd:design(comparative,cov(independent))} or {it:unstructured} {cmd:design(comparative,cov(unstructured))}
 
 {pmore}
 {cmd:design(mcbnetwork)} indicates that the data is from matched studies and instructs to perform contrast-based network meta-analysis. There can be more than one row of data per each {cmd: studyid}. The required {it:{vars}} has the form {cmd: a b c d index comparator}. 
@@ -285,15 +292,18 @@ for the correlation when computing the confidence intervals for the individual s
 
 {pmore}
 {cmd:design(abnetwork)} instructs to perform arm-based network meta-analysis. The rquired {it:{vars}} has the form {cmd: n N cat} where {it:cat} is the 
-first covariate which should be a string with atleast two levels. There should be atleast two rows of data per {cmd:studyid}. 
+first covariate which should be a string with atleast two levels. 
+There should be atleast two rows of data per {cmd:studyid}. {cmd:baselevel(label)} is relevant in abnetwork meta-analysis 
+and indicates the label of the reference level of the covariate of interest. The correct use is {cmd:design(abnetwork, baselevel(label))} 
+
 
 {dlgtab:Model}
 
 {phang}
-{opt model(type, modelopts)} specifies the type of model to fit. {it:type} is either {cmd:fixed},  {cmd:random}, {cmd:mixed} or {cmd:exact}. 
+{opt model(type, modelopts)} specifies the type of model to fit. {it:type} is either {cmd:fixed},  {cmd:random}, {cmd:mixed} or {cmd:hexact}. 
 
 {pmore}
-{cmd:model(exact)} uses the exact binomial distribution. The model assumes that the studies are homogeneous.
+{cmd:model(hexact)} uses the exact binomial distribution. The model assumes that the studies are homogeneous.
 
 {pmore}
 {cmd:model(fixed)} fits a fixed-effects logistic regression model to the data. The model assumes that the studies are homogeneous.
@@ -307,7 +317,7 @@ first covariate which should be a string with atleast two levels. There should b
 more control on the optimization process. The appropriate options 
 feed into the {cmd:binreg}(see {it:{help binreg##maximize_options:maximize_options}}) 
 or {cmd:meqrlogit} (see {it:{help meqrlogit##maximize_options:maximize_options}} and 
-{it:{help meqrlogit##laplace:integration_options}}). 
+{it:{help meqrlogit##laplace:integration_options}}) or {cmd:melogit} (see {it:{help melogit##maximize_options:maximize_options}}) for stata version 16 or higher. 
 
 {pmore}
 The fixed-effects model is maximized using Stata's {help ml} command. This implies that
@@ -411,6 +421,9 @@ enforces the {cmd: nowt} option.
 {phang}
 {opt summaryonly} requests to show only the summary estimates. Useful when there are many studies in the groups.
 
+{phang}
+{opt smooth} requests for the model-based study-specific estimates.
+
 
 {dlgtab:Table}
 {phang}
@@ -419,7 +432,8 @@ enforces the {cmd: nowt} option.
 {pmore}
 {opt sumtable(rr)} requests that the summary relative ratios be presented in the table. This options is whenever there are categorical covariates in the model.
 
-{synopt :{opt gof}}display the goodfness of fit statistics; Akaike information and Bayesian information criterion.{p_end}
+{pmore}
+{opt gof} display the goodfness of fit statistics; Akaike information and Bayesian information criterion.{p_end}
 
 {dlgtab:Forest plot}
 {phang}
@@ -521,13 +535,11 @@ etc., control of margins, plot regions, graph size, aspect ratio, and the use of
 {marker remarks}{...}
 {title:Remarks}
 {pstd}
-{helpb meqrlogit} is used for the random-effects model and {helpb binreg} for the fixed-effects model. 
+{helpb meqrlogit} or {helpb melogit} is used for the random-effects model and {helpb binreg} for the fixed-effects model. 
 The binomial distribution is used to model the within-study variability ({help metapreg##Hamza2008:Hamza et al. 2008}).
-The weighting is implicit and parameter estimation is an iterative procedure. 
-The method of maximum likelihood chooses as estimates the values of the parameters that are most consistent with the data. 
-The density of the probability distribution at a given data point is a measure of consistency for the observation, in other words 
-how much information concerning the parameter the observation has. The maximum likelihood contains all the current information about the parameter. 
-Data points near the parameter estimates have larger contribution to the maximum likelihood i.e. more weight. 
+The weighting is implicit and proportional to the study size and within-study variance. The estimation of the model parameters is an iterative procedure. 
+The parameters are maximum likelihood estimates. 
+
 
 {marker examples}{...}
 {title:Examples}
@@ -561,9 +573,6 @@ with specified x-axis label, e.t.c.
 {cmd : studyid(study) }
 {p_end}
 {pmore3}
-{cmd :model(random) }
-{p_end}
-{pmore3}
 {cmd :by(STRtgroup) }
 {p_end}
 {pmore3}
@@ -582,7 +591,7 @@ with specified x-axis label, e.t.c.
 {cmd :graphregion(color(white)) }
 {p_end}
 {pmore3}
-{cmd :texts(1.5) prediction ;}	
+{cmd :texts(1.5) prediction smooth gof;}	
 {p_end}
 
 {pmore2}
@@ -621,9 +630,6 @@ with specified x-axis label, Wilson confidence intervals for the studies, e.t.c.
 {cmd:studyid(study) }
 {p_end}
 {pmore3}
-{cmd:model(random)  }
-{p_end}
-{pmore3}
 {cmd:cimethod(wilson) }
 {p_end}
 {pmore3}
@@ -639,7 +645,7 @@ with specified x-axis label, Wilson confidence intervals for the studies, e.t.c.
 {cmd:subti(Atypical cervical cytology, size(4)) }
 {p_end}
 {pmore3}
-{cmd:texts(1.5) prediction;}
+{cmd:texts(1.5) prediction smooth;}
 {p_end}
 {pmore3}
 
@@ -677,9 +683,6 @@ Triage group as a covariate, display all summary tables, e.t.c.
 {p_end}
 {pmore3}
 {cmd:sumtable(all) ///}
-{p_end}
-{pmore3}
-{cmd:model(random)  ///}
 {p_end}
 {pmore3}
 {cmd:cimethod(exact) ///}
@@ -726,9 +729,6 @@ The dataset used in this example produced the top-left graph in figure two in
 {cmd: studyid(study) ///}
 {p_end}
 {pmore3}
-{cmd: model(random) ///}
-{p_end}
-{pmore3}
 {cmd: label(namevar=author, yearvar=year) ///}
 {p_end}
 {pmore3}
@@ -753,7 +753,7 @@ The dataset used in this example produced the top-left graph in figure two in
 {cmd: graphregion(color(white))  ///}
 {p_end}
 {pmore3}
-{cmd: texts(1.5)}
+{cmd: texts(1.5) smooth}
 {p_end}
 {pmore}
 {it:({stata "metapreg_examples metapreg_example_two_one":click to run})}
@@ -771,10 +771,6 @@ By supplying the risk-ratios and their variability, {help metapreg##Sharp1998:Sh
 The logistic regression model appropriately accounts for both within- and between-study heterogeneity, with vaccination arm as a covariate. 
 The options {cmd:comparative} indicates that the data is comparative. The first covariate {cmd:bcg}, identifies the first and the second observations of the pair. 
 The risk-ratios are requested with the option {cmd:outplot(rr)}. All output tables are requested with the option {cmd:sumtable(all)}. 
-
-{pmore}
-To fit an equivalent fixed effects model to the data as in {help metapreg##Sharp1998a:Sharp (1998)}, 
-use the option {cmd: model(fixed)}.
    
 {pmore2}
 {stata `"use "http://fmwww.bc.edu/repec/bocode/b/bcg.dta""':. use "http://fmwww.bc.edu/repec/bocode/b/bcg.dta"}
@@ -808,7 +804,7 @@ use the option {cmd: model(fixed)}.
 {cmd: xtick(0, 1, 2)  /// }
 {p_end}
 {pmore3}
-{cmd: logscale ///} 
+{cmd: logscale smooth ///} 
 {p_end}
 {pmore3}
 {cmd: xtitle(Relative Ratio,size(2)) /// }
@@ -826,7 +822,6 @@ use the option {cmd: model(fixed)}.
 {pmore2} 
 {it:({stata "metapreg_examples metapreg_example_three_one":click to run})}
 
-
 {synoptline}
 {marker example_three_two}{...}
 {cmd : 3.2 Continous covariate}
@@ -843,9 +838,6 @@ We investigate whether altitude has an effect on the vaccination by including {c
 {p_end}
 {pmore3}
 {cmd: studyid(study) ///}
-{p_end}
-{pmore3}
-{cmd: model(random)  /// }
 {p_end}
 {pmore3}
 {cmd: sumtable(all) by(bcg)  ///}
@@ -872,7 +864,7 @@ We investigate whether altitude has an effect on the vaccination by including {c
 {cmd: astext(80) /// }
 {p_end}
 {pmore3}
-{cmd: texts(1.5) prediction }
+{cmd: texts(1.5) prediction smooth}
 {p_end}
 
 {pmore2} 
@@ -936,7 +928,7 @@ The interaction term from {cmd:metapreg} and the coefficient for lat using {cmd:
 {cmd:astext(80) ///} 
 {p_end}
 {pmore3}
-{cmd:texts(1.5) logscale }  
+{cmd:texts(1.5) logscale smooth }  
 {p_end}
 
 {pmore2}
@@ -969,9 +961,6 @@ The analysis is more appropriately perfomed using {cmd:metapreg} by including {c
 {cmd:sortby(year) ///}
 {p_end}
 {pmore3}
-{cmd:model(random)  ///}
-{p_end}
-{pmore3}
 {cmd:sumtable(all) ///}
 {p_end}
 {pmore3}
@@ -1002,7 +991,7 @@ The analysis is more appropriately perfomed using {cmd:metapreg} by including {c
 {cmd:astext(70) /// }
 {p_end}
 {pmore3}
-{cmd:texts(1.5) logscale}
+{cmd:texts(1.5) logscale smooth}
 
 
 {pmore2}		
@@ -1069,7 +1058,7 @@ Total {c |} a + c {space 5} b + d  {space 4}{c |} a + b + c+ d
 {cmd:lcols(comparator index) ///}
 {p_end}
 {pmore3}
-{cmd:astext(80) texts(1.2) logscale  }
+{cmd:astext(80) texts(1.2) logscale smooth }
 {p_end}
 
 
@@ -1086,7 +1075,9 @@ Total {c |} a + c {space 5} b + d  {space 4}{c |} a + b + c+ d
 {synoptset 24 tabbed}{...}
 {p2col 5 15 19 2: Matrices}{p_end}
 {synopt:{cmd:e(rrout)}}summary relative ratios when there categorical covariates{p_end}
+{synopt:{cmd:e(poprrout)}}population-averaged summary relative ratios when there categorical covariates{p_end}
 {synopt:{cmd:e(absout)}}summary proportions{p_end}
+{synopt:{cmd:e(popabsout)}}population-averaged summary proportions{p_end}
 {synopt:{cmd:e(hetout)}}heterogeneity test statistics after a fitting a random-effects model{p_end}
 {synopt:{cmd:e(absoutp)}}summary proportions predictive intervals{p_end}
 {synopt:{cmd:e(logodds)}}summary log-odds{p_end}

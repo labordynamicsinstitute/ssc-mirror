@@ -12,9 +12,9 @@ d KW: directory
 d KW: folder
 d KW: boilerplate
 d
-d Requires: Stata version 10
+d Requires: Stata version 15
 d
-d Distribution-Date: 20221124
+d Distribution-Date: 20230914
 d
 d Author: Maarten L. Buis, University of Konstanz
 d Support: email maarten.buis@@uni-konstanz.de
@@ -23,3 +23,44 @@ f mkproject.ado
 f mkproject.sthlp
 f ../b/boilerplate.ado
 f ../b/boilerplate.sthlp
+f ../b/boilerplate_create.sthlp
+f ../l/lmkproject.mlib
+f mkproject_create.sthlp
+f mkproject_work.ado
+f mp_ana.mpb
+f mp_b_ana.sthlp
+f mp_b_dta.sthlp
+f mp_b_dta_c.sthlp
+f mp_b_excer.sthlp
+f mp_b_ignore.sthlp
+f mp_b_main.sthlp
+f mp_b_readme.sthlp
+f mp_b_readme_sp.sthlp
+f mp_b_rlog.sthlp
+f mp_b_rlogc.sthlp
+f mp_b_smclpres.sthlp
+f mp_course.mpp
+f mp_defaults.mpd
+f mp_dta.mpb
+f mp_dta_c.mpb
+f mp_excer.mpb
+f mp_excer.mpp
+f mp_ignore.mpb
+f mp_long.mpp
+f mp_longt.mpp
+f mp_main.mpb
+f mp_p_course.sthlp
+f mp_p_excer.sthlp
+f mp_p_long.sthlp
+f mp_p_longt.sthlp
+f mp_p_research_git.sthlp
+f mp_p_researcht_git.sthlp
+f mp_p_smclpres.sthlp
+f mp_readme.mpb
+f mp_readme_sp.mpb
+f mp_research_git.mpp
+f mp_researcht_git.mpp
+f mp_rlog.mpb
+f mp_rlogc.mpb
+f mp_smclpres.mpb
+f mp_smclpres.mpp

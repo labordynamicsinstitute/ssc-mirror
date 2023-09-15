@@ -1,9 +1,9 @@
 {smcl}
-{* *! version 1.2.0}{...}
+{* *! version 2.0.0}{...}
 {vieweralsosee "mkproject" "help mkproject"}{...}
+{vieweralsosee "create a new template" "help boilerplate create"}
 {viewerjumpto "Syntax" "boilerplate##syntax"}{...}
 {viewerjumpto "Description" "boilerplate##description"}{...}
-{viewerjumpto "Options" "boilerplate##option"}{...}
 {viewerjumpto "Examples" "boilerplate##example"}{...}
 {title:Title}
 
@@ -16,60 +16,60 @@
 
 {p 8 17 2}
 {cmd:boilerplate}
-{help filename:new_filename} ,
-{cmd:[}
-{opt dta}
-{opt ana} 
-{opt smclpres}
-{opt git}
-{opt noopen}
-{cmd:]}
+{it:new_filename}
+[{cmd:,} {opt templ:ate(template)} 
+{opt dir(directory)} ]
+
+{p 8 17 2}
+{cmd:boilerplate}
+[{cmd:,} {opt query} 
+{opt create(filename)} 
+{opt remove(template_name)} 
+{opt default(template_name)} 
+{opt resetdefault}
+{opt replace}]
+
+{synoptset 24 tabbed}{...}
+{synopthdr}
+{synoptline}
+{syntab:Main}
+{synopt:{opt templ:ate(template)}}choose the template for the boilerplate. The 
+{it:query} option displays a list of templates available and the default{p_end}
+{synopt:{opt dir(directory)}}specifies the directory in which the file is to be 
+created{p_end}
+{synopt:{opt query}}displays a list of templates available{p_end}
+
+{syntab:Modify templates}
+{synopt:{opt create(filename)}}create a template from {it:filename}{p_end}
+{synopt:{opt remove(template_name)}}removes the template {it:template_name}{p_end}
+{synopt:{opt default(template_name)}}set the default template to {it:template_name}{p_end}
+{synopt:{opt resetdef:ault}}sets the default template back to {it:long}{p_end}
+{synoptline}
+{p2colreset}{...}
+
 
 {marker description}{...}
 {title:Description}
 
 {pstd}
-{cmd:boilerplate} creates a new .do file called {it:new_filename}, which will 
-contain boilerplate code. The type of boilerplate code depends on whether the
-{cmd:dta}, {cmd:ana}, or {cmd:smclpres} option has been specified;{p_end} 
-{pmore}the first indicates that the .do file is mainly for data preparation,{p_end}
-{pmore}the second indicates that the .do file is mainly for data analysis, and{p_end}
-{pmore}the last indicates that the .do file is a source file for a 
-{stata ssc desc smclpres:smclpres} presentation.{p_end}
+There is usually a set of commands that are included in every .do file a person 
+makes, like {cmd:clear _all} or {cmd:log using}. What those commands are can 
+differ from person to person, but most persons have such a standard set. The 
+purpose of {cmd:boilerplate} is to help creating new .do file by adding those
+standard commands (often called boilerplate code). The type of boilerplate code 
+that will be added to {it:new_filename} depends on the template. Use the 
+{cmd:query} option to see what what templates are available. 
 
 {pstd}
-Once {cmd:boilerplate} has created the file, it will open that .do file in the 
-do file editor, unless the {cmd:noopen} option has been specified. 
-
-
-{marker option}{...}
-{title:Option}
-
-{phang}
-{opt dta} specifies that the .do file's main purpose is data preparation, the
-default.
-
-{phang}
-{opt ana} specifies that the .do file's main purpose is data analysis.
-
-{phang}
-{opt smclpres} specified that the .do file is to be a source file for a 
-{cmd:smclpres} presentation.
-
-{phang}
-{opt noopen} specifies that the created .do file is not to be opened in the 
-do file editor.	
-
-{phang}
-{opt git} specifies that the .do file will use the directory structure for a 
-project maintained by Git, i.e. the raw data is expected to be in 
-../protected/data rather than in ../posted/data.
+{help boilerplate_create:This} help file discusses how to create your own 
+template.
 
 
 {marker example}{...}
 {title:Example}
 
-{phang}{cmd:. boilerplate foo_dta02.do, dta}{p_end}
+{phang}{cmd:. boilerplate , query}{p_end}
+{phang}{cmd:. boilerplate foo_dta02.do, template(dta)}{p_end}
 
 
 {title:Author}

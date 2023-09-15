@@ -1,0 +1,24 @@
+<header>
+<mkproject> project
+<version> 2.0.0
+<label> Small research project as part of a course
+<reqs> dirtree
+<description>
+{pstd} 
+This template is for a small research project that takes place over a
+short period of time that does not require snapshots. A typical example
+would be a project someone has to do for a course.
+</description>
+</header>
+
+<dir> docu
+<dir> data
+<dir> ana
+<dir> txt
+
+<file> rlogc  docu/research_log.md
+<file> main   ana/<abbrev>_main.do
+<file> dta_c  ana/<abbrev>_dta01.do
+<file> ana    ana/<abbrev>_ana01.do
+
+<cmd> dirtree

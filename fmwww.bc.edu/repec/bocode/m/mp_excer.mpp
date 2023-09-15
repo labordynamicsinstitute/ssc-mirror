@@ -1,0 +1,14 @@
+<header>
+<mkproject> project
+<version> 2.0.0
+<label> excercise for a course
+<description>
+{pstd} 
+This template sets up a directory for a basic excercise one may have to do for
+a course
+</description>
+</header>
+
+<file> excer <abbrev>.do
+
+<cmd> doedit <abbrev>.do

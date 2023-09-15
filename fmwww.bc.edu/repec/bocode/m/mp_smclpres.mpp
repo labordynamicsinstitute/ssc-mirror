@@ -1,0 +1,20 @@
+<header>
+<mkproject> project
+<version> 2.0.0
+<label> a smclpres presentation project
+<reqs> smclpres
+<description>
+{pstd} 
+This template sets up a directory for a {help smclpres} presentation.
+</description>
+</header>
+
+<dir> source
+<dir> handout
+<dir> presentation
+
+<file> smclpres source/presentation.do
+<file> readme_sp readme.txt
+
+<cmd> qui cd source
+<cmd> doedit presentation.do
