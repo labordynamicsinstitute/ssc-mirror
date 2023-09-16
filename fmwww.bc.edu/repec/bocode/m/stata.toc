@@ -4,6 +4,7 @@ p macrof module to compute the macroF evaluation criterion for multi-class outco
 p madfuller module to perform Dickey-Fuller test on panel data
 p madot module to create dot plot for summarizing pooled estimates of multiple outcomes from meta-analysis
 p mads module to calculate Median Absolute Deviations
+p magreg module to calculate maximum agreement regression
 p mahapick module to select matching observations based on a Mahalanobis distance measure
 p mail module to send progress reports (Mac OSX/Linux/Unix)
 p majority module for majority calculations for real or hypothetical elections

@@ -1,0 +1,18 @@
+d 'MAGREG': module to calculate maximum agreement regression
+d
+d    magreg estimates the maximum agreement regression model
+d specified in varlist. 
+d
+d KW: regression
+d KW: maximum agreement
+d
+d Requires: Stata version 9
+d
+d Distribution-Date: 20230915
+d
+d Author:   Matteo Bottai,  Institute of Environmental Medicine, Karolinska Institutet
+d Support: email  matteo.bottai@@ki.se
+d
+f magreg.ado
+f magreg_est.ado
+f magreg.sthlp

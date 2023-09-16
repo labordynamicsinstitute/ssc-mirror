@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.0}{...}
+{* *! version 2.0.1}{...}
 {vieweralsosee "mkproject" "help mkproject"}{...}
 {vieweralsosee "create a new template" "help boilerplate create"}
 {viewerjumpto "Syntax" "boilerplate##syntax"}{...}
@@ -16,9 +16,8 @@
 
 {p 8 17 2}
 {cmd:boilerplate}
-{it:new_filename}
-[{cmd:,} {opt templ:ate(template)} 
-{opt dir(directory)} ]
+{help filename:new_filename}
+[{cmd:,} {opt templ:ate(template)} ]
 
 {p 8 17 2}
 {cmd:boilerplate}
@@ -35,8 +34,6 @@
 {syntab:Main}
 {synopt:{opt templ:ate(template)}}choose the template for the boilerplate. The 
 {it:query} option displays a list of templates available and the default{p_end}
-{synopt:{opt dir(directory)}}specifies the directory in which the file is to be 
-created{p_end}
 {synopt:{opt query}}displays a list of templates available{p_end}
 
 {syntab:Modify templates}

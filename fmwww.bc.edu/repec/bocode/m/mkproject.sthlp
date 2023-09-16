@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.0}{...}
+{* *! version 2.0.1}{...}
 {vieweralsosee "boilerplate" "help boilerplate"}{...}
 {vieweralsosee "create new templates" "help mkproject_create"}{...}
 {vieweralsosee "smclpres (if installed)" "help smclpres"}{...}
