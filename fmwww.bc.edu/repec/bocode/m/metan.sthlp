@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 4.06  David Fisher  12oct2022}{...}
+{* *! version 4.07  David Fisher  15sep2023}{...}
 {vieweralsosee "metan_model" "help metan_model"}{...}
 {vieweralsosee "metan_binary" "help metan_binary"}{...}
 {vieweralsosee "metan_continuous" "help metan_continuous"}{...}
@@ -147,6 +147,7 @@ This incorporates all the functionalities of the previous version of {cmd:metan}
 {synopt :{opt wgt(varname)}}specify a variable containing user-defined weights{p_end}
 
 {syntab :Forest plot and/or saved data}
+{synopt :{opt allw:eights}}display study-specific weights associated with all requested models on the forest plot{p_end}
 {synopt :{opt hetinfo(het_spec)}}specify heterogeneity information to display on the forest plot{p_end}
 {synopt :{cmd:extraline(yes|no)}}override the default placement of heterogeneity information in the forest plot{p_end}
 {synopt :{opt rfdist}, {opt rflevel(#)}}display approximate predictive interval, with optional coverage level (default is {help creturn##output:c_level}; see {help set level}){p_end}
@@ -370,6 +371,15 @@ The raw (non-normalised) numbers stored in {it:varname} may also be saved and/or
 {dlgtab:Forest plot and/or saved data}
 
 {phang}
+{opt allweights} specifies that weights associated with {ul:all} requested models be displayed as columns on the right-hand side of the forest plot.
+By default, the presented weights are those associated with the first requested model only.
+
+{pmore}
+Weights will also be saved within the saved dataset.
+Weights associated with the first model will be given the default name {bf:_WT}.
+Weights associated with subsequent models will be given names {bf:_WT_}{it:suffix}, where {it:suffix} is a descriptive shorthand for the model. 
+
+{phang}
 {opt hetinfo(het_spec)} specifies the heterogeneity information to be displayed on the forest plot, which by default is {opt isq pvalue}.
 {it:het_spec} has the following syntax:
 
@@ -455,7 +465,7 @@ which would usually appear outside the plot region as the column heading, and in
 This allows multiple such datasets to be {bf:{help append}}ed without this information being lost.
 
 {phang}
-{opt clear} is an alternative to {cmd:saving()} which replaces the data in memory with the "results set" data.
+{opt clear} is an alternative to {cmd:saving()} which replaces the data in memory with the {help metan##saved_datasets:"results set"} data.
 
 
 
@@ -465,13 +475,14 @@ This allows multiple such datasets to be {bf:{help append}}ed without this infor
 {pstd}
 By default, {cmd:metan} adds new variables to the dataset corresponding to the individual study effect sizes,
 standard errors, confidence intervals and weights used by the program.
-Amongst other things, this provides a method of obtaining effect sizes and standard errors from other data structures such as 2x2 cell counts.
+Amongst other things, this provides a method of obtaining effect sizes and standard errors from other data structures such as 2x2 cell counts;
+in a similar way to Stata's built-in {cmd:meta esize}, or {cmd:escalc} within the {cmd:metafor} package in R.
 These new variables may be suppressed using the {opt nokeepvars} or {opt norsample} options.
 
 {pstd}
-(Note that, if {opt cumulative} or {opt influence}, these variables will still contain 
-individual study characteristics, which will therefore {ul:not} agree with the results table shown on-screen,
-except for the first iteration of a {opt cumulative} analysis.)
+(Note that these variables are always consistent with the original raw data from individual studies, regardless of other options.
+In particular, if options {opt cumulative} or {opt influence} are specified, these variables will {ul:not} be consistent with the results table shown on-screen.
+To consistently obtain the data shown on-screen and in the forest plot, use {help metan##saved_datasets:"results sets"} as described below.)
 
 {pstd}
 The following new variables may be added:
@@ -480,7 +491,7 @@ The following new variables may be added:
 {p2col 7 32 36 2:{cmd:_seES}}Standard error of ES{p_end}
 {p2col 7 32 36 2:{cmd:_LCI}}Lower confidence limit for ES{p_end}
 {p2col 7 32 36 2:{cmd:_UCI}}Upper confidence limit for ES{p_end}
-{p2col 7 32 36 2:{cmd:_WT}}Study percentage weight (between 0 and 100){p_end}
+{p2col 7 32 36 2:{cmd:_WT}}Study percentage weight (between 0 and 100) associated with first requested {help metan_model##model:pooling method}{p_end}
 {p2col 7 32 36 2:{cmd:_NN}}Study sample size{p_end}
 {p2col 7 32 36 2:{cmd:_CC}}Marker of whether continuity correction was applied{p_end}
 {p2col 7 32 36 2:{cmd:_rsample}}Marker of which observations were used in the analysis{p_end}
@@ -535,7 +546,7 @@ The following results may also be saved, depending on the combination of effect 
 
 {p2col 5 20 24 2: Scalars (with subgroups only)}{p_end}
 {synopt:{cmd:r(nby)}}Number of subgroups{p_end}
-{synopt:{cmd:r(Qbet)}}Measure of between-study heterogeneity{p_end}
+{synopt:{cmd:r(Qbet)}}Measure of between-study heterogeneity (see {help metan##diffs_metan9:note} below){p_end}
 {synopt:{cmd:r(Qsum)}}(common-effect models only) Sum of within-subgroup heterogeneity statistics{p_end}
 {synopt:{cmd:r(F)}}(common-effect models only) F-statistic comparing within- and between-subgroup heterogeneity;
 equal to {bf:(r(Qbet)/(r(nby) - 1)) / (r(Qsum)/((r(k) - 1) - (r(nby) - 1)))}
@@ -709,32 +720,15 @@ you could specify {cmd:model(mh \ random)}.
 In June 2019, Stata version 16 introduced a suite of built-in meta-analysis commands, with the prefix {bf:{help meta}}.
 Forest plots are generated using a new specific Stata graph type (rather than being generated using a combination of {cmd:twoway} commands),
 and there is better interface with other built-in Stata estimation commands.
-However, at the time of writing it has somewhat limited functionality, and it is unclear which directions its future development might take.
-Currently, {cmd:metan} implements many more random-effects models and additional features,
+However, there remains a need for a comprehensive, adaptable user-written package which is available to users of earlier and more recent versions of Stata alike.
+At the time of writing, {cmd:metan} implements a wider range of random-effects models and additional features,
 and {cmd:forestplot} provides far more flexibility to create non-standard plots.
-Plus, of course, {cmd:metan} is available to users of earlier versions of Stata.
 
 {pstd}
-As of October 2020 (Stata version 16.1), Stata 16's {cmd:meta} suite is currently unable, amongst other things, to:
-
-{phang2}
-Display the results of analysis under multiple models in the same output,
-as can be done using {cmd:metan}'s {opt second()} or {opt model()} options;
-
-{phang2}
-Make use of user-specified weights in analysis or in a forest plot;
-
-{phang2}
-Show predictive intervals for study subgroups;
-
-{phang2}
-Make use of marker label options to display text at the co-ordinates of study effect estimates (see Example 9 below).
-
-{pstd}
-Finally, note that there is an important difference in the way that {cmd:metan} and Stata 16's {cmd:meta} suite
+Note also that there is an important difference in the way that {cmd:metan} and Stata 16's {cmd:meta} suite
 report heterogenity statistics with random-effects models.
-{cmd:metan} views I-squared (and its transformations H and H-squared) as being descriptive of the observed data,
-and I-squared is therefore derived from Q regardless of the specified model unless option {opt isqparam} is specified (see {it:{help metan_model:model_spec}}).
+{cmd:metan} views I-squared (and its transformations H and H-squared) as being {ul:descriptive} of the observed data,
+and I-squared is therefore derived from Q regardless of the specified model (unless option {opt isqparam} is specified; see {it:{help metan_model:model_spec}}).
 By constrast, Stata 16's {cmd:meta} suite reports I-squared based on Q if a common-effect model is specified,
 or based on tau-squared if a random-effects model is specified.
 

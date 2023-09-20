@@ -1,5 +1,5 @@
 *﻿* did_multiplegt_dyn : did_multiplegt, robust to dynamic effects and with asymptotic variances
-** This version : September 4th, 2023
+** This version : September 19th, 2023
 ** Modified and commented by Clément.
 
 ********************************************************************************
@@ -11,6 +11,18 @@ capture program drop did_multiplegt_dyn
 program did_multiplegt_dyn, eclass
 	version 12.0
 	syntax varlist(min=4 max=4 numeric) [if] [in] [, effects(integer 1) placebo(integer 0) switchers(string) controls(varlist numeric) trends_nonparam(varlist numeric) weight(varlist numeric) drop_larger_lower NORMalized cluster(varlist numeric) graphoptions(string) SAVe_results(string) graph_off same_switchers effects_equal  drop_if_d_miss_before_first_switch ]
+	
+// Modif Felix:	
+**** Check if gtools is installed, if not install it 
+cap which gtools
+if _rc ssc install gtools	
+
+// Note from the gegen helpfile:
+/*
+The functions listed below have been compiled and hence will run very quickly. Functions not listed here hash the data and then call egen with by(varlist) set to the hash, which is often faster than calling egen directly, but not always.  Natively supported functions should always be faster, however.
+
+-> So even if it is not optimized for every function this should not be a problem
+*/
 	
 ****The path of the initial dataset
 local dataset_name_XX `c(filename)'
@@ -104,8 +116,8 @@ drop if `2'==.|`3'==.
 //dropping groups with always missing treatment or outcome
 capture drop mean_d_XX
 capture drop mean_y_XX
-bys `2': egen mean_d_XX=mean(`4')
-bys `2': egen mean_y_XX=mean(`1')
+bys `2': gegen mean_d_XX=mean(`4')
+bys `2': gegen mean_y_XX=mean(`1')
 drop if mean_d_XX==.|mean_y_XX==.
 drop mean_d_XX mean_y_XX
 	
@@ -113,7 +125,7 @@ drop mean_d_XX mean_y_XX
 capture drop counter_XX
 capture drop counter_temp_XX
 gen counter_temp_XX=1
-bys `2' `3' : egen counter_XX=count(counter_temp_XX)
+bys `2' `3' : gegen counter_XX=count(counter_temp_XX)
 sum counter_XX
 scalar aggregated_data=0
 if r(max)==1{
@@ -148,31 +160,31 @@ if scalar(aggregated_data)==0{
 }
  
 ////// Creating variables that will be helpful to handle imbalanced panels//
-egen time_XX=group(`3')
+gegen time_XX=group(`3')
 
 gen time_d_nonmiss_XX=time_XX if `4'!=.
-bys `2': egen min_time_d_nonmiss_XX=min(time_d_nonmiss_XX)
+bys `2': gegen min_time_d_nonmiss_XX=min(time_d_nonmiss_XX)
 capture drop max_time_d_nonmiss_XX
-bys `2': egen max_time_d_nonmiss_XX=max(time_d_nonmiss_XX)
+bys `2': gegen max_time_d_nonmiss_XX=max(time_d_nonmiss_XX)
 capture drop time_y_nonmiss_XX
 capture drop min_time_y_nonmiss_XX
 gen time_y_nonmiss_XX=time_XX if `1'!=.
-bys `2': egen min_time_y_nonmiss_XX=min(time_y_nonmiss_XX)
+bys `2': gegen min_time_y_nonmiss_XX=min(time_y_nonmiss_XX)
 capture drop time_d_miss_XX
 capture drop min_time_d_miss_aft_ynm_XX
 gen time_d_miss_XX=time_XX if `4'==.&time_XX>=min_time_y_nonmiss_XX
-bys `2': egen min_time_d_miss_aft_ynm_XX=min(time_d_miss_XX)
+bys `2': gegen min_time_d_miss_aft_ynm_XX=min(time_d_miss_XX)
 drop time_d_nonmiss_XX time_y_nonmiss_XX time_d_miss_XX
 
 ////// Creating baseline treatment: D_{g,1} in paper, redefined to account for imbalanced panels: g's treatment at first period where g's treatment non missing//
 
 gen d_sq_XX_temp=`4' if time_XX==min_time_d_nonmiss_XX
-bys `2': egen d_sq_XX=mean(d_sq_XX_temp)
+bys `2': gegen d_sq_XX=mean(d_sq_XX_temp)
 drop d_sq_XX_temp 
 
 // Modif Doulo: Create a new variable containing the integer levels of d_sq_XX, in the case of non-integer averages of d_sq_XX.
 capture drop d_sq_int_XX
-egen d_sq_int_XX = group(d_sq_XX)
+gegen d_sq_int_XX = group(d_sq_XX)
 
 
 ////// If the option drop_larger_lower was specified, drop (g,t) cells such that at t, g has experienced both a strictly lower and a strictly higher treatment than its baseline treatment. //
@@ -198,7 +210,7 @@ sort `2' `3'
 
 ////// Creating Y D G variables //
 gen outcome_XX=`1'
-egen group_XX=group(`2')
+gegen group_XX=group(`2')
 gen treatment_XX=`4'
 
 ////// Counting number of groups //
@@ -213,12 +225,12 @@ replace ever_change_d_XX=1 if ever_change_d_XX[_n-1]==1&group_XX==group_XX[_n-1]
 sort group_XX time_XX
 gen temp_F_g_XX=time_XX if ever_change_d_XX==1&ever_change_d_XX[_n-1]==0 
 replace temp_F_g_XX=0 if temp_F_g_XX==.
-bys group_XX: egen F_g_XX=max(temp_F_g_XX)
+bys group_XX: gegen F_g_XX=max(temp_F_g_XX)
 drop temp_F_g_XX
 
 ///// Dropping the values of the baseline treatment such that no variance in F_g within those values.//
 capture drop var_F_g_XX
-bys d_sq_XX `trends_nonparam': egen var_F_g_XX=sd(F_g_XX)
+bys d_sq_XX `trends_nonparam': gegen var_F_g_XX=sd(F_g_XX)
 drop if var_F_g_XX==0
 drop var_F_g_XX
 
@@ -237,7 +249,7 @@ if r(N)==0{
 ////// For each value of the baseline treatment, we drop time periods such that we do not have any control with that baseline treatment after that period //
 //// Watch out: this means the panel is no longer balanced, though it is balanced within values of the baseline treatment //
 gen never_change_d_XX=1-ever_change_d_XX
-bys time_XX d_sq_XX `trends_nonparam': egen controls_time_XX=max(never_change_d_XX)
+bys time_XX d_sq_XX `trends_nonparam': gegen controls_time_XX=max(never_change_d_XX)
 drop if controls_time_XX==0
 
 ////// Computing t_min_XX, T_max_XX, and replacing F_g_XX by last period plus one for those that never change treatment //
@@ -264,7 +276,7 @@ replace outcome_XX=. if min_time_d_miss_aft_ynm_XX<F_g_XX&time_XX>=min_time_d_mi
 capture drop last_obs_D_bef_switch_t_XX
 capture drop last_obs_D_bef_switch_XX
 gen last_obs_D_bef_switch_t_XX=time_XX if time_XX<F_g_XX&treatment_XX!=.
-bys group_XX: egen last_obs_D_bef_switch_XX=max(last_obs_D_bef_switch_t_XX)
+bys group_XX: gegen last_obs_D_bef_switch_XX=max(last_obs_D_bef_switch_t_XX)
 
 *For groups that do not experience a treatment change, we just have FD_g<=LD_g, and we will deal with missing treatments depending on when they occur with respect to those two dates.
 
@@ -286,7 +298,7 @@ replace F_g_XX=T_max_XX+1 if F_g_XX<T_max_XX+1&last_obs_D_bef_switch_XX<F_g_XX-1
 *For groups that experience a treatment change, if D_gt missing at F_g<t, we replace their missing treatment by D(g,F_g). This is again a liberal convention, but it is innocuous for the reduced-form parameters DID_l, so we do not give the user the option to overrule it (Note that overruling it could make the same_switchers option fail)
 
 gen d_F_g_temp_XX = treatment_XX if time_XX==F_g_XX
-bys group_XX: egen d_F_g_XX = mean(d_F_g_temp_XX)
+bys group_XX: gegen d_F_g_XX = mean(d_F_g_temp_XX)
 replace treatment_XX=d_F_g_XX if F_g_XX<T_max_XX+1&treatment_XX==.&time_XX>F_g_XX&last_obs_D_bef_switch_XX==F_g_XX-1
 
 *For groups that do not experience a treatment change, if D_gt missing at FD_g<t<LD_g, we replace their missing treatment by D_g1. This is again a liberal convention, so we give the user the option to not use those observations, wi1th drop_if_d_miss_before_first_switch option.
@@ -304,7 +316,7 @@ cap rename _merge _merge_og
 
 fillin group_XX time_XX
 capture drop d_sq_XX_new
-bys group_XX: egen d_sq_XX_new=mean(d_sq_XX)
+bys group_XX: gegen d_sq_XX_new=mean(d_sq_XX)
 drop d_sq_XX
 rename d_sq_XX_new d_sq_XX
 
@@ -319,20 +331,20 @@ replace N_gt_XX=0 if outcome_XX==.|treatment_XX==.
 capture drop F_g_trunc_XX
 gen F_g_trunc_XX=F_g_XX
 replace F_g_trunc_XX=min(F_g_XX,trunc_control_XX) if trunc_control_XX!=.
-bys d_sq_XX `trends_nonparam': egen T_g_XX = max(F_g_trunc_XX) 
+bys d_sq_XX `trends_nonparam': gegen T_g_XX = max(F_g_trunc_XX) 
 
 replace T_g_XX = T_g_XX-1
 
 ////// Defining S_g, an indicator variable for groups whose average post switch treatment value is larger than their initial value of treatment. They will be considered switchers in. If S_g==0, that means the group is a switcher out. For never-switchers, S_g will be undefined. //
-bys group_XX : egen avg_post_switch_treat_XX_temp = total(treatment_XX) if time_XX>=F_g_XX&time_XX<=T_g_XX
+bys group_XX : gegen avg_post_switch_treat_XX_temp = total(treatment_XX) if time_XX>=F_g_XX&time_XX<=T_g_XX
 gen count_time_post_switch_XX_temp=(treatment_XX!=.) if time_XX>=F_g_XX&time_XX<=T_g_XX
 
 
-bysort group_XX : egen count_time_post_switch_XX=total(count_time_post_switch_XX_temp)
+bysort group_XX : gegen count_time_post_switch_XX=total(count_time_post_switch_XX_temp)
 
 replace avg_post_switch_treat_XX_temp =avg_post_switch_treat_XX_temp/count_time_post_switch_XX
 
-bys group_XX: egen avg_post_switch_treat_XX=mean(avg_post_switch_treat_XX_temp)
+bys group_XX: gegen avg_post_switch_treat_XX=mean(avg_post_switch_treat_XX_temp)
 drop avg_post_switch_treat_XX_temp
 
 // When a group is a switching group, but its average post-treatment treatment value is exactly equal to its baseline treatment, we cannnot classify it as a swicher in or a switcher out, but it is not a control either. As such, we drop it from the estimation. Those groups are referred to as no-first-stage-switchers.
@@ -363,7 +375,7 @@ if "`cluster'"!=""{
 	bysort `cluster' : gen first_obs_by_clust_XX = (_n==1)
 	
 	//Error message for clustering: non-nested case
-	bysort group_XX: egen cluster_var_g_XX = sd(`cluster')
+	bysort group_XX: gegen cluster_var_g_XX = sd(`cluster')
 	sum cluster_var_g_XX
 	scalar max_cluster_var_XX = `r(max)'
 	if (scalar(max_cluster_var_XX) >0){
@@ -415,8 +427,8 @@ local count_controls=`count_controls'+1
 
 capture drop sum_weights_control_XX //So as to consider the weighted regressions. Do not move the capture drop outside the loop
 
-bys time_XX d_sq_XX `trends_nonparam' : egen sum_weights_control_XX = total(N_gt_XX) if ever_change_d_XX==0&diff_y_XX!=.&fd_X_all_non_missing_XX==1
-bys time_XX d_sq_XX `trends_nonparam' : egen avg_diff_X`count_controls'_XX = total(N_gt_XX*diff_X`count_controls'_XX) if ever_change_d_XX==0&diff_y_XX!=.&fd_X_all_non_missing_XX==1
+bys time_XX d_sq_XX `trends_nonparam' : gegen sum_weights_control_XX = total(N_gt_XX) if ever_change_d_XX==0&diff_y_XX!=.&fd_X_all_non_missing_XX==1
+bys time_XX d_sq_XX `trends_nonparam' : gegen avg_diff_X`count_controls'_XX = total(N_gt_XX*diff_X`count_controls'_XX) if ever_change_d_XX==0&diff_y_XX!=.&fd_X_all_non_missing_XX==1
 
 bys time_XX d_sq_XX `trends_nonparam' : replace avg_diff_X`count_controls'_XX = avg_diff_X`count_controls'_XX/sum_weights_control_XX
 
@@ -443,7 +455,7 @@ gen prod_X`count_controls'_diff_y_temp_XX = resid_X`count_controls'_time_FE_XX*d
 replace prod_X`count_controls'_diff_y_temp_XX = 0 if prod_X`count_controls'_diff_y_temp_XX ==.
 
 // Computing the sum for each group to obtain the term \sum_{t=2}^{F_g-1}*N_{g,t}*\Delta \Dot{X}_{g,t}* \Delta Y_{g,t}
-bys group_XX: egen prod_X`count_controls'_diff_y_XX = total(prod_X`count_controls'_diff_y_temp_XX)
+bys group_XX: gegen prod_X`count_controls'_diff_y_XX = total(prod_X`count_controls'_diff_y_temp_XX)
 
 }
 
@@ -863,7 +875,7 @@ matrix mat_res_XX[`i',6]=N_switchers_effect_`i'_XX
 matrix mat_res_XX[`i',7]=`i'
 ereturn scalar N_switchers_effect_`i' = N_switchers_effect_`i'_XX
 * Number of observations used in the estimation
-egen N_effect_`i'_XX = total(count`i'_global_XX) 
+gegen N_effect_`i'_XX = total(count`i'_global_XX) 
 scalar N_effect_`i'_XX = N_effect_`i'_XX
 ereturn scalar N_effect_`i' = N_effect_`i'_XX
 matrix mat_res_XX[`i',5]=N_effect_`i'_XX
@@ -875,7 +887,7 @@ if N_switchers_effect_`i'_XX==0|N_effect_`i'_XX==0{
 }
 
 * DID_l
-egen DID_`i'_XX = total(U_Gg`i'_global_XX) 
+gegen DID_`i'_XX = total(U_Gg`i'_global_XX) 
 replace  DID_`i'_XX = DID_`i'_XX/G_XX
 scalar DID_`i'_XX = DID_`i'_XX
 
@@ -912,7 +924,7 @@ if "`switchers'"=="in"{
 gen U_Gg_global_XX = w_plus_XX*U_Gg_plus_XX +(1-w_plus_XX)*U_Gg_minus_XX
 replace U_Gg_global_XX=. if first_obs_by_gp_XX==0
 
-egen delta_XX = total(U_Gg_global_XX)
+gegen delta_XX = total(U_Gg_global_XX)
 replace delta_XX = delta_XX/G_XX
 scalar delta_XX = delta_XX
 ereturn scalar Av_tot_effect = scalar(delta_XX)
@@ -962,7 +974,7 @@ if "`normalized'"!=""{
 
 // Summing them to obtain the DID_pl
 
-egen DID_placebo_`i'_XX = total(U_Gg_pl_`i'_global_XX) 
+gegen DID_placebo_`i'_XX = total(U_Gg_pl_`i'_global_XX) 
 replace  DID_placebo_`i'_XX= DID_placebo_`i'_XX/G_XX
 scalar DID_placebo_`i'_XX = DID_placebo_`i'_XX
 
@@ -987,7 +999,7 @@ matrix mat_res_XX[`=l_XX'+ 1 + `i',6]=N_switchers_placebo_`i'_XX
 matrix mat_res_XX[`=l_XX'+ 1 + `i',7]= `=-`i''
 ereturn scalar N_switchers_placebo_`i' = N_switchers_placebo_`i'_XX
 * Number of observations used in the estimation
-egen N_placebo_`i'_XX = total(count`i'_pl_global_XX)
+gegen N_placebo_`i'_XX = total(count`i'_pl_global_XX)
 scalar N_placebo_`i'_XX = N_placebo_`i'_XX
 ereturn scalar N_placebo_`i' = N_placebo_`i'_XX
 matrix mat_res_XX[`=l_XX' + 1 + `i',5]=N_placebo_`i'_XX
@@ -1027,7 +1039,7 @@ if "`cluster'"!=""{
 	
 	replace U_Gg_var_glob_`i'_XX = U_Gg_var_glob_`i'_XX*first_obs_by_gp_XX
 	
-	bys `cluster' : egen clust_U_Gg_var_glob_`i'_XX = total(U_Gg_var_glob_`i'_XX)
+	bys `cluster' : gegen clust_U_Gg_var_glob_`i'_XX = total(U_Gg_var_glob_`i'_XX)
 	
 	gen clust_U_Gg_var_glob_`i'_2_XX=clust_U_Gg_var_glob_`i'_XX^2*first_obs_by_clust_XX
 	
@@ -1090,7 +1102,7 @@ if "`cluster'"!=""{
 	
 	replace U_Gg_var_glob_pl_`i'_XX = U_Gg_var_glob_pl_`i'_XX*first_obs_by_gp_XX
 	
-	bys `cluster' : egen clust_U_Gg_var_glob_pl_`i'_XX= total(U_Gg_var_glob_pl_`i'_XX)
+	bys `cluster' : gegen clust_U_Gg_var_glob_pl_`i'_XX= total(U_Gg_var_glob_pl_`i'_XX)
 	
 	gen clust_U_Gg_var_glob_pl_`i'_2_XX=clust_U_Gg_var_glob_pl_`i'_XX^2*first_obs_by_clust_XX
 	
@@ -1147,7 +1159,7 @@ if "`cluster'"!=""{
 	
 	replace U_Gg_var_global_XX=U_Gg_var_global_XX*first_obs_by_gp_XX
 	
-	bys `cluster' : egen clust_U_Gg_var_global_XX= total(U_Gg_var_global_XX)
+	bys `cluster' : gegen clust_U_Gg_var_global_XX= total(U_Gg_var_global_XX)
 	replace clust_U_Gg_var_global_XX=clust_U_Gg_var_global_XX^2*first_obs_by_clust_XX
 	
 	sum clust_U_Gg_var_global_XX
@@ -1607,7 +1619,7 @@ bys group_XX: gen never_change_d_`i'_XX=(F_g_XX>time_XX) if diff_y_`i'_XX!=.
 
 // N^g_t  //for trends_nonparam: we need controls defined as {D_{g',1} =  D_{g,1} and Sg′ =Sg}
 gen never_change_d_`i'_wXX = never_change_d_`i'_XX*N_gt_XX
-bys time_XX d_sq_XX `trends_nonparam': egen N_gt_control_`i'_XX=total(never_change_d_`i'_wXX)
+bys time_XX d_sq_XX `trends_nonparam': gegen N_gt_control_`i'_XX=total(never_change_d_`i'_wXX)
 
 ///// binary variable indicating whether group g is l periods away from switch //
 
@@ -1631,7 +1643,7 @@ replace relevant_y_missing_XX=1 if fd_X_all_non_missing_XX==0&time_XX>=F_g_XX&ti
 
 bys group_XX: gen cum_fillin_XX = sum(relevant_y_missing_XX)
 gen dum_fillin_temp_XX = (cum_fillin_XX==0&time_XX==F_g_XX-1+`=`effects'')
-bys group_XX: egen fillin_g_XX = total(dum_fillin_temp_XX)
+bys group_XX: gegen fillin_g_XX = total(dum_fillin_temp_XX)
 gen still_switcher_`i'_XX = (F_g_XX-1+`=`effects''<=T_g_XX&fillin_g_XX>0) 
 
 gen distance_to_switch_`i'_XX=(still_switcher_`i'_XX&time_XX==F_g_XX-1+`i'&`i'<=L_g_XX&S_g_XX==increase_XX&N_gt_control_`i'_XX>0&N_gt_control_`i'_XX!=.) if diff_y_`i'_XX!=. 
@@ -1642,7 +1654,7 @@ gen distance_to_switch_`i'_XX=(time_XX==F_g_XX-1+`i'&`i'<=L_g_XX&S_g_XX==increas
 
 ///// Computing N^1_{t,l} or N^0_{t,l}. //
 gen distance_to_switch_`i'_wXX = distance_to_switch_`i'_XX*N_gt_XX
-bys time_XX: egen N`=increase_XX'_t_`i'_XX=total(distance_to_switch_`i'_wXX)
+bys time_XX: gegen N`=increase_XX'_t_`i'_XX=total(distance_to_switch_`i'_wXX)
 
 ///// Computing N^1_l or N^0_l. //
 forvalue t=`=t_min_XX'/`=T_max_XX'{
@@ -1651,7 +1663,7 @@ forvalue t=`=t_min_XX'/`=T_max_XX'{
 }
 
 ///// Computing N^0_{t,l,g} or N^1_{t,l,g}. //
-bys time_XX d_sq_XX `trends_nonparam': egen N`=increase_XX'_t_`i'_g_XX=total(distance_to_switch_`i'_wXX)
+bys time_XX d_sq_XX `trends_nonparam': gegen N`=increase_XX'_t_`i'_g_XX=total(distance_to_switch_`i'_wXX)
 
 ///// Computing the mean of first or long-differences of outcomes time N_{g,t} for non-treated and for treated separately - will be useful for the computation of the variance //
 
@@ -1660,13 +1672,13 @@ gen diff_y_`i'_N_gt_XX=N_gt_XX*diff_y_`i'_XX
 capture drop dof_diff_y_`i'_N_gt_XX
 gen dof_diff_y_`i'_N_gt_XX=(N_gt_XX!=0&diff_y_`i'_XX!=.)
 
-bys time_XX d_sq_XX `trends_nonparam' : egen mean_diff_y_`i'_nd_sq_t_XX=mean(diff_y_`i'_N_gt_XX) if never_change_d_`i'_XX==1&N`=increase_XX'_t_`i'_XX>0&N`=increase_XX'_t_`i'_XX!=.
+bys time_XX d_sq_XX `trends_nonparam' : gegen mean_diff_y_`i'_nd_sq_t_XX=mean(diff_y_`i'_N_gt_XX) if never_change_d_`i'_XX==1&N`=increase_XX'_t_`i'_XX>0&N`=increase_XX'_t_`i'_XX!=.
 
-bys time_XX d_sq_XX `trends_nonparam' : egen count_diff_y_`i'_nd_sq_t_XX=total(dof_diff_y_`i'_N_gt_XX) if diff_y_`i'_XX!=.&never_change_d_`i'_XX==1&N`=increase_XX'_t_`i'_XX>0&N`=increase_XX'_t_`i'_XX!=.
+bys time_XX d_sq_XX `trends_nonparam' : gegen count_diff_y_`i'_nd_sq_t_XX=total(dof_diff_y_`i'_N_gt_XX) if diff_y_`i'_XX!=.&never_change_d_`i'_XX==1&N`=increase_XX'_t_`i'_XX>0&N`=increase_XX'_t_`i'_XX!=.
 
-bys time_XX d_sq_XX `trends_nonparam' : egen mean_diff_y_`i'_d_sq_t_XX=mean(diff_y_`i'_N_gt_XX) if distance_to_switch_`i'_XX==1 
+bys time_XX d_sq_XX `trends_nonparam' : gegen mean_diff_y_`i'_d_sq_t_XX=mean(diff_y_`i'_N_gt_XX) if distance_to_switch_`i'_XX==1 
 
-bys time_XX d_sq_XX `trends_nonparam' : egen count_diff_y_`i'_d_sq_t_XX=total(dof_diff_y_`i'_N_gt_XX) if distance_to_switch_`i'_XX==1
+bys time_XX d_sq_XX `trends_nonparam' : gegen count_diff_y_`i'_d_sq_t_XX=total(dof_diff_y_`i'_N_gt_XX) if distance_to_switch_`i'_XX==1
 
 ///// If the dynamic effect can be estimated (as there are switchers), we compute the U_Gg variables etc. //
 if (N`=increase_XX'_`i'_XX!=0){
@@ -1683,7 +1695,7 @@ gen U_Gg`i'_temp_XX = dummy_U_Gg`i'_XX*(G_XX / N`=increase_XX'_`i'_XX) * (time_X
 
 replace U_Gg`i'_temp_XX = U_Gg`i'_temp_XX* diff_y_`i'_XX 
 
-bysort group_XX : egen U_Gg`i'_XX=total(U_Gg`i'_temp_XX)
+bysort group_XX : gegen U_Gg`i'_XX=total(U_Gg`i'_temp_XX)
 
 replace U_Gg`i'_XX = U_Gg`i'_XX*first_obs_by_gp_XX
 
@@ -1709,7 +1721,7 @@ replace U_Gg`i'_temp_var_XX= dummy_U_Gg`i'_XX*(G_XX / N`=increase_XX'_`i'_XX) * 
 replace U_Gg`i'_temp_var_XX= dummy_U_Gg`i'_XX*(G_XX / N`=increase_XX'_`i'_XX) * [distance_to_switch_`i'_XX - (N`=increase_XX'_t_`i'_g_XX/N_gt_control_`i'_XX) * never_change_d_`i'_XX] * (time_XX>=`=`i'+1'&time_XX<=T_g_XX) * diff_y_`i'_N_gt_XX if distance_to_switch_`i'_XX==1&count_diff_y_`i'_d_sq_t_XX==1
 
 // Summing the U_{G,g,l}s over time periods for each group //
-bys group_XX: egen U_Gg`i'_var_XX=total(U_Gg`i'_temp_var_XX)
+bys group_XX: gegen U_Gg`i'_var_XX=total(U_Gg`i'_temp_var_XX)
 
 }
 
@@ -1718,7 +1730,7 @@ if "`normalized'"!=""{
 	capture drop sum_treat_until_`i'_XX
 	capture drop delta_D_`i'_cum_temp_XX
 	
-	bys group_XX : egen sum_treat_until_`i'_XX = total(treatment_XX - d_sq_XX) if time_XX>=F_g_XX&time_XX<=F_g_XX-1+`i'&S_g_XX==increase_XX
+	bys group_XX : gegen sum_treat_until_`i'_XX = total(treatment_XX - d_sq_XX) if time_XX>=F_g_XX&time_XX<=F_g_XX-1+`i'&S_g_XX==increase_XX
 	
 gen delta_D_`i'_cum_temp_XX = N_gt_XX/N`=increase_XX'_`i'_XX*[sum_treat_until_`i'_XX* S_g_XX + (1-S_g_XX)*(-sum_treat_until_`i'_XX)] if distance_to_switch_`i'_XX==1 
 
@@ -1796,7 +1808,7 @@ foreach l of local levels_d_sq_XX {
 bys group_XX: gen never_change_d_pl_`i'_XX=never_change_d_`i'_XX*(diff_y_pl_`i'_XX!=.) 
 gen never_change_d_pl_`i'_wXX=never_change_d_pl_`i'_XX*N_gt_XX
 
-bys time_XX d_sq_XX `trends_nonparam': egen N_gt_control_placebo_`i'_XX=total(never_change_d_pl_`i'_wXX) 
+bys time_XX d_sq_XX `trends_nonparam': gegen N_gt_control_placebo_`i'_XX=total(never_change_d_pl_`i'_wXX) 
 
 ///// Binary variable indicating whether group g is l periods away from switch & (diff_y_pl_`i'_XX!=.) is well defined. //
 
@@ -1804,7 +1816,7 @@ gen dist_to_switch_pl_`i'_XX=distance_to_switch_`i'_XX*(diff_y_pl_`i'_XX!=.)
 gen dist_to_switch_pl_`i'_wXX= dist_to_switch_pl_`i'_XX*N_gt_XX
 ///// Computing N^1_{t,l} or N^0_{t,l}. 
 
-bys time_XX: egen N`=increase_XX'_t_placebo_`i'_XX=total(dist_to_switch_pl_`i'_wXX)
+bys time_XX: gegen N`=increase_XX'_t_placebo_`i'_XX=total(dist_to_switch_pl_`i'_wXX)
 
 ///// Computing N^1_l or N^0_l. //
 
@@ -1816,7 +1828,7 @@ forvalue t=`=t_min_XX'/`=T_max_XX'{
 
 ///// Computing N^0_{t,l,g} or N^1_{t,l,g}. 
 
-bys time_XX d_sq_XX `trends_nonparam': egen N`=increase_XX'_t_placebo_`i'_g_XX=total(dist_to_switch_pl_`i'_wXX)
+bys time_XX d_sq_XX `trends_nonparam': gegen N`=increase_XX'_t_placebo_`i'_g_XX=total(dist_to_switch_pl_`i'_wXX)
 
 ///// Computing the mean of first or long-differences of outcomes for non-treated and for treated separately - will be useful for the computation of the variance // + //Weighting the means
 
@@ -1825,13 +1837,13 @@ gen diff_y_pl_`i'_N_gt_XX=N_gt_XX*diff_y_pl_`i'_XX
 capture drop dof_diff_y_pl_`i'_N_gt_XX
 gen dof_diff_y_pl_`i'_N_gt_XX=(N_gt_XX!=0&diff_y_pl_`i'_XX!=.)
 
-bys time_XX d_sq_XX `trends_nonparam' : egen mean_diff_y_pl_`i'_nd_sq_t_XX=mean(diff_y_pl_`i'_N_gt_XX) if never_change_d_pl_`i'_XX==1&N`=increase_XX'_t_placebo_`i'_XX>0&N`=increase_XX'_t_placebo_`i'_XX!=.
+bys time_XX d_sq_XX `trends_nonparam' : gegen mean_diff_y_pl_`i'_nd_sq_t_XX=mean(diff_y_pl_`i'_N_gt_XX) if never_change_d_pl_`i'_XX==1&N`=increase_XX'_t_placebo_`i'_XX>0&N`=increase_XX'_t_placebo_`i'_XX!=.
 
-bys time_XX d_sq_XX `trends_nonparam' : egen count_diff_y_pl_`i'_nd_sq_t_XX=total(dof_diff_y_pl_`i'_N_gt_XX) if diff_y_pl_`i'_XX!=.&never_change_d_pl_`i'_XX==1&N`=increase_XX'_t_placebo_`i'_XX>0&N`=increase_XX'_t_placebo_`i'_XX!=.
+bys time_XX d_sq_XX `trends_nonparam' : gegen count_diff_y_pl_`i'_nd_sq_t_XX=total(dof_diff_y_pl_`i'_N_gt_XX) if diff_y_pl_`i'_XX!=.&never_change_d_pl_`i'_XX==1&N`=increase_XX'_t_placebo_`i'_XX>0&N`=increase_XX'_t_placebo_`i'_XX!=.
 
-bys time_XX d_sq_XX `trends_nonparam' : egen mean_diff_y_pl_`i'_d_sq_t_XX=mean(diff_y_pl_`i'_N_gt_XX) if dist_to_switch_pl_`i'_XX==1 
+bys time_XX d_sq_XX `trends_nonparam' : gegen mean_diff_y_pl_`i'_d_sq_t_XX=mean(diff_y_pl_`i'_N_gt_XX) if dist_to_switch_pl_`i'_XX==1 
 
-bys time_XX d_sq_XX `trends_nonparam' : egen count_diff_y_pl_`i'_d_sq_t_XX=total(dof_diff_y_pl_`i'_N_gt_XX) if dist_to_switch_pl_`i'_XX==1
+bys time_XX d_sq_XX `trends_nonparam' : gegen count_diff_y_pl_`i'_d_sq_t_XX=total(dof_diff_y_pl_`i'_N_gt_XX) if dist_to_switch_pl_`i'_XX==1
 
 ///// If the Placebos effect could be estimated (as there are switchers), we compute the U_Gg. //
 gen dummy_U_Gg_pl_`i'_XX = (`i'<=T_g_XX-1)
@@ -1840,7 +1852,7 @@ gen dummy_U_Gg_pl_`i'_XX = (`i'<=T_g_XX-1)
 if (N`=increase_XX'_placebo_`i'_XX!=0){
 	gen U_Gg_pl_`i'_temp_XX = dummy_U_Gg_pl_`i'_XX*(G_XX / N`=increase_XX'_placebo_`i'_XX) * N_gt_XX * [dist_to_switch_pl_`i'_XX - (N`=increase_XX'_t_placebo_`i'_g_XX/N_gt_control_placebo_`i'_XX) * never_change_d_pl_`i'_XX]*diff_y_pl_`i'_XX 
 
-	bysort group_XX : egen U_Gg_placebo_`i'_XX=total(U_Gg_pl_`i'_temp_XX)
+	bysort group_XX : gegen U_Gg_placebo_`i'_XX=total(U_Gg_pl_`i'_temp_XX)
 
 	replace U_Gg_placebo_`i'_XX= U_Gg_placebo_`i'_XX*first_obs_by_gp_XX
 
@@ -1862,7 +1874,7 @@ if (N`=increase_XX'_placebo_`i'_XX!=0){
 	replace U_Gg_pl_`i'_temp_var_XX= dummy_U_Gg_pl_`i'_XX*(G_XX / N`=increase_XX'_placebo_`i'_XX) * [dist_to_switch_pl_`i'_XX - (N`=increase_XX'_t_placebo_`i'_g_XX/N_gt_control_placebo_`i'_XX) * never_change_d_pl_`i'_XX] * (time_XX>=`=`i'+2'&time_XX<=T_g_XX) * diff_y_pl_`i'_N_gt_XX if dist_to_switch_pl_`i'_XX==1&count_diff_y_pl_`i'_d_sq_t_XX==1
 
 	// Summing the U_{G,g,l}s over time periods for each group //
-	bys group_XX: egen U_Gg_pl_`i'_var_XX=total(U_Gg_pl_`i'_temp_var_XX)
+	bys group_XX: gegen U_Gg_pl_`i'_var_XX=total(U_Gg_pl_`i'_temp_var_XX)
 
 	//End of placebos computation 
 
@@ -1875,7 +1887,7 @@ if "`normalized'"!=""{
 	capture drop sum_treat_until_`i'_pl_XX
 	capture drop delta_D_pl_`i'_cum_temp_XX
 
-	bys group_XX : egen sum_treat_until_`i'_pl_XX = total(treatment_XX - d_sq_XX) if time_XX>=F_g_XX&time_XX<=F_g_XX-1+`i'&diff_y_pl_`i'_XX!=.&S_g_XX==increase_XX
+	bys group_XX : gegen sum_treat_until_`i'_pl_XX = total(treatment_XX - d_sq_XX) if time_XX>=F_g_XX&time_XX<=F_g_XX-1+`i'&diff_y_pl_`i'_XX!=.&S_g_XX==increase_XX
 
 gen delta_D_pl_`i'_cum_temp_XX = N_gt_XX/N`=increase_XX'_placebo_`i'_XX*[sum_treat_until_`i'_pl_XX* S_g_XX + (1-S_g_XX)*(-sum_treat_until_`i'_pl_XX)] if dist_to_switch_pl_`i'_XX==1
 
@@ -1922,7 +1934,7 @@ scalar w_`i'_XX = N`=increase_XX'_`i'_XX / sum_N`=increase_XX'_l_XX
 gen delta_D_`i'_temp_XX = N_gt_XX/N`=increase_XX'_`i'_XX*[(treatment_XX-d_sq_XX)* S_g_XX + (1-S_g_XX)*(d_sq_XX-treatment_XX)] if distance_to_switch_`i'_XX==1
 
 replace delta_D_`i'_temp_XX=0 if delta_D_`i'_temp_XX==.
-egen delta_D_`i'_XX = total(delta_D_`i'_temp_XX)
+gegen delta_D_`i'_XX = total(delta_D_`i'_temp_XX)
 drop delta_D_`i'_temp_XX	
 
 	

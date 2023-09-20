@@ -1,7 +1,7 @@
 * metan.ado
 * Study-level (aka "aggregate-data" or "published data") meta-analysis
 
-*! version 4.06  12oct2022
+*! version 4.07  15sep2023
 *! Current version by David Fisher
 *! Previous versions by Ross Harris and Michael Bradburn
 
@@ -67,7 +67,7 @@ real scalar ftausq(real matrix coeffs, real colvector weight, real scalar eff) {
 
 
 /* "Generalised Q" methods */
-void GenQ(string scalar varlist, string scalar touse, real scalar hlevel, real rowvector iteropts)
+void GenQ(string scalar varlist, string scalar touse, real scalar hlevel, real rowvector iteropts, string scalar model)
 {
 	// setup
 	real colvector yi, se, vi, wi
@@ -84,18 +84,7 @@ void GenQ(string scalar varlist, string scalar touse, real scalar hlevel, real r
 	maxiter = iteropts[3]
 	
 	real scalar k
-	k = length(yi)
-	
-	/* Mandel-Paule estimator of tausq (J Res Natl Bur Stand 1982; 87: 377-85) */
-	// (also DerSimonian & Kacker, Contemporary Clinical Trials 2007; 28: 105-114)
-	// ... can be shown to be equivalent to the "empirical Bayes" estimator
-	// (e.g. Sidik & Jonkman Stat Med 2007; 26: 1964-81)
-	// and converges more quickly
-	real scalar rc_tausq, tausq
-	rc_tausq = mm_root(tausq=., &Q_crit(), 0, maxtausq, itol, maxiter, yi, vi, k, k-1)
-	st_numscalar("r(tausq)", tausq)
-	st_numscalar("r(rc_tausq)", rc_tausq)
-	
+	k = length(yi)	
 
 	/* Confidence interval for tausq by generalised Q-profiling */
 	// Viechtbauer Stat Med 2007; 26: 37-52
@@ -111,7 +100,7 @@ void GenQ(string scalar varlist, string scalar touse, real scalar hlevel, real r
 	real scalar Q_crit_hi, Q_crit_lo, tsq_lci, rc_tsq_lci, tsq_uci, rc_tsq_uci
 	Q_crit_hi = invchi2(k-1, .5 + hlevel/200)		// higher critical value (0.975) to compare GenQ against (for *lower* bound of tausq)
 	Q_crit_lo = invchi2(k-1, .5 - hlevel/200)		//  lower critical value (0.025) to compare GenQ against (for *upper* bound of tausq)
-	
+		
 	if (Qmin < Q_crit_lo) {			// if Q(0) is less the lower critical value, interval is set to null
 		rc_tsq_lci = 2
 		rc_tsq_uci = 2
@@ -143,7 +132,24 @@ void GenQ(string scalar varlist, string scalar touse, real scalar hlevel, real r
 		}
 	}
 	
-	// return confidence limits and rc codes
+	/* Mandel-Paule estimator of tausq (J Res Natl Bur Stand 1982; 87: 377-85) */
+	// (also DerSimonian & Kacker, Contemporary Clinical Trials 2007; 28: 105-114)
+	// ... can be shown to be equivalent to the "empirical Bayes" estimator
+	// (e.g. Sidik & Jonkman Stat Med 2007; 26: 1964-81)
+	// and converges more quickly
+	real scalar rc_tausq, tausq
+	if (model=="mp") {
+		rc_tausq = mm_root(tausq=., &Q_crit(), 0, maxtausq, itol, maxiter, yi, vi, k, k-1)
+	}
+	else {
+		real scalar Q_median
+		Q_median = invchi2(k-1, .5)		// median of distribution (for median-unbiased estimator suggested by Viechtbauer 2021)
+		rc_tausq = mm_root(tausq=., &Q_crit(), 0, maxtausq, itol, maxiter, yi, vi, k, Q_median)
+	}
+	
+	// return scalars and rc codes
+	st_numscalar("r(tausq)", tausq)
+	st_numscalar("r(rc_tausq)", rc_tausq)
 	st_numscalar("r(tsq_lci)", tsq_lci)
 	st_numscalar("r(tsq_uci)", tsq_uci)
 	st_numscalar("r(rc_tsq_lci)", rc_tsq_lci)

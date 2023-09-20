@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 4.06  David Fisher  12oct2022}{...}
+{* *! version 4.07  David Fisher  15sep2023}{...}
 {vieweralsosee "metan" "help metan"}{...}
 {vieweralsosee "metan_binary" "help metan_binary"}{...}
 {vieweralsosee "metan_continuous" "help metan_continuous"}{...}
@@ -68,12 +68,13 @@ if not specifically referenced below.{p_end}
 
 {syntab :Tau-squared estimators for standard inverse-variance random-effects model}
 {synopt :{opt iv:common} | {opt fe} | {opt fixedi}}Common (aka "fixed") effect inverse-variance (default unless two-group comparison of binary outcomes){p_end}
-{synopt :{opt random} | {opt re} | {opt dl:aird}}DerSimonian-Laird estimator{p_end}
+{synopt :{opt random} | {opt re} | {opt dl:aird} [, {help metan_model##options_model:{bf:pooled}}]}DerSimonian-Laird estimator{p_end}
 {synopt :{opt bdl} | {opt dlb}}Bootstrap DerSimonian-Laird estimator{p_end}
 {synopt :{opt he:dges}}Hedges estimator aka "Cochran ANOVA-like" aka "variance component" estimator{p_end}
-{synopt :{opt mp:aule} | {opt eb:ayes}}Mandel-Paule aka "empirical Bayes" estimator{p_end}
+{synopt :{opt mp:aule} | {opt eb:ayes} [, {help metan_model##options_model:{bf:pooled}}]}Mandel-Paule aka "empirical Bayes" estimator{p_end}
+{synopt :{opt pmm}}"Median-unbiased" estimator ({help metan_model##refs:Viechtbauer 2021}){p_end}
 {synopt :{opt ml:e}}Maximum likelihood (ML) estimator{p_end}
-{synopt :{opt reml}}Restricted maximum likelihood (REML) estimator{p_end}
+{synopt :{opt reml} [, {help metan_model##options_model:{bf:pooled}}]}Restricted maximum likelihood (REML) estimator{p_end}
 {synopt :{opt hm:akambi}}Hartung-Makambi estimator ({help metan_model##refs:Hartung and Makambi 2003}){p_end}
 {synopt :{opt b0} {opt bp}}Rukhin B0 and BP estimators{p_end}
 {synopt :{opt sj2s} [, {help metan_model##options_model:{bf:init(}{it:model_name}{bf:)}}]}Sidik-Jonkman two-step estimator{p_end}
@@ -103,6 +104,8 @@ but applicable to a specific model{p_end}
 {syntab :Model-specific options (see {it:{help metan_model##model_name:model_name}})}
 {synopt :{opt init(model_name)}}initial estimate of tau-squared for two-step estimators {opt sj2s} and {opt dk2s}{p_end}
 {synopt :{opt isq(real)} {opt tausq(real)}}user-defined I-squared or tau-squared values for use with sensitivity analysis {opt sa}{p_end}
+{synopt :{opt pooled}}heterogeneity estimation will be pooled across subgroups ({help metan_model##refs:Borenstein et al 2009}); for use with option {bf:{help metan##options_main:by()}}
+and only with models {opt dlaird}, {opt mpaule}, {opt mult}, or {opt reml}{p_end}
 {synopt :{opt tru:ncate}{cmd:(one} | {cmd:zovert)}}optional truncation of the Hartung-Knapp-Sidik-Jonkman correction factor{p_end}
 {synopt :{opt ba:rtlett} {opt sk:ovgaard}}Bartlett's ({help metan_model##refs:Huizenga et al 2011})
 or Skovgaard's ({help metan_model##refs:Guolo 2012}) corrections to the likelihood, for use with the profile-likelihood model {opt pl}{p_end}
@@ -241,6 +244,18 @@ In that case, a warning message is printed underneath the results table, recomme
 under which the correction factor is compared to the ratio of the {it:z}-based to the {it:t}-based critical values.
 
 {phang}
+{opt init(model_name)} specifies an initial estimate of tau-squared for "two-step" estimation models {opt sj2s} and {opt dk2s}.
+
+{phang2}
+For the Sidik-Jonkman two-step estimator {opt sj2s}, the default initial estimate
+is the mean dispersion of effect sizes from their unweighted mean ({help metan_model##refs:Sidik and Jonkman 2005});
+any standard tau-squared estimator {it:{help metan_model##model_name:model_name}} may instead be used.
+
+{phang2}
+For the DerSimonian-Kacker two-step estimator {opt dk2s}, the default initial {it:{help metan_model##model_name:model_name}} is {opt hedges},
+with the single alternative of {opt dlaird}.{p_end}
+
+{phang}
 {opt isq(real)} or {opt tausq(real)} impose a user-specified amount of heterogeneity for use with the sensitivity-analysis model {opt sa}.
 At most one of these options may be used.
 If neither is used, a value for {it:I}-squared of 80% is taken as the default.
@@ -255,16 +270,13 @@ A value for tau-squared is back-derived in order for the random-effects model to
 {opt tausq(real)} constrains the value of tau-squared, and takes values of zero or above.
 
 {phang}
-{opt init(model_name)} specifies an initial estimate of tau-squared for "two-step" estimation models {opt sj2s} and {opt dk2s}.
-
-{phang2}
-For the Sidik-Jonkman two-step estimator {opt sj2s}, the default initial estimate
-is the mean dispersion of effect sizes from their unweighted mean ({help metan_model##refs:Sidik and Jonkman 2005});
-any standard tau-squared estimator {it:{help metan_model##model_name:model_name}} may instead be used.
-
-{phang2}
-For the DerSimonian-Kacker two-step estimator {opt dk2s}, the default initial {it:{help metan_model##model_name:model_name}} is {opt hedges},
-with the single alternative of {opt dlaird}.{p_end}
+{opt pooled} is only for use with trial-level subgroups; see {bf:{help metan##options_main:by()}}.
+It requests that the between-study heterogeneity variance is pooled across subgroups, and that the resulting estimate is used for all subgroups
+rather than being estimated separately for each subgroup as by default.
+Because a pooled estimate of heterogeneity variance is equivalent to a meta-regression on the set of subgroup categories,
+a call is made to the user-written meta-regression package {cmd:metareg} ({help metan_model##refs:Harbord and Higgins 2008}).
+Hence, only the random-effects models implemented by {cmd:metareg} are allowed with {opt pooled}; that is: {opt dlaird}, {opt mpaule}, or {opt reml}.
+(The multiplicative heterogeneity model {opt mult} may also be used, via a call to {bf:{help regress}} rather than to {cmd:metareg}.)
 
 {phang}
 {opt bartlett} and {opt skovgaard} are options for use with the profile-likelihood model {opt pl}.
@@ -396,6 +408,10 @@ The "click to run" element of the examples in this document is handled using an 
 {title:References}
 
 {phang}
+Borenstein M, Hedges LV, Higgins JPT, Rothstein HR. 2009. Introduction to Meta-Analysis.
+Chichester: Wiley.
+
+{phang}
 Breslow NE, Day NE. 1980. Statistical Methods in Cancer Research: Vol. I - The Analysis of Case-Control Studies.
 Lyon: International Agency for Research on Cancer.
 
@@ -433,6 +449,11 @@ Stata Journal 15: 369-396
 Guolo A. 2012.
 Higher-order likelihood inference in meta-analysis and meta-regression.
 Statistics in Medicine 31: 313-327. doi: 10.1002/sim.4451
+
+{phang}
+Harbord RM, Higgins JPT. 2008.
+Meta-regression in Stata.
+Stata Journal 8: 493-519
 
 {phang}
 Hartung J, Makambi KH. 2003.

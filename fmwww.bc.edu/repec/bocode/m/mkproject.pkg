@@ -14,7 +14,7 @@ d KW: boilerplate
 d
 d Requires: Stata version 15
 d
-d Distribution-Date: 20230914
+d Distribution-Date: 20230919
 d
 d Author: Maarten L. Buis, University of Konstanz
 d Support: email maarten.buis@@uni-konstanz.de
@@ -27,40 +27,40 @@ f ../b/boilerplate_create.sthlp
 f ../l/lmkproject.mlib
 f mkproject_create.sthlp
 f mkproject_work.ado
-f mp_ana.mpb
-f mp_b_ana.sthlp
-f mp_b_dta.sthlp
-f mp_b_dta_c.sthlp
-f mp_b_excer.sthlp
-f mp_b_ignore.sthlp
-f mp_b_main.sthlp
-f mp_b_readme.sthlp
-f mp_b_readme_sp.sthlp
-f mp_b_rlog.sthlp
-f mp_b_rlogc.sthlp
-f mp_b_smclpres.sthlp
-f mp_course.mpp
-f mp_defaults.mpd
-f mp_dta.mpb
-f mp_dta_c.mpb
-f mp_excer.mpb
-f mp_excer.mpp
-f mp_ignore.mpb
-f mp_long.mpp
-f mp_longt.mpp
-f mp_main.mpb
-f mp_p_course.sthlp
-f mp_p_excer.sthlp
-f mp_p_long.sthlp
-f mp_p_longt.sthlp
-f mp_p_research_git.sthlp
-f mp_p_researcht_git.sthlp
-f mp_p_smclpres.sthlp
-f mp_readme.mpb
-f mp_readme_sp.mpb
-f mp_research_git.mpp
-f mp_researcht_git.mpp
-f mp_rlog.mpb
-f mp_rlogc.mpb
-f mp_smclpres.mpb
-f mp_smclpres.mpp
+F mp_ana.mpb
+F mp_b_ana.sthlp
+F mp_b_dta.sthlp
+F mp_b_dta_c.sthlp
+F mp_b_excer.sthlp
+F mp_b_ignore.sthlp
+F mp_b_main.sthlp
+F mp_b_readme.sthlp
+F mp_b_readme_sp.sthlp
+F mp_b_rlog.sthlp
+F mp_b_rlogc.sthlp
+F mp_b_smclpres.sthlp
+F mp_course.mpp
+F mp_defaults.mpd
+F mp_dta.mpb
+F mp_dta_c.mpb
+F mp_excer.mpb
+F mp_excer.mpp
+F mp_ignore.mpb
+F mp_long.mpp
+F mp_longt.mpp
+F mp_main.mpb
+F mp_p_course.sthlp
+F mp_p_excer.sthlp
+F mp_p_long.sthlp
+F mp_p_longt.sthlp
+F mp_p_research_git.sthlp
+F mp_p_researcht_git.sthlp
+F mp_p_smclpres.sthlp
+F mp_readme.mpb
+F mp_readme_sp.mpb
+F mp_research_git.mpp
+F mp_researcht_git.mpp
+F mp_rlog.mpb
+F mp_rlogc.mpb
+F mp_smclpres.mpb
+F mp_smclpres.mpp

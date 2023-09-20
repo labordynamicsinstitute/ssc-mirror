@@ -528,6 +528,11 @@ and running the command three times, etc.
 {p_end}
 
 {p 4 4}
+A short do file with a simple example where the treatment status is observed in each period while the outcome
+is only observed every second period can be found {browse "https://drive.google.com/uc?export=download&id=1NBwfsFeNltU3XSOsORdthUW49LIezm1z":here}. 
+{p_end}
+
+{p 4 4}
 {it:How many control variables can I include in the estimation?}
 {p_end}
 
@@ -644,6 +649,15 @@ de Chaisemartin, C, D'Haultfoeuille, X, Malézieux, M, Sow, D (2023a).
 {p 4 4}
 de Chaisemartin, C, D'Haultfoeuille, X, Malézieux, M, Sow, D (2023b).
 {browse "https://drive.google.com/file/d/1d23jtOT8tiHG3mpjD_cuJy3h4I2sYFEK/view?usp=drive_link":Comparing the did_multiplegt and did_multiplegt_dyn Stata commands}.
+{p_end}
+
+{title:Auxiliary packages}
+
+{p 4 4}
+The command uses the gtools package and automatically installs it
+if users do not already have it on their machine.
+This may increase the command’s running time the first
+time it is run on a computer.
 {p_end}
 
 {title:Authors}

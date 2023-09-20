@@ -1,10 +1,9 @@
 * metan.ado
 * Study-level (aka "aggregate-data" or "published data") meta-analysis
 
-*! version 4.06  12oct2022
+*! version 4.07  15sep2023
 *! Current version by David Fisher
 *! Previous versions by Ross Harris and Michael Bradburn
-
 
 
 *****************************
@@ -139,6 +138,21 @@
 //      CIs on the proportion scale are handled by -cii- rather than by back-transformation
 // Plus: code subroutines re-organized for improved readability and debugging going forward
 
+* version 4.07
+// Bug fixes:
+// - `proportion' with `rfdist' and by() resulted in predictive intervals being displayed for subgroups under inappropriate models (e.g. IV); this has been fixed
+// - in some circumstances with proportion data, diamonds and predictive intervals displayed incorrectly in forestplot; this has been fixed
+// - when model(user) was used, failure to specify option extralabel() resulted in error "ovstats not found"; this has been fixed
+// - metan..., forestplot(nolcolscheck) resulted in error. This is not official syntax, but has nevertheless been fixed
+// Improvements:
+// - improved behaviour of hetinfo() when combined with `isqparam' and/or extraline()
+// - introduced new value _USE==7 specifically for predictive intervals (previously they were _USE==3/5 plus additional checks/options)
+//     (this helps resolve the issue above r.e. proportion data)
+// - sensitivity analysis *can* now be used with by()
+// - by() now supports use of "pooled (across subgroups)" heterogeneity parameters, either additive (DerSimonian-Laird) or multiplicative
+// - weights from multiple models may now be displayed in forestplot and/or saved to new dataset, with new `allweights' option
+// - added Viechtbauer (2021) median-unbiased version of Mandel-Paule tausq estimator
+
 
 program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 
@@ -149,7 +163,7 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 	    local hidden hidden
 		local historical historical
 	}
-	return `hidden' local metan_version "4.06"
+	return `hidden' local metan_version "4.07"
 
 	// Clear historical global macros (see metan9.ado)
 	forvalues i = 1/15 {
@@ -262,9 +276,9 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 	// plus labtitle() will be stored in `output_opts', not `opts_adm'
 	local 0 `", `opts_adm'"'
 	syntax , [ STUDY(string) BY(string) LABEL(string) LCols(namelist) LABTITLE(string asis) * ]
+	local opts_adm `"`macval(options)'"'
 
 	// study/title options, to pass onto metan_output.ado
-	local opts_adm `"`macval(options)'"'
 	local output_opts `"study(`s(study)') sfmtlen(`s(sfmtlen)') labtitle(`s(labtitle)') lcols(`s(lcols)')"'
 	
 	// `_STUDY' and `_BY' are the "working" variables from now on; guaranteed numeric.
@@ -285,6 +299,7 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 	// - Parse inputted varlist structure and check for validity
 	// - Parse models and modelling options
 	cap nois ProcessData `_USE' `invlist' if `touse', summstat(`summstat') ///
+		by(`_BY') /*Sep 2023: by() ONLY needed in case "pooled heterogeneity" requested*/ ///
 		`eform' `log' `opts_adm' `touse2opt' // <-- this latter is a marker of being passed from -ipdmetan-
 
 	if _rc {
@@ -454,11 +469,24 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 	//  - with the same contents as the elements of `rownames'
 	//  - but *without* npts (as _NN is handled separately)
 	//  - and with the addition of Q, Qdf, Q_lci, Q_uci, [sigmasq]
-	//  - and with the addition of a separate weight variable (`_WT2') if cumulative/inflence
+	//  - and with the addition of a separate weight variable (`_WT2') if cumulative/influence
 
 	// Subsequently, `rownames' will be passed between subroutines
 	// and `xrownames' will be re-derived whenever needed
 	// by taking `rownames' and applying the "algorithm" above.
+	
+	// August 2023
+	local 0 `", `opts_adm'"'
+	syntax [, ALLWEIGHTS * ]
+	if `"`allweights'"'!=`""' {
+		local m1 = `m' - 1
+		forvalues j = 1 / `m1' {
+			tempvar _WT_`j'
+			local allwtnames `allwtnames' `_WT_`j''
+		}
+		local allwtnamesopt allwtnames(`allwtnames')
+		local opts_adm `"`macval(options)'"'			// remove allweights form `opts_adm'; it is otherwise unchanged
+	}
 	
 	
 	******************************************
@@ -470,22 +498,37 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 		sortby(`sortby' `obs') summstat(`summstat') qstat(`qstat') citype(`citype') rownames(`rownames') ///
 		teststatlist(`teststatlist') modellist(`modellist') outvlist(`outvlist') by(`_BY') ///
 		`modelopts' /// list of options for each model, in the form "model`j'opts(`s(model`j'opts)')"
-		`userwgt'   // internal option from ProcessData
+		`userwgt'   /// internal option from ProcessData
+		`allwtnamesopt'	// Aug 2023: internal option relating to option "allweights"
 
 	// Form final list of matrices to send to metan_output.ado
 	forvalues j = 1 / `m' {
+		if `m' > 1 local jj = `j'
+
 		cap {
 			confirm matrix r(bystats`j')
 			assert rowsof(r(bystats`j')) > 1
 		}
-		if _rc continue
-		tempname bystats`j'
-		matrix `bystats`j'' = r(bystats`j')
-		local bystatslist `"`bystatslist' `bystats`j''"'
-		if `m' > 1 local jj = `j'
-		return matrix bystats`jj' = `bystats`j'', copy
+		if !_rc {
+			tempname bystats`j'
+			matrix `bystats`j'' = r(bystats`j')
+			local bystatslist `"`bystatslist' `bystats`j''"'
+			return matrix bystats`jj' = `bystats`j'', copy
+		}
+		
+		cap {
+			confirm matrix r(byhet`j')
+			assert rowsof(r(byhet`j')) > 1
+		}
+		if !_rc {
+			tempname byhet`j'
+			matrix `byhet`j'' = r(byhet`j')
+			local byhetlist `"`byhetlist' `byhet`j''"'
+			return matrix byhet`jj' = `byhet`j'', copy
+		}
 	}
 	if `"`bystatslist'"'!=`""' local mmatlist `"`mmatlist' bystatslist(`bystatslist')"'
+	if `"`byhetlist'"'!=`""'   local mmatlist `"`mmatlist' byhetlist(`byhetlist')"'
 
 	foreach x in ovstats hetstats byQ {
 		cap {
@@ -542,18 +585,25 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 			if !missing(r(OR)) return scalar OR = r(OR)
 		}
 	
+		local tausq_or_phi = 0
 		if !missing(`ovstats'[rownumb(`ovstats', "tausq"), 1]) {
-			return scalar Hstar = r(Hstar)
 			return scalar tausq = r(tausq)
-			return scalar sigmasq = r(sigmasq)
-			
+			return `historical' scalar sigmasq = r(sigmasq)
+			local tausq_or_phi = 1
+		}
+		if !missing(`ovstats'[rownumb(`ovstats', "phi"), 1]) {
+			return scalar phi = r(phi)		// Sep 2023: multiplicative heterogeneity only (=H^2)
+			local tausq_or_phi = 1
+		}
+		if `tausq_or_phi' {
 			// May 2020: Qr deprecated in favour of Hstar: latter is more interpretable, and has appeared in print
 			// (van Aert & Jackson 2019)
 			return `historical' scalar Qr = r(Qr)
+			return scalar Hstar = r(Hstar)
 		}
-
+		
 		gettoken model1 : modellist
-		local RefREModList mp ml pl reml bt dlb		// random-effects models where a conf. interval for tausq is estimated
+		local RefREModList mp pmm ml pl reml bt dlb		// random-effects models where a conf. interval for tausq is estimated
 		if `: list model1 in RefREModList' {
 			return scalar tsq_var    = r(tsq_var)
 			return scalar rc_tsq_lci = r(rc_tsq_lci)
@@ -573,7 +623,7 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 	}
 	
 	if `"`bystatslist'"'!=`""' {
-		return scalar tsq_common = r(tsq_common)
+		return `hidden' scalar tsq_common = r(tsq_common)
 		return scalar Qsum = r(Qsum)
 		return scalar Qbet = r(Qbet)
 		return scalar F   = r(Fstat)
@@ -709,44 +759,77 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 	***********************************************
 	
 	local qlist `r(Q)' `r(Qdf)' `r(Q_lci)' `r(Q_uci)' `r(Qsum)' `r(Qbet)' `r(nby)'
-	local extra `r(nsg)' `r(nzt)'
+	local extra extra(`r(nsg)' `r(nzt)') `r(mhallzero)' `r(clearnpts)'
 	local outvlist `r(outvlist)'
 	if `"`r(xoutvlist)'"'!=`""' {
 		local xv_opt xoutvlist(`r(xoutvlist)')
 		local oldvlist `r(oldvlist)'
 	}
-	if `"`sortby'"'==`""' local sorted nosorted	// for PrintDesc
+	if `"`sortby'"'==`""' local sorted nosorted			// for PrintDesc
 	
 	// Remove options not needed for metan_ouput but needed in main routine
 	local 0 `", `opts_adm' `keepvars'"'
-	syntax [, noPRESERVE noKEEPvars noRSample * ]
+	syntax [, noPRESERVE noKEEPvars noRSample ALTSAVedvars /* Added May 2023 */ * ]
 	local opts_adm `"`macval(options)'"'
 	if `"`rsample'"'!=`""' local keepvars nokeepvars	// noRSample implies noKEEPVars
 
 	// Now parse additional options needed in this part of the code (AND in metan_output)
 	local 0 `", `opts_adm'"'
-	syntax [, SAVING(passthru) CLEAR CLEARSTACK noGRaph KEEPAll KEEPOrder PREfix(name local) ILevel(cilevel) OLevel(cilevel) * ] 
+	syntax [, SAVING(passthru) CLEAR CLEARSTACK noGRaph KEEPAll KEEPOrder ///
+		PREfix(name local) ILevel(cilevel) OLevel(cilevel) * ]
 	
-	// July 2021: prefix() option
+	// [Aug 2023] consistency check r.e. cumul/influence
+	cap assert (`"`oldvlist'"'!=`""') == (`"`cumulative'`influence'"'!=`""')
+	if _rc {
+		nois disp as err `"Something has gone wrong regarding {bf:`cumulative'`influence'}"'
+		exit _rc
+	}
+	if `"`altsavedvars'"'!=`""' & `"`cumulative'`influence'"'==`""' {
+		disp `"{error}{bf:altsavedvars} may only be specified with {bf:cumulative} or {bf:influence}; option will be ignored"'
+		local altsavedvars
+	}
+	
+	// [July 2021] prefix() option
 	if length("`prefix'") > 5 {
 		disp as err `"{bf:prefix()} invalid; stub name too long ( >5 )"'
 		exit 198
 	}
 	
-	
-	** Handle studies with insufficient data (_USE==2)
+	// Handle studies with insufficient data (_USE==2)
 	// N.B. additional changes of `_USE' from 1 to 2 may have been done within metan_analysis (e.g. if no zero-cell corrections)
 	if `"`keepall'`keeporder'"'==`""' {
 		qui replace `touse' = 0 if `_USE'==2
 		qui replace `touse2' = 0 if `_USE'==2
 	}
-	
 
+	
 	** Create and return matrix of coefficients
 	// if cumul/influence, `outvlist' contains cumul/influence effect sizes
 	// but r(coeffs) and saved variables should contain original study-specific effect sizes
-	if `"`oldvlist'"'!=`""' tokenize `oldvlist'
-	else tokenize `outvlist'
+	if `"`oldvlist'"'==`""' tokenize `outvlist'				// default
+	else {													// if cumul/influence
+		tokenize `oldvlist'		
+		local extravarlab `"`cumulative'`influence' "'		// for later
+		
+		// May-Aug 2023: `altsavedvars' option
+		// This over-rides the default behaviour regarding cumulative/influence data saved *in the current dataset* (or in matrix r(coeffs))
+		// By default, such data mirrors the raw data, i.e. it is *not* cumulative/influence.
+		if `"`altsavedvars'"'!=`""' {
+			tempvar _NN2
+			qui gen byte `_NN2' = .
+			
+			tokenize `outvlist'
+			args _ES _seES _LCI _UCI _WT _NN _CC
+			tokenize `_ES' `_seES' `_LCI' `_UCI' `_WT' `_NN2' `_CC'
+			// ^^ don't re-define `outvlist' as sent to metan_output
+			// Instead, retokenize for use within metan.ado only
+			// (i.e. GetMatCoeffs, and then finishing off after metan_ouput)
+			
+			FillDown `outvlist', newn(`_NN2') sortby(`sortby' `obs') `opts_adm'
+			// Because in some situations the fill-down routine within metan_output will not be executed,
+			//  just do it here instead (within a subroutine, in order to use `sortpreserve')
+		}
+	}
 	args _ES _seES _LCI _UCI _WT _NN _CC	
 	
 	if `"`keepvars'"'!=`""' {
@@ -778,8 +861,10 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 			matrix colnames `coeffs' = `_BYexist' _STUDY _ES _seES `_NNexist' `_WTexist'			
 			return matrix coeffs = `coeffs'
 		}
-	}
+	}	
 
+	
+	** Set up -preserve- prior to running metan_output
 	// July 2021:
 	// Only need to -preserve- if:
 	// - saving a results set
@@ -800,15 +885,16 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 		`modelopts'            /// list of options for each model, in the form "model`j'opts(`s(model`j'opts)')"
 		by(`_BY') `output_opts' /// by() bylist() study() plus suboptions relating to titling of tables etc.
 		`mmatlist' qlist(`qlist') /// results matrices (including subgroups & heterogeneity) from "metan_analysis"
-		extra(`extra') `r(mhallzero)' `r(clearnpts)' /* internal macros from metan_analysis */
+		`extra'            	/// /* internal options/macros from metan_analysis */
+		`allwtnamesopt'	// Aug 2023: internal option relating to option "allweights"
 
 
 
 	*************
 	* Finish up *
 	*************
-
-	// exit early:
+	
+	// exit early... :
 	// (1) if option -nopreserve- (e.g. if called from -ipdmetan- )
 	// (2) if option "clear" (so no need for stored variables)
 	if `"`clear'`clearstack'"'!=`""' | `"`preserve'"'!=`""'{
@@ -862,14 +948,16 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 		char define `_UCI'[LevelPooled] `olevel'
 
 		// variable labels
-		label variable `_ES' "Effect size"
-		label variable `_seES' "Standard error of effect size"
+		StrProper `extravarlab'effect
+		label variable `_ES' `"`s(result)' size"'
+		label variable `_seES' `"Standard error of `extravarlab'effect size"'
 		label variable `_LCI' "`ilevel'% lower confidence limit"
 		label variable `_UCI' "`ilevel'% upper confidence limit"
-		label variable `_WT' "% Weight"
+		label variable `_WT' `"`=proper(`"`extravarlab'"')'% Weight"'
 		format `_WT' %6.2f
 		if `"`_NN'"'!=`""' {
-			label variable `_NN' "No. pts"
+			StrProper `extravarlab'no.
+			label variable `_NN' `"`s(result)' pts"'
 		}
 		if `"`_CC'"'!=`""' {
 			label variable `_CC' "Continuity correction applied?"
@@ -954,6 +1042,21 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 end
 
 
+program define FillDown, sortpreserve
+	syntax varlist [if] [in] [, SORTBY(varlist) BY(varname numeric) NEWN(varname numeric) CUmulative INFluence SGWt * ]
+	marksample touse, novarlist
+	tokenize `varlist'
+	args _ES _seES _LCI _UCI _WT _NN _CC
+	
+	if `"`sgwt'"'!=`""' local by2 : copy local by
+	sort `touse' `by2' `sortby'
+	qui by `touse' `by2' : replace `newn' = sum(`_NN') if `touse'
+	if `"`influence'"'!=`""' {
+		qui by `touse' `by2' : replace `newn' = `newn'[_N] if `touse'
+		qui replace `newn' = `newn' - `_NN' if `touse'
+	}
+end	
+			
 program define GetMatCoeffs, rclass sortpreserve
 	syntax varlist [if] [in], [SORTBY(varlist)]	
 	marksample touse, novarlist
@@ -963,7 +1066,12 @@ program define GetMatCoeffs, rclass sortpreserve
 	return matrix coeffs = `coeffs'
 end		
 		
-		
+program define StrProper, sclass
+	gettoken word1 rest : 0
+	local result = proper(`"`word1'"') + lower(`"`rest'"')
+	sreturn local result `"`result'"'
+end
+
 
 
 ********************************************************************************************************
@@ -2738,11 +2846,12 @@ program define ProcessModelOpts, sclass
 	local rownames `rownames' pvalue								// p-value
 
 	if "`logrank'"!="" | `: list posof "peto" in modellist' local rownames `rownames' OE V	// logrank and Peto OR only
+	if `: list posof "mu" in modellist' local rownames `rownames' phi						// multiplicative heterogeneity model only [Sep 2023]
 	
 	local UniqModels : list uniq modellist
 	local NoTau2Models mh peto mu iv
 	local UniqModels : list UniqModels - NoTau2Models
-	if `"`UniqModels'"'!=`""' local rownames `rownames' tausq	// tausq, *unless* all models are common-effect (M-H, Peto, IV or MU)
+	if `"`UniqModels'"'!=`""' local rownames `rownames' tausq	// ^^ *unless* all models are common-effect (M-H, Peto, IV or MU), include tausq and sigmasq
 
 	// [Sep 2020:]
 	// Note: Heterogeneity stats derived from the *data*, independently of model (i.e. Q Qdf H Isq)
@@ -2753,7 +2862,7 @@ program define ProcessModelOpts, sclass
 	// (plus tsq + CI itself)
 
 	// model-based tausq confidence intervals
-	local RefModList mp ml pl reml bt dlb
+	local RefModList mp pmm ml pl reml bt dlb
 	if `"`: list UniqModels & RefModList'"'!=`""' {
 		local rownames `rownames' tsq_lci tsq_uci
 	}
@@ -3036,8 +3145,9 @@ program define ParseModel, sclass
 		Z T CHI2 CMH CMHNocc ///													// test statistic options
 		HKSj HKnapp KHartung KRoger BArtlett PETO RObust SKovgaard EIM OIM QWT(varname numeric) /*contains quality weights*/ ///
 		INIT(name) CC(passthru) noCC2 LOGRank PRoportion TN(passthru) POVERV(passthru) ///
+		POOLed SGPooled SGCommon /*Added Sep 2023: requests that het. param. is "pooled" (Borenstein) or "common" (Schwarzer, Carpenter, Ruecker) across subroups */ ///
 		LAbel(string asis) EXtralabel(string asis) FIRST /*SECOND*/ ///		// [Oct 2020:] user-defined model labelling
-		WGT(passthru) TRUNCate(passthru) ISQ(string) TAUSQ(string) ///
+		WGT(passthru) TRUNCate(passthru) ISQ(string) TAUSQ(string) PHI(string) ///
 		ITOL(passthru) MAXTausq(passthru) REPS(passthru) MAXITer(passthru) QUADPTS(passthru) DIFficult TECHnique(passthru) ]
 		// last line ^^  "global" opts to compare with "specific model" opts
 
@@ -3086,7 +3196,7 @@ program define ParseModel, sclass
 		
 		// Tausq estimators, with synonyms
 		local 0 `", `model'"'
-		syntax [, COMMON IVCommon INVVariance IVariance FIXed MHaenszel Random DLaird HMakambi MLe MPaule PMandel EBayes CAnova HEdges SEnsitivity * ]
+		syntax [, COMMON IVCommon INVVariance IVariance FIXed MHaenszel Random DLaird HMakambi MLe MPaule PMandel PMMedian EBayes CAnova HEdges SEnsitivity * ]
 		if inlist("`model'", "fe", "iv") ///
 			| "`fixed'`common'`ivcommon'`invvariance'`ivariance'"!="" local model iv	// Fixed (common)-effects inverse-variance	
 		else if "`model'"=="re" | "`random'`dlaird'"!="" local model dl			// DerSimonian-Laird random-effects
@@ -3096,6 +3206,7 @@ program define ParseModel, sclass
 		else if inlist("`model'", "bdl", "dlb") local model dlb					// Bootstrap DerSimonian-Laird (Kontopantelis)
 		else if inlist("`model'", "gq", "genq", "vb") ///
 			| "`mpaule'`pmandel'`ebayes'"!="" local model mp					// Mandel-Paule aka Generalised Q aka Empirical Bayes
+		else if "`model'"=="pmmedian" local model pmm							// Viechtbauer (2021) median-unbiased version of Mandel-Paule
 		else if "`model'"=="vc" | "`canova'`hedges'"!="" local model he			// Hedges aka "variance-component" aka Cochran's ANOVA-type estimator
 		else if inlist("`model'", "sj2", "sj2s") local model sj2s				// Sidik-Jonkman two-step (default init=vc)
 		else if inlist("`model'", "dk2", "dk2s") local model dk2s				// DerSimonian-Kacker two-step (default init=vc)
@@ -3113,7 +3224,7 @@ program define ParseModel, sclass
 			else if "`kroger'"!="" local model kr									// Kenward-Roger variance correction
 			else if "`qeffects'`quality'"!="" local model qe						// Doi's Quality Effects model
 		}
-		
+				
 		// Hartung-Knapp-Sidik-Jonkman variance correction
 		if "`hksj_opt'"!="" {
 			if "`model'"=="hksj" local model dl
@@ -3180,29 +3291,27 @@ program define ParseModel, sclass
 			}
 			
 			// user-specified initial estimate
+			// Note: "sensitivity analysis" (i.e. user-specified value) is not currently supported (Sep 2023: other than zero for Sidik-Jonkman)
 			else {
 				local 0 `", `init'"'
-				syntax [, CAnova HEdges /*SEnsitivity*/ DLaird HMakambi MPaule PMandel EBayes * ]
+				syntax [, CAnova HEdges DLaird HMakambi MPaule PMandel EBayes * ]
 				if "`canova'`hedges'"!="" | "`init'"=="vc" local init he										// Hedges/Cochran/Variance-component
 				else if inlist("`init'", "gq", "genq", "vb") | "`mpaule'`pmandel'`ebayes'"!="" local init mp	// Mandel-Paule aka Generalised Q aka Empirical Bayes
-				// else if "`init'"=="sa" | "`sensitivity'"!="" local init sa
 				else if "`hmakambi'"!="" local init hm
 				else if "`dlaird'"!="" local init dl
 				else if "`init'"=="bdl" local init dlb
 			}
 			
 			if "`model'"=="dk2s" {						// DerSimonian-Kacker two-step is valid for MM estimators only
-				// if !inlist("`init'", "he", "dl", "sa") {
 				if !inlist("`init'", "he", "dl") {
 					nois disp as err `"Option {bf:init()} must be {bf:hedges} or {bf:dlaird} with DerSimonian-Kacker two-step estimator"'
 					exit 184
 				}
 			}
-			else {
-				if !(inlist("`init'", "he", "dl", "dlb", "ev", "hm") /*, "sa"*/ | inlist("`init'", "b0", "bp", "mp", "ml", "reml")) {
+			else if !inlist("`init'", "he", "dl", "dlb", "ev", "hm") ///
+				& !inlist("`init'", "b0", "bp", "mp", "pmm", "ml", "reml") {
 					nois disp as err `"Invalid {bf:init()} option with Sidik-Jonkman two-step estimator"'
 					exit 184
-				}
 			}
 			local init_opt `"init(`init')"'
 		}
@@ -3221,7 +3330,7 @@ program define ParseModel, sclass
 		}
 
 		// conflicting options: variance modifications
-		opts_exclusive `"`hksj_opt' `bartlett' `skovgaard' `robust'"' model 184
+		opts_exclusive `"`hksj_opt' `kr_opt' `bartlett' `skovgaard' `robust'"' model 184
 
 		// Bartlett and Skovgaard likelihood corrections: profile likelihood only
 		if `"`bartlett'`skovgaard'"'!=`""' {
@@ -3242,8 +3351,30 @@ program define ParseModel, sclass
 			}
 		}
 		
+		// Added Sep 2023
+		// "Pooled" (across subgroups) heterogeneity parameters
+		//   see e.g. Borenstein et al 2009 for the DerSimonian-Laird case
+		// Since this approach is equivalent to meta-regression on subgroup indicators, it can also be done using REML or EB (see e.g. -metareg-)
+		// Similarly, a weighted OLS regression on subgroup indicators yields a "pooled" *multiplicative* parameter (see e.g. Thompson & Sharp 1999)
+		if `"`pooled'`sgpooled'`sgcommon'"'!=`""' {
+			local errword : word 1 of `pooled' `sgpooled' `sgcommon'
+			cap assert inlist("`model'", "dl", "reml", "mp", "mu")
+			if _rc {
+				nois disp as err `"Option {bf:`errword'} specified, requesting that heterogeneity parameter be stratified by subgroup"'
+				nois disp as err `"Only models {bf:dlaird}, {bf:reml}, {bf:mpaule} and {bf:multiplicative} are currently allowed in this context"'
+				exit 184
+			}
+			capture which metareg
+			if _rc {
+				nois disp as err `"Heterogeneity parameter stratified by subgroup requires the user-written {bf:metareg} package"'
+				nois disp as err `"Type {stata findit metareg:findit metareg} to find and install it"'
+				exit 499
+			}
+			local pooled pooled
+		}
+
 		// dependencies
-		if inlist("`model'", "mp", "ml", "pl", "reml", "bt", "hc") {
+		if inlist("`model'", "mp", "pmm", "ml", "pl", "reml", "bt", "hc") {
 			capture mata mata which mm_root()
 			if _rc {
 				nois disp as err `"Iterative tau-squared calculations require the Mata function {bf:mm_root()} from {bf:moremata}"'
@@ -3274,8 +3405,8 @@ program define ParseModel, sclass
 		// final check for valid random-effects models:
 		if !inlist("`model'", "", "user", "iv", "mh", "peto", "mu") ///         I-V common-effect, Mantel-Haenszel, Peto, mult. het. [PLUS USER-DEFINED]
 			& !inlist("`model'", "dl", "dlb", "ev", "he", "hm", "b0", "bp") /// simple tsq estimators (non-iterative)
-			& !inlist("`model'", "mp", "ml", "reml") ///                        simple tsq estimators (iterative)
-			& !inlist("`model'", "sj2s", "dk2s", "sa") ///                      two-step estimators; sensitivity analysis at fixed tsq/Isq
+			& !inlist("`model'", "mp", "pmm", "ml", "reml") ///                 simple tsq estimators (iterative)
+			& !inlist("`model'", "sj2s", "dk2s", "dlc", "sa") ///               two-step estimators; sensitivity analysis at fixed tsq/Isq
 			& !inlist("`model'", "pl", "bt", "hc", "qe", "ivhet") {			// complex models
 			nois disp as err `"Invalid random-effects model"'
 			nois disp as err `"Please see {help metan_model:help metan} for a list of valid model names"'
@@ -3297,13 +3428,13 @@ program define ParseModel, sclass
 	//  it only remains to check them against the *model* (and teststat/hetstat)
 	opts_exclusive `"`cc' `cc2'"' `""' 184
 	local old_ccopt `"`cc'`cc2'"'
-	foreach opt in wgt truncate isq tausq tn poverv itol maxtausq reps maxiter quadpts difficult technique {
+	foreach opt in wgt truncate isq tausq phi tn poverv itol maxtausq reps maxiter quadpts difficult technique {
 		local old_`opt' : copy local `opt'
 	}
 		
 	local 0 `", `globalopts'"'
 	syntax [, Z T CHI2 CMH CMHNocc ///
-		CC(passthru) noCC2 WGT(passthru) TRUNCate(passthru) ISQ(string) TAUSQ(string) TN(passthru) POVERV(passthru) ///
+		BY(passthru) CC(passthru) noCC2 WGT(passthru) TRUNCate(passthru) ISQ(string) TAUSQ(string) PHI(string) TN(passthru) POVERV(passthru) ///
 		ITOL(passthru) MAXTausq(passthru) REPS(passthru) MAXITer(passthru) QUADPTS(passthru) DIFficult TECHnique(passthru) * ]
 		// last line ^^  "global" opts to compare with "specific model" opts
 		// add "*" as this macro also contains `opts_adm' (not relevant to this subroutine)
@@ -3316,7 +3447,7 @@ program define ParseModel, sclass
 	opts_exclusive `"`cc' `cc2'"' `""' 184
 	local ccopt    `"`cc'`cc2'"'
 
-	foreach opt in ccopt wgt truncate isq tausq tn poverv itol maxtausq reps maxiter quadpts difficult technique {
+	foreach opt in ccopt wgt truncate isq tausq phi tn poverv itol maxtausq reps maxiter quadpts difficult technique {
 		if `"`old_`opt''"'!=`""' {
 			local `opt' : copy local old_`opt'
 		}
@@ -3432,50 +3563,72 @@ program define ParseModel, sclass
 				exit 198
 			}
 			local tsqsa_opt `"tsqsa(`tausq')"'
-			if !`islabel' local label = `"SA(tau{c 178}="' + strofreal(`tausq', "%05.3f") + `")"'
+			// if !`islabel' local label = `"SA(tau{c 178}="' + strofreal(`tausq', "%05.3f") + `")"'
+		}
+		
+		else if `"`isq'"'!=`""' {
+			cap confirm number `isq'
+			if _rc {
+				nois disp as err `"Error in {bf:isq()} suboption to {bf:sa()}; a single number was expected"'
+				exit _rc
+			}
+			if `isq'<0 | `isq'>=100 {
+				nois disp as err `"I{c 178} value for sensitivity analysis must be at least 0% and less than 100%"'
+				exit 198
+			}
+			local isqsa_opt `"isqsa(`isq')"'
+			// if !`islabel' local label `"SA(I{c 178}=`isq'%)"'
+		}
+		
+		else if `"`phi'"'!=`""' {
+			cap confirm number `phi'
+			if _rc {
+				nois disp as err `"Error in {bf:phi()} suboption to {bf:sa()}; a single number was expected"'
+				exit _rc
+			}			
+			if `phi'<0 {
+				nois disp as err `"{bf:phi()} is a multiplicative factor for variance and cannot be negative"'
+				exit 198
+			}			
+			local phisa_opt `"phisa(`phi')"'
 		}
 		
 		else {
-			if `"`isq'"'==`""' local isq = 80
-			else {
-				cap confirm number `isq'
-				if _rc {
-					nois disp as err `"Error in {bf:isq()} suboption to {bf:sa()}; a single number was expected"'
-					exit _rc
-				}
-				if `isq'<0 | `isq'>=100 {
-					nois disp as err `"I{c 178} value for sensitivity analysis must be at least 0% and less than 100%"'
-					exit 198
-				}
-			}
-			local isqsa_opt `"isqsa(`isq')"'
-			if !`islabel' local label `"SA(I{c 178}=`isq'%)"'
+			nois disp as err `"Error in options for sensitivity analysis: expected one of {bf:isq()}, {bf:tausq()} or {bf:phi()}"'
+			exit 198
 		}
 		
-		if `: word count `tsqsa' `isqsa'' >=2 {
-			nois disp as err `"Only one of {bf:isq()} or {bf:tausq()} may be supplied as suboptions to {bf:sa()}"'
+		if `: word count `tsqsa' `isqsa' `phi'' >=3 {
+			nois disp as err `"Only one of {bf:isq()}, {bf:tausq()} or {bf:phi()} may be supplied as suboptions to {bf:sa()}"'
 			exit 184
 		}
 	}
 	
 	// if NOT sensitivity analysis
 	else {
-		if `"`isq'"'!=`""' {
-			nois disp as err `"option {bf:isq()} may only be specified when requesting a sensitivity analysis model"'
-			exit 184
-		}
-		if `"`tausq'"'!=`""' {
-			nois disp as err `"option {bf:tausq()} may only be specified when requesting a sensitivity analysis model"'
-			exit 184
+		foreach x in isq tausq phi {
+			if `"``x''"'!=`""' {
+				nois disp as err `"Option {bf:`x'()} may only be specified when requesting a sensitivity analysis model"'
+				exit 184
+			}
 		}
 	}
 	
 
 	** OTHER OPTIONS
+	// "Pooled heterogeneity" (across subgroups) only valid with by()
+	// (this is the only reason to consider by() alongside model-related options; other option checks are performed by ParseOptions)
+	if `"`pooled'"'!=`""' {
+		if `"`by'"'==`""' {
+			nois disp as err `"Option {bf:`errword'} is not valid without {bf:by()}"'
+			exit 184
+		}
+	}
+	
 	// Continuity correction: some checks needed for specific option, others for global... do them all together here
 	if `params'!=4 & "`proportion'"=="" {
 		if `"`ccopt'"'!=`""' {
-			nois disp as err "Continuity correction only valid with proportions or 2x2 count data"
+			nois disp as err `"Continuity correction only valid with proportions or 2x2 count data"'
 			exit 184
 		}
 	}
@@ -3611,13 +3764,20 @@ program define ParseModel, sclass
 		else if "`model'"=="ev" local label "Emp. Var."
 		else if inlist("`model'", "bp", "b0") local label = "Rukhin " + upper("`model'")	
 		else if "`model'"=="user" local label User
-		else if "`model'"!="sa" local label = upper("`model'")
+		else /*if "`model'"!="sa"*/ local label = upper("`model'")
 
-		if "`hksj_opt'"!="" local label "`label'+HKSJ"
-		if "`kr_opt'"!=""   local label "`label'+KR"
-		if "`robust'"!=""   local label "`label'+Rob."
-		if "`bartlett'"!="" local label "`label'+Bart."
-		if "`skovgaard'"!="" local label "`label'+Skov."
+		local labt = 0		// Added Sep 2023
+		if "`hksj_opt'"!="" local label `"`label'+HKSJ"'
+		else if "`kr_opt'"!=""    local label `"`label'+KR"'
+		else if "`robust'"!=""    local label `"`label'+Rob."'
+		else if "`bartlett'"!=""  local label `"`label'+Bart."'
+		else if "`skovgaard'"!="" local label `"`label'+Skov."'
+		else if "`teststat'"=="t" {
+			if "`pooled'"!="" local label `"`label' (t CI, Pooled)"'
+			else local label `"`label' (t CI)"'
+			local labt = 1
+		}
+		if "`pooled'"!="" & !`labt' local label `"`label' (Pooled)"'
 	}
 	
 	
@@ -3626,7 +3786,7 @@ program define ParseModel, sclass
 
 	// Model options
 	local modelopts `"`cmhnocc' `robust' `hksj_opt' `kr_opt' `bartlett' `skovgaard' `eim' `oim' `ccopt_final' `tn' `poverv'"'
-	local modelopts `"`modelopts' `wgt' `truncate' `isqsa_opt' `tsqsa_opt' `qe_opt' `init_opt'"'	// `tsqlevel' removed June 2022
+	local modelopts `"`modelopts' `wgt' `pooled' `truncate' `isqsa_opt' `tsqsa_opt' `phisa_opt' `qe_opt' `init_opt'"'	// N.B. `tsqlevel' removed June 2022
 	local modelopts `"`modelopts' `itol' `maxtausq' `reps' `maxiter' `quadpts' `difficult' `technique'"'
 	local modelopts = trim(itrim(`"`modelopts'"'))
 	
@@ -3802,7 +3962,9 @@ program define ParseOptions, sclass
 			nois disp as err "Cannot use option {bf:by()} with user-defined main analysis"
 			exit 184
 		}
-	}	
+	}
+	assert `: word count `sgwt' `ovwt''==1
+	
 	if `"`altwt'"'!=`""' & `"`cumulative'`influence'"'==`""' {
 		disp `"{error}Note: {bf:altwt} is not applicable without {bf:cumulative} or {bf:influence}, and will be ignored"'
 		local altwt
@@ -3837,6 +3999,16 @@ program define ParseOptions, sclass
 			local isqparam
 		}
 	}
+	
+	// June 2023: same, but related to DL
+	if "`isqparam'"!="" {
+		local notsqb dl ivhet qe hc
+		if `"`: list modellist - notsqb'"'==`""' {
+			disp `"{error}Note: for models based on the DerSimonian-Laird moments-based estimate of tau{c 178}, "'
+			disp `"{error}{bf:isqparam} will have no effect; therefore it will be ignored for such models"'
+			local isqparam
+		}		
+	}
 
 	// Re-assemble options list
 	// (see "Prepare for meta-analysis modelling" section above)
@@ -3848,8 +4020,8 @@ program define ParseOptions, sclass
 	sreturn local options `"`macval(opts_adm)'"'
 	
 end
-
-
+	
+	
 
 
 

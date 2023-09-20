@@ -1,0 +1,16 @@
+d 'POOLEDSD': module to calculate pooled standard deviation for a continuous variable by a factor variable
+d
+d  pooledsd calculates the pooled standard deviation for a
+d continuous variable using the groups listed in a factor variable/ d
+d KW: standard deviation
+d KW: pooling
+d
+d Requires: Stata version 9
+d
+d Distribution-Date: 20230919
+d
+d Author: David Speed, University of New Brunswick - Saint John
+d Support: email dspeed@@unb.ca
+d
+f pooledsd.ado
+f pooledsd.sthlp

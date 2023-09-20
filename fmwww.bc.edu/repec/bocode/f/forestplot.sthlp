@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 4.06  David Fisher  12oct2022}{...}
+{* *! version 4.07  David Fisher  15sep2023}{...}
 {vieweralsosee "metan" "help metan"}{...}
 {vieweralsosee "forestplot" "help forestplot"}{...}
 {vieweralsosee "metani" "help metani"}{...}
@@ -138,6 +138,7 @@ The values of {bf:_USE} or {it:use} are interpreted by {cmd:forestplot} in the f
 {p 8 15 2}4 = heterogeneity information; assumed to be present only in the first left-hand column{p_end}
 {p 8 15 2}5 = overall pooled effect{p_end}
 {p 8 15 2}6 = blank line{p_end}
+{p 8 15 2}7 = prediction interval data{p_end}
 
 {pstd}
 Note that {cmd:forestplot} creates a variable named {bf:_EFFECT} containing a string-valued concatenation of the (formatted) effect size

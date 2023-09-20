@@ -2,16 +2,16 @@
 * Subroutine to run the actual meta-analysis modelling
 * Called by metan.ado; do not run directly
 
-*! version 4.06  David Fisher 12oct2022
+*! version 4.07  David Fisher 15sep2023
 
 
 program define metan_analysis, rclass
 
 	syntax varlist(numeric min=3 max=7) [if] [in], OUTVLIST(varlist numeric min=5 max=7) ///
 		[ MODELLIST(namelist) TESTSTATLIST(namelist) BY(varname numeric) XOUTVLIST(varlist numeric) ROWNAMES(namelist) ///
-		CUmulative INFluence PRoportion noOVerall noSUbgroup OVWt SGWt ALTWt TESTBased RFDist ///
+		CUmulative INFluence PRoportion noOVerall noSUbgroup OVWt SGWt ALTWt TESTBased ISQParam RFDist ///
 		KEEPAll KEEPOrder noTABle noGRaph noHEADER ///
-		IFINOPT USERWGT * ]			// internal options only (for this subroutine, not for metan_output.ado)
+		IFINOPT USERWGT ALLWTNAMES(namelist) * ]		// internal options only (for this subroutine, not for metan_output.ado)
 	
 	local opts_adm `"`macval(options)' xoutvlist(`xoutvlist')"'
 	local oldrownames : copy local rownames
@@ -37,21 +37,20 @@ program define metan_analysis, rclass
 	
 	// Hence, loop over models *backwards* so that "primary" model is done last
 	//  and hence "correct" outvlist is left behind
+
+	// Aug 2023: Hence, reverse order of elements of `allwtnames' so that they align with true model list as specified by user
+	if `"`allwtnames'"'!=`""' {
+		foreach el in `allwtnames' {
+			local allwtnames2 `el' `allwtnames2'
+		}
+		local allwtnames : copy local allwtnames2
+	}
 	
 	gettoken model1 : modellist
 	local UniqModels : list uniq modellist
 	local RefFEModList peto mh iv mu			// fixed (common) effect models
-	local RefREModList mp ml pl reml bt dlb		// random-effects models where a conf. interval for tausq is estimated
-	
-	// local nrfd = 0		// initialize marker of "less than 3 studies" (for rfdist)
-	// local nmiss = 0		// initialize marker of "pt. numbers are missing in one or more trials"
-	// local nsg = 0		// initialize marker of "only a single valid estimate" (e.g. for by(), or cumul/infl)
-	// local nzt = 0		// initialize marker of "HKSJ has resulted in a shorter CI than IV" (for HKSJ)
-
-	// foreach x in nrc_2000 nrc_2002 nrc_tausq nrc_tsq_lci nrc_tsq_uci nrc_eff_lci nrc_eff_uci {
-	// 	local `x' = 0	// initialize
-	// }
-	
+	local RefREModList mp pmm ml pl reml bt dlb		// random-effects models where a conf. interval for tausq is estimated
+		
 	// Before looping, create list of unique colnames
 	//  (e.g. if same basic model is run twice, with different options)
 	local m = 0
@@ -68,7 +67,7 @@ program define metan_analysis, rclass
 		local opts_adm `"`macval(options)'"'
 		
 		local 0 `", `model`m'opts'"'
-		syntax [, HKSj RObust KRoger BArtlett SKovgaard WGT(passthru) ///
+		syntax [, POOLed HKSj RObust KRoger BArtlett SKovgaard WGT(passthru) ///
 			CC(string) * ]	// <-- cc() for later checking for missing effect size/std. error
 		
 		// May 2022: Extract info on user-defined weights to send to metan_output.ado
@@ -93,6 +92,7 @@ program define metan_analysis, rclass
 		// clearer for users to see labelling e.g. "dl; dl_hksj" rather than "dl_1; dl_2"
 		// ... and similarly for robust variance estimator
 		// and REML Kenward-Roger correction and PL likelihood corrections
+		// ... and pooled (across subgroups) heterogeneity [Sep 2023]
 		if `"`hksj'"'!=`""' local model `model'_hksj
 		if `"`robust'"'!=`""' local model `model'_rob
 		if `"`kroger'"'!=`""' local model `model'_kr
@@ -100,6 +100,7 @@ program define metan_analysis, rclass
 			if `"`bartlett'"'!=`""' local model `model'_bart
 			if `"`skovgaard'"'!=`""' local model `model'_skov
 		}
+		if `"`pooled'"'!=`""' local model `model'_pool
 		
 		if `: list model in mcolnames' {
 			local j=2
@@ -109,11 +110,12 @@ program define metan_analysis, rclass
 				local newname `model'_`j'
 			}
 			local mcolnames `mcolnames' `newname'
-			if "`model'"!="user" local hetcolnames `hetcolnames' `newname'
+			if "`model'"=="sa" | "`isqparam'"!="" local hetcolnames `hetcolnames' `newname'	/* modified May 2023 */
+			
 		}
 		else {
 			local mcolnames `mcolnames' `model'
-			if "`model'"!="user" local hetcolnames `hetcolnames' `model'
+			if "`model'"=="sa" | "`isqparam'"!="" local hetcolnames `hetcolnames' `model'	/* modified May 2023 */
 		}
 		// [Nov 2020:] Note: this forms a copy of `mcolnames' for matrix `hetstats', called `hetcolnames'		
 
@@ -140,7 +142,7 @@ program define metan_analysis, rclass
 		cap nois PerformMetaAnalysis `invlist' if `touse' & `_USE'==1, outvlist(`outvlist') ///
 			model(`model') teststat(`teststat') `overall' `subgroup' `cumulative' `influence' `proportion' ///
 			rownames(`rownames') `byopts' `ovwt' `sgwt' `altwt' `model`j'opts' `opts_adm' ///
-			`testbased' `first'
+			`testbased' `isqparam' `first'
 
 		if _rc {
 			if inlist(_rc, 2000, 2001, 2002) {
@@ -157,6 +159,15 @@ program define metan_analysis, rclass
 				c_local err noerr
 				exit _rc
 			}
+		}
+		
+		// August 2023
+		// If requested, store weights from each model under separate varnames
+		if `j' > 1 & `"`allwtnames'"'!=`""' {
+			tokenize `outvlist'
+			args _ES _seES _LCI _UCI _WT _NN _CC
+			gettoken wtname allwtnames : allwtnames
+			qui clonevar `wtname' = `_WT'
 		}
 		
 		// create matrices of pooled results
@@ -270,7 +281,7 @@ program define metan_analysis, rclass
 	else {
 		// reduce rows if necessary
 		// if no models which estimate tausq CIs, just keep rows containing point estimates
-		if `"`: list UniqModels & RefREModList'"'==`""' {		// RefREModList = mp ml pl reml bt dlb
+		if `"`: list UniqModels & RefREModList'"'==`""' {		// RefREModList = mp pmm ml pl reml bt dlb
 			matrix `hetstats' = `hetstats'[rownumb(`hetstats', "tausq"), 1...] \ `hetstats'[rownumb(`hetstats', "H"), 1...] ///
 				\ `hetstats'[rownumb(`hetstats', "Isq"), 1...] \ `hetstats'[rownumb(`hetstats', "HsqM"), 1...]
 		}
@@ -282,7 +293,6 @@ program define metan_analysis, rclass
 	// `byQ' contains subgroup-Q values from *first* model
 	// If this model is common-effect,  Q_lci will be from non-central chisq; label with "fe"
 	// If this model is random-effects, Q_lci will be from Gamma; label with "re"
-	// local qlist `r(Q)' `r(Qdf)' `r(Q_lci)' `r(Q_uci)'
 	if `"`by'"'!=`""' & (`"`subgroup'"'==`""' | `"`sgwt'"'!=`""') {
 	
 		// first, check `mwt' (cf. `ovstats' and `hetstats' above)
@@ -655,11 +665,11 @@ program define PerformMetaAnalysis, rclass sortpreserve
 		TESTBased ISQParam ROWNAMES(namelist) FIRST /* N.B. "first" is marker that this is the first/main/primary model */ ///
 		OUTVLIST(varlist numeric min=5 max=7) XOUTVLIST(varlist numeric) ///
 		noOVerall noSUbgroup OVWt SGWt ALTWt WGT(varname numeric) CUmulative INFluence PRoportion noINTeger ///
-		LOGRank ILevel(passthru) CC(passthru) KRoger /// from `opts_model'; needed in main routine
+		LOGRank ILevel(passthru) CC(passthru) KRoger POOLed /// from `opts_model'; needed in main routine
 		* ]
 
-	local opts_model `"`macval(options)' `kroger'"'		// model`j'opts; add `kroger' back in
-														// (this means it is duplicated, but `opts_model' is only used in this subroutine so it shouldn't matter)
+	local opts_model `"`macval(options)' `kroger' `pooled'"'	// model`j'opts; add `kroger' and `pooling' back in (this means they are duplicated...
+																//  ...but `opts_model' is only used in this subroutine so it shouldn't matter)
 	marksample touse, novarlist		// -novarlist- option prevents -marksample- from setting `touse' to zero if any missing values in `varlist'
 									// we want to control this behaviour ourselves, e.g. by using KEEPALL option
 	local invlist : copy local varlist
@@ -673,11 +683,13 @@ program define PerformMetaAnalysis, rclass sortpreserve
 	
 	// sensitivity analysis
 	// [Jan 2020: remove this, but first check how "single tausq" subgroup analysis works (c.f. R book)]
+	/*
 	if "`model'"=="sa" & "`by'"!="" {
 		nois disp as err `"Sensitivity analysis cannot be used with {bf:by()}"'
 		exit 184
 	}
-
+	*/
+	
 	* Create list of "pooling" tempvars to pass to ProcessPoolingVarlist
 	// and thereby create final generic list of "pooling" vars to use within MetaAnalysisLoop
 	// (i.e. tempvars that are only needed within this subroutine)
@@ -820,18 +832,13 @@ program define PerformMetaAnalysis, rclass sortpreserve
 			summ `_ES' [aw=1/`_seES'^2] if `touse', meanonly
 			scalar `eff_Q' = r(mean)
 			
-			tempvar qhet
-			qui gen double `qhet' = ((`_ES' - `eff_Q')/`_seES')^2
-			summ `qhet' if `touse', meanonly
+			tempvar Qhet
+			qui gen double `Qhet' = ((`_ES' - `eff_Q')/`_seES')^2
+			summ `Qhet' if `touse', meanonly
 
 			return scalar Q = cond(r(N), r(sum), .)
 			return scalar Qdf = cond(r(N), r(N)-1, .)
 		}
-		
-		//return scalar nrfd  = `nrfd'	// update marker of "less than 3 studies" (for rfdist)
-		//return scalar nmiss = `nmiss'	// update marker of "pt. numbers are missing in one or more trials"
-		//return scalar nsg   = `nsg'		// update marker of "only a single valid estimate" (e.g. for by(), or for cumul/infl)
-		//return scalar nzt   = `nzt'		// update marker of "HKSJ has resulted in a shorter CI than IV" (for HKSJ)
 		
 		exit 0					// exit subroutine and continue without error
 	}
@@ -863,6 +870,70 @@ program define PerformMetaAnalysis, rclass sortpreserve
 		tempvar obsj
 		qui gen long `obsj' = .
 	}
+
+	// NEW SEP 2023
+	// If heterogeneity parameter is "pooled" (i.e. stratified by) subgroup, need to estimate it once, now
+	// and pass it through to subsequent analyses as if it were a "sensitivity analysis"
+	if `"`pooled'"'!=`""' {
+		tempvar by2
+		egen `by2' = group(`by') if `touse', missing
+		qui tab `by2' if `touse'
+		cap assert `r(r)'==`: word count `bylist''
+		if _rc {
+			disp as err "Error in {bf:by()} groups"	// shouldn't ever see this
+			exit _rc
+		}		
+
+		// Prepare to use xi
+		local OldVarsPrefix: char _dta[__xi__Vars__Prefix__]
+		local OldVarsToDrop: char _dta[__xi__Vars__To__Drop__]
+		foreach X in `c(ALPHA)' {
+			local x __`X'`X'
+			cap ds __`X'`X'
+			if _rc==111 continue, break
+			foreach Y in `c(ALPHA)' {
+				local x __`X'`Y'
+				cap ds __`X'`Y'
+				if _rc==111 continue, break
+			}
+			if !_rc {
+				disp as err `"Please remove some variables with names beginning __*"'
+				exit 198
+			}
+		}
+		if inlist("`model'", "dl", "reml", "mp") {
+			local model2 : copy local model
+			if "`model'"=="dl" local model2 mm
+			else if "`model'"=="mp" local model2 eb
+			cap xi, prefix(`x'): metareg `_ES' i.`by2' if `touse', wsse(`_seES') `model2'
+			local opts_model tsqsa(`e(tau2)') `opts_model'
+			return scalar tsq_pooled = `e(tau2)'
+		}
+		else if "`model'"=="mu" {
+			tempvar precsq
+			gen double `precsq' = 1/`_seES'^2
+			cap xi, prefix(`x'): regress `_ES' i.`by2' [aw=`precsq'] if `touse'
+			summ `precsq', meanonly
+			local phi_pooled = r(mean)*e(rmse)^2
+			local opts_model phisa(`phi_pooled') `opts_model'
+			return scalar phi_pooled = `phi_pooled'
+		}
+		else {
+			nois disp as err "Invalid model requested"	// shouldn't ever see this
+			exit 198
+		}
+		if _rc {
+			if "`model'"=="mu" disp as err "Error in {bf:regress}"
+			else disp as err "Error in {bf:metareg}"
+			c_local err noerr		// tell -metan- not to also report an "error in metan_analysis.PerformMetaAnalysis"
+			exit _rc
+		}
+
+		cap drop `by2'
+		cap drop `x'*
+		char define _dta[__xi__Vars__Prefix__] `OldVarsPrefix'
+		char define _dta[__xi__Vars__To__Drop__] `OldVarsToDrop'
+	}
 	
 	
 	
@@ -890,11 +961,6 @@ program define PerformMetaAnalysis, rclass sortpreserve
 		// Run extra loop to store results of each iteration within the currrent dataset (`xoutvlist')
 		if `"`cumulative'`influence'"' != `""' {
 
-			// initialize error markers
-			// foreach el in rc_2000 rc_2001 rc_2002 {
-			// 	local n`el' = 0
-			// }
-		
 			// Moved/amended March 2020
 			qui bysort `touse' (`sortby') : replace `obsj' = _n if `touse'
 		
@@ -1003,10 +1069,12 @@ program define PerformMetaAnalysis, rclass sortpreserve
 		if inlist("`model'", "mh", "peto", "iv", "ivhet", "qe", "mu") ///
 			| inlist("`model'", "bt", "hc", "pl") | "`kroger'"!="" {
 			local toremove rflci rfuci
+			if `"`proportion'"'!=`""' local toremove `toremove' prop_rflci prop_rfuci
 		}
 		// if "`model'"=="peto" | "`teststat'"=="chi2" local toremove `toremove' z
 		if inlist("`teststat'", "chi2", "t") local toremove `toremove' z
 		if inlist("`model'", "peto", "mh", "iv", "mu") local toremove `toremove' tausq /*sigmasq*/
+		if "`model'"!="mu" local toremove `toremove' phi	// added Sep 2023
 		cap confirm numeric var `_NN'
 		if _rc local toremove `toremove' npts
 		local rownames_reduced : list rownames - toremove
@@ -1037,7 +1105,7 @@ program define PerformMetaAnalysis, rclass sortpreserve
 		local nzt = !inlist("`r(nzt)'", "0", "", ".")
 		
 		// Warning messages & error codes r.e. confidence limits for iterative tausq
-		if inlist("`model'", "mp", "ml", "pl", "reml", "bt") | "`kroger'"!="" {
+		if inlist("`model'", "mp", "pmm", "ml", "pl", "reml", "bt") | "`kroger'"!="" {
 			local maxtausq2 = r(maxtausq)		// take maxtausq from PerformPooling (10* D+L estimate)
 			local 0 `", `opts_model'"'
 			syntax [, MAXTausq(real -9) MAXITer(real 1000) * ]
@@ -1102,10 +1170,16 @@ program define PerformMetaAnalysis, rclass sortpreserve
 	
 		// Normalise weights overall (if `ovwt')
 		if `"`ovwt'"'!=`""' {
+
+			/* Amended for clarity May 2023 */
 			local _WT2 = cond(`"`xwt'"'!=`""', `"`xwt'"', `"`_WT'"')			// use _WT2 from `xoutvlist' if applicable
 			summ `_WT' if `touse', meanonly
 			qui replace `_WT2' = 100*cond(`"`altwt'"'!=`""', `_WT', `_WT2') / r(sum) if `touse'
 			// ^^ use *original* weights (_WT) rather than cumul/infl weights (_WT2) if `altwt'
+			if `"`xwt'"'!=`""' & `"`altwt'"'==`""' {
+				qui replace `_WT' = 100*`_WT' / r(sum) if `touse'
+				// ^^ if *not* altwt, also normalize the "standard" weight, for storing in memory as _WT
+			}
 		}
 
 		return matrix ovstats = `ovstats'		// needs to be returned separately from "return add" above, as it has been edited
@@ -1119,7 +1193,7 @@ program define PerformMetaAnalysis, rclass sortpreserve
 	******************************************
 	
 	if `"`by'"'!=`""' & (`"`subgroup'"'==`""' | `"`sgwt'"'!=`""') {
-		
+				
 		// Amended May 2020
 		tempname Qsum csum avg_eff_num avg_eff_denom
 		scalar `Qsum' = 0			// sum of subgroup-specific Q statistics
@@ -1129,9 +1203,6 @@ program define PerformMetaAnalysis, rclass sortpreserve
 
 		** Initialize markers of subgroup-related errors
 		// (plus Mata iterative functions failed to converge etc ... this is done on-the-fly for `overall')
-		// foreach el in /*rc_2000 rc_2001 rc_2002*/ rc_tausq rc_tsq_lci rc_tsq_uci rc_eff_lci rc_eff_uci {
-		// 	local n`el' = 0
-		// }
 		local nsg = 0		// reset
 		local nsg_list		// init list of subgroups with only one study ==> random-effects models become iv/mh
 
@@ -1146,11 +1217,11 @@ program define PerformMetaAnalysis, rclass sortpreserve
 		//    whereas ovstats includes *all* models simultaneously)
 		local toremove
 		if !("`logrank'"!="" | "`model'"=="peto") local toremove OE V
-		// if "`kroger'"=="" local toremove `toremove' df_kr
 		if "`teststat'"!="t" local toremove `toremove' df
 		if inlist("`model'", "mh", "peto", "iv", "ivhet", "qe", "mu") ///
 			| inlist("`model'", "bt", "hc", "pl") | "`kroger'"!="" {
 			local toremove `toremove' rflci rfuci
+			if `"`proportion'"'!=`""' local toremove `toremove' prop_rflci prop_rfuci
 		}
 		
 		// [Sep 2020:]
@@ -1162,10 +1233,11 @@ program define PerformMetaAnalysis, rclass sortpreserve
 		// (plus tsq + CI itself)
 
 		// model-based tausq confidence intervals
-		if !inlist("`model'", "mp", "ml", "pl", "reml", "bt", "dlb") local toremove `toremove' tsq_lci tsq_uci
+		if !inlist("`model'", "mp", "pmm", "ml", "pl", "reml", "bt", "dlb") local toremove `toremove' tsq_lci tsq_uci
 
 		// common-effect models: no tausq
 		if inlist("`model'", "peto", "mh", "iv", "mu") local toremove `toremove' tausq /*sigmasq*/
+		if "`model'"!="mu" local toremove `toremove' phi	// added Sep 2023
 		foreach el in t chi2 u {
 			if "`teststat'"!="`el'" local toremove `toremove' `el'
 		}
@@ -1256,7 +1328,6 @@ program define PerformMetaAnalysis, rclass sortpreserve
 				model(`model') summstat(`summstat') teststat(`teststat') `qstat' `testbased' `isqparam' ///
 				mhvlist(`mhvlist') oevlist(`oevlist') invlist(`invlist') `nptsopt' wtvar(`wtvar') wgt(`wgt') ///
 				`integer' `logrank' `proportion' `opts_model'
-
 			local rc = _rc
 			if _rc {
 				if _rc==2000 local nrc_2000 = 1
@@ -1335,7 +1406,6 @@ program define PerformMetaAnalysis, rclass sortpreserve
 			
 			
 			** If PerformPooling ran successfully, update `bystats' matrix and return subgroup stats
-			// local sgk = 0
 			if !`rc' | (`rc'==2002 & "`model'"=="mh") {
 
 				// update `bystats' matrix
@@ -1382,7 +1452,7 @@ program define PerformMetaAnalysis, rclass sortpreserve
 			
 		}	// end forvalues i = 1 / `nby'		
 				
-		if (`"`overall'"'==`""' | `"`ovwt'"'!=`""') {
+		if `"`overall'"'==`""' | `"`ovwt'"'!=`""' {
 			assert `kOV' == `k'		// check that sum of subgroup `k's = previously-calculated overall `k'
 			assert `nOV' == `n'		// check that sum of subgroup `n's = previously-calculated overall `n'
 		}
@@ -1456,6 +1526,7 @@ program define PerformMetaAnalysis, rclass sortpreserve
 		tempname tsq_common
 		scalar `tsq_common' = max(0, (`Qsum' - (`k' - `nby1')) / `csum')
 		
+		// Return
 		return scalar tsq_common = `tsq_common'
 		return scalar Qsum = `Qsum'
 		return scalar Qbet = `Qbet'
@@ -1478,11 +1549,11 @@ program define PerformMetaAnalysis, rclass sortpreserve
 		if !_rc {
 			// reduce rows if necessary
 			// if current model does not estimate tausq CIs, just keep rows containing point estimates
-			if inlist("`model'", "iv", "mh", "peto") {
+			if inlist("`model'", "iv", "mh", "peto", "mu") {
 				matrix define `byhet' = `byhet'[rownumb(`byhet', "H"), 1...] ///
 					\ `byhet'[rownumb(`byhet', "Isq"), 1...] \ `byhet'[rownumb(`byhet', "HsqM"), 1...]
 			}
-			else if !inlist("`model'", "mp", "ml", "pl", "reml", "bt", "dlb") {
+			else if !inlist("`model'", "mp", "pmm", "ml", "pl", "reml", "bt", "dlb") {
 				matrix define `byhet' = `byhet'[rownumb(`byhet', "tausq"), 1...] \ `byhet'[rownumb(`byhet', "H"), 1...] ///
 					\ `byhet'[rownumb(`byhet', "Isq"), 1...] \ `byhet'[rownumb(`byhet', "HsqM"), 1...]
 			}
@@ -2078,7 +2149,8 @@ program define PerformPoolingIV, rclass
 		OEVLIST(varlist numeric min=2 max=2) INVLIST(varlist numeric min=2 max=6) ///
 		NPTS(varname numeric) WGT(varname numeric) WTVAR(varname numeric) ///
 		HKsj KRoger BArtlett SKovgaard RObust LOGRank PRoportion TN(string) POVERV(real 2) /*noTRUNCate*/ TRUNCate(string) EIM OIM ///
-		ISQSA(real 80) TSQSA(real -99) QWT(varname numeric) INIT(name) OLevel(cilevel) HLevel(cilevel) RFLevel(cilevel) CItype(passthru) ///
+		ISQSA(real -99) TSQSA(real -99) PHISA(real -99) POOLed /*Added Sep 2023*/ QWT(varname numeric) INIT(name) ///
+		OLevel(cilevel) HLevel(cilevel) RFLevel(cilevel) CItype(passthru) ///
 		ITOL(real 1.0x-1a) MAXTausq(real -9) REPS(real 1000) MAXITer(real 1000) QUADPTS(real 100) DIFficult TECHnique(string) * ]
 
 	// N.B. extra options should just be those allowed for PerformPoolingMH
@@ -2087,7 +2159,7 @@ program define PerformPoolingIV, rclass
 	if `"`wtvar'"'==`""' {
 		local wtvar
 		tempvar wtvar
-		qui gen `wtvar' = .
+		qui gen double `wtvar' = .
 	}	
 	else {
 		marksample touse, novarlist		// June 2022: temporary marksample, consistent across models (c.f. I-V and no CC; see elsewhere)
@@ -2151,18 +2223,14 @@ program define PerformPoolingIV, rclass
 		
 	tempname eff se_eff crit pvalue
 	qui replace `wtvar' = 1/`_seES'^2 if `touse'
-	summ `_ES' [aw=`wtvar'] if `touse', meanonly
+	qui summ `_ES' [aw=`wtvar'] if `touse'
 	scalar `eff' = r(mean)
 	scalar `se_eff' = 1/sqrt(r(sum_w))		// I-V common-effect SE
 
 	// Derive Cochran's Q
-	tempvar qhet
-	qui gen double `qhet' = `wtvar'*((`_ES' - `eff')^2)
-	summ `qhet' if `touse', meanonly
 	assert r(N) == `k'
-	
 	tempname Q Qdf
-	scalar `Q' = r(sum)
+	scalar `Q' = cond(missing(r(Var)), 0, r(Var)*r(sum_w)*(r(N)-1)/r(N))
 	scalar `Qdf' = r(N) - 1
 	
 	// Derive sigmasq and tausq
@@ -2171,111 +2239,114 @@ program define PerformPoolingIV, rclass
 	scalar `c' = r(sum_w) - r(mean)
 	scalar `sigmasq' = `Qdf'/`c'						// [general note: can this be generalised to other (non-IV) methods?]
 	scalar `tausq' = max(0, (`Q' - `Qdf')/`c')			// default: D+L estimator
-
-
-
+	
+	
+	
 	**********************************
 	* Non-iterative tausq estimators *
 	**********************************
 	// (other than D+L, already derived above)
 	
-	** Setup two-stage estimators sj2s and dk2s
-	// consider *initial* estimate of tsq
-	if inlist("`model'", "sj2s", "dk2s") {
-		local final `model'
-		local model `"`init'"'
+	if "`pooled'"=="" {
 		
-		if substr(trim(`"`model'"'), 1, 2)==`"sa"' {
-			tempname tausq0
-			scalar `tausq0' = `tausq'
-		
-			_parse comma model 0 : model
-			syntax [, ISQ(string) TAUSQ(string)]
+		** Setup two-stage estimators sj2s and dk2s
+		// consider *initial* estimate of tsq
+		if inlist("`model'", "sj2s", "dk2s") {
+			local final `model'
+			local model `"`init'"'
 			
-			if `"`tausq'"'!=`""' & `"`isq'"'==`""' {
-				nois disp as err `"Only one of {bf:isq()} or {bf:tausq()} may be supplied as suboptions to {bf:sa()}"'
-				exit 184
-			}
-		
-			else if `"`tausq'"'!=`""' {
-				cap confirm number `tausq'
-				if _rc {
-					nois disp as err `"Error in {bf:tausq()} suboption to {bf:sa()}; a single number was expected"'
-					exit _rc
+			/*
+			if substr(trim(`"`model'"'), 1, 2)==`"sa"' {
+				tempname tausq0
+				scalar `tausq0' = `tausq'
+			
+				_parse comma model 0 : model
+				syntax [, ISQ(string) TAUSQ(string)]
+				
+				if `"`tausq'"'!=`""' & `"`isq'"'==`""' {
+					nois disp as err `"Only one of {bf:isq()} or {bf:tausq()} may be supplied as suboptions to {bf:sa()}"'
+					exit 184
 				}
-				if `tausq' < 0 {
-					nois disp as err `"tau{c 178} value for sensitivity analysis cannot be negative"'
-					exit 198
-				}
-				local tsqsa = `tausq'
-				local isqsa
-			}
-			else {
-				if `"`isq'"'==`""' local isq = 80
-				else {
-					cap confirm number `isq'
+			
+				else if `"`tausq'"'!=`""' {
+					cap confirm number `tausq'
 					if _rc {
-						nois disp as err `"Error in {bf:isq()} suboption to {bf:sa()}; a single number was expected"'
+						nois disp as err `"Error in {bf:tausq()} suboption to {bf:sa()}; a single number was expected"'
 						exit _rc
 					}
-					if `isq'<0 | `isq'>=100 {
-						nois disp as err `"I{c 178} value for sensitivity analysis must be at least 0% and less than 100%"'
+					if `tausq' < 0 {
+						nois disp as err `"tau{c 178} value for sensitivity analysis cannot be negative"'
 						exit 198
 					}
+					local tsqsa = `tausq'
+					local isqsa
 				}
-				local isqsa = `isq'
-				local tsqsa = -99
-			}
+				else {
+					if `"`isq'"'==`""' local isq = 80
+					else {
+						cap confirm number `isq'
+						if _rc {
+							nois disp as err `"Error in {bf:isq()} suboption to {bf:sa()}; a single number was expected"'
+							exit _rc
+						}
+						if `isq'<0 | `isq'>=100 {
+							nois disp as err `"I{c 178} value for sensitivity analysis must be at least 0% and less than 100%"'
+							exit 198
+						}
+					}
+					local isqsa = `isq'
+					local tsqsa = -99
+				}
 
-			scalar `tausq' = `tausq0'
-		}
-	}
-	
-	** Hartung-Makambi estimator (>0)
-	if "`model'"=="hm" {
-		scalar `tausq' = `Q'^2 / (`c'*(`Q' + 2*`Qdf'))
-	}
-	
-	** Non-iterative, making use of the sampling variance of _ES
-	else if inlist("`model'", "ev", "he", "b0", "bp") {
-		tempname var_eff meanv
-		qui summ `_ES' if `touse'
-		scalar `var_eff' = r(Var)
-
-		tempvar v
-		qui gen double `v' = `_seES'^2
-		summ `v' if `touse', meanonly
-		scalar `meanv' = r(mean)
-		
-		// empirical variance (>0)
-		if "`model'"=="ev" {
-			tempvar residsq
-			qui gen double `residsq' = (`_ES' - r(mean))^2
-			summ `residsq', meanonly
-			scalar `tausq' = r(mean)
-		}
-		
-		// Hedges aka "variance component" aka Cochran ANOVA-type estimator
-		else if "`model'"=="he" {
-			scalar `tausq' = `var_eff' - `meanv'
-		}
-		
-		// Rukhin Bayes estimators
-		else if inlist("`model'", "b0", "bp") {
-			scalar `tausq' = `var_eff'*(`k' - 1)/(`k' + 1)
-			if "`model'"=="b0" {
-				confirm numeric var `npts'
-				summ `npts' if `touse', meanonly	
-				scalar `tausq' = `tausq' - ( (`r(sum)' - `k')*`Qdf'*`meanv'/((`k' + 1)*(`r(sum)' - `k' + 2)) )
+				scalar `tausq' = `tausq0'
 			}
+			*/
 		}
-		scalar `tausq' = max(0, `tausq')			// truncate at zero
+		
+		** Hartung-Makambi estimator (>0)
+		// [Note Sep 2023] *NOT* "else if", because of potential role-switch of `model' and `init' above
+		if "`model'"=="hm" {
+			scalar `tausq' = `Q'^2 / (`c'*(`Q' + 2*`Qdf'))
+		}
+		
+		** Non-iterative, making use of the sampling variance of _ES
+		else if inlist("`model'", "ev", "he", "b0", "bp") {
+			tempname var_eff meanv
+			qui summ `_ES' if `touse'
+			scalar `var_eff' = r(Var)
+
+			tempvar v
+			qui gen double `v' = `_seES'^2
+			summ `v' if `touse', meanonly
+			scalar `meanv' = r(mean)
+			
+			// empirical variance (>0)
+			if "`model'"=="ev" {
+				scalar `tausq' = `var_eff'*(`k' - 1)/`k'
+			}
+			
+			// Hedges aka "variance component" aka Cochran ANOVA-type estimator
+			else if "`model'"=="he" {
+				scalar `tausq' = `var_eff' - `meanv'
+			}
+			
+			// Rukhin Bayes estimators
+			else if inlist("`model'", "b0", "bp") {
+				scalar `tausq' = `var_eff'*(`k' - 1)/(`k' + 1)
+				if "`model'"=="b0" {
+					confirm numeric var `npts'
+					summ `npts' if `touse', meanonly	
+					scalar `tausq' = `tausq' - ( (`r(sum)' - `k')*`Qdf'*`meanv'/((`k' + 1)*(`r(sum)' - `k' + 2)) )
+				}
+			}
+			scalar `tausq' = max(0, `tausq')	// truncate at zero
+		}
 	}
 	
 	// Sensitivity analysis: use given Isq/tausq and sigmasq to generate tausq/Isq
-	else if "`model'"=="sa" {
+	if "`model'"=="sa" | "`pooled'"!="" {		// modified Sep 2023
 		if `tsqsa'==-99 scalar `tausq' = `isqsa'*`sigmasq'/(100 - `isqsa')
-		else scalar `tausq' = `tsqsa'
+		else if `phisa'==-99 scalar `tausq' = `tsqsa'
 	}
 
 
@@ -2309,7 +2380,7 @@ program define PerformPoolingIV, rclass
 	local maxtausq = cond(`maxtausq'==-9, max(10*`tausq', 100), `maxtausq')
 		
 	// Iterative, using Mata
-	if inlist("`model'", "dlb", "mp", "ml", "pl", "reml") {
+	if "`pooled'"=="" & inlist("`model'", "dlb", "mp", "pmm", "ml", "pl", "reml") {
 	
 		// Bootstrap D+L
 		// (Kontopantelis PLoS ONE 2013)
@@ -2325,12 +2396,12 @@ program define PerformPoolingIV, rclass
 			cap nois mata: DLb("`_ES' `_seES'", "`touse'", `olevel', `reps')
 		}
 		
-		// Mandel-Paule aka empirical Bayes
-		// (DerSimonian and Kacker CCT 2007)
+		// Mandel-Paule aka empirical Bayes (DerSimonian and Kacker CCT 2007)
+		// or median-unbiased estimator suggested by Viechtbauer (2021)
 		// N.B. Mata routine also performs the Viechtbauer Q-profiling routine for tausq CI
 		// (Viechtbauer Stat Med 2007; 26: 37-52)
-		else if "`model'"=="mp" {
-			cap nois mata: GenQ("`_ES' `_seES'", "`touse'", `hlevel', (`maxtausq', `itol', `maxiter'))
+		else if inlist("`model'", "mp", "pmm") {
+			cap nois mata: GenQ("`_ES' `_seES'", "`touse'", `hlevel', (`maxtausq', `itol', `maxiter'), "`model'")
 		}
 		
 		// REML
@@ -2356,7 +2427,7 @@ program define PerformPoolingIV, rclass
 			else if "`skovgaard'"!="" local mlpl plskov
 			local hmethod = cond("`difficult'"!="", "hybrid", "m-marquardt")	// default = m-marquardt
 			if "`technique'"=="" local technique nr								// default = nr
-			cap nois mata: MLPL("`_ES' `_seES'", "`touse'", (`olevel', `hlevel'), (`maxtausq', `itol', `maxiter'), "`hmethod'", "`technique'", "`mlpl'")			
+			cap nois mata: MLPL("`_ES' `_seES'", "`touse'", (`olevel', `hlevel'), (`maxtausq', `itol', `maxiter'), "`hmethod'", "`technique'", "`mlpl'")
 			if `"`r(ll_negtsq)'"'!=`""' {
 			    disp `"{error}tau-squared value from last iteration was negative, so has been set to zero"'
 			}			
@@ -2409,7 +2480,7 @@ program define PerformPoolingIV, rclass
 		return scalar rc_tsq_lci = r(rc_tsq_lci)
 		return scalar rc_tsq_uci = r(rc_tsq_uci)
 		
-	}	// end if inlist("`model'", "dlb", "mp", "ml", "pl", "reml")
+	}	// end if inlist("`model'", "dlb", "mp", "pmm", "ml", "pl", "reml")
 		// [i.e. iterative tausq estimators]
 	
 	// end of "Iterative, using Mata" section
@@ -2424,11 +2495,15 @@ program define PerformPoolingIV, rclass
 		qui replace `wtvar' = `wgt' if `touse'
 	}
 	
+	tempvar Qhet
 	tempname Qr				// will also be used for post-hoc variance correction
-	if "`final'"!="" {		
-		qui replace `qhet' = ((`_ES' - `eff')^2)/((`_seES'^2) + `tausq')
-		summ `qhet' if `touse', meanonly
-		scalar `Qr' = r(sum)
+	if "`final'"!="" {
+		tempvar wt0
+		qui gen double `wt0' = 1/((`_seES'^2) + `tausq')
+		qui summ `_ES' [aw=`wt0'] if `touse'
+		scalar `eff' = r(mean)		
+		assert r(N) == `k'
+		scalar `Qr' = cond(missing(r(Var)), 0, r(Var)*r(sum_w)*(r(N)-1)/r(N))
 		
 		if "`final'"=="sj2s" {					// two-step Sidik-Jonkman
 			// scalar `tausq' = cond(`tausq'==0, `sigmasq'/99, `tausq') * `Qr'/`Qdf'		// March 2018: if tsq=0, use Isq=1%
@@ -2442,14 +2517,13 @@ program define PerformPoolingIV, rclass
 			*/
 		}
 		else if "`final'"=="dk2s" {				// two-step DerSimonian-Kacker (MM only)
-			tempname wi1 wi2 wis1 wis2 
-			summ `wtvar' if `touse', meanonly
-			scalar `wi1' = r(sum)				// sum of weights
-			summ `wtvar' [aw=`wtvar'] if `touse', meanonly
+			tempname wi1 wi2 wis1 wis2
+			summ `wt0' [aw=`wt0'] if `touse', meanonly
+			scalar `wi1' = r(sum_w)				// sum of weights
 			scalar `wi2' = r(sum)				// sum of squared weights				
-			summ `wtvar' [aw=`_seES'^2] if `touse', meanonly
+			summ `wt0' [aw=`_seES'^2] if `touse', meanonly
 			scalar `wis1' = r(sum)				// sum of weight * variance
-			summ `wtvar' [aw=`wtvar' * (`_seES'^2)] if `touse', meanonly
+			summ `wt0' [aw=`wt0' * (`_seES'^2)] if `touse', meanonly
 			scalar `wis2' = r(sum)				// sum of squared weight * variance
 			
 			scalar `tausq' = (`Qr' - (`wis1' - `wis2'/`wi1')) / (`wi1' - `wi2'/`wi1')
@@ -2497,9 +2571,9 @@ program define PerformPoolingIV, rclass
 		qui replace `tauqe' = `wtvar' * (1 - `newqe') if `newqe' < 1
 		summ `tauqe' if `touse', meanonly
 		
-		// Point estimate uses weights = qi/vi + tauhati
+		// Point estimate uses weights = qi/vi + tauhati
 		// ...but expressions presented in CCT 2015 involve addition & subtraction of very similar quantities with risk of rounding error.
-		// Instead, we use the expression below, which can be shown to be equivalent to Equation 7 of CCT 2015
+		// Instead, we use the expression below, which can be shown to be equivalent to Equation 7 of CCT 2015
 		qui replace `wtvar' = `newqe' * (`wtvar' + (r(sum) / `sumnewqe')) if `touse'
 		
 		summ `wtvar' if `touse', meanonly
@@ -2591,15 +2665,15 @@ program define PerformPoolingIV, rclass
 		// Similarly to M-H and Peto methods, re-calculate Q based on standard variance weights
 		// but with respect to the *weighted* pooled effect size
 		if `"`wgt'"'!=`""' {
-			qui replace `qhet' = ((`_ES' - `eff') / `_seES')^2
-			summ `qhet' if `touse', meanonly
+			qui gen double `Qhet' = ((`_ES' - `eff') / `_seES')^2
+			summ `Qhet' if `touse', meanonly
 			scalar `Q' = cond(r(N), r(sum), .)
 		}
 	}
 	
 	// Standard weighting based on additive tau-squared
 	// (N.B. if iv or mu, eff and se_eff have already been calculated)
-	else if !inlist("`model'", "iv", "peto", "mu") {		
+	else if !inlist("`model'", "iv", "peto", "mu") & `phisa'==-99 {
 		qui replace `wtvar' = 1/(`_seES'^2 + `tausq') if `touse'
 		summ `_ES' [aw=`wtvar'] if `touse', meanonly
 		scalar `eff' = r(mean)
@@ -2612,7 +2686,6 @@ program define PerformPoolingIV, rclass
 
 
 
-	
 	*********************************
 	* Post-hoc variance corrections *
 	*********************************
@@ -2623,10 +2696,10 @@ program define PerformPoolingIV, rclass
 	tempname Hstar
 	scalar `Qr' = `Q'
 	if !inlist("`model'", "iv", "peto", "mu") | "`wgt'"!="" {		// Note: if I-V common-effect (e.g. for "mu"), Qr = Q and Hstar = H
-		qui replace `qhet' = `wtvar'*((`_ES' - `eff')^2)
-		summ `qhet' if `touse', meanonly
+		cap drop `Qhet'
+		qui gen double `Qhet' = `wtvar'*((`_ES' - `eff')^2)
+		summ `Qhet' if `touse', meanonly
 		scalar `Qr' = cond(r(N), r(sum), .)
-		return scalar Qr = `Qr'
 	}
 	scalar `Hstar' = sqrt(`Qr'/`Qdf')
 	
@@ -2639,7 +2712,14 @@ program define PerformPoolingIV, rclass
 	// (Roever et al, BMC Med Res Methodol 2015; Jackson et al, Stat Med 2017; van Aert & Jackson, Stat Med 2019)
 
 	local nzt = 0
-	if "`model'"=="mu" | "`hksj'"!="" {
+	if "`model'"=="sa" | "`pooled'"!="" {	// added Sep 2023
+		if `phisa'!=-99 {
+			scalar `Hstar' = sqrt(`phisa')
+			scalar `se_eff' = `se_eff' * `Hstar'
+			scalar `Qr' = `Qr'/`phisa'
+		}
+	}
+	else if "`model'"=="mu" | "`hksj'"!="" {
 		tempname tcrit zcrit
 		scalar `zcrit' = invnormal(.5 + `olevel'/200)
 		scalar `tcrit' = invttail(`Qdf', .5 - `olevel'/200)
@@ -2657,9 +2737,8 @@ program define PerformPoolingIV, rclass
 			if "`hksj'"!="" & `Hstar' < `zcrit'/`tcrit' local nzt = 1		// setup error display for later
 		}
 		scalar `se_eff' = `se_eff' * `Hstar'
+		if "`model'"=="mu" scalar `Qr' = `Qr'/(`Hstar'^2)
 	}
-	return scalar Hstar = `Hstar'
-	return scalar nzt = `nzt'
 
 	// Sidik-Jonkman robust ("sandwich-like") variance estimator
 	// (Sidik and Jonkman, Comp Stat Data Analysis 2006)
@@ -2723,6 +2802,14 @@ program define PerformPoolingIV, rclass
 	// check for successful pooling
 	if missing(`eff', `se_eff') exit 2002
 
+	return scalar Hstar = `Hstar'
+	return scalar nzt = `nzt'
+	if "`model'"=="mu" | ("`pooled'"!="" & `phisa'!=99) {
+		return scalar phi = `Hstar'^2
+	}
+	if !inlist("`model'", "iv", "peto") {
+		return scalar Qr = `Qr'
+	}
 
 
 	**********************************************
@@ -2752,7 +2839,13 @@ program define PerformPoolingIV, rclass
 		** Back-transforms: special case
 		// if k = 1, pass to GenConfIntsPr
 		if `k'==1 {
-			GenConfIntsPr `invlist' if `touse', `citype' level(`olevel')
+			cap nois GenConfIntsPr `invlist' if `touse', `citype' level(`olevel')
+			if _rc {
+				if _rc==1 nois disp as err `"User break in {bf:metan_analysis.GenConfIntsPr}"'
+				else nois disp as err `"Error in {bf:metan_analysis.GenConfIntsPr}"'
+				c_local err noerr		// tell -metan- not to also report an "error in metan_analysis.PerformMetaAnalysis"
+				exit _rc
+			}
 			return scalar prop_eff = r(es)
 			return scalar prop_lci = r(lb)
 			return scalar prop_uci = r(ub)
@@ -2765,7 +2858,6 @@ program define PerformPoolingIV, rclass
 		else {
 			tokenize `invlist'
 			args succ _NN
-			
 		
 			** Perform standard back-transforms
 			// first, truncate intervals at `mintes' and `maxtes'
@@ -3030,25 +3122,21 @@ program define PerformPoolingIV, rclass
 	// Sensitivity analysis
 	// (Note: tausq has already been established, whether `tsqsa' or `Isqsa')
 	if "`model'"=="sa" {
+		local tsqlist sa		// [May 2023] for -heterogi- ;  see below
+		
 		tempname H Isqval HsqM
 		if `tsqsa' == -99 {
 			scalar `H' = sqrt(100 / (100 - `isqsa'))
 			scalar `Isqval' = `isqsa'
 			scalar `HsqM' = `isqsa'/(100 - `isqsa')
-			return scalar H = `H'
-			return scalar Isq = `Isqval'
-			return scalar HsqM = float(`HsqM')			// If user-defined I^2 is a round(ish) number, so should H^2 be
 		}
 		else {
 			scalar `H' = sqrt((`tsqsa' + `sigmasq') / `sigmasq')
 			scalar `Isqval' = 100*`tsqsa'/(`tsqsa' + `sigmasq')
 			scalar `HsqM' = `tsqsa'/`sigmasq'
-			return scalar H = `H'
-			return scalar Isq = `Isqval'
-			return scalar HsqM = `HsqM'
 		}
 		
-		// [Sep 2020] Also save values in matrix `hetstats', same as if `isqparam' (see subroutine -heterogi- )
+		// [Sep 2020] Save values in matrix `hetstats', same as if `isqparam' (see subroutine -heterogi- )
 		local t2rownames tausq tsq_lci tsq_uci H H_lci H_uci Isq Isq_lci Isq_uci HsqM HsqM_lci HsqM_uci
 		tempname hetstats
 		local r : word count `t2rownames'
@@ -3063,28 +3151,26 @@ program define PerformPoolingIV, rclass
 		return matrix hetstats = `hetstats'
 	}
 	
-	else {
-		if !inlist("`model'", "iv", "peto", "mu") {
-			local tausqlist `tausq' `tsq_lci' `tsq_uci'
-			cap assert "`tausqlist'"!="" if "`isqparam'"!=""
-			if _rc {
-				nois disp as err "Heterogeneity confidence interval not valid"
-				exit 198
-			}
-		}
-		
-		cap nois Heterogi `Q' `Qdf' if `touse', `testbased' `isqparam' ///
-			stderr(`_seES') tausqlist(`tausqlist') level(`hlevel')
-
+	if !inlist("`model'", "iv", "peto", "mu") {
+		local tausqlist `tausq' `tsq_lci' `tsq_uci'
+		cap assert "`tausqlist'"!="" if "`isqparam'"!=""
 		if _rc {
-			if _rc==1 nois disp as err `"User break in {bf:metan_analysis.Heterogi}"'
-			else nois disp as err `"Error in {bf:metan_analysis.Heterogi}"'
-			c_local err noerr		// tell -metan- not to also report an "error in metan_analysis.PerformPoolingIV"
-			exit _rc
+			nois disp as err "Heterogeneity confidence interval not valid"
+			exit 198
 		}
-		
-		return add
 	}
+	
+	cap nois Heterogi `Q' `Qdf' if `touse', `testbased' `isqparam' ///
+		stderr(`_seES') tausqlist(`tausqlist') level(`hlevel')
+
+	if _rc {
+		if _rc==1 nois disp as err `"User break in {bf:metan_analysis.Heterogi}"'
+		else nois disp as err `"Error in {bf:metan_analysis.Heterogi}"'
+		c_local err noerr		// tell -metan- not to also report an "error in metan_analysis.PerformPoolingIV"
+		exit _rc
+	}
+	
+	return add
 	
 	// Return scalars
 	return scalar eff = `eff'
@@ -3128,13 +3214,13 @@ program define PerformPoolingMH, rclass
 	if `"`wtvar'"'==`""' {
 		local wtvar
 		tempvar wtvar
-		qui gen `wtvar' = .
+		qui gen double `wtvar' = .
 	}
 	
 	
 	** Unpack tempvars for Mantel-Haenszel pooling
 	tokenize `mhvlist'
-	tempvar qhet
+	tempvar Qhet
 	tempname Q Qdf
 	
 	if "`summstat'"=="or" {
@@ -3238,8 +3324,8 @@ program define PerformPoolingMH, rclass
 			}
 			drop `sterm' `cterm'
 			
-			qui gen double `qhet' = ((`e1' - `afit')^2) * ((1/`afit') + (1/`bfit') + (1/`cfit') + (1/`dfit'))
-			summ `qhet' if `touse', meanonly
+			qui gen double `Qhet' = ((`e1' - `afit')^2) * ((1/`afit') + (1/`bfit') + (1/`cfit') + (1/`dfit'))
+			summ `Qhet' if `touse', meanonly
 			scalar `Q'   = cond(r(N), r(sum), .)
 			scalar `Qdf' = cond(r(N), r(N)-1, .)
 		
@@ -3254,7 +3340,7 @@ program define PerformPoolingMH, rclass
 				scalar `Q' = `Q' - (`tsum')^2 / r(sum)
 				drop `tarone_num' `tarone_denom'
 			}
-			drop `qhet' `afit' `bfit' `cfit' `dfit'
+			drop `Qhet' `afit' `bfit' `cfit' `dfit'
 		}
 	}		// end M-H OR
 	
@@ -3324,10 +3410,10 @@ program define PerformPoolingMH, rclass
 	// if Cochran's Q, need to calculate I-V effect size
 	if "`qstat'"=="cochranq" {
 		summ `_ES' [aw=1/`_seES'^2] if `touse', meanonly
-		qui gen double `qhet' = ((`_ES' - r(mean)) / `_seES') ^2
+		qui gen double `Qhet' = ((`_ES' - r(mean)) / `_seES') ^2
 	}		
-	else qui gen double `qhet' = ((`_ES' - `eff') / `_seES') ^2
-	summ `qhet' if `touse', meanonly
+	else qui gen double `Qhet' = ((`_ES' - `eff') / `_seES') ^2
+	summ `Qhet' if `touse', meanonly
 	if inlist("`qstat'", "mhq", "cochranq", "petoq") {
 		if r(N)>=1 {
 			scalar `Q' = r(sum)
@@ -3341,7 +3427,7 @@ program define PerformPoolingMH, rclass
 	// New June 2022: return k and npts to reflect the studies with non-missing _ES and _seES
 	// IN ADDITION to the "actual" k and npts from *all* studies in `touse'
 	if `"`npts'"'!=`""' {
-		summ `npts' if `touse' & !missing(`qhet'), meanonly
+		summ `npts' if `touse' & !missing(`Qhet'), meanonly
 		if r(N) return scalar npts_mh = r(sum)
 	}
 	return scalar k_mh = r(N)
