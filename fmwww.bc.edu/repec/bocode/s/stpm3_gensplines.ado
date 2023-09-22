@@ -130,7 +130,7 @@ program define stpm3_gensplines,
          local k = `k' + 1
       }        
       if `hasdelentry' & "`scale'" != "lnhazard" {      
-        local gensplineopt = cond("`df'" == "1","df(1)","allknots(`knots_tvc')")
+        local gensplineopt = cond("`dftvc'" == "1","df(1)","allknots(`knots_tvc')")
         gensplines `tt0' if `touse' , `gensplineopt' gen(_`type'_t0_tvc)   ///
                                       type(`type')
         local k = 1

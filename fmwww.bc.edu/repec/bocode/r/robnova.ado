@@ -1,5 +1,5 @@
 program robnova, rclass
-	version 9
+	version 10
 	syntax varlist(min=2 max=2 numeric) [if] [in]
 	preserve
 	tokenize `varlist'

@@ -110,6 +110,7 @@ program define stpm3km
 	  local ++c
     }	
     _get_gropts, graphopts(`options') getallowed(legend xtitle ytitle title)
+di "`options'"
 
     if `"`s(title)'"' == "" {
       if `"`haspi'"' == "" {
@@ -130,7 +131,6 @@ program define stpm3km
         local ++c
       } 
     }
-    set trace off
     twoway   `kmline'  ///
              `pline'   ///
            , `options' `title' `xtitle' `ytitle' `legend' 

@@ -9,9 +9,9 @@ d KW: robust
 d KW: Welch
 d KW: Brown-Forsythe
 d
-d Requires: Stata version 9
+d Requires: Stata version 10
 d
-d Distribution-Date: 20230919
+d Distribution-Date: 20230921
 d
 d Author: David Speed, University of New Brunswick - Saint John
 d Support: email dspeed@@unb.ca

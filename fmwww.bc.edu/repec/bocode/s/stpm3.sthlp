@@ -185,7 +185,8 @@ fitted.
 i.e. ln(-ln S(t)), where S(t) is the
 survival function. 
 If no time-dependent effects are specified,
-the  model has proportional hazards.
+the model has proportional hazards.
+With 1 df this is equivalent to a Weibull model.
 
 {pmore}
 {cmd:scale(lnhazard|loghazard)} or {cmd:scale(loghazard)} fit a model on the log hazard scale,
@@ -196,6 +197,12 @@ the model has proportional hazards.
 {cmd:scale(lnodds)} or {cmd:scale(logodds)} fit a model on the log cumulative odds scale,
 i.e. ln((1 - S(t))/S(t)). If no time-dependent effects 
 are specified the model has proportional odds.
+With 1 df this is equivalent to a loglogistic model.
+
+{pmore}
+{cmd:scale(probit)} or {cmd:scale(probit)} fit a model on the 
+with a probit link function for the survival function, invnorm(1 - S(t))).
+With 1 df this is equivalent to a lognormal model.
 
 {phang}
 {opt splinetype(splinetype)} defines the type of spline used to model the effect of time. 

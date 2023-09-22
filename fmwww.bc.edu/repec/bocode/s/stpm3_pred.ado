@@ -1,4 +1,4 @@
-*! version 1.02 2023-08-16
+*! version 1.04 2023-09-19
 
 program stpm3_pred, sortpreserve
   version 16.1
@@ -723,6 +723,7 @@ program stpm3_pred, sortpreserve
 // list of actual used tvcvars needed for ODE & centiles
 //*********************** TVC*****************************
     if "`e(tvc)'" != "" {
+      local vtemp
       foreach v in `e(splinelist_tvc)' {
         _ms_parse_parts `v'
         if "`r(type)'" == "interaction" {
@@ -734,7 +735,7 @@ program stpm3_pred, sortpreserve
       stpm3_pred_varlist_add_bn "`tvc_ode`m''"
       local tvc_ode`m' `r(varlist)'
     }
-  
+
 // omitted variables  
     tempname omit`m'
     _ms_omit_info e(b)  
