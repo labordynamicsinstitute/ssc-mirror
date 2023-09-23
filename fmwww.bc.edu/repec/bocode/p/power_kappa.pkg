@@ -1,0 +1,22 @@
+d 'POWER_KAPPA': module to compute power and sample size for the two-rater kappa statistic with two or more categories
+d
+d  power kappa computes power and sample size for the kappa test of
+d agreement between two raters when there are two or more
+d categories from which to choose from. power kappa computes power
+d and sample size using the method described by Flack et al.
+d (1988). 
+d
+d KW: measure of agreement
+d KW: interrater agreement
+d KW: kappa statistic
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20230922
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f power_cmd_kappa.ado
+f power_cmd_kappa_init.ado
+f power_kappa.sthlp

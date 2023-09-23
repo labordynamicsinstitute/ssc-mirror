@@ -1,4 +1,4 @@
-*! version 1.02 2023-08-16
+*! version 1.04 2023-09-19
 program define standsurv, rclass sortpreserve
   version 16.1
   syntax [anything] [if] [in],        ///
@@ -56,7 +56,6 @@ program define standsurv, rclass sortpreserve
   marksample touse, novarlist
   
   local hasif = "`if'`in'" != ""
-  
 // default to standardized survival function
   if wordcount("`centile' `hazard' `survival' `rmst' `rmft' `failure' `cif' `crudeprob' `crudeprobpart' `transprob' `los'`msmodels'") == 0 local survival "survival"
 // only one prediction option
@@ -136,6 +135,9 @@ program define standsurv, rclass sortpreserve
   local Ncrmodels = cond("`crmodels'" == "",1,wordcount("`crmodels'"))
   local Nmsmodels = cond("`msmodels'" == "",`Ncrmodels',wordcount("`msmodels'"))
   
+  
+  
+  
   if "`crmodels'" == "" & "`cif'" != "" {
     di as error "cif option only available with competing risks using crmodels() option" ///
                 _newline "Use failure option for 1-S(t)"
@@ -153,6 +155,7 @@ program define standsurv, rclass sortpreserve
     }
     estimates store `current_model'
     local crmodels `current_model'
+    local allmodelvars `e(model_vars)'
   }
 
   else {
@@ -166,8 +169,10 @@ program define standsurv, rclass sortpreserve
         di as error "`hazard'`centile' option not implemented for competing risks or multistate models."
         exit 198
       }
+      local allmodelvars `allmodelvars' `e(model_vars)'     
     }
   }
+  
   
   // nogen option
   if "`gen'" != "" {
@@ -854,12 +859,12 @@ program define standsurv, rclass sortpreserve
       //////////////////////////////////////
       //  create frame for each at option //
       //////////////////////////////////////
-      if "`verbose'" != "" di "Creating at frames"
+      if "`verbose'" != "" & `mi'==1 di "Creating at frames"
       forvalues i = 1/`N_at_options' {
         tempname atframe`i'`mi'
         local atframenames `atframenames' `atframe`i'`mi''
          
-        frame put `e(model_vars)' if `touse_at`i'', into(`atframe`i'`mi'')
+        frame put `allmodelvars' if `touse_at`i'', into(`atframe`i'`mi'')
         frame `atframe`i'`mi'' {
           foreach v in `at`i'vars' {
             if `at`i'_`v'_value' != . {
