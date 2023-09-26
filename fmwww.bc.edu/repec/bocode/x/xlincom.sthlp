@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.2.6 28nov2020}{...}
+{* *! version 1.2.7 25sep2023}{...}
 {vieweralsosee "[R] lincom" "mansection R lincom"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[R] nlcom" "help nlcom"}{...}
@@ -45,7 +45,7 @@ Multiple combinations
 {synopt :{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}{p_end}
 {synopt :{opt df(#)}}use t distribution with {it:#} degrees of freedom for
        computing p-values and confidence intervals{p_end}
-{synopt :{opt nohead:er}}suppress header output{p_end}
+{synopt :{opt nohead:er}}suppress output header{p_end}
 {synopt :{opt ef:orm}}exponentiated coefficients; exp(b){p_end}
 {synopt :{opt or}}odds ratio{p_end}
 {synopt :{opt hr}}hazard ratio{p_end}
@@ -117,7 +117,7 @@ The default is to use {cmd:e(df_r)} degrees of freedom or the standard normal
 distribution if {cmd:e(df_r)} is missing.
 
 {phang}
-{opt noheader} suppresses header output.
+{opt noheader} suppresses the output header.
 
 {phang}
 {opt eform}, {opt or}, {opt hr}, {opt shr},  {opt irr}, and {opt rrr} all report

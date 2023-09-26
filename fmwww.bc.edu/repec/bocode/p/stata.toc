@@ -119,6 +119,7 @@ p povguide module to generate the U.S. Poverty Guideline value for a given famil
 p povguide2 module to compute Federal Poverty Guidelines by family size and year, 1973-2023
 p povimp module to provide poverty estimates in the absence of actual consumption data
 p povtime module to compute aggregate intertemporal poverty measures (poverty in a panel accounting for time)
+p power_concord module to compute power and sample size for Lin's concordance correlation coefficient
 p power_diagnostic module to compute power and sample size for sensitivity and specificity of a diagnostic test
 p power_icc module to compute power and sample size for one-way random-effects intraclass correlation
 p power_kappa module to compute power and sample size for the two-rater kappa statistic with two or more categories

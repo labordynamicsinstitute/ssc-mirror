@@ -1,0 +1,27 @@
+d 'POWER_CONCORD': module to compute power and sample size for Lin's concordance correlation coefficient
+d
+d  power concord computes power and sample size for Lin's
+d concordance coefficient using the "simplified method" described
+d in Lin et al. (2012).  For the case of two raters with a single
+d reading per rater, the computations of the power and sample size
+d are simplified by using the upper bound of the variance of each
+d estimate of the agreement indices (see page 72 of Lin et al.
+d [2012] for details). 
+d
+d KW: concordance coefficient
+d KW: measure of agreement
+d KW: interrater agreement
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20230925
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+d Author: Lawrence Lin, NA
+d Support: email 
+d
+f power_cmd_concord.ado
+f power_cmd_concord_init.ado
+f power_concord.sthlp

@@ -1,6 +1,7 @@
 /*
-Feb 14 2023
+Sep 24 2023
 Hongyu Mou, Yiqing Xu
+Version 1.0.0
 */
 
 capture program drop panelview
