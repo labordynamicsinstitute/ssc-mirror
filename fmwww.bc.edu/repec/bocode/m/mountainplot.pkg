@@ -32,6 +32,6 @@ d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org
 d
- ../r/mountainplot.ado
- ../r/mountainplot.sthlp
- ../l/lungfunction.dta
+f mountainplot.ado
+f mountainplot.sthlp
+f ../l/lungfunction.dta
