@@ -1,14 +1,8 @@
-*! nstagebinopt v1.0
-cap log close
-cap program drop nstagebinopt
-cap mata: mata drop feas() 
-cap mata: mata drop mvnp()
-set more off
-
+*! nstagebinopt v1.02 20Dec2022 by BCO, based on v1.0 17jul2014 by DB
 
 /*
 	nstageoptbinopt
-	
+		
 	Output admissible designs into a Stata dataset (control alpha and power)
 */
 
@@ -31,8 +25,16 @@ syntax, Nstage(int)	///						total number of stages
 		fu(real 0) ///						length of f/u on I outcome
 		ACCRate(string) ///					accrual rate in each stage
 		acc(real 0.0005) ///				max diff in power and alpha of feasible designs from specified values
-		PLot] //							plot expected sample sizes of admissible designs
+		PLot *] //							plot expected sample sizes of admissible designs
 
+local xopt `"`options'"'	
+nois dis `xopt'	
+local ver 1.0.2
+local date 09 June 2023
+
+local seed 12345
+if `seed'>0 set seed `seed'		
+		
 // Rename macros
 local J = `nstage'					// # stages
 local Jm1 = `J'-1					// # I-stages
@@ -260,7 +262,9 @@ foreach A of numlist `aratio' {
 	else local alpacc = `acc'
 
 	foreach pp in `p_list' {
-		mata: feas(`J', `K', `alpha', `power', st_matrix("pc"), st_matrix("th0"), st_matrix("th1"), st_matrix("ltfu"), `A', `pi', `ppv', `pp', `alpacc', `fu', st_matrix("accr"))
+		mata: feas(`J', `K', `alpha', `power', st_matrix("pc"), st_matrix("th0"), ///
+			st_matrix("th1"), st_matrix("ltfu"), `A', `pi', `ppv', `pp', `alpacc', ///
+			`fu', st_matrix("accr"), `seed')
 	}
 }
 
@@ -274,7 +278,8 @@ if r(N)==0 {
 // Design parameters 
 format a? w? %9.2f
 if `ppv'==999 | "`fwer'"=="" format a`J' %9.3f
-else format a`J' %9.0g		// 4 dp enough?
+*else format a`J' %9.0g		// 4 dp enough?
+else format a`J' %9.4f // Babak changed this from version 1 
 qui tostring a? w?, force u replace
 
 gen sw_alpha = a1
@@ -313,11 +318,13 @@ qui {
 		if "`fwer'"=="" local nofwer nofwer
 		
 		qui which nstagebin
-		if `ppv'==999 cap nstagebin, nstage(`J') acc(`accrate') theta0(`theta0') theta1(`theta1') ctrlp(`ctrlp') ///
-			arms(`narms') alpha(`a_set') power(`w_set') aratio(`A') ltfu(`ltfu') fu(`fup') ess `nofwer'
+		if `ppv'==999 cap nstagebin, nstage(`J') acc(`accrate') theta0(`theta0') ///
+			theta1(`theta1') ctrlp(`ctrlp') arms(`narms') alpha(`a_set') ///
+			power(`w_set') aratio(`A') ltfu(`ltfu') fu(`fup') ess seed(`seed') `nofwer'
 			
-		else cap nstagebin, nstage(`J') acc(`accrate') theta0(`theta0') theta1(`theta1') ctrlp(`ctrlp') arms(`narms') ///
-			alpha(`a_set') power(`w_set') aratio(`A') ppvc(`ppv') ppve(`ppv') ltfu(`ltfu') fu(`fup') ess `nofwer'
+		else cap nstagebin, nstage(`J') acc(`accrate') theta0(`theta0') theta1(`theta1') ///
+			ctrlp(`ctrlp') arms(`narms') alpha(`a_set') power(`w_set') aratio(`A') ///
+			ppvc(`ppv') ppve(`ppv') ltfu(`ltfu') fu(`fup') ess seed(`seed') `nofwer'
 		
 		*if _rc==0 {
 			forvalues j = 1/`J' {
@@ -395,7 +402,8 @@ qui {
 		
 		if `K'==1 {
 			*replace ess0 = round(ess0)				
-			gen loss = (1-`q')*ess0+`q'*N`J'
+			*gen loss = (1-`q')*ess0+`q'*N`J' /*Babak changed this from V1.0*/
+			gen loss = (1-`q')*ess0+`q'*ess`K'
 		}
 		else gen loss = (1-`q')*ess0+`q'*ess`K'
 		
@@ -408,9 +416,13 @@ qui {
 			replace q = . if ess0!=min_ess0
 			
 			if `K'==1 {
-				egen min_max = min(N`J') if q==float(`q')
-				replace q = . if N`J'!=min_max
-				drop min_max
+				*egen min_max = min(N`J') if q==float(`q') /*Babak changed this from V1.0*/
+				*replace q = . if N`J'!=min_max /*Babak changed this from V1.0*/
+				*drop min_max /*Babak changed this from V1.0*/
+				
+				egen min_ess`K' = min(ess`K') if q==float(`q')
+				replace q = . if ess`K'!=min_ess`K'
+				drop min_ess`K'
 			}
 			
 			else {
@@ -476,25 +488,41 @@ else drop power
 
 
 // Output designs
-if "`fwer'"!="" & `K'>1 local ncol 8
-else local ncol 7
+
+
+// Display results
+
+if "`fwer'"!="" & `K'>1 local ncol 9 /*Babak changed this from V1.0*/
+else local ncol 8 /*Babak changed this from V1.0*/
 local ww1 11
 local ww2 9
+local ww3 7 /*Babak added this from V1.0*/
 
 local sr1 %`ww1's
 local sr2 %`ww2's
+local sr3 %`ww3's /*Babak added this from V1.0*/
 
-local totww = (`ncol'-1)*`ww2'+`ww1'
+local totww = (`ncol'-1)*`ww2'+`ww2' /*Babak changed this from V1.0*/
 
+
+local title1 "n-stage (binary) trial design                      version `ver', `date'"	
+local title2 "Choodari-Oskooei, Bratton, and Parmar (2023) Stata Journal 23(3)."
+local hline = `totww'
+
+di as text _n "`title1'" _n "{hline `hline'}"
+di as text "Admissible designs for a " as res "`arms'" as text "-arm " as res ///
+	"`nstage'" as txt "-stage trial with binary outcome based on"
+di as text "`title2'" 
 di as text "{hline `totww'}"
-di as text `sr1' "q-range" `sr2' "Stage" `sr2' "Sig."  `sr2' "Power" `sr2' "Alloc." ///
-				`sr2' "E(N|H0)" _cont
-if `arms'>2 di as text `sr2' "E(N|H`K')" _cont
-else di as text `sr2' "max(N)" _cont
-if "`fwer'"!="" & `K'>1 di as text  `sr2' "FWER" _cont
+di as text "Design" `sr1' "q-range" `sr2' "Stage" `sr2' "Sig."  `sr2' ///
+	"Power" `sr2' "Alloc." `sr2' "E(N|H0)" _cont
+* if `arms'>2 di as text `sr2' "E(N|H1)" _cont /* Babak changed this from V1.0*/
+* else di as text `sr2' "max(N)" _cont /* Babak changed this from V1.0*/
+di as text `sr2' "E(N|H1)" _cont  /* Babak changed this from V1.0*/
+if "`fwer'"!="" & `K'>1 di as text  `sr3' "FWER" _cont
 
-di _n as text `sr1' "" `sr2' "" `sr2' "level" `sr2' "" `sr2' "ratio" _cont
-if  "`fwer'"!="" & `ppv'==999 & `K'>1 di as text `sr2' "" `sr2' "" `sr2' "(SE)" _cont
+di _n as text "number" `sr1' "" `sr2' "" `sr2' "level" `sr2' "" `sr2' "ratio" _cont
+if  "`fwer'"!="" & `ppv'==999 & `K'>1 di as text `sr2' "" `sr2' "" `sr3' "(SE)" _cont 			/*This is from Babak - might have to change this*/
 di _n as text "{hline `totww'}"
 
 local ndes = _N
@@ -507,7 +535,8 @@ forvalues d = 1/`ndes' {
 	}
 
 	local ess0 = ess0 in `d'
-	if `arms'>2 local ess`K' = ess`K' in `d'
+	*if `arms'>2 local ess`K' = ess`K' in `d' /* Babak changed this from V1.0*/
+	local ess`K' = ess`K' in `d'
 	local A = A in `d'
 	local q_range = q_range in `d'
 	
@@ -519,18 +548,20 @@ forvalues d = 1/`ndes' {
 	
 	forvalues j = 1/`J' {		
 		if `j'==1 {
-			di as res `sr1' "`q_range'" %`ww2'.0f `j' `sr2' "`a`j''" `sr2' "`w`j''" %`ww2'.2f `A' ///
-				%`ww2'.0f `ess0' _cont
+			di as res _skip(1) "`d'" _skip(6) "`q_range'" _skip(4) `j' _skip(6) ///
+				"`a`j''" `sr2' "`w`j''" %`ww2'.2f `A' %`ww2'.0f `ess0' _cont
 				
-			if `arms'>2 di as res %`ww2'.0f `ess`K'' _cont
-			else di as res %`ww2'.0f `N`J'' _cont
+			*if `arms'>2 di as res %`ww2'.0f `ess`K'' _cont /* Babak changed this from V1.0*/
+			*else di as res %`ww2'.0f `N`J'' _cont
+			di as res %`ww2'.0f `ess`K'' _cont
 			
 			if "`fwer'"!="" & `K'>1 di as res _cont %`ww2'.4f `fwerate' _cont
 		}
 		else {
-			di _n as res `sr1' "" %`ww2'.0f `j' `sr2' "`a`j''" `sr2' "`w`j''" _cont
-			if `j'==2 & "`fwer'"!="" & `ppv'==999 & `K'>1 di `sr2' "" `sr2' "" `sr2' "" as text "  (" ///
-				as res %5.4f `se_fwerate' as text ")" _cont
+			di _n as res _skip(4) `sr1' "" %`ww2'.0f `j' _skip(1) `sr2' "`a`j''" ///
+				`sr2' "`w`j''" _cont
+			if `j'==2 & "`fwer'"!="" & `ppv'==999 & `K'>1 di `sr2' "" `sr2' "" ///
+				`sr2' "" as text "  (" as res %5.4f `se_fwerate' as text ")" _cont
 		}
 	}
 	noi di _n as text "{hline `totww'}"
@@ -538,15 +569,15 @@ forvalues d = 1/`ndes' {
 
 
 if `K'==1 {
-	di as txt " Note: each design minimises the loss function q*max(N)+(1-q)*E(N|H0) for"
+	di as txt " Note: each design minimises the loss function (1-q)E(N|H0)+qE(N|H1) for" /* Babak changed this from V1.0*/
 	di as txt "       weights q specified in q-range."
 	*di as txt " q=0 corresponds to minimax design & q=1 corresponds to null-optimal design"
 }
 
 else {
 	label var ess`K' "Expected sample size under H`K'"
-	di as txt " Note: each design minimises the loss function (1-q)E(N|H0)+qE(N|H`K') for values"
-	di as txt "       of q specified in q_range. Hk is the hypothesis that k of the experimental"
+	di as txt " Note: each design minimises the loss function (1-q)E(N|H0)+qE(N|H1) for values of"
+	di as txt "       q specified in q_range. H1 is the hypothesis that all of the experimental"
 	di as txt "       arms are effective."
 	*di as txt " q=0 corresponds to alternative-optimal design & q=1 corresponds to null-optimal design"
 }
@@ -561,25 +592,12 @@ if "`save'"!="" qui sav "`save'.dta", replace
 
 // Draw plot of ESS vs MSS
 qui if "`plot'"!="" {
-	if `K'==1 {
-
-		tempvar mss
-		gen `mss' = word(sw_N,`J')
-		destring `mss', replace
-
-		tw ///
-			(scatter ess `mss', c(l) ms(O) mfc(white)), ///
-			xtitle(Maximum sample size) ///
-			ytitle(Expected sample size under H{sub:0}) ///
-			xline(`n_fix', lp(dash) lw(medthin) lc(gs10)) 
-	}
 	
-	else {
-		tw ///
+	tw ///
 			(scatter ess0 ess`K', c(l) ms(O) mfc(white)), ///
-			xtitle(Expected sample size | H{sub:`K'}) ///
-			ytitle(Expected sample size | H{sub:0})	
-	}
+			xtitle(Expected sample size | H{sub:1}) ///
+			ytitle(Expected sample size | H{sub:0})	`xopt'
+	
 }
 
 restore
@@ -587,10 +605,92 @@ restore
 end		
 
 
+
+*! fwer1stage v0.02
+
+program def fwer1stage, rclass
+version 10
+
+/*
+	Calculate FWER for multi-arm 1-stage trials algebraically
+	
+	v0.02 - can specify 1 alpha for each arm or a common alpha
+*/
+
+syntax, arms(int) alpha(string) aratio(real)
+
+local K = `arms'-1		// # E arms
+local A = `aratio'
+
+local nopts: word count `alpha'
+if `nopts'!=1 & `nopts'!=`K' {
+	di as err "1 or `K' options should be specified for alpha"
+	exit 198
+}	
+
+
+forvalues k = 1/`K' {
+	if `nopts'==1 local z`k' = invnormal(1-`alpha')
+	else {
+		local a`k': word `k' of `alpha'
+		local z`k' = invnormal(1-`a`k'')
+	}
+}
+
+	
+// Correlation matrix
+local r = `A'/(`A'+1)
+
+tempname R
+matrix def `R' = I(`K')
+forvalues k = 1/`K' {
+	forvalues l = 1/`K' {
+		if `k'!=`l' matrix def `R'[`k',`l'] = `r'
+		else matrix def `R'[`k',`l'] = 1
+	}
+}
+
+
+// Vector of z values
+local z1ma `z1'
+forvalues k = 2/`K' {
+	local z1ma `z1ma', `z`k''
+}
+
+tempname Z
+matrix `Z' = (`z1ma')
+
+local rep = 5000
+mata: mvnpb("`Z'", "`R'", `rep')
+local fwer = 1-r(p)
+return scalar fwer = `fwer'
+
+di as text "FWER = " as res %5.4f `fwer'
+
+end
+
+mata:
+mata clear
+void mvnpb(string scalar xx, string scalar vv, real scalar reps)
+{
+/*
+	Assumes Hammersley sequences are to be generated, without antithetics.
+*/
+	real vector opt
+	x = st_matrix(xx)	// row or col vector of args at which probability is required
+	V = st_matrix(vv)	// variance-covariance matrix
+	opt = (2, reps, 1, 0)	// 2 for Hammersley
+	p = ghk( x, V, opt, rank=.)
+	st_numscalar("r(p)", p)
+}
+end
+
+
+
 // Start of Mata commands
 mata:
 
-void feas(J, K, alpha, power, pc, th0, th1, ltfu, A, pi, ppv, p, acc, fu, accr)
+void feas(J, K, alpha, power, pc, th0, th1, ltfu, A, pi, ppv, p, acc, fu, accr, seed)
 {
 	Jm1 = J-1
 	

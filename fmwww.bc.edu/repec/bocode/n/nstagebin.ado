@@ -1,13 +1,4 @@
-*! nstagebin v1.0.1 17jul2014
-cap program drop nstagebin
-cap mata: mata drop mvnprob()
-
-program def nstagebin, rclass
-version 10.0
-
-local ver 1.0.1
-local date 17 Jul 2014
-
+*! nstagebin v1.0.2 20aug2021, based on nstagebin v1.0.1 17jul2014 
 
 /*
 	Determine sample size for multi-arm multi-stage trial with binary outcome
@@ -38,8 +29,16 @@ local date 17 Jul 2014
 // NB: A 'stage' consists of the time between analyses, hence includes the f/u period
 //		in which more patients will be recruited in advance of the next stage
 
-syntax, Nstage(int) ACcrate(string) ALpha(string) POwer(string) ARms(string) theta0(string) theta1(string) ///
-   Ctrlp(string) [FU(string) Ltfu(string) Extrat(real 0) ppvc(real 999) ppve(real 999) ARAtio(real 1) Tunit(int 1) ///
+
+program def nstagebin, rclass
+version 10.0
+
+local ver 1.0.2
+local date 09 June 2023
+
+syntax, Nstage(int) ACcrate(string) ALpha(string) POwer(string) ARms(string) ///
+	theta0(string) theta1(string) Ctrlp(string) [FU(string) Ltfu(string) ///
+	Extrat(real 0) ppvc(real 999) ppve(real 999) ARAtio(real 1) Tunit(int 1) ///
    NOFwer ESs PRObs seed(int -1) reps(int 250000)] 
 
 local errcount 0
@@ -298,8 +297,8 @@ local totCA0 = 0
 forvalues j = 1/`J' {
 	
 	*1. Cumulative number NEEDED in control arm 
-	local nCS`j' = round((-`z_aS`j'' + `z_wS`j'')^2*(`A'*`pCS`j''*`qCS`j''+`p1S`j''*`q1S`j'') / ///
-		(`A'*(`theta1S`j''-`theta0S`j'')^2))	
+	local nCS`j' = round((-`z_aS`j'' + `z_wS`j'')^2*(`A'*`pCS`j''*`qCS`j'' ///
+		+`p1S`j''*`q1S`j'') / (`A'*(`theta1S`j''-`theta0S`j'')^2))	
 		
 	*2. Cumulative number NEEDED in each remaining experimental arm
 	local nXS`j' = round(`A'*`nCS`j'')	
@@ -369,7 +368,8 @@ forvalues j = 1/`J' {
 	local jm1 = `j'-1
 	local totXS`j' = round(`A'*`totCS`j'')
 	local totactS`j' = `totCS`j'' + (`armsS`j''-1)*`totXS`j''		// Total in active arms
-	local totS`j' = `totS`jm1'' + (`totCS`j''-`totCS`jm1'') + (`armsS`j''-1)*(`totXS`j''-`totXS`jm1'')		// Total recruited
+	local totS`j' = `totS`jm1'' + (`totCS`j''-`totCS`jm1'') + ///
+		(`armsS`j''-1)*(`totXS`j''-`totXS`jm1'')		// Total recruited
 }
 
 
@@ -390,10 +390,12 @@ forvalues j = 1/`J' {
 		local r1`i'`j' = sqrt(`nCS`i''/`nCS`j'')
 		
 		if `have_D'==1 & `j'==`J' {
-			local r0`i'`j' = [(`ppvc'*`p0S`i''-`p0S`i''*`p0S`j'') + `A'*(`ppvc'*`pCS`i''-`pCS`i''*`pCS`j'')] / ///
+			local r0`i'`j' = [(`ppvc'*`p0S`i''-`p0S`i''*`p0S`j'') + ///
+				`A'*(`ppvc'*`pCS`i''-`pCS`i''*`pCS`j'')] / ///
 				(`A'*`nCS`j''*sqrt(`v_theta0S`i'')*sqrt(`v_theta0S`j''))
 
-			local r1`i'`j' = [(`ppve'*`p1S`i''-`p1S`i''*`p1S`j'') + `A'*(`ppvc'*`pCS`i''-`pCS`i''*`pCS`j'')] / ///
+			local r1`i'`j' = [(`ppve'*`p1S`i''-`p1S`i''*`p1S`j'') + ///
+				`A'*(`ppvc'*`pCS`i''-`pCS`i''*`pCS`j'')] / ///
 				(`A'*`nCS`j''*sqrt(`v_theta1S`i'')*sqrt(`v_theta1S`j''))	
 		}
 	}
@@ -488,19 +490,19 @@ if "`probs'`ess'"!="" | "`nofwer'"=="" {
 		
 		local muz1
 		forvalues j = 1/`J' {
-			local muz1`j' = (`theta1S`j''-`theta0S`j'')/sqrt(`pCS`j''*(1-`pCS`j'')/`nCS`j'' + ///
-								`p1S`j''*(1-`p1S`j'')/(`A'*`nCS`j''))
+			local muz1`j' = (`theta1S`j''-`theta0S`j'')/ ///
+				sqrt(`pCS`j''*(1-`pCS`j'')/`nCS`j'' + `p1S`j''*(1-`p1S`j'')/(`A'*`nCS`j''))
 			local muz1 `muz1' `muz1`j''
 		}
 		
 		if "`probs'"!="" | "`nofwer'"=="" {
 		
-			if `have_D'==0 nstagebinfwer, nstage(`J') arms(`armsS1') alpha(`alpha') corr(`R0`J'') aratio(`A') ///
-								seed(`seed') reps(`reps') muz1(`muz1')
+			if `have_D'==0 nstagebinfwer, nstage(`J') arms(`armsS1') alpha(`alpha') ///
+				corr(`R0`J'') aratio(`A') seed(`seed') reps(`reps') muz1(`muz1')
 							
 			else {
-				nstagebinfwer, nstage(`J') arms(`armsS1') alpha(`alpha') corr(`R0`J'') aratio(`A') ///
-								seed(`seed') reps(`reps') muz1(`muz1') ineqd 
+				nstagebinfwer, nstage(`J') arms(`armsS1') alpha(`alpha') ///
+				corr(`R0`J'') aratio(`A') seed(`seed') reps(`reps') muz1(`muz1') ineqd 
 				local maxfwer = r(maxfwer)
 			}
 			
@@ -539,8 +541,8 @@ if "`probs'`ess'"!="" | "`nofwer'"=="" {
 				local ltfup `ltfup' `ltfuS`j''
 			}		
 			
-			nstagebiness, nstage(`J') arms(`armsS1') alpha(`alpha') aratio(`A') ctrln(`nC') ///
-				fu(`delay') ltfu(`ltfup') accrate(`accrate') muz1(`muz1')
+			nstagebiness, nstage(`J') arms(`armsS1') alpha(`alpha') aratio(`A') ///
+				ctrln(`nC') fu(`delay') ltfu(`ltfup') accrate(`accrate') muz1(`muz1')
 			local expn0 = r(ess0)
 			local expn`K' = r(ess1)
 			return scalar ess0 = `expn0'
@@ -599,13 +601,14 @@ return scalar totpower = `totpower'
 	
 
 // Display results
-local title1 "n-stage trial design                 version `ver', `date'"	
-local title2 "on Bratton et al. (2013) BMC Med Res Meth 13:139"
+local title1 "n-stage trial design - binary outcome       version `ver', `date'"	
+local title2 "Bratton et al. (2013) BMC Med Res Meth 13:139 and Choodari-Oskooei,"
+local title3 "Bratton, and Parmar (2023) Stata Journal 23(3)." 
 
 local hline = length("`title1'")
 
 
-local ww 10
+local ww 11
 local sfl %-`ww's
 local sfc %~`ww's
 local sfr %`ww's
@@ -621,8 +624,10 @@ local ww4 = `ww' * 4
 if `have_D'==1 local s S
 
 di as text _n "`title1'" _n "{hline `hline'}"
-di as text "Sample size for a " as res "`armsS1'" as text "-arm " as res "`nstage'" as txt "-stage trial with binary outcome based"
-di as text "`title2'" _n "{hline `hline'}"
+di as text "Sample size for a " as res "`armsS1'" as text "-arm " ///
+	as res "`nstage'" as txt "-stage trial with binary outcome based on"
+di as text "`title2'" 	
+di as text "`title3'" _n "{hline `hline'}"
 
 di
 if `have_D'==0 {
@@ -635,6 +640,9 @@ if `have_D'==1 {
 	if `fuS1'>0 | `fuS`J''>0 di as text "Delay in observing I (D) outcome = `fuS1' (`fuS`J'') `lperiod's"
 	if `ltfuS1'>0 | `ltfuS`J''>0 di as text "Attrition rate for I (D) outcome = " %3.2f `ltfuS1' " (" %3.2f `ltfuS`J'' ")"
 }
+
+if "`selection'"!="" di as text "Select best `selectsubset' arms at stages 1-`Jm1'"
+
 di
 di as text "Operating characteristics"
 di as text "{hline `width'}"
@@ -679,7 +687,7 @@ if `J'>1 {
 			di as text %-`ww's "Pairwise" %`ww'.4f as res `AS`J'' %`ww'.3f as res `WS`J'' ///
 				_skip(`ww3') %`ww'.3f as res `tS`J''
 				
-			if "`nofwer'"=="" di as text %-`ww's "FWER (SE)" as res %`ww'.4f `fwerate'  ///
+			if "`nofwer'"=="" di as text %-`ww's "FWER(SE)**" as res %`ww'.4f `fwerate'  ///
 					as text "   (" as res %5.4f `se_fwerate' as text ")"
 		}	
 			
@@ -721,15 +729,18 @@ if `J'>1 {
 *di as text " KEY: theta = absolute difference in event rates"
 di as text " *  Length (duration of each stage) is expressed in " as res "`lperiod'" as text " periods"
 *if `have_D' di as text " ** Calculated under global null hypothesis for I and D outcomes"
-
+if `K' > 1 {
+	di as text " **  FWER is calculated using simulations with " as res ///
+		"`reps'" as text " replications"
+}
 
 local ww 9
 local sfl %-`ww's
 local sfc %~`ww's
 local sfr %`ww's
 
-local oddstages = 2* int(`J'/2) != `J'
-local evenstages = `J' - `oddstages'
+*local oddstages = 2* int(`J'/2) != `J'
+*local evenstages = `J' - `oddstages'
 local text 21
 local col = `text'+`ww'-length("Overall")+1
 local stext %-`text's
@@ -740,7 +751,7 @@ local dup = int((`nres'*`ww'-length("Stage 1"))/2-1)
 di
 di as text "Cumulative sample sizes per arm per stage"
 
-forvalues m = 1(2)`evenstages' {
+/*forvalues m = 1(2)`evenstages' {
 	local mp1 = `m'+1
 	di as text _col(`col') _dup(`dup') "{c -}" "Stage `m'" _dup(`dup') "{c -}"	///
 		"  " _dup(`dup') "{c -}" "Stage `mp1'" _dup(`dup') "{c -}"
@@ -762,10 +773,9 @@ forvalues m = 1(2)`evenstages' {
 	}
 	di as text "{hline `width'}"
 }
-
-if `oddstages' {
+*/
+forvalues m = 1/`J' {
 	local width2 = `text' + `nres' * `ww'
-	local m = `nstage' 
 	di as text _col(`col') _dup(`dup') "{c -}" "Stage `m'" _dup(`dup') "{c -}"
 	di as text _skip(`text') `sfr' "Overall" `sfr' "Control" `sfr' "Exper." _n "{hline `width2'}"
 	di as text `stext' "Number of active arms" `sfr' %`ww'.0f `armsS`m'' %`ww'.0f 1 %`ww'.0f `armsS`m''-1 
@@ -829,11 +839,14 @@ end
 
 
 
-****************************************************************************************************
+
+
+*****************************************************************************************************
 
 
 * nstagebinfwer subroutine v1.0
 cap program drop nstagebinfwer
+cap mata mata drop mvnp()
 
 program def nstagebinfwer, rclass
 version 10
@@ -917,8 +930,10 @@ forvalues e = 0/`K' {
 		
 		forvalues j = 1/`J' {
 			local jm1 = `j'-1
-			if `k'<=`e' gen byte pass`e'`j'`k' = (`sign`j''*(z`j'`k'+`muz1`j'')<invnormal(`alpha`j'') & pass`e'`jm1'`k'==1)
-			if `k'>`e' gen byte pass`e'`j'`k' = (`sign`j''*z`j'`k'<invnormal(`alpha`j'') & pass`e'`jm1'`k'==1)
+			if `k'<=`e' gen byte pass`e'`j'`k' = ///
+				(`sign`j''*(z`j'`k'+`muz1`j'')<invnormal(`alpha`j'') & pass`e'`jm1'`k'==1)
+			if `k'>`e' gen byte pass`e'`j'`k' = ///
+				(`sign`j''*z`j'`k'<invnormal(`alpha`j'') & pass`e'`jm1'`k'==1)
 		}
 	}
 
@@ -993,8 +1008,7 @@ end
 
 
 
-***********************************************************************************************
-
+*****************************************************************************************************
 
 
 
@@ -1147,8 +1161,10 @@ qui foreach h in 0 1 {
 		forvalues j = 1/`Jm1' {
 			local jm1 = `j'-1
 			
-			if `h'==0 gen byte pass`h'`j'`k' = (`sign`j''*z`j'`k'<invnormal(`alpha`j'') & pass`h'`jm1'`k'==1)
-			else gen byte pass`h'`j'`k' = (`sign`j''*(z`j'`k'+`muz1`j'')<invnormal(`alpha`j'') & pass`h'`jm1'`k'==1)
+			if `h'==0 gen byte pass`h'`j'`k' = ///
+				(`sign`j''*z`j'`k'<invnormal(`alpha`j'') & pass`h'`jm1'`k'==1)
+			else gen byte pass`h'`j'`k' = ///
+				(`sign`j''*(z`j'`k'+`muz1`j'')<invnormal(`alpha`j'') & pass`h'`jm1'`k'==1)
 		}
 	}
 	
@@ -1190,9 +1206,87 @@ end
 
 
 
-***********************************************************************************************
+**************************************************************************************************
+*! fwer1stage v0.02
+
+program def fwer1stage, rclass
+version 10
+
+/*
+	Calculate FWER for multi-arm 1-stage trials algebraically
+	
+	v0.02 - can specify 1 alpha for each arm or a common alpha
+*/
+
+syntax, arms(int) alpha(string) aratio(real)
+
+local K = `arms'-1		// # E arms
+local A = `aratio'
+
+local nopts: word count `alpha'
+if `nopts'!=1 & `nopts'!=`K' {
+	di as err "1 or `K' options should be specified for alpha"
+	exit 198
+}	
 
 
+forvalues k = 1/`K' {
+	if `nopts'==1 local z`k' = invnormal(1-`alpha')
+	else {
+		local a`k': word `k' of `alpha'
+		local z`k' = invnormal(1-`a`k'')
+	}
+}
+
+	
+// Correlation matrix
+local r = `A'/(`A'+1)
+
+tempname R
+matrix def `R' = I(`K')
+forvalues k = 1/`K' {
+	forvalues l = 1/`K' {
+		if `k'!=`l' matrix def `R'[`k',`l'] = `r'
+		else matrix def `R'[`k',`l'] = 1
+	}
+}
+
+
+// Vector of z values
+local z1ma `z1'
+forvalues k = 2/`K' {
+	local z1ma `z1ma', `z`k''
+}
+
+tempname Z
+matrix `Z' = (`z1ma')
+
+local rep = 5000
+mata: mvnpb("`Z'", "`R'", `rep')
+local fwer = 1-r(p)
+return scalar fwer = `fwer'
+
+di as text "FWER = " as res %5.4f `fwer'
+
+end
+
+mata:
+mata clear
+void mvnpb(string scalar xx, string scalar vv, real scalar reps)
+{
+/*
+	Assumes Hammersley sequences are to be generated, without antithetics.
+*/
+	real vector opt
+	x = st_matrix(xx)	// row or col vector of args at which probability is required
+	V = st_matrix(vv)	// variance-covariance matrix
+	opt = (2, reps, 1, 0)	// 2 for Hammersley
+	p = ghk( x, V, opt, rank=.)
+	st_numscalar("r(p)", p)
+}
+end
+
+**************************************************************************************************
 
 mata:
 void mvnprob(string scalar xx, string scalar vv, real scalar reps)

@@ -63,9 +63,9 @@ underlying event will not be carried out due to insufficient samples.
 {p_end}
 
 {phang}
-{opt carg(filename[,type])}  Draw a figure that plots the cumulative abnormal returns around eventdate.And set results file where the 
+{opt graph(filename[,type])}  Draw a figure that plots the cumulative abnormal returns around eventdate.And set results file where the 
 figure will be saved in. The default is CAR, which stands for the results filename is CAR,the output format is gph. If users need to 
-output charts of other types, they can add other output types to carg. The following are some commonly used output types.
+output charts of other types, they can add other output types to graph. The following are some commonly used output types.
 {p_end}
     {pstd}Output format: following are some commonly used format{p_end}
     {pstd}ps PostScript.{p_end}
@@ -177,7 +177,7 @@ Abnormal Return.
 {stata `"keep stkcd ed"'}
 {p_end}
 {phang}
-{stata `"cnevent stkcd ed,estw(-190,-10) eventw(-3,3 -2,3 -1,5) ar(AR_k) car(CAR_k) index(1) estsmpn(150)  filename(myeventstudy) carg(1p,pdf) t(ttest)"'}
+{stata `"cnevent stkcd ed,estw(-190,-10) eventw(-3,3 -2,3 -1,5) ar(AR_k) car(CAR_k) index(1) estsmpn(150)  filename(myeventstudy) graph(1p,pdf) t(ttest)"'}
 {p_end}
 
 

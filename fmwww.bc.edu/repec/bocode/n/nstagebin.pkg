@@ -1,23 +1,35 @@
-d 'NSTAGEBIN': module to perform sample size calculation for multi-arm multi-stage randomised controlled trials with binary outcomes
+d 'NSTAGEBIN': module to provide facilities for optimising and designing multi-arm multi-stage (MAMS) randomised controlled trials with binary outcomes
 d
-d  nstagebin specifies the design (sample size, duration and
-d overall pairwise and familywise operating    characteristics) of
-d a multi-arm, multi-stage (MAMS) trial using a binary intermediate
-d    (I) outcome at the interim stages and a binary definitive (D)
-d outcome at the final	  stage, both analysed using an absolute
-d difference in proportions. 
+d   nstagebin specifies the design (sample size, duration and
+d overall pairwise operating characteristics) of a multi-arm,	
+d multi-stage (MAMS) trial using a binary intermediate (I) outcome
+d at the interim stages and a binary definitive (D)    outcome at
+d the final stage, both analysed using an absolute difference in
+d proportions. See Bratton, Phillips & Parmar	 (2013) for a
+d description of the design and Royston, Barthel, Parmar, Oskooei &
+d Isham (2011) for a description of a	 similar MAMS design for
+d time-to-event outcomes. 
 d
-d KW: randomized trial
-d KW: multi-arm
-d KW: multi-stage
+d KW: clinical trials
+d KW: sample size
+d KW: multi-stage trial
 d
 d Requires: Stata version 10
 d
-d Distribution-Date: 20140924
+d Distribution-Date: 20230928
 d
-d Author: Daniel Bratton, University College London
-d Support: email daniel.bratton@@ucl.ac.uk
+d Author: Babak Choodari-Oskooei, MRC Clinical Trials Unit at UCL, London, UK
+d Support: email b.choodari-oskooei@@ucl.ac.uk
+d
+d Author: Daniel J. Bratton, Clinical Statistics, GlaxoSmithKline, Stevenage, UK
+d Support: email daniel.x.bratton@@gsk.com
+d
+d Author:  Mahesh KB Parmar, MRC Clinical Trials Unit at UCL, London, UK
+d Support: email m.parmar@@ucl.ac.uk
 d
 f nstagebin.ado
-f nstagebin.sthlp
+f nstagebinopt.ado
 f nstagebin.dlg
+f nstagebin.sthlp
+f nstagebinopt.sthlp
+f nstagebin_example.do

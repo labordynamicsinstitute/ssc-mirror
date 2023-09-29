@@ -1,6 +1,6 @@
 {smcl}
 {* 01sept2013}{...}
-{cmd:help for nstagebin}{right:MRC Clinical Trials Unit}
+{cmd:help for nstagebin}{right:MRC Clinical Trials Unit at UCL}
 {hline}
 
 
@@ -41,6 +41,8 @@
 {synopt :{opt probs}}reports probabilities of the number of arms reaching each stage{p_end}
 {synopt :{opt ess}}reports the expected sample sizes{p_end}
 {synopt :{opt nofwer}}suppress the calculation of the familywise error rate{p_end}
+{synopt :{opt reps(#)}}specifies the number of replications used in the simulation to calculate the FWER{p_end}
+{synopt :{opt seed}}specifies the initial value of the random-number seed used in the simulation to calculate the FWER which is reproducible{p_end}
 
 
 {synoptline}
@@ -165,9 +167,13 @@ under the global null (no arms effective) and the global alternative (all arms e
 {opt ess} reports the expected sample size of the trial when either none or all of the experimental treatment arms are effective.
 
 {phang}
-{opt nofwer} suppresses the calculation of the maximum familywise error rate of the trial (probability of making at least one type I error at the end of the trial under the global null hypothesis)
+{opt nofwer} suppresses the calculation of the maximum familywise error rate of the trial (probability of making at least one type I error at the end of the trial under the global null hypothesis).
 
+{phang}
+{opt reps(#)} specifies the number of replications used in the simulation to calculate the FWER. The default value is 250000 replicates.
 
+{phang}
+{opt seed(#)} specifies the initial value of the random-number seed used in the simulation to calculate the FWER which is reproducible.
 
 
 {title:Remarks}
@@ -196,18 +202,59 @@ rates are assumed to be 10% and 20% respectively. The positive predictive value 
 {cmd:             aratio(0.5) ppvc(0.8) ppve(0.8)}                       
 
 
-{title:Author}
 
-{pstd}
-Daniel Bratton, MRC Clinical Trials Unit at UCL, London.{break}
-daniel.bratton@ucl.ac.uk
+{title:Stored results}
 
+nstage stores the following in r():
 
+Scalars:
+
+                r(WSj) =  stage specific (overall) pairwise power
+                r(ASj) =  stage specific (overall) pairwise alpha
+              r(totSj) =  cumulative number of recruited patients across all arms (stage j)
+             r(totXSj) =  cumulative number of recruited patients in each experimental arm (stage j)
+             r(totCSj) =  cumulative number of recruited patients in control arm (stage j)
+           r(totactSj) =  cumulative number of recruited patients in all active arms (stage j)
+                r(nSj) =  cumulative number of patients across all arms required for analyses (stage j) 
+               r(nXSj) =  cumulative number of patients in each experimental arm required for analysis (stage j)
+               r(nCSj) =  cumulative number of patients in control arm required for analysis (stage j)
+                r(tSj) =  expected time of stage j analysis (in specified units)
+            r(maxfwer) =  maximum FWER
+            r(se_fwer) =  SE(FWER)
+               r(fwer) =  Familywise type I error rate
+
+			   
 {title:References}
 
 {phang}
-Bratton DJ, Phillips PPJ, Parmar MKB. 2013. A multi-arm multi-stage clinical trial design for binary outcomes with application to tuberculosis. BMC Med Res Meth, 13:139. 
+Choodari-Oskooei B, Bratton DJ, Parmar MKB. 2023. Facilities for optimising and designing multi-arm multi-stage (MAMS) randomised controlled trials with binary outcomes. {it:Stata Journal} 23(3). 
 
 {phang}
-Royston P, Barthel FMS, Parmar MKB, Choodari-Oskooei B, Isham V. 2011. Designs for clinical trials with time-to-event outcomes based on stopping guidelines for lack of benefit. Trials, 12:81.
+Choodari-Oskooei, B., M.R. Sydes, P. Royston, M.K.B Parmar. 2022. 
+{browse "https://link.springer.com/referenceworkentry/10.1007/978-3-319-52677-5_110-1":Multi-arm Multi-stage (MAMS) Platform Randomized Clinical Trials}.
+{it:Principles and Practice of Clinical Trials}. Piantadosi, S., Meinert, C.L. (eds) Springer, Cham.
+
+{phang}
+Bratton DJ, Phillips PPJ, Parmar MKB. 2013. 
+{browse "https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/1471-2288-13-139":A multi-arm multi-stage clinical trial design for binary outcomes with application to tuberculosis.}
+{it:BMC Medical Research Methodology} 13:139. 
+
+{phang}
+Royston P, Barthel FMS, Parmar MKB, Choodari-Oskooei B, Isham V. 2011. Designs for clinical trials with time-to-event outcomes based on stopping guidelines for lack of benefit. {it:Trials} 12:81.
+			   
+
+{title:Author}
+
+{pstd}
+Babak Choodari-Oskooei, MRC Clinical Trials Unit at UCL, London.{break}
+b.choodari-oskooei@ucl.ac.uk
+
+{pstd}
+Daniel Bratton, GlaxoSmithKline, Stevenage, UK.{break}
+daniel.x.bratton@gsk.com
+
+{pstd}
+Mahesh KB Parmar, MRC Clinical Trials Unit at UCL, London.{break}
+m.parmar@ucl.ac.uk
+
 

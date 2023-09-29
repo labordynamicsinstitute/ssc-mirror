@@ -18,7 +18,7 @@ d axes when ratios are plotted against the geometric mean, (ii) for
 d the x-axis when percentage differences are plotted against the
 d (arithmetic or geometric) mean. 
 d
-d KW: niceloglabels 
+d KW: niceloglabels
 d KW: tolerance
 d KW: concord
 d KW: kappaetc
@@ -28,10 +28,11 @@ d KW: pairplot
 d KW: batplot
 d KW: baplot
 d KW: agree
+d KW: gr0094
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20220118
+d Distribution-Date: 20230928
 d
 d Author: Mark Chatfield, University of Queensland
 d Support: email m.chatfield@@uq.edu.au

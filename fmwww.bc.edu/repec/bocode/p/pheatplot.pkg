@@ -1,0 +1,25 @@
+d 'PHEATPLOT': module to visualize p-values
+d
+d  pheatplot is a postestimation command that calculates pairwise
+d comparisons of estimates using lincom and visualizes the
+d differences and the p-values of the difference in heat plots. 
+d
+d KW: graphics
+d KW: p-values
+d KW: pairwise comparisons
+d
+d Requires: Stata version 17 and heatplot from SSC (q.v.)
+d
+d Distribution-Date: 20230928
+d
+d Author: Elisa Brini, University of Oslo
+d Support: email elisa.brini@@sosgeo.uio.no
+d
+d Author: Solveig T. Borgen, University of Oslo
+d Support: email s.t.borgen@@sosgeo.uio.no
+d
+d Author: Nicolai T. Borgen , Oslo Metropolitan University
+d Support: email n.t.borgen@@isp.uio.no
+d
+f pheatplot.ado
+f pheatplot.sthlp

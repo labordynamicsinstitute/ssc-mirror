@@ -75,6 +75,7 @@ p pfwb module to predict Financial Well-Being scale scores from CFPB survey inst
 p pgamma module to generate probability plot for data vs fitted gamma distribution
 p pgmhaz8 module to estimate discrete time (grouped data) proportional hazards models
 p phack_deround module to deround coefficients and standard errors for meta-analysis
+p pheatplot module to visualize p-values
 p phenotype module to simulate disease status and censored age for family data
 p piaactools module to provide PIAAC tools
 p pieplot module to plot pie charts of categorical frequencies  

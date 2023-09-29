@@ -1,4 +1,6 @@
-*! version 1.0  2022-01-18 Mark Chatfield
+*! version 1.1  2023-09-27 Mark Chatfield
+*Only change from version 1.0:  lp(solid) added to yline (as Stata 18 has changed their default graphics)
+
 
 *I shortened Nick Cox's command: niceloglabels, v1.1.0  24 August 2020 
 program niceloglabels_shorter  
@@ -344,7 +346,7 @@ if regexm("`plot'", "difference") {
 	
 	if `=r(uloa)' > `ymax' local ymax = r(uloa)
 	if `=r(lloa)' < `ymin' local ymin = r(lloa)
-	local lineequality "yline(0, lc(gs0))"
+	local lineequality "yline(0, lc(gs0) lp(solid))"
 	if `ymin' > 0 | `ymax' < 0  local lineequality ""	
 	
 	if "`ciloa'" != "" {
@@ -559,7 +561,7 @@ if regexm("`plot'", "percentmean") {
 
 	if `=r(uloa)' > `ymax' local ymax = r(uloa)
 	if `=r(lloa)' < `ymin' local ymin = r(lloa)
-	local lineequality "yline(0, lc(gs0))"
+	local lineequality "yline(0, lc(gs0) lp(solid))"
 	if `ymin' > 0 | `ymax' < 0  local lineequality ""	
 	
 	if "`ciloa'" != "" {
@@ -778,7 +780,7 @@ if regexm("`plot'", "percentlmean") {
 	
 	if `=r(uloa)' > `ymax' local ymax = r(uloa)
 	if `=r(lloa)' < `ymin' local ymin = r(lloa)
-	local lineequality "yline(0, lc(gs0))"
+	local lineequality "yline(0, lc(gs0) lp(solid))"
 	if `ymin' > 0 | `ymax' < 0  local lineequality ""
 	
 	if "`ciloa'" != "" {
@@ -1184,7 +1186,7 @@ if "`cibias'" != "" {
 	local ymax = `ymax'*`ymaxminratio'^(0.1)
 	
 	*next 3 lines vary according to plot()
-	local lineequality "yline(1, lc(gs0))"
+	local lineequality "yline(1, lc(gs0) lp(solid))"
 	if `ymin' > 1 | `ymax' < 1  local lineequality ""
 	
 	*yticks ... unique to ratio

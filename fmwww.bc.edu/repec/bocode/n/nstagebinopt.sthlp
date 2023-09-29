@@ -1,6 +1,6 @@
 {smcl}
 {* 09sept2014}{...}
-{cmd:help for nstagebinopt}{right:MRC Clinical Trials Unit}
+{cmd:help for nstagebinopt}{right:MRC Clinical Trials Unit at UCL}
 {hline}
 
 
@@ -37,7 +37,7 @@
 {synopt :{opt p(numlist)}}define which alpha-functions should be used in the search procedure{p_end}
 {synopt :{opt l:tfu(# [#])}}loss-to-follow-up rate for the I and D outcomes{p_end}
 {synopt :{opt fu(#)}}length of follow-up period for the I outcome{p_end}
-{synopt :{opt acc:rate(numlist)}}overall accrual rate in each stage{p_end}
+{synopt :{opt accr:ate(numlist)}}overall accrual rate in each stage{p_end}
 {synopt :{opt acc(#)}}maximum deviation in alpha and power of feasible designs from values specified in {opt alpha()} and {opt power()} respectively{p_end}
 {synopt :{opt plot}} plot the expected sample sizes used in the loss function for each admissible design
 
@@ -192,20 +192,42 @@ differ and have minimum targeted treatment effects of 15% and 10% respectively. 
 
 {cmd:. nstagebinopt, nstage(4) arms(6) alpha(0.05) power(0.8)}
 {cmd:                theta0(0 0) theta1(0.15 0.1) ctrlp(0.7 0.6)}
-{cmd:                fu(0.25 1) ltfu(0.1 0.2) aratio(0.5)}
+{cmd:                fu(0.25) ltfu(0.1 0.2) aratio(0.5)}
 {cmd:                ppv(0.8) accrate(200 200 300 600) fwer}                       
-
-
-{title:Author}
-
-{pstd}
-Daniel Bratton, MRC Clinical Trials Unit at UCL, London.{break}
-daniel.bratton@ucl.ac.uk
 
 
 {title:References}
 
 {phang}
-Bratton DJ, Phillips PPJ, Parmar MKB. 2013. A multi-arm multi-stage clinical trial design for binary outcomes with application to tuberculosis. BMC Med Res Meth, 13:139. 
+Choodari-Oskooei B, Bratton DJ, Parmar MKB. 2023. Facilities for optimising and designing multi-arm multi-stage (MAMS) randomised controlled trials with binary outcomes. {it:Stata Journal} 23(3). 
+
+{phang}
+Choodari-Oskooei, B., M.R. Sydes, P. Royston, M.K.B Parmar. 2022. 
+{browse "https://link.springer.com/referenceworkentry/10.1007/978-3-319-52677-5_110-1":Multi-arm Multi-stage (MAMS) Platform Randomized Clinical Trials}.
+{it:Principles and Practice of Clinical Trials}. Piantadosi, S., Meinert, C.L. (eds) Springer, Cham.
+
+{phang}
+Bratton DJ, Phillips PPJ, Parmar MKB. 2013. 
+{browse "https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/1471-2288-13-139":A multi-arm multi-stage clinical trial design for binary outcomes with application to tuberculosis.}
+{it:BMC Medical Research Methodology} 13:139. 
+
+{phang}
+Royston P, Barthel FMS, Parmar MKB, Choodari-Oskooei B, Isham V. 2011. Designs for clinical trials with time-to-event outcomes based on stopping guidelines for lack of benefit. {it:Trials} 12:81.
+	
+{title:Author}
+
+{pstd}
+Babak Choodari-Oskooei, MRC Clinical Trials Unit at UCL, London.{break}
+b.choodari-oskooei@ucl.ac.uk
+
+{pstd}
+Daniel Bratton, GlaxoSmithKline, Stevenage, UK.{break}
+daniel.x.bratton@gsk.com
+
+{pstd}
+Mahesh KB Parmar, MRC Clinical Trials Unit at UCL, London.{break}
+m.parmar@ucl.ac.uk
+
+
 
 

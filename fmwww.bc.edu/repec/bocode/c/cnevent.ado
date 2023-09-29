@@ -21,7 +21,7 @@ program define cnevent
 		exit 9
 	}	
 
-    syntax varlist(max=2 min=2) [,estw(string) eventw(string)  car(string) ar(string) index(string) estsmpn(int 50) filename(string) carg(string) t(string)] 
+    syntax varlist(max=2 min=2) [,estw(string) eventw(string)  car(string) ar(string) index(string) estsmpn(int 50) filename(string) graph(string) t(string)] 
 	qui{
 	    tempname stkcd eventdate est_window_s est_window_e eve_window_s eve_window_e eve temp1 abss a  temp2 event_n temp3 file option temp4 stk Event_date num before dol y ynum AR_t
 	    tokenize "`varlist'"
@@ -162,7 +162,7 @@ program define cnevent
 	    while length("`index'")<6{
            local index 0`index'
         }
-	    rm `index'.dta
+	    rm index`index'.dta
         mkf `temp4'  
         cwf `temp4'
 	}	
@@ -231,7 +231,7 @@ program define cnevent
 			
 			disp "current working on Stock  ``stk'' with event date " %dCY-N-D ``Event_date'' ", `s' of ``event_n'' completed"
 		}	 
-    qui{
+   qui{  
         cwf `temp1'
 	    format ``eventdate'' %dCY-N-D
 		preserve
@@ -278,7 +278,7 @@ program define cnevent
 		        }			
 			}
 		}
-
+ 
 	    save ``file''.dta,replace
 		if `"`t'"' != ""{
 		local tn `t1'
@@ -295,7 +295,7 @@ program define cnevent
         putdocx save `t'.docx, replace
 		}
 		restore
-		if `"`carg'"' !=""{
+		if `"`graph'"' !=""{
 		tempname c d s n name type
 		if ``eve_window_s'' < 0{
 		local `c'=abs(``eve_window_s'')
@@ -338,12 +338,12 @@ program define cnevent
 		}
 		rename (v1 v2) (`car' ``eventdate'')
 		if ``eve_window_s'' < 0{
-		twoway line `car' ``eventdate'' ,ytitle(CAAR) xline(0,lc(red))
+		twoway line `car' ``eventdate'' ,ytitle(CAR_t) xtitle(t) xline(0,lc(red))
 		}
 		else{
-		twoway line `car' ``eventdate'' ,ytitle(CAAR)     
+		twoway line `car' ``eventdate'' ,ytitle(CAR_t) xtitle(t)     
 		}
-	   		tokenize "`carg'", parse(",")
+	   		tokenize "`graph'", parse(",")
 			local `name' `1'
 			if `"`3'"' != ""{
 				local `type' `3'

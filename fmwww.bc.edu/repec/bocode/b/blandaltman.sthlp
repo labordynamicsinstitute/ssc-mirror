@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0  2022-01-18 Mark Chatfield}{...}
+{* *! version 1.1  2023-09-27 Mark Chatfield}{...}
 {viewerjumpto "Syntax" "blandaltman##syntax"}{...}
 {viewerjumpto "Description" "blandaltman##description"}{...}
 {viewerjumpto "Remarks" "blandaltman##remarks"}{...}
@@ -102,7 +102,7 @@ by() warning: any lines, intervals and stats are NOT calculated separately for e
 {title:Description}
 
 {pstd}
-{cmd:blandaltman} produces Bland-Altman plots featuring 
+As described in {browse "https://doi.org/10.1177/1536867X231196488":Chatfield et al. (2023)}, {cmd:blandaltman} produces Bland-Altman plots featuring 
 (a) difference, (b) percentage difference or (c) ratio on the y-axis, 
 and (arithmetic or geometric) mean on the x-axis. 
 By default, regression-based bias and limits of agreement are produced in order to help everyone 
@@ -129,7 +129,8 @@ Logarithmically-scaled axes are used (i) for both axes when ratios are plotted a
 {pstd}{cmd:   . blandaltman lnvarA lnvarB, plot(difference)}{p_end} 
 {pstd}{cmd:   . blandaltman varA varB, plot(ratio)}{p_end} 
 {pstd}{cmd:   . blandaltman varA varB, plot(percentlmean)}{p_end} 
-{pstd}For more on {cmd:percentlmean} see Cole and Altman 2017 (short article) or Cole 2000 (long article).
+{pstd}For more on {cmd:percentlmean} see {browse "https://doi.org/10.1177/1536867X231196488":Chatfield et al. (2023)}, 
+and references therein.
 
 {pstd}The following plot will often be very similar (this plot is commonly used with lab measures){p_end} 
 {pstd}{cmd:   . blandaltman varA varB, plot(percentmean)}{p_end} 
@@ -202,7 +203,7 @@ You might prefer to specify different value labels and ticks, by specifying e.g.
     {title:The 4 types of Bland-Altman plots that are readily created with blandaltman}
 
 {pstd}This example also helps the user to decide whether heteroscedasticity is evident in a plot featuring differences or %differences (or ratios) {p_end}	
-{phang2}{sf:. }{stata `"use "labmeasures.dta", clear"'}{p_end}
+{phang2}{sf:. }{stata `"use http://fmwww.bc.edu/repec/bocode/l/labmeasures.dta, clear"'}{p_end}
 
 {phang2}{sf:. }{stata "blandaltman plexrbp4µmoll nimanurbp4µmoll, plot(difference percentmean percentlmean ratio)"}{p_end}
 
@@ -223,7 +224,7 @@ assuming the distribution of differences (or percentage differences or log ratio
 You won't want them all! See Remarks. 
 Bland and Altman's (1986) PEFR dataset is used. {p_end}
 
-{phang2}{sf:. }{stata `"use "PEFR.dta", clear"'}{p_end}
+{phang2}{sf:. }{stata `"use http://fmwww.bc.edu/repec/bocode/p/PEFR.dta, clear"'}{p_end}
 
 {phang2}{sf:. }{stata `"blandaltman Wright Mini, plot(difference) h ciloa cibias predint ticonf(95) loaopts(lc(red)) ciloaopts(mc(red) lc(red)) legend(on order(2 "Bias (& 95% CI)" 4 "95% LoA (& 95% CI)" 6 "95% PI" 8 "95% TI with 95% conf."))"'}
 {p_end}
@@ -248,8 +249,8 @@ With the exception of some of the regression output, {cmd:blandaltman} stores ev
 {phang}Carkeet, A. 2015. Exact parametric confidence intervals for Bland–Altman limits of agreement. Optometry and Vision Science 92: e71–e80.{p_end} 
 {phang}Carkeet, A. and Y. T. Goh. 2018. Confidence and coverage for Bland–Altman limits of agreement and their approximate confidence intervals. Statistical Methods in Medical Research 27: 1559-1574.{p_end} 
 {phang}Chatfield, M. 2021. Tolerance: Stata module to calculate tolerance intervals (normal distribution). Statistical Software Components S459009, Boston College Department of Economics.{p_end} 
-{phang}Cole, T. J. 2000. Sympercents: symmetric percentage differences on the 100 log(e) scale simplify the presentation of log transformed data. Statistics in Medicine 19: 3109-25.{p_end} 
-{phang}Cole, T. J. and D. G. Altman. 2017. Statistics Notes: Percentage differences, symmetry, and natural logarithms. BMJ 358: j3683.{p_end}
+{phang}{browse "https://doi.org/10.1177/1536867X231196488":Chatfield M. D., Cole T. J., de Vet H. C. W., Marquart-Wilson L. and D. M. Farewell. 2023. blandaltman: A command to create variants of Bland-Altman plots. Stata Journal 23: 851-874.}
+
 {phang}Cox, N. J. 2018. Speaking Stata: Logarithmic binning and labelling. Stata Journal 18: 262–286.{p_end} 
 {phang}Cox, N. J. 2020. Software update for niceloglabels. Stata Journal 20: 1028-1030.{p_end} 
 {phang}Francq, B. G., M. Berger and C. Boachie. 2020. To tolerate or to agree: A tutorial on tolerance intervals in method comparison studies with BivRegBLS R Package. Statistics in Medicine 39: 4334-4349.{p_end} 
@@ -263,6 +264,7 @@ With the exception of some of the regression output, {cmd:blandaltman} stores ev
 of agreement. BMC Medical Research Methodology 18:45.{p_end} 
 {phang}Vangel, M. G. 2005. Tolerance Interval. In The Encyclopedia of Biostatistics, 2nd Edition, edited by P. Armitage and T. Colton. John Wiley & Sons, Ltd.{p_end} 
 {phang}Vardeman, S. B. 1992. What about the Other Intervals? The American Statistician 46: 193-197.{p_end}
+
 {phang}Vock, M. 2016. Intervals for the assessment of measurement agreement: Similarities, differences, and consequences of incorrect interpretations. Biometrical Journal 58, 489–501.{p_end}
 
 
@@ -288,9 +290,6 @@ Over the years, I have used Adrian Mander's {cmd:batplot} command to visually as
 
 {marker alsosee}{...}
 {title:Also see}
-
-{p 4 14 2}
-Article: A manuscript introducing {cmd:blandaltman} will be submitted to Stata Journal in 2022.{p_end}
 
 {p 7 14 2}
 Help: {helpb niceloglabels} (if installed), 
