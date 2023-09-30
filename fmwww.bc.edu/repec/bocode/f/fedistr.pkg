@@ -1,0 +1,20 @@
+d 'FEDISTR': module for plotting distributions after absorbing fixed effects
+d
+d  fedistr allows the user to visualize how much variance is left
+d and what the residualized distribution looks like after
+d accounting for fixed effects and/or linear covariates. 
+d
+d KW: graphics
+d KW: fixed effects
+d KW: variance
+d KW: residuals
+d
+d Requires: Stata version 15 and reghdfe, ftools, palettes, colrspace, blindschemes from SSC (q.v.)
+d
+d Distribution-Date: 20230929
+d
+d Author: Leo Ahrens, University of Konstanz
+d Support: email leo@@ahrensmail.de
+d
+f fedistr.ado
+f fedistr.sthlp

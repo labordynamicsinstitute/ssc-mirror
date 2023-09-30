@@ -20,6 +20,7 @@ p fcinstability module to perform forecast comparison and forecast rationality t
 p fcstats module to compute time series forecast accuracy statistics
 p fdfilter module to implement Corbae-Ouliaris frequency domain filter to time series data
 p fdta module to change contents of string variables
+p fedistr module for plotting distributions after absorbing fixed effects
 p fedit module to find and edit text file from within Stata
 p feldti module to compare two independent coefficients of reliability
 p fese module to calculate standard errors for fixed effects
