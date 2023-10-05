@@ -1,0 +1,15 @@
+d 'HANOITOWER': module to play Towers of Hanoi
+d
+d   this routine plays Towers of Hanoi. 
+d
+d KW: Towers of Hanoi
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20231004
+d
+d Author: Kerry Du, School of Management, Xiamen University
+d Support: email kerrydu@@xmu.edu.cn
+d
+f hanoitower.ado
+f hanoitower.sthlp

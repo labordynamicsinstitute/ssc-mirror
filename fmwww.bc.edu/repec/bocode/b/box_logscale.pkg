@@ -1,0 +1,22 @@
+d 'BOX_LOGSCALE': module to create box plots on the log scale (generalising Tukey's definition of whiskers)
+d
+d  box_logscale presents box plots on a logarithmic scale. It log10
+d transforms the yvars, runs graph box and labels the numeric axis
+d with nice original-scale numbers. It can be a better approach
+d than: graph box, yscale(log). 
+d
+d KW: graphics
+d KW: graph box
+d KW: boxplot
+d KW: box plot
+d KW: log
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20231004
+d
+d Author: Mark Chatfield, University of Queensland
+d Support: email m.chatfield@@uq.edu.au
+d
+f box_logscale.ado
+f box_logscale.sthlp

@@ -359,6 +359,9 @@ imputated data? UCLA: Statistical Consulting Group. from
 {title:Acknowledgments}
 
 {pstd}
+Jessica Stroope reported a bug with the {cmd:pwcompare(effects)} option.
+
+{pstd}
 Liz Hensor reported a bug with the {opt at} legend when {opt over()} 
 was specified. 
 
@@ -405,8 +408,8 @@ Oliver Klein originally stimulated the {cmd:mimrgns} command.
 
 {pstd}
 Daniel Klein{break}
-INCHER-Kassel{break}
-University of Kassel{break}
+German Centre for Higher Education Research and Science Studies (DZHW){break}
+Research Data Centre{break}
 klein.daniel.81@gmail.com
 
 

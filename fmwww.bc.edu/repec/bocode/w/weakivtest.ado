@@ -11,8 +11,14 @@
 //	"A robust test for weak instruments in Stata." http://papers.ssrn.com/sol3/papers.cfm?abstract_id=2323012.
 * this version: 10/28/2020 - include noconstant option
  
-program weakivtest,rclass
+program weakivtest, rclass
 	version 10
+	
+	
+	*LY 08/30/2023: Add the adjust_ereturn program to change the ereturn results after regression so it is compatible with reghdfe and ivreghdfe
+	cap prog drop adjust_ereturn
+	adjust_ereturn
+	
 
 	*Allowed options: significant level, optimization parameter eps and parameter for the inverse non-central F distribution n2.
 	syntax [,level(string) eps(string) n2(string)]
@@ -25,10 +31,20 @@ program weakivtest,rclass
 	}
 	
 	*weakivtest is a postestimation command to ivreg2 or ivregress; otherwise display error message.
+	/*
 	if `"`e(cmd)'"' != "ivreg2" & `"`e(cmd)'"' != "ivregress" {
 		di as err `"Weakivtest is a postestimation command after running ivreg2 or ivregress."'
 		exit
 	}
+	*/
+	
+	
+	*LY 08/30/2023: Change the error message to include reghdfe and ivreghdfe. 
+	if `"`e(cmd)'"' != "ivreg2" & `"`e(cmd)'"' != "ivregress" & `"`e(cmd)'"' != "reghdfe" & `"`e(cmd)'"' != "ivreghdfe" {
+		di as err `"Weakivtest is a postestimation command after running ivreg2, ivregress, ivreghdfe or reghdfe."'
+		exit
+	}
+	
 	
 	*CP 10/28/2020: allow for noconstant
 	/*
@@ -38,6 +54,7 @@ program weakivtest,rclass
 		exit
 	}
 	*/
+	
 	*Su 10/30/2020: check for noconst_flag
 	local noconst_flag=( "`e(constant)'"=="noconstant") | ( "`e(cons)'"=="0")
 	*weakivtest only allows one single endogenous regressor; otherwise display error message.
@@ -318,8 +335,20 @@ program weakivtest,rclass
 	mata  `v2' = st_data(., "`res2'")
 	
 	* Omega matrix is the unadjusted variance covariance matrix adjusted by the degree of freedom.
-	*** PH FIX 8/17/18: adjustment for weights
+	*LY 09/27/2023: adjustment for aweight robust
+	if ("`vcet'"=="robust" & "`e(wtype)'"=="aweight") {
 	mat accum `Omega'= `res2' `res1' `addweight', nocons
+	local pos_1 = strpos("`e(wexp)'", "=") + 1
+	local weight_1 = substr("`e(wexp)'", `pos_1', .)
+	egen mean_weight_1 = mean(`weight_1')
+	local mean_weight = mean_weight_1
+	mat `Omega'=`Omega'*`mean_weight'
+	drop mean_weight_1
+	}
+	else{
+	*** PH FIX 8/17/18: adjustment for weights
+	mat accum `Omega'= `res2' `res1' `addweight', nocons    
+	}
 	
 	*CP 10/28/2020: allow for noconstant
 	if ( `noconst_flag'==1) {
@@ -343,7 +372,7 @@ program weakivtest,rclass
 	
 	* omega_22 is the submatrix of omega.
 	mata `omega_22'=`Omega'[2,2]
-	
+
 	* W_1, W_2 and W_12 are submatrices of W.
 	mata `W_1'=`W'[1::`K',1..`K']
 	mata `W_12'=`W'[1::`K',`K'+1..2*`K']
@@ -887,4 +916,96 @@ and Omega and start point BLIML_Start by using the Nelder-Mead technique.*/
 		return (BLIML)
 	}
 
+end
+
+
+* LY 08/30/2023: Implement adjust_ereturn program to change the ereturn results after reghdfe or ivreghdfe regressions
+program adjust_ereturn, eclass
+		if `"`e(cmd)'"' == "ivreg2" {
+		local pos_2 = strpos("`e(cmdline)'", "partial") + 1
+		if `pos_2' > 0 {
+			* Update for e(inexog_ct): When we use the partial option in the ivreg2 case, we delete the varlist specified (including the constant) in this option. So now we update the number of included exogenous regressors as the number of this deleted variables minus 1.
+			ereturn scalar inexog_ct = `e(partial_ct)' - 1
+			* Update for e(cons): Activate the option for a constant in each regression (because when we use partial option we delete the constant of the regression).
+			ereturn scalar cons = 1
+		}
+	}	
+	
+	if( inlist(`"`e(cmd)'"', "reghdfe", "ivreghdfe") & `"`e(model)'"' == "iv") {
+		* Update for e(inexog): Create labels of all feasible fixed effects in each regression (weakivtest command need this to count the number of feasible fixed effects in each regression).
+		local inexog_aux = " " + "`e(absvars)'"
+		local r_aux_1 = 0
+		local r_aux_2 = 0
+		local rep1 = 1
+		local rep2 = 1
+		foreach name of local inexog_aux {
+    			local pos = strpos("`name'", " ") + 1
+    			local name = substr("`name'", `pos', .)
+				local pos_aux = strpos("`name'", "#")
+				if `pos_aux' > 0 {
+					local name_1 = substr("`name'", `pos_aux'+1, .)
+					local name_2 = substr("`name'", 1, `pos_aux'-1)
+					qui distinct `name_1' `name_2', joint
+					if `rep1' == 1 {
+						local r_aux_1 = `r(ndistinct)'
+					}
+					else if `rep1' > 1 {
+					    local r_aux1 = `r(ndistinct)'
+						local r_aux_1 = `r_aux_1' + `r_aux1'
+					}
+					local name_1 = "i." + "`name_1'"
+					local name_2 = "i." + "`name_2'"
+					local name_full = "`name_1'" + "#" + "`name_2'"
+					local inexog_fe `inexog_fe' `name_full'
+					local rep1 = `rep1' + 1 
+				}			
+				else {
+					local name_aux = "`name'"
+					qui distinct `name_aux'
+					if `rep2' == 1 {
+						local r_aux_2 = `r(ndistinct)'
+					}
+					else if `rep2' > 1 {
+					    local r_aux2 = `r(ndistinct)'
+						local r_aux_2 = `r_aux_2' + `r_aux2'
+					}
+					local name = "i." + "`name'"
+					local inexog_fe `inexog_fe' `name'
+					local rep2 = `rep2' + 1 
+				}
+		}
+		ereturn local inexog = "`e(inexog)'" + " " + "`inexog_fe'"
+		
+		if `"`e(cmd)'"' == "ivreghdfe" & "`e(df_a)'" != "" & "`e(N_full)'" != ""  {
+			* Update for e(inexog_ct): For the ivreghdfe case, we set the number of included exogenous regressors equal to the number of degrees of freedom lost due to the estimation of the model, plus singleton observations according to fixed effects, plus the number of regressors minus 1.
+			ereturn scalar inexog_ct = `e(num_singletons)' + `e(inexog_ct)' + `e(df_a)' - 1
+			* Update for e(N): Change the number of observations to fit the ivreg2 case (N_full considers singleton observations according to fixed effects).
+			ereturn scalar N = `e(N_full)'
+		}
+		else if (`"`e(cmd)'"' == "reghdfe" & `r_aux_1' > 0) {
+		    * Update for e(inexog_ct): For the reghdfe case, we set the number of included exogenous regressors equal to the number of degrees of freedom lost due to the estimation of the model, plus singleton observations according to fixed effects, plus the number of regressors minus 1.
+			local singleton_obs = `r_aux_1' + `r_aux_2' - `e(df_a)' - `e(inexog_ct)'
+			ereturn scalar inexog_ct = `singleton_obs' + `e(inexog_ct)' + `e(df_a)' - 1 
+			* Update for e(N): Change the number of observations to fit the ivreg2 case (Now e(N) considers singleton observations according to fixed effects).
+			ereturn scalar N = `e(N)' + `singleton_obs'
+		}
+		else {
+		    * Update for e(inexog_ct): For the reghdfe case (when we don't have singleton observations), we set the number of included exogenous regressors equal to the number of degrees of freedom lost due to the estimation of the model, plus the number of regressors minus 1.
+		    ereturn scalar inexog_ct = `e(inexog_ct)' + `e(df_a)' - 1
+		}
+		
+		* Update for e(cons): Activate the option for a constant in each regression (I think that this is not explicit in reghdfe and ivreghdfe cases, but they show the results as they used a constant).
+		ereturn scalar cons = 1
+
+		* Update for e(vce): Change the name of the type of robust variance-covariance estimator to fit the ivreg2 case
+		if `"`e(vce)'"' == "cluster" {
+			ereturn local vce = "robust cluster"
+		}
+		else if `"`e(vce)'"' == "ols" {
+			ereturn local vce = ""
+		}
+		
+		* Update for e(cmd): Change the name of the estimator to fit the ivreg2 case
+		ereturn local cmd = "ivreg2" 
+	}	
 end

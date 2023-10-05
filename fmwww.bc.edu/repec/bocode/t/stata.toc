@@ -104,7 +104,7 @@ p traces module to display traces of items
 p trackobs module to keep a record of the number of observations in the current dataset.
 p trans_unicode module to convert files to and from Unicode
 p transint help files for transformations
-p translog module to create new variables for a translog function.
+p translog module to create new variables for a translog function
 p transplot module producing plots for trying out transformations
 p traveltime module to generate travel time and travel distance information
 p treatoprobit module to estimate a treatment effects model for a binary endogenous treatment on an ordered outcome

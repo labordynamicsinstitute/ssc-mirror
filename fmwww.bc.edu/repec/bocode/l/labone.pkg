@@ -11,8 +11,8 @@ d Requires: Stata version 12.1
 d
 d Distribution-Date: 20171126
 d
-d Author:  Kerry Du, Center for Economic Research, Shandong University, China
-d Support: email  kerrydu@@sdu.edu.cn
+d Author:  Kerry Du, School of Management, Xiamen University
+d Support: email kerrydu@@xmu.edu.cn
 d
 f labone.ado
 f labone.sthlp

@@ -12,8 +12,8 @@ d Requires: Stata version 9
 d
 d Distribution-Date: 20171123
 d
-d Author: Kerry Du, Shandong University
-d Support: email kerrydu@@sdu.edu.cn
+d Author: Kerry Du, School of Management, Xiamen University
+d Support: email kerrydu@@xmu.edu.cn
 d
 f reshape3.ado
 f reshape3.sthlp

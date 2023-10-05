@@ -12,8 +12,8 @@ d Requires: Stata version 16
 d
 d Distribution-Date: 20210808
 d
-d Author: Kerry Du, Shandong University
-d Support: email kerrydu@@sdu.edu.cn
+d Author: Kerry Du, School of Management, Xiamen University
+d Support: email kerrydu@@xmu.edu.cn
 d
 f malmq2.ado
 f ../_/_get_version.ado

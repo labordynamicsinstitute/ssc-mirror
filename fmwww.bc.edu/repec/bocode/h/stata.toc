@@ -6,6 +6,7 @@ p hallt-skewt module to compute skewness-adjusted bootstrap t-statistics
 p hamiltonfilter module to calculate the Hamilton Filter for a Single Time Series or for a Panel Dataset
 p hammock module to implement Hammock plot, visualizing categorical (and continuous) data
 p hangroot module creating a hanging rootogram comparing an empirical distribution to the best fitting theoretical distribution 
+p hanoitower module to play Towers of Hanoi
 p hansen2 module for Hansen's test for parameter instability 
 p hapblock module to perform haplotype analysis to identify the edges of haplotype blocks
 p hapipf module to perform haplotype analysis

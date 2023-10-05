@@ -1,4 +1,4 @@
-*! version 4.0.6 24feb2021 daniel klein
+*! version 4.0.7 24jul2022 daniel klein
 program mimrgns
     version 11.2
     nobreak {
@@ -117,7 +117,7 @@ program mimrgns_opts_not_allowed
     
     if (`"`anything'"'!="") local ESAMPLE ESAMPLE(varname numeric)
     
-    if (`"`plotopts'"' != "") local plot plot(not alloed)
+    if (`"`plotopts'"' != "") local plot plot(not allowed)
     
     foreach opt in contrast pwcompare {
         if (c(stata_version)>=12)  local `opt' // void
@@ -254,7 +254,6 @@ program mimrgns_get_contr_pwcomp_sub
     
     if ("`cieffects'"!="") local  cionly  `_cionly'
     if ("`pveffects'"!="") local  pvonly  `_pvonly'
-    if ("`effects'"!="")   local  effects `""""' // sic!
     if ("`cimargins'"!="") global mimrgns__cimargins `_cionly'
     
     if mi(`"`cionly'`pvonly'`effects'`cimargins'"') local cionly `_cionly'
@@ -812,6 +811,7 @@ program mimrgns_report_contr_pwcomp
     }
     
     foreach style in ${mimrgns__table_style} {
+        if ("`style'" == "effects") local style // void
         _coef_table , `coding' `options' `vs_mats' `style'
         `Note'
     }
@@ -1053,6 +1053,7 @@ end
 exit
 
 /* ---------------------------------------
+4.0.7 24jul2022 fix bug with -pwcompare(effects)- not showing results
 4.0.6 24feb2021 bug fix for at-legend if over() was specified
                 add e(over), e(within), etc. to mimrgns_report
 4.0.5 16nov2020 update StataCorp. _marg_report routine to version 16

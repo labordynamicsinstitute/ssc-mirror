@@ -69,6 +69,7 @@ p bmp2dta module to convert bitmap files to Stata datasets
 p bnormpdf module to calculate the bivariate normal density
 p boost module to perform boosted regression
 p boottest module to provide fast execution of the wild bootstrap with null imposed
+p box_logscale module to create box plots on the log scale (generalising Tukey's definition of whiskers)
 p boxpanel module to produce box plots for panel data
 p boxtid module to fit Box-Tidwell and exponential regression models
 p bpagan module to perform Breusch-Pagan test for heteroskedasticity

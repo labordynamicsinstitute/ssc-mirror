@@ -67,6 +67,25 @@ help for {hi: weakivtest}
 
 {phang2}{stata "weakivtest" : . weakivtest }{p_end}
 
+{pstd}Load National Longitudinal Survey data{p_end}
+
+{phang2}{stata "webuse nlswork, clear" : . webuse nlswork, clear}{p_end}
+
+{pstd}Implement {cmd:weakivtest} as a postestimation command for {cmd:ivreg2} in IV regressions with fixed effects.{p_end}
+{phang2}{stata "ivreg2 ln_w (ttl=age) grade collgrad i.year , ffirst  cluster(idcode) " : . ivreg2 ln_w (ttl=age) grade collgrad i.year , ffirst  cluster(idcode)}{p_end}
+
+{phang2}{stata "weakivtest" : . weakivtest }{p_end}
+
+{pstd}Implement {cmd:weakivtest} as a postestimation command for {cmd:reghdfe} in IV regressions with fixed effects.{p_end}
+{phang2}{stata "reghdfe ln_w grade collgrad (ttl=age) , ffirst absorb(year) cluster(idcode) old stage(first) " : . reghdfe ln_w grade collgrad (ttl=age) , ffirst absorb(year) cluster(idcode) old stage(first)}{p_end}
+
+{phang2}{stata "weakivtest" : . weakivtest }{p_end}
+
+{pstd}Implement {cmd:weakivtest} as a postestimation command for {cmd:ivreghdfe} in IV regressions with fixed effects.{p_end}
+{phang2}{stata "ivreghdfe ln_w (ttl=age) grade collgrad, first absorb(year) cluster(idcode)  " : . ivreghdfe ln_w (ttl=age) grade collgrad, first absorb(year) cluster(idcode)}{p_end}
+
+{phang2}{stata "weakivtest" : . weakivtest }{p_end}
+
 {title:Saved results}
 
 {p 4 4 2}{cmd:weakivtest} saves the following results in {cmd:r()}:
@@ -165,18 +184,18 @@ are weak. {it:Review of Economics and Statistics} 86:797-810.
 {marker authors}{...}
 {title:Authors}
 
-	Carolin E. Pflueger, University of British Columbia, Vancouver BC V6T 1Z2, Canada
-	carolin.pflueger@sauder.ubc.ca
+	Carolin E. Pflueger, University of Chicago, Chicago IL, 60637, cpflueger@uchicago.edu
 
-	Su Wang, London School of Economics, London WC2A 2AE, United Kingdom
-	s.wang50@lse.ac.uk.
+	Su Wang, ShanghaiTech University, Shanghai, 201210, China, wangsu@shanghaitech.edu.cn
 
-        	We thank Peter Hull for pointing out and fixing an error with the weights. 
+	The package is currently maintained by Carolin Pflueger, Su Wang and Luis Yepez (luisyepezsa@uchicago.edu). 
+
+        	We thank Peter Hull for pointing out and fixing an error with the weights. We thank Johannes Stroebel and Drew Johnston for help with reghdfe. 
 		All remaining errors are our own. 
 
 {marker also}{...}
 {title:Also see}
 
 {p 4 4 2}{help ivregress}, {help ivreg}, 
-{help ivregress_postestimation}, {help ivreg2} (if installed), {help avar} (if installed)
+{help ivregress_postestimation}, {help ivreg2}, {help reghdfe}, {help ivreghdfe} (if installed), {help avar} (if installed)
 {p_end}

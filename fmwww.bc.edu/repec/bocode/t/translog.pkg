@@ -1,4 +1,4 @@
-d 'TRANSLOG': module to create new variables for a translog function.
+d 'TRANSLOG': module to create new variables for a translog function
 d
 d   translog generates new variables for a translog function with
 d the specified variables. The translog    function form is widely
@@ -17,8 +17,8 @@ d Requires: Stata version 10.1
 d
 d Distribution-Date: 20170314
 d
-d Author:   Kerry Du, Center for Economic Research, Shandong University, China
-d Support: email kerrydu@@sdu.edu.cn
+d Author:   Kerry Du, School of Management, Xiamen University
+d Support: email kerrydu@@xmu.edu.cn
 d
 f translog.ado
 f translog.sthlp
