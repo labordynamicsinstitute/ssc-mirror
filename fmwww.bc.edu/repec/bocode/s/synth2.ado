@@ -1,4 +1,4 @@
-*! synth2 2.0.0 Guanpeng Yan and Qiang Chen 01/06/2023
+*! synth2 2.1.0 Guanpeng Yan and Qiang Chen 05/10/2023
 
 program synth2, eclass sortpreserve
 	version 16
@@ -25,6 +25,7 @@ program synth2, eclass sortpreserve
 		placebo(string) ///
 		loo ///
 		frame(string) ///
+		symbol(integer 1) ///
 		SAVEGraph(string) ///
 		noFIGure ///
 		]
@@ -81,7 +82,7 @@ program synth2, eclass sortpreserve
 		}
 	}
 	/* Check trperiod */
-	qui levelsof `timeVar', local(time_n)
+	qui mata: synth2_levelsof("`timeVar'", "time_n")
 	loc check: list trperiod in time_n
 	if `check' == 0 {
 		di as err "invalid trperiod() -- treatment period not found in {it:timelvar}"
@@ -89,7 +90,7 @@ program synth2, eclass sortpreserve
 	}
 	/* Check preperiod */
 	if "`preperiod'" != "" {
-		qui levelsof `timeVar' if `timeVar' < `trperiod', local(time_pre)
+		qui mata: synth2_levelsofsel("`timeVar'", "time_pre", st_data(., "`timeVar'"):<`trperiod')
 		loc check: list preperiod in time_pre
 		if `check' == 0 {
 			di as err "invalid preperiod() -- at least one of pretreatment periods that not found in {it:timevar} or not ahead of treatment period"
@@ -102,7 +103,7 @@ program synth2, eclass sortpreserve
 	}
 	/* Check postperiod */
 	if "`postperiod'" != "" {
-		qui levelsof `timeVar' if `timeVar' >= `trperiod', local(time_post)
+		qui mata: synth2_levelsofsel("`timeVar'", "time_post", st_data(., "`timeVar'") :>= `trperiod')
 		loc check: list posof "`trperiod'" in postperiod
 		if `check' != 1 {
 			di as err "invalid postperiod() -- treatment period should be the first period of posttreatment periods"
@@ -117,6 +118,17 @@ program synth2, eclass sortpreserve
 			loc check: list i in postperiod
 			if `check' == 0 qui drop if `timeVar' == `i'
 		}
+	}
+	/* Check symbol */
+	if `symbol' == 1{
+		local sym "·"
+	}
+	else if `symbol' == 2{
+		local sym "_"
+	}
+	else {
+		di as err "invalid symbol() -- symbol() should be specified {bf:1} or {bf:2}"
+		exit 198
 	}
 	gettoken depvar indepvars : anything
 	local indepvars = strltrim("`indepvars'")
@@ -137,10 +149,10 @@ program synth2, eclass sortpreserve
 		qui levelsof `panelVarStr' if `panelVar' == `trunit', local(unit_tr) clean
 		
 		qui tostring `timeVar', gen(`timeVarStr') usedisplayformat force
-		qui levelsof `timeVarStr', local(time_all) clean
-		qui levelsof `timeVarStr' if `timeVar' < `trperiod', local(time_pre) clean
-		qui levelsof `timeVarStr' if `timeVar' >= `trperiod', local(time_post) clean
-		qui levelsof `timeVarStr' if `timeVar' == `trperiod', local(time_tr) clean
+		mata: synth2_slevelsof("`timeVarStr'", "time_all")
+		mata: synth2_slevelsofsel("`timeVarStr'", "time_pre", st_data(., "`timeVar'") :< `trperiod')
+		mata: synth2_slevelsofsel("`timeVarStr'", "time_post", st_data(., "`timeVar'") :>= `trperiod')
+		mata: synth2_slevelsofsel("`timeVarStr'", "time_tr", st_data(., "`timeVar'") :== `trperiod')
 	}
 	qui cap varabbrev synth `anything', trunit(`trunit') trperiod(`trperiod') `xperiod' `mspeperiod' `customV' `margin' `maxiter' `sigf' `bound' `nested' `allopt'
 	if (_rc){
@@ -151,18 +163,18 @@ program synth2, eclass sortpreserve
 	matrix V_wt = e(V_matrix)
 	matrix colname weight_vars = Weight
 	frame `frame'{
-		capture gen pred·`depvar' = .
-		label variable pred·`depvar' "prediction of `depvar'
-		mata: synth2_insertMatrix("`panelVar'", "`timeVar'", `trunit', st_matrix("e(Y_synthetic)"), "pred·`depvar'")
-		capture gen tr·`depvar' = `depvar' - pred·`depvar'
-		label variable tr·`depvar' "treatment effect on `depvar'"
+		capture gen pred`sym'`depvar' = .
+		label variable pred`sym'`depvar' "prediction of `depvar'
+		mata: synth2_insertMatrix("`panelVar'", "`timeVar'", `trunit', st_matrix("e(Y_synthetic)"), "pred`sym'`depvar'")
+		capture gen tr`sym'`depvar' = `depvar' - pred`sym'`depvar'
+		label variable tr`sym'`depvar' "treatment effect on `depvar'"
 		di as txt "Fitting results in the pretreatment periods:"
 		mata: synth2_sum("`panelVar'", "`timeVar'", `trunit', `trperiod', "`unit_tr'", "`time_tr'", cols(tokens("`unit_ctrl'")), ///
-			cols(tokens("`indepvars'")), st_data(., "pred·`depvar'"), st_data(., "tr·`depvar'"), 0, .)
+			cols(tokens("`indepvars'")), st_data(., "pred`sym'`depvar'"), st_data(., "tr`sym'`depvar'"), 0, .)
 		matrix balance = e(X_balance), J(rowsof(e(X_balance)), 1 ,.)
 		matrix colnames balance = Treated Synthetic Control
 	}
-	if "`preperiod'" == "" qui levelsof `timeVar' if `timeVar' < `trperiod', local(preperiod)
+	if "`preperiod'" == "" qui mata: synth2_levelsofsel("`timeVar'", "preperiod", st_data(., "`timeVar'") :< `trperiod')
 	synth2_balance `indepvars', panelVar(`panelVar') timeVar(`timeVar') trunit(`trunit') `xperiod' preperiod(`preperiod') frame(`frame')
 	matrix coljoinbyname balance = weight_vars balance
 	mata: temp = st_matrixrowstripe("balance"); ///
@@ -217,17 +229,17 @@ program synth2, eclass sortpreserve
 	frame `frame'{
 		di _newline as txt "Prediction results in the posttreatment periods:"
 		mata: synth2_print(st_sdata(., "`timeVarStr'"), ("Time", "Actual Outcome", " Synthetic Outcome", " Treatment Effect"), ///
-			st_data(., "`depvar' pred·`depvar' tr·`depvar'"), ///
+			st_data(., "`depvar' pred`sym'`depvar' tr`sym'`depvar'"), ///
 			selectindex((st_data(., "`panelVar'") :== `trunit') :& (st_data(., "`timeVar'") :>= `trperiod')), 1, (13, 17, 16), 0, 0, 1)
 		if("`figure'" == ""){
-			qui levelsof `timeVar', local(temp) clean
+			qui mata: synth2_levelsof("`timeVar'", "temp")
 			loc pos: list posof "`trperiod'" in temp
 			loc pos = `pos' - 1
 			loc xline: word `pos' of `temp'
-			twoway (line `depvar' `timeVar') (line pred·`depvar' `timeVar', lpattern(dash)) if `panelVar' == `trunit', ///
+			twoway (line `depvar' `timeVar') (line pred`sym'`depvar' `timeVar', lpattern(dash)) if `panelVar' == `trunit', ///
 					title("Actual and Synthetic Outcomes") xline(`xline', lp(dot) lc(black)) name(pred, replace) ///
 					ytitle(`depvar')  legend(order(1 "Actual" 2 "Synthetic")) nodraw
-			line tr·`depvar' `timeVar', xline(`xline', lp(dot) lc(black)) yline(0, lp(dot) lc(black)) ///
+			line tr`sym'`depvar' `timeVar', xline(`xline', lp(dot) lc(black)) yline(0, lp(dot) lc(black)) ///
 					title("Treatment Effects") name(eff, replace) ///
 					ytitle("treatment effects on `depvar'") nodraw
 			local graphlist = "`graphlist' pred eff"
@@ -241,7 +253,7 @@ program synth2, eclass sortpreserve
 		synth2_placebo `anything', trunit(`trunit') trperiod(`trperiod') ///
 			panelVar(`panelVar') timeVar(`timeVar') panelVarStr(`panelVarStr') timeVarStr(`timeVarStr') ///
 			unit_all(`unit_all') unit_tr(`unit_tr') unit_ctrl(`unit_ctrl') time_tr(`time_tr') time_all(`time_all') ///
-			frame(`frame') `xperiod' `mspeperiod' `placebo' `figure' `nested' `allopt' `margin' `maxiter' `sigf' `bound'
+			frame(`frame') sym("`sym'") `xperiod' `mspeperiod' `placebo' `figure' `nested' `allopt' `margin' `maxiter' `sigf' `bound'
 		local graphlist = "`graphlist' `e(graphlist)'"
 		capture mat pval = e(pval)
 	}
@@ -260,42 +272,42 @@ program synth2, eclass sortpreserve
 				exit
 			}
 			frame `frame'{
-				qui cap gen pred·`depvar'·rmv`unit_loo' = .
-				qui label variable pred·`depvar'·rmv`unit_loo' "prediction of `depvar' (`unit_loo' excluded) generated by 'robustness test'"
-				mata: synth2_insertMatrix("`panelVar'", "`timeVar'", `trunit', st_matrix("e(Y_synthetic)"), "pred·`depvar'·rmv`unit_loo'")
-				qui cap gen tr·`depvar'·rmv`unit_loo' = `depvar' - pred·`depvar'·rmv`unit_loo'
-				qui label variable tr·`depvar'·rmv`unit_loo' "treatment effect on `depvar' (`unit_loo' excluded) generated by 'robustness test'"
-				local linePred " `linePred' (line pred·`depvar'·rmv`unit_loo' `timeVar', lc(gs8%20) lp(solid)) "
-				local lineEff " `lineEff' (line tr·`depvar'·rmv`unit_loo' `timeVar', lc(gs8%20) lp(solid)) "
+				qui cap gen pred`sym'`depvar'`sym'rmv`unit_loo' = .
+				qui label variable pred`sym'`depvar'`sym'rmv`unit_loo' "prediction of `depvar' (`unit_loo' excluded) generated by 'robustness test'"
+				mata: synth2_insertMatrix("`panelVar'", "`timeVar'", `trunit', st_matrix("e(Y_synthetic)"), "pred`sym'`depvar'`sym'rmv`unit_loo'")
+				qui cap gen tr`sym'`depvar'`sym'rmv`unit_loo' = `depvar' - pred`sym'`depvar'`sym'rmv`unit_loo'
+				qui label variable tr`sym'`depvar'`sym'rmv`unit_loo' "treatment effect on `depvar' (`unit_loo' excluded) generated by 'robustness test'"
+				local linePred " `linePred' (line pred`sym'`depvar'`sym'rmv`unit_loo' `timeVar', lc(gs8%20) lp(solid)) "
+				local lineEff " `lineEff' (line tr`sym'`depvar'`sym'rmv`unit_loo' `timeVar', lc(gs8%20) lp(solid)) "
 			}
 		}
 		di _newline _newline as txt "Leave-one-out robustness test results in the posttreatment period:"
 		frame `frame'{
-			mata: st_store(., (st_addvar("float", "pred·`depvar'·loomin"), st_addvar("float", "pred·`depvar'·loomax")), ///
-				rowminmax(st_data(., ("pred·`depvar'·rmv" :+ tokens("`unit_loolist'")))))
-			qui label variable pred·`depvar'·loomin "min prediction of `depvar' generated by 'robustness test'"
-			qui label variable pred·`depvar'·loomax "max prediction of `depvar' generated by 'robustness test'"
-			mata: st_store(., (st_addvar("float", "tr·`depvar'·loomin"), st_addvar("float", "tr·`depvar'·loomax")), ///
-				rowminmax(st_data(., ("tr·`depvar'·rmv" :+ tokens("`unit_loolist'")))))
-			qui label variable tr·`depvar'·loomin "min treatment effect on `depvar' generated by 'robustness test'"
-			qui label variable tr·`depvar'·loomax "max treatment effect on `depvar' generated by 'robustness test'"
-			mata: synth2_print3(st_sdata(., "`timeVarStr'"), ("Time", "Actual ", "Synthetic ", "Min ", "Max "), ("Outcome", "Synthetic Outcome (LOO)"), st_data(., "`depvar' pred·`depvar' pred·`depvar'·loomin pred·`depvar'·loomax"), selectindex((st_data(., "`panelVar'") :== `trunit') :& (st_data(., "`timeVar'") :>= `trperiod')), 0, (10, 10, 10, 10), 0, 0)
+			mata: st_store(., (st_addvar("float", "pred`sym'`depvar'`sym'loomin"), st_addvar("float", "pred`sym'`depvar'`sym'loomax")), ///
+				rowminmax(st_data(., ("pred`sym'`depvar'`sym'rmv" :+ tokens("`unit_loolist'")))))
+			qui label variable pred`sym'`depvar'`sym'loomin "min prediction of `depvar' generated by 'robustness test'"
+			qui label variable pred`sym'`depvar'`sym'loomax "max prediction of `depvar' generated by 'robustness test'"
+			mata: st_store(., (st_addvar("float", "tr`sym'`depvar'`sym'loomin"), st_addvar("float", "tr`sym'`depvar'`sym'loomax")), ///
+				rowminmax(st_data(., ("tr`sym'`depvar'`sym'rmv" :+ tokens("`unit_loolist'")))))
+			qui label variable tr`sym'`depvar'`sym'loomin "min treatment effect on `depvar' generated by 'robustness test'"
+			qui label variable tr`sym'`depvar'`sym'loomax "max treatment effect on `depvar' generated by 'robustness test'"
+			mata: synth2_print3(st_sdata(., "`timeVarStr'"), ("Time", "Actual ", "Synthetic ", "Min ", "Max "), ("Outcome", "Synthetic Outcome (LOO)"), st_data(., "`depvar' pred`sym'`depvar' pred`sym'`depvar'`sym'loomin pred`sym'`depvar'`sym'loomax"), selectindex((st_data(., "`panelVar'") :== `trunit') :& (st_data(., "`timeVar'") :>= `trperiod')), 0, (10, 10, 10, 10), 0, 0)
 			di "{p 0 6 2}{txt}Note: The last two columns report the minimum and maximum synthetic outcomes when one control unit with a nonzero weight is excluded at a time.{p_end}"
 			di
-			mata: synth2_print2(st_sdata(., "`timeVarStr'"), ("Time", "Treatment Effect", "Min ", "Max "), "Treatment Effect (LOO)", st_data(., "tr·`depvar' tr·`depvar'·loomin tr·`depvar'·loomax"), selectindex((st_data(., "`panelVar'") :== `trunit') :& (st_data(., "`timeVar'") :>= `trperiod')), 0, (18, 12, 12), 0, 0)
+			mata: synth2_print2(st_sdata(., "`timeVarStr'"), ("Time", "Treatment Effect", "Min ", "Max "), "Treatment Effect (LOO)", st_data(., "tr`sym'`depvar' tr`sym'`depvar'`sym'loomin tr`sym'`depvar'`sym'loomax"), selectindex((st_data(., "`panelVar'") :== `trunit') :& (st_data(., "`timeVar'") :>= `trperiod')), 0, (18, 12, 12), 0, 0)
 			di "{p 0 6 2}{txt}Note: The last two columns report the minimum and maximum treatment effects when one control unit with a nonzero weight is excluded at a time.{p_end}"
 		}
 		if "`figure'" == ""{
 			frame `frame'{
-				qui levelsof `timeVar', local(temp) clean
+				qui mata: synth2_levelsof("`timeVar'", "temp")
 				loc pos: list posof "`trperiod'" in temp
 				loc pos = `pos' - 1
 				loc xline: word `pos' of `temp'
-				twoway (line `depvar' `timeVar', lp(solid)) (line pred·`depvar' `timeVar', lp(dash)) `linePred' ///
+				twoway (line `depvar' `timeVar', lp(solid)) (line pred`sym'`depvar' `timeVar', lp(dash)) `linePred' ///
 					if `panelVar' == `trunit', xline(`xline', lp(dot) lc(black)) title("Leave-one-out Robustness Test") ///
 					legend(order(1 "Actual" 2 "Synthetic" 3 "Synthetic (LOO)")  rows(1)) ///
 					name(pred_loo, replace) ytitle(`depvar') nodraw
-				twoway (line tr·`depvar' `timeVar', lp(solid)) `lineEff' if `panelVar' == `trunit', ///
+				twoway (line tr`sym'`depvar' `timeVar', lp(solid)) `lineEff' if `panelVar' == `trunit', ///
 					xline(`xline', lp(dot) lc(black)) yline(0, lp(dot) lc(black)) ///
 					title("Leave-one-out Robustness Test") name(eff_loo, replace) ///
 					ytitle("treatment effects on `depvar'") ///
@@ -373,6 +385,7 @@ program synth2_placebo, eclass sortpreserve
 		maxiter(passthru) ///
 		sigf(passthru) ///
 		bound(passthru) ///
+		sym(string) ///
 		unit(numlist missingokay) period(numlist min = 1 int sort <`trperiod') Cutoff(numlist min = 1 max = 1 >=1) ///
 		show(numlist min = 1 max = 1 >=1) noFIGure nested allopt]
 	
@@ -389,7 +402,7 @@ program synth2_placebo, eclass sortpreserve
 	}
 	else local unit_pboList "`unit_ctrl'"
 	
-	qui levelsof `timeVar', local(temp) clean
+	qui mata: synth2_levelsof("`timeVar'", "temp")
 	loc pos: list posof "`trperiod'" in temp
 	loc pos = `pos' - 1
 	loc xline: word `pos' of `temp'
@@ -407,14 +420,14 @@ program synth2_placebo, eclass sortpreserve
 				exit
 			}
 			frame `frame'{
-				capture gen pred·`depvar' = .
-				mata: synth2_insertMatrix("`panelVar'", "`timeVar'", `pbounit', st_matrix("e(Y_synthetic)"), "pred·`depvar'")
-				qui replace tr·`depvar' = `depvar'- pred·`depvar' if `panelVar' == `pbounit'
-				mata: synth2_sum("`panelVar'", "`timeVar'", `pbounit', `trperiod', "`unit_tr'", "`time_tr'", ., ., st_data(., "pred·`depvar'"), ///
-					st_data(., "tr·`depvar'"), 1, ("`cutoff'" == "" ? . : strtoreal("`cutoff'")))
+				capture gen pred`sym'`depvar' = .
+				mata: synth2_insertMatrix("`panelVar'", "`timeVar'", `pbounit', st_matrix("e(Y_synthetic)"), "pred`sym'`depvar'")
+				qui replace tr`sym'`depvar' = `depvar'- pred`sym'`depvar' if `panelVar' == `pbounit'
+				mata: synth2_sum("`panelVar'", "`timeVar'", `pbounit', `trperiod', "`unit_tr'", "`time_tr'", ., ., st_data(., "pred`sym'`depvar'"), ///
+					st_data(., "tr`sym'`depvar'"), 1, ("`cutoff'" == "" ? . : strtoreal("`cutoff'")))
 				if(`isRmv' == 0){
 					local unit_pboSel "`unit_pboSel' `unit_pbo'"
-					local line " `line' (tsline tr·`depvar' if `panelVar' == `pbounit', lp(solid) lc(gs8%20)) "
+					local line " `line' (tsline tr`sym'`depvar' if `panelVar' == `pbounit', lp(solid) lc(gs8%20)) "
 				}
 				else local unit_pboRmv "`unit_pboRmv' `unit_pbo'"
 			}
@@ -436,7 +449,7 @@ program synth2_placebo, eclass sortpreserve
 		mata: printf("\n{txt}In-space placebo test results using fake treatment units (continued" + ///
 			("`cutoff'" == "" ? "" : (", cutoff = {res}`cutoff'")) + "{txt}):\n")
 		frame `frame'{
-			mata: synth2_placebo(st_data(., "`timeVar'"), st_sdata(., "`panelVarStr'"), st_sdata(., "`timeVarStr'"), "`unit_tr'", "`unit_pboSel'", `trperiod', st_data(., "tr·`depvar'"))
+			mata: synth2_placebo(st_data(., "`timeVar'"), st_sdata(., "`panelVarStr'"), st_sdata(., "`timeVarStr'"), "`unit_tr'", "`unit_pboSel'", `trperiod', st_data(., "tr`sym'`depvar'"))
 			di "{p 0 6 2}{txt}Note: (1) The two-sided p-value of the treatment effect for a particular period is defined as the frequency that the absolute values of the placebo effects are greater than or equal to the absolute value of treatment effect.{p_end}"
 			di "{p 6 6 2}{txt}(2) The right-sided (left-sided) p-value of the treatment effect for a particular period is defined as the frequency that the placebo effects are greater (smaller) than or equal to the treatment effect.{p_end}"
 			di "{p 6 6 2}{txt}(3) If the estimated treatment effect is positive, then the right-sided p-value is recommended; whereas the left-sided p-value is recommended if the estimated treatment effect is negative.{p_end}"
@@ -447,7 +460,7 @@ program synth2_placebo, eclass sortpreserve
 		if "`figure'" == ""{
 			frame `frame'{
 				qui local num = wordcount("`unit_pboSel'") + 1
-				twoway `line' (tsline tr·`depvar' if `panelVar' == `trunit', lp(solid)) , ///
+				twoway `line' (tsline tr`sym'`depvar' if `panelVar' == `trunit', lp(solid)) , ///
 					xline(`xline', lp(dot) lc(black)) yline(0, lp(dot) lc(black)) ///
 					title("In-space Placebo Test") name(eff_pboUnit, replace) ///
 					ytitle("treatment/placebo effects on `depvar'") ///
@@ -489,7 +502,7 @@ program synth2_placebo, eclass sortpreserve
 	if("`period'" != ""){
 		di _newline as txt "Implementing placebo test using fake treatment time " _continue
 		foreach pboperiod in `period'{
-			qui levelsof `timeVar', local(time_n)
+			qui mata: synth2_levelsof("`timeVar'", "time_n")
 			loc check: list pboperiod in time_n
 			if `check' == 0 {
 				di _newline as err "placebo() invalid -- invalid fake period `pboperiod'"
@@ -506,20 +519,20 @@ program synth2_placebo, eclass sortpreserve
 				exit
 			}
 			frame `frame'{
-				loc pboTimeVar = strtoname("`depvar'·`time_pbo'")
-				capture gen pred·`pboTimeVar' = .
-				mata: synth2_insertMatrix("`panelVar'", "`timeVar'", `trunit', st_matrix("e(Y_synthetic)"), "pred·`pboTimeVar'")
-				capture gen tr·`pboTimeVar' = `depvar' - pred·`pboTimeVar'
-				label variable pred·`pboTimeVar' "prediction of `depvar' generated by 'placebo period `time_pbo''"
-				label variable tr·`pboTimeVar' "treatment effect on `depvar' generated by 'placebo period `time_pbo''"
+				loc pboTimeVar = strtoname("`depvar'`sym'`time_pbo'")
+				capture gen pred`sym'`pboTimeVar' = .
+				mata: synth2_insertMatrix("`panelVar'", "`timeVar'", `trunit', st_matrix("e(Y_synthetic)"), "pred`sym'`pboTimeVar'")
+				capture gen tr`sym'`pboTimeVar' = `depvar' - pred`sym'`pboTimeVar'
+				label variable pred`sym'`pboTimeVar' "prediction of `depvar' generated by 'placebo period `time_pbo''"
+				label variable tr`sym'`pboTimeVar' "treatment effect on `depvar' generated by 'placebo period `time_pbo''"
 				if "`figure'" == "" {
 					twoway (line `depvar' `timeVar' if `panelVar' == `trunit') ///
-						(line pred·`pboTimeVar' `timeVar' if `panelVar' == `trunit', lpattern(dash)), ///
+						(line pred`sym'`pboTimeVar' `timeVar' if `panelVar' == `trunit', lpattern(dash)), ///
 						title("In-time Placebo Test (fake treatment time = `time_pbo')") xline(`xline' `xlinePbo', lp(dot) lc(black)) ///
 						name(pred_pboTime`pboperiod', replace) ytitle(`depvar')  ///
 						legend(order(1 "Actual" 2 "Synthetic")) nodraw
 					local graphlist = "`graphlist' pred_pboTime`pboperiod'"
-					line tr·`pboTimeVar' `timeVar' if `panelVar' == `trunit', ///
+					line tr`sym'`pboTimeVar' `timeVar' if `panelVar' == `trunit', ///
 						xline(`xline' `xlinePbo', lp(dot) lc(black)) yline(0, lp(dot) lc(black)) ///
 						title("In-time Placebo Test (fake treatment time = `time_pbo')") name(eff_pboTime`pboperiod', replace) ///
 						ytitle("placebo effects on `depvar'") nodraw
@@ -530,10 +543,10 @@ program synth2_placebo, eclass sortpreserve
 		di
 		foreach pboperiod in `period'{
 			frame `frame': qui levelsof `timeVarStr' if `timeVar' == `pboperiod', local(time_pbo) clean
-			loc pboTimeVar = strtoname("`depvar'·`pboperiod'")
+			loc pboTimeVar = strtoname("`depvar'`sym'`pboperiod'")
 			di _newline as txt "In-time placebo test results using fake treatment time " as res "`time_pbo'" as txt":"
 			frame `frame': mata: synth2_print(st_sdata(., "`timeVarStr'"), ("Time", "Actual Outcome", " Synthetic Outcome", " Treatment Effect"), ///
-				st_data(., "`depvar' pred·`pboTimeVar' tr·`pboTimeVar'"), ///
+				st_data(., "`depvar' pred`sym'`pboTimeVar' tr`sym'`pboTimeVar'"), ///
 				selectindex((st_data(., "`panelVar'") :== `trunit') :& (st_data(., "`timeVar'") :>= `pboperiod')), 1, (13, 17, 16), 0, 0, 0)
 		}
 	}
@@ -567,6 +580,46 @@ end
 
 version 16
 mata:
+	real matrix synth2_uniqrows(real matrix m){
+		tmp = J(0, 1, .)
+		for(i = 1;i<=rows(m); i++){
+			if(i == 1) tmp = tmp\m[i,.]
+			else{
+				if(sum(tmp:==m[i,.])==0) tmp = tmp\m[i,.]
+			}
+		}
+		return(tmp)
+	}
+	string matrix synth2_suniqrows(string matrix m){
+		tmp = J(0, 1, "")
+		for(i = 1;i<=rows(m); i++){
+			if(i == 1) tmp = tmp\m[i,.]
+			else{
+				if(sum(tmp:==m[i,.])==0) tmp = tmp\m[i,.]
+			}
+		}
+		return(tmp)
+	}
+	void synth2_levelsof(string scalar varname, string scalar localname){
+		st_local(localname, "")
+		tmp = synth2_uniqrows(st_data(., varname)); 
+		for(i=1; i<=rows(tmp);i++) st_local(localname, st_local(localname) + (i==1?"":" ")+ strofreal(tmp[i]))
+	}
+	void synth2_levelsofsel(string scalar varname, string scalar localname, real matrix selvar){
+		st_local(localname, "")
+		tmp = synth2_uniqrows(st_data(selectindex(selvar), varname)); 
+		for(i=1; i<=rows(tmp);i++) st_local(localname, st_local(localname) + (i==1?"":" ")+ strofreal(tmp[i]))
+	}
+	void synth2_slevelsof(string scalar varname, string scalar localname){
+		st_local(localname, "")
+		tmp = synth2_suniqrows(st_sdata(., varname));
+		for(i=1; i<=rows(tmp); i++) st_local(localname, st_local(localname) + (i==1?"":" ") + tmp[i])
+	}
+	void synth2_slevelsofsel(string scalar varname, string scalar localname, real matrix selvar){
+		st_local(localname, "")
+		tmp = synth2_suniqrows(st_sdata(selectindex(selvar), varname)); 
+		for(i=1; i<=rows(tmp);i++) st_local(localname, st_local(localname) + (i==1?"":" ")+ tmp[i])
+	}
 	void synth2_abstract(string scalar anything, string scalar varlist, string scalar depvar){
 		anything = tokens(usubinstr(usubinstr(anything, "(", " ", .), ")", " ", .))
 		covariates = ""
@@ -906,6 +959,8 @@ mata:
 		pvalM[indexRow, .] = pval
 	}
 end
+* 2.1.0 Add the option sign()
+* 2.0.1 Fix some bugs
 * 2.0.0 Enhance the functionality of saving graphs
 * 1.0.0 Address the compatibility issue of varabbreviation
 * 0.0.2 Adjust the input of numlist of covariates

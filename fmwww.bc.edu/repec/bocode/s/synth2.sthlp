@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.0 6 Jan 2023}{...}
+{* *! version 2.1.0 5 Oct 2023}{...}
 {cmd:help synth2} 
 {hline}
 {vieweralsosee "" "--"}{...}
@@ -15,6 +15,7 @@
 {viewerjumpto "Author" "synth2##author"}{...}
 
 {title:Title}
+
 {phang}
 {bf:synth2} {hline 2}  Implementation of synthetic control method (SCM) with placebo tests, robustness test and visualization
 
@@ -55,6 +56,7 @@
 {syntab:Reporting}
 {synopt:{opt frame(framename)}}create a Stata frame storing dataset with generated variables including counterfactual predictions, treatment effects, 
 and results from placebo tests and/or robustness test if implemented{p_end}
+{synopt:{opt symbol(symboltype)}}change the symbol type of generated variables in Stata frame{p_end}
 {synopt:{opt nofig:ure}}Do not display figures. The default is to display all figures.{p_end}
 {synopt:{cmdab:saveg:raph}([{it:prefix}], [{cmdab:asis} {cmdab:replace}])}Save all produced graphs to the current path.{p_end}
 {synoptline}
@@ -76,7 +78,8 @@ See Yan and Chen (2023) for more details.
 {title:Required Settings}
 
 {phang}
-{opt trunit(#)} the unit number of the treated unit (i.e., the unit affected by the intervention) as given in the panel variable specified in {helpb xtset} {it:panelvar}. Note that only a single unit number can be specified.
+{opt trunit(#)} the unit number of the treated unit (i.e., the unit affected by the intervention) as given in the panel variable specified in {helpb xtset} {it:panelvar}. 
+Note that only a single unit number can be specified.
 
 {phang}
 {opt trperoid(#)} the time period when the intervention occurred.
@@ -91,7 +94,8 @@ Note that only a single time period can be specified.
 {phang} 
 {opth counit:(numlist:numlist)} a list of unit numbers for the control units as {it:{help numlist:numlist}} given in the panel variable specified in {helpb xtset} {it:panelvar}. 
 The list of control units specified constitute what is known as the "donor pool". If no {bf:counit} is specified, 
-the donor pool defaults to all available units other than the treated unit. The  previous option {opth ctrlunit:(numlist:numlist)} is deprecated, but continues to work just like the current option {opth counit:(numlist:numlist)}.  
+the donor pool defaults to all available units other than the treated unit. 
+The  previous option {opth ctrlunit:(numlist:numlist)} is deprecated, but continues to work just like the current option {opth counit:(numlist:numlist)}.  
 
 {phang} 
 {opth preperiod:(numlist:numlist)} a list of pretreatment periods as {it:{help numlist:numlist}} given in the time variable specified in {helpb xtset} {it:timevar}.
@@ -107,7 +111,8 @@ which ranges from the time period when the intervention occurred to the latest t
 {opth xperiod:(numlist:numlist)} a list of periods as {it:{help numlist:numlist}} given in the time variable specified in {helpb xtset} {it:timevar}, over which the covariates specified in {indepvars} are averaged. 
 
 {phang} 
-{opth mspeperiod:(numlist:numlist)} a list of pretreatment periods as {it:{help numlist:numlist}} given in the time variable specified in {helpb xtset} {it:timevar}, over which the mean squared prediction error (MSPE) should be minimized. 
+{opth mspeperiod:(numlist:numlist)} a list of pretreatment periods as {it:{help numlist:numlist}} given in the time variable specified in {helpb xtset} {it:timevar}, 
+over which the mean squared prediction error (MSPE) should be minimized. 
 
 {phang}
 {cmd:nested} if {cmd:nested} is specified, {cmd: synth2} embarks on a fully nested optimization procedure, 
@@ -160,11 +165,14 @@ These two options iteratively reassign the treatment to control units where no i
 and calculate the p-values of the treatment effects. Note that only one of {bf:unit} and {opth unit(numlist)} can be specified.
 
 {phang2} 
-{opth period:(numlist:numlist)} specifies the in-time placebo test using fake treatment times (more than one fake treatment time can be specified). This option reassigns the treatment to time periods previous to the intervention, when no treatment actually occurred.
+{opth period:(numlist:numlist)} specifies the in-time placebo test using fake treatment times (more than one fake treatment time can be specified). 
+This option reassigns the treatment to time periods previous to the intervention, when no treatment actually occurred.
 
 {phang2} 
-{opt cutoff(#_c)} specifies a cutoff threshold that discards fake treatment units with pretreatment MSPE {it:#_c} times larger than that of the treated unit, where {it:#_c} must be a real number greater than or equal to 1. 
-This option only applies when {bf:unit} or {opth unit(numlist)} is specified. If this option is not specified, then no fake treatment units are discarded.
+{opt cutoff(#_c)} specifies a cutoff threshold that discards fake treatment units with pretreatment MSPE {it:#_c} times larger than that of the treated unit, 
+where {it:#_c} must be a real number greater than or equal to 1. 
+This option only applies when {bf:unit} or {opth unit(numlist)} is specified. 
+If this option is not specified, then no fake treatment units are discarded.
 
 {phang2} 
 {opt show(#_s)} specifies the number of units to show in the post/pre MSPE graph, which correponds to units with the largest {it:#_s} ratios of posttreatment MSPE to pretreatment MSPE.
@@ -183,6 +191,10 @@ By excluding a unit receiving a positive weight goodness of fit is sacrificed, b
 {phang}
 {opt frame(framename)} creates a Stata frame storing generated variables in the wide form including counterfactual predictions, 
 treatment effects, and results from placebo tests and/or robustness test if implemented. The frame named {it:framename} is replaced if it already exists, or created if not.
+
+{phang}
+{opt symbol(symboltype)} specifies {it:signtype} as the symbol type for generated variables in Stata frame {it:framename}. 
+{it:signtype} can be set to either 1 (default) or 2, correponding to the symbols "·" or "_", respectively.
 
 {phang}
 {opt nofigure} Do not display figures. The default is to display all figures from the estimation results, 
@@ -255,7 +267,7 @@ and save all produced graphs to the current path{p_end}
 {synopt:{cmd:e(time_pre)}}pretreatment periods{p_end}
 {synopt:{cmd:e(time_post)}}posttreatment periods{p_end}
 {synopt:{cmd:e(frame)}}name of Stata frame storing generated variables{p_end}
-{synopt:{cmd:e(graphnames)}}names of all produced graphs{p_end}
+{synopt:{cmd:e(graph)}}names of all produced graphs{p_end}
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Matrices}{p_end}
@@ -286,7 +298,7 @@ Abadie, A. and Gardeazabal, J. 2003. Economic Costs of Conflict: A Case Study of
 {it:American Economic Review} 93(1): 113-132.
 
 {phang}
-{browse "https://github.com/GuanpengYan/synth2/blob/main/2023-01-06_synth2_sJournal.pdf": Yan, G. and Chen, Q. 2023. synth2: Synthetic Control Method with Placebo Tests, Robustness Test and Visualization.{it:Shandong University Working Paper}}.
+{browse "https://journals.sagepub.com/doi/abs/10.1177/1536867X231195278": Yan, G. and Chen, Q. 2023. synth2: Synthetic Control Method with Placebo Tests, Robustness Test and Visualization. {it:The Stata Journal} 23(3): 597-624.}
 
 {marker author}{...}
 {title:Author}
@@ -304,5 +316,4 @@ qiang2chen2@126.com{break}
 {title:Also see}
 
 {phang}Help: {help synth} (SSC), {help allsynth} (SSC, if installed), {help synth_runner} (SSC, if installed), and {help scul}(SSC, if installed).{p_end}
-
 

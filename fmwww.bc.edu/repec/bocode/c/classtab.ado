@@ -1,6 +1,7 @@
+*! 1.0.1 Ariel Linden 05Oct2023 // added byable 
 *! 1.0.0 Ariel Linden 02Aug2022 
 
-program define classtab, rclass
+program define classtab, rclass byable(recall)
 version 11.0
 
         /* obtain settings */

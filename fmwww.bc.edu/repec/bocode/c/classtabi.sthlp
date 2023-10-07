@@ -1,4 +1,5 @@
 {smcl}
+{* *! version 3.0.1 05OCt2023}{...}
 {* *! version 3.0.0 01Sep2022}{...}
 {* *! version 2.0.1 12Jul2018}{...}
 {* *! version 2.0.0 03Oct2017}{...}
@@ -47,6 +48,9 @@ Immediate form of {cmd:classtab} referring to a saved 2 X 2 matrix
 {synoptline}
 {synopt :{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}{p_end}
 {synoptline}
+{p 4 6 2}
+{opt by} is allowed with {cmd:classtab}; see {manhelp by D}.{p_end}
+
 
  
 {p 4 6 2}
@@ -173,10 +177,9 @@ Linden, Ariel (2022). classtab: Stata module for computing diagnostic accuracy s
 {p 4 8 2}	Ariel Linden{p_end}
 {p 4 8 2}	President, Linden Consulting Group, LLC{p_end}
 {p 4 8 2}{browse "mailto:alinden@lindenconsulting.org":alinden@lindenconsulting.org}{p_end}
-{p 4 8 2}{browse "http://www.lindenconsulting.org"}{p_end}
+
 
          
-
 {title:Also see}
 
 {p 4 8 2} Online: {helpb estat classification}, {helpb roccomp}, {helpb roctabi} (if installed), {helpb rmclass} (if installed), 
