@@ -1,10 +1,10 @@
 *! Authors:
 *! Chuntao Li, Ph.D. , China Stata Club(爬虫俱乐部)(chtl@henu.edu.cn)
 *! Xueren Zhang, China Stata Club(爬虫俱乐部)(snowmanzhang@whu.edu.cn)
-*! June 23th, 2023
+*! October 8th, 2023
 *! Program written by Dr. Chuntao Li, Xueren Zhang
-*! Used to interact with ChatGPT within Stata software and obtain Stata usage recommendations from ChatGPT.
-*! and can only be used in Stata version 16.0 or above
+*! Used to interact with GPT within Stata software and obtain Stata usage recommendations from GPT.
+*! and can only be used in Stata version 14.0 or above
 *! Original Service Source: https://platform.openai.com/docs/api-reference/introduction
 *! Please do not use this code for commerical purpose
 
@@ -24,6 +24,7 @@ program define chatgpt
 				command(string) /// 
 				session(string) ///
 				file(string) ///
+				proxy(string) ///
 				do(string)]
 
 	//Pre-Process
@@ -43,11 +44,11 @@ program define chatgpt
 	//3. print the python version
 	//!python "`cmdurl'/chatgpt_script.py" "version"
 	
-	//3. split anything args	
+	//4. split anything args	
 	tokenize `anything'
 	local anything "`2'"
 
-	//4. download init payload file
+	//5. download init payload file
 	if "`engine'" == ""{
 		local engine = "gpt-3.5-turbo"
 		local engine_inner ""
@@ -55,7 +56,8 @@ program define chatgpt
 	else{
 		local engine_inner "1"
 	}
-	if !inlist("`engine'", "gpt-3.5-turbo", "gpt-3.5-turbo-0301"){
+	
+	if !inlist("`engine'", "gpt-3.5-turbo", "gpt-3.5-turbo-0301","gpt-4"){
 		disp as error "engine() option incorrectly specified."
 		exit 198
 	}
@@ -64,22 +66,37 @@ program define chatgpt
 		!python "`cmdurl'/chatgpt_script.py" "gen" "`engine'" "`cmdurl'"
 	}
 	
-
+	//6. set the proxy
+	if "`proxy'" == ""{
+		local x_proxy ""
+	}
+	else if !ustrregexm("`proxy'","^[\d\.]+:\d+$"){
+		disp as error "proxy() option incorrectly specified. It should be like 127.0.0.1:7890"
+		exit 198
+	}
+	else{
+		local x_proxy `"-x "`proxy'""'
+	}
 
 
 	//Test
 	//---------
 	if "`1'" == "test"{
-		//1. find the python script.py
+		//1. init the test prog
+		cap erase res.txt
+		local BugFound = 0
+		
+		//2. find the python script.py
 		capture confirm file "`cmdurl'/chatgpt_script.py"
 		if _rc! = 0{
 			di as error "file chatgpt_script.py can not found!"
+			local BugFound = `BugFound' + 1
 		}
 		else{
 			di as text "√ file chatgpt_script.py found."
 		}
 
-		//2. before curl
+		//3. before curl
 		cap erase chatgpt_test_log.txt
 		!python "`cmdurl'/chatgpt_script.py" "gen" "`engine'" "`cmdurl'"
 		local sp = ustrtohex("test中文")
@@ -94,12 +111,13 @@ program define chatgpt
 		file close myfile
 		!python "`cmdurl'/chatgpt_script.py" "read" "`arg1'" "do"
 
-		//3. check curl
+		//4. check curl
 		cap erase curl_version.txt
 		!curl --version > curl_version.txt
 		cap confirm file "curl_version.txt"
 		if _rc!=0{
 			di as error "system can not found curl!"
+			local BugFound = `BugFound' + 1
 		}
 		else{
 			di as text "√ curl had installed successfully."
@@ -109,17 +127,22 @@ program define chatgpt
 			-H "Content-Type: application/json" ///
 			-H "Authorization: Bearer sk-errorkey" ///
 			--data "@payload.txt" ///
-			-o "res.txt"
+			-o "res.txt" `x_proxy'
 
-		//4. after curl
+		//5. after curl
 		!python "`cmdurl'/chatgpt_script.py" "log" "chat-default.log"
 		!python "`cmdurl'/chatgpt_script.py" "type"
 		
-		//5. check curl
+		//6. check curl
 		disp as text "The Python script has six testing items: gen, system, add, read, log, and type. The successful tests are:"
 		cap confirm file "chatgpt_test_log.txt"
 		if _rc == 0{
 			type chatgpt_test_log.txt
+			local info = fileread("chatgpt_test_log.txt")
+			if ustrregexm("`info'","No such file or directory: 'res.txt'") & "`BugFound'"=="0"{
+				di as text "You should set the correct proxy() option when using the command."
+				local BugFound = `BugFound' + 1
+			}
 		}
 	}
 
@@ -299,7 +322,7 @@ program define chatgpt
 			-H "Content-Type: application/json" ///
 			-H "Authorization: Bearer `key'" ///
 			--data "@payload.txt" ///
-			-o "res.txt"
+			-o "res.txt" `x_proxy'
 
 		//6. complete the log file and type the reply
 		if "`session'" != ""{

@@ -102,6 +102,10 @@ We recommend that you specifically use {cmd: chatgpt session} with base options 
 {opt session(string)} specifies the session id to which the command belongs. If this id has not been created by {cmd: chatgpt session}, the command will result in an error. 
 When this option is used, the {opt openai_api_key(str)} option does not need to be added, as it is already bound to the session id.
 
+{p 4 4 2}
+{opt proxy(string)} specifies the proxy port used by the command when submitting data through the API. 
+This option is used when users need to access the services provided by OpenAI through a proxy server.
+The option should be formatted as proxy("127.0.0.1:7890").
 
 {dlgtab:chatgpt read options}
 
@@ -120,8 +124,8 @@ This option is only useful when using {cmd: chatgpt read other}.
 {p 4 4 2}
 {opt session(string)} is same as mentioned above.
 
-
-
+{p 4 4 2}
+{opt proxy(string)} is same as mentioned above.
 
 {title:Example}
 

@@ -56,9 +56,11 @@ be enclosed in double quotes.
 {p_end}
 
 {syntab:{it:selection-options}}
-{synopt:{opt has(spec)}}load variables that match {it:spec} 
+{synopt:{opt has(spec)}}load variables that match {it:spec}; 
+see {help ds} 
 {p_end}
-{synopt:{opt not(spec)}}load variables that do not match {it:spec}
+{synopt:{opt not(spec)}}load variables that do not match {it:spec}; 
+see {help ds}
 {p_end}
 {synopt:{opt inse:nsitive}}perform case-insensitive pattern matching
 {p_end}
@@ -74,18 +76,18 @@ variables returned by {help findname}
 {pstd}
 {cmd:usesome} is a convenience command for loading a subset of 
 a Stata dataset into memory. The command makes it easy to 
-specify variables
+specify variables ...
 
 {phang2}
-- referring to column positions in the dataset
+... referring to column positions in the dataset
 {p_end}
 
 {phang2}
-- {cmd:not} to be loaded
+... {cmd:not} to be loaded
 {p_end}
 
 {phang2}
-- referring to properties (e.g., numeric variables)
+... referring to properties (e.g., numeric variables)
 {p_end}
 
 {pstd}
@@ -112,6 +114,7 @@ same as with {help use}.
 
 {marker s_opts}{...}
 {dlgtab:Selection options}
+
 {phang}
 {opt has(spec)} and {opt not(spec)} select from {it:filename} 
 the subset of variables that meet or fail the specification 
@@ -123,9 +126,9 @@ When specified for loading a subset of a dataset with more than
 
 {p 8 8 2}
 Although it is no longer shown in the syntax diagram, {opt has()} 
-and {opt not()} may be specified together with {it:varspec}, and 
-add to {it:varspec} all variables that meet or fail the specification 
-{it:spec}.
+and {opt not()} may be specified together with {it:varspec} and, if 
+they are, add to {it:varspec} all variables that meet or fail the 
+specification {it:spec}.
 
 {p 8 8 2}
 To select from {it:varspec} the subset of variables that meet or 
@@ -142,7 +145,7 @@ case insensitive matching.
 community-contributed {help findname} (Cox 2010a, 2010b, 2012, 2015, 2020) 
 to select variables by properties. Only options for selecting variables 
 are allowed. Option {opt columns()} is not allowed; variable column 
-positions should be directly specified with {cmd:usesome}.
+positions should instead be specified in {it:varspec}.
 
 
 {title:Examples}
@@ -216,7 +219,7 @@ volume 10, number 2. ({browse "http://www.stata-journal.com/article.html?article
 
 {pstd}
 Daniel Klein{break}
-University of Kassel{break}
+{* German Centre for Higher Education Research and Science Studies{break}}
 klein.daniel.81@gmail.com
 
 
