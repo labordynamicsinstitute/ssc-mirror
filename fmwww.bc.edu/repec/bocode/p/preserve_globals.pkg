@@ -1,0 +1,20 @@
+d 'PRESERVE_GLOBALS': module to preserve global macros
+d
+d  preserve_globals preserves global macros and restores their
+d contents when a command has concluded.  Any changes that the
+d command makes to existing global macros are undone as soon as it
+d concludes. 
+d
+d KW: macros
+d KW: global
+d KW: programming
+d
+d Requires: Stata version 16.1
+d
+d Distribution-Date: 20231007
+d
+d Author: Daniel Klein, Universität Kassel
+d Support: email daniel.klein@@uni-kassel.de
+d
+f preserve_globals.ado
+f preserve_globals.sthlp

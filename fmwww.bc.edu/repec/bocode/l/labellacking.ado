@@ -1,3 +1,4 @@
+*! 1.4.0 NJC 8 October 2023 
 *! 1.3.1 NJC and RP 28 October 2021 
 *! 1.3.0 NJC and RP 23 June 2013
 * 1.2.0 NJC 22 June 2013
@@ -33,7 +34,17 @@ quietly foreach v of local varlist {
 	else {
 		tempvar work
 		replace `vuse' = `touse' & (`v' != .) & (`v' == int(`v')) 
-		decode `v' if `vuse', gen(`work') maxlength(4) 
+		capture decode `v' if `vuse', gen(`work') maxlength(4) 
+
+		if _rc == 111 {
+			local ++I 
+			local length = max(`length', length("`v'")) 
+			local label : value label `v' 
+			local name`I' "`v'" 
+			local text`I' "(value label `label' not defined)"
+			continue 
+		}
+		
 		levelsof `v' if `vuse' & missing(`work'), local(levels) `missing' 
 		if "`levels'" == "" { 
 			if "`all'" != "" { 

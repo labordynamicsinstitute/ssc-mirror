@@ -1,5 +1,5 @@
 {smcl}
-{* 23 June 2013/28oct2021}{...}
+{* 23 June 2013/28oct2021/8oct2023}{...}
 {hline}
 help for {hi:labellacking}
 {hline}
@@ -68,7 +68,10 @@ if installed).
 
 {p 4 4 2}
 Chen Samulsion and Daniel Klein helped identify a problem when the 
-first character of a value label was a multi-byte character. 
+first character of a value label was a multi-byte character.
+Shen Yang pointed out that the command failed when a set of value labels 
+has been associated with a variable, but those value labels have not yet 
+been defined. Such problems are now trapped and reported. 
 
 
 {title:Authors} 
