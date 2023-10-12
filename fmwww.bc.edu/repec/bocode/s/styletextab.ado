@@ -1,8 +1,19 @@
-*! version 1.1  07jul2023  Gorkem Aksaray <aksarayg@tcd.ie>
+*! version 1.2.1  09oct2023  Gorkem Aksaray <aksarayg@tcd.ie>
 *! Restyle LaTeX tables exported by the collect suite of commands
 *! 
 *! Changelog
 *! ---------
+*!   [1.2.1]
+*!     - Automatic conversion of hyphens as minus signs to en dashes in math
+*!       mode to ensure proper typographic representation.
+*!   [1.2]
+*!     - Added usepackage() option to add LaTeX packages to the preamble.
+*!     - geometry and lipsum options are removed as they are now redundant with
+*!       the addition of usepackage() option.
+*!     - beforetext() and aftertext() options can now add multiple lines
+*!       delimited by quotation marks. They also automatically define \sq{} and
+*!       \dq{} macros for single and double quotes used within text.
+*!     - Better handling of repeatable options.
 *!   [1.1]
 *!     - Allow for multiple paragraphs of text before and after table.
 *!     - Added lipsum() and geometry() options.
@@ -12,22 +23,28 @@
 capture program drop styletextab
 program styletextab, rclass
     version 18
-    syntax [using/] [, SAVing(string asis)                      ///
-                       FRAGment TABLEonly LScape noBOOKtabs     ///
-                       LABel(string)                            ///
-                       BEFOREtext0(string) AFTERtext0(string)   ///
-                       BEFOREtext1(string) AFTERtext1(string)   ///
-                       BEFOREtext2(string) AFTERtext2(string)   ///
-                       BEFOREtext3(string) AFTERtext3(string)   ///
-                       BEFOREtext4(string) AFTERtext4(string)   ///
-                       BEFOREtext5(string) AFTERtext5(string)   ///
-                       BEFOREtext6(string) AFTERtext6(string)   ///
-                       BEFOREtext7(string) AFTERtext7(string)   ///
-                       BEFOREtext8(string) AFTERtext8(string)   ///
-                       BEFOREtext9(string) AFTERtext9(string)   ///
-                       geometry GEOMETRY2(string)               ///
-                       lipsum LIPSUM2(string)                   ///
+    
+    // Repeatable options
+    local repeated_option_maxcount = 9 // can increase if needed!
+    forvalues i = 0/`repeated_option_maxcount' {
+        local usepackage "`usepackage' USEPackage`i'(string asis)"
+        local beforetext "`beforetext' BEFOREtext`i'(string asis)"
+        local  aftertext  "`aftertext'  AFTERtext`i'(string asis)"
+    }
+    
+    syntax [using/] [,                          ///
+                     SAVing(string asis)        ///
+                     FRAGment                   ///
+                     TABLEonly                  ///
+                     LScape                     ///
+                     noBOOKtabs                 ///
+                     LABel(string)              ///
+                     `usepackage'               ///
+                     `beforetext'               ///
+                     `aftertext'                ///
                     ]
+    
+    local global_skip = 2
     
     if `"`using'"' == "" {
         if `"`s(filename)'"' == "" {
@@ -97,8 +114,50 @@ program styletextab, rclass
     
     * preamble
     file write `tf' "\documentclass{article}" _n
-    if "`geometry'`geometry2'" != "" {
-        file write `tf' "\usepackage[`geometry2']{geometry}" _n
+    if `"`usepackage0'"' != "" {
+        forvalues i = 0/`repeated_option_maxcount' {
+            if `"`usepackage`i''"' != "" {
+                local 0 `"`usepackage`i''"'
+                syntax name(name=pkgname id="package name") [, opt(string) opts(string) pre Nextlines(string asis)]
+                if "`pre'" == "" {
+                    continue
+                }
+                if "`opt'" != "" & "`opts'" != "" {
+                    di as err "options opt() and opts() may not be used simultaneously"
+                    exit 198
+                }
+                if "`opt'" == "" & "`opts'" == "" {
+                    file write `tf' "\usepackage{`pkgname'}" _n
+                }
+                else if "`opt'" != "" {
+                    file write `tf' "\usepackage[`opt']{`pkgname'}" _n
+                }
+                else if "`opts'" != "" {
+                    file write `tf' "\usepackage[" _n
+                    tokenize "`opts'", parse(",")
+                    if "`1'" == "," {
+                        macro shift
+                        continue
+                    }
+                    file write `tf' _skip(`global_skip') "`1'"
+                    macro shift
+                    while "`1'" != "" {
+                        if "`1'" == "," {
+                            macro shift
+                            continue
+                        }
+                        file write `tf' "," _n _skip(`global_skip') "`1'"
+                        macro shift
+                    }
+                    file write `tf' _n "]{`pkgname'}" _n
+                }
+                tokenize `"`nextlines'"', parse(`"""')
+                while "`1'" != "" {
+                    file write `tf' "`1'" _n
+                    macro shift
+                }
+            }
+        }
     }
     if "`lscape'" != "" {
         file write `tf' "\usepackage{pdflscape}" _n
@@ -111,17 +170,68 @@ program styletextab, rclass
     file write `tf' "\usepackage{amsmath}" _n
     file write `tf' "\usepackage{ulem}" _n
     file write `tf' "\usepackage[table]{xcolor}" _n
-    if "`lipsum'`lipsum2'" != "" {
-        file write `tf' "\usepackage[`lipsum2']{lipsum}" _n
+    if `"`usepackage0'"' != "" {
+        forvalues i = 0/`repeated_option_maxcount' {
+            if `"`usepackage`i''"' != "" {
+                local 0 `"`usepackage`i''"'
+                syntax name(name=pkgname id="package name") [, opt(string) opts(string) pre Nextlines(string asis)]
+                if "`pre'" != "" {
+                    continue
+                }
+                if "`opt'" != "" & "`opts'" != "" {
+                    di as err "options opt() and opts() may not be used simultaneously"
+                    exit 198
+                }
+                if "`opt'" == "" & "`opts'" == "" {
+                    file write `tf' "\usepackage{`pkgname'}" _n
+                }
+                else if "`opt'" != "" {
+                    file write `tf' "\usepackage[`opt']{`pkgname'}" _n
+                }
+                else if "`opts'" != "" {
+                    file write `tf' "\usepackage[" _n
+                    tokenize "`opts'", parse(",")
+                    if "`1'" == "," {
+                        macro shift
+                        continue
+                    }
+                    file write `tf' _skip(`global_skip') "`1'"
+                    macro shift
+                    while "`1'" != "" {
+                        if "`1'" == "," {
+                            macro shift
+                            continue
+                        }
+                        file write `tf' "," _n _skip(`global_skip') "`1'"
+                        macro shift
+                    }
+                    file write `tf' _n "]{`pkgname'}" _n
+                }
+                tokenize `"`nextlines'"', parse(`"""')
+                while "`1'" != "" {
+                    file write `tf' "`1'" _n
+                    macro shift
+                }
+            }
+        }
+    }
+    if `"`beforetext0'`aftertext0'"' != "" {
+        file write `tf' "\newcommand{\sq}[1]{\`#1'}" _n
+        file write `tf' "\newcommand{\dq}[1]{\`\`#1''}" _n
     }
     
     file write `tf' "\begin{document}" _n
     
     * beforetext
-    if "`beforetext0'" != "" {
-        forvalues i = 0/9 {
-            if "`beforetext`i''" != "" {
-                file write `tf' _n "`beforetext`i''" _n
+    if `"`beforetext0'"' != "" {
+        forvalues i = 0/`repeated_option_maxcount' {
+            if `"`beforetext`i''"' != "" {
+                file write `tf' _n
+                tokenize `"`beforetext`i''"', parse(`"""')
+                while "`1'" != "" {
+                    file write `tf' "`1'" _n
+                    macro shift
+                }
             }
         }
         file write `tf' _n
@@ -171,6 +281,13 @@ program styletextab, rclass
                 local newline = subinstr(`"`macval(line)'"', "\cline", "\cmidrule", .)
                 file write `tf' `"`newline'"' _n
             }
+            else if regexm(`"`macval(line)'"', "\\multicolumn{([0-9])}{([|]?[clr][|]?)}{-([^\}]*)}") {
+                local newline = ///
+                    regexreplaceall(`"`macval(line)'"', ///
+                                    "\\multicolumn{[0-9]}{[|]?[clr][|]?}{-[^\}]*}", ///
+                                    "\\multicolumn{"+regexs(1)+"}{"+regexs(2)+"}{\\$-\\$"+regexs(3)+"}")
+                file write `tf' `"`newline'"' _n
+            }
             else {
                 file write `tf' `"`macval(line)'"' _n
             }
@@ -211,11 +328,16 @@ program styletextab, rclass
     
     if "`tableonly'" == "" {
     
-    * aftertex
-    if "`aftertext0'" != "" {
-        forvalues i = 0/9 {
-            if "`aftertext`i''" != "" {
-                file write `tf' _n "`aftertext`i''" _n
+    * aftertext
+    if `"`aftertext0'"' != "" {
+        forvalues i = 0/`repeated_option_maxcount' {
+            if `"`aftertext`i''"' != "" {
+                file write `tf' _n
+                tokenize `"`aftertext`i''"', parse(`"""')
+                while "`1'" != "" {
+                    file write `tf' "`1'" _n
+                    macro shift
+                }
             }
         }
         file write `tf' _n

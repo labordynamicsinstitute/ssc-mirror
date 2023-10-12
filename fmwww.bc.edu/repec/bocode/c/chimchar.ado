@@ -1,6 +1,6 @@
 /*
 
-chimchar 1.0.6 13 March 2023
+chimchar 2.0.1 10 October 2023
 Tommy Morgan - labhours@tmorg.org
 CHanging IMpractical CHARacters: a Stata command
 that cleans string variables of all their annoying characters. Turns
@@ -16,103 +16,126 @@ periods in datasets that come with decimal commas.
 program define chimchar
 	version 14
 	
-	syntax varlist , [NUMOKAY NUMREMOVE NUMONLY] [DPSWITCH]
+	syntax [varlist] , [NUMOKAY NUMREMOVE NUMONLY] [DPSWITCH]
 
 	foreach strvar in `varlist' {
-		if ("`numokay'" != "" & "`numremove'" != "") | ("`numokay'" != "" & "`numonly'" != "") | ("`numonly'" != "" & "`numremove'" != "") {
-			di as err "options numonly, numokay, and numremove are mutually exclusive, pick just one"
-			exit 198
-		}
-
-		if "`numokay'" == "" & "`numremove'" == "" & "`numonly'" == "" {
-			di as err "must specify either numokay, numremove, or numonly option"
-			exit 198
-		}
-
-		if "`dpswitch'"!="" {
-			di as text "Now switching all commas in `strvar' to periods and vice-versa"
-			replace `strvar' = subinstr(`strvar', ".", "___8375dot_un_matchable^3__", .)
-			replace `strvar' = subinstr(`strvar', ",", ".", .)
-			replace `strvar' = subinstr(`strvar', "___8375dot_un_matchable^3__", ",", .)
-			di as text "All commas in `strvar' have now been switched to periods and vice-versa"
-		}
 		
-		di as text "Now removing uniquely obnoxious characters like ` and () from `strvar'"
-		quietly {
-			
-			*kill the worst, most obnoxious characters
-			local grave = char(96)
-			local apost = char(39)
-			local quote = char(34)
-			local leftparenth = char(40)
-			local rightparenth = char(41)
-			replace `strvar' = subinstr(`strvar', "`macval(grave)'", "", .)
-			replace `strvar' = subinstr(`strvar', `"`macval(apost)'"', "", .)
-			replace `strvar' = subinstr(`strvar', `"`macval(quote)'"', "", .)
-			replace `strvar' = subinstr(`strvar', `"`macval(leftparenth)'"', "", .)
-			replace `strvar' = subinstr(`strvar', `"`macval(rightparenth)'"', "", .)
+		*check if it's a string, skip if not
+		capture confirm string variable `strvar'
+		if _rc != 0 {
+			di as txt "skipping `strvar' because it is not a string variable"
 		}
+		else {
 		
-		di as text "Uniquely obnoxious characters like ` and () have now been removed from `strvar'"
-		di as text "Now replacing special letters like Æ and ĸ with normal letters in `strvar'"
-		
-		quietly {
-			*get all the letters taken care of
-			replace `strvar' = subinstr(`strvar', "Æ", "ae", .)
-			replace `strvar' = subinstr(`strvar', "Ø", "o", .)
-			replace `strvar' = subinstr(`strvar', "Ð", "d", .)
-			replace `strvar' = subinstr(`strvar', "ß", "ss", .)
-			replace `strvar' = subinstr(`strvar', "æ", "ae", .)
-			replace `strvar' = subinstr(`strvar', "ø", "o", .)
-			replace `strvar' = subinstr(`strvar', "Ð", "d", .)
-			replace `strvar' = subinstr(`strvar', "ı", "i", .)
-			replace `strvar' = subinstr(`strvar', "Ĳ", "ij", .)
-			replace `strvar' = subinstr(`strvar', "ĳ", "ij", .)
-			replace `strvar' = subinstr(`strvar', "ĸ", "k", .)
-			replace `strvar' = subinstr(`strvar', "ŉ", "n", .)
-			replace `strvar' = subinstr(`strvar', "Ŋ", "ng", .)
-			replace `strvar' = subinstr(`strvar', "ŋ", "ng", .)
-			replace `strvar' = subinstr(`strvar', "Œ", "oe", .)
-			replace `strvar' = subinstr(`strvar', "œ", "oe", .)
-			replace `strvar' = ustrlower(ustrto(ustrnormalize(`strvar', "nfd"), "ascii", 2))
-		}
-		
-		di as text "Special letters like Æ and ĸ have now been replaced with normal letters in `strvar'"
-			
-			*kill the extra ASCII characters but keep the numbers
-			if "`numokay'"!="" & "`numremove'"=="" & "`numonly'"=="" {
-				di as text "Now removing all remaining non-numeric and non-letter ASCII characters from `strvar'"
-				qui foreach i of numlist 1/255 {
-					if !inrange(`i', 48, 57) & !inrange(`i', 44, 46) & !inrange(`i', 97, 122) & `i'!=96 & `i'!=39 & `i'!=34 & `i'!=40 & `i'!=41 {
-							replace `strvar' = subinstr(`strvar', `"`=char(`i')'"', "", .)
-					}
-				}
-				di as text "All remaining non-numeric and non-letter ASCII characters have been removed from `strvar'"
+			*make sure they only picked one option
+			if ("`numokay'" != "" & "`numremove'" != "") | ("`numokay'" != "" & "`numonly'" != "") | ("`numonly'" != "" & "`numremove'" != "") {
+				di as err "options numonly, numokay, and numremove are mutually exclusive, pick just one"
+				exit 198
 			}
 			
-			*kill all remaining non-letter ASCII characters
-			if "`numokay'"=="" & "`numremove'"!="" & "`numonly'"=="" {
-				di as text "Now removing all remaining non-letter ASCII characters from `strvar'"
-				qui foreach i of numlist 1/255 {
-					if !inrange(`i', 97, 122) & `i'!=96 & `i'!=39 & `i'!=34 & `i'!=40 & `i'!=41 {
-							replace `strvar' = subinstr(`strvar', `"`=char(`i')'"', "", .)
-					}
-				}
-				di as text "All remaining non-letter ASCII characters have been removed from `strvar'"
+			
+			*make sure they picked an option
+			if "`numokay'" == "" & "`numremove'" == "" & "`numonly'" == "" {
+				di as err "must specify either numokay, numremove, or numonly option"
+				exit 198
 			}
 			
-			*kill everything but the numeric characters along with . and ,
-			if "`numokay'"=="" & "`numremove'"=="" & "`numonly'"!="" {
-				di as text "Now removing all remaining non-numeric characters from `strvar'"
-				qui foreach i of numlist 1/255 {
-					if !inrange(`i', 48, 57) & !inrange(`i', 45, 46) & `i'!=96 & `i'!=39 & `i'!=34 & `i'!=40 & `i'!=41 {
-							replace `strvar' = subinstr(`strvar', `"`=char(`i')'"', "", .)
-					}
-				}
-				di as text "All remaining non-numeric characters have been removed from `strvar'"
+			*do the comma decimal switch if marked
+			if "`dpswitch'"!="" {
+				di as text "Now switching all commas in `strvar' to periods and vice-versa"
+				replace `strvar' = subinstr(`strvar', ".", "+_+yeet+_+", .)
+				replace `strvar' = subinstr(`strvar', ",", ".", .)
+				replace `strvar' = subinstr(`strvar', "+_+yeet+_+", ",", .)
+				di as text "All commas in `strvar' have now been switched to periods and vice-versa"
 			}
 			
-		di as text "`strvar' is clean now!"
+			
+			
+			
+			
+			di as text "Now removing uniquely obnoxious characters like ` and () from `strvar'"
+			quietly {
+				
+				*kill the worst, most obnoxious characters
+				local grave = char(96)
+				local apost = char(39)
+				local quote = char(34)
+				local leftparenth = char(40)
+				local rightparenth = char(41)
+				replace `strvar' = subinstr(`strvar', "`macval(grave)'", "", .)
+				replace `strvar' = subinstr(`strvar', `"`macval(apost)'"', "", .)
+				replace `strvar' = subinstr(`strvar', `"`macval(quote)'"', "", .)
+				replace `strvar' = subinstr(`strvar', `"`macval(leftparenth)'"', "", .)
+				replace `strvar' = subinstr(`strvar', `"`macval(rightparenth)'"', "", .)
+			}
+			
+			di as text "Uniquely obnoxious characters like ` and () have now been removed from `strvar'"
+			di as text "Now replacing special letters like Æ and ĸ with normal letters in `strvar'"
+			
+			quietly {
+				*get all the letters taken care of
+				replace `strvar' = subinstr(`strvar', "Æ", "ae", .)
+				replace `strvar' = subinstr(`strvar', "Ø", "o", .)
+				replace `strvar' = subinstr(`strvar', "Ð", "d", .)
+				replace `strvar' = subinstr(`strvar', "ß", "ss", .)
+				replace `strvar' = subinstr(`strvar', "æ", "ae", .)
+				replace `strvar' = subinstr(`strvar', "ø", "o", .)
+				replace `strvar' = subinstr(`strvar', "Ð", "d", .)
+				replace `strvar' = subinstr(`strvar', "ı", "i", .)
+				replace `strvar' = subinstr(`strvar', "Ĳ", "ij", .)
+				replace `strvar' = subinstr(`strvar', "ĳ", "ij", .)
+				replace `strvar' = subinstr(`strvar', "ĸ", "k", .)
+				replace `strvar' = subinstr(`strvar', "ŉ", "n", .)
+				replace `strvar' = subinstr(`strvar', "Ŋ", "ng", .)
+				replace `strvar' = subinstr(`strvar', "ŋ", "ng", .)
+				replace `strvar' = subinstr(`strvar', "Œ", "oe", .)
+				replace `strvar' = subinstr(`strvar', "œ", "oe", .)
+				replace `strvar' = ustrlower(ustrto(ustrnormalize(`strvar', "nfd"), "ascii", 2))
+			}
+			
+			di as text "Special letters like Æ and ĸ have now been replaced with normal letters in `strvar'"
+				
+				
+				*numokay: kill the extra ASCII characters but keep the numbers
+				if "`numokay'"!="" & "`numremove'"=="" & "`numonly'"=="" {
+					di as text "Now removing all remaining non-numeric and non-letter ASCII characters from `strvar'"
+					qui foreach i of numlist 1/255 {
+						if !inrange(`i', 48, 57) & !inrange(`i', 44, 46) & !inrange(`i', 97, 122) & `i'!=96 & `i'!=39 & `i'!=34 & `i'!=40 & `i'!=41 {
+								replace `strvar' = subinstr(`strvar', `"`=char(`i')'"', "", .)
+						}
+					}
+					di as text "All remaining non-numeric and non-letter ASCII characters have been removed from `strvar'"
+				}
+				
+				
+				*numremove: kill all remaining non-letter ASCII characters
+				if "`numokay'"=="" & "`numremove'"!="" & "`numonly'"=="" {
+					di as text "Now removing all remaining non-letter ASCII characters from `strvar'"
+					qui foreach i of numlist 1/255 {
+						if !inrange(`i', 97, 122) & `i'!=96 & `i'!=39 & `i'!=34 & `i'!=40 & `i'!=41 {
+								replace `strvar' = subinstr(`strvar', `"`=char(`i')'"', "", .)
+						}
+					}
+					di as text "All remaining non-letter ASCII characters have been removed from `strvar'"
+				}
+				
+				*numonly: kill everything but the numeric characters along with . by itself
+				if "`numokay'"=="" & "`numremove'"=="" & "`numonly'"!="" {
+					di as text "Now removing all remaining non-numeric characters from `strvar' and isolated decimal markers"
+					qui foreach i of numlist 1/255 {
+						if !inrange(`i', 48, 57) & !inrange(`i', 45, 46) & `i'!=96 & `i'!=39 & `i'!=34 & `i'!=40 & `i'!=41 {
+								replace `strvar' = subinstr(`strvar', `"`=char(`i')'"', "", .)
+						}
+					}
+					qui foreach i of numlist 1/5 {
+						replace `strvar' = subinstr(`strvar', "..", ".",.)
+						replace `strvar' = subinstr(`strvar', "--", "-",.)
+					}
+					di as text "All remaining non-numeric characters have been removed from `strvar'"
+				}
+				
+			di as result "`strvar' is clean now!"
 		}
+	}
 		
 end

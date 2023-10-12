@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1  07jul2023}{...}
+{* *! version 1.2  02oct2023}{...}
 {viewerjumpto "Syntax" "styletextab##syntax"}{...}
 {viewerjumpto "Description" "styletextab##description"}{...}
 {viewerjumpto "Options" "styletextab##options"}{...}
@@ -24,18 +24,50 @@
 [{cmd:using} {it:{help filename}}]
 [{cmd:,} {cmd:saving(}{it:filename} [{cmd:,} {opt replace}]{cmd:)} {it:options}]
 
-{synoptset 21}{...}
+{synoptset 28}{...}
 {synopthdr}
 {synoptline}
-{synopt:{opt frag:ment}}keep only LaTeX {it:tabular} environment{p_end}
-{synopt:{opt table:only}}keep only LaTeX {it:table} environment{p_end}
+{synopt:{opt frag:ment}}keep only the LaTeX {it:tabular} environment{p_end}
+{synopt:{opt table:only}}keep only the LaTeX {it:table} environment{p_end}
 {synopt:[{cmd:no}]{opt book:tabs}}specify whether to use LaTeX booktabs rules (default is {opt booktabs}){p_end}
-{synopt:{opt lab:el}{cmd:(}{it:marker}{cmd:)}}label the table for cross-referencing{p_end}
+{synopt:{opth lab:el(styletextab##marker:marker)}}label the table for cross-referencing{p_end}
 {synopt:{opt ls:cape}}wrap the table in a LaTeX {it:landscape} environment{p_end}
-{synopt:{opt geometry}[{cmd:(}{it:pkgopts}{cmd:)}]}load LaTeX geometry package to customize page layout{p_end}
-{synopt:{opt lipsum}[{cmd:(}{it:pkgopts}{cmd:)}]}load LaTeX lipsum package to produce dummy text{p_end}
-{synopt:{opt before:text}{cmd:(}{it:string}{cmd:)}}add text before table{p_end}
-{synopt:{opt after:text}{cmd:(}{it:string}{cmd:)}}add text after table{p_end}
+{synopt:{cmdab:usep:ackage(}{it:pkg}[{cmd:,} {help styletextab##pkgopts:{it:pkg_opts}}]{cmd:)}}load a LaTeX package{p_end}
+{synopt:{cmdab:before:text(}{it:strlist}{cmd:)}}add text before table{p_end}
+{synopt:{cmdab:after:text(}{it:strlist}{cmd:)}}add text after table{p_end}
+{synoptline}
+
+{synoptset 28}{...}
+{marker pkgopts}{...}
+{synopthdr:pkg_opts}
+{synoptline}
+{synopt:{opth opt:(styletextab##optlist:optlist)}|{opt opts(optlist)}}specify the list of options for the LaTeX package loaded{p_end}
+{synopt:{opt pre}}specify whether the LaTeX package should be loaded at the beginning of the preamble right after {it:\documentclass{}} (default is to add it to the end of the preamble){p_end}
+{synopt:{cmdab:n:extlines(}{it:strlist}{cmd:)}}add line(s) of text after the package is loaded{p_end}
+{synoptline}
+
+{marker marker}{...}
+{phang}
+{it:marker} specifies a valid LaTeX reference marker as in {it:\label{marker}}.
+
+{marker optlist}{...}
+{phang}
+{it:optlist} specifies a set of valid options for the LaTeX package loaded.
+Multiple options are delimited by comma as in LaTeX code.
+The output will be in the form
+
+{p 8 8 2} {it:\usepackage[opt1,opt2,...]{package}}{p_end}
+
+{p 8} if {opt opt()} is used;
+or in the form
+
+{p 8 8 2} {it:\usepackage[}{p_end}
+{p 8 8 2} {space 2}{it:opt1,}{p_end}
+{p 8 8 2} {space 2}{it:opt2,}{p_end}
+{p 8 8 2} {space 2}...{p_end}
+{p 8 8 2} {it:]{package}}{p_end}
+
+{p 8}if {opt opts()} is used.
 
 
 {marker description}{...}
@@ -88,27 +120,48 @@ Similarly, if the {opt saving()} option is omitted,
 {cmd:label(}{it:marker}{cmd:)} adds an additional line right after {bf:\caption} with {bf:\label} macro specifying the label marker for the table. This is used for cross-referencing the table within a LaTeX document.
 
 {phang}
-{cmd:lscape} invokes LaTeX's {bf:pdflscape} package to wrap the table in a landscape layout. This makes it easier to view tables that are too wide to fit in a portait page (for example, regression comparison tables with more than 5-6 models).
+{cmd:lscape} invokes LaTeX's {bf:pdflscape} package to wrap the table in a landscape layout. This makes it easier to view tables that are too wide to fit in a portait page (for example, a regression comparison table with more than 5-6 models).
 
 {phang}
-{cmd:geometry}[{cmd:(}{it:pkgopts}{cmd:)}] invokes LaTeX's
-{browse "https://ftp.heanet.ie/mirrors/ctan.org/tex/macros/latex/contrib/geometry/geometry.pdf":geometry}
-package to customize page layout.
-The default is to insert {bf:geometry} package by itself without any option. Alternatively, use {it:pkgopts} to specify package options.
+{cmdab:usep:ackage(}{it:pkg}[{cmd:,} {help styletextab##pkgopts:{it:pkg_opts}}]{cmd:)} specifies a LaTeX package to be included in the document.
+{cmd:usepackage()} may be specified multiple times to add multiple packages in the specified order.
+
+{phang2}
+{it:pkg_opts} are
+{opth opt:(styletextab##optlist:optlist)} or {opt opts(optlist)},
+{opt pre}, and
+{opt nextlines(strlist)}.
+
+{phang3}
+{opth opt:(styletextab##optlist:optlist)} specifies the set of options used with the LaTeX package loaded.
+{opt opts()} is the multiline version of {cmd:opt()}, putting each option to its own line,
+which is useful for quickly commenting/uncommenting distinct options to see their effects.
+
+{phang3}
+{opt pre} specifies whether the LaTeX package should be loaded at the beginning of the preamble (the default is to load the package at the end of the preamble).
+
+{phang3}
+{opt nextlines(strlist)} adds the text {it:string} to the next line.
+Multiple lines can be added by using double quotes,
+i.e., specify {it:strlist} as "{it:First line}" "{it:Second line}" etc.
 
 {phang}
-{cmd:lipsum}[{cmd:(}{it:pkgopts}{cmd:)}] invokes LaTeX's
-{browse "https://ftp.heanet.ie/mirrors/ctan.org/tex/macros/latex/contrib/lipsum/lipsum.pdf":lipsum}
-package to produce dummy text in {opt beforetext()} and {opt aftertext()}.
-This is useful for simulating content around a table to visualize how it would appear within a document.
-The default is to insert {bf:lipsum} package by itself without any option. Alternatively, use {it:pkgopts} to specify package options.
-
-{phang}
-{cmd:beforetext(}string{cmd:)} and {cmd:aftertext(}string{cmd:)}
-add the text {it:string} before and after the table
+{opt beforetext(strlist)} and {opt aftertext(strlist)}
+add text before and after the table
 (relevant only if {opt fragment} and {opt tableonly} options are omitted).
-{cmd:beforetext()} and {cmd:aftertext()} may be repeated
+Multiple lines of text can be added by using double quotes,
+i.e., specify {it:strlist} as "{it:First line}" "{it:Second line}" etc.
+{cmd:beforetext()} and {cmd:aftertext()} may also be repeated
 to add multiple paragraphs separated by an empty line.
+
+{phang2}
+Either option, when specified, automatically defines
+two new LaTeX macros
+{it:\sq{}} and {it:\dq{}}
+for single quotation and double quotation, respectively.
+These allow for using quotations within text.
+Otherwise, {help local} and {help global} macros can be used
+within text as usual.
 
 
 {marker remarks}{...}
@@ -185,12 +238,13 @@ different modes without the need to recreate the table from scratch.
 {pstd}Add multiple paragraphs of text and increase page margins:{p_end}
 {phang}{cmd:. styletextab, {space 52} ///}{p_end}
 {phang}{cmd:> {space 4}label(fig:reg1){space 46} ///}{p_end}
-{phang}{cmd:> {space 4}geometry(margin=1in){space 41} ///}{p_end}
-{phang}{cmd:> {space 4}lipsum(auto-lang=true){space 39} ///}{p_end}
+{phang}{cmd:> {space 4}usepackage(geometry, opt(margin=1in) pre){space 20} ///}{p_end}
+{phang}{cmd:> {space 4}usepackage(lipsum, nextl(%Preamble ends here!)){space 14} ///}{p_end}
+{phang}{cmd:> {space 4}usepackage(parskip, pre){space 37} ///}{p_end}
 {phang}{cmd:> {space 4}before(\section*{Regression models}){space 25} ///}{p_end}
-{phang}{cmd:> {space 4}before(Table~\ref{fig:reg1} presents regressions.{space 12} ///}{p_end}
-{phang}{cmd:> {space 11}These regressions are very interesting. \lipsum[1]){space 3} ///}{p_end}
-{phang}{cmd:> {space 4}before(Let's see how they look:){space 29} ///}{p_end}
+{phang}{cmd:> {space 4}before("Table~\ref{fig:reg1} presents regressions."{space 10} ///}{p_end}
+{phang}{cmd:> {space 11}"These regressions are very interesting." \lipsum[1]){space 1} ///}{p_end}
+{phang}{cmd:> {space 4}before(Let's see how \dq{they} look:){space 24} ///}{p_end}
 {phang}{cmd:> {space 4}after(This text comes after Table~\ref{fig:reg1}. \lipsum[2]) ///}{p_end}
 {phang}{cmd:> {space 4}after(\lipsum[3])}{p_end}
 

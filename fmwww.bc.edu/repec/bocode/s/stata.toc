@@ -15,6 +15,7 @@ p sq module for sequence analysis
 p staggered module implementing R staggered package based on Roth and Sant'Anna (2023)
 p standsurv module to compute standardized (marginal) survival and related functions
 p stata_linter module providing a tool to detect and correct bad Stata coding practices
+p stckar module to draw stacked area graphs
 p step3 module to relate latent class membership to external variables
 p stpm3 module to fit flexible parametric survival models
 p stpp module to compute Pohar-Perme non-parametric estimate of marginal relative (net) survival

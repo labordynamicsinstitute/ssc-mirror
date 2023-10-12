@@ -1,14 +1,14 @@
 d 'CHIMCHAR': module to thoroughly clean string variables
 d
-d  chimchar stands for CHanging IMpractical CHARacters. It removes
-d characters from string variables that can impede functions like
-d {opt destring} and {opt reclink}. You can choose to remove only
-d special characters, remove both special characters and numeric
-d characters, or remove all non-numeric characters altogether. If
-d letters are not removed, special characters that are based on
-d Latin letters are replaced with their closest ASCII (plain Latin)
-d letter counterpart(s); for example, "Æ", "š" and "ĸ" would
-d become "ae", "s", and "k", respectively. 
+d  abstract: chimchar stands for CHanging IMpractical CHARacters.
+d It removes characters from string variables that can impede
+d functions like destring and reclink. You can choose to remove
+d only special characters, remove both special characters and
+d numeric characters, or remove all non-numeric characters
+d altogether. If letters are not removed, special characters that
+d are based on Latin letters are replaced with their closest ASCII
+d (plain Latin) letter counterpart(s); for example, "Æ", "š" and
+d "ĸ" would become "ae", "s", and "k", respectively. 
 d
 d KW:  text processing
 d KW: Unicode

@@ -1,0 +1,20 @@
+d 'STCKAR': module to draw stacked area graphs
+d
+d  This package generates a stacked area graph of up to 10
+d variables. The variables are sorted by a summary statistic to
+d improve the read- and comparability of the graph. It allows for
+d (alternating) positive and negative variable values. 
+d
+d KW: graphics
+d KW: area graphs
+d KW: stacked area graphs
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20231011
+d
+d Author: Jonathan Thiele, FU Berlin
+d Support: email jonathan.thiele@@fu-berlin.de
+d
+f stckar.ado
+f stckar.sthlp
