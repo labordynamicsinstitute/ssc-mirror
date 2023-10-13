@@ -169,7 +169,7 @@ program define classtabi, rclass
               in ye %8.2f return(fpr) `"%"' 
 			  in ye _col(51) %8.2f return(fprlb) `"%"'
 			  in ye _col(61) %8.2f return(fprub) `"%"' ;
-		di	  in gr `"False negative rate"' _col(33) `"A/(A+B)"'
+		di	  in gr `"False negative rate"' _col(33) `"B/(A+B)"'
               in ye %8.2f return(fnr) `"%"'
 			  in ye _col(51) %8.2f return(fnrlb) `"%"'
 			  in ye _col(61) %8.2f return(fnrub) `"%"' ;

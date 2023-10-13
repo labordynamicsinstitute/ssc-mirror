@@ -12,6 +12,7 @@ p dataframe module to store/restore multiple Stata datasets to/from memory
 p datanet module to facilitate dataset organization for network analysis purposes
 p dataout module to export a dataset or tab-delimited file into various formats
 p dataplink module to import data from plink
+p datefrac module to convert calendar dates to fractional years
 p datelist module to to create ascending numeric lists of dates
 p datesum module to display summary statistics for date variables
 p datmat module to multiply variables via matrix multiplication

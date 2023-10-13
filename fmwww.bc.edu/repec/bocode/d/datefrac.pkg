@@ -1,0 +1,25 @@
+d 'DATEFRAC': module to convert calendar dates to fractional years
+d
+d  datefrac takes any variable that represents an exact date and
+d generates a numeric variable representing the fraction of that
+d year that has passed at the beginning of that date by taking the
+d number of days since 1 January of a given year, dividing that
+d number by 365, and adding the resulting fraction to the given
+d year. For example, datefrac assigns the value 2020.000 (2020 +
+d 0/365) to the date 1 January 2020 and the value 1999.17260 (1999
+d + 63/365) to the date 4 March 1999. It also accounts for leap
+d years if the year is a multiple of 4, assigning the value
+d 2000.17486 (2000 + 64/366) to the date 4 March 2000. 
+d
+d KW: date handling
+d KW: time series
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20231012
+d
+d Author: Tommy Morgan, Brigham Young University
+d Support: email morganto@@student.byu.edu
+d
+f datefrac.ado
+f datefrac.sthlp
