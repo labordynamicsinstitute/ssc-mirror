@@ -1,8 +1,9 @@
 {smcl}
-{* *! version 2.0.0  08oct2023}{...}
+{* *! version 2.1.0  10oct2023}{...}
 {vieweralsosee "[P] macro" "help macro"}{...}
 {viewerjumpto "Syntax" "preserve_globals##syntax"}{...}
 {viewerjumpto "Description" "preserve_globals##description"}{...}
+{viewerjumpto "Options" "preserve_globals##options"}{...}
 {viewerjumpto "Remarks" "preserve_globals##remarks"}{...}
 {viewerjumpto "Acknowledgements" "preserve_globals##acknowledgements"}{...}
 {viewerjumpto "Support" "preserve_globals##support"}{...}
@@ -15,6 +16,7 @@
 
 {p 8 20 2}
 {cmd:preserve_globals}
+[ {cmd:,} {opt strict} {cmd::} ]
 {it:command}
 
 
@@ -29,6 +31,15 @@ Any changes that {it:command} makes to
 existing global macros are undone as soon as {it:command} concludes. 
 However, {it:command} may define new global macros and such global 
 macros persist when {it:command} concludes.
+
+
+{...}
+{marker options}{...}
+{title:Options}
+
+{phang}
+{opt strict} deletes any new global macros that {it:command} defines 
+when {it:command} concludes. 
 
 
 {...}
@@ -66,7 +77,7 @@ to guarantee that local macros are empty when they should be empty.
  
 
 {...}
-{marker acknowledgments}{...}
+{marker acknowledgements}{...}
 {title:Acknowledgements}
 
 {pstd}
