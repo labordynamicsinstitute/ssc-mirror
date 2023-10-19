@@ -76,16 +76,20 @@ Estimating a two sample Glass' Delta effect size on the imputed datasets with a 
 {p2col 5 16 25 2: Scalars}{p_end}
 {synopt:{cmd:r(pooled_se_d)}}pooled standard error for Cohen's {it:d}{p_end}
 {synopt:{cmd:r(pt_est_d)}}pooled point estimate for Cohen's {it:d}{p_end}
-{synopt:{cmd:r(ul_d)}}upper 95% confidence limit for the estimate of Cohen's {it:d}{p_end}
+{synopt:{cmd:r(ub_d)}}upper 95% confidence limit for the estimate of Cohen's {it:d}{p_end}
+{synopt:{cmd:r(lb_d)}}lower 95% confidence limit for the estimate of Cohen's {it:d}{p_end}
 {synopt:{cmd:r(pooled_se_g)}}pooled standard error for Hedges' {it:g}{p_end}
 {synopt:{cmd:r(pt_est_g)}}pooled point estimate for Hedges' {it:g}{p_end}
-{synopt:{cmd:r(ul_g)}}upper 95% confidence limit for the estimate of Hedges' {it:g}{p_end}
+{synopt:{cmd:r(ub_g)}}upper 95% confidence limit for the estimate of Hedges' {it:g}{p_end}
+{synopt:{cmd:r(lb_g)}}lower 95% confidence limit for the estimate of Hedges' {it:g}{p_end}
 {synopt:{cmd:r(pooled_se_g1)}}pooled standard error for Glass's Delta for group 1{p_end}
-{synopt:{cmd:r(pooled_estimate_g1)}}pooled point estimate for Glass's Delta for group 1{p_end}
-{synopt:{cmd:r(ul_g1)}}upper 95% confidence limit for the estimate of Glass' group 1 Delta{p_end}
+{synopt:{cmd:r(pt_est_g1)}}pooled point estimate for Glass's Delta for group 1{p_end}
+{synopt:{cmd:r(ub_g1)}}upper 95% confidence limit for the estimate of Glass' group 1 Delta{p_end}
+{synopt:{cmd:r(lb_g1)}}lower 95% confidence limit for the estimate of Glass' group 1 Delta{p_end}
 {synopt:{cmd:r(pooled_se_g2)}}pooled standard error for Glass's Delta for group 2{p_end}
-{synopt:{cmd:r(pooled_estimate_g2)}}pooled point estimate for Glass's Delta for group 2{p_end}
-{synopt:{cmd:r(ul_g2)}}upper 95% confidence limit for the estimate of Glass' group 2 Delta{p_end}
+{synopt:{cmd:r(pt_est_g2)}}pooled point estimate for Glass's Delta for group 2{p_end}
+{synopt:{cmd:r(ub_g2)}}upper 95% confidence limit for the estimate of Glass' group 2 Delta{p_end}
+{synopt:{cmd:r(lb_g2)}}lower 95% confidence limit for the estimate of Glass' group 2 Delta{p_end}
 {synopt:{cmd:r(by_var)}}the grouping variable used in the {cmd:by} statement{p_end}
 {synopt:{cmd:r(varname)}}the outcome variable used in the command{p_end}
 
