@@ -1,5 +1,5 @@
 {smcl}
-{* 2022july15}
+{* 2022july15, 2023jun27, sep26, oct18}
 {hline}
 help for {hi:tree}
 {hline}
@@ -312,10 +312,34 @@ Where {it:treepath} (described above) identifies an existing tree or interior no
 nodes to be established as children of the node identified in {it:treepath}.
 
 {p 4 4 2}
-Draw a diagram of the tree structure
+Draw a textual diagram of the tree structure
 
 {p 8 10 2}
-{cmd:tree draw} [{cmd:,} {it:varlist}] 
+{cmd:tree draw} [{it:varlist}] 
+
+{p 4 4 2}
+Draw an image of the tree using Stata graphics capabilities
+
+{p 8 10 2}
+{cmd:tree plot} [{it:varlist}] [{cmd:,} {opt superlabel(superlabeltext)}
+{opt numbers}
+{opt gphsav:ing(gphfilename)}
+{opt gphasis} {opt gphreplace}
+{opt dosave(dofilename)} {opt doreplace} {opt prob_places(#)} {opt noprob}
+]
+
+{p 6 6 2}
+Due to the way this is programmed, you can also write{p_end}
+{p 8 10 2}
+{cmd:tree_plot} ...
+
+{p 6 6 2}
+Either way, this is not to be confused with {cmd:treeplot}, a separate user-generated program,
+which does a much different task.
+
+{p 6 6 2}
+{it:varlist} specifies variables to be displayed in the plot. The plot can become crowded if
+too many variables are specified.
 
 {p 4 4 2}
 List the payoff variables and trees
@@ -327,7 +351,7 @@ List the payoff variables and trees
 Set the values of payoff variables and/or probabilities for a given node
 
 {p 8 10 2}
-{cmd:tree setvals} {it:treepath} [{cmd:,} {it:v1}{cmd:(}{it:v1exp}{cmd:)} {it:v2}{cmd:(}{it:v2exp}{cmd:)}
+{cmd:tree setvals,} {opt at(treepath)} [{it:v1}{cmd:(}{it:v1exp}{cmd:)} {it:v2}{cmd:(}{it:v2exp}{cmd:)}
 ... {it:vn}{cmd:(}{it:vnexp}{cmd:)} {cmd:prob(}{it:probexp}{cmd:)}
 {opt check} {opt nosub} {opt ver:bose}]
 
@@ -335,7 +359,7 @@ Set the values of payoff variables and/or probabilities for a given node
 Alternative syntax
 
 {p 8 10 2}
-{cmd:tree setvals,} [{opt at(treepath)} {it:v1}{cmd:(}{it:v1exp}{cmd:)} {it:v2}{cmd:(}{it:v2exp}{cmd:)}
+{cmd:tree setvals} {it:treepath} [{cmd:,} {it:v1}{cmd:(}{it:v1exp}{cmd:)} {it:v2}{cmd:(}{it:v2exp}{cmd:)}
 ... {it:vn}{cmd:(}{it:vnexp}{cmd:)} {cmd:prob(}{it:probexp}{cmd:)}
 {opt check} {opt nosub} {opt ver:bose}]
 
@@ -469,15 +493,15 @@ preserve or restore operation is to use. The channel value may be any integer
 from 0 to 99, with 0 being the default.
 
 {p 4 4 2}
-{opt replace} for the {cmd:preserve} commands: specify that the preserved
+{opt replace} for the {cmd:preserve} subcommands: specify that the preserved
 values may overwrite existing values in the indicated channel.
 
 {p 4 4 2}
-{opt nosub} for the {cmd:setvals} command: prevent the substitution of {cmd:$}
+{opt nosub} for the {cmd:setvals} subcommand: prevent the substitution of {cmd:$}
 for {cmd:@}.
 
 {p 4 4 2}
-{opt check} for the {cmd:setvals} command: check that the expressions for payoff variables and prob are valid
+{opt check} for the {cmd:setvals} subcommand: check that the expressions for payoff variables and prob are valid
 numeric expressions. (Missing values count as valid in this context.)
 This is meaningful only if all the components of the expressions are defined at
 the time that {cmd:setvals} is called.
@@ -506,6 +530,60 @@ weighted sums and means toward the roots. See {help tree##sums_and_means:Raw Sum
 {opt retain} for {cmd:tree eval}: specify that variables pertaining to rawsums or means
 from an earlier invocation of {cmd:tree eval} are to be retained. The default action
 is to drop them. See {help tree##sums_and_means:Raw Sums and Means}, below.
+
+{p 4 4 2}
+{opt superlabel(superlabeltext)} for the {cmd:plot} subcommand: specify alternative
+text to be written for labeling the superroot in the plot; the default is {cmd:superroot}.
+
+{p 4 4 2}
+{opt numbers} for the {cmd:plot} subcommand: specify that node numbers are to be
+displayed in the plot.
+
+{p 4 4 2}
+{opt gphsav:ing(gphfilename)} for the {cmd:plot} subcommand: save the plot as a
+Stata graphics (.gph) file.
+
+{p 6 6 2}
+As with the {help graph save} command, if {it:gphfilename} is specified without an extension,
+{cmd:.gph} is assumed.
+
+{p 4 4 2}
+{opt gphasis} for the {cmd:plot} subcommand: employ the {cmd:asis} option in saving
+the plot. See {help graph save}.
+
+{p 4 4 2}
+{opt gphreplace} for the {cmd:plot} subcommand: employ the {cmd:replace} option in saving
+the plot; the file may be replaced if it already exists.
+
+{p 4 4 2}
+{opt dosave(dofilename)} for the {cmd:plot} subcommand: save the generated do-file
+under the specified name. If {it:dofilename} is specified without an extension,
+{cmd:.do} is assumed.
+
+{p 6 6 2}
+To create a plot, a do-file is generated containing Stata graphing commands.
+By default, this is a {help tempfile}; thus, it is deleted after is is run.
+With this option, you can, instead, save the file.
+
+{p 4 4 2}
+{opt doreplace} used with {opt dosave(dofilename)}, specifies that {it:dofilename}
+may be replaced if it already exists.
+
+{p 4 4 2}
+{opt prob_places(#)} for the {cmd:plot} subcommand: specify the number of decimal places
+to report probability values. The default is 3.
+
+{p 6 6 2}
+The plot will include probability values after the node names, in parentheses. Note that
+this is R_prob, that is, the numeric value, rather than the prob expression. Therefore,
+you will not get values unless you have already called {cmd:tree eval}.
+(You will not get updated values unless you have called {cmd:tree eval} since any
+changes to prob values (via {cmd:tree setvals}) have occurred.)
+
+{p 4 4 2}
+{opt noprob}  for the {cmd:plot} subcommand: suppress the reporting of probability
+values.
+
 
 {hline}
 
@@ -730,7 +808,7 @@ or extract values from a different pair of nodes (or single node),
 using distinct {it:pref} values to preserve the results under distinct scalar names.
 
 {p 4 4 2}
-The various {cmd:preserve} and {cmd:restore} commands will preserve and restore
+The various {cmd:preserve} and {cmd:restore} subcommands will preserve and restore
 payoff or probability expressions, or both. These may be used to facilitate
 the running of alternative scenarios and sensitivity analyses. 
 You might establish a set of probabilities and terminal-node payoff expressions that you
@@ -740,17 +818,17 @@ the analysis. (You would rerun {cmd:tree eval}, {cmd:tree diffs}, and any necess
 calculations.)
 
 {p 4 4 2}
-The benefit of the {cmd:preserve} and {cmd:restore} commands occurs when you want to run
+The benefit of the {cmd:preserve} and {cmd:restore} subcommands occurs when you want to run
 a multitude of alternative scenarios and sensitivity analyses.
 Typically, each such analysis deviates from the base case in a different way, and
 you would want to return the values to the base case before making the adjustments
 that pertain to the next analysis. For example, if one analysis changes {cmd:cost} (in a
 multitude of terminal nodes}, and another analysis changes {cmd:qaly}, then you would
 want to return {cmd:cost} to its base-case value before doing the second scenario.
-The {cmd:restore} commands conveniently take care of this.
+The {cmd:restore} subcommands conveniently take care of this.
 
 {p 4 4 2}
-Any of the {cmd:preserve} commands ({cmd:tree preserveprob} or {cmd:tree preservepayoff} or {cmd:tree preserveall})
+Any of the {cmd:preserve} subcommands ({cmd:tree preserveprob} or {cmd:tree preservepayoff} or {cmd:tree preserveall})
 may be issued at any time; they will save the present state of the probability or payoff (or all) expressions.
 It is appropriate to do this after the base-case values are established, but before any
 adjustments are made for scenario/sensitivity analyses.
@@ -761,24 +839,25 @@ would depend on which of the settings (probability or payoff variables or both)
 you expect to alter and need to be restored later.
 
 {p 4 4 2}
-A corresponding {cmd:restore} command ({cmd:tree restoreprob} or {cmd:tree restorepayoff} or {cmd:tree restoreall})
+A corresponding {cmd:restore} subcommand ({cmd:tree restoreprob} or {cmd:tree restorepayoff} or {cmd:tree restoreall})
 should be issued prior to making adjustments for a subsequent scenario/sensitivity analysis.
 
 {p 4 4 2}
-As noted above, the {cmd:preserve} and {cmd:restore} commands have an optional 
+As noted above, the {cmd:preserve} and {cmd:restore} subcommands have an optional 
 {opt chan:nel(#)} option, allowing you to specify which, of possibly many "channels", that the
 preserve or restore operation is to use. The channel value may be any integer
 from 0 to 99, with 0 being the default. Thus, you may establish a multitude of base cases,
 in case that is useful. If you have only one base case, then you can ignore this option.
 
 {p 4 4 2}
-The {cmd:preserve} commands have a {cmd:replace} option. This is used if you nave already
+The {cmd:preserve} subcommands have a {cmd:replace} option. This is used if you nave already
 done a preserve (using the same channel), and want to overwrite the previously-preserved values.
 
 {p 4 4 2}
 At any point, you may view the tree structure in a textual graphic form by calling
 {cmd:tree draw}. It will display one line for each node, with
-connecting lines and indentation to indicate the hirearchical relations.
+connecting lines and indentation to indicate the hirearchical relations, similar
+to the output of the {cmd:tree} command in the Windows command prompt.
 Integers will be displayed on the left side; these are the Stata observation numbers,
 which may help you in diagnosing data problems that may arise.
 (You can {help list} a given observation, though {cmd:tree draw} can give you the
@@ -787,7 +866,7 @@ a value from a specific observation, though {cmd:tree values} can also do that.)
 Terminal nodes are marked with an asterisk to the right of the node name.
 
 {p 4 4 2}
-Note that the observation numbers will not necessarily in sequential order.
+The observation numbers will not necessarily in sequential order.
 The order diplayed reflects the tree structure, whereas the observation
 numbers reflect the order in which the tree was built (the order in which nodes
 were added).
@@ -796,6 +875,11 @@ were added).
 The optional varlist is a set of variables that will be displayed
 in the output. It is best not to specify too many variables, as the display will
 get crowded.
+
+{p 4 4 2}
+Note that there are two methods of obtaining a visual representation of the tree:
+{cmd:tree draw} and {cmd:tree plot}. The latter gives a more natural image of the
+tree, while {cmd:tree draw} may be better for viewing values of selected variables. 
 
 {hline}
 
@@ -914,15 +998,15 @@ to be chosen by the user; the complete list is{p_end}
 {cmd:__probsum},
 {cmd:__n_starprobs},
 {cmd:__residprob},
+{cmd:__residual},
 {cmd:__weight},
 {cmd:prob},
 {cmd:R_prob},
 {cmd:setvals_qui},
 {cmd:setvals_node_id},
 {cmd:setvals_varstoset},
-{cmd:setvals_numvalsset},
 {cmd:setvals_vval},
-{cmd:setvals_check_errors},
+{cmd:setvals_vars_affected),
 {cmd:verbose},
 {cmd:check},
 {cmd:sub}.
@@ -943,7 +1027,7 @@ There are at least two uses for this.
 {p 4 4 2}
 This way, you have done an alternative, with cost increased by 10%.
 (Note that this does not involve a change to any payoff variable expression, and
-there is no need to use a {cmd:preserve} command.)
+there is no need to use a {cmd:preserve} subcommand.)
 
 {p 4 4 2}
 Alternatively, this setup could be done using {help global} macros:{p_end}

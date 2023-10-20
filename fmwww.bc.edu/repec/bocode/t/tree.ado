@@ -8,7 +8,18 @@ prog def tree
 * version 1.1.1 2021may03
 * version 1.2.1 2022dec13
 * 2023jun28: public release.
-*! version 1.3.1 2023jun28
+* version 1.3.1 2023jun28
+* version 1.3.2 2023oct10
+*! version 1.4.0 2023oct18
+
+/*
+2023oct02: edited comments.
+3032oct18: tree-traversal is now coded in its own ado file: tree_traverse.ado.
+PS: later putting it back in!
+*/
+
+
+
 version 14
 
 
@@ -16,8 +27,12 @@ version 14
 local allowable_subcmd
  "init create node draw verify eval check setvals diffs
  values a_minus_b preserveprob preservepayoff restoreprob restorepayoff
- preserveall restoreall des";
+ preserveall restoreall des plot";
 #delimit cr
+
+/* Note that "plot" invokes tree_plot, which is defined in a separate filr:
+tree_plot.ado.
+*/
 
 
 gettoken subcmd 0 :0 , parse(" ,")
@@ -90,14 +105,14 @@ __next
 __probsum
 __n_starprobs
 __residprob
+__residual
 __weight
 prob R_prob
 setvals_qui
 setvals_node_id
 setvals_varstoset
-setvals_numvalsset
 setvals_vval
-setvals_check_errors
+setvals_vars_affected
 verbose
 check
 sub
@@ -163,9 +178,10 @@ lower by 1. Notes regarding these values are being rewritten, even if dated prio
 	gen int __branch_head = .
 	gen int __branch_tail = .
 	gen int __next = .
-	gen double __probsum = . /* sum of non-star probs in child nodes */
-	gen int __n_starprobs = . /* num child nodes with missing probs */
-	gen double __residprob = . /* apportioned residual probability */
+	gen double __probsum = . /* sum of non-residual probs in child nodes */
+	gen int __n_starprobs = . /* num child nodes with residual probs */
+	gen double __residprob = . /* apportioned residual probability in child nodes */
+	gen byte __residual = 0  /* whether prob is specified as residual; see note below */
 }
 /* __branch_head and __branch_tail are for the child nodes;
 __next is for the chain that the present node may be in.
@@ -182,6 +198,12 @@ It is...
 There will also be prob1, prob2, etc -- preserved versions of prob.
 
 A value of "*" for prob is fitting but meaningless in the superroot.
+
+2023oct09: we keep a var named __residual to indicate that the prob is specified
+as resudual. We now will be using this rather than testing for prob == "*" -- to
+accommodate the case of prob being an expression (say a scalar) that evaluates
+to "*". That was not previously handled correctly.
+
 */
 
 
@@ -189,8 +211,10 @@ A value of "*" for prob is fitting but meaningless in the superroot.
 prob holds the probability of the present branch. We allow a node to be
 attached to only one parent node.
 
-If left missing, we will calculate a residual probability:
+If specified as "*", we will calculate a residual probability:
 (1- sum of all nonmissing probs in sibling nodes) / (num missing probs).
+
+(Earlier plan was to do this whenever it was missing; cancelled that.)
 
 
 namelist will establish numeric (double) content (payoff) vars.
@@ -357,7 +381,7 @@ find_tree `treename', require(noexist)
 create_node `treename', attach_id(1) nodetype("root":nodetype) label(`label')
 -- That was limited to a single tree at a time.
 
-Starting 2022oct11, we do this create_and_attach_nodes:
+Starting 2022oct11, we do this using create_and_attach_nodes:
 */
 
 create_and_attach_nodes, nodelist1(`treename') nodetype1(`="root":nodetype') ///
@@ -440,7 +464,7 @@ local setvals_varstoset `: char _dta[payoffvars]' prob
 if "`verbose'" ~= "" {
 	disp "setvals_varstoset: `setvals_varstoset'"
 }
-local setvals_numvalsset "0"
+global tree_eval_errors
 foreach v of local setvals_varstoset {
 	if "`debug'" ~= "" {
 		disp "v: `v', <``v''>"
@@ -462,28 +486,19 @@ foreach v of local setvals_varstoset {
 			`setvals_qui' replace `v' = `"`setvals_vval'"' in `setvals_node_id'
 		}
 
-		if "`check'" ~= "" & ("`v'" ~= "prob" | `"`setvals_vval'"' ~= "*") {
-			/* That test of `"`setvals_vval'"' ~= "*" is done on setvals_vval; it is important to
-			use the trimmed version of ``v''.
-
-			Check by actually setting the numeric co-variable.
-			*/
-			capture noisily replace R_`v' = `=`v'[`setvals_node_id']' in `setvals_node_id'
-			if _rc {
-				disp as err "invalid expression for `v'"
-				setvals_qui replace R_`v' = . in `setvals_node_id'
-				local setvals_check_errors "Y"
-			}
-		}
-		local ++setvals_numvalsset
+		local setvals_vars_affected "`setvals_vars_affected' `v'"
 	}
 }
 
-if "`setvals_check_errors'" ~= "" {
+if "`setvals_vars_affected'" ~= "" & "`check'" ~= "" {
+	assign_Rvals `setvals_vars_affected', id(`setvals_node_id') location(`namelist') `verbose'
+}
+
+if "$tree_eval_errors" ~= "" {
 	exit 198
 }
 
-if `setvals_numvalsset' == 0 {
+if "`setvals_vars_affected'" == "" {
 	disp "(no settings specified)"
 }
 /*
@@ -535,6 +550,8 @@ if __nodetype[`attach_id'] == "terminal":nodetype {
 `qui' set obs `node_id'
 
 `qui' replace __nodename = "`nodename'" in `node_id'
+`qui' replace __residual = 0 in `node_id'
+
 /*
 if "`label'" ~= "" {
 	`qui' replace __nodelabel = `"`label'"' in `node_id'
@@ -657,84 +674,6 @@ end /* tree_node */
 
 
 
-prog def traverse_tree
-/* This shall do recursive calling! */
-syntax, id(integer) parent(integer) depth(integer) ///
-	[location(string) action1(name) action4(name) VERbose]
-
-/*
-action1,4 program names -- to be called at various points.
-
-Prior to 2023may05, we had action2 & 3; eliminating them.
-Previous Action3 rotines will be blended into action1 routines, but reverse the parent-child roles.
-See tree.ado_save021 for historical reference.
-
-action1 is what is to be DONE at each node as it is visited, prior to
-traversing the descendant nodes.
-
-[action3 is done immediately after traversing a child node, for passing info from
-child back to the present node.]
-
-action4 is done after traversing all child nodes.
-(action4 added 2022mar01.)
-Keep the name action4 as historical legacy.
-
-These are the options that action routines must take:
-action1: id, parent, depth, location
-action4: id, parent, depth, location
-
-All take optional verbose; added 2022oct27.
-In action1, parent was added 2022feb28.
-child, for action3, is locally generated -- not passed in.
-
-Adding a probno option; 2022feb28, 21:57. Removed, 2022jun27.
-
-
-Each of these is expected to have the options shown above.
-BUT because of the generality, an instance of a given species of action routine
-must take all the options, but might not use them all.
-
-Similarly, not every call to traverse_tree needs all the options.
-*/
-
-if _N <1 {
-	disp "(no tree)"
-	exit 0
-}
-
-/*~~*/  /*disp "traverse_tree; id `id', depth `depth'" */
-
-local location "`location' `=__nodename[`id']'"
-/* Note that location initially comes in as the parent's location, but
-it now pertains to the present node.
-*/
-
-/*~~debug: disp "traverse_tree; location `location'" */
-
-
-if "`action1'" ~= "" {
-	`action1', id(`id') parent(`parent') depth(`depth') location(`location') `verbose'
-}
-
-local jj = __branch_head[`id']
-
-/* action2 would go here, conditionally; but never needed it. */
-
-while ~mi(`jj') {
-	/* Recursive call: */
-	traverse_tree, id(`jj') parent(`id') depth(`=`depth'+1') ///
-		location(`location') ///
-		action1(`action1') action4(`action4') `verbose'
-	local jj = __next[`jj']
-}
-
-if "`action4'" ~= "" {
-	`action4', id(`id') parent(`parent') depth(`depth') location(`location') `verbose'
-}
-end /* traverse_tree */
-
-
-
 prog def draw_node_prefix
 syntax, depth(integer)
 forvalues jj = 1 / `=`depth'-1' {
@@ -812,7 +751,7 @@ assert_tree_data_present
 syntax [varlist(default=none)]
 /* -- really should do no more than, say, 4 vars. */
 global tree_drawvars "`varlist'"
-traverse_tree, depth(0) id(1) parent(0) action1(draw_node)
+tree_traverse, depth(0) id(1) parent(0) action1(draw_node)
 end /* tree_draw */
 
 
@@ -828,7 +767,7 @@ if __nodetype[`id'] == "terminal":nodetype {
 		disp as err "Terminal node `id' (" __nodename[`id'] ") has branches."
 		local errors "Y"
 		/* This condition should not happen, assuming that all tree construction
-		operations are done by the programs in this file.
+		operations are done by the programs in this do-file.
 		*/
 	}
 }
@@ -855,7 +794,7 @@ end /* verify_node */
 prog def tree_verify
 assert_tree_data_present
 global tree_eval_errors
-traverse_tree, depth(0) id(1) parent(0) action1(verify_node)
+tree_traverse, depth(0) id(1) parent(0) action1(verify_node)
 if "$tree_eval_errors" ~= "" {
 	exit 459
 }
@@ -898,25 +837,9 @@ else /* terminal */ {
 	if "`verbose'" ~= "" {
 		disp " -- initializing"
 	}
-	foreach v of local payoffvars {
-		if `v'[`id'] == "" {
-			disp as err "Note: " as txt "`v'[`id'] is unassigned"
-			if "`location'" ~= "" {
-				disp as text "location: `location'"
-			}
-			`qui' replace R_`v' = . in `id'
-		}
-		else {
-			capture noisily `qui' replace R_`v' = `=`v'[`id']' in `id' // see note below
-			if _rc {
-				global tree_eval_errors "Y"
-				disp as err "error evaluating R_`v', node `id'"
-				if "`location'" ~= "" {
-					disp as text "location: `location'"
-				}
-			}
-		}
-	}
+
+	assign_Rvals `payoffvars', id(`id') location(`location') `verbose'
+
 	foreach v of global tree_rawsumvars {
 		`qui' replace S_`v' = R_`v' in `id'
 	}
@@ -986,7 +909,7 @@ else {
 
 /* If there is a parent...*/
 if `parent'>0 & ~mi(`parent') {
-	if prob[`id'] == "*" {
+	if __residual[`id'] {
 		`qui' replace __n_starprobs = __n_starprobs + 1 in `parent'
 	}
 	else {
@@ -1009,57 +932,12 @@ numerical value from an expression as a plain assignment.
 Instead, we need the `=prob[`id']' construct. Note that we need to index prob;
 otherwise, you get prob[1]. Also note that each invocation applies to ONE observation.
 
-We do this in the context of an action routine to be used in traverse_tree. But it
+We do this in the context of an action routine to be used in tree_traverse. But it
 could also be done by looping through all obs.
 */
 syntax, id(integer) parent(integer) depth(integer) [location(string) verbose]
-local prob_txt = prob[`id']
 
-if "`verbose'" == "" {
-	local qui "qui"
-}
-
-if `"`prob_txt'"' == "" {
-	if __nodetype[`id'] > "root":nodetype {
-		/* We don't get alarmed for root or superroot.
-		It is normal for them to be unassigned.
-		*/
-		disp as err "Note: " as txt "prob[`id'] is unassigned"
-		if "`location'" ~= "" {
-			disp as text "location: `location'"
-		}
-	}
-	`qui' replace R_prob = . in `id'
-}
-else if `"`prob_txt'"' == "*" {
-	`qui' replace R_prob = .z in `id'
-}
-else {
-	capture noisily `qui' replace R_prob = `=`prob_txt'' in `id'
-	if _rc {
-		global tree_eval_errors "Y"
-		disp as err "error evaluating R_prob, node `id'"
-		if "`location'" ~= "" {
-			disp as text "location: `location'"
-		}
-	}
-}
-
-/*
-Since this applies to one value, rather than a "column", we can use the -if-
-command. Earlier, I tried a cond expression:
-** replace R_prob = cond(("`prob_txt'" ~= "*"), (`prob_txt'), .z) in `id'
-But that results in invalid syntax when "`prob_txt'" == "*". It reduces to, e.g.,
-** replace R_prob = cond(("*" ~= "*"), (*), .z) in 14
-Even though the second argument (*) is not taken, it still appears in the command
-and is invalid syntax. A similar thing happened when the test for "`prob_txt'" == ""
-was included in a (compound) cond expression.
-
-Assigning local prob_txt = prob[`id']
-with an "=" evaluates the contents of prob[`id'],
-rather than taking "prob[`id']" literally. That's what we want.
-
-*/
+assign_Rvals prob, id(`id') location(`location') `verbose'
 
 /*
 Clear __probsum and __n_starprobs. {Inserted 2023may18)
@@ -1070,10 +948,90 @@ unnecessarily.
 
 See notes regarding these vars in tree_eval.
 */
+
+if "`verbose'" == "" {
+	local qui "qui"
+}
+
 `qui' replace __probsum = 0 in `id'
 `qui' replace __n_starprobs = 0 in `id'
 
 end /* init_probs */
+
+
+
+prog def assign_Rvals
+/* Set the R-values for a set of payoff vars or prob.
+Created 1023oct14. Factor-out some code that was common to init_payoffvars and
+init_probs. Later use this in the -check- option to tree_setvals.
+*/
+syntax varlist(string), id(integer) [location(string) verbose]
+if "`verbose'" == "" {
+	local qui "qui"
+}
+
+local allowedvars `: char _dta[payoffvars]' prob
+/* -- those are the payoff vars (base names) and prob. */
+
+local varlist_excess: list varlist-allowedvars
+if "`varlist_excess'" ~= "" {
+	disp as err "assign_Rvals: invalid varlist elements: `varlist_excess'"
+	exit 198
+}
+
+foreach v of local varlist {
+	local textval = trim(`v'[`id'])
+	if `"`textval'"' == "" {
+		if "`v'" ~= "prob" |  __nodetype[`id'] > "root":nodetype {
+			/* Blank `v' value; possible problem, but non-fatal; issue a warning.
+			But we don't get alarmed for root or superroot.
+			It is normal (or optional) for prob to be unassigned there.
+			*/
+			disp as err "Note: " as txt "`v'[`id'] is unassigned"
+			if "`location'" ~= "" {
+				disp as text "location: `location'"
+			}
+			`qui' replace R_`v' = . in `id'
+		}
+	}
+	else {
+		/* non-blank `v' value */
+		if "`v'" == "prob" & `"`textval'"' ~= "*" {
+			capture local qqq = `textval'
+			if (~_rc) & (`"`qqq'"' == "*") {
+				local textval "*"
+				/* This is to handle the case in which `textval' is an expression
+				(e.g., a scalar) that evaluates to "*". We change it to an actual "*".
+				Otherwise, we would get an error in evaluating R_prob;
+				we'd issue a command like
+				- replace R_prob = * in 37 -.
+				You get the response "*in invalid name".
+				2023oct09 & 15.
+				*/
+			}
+		}
+		/*~~~*/ /* disp "assign_Rvals, point 1, textval: <`textval'>" */
+		if "`v'" == "prob" & `"`textval'"' == "*" {
+			`qui' replace R_prob = .z in `id'
+		}
+		else {
+			capture replace R_`v' = `=`textval'' in `id'
+			if _rc {
+				global tree_eval_errors "Y"
+				disp as err "error evaluating R_`v', node `id'"
+				if "`location'" ~= "" {
+					disp as text "location: `location'"
+				}
+			}
+		}
+	}
+	if "`v'" == "prob" {
+		`qui' replace __residual = `"`textval'"' == "*" in `id'
+	}
+}
+end /* assign_Rvals */
+
+
 
 
 
@@ -1087,7 +1045,7 @@ Replace R_prob in the case of a residual specification.
 We PRESUME that init_probs has already been called.
 That will have taken care of the normal prob values.
 Furthermore, __residprob should have been calculated, which relies on the initial
-clearing of __probsum and __n_starprobs, and the running of adjust_probtallys under traverse_tree.
+clearing of __probsum and __n_starprobs, and the running of adjust_probtallys under tree_traverse.
 */
 
 syntax, id(integer) parent(integer) depth(integer) [location(string) verbose]
@@ -1098,7 +1056,9 @@ else {
 	disp "set_resid_probs, id `id', parent `parent'"
 }
 
-`qui' replace R_prob = __residprob[`parent'] in `id' if prob == "*"
+if __residual[`id'] {
+	`qui' replace R_prob = __residprob[`parent'] in `id'
+}
 
 /* When `id' == 1, `parent' would be 0, yielding a missing value. But that's okay. */
 end /* set_resid_probs */
@@ -1303,12 +1263,12 @@ foreach v of local means_commonvars {
 }
 
 
-traverse_tree, depth(0) id(1) parent(0) action1(init_probs) `verbose'
+tree_traverse, depth(0) id(1) parent(0) action1(init_probs) `verbose'
 
-traverse_tree, depth(0) id(1) parent(0) action1(adjust_probtallys) ///
+tree_traverse, depth(0) id(1) parent(0) action1(adjust_probtallys) ///
 	action4(check_probsum) `verbose'
 `qui' replace __residprob = (1-__probsum)/__n_starprobs
-traverse_tree, depth(0) id(1) parent(0) action1(set_resid_probs) `verbose'
+tree_traverse, depth(0) id(1) parent(0) action1(set_resid_probs) `verbose'
 
 
 /*
@@ -1317,7 +1277,7 @@ But, as noted for __probsum and __n_starprobs, we choose to do it
 node-by-node in init_payoffvars, for the same reasons.
 */
 
-traverse_tree, depth(0) id(1) parent(0) action1(init_payoffvars) ///
+tree_traverse, depth(0) id(1) parent(0) action1(init_payoffvars) ///
 	action4(add_payoff_vals_to_parent) `verbose'
 
 foreach v of local means_newvars {
@@ -1338,7 +1298,7 @@ Same goes for tree_meansvars_prior.
 */
 
 if "$tree_eval_errors" ~= "" {
-	exit 459
+	exit 198
 }
 
 end /* tree_eval */
@@ -1361,8 +1321,8 @@ else {
 
 global tree_eval_errors
 
-traverse_tree, depth(0) id(1) parent(0) action1(init_probs) `verbose'
-traverse_tree, depth(0) id(1) parent(0) action1(init_payoffvars) `verbose'
+tree_traverse, depth(0) id(1) parent(0) action1(init_probs) `verbose'
+tree_traverse, depth(0) id(1) parent(0) action1(init_payoffvars) `verbose'
 
 if "$tree_eval_errors" ~= "" {
 	exit 459
@@ -1656,3 +1616,87 @@ if `channel' < 0 | `channel'>99 {
 	exit 198
 }
 end /* check_channel */
+
+
+prog def tree_traverse
+
+/* This shall do recursive calling! */
+syntax, id(integer) parent(integer) depth(integer) ///
+	[location(string) action1(name) action4(name) VERbose]
+
+/*
+id: the obs no of the node that is visited; all of the children of this node are
+then visited -- recursively.
+
+Presumably, when this is first called, id is the root of the tree being traversed.
+
+action1,4 program names -- to be called at various points.
+
+Prior to 2023may05, we had action2 & 3; eliminating them.
+Previous Action3 rotines will be blended into action1 routines, but reverse the parent-child roles.
+See tree.ado_save021 for historical reference.
+
+action1 is what is to be DONE at each node as it is visited, prior to
+traversing the descendant nodes.
+
+[action3 is done immediately after traversing a child node, for passing info from
+child back to the present node.]
+
+action4 is done after traversing all child nodes.
+(action4 added 2022mar01.)
+Keep the name action4 as historical legacy.
+
+These are the options that action routines must take:
+action1: id, parent, depth, location
+action4: id, parent, depth, location
+
+All take optional verbose; added 2022oct27.
+In action1, parent was added 2022feb28.
+[child, for action3, is locally generated -- not passed in.]
+
+Adding a probno option; 2022feb28, 21:57. Removed, 2022jun27.
+
+
+Each of these is expected to have the options shown above.
+BUT because of the generality, an instance of a given species of action routine
+must take all the options, but might not use them all.
+
+Similarly, not every call to tree_traverse needs all the options.
+*/
+
+if _N <1 {
+	disp "(no tree)"
+	exit 0
+}
+
+/*~~*/  /*disp "tree_traverse; id `id', depth `depth'" */
+
+local location "`location' `=__nodename[`id']'"
+/* Note that location initially comes in as the parent's location, but
+it now pertains to the present node.
+*/
+
+/*~~debug: disp "tree_traverse; location `location'" */
+
+
+if "`action1'" ~= "" {
+	`action1', id(`id') parent(`parent') depth(`depth') location(`location') `verbose'
+}
+
+local jj = __branch_head[`id']
+
+/* action2 would go here, conditionally; but never needed it. */
+
+while ~mi(`jj') {
+	/* Recursive call: */
+	tree_traverse, id(`jj') parent(`id') depth(`=`depth'+1') ///
+		location(`location') ///
+		action1(`action1') action4(`action4') `verbose'
+	local jj = __next[`jj']
+}
+
+if "`action4'" ~= "" {
+	`action4', id(`id') parent(`parent') depth(`depth') location(`location') `verbose'
+}
+end /* tree_traverse */
+
