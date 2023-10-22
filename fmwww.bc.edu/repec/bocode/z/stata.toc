@@ -11,3 +11,4 @@ p zscore06 module to calculate anthropometric z-scores using the 2006 WHO child 
 p ztg module to estimate zero-truncated geometric regression
 p ztnbp module to estimate zero-truncated NegBin-P regression
 p ztpflex module to estimate zero-truncated Poisson mixture regression
+p ztree2stata module to import data created by z-Tree

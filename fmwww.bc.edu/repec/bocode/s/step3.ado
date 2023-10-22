@@ -1,8 +1,8 @@
 * Bias-Adjusted 3Step Latent Class Analysis
-* v1.1 – 20mar2023
+* v1.2 – 21oct2023
 * Written by Giovanbattista Califano
 * Dept. Agricultural Sciences – Economics and Policy Group
-* University of Naples "Federico II"
+* University of Naples Federico II
 * giovanbattista.califano@unina.it
 
 cap program drop step3
@@ -57,6 +57,7 @@ cap qui drop L_CLASS
 cap qui drop CPP_*
 cap qui drop ___c*
 cap qui drop modal_CLASS
+cap qui ren _merge MeRgE
 
 tempvar max obs1 obs2 class
 qui egen `max' = rowmax(`posterior'*)
@@ -302,5 +303,7 @@ cap qui drop L_CLASS
 cap qui drop CPP_*
 cap qui drop ___c*
 cap qui drop modal_CLASS
+cap qui ren MeRgE _merge
+
 
 end

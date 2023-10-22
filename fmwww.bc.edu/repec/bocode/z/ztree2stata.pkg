@@ -1,0 +1,24 @@
+d 'ZTREE2STATA': module to import data created by z-Tree
+d
+d      ztree2stata imports a z-Tree (Fischbacher, Zurich toolbox
+d for ready-made economic experiments, 2007) data file and converts
+d it into Stata format.  Specifically ztree2stata    opens an ASCII
+d text file saved by z-Tree, keeps the data of the specified table,
+d renames variables using the variable	  names in z-Tree, and
+d converts the data into numerical type if possible. ztree2stata is
+d a useful tool for those working with z-Tree data in Stata, as it
+d saves time and effort by streamlining the data conversion
+d process. 
+d
+d KW: data management
+d KW: z-Tree
+d
+d Requires: Stata version 8
+d
+d Distribution-Date: 20231021
+d
+d Author: Kan Takeuchi, Hitotsubashi University
+d Support: email ktakeuch@@umich.edu
+d
+f ztree2stata.ado
+f ztree2stata.sthlp

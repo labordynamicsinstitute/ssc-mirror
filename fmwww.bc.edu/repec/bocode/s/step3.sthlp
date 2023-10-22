@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1 20mar2023}{...}
+{* *! version 1.2 21oct2023}{...}
 {viewerdialog step3 "dialog step3"}{...}
 {viewerjumpto "Syntax" "step3##syntax"}{...}
 {viewerjumpto "Description" "step3##description"}{...}
@@ -97,7 +97,7 @@ This phenomenon is more evident and problematic at lower entropy levels.
 {title:Author}
 
 {pstd}Giovanbattista Califano{p_end}
-{pstd}University of Naples "Federico II"{p_end}
+{pstd}University of Naples Federico II{p_end}
 {pstd}Dept. Agricultural Sciences – Economics and Policy Group{p_end}
 {pstd}giovanbattista.califano@unina.it{p_end}
 
