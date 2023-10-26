@@ -1,4 +1,4 @@
-*! version 1.04 2023-09-19
+*! version 1.05 2023-10-25
 
 program stpm3_pred, sortpreserve
   version 16.1
@@ -352,7 +352,8 @@ program stpm3_pred, sortpreserve
         }
         local at`i'_`1'_value `2'
         if "``1'_type'" == "factor" {
-          _ms_extract_varlist `2'.`1'  // check legitimate level (could move)
+          // commented out, but now not checking if factor level not possible
+          //_ms_extract_varlist `2'.`1'  // check legitimate level (could move)
         }
         mac shift 2
         
@@ -880,8 +881,11 @@ program stpm3_pred, sortpreserve
               gen `timevalues`i'_gen' = `timevartmp`i''
             }
             local timevar`i' `timevalues`i'_gen'
-            local timevarfinal `timevarfinal' `timevar`i''
+            //local timevarfinal `timevarfinal' `timevar`i''
           }
+		  else {
+		  	local timevar`i' `timevalues`i'_gen'
+		  }
         }
         else {
           if "`centype'" == "numlist" {
@@ -892,7 +896,7 @@ program stpm3_pred, sortpreserve
         }
       }
       if "`centile'" == "" {
-        local timevarfinal `timevarfinal' `timevar`i''                                              
+        local timevarfinal `timevarfinal' `timevar`i''     
         gen byte `tnot0_`i'' = `timevar`i''>0 & !missing(`timevar`i'') & `touse'
         local results_write `results_write' `tnot0_`i''
       }
@@ -1181,7 +1185,6 @@ end
 
 program define get_variable_type
   local fvnames : colfullnames e(b)
-
   foreach var in `fvnames' {
     _ms_parse_parts `var'
     if `r(omit)' continue
@@ -1221,7 +1224,7 @@ program define get_variable_type
         if "``r(name`k')'_baseline'" != "" continue
         if "`r(op`k')'" == "c" continue
         if strpos("`r(op`k')'","b") >0 {
-          local `r(name`k')'_baseline `r(level)'
+          local `r(name`k')'_baseline `r(level`k')'
         }
       }
     }

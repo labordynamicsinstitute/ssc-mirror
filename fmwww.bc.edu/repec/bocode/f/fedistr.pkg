@@ -11,7 +11,7 @@ d KW: residuals
 d
 d Requires: Stata version 15 and reghdfe, ftools, palettes, colrspace, blindschemes from SSC (q.v.)
 d
-d Distribution-Date: 20230929
+d Distribution-Date: 20231025
 d
 d Author: Leo Ahrens, University of Konstanz
 d Support: email leo@@ahrensmail.de

@@ -1,4 +1,4 @@
-*! version 1.04 2023-09-19
+*! version 1.05 2023-10-25
 
 program stpm3, eclass byable(onecall)
 	version 16.1
@@ -295,7 +295,6 @@ program Estimate, eclass
                          userinfo(`stpm3_struct')                           ///
 	  			               search(off)                                        ///
                          `initopt'                                          ///
-                         collinear                                          /// WILL NEED OTHER TEST
 	  			               maximize  
     
     if (c(rc) == 1400) & "`initvaluesloop'" != "" {

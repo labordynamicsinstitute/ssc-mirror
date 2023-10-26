@@ -45,7 +45,8 @@
 {synopt :{cmdab:@w}}Specifies in {it:command} where to place the main weight and replicate weights.  See examples below.{p_end}
 
 {syntab :VCE Jackknife without replicate weights (e.g.: TIMSS or PIRLS)}
-{synopt :{cmdab:jrr}}specifies Jackknife be used for VCE{p_end}
+{synopt :{cmdab:jrr}}specifies that the pre-2015 TIMSS / 2016 PIRLS method be used for VCE{p_end}
+{synopt :{cmdab:jrrt2}}specifies that the TIMSS 2015 / PIRLS 2016 method be used for VCE{p_end}
 {synopt :{cmdab:weight}{cmd:(}{it:varname}{cmd:)}}Main sampling weight to be used{p_end}
 {synopt :{cmdab:jkzone}{cmd:(}{it:varname}{cmd:)}}Sampling zone variable{p_end}
 {synopt :{cmdab:jkrep}{cmd:(}{it:varname}{cmd:)}}Zone replicate weight variable{p_end}
@@ -59,8 +60,8 @@
 {synopt :{cmdab:@w}}Specifies in {it:command} where to place the main weight and replicate weights.  See examples below.{p_end}
 
 {syntab :VCE Aggregation}
-{synopt :{cmdab:timss}}specifies TIMSS formula for aggregating VCE be used{p_end}
-{synopt :{cmdab:pirls}}specifies PIRLS formula for aggregating VCE be used{p_end}
+{synopt :{cmdab:timss}}specifies that the pre-2015 TIMSS formula for aggregating VCE be used{p_end}
+{synopt :{cmdab:pirls}}specifies that the pre-2016 PIRLS formula for aggregating VCE be used{p_end}
 {synoptline}
 
 {p2colreset}{...}
@@ -118,7 +119,7 @@ See the Formulas section below.
 {cmdab:mdd} multi-dimensional draws: if more than one latent variable is included (i.e.: {opt pv1} or {opt pv2} is specified), {opt mdd}
 specifies that the plausible values for all the latent variables were generated as a single draw from a multi-dimensional posterior distribution
 (e.g.: achievement sub-domains in TIMSS).
-If ommitted, it is assumed that the plausibe values for the different latent variables were drawn independently (e.g.: math and science achievement in TIMSS).
+If omitted, it is assumed that the plausible values for the different latent variables were drawn independently (e.g.: math and science achievement in TIMSS).
 If {opt mdd} is specified, the number of plausible vales for each latent variable must be the same and must be in the same order: the first plausible value
 of latent variables {opt pv}, {opt pv1} and (if included) {opt pv2} are all from the same draw, as are the second, third, etc.  Each {it:command} is executed for each 
 draw of plausible
@@ -127,7 +128,7 @@ plausible values.  This option is not applicable unless {opt pv1} or {opt pv2} i
 
 {phang}
 {cmdab:mdd1} multi-dimensional draws: this specifies that the plausible values for
- the second and third latent varabiables (specified in the pv1 and pv2 options) were drawn together and seperately from the first latent
+ the second and third latent variables (specified in the pv1 and pv2 options) were drawn together and separately from the first latent
 variable (specified in the pv option).
 
 {phang}
@@ -144,16 +145,19 @@ variable (specified in the pv option).
 2003, 2006 and 2009 these variables are w_fstr1 - w_fstr80.
 
 {phang}
-{cmdab:fays}{cmd:(}{it:real}{cmd:)} is the Fay's adjustment. In PISA 2000, 2003, 2006, and 2009 this is 0.5.
+{cmdab:fays}{cmd:(}{it:real}{cmd:)} is the Fay's adjustment. In PISA, this is 0.5.
 
 {phang}
-{cmdab:weight}{cmd:(}{it:varname}{cmd:)} The sampling weight to be used.  In PISA this is w_fstuw.
+{cmdab:weight}{cmd:(}{it:varname}{cmd:)} The sampling weight to be used.  In PISA, this is w_fstuw.
 
 
 {dlgtab:VCE Jackknife without replicate weights}
 
 {phang}
-{cmdab:jrr} specifies that Jackknife be used for estimating the sampling variance where replicate weights are not specified.
+{cmdab:jrr} specifies that the pre-2015 TIMSS and pre-2016 PIRLS Jackknife method be used for estimating the sampling variance where replicate weights are not specified.
+
+{phang}
+{cmdab:jrrt2} specifies that the 2015 TIMSS and 2016 PIRLS Jackknife method be used for estimating the sampling variance where replicate weights are not specified.  Either {opt jrr} or {opt jrrt2} should be specified but not both.
 
 {phang}
 {cmdab:jkzone}{cmd:(}{it:varname}{cmd:)} is a categorical variable that specifies the sampling zone; for TIMSS and PIRLS
@@ -185,30 +189,44 @@ TIMSS and PIRLS, this variable is jkrep.
 {dlgtab:VCE Aggregation}
 
 {phang}
-{cmdab:timss} tells the program to aggregate the VCE according to the formula on 2-52 of IEA (2005).
+{cmdab:timss} tells the program to aggregate the VCE according to the formula on 2-52 of IEA (2005).  This is used only prior to TIMSS 2015.
 
 {phang}
 {cmdab:pirls} tells the program to aggregate the VCE according to the formula on 2-52 of IEA (2005); see
-the description of formulas below.
+the description of formulas below.  This is used prior to PIRLS 2016.
 
 {title:Examples}
 
 
 {pstd}
-Estimating statistics with PISA
+Estimating statistics with PISA 2015
+
+{phang2}{cmd:. pv, pv(pv*math) weight(w_fstuwt) brr rw(w_fsturwt*) fays(0.5): reg @pv stratio escs [aw=@w]}{p_end}
+
+{phang2}{cmd:. pvtest stratio=escs}{p_end}
+
+{phang2}{cmd:. svyset cntschid [pw=w_fstuwt], vce(brr) brrweight(w_fsturwt*) fay(0.5)}{p_end}
+
+{phang2}{cmd:. pv, pv(pv*math): svy: reg @pv stratio escs}{p_end}
+
+{phang2}{cmd:. pv, pv(pv*math): xtmixed @pv escs stratio || schoolid:}{p_end}
+
+{phang2}{cmd:. pv, pv(pv*math) brr fays(0.5) weight(w_fstuwt) rw(w_fsturwt*): mean escs [aw = @w] if @pv < 500}{p_end}
+
+{pstd}
+Estimating statistics with PISA 2000 to 2012
 
 {phang2}{cmd:. pv, pv(pv*math) weight(w_fstuwt) brr rw(w_fstr*) fays(0.5): reg @pv stratio propqual [aw=@w]}{p_end}
 
-{phang2}{cmd:. pvtest stratio=propqual}{p_end}
+{pstd}
+Estimating statistics with TIMSS 2015 and PIRLS 2016 and later
 
-{phang2}{cmd:. pv, pv(pv*math): svy: reg @pv stratio propqual}{p_end}
+{phang2}{cmd:. pv, pv(asrrea*) jkzone(jkzone) jkrep(jkrep) weight(totwgt) jrrt2: mean @pv [aw=@w]}{p_end}
 
-{phang2}{cmd:. pv, pv(pv*math): xtmixed @pv wealth schsize || schoolid:}{p_end}
-
-{phang2}{cmd:. pv, pv(pv*math) brr fays(0.5) weight(w_fstuwt) rw(w_fstr*): mean wealth [aw = @w] if @pv < 500}{p_end}
+{phang2}{cmd:. pv, pv(asrrea*) jkzone(jkzone) jkrep(jkrep) weight(totwgt) jrrt2: xi: reg @pv i.itsex [aw=@w]}{p_end}
 
 {pstd}
-Estimating statistics with TIMSS and PIRLS
+Estimating statistics with TIMSS prior to 2015 and PIRLS prior to 2016
 
 {phang2}{cmd:. pv, pv(asrrea*) jkzone(jkzone) jkrep(jkrep) weight(totwgt) jrr timss: mean @pv [aw=@w]}{p_end}
 
@@ -259,17 +277,19 @@ Estimating statistics with more than one latent variable
 
 {pstd}
 To calculate a statistic that is a function of a latent variable measured by plausible values, 
-Rubin’s (1987) combination rules are used: the statistic is calculated for each plausible value 
+Rubin s (1987) combination rules are used: the statistic is calculated for each plausible value 
 and then averaged.  Its sampling variance is based on the variation between the statistic calculated 
 for each plausible value as well as their sampling variances.  Formulas for the statistic, 
 its standard error, and its distribution can be found in OECD (2005a:79; 2005b:131) and 
-Harringa, West and Berglund (2010:356-357).  The IEA recommends a different formula for calculating 
-the standard error of the statistic for TIMSS and PIRLS data (IEA 2005: pp 2-52) which is implemented
- by specifying the {opt timss} or {opt pirls} option.
+Harringa, West and Berglund (2010:356-357).  The same formulas are recommended by the IEA for TIMSS 2015 (Foy and LaRoche 2016:4.7) and 
+PIRLS 2016 (Foy and LaRoche 2017:4.7).  Prior to the 2015 TIMSS and 2016 PIRLS, The IEA recommended a different formula for calculating 
+the standard error of statistics for TIMSS and PIRLS data (IEA 2005: pp 2-52) which is implemented by specifying the {opt timss} or {opt pirls} option.
+These options are no longer needed to implement the TIMSS 2015 or PIRLS 2016 formulas.
 
 {pstd}The formula for calculating the sampling variance using Balanced Repeated Replicates is found in 
 OECD (2005a:79).  The formula for creating the jackknife replicate weights in the TIMSS and PIRLS data 
-is found in IEA (2005: pp 2-50). 
+is found in IEA (2005: pp 2-50) prior to TIMSS 2015 and PIRLS 2016.  For TIMSS 2015, the formulas are found in 
+Foy and LaRoche (2016) and, for PIRLS 2016, in Foy and LaRoche (2017)
 
 {pstd}If more than one latent variable is included in the calculation of the statistic then the plausible values
 for each latent variable are either drawn independently from two different posterior distributions or
@@ -288,6 +308,14 @@ ordered pair of plausible values.  Options {opt mdd} and {opt mdd1} are specifie
 
 {phang}IEA (2005), {it:TIMSS 2003 User Guide for the International Database}, IEA, Chestnut Hill, MA {p_end}
 
+{phang}Foy, P., & LaRoche, S. (2016). Estimating Standard Errors in the TIMSS 2015 Results. In M. O. Martin, I. V. S. Mullis, & M. Hooper (Eds.), 
+{it:Methods and Procedures in TIMSS 2015} (pp. 4.1-4.69). Retrieved from Boston College, TIMSS & PIRLS International Study Center website: 
+http://timss.bc.edu/publications/timss/2015-methods/chapter-4.html{p_end}
+
+{phang}Foy, P. and S. LaRoche (2017). Estimating Standard Errors in the PIRLS 2016 Results. In Martin, M. O., Mullis, I. V. S., & Hooper, M. (Eds.). 
+{it:Methods and Procedures in PIRLS 2016}. Retrieved from Boston College, TIMSS & PIRLS International Study Center website: 
+https://timssandpirls.bc.edu/publications/pirls/2016-methods.html{p_end}
+
 {phang}OECD (2005a), {it:PISA 2003 Data Analysis Manual}, OECD, Paris{p_end}
 
 {phang}OECD (2005b), {it:PISA 2003 Technical Report}, OECD, Paris{p_end}
@@ -296,7 +324,7 @@ ordered pair of plausible values.  Options {opt mdd} and {opt mdd1} are specifie
 
 {title:Author}
 
-{pstd}Note that this is a significant revision to the original pv module.  Please send questions, comments or problems to the author, Kevin Macdonald, at kadmacdonald@gmail.com.{p_end}
+{pstd}Please send questions, comments or problems to the author, Kevin Macdonald, at kadmacdonald@gmail.com.{p_end}
 
 {title:Also see}
 
@@ -305,5 +333,5 @@ ordered pair of plausible values.  Options {opt mdd} and {opt mdd1} are specifie
 
 {title:Version}
 
-{pstd}Last updated 2014-01-25{p_end}
+{pstd}Last updated 2019-01-30{p_end}
 

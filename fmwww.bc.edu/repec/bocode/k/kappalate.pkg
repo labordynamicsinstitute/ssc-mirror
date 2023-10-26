@@ -1,0 +1,33 @@
+d 'KAPPALATE': module to estimate the local average treatment effect (LATE) using Abadie's kappa approach and other weighting estimators
+d
+d    kappalate estimates the local average treatment effect (LATE)
+d using methods based on inverse probability weighting, including
+d (but not limited to) Abadie's (2003) kappa approach. The
+d estimators implemented by kappalate are described in a paper by
+d Słoczyński, Uysal, and Wooldridge (2023) cited in the help
+d file. The program computes analytic standard errors for each
+d estimator. kappalate supports estimating the instrument
+d propensity score using maximum likelihood or the covariate
+d balancing approach of Imai and Ratkovic (2014). 
+d
+d KW: covariate balancing
+d KW: instrumental variables
+d KW: inverse probability weighting
+d KW: local average treatment effect (LATE)
+d KW: propensity score
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20231025
+d
+d Author:  Derya Uysal, LMU Munich
+d Support: email derya.uysal@@econ.lmu.de 
+d
+d Author:  Tymon Słoczyński , Brandeis University
+d Support: email tslocz@@brandeis.edu
+d
+d Author: Jeffrey M. Wooldridge, Michigan State University
+d Support: email  wooldri1@@msu.edu
+d
+f kappalate.ado
+f kappalate.sthlp

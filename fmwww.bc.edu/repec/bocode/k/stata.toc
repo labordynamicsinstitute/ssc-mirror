@@ -4,6 +4,7 @@ p kapgof module to compute confidence intervals for the kappa statistic
 p kaplansky module to graph examples of distributions of varying kurtosis 
 p kappa2 module to produce Generalizations of weighted kappa for incomplete designs
 p kappaetc module to evaluate interrater agreement
+p kappalate module to estimate the local average treatment effect (LATE) using Abadie's kappa approach and other weighting estimators
 p kapprevi module to plot the dependence of kappa statistic on true prevalence
 p kaputil module to generate confidence intervals and sample size calculations for the kappa-statistic
 p katego module to split a continuous numerical variable in custom categories

@@ -1182,6 +1182,32 @@ matrix mat_res_XX[l_XX+1,4]= UB_CI_XX
 }
 
  
+ // Modif Felix 
+*********************Matrix for event_plot******************************
+matrix didmgt_b2=mat_res_XX[1...,1..1]
+
+matrix didmgt_var2=J(`=l_placebo_XX'+`=l_XX'+1,1,0)
+forvalue i=1/`=`=l_placebo_XX'+`=l_XX'+1'{
+matrix didmgt_var2[`i',1]=mat_res_XX[`i',2]^2
+}
+
+*** add reference period
+local rownames2 "`rownames' Effect_0"
+matrix zero=J(1,1,0)
+matrix didmgt_b2=didmgt_b2\zero
+matrix didmgt_var2=didmgt_var2\zero
+
+matrix rownames didmgt_var2= `rownames2'
+// For compatibility with old do files:
+matrix compatibility_variances = didmgt_var2
+
+matrix rownames didmgt_b2 = `rownames2'
+matrix rownames didmgt_var2 = `rownames2'
+
+ereturn matrix estimates=didmgt_b2 
+ereturn matrix didmgt_variances=didmgt_var2
+ereturn matrix variances= compatibility_variances
+ereturn local cmd "did_multiplegt_dyn"
 
 ****************************F-tests*************************************
 
