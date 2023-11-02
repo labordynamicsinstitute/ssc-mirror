@@ -51,6 +51,7 @@ p matvsort module for sorting vectors or rows or columns of matrices
 p matwrite module to write Stata variables as MATLAB matrices
 p mauchly module to compute Mauchly’s sphericity test for repeated measures ANOVA models
 p maxdrawdown module to calculate the maximum drawdown of a stock, fund or other financial product
+p maxsum module to compute the maximum value of a rolling sum
 p maxwell module  for computing Maxwell's random error (RE) coefficient of agreement between 2 raters for binary data 
 p mbitobit module to fit bivariate Tobit regression
 p mbsens module to compute Sensitivity metric for matched sample using McNemar's test

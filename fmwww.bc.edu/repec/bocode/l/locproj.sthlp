@@ -1,6 +1,6 @@
 {smcl}
 {* First Version May 10 2023}{...}
-{* This Version June 26 2023}{...}
+{* This Version October 27 2023}{...}
 {viewerdialog locproj "dialog locproj"}{...}
 {vieweralsosee "[R] lincom" "help lincom"}{...}
 {vieweralsosee "[R] margins" "help margins"}{...}
@@ -67,7 +67,7 @@ Automatic Specification (Shock and Lags)
 {ifin}
 {cmd:,}
 [ {opt h:or(numlist integer)} {opt lcs(string)} {opt lco:pt(string)} {opt fc:ontrols(varlist)} {opt ins:tr(string)} {opt tr:ansf(string)} 
-{opt m:et(string)} {it:model_options} {opt hopt(string)} {opt conf(numlist integer)} {opt noi:sily} {opt save:irf} {opt irfn:ame(string)} 
+{opt m:et(string)} {it:model_options} {opt hopt(string)} {opt conf(numlist integer)} {opt noi:sily} {opt st:ats} {opt save:irf} {opt irfn:ame(string)} 
 {opt f:act(real)} {opt marg:ins} {opt mrfv:ar(varlist)} {opt mrpr:edict(string)} {opt mro:pt(string)} {opt nograph} {opt ti:tle(string)} 
 {opt lab:el(string)} {opt z:ero} {opt lcol:or(string)} {opt tti:tle(string)} {opt grn:ame(string)} {opt grs:ave(string)} 
 {opt as(string)} {opt gro:pt(string)}  ]{p_end}
@@ -83,7 +83,7 @@ Explicit Specification (Shock and Lags)
 {cmd:,}
 [ {opt h:or(numlist integer)} {opt s:hock(varlist)} {opt c:ontrols(varlist)} {opt yl:ags(integer)} {opt sl:ags(integer)} {opt lcs(string)} 
 {opt lco:pt(string)} {opt fc:ontrols(varlist)} {opt ins:tr(string)} {opt tr:ansf(string)} {opt m:et(string)} {it:model_options} {opt hopt(string)} 
-{opt conf(numlist integer)} {opt noi:sily} {opt save:irf} {opt irfn:ame(string)} {opt f:act(real)} {opt marg:ins} {opt mrfv:ar(varlist)} 
+{opt conf(numlist integer)} {opt noi:sily} {opt st:ats} {opt save:irf} {opt irfn:ame(string)} {opt f:act(real)} {opt marg:ins} {opt mrfv:ar(varlist)} 
 {opt mrpr:edict(string)} {opt mro:pt(string)} {opt nograph} {opt ti:tle(string)} {opt lab:el(string)} {opt z:ero} {opt lcol:or(string)} 
 {opt tti:tle(string)} {opt grn:ame(string)} {opt grs:ave(string)} {opt as(string)} {opt gro:pt(string)} ]{p_end}
 
@@ -205,6 +205,10 @@ that must change with every step/horizon of the IRF {it:h = 0...hor}.{p_end}
 {synopt:{opt noi:sily}}If this option is specified, the command displays a regression output for each one of the horizons. If this option 
 is not specified the command only returns a matrix with the IRF, its standard error and the confidence bands. {p_end}
 
+{synopt:{opt st:ats}}If this option is specified, the command displays a table with the summary statistics of the estimated regression
+at each step/horizon. The table includes the number of observations, the R-squared or pseudo-R-squared, the F-statistic or Chi2-statistic,
+and the p-value (prob) of the respective statistic. {p_end}
+
 
 {syntab:{bf:IRF Options:}}
 
@@ -249,11 +253,12 @@ in percentage terms, this option should be specified as fact(100).{p_end}
 {title:Stored results}
 
 {pstd}
-{cmd:locproj} stores the following in {cmd:r()}:
+{cmd:locproj} stores the following in {cmd:e()}:
 
 {synoptset 18 tabbed}{...}
 {p2col 5 18 22 2: Matrices}{p_end}
-{synopt:{bf:r(irf)}}A matrix including the Impulse Response Function (IRF), its standard error and its confidence interval.{p_end}
+{synopt:{bf:e(irf)}}A matrix including the Impulse Response Function (IRF), its standard error and its confidence interval.{p_end}
+{synopt:{bf:e(stats)}}A matrix including the regression statistics by each step/horizon.{p_end}
 
 {p2col 5 18 22 2: Name of Generated Variables if no name is defined:}{p_end}
 
@@ -344,12 +349,17 @@ The Jordà example requires using Newey-West as the estimation method, which con
 
 {title:Example 1.4. Displaying all the regression outputs}
 
-If we want to take a look at the regression output for each one of the horizons of the IRF we can use the option noisily. The regression
-outputs displayed are not the direct outputs from whatever estimation method we are using, but a simplified output table. 
+If we want to take a look at the regression output for each one of the horizons of the IRF we can use the options noisily and stats. 
+The regression outputs displayed are not the direct outputs from whatever estimation method we are using, but a simplified output table. 
 The reason for this is that {cmd: locproj} uses temporary variables whose given names do not have any meaning and would be difficult to 
 understand. {cmd: locproj} generates a new output table with variable names related to the variable list defined by the user. 
 
 {p 4 8 2}{cmd:. locproj gs10 l(0/4).gs1, h(12) m(newey) hopt(lag) yl(3) noisily}{p_end}
+
+The {bf:stats} option generates a table with each regression statistics for every horizon, i.e. number of observations, R-squared 
+or pseudo-R-squared, F-statistic or Chi2-statistic and their respective p-values.
+
+{p 4 8 2}{cmd:. locproj gs10 l(0/4).gs1, h(12) m(newey) hopt(lag) yl(3) stats}{p_end}
 
 
 {title:Example 1.5. Use of the transformation options}

@@ -1,12 +1,12 @@
-*! version 2 August 03 2023
+*! version 27 October 03 2023
 * First Version May 10 2023
 program locproj, eclass
 version 13.0:
 
 	syntax varlist (fv ts) [if] [in], [Hor(numlist integer) Shock(varlist fv ts) Controls(varlist fv ts) FControls(varlist fv ts) Met(string) /*
-	*/TRansf(string) lcs(string) YLags(integer 0) SLags(integer 0) LCOpt(string) SAVEirf IRFName(string) INStr(string) NOIsily hopt(string) Fact(real 1) /*
-	*/conf(numlist max=2 integer) nograph LCOLor(string) TItle(string) LABel(string) TTItle(string) Zero GRName(string) GRSave(string) as(string) /*
-	*/GROpt(string) MARGins MRFVar(varlist fv ts) MRPRed(string) MROpt(string) * ]
+	*/TRansf(string) lcs(string) YLags(integer 0) SLags(integer 0) LCOpt(string) SAVEirf IRFName(string) INStr(string) NOIsily STats hopt(string) /*
+	*/Fact(real 1) conf(numlist max=2 integer) nograph LCOLor(string) TItle(string) LABel(string) TTItle(string) Zero GRName(string) GRSave(string) /*
+	*/as(string) GROpt(string) MARGins MRFVar(varlist fv ts) MRPRed(string) MROpt(string) * ]
 
 *********************************************************************************************************************************************
 *********************************************************************************************************************************************
@@ -276,6 +276,8 @@ label var `birf' "`label'"
 
 *********************************************************************************************************************************************
 *********************************************************************************************************************************************
+matrix stats = J(`hor'+`chl'-`hs'+1,6,.)
+
 qui {
 	forval h=`hran' {
 		if `hs'==0 loc k=`h'+ 1 +`chl'
@@ -299,6 +301,18 @@ qui {
         matrix `b`h'' = e(b)
         matrix `V`h'' = e(V)
 		loc cfn : colfullnames e(b)
+		
+		matrix stats[`h'+`chl'+1,1]=e(N)
+		if e(r2)!=. matrix stats[`h'+`chl'+1,2]=e(r2)
+		else if e(r2_o)!=. matrix stats[`h'+`chl'+1,2]=e(r2_o)
+		else matrix stats[`h'+`chl'+1,2]=1-e(rss)/(e(rss)+e(mss))
+		matrix stats[`h'+`chl'+1,3]=e(r2_p)
+		matrix stats[`h'+`chl'+1,4]=e(F)
+		matrix stats[`h'+`chl'+1,5]=e(chi2)		
+		if e(p)!=.  matrix stats[`h'+`chl'+1,6]=e(p)
+		else if e(F)!=. matrix stats[`h'+`chl'+1,6]=1-F(e(df_m)+1,e(df_r),e(F))
+		else matrix stats[`h'+`chl'+1,6]=1-chi2(e(df_m)+1,e(chi2))
+
 		
 		local cfn=regexr("`cfn'","`ltr'","`ltrn'")
 		if `ylags'>1 {
@@ -408,8 +422,14 @@ if `nconf'>1 {
 }
 forval i=`hran' {
 	loc rows `rows' `i'
+	loc lines `lines'&
 }
 matrix rownames IRF = `rows'
+
+matrix colnames stats = " N " "R2" "psR2" "F" "Chi2" "Prob"
+matrix rownames stats = `rows'
+
+if "`stats'"=="stats" matlist stats, cspec(&o2 R %9.0f o2|%9.0f & %9.3f & %9.3f & %9.2f & %9.2f & %9.4f &) rspec(&-`lines') title("Statistics by step")
 matlist IRF, noheader format(%9.5f) title("Impulse Response Function") lines(oneline)
 
 *********************************************************************************************************************************************

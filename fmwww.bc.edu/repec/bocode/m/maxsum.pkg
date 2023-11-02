@@ -1,0 +1,23 @@
+d 'MAXSUM': module to compute the maximum value of a rolling sum
+d
+d  maxsum is a convenience tool for computing the maximum value of
+d a rolling (cumulative) sum of an expression. It is intended to
+d offer Stata users a comparable solution to R's sum() function or
+d MS Excel's sum() function. 
+d
+d KW: rolling sum
+d KW: running total
+d KW: cumulative sum
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20231101
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+d Author: Lawrence Lin, NA
+d Support: email 
+d
+f maxsum.ado
+f maxsum.sthlp
