@@ -1958,6 +1958,95 @@ real scalar _geo_rayintersect(real scalar px, real scalar py,
 end
 
 *! {smcl}
+*! {marker geo_refine}{bf:geo_refine()}{asis}
+*! version 1.0.1  31oct2023  Ben Jann
+*!
+*! Refines polygon by adding extra points such that maximum distance between
+*! neighboring points is smaller than or equal to delta.
+*!
+*! Syntax:
+*!
+*!      result = geo_refine(XY, delta)
+*!
+*!  result  n x 2 real matrix containing refined shapes
+*!  XY      n x 2 real matrix containing the (X,Y) coordinates of the shapes
+*!          to be refined; separate shape items divided by missing
+*!  delta   real scalar specifying threshold for adding points (minimum
+*!          distance)
+*!
+
+local Int   real scalar
+local RS    real scalar
+local RR    real rowvector
+local RM    real matrix
+
+mata:
+mata set matastrict on
+
+`RM' geo_refine(`RM' XY, `RS' delta)
+{
+    `Int' i, n, j, r, k
+    `RS'  d
+    `RR'  xy1, xy0
+    `RM'  xy
+    
+    if (cols(XY)!=2) {
+        errprintf("{it:XY} must have two columns\n")
+        exit(3200)
+    }
+    d = abs(delta)
+    if (d==0) return(XY) // do not refine if delta=0
+    n = rows(XY)
+    xy = J(r=n, 2, .)
+    j = 0
+    xy1 = (.,.)
+    for (i=1;i<=n;i++) {
+        xy0 = xy1
+        xy1 = XY[i,]
+        if (hasmissing(xy0)) { // first point after missing
+            _geo_refine_add1(xy, ++j, r, n, xy1)
+            continue
+        }
+        if (hasmissing(xy1)) { // missing point
+            _geo_refine_add1(xy, ++j, r, n, xy1)
+            continue
+        }
+        k = ceil(sqrt((xy1[1]-xy0[1])^2 + (xy1[2]-xy0[2])^2) / d)
+        if (k<=1) {
+            _geo_refine_add1(xy, ++j, r, n, xy1)
+            continue
+        }
+        _geo_refine_addn(xy, j, r, n,
+            xy0 :+ (1::k-1)/k * (xy1[1] - xy0[1], xy1[2] - xy0[2]) \ xy1) 
+    }
+    return(xy[|1,1 \ j,.|])
+}
+
+void _geo_refine_add1(`RM' XY, `Int' j, `Int' r, `Int' n, `RR' xy)
+{
+    if (j>r) {
+        XY = XY \ J(n, 2, .)
+        r = r + n
+    }
+    XY[j,] = xy
+}
+
+void _geo_refine_addn(`RM' XY, `Int' j, `Int' r, `Int' n, `RM' xy)
+{
+    real scalar j0
+    
+    j0 = j + 1
+    j  = j + rows(xy)
+    while (j>r) {
+        XY = XY \ J(n, 2, .)
+        r = r + n
+    }
+    XY[|j0,1 \ j,.|] = xy
+}
+
+end
+
+*! {smcl}
 *! {marker geo_rotate}{bf:geo_rotate()}{asis}
 *! version 1.0.0  27jun2023  Ben Jann
 *!

@@ -1,4 +1,4 @@
-*! version 3.00  August 2, 2023 @ 10:52:05 UK
+*! version 3.01  November 1, 2023 @ 15:09:45 UK
 
 * 1.01 Re-design - psiduse/psidadd -> -psid use- -psid add-/alpha tester version
 * 1.02 Various Bug fixes, subprograms vardoc and long added -> First published on SSC
@@ -14,6 +14,7 @@
 * 2.14 Bug fix
 * 2.15 Bug fix
 * 3.00 Updated to PSID delivery 2021
+* 3.01 Wrong identifiers for CAH files. Fixed
 
 * Selector Program
 program psid
@@ -575,13 +576,13 @@ program _PROCESS_cah
 	
 	// Heading for Do-File, if any
 	if "`doc'" != "" {
-		file write fout _n _n "// == [ Marriage history] == "
+		file write fout _n _n "// == [ Childhood and Adaption History ] == "
 	}
 	
-	`doc' use `cah'1 `cah'2 `cah'3 `wavevars'  ///
+	`doc' use `cah'3 `cah'4 `wavevars'  ///
 	  using `"`using'/`cahfile'"', clear
-	`doc' gen long x11101ll =`cah'2*1000 + `cah'3
-	`doc' drop `cah'2 `cah'3
+	`doc' gen long x11101ll =`cah'3*1000 + `cah'4
+	`doc' drop `cah'3 `cah'3
 	`doc' lab var x11101ll "Person identification number"
 end
 

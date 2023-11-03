@@ -1,0 +1,45 @@
+d 'ARTCAT': module to calculate sample size or power for a two-group trial with ordered categorical outcome
+d
+d   artcat calculates sample size given power, or power given
+d sample size, for a 2-group randomised controlled trial with an
+d ordered categorical outcome.	Superiority, non-inferiority and
+d substantial-superiority (also called super-superiority) trial
+d types are all supported. 
+d
+d KW: power
+d KW: sample size
+d KW: RCT
+d KW: ordered categorical outcome
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20231102
+d
+d Author: Ian R. White, University College London
+d Support: email ian.white@@ucl.ac.uk
+d
+d Author: Ella Marley-Zagar, University College London
+d Support: email e.marley-zagar@@ucl.ac.uk
+d
+d Author: Tim P. Morris, University College London
+d Support: email tim.morris@@ucl.ac.uk
+d
+d Author: Mahesh K. B. Parmar, University College London
+d Support: email m.parmar@@ucl.ac.uk
+d
+d Author: Patrick Royston, University College London
+d Support: email j.royston@@ucl.ac.uk
+d
+d Author: Abdel G. Babiker, University College London
+d Support: email a.babiker@@ucl.ac.uk
+d
+f artcat.ado
+f artcat.sthlp
+f artcat_check_errormsgs.do
+f artcat_examples.do
+f artcat_test.do
+f artcat_test_consistency.do
+f artcat_compare_with_Whitehead.do
+f artcat_compare_with_power.do
+f artcat_compare_with_dani.do
+f artcat_compare_with_artbin.do

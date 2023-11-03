@@ -1,4 +1,4 @@
-*! version 1.1.7  23oct2023  Ben Jann
+*! version 1.2.0  02nov2023  Ben Jann
 
 program geoframe, rclass
     version 16.1
@@ -880,9 +880,15 @@ program _geoframe_project
                 if `"`ifshp'"'!="" & `"`into'"'=="" {
                     // update sample in attribute frame; already ok if select
                     // has been applied
+                    frame `shpframe' {
+                        // tag units with nonzero selection
+                        tempvar merge
+                        qui gen byte `merge' = `touse'
+                        mata: _set_one_if_any("`shpid'" , "`merge'")
+                    }
                     drop `touse'
                     _copy_from_shpframe `id' `shpid' `shpframe'/*
-                        */ `lnkvar' "`touse'"
+                        */ `lnkvar' "`merge'" "`touse' = `merge'"
                     qui replace `touse' = 0 if `touse'>=.
                 }
             }
@@ -1057,6 +1063,10 @@ program _geoframe_simplify
     __geoframe_manipulate simplify `0'
 end
 
+program _geoframe_refine
+    __geoframe_manipulate refine `0'
+end
+
 program _geoframe_bshare
     __geoframe_manipulate bshare `0'
 end
@@ -1067,7 +1077,7 @@ program __geoframe_manipulate
     local opts nodrop noDOTs into(namelist max=2) replace CURrent
     if "`subcmd'"=="clip" {
         syntax [if] [in], mask(str) [ rclip/*
-            */ Line noCLip STrict SPlit `opts' ]
+            */ Line noCLip STrict noSPlit `opts' ]
     }
     else if "`subcmd'"=="simplify" {
         syntax [anything(id="delta" name=delta)] [if] [in] [,/*
@@ -1076,6 +1086,15 @@ program __geoframe_manipulate
             numlist `"`delta'"', max(1) range(>=0)
             local delta `r(numlist)'
         }
+    }
+    else if "`subcmd'"=="refine" {
+        syntax [anything(id="delta" name=delta)] [if] [in] [,/*
+            */ ABSolute `opts' ]
+        if "`delta'"!="" {
+            numlist `"`delta'"', max(1) range(>=0)
+            local delta `r(numlist)'
+        }
+        if "`drop'"=="" local drop nodrop 
     }
     else if "`subcmd'"=="bshare" {
         syntax [if] [in] [, NOT `opts' ]
@@ -1114,6 +1133,10 @@ program __geoframe_manipulate
             __geoframe_simplify `touse' "`delta'" "`absolute'" "`jointly'"/*
                 */ "`drop'" "`dots'" // => Ndrop
         }
+        else if "`subcmd'"=="refine" {
+            __geoframe_refine `touse' "`delta'" "`absolute'"/*
+                */ "`dots'" // => Nadd
+        }
         else if "`subcmd'"=="bshare" {
             __geoframe_bshare `touse' "`not'" "`drop'" "`dots'" // => Ndrop
         }
@@ -1139,10 +1162,12 @@ program __geoframe_manipulate
         }
     }
     // reporting and frame change
-    if `Ndrop'==1 local msg observation
-    else          local msg observations
-    local tmp `: di %9.0gc `Ndrop''
-    __di_frame "(dropped `tmp' `msg' in frame " `shpframe' ")"
+    if "`Ndrop'"!="" {
+        if `Ndrop'==1 local msg observation
+        else          local msg observations
+        local tmp `: di %9.0gc `Ndrop''
+        __di_frame "(dropped `tmp' `msg' in frame " `shpframe' ")"
+    }
     if "`Nadd'"!="" {
         if `Nadd'==1 local msg observation
         else         local msg observations
@@ -1164,7 +1189,7 @@ program __geoframe_manipulate
 end
 
 program ___geoframe_clip
-    args touse MASK rclip line noclip strict split drop dots
+    args touse MASK rclip line noclip strict nosplit drop dots
     __get coordinates, local(XY) strict
     gettoken X XY : XY
     gettoken Y XY : XY
@@ -1188,7 +1213,7 @@ program ___geoframe_clip
     local poly 1 // 0 = individual observation, 1 = groups of observations
     if "`noclip'"!="" {
         if "`point'"!="" {
-            if "`split'"!="" local poly 0
+            if "`nosplit'"=="" local poly 0
             else {
                 capt assert (_n==1 | `id'!=`id'[_n-1]) if `touse'
                 if _rc==1 exit _rc
@@ -1213,7 +1238,7 @@ program ___geoframe_clip
     if `poly' {
         if "`noclip'"!="" {
             mata: _noclip("`touse'", "`id'", "`pid'", "`rclip'"!="", "`OUT'",/*
-                */ ("`X'","`Y'"), "`MASK'", "`strict'"!="", "`split'"!="",/*
+                */ ("`X'","`Y'"), "`MASK'", "`strict'"!="", "`nosplit'"!="",/*
                 */ "`drop'"!="", "`dots'"=="")
         }
         else {
@@ -1242,10 +1267,10 @@ program __geoframe_simplify
     if "`delta'"=="" | "`absolute'"=="" {
         if "`delta'"=="" local delta 1
         su `X' if `touse', meanonly
-        local xrange = r(max)-r(mean)
+        local xrange = r(max)-r(min)
         su `Y' if `touse', meanonly
-        local yrange = r(max)-r(mean)
-        local delta = (`xrange'/1000) * (`yrange'/1000) / 2 * `delta'
+        local yrange = r(max)-r(min)
+        local delta = (`xrange'/2000) * (`yrange'/2000) / 2 * `delta'
     }
     local msg `: di %9.0g `delta''
     di as txt "(threshold = `msg')"
@@ -1253,6 +1278,31 @@ program __geoframe_simplify
         */ "`jointly'"!="", "`drop'"!="", "`dots'"=="")
     qui drop if `OUT'
     c_local Ndrop = r(N_drop)
+end
+
+program __geoframe_refine
+    args touse delta absolute dots
+    __get id, local(ID)
+    if `"`ID'"'=="" {
+        tempvar ID
+        qui gen byte `ID' = 1
+    }
+    qui __get coordinates, local(XY) strict
+    gettoken X XY : XY
+    gettoken Y XY : XY
+    if "`delta'"=="" | "`absolute'"=="" {
+        if "`delta'"=="" local delta 1
+        su `X' if `touse', meanonly
+        local xrange = r(max)-r(min)
+        su `Y' if `touse', meanonly
+        local yrange = r(max)-r(min)
+        local delta = sqrt(`xrange'^2 + `yrange'^2) / 200 / `delta'
+        if `delta'==0 local delta .
+    }
+    local msg `: di %9.0g `delta''
+    di as txt "(threshold = `msg')"
+    mata: _refine("`ID'", ("`X'","`Y'"), "`touse'", `delta', "`dots'"=="")
+    c_local Nadd `Nadd'
 end
 
 program __geoframe_bshare
@@ -1650,9 +1700,12 @@ program _geoframe_generate_shpmatch
 end
 
 program _geoframe_bbox
-    syntax name(id="newname" name=newname) [if] [in] [, noShp/*
+    syntax namelist(id="newname" name=newnames max=2) [if] [in] [, noShp/*
         */ by(varname numeric) ROTate CIRcle hull PADding(real 0)/*
         */ n(numlist int max=1 >0) ANGle(real 0) noADJust replace CURrent ]
+    gettoken newname newnames : newnames
+    gettoken newshpname : newnames
+    if "`newshpname'"=="" local newshpname "`newname'_shp"
     if "`hull'"!="" & "`circle'"!="" {
         di as err "only one of {bf:circle} and {bf:hull} allowed"
         exit 198
@@ -1662,7 +1715,10 @@ program _geoframe_bbox
     else if "`rotate'"!="" local btype 1
     else                   local btype 0
     if "`n'"=="" local n 100
-    if "`replace'"=="" confirm new frame `newname'
+    if "`replace'"=="" {
+        confirm new frame `newname'
+        confirm new frame `newshpname'
+    }
     // mark sample
     marksample touse
     if "`by'"!="" markout `touse' `by'
@@ -1698,40 +1754,59 @@ program _geoframe_bbox
         }
     }
     // prepare new frame
-    tempname newframe
-    frame create `newframe' double(_ID _X _Y)
+    tempname newframe newshpframe
+    frame create `newframe' double(_ID)
+    frame create `newshpframe' double(_ID _X _Y)
     // obtain boxes/MECs
     frame `shpframe' {
         if "`BY'"!="" {
             if "`BY'"=="`ID'" {
-                mata: _bbox2("`newframe'", `"`XY'"', "`touse'",/*
+                mata: _bbox2("`newshpframe'", `"`XY'"', "`touse'",/*
                      */ `btype', `n', `padding', "`adjust'"=="",/*
                      */ `angle', "`BY'")
             }
             else {
                 qui levelsof `BY' if `touse', local(bylvls)
                 foreach lvl of local bylvls {
-                    mata: _bbox1("`newframe'", `"`XY'"', "`touse'",/*
+                    mata: _bbox1("`newshpframe'", `"`XY'"', "`touse'",/*
                          */ `btype', `n', `padding', "`adjust'"=="",/*
                          */ `angle', "`BY'", `lvl')
                 }
             }
         }
         else {
-            mata: _bbox1("`newframe'", `"`XY'"', "`touse'",/*
+            mata: _bbox1("`newshpframe'", `"`XY'"', "`touse'",/*
                  */ `btype', `n', `padding',"`adjust'"=="", `angle')
+            frame `newshpframe': qui replace _ID = 1
+        }
+        frame `newshpframe' {
+            qui compress _ID
+            __geoframe_set_type shape
         }
     }
-    // cleanup
     frame `newframe' {
-        qui compress _ID
-        __geoframe_set_type shape
+        qui geoframe append `newshpframe' _ID if _n==1 | _ID!=_ID[_n-1]
+        __geoframe_set_type unit
+        qui _geoframe_link `newshpframe'
+        qui geoframe generate centroids
+        qui _geoframe_unlink
+    }
+    // cleanup
+    frame `newshpframe' {
+        capt confirm new frame `newshpname'
+        if _rc==1 exit 1
+        if _rc frame drop `newshpname'
+        frame rename `newshpframe' `newshpname'
+    }
+    frame `newframe' {
         capt confirm new frame `newname'
         if _rc==1 exit 1
         if _rc frame drop `newname'
         frame rename `newframe' `newname'
-        __di_frame "(new frame " `newname' " created)"
+        qui _geoframe_link `newshpname'
     }
+    __di_frame "(new frame " `newname' " created)"
+    __di_frame "(new frame " `newshpname' " created)"
     if "`current'"!="" {
         if "`newname'"!=`"`cframe'"' {
             frame change `newname'
@@ -1741,24 +1816,34 @@ program _geoframe_bbox
 end
 
 program _geoframe_symbol
-    syntax name(id="newname" name=name) [if] [in] [, * ]
-    __geoframe_symbol `name' `if' `in', `options'
+    syntax namelist(id="newname" name=newnames max=2) [if] [in] [, * ]
+    __geoframe_symbol `newnames' `if' `in', `options'
 end
 
 program _geoframe_symboli
     syntax anything(id="newname") [, * ]
-    gettoken name anything : anything
+    gettoken name    anything : anything
+    gettoken shpname          : anything
     confirm name `name'
+    capt confirm name `shpname'
+    if _rc==1 exit _rc
+    if _rc local shpname "`name'_shp"           // 2nd element is not a name
+    else   gettoken shpname anything : anything // 2nd element is a name
     numlist `"`anything'"', min(3)
-    __geoframe_symbol `name' `r(numlist)', `options'
+    __geoframe_symbol `name' `shpname' `r(numlist)', `options'
 end
 
 program __geoframe_symbol
     syntax anything [if] [in] [, replace/*
         */ SHape(passthru) SIze(passthru) OFFset(passthru) ANGle(passthru)/*
         */ ratio(passthru) n(passthru) CURrent ]
-    gettoken newname anything : anything
-    if "`replace'"=="" confirm new frame `newname'
+    gettoken newname     anything : anything
+    gettoken newshpname  anything : anything
+    if "`newshpname'"=="" local newshpname "`newname'_shp"
+    if "`replace'"=="" {
+        confirm new frame `newname'
+        confirm new frame `newshpname'
+    }
     local cframe `"`c(frame)'"'
     // generate symbols
     if `: list sizeof anything' {
@@ -1787,20 +1872,33 @@ program __geoframe_symbol
         local frame `"`c(frame)'"'
         __get id, l(ID)
     }
-    tempname newframe
-    _geoplot_symbol . . `frame' `if' `in', _frameonly(`newframe' `ID')/*
+    tempname newframe newshpframe
+    frame create `newframe' double(_ID _CX _CY)
+    _geoplot_symbol . . `frame' `if' `in', _frameonly(`newshpframe' `ID')/*
         */ `shape' `size' `offset' `angle' `ratio' `n'
-    // cleanup
     frame `newframe' {
-        drop W
+        qui geoframe append `newshpframe' _ID _CX _CY if _n==1 | _ID!=_ID[_n-1]
+        __geoframe_set_type unit
+    }
+    // cleanup
+    frame `newshpframe' {
         order _ID
+        drop W _CX _CY
         __geoframe_set_type shape
+        capt confirm new frame `newshpname'
+        if _rc==1 exit 1
+        if _rc frame drop `newshpname'
+        frame rename `newshpframe' `newshpname'
+    }
+    frame `newframe' {
         capt confirm new frame `newname'
         if _rc==1 exit 1
         if _rc frame drop `newname'
         frame rename `newframe' `newname'
-        __di_frame "(new frame " `newname' " created)"
+        qui _geoframe_link `newshpname'
     }
+    __di_frame "(new frame " `newname' " created)"
+    __di_frame "(new frame " `newshpname' " created)"
     if "`current'"!="" {
         if "`newname'"!=`"`cframe'"' {
             frame change `newname'
@@ -1936,7 +2034,7 @@ program __geoframe_collapse
     gettoken frame 0 : 0, parse(" ,")
     frame `frame' {
         local opts COordinates(passthru) SELect(passthru) id(varname)/*
-            */ GENerate GENerate2(str)
+            */ GENerate GENerate2(str) noDOTs
         if `contract' {
             syntax [if] [in] [fw] [, `opts' * ]
         }
@@ -1963,7 +2061,7 @@ program __geoframe_collapse
         else {
             if `"`generate'"'!="" {
                 __geoframe_collapse_parse_gen `generate2' /*
-                    returns generate, replace, set */
+                    returns generate, replace, set, sort*/
                 local ID `generate'
                 local novarnote
             }
@@ -1971,10 +2069,11 @@ program __geoframe_collapse
                 tempname ID
                 local replace
                 local set noset
+                local sort nosort
                 local novarnote novarnote
             }
-            _geoframe_spjoin `cframe' `ID' `if' `in',/*
-                */ `select' `coordinates' `replace' `set' `novarnote'
+            _geoframe_spjoin `cframe' `ID' `if' `in', `dots' `select'/*
+                */ `coordinates' `replace' `set' `sort' `novarnote'
         }
     }
     tempname frame1
@@ -2001,16 +2100,18 @@ program __geoframe_collapse
 end
 
 program __geoframe_collapse_parse_gen
-    syntax [name] [, replace noset ]
+    syntax [name] [, replace noset nosort ]
     if "`namelist'"=="" local namelist _ID // default
     c_local generate `namelist'
     c_local replace `replace'
     c_local set `set'
+    c_local sort `sort'
 end
 
 program _geoframe_spjoin
     syntax [namelist(min=1 max=2)] [if] [in] [, SELect(str asis) /*
-        */ COordinates(varlist min=2 max=2) replace noset NOVARNOTE noDOTs ]
+        */ COordinates(varlist min=2 max=2) replace nosort noset/*
+        */ NOVARNOTE noDOTs ]
     marksample touse
     gettoken shpframe namelist : namelist
     gettoken id       namelist : namelist
@@ -2076,11 +2177,19 @@ program _geoframe_spjoin
     if _rc==1 exit _rc
     if _rc drop `id'
     rename `Id' `id'
+    if "`sort'"=="" {
+        tempvar sortindex
+        qui gen double `sortindex' = _n
+        sort `id' `sortindex'
+    }
     if "`set'"=="" {
         _geoframe_set id `id'
     }
     if "`novarnote'"=="" {
         __di_frame "(variable {bf:`id'} added to frame " `frame' ")"
+        if "`sort'"=="" {
+            __di_frame "(data in frame " `frame' " sorted by {bf:`id'})"
+        }
     }
 end
 
@@ -2834,15 +2943,8 @@ program _geoframe_translate
     gettoken subcmd : 0, parse(" ,")
     local subcmd = strlower(`"`subcmd'"')
     if `"`subcmd'"'=="esri" gettoken subcmd 0 : 0, parse(" ,")
-    __geoframe_translate_esri `0'
-end
-
-program _geoframe_convert
-    _geoframe_translate `0'
-end
-
-program __geoframe_translate_esri
-    syntax [anything(equalok)] [using] [, * ]
+    else                    local subcmd esri
+    syntax [anything] [using] [, * ]
     if `:list sizeof using'==0 {
         if `:list sizeof anything'>1 {
             gettoken outname anything : anything
@@ -2852,9 +2954,63 @@ program __geoframe_translate_esri
         }
         local 0 `macval(outname)' `macval(anything)', `macval(options)'
     }
-    syntax [anything(name=outname)] using/ [, user replace ]
+    syntax [anything] using/ [, * ]
+    if `"`anything'"'=="" local anything `""""'
+    mata: _translate_zipname(st_local("using")) // => zip using shpname
+    if `zip' {
+        __geoframe_ziptranslate `subcmd' `anything' `"`using'"'/*
+            */ `"`shpname'"', `options'
+    }
+    else {
+        __geoframe_translate_`subcmd' `anything' `"`using'"', `options'
+    }
+end
+
+program _geoframe_convert
+    _geoframe_translate `0'
+end
+
+program __geoframe_ziptranslate
+    _parse comma lhs 0 : 0
+    gettoken subcmd  lhs : lhs
+    gettoken outname lhs : lhs
+    gettoken using   lhs : lhs
+    gettoken shpname     : lhs
+    while (1) { // find name for temporary directory
+        tempname tmpdir
+        mata: st_local("dirok", strofreal(!direxists("`tmpdir'")))
+        if `dirok' continue, break
+    }
+    local using0 `"`using'"'
+    mata: !pathisabs(st_local("using"))/*
+        */ ? st_local("using", pathjoin(pwd(), st_local("using")))/*
+        */ : J(0,0,.)
+    local pwd `"`c(pwd)'"'
+    nobreak {
+        mkdir `tmpdir'
+        capture noisily break {
+            qui cd `tmpdir'
+            qui unzipfile `"`using'"', replace
+            mata: _ziptranslate_findshp(st_local("shpname"),/* updates shpname
+                */ "`tmpdir'", st_local("using0"))
+            qui cd `"`pwd'"'
+            if strtrim(`"`outname'"')=="" local outname `""""'
+            __geoframe_translate_`subcmd' `outname' `"`shpname'"' `0'
+        }
+        local rc = _rc
+        qui cd `"`pwd'"'
+        mata: _ziptranslate_cleanup("`tmpdir'")
+        exit `rc'
+    }
+end
+
+program __geoframe_translate_esri
+    _parse comma lhs 0 : 0
+    syntax [, user replace ]
+    gettoken outname lhs : lhs
+    gettoken using   lhs : lhs
     mata: _translate_using(st_local("using")) // => using path basename
-    mata: _translate_outname(st_local("outname")) // => outpath outname
+    mata: _translate_outname(strtrim(st_local("outname"))) // => outpath outname
     if `"`outname'"'=="" local outname `"`basename'"'
     local hasoutpath: list sizeof outpath
     if `hasoutpath' {
@@ -3050,6 +3206,26 @@ void _q_gtype(string scalar R, string rowvector id,
     st_matrix(R, poly \ line \ point \ empty)
 }
 
+void _set_one_if_any(string scalar id, string scalar touse)
+{
+    real scalar    i, n
+    real colvector a, b 
+    real matrix    ID, TOUSE
+    
+    st_view(ID=., ., id)
+    st_view(TOUSE=., ., touse)
+    n = rows(ID)
+    a = selectindex(_mm_uniqrows_tag(ID))
+    i = rows(a)
+    if (i<=1) b = n
+    else      b = a[|2 \. |] :- 1 \ n
+    for (;i;i--) {
+        if (anyof(TOUSE[|a[i] \ b[i]|],1)) {
+            TOUSE[|a[i] \ b[i]|] = J(b[i] - a[i] + 1, 1, 1)
+        }
+    }
+}
+
 void _project(string scalar touse, string scalar x, string scalar y,
     string scalar pname, string scalar pargs)
 {
@@ -3087,7 +3263,7 @@ real matrix _project_robinson(real colvector x, real colvector y,
 void _noclip(string scalar touse,
     string scalar id, string scalar pid, real scalar rclip,
     string scalar out, string rowvector xy, string scalar mask,
-    real scalar strict, real scalar split, real scalar nodrop,
+    real scalar strict, real scalar nosplit, real scalar nodrop,
     real scalar dots)
 {
     real scalar    i, r, n
@@ -3120,7 +3296,7 @@ void _noclip(string scalar touse,
         if (anyof(OUT[|ab|], strict)) OUT[|ab|] = J(r, 1, strict)
         else                          OUT[|ab|] = J(r, 1, 1-strict)
     }
-    if (!split) {
+    if (nosplit) {
         a = selectindex(_mm_unique_tag(ID))
         i = rows(a)
         if (i<=1) b = n
@@ -3134,7 +3310,7 @@ void _noclip(string scalar touse,
     }
     if (nodrop) {
         if (rclip) st_view(XY=., ., xy, touse)
-        if (split) {
+        if (!nosplit) {
             a = selectindex(_mm_unique_tag(ID))
             i = rows(a)
             if (i<=1) b = n
@@ -3306,6 +3482,42 @@ void _simplify(string scalar id, string scalar out, string rowvector xy,
         if (dots) _geo_progressdots(1-(i-1)/dn, d0)
     }
     if (dots) display(")")
+}
+
+void _refine(string scalar id, string rowvector xy,
+    string scalar touse, real scalar delta, real scalar dots)
+{
+    real scalar    i, n, r, dn, d0
+    real colvector a, b
+    real colvector ID
+    real matrix    XY, XYi
+    struct _clip_expand_info scalar I
+
+    st_view(ID=., ., id, touse)
+    st_view(XY=., ., xy, touse)
+    n = rows(ID)
+    a = selectindex(_mm_unique_tag(ID))
+    i = rows(a)
+    if (i<=1) b = n
+    else      b = a[|2 \. |] :- 1 \ n
+    if (dots) {
+        displayas("txt")
+        printf("(refining shapes of %g units)\n", i)
+        d0 = _geo_progress_init("(")
+        dn = i
+    }
+    for (;i;i--) {
+        r  = b[i] - a[i] + 1
+        XYi = geo_refine(XY[|a[i],1 \ b[i],2|], delta)
+        if (rows(XYi)>r) {
+            I.XY = I.XY, &XYi[.,.]
+            I.ab = I.ab, &(a[i] \ b[i])
+        }
+        if (dots) _geo_progressdots(1-(i-1)/dn, d0)
+    }
+    if (dots) display(")")
+    st_local("Nadd", "0")
+    _clip_expand(touse, I.XY, I.ab, xy) // store polygons with additional points
 }
 
 void _bshare(string scalar id, string scalar pid, string scalar out,
@@ -3726,22 +3938,114 @@ void _append(string scalar frame, string scalar touse, string rowvector vars,
     }
 }
 
+void _translate_zipname(string scalar fn)
+{
+    string scalar bn, shpname, sep
+    pragma unset shpname
+    
+    if (!strpos(fn, ".zip")) {
+        st_local("zip", "0")
+        return
+    }
+    bn = pathbasename(fn)
+    if (bn=="") { // fn ends with directory separator
+        sep = substr(fn,-1,.)
+        fn = substr(fn,1,strlen(fn)-1)
+    }
+    while (fn!="") {
+        bn = pathbasename(fn)
+        if (substr(bn,-4,.)==".zip") {
+            if (!direxists(fn)) { // only if not a directory
+                if (shpname!="") shpname = shpname + sep
+                st_local("zip", "1")
+                st_local("using", fn)
+                st_local("shpname", shpname)
+                return
+            }
+        }
+        pathsplit(fn, fn, bn)
+        shpname = pathjoin(bn, shpname)
+    }
+    // path contains no file with a .zip suffix
+    st_local("zip", "0")
+}
+
+void _ziptranslate_findshp(string scalar shpname, 
+    string scalar tmpdir, string scalar usng)
+{
+    real scalar      i, n
+    string scalar    s, bn
+    string colvector fn
+    
+    if (!direxists(shpname)) bn = pathbasename(shpname) // directory takes precedence
+    if (bn!="") {
+        if (pathsuffix(shpname)=="") s = shpname + ".shp"
+        else                         s = shpname
+        if (!fileexists(s)) {
+            errprintf("shape file %s not found in %s\n", s, usng)
+            exit(601)
+        }
+    }
+    else {
+        if (shpname!="") {
+            if (!direxists(shpname)) {
+                errprintf("directory %s not found in %s\n", shpname, usng)
+                exit(601)
+            }
+        }
+        fn = __ziptranslate_findshp(shpname) // collect all .shp files
+        n = length(fn)
+        if (!n) {
+            errprintf("no shape file found in %s\n", pathjoin(usng,shpname))
+            exit(601)
+        }
+        if (n>1) {
+            printf("{txt}multiple shape files found in %s:\n",/*
+                */ pathjoin(usng,shpname))
+            for (i=1;i<=n;i++) printf("{bf:%s}\n", pathrmsuffix(fn[i]))
+            printf("translating {bf:%s}\n", pathrmsuffix(fn[1]))
+        }
+        shpname = fn[1] // use first match
+    }
+    st_local("shpname", pathjoin(tmpdir, shpname))
+}
+
+string colvector __ziptranslate_findshp(string scalar path)
+{
+    real scalar      i, n
+    string colvector fn, dir
+    
+    fn  = dir(path, "files", "*.shp", 1)
+    dir = dir(path, "dirs", "*")
+    n = rows(dir)
+    for (i=1;i<=n;i++) {
+        fn = fn \ __ziptranslate_findshp(pathjoin(path, dir[i]))
+    }
+    return(fn)
+}
+
+void _ziptranslate_cleanup(string scalar path)
+{
+    real scalar      i
+    string colvector fn, dir
+    
+    fn = dir(path, "files", "*", 1)
+    i = rows(fn)
+    for (;i;i--) unlink(fn[i])
+    dir = dir(path, "dirs", "*", 1)
+    i = rows(dir)
+    for (;i;i--) _ziptranslate_cleanup(dir[i])
+    rmdir(path)
+}
+
 void _translate_using(string scalar fn)
 {
+    real scalar      i, n
     string scalar    path, bn
     string colvector dir
     pragma unset path
     
-    bn = pathbasename(fn)
-    if (bn!="") {
-        // check whether fn is indeed a file; using a workaround because mata's
-        // fileexists() seems to return 1 also if fn is, in fact, a directory
-        stata(sprintf(`"local FEXISTS = fileexists(`"%s"')"', fn))
-        if (st_local("FEXISTS")=="0") {
-            if (direxists(fn)) bn = ""
-        }
-        st_local("FEXISTS", "")
-    }
+    if (!direxists(fn)) bn = pathbasename(fn) // directory takes precedence
     if (bn!="") { // [path/]filename specified
         pathsplit(fn, path, bn)
     }
@@ -3752,13 +4056,17 @@ void _translate_using(string scalar fn)
             exit(601)
         }
         dir = dir(path, "files", "*.shp")
-        if (!length(dir)) {
-            errprintf("no ESRI shapefile found in directory %s\n", path)
+        n = length(dir)
+        if (!n) {
+            errprintf("no shape file found in %s\n", path)
             exit(601)
         }
+        if (n>1) {
+            printf("{txt}multiple shape files found in %s:\n", path)
+            for (i=1;i<=n;i++) printf("{bf:%s}\n", pathrmsuffix(dir[i]))
+            printf("translating {bf:%s}\n", pathrmsuffix(dir[1]))
+        }
         bn = dir[1] // use first match
-        printf("{txt}(translating {bf:%s} from directory %s)\n",
-            pathrmsuffix(bn), path)
     }
     if (!pathisabs(path)) path = pathjoin(pwd(), path) // make path absolute
     if (strpos(path, ".shp")) {

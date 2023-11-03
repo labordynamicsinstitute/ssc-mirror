@@ -1,5 +1,5 @@
 {smcl}
-{* 23oct2023}{...}
+{* 02nov2023}{...}
 {hi:help geoframe}{...}
 {right:{browse "https://github.com/benjann/geoplot/"}}
 {hline}
@@ -44,7 +44,9 @@
     {p_end}
 {p2col :{helpb geoframe##rclip:rclip}}clip shapes using rectangular window
     {p_end}
-{p2col :{helpb geoframe##simplify:simplfy}}simplify (generalize) shapes
+{p2col :{helpb geoframe##simplify:simplify}}simplify (generalize) shapes
+    {p_end}
+{p2col :{helpb geoframe##refine:refine}}add extra points to straight lines
     {p_end}
 {p2col :{helpb geoframe##bshare:bshare}}select shared borders
     {p_end}
@@ -107,29 +109,60 @@
 {dlgtab:geoframe translate}
 
 {p 8 15 2}
-    {cmd:geoframe} {cmdab:tr:anslate} [{it:translator}] [{it:name}] [{cmd:using}]
-    {it:sourcename} [{cmd:,} {cmd:replace} {cmd:user} ]
+    {cmd:geoframe} {cmdab:tr:anslate} [{it:translator}] [{it:destination}] [{cmd:using}]
+    {it:source} [{cmd:,} {cmd:replace} {cmd:user} ]
 
 {pstd}
-    translates shape file source data to Stata format. Two files will be created,
-    {it:name}{cmd:.dta} and {it:name}{cmd:_shp.dta}. {it:name} may include an absolute or
-    relative path; if no path is included in {it:name}, the files are stored in the
-    current working directory. If {it:name} is omitted or does not include a base name
-    (i.e., if {it:name} is a path only), the base name of the source data is used
-    to name the created files. Option {cmd:replace} allows
-    overwriting existing files.
-
-{pstd}
-    {it:sourcename} specifies the location
-    of the source. If {it:sourcename} only contains a path (i.e. does not specify
-    the name of the source), {cmd:geoframe translate} will translate the
-    first source found in the specified directory.
-
-{pstd}
-    Currently, the only available {it:translator} is {cmd:esri}, which
+    translates shapefile source data to Stata format, where {it:translator} specifies
+    the type of translation. Currently, the only available translator is {cmd:esri}, which
     translates ESRI shapefile data to Stata format using official Stata's
     {helpb spshape2dta} command or, if option {cmd:user} is specified, the
-    user command {helpb shp2dta} (see {bf:{stata ssc describe shp2dta}}).
+    user command {helpb shp2dta} (see {bf:{stata ssc describe shp2dta}}). Omitting
+    {it:translator} is equivalent to specifying {cmd:esri}.
+
+{pstd}
+    Optional argument {it:destination} specifies a destination for the translated
+    data. The syntax for {it:destination} is
+
+        [{it:path}][{it:basename}]
+
+{pstd}
+    where {it:path} is an absolute or relative path to an (existing) directory
+    (e.g. {cmd:mydata/shapfiles/} on Mac OS or {cmd:mydata\shapfiles\}
+    on Windows) and {it:basename} provides a custom base name for the created files. If
+    {it:path} is omitted, the files are stored in the working directory. If
+    {it:basename} is omitted, the name of the source will be used. Two files
+    will be created, {it:basename}{cmd:.dta} and
+    {it:basename}{cmd:_shp.dta}. Option {cmd:replace} allows overwriting
+    existing files.
+
+{pstd}
+    Argument {it:source} identifies the source data to be translated. The syntax
+    for {it:source} is
+
+        {it:sourcepath}[{it:sourcename}]
+
+{pstd}
+    where {it:sourcepath} is an absolute or relative path to the directory containing
+    the source (e.g. {cmd:mydata/shapfiles/source/world/} on Mac OS or
+    {cmd:mydata\shapfiles\source\world\} on Windows) and {it:sourcename} specifies the
+    base name of the source to be translated (in case of an ESRI shape file,
+    the source consists of {it:sourcename}{cmd:.shp}, {it:sourcename}{cmd:.dbf},
+    and possibly some additional files with the same base name). If {it:sourcepath}
+    contains multiple sources and {it:sourcename} is omitted, the first source
+    will be translated. Alternatively, {it:source} can be
+
+        {it:zipfile}[{it:separator}[{it:location}][{it:sourcename}]]
+
+{pstd}
+    where {it:zipfile} is the (path and) name of a zip file containing the source
+    (e.g. {cmd:mydata/shapfiles/source/world.zip} on Mac OS or {cmd:mydata\shapfiles\source\world.zip}
+    on Windows), {it:separator} is the operating system's directory separator (i.e. {cmd:/} on Mac OS, {cmd:\} on Windows),
+    {it:location} specifies the directory of the source within the zip file, and
+    {it:sourcename} specifies the name of the source to be translated. For example, you could
+    type {cmd:world.zip/50m/} to translate the first source found in folder {cmd:50m} within
+    zip file {cmd:world.zip}, or you could type {cmd:world.zip/50m/country_borders} to translate
+    the source called {cmd:country_borders} in folder {cmd:50m} within zip file {cmd:world.zip}.
 
 {pstd}
     {cmd:geoframe convert} is a synonym for {cmd:geoframe translate}.
@@ -500,7 +533,7 @@ Except for {cmd:robinson}, the projections are computed by user command
 
 {phang}
     {opth if:shp(exp)} specifies an {it:if} condition to be applied to
-    the linked shape. Observations in the
+    the linked shape frame. Observations in the
     linked shape frame that do not satisfy the specified condition (i.e.,
     observations for which {it:exp} evaluates to zero), as well as units in the
     current frame for which {cmd:ifshp()} leads to an empty selection in the
@@ -526,7 +559,7 @@ Except for {cmd:robinson}, the projections are computed by user command
 
 {phang}
     {opt cur:rent} makes the created frame the current frame. ({cmd:current} has
-    no effect if the {cmd:frame} prefix is applied, as Stata immediately switches back
+    no effect if the {cmd:frame} prefix is applied, as Stata will immediately switch back
     to the prior frame.)
 
 {marker select}{...}
@@ -587,7 +620,7 @@ Except for {cmd:robinson}, the projections are computed by user command
 
 {phang}
     {opt cur:rent} makes the created frame the current frame. ({cmd:current} has
-    no effect if the {cmd:frame} prefix is applied, as Stata immediately switches back
+    no effect if the {cmd:frame} prefix is applied, as Stata will immediately switch back
     to the prior frame.)
 
 {marker clip}{...}
@@ -613,7 +646,7 @@ Except for {cmd:robinson}, the projections are computed by user command
     if {cmd:noclip} is specified.
 
 {phang}
-    {opt nocl:ip} applies selection rather than clipping. Shapes that
+    {opt nocl:ip} applies selection rather than clipping. Shape items that
     are at least partially inside the clipping window will be selected. {cmd:noclip}
     is implied when processing point data or paired-coordinate data. For
     paired-coordinate data, an item is considered inside if the origin coordinate
@@ -621,15 +654,16 @@ Except for {cmd:robinson}, the projections are computed by user command
 
 {phang}
     {opt st:rict} changes the behavior of {cmd:noclip}. By default, {cmd:noclip}
-    selects shapes that are at least partially inside the clipping
-    window. Specify {cmd:strict} together with {cmd:noclip} to select the
-    shapes that are completely within the window.
+    selects shape items that are at least partially inside the clipping
+    window. Specify {cmd:strict} to restrict the selection
+    to items that are completely within the window.
 
 {phang}
-    {opt sp:lit} changes the behavior of {cmd:noclip}. By default, {cmd:noclip}
-    selects or excludes all shape items together
-    that belong to the same unit (e.g. main territory and exclaves). Specify
-    {cmd:split} together with {cmd:noclip} to select or exclude each shape item individually.
+    {opt nosp:lit} changes the behavior of {cmd:noclip}. By default, {cmd:noclip}
+    selects or excludes each shape item (i.e. each polygon, line, or point)
+    individually. Specify {cmd:nosplit} to treat shape
+    items that belong to the same unit (e.g. main territory and exclaves) as a
+    group of items to be included or excluded together.
 
 {phang}
     {opt nodrop} retains empty-shape units in the data. The default is to keep only
@@ -651,7 +685,7 @@ Except for {cmd:robinson}, the projections are computed by user command
 
 {phang}
     {opt cur:rent} makes the created frame the current frame. ({cmd:current} has
-    no effect if the {cmd:frame} prefix is applied, as Stata immediately switches back
+    no effect if the {cmd:frame} prefix is applied, as Stata will immediately switch back
     to the prior frame.)
 
 {marker rclip}{...}
@@ -717,8 +751,8 @@ Except for {cmd:robinson}, the projections are computed by user command
 {pmore}
     By default, {it:delta} is interpreted as a multiplier for the base threshold, which
     is determined from the coordinates of the selected shapes as
-    0.5 * (Xmax-Xmin)/1000 * (Ymax-Ymin)/1000 (corresponding to half a pixel
-    in a one megapixel image). This default is chosen so
+    0.5 * (Xmax-Xmin)/2000 * (Ymax-Ymin)/2000 (corresponding to half a pixel
+    in a four megapixel image). This default is chosen so
     that the simplification will be barely visible when plotting the shapes, but
     thousands of data points may still be removed depending on the complexity of
     the original data. Shape files often come with a great amount of
@@ -753,8 +787,41 @@ Except for {cmd:robinson}, the projections are computed by user command
 
 {phang}
     {opt cur:rent} makes the created frame the current frame. ({cmd:current} has
-    no effect if the {cmd:frame} prefix is applied, as Stata immediately switches back
+    no effect if the {cmd:frame} prefix is applied, as Stata will immediately switch back
     to the prior frame.)
+
+{marker refine}{...}
+{dlgtab:geoframe refine}
+
+{p 8 15 2}
+    [{cmd:frame} {it:frame}{cmd::}] {cmd:geoframe} {cmd:refine} [{it:delta}] {ifin}
+    [{cmd:,} {it:options} ]
+
+{pstd}
+    refines the selected shapes by adding extra points within segments that are
+    longer than a given threshold. That is, if the distance between two
+    neighboring points in a polygon or line is larger than the threshold,
+    additional points will be added such that the maximum distance between
+    points is smaller than or equal to the threshold. Argument {it:delta}
+    affects the degree of refinement; see option {cmd:absolute}
+    below. {cmd:geoframe refine} may be useful if you want to apply
+    projections. {it:options} are as follows.
+
+{phang}
+    {opt abs:olute} causes {it:delta} to be interpreted as an absolute value
+    for the threshold (maximum distance between neighboring points). By
+    default, {it:delta} is interpreted as a factor by which the base threshold
+    will be divided. The base threshold is determined such that a diagonal
+    across the map would have at least 200 points. Specify, for example,
+    {cmd:geoframe refine 2} to use a threshold that is half the size of the
+    default threshold (at least 400 points on the diagonal). Alternatively, specify
+    {it:delta} with option {cmd:absolute} if you want to provide a custom
+    threshold rather than a divisor for the default threshold. {cmd:absolute}
+    only has an effect if {it:delta} is specified.
+
+{phang}
+    {opt nodot:s}, {opt into()}, {opt replace}, and {opt cur:rent} as described for
+    {helpb geoframe##simplify:geoframe simplify}.
 
 {marker bshare}{...}
 {dlgtab:geoframe bshare}
@@ -1089,7 +1156,7 @@ Except for {cmd:robinson}, the projections are computed by user command
     possible observations are used for each calculated statistic.
 
 {phang}
-    {opt sel:ect(exp)} restricts the shapes from the current frame to be
+    {opth sel:ect(exp)} restricts the shapes from the current frame to be
     considered. The default is to use all shapes. Specify
     {opt select(exp)} to consider only shapes for which {it:exp} is unequal 0.
 
@@ -1102,13 +1169,16 @@ Except for {cmd:robinson}, the projections are computed by user command
     {opt gen:erate}[{cmd:(}{it:spec}{cmd:)}] causes the IDs of the matched
     shapes to be left behind as a new variable in {it:frame2}. {it:spec} is
 
-            [{help newvar:{it:ID}}] [{cmd:,} {cmd:replace} {cmd:noset} ]
+            [{help newvar:{it:ID}}] [{cmd:,} {cmd:nosort} {cmd:noset} {cmd:replace} ]
 
 {pmore}
-    where {it:ID} is the variable name to be used, {cmd:replace} allows
-    overwriting an existing variable, and {cmd:noset} omits registering the
-    variable in {it:frame2} using {helpb geoframe##set:geoframe set id}. The
-    default for {it:ID} is {cmd:_ID}.
+    where {it:ID} is the variable name to be used, {cmd:nosort} omits sorting the data in
+    {it:frame2} by the generated ID variable, {cmd:noset} omits registering the
+    generated ID variable in {it:frame2} using {helpb geoframe##set:geoframe set id}, and
+    {cmd:replace} allows overwriting an existing variable. The default for {it:ID} is {cmd:_ID}.
+
+{phang}
+    {opt nodot:s} suppresses the progress dots of the spatial join that are displayed by default.
 
 {phang}
     {cmd:id(}{help varname:{it:ID}}{cmd:)} indicates that an ID variable matching the points in
@@ -1138,38 +1208,47 @@ Except for {cmd:robinson}, the projections are computed by user command
 
 {p 8 15 2}
     [{cmd:frame} {it:frame}{cmd::}] {cmd:geoframe} {cmd:spjoin} {it:frame2} [{it:ID}]
-    {ifin} [{cmd:,} {opt co:ordinates(X Y)} {opt replace} {opt noset} {opt nodot:s}
-    {opt sel:ect(exp)} ]
+    {ifin} [{cmd:,} {it:options} ]
 
 {pstd}
     finds the positions of the points provided by the current frame in the shapes
     defined by {it:frame2} (note the reversed logic of the syntax compared to
-    {helpb geoframe##collapse:geoframe collapse}). Only points satisfying the {it:if} and {it:in}
-    qualifiers will be considered. {it:frame2} can be a shape frame or an attribute frame
-    that is linked to a shape frame.
+    {helpb geoframe##collapse:geoframe collapse}) and stores the IDs of the matched shapes
+    in variable {it:ID} in the current frame; {cmd:_ID} is used as default
+    variable name. Only points satisfying the {it:if} and {it:in}
+    qualifiers will be considered; for all other points {it:ID} will be set to
+    missing. {it:frame2} can be a shape frame or an attribute frame
+    that is linked to a shape frame. The spacial join algorithm assumes that
+    shapes do not overlap (no crossings). It also assumes that nested shapes in
+    {it:frame2} (or its linked shape frame) have been tagged using
+    {helpb geoframe##gen_plevel:geoframe generate plevel}
+    (if there are nested shapes). {it:options} are as follows.
 
-{pstd}
-    The IDs of the matched shapes will be stored in
-    variable {it:ID} in the current frame; {cmd:_ID} is used as default
-    variable name. Option {cmd:replace} allows overwriting an existing
-    variable. The created variable will be registered in the current frame using
-    {helpb geoframe##set:geoframe set id} unless option {cmd:noset} is
-    specified. Option {opt coordinates()} specifies custom coordinate variables
-    in the current frame; the default is to use the variables returned by
-    {helpb geoframe##set:geoframe get coordinates}. Option {cmd:nodots} suppresses
-    the progress dots that are displayed by default.
-
-{pstd}
-    Option {opt select()} restricts the shapes from {it:frame2} that will be
+{phang}
+    {opth sel:ect(exp)} restricts the shapes from {it:frame2} that will be
     considered in the spatial join. The default is to use all shapes. Specify
     {opt select(exp)} to consider only shapes for which {it:exp} is unequal 0.
 
-{pstd}
-    The spacial join algorithm assumes that shapes do not overlap (no
-    crossings). It also assumes that nested shapes in
-    {it:frame2} (or its linked shape frame) have been tagged using
-    {helpb geoframe##gen_plevel:geoframe generate plevel}
-    (if there are nested shapes).
+{phang}
+    {opt co:ordinates(X Y)} specifies custom coordinate variables
+    in the current frame. The default is to use the variables returned by
+    {helpb geoframe##set:geoframe get coordinates}.
+
+{phang}
+    {cmd:nosort} does not sort the data. The default is to sort the data in the
+    current frame by the created ID variable (preserving the original sort order
+    within ID).
+
+{phang}
+    {cmd:noset} does not register the created ID variable. By default,
+    the created variable will be registered in the current frame using
+    {helpb geoframe##set:geoframe set id}.
+
+{phang}
+    {cmd:replace} allows overwriting an existing variable.
+
+{phang}
+    {opt nodot:s} suppresses the progress dots that are displayed by default.
 
 {marker grid}{...}
 {dlgtab:geoframe grid}
@@ -1225,19 +1304,21 @@ Except for {cmd:robinson}, the projections are computed by user command
 
 {phang}
     {opt cur:rent} makes the created frame the current frame. ({cmd:current} has
-    no effect if the {cmd:frame} prefix is applied, as Stata immediately switches back
+    no effect if the {cmd:frame} prefix is applied, as Stata will immediately switch back
     to the prior frame.)
 
 {marker bbox}{...}
 {dlgtab:geoframe bbox}
 
 {p 8 15 2}
-    [{cmd:frame} {it:frame}{cmd::}] {cmd:geoframe} {cmdab:bb:ox} {it:newname}
+    [{cmd:frame} {it:frame}{cmd::}] {cmd:geoframe} {cmdab:bb:ox} {it:newname} [{it:newshpname}]
     {ifin} [{cmd:,} {it:options} ]
 
 {pstd}
     computes the bounding box of the selected shapes in the current
-    frame and stores its coordinates in a new frame called {it:newname}. The current
+    frame and stores it in a new frame called {it:newname} and an associated shape frame
+    called {it:newshpname}; {it:newname}{cmd:_shp} is used as name for the shape
+    frame if {it:newshpname} is omitted. The current
     frame may be a shape frame or an attribute frame that has been linked to a
     shape frame. {it:options} are as follows.
 
@@ -1290,19 +1371,21 @@ Except for {cmd:robinson}, the projections are computed by user command
 
 {phang}
     {opt cur:rent} makes the created frame the current frame. ({cmd:current} has
-    no effect if the {cmd:frame} prefix is applied, as Stata immediately switches back
+    no effect if the {cmd:frame} prefix is applied, as Stata will immediately switch back
     to the prior frame.)
 
 {marker symbol}{...}
 {dlgtab:geoframe symbol}
 
 {p 8 15 2}
-    [{cmd:frame} {it:frame}{cmd::}] {cmd:geoframe} {cmdab:sym:bol} {it:newname}
+    [{cmd:frame} {it:frame}{cmd::}] {cmd:geoframe} {cmdab:sym:bol} {it:newname} [{it:newshpname}]
     {ifin} [{cmd:,} {it:options} ]
 
 {pstd}
     creates symbol shapes at the positions of the points in the current frame
-    and stores their coordinates in a new frame called {it:newname}. {it:options}
+    and stores them in a new frame called {it:newname} and an associated shape frame
+    called {it:newshpname}; {it:newname}{cmd:_shp} is
+    used as name for the shape frame if {it:newshpname} is omitted. {it:options}
     are as follows.
 
 {phang}
@@ -1315,19 +1398,21 @@ Except for {cmd:robinson}, the projections are computed by user command
 
 {phang}
     {opt cur:rent} makes the created frame the current frame. ({cmd:current} has
-    no effect if the {cmd:frame} prefix is applied, as Stata immediately switches back
+    no effect if the {cmd:frame} prefix is applied, as Stata will immediately switch back
     to the prior frame.)
 
 {marker symboli}{...}
 {dlgtab:geoframe symboli}
 
 {p 8 15 2}
-    {cmd:geoframe} {cmd:symboli} {it:newname}
+    {cmd:geoframe} {cmd:symboli} {it:newname} [{it:newshpname}]
     {it:x1} {it:y1} {it:size1} [{it:x2} {it:y2} {it:size2} ...] [{cmd:,} {it:options} ]
 
 {pstd}
     creates symbol shapes of the specified sizes at the specified
-    positions and stores their coordinates in a new frame called {it:newname}. {it:options}
+    positions and stores stores them in a new frame called {it:newname} and an
+    associated shape frame called {it:newshpname}; {it:newname}{cmd:_shp} is
+    used as name for the shape frame if {it:newshpname} is omitted. {it:options}
     are as describes for {helpb geoframe##symbol:geoframe symbol}; option {cmd:size()}
     will be ignored.
 
@@ -1460,7 +1545,7 @@ Except for {cmd:robinson}, the projections are computed by user command
 
 {phang}
     {opt cur:rent} makes the created frame the current frame. ({cmd:current} has
-    no effect if the {cmd:frame} prefix is applied, as Stata immediately switches back
+    no effect if the {cmd:frame} prefix is applied, as Stata will immediately switch back
     to the prior frame.)
 
 {pstd}

@@ -663,7 +663,20 @@ if "`save'"!="" {
 	}
 	ParseSAVE `saveopt'
 
-	m _icio_out_export("`savename'", "`s(save_replace)'", "`s(save_modify)'", "`s(save_sheet)'", "`s(save_sheet_replace)'")
+	if c(stata_version) < 15 {
+		local export _icio_out_export
+	}
+	else if c(stata_version) < 17 {
+		local export _icio_out_export15
+	}
+	else if c(stata_version) < 18 {
+		local export _icio_out_export17
+	}
+	else {
+		local export _icio_out_export18
+	}
+
+	m `export'("`savename'", "`s(save_replace)'", "`s(save_modify)'", "`s(save_sheet)'", "`s(save_sheet_replace)'")
 }
 
 

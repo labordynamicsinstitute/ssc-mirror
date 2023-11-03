@@ -1,5 +1,5 @@
 {smcl}
-{* 12oct2023}{...}
+{* 02nov2023}{...}
 {hi:help geoplot}{...}
 {right:{browse "https://github.com/benjann/geoplot/"}}
 {hline}
@@ -165,7 +165,7 @@
     standard legend
     {p_end}
 {synopt :{helpb geoplot##clegend:{ul:cleg}end{sf:[}({it:options}){sf:]}}}add
-    {helpb contour} plot legend
+    {helpb contour} plot legend (requires Stata 18)
     {p_end}
 {synopt :{helpb geoplot##sbar:sbar{sf:[}({it:options}){sf:]}}}add scale bar
     {p_end}
@@ -225,8 +225,9 @@
 
 {pstd}
     where {it:frame} is the frame containing the shapes to be
-    plotted (see {helpb geoframe}), {help geoplot##zvar:{it:zvar}} is an optional
-    variable to determine styling, and {it:weight}, specified as
+    plotted (see {helpb geoframe}; {it:frame} can be a shape frame or an 
+    attribute frame that has been linked to a shape frame), {help geoplot##zvar:{it:zvar}}
+    is an optional variable to determine styling, and {it:weight}, specified as
     {cmd:[}{cmdab:w:eight}{cmd:=}{it:exp}{cmd:]} or
     {cmd:[}{cmdab:iw:eight}{cmd:=}{it:exp}{cmd:]}, rescales the coordinates of
     the shapes by the absolute (and normalized) values of {it:exp}. Type
@@ -268,6 +269,16 @@
     plot. {cmd:select()} is applied after determining the cuts for {it:zvar}
     and after processing weights and {cmd:size()}. Specify {it:{help if}} or
     {it:{help in}} if you want to select observations upfront.
+
+{phang}
+    {opth if:shp(exp)} specifies an additional {it:if} condition to be applied to
+    the shape frame. This is relevant if {it:frame} is an attribute frame that
+    has been linked to a shape frame. Observations in the shape frame that do not
+    satisfy the specified condition (i.e., observations for which {it:exp} evaluates
+    to zero), as well as units in the attribute frame for which {cmd:ifshp()}
+    leads to an empty selection in the shape frame, will be excluded. If {it:frame}
+    is a shape frame (i.e. not an attribute frame linked to a shape frame), {cmd:ifshp()}
+    is treated in the same way as the {it:{help if}} qualifier.
 
 {phang}
     {cmdab:ec:olor(}{help colorpalette##colorlist:{it:colorspec}}{cmd:)}
@@ -363,8 +374,9 @@
 
 {pstd}
     where {it:frame} is the frame containing the shapes to be
-    plotted (see {helpb geoframe}), {help geoplot##zvar:{it:zvar}} is an optional
-    variable to determine styling, and {it:weight}, specified as
+    plotted (see {helpb geoframe}; {it:frame} can be a shape frame or an 
+    attribute frame that has been linked to a shape frame), {help geoplot##zvar:{it:zvar}}
+    is an optional variable to determine styling, and {it:weight}, specified as
     {cmd:[}{cmdab:w:eight}{cmd:=}{it:exp}{cmd:]} or
     {cmd:[}{cmdab:iw:eight}{cmd:=}{it:exp}{cmd:]}, rescales the coordinates of
     the shapes by the absolute (and normalized) values of {it:exp}. Type
@@ -373,7 +385,7 @@
 
 {phang}
     {it:{help geoplot##zopts:zvar_options}}, {cmd:wmax()}, {cmd:size()}, {cmd:select()},
-    {cmd:lock}, {opt box()}, {opt feature()}, {opt coordinates()}, {opt id()},
+    {cmd:ifshp()}, {cmd:lock}, {opt box()}, {opt feature()}, {opt coordinates()}, {opt id()},
     {opt centroids()}, and {cmd:area()} are
     options as described for layer type {helpb geoplot##area:area}.
 
@@ -1345,8 +1357,8 @@
 {phang}
     {cmd:clegend}[{cmd:(}{it:options}{cmd:)}] prints a {help clegend_option:contour} plot legend
     of the colors used in one of the layers that include
-    {help geoplot##zvar:{it:zvar}} with a {help geoplot##color:color gradient}. {it:options}
-    are as follows.
+    {help geoplot##zvar:{it:zvar}} with a {help geoplot##color:color gradient}
+    (requires Stata 18). {it:options} are as follows.
 
 {phang2}
     {opt l:ayer(#)} selects the layer for which the legend be created. The default
@@ -1545,6 +1557,17 @@
     (or enclosing circle) of the objects (including padding).
 
 {phang2}
+    {cmdab:pos:ition(}{it:x} {it:y} [{it:{help compassdirstyle}}]{cmd:)} moves
+    the objects to the absolute position provided by coordinates {it:x} and
+    {it:y}. Optional argument {it:{help compassdirstyle}} determines where the
+    objects will be located relative to point ({it:x},{it:y}). The default is
+    {cmd:0} (or {cmd:center}) which means that the objects will be centered
+    at ({it:x},{it:y}). For example, specify {cmd:left} to place the objects to the left of
+    ({it:x},{it:y}), or specify {cmd:se} to place the objects in south-east direction
+    of ({it:x},{it:y}). Main arguments {it:offset} and {it:angle}, if specified, will
+    be applied after {cmd:position()} has taken effect.
+
+{phang2}
     {cmd:box}[{cmd:(}{it:which}{cmd:)}] displays the origin bounding box and
     the destination bounding box of the objects. Argument {it:what} can be
     {cmdab:d:estination} (print destination  box only) or
@@ -1577,10 +1600,19 @@
     or {cmd:circle} is specified.
 
 {phang2}
-    {cmdab:con:nect}[{cmd:(}{it:{help line_options}}{cmd:)}] enforces printing the
-    connecting lines even if no bounding boxes or MECs are printed. Specify
-    {it:{help line_options}} to affect the rendering of the connecting lines. For
-    example, type {cmd:connect(lpattern(dash))} to use dashed lines.
+    {cmdab:con:nect}[{cmd:(}{it:options}{cmd:)}] enforces printing the
+    connecting lines even if no bounding boxes or MECs are displayed and affects
+    the rendering of the lines. {it:options} are as follows.
+
+{p2colset 17 31 33 2}{...}
+{p2col:{cmd:all}}requests that all four corners of the bounding
+    boxes be connected; by default only the two outer corners are connected
+    (i.e., the corners for which the connecting lines do not cross either the
+    origin box or the destination box)
+    {p_end}
+{p2col:{it:{help line_options}}}affect the rendering of the connecting lines; for
+    example, type {cmd:connect(lpattern(dash))} to use dashed lines
+    {p_end}
 
 {phang2}
     {it:{help area_options}} are options that affect the look of the bounding boxes
