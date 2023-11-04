@@ -1,5 +1,6 @@
-*! 10oct23 Jonathan Thiele v1.0
+*! 3nov23 Jonathan Thiele v1.01
 *! jonathan.thiele@fu-berlin.de
+*! RWI - Leibniz-Institut fuer Wirtschaftsforschung
 * written in Stata version:  16.1
 
 **program definition

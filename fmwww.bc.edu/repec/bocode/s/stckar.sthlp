@@ -1,5 +1,5 @@
 {smcl}
-{* Version 1.0 18September2023}{...}
+{* Version 1.01 3November2023}{...}
 {cmd: help stckar}
 
 {bf:stckar} {hline 2} draws stacked area graphs
@@ -77,3 +77,10 @@ The command was written with Stata 16.1.
 	{stata "use http://fmwww.bc.edu/ec-p/data/wooldridge/prison"}
 	{stata collapse cag0_14 cag15_17 cag18_24 cag25_34, by(year)}
 	{stata stckar cag0_14 cag15_17 cag18_24 cag25_34 year}
+	
+	
+{title:Author}
+
+	Jonathan Thiele
+	jonathan.thiele@fu-berlin.de
+	written at the RWI - Leibniz-Institut fuer Wirtschaftsforschung
