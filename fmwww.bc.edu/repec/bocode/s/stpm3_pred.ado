@@ -759,7 +759,7 @@ program stpm3_pred, sortpreserve
       else if "`centype'" == "variable" {
         frame put `centilewritelist' `framecopy' if `touse_centile1' & `touse', into(`resframe')
       }
-      //else frame create `resframe'
+      else if "`centype'" == "numlist" frame create `resframe'
     }
     else {
       forvalues i = 1/`Natoptions' {
@@ -903,10 +903,10 @@ program stpm3_pred, sortpreserve
       else {
         tempvar cenwrite`i'
         if "`centype'" == "numlist" {
-          gen `centvar`i'' = `cenvartmp`i''
-          //Numlist_to_var `cenvartmp`i'', nlist("`centile'")
+          capture confirm var `centvar`i''
+          if _rc gen `centvar`i'' = `cenvartmp`i''
         }
-        gen byte `cenwrite`i'' = !missing(`centvar')
+        gen byte `cenwrite`i'' = !missing(`centvar`i'')
         local results_write `results_write' `cenwrite`i''
       }
       if "`gen'" == "" _stubstar2names `anything', nvars(`Natoptions')  

@@ -21,11 +21,13 @@
 	  
 {marker description}{...}
 {title:Description}
-{pstd}{cmd:mlmr2} produces r-squared measures for models estimated by {cmd:mixed}. Using the Rights & Sterba (2019; 2023) framework for decomposing the total model-implied outcome 
+{pstd}{cmd:mlmr2} produces r-squared measures for models estimated by {cmd:mixed}.  Using the Rights and Sterba (2019; 2021; 2023b) framework for decomposing the total model-implied outcome 
 variance from a multilevel model into (potentially level-specific) sources, {cmd:mlmr2} computes measures of the proportion of explained variance attributable to each (or combinations) 
-of those sources (e.g., level-1 predictors via fixed slopes). {cmd:mlmr2} can be used as a postestimation command with any set of estimation results from mixed except for results from 
-cross-classified models and/or models with more than 5 levels of clustering. {cmd:mlmr2} offers the {opt c:wc} option, which applies the variance decomposition assuming that each
-predictor only varies at 1 level (if this isn't true for the estimated model, an error message will report which predictors violated this assumption). 
+of those sources (e.g., level-1 predictors via fixed slopes).  {cmd:mlmr2} can be used as a postestimation command with any set of estimation results from mixed except for results from 
+cross-classified models and/or models with more than 5 levels of clustering.  {cmd:mlmr2} offers the {opt c:wc} option, which applies the variance decomposition assuming that each
+predictor only varies at 1 level (if this isn't true for the estimated model, an error message will report which predictors violated this assumption).  When the {opt c:wc} option is not
+specified, a warning message will be printed with the output table that points out which measures are always safe to interpret.  The other measures will potentially be biased by conflation 
+if any predictor varies at more than 1 level (Rights, 2023; Rights & Sterba, 2023a).
 
 
 {marker examples}{...}
@@ -209,6 +211,10 @@ predictor only varies at 1 level (if this isn't true for the estimated model, an
 {p2col:{cmd:r(R2_L4_Total)}}proportion of total outcome variance explained by level-4 sources{p_end}
 {p2col:{cmd:r(R2_L5_Total)}}proportion of total outcome variance explained by level-5 sources{p_end}
 
+{pstd}Matrices{p_end}
+{p2colset 7 30 31 0}{...}
+{p2col:{cmd:r(R2)}}matrix containing each of the r-squared measures{p_end}
+
 {pstd}Note that results regarding levels above the highest level in the estimated model will not be stored (e.g., {cmd:r(R2_f5_Total)} will not be stored if the estimated model has fewer than 5 levels).{p_end}
 
 
@@ -221,7 +227,13 @@ predictor only varies at 1 level (if this isn't true for the estimated model, an
 {marker references}{...}
 {title:References}
 
+{pstd}Rights, J. D. 2023. Aberrant distortion of variance components in multilevel models under conflation of level-specific effects. {it:Psychological Methods}, 28: 1154–1177.{p_end}
+
 {pstd}Rights, J. D., and S. K. Sterba. 2019. Quantifying explained variance in multilevel models: An integrative framework for defining R-squared measures. {it:Psychological Methods}, 24: 309–338. {p_end}
 
-{pstd}Rights, J. D., and S. K. Sterba. 2023. R-squared measures for multilevel models with three or more levels. {it:Multivariate Behavioral Research}, 58: 340–367.{p_end}
+{pstd}Rights, J. D., and S. K. Sterba. 2021. Effect size measures for longitudinal growth analyses: Extending a framework of multilevel model r-squareds to accommodate heteroscedasticity, autocorrelation, nonlinearity, and alternative centering strategies. {it:New Directions for Child and Adolescent Development}, 2021: 65–110.{p_end}
+
+{pstd}Rights, J. D., and S. K. Sterba. 2023a. On the common but problematic specification of conflated random slopes in multilevel models. {it:Multivariate Behavioral Research}: 1–28.{p_end}
+
+{pstd}Rights, J. D., and S. K. Sterba. 2023b. R-squared measures for multilevel models with three or more levels. {it:Multivariate Behavioral Research}, 58: 340–367.{p_end}
 

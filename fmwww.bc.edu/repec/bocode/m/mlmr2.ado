@@ -297,7 +297,7 @@ program mlmr2, rclass sortpreserve
 			mat `v22' = 0
 			mat `m2' = 0
 		}
-		tempname var1 var2 tvar R2_f1_1 R2_v12_1 Resid_1 R2_f2_2 R2_v22_2 R2_m2_2 R2_f1_t R2_f2_t R2_f_t R2_v12_t R2_v22_t R2_v_t R2_m_t R2_fv_t R2_fvm_t Resid_t R2_L1_t R2_L2_t 
+		tempname var1 var2 tvar R2_f1_1 R2_v12_1 Resid_1 R2_f2_2 R2_v22_2 R2_m2_2 R2_f1_t R2_f2_t R2_f_t R2_v12_t R2_v22_t R2_v_t R2_m_t R2_fv_t R2_fvm_t Resid_t R2_L1_t R2_L2_t R2
 		sca `var1' = `f1'[1,1] + `v12'[1,1] + `s2'
 		sca `var2' = `f2'[1,1] + `v22'[1,1] + `m2'[1,1]
 		sca `tvar' = `var1' + `var2'
@@ -352,11 +352,11 @@ program mlmr2, rclass sortpreserve
 			di _newline" *R2fvm = {res}" %5.4f `R2_fvm_t' "{txt} {c |} the whole model.                                                   "_continue
 			di _newline" *Resid = {res}" %5.4f `Resid_t'  "{txt} {c |} level-1 residuals (i.e., proportion of unexplained variance).      "_continue
 			di _newline"{hline 17}{c BT}{hline 68}"_continue
-			di _newline" *These estimates are always safe to interpret. All other estimates"_continue
-			di _newline"  may be biased unless you are confident that each predictor in your"_continue
-			di _newline"  model has a constant effect across the levels on which it exists."_continue
-			di _newline"  See 'Aberrant Distortion of Variance Components in Multilevel Models"_continue
-			di _newline"  Under Conflation of Level-Specific Effects' (Rights, 2022) for more info."
+			di _newline" *These estimates are always safe to interpret.  All other estimates potentially contain"_continue
+			di _newline"  conflation bias if any predictor varies at more than 1 level.  For more info, see"_continue
+			di _newline"  'Aberrant Distortion of Variance Components in Multilevel Models Under Conflation"_continue
+			di _newline"  of Level-Specific Effects' (Rights, 2023) and 'On the Common but Problematic"_continue
+			di _newline"  Specification of Conflated Random Slopes in Multilevel Models' (Rights & Sterba, 2023)."	  
 		}
 		else if "`cwc'"=="cwc" {
 			di "{txt}mlmr2: R-Squared Measures for Mixed Models"
@@ -389,6 +389,11 @@ program mlmr2, rclass sortpreserve
 			di _newline"  Resid = {res}" %5.4f `Resid_t'  "{txt} {c |} level-1 residuals (i.e., proportion of unexplained variance).      "_continue
 			di _newline"{hline 17}{c BT}{hline 68}"
 		}
+		ret clear
+		mat `R2' = (`R2_f1_1',`R2_v12_1',`Resid_1',`R2_f2_2',`R2_v22_2',`R2_m2_2',`R2_f1_t',`R2_f2_t',`R2_v12_t',`R2_v22_t',`R2_f_t',`R2_v_t',`R2_m_t',`R2_fv_t',`R2_fvm_t',`Resid_t')
+		mat colnames `R2' = R2_f1_1 R2_v12_1 Resid_1 R2_f2_2 R2_v22_2 R2_m2_2 R2_f1_t R2_f2_t R2_v12_t R2_v22_t R2_f_t R2_v_t R2_m_t R2_fv_t R2_fvm_t Resid_t
+		mat rownames `R2' = "`dv'"
+		ret mat R2 = `R2'
 		qui _estimates unhold mixedest
 		qui _estimates hold mixedest, copy restore
 	}
@@ -766,7 +771,7 @@ program mlmr2, rclass sortpreserve
 			mat `v33' = 0
 			mat `m3' = 0
 		}
-		tempname var1 var2 var3 tvar R2_f1_1 R2_v12_1 R2_v13_1 Resid_1 R2_f2_2 R2_v22_2 R2_v23_2 R2_m2_2 R2_f3_3 R2_v32_3 R2_v33_3 R2_m3_3 R2_f1_t R2_f2_t R2_f3_t R2_f_t R2_v12_t R2_v22_t R2_v32_t R2_v2_t R2_v13_t R2_v23_t R2_v33_t R2_v3_t R2_v_t R2_m2_t R2_m3_t R2_m_t R2_fv_t R2_fvm_t Resid_t R2_L1_t R2_L2_t R2_L3_t
+		tempname var1 var2 var3 tvar R2_f1_1 R2_v12_1 R2_v13_1 Resid_1 R2_f2_2 R2_v22_2 R2_v23_2 R2_m2_2 R2_f3_3 R2_v32_3 R2_v33_3 R2_m3_3 R2_f1_t R2_f2_t R2_f3_t R2_f_t R2_v12_t R2_v22_t R2_v32_t R2_v2_t R2_v13_t R2_v23_t R2_v33_t R2_v3_t R2_v_t R2_m2_t R2_m3_t R2_m_t R2_fv_t R2_fvm_t Resid_t R2_L1_t R2_L2_t R2_L3_t R2
 		sca `var1' = `f1'[1,1] + `v12'[1,1] + `v13'[1,1] + `s2'
 		sca `var2' = `f2'[1,1] + `v22'[1,1] + `v23'[1,1] + `m2'[1,1]
 		sca `var3' = `f3'[1,1] + `v32'[1,1] + `v33'[1,1] + `m3'[1,1]
@@ -857,11 +862,11 @@ program mlmr2, rclass sortpreserve
 			di _newline" *R2fvm = {res}" %5.4f `R2_fvm_t' "{txt} {c |} the whole model.                                                   "_continue
 			di _newline" *Resid = {res}" %5.4f `Resid_t'  "{txt} {c |} level-1 residuals (i.e., proportion of unexplained variance).      "_continue
 			di _newline"{hline 17}{c BT}{hline 68}"_continue
-			di _newline" *These estimates are always safe to interpret. All other estimates"_continue
-			di _newline"  may be biased unless you are confident that each predictor in your"_continue
-			di _newline"  model has a constant effect across the levels on which it exists."_continue
-			di _newline"  See 'Aberrant Distortion of Variance Components in Multilevel Models"_continue
-			di _newline"  Under Conflation of Level-Specific Effects' (Rights, 2022) for more info."
+			di _newline" *These estimates are always safe to interpret.  All other estimates potentially contain"_continue
+			di _newline"  conflation bias if any predictor varies at more than 1 level.  For more info, see"_continue
+			di _newline"  'Aberrant Distortion of Variance Components in Multilevel Models Under Conflation"_continue
+			di _newline"  of Level-Specific Effects' (Rights, 2023) and 'On the Common but Problematic"_continue
+			di _newline"  Specification of Conflated Random Slopes in Multilevel Models' (Rights & Sterba, 2023)."
 		}
 		else if "`cwc'"=="cwc" {
 			di "{txt}mlmr2: R-Squared Measures for Mixed Models"
@@ -908,6 +913,11 @@ program mlmr2, rclass sortpreserve
 			di _newline"  Resid = {res}" %5.4f `Resid_t'  "{txt} {c |} level-1 residuals (i.e., proportion of unexplained variance).      "_continue
 			di _newline"{hline 17}{c BT}{hline 68}"
 		}
+		ret clear
+		mat `R2' = (`R2_f1_1',`R2_v12_1',`R2_v13_1',`Resid_1',`R2_f2_2',`R2_v22_2',`R2_v23_2',`R2_m2_2',`R2_f3_3',`R2_v32_3',`R2_v33_3',`R2_m3_3',`R2_f1_t',`R2_f2_t',`R2_f3_t',`R2_v12_t',`R2_v22_t',`R2_v32_t',`R2_v2_t',`R2_v13_t',`R2_v23_t',`R2_v33_t',`R2_v3_t',`R2_m2_t',`R2_m3_t',`R2_f_t',`R2_v_t',`R2_m_t',`R2_fv_t',`R2_fvm_t',`Resid_t')
+		mat colnames `R2' = R2_f1_1 R2_v12_1 R2_v13_1 Resid_1 R2_f2_2 R2_v22_2 R2_v23_2 R2_m2_2 R2_f3_3 R2_v32_3 R2_v33_3 R2_m3_3 R2_f1_t R2_f2_t R2_f3_t R2_v12_t R2_v22_t R2_v32_t R2_v2_t R2_v13_t R2_v23_t R2_v33_t R2_v3_t R2_m2_t R2_m3_t R2_f_t R2_v_t R2_m_t R2_fv_t R2_fvm_t Resid_t
+		mat rownames `R2' = "`dv'"
+		ret mat R2 = `R2'
 		qui _estimates unhold mixedest
 		qui _estimates hold mixedest, copy restore
 	}
@@ -1492,7 +1502,7 @@ program mlmr2, rclass sortpreserve
 			mat `v44' = 0
 			mat `m4' = 0
 		}
-		tempname var1 var2 var3 var4 tvar R2_f1_1 R2_v12_1 R2_v13_1 R2_v14_1 Resid_1 R2_f2_2 R2_v22_2 R2_v23_2 R2_v24_2 R2_m2_2 R2_f3_3 R2_v32_3 R2_v33_3 R2_v34_3 R2_m3_3 R2_f4_4 R2_v42_4 R2_v43_4 R2_v44_4 R2_m4_4 R2_f1_t R2_f2_t R2_f3_t R2_f4_t R2_f_t R2_v12_t R2_v22_t R2_v32_t R2_v42_t R2_v2_t R2_v13_t R2_v23_t R2_v33_t R2_v43_t R2_v3_t R2_v14_t R2_v24_t R2_v34_t R2_v44_t R2_v4_t R2_v_t R2_m2_t R2_m3_t R2_m4_t R2_m_t R2_fv_t R2_fvm_t Resid_t R2_L1_t R2_L2_t R2_L3_t R2_L4_t
+		tempname var1 var2 var3 var4 tvar R2_f1_1 R2_v12_1 R2_v13_1 R2_v14_1 Resid_1 R2_f2_2 R2_v22_2 R2_v23_2 R2_v24_2 R2_m2_2 R2_f3_3 R2_v32_3 R2_v33_3 R2_v34_3 R2_m3_3 R2_f4_4 R2_v42_4 R2_v43_4 R2_v44_4 R2_m4_4 R2_f1_t R2_f2_t R2_f3_t R2_f4_t R2_f_t R2_v12_t R2_v22_t R2_v32_t R2_v42_t R2_v2_t R2_v13_t R2_v23_t R2_v33_t R2_v43_t R2_v3_t R2_v14_t R2_v24_t R2_v34_t R2_v44_t R2_v4_t R2_v_t R2_m2_t R2_m3_t R2_m4_t R2_m_t R2_fv_t R2_fvm_t Resid_t R2_L1_t R2_L2_t R2_L3_t R2_L4_t R2
 		sca `var1' = `f1'[1,1] + `v12'[1,1] + `v13'[1,1] + `v14'[1,1] + `s2'
 		sca `var2' = `f2'[1,1] + `v22'[1,1] + `v23'[1,1] + `v24'[1,1] + `m2'[1,1]
 		sca `var3' = `f3'[1,1] + `v32'[1,1] + `v33'[1,1] + `v34'[1,1] + `m3'[1,1]
@@ -1623,11 +1633,11 @@ program mlmr2, rclass sortpreserve
 			di _newline" *R2fvm = {res}" %5.4f `R2_fvm_t' "{txt} {c |} the whole model.                                                   "_continue
 			di _newline" *Resid = {res}" %5.4f `Resid_t'  "{txt} {c |} level-1 residuals (i.e., proportion of unexplained variance).      "_continue
 			di _newline"{hline 17}{c BT}{hline 68}"_continue
-			di _newline" *These estimates are always safe to interpret. All other estimates"_continue
-			di _newline"  may be biased unless you are confident that each predictor in your"_continue
-			di _newline"  model has a constant effect across the levels on which it exists."_continue
-			di _newline"  See 'Aberrant Distortion of Variance Components in Multilevel Models"_continue
-			di _newline"  Under Conflation of Level-Specific Effects' (Rights, 2022) for more info."
+			di _newline" *These estimates are always safe to interpret.  All other estimates potentially contain"_continue
+			di _newline"  conflation bias if any predictor varies at more than 1 level.  For more info, see"_continue
+			di _newline"  'Aberrant Distortion of Variance Components in Multilevel Models Under Conflation"_continue
+			di _newline"  of Level-Specific Effects' (Rights, 2023) and 'On the Common but Problematic"_continue
+			di _newline"  Specification of Conflated Random Slopes in Multilevel Models' (Rights & Sterba, 2023)."
 		}
 		else if "`cwc'"=="cwc" {
 			di "{txt}mlmr2: R-Squared Measures for Mixed Models"
@@ -1688,6 +1698,11 @@ program mlmr2, rclass sortpreserve
 			di _newline"  Resid = {res}" %5.4f `Resid_t'  "{txt} {c |} level-1 residuals (i.e., proportion of unexplained variance).      "_continue
 			di _newline"{hline 17}{c BT}{hline 68}"	
 		}
+		ret clear
+		mat `R2' = (`R2_f1_1',`R2_v12_1',`R2_v13_1',`R2_v14_1',`Resid_1',`R2_f2_2',`R2_v22_2',`R2_v23_2',`R2_v24_2',`R2_m2_2',`R2_f3_3',`R2_v32_3',`R2_v33_3',`R2_v34_3',`R2_m3_3',`R2_f4_4',`R2_v42_4',`R2_v43_4',`R2_v44_4',`R2_m4_4',`R2_f1_t',`R2_f2_t',`R2_f3_t',`R2_f4_t',`R2_v12_t',`R2_v22_t',`R2_v32_t',`R2_v42_t',`R2_v2_t',`R2_v13_t',`R2_v23_t',`R2_v33_t',`R2_v43_t',`R2_v3_t',`R2_v14_t',`R2_v24_t',`R2_v34_t',`R2_v44_t',`R2_v4_t',`R2_m2_t',`R2_m3_t',`R2_m4_t',`R2_f_t',`R2_v_t',`R2_m_t',`R2_fv_t',`R2_fvm_t',`Resid_t')
+		mat colnames `R2' = R2_f1_1 R2_v12_1 R2_v13_1 R2_v14_1 Resid_1 R2_f2_2 R2_v22_2 R2_v23_2 R2_v24_2 R2_m2_2 R2_f3_3 R2_v32_3 R2_v33_3 R2_v34_3 R2_m3_3 R2_f4_4 R2_v42_4 R2_v43_4 R2_v44_4 R2_m4_4 R2_f1_t R2_f2_t R2_f3_t R2_f4_t R2_v12_t R2_v22_t R2_v32_t R2_v42_t R2_v2_t R2_v13_t R2_v23_t R2_v33_t R2_v43_t R2_v3_t R2_v14_t R2_v24_t R2_v34_t R2_v44_t R2_v4_t R2_m2_t R2_m3_t R2_m4_t R2_f_t R2_v_t R2_m_t R2_fv_t R2_fvm_t Resid_t
+		mat rownames `R2' = "`dv'"
+		ret mat R2 = `R2'
 		qui _estimates unhold mixedest
 		qui _estimates hold mixedest, copy restore
 	}
@@ -2507,7 +2522,7 @@ program mlmr2, rclass sortpreserve
 			mat `v55' = 0
 			mat `m5' = 0
 		}
-		tempname var1 var2 var3 var4 var5 tvar R2_f1_1 R2_v12_1 R2_v13_1 R2_v14_1 R2_v15_1 Resid_1 R2_f2_2 R2_v22_2 R2_v23_2 R2_v24_2 R2_v25_2 R2_m2_2 R2_f3_3 R2_v32_3 R2_v33_3 R2_v34_3 R2_v35_3 R2_m3_3 R2_f4_4 R2_v42_4 R2_v43_4 R2_v44_4 R2_v45_4 R2_m4_4 R2_f5_5 R2_v52_5 R2_v53_5 R2_v54_5 R2_v55_5 R2_m5_5 R2_f1_t R2_f2_t R2_f3_t R2_f4_t R2_f5_t R2_f_t R2_v12_t R2_v22_t R2_v32_t R2_v42_t R2_v52_t R2_v2_t R2_v13_t R2_v23_t R2_v33_t R2_v43_t R2_v53_t R2_v3_t R2_v14_t R2_v24_t R2_v34_t R2_v44_t R2_v54_t R2_v4_t R2_v15_t R2_v25_t R2_v35_t R2_v45_t R2_v55_t R2_v5_t R2_v_t R2_m2_t R2_m3_t R2_m4_t R2_m5_t R2_m_t R2_fv_t R2_fvm_t Resid_t R2_L1_t R2_L2_t R2_L3_t R2_L4_t R2_L5_t
+		tempname var1 var2 var3 var4 var5 tvar R2_f1_1 R2_v12_1 R2_v13_1 R2_v14_1 R2_v15_1 Resid_1 R2_f2_2 R2_v22_2 R2_v23_2 R2_v24_2 R2_v25_2 R2_m2_2 R2_f3_3 R2_v32_3 R2_v33_3 R2_v34_3 R2_v35_3 R2_m3_3 R2_f4_4 R2_v42_4 R2_v43_4 R2_v44_4 R2_v45_4 R2_m4_4 R2_f5_5 R2_v52_5 R2_v53_5 R2_v54_5 R2_v55_5 R2_m5_5 R2_f1_t R2_f2_t R2_f3_t R2_f4_t R2_f5_t R2_f_t R2_v12_t R2_v22_t R2_v32_t R2_v42_t R2_v52_t R2_v2_t R2_v13_t R2_v23_t R2_v33_t R2_v43_t R2_v53_t R2_v3_t R2_v14_t R2_v24_t R2_v34_t R2_v44_t R2_v54_t R2_v4_t R2_v15_t R2_v25_t R2_v35_t R2_v45_t R2_v55_t R2_v5_t R2_v_t R2_m2_t R2_m3_t R2_m4_t R2_m5_t R2_m_t R2_fv_t R2_fvm_t Resid_t R2_L1_t R2_L2_t R2_L3_t R2_L4_t R2_L5_t R2
 		sca `var1' = `f1'[1,1] + `v12'[1,1] + `v13'[1,1] + `v14'[1,1] + `v15'[1,1] + `s2'
 		sca `var2' = `f2'[1,1] + `v22'[1,1] + `v23'[1,1] + `v24'[1,1] + `v25'[1,1] + `m2'[1,1]
 		sca `var3' = `f3'[1,1] + `v32'[1,1] + `v33'[1,1] + `v34'[1,1] + `v35'[1,1] + `m3'[1,1]
@@ -2686,11 +2701,11 @@ program mlmr2, rclass sortpreserve
 			di _newline" *R2fvm = {res}" %5.4f `R2_fvm_t' "{txt} {c |} the whole model.                                                   "_continue
 			di _newline" *Resid = {res}" %5.4f `Resid_t'  "{txt} {c |} level-1 residuals (i.e., proportion of unexplained variance).      "_continue
 			di _newline"{hline 17}{c BT}{hline 68}"_continue
-			di _newline" *These estimates are always safe to interpret. All other estimates"_continue
-			di _newline"  may be biased unless you are confident that each predictor in your"_continue
-			di _newline"  model has a constant effect across the levels on which it exists."_continue
-			di _newline"  See 'Aberrant Distortion of Variance Components in Multilevel Models"_continue
-			di _newline"  Under Conflation of Level-Specific Effects' (Rights, 2022) for more info."
+			di _newline" *These estimates are always safe to interpret.  All other estimates potentially contain"_continue
+			di _newline"  conflation bias if any predictor varies at more than 1 level.  For more info, see"_continue
+			di _newline"  'Aberrant Distortion of Variance Components in Multilevel Models Under Conflation"_continue
+			di _newline"  of Level-Specific Effects' (Rights, 2023) and 'On the Common but Problematic"_continue
+			di _newline"  Specification of Conflated Random Slopes in Multilevel Models' (Rights & Sterba, 2023)."
 		}
 		else if "`cwc'"=="cwc" {
 			di "{txt}mlmr2: R-Squared Measures for Mixed Models"
@@ -2767,13 +2782,17 @@ program mlmr2, rclass sortpreserve
 			di _newline"  Resid = {res}" %5.4f `Resid_t'  "{txt} {c |} level-1 residuals (i.e., proportion of unexplained variance).      "_continue
 			di _newline"{hline 17}{c BT}{hline 68}"
 		}
+		ret clear
+		mat `R2' = (`R2_f1_1',`R2_v12_1',`R2_v13_1',`R2_v14_1',`R2_v15_1',`Resid_1',`R2_f2_2',`R2_v22_2',`R2_v23_2',`R2_v24_2',`R2_v25_2',`R2_m2_2',`R2_f3_3',`R2_v32_3',`R2_v33_3',`R2_v34_3',`R2_v35_3',`R2_m3_3',`R2_f4_4',`R2_v42_4',`R2_v43_4',`R2_v44_4',`R2_v45_4',`R2_m4_4',`R2_f5_5',`R2_v52_5',`R2_v53_5',`R2_v54_5',`R2_v55_5',`R2_m5_5',`R2_f1_t',`R2_f2_t',`R2_f3_t',`R2_f4_t',`R2_f5_t',`R2_v12_t',`R2_v22_t',`R2_v32_t',`R2_v42_t',`R2_v52_t',`R2_v2_t',`R2_v13_t',`R2_v23_t',`R2_v33_t',`R2_v43_t',`R2_v53_t',`R2_v3_t',`R2_v14_t',`R2_v24_t',`R2_v34_t',`R2_v44_t',`R2_v54_t',`R2_v4_t',`R2_v15_t',`R2_v25_t',`R2_v35_t',`R2_v45_t',`R2_v55_t',`R2_v5_t',`R2_m2_t',`R2_m3_t',`R2_m4_t',`R2_m5_t',`R2_f_t',`R2_v_t',`R2_m_t',`R2_fv_t',`R2_fvm_t',`Resid_t')
+		mat colnames `R2' = R2_f1_1 R2_v12_1 R2_v13_1 R2_v14_1 R2_v15_1 Resid_1 R2_f2_2 R2_v22_2 R2_v23_2 R2_v24_2 R2_v25_2 R2_m2_2 R2_f3_3 R2_v32_3 R2_v33_3 R2_v34_3 R2_v35_3 R2_m3_3 R2_f4_4 R2_v42_4 R2_v43_4 R2_v44_4 R2_v45_4 R2_m4_4 R2_f5_5 R2_v52_5 R2_v53_5 R2_v54_5 R2_v55_5 R2_m5_5 R2_f1_t R2_f2_t R2_f3_t R2_f4_t R2_f5_t R2_v12_t R2_v22_t R2_v32_t R2_v42_t R2_v52_t R2_v2_t R2_v13_t R2_v23_t R2_v33_t R2_v43_t R2_v53_t R2_v3_t R2_v14_t R2_v24_t R2_v34_t R2_v44_t R2_v54_t R2_v4_t R2_v15_t R2_v25_t R2_v35_t R2_v45_t R2_v55_t R2_v5_t R2_m2_t R2_m3_t R2_m4_t R2_m5_t R2_f_t R2_v_t R2_m_t R2_fv_t R2_fvm_t Resid_t
+		mat rownames `R2' = "`dv'"
+		ret mat R2 = `R2'
 		qui _estimates unhold mixedest
 		qui _estimates hold mixedest, copy restore
 	}
 	else if `nlevels'>5 {
 		di as err "No more than 5 levels are currently allowed."
 	}
-	ret clear
 	cap ret sca R2_L5_Total = `R2_L5_t'
 	cap ret sca R2_L4_Total = `R2_L4_t'
 	cap ret sca R2_L3_Total = `R2_L3_t'

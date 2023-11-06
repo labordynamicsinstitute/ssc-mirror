@@ -26,9 +26,9 @@ d
 d Author: Bill Rising, StataCorp
 d Support: email  brising@@stata.com
 d
-d Distribution-Date: 20080731
+d Distribution-Date: 20231105
 
 f log2html.ado
-f log2html.hlp
+f log2html.sthlp
 f log2html7.ado
 f log2html7.hlp

@@ -1,3 +1,4 @@
+*! log2html 1.2.10 cfb/njc/br 05nov2023
 *! log2html 1.2.9  cfb/njc/br 08jun2006
 *! log2html 1.2.8  cfb/njc/br 09feb2005
 *! log2html 1.2.7  cfb/njc/br 12oct2004 
@@ -93,7 +94,8 @@ program log2html
 	if `"`title'"' ~= "" {
 		file write `ho' `"<title>`title'</title>"' _n
 	}
-	file write `ho' `"<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1">"' _newline
+// change to utf8 to prevent mangling of accented characters
+	file write `ho' `"<meta http-equiv="Content-type" content="text/html; charset=utf8">"' _newline
 	file write `ho' `"<meta http-equiv="Content-Style-Type" content="text/css">"' _newline
 	if "`css'" == "" {
 		file write `ho' `"<style type="text/css">"' _newline

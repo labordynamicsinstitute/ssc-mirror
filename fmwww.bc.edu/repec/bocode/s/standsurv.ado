@@ -1,4 +1,4 @@
-*! version 1.04 2023-09-19
+*! version 1.05 2023-11-05
 program define standsurv, rclass sortpreserve
   version 16.1
   syntax [anything] [if] [in],        ///
@@ -123,6 +123,8 @@ program define standsurv, rclass sortpreserve
     // -- square
     // -- diagonals all missing
     // -- elements unique
+    
+    
     local ode ode
   }
   else {
@@ -134,7 +136,6 @@ program define standsurv, rclass sortpreserve
   
   local Ncrmodels = cond("`crmodels'" == "",1,wordcount("`crmodels'"))
   local Nmsmodels = cond("`msmodels'" == "",`Ncrmodels',wordcount("`msmodels'"))
-  
   
   
   
@@ -543,9 +544,10 @@ program define standsurv, rclass sortpreserve
   }  
   
 // stub2 names  
+
   if("`cif'" != "" | ("`rmft'" != "" & "`crmodels'" != "") | "`crudeprob'" != "" | "`crudeprobpart'" != "" | ("`rmft'" != "" & "`crmodels'"!= "") | "`msmodels'" != "") {
     if("`stub2'" == "") {
-      if "`cif'" != "" | ("`rmft'" != "" & "`crmodels'"!= "") local stub2 `crmodels'
+      if "`cif'" != "" | ("`rmft'" != "" & "`crmodels'" != "" & "`cif'" != "") local stub2 `crmodels'
       else if "`msmodels'"      != "" {
         forvalues i = 1/`Nstates' {
           local stub2 `stub2' s`i' 
@@ -556,6 +558,8 @@ program define standsurv, rclass sortpreserve
     }
   }
   local Nstub2names = wordcount("`stub2'") + ("`crudeprob'" == "" & "`cif'" == "" & "`crudeprobpart'"=="" & ("`rmft'" == "" & "`crmodels'"!= ""))
+  
+  if "`Nstub2names'" == "0" local Nstub2names 1
   if `Nstub2names'>1 & !("`cif'" != "" | ("`rmft'" != "" & "`crmodels'" != "") | ///
                        "`crudeprob'" != "" | "`crudeprobpart'" != "" |           ///
                        ("`rmft'" != "" & "`crmodels'"!= "") |                    /// 
@@ -563,7 +567,7 @@ program define standsurv, rclass sortpreserve
   	di as error "You have used stub2() for an option where it is not needed"
     exit 198
   }
-  
+
 // names of new variables
 // ######## UPDATE for MSMODELS if stub2name used
   if  "`anything'" != "" {
@@ -603,7 +607,8 @@ program define standsurv, rclass sortpreserve
     }
     
     if ((`Nmsmodels' == 1 & "`crudeprob'" == "") | ///
-       (`Ncrmodels' > 1 & "`cif'" == ""  & "`crudeprobpart'" == "" & "`rmft'" == "")) { 
+       (`Ncrmodels' > 1 & ("`cif'" == ""  & "`crudeprobpart'" == "" & "`rmft'" == "")) | ///
+       (`Ncrmodels' > 1 & ("`cif'" == "" & "`rmft'" != ""))) { 
       local at_varnames `tmp_atnames'
     }
     else {
@@ -847,7 +852,7 @@ program define standsurv, rclass sortpreserve
       local Nequations_model`mi' = 2
       
       
-      if "`hazard'" != "" & "`stpm3_scale_model`mi''" != "lncumhazard" {
+      if "`hazard'" != "" & !inlist("`stpm3_scale_model`mi''","lncumhazard") {
         di as error "hazard option only available for stpm3, scale(lncumhazard) models." 
         exit 198
       }      
@@ -934,6 +939,7 @@ program define standsurv, rclass sortpreserve
       if "`e(scale)'" == "lnhazard" {
         if "`survival'`failure'`rmst'`rmft'" != "" local ode ode
       }
+
       tempname timebeta`mi'
       matrix `timebeta`mi'' = e(b)[1,"time:"]
       // column location of time-dependent effects - needed for ODE
