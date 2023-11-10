@@ -57,6 +57,7 @@ help for {cmd:table1_mc}
 {synopt:{opt slashN}}report n/N instead of n for categorical/binary vars {p_end}
 {synopt:{opt catrowperc}}report row percentages rather than column percentages for categorical vars (but not binary vars) {p_end}
 {synopt:{opt pdp(#)}}max number of decimal places in p-value when p-value < 0.10; default is pdp(3){p_end}
+{synopt:{opt highpdp(#)}}max number of decimal places in p-value when p-value ≥ 0.10; default is highpdp(2){p_end}
 {synopt:{opt gurmeet}}equivalent to specifying:  percformat(%5.1f) percent_n percsign("") iqrmiddle(",") sdleft(" [±") sdright("]") gsdleft(" [×/") gsdright("]") onecol extraspace{p_end}
 
 {syntab:Output}
@@ -95,7 +96,7 @@ For categorical/binary variables the default is to
 display the column percentage using either 0 or 1 decimal place depending on the total frequency. You
 can change this default using the {bf:percformat()} option.{p_end}
 
-{pstd}The default times-divide symbol for the geometric SD (or multiplicative standard deviation) 
+{pstd}The default times-divide symbol for the geometric SD (Kirkwood 1979) 
 is very similar to that proposed by Limpert & Stahel (2011).{p_end}
 
 {pstd}The underlying results table can be (i) saved to an Excel file using the {bf:saving()} option, and/or 
@@ -106,9 +107,8 @@ using the command {help table1_mc_dta2docx:table1_mc_dta2docx}.{p_end}
 
 {title:Remarks}
 
-{pstd}Stata 17 introduced a massively revised and expanded {cmd:table} command, offering much flexibility. 
-I don't think it will impact on the popularity of table1_mc, which is much easier to use and read about. 
-As of May 2022, I don't think Stata's {cmd:table} command can report Median (Q1-Q3) in one cell (or two).{p_end}
+{pstd}Stata 18 introduced the {cmd:dtable} command, and Stata 17 introduced a massively revised and expanded {cmd:table} command. 
+Both offer much flexibility, though {cmd:table1_mc} is much easier to use and read about.{p_end}
 
 {pstd}{cmd:table1_mc} is an extension and modification of Phil Clayton's {cmd:table1} command.{p_end}  
 {pstd}Other user written commands that do similar things include:{break}
@@ -117,7 +117,8 @@ As of May 2022, I don't think Stata's {cmd:table} command can report Median (Q1-
  {cmd:sumtable} ... two stats in two (not one) columns, generally not as flexible, no p-values{break}
  {cmd:partchart} ... quite similar but strangely doesn't seem to express IQR as (Q1-Q3), reporting instead the difference between the two quartiles{break}
  {cmd:tabxml} ... survey data frequencies and/or % for categorical variables, means and SE / CI for continuous variables. To avoid matsum error message: . net install sg100, from(http://www.stata.com/stb/stb47){break}
- {cmd:basetable} ... "can be used for survey analysis". Nice, can do 95% CIs for each group. http://www.bruunisejs.dk/StataHacks/My%20commands/basetable/basetable_demo/{p_end}
+ {cmd:basetable} ... "can be used for survey analysis". Nice, can do 95% CIs for each group. 
+ Can save in various styles e.g. Latex. Stata Journal 2022; 22: 416-429.{p_end}
 
 {pstd}See also http://blog.stata.com/2017/04/06/creating-excel-tables-with-putexcel-part-3-writing-custom-reports-for-arbitrary-variables/{p_end}
 
@@ -151,6 +152,7 @@ Use the {bf:clear} option of table1_mc together with the command {help table1_mc
 
 {title:References}
 
+{phang}Kirkwood TBL. Geometric means and measures of dispersion. Biometrics 1979; 35: 908–909.{p_end} 
 {phang}Limpert E, Stahel WA. Problems with Using the Normal Distribution – and Ways to Improve Quality and Efficiency of Data Analysis. PLoS ONE. 2011;6(7):e21403. doi:10.1371/journal.pone.0021403.{p_end} 
 {phang}table1 - Phil Clayton, ANZDATA Registry, Australia.{p_end}
 

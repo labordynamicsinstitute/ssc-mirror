@@ -1,17 +1,18 @@
 program define hammock
-*! 1.2.4   May 24, 2023: label_min_dist option
+*! 1.2.5   Oct 10, 2023: added option outline 
 	version 14.2
 	syntax varlist [if] [in], [  Missing BARwidth(real 1) MINBARfreq(int 1) /// 
 		hivar(str) HIVALues(numlist  missingokay) SPAce(real 0.0) ///
 		LABel labelopt(str) label_min_dist(real 3.0) ///
 		SAMEscale(varlist) ///
-		ASPECTratio(real 0.72727) COLorlist(str) shape(str) * ]
+		ASPECTratio(real 0.72727) COLorlist(str) shape(str) no_outline * ]
 
 	confirm numeric variable `varlist'
-
+	
 	local missing = "`missing'" != ""
 	local addlabel= "`label'" != ""
 	local same = "`samescale'" !=""
+	local outline = 1- ("`_outline'" == "no_outline") //options that start with "no" have different syntax 
 
 	if ("`shape'"=="") local shape="rectangle"
 	local rangeexpansion=0.1  /*fraction space reserved for missing values*/
@@ -23,6 +24,7 @@ program define hammock
 
 	check_sufficient_colors ,  hivar("`hivar'") hivalues("`hivalues'") colorlist("`colorlist'") 
 	if ("`colorlist'"=="")	 local colorlist="black red  blue teal  yellow sand maroon orange olive magenta"
+
 
 	* observations to use 
 	marksample touse , novarlist
@@ -213,7 +215,7 @@ program define hammock
 	     width(`width')  ylabmax(`ylabmax') ylabmin(`ylabmin') ///
          aspectratio(`aspectratio') ar_x(`ar_x') xrange(`xrange') yrange(`yrange') ///
 		 xlab_num("`xlab_num'")  graphx("`graphx'") colorlist("`colorlist'") ///
-		 shape("`shape'") ///
+		 shape("`shape'") outline(`outline') ///
 		 options(`"`options'"') addlabeltext(`"`addlabeltext'"') yline(`"`yline'"')
 
 	// matrix `label_coord' is still around but not needed in GraphBoxColor 
@@ -457,6 +459,7 @@ end
 * graphx 		 : name of x variable for plotting
 * addlabeltext   : string for adding labels:  text("ypos1 xpos1 "text1"  ypos2 xpos2 "text2" [...])
 * colorlist		 : list of colors to be used
+* outline		 : 1/0: whether or not boxes should have an outline (using lcolor)
 *
 * Strategy: 
 * For each box, 3 variables (yhigh, ylow, and x) are created. 
@@ -472,14 +475,20 @@ end
 program define GraphBoxColor 
 	version 14.2
     syntax , xstart(str) xend(str) ystart(str) yend(str) width(str) graphx(str) ///
-	    ylabmin(real) ylabmax(real) xlab_num(str) shape(str) ///
+	    ylabmin(real) ylabmax(real) xlab_num(str) shape(str) outline(int) ///
 		aspectratio(real) ar_x(real) xrange(real) yrange(real) ///
-		[  colorlist(str) addlabeltext(str) yline(str)  options(str) ]
+		[  colorlist(str) addlabeltext(str) yline(str)  options(str)  ]
   
 	tempvar w increment
 	qui egen `w'= rsum(`width'*)  // total width of a multi-color box
 	qui gen `increment'=0	// sum of w_k before the current color
+		
+	local no_outline=""
+	if (`outline'==0)	local no_outline = "lcolor(black%0)"  // boxes have no, i.e. translucent outline
+	//If there is an outline, my tests indicate that the outline is correctly inside the area as in "lalign(inside)" 
+	//      lalign(outside) would be a problem as there would be overlap with neighboring lines
 	
+
 	// initialize, so I can use "replace" later
 	tempvar yhigh ylaghigh ylaglow xlow xhigh xlaghigh xlaglow ylow
 	foreach var of newlist `xlow' `xhigh' `xlaghigh' `xlaglow' `yhigh' `ylaghigh' `ylaglow' `ylow' {
@@ -562,6 +571,8 @@ program define GraphBoxColor
 				local xlow1=`xlow'[`i']
 				local xlaglow1=`xlaglow'[`i']
 				
+				
+				
 				// if graph box is non-missing (checking 1 macro; they should be all missing or all not missing)
 				if (`yhigh'[`i']!=. ) {
 					// temp variables die at end of a program; therefore define here where the plotting occurs
@@ -576,15 +587,15 @@ program define GraphBoxColor
 						// for entire hammock.ado speed advantage using this routine is 1%-6%
 						plot_parallelogram `hi`i'`k'' `lo`i'`k'' `x`i'`k'', ///
 							yhigh(`yhigh1') ylaghigh(`ylaghigh1') x1(`xlow1') x2(`xlaglow1') ///
-							ylow(`ylow1')  ylaglow(`ylaglow1') color(`color')
+							ylow(`ylow1')  ylaglow(`ylaglow1') color(`color') `no_outline'
 					}
 					else {						
 						// works for both general quadrangles and for parallelogram as a special case
-						plot_quadrangle `hi`i'`k'' `lo`i'`k'' `x`i'`k'', color(`color') ///
+						plot_quadrangle `hi`i'`k'' `lo`i'`k'' `x`i'`k'', color(`color') `no_outline' ///
 							xhigh(`xhigh1') yhigh(`yhigh1') ///	     
 							xlow(`xlow1') ylow(`ylow1') ///
 							xlaghigh(`xlaghigh1') ylaghigh(`ylaghigh1') ///
-							xlaglow(`xlaglow1') ylaglow(`ylaglow1') 
+							xlaglow(`xlaglow1') ylaglow(`ylaglow1') 	
 					}
 					local temp = r(addplot)
 					assert "`temp'"!=""
@@ -1127,3 +1138,4 @@ end
 //*! 1.2.2    Jan 27, 2023: minbarfreq option added
 //*! 1.2.3    Apr 12, 2023: Added warning if label value contains only white space
 //*! 1.2.4   May 24, 2023: label_min_dist option
+//*! 1.2.5   Oct 10, 2023: added option outline 

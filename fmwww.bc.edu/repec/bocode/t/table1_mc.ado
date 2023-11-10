@@ -1,4 +1,8 @@
-*! -table1_mc- version 3.3 Mark Chatfield    2022-05-05
+*! -table1_mc- version 3.4 Mark Chatfield    2023-11-07
+* highpdp option added as some journals ask for all p-values to 3 decimal places
+* levels of numeric variable with decimal places did not always print when treated as a categorical variable
+
+* -table1_mc- version 3.3 Mark Chatfield    2022-05-05
 * added statistic option to give the value of the test statistic
 * if missing option is chosen, the test associated with categorical variables did not include the missing category. This has been corrected.
 * Wrap tempfile macros in double quotes. 
@@ -71,7 +75,8 @@ program define table1_mc, sclass
 		[gsdright(string asis)] ///	what is entered after GSD; gsdright(")") is default		
 		[percent]			/// report categorical vars just as % (no N)
 		[MISsing]			/// don't exclude missing values
-		[pdp(integer 3)]	/// max number of decimal places in p-value
+		[pdp(integer 3)]	/// max number of decimal places in p-value < 0.1
+		[highpdp(integer 2)]	/// max number of decimal places in p-value >= 0.1		
 		[test]				/// include column specifying which test was used
 		[STATistic]         /// give value of test statistic
 		[SAVing(string asis)] /// optional Excel file to save output		
@@ -638,11 +643,10 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 				if "`onecol'"=="" {
 					qui gen factor="`varlab'" if _n==1
 					qui gen factor_sep="`varlab'" // allows neat sepby
-					qui gen level=""
+					qui gen level= string(`varnum')   // was just qui gen level=""  before 2023 10 20
 					qui levelsof `varnum', local(levels)
 					foreach level of local levels {
-						qui replace level="`: label (`varnum') `level''" ///
-							if `varnum'==`level'
+						qui replace level="`: label (`varnum') `level''" if `varnum'==`level'
 					}
 					qui replace level="Missing" if `varnum'==. // mc
 				}
@@ -658,11 +662,11 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 						qui replace `v' = `v'[_n+1] if _n==1
 					}
 					qui gen factor="`varlab'" if _n==1
+					qui replace factor="   " + string(`varnum') if _n!=1 // new 2023 10 20
 					qui gen factor_sep="`varlab'" // allows neat sepby
 					qui levelsof `varnum', local(levels)
 					foreach level of local levels {
-						qui replace factor="   `: label (`varnum') `level''" ///
-							if `varnum'==`level'
+						qui replace factor="   `: label (`varnum') `level''" if `varnum'==`level'
 					}
 					qui replace factor="   Missing" if `varnum'==. & _n!=1 // mc
 				}
@@ -890,7 +894,7 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 	* format p-values
 	if `groupcount'>1 {
 		cap gen p = .
-		qui gen pvalue=string(p, "%4.2f") if !missing(p)
+		qui gen pvalue=string(p, "%`=`highpdp'+2'.`highpdp'f") if !missing(p)
 		qui replace pvalue=string(p, "%`=`pdp'+2'.`pdp'f") if p<0.10
 		local pmin=10^-`pdp'
 		qui replace pvalue="<" + string(`pmin', "%`=`pdp'+2'.`pdp'f") if p<`pmin'
@@ -899,7 +903,7 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 	}
 	if "`pairwise123'" == "pairwise123" {
 		foreach p of var p12 p23 p13 {
-			qui gen `p's=string(`p', "%4.2f") if !missing(`p')
+			qui gen `p's=string(`p', "%`=`highpdp'+2'.`highpdp'f") if !missing(`p')
 			qui replace `p's=string(`p', "%`=`pdp'+2'.`pdp'f") if `p'<0.10
 			qui replace `p's="<" + string(`pmin', "%`=`pdp'+2'.`pdp'f") if `p'<`pmin'
 			qui replace `p's=" " + `p's if `p'>=`pmin' & `p's != ""

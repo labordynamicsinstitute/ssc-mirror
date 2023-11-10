@@ -35,6 +35,7 @@ help for {hi:hammock}{right:{hi: Matthias Schonlau}}
 {synopt :{opt minbar:freq(int)}} Specify minimum bar width {p_end}
 {synopt :{opt label_min_dist(real)}} Specify minimum distance between two labels on the same axis{p_end}
 {synopt :{opt labelopt(str)}} Pass options to {it:{help added_text_options}}, e.g. to manipulate label text size{p_end}
+{synopt :{opt no_outline}} Do not outline the edges of semi-translucent boxes {p_end}
 
 {syntab :Other options}
 {synopt :{opt shape(str)}} Box shape: "parallelogram" or "rectangle" (default) {p_end}
@@ -167,7 +168,14 @@ The arguments are passed  to {it:{help added_text_options}}.
 This can be used to manipulate the text sizes of the labels, for example, {it: labelopt(size(vsmall))}.
 Text size names are explained in {it:{help textsizestyle}}. 
 By default, label size is "medium". If option {it:label} is not specified,  option {it:labelopt} is ignored. 
-
+  
+{phang}
+{opt no_outline} (rarely needed) In Stata, translucent boxes (e.g. "red%50" , where the color is 50% translucent) 
+are drawn with an outline that is not translucent.
+If there are several overlapping colors, it may be visually simpler to show the translucent box 
+without outlining the edges of the box. This option removes the outline.
+ This option only effects semi-translucent colors; it has no effect on regular colors (e.g. "red"). 
+  
 
 {dlgtab:Other options}
 
