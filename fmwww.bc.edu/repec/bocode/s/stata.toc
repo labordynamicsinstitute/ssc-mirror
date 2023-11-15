@@ -21,6 +21,7 @@ p stpm3 module to fit flexible parametric survival models
 p stpp module to compute Pohar-Perme non-parametric estimate of marginal relative (net) survival
 p streamplot module to produce streamplots
 p styletextab module to style LaTeX tables exported by collect suite of commands
+p submatrix module to perform advanced matrix subscripting
 p summclust module to compute cluster level measures of leverage, influence, and a cluster jackknife variance estimator
 p summtab module to compute summary statistics overall and/or across levels of a categorical variable 
 p sunburst module for (half) sunburst plots

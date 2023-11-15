@@ -17,7 +17,7 @@ program define metapreg_example_one_one
 	di "	xlab(.25, 0.5, .75, 1) ///"
 	di "	subti(Atypical cervical cytology, size(4)) ///"
 	di "	graphregion(color(white)) ///"
-	di "	texts(1.5) prediction smooth gof	"
+	di "	texts(1.25)  smooth gof	"
 
 	set more off
 	
@@ -31,7 +31,7 @@ program define metapreg_example_one_one
 		xlab(.25, 0.5, .75, 1) ///
 		subti(Atypical cervical cytology, size(4)) ///
 		graphregion(color(white)) /// 
-		texts(1.5) prediction smooth gof	
+		texts(1.25) smooth gof	
 	restore
 end
 
@@ -45,7 +45,7 @@ program define metapreg_example_one_two
 	di "	xlab(.25, 0.5, .75, 1) ///"
 	di "	subti(Atypical cervical cytology, size(4)) ///"
 	di "	graphregion(color(white)) /// "
-	di "	texts(1.5) prediction smooth"
+	di "	texts(1.5) smooth"
 
 	set more off
 	bys tgroup, rc0: metapreg num denom, ///
@@ -55,7 +55,7 @@ program define metapreg_example_one_two
 		xlab(0, .25, 0.5, .75, 1) ///
 		subti(Atypical cervical cytology, size(4)) ///
 		graphregion(color(white)) /// 
-		texts(1.5) prediction smooth
+		texts(1.5) smooth
 	restore
 end
 
@@ -72,7 +72,7 @@ program define metapreg_example_one_three
 	di "	xlab(.25, 0.5, .75, 1) ///"
 	di "	subti(Atypical cervical cytology, size(4)) ///"
 	di "	graphregion(color(white)) ///" 
-	di "	texts(1.5) prediction summaryonly"
+	di "	texts(1.5)  summaryonly"
 	
 	set more off
 	
@@ -86,7 +86,7 @@ program define metapreg_example_one_three
 		xlab(0, .25, 0.5, .75, 1) ///
 		subti(Atypical cervical cytology, size(4)) ///
 		graphregion(color(white)) /// 
-		texts(1.5) prediction summaryonly
+		texts(1.5)  summaryonly
 		
 	restore
 end
@@ -95,7 +95,7 @@ program define metapreg_example_two_one
 	preserve
 	use "http://fmwww.bc.edu/repec/bocode/t/tsoumpou2009cancertreatrevfig2WNL.dta", clear
 	di ". metapreg p16p p16ptot, ///" 
-	di "	studyid(study) ///"
+	di "	studyid(study)  sumtable(all) ///"
 	di "	label(namevar=author, yearvar=year) ///" 
 	di "	sortby(year author) ///"
 	di "	xlab(0, .1, .2, 0.3,0.4,0.5)  ///"
@@ -104,12 +104,12 @@ program define metapreg_example_two_one
 	di "	subti(Cytology = WNL, size(4) color(blue)) ///"
 	di "	pointopt(msymbol(x)msize(2)) ///"
 	di "	graphregion(color(white)) ///"
-	di "	texts(1.5) smooth"
+	di "	texts(1.5) smooth gof"
 
 	set more off
 
 	metapreg p16p p16tot, ///		
-		studyid(study) ///
+		studyid(study) sumtable(all) ///
 		label(namevar=author, yearvar=year) ///
 		sortby(year author) ///
 		xlab(0, .1, .2, 0.3, 0.4, 0.5) ///
@@ -118,7 +118,38 @@ program define metapreg_example_two_one
 		subti(Cytology = WNL, size(4) color(blue)) ///
 		graphregion(color(white)) /// 
 		pointopt(msymbol(X)msize(2)) /// 
-		texts(1.5) smooth
+		texts(1.5) smooth gof
+	restore
+end
+
+program define metapreg_example_two_two
+	preserve
+	use "http://fmwww.bc.edu/repec/bocode/t/tsoumpou2009cancertreatrevfig2WNL.dta", clear
+	di ". metapreg p16p p16ptot, link(loglog) ///" 
+	di "	studyid(study) sumtable(all) ///"
+	di "	label(namevar=author, yearvar=year) ///" 
+	di "	sortby(year author) ///"
+	di "	xlab(0, .1, .2, 0.3,0.4,0.5)  ///"
+	di "	xline(0, lcolor(black)) ///"
+	di "	ti(Positivity of p16 immunostaining, size(4) color(blue)) ///"
+	di "	subti(Cytology = WNL, size(4) color(blue)) ///"
+	di "	pointopt(msymbol(x)msize(2)) ///"
+	di "	graphregion(color(white)) ///"
+	di "	texts(1.5) smooth gof"
+
+	set more off
+
+	metapreg p16p p16tot, link(loglog) ///		
+		studyid(study) sumtable(all) ///
+		label(namevar=author, yearvar=year) ///
+		sortby(year author) ///
+		xlab(0, .1, .2, 0.3, 0.4, 0.5) ///
+		xline(0, lcolor(black)) ///
+		ti(Positivity of p16 immunostaining, size(4) color(blue)) ///
+		subti(Cytology = WNL, size(4) color(blue)) ///
+		graphregion(color(white)) /// 
+		pointopt(msymbol(X)msize(2)) /// 
+		texts(1.5) smooth gof
 	restore
 end
 
@@ -169,7 +200,7 @@ program define metapreg_example_three_two
 	di "	sumstat(Proportion) ///"
 	di "	rcols(cases_tb population) /// "
 	di "	astext(80) /// "
-	di "	texts(1.5) prediction smooth "
+	di "	texts(1.5)  smooth "
 		
 	set more off
 	
@@ -178,12 +209,12 @@ program define metapreg_example_three_two
 		sortby(lat) ///
 		sumtable(all) by(bcg) ///
 		graphregion(color(white)) /// 
-		xlab(0, 0.05, 0.1) /// 
-		xtick(0, 0.05, 0.1)  /// 
+		xlab(0, 0.05, 0.15) /// 
+		xtick(0, 0.05, 0.15)  /// 
 		sumstat(Proportion) ///
 		rcols(cases_tb population) /// 
 		astext(80) /// 
-		texts(1.5) prediction smooth 		
+		texts(1.5)  smooth 		
 	restore
 end
 
@@ -217,7 +248,7 @@ program define metapreg_example_three_three
 		xlab(0, 1, 2) /// 
 		xtick(0, 1, 2)  /// 
 		rcols(cases_tb population) /// 
-		astext(80) /// 
+		astext(80)  /// 
 		texts(1.5) logscale smooth
 	restore
 end
@@ -225,11 +256,11 @@ end
 program define metapreg_example_four_one
 	preserve
 	use "http://fmwww.bc.edu/repec/bocode/s/schizo.dta", clear
-	di ". gsort firstauthor -arm  "
+	di ". gsort firstauthor arm  "
 	di ""
 	di ". metapreg response total arm missingdata,  /// "
 	di "	studyid(firstauthor) ///"
-	di "	sortby(year) ///"
+	di "	sortby(year) link(loglog) ///"
 	di "	sumtable(all) ///"
 	di "	design(comparative)   ///"
 	di "	outplot(rr) ///"
@@ -238,7 +269,7 @@ program define metapreg_example_four_one
 	di "	xlab(0, 5, 15) /// "
 	di "	xtick(0, 5, 15)  ///" 
 	di "	sumstat(Rel Ratio) ///"
-	di "	lcols(response total year) /// "
+	di "	lcols(response total) /// "
 	di "	astext(70) /// "
 	di "	texts(1.5) logscale smooth ///"
 	di "	xsize(12) ysize(6)"
@@ -246,29 +277,28 @@ program define metapreg_example_four_one
 
 	set more off
 	
-	gsort firstauthor -arm
+	gsort firstauthor arm
 	
 	metapreg response total arm missingdata,  /// 
 		studyid(firstauthor) ///
-		sortby(year) ///
+		sortby(year) link(loglog) ///
 		sumtable(all) ///
 		design(comparative)  ///
 		outplot(rr) ///
 		interaction ///
 		graphregion(color(white)) /// 
-		xlab(0, 5, 15) /// 
-		xtick(0, 5, 15)  /// 
+		xlab(0, 0.5, 1.5) /// 
+		xtick(0, .5, 1.5)  /// 
 		sumstat(Rel Ratio) ///
-		lcols(response total year) /// 
-		astext(80) /// 
-		texts(1.5) logscale smooth xsize(12) ysize(6)
-		
+		lcols(response total) /// 
+		astext(70) /// 
+		texts(1.5) logscale smooth xsize(12) ysize(6) 
 	restore
 end
 
 program define metapreg_example_five_one
 	preserve
-	use "https://github.com/VNyaga/Metapreg/blob/master/Build/matched.dta?raw=true", clear
+	use "http://fmwww.bc.edu/repec/bocode/m/matched.dta", clear
 	di ". metapreg a b c d index comparator,  /// "
 	di "	studyid(study) ///"
 	di "	model(fixed)  /// "

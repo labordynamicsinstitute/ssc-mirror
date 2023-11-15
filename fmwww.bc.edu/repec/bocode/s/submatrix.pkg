@@ -1,0 +1,27 @@
+d 'SUBMATRIX': module to perform advanced matrix subscripting
+d
+d  The submatrix command supports users in the advanced extraction
+d of submatrices from Stata matrices. The submatrix command subsets
+d Stata matrices from multiple non-consecutive rows or columns,
+d using number and/or name subscripting. submatrix introduces
+d permutation vectors in the Stata environment exploiting numlist;
+d this feature is already available in Mata and allows easier and
+d faster matrix subscripting. Furthermore, submatrix allows
+d replication, rearrangement, and deletion of elements from Stata
+d matrices. 
+d
+d KW: data management
+d KW: matrix
+d KW: subscript
+d KW: submatrix
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20231114
+d
+d Author: Daniele Spinelli, University of Milano Bicocca
+d Support: email aniele.spinelli@@unimib.it
+d
+f submatrix.ado
+f submatrix.sthlp
+f submatrix_examples.do

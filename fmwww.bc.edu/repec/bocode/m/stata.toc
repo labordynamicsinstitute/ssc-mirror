@@ -162,6 +162,7 @@ p mixlogit module to fit mixed logit models by using maximum simulated likelihoo
 p mixlogitwtp module to estimate mixed logit models in WTP space
 p mixmcm module to estimate finite mixtures of non-stationary Markov chain models  by maximum likelihood (ML) and the Expectation-Maximization (EM) algorithm
 p mixmixlogit module to estimate mixed-mixed multinomial logit model
+p mixrandregret module for fitting mixed random regret minimization models
 p mkbilogn module to create bivariate lognormal variables
 p mkcorr module to generate correlation table formatted for easy inclusion in articles
 p mkdat module providing easy SOEP retrievals

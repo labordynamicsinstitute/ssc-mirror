@@ -1,0 +1,24 @@
+d 'CENTILE2': module to enhance centile command and provide additional definitions for computing sample quantiles
+d
+d  centile2 is an enhancement to Stata's official centile command
+d that allows the user to select amongst six algorithms for
+d defining the quantile (centile), corresponding to the continuous
+d sample quantile types described in Hyndman and Fan (1996), and
+d likewise implemented in R's quantile function.  The availability
+d of different definitions for computing sample quantiles ensures
+d that the same result can be reproduced using different software
+d packages. 
+d
+d KW: quantiles
+d KW: centiles
+d KW: definitions
+d
+d Requires: Stata version 6
+d
+d Distribution-Date: 20231114
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f centile2.ado
+f centile2.sthlp

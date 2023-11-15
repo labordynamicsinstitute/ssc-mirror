@@ -1,7 +1,7 @@
 
 {smcl}
 
-{* *! version 1.0.0 24Jun2023}
+{* *! version 1.0.1 10Nov2023}
 {cmd:help pmvalsampsize}
 {hline}
 
@@ -24,6 +24,8 @@
 		{opt lpnorm:al(numlist max=2)} {opt lpskew:ednormal(numlist max=4)} 
 		{opt lpbeta(numlist max=2)} {opt lpcstat(numlist max=1)}  
 		{opt tol:erance(real 0.0005)} {opt inc:rement(real 0.1)} 
+		{opt sens:itivity(real 0)} {opt spec:ificity(real 0)} {opt thresh:old(real 0)}
+		{opt nbci:width(real 0.2)} {opt nbseinc:rement(real 0.0001)}
 		{opt seed(int 123456)} {opt mmoe(real 1.1)} {opt trace} {opt graph} {opt noprint}]	
 
 
@@ -58,6 +60,11 @@
 {synopt :{opt oeseinc:rement(real 0.0001)}}sets increment by which to iterate when identifying the SE(ln(OE)) to meet the target CI width for OE{p_end}
 {synopt :{opt seed(int 123456)}}set seed for simulation based calclulations{p_end}
 {synopt :{opt graph}}produces histogram of the LP distribution for checking{p_end}
+{synopt :{opt sens:itivity(real 0)}}anticipated sensitivity at validation{p_end}
+{synopt :{opt spec:ificity(real 0)}}anticipated specificity at validation{p_end}
+{synopt :{opt thresh:old(real 0)}}specifies risk threshold used for net benefit calculation{p_end}
+{synopt :{opt nbci:width(real 0.2)}}target CI width for standardised net benefit performance{p_end}
+{synopt :{opt nbseinc:rement(real 0.0001)}}sets increment by which to iterate when identifying the SE(standardised net benefit) to meet the target CI width for standardised net benefit{p_end}
 {synoptline}
 
 {phang}
@@ -104,6 +111,8 @@ allowing conclusions to be drawn about whether the model is potentially accurate
 {pmore}i) precise estimation of the Observed/Expected (O/E) statistic,{p_end}
 {pmore}ii) precise estimation of the calibration slope (c-slope), and{p_end}
 {pmore}iii) precise estimation of the c-statistic.{p_end}
+{phang}And a fourth optional criteria to calculate the sample size (N) needed for:{p_end}
+{pmore}iv) precise estimation of the standardised net-benefit (sNB).{p_end}
 
 {phang}The sample size calculation requires the user to pre-specify the following;{p_end} 
 {pmore}- the outcome event proportion{p_end}
@@ -114,6 +123,9 @@ allowing conclusions to be drawn about whether the model is potentially accurate
 {pmore}- the anticipated c-statisitic performance{p_end}
 {pmore}- the target precision (CI width) for the c-statisitic{p_end}
 {pmore}- the distribution of estimated probabilities from the model, ideally specified on the log-odds scale - AKA the Linear Predictor (LP){p_end}
+{pmore}- the anticipated sensitivity, specificity and relevant risk threshold for sNB calculation{p_end}
+{pmore}- the target precision (CI width) for the standardised net benefit{p_end}
+
 
 {marker options}{...}
 {title:General Options}
@@ -205,6 +217,32 @@ to approximate the LP distribution for criteria 2.
 The graph also details summary statistics for the simulated distribution.
 Useful option for checking the simulated LP distribution against the source of input parameters. 
 Also useful for reporting at publication. 
+
+{phang}{opt sensitivity(real 0)} specifies the anticipated sensitivity performance in the validation sample at the chosen risk threshold (specified using {opt threshold()}). 
+If sensitivity and specificity are not provided then {opt pmvalsampsize} uses the simulated LP distribution from criteria 2 
+and the user-specified risk threshold to estimate the anticipated sensitivity and specificity 
+to be used in calculation of net benefit. 
+NB: net benefit criteria is only calculated if either i) {opt sensitivity()}, {opt specificity()} and {opt threshold()} or ii) {opt threshold()} option are provided.
+
+{phang}{opt specificity(real 0)} specifies the anticipated specificity performance in the validation sample at the chosen risk threshold (specified using {opt threshold()}). 
+If sensitivity and specificity are not provided then {opt pmvalsampsize} uses the simulated LP distribution from criteria 2 
+and the user-specified risk threshold to estimate the anticipated sensitivity and specificity 
+to be used in calculation of net benefit. 
+NB: net benefit criteria is only calculated if either i) {opt sensitivity()}, {opt specificity()} and {opt threshold()} or ii) {opt threshold()} option are provided.
+
+{phang}{opt threshold(real 0)} specifies the risk threshold to be used for calculation of net benefit performance of the model in the validation sample. 
+If sensitivity and specificity are not provided then {opt threshold()} must be given in order for {opt pmvalsampsize} to assess sample size requirements for net benefit.
+NB: net benefit criteria is only calculated if either i) {opt sensitivity()}, {opt specificity()} and {opt threshold()} or ii) {opt threshold()} option are provided.
+
+{phang}{opt nbciwidth(real 0.2)} specifies the target CI width (acceptable precision) for the standardised net benefit performance. 
+Default assumes CI width=0.2. 
+The choice of CI width is context specific. 
+See Riley et al. for further details. 
+
+{phang}{opt nbseincrement(real 0.0001)} sets the increment by which to iterate when identifying the SE(standardised net benefit) to meet the target CI width specified for standardised net benefit.
+The default iteration increment=0.0001.
+In the majority of cases this will be suitably small to ensure a precise SE is identified.
+The user should check the output table to ensure that the target CI width has been attained and adjust the increment if necessary. 
 
 {marker options}{...}
 {title:Continuous outcome options}
@@ -310,6 +348,11 @@ If we target a R-sq CI width=0.1, CITL CI width=0.08 and c-slope CI width=0.2, t
 {synopt:{cmd:r(tolerance)}}Tolerance for agreement between anticipated event prop. and simulated event prop. when using {opt lpcstat()} (binary models){p_end}
 {synopt:{cmd:r(increment)}}Increment by which to iterate non-event mean when identifying suitable mean to meet {opt tolerance()} when using {opt lpcstat()} (binary models){p_end}
 {synopt:{cmd:r(simulated_data_cstat)}}C-statistic calculated through simulation based process. Can be used to check against target c-statistic (binary models){p_end}
+{synopt:{cmd:r(sensitivity)}}Sensitivity either user specified or calculated through simulation based process (binary models){p_end}
+{synopt:{cmd:r(specificity)}}Specificity either user specified or calculated through simulation based process (binary models){p_end}
+{synopt:{cmd:r(nb)}}Net benefit calculated using sens, spec and risk threshold (binary models){p_end}
+{synopt:{cmd:r(standardised_nb)}}Standardised net benefit calculated using prevalence, sens, spec and risk threshold (binary models){p_end}
+{synopt:{cmd:r(threshold)}}User specified risk threshold for net benefit (binary models){p_end}
 
 {p2colreset}{...}
 
@@ -338,10 +381,6 @@ Minimum sample size for external validation of a clinical prediction model with 
 {p 5 12 2}
 Riley RD, Debray TPA, Collins G, Archer L, Ensor J, van Smeden M, Snell KIE. 
 Minimum sample size for external validation of a clinical prediction model with a binary outcome. {it:Statistics in Medicine}. 2021. {p_end}
-
-{p 5 12 2}
-Riley RD, Collins GS, Ensor J, Archer L, Booth S, Mozumder SI, Rutherford MJ, van Smeden M, Lambert PC, Snell KIE.
-Minimum sample size calculations for external validation of a clinical prediction model with a time-to-event outcome. {it:Statistics in Medicine}. 2022.{p_end}
 
 
 {title:Also see}

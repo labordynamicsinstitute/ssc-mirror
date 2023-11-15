@@ -42,6 +42,7 @@ p censornb module to estimate censored negative binomial regression as survival 
 p censusapi module to download Census data through the Census API
 p centcalc module to calculate distribution-based centiles
 p center module to center (or standardize) variables 
+p centile2 module to enhance centile command and provide additional definitions for computing sample quantiles
 p centpow module to calculate centrality and power indices for each node in a network.
 p centroid module to calculate centroids
 p cepois module to estimate censored maximum likelihood Poisson regression models

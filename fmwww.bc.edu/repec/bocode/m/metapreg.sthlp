@@ -1,11 +1,14 @@
 {smcl}
-{* *! version 3.0.1 14Sep2023}{...}
+{* *! version 3.0.2 14Nov2023}{...}
 {viewerdialog metapreg "dialog metapreg"}{...}
 {vieweralsosee "[ME] meqrlogit" "help meqrlogit"}{...}
 {vieweralsosee "[ME] meqrlogit" "mansection ME meqrlogit"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[ME] melogit" "help melogit"}{...}
 {vieweralsosee "[ME] melogit" "mansection ME melogit"}{...}
+{vieweralsosee "" "--"}{...}
+{vieweralsosee "[ME] mecloglog" "help mecloglog"}{...}
+{vieweralsosee "[ME] mecloglog" "mansection ME mecloglog"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[R] binreg" "help binreg"}{...}
 {vieweralsosee "[R] binreg" "mansection R binreg"}{...}
@@ -20,7 +23,7 @@
 {title:Title}
 {p2colset 5 18 25 2}{...}
 {p2col :{opt metapreg} {hline 2}} Fixed-effects, random-effects and mixed-effects meta-analysis, meta-regression and network meta-analysis
-of proportions with binomial distribution, logistic and logistic-normal regression{p_end}
+of proportions with binomial distribution and logit, loglog and cloglog links{p_end}
 {p2colreset}{...}
 
 {marker syntax}{...}
@@ -57,7 +60,7 @@ In {cmd:mcbnetwork} or {cmd:pcbnetwork} studies, two first string covariates req
 
 {pstd}
 {cmd:metapreg} is a routine for meta-analysis of proportions 
-from binomial data; the exact binomial distrubtion or a generalized linear model for the binomial family with a logit link is fitted. 
+from binomial data; the exact binomial distrubtion or a generalized linear model for the binomial family with a logit, loglog or the cloglog link is fitted. 
 
 {pstd}
 The program fits fixed or a random-effects model. The data can be from independent studies; where each row contains data from seperate studies, 
@@ -74,7 +77,7 @@ A random-effects model accounts for and allows the quantification of heterogenei
 By default, the exact binomial distribution is used when there are less than {cmd:3} studies.
 
 {pstd}
-In a comparative/mcbnetwork/pcbnetwork meta-analysis, the study-specific relative proportions can be tabulated and/or plotted.
+In a comparative/mcbnetwork/pcbnetwork meta-analysis, the study-specific proportion ratios or odds ratios can be tabulated and/or plotted.
 
 {pstd}
 When there are no covariates, heterogeneity is also quantified using the I-squared measure({help metapreg##ZD2014:Zhou and Dendukuri 2014}).
@@ -92,6 +95,7 @@ The command requires Stata 14.1 or later versions.
 
 {synopt :{opth m:odel(metapreg##modeltype:type[, modelopts])}}specifies the type of model to fit; default is {cmd:model(random)}. 
 {help metapreg##optimization_options:modelopts} control the control the optimization process{p_end}
+{synopt :{opt li:nk(logit|loglog|cloglog)}} specifies the function to transform the probabilities to a continuous scale that is unbounded. By default, the {cmd:logit} link is employed.{p_end}
 {synopt :{opth des:ign(metapreg##designtype:design[, designopts])}}specifies the type of the studies or design of meta-analysis; default is {cmd:design(basic)}. 
 {help metapreg##design_options:designopts} are relevant in abnetwork and comparative meta-analysis.{p_end}
 {synopt :{opt nomc}}informs the program not to perform {cmd:m}odel {cmd:c}omparison with likelihood-ratio tests comparison for the specified model with other simpler models{p_end}
@@ -115,7 +119,7 @@ for the individuals({it:icytpe}) studies or the overall({it:ociytpe}) summaries 
 {synopt :{opt nosub:group}}prevents the display of within-group summary estimates. By default both within-group and overall summaries are displayed{p_end}
 {synopt : {opt nowt:}}suppresses the display of the weights from the tables and forest plots.{p_end}
 {synopt :{opt summary:only}}requests to show only the summary estimates{p_end}
-{synopt :{opth outp:lot(metapreg##outplot:abs|rr)}}specifies to display/plot absolute/relative measures; default is {cmd:outplot(abs)}{p_end}
+{synopt :{opth outp:lot(metapreg##outplot:abs|rr|or)}}specifies to display/plot absolute/relative measures; default is {cmd:outplot(abs)}{p_end}
 {synopt :{opth down:load(path)}}specify the location where a copy of data used to plot the forest plot should be stored {p_end}
 {synopt :{opt sm:ooth}}requests the study-specific smooth estimates {p_end}
 
@@ -124,8 +128,8 @@ for the individuals({it:icytpe}) studies or the overall({it:ociytpe}) summaries 
 {synoptline}
 {synopt :{opt noita:ble}}suppresses the table with the study-specific estimates{p_end}
 {synopt :{opt gof}}display the Akaike information and Bayesian information criterion{p_end}
-{synopt :{opth sumt:able(metapreg##sumtable:none|logit|abs|rr|all)}}specifies to display the which tables to display {cmd:logits}, 
-{cmd:proportions} and/or the {cmd:ratios} of proportions; by default all the summary tables are displayed{p_end}
+{synopt :{opth sumt:able(metapreg##sumtable:none|logit|abs|rr|or|all)}}specifies to display the which tables to display {cmd:logits}, 
+{cmd:proportions} and/or the {cmd:ratios} of proportions or odds; by default all the summary tables are displayed{p_end}
 
 
 {synoptline}
@@ -197,13 +201,21 @@ be comma separated.{p_end}
 {synopt :{opt koopman}}computes Koopman asymptotic score confidence intervals; the {cmd:default} for comparative/paired studies. These intervals have better coverage even for small sample size{p_end}
 {synopt :{opt cml}}computes constrained maximum likelihood (cml) confidence intervals; the {cmd:default} for matched data. These intervals have better coverage even for small sample size{p_end}
 
+{dlgtab:or}
+
+{synopt :{opt e:xact}}computes the exact CI of the study odds ratio by inverting two one-sided Fishers exact tests. These {cmd:default} intervals are overly convservative. {p_end}
+{synopt :{opt w:oolf}}use Woolf approximation to calculate CI of the study odds ratio.{p_end}
+{synopt :{opt co:rnfield}} use Cornfield approximation to calculate CI of the study odds ratio. These intervals have better coverage even for small sample size{p_end}
+
+
 {synoptline}
 {marker sumtable}{...}
 {synopthdr :sumtable}
 {synoptline}
-{synopt :{opt abs}}requests the display of the (adjusted)marginal absolute measures in a table{p_end}
-{synopt :{opt rr}}requests the display of the (adjusted) marginal relative ratios in a table{p_end}
-{synopt :{opt logit}}requests the display of (adjusted) marginal log-odds estimates of the fitted model in a table{p_end}
+{synopt :{opt abs}}requests the display of the conditional and population-averaged proportions in a table{p_end}
+{synopt :{opt rr}}requests the display of the conditional and population-averaged risk ratios in a table{p_end}
+{synopt :{opt or}}requests the display of the conditional and population-averaged odds ratios in a table{p_end}
+{synopt :{opt logit}}requests the display of the conditional log-odds estimates of the fitted model in a table{p_end}
 {synopt :{opt none}}requests the suppression of the summary tables{p_end}
 
 {synoptline}
@@ -211,48 +223,9 @@ be comma separated.{p_end}
 {synopthdr :outplot}
 {synoptline}
 {synopt :{opt abs}}requests the display of the study-specific and overall absolute measures in a table and /or a graph; the default{p_end} 
-{synopt :{opt rr}}requests the display of the study-specific and overall relative ratios in a table and /or a graph. This is an option when studies are comparative or in abnetwork analysis{p_end}
+{synopt :{opt rr}}requests the display of the study-specific and summary risk ratios in a table and /or a graph. This is an option when studies are comparative, abnetwork or cbnetwork analysis{p_end}
+{synopt :{opt or}}requests the display of the study-specific and summary odds ratios in a table and /or a graph. This is an option when studies are comparative, abnetwork or cbnetwork analysis{p_end}
 
-{synoptline}
-
-{marker optimization_options}{...}
-{synoptline}
-{synopthdr :optimization options}
-{synoptline}
-{syntab:Maximization}
-{synopt :{opt fisher(#)}}Fisher scoring steps{p_end}
-{synopt :{opt search}}search for good starting values{p_end}
-{synopt :{opt other options}}{opth tech:nique(maximize##algorithm_spec:algorithm_spec)},
-	[{cmd:{ul:no}}]{opt lo:g},{opt tr:ace},{opt grad:ient},
-	{opt showstep},
-	{opt hess:ian},
-	{opt showtol:erance},
-	{opt dif:ficult},
-	{opt iter:ate(#)}, 
-	{opt tol:erance(#)},
-	{opt ltol:erance(#)},
-	{opt nrtol:erance(#)},{opt nonrtol:erance}, and
-	{opt from(init_specs)}; see {manhelp maximize R}. These options are seldom used{p_end}
-
-{syntab:Random-effects integration}
-{synopt :{opt intp:oints(# [# ...])}}sets the number of 
-integration (quadrature) points; default is {cmd:intpoints(7)}{p_end}
-{synopt :{opt lap:lace}}use Laplacian approximation; equivalent to 
-{cmd:intpoints(1)}{p_end}
-
-{syntab :Random-effects maximization}
-{synopt :{opt retol:erance(#)}}tolerance for random-effects estimates; default 
-is {cmd:retolerance(1e-8)}; seldom used{p_end}
-{synopt :{opt reiter:ate(#)}}maximum number of iterations for random-effects
-estimation; default is {cmd:reiterate(50)}; seldom used{p_end}
-{synopt :{opt matsqrt}}parameterize variance components using matrix square
-roots; the default{p_end}
-{synopt :{opt matlog}}parameterize variance components using matrix logarithms
-{p_end}
-{synopt :{opth refine:opts(meqrlogit##maximize_options:maximize_options)}}control
-the maximization process during refinement of starting values
-{p_end}
-{synoptline}
 
 {synoptline}
 {p2colreset}{...}
@@ -296,7 +269,6 @@ first covariate which should be a string with atleast two levels.
 There should be atleast two rows of data per {cmd:studyid}. {cmd:baselevel(label)} is relevant in abnetwork meta-analysis 
 and indicates the label of the reference level of the covariate of interest. The correct use is {cmd:design(abnetwork, baselevel(label))} 
 
-
 {dlgtab:Model}
 
 {phang}
@@ -328,9 +300,25 @@ Examples, {cmd: model(random, intpoint(9))} to increase the integration points,
 {cmd: model(random, technique(bfgs))} to specify Stata's BFGS maximiztion algorithm.
 
 {phang}
+{cmd:link(link)} specifies the function to transform the probabilities to a continuous scale that is unbounded. {it:link} is one of the following: {cmd:logit}, {cmd:loglog} and {cmd:cloglog}.
+
+{pmore}{cmd:link(logit)} is the default link function resulting to the logistic regression i.e. {it: p = exp(xb)/(1 + exp(xb))}.
+
+{pmore}{cmd:link(loglog)} request the use of the log-log link i.e. {it:p = exp(-exp(xb))}.
+
+{pmore}{cmd:link(cloglog)} request the use of the complementary log-log link i.e. {it:p = 1 - exp(-exp(xb))}.
+
+{pmore} The logit link is symmetric because the probabilities approach zero or one at the same rate. 
+The log-log  and complementary log-log  links are asymmetric. Complementary log-log link approaches zero slowly and one quickly. Log-log link approaches zero quickly and one slowly. 
+Either the log-log or complementary log-log link will tend to fit better than logistic and are frequently used when the probability of an event is small or large. The reason that logit is so prevalent is because logistic parameters can be interpreted as odds ratios.
+When the complementary log-log model holds for the probability of a success, the log-log model holds for the probability
+of a failure.
+
+{phang}
 {cmd:by(byvar)} specifies that the summary etsimates be stratified/grouped according to the variable declared. This is useful in meta-regression with more than one covariate,
 and the {cmd:byvar} is not one of the covariates or when there are interactions and the first covariate is not an ideal grouping variable. By default, results are grouped according to the 
 levels of the first categorical variable in the regression equation.
+
 
 {pmore}
 This option is not the same as the Stata {help by} prefix which repeates the analysis for each group of observation for which the values of the prefixed variable are the same.
@@ -346,7 +334,6 @@ presented in one table and one forest plot
 
 {phang}
 {opth level(level)} sets confidence level for confidence and prediction intervals; default is {cmd: level(95)}
-
 
 {phang}
 {opt power(#)} sets the exponentiating power with base 10; default is {cmd: power(0)}. Any real value is allowed. 
@@ -410,13 +397,16 @@ enforces the {cmd: nowt} option.
 {opt nosubgroup} prevents the display of within-group summary estimates. By default both within-group and overall summaries are displayed{p_end}
 
 {phang}
-{opt outplot(abs|rr)} specifies to plot absolute/relative measures; default is {cmd:outplot(abs)}. 
+{opt outplot(abs|rr|or)} specifies to plot absolute/relative proportions; default is {cmd:outplot(abs)}. 
 
 {pmore} 
-{opt outplot(abs)} is the default and specifies that the absolute measures be presented in the table and/or in the graph. 
+{opt outplot(abs)} is the default and specifies that the proportions be presented in the table and/or in the graph. 
 
 {pmore}
-{opt outplot(rr)} requests that the relative ratios be presented in the table and/or in the graph. This options is relevant with matched, pcbnetwork or comparative data. 
+{opt outplot(rr)} requests that the proportion ratios be presented in the table and/or in the graph. This options is relevant with abnetwork, matched, pcbnetwork or comparative data. 
+
+{pmore}
+{opt outplot(or)} requests that the odds ratios be presented in the table and/or in the graph. This options is relevant with abnetwork, matched, pcbnetwork or comparative data. 
 
 {phang}
 {opt summaryonly} requests to show only the summary estimates. Useful when there are many studies in the groups.
@@ -427,10 +417,13 @@ enforces the {cmd: nowt} option.
 
 {dlgtab:Table}
 {phang}
-{opt sumtable(none|logit|abs|rr|all)} requests no summary table, summary log odds, summary proportions and summary relative ratios from the the fitted model be presented in a table. 
+{opt sumtable(none|logit|abs|rr|or|all)} requests no summary table, summary log odds, summary proportions, summary proportion ratios, and summary odds ratios from the the fitted model be presented in a table. 
 
 {pmore}
-{opt sumtable(rr)} requests that the summary relative ratios be presented in the table. This options is whenever there are categorical covariates in the model.
+{opt sumtable(rr)} requests that the summary proportion ratios be presented in the table. This options is whenever there are categorical covariates in the model.
+
+{pmore}
+{opt sumtable(or)} requests that the summary odds ratios be presented in the table. This options is whenever there are categorical covariates in the model.
 
 {pmore}
 {opt gof} display the goodfness of fit statistics; Akaike information and Bayesian information criterion.{p_end}
@@ -591,7 +584,7 @@ with specified x-axis label, e.t.c.
 {cmd :graphregion(color(white)) }
 {p_end}
 {pmore3}
-{cmd :texts(1.5) prediction smooth gof;}	
+{cmd :texts(1.5)  smooth gof;}	
 {p_end}
 
 {pmore2}
@@ -645,7 +638,7 @@ with specified x-axis label, Wilson confidence intervals for the studies, e.t.c.
 {cmd:subti(Atypical cervical cytology, size(4)) }
 {p_end}
 {pmore3}
-{cmd:texts(1.5) prediction smooth;}
+{cmd:texts(1.5)  smooth;}
 {p_end}
 {pmore3}
 
@@ -700,7 +693,7 @@ Triage group as a covariate, display all summary tables, e.t.c.
 {cmd:graphregion(color(white))  ///}
 {p_end}
 {pmore3}
-{cmd:texts(1.5) prediction summaryonly }
+{cmd:texts(1.5)  summaryonly }
 {p_end}
 
 {pmore2}		
@@ -708,7 +701,7 @@ Triage group as a covariate, display all summary tables, e.t.c.
 
 {synoptline}
 {marker example_two_one}{...}
-{cmd : 2.1 Proportions near 0 - Intercept-only model}
+{cmd : 2.1 Proportions near 0 - Intercept-only model - Logit link}
 
 {pmore}
 Logistic regression correctly handles the extreme cases appropriately without need for transformation. Options for the forest plot; specified x-axis label, ticks on x-axis added,
@@ -753,10 +746,57 @@ The dataset used in this example produced the top-left graph in figure two in
 {cmd: graphregion(color(white))  ///}
 {p_end}
 {pmore3}
-{cmd: texts(1.5) smooth}
+{cmd: texts(1.5) smooth gof}
 {p_end}
 {pmore}
 {it:({stata "metapreg_examples metapreg_example_two_one":click to run})}
+
+{synoptline}
+{marker example_two_two}{...}
+{cmd : 2.2 Proportions near 0 - Intercept-only model - loglog link}
+
+{pmore}
+The loglog regression is an extension of the logistic regression model and is particularly useful when the probability of an event is very small. 
+
+{pmore2}
+{stata "use http://fmwww.bc.edu/repec/bocode/t/tsoumpou2009cancertreatrevfig2WNL.dta":. use http://fmwww.bc.edu/repec/bocode/t/tsoumpou2009cancertreatrevfig2WNL.dta}
+{p_end}
+
+{pmore2}
+{cmd:.	metapreg p16p p16tot, link(loglog) ///}
+{p_end}
+{pmore3}
+{cmd: studyid(study) ///}
+{p_end}
+{pmore3}
+{cmd: label(namevar=author, yearvar=year) ///}
+{p_end}
+{pmore3}
+{cmd: sortby(year author) ///}
+{p_end}
+{pmore3}
+{cmd: xlab(0, .2, 0.4, 0.6, 0.8, 1) ///}
+{p_end}
+{pmore3}
+{cmd: xline(0, lcolor(black)) ///}
+{p_end}
+{pmore3}
+{cmd: ti(Positivity of p16 immunostaining, size(4) color(blue)) ///}
+{p_end}
+{pmore3}
+{cmd: subti("Cytology = WNL", size(4) color(blue)) ///}
+{p_end}
+{pmore3}
+{cmd: pointopt(msymbol(X) msize(2)) ///}
+{p_end}
+{pmore3}
+{cmd: graphregion(color(white))  ///}
+{p_end}
+{pmore3}
+{cmd: texts(1.5) smooth gof}
+{p_end}
+{pmore}
+{it:({stata "metapreg_examples metapreg_example_two_two":click to run})}
 
 
 {synoptline}
@@ -864,7 +904,7 @@ We investigate whether altitude has an effect on the vaccination by including {c
 {cmd: astext(80) /// }
 {p_end}
 {pmore3}
-{cmd: texts(1.5) prediction smooth}
+{cmd: texts(1.5)  smooth}
 {p_end}
 
 {pmore2} 
@@ -939,9 +979,15 @@ The interaction term from {cmd:metapreg} and the coefficient for lat using {cmd:
 {cmd : 4.1 Meta-regression - Comparative studies - Sparse data}
 {pmore}
 Using {help metan}, {help metapreg##Chaimani_etal2014:Chaimani et al. (2014)} informaly assessed the difference in treatment effect of haloperidol compared to placebo in treating schizophrenia.
+{p_end}
 
 {pmore}
-The analysis is more appropriately perfomed using {cmd:metapreg} by including {cmd:arm} and {cmd:missingdata} as covariates. The interaction term allows to test whether the risk-ratios for arm differ between the group with  and without missing data.
+The analysis is more appropriately perfomed using {cmd:metapreg} by including {cmd:arm} and {cmd:missingdata} as covariates. 
+{p_end}
+
+{pmore}
+The interaction term allows to test whether the risk-ratios for arm differ between the group with and without missing data.
+{p_end}
 
 {pmore2}
 {stata `"use "http://fmwww.bc.edu/repec/bocode/s/schizo.dta""':. use "http://fmwww.bc.edu/repec/bocode/s/schizo.dta"}
@@ -955,7 +1001,7 @@ The analysis is more appropriately perfomed using {cmd:metapreg} by including {c
 {cmd:. metapreg response total arm missingdata,  ///}
 {p_end}
 {pmore3}
-{cmd:studyid(firstauthor) ///}
+{cmd:studyid(firstauthor) link(loglog) ///}
 {p_end}
 {pmore3}
 {cmd:sortby(year) ///}
@@ -1027,7 +1073,7 @@ Total {c |} a + c {space 5} b + d  {space 4}{c |} a + b + c+ d
 
 
 {pmore2}
-{stata `"use "https://github.com/VNyaga/Metapreg/blob/master/Build/matched.dta?raw=true""':. use "https://github.com/VNyaga/Metapreg/blob/master/Build/matched.dta?raw=true"}
+{stata `"use "http://fmwww.bc.edu/repec/bocode/m/matched.dta""':. use "http://fmwww.bc.edu/repec/bocode/m/matched.dta"}
 {p_end}
 
 {pmore2}
@@ -1076,6 +1122,8 @@ Total {c |} a + c {space 5} b + d  {space 4}{c |} a + b + c+ d
 {p2col 5 15 19 2: Matrices}{p_end}
 {synopt:{cmd:e(rrout)}}summary relative ratios when there categorical covariates{p_end}
 {synopt:{cmd:e(poprrout)}}population-averaged summary relative ratios when there categorical covariates{p_end}
+{synopt:{cmd:e(orout)}}summary odds ratios when there categorical covariates{p_end}
+{synopt:{cmd:e(poporout)}}population-averaged summary odds ratios when there categorical covariates{p_end}
 {synopt:{cmd:e(absout)}}summary proportions{p_end}
 {synopt:{cmd:e(popabsout)}}population-averaged summary proportions{p_end}
 {synopt:{cmd:e(hetout)}}heterogeneity test statistics after a fitting a random-effects model{p_end}

@@ -2,14 +2,15 @@
 *												 *
 *  PROGRAM TO CALCULATE SAMPLE SIZE FOR MODEL    * 
 *	VALIDATION BASED ON PRECISION OF PERFORMANCE *
-*  28/06/23 									 *
+*  31/01/22 									 *
 *  												 *
+*	Updated: 10/11/23							 *
+*	- added net benefit as an optional criteria  *	
 *												 *
-*  1.0.0 J. Ensor								 *
+*  1.0.1 J. Ensor								 *
 **************************************************
 
-*! 1.0.0 J.Ensor 28Jun2023
-
+*! 1.0.1 J.Ensor 10Nov2023
 
 program define pmvalsampsize, rclass
 
@@ -43,7 +44,9 @@ syntax ,   TYPE(string) ///
 			LPNORMal(numlist max=2) LPSKEWednormal(numlist max=4) ///
 			LPBETA(numlist max=2) LPCSTAT(numlist max=1) /// 
 			TOLerance(real 0.0005) INCrement(real 0.1) OESEINCrement(real 0.0001) ///
-			SEED(int 1234) MMOE(real 1.1) TRACE GRAPH CALCURves noPRINT]
+			SEED(int 123456) MMOE(real 1.1) TRACE GRAPH CALCURves noPRINT ///
+			SENSitivity(real 0) SPECificity(real 0) THRESHold(real 0) ///
+			NBCIwidth(real 0.2) NBSEINCrement(real 0.0001)]
 
 
 ***********************************************
@@ -74,6 +77,8 @@ if "`type'"=="b" {
 				oe(`oe') oeci(`oeciwidth') oeseinc(`oeseincrement') ///
 				cs(`cslope') csciwidth(`csciwidth') ///
 				cstatci(`cstatciwidth') simobs(`simobs') ///
+				sens(`sensitivity') spec(`specificity') thresh(`threshold') ///
+				nbciwidth(`nbciwidth') nbseincrement(`nbseincrement') ///
 				tol(`tolerance') inc(`increment') seed(`seed') lpnormal(`lpnormal') `graph_ind' `trace_ind'
 		
 	}
@@ -88,6 +93,8 @@ if "`type'"=="b" {
 				oe(`oe') oeci(`oeciwidth') oeseinc(`oeseincrement') ///
 				cs(`cslope') csciwidth(`csciwidth') ///
 				cstatci(`cstatciwidth') simobs(`simobs') ///
+				sens(`sensitivity') spec(`specificity') thresh(`threshold') ///
+				nbciwidth(`nbciwidth') nbseincrement(`nbseincrement') ///
 				tol(`tolerance') inc(`increment') seed(`seed') lpskewednormal(`lpskewednormal') `graph_ind' `trace_ind'
 		
 	}
@@ -102,6 +109,8 @@ if "`type'"=="b" {
 				oe(`oe') oeci(`oeciwidth') oeseinc(`oeseincrement') ///
 				cs(`cslope') csciwidth(`csciwidth') ///
 				cstatci(`cstatciwidth') simobs(`simobs') ///
+				sens(`sensitivity') spec(`specificity') thresh(`threshold') ///
+				nbciwidth(`nbciwidth') nbseincrement(`nbseincrement') ///
 				tol(`tolerance') inc(`increment') seed(`seed') lpbeta(`lpbeta') `graph_ind' `trace_ind'
 		
 	}
@@ -116,6 +125,8 @@ if "`type'"=="b" {
 				oe(`oe') oeci(`oeciwidth') oeseinc(`oeseincrement') ///
 				cs(`cslope') csciwidth(`csciwidth') ///
 				cstatci(`cstatciwidth') simobs(`simobs') ///
+				sens(`sensitivity') spec(`specificity') thresh(`threshold') ///
+				nbciwidth(`nbciwidth') nbseincrement(`nbseincrement') ///
 				tol(`tolerance') inc(`increment') seed(`seed') lpcstat(`lpcstat') `graph_ind' `trace_ind'
 				
 		ret sca non_event_mean = r(non_event_mean)
@@ -130,13 +141,17 @@ if "`type'"=="b" {
 	return scalar sample_size = r(sample_size)
 	return scalar events = r(events)
 	return scalar prevalence = r(prevalence)
-	local retlist oe se_oe lb_oe ub_oe width_oe cslope se_cslope csciwidth cstatistic se_cstat cstatciwidth
+	local retlist oe se_oe lb_oe ub_oe width_oe cslope se_cslope csciwidth cstatistic se_cstat cstatciwidth sensitivity specificity threshold nb standardised_nb
 		foreach s of local retlist {
 		ret sca `s' = r(`s')
 		}
 		
 	mat def binary_val_samp_size_results = r(results)
 	return mat results = binary_val_samp_size_results
+	
+	if "`print'"!="noprint" {
+		criteria_print, type("`type'") sens(`sensitivity') spec(`specificity') thresh(`threshold')
+	}
 	}
 	else if "`type'"=="c" {
 		
@@ -159,15 +174,17 @@ if "`type'"=="b" {
 	
 	mat def continuous_val_samp_size_results = r(results)
 	return mat results = continuous_val_samp_size_results
+	
+	if "`print'"!="noprint" {
+		criteria_print, type("`type'") 
+	}
 	}
 	else {
 		di as err "Model type must be either b or c (binary/continuous)"
 		error 499
 		}
 	
-	if "`print'"!="noprint" {
-		criteria_print, type("`type'")
-	}
+	
 ***********************************************
 		
 end
@@ -196,6 +213,9 @@ version 12.1
 	SEED = sets seed for calculations based on simulated data
 	GRAPH = produces histogram of LP dist for checking
 	TRACE = Output a trace of iteration procedure for obtaining non-event mean under lpcstat option
+	SENSitivity = sensitivity for net benefit 
+	SPECificity = specificity for net benefit
+	THRESHold = risk threshold for net benefit 
 */
 
 syntax , PREValence(real) CSTATistic(real) ///
@@ -205,7 +225,8 @@ syntax , PREValence(real) CSTATistic(real) ///
 			 LPNORMal(numlist max=2) LPSKEWednormal(numlist max=4) ///
 			 LPBETA(numlist max=2) LPCSTAT(numlist max=1) /// 
 			 TOLerance(real 0.0005) INCrement(real 0.1) OESEINCrement(real 0.0001) ///
-			 SEED(int 1234) GRAPH CALCURves TRACE] 
+			 SEED(int 123456) GRAPH CALCURves TRACE SENSitivity(real 0) ///
+			 SPECificity(real 0) THRESHold(real 0) NBCIwidth(real 0.2) NBSEINCrement(real 0.0001)] 
 
 // CHECK INPUTS
 
@@ -267,6 +288,7 @@ set seed `seed'
 	local ub_oe = exp(ln(`oe') + (1.96*`se_oe'))
 	local lb_oe = exp(ln(`oe') - (1.96*`se_oe'))
 	local width_oe = `ub_oe'-`lb_oe'
+	//nois di "width=`width_oe' -----lb=`lb_oe'-----ub=`ub_oe'-------se=`se_oe'"
  }
 
 	local n1 = ceil((1-`prevalence')/(`prevalence'*`se_oe'^2))
@@ -485,7 +507,7 @@ if "`lpskewednormal'"!="" {
 			}
 			
 			// check C-statistic is correct
-			qui pmcstat LP outcome
+			qui pmcstat LP outcome_test
 			local simulated_data_cstat = r(cstat)
 			
 			ret sca non_event_mean = `m2'
@@ -534,13 +556,89 @@ if "`lpskewednormal'"!="" {
 	
 	local E2 = `n2'*`prevalence'
 	
+// CRITERIA 4 - NET BENEFIT
+local estimate_nb = `sensitivity'+`specificity'
+
+if `sensitivity'!=0 & `specificity'!=0 & `threshold'!=0 {
+	local nb = (`sensitivity'*`prevalence') - ((1-`specificity')*(1-`prevalence')*(`threshold'/(1-`threshold')))
+	local standardised_nb = `nb'/`prevalence'
+
+	local w = ((1-`prevalence')/`prevalence')*(`threshold'/(1-`threshold'))
+	* target CI width for sNB of 0.2, which corresponds to SE of 0.051
+
+	local width_nb = 0 
+	 local se_nb = 0
+	 while `width_nb'<`nbciwidth' {
+		local se_nb = `se_nb'+`nbseincrement'
+		local ub_nb = (`standardised_nb') + (1.96*`se_nb')
+		local lb_nb = (`standardised_nb') - (1.96*`se_nb')
+		local width_nb = `ub_nb'-`lb_nb'
+	// 	nois di "width=`width_nb' -----lb=`lb_nb'-----ub=`ub_nb'-------se=`se_nb'"
+	 }
+	 
+	 local se_nb = round(`se_nb',0.001)
+
+	 * calculate sample size
+	local n4 = ceil((1/(`se_nb'^2))*(((`sensitivity'*(1-`sensitivity'))/`prevalence')+(`w'*`w'*`specificity'*(1-`specificity')/(1-`prevalence'))+(`w'*`w'*(1-`specificity')*(1-`specificity')/(`prevalence'*(1-`prevalence')))))
+
+	local no_nb = 0
+}
+else if `threshold'!=0 {
+			qui gen nb_p = exp(LP)/(1+exp(LP)) 
+			qui gen nb_outcome = rbinomial(1,nb_p)
+			qui gen classification = 0 if nb_p<`threshold'
+			qui replace classification = 1 if classification==.
+			qui count if classification==1 & nb_outcome==1
+			local pos = r(N)
+			qui count if classification==0 & nb_outcome==0
+			local neg = r(N)
+			qui count if nb_outcome==1
+			local e = r(N)
+			qui count if nb_outcome==0
+			local ne = r(N)
+			local sensitivity = round(`pos'/`e',0.01)
+			local specificity = round(`neg'/`ne',0.01)
+			
+			local nb = (`sensitivity'*`prevalence') - ((1-`specificity')*(1-`prevalence')*(`threshold'/(1-`threshold')))
+	local standardised_nb = `nb'/`prevalence'
+
+	local w = ((1-`prevalence')/`prevalence')*(`threshold'/(1-`threshold'))
+	* target CI width for sNB of 0.2, which corresponds to SE of 0.051
+
+	local width_nb = 0 
+	 local se_nb = 0
+	 while `width_nb'<`nbciwidth' {
+		local se_nb = `se_nb'+`nbseincrement'
+		local ub_nb = (`standardised_nb') + (1.96*`se_nb')
+		local lb_nb = (`standardised_nb') - (1.96*`se_nb')
+		local width_nb = `ub_nb'-`lb_nb'
+	// 	nois di "width=`width_nb' -----lb=`lb_nb'-----ub=`ub_nb'-------se=`se_nb'"
+	 }
+	 
+	 local se_nb = round(`se_nb',0.001)
+
+	 * calculate sample size
+	local n4 = ceil((1/(`se_nb'^2))*(((`sensitivity'*(1-`sensitivity'))/`prevalence')+(`w'*`w'*`specificity'*(1-`specificity')/(1-`prevalence'))+(`w'*`w'*(1-`specificity')*(1-`specificity')/(`prevalence'*(1-`prevalence')))))
+
+	local no_nb = 0
+}
+else {
+	local no_nb = 1
+	local nb = 0
+	local standardised_nb = 0
+	}
+
+** end of criteria 4
+
+// restore following simulation for criteria 2 - c-slope
+	
 	restore
 
 // CRITERIA 3 - CSTATISTIC
 	preserve
 	
 	qui drop _all  
-	qui set obs `simobs'
+	qui set obs 1000000
 	
 	qui gen size = _n
 	qui gen se_cstatsq = `cstatistic'*(1-`cstatistic')*(1+(((size/2)-1)*((1-`cstatistic')/(2-`cstatistic'))) +((((size/2)-1)*`cstatistic')/(1+`cstatistic')))/(size*size*`prevalence'*(1-`prevalence'))
@@ -557,38 +655,29 @@ if "`lpskewednormal'"!="" {
 
 	restore 
 	
-// CRITERIA 4 - NET BENEFIT
-// * inputs
-// local outcome_prop = 0.018
-// local sens = 0.2
-// local spec = 0.99
-// local threshold = 0.08
-// local NB = (`sens'*`outcome_prop') - ((1-`spec')*(1-`outcome_prop')*(`threshold'/(1-`threshold')))
-// local sNB = `NB'/`outcome_prop'
-// * calculate NB and sNB
-// disp "net benefit =  `NB' 
-// disp "standardised net benefit = " `sNB'
-// local w = ((1-`outcome_prop')/`outcome_prop')*(`threshold'/(1-`threshold'))
-// * target CI width for sNB of 0.2, which corresponds to SE of 0.051
-// * input SE
-// local sesNB = 0.051
-// * calculate sample size
-// local sampsize_sNB = (1/(`sesNB'^2))*(((`sens'*(1-`sens'))/`outcome_prop')+(`w'*`w'*`spec'*(1-`spec')/(1-`outcome_prop'))+(`w'*`w'*(1-`spec')*(1-`spec')/(`outcome_prop'*(1-`outcome_prop'))))
-// disp "Required sample size (events) for standardised net benefit = " `sampsize_sNB' " (" `sampsize_sNB'*`outcome_prop' ")"
 
+ 
 	
 ****************************************************** REPORTING
-// MINIMUM N 
+
+if `no_nb'==1 {
+	// MINIMUM N 
 local nfinal = max(`n1',`n2',`n3')
 local di_perf_1 : di %4.3f `oe'
 local di_perf_2 : di %4.3f `cslope'
 local di_perf_3 : di %4.3f `cstatistic'
+// local di_perf_4 : di %4.3f `standardised_nb'
+
 local di_se_1 : di %4.3f `se_oe'
 local di_se_2 : di %4.3f `se_cslope'
 local di_se_3 : di %4.3f `se_cstat'
+// local di_se_4 : di %4.3f `se_nb'
+
 local di_ci_1 : di %4.3f  `width_oe' //`oeciwidth'
 local di_ci_2 : di %4.3f `csciwidth'
 local di_ci_3 : di %4.3f `cstatciwidth'
+// local di_ci_4 : di %4.3f `nbciwidth'
+
 local di_lb_1 : di %4.3f `lb_oe'
 //local di_lb_2 : di %4.3f `lb_cslope'
 //local di_lb_3 : di %4.3f `lb_cstat'
@@ -603,7 +692,7 @@ local E_final = `nfinal'*`prevalence'
 return scalar sample_size = `nfinal'
 return scalar events = `E_final'
 return scalar prevalence = `prevalence'
-local retlist oe se_oe lb_oe ub_oe width_oe cslope se_cslope csciwidth cstatistic se_cstat cstatciwidth
+local retlist oe se_oe lb_oe ub_oe width_oe cslope se_cslope csciwidth cstatistic se_cstat cstatciwidth sensitivity specificity threshold standardised_nb nb
 foreach s of local retlist {
 ret sca `s' = ``s''
 }
@@ -611,7 +700,7 @@ ret sca `s' = ``s''
 // OUTPUT TABLE & ASSUMPTIONS
 *di as txt _n "NB: Assuming E/O=`di_perf_1' & c-slope=`di_perf_2'"
 
-local res 1 2 3  
+local res 1 2 3   
 matrix Results = J(4,4,.)
 local i=0
 foreach r of local res {
@@ -644,6 +733,82 @@ return mat results = Results
 local di_E_final = ceil(`E_final')
 di _n "Minimum sample size required for model validation based on user inputs = `nfinal',"
 di "with `di_E_final' events (assuming an outcome prevalence = `prevalence')"
+
+}
+else {
+	// MINIMUM N 
+	local nfinal = max(`n1',`n2',`n3',`n4')
+	local di_perf_1 : di %4.3f `oe'
+	local di_perf_2 : di %4.3f `cslope'
+	local di_perf_3 : di %4.3f `cstatistic'
+	local di_perf_4 : di %4.3f `standardised_nb'
+
+	local di_se_1 : di %4.3f `se_oe'
+	local di_se_2 : di %4.3f `se_cslope'
+	local di_se_3 : di %4.3f `se_cstat'
+	local di_se_4 : di %4.3f `se_nb'
+
+	local di_ci_1 : di %4.3f  `width_oe' //`oeciwidth'
+	local di_ci_2 : di %4.3f `csciwidth'
+	local di_ci_3 : di %4.3f `cstatciwidth'
+	local di_ci_4 : di %4.3f `nbciwidth'
+
+	local di_lb_1 : di %4.3f `lb_oe'
+	//local di_lb_2 : di %4.3f `lb_cslope'
+	//local di_lb_3 : di %4.3f `lb_cstat'
+	local di_ub_1 : di %4.3f `ub_oe'
+	//local di_ub_2 : di %4.3f `ub_cslope'
+	//local di_ub_3 : di %4.3f `ub_cstat'
+
+
+	local E_final = `nfinal'*`prevalence'
+
+	// RETURN LIST
+	return scalar sample_size = `nfinal'
+	return scalar events = `E_final'
+	return scalar prevalence = `prevalence'
+	local retlist oe se_oe lb_oe ub_oe width_oe cslope se_cslope csciwidth cstatistic se_cstat cstatciwidth sensitivity specificity threshold standardised_nb nb
+	foreach s of local retlist {
+	ret sca `s' = ``s''
+	}
+
+	// OUTPUT TABLE & ASSUMPTIONS
+	*di as txt _n "NB: Assuming E/O=`di_perf_1' & c-slope=`di_perf_2'"
+
+	local res 1 2 3 4  
+	matrix Results = J(5,4,.)
+	local i=0
+	foreach r of local res {
+		local ++i
+		matrix Results[`i',1] = `n`r''
+		matrix Results[`i',2] = `di_perf_`r''
+		matrix Results[`i',3] = `di_se_`r''
+		matrix Results[`i',4] = `di_ci_`r''
+		}
+		mat colnames Results = "Samp_size" "Perf" "SE" "CI width" 
+		mat rownames Results = "Criteria 1 - O/E" "Criteria 2 - C-slope" "Criteria 3 - C statistic" "Criteria 4 - St Net Benefit" "Final SS"
+		// alternative more informative criteria names for output table 
+	// 	mat rownames Results = "1.O/E" "2.C-slope" "3.C statistic" "Final SS"
+
+	preserve
+	clear
+	qui svmat Results, names(col)
+	sort Samp_size
+	local i = 5
+	matrix Results[`i',1] = Samp_size[4]
+	matrix Results[`i',2] = Perf[4]
+	matrix Results[`i',3] = SE[4]
+	matrix Results[`i',4] = CI[4]
+	restore
+
+	matlist Results,  aligncolnames(r) twidth(30) lines(rowtotal)
+
+	return mat results = Results
+
+	local di_E_final = ceil(`E_final')
+	di _n "Minimum sample size required for model validation based on user inputs = `nfinal',"
+	di "with `di_E_final' events (assuming an outcome prevalence = `prevalence')"
+}
 
 end 	
 
@@ -817,20 +982,36 @@ version 12.1
 	TYPE = model type 
 */
 
-syntax ,  TYPE(string) 
+syntax ,  TYPE(string) [SENSitivity(real 0) SPECificity(real 0) THRESHold(real 0)]
 
 if "`type'"!="c" {
-	di _n "Criteria 1 - precise estimation of O/E performance in the validation sample"
-	di "Criteria 2 - precise estimation of the calibration slope in the validation sample"
-	di "Criteria 3 - precise estimation of the C statistic in the validation sample"
-// 	di "Criteria 4 - precise estimation of the net-benefit in the validation sample"
+	
+	
+	if `sensitivity'!=0 & `specificity'!=0 & `threshold'!=0 {
+		di _n "Criteria 1 - precise estimation of O/E performance in the validation sample"
+			di "Criteria 2 - precise estimation of the calibration slope in the validation sample"
+			di "Criteria 3 - precise estimation of the C statistic in the validation sample"
+			di "Criteria 4 - precise estimation of the standardised net-benefit in the validation sample"
+	}
+	else if `threshold'!=0 {
+		di _n "Criteria 1 - precise estimation of O/E performance in the validation sample"
+			di "Criteria 2 - precise estimation of the calibration slope in the validation sample"
+			di "Criteria 3 - precise estimation of the C statistic in the validation sample"
+			di "Criteria 4 - precise estimation of the standardised net-benefit in the validation sample"
+	}
+	else {
+		di _n "Criteria 1 - precise estimation of O/E performance in the validation sample"
+		di "Criteria 2 - precise estimation of the calibration slope in the validation sample"
+		di "Criteria 3 - precise estimation of the C statistic in the validation sample"
+	}
+			
 }
-else {
-	di _n "Criteria 1 - precise estimation of R-squared performance in the validation sample"
-	di "Criteria 2 - precise estimation of CITL performance in the validation sample"
-	di "Criteria 3 - precise estimation of the calibration slope in the validation sample"
-	di "Criteria 4 - precise estimation of the residual variances in the validation sample"
-}
+	else {
+		di _n "Criteria 1 - precise estimation of R-squared performance in the validation sample"
+		di "Criteria 2 - precise estimation of CITL performance in the validation sample"
+		di "Criteria 3 - precise estimation of the calibration slope in the validation sample"
+		di "Criteria 4 - precise estimation of the residual variances in the validation sample"
+	}
 
 end
 
@@ -980,7 +1161,7 @@ if "`faster'"=="faster" {
 
 
 if "`hanley'"=="" {
-	// default use newcombe SE formula
+	// default use necombe SE formula
 	local newcombe_c = `cstat'
 	local cstat_se = ((`cstat'*(1-`cstat'))*(1+(((`obs'/2)-1)*((1-`cstat')/(2-`cstat'))) ///
 	+((((`obs'/2)-1)*`cstat')/(1+`cstat')))/((`obs'^2)*`prev'*(1-`prev')))^.5

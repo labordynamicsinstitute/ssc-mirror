@@ -1,12 +1,5 @@
-*! Version 1.0.0 -- William Liu (刘威廉) -- 1 September 2023
-*! ivcloglog -- Complementary log-log model with continuous endogenous covariates, instrumented via the control function approach (i.e., 2SRI)
-*!
-*! Syntax:
-*! ivcloglog binary_outcome_var [controls] [if] [in], VHATname(string) ENDOgenous(endo_vars = instruments[, NOCONstant]) [NOCONstant order(integer) vce(vcetype) NOGENerate DIFFicult_vce SHOWstages]
-*!
-*! This is the .ado file that contains the code for the -gmm- moment evaluator program -ivcloglog- uses, -gmm_ivcloglog-.
 program define gmm_ivcloglog
-	version 14
+	version 11
 	syntax varlist if [fweight iweight pweight],	///
 					at(name)						///			// This contains the parameter estimates
 					y1(varname)						///
@@ -18,7 +11,7 @@ program define gmm_ivcloglog
 					fakederivatives					///
 					]
 	
-	local num_endo: list sizeof y2
+	local num_endo : list sizeof y2
 	tokenize `varlist'		// Get the names of the variables storing the residual functions
 	
 	* Reduced form equations ("first stage")

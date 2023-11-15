@@ -1,7 +1,7 @@
-d 'IVCLOGLOG': module to estimate a complementary log-log model with continuous endogenous covariates, instrumented via the control function approach
+d 'IVCLOGLOG': module to estimate a complementary log-log model with endogenous covariates, instrumented via the control function approach (i.e., 2SRI)
 d
-d   -ivcloglog- is essentially the same thing as -ivprobit,
-d twostep- but for the -cloglog- model. -ivcloglog- estimates a
+d  -ivcloglog- is essentially the same thing as -ivprobit, twostep-
+d but for the -cloglog- model. -ivcloglog- estimates a
 d complementary log-log model with instrumenting of endogenous
 d variables via the control function approach (also known in
 d statistics as 2SRI – two-stage residuals inclusion).  This just
@@ -10,16 +10,17 @@ d stage regressions (i.e., the "auxiliary models") are included as
 d regressors in the second stage (i.e., the "primary model").  In
 d the case of -ivcloglog-, a linear first stage and polynomial
 d control functions are used – the latter just means that powers
-d of the residuals are used. An important use case is that
-d -ivcloglog- allows users to estimate a Prentice and Gloeckler
-d (1978) model with continuous endogenous covariates, just like how
-d the basic version of the model (i.e., with all covariates
-d exogenous) can be estimated using -cloglog-. For the guide to the
-d theory behind this, see “A Theory Guide: Instrumenting a
-d Discrete-Data Proportional Hazards Model with Control
-d Functions” (Liu, 2023). For the complementary empirical guide
-d with a real-data application, see “An IV Hazard Model of Loan
-d Default with an Application to Subprime Mortgage Cohorts”
+d of the residuals are used as generated second-stage regressors.
+d An important use case is that -ivcloglog- allows users to
+d estimate a Prentice and Gloeckler (1978) model with endogenous
+d covariates (either continuous or functions of observed continuous
+d covariates), just like how the basic version of the model (i.e.,
+d with all covariates exogenous) can be estimated using -cloglog-.
+d For the guide to the theory behind this, see “A Theory Guide:
+d Instrumenting a Discrete-Data Proportional Hazards Model with
+d Control Functions” (Liu, 2023). For the complementary empirical
+d guide with a real-data application, see “An IV Hazard Model of
+d Loan Default with an Application to Subprime Mortgage Cohorts”
 d (Palmer, 2023). 
 d
 d KW: control function
@@ -32,13 +33,14 @@ d KW: survival model
 d KW: duration model
 d KW: proportional hazards
 d
-d Requires: Stata version 14 and moremata from SSC (q.v.)
+d Requires: Stata version 11 and moremata from SSC (q.v.)
 d
-d Distribution-Date: 20230912
+d Distribution-Date: 20231114
 d
 d Author: William Liu	, MIT
 d Support: email liuw@@mit.edu
 d
 f ivcloglog.ado
+f ivcloglog_ex.ado
 f ../g/gmm_ivcloglog.ado
 f ivcloglog.sthlp
