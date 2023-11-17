@@ -13,9 +13,10 @@ as well as summary measures of these regressions' robustness to heterogeneous tr
 {marker syntax}{...}
 {title:Syntax}
 
-{p 4 8}{cmd:twowayfeweights Y G T D [D0]} {if}
+{p 4 8}{cmd:twowayfeweights Y G T D} {if}
 [{cmd:,}
 {cmd:type(}{it:string}{cmd:)}
+{cmd:summary_measures}
 {cmd:test_random_weights(}{it:varlist}{cmd:)}
 {cmd:controls(}{it:varlist}{cmd:)}
 {cmd:other_treatments(}{it:varlist}{cmd:)}
@@ -50,22 +51,6 @@ and {cmd:D} is the first difference of the treatment
 if one wants to estimate the weights attached to the first-difference regression.
 {p_end}
 
-{p 4 8}
-If {cmd:type(}{it:fdTR}{cmd:)} is specified in the option {cmd:type} below,
-then the command requires a fifth argument, {cmd:D0}.
-{cmd:D0} is the mean of the treatment in group g and at period t.
-It should be non-missing at the first period
-when a group appears in the data
-(e.g. at t=1 for the groups that are in the data from the beginning),
-and for all observations for which the first-difference of
-the group-level mean outcome and treatment are non missing.
-{p_end}
-
-{p 4 8}
-The command creates a variables called weight
-so it will not run if your dataset already has a variable with that name.
-{p_end}
-
 {marker options}{...}
 {title:Options}
 
@@ -85,6 +70,20 @@ Finally, with {it:fdS} it estimates the weights
 and sensitivity measures attached to the first-difference regression
 under common trends and the assumption that groups' treatment
 effect does not change over time.
+{p_end}
+
+{p 4 8}
+{cmd: summary_measures} displays complementary results from the computation of the weights. Specifically, the option outputs: ({it:i}) the point estimate of the coefficient on the {cmd:D} variable from a TWFE regression, ({it:ii}) the minimum value of the standard deviation of the ATEs compatible with the coefficient from the TWFE regression and ATE across all treated (g,t) cells being equal to zero, ({it:iii}) the minimum value of the standard deviation of the ATEs compatible with the coefficient from the TWFE regression and ATE across all treated (g,t) cells having different signs (this is computed only if the sum of negative weights is different from 0). See the FAQ section for other details.
+
+{p 4 8}
+{cmd:test_random_weights} when this option is specified, the command estimates
+the correlation between each variable in {it:varlist} and the weights.
+Testing if those correlations significantly differ
+from zero is a way to assess whether the weights are as good as randomly assigned to groups and time periods.
+When {cmd:other_treatments} is specified,
+the command only reports the correlation between each variable
+and the weights attached to the main treatment,
+not the correlations between each variable and the contamination weights attached to the other treatments.
 {p_end}
 
 {p 4 8}
@@ -114,18 +113,7 @@ See de Chaisemartin & D'Haultfoeuille (2020b) for further details.
 {p_end}
 
 {p 4 8}
-{cmd:test_random_weights} when this option is specified, the command estimates
-the correlation between each variable in {it:varlist} and the weights.
-Testing if those correlations significantly differ
-from zero is a way to assess whether the weights are as good as randomly assigned to groups and time periods.
-When {cmd:other_treatments} is specified,
-the command only reports the correlation between each variable
-and the weights attached to the main treatment,
-not the correlations between each variable and the contamination weights attached to the other treatments.
-{p_end}
-
-{p 4 8}
-{cmd:weight}: if the regression is weighted,
+{cmd:weight} if the regression is weighted,
 the weight variable can be specified in {cmd:weight}.
 If {cmd:type(}{it:fdTR}{cmd:)} is specified,
 then the weight variable should be non-missing at the first period when a group appears
@@ -175,65 +163,47 @@ under which beta could be of a different sign than the treatment effect in all t
 {p_end}
 
 {p 4 4}
-Assume that the first summary measure is equal to x.
-How can you tell if x is a low or a high amount of treatment effect heterogeneity?
-This is not an easy question to answer, but here is one possibility.
-Let us assume that you find it a priori reasonable to assume that
-the treatment effect of every group and time period cannot be larger in absolute value than some real number B>0.
-If you are trying to assess beta's robustness to heterogeneous effects,
-beta presumably falls within your range of
-a priori plausible values for the treatment effect,
-so it seems fair to argue that B is at least as large as |beta|.
-Now let us also assume that the treatment effects of the treated groups and time periods are drawn from a uniform distribution.
-Then, to have that the mean of that distribution is 0 while its standard deviation is x,
-the treatment effects should be uniformly distributed on the [-sqrt(3)x,sqrt(3)x] interval.
-If |beta|>=sqrt(3)x,
-then uniformly distributed treatment effects with mean 0
-and standard deviation x are compatible with your a priori plausible values for the treatment effect,
-so x may not be an implausibly high amount of treatment effect heterogeneity,
-and the ATT may be equal to 0.
-If on the other hand |beta|<sqrt(3)x,
-x may or may not be an implausibly high amount of treatment effect heterogeneity,
-depending on whether B<sqrt(3)x or B>=sqrt(3)x.
+Assume that the first summary measure is equal to x. How can you tell if x is a low or a high amount 
+of treatment effect heterogeneity? This is not an easy question to answer, but here is one possibility.  
+Let us assume that the treatment effects of (g,t) cells are drawn from a uniform distribution. Then, to 
+have that the mean of that distribution is 0 while its standard deviation is x, the treatment effects 
+should be uniformly distributed on the [-sqrt(3)x,sqrt(3)x] interval. Then, you can ask yourself: is it 
+reasonable to assume that some (g,t) cells have a treatment effect as large as sqrt(3)x, while other cells 
+have a treatment effect as low as -sqrt(3)x? If the answer is negative (you think that it is not reasonable 
+to assume that the treatment effect will exceed the +/-sqrt(3)x bounds for some (g,t) cells), this means that 
+the uniform distribution of treatment effects compatible with an ATT of 0 and a standard deviation of x seems 
+implausible to you. Then, you can consider that the command's first summary measure is high, and that it is 
+unlikely that beta and the ATT are of a different sign. Conversely, if the answer is positive (you believe 
+that the treatment effect might exceed the bounds for some (g,t) cells), it may not be unlikely that beta and the ATT are of a different sign. 
 {p_end}
 
 {p 4 4}
-The previous reasoning relies on the assumption that treatment effects follow a uniform distribution.
-You may find it more reasonable to assume that they are, say, normally distributed.
-Then you can conduct the following, similar exercise.
-Let us assume that you find it a priori reasonable to assume that most,
-say 95%, of the treatment effects are not larger in absolute value than some real number B>0.
-If the treatment effects of the treated groups
-and time periods are drawn from a mean 0 and standard deviation x normal distribution,
-then 95% of them will fall within the [-1.96x,1.96x] interval.
-If B>=1.96x, N(0,x^2) distributed
-treatment effects don't seem incompatible with your prior,
-so x may not be an implausibly high amount of treatment effect heterogeneity.
+The previous sensitivity exercise assumes that treatment effects follow a uniform distribution. You may find
+ it more reasonable to assume that they are, say, normally distributed. Then you can conduct the following, 
+ similar exercise. If the treatment effects of (g,t) cells are drawn from a normal distribution with mean 0 
+ and standard deviation x normal distribution, 95% of them will fall within the [-1.96x,1.96x] interval, and 
+ 5% will fall outside of that interval. Then, you can ask yourself: is it reasonable to assume that 2.5% of 
+ (g,t) cells have a treatment effect larger than 1.96x, while 2.5% have a treatment effect lower than -1.96? 
+ If the answer is negative (you are willing to assume that at most 2.5% of the treatment effects fall out of 
+ the [-1.96x,1.96x] interval at each side), this means that the normal distribution of treatment effects compatible 
+ with an ATT of 0 and a standard deviation of x seems implausible to you. Then, you can consider that the command's 
+ first summary measure is high, and that it is unlikely that beta and the ATT are of a different sign.
 {p_end}
 
 {p 4 8}
 {it:How can I tell if the second summary measure is high or low?}
 {p_end}
 
-{p 4 4}Assume that the second summary measure is equal to x.
-Again, let us assume that you find it a priori reasonable to assume that the treatment effect
-of every group and time period cannot be larger in absolute value than some real number B>0.
-Again, it seems fair to argue that B is at least as large as |beta|.
-To fix ideas, let us assume that beta>0.
-Let us also assume that the treatment effects of the treated groups
-and time periods are drawn from a uniform distribution.
-Then, one could have that those effects are all negative,
-with a standard deviation equal to x, for instance if they are uniformly drawn from the [-2sqrt(3)x,0] interval.
-If |beta|>=2sqrt(3)x,
-then treatment effects distributed on the [-2sqrt(3)x,0] interval seem compatible
-with your a priori plausible range of values for the treatment effect,
-so x may not be an implausibly high amount of treatment effect heterogeneity.
-If on the other hand |beta|<2sqrt(3)x,
-x may or may not be an implausibly high amount of treatment effect heterogeneity,
-depending on whether B<2sqrt(3)x or B>=2sqrt(3)x.
-If the treatment effects of the treated groups and time periods are all negative,
-they cannot follow a normal distribution,
-so we do not discuss that possibility here.
+{p 4 4}
+Assume that the second summary measure is equal to x. To fix ideas, let us assume that beta>0. Let us 
+assume that the treatment effects of (g,t) cells are drawn from a uniform distribution.  Then, one could
+ have that those effects are all negative, with a standard deviation equal to x, for instance if they are 
+ uniformly drawn from the [-2sqrt(3)x,0]. Then, you can ask yourself: is it reasonable to assume that some 
+ (g,t) cells have a treatment effect as low as -2sqrt(3)x? If the answer is negative (you are not willing 
+ to assume that some (g,t) cells have a treatment effect lower than -2sqrt(3)x), this means that the uniform 
+ distribution of treatment effects compatible with sign reversal and a standard deviation of x seems implausible 
+ to you. Then, you can consider that the command's second summary measure is high, and that sign reversal is unlikely.
+  If the treatment effects of (g,t) cells are all negative, they cannot follow a normal distribution, so we do not discuss that possibility here.
 {p_end}
 
 {marker references}{...}

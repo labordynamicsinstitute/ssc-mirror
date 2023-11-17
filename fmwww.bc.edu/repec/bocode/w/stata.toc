@@ -19,6 +19,7 @@ p weeklyclaims module to Get Weekly Initial Jobless Claims from the US Dept. of 
 p weibullfit module to fit a two-parameter Weibull distribution
 p welcom module for simulating distributional impacts of changes in competition (WELCOM)
 p welflossas module to compute well-being (monetary) gain/loss measures and social welfare loss indices and curves associated with segregation using either disaggregated or aggregated data for the quantitative variable
+p wgtdistrim module for trimming extreme sampling weights
 p wgttest module to test the impact of sampling weights in regression analysis
 p whereis module to keep track of ancillary programs and files
 p which_version module to return location and programmer's version of ado-files

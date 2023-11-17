@@ -1,7 +1,15 @@
 capture program drop twowayfeweights
 program twowayfeweights, eclass
 	version 12.0
-	syntax varlist(min=4 numeric) [if] [in]  [, type(string) test_random_weights(varlist numeric) controls(varlist numeric) path(string) weight(varlist numeric) other_treatments(varlist numeric)]
+	syntax varlist(min=4 numeric) [if] [in]  [, type(string) test_random_weights(varlist numeric) controls(varlist numeric) path(string) weight(varlist numeric) other_treatments(varlist numeric)  summary_measures]
+
+	foreach p in gtools {
+		qui cap which `p'
+		if _rc != 0 {
+			di as error "twowayfeweights requires the `p' package: " `"{stata ssc install gtools, replace}"'
+			exit
+		}
+	}
 
 	if "`other_treatments'"==""{
 	
@@ -22,8 +30,10 @@ program twowayfeweights, eclass
 	gen `time'=`3'
 	gen `meantreat'=`4'
 	if "`type'"=="fdTR" {
-	tempvar treatment
-	gen `treatment'=`5'
+		gegen treatment_temp = mean(`meantreat'), by(`group' `time')
+		tempvar treatment
+		gen `treatment'= treatment_temp
+		drop treatment_temp
 	}
 	
 	preserve
@@ -33,6 +43,10 @@ program twowayfeweights, eclass
 	keep `if'
 	}
 	
+	if strpos("`weight'", "weight") == 0  { 
+		cap rename weight weight_OG
+	}
+
 	if "`type'"!="fdTR" {
 	* Keeping only sample used in estimation of regression
 	foreach var of varlist `varlist' {
@@ -57,8 +71,8 @@ program twowayfeweights, eclass
 
 	*Replacing individual level treatment by (g,t)-level treatment
 	capture drop treatment_gt treatment_sd_gt
-	bys `group' `time': egen treatment_gt=mean(`meantreat')
-	bys `group' `time': egen treatment_sd_gt=sd(`meantreat')
+	gegen treatment_gt=mean(`meantreat'), by(`group' `time')
+	gegen treatment_sd_gt=sd(`meantreat'), by(`group' `time')
 	sum treatment_sd_gt
 	if r(mean)>0&r(mean)!=.{
 	noisily di as text "The treatment variable in the regression varies within some group * period cells."
@@ -74,8 +88,8 @@ program twowayfeweights, eclass
 	if "`controls'"!=""{
 	local count=1
 	foreach var of varlist `controls' {
-	bys `group' `time': egen `var'_gt=mean(`var')
-	bys `group' `time': egen `var'_sd_gt=sd(`var')
+	gegen `var'_gt=mean(`var'), by(`group' `time')
+	gegen `var'_sd_gt=sd(`var'), by(`group' `time')
 	sum `var'_sd_gt
 	if r(mean)>0&r(mean)!=.{
 	noisily di as text "The control variable " `count' " varies within some group * period cells."
@@ -110,7 +124,7 @@ program twowayfeweights, eclass
 	scalar mean_D=r(mean)
 	sum `outcome' [aweight=weight_XX]
 	scalar obs=r(sum_w)
-	bys `group' `time': egen P_gt=total(weight_XX)
+	gegen P_gt=total(weight_XX), by(`group' `time')
 	replace P_gt=P_gt/obs 
 	gen nat_weight= P_gt*`meantreat'/mean_D
 	
@@ -143,7 +157,7 @@ program twowayfeweights, eclass
 	egen num_obs=total(weight_XX)
 	sum num_obs
 	scalar obs=r(mean)	
-	bys `group' `time': egen P_gt=total(weight_XX)
+	gegen P_gt=total(weight_XX), by(`group' `time')
 	replace P_gt=P_gt/obs 
 	gen nat_weight= P_gt*`treatment'/mean_D
 	reg `meantreat' i.`time' `controls' [aweight=weight_XX]
@@ -181,26 +195,21 @@ program twowayfeweights, eclass
 	
 	sum `outcome' [aweight=weight_XX]
 	scalar obs=r(sum_w)
-	bys `group' `time': egen P_gt=total(weight_XX)
+	gegen P_gt=total(weight_XX), by(`group' `time')
 	replace P_gt=P_gt/obs
 
 	areg `meantreat' i.`time' `controls' [aweight=weight_XX], absorb(`group')
 	predict eps_1, residuals
-	gen E_eps_1_g_geqt=.
-	egen newt=group(`time')
+	gegen newt=group(`time')
 	replace newt=newt-1 
-	sum newt
-	local tmax=r(max)
 	gen eps_1_weight=eps_1*weight_XX
-	forvalue t=0/`tmax'{	
-	bys `group': egen E_eps_1_g_geqt_aux=total(eps_1_weight) if newt>=`t' 
-	bys `group': egen weight_XX_aux=total(weight_XX) if newt>=`t'
-	replace E_eps_1_g_geqt_aux=E_eps_1_g_geqt_aux/weight_XX_aux
-	replace E_eps_1_g_geqt=E_eps_1_g_geqt_aux if newt==`t'
-	drop E_eps_1_g_geqt_aux weight_XX_aux
-	}
-	drop eps_1_weight
-	
+	// Modif. Diego: replace the loop with a reverse sorting cumulative sum //
+	gsort `group' -newt
+	bys `group': gen E_eps_1_g_geqt_aux = sum(eps_1_weight) 
+	bys `group': gen weight_XX_aux = sum(weight_XX) 
+	gen E_eps_1_g_geqt = E_eps_1_g_geqt_aux / weight_XX_aux 
+	sort `group' newt
+	drop eps_1_weight E_eps_1_g_geqt_aux weight_XX_aux
 	*Computing beta
 	
 	areg `outcome' i.`time' `meantreat' `controls' [aweight=weight_XX], absorb(`group')
@@ -237,7 +246,7 @@ program twowayfeweights, eclass
 
 	sum `outcome' [aweight=weight_XX]
 	scalar obs=r(sum_w)
-	bys `group' `time': egen P_gt=total(weight_XX)
+	gegen P_gt=total(weight_XX), by(`group' `time')
 	replace P_gt=P_gt/obs
 	
 	reg `meantreat' i.`time' `controls' [aweight=weight_XX]
@@ -301,19 +310,23 @@ program twowayfeweights, eclass
 	*Computing the new sensitivity measure
 	if summinus<0{
 	keep if weight!=0
-	gsort -W
-	sum W
-	gen P_k=.
-	gen S_k=.
-	gen T_k=.
-	replace P_k=nat_weight if _n==`r(N)'
-	replace S_k=weight if _n==`r(N)'
-	replace T_k=nat_weight*W^2 if _n==`r(N)'
-	forvalue i=1/`=`r(N)'-1'{
-	replace P_k=nat_weight+P_k[_n+1] if _n==`r(N)'-`i'
-	replace S_k=weight+S_k[_n+1] if _n==`r(N)'-`i'
-	replace T_k=nat_weight*W^2+T_k[_n+1] if _n==`r(N)'-`i'
-	}
+
+	// Modif. Diego: change the loop with the cumulative sum
+	gsort -W `group' `time' // Replicate the ordering	
+	sum W	
+	cap drop P_k
+	gsort W -`group' -`time'
+	gen P_k = sum(nat_weight)	
+	cap drop S_k
+	gsort W -`group' -`time'
+	gen S_k = sum(weight)	
+	cap drop T_k
+	gsort W -`group' -`time'
+	gen sq_weight = nat_weight * W^2
+	gen T_k = sum(sq_weight)	
+	drop sq_weight
+	gsort -W `group' `time' // Replicate the ordering
+
 	gen sens_measure2=abs(beta)/sqrt(T_k+S_k^2/(1-P_k))
 	gen ind=(W<-S_k/(1-P_k))
 	replace ind=0 if _n==1 
@@ -342,31 +355,76 @@ restore
 }
 	
 /// Displaying the results and saving them in e()
-
-	if "`type'"=="feTR"|"`type'"=="fdTR"{	
-
-	di as text "Under the common trends assumption, beta estimates a weighted sum of " nweights " ATTs. " _newline nplus " ATTs receive a positive weight, and " nminus " receive a negative weight." _newline "The sum of the positive weights is equal to " sumplus "." _newline "The sum of the negative weights is equal to " summinus "."
-	di as text "beta is compatible with a DGP where the average of those ATTs is equal to 0," _newline "while their standard deviation is equal to " sensibility "."
-	if summinus<0{
-	di as text "beta is compatible with a DGP where those ATTs all are of a different sign than beta," _newline "while their standard deviation is equal to " sensibility2 "."
+	if summinus == . {
+		scalar summinus = 0
 	}
-	if summinus==0{
-	di as text "All the weights are positive, so beta cannot be of a different sign than all those ATTs."
-	}
-	
-	}
-	
-	if "`type'"=="feS"|"`type'"=="fdS"{
-	
-	di as text "Under the common trends, treatment monotonicity, and if groups' treatment effect does not change over time,"_newline "beta estimates a weighted sum of " nweights " LATEs. " _newline nplus " LATEs receive a positive weight, and " nminus " receive a negative weight." _newline "The sum of the positive weights is equal to " sumplus "." _newline "The sum of the negative weights is equal to " summinus "."
-	di as text "beta is compatible with a DGP where the average of those LATEs is equal to 0," _newline "while their standard deviation is equal to " sensibility "."
-	if summinus<0{
-	di as text "beta is compatible with a DGP where those LATEs all are of a different sign than beta," _newline "while their standard deviation is equal to " sensibility2 "."
-	}
-	if summinus==0{
-	di as text "All the weights are positive, so beta cannot be of a different sign than all those LATEs."
+	{
+		if "`type'"=="feTR"|"`type'"=="fdTR"{	
+			local ctitle = "ATT"
+		}
+		else if "`type'"=="feS"|"`type'"=="fdS"{
+			local ctitle = "LATE"
+		}
 	}
 
+	local row_1 = ""
+	fit_str , str("Treat. var: `4'") len(24) out(row_11) left
+	local row_1 = "`row_1'" + r(row_11)
+	fit_str , str("# `ctitle's") len(12) out(row_12) left
+	local row_1 = "`row_1'" + r(row_12)
+	fit_str , str("`=uchar(931)' weights") len(12) out(row_13) left
+	local row_1 = "`row_1'" + r(row_13)
+
+	local row_2 = ""
+	fit_str , str("Positive weights") len(24) out(row_21) left
+	local row_2 = "`row_2'" + r(row_21)
+	fit_str , str("`: di %9.0f nplus'") len(12) out(row_22) left
+	local row_2 = "`row_2'" + r(row_22)
+	fit_str , str("`: di %9.4f sumplus'") len(12) out(row_23) left
+	local row_2 = "`row_2'" + r(row_23)
+	
+	local row_3 = ""
+	fit_str , str("Negative weights") len(24) out(row_31) left
+	local row_3 = "`row_3'" + r(row_31)
+	fit_str , str("`: di %9.0f nminus'") len(12) out(row_32) left
+	local row_3 = "`row_3'" + r(row_32)
+	fit_str , str("`: di %9.4f summinus'") len(12) out(row_33) left
+	local row_3 = "`row_3'" + r(row_33)
+
+	local row_4 = ""
+	fit_str , str("Total") len(24) out(row_41) left
+	local row_4 = "`row_4'" + r(row_41)
+	fit_str , str("`: di %9.0f nweights'") len(12) out(row_42) left
+	local row_4 = "`row_4'" + r(row_42)
+	fit_str , str("`: di %9.4f `=summinus + sumplus''") len(12) out(row_43) left
+	local row_4 = "`row_4'" + r(row_43)
+
+
+	di ""
+	di as text "Under the common trends assumption, beta estimates a weighted sum of " nweights " `ctitle's. " _newline nplus " `ctitle's receive a positive weight, and " nminus " receive a negative weight."
+	di as result "{hline 48}"
+	di as result "`row_1'"
+	di as result "{hline 48}"
+	di as result  "`row_2'"
+	di as result  "`row_3'"
+	di as text 48 * "-"
+	di as result  "`row_4'"
+	di as result  "{hline 48}"
+
+	if "`summary_measures'" != "" {
+		local srow_1 "Summary Measures:"
+		local discl "Reference: Corollary 1, de Chaisemartin, C and D'Haultfoeuille, X (2020a)"
+		local srow_fe "TWFE coefficient (`=uchar(946)'_fe) = `: di %9.4f beta'"
+		local srow_2 "min `=uchar(963)'(`=uchar(916)') compatible with `=uchar(946)'_fe and `=uchar(916)'_TR = 0: `: di %9.4f sensibility'"
+		di as result ""
+		di as result "`srow_1'"
+		di as result "`srow_fe'"
+		di as result "`srow_2'"
+		if summinus<0{
+			local srow_3 "min `=uchar(963)'(`=uchar(916)') compatible with `=uchar(946)'_fe and `=uchar(916)'_TR of a different sign: `: di %9.4f sensibility2'"					
+			di as result "`srow_3'"
+		}
+		di as text "`discl'"
 	}
 	
 	ereturn clear 
@@ -411,6 +469,10 @@ if "`other_treatments'"!=""{
 	if `"`if'"' != "" {
 	keep `if'
 	}
+
+	if strpos("`weight'", "weight") == 0  { 
+		cap rename weight weight_OG
+	}
 	
 	* Keeping only sample used in estimation of regression
 	foreach var of varlist `varlist' {
@@ -426,8 +488,8 @@ if "`other_treatments'"!=""{
 	}	
 	*Replacing individual level treatment by (g,t)-level treatment
 	capture drop treatment_gt treatment_sd_gt
-	bys `group' `time': egen treatment_gt=mean(`meantreat')
-	bys `group' `time': egen treatment_sd_gt=sd(`meantreat')
+	gegen treatment_gt=mean(`meantreat'), by(`group' `time')
+	gegen treatment_sd_gt=sd(`meantreat'), by(`group' `time')
 	sum treatment_sd_gt
 	if r(mean)>0&r(mean)!=.{
 	noisily di as text "The treatment variable in the regression varies within some group * period cells."
@@ -442,8 +504,8 @@ if "`other_treatments'"!=""{
 	*Replacing individual level other treatments by (g,t)-level treatment
 	local count=1
 	foreach var of varlist `other_treatments' {
-	bys `group' `time': egen `var'_gt=mean(`var')
-	bys `group' `time': egen `var'_sd_gt=sd(`var')
+	gegen `var'_gt=mean(`var'), by(`group' `time')
+	gegen `var'_sd_gt=sd(`var'), by(`group' `time')
 	sum `var'_sd_gt
 	if r(mean)>0&r(mean)!=.{
 	noisily di as text "The other treatment variable " `count' " varies within some group * period cells."
@@ -461,8 +523,8 @@ if "`other_treatments'"!=""{
 	if "`controls'"!=""{
 	local count=1
 	foreach var of varlist `controls' {
-	bys `group' `time': egen `var'_gt=mean(`var')
-	bys `group' `time': egen `var'_sd_gt=sd(`var')
+	gegen `var'_gt=mean(`var'), by(`group' `time')
+	gegen `var'_sd_gt=sd(`var'), by(`group' `time')
 	sum `var'_sd_gt
 	if r(mean)>0&r(mean)!=.{
 	noisily di as text "The control variable " `count' " varies within some group * period cells."
@@ -493,7 +555,7 @@ if "`other_treatments'"!=""{
 	scalar mean_D=r(mean)
 	sum `outcome' [aweight=weight_XX]
 	scalar obs=r(sum_w)
-	bys `group' `time': egen P_gt=total(weight_XX)
+	gegen P_gt=total(weight_XX), by(`group' `time')
 	replace P_gt=P_gt/obs 
 	gen nat_weight= P_gt*`meantreat'/mean_D
 	areg `meantreat' i.`time' `controls' `other_treatments' [aweight=weight_XX], absorb(`group')
@@ -576,13 +638,101 @@ restore
 	}
 
 	/// Displaying the results and saving them in e()
+	if summinus == . {
+		scalar summinus = 0
+	}
+	local row_1 = ""
+	fit_str , str("Treat. var: `4'") len(24) out(row_11) left
+	local row_1 = "`row_1'" + r(row_11)
+	fit_str , str("# ATTs") len(12) out(row_12) left
+	local row_1 = "`row_1'" + r(row_12)
+	fit_str , str("`=uchar(931)' weights") len(12) out(row_13) left
+	local row_1 = "`row_1'" + r(row_13)
 
+	local row_2 = ""
+	fit_str , str("Positive weights") len(24) out(row_21) left
+	local row_2 = "`row_2'" + r(row_21)
+	fit_str , str("`: di %9.0f nplus'") len(12) out(row_22) left
+	local row_2 = "`row_2'" + r(row_22)
+	fit_str , str("`: di %9.4f sumplus'") len(12) out(row_23) left
+	local row_2 = "`row_2'" + r(row_23)
+	
+	local row_3 = ""
+	fit_str , str("Negative weights") len(24) out(row_31) left
+	local row_3 = "`row_3'" + r(row_31)
+	fit_str , str("`: di %9.0f nminus'") len(12) out(row_32) left
+	local row_3 = "`row_3'" + r(row_32)
+	fit_str , str("`: di %9.4f summinus'") len(12) out(row_33) left
+	local row_3 = "`row_3'" + r(row_33)
+
+	local row_4 = ""
+	fit_str , str("Total") len(24) out(row_41) left
+	local row_4 = "`row_4'" + r(row_41)
+	fit_str , str("`: di %9.0f nweights'") len(12) out(row_42) left
+	local row_4 = "`row_4'" + r(row_42)
+	fit_str , str("`: di %9.4f `=summinus + sumplus''") len(12) out(row_43) left
+	local row_4 = "`row_4'" + r(row_43)
+
+	di ""
 	di as text "Under the common trends assumption, beta estimates the sum of several terms."
-	di as text "The first term is a weighted sum of " nweights " ATTs of the treatment." _newline nplus " ATTs receive a positive weight, and " nminus " receive a negative weight." _newline "The sum of the positive weights is equal to " sumplus "." _newline "The sum of the negative weights is equal to " summinus "."
+	di as text "The first term is a weighted sum of " nweights " ATTs of the treatment." _newline nplus " ATTs receive a positive weight, and " nminus " receive a negative weight."
+	di as result "{hline 48}"
+	di as result "`row_1'"
+	di as result "{hline 48}"
+	di as result  "`row_2'"
+	di as result  "`row_3'"
+	di as text 48 * "-"
+	di as result  "`row_4'"
+	di as result  "{hline 48}"
+
 	local j=1
 	foreach var of varlist `other_treatments' {
-	di as text "The next term is a weighted sum of " nweights_others`j' " ATTs of treatment " `j' " included in the other_treatments option." _newline nplus_others`j' " ATTs receive a positive weight, and " nminus_others`j' " receive a negative weight." _newline "The sum of the positive weights is equal to " sumplus_others`j' "." _newline "The sum of the negative weights is equal to " summinus_others`j' "."
-	local j=`j'+1
+		if summinus_others`j' == . {
+			scalar summinus_others`j' = 0
+		}
+		local row_1 = ""
+		fit_str , str("Other treat.: `var'") len(24) out(row_11) left
+		local row_1 = "`row_1'" + r(row_11)
+		fit_str , str("# ATTs") len(12) out(row_12) left
+		local row_1 = "`row_1'" + r(row_12)
+		fit_str , str("`=uchar(931)' weights") len(12) out(row_13) left
+		local row_1 = "`row_1'" + r(row_13)
+
+		local row_2 = ""
+		fit_str , str("Positive weights") len(24) out(row_21) left
+		local row_2 = "`row_2'" + r(row_21)
+		fit_str , str("`: di %9.0f nplus_others`j''") len(12) out(row_22) left
+		local row_2 = "`row_2'" + r(row_22)
+		fit_str , str("`: di %9.4f sumplus_others`j''") len(12) out(row_23) left
+		local row_2 = "`row_2'" + r(row_23)
+		
+		local row_3 = ""
+		fit_str , str("Negative weights") len(24) out(row_31) left
+		local row_3 = "`row_3'" + r(row_31)
+		fit_str , str("`: di %9.0f nminus_others`j''") len(12) out(row_32) left
+		local row_3 = "`row_3'" + r(row_32)
+		fit_str , str("`: di %9.4f summinus_others`j''") len(12) out(row_33) left
+		local row_3 = "`row_3'" + r(row_33)
+
+		local row_4 = ""
+		fit_str , str("Total") len(24) out(row_41) left
+		local row_4 = "`row_4'" + r(row_41)
+		fit_str , str("`: di %9.0f nweights_others`j''") len(12) out(row_42) left
+		local row_4 = "`row_4'" + r(row_42)
+		fit_str , str("`: di %9.4f `=summinus_others`j' + sumplus_others`j'''") len(12) out(row_43) left
+		local row_4 = "`row_4'" + r(row_43)
+
+		di ""
+		di as text "The next term is a weighted sum of " nweights_others`j' " ATTs of treatment " `j' " included in the other_treatments option." _newline nplus_others`j' " ATTs receive a positive weight, and " nminus_others`j' " receive a negative weight."
+		di as result "{hline 48}"
+		di as result "`row_1'"
+		di as result "{hline 48}"
+		di as result  "`row_2'"
+		di as result  "`row_3'"
+		di as text 48 * "-"
+		di as result  "`row_4'"
+		di as result  "{hline 48}"
+		local j=`j'+1
 	}
 	ereturn clear 
 	ereturn scalar sum_neg_w = summinus
@@ -604,4 +754,18 @@ restore
 	
 	}
 	
+end
+
+cap program drop fit_str
+program define fit_str, rclass
+syntax , str(string) len(integer) out(string) [left]
+{
+if "`left'" == "" {
+	local n_str = (`len' - length(abbrev("`str'", `len')))* " " + abbrev("`str'", `len')
+}
+else {
+	local n_str = abbrev("`str'", `len') + (`len' - length(abbrev("`str'", `len')))* " " 
+}
+}
+return local `out' = "`n_str'"
 end

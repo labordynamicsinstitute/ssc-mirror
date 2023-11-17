@@ -1,0 +1,21 @@
+d 'WGTDISTRIM': module for trimming extreme sampling weights
+d
+d  wgtdistrim trims extreme sampling weights using the weight
+d distribution approach suggested by Potter (1990). 
+d
+d KW: weight
+d KW: survey weight
+d KW: weight trimming
+d
+d Requires: Stata version 16.1
+d
+d Distribution-Date: 20231116
+d
+d Author: Sebastian Lang, NA
+d Support: email 	contact@@sebastianlang.eu
+d
+d Author: Daniel Klein, Universität Kassel
+d Support: email daniel.klein@@uni-kassel.de
+d
+f wgtdistrim.ado
+f wgtdistrim.sthlp
