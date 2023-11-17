@@ -35,4 +35,7 @@ wget --mirror --convert-links --page-requisites --no-parent $SRCURL
 find fmwww.bc.edu -name index.html\* -exec rm {} \;
 # put a note
 sed "s/XXDATEXX/$(date +%F)/" stata.toc.template > fmwww.bc.edu/repec/bocode/stata.toc
+# list all files
+find fmwww.bc.edu/repec/bocode -type f > sscfiles.txt
+
 
