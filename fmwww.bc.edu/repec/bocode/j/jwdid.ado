@@ -1,13 +1,66 @@
-*! v1.31 Corrects for Never group
+*!v1.41 Allows for multiple Options
+*       Also FV and TS     
+* v1.4  Allows for TRT to be continuous, and adds example
+* v1.36 Adds TrtVar or Gvar
+* v1.35 Adds method for margins
+* v1.34 Minor Improv to Combinations. Also only works St15 or above
+* v1.33 reduces ammount of ommited empty
+* v1.32 Corrects for bug with no ivar
+* v1.31 Corrects for Never group
 * v1.3 Corrects for Nonlinear models
 * 8/30/2022 corrects for long variables
 * v1.2 FRA 8/17/2022 Adds Correction unbalanced panel
 * v1.1 FRA 8/5/2022 Redef not yet treated. 
 * v1   FRA 8/5/2022 Has almost everything we need
 
+program jwdid_example
+	preserve
+	frause mpdta, clear
+	display "jwdid lemp, ivar(countyreal) tvar(year) gvar(first) never"
+	jwdid lemp, ivar(countyreal) tvar(year) gvar(first) never
+	display "estat simple"
+	estat simple
+	display "estat calendar"
+	estat calendar
+	display "estat group"
+	estat group
+	display "estat event"
+	estat event
+	restore  	
+end
+
+program method_parser, rclass
+	syntax namelist , [*]
+	return local method `namelist'
+	return local options `options'
+end
+
 program jwdid, eclass
-	version 14
-	syntax varlist [if] [in] [pw], [Ivar(varname) cluster(varname) ] [Tvar(varname) time(varname)] Gvar(varname) [never group method(name) nocorr]
+	version 15
+	** Replay
+	syntax [ anything(everything)], [example *]
+	if replay() {
+		if "`example'" !="" {
+			jwdid_example
+		}
+		else {
+			if "e(cmd)"=="jwdid" ereturn display
+			else display "Last estimation not found"
+		}
+		exit
+	}
+	
+	syntax varlist( fv ts) [if] [in] [pw], [Ivar(varname) cluster(varname) ] ///
+								  [Tvar(varname) time(varname)] ///
+								  [Gvar(varname) trtvar(varname) trgvar(varname)] ///
+								  [never group method(string asis) nocorr  ]
+	
+	if "`method'"!="" {
+		method_parser `method'
+		local method `r(method)'
+		local method_option `r(options)'
+	}
+	
 	marksample  touse
 	markout    `touse' `ivar' `tvar' `gvar'
 	gettoken y x:varlist 
@@ -17,6 +70,27 @@ program jwdid, eclass
 		error 198
 	}
 	if "`tvar'"=="" local tvar `time'
+
+	if "`gvar'`trtvar'"=="" {
+		display in red "option gvar/trtvar() required"
+		error 198
+	}
+
+	if "`trtvar'`gvar'"=="" {
+		display as error "Cohort variable not specified"
+		error 198
+	} 
+	else if "`trtvar'"!="" & "`gvar'"!="" {
+		display as error "You can only specify gvar or trtvar. Not both"		
+		error 198
+	}
+	else if "`trtvar'"!="" {
+		capture drop __gvar
+		qui:_gjwgvar __gvar=`trtvar', tvar(`tvar') ivar(`ivar') 
+		local gvar __gvar
+	}
+	// Groups refer to Gvar. Not compatible if not panel
+	if "`ivar'"=="" local group group
 	
 	*easter_egg
 	** Count gvar
@@ -36,11 +110,20 @@ program jwdid, eclass
 		qui:sum `gvar' if `touse'==1 , meanonly
 		qui:replace `touse'=0 if `touse'==1 & `tvar'>=`r(max)' 
 	}
-	
-	qui:capture drop __tr__
-	qui:gen byte __tr__=0 if `touse'
-	qui:replace  __tr__=1 if `tvar'>=`gvar' & `gvar'>0  & `touse'
-	qui:replace  __tr__=1 if `touse' & "`never'"!=""
+	** Never makes estimation like SUN ABRaham
+	** or CSDID with REG
+	if "`trtvar'"=="" {
+		qui:capture drop __tr__
+		qui:gen byte __tr__=0 if `touse'
+		qui:replace  __tr__=1 if `tvar'>=`gvar' & `gvar'>0  & `touse'
+		qui:replace  __tr__=1 if `touse' & "`never'"!=""
+	}	
+	else {
+		qui:capture drop __tr__
+		qui:gen      __tr__=`trtvar' if `touse'
+		qui:replace  __tr__=1        if `touse' & "`never'"!="" & `trtvar'==0
+	}
+	** But effect is done for effectively treated so
 	qui:capture drop __etr__
 	qui:gen byte __etr__=0 if `touse'
 	qui:replace  __etr__=1 if `touse' & `tvar'>=`gvar' & `gvar'>0
@@ -65,27 +148,36 @@ program jwdid, eclass
 	mata: gap=min((xs[2..rows(xs),1]:-xs[1..rows(xs)-1,1]))
 	mata: st_local("gap",strofreal(gap))
 	mata: mata drop xs gap xs1 xs2
-	***
+	*** dropping newv
+	**
 	foreach i of local glist {
 		foreach j of local tlist {
-			if "`never'"!="" {
-				if (`i'-`gap')!=`j' {
-				local xvar `xvar' c.__tr__#i`i'.`gvar'#i`j'.`tvar' ///
-							      c.__tr__#i`i'.`gvar'#i`j'.`tvar'#c.(`xxvar') 
-							  
-				local xvar2 `xvar2' i`i'.`gvar'#i`j'.`tvar' 
-				
-				local xvar3 `xvar3' i`i'.`gvar'#i`j'.`tvar'#c.(`xxvar')  
+			qui:count if `i'==`gvar' & `j'==`tvar'
+			if `r(N)'>0 {
+				if "`never'"!="" {
+					if (`i'-`gap')!=`j' {
+					
+					local xvar `xvar'   c.__tr__#i`i'.`gvar'#i`j'.`tvar' 							  
+					local xvar2 `xvar2' i`i'.`gvar'#i`j'.`tvar' 
+					
+					if "`x'"!="" {
+						local xvar `xvar'   c.__tr__#i`i'.`gvar'#i`j'.`tvar'#c.(`xxvar') 
+						local xvar3 `xvar3' i`i'.`gvar'#i`j'.`tvar'#c.(`xxvar')  
+						}
+					}
+				}
+				else if `j'>=`i' {
+
+					local xvar `xvar'   c.__tr__#i`i'.`gvar'#i`j'.`tvar' 							  
+					local xvar2 `xvar2' i`i'.`gvar'#i`j'.`tvar' 
+					
+					if "`x'"!="" {
+						local xvar `xvar'   c.__tr__#i`i'.`gvar'#i`j'.`tvar'#c.(`xxvar') 
+						local xvar3 `xvar3' i`i'.`gvar'#i`j'.`tvar'#c.(`xxvar')  
+					}
+
 				}
 			}
-			else if `j'>=`i' {
-				local xvar `xvar' c.__tr__#i`i'.`gvar'#i`j'.`tvar' ///
-							      c.__tr__#i`i'.`gvar'#i`j'.`tvar'#c.(`xxvar')   
-							 
-				local xvar2 `xvar2' i`i'.`gvar'#i`j'.`tvar' 		
-				local xvar3 `xvar3' i`i'.`gvar'#i`j'.`tvar'#c.(`xxvar') 
-			}
-
 		}
 	}
 	** for xs
@@ -136,11 +228,20 @@ program jwdid, eclass
 			} 
 		}
 		`method'  `y' `xvar'  `x'  `ogxvar' `otxvar' `xcorr'    i.`gvar' i.`tvar' ///
-		if `touse' [`weight'`exp'], cluster(`cvar') 
+		if `touse' [`weight'`exp'], cluster(`cvar') `method_option'
 	}
 	
 	ereturn local cmd jwdid
+	ereturn local cmd2 `method'
+	ereturn local cmdopt `method_option'
+
 	ereturn local cmdline jwdid `0'
+	if "`method'"!="" {
+		ereturn local scmd `method'  `y' `xvar'  `x'  `ogxvar' `otxvar' `xcorr'   i.`gvar' i.`tvar' if `touse' [`weight'`exp'], cluster(`cvar') 
+	}
+	else {
+		ereturn local scmd reghdfe `y' `xvar'  `x'  `ogxvar' `otxvar'  `xcorr' 	if `touse' [`weight'`exp'], abs(`gvar'  `tvar') cluster(`cvar') keepsingletons noempty
+	}
 	ereturn local estat_cmd jwdid_estat
 	if "`never'"!="" ereturn local type  never
 	else 			 ereturn local type  notyet
@@ -259,4 +360,32 @@ program myhdmean, rclass
 	*display in w "`dropvlist'"
 	if "`dropvlist'"!="" drop `dropvlist'
 	
+end
+
+** Aux var for jwdid
+program _gjwgvar, sortpreserve
+	syntax newvarname =/exp [if] [in], tvar(varname) ivar(varname)
+	local exp = subinstr("`exp'","(","",.)
+	local exp = subinstr("`exp'",")","",.)
+	tempvar touse
+	qui:gen byte `touse'=0
+	qui:replace `touse'=1 `if' `in'
+	qui:replace `touse'=0 if `tvar'==. | `ivar'==. | `exp'==.
+	tempvar vals
+	sum `exp' if `touse' , meanonly
+	local lmin=r(min)
+	local lmax=r(max)
+	if `lmin'<0 | `lmax'>1 {
+			display in r "`exp' can only have values between 0 and 1"
+			error 4444
+	}
+	qui: {
+		tempvar aux auxd
+		qui: gen byte `auxd'=`exp'>0 if `exp'!=.
+		bysort `touse' `ivar' `auxd':egen `aux'=min(`tvar')
+		replace `aux'=0 if `exp'==0
+		by     `touse' `ivar':egen `varlist'=max(`aux')
+		replace `varlist'=. if `exp'==. | !`touse'
+	}
+	label var `varlist' "Group Variable based on `exp'"
 end

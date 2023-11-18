@@ -1,0 +1,27 @@
+d 'DISTILL': module to assess heterogeneous treatment effects in randomized controlled trials
+d
+d  distill implements the "Distillation Method" (Adams et al. 2022)
+d to estimate treatment effects within a desired number of strata
+d (quantiles) of the propensity score to determine whether a
+d randomized controlled trial (RCT) may have produced heterogeneous
+d treatment effects. Adams et al. (2022) found treatment effects in
+d the higher strata, corresponding to subjects who were more likely
+d to participate/engage in the intervention. 
+d
+d KW: randomized controlled trials
+d KW: heterogeneous treatment effects
+d KW: distillation
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20231117
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+d Author: John L. Adams,  Kaiser Permanente
+d Support: email 
+d
+f distill.ado
+f distill.sthlp
+f distill_example.dta
