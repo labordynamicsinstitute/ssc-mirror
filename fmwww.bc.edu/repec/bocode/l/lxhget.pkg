@@ -1,0 +1,18 @@
+d 'LXHGET': module to download datasets of lianxh.cn blogs or network 
+d
+d   lxhget provides a easy way to download datasets of lianxh.cn
+d blogs or network.    These datasets can have various suffixes,
+d such as .dta, xlsx, .do, .rar, .txt, .csv, .pkg, etc files. 
+d
+d KW: data management
+d KW: dataset access
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20231118
+d
+d Author: Yujun Lian, Department of Finance, Sun Yat-Sen University, China
+d Support: email arlionn@@163.com
+d
+f lxhuse.ado
+f lxhuse.sthlp

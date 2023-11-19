@@ -1,6 +1,6 @@
 {smcl}
 {hline}
-Help for {cmd:ivcloglog} version 2.0.0{center:William Liu (刘威廉)}{right:11 November 2023}
+Help for {cmd:ivcloglog} version 2.0.1{center:William Liu (刘威廉)}{right:17 November 2023}
 {hline}
 {vieweralsosee "ivprobit" "help ivprobit"}{...}
 {vieweralsosee "cloglog" "help cloglog"}{...}

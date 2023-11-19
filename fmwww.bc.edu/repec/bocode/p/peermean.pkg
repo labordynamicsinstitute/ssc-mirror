@@ -1,0 +1,20 @@
+d 'PEERMEAN': module to compute mean of Peer firms
+d
+d      Suppose there are 4 firms in an industry with output y {1,
+d 2, 3, 4}. They are peers of each other.  When we consider    firm
+d A, its peers include firm B, firm C and firm D. The mean of
+d output of firm A's peers equals y_mean{-A} = (2+3+4)/3. 
+d
+d KW: mean
+d KW: peers
+d KW: firm data
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20231118
+d
+d Author: Yujun Lian, Department of Finance, Sun Yat-Sen University, China
+d Support: email arlionn@@163.com
+d
+f peermean.ado
+f peermean.sthlp

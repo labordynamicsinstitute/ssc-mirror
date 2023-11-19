@@ -1,6 +1,4 @@
-
-*! v 1.02 
-*! Update: 20210519
+*! version 1.4  11Sep2023
 *! www.lianxh.cn, StataChina@163.com
 *! Codes from -bcuse.ado- by Prof. C.F. Baum have been incorporated
 
@@ -8,7 +6,7 @@
 prog define lxhuse
 	version 11
 	syntax [anything(name = FileName)]  ///
-	       [, CLEAR noDesc Save REPLACE Url(string) ]
+	       [, CLEAR Desc Save REPLACE Url(string) ]
 	
 
 	if "`FileName'" == ""{  // browse dataset list
@@ -16,8 +14,18 @@ prog define lxhuse
 		exit
 	}
 	
+	if strpos("`FileName'", ".dta") == 0 & strpos("`FileName'", ".zip") == 0{
+		local FileName = "`FileName'" + ".dta"
+	}
+	
 	if "`url'" == ""{
-	    local DataURL "https://file.lianxh.cn/data"  // 连享会数据存放网址
+		mata: vfile = cat("https://file.lianxh.cn/data/data_catalogue.txt")
+		capt mata: st_local("DataURL", select(vfile, regexm(vfile,`"`FileName'"')))
+		if "`DataURL'" == ""{
+			di as err _n "Error: `FileName' not found."
+			di as text _col(3) `"o  To view the filelist, {browse "https://gitee.com/arlionn/data/blob/master/data_catalogue_md.md":Click here}"'			
+			exit 
+		}
 	}
 	else{
 	    local DataURL "`url'"
@@ -30,10 +38,10 @@ prog define lxhuse
 	* http://fmwww.bc.edu/ec-p/data/wooldridge  // lxhuse.ado
 	
 	if regexm("`FileName'", ".+.zip$") {
-		capt copy "`DataURL'/`FileName'" ., replace
+		capt copy "`DataURL'" ., replace
 		if _rc != 0 {
 			di as err _n "Error: `FileName' not found."
-			di as text _col(3) `"o  To view the filelist, {browse "https://gitee.com/lianxh/data/tree/master/data01":Click here}"'			
+			di as text _col(3) `"o  To view the filelist, {browse "https://gitee.com/arlionn/data/blob/master/data_dty.md":Click here}"'			
 			exit 
 		}
 		qui unzipfile "`FileName'", replace
@@ -41,9 +49,10 @@ prog define lxhuse
 		capt use `fn', `clear'
 	}
 	else {
-		capt use "`DataURL'/`FileName'", `clear'
+		use "`DataURL'", `clear'
 		local fn "`FileName'"  // for option -save-		
 	}
+	
 	if _rc != 0 {
  		if _rc == 4 {
  			di as err _n "Error: data in memory would be lost. Use" as text " lxhuse `FileName', clear" as error " to discard changes."
@@ -57,12 +66,12 @@ prog define lxhuse
 			}	
 		    di as err _n "Error: file `FileName' not found or the extracted file is not in Stata format. "
 			di as text _col(3) `"o  Use - {stata "help lxhget":lxhget} `FileName'`suffix' to download .xlsx, .do, .rar, .txt, .csv, etc files."' 
-		    di as text _col(3) `"o  To view the filelist, {browse "https://gitee.com/lianxh/data/tree/master/data01":Click here}"'			
+		    di as text _col(3) `"o  To view the filelist, {browse "https://gitee.com/arlionn/data/blob/master/data_catalogue_md.md":Click here}"'			
 		}
 		exit
 	}
 	
-	if "`desc'" != "nodesc" { 
+	if "`desc'" == "desc" { 
 		describe
 	}
 	
@@ -89,7 +98,7 @@ end
 program define br_datalist
 version 11
 
-	  dis _col(5) "View: " `"{browse "https://gitee.com/lianxh/data/tree/master/data01": dataset list}"' ///
+	  dis _col(5) "View: " `"{browse "https://gitee.com/arlionn/data/blob/master/data_catalogue_md.md": dataset list}"' ///
 	      _skip(4) `"{browse "https://www.lianxh.cn": blog list}"'
 
 end

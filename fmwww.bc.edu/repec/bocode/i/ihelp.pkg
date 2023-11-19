@@ -14,7 +14,7 @@ d KW: programming
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20210617
+d Distribution-Date: 20231118
 d
 d Author: Yujun Lian, Department of Finance, Sun Yat-Sen University, China
 d Support: email arlionn@@163.com
@@ -23,5 +23,6 @@ d Author: Yongli Chen, Antai College of Economics and Management, Shanghai Jiao 
 d Support: email yongli_chan@@163.com
 d
 f ihelp.ado
+f ../h/hhelp.ado
 f ihelp.sthlp
 f ihelp_cn.sthlp

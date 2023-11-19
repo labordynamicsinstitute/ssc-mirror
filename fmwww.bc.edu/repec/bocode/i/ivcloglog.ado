@@ -10,9 +10,12 @@ v.2.0.0 -- 11 November 2023
 (3) Replay functionality: previous estimation output is replayed after inputting "ivcloglog".
 (4) Modified output for improved clarity.
 (5) Bug fixes and minor tweaks.
+
+v.2.0.1 -- 17 November 2023
+(1) Bug fix for when multiple endogenous variables are supplied with -endogenous()-
 */
 
-*! Version 2.0.0 -- William Liu (刘威廉) -- 11 November 2023
+*! Version 2.0.1 -- William Liu (刘威廉) -- 17 November 2023
 *! ivcloglog -- Complementary log-log model with endogenous covariates (either continuous or functions of observed continuous covariates), instrumented via the control function approach (i.e., 2SRI)
 *!
 *! Syntax:
@@ -335,7 +338,7 @@ program parse_remaining_opt, sclass		// Parses -auxiliary()- and also checks for
 	}
 	else {
 		local endogenous : list uniq endogenous				// Check for duplicates
-		local num_endo : word count "`endogenous'"
+		local num_endo : word count `endogenous'			// Should not have quotes otherwise will return 1
 	}
 	
 	sreturn local allinst "`exogvars' `extinst'"
@@ -413,7 +416,6 @@ program define iden_check_and_fvexpand_2, rclass
 	// Constants are never flagged for omission. Since we focus on the variables that are flagged here, we don't need to worry about constants.
 	tempname temp exog_omit
 	
-	// Interestingly, -local exog_wordcount : word count "`exog'"- would incorrectly store 1 in exog_wordcount.
 	// Annoyingly, void matrices are allowed in Mata but not Stata, so I need to work around this.
 	if ("`exog'" != "") {
 		matrix `temp' = J(1, wordcount("`exog'"), 1)		// Annoyingly, -_ms_omit_info- only works with matrices

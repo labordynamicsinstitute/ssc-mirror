@@ -1,0 +1,30 @@
+d 'WWWHELP': module to display the help document in PDF format of the specified command via browsers
+d
+d      wwwhelp provides a quick and convenient way of opening
+d online HTML or PDF version of {Stata}'s official help files.	 
+d Since the built-in file opened with the official command help can
+d only be read through the Stata interface, which is not   
+d conducive to sharing and dissemination. wwwhelp fill this gap by
+d allowing help files to be read and used independent of    Stata.
+d The only thing needed to be done is adding a www before the help
+d to turn it into wwwhelp, then the documents that    can be opened
+d directly using help cmd command can also be opened online using
+d wwwhelp cmd, including both detailed PDF    versions and simple
+d HTML versions. 
+d
+d KW: help
+d KW: pdf
+d KW: browser
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20231118
+d
+d Author: Yujun Lian, Department of Finance, Sun Yat-Sen University, China
+d Support: email arlionn@@163.com
+d
+f wwwhelp.ado
+f wwwhelp.sthlp
+f wwwhelp_cn.sthlp
+f ../h/hhelp.ado
+f ../h/hhelp.sthlp

@@ -1,22 +1,22 @@
 *! version 1.2  16Nov2023
 *! version 1.06 2023/7/24 22:57
-*         2023/7/24 22:57  添加两个功能：ihelp_ms(MS剪切板) & Section定位
-*         2023/5/11 14:25  ihelp
-*         2023/4/23 22:11  BUG(Stata14, ihelp import eexcel) --> ihelp_similar line264
+*         2023/7/24 22:57  添加两个功能：wwwhelp_ms(MS剪切板) & Section定位
+*         2023/5/11 14:25  wwwhelp
+*         2023/4/23 22:11  BUG(Stata14, wwwhelp import eexcel) --> wwwhelp_similar line264
 *         2023/4/19 11:09  weixin option --> txt option
 *         2023/4/16 14:52  line 103 121: local hlp ([D] import_fred --> [D] import fred)
-*         2023/4/15 16:58  ihelp_ucap (error: ihelp stata) --> add lines: gen link_a
+*         2023/4/15 16:58  wwwhelp_ucap (error: wwwhelp stata) --> add lines: gen link_a
 *         2023/2/23 0:02   clipout support Windows, MacOS
 *         2023/2/22 11:23  !echo | set /p=text| clip
-*         2023/2/22 10:17, ihelp regress postestimation##estatvif
+*         2023/2/22 10:17, wwwhelp regress postestimation##estatvif
 *  v 1.03 2023/2/18 9:28   findfile, path(BASE)
 *         2023/2/17 21:18  add option  -web- 
 *         2021/8/23 15:01  add option  -latex-
 *  v 1.02 2021/5/19 11:51
 *! Author: Yongli Chen, Yujun Lian (arlionn@163.com)
 
-// cap program drop ihelp
-program define ihelp, rclass
+/* cap program drop wwwhelp */
+program define wwwhelp, rclass
 version 14.0
 
 	syntax [anything(everything)]  ///
@@ -59,7 +59,7 @@ version 14.0
     cap findfile `hlp'.sthlp, path(`"`Base'"')	 /*chg: Lian, 2023/2/18 9:36*/
 	*cap findfile `hlp'.sthlp // get the full name of the unrecognized parameter
 	if _rc != 0 { // ?help_alisa.maint (include "grogramming function")
-		ihelp_similar `hlp', sup
+		wwwhelp_similar `hlp', sup
 		local hlp1 = `"`r(fname)'"'
 		if "`hlp1'" != "" local hlp "`hlp1'"
 	}
@@ -79,13 +79,13 @@ version 14.0
 	}
 	
 	if `"`fname'"'=="" {
-		ihelp_ucap `hlp'
+		wwwhelp_ucap `hlp'
 		if `"`r(url)'"' != "" {
 			local url = `"`r(url)'"'
 			local pref = r(pref)
 		}
 		else {
-			ihelp_similar `hlp', sim c
+			wwwhelp_similar `hlp', sim c
 			if `r(N)'==0 {
 		        dis as error `"'`anything'' is not an official Stata command. See {stata `"help `anything'"'}, and {stata "help gs"}, {stata "help help"}"'
 				*dis as error `"'`anything'' is unrecognized. Only official Stata command is supported. "' 
@@ -93,7 +93,7 @@ version 14.0
 			}
 			else {
 				dis as error `"Please input the full name of the command to make the link to help file accurate and unique. See {stata `"help `anything'"'}"' _n
-				ihelp_similar `hlp', sim
+				wwwhelp_similar `hlp', sim
 			}
 			exit 0
 		}
@@ -126,16 +126,16 @@ version 14.0
 		local text_f3 [help `hlp'](`url')
 		local mtext_m [**[`=upper("`pref'")']** `hlp'](`url')
 		local mtext_w [`=upper("`pref'")'] `hlp': `url'
-		local mtext_latex \stihelp[`pref']{`hlp'}  // new command Latex text
+		local mtext_latex \stwwwhelp[`pref']{`hlp'}  // new command Latex text
 		local urlManual "https://www.stata.com/manuals/"
 		local mtext_Tex_full "\href{`url'}{\bfseries{[\MakeUppercase{`pref'}] `hlp'}}"
 		local link_ms `url'
 		// Note: 「\;」 表示Latex中的空格
 	/*
-	\newcommand{\stihelp}[2][r]{
+	\newcommand{\stwwwhelp}[2][r]{
 		\href{https://www.stata.com/manuals/#1#2.pdf}{\bfseries{[\MakeUppercase{#1}] #2}}
 	}
-	% Usesage in Latex: See \stihelp{regress} and \stihelp[xt]{xtreg}
+	% Usesage in Latex: See \stwwwhelp{regress} and \stwwwhelp[xt]{xtreg}
 	*/
 	}
 	else {
@@ -145,7 +145,7 @@ version 14.0
 		local text_f3 [help `hlp'](`url_web')
 		local mtext_m [**[`=upper("`pref'")']** `hlp'](`url_web')
 		local mtext_w [`=upper("`pref'")'] `hlp': `url_web'
-		local mtext_latex \stihelp[`pref']{`hlp'}  // new command Latex text
+		local mtext_latex \stwwwhelp[`pref']{`hlp'}  // new command Latex text
 		local mtext_Tex_full "\href{`url_web'}{\bfseries{[\MakeUppercase{`pref'}] `hlp'}}"  
 		local link_ms `url_web'
 	}
@@ -180,7 +180,7 @@ version 14.0
 			clipout "`mtext_Tex_full'", `clipoff' `notip'
 		}
 		else if "`ms'"!="" {
-			ihelp_ms, url("`link_ms'") b("[`=upper("`pref'")']") t("`hlp'") `clipoff'
+			wwwhelp_ms, url("`link_ms'") b("[`=upper("`pref'")']") t("`hlp'") `clipoff'
 		}
 	}
 	return local link_f3 `text_f3'   	  // Format(3)
@@ -208,7 +208,7 @@ end
 *  https://www.alphr.com/echo-without-newline/
 *  https://linuxhandbook.com/echo-without-newline/
 
-// cap program drop clipout
+/* cap program drop clipout */
 program define clipout
 
     syntax anything [, Clipoff NOTIP]
@@ -245,9 +245,9 @@ end
 
 
 
-*-------------------------------------------------------- ihelp_similar.ado ----
-// cap program drop ihelp_similar
-program define ihelp_similar, rclass
+*-------------------------------------------------------- wwwhelp_similar.ado ----
+// cap program drop wwwhelp_similar
+program define wwwhelp_similar, rclass
 
 	syntax anything(everything)[, SIMilar SUPplement Count]
 	
@@ -295,7 +295,7 @@ program define ihelp_similar, rclass
 		forvalues k = 1/`cnt' {
 			local hlp = v2[`k']
 // 			local hlp = v1[`k']
-			local dis_text `dis_text' {stata `"ihelp `hlp'"': `hlp'} | 
+			local dis_text `dis_text' {stata `"wwwhelp `hlp'"': `hlp'} | 
 		}
 		local dis_text = substr(`"`dis_text'"', 1, strlen(`"`dis_text'"')-2)
 		local add_s = cond(`cnt'>1, "s", "")
@@ -309,9 +309,9 @@ end
 *-----------------------------------------
 
 
-*----------------------------------------------------------- ihelp_ucap.ado ----
-// cap program drop ihelp_ucap
-program define ihelp_ucap, rclass
+*----------------------------------------------------------- wwwhelp_ucap.ado ----
+// cap program drop wwwhelp_ucap
+program define wwwhelp_ucap, rclass
 	syntax anything(everything)
 	local hlp = subinstr("`anything'", " ", "_", .)
 	clear
@@ -353,15 +353,15 @@ end
 *-----------------------------------------
 
 
-*----------------------------------------------------------- ihelp_ms.ado ----
-// cap program drop ihelp_ms
-program define ihelp_ms, rclass
+*----------------------------------------------------------- wwwhelp_ms.ado ----
+// cap program drop wwwhelp_ms
+program define wwwhelp_ms, rclass
 	//clipbord text
 	syntax, URL(string) [Bold(string) Text(string) Clipoff]
 	if "`clipoff'" ~= ""{
 		exit 
 	}
-	local text_ws <html><body><!--StartFragment--><a href='http://fmwww.bc.edu/repec/bocode/i/`url''><strong>`bold'</strong> `text'</a><!--EndFragment--></body></html>
+	local text_ws <html><body><!--StartFragment--><a href='`url''><strong>`bold'</strong> `text'</a><!--EndFragment--></body></html>
 	local ws_start: display %09.0f strpos(`"`text_ws'"', "<html>")
 	local ws_end: display %09.0f strpos(`"`text_ws'"', "</html>") + strlen("</html>")
 	local ws_startf: display %09.0f strpos(`"`text_ws'"', "<!--StartFragment-->") + strlen("<!--StartFragment-->")
@@ -409,13 +409,13 @@ end
 
   2023/2/18 0:45 (xxx), update: --------------------------------to be ...-------
   ?????
-  - bug: ihelp varlist, m 无前缀[U]的问题（修改 ihelp_ucap modular）（原 []varlist，现[U]varlist）
-  - bug: ihelp disp, m 无法显示命令全称的问题（原 [P]disp，现 [P]display）
+  - bug: wwwhelp varlist, m 无前缀[U]的问题（修改 wwwhelp_ucap modular）（原 []varlist，现[U]varlist）
+  - bug: wwwhelp disp, m 无法显示命令全称的问题（原 [P]disp，现 [P]display）
   - web 选项的输出链接修改（原：pdf链接，现：web链接）
   - 错误提示信息和警告信息
-	+ 官方命令识别（修改 ihelp_similar 命令，添加 Count option）
+	+ 官方命令识别（修改 wwwhelp_similar 命令，添加 Count option）
 	+ 区别两类错误信息：非官方命令 vs 过短导致无法唯一识别的官方命令
-	+ 添加仅输入 ihelp 的提示信息
+	+ 添加仅输入 wwwhelp 的提示信息
   - 自定制配文
     + 预设定（添加 Format(integer 0) option），增加三个预设定配文方式
 
@@ -439,7 +439,7 @@ end
   2021/5/2 00:08 (yongli), update:
 	- adjust the order of each module
 	- compatible with stata16
-	- ihelp_similar modular: list similar commands
+	- wwwhelp_similar modular: list similar commands
 
   2021/4/28 00:59 (yongli), update: 
 	- handles the case of command abbreviation
@@ -453,10 +453,10 @@ end
    要全面统计一下[docs/Stata_cmd_PDF_online_Items.md] 文件中【anything】不是
    单个单词的情形有哪些？如果不多，可以用 if 语句解决，否则可以找找规律
    
-    - ihelp twoway scatter
+    - wwwhelp twoway scatter
 	- 
     if wordcount(cmd)>1{
-	   cap ihelp cmd
+	   cap wwwhelp cmd
 	   if _rc{
 	      
 	   }

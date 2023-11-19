@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.02 19may2021}{...}
+{* *! version 1.4  11Sep2023}{...}
 {cmd:help lxhuse}
 {hline}
 
@@ -21,7 +21,7 @@ see {stata "help lianxh":help lianxh}.{p_end}
 [
 {it:filename}  
 {cmd:,}
-{cmdab:nod:esc}
+{cmdab:d:esc}
 {cmd:clear}
 {cmdab:s:ave}
 {cmd:replace}
@@ -33,10 +33,8 @@ see {stata "help lianxh":help lianxh}.{p_end}
 {synoptset 10}{...}
 {synopthdr:Options}
 {synoptline}
-{synopt:{cmdab:nodesc}}
-the dataset should not be described after loading.
-By default, the {cmd:describe} command is automatically issued after the dataset is
-loaded.
+{synopt:{cmdab:desc}}
+describe the dataset.
 {p_end}
 {synopt:{cmdab:clear}}
 clear Stata's memory before loading the new dataset.
@@ -68,7 +66,7 @@ in blogs of {browse "https://www.lianxh.cn":lianxh.cn}.
 Those blogs can be easily searched with {stata "help lianxh":lianxh} command in Stata Command Window.
 
 {pstd}To use the {bf:auto_test.dta} dataset, give the command {bf:lxhuse auto_test}. 
-If you receive an error message, check the {browse "https://gitee.com/lianxh/data/tree/master/data01":web page} listing
+If you receive an error message, check the {browse "https://gitee.com/arlionn/data/blob/master/data_dty.md":web page} listing
 these datasets.
 
 {pstd}If a Stata data file has been saved in .zip format on the server (usually because 
@@ -78,7 +76,7 @@ will be copied to your working directory, unzipped, and read into Stata.
 {pstd}If the dataset is declared as a timeseries or panel, the {cmd:tsset} command will be 
 issued to display those characteristics.
 
-{pstd}The {bf:anciliary files} can be downloaded using {stata "help lxh":lxh get} command.
+{pstd}The {bf:anciliary files} can be downloaded using {stata "help lxhget":lxhget} command.
 
 
 {title:Examples} 
@@ -86,7 +84,6 @@ issued to display those characteristics.
 {phang}{stata "lxhuse" : . lxhuse} {space 6} // list datasets{p_end}
 {phang}{stata "lxhuse auto_test" : . lxhuse auto_test}{p_end}
 {phang}{stata "lxhuse auto_test, clear" : . lxhuse auto_test, clear}{p_end}
-{phang}{stata "lxhuse auto_test, nodesc" : . lxhuse auto_test, nodesc}{p_end}
 {phang}{stata "lxhuse auto_test.zip, clear" : . lxhuse auto_test.zip, clear}{p_end}
 
 
@@ -110,12 +107,12 @@ Blog: {browse "https://www.lianxh.cn":lianxh.cn} {break}
 {pstd}
 
 {synoptset 30 }{...}
+{synopt:{help lxhget} (if installed)} {stata ssc install lxhget} (to install){p_end}
 {synopt:{help lianxh} (if installed)} {stata ssc install lianxh} (to install){p_end}
 {synopt:{help bdiff} (if installed)} {stata ssc install bdiff} (to install){p_end}
-{synopt:{help hhi5} (if installed)} {stata ssc install hhi5} (to install){p_end}
 {synopt:{help songbl} (if installed)} {stata ssc install songbl} (to install){p_end}
 {synopt:{help xtbalance} (if installed)} {stata ssc install xtbalance} (to install){p_end}
-{synopt:{help imusic} (if installed)} {stata ssc install imusic} (to install){p_end}
+{synopt:{help ihelp} (if installed)} {stata ssc install ihelp} (to install){p_end}
 {p2colreset}{...}
 
 
@@ -126,6 +123,5 @@ Online:
 {help use}, 
 {help webuse},
 {help net get}, 
-{help bcuse} (if installed),
-{help lxh} (if installed).
+{help bcuse} (if installed).
 

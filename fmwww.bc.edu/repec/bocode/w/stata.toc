@@ -56,4 +56,5 @@ p wtd_perc module to calculate percentile of inter-arrival density based on the 
 p wtdttt module to estimate parameters of the ordinary and reverse Waiting Time Distribution (WTD) by maximum likelihood
 p wtp module to estimate confidence intervals for willingness to pay measures
 p wtpcikr module to estimate Krinsky and Robb Confidence Intervals for Mean and Median Willingness to Pay
+p wwwhelp module to display the help document in PDF format of the specified command via browsers
 p wyoung module to perform multiple testing corrections
