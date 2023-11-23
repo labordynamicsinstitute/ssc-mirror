@@ -13,7 +13,7 @@ as well as summary measures of these regressions' robustness to heterogeneous tr
 {marker syntax}{...}
 {title:Syntax}
 
-{p 4 8}{cmd:twowayfeweights Y G T D} {if}
+{p 4 8}{cmd:twowayfeweights Y G T D [D0]} {if}
 [{cmd:,}
 {cmd:type(}{it:string}{cmd:)}
 {cmd:summary_measures}
@@ -51,6 +51,17 @@ and {cmd:D} is the first difference of the treatment
 if one wants to estimate the weights attached to the first-difference regression.
 {p_end}
 
+{p 4 8}
+If {cmd:type(}{it:fdTR}{cmd:)} is specified in the option {cmd:type} below,
+then the command requires a fifth argument, {cmd:D0}.
+{cmd:D0} is the mean of the treatment in group g and at period t.
+It should be non-missing at the first period
+when a group appears in the data
+(e.g. at t=1 for the groups that are in the data from the beginning),
+and for all observations for which the first-difference of
+the group-level mean outcome and treatment are non missing.
+{p_end}
+
 {marker options}{...}
 {title:Options}
 
@@ -73,7 +84,13 @@ effect does not change over time.
 {p_end}
 
 {p 4 8}
-{cmd: summary_measures} displays complementary results from the computation of the weights. Specifically, the option outputs: ({it:i}) the point estimate of the coefficient on the {cmd:D} variable from a TWFE regression, ({it:ii}) the minimum value of the standard deviation of the ATEs compatible with the coefficient from the TWFE regression and ATE across all treated (g,t) cells being equal to zero, ({it:iii}) the minimum value of the standard deviation of the ATEs compatible with the coefficient from the TWFE regression and ATE across all treated (g,t) cells having different signs (this is computed only if the sum of negative weights is different from 0). See the FAQ section for other details.
+{cmd: summary_measures} displays complementary results from the computation of the weights. 
+Specifically, the option outputs: ({it:i}) the point estimate of the coefficient on the {cmd:D} variable from a TWFE regression, 
+({it:ii}) the minimum value of the standard deviation of the ATEs compatible with the coefficient from the TWFE regression 
+and ATE across all treated (g,t) cells being equal to zero, ({it:iii}) the minimum value of the 
+standard deviation of the ATEs compatible with the coefficient from the TWFE regression and ATE across 
+all treated (g,t) cells having different signs (this is computed only if the sum of negative weights is 
+different from 0). See the FAQ section for other details.
 
 {p 4 8}
 {cmd:test_random_weights} when this option is specified, the command estimates
@@ -206,6 +223,23 @@ assume that the treatment effects of (g,t) cells are drawn from a uniform distri
   If the treatment effects of (g,t) cells are all negative, they cannot follow a normal distribution, so we do not discuss that possibility here.
 {p_end}
 
+{marker example}{...}
+{title:Example}
+
+The following example is based on data from F. Vella and M. Verbeek (1998), "Whose Wages Do Unions Raise? A Dynamic Model of Unionism and Wage Rate Determination for Young Men". 
+Results and further details about the estimation below can be found in Section V.C of de Chaisemartin & D'Haultfoeuille (2020a).
+Run the following line to load the dataset:
+
+{phang2}use "https://raw.githubusercontent.com/chaisemartinPackages/twowayfeweights/main/wagepan_twfeweights.dta", clear{p_end}
+
+The next line estimates the weights from a TWFE regression of log wage (Y) on union status (D), individual worker (G) and year (T) fixed effects:
+
+{phang2}{stata twowayfeweights lwage nr year union, type(feTR) test_random_weights(educ) summary_measures}{p_end}
+
+The next line performs the same exercise using first differences of outcome and treatment:
+
+{phang2}{stata twowayfeweights diff_lwage nr year diff_union union, type(fdTR) test_random_weights(educ) summary_measures}{p_end}
+
 {marker references}{...}
 {title:References}
 
@@ -222,6 +256,7 @@ assume that the treatment effects of (g,t) cells are drawn from a uniform distri
 {p 4 8}Xavier D'Haultfoeuille, CREST, Palaiseau, France.{p_end}
 {p 4 8}Antoine Deeb, University of California at Santa Barbara, Santa Barbara, California, USA.{p_end}
 
+{p 4 8}The development of this package was funded by the European Union (ERC, REALLYCREDIBLE,GA N°101043899).{p_end}
 
 {title:Contact}
 

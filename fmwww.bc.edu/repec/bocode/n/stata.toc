@@ -3,6 +3,7 @@ p nbercycles module to generate graph command (and optionally graph) timeseries 
 p nbfit module for fitting negative binomial distribution by maximum likelihood
 p nbinreg module to estimate negative binomial regression models
 p nbstrat module to estimate Negative Binomial with Endogenous Stratification
+p nca module to perform Necessary Condition Analysis (NCA)
 p ncf modules related to the noncentral F distribution
 p nct modules related to the noncentral t distribution
 p ndbci module extending ci for single variable with exposure time.

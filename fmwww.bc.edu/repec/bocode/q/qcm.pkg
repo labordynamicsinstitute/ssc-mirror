@@ -1,0 +1,35 @@
+d 'QCM': module to implement quantile control method (QCM) via Random Forest
+d
+d      qcm implements quantile control method (QCM) via random
+d forest (Chen, Xiao and Yao, 2023), which provides confidence	 
+d intervals for treatment effects in panel data with a single
+d treated unit using quantile random forest (Meinshausen, 2006).   
+d As a nonparametric ensemble learning, QCM is suitable for
+d high-dimensional data, and robust to heteroskedasticity,   
+d autocorrelation and model misspecification.  Simulations in Chen,
+d Xiao and Yao (2023) show that for 95% nominal confidence   
+d level, the empirical coverage rate can reach above 90% if the
+d number of pretreatment periods is 30 or larger.  qcm also   
+d supports placebo tests using fake treatment units and/or fake
+d treatment time as alternative methods for inference and   
+d robustness check. 
+d
+d KW: quantile estimates
+d KW: random forest
+d KW: treatment effects
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20231122
+d
+d Author: Guanpeng Yan,  Shandong University of Finance and Economics
+d Support: email guanpengyan@@yeah.net
+d
+d Author: Qiang Chen ,  Shandong University
+d Support: email qiang2chen2@@126.com
+d
+f qcm.ado
+f qcm.sthlp
+f ../l/lqcm.mlib
+f ../g/growth.dta
+f ../c/carbontaxgr.dta

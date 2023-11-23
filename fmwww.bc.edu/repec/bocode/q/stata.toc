@@ -1,5 +1,6 @@
 p qap module to perform quadratic assignment procedure
 p qbeta module to generate quantile-quantile plot for data vs fitted beta distribution
+p qcm module to implement quantile control method (QCM) via Random Forest
 p qconvert module to convert a raw Q-sort file into a new Q-sort file which is ready for analysis by QFACTOR program
 p qcount program to fit quantile regression models for count data
 p qenv module to generate quantile envelopes for quantile-quantile plots

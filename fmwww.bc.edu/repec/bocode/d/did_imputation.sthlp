@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 3 2023-04-23}{...}
+{* *! version 3.1 2023-11-22}{...}
 {vieweralsosee "reghdfe" "help reghdfe"}{...}
 {vieweralsosee "event_plot" "help event_plot"}{...}
 {viewerjumpto "Syntax" "did_imputation##syntax"}{...}
@@ -155,11 +155,12 @@ for the relevant units---otherwise proper balancing is impossible and an error w
 Note that excluded units will still be used in Step 1 (e.g. to recover the period FEs) and for pre-trend tests.{p_end}
 
 {phang}{opt het:by(varname)}: reports estimands separately by subgroups defined by the discrete (non-negative integer or string) 
-variable provided. Use this option or {opt project} for treatment effect heterogeneity analyses.{p_end}
+variable provided. This is the preferred option for treatment effect heterogeneity analyses (but see also {opt project}).{p_end}
 
-{phang}{opt pro:ject(varlist)}: projects (i.e., regresses) treatment effect estimates on a set of numeric variables provided 
-and reports the constant and slope coefficients. The variables should not be collinear. 
-Use this option or {opt hetby} for treatment effect heterogeneity analyses.{p_end}
+{phang}{opt pro:ject(varlist)}: projects (i.e., regresses) treatment effect estimates on a set of numeric variables 
+and reports the constant and slope coefficients. The variables should not be collinear. (To analyse effect heterogeneity
+by subgroup, option {opt hetby} is preferred. Note that standard errors may not agree exactly between {opt hetby} and
+{opt project}.){p_end}
 
 {phang}{opt minn(#)}: the minimum effective number (i.e. inverse Herfindahl index) of treated observations,
 below which a coefficient is suppressed and a warning is issued. 
@@ -359,11 +360,16 @@ Instead specify the estimand of your interest via {opt wtr}.{p_end}
 
 {pmore}HOWEVER, standard errors will be incorrect. Instead, use {opt hetby} or {opt project}:{p_end}
 {pmore}{cmd:. did_imputation Y i t Ei, hetby(female)}{p_end}
-{pmore}will produce the ATT for males (tau_0) and females (tau_1). Alternatively,{p_end}
+{pmore}will produce the ATT for males (tau_0) and females (tau_1). You can further use{p_end}
+{pmore}{cmd:. lincom tau_1-tau_0}{p_end}
+{pmore}to compute the difference between them with a SE. Alternatively,{p_end}
 {pmore}{cmd:. did_imputation Y i t Ei, project(female)}{p_end}
 {pmore}will produce the ATT for males (tau_cons) and the difference in ATTs between females and males (tau_female).{p_end}
 
 {pmore}Both options can be combined with {opt horizons} to do heterogeneity analysis within each horizon.{p_end}
+
+{pmore}If you also want to allow different period effects for the two groups, you can use the {opt fe()} option as usual, e.g.:{p_end}
+{pmore}{cmd:. did_imputation Y i t Ei, hetby(female) fe(i t#female)}{p_end}
 		
 {phang}21) {ul:Repeated cross-sections}: {p_end}
 {pmore}When in each period you have a different sample of individiuals {it:i} in the same groups (e.g. regions), 
@@ -429,5 +435,5 @@ We thank Kyle Butts for the help in preparing this helpfile.
 {title:Author}
 
 {pstd}
-Kirill Borusyak (UCL Economics), k.borusyak@ucl.ac.uk
+Kirill Borusyak (UC Berkeley), k.borusyak@berkeley.edu
 

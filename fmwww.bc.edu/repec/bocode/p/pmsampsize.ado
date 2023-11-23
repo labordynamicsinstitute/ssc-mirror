@@ -35,12 +35,14 @@
 *	using variance 								 *
 *	Updated: 9/6/23								 *
 *	- altered output for binary crit.3 shrinkage *
+*	Updated: 20/11/23							 *
+*	- cox-snell/nagelkerke's r-sq options		 *
+*	- cont. crit.3 simplified (234+p) 			 *
 *												 *
-*  1.3.0 J. Ensor								 *
+*  1.3.1 J. Ensor								 *
 **************************************************
 
-*! 1.3.0 J.Ensor 09Jun2023
-
+*! 1.3.1 J.Ensor 20Nov2023
 
 program define pmsampsize, rclass
 
@@ -50,6 +52,8 @@ version 12.1
 	C = use pmsampsize for continuous outcome model sample size
 	S = use pmsampsize for survival outcome model sample size
 	B = use pmsampsize for binary outcome model sample size
+	CSRSQUARED = Cox-Snell R-sq adjusted
+	NAGRSQUARED = Nagelkerke's R-sq adjusted
 	RSQUARED = R-sq adjusted
 	PARAMETERS = number of parameters to be estimated in model
 	N = fixed sample size of existing dataset for development
@@ -69,7 +73,8 @@ version 12.1
 */
 
 syntax ,   TYPE(string) ///
-			[RSQuared(real 0) Shrinkage(real 0.9) ///
+			[CSRSQuared(real 0) NAGRSQuared(real 0) ///
+			RSQuared(real 0) Shrinkage(real 0.9) ///
 			Parameters(int 0) N(int 0) ///
 			CSTATistic(real 0) SEED(int 123456) ///
 			RATE(real 0) MEANFup(real 0) TIMEpoint(real 0) ///
@@ -80,10 +85,35 @@ syntax ,   TYPE(string) ///
 ***********************************************
 
 if "`type'"=="b" {
+	local rsquared = 0
+	if `nagrsquared'!=0 {
+		
+		if `csrsquared'!=0 {
+			di as err "Only one of csrsquared() or nagrsquared() can be specified"
+			error 103
+		}
+		
+		local E = `parameters'*`prevalence'
+		local lnLnull = (`E'*(ln(`E'/`parameters')))+((`parameters'-`E')*(ln(1-(`E'/`parameters'))))
+		local max_r2a = (1- exp((2*`lnLnull')/`parameters'))
+		local rsquared = `nagrsquared'*`max_r2a'
+		local rsquared : di %4.3f `rsquared'
+	}
+	
+	if `csrsquared'!=0 {
+		if `nagrsquared'!=0 {
+			di as err "Only one of csrsquared() or nagrsquared() can be specified"
+			error 103
+		}
+		
+		local rsquared = `csrsquared'
+	}
+	
+	
 	if `cstatistic'!=0 {
 		
 		if `rsquared'!=0 {
-			di as err "Only one of rsquared() or cstatistic() can be specified"
+			di as err "Only one *rsquared() option or the cstatistic() can be specified"
 			error 103
 		}
 		
@@ -94,7 +124,7 @@ if "`type'"=="b" {
 	}
 	else {
 		if `rsquared'==0 {
-			di as err "One of rsquared() or cstatistic() must be specified"
+			di as err "One of csrsquared() or nagrsquared() or cstatistic() must be specified"
 			error 103
 		}
 	}
@@ -163,8 +193,31 @@ if "`type'"=="b" {
 	else if "`type'"=="s" {
 		
 ***********************************************
-	if `rsquared'==0 {
-			di as err "rsquared() must be specified"
+local rsquared = 0
+	if `nagrsquared'!=0 {
+		
+		if `csrsquared'!=0 {
+			di as err "Only one of csrsquared() or nagrsquared() can be specified"
+			error 103
+		}
+		
+		local events = `parameters'*`rate'*`meanfup'
+		local lnLnull = (`events'*(ln(`events'/`parameters')))-`events'
+		local max_r2a = (1- exp((2*`lnLnull')/`parameters'))
+		local rsquared = `nagrsquared'*`max_r2a'
+		local rsquared : di %4.3f `rsquared'
+	}
+	
+	if `csrsquared'!=0 {
+		if `nagrsquared'!=0 {
+			di as err "Only one of csrsquared() or nagrsquared() can be specified"
+			error 103
+		}
+		
+		local rsquared = `csrsquared'
+	}
+	else if `rsquared'==0 {
+			di as err "One of csrsquared() or nagrsquared() must be specified"
 			error 103
 		}
 
@@ -287,6 +340,7 @@ local n3 = `parameters'
 	local epp3 = `E3'/`parameters'
 	local EPP_3 = round(`epp3',.01)
 	
+	local n2_high = 0
 	if `n2'>`n1' {
 		local n2_high = 1
 		}
@@ -436,7 +490,12 @@ local n1 = `parameters'+2
 	local SPP_2 = round(`spp_2',.01)
 		
 	// criteria 3 - precise estimate of residual variance
-	local n3 = 234
+	local n3 = 234 + `parameters'
+	local shrinkage_3 = 1 + ((`parameters'-2)/(`n3'*(ln(1-((`r2a'*(`n3'-`parameters'-1))+`parameters')/(`n3'-1)))))
+	local spp_3 = `n3'/`parameters'
+	local SPP_3 = round(`spp_3',.01)
+			
+/*
 	local df = `n3'-`parameters'-1
 	local chilow = `df'/(invchi2(`df',0.025))
 	local chiupp = (invchi2(`df',0.975))/`df'
@@ -466,6 +525,7 @@ local n1 = `parameters'+2
 			local spp_3 = `n3'/`parameters'
 			local SPP_3 = round(`spp_3',.01)
 			}
+*/
 	
 	// criteria 4 - precise estimation of intercept
 	local n4 = max(`n1',`n2',`n3')
@@ -519,7 +579,7 @@ return scalar parameters = `parameters'
 return scalar r2a = `r2a'
 return scalar SPP = `SPP_final'
 return scalar int_mmoe = `int_mmoe'
-return scalar var_mmoe = `resvar_mmoe'
+// return scalar var_mmoe = `resvar_mmoe'
 
 // output table & assumptions
 di as txt "NB: Assuming 0.05 acceptable difference in apparent & adjusted R-squared"
@@ -789,10 +849,7 @@ syntax ,  Cstatistic(real) PREValence(real) [SEED(int 123456)]
 	
 end
 
-/*
-cstat2rsq , c(.8) prev(.018) //seed(1234)
-ret list
-*/
+
 
 ******* start of binary fixed n program
 program define binary_ss_fixed_n, rclass
@@ -959,7 +1016,7 @@ foreach r of local res {
 	matrix Results[`i',6] = `DInag_r2'
 	matrix Results[`i',7] = `EPP_`r''
 	}
-	mat colnames Results = "Samp_size" "Shrinkage" "Parameter" "Rsq" "Max_Rsq" "Nag_Rsq" "EPP"
+	mat colnames Results = "Samp_size" "Shrinkage" "Parameter" "CS_Rsq" "Max_Rsq" "Nag_Rsq" "EPP"
 	mat rownames Results = "Criteria 1" "Criteria 2" "Criteria 3 *" "Final"
 
 matlist Results, lines(rowtotal)

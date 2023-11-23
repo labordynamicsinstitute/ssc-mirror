@@ -1,7 +1,7 @@
 *! did_imputation: Treatment effect estimation and pre-trend testing in staggered adoption diff-in-diff designs with an imputation approach of Borusyak, Jaravel, and Spiess (2023)
-*! Version: April 23, 2023
+*! Version: November 22, 2023
 *! Author: Kirill Borusyak
-*! Recent updates: convenient syntax for heterogeneity analyses, option to save residuals
+*! Recent updates: project() option can no longer be combined with autosample, which could lead to errors
 *! Citation: Borusyak, Jaravel, and Spiess, "Revisiting Event Study Designs: Robust and Efficient Estimation" (2023)
 program define did_imputation, eclass sortpreserve
 version 13.0
@@ -106,6 +106,10 @@ qui {
 	}
 	if ("`autosample'"!="" & "`hbalance'"!="") {
 		di as error "Autosample cannot be combined with hbalance. Please specify the sample explicitly"
+		error 184
+	}
+	if ("`autosample'"!="" & "`project'"!="") {
+		di as error "Autosample cannot be combined with project. Please specify the sample explicitly"
 		error 184
 	}
 	if ("`project'"!="" & "`hetby'"!="") {

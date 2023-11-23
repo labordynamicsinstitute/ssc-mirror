@@ -1,7 +1,7 @@
 
 {smcl}
 
-{* *! version 1.1.0 17May2021}
+{* *! version 1.2.0 09Jun2023}
 {cmd:help pmsampsize}
 {hline}
 
@@ -15,7 +15,8 @@
 
 {p 8 17 2}
 {cmd:pmsampsize} , {opt type(string)} 
-	[{opt rsq:uared(real 0)} {opt par:ameters(int 0)} {opt n(int 0)} {opt s:hrinkage(real 0.9)} 
+	[{opt csrsq:uared(real 0)} {opt nagrsq:uared(real 0)} {opt rsq:uared(real 0)} 
+	{opt par:ameters(int 0)} {opt n(int 0)} {opt s:hrinkage(real 0.9)} 
 	{opt rate(real 0)} {opt meanf:up(real 0)} {opt time:point(real 0)} 
 	{opt int:ercept(real 0)} {opt sd(real 0)} {opt prev:alence(real 0)} {opt mmoe(real 1.1)}
 	{opt cstat:istic(real 0)} 
@@ -25,7 +26,9 @@
 {synopthdr:pmsampsize_options}
 {synoptline}
 {synopt :{opt type(string)}}specifies the type of analysis for which sample size is being calculated{p_end}
-{synopt :{opt rsq:uared(real)}}expected value of the (Cox-Snell) R-squared of the developed model, based on previous evidence (e.g. an existing model){p_end}
+{synopt :{opt csrsq:uared(real)}}expected value of the Cox-Snell R-squared of the developed model, based on previous evidence {p_end}
+{synopt :{opt nagrsq:uared(real)}}expected value of the Nagelkerke's R-squared of the developed model, based on previous evidence {p_end}
+{synopt :{opt rsq:uared(real)}}expected value of the R-squared of the developed model, based on previous evidence {p_end}
 {synopt :{opt par:ameters(int)}}number of candidate predictor parameters for potential inclusion in the developed model{p_end}
 {synopt :{opt n(int)}}fixed sample size of existing dataset to be used for new model development{p_end}
 {synopt :{opt s:hrinkage(real 0.9)}}desired level of shrinkage (a measure of overfitting) in the developed model{p_end}
@@ -59,8 +62,6 @@ i) small overfitting defined by an expected shrinkage of predictor effects by 10
 ii) small absolute difference of 0.05 in the model's apparent and adjusted Nagelkerke's R-squared value, and 
 iii) precise estimation (within +/- 0.05) of the average outcome risk in the population for a key timepoint of interest for prediction.
 
-{pstd}NB: When specifying a binary outcome prediction model with 12 or fewer predictor parameters, an alternative approach by van Smeden et al. may be considered as {browse "https://mvansmeden.shinyapps.io/BeyondEPV/":presented here}
-
 {marker options}{...}
 {title:General Options}
 
@@ -68,15 +69,6 @@ iii) precise estimation (within +/- 0.05) of the average outcome risk in the pop
 {pmore}{opt c} specifies sample size calculation for a prediction model with a continuous outcome{p_end}
 {pmore}{opt b} specifies sample size calculation for a prediction model with a binary outcome{p_end}
 {pmore}{opt s} specifies sample size calculation for a prediction model with a survival (time-to-event) outcome{p_end}
-
-{phang}{opt rsquared(real)} specifies the expected value of the (Cox-Snell) R-squared of the new model, where R-squared is the percentage of variation in outcome values explained by the model.
-For example, the user may input the value of the (Cox-Snell) R-squared reported for a previous prediction model study in the same field. 
-If taking a value from a previous prediction model {it: development} study, users should input the model's {it: adjusted} R-squared value, not the apparent R-squared value, as the latter is optimistic (biased).
-However, if taking the R-squared value from an external validation of a previous model, the apparent R-squared can be used (as the validation data was not used for development, and so R-squared apparent is then unbiased).
-Note that for binary and survival outcome models, the {it: Cox-Snell} R-squared value is required; this is the generalised version of the well-known R-squared for continuous outcomes, based on the likelihood. 
-The papers by Riley et al. (see references) outline how to obtain the Cox-Snell R-squared value from published studies if they are not reported, using other information 
-(such as the C-statistic [see {opt cstatistic()} option below] or Nagelkerke's R-squared).
-Users should be conservative with their chosen R-squared value; for example, by taking the R-squared value from a previous model, even if they hope their new model will improve performance.
 
 {phang}{opt parameters(int)} specifies the number of candidate predictor parameters for potential inclusion in the new prediction model.
 Note that this may be larger than the number of candidate predictors, as categorical and continous predictors often require two or more parameters to be estimated.
@@ -88,6 +80,20 @@ See references below for further information.
 
 {marker options}{...}
 {title:Binary outcome options}
+
+{phang}{opt csrsquared(real)} specifies the expected value of the Cox-Snell R-squared of the new model, where this is the generalised version of the well-known R-squared for continuous outcomes, based on the likelihood.
+For example, the user may input the value of the Cox-Snell R-squared reported for a previous prediction model study in the same field. 
+If taking a value from a previous prediction model {it: development} study, users should input the model's {it: adjusted} R-squared value, not the apparent R-squared value, as the latter is optimistic (biased).
+However, if taking the R-squared value from an external validation of a previous model, the apparent R-squared can be used (as the validation data was not used for development, and so R-squared apparent is then unbiased).
+The papers by Riley et al. (see references) outline how to obtain the Cox-Snell R-squared value from published studies if they are not reported, using other information 
+(such as the C-statistic - see {opt cstatistic()} option below).
+Users should be conservative with their chosen R-squared value; for example, by taking the R-squared value from a previous model, even if they hope their new model will improve performance.
+
+{phang}{opt nagrsquared(real)} specifies the expected value of the Nagelkerke's R-squared of the new model, where this is the percentage of variation in outcome values explained by the model.
+For example, the user may input the value of the Nagelkerke's R-squared reported for a previous prediction model study in the same field. 
+If taking a value from a previous prediction model {it: development} study, users should input the model's {it: adjusted} R-squared value, not the apparent R-squared value, as the latter is optimistic (biased).
+However, if taking the R-squared value from an external validation of a previous model, the apparent R-squared can be used (as the validation data was not used for development, and so R-squared apparent is then unbiased).
+Users should be conservative with their chosen R-squared value; for example, by taking the R-squared value from a previous model, even if they hope their new model will improve performance.
 
 {phang}{opt n(int)} specifies the fixed sample size of an existing dataset to be used for the new model development. 
 When using this option {cmd: pmsampsize} calculates the maximum number of candidate predictor parameters that can be considered for potential inclusion in the new prediction model given the fixed sample size of the available dataset.
@@ -118,6 +124,12 @@ NB: time units must be the same as given for {opt timepoint}
 {marker options}{...}
 {title:Continuous outcome options}
 
+{phang}{opt rsquared(real)} specifies the expected value of the R-squared of the new model, where R-squared is the percentage of variation in outcome values explained by the model.
+For example, the user may input the value of the R-squared reported for a previous prediction model study in the same field. 
+If taking a value from a previous prediction model {it: development} study, users should input the model's {it: adjusted} R-squared value, not the apparent R-squared value, as the latter is optimistic (biased).
+However, if taking the R-squared value from an external validation of a previous model, the apparent R-squared can be used (as the validation data was not used for development, and so R-squared apparent is then unbiased).
+Users should be conservative with their chosen R-squared value; for example, by taking the R-squared value from a previous model, even if they hope their new model will improve performance.
+
 {phang}{opt intercept(real 0)} specifies the average outcome value in the population of interest e.g. the average blood pressure, or average pain score. 
 This could be based on a previous study, or on clinical knowledge.
 
@@ -139,7 +151,7 @@ See references below for further information.
 
 {pstd}Use {cmd: pmsampsize} to calculate the minimum sample size required to develop a multivariable prediction model for a binary outcome using 24 candidate predictor parameters. 
 Based on previous evidence, the outcome prevalence is anticipated to be 0.174 (17.4%) and a lower bound (taken from the adjusted Cox-Snell R-squared of an existing prediction model) for the new model's R-squared value is 0.288 {p_end}
-{phang2}{cmd:. }{stata pmsampsize, type(b) rsquared(0.288) parameters(24) prevalence(0.174)}{p_end}
+{phang2}{cmd:. }{stata pmsampsize, type(b) csrsquared(0.288) parameters(24) prevalence(0.174)}{p_end}
 
 {pstd}Now lets assume we could not obtain a Cox-Snell R-squared estimate from an existing prediction model, but instead had a C-statistic (0.89) reported for the existing prediction model. 
 We can use this C-statistic along with the prevalence to approximate the Cox-Snell R-squared using the approach of Riley et al. (2020). 
@@ -148,19 +160,19 @@ Use {cmd: pmsampsize} with the {opt cstatistic()} option instead of {opt rsquare
 
 {pstd}Now lets assume we have an existing dataset for developing a new multivariable prediction model, i.e. we have a fixed sample size (N). 
 Given a fixed sample size we can use pmsampsize to calculate the maximum number of candidate predictor parameters that can be considered during model development using the existing dataset. 
-To do this we use the {opt n()} option and do not specify the {opt parameters()} option. 
+To do this we use the {opt n()} option and do not specify the {opt parameters} option. 
 {p_end}
-{phang2}{cmd:. }{stata pmsampsize, type(b) rsquared(0.288) n(662) prevalence(0.174)}
+{phang2}{cmd:. }{stata pmsampsize, type(b) cstatistic(0.89) n(660) prevalence(0.174)}
 {p_end}
 
 {phang}
 {bf:Survial outcomes (Cox prediction models)}
 
 {pstd}Use {cmd: pmsampsize} to calculate the minimum sample size required for developing a multivariable prediction model with a survival outcome using 25 candidate predictors. 
-We know an existing prediction model in the same field has an R-squared adjusted of 0.051. 
+We know an existing prediction model in the same field has an Cox-Snell R-squared adjusted of 0.051. 
 Further, in the previous study the mean follow-up was 2.07 years, and overall event rate was 0.065.
 We select a timepoint of interest for prediction using the newly developed model of 2 years {p_end}
-{phang2}{cmd:. }{stata  pmsampsize, type(s) rsquared(0.051) parameters(25) rate(0.065) timepoint(2) meanfup(2.07)}{p_end}
+{phang2}{cmd:. }{stata  pmsampsize, type(s) csrsquared(0.051) parameters(25) rate(0.065) timepoint(2) meanfup(2.07)}{p_end}
 
 {phang}
 {bf:Continuous outcomes (Linear prediction models)}
@@ -182,7 +194,6 @@ We know an existing prediction model in the same field has an R-squared adjusted
 {synopt:{cmd:r(final_shrinkage)}}Expected shrinkage required{p_end}
 {synopt:{cmd:r(r2)}}Specified R-squared adjusted{p_end}
 {synopt:{cmd:r(max_r2)}}Maximum Cox-Snell R-squared possible (binary & survival models){p_end}
-{synopt:{cmd:r(nag_r2)}}Nagelkerke's R-squared given inputs (binary & survival models){p_end}
 {synopt:{cmd:r(EPP)}}Events per Predictor Parameter (binary & survival models){p_end}
 {synopt:{cmd:r(events)}}Minimum number of events required assuming input outcome proportion or outcome prevalence (binary & survival models){p_end}
 {synopt:{cmd:r(prevalence)}}Overall prevalence (binary models){p_end}
@@ -209,7 +220,7 @@ j.ensor@bham.ac.uk{p_end}
 
 {title:Acknowledgements}
 
-{phang}With thanks to Richard D Riley, Gary Collins, Glen Martin & Kym Snell{p_end}
+{phang}With thanks to Richard Riley, Gary Collins, Glen Martin & Kym Snell for helpful feedback{p_end}
 
 {marker reference}{...}
 {title:References}
@@ -227,9 +238,6 @@ Riley RD, Snell KIE, Ensor J, Burke DL, Harrell FE, Jr., Moons KG, Collins GS.
 Minimum sample size required for developing a multivariable prediction model: Part II binary and time-to-event outcomes. {it:Statistics in Medicine}. 2019.{p_end}
 
 {p 5 12 2}
-van Smeden M, Moons KG, de Groot JA, et al. Sample size for binary logistic prediction models: Beyond events per variable criteria. {it:Stat Methods Med Res}. 2019;28(8):2455-74.{p_end}
-
-{p 5 12 2}
 Riley, RD, Van Calster, B, Collins, GS. A note on estimating the Cox‐Snell R2 from a reported C statistic (AUROC) to inform sample size calculations for developing a prediction model with a binary outcome. 
 {it:Statistics in Medicine}. 2020.{p_end}
 
@@ -237,5 +245,5 @@ Riley, RD, Van Calster, B, Collins, GS. A note on estimating the Cox‐Snell R2 
 {title:Also see}
 
 {psee}
-Online: {helpb pmcalplot}, {helpb matlist}
+Online: {helpb pmvalsampsize}, {helpb pmcalplot}, {helpb matlist}
 {p_end}
