@@ -204,7 +204,7 @@ Note that this option only applies when {opt nofigure} is not specified.
 
 {phang2}* Implement in-time placebo test with the fake treatment time 2002q1, and save all produced graphs using prefix "growth" to the current path{p_end}
 {phang2}{cmd:. di tq(2002q1)}{p_end}
-{phang2}{cmd:. qcm gdp, trunit(9) trperiod(176) placebo(placebo(period(168))) savegraph(growth, replace)}{p_end}
+{phang2}{cmd:. qcm gdp, trunit(9) trperiod(176) placebo(period(168)) savegraph(growth, replace)}{p_end}
 
 {title:Examples 2: estimating the effect of carbon taxes on CO2 emissions in Sweden (Andersson, 2019)}
 

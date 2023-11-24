@@ -189,8 +189,11 @@ program qcm,  eclass sortpreserve
         mata: qcm_slevelsofsel("`timeVarStr'", "time_post", st_data(., "`timeVar'") :>= `trperiod')
         mata: qcm_slevelsofsel("`timeVarStr'", "time_tr", st_data(., "`timeVar'") :== `trperiod')
 		
-		mata: qcm("`varlist'", "`unit_all'", "`unit_tr'", "`time_all'", "`time_tr'", 0, `ntree', "`mtry'", "`maxdepth'" ///
+		cap mata: qcm("`varlist'", "`unit_all'", "`unit_tr'", "`time_all'", "`time_tr'", 0, `ntree', "`mtry'", "`maxdepth'" ///
 			, `minlsize', `seed', `minssize', `cilevel', `qtype', "`importance'" == "" ? 1 : 0)
+		if _rc {
+			exit
+		}
 		
 		di _newline "{txt}Parameters of random forest:"
 		mata: qcm_train_summary(`ntree', `mtry', "`maxdepth'", `minlsize', `seed', `minssize')
@@ -462,7 +465,7 @@ program qcm_placebo, eclass sortpreserve
 			foreach unit_placebo in `unit_ctrl'{
 				loc unit_tmp "`unit_placebo'"
 				di as res "`unit_placebo'"  as txt "..." _continue
-				mata: qcm("`varlist'", "`unit_all'", "`unit_placebo'", "`time_all'", "`time_tr'", 1, ///
+				cap mata: qcm("`varlist'", "`unit_all'", "`unit_placebo'", "`time_all'", "`time_tr'", 1, ///
 					`ntree', "`mtry'", "`maxdepth'", `minlsize', `seed', `minssize', `cilevel', `qtype', 0)
 				if _rc {
 						exit
@@ -569,7 +572,7 @@ program qcm_placebo, eclass sortpreserve
 				loc xline_pbo: word `pos' of `temp'
 				di as res "`time_pbo'" as txt "..." _continue
 				
-				mata: qcm("`varlist'", "`unit_all'", "`unit_tr'", "`time_all'", "`time_pbo'", 2, `ntree', "`mtry'" ///
+				cap mata: qcm("`varlist'", "`unit_all'", "`unit_tr'", "`time_all'", "`time_pbo'", 2, `ntree', "`mtry'" ///
 					, "`maxdepth'", `minlsize', `seed', `minssize', `cilevel', `qtype', 0)
 				if _rc {
 					exit
