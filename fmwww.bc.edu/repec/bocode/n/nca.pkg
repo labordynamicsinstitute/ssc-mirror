@@ -14,7 +14,7 @@ d KW: nca
 d
 d Requires: Stata version 15
 d
-d Distribution-Date: 20231122
+d Distribution-Date: 20231124
 d
 d Author: Daniele Spinelli, University of Milano Bicocca
 d Support: email daniele.spinelli@@unimib.it
@@ -27,6 +27,7 @@ d Support: email buijs@@rsm.nl
 d
 f nca.ado
 f nca_centiles.ado
+f nca_display.ado
 f nca_display_bottleneck_table.ado
 f nca_estimate.ado
 f nca_get_centiles.ado
