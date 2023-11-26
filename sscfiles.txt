@@ -702,6 +702,7 @@ fmwww.bc.edu/repec/bocode/x/xtwest.hlp
 fmwww.bc.edu/repec/bocode/j/joinvars.html
 fmwww.bc.edu/repec/bocode/j/jaccard.ado
 fmwww.bc.edu/repec/bocode/j/jmpierce2.hlp
+fmwww.bc.edu/repec/bocode/j/jl.sthlp
 fmwww.bc.edu/repec/bocode/j/jaccard.sthlp
 fmwww.bc.edu/repec/bocode/j/jgraphs.sthlp
 fmwww.bc.edu/repec/bocode/j/jsonio.jar
@@ -712,6 +713,7 @@ fmwww.bc.edu/repec/bocode/j/jnsn.pkg
 fmwww.bc.edu/repec/bocode/j/johans.ado
 fmwww.bc.edu/repec/bocode/j/jnsni.html
 fmwww.bc.edu/repec/bocode/j/jhhnb_ll.ado
+fmwww.bc.edu/repec/bocode/j/jl.ado
 fmwww.bc.edu/repec/bocode/j/jwdid.sthlp
 fmwww.bc.edu/repec/bocode/j/jnsw.hlp
 fmwww.bc.edu/repec/bocode/j/jb6.hlp
@@ -724,6 +726,7 @@ fmwww.bc.edu/repec/bocode/j/joyplot.ado
 fmwww.bc.edu/repec/bocode/j/jsonio.pkg
 fmwww.bc.edu/repec/bocode/j/jnsni.hlp
 fmwww.bc.edu/repec/bocode/j/jhhnb1_ll.ado
+fmwww.bc.edu/repec/bocode/j/jl.pluginMACARM64
 fmwww.bc.edu/repec/bocode/j/stata.toc
 fmwww.bc.edu/repec/bocode/j/jontertest.do
 fmwww.bc.edu/repec/bocode/j/joy_plot.pkg
@@ -762,6 +765,7 @@ fmwww.bc.edu/repec/bocode/j/jonter.pkg
 fmwww.bc.edu/repec/bocode/j/jfile.ico
 fmwww.bc.edu/repec/bocode/j/jmpierce.ado
 fmwww.bc.edu/repec/bocode/j/jhnb_logit_ll.ado
+fmwww.bc.edu/repec/bocode/j/julia.pkg
 fmwww.bc.edu/repec/bocode/j/jsonio.sthlp
 fmwww.bc.edu/repec/bocode/j/jb.html
 fmwww.bc.edu/repec/bocode/j/jackson-core-2.6.7.jar
@@ -775,6 +779,7 @@ fmwww.bc.edu/repec/bocode/j/jmpierce.zip
 fmwww.bc.edu/repec/bocode/j/jwdid_postestimation.sthlp
 fmwww.bc.edu/repec/bocode/j/joinvars.sthlp
 fmwww.bc.edu/repec/bocode/j/jarowinkler.sthlp
+fmwww.bc.edu/repec/bocode/j/jl.pluginMACINTEL64
 fmwww.bc.edu/repec/bocode/j/jb6.pkg
 fmwww.bc.edu/repec/bocode/j/jcd.sthlp
 fmwww.bc.edu/repec/bocode/j/jc.sthlp
@@ -788,6 +793,7 @@ fmwww.bc.edu/repec/bocode/j/jaccard.pkg
 fmwww.bc.edu/repec/bocode/j/jwdid.pkg
 fmwww.bc.edu/repec/bocode/j/jmpierce2.html
 fmwww.bc.edu/repec/bocode/j/jhpoi_ll.ado
+fmwww.bc.edu/repec/bocode/j/jl.pluginLINUX64
 fmwww.bc.edu/repec/bocode/j/jnsw.ado
 fmwww.bc.edu/repec/bocode/j/jwdid_plot.ado
 fmwww.bc.edu/repec/bocode/j/jtpa.dta
@@ -798,6 +804,7 @@ fmwww.bc.edu/repec/bocode/j/join.ado
 fmwww.bc.edu/repec/bocode/j/jformat.sthlp
 fmwww.bc.edu/repec/bocode/j/jsonio.ado
 fmwww.bc.edu/repec/bocode/j/jspmix.dta
+fmwww.bc.edu/repec/bocode/j/jl.pluginWIN64.dll
 fmwww.bc.edu/repec/bocode/j/jrule.pkg
 fmwww.bc.edu/repec/bocode/j/jonter.ado
 fmwww.bc.edu/repec/bocode/j/joinvars.pkg
@@ -10354,6 +10361,7 @@ fmwww.bc.edu/repec/bocode/s/scul_basque.dta
 fmwww.bc.edu/repec/bocode/s/spautoerrnn.ado
 fmwww.bc.edu/repec/bocode/s/standsurv.pkg
 fmwww.bc.edu/repec/bocode/s/scheme-burd3.scheme
+fmwww.bc.edu/repec/bocode/s/stataplugininterface.jl
 fmwww.bc.edu/repec/bocode/s/svalue.pkg
 fmwww.bc.edu/repec/bocode/s/spmstarxt.dlg
 fmwww.bc.edu/repec/bocode/s/sptobitmstarhxt3.ado

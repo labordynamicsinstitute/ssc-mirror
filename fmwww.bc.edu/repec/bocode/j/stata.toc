@@ -14,4 +14,5 @@ p joy_plot module to produce joy plots
 p joyplot module to produce joyplots or ridgeline plots
 p jrule module to detect model misspecifications in SEM
 p jsonio module for I/O operations on JSON data
+p julia module to provide interface to Julia
 p jwdid module to estimate Difference-in-Difference models using Mundlak approach
