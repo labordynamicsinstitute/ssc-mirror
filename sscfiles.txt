@@ -13390,6 +13390,7 @@ fmwww.bc.edu/repec/bocode/r/stata.toc
 fmwww.bc.edu/repec/bocode/r/running.hlp
 fmwww.bc.edu/repec/bocode/r/rosssekh.pkg
 fmwww.bc.edu/repec/bocode/r/ridgeline.ado
+fmwww.bc.edu/repec/bocode/r/reghdfejl.sthlp
 fmwww.bc.edu/repec/bocode/r/regcoef.pkg
 fmwww.bc.edu/repec/bocode/r/runmplus.ado
 fmwww.bc.edu/repec/bocode/r/raschtest.pkg
@@ -13485,6 +13486,7 @@ fmwww.bc.edu/repec/bocode/r/rd.ado
 fmwww.bc.edu/repec/bocode/r/richness.html
 fmwww.bc.edu/repec/bocode/r/rdpermute.ado
 fmwww.bc.edu/repec/bocode/r/randomizr.pkg
+fmwww.bc.edu/repec/bocode/r/reghdfejl.pkg
 fmwww.bc.edu/repec/bocode/r/regxfe.pkg
 fmwww.bc.edu/repec/bocode/r/rwrmed.sthlp
 fmwww.bc.edu/repec/bocode/r/rca.hlp
@@ -13774,6 +13776,7 @@ fmwww.bc.edu/repec/bocode/r/riflogit.pkg
 fmwww.bc.edu/repec/bocode/r/rpaxioms.pkg
 fmwww.bc.edu/repec/bocode/r/reshape3.ado
 fmwww.bc.edu/repec/bocode/r/rtm_calc.ado
+fmwww.bc.edu/repec/bocode/r/reghdfejl.ado
 fmwww.bc.edu/repec/bocode/r/rocss.ado
 fmwww.bc.edu/repec/bocode/r/remst.m
 fmwww.bc.edu/repec/bocode/r/r_ml_stata_data_new_example.dta
@@ -13976,6 +13979,7 @@ fmwww.bc.edu/repec/bocode/r/rolling2.hlp
 fmwww.bc.edu/repec/bocode/r/rnbinom.mo
 fmwww.bc.edu/repec/bocode/r/rdqte.sthlp
 fmwww.bc.edu/repec/bocode/r/rfregk.ado
+fmwww.bc.edu/repec/bocode/r/reghdfejl_estat.ado
 fmwww.bc.edu/repec/bocode/r/results.ado
 fmwww.bc.edu/repec/bocode/r/R.ado
 fmwww.bc.edu/repec/bocode/r/rlasso.ado
@@ -14086,6 +14090,7 @@ fmwww.bc.edu/repec/bocode/r/read_parameterestimates_indirect.sthlp
 fmwww.bc.edu/repec/bocode/r/rbiprobit.sthlp
 fmwww.bc.edu/repec/bocode/r/rforest_examples.ihlp
 fmwww.bc.edu/repec/bocode/r/readshare.ado
+fmwww.bc.edu/repec/bocode/r/reghdfejl_p.ado
 fmwww.bc.edu/repec/bocode/r/readlog.hlp
 fmwww.bc.edu/repec/bocode/r/rebus_gqi.mo
 fmwww.bc.edu/repec/bocode/r/ridgereg.ado

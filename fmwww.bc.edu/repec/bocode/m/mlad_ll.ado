@@ -18,14 +18,26 @@ program define mlad_ll
 // First call need to check for factor variables 
   if ${MLAD_firstcall} {
     Checkfv `b'
-    // Read data etc into Python
+    
     if "$MLAD_verbose" != "" di "Setting up in Python"
+    forvalues i = 1/${ML_n} {
+      tempname b`i' 
+      if ${MLAD_hasfv`i'} {
+        _ms_eq_info, matrix(`b')
+        matrix `b`i'' = `b'[1,"`r(eq`i')':"]
+        _ms_extract_varlist ${ML_x`i'}, matrix(`b`i'') noomitted
+        fvrevar `r(varlist)'
+        global MLAD_X_eq`i' `r(varlist)'
+      }    
+    }
+
+// Read data etc into Python
     python: GetInfo(mlad)
     global MLAD_firstcall 0
     if "$MLAD_verbose" != "" di "Finishing setting up in Python"
   }
   
-  // Extract beta matrix for each equation  
+// Extract beta matrix for each equation  
   forvalues i = 1/${ML_n} {
     tempname b`i' 
     matrix `b`i'' = `b'[1,${ML_fp`i'}..${ML_lp`i'}]
@@ -38,24 +50,21 @@ program define mlad_ll
 // Recreate full matrices if factor variables
   if ${MLAD_hasanyfv} {  
     if `todo'>0 mata: zerostog()
-    if `todo'>1  mata: zerostoH()
+    if `todo'>1 mata: zerostoH()
   }
 
 end
 
 // Check whether factor variables
 program define Checkfv
+  local b `1'
   global MLAD_hasanyfv 0
   forvalues i = 1/${ML_n} {
     tempname b`i' 
+
     fvexpand ${ML_x`i'}
     global MLAD_hasfv`i' = ("`r(fvops)'" == "true")
     if ${MLAD_hasfv`i'} global MLAD_hasanyfv 1
-    if ${MLAD_hasfv`i'} {
-      _ms_extract_varlist ${ML_x`i'}, matrix(`b`i'') noomitted
-      fvrevar `r(varlist)'
-      global MLAD_X_eq`i' `r(varlist)'
-    }
   }
   global MLAD_gname = cond(${MLAD_hasanyfv},"gtmp","g")
   global MLAD_Hname = cond(${MLAD_hasanyfv},"Htmp","H")
@@ -74,8 +83,8 @@ program define GetScores
   tempvar touse
   gen byte `touse' = e(sample)
   python: scores_to_stata()
-  list `eqlist' in 1/10
-  if ${MLAD_hasid} local cluster(`${MLAD_idvar}')
+
+  if ${MLAD_hasid} local cluster cluster(${MLAD_idvar})
   _robust `eqlist', `cluster'
 end
 
@@ -123,7 +132,7 @@ import numpy as np
 import jax.numpy as jnp 
 from jax import grad, jit, jacrev, jacfwd, hessian, vmap, jvp
 from jax.config import config
-from jax.ops import index, index_update
+
 import mladutil as mu
 ## need double precision
 config.update("jax_enable_x64", True)
@@ -146,7 +155,7 @@ def GetInfo(mlad):
   mlad.N_equations   = int(Macro.getGlobal("ML_n"))
   N_parameters       = int(Macro.getGlobal("ML_k"))
   Nobs               = int(float(Macro.getGlobal("ML_N")))
-  hasjit             = int(Macro.getGlobal("MLAD_hasjit"))
+  mlad.hasjit        = int(Macro.getGlobal("MLAD_hasjit"))
   mlad.touse         = Macro.getGlobal("ML_sample")
   mlad.hasscalars    = int(Macro.getGlobal("MLAD_hasscalars"))
   mlad.hasmatrices   = int(Macro.getGlobal("MLAD_hasmatrices"))
@@ -171,6 +180,7 @@ def GetInfo(mlad):
   hasoffset = []
   varnames  = []
   mlad.Nvarnames = []
+
   for i in range(mlad.N_equations):
     hasfv.append(int(Macro.getGlobal("MLAD_hasfv"+str(i+1))))
     hascons.append((Macro.getGlobal("ML_xc"+str(i+1))==""))
@@ -180,6 +190,7 @@ def GetInfo(mlad):
   
   X = [0]*(mlad.N_equations+1)
   X[0] = []
+
   for i in range(mlad.N_equations):
     if hasoffset[i]: X[0].append(jnp.asarray(np.asarray(Data.get(Macro.getGlobal("ML_xo"+str(i+1)),selectvar=mlad.touse,missingval=jnp.nan)))[:,None])
     else: X[0].append(0)
@@ -191,6 +202,7 @@ def GetInfo(mlad):
       if hascons[i]: X[i+1] = jnp.vstack((X[i+1],jnp.ones((1,X[i+1].shape[1]))))
     else: X[i+1] =  jnp.ones((1,Nobs))
     X[i+1] = X[i+1].T
+
 
   ## function arguments (beta,X, wt, M, staticscalars]
   mlad.like_fn_args = [[[0]]*mlad.N_equations]
@@ -238,14 +250,14 @@ def GetInfo(mlad):
   else: staticargs = []
   
 
- ## likelihood 
-  if(hasjit): mlad.python_ll = jit(ll.python_ll,static_argnums=(staticargs))  
-  else:       mlad.python_ll = ll.python_ll  
+  ## likelihood 
+  if(mlad.hasjit): mlad.python_ll = jit(ll.python_ll,static_argnums=(staticargs))  
+  else:            mlad.python_ll = ll.python_ll  
   
   ## Obtain gradient of each equation
   if(mlad.haspygradient): mlad.grad_fn = ll.python_grad
   else: mlad.grad_fn = grad(ll.python_ll)
-  if(hasjit): mlad.grad_fn = jit(mlad.grad_fn,static_argnums=(staticargs))
+  if(mlad.hasjit): mlad.grad_fn = jit(mlad.grad_fn,static_argnums=(staticargs))
 
   ## Obtain equation contribution to Hessian
   if(mlad.haspyhessian): 
@@ -255,7 +267,7 @@ def GetInfo(mlad):
     elif(hessian_adtype == "revfwd"): mlad.H_fn = jacfwd(jacrev(ll.python_ll))
     elif(hessian_adtype == "fwdfwd"): mlad.H_fn = jacfwd(jacfwd(ll.python_ll))
     elif(hessian_adtype == "fwdrev"): mlad.H_fn = jacrev(jacfwd(ll.python_ll))
-  if(hasjit): mlad.H_fn = jit(mlad.H_fn,static_argnums=(staticargs))
+  if(mlad.hasjit): mlad.H_fn = jit(mlad.H_fn,static_argnums=(staticargs))
 
   if(hassetup):
     setup = importlib.import_module(setupfile)
@@ -272,7 +284,6 @@ def GetInfo(mlad):
 def calcAll(mlad,todo):
   loadBetas(mlad)
   lnf = mlad.python_ll(*mlad.like_fn_args)
-  
   if(todo>0):  g = jnp.hstack(mlad.grad_fn(*mlad.like_fn_args))[None,:]
   if(todo==2): 
     if(mlad.haspyhessian): H = mlad.H_fn(*mlad.like_fn_args)
@@ -305,28 +316,23 @@ def scores_to_stata():
   ## get predicted values for each equation
   
   allxb = [0]*mlad.N_equations
+
   for i in range(mlad.N_equations): 
     allxb[i] = (mu.linpred(mlad.like_fn_args[0],mlad.like_fn_args[1],i+1))
-    
-  mlad.like_fn_args[0] = jnp.asarray(allxb)
+  
+  mlad.like_fn_args[0] = jnp.asarray(allxb)[:,:,-1]
+
   ## replace X with a 1 for each equation
   for i in range(mlad.N_equations): 
-    mlad.like_fn_args[1][i+1] = jnp.asarray([[1]])
+    mlad.like_fn_args[1][i+1] = 1
   
   gradj = grad(ll.python_ll)
+  if(mlad.hasjit): gradj = jit(gradj)
+  scores = gradj(*mlad.like_fn_args)
   
-  in_axisvals = [0,None,None,None]
-  #in_axesvals = [0]*mlad.N_equations      
-  #in_axesvals.append(None)                
-  #in_axesvals.extend([0]*mlad.Nothervars) 
-  #if(mlad.hasid): in_axesvals.append(None)
-  #if(mlad.hasscalars):  in_axesvals.append(None)
-  #if(mlad.hasmatrices): in_axesvals.append(None)
-  
-  scores = vmap(gradj,in_axes=in_axisvals,out_axes=(0))(*mlad.like_fn_args)
   #loop over equations to save to Stata
   for i in range(mlad.N_equations): 
-    Data.store(Macro.getLocal("eq"+str(i+1)),None,scores[i],Macro.getLocal("touse"))
+    Data.store(Macro.getLocal("eq"+str(i+1)),None,scores[i][:,None],Macro.getLocal("touse"))
   
 ##########################################################
 ### delete stuff                                       ###
@@ -339,6 +345,7 @@ def tidymlad(mlad):
   mlad.hasid        = None
   mlad.hasscalars   = None
   mlad.hasmatrices  = None
+  mlad.hasjit       = None
   mlad.like_fn_args = None
   mlad.Nscalars     = None
   mlad.Nmatrices    = None

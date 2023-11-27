@@ -1,4 +1,4 @@
-*! version 1.0 2021-08-03
+*! version 1.02 2023-11-22
 
 program define mlad
   version 16.1 
@@ -53,7 +53,7 @@ program define mlad
     di as error "No link to python executable."
     exit 198
   }
-  foreach m in jax jaxlib scipy importlib numpy {
+  foreach m in jax scipy importlib numpy {
     capture python which `m'
     if _rc {
       di as error "Python module `m' need to be installed."
@@ -71,7 +71,6 @@ program define mlad
     else {
       local othervarnames `othervars'
     }
-  
   
 // new ID variables
   if "`id'" != "" {
@@ -112,7 +111,7 @@ program define mlad
     }
  }   
  
- // static scalars0.4
+ // static scalars
   if "`staticscalars'" != "" {
     foreach sc in `staticscalars' {
       confirm scalar `sc'
@@ -144,7 +143,6 @@ program define mlad
   if "`search'" != "" local search search(`search')
   if "`init'" != "" local init init(`init')
   
-
   ml model `mlmethod' mlad_ll `anything' [`weight'`exp'] if `touse', ///
                                                      `options'       ///
                                                      `search'        ///
@@ -152,7 +150,6 @@ program define mlad
                                                      `init'          ///
                                                      maximize        ///
                                                      nopreserve    
-
                                                       
   if "`robustok'" != "" {
     forvalues i = 1/`e(k_eq)' {
@@ -161,9 +158,10 @@ program define mlad
     mlad_ll robust e(b)
   }
                                                       
-  // Tidy up
+// Tidy up
 // remove data loaded in python
   mlad_ll tidy
+
 // drop globals  
   foreach n in touse othervars othervarnames hasid idvar      ///
                      hasscalars scalars scalarnames           ///

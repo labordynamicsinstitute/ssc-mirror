@@ -106,6 +106,7 @@ p regen module to create new or change existing variable
 p regfit module to Output The Equation of a Regression
 p reggae_music module for rasta Stata users
 p reghdfe module to perform linear or instrumental-variable regression absorbing any number of high-dimensional fixed effects
+p reghdfejl module to estimate high-dimensional fixed-effect linear models using Julia
 p regife module to estimate linear models with interactive fixed effects
 p regintfe module to estimate a linear regression model with one interacted high dimensional fixed effect
 p reglike module to calculate log-likelihood function value from regress

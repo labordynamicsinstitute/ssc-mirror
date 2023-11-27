@@ -1,7 +1,7 @@
-from jax.ops import index, index_update, segment_sum
+from jax.ops import segment_sum
 import jax.numpy as jnp 
 import jax.lax as lax
-from jax import jit, vmap
+from jax import jit, vmap, pmap
 from scipy.special import roots_legendre, roots_hermitenorm, roots_hermite
 from jax.numpy.linalg import inv
 from jax.config import config
@@ -27,8 +27,8 @@ def rcsgen_beta(x,knots,beta,rmatrix=jnp.zeros(1)):
   Nknots   = knots.shape[0]
   Nobs     = x.shape[0]
   Nparams  = Nknots - 1
-  kmin     = knots[index[0]]
-  kmax     = knots[index[Nknots]]
+  kmin     = knots[0]
+  kmax     = knots[Nknots]
   intknots = knots[1:Nparams,None]
   lam      = (kmax - intknots)/(kmax-kmin)
   ##spline matrix
@@ -43,8 +43,8 @@ def rcsgen(x,knots,rmatrix=jnp.zeros(1)):
   Nknots   = knots.shape[0]
   Nobs     = x.shape[0]
   Nparams  = Nknots - 1
-  kmin     = knots[index[0]]
-  kmax     = knots[index[Nknots]]
+  kmin     = knots[0]
+  kmax     = knots[Nknots]
   intknots = knots[1:Nparams,None]
   lam      = (kmax - intknots)/(kmax-kmin)
   ##spline matrix
@@ -61,8 +61,8 @@ def drcsgen(x,knots,rmatrix=jnp.zeros(1)):
   Nknots   = knots.shape[0]
   Nobs     = x.shape[0]
   Nparams  = Nknots - 1
-  kmin     = knots[index[0]]
-  kmax     = knots[index[Nknots]]
+  kmin     = knots[0]
+  kmax     = knots[Nknots]
   intknots = knots[1:Nparams,None]
   lam      = (kmax - intknots)/(kmax-kmin)
   ##spline matrix
@@ -74,7 +74,9 @@ def drcsgen(x,knots,rmatrix=jnp.zeros(1)):
 
 ## vectorise  
 vrcsgen = vmap(rcsgen,(0,None,None))
-vdrcsgen = vmap(drcsgen,(0,None,None))  
+vdrcsgen = vmap(drcsgen,(0,None,None))
+
+  
   
 ## weibull survival function  
 def weibsurv(t,lam,gam):
@@ -86,7 +88,9 @@ def weibdens(t,lam,gam):
 
 ## extract liner predictor  (adds offset)
 def linpred(beta,X,eq):
-  return((X[index[eq]] @ beta[index[eq]-1])[:,None] + X[0][index[eq-1]])  
+  return(jnp.dot(X[eq], beta[eq-1])[:,None] + X[0][eq-1])  
+
+##  return((X[eq] @ beta[eq-1])[:,None] + X[0][eq-1])  
 
 ## sum over ids
 def sumoverid(id,X,Nid):
@@ -96,9 +100,9 @@ sumoverid = vmap(sumoverid,(None,1,None),1)
   
 ## mlvecsum equivalent
 def mlvecsum(Z,X,eq):
-  return(jnp.sum(Z*X[index[(eq)]],axis=0))
+  return(jnp.sum(Z*X[eq],axis=0))
 
 ## mlmatsum equivalent
 def mlmatsum(Z,X,eq1,eq2):
-  return((Z*X[index[eq1]]).T@X[index[eq2]])
+  return((Z*X[eq1]).T@X[eq2])
   
