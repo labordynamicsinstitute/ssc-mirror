@@ -134,7 +134,9 @@ in a dialog box during installation.
 
 {p 4 6 0}
 * In {bf:macOS}, after installation, you need to {browse "https://support.apple.com/guide/terminal/open-or-quit-terminal-apd5265185d-f365-44cb-8b09-71a064a42125":open a Terminal}
-and execute the three command lines under "macOS" in the {browse "https://julialang.org/downloads/platform/":platform-specific instructions}.
+and execute the three command lines under "macOS" in the {browse "https://julialang.org/downloads/platform/":platform-specific instructions}. On Intel Macs, 
+{cmd:jl} seems to require at least macOS 11 (Big Sur) or 12 (Monterey) to run reliably. On computers not officially supported by those editions, one can use 
+the {browse "https://dortania.github.io/OpenCore-Legacy-Patcher/":OpenCore Legacy Patcher} to upgrade anyway--at your own risk.
 
 {pstd} If the Julia package DataFrames.jl is not installed, {cmd:jl} will attempt to install it on first
 use. {it:That requires an Internet connection and can take several minutes.}

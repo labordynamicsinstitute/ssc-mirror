@@ -17,6 +17,7 @@
 * Version 1.2 August 13, 2019 /* filessave and dirsave options */
 * Version 1.2.1 August 28, 2019 /* cfa is now a wrapper for sem command; that means that most options of sem_estimation_options should work for cfa */
 * Version 1.2.2 February 17, 2020 /* check if svmat2 is installed */
+* Version 1.2.3 November 27, 2023 /* fixed a bug when decimal point was set to comma */
 
 
 
@@ -25,7 +26,7 @@
 program define validscale, rclass
 version 12.0
 syntax varlist [if], PARTition(numlist integer >0) [HTML(string) CATegories(numlist) SCOREName(string) scores(varlist) IMPute(string) NORound COMPScore(string) DESCitems GRAPHs cfa CFAMethod(string) cfasb CFAStand CFACov(string) CFARmsea(real -999) CFACFi(real -999) CFAOR CFANOCOVDim CONVdiv TCONVdiv(real 0.4) CONVDIVBoxplots Alpha(real 0.7) Delta(real 0.9) h(real 0.3) HJmin(real 0.3) REPet(varlist) scores2(varlist) KAPpa ICKAPpa(integer 0) kgv(varlist) KGVBoxplots KGVGroupboxplots conc(varlist) tconc(real 0.4) DIRsave(string) FILESsave *]
-preserve
+*preserve
 
 
 foreach c in delta loevh mi_twoway detect imputeitems lstrfun{
@@ -881,28 +882,28 @@ foreach s in `scorename' {
 	local col = `col'+10
 	
 	local a : di %6.2f `al`i''
-	if `a' < `alpha' {
+	if `al`i'' < `alpha' {
 		di _col(`col') "{error:`a'} " _c
 	}
 	else di _col(`col') "{text:`a'}" _c
 	
 	local col = `col'+10
 	local d : di %6.2f `delt`i''
-	if `d' < `delta' {
+	if `delt`i''< `delta' {
 		di _col(`col') "{error:`d'} " _c
 	}
 	else di _col(`col') "{text:`d'}" _c
 	
 	local col = `col'+10
 	local ht : di %6.2f `h`i''
-	if `ht' < `h' {
+	if `h`i'' < `h' {
 		di _col(`col') "{error:`ht'} " _c
 	}
 	else di _col(`col') "{text:`ht'}" _c
 	
 	local col = `col'+8
 	local m : di %8.2f `min`i''
-	if `m' < `hjmin' {
+	if `min`i'' < `hjmin' {
 		di _col(`col') "{error:`m'} " _c
 		di "{text:(item `itmin`i'')}" _c
 	}
@@ -1129,8 +1130,8 @@ foreach p in `partition' {
 			qui count if `varo`z'' != . 
 			local d = r(N)
 			local e = `n'/`d'
-			local e : di %4.2f `e'*100
-			if `e' != 0 di _col(`=`col'-1')"{text:`e'%}" _c
+			local et : di %4.2f `e'*100
+			if `e'*100 != 0 di _col(`=`col'-1')"{text:`et'%}" _c
 			else di _col(`=`col'-1')"{text:   -}" _c
 			local col = `col'+8
 		}
@@ -1388,7 +1389,7 @@ if ${exist} != 1 {
 			forvalues k = 1/`P' { 
 					
 				local t = B[`z',`k']
-				local t : di %6.3f `t'
+				local tt : di %6.3f `t'
 				if `k' == `i' {
 					if `t' < `tconvdiv' {
 						/*if "${html}" != "" {
@@ -1397,7 +1398,7 @@ if ${exist} != 1 {
 							di "</p>"
 						}*/
 						//else {
-							di in red _col(`col') "{bf:`t'}" _c
+							di in red _col(`col') "{bf:`tt'}" _c
 						//}
 						
 						local cptconv = `cptconv'+1
@@ -1410,7 +1411,7 @@ if ${exist} != 1 {
 							di "</p>"
 						}*/
 						//else {
-							di as text _col(`col') "{bf:`t'}" _c
+							di as text _col(`col') "{bf:`tt'}" _c
 						//}
 						local col = `col' + `dec'
 					}
@@ -1424,7 +1425,7 @@ if ${exist} != 1 {
 							di "</span>"
 						}*/
 						//else {
-							di in red _col(`col') "`t'" _c
+							di in red _col(`col') "`tt'" _c
 						//}
 						
 						if `dd' == `z' local cptdiv = `cptdiv'+1 // [one per item]
@@ -1438,7 +1439,7 @@ if ${exist} != 1 {
 							di "</p>"
 						}*/
 						//else {
-							di as text _col(`col') "{text:`t'}"_c
+							di as text _col(`col') "{text:`tt'}"_c
 						//}
 						
 						local col = `col' + `dec'
@@ -1534,15 +1535,15 @@ else if ${exist} == 1 {
 			forvalues k = 1/`P' { 
 					
 				local t = B[`z',`k']
-				local t : di %6.3f `t'
+				local tt : di %6.3f `t'
 				if `k' == `i' {
 					if `t' < `tconvdiv' {
-						di in red _col(`col') "{bf:`t'}" _c
+						di in red _col(`col') "{bf:`tt'}" _c
 						local cptconv = `cptconv'+1
 						local col = `col' + `dec'
 					}
 					else {
-						di _col(`col') "{bf:`t'}" _c
+						di _col(`col') "{bf:`tt'}" _c
 						local col = `col' + `dec'
 					}
 				}
@@ -1556,7 +1557,7 @@ else if ${exist} == 1 {
 						local col = `col' + `dec'
 					}
 					else {
-						di as text _col(`col') "{text:`t'}"_c
+						di as text _col(`col') "{text:`tt'}"_c
 						local col = `col' + `dec'
 					}
 				}
@@ -2976,6 +2977,6 @@ forvalues i=1/`n' {
 	di
 }
 
-capture restore, not
+*capture restore, not
 end
 
