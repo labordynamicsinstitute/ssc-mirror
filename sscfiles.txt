@@ -15320,7 +15320,6 @@ fmwww.bc.edu/repec/bocode/p/plotshares.sthlp
 fmwww.bc.edu/repec/bocode/p/poverty.html
 fmwww.bc.edu/repec/bocode/p/pvfix.sthlp
 fmwww.bc.edu/repec/bocode/p/pgamma.pkg
-fmwww.bc.edu/repec/bocode/p/pgb2.html
 fmwww.bc.edu/repec/bocode/p/pwlaw.ado
 fmwww.bc.edu/repec/bocode/p/psacalc.ado
 fmwww.bc.edu/repec/bocode/p/power_cmd_pairsens_init.ado
@@ -15590,7 +15589,6 @@ fmwww.bc.edu/repec/bocode/p/predictms.ado
 fmwww.bc.edu/repec/bocode/p/povcalnet_cl.ado
 fmwww.bc.edu/repec/bocode/p/pval_fixed.ado
 fmwww.bc.edu/repec/bocode/p/psreg.ado
-fmwww.bc.edu/repec/bocode/p/pgamma.html
 fmwww.bc.edu/repec/bocode/p/postlist.hlp
 fmwww.bc.edu/repec/bocode/p/pzms.sthlp
 fmwww.bc.edu/repec/bocode/p/propcnsreg_sim.sthlp
@@ -15645,7 +15643,6 @@ fmwww.bc.edu/repec/bocode/p/poisml.pkg
 fmwww.bc.edu/repec/bocode/p/power_pairspec.sthlp
 fmwww.bc.edu/repec/bocode/p/parallel_map_template.do.ado
 fmwww.bc.edu/repec/bocode/p/pc_dd_analytic.sthlp
-fmwww.bc.edu/repec/bocode/p/pgamma4.html
 fmwww.bc.edu/repec/bocode/p/povguide.hlp
 fmwww.bc.edu/repec/bocode/p/parallel.pdf
 fmwww.bc.edu/repec/bocode/p/psbayes.ado
