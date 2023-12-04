@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1 19jul2022}{...}
+{* *! version 1.2 29nov2023}{...}
 {cmd:help xtnumfac}
 {hline}
 
@@ -121,7 +121,6 @@ with the package and which is taken from the first empirical example in Kapetani
 {phang}{cmd:. xtnumfac rd_lrhp, stan(5) detail}{p_end}
 
 
-
 {marker results}{...}
 {title:Stored results}
 
@@ -143,8 +142,6 @@ output.{p_end}
 {synopt:{cmd:e(allICs)}} A ({it:kmax} x 8) matrix containing the value of all measures for all numbers of
 factors under consideration. Corresponds to the values in the reported function
 output (albeit without asterisks).
-
-
 
 {marker references}{...}
 {title:References}

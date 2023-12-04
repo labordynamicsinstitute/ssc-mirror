@@ -1,3 +1,4 @@
+*! 1.3.0 NJC 20 Nov 2023
 *! 1.2.0 NJC 29 Dec 2022
 *! 1.1.0 NJC 10 Dec 2022
 *! 1.0.0 NJC 30 Nov 2022
@@ -10,6 +11,7 @@ program vennbar
 	[,                      ///
 	fillin                  ///
 	percent                 ///
+	frformat(str)           ///
 	pcformat(str)           ///
 	varlabels               ///
 	vallabels               /// 
@@ -57,10 +59,10 @@ program vennbar
 		decimal `varlist' 
 
 		if "`exp'" == "" local exp 1 
-		bysort _binary : gen double _count = sum(`exp')  
+		bysort _binary : gen double _freq = sum(`exp')  
 		bysort _binary : keep if _n == _N 
-		compress _count 
-		keep `varlist' _count _decimal _binary   
+		compress _freq  
+		keep `varlist' _freq _decimal _binary   
 
 		/// want to show possible subsets that did not occur 
 		if "`fillin'" != "" { 
@@ -87,13 +89,13 @@ program vennbar
 					local --n 
 				} 
 
-				replace _count = 0 if missing(_count)
+				replace _freq = 0 if missing(_freq)
 			}  
 		} 
 
 		if "`percent'" != "" { 
-			su _count, meanonly 
-			gen _percent = 100 * _count / r(sum)
+			su _freq, meanonly 
+			gen _percent = 100 * _freq / r(sum)
 			if "`pcformat'" == "" local pcformat "%2.1f"
 			format _percent `pcformat' 
 			local pcshow _percent 
@@ -101,12 +103,12 @@ program vennbar
 			gen _pcshow = strofreal(_percent, "`pcformat'") 
 		} 
 		else { 
-			local yvar _count
+			local yvar _freq
 		}
 	
         /// text defaults to varnames, 
-		/// optionally to variable labels if defined. 		
-		/// optionally to value labels (values if not defined) 
+		/// optionally to variable labels if defined; 		
+		/// optionally to value labels (values if not defined);
 		/// default separator is ", " 
 		gen _text = "" 
 		tokenize "`varlist'" 
@@ -141,8 +143,9 @@ program vennbar
 	} 
 
 	/// list major part 
-	sort _decimal 
-	list _binary _decimal _text _count `pcshow' _degree, noobs sep(0)
+	sort _decimal
+	capture if "`frformat'" != "" format _freq `frformat' 
+	list _binary _decimal _text _freq `pcshow' _degree, noobs sep(0)
 
 	quietly {
  		/// we may need to create extra observations to show set frequencies;
@@ -161,7 +164,7 @@ program vennbar
 			} 
 			else replace _set = "``j''" in `j' 
 
-			summarize _count if substr(_binary, `j', 1) == "1", meanonly 
+			summarize _freq if substr(_binary, `j', 1) == "1", meanonly 
 			replace _setfreq = r(sum) in `j' 
 		}
 
@@ -180,10 +183,10 @@ program vennbar
 	local plot = cond("`recast'" == "", "hbar", "`recast'") 
 
 	if !strpos(`"`options'"', "over(") { 
-		local options `options' over(_text, sort(_count) descending)
+		local options `options' over(_text, sort(_freq) descending)
 	} 
  
-	graph `plot' (asis) `yvar', `options'
+	graph `plot' (asis) `yvar',  blabel(bar) `options'
 end
 
 program bad_data

@@ -1,8 +1,8 @@
 *! xtnumfac
-*! v. 1.1 - 19.07.2022
+*! v. 1.2 - 29.11.2023
 capture program drop xtnumfac
 program define xtnumfac, eclass 
-syntax varlist(min=1 ts /*ts added by JD*/ ) [if] [in] [, kmax(integer 8) STANdardize(integer 1) Detail]
+syntax varlist(min=1 ts  ) [if] [in] [, kmax(integer 8) STANdardize(integer 1) Detail]
 version 11.2
 
 
@@ -71,7 +71,7 @@ preserve
 	
 	
 * Get results 
-mata: mainroutine(st_data(., "`varlist'"), st_numscalar("e(N_g)"), st_numscalar("e(T)"), strtoreal(st_local("kmax")), strtoreal(st_local("standardize")))
+noi mata: mainroutine(st_data(., "`varlist'"), st_numscalar("e(N_g)"), st_numscalar("e(T)"), strtoreal(st_local("kmax")), strtoreal(st_local("standardize")))
 
 
 
@@ -80,23 +80,39 @@ restore
 
 * Report results
 if !missing("`detail'") {
+
+	local h1 = 4
+	local h2 = 25
+	local h3 = 50
+	local h4 = 70
+
+	local l1 = 16
+	local l2 = 27
+	local l3 = 38
+	local l4 = 49
+	local l5 = 60
+	local l6 = 71
+	local l7 = `l1' + 3
+	local l8 = `l2' + 3
+	local l9 = `l3' + 3
+
 	di as result _newline "Statistics for number of common factors in `varlist'" 
 	if `isbalanced' == 1 {
-		dis as text _col(4) "Number of obs" 		_col(25) "=" as result %9.0g `e(N)' 	_col(55) as text 	"Obs per group"		_col(73) "=" %9.0g `e(T)'
-		dis as text _col(4) "Number of groups" 		_col(25) "=" as result %9.0g `e(N_g)'	_col(55) as text 	"Number of variables" 	_col(73) "=" %9.0g `e(k)'
+		dis as text _col(`h1') "Number of obs" 		_col(`h2') "=" as result %9.0g `e(N)' 	_col(`h3') as text 	"Obs per group"		_col(`h4') "=" %9.0g `e(T)'
+		dis as text _col(`h1') "Number of groups" 		_col(`h2') "=" as result %9.0g `e(N_g)'	_col(`h3') as text 	"Number of variables" 	_col(`h4') "=" %9.0g `e(k)'
 	}
 	else {
-		dis as text																			_col(60) "Obs per group:"		
-		dis as text _col(4) "Number of obs" 		_col(25) "=" %9.0g as result `e(N)'		as text	_col(68) "min"					_col(73) "=" as result %9.0f `e(Tmin)'
-		dis as text _col(4) "Number of groups" 		_col(25) "=" %9.0g as result `e(N_g)'		as text	_col(68) "avg"					_col(73) "=" as result %9.2f `e(Tbar)'
-		dis as text _col(4) "Number of variables" 	_col(25) "=" %9.0g as result `e(k)'		as text	_col(68) "max"					_col(73) "=" as result %9.0f `e(Tmax)'
+		dis as text																							_col(`=`h3'-3') "Obs per group:"		
+		dis as text _col(`h1') "Number of obs" 			_col(`h2') "=" %9.0g as result `e(N)'		as text	_col(`h3') "min"					_col(`h4') "=" as result %9.0f `e(Tmin)'
+		dis as text _col(`h1') "Number of groups" 		_col(`h2') "=" %9.0g as result `e(N_g)'		as text	_col(`h3') "avg"					_col(`h4') "=" as result %9.2f `e(Tbar)'
+		dis as text _col(`h1') "Number of variables" 	_col(`h2') "=" %9.0g as result `e(k)'		as text	_col(`h3') "max"					_col(`h4') "=" as result %9.0f `e(Tmax)'
 	}
 	*di as result _col(71) as text "N" _col(73) "=" _col(76) %9.0g `e(N)'
 	*di as result _col(71) as text "T" _col(73) "=" _col(76) %9.0g `e(T)'
 	di ""
-	di as text "{hline 11}{c TT}{hline 76}" 	
-	di as result _col(2) "# factors " "{c |}" _col(19) "PC_{p1}" _col(31)  "PC_{p2}" _col(43)  "PC_{p3}" _col(55)  "IC_{p1}" _col(67) "IC_{p2}" _col(79) "IC_{p3}" 	
-	di as text "{hline 11}{c +}{hline 76}" 	
+	di as text "{hline 11}{c TT}{hline 69}" 	
+	di as result _col(2) "# factors " "{c |}" _col(`l1') "PC_{p1}" _col(`l2')  "PC_{p2}" _col(`l3')  "PC_{p3}" _col(`l4')  "IC_{p1}" _col(`l5') "IC_{p2}" _col(`l6') "IC_{p3}" 	
+	di as text "{hline 11}{c +}{hline 69}" 	
 	forvalues k = 0(1)`kmax' {
 		forvalues myIC = 1(1)6 {
 			if `k'== best_numfac[1,`myIC'] {
@@ -109,13 +125,13 @@ if !missing("`detail'") {
 			}
 		}
 		
-		di as text %6s "`k'" _col(12) "{c |}" %12s "`tempIC1'" %12s "`tempIC2'" %12s "`tempIC3'" ///
-		%12s "`tempIC4'" %12s "`tempIC5'" %12s "`tempIC6'" %12s 
+		di as text %6s "`k'" _col(12) "{c |}" %11s "`tempIC1'" %11s "`tempIC2'" %11s "`tempIC3'" ///
+		%11s "`tempIC4'" %11s "`tempIC5'" %11s "`tempIC6'" %11s 
 	}
-	di as text "{hline 11}{c BT}{hline 76}" 
-	di as text "{hline 11}{c TT}{hline 76}" 	
-	di as result _col(2) "# factors " "{c |}" _col(19) "ER" _col(31)  "GR" _col(43)  "GOL" 	
-	di as text "{hline 11}{c +}{hline 76}" 	
+	di as text "{hline 11}{c BT}{hline 69}" 
+	di as text "{hline 11}{c TT}{hline 69}" 	
+	di as result _col(2) "# factors " "{c |}" _col(`l7') "ER" _col(`l8')  "GR" _col(`l9')  "GOS" 	
+	di as text "{hline 11}{c +}{hline 69}" 	
 	forvalues k = 0(1)`kmax' {
 		forvalues myIC = 7(1)9 {
 			if `k'== best_numfac[1,`myIC'] {
@@ -128,15 +144,15 @@ if !missing("`detail'") {
 			}
 		}
 		
-		di as text %6s "`k'" _col(12) "{c |}" %12s "`tempIC7'" %12s "`tempIC8'" %12s "`tempIC9'" 
+		di as text %6s "`k'" _col(12) "{c |}" %11s "`tempIC7'" %11s "`tempIC8'" %11s "`tempIC9'" 
 	}
-	di as text "{hline 11}{c BT}{hline 76}" 
+	di as text "{hline 11}{c BT}{hline 69}" 
 	di as result "`kmax'" ///
 	   as text " factors maximally considered."
 	di as text "PC_{p1},...,IC_{p3} from Bai and Ng (2002)"
 	di as text "ER, GR from Ahn and Horenstein (2013)"
 	di as text "ED from Onatski (2010)"
-	di as text "GOL from Gagliardini, Ossola, Scaillet (2019)"
+	di as text "GOS from Gagliardini, Ossola, Scaillet (2019)"
 
 }
 else {
@@ -174,7 +190,7 @@ else {
 	di 	as text " ER" _col(`=`l1'+1') "{c |}" as result %6.0f best_numfac[1,7] ///
 		as text _col(`=`l1'+`l2'+2')"{c |}  GR" _col(`=`l1'+`l2'+`l3'+3') "{c |}" as result %6.0f best_numfac[1,8]
 
-	di 	as text " GOL" _col(`=`l1'+1') "{c |}" as result %6.0f best_numfac[1,9] ///
+	di 	as text " GOS" _col(`=`l1'+1') "{c |}" as result %6.0f best_numfac[1,9] ///
 		as text _col(`=`l1'+`l2'+2')"{c |}  ED" _col(`=`l1'+`l2'+`l3'+3') "{c |}" as result %6.0f best_numfac[1,10]
 	di as text "{hline `l1'}{c BT}{hline `l2'}{c BT}{hline `l3'}{c BT}{hline `l4'}"
 
@@ -183,7 +199,7 @@ else {
 	di as text "PC_{p1},...,IC_{p3} from Bai and Ng (2002)"
 	di as text "ER, GR from Ahn and Horenstein (2013)"
 	di as text "ED from Onatski (2010)"
-	di as text "GOL from Gagliardini, Ossola, Scaillet (2019)"
+	di as text "GOS from Gagliardini, Ossola, Scaillet (2019)"
 }
 
     if (e(missnum) > 0) {
@@ -212,15 +228,19 @@ function mainroutine(real matrix data, real scalar N, real scalar T, kmax, stan)
 	N        = cols(data)*N
 
 // Add if-clauses for standardization options	
-	if (stan == 2 | stan == 3) X = X - J(T,1,1)*mean(X)
+	pointer mfunc
+	if (hasmissing(X)==0) mfunc = &mymean()
+	else mfunc = &meanmiss()
+	
+	if (stan == 2 | stan == 3) X = X - J(T,1,1)*(*mfunc)(X)
 
-	if (stan == 4 | stan == 5) X = X - J(T,1,1)*mean(X) - mean(X')'*J(1,N,1) + J(T,1,1)*mean(vec(X))*J(1,N,1)
+	if (stan == 4 | stan == 5) X = X - J(T,1,1)*(*mfunc)(X) - (*mfunc)(X')'*J(1,N,1) + J(T,1,1)*(*mfunc)(vec(X))*J(1,N,1)
 	
 	if (stan == 3 | stan == 5) {
-		X_sd = sqrt((mean(X:^2) - mean(X):^2))'
+		X_sd = sqrt(((*mfunc)(X:^2) - (*mfunc)(X):^2))'
 		X = X :/(J(T,1,1)*X_sd')
 	}
-			
+		
 
 // Call interior functions to get all IC values and chosen num of factors	
 	allICs0      = numfac_int(X,kmax)
@@ -240,7 +260,7 @@ function mainroutine(real matrix data, real scalar N, real scalar T, kmax, stan)
 	st_numscalar("e(k)",cols(data))
 
 // matrix col and row names (by JD)
-	cnames = (J(9,1,"") , ("PC_{p1}" \ "PC_{p2}" \ "PC_{p3}" \ "IC_{p1}" \ "IC_{p2}" \ "IC_{p3}" \ "ER" \ "GR" \ "GOL"))
+	cnames = (J(9,1,"") , ("PC_{p1}" \ "PC_{p2}" \ "PC_{p3}" \ "IC_{p1}" \ "IC_{p2}" \ "IC_{p3}" \ "ER" \ "GR" \ "GOS"))
 	rnames = (J(kmax+1,1,""), strofreal(0::kmax))
 	
 	st_matrixrowstripe("e(allICs)",rnames)
@@ -250,6 +270,9 @@ function mainroutine(real matrix data, real scalar N, real scalar T, kmax, stan)
 	st_matrixrowstripe("e(best_numfac)",("","k*"))
 }
 
+/// mean function which allows for missings
+function meanmiss(real matrix X) return(quadcolsum(X,0):/quadcolsum(X:!=.))
+function mymean(real matrix X) return(mean(X))
 
 // mata drop numfac_int()
 function numfac_int(X0, kmax0)  {
@@ -260,7 +283,8 @@ function numfac_int(X0, kmax0)  {
 //   kmax0: The maximum number of factors to consider.
 // The output is a matrix providing the IC values for factor models with 
 // k=1,2,...,kmax0 factors in its rows. The columns correspond to the following
-// statistics: 1:PC_p1,...,6:IC_p3, 7:ER, 8:GR, 9: GOL
+// statistics: 1:PC_p1,...,6:IC_p3, 7:ER, 8:GR, 9: GOS
+
 	T     = rows(X0)
 	N     = cols(X0)
     minNT = min((N, T))
@@ -283,7 +307,7 @@ function numfac_int(X0, kmax0)  {
 	missnum = sum(sum(missind)')
 	st_numscalar("e(missnum)", missnum)
 	
-	if ( missnum == 0)
+	if ( missnum == 0) {
 		if (T > N) {
 				xx         = cross(X0,X0)
 				fullsvd(xx:/(N*T), junk1, mus, junk2) // N x N
@@ -292,15 +316,18 @@ function numfac_int(X0, kmax0)  {
 				xx         = cross(X0',X0')
 				fullsvd(xx:/(N*T), junk1, mus ,junk2) // T x T	 
 		}	
+	}
 	else {
 		obsind  = J(T,N,1) - missind
-		
-	    X0mean  = J(T,1,1) * mean(editmissing(X0,0))
+
+	    X0mean  = J(T,1,1) * meanmiss(editmissing(X0,0))
 		X0      = editmissing(X0,0) + X0mean:*missind
 		
 		conv_crit = (X0 - X0mean):^2
-		conv_crit = mean(mean(conv_crit)')
+		
+		conv_crit = mean(meanmiss(conv_crit)')
 		upd       = conv_crit
+		
 		while (upd > 0.001*conv_crit) {
 			X0_old = X0
 			if (T > N) {
@@ -317,7 +344,7 @@ function numfac_int(X0, kmax0)  {
 			}
 			X0  = X0_old:*obsind + (uu_k*vee_k'):*missind:*sqrt(N*T)
 			upd = mean(mean(abs(X0-X0_old))')
-		}	
+		}
 	}		
 		
 
@@ -331,13 +358,12 @@ function numfac_int(X0, kmax0)  {
     V_val     = J(1,kmax0+1,.)
     // These are the three penalties (without mm0 or the estimate of sig2)
     penalties = ((N+T)/(N*T)*ln((N*T)/(N+T)) \ (N+T)/(N*T)*ln(minNT) \ ln(minNT)/minNT)
-	
+
     for (mm0=kmax0; mm0>=1; mm0--) {
        	V_val[mm0]    = sum(mus[mm0+1..minNT])
        	PC_ICs[.,mm0] = J(3,1,V_val[mm0]) + penalties*mm0*V_val[kmax0]
        	IC_ICs[.,mm0] = J(3,1,ln(V_val[mm0])) + penalties*mm0
     }
-
 	
     V_val[kmax0+1] = sum(mus[kmax0+2..minNT])
     V0               = mean(vec(X0):^2)
@@ -389,11 +415,11 @@ function numfac_int(X0, kmax0)  {
 		ED = (J(rows(ER),cols(ER),.))
 	}
 
-// Now do GOL
+// Now do GOS
 // penalty is g(n,t), p. 512
 	penalty = (sqrt(N)+sqrt(T))^2/(N*T) * ln(N*T / (sqrt(N)+sqrt(T))^2 )
-	GOL = (mus[1..kmax0+1] :- penalty)'
-	allICs0 = (PC_ICs\ IC_ICs\ ER\ GR\ GOL\ED)
+	GOS = (mus[1..kmax0+1] :- penalty)'
+	allICs0 = (PC_ICs\ IC_ICs\ ER\ GR\ GOS\ED)
 
 	return(allICs0)
 }
@@ -408,7 +434,7 @@ function bestnum_ic_int(allICs1)
 //              numbers of factors (in cols) for different ICs (rows).  
 //              We assume that the first 6 rows are the Bai&Ng ICs whereas 
 //              rows 7 and 8 are those of Ahn and Horenstein;
-//				row 9 is the selection criterion used by GOL.
+//				row 9 is the selection criterion used by GOS.
 // The function output is a 1x8 vector of estimates for the number of factors.
 	best_numfac0 = J(1,9,.)
 	tempmin     = .

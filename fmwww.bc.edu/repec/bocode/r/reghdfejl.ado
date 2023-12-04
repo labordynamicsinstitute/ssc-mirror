@@ -1,4 +1,4 @@
-*! reghdfejl 0.2.1 24 November 2023
+*! reghdfejl 0.3.2 2 December 2023
 
 // The MIT License (MIT)
 //
@@ -38,13 +38,13 @@ program define reghdfejl, eclass
 
   local cmdline `0'
 	syntax anything [if] [in] [aw pw iw/], [Absorb(string) Robust CLuster(string) vce(string) RESIDuals ITerations(integer 16000) gpu THReads(integer 0) ///
-                                          noSAMPle TOLerance(real 1e-8) Level(real `c(level)') NOHEADer NOTABLE *]
+                                          noSAMPle TOLerance(real 1e-8) Level(real `c(level)') NOHEADer NOTABLE compact *]
   local sample = "`sample'"==""
 
   _assert `iterations'>0, msg("{cmdab:It:erations()} must be positive.") rc(198)
   _assert `tolerance'>0, msg("{cmdab:tol:erance()} must be positive.") rc(198)
   
-  _get_diopts diopts options, `options'
+  _get_diopts diopts _options, `options'
 
   marksample touse
   
@@ -58,31 +58,25 @@ program define reghdfejl, eclass
   if `"$reghdfejl_loaded"'=="" {
     cap jl: nothing
     if _rc {
-      di as err `"Can't access Julia. {cmd:reghdfejl} requires that {browse "https://github.com/JuliaLang/juliaup#installation":Julia be installed}."'
-      di as err "And it requires that the Stata package {cmd:jl} be installed, via {stata ssc install jl}."
+      di as err `"Can't access Julia. {cmd:reghdfejl} requires that the {cmd:jl} command be installed, via {stata ssc install julia}."
+      di as err "And it requires that Julia be installed, following the instruction under Installation in {help jl##installation:help jl}."
       exit 198
     }
-    jl      AddPkg `gpulib' FixedEffectModels DataFrames Vcov
-    jl, qui: using `gpulib',FixedEffectModels,DataFrames,Vcov
+    jl      AddPkg BLISBLAS  `gpulib' FixedEffectModels DataFrames Vcov
+    jl, qui: using BLISBLAS, `gpulib',FixedEffectModels,DataFrames,Vcov
     global reghdfejl_loaded 1
   }
 
-  local wtvar `exp'
-  if "`weight'"=="pweight" & `"`robust'`cluster'`vce'"'=="" local robust robust  // pweights implies robust
-
-  if `"`absorb'"' != "" {
-    ParseAbsorb `absorb'
-    local N_hdfe `r(N_hdfe)'
-    local absorb `r(absorb)'
-    local absorbvars `r(absorbvars)'
-    local feterms `r(feterms)'
-    local fenames `r(fenames)'
-    local savefe `r(savefe)'
-    local namedfe `r(namedfe)'
-
-    markout `touse' `absorbvars'
+  if `"`exp'"' != "" {
+    cap confirm var `exp'
+    if _rc {
+      tempname wtvar
+      gen double `wtvar' = `exp' if `touse'
+    }
+    else local wtvar `exp'
+    local wtopt , weights = :`wtvar'
+    local haspw = "`weight'"=="pweight"
   }
-  else if !0`hascons' local feterms + 0
 
   tokenize `anything'
   local depname `1'
@@ -91,40 +85,56 @@ program define reghdfejl, eclass
   local hasiv = strpos(`"`*'"', "=")
   if `hasiv' {
     local t = regexm(`"`*'"', "^([^\(]*)\(([^=]*)=([^\)]*)\)(.*)$")  // standard IV syntax
-    fvexpand `=regexs(1)' `=regexs(4)'
-    local inexogname `r(varlist)'
-    fvexpand `= regexs(2)'
-    local instdname `r(varlist)'
-    fvexpand `=regexs(3)'
-    local instsname `r(varlist)'
+    local inexogname `=regexs(1)' `=regexs(4)'
+    local instdname = regexs(2)
+    local instsname = regexs(3)
   }
-  else {
-    fvexpand `*'
-    local inexogname `r(varlist)'
-  }
+  else local inexogname `*'
 
-  local varlist `depname' `instdname' `inexogname' `instsname'
-  markout `touse' `varlist'
+  markout `touse' `depname' `instdname' `inexogname' `instsname'
 
-  if `"`cluster'"' != "" local vce cluster `cluster'  // move clustering vars in cluster() to vce() because _vce_parse can only handle >1 var in latter
-  _vce_parse, optlist(Robust UNadjusted ols) argoptlist(CLuster) pwallowed(robust) old: `wgtexp', `robust' vce(`vce')
-	local vce `r(vceopt)'
-	local robust `r(robust)'
-	local cluster `r(cluster)'
-	if "`cluster'"!="" markout `touse' `cluster', strok
-
-  if "`cluster'"=="" {
-    if "`robust'"!="" {
-      local vcovopt , Vcov.robust()
+  if `"`vce'"' != "" {
+    _assert `"`cluster'"'=="", msg("only one of cluster() and vce() can be specified") rc(198)
+    _assert `"`robust'"' =="", msg("only one of robust and vce() can be specified"   ) rc(198)
+    tokenize `"`vce'"'
+    local 0, `1'
+    syntax, [Robust CLuster UNadjusted ols]
+    _assert "`robust'`cluster'`unadjusted'`ols'"!="", msg("vcetype '`0'' not allowed") rc(198)
+    if "`cluster'"!="" {
+      macro shift
+      local cluster `*'
     }
   }
+
+  if `"`cluster'"'=="" {
+    if "`robust'"!="" local vcovopt , Vcov.robust()
+  }
   else {
-    mata st_local("vcovopt", invtokens(":":+tokens("`cluster'"),","))
-    local vcovopt , Vcov.cluster(`vcovopt')
+    tokenize `"`cluster'"', parse(" #")
+    local cluster `*'  // enforce uniform use of spaces
+    local cluster: subinstr local cluster " # # " "#", all
+    local cluster: subinstr local cluster " # " "#", all
+    foreach term in `cluster' {
+      if strpos(`"`term'"', "#") {  // allow clustering on interactions
+        local term: subinstr local term "#" " ", all
+        tempvar t
+        egen long `t' = group(`term')
+        local _cluster `_cluster' `t'
+      }
+      else local _cluster `_cluster' `term'
+    }
+    markout `touse' `_cluster', strok
+    mata st_local("vcovopt", " , Vcov.cluster(" + invtokens(":":+tokens("`_cluster'"),",") + ")")
   }
 
   foreach varset in dep inexog instd insts {
-    if strpos("``varset'name'", ".") {
+    if strpos("``varset'name'", ".") | strpos("``varset'name'", "#") {
+      fvexpand ``varset'name' if `touse'
+      local `varset'name
+      foreach var in `r(varlist)' {
+        _ms_parse_parts `var'
+        if !r(omit) local `varset'name ``varset'name' `var'
+      }
       fvrevar ``varset'name' if `touse'
       local `varset' `r(varlist)'
     }
@@ -133,16 +143,61 @@ program define reghdfejl, eclass
   }
   _assert `kdep'==1, msg("Multiple dependent variables specified.") rc(198) 
 
-  if `"`wtvar'"' != "" {
-    cap confirm var `wtvar'
-    if _rc {
-      tempname wtvar
-      gen double `wtvar' = `exp' if `touse'
-    }
-    local wtopt , weights = :`wtvar'
-  }
+  if `"`absorb'"' != "" {
+    local 0 `absorb'
+    syntax anything(equalok), [SAVEfe]
+    tokenize `anything', parse(" =")
 
-  local vars `dep' `inexog' `instd' `insts' `cluster' `wtvar' `absorbvars'
+    while `"`1'"' != "" {
+      if `"`2'"' == "=" {
+        confirm new var `1'
+        local fenames = `"`fenames'"' + " `1'"
+        macro shift 2
+        local namedfe 1
+      }
+      else local fenames = `"`fenames'"' + `" "" "'
+      local feterms `feterms' `1'
+      macro shift
+    }
+    local absorb `feterms'
+    local N_hdfe: word count `feterms'
+
+    local feterms i.`: subinstr local feterms " " " i.", all'
+
+    local absorbvars `feterms'
+    local feterms: subinstr local feterms "##c." ")*(", all
+    local feterms: subinstr local feterms "#c." ")&(", all
+    local feterms: subinstr local feterms "##i." ")&fe(", all
+    local feterms: subinstr local feterms "##" "#", all
+    local feterms: subinstr local feterms "#" "#i.", all
+    local feterms: subinstr local feterms "#i.i." "#i.", all
+    local feterms: subinstr local feterms "#i." ")&fe(", all
+    local feterms: subinstr local feterms "i." "fe(", all
+    local feterms: subinstr local feterms " " ") + ", all
+    local feterms: subinstr local feterms ")" " )", all
+    local feterms: subinstr local feterms "(" "( ", all
+    local feterms + `feterms' )
+
+    local absorbvars: subinstr local absorbvars "i." " ", all
+    local absorbvars: subinstr local absorbvars "c." " ", all
+    local absorbvars: subinstr local absorbvars "#" " ", all
+
+    local absorbvars `absorbvars'
+    foreach var in `absorbvars' {
+      cap confirm numeric var `var'
+      if _rc {
+        tempvar t
+        egen long `t' = group(`var') if `touse'
+        local absorbvars: subinstr local absorbvars "`var'" "`t'", word all
+        local feterms   : subinstr local feterms    "`var'" "`t'", word all
+      }
+    }
+    
+    markout `touse' `absorbvars'
+  }
+  else if !0`hascons' local feterms + 0
+
+  local vars `dep' `inexog' `instd' `insts' `_cluster' `wtvar' `absorbvars'
   local vars: list uniq vars
 
   if "`residuals'" != "" {
@@ -150,15 +205,25 @@ program define reghdfejl, eclass
     local residuals _reghdfejl_resid
   }
   else {
-    local 0, `options'
+    local 0, `_options'
     syntax, [RESIDuals(name) *]
+    local _options `options'
   }
 
-  if `"`options'"' != "" di as inp `"`options'"' as txt " ignored" _n
+  if `"`_options'"' != "" di as inp `"`_options'"' as txt " ignored" _n
 
   local saveopt = cond("`residuals'`savefe'`namedfe'"=="", "", ", save = :" + cond("`residuals'"=="", "fe", cond("`savefe'`namedfe'"=="", "residuals", "all")))
 
+  if "`compact'"!="" {
+    tempfile compactfile
+    save "`compactfile'"
+    keep `vars' `touse'
+    qui keep if `touse'
+  }
+
   jl PutVarsToDFNoMissing `vars' if `touse'  // put all vars in Julia DataFrame named df
+
+  if "`compact'" !="" drop _all
 
   mata: st_local("inexog", invtokens(tokens("`inexog'"), "+"))  // put +'s in var lists
   if `hasiv' {
@@ -169,6 +234,15 @@ program define reghdfejl, eclass
 
   * Estimate!
   jl, qui: m = reg(df, @formula(`dep' ~ `inexog' `ivarg' `feterms') `wtopt' `vcovopt' `methodopt' `threadsopt' `saveopt', tol=`tolerance', maxiter=`iterations')
+
+  jl, qui: sizedf = size(df)
+  if "`wtvar'"!="" jl, qui: sumweights = mapreduce((w,s)->(s ? w : 0), +, df.`wtvar', m.esample; init = 0)
+
+//   jl, qui: df = nothing  // yield memory
+  if "`compact'"!="" {
+    jl, qui: GC.gc()
+    use `compactfile'
+  }
 
   if "`savefe'`namedfe'" != "" {
     jl, qui: FEs = fe(m); SF_macro_save("reghdfejl_FEnames", join(names(FEs), " "))
@@ -193,16 +267,17 @@ program define reghdfejl, eclass
   tempname t
 
   jl, qui: SF_scal_save("`t'", nobs(m))
+
   if `sample' {
     jl, qui: esample = Vector{Float64}(m.esample)
     jl GetVarsFromMat `touse' if `touse', source(esample) replace
     jl, qui: esample = nothing
   }
 
-  if "`inexog'`ivarg'" != "" {  // if there are no coefficient estimates...
+  if "`inexog'`ivarg'" != "" {  // if there are coefficient estimates...
     tempname b V
 
-    jl, qui: I = [1+`kinexog'+`hascons':length(coef(m)) ; 1+`hascons':`kinexog'+`hascons' ; 1:`hascons']  // cons-exog-endog -> endog-exog-cons
+    jl, qui: I = [1+`kinexog'+`hascons':`kinexog'+`hascons'+`kinstd' ; 1+`hascons':`kinexog'+`hascons' ; 1:`hascons']  // cons-exog-endog -> endog-exog-cons
     jl, qui: `b' = collect(coef(m)[I]')
     jl, qui: `V' = replace!(vcov(m)[I,I], NaN=>0.)
     jl GetMatFromMat `b'
@@ -220,7 +295,7 @@ program define reghdfejl, eclass
   ereturn post `b' `V', depname(`depname') obs(`=`t'') buildfvinfo findomitted `=cond(`sample', "esample(`touse')", "")'
 
   ereturn scalar N_hdfe = 0`N_hdfe'
-  jl, qui: SF_scal_save("`t'", size(df,1))
+  jl, qui: SF_scal_save("`t'", sizedf[1])
   ereturn scalar N_full = `t'
   mata st_numscalar("e(rank)", rank(st_matrix("e(V)")))
   ereturn scalar df_m = e(rank)
@@ -242,7 +317,7 @@ program define reghdfejl, eclass
   ereturn scalar ic = `t'
   jl, qui: SF_scal_save("`t'", m.converged)
   ereturn scalar converged = `t'
-  jl, qui: SF_scal_save("`t'", size(df,1) - nobs(m))
+  jl, qui: SF_scal_save("`t'", sizedf[1] - nobs(m))
   ereturn scalar num_singletons = `t'
   ereturn scalar rmse = sqrt(e(rss) / (e(N) - e(df_a) - e(rank)))
   ereturn scalar ll  = -e(N)/2*(1 + log(2*_pi / e(N) *  e(rss)          ))
@@ -255,7 +330,7 @@ program define reghdfejl, eclass
 
   if "`wtvar'"=="" ereturn scalar sumweights = e(N)
   else {
-    jl, qui: SF_scal_save("`t'", mapreduce((w,s)->(s ? w : 0), +, df.`wtvar', m.esample; init = 0))
+    jl, qui: SF_scal_save("`t'", sumweights)
     ereturn scalar sumweights = `t'
   }
 
@@ -305,8 +380,6 @@ program define reghdfejl, eclass
   ereturn local cmdline `cmdline'
   ereturn local cmd reghdfejl
 
-  jl, qui: df = nothing  // yield memory
-
   Display, `diopts' level(`level') `noheader' `notable'
 end
 
@@ -340,47 +413,8 @@ program define Display
   if "`table'"=="" ereturn display, level(`level') `diopts'
 end
 
-cap program drop ParseAbsorb
-program define ParseAbsorb, rclass
-  version 16
 
-  syntax anything(equalok), [SAVEfe]
-  tokenize `anything', parse(" =")
-
-  return local savefe `savefe'
-
-  while `"`1'"' != "" {
-    if `"`2'"' == "=" {
-      confirm new var `1'
-      local fenames = `"`fenames'"' + " `1'"
-      macro shift 2
-      return local namedfe 1
-    }
-    else local fenames = `"`fenames'"' + `" "" "'
-    local feterms `feterms' `1'
-    macro shift
-  }
-  return local absorb `feterms'
-  return local fenames `fenames'
-
-  return local N_hdfe: word count `feterms'
-  local feterms: subinstr local feterms " " " i.", all
-  fvunab _feterms: i.`feterms'
-  local feterms
-  foreach exp in `_feterms' {  // drop un-prefixed continuous terms from ## expansion
-    if substr("`exp'",1,2)=="i." local feterms `feterms' `exp'
-  }
-
-  local absorbvars `feterms'
-  local feterms: subinstr local feterms "##c." ")*(", all
-  local feterms: subinstr local feterms "#c." ")&(", all
-  local feterms: subinstr local feterms "##i." ")&fe(", all
-  local feterms: subinstr local feterms "#i." ")&fe(", all
-  local feterms: subinstr local feterms "i." "fe(", all
-  local feterms: subinstr local feterms " " ") + ", all
-  return local feterms + `feterms')
-
-  local absorbvars: subinstr local absorbvars "i." " ", all
-  local absorbvars: subinstr local absorbvars "c." " ", all
-  return local absorbvars: subinstr local absorbvars "#" " ", all
-end
+* Version history
+* 0.3.0 Added support for absorbing string vars and clustering on interactions
+* 0.3.1 Added compact option
+* 0.3.2 Much better handling of interactions. Switched to BLISBLAS.jl.

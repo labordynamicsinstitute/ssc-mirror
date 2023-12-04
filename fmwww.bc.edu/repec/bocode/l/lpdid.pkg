@@ -1,0 +1,45 @@
+d 'LPDID': module implementing Local Projections Difference-in-Differences (LP-DiD) estimator
+d
+d  LPDID performs the Local Projections Difference-in-Differences
+d estimator (LP-DiD) proposed by Dube, Girardi, Jordà and Taylor
+d (2023). LP-DiD is a convenient and flexible regression-based
+d framework for implementing Difference-in-Differences with
+d multiple time periods. It uses panel data to estimate the average
+d effect of a treatment under the assumptions of no-anticipation
+d and (conditional) parallel trends. It can provide both dynamic
+d event study estimates that track the treatment effect path at
+d each time horizon after treatment, and 'pooled' estimates of the
+d overall average effect in a post-treatment time window. Treatment
+d can be absorbing (once a unit gets treated, it stays treated) or
+d non-absorbing (units can enter and exit treatment multiple
+d times). If treatment is non-absorbing, the nonabsorbing() option
+d must be specified. The estimation sample is restricted to units
+d entering treatment and 'clean' controls, thus avoiding the
+d 'negative-weights' bias of TWFE estimators. The baseline version
+d estimates a variance-weighted effect with strictly positive
+d weights. The reweighed version (implemented through the rw
+d option) estimates an equally-weighted average effect. LP-DiD
+d offers flexibility in using either the last period before
+d treatment (the default option) or an average of pre-treatment
+d periods (the pmd() option) as the pre-treatment base period. The
+d command allows inclusion of control variables, including
+d pre-treatment lags of the outcome. 
+d
+d KW: local projections
+d KW: difference-in-difference
+d KW: DiD
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20231203
+d
+d Author: Alexander Busch, IZA, Bonn University
+d Support: email    busch@@iza.org
+d
+d Author:   Daniele Girardi,  King's College London 
+d Support: email daniele.girardi@@kcl.ac.uk
+d
+f lpdid.ado
+f lpdid.sthlp
+f lpdidtestdata1.dta
+f lpdidtestdata2.dta

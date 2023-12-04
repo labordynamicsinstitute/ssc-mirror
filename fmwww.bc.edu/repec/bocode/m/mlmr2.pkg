@@ -3,24 +3,33 @@ d
 d   mlmr2 produces r-squared measures for models estimated by
 d mixed.  Using the Rights and Sterba (2019; 2021; 2023b) framework
 d for decomposing the total model-implied outcome variance from a
-d multilevel model into (potentially level-specific) sources, mlmr2
-d computes measures of the proportion of explained variance
-d attributable to each (or combinations) of those sources (e.g.,
-d level-1 predictors via fixed slopes).  mlmr2 can be used as a
+d linear mixed model into its sources, mlmr2 computes measures of
+d the proportion of explained variance attributable to each (or
+d combinations) of those sources (e.g., level-1 portion of
+d predictors via fixed slopes).  mlmr2 can be used as a
 d postestimation command with any set of estimation results from
 d mixed except for results from cross-classified models and/or
-d models with more than 5 levels of clustering. 
-d
+d models with more than 5 levels.  mlmr2 also assesses whether the
+d model's fixed and random effects may be subject to conflation
+d bias.  If mlmr2 detects any predictors at risk of having
+d conflated fixed or random effects, the output will contain
+d warning messages detailing which predictors are at risk.  These
+d warning messages are to aid the user in avoiding conflation bias
+d in the r-squared measures (Rights, 2023; Rights & Sterba, 2023a). d
 d KW: mixed estimation
 d KW: R-squared
 d KW: multilevel models
 d
 d Requires: Stata version 17
 d
-d Distribution-Date: 20231105
+d Distribution-Date: 20231203
 d
 d Author: Anthony J. Gambino , University of Connecticut
 d Support: email anthony.gambino@@uconn.edu
 d
 f mlmr2.ado
+f mlmr2_2L.ado
+f mlmr2_3L.ado
+f mlmr2_4L.ado
+f mlmr2_5L.ado
 f mlmr2.sthlp

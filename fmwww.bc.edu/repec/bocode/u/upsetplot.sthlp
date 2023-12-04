@@ -1,5 +1,5 @@
 {smcl}
-{* 30nov2022/10dec2022/21mar2023/2apr2023}{...}
+{* 30nov2022/10dec2022/21mar2023/2apr2023/16jul2023/28aug2023/3sep2023/30nov2023}{...}
 {hline}
 help for {hi:upsetplot}
 {hline}
@@ -16,6 +16,7 @@ help for {hi:upsetplot}
 {cmd:,}
 {opt fillin}
 {opt percent}
+{opt frformat(str)}
 {opt pcformat(str)}
 {opt select(numlist)} 
 {break}
@@ -37,24 +38,26 @@ help for {hi:upsetplot}
 {title:Description}
 
 {p 4 4 2}
-{cmd:upsetplot} produces a bar chart alternative to Euler or Venn
-diagrams showing the frequencies (or more generally abundances) of
+{cmd:upsetplot} produces by default bar chart alternatives to Euler or Venn
+diagrams showing the frequencies (meaning generally, abundances) of
 subsets of observations as defined jointly by a bundle of numeric
-indicator variables. The plot resembles what have been called UpSetPlots
-elsewhere. 
+indicator variables. Such plots resemble what have been called UpSetPlots
+elsewhere. There is scope to recast results to use some other
+subcommands of {cmd:twoway}. 
 
 {p 4 4 2}
-The order of variables presented to {cmd:upsetplot} affects the order of
-subsets in the plot and in the associated dataset, but not which subsets
-are defined. If any indicator represents an outcome or response, it
-might well be specified first. 
+The order of variables presented to {cmd:upsetplot} does not determine the order in which 
+they are shown in a plot. By default bars (spikes, dotted lines) are shown 
+in order of subset frequency, but choosing a more suitable order is the
+user's prerogative. There is considerable scope to change that sort order 
+using other criteria. 
 
 {p 4 4 2}
-Commonly, but not necessarily, subset frequencies (or abundances) are
+Commonly, but not necessarily, subset frequencies (abundances) are
 already in a variable in the dataset. If so, that variable should be
 specified as frequency or analytic weights. If no weights are specified,
 {cmd:upsetplot} counts observations for you. Either way, note that the
-focus of this command is on displaying frequencies or abundances, and
+focus of this command is on displaying frequencies, and
 not the particular values in each subset.  
 
 {p 4 4 2}
@@ -95,9 +98,9 @@ using variable names or optionally variable labels.  The text
 empty text. 
 
 {p 8 8 2}
-{cmd:_count} is a numeric variable containing the count (frequency) of
+{cmd:_freq} is a numeric variable containing the frequency of
 occurrence of each subset. If analytic weights were specified, values
-may have fractional parts.                                
+may have fractional parts. Otherwise values will be integer counts.                                
 
 {p 8 8 2}
 (Optionally) {cmd:_percent} is a numeric variable containing the percent
@@ -128,6 +131,11 @@ added "and no standard term either". Terms encountered (other than
 the homely size. See annotations of several references. 
 
 {p 4 4 2}
+Unwin (2015, pp.179, 180, 182) independently used plots with similar 
+content but different style to show the structure of missing values. 
+For more examples, see Unwin (2024).  
+
+{p 4 4 2}
 More detailed Remarks, including many further references, follow later
 in this help. 
 
@@ -138,23 +146,30 @@ in this help.
 
 {p 4 4 2}
 {cmd:fillin} insists on showing subsets that do not occur with their
-frequency or abundance zero. This can be helpful if there are only a few
+frequency zero. This can be helpful if there are only a few
 such subsets, but not usually otherwise.
 
 {p 4 4 2}
 {cmd:percent} specifies listing and plotting of percents rather than
-counts (frequencies}. 
+frequencies. 
 
 {p 4 4 2}
-{cmd:pcformat()} specifies a display format for percents in listings and
-plots. The default is {cmd:%2.1f}.  This option has no effect without
-{cmd:percent}.
+{cmd:frformat()} specifies a display format for frequencies in listings. 
+This option may be appropriate if any frequencies include fractional 
+parts. If you wish to specify a format for the bar labels,  
+you should do so directly, using {cmd:labelopts(mlabformat())}. 
 
 {p 4 4 2}
-{cmd:select()} specifies that only first so many bars be shown. That is, 
+{cmd:pcformat()} specifies a display format for percents in listings. 
+The default is {cmd:%2.1f}.  This option has no effect without
+{cmd:percent}. If you wish to specify a format for the bar labels,  
+you should do so directly, using {cmd:labelopts(mlabformat())}. 
+
+{p 4 4 2}
+{cmd:select()} specifies that only the first so many bars be shown. That is, 
 without this option the bars that would be shown are considered to be 
 numbered 1, 2, 3 and so on, from left to right. {cmd:select(1/10)} would 
-reduce the display the first 10 bars. Typically, this option would be used 
+reduce the display to the first 10 bars. Typically, this option would be used 
 to select the most frequent subsets, but the syntax allows any integer 
 {help numlist}. 
 
@@ -169,41 +184,42 @@ variable label has not been defined, the variable name is used instead.
 
 {p 4 4 2}
 {cmd:separator()} specifies a string to separate variable names or, as
-above, variable labels in calculating {cmd:_text}. The default is
-{cmd:", "}, a comma followed by a space. Hint: the intersection symbol
-can be obtained using {cmd:"{c -(}&cap{c )-}"}. Such SMCL notation will
-be interpreted on graphs, but will appear uninterpreted in data
-listings.  This option has no bearing on the graph produced by
-{cmd:upsetplot}, but is explained here for symmetry with the help for
-{helpb vennbar}. 
+above, variable or value labels in display of subsets. The default is {cmd:", "},
+a comma followed by a space. Hint: the intersection symbol  can be
+obtained using SMCL's {cmd:"{c -(}&cap{c )-}"} or Unicode character
+(U+2229) through {cmd:uchar(2229)}. The SMCL notation will be
+interpreted on graphs, but will appear uninterpreted in data listings.  
+The Unicode character should be interpreted in both.
 
 {p 4 4 2}
 {cmd:gsort()} specifies instructions to {helpb gsort} on the order of
 bars, mentioning one or more variable names for sorting the display.
 The variable(s) named must be included in the reduced dataset as defined
-above and should be one or more of the following:  
+above and could be one or more of the following:  
 
     {cmd:_binary}
     {cmd:_decimal}
     {cmd:_text} 
-    {cmd:_count}
+    {cmd:_freq}
     {cmd:_percent} (if specified) 
     {cmd:_degree} 
 
 {p 4 4 2} 
-The default is to sort on the frequency or abundance variable
-{cmd:_count} created by the command, highest values first.  
+The default is to sort on the frequency (abundance) variable
+{cmd:_freq} created by the command, highest values first.  
 
 {p 4 4 2}
 {cmd:axisgap()} specifies a gap between the {it:x} axis and the first
 row of the legend. The default is (the maximum value of
-{cmd:_count})/100.  After the command has run the value used is
-accessible as local macro {cmd:axisgap}. 
+{cmd:_freq} or {cmd:_percent}) / 100.  After the command has run the value used is
+accessible as local macro {cmd:axisgap}. That allows one or more extra
+passes to change the gap. 
 
 {p 4 4 2}
 {cmd:vargap()} specifies the gap between each row in the legend. The
-default is (the maximum value of {cmd:_count})/25. After the command has
-run the value used is accessible as local macro {cmd:vargap}. 
+default is (the maximum value of {cmd:_freq} or {cmd:_percent})/25. After the command has
+run the value used is accessible as local macro {cmd:vargap}. That allows one or more extra
+passes to change the gap. 
 
 {p 4 4 2}
 {cmd:baropts()} are options of {helpb twoway bar} used to tune the
@@ -212,9 +228,10 @@ rendering of bars. The defaults include
 
 {p 4 4 2}
 {cmd:labelopts()} are options of {helpb twoway scatter} used to tune the
-rendering of text labels showing frequencies above each bar. The
-defaults are 
-{cmd:ms(none) mlabc(black) mla(_count) mlabpos(12) mlabsize(small)}. 
+rendering of text labels showing frequencies or percents above each bar. The
+defaults are {cmd:mla(_freq} or {cmd:mla(_percent)} with 
+{cmd:ms(none) mlabc(black) mlabpos(12) mlabsize(small)}. 
+Alternatively, {cmd:labelopts(none)} suppresses such labels.
 
 {p 4 4 2}
 {cmd:matrixopts()} are options of {helpb twoway scatter} used to tune
@@ -282,13 +299,13 @@ name.
 
 {p 4 8 2}{cmd:. upsetplot A R M S [fw=freq], varlabels  baropts(`toptitle' `bcolour') gsort(_decimal) name(UP2, replace)}{p_end}
 
-{p 4 8 2}{cmd:. upsetplot A R M S [fw=freq], varlabels gsort(_degree -_count) baropts(`toptitle' `bcolour') name(UP3, replace)}{p_end}
+{p 4 8 2}{cmd:. upsetplot A R M S [fw=freq], varlabels gsort(_degree -_freq) baropts(`toptitle' `bcolour') name(UP3, replace)}{p_end}
 
-{p 4 8 2}{cmd:. upsetplot A R M S [fw=freq], varlabels gsort(-_degree -_count) baropts(`toptitle' `bcolour') name(UP4, replace)}{p_end}
+{p 4 8 2}{cmd:. upsetplot A R M S [fw=freq], varlabels gsort(-_degree -_freq) baropts(`toptitle' `bcolour') name(UP4, replace)}{p_end}
 
 {p 4 8 2}{cmd:. tempfile schnable}{p_end}
  
-{p 4 8 2}{cmd:. upsetplot A R M S [fw=freq], varlabels gsort(-_degree -_count) baropts(`toptitle' `bcolour') savedata("`schnable'")}{p_end}
+{p 4 8 2}{cmd:. upsetplot A R M S [fw=freq], varlabels gsort(-_degree -_freq) baropts(`toptitle' `bcolour') savedata("`schnable'")}{p_end}
 
 {p 4 8 2}{cmd:. use "`schnable'", clear}{p_end}
 
@@ -386,7 +403,7 @@ name.
 
 {p 4 8 2}{cmd:. upsetplot M*, varlabels baropts(`toptitle' `bcolour') name(UP7, replace)}{p_end}
 
-{p 4 8 2}{cmd:. upsetplot M* if missing(ind_code, union, wks_ue, tenure, wks_work), varlabels baropts(`toptitle' `bcolour') gsort(_degree -_count) name(UP8, replace)}{p_end}
+{p 4 8 2}{cmd:. upsetplot M* if missing(ind_code, union, wks_ue, tenure, wks_work), varlabels baropts(`toptitle' `bcolour') gsort(_degree -_freq) name(UP8, replace)}{p_end}
 
 {p 4 8 2}{cmd:. * EXAMPLE 4}{p_end}
 {p 4 8 2}{cmd:. * various indicators in nlswork.dta}{p_end}
@@ -409,7 +426,7 @@ name.
 
 {title:Authors}
 
-{p 4 4 2}Tim Morris, MRC Clinical Trials Unit, University College London{break} 
+{p 4 4 2}Tim P. Morris, MRC Clinical Trials Unit, University College London{break} 
 tim.morris@ucl.ac.uk
 
 {p 4 4 2}Nicholas J. Cox, Durham University{break}
@@ -418,13 +435,23 @@ n.j.cox@durham.ac.uk
 
 {title:Acknowledgments}
 
-{p 4 4 2}Various threads on Statalist contributed directly or indirectly
-to the development of this command. 
+{p 4 4 2}
+This paper arose from a conversation between the authors at the London
+Stata meeting in 2022. We much appreciate the enterprise, energy, and
+enthusiasm behind these meetings over almost 30 years shown by the late
+Ana Timberlake, Teresa Timberlake, David Corbett, and their colleagues.
+
+{p 4 4 2}
+Angela Wood originally drew the attention of TPM to upsetplots. Antony
+Unwin provided NJC access to his forthcoming book. Several posts on 
+Statalist indicated very helpfully both interest in this problem and 
+reactions to earlier versions of these commands. 
 
 
 {title:Also see}
 
 {p 4 4 2}Help for{break}
+{help misstable}{break}
 {help sortmean} (if installed){break} 
 {help groups} ({it:Stata Journal}) (if installed){break}
 {help vennbar} (if installed){break}
@@ -440,7 +467,7 @@ to the development of this command.
 {p 4 4 2}
 {cmd:upsetplot} requires a bundle of numeric variables with values 0 or
 1.  Such variables are variously called indicator, dummy, binary,
-dichotomous, zero-one, Boolean, logical or quantal. Missing values will
+dichotomous, zero-one, one-hot, Boolean, logical or quantal. Missing values will
 be ignored.  Otherwise presenting values other than 0 or 1 is considered
 an error.  Observations used will thus have all values 0 or 1 in all
 variables specified.  Differently put, {cmd:upsetplot} is not for string
@@ -472,7 +499,7 @@ equivalents 0 to 7. More generally, {it:k} such variables define
 
 {p 4 4 2}
 The order of variables presented determines the order in which they are
-shown in the key. Choosing a suitable order is considered to be the user's
+shown in the legend. Choosing a suitable order is considered to be the user's
 responsibility. For example, if the data were medical symptoms exhibited
 by patients, a substantive grouping (say, cardiovascular symptoms all
 together) could make analytical sense. Otherwise, ordering variables by
@@ -482,7 +509,7 @@ with this package and an example above shows its use. See also
 {help vorter} from SSC. 
 
 {p 4 4 2}
-Variables that are identically 0 or 1, at least in the data being shown, 
+Variables that are identically 0 or identically 1, at least in the data being shown, 
 are not always useful and so might be omitted. {help findname} (Cox
 2010, and {cmd:search findname, sj} for updates) can be used to find
 such variables through options {cmd:all(@ == 0)} or {cmd:all(@ == 1)}. 
@@ -520,7 +547,7 @@ indicator variables in Stata.
 
 {p 4 4 2}
 Various commentators, from Leibniz onward, have seen anticipations
-of bimary arithmetic in the divination manual {it:I Ching} ({it:Yijing}, {it:Yi Jing},
+of binary arithmetic in the divination manual {it:I Ching} ({it:Yijing}, {it:Yi Jing},
 {it:Yi King}, etc.). That seems exaggerated. See Gardner (1974} for a brisk
 discussion and Knuth (2011) and Strickland and Lewis (2022) for further comments.  
 
@@ -531,7 +558,7 @@ sometimes to understand, but even for 4 or 5 variables they are harder
 to draw and even harder to understand.  For say {it:k} = 5, 2^5 = 32,
 which poses a challenge to show data intelligibly.  For say {it:k} = 10,
 2^10 = 1024, which is often far too many subsets to work with
-simultaneously.  However, the problem may be eased in practice if many
+simultaneously.  However, the problem will be eased in practice if many
 of the possible subsets do not occur, or occur so rarely that they can
 be ignored. For modest values of {it:k}, bar charts may be a competitive
 alternative, which is the idea implemented here.  
@@ -550,7 +577,19 @@ older (e.g. Kosara 2007) and indeed implicit in any decision to use bar
 charts when researchers are aware of Venn diagrams.  The assertion "I
 would argue that Venn diagrams are a great tool for learning about sets,
 but useless as a visualization" (Kosara 2007) is unfortunately supported
-by many examples in various literatures. 
+by many examples in various literatures.
+
+{p 4 4 2}
+Hamming (1991, pp.16{c -}17) commended Venn diagrams for simple cases yet 
+continued: "But if you try to go to very many subsets then the problem of 
+drawibg a diagram which will show clearly what you are doing is often 
+difficult. Circles are not, of course, necessary but when you are forced to 
+draw very snake-like regions then the diagram is of little help in 
+visualizing the situation." 
+
+{p 4 4 2}
+Gleason (1991, p.33) commented that Venn diagrams become unwieldy for
+a number of sets "exceeding 4 or 5". 
 
 {p 4 4 2}
 Venn diagrams are widely familiar in mathematics and science and indeed
@@ -595,7 +634,7 @@ so well established.
 
 {p 4 4 2}
 John Venn (1834{c -}1923) now benefits from a full-length biography
-(Verbugt 2022). For shorter appreciations, see Broadbent (1976),
+(Verburgt 2022). For shorter appreciations, see Broadbent (1976),
 Grattan-Guinness (2001), or Gibbins (2004). Grattan-Guinness (2011)
 places the work of Boole and Venn in context, surveying the development
 of logic in 19th century Britain. Venn's interest in probability and 
@@ -611,8 +650,8 @@ Dunham (1999). For a shorter although still detailed account, see
 Youschkevitch (1971).  For a very concise account, see Sandifer (2008).  
 
 {p 4 4 2}
-For implementations of Venn diagrams in Stata, see Lauritsen (1999a,
-1999b, 1999c, 2000, 2009), Gong and Osterman (2011), and Over (2022).
+For implementations of Venn diagrams in Stata, see (e.g.) Lauritsen (1999a,
+1999b, 1999c, 2000, 2009), Gong and Ostermann (2011), and Over (2022).
 
 
 {title:References}
@@ -783,6 +822,13 @@ Euler, L. 1768.
 Saint Petersbourg: L'Acad{c e'}mie Imp{c e'}riale des Sciences. 
 
 {p 4 8 2}
+Freeman, S.C., E. Saeedi, J.M. Ordóñez-Mena, C.R. Nevill, J. Hartmann-Boyce, D.M. Caldwell, 
+N.J. Welton, N.J. Cooper and A.J. Sutton. 
+2023. 
+Data visualisation approaches for component network meta-analysis: visualising the data structure. 
+{it:BMC Medical Research Methodology} 23, 208. https://doi.org/10.1186/s12874-023-02026-z
+
+{p 4 8 2}
 Friendly, M. and H. Wainer. 2021. 
 {it:A History of Data Visualization and Graphic Communication.} 
 Cambridge, MA: Harvard University Press. 
@@ -815,6 +861,12 @@ Venn, John.
 In Matthew, H.C.G. and B. Harrison (eds)
 {it:Oxford Dictionary of National Biography.}
 Oxford: Oxford University Press 56: 259{c -}260. 
+
+{p 4 8 2}
+Gleason, A.M. 1991. 
+{it:Fundamentals of Abstract Analysis.}
+Bostnn, MA: Jones and Bartlett. 
+[original publication: 1966. Reading, MA: Addison-Wesley.] 
 
 {p 4 8 2}
 Gong, W. and J. Ostermann. 2011.
@@ -894,6 +946,11 @@ New York: W.W. Norton.
 Hamming, R.W. 1985. 
 {it:Methods of Mathematics Applied to Calculus, Probability, and Statistics.} 
 Englewood Cliffs, NJ: Prentice-Hall.
+
+{p 4 8 2}
+Hamming, R.W. 1991. 
+{it:The Art of Probability for Scientists and Engineers.} 
+Reading, MA: Addison-Wesley. 
 
 {p 4 8 2}
 Heath, P. and E. Seneta. 2001. 
@@ -1060,7 +1117,7 @@ Pitman, J. 1993.
 {it:Probability.} 
 New York: Springer.
 
-{p 4 8 3}
+{p 4 8 2}
 Playfair, W. 1801.
 {it:The Statistical Breviary.} 
 London: Wallis etc.  
@@ -1115,6 +1172,16 @@ Strickland, L. and H.R. Lewis. 2022.
 Cambridge, MA: MIT Press. 
 
 {p 4 8 2}
+Unwin, A. 2015. 
+{it:Graphical Data Analysis with R.}
+Boca Raton, FL: CRC Press. 
+
+{p 4 8 2}
+Unwin, A. 2024. 
+{it:Getting (more out of) Graphics.}
+Boca Raton, FL: CRC Press. 
+
+{p 4 8 2}
 Venn, J. 1866, 1876, 1888. 
 {it:The Logic of Chance.} 
 London: Macmillan.
@@ -1150,7 +1217,7 @@ On the nature and uses of averages.
 52: 429{c -}456.
 
 {p 4 8 2}
-Verbugt, L.M. 2022. 
+Verburgt, L.M. 2022. 
 {it:John Venn: A Life in Logic.} 
 Chicago: University of Chicago Press. 
 
@@ -1191,7 +1258,7 @@ p.147 cardinality
 {title:Bibliographic note on Martin Gardner's columns} 
 
 {p 4 4 2}
-Martin Gardner's columns on "Mathematical games" over many years in
+Martin Gardner's columns on "Mathematical Games" over many years in
 {it:Scientific American} covered much more than games and puzzles and
 included many splendid expositions of topics with mathematical content.
 They present a variety of small bibliographical challenges. The original
@@ -1213,4 +1280,4 @@ and
 {browse "https://ansible.uk/misc/mgardner.html":https://ansible.uk/misc/mgardner.html} 
 will help you find what you are looking for or indeed to determine 
 whether a relevant column was ever written.
-
+`

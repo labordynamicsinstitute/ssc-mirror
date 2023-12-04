@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.2.1 23nov2023}{...}
+{* *! version 0.3.1 30nov2023}{...}
 
 {title:Title}
 
@@ -34,6 +34,7 @@
 {synopt:{opt tol:erance(#)}}criterion for convergence. default is 1e-8{p_end}
 {synopt:{opt iter:ate(#)}}maximum number of iterations; default is 16,000{p_end}
 {synopt:{opt nosamp:le}}will not create {it:e(sample)}, saving some space and speed{p_end}
+{synopt:{opt compact}}temporarily saves all data to disk in order to free memory{p_end}
 {synopt:{opt threads(#)}}number of CPU threads Julia should use{p_end}
 {synopt:{opt gpu}}use NVIDIA or Apple Silicon GPU{p_end}
 {synopt:{opt l:evel(#)}}set confidence level; default is normally 95{p_end}
@@ -56,12 +57,10 @@ with two-stage least squares. In this capacitiy it is not as full-featured as {c
 
 {pstd}
 To run, {cmd:reghdfejl} requires that the Stata command {cmd:jl} be installed; "{stata ssc install julia}" should suffice. It also needs
-Julia, which is free. See these {help jl##installation:installation instructions}. On Intel Macs, it seems to require macOS 11 (Big Sur)
-or 12 (Monterey) to run reliably.
+Julia 1.9.4 or later, which is free. See these {help jl##installation:installation instructions}.
 
-{ptsd}
-Because Julia performs just-in-time
-compilation, and because {cmd:reghdfejl} may need to install Julia packages, there can be long lags on first use. 
+{pstd}
+Because Julia performs just-in-time compilation, and because {cmd:reghdfejl} may need to install Julia packages, there can be long lags on first use. 
 
 {pstd}
 If {cmd:reghdfejl} appears to be failing to install the needed packages,
@@ -96,13 +95,10 @@ useful when you have plenty of RAM, when the number of non-absorbed regressors i
 (for then the computational efficiency of Julia shines).
 
 {pstd}
-{cmd:reghdfejl} offers two novel options that can increase speed, athough in the author's experience they don't help a lot. The {opt threads(#)}
+{cmd:reghdfejl} offers two novel options that can increase speed. The {opt threads(#)}
 option can reduce the number of CPU threads Julia uses. The default number--and the maximum that {cmd:reghdfejl} can access--is set by 
-the {browse "https://docs.julialang.org/en/v1/manual/multi-threading/":system environment variable JULIA_NUM_THREADS}. To determine this value,
-type "{stata "jl: Threads.nthreads()"}" at the Stata prompt. On CPUs with efficiency 
-as well as performance cores, it is sometimes faster to reduce the number of threads
-to the number of performance cores, in order to reduce dependence on the slower efficiency cores. Further reductions also help if the overhead
-of multithreading exceeds the benefits.
+the {browse "https://docs.julialang.org/en/v1/manual/multi-threading/":system environment variable JULIA_NUM_THREADS}. See 
+{help jl##threads:help jl} for more on determining and controlling the number of threads.
 
 {pstd}
 The other novel option, {cmd:gpu} specifies the use of NVIDIA or Apple Silicon GPUs for computation. Typically this modestly increases speed.
@@ -185,6 +181,9 @@ specifies the maximum number of iterations; the default is 16,000.
 
 {phang}
 {opt nosample} will not create {it:e(sample)}, saving some space and speed.
+
+{phang}
+{opt compact} temporarily saves all data to disk in orer to free memory for estimation--at the cost of a bit of time.
 
 {phang}
 {opt l:evel(#)} sets the confidence level for reported confidence intervals. The default is controlled by {help set level} and is usually 95.

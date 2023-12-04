@@ -17,7 +17,7 @@ d KW: plugins
 d
 d Requires: Stata version 14.1 and Julia 1.9
 d
-d Distribution-Date: 20231127
+d Distribution-Date: 20231203
 d
 d Author: David Roodman
 d Support: email david@@davidroodman.com
@@ -28,6 +28,7 @@ F ../s/stataplugininterface.jl
 G WIN64 jl.pluginWIN64.dll jl.plugin
 G MACARM64 jl.pluginMACARM64 jl.plugin
 G OSX.ARM64 jl.pluginMACARM64 jl.plugin
+G MacOSX jl.pluginMacOSX jl.plugin
 G MACINTEL64 jl.pluginMACINTEL64 jl.plugin
 G OSX.X8664 jl.pluginMACINTEL64 jl.plugin
 G LINUX64 jl.pluginLINUX64 jl.plugin

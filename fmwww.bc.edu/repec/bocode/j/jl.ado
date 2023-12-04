@@ -1,4 +1,4 @@
-*! jl 0.5.6 25 November 2023
+*! jl 0.6.0 2 December 2023
 *! Copyright (C) 2023 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
@@ -32,16 +32,36 @@ program define display_multiline
   di `"`s'"'
 end
 
+// Take 1 argument, possible path for julia executable, return workable path, if any, in caller's libpath local; error otherwise
+cap program drop wheresjulia
+program define wheresjulia, rclass
+  tempfile tempfile
+  !`1'julia -e "using Libdl; println(dlpath(\"libjulia\"))" > `tempfile'
+  mata st_local("libpath", fget(fh = fopen("`tempfile'", "r"))); _fclose(fh)
+  c_local libpath `libpath'
+end
+
 cap program drop assure_julia_started
 program define assure_julia_started
   version 14.1
 
   if `"$julia_loaded"' == "" {
-    cap plugin call _julia, start
+    cap {
+      cap wheresjulia
+      cap if _rc & c(os)!="Windows" wheresjulia ~/.juliaup/bin/
+      cap if _rc & c(os)=="MacOSX" {
+        forvalues v=9/20 {  // https://github.com/JuliaLang/juliaup/issues/758#issuecomment-1836577702
+          cap wheresjulia /Applications/Julia-1.`v'.app/Contents/Resources/julia/bin/
+          if !_rc continue, break
+        }
+      }
+      if _rc error _rc
+      plugin call _julia, start "`libpath'"
+    }
     if _rc {
-      di as err "Can't access Julia. {cmd:jl} requires that Julia be installed and that the system"
-      di as err "variable JULIA_DIR point to the Julia directory."
-      di as err `"Installation via {cmd:juliaup} is strongly recommended. Instructions are {browse "https://github.com/JuliaLang/juliaup#installation":here}."'
+      di as err "Can't access Julia. {cmd:jl} requires that Julia be installed and that you are"
+      di as err `"able to start it by typing "julia" in a terminal window (though you won't normally need to)."'
+      di as err `"Installation via {browse "https://github.com/JuliaLang/juliaup#installation":juliaup} is recommended."'
       exit 198
     }
     global julia_loaded 1  // set now to prevent infinite loop from following jl calls!
@@ -67,8 +87,10 @@ program define jl, rclass
   cap _on_colon_parse `0'
   if _rc {
     if `"`1'"'=="stop" {
-      plugin call _julia, stop
-      global julia_loaded
+      if 0$julia_loaded {
+        plugin call _julia, stop
+        global julia_loaded
+      }
       exit
     }
     
@@ -223,3 +245,4 @@ program _julia, plugin using(jl.plugin)
 * 0.5.4 Bug and documentation fixes.
 * 0.5.5 Tweaks
 * 0.5.6 File reorganization
+* 0.6.0 Implemented dynamic runtime loading of libjulia for robustness to Julia installation type

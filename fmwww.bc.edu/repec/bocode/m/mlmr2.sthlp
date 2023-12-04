@@ -10,24 +10,11 @@
 {marker syntax}{...}
 {title:Syntax}
 
-{p 7}{cmd:mlmr2} [, {it:options}]
+{p 7}{cmd:mlmr2}
 
-{p2colset 7 30 31 0}{...}
-{p2col:{it:options}}Description{p_end}
-      {hline}
-{p2col:{opt c:wc}}specifies that the variance decomposition be done under the assumption that each predictor in the model varies at only 1 level (e.g., every predictor below the highest level is centered-within-clusters){p_end}
-      {hline}
-
-	  
 {marker description}{...}
 {title:Description}
-{pstd}{cmd:mlmr2} produces r-squared measures for models estimated by {cmd:mixed}.  Using the Rights and Sterba (2019; 2021; 2023b) framework for decomposing the total model-implied outcome 
-variance from a multilevel model into (potentially level-specific) sources, {cmd:mlmr2} computes measures of the proportion of explained variance attributable to each (or combinations) 
-of those sources (e.g., level-1 predictors via fixed slopes).  {cmd:mlmr2} can be used as a postestimation command with any set of estimation results from mixed except for results from 
-cross-classified models and/or models with more than 5 levels of clustering.  {cmd:mlmr2} offers the {opt c:wc} option, which applies the variance decomposition assuming that each
-predictor only varies at 1 level (if this isn't true for the estimated model, an error message will report which predictors violated this assumption).  When the {opt c:wc} option is not
-specified, a warning message will be printed with the output table that points out which measures are always safe to interpret.  The other measures will potentially be biased by conflation 
-if any predictor varies at more than 1 level (Rights, 2023; Rights & Sterba, 2023a).
+{pstd}{cmd:mlmr2} produces r-squared measures for models estimated by {cmd:mixed}.  Using the Rights and Sterba (2019; 2021; 2023b) framework for decomposing the total model-implied outcome variance from a linear mixed model into its sources, {cmd:mlmr2} computes measures of the proportion of explained variance attributable to each (or combinations) of those sources (e.g., level-1 portion of predictors via fixed slopes).  {cmd:mlmr2} can be used as a postestimation command with any set of estimation results from {cmd:mixed} except for results from cross-classified models and/or models with more than 5 levels.  {cmd:mlmr2} also assesses whether the model's fixed and random effects may be subject to conflation bias.  If {cmd:mlmr2} detects any predictors at risk of having conflated fixed or random effects, the output will contain warning messages detailing which predictors are at risk.  These warning messages are to aid the user in avoiding conflation bias in the r-squared measures (Rights, 2023; Rights & Sterba, 2023a).
 
 
 {marker examples}{...}
@@ -42,8 +29,7 @@ if any predictor varies at more than 1 level (Rights, 2023; Rights & Sterba, 202
 {pstd}Using mlmr2 to compute r-squared measures for the estimated model{p_end}
 {phang2}{cmd:. mlmr2}
 
-{pstd}There are multiple predictors in this model that vary at both levels, so using the {opt c:wc} option results in an error message reporting which predictors vary at more than 1 level{p_end}
-{phang2}{cmd:. mlmr2, c}
+{pstd}Note that every predictor except grade contains both level-1 and level-2 variation, and none of those predictors have their contextual effects accounted for (i.e., their corresponding cluster mean variables are not included as predictors), so {cmd:mlmr2} produces warning messages about these predictors because they are all at risk of having their fixed and random effects biased by conflation.{p_end}
 
     {hline}
 {pstd}Setup{p_end}
@@ -52,8 +38,10 @@ if any predictor varies at more than 1 level (Rights, 2023; Rights & Sterba, 202
 {pstd}Two-level model{p_end}
 {phang2}{cmd:. mixed weight week || id:}
 
-{pstd}The week variable has no variation across the id clusters, so the {opt c:wc} option can be used even though week is not centered-within-clusters{p_end}
-{phang2}{cmd:. mlmr2, c}
+{pstd}Using mlmr2 to compute r-squared measures for the estimated model{p_end}
+{phang2}{cmd:. mlmr2}
+
+{pstd}Note that week has no variation across the id clusters, so {cmd:mlmr2} produces no warning message because there is no risk of week's fixed effect being biased by conflation.{p_end}
 
     {hline}
 {pstd}Setup{p_end}
@@ -65,6 +53,8 @@ if any predictor varies at more than 1 level (Rights, 2023; Rights & Sterba, 202
 {pstd}Using mlmr2 to compute r-squared measures for the estimated model{p_end}
 {phang2}{cmd:. mlmr2}
 
+{pstd}Note that every predictor in this model contains level-1, level-2, and level-3 variation, and no contextual effects have been accounted for, so {cmd:mlmr2} produces warning messages about the predictors because they are all at risk of having their fixed and random effects biased by conflation.{p_end}
+
     {hline}
 {pstd}Setup{p_end}
 {phang2}{cmd:. webuse ovary}
@@ -74,6 +64,8 @@ if any predictor varies at more than 1 level (Rights, 2023; Rights & Sterba, 202
 
 {pstd}Using mlmr2 to compute r-squared measures for the estimated model{p_end}
 {phang2}{cmd:. mlmr2}
+
+{pstd}Note that there is a warning message for cos1 but not for sin1.  This is because the level-2 variance of sin1 is so small that it's basically zero (it's less than 10^-10), meaning that there is basically no risk of its fixed or random effect being biased by conflation.  Conversely, the level-2 variance of cos1 is technically nonzero (it's about 0.00003) and its level-2 cluster means have not been included in the model as a predictor, so there is technically a risk of its fixed effect being biased by conflation.  However, considering the level-1 variance of cos1 (about 0.51) is many magnitudes larger than its level-2 variance, there is probably very little risk of conflation bias, and this warning message can be ignored.{p_end}
 
     {hline}
 {pstd}Setup{p_end}

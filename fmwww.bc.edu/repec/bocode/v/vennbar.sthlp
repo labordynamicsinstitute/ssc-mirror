@@ -1,5 +1,5 @@
 {smcl}
-{* 30nov2022/10dec2022/30dec2022/3jan2023/9jan2023/2apr2023}{...}
+{* 30nov2022/10dec2022/30dec2022/3jan2023/9jan2023/2apr2023/16jul2023/28aug2023/3sep2023/30nov2023}{...}
 {hline}
 help for {hi:vennbar}
 {hline}
@@ -16,6 +16,7 @@ help for {hi:vennbar}
 {cmd:,}
 {opt fillin}
 {opt percent}
+{opt frformat(str)}
 {opt pcformat(str)}
 {break}
 {opt varlabels}
@@ -33,23 +34,24 @@ help for {hi:vennbar}
 {title:Description}
 
 {p 4 4 2}
-{cmd:vennbar} produces a bar or dot chart alternative to Euler or Venn
-diagrams showing the frequencies (or more generally abundances) of
+{cmd:vennbar} produces bar or dot chart alternatives to Euler or Venn
+diagrams showing the frequencies (meaning generally, abundances) of
 subsets of observations as defined jointly by a bundle of numeric indicator
 variables. 
 
 {p 4 4 2}
-The order of variables presented to {cmd:vennbar} affects the order of
-subsets in the plot and in the associated dataset, but not which subsets
-are defined. If any indicator represents an outcome or response, it
-might well be specified first. 
+The order of variables presented to {cmd:vennbar} does not determine the order in which 
+they are shown in a plot. By default bars or dotted lines are shown 
+in order of subset frequency, but choosing a more suitable order is the
+user's prerogative. There is considerable scope to change that sort order 
+using other criteria. 
 
 {p 4 4 2}
-Commonly, but not necessarily, subset frequencies (or abundances) are
+Commonly, but not necessarily, subset frequencies (abundances) are
 already in a variable in the dataset. If so, that variable should be
 specified as frequency or analytic weights. If no weights are specified,
 {cmd:vennbar} counts observations for you. Either way, note that the
-focus of this command is on displaying frequencies or abundances, and
+focus of this command is on displaying frequencies, and
 not the particular values in each subset.  
 
 {p 4 4 2}
@@ -87,9 +89,9 @@ labels.  The text {cmd:"<none>"} is reported for any subset which would
 otherwise have empty text. 
 
 {p 8 8 2}
-{cmd:_count} is a numeric variable containing the count (frequency) of
+{cmd:_freq} is a numeric variable containing the frequency of
 occurrence of each subset. If analytic weights were specified, values
-may have fractional parts. 
+may have fractional parts. Otherwise values will be integer counts. 
 
 {p 8 8 2}
 (Optionally) {cmd:_percent} is a numeric variable containing the percent
@@ -130,12 +132,18 @@ this help.
 
 {p 4 4 2}
 {cmd:fillin} insists on showing subsets that do not occur with their
-frequency or abundance zero. This can be helpful if there are only a few
+frequency This can be helpful if there are only a few
 such subsets, but not usually otherwise.
 
 {p 4 4 2}
 {cmd:percent} specifies listing and plotting of percents rather than 
-counts (frequencies}. 
+frequencies. 
+
+{p 4 4 2}
+{cmd:frformat()} specifies a display format for frequencies in listings. 
+This option may be appropriate if any frequencies include fractional 
+parts. If you wish to specify a format to {cmd:blabel()}, 
+you should do so directly: see {help blabel_option}.
 
 {p 4 4 2}
 {cmd:pcformat()} specifies a display format for percents in listings. 
@@ -163,12 +171,14 @@ interest, such as alive and dead, wet and dry, or female and male.
 {cmd:separator()} specifies a string to separate variable names or, as
 above, variable or value labels in display of subsets. The default is {cmd:", "},
 a comma followed by a space. Hint: the intersection symbol  can be
-obtained using {cmd:"{c -(}&cap{c )-}"}. Such SMCL notation will be
+obtained using SMCL's {cmd:"{c -(}&cap{c )-}"} or Unicode character
+(U+2229) through {cmd:uchar(2229)}. The SMCL notation will be
 interpreted on graphs, but will appear uninterpreted in data listings.  
+The Unicode character should be interpreted in both.
 
 {p 4 4 2}
 {cmd:recast()} specifies a subcommand of {help graph}, either {cmd:bar}
-or {cmd:dot} as an alternative to the default {cmd:hbar}. Note: This
+or {cmd:dot}, as an alternative to the default {cmd:hbar}. Note: This
 option name is inspired by the {cmd:recast()} option of {help twoway},
 but is not that option. If you wish to use {cmd:twoway} instead, specify
 the {cmd:savedata()} option and fire up {cmd:twoway} directly on the
@@ -183,14 +193,14 @@ about any space needed above the highest bar label, so you may need
 two passes and a call to {cmd:yscale()} to extend the axis.
 
 {p 4 4 2}
-The default is {cmd:over(_text, sort(_count) descending)}. Otherwise
+The default is {cmd:over(_text, sort(_freq) descending) blabel(bar)}. Otherwise
 options may refer to variables included in the 
 reduced dataset as defined above, which could be any of the following:  
 
     {cmd:_binary}
     {cmd:_decimal}
     {cmd:_text} 
-    {cmd:_count}
+    {cmd:_freq}
     {cmd:_percent} (if specified)
     {cmd:_degree} 
 
@@ -248,21 +258,21 @@ name.
 
 {p 4 8 2}{cmd: . tempfile schnable}{p_end}
 
-{p 4 8 2}{cmd: . vennbar A R M S [fw=freq], `bcolour' `toptitle' varlabels blabel(bar)  ysc(alt) ysc(r(. 9200)) savedata("`schnable'", replace) name(VB1, replace)}{p_end}
+{p 4 8 2}{cmd: . vennbar Arabidopsis Rice Maize Sorghum [fw=freq], `bcolour' `toptitle' varlabels ysc(alt) ysc(r(. 9200)) savedata("`schnable'", replace) name(VB1, replace)}{p_end}
 
-{p 4 8 2}{cmd: . vennbar A R M S [fw=freq], `bcolour' `toptitle' varlabels blabel(bar) over(_text, sort(_decimal) descending) over(_degree) nofill ysc(alt) ysc(r(. 9200)) name(VB2, replace)}{p_end}
+{p 4 8 2}{cmd: . vennbar Arabidopsis Rice Maize Sorghum [fw=freq], `bcolour' `toptitle' varlabels over(_text, sort(_decimal) descending) over(_degree) nofill ysc(alt) ysc(r(. 9200)) name(VB2, replace)}{p_end}
 
-{p 4 8 2}{cmd: . vennbar A R M S [fw=freq], `toptitle'  varlabels sep("; ") blabel(bar) marker(1, mcolor(blue)) ysc(r(0 10000)) recast(dot) linetype(line) lines(lc(gs8) lw(thin)) name(VB3, replace)}{p_end}
+{p 4 8 2}{cmd: . vennbar Arabidopsis Rice Maize Sorghum [fw=freq], `toptitle'  varlabels sep("; ") marker(1, mcolor(blue)) ysc(r(0 10000)) recast(dot) linetype(line) lines(lc(gs8) lw(thin)) name(VB3, replace)}{p_end}
 
-{p 4 8 2}{cmd: . vennbar A R M S [fw=freq], over(_degree, descending) over(_text, sort(_count) descending) nofill `bcolour' `toptitle' ysc(alt) name(VB4, replace)}{p_end}
+{p 4 8 2}{cmd: . vennbar Arabidopsis Rice Maize Sorghum [fw=freq], over(_degree, descending) over(_text, sort(_freq) descending) nofill `bcolour' `toptitle' ysc(alt) name(VB4, replace)}{p_end}
 
-{p 4 8 2}{cmd: . vennbar A R M S [fw=freq],  over(_text, sort(_count) descending) over(_degree, descending) nofill `bcolour' `toptitle' ysc(alt range(. 9200)) name(VB5, replace) blabel(bar)}{p_end}
+{p 4 8 2}{cmd: . vennbar Arabidopsis Rice Maize Sorghum [fw=freq],  over(_text, sort(_freq) descending) over(_degree, descending) nofill `bcolour' `toptitle' ysc(alt range(. 9200)) name(VB5, replace)}{p_end}
 
 {p 4 8 2}{cmd: . use "`schnable'", clear }{p_end}
 
 {p 4 8 2}{cmd: . graph hbar (asis) _setfreq, over(_set, sort(1)) bar(1, lcolor(blue) fcolor(blue*0.3)) blabel(bar) ysc(off) `toptitle' name(VB6, replace) }{p_end}
 
-{p 4 8 2}{cmd: . su _count, meanonly }{p_end}
+{p 4 8 2}{cmd: . su _freq, meanonly }{p_end}
 {p 4 8 2}{cmd: . local N = r(sum)}{p_end}
 
 {p 4 8 2}{cmd: . * null model, with observed probabilities of being A R M S}{p_end}
@@ -270,9 +280,9 @@ name.
 
 {p 4 8 2}{cmd: . quietly {c -(}}{p_end}
 
-{p 4 8 2}{cmd: . foreach v in A R M S {c -(}}{p_end}
+{p 4 8 2}{cmd: . foreach v in Arabidopsis Rice Maize Sorghum {c -(}}{p_end}
 {p 4 8 2}{cmd: . 	* the mean of an indicator is a probability }{p_end}
-{p 4 8 2}{cmd: . 	su `v' [fw=_count] }{p_end}
+{p 4 8 2}{cmd: . 	su `v' [fw=_freq], meanonly }{p_end}
 {p 4 8 2}{cmd: . 	replace _expected = _expected * cond(`v' == 1, r(mean), 1 - r(mean))}{p_end}
 {p 4 8 2}{cmd: . {c )-}}{p_end}
 
@@ -283,7 +293,7 @@ name.
 {p 4 8 2}{cmd: . {c )-}}{p_end}
 
 {p 4 8 2}{cmd: . * Pearson residuals for null model }{p_end}
-{p 4 8 2}{cmd: . gen _Pearson = (_count - _expected) / sqrt(_expected)}{p_end}
+{p 4 8 2}{cmd: . gen _Pearson = (_freq - _expected) / sqrt(_expected)}{p_end}
 
 {p 4 8 2}{cmd: . graph hbar (asis) _Pearson, over(_text, sort(decimal)) `bcolour' ysc(alt) ytitle(Pearson residuals from null model) name(VB7, replace)}{p_end}
 
@@ -304,7 +314,7 @@ name.
 
 {p 4 8 2}{cmd: . vennbar M*, `toptitle' `bcolour' varlabels name(VB8, replace)}{p_end}
 
-{p 4 8 2}{cmd: . vennbar M* if missing(ind_code, union, wks_ue, tenure, wks_work), `toptitle' `bcolour' varlabels over(_text, sort(_count) descending) over(_degree) nofill ysc(r(. 9200)) blabel(bar) name(VB9, replace)}{p_end}
+{p 4 8 2}{cmd: . vennbar M* if missing(ind_code, union, wks_ue, tenure, wks_work), `toptitle' `bcolour' varlabels over(_text, sort(_freq) descending) over(_degree) nofill ysc(r(. 9200)) name(VB9, replace)}{p_end}
 
 {p 4 8 2}{cmd: . * EXAMPLE 3}{p_end}
 {p 4 8 2}{cmd: . * various indicators in nlswork.dta }{p_end}
@@ -322,7 +332,7 @@ name.
 
 {p 4 8 2}{cmd: . vennbar nev_mar c_city collgrad south , `toptitle' `bcolour' varlabels name(VB11, replace)}{p_end}
 
-{p 4 8 2}{cmd: . vennbar nev_mar c_city collgrad south, varlabels sep("; ") `toptitle' `bcolour' blabel(bar) name(VB12, replace)}{p_end}
+{p 4 8 2}{cmd: . vennbar nev_mar c_city collgrad south, varlabels sep("; ") `toptitle' `bcolour' name(VB12, replace)}{p_end}
 
 {p 4 8 2}{cmd: . label def nev_mar 0 ever 1 never }{p_end}
 {p 4 8 2}{cmd: . label def c_city 0 "non-central" 1 central}{p_end}
@@ -333,7 +343,7 @@ name.
 {p 4 8 2}{cmd: . 	label val `v' `v' }{p_end}
 {p 4 8 2}{cmd: . {c )-}}{p_end}
 
-{p 4 8 2}{cmd: . vennbar nev_mar c_city collgrad south, vallabels sep("; ") `toptitle' `bcolour' blabel(bar) name(VB13, replace)}{p_end}
+{p 4 8 2}{cmd: . vennbar nev_mar c_city collgrad south, vallabels sep("; ") `toptitle' `bcolour' name(VB13, replace)}{p_end}
 
 
 {title:Authors}
@@ -341,13 +351,14 @@ name.
 {p 4 4 2}Nicholas J. Cox, Durham University{break}
 n.j.cox@durham.ac.uk
 
-{p 4 4 2}Tim Morris, MRC Clinical Trials Unit, University College London{break} 
+{p 4 4 2}Tim P. Morris, MRC Clinical Trials Unit, University College London{break} 
 tim.morris@ucl.ac.uk
 
 
 {title:Also see}
 
 {p 4 4 2}Help for{break}
+{help misstable}{break}
 {help sortmean} (if installed){break} 
 {help groups} ({it:Stata Journal}) (if installed){break}
 {help upsetplot} (if installed){break}
@@ -363,7 +374,7 @@ tim.morris@ucl.ac.uk
 {p 4 4 2}
 {cmd:vennbar} requires a bundle of numeric variables with values 0 or 1.
 Such variables are variously called indicator, dummy, binary,
-dichotomous, zero-one, Boolean, logical or quantal.  Nissing values will
+dichotomous, zero-one, one-hot, Boolean, logical or quantal.  Missing values will
 be ignored.  Otherwise presenting values other than 0 or 1 is considered
 an error.  Observations used will thus have all values 0 or 1 in all
 variables specified.  Differently put, {cmd:vennbar} is not for string
@@ -404,7 +415,7 @@ their means (equivalently, the frequency or abundance of states coded as
 with this package. See also {help vorter} from SSC. 
 
 {p 4 4 2}
-Variables that are identically 0 or 1, at least in the data being shown, 
+Variables that are identically 0 or identically 1, at least in the data being shown, 
 are not always useful and so might be omitted. {help findname} (Cox
 2010, and {cmd:search findname, sj} for updates) can be used to find
 such variables through options {cmd:all(@ == 0)} or {cmd:all(@ == 1)}. 
@@ -442,7 +453,7 @@ creation of indicator variables in Stata.
 
 {p 4 4 2}
 Various commentators, from Leibniz onward, have seen anticipations
-of bimary arithmetic in the divination manual {it:I Ching} ({it:Yijing}, {it:Yi Jing},
+of binary arithmetic in the divination manual {it:I Ching} ({it:Yijing}, {it:Yi Jing},
 {it:Yi King}, etc.). That seems exaggerated. See Gardner (1974} for a brisk
 discussion and Knuth (2011) and Strickland and Lewis (2022) for further comments.  
 
@@ -453,7 +464,7 @@ sometimes to understand, but even for 4 or 5 variables they are harder
 to draw and even harder to understand.  For say {it:k} = 5, 2^5 = 32,
 which poses a challenge to show data intelligibly.  For say {it:k} = 10,
 2^10 = 1024, which is often far too many subsets to work with
-simultaneously.  However, the problem may be eased in practice if many
+simultaneously.  However, the problem will be eased in practice if many
 of the possible subsets do not occur, or occur so rarely that they can
 be ignored. For modest values of {it:k}, bar or dot charts may be a
 competitive alternative, which is the idea implemented here.  
@@ -471,6 +482,18 @@ decision to use bar charts when researchers are aware of Venn diagrams.
 The assertion "I would argue that Venn diagrams are a great tool for
 learning about sets, but useless as a visualization" (Kosara 2007) is
 unfortunately supported by many examples in various literatures. 
+
+{p 4 4 2}
+Hamming (1991, pp.16{c -}17) commended Venn diagrams for simple cases yet 
+continued: "But if you try to go to very many subsets then the problem of 
+drawibg a diagram which will show clearly what you are doing is often 
+difficult. Circles are not, of course, necessary but when you are forced to 
+draw very snake-like regions then the diagram is of little help in 
+visualizing the situation." 
+
+{p 4 4 2}
+Gleason (1991, p.33) commented that Venn diagrams become unwieldy for
+a number of sets "exceeding 4 or 5". 
 
 {p 4 4 2}
 Venn diagrams are widely familiar in mathematics and science and indeed
@@ -515,7 +538,7 @@ so well established.
 
 {p 4 4 2}
 John Venn (1834{c -}1923) now benefits from a full-length biography
-(Verbugt 2022). For shorter appreciations, see Broadbent (1976),
+(Verburgt 2022). For shorter appreciations, see Broadbent (1976),
 Grattan-Guinness (2001), or Gibbins (2004). Grattan-Guinness (2011)
 places the work of Boole and Venn in context, surveying the development
 of logic in 19th century Britain. Venn's interest in probability and 
@@ -532,8 +555,8 @@ account, see Youschkevitch (1971).  For a very concise account, see
 Sandifer (2008).  
 
 {p 4 4 2}
-For implementations of Venn diagrams in Stata, see Lauritsen (1999a,
-1999b, 1999c, 2000, 2009), Gong and Osterman (2011), and Over (2022).
+For implementations of Venn diagrams in Stata, see (e.g.) Lauritsen (1999a,
+1999b, 1999c, 2000, 2009), Gong and Ostermann (2011), and Over (2022).
 
 
 {title:References}
@@ -748,6 +771,12 @@ In Matthew, H.C.G. and B. Harrison (eds)
 Oxford: Oxford University Press 56: 259{c -}260. 
 
 {p 4 8 2}
+Gleason, A.M. 1991. 
+{it:Fundamentals of Abstract Analysis.}
+Bostnn, MA: Jones and Bartlett. 
+[original publication: 1966. Reading, MA: Addison-Wesley.] 
+
+{p 4 8 2}
 Gong, W. and J. Ostermann. 2011.
 pvenn: module to create proportional Venn diagram.
 http://fmwww.bc.edu/RePEc/bocode/p
@@ -825,6 +854,11 @@ New York: W.W. Norton.
 Hamming, R.W. 1985. 
 {it:Methods of Mathematics Applied to Calculus, Probability, and Statistics.} 
 Englewood Cliffs, NJ: Prentice-Hall.
+
+{p 4 8 2}
+Hamming, R.W. 1991. 
+{it:The Art of Probability for Scientists and Engineers.} 
+Reading, MA: Addison-Wesley. 
 
 {p 4 8 2}
 Heath, P. and E. Seneta. 2001. 
@@ -986,7 +1020,7 @@ Pitman, J. 1993.
 {it:Probability.} 
 New York: Springer.
 
-{p 4 8 3}
+{p 4 8 2}
 Playfair, W. 1801.
 {it:The Statistical Breviary.} 
 London: Wallis etc.  
@@ -1076,7 +1110,7 @@ On the nature and uses of averages.
 52: 429{c -}456.
 
 {p 4 8 2}
-Verbugt, L.M. 2022. 
+Verburgt, L.M. 2022. 
 {it:John Venn: A Life in Logic.} 
 Chicago: University of Chicago Press. 
 
@@ -1108,7 +1142,7 @@ p.147 cardinality
 {title:Bibliographic note on Martin Gardner's columns} 
 
 {p 4 4 2}
-Martin Gardner's columns on "Mathematical games" over many years in
+Martin Gardner's columns on "Mathematical Games" over many years in
 {it:Scientific American} covered much more than games and puzzles and
 included many splendid expositions of topics with mathematical content.
 They present a variety of small bibliographical challenges. The original

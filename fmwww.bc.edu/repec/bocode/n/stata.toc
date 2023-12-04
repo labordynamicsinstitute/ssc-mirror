@@ -35,6 +35,7 @@ p nnmatch module to compute nearest-neighbor bias-corrected estimators
 p nonparmde module to calculate the minimum detectable effect in randomized experiment
 p nopomatch module to implement Nopo's decomposition
 p norm module to normalize variables
+p norm_dist module providing  normal and inverse normal distribution functions with added mean and standard deviation
 p normalbvr module to generate Normal bivariate ridits
 p normalizepath module  to parse (and normalize) files' paths
 p normalrir module to calculate ridits of inverse ridits between Normal populations
