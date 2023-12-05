@@ -38,11 +38,14 @@
 *	Updated: 20/11/23							 *
 *	- cox-snell/nagelkerke's r-sq options		 *
 *	- cont. crit.3 simplified (234+p) 			 *
+*	Updated: 4/12/23							 *
+*	- fix to nagrsquared option issue when used  *
+*	in combination with the n() option			 *
 *												 *
-*  1.3.1 J. Ensor								 *
+*  1.3.2 J. Ensor								 *
 **************************************************
 
-*! 1.3.1 J.Ensor 20Nov2023
+*! 1.3.2 J.Ensor 4Dec2023
 
 program define pmsampsize, rclass
 
@@ -93,11 +96,20 @@ if "`type'"=="b" {
 			error 103
 		}
 		
-		local E = `parameters'*`prevalence'
-		local lnLnull = (`E'*(ln(`E'/`parameters')))+((`parameters'-`E')*(ln(1-(`E'/`parameters'))))
-		local max_r2a = (1- exp((2*`lnLnull')/`parameters'))
-		local rsquared = `nagrsquared'*`max_r2a'
-		local rsquared : di %4.3f `rsquared'
+		if `n'!=0 {
+			local E = `n'*`prevalence'
+			local lnLnull = (`E'*(ln(`E'/`n')))+((`n'-`E')*(ln(1-(`E'/`n'))))
+			local max_r2a = (1- exp((2*`lnLnull')/`n'))
+			local rsquared = `nagrsquared'*`max_r2a'
+			local rsquared : di %4.3f `rsquared'
+		}
+		else {
+			local E = `parameters'*`prevalence'
+			local lnLnull = (`E'*(ln(`E'/`parameters')))+((`parameters'-`E')*(ln(1-(`E'/`parameters'))))
+			local max_r2a = (1- exp((2*`lnLnull')/`parameters'))
+			local rsquared = `nagrsquared'*`max_r2a'
+			local rsquared : di %4.3f `rsquared'
+		}
 	}
 	
 	if `csrsquared'!=0 {
@@ -412,7 +424,7 @@ di "with `di_E_final' events (assuming an outcome prevalence = `prevalence'), an
 end 	
 
 ******* end of binary
-* pmsampsize, type(b) rsquared(0.65) parameters(24) prevalence(0.51) noprint s(.8)
+
 
 ******* start of continuous
 program define continuous_samp_size, rclass

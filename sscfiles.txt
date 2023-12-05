@@ -785,6 +785,7 @@ fmwww.bc.edu/repec/bocode/j/jarowinkler.sthlp
 fmwww.bc.edu/repec/bocode/j/jl.pluginMACINTEL64
 fmwww.bc.edu/repec/bocode/j/jb6.pkg
 fmwww.bc.edu/repec/bocode/j/jcd.sthlp
+fmwww.bc.edu/repec/bocode/j/julia.sthlp
 fmwww.bc.edu/repec/bocode/j/jc.sthlp
 fmwww.bc.edu/repec/bocode/j/jmpierce.html
 fmwww.bc.edu/repec/bocode/j/JSTdatasetR5.dta
