@@ -10666,6 +10666,7 @@ fmwww.bc.edu/repec/bocode/s/sunburst.ado
 fmwww.bc.edu/repec/bocode/s/sutex6.ado
 fmwww.bc.edu/repec/bocode/s/shp2dta.ado
 fmwww.bc.edu/repec/bocode/s/spider.ado
+fmwww.bc.edu/repec/bocode/s/sipp.dta
 fmwww.bc.edu/repec/bocode/s/setpoisson.sthlp
 fmwww.bc.edu/repec/bocode/s/subjob35.ado
 fmwww.bc.edu/repec/bocode/s/simuped2.html

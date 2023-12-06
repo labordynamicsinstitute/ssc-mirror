@@ -18,7 +18,7 @@ d KW: propensity score
 d
 d Requires: Stata version 17
 d
-d Distribution-Date: 20231025
+d Distribution-Date: 20231205
 d
 d Author:  Derya Uysal, LMU Munich
 d Support: email derya.uysal@@econ.lmu.de 
@@ -31,3 +31,4 @@ d Support: email  wooldri1@@msu.edu
 d
 f kappalate.ado
 f kappalate.sthlp
+f ../s/sipp.dta

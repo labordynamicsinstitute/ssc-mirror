@@ -3,7 +3,7 @@
 
 {title:Title}
 
-{p2colset 5 16 17 2}{...}
+{p2colset 5 15 16 2}{...}
 {p2col:{hi:maxsum} {hline 2}} a function to compute the maximum value of a rolling-sum {p_end}
 {p2colreset}{...}
 
@@ -13,13 +13,21 @@
 
 
 {p 8 17 2}
-{cmd:maxsum} {helpb exp:exp} {ifin} 
+{cmd:maxsum} {helpb exp:exp} {ifin} [, {opt f:ormat}{cmd:(%}{it:{help format:fmt}}{opt )} ]
 
 {p 4 6 2}
 {opt by} is allowed with {cmd:maxsum}; see {manhelp by D}.{p_end}
 
 {p 4 6 2}
-{p2colreset}{...}				
+{p2colreset}{...}	
+
+{synoptset 19 tabbed}{...}
+{synopthdr}
+{synoptline}
+{synopt:{opt f:ormat}{cmd:(%}{it:{help format:fmt}}{opt )}}display format for {opt maxsum} value; default format is {cmd:%-14.2fc}{p_end}
+{synoptline}
+{p2colreset}{...}
+			
 	
 {title:Description}
 
@@ -36,8 +44,8 @@ or MS Excel's {browse "https://support.microsoft.com/en-us/office/sum-function-0
 {phang2}{bf:{stata "sysuse auto, clear":. sysuse auto, clear}}{p_end}
 
 {pstd}
-Compute the maximum value of the rolling-sum for the variable weight{p_end}
-{phang2}{bf:{stata "maxsum weight":. maxsum weight}}{p_end}
+Compute the maximum value of the rolling-sum for the variable {it:weight}, changing the format of the {opt maxsum} value produced {p_end}
+{phang2}{bf:{stata "maxsum weight, format(%-9.0f)":. maxsum weight, format(%-9.0f)}}{p_end}
 
 {pstd}
 A more complex expression{p_end}
@@ -70,8 +78,9 @@ Using the {helpb by:by} prefix{p_end}
 to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
-Linden, A. (2023). MAXSUM: Stata module to compute the maximum value of a rolling-sum {p_end}
-
+Linden, A. (2023). MAXSUM: Stata module to compute the maximum value of a rolling-sum. 
+{browse "https://ideas.repec.org/c/boc/bocode/s459258.html":https://ideas.repec.org/c/boc/bocode/s459258.html}
+{p_end}
 
 
 {title:Authors}

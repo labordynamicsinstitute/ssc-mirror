@@ -1,5 +1,5 @@
 ﻿{smcl}
-{* 21oct2023}{...}
+{* 04dec2023}{...}
 {hline}
 help for {hi:kappalate}
 {hline}
@@ -20,7 +20,11 @@ help for {hi:kappalate}
 {synoptset 20 tabbed}{...}
 {synopthdr}
 {synoptline}
-{synopt:{opt zmodel(string)}}select the approach to estimating the instrument propensity score; options include {opt logit}, {opt probit}, and {opt cbps}; default is {opt cbps}{p_end}
+{synopt:{opt zmodel(string)}}select the approach to estimating the instrument propensity score;
+options include {opt logit} to fit a logit model by maximum likelihood (ML),
+{opt probit} to fit a probit model by maximum likelihood (ML),
+and {opt cbps} to fit a logit model by covariate balancing (CB);
+default is {opt cbps}{p_end}
 {synopt:{opt vce(vcetype)}}{it:vcetype} is passed on to Stata's {cmd:gmm} command and specifies the type of standard error reported (see {helpb gmm} for details); default is {opt robust}{p_end}
 {synopt:{opt std(string)}}{it:string} may be {opt on} or {opt off}, which determines whether nonbinary covariates are standardized prior to estimation; default is {opt on}{p_end}
 {synopt:{opt which(string)}}{it:string} may be {opt all} or {opt norm}, which determines whether all estimates or only normalized estimates are displayed; default is {opt norm}{p_end}
@@ -29,11 +33,19 @@ help for {hi:kappalate}
 
 {title:Description}
 
-{pstd} {cmd:kappalate} estimates the local average treatment effect (LATE) using methods based on inverse probability weighting, including (but not limited to) Abadie's (2003) kappa approach.  See Słoczyński, Uysal, and Wooldridge (2023) for a detailed treatment of the underlying theoretical results.
+{pstd} {cmd:kappalate} estimates the local average treatment effect (LATE) using methods based on inverse probability weighting, each of which can be motivated by Abadie's (2003) kappa theorem.
+See Słoczyński, Uysal, and Wooldridge (2023) for a detailed treatment of the underlying theoretical results.
 
-{pstd} The following variables should be designated.  {it:depvar} is the outcome variable.  {it:indepvars} is a list of control variables.  {it:treatment} and {it:instrument} are the treatment and the instrumental variable, respectively, both of which must be binary and take on only the values 0, 1, or missing.  {it:instrument} is assumed to be valid conditional on {it:indepvars} and needs to satisfy the monotonicity assumption.
+{pstd} The following variables should be designated.
+{it:depvar} is the outcome variable.
+{it:indepvars} is a list of control variables.
+{it:treatment} and {it:instrument} are the treatment and the instrumental variable, respectively, both of which must be binary and take on only the values 0, 1, or missing.
+{it:instrument} is assumed to be valid conditional on {it:indepvars} and needs to satisfy the monotonicity assumption.
 
-{pstd} {cmd:kappalate} displays up to five estimates of the LATE, dependent on the options chosen.  The naming convention for the alternative estimates follows Słoczyński, Uysal, and Wooldridge (2023), who recommend normalized estimators ({cmd:which(norm)}) and estimating the instrument propensity score using the covariate balancing approach ({cmd:zmodel(cbps)}) of Imai and Ratkovic (2014).  We also recommend standardizing nonbinary covariates prior to estimation ({cmd:std(on)}), as this may improve the performance of Stata's optimization process without affecting the estimation results.
+{pstd} {cmd:kappalate} displays up to five estimates of the LATE, dependent on the options chosen.
+The naming convention for the alternative estimates follows Słoczyński, Uysal, and Wooldridge (2023), who recommend normalized estimators (option {cmd:which(norm)}),
+and especially the estimator in Uysal (2011), referred to as {it:tau_u}, with covariate balancing propensity scores (option {cmd:zmodel(cbps)}), as in Heiler (2022).
+We also recommend standardizing nonbinary covariates prior to estimation (option {cmd:std(on)}), as this may improve the performance of Stata's optimization process without affecting the estimation results.
 
 {pstd} If you use this program in your work, please cite Słoczyński, Uysal, and Wooldridge (2023).
 
@@ -44,15 +56,18 @@ help for {hi:kappalate}
 Abadie, Alberto (2003). "Semiparametric Instrumental Variable Estimation of Treatment Response Models." {it:Journal of Econometrics} 113(2), 231{c 150}263.
 
 {phang}
-Imai, Kosuke and Marc Ratkovic (2014). "Covariate Balancing Propensity Score." {it:Journal of the Royal Statistical Society, Series B} 76(1), 243{c 150}263.
+Heiler, Phillip (2022). "Efficient Covariate Balancing for the Local Average Treatment Effect." {it:Journal of Business & Economic Statistics} 40(4), 1569{c 150}1582.
 
 {phang}
 Słoczyński, Tymon, S. Derya Uysal, and Jeffrey M. Wooldridge (2023). "Abadie's Kappa and Weighting Estimators of the Local Average Treatment Effect." arXiv:2204.07672. Available at {browse "https://arxiv.org/abs/2204.07672"}.
 
+{phang}
+Uysal, S. Derya (2011). "Three Essays on Doubly Robust Estimation Methods." PhD dissertation, University of Konstanz.
+
 
 {title:Examples}
 
-        {com}. {stata "use https://economics.mit.edu/sites/default/files/inline-files/sipp2.dta, clear"}
+        {com}. {stata "use https://people.brandeis.edu/~tslocz/sipp.dta, clear"}
 
         . {stata "drop if kwage==. | educ==. | rsncode==999"}
 

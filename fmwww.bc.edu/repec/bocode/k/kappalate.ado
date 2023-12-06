@@ -1,4 +1,10 @@
-*! version 1.0.0  21oct2023  S. Derya Uysal, Tymon Sloczynski, and Jeffrey M. Wooldridge
+*! version 1.0.1  04dec2023  S. Derya Uysal, Tymon Sloczynski, and Jeffrey M. Wooldridge
+
+** changes: 
+** tau_t,norm --> tau_u
+** output: CBPS --> logit CB
+** output: logit --> logit ML
+** output: probit --> probit ML
 
 capture program drop kappalate
 program define kappalate, eclass
@@ -414,18 +420,18 @@ program define kappalate, eclass
 			matrix `b' = (`tau_a', `tau_a1', `tau_a0', `tau_a10', `tau_norm')
 			matrix `V' = (`var_tau_a', 0, 0, 0, 0 \ 0, `var_tau_a1', 0, 0, 0 \ 0, 0,`var_tau_a0', 0, 0 \ 0, 0, 0, `var_tau_a10', 0 \ 0, 0, 0, 0, `var_tau_norm')
 			matrix rownames `b' = " "
-			matrix colnames `b' = "tau_a" "tau_a,1" "tau_a,0" "tau_a,10" "tau_t,norm"
-			matrix rownames `V' = "tau_a" "tau_a,1" "tau_a,0" "tau_a,10" "tau_t,norm"
-			matrix colnames `V' = "tau_a" "tau_a,1" "tau_a,0" "tau_a,10" "tau_t,norm"
+			matrix colnames `b' = "tau_a" "tau_a,1" "tau_a,0" "tau_a,10" "tau_u"
+			matrix rownames `V' = "tau_a" "tau_a,1" "tau_a,0" "tau_a,10" "tau_u"
+			matrix colnames `V' = "tau_a" "tau_a,1" "tau_a,0" "tau_a,10" "tau_u"
 		}
 		else if "`zmodel'"=="cbps" {
 			tempname b V
 			matrix `b' = (`tau_a', `tau_norm')
 			matrix `V' = (`var_tau_a', 0 \ 0, `var_tau_norm')
 			matrix rownames `b' = " "
-			matrix colnames `b' = "tau_a" "tau_t,norm"
-			matrix rownames `V' = "tau_a" "tau_t,norm"
-			matrix colnames `V' = "tau_a" "tau_t,norm"
+			matrix colnames `b' = "tau_a" "tau_u"
+			matrix rownames `V' = "tau_a" "tau_u"
+			matrix colnames `V' = "tau_a" "tau_u"
 		}
 	}
 	
@@ -435,18 +441,18 @@ program define kappalate, eclass
 			matrix `b' = (`tau_a10', `tau_norm')
 			matrix `V' = (`var_tau_a10', 0 \ 0, `var_tau_norm')
 			matrix rownames `b' = " "
-			matrix colnames `b' = "tau_a,10" "tau_t,norm"
-			matrix rownames `V' = "tau_a,10" "tau_t,norm"
-			matrix colnames `V' = "tau_a,10" "tau_t,norm"
+			matrix colnames `b' = "tau_a,10" "tau_u"
+			matrix rownames `V' = "tau_a,10" "tau_u"
+			matrix colnames `V' = "tau_a,10" "tau_u"
 		}
 		else if "`zmodel'"=="cbps" {
 			tempname b V
 			matrix `b' = (`tau_norm')
 			matrix `V' = (`var_tau_norm')
 			matrix rownames `b' = " "
-			matrix colnames `b' = "tau_t,norm"
-			matrix rownames `V' = "tau_t,norm"
-			matrix colnames `V' = "tau_t,norm"
+			matrix colnames `b' = "tau_u"
+			matrix rownames `V' = "tau_u"
+			matrix colnames `V' = "tau_u"
 		}
 	}
 	
@@ -455,11 +461,14 @@ program define kappalate, eclass
 	di as text "Outcome     :   "  "`yvar'"
 	di as text "Treatment   :   "  "`tvar'"
 	di as text "Instrument  :   "  "`zvar'"
-	if "`zmodel'"!="cbps" {
-		di as text "IPS         :   `zmodel'"
+	if "`zmodel'"=="logit" {
+		di as text "IPS         :   logit ML"
+	}
+	else if "`zmodel'"=="probit" {
+		di as text "IPS         :   probit ML"
 	}
 	else if "`zmodel'"=="cbps" {
-		di as text "IPS         :   CBPS"
+		di as text "IPS         :   logit CB"
 	}
 	di
 	di as text "Number of obs   =   " as result `N'
