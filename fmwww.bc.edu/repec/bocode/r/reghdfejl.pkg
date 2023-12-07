@@ -10,7 +10,7 @@ d KW: plugins
 d
 d Requires: Stata version 16, julia from SSC, Julia 1.9, Python 3.x
 d
-d Distribution-Date: 20231203
+d Distribution-Date: 20231206
 d
 d Author: David Roodman
 d Support: email david@@davidroodman.com
@@ -18,4 +18,5 @@ d
 f reghdfejl.ado
 f reghdfejl_p.ado
 f reghdfejl_estat.ado
+f reghdfejl_masker.ado
 f reghdfejl.sthlp
