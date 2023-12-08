@@ -1,0 +1,34 @@
+d 'MANYWEAKIV': module to implements the weak-identification robust jackknife AR test from Mikusheva and Sun (2022)
+d
+d  In empirical applications using instrumental variables, the
+d current consensus practice is to report the first stage F
+d statistic and as long as it is above 10, researchers are allowed
+d to rely on standard t-statistics inferences.	This practice has
+d foundations in Stock and Yogo (2005) which showed that the
+d concentration parameter fully characterizes the     size
+d distortion of the TSLS-Wald test, and empirically the
+d concentration parameter can be judged based on the first stage F
+d statistics.  This result has been obtained under the assumptions
+d of homoscedasticity and for a fixed number of instruments.
+d Mikusheva and Sun (2022) introduces a new F test that is valid
+d under heteroscedasticity and many instruments.  Based on the
+d result of this new F test (implemented in manyweakpretest),
+d applied researchers can switch between the 5% JIVE t-statistic or
+d 5% jackknife AR test (implemented in manyweakivtest) with the
+d caveats analogous to Stock and Yogo (2005):  Namely, the size of
+d the two-step procedure are bounded within 15%. 
+d
+d KW: weak indeitification
+d KW: robust jackknife
+d KW: AR test
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20231118
+d
+d Author: Liyang Sun, University College London
+d Support: email  liyang.sun@@ucl.ac.uk
+d
+f manyweakivtest.ado
+f manyweakivpretest.ado
+f manyweakiv.sthlp

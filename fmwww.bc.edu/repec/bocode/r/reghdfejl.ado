@@ -1,4 +1,4 @@
-*! reghdfejl 0.4.0 5 December 2023
+*! reghdfejl 0.4.2 7 December 2023
 
 // The MIT License (MIT)
 //
@@ -112,8 +112,12 @@ program define reghdfejl, eclass
       exit 198
     }
     local blaslib = cond(c(os)=="MacOSX", "AppleAccelerate", "BLISBLAS")
-    jl      AddPkg `blaslib'  `gpulib' FixedEffectModels DataFrames Vcov
-    jl, qui: using `blaslib', `gpulib',FixedEffectModels,DataFrames,Vcov
+    jl AddPkg `blaslib'
+    jl AddPkg `gpulib'
+    jl AddPkg FixedEffectModels, minver(1.10.2)
+    jl AddPkg DataFrames, minver(1.6.1)
+    jl AddPkg Vcov, minver(0.8.1)
+    jl, qui: using `blaslib', `gpulib', FixedEffectModels, DataFrames, Vcov
     global reghdfejl_loaded 1
   }
 
@@ -178,7 +182,7 @@ program define reghdfejl, eclass
   }
 
   foreach varset in dep inexog instd insts {
-    if strpos("``varset'name'", ".") | strpos("``varset'name'", "#") {
+    if strpos("``varset'name'", ".") | strpos("``varset'name'", "#") | strpos("``varset'name'", "-") | strpos("``varset'name'", "?") | strpos("``varset'name'", "*") | strpos("``varset'name'", "~") {
       fvexpand ``varset'name' if `touse'
       local `varset'name
       foreach var in `r(varlist)' {
@@ -475,3 +479,5 @@ end
 * 0.3.2 Much better handling of interactions. Switched to BLISBLAS.jl.
 * 0.3.3 Fixed bugs in handling of interactions and constant term
 * 0.4.0 Added mask and unmask
+* 0.4.1 Properly handle varlists with -/?/*/~
+* 0.4.2 Set version minima for some packages

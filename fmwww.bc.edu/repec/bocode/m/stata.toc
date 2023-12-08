@@ -15,6 +15,7 @@ p makematrix module to make a matrix of results from other commands
 p maketex module to generate LaTeX code from a text file
 p malmq2 module to compute Malmquist Productivity Index 
 p manski_ci module to use Manski type bounds (Manski 2003) to calculate confidence intervals around a treatment variable's regression coefficient in a (covariate-adjusted) regression
+p manyweakiv module to implements the weak-identification robust jackknife AR test from Mikusheva and Sun (2022)
 p map module to map string variables using an external dictionary file
 p mapch module map chains of events
 p maptile module to map a variable
