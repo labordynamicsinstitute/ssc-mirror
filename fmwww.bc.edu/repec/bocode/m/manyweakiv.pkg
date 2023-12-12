@@ -1,4 +1,4 @@
-d 'MANYWEAKIV': module to implements the weak-identification robust jackknife AR test from Mikusheva and Sun (2022)
+d 'MANYWEAKIV': module to implement the weak-identification robust jackknife AR test from Mikusheva and Sun (2022)
 d
 d  In empirical applications using instrumental variables, the
 d current consensus practice is to report the first stage F
@@ -18,7 +18,7 @@ d 5% jackknife AR test (implemented in manyweakivtest) with the
 d caveats analogous to Stock and Yogo (2005):  Namely, the size of
 d the two-step procedure are bounded within 15%. 
 d
-d KW: weak indeitification
+d KW: weak identification
 d KW: robust jackknife
 d KW: AR test
 d

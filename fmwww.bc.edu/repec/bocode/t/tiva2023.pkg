@@ -1,0 +1,32 @@
+d 'TIVA2023': module to manipulate the OECD TiVA inter-country input-output tables database 
+d
+d  tiva2023 imports OECD's TiVA database into Mata objects and
+d calculates indicators. 
+d
+d KW: data management
+d KW: OECD
+d KW: input-output tables
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20231211
+d
+d Author: Charles Cadestin, OECD
+d Support: email  charles.cadestin@@oecd.org
+d
+f tiva2023.ado
+f tiva2023_checktivafiles.ado
+f tiva2023_getpath.ado
+f tiva2023_gettivafiles.ado
+f tiva2023_matacommoniciofunctions.mata
+f tiva2023_mataimportfunctions.mata
+f tiva2023_matainitclass.mata
+f tiva2023_mataoecdindicators.mata
+f tiva2023_matamyindicators.mata
+f tiva2023_mataupdownindicators.mata
+f tiva2023_matatolocal.ado
+f tiva2023_store.ado
+f tiva2023_matastore.mata
+f tiva2023_compile.ado
+f tiva2023_getconditionfromlocal.ado
+f tiva2023.sthlp

@@ -1,0 +1,259 @@
+<pre>
+<p>
+-------------------------------------------------------------------------------
+help for <b>collapseunique</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Collapse a dataset to unique observations of a specified set of basis variables</u></b>
+<p>
+        <b>collapseunique</b> [<i>varlist</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>, by(</b><i>byvars</i><b>)</b> <b>testsep</b>
+                 <b>fast</b> <b><u>emptyv</u></b><b>arlist</b>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>collapseunique</b> performs an action that is similar to that of collapse,
+    but rather than summarizing over a multitude of values, it yields the
+    unique values within by-groups, provided that the values are indeed
+    unique.
+<p>
+    <i>varlist</i> is the set of variables you want to collect which are supposedly
+    functionally dependent on <i>byvars</i>.
+<p>
+    <b>by(</b><i>byvars</i><b>)</b> specifies the "basis" on which you are reducing the dataset -
+    the variables on which <i>varlist</i> is supposedly functionally dependent.
+<p>
+    <b>collapseunique</b> tests to be sure that all of the variables in <i>varlist</i> are
+    functionally dependent on <i>byvars</i>.  If that test passes, then the dataset
+    is reduced to one observation per unique value (or unique tuple of
+    values) of <i>byvars</i>, and only those variables mentioned in <i>varlist</i> or
+    <i>byvars</i> are retained.  Thus, it generally reduces both observations and
+    variables.  Note that in making this reduction, there is no ambiguity of
+    which <i>varlist</i> values to choose, because of the functional dependency.
+<p>
+    Other variables (those not mentioned in <i>varlist</i> or <i>byvars</i>) are dropped,
+    since they might not be functionally dependent on <i>byvars</i>, and thus,
+    would, if retained, have no logical connection to the corresponding
+    <i>byvars</i> values; such variables would have an arbitrary representative
+    value retained in the reduction step, and could be inconsistent in
+    repeated runs.
+<p>
+    After this successfully runs, the resulting dataset will be sorted by
+    <i>byvars</i> (providing it exists), which also becomes a key for the resulting
+    dataset.  (A key is a set of variables that uniquely identify
+    obserations.  Thus, in a typical usage, you would not have <i>byvars</i> as the
+    key for the starting dataset, since, in that case, the dataset is already
+    "reduced".)
+<p>
+    See funcdep for a further explanation of functional dependency.
+<p>
+<p>
+<b><u>Additional Options</u></b>
+<p>
+    <b>testsep</b> performs the functional dependency test of <i>varlist</i> one variable
+        at a time; the default is to test them all at once.  The difference
+        is that if the test fails, and if <i>varlist</i> contains multiple
+        variables, then under <b>testsep</b>, you will be able to tell which
+        variable(s) caused the failure.  (When exploring data for functional
+        dependency, it may be useful to first use funcdep.)
+<p>
+        It is less efficient to use <b>testsep</b>, but the difference is negligible
+        on small datasets.  Also, <b>testsep</b> will generate more output noise.
+<p>
+    <b>fast</b> has the same effect as the <b>fast</b> option in collapse; it specifies
+        that <b>collapseunique</b> not do extra work (a preserve) so that it can
+        restore the original data should the user press <b>Break</b> - or,
+        additionally, if the functional dependency test fails.  Thus, it is
+        faster for large datasets, but is potentially dangerous.  See more on
+        this subject under <b><u>Remarks</u></b>.
+<p>
+    <b><u>emptyv</u></b><b>arlist</b> is required if <i>varlist</i> is absent or is a subset of <i>byvars</i>;
+        it is ignored otherwise.  This is a safeguard against accidentally
+        reducing the data; it confirms that you truly intend to reduce to the
+        unique values in <i>byvars</i>.  (Without this safeguard, it would be easy
+        to accidentally clobber the data.)
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    The purpose of <b>collapseunique</b> is to extract embedded functional
+    dependency information, which you may subsequently want to save in a
+    separate dataset.  Thus, it facilitates data normalization.  More on this
+    later.  There are other possible uses, which will be explained under
+    <b><u>Examples</u></b>.
+<p>
+    A simple example may help illustrate the action of this command:
+<p>
+. list, noobs
+<p>
+  +-----------+
+  | a   b   c |
+  |-----------|
+  | 6   4   7 |
+  | 9   4   7 |
+  | 1   6   5 |
+  | 2   6   5 |
+  | 4   6   5 |
+  | 2   8   5 |
+  +-----------+
+<p>
+. collapseunique c, by(b)
+<i>(output omitted)</i>
+<p>
+. list, noobs
+<p>
+  +-------+
+  | b   c |
+  |-------|
+  | 4   7 |
+  | 6   5 |
+  | 8   5 |
+  +-------+
+<p>
+    At this point, you can save this table, and then go back and remove c
+    from the original table.  The resulting two tables constitute a
+    <i>normalized</i> version of the original table, where you have "factored out"
+    the functional dependency of c on b.  (Note that in this example, c is
+    functionally dependent on b, but not vice-versa.)
+<p>
+    You would not normally specify <i>varlist</i> and <i>byvars</i> such that an overlap
+    exists between them, however there is no harm in having one.  Any
+    variables common to both are removed from <i>varlist</i> at the outset.  This
+    can potentially make <i>varlist</i> empty (if it is a subset of <i>byvars</i>).
+<p>
+    <i>varlist</i> may be absent (or it may become empty due to editing as described
+    above), in which case the dataset is reduced to the unique tuples of
+    values in <i>byvars</i>.  Note the requirement of the <b><u>emptyv</u></b><b>arlist</b> option in
+    this case.  (An absent <i>varlist</i> does not default to <b>_all</b>.  Note also, that
+    an empty <i>varlist</i> is always functionally dependent on any <i>byvars</i>.)
+<p>
+    <b>by(</b><i>byvars</i><b>)</b> may be absent, in which case the whole dataset is treated as
+    one by-group, and is reduced to a single observation containing <i>varlist</i>,
+    provided that the values of <i>varlist</i> are constant over the whole set.
+<p>
+    Either <i>varlist</i> or <i>byvars</i> may be absent, but not both.
+<p>
+    <b>collapseunique</b> differs from collapse in that it may refuse to do any
+    action at all, depending on the content of the data, whereas <b>collapse</b>
+    does not have such a sensitivity to the data.
+<p>
+    <b>collapseunique</b> treats missing values (including the extended missing
+    values) as distinct.
+<p>
+    Note regarding <b>fast</b>: If the functional dependency test fails, or if the
+    user presses <b>Break</b>, the dataset is restored to its original state, unless
+    <b>fast</b> is specified.  <b>collapseunique</b> starts by filtering on any <b>if</b> or <b>in</b>
+    qualifiers that may be present.  Therefore, under <b>fast</b>, if the functional
+    dependency test fails or the user presses <b>Break</b>, the dataset is left in
+    the state as screened by the <b>if</b> or <b>in</b> qualifiers, if any.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+      <b>. collapseunique county_median_income, by(state county)</b>
+<p>
+      <b>. collapseunique family_income family_size , by(familyid year)</b>
+<p>
+<p>
+    Another use of <b>collapseunique</b> is to reduce a dataset to one observation
+    per by-group after creating aggregate measures such as those generated by
+    egen functions, though in many cases, the result could be achieved in one
+    command using collapse (and <b>collapse</b> has some additional advantages such
+    as the ability to take weights).
+<p>
+      <b>. egen meanincome= mean(income), by(state)</b>
+      <b>. egen maxincome= max(income), by(state)</b>
+      <b>. collapseunique meanincome maxincome, by(state)</b>
+<p>
+    The foregoing set of commands could be replaced by one collapse command.
+    But there are some types of aggregations that are not handled by
+    <b>collapse</b>, for example,
+<p>
+      <b>. egen kurtincome= kurt(income), by(state)</b>
+      <b>. collapseunique kurtincome, by(state)</b>
+<p>
+<p>
+    Yet another possible use of <b>collapseunique</b> is to eliminate duplicate
+    observations:
+<p>
+      <b>. collapseunique _all, by(recordid)</b>
+<p>
+    The prior example presumes a variable (recordid) which would be key if it
+    weren't for the duplicate obserevations.  If you just want to reduce to
+    all unique observations, you could do...
+<p>
+      <b>. collapseunique, by(_all) emptyvarlist</b>
+<p>
+<p>
+<b><u>Additional Remarks</u></b>
+<p>
+    One way to understand the action of <b>collapseunique</b> is to note that...
+<p>
+      <b>. collapseunique a, by(k)</b>
+<p>
+    is roughly equivalent to...
+<p>
+      <b>. collapse (max) maxa=a (min) mina=a , by(k)</b>
+      <b>. assert maxa==mina</b>
+      <b>. rename maxa a</b>
+      <b>. drop mina</b>
+<p>
+    where the dataset is restored if the assert fails.  (Code to handle that
+    situation is not shown here.  Also, to properly use the latter technique
+    would require the transferrence of labels onto the new a.  These examples
+    may not be equivalent if a contains missing values.)
+<p>
+    You may ask, what is the difference between these two?:
+<p>
+      <b>. collapseunique a b c, by(k)</b>
+<p>
+      <b>. collapseunique, by(k a b c) emptyvarlist</b>
+<p>
+    The answer is that the first example may or may not execute, depending on
+    the data; the second will always execute (assuming that k, a, b, and c
+    are variables).  If the first example does execute successfully, then the
+    two examples will yield the same reduced dataset (putting aside the
+    nominal sort order).
+<p>
+    Be aware that functional dependency can arise "by accident", in which
+    case it may be inappropriate to apply a <b>collapseunique</b> operation.  See 
+    funcdep for more on this matter.
+<p>
+    <b>collapseunique</b> has some similarity to contract.
+<p>
+    This calls funcdep (another program by the same author) to perform the
+    functional dependency test.
+<p>
+    This is written for Stata 8; a version for Stata 6 also exists.
+<p>
+           --------------------------------------------------------------------
+            <b>technical note:</b> As noted, <i>varlist</i> is initially reduced
+            by removing any variables it has in common with <i>byvars</i>.
+            There is no intrinsic need for this, but it improves
+            efficiency and closes a loophole in the <b>emptyvarlist</b>
+            safeguard.
+           --------------------------------------------------------------------
+<p>
+<p>
+<b><u>On Normalization</u></b>
+<p>
+    Data normalization is the process of taking a table and possibly
+    splitting it into multiple tables, each of which is "normal" in that it
+    contains no functional dependency between non-key variables.  To help
+    understand this, consider the common procedure of merging higher-level
+    information onto lower-level data, such as merging family-based
+    information onto a set of person-based observations.  Normalization
+    reverses this process.  Non-normal datasets can be convenient in
+    analysis, but are considered as poor design in the primary storage of
+    data.  Also, once data are normalized, you can more easily construct new
+    analysis sets by recombining the normalized datasets.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    David Kantor.  Email kantor.d@att.net if you observe any problems.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+</pre>

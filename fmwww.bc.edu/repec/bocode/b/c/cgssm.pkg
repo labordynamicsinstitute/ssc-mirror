@@ -1,0 +1,44 @@
+d 'CGSSM': module implementing the contrasting groups' standard setting method
+d
+d      Establishing a competency standard for when a certain level
+d of expertise is reached by identifying cut-off points    on
+d different performance measures based on rating scores or
+d simulator metrics is an important issue in	competency-based
+d learning.    One method to set such standards, is the contrasting
+d groups' standard setting method.  It is a    participant-based
+d method where the performance of a certain procedure is evaluated
+d between participants of    different expertise level, e.g.,
+d novices and experts.	  Using the contrasting groups' method, the
+d cut-off point is set by identifying the intercept of two normally
+d    distributed curves that represent the score distributions of
+d the groups defined by their level of expertise.  After    a
+d pass/fail score is defined, the percentage of false positives and
+d negatives can be calculated to explore the	consequences of the
+d test.    Traditionally, these false positives and false negatives
+d are calculated based on the observed number of individuals	who
+d passes or fails a test.  However, validity studies often include
+d only a small number of participants.	These	 small numbers make
+d the rate of false positives and false negatives sensitive to
+d outliers.    Instead, using the normally distributed curves that
+d represent the score distributions of the groups defined by   
+d their level of expertise, the theoretical false negatives, and
+d theoretical false positives can be calculated.    What is new in
+d cgssm and cgssmi is that the cut-off is found using an exact
+d formula based on solving a polynomial    of first or second order
+d degree. 
+d
+d KW: competency standard
+d KW: false positive
+d KW: false negative
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20230221
+d
+d Author: Niels Henrik Bruun, Aalborg University Hospital
+d Support: email niels.henrik.bruun@@gmail.com
+d
+f cgssm.ado
+f cgssm.sthlp
+f cgssmi.ado
+f cgssmi.sthlp

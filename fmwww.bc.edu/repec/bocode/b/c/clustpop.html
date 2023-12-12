@@ -1,0 +1,100 @@
+<pre>
+.-
+help for ^clustpop^ - 1.0 - 17 Apr 2011
+.-
+<p>
+Estimate population cluster group assignments
+.-
+<p>
+  ^clustpop^ varlist [^if^ exp] [^in^ range] [, reps(100) k(3) seed(string) alp
+&gt; ha(0.05) 
+                                   type("kmeans") distopt("L2") dots ]
+<p>
+<p>
+Description
+-----------
+clustpop is a routine to estimate population group assignments using the @clust
+&gt; er@ command. 
+<p>
+The cluster command groups cases based on the values of a variable, or the 
+mean/median of a group of variables. However, the group assignments will vary
+depending on the random seed that starts off the process.  So if the -cluster-
+command is executed many times, it will produce different group assignments.
+<p>
+In other words, There is population of group assignments from which the -cluste
+&gt; r-
+command samples a single possibility. Therefore the results from -cluster- are 
+&gt; like taking a 
+sample (N=1) from a population and using that result as an estimate of the 
+group assignment population.
+<p>
+^clustpop^ runs the -cluster- command many times in order to create a larger sa
+&gt; mple.
+For each case, the most frequently occuring group assignment is taken as an est
+&gt; imate
+of the most common group assignment in the population.  The case is assigned to
+&gt;  
+this group only if the lower bound (at a given alpha) of the population estimat
+&gt; e is 
+greater than half.  In other words, it must be probable that the most frequentl
+&gt; y 
+occuring group assignment is the group assignment more than half the time in th
+&gt; e 
+population.  If this is not so, the group assignment is set to missing.
+<p>
+<p>
+Output:
+-------
+Three variables are produced as output:
+1. The estimate of the group assignment
+2. The proportion of cases that are assigned as in variable 1 above
+3. The lower bound of the proportion of cases that are assigned as in variable 
+&gt; 1 above  
+<p>
+<p>
+Options: 
+--------
+^reps(^#^)^ specifies the number of times the cluster command is repeated. 
+        The default is 30. 
+<p>
+^k(^#^)^  specifies the number of groups (see help for the @cluster@ command). 
+      The default is 3. 
+<p>
+^seed(^"string"^)^ specifies the random number seed to use at the start. 
+               The default is "123456789" (you can just -set seed- intead). 
+<p>
+^type(^"string"^)^ indicates the type of averaging (see help for the @cluster@ 
+&gt; command). 
+               The default is "kmeans". 
+<p>
+^distopt(^"string"^)^ Specifies how the distance between the cases is calculate
+&gt; d (see 
+                  help for the cluster command). The default is "L2". 
+<p>
+^alpha(^0.00-0.99^)^ gives the alpha for the statistical test.  Default is 0.05
+&gt; .
+ 
+^dots^ will print a dot for each replication (shows the command is working...) 
+<p>
+<p>
+<p>
+Other routines called
+---------------------
+  @matsort@ must be installed for clustpop to function
+             
+<p>
+Examples
+--------
+. sysuse auto,clear
+. clustpop mpg rep78  displacement,k(4)  
+<p>
+<p>
+Author: Paul Millar
+        www.paulmillar.ca
+        paulmi@@nipissingu.ca
+         
+See also:
+---------
+Online:     help for @cluster@
+<p>
+</pre>

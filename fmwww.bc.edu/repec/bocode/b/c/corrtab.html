@@ -1,0 +1,123 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>corrtab</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Correlation analysis</u></b> 
+<p>
+        <b>corrtab</b> [<i>varlist</i>] [<b>weight</b> <i>fweight aweight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>,</b> <b><u>o</u></b><b>bs</b>
+                <b>sig</b> <b><u>b</u></b><b>onferroni</b> <b><u>sid</u></b><b>ak</b> <b><u>cwd</u></b><b>eletion</b> <b><u>vs</u></b><b>ort(</b><i>varname numeric</i><b>)</b> <b><u>v</u></b><b>ars(</b><i>#</i><b>)</b>
+                <b><u>a</u></b><b>bove(</b><i>#</i><b>)</b> <b><u>p</u></b><b>rint(</b><i>#</i><b>)</b> <b><u>sor</u></b><b>t</b> <b><u>sp</u></b><b>earman</b> <b><u>t</u></b><b>label</b> <b><u>c</u></b><b>label</b> <b><u>all</u></b><b>label</b> <b>format</b> ]
+<p>
+<b><u>Description</u></b>
+<p>
+<b>corrtab</b> displays Pearson or Spearman rank correlations for <i>varlist</i>. The default
+calculation of individual correlation coefficients is made independently and
+thus the display contains the pairwise coefficients.  Optionally, casewise
+deletion can be requested. The sample <i>n</i> and a test of independence are also
+reported optionally. String variables are automatically omitted from the
+analytic processing. Multiple, duplicative <i>varlist</i> designations can be selected
+to enable full capture of intended variables; duplicate variables specified in
+<i>varlist</i> are removed before processing.
+<p>
+<b><u>Remarks</u></b>
+<p>
+<b>corrtab</b> provides a rapid display of correlations formatted for easy reading and
+for copying to reports and manuscripts. <b>corrtab</b> is meant for use when the
+number of column variables is 8 or fewer, although it could display many more
+column variables depending on font and linesize.  The user should experiment.
+The number of column variables that will be displayed properly depends also on
+the length of the labels in column 1.
+<p>
+<b>corrtab</b> optionally makes use of advanced labeling systems to provide clear and
+useful display suitable for the screen and for word-processors (see below).
+<p>
+<b><u>Options</u></b>
+<p>
+<b>spearman</b> specifies Spearman correlations. The default is to calculate Pearson
+correlations.
+<p>
+<b>obs</b> adds a line to each row of the display reporting the number of observations
+used in calculating the correlation coefficient.
+<p>
+<b>sig</b> adds a line to each row of the display reporting the significance level of
+each correlation coefficient.
+<p>
+<b>print(</b><i>#</i><b>)</b> specifies the significance level for printing of correlation
+coefficients. Coefficients with significance levels larger than <i>#</i> are left
+blank. <b>print(10)</b> or <b>print(.1)</b> would list only coefficients significant at the
+10% level or better.
+<p>
+<b>bonferroni</b> makes the Bonferroni adjustment to calculated significance levels.
+This affects printed significance levels and the <b>print()</b> option.  <b>corrtab,</b>
+<b>print(.05) bonferroni</b> prints coefficients with Bonferroni-adjusted significance
+levels of .05 or less.
+<p>
+<b>sidak</b> makes the Sidak adjustment to calculated significance levels.  This
+affects printed significance levels and the <b>print()</b> option.  <b>corrtab,</b>
+<b>print(.05) sidak</b> prints coefficients with Sidak-adjusted significance levels of
+.05 or less.  {p}<b>vars(</b><i>#</i><b>)</b> specifies that the first <i>#</i> variables on the <i>varlist</i>
+are to be correlated with all of the variables on the <i>varlist</i>. This produces <i>#</i>
+columns of correlations. There is no limit to the number of variables
+specified, but a difficult to read display occurs when the number of variables
+exceeds the width of the screen. Not specifying <b>vars()</b> results in all variables
+being displayed.  {p}<b>sort</b> requests the <i>varlist</i> be reported in sorted order. If
+<b>vars()</b> is specified the first <i>#</i> variables will not be sorted.  {p}<b>above(</b><i>#</i><b>)</b>
+specifies the minimum absolute level of correlation coefficients to be printed.
+Coefficients with smaller coefficients are left blank.  <b>above(.5)</b> would list
+only coefficients of 0.5 or greater or -0.5 or less.  {p}<b>cwdeletion</b> removes
+observations with missing values in the <i>varlist</i> from the calculations.
+{p}<b>vsort()</b> sorts the correlation coefficient in descending order according to a
+selected variable in the column list. This option works only when <b>obs</b> and/or
+<b>sig</b> are not used. That is, it works for the simple display of coefficients
+only.  {p}<b>tlabel</b> makes use of the <b>tlabel</b> system (if used) to provide detailed
+labels for column 1 (see below).  {p}<b>clabel</b> places labels in the column names
+using <b>char</b> <i>varname</i><b>[varname]</b>, according to <b>list</b>'s <b>subvarname</b> option (see below).
+{p}<b>alllabel</b> places labels in columns and rows using <b>char</b> <i>varname</i><b>[varname]</b>,
+according to <b>list</b>'s <b>subvarname</b> option (see below).  {p}<b>format</b> Default is %9.3f.
+Increase both f and d (%.f.df) to handle large number of observations and/or
+increased decimal format.  User-defined labels {p}By default, <b>corrtab</b> uses
+variable names for column and row labels.  However, variable names are not
+always appropriate or appropriately formatted.  Specific labels for correlation
+display create several problems. The primary problem is that column labels must
+be short enough that they don't waste display space. Row labels can be longer
+and provide more information.  User-defined labels provide the opportunity to
+make word-processor-ready tables as well as correlation tables that are easy to
+read and work with.  {p} There are two systems available. The first (<b>tlabel</b>)
+was first used in the program <b>fsum</b> (see fsum if installed). <b>tlabel</b> user-defined
+labels are actually variable characteristics in the form of <b>char</b>
+<i>varname</i><b>[tlabel]</b> <i>description</i>.  See help for char. Characteristics (labels) are
+saved with the data set.  They can be entered from the keyboard with the <b>char</b>
+command. Since such labels will probably be used repeatedly, they can be
+entered in a do file or program and called when needed. An example of do file
+commands is shown directly below:  {p 4 8}. char haq_disa[tlabel] "HAQ (0-3)"
+{p_end} {p 4 8}. char sex[tlabel] "Sex (% male)" {p_end} {p 4 8}. char
+age[tlabel] "Age (years)" {p_end} {p 4 8}. char ethorig[tlabel] "Ethnic origin
+(code)" {p_end} {p}As an aid, the programs <b>tlabel</b> and <b>tlablist</b> are provided.
+{p}The second system uses <b>clabel</b>. In Stata 8, an option was provided to the
+<b>list</b> command list to make use of <b>char </b><i>varname</i><b>[varname]</b> to label columns.
+<b>corrtab</b> makes use of this option, as well. Examples of labels altered for the
+shorter <b>clabel</b> system are:  {p 4 8}. char haq_disa[varname] HAQ {p_end} {p 4
+8}. char sex[varname] Sex {p_end} {p 4 8}. char age[varname] Age {p_end} {p 4
+8}. char ethorig[varname] Ethnicity {p_end} {p}The dual labeling system is
+optional. Its main value is in the circumstance where the same variables and
+labels are used repeatedly. In this instance it saves time and improves screen
+and word-processor formatting and readability.  Examples {p 4 8}. corrtab
+{p_end} {p 4 8}. corrtab price weight mpg displ {p_end} {p 4 8}. corrtab price
+weight mpg displ, sig var(2) sort {p_end} {p 4 8}. corrtab price weight mpg
+displ, sig obs var(2) above(0.5) sp cwd sort {p_end} {p 4 8}. corrtab price
+weight mpg displ, sig obs vsort(price) {p_end} {p 4 8}. corrtab mpg re* p*
+*igh*,sig bon tlabel clabel {p_end} {p 4 8}. corrtab price weight mpg displ,all
+{p_end} {p 4 8}. corrtab price weight mpg displ, t c {p_end} {p 4 8}. corrtab
+haq pain glb fatigue age totin,v(3) t c vsort(haq) {p_end} Pearson correlations
++---------------------------------------------------------+ | Variable HAQ Pain
+Global | |---------------------------------------------------------| | HAQ
+(0-3) 1.000 0.598 0.588 | | Pain (0-10) 0.598 1.000 0.665 | | Global severity
+(0-10) 0.588 0.665 1.000 | | Fatigue (0-10) 0.527 0.608 0.604 | | Total Income
+(US dollars) -0.337 -0.223 -0.249 | | Age (years) 0.131 -0.036 0.024 |
++---------------------------------------------------------+ Acknowledgements
+{p}<b>corrtab</b> is a Stata 8 program that is an upgrade from the Stata 5 version of
+<b>pwcorrs</b>.  {p}Nick Cox made very helpful suggestions.  Author Fred Wolfe,
+National Data Bank for Rheumatic Diseases, Wichita, KS
+fwolfe@arthritis-research.org Also see {p 0 19}On-line:  help for pwcorr, corr,
+</pre>

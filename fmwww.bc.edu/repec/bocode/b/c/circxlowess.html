@@ -1,0 +1,49 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>circxlowess</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Smoothing including lowess for circular data, x variable circular</u></b> 
+<p>
+        <b>circxlowess</b> <i>yvar xvar</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>,</b> <b><u>p</u></b><b>ad(</b><i>#</i><b>)</b> <i>lowess_options</i> ]
+<p>
+<p>
+<b><u>Description</u></b> 
+<p>
+    <b>circxlowess</b> carries out smoothing (including lowess) of a <i>y</i> variable <i>yvar</i>
+    (specified first in the <i>varlist</i>) with respect to some circular <i>x</i> variable
+    <i>xvar</i>. <i>xvar</i> should take on values between 0 and 360 degrees. Smoothing is
+    done by temporarily adding pads of repeated values at either end of the
+    circular scale.
+<p>
+    The kind and degree of smoothing and the rendition of the display are
+    specified by invoking options of <b>lowess</b>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>pad(</b><i>#</i><b>)</b> specifies a pad of <i>#</i> degrees at each <i>x</i> axis end. Data less than or
+        equal to <i>#</i> degrees are copied at the right end of the <i>x</i> axis for an
+        interval of 360 to 360 + <i>#</i> degrees.  Data more than 360 - <i>#</i> degrees
+        are copied at the left end of the <i>x</i> axis for an interval of -<i>#</i> to 0
+        degrees. The default is 180, so that a full two cycles are shown.
+<p>
+    <i>lowess_options</i> specify options allowed with lowess.
+<p>
+<p>
+<b><u>Examples</u></b> 
+<p>
+    <b>. circxlowess length wallasp, gen(lowess) yla(,ang(h))</b>
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b> 
+<p>
+    On-line: help for lowess, circylowess
+<p>
+</pre>

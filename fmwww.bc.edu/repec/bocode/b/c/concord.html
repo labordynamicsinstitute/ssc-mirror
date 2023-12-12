@@ -1,0 +1,217 @@
+<pre>
+<p>
+-------------------------------------------------------------------------------
+<b>help concord</b>                                                  (SJ7-3: st0015_4)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>concord</b> -- Concordance correlation coefficient and associated measures,
+                 tests, and graphs
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>concord</b> <i>vary</i> <i>varx</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] [<b>,</b> <b>by(</b><i>byvar</i><b>)</b> <b><u>s</u></b><b>ummary</b> <b><u>le</u></b><b>vel(</b><i>#</i><b>)</b>
+                 <b>ccc</b>[<b>(noref</b> <i>ccc_options</i><b>)</b>] <b>loa</b>[<b>(noref</b> <b><u>reg</u></b><b>line</b> <i>loa_options</i><b>)</b>]
+                 <b>qnormd</b>[<b>(</b><i>qnormd_options</i><b>)</b>]]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>concord</b> computes Lin's (1989, 2000) concordance correlation coefficient
+    for agreement on a continuous measure obtained by two persons or methods.
+    (The measure was introduced earlier by Krippendorff (1970).) The
+    concordance correlation coefficient combines measures of both precision
+    and accuracy to determine how far the observed data deviate from the line
+    of perfect concordance (i.e., the line at 45 degrees on a square scatter
+    plot). Lin's coefficient increases in value as a function of the nearness
+    of the data's reduced major axis to the line of perfect concordance (the
+    accuracy of the data) and of the tightness of the data about its reduced
+    major axis (the precision of the data).  The Pearson correlation
+    coefficient, r, the bias-correction factor, C_b, and the equation of the
+    reduced major axis are reported to show these components.  Note that the
+    concordance correlation coefficient, rho_c, can be expressed as the
+    product of r, the measure of precision, and C_b, the measure of accuracy.
+<p>
+    <b>concord</b> also provides results for Bland and Altman's limits-of-agreement,
+    "loa", procedure (1986). The loa, a data-scale assessment of the degree
+    of agreement, is a complementary approach to the relationship-scale
+    approach of Lin.
+<p>
+    Finally, two other results are reported:
+<p>
+        1. The correlation between difference and mean. In one interpretation
+        this is a test statistic for a null hypothesis of equal variances
+        given bivariate normality (Pitman 1939; also see Snedecor and Cochran
+        1989, 192-193).  Alternatively, it is an exploratory diagnostic.  A
+        value near zero implies concordance.
+<p>
+        2. An F test of equality of means and variances. Note that this too
+        assumes bivariate normality (Bradley and Blackwood 1989).  See also
+        Hsu (1940) and Reynolds and Gregoire (1991).  Nonsignificance implies
+        concordance.
+<p>
+    The user provides the pairs of measurements for a single property as
+    observations in variables <i>vary</i> and <i>varx</i>.  Frequency weights may be
+    specified and used. Missing values (if any) are deleted in a casewise
+    manner.
+<p>
+    Various associated graphs may be obtained through options.  See below for
+    explanations of the options <b>ccc</b>, <b>loa</b>, and <b>qnormd</b>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>by(</b><i>byvar</i><b>)</b> produces separate results for groups of observations defined by
+        <i>byvar</i>.
+<p>
+    <b>summary</b> requests summary statistics.
+<p>
+    <b>level(</b><i>#</i><b>)</b> sets the confidence level % for the CI; default is <b>c(level)</b>.
+<p>
+    <b>ccc</b> requests a graphical display of the data and the reduced major axis
+        of the data. The reduced major axis or SD line goes through the
+        intersection of the means and has slope given by the sign of
+        Pearson's r and the ratio of the standard deviations. The SD line
+        serves as a summary of the center of the data.
+<p>
+        <b>ccc()</b> suboption <b>noref</b> suppresses the reference line of perfect
+        concordance, y=x.
+<p>
+        <b>ccc()</b> may also be specified with other options, which should be
+        options of <b>scatter</b>. For example, the scheme may be changed by a call
+        such as <b>ccc(scheme(lean1)</b>.
+<p>
+    <b>loa</b> requests a graphical display of the loa, the mean difference, and the
+        data presented as paired differences plotted against pair-wise means.
+<p>
+        <b>loa()</b> suboption <b>noref</b> suppresses the reference line of perfect
+        average agreement, y=0.
+<p>
+        <b>loa()</b> suboption <b>regline</b> adds a regression line to the loa plot
+        fitting the paired differences to the pair-wise means.
+<p>
+        <b>loa()</b> may also be specified with other options, which should normally
+        be options of <b>scatter</b>.  For example, the reference line of perfect
+        average agreement was generated as <b>loa(yline(0, lstyle(refline))</b>
+        <b>yscale(range(0)) ylabel(0, add))</b>.
+<p>
+    <b>qnormd</b> requests a normal plot of differences.
+<p>
+        <b>qnormd()</b> may also be specified with options, which should be options
+        of <b>scatter</b>. For example, <b>qnormd(title(Normal plot of differences))</b>
+        adds a title to the graph.
+<p>
+<p>
+<b><u>Comments</u></b>
+<p>
+    Lin (2000) reported typographical errors in his original 1989 paper that
+    affected calculation of the standard error of rho_c. These corrections
+    were included in <b>concord</b> in version 2.2.7 (January 2002) when the erratum
+    was brought to the attention of the program authors by Dr. Benjamin
+    Littenberg.  We thank Dr. Littenberg.
+<p>
+    Kevan Polkinghorne pointed out a problem with <b>loa()</b>.  Mark Marshall
+    pointed out a problem with <b>by()</b> under Stata 9.
+<p>
+    Dunn (2004) contains a bibliography on related work.  Cox (2004)
+    discusses other graphical approaches to this and related problems. Cox
+    (2006) discusses concordance correlation and other numerical and
+    graphical methods for assessing agreement with various scientific
+    examples.
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    The following items are returned in <b>r()</b>, if the <b>by()</b> option was not used:
+<p>
+        <b>r(N)</b>         number of observations compared
+        <b>r(rho_c)</b>     concordance correlation coefficient rho_c
+        <b>r(se_rho_c)</b>  standard error of rho_c
+        <b>r(asym_ll)</b>   lower CI limit (asymptotic)
+        <b>r(asym_ul)</b>   upper CI limit (asymptotic)
+        <b>r(z_tr_ll)</b>   lower CI limit (z-transform)
+        <b>r(z_tr_ul)</b>   upper CI limit (z-transform)
+        <b>r(C_b)</b>       bias-correction factor C_b
+        <b>r(diff)</b>      mean difference
+        <b>r(sd_diff)</b>   standard deviation of mean difference
+        <b>r(LOA_ll)</b>    lower loa CI limit
+        <b>r(LOA_ul)</b>    upper loa CI limit
+        <b>r(rdm)</b>       correlation between difference and mean
+        <b>r(Fdm)</b>       F from Bradley-Blackwood test
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. concord rater1 rater2</b>
+<p>
+    <b>. concord rater1 rater2 [fw=freq]</b>
+<p>
+    <b>. concord rater1 rater2, summary ccc</b>
+<p>
+    <b>. concord rater1 rater2, summary ccc(noref)</b>
+<p>
+    <b>. concord rater1 rater2, level(90) by(grp)</b>
+<p>
+    <b>. concord rater1 rater2, loa(regline noref)</b>
+<p>
+    <b>. concord rater1 rater2, qnormd(title(Normal plot))</b>
+<p>
+<p>
+<b><u>Authors</u></b>
+<p>
+    Thomas J. Steichen, Winston-Salem, NC, USA, steichen@triad.rr.com
+<p>
+    Nicholas J. Cox, Durham University, UK, n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Bland, J. M., and D. G. Altman.  1986. Statistical methods for assessing
+        agreement between two methods of clinical measurement. <i>Lancet</i> I:
+        307-310.
+<p>
+    Bradley, E. L., and L. G. Blackwood. 1989. Comparing paired data:  a
+        simultaneous test for means and variances. <i>American Statistician</i> 43:
+        234-235.
+<p>
+    Cox, N. J. 2004. Graphing agreement and disagreement.  <i>Stata Journal</i> 4:
+        329-349.
+<p>
+    ------. 2006.  Assessing agreement of measurements and predictions in
+        geomorphology.  <i>Geomorphology</i> 76: 332-346.
+<p>
+    Dunn, G. 2004.<i>  Statistical Evaluation of Measurement Errors: Design and</i>
+        <i>Analysis of Reliability Studies.</i>  London: Arnold.
+<p>
+    Hsu, C. T. 1940. On samples from a normal bivariate population.  <i>Annals</i>
+        <i>of Mathematical Statistics</i> 11: 410-426.
+<p>
+    Krippendorff, K. 1970. Bivariate agreement coefficients for reliability
+        of data.  In Borgatta, E.F. and G.W. Bohrnstedt (eds) <i>Sociological</i>
+        <i>Methodology</i>. San Francisco: Jossey-Bass, 139-150.  [a.k.a.
+        <i>Sociological Methodology</i> 2: 139-150]
+<p>
+    Lin, L. I-K. 1989. A concordance correlation coefficient to evaluate
+        reproducibility. <i>Biometrics</i> 45: 255-268.
+<p>
+    ------. 2000. A note on the concordance correlation coefficient.
+        <i>Biometrics</i> 56: 324-325.
+<p>
+    Pitman, E. J. G. 1939. A note on normal correlation.  <i>Biometrika</i> 31:
+        9-12.
+<p>
+    Reynolds, M., and T. G. Gregoire. 1991. Comment on Bradley and Blackwood.
+        <i>American Statistician</i> 45: 163-164.
+<p>
+    Snedecor, G. W., and W. G. Cochran. 1989. <i>Statistical Methods.</i>  Ames, IA:
+        Iowa State University Press.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    STB:  STB-43 sg84; STB-45 sg84.1; STB-54 sg84.2; STB-58 sg84.3
+<p>
+    SJ:   SJ2-2 st0015; SJ4-4 st0015_1; SJ5-3: st0015_2; SJ6-2: st0015_3
+</pre>

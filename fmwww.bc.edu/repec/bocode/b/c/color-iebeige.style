@@ -1,0 +1,4 @@
+*! version 1.0.0  04feb2022
+sequence 2
+label resource "IE beige"
+set rgb "211 207 195"

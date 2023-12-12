@@ -1,3 +1,4 @@
+*! 2.9.2 NJC 11 December 2023
 *! 2.9.1 NJC 30 January 2022     
 *! 2.9.0 NJC 10 July 2021     
 * 2.8.1 NJC 11 October 2020 
@@ -27,7 +28,7 @@
 * 2.1.2 NJC 11 August 2004
 * 2.1.1 NJC 21 July 2004
 * 2.1.0 NJC 13 February 2004
-* 2.0.3 NJC 17 July 2003 
+* 2.0.3 NJC 17 July 2003 *!*
 * 2.0.2 NJC 7 July 2003 
 * 2.0.1 NJC 6 July 2003 
 * 2.0.0 NJC 3 July 2003 
@@ -156,6 +157,12 @@ program stripplot, sort
 			di as err "by(, total) not supported with bar or box or tufte" 
 			exit 198 
 		}	
+		
+		if "`separate'" == "`by'" { 
+			tempvar SEPARATE 
+			clonevar `SEPARATE' = `separate'
+			local separate `SEPARATE'
+		}
 	}
 
 	// data to use, including by() over() separate() options 

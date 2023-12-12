@@ -1,0 +1,131 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>circrao</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Rao spacing test for circular data</u></b> 
+<p>
+        <b>circrao</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>circrao</b> carries out a uniformity test for circular variables <i>varlist</i> with
+    scales between 0 and 360 degrees due to Rao (1969, 1976). Sort the <i>n</i>
+    observed directions and calculate the spacings as differences between
+    successive ordered values: the last spacing is calculated from the last
+    value to the first. Then calculate
+<p>
+        <i>U</i> = (1/2) SUM (| spacing - 360 / <i>n</i> |).
+<p>
+    <i>U</i> has the following interpretation: Place <i>n</i> arcs of fixed length 360 / <i>n</i>
+    degrees on the circumference, starting with each of the sample points.
+    The circumference would be completely covered by these arcs only if the
+    sample points were uniformly (equally) spaced. <i>U</i> is the total uncovered
+    portion of the circumference, or equivalently the extent to which the
+    arcs overlap each other. Large values of <i>U</i> indicate clustering of the
+    sample points or evidence for rejecting the null hypothesis of
+    uniformity. One merit of this test compared with some others is that it
+    works well for data which are not unimodal.
+<p>
+    Critical values for this statistic are tabulated by Rao (1976, p.333),
+    Batschelet (1981, p.339), Upton and Fingleton (1989, pp.248, 392, for <i>G</i> =
+    2<i>U</i>), Mardia and Jupp (2000, p.368) and most extensively by Russell and
+    Levitin (1995). The following are extracted from the last reference,
+    p.885:
+<p>
+        <i>  n  P</i> = 0.05 <i>P</i> = 0.01
+        -----------------------
+          4   186.45   221.14   
+          5   183.44   211.93 
+          6   180.65   206.79
+          7   177.83   202.55
+          8   175.68   198.46
+          9   173.68   195.27
+         10   171.98   192.37
+         11   170.45   189.88
+         12   169.09   187.66 
+         13   167.87   185.68
+         14   166.76   183.90
+         15   165.75   182.28
+         16   164.83   180.81 
+         17   163.98   179.46
+         18   163.20   178.22 
+         19   162.47   177.08 
+         20   161.79   176.01 
+         21   161.16   175.02 
+         22   160.56   174.10 
+         23   160.01   173.23
+         24   159.48   172.41 
+         25   158.99   171.64 
+         26   158.52   170.92 
+         27   158.07   170.23
+         28   157.65   169.58 
+         29   157.25   168.96 
+         30   156.87   168.38
+         35   155.19   165.81 
+         40   153.82   163.73 
+         45   152.68   162.00 
+         50   151.70   160.53 
+         75   148.34   155.49 
+        100   146.29   152.46 
+        150   143.83   148.84 
+        200   142.35   146.67  
+        300   140.57   144.09 
+        400   139.50   142.54 
+        500   138.77   141.48 
+        600   138.23   140.70
+        700   137.80   140.09
+        800   137.46   139.60 
+        900   137.18   139.19 
+       1000   136.94   138.84 
+<p>
+    For large <i>n</i>, it follows from the work of Sherman (1950) that the sampling
+    distribution of <i>U</i> under the null hypothesis of uniformity is
+    approximately Normal with mean 360 / exp(1) = 132.4366 and standard
+    deviation 360 * sqrt(2 exp(-1) - 5 exp(-2)) / sqrt(<i>n</i>) = 87.504786 /
+    sqrt(<i>n</i>).  The corresponding <i>P</i>-value is shown, irrespective of <i>n</i>: users
+    should decide whether to trust it.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . circrao axisasp
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>References</u></b> 
+<p>
+    Batschelet, E. 1981. <i>Circular statistics in biology.</i> London: Academic
+        Press.
+<p>
+    Mardia, K.V. and Jupp, P.E. 2000. <i>Directional statistics.</i> Chichester:
+        John Wiley.
+<p>
+    Rao, J.S. 1969. Some contributions to the analysis of circular data.
+        Ph.D.  thesis, Indian Statistical Institute, Calcutta.
+<p>
+    Rao, J.S. 1976. Some tests based on arc-lengths for the circle.  <i>Sankhya</i>
+        38B, 339-348.
+<p>
+    Russell, G.S. and Levitin, D.J. 1995. An expanded table of probability
+        values for Rao's spacing test.  <i>Communications in Statistics,</i>
+        <i>Simulation and Computation</i> 24, 879-888.
+<p>
+    Sherman, B. 1950. A random variable related to the spacing of sample
+        values.  <i>Annals of Mathematical Statistics</i> 21, 339-361.
+<p>
+    Upton, G.J.G. and Fingleton, B. 1989.  <i>Spatial data analysis by example.</i>
+        <i>Volume 2: Categorical and directional data.</i>  Chichester: John Wiley.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line: circsummarize
+<p>
+</pre>

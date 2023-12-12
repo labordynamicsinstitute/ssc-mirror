@@ -1,0 +1,49 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>confirmdir</b>                                           manual:  <b>[R] none</b>
+                                                             dialog:  <b> none</b>    
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Confirms if directory exists</u></b>
+<p>
+        <b>confirmdir</b> <i>full direcotory name</i>
+<p>
+        
+<b><u>Description</u></b>
+<p>
+    <b>confirmdir</b> is designed for programmers who want to know if a directory
+    exists.  This is just like <b>confirm</b> command when used to confirm a file.
+    If Stata allowed their <b>confirm</b> command to also have the "dir" option,
+    this program would not have been written.  Stata's <b>confirm file</b> will
+    confirm a directory in UNIX/Linux but not in Windows.  <b>confirmdir</b> works
+    in all operating systems.
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>.  confirmdir "c:\My Favorite Directory\Where I Keep Stuff\"</b>
+<p>
+    <b>.  confirmdir /projects/ethiopia/survey2002/data/</b>
+<p>
+<p>
+<b><u>Saved Results</u></b>
+<p>
+    The <b>confirmdir</b> command saves in <b>r()</b>:
+ 
+    Macros         
+      <b>r(confirmdir)</b>       return code returned by the cd command.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Dan Blanchette
+    The Carolina Population Center
+    University of North Carolina - Chapel Hill, USA
+    dan_blanchette@unc.edu
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line: confirm cd, tmpdir (if installed)
+<p>
+</pre>

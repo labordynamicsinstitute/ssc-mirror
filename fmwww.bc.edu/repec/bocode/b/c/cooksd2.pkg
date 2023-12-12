@@ -1,0 +1,23 @@
+d 'COOKSD2': module to compute Cook's distance after regress or xtreg
+d
+d     cooksd2 generates Cook's (1977) distance measures after
+d regress or xtreg, which summarize the effect	  of deleting an
+d observation, or an entire subject, on the estimated regression
+d coefficients. The    procedure uses efficient updating formulas,
+d based on Christensen et al. (1992) and Banerjee and	 Frees
+d (1997). 
+d
+d KW: regression
+d KW: Cook's distance
+d KW: panel data
+d
+d Requires: Stata version 15.1
+d
+d Distribution-Date: 20221206
+d
+d Author: David Vincent , DV Econometrics
+d Support: email dvincent@@dveconometrics.co.uk 
+d
+f cooksd2.ado
+f cooksd2.sthlp
+f ../u/uk2022_vincent.pdf

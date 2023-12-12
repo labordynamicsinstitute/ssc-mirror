@@ -1,0 +1,6 @@
+*! version 1.0.1  16jul2020
+sequence 960
+* label "YGS4"
+label resource "COLOR-YGS4"
+
+set rgb "221 221 221"

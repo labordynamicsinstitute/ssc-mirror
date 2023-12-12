@@ -1,0 +1,232 @@
+<pre>
+<b>help censlope_iteration</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Iteration options used by censlope</u></b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+    Percentile slope estimation
+<p>
+        <b>censlope</b> <i>...</i> [<b>,</b> <i>options</i>]
+<p>
+    Set default maximum iterations
+<p>
+        <b>set</b> <b>maxiter</b> <i>#</i> [<b>,</b> <b><u>perm</u></b><b>anently</b>]
+<p>
+<p>
+    <i>options</i>                      Description
+    -------------------------------------------------------------------------
+    <b><u>from</u></b><b>abs(</b><i>#</i><b>)</b>                   initial estimate for absolute magnitude of
+                                   slopes
+    <b><u>brac</u></b><b>kets(</b><i>#</i><b>)</b>                  maximum number of rows for the bracket
+                                   matrix
+    <b><u>tech</u></b><b>nique(</b><i>algorithm_spec</i><b>)</b>    iterative numerical solution technique
+    <b><u>iter</u></b><b>ate(</b><i>#</i><b>)</b>                   perform maximum of <i>#</i> iterations; default is
+                                   <b>iterate(16000)</b>
+    <b><u>tol</u></b><b>erance(</b><i>#</i><b>)</b>                 tolerance for the percentile slopes
+    <b>log</b>                          display an iteration log of the brackets
+                                   during bracket convergence
+    <b>no</b><b><u>lim</u></b><b>its</b>                     do not calculate confidence limits
+    -------------------------------------------------------------------------
+    where <i>algorithm_spec</i> is
+<p>
+        <i>algorithm</i> [ <i>#</i> [ <i>algorithm</i> [<i>#</i>] ] ... ]
+<p>
+    and <i>algorithm</i> is { <b>bisect</b> | <b>regula</b> | <b>ridders</b> }
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    The <b>censlope</b> command calculates estimates and confidence limits for a
+    median or other percentile slope <b>beta</b> by solving numerically a scalar
+    equation in <b>beta</b>, using an iterative method.  The options controlling the
+    exact iterative method will probably not be used often, because <b>censlope</b>
+    is intended to have sensible defaults.  However, users who wish to change
+    the default method may do so, using a set of options similar to the
+    maximization options used by Stata maximum likelihood estimation
+    commands.
+<p>
+    <b>set</b> <b>maxiter</b> specifies the default maximum number of iterations for
+    estimation commands that iterate.  The initial value is <b>16000</b>, and <i>#</i> can
+    be <b>0</b> to <b>16000</b>.  To change the maximum number of iterations performed by a
+    particular estimation command, you need not reset <b>maxiter</b>; you can
+    specify the <b>iterate(</b><i>#</i><b>)</b> option.  When <b>iterate(</b><i>#</i><b>)</b> is not specified, the
+    <b>maxiter</b> value is used.
+<p>
+<p>
+<b><u>Iteration options</u></b>
+<p>
+    <b>fromabs(</b><i>#</i><b>)</b> specifies an initial estimate of the typical absolute
+        magnitude of a percentile slope.  If <b>fromabs()</b> is not specified, it
+        defaults to the aspect ratio <i>(ymax-ymin)/(xmax-xmin)</i> (where <i>xmax</i> and
+        <i>xmin</i> are the maximum and minimum X values, and <i>ymax</i> and <i>ymin</i> are the
+        maximum and minimum Y values) if that ratio is defined and nonzero,
+        and to 1 otherwise.  This magnitude is used in constructing the
+        bracket matrix.  Candidate bracket beta-values will have values of 0
+        or of +/-<i>fromabs</i>*2^K, where K is a nonnegative integer.  The bracket
+        matrix is a matrix with two columns and three or more rows, each row
+        containing a candidate beta-value in column 1 and the corresponding
+        zetastar-value in column 2.  It is used to find an initial pair of
+        beta-values for input into the iterative numerical solution method,
+        which attempts to find a solution in beta between the two initial
+        beta-values.  The bracket matrix is initialized to have beta-values
+        -<i>fromabs</i>, 0 and +<i>fromabs</i>, and zetastar-values corresponding to these
+        beta-values.  If a target zeta-value is outside the range of the
+        zetastar-values of the bracket matrix, then the bracket matrix is
+        extended by adding new rows before the first row by successively
+        doubling the beta-value in the first row, or by adding new rows after
+        the last row by successively doubling the beta-value in the last row,
+        until there is a zetastar-value in the second column on each side of
+        the target zeta-value.  For an explanation of this terminology, see
+        <b>Methods</b> below.
+<p>
+    <b>brackets(</b><i>#</i><b>)</b> specifies a maximum number of rows for the bracket matrix.
+        The minimum is <b>brackets(3)</b>.  The default is <b>brackets(1000)</b>.
+<p>
+    <b>technique(</b><i>algorithm_spec</i><b>)</b> specifies an iterative solution method for
+        finding a solution in <b>beta</b> to the equation to be solved.  The
+        following algorithms are currently implemented in <b>censlope</b>.
+<p>
+        <b>technique(bisect)</b> specifies an adapted version of the bisection
+        method for step functions.
+<p>
+        <b>technique(regula)</b> specifies an adapted version of the regula falsi
+        (or false position) method for step functions.
+<p>
+        <b>technique(ridders)</b> specifies an adapted version of the method of
+        Ridders (1979) for step functions.
+<p>
+        The default is <b>technique(ridders 5 bisect </b><i>iterate</i><b>)</b>, where <i>iterate</i> is
+        the value of the <b>iterate()</b> option.  The bisection method is
+        guaranteed to converge in a number of iterations similar to the
+        binary logarithm of the <b>tolerance()</b> option.  The regula falsi and
+        Ridders methods are usually faster if the zetastar function is very
+        nearly continuous but may sometimes be slower if the zetastar
+        function is a discrete step function.  All methods are modified
+        versions, for step functions, of the methods of the same names
+        described in Press et al. (1992).
+<p>
+        You can switch between algorithms by specifying more than one in the
+        <b>technique()</b> option.  By default, <b>censlope</b> will use an algorithm for
+        five iterations before switching to the next algorithm.  To specify a
+        different number of iterations, include the number after the
+        technique in the option.  For example, specifying <b>technique(ridders</b>
+        <b>10 bisect 1000)</b> requests that <b>censlope</b> perform 10 iterations by using
+        the Ridders algorithm, perform 1000 iterations by using the bisection
+        algorithm, and then switch back to Ridders for 10 iterations, and so
+        on.  The process continues until convergence or until the maximum
+        number of iterations is reached.
+<p>
+    <b>iterate(</b><i>#</i><b>)</b> specifies the maximum number of iterations.  When the number
+        of iterations equals <b>iterate()</b>, the iterative solution program stops
+        and records failure to converge.  If convergence is declared before
+        this threshold is reached, it will stop when convergence is declared.
+        The default value of <b>iterate(</b><i>#</i><b>)</b> is the current value of <b>set maxiter</b>,
+        which is <b>iterate(16000)</b> by default.
+<p>
+    <b>tolerance(#)</b> specifies the tolerance for the percentile differences.
+        When the relative difference between the current beta-brackets is
+        less than or equal to <b>tolerance()</b>, the <b>tolerance()</b> convergence
+        criterion is satisfied.  <b>tolerance(1e-6)</b> is the default.
+<p>
+    <b>log</b> specifies that an iteration log showing the progress of the numerical
+        solution method is to be displayed.  If an iteration log is
+        displayed, then there will be four separate iteration sequences per
+        percentile, estimating the left estimate, the right estimate, the
+        lower confidence limit, and the upper confidence limit, respectively.
+        For this reason, the default is not to produce an iteration log.
+        However, if <b>censlope</b> is expected to be slow (as for large datasets),
+        then an iteration log can be specified to reassure the user that
+        progress is being made.
+<p>
+    <b>nolimits</b> specifies that lower and upper confidence limits will not be
+        calculated.  This will save computational time if the user plans to
+        calculate confidence limits using a resampling prefix command, such
+        as <b>bootstrap</b> or <b>jackknife</b>.
+<p>
+<p>
+<b><u>Methods</u></b>
+<p>
+    The program <b>censlope</b> uses iterative numerical methods to solve an
+    equation involving a monotonically nonincreasing step function.  Given
+    two variables Y and X, we attempt to solve in beta an equation
+<p>
+    <b>zetastar(beta) - zetatarget = 0</b>
+<p>
+    where we define
+<p>
+    <b>zetastar(beta) = zeta( theta( Y - beta*X , X ) )</b>
+<p>
+    where <b>theta(U,V)</b> may be either <b>D(U|V)</b> (Somers' <i>D</i>) or <b>tau_a(U,V)</b>
+    (Kendall's tau-a) as defined in <b>somersd</b>, <b>zeta()</b> is any one of the
+    transformations used by the <b>transf()</b> option of <b>somersd</b>, and <b>zetatarget</b> is
+    a target zeta-value.  This target zeta-value may be <b>zeta(1-2q)</b> if we are
+    trying to estimate the 100<i>q</i>th percentile slope or <b>zeta(1-2q) +/-</b>
+    <b>multiplier*standard_error</b> if we are trying to calculate confidence limits
+    for the 100<i>q</i>th percentile slope.  In either case, the left-hand side of
+    the equation to be solved is a step function, and therefore a unique
+    solution may not exist, as there may be no exact solution or an interval
+    of exact solutions.  We therefore have to find either a left solution
+    (defined as the supremum value of <b>beta</b> such that
+    <b>zetastar(beta)-zetatarget</b> is positive), or a right solution (defined as
+    the infimum value of <b>beta</b> such that <b>zetastar(beta)-zetatarget</b> is
+    negative).  For a given 100<i>q</i>th percentile slope, the estimate of the
+    percentile is defined as the mean of the left and right solutions, the
+    lower confidence limit is defined as a left solution, and the upper
+    confidence limit is defined as a right solution.  Therefore, each
+    percentile slope to be estimated requires four iteration sequences,
+    solving the left estimate, the right estimate, the lower confidence
+    limit, and the upper confidence limit, respectively.  This requirement
+    implies many evaluations of the object function
+    <b>zetastar(beta)-zetatarget</b>, each of which in turn involves calculating
+    Somers' D or Kendall's tau-a.  It is therefore important to be able to
+    calculate Somers' D and/or Kendall's tau-a efficiently, if <b>censlope</b> is to
+    be used for large samples.  Fortunately, <b>somersd</b> uses the algorithm of
+    Newson (2006), which calculates Somers' D and/or Kendall's tau-a in a
+    time of order N*log(N), where N is the number of observations.
+<p>
+    Initial beta-value estimates for the iterative methods are stored in the
+    bracket matrix, which is a matrix with two columns.  The first column
+    contains a sequence of beta-values in ascending order, and the second
+    column contains the corresponding zetastar-values.  As the function
+    <b>zetastar()</b> is nonincreasing, it follows that a pair of zetastar-values
+    from the bracket matrix, one on each side of the target zetastar-value,
+    will correspond to a pair of beta-values, one on each side of the left or
+    right solution to the equation in <b>beta</b>.  The bracket matrix is
+    initialized, and extended if necessary, as described in the help for the
+    <b>fromabs()</b> and <b>brackets()</b> options.
+<p>
+    The methods used by <b>censlope</b> and <b>somersd</b> are implemented using a library
+    of Mata functions, whose code is distributed with the <b>somersd</b> package in
+    accordance with the open-source principle.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, Imperial College London, UK.
+    Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Newson, R.  2006.  Efficient calculation of jackknife confidence
+        intervals for rank statistics.  <i>Journal of Statistical Software</i> 15:
+        1-10.
+<p>
+    Press, W. H., S. A., Teukolsky, W. T. Vetterling, and B. P. Flannery.
+        1992.  <i>Numerical Recipes in C:  The Art of Scientific Computing</i>.  2nd
+        ed.  Cambridge, UK: Cambridge University Press.
+<p>
+    Ridders, C. J. F.  1979.  A new algorithm for computing a single root of
+        a real continuous function.  <i>IEEE Transactions on Circuits and</i>
+        <i>Systems</i>, vol. CAS-26(11): 979-980.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] maximize</b>
+<p>
+    Online:  <b>lrtest</b>, <b>ml</b>, <b>test</b>,
+             <b>somersd</b>, <b>censlope</b>, <b>cendif</b> (if installed)
+</pre>

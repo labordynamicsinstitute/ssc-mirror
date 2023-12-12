@@ -1,0 +1,59 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>circvplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Cumulative vector plot for circular data</u></b>
+<p>
+        <b>circvplot</b> <i>varname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>result</u></b><b>ant(</b><i>resultant_options</i><b>)</b>
+                 <b><u>rot</u></b><b>ate(</b><i>#</i><b>)</b> <i>twoway_options</i> ]
+<p>
+<p>
+<b><u>Description</u></b> 
+<p>
+    <b>circvplot</b> produces a cumulative vector plot for <i>varname</i>.  <i>varname</i> should
+    be a circular variable taking on values between 0 and 360 degrees. Each
+    value of <i>varname</i> is plotted as a unit vector. The vectors are sorted and
+    plotted end to end, by default starting opposite the mean direction. The
+    resultant of the vectors is also shown as an arrow.
+<p>
+    The graph will usually best be shown with <b>xsize()</b> and <b>ysize()</b> equal, or
+    nearly so.
+<p>
+<p>
+<b><u>Options</u></b> 
+<p>
+    <b>resultant()</b> specifies options controlling the rendering of the arrow
+        showing the resultant. In particular, <b><u>arrowhead</u></b><b>factor(</b><i>#</i><b>)</b> specifies
+        that the arrowhead length should be the default length (which is 7%
+        of the resultant length) X a factor of <i>#</i>.  Otherwise, such options
+        are typically appropriate connect_options.
+<p>
+    <b>rotate()</b> changes the direction at which plotting starts by a clockwise
+        rotation of <i>#</i> degrees from the default of opposite the vector mean.
+        Such rotation is needed occasionally to avoid producing a loop that
+        cuts itself.
+<p>
+    <i>twoway_options</i> are options of twoway.  By default the <b>subtitle()</b>
+        indicates the mean direction and vector strength and is at <b>pos(6)</b>.
+        Note that the degree symbol can be specified by <b>`=char(176)'</b>.
+<p>
+<p>
+<b><u>Example</u></b> 
+<p>
+    <b>. circvplot wallasp, title("Wall aspect", pos(12)) clcolor(blue)</b>
+        <b>result(clcolor(red))</b>
+    <b>. graph display, xsize(4) ysize(4)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line: help for circdplot (if installed), circrplot (if installed)
+<p>
+</pre>

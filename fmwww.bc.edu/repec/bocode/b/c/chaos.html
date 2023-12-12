@@ -1,0 +1,63 @@
+<pre>
+.-
+help for ^chaos^
+.-
+<p>
+Iterating a logistic difference equation
+----------------------------------------
+<p>
+    ^chaos , r(^#^)^ [ ^c^onnect^(^str^) s^ymbol^(^str^)^  ]
+<p>
+Description
+-----------
+<p>
+^chaos^ iterates for 0 &lt; r &lt; 4 and t = 1, 2, 3, ...
+<p>
+        x[t+1] = r * x[t] * (1 - x[t])
+<p>
+starting with x[1] as a random number from the uniform distribution on
+[0,1).
+<p>
+As r increases, the generic behaviour changes from tendency to a single
+equilibrium to alternations between two equilibria, between four
+equilibria, and so on, successive bifurcations leading to `chaos' for
+sufficiently large r.
+<p>
+^chaos^ presents the user with graphs of x[t] versus t and of x[t+1]
+versus x[t].
+<p>
+<p>
+Remarks
+-------
+<p>
+If there are no data in memory, ^chaos^ sets the number of observations
+to 200. This is suggested as a suitable number.
+<p>
+<p>
+Options
+-------
+<p>
+^r(^#^)^ is a required option setting r: 0 &lt; r &lt; 4.
+<p>
+^connect(^ ^)^ can be used to suppress connection of data points. The
+    default is ^l^.
+<p>
+^symbol(^ ^)^ can be used to specify a plotting symbol. The default
+    is ^.^
+<p>
+<p>
+Examples
+--------
+<p>
+    . ^chaos, r(3.99)^
+    . ^chaos, r(3.99) c(.) sy(o)^
+<p>
+<p>
+Author
+------
+<p>
+         Nicholas J. Cox, University of Durham, U.K.
+         n.j.cox@@durham.ac.uk
+<p>
+<p>
+</pre>

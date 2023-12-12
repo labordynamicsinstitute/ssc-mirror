@@ -1,0 +1,62 @@
+<pre>
+<b>help contour</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b> Produces a contour plot</b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>contour</b> [<i>varlist</i>] [<b>,</b> <i>options</i>]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>s</u></b><b>plit</b>{numlist}       specifies the values for the contours and takes a
+                            number list, the default is 3 contours at the
+                            mean, 25th and 75th percentiles.
+      <b><u>v</u></b><b>alues</b>               specifies that the data points be plotted
+                            alongside the contours.
+      twoway_options       specifies options for example titles and labels.
+    -------------------------------------------------------------------------
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>contour</b> draws a contour plot for a variable list on the x-axis and the
+    observations on the y-axis.
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b><u>s</u></b><b>plit</b>{numlist} specifies the values for the contours and takes a number
+        list, the default is 3 contours at the mean, 25th and 75th
+        percentiles.
+<p>
+    <b><u>v</u></b><b>alues</b> specifies that the data points be plotted alongside the contours.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+Click the following commands in order. 
+ 
+clear
+<p>
+set obs 8
+<p>
+gen x1=uniform()
+gen x2=uniform()
+gen x3=uniform()
+gen x4=uniform()
+<p>
+contour x1-x4
+contour x1-x4, ylabel(,angle(0)) title(contours) split(0.5) 
+<p>
+<b><u>Also see</u></b>
+<p>
+Online:  
+<b>twoway</b>
+</pre>

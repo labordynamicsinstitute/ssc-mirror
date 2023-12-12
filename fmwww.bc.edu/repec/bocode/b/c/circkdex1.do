@@ -1,0 +1,16 @@
+use azimuthdata
+circbw azimuth
+circkden azimuth, h(15.88) saving(Fig1a, replace)
+circkden azimuth, h(15.88) circgph saving(Fig1b, replace)
+circkden azimuth, h(31.77) saving(Fig1c, replace)
+circkden azimuth, h(31.77) circgph saving(Fig1d, replace)
+circkden azimuth, h(63.54) saving(Fig1e, replace)
+circkden azimuth, h(63.54) circgph saving(Fig1f, replace)
+cirkdevm azimuth, h(58.88) saving(Fig2a, replace)
+cirkdevm azimuth, h(58.88) circgph saving(Fig2b, replace)
+cirkdevm azimuth, h(14.72) saving(Fig2c, replace)
+cirkdevm azimuth, h(14.72) circgph saving(Fig2d, replace)
+cirkdevm azimuth, h(3.68) saving(Fig2e, replace)
+cirkdevm azimuth, h(3.68) circgph saving(Fig2f, replace)
+graph combine Fig1a.gph Fig1c.gph Fig1e.gph Fig1b.gph Fig1d.gph Fig1f.gph, iscale(.5) title(Figura 1) saving(Fig1tot, replace)
+graph combine Fig2a.gph Fig2c.gph Fig2e.gph Fig2b.gph Fig2d.gph Fig2f.gph, iscale(.5) title(Figura 2) saving(Fig2tot, replace)

@@ -1,0 +1,63 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>circqvm</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Quantile-quantile plot for von Mises distribution fitted to circular data</u></b>
+<p>
+        <b>circqvm</b> <i>varname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>, show(</b><i>numlist</i><b>)</b> <b>plot(</b><i>plot</i><b>)</b>
+                 <i>scatter_options</i>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>circqvm</b> gives a quantile-quantile plot for the fit of a von Mises (a.k.a.
+    circular normal) distribution to a circular variable on a scale between 0
+    and 360 degrees. circvm is used to fit the distribution, estimating the
+    two parameters vector mean mu and concentration parameter kappa. Both
+    observed and expected quantiles are rotated so that each set is centred
+    on the observed vector mean.  Each is nevertheless labelled in terms of
+    <i>varname</i>.
+<p>
+    This plot was suggested by Fisher (1993). However, he uses a sine((angle
+    - centre) / 2) scale, which has the merit of pulling in the tails and
+    stretching the region near the centre of the distribution, but the
+    disadvantage, as with any transformation, of being one step further away
+    from the data.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>show()</b> specifies a numlist of axis labels to be shown, overriding the
+        default.
+<p>
+    <b>plot(</b><i>plot</i><b>)</b> provides a way to add other plots to the generated graph; see
+        help plot_option.
+<p>
+    <i>scatter_options</i> are any options allowed with scatter.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. circqvm wallasp</b>
+ 
+    <b>. circqvm wallasp, show(0(45)315)</b>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Fisher, N.I. 1993. <i>Statistical analysis of circular data.</i>  Cambridge:
+        Cambridge University Press.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line: help for circvm, circpvm
+<p>
+</pre>

@@ -4,7 +4,8 @@
 {* 2jan2015/30mar2015/4may2015/25may2015/9jul2015/4sep2015/15oct2015/14dec2015/26jan2016/22mar2016/9may2016/9aug2016/18aug2016/31oct2016/20dec2016/22feb2017/24feb2017/2mar2017/8mar2017/21mar2017/26mar2017/4apr2017/13apr2017/13jun2017}{...}
 {* 12jul2017/25sep2017/18oct2017/14nov2017/21dec2017/24feb2018/26mar2018/2may2018/11may2018/14may2018/10jun2018/4jul2018/30jul2018/8aug2018/22aug2018/25sep2018/3oct2018/15oct2018/22oct2018/15nov2018/3dec2018/11dec2018/13dec2018}{...}
 {* 8jan2019/22feb2019/13mar2019/23apr2019/19may2019/12jun2019/24jun2019/12jul2019/17jul2019/29jul2019/9aug2019/25sep2019/7oct2019/14oct2019/31oct2019/13dec2019/23dec2019/21jan2020/20feb2020/10mar2020/19jun2020/28jun2020/11oct2020}{...}
-{* 19nov2020/5dec2020/19dec2020/4jan2021/8feb2021/27feb2021/9apr2021/13jun2021/22jun2021/10jul2021/16jul2021/28jul2021/5aug2021/3sep2021/13sep2021/11oct2021/3dec2021/18jan2022/31jan2022}{...}
+{* 19nov2020/5dec2020/19dec2020/4jan2021/8feb2021/27feb2021/9apr2021/13jun2021/22jun2021/10jul2021/16jul2021/28jul2021/5aug2021/3sep2021/13sep2021/11oct2021/3dec2021/18jan2022/31ja/n2022/28feb2022/17mar2022/27apr2022/29jun2022/6aug2022}{...}
+{* 3sep2022/12nov2022/6dec2022/18dec2022/16jan2023/8feb2023/2mar2023/10mar2023/14mar2023/31mar2023/5apr2023/19apr2023/13may2023/6jun2023/16jun2023/3aug2023/17sep2023/1oct2023/10dec2023/11dec2023}{...}
 {hline}
 help for {hi:stripplot}
 {hline}
@@ -359,13 +360,13 @@ is not supported with bars or boxes, nor {cmd:by()} with reference lines.
 
 {p 4 4 2}Meta-remark: The very large list of references here has just
 grown over several years from a much shorter set of more usual length. A
-rationale for its length, beyond the amusement and bemusement of the
+rationale for its length, beyond the amusement of the
 program author, might include: providing overwhelming evidence of how
 long and how widely these plots have been invented, or re-invented;
 documenting explicitly the variety of plot forms (and the variety of
 plot names) in more detail than in other sources; maximising the
 scope for people to find congenial references in literature accessible to
-them. Equally, there is here neither intent nor claim to produce a 
+them; challenging people to suggest other earlier and/or excellent examples. Equally, there is here neither intent nor claim to produce a 
 comprehensive list.  
 
 {p 4 4 2}There is not a sharp distinction in the literature or in
@@ -382,15 +383,17 @@ Friendly {it:et al.} (2010) and Friendly and Wainer (2021).
 Galton (1869, pp.27{c -}28; 1892, 
 pp.27{c -}28) gave a schematic dot diagram showing how the heights of a
 million men might be plotted.  Jevons (1884), Wallace (1889), 
-Bateson and Brindley (1892), Bateson (1894), Brunt (1917, 1931), Shewhart
-(1931, 1939), Pearson (1931, 1938), Pearson and Chandra Sekhar (1936),
+Bateson and Brindley (1892), Bateson (1894), Brunt (1917, 1931), Gause (1930), 
+Shewhart (1931, 1939), Pearson (1931, 1938), Pearson and Chandra Sekhar (1936),
 Shaw (1936), Brinton (1939), Tippett (1943) and Zipf (1949) are other
 early sources.  C.B. Williams often used such diagrams in his papers (e.g. 
 1940, 1944) and books (1964, 1970).
 
 {p 4 4 2}In his now famous paper introducing the {it:Iris} data to statistical 
 science, Fisher (1936) gave a histogram in which each value is represented by 
-a rectangle of constant area, hence using essentially the same principle.  
+a rectangle of constant area, hence using essentially the same principle. The same idea was used by Svendsen (1940), on which see Murphy (1997, p.341), 
+Dixon and Massey (1951, 1957, 1969, 1983), Murphy (1985, p.61) 
+and Wilks (2006, 2011, 2019, p.34 in all editions).
 
 {p 4 4 2}Sasieni and Royston (1996) and Wilkinson (1999a) give
 general discussions: see Sasieni and Royston (1994) for the first
@@ -399,7 +402,10 @@ Stata implementation.
 {p 4 4 2}
 Wilks (1948), Hald (1952) and Box {it:et al.} (1978) used the term 
 {it:dot frequency diagram} or {it:dot diagram}, 
-as did Rowntree (1981), Bajpai {it:et al.} (1992), Harris (1999), Armitage {it:et al.} (2002), 
+as did Rowntree (1981), 
+Berry and Lindgren (1990, 1996), 
+Bajpai {it:et al.} (1992), 
+Harris (1999), Armitage {it:et al.} (2002), 
 Bl{c ae}sild and Granfeldt (2003), Bartholomew (2016) and Naghettini (2016).  
 Monkhouse and Wilkinson (1952) used the term {it:dispersion diagram}, 
 as did McGrew and Monroe (1993, 2000) and Morrocco and Ballantyne (2008); 
@@ -407,8 +413,8 @@ the term is also used for box plot-like displays
 (e.g. Hogg 1948; Ottaway 1973). 
 Miller (1953, 1964) used the terms {it:dispersion graph} and 
 {it:dispersion diagram}. 
-Silk (1979) and Slocum {it:et al.} (2010) used the term 
-{it:dispersion graph} for stacked dotplots. 
+Truran (1975), Silk (1979), White (1984) and Slocum {it:et al.} (2010) 
+used the term {it:dispersion graph} for stacked dotplots. 
 Pearson (1956) gives several examples.  
 Dickinson (1963) used the term {it:dispersal graph}. 
 Tukey (1974) used the term {it:dot pattern}. 
@@ -416,10 +422,11 @@ Tukey (1977, p.50) showed a dot plot for an example in which a box
 plot works poorly. See also examples in Tukey (1970a, 1970b) and 
 Mosteller and Tukey (1977, p.456). 
 Harris (1999) used the term {it:dot array chart}. 
-Chambers {it:et al.} (1983), Becker {it: et al.} (1988), Fox (1990), 
-Thompson (1992), Cleveland (1994), Lee and Tu (1997), Wilkinson (1999b, 2005)
-and Reimann {it:et al.} (2008) 
-used the term {it:one-dimensional scatter plot}. 
+Kendall (1971), Chambers {it:et al.} (1983), Becker and Chambers (1984), 
+Becker {it:et al.} (1988), 
+Fox (1990), Thompson (1992), Cleveland (1994), Lee and Tu (1997), 
+Wilkinson (1999b, 2005) and Reimann {it:et al.} (2008) 
+used the term {it:one-dimensional plot} or {it:one-dimensional scatter plot}. 
 H{c a:}rdle (1991) used the term {it:needle plot}. 
 Wennberg and Cooper (1996) used the term {it:distribution graph}. 
 Jacoby (1997) used the term {it:univariate scatter plot}, as did 
@@ -434,10 +441,12 @@ Woloshin (2000) used the term {it:turnip graphs}, attributing it to
 J.E. Wennberg. 
 Ryan {it:et al.} (1985) discuss their Minitab implementation using 
 the term {it:dotplot}. 
-Krieg {it:et al.} (1988), Velleman (1989), Hoaglin {it:et al.} (1991), 
+Note also later editions such as Ryan {it:et al.} (2013). 
+Krieg {it:et al.} (1988), Velleman (1989), Staudte and Sheather (1990), 
+Hoaglin {it:et al.} (1991), 
 Gonick and Smith (1993), Swan and Sandilands (1995), Wilkinson (1999b, 2005)
-Wild and Seber (2000), Burt {it:et al.} (2009), Ryan (2009), Wilcox (2009), 
-Janert (2011), Cook {it:et al.} (2016), Albert (2018) and Wilks (2019) 
+Wild and Seber (2000), Utts and Heckard (2002), Burt {it:et al.} (2009), Ryan (2009), Wilcox (2009), Doane and Seward (2011),  
+Janert (2011), Peacock and Peacock (2011), Cook {it:et al.} (2016), Albert (2018), Wilks (2019) and De Veaux {it:et al.} (2021)
 are among many others also using the term {it: dot plot} or {it:dotplot}. 
 Yandell (2007), Thas (2010), Janert (2011), Sleeper (2018, 2020) and Wexler (2021) 
 used the term {it:jittered plots} or {it:jitter plot} for jittered versions. 
@@ -447,17 +456,20 @@ The latter term also appears in Wright and London (2009),
 Koponen and Hild{c e'}n (2019) and Schwabish (2021). 
 McGrew {it:et al.} (2014) used {it:individual value plot} and 
 {it:individual point distribution}. 
-Stuetzle (1987) and Goos and Meintrup (2015) used {it:histogram}. 
+Stuetzle (1987), Madansky (1988), Thi{c e'}baux (1994) and Goos and Meintrup (2015, 2016) used {it:histogram}. 
 Wexler {it:et al.} (2017) and Sleeper (2020) used {it:unit histogram}. 
 Bradstreet (2012), Rice and Lumley (2016) and Cairo (2019) 
 used {it:dot chart}.  
 Cleveland (1985) used the term {it:point graph}, 
 as did Harris (1999) and Slocum {it:et al.} (2010). 
 Computing Resource Center (1985) and Hamilton (1992) used the terms 
-{it:oneway plot} and {it:oneway scatterplot}. 
+{it:oneway plot} and {it:oneway scatterplot}.
+Pagano and Gauvreau (1993) used the term one-way scatter plot.  
 Feinstein (2002, pp.67, 167) used the term {it:one-way graph}.  
 The term {it:line plot} appears in Hill and Dixon (1982), 
-Cooper and Weekes (1983), Klemel{c a:} (2009) and Schuenemeyer and Drew (2011), 
+Cooper and Weekes (1983), Benjamini (1988), 
+Klemel{c a:} (2009), Christensen {it:et al.} (2011) and 
+Schuenemeyer and Drew (2011), 
 that of {it:line chart} appears in Robertson (1988), 
 and that of {it:linear plot} appears in Hay (1996). 
 The term {it:strip plot} (or {it:strip chart}) (e.g. 
@@ -466,13 +478,14 @@ Venables and Ripley 2002; Maindonald and Braun 2003;
 Robbins 2005; Faraway 2005, 2014; Sarkar 2008; Sawitzki 2009; Thas 2010; 
 Harris and Jarvis 2011; Few 2009, 2012, 2015, 2020; Cairo 2013, 2016; 
 Cam{c o~}es 2016; Friendly and Meyer 2016;   
-Harris 2016; Hilfiger 2016; Carlson 2017; Spiegelhalter 2019; Schwabish 2021; Wexler 2021) 
+Harris 2016; Hilfiger 2016; Carlson 2017; Spiegelhalter 2019; Schwabish 2021, 2023; Wexler 2021) 
 appears traceable to work by J.W. and P.A. Tukey (1990).  
+The term {it:dot strip plot} appears in Smith (2022). 
 The term {it:blob chart} appears in Adams (1992). 
 The term {it:dit plot} appears in Ellison (1993, 2001). 
 The terms {it:number line}, {it:number-line plot} and {it:number axis}
 appear in Helsel and Hirsch (1992), McGrew and Monroe (1993, 2000), 
-Monmonier (1991, 1993) and Harris (1999). 
+Monmonier (1991, 1993), Harris (1999) and Wolfram (2017). 
 People in neuroscience often plot event times for multiple trials as 
 {it:raster plots}: Brillinger and Villa (1997) is a token reference 
 from the statistical literature. See Kass {it:et al.} (2014) for more. 
@@ -483,79 +496,85 @@ and a fulcrum to indicate mean as centre of gravity, as one kind of
 {it:beam and fulcrum display}. 
 The term {it:data distribution graph} appears in Robbins (2005). 
 The term {it:column scatter graph or plot} for vertical strip plots appears in 
-Motulsky (1995) and in Girgis and Mohanty (2012). 
+Motulsky (1995, 2010, 2014, 2018) and in Girgis and Mohanty (2012). 
 The term {it:barcode plot} or {it:bar code plot} or {it:barcode chart} 
-appears in Keen (2010, 2018), Thas (2010) and Kirk (2012). 
+appears in Keen (2010, 2018), Thas (2010), Kirk (2012) and Smith (2022). 
 The term {it:circle plot} appears in McDaniel and McDaniel (2012a, 2012b). 
 The term {it:Wilkinson dot plot} appears in Chang (2013, 2019),  
 Koponen and Hild{c e'}n (2019), Sleeper (2020), Schwabish (2021) and Wexler (2021).  
 The term {it:swarm} or {it:beeswarm plot} appears in Eklund (2013), 
 Martinez {it:et al.} (2017), Andrews (2019), Holmes and Huber (2019), 
-Koponen and Hild{c e'}n (2019) and Schwabish (2021). 
+Koponen and Hild{c e'}n (2019), Schwabish (2021) and Smith (2022). 
 The term {it:instance chart} appears in Kirk (2016). 
 The term {it:wheat plot} appears in Few (2017) and Schwabish (2021). 
 The term {it:SinaPlot} appears in Sidiropoulos {it:et al.} (2018) for a hybrid
 of violin plot and strip chart.
 The term {it:raincloud plot} appears in Allen {it:et al.} (2019) and 
-Schwabish (2021) for a hybrid of strip chart, box plot and violin plot.  
+Schwabish (2021) for a hybrid of strip chart, box plot and violin plot and
+in Schwabish (2023) for a hybrid of strip chart and box plot with whiskers to 10% and 90% points.  
+Stacked dot and strip plots appear to qualify as one kind of {it:gatherplot} 
+(Park {it:et al.} 2023). 
 
 {p 4 4 2}
+Wigglesworth (1954), 
 Moroney (1956), 
 Wallis and Roberts (1956, p.178), 
 Clement and Robertson (1961),
 Youden (1962), 
 Gregory (1963),  
 Haggett (1965, 1972), 
-Draper and Smith (1966), 
-Cormack (1971), Williamson (1972), Davis (1973, 1986, 2002), 
+Draper and Smith (1966), Cole and King (1968), 
+Cormack (1971), Moore (1971), Williamson (1972), Davis (1973, 1986, 2002), 
 Agterberg (1974), Hammond and McCullagh (1974), Tufte (1974, 2020), 
-Lewis (1977), Wright (1977), Barnett and Lewis (1978), 
-Mardia {it:et al.} (1979), 
-Smith (1979), Brown and Hu (1980), 
+Lehmann (1975, 1998), Lewis (1977), Wright (1977), Barnett and Lewis (1978), 
+Johnston (1978), Mardia {it:et al.} (1979), 
+Murphy (1979, 1982), Smith (1979), Brown and Hu (1980), 
 Bertin (1981, 1983), Green (1981),  
 Wetherill (1981, 1982), 
 Dobson (1983 and later), 
 Light and Pillemer (1984), 
 Bentley (1985, 1988), Aitchison (1986), Clark and Hosking (1986), 
 Colinvaux (1986, 1993), Ibrekk and Morgan (1987), Jones and Moon (1987), 
-Chatfield (1988), Flury and Riedwyl (1988), Siegel (1988), 
+Chatfield (1988), Flury and Riedwyl (1988), Siegel (1988), Sprent (1988), 
 Hald (1990), Morgan and Henrion (1990), Hutchinson (1993),
-Baxter (1994), Daly {it:et al.} (1995), Guttorp (1995),  
+Baxter (1994), Kent and Coker (1994), Daly {it:et al.} (1995), Guttorp (1995),  
 Henry (1995), Jongman {it:et al.} (1995), 
 Berry (1996), McNeil (1996), Siegel and Morgan (1996), 
 Behrens (1997), Flury (1997),  
 Cobb (1998), Griffiths {it:et al.} (1998), 
 Bland (2000), Nolan and Speed (2000), 
 Manly (2001), Spence (2001, 2007, 2014), 
-Dupont (2002), Field (2003, 2010, 2016), 
+Dupont (2002), Field (2003, 2010, 2016), Mead, Curnow and Hasted (2003),  
 Barnett (2004), Heiberger and Holland (2004, 2015),  
 van Belle {it:et al.} (2004),
-Robbins (2005), 
+Robbins (2005), Maronna {it:et al.} (2006, 2019), 
 Young {it:et al.} (2006), 
 Agresti and Franklin (2007), Cook and Swayne (2007), Morgenthaler (2007),
-Freeman {it:et al.} (2008), Warton (2008), 
-Schneider (2009), Theus and Urbanek (2009), 
+Freeman {it:et al.} (2008), Urbanek (2008), Warton (2008), 
+Yamamoto {it:et al.} (2008), Schneider (2009), Theus and Urbanek (2009), 
+Wainer (2009, 2016), 
 Whitlock and Schluter (2009, 2015, 2020), Andersen and Skovgaard (2010), 
-Keen (2010, 2018), Drummond and Vowler (2011), 
-Sokal and Rohlf (2012), Wills (2012), 
+Keen (2010, 2018), Zar (2010), Drummond and Vowler (2011), 
+Kent (2012), Sokal and Rohlf (2012), Wills (2012), 
 Greenacre and Primicerio (2013),  
 Ramsey and Schafer (2013), Yau (2013), Amaratunga {it:et al.} (2014), 
 Hector (2015), 
-Berinato (2016; who also uses the term in another sense: p.30),  
-Greenacre (2016), Wainer (2016), 
+Berinato (2016; who also uses the term in another sense: p.30),
+Goos and Meintrup (2016), Greenacre (2016), 
 Irizarry and Love (2017), 
 Wolfe and Schneider (2017), 
 Kriebel and Murray (2018),  Pearson (2018), Standage (2018, 2019, 2020),  
 Greenacre (2019), Grant (2019), Healy (2019),  
 Koponen and Hild{c e'}n (2019), Selvin (2019), Irizarry (2020), Mudelsee (2020) 
-and Vanderplas {it:et al.} (2020) 
+Vanderplas {it:et al.} (2020) and DelSole and Tippett (2022)  
 are some other references with examples of strip plots. 
 
 {p 4 4 2} 
 Siegel (1988) gives an especially lucid discussion of stem-and-leaf
 plots presented to maximise their resemblance to both histograms and
 strip plots (in the present sense).  His first edition is preferable on
-this point to the second edition, Siegel and Morgan (1996).  
+this point to the second edition, Siegel and Morgan (1996). Other lucid 
+explanations were given by Berry (1996) and Berry and Lindgren (1996).   
 
 {p 4 4 2}
 The Federal Reserve publishes predictions of interest rates using dot plots. 
@@ -567,26 +586,33 @@ density plots, scatter plots} are now often known as {it:rugs}
 or {it:rug plots}, 
 although their use predates this term. See (e.g.)
 Brunt (1917, 1931), Wallis and Roberts (1956, p.178),  
-Boneva {it:et al.} (1971), Binford (1972), 
+Boneva {it:et al.} (1971), Binford (1972), Box and Tiao (1973),  
 Davis (1973, 1986, 2002), 
 Daniel (1976), Lewis (1977),  
 Brier and Fienberg (1980), Brown and Hu (1980), Tukey and Tukey (1981), 
-Chambers {it:et al.} (1983), Tufte (1983, 2006, 2020), 
-Aitchison (1986), Fox (1990),  
+Chambers {it:et al.} (1983), Tufte (1983, 2006, 2020), Murphy (1985, p.61), 
+Aitchison (1986), Hastie and Tibshirani (1986), Fox (1990),  
+Berry and Lindgren (1990, 1996), 
 Hastie and Tibshirani (1990) (who do use the term),
 H{c a:}rdle (1990, 1991), Hastie (1992), Clark and Pregibon (1992), 
-Scott (1992, 2015), Pitman (1993), Wand and Jones (1995),  
-Wilks (1995, 2006, 2011, 2019), Fan and Gijbels (1996),  
-Gasser (1996), Ripley (1996), Simonoff (1996), 
-Bowman and Azzalini (1997), Flury (1997), Millard (1998),  
-Harris (1999) (who uses the term {it:border plot}), Friendly (2000), 
-Schimek (2000), Baxter (2003), Barnett (2004), Wasserman (2004, 2006), 
-Aitkin {it:et al.} (2005, 2009), Sarkar (2008), 
-Hastie {it:et al.} (2009), Sawitzki (2009), Everitt and Skrondal (2010), 
-Keen (2010, 2018), Everitt {it:et al.} (2011), 
+Scott (1992, 2015), Cleveland (1993), Pitman (1993), 
+Jongman {it:et al.} (1995), Wand and Jones (1995),  
+Wilks (1995, 2006, 2011, 2019), 
+Fan and Gijbels (1996), Gasser (1996), Ripley (1996), Simonoff (1996, 2003), 
+Bowman and Azzalini (1997), Flury (1997), Reiss and Thomas (1997, 2001, 2007),
+Millard (1998),  
+Harris (1999) (who uses the term {it:border plot}), Johnson and Albert (1999),
+Friendly (2000), 
+Schimek (2000), Utts and Heckard (2002), Baxter (2003), 
+Barnett (2004), Wasserman (2004, 2006), 
+Aitkin {it:et al.} (2005, 2009), Bolker (2008), Bowman (2008), 
+Friendly (2008), H{c a:}rdle {it:et al.} (2008), Minnotte {it:et al.} (2008), 
+Sarkar (2008), Hastie {it:et al.} (2009), Sawitzki (2009), 
+Sheather (2009), Barnett and Dobson (2010), Everitt and Skrondal (2010), 
+Keen (2010, 2018), Christensen {it:et al.} (2011), Everitt {it:et al.} (2011), 
 Gower {it:et al.} (2011), Harris and Jarvis (2011), 
 Matthiopoulos (2011), Schuenemeyer and Drew (2011), 
-Feigelson and Babu (2012), Legendre and Legendre (2012), 
+Feigelson and Babu (2012), Lee (2012), Legendre and Legendre (2012), Weigel (2012),  
 Chang (2013, 2019), Fahrmeir {it:et al.} (2013),  
 Greenacre and Primicerio (2013),  
 James {it:et al.} (2013), Faraway (2014),
@@ -594,8 +620,9 @@ Perpi{c n~}{c a'}n Lamigueiro (2014, 2018), Harrell (2015),
 Heiberger and Holland (2015), Efron and Hastie (2016), 
 Friendly and Meyer (2016), Harris (2016),  
 Carlson (2017), Martinez {it:et al.} (2017), Albert (2018), Field (2018),  
-Koponen and Hild{c e'}n (2019), Racine (2019),  
-Irizarry (2020), Gerbing (2020) and Friendly and Wainer (2021). 
+Bouveyron {it:et al.} (2019), Koponen and Hild{c e'}n (2019), Racine (2019),  
+Irizarry (2020), Gerbing (2020), Friendly and Wainer (2021) and Setlur and 
+Cogley (2022). 
 Tufte (1983, p.135) uses the term differently, for a series of plots linked 
 together using their marginal distributions.
 
@@ -609,11 +636,12 @@ Ellison (1993, 2001), McGrew and Monroe (1993, 2000), Curry (1999),
 Harris (1999), Wild and Seber (2000), 
 Quinn and Keough (2002), Young {it:et al.} (2006),
 Hendry and Nielsen (2007), Morrocco and Ballantyne (2008), 
+Motulsky (2010, 2014, 2018), Christensen {it:et al.} (2011), 
 Krause and O'Connell (2012),  
 Chang (2013, 2019), Davino {it:et al.} (2014), McGrew {it:et al.} (2014), 
 Goos and Meintrup (2015), Friendly and Meyer (2016), Gierlinski (2016),
-Irizarry and Love (2017),  Wexler {it:et al.} (2017), 
-Keen (2018), Kriebel and Murray (2018), 
+Greenacre (2017), Irizarry and Love (2017),  Wexler {it:et al.} (2017), 
+Chiou and Bergey (2018), Keen (2018), Kriebel and Murray (2018), 
 Sleeper (2018) (whose explanation is singularly confused), 
 Holmes and Huber (2019), Irizarry (2020), Gerbing (2020) and Wexler (2021). 
 See also Miller (1953, 1964). 
@@ -627,22 +655,25 @@ rather than to data points within so many IQR of the quartiles, was
 emphasised by Cleveland (1985), but anticipated by Matthews (1936) 
 and Grove (1956) who plotted the interoctile range, meaning between the first
 and seventh octiles, as well as the range and interquartile range. 
-Dury (1963), Johnson (1975), Harris (1999), Feinstein (2002), Myatt (2007), 
+Dury (1963), Johnson (1975), Cressie (1991), 
+Pagano and Gauvreau (1993), Harris (1999), 
+Feinstein (2002), Utts and Heckard (2002), Myatt (2007), 
 Myatt and Johnson (2009, 2011), Draghici (2012), Davino {it:et al.} (2014), 
-Chang (2013, 2019), McGrew {it:et al.} (2014), Goos and Meintrup (2015)  
+Chang (2013, 2019), McGrew {it:et al.} (2014), Goos and Meintrup (2015, 2016)  
 and Wickham and Grolemund (2017) 
 showed means as well as minimum, quartiles, median and maximum. 
 Schmid (1954) showed summary graphs with median, quartiles 
 and 5 and 95% points. 
 Bentley (1985, 1988), Davis (2002), Spence (2007, 2014), Few (2009),  
-Motulsky (2010, 2014, 2018) and Gierlinski (2016) 
+Motulsky (2010, 2014, 2018), Gierlinski (2016) and Smith (2022)
 plotted whiskers to 5 and 95% points. 
 Crowe (1971, pp.70{c -}71) plotted median, quartiles and 10% and 90% points 
-on the margins of histograms. 
+on the margins of histograms.
+Moore and McCabe (1989, suggestion on p.35),  
 Morgan and Henrion (1990, pp.221, 241), 
 Fauth and Resetarits (1999), Spence (2001, p.36),  
 Gotelli and Ellison (2004, 2013, pp.72, 110, 213, 416),  
-Wilks (2011, p.280; 2019, p.365) and Schwabish (2021, p.198) 
+Wilks (2011, p.280; 2019, p.365) and Schwabish (2021, p.198; 2023, p.313) 
 plotted whiskers to 10% and 90% points, 
 as was also mentioned by Ramsey and Schafer (2013, p.19). See also 
 Feinstein (2002, p.308). 
@@ -657,13 +688,14 @@ and a {it:midgap plot} by Seheult (1986) and Stock and Behrens (1991). It
 consists of a point symbol for the median, no visible box, and whiskers between
 each quartile and the extreme beyond. See also Tufte (2020, p.100). 
 
-{p 4 4 2}Parzen (1979a, 1979b, 1982) hybridised box and quantile plots as 
+{p 4 4 2}Parzen (1979a, 1979b, 1982, 1997) hybridised box and quantile plots as 
 quantile-box plots. See also (e.g.) Shera (1991), 
 Militk{c y'} and Meloun (1993), Meloun and Militk{c y'} (1994),  
 Nair {it:et al.} (2013),  
 Evans and Cox (2017) and Cox (2020).
-Shelly (1996), Guevara and Avil{c e'} (2007) and 
-Feigelson and Babu (2012, p.208) plotted quantile plots and box plots side by side.
+Shelly (1996), Guevara and Avil{c e'} (2007), 
+Feigelson and Babu (2012, p.208) and Holmes and Huber (2019, p.129) 
+plotted quantile plots and box plots side by side.
 Note, however, that the quantile box plot of Keen (2010, 2018)
 is just a box plot with whiskers extending to the extremes. 
 In contrast, the quantile box plots of JMP are evidently box plots with 
@@ -690,6 +722,7 @@ See also Xue and Titterington (2011) for a detailed analysis of
 folding a distribution function at any quantile. 
 From literature seen by me, it seems that none of these threads 
 -- quantile-box plots or the later variants (A) (B) (C) -- cites each other. 
+Note that the mountain plot of Urbanek (2008) is a different idea. 
 
 {p 4 4 2}Ideas similar to box plots go back much further.  
 Cox (2009) gives various
@@ -718,7 +751,7 @@ historical comments. Further examples long in use for environmental applications
 are hypsometric curves (Clarke 1966) and flow duration curves (Searcy 1959).  
 
 {p 4 4 2}Dot charts (also sometimes called dot plots) in the sense of
-Cleveland (1984, 1994), as implemented in {help graph dot}, are quite
+Cleveland (1984, 1994) and Cleveland and McGill (1984), as implemented in {help graph dot}, are quite
 distinct. Various authors (e.g. Lang and Secic 2006, Zuur {it:et al.} 2007, 
 Sarkar 2008, Mitchell 2010, Chang 2013/2019, Kirk 2016, Healy 2019, Gerbing 2020, Wexler 2021) 
 call these Cleveland dot charts or dot plots. 
@@ -729,18 +762,18 @@ Henry (1995), Jacoby (1997, 2006), Sinacore (1997),
 Millard (1998), Wilkinson (1999b, 2005), Harrell (2001, 2015), 
 Millard and Neerchal (2001), Feinstein (2002), Heiberger and Holland (2004, 2015),  
 Cox (2008), Few (2009, 2012, 2015, 2020), Myatt and Johnson (2009), 
-Wickham (2009, 2016), 
+Wainer (2009, 2014, 2016), Wickham (2009, 2016), 
 Carr and Pickle (2010), Everitt and Skrondal (2010), Keen (2010, 2018), 
-Martinez {it:et al.} (2011, 2017), 
+Martinez {it:et al.} (2011, 2017), Robinson and Hamann (2011),  
 Feigelson and Babu (2012),  
 Krause and O'Connell (2012),
 Cairo (2013), Yau (2013), 
-Wainer (2014, 2016), Berinato (2016), Cook {it:et al.} (2016), 
+ Berinato (2016), Cook {it:et al.} (2016), 
 Harris (2016), Hilfiger (2016),
 Carlson (2017), Hoffmann (2017),  
 Wexler {it:et al.} (2017), Wickham and Grolemund (2017), Albert (2018)
 Kriebel and Murray (2018), Standage (2018, 2019, 2020), Nolan 
-and Stoudt (2021) and Schwabish (2021). 
+and Stoudt (2021), Schwabish (2021), Smith (2022) and Wickham {it:et al.} (2023).  
 
 {p 4 4 2}See also Cox (2004) for a general discussion of graphing
 distributions in Stata; Cox (2007) for an implementation of
@@ -892,7 +925,10 @@ horizontal lines.
 {p 4 8 2}{cmd:. gen foreign2 = foreign + 0.15}{p_end}
 {p 4 8 2}{cmd:. gen foreign3 = foreign - 0.15}{p_end}
 {p 4 8 2}{cmd:. gen showmean = string(mean, "%2.1f")}{p_end}
-{p 4 8 2}{cmd:. stripplot mpg, over(foreign) box(barw(0.2)) centre cumul cumprob vertical height(0.4) addplot(scatter median loq upq foreign2, ms(none ..) mla(median loq upq) mlabc(blue ..) mlabsize(*1.2 ..) || scatter mean foreign3, ms(none) mla(showmean) mlabc(orange) mlabsize(*1.2) mlabpos(9) || scatter min foreign, ms(none) mla(shown) mlabc(black) mlabsize(*1.2) mlabpos(6)) xsc(r(. 1.2)) yla(, ang(h)) xla(, noticks) name(ST29, replace)}{p_end}
+{p 4 8 2}{cmd:. local box scatter median loq upq foreign2, ms(none ..) mla(median loq upq) mlabc(blue ..) mlabsize(*1.2 ..)}{p_end}
+{p 4 8 2}{cmd:. local mean scatter mean foreign3, ms(none) mla(showmean) mlabc(orange) mlabsize(*1.2) mlabpos(9)}{p_end}
+{p 4 8 2}{cmd:. local min scatter min foreign, ms(none) mla(shown) mlabc(black) mlabsize(*1.2) mlabpos(6)}{p_end}
+{p 4 8 2}{cmd:. stripplot mpg, over(foreign) box(barw(0.2)) centre cumul cumprob vertical height(0.4) addplot(`box' || `mean' || `min') xsc(r(. 1.2)) yla(, ang(h)) xla(, noticks) name(ST29, replace)}{p_end}
 
 {p 4 8 2}{cmd:// (Stata's blood pressure data)}{p_end}
 {p 4 8 2}{cmd:. sysuse bplong, clear}{p_end}
@@ -943,7 +979,9 @@ James Sanders, William Lisowski, Eric Booth and Chinh Nguyen helped to
 identify and solve a problem with box line widths that were 
 sometimes much too small to be visible.
 David Airey found yet another bug. Nitish Upadhyaya tickled and Eddy 
-Simms located a further bug. 
+Simms located a further bug. Antony Unwin provided the gatherplot reference.  
+Richard Goldstein supplied the 2018 Chiou and Bergey reference. 
+Pete Taylor tickled a bug if the variables specified in {cmd:by()} and {cmd:separate()} were the same variable. 
 
 {p 4 4 2}I mourn the loss of Allan Seheult (1942{c -}2019) (Green 2020) 
 and Ron Johnston (1941{c -}2020) (Pattie 2020), fine and friendly scholars.   
@@ -964,7 +1002,7 @@ London: Chapman and Hall, 181{c -}212.
 
 {p 4 8 2}Agresti, A. and C. Franklin. 2007. 
 {it:Statistics: The Art and Science of Learning from Data.} 
-Upper Saddle River, NJ: Pearson Prentice Hall. (later editions 2009, 2013)  
+Upper Saddle River, NJ: Pearson Prentice Hall. (later editions 2009, 2013, 2016, 2021, from 2016 with B. Klingenberg)   
 
 {p 4 8 2}Agterberg, F.P. 1974. 
 {it:Geomathematics: Mathematical Background and Geo-Science Applications.} 
@@ -1016,7 +1054,11 @@ Malden, MA: Blackwell.
 {p 4 8 2}Bajpai, A.C., I.M. Calus and J.A. Fairley. 1992. 
 Descriptive statistical techniques. 
 In Hewitt, C.N. (ed.) {it:Methods of Environmental Data Analysis.} 
-London: Chapman and Hall, 1{c -}35. 
+London: Chapman and Hall, 1{c -}35.
+
+{p 4 8 2}Barnett, A.G. and A.J. Dobson. 2010.
+{it:Analysing Seasonal Health Data.} 
+Berlin: Springer. Rugs on pp.65, 118.  
 
 {p 4 8 2}Barnett, V. 2004. 
 {it:Environmental Statistics: Methods and Applications.} 
@@ -1047,6 +1089,10 @@ Clinton Corners, NY: Percheron Press.
 {p 4 8 2}Baxter, M. 2003. {it:Statistics in Archaeology.} 
 London: Hodder Arnold. 
 
+{p 4 8 2}Becker, R. A. and J. M. Chambers. 1984. 
+{it:S: An Interactive Environment for Data Analysis and Graphics.} 
+Belmont, CA: Wadsworth. 
+
 {p 4 8 2}Becker, R.A., J.M. Chambers and A.R. Wilks. 1988. 
 {it:The New S language: A Programming Environment for Data Analysis and Graphics.} 
 Pacific Grove, CA: Wadsworth and Brooks/Cole. 
@@ -1055,6 +1101,11 @@ Pacific Grove, CA: Wadsworth and Brooks/Cole.
 Behrens, J.T. 1997. 
 Principles and procedures of exploratory data analysis. 
 {it:Psychological Methods} 2: 131{c -}160. 
+
+{p 4 8 2}
+Benjamini, Y. 1988. 
+Opening the box of a boxplot. 
+{it:American Statistician} 42: 257{c -}262
 
 {p 4 8 2}Bentley, J.L. 1985. 
 Programming pearls: selection. 
@@ -1069,7 +1120,17 @@ Reading, MA: Addison-Wesley.
 Boston, MA: Harvard Business Review Press. 
 
 {p 4 8 2}Berry, D.A. 1996. {it:Statistics: A Bayesian Perspective.} 
+Belmont, CA: Duxbury.
+
+{p 4 8 2}Berry, D.A. and B.W. Lindgren. 1990. 
+{it:Statistics: Theory and Methods.} 
+Pacific Grove, CA: Brooks/Cole. 
+dot diagram 322, 339, 460; rug plot 566, 571, 589  
+
+{p 4 8 2}Berry, D.A. and B.W. Lindgren. 1996. 
+{it:Statistics: Theory and Methods.} 
 Belmont, CA: Duxbury. 
+data plot 291; dot diagram 260, 419; dot plot 485; rug plot 531, 538  
 
 {p 4 8 2}Bertin, J. 1981.
 {it:Graphics and Graphic Information Processing}.
@@ -1098,15 +1159,31 @@ Boca Raton, FL: Chapman and Hall/CRC.
 {it:An Introduction to Medical Statistics.}
 Oxford: Oxford University Press. (fourth edition 2015)  
 
+{p 4 8 2}Bolker, B.M. 2008. 
+{it:Ecological Models and Data in R.} 
+Princeton, NJ: Princeton University Press. 
+See rugs on pp.177, 218, 241, 
+
 {p 4 8 2}Boneva, L.I., D.G. Kendall and I. Stefanov. 1971. 
 Spline transformations: three new diagnostic aids for the statistical 
 data-analyst. 
 {it:Journal of the Royal Statistical Society Series B} 
 33: 1{c -}71. (See p.35.)                               
 
+{p 4 8 2}Bouvreyron, C., G. Celeux, T.B. Murphy and A.E. Raftery. 
+2019. 
+{it:Model-based Clustering and Classification for Data Science With Applications in R.} 
+Cambridge: Cambridge University Press. 
+
 {p 4 8 2}Bowley, A.L. 1910. 
 {it:An Elementary Manual of Statistics.} 
-London: Macdonald and Evans. (seventh edition 1952) 
+London: Macdonald and Evans. (seventh edition 1952)
+
+{p 4 8 2}Bowman, A.W. 2008. 
+Smoothing techniques for visualization. 
+In Chen, C., W. H{c a:}rdle and A. Unwin (eds) 
+{it:Handbook of Data Visualization.} 
+Berlin: Springer, 493{c -}514.  
 
 {p 4 8 2}Bowman, A.W. and A. Azzalini. 1997. 
 {it:Applied Smoothing Techniques for Data Analysis: The Kernel Approach with S-PLus Illustrations.} 
@@ -1115,6 +1192,10 @@ Oxford: Oxford University Press. See pp.55, 56, 152, 158, 164, 165.
 {p 4 8 2}Box, G.E.P., W.G. Hunter and J.S. Hunter. 1978. 
 {it: Statistics for Experimenters: An Introduction to Design, Data Analysis, and Model Building.}
 New York: John Wiley. (second edition 2005)
+
+{p 4 8 2}Box, G.E.P. and G.C. Tiao. 1973. 
+{it:Bayesian Inference in Statistical Analysis.} 
+Reading, MA: Addison-Wesley. Rugs on pp.68, 154, 161, 169, 370. 
 
 {p 4 8 2}Bradstreet, T.E. 2012.
 Grables: Visual displays that combine the best attributes of graphs 
@@ -1188,7 +1269,17 @@ Sebastopol, CA: O'Reilly. 1st edition 2013
 
 {p 4 8 2}Chatfield, C. 1988. 
 {it:Problem Solving: A Statistician's Guide.} London: Chapman & Hall.
-(second edition 1995) 
+(second edition 1995)
+
+{p 4 8 2}Chiou, K.L. and C.M. Bergey. 2018.
+Methylation-based enrichment facilitates low-cost, noninvasive genomic scale sequencing of populations from feces. 
+{it:Scientific Reports} 8, 1975. 
+{browse "https://doi.org/10.1038/s41598-018-20427-9":https://doi.org/10.1038/s41598-018-20427-9} 
+
+{p 4 8 2}
+Christensen, R., W. Johnson. A. Branscum and T.E. Hanson. 2011. 
+{it:Bayesian Ideas and Data Analysis: An Introduction for Scientists and Statisticians.}
+Boca Raton, FL: CRC Press. 
 
 {p 4 8 2}Clark, L.A. and D. Pregibon. 1992. Tree-based models. 
 In Chambers, J.M. and T. Hastie (eds) 
@@ -1212,14 +1303,26 @@ scale breaks, dot charts, and multibased logging.
 {it:American Statistician} 38: 270{c -}80.
 
 {p 4 8 2}Cleveland, W.S. 1985. {it:The Elements of Graphing Data.} 
-Monterey, CA: Wadsworth. 
+Monterey, CA: Wadsworth.
+
+{p 4 8 2}Cleveland, W.S. 1993. {it:Visualizing Data.}  
+Summit, NJ: Hobart Press. See p.115 for use of rugs.  
 
 {p 4 8 2}Cleveland, W.S. 1994. {it:The Elements of Graphing Data.} 
 Summit, NJ: Hobart Press. 
 
+{p 4 8 2}Cleveland, W.S. and R. McGill. 1984. 
+Graphical perception: Theory, experimentation, and application to the 
+development of graphical methods.
+{it:Journal, American Statistical Association} 79: 531{c -}554. 
+
 {p 4 8 2}Cobb, G.W. 1998. 
 {it:Introduction to Design and Analysis of Experiments.} 
-New York: Springer. 
+New York: Springer.
+
+{p 4 8 2}Cole, J.P. and C.A.M. King. 1968. 
+{it:Quantitative Geography: Techniques and Theories in Geography.} 
+London: John Wiley. See pp.4, 6, 72. 
 
 {p 4 8 2}Colinvaux, P.A. 1986. 
 {it:Ecology.}
@@ -1282,7 +1385,11 @@ How can I calculate percentile ranks? How can I calculate plotting positions?
 
 {p 4 8 2}Cox, N.J. 2020. 
 Speaking Stata: More ways for rowwise. 
-{it:Stata Journal} 20(2): 481{c -}488. 
+{it:Stata Journal} 20(2): 481{c -}488.
+
+{p 4 8 2}Cressie, N.A.C. 1991. 
+{it:Statistics for Spatial Data.} 
+New York: John Wiley.  
 
 {p 4 8 2}Crowe, P.R. 1933. 
 The analysis of rainfall probability: A graphical method and its application to European data. 
@@ -1323,9 +1430,39 @@ Chichester: John Wiley. See pp.10, 16{c -}17.
 {it:Statistics and Data Analysis in Geology.} 
 New York: John Wiley. (previous editions 1973, 1986) 
 
+{p 4 8 2}DelSole, T.D. and M.K. Tippett. 2022. 
+{it:Statistical Methods for Climate Scientists.} 
+Cambridge: Cambridge University Press. 
+
+{p 4 8 2}De Veaux, R.D., P.F. Velleman and D.E. Bock. 2019. 
+{it:Stats: Data and Models.} 
+Harlow: Pearson. Note also previous editions and related texts
+under different titles. 
+
 {p 4 8 2}Dickinson, G.C. 1963. 
 {it:Statistical Mapping and the Presentation of Statistics.} 
-London: Edward Arnold. (second edition 1973) 
+London: Edward Arnold. (second edition 1973)
+
+{p 4 8 2}Dixon, W.J. and F.J. Massey. 1951. 
+{it:An Introduction to Statistical Analysis.} 
+New York: McGraw-Hill. See pp.6{c -}7 and 37.
+ 
+{p 4 8 2}Dixon, W.J. and F.J. Massey. 1957. 
+{it:An Introduction to Statistical Analysis.} 
+New York: McGraw-Hill. See pp.5{c -}7 and 37.
+ 
+{p 4 8 2}Dixon, W.J. and F.J. Massey. 1969. 
+{it:An Introduction to Statistical Analysis.} 
+New York: McGraw-Hill. See pp.7{c -}8 and 45. 
+
+{p 4 8 2}Dixon, W.J. and F.J. Massey. 1983. 
+{it:An Introduction to Statistical Analysis.} 
+New York: McGraw-Hill. See pp.6{c -}7 and 47. 
+
+{p 4 8 2}Doane, D.P. and L.E. Seward. 2011. 
+Measuring skewness: A forgotten statistic?
+{it:Journal of Statistics Education}  19(2)  
+{browse "www.amstat.org/publications/jse/v19n2/doane.pdf":www.amstat.org/publications/jse/v19n2/doane.pdf} 
 
 {p 4 8 2}Doane, D.P. and R.L. Tracy. 2000. 
 Using beam and fulcrum displays to explore data. 
@@ -1461,7 +1598,7 @@ Burlingame, CA: Analytics Press.
 Burlingame, CA: Analytics Press.
 
 {p 4 8 2}Few, S. 2017. 
-The DataVis jitterbug: let’s improve an old dance.  
+The DataVis jitterbug: letâ€™s improve an old dance.  
 {browse "https://www.perceptualedge.com/articles/visual_business_intelligence/the_datavis_jitterbug.pdf":https://www.perceptualedge.com/articles/visual_business_intelligence/the_datavis_jitterbug.pdf}
 
 {p 4 8 2}Few, S. 2020. 
@@ -1516,7 +1653,13 @@ Malden, MA: BMJ Books/Blackwell Publishing.
 
 {p 4 8 2}Friendly, M. 2000. 
 {it:Visualizing Categorical Data.} 
-Cary, NC: SAS Institute. 
+Cary, NC: SAS Institute.
+
+{p 4 8 2}Friendly, M. 2008. 
+A brief history of data visualization. 
+In Chen, C., W. H{c a:}rdle and A. Unwin (eds) 
+{it:Handbook of Data Visualization.} 
+Berlin: Springer, 15{c -}56.  
 
 {p 4 8 2}Friendly, M. and D. Meyer. 2016. 
 {it:Discrete Data Analysis with R: Visualization and Modeling Techniques for Categorical and Count Data.}
@@ -1543,6 +1686,10 @@ In Rieder, A. (ed.)
 {it:Robust Statistics, Data Analysis, and Computer Intensive Methods: In Honor of Peter Huber's 60th Birthday.} 
 New York: Springer, 173{c -}184.
 
+{p 4 8 2}
+Gause, G.F. 1930. Studies on the ecology of the Orthoptera. 
+{it:Ecology} 11: 307{c -}325.
+
 {p 4 8 2}Gerbing, D.W. 2020. 
 {it:R Visualizations: Derive Meaning from Data.}
 Boca Raton, FL: CRC Press. 
@@ -1568,10 +1715,14 @@ Mountain plots. {it:Stata Technical Bulletin} 33: 9{c -}10.
 
 {p 4 8 2}Gonick, L. and W. Smith. 1993. 
 {it:The Cartoon Guide to Statistics.} 
-New York: HarperCollins. 
+New York: HarperCollins. See pp.9, 20, 24, 25, 177. 
 
 {p 4 8 2}Goos, P. and D. Meintrup. 2015. 
 {it:Statistics with JMP: Graphs, Descriptive Statistics and Probability.} 
+Chichester: John Wiley. 
+
+{p 4 8 2}Goos, P. and D. Meintrup. 2016. 
+{it:Statistics with JMP: Hypothesis Tests, ANOVA and Regression.} 
 Chichester: John Wiley. 
 
 {p 4 8 2}Gotelli, N.J. and A.M. Ellison. 2004 (second edition 2013). 
@@ -1607,6 +1758,11 @@ Allan Henry Seheult, 1942{c -}2019.
 Greenacre, M. 2016. 
 Data reporting and visualization in ecology. 
 {it:Polar Biology} 39: 2189{c -}2205.
+
+{p 4 8 2}
+Greenacre, M. 2017. 
+{it:Correspondence Analysis in Practice.} 
+Boca Raton, FL: CRC Press. See p.234.  
 
 {p 4 8 2}
 Greenacre, M. 2019. 
@@ -1658,12 +1814,12 @@ New York: Harper and Row.
 New York: John Wiley.
 
 {p 4 8 2}Hald, A. 1990. 
-{it:A History of Probability and Statistics and Their Applications before 1750.} 
+{it:A History of Probability and Statistics and Their Applications before 1750.}
 New York: John Wiley. 
 
 {p 4 8 2}Hamilton, L.C. 1992. 
 {it:Regression with Graphics: A Second Course in Applied Statistics.} 
-Belmont, CA: Duxbury Press. 
+Belmont, CA: Duxbury. 
 
 {p 4 8 2}Hammond, R. and P.S. McCullagh. 1974. 
 {it:Quantitative Techniques in Geography: An Introduction.} 
@@ -1675,7 +1831,13 @@ Cambridge: Cambridge University Press.
 
 {p 4 8 2}H{c a:}rdle, W. 1991. 
 {it:Smoothing Techniques with Implementation in S.}
-New York: Springer. 
+New York: Springer.
+
+{p 4 8 2}H{c a:}rdle, W., R.A. Moro and D. Sch{c a:}fer. 2008. 
+Graphical data representation in bankruptcy analysis. 
+In Chen, C., W. H{c a:}rdle and A. Unwin (eds) 
+{it:Handbook of Data Visualization.} 
+Berlin: Springer, 853{c -}872.  
 
 {p 4 8 2}Harrell, F.E. 2001. 
 {it:Regression Modeling Strategies: With Applications to Linear Models, Logistic Regression, and Survival Analysis}.
@@ -1702,6 +1864,11 @@ New York: Oxford University Press.
 In Chambers, J.M. and T. Hastie (eds) 
 {it:Statistical Models in S.} 
 Pacific Grove, CA: Wadsworth and Brooks/Cole, 249{c -}307. 
+
+{p 4 8 2}Hastie, T.J. and R.J. Tibshirani. 1986. 
+Generalized additive models. 
+{it:Statistical Science} 1: 297{c -}310.
+https://doi.org/10.1214/ss/1177013604
 
 {p 4 8 2}Hastie, T.J. and R.J. Tibshirani. 1990. 
 {it:Generalized Additive Models.} 
@@ -1814,7 +1981,17 @@ London: Macmillan.
 
 {p 4 8 2}
 Johnson, B.L.C. 1975. 
-{it:Bangladesh.} London: Heinemann Educational. 
+{it:Bangladesh.} London: Heinemann Educational.
+
+{p 4 8 2}
+Johnson, V.E. and J.H. Albert. 1999. 
+{it:Ordinal Data Modeling.} 
+New York: Springer. 
+
+{p 4 8 2}
+Johnston, R.J. 1978. 
+{it:Multivariate Statistical Analysis in Geography: A Primer on the General Linear Model.}
+London: Longman.  
 
 {p 4 8 2}
 Johnston, R.J. 2019. 
@@ -1840,7 +2017,24 @@ New York: Springer.
 
 {p 4 8 2}Keen, K.J. 2010. 
 {it:Graphics for Statistics and Data Analysis with R.} 
-Boca Raton, FL: CRC Press. (second edition 2018) 
+Boca Raton, FL: CRC Press. (second edition 2018)
+
+{p 4 8 2}Kendall, D.G. 1971. 
+Seriation from abundance matrices. 
+In Kendall, D.G., F.R. Hodson and P. Tautu (eds) 
+{it:Mathematics in the Archaeological and Historical Sciences.} 
+Edinburgh: Edinburgh University Press, 215{c -}252. See p.236. 
+[breve accent on a of Tautu] 
+
+{p 4 8 2}
+Kent, M. 2012. 
+{it:Vegetation Description and Data Analysis.} 
+Chichester: John Wiley. 
+
+{p 4 8 2}
+Kent, M. and P. Coker. 1994. 
+{it:Vegetation Description and Analysis.} 
+Chichester: John Wiley. 
 
 {p 4 8 2}Kirk, A. 2012. 
 {it:Data Visualization: A Successful Design Process.} 
@@ -1894,9 +2088,24 @@ A versatile one-dimensional distribution plot: the BLiP plot.
 51: 353{c -}358.
 
 {p 4 8 2}
+Lee, P.M. 2012. 
+{it:Bayesian Statistics: An Introduction.} 
+Chichester: John Wiley. p.331 
+
+{p 4 8 2}
 Legendre, P. and L. Legendre. 2012. 
 {it:Numerical Ecology.} 
 Amsterdam: Elsevier. See p.585.  
+
+{p 4 8 2}
+Lehmann, E.L. 1975. 
+{it:Nonparametrics: Statistical Methods Based on Ranks.} 
+San Francisco, CA: Holden-Day.
+ 
+{p 4 8 2}
+Lehmann, E.L. 1998. 
+{it:Nonparametrics: Statistical Methods Based on Ranks.} 
+Englewood Cliffs, NJ: Prentice-Hall. 
 
 {p 4 8 2}Leisch, F. 2010.  
 Neighborhood graphs, stripes and shadow plots for cluster visualization. 
@@ -1916,6 +2125,10 @@ London: Methuen.
 {it:Summing Up: The Science of Reviewing Research.}
 Cambridge, MA: Harvard University Press. 
 
+{p 4 8 2}Madansky, A. 1988. 
+{it:Prescriptions for Working Statisticians.} 
+New York: Springer. 
+
 {p 4 8 2}Maindonald, J.H. and W.J. Braun. 2003. 
 {it:Data Analysis and Graphics Using R {c -} An Example-based Approach.} 
 Cambridge: Cambridge University Press. (later editions 2007, 2010) 
@@ -1928,9 +2141,17 @@ Boca Raton, FL: Chapman & Hall/CRC Press.
 {it:Multivariate Analysis.}
 London: Academic Press. 
 
+{p 4 8 2}Maronna, R.A., R.D. Martin, and V.J. Yohai. 
+2006. {it:Robust Statistics: Theory and Methods.} 
+Hoboken, NJ: John Wiley. 
+
+{p 4 8 2}Maronna, R.A., R.D. Martin, V.J. Yohai and M. Salibi{c a'}n-Barrera. 
+2019. {it:Robust Statistics: Theory and Methods (With R).} 
+Hoboken, NJ: John Wiley.
+ 
 {p 4 8 2}Martinez, W.L., A.R. Martinez and J.L. Solka. 2011. 
 {it:Exploratory Data Analysis with MATLAB.} 
-Boca Raton, FL: CRC Press. 
+Boca Raton, FL: CRC Press.
 
 {p 4 8 2}Martinez, W.L., A.R. Martinez and J.L. Solka. 2017. 
 {it:Exploratory Data Analysis with MATLAB.} 
@@ -1985,6 +2206,10 @@ Cambridge: Cambridge University Press.
 {it:Epidemiological Research Methods.} 
 Chichester: John Wiley. 
 
+{p 4 8 2}Mead, R., R. N. Curnow and A. M. Hasted. 2003. 
+{it:Statistical Methods in Agriculture and Experimental Biology.} 
+Boca Raton, FL: Chapman and Hall/CRC. See pp.162, 427. 
+
 {p 4 8 2}Meloun, M. and J. Militk{c y'}. 1994. 
 Computer-assisted data treatment in analytical chemometrics.
 I. Exploratory analysis of univariate data. 
@@ -2008,7 +2233,13 @@ Boca Raton, FL: CRC Press.
 
 {p 4 8 2}Miller, A.A. 1953. 
 {it:The Skin of the Earth.} 
-London: Methuen. (2nd edition 1964) 
+London: Methuen. (2nd edition 1964)
+ 
+{p 4 8 2}Minnotte, M.C., S.R. Sain and D.W. Scott. 2008. 
+Multivariate visualization by density estimation. 
+In Chen, C., W. H{c a:}rdle and A. Unwin (eds) 
+{it:Handbook of Data Visualization.} 
+Berlin: Springer, 389{c -}413.  
 
 {p 4 8 2}Mitchell, P.L. 2010. 
 Replacing the pie chart, and other graphical grouses. 
@@ -2029,7 +2260,21 @@ Chicago: University of Chicago Press.
 {p 4 8 2}
 Monti, K.L. 1995. 
 Folded empirical distribution function curves{c -}mountain plots. 
-{it:American Statistician} 49: 342{c -}345. 
+{it:American Statistician} 49: 342{c -}345.
+
+{p 4 8 2}
+Moore, D.S. and G.P. McCabe. 1989. 
+{it:Introduction to the Practice of Statistics.} 
+New York: W.H. Freeman. Many later editions, latterly with B.A. Craig as third
+author, but none checked to see whether mention of boxplot whiskers to 10% and
+90% points persists.
+
+{p 4 8 2}Moore, R.E.N. 1971. 
+A relationship observed between mosaic units and the sizes of Roman mosaic stones. 
+In Kendall, D.G., F.R. Hodson and P. Tautu (eds) 
+{it:Mathematics in the Archaeological and Historical Sciences.} 
+Edinburgh: Edinburgh University Press, 445{c -}452. See p.448. 
+[breve accent on a of Tautu] 
 
 {p 4 8 2}Morgan, M.G. and M. Henrion. 1990. 
 {it:Uncertainty: A Guide to Dealing with Uncertainty in Quantitative Risk and Policy Analysis.} 
@@ -2061,6 +2306,22 @@ add subtitle {it:A Nonmathematical Guide to Statistical Thinking})
 {it:Statistical Analysis of Climate Extremes.} 
 Cambridge: Cambridge University Press. 
 
+{p 4 8 2}Murphy, E.A. 1979. 
+{it:Probability in Medicine.} 
+Baltimore: Johns Hopkins University Press. See p.67.
+
+{p 4 8 2}Murphy, E.A. 1982. 
+{it:Biostatistics in Medicine.}  
+Baltimore: Johns Hopkins University Press. See p.267.
+
+{p 4 8 2}Murphy, E.A. 1985. 
+{it:A Companion to Medical Statistics.}
+Baltimore: Johns Hopkins University Press. See p.61. 
+
+{p 4 8 2}Murphy, E.A. 1997. 
+{it:The Logic of Medicine.} 
+Baltimore: Johns Hopkins University Press. 
+
 {p 4 8 2}Myatt, G.J. 2007. 
 {it:Making Sense of Data: A Practical Guide to Exploratory Data Analysis and Data Mining.}
 Hoboken, NJ: John Wiley. 
@@ -2091,7 +2352,17 @@ Oxford: Oxford University Press.
 
 {p 4 8 2}Ottaway, B. 1973. 
 Dispersion diagrams: a new approach to the display of carbon-14 dates. 
-{it:Archaeometry} 15: 5{c -}12. 
+{it:Archaeometry} 15: 5{c -}12.
+
+{p 4 8 2}Pagano, M. and K. Gauvreau. 1993. 
+{it:Principles of Biostatistics.} Belmont, CA: Duxbury.
+one-way scatter plot: pp.20, 22, 57; 
+box plot with mean: p.42. 
+{* Need to check 2nd edition 2000 from Pacific Grove, CA: Duxbury and 3rd edition 2022 with H. Mattie from Boca Raton, FL: CRC Press.}{...}
+
+{p 4 8 2}Park, D., S.-H. Kim and N. Elmqvist. 2023. 
+Gatherplot: a non-overlapping scatterplot. 
+{browse "https://arxiv.org/abs/2301.10843":https://arxiv.org/abs/2301.10843} 
 
 {p 4 8 2}Parzen, E. 1979a. 
 Nonparametric statistical data modeling. 
@@ -2109,9 +2380,18 @@ In Tiago de Oliveira, J. and B. Epstein (eds)
 {it:Some Recent Advances in Statistics.} London: Academic Press, 
 23{c -}52.
 
+{p 4 8 2}Parzen, E. 1997. 
+Concrete statistics. In 
+Ghosh, S., W.R. Schucany, and W.B. Smith (Eds) 
+{it:Statistics of Quality}. New York: Marcel Dekker, 309{c -}332. 
+
 {p 4 8 2}Pattie, C. 2020. 
 Ron Johnston obituary. 
 {browse "https://www.theguardian.com/science/2020/jul/16/ron-johnston-obituary":https://www.theguardian.com/science/2020/jul/16/ron-johnston-obituary}
+
+{p 4 8 2}Peacock, J.L. and P.J. Peacock. 2011. 
+{it:Oxford Handbook of Medical Statistics.} 
+Oxford: Oxford University Press. See p.197.  
 
 {p 4 8 2}Pearson, E.S. 
 1931. The analysis of variance in cases of non-normal variation. 
@@ -2159,6 +2439,10 @@ Boston, MA: Brooks/Cole (previous editions 1996, 2002)
 {it:Statistical Data Analysis Explained: Applied Environmental Statistics with R.}
 Chichester: John Wiley. 
 
+{p 4 8 2}Reiss, R.-D. and M. Thomas. 1997, 2001, 2007. 
+{it:Statistical Analysis of Extreme Values with Applications to Insurance, Finance, Hydrology and other Fields.} 
+Basel: Birkh{c a:}user. 
+
 {p 4 8 2}Rice, K. and T. Lumley. 2016. 
 Graphics and statistics for cardiology: comparing categorical and continuous
 variables.  {it:Heart} 102: 349{c -}355 doi:10.1136/heartjnl-2015-308104
@@ -2175,16 +2459,24 @@ London: Macdonald Orbis. See pp.34{c -}5.
 {it:Creating More Effective Graphs.} 
 Hoboken, NJ: John Wiley. (2013 edition: Wayne, NJ: Chart House) 
 
+{p 4 8 2}Robinson, A.P. and J.D. Hamann. 2011. 
+{it:Forest Analytics with R: An Introduction.} 
+New York: Springer. See p.123.
+
 {p 4 8 2}Rowntree, D. 1981. 
 {it:Statistics Without Tears: A Primer for Non-mathematicians.}
 Harmondsworth: Penguin. 
+
+{p 4 8 2}Ryan, B.F., B.L. Joiner and J.D. Cryer. 2013. 
+{it:Minitab Handbook: Updated for Release 16.} 
+Boston, MA: Brooks/Cole.  
 
 {p 4 8 2}Ryan, B.F., B.L. Joiner and T.A. Ryan. 1985. 
 {it:Minitab Handbook.} 
 Boston, MA: Duxbury.
 {* Thomas Arthur Ryan Jr 1940-2017}{...} 
 {* Barbara Falkenbach Ryan PhD 1968 divorced 1988}{...}
-(* Brian Lyon Joiner PhD 1968}{...}  
+(* Brian Lyon Joiner PhD 1968}{...} 
 
 {p 4 8 2}Ryan, T.P. 2009. 
 {it:Modern Regression Methods.} 
@@ -2232,6 +2524,10 @@ Hoboken, NJ: John Wiley.
 {it:Better Data Visualizations: A Guide for Scholars, Researchers, and Wonks.}
 New York: Columbia University Press. 
 
+{p 4 8 2}Schwabish, J. 2023. 
+{it:Data Visualization in Excel: A Guide for Beginners, Intermediates, and Wonks.}
+Boca Raton, FL: CRC Press. 
+
 {p 4 8 2}Scott, D.W. 1992. 
 {it:Multivariate Density Estimation: Theory, Practice, and Visualization.} 
 New York: John Wiley. 
@@ -2255,9 +2551,17 @@ London: British Psychological Society and Methuen, 3{c -}21.
 {it:The Joy of Statistics: A Treasury of Elementary Statistical Tools and Their Appications.} 
 Oxford: Oxford University Press. 
 
+{p 4 8 2}Setlur, V. and B. Cogley. 2022. 
+{it:Functional Aesthetics for Data Visualization.}
+Hoboken, NJ: John Wiley. See pp.195{c -}196.
+
 {p 4 8 2}Shaw, N. 1936. 
 {it:Manual of Meteorology. Volume II: Comparative Meteorology.} 
 Cambridge: Cambridge University Press. See pp.102{c -}105, 420. 
+
+{p 4 8 2}Sheather, S.J. 2009.
+{it:A Modern Approach to Regression with R.}
+New York: Springer. 
 
 {p 4 8 2}Shelly, M. 1996. 
 Exploratory data analysis: data visualization or torture? 
@@ -2296,6 +2600,10 @@ London: George Allen & Unwin.
 
 {p 4 8 2}Simonoff, J.S. 1996. 
 {it:Smoothing Methods in Statistics.} 
+New York: Springer.
+ 
+{p 4 8 2}Simonoff, J.S. 2003. 
+{it:Analyzing Categorical Data.} 
 New York: Springer. 
 
 {p 4 8 2}Sinacore, J.M. 1997.
@@ -2319,6 +2627,10 @@ Sebastopol, CA: O'Reilly.
 {it:Thematic Cartography and Geovisualization.} 
 Upper Saddle River, NJ: Pearson Prentice Hall. 
 
+{p 4 8 2}Smith, A. 2022. 
+{it:How Charts Work: Understand and Explain Data with Confidence.} 
+Harlow: Pearson. 
+
 {p 4 8 2}Smith, D.M. 1979. 
 {it:Where the Grass is Greener: Living in an Unequal World.} 
 Harmondsworth: Penguin. See p.270. 
@@ -2341,7 +2653,7 @@ New York: McGraw-Hill. See p.166.
 
 {p 4 8 2}Spear, M.E. 1969.
 {it:Practical Charting Techniques.} 
-New York: McGraw-Hill. See p.224, 
+New York: McGraw-Hill. See p.224. 
 
 {p 4 8 2}Spence, R. 2001. 
 {it:Information Visualization.} 
@@ -2359,6 +2671,10 @@ Cham: Springer.
 {it:The Art of Statistics: Learning from Data.}
 London: Penguin Books. pp.42, 45.
 
+{p 4 8 2}Sprent, P. 1988. 
+{it:Taking Risks: The Science of Uncertainty.} 
+Harmondsworth: Penguin Books. p.203. 
+
 {p 4 8 2}Standage, T. (ed) 2018. 
 {it:Seriously Curious: The Economist Explains: The Facts and Figures That Turn Your World Upside Down.} 
 London: Profile Books. pp.94, 141, 223. 
@@ -2368,8 +2684,12 @@ London: Profile Books. pp.94, 141, 223.
 London: Profile Books. pp.45, 79, 95, 110, 113, 140, 185. 
 
 {p 4 8 2}Standage, T. (ed) 2020. 
-{it:Unconvential Wisdom: The Economist Explains: Adventures in the Surprisingly True.} 
+{it:Unconventional Wisdom: The Economist Explains: Adventures in the Surprisingly True.} 
 London: Profile Books. pp.49, 62, 68, 70, 154. 
+
+{p 4 8 2}Staudte, R.G. and S.J. Sheather. 1990. 
+{it:Robust Estimation and Testing.} 
+Mew York: John Wiley. 
 
 {p 4 8 2}
 Stock, W.A. and J.T. Behrens. 1991. 
@@ -2381,8 +2701,14 @@ accuracy and bias of estimates of whisker length.
 {p 4 8 2}
 Stuetzle, W. 1987. 
 Plot windows.
-{it:Journal of the American Statistical Association}
+{it:Journal, American Statistical Association}
 82: 466{c -}475. 
+
+{p 4 8 2}
+Svendsen, N. 1940. 
+Are supernormal cholesterol-values in serum caused by a dominantly 
+inherited factor? Report of a family investigation of 34 individuals. 
+{it:Acta Medica Scandinavica} 104: 235{c -}244. 
 
 {p 4 8 2}Swan, A.R.H. and M. Sandilands. 1995. 
 {it:An Introduction to Geological Data Analysis.} 
@@ -2394,7 +2720,11 @@ New York: Springer.
 
 {p 4 8 2}Theus, M. and S. Urbanek. 2009. 
 {it:Interactive Graphics for Data Analysis: Principles and Examples.}
-Boca Raton, FL: CRC Press. 
+Boca Raton, FL: CRC Press.
+
+{p 4 8 2}Thi{c e'}baux, H.J. 1994.
+{it:Statistical Data Analysis for Ocean and Atmospheric Sciences.} 
+San Diego, CA: Academic Press. See pp.39, 40, 120.  
 
 {p 4 8 2}Thompson, J.M. 1992. 
 Visual representation of data including graphical exploratory data analysis. 
@@ -2405,6 +2735,10 @@ London: Chapman and Hall, 213{c -}258.
 {p 4 8 2}Tippett, L.H.C. 1943. 
 {it:Statistics.} London: Oxford University Press. See p.97 in 1956 edition.
  
+{p 4 8 2}Truran, H.C. 1975. 
+{it:A Practical Guide to Statistical Maps and Diagrams.} 
+London: Heinemann Educational Books.
+
 {p 4 8 2}Tufte, E.R. 1974. 
 {it:Data Analysis for Politics and Policy.} 
 Englewood Cliffs, NJ: Prentice-Hall. 
@@ -2474,7 +2808,19 @@ Chichester: John Wiley, 215{c -}243. See p.235.
 
 {p 4 8 2}Uman, M.A. 1969. 
 {it:Lightning.} 
-New York: McGraw-Hill. See p.86. 
+New York: McGraw-Hill. See p.86.
+
+{p 4 8 2}Urbanek, S. 2008. 
+Visualizing trees and forests. 
+In Chen, C., W. H{c a:}rdle and A. Unwin (eds) 
+{it:Handbook of Data Visualization.} 
+Berlin: Springer, 243{c -}264.  
+
+{p 4 8 2}Utts, J.M. and R.F. Heckard. 2002. 
+{it:Mind on Statistics.} 
+Pacific Grove, CA: Duxbury. 
+dotplots pp.2, 29, 360, 418, 498, 501, 513; rug p.478; 
+boxplot with means pp.491, 513
 
 {p 4 8 2}van Belle, G., L.D. Fisher, P.J. Heagerty and T. Lumley. 2004. 
 {it:Biostatistics: A Methodology for the Health Sciences.} 
@@ -2490,6 +2836,10 @@ New York: W.H. Freeman. (later editions 1993, etc.)
 
 {p 4 8 2}Venables, W.N. and B.D. Ripley. 2002. 
 {it:Modern Applied Statistics with S.} New York: Springer. 
+
+{p 4 8 2}Wainer, H. 2009. 
+{it:Picturing the Uncertain World: How to Understand, Communicate, and Control Uncertainty through Graphical Display.} 
+Princeton, NJ: Princeton University Press. 
 
 {p 4 8 2}Wainer, H. 2014. 
 {it:Medical Illuminations: Using Evidence, Visualization and Statistical Thinking to Improve Healthcare.} 
@@ -2520,7 +2870,13 @@ New York: Springer.
 
 {p 4 8 2}Wasserman, L. 2006. 
 {it:All of Nonparametric Statistics.} 
-New York: Springer. 
+New York: Springer.
+
+{p 4 8 2}Weigel, A.P. 2012. 
+Ensemble forecasts. 
+In Jolliffe, I.T. and D.B. Stephenson (eds) 
+{it:Forecast Verification: A Practitioner's Guide in Atmospheric Science.} 
+Chichester: Wiley-Blackwell, 141{c -}166.  
 
 {p 4 8 2}Weissgerber, T.L., N.M. Milic, S.J. Winham and V.D. Garovic. 2015. 
 Beyond bar and line graphs: time for a new data presentation paradigm. 
@@ -2547,6 +2903,9 @@ New York: McGraw Hill.
 {it:The Big Book of Dashboards: Visualizing Your Data Using Real-World Business Scenarios.} 
 Hoboken, NJ: John Wiley. 
 
+{p 4 8 2}White, R. 1984. 
+{it:Physical Geography.} London: Macmillan. See p.159.
+
 {p 4 8 2}
 Whitlock, M.C. and D. Schluter. 2009. 
 {it:The Analysis of Biological Data.} 
@@ -2564,10 +2923,20 @@ Wickham, H. 2016.
 Cham: Springer. Dot charts pp.154, 233, 237. 
 
 {p 4 8 2}
+Wickham, H., M. {c C,}etinskaya-Rundel and G. Grolemund. 2023. 
+{it:R for Data Science: Import, Tidy, Transform, Visualize, and Model Data.} 
+Sebastopol, CA: O'Reilly. Dot charts pp.286{c -}289.    
+
+{p 4 8 2}
 Wickham, H. and G. Grolemund. 2017. 
 {it:R for Data Science: Import, Tidy, Transform, Visualize, and Model Data.} 
 Sebastopol, CA: O'Reilly. Dot charts pp.228{c -}230. Box plots with means 
 pp.386, 392.   
+
+{p 4 8 2}
+Wigglesworth, V.B. 1954.
+{it:The Physiology of Insect Metamorphosis.} 
+London: Cambridge University Press. See p.71. 
 
 {p 4 8 2}
 Wilcox, R.R. 2009. 
@@ -2634,6 +3003,10 @@ New York: Springer.
 {it:Intuitive Introductory Statistics.} 
 Cham: Springer. 
 
+{p 4 8 2}Wolfram, S. 2017. 
+{it:An Elementary Introduction to the Wolfram Language.} 
+Champaign, IL: Wolfram Media. 
+
 {p 4 8 2}Woloshin, S. 2000. 
 A turnip graph engine. 
 {it:Stata Technical Bulletin} 58: 5{c -}8.
@@ -2651,6 +3024,12 @@ The {it:p}-folded cumulative distribution function and the mean
 absolute deviation from the {it:p}-quantile. 
 {it:Statistics & Probability Letters} 81: 1179{c -}1182.
 
+{p 4 8 2}Yamamoto, Y., M. Iizuka and T. Fujino. 2008. 
+Web-based statistical graphics using XML technologies. 
+In Chen, C., W. H{c a:}rdle and A. Unwin (eds) 
+{it:Handbook of Data Visualization.} 
+Berlin: Springer, 757{c -}789.  
+
 {p 4 8 2}Yandell, B.S. 2007. 
 Graphical data presentation, with emphasis on genetic data.  
 {it:HortScience} 42: 1047{c -}1051. 
@@ -2666,6 +3045,10 @@ New York: Scholastic Book Services. See p.108.
 {p 4 8 2}Young, F.W., P.M. Valero-Mora and M. Friendly. 2006. 
 {it:Visual Statistics: Seeing Data with Interactive Graphics.} 
 Hoboken, NJ: John Wiley. 
+
+{p 4 8 2}Zar, J.H. 2010. 
+{it:Biostatistical Analysis.} 
+Upper Saddle River, NJ: Pearson Education. See p.5. 
 
 {p 4 8 2}Zipf, G.K. 1949.
 {it: Human Behavior and the Principle of Least Effort: An Introduction to Human Ecology.}

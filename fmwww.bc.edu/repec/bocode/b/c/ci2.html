@@ -1,0 +1,71 @@
+<pre>
+.-
+help for ^ci2^, ^cii2^               (STB 59 - sg159 PT Seed - paul.seed@@kcl.a
+&gt; c.uk)
+.-
+<p>
+<p>
+Confidence intervals for correlations
+-------------------------------------
+<p>
+<p>
+        ^ci2^ varname1 varname2 [^if^ exp] [^in^ range] [weight] [^, COrr SPear
+&gt; man^]
+<p>
+        ^cii2^ #n #corr [^, corr^]
+<p>
+<p>
+Description
+-----------
+<p>
+Without the ^corr^ or ^spear^ options, ^ci2^ and ^cii2^ behave as @ci@ and @cii
+&gt; @.
+<p>
+With option ^corr^, ^ci2^ calculates the Pearson product moment correlation
+&amp; produces a confidence interval, based on Fisher's transformation.  As with 
+@correlate@, ^ci2^ takes frequency and analytic weights.
+<p>
+With option ^spearman^, (with or without ^corr^), Spearman's rank correlation i
+&gt; s used.
+<p>
+^cii2^ is the immediate version.  There is no separate Spearman option, because
+&gt;  
+the method for finding the correlation is the same in both cases.
+<p>
+<p>
+<p>
+<p>
+Examples
+--------
+Use for correlations 
+ . ^ci2 colorime icp , corr^
+<p>
+ . ^ci2 colorime icp , corr spearman^
+ . ^ci2 colorime icp , spearman^
+(Note: these last two are effectively the same.)
+<p>
+ . ^cii2 78 .52 , corr^                 (78 paired observations, correlation 0.
+&gt; 52)
+<p>
+Use as ^ci^ and ^cii^
+ . ^ci2 mpg^
+ . ^ci2 mpg price, level(90)^
+ . ^ci2 promoted, binomial^
+ . ^ci2 count, poisson^
+ . ^ci2 deaths, exposure(pyears)^
+<p>
+ . ^cii2 166 19509 4379^                 (166 obs, mean=19509, sd=4379)
+ . ^cii2 166 19509 4379, level(90)^
+ . ^cii2 10 1^                           (10 binomial events, 1 observed succes
+&gt; s)
+ . ^cii2 1 27, poisson^                  (27 Poisson events observed)
+<p>
+<p>
+<p>
+Also see
+--------
+<p>
+ Manual: [R] correlate
+On-line: @correlate@, @pwcorr@ 
+<p>
+</pre>

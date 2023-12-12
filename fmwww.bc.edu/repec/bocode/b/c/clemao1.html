@@ -1,0 +1,74 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>clemao1, clemio1</b> 
+-------------------------------------------------------------------------------
+<p>
+<b><u>Clemente, Montanes, Reyes unit root tests with one structural break</u></b>
+<p>
+        <b>clemao1</b> <i>varname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>,</b> <b>maxlag(</b><i>#</i><b>)</b> <b>trim(</b><i>#</i><b>)</b> <b>graph</b> ]
+<p>
+        <b>clemio1</b> <i>varname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>,</b> <b>maxlag(</b><i>#</i><b>)</b> <b>trim(</b><i>#</i><b>)</b> <b>graph</b> ]
+<p>
+        <b>clemao1</b> and <b>clemio1</b> are for use with time-series data. You must <i>tsset</i>
+              your data before using these routines. <i>Varname</i> may contain
+              time-series operators. <b>clemao1</b> and <b>clemio1</b> may be applied to a
+              single time series within a panel with the <b>if</b> qualifier or the <b>by</b>
+              prefix.
+<p>
+<b><u>Description</u></b>
+<p>
+<b>clemao1</b> computes the additive outlier unit root test for <i>varname</i>, allowing for
+a single structural break.
+<p>
+<b>clemio1</b> computes the innovational outlier unit root test for <i>varname</i>, allowing
+for a single structural break.
+<p>
+These tests are modified from those described by Clemente, Montanes and Reyes
+    (1998) as providing a test for stationarity in the presence of a single
+    structural break in the series (rather than the two breaks identified by
+    their routines).  Critical values are taken from Perron and Vogelsang
+    (1992), Table 3 (clemao1) and Table 4 (clemio1) for T=150.
+<p>
+<b><u>Options</u></b>
+<p>
+<b>maxlag(</b><i>#</i><b>)</b> specifies the maximum lag. It must be a positive integer. The default
+    value is 12.
+<p>
+<b>trim(</b><i>#</i><b>)</b> specifies the fraction of the sample to trim from each end. It has a
+    default value of five percent (0.05).
+<p>
+<b>graph</b> specifies that a graph of the (differenced) series and the sequences of
+    t-ratios from the breakpoint test should be generated.
+<p>
+<b><u>Examples</u></b>
+<p>
+        . webuse wpi1
+<p>
+        . clemao1 wpi
+        
+        . clemio1 D.wpi
+        
+        . clemao1 wpi, trim(0.10) graph
+         
+        . clemio1 wpi, maxlag(6) trim(0.10)
+         
+        
+<b><u>References</u></b>
+<p>
+Clemente, J., Montanes, A., Reyes, M., 1998. Testing for a unit root in
+    variables with a double change in the mean. Economics Letters 59, 175-182.
+<p>
+Perron, P., Vogelsang, T., 1992. Nonstationarity and level shifts with an
+    application to purchasing power parity. Journal of Business and Economic
+    Statistics 10, 301-320.
+<p>
+<b><u>Authors</u></b>
+<p>
+Christopher F. Baum (baum@bc.edu) Boston College
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+ Manual: <b>[TS] dfuller</b>
+On-line: dfuller, zandrews (if installed)
+</pre>

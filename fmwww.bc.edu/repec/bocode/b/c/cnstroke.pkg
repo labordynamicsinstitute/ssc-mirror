@@ -1,0 +1,25 @@
+d 'CNSTROKE': module to return the stroke count of Chinese characters
+d
+d     cnstroke can get the stroke count of any Chinese character,
+d and the result is returned in    r(cnstroke), as long as that is
+d not empty. 
+d
+d KW: data management
+d KW: Chinese
+d KW: text analysis
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20220903
+d
+d Author: Yuyan Li, Zhongnan University of Economics and Law
+d Support: email y1539691364@@163.com
+d
+d Author: Muhammad Usman, University of Education
+d Support: email m.usman@@ue.edu.pk
+d
+d Author: Haitao Si, Wuhan University
+d Support: email sihaitao0114@@163.com
+d
+f cnstroke.ado
+f cnstroke.sthlp

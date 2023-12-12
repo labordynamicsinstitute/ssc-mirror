@@ -1,0 +1,87 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>centpow</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Network Centrality and Power</u></b>
+<p>
+        <b>centpow</b> <i>filename</i> <b>,</b> [ <b><u>norm</u></b><b>alize</b> <b>beta(</b><i>real</i><b>)</b> <b>saveas(</b><i>filename</i><b>)</b>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>centpow</b> creates a new dataset containing the degree centrality,
+    alter-based centrality and power, and beta centrality and power for each
+    node in a symmetric network described by <i>filename</i>.
+    [NOTE: This command does not affect the data in memory.]
+<p>
+<p>
+<b><u>Options</u></b>
+    <b>normalize</b> Requests that each measure be normalized using the approach
+        described by Bonacich (1987).
+    <b>beta(</b><i>real</i><b>)</b> Specifies the value of the <i>beta</i> parameter used to compute beta
+        centrality and power (must be positive).  [Default = .995 * 1/largest
+        eigenvalue; this makes beta centrality roughly equivalent to
+        eigenvector centrality.]
+    <b>saveas(</b><i>filename</i><b>)</b> Specifies the name of the new file containing the
+        centrality and power scores.  The default is <i>centpow.dta</i>.
+<p>
+<p>
+<b><u>Input</u></b>
+    <i>filename</i> must be a comma-delimited file containing a square, symmetric
+    matrix.  The matrix entries may be either binary or valued.
+<p>
+<p>
+<b><u>Output</u></b>
+    Each vector of scores is saved as a variable, with the observations in
+    the same order as the rows and columns of the input matrix.
+<p>
+    Degree centrality is defined as a node's total number of connections, and
+    is saved as the variable <i>degree</i>.
+<p>
+    Alter-based centrality and power are extensions of degree centrality in
+    which each node's score is based on the degree centrality of the nodes to
+    which it is connected.  Alter-based centrality is defined as the sum of
+    the degree centralities of a node's alters, and is saved as the variable
+    <i>altercent</i>.  Alter-based power is defined as the sum of the inverse degree
+    centralities of a node's alters, and is saved as the variable <i>alterpow</i>.
+<p>
+    Beta centrality and power are saved as the variables <i>betacent</i> and
+    <i>betapow</i>, respectively.  These measures are conceptually similar to
+    alter-based centrality and power, and often yield similar results.
+    However, they are computationally distinct (see Bonacich 1987) and are
+    subject to several assumptions:
+<p>
+        (1) The network contains no disconnected components,
+<p>
+        (2) The largest eigenvalue is substantially larger than the 2nd
+        largest eigenvalue,
+<p>
+        (3) The absolute value of <i>beta</i> is less than the reciprocal of the
+        largest eigenvalue.
+<p>
+    If any of these assumptions is violated, the command will issue a
+    warning, but will still compute the measures.
+ 
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+Neal, Z. P. (2011) Differentiating Centrality and Power in the World City
+     Network, <i>Urban Studies</i> 48: 2733-2748. (CLICK FOR PDF)
+<p>
+Neal, J. W. and Z. P. Neal.  (in press) Power as a Structural Phenomenon,
+     <i>American Journal of Community Psychology</i> 48: 157-167. (CLICK FOR PDF)
+<p>
+Bonacich, P.  (1987) Power and Centrality: A Family of Measures, <i>American</i>
+     <i>Journal of Sociology</i> 92: 1070-82.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+Zachary Neal
+Department of Sociology
+Michigan State University
+zpneal@msu.edu
+<p>
+</pre>

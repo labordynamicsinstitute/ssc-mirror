@@ -1,0 +1,99 @@
+<pre>
+<b>help ccmatch</b>                                                     (version 1.1) 
+By Daniel E. Cook {Danielecook@gmail.com}                   www.Danielecook.com
+-------------------------------------------------------------------------------
+<b><u>ccmatch</u></b>
+<p>
+     <b>ccmatch</b> -- Used to randomly match cases and controls
+                based on specified criteria. For instance,
+                if you wanted to randomly match cases and
+                controls based on age, you can use ccmatch
+                to specify age as a criterion on which to
+                match cases and controls and it will match
+                randomly by age. You can use multiple
+                variables to match based on multiple
+                criteria
+<p>
+     ccmatch creates two variables:
+<p>
+                <b>match_id</b> gives the id of the partner an
+                individual has been matched to.
+<p>
+                <b>matched_pair</b> Numbers pairs starting from
+                one. Pairs will share the same number in
+                this column (see example below).
+<p>
+<p>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+     <b>ccmatch</b><i> variable_list</i>, <b>cc() id()</b>
+<p>
+          <i>variable_list</i> -- Specify variables you want each pair to share here.
+<p>
+          <b>cc(</b><i>var</i><b>)</b> -- Specify the variable you use to identify cases and
+          controls. Must be coded 0=controls, 1=cases.
+<p>
+          <b>id(</b><i>var</i><b>)</b> -- Specify the variable you to name individuals/observations
+          in your dataset.
+<p>
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+<p>
+         <b>match_id</b>       <b>matched_pair</b>   <b>name</b>                     <b>case_control</b>   
+&gt;           <b>age</b>
+         a6             1              a2                       0              
+&gt;           15
+         a2             1              a6                       1              
+&gt;           15
+         a7             2              a4                       0              
+&gt;           16
+         a4             2              a7                       1              
+&gt;           16
+         a8             3              a5                       0              
+&gt;           17
+         a5             3              a8                       1              
+&gt;           17
+         a10            4              a1                       0              
+&gt;           19
+         a1             4              a10                      1              
+&gt;           19
+                        .              a3                       0              
+&gt;           15
+                        .              a9                       1              
+&gt;           18
+<p>
+     The above output is an example of what match can do. The original data
+     (<b>name, case_control, age</b>) is unchanged, except that it has been reordered
+     The command used was:
+<p>
+     <b>ccmatch age, id(name) cc(case_control)</b>
+<p>
+     Age was specified following <b>ccmatch</b> to indicate that we wanted to match
+     cases/control who are the same age.
+<p>
+     The case/control variable is specified as an option using<b> cc()</b>, and the id
+     of each individual is specified using<b> id()</b>.
+<p>
+<p>
+-------------------------------------------------------------------------------
+<i>note</i> I use individual in this document but it could be interchanged with the
+word 'observation' and meaning would be the same. This program should be used
+in cases where each row of your dataset constitutes a single individual.
+-------------------------------------------------------------------------------
+Last Revised <i> 12/18/12</i>
+<i> Update</i> - 12/18/12
+          - Huge performance improvement - works on extremely large datasets no
+&gt; w. 
+<p>
+<i> Update</i> - 06/27/12
+          - Fixed issue where a maximum of only 1600 individuals could be match
+&gt; ed. 
+<p>
+<i> Initial Release</i> - 12/18/11
+<p>
+<p>
+</pre>

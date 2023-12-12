@@ -1,0 +1,207 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>chardef</b> and <b>charundef</b>                                   (Roger Newson)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Assign values to a </u></b><b><u>characteristic</u></b><b><u> of a list of items</u></b>
+<p>
+        <b>chardef</b> [ <i>evarlist</i> ] [ , <b><u>c</u></b><b>har(</b><i>name</i><b>)</b> <b><u>v</u></b><b>alues(</b><i>string_list</i><b>)</b>
+                     <b><u>pr</u></b><b>efix(</b><i>string</i><b>)</b> <b><u>su</u></b><b>ffix(</b><i>string</i><b>)</b> ]
+<p>
+        <b>charundef</b> [ <i>evarlist</i> ] [ , <b><u>c</u></b><b>harlist(</b><i>characteristic_list</i><b>)</b> ]
+<p>
+    where <i>evarlist</i> is a list of names which are either variable names or
+    <b>_dta</b>, and <i>characteristic_list</i> is
+<p>
+    <i>namelist</i> | <b>*</b>
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>chardef</b> is a mass-production version of the <b>char define</b> command.  It
+    assigns a list of values to a named characteristic of a list of items,
+    which can be variables, or the current dataset.  If the <i>evarlist</i> is not
+    supplied, then <b>chardef</b> assigns the values to the named characteristic for
+    all variables in the dataset currently in the memory.  If the named
+    characteristic is not supplied, then the values are assigned to the
+    characteristic <b>varname</b>, used by the <b>list</b> command.  If the list of values
+    is shorter than the <i>evarlist</i>, then the list of values is extended on the
+    right with copies of the last value.  Optionally, a prefix and/or a
+    suffix may be added to the values.  The <b>charundef</b> module resets a list of
+    characteristics to empty strings for a list of items.
+<p>
+<p>
+<b><u>Options for </u></b><b><u>chardef</u></b>
+<p>
+    <b>char(</b><i>name</i><b>)</b> specifies the name of the variable characteristic whose values
+        will be reset for all items in the <i>evarlist</i>.  If the <b>char()</b> option is
+        not supplied, then the values are assigned to the characteristic
+        <b>varname</b>, used by the <b>subvarname</b> option of the <b>list</b> command.
+<p>
+    <b>values(</b><i>string_list</i><b>)</b> specifies the list of values to be assigned to the
+        characteristic specified by the <b>char()</b> option, for the corresponding
+        items in the <i>evarlist</i>.  If not specified, then it is initialized to a
+        single empty string (<b>""</b>).  If the list of values is shorter than the
+        <i>evarlist</i>, then it is extended on the right with copies of the last
+        value in the list, which may or may not be an empty string.
+        Therefore, in default, the values of the named characteristic are
+        cleared for all items in the <i>evarlist</i>.
+<p>
+    <b>prefix(</b><i>string</i><b>)</b> specifies a common prefix string, to be added to the left
+        of the values specified by the <b>values()</b> option, before assignment to
+        the characteristic named by the <b>char()</b> option for the corresponding
+        items in the <i>evarlist</i>.
+<p>
+    <b>suffix(</b><i>string</i><b>)</b> specifies a common suffix string, to be added to the right
+        of the values specified by the <b>values()</b> option, before assignment to
+        the characteristic named by the <b>char()</b> option for the corresponding
+        items in the <i>evarlist</i>.
+<p>
+<p>
+<b><u>Options for </u></b><b><u>charundef</u></b>
+<p>
+    <b>charlist(</b><i>characteristic_list</i><b>)</b> specifies a list of names of
+        characteristics to be undefined (by being set to the empty string
+        <b>""</b>).  It may be a list of legal Stata names, or may be <b>*</b>, implying a
+        list of the names of all characteristics present for any item in the
+        <i>evarlist</i>.  If not set, <b>charlist()</b> is set to the names of all
+        characteristics present for any item in the <i>evarlist</i>.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>chardef</b> and <b>charundef</b> are designed to save the user the work of typing
+    multiple <b>char define</b> commands for multiple variables and/or for the
+    current dataset.  It is particularly useful if the user is using the 
+    <b>listtab</b> package, downloadable from SSC, to generate tables for TeX, HTML,
+    XML or RTF documents.  The user may want to specify one or more header
+    rows, using the <b>headlines()</b> option of <b>listtab</b>, and generate some of these
+    header rows using the <b>listtab_vars</b> module.  These header rows will
+    typically be rows of header cells, separated by the <b>delimiter()</b> string
+    used by <b>listtab</b>.  The text in the header cells may be prefixed using the
+    <b>prefix()</b> option of <b>chardef</b>, and/or suffixed using the <b>suffix()</b> option of
+    <b>chardef</b>, to specify alignment and/or formatting in the generated table.
+    The whole header row may be prefixed and suffixed by the <b>begin()</b> and
+    <b>end()</b> strings, respectively, specified as options to <b>listtab</b>.  For more
+    about the use of <b>chardef</b> with <b>listtab</b> and other packages to create
+    tables, see Newson (2012).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    Setup
+<p>
+        <b>.sysuse auto, clear</b>
+        <b>.describe</b>
+<p>
+    The following example sets the default <b>varname</b> characteristic for 5
+    variables, and lists them using <b>list</b>.
+<p>
+        <b>.chardef make foreign weight length mpg, values("Car model" "Where</b>
+            <b>from?" "How heavy?" "How long?" "How efficient?")</b>
+        <b>.list make foreign weight length mpg, abbr(32) subvarname</b>
+<p>
+    The following example sets the <b>varname</b> characteristic for the first
+    variable (<b>make</b>), and clears the <b>varname</b> characteristic for all other
+    variables (using the empty string <b>""</b>), and lists all variables.
+<p>
+        <b>.chardef, values("Model of car" "")</b>
+        <b>.list, abbr(32) subvarname</b>
+<p>
+    The following example clears the <b>varname</b> characteristic for all
+    variables, and lists them.
+<p>
+        <b>.chardef</b>
+        <b>.list, abbr(32) subvarname</b>
+<p>
+    The following example assigns the non-default <b>header</b> characteristic for 5
+    variables.
+<p>
+        <b>.chardef make foreign weight length mpg, char(header) values("Car</b>
+            <b>model" "Where from?" "How heavy?" "How long?" "How efficient?")</b>
+        <b>.char list</b>
+<p>
+    The following 3 examples assign the <b>header</b> characteristic for 5
+    variables, and then unset it.
+<p>
+        <b>.chardef make foreign weight length mpg, char(header) values("Car</b>
+            <b>model" "Where from?" "How heavy?" "How long?" "How efficient?")</b>
+        <b>.char list</b>
+        <b>.charundef</b>
+<p>
+        <b>.chardef make foreign weight length mpg, char(header) values("Car</b>
+            <b>model" "Where from?" "How heavy?" "How long?" "How efficient?")</b>
+        <b>.char list</b>
+        <b>.charundef, char(*)</b>
+<p>
+        <b>.chardef make foreign weight length mpg, char(header) values("Car</b>
+            <b>model" "Where from?" "How heavy?" "How long?" "How efficient?")</b>
+        <b>.char list</b>
+        <b>.charundef make foreign weight length mpg, char(*)</b>
+<p>
+    The following advanced example demonstrates the use of <b>chardef</b>, with the
+    packages <b>sdecode</b>, <b>listtab</b> and <b>rtfutil</b>, to create a Rich Text Format (RTF)
+    file <b>myrtf1.rtf</b>, containing a table of 5 variables for odd-numbered car
+    models.  The packages <b>sdecode</b>, <b>listtab</b> and <b>rtfutil</b> can be downloaded from
+    SSC.
+<p>
+        <b>.sysuse auto, clear</b>
+        <b>.keep if mod(_n,2)</b>
+        <b>.chardef make foreign weight length mpg, char(hcell) prefix("\qr{\i</b>
+            <b>") suffix("}") values("Car model" "Where from?" "How heavy?" "How</b>
+            <b>long?" "How efficient?")</b>
+        <b>.replace make="\qr{"+make+"}"</b>
+        <b>.foreach Y of var foreign weight length mpg {</b>
+        <b>.  sdecode `Y', replace prefix("\qr{") suffix("}")</b>
+        <b>.}</b>
+        <b>.tempname buff1</b>
+        <b>.rtfopen `buff1' using "myrtf1.rtf", replace template(fnmono1)</b>
+        <b>.capture noisily {</b>
+        <b>.  rtfrstyle make foreign weight length mpg, cwidth(2000 1000) lo(b d</b>
+            <b>e)</b>
+ 
+        <b>.  listtab_vars make foreign weight length mpg, b(`b') d(`d') e(`e')</b>
+            <b>substitute(char hcell) lo(hrow)</b>
+        <b>.  listtab make foreign weight length mpg, handle(`buff1')</b>
+            <b>head("`hrow'") b(`b') d(`d') e(`e')</b>
+        <b>.}</b>
+        <b>.rtfclose `buff1'</b>
+<p>
+    The following example clears all characteristics of the current dataset:
+<p>
+        <b>.sysuse auto, clear</b>
+        <b>.char list</b>
+        <b>.charundef _dta</b>
+        <b>.char list</b>
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+<b>charundef</b> saves the following results in <b>r()</b>:
+<p>
+    Macros         
+      <b>r(charlist)</b>         list of names of characteristics cleared (in
+                            alphabetic order)
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, National Heart and Lung Institute, Imperial College London,
+    UK.
+    Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<a name="references"></a><b><u>References</u></b>
+<p>
+    Newson, R. B.  2012.  From resultssets to resultstables in Stata.  <i>The</i>
+        <i>Stata Journal</i> 12(2): 191-213.  Download from <i>The Stata Journal</i>
+        website.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[P] char</b>
+<p>
+      Help:  <b>[P] char</b>
+             <b>sdecode</b>, <b>listtab</b>, <b>rtfutil</b> if installed
+</pre>

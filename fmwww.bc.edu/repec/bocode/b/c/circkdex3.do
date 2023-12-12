@@ -1,0 +1,16 @@
+use fisherfeldes2
+circbw laoriefeld if half==1
+circkden laoriefeld, h(22.38) saving(Fig5a, replace)
+circkden laoriefeld, h(22.38) circgph saving(Fig5b, replace)
+circkden laoriefeld, h(44.76) saving(Fig5c, replace)
+circkden laoriefeld, h(44.76) circgph saving(Fig5d, replace)
+circkden laoriefeld, h(89.52) saving(Fig5e, replace)
+circkden laoriefeld, h(89.52) circgph saving(Fig5f, replace)
+cirkdevm laoriefeld, h(28.64) saving(Fig6a, replace)
+cirkdevm laoriefeld, h(28.64) circgph saving(Fig6b, replace)
+cirkdevm laoriefeld, h(7.16) saving(Fig6c, replace)
+cirkdevm laoriefeld, h(7.16) circgph saving(Fig6d, replace)
+cirkdevm laoriefeld, h(1.79) saving(Fig6e, replace)
+cirkdevm laoriefeld, h(1.79) circgph saving(Fig6f, replace)
+graph combine Fig5a.gph Fig5c.gph Fig5e.gph Fig5b.gph Fig5d.gph Fig5f.gph, iscale(.5) title(Figura 5) saving(Fig5t, replace)
+graph combine Fig6a.gph Fig6c.gph Fig6e.gph Fig6b.gph Fig6d.gph Fig6f.gph, iscale(.5) title(Figura 6) saving(Fig6t, replace)

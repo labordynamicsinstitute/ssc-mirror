@@ -1,0 +1,125 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>changemean</b>                                          Joao Pedro Azevedo
+                                                                  Samuel Franco
+-------------------------------------------------------------------------------
+<p>
+<b><u>Income and Inequalily Contribution on Poverty Variation</u></b>
+<p>
+        <b>changemean</b> <i>varlist</i> [<i>weight</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ , <b>by(</b><i>groupvar</i><b>)</b>
+                 <b>base(</b><i>refcat</i><b>)</b> <b>varpl(</b><i>varname</i><b>)</b> <b>pline(</b><i>number</i><b>)</b> <b>h</b> <b>h2</b> <b>pgr</b> <b>igr</b> <b>w</b> <b>fgt1</b>
+                 <b>fgt2</b> <b>fgt3</b> <b>fgt4</b> <b>fgt5</b> <b>fgt6</b> <b>fgt7</b> <b>fgt8</b> <b>fgt9</b> <b>chu1</b> <b>chu2</b> <b>chu3</b> <b>chu4</b>
+                 <b>chu5</b> <b>s</b> <b>thon</b> <b>tak</b> ]
+<p>
+<b>fweight</b>s, are allowed; see help weights.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>changemean</b> decompose the poverty gap among two or more subgroups by
+    income and inequality. Several measures of poverty can be used. If no
+    specific measures is requested the default value is the head count ratio
+    [FGT(0)]. This version of the program does not support the computation of
+    multiple poverty measures.
+<p>
+    <b>varlist</b> Income variable
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>by(</b><i>groupvar</i><b>)</b> provide the variable name that defided the groups of
+    comparison.  The default comparation group is computed as half the median
+    of varlist.
+<p>
+    <b>base(</b><i>refcat</i><b>)</b> sets the value of the comparation categoric group that
+    defided the base group. If the base category was not defined <b>changemean</b>
+    will use the first category.
+<p>
+    <b>varpl(</b><i>varname</i><b>)</b> provide the variable name containing the values poverty
+    line.
+<p>
+    <b>pline(</b>#<b>)</b> sets the value of the poverty line. The default poverty line is
+    computed as half the median of varname.
+<p>
+The following options specify the poverty measure to be computed.
+<p>
+    <b>h</b> : headcount ratio [FGT(0)] (default value)
+    <b>h2</b> : extremem poverty headcount ratio
+    <b>pgr</b> : poverty gap ratio [FGT(1)]
+    <b>igr</b> : income gap ratio
+    <b>w</b> : Watts index
+    <b>s</b> : Sen index
+    <b>tak</b> : Takayama index
+    <b>thon</b> : Thon index
+    <b>fgt1</b> : Foster, Greer and Thorbecke - FGT(0.5)
+    <b>fgt2</b> : Foster, Greer and Thorbecke - FGT(1.5)
+    <b>fgt3</b> : Foster, Greer and Thorbecke - FGT(2)
+    <b>fgt4</b> : Foster, Greer and Thorbecke - FGT(2.5)
+    <b>fgt5</b> : Foster, Greer and Thorbecke - FGT(3)
+    <b>fgt6</b> : Foster, Greer and Thorbecke - FGT(3.5)
+    <b>fgt7</b> : Foster, Greer and Thorbecke - FGT(4)
+    <b>fgt8</b> : Foster, Greer and Thorbecke - FGT(4.5)
+    <b>fgt9</b> : Foster, Greer and Thorbecke - FGT(5)
+    <b>chu1</b> : Clark, Ulph and Hemming index with beta of 0.10
+    <b>chu2</b> : Clark, Ulph and Hemming index with beta of 0.25
+    <b>chu3</b> : Clark, Ulph and Hemming index with beta of 0.50
+    <b>chu4</b> : Clark, Ulph and Hemming index with beta of 0.75
+    <b>chu5</b> : Clark, Ulph and Hemming index with beta of 0.90
+<p>
+<b><u>Remarks</u></b>
+<p>
+    The output table of change mean describe the following indicators:
+<p>
+    <b>Index</b> Presents the comparision categories.
+<p>
+    <b>Baseli</b> Shows the poverty rate (head count ratio) of the individuals on
+    the base line category.
+<p>
+    <b>Origin</b> Shows the poverty rate (head count ratio) of the individuals on
+    each one of the comparison categories.
+<p>
+    <b>Income</b> Poverty rate of the baseline group with the average income of the
+    comparsion group.
+<p>
+    <b>Inequa</b> Poverty rate of the baseline group with the inequality of the
+    comparsion group.
+<p>
+    <b>Gap</b> Poverty gap (head count ratio of base line category - head count
+    ratio of comparsin category).
+<p>
+    <b>RawInc</b> Raw contribution of the income differential on the poverty gap.
+<p>
+    <b>RawIne</b> Raw contribution of the inequality differential on the poverty
+    gap.
+<p>
+    <b>RelInc</b> Relative contribution of the income differential on the poverty
+    gap.
+<p>
+    <b>RelIne</b> Relative contribution of the inequality differential on the
+    poverty gap.
+<p>
+<b><u>Examples</u></b>
+<p>
+        . changemean rdpc
+<p>
+        . changemean rdpc [fw=peso]
+<p>
+        . changemean rdpc [fw=peso], by(educa)
+<p>
+        . changemean rdpc [fw=peso], by(educa) varpl(lp)
+<p>
+        . changemean rdpc [fw=peso], by(educa) line(240)
+<p>
+        . changemean rdpc [fw=peso], by(educa) base(1)
+<p>
+        . changemean rdpc [fw=peso], by(educa) base(1) varpl(lp)
+<p>
+        . changemean rdpc [fw=peso], by(educa) base(3) line(240)
+<p>
+<b><u>Authors</u></b>
+<p>
+    Joao Pedro Azevedo
+    jazevedo@worldbank.org
+<p>
+    Samuel Franco
+    sam@ipea.gov.br
+<p>
+</pre>

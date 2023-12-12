@@ -1,0 +1,78 @@
+<pre>
+.-
+help for ^civplot^
+.-
+<p>
+Vertical plots showing confidence intervals
+-------------------------------------------
+<p>
+    ^civplot^ varlist [^if^ exp] [^in^ range] [weight]
+    [ ^, lev^el^(^#^) p^oisson^ bin^omial ^e^xposure^(^varname^)^
+    graph_options ]
+    
+    ^civplot^ varname [^if^ exp] [^in^ range] [weight] [ ^, by(^byvar^)^
+    ^lev^el^(^#^) p^oisson^ bin^omial ^e^xposure^(^varname^)^
+    ^t^otal graph_options ]
+<p>
+Description
+-----------
+<p>
+^civplot^ produces a display of means and confidence intervals for 
+different variables, or for different groups of a single variable 
+defined by the ^by^ option. 
+<p>
+^ci^ is used for the calculations. ^graph^ is used for the graphical
+display. Each confidence interval is by default shown as a vertical line.
+<p>
+The groups on the horizontal axis are tacitly plotted at 1, ... , 
+number of intervals with value labels from the actual values or variable 
+names. 
+<p>
+<p>
+Options
+-------
+<p>
+^by(^byvar^)^ defines a grouping variable. It is only allowed when a 
+    single variable is specified. ^by( )^ is treated as categorical, not 
+    measured. 
+<p>
+^level(^#^)^, ^poisson^, ^binomial^ and ^exposure(^varname^)^ are all
+    options of ^ci^. See help on @ci@.
+<p>
+^total^ adds a final line showing the mean and confidence interval for
+    all groups specified. It is only allowed in conjunction with ^by( )^. 
+<p>
+graph_options are options of ^graph^. See help on @graph@. Note that 
+<p>
+    ^xlabel(1/^number of intervals^)^ is wired in. 
+<p>
+    ^symbol^ defaults to ^"oii"^ (a circle for the mean and invisible 
+    symbols for the the mean). 
+    
+    ^connect^ defaults to ^".II"^. 
+<p>
+    Titles filled in by default may be blanked out or, more generally,
+    overwritten by options such as ^b2(" ") or t1("  ")^. 
+<p>
+<p>
+Examples
+--------
+<p>
+    . ^civplot length, by(grade) yla(0(200)1200)^
+    . ^civplot length, by(grade) yla(0(200)1200) sy(Sii) c(.||)^
+    . ^civplot length width, yla(0(200)1200) xsc(0.5,2.5) b2("  ")^ 
+<p>
+<p>
+Author
+------
+<p>
+         Nicholas J. Cox, University of Durham, U.K.
+         n.j.cox@@durham.ac.uk
+<p>
+<p>
+Also see
+--------
+<p>
+On-line: help for @ci@, @serrbar@, @cihplot@ (if installed)  
+<p>
+</pre>

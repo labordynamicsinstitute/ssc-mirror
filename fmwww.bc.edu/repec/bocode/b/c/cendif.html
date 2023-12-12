@@ -1,0 +1,262 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>cendif</b>
+               (SJ6-4: snp15_7; SJ6-3: snp15_6; SJ5-3: snp15_5; SJ3-3: snp15_4;
+                               STB-61: snp15_3; STB-58: snp15_2; STB-57: snp15)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Robust confidence intervals for median and other percentile differences</u></b>
+<p>
+        <b>cendif</b> <i>depvar</i> [<b>using</b> <i>filename</i>] [<i>weight</i>] [<i>if</i>] [<i>in</i>]<b>,</b> <b>by(</b><i>groupvar</i><b>)</b>
+                     [<b><u>ce</u></b><b>ntile(</b><i>numlist</i><b>)</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b> <b><u>ef</u></b><b>orm</b>
+                     <b><u>ys</u></b><b>targenerate(</b><i>newvarlist</i><b>)</b> <b><u>cl</u></b><b>uster(</b><i>varname</i><b>)</b>
+                     <b><u>cfw</u></b><b>eight(</b><i>expression</i><b>)</b> <b><u>fu</u></b><b>ntype(</b><i>functional_type</i><b>)</b> <b><u>td</u></b><b>ist</b>
+                     <b><u>tr</u></b><b>ansf(</b><i>transformation_name</i><b>)</b> <b><u>sa</u></b><b>ving(</b><i>filename</i>[<b>,replace</b>]<b>)</b>
+                     no<b>hold</b> ]
+<p>
+    where <i>transformation_name</i> is one of
+<p>
+        <b>iden</b> | <b>z</b> | <b>asin</b>
+<p>
+    and <i>functional_type</i> is one of
+<p>
+        <b><u>w</u></b><b>cluster</b> | <b><u>b</u></b><b>cluster</b> | <b><u>v</u></b><b>onmises</b>
+<p>
+    <b>fweight</b>s, <b>iweight</b>s, and <b>pweight</b>s are allowed; see weight.
+<p>
+    <b>bootstrap</b>, <b>by</b>, <b>jackknife</b>, and <b>statsby</b> are allowed; see prefix.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>cendif</b> calculates confidence intervals for generalized Hodges-Lehmann
+    median differences, and other percentile differences, between values of a
+    Y-variable in <i>depvar</i> for a pair of observations chosen at random from two
+    groups A and B, defined by the <i>groupvar</i> in the <b>by()</b> option. These
+    confidence intervals are robust to the possibility that the population
+    distributions in the two groups are different in ways other than
+    location. This might happen if, for example, the two populations had
+    different variances. For positive-valued variables, <b>cendif</b> can be used to
+    calculate confidence intervals for median ratios or other percentile
+    ratios. <b>cendif</b> is part of the <b>somersd</b> package and requires the <b>somersd</b>
+    program to work.  The parameters estimated by <b>cendif</b> are a subset of
+    those estimated by <b>censlope</b>, which is also part of the <b>somersd</b> package.
+    However, <b>cendif</b> may be more easy to use than <b>censlope</b> and more
+    time-efficient for small sample numbers.
+<p>
+<p>
+<b><u>Options for use with cendif</u></b>
+<p>
+    <b>by(</b><i>groupvar</i><b>)</b> is not optional. It specifies the name of the grouping
+        variable. This variable must have exactly two possible values.  The
+        lower value indicates group A, and the higher value indicates group
+        B.
+<p>
+    <b>centile(</b><i>numlist</i><b>)</b> specifies a list of percentile differences to be
+        reported and defaults to <b>centile(50)</b> (median only) if not specified.
+        Specifying <b>centile(25 50 75)</b> will produce the 25th, 50th, and 75th
+        percentile differences.
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the confidence level, as a percentage, for confidence
+        intervals; see <b>level</b>.
+<p>
+    <b>eform</b> specifies that exponentiated percentile differences be given. This
+        option is used if <i>depvar</i> is the log of a positive-valued variable.
+        In this case, confidence intervals are calculated for percentile
+        ratios between values of the original positive variable instead of
+        for percentile differences.
+<p>
+    <b>ystargenerate(</b><i>newvarlist</i><b>)</b> specifies a list of variables to be generated,
+        corresponding to the percentile differences, containing the
+        differences <b>Y*(theta)=Y-group1*theta</b>, where <b>group1</b> is a binary
+        variable indicating membership of group 1 and <b>theta</b> is the percentile
+        difference.  The variable names in the <i>newvarlist</i> are matched to the
+        list of percentiles specified by the <b>centile()</b> option, sorted in
+        ascending order of percentage.  If the two lists have different
+        lengths, <b>cendif</b> generates a number <i>nmin</i> of new variables equal to the
+        minimum length of the two lists, matching the first <i>nmin</i> percentiles
+        with the first <i>nmin</i> new variable names.  Usually, there is only one
+        percentile difference (the median difference) and one new
+        <b>ystargenerate()</b> variable.
+<p>
+    <b>cluster(</b><i>varname</i><b>)</b> specifies the variable that defines sampling clusters.
+        If <b>cluster()</b> is defined, then the confidence intervals are calculated
+        assuming that the data are a sample of clusters from a population of
+        clusters rather than a sample of observations from a population of
+        observations.
+<p>
+    <b>cfweight(</b><i>expression</i><b>)</b> specifies an expression giving the cluster frequency
+        weights.  These cluster frequency weights must have the same value
+        for all observations in a cluster.  If <b>cfweight()</b> and <b>cluster()</b> are
+        both specified, then each cluster in the dataset is assumed to
+        represent a number of identical clusters equal to the cluster
+        frequency weight for that cluster. If <b>cfweight()</b> is specified and
+        <b>cluster()</b> is unspecified, then each observation in the dataset is
+        treated as a cluster, and assumed to represent a number of identical
+        one-observation clusters equal to the cluster frequency weight.  For
+        more details on the interpretation of weights, see <b>Interpretation of</b>
+        <b>weights</b> in the help for <b>somersd</b>.  Note that the observation frequency
+        weights are used by <b>cendif</b> for tabulating the group frequencies.
+<p>
+    <b>funtype(</b><i>functional_type</i><b>)</b> specifies whether the percentile differences
+        estimated are between-cluster, within-cluster or Von Mises percentile
+        differences.  These three functional types are specified by the
+        options <b>funtype(bcluster)</b>, <b>funtype(wcluster)</b> or <b>funtype(vonmises)</b>,
+        respectively, and correspond to the functional types of the same
+        names used by <b>somersd</b>.  If <b>funtype()</b> is not specified, then
+        <b>funtype(bcluster)</b> is assumed, and between-cluster percentile
+        differences are estimated.  If the clusters are pairs of
+        observations, and if the <b>by()</b> option specifies an indicator variable
+        indicating whether the observation is the first or second member of
+        its pair, then the within-cluster median difference is the parameter
+        corresponding to the sign test, and the Von Mises median difference
+        is the conventional Hodges-Lehmann median difference between the
+        group of first members and the group of second members, with
+        confidence limits adjusted for clustering.  For further details, see
+        the manual <b>cendif.pdf</b>, distributed with <b>somersd</b> as an ancillary file.
+<p>
+    <b>tdist</b> specifies that the standardized Somers' D estimates are assumed to
+        be sampled from a t distribution with n-1 degrees of freedom, where n
+        is the number of clusters or the number of observations if <b>cluster()</b>
+        is not specified.
+<p>
+    <b>transf(</b><i>transformation_name</i><b>)</b> specifies that the Somers' D estimates are to
+        be transformed, defining a standard error for the transformed
+        population value, from which the confidence limits for the percentile
+        differences are calculated.  <b>z</b> (the default) specifies Fisher's z
+        (the hyperbolic arctangent), <b>asin</b> specifies Daniels' arcsine, and
+        <b>iden</b> specifies identity or untransformed.
+<p>
+    <b>saving(</b><i>filename</i>[<b>,replace</b>]<b>)</b> specifies a dataset to be created, whose
+        observations correspond to the observed values of differences between
+        a value of <i>depvar</i> in group A and a value of <i>depvar</i> in group B.
+        <b>replace</b> instructs Stata to replace any existing dataset of the same
+        name.  The saved dataset can then be reused if <b>cendif</b> is called later
+        with <b>using</b> to save the long processing times used to calculate the
+        set of observed differences.  The <b>saving()</b> option and the <b>using</b>
+        qualifier are provided mainly for programmers to use, at their own
+        risk.
+<p>
+    <b>nohold</b> indicates that any existing estimation results be overwritten with
+        a new set of estimation results for the use of programmers.  By
+        default, any existing estimation results are restored after execution
+        of <b>cendif</b>.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>cendif</b> is part of the <b>somersd</b> package and uses the program <b>somersd</b>, which
+    calculates confidence intervals for Somers' D.  A 100<b>q</b>th percentile
+    difference is defined as a value of <b>theta</b> satisfying the equation
+<p>
+    <b>D[ystar(theta)|group_A] = 1-2q</b>
+<p>
+    where <b>D[.|.]</b> represents Somers' D, <b>group_A</b> is an indicator variable for
+    membership of group A instead of group B, and <b>ystar(theta)</b> is a variable
+    equal to <i>depvar</i> for observations in group A and equal to <i>depvar</i><b>+theta</b> for
+    observations in group B.  If <b>q</b>=0.5, then the value of <b>theta</b> is the
+    Hodges-Lehmann median difference. In this case, <b>cendif y, by(group)</b> gives
+    the same median difference as <b>npshift y, by(group)</b>, although the
+    confidence limits may be different. (The program <b>npshift</b> calculates
+    confidence intervals for the Hodges-Lehmann minimum difference, assuming
+    that the two group distributions differ only in location. It is available
+    from Stata Technical Bulletin (STB) in STB-52: sg123.)
+<p>
+    For extreme percentiles and/or very small sample numbers, <b>cendif</b>
+    sometimes calculates infinite positive upper confidence limits or
+    infinite negative lower confidence limits.  These are represented by
+    <b>+/-c(maxdouble)</b>, where <b>c(maxdouble)</b> is the c-class value specifying the
+    largest positive number that can be stored in a double.
+<p>
+    With very large sample numbers, <b>cendif</b> may be slow, as it must calculate
+    every possible paired difference between values in the two samples to
+    calculate the median difference. A possible remedy is to reduce the
+    number of possible differences by grouping the Y variable. For instance,
+    if <b>income</b> is a measure of income in dollars, and <b>group</b> is a binary
+    variable indicating membership of one of two groups, then the user might
+    type
+<p>
+    <b>. gene incomegp=100*(int(income/100)+1)</b>
+    <b>. cendif incomegp, by(group) tdist</b>
+<p>
+    to calculate the median difference in income between the two groups to
+    the nearest 100 dollars. This process would probably take less time than
+    if the user typed
+<p>
+    <b>. cendif income, by(group) tdist</b>
+<p>
+    Full documentation of the <b>somersd</b> package (including methods and
+    formulas) is provided in the files <b>somersd.pdf</b>, <b>censlope.pdf</b>, and
+    <b>cendif.pdf</b>, which are distributed with the <b>somersd</b> package as ancillary
+    files (see <b>net</b>).  They can be viewed using the Adobe Acrobat Reader,
+    which can be downloaded from
+<p>
+    http://www.adobe.com/products/acrobat/readermain.html
+<p>
+    For a comprehensive review of Kendall's tau-a, Somers' D, and median
+    differences, see Newson (2002).  The definitive reference for the
+    statistical and computational methods of <b>censlope</b> is Newson (2006).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. cendif weight, tdist by(foreign)</b>
+<p>
+    <b>. cendif weight, tdist by(foreign) ce(25 50 75)</b>
+<p>
+    <b>. gene logwt=log(weight)</b>
+    <b>. cendif logwt, tdist by(foreign) ce(25 50 75) eform</b>
+<p>
+    <b>. cendif mpg, by(foreign) saving(trash1, replace)</b>
+    <b>. cendif mpg using trash1, by(foreign) tr(asin) tdist</b>
+<p>
+    The following example uses the <b>funtype()</b> option to estimate median
+    differences between paired data.  It uses the <b>bplong</b> dataset, distributed
+    with Stata and accessible using the <b>sysuse</b> command, with one observation
+    for each of 2 blood pressure measurements (before and after treatment)
+    for each of a sample of patients.  The option <b>funtype(wcluster)</b> specifies
+    the median difference between measurements on the same patient before and
+    after treatment, which is equal to zero under the null hypothesis tested
+    by the sign test.  The option <b>funtype(vonmises)</b> specifies the
+    conventional Hodges-Lehmann median difference between the group of
+    before-treatment measures and the group of after-treatment measurements,
+    with estimates calculated as if the two groups were two independent
+    samples, but with confidence limits adfjusted for clustering by patient.
+    This Von Mises parameter is zero under the null hypothesis tested by the
+    clustered ranksum test presented in Rosmer <i>et al.</i> (2006).
+<p>
+    <b>. sysuse bplong, clear</b>
+    <b>. describe, simple</b>
+    <b>. cendif bp, by(when) tdist cluster(patient) funtype(wcluster)</b>
+    <b>. cendif bp, by(when) tdist cluster(patient) funtype(vonmises)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, Imperial College London, UK.
+    Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>Reference</u></b>
+<p>
+    Newson R.  2002.  Parameters behind "nonparametric" statistics: Kendall's
+        tau, Somers' D and median differences.  <i>Stata Journal</i> 2: 45-64.
+<p>
+    Newson, R.  2006.  Confidence intervals for rank statistics:  Percentile
+        slopes, differences, and ratios.  <i>Stata Journal</i> 6: 497-520.
+<p>
+    Rosmer, B., R. J. Glynn and M-L. T. Lee.  2006.  Extension of the
+        rank-sum test for clustered data:  Two-group comparisons with group
+        membership defined at the subunit level.  Biometrics 62(4):
+        1251-1259.
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual: <b>[R] spearman</b>, <b>[R] ranksum</b>, <b>[R] signrank</b>, <b>[R] centile</b>
+<p>
+    STB:  STB-52: sg123, STB-55: snp15, STB-57: snp15.1, STB-58: snp15.2,
+             STB-58: snp16; STB-61: snp15.3; STB-61: snp16.1.
+<p>
+    Online: <b>ktau</b>, <b>ranksum</b>, <b>signrank</b>, <b>centile</b>
+             <b>cid</b>, <b>npshift</b>, <b>somersd</b>, <b>censlope</b> (if installed)
+</pre>

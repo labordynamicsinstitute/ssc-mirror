@@ -1,0 +1,45 @@
+<pre>
+.-
+help for ^colelms^ 
+.-
+<p>
+Calculating Cole's LMS values and smoothed centiles for growth data 
+---------------------------------------------------------------
+        ^colelms^ yvar, ^age^group(var) [^sex^(var) ^cent^ile(# # #) ^df^(#) ^n
+&gt; os^mooth] 
+  
+Variables required
+------------------
+        ^yvar^ -- growth measurements: height, weight or BMI ..
+<p>
+Options 
+-------
+        ^age^group -- specifies age group variable for LMS calculation.
+<p>
+        ^sex^ -- specifies sex variable to calculate LMS seperately for males a
+&gt; nd
+                females
+        
+        ^cent^ile(varname) -- specifies "standard" centiles based on smoothed L
+&gt; MS
+                values
+<p>
+        ^df^(#) -- specifies degrees of freedom for GAM (See STB 42)
+<p>
+        ^nos^mooth -- only calculates LMS 
+<p>
+Example
+--------
+.^colelms height, agegroup(agegroup) sex(sex)^
+ 
+ 
+Authors
+--------
+        Zhiqiang Wang
+        Menzies School of Health Research, Darwin, Australia
+        wang@@menzies.su.edu.au
+        
+        Mark S Pearce
+        University of Newcastle upon Tyne, UK
+        m.s.pearce@@newcastle.ac.uk
+</pre>

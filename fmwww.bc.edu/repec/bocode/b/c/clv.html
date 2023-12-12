@@ -1,0 +1,149 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>clv</b>                                               Jean-Benoit Hardouin
+-------------------------------------------------------------------------------
+<p>
+<b><u>Clustering of variables around latent components </u></b>
+<p>
+        <b>clv</b> [<i>varlist</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>weight</b>] [<b>,</b> <b><u>nostand</u></b><b>ardized</b> <b>bar</b>
+              <b><u>cons</u></b><b>olidation</b>(<i>#</i>) <b><u>noden</u></b><b>dro</b> <b><u>saved</u></b><b>endro</b>(<i>filename</i>[,replace])
+              <b><u>cut</u></b><b>number</b>(<i>#</i>) <b><u>show</u></b><b>count</b> <b><u>texts</u></b><b>ize</b>(<i>string</i>) <b>deltaT</b> <b><u>hor</u></b><b>izontal</b>
+              <b><u>abb</u></b><b>rev</b>(<i>#</i>) <b><u>tit</u></b><b>le</b>(<i>string</i>) <b><u>cap</u></b><b>tion</b>(<i>string</i>) <b><u>ker</u></b><b>nel</b>(<i>numlist</i>)
+              <b><u>meth</u></b><b>od</b>(<i>keyword</i>) <b><u>nobip</u></b><b>lot</b> <b><u>add</u></b><b>var</b> <b>genlv</b>(string) <b><u>rep</u></b><b>lace</b> <b>std</b>
+              <b>dim</b>(<i>string</i>)]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>clv</b> clusters variables around latent components. The variables are
+        clustered stepwise by seeking to minimize at each step the decrease
+        of the T criterion, computed as the sum of the first eigenvalues of
+        the matrices of data of all the clusters. A hierarchical cluster
+        analysis based on this criterion is performed. A consolidation
+        procedure can be run subsequently which allows each variable to be
+        assigned to the latent component it is the most correlated with.
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>nostandardized</b> uses centered variables instead of standardized variables.
+<p>
+    <b>bar</b> displays a chart of the decrease in the T criterion at each step.
+<p>
+    <b>consolidation</b> performs a consolidation procedure with the obtained
+        partition into the specified number of clusters (by default, no
+        consolidation procedure is performed).
+<p>
+    <b>nodendro</b> suppresses the display of the dendogram.
+<p>
+    <b>savedendro</b> saves the dendrogram in the file defined by this option. If
+        this file already exists, it is possible to replace it with the
+        <b>replace</b> option.
+<p>
+    <b>cutnumber</b> defines the number of clusters presented in the dendrogram (40
+        by default).
+<p>
+    <b>showcount</b> displays the number of variables in each cluster (usefull with
+        the <b>cutnumber</b> option).
+<p>
+    <b>textsize</b> defines the size of the labels of the variables on the
+        dendrogram (see textsizestyle).
+<p>
+    <b>deltaT</b> uses the variation of the T criterion as height variable for the
+        dendrogram.
+<p>
+    <b>horizontal</b> displays an horizontal (instead vertical) dendrogram.
+<p>
+    <b>abbrev</b> defines the length of the variables labels on the dendrogram (15
+        characters by default).
+<p>
+    <b>title</b> defines the title of the dendrogram.
+<p>
+    <b>caption</b> defines the caption of the axis of the dendrogram which indicates
+        the names of the variables.
+<p>
+    <b>kernel</b> defines one or several kernels of variables (variables which are
+        clustered together in an initial step). The first number indicates
+        that the first variables are clustered together, the second number
+        indicates that the following variables are clustered together...
+<p>
+    <b>method</b> indicates the method to cluster the variables among <i>classical</i> (by
+        default) for the method described by Vigneau and Qannari, <i>polychoric</i>
+        for a use of the matrix of polychoric coefficients of correlation
+        (instead of Pearson coefficients of correlation), <i>v2</i> for a modified
+        algorithm wich search to minimize the maximum second eigenvalue among
+        the clusters of 2 variables and more, <i>polychoricv2</i> which correspond
+        to the <i>v2</i> option with the matrix of polychoric coefficients of
+        correlation, and <i>centroid</i> which is defined by Vigneau and Qannari as
+        an adaptation of CLV when the sign of the correlation coefficients
+        between the variables is important.
+<p>
+    <b>nobiplot</b> avoids to display a biplot of the latent variables with the
+        <b>consolidation</b> option.
+<p>
+    <b>genlv</b> saves the latent variables in new variables with the string as
+        prefix (followed by a number). This option must be used in
+        conjonction with the <b>consolidation</b> option.
+<p>
+    <b>replace</b> allows replacing the variables creates with the <b>genlv</b> option if
+        they already exist.
+<p>
+    <b>std</b> allows standardizing the latent variables for the graphical
+        representation on the biplot.
+<p>
+    <b>dim</b>(<i>string</i>) allows choosing the axes represented on the biplot.
+<p>
+    If no <i>varlist</i> is indicated, the procedure uses the varlist from the last
+        <b>clv</b> procedure, but does not perform the hierarchical cluster
+        analysis.
+<p>
+<b><u>Notes</u></b>
+<p>
+    The classifications around latent variables (CLV) is defined by its
+        authors (Vigneau and Qannari, 2003) only for continuous variables.
+        Results with binary or ordinal variables must be interpreted with
+        precautions.
+<p>
+    Only <b>fweights</b> are allowed. The biplots are disabled if weights are used.
+<p>
+    In this procedure, all the individuals with at least one missing value
+        are omitted.
+<p>
+    With the <i>polychoric</i> and <i>polychoricv2</i> methods, the <b>nostandardized</b> option
+        is disabled.
+<p>
+    This module uses the following modules downloadable on SSC: ssc describe
+        polychoric, ssc describe biplotvlab and ssc describe genscore
+<p>
+<b><u>Example</u></b>
+<p>
+        
+    <b>. clv var1-var15</b> /*performs the HCA procedure*/
+<p>
+        
+    <b>. clv var1-var15, cons(6) bar nodendro meth(centroid)</b> /* performs the HCA
+        procedure based on the centroid method followed by a consolidation
+        procedure with 6 clusters*/
+<p>
+        
+    <b>. clv, cons(3) addvar</b> /*performs only the consolidation procedure with 3
+        clusters, based on the preceeding HCA procedure*/
+<p>
+<b><u>Aknowledgements</u></b>
+<p>
+    The author thanks Ronan Conroy for all the propositions of improvements.
+<p>
+<b><u>Reference</u></b>
+<p>
+    Vigneau E. and Qannari E. M. Clustering of variables around latent
+        components. Communications in Statistics - Simulation and
+        Computation. 32(4): 1131-1150, 2003.
+<p>
+<b><u>Author</u></b>
+<p>
+    Jean-Benoit Hardouin, PhD, assistant professor
+    EA 4275 SPHERE "Team of Biostatistics, Clinical Research and Subjective
+        Measures in Health Sciences"
+    University of Nantes - Faculty of Pharmaceutical Sciences
+    1, rue Gaston Veil - BP 53508
+    44035 Nantes Cedex 1 - FRANCE
+    Email:  jean-benoit.hardouin@univ-nantes.fr
+</pre>

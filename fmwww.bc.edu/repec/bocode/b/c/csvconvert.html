@@ -1,0 +1,96 @@
+<pre>
+<p>
+<b>help csvconvert</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+        <b>csvconvert</b> - module for gathering multiple comma-separated values
+                (.csv) files into one single Stata (.dta) dataset.
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>csvconvert</b> <i>input_directory</i> [<b>,</b> <i>options</i>]
+<p>
+        Note: all .csv files must be placed in the same directory;
+                <i>input_directory</i> is the directory where the .csv files must be
+                stored.
+<p>
+<p>
+    <i>options</i>                          Description
+    -------------------------------------------------------------------------
+      <b>output_file(</b><i>file_name</i><b>)</b>         <i>file_name</i> is the name of the .dta file;
+                                       default is "output.dta".
+      <b>output_dir(</b><i>output_directory</i><b>)</b>   <i>output_directory</i> is the directory where
+                                       the output file is saved; default is
+                                       <i>input_directory</i>.
+      <b>input_file(</b>.<i>csv file list</i><b>)</b>     names of the .csv files placed in
+                                       <i>input_directory</i> to be converted; you
+                                       must specify the extension .csv for
+                                       each file name included in the list
+                                       (see examples below).  If this option
+                                       is not specified, csvconvert takes
+                                       into the process all the .csv files
+                                       stored in <i>input_directory</i>.
+    -------------------------------------------------------------------------
+    Double quotes must NOT be used to enclose <i>input_directory</i> nor
+    <i>output_directory</i>, even if the directory path contains spaces.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+        <b>csvconvert</b> appends a set of .csv files into one single file, which is
+        saved in the .dta format, immediately readable into Stata.
+        This command suits the case in which the researcher holds multiple
+        data files differing by - for example - a period variable, typically
+        year.
+<p>
+        By default, <b>csvconvert</b> creates a new variable, _csvfile, containing
+        the name of the .csv file from which the observation originates.
+        At the end of the process <b>csvconvert</b> displays a message with the
+        number of the original .csv files that have been included in the .dta
+        file.
+        (this information can become useful to double check that all the .csv
+        files have been converted into the .dta file).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    Donwload trail sample from my webpage and store the files in a directory
+    you created - for example C:\Data\worldbank.
+<p>
+    Check that all the .csv files are in the same directory - in this example
+    C:\Data\worldbank
+        <b>. dir C:\Data\worldbank\*.csv</b>
+<p>
+    The following command creates the file output.dta and saves it in the
+    directory C:\Data\worldbank
+        <b>. csvconvert C:\Data\worldbank</b>
+<p>
+    The following command creates the file wb_data.dta and saves it in the
+    directory C:\Data\wb dataset
+        <b>. csvconvert C:\Data\worldbank, output_file(wb_data.dta)</b>
+            <b>output_dir(C:\Data\wb dataset)</b>
+<p>
+    The following command includes in output.dta only the selected .csv files
+    wb2008.csv and wb2009.csv
+        <b>. csvconvert C:\Data\worldbank, input_file(wb2008.csv wb2009.csv)</b>
+<p>
+    Similar to the commands above: the files wb2008.csv and wb2009.csv are
+    stored into wb_data.dta, which is saved in C:\Data\wb dataset
+        <b>. csvconvert C:\Data\worldbank, input_file(wb2008.csv wb2009.csv)</b>
+            <b>output_file(wb_data.dta) output_dir(C:\Data\wb dataset)</b>
+<p>
+<b><u>Author</u></b>
+<p>
+        Alberto A. Gaggero, University of Pavia, Italy
+        alberto.gaggero@unipv.it
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[D] append</b>, <b>[D] insheet</b>
+<p>
+      Help:  <b>[D] append</b>, <b>[D] insheet</b>
+<p>
+</pre>

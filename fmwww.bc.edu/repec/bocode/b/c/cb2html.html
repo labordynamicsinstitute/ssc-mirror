@@ -1,0 +1,234 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>cb2html</b>                                              manual:  none    
+                                                              dialog:  none    
+-------------------------------------------------------------------------------
+<p>
+<b><u>Write a codebook to an html file</u></b>
+<p>
+        <b>cb2html</b> [<i>varlist</i>] using <i>filename</i> [<b>,</b> <b>replace</b> <b><u>ti</u></b><b>tle(</b><i>string</i><b>)</b>
+                 <b><u>pp</u></b><b>recision(</b><i>#</i><b>)</b> <b><u>f</u></b><b>precision(</b><i>#</i><b>)</b> <b><u>sp</u></b><b>recision(</b><i>#</i><b>)</b> <b><u>m</u></b><b>axvalues(</b><i>#</i><b>)</b>
+                 <b><u>su</u></b><b>mmarize(</b><i>#</i><b>)</b> <b><u>st</u></b><b>ringmax(</b><i>#</i><b>)</b> <b><u>n</u></b><b>otes</b> <b><u>ty</u></b><b>pe</b> <b><u>pa</u></b><b>gebreak(</b><i>#</i><b>)</b>
+                 <b><u>c</u></b><b>ombine(</b><i>var1 var2</i><b>)</b> <b><u>u</u></b><b>pper</b> <b><u>v</u></b><b>allabel</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>cb2html</b> writes a codebook in html format for the variables specified or,
+    if no variables are specified, all the variables in the data in memory,
+    into <i>filename</i>.html.  It writes the dataset label, the variable name,
+    label, and the data type of each variable.  It writes the frequency,
+    percent, value, and label of each value by default, or it writes the n,
+    mean, std dev, min, and max.  Optionally, it writes other information
+    that has been stored in variable and dataset notes.
+<p>
+    Survey research organizations that collect and disseminate survey data
+    are most likely to find this command of use.  The codebook it produces is
+    intended to be an end-user product suitable for publishing or printing.
+    It provides a method of combining the frequencies and/or means of the
+    data with the full text of the questionnaire so that researchers have all
+    information in a single document.
+<p>
+    After creating an html file, you can edit it in Microsoft Word.  This
+    allows you to change fonts, insert text, etc., as you would with any MS
+    Word document without editing the html code.  You can then print from MS
+    Word or convert the file to PDF or some other format.  (Warning: MS Word
+    inserts a lot of extra html code.  This may cause problems if you use the
+    codebook as an html document after editing it in MS Word.)
+<p>
+    <b>using</b> <i>filename</i> must be specified. The suffix .html is added
+        automatically.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>replace</b> writes over <i>filename</i>.html if it already exists. If <i>filename</i>.html
+        already exists, and <b>replace</b> is not specified, the file will not be
+        written.
+<p>
+    <b>title(</b><i>string</i><b>)</b> allows you to specify a title that is displayed in the
+        browser title bar at the top. If <b>title</b> is not specified, the dataset
+        label is displayed instead (assuming it exists).
+<p>
+    <b>pprecision(</b><i>#</i><b>)</b> allows you to change the number of decimal values displayed
+        in the percents column.  The default value is 0 (e.g., 12%). A value
+        of 1 will preserve one decimal of precision (e.g., 12.3%), a value of
+        2 will preserve two decimals of precision (e.g., 12.34%), etc.  Any
+        positive integer may be given.
+<p>
+    <b>fprecision(</b><i>#</i><b>)</b> allows you to change the number of decimal values displayed
+        in the values column for floating point variables (stored in Stata as
+        data type float or double).  The default value is 0 (e.g., 12). A
+        value of 1 will preserve one decimal of precision (e.g., 12.3), a
+        value of 2 will preserve two decimals of precision (e.g., 12.34),
+        etc.  Any integer in the range 0 - 22 may be given.
+<p>
+    <b>sprecision(</b><i>#</i><b>)</b> allows you to change the number of decimal values displayed
+        for all statistics of summarized variables.  The default value is 0
+        (e.g., 12). A value of 1 will preserve one decimal of precision
+        (e.g., 12.3), a value of 2 will preserve two decimals of precision
+        (e.g., 12.34), etc.  Any integer in the range 0 - 22 may be given.
+<p>
+    <b>maxvalues(</b><i>#</i><b>)</b> allows you to limit the number of discrete values that will
+        be written for a variable.  If a variable, e.g., each respondent's
+        ID, has more than <i>#</i> discrete values, only the 5 smallest and 5
+        largest values will be written.  A row will also be written that
+        gives the range of values omitted from the display along with the
+        frequency and percent of the omitted values.
+<p>
+        The default value of <i>#</i> is 10.  Any integer may be given, including
+        numbers smaller than 10.  However, at minimum, the 5 smallest and 5
+        largest values will always be printed, or all the values will be
+        printed if the variable has fewer than 10 values.
+<p>
+        You can override maxvalues for one or more variables by defining a
+        variable characteristic.  See <i>Notes</i> below.
+<p>
+    <b>summarize(</b><i>#</i><b>)</b> allows you to select a lower limit above which the
+        frequency, mean, sd, min, and max are printed instead of the discrete
+        values.  This option overrides maxvalues.
+<p>
+        You can override summarize for one or more variables by defining a
+        variable characteristic.  See <i>Notes</i> below.
+<p>
+    <b>stringmax(</b><i>#</i><b>)</b> In Stata/SE a string value can be up to 244 characters long.
+        By default, the entire string value will be written to the codebook.
+        You can shorten long strings to <i>#</i> characters using this option.
+        Leading and trailing blanks will be removed, then the first <i>#</i>
+        characters will be written to the html file.
+<p>
+    <b>notes</b> lists note1, note2, and note3 attached to the variables and note1
+        attached to the dataset (see help notes).
+<p>
+        By default, only the variable and dataset labels are written, and
+        labels are limited to 80 characters in Stata/SE. Optionally, you may
+        create notes for variables, e.g., containing the full text of the
+        question, skip instructions, or supplemental instructions to
+        interviewers.  You may also create a note for the dataset, e.g.,
+        describing the survey or outlining the contents of a section.
+<p>
+        Notes can be up to 67,784 characters; however, you may want to limit
+        your note length for readability.  Notes should not contain double
+        quotes, but single quotes can be used.  Notes may contain standard
+        html code, such as &lt;br&gt; to start a new line.
+<p>
+        You may define up to three notes for each variable and one note for
+        the dataset.  Stata numbers notes by the order that the note command
+        appears in your do-file.  The first note for a given variable becomes
+        "note1", the second "note2", and the third "note3".  These notes are
+        handled differently as described below.
+<p>
+        If note1 exists for a variable, it will be written in place of the
+        variable label.  If note1 exists for the dataset, it will be written
+        after the dataset label.  Note1 is written without bold or italics.
+<p>
+        You may also create note2 for variables, e.g., containing the skip
+        conditions for the variable. If note2 exists, it will be written in a
+        separate row above note1.  Note2 is written in bold and italics.
+<p>
+        You may also create note3 for variables, e.g., containing
+        instructions to interviewers. If note3 exists, it will be written in
+        a separate row above note2.  Note3 is written in bold.
+<p>
+    <b>type</b> writes the Stata data storage type (byte, int, float, long, double,
+        or str#).  By default, whether the variable is numeric or character
+        (string) is written.
+<p>
+    <b>pagebreak(</b><i>#</i><b>)</b> Use this option if you intend to print the codebook and
+        don't want the table for any variable split across pages.  It inserts
+        a page break into the html file after <i>#</i> lines (or fewer) have been
+        written.  First, it checks whether the entire table for the next
+        variable will fit on the page within the line limit of <i>#</i>.  If not, it
+        inserts a page break, moving the next variable's table to the
+        following page.  The default is no page breaks, which minimizes paper
+        use, but is likely to result in pages breaking in the middle of a
+        table.  A page break is automatically inserted after the data label
+        and data note in order to treat that information as a separate title
+        page.
+<p>
+        The number of lines per page that you should choose depends on many
+        factors, including your printer type, browser version, and the font
+        size and type you have set in your browser.  This command uses Times
+        New Roman, which is a variable-spaced font. It does not specify a
+        size for the font. (In Mozilla Firefox you can adjust the font size
+        in Tools, Options, Content. In Internet Explorer, use View, Text
+        Size.)
+<p>
+        The number of lines also is affected by the lengths of your variable
+        notes, variable labels, and value labels. This command assumes 100
+        characters per line for each variable note and 60 for each variable
+        and value label, and it adjusts the estimated lines per page
+        accordingly.
+<p>
+        There's no guarantee that this option will prevent every table from
+        splitting across pages.  With a little experimenting, you should find
+        a <i>#</i> that works for almost all variables and still keeps the number of
+        printed pages reasonably low.
+<p>
+    <b>combine(</b><i>var1 var2</i><b>)</b> allows you to combine two variables temporarily into a
+        single variable and obtain frequencies of the combination. An example
+        is year and month of interview.
+<p>
+    <b>upper</b> will print variable names in upper case.  The default is lower
+        case.
+<p>
+    <b>vallabel</b> will print the value in the space used for the value label if no
+        label has been defined.  The default is a blank space.
+<p>
+<b><u>Notes</u></b>
+<p>
+    You can define a variable characteristic called <i>freq</i> for one or more
+    variables with the value <i>Yes</i>.  This tells cb2html to print all values of
+    that variable regardless of the settings for maxvalues() or summarize().
+    You can define the characteristic like this:
+<p>
+      <b>char def var1[freq] Yes</b>
+<p>
+    This command requires Stata 10.  It produces W3C valid HTML 4.01
+    Transitional code, which displays properly in Mozilla Firefox, and
+    Internet Explorer.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. cb2html using mycodebook</b>
+<p>
+    <b>. cb2html using mycodebook, title(Codebook for My Project)</b>
+<p>
+    <b>. cb2html vj89-vm92a v334_* using mycodebook, replace</b>
+<p>
+    <b>. cb2html using mycodebook, maxvalues(20) pprecision(2) fprecision(3)</b>
+<p>
+    <b>. cb2html using mycodebook, summarize(20) sprecision(3)</b>
+<p>
+    <b>. cb2html using "c:\My Project\mycodebook.html" pagebreak(54) upper</b>
+<p>
+    <b>. cb2html using mycodebook, notes type stringmax(20) replace</b>
+<p>
+    <b>. cb2html using mycodebook, combine(int_year int_month)</b>
+<p>
+<p>
+<p>
+<p>
+<b><u>Reference</u></b>
+<p>
+    I incorporated many coding suggestions from Kit Baum, Nick Cox, and Dan
+    Blanchette, I benefitted greatly from Ed Van Duinen's advice on web
+    programming, and I added many options suggested by programmers too
+    numerous to mention at The Carolina Population Center and elsewhere.  Any
+    problems you find in this program are mine alone.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Phil Bardsley, Carolina Population Center, University of North Carolina -
+    Chapel Hill, USA. Contact phil_bardsley@unc.edu if you observe any
+    problems.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] codebook, [R] notes, [R] label, [R] inspect, [R] labelbook,</b>
+             <b>[R] describe</b>
+<p>
+</pre>

@@ -1,0 +1,84 @@
+<pre>
+.-
+help for ^ciform^                                                  (Roger Newso
+&gt; n)
+.-
+<p>
+Formatting numeric variables as a confidence interval for tables in documents
+-----------------------------------------------------------------------------
+<p>
+        ^ciform^     [varlist] [^if^ exp] [^in^ range] , ^n^ewvars(newvarlist)
+                       [ ^f^ormat(format) ]
+<p>
+<p>
+Description
+-----------
+<p>
+^ciform^ takes, as input, a list of 3 numeric variables, assumed to contain
+estimates, lower confidence limits and upper confidence limits, respectively,
+It creates, as output, a list of 3 new string variables, containing the 3
+numeric input variables formatted as a confidence interval. These new variables
+are intended to be output using ^outsheet^ and imported into word processors or
+spreadsheets (or even TeX) to be incorporated into tables. ^ciform^ is intended
+for use after ^parmest^ (STB-49, May 1999), which saves a model fit as a new
+data set, with 1 observation per parameter of the most recently fitted model, a
+&gt; nd
+variables containing point estimates and confidence limits. If ^varlist^ is
+absent, then ^ciform^ searches for variables called ^estimate^,
+^min$S_level^ and ^max$S_level^ (as created by ^parmest^), where ^S_level^ is 
+the global macro containing the current confidence level.
+<p>
+<p>
+Options for use with ^ciform^
+--------------------------
+<p>
+^newvars^ specifies a list of 3 new string variables, containing the input
+    variables formatted as a confidence interval, with commas and parentheses
+    added to the lower and upper limits as appropriate.
+<p>
+^format^ specifies the format to be used for the confidence interval. If
+^format^ is not specified, then ^ciform^ uses the format of the first variable 
+    in ^varlist^.
+<p>
+<p>
+Remarks
+-------
+<p>
+^ciform^ is designed to be used after ^parmest^ and before
+^outsheet,noquote^ when creating tables of confidence intervals in a document. 
+It saves the labour of manually reformatting the estimates and confidence limit
+&gt; s 
+and keying in the commas and parentheses one by one inside a word processor 
+(or even a text editor in preparation for input to TeX). The output worksheet 
+is typically a tab-delimited text file. The user can cut and paste this output 
+into a word processor, or replace all the tabs with ampersands and all the 
+^&lt;newline&gt;^s with ^\cr&lt;newline&gt;^ and then cut and paste the result into a TeX 
+table.
+<p>
+<p>
+Examples
+--------
+<p>
+ . ^regress mpg foreign weight,robust^
+ . ^parmest,label^
+ . ^ciform,f(%8.2f) n(beta betamin betamax)^
+ . ^outsheet parm label beta betamin betamax using table1.txt,noquote replace^
+<p>
+<p>
+ . ^ciform or ormin ormax,ne(sor sormin sormax) fo(%8.2f)^
+<p>
+<p>
+Author
+------
+<p>
+Roger Newson, Guy's, King's and St Thomas' School of Medicine, London, UK.
+Email: ^roger.newson@@kcl.ac.uk^
+<p>
+<p>
+Also see
+--------
+<p>
+Manual:   ^[R] outsheet^
+STB:      dm65 (STB-49)
+On-line:  help for @outsheet@, help for @parmest@ if installed
+</pre>

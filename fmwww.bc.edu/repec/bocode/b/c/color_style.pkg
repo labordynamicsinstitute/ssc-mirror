@@ -1,0 +1,28 @@
+d 'COLOR_STYLE': module to change the colors in the current scheme
+d
+d   color_style is a command that can be used to easily change the
+d colors of the current scheme. It is a wrapper for Ben Jann's
+d Colorpalette and grstyle commands. 
+d
+d KW: graphics
+d KW: schemes
+d KW: color style
+d KW: graph style
+d
+d Requires: Stata version 14 and palettes, colrspace, grstyle from SSC (q.v.)
+d
+d Distribution-Date: 20220501
+d
+d Author: Fernando Rios-Avila, Levy Economics Institute of Bard College
+d Support: email friosavi@@levy.org
+d
+f color_style.ado
+f color_style.sthlp
+f color_brewer.ado
+f color_brewer9.ado
+f ../f/font_style.ado
+f ../g/graphquery.ado
+f ../s/scheme-black.scheme
+f ../s/scheme-white.scheme
+f ../s/scheme-black2.scheme
+f ../s/scheme-white2.scheme

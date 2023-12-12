@@ -1,0 +1,36 @@
+d 'CWMGLM': module to estimate Cluster Weighted Models (CWM)
+d
+d  cwmglm is a flexible package that allows to estimate Cluster
+d Weighted Models (finite mixture of regression with random
+d covariates) using the EM algorithm. In this program, are also
+d included parsimonious models of Gaussian distributions based on
+d the eigenvalue decomposition of the variance-covariance matrix
+d (Celeux and Govaert, 1995). cwmglm is also able to estimate
+d finite mixtures of regressions and mixture of distributions. 
+d
+d KW: finite mixture models
+d KW: regression
+d KW: cluster
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20221203
+d
+d Author: Daniele Spinelli , University of Milano-Bicocca
+d Support: email daniele.spinelli@@unimib.it
+d
+d Author: Salvatore Ingrassia  , Università degli Studi di Catania
+d Support: email s.ingrassia@@unict.it
+d
+d Author: Giorgio Vittadini , University of Milano-Bicocca
+d Support: email giorgio.vittadini@@unimib.it
+d
+f cwmglm.ado
+f cwmbootstrap.ado
+f cwmglm_predict.ado
+f cwmglm.sthlp
+f cwmglm_postestimation.sthlp
+f ../l/lcwmglm.mlib
+f cwmglm_examples.do
+f ../m/multinorm.dta
+f ../s/students.dta

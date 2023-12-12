@@ -1,0 +1,4 @@
+*! version 1.0.0  04feb2022
+sequence 6
+label resource "IE magenta"
+set rgb "202 114 148"

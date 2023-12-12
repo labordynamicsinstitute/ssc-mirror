@@ -1,0 +1,1072 @@
+<pre>
+<b>help cmp</b>
+-------------------------------------------------------------------------------
+<b><u>Title</u></b>
+<p>
+    Conditional (recursive) mixed process estimator with multilevel random
+    effects and coefficients
+<p>
+<b><u>Syntax</u></b>
+<p>
+    <b>cmp setup</b>
+<p>
+    - or -
+<p>
+    <b>cmp</b> <i>eq</i> [<i>eq ...</i>] [<i>if</i>] [<i>in</i>] [<i>weight</i>] <b>,</b> <b><u>ind</u></b><b>icators</b>(<i>exp</i> [<i>exp</i><i> ...</i>]) [<b>level(</b><i>#</i><b>)</b>
+        <b><u>qui</u></b><b>etly</b> <b><u>nolr</u></b><b>test</b>
+        <b><u>red</u></b><b>raws(</b># [# ...] , [<b>type(</b><i>halton </i>|<i> hammersley </i>|<i> ghalton </i>|<i> random</i><b>)</b>
+        <b><u>anti</u></b><b>thetics</b> <b><u>scr</u></b><b>amble</b> <b><u>st</u></b><b>eps(</b><i>#</i><b>)</b>]<b>)</b> <b>lf</b>
+        <b><u>ghkd</u></b><b>raws(</b>[#]<b> , </b>[<b>type(</b><i>halton </i>|<i> hammersley </i>|<i> ghalton </i>|<i> random</i><b>)</b>
+        <b><u>anti</u></b><b>thetics</b> <b><u>scr</u></b><b>amble</b>]<b>)</b> <b><u>nodr</u></b><b>op</b> <b><u>inter</u></b><b>active</b> <b>init(</b><i>vector</i><b>)</b> <b><u>noest</u></b><b>imate</b>
+        <b><u>cov</u></b><b>ariance</b>(<i>covopt</i> [<i>covopt</i> ...]) <b><u>struc</u></b><b>tural</b> <b><u>rev</u></b><b>erse</b> <b><u>ps</u></b><b>ampling(</b><i># #</i><b>)</b>
+        <i>ml_opts</i> <b>svy</b> <i>svy_opts</i>]
+<p>
+        where <i>covopt</i> is
+<p>
+            <b><u>un</u></b><b>structured | </b><b><u>ex</u></b><b>changeable | </b><b><u>ind</u></b><b>ependent</b>
+<p>
+        and <i>eq</i> is
+<p>
+            [<i>fe_equation</i>] [<b>||</b> <i>re_equation</i>] [<b>||</b> <i>re_equation</i> ...]
+<p>
+        Each <i>fe_equation</i> is an equation to be estimated, defined largely
+            according to the ml model <i>eq</i> syntax. That is, <i>fe_equation</i> is
+            enclosed in parentheses, optionally prefixed with a name for the
+            equation:
+<p>
+            <b>(</b> [<i>eqname</i><b>:</b>] <i>varname_y</i> [<i>varname_y2</i>] <b>=</b> [<i>indepvars</i>] [<b>,</b> <b><u>nocons</u></b><b>tant</b>
+            <b><u>off</u></b><b>set(</b><i>varname_o</i><b>)</b> <b><u>exp</u></b><b>osure(</b><i>varname_e</i><b>)</b> <b><u>trunc</u></b><b>points(</b><i>exp exp</i><b>)</b> <b>iia</b>] <b>)</b>
+<p>
+        <i>indepvars</i> may include factor variables; see fvvarlist.
+<p>
+        <i>varname_y2</i> is included only for interval-censored data, in a syntax
+            analogous to that of intreg. <b><u>trunc</u></b><b>points(</b><i>exp exp</i><b>)</b> is allowed for
+            equations involving all model types except mulitnomial and
+            rank-ordered probit. <b>iia</b> is meaningful only for multinomial
+            probit models without alternative-specific regressors.
+<p>
+        Each <i>exp</i> in the required <b><u>ind</u></b><b>icators()</b> option is an expression that
+            evaluates to a <b>cmp</b> <i>indicator variable</i>, which communicates
+            required observation-level information about the dependent
+            variable(s) in the corresponding equation, and can be a constant,
+            a variable name, or a complex mathematical expression. It can
+            contain spaces or parentheses if it is double-quoted.  Each <i>exp</i>
+            must evaluate to 0, 1, 2, 3, 4, 5, 6, 7, 8, or 9, potentially
+            varying by observation. For a multinomial probit equation group
+            with alternative-specific regressors, the corresponding indicator
+            expressions should all evaluate to 0's and 6's, and should be
+            enclosed in an additional pair of parentheses. The same goes for
+            rank-ordered probit groups, except with 9's instead of 6's.
+<p>
+        In random effect/coefficent models, each <i>re_equation</i> specifies the
+            effects, potentially at multiple levels, according to the syntax
+<p>
+            <i>levelvar</i><b>:</b> [<i>varlist</i>] [<b>,</b> <b><u>nocons</u></b><b>tant</b> <b><u>cov</u></b><b>ariance</b>(<i>covopt</i>)] [<i>weight</i>]
+<p>
+        where <i>covopt</i> is as defined above. In these models, the <b><u>red</u></b><b>raws()</b>
+            option is mandatory.
+<p>
+    <b>cmp</b> may be prefixed with svy ... :.
+<p>
+    <b>pweight</b>s, <b>fweight</b>s, <b>aweight</b>s, and <b>iweight</b>s are allowed at all levels; see
+        help weights. Group-level, weights, specificed in the <i>re_equation</i>
+        syntax above, should be constant within groups. Weights for a given
+        level need be specified in just one equation.
+<p>
+    The syntax of predict following <b>cmp</b> is
+<p>
+    <b>predict</b> [<i>type</i>] {<i>newvarname</i>|<i>stub*</i>|<i>newvarlist</i>} [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b>
+        <i>statistic</i> <b><u>eq</u></b><b>uation(</b><i>eqno</i>[<b>,</b><i>eqno</i>]<b>)</b> <b><u>o</u></b><b>utcome(</b><i>outcome</i><b>)</b> <b><u>nooff</u></b><b>set</b>]
+<p>
+        where <i>statistic</i> is <b>xb</b>, <b>pr</b>, <b>stdp</b>, <b>stddp</b>, <b>lnl</b>, <b><u>sc</u></b><b>ores</b>, <b><u>re</u></b><b>siduals</b>, <b>e(</b><i>a</i>
+            <i>b</i><b>)</b>, or <b>ystar(</b><i>a b</i><b>)</b>; and <i>a</i> and <i>b</i> may be numbers or variables; <i>a</i>
+            missing (<i>a</i> <u>&gt;</u> <b>.</b>) means minus infinity, and <i>b</i> missing (<i>b</i> <u>&gt;</u> <b>.</b>) means
+            plus infinity; see missing.
+<p>
+    <b>cmp</b> shares features of all estimation commands; see help estcom.
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>cmp</b> fits a large family of multi-equation, multi-level, conditional
+    recursive mixed-process estimators. Those adjectives are defined as
+    follows:
+<p>
+    * "Multi-equation" means that it can fit Seemingly Unrelated (SUR) and
+      instrumental variables (IV) systems.
+<p>
+    * "Multi-level" means that random coefficients and effects (intercepts) can
+      be modelled at various levels in hierarchical fashion, the classic
+      example being a model of education outcomes with unobserved school and
+      class effects. Since the models can also be multi-equation, random
+      effects at a given level are allowed by default to be correlated across
+      equations. E.g., school and class effects may be correlated across
+      outcomes such as math and readings scores. Effects at different levels,
+      however, are assumed uncorrelated with each other and with the
+      observation-level errors.
+<p>
+    * "Mixed process" means that different equations can have different kinds
+      of dependent variables (response types). The choices, all generalized
+      linear models with a Gaussian error distribution, are: continuous and
+      unbounded (the classical linear regression model), tobit (left-, right-,
+      or bi-censored), interval-censored, probit, ordered probit, multinomial
+      probit, and rank-ordered probit. Pre-censoring truncation can be modeled
+      for most response types. A dependent variable in one equation can appear
+      on the right side of another equation.
+<p>
+    * "Recursive" means, however, that <b>cmp</b> can only fit sets of equations with
+      clearly defined stages, not ones with simultaneous causation. <i>A</i> and <i>B</i> can
+      be modeled determinants of <i>C</i> and <i>C</i> a determinant of <i>D</i>--but <i>D</i> cannot be a
+      modeled determinant of <i>A</i>, <i>B</i>, or <i>C</i>.
+<p>
+    * "Conditional" means that the model can vary by observation. An equation
+      can be dropped for observations for which it is not relevant--if, say, a
+      worker retraining program is not offered in a city then the determinants
+      of uptake cannot be modeled there. The type of a dependent variable can
+      even vary by observation.
+<p>
+    Broadly, <b>cmp</b> is appropriate for two classes of models: 1) those in which
+    a truly recursive data-generating process is posited; and 2) those in
+    which there is simultaneity, but instruments allow the construction of a
+    recursive set of equations, as in two-stage least squares, that can be
+    used to consistently estimate structural parameters in the final stage.
+    In the first case, <b>cmp</b> is a full-information maximum likelihood (FIML)
+    estimator, and all estimated parameters are structural. In the latter, it
+    is a limited-information (LIML) estimator, and only the final stage's
+    coefficients are structural, the rest being reduced-form parameters. What
+    matters for the validity of <b>cmp</b> is that the <i>system of equations</i> is
+    recursive, whether or not the model is.
+<p>
+    <b>cmp</b>'s modeling framework embraces those of the official Stata commands
+    probit, ivprobit, treatreg, biprobit, tetrachoric, oprobit, mprobit,
+    asmprobit, asroprobit, tobit, ivtobit, cnreg, intreg, truncreg, heckman,
+    heckprob, xtreg, xtprobit, xttobit, xtintreg, in principle even regress,
+    and sureg, as well as the user-written ssm, polychoric, triprobit,
+    mvprobit, bitobit, mvtobit, oheckman, switch_probit, and (in its
+    "non-endogenous" mode) bioprobit. It goes beyond them in several ways.
+    Thanks to the flexibility of ml, on which it is built, it accepts
+    coefficient constraints as well as all weight types, vce types (robust,
+    cluster, linearized, etc.), and <b>svy</b> settings. And it offers more
+    flexibility in model construction. For example, one can regress a
+    continuous variable on two endogenous variables, one binary and the other
+    sometimes left-censored, instrumenting each with additional variables.
+    And <b>cmp</b> usually allows the model to vary by observations.  Equations can
+    have different samples, overlapping or non-overlapping. Heckman selection
+    modeling can be incorporated into a wide variety of models through
+    auxilliary probit equations. In some cases, the gain is consistent
+    estimation where it was difficult before. Sometimes the gain is in
+    efficiency.  For example if <i>C</i> is continuous, <i>B</i> is a
+    sometimes-left-censored determinant of <i>C</i>, and <i>A</i> is an instrument, then
+    the effect of <i>B</i> on <i>C</i> can be consistently estimated with 2SLS (Kelejian
+    1971). However, a <b>cmp</b> estimate that uses the information that <i>B</i> is
+    censored will be more efficient, based as it is on a more accurate model.
+<p>
+    As a matter of algorithm, <b>cmp</b> is an SUR (seemingly unrelated regressions)
+    estimator. It treats the equations as independent from each other except
+    for modeling their underlying errors as jointly normally distributed.
+    Mathematically, the likelihood it computes is conditioned on observing
+    <i>all</i> right-side variables, including those that also appear on the left
+    side of equations.  However, it can actually fit a much larger class of
+    models. Maximum likelihood (ML) SUR estimators, including <b>cmp</b>, are
+    appropriate for many simultaneous equation models, in which endogenous
+    variables appear on the right side of structural equations as well as the
+    left. Models of this kind for which ML SUR is consistent must satisfy two
+    criteria:
+<p>
+        1) They are recursive. In other words, the equations can be arranged
+        so that the matrix of coefficients of the dependent variables in each
+        others' equations is triangular. As emphasized above, this means the
+        models have clearly defined stages, though there can be more than one
+        equation per stage.
+<p>
+        2) They are "fully oberved." Dependent variables in one stage enter
+        subsequent stages only as observed. Returning to the example in the
+        first paragraph, if <i>C</i> is a categorical variable modeled as ordered
+        probit, then <i>C</i>, not the latent variable underlying it, call it <i>C*</i>,
+        must figure in the model for <i>D</i>.
+<p>
+    As an illustration of the ideas here, some Stata estimation commands have
+    wider applicability than many realize. <b>sureg (X=Y) (Y=Z), isure</b> typically
+    matches <b>ivregress 2sls X (Y=Z)</b> exactly even though the documentation does
+    not describe sureg as an instrumental variables (IV) estimator.
+    (Iterated SUR is not a true ML estimator, but it converges to the same
+    solution as ML-based SUR, as implemented, for example, in the
+    demonstration command mysureg. See Pagan (1979) on the LIML-iterated SUR
+    connection.) And <b>biprobit (X=Y) (Y=Z)</b> will consistently estimate an IV
+    model in which <i>X</i> and <i>Y</i> are binary.
+<p>
+    To inform <b>cmp</b> about the natures of the dependent variables and about
+    which equations apply to which observations, the user must include the
+    <b><u>ind</u></b><b>icators()</b> option after the comma in the <b>cmp</b> command line. This must
+    contain one expression for each equation. The expression can be a
+    constant, a variable name, or a more complicated mathematical formula.
+    Formulas that contain spaces or parentheses should be enclosed in quotes.
+    For each observation, each expression must evaluate to one of the
+    following codes, with the meanings shown:
+<p>
+        0 = observation is not in this equation's sample
+        1 = equation is "continuous" for this observation, i.e., has the OLS
+        likelihood or is an uncensored observation in a tobit equation
+        2 = observation is left-censored for this (tobit) equation at the
+        value stored in the dependent variable
+        3 = observation is right-censored at the value stored in the
+        dependent variable
+        4 = equation is probit for this observation
+        5 = equation is ordered probit for this observation
+        6 = equation is multinomial probit for this observation
+        7 = equation is interval-censored for this observation
+        <i>8 = equation is truncated on the left and/or right</i> (obsolete because
+        truncation is now a general modeling feature)
+        9 = equation is rank-ordered probit for this observation
+<p>
+    For clarity, users can execute the <b>cmp setup</b> subcommand, which defines
+    global macros that can then be used in <b>cmp</b> command lines:
+<p>
+        $cmp_out = 0
+        $cmp_cont = 1
+        $cmp_left = 2
+        $cmp_right = 3
+        $cmp_probit = 4
+        $cmp_oprobit = 5
+        $cmp_mprobit = 6
+        $cmp_int = 7
+        $cmp_trunc = 8
+        $cmp_roprobit = 9
+<p>
+    Since <b>cmp</b> is a Maximum Likelihood estimator built on ml, equations are
+    specified according to the <b>ml model</b> syntax. This means that for
+    instrumented regressions, <b>cmp</b> differs from ivregress, ivprobit, ivtobit,
+    and similar commands in not automatically including exogenous regressors
+    (included instruments) from the second stage in the first stage. So you
+    must arrange for this yourself. For example, <b>ivreg y x1 (x2=z)</b>
+    corresponds to <b>cmp (y=x1 x2) (x2=x1 z), ind($cmp_cont $cmp_cont)</b>.
+<p>
+    In order to model random coefficients and effects, <b>cmp</b> borrows syntax
+    from xtmixed. It is best explained with examples.  This <i>eq</i> specifies an
+    equation with two levels of random effects corresponding to groups
+    defined by the variables <b>school</b> and <b>class</b>:
+<p>
+        (math = age || school: || class:)
+<p>
+    (<b>school</b>, coming first, is understood to be "above" <b>class</b> in the
+    hierarchy.) At a given level, random effects can be assumed present in
+    some equations and not others. Those in more than one equation at a given
+    level are assumed to be (potentially) correlated across equations (an
+    assumption that can be overridden through constraints or the <b><u>cov</u></b><b>ariance()</b>
+    option). This specifies a school effect only for math but not reading
+    scores, and potentially correlated class effects for both:
+<p>
+        (math = age || school: || class:) (reading = age || class:)
+<p>
+    This adds random coefficients on age at the class level in both
+    equations. The two new coefficients are potentially correlated with each
+    other and with the random intercepts at the same level:
+<p>
+        (math = age || school: || class: age) (reading = age || class: age)
+<p>
+    Weights of various types may be specified at each level. These should be
+    defined by variables or expressions that are constant within each group
+    of the given level. Within a given group, <b>aweight</b>s and <b>pweight</b>s are
+    rescaled to sum to the number of groups in the next level down (or number
+    of observations if it is the bottom level). <b>pweight</b>s imply <b>vce(cluster</b>
+    <i>groupvar</i><b>)</b> where <i>groupvar</i> defines the highest level in the hierarchy
+    having <b>pweight</b>s. <b>iweight</b>s and <b>fweights</b>s are not rescaled; the latter
+    affect the reported sample size. Since weights must be the same across
+    equations, they need be specified only once for each level. So these are
+    equivalent:
+<p>
+        (math = age || school: || class: [pw=weightvar1]) (reading = age ||
+        class:)
+        (math = age || school: || class: [pw=weightvar1]) (reading = age ||
+        class: [pw=weightvar1])
+<p>
+    and the contradiction here would cause an error:
+<p>
+        (math = age || school: || class: [pw=weightvar1]) (reading = age ||
+        class: [pw=weightvar2])
+<p>
+    Unlike xtreg, xtprobit, xttobit, xtintreg, xtmixed, and gllamm, which use
+    quadrature to integrate likelihoods over the unobserved random effects
+    (see <b>[R] xtmixed</b>), <b>cmp</b> uses simulation. This involves making many draws
+    from the hypothesized normal distributions of the effects, computing the
+    implied likelihood for each set of draws, then averaging (Train 2009;
+    Greene 2011, chap 15).  To govern the simulation, random effects models
+    in <b>cmp</b> must include the <b><u>red</u></b><b>raws()</b> option. This sets the number of draws
+    per observation at each level, the type of sequence (Halton, Hammersley,
+    generalized Halton, pseudorandom), whether antithetics are also drawn,
+    and whether, in the Halton and Hammersley caes, sequences should be
+    scrambled using the square-root scrambler. (See Gates 2006 for more on
+    all these concepts except scrambling, for which see Kolenikov 2012.) For
+    (generalized) Halton and Hammersley sequences, it is preferable to make
+    the number of draws prime, to insure more variable coverage of the
+    distribution from observation to observation, making coverage more
+    uniform overall. Increasing the number of draws increases precision at
+    the expense of time. In a bid for speed <b>cmp</b> can begin by estimating with
+    just 1 draw per observation and random effect (plus the antithetics if
+    specified). It can then use the result of this rough search as the
+    starting point for an estimate with more draws, then repeat, multiplying
+    by a fixed amount each time until reaching the specified number of draws.
+    The <b><u>st</u></b><b>eps(</b><i>#</i><b>)</b> suboption of <b><u>red</u></b><b>raws()</b> can override the default number of
+    steps, which is just 1. <b>redraws(50 50, steps(1))</b> would specify immediate
+    estimation with the full 50 draws per observation in a three-level model
+    (with two levels of random effects). See options below for more.
+<p>
+    Estimation problems with observations that are censored in three or more
+    equations, such as a trivariate probit, require calculation of cumulative
+    joint normal distributions of dimension three or higher. This is a
+    non-trivial problem. The preferred technique again involves simulation:
+    the method of Geweke, Hajivassiliou, and Keane (GHK). (Greene 2011;
+    Cappellari and Jenkins 2003; Gates 2006). <b>cmp</b> accesses the algorithm
+    through the separately available Mata function ghk2(), which must be
+    installed for <b>cmp</b> to work.  Modeled on the built-in ghk() and ghkfast(),
+    ghk2() gives users choices about the length and nature of the sequences
+    generated for the simulation, which choices <b>cmp</b> largely passes on through
+    the optional <b><u>ghkd</u></b><b>raws()</b> option, which includes <b>type()</b>, <b><u>anti</u></b><b>thetics</b>,
+    <b><u>scr</u></b><b>amble</b> suboptions. See options below for more.
+<p>
+    For both domains of simulation--random coefficients/effects and
+    cumulative normal distributions estimated with the GHK algorithm---each
+    observation or group gets its own sequence of draws. Thus changing the
+    order of the observations in the data set will change the estimation
+    results--one hopes only slightly.  If using pseudorandom sequences
+    (<b>ghktype(random)</b>) or generalized Halton ones (<b>ghktye(ghalton)</b>), the state
+    of the Stata random number generator also slightly influences the
+    results. For exact reproducibility of your results with these sequences,
+    initialize the seed to some chosen value with the set seed command each
+    time before running <b>cmp</b>. Estimations that require simulation can run much
+    more slowly than those that do not.
+<p>
+    <b>cmp</b> starts by fitting each equation separately in order to obtain a good
+    starting point for the full model fit.  Sometimes in this preparatory
+    step, convergence difficulties make a reported parameter covariance
+    matrix singular, yielding missing standard errors for some regressors. Or
+    variables are found to be collinear. In order to maximize the chance of
+    convergence, <b>cmp</b> ordinarily drops such regressors from the equations in
+    which they cause trouble, reruns the single-equation fit, and then leaves
+    them out for the full model too. The <b><u>nodr</u></b><b>op</b> option prevents this
+    behavior.
+<p>
+<b><u>On estimation with interval-censored or truncated equations</u></b>
+<p>
+    For equations with interval-censored observations, list two variables
+    before the <b>=</b>, somewhat following the syntax of intreg. For example, <b>cmp</b>
+    <b>(y1 y2 = x1 x2), ind($cmp_int)</b> indicates that the dependent variable is
+    censored to intervals whose lower bounds are in y1 and upper bounds are
+    in y2. Missing values in y1 are treated as -infinity and those in y2 are
+    treated as +infinity. For observations in which y1 and y2 coincide, there
+    is no censoring, and the likelihood is the same as for <b>$cmp_cont</b>.
+<p>
+    For equations with truncated distributions--which can be any model type
+    besides multinomial and rank-ordered probit--use the <b><u>trunc</u></b><b>points(</b><i>exp exp</i><b>)</b>
+    option within the specification for the given equation to provide
+    truncation points. Like indicator expressions, the truncation points can
+    be constants, expressions, or variable names, with missing values
+    interpreted as above. Observations in which the observed value lies
+    outside the truncation range are automatically dropped for that equation.
+    An example is below.
+<p>
+<a name="mprobit"></a><b><u>On estimation with multinomial probit equations</u></b>
+<p>
+    Multinomial probits can be specified with two different syntaxes, roughly
+    corresponding to the Stata commands mprobit and asmprobit. In the first
+    syntax, the user lists a single equation, just as for other dependent
+    variable types, and puts a 6 (<b>$cmp_mprobit</b>) in the <b><u>ind</u></b><b>icators()</b> list. The
+    dependent variable holds the choice made in each case. Like mprobit, <b>cmp</b>
+    treats all regressors as determinants of choice for all alternatives. In
+    particular, it expands the specified equation to a group with one
+    "utility" equation for each possible choice. All equations in the group
+    include all regressors, except for the first, which has none. This one
+    corresponds to the lowest value of the dependent variable, which is taken
+    as the base alternative. The next, corresponding to the second-lowest
+    value, is the "scale alternative," meaning that to normalize results, the
+    variance of its error term is fixed. (The value it is fixed at depends on
+    whether the <b><u>struc</u></b><b>tural</b> option is invoked, on which see below.) In the
+    first syntax, the single <i>eq</i> can contain an <b>iia</b> option after the comma so
+    that <b>cmp</b>, like mprobit, will impose the Independence of Irrelevant
+    Alternatives assumption. I.e., <b>cmp</b> will assume that errors in the utility
+    equations are uncorrelated and have unit variance.
+<p>
+    Such models, ones without exclusion restrictions and without the IIA
+    assumption, are formally identified as long as at least one regressor
+    varies over alternatives (Keane 1992). However, Keane emphasizes that
+    fits for such models tend to be unstable if there are no exclusion
+    restrictions. There are two ways to impose exclusion restrictions with
+    <b>cmp</b>. First, as with mprobit, you can use constraints.
+<p>
+    Second, you can use <b>cmp</b>'s other multinomial probit syntax. In this
+    "alternative-specific" syntax, you list one equation in the <b>cmp</b> command
+    line for each alternative, including the base alternative. Different
+    equations may include different regressors. Unlike asmprobit, <b>cmp</b> does
+    not force regressors that appear in more than one equation to have the
+    same coefficient across alternatives, although again this restriction can
+    be imposed through constraints. When using the alternative-specific
+    syntax, the dependent variables listed should be a set of <i>dummies</i>, as can
+    be generated with xi, noomit from the underlying choice variable. The
+    first equation is always treated as the base alternative, so here you can
+    control which alternative is the base alternative, by reordering the
+    equations. In general, regressors that appear in all other equations
+    should be excluded from the base alternative. Otherwise, unless a
+    constraint is imposed to reduce the degrees of freedom, the model will
+    not be identified. (<b>cmp</b> automatically excludes the constant from the base
+    alternative equation.) Variables that are specific to the base
+    alternative, however, or to a strict subset of alternatives, can be
+    included in the base alternative equation.  In the second syntax, the IIA
+    is not assumed, nor available through an option. It can still be imposed
+    through constraints.
+<p>
+    To specify an alternative-specific multinomial probit group, include
+    expressions in the <b><u>ind</u></b><b>icators()</b> that evaluate to 0 or 6 (<b>$cmp_out</b> or
+    <b>$cmp_mprobit</b>) for each equation (0 indicating that the choice is not
+    available for given observations). You must enclose the whole list in an
+    additional set of parentheses. Note that unlike with asmprobit, there
+    should be still be one row in the data set per case, not per case and
+    alternative. So instead of variables that vary by alternative, there must
+    be a version of that variable for each alternative--not a single travel
+    time variable that varies by mode of travel, but an air travel time
+    variable, a bus travel time variable, and so on. An alternative-specific
+    multinomial example is also below.
+<p>
+    In a multinomial probit model with J choices, each possible choice has
+    its own structural equation, including an error term. These error terms
+    have some covariance structure. It is impossible, however, to estimate
+    all the entries of the JxJ covariance matrix (Train 2003; Long and Freese
+    (2006)). What is used in the computation of the likelihood is the
+    (J-1)x(J-1) covariance matrix of the differences of the
+    non-base-alternative errors from the base-alternative error. So by
+    default, <b>cmp</b>, much like asmprobit, interprets the sigma and rho
+    parameters relating to these equations as characterizing these
+    <i>differenced</i> errors. To eliminate an excessive degree of scaling freedom,
+    it constrains the error variance of the first non-base-alternative
+    equation (the "scaling alternative") to 2, which it would be anyway if
+    the errors for the first two structural equations were i.i.d. standard
+    normal (so that their difference has variance 2).
+<p>
+    The disadvantage of this parameterization is that it is hard to think
+    about if you want to impose additional constraints on it. As an
+    alternative, <b>cmp</b>, like asmprobit, offers a <b><u>struc</u></b><b>tural</b> option. When this
+    is included, <b>cmp</b> creates a full set of parameters to describe the
+    covariance of the J structural errors. To remove the excessive degrees of
+    freedom, it then constrains the base alternative error to have variance 1
+    and no correlation with the other errors; and constrains the error for
+    the second, scaling alternative to also have variance 1. To impose the
+    IIA under this option, one would then constrain various "atanhrho" and
+    "lnsig" parameters to 0. An example below shows how to estimate the same
+    IIA model with and without the structural parameterization.
+<p>
+    The intuitiveness of the structural parameterization comes at a real
+    cost, however (Bunch (1991); Long and Freese (2006), pp. 325-29). Though
+    the particular set of constraints imposed seems innocent, it actually
+    results in a mapping from the space of allowed structural covariances to
+    the space of possible covariance matrices for the relative-differenced
+    errors that is not <i>onto</i>. That is, there are positive definite (J-1)x(J-1)
+    matrices, valid candidates for the covariance of the relative-differenced
+    errors, which are not compatible with the assumptions that the first two
+    alternatives' structural errors have variance one <i>and</i> that the first,
+    base alternative's error is uncorrelated with all other structural
+    errors. So the <b><u>struc</u></b><b>tural</b> option can prevent <b>cmp</b> from reaching the
+    maximum-likelihood fit. Long and Freese (2006) describe how changing
+    which alternatives are the base and scaling alternatives, by reording the
+    equations, can sometimes free an estimator to find the true maximum
+    within the <b><u>struc</u></b><b>tural</b> parametrization.
+<p>
+<a name="roprobit"></a><b><u>On estimation with rank-ordered probit equations</u></b>
+<p>
+    Specification and treatment of rank-ordered probit equations is nearly
+    identical to that in the second syntax for multinomial probits described
+    just above. Equations must be listed for every alternative. Indicators
+    for these equations must be either 0 or 9 (<b>$cmp_out</b> or <b>$cmp_roprobit</b>) for
+    each observation, and grouped in an extra set of parentheses. Constraints
+    defining the base and scale alternatives are automatically imposed in the
+    same way. The <b>structural</b> option too works identically. One option
+    relating specifically to rank-ordered probit is <b>reverse</b>. It instructs <b>cmp</b>
+    to interpret lower-numbered rankings as higher instead of lower.
+<p>
+<a name="tips"></a><b><u>Tips for achieving and speeding convergence</u></b>
+<p>
+    If you are having trouble achieving (or waiting for) convergence with
+    <b>cmp</b>, these techniques might help:
+<p>
+        1. Changing the search techniques using <b>ml</b>'s technique() option, or
+            perhaps the search parameters, through its maximization options.
+            <b>cmp</b> accepts all these and passes them on to <b>ml</b>. The default
+            Newton-Raphson search method usually works very well once <b>ml</b> has
+            found a concave region. The DFP algorithm (<b>tech(dfp)</b>) often works
+            better before then, and the two can be mixed, as with <b>tech(dfp</b>
+            <b>nr)</b>. See the details of the <b>technique()</b> option at ml.
+        2. If the estimation problem requires the GHK algorithm (see above),
+            change the number of draws per observation in the simulation
+            sequence using the <b><u>ghkd</u></b><b>raws()</b> option. By default, <b>cmp</b> uses twice
+            the square root of the number of observations for which the GHK
+            algorithm is needed, i.e., the number of observations that are
+            censored in at least three equations. Raising simulation accuracy
+            by increasing the number of draws is sometimes necessary for
+            convergence and can even speed it by improving search precision.
+            On the other hand, especially when the number of observations is
+            high, convergence can be achieved, at some loss in precision,
+            with remarkably few draws per observations--as few as 5 when the
+            sample size is 10,000 (Cappellari and Jenkins 2003). And taking
+            more draws can also greatly extend execution time.
+        3. If getting many "(not concave)" messages, try the <b><u>diff</u></b><b>icult</b>
+            option, which instructs <b>ml</b> to use a different search algorithm in
+            non-concave regions.
+        4. If the search appears to be converging in likelihood--if the log
+            likelihood is hardly changing in each iteration--and yet fails to
+            converge, try adding a <b><u>nrtol</u></b><b>erance(</b><i>#</i><b>)</b> or <b><u>nonrtol</u></b><b>erance</b> option to
+            the command line after the comma. These are <b>ml</b> options that
+            control when convergence is declared. (See ml_opts, below.) By
+            default, <b>ml</b> declares convergence when the log likelihood is
+            changing very little with successive iterations (within
+            tolerances adjustable with the <b><u>tol</u></b><b>erance(</b><i>#</i><b>)</b> and <b><u>ltol</u></b><b>erance(</b><i>#</i><b>)</b>
+            options) <i>and</i> when the calculated gradient vector is close enough
+            to zero.  In some difficult problems, such as ones with nearly
+            collinear regressors, the imprecision of floating point numbers
+            prevents <b>ml</b> from quite satisfying the second criterion.  It can
+            be loosened by using the <b><u>nrtol</u></b><b>erance(</b><i>#</i><b>)</b> to set the scaled
+            gradient tolerance to a value larger than its default of 1e-5, or
+            eliminated altogether with <b><u>nonrtol</u></b><b>erance</b>. Because of the risks of
+            collinearity, <b>cmp</b> warns when the condition number of an
+            equation's regressor matrix exceeds 20 (Greene 2000, p. 40).
+        5. Try <b>cmp</b>'s interactive mode, via the <b><u>inter</u></b><b>active</b> option. This
+            allows the user to interrupt maximization by hitting Ctrl-Break
+            or its equivalent, investigate and adjust the current solution,
+            and then restart maximization by typing ml max. Techniques for
+            exploring and changing the current solution include displaying
+            the current coefficient and gradient vectors (with <b>mat list $ML_b</b>
+            or <b>mat list $ML_g</b>) and running ml plot. See help ml, <b>[R] ml</b>, and
+            Gould, Pitblado, and Sribney (2006) for details. <b>cmp</b> is slower in
+            interactive mode.
+<p>
+<p>
+<a name="options"></a><b><u>Options</u></b>
+<p>
+    <b><u>ind</u></b><b>icators</b>(<i>exp</i> [<i>exp</i><i> ...</i>]) is required. It should pass a list of
+        expressions that evaluate to 0, 1, 2, 3, 4, 5, 6, 7, 8, or 9 for
+        every observation, with one expression for each equation and in the
+        same order. Expressions can be constants, variable names, or
+        formulas. Individual formulas that contain spaces or parentheses
+        should be enclosed in quotes.
+<p>
+    <b>level(</b><i>#</i><b>)</b> specifies the confidence level, in percent, for confidence
+        intervals of the coefficients; see help level. The default is 95.
+<p>
+    <b><u>qui</u></b><b>etly</b> suppresses most output: the results from any single-equation
+        initial fits and the iteration log during the full model fit.
+<p>
+    <b><u>nolr</u></b><b>test</b> suppresses calculation and reporting of the likelihood ratio
+        (LR) test of overall model fit, relative to a constant(s)-only model.
+        This has no effect if data are <b>pweight</b>ed or errors are <b>robust</b> or
+        <b>cluster</b>ed.  In those cases, the likelihood function does not reflect
+        the non-sphericity of the errors, and so is a pseudolikelihood. The
+        LR test is then invalid and is not run anyway.
+<p>
+    <b><u>red</u></b><b>raws(</b># [# ...] , [<b>type(</b><i>halton </i>|<i> hammersley </i>|<i> ghalton </i>|<i> random</i><b>)</b>
+        <b><u>anti</u></b><b>thetics</b> <b><u>scr</u></b><b>amble</b> <b><u>st</u></b><b>eps(</b><i>#</i><b>)</b>]<b>)</b> is required for random
+        coefficient/effects models.  It governs the simulation-based
+        estimation of them. The option should begin with one number (#) for
+        each level of the model above the base (e.g., two numbers in a
+        three-level model); these specify the number of draws per observation
+        from the simulated distributions of the random effects. The optional
+        <b>type()</b> suboption sets the sequence type; the default is halton. The
+        optional <b><u>anti</u></b><b>thetics</b> suboption doubles the number of draws at all
+        levels by including antithetics. For more on these concepts, see See
+        Drukker and Gates (2006). The optional <b><u>scr</u></b><b>amble</b> option invokes the
+        square-root scrambler for Halton and Hammersley sequences. (See
+        Kolenikov 2012. This scrambler has no effect for primes 2 and 3.) The
+        optional <b><u>st</u></b><b>eps(</b><i>#</i><b>)</b> suboption sets the number of times to fit the model
+        as the number of draws at each level is geometrically increased to
+        the specified final values. The preliminary runs all use the
+        Newton-Raphson search algorithm and ml's <b>nonrtolerance tolerance(0.1)</b>
+        options in order to accept coarse fits. This stepping is meant only
+        to increase speed by using fewer draws until the search is close to
+        the maximum. It can be disabled with <b>steps(1)</b>.
+<p>
+    <b>lf</b> makes <b>cmp</b> use its lf-method evaluator instead of its d2-method one
+        (for Stata 10 or earlier) or lf1-method one (Stata 11 or later). This
+        forces <b>cmp</b> to compute first derivatives of the likelihood numerically
+        instead of analytically, which substantially slows estimation but
+        occassionally improves convergence.
+<p>
+    <b><u>ghkd</u></b><b>raws(</b>[#]<b> , </b>[<b>type(</b><i>halton </i>|<i> hammersley </i>|<i> ghalton </i>|<i> random</i><b>)</b> <b><u>anti</u></b><b>thetics</b>
+        <b><u>scr</u></b><b>amble</b> ]<b>)</b> governs the draws used in GHK simulation of
+        higher-dimensional cumulative multivariate normal distributions. It
+        is similar to the <b><u>red</u></b><b>raws</b> option. However, it takes at most one
+        number; if it, or the entire option, is omitted, the number of draws
+        is set rather arbitrarily to twice the square root of the number of
+        observations for which the simulation is needed. (Simulated maximum
+        likelihood is consistent as long as the number of draws rises with
+        the square root of the number of observations. In practice, a higher
+        number of observations often reduces the number of draws per
+        observation needed for reliable results. Train 2009, p. 252.) As in
+        the <b><u>red</u></b><b>raws()</b> option, the optional <b>type(</b><i>string</i><b>)</b> suboption specifies
+        the type of sequence in the GHK simulation, <b>halton</b> being the default;
+        <b><u>anti</u></b><b>thetics</b> requests antithetic draws; and <b><u>scr</u></b><b>amble</b> applies the
+        square-root scrambler.
+<p>
+    <b><u>nodr</u></b><b>op</b> prevents the dropping of regressors from equations in which they
+        receive missing standard errors in initial single-equation fits. It
+        also prevents the removal of collinear variables.
+<p>
+    <b><u>cov</u></b><b>ariance</b>(<i>covopt</i> [<i>covopt</i> ...]) offers shorthand ways to constrain the
+        <i>cross-equation</i> correlation structure of the errors at each
+        level--shorthand, that is, compared to using constraint. There should
+        be one <i>covopt</i> for each level in the model, and each can be
+        <b><u>un</u></b><b>structured</b>, <b><u>ex</u></b><b>changeable</b>, or <b><u>ind</u></b><b>ependent</b>. <b><u>un</u></b><b>structured</b>, the
+        default, imposes no constraint. <b><u>ex</u></b><b>changeable</b> specifies that all
+        correlations between random effects, coefficients, or residual errors
+        in different equations, within a given level are the same; and
+        likewise for all the variances of all these areas. <b><u>ind</u></b><b>ependent</b> sets
+        all cross-equation correlations at a given level to zero. Separately,
+        the <i>re_equation</i> syntax documented above also includes a <b><u>cov</u></b><b>ariance()</b>
+        option. With the same choices and defintitions, it controls variances
+        and covariances <i>within</i> a given equation at a given level.
+<p>
+    <b><u>inter</u></b><b>active</b> makes <b>cmp</b> fit the full model in ml's interactive mode.  This
+        allows the user to interrupt the model fit with Ctrl-Break or its
+        equivalent, view and adjust the trial solution with such commands as
+        ml plot, then restart optimization by typing ml max. See help ml, <b>[R]</b>
+        <b>ml</b>, and Gould, Pitblado, and Sribney (2006) for details. <b>cmp</b> runs
+        more slowly in interactive mode.
+<p>
+    <b>init(</b><i>vector</i><b>)</b> passes a row vector of user-chosen starting values for the
+        full model fit, in the manner of the  ml init, copy command. The
+        vector must contain exactly one element for each parameter <b>cmp</b> will
+        estimate, and in the same order as <b>cmp</b> reports the parameter
+        estimates in the output. Thus, at the end will be the initial guesses
+        for the lnsig_<i>i</i> parameters, then those for the atanhrho_<i>ij</i>, then
+        those for any ordered-probit cuts. (<b>cmp</b> normally also reports sig_<i>i</i>'s
+        and rho_<i>ij</i>'s, but these are not additional parameters, merely
+        transformed versions of underlying ones, and should be ignored in
+        building the vector of starting values.) The names of the row and
+        columns of the vector do not matter.
+<p>
+    <b><u>noest</u></b><b>imate</b> simplifies the job of constructing an initial vector for the
+        <b>init()</b> option. It instructs <b>cmp</b> to stop before fitting the full model
+        and leave behind an e(b) return vector with one labeled entry for
+        each free parameter. To view this vector, type mat list e(b). You can
+        copy or edit this vector, such as with "mat b=e(b)", then pass it
+        back to <b>cmp</b> with the <b>init()</b> option.
+<p>
+    <b><u>struc</u></b><b>tural</b> forces the structural covariance parameterization for all
+        multinomial and rank-ordered equation groups. See above for more.
+<p>
+    <b><u>rev</u></b><b>erse</b> instructs <b>cmp</b> to interpret lower-numbered ranks in rank-ordered
+        probit equations as being higher.
+<p>
+    <b><u>ps</u></b><b>ampling(</b><i># #</i><b>)</b> makes <b>cmp</b> perform "progressive sampling," which can speed
+        estimation on large data sets. First it estimates on a small
+        subsample, then a larger one, etc., until reaching the full sample.
+        Each iteration uses the previous one's estimates as a starting point.
+        The first argument in the option sets the initial sample size, either
+        in absolute terms (if it is at least 1) or as a fraction of the full
+        sample (if it is less than 1). The second argument is the factor by
+        which the sample should grow in each iteration. This process is
+        analogous to but distinct from the stepping that occurs by default in
+        simulating random effects.
+<p>
+<a name="ml_opts"></a>    <i>ml_opts</i>: <b>cmp</b> accepts the following standard ml options: <b><u>tr</u></b><b>ace</b> <b><u>grad</u></b><b>ient</b>
+        <b><u>hess</u></b><b>ian</b> <b>showstep</b> <b><u>tech</u></b><b>nique(</b><i>algorithm_specs</i><b>)</b>
+        <b>vce(oim</b>|<b><u>o</u></b><b>pg</b>|<b><u>r</u></b><b>obust</b>|<b><u>cl</u></b><b>uster)</b> <b><u>iter</u></b><b>ate(</b><i>#</i><b>)</b> <b><u>tol</u></b><b>erance(</b><i>#</i><b>)</b> <b><u>ltol</u></b><b>erance(</b><i>#</i><b>)</b>
+        <b><u>gtol</u></b><b>erance(</b><i>#</i><b>)</b> <b><u>nrtol</u></b><b>erance(</b><i>#</i><b>)</b> <b><u>nonrtol</u></b><b>erance</b> <b><u>shownrt</u></b><b>olerance</b> <b><u>dif</u></b><b>ficult</b>
+        <b><u>const</u></b><b>raints(</b><i>clist</i><b>)</b> <b><u>sc</u></b><b>ore(</b><i>newvarlist</i>|<i>stub</i>*<b>)</b>
+<p>
+<a name="ml_opts"></a>    <b>svy</b> indicates that <b>ml</b> is to pick up the <b>svy</b> settings set by <b>svyset</b> and
+        use the robust variance estimator. This option requires the data to
+        be <b>svyset</b>. <b>svy</b> may not be specified with <b>vce()</b> or weights. See help
+        svy estat.
+<p>
+    <i>svy_opts</i>: Along with <b>svy</b>, users may also specify any of these related ml
+        options, which affect how the svy-based variance is estimated:
+        <b><u>nosvy</u></b><b>adjust</b> <b><u>sub</u></b><b>pop(</b><i>subpop_spec</i><b>)</b> <b><u>srs</u></b><b>subpop</b>. And users may specify any
+        of these ml options, which affect output display: <b>deff</b> <b>deft</b> <b>meff</b> <b>meft</b>
+        <b><u>ef</u></b><b>orm</b> <b><u>p</u></b><b>rob</b> <b>ci</b>. See help svy estat.
+<p>
+<b><u>On </u></b><b><u>predict</u></b><b><u> and </u></b><b><u>margins</u></b><b><u> after cmp</u></b>
+<p>
+    Options for <b>predict</b> after <b>cmp</b> are:
+<p>
+      <b><u>eq</u></b><b>uation(</b><i>eqno</i>[<b>,</b><i>eqno</i>]<b>)</b>    specify equation(s)
+      <b>xb</b>                       linear prediction
+      <b>stdp</b>                     standard error of linear prediction
+      <b>stddp</b>                    standard error of difference in linear
+                                 predictions
+      <b>lnl</b>                      observation-level log likelihood (in
+                                 hierarchical models, averaged over groups)
+      <b><u>sc</u></b><b>ores</b>                   derivative of the log likelihood with respect
+                                 to xb or parameter
+      <b><u>re</u></b><b>siduals</b>                calculate the residuals
+      <b>pr</b>                       probability of a positive outcome (meant for
+                                 probit equations)
+      <b>e(</b><i># #</i><b>)</b>                   censored expected value (see help regress
+                                 postestimation)
+      <b><u>y</u></b><b>star(</b><i># #</i><b>)</b>               truncated expected value (see help regress
+                                 postestimation)
+      <b><u>o</u></b><b>utcome(</b><i>outcome</i><b>)</b>         specify outcome(s), for ordered probit only
+      <b><u>nooff</u></b><b>set</b>                 ignore any <b>offset()</b> or <b>exposure()</b> variable
+<p>
+    Note that the <b>e(</b><i># #</i><b>)</b> and <b><u>y</u></b><b>star(</b><i># #</i><b>)</b> options should not include a comma
+    between the two bounds.
+<p>
+    <i>eqno</i> can be an equation name (if not set explicitly, an equation's name
+    is that of its dependent variable). Or it can be an equation number
+    preceded by a <b>#</b>. The default equation is #1, unless the provided variable
+    list has one entry for each equation, or takes the form <i>stub*</i>. These
+    request prediction variables for all equations, with names as given or as
+    automatically generated beginning with <i>stub</i>.
+<p>
+    In contrast, for ordered probit equations, if <b>pr</b> is specified, <b>predict</b>
+    will by default compute probability variables for all outcomes. The names
+    for these variables will be automatically generated using a provided
+    variable name as a stub. This stub may be directly provided in the
+    command line--in which case it should <i>not</i> include a <b>*</b>--or may itself be
+    automatically generated by a cross-equation <i>stub*</i>. Thus it is possible to
+    generate probabilities for all outcomes in all ordered probit equations
+    with a single, terse command. Alternatively, the <b><u>o</u></b><b>utcome(</b><i>outcome</i><b>)</b> option
+    can be used to request probabilities for just one outcome. <i>outcome</i> can be
+    a value for the dependent variable, or a category number preceded by a <b>#</b>.
+    For example, if the categorical dependent variable takes the values 0, 3,
+    and 4, then <b>outcome(4)</b> and <b>outcome(#3)</b> are synonyms. (<b>outcome()</b> also
+    implies <b>pr</b>.)
+<p>
+    In explaining the multi-equation and -outcome behavior of predict after
+    <b>cmp</b>, examples are worth a thousand words.
+<p>
+    The flexibility of <b>cmp</b> affects the use of predict and margins after
+    estimation. Because the censoring type (probit, tobit, etc.) can
+    technically vary by observation, the default statistic for predict is
+    always <b>xb</b>, linear fitted values. This is unlike for probit and oprobit,
+    after which the default is <b>pr</b>, predicted probabilities of outcomes. So to
+    obtain probilities predicted by (ordered) probit equations, remember to
+    include the <b>pr</b> option in the predict command line or <b>predict(pr)</b> in the
+    margins command line. (For ordered probit equations, an <b>outcome()</b> option
+    will also imply <b>pr</b>.)
+<p>
+    When using margins to estimate marginal effects with respect to one
+    equation in a multi-equation <b>cmp</b> model, users may need to include the
+    <b>force</b> option in the cmd:margins} command line.
+<p>
+    Examples of predict and margins after <b>cmp</b> are below.
+<p>
+<b><u>Citation</u></b>
+<p>
+    <b>cmp</b> is not an official Stata command. It is a free contribution to the
+        research community.  Please cite it as such:
+        Roodman, D. 2011. Estimating fully observed recursive mixed-process
+        models with cmp. <i>Stata Journal</i> 11(2): 159-206.
+<p>
+<b><u>Published examples</u></b>
+See Google Scholar.
+<p>
+<b><u>Introductory examples</u></b>
+<p>
+    The purpose of <b>cmp</b> is not to match standard commands, but to fit models
+    otherwise beyond easy estimation in Stata. But replications illustrate
+    how <b>cmp</b> works (colored text is clickable):
+<p>
+    <b>* Define indicator macros for clarity.</b>
+    . cmp setup
+<p>
+    . webuse laborsup
+<p>
+    <b>* Make censoring level 0 for fem_inc since pre-Oct '07 ivtobit assumes it</b>
+        <b>is because of bug.</b>
+    . replace fem_inc = fem_inc - 10
+<p>
+    . reg kids fem_inc male_educ
+    . cmp (kids = fem_inc male_educ), ind($cmp_cont) quietly
+<p>
+    . sureg (kids = fem_inc male_educ) (fem_work = male_educ), isure
+    . cmp (kids = fem_inc male_educ) (fem_work = male_educ), ind($cmp_cont
+        $cmp_cont) quietly
+<p>
+    . mvreg fem_educ male_educ = kids other_inc fem_inc
+    . cmp (fem_educ = kids other_inc fem_inc) (male_educ = kids other_inc
+        fem_inc), ind(1 1) qui
+<p>
+    . ivreg fem_work fem_inc (kids = male_educ), first
+    . cmp (kids = fem_inc male_educ) (fem_work = kids fem_inc), ind($cmp_cont
+        $cmp_cont) qui
+<p>
+    . ivregress liml fem_work fem_inc (kids = male_educ other_inc)
+    . cmp (kids = fem_inc male_educ other_inc) (fem_work = kids fem_inc),
+        ind($cmp_cont $cmp_cont) qui}
+<p>
+    . probit kids fem_inc male_educ
+    . predict p
+    . margins, dydx(*)
+    . cmp (kids = fem_inc male_educ), ind($cmp_probit) qui
+    . predict p2, pr
+    . margins, dydx(*) predict(pr)
+<p>
+    . oprobit kids fem_inc male_educ
+    . margins, dydx(*) predict(outcome(#2))
+    . cmp (kids = fem_inc male_educ), ind($cmp_oprobit) qui
+    . margins, dydx(*) predict(eq(#1) outcome(#2) pr)
+<p>
+    . gen byte anykids = kids &gt; 0
+    . biprobit (anykids = fem_inc male_educ) (fem_work = male_educ)
+    . cmp (anykids = fem_inc male_educ) (fem_work = male_educ),
+        ind($cmp_probit $cmp_probit)
+<p>
+    . tetrachoric anykids fem_work
+    . cmp (anykids = ) (fem_work = ), ind($cmp_probit $cmp_probit) nolr qui
+<p>
+    . ivprobit fem_work fem_educ kids (other_inc = male_educ), first
+    . margins, predict(pr) dydx(*)
+    . cmp (fem_work = other_inc fem_educ kids) (other_inc = fem_educ kids
+        male_educ), ind($cmp_probit $cmp_cont)
+    . margins, predict(pr eq(#1)) dydx(*) force
+<p>
+    . treatreg other_inc fem_educ kids, treat(fem_work = male_educ)
+    . cmp (other_inc = fem_educ kids fem_work) (fem_work = male_educ),
+        ind($cmp_cont $cmp_probit) qui
+<p>
+    . tobit fem_inc kids male_educ, ll
+    . cmp (fem_inc = kids male_educ), ind("cond(fem_inc, $cmp_cont,
+        $cmp_left)") qui
+<p>
+    . ivtobit fem_inc kids (male_educ = other_inc), ll first
+    . cmp (fem_inc=kids male_educ) (male_educ=kids other_inc),
+        ind("cond(fem_inc,$cmp_cont,$cmp_left)" $cmp_cont)
+<p>
+    . preserve
+    . webuse intregxmpl, clear
+    . intreg wage1 wage2 age age2 nev_mar rural school tenure
+    . cmp (wage1 wage2 = age age2 nev_mar rural school tenure), ind($cmp_int)
+        qui
+    . restore
+<p>
+    . preserve
+    . webuse laborsub, clear
+    . truncreg whrs kl6 k618 wa we, ll(0)
+    . cmp (whrs = kl6 k618 wa we, trunc(0 .)), ind($cmp_cont) qui
+    . restore
+<p>
+    . preserve
+    . webuse sysdsn3, clear
+    . mprobit insure age male nonwhite site2 site3
+    . cmp (insure = age male nonwhite site2 site3, iia), nolr
+        ind($cmp_mprobit) qui
+    . restore
+<p>
+    . preserve
+    . webuse travel, clear
+    . asmprobit choice travelcost termtime, casevars(income) case(id)
+        alternatives(mode) struct
+    . drop invehiclecost traveltime partysize
+    . reshape wide choice termtime travelcost, i(id) j(mode)
+    . constraint 1 [air]termtime1 = [train]termtime2
+    . constraint 2 [train]termtime2 = [bus]termtime3
+    . constraint 3 [bus]termtime3 = [car]termtime4
+    . constraint 4 [air]travelcost1 = [train]travelcost2
+    . constraint 5 [train]travelcost2 = [bus]travelcost3
+    . constraint 6 [bus]travelcost3 = [car]travelcost4
+    . cmp (air:choice1=t*1) (train: choice2=income t*2) (bus: choice3=income
+        t*3) (car: choice4=income t*4), ind((6 6 6 6)) constr(1/6) nodrop
+        struct tech(dfp)
+    . restore
+<p>
+    . preserve
+    . webuse wlsrank, clear
+    . asroprobit rank high low if noties, casevars(female score) case(id)
+        alternatives(jobchar) reverse
+    . reshape wide rank high low, i(id) j(jobchar)
+    . constraint 1 [esteem]high1=[variety]high2
+    . constraint 2 [esteem]high1=[autonomy]high3
+    . constraint 3 [esteem]high1=[security]high4
+    . constraint 4 [esteem]low1=[variety]low2
+    . constraint 5 [esteem]low1=[autonomy]low3
+    . constraint 6 [esteem]low1=[security]low4
+    . cmp (esteem:rank1=high1 low1)(variety:rank2=female score high2
+        low2)(autonomy:rank3=female score high3 low3)(security:rank4=female
+        score high4 low4) if noties,ind((9 9 9 9)) tech(dfp) ghkd(200,
+        type(hammersley)) rev constr(1/6)
+    . restore
+<p>
+    <b>* Heckman selection models.</b>
+<p>
+    . preserve
+<p>
+    . webuse womenwk, clear
+    . heckman wage education age, select(married children education age)
+        mills(heckman_mills)
+    . gen selectvar = wage&lt;.
+    . cmp (wage = education age) (selectvar = married children education
+        age), ind(selectvar $cmp_probit) nolr qui
+    . predict cmp_mills, eq(selectvar)
+    . replace cmp_mills = normalden(cmp_mills)/normal(cmp_mills)
+<p>
+    . gen wage2 = wage &gt; 20 if wage &lt; .
+    . heckprob wage2 education age, select(married children education age)
+    . cmp (wage2 = education age) (selectvar = married children education
+        age), ind(selectvar*$cmp_probit $cmp_probit) qui
+<p>
+    . restore
+<p>
+    <b>* Hierarchical/random effects models</b>
+<p>
+    . preserve
+    . webuse union, clear
+    . gen double south_year = south * year
+    . xtprobit union age grade not_smsa south year south_year
+    . cmp (union = age grade not_smsa south year south_year || idcode:),
+        ind($cmp_probit) nolr redraws(101, anti) tech(dfp)
+    . restore
+<p>
+    . preserve
+    . webuse nlswork3, clear
+    . gen double south_year = south * year
+    . xttobit ln_wage union age grade not_smsa south year south_year, ul(1.9)
+    . replace ln_wage = 1.9 if ln_wage &gt; 1.9
+    . cmp (ln_wage = union age grade not_smsa south year south_year ||
+        idcode:), ind("cond(ln_wage&lt;1.899999, $cmp_cont, $cmp_right)") nolr
+        redraws(101) tech(dfp)
+    . restore
+<p>
+    . preserve
+    . webuse nlswork5, clear
+    . gen double south_year = south * year
+    . xtintreg ln_wage1 ln_wage2 union age grade south year south_year
+        occ_code
+    . cmp (ln_wage1 ln_wage2 = union age grade south year south_year occ_code
+        || idcode:), ind($cmp_int) nolr redraws(101, type(hammersley))
+        tech(dfp)
+    . restore
+<p>
+    These examples go beyond standard commands:
+<p>
+    . webuse laborsup
+<p>
+    <b>* Regress an unbounded, continuous variable on an instrumented, binary</b>
+        <b>one. 2SLS is consistent but less efficient.</b>
+    . cmp (other_inc = fem_work) (fem_work = kids), ind($cmp_cont
+        $cmp_probit) qui robust
+    . ivreg other_inc (fem_work = kids), robust
+<p>
+    <b>* Now regress it on a left-censored one, female income, which is only</b>
+        <b>modeled for observations in which the woman works.</b>
+    . gen byte ind2 = cond(fem_work, cond(fem_inc, $cmp_cont, $cmp_left),
+        $cmp_out)
+    . cmp (other_inc=fem_inc kids) (fem_inc=fem_edu), ind($cmp_cont ind2)
+<p>
+    <b>* "IV-oprobit"</b>
+    . cmp (kids = fem_educ) (fem_educ = fem_work), ind($cmp_oprobit
+        $cmp_cont) tech(dfp) nolr
+    . margins, dydx(*) predict(eq(#1) pr outcome(#2)) force
+<p>
+    <b>* Ordered probit with Heckman selection modeling</b>
+    . preserve
+    . webuse womenwk, clear
+    . gen selectvar = wage&lt;.
+    . gen wage3 = (wage &gt; 10)+(wage &gt; 30) if wage &lt; .
+    . cmp (wage3 = education age) (selectvar = married children education
+        age), ind(selectvar*$cmp_oprobit $cmp_probit) qui
+    . restore
+<p>
+    <b>* Correlated random coefficient and random effect.</b>
+    . preserve
+    . use http://www.stata-press.com/data/mlmus3/gcse, clear
+    . cmp (gcse = lrt || school: lrt), ind($cmp_cont) nolr redraws(101, anti)
+        tech(dfp)
+    . restore
+ 
+    <b>* Multinomial probit with heterogeneous preferences (random effects by</b>
+        <b>individual)</b>
+    . preserve
+    . use http://fmwww.bc.edu/repec/bocode/j/jspmix.dta, clear
+    . cmp (tby = sex, iia || scy3:), ind($cmp_mprobit) nolr redraws(47, anti)
+        tech(dfp)
+    . restore
+<p>
+<a name="predict_egs"></a>    These illustrate subtleties of predict after <b>cmp</b>:
+<p>
+    . webuse laborsup
+<p>
+    <b>* Bivariate seemingly unrelated ordered probit</b>
+    . gen byte kids2 = kids + int(uniform()*3)
+    . cmp (kids=fem_educ) (kids2=fem_educ), ind($cmp_oprobit $cmp_oprobit)
+        nolr tech(dfp) qui
+    <b>* Predict fitted values. Fitted values are always the default, as is</b>
+        <b>equation #1</b>
+    . predict xbA
+    <b>* Two ways to predict fitted values for all equations</b>
+    . predict xbB*
+    . predict xbC xbD
+    <b>* Get scores for all equations and parameters</b>
+    . predict sc*, score
+    <b>* Get observation-level log-likelihoods</b>
+    . predict lnl, lnl
+    <b>* Two ways to predict kids=0, using (default) first equation</b>
+    . predict prA, pr outcome(0)
+    . predict prB, outcome(#1)
+    <b>* Predict kids2=4, using second equation</b>
+    . predict prC, outcome(4) eq(kids2)
+    <b>* Predict all outcomes, all equations.</b>
+    . predict prD*, pr
+    <b>* Same but result variable names for the two equations start with prE and</b>
+        <b>prF respectively.</b>
+    . predict prE prF, pr
+    <b>* Predict all outcomes, equation 2. Generates variables prG_Y where Y is</b>
+        <b>outcome number (not outcome value).</b>
+    . predict prG, eq(#2) pr
+<p>
+<b><u>References</u></b>
+<p>
+    Bunch, D.S. 1991. Estimability in the multinomial probit model.
+        Transportation Research. 25B(1): 1-12.
+    Cappellari, L., and S. Jenkins. 2003. Multivariate probit regression
+        using simulated maximum likelihood.  <i>Stata Journal</i> 3(3): 278-94.
+    Drukker, D.M., and R. Gates. 2006. Generating Halton sequences using
+        Mata. <i>Stata Journal</i> 6(2): 214-28. 
+        http://www.stata-journal.com/article.html?article=st0103
+    Gates, R. 2006. A Mata Geweke-Hajivassiliou-Keane multivariate normal
+        simulator. <i>Stata Journal</i> 6(2): 190-213. 
+        http://www.stata-journal.com/article.html?article=st0102
+    Gould, W., J. Pitblado, and W. Sribney. 2006. Maximum Likelihood
+        Estimation with Stata. 3rd ed. College Station: Stata Press.
+    Greene, W.H. 2002. <i>Econometric Analysis</i>, 5th ed. Prentice-Hall.
+    Greene, W.H. 2011. <i>Econometric Analysis</i>, 7th ed. Prentice-Hall.  Chapter
+        15
+    Keane, M.P. 1992. A note on identification in the multinomial probit
+        model. <i>Journal of Business and Economics Statistics</i> 10(2), pp.
+        193-200.
+    Kelejian, H.H. 1971. Two-stage least squares and econometric systems
+        linear in parameters but nonlinear in the endogenous variables.
+        <i>Journal of the American Statistical Association</i> 66(334): 373-74.
+    Long, J. S., and J. Freese. 2006. Regression models for categorical
+        dependent variables using Stata. 2nd ed. College Station, TX: Stata
+        Press.
+    Pagan. A. 1979. Some consequences of viewing LIML as an iterated Aiken
+        estimator. Economics Letters 3:369-372.
+    Pitt, M.M., and S. R. Khandker. 1998. The impact of group-based credit
+        programs on poor households in Bangladesh: Does the gender of
+        participants matter?  <i>Journal of Political Economy</i> 106(5): 958-96.
+    Rivers, D., and Q. Vuong. 1988. Limited information estimators and
+        exogeneity tests for simultaneous probit models.  <i>Journal of</i>
+        <i>Econometrics</i> 39: 347-66.
+    Roodman, D. 2011. Estimating fully observed recursive mixed-process
+        models with cmp. <i>Stata Journal</i> 11(2): 159-206.
+    Smith, R.J., and R.W. Blundell. 1986. An exogeneity test for a
+        simultaneous equation tobit model with an application to labor
+        supply. <i>Econometrica</i> 54(3): 679-85.
+    Train, K. 2009. <i>Discrete Choice Methods with Simulation.</i> 2nd ed.
+        Cambridge University Press. 
+        http://elsa.berkeley.edu/books/choice2.html
+<p>
+<b><u>Author</u></b>
+<p>
+    David Roodman
+    Senior Fellow
+    Center for Global Development
+    Washington, DC
+    droodman@cgdev.org
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    Thanks to Kit Baum, David Drukker, Arne Hole, Stanislaw Kolenikov, and
+    Mead Over for comments.
+<p>
+<b><u>Also see</u></b>
+<p>
+    <b>[R] ml</b>, <b>[R] biprobit</b>, <b>[R] probit</b>, <b>[R] oprobit</b>, <b>[R] sureg</b>, <b>[R] ivreg</b>, <b>[R]</b>
+             <b>tobit</b>, <b>[R] cnreg</b>, <b>[R] intreg</b>, <b>[R] truncreg</b>, <b>[R] ivtobit</b>, <b>[R]</b>
+             <b>ivprobit</b>, <b>[R] heckman</b>, <b>[R] heckprob</b>, <b>[SVY] svy estimation</b>.
+</pre>

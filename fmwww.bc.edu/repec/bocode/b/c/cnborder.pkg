@@ -1,0 +1,25 @@
+d 'CNBORDER': module to analyze locations in China vs geography
+d
+d    Baidu Map API is widely used in China. By using the address,
+d this STATA module aids in	   determining whether a point is
+d on the boundary. 
+d
+d KW: geography
+d KW: China
+d KW: maps
+d
+d Requires: Stata version 14 and cngcode, cnaddress from SSC (q.v.)
+d
+d Distribution-Date: 20221030
+d
+d Author:   Chuntao Li,  China Stata Club
+d Support: email   chtl@@zuel.edu.cn
+d
+d Author:  Guangzhong Liu,  China Stata Club
+d Support: email liugz_henu@@163.com
+d
+d Author:   Muhammad Usman, UE Business School, University of Education, Lahore, Pakistan
+d Support: email m.usman@@ue.edu.pk
+d
+f cnborder.ado
+f cnborder.sthlp

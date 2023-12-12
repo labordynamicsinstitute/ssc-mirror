@@ -1,0 +1,86 @@
+<pre>
+<b>help clstop_lbt</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>clstop_lbt</b> -- Steinley &amp; Brusco's lower bound technique (LBT) to
+                  determine the number of kmeans clusters
+<p>
+<b><u>Syntax</u></b>
+<p>
+    <b>cluster stop [</b><i>clname</i><b>], rule(lbt)</b>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>clstop_lbt</b> adds the rule <b>lbt</b> to the post-estimation command cluster stop
+    to determine the number of k-means clusters using Steinley &amp; Brusco's
+    (2011) lower bound technique (LBT).
+<p>
+    <b>clstop_lbt</b> creates the normalized index LBT that measures the closeness
+    of the observed value of the within-cluster sums of squares (SSE) to the
+    minimum value of SSE in terms of total sums of squares (SST) according to
+    LBT = (SSE - SSE(min))/SST. The method to determine the lower bound of
+    the SSE is given in Steinley &amp; Brusco (2011, p. 289). If the number of
+    variables is equal or less than the number of clusters <i>k</i>, LBT is equal to
+    the ratio SSE/SST (in this case, the LBT cannot be used). Using the LBT,
+    a partition into <i>k</i> clusters is chosen such that LBT(<i>k</i>) is minimum.
+<p>
+    <b>clstop_lbt</b> can also be used to determine whether there is more than one
+    cluster. In this case the ratio SSE(2)/SST of a two cluster solution
+    should be less than the lower bound ratio (LBR) obtainable when there is
+    only one cluster - assuming a (multivariate) normal distribution, the
+    LBR(normal) is 1-2/pi = .3634, assuming a univariate distribution the
+    LBR(univariate) is .25.
+<p>
+    A simulation study by Steinley &amp; Brusco (2011) shows that the LBT index
+    outperforms the accuracy and precision of the CH (Calinski-Harabasz)
+    index. However, the LBT requires that the number of variables exceed the
+    number of clusters. In cases of equal or more clusters than the number of
+    variables Steinley &amp; Brusco recommend to use the CH index which is also
+    calculated by<b> clstop_lbt</b> (see Saved Results) and which is the default
+    when using -cluster stop-.
+<p>
+<b><u>Example</u></b>
+<p>
+    . webuse iris
+    . cluster kmeans seplen-petwid, k(2) s(pr(1))
+    . cluster stop, rule(lbt)
+    . cluster kmeans seplen-petwid, k(3) s(pr(1))
+    . cluster stop, rule(lbt)
+    . cluster kmeans seplen-petwid, k(4) s(pr(1))
+    . cluster stop, rule(lbt)
+<p>
+<a name="results"></a><b><u>Saved Results</u></b>
+<p>
+    <b>cluster stop</b> with <b>rule(lbt)</b> saves the following in <b>r()</b>:
+<p>
+    Scalars   
+      <b>r(N)</b>           number of valid cases (listwise)
+      <b>r(k)</b>           number of partitions (clusters)
+      <b>r(SSE_#)</b>       Within clusters (error) sum of squares for # partitions
+      <b>r(SSB_#)</b>       Between clusters sum of squares for # partitions
+      <b>r(SSE_SST_#)</b>   Ratio SSE/SST for # partitions
+      <b>r(calinski_#)</b>  Calinski &amp; Harabasz pseudo F for # partitions
+      <b>r(LBT_#)</b>       Index LBT for # partitions
+<p>
+    Macros    
+      <b>r(clname)</b>      name of the cluster analysis
+      <b>r(vars)</b>        list of variables used
+      <b>r(rule)</b>        <b>lbt</b>
+<p>
+<b><u>References</u></b>
+<p>
+    Steinley, D. &amp; Brusco, M. J. (2011). Choosing the number of clusters in
+        K-means clustering. <i>Psychological Methods</i>, <i>16</i>, 285-297.
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual: <b>[MV] cluster programming subroutines</b>
+<p>
+<b><u>Author</u></b>
+<p>
+    Dirk Enzmann
+    Institute of Criminal Sciences, Hamburg
+    email: mailto:dirk.enzmann@uni-hamburg.de
+</pre>

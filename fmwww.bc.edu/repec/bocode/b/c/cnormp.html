@@ -1,0 +1,44 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>cnormp</b>                                       Austin Nichols (Oct 2009)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Program to calculate parameters for creating a censored normal random variable </u></b>
+<b><u>&gt; with specified mean and variance</u></b>
+<p>
+        <b>cnormp</b> <i>mean</i> <i>sd</i> [, <b><u>c</u></b><b>enspoint(</b><i>real</i><b>)</b> ]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>cnormp</b> calculates the mean and standard deviation of the underlying
+    uncensored normal distribution that when left censored at <i>censpoint</i> will
+    have the specified <i>mean</i> and <i>sd</i>.  The default value for <i>censpoint</i> when
+    unspecified is zero.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    drawnorm x, mean(20) sd(20) n(1000) clear
+    cnormp 20 20
+    forv i=1/9 {
+    g y`i'=max(0,rnormal(r(m),r(s)))
+    }
+    su
+    drawnorm x, mean(20) sd(20) n(1000) clear
+    cnormp 20 20, c(10)
+    forv i=1/9 {
+    g y`i'=max(10,rnormal(r(m),r(s)))
+    }
+    su
+<p>
+<b><u>Author</u></b>
+<p>
+    Austin Nichols
+    &lt;austinnichols@gmail.com&gt;
+    Urban Institute
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: help for functions.
+<p>
+</pre>

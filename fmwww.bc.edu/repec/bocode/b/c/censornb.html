@@ -1,0 +1,139 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>censornb</b>                                                (Joseph Hilbe)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Censored negative binomial regression</u></b>
+<p>
+        <b>censornb</b>  <i>depvar</i> [<i>varlist</i>] [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>,</b> <b><u>cen</u></b><b>sor(</b><i>varname</i><b>)</b> [
+             <b><u>off</u></b><b>set(</b><i>varname</i><b>)</b> <b><u>exp</u></b><b>osure(</b><i>varname</i><b>)</b> <b><u>cl</u></b><b>uster(</b><i>varname</i><b>)</b> <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>
+             <b><u>from</u></b><b>(</b><i>asis</i><b>)</b> <b><u>ir</u></b><b>r</b> <b><u>rob</u></b><b>ust</b> <b>nolog</b> <i>maximize_options</i> <i>survey_options</i>]
+<p>
+        Note: the option <i>censor</i> must be included in the command. A censor
+        variable must use the following numbers to indicate the type of
+        censoring: 1 = <i>not censored</i>, 0 = <i>left censored</i>, -1 = <i>right censored</i>.
+<p>
+    <b>aweight</b>s, <b>fweight</b>s, <b>iweight</b>s, and <b>pweight</b>s are allowed; see help weights.
+<p>
+    <b>censornb</b> provides access to all <i>maximize</i> options; see help maximize.
+<p>
+    <b>censornb</b> provides access to all <i>survey</i> options; see help svy.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>censornb</b> fits a maximum likelihood censored negative binomial regression
+    of <i>depvar</i> on <i>indepvars</i>, where <i>depvar</i> is a non-negative count variable.
+    The censor option is required. If no observations are censored, a censor
+    variable with all 1's must be specified. Interpret parameter estimates as
+    one would <b>nbreg</b>.  <b>censornb</b> is parameterized as a survival model, not as
+    the econometric parameterization found in Greene, Cameron &amp; Trivedi, and
+    elsewhere, although results are similar.
+<p>
+    <b>censornb</b> acccepts all of the <i>help maximize</i> options, the <i>constraint()</i>
+    option, and all survey options and capabilities documented in <b>[SVY]</b>;
+    including multi-level surveys; poststratification; and BRR, jackknife,
+    and linearization VCE estimators.
+<p>
+    This program uses <b>ml lf</b> method.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +-------+
+    ----+ Model +------------------------------------------------------------
+<p>
+    <b>censor(</b><i>cenvar</i><b>)</b> is required. Values of 1 indicate a non-censored, 0 a left
+        censored, and -1 a right censored observation.
+<p>
+    <b>offset(</b><i>varname</i><b>)</b> specifies a <i>varname</i> in model with coefficient constrained
+        to 1.
+<p>
+    <b>exposure(</b><i>varname</i><b>)</b> specifies a <i>ln(varname)</i> in model with coefficient
+        constrained to 1.
+<p>
+    <b>constraints(</b><i>constraints</i><b>)</b> apply specified linear constraints.
+<p>
+<p>
+<p>
+        +-----------+
+    ----+ SE/Robust +--------------------------------------------------------
+<p>
+    <b>cluster(</b><i>varname</i><b>)</b>
+<p>
+    <b>robust</b> specifies that the Huber/White/sandwich estimator of variance is
+        to be used in place of the traditional calculation.  <b>robust</b> combined
+        with <b>cluster()</b> allows observations which are not independent within
+        cluster (although they must be independent between clusters).  If you
+        specify <b>pweight</b>s, <b>robust</b> is implied.
+<p>
+    <b>vce(</b><i>options</i><b>)</b> allowed. <b>vce()</b> supports <i>robust</i>, <i>opg</i>, and <i>native</i>.  <b>vce</b> does
+        not support options <i>bootstrap</i> or <i>jacknife</i>, However, <b>censornb</b> does
+        support the <b>bootstrap</b> and <b>jacknife</b> commands, so these modeling
+        capabilities are allowed.
+<p>
+<p>
+        +-----------+
+    ----+ Reporting +--------------------------------------------------------
+   
+    <b>level(</b><i>#</i><b>)</b> specifies the confidence level, in percent, for confidence
+        intervals of the coefficients; see help level.
+<p>
+    <b>nolog</b> suppresses the iteration log.
+<p>
+<p>
+        +-------------+
+    ----+ max options +------------------------------------------------------
+<p>
+<p>
+    <i>maximize_options</i>: technique(algorithm_spec), [no]log, trace, hessian,
+        gradient, showstep, shownrtolerance, difficult, iterate(#),
+        tolerance(#), ltolerance(#), gtolerance(#), nrtolerance(#),
+        nonrtolerance, from(init_specs); see maximize.
+<p>
+<p>
+        +-------------+
+    ----+ svy options +------------------------------------------------------
+<p>
+    <i>survey_options</i> are all available. See help svy
+<p>
+<p>
+<p>
+<p>
+<b><u>Author and support</u></b>
+<p>
+    <b>Joseph Hilbe</b>,<b> Arizona State University</b>:<b>  jhilbe@aol.com</b>
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>censornb</b> is a user authored program. Support is by author. See<b> Hilbe</b>,
+    <i>Negative Binomial Regression</i>, Cambridge Univ. Press, for discussion.
+    Related information can also be obtained at <b>[R] nbreg</b>.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. censornb time hmo age, censor(cenvcar) nolog irr</b>
+<p>
+    <b>. censornb time hmo age, censor(cenvar) nolog cluster(provnum)</b>
+<p>
+    <b>. bootstrap: censornb deaths smokes a2-a5, censor(cenvar)</b>
+        <b>exposure(pyears) irr nolog</b>
+<p>
+    <b>. svyset psuid [pweight=finalwgt], strata(stratid)</b>
+<p>
+    <b>. svy: censornb zinc age age2 weight female black orace rural, censor(cv)</b>
+        <b>nolog irr</b>
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] Negative binomial regression</b>; <b>[SVY] Svy: negative binomial</b>
+<p>
+    Online:  <b>help</b> <b>censornb</b> <b> nbreg</b>
+<p>
+<p>
+<p>
+<p>
+</pre>

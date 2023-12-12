@@ -1,0 +1,4 @@
+*! version 1.0.0  04feb2022
+sequence 7
+label resource "IE yellow"
+set rgb "231 202 85"

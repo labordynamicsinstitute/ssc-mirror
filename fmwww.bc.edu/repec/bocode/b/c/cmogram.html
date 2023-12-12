@@ -1,0 +1,236 @@
+<pre>
+<b>help cmogram</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+        
+    <b>cmogram</b> -- Draw histogram-style conditional mean or median graph
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>cmogram</b> <i>yvar</i> <i>xvar</i> [<i>if</i>] [<b>,</b> <i>options</i> ]
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>tit</u></b><b>le(</b>...<b>)</b>          title of graph
+      <b><u>con</u></b><b>trols(</b><i>varlist</i><b>)</b>   control variables for graphing residuals
+      <b><u>cut</u></b><b>point(</b><i>#</i><b>)</b>         point along <i>x</i> axis to split the graph
+      <b><u>cutr</u></b><b>ight</b>            include border observations on the right side
+      <b>ci(</b><i>#</i><b>)</b>               plot means with confidence intervals of level <i>#</i>
+      <b><u>med</u></b><b>ian</b>              plot medians rather than means
+      <b>count</b>               plot counts (frequencies) rather than means
+      <b><u>frac</u></b><b>tion</b>            plot fractions (proportions) rather than means
+      <b><u>l</u></b><b>ineat(</b><i>#</i><b>)</b>           draw one or more vertical lines at points along <i>x</i>
+                            axis
+      <b><u>sc</u></b><b>atter</b>             format as scatterplot rather than bar graph
+      <b><u>leg</u></b><b>end</b>              allow legend to display
+      <b><u>lf</u></b><b>it</b>                include line of best fit
+      <b>lfitci</b>              include line of best fit, with confidence interval
+      <b><u>qf</u></b><b>it</b>                include quadratic of best fit
+      <b>qfitci</b>              include quadratic of best fit, with confidence
+                            interval
+      <b><u>low</u></b><b>ess</b>              include local linear smooth plot
+      <b>by(</b><i>varname</i><b>)</b>         graph subgroups according to <i>varname</i>
+      <b><u>byt</u></b><b>itle(</b>...<b>)</b>        overall title for <i>by()</i> graphs
+      <b><u>byv</u></b><b>alues(</b>...<b>)</b>       optional ordered list of categories for <i>by()</i> graphs
+      <b><u>note</u></b><b>n</b>               note # observations at bottom of graph
+      <b>notepfx(</b>...<b>)</b>        prefix for note at bottom of graph
+      <b>notesfx(</b>...<b>)</b>        suffix for note at bottom of graph
+      <b><u>non</u></b><b>otes</b>             suppress all notes at bottom of graph
+      <b><u>h</u></b><b>istopts(</b><i>options</i><b>)</b>   control bin definition with histogram options
+      <b><u>g</u></b><b>raphopts(</b><i>options</i><b>)</b>  control graph output with graph options
+      <b><u>lfito</u></b><b>pts(</b><i>options</i><b>)</b>   control line or quadratic of best fit options
+      <b><u>lowo</u></b><b>pts(</b><i>options</i><b>)</b>    control lowess plot options
+      <b><u>cio</u></b><b>pts(</b><i>options</i><b>)</b>     control <i>ci</i> confidence intervals with ci options
+      <b><u>rcapo</u></b><b>pts(</b><i>options</i><b>)</b>   control <i>ci</i> output with rcap options
+      <b><u>sav</u></b><b>ing(</b><i>filename</i><b>)</b>    save graph to file
+      <b><u>gen</u></b><b>erate(</b><i>prefix</i><b>)</b>    save graph values in variables with given prefix;
+                            programmer's option
+    -------------------------------------------------------------------------
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>cmogram</b> graphs the means, medians, frequencies, or proportions of <i>yvar</i>,
+    conditional on <i>xvar</i>. By default, bins are defined along the <i>x</i> axis as
+    they are by histogram. Alternatively, histogram options can be used to
+    override the default bin definitions, as in <b>histopts(</b><i>bin</i><b>(</b><i>10</i><b>))</b>. The exact
+    bin definitions are always output along with the graph(s).
+<p>
+    While the default output style is similar to a histogram, the <b>scatter</b>
+    option allows for scatterplot-style output. For regression discontinuity
+    and similar applications, <b>cutpoint(</b><i>#</i><b>)</b> can be used to split graphs at a
+    particular <i>x</i> value. To plot conditional means or medians of residuals,
+    <b>controls(</b>...<b>)</b> can be used; the plotted residuals will be after a
+    regression of the form <i>regress yvar controls</i>.
+<p>
+    <b>by</b> allows subgroups to be plotted separately.
+<p>
+<a name="options"></a><p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+    <b>title(</b>...<b>)</b> adds a title to the top of the graph.  Specify the graph
+        number as the <i>#</i> in <b>title#(</b>...<b>)</b> to specify a title for only one of
+        several graphs output (e.g., using <b>by</b>).
+<p>
+    <b>controls(</b><i>varlist</i><b>)</b> considers residuals of <i>yvar</i> rather than the values of
+        <i>yvar</i> directly.  A regression of the form <i>regress yvar controls</i> is
+        executed, then means or medians of the residuals are plotted
+        accordingly.
+<p>
+    <b>cutpoint(</b><i>#</i><b>)</b> splits the graph at the specified point along the <i>x</i> axis.
+        Bins are defined along the <i>x</i> axis to the right and left of this
+        cutoff, with no bin spanning the cutoff.
+<p>
+    <b>cutright</b> includes border observations on the right side of a split graph.
+        By default, border observations are included on the left.
+<p>
+    <b>ci(</b><i>#</i><b>)</b> plots means of <i>yvar</i> with confidence intervals of level <i>#</i>.
+<p>
+    <b>median</b> plots medians of <i>yvar</i> rather than means.
+<p>
+    <b>count</b> plots counts (frequencies) of <i>yvar</i> rather than means.
+<p>
+    <b>fraction</b> plots fractions (proportions) of <i>yvar</i> rather than means.
+<p>
+    <b>lineat(</b><i>#</i><b>)</b> draws a vertical line at the specified point along the <i>x</i> axis.
+        To draw multiple lines, include multiple numbers separated by spaces.
+<p>
+    <b>scatter</b> formats output as a scatterplot rather than a bar graph. In this
+        case, each conditional median or mean is plotted as a dot rather than
+        a bar.
+<p>
+    <b>legend</b> allows display of the legend; by default it is suppressed. To more
+        fully control display of the legend, include this option as well as
+        <b>graphopts(</b><i>legend</i><b>(</b>...<b>))</b>.
+<p>
+    <b>lfit</b> plots a line of best fit on the graph. When the graph is split using
+        <b>cutpoint</b>, separate lines of best fit are plotted on the left and
+        right.
+<p>
+    <b>lfitci</b> is the same as <b>lfit</b>, but with confidence intervals.
+<p>
+    <b>qfit</b> is the same as <b>lfit</b>, but with a quadratic.
+<p>
+    <b>qfitci</b> is the same as <b>qfit</b>, but with confidence intervals.
+<p>
+    <b>lowess</b> plots local linear smooth (lowess) plot on the graph. When the
+        graph is split using <b>cutpoint</b>, separate lowess plots are plotted on
+        the left and right.
+<p>
+    <b>by(</b><i>varname</i><b>)</b> graphs subgroups separately, according to <i>varname</i>. Subgroups
+        are identified in the note field below each graph.
+<p>
+    <b>bytitle(</b>...<b>)</b> adds an overall title to a series of subgroup graphs, when
+        <b>by</b> is used.
+<p>
+    <b>byvalues(</b>...<b>)</b> specifies an ordered list of category values, when <b>by</b> is
+        used. So, e.g., <b>byvalues(</b><i>1 0</i><b>)</b> will place the <i>1</i> graph before the <i>0</i>
+        graph. By default, graphs appear in sorted order.
+<p>
+    <b>noten</b> notes the number of observations at the bottom of the graph.
+<p>
+    <b>notepfx(</b>...<b>)</b> adds a prefix to the note at the bottom of the graph. This
+        will precede the number of observations and/or the subgroup,
+        depending on other options.
+<p>
+    <b>notesfx(</b>...<b>)</b> adds a suffix to the note at the bottom of the graph. This
+        will follow the number of observations and/or the subgroup, depending
+        on other options.
+<p>
+    <b>nonotes</b> suppresses all notes at the bottom of the graph, even when using
+        <b>by</b>.
+<p>
+    <b>histopts(</b><i>options</i><b>)</b> controls the definition of bins with histogram options.
+        When graphs are split by <b>cutpoint</b>, these options govern bin
+        definitions for each side of the graph. So, e.g., <b>histopts(</b><i>bin</i><b>(</b><i>10</i><b>))</b>
+        will define 10 bins to the left and 10 to the right.
+<p>
+    <b>graphopts(</b><i>options</i><b>)</b> specifies additional graph options to govern graph
+        output. These options can control any aspect of the look of the
+        graph, including titles, labels, and styles. Specify the graph number
+        as the <i>#</i> in <b>graphopts#(</b><i>options</i><b>)</b> to specify options for only one of
+        several graphs output.
+<p>
+    <b>lfitopts(</b><i>options</i><b>)</b> specifies additional lfit options to govern output of
+        the line-of-best-fit when using <b>lfit</b>.  When using <b>lfitci</b>, specifies
+        additional lfitci options.  When using <b>qfit</b>, specifies additional
+        qfit options.  When using <b>qfitci</b>, specifies additional qfitci
+        options.  Specify the graph number as the <i>#</i> in <b>lfitopts#(</b><i>options</i><b>)</b> to
+        specify options for only one of several graphs output.
+<p>
+    <b>lowopts(</b><i>options</i><b>)</b> specifies additional lowess options to govern output of
+        lowess plots when using <b>lowess</b>.  Specify the graph number as the <i>#</i> in
+        <b>lowopts#(</b><i>options</i><b>)</b> to specify options for only one of several graphs
+        output.
+<p>
+    <b>ciopts(</b><i>options</i><b>)</b> specifies additional ci options to govern calculation of
+        confidence intervals when using <b>ci</b>.
+<p>
+    <b>rcapopts(</b><i>options</i><b>)</b> specifies additional rcap options to govern output of
+        confidence intervals when using <b>ci</b>.  Specify the graph number as the
+        <i>#</i> in <b>rcapopts#(</b><i>options</i><b>)</b> to specify options for only one of several
+        graphs output.
+<p>
+    <b>saving(</b><i>filename</i><b>)</b> exports the graph to <i>filename</i> and closes the graph
+        window. This option is ideal for automating the output of graphs with
+        .do files.
+<p>
+    <b>generate(</b><i>prefix</i><b>)</b> is a programmer's option to save graphing values, as in
+        twoway__histogram_gen.  Variables of the form <i>prefix</i>x#, where <i>#</i> is
+        the graph number starting from 0, are saved with the center <i>x</i> value
+        for each bin.  Variables of the form <i>prefix</i>y# are saved with the
+        corresponding heights.
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>cmogram</b> saves the following in <b>r()</b>:
+<p>
+    Scalars:
+<p>
+         <b>r(bw#)</b>    bin width for graph <i>#</i>
+<p>
+    By default, there is only one graph output by <b>cmogram</b>, so <i>#</i> is 0; when
+    <b>cutpoint</b> is specified, there are two graphs, 0 and 1, corresponding to
+    the left and right sides of the graph; when <b>by</b> is specified, there are
+    additional graphs. To save more details for each graph, use the <b>generate</b>
+    option.
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. sysuse auto</b>
+<p>
+    <b>. cmogram mpg weight</b>
+<p>
+    <b>. cmogram mpg weight, median title("Median MPG by Weight")</b>
+<p>
+    <b>. cmogram mpg weight, median title("Median MPG by Weight") saving("median</b>
+        <b>mpg.png")</b>
+<p>
+    <b>. cmogram mpg weight, histopts(bin(10)) lfit scatter</b>
+<p>
+    <b>. cmogram mpg weight, histopts(bin(10)) lfit graphopts(note("Source:</b>
+        <b>..."))</b>
+<p>
+    <b>. cmogram mpg weight, histopts(bin(5)) lfit cutpoint(3250) lineat(3250)</b>
+<p>
+    <b>. cmogram mpg weight, histopts(bin(5)) lfit cutpoint(3250) lineat(3000</b>
+        <b>3250 3500) controls(price)</b>
+<p>
+    <b>. cmogram mpg weight, histopts(bin(5)) by(foreign) bytitle("Mean MPG by</b>
+        <b>Type and Weight")</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+Christopher Robert, Harvard University, chris_robert@hksphd.harvard.edu
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: help for <b>histogram</b>
+</pre>

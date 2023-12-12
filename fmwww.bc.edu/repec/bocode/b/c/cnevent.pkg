@@ -1,0 +1,26 @@
+d 'CNEVENT': module to carry out an event study with Chinese publicly listed firms
+d
+d  cnevent can carry out a standard market model event study. It
+d calculates the abnormal returns and Cumulative abnormal returns  
+d  for each event.  To run this command, you only need to load your
+d event list into memory containing necessary variables. The   
+d event list contains a variable of event date that record the date
+d when the event happens and a variable of event firm id which	 
+d identifies the subject of each sample. 
+d
+d KW:  China
+d KW: firms
+d KW: event study
+d
+d Requires: Stata version 17 and cntrade from SSC (q.v.)
+d
+d Distribution-Date: 20230928
+d
+d Author: Chuntao Li, Zhongnan Univ. of Econ. & Law 
+d Support: email chtl@@zuel.edu.cn
+d
+d Author: Yizhuo Fang, Zhongnan Univ. of Econ. & Law 
+d Support: email 13608671126@@163.com
+d
+f cnevent.ado
+f cnevent.sthlp

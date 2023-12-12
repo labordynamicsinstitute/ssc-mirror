@@ -1,0 +1,60 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>circcentre</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Centring circular data</u></b>
+<p>
+        <b>circcentre</b> <i>varname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] <b>,</b> <b><u>g</u></b><b>enerate(</b><i>newvar</i><b>)</b>
+                 [<b><u>c</u></b><b>entre(</b><i>centre</i><b>)</b> <b>sine</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>circcentre</b> takes <i>varname</i>, a circular variable between 0 and 360 degrees,
+    and produces a new variable <i>newvar</i> centring <i>varname</i> on the direction(s)
+    given by <b>centre()</b>. If <b>centre()</b> is not specified, <b>circcentre</b> looks for a
+    vector mean left behind by circsummarize as <b>r(vecmean)</b>.  <i>newvar</i> varies
+    from -180 degrees to 180 degrees, with centre at 0 degrees.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>generate()</b> specifies the name of the new variable and is not optional.
+<p>
+    <b>centre()</b> specifies the direction(s) which correspond to the centre(s) of
+        <i>newvar</i>. Possibilities are various constants or the name of a variable
+        containing one or more directions.
+<p>
+    <b>sine</b> specifies that the new variable be expressed on a sine scale,
+        precisely as sine of (<i>varname</i> - centre) / 2. This transformation
+        pulls in the tails and pushes out the middle of the distribution. For
+        examples of this transformation, see Fisher (1993).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. circsummarize wallasp</b>
+    <b>. circcentre wallasp, gen(wallasp2)</b>
+    <b>. circcentre wallasp, gen(wallasp3) centre(45)</b>
+<p>
+    <b>. circcentre orient, gen(relflow) centre(iceflow)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    Fisher, N.I. 1993. <i>Statistical analysis of circular data.</i>  Cambridge:
+        Cambridge University Press.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line:  help for circdiff, circsummarize
+<p>
+</pre>

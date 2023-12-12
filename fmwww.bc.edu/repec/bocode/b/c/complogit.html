@@ -1,0 +1,87 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>complogit</b>                                              (Glenn Hoetker)
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Compare coefficients across logit equations</u></b>
+<p>
+        <b>complogit</b> <i>varlist</i> , <b>group(</b><i>varname</i><b>)</b> [ <b><u>num</u></b><b>erator(</b><i>varname</i><b>)</b>
+               <b><u>den</u></b><b>ominator(</b><i>varname</i><b>)</b> <b><u>sp</u></b><b>ecific(</b><i>varname</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<p>
+<b>complogit</b> allows for the accurate comparison of coefficients across
+groups in a logit equation by automating the calculations discussed in Hoetker 
+&gt; (2004; 2007).  
+This help file will make little sense without reference to those articles.
+<p>
+<p>
+In its basic application, it performs the requested logit equation on
+all observations, on cases where the <i> group</i> variable=0 and on cases 
+where it equals 1.  It then performs a logit for all observations, allowing
+residual variance to differ across groups. It then tests whether residual 
+variation differs across groups using a likelihood ratio and Wald chi-square 
+test. Lastly, it uses a likelihood ratio test to test the null hypothesis 
+that the true coefficients are the same across groups versus the alternative 
+that <i>at least one</i> coefficient differs.
+<p>
+<p>
+Optionally, the user may request a test of test of the null hypothesis that the
+&gt;  
+true coefficients are the same across groups versus the alternative that 
+<i>a specific</i> coefficient differs. To do so, specify the desired coefficient
+in the <b>specific</b> option.  Note that this test assumes that all other
+coefficients are equal across groups.
+<p>
+<p>
+Optionally, the user may request a test that the ratio of two coeffiients
+is the same across groups.  To do so, specify the desired variables in the
+<b>numerator</b> and <b>denominator</b> options.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+See above
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+<p>
+Version 8 of Stata is required.  There is minimal error checking. 
+<b>complogitml.ado</b> contains the maximum likelihood routine and is of little direct
+use.  It is based on code contained in Allison (1999). Users may also wish to s
+&gt; ee the <b> oglm</b> command
+of Richard Williams and his associated papers.
+<p>
+<b><u>References</u></b>
+<p>
+Allison, P.D. 1999. Comparing logit and probit coefficients across groups. 
+<i> SMR/Sociological Methods &amp; Research</i>. 28(2): 186-208.
+<p>
+Hoetker, G. 2004. Confounded coefficients: Accurately comparing logit 
+and probit coefficients across groups.  Working paper. 
+http://www.business.uiuc.edu/ghoetker/documents/Hoetker_comp_logit.pdf
+<p>
+Hoetker, G. 2007. The use of logit and probit models in strategic management re
+&gt; search: Critical issues.
+<i> Strategic Management Journal</i>. 28(4): 331-343. 
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+                . complogit y x1 x2, group(type)
+<p>
+                . complogit y x1 x2, group(type) num(x1) den(x2)
+<p>
+                . complogit y x1 x2, group(type) sp(x1)
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+Glenn Hoetker, College of Business, University of Illinois at Urbana-Champaign
+Email: ghoetker@uiuc.edu
+<p>
+</pre>

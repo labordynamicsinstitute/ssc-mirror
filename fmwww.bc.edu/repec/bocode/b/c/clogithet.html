@@ -1,0 +1,139 @@
+<pre>
+-------------------------------------------------------------------------------
+<b>help clogithet</b>
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>clogithet</b> -- Heteroscedastic conditional logit model.
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>clogithet</b> <i>depvar</i> [<i>indepvars</i>] [<i>if</i>] [<i>in</i>] [<i>weight</i>] <b>,</b> <b><u>gr</u></b><b>oup(</b><i>varname</i><b>)</b> <b><u>het</u></b><b>(</b>
+               <i>varlist</i><b>)</b> [<i>options</i>]
+<p>
+    <i>options</i>                     Description
+    -------------------------------------------------------------------------
+    Model
+    * <b><u>gr</u></b><b>oup(</b><i>varname</i><b>)</b>            matched group variable
+    * <b>het(</b><i>varlist</i><b>)</b>              independent variables to model the variance
+<p>
+    SE/Robust
+      <b><u>r</u></b><b>obust</b>                    robust standard errors
+      <b><u>cl</u></b><b>uster(</b><i>varname</i><b>)</b>          adjust standard errors for intragroup
+                                  correlation
+      <b>opg</b>                       standard errors based on the outer product of
+                                  gradient matrix
+<p>
+    Reporting
+      <b>lm</b>                        report Lagrange multiplier test for
+                                  heteroscedasticity
+      <b>clogit</b>                    report (homoscedastic) conditional logit
+                                  estimates
+<p>
+    -------------------------------------------------------------------------
+    * <b>group(</b><i>varname</i><b>)</b> and <b>het(</b><i>varlist</i><b>)</b> are required.
+    <b>fweight</b>s, <b>iweight</b>s, and <b>pweight</b>s are allowed (see weight), but they are
+      interpreted to apply to groups as a whole, not to individual
+      observations.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>clogithet</b> fits a heteroscedastic version of McFadden's conditional logit
+    model. This model is also referred to as the parametrised heteroscedastic
+    multinomial logit model (Hensher et al., 1999) and the heteroscedastic
+    logit model (DeShazo and Fermo, 2002; Hole, 2006).
+<p>
+    Like <b>hetprob</b>, <b>clogithet</b> models the relationship between the error
+    variance and a list of user-specified variables. Note that in the case of
+    <b>clogithet</b> it is the <i>scale parameter</i> which is a function of exp(Z*gamma),
+    rather than the variance itself.  The scale parameter is inversely
+    related to the variance (see Hole, 2006, for details). The variables in Z
+    must be constant within groups, i.e. they must be characteristics of the
+    decision-maker rather than alternative attributes.
+<p>
+    The data setup is the same as for <b>clogit</b>.
+<p>
+    See logistic estimation commands for a list of related estimation
+    commands.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +-------+
+    ----+ Model +------------------------------------------------------------
+<p>
+    <b>group(</b><i>varname</i><b>)</b> is required; it specifies a numeric identifier variable
+        for the matched groups.
+<p>
+    <b>het(</b><i>varlist</i><b>)</b> is required; it specifies the independent variables in the
+        variance function.
+<p>
+        +-----------+
+    ----+ SE/Robust +--------------------------------------------------------
+<p>
+    <b>robust</b>, <b>cluster(</b><i>varname</i><b>)</b>; see estimation options.
+<p>
+    <b>opg</b>; standard errors based on the outer product of gradient estimate of
+        the covariance matrix.
+<p>
+        +-----------+
+    ----+ Reporting +--------------------------------------------------------
+<p>
+    <b>lm</b>; report Lagrange multiplier test for heteroscedasticity (H0: gamma
+        =0).
+<p>
+    <b>clogit</b>; report (homoscedastic) conditional logit estimates.
+<p>
+        +-------------+
+    ----+ Max options +------------------------------------------------------
+ 
+    <i>maximize_options</i>; <b><u>tech</u></b><b>nique(</b><i>algorithm_spec</i><b>)</b>, <b><u>iter</u></b><b>ate(</b><i>#</i><b>)</b>, <b><u>tr</u></b><b>ace</b>, <b><u>grad</u></b><b>ient</b>,
+        <b>showstep</b>, <b><u>hess</u></b><b>ian</b>, <b><u>tol</u></b><b>erance(</b><i>#</i><b>)</b>, <b><u>ltol</u></b><b>erance(</b><i>#</i><b>)</b> <b><u>gtol</u></b><b>erance(</b><i>#</i><b>)</b>,
+        <b><u>nrtol</u></b><b>erance(</b><i>#</i><b>)</b>, <b>from(</b><i>init_specs</i><b>)</b>, <b><u>dif</u></b><b>ficult</b>; see maximize.  Note that
+        <b>technique(</b><i>bhhh</i><b>)</b> is not allowed.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. webuse travel</b>
+    <b>. gen aasc = (mode == 1)</b>
+    <b>. gen tasc = (mode == 2)</b>
+    <b>. gen basc = (mode == 3)</b>
+    <b>. clogithet choice aasc tasc basc termtime travelcost, group(id)</b>
+        <b>het(partysize)</b>
+    <b>. clogithet choice aasc tasc basc termtime travelcost, group(id)</b>
+        <b>het(partysize) robust lm</b>
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    DeShazo, J.R., Fermo, G., 2002. Designing choice sets for stated
+        preference methods: the effects of complexity on choice consistency.
+        Journal of Environmental Economics and Management 44, 123-143.
+<p>
+    Hensher, D., Louviere, J., Swait, J., 1999. Combining sources of
+        preference data.  Journal of Econometrics 89, 197-221.
+<p>
+    Hole, A.R., 2006. Small-sample properties of tests for heteroscedasticity
+        in the conditional logit model. Economics Bulletin 3, 1-14. Available
+        at 
+        http://economicsbulletin.vanderbilt.edu/2006/volume3/EB-06C20063A.pdf
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    This command was written by Arne Risa Hole (a.r.hole@sheffield.ac.uk),
+        Department of Economics, University of Sheffield. Comments and
+        suggestions are welcome.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] clogit</b>
+<p>
+    Online:  <b>clogit</b>
+</pre>

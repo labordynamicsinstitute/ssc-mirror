@@ -1,0 +1,24 @@
+d 'CLASSTAB': module or computing diagnostic accuracy statistics and classification table
+d
+d  classtab reports various classification statistics and their
+d exact confidence intervals (also known in the literature as
+d Clopper-Pearson [1934] binomial confidence intervals) and
+d provides a 2 x 2 classification table. classtabi is the immediate
+d form of classtab. 
+d
+d KW:  classification
+d KW: data mining
+d KW: diagnostic accuracy
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20231012
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f classtab.ado
+f classtab.sthlp
+f classtabi.ado
+f classtabi.sthlp
+f classtab_example.dta

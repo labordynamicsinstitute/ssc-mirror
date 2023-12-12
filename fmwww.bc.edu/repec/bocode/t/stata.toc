@@ -75,6 +75,7 @@ p timeit module to provide single line version of timer on/off
 p timestamp module to obtain a UNIX timestamp and the current time of a user-specified timezone
 p titebeta module to conduct toxicity monitoring for phase 2 (and 3) trials 
 p title module to create a title for logfiles
+p tiva2023 module to manipulate the OECD TiVA inter-country input-output tables database 
 p tkdensity module for univariate kernel density estimation with calculation on transformed scale
 p tknz module to tokenize string into named macros
 p tmap module for simple thematic mapping

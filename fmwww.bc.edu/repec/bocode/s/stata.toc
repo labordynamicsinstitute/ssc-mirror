@@ -20,6 +20,7 @@ p step3 module to relate latent class membership to external variables
 p stpm3 module to fit flexible parametric survival models
 p stpp module to compute Pohar-Perme non-parametric estimate of marginal relative (net) survival
 p streamplot module to produce streamplots
+p stripplot module for strip plots (one-way dot plots) 
 p styletextab module to style LaTeX tables exported by collect suite of commands
 p submatrix module to perform advanced matrix subscripting
 p summclust module to compute cluster level measures of leverage, influence, and a cluster jackknife variance estimator

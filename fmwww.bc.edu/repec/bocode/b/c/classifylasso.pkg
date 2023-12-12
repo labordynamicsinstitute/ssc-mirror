@@ -1,0 +1,41 @@
+d 'CLASSIFYLASSO': module to identify latent group structures via Classifier-Lasso.
+d
+d   classifylasso facilitates practitioners to identifiy latent
+d group structures via Classifier-Lasso.  It simultaneously   
+d identifies and estimates unobserved parameter heterogeneity in
+d panel data models using penalized techniques.    classifylasso
+d displays the group selection information and an estimation table.
+d  Estimation results are stored in e()    form.  Postestimation
+d commands are allowed to generate new variables or to visualize
+d more results. 
+d
+d KW: classification
+d KW: lasso
+d KW: latent groups 
+d
+d Requires: Stata version 17 and reghdfe, ftools from SSC (q.v.)
+d
+d Distribution-Date: 20231018
+d
+d Author:  Wenxin Huang,   Antai College of Economics and Management, Shanghai Jiao Tong University
+d Support: email wxhuang@@sjtu.edu.cn
+d
+d Author: Yiru Wang,   Department of Economics, University of Pittsburgh
+d Support: email yiru.wang@@pitt.edu 
+d
+d Author:  Lingyun Zhou,  PBC School of Finance, Tsinghua University
+d Support: email zhouly.23@@pbcsf.tsinghua.edu.cn
+d
+f classifylasso.ado
+f classifylasso.sthlp
+f classifylasso.mata
+f classifylasso_p.ado
+f classifylasso_p.sthlp
+f classocoef.ado
+f classocoef.sthlp
+f classogroup.ado
+f classogroup.sthlp
+f classoselect.ado
+f classoselect.sthlp
+f ../d/demo.do
+f ../s/saving.dta

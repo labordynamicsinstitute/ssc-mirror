@@ -1,0 +1,288 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>censlope</b>
+               (SJ6-4: snp15_7; SJ6-3: snp15_6; SJ5-3: snp15_5; SJ3-3: snp15_4;
+                               STB-61: snp15_3; STB-58: snp15_2; STB-57: snp15)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Robust confidence intervals for median and other percentile slopes</u></b>
+<p>
+        <b>censlope</b> <i>yvarname</i> <i>xvarname</i> [<i>weight</i>] [<i>if</i>] [<i>in</i>]<b>,</b> [<b><u>ce</u></b><b>ntile(</b><i>numlist</i><b>)</b>
+                     <b><u>ef</u></b><b>orm</b> <b><u>ys</u></b><b>targenerate(</b><i>newvarlist</i><b>)</b> <b><u>esta</u></b><b>ddr</b> <i>somersd_options</i>
+                     <i>iteration_options</i>]
+<p>
+    where <i>yvarname</i> and <i>xvarname</i> are variable names.
+<p>
+    <b>fweight</b>s, <b>iweight</b>s, and <b>pweight</b>s are allowed; see weight.  They are
+    interpreted as for <b>somersd</b>.
+<p>
+    <b>bootstrap</b>, <b>by</b>, <b>jackknife</b>, and <b>statsby</b> are allowed; see prefix.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>censlope</b> calculates confidence intervals for generalized Theil-Sen median
+    slopes and other percentile slopes of a Y variable specified by <i>yvarname</i>
+    with respect to an X variable specified by <i>xvarname</i>.  These confidence
+    intervals are robust to the possibility that the population distributions
+    of the Y variable, conditional on different values of the X variable, are
+    different in ways other than location.  This might happen if, for
+    example, the conditional distributions had different variances.  For
+    positive-valued Y variables, <b>censlope</b> can be used to calculate confidence
+    intervals for median per-unit ratios or other percentile per-unit ratios
+    associated with a unit increment in the X variable.  If the X variable is
+    binary with values 0 and 1, then the generalized Theil-Sen percentile
+    slopes are the generalized Hodges-Lehmann percentile differences between
+    the group of observations whose X value is 1 and the group of
+    observations whose X value is 0.  <b>censlope</b> is part of the <b>somersd</b> package
+    and requires the <b>somersd</b> program to work.  It executes the <b>somersd</b>
+    command,
+<p>
+        <b>somersd</b> <i>xvarname</i> <i>yvarname</i> [<i>weight</i>] [<i>if</i>] [<i>in</i>] [<b>,</b> <i>somersd_options</i>]
+<p>
+    and then estimates the percentile slopes.  The estimates and confidence
+    limits for the percentile slopes are evaluated using an iterative
+    numerical method, which the user may change from the default by using the
+    <i>iteration_options</i>.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>centile(</b><i>numlist</i><b>)</b> specifies a list of percentile slopes to be reported and
+        defaults to <b>centile(50)</b> (median only) if not specified.  Specifying
+        <b>centile(25 50 75)</b> will produce the 25th, 50th, and 75th percentile
+        differences.
+<p>
+    <b>eform</b> specifies that exponentiated percentile slopes be given.  This
+        option is used if <i>yvarname</i> specifies the log of a positive-valued
+        variable.  In this case, confidence intervals are calculated for
+        percentile ratios or per-unit ratios between values of the original
+        positive variable, instead of for percentile differences or per-unit
+        differences.
+<p>
+    <b>ystargenerate(</b><i>newvarlist</i><b>)</b> specifies a list of variables to be generated,
+        corresponding to the percentile slopes, containing the differences
+        <b>Y*(beta)=Y-X*beta</b>, where <b>beta</b> is the percentile slope.  The variable
+        names in the <i>newvarlist</i> are matched to the list of percentiles
+        specified by the <b>centile()</b> option, sorted in ascending order of
+        percent.  If the two lists have different lengths, then <b>censlope</b>
+        generates a number <i>nmin</i> of new variables equal to the minimum length
+        of the two lists, matching the first <i>nmin</i> percentiles with the first
+        <i>nmin</i> new variable names.  Usually, there is only one percentile slope
+        (the median slope), and one new <b>ystargenerate()</b> variable, whose
+        median can be used as the intercept when drawing a straight line
+        through the data points on a scatterplot.
+<p>
+    <b>estaddr</b> specifies that the results saved in <b>r()</b> also be saved in <b>e()</b> (see
+        <b>Saved results</b> below).  This option makes it easier to use <b>censlope</b>
+        with <b>parmby</b>, to create an output dataset (or results set) with one
+        observation per by-group and data on confidence intervals for Somers'
+        D and median slopes.  <b>parmby</b> is part of the package <b>parmest</b>,
+        downloadable from SSC.
+<p>
+    <i>somersd_options</i> are any of the options available with <b>somersd</b>.
+<p>
+    <i>iteration_options</i> are any of the options described in censlope_iteration.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>censlope</b> is part of the <b>somersd</b> package and uses the program <b>somersd</b>,
+    which calculates confidence intervals for Somers' D and Kendall's tau-a.
+    Given two random variables Y and X, a 100<b>q</b>th percentile slope of Y with
+    respect to X is defined as a value of <b>beta</b> satisfying the equation
+<p>
+    <b>theta( Y-beta*X , X ) = 1 - 2q</b>
+<p>
+    where <b>theta(U,V)</b> represents either <b>D(U|V)</b> (Somers' D) or <b>tau_a(U,V)</b>
+    (Kendall's tau-a) between the variables U and V.  (For definitions of
+    Somers' D and Kendall's tau-a, see <b>somersd</b>.) If <b>q</b>=0.5, then the value of
+    <b>beta</b> is a Theil-Sen median slope.  If in addition X is a binary variable,
+    with possible values 0 and 1, then the value of <b>beta</b> is a Hodges-Lehmann
+    median difference between Y values in the subpopulation in which X==1 and
+    Y values in the subpopulation in which X==0.  An alternative program for
+    calculating Hodges-Lehmann median (and other percentile) differences is 
+    <b>cendif</b>, which is also distributed as part of the <b>somersd</b> package.
+<p>
+    For extreme percentiles and/or very small sample numbers, <b>censlope</b>
+    sometimes calculates infinite positive upper confidence limits or
+    infinite negative lower confidence limits.  These are represented by
+    <b>+/-c(maxdouble)</b>, where <b>c(maxdouble)</b> is the c-class value specifying the
+    largest positive number that can be stored in a double.
+<p>
+    <b>censlope</b> can use all the options used by <b>somersd</b>, to use any of the
+    extended versions of Somers' D or Kendall's tau-a in the definition of
+    percentile slopes, differences, and ratios.  In particular, we may use
+    the <b>wstrata()</b> option of <b>somersd</b> to estimate within-stratum median
+    differences and slopes, based on comparisons between observations between
+    the same stratum.  This method allows us to estimate median differences
+    in an outcome variable, associated with an exposure, within strata
+    defined by grouping a confounder, or by grouping a propensity score for
+    the exposure based on multiple confounders.  Therefore, rank parameters
+    (such as median differences) can be adjusted for confounders, just as
+    regression parameters can be adjusted for confounders.  However,
+    regression methods are required to define propensity scores.
+<p>
+    The program <b>cendif</b> is also part of the <b>somersd</b> package and calculates
+    confidence intervals for a restricted subset of the parameters estimated
+    by <b>censlope</b>, assuming a binary X variable and a restricted range of
+    <i>somersd_options</i>.  <b>cendif</b> does not use an iterative method but instead
+    calculates all possible differences between Y values in the two groups
+    defined by the binary X variable.  In large samples, this method is more
+    time-consuming than the iterative method used by <b>censlope</b>.  However, in
+    small samples (such as the <b>auto</b> data), <b>cendif</b> can be much faster than
+    <b>censlope</b>.
+<p>
+    Full documentation of the <b>somersd</b> package (including Methods and
+    Formulas) is provided in the files <b>somersd.pdf</b>, <b>censlope.pdf</b>, and
+    <b>cendif.pdf</b>, which are distributed with the <b>somersd</b> package as ancillary
+    files (see <b>net</b>).  They can be viewed using the Adobe Acrobat Reader,
+    which can be downloaded from
+<p>
+    http://www.adobe.com/products/acrobat/readermain.html
+<p>
+    For a comprehensive review of Kendall's tau-a, Somers' D, and median
+    differences, see Newson (2002).  The definitive reference for the
+    statistical and computational methods of <b>censlope</b> is Newson (2006).
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+        <b>. censlope weight length</b>
+<p>
+        <b>. censlope weight length, transf(z)</b>
+<p>
+        <b>. censlope weight length, transf(z) centile(25(25)75)</b>
+<p>
+        <b>. censlope weight foreign</b>
+<p>
+        <b>. censlope weight foreign, transf(z)</b>
+<p>
+        <b>. censlope weight foreign, transf(z) centile(0(25)100)</b>
+<p>
+    The following example estimates percentile weight ratios between non-U.S.
+    and U.S. cars:
+<p>
+        <b>. gene logweight=log(weight)</b>
+        <b>. censlope logweight foreign, transf(z) centile(0(25)100) eform</b>
+<p>
+    The following example uses the <b>wstrata</b> option of <b>somersd</b> to calculate
+    median differences in fuel efficiency between non-U.S. and U.S. cars in
+    the same weight quintile.  We find that non-U.S. cars typically travel 2
+    to 7 more miles per gallon than U.S. cars, but 0 to 4 fewer miles per
+    gallon than U.S. cars in the same weight quintile:
+<p>
+        <b>. xtile weightgp=weight, nquantiles(5)</b>
+        <b>. tab weightgp foreign</b>
+        <b>. censlope mpg foreign, transf(z)</b>
+        <b>. censlope mpg foreign, transf(z) wstrata(weightgp)</b>
+<p>
+    The following example creates a scatterplot of car weight in U.S. pounds
+    against car length in U.S. inches with a straight line through the data
+    points, whose slope is the median slope and whose intercept is the median
+    of the variable <b>resi</b> generated by the <b>ystargenerate()</b> option:
+<p>
+        <b>. censlope weight length, transf(z) tdist ystargenerate(resi)</b>
+        <b>. egen intercept=median(resi)</b>
+        <b>. gene what=weight-resi+intercept</b>
+        <b>. lab var what "Predicted weight"</b>
+        <b>. scatter weight length || line what length, sort</b>
+<p>
+    The following example uses the <b>estaddr</b> option together with <b>parmby</b> (part
+    of the <b>parmest</b> package) to produce an output dataset (or results set) in
+    the memory, with one observation per by-group, and data on confidence
+    intervals for Somers' D and median slopes.  This dataset is then input to
+    the <b>eclplot</b> command to produce a confidence interval plot of Somers' D
+    parameters and a confidence interval plot of median slopes.  The packages
+    <b>parmest</b> and <b>eclplot</b> can be downloaded from SSC.
+<p>
+        <b>. parmby "censlope weight length, tdist estaddr", by(foreign)</b>
+            <b>norestore ecol(cimat) rename(ec_1_1 percent ec_1_2 pctlslope</b>
+            <b>ec_1_3 minimum ec_1_4 maximum)</b>
+        <b>. list</b>
+        <b>. eclplot estimate min95 max95 foreign, hori ylabel(0 1)</b>
+            <b>xtitle("Somers' D (95% CI)")</b>
+        <b>. eclplot pctlslope minimum maximum foreign, hori ylabel(0 1)</b>
+            <b>xtitle("Percentile slope (95% CI)")</b>
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>censlope</b> saves the following results in <b>r()</b>:
+<p>
+    Scalars         
+    <b>r(level)</b>        confidence level
+    <b>r(fromabs)</b>      value of the <b>fromabs()</b> option
+    <b>r(tolerance)</b>    value of the <b>tolerance()</b> option
+<p>
+    Macros          
+    <b>r(yvar)</b>         name of the Y variable
+    <b>r(xvar)</b>         name of the X variable
+    <b>r(eform)</b>        <b>eform</b> if specified
+    <b>r(centiles)</b>     list of percentages for the percentiles
+    <b>r(technique)</b>    list of techniques from the <b>technique()</b> option
+    <b>r(tech_steps)</b>   list of step numbers for the techniques
+<p>
+    Matrices        
+    <b>r(cimat)</b>        confidence intervals for percentile differences or ratios
+    <b>r(rcmat)</b>        return codes for entries of <b>r(cimat)</b>
+    <b>r(bracketmat)</b>   bracket matrix
+    <b>r(techstepmat)</b>  column vector of step numbers for the techniques
+<p>
+    The matrix <b>r(cimat)</b> has one row per percentile, as well as columns
+    containing the percentages, percentile estimates, lower and upper
+    confidence limits (labeled <b>Percent</b>, <b>Pctl_Slope</b>, <b>Minimum</b>, and <b>Maximum</b> if
+    <b>eform</b> is not specified, or <b>Percent</b>, <b>Pctl_Ratio</b>, <b>Minimum</b>, and <b>Maximum</b> if
+    <b>eform</b> is specified).  The matrix <b>r(rcmat)</b> has the same numbers of rows
+    and columns as <b>r(cimat)</b> with the same labels, and the first column
+    contains the percentages, but the other entries contain return codes for
+    the estimation of the corresponding entries of <b>r(cimat)</b>.  These return
+    codes are equal to 0 if the beta-value was estimated successfully, 1 if
+    the corresponding zetastar-value could not be calculated, 2 if the
+    corresponding zetastar-value could not be bracketed, 3 if the
+    beta-brackets failed to converge, and 4 if the beta-value could not be
+    calculated from the converged beta-brackets.  The matrix <b>r(bracketmat)</b> is
+    the final version of the bracket matrix described in help for the
+    fromabs() and brackets() options of <b>censlope</b> and has one row per
+    beta-bracket, as well as two columns, labeled <b>Beta</b> and <b>Zetastar</b>,
+    containing the beta-brackets and the corresponding zetastar-values.  The
+    matrix <b>r(techstepmat)</b> is a column vector with one row for each of the
+    techniques listed in the technique() option, with a row label equal to
+    the name of the technique and a value equal to the number of steps for
+    that technique.  The <b>fromabs()</b>, <b>brackets()</b>, <b>tolerance()</b>, and <b>technique()</b>
+    options are described in <i>iteration_options</i>.
+<p>
+    <b>censlope</b> also saves in <b>e()</b> a full set of estimation results for the 
+    <b>somersd</b> command.  If <b>estaddr</b> is specified, this set of estimation results
+    is expanded by adding a set of <b>e()</b> results with the same names and
+    contents as the <b>r()</b> results.  This option allows the user to pass a
+    <b>censlope</b> command to <b>parmby</b>, producing an output dataset (or results set)
+    with one observation per by-group and data on confidence intervals for
+    Somers' D and for the median slope.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Roger Newson, Imperial College London, UK.
+    Email: r.newson@imperial.ac.uk
+<p>
+<p>
+<b><u>Reference</u></b>
+<p>
+    Newson, R. 2002. Parameters behind "nonparametric" statistics: Kendall's
+        tau, Somers' D, and median differences. <i>Stata Journal</i> 2: 45-64.
+<p>
+    Newson, R. 2006. Confidence intervals for rank statistics:  Percentile
+        slopes, differences, and ratios. <i>Stata Journal</i> 6: 497-520.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual: <b>[R] spearman</b>, <b>[R] ranksum</b>, <b>[R] signrank</b>, <b>[R] centile</b>
+<p>
+    STB:  STB-52: sg123, STB-55: snp15, STB-57: snp15.1, STB-58: snp15.2,
+             STB-58: snp16; STB-61: snp15.3; STB-61: snp16.1
+<p>
+    Online: <b>ktau</b>, <b>ranksum</b>, <b>signrank</b>
+             <b>cid</b>, <b>npshift</b>, <b>somersd</b>, <b>cendif</b>, <b>parmest</b>, <b>eclplot</b> (if installed)
+</pre>

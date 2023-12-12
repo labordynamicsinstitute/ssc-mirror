@@ -1,0 +1,6 @@
+*! version 1.0.1  16jul2020
+sequence 956
+* label "YPURPLE"
+label resource "COLOR-YPURPLE"
+
+set rgb "119 71 152"
