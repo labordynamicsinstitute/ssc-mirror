@@ -17668,6 +17668,7 @@ fmwww.bc.edu/repec/bocode/r/rddsga_synth.dta
 fmwww.bc.edu/repec/bocode/r/replist.hlp
 fmwww.bc.edu/repec/bocode/r/r2_mz.html
 fmwww.bc.edu/repec/bocode/r/rmloa.pkg
+fmwww.bc.edu/repec/bocode/r/reghdfejl_load.ado
 fmwww.bc.edu/repec/bocode/r/rndnblx.html
 fmwww.bc.edu/repec/bocode/r/robustpf.sthlp
 fmwww.bc.edu/repec/bocode/r/rndbin.ado
@@ -19640,6 +19641,7 @@ fmwww.bc.edu/repec/bocode/p/pbeta.hlp
 fmwww.bc.edu/repec/bocode/p/pentropy_single_final.gss
 fmwww.bc.edu/repec/bocode/p/piaacdes.sthlp
 fmwww.bc.edu/repec/bocode/p/putwrap.pkg
+fmwww.bc.edu/repec/bocode/p/partialhdfejl.ado
 fmwww.bc.edu/repec/bocode/p/piaacreg.ado
 fmwww.bc.edu/repec/bocode/p/pam.sthlp
 fmwww.bc.edu/repec/bocode/p/plotprocess.sthlp

@@ -1,4 +1,4 @@
-*! jl 0.7.0 7 December 2023
+*! jl 0.7.2 11 December 2023
 *! Copyright (C) 2023 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
@@ -17,33 +17,28 @@
 *! Version history at bottom
 
 
-* properly print a string with newlines
-cap program drop display_multiline
-program define display_multiline
-  version 14.1
-  tempname t
-  local s `0'
-  scalar `t' = strpos(`"`s'"', char(10))
-  while `t' {
-    di substr(`"`s'"', 1, `t'-1)
-    local s = substr(`"`s'"', `t'+1, .)
-    scalar `t' = strpos(`"`s'"', char(10))
-  }
-  di `"`s'"'
-end
-
 // Take 1 argument, possible path for julia executable, return workable path, if any, in caller's libpath and libname locals; error otherwise
 cap program drop wheresjulia
 program define wheresjulia, rclass
+  version 14.1
   tempfile tempfile
-  !`1'julia -e "using Libdl; println(dlpath(\"libjulia\"))" > `tempfile'
-  mata pathsplit(fget(fh = fopen("`tempfile'", "r")), _juliapath="", _julialibname=""); _fclose(fh)
+  cap {
+    cap mata _fclose(fh)
+    !`1'julia -e "using Libdl; println(dlpath(\"libjulia\"))" > `tempfile'  // fails in RH Linux
+    mata pathsplit(_fget(fh = _fopen("`tempfile'", "r")), _juliapath="", _julialibname="")
+  }
+  if _rc cap {
+    !`1'julia -e 'using Libdl; println(dlpath( "libjulia" ))' > `tempfile'  // fails in Windows
+    mata pathsplit(_fget(fh = _fopen("`tempfile'", "r")), _juliapath="", _julialibname="")
+  }
+  local rc = _rc
+  cap mata _fclose(fh)
+  error `rc'
   mata st_local("libpath", _juliapath); st_local("libname", _julialibname)
   c_local libpath `libpath'
   c_local libname `libname'
 end
 
-cap program drop assure_julia_started
 program define assure_julia_started
   version 14.1
 
@@ -57,7 +52,7 @@ program define assure_julia_started
           if !_rc continue, break
         }
       }
-      if _rc error _rc
+      error _rc
       plugin call _julia, start "`libpath'/`libname'" "`libpath'"
     }
     if _rc {
@@ -83,16 +78,20 @@ program define assure_julia_started
       qui findfile jl.plugin
       jl, qui: stataplugininterface.setdllpath(expanduser(raw"`r(fn)'"))
 
-      jl AddPkg DataFrames
+      jl AddPkg DataFrames, minver(1.6.1)
       jl, qui: using DataFrames
     }
     if _rc global julia_loaded
   }
 end
 
-cap program drop jl
 program define jl, rclass
   version 14.1
+
+  if `"`0'"'=="version" {
+    return local version 0.7.1
+    exit
+  }
 
   cap _on_colon_parse `0'
   if _rc {
@@ -119,7 +118,7 @@ program define jl, rclass
         if `"`minver'"'!="" {
           qui jl: length([1 for v in values(Pkg.dependencies()) if v.name=="`namelist'" && v"`minver'">v.version])
           if `r(ans)' {
-            di as txt "The Julia package `namelist' is not up to date. Attempting to update it. This could take a few minutes." _n 
+            di as txt "The Julia package `namelist' is not up-to-date. Attempting to update it. This could take a few minutes." _n 
             mata displayflush() 
             cap {
               if c(os)=="Unix" {
@@ -233,8 +232,21 @@ program define jl, rclass
   return local ans `ans'
 end
 
-cap program drop _julia
 program _julia, plugin using(jl.plugin)
+
+* properly print a string with newlines
+program define display_multiline
+  version 14.1
+  tempname t
+  local s `0'
+  scalar `t' = strpos(`"`s'"', char(10))
+  while `t' {
+    di substr(`"`s'"', 1, `t'-1)
+    local s = substr(`"`s'"', `t'+1, .)
+    scalar `t' = strpos(`"`s'"', char(10))
+  }
+  di `"`s'"'
+end
 
 
 * Version history
@@ -246,3 +258,5 @@ program _julia, plugin using(jl.plugin)
 * 0.6.0 Implemented dynamic runtime loading of libjulia for robustness to Julia installation type
 * 0.6.2 Fixed 0.6.0 crashes in Windows
 * 0.7.0 Dropped UpPkg and added minver() option to AddPkg
+* 0.7.1 Try single as well as double quotes in !julia. Further attack on Windows crashes on errors.
+* 0.7.2 Better handling of exceptions in Julia 

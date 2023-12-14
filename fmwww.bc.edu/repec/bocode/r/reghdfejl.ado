@@ -1,4 +1,4 @@
-*! reghdfejl 0.4.2 7 December 2023
+*! reghdfejl 0.5.1 12 December 2023
 
 // The MIT License (MIT)
 //
@@ -66,7 +66,6 @@ program define reghdfejl, eclass
       di as res "  `reghdfeado' -> `dest'"
       di as res "  `r(fn)' -> `reghdfeado'"
     }
-    di as txt "The change will take effect after you restart Stata."
     exit 0
   }
 
@@ -89,12 +88,12 @@ program define reghdfejl, eclass
   }
 
 	syntax anything [if] [in] [aw pw iw/], [Absorb(string) Robust CLuster(string) vce(string) RESIDuals ITerations(integer 16000) gpu THReads(integer 0) ///
-                                          noSAMPle TOLerance(real 1e-8) Level(real `c(level)') NOHEADer NOTABLE compact *]
+                                          noSAMPle TOLerance(real 1e-8) Level(real `c(level)') NOHEADer NOTABLE compact NOIsily noCONStant *]
   local sample = "`sample'"==""
 
   _assert `iterations'>0, msg("{cmdab:It:erations()} must be positive.") rc(198)
   _assert `tolerance'>0, msg("{cmdab:tol:erance()} must be positive.") rc(198)
-  
+
   _get_diopts diopts _options, `options'
 
   marksample touse
@@ -104,22 +103,7 @@ program define reghdfejl, eclass
 
   if `threads' local threadsopt , nthreads = `threads'
   
-  if `"$reghdfejl_loaded"'=="" {
-    cap jl: nothing
-    if _rc {
-      di as err `"Can't access Julia. {cmd:reghdfejl} requires that the {cmd:jl} command be installed, via {stata ssc install julia}."
-      di as err "And it requires that Julia be installed, following the instruction under Installation in {help jl##installation:help jl}."
-      exit 198
-    }
-    local blaslib = cond(c(os)=="MacOSX", "AppleAccelerate", "BLISBLAS")
-    jl AddPkg `blaslib'
-    jl AddPkg `gpulib'
-    jl AddPkg FixedEffectModels, minver(1.10.2)
-    jl AddPkg DataFrames, minver(1.6.1)
-    jl AddPkg Vcov, minver(0.8.1)
-    jl, qui: using `blaslib', `gpulib', FixedEffectModels, DataFrames, Vcov
-    global reghdfejl_loaded 1
-  }
+  reghdfejl_load
 
   if `"`exp'"' != "" {
     cap confirm var `exp'
@@ -172,7 +156,7 @@ program define reghdfejl, eclass
       if strpos(`"`term'"', "#") {  // allow clustering on interactions
         local term: subinstr local term "#" " ", all
         tempvar t
-        egen long `t' = group(`term')
+        qui egen long `t' = group(`term')
         local _cluster `_cluster' `t'
       }
       else local _cluster `_cluster' `term'
@@ -184,13 +168,17 @@ program define reghdfejl, eclass
   foreach varset in dep inexog instd insts {
     if strpos("``varset'name'", ".") | strpos("``varset'name'", "#") | strpos("``varset'name'", "-") | strpos("``varset'name'", "?") | strpos("``varset'name'", "*") | strpos("``varset'name'", "~") {
       fvexpand ``varset'name' if `touse'
+      local `varset'
       local `varset'name
       foreach var in `r(varlist)' {
         _ms_parse_parts `var'
-        if !r(omit) local `varset'name ``varset'name' `var'
+        if !r(omit) {
+          local `varset'name ``varset'name' `var'
+          tempvar t
+          qui gen double `t' = `var' if `touse'
+          local `varset' ``varset'' `t'
+        }
       }
-      fvrevar ``varset'name' if `touse'
-      local `varset' `r(varlist)'
     }
     else local `varset' ``varset'name'
     local k`varset': word count ``varset''
@@ -236,12 +224,11 @@ program define reghdfejl, eclass
     local absorbvars: subinstr local absorbvars "c." " ", all
     local absorbvars: subinstr local absorbvars "#" " ", all
 
-    local absorbvars `absorbvars'
     foreach var in `absorbvars' {
       cap confirm numeric var `var'
       if _rc {
         tempvar t
-        egen long `t' = group(`var') if `touse'
+        qui egen long `t' = group(`var') if `touse'
         local absorbvars: subinstr local absorbvars "`var'" "`t'", word all
         local feterms   : subinstr local feterms    "`var'" "`t'", word all
       }
@@ -276,6 +263,10 @@ program define reghdfejl, eclass
   }
 
   jl PutVarsToDFNoMissing `vars' if `touse'  // put all vars in Julia DataFrame named df
+  if "`noisily'"!="" jl: df
+
+  qui jl: size(df,1)
+  _assert `r(ans)', rc(2001) msg(insufficient observations)
 
   if "`compact'" !="" drop _all
 
@@ -287,12 +278,17 @@ program define reghdfejl, eclass
   }
 
   * Estimate!
-  jl, qui: m = reg(df, @formula(`dep' ~ `inexog' `ivarg' `feterms') `wtopt' `vcovopt' `methodopt' `threadsopt' `saveopt', tol=`tolerance', maxiter=`iterations')
+  local estcmd "reg(df, @formula(`dep' ~ `inexog' `ivarg' `feterms') `wtopt' `vcovopt' `methodopt' `threadsopt' `saveopt', tol=`tolerance', maxiter=`iterations')"
+  if "`noisily'"!="" {
+    di "`estcmd'"
+    jl: m = `estcmd'
+  }
+  else jl, qui: m = `estcmd'
 
   jl, qui: sizedf = size(df)
   if "`wtvar'"!="" jl, qui: sumweights = mapreduce((w,s)->(s ? w : 0), +, df.`wtvar', m.esample; init = 0)
 
-  jl, qui: df = nothing  // yield memory
+  if "`noisily'"=="" jl, qui: df = nothing  // yield memory
   if "`compact'"!="" {
     jl, qui: GC.gc()
     use `compactfile'
@@ -312,15 +308,15 @@ program define reghdfejl, eclass
   }
 
   if "`residuals'"!="" {
-    jl, quietly: res = residuals(m); replace!(res, missing=>NaN)
+    jl, qui: res = residuals(m); replace!(res, missing=>NaN)
     jl GetVarsFromMat `residuals' if `touse', source(res) `replace'
     label var `residuals' "Residuals"
     jl, qui: res = nothing
   }
 
-  tempname t
+  tempname t N
 
-  jl, qui: SF_scal_save("`t'", nobs(m))
+  jl, qui: SF_scal_save("`N'", nobs(m))
 
   if `sample' {
     jl, qui: esample = Vector{Float64}(m.esample)
@@ -328,9 +324,10 @@ program define reghdfejl, eclass
     jl, qui: esample = nothing
   }
 
-  tempname b V
-  jl, qui: SF_scal_save("`b'", length(coef(m)))
-  if `b' {
+  jl, qui: SF_scal_save("`t'", length(coef(m)))
+  if `t' {
+    tempname b V
+
     jl, qui: SF_scal_save("`b'", coefnames(m)[1]=="(Intercept)")
     local hascons = `b'
 
@@ -351,7 +348,7 @@ program define reghdfejl, eclass
   }
   else local hascons = 0
 
-  ereturn post `b' `V', depname(`depname') obs(`=`t'') buildfvinfo findomitted `=cond(`sample', "esample(`touse')", "")'
+  ereturn post `b' `V', depname(`depname') obs(`=`N'') buildfvinfo findomitted `=cond(`sample', "esample(`touse')", "")'
 
   ereturn scalar N_hdfe = 0`N_hdfe'
   jl, qui: SF_scal_save("`t'", sizedf[1])
@@ -442,7 +439,6 @@ program define reghdfejl, eclass
   Display, `diopts' level(`level') `noheader' `notable'
 end
 
-cap program drop Display
 program define Display
   version 16
   syntax [, Level(real `c(level)') noHEADer notable *]
@@ -479,5 +475,8 @@ end
 * 0.3.2 Much better handling of interactions. Switched to BLISBLAS.jl.
 * 0.3.3 Fixed bugs in handling of interactions and constant term
 * 0.4.0 Added mask and unmask
-* 0.4.1 Properly handle varlists with -/?/*/~
+* 0.4.1 Handle varlists with -/?/*/~
 * 0.4.2 Set version minima for some packages
+* 0.4.3 Add julia.ado version check. Fix bug in posting sample size. Prevent crash on insufficient observations.
+* 0.5.0 Add gpu & other options to partialhdfejl. Document the command. Create reghdfejl_load.ado.
+* 0.5.1 Fix dropping of some non-absorbed interaction terms. Handle noconstant when no a().
