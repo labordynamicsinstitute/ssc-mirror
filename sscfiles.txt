@@ -9403,6 +9403,7 @@ fmwww.bc.edu/repec/bocode/i/ivreg2.hlp
 fmwww.bc.edu/repec/bocode/i/ivreg2.ado
 fmwww.bc.edu/repec/bocode/i/ivpois.sthlp
 fmwww.bc.edu/repec/bocode/i/iefonts.ado
+fmwww.bc.edu/repec/bocode/i/isocodes.ado
 fmwww.bc.edu/repec/bocode/i/itvalpctile.pkg
 fmwww.bc.edu/repec/bocode/i/isko8868.ado
 fmwww.bc.edu/repec/bocode/i/intext.pkg
@@ -9722,6 +9723,7 @@ fmwww.bc.edu/repec/bocode/i/indep4asm.sthlp
 fmwww.bc.edu/repec/bocode/i/inputst.ado
 fmwww.bc.edu/repec/bocode/i/invmvt.sthlp
 fmwww.bc.edu/repec/bocode/i/ipfraking.ado
+fmwww.bc.edu/repec/bocode/i/isocodes.pkg
 fmwww.bc.edu/repec/bocode/i/ivdesc.ado
 fmwww.bc.edu/repec/bocode/i/isa_est.ado
 fmwww.bc.edu/repec/bocode/i/isograph.pkg
@@ -9867,6 +9869,7 @@ fmwww.bc.edu/repec/bocode/i/ietoolkit.sthlp
 fmwww.bc.edu/repec/bocode/i/irrepro.hlp
 fmwww.bc.edu/repec/bocode/i/icd9tmpm.html
 fmwww.bc.edu/repec/bocode/i/iccvar.ado
+fmwww.bc.edu/repec/bocode/i/isocodes.sthlp
 fmwww.bc.edu/repec/bocode/i/ivreg2.sthlp
 fmwww.bc.edu/repec/bocode/i/isa_est_woinit.ado
 fmwww.bc.edu/repec/bocode/i/imb.ado

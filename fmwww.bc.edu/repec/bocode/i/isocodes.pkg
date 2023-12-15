@@ -1,0 +1,20 @@
+d 'ISOCODES': module to generate standardized country codes and names
+d
+d  isocodes creates standardized country codes and names based on
+d an input string. It can generate short ISO 3166 codes and full
+d country names. See the help file (help isocodes) for details
+d after installation. 
+d
+d KW: countries
+d KW: country
+d KW: ISO 3166
+d
+d Requires: Stata version 14 and gtools from SSC (q.v.)
+d
+d Distribution-Date: 20231214
+d
+d Author: Leo Ahrens, University of Konstanz
+d Support: email leo@@ahrensmail.de
+d
+f isocodes.ado
+f isocodes.sthlp
