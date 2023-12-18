@@ -1703,6 +1703,7 @@ sum diff_y_XX if $cond_stable, meanonly
 cap drop FE*
 capture $noisily reghdfe diff_y_XX  [aweight=`counter'] if $cond_stable, absorb(FE1=trends_var_XX) resid keepsingletons
 
+if _rc!=2001{ /// Modif Felix
 // Patching if not enough observations in this regression
 capture matrix didmgt_B = e(b)
 if _rc!=301{ // r(301) in an error for "last estimate not found"
@@ -1750,6 +1751,9 @@ drop `diff_y_res2'
 ********************************************************************************
 
 }
+
+} // Modif Felix
+
 // End of the loop over values of D_cat
 }
 

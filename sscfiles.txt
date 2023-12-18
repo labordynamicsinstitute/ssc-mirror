@@ -3755,6 +3755,7 @@ fmwww.bc.edu/repec/bocode/c/cprdent_14.ado
 fmwww.bc.edu/repec/bocode/c/cepois.pkg
 fmwww.bc.edu/repec/bocode/c/concord.pkg
 fmwww.bc.edu/repec/bocode/c/color-538o.style
+fmwww.bc.edu/repec/bocode/c/cpt.sthlp
 fmwww.bc.edu/repec/bocode/c/cauchitasinhinnerv3.ado
 fmwww.bc.edu/repec/bocode/c/cii2.html
 fmwww.bc.edu/repec/bocode/c/chaoticmaps.m
@@ -3802,6 +3803,7 @@ fmwww.bc.edu/repec/bocode/c/color_style.ado
 fmwww.bc.edu/repec/bocode/c/cauchitasinhinnerw2.ado
 fmwww.bc.edu/repec/bocode/c/charlist.sthlp
 fmwww.bc.edu/repec/bocode/c/csvconvert.html
+fmwww.bc.edu/repec/bocode/c/cpt.ado
 fmwww.bc.edu/repec/bocode/c/cfuncspec.sthlp
 fmwww.bc.edu/repec/bocode/c/ciw.html
 fmwww.bc.edu/repec/bocode/c/cpyxplot.html
@@ -3841,6 +3843,7 @@ fmwww.bc.edu/repec/bocode/c/color-ply2.style
 fmwww.bc.edu/repec/bocode/c/Ch04_Fig_Example_4.do
 fmwww.bc.edu/repec/bocode/c/codebook_ripper.pkg
 fmwww.bc.edu/repec/bocode/c/cmaxuse.pkg
+fmwww.bc.edu/repec/bocode/c/cpt.pkg
 fmwww.bc.edu/repec/bocode/c/chardef.html
 fmwww.bc.edu/repec/bocode/c/color-ygreen.style
 fmwww.bc.edu/repec/bocode/c/corr_svy.hlp

@@ -247,6 +247,7 @@ p cprdutil module for inputting CPRD datasets into Stata
 p cpredict module to produce conditional predictions
 p cprplot2 module to graph component-plus-residual plots for transformed regressors
 p cprplots module to graph (augmented) component-plus-residual plots in a single image
+p cpt module to compute optimal cut-points for empirical ROC curves and other ROC/AUC calculationss
 p cpyxplot module to produce scatter plots for each y vs each x variable
 p cqiv module to perform censored quantile instrumental variables regression
 p cquad module to perform conditional maximum likelihood estimation of quadratic exponential models

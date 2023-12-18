@@ -1,0 +1,21 @@
+d 'CPT': module to compute optimal cut-points for empirical ROC curves and other ROC/AUC calculationss
+d
+d	The command cpt is a wrapper for roctab.    It generates
+d three matrices: A AUC estimation report; The sensitivity, the
+d specificity, the accuracy, the lr+, and the lr-    from roctab at
+d each cut-point value, as well as the PPV, the NPV, and the AUC in
+d each cut-point value. 
+d
+d KW: ROC curve
+d KW: sensitivity
+d KW: specificity
+d
+d Requires: Stata version 15.1
+d
+d Distribution-Date: 20231217
+d
+d Author: Niels Henrik Bruun, Aalborg University Hospital
+d Support: email niels.henrik.bruun@@gmail.com
+d
+f cpt.ado
+f cpt.sthlp
