@@ -1,10 +1,11 @@
+*! 2.0.0 NJC 19 Dec 2023
 *! 1.0.0 NJC 11 Oct 2006 
 program fractileplot 
-	version 8 
+	version 10 
 	syntax varlist(numeric min=2) [if] [in],          ///
-	[ a(real 0.5) combine(str asis) CYCles(int 3)     ///
-	DRaw(numlist >0 integer) GENerate(str) noGRAPH    ///
-	locpoly LOCPOLY2(str asis) LOG lowess(str asis)   ///
+	[ a(real 0.5) BWidth(real 0.2) combine(str asis) CYCles(int 3)     ///
+	DEGree(int 0) DRaw(numlist >0 integer) GENerate(str) noGRAPH    ///
+	Kernel(str) LOG ///
 	OMit(numlist >0 integer) Predict(str) noPTs       /// 
 	REPLACE SCatter(str asis) * ] 
 
@@ -14,16 +15,6 @@ program fractileplot
 		if r(N) == 0 error 2000 
 		local nobs = r(N)
 
-		if `"`locpoly'`locpoly2'"' != "" { 
-			// will fail if not installed 
-			which locpoly 
-
-			if `"`lowess'"' != "" { 
-				di as err "must decide between lowess and locpoly" 
-				exit 198 
-			}
-		}	
-		
 		gettoken lhs rhs : varlist
 		local LHS : variable label `lhs' 
 		if `"`LHS'"' == "" local LHS "`lhs'" 
@@ -85,6 +76,8 @@ program fractileplot
 			gen double `f`j'' = _b[`x`j''] * `x`j'' if `touse'
 			label var `f`j'' "`lhs' smoothed wrt F(``j'')"
 		}	
+		
+		if "`kernel'" == "" local kernel "biweight"
 	
 		// backfitting: loop over `cycles' cycles 
 		forval c = 1/`cycles' {
@@ -99,14 +92,10 @@ program fractileplot
 				}
 				
 				tempvar new 
-
-				if `"`locpoly'`locpoly2'"' == "" { 
-					lowess `partres' `x`j'' if `touse', ///
-					nograph gen(`new') `lowess' 
-				}
-				else locpoly `partres' `x`j'' if `touse', ///
-					at(`x`j'') nograph gen(`new') `locpoly2' 
-
+				
+				lpoly `partres' `x`j'' if `touse', at(`x`j'') nograph gen(`new') ///
+				kernel(`kernel') bwidth(`bwidth') degree(`degree')
+								
 				replace `f`j'' = `new' 
 				drop `new' 
 

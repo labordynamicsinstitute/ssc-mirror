@@ -588,6 +588,7 @@ fmwww.bc.edu/repec/bocode/s/scul_Stadium.dta
 fmwww.bc.edu/repec/bocode/s/sptobitmstardhxt.do
 fmwww.bc.edu/repec/bocode/s/sptobitmstarxt05.ado
 fmwww.bc.edu/repec/bocode/s/stpm2_postestimation.html
+fmwww.bc.edu/repec/bocode/s/svycanon.pkg
 fmwww.bc.edu/repec/bocode/s/spatweight2.src
 fmwww.bc.edu/repec/bocode/s/sctree.ado
 fmwww.bc.edu/repec/bocode/s/splagvar.ado
@@ -908,6 +909,7 @@ fmwww.bc.edu/repec/bocode/s/stackids.hlp
 fmwww.bc.edu/repec/bocode/s/sfpanel.ado
 fmwww.bc.edu/repec/bocode/s/statastates.sthlp
 fmwww.bc.edu/repec/bocode/s/sptobitsar.dlg
+fmwww.bc.edu/repec/bocode/s/svycanon.sthlp
 fmwww.bc.edu/repec/bocode/s/spagg.hlp
 fmwww.bc.edu/repec/bocode/s/sptobitmstard6.ado
 fmwww.bc.edu/repec/bocode/s/stpm2.pkg
@@ -2106,6 +2108,7 @@ fmwww.bc.edu/repec/bocode/s/spregcs25.ado
 fmwww.bc.edu/repec/bocode/s/sb_example-3.do
 fmwww.bc.edu/repec/bocode/s/st2openbugsana.ado
 fmwww.bc.edu/repec/bocode/s/scheme-gg_piyg.scheme
+fmwww.bc.edu/repec/bocode/s/svycanonPATHStudyWave1example.dta
 fmwww.bc.edu/repec/bocode/s/spregdhp.dta
 fmwww.bc.edu/repec/bocode/s/subjobpov.ado
 fmwww.bc.edu/repec/bocode/s/skewreg.ado
@@ -2793,6 +2796,7 @@ fmwww.bc.edu/repec/bocode/s/scfcombo.ado
 fmwww.bc.edu/repec/bocode/s/sslope.html
 fmwww.bc.edu/repec/bocode/s/smfit.ado
 fmwww.bc.edu/repec/bocode/s/svybsamp2.pkg
+fmwww.bc.edu/repec/bocode/s/svycanon.ado
 fmwww.bc.edu/repec/bocode/s/sptobitsem3.ado
 fmwww.bc.edu/repec/bocode/s/stopwords_es.txt
 fmwww.bc.edu/repec/bocode/s/stpm.hlp
@@ -2997,6 +3001,7 @@ fmwww.bc.edu/repec/bocode/s/sptobitmstarxt.do
 fmwww.bc.edu/repec/bocode/s/spweight.dlg
 fmwww.bc.edu/repec/bocode/s/sptobitsdm3.ado
 fmwww.bc.edu/repec/bocode/s/stcmd.sthlp
+fmwww.bc.edu/repec/bocode/s/svycanonNYTS2021example.dta
 fmwww.bc.edu/repec/bocode/s/savespss_about.idlg
 fmwww.bc.edu/repec/bocode/s/survsim.html
 fmwww.bc.edu/repec/bocode/s/SIPP_Occ.dta
@@ -7684,6 +7689,7 @@ fmwww.bc.edu/repec/bocode/f/fixsort.pkg
 fmwww.bc.edu/repec/bocode/f/fmmlc.ado
 fmwww.bc.edu/repec/bocode/f/framingham30.sthlp
 fmwww.bc.edu/repec/bocode/f/fabplot.pkg
+fmwww.bc.edu/repec/bocode/f/fractileplot.sthlp
 fmwww.bc.edu/repec/bocode/f/fmm_negbin1_p.ado
 fmwww.bc.edu/repec/bocode/f/find.pkg
 fmwww.bc.edu/repec/bocode/f/favplot.sthlp
@@ -8064,6 +8070,7 @@ fmwww.bc.edu/repec/bocode/f/factmerg.html
 fmwww.bc.edu/repec/bocode/f/fragility.pkg
 fmwww.bc.edu/repec/bocode/f/forfile.html
 fmwww.bc.edu/repec/bocode/f/for211.html
+fmwww.bc.edu/repec/bocode/f/fractileplot1.hlp
 fmwww.bc.edu/repec/bocode/f/frapply.pkg
 fmwww.bc.edu/repec/bocode/f/flowchart_example2.do
 fmwww.bc.edu/repec/bocode/f/funnel2.dlg
@@ -8168,6 +8175,7 @@ fmwww.bc.edu/repec/bocode/f/fmmhist.pkg
 fmwww.bc.edu/repec/bocode/f/firthlogit.sthlp
 fmwww.bc.edu/repec/bocode/f/fpcata.ado
 fmwww.bc.edu/repec/bocode/f/fiskfit.ado
+fmwww.bc.edu/repec/bocode/f/fractileplot1.ado
 fmwww.bc.edu/repec/bocode/f/frm_ptest.html
 fmwww.bc.edu/repec/bocode/f/fcollapse.ado
 fmwww.bc.edu/repec/bocode/f/fpimpov.ado

@@ -1,4 +1,4 @@
-*! version 1.1 08May2019
+*! version 1.2 21/12/2023
 
 prog define swpermute, rclass
 version 13.0
@@ -19,7 +19,14 @@ Data should be in long format with a row for each cluster at each period. 	There
 Using matrices for the estimation so is limited to 400 periods
 
 UPDATES:
+Dec 2023
+- Correct setting of random number seed
+
+Jun 2019
 - default number of repetitions increased from 500 to 1000
+
+
+
 */
 
 
@@ -405,7 +412,7 @@ qui use `original', clear
 if "`seed'" != "" {
 	set seed `seed'
 } 
-else local seed = c(rngstate)
+local state = c(rngstate)
 
 
 ********************************************************************************
@@ -438,11 +445,9 @@ foreach inull of local null {
 	*calcualte the observed estimated effect
 	qui use `original', clear
 	
-	if "`seed'" != "" {
-	set seed `seed'
-}
+	set rngstate `state'
 
-if `inull' != 0 {
+	if `inull' != 0 {
 		*if inlist("`outcometype'", "cluster-summary", "continuous") == 1 {
 		qui replace `outcome' = `outcome' - `inull' if `intervention' == 1
 	}

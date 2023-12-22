@@ -26,4 +26,6 @@ p submatrix module to perform advanced matrix subscripting
 p summclust module to compute cluster level measures of leverage, influence, and a cluster jackknife variance estimator
 p summtab module to compute summary statistics overall and/or across levels of a categorical variable 
 p sunburst module for (half) sunburst plots
+p svycanon module to assess the statistical significance of the canonical correlations incorporating complex survey design factors
+p swpermute module to compute Permutation tests for Stepped-Wedge Cluster-Randomised Trials
 p synth2 module to implement synthetic control method (SCM) with placebo tests, robustness test and visualization

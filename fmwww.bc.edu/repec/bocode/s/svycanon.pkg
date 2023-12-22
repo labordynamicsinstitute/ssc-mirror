@@ -1,0 +1,29 @@
+d 'SVYCANON': module to assess the statistical significance of the canonical correlations incorporating complex survey design factors
+d
+d   The post estimation command svycanon extends the functionality
+d of canon by calculating the test statistics, degrees of freedom
+d and p-values necessary to assess the statistical significance of
+d the secondary canonical correlations.   This is done according to
+d the methods Wilks' lambda, Pillai's trace, and Hotelling-Lawley
+d trace and Roy's largest root. svycanon also implements a novel
+d algorithm that allows the inclusion of complex survey design
+d factors, e.g., strata, cluster and replicate weights, in the
+d estimation of the statistical significance of the canonical
+d correlations. The units and variables graphs drawn by svycanon
+d further complement the information listed by the existing canon
+d post estimation commands. 
+d
+d KW: canonical correlations
+d KW: complex survey data
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20231221
+d
+d Author: Raul Cruz, Indiana University, Bloomington
+d Support: email raulcruz@@iu.edu
+d
+f svycanon.ado
+f svycanon.sthlp
+f svycanonNYTS2021example.dta
+f svycanonPATHStudyWave1example.dta

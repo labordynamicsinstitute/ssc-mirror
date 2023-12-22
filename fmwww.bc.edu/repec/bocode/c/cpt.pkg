@@ -1,4 +1,4 @@
-d 'CPT': module to compute optimal cut-points for empirical ROC curves and other ROC/AUC calculationss
+d 'CPT': module to compute optimal cut-points for empirical ROC curves and other ROC/AUC calculations
 d
 d	The command cpt is a wrapper for roctab.    It generates
 d three matrices: A AUC estimation report; The sensitivity, the
