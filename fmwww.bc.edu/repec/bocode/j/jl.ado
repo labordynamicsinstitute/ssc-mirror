@@ -1,4 +1,4 @@
-*! jl 0.7.2 11 December 2023
+*! jl 0.7.3 16 December 2023
 *! Copyright (C) 2023 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-*! Version history at bottom
+* Version history at bottom
 
 
 // Take 1 argument, possible path for julia executable, return workable path, if any, in caller's libpath and libname locals; error otherwise
@@ -39,6 +39,7 @@ program define wheresjulia, rclass
   c_local libname `libname'
 end
 
+cap program drop assure_julia_started
 program define assure_julia_started
   version 14.1
 
@@ -85,11 +86,12 @@ program define assure_julia_started
   }
 end
 
+cap program drop jl
 program define jl, rclass
   version 14.1
 
   if `"`0'"'=="version" {
-    return local version 0.7.1
+    return local version 0.7.3
     exit
   }
 
@@ -113,39 +115,22 @@ program define jl, rclass
     if `"`cmd'"'=="AddPkg" {
       syntax name, [MINver(string)]
       jl, qui: using Pkg
-      qui jl: Int("`namelist'" in keys(Pkg.project().dependencies))
-      if `r(ans)' {
-        if `"`minver'"'!="" {
-          qui jl: length([1 for v in values(Pkg.dependencies()) if v.name=="`namelist'" && v"`minver'">v.version])
-          if `r(ans)' {
-            di as txt "The Julia package `namelist' is not up-to-date. Attempting to update it. This could take a few minutes." _n 
-            mata displayflush() 
-            cap {
-              if c(os)=="Unix" {
-                !julia -E"using Pkg; Pkg.update(\"`namelist'\")"
-              }
-              else jl, qui: Pkg.update("`namelist'")  // this crashes Stata in Ubuntu 22.04
-            }
-            if _rc {
-              di as err _n "Failed to update the Julia package `namelist'."
-              di as err "You should be able to install it by running Julia and typing:" _n as cmd `"using Pkg; Pkg.update("`namelist'")"'
-              exit 198
-            }
-          }
-        }
-      }
-      else {
-        di as txt "The Julia package `namelist' is not installed. Attempting to install it. This could take a few minutes." _n 
+      qui jl: Int(!("`namelist'" in keys(Pkg.project().dependencies)))
+      local notinstalled `r(ans)'
+      if !`notinstalled' & "`minver'"!="" qui jl: length([1 for v in values(Pkg.dependencies()) if v.name=="`namelist'" && v.version<v"`minver'"])
+      if `notinstalled' | `r(ans)' {
+        di as txt "The Julia package `namelist' is not installed and up-to-date. Attempting to update it. This could take a few minutes." _n 
         mata displayflush() 
+        local addcmd Pkg.add(PackageSpec(name="`namelist'" `=cond("`minver'"=="", "", `", version=v"`minver'" "')'))
         cap {
           if c(os)=="Unix" {
-            !julia -E"using Pkg; Pkg.add(\"`namelist'\")"
+            !julia -E"using Pkg; `addcmd'"
           }
-          else jl, qui: Pkg.add("`namelist'")  // this crashes Stata in Ubuntu 22.04
+          else jl, qui: `addcmd'  // this crashes Stata in Ubuntu 22.04
         }
         if _rc {
-          di as err _n "Failed to install the Julia package `namelist'."
-          di as err "You should be able to install it by running Julia and typing:" _n as cmd `"using Pkg; Pkg.add("`namelist'")"'
+          di as err _n "Failed to update the Julia package `namelist'."
+          di as err "You should be able to install it by running Julia and typing:" _n `"{cmd:using Pkg; Pkg.update("`namelist'")}"'
           exit 198
         }
       }
@@ -260,3 +245,4 @@ end
 * 0.7.0 Dropped UpPkg and added minver() option to AddPkg
 * 0.7.1 Try single as well as double quotes in !julia. Further attack on Windows crashes on errors.
 * 0.7.2 Better handling of exceptions in Julia 
+* 0.7.3 Fixed bug in PutMatToMat
