@@ -1,4 +1,5 @@
-*! version 1.0.0  Qiang Chen 18July2020
+*! version 1.0  Qiang Chen 20July2020
+*! version 2.0  Qiang Chen 12December2023
 
 program define skewreg, eclass byable(recall) sortpreserve
     local cmdline : copy local 0
@@ -16,24 +17,31 @@ program define skewreg, eclass byable(recall) sortpreserve
 	
 	if "`detail'" != "" {
 		set seed `seed'
-		sqreg `depvar' `indeps' if `touse', q(`tao' 0.50 `1_tao') reps(`reps') level(`level')
+		qrprocess `depvar' `indeps' if `touse', q(`tao' 0.50 `1_tao') vce(boot, reps(`reps')) level(`level')
 		display _n as txt "Fitting skewness regression..."
 	}
 	else {
 		display _n as txt "Fitting skewness regression..."
 		set seed `seed'
-		quietly sqreg `depvar' `indeps' if `touse', q(`tao' 0.50 `1_tao') reps(`reps') 	
+		quietly qrprocess `depvar' `indeps' if `touse', q(`tao' 0.50 `1_tao') vce(boot, reps(`reps')) level(`level')
 	}
 	
 	local N = e(N)               
     local df_r = e(df_r) 	
 	
-	local pr2_q1 = 1 - (e(sumadv1)/e(sumrdv1))
-	local pr2_q2 = 1 - (e(sumadv2)/e(sumrdv2))
-	local pr2_q3 = 1 - (e(sumadv3)/e(sumrdv3))
+	local pr2_q1 = 1-e(sum_mdev)[1,1]/e(sum_rdev)[1,1]
+	local pr2_q2 = 1-e(sum_mdev)[1,2]/e(sum_rdev)[1,2]
+	local pr2_q3 = 1-e(sum_mdev)[1,3]/e(sum_rdev)[1,3]
 	
 	if "`predict'" != "" {
-	quietly predictnl `predict' = (xb(#3) + xb(#1) - 2*xb(#2))/(xb(#3)-xb(#1)) if `touse'
+	quietly capture drop qra1 qra2 qra3
+	quietly predict qra,rearranged(`tao' 0.50 `1_tao')	
+	quietly label variable qra1 "`tao' conditional quantile rearranged to remove quantile crossing"
+	quietly label variable qra2 ".5 conditional quantile rearranged to remove quantile crossing"
+	quietly label variable qra3 "`1_tao' conditional quantile rearranged to remove quantile crossing"
+	quietly capture drop `predict'
+	quietly predictnl `predict' = (qra3 + qra1 - 2*qra2)/(qra3-qra1) if `touse'
+	quietly label variable `predict' "predicted conditional skewness"
 	}
 	
 	quietly margins if `touse',dydx(*) expression((xb(#3) + xb(#1) - 2*xb(#2))/(xb(#3) - xb(#1)))

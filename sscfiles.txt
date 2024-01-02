@@ -1598,6 +1598,7 @@ fmwww.bc.edu/repec/bocode/s/sae_proc_ind.sthlp
 fmwww.bc.edu/repec/bocode/s/switchoprobit.ado
 fmwww.bc.edu/repec/bocode/s/songbl_ssc.sthlp
 fmwww.bc.edu/repec/bocode/s/sqmodalplot.ado
+fmwww.bc.edu/repec/bocode/s/spreadreg.sthlp
 fmwww.bc.edu/repec/bocode/s/spmstarxt08.ado
 fmwww.bc.edu/repec/bocode/s/stpiece.hlp
 fmwww.bc.edu/repec/bocode/s/spregxt23.ado
@@ -2765,6 +2766,7 @@ fmwww.bc.edu/repec/bocode/s/survey.csv
 fmwww.bc.edu/repec/bocode/s/sptobitmstarxt.dlg
 fmwww.bc.edu/repec/bocode/s/spgmmxt.sthlp
 fmwww.bc.edu/repec/bocode/s/statapushconfig.ado
+fmwww.bc.edu/repec/bocode/s/spreadreg.ado
 fmwww.bc.edu/repec/bocode/s/sptobitmstarxt04.ado
 fmwww.bc.edu/repec/bocode/s/svysd.sthlp
 fmwww.bc.edu/repec/bocode/s/sample0309s.dta

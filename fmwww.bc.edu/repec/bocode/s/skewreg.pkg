@@ -22,7 +22,7 @@ d KW: quantile regression
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20200724
+d Distribution-Date: 20240101
 d
 d Author:  Qiang Chen, Shandong University
 d Support: email qiang2chen2@@126.com
@@ -31,4 +31,6 @@ f skewreg.ado
 f skewreg.sthlp
 f ../k/kurtosisreg.ado
 f ../k/kurtosisreg.sthlp
+f spreadreg.ado
+f spreadreg.sthlp
 f ../c/census80.dta

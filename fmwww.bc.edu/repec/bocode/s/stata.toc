@@ -9,6 +9,7 @@ p setroot module to find the root path of a project and set it as a global varia
 p simsum module to perform analyses of simulation studies including Monte Carlo error
 p simulate2 module enhancing and parallelising simulate
 p sivqr module to perform smoothed IV quantile regression
+p skewreg module to estimate skewness and kurtosis regressions
 p sotable module to produce tests and confidence bands for multiple comparisons of two-sided or one-sided hypotheses
 p spider module for spider plots
 p sq module for sequence analysis

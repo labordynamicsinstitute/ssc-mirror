@@ -1,4 +1,4 @@
-*! jl 0.7.3 16 December 2023
+*! jl 0.8.0 28 December 2023
 *! Copyright (C) 2023 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
@@ -91,7 +91,7 @@ program define jl, rclass
   version 14.1
 
   if `"`0'"'=="version" {
-    return local version 0.7.3
+    return local version 0.8.0
     exit
   }
 
@@ -111,8 +111,12 @@ program define jl, rclass
     tokenize `"`0'"', parse(" ,")
     macro shift
     local 0 `*'
-    
-    if `"`cmd'"'=="AddPkg" {
+
+    if `"`cmd'"'=="SetEnv" {
+      jl, qui: using Pkg; Pkg.activate(joinpath(dirname(Base.load_path_expand("@v#.#")), "`1'"))  // move to an environment specific to this package
+      jl AddPkg DataFrames
+    }
+    else if `"`cmd'"'=="AddPkg" {
       syntax name, [MINver(string)]
       jl, qui: using Pkg
       qui jl: Int(!("`namelist'" in keys(Pkg.project().dependencies)))
@@ -246,3 +250,4 @@ end
 * 0.7.1 Try single as well as double quotes in !julia. Further attack on Windows crashes on errors.
 * 0.7.2 Better handling of exceptions in Julia 
 * 0.7.3 Fixed bug in PutMatToMat
+* 0.8.0 Added SetEnv command

@@ -1,5 +1,6 @@
 {smcl}
-{* *! version 1.0.0  21july2020}{...}
+{* *! version 1.0  20July2020}{...}
+{* *! version 2.0  12December2023}{...}
 {cmd: help skewreg}
 {hline}
 
@@ -39,8 +40,9 @@ INCLUDE help fvvarlist
 {title:Description}
 
 {pstd}
-{cmd:skewreg} performs skewness regression for cross-sectional or time-series data as defined in Chen and Xiao (2020), which quantifies the effects of covariates on quantile-based measure of skewness of the conditional distribution.  
-{cmd:skewreg} calls {help sqreg} for simultaneous quantile regression, which reports bootstrap standard errors. 
+{cmd:skewreg} performs skewness regression for cross-sectional or time-series data as defined in Chen and Xiao (2023), which quantifies the effects of covariates on quantile-based measure of skewness of the conditional distribution.  
+{cmd:skewreg} calls {cmd: qrprocess} for fast implementation of quantile regressions (Chernozhukov et al., 2020, 2022), which also avoids the potential problem of quantile crossing (Chernozhukov et al., 2010).
+The command {cmd: qrprocess} can be installed from SSC by typing "ssc install qrprocess,replace".  
 {cmd:skewreg} then use {help margins} to computes average marginal effects (AME), which are parameters of interest. 
 For a continuous variable {cmd:x}, AME is defined as marginal effects ({cmd:dy/dx}) averaged over all observations. For discrete variables, marginal effects are defined as discrete changes from the base level. 
 For example, for a dummy variable {cmd:x}, AME is defined as {cmd:(y|x=1)-(y|x=0)}, averaged over all observations. Standard errors for AMEs are obtained by the delta method from bootstrap standard errors. 
@@ -64,7 +66,7 @@ which corresponds to conditional skewness as measured by
 {dlgtab:Reporting}
 
 {phang}
-{opt detail} show detailed results, including simultaneous quantile regression, the numerator and denominator parts of skewness regression.
+{opt detail} show detailed results, including underlying quantile regression, the numerator and denominator parts of skewness regression.
 
 {phang}
 {opt graph} graph coefficients of skewness regression to visualize average marginal effects and their confidence intervals.
@@ -75,53 +77,54 @@ which corresponds to conditional skewness as measured by
 {phang}
 {opt predict(string)} predict conditional skewness for possible later usage.
 
-{marker examples}{...}
+{marker example}{...}
 {title:Examples: fast but trivial}
 
 {pstd}Setup{p_end}
 {phang2}{cmd:. sysuse auto,clear}{p_end}
 
-{pstd}Fit a default skewness regression (for correct computation of AME, use "i.foreign" even though "foreign" is a dummy variable){p_end}
-{phang2}{cmd:. skewreg price mpg weight i.foreign}{p_end}
+{pstd}Fit a default skewness regression{p_end}
+{phang2}{cmd:. skewreg price mpg weight foreign}{p_end}
 
 {pstd}Fit a skewness regression with detailed output, 90% confidience intervals, coefficient graph, and record predicted conditional skewness as a new variable {cmd:skewness} {p_end}
-{phang2}{cmd:. skewreg price mpg weight i.foreign, detail level(90) graph predict(skewness)}{p_end}
+{phang2}{cmd:. skewreg price mpg weight foreign, detail level(90) graph predict(skewness)}{p_end}
 
 {pstd}Fit a skewness regression at the 0.1 quantile with random seed 123 and 500 bootstrap replications{p_end}
-{phang2}{cmd:. skewreg price mpg weight i.foreign, quantile(0.1) seed(123) reps(500)}{p_end}
+{phang2}{cmd:. skewreg price mpg weight foreign, quantile(0.1) seed(123) reps(500)}{p_end}
 
 {pstd}Fit a skewness regression in a subsample{p_end}
-{phang2}{cmd:. skewreg price mpg weight i.foreign if rep78==3}{p_end}
+{phang2}{cmd:. skewreg price mpg weight foreign if rep78==3}{p_end}
 
-{marker examples}{...}
+{marker example}{...}
 {title:Examples: slow but interesting}
 
 {pstd}Setup (1% US census data in 1980 obtained from Angrist et al.(2006). After loading data, use command {help notes} for a detailed description){p_end}
-{phang2}{cmd:. use census80.dta, clear}{p_end}
+{phang2}{cmd:. sysuse census80.dta, clear}{p_end}
 
 {pstd}Fit a default skewness regression (for correct computation of AME, use factor variable (see {help fvvarlist}) {cmd:c.exper#c.exper} so that Stata recognizes it as the square of {cmd:exper}){p_end}
-{phang2}{cmd:. skewreg logwk educ i.black exper c.exper#c.exper}{p_end}
+{phang2}{cmd:. skewreg logwk educ black exper c.exper#c.exper}{p_end}
 
-{pstd}Test joint significance of coefficients following the above kurtosis regression{p_end}
-{phang2}{cmd:. test educ 1.black exper}{p_end}
+{pstd}Test joint significance of coefficients following the above skewness regression{p_end}
+{phang2}{cmd:. test educ black exper}{p_end}
 
 {pstd}Fit a skewness regression with detailed output, 90% confidience intervals, coefficient graph, and record predicted conditional skewness as a new variable {cmd:skewness} {p_end}
-{phang2}{cmd:. skewreg logwk educ i.black exper c.exper#c.exper, detail level(90) graph predict(skewness)}{p_end}
+{phang2}{cmd:. skewreg logwk educ black exper c.exper#c.exper, detail level(90) graph predict(skewness)}{p_end}
 
 {pstd}Fit a skewness regression at the 0.1 quantile with random seed 123 and 500 bootstrap replications (very slow){p_end}
-{phang2}{cmd:. skewreg logwk educ i.black exper c.exper#c.exper, quantile(0.1) seed(123) reps(500)}{p_end}
+{phang2}{cmd:. skewreg logwk educ black exper c.exper#c.exper, quantile(0.1) seed(123) reps(500)}{p_end}
 
 {pstd}Fit a default skewness regression for the black and non-black subsamples respectively via {help bysort}{p_end}
 {phang2}{cmd:. bysort black: skewreg logwk educ exper c.exper#c.exper}{p_end}
 
 {marker examples}{...}
-{title:Examples: time series}
+{title:Example: time series}
 
 {pstd}Setup{p_end}
 {phang2}{cmd:. sysuse sp500.dta, clear}{p_end}
 
-{pstd}Since {help sqreg} doesn't accept time-series operators (see {help tsvarlist}), {cmd:skewreg} doesn't either. So define one-period lagged variable manually{p_end}
-{phang2}{cmd:. tsset date}{p_end}
+{pstd}Since {help qrprocess} doesn't accept time-series operators (see {help tsvarlist}), {cmd:skewreg} doesn't either. So define one-period lagged variable manually{p_end}
+{phang2}{cmd:. gen trade_date = _n}{p_end}
+{phang2}{cmd:. tsset trade_date}{p_end}
 {phang2}{cmd:. gen l1_close = l.close}{p_end}
 
 {pstd}Fit a default skewness regression{p_end}
@@ -145,12 +148,12 @@ which corresponds to conditional skewness as measured by
 {synopt:{cmd:e(df_r)}}residual degrees of freedom{p_end}
 {synopt:{cmd:e(reps)}}number of bootstrap replications{p_end}
 {synopt:{cmd:e(seed)}}random seed number{p_end}
-{synopt:{cmd:e(q1)}}quantile of first simultaneous quantile regression{p_end}
-{synopt:{cmd:e(q2)}}quantile of second simultaneous quantile regression{p_end}
-{synopt:{cmd:e(q3)}}quantile of third simultaneous quantile regression{p_end}
-{synopt:{cmd:e(pr_q1)}}pseudo R2 of first simultaneous quantile regression{p_end}
-{synopt:{cmd:e(pr_q2)}}pseudo R2 of second simultaneous quantile regression{p_end}
-{synopt:{cmd:e(pr_q3)}}pseudo R2 of third simultaneous quantile regression{p_end}
+{synopt:{cmd:e(q1)}}quantile index of the first quantile regression{p_end}
+{synopt:{cmd:e(q2)}}quantile index of the second quantile regression{p_end}
+{synopt:{cmd:e(q3)}}quantile index of the third quantile regression{p_end}
+{synopt:{cmd:e(pr_q1)}}pseudo R2 of the first quantile regression{p_end}
+{synopt:{cmd:e(pr_q2)}}pseudo R2 of the second quantile regression{p_end}
+{synopt:{cmd:e(pr_q3)}}pseudo R2 of the third quantile regression{p_end}
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Macros}{p_end}
@@ -182,11 +185,25 @@ Qiang Chen, School of Economics, Shandong University, P. R. China{p_end}
 {title:References}
 
 {marker ACF2006}{...}
-{pstd}
+{phang}
 Angrist, Joshua, Victor Chernozhukov and Iván Fernández-Val, 2006.{browse "https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1468-0262.2006.00671.x": Quantile Regression under Misspecification, with an Application to the U.S. Wage Structure}. 
 {it:Econometrica}, 74(2), 539-563. 
 
-{marker CX2020}{...}
+{marker CFG2010}{...}
 {phang}
-Chen, Qiang, and Zhijie Xiao, 2020, "Spread Regression, Skewness Regression and Kurtosis Regression with an Application to the U.S. Wage Structure," Shandong University working paper.{p_end}
+Chernozhukov, Victor, Iván Fernández-Val and Alfred Galichon, 2010. {browse "https://onlinelibrary.wiley.com/doi/abs/10.3982/ECTA7880":Quantile and Probability Curves without Crossing}. 
+{it:Econometrica}, 78, 1093-1125. 
+
+{marker CFM2020}{...}
+{phang}
+Chernozhukov, Victor, Iván Fernández-Val and Blaise Melly, 2020. Quantile and Distribution Regression in Stata: Algorithms, Pointwise and Functional Inference. {it:Working paper}. 
+
+{marker CFM2022}{...}
+{phang}
+Chernozhukov, Victor, Iván Fernández-Val and Blaise Melly, 2022. {browse "https://link.springer.com/article/10.1007/s00181-020-01898-0": Fast Algorithms for the Quantile Regression Process}. 
+{it:Empirical Economics}, 62,7-33. 
+
+{marker CX2023}{...}
+{phang}
+Chen, Qiang, and Zhijie Xiao, 2023, "Spread Regression, Skewness Regression and Kurtosis Regression with an Application to the U.S. Wage Structure," {it:Journal of Applied Econometrics}, revise and resubmit.{p_end}
 
