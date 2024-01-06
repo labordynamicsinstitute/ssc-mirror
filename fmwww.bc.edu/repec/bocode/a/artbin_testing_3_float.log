@@ -1,0 +1,307 @@
+c:\ian\git\artbin\package\artbin.ado
+*!version 2.1.0 IW     04jan2024
+c:\ian\git\artbin\package\art2bin.ado
+*!version 1.01  09june2022
+
+Performing iteration ...
+
+Estimated sample sizes for a two-sample proportions test
+Pearson's chi-squared test 
+H0: p2 = p1  versus  Ha: p2 != p1
+
+Study parameters:
+
+        alpha =    0.0500
+        power =    0.9000
+        delta =    0.0500  (difference)
+           p1 =    0.0500
+           p2 =    0.1000
+
+Estimated sample sizes:
+
+            N =     1,242
+  N per group =       621
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        favourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  yes
+Algorithm used                         2-arm
+
+Anticipated event probabilities        0.050  0.100 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.900
+
+Total sample size (calculated)         1242
+
+Sample size per group (calculated)     621 621
+Expected total number of events        93.15
+Expected number of events per group    31.05 62.1
+------------------------------------------------------------------------------
+
+Performing iteration ...
+
+Estimated sample sizes for a two-sample proportions test
+Pearson's chi-squared test 
+H0: p2 = p1  versus  Ha: p2 != p1
+
+Study parameters:
+
+        alpha =    0.0500
+        power =    0.9500
+        delta =    0.0400  (difference)
+           p1 =    0.0300
+           p2 =    0.0700
+
+Estimated sample sizes:
+
+            N =     1,636
+  N per group =       818
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        favourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  yes
+Algorithm used                         2-arm
+
+Anticipated event probabilities        0.030  0.070 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.950
+
+Total sample size (calculated)         1636
+
+Sample size per group (calculated)     818 818
+Expected total number of events        81.8
+Expected number of events per group    24.54 57.26
+------------------------------------------------------------------------------
+
+Performing iteration ...
+
+Estimated sample sizes for a two-sample proportions test
+Pearson's chi-squared test 
+H0: p2 = p1  versus  Ha: p2 != p1
+
+Study parameters:
+
+        alpha =    0.0500
+        power =    0.8500
+        delta =    0.1000  (difference)
+           p1 =    0.1000
+           p2 =    0.2000
+
+Estimated sample sizes:
+
+            N =       494
+  N per group =       247
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        favourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  yes
+Algorithm used                         2-arm
+
+Anticipated event probabilities        0.100  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.850
+
+Total sample size (calculated)         494
+
+Sample size per group (calculated)     247 247
+Expected total number of events        74.1
+Expected number of events per group    24.7 49.4
+------------------------------------------------------------------------------
+
+Performing iteration ...
+
+Estimated sample sizes for a two-sample proportions test
+Pearson's chi-squared test 
+H0: p2 = p1  versus  Ha: p2 != p1
+
+Study parameters:
+
+        alpha =    0.0250
+        power =    0.8000
+        delta =   -0.0900  (difference)
+           p1 =    0.1000
+           p2 =    0.0100
+
+Estimated sample sizes:
+
+            N =       286
+  N per group =       143
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  yes
+Algorithm used                         2-arm
+
+Anticipated event probabilities        0.100  0.010 
+
+Alpha                                  0.025 (two-sided)
+                                        (taken as .0125 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         286
+
+Sample size per group (calculated)     143 143
+Expected total number of events        15.73
+Expected number of events per group    14.3 1.43
+------------------------------------------------------------------------------
+
+Performing iteration ...
+
+Estimated sample sizes for a two-sample proportions test
+Pearson's chi-squared test 
+H0: p2 = p1  versus  Ha: p2 != p1
+
+Study parameters:
+
+        alpha =    0.1000
+        power =    0.9000
+        delta =    0.0500  (difference)
+           p1 =    0.1500
+           p2 =    0.2000
+
+Estimated sample sizes:
+
+            N =     2,054
+  N per group =     1,027
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        favourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  yes
+Algorithm used                         2-arm
+
+Anticipated event probabilities        0.150  0.200 
+
+Alpha                                  0.100 (two-sided)
+                                        (taken as .05 one-sided)
+Power (designed)                       0.900
+
+Total sample size (calculated)         2054
+
+Sample size per group (calculated)     1027 1027
+Expected total number of events        359.45
+Expected number of events per group    154.05 205.4
+------------------------------------------------------------------------------
+
+Performing iteration ...
+
+Estimated sample sizes for a two-sample proportions test
+Pearson's chi-squared test 
+H0: p2 = p1  versus  Ha: p2 != p1
+
+Study parameters:
+
+        alpha =    0.0500
+        power =    0.9000
+        delta =   -0.2000  (difference)
+           p1 =    0.3000
+           p2 =    0.1000
+
+Estimated sample sizes:
+
+            N =       184
+  N per group =        92
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  yes
+
+Anticipated event probabilities        0.300  0.100 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.900
+
+Total sample size (calculated)         184
+
+Sample size per group (calculated)     92 92
+Expected total number of events        36.8
+Expected number of events per group    27.6 9.2
+------------------------------------------------------------------------------
+
+*************************************************************
+*** ARTBIN HAS PASSED ALL SOFTWARE TESTING POINT 3 **********
+*************************************************************

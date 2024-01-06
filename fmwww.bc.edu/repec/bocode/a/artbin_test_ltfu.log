@@ -1,0 +1,176 @@
+-----------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  c:\ian\git\artbin\testing\artbin_test_ltfu.log
+  log type:  text
+ opened on:  14 Nov 2023, 18:43:07
+
+. /*
+> artbin_test_ltfu.do
+> new testing file for artbin
+> IW 14/11/2023
+> */
+. pda
+
+. 
+. * evaluate ltfu() for power->n
+. artbin, pr(.02 .02) margin(.02) noround
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.0.2 23may2023)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis H0:                    H0: pi2 - pi1 >= .02
+Alternative hypothesis H1:             H1: pi2 - pi1 < .02
+
+Anticipated event probabilities        0.020  0.020 
+
+Alpha                                  0.050 (two-sided)
+                                       (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         1743.7366
+
+Sample size per group (calculated)     871.86832 871.86832
+Expected total number of events        34.87    
+------------------------------------------------------------------------------
+
+. local n=r(n)
+
+. artbin, pr(.02 .02) margin(.02) noround ltfu(.1)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.0.2 23may2023)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis H0:                    H0: pi2 - pi1 >= .02
+Alternative hypothesis H1:             H1: pi2 - pi1 < .02
+
+Anticipated event probabilities        0.020  0.020 
+
+Alpha                                  0.050 (two-sided)
+                                       (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Loss to follow up assumed:             10 %
+
+Total sample size (calculated)         1937.4851
+
+Sample size per group (calculated)     968.74257 968.74257
+Expected total number of events        38.75    
+------------------------------------------------------------------------------
+
+. di r(n),`n'/0.9
+1937.4851 1937.4851
+
+. assert reldif(r(n),`n'/0.9) < 1E-7
+
+. 
+. 
+. * evaluate ltfu() for n->power
+. artbin, pr(.02 .02) margin(.02) noround n(1000) ltfu(.2)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.0.2 23may2023)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis H0:                    H0: pi2 - pi1 >= .02
+Alternative hypothesis H1:             H1: pi2 - pi1 < .02
+
+Anticipated event probabilities        0.020  0.020 
+
+Alpha                                  0.050 (two-sided)
+                                       (taken as .025 one-sided)
+Power (calculated)                     0.547
+
+Loss to follow up assumed:             20 %
+
+Total sample size (designed)           1250
+
+Sample size per group (designed)       625 625
+Expected total number of events        20.00    
+------------------------------------------------------------------------------
+
+. local power=r(power)
+
+. artbin, pr(.02 .02) margin(.02) noround n(800)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.0.2 23may2023)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis H0:                    H0: pi2 - pi1 >= .02
+Alternative hypothesis H1:             H1: pi2 - pi1 < .02
+
+Anticipated event probabilities        0.020  0.020 
+
+Alpha                                  0.050 (two-sided)
+                                       (taken as .025 one-sided)
+Power (calculated)                     0.452
+
+Total sample size (designed)           800
+
+Sample size per group (designed)       400 400
+Expected total number of events        16.00    
+------------------------------------------------------------------------------
+
+. di r(power),`power'
+.45192744 .54683603
+
+. assert reldif(r(power),`power') < 1E-7
+assertion is false
+r(9);
+
+end of do-file
+      name:  <unnamed>
+       log:  c:\ian\git\artbin\testing\artbin_test_ltfu.log
+  log type:  text
+ closed on:  14 Nov 2023, 18:43:07
+-----------------------------------------------------------------------------------------------------------------

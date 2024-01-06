@@ -1,4 +1,4 @@
-*! version 1.2.8 2023-04-19
+*! version 1.2.9 2024-01-04
 
 program define stpp, rclass sortpreserve
   version 16.0
@@ -116,7 +116,7 @@ program define stpp, rclass sortpreserve
   /// checks that at least one observation and 1 event. (within standstrata???)
   if "`by'" != "" | "`standstrata'" != "" {
     tempvar bygroups eventtab
-    egen `bygroups' = group(`by' `standstrata') if `touse'
+    qui egen `bygroups' = group(`by' `standstrata') if `touse'
     qui tab `bygroups' _d if `touse', matcell(`eventtab')
     matrix `eventtab' =  `eventtab'[1...,2]
     mata:st_local("zeroevents",strofreal(sum(st_matrix("`eventtab'"):==0):>0))
@@ -125,6 +125,7 @@ program define stpp, rclass sortpreserve
     	di as error "by() and/or standstrata() options"
       exit 198
     }
+    qui replace `touse' = 0 if `bygroups' == .
   }
   else {
     quietly count if _d==1 &`touse'
@@ -133,7 +134,7 @@ program define stpp, rclass sortpreserve
       exit 198
     }
   }
-  
+
 // frames
   if "`frame'" != "" {
     getframeoptions `frame'    
@@ -279,10 +280,10 @@ program define stpp, rclass sortpreserve
     }
   }
   tempvar d0
-  gen byte `d0' = 1 - _d
+  qui gen byte `d0' = 1 - _d
   if "`by'" == "" {
     tempvar cons
-    gen `cons' = 1
+    qui gen `cons' = 1
     local by `cons'
   }
 	
@@ -304,7 +305,7 @@ program define stpp, rclass sortpreserve
       preserve
         keep if `touse'
         tempvar group
-        egen `group'=group(`by')
+        qui egen `group'=group(`by') if `touse'
         levelsof `group', local(grouplevs)
         local Nofgroups=wordcount("`grouplevs'")
         local Nofby=wordcount("`by'")
@@ -778,8 +779,8 @@ function PP_Get_stpp_info()
     }
     asarray(S.unique_t_k,(k),uniqrows(S.t[selectindex(S.d :& rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars)]))
     S.Nunique_t_k[k] = rows(asarray(S.unique_t_k,(k)))
-    asarray(S.mint_k,k,min(S.t[selectindex(rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars)]))
-    asarray(S.maxt_k,k,max(S.t[selectindex(rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars)]))
+    asarray(S.mint_k,k,min(asarray(S.unique_t_k,(k))))
+    asarray(S.maxt_k,k,max(asarray(S.unique_t_k,(k))))
   }  
 
 // Read in popmort files  

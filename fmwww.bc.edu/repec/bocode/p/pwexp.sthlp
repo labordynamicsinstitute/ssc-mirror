@@ -1,13 +1,13 @@
 {smcl}
 {* 20Jun2022, 13Sep2020 }{...}
 {hline}
-help for {hi:swexp} 
+help for {hi:pwexp} 
 {hline}
 
 {title:piecewise exponential}
 
 {p 4 8 2}
-{cmd:swexp} 
+{cmd:pwexp} 
 {it:varname x}
 [{cmd:if} {it:exp}] [{cmd:in} {it:range}] 
 {cmd:,} 
@@ -21,7 +21,7 @@ help for {hi:swexp}
 
 {title:Description}
 
-{p 4 8 2}{cmd:swexp} piecewise exponential distribution function defined by the time change(s) and end points listed in 
+{p 4 8 2}{cmd:pwexp} piecewise exponential distribution function defined by the time change(s) and end points listed in 
 {cmdab:tim:e(}{it:numlist}{cmd:)} with the corresponding survival values of {cmdab:sur:vival(}{it:numlist}{cmd:)} 
 or the failure rates of {cmdab:h:azard(}{it:numlist}{cmd:)}. 
 These together define the implied failure rate or survival of each defined time interval.

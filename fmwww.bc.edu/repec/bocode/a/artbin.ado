@@ -1,12 +1,13 @@
-*!version 2.0.2 EMZ    23may2023
-* version 2.0.1 EMZ    09june2022 
+*!version 2.1.0 IW     04jan2024
+* version 2.0.2 EMZ    23may2023
+* version 2.0.1 EMZ    09jun2022 
 * version 2.0.0 EMZ    08nov2021
 * version 1.2.13EMZ    08nov2021
 * version 1.2.12EMZ    04nov2021
 * version 1.2.11EMZ    21oct2021
 * version 1.2.10EMZ    07oct2021
 * version 1.2.9 EMZ    16sep2021
-* version 1.2.8 EMZ    21june2021
+* version 1.2.8 EMZ    21jun2021
 * version 1.2.7 EMZ    20may2021
 * version 1.2.6 EMZ    15apr2021
 * version 1.2.5 EMZ    12apr2021
@@ -32,7 +33,16 @@
 *	History
 	
 /*
-2.0.2   23may2023   ltfu() bux fix (previously applied to SS but not to power)
+2.1.0   22nov2023   ltfu() was wrong for n -> power
+					give error if n and power specified (previously power was ignored)
+					improve iterative algorithm for >2 groups
+					apply rounding only at end: previously also applied in art2bin call
+						this reduces sample size by 1 in three cases in the test files
+					add expected events per group to output
+					add undocumented options debug, convcrit, format
+					small tidying of output
+					return artbin_version
+2.0.2   23may2023   ltfu() bug fix (previously applied to SS but not to power)
 2.0.1   09june2022  Removal of comma in between anticipated probabilities in output table.  Replaced p's with pi's in output table hypothesis test.  	
 					Minor formatting to output table.  Allowed onesided for >2 groups if trend/dose specified.  Removed warning if p1 + m lies 
 					outside (0,1) as per Ab's suggestion.
@@ -151,6 +161,11 @@
 program define artbin, rclass
 version 8
 
+if _caller() >= 12 {
+    local hidden hidden
+}
+return `hidden' local artbin_version "2.1.0"
+
 gettoken number : 1
 if "`1'"! = "," {
     di as err "artbin syntax is: artbin, pr()"
@@ -159,15 +174,25 @@ if "`1'"! = "," {
 
 syntax , PR(numlist min=2 >0 <1) [ Margin(numlist max=1) ALpha(real 0.05) ARatios(string) UNFavourable FAVourable UNFavorable FAVorable COndit LOcal 	///
 	DOses(string) N(integer 0) NGroups(numlist max=1) ni NI2(numlist max=1) Onesided Onesided2(numlist max=1)		///
-	POwer(real 0.8) TRend NVMethod(numlist max=1) ap2(real 0) Ccorrect Ccorrect2(numlist max=1) nchi WAld FORCE NOROUND NOTABLE ALGorithm ///
-	DIstant(numlist max=1) LTFU(numlist max=1 >0 <1)]
+	POwer(numlist max=1 >0 <1) TRend NVMethod(numlist max=1) ap2(real 0) Ccorrect Ccorrect2(numlist max=1) nchi WAld FORCE NOROUND NOTABLE ALGorithm ///
+	DIstant(numlist max=1) LTFU(numlist max=1 >=0 <1) ///
+	debug convcrit(real 1E-7) format(string) /// undocumented
+	]
 
 
-local version "binary version 2.0.2 23may2023"
+local version "binary version 2.1.0 04jan2024"
+
+if `n'>0 & !mi("`power'") {
+	di as err "You can't specify both n() and power()"
+	exit 198
+}
+if `n'==0 & mi("`power'") local power 0.8 // default
 
 numlist "`pr'"
 local npr: word count `pr'
-
+forvalues a=1/`npr' {
+	local pr`a' : word `a' of `pr'
+}
 
 if !mi("`ni'") | !mi("`ni2'") {
 	di as err "You are using the old syntax: pr(p1 p2) ni.  The new syntax for the equivalent expression is pr(p1 p1) margin(p2-p1)"
@@ -343,9 +368,17 @@ if (`ap2'<0 | `ap2'>1) {
 }
 
 
-* If the user specifies n, turn noround on
-if ("`n'"!="0") local noround = "noround"
-
+* If the user specifies n, turn noround on 
+* and handle LTFU so that n is obs sample size and ntotal is obs+ltfu
+if !mi("`ltfu'") local obsfrac = 1 - `ltfu'
+else local obsfrac 1
+if ("`n'"!="0") {
+	local noround = "noround"
+	local ntotal `n'
+	if !mi("`ltfu'") {
+		local n = round(`ntotal'*`obsfrac',1) // art2bin can't handle non-integer n
+	}
+}
 
 * If there are >2 groups and the user specifies less numbers in aratios than prs, send to error message
 if !mi("`aratios'") {
@@ -455,7 +488,23 @@ if !mi("`unfavourable'") & !mi("`favourable'") {
         exit 198
 	  }
 
-* wrapper for art2bin to be called if ngoups=2 (unless undocumented case of superiority 2-arms nchi or if condit is specified)
+if `n'==0 local npoweropt power(`power')
+else local npoweropt n(`n')
+
+if "`debug'"=="debug" {
+	di as input "About to start calculation"
+	if `n'==0 di "Find SS for power = `power'"
+	else di "Find power for n = `n'"
+	local qui dicmd
+}
+else local qui qui
+
+if mi("`format'") local format %-9.2f
+
+// END OF PARSING
+
+// START CALCULATION 
+* wrapper for art2bin to be called if ngroups=2 (unless undocumented case of superiority 2-arms nchi or if condit is specified)
 	if `npr'==2 & !(`niss'==0 & "`nchi'"=="nchi") & "`condit'"=="" {
 	    
 
@@ -473,11 +522,11 @@ if !mi("`unfavourable'") & !mi("`favourable'") {
 	  else local ccorrect "ccorrect"
 	  * If margin is specified and it is a non-inferiority/substantial-superiority trial, then input p1 p2 and margin into art2bin as required
 	  if ("`trialtype'"=="non-inferiority" | "`trialtype'"=="substantial-superiority") {
-	  qui art2bin `w1' `w2', margin(`margin') n(`n') ar(`aratios') alpha(`alpha') power(`power') nvmethod(`nvmethod') `onesided' `ccorrect' `local' `wald' `noround'
+	  `qui' art2bin `w1' `w2', margin(`margin') `npoweropt' ar(`aratios') alpha(`alpha') nvmethod(`nvmethod') `onesided' `ccorrect' `local' `wald' noround
 		 }
 	 * If it is a superiority trial, then margin=0 in art2bin 
 	  else if "`trialtype'"=="superiority" {
-	  qui art2bin `w1' `w2', margin(0) n(`n') ar(`aratios') alpha(`alpha') power(`power') nvmethod(`nvmethod') `onesided' `ccorrect' `local' `wald' `noround'
+	  `qui' art2bin `w1' `w2', margin(0) `npoweropt' ar(`aratios') alpha(`alpha') nvmethod(`nvmethod') `onesided' `ccorrect' `local' `wald' noround
 		 }
 	  * for output table at the end
 	  local p1 = `w1'
@@ -518,16 +567,15 @@ if !mi("`unfavourable'") & !mi("`favourable'") {
 	  if "`local'" == "" local localdescr "distant"
 	  else if "`local'" == "local" local localdescr "local"
 	  local artcalcused "2-arm"
-	}
-   else {
-
-
+	  if "`debug'"=="debug" {
+		di as text "Calculation by art2bin: " _c
+		di cond(`ssize',"n=`n'","power=`power'")
+	  }
+	} // END OF CALCULATION BY ART2BIN
+	
+   else { // START OF GENERAL K-GROUPS CALCULATION 
 if max(`alpha',1-`alpha')>=1 { 
 	di as err "alpha() out of range"
-	exit 198
-}
-if max(`power',1-`power')>=1 {
-	di as err "power() out of range"
 	exit 198
 }
 if `n'<0 { 
@@ -633,16 +681,16 @@ local Power `power'	/* as supplied */
 	  else local ccorrect "ccorrect"
 	
 	if `ssize' {
-		qui art2bin `p1' `p2', margin(`margin') ar(`ar21')	///
-		alpha(`alpha') power(`power') nvmethod(`nvm') `onesided' `ccorrect' `local' `wald' `noround'
+		`qui' art2bin `p1' `p2', margin(`margin') ar(`ar21')	///
+		alpha(`alpha') power(`power') nvmethod(`nvm') `onesided' `ccorrect' `local' `wald' noround
 		local n `r(n)'
 		local artcalcused "2-arm"
 	}
 	else {
 		local n0 = floor(`n'/(1+`ar21'))
 		local n1 = floor(`n'*`ar21'/(1+`ar21'))
-		qui art2bin `p1' `p2', margin(`margin') ar(`ar21') n0(`n0')	///
-			n1(`n1') alpha(`alpha') nvmethod(`nvm') `onesided' `ccorrect' `local' `wald' `noround'
+		`qui' art2bin `p1' `p2', margin(`margin') ar(`ar21') n0(`n0')	///
+			n1(`n1') alpha(`alpha') nvmethod(`nvm') `onesided' `ccorrect' `local' `wald' noround
 		local power `r(power)'	
 		local artcalcused "2-arm"
 	}
@@ -778,7 +826,7 @@ else {                                                                          
 	}
 	tempname b MU Q0 q0 a D
 	local K=`ngroups'-1
-	scalar `b'=1-`power'
+	if `ssize'==1 scalar `b'=1-`power'
 	* Variance-covariance matrix under alternative hypothesis
 		if "`wald'" ~="" {
 			tempname VA
@@ -834,9 +882,12 @@ else {                                                                          
 				_sp `S' `S' `W', out(`a1')
 				scalar `a1'=(`a1'+`sbar'^2)/`s'^2
 				if `n'==0 {
-					* Solve for n iteratvely
+					* Solve for n iteratively (interval bisection)
+					* Convergence criteria tightened up, IW 22nov2023
+					* previously 0.001 for change in b and 1 for change in n
+					if `convcrit'<1E-15 di as error "convcrit < 1E-15: program may hang"
 					tempname n0 nl nu b0 sm
-					scalar `sm'=0.001
+					scalar `sm'=`convcrit'
 					local i 1
 					scalar `n0'=npnchi2(`K',`a',`b')/`q0'
 					_pe2 `a0' `q0' `a1' `q1' `K' `n0' `a' `b0'
@@ -864,7 +915,7 @@ else {                                                                          
 								scalar `nu'=`n0'
 							}
 							else scalar `nl'=`n0'
-							local i=`i'*((`nu'-`nl')>1)
+							local i=`i'*((`nu'-`nl')>`sm')
 						}
 					}
 					local n=`n0'
@@ -973,10 +1024,12 @@ local off 40
 local longstring 38
 local maxwidth 78
 local artcalcused "k-arm"
+if "`debug'"=="debug" {
+	di as text "General K-groups calculation : " _c
+	di cond(`ssize',"n=`n'","power=`power'")
 }
+}  // END OF GENERAL K-GROUPS CALCULATION 
 
-* Account for loss to follow up
-if !mi("`ltfu'") local n = `n' /(1 - `ltfu')
 
 * Change rounding option so rounds UP to the nearest integer if noround is not specified - PER GROUP, FOR ALL ARMS (incl results from art2bin)
 
@@ -1004,49 +1057,43 @@ if `allr1'!=1 {
 	local nbygroup=`n'/`totalallr'
 	
 
-	 
+	local D 0
 	forvalues a=1/`npr' {
-			if "`noround'"=="" {
-				local n`a' = ceil(ceil(`nbygroup') * `allr`a'')
-				if `a'==1 local n = `n`a''
-				else local n = `n' + `n`a''
-*				local D=ceil(`D') 
-				* calculate D for rounded n, and do not round D
-				* calculation of D based on SS if art2bin wrapper was called
-					 if `ssize'==1 {
-						if `npr'==2 & !(`niss'==0 & "`nchi'"=="nchi") & "`condit'"=="" {
-							local D = (`n1'*`p1') + (`n2'*`p2')
-						}
-						* otherwise if art2bin wrapper not called
-						else local D = `n'*`pibar'
-					}			 
-				}
-				else {
-				local n`a' = `nbygroup' * `allr`a''
-				if `a'==1 local n = `n`a''
-				else local n = `n' + `n`a''
-				* calculate D for non-rounded n, and do not round D
-				* calculation of D based on SS if art2bin wrapper was called
-					if `ssize'==1 {
-						if `npr'==2 & !(`niss'==0 & "`nchi'"=="nchi") & "`condit'"=="" {
-							local D = (`n1'*`p1') + (`n2'*`p2')
-						}
-						* otherwise if art2bin wrapper not called
-						else local D = `n'*`pibar'
-					}
-*				local D = `D'                                                      
-*				local power=1-`b'
+		if `ssize'==1 {
+			if "`noround'"=="" { // standard rounding
+				* local n`a' = ceil(ceil(`nbygroup') * `allr`a''  / `obsfrac') 
+				local n`a' = ceil(`nbygroup' * `allr`a''  / `obsfrac') // removed double ceiling 21nov2023
+				if `a'==1 local ntotal = `n`a''
+				else local ntotal = `ntotal' + `n`a''
 			}
-	if `a'!=`npr' local ntable `ntable' `n`a'',
-	else if `a'==`npr' local ntable `ntable' `n`a''
-	return scalar n`a' = `n`a''
+			else { // no rounding
+				local n`a' = `nbygroup' * `allr`a'' / `obsfrac'
+				if `a'==1 local ntotal = `n`a''
+				else local ntotal = `ntotal' + `n`a''
+			}
+		}
+		else if `ssize'==0 local n`a' = `ntotal' * `allr`a'' / `totalallr' // *** new 21nov2023
+
+		local narounded : di `format' `n`a'' 
+		if `a'!=`npr' local comma ,
+		else local comma
+		local ntable `ntable' `narounded' `comma'
+
+		local d`a' = `n`a'' * `pr`a'' * `obsfrac'
+		local D = `D' + `d`a''
+		local darounded : di `format' `d`a'' 
+		local Dtable2 `Dtable2' `darounded' `comma'
+
+		return scalar n`a' = `n`a''
+		return scalar D`a' = `d`a''
 	}
 	
 	
 * Put D to 2.d.p. for table output only (returned value will have full d.p.)
 *local Dtable = `D'
 *frac_ddp `Dtable' 2
-local Dtable : di %-9.2f `D'
+local Dtable : di `format' `D'
+local ntotaltable : di `format' `ntotal'
 
 * loss to follow up as a percentage for the table
 if !mi("`ltfu'")  {
@@ -1091,11 +1138,11 @@ if ("`ccorrect'" == "ccorrect" | "`ccorrect'" == "1") di as text "Continuity cor
 else if ("`ccorrect'" == "" | "`ccorrect'" == "0") di as text "Continuity correction" _col(`off') as res "no"
 	
 if ("`trialtype'"=="non-inferiority" | "`trialtype'"=="substantial-superiority") {
-	di as txt "Null hypothesis H0:" _col(`off') as res "`H0'"        
-	di as txt "Alternative hypothesis H1:" _col(`off') as res "`H1'"
+	di as txt "Null hypothesis" _col(`off') as res "`H0'"        
+	di as txt "Alternative hypothesis" _col(`off') as res "`H1'"
 }
 
-if !mi("`algorithm'") di as text "Algorithm used:" _col(`off') as res "`artcalcused'"
+if !mi("`algorithm'") di as text "Algorithm used" _col(`off') as res "`artcalcused'"
 
 if `ngroups'>2 & "`trtest'"!="" {
 	di as text "`trtest'" _col(`off') as res "`doses'"
@@ -1103,7 +1150,7 @@ if `ngroups'>2 & "`trtest'"!="" {
 di as text _n "Anticipated event probabilities" _col(`off') as res "`altp'"
 if mi("`onesided'") {
     di as text _n "Alpha" _col(`off') %5.3f as res `Alpha' " (`sided'-sided)"
-	if "`sided'" == "two" di as text _col(`off') as res "(taken as `Alphadiv2' one-sided)"
+	if "`sided'" == "two" di as text _col(`off') as res " (taken as `Alphadiv2' one-sided)"
 }
 else di as text _n "Alpha" _col(`off') %5.3f as res `Alpha' " (`sided'-sided)"
 if `ssize'==1 {
@@ -1116,13 +1163,14 @@ if `ssize'==0 {
  	return scalar power=`power'
  	local mess (designed)
 }
-if !mi("`ltfu'") di as text _n "Loss to follow up assumed:" _col(`off') as res "`ltfuperc'"
-di as text _n "Total sample size `mess'" _col(`off') as res `n' 
+if !mi("`ltfu'") di as text _n "Loss to follow up assumed" _col(`off') as res "`ltfuperc'"
+di as text _n "Total sample size `mess'" _col(`off') as res `ntotaltable' 
 di as text _n "Sample size per group `mess'" _col(`off') as res `ntable'
-di as text "Expected total number of events" _col(`off') as res "`Dtable'" " 
+di as text "Expected total number of events" _col(`off') as res `Dtable'
+di as text "Expected number of events per group" _col(`off') as res `Dtable2'
 di as text "{hline `maxwidth'}"
 
-return scalar n=`n'
+return scalar n=`ntotal'
 return scalar D=`D'                                                             
 
 }
@@ -1133,8 +1181,8 @@ else if "`notable'"!="" {
 	return scalar D=`D' 
 	}
 	else if `ssize'==1 {
- 	di as text "Total sample size (calculated) is: " as res `n'
-	return scalar n=`n'
+ 	di as text "Total sample size (calculated) is: " as res `ntotal'
+	return scalar n=`ntotal'
 	return scalar D=`D' 
 	}
 }

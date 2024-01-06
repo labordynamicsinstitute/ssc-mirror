@@ -1,4 +1,4 @@
-*! opplot_demo version 1.02 - Biostat Global Consulting - 2020-10-29
+*! opplot_demo version 1.03 - Biostat Global Consulting - 2023-12-22
 *******************************************************************************
 * Change log
 * 				Updated
@@ -10,9 +10,9 @@
 *										data; reload faux data after Demo 7;
 *										demo plotting all strata; demo saving
 * 										.tif; add comments throughout
+* 2023-12-22	1.03	Dale Rhoda		Updated with examples of high, medium,
+*                                       and low coverage categories
 *******************************************************************************
-
-********************************************************************************
 *
 * Program to illustrate making organ pipe plots in two different strata
 *
@@ -23,14 +23,13 @@
 
 clear
 set more off
-capture mkdir "C:\Users\Dale\Desktop\- temporary\opplot demo" // <--- Edit this line
-cd "C:\Users\Dale\Desktop\- temporary\opplot demo"            // <--- Edit this line
+cd "Q:/- Folders shared outside BGC/BGC Team - WHO Software/Working folder - Dale/VCQI test output/Opplot testing"    // <--- Edit this line
 
 * If necessary, add the folder that holds the opplot program to your adopath
 * (Not necessary if you put the program in a folder that is already in the
 *  adopath, like maybe c:/ado/personal or c:/ado/plus/o)
 
-adopath + "C:\Users\Dale\Dropbox (Biostat Global)\DAR GitHub Repos\vcqi-stata-bgc\PLOT"  // <--- Edit this line
+adopath + "E:/Biostat Global Dropbox/Dale Rhoda/DAR GitHub Repos/vcqi-stata-bgc/PLOT"                                 // <--- Edit this line
 
 * Make fake data with 2 strata with 10 clusters each with varying respondents per cluster
 
@@ -143,7 +142,41 @@ opplot y , clustvar(clusterid) stratvar(stratumid) ///
            xsize(20) ysize(6) plotn nlinecolor(red) nlinewidth(*2) ///
            nlinepattern(dash) ytitle2(Number of Respondents (N)) ///
            yround2(2)
-		  
+
+ * Demo adding high, medium and low coverage categories.
+ * Only specify the lcthreshold. All other values will use defaults.
+ 
+ * 
+opplot y , clustvar(clusterid) stratvar(stratumid) ///
+       stratum(1) title(Stratum 1) name(Demo10,replace) lcthreshold(50) ///
+       note("Different colors for clusters with a) 100% coverage, b) >50% and < 100%, and c) <= 50%.")
+
+ * Demo adding high, medium and low coverage categories.
+ * Specify both the lcthreshold (slightly lower than previous run) and high. All other values will use defaults.
+
+opplot y , clustvar(clusterid) stratvar(stratumid) ///
+        stratum(0) title(Stratum 0) name(Demo11,replace) ///
+        lcthreshold(20) high(90) ///
+		note("Different colors for clusters with a) >= 90% coverage, b) >20% and < 90%, and c) <= 20%.")
+
+ * Demo adding high, medium and low coverage categories with specified barcolor options.
+ * Change both the lcthreshold and high. Define barcolors for high, medium and low coverage categories.
+
+opplot y , clustvar(clusterid) stratvar(stratumid) ///
+        stratum(0) title(Stratum 0) name(Demo12,replace) ///
+        lcthreshold(35) high(80) ///
+        barcolorhigh1(67 162 202) barcolormid1(123 204 196) barcolorlow1(186 228 188) ///
+		note("Different colors for clusters with a) >= 80% coverage, b) >35% and < 80%, and c) <= 35%.")
+		
+ * Demo portraying only two categories by setting lcthreshold == high.
+ * Note that in this case, any clusters exactly equal to the threshold are
+ * shown in the *lower* color.
+
+opplot y , clustvar(clusterid) stratvar(stratumid) ///
+        stratum(0) title(Stratum 0) name(Demo13,replace) ///
+        lcthreshold(50) high(50) ///
+		note("Different colors for clusters with a) > 50% coverage and b) <= 50%.")		
+		   
 * Here is the 'syntax' statement from opplot.  We have demoed the useful
 * features in this program.  
 	

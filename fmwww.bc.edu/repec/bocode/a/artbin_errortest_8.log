@@ -1,0 +1,1368 @@
+
+. 
+. which artbin 
+c:\ian\git\artbin\package\artbin.ado
+*!version 2.1.0 IW     04jan2024
+
+. which art2bin
+c:\ian\git\artbin\package\art2bin.ado
+*!version 1.01  09june2022
+
+. 
+. * Trying incorrect/missing values of p() 
+. ********************************************
+. 
+. * No value for pr()
+. cap noi artbin, pr() alpha(0.05) power(0.90) 
+option pr() required
+
+. * gives "option pr() required" as expected
+. 
+. * One value of pr()
+. cap noi artbin, pr(.05) alpha(0.05) power(0.90) 
+pr() invalid -- invalid numlist has too few elements
+
+. * gives "pr() invalid -- invalid numlist has too few elements" as expected
+. 
+. * One value of pr(), but ngroups(2)
+. cap noi artbin, pr(.05) ngroups(2) alpha(0.05) power(0.90) 
+pr() invalid -- invalid numlist has too few elements
+
+. * gives "pr() invalid -- invalid numlist has too few elements" as expected
+. 
+. * One value of pr() which is out of range
+. cap noi artbin, pr(1.1) alpha(0.05) power(0.90) 
+pr() invalid -- invalid numlist has elements outside of allowed range
+
+. * gives "pr() invalid -- invalid numlist has elements outside of allowed range" as expected
+. 
+. * Control probability out of range
+. cap noi artbin, pr(1.1 0.5) alpha(0.05) power(0.90) 
+pr() invalid -- invalid numlist has elements outside of allowed range
+
+. * gives "pr() invalid -- invalid numlist has elements outside of allowed range" as expected
+. 
+. * Treatment probability out of range
+. cap noi artbin, pr(0.5 1.1) alpha(0.05) power(0.90) 
+pr() invalid -- invalid numlist has elements outside of allowed range
+
+. * gives "pr() invalid -- invalid numlist has elements outside of allowed range" as expected
+. 
+. * similarly, really high treatment probability
+. cap noi artbin, pr(0.5 100) alpha(0.05) power(0.90) 
+pr() invalid -- invalid numlist has elements outside of allowed range
+
+. * gives "pr() invalid -- invalid numlist has elements outside of allowed range" as expected
+. 
+. * 3 groups of probability, NI design, ngroups(2)
+. cap noi artbin, pr(0.5 0.8 0.3) margin(0.1) ngroups(2) alpha(0.05) power(0.90) 
+Can not have margin with >2 groups
+
+. * gives "Can not have margin with >2 groups" (as expected) 
+. 
+. * 3 groups of probability, NI design, ngroups(3)
+. cap noi artbin, pr(0.5 0.8 0.3) margin(0.1) ngroups(3) alpha(0.05) power(0.90) 
+Can not have margin with >2 groups
+
+. * gives "Can not have margin with >2 groups" (as expected) 
+. 
+. * 3 groups of probability, Superiority design, ngroups(2)
+. artbin, pr(0.5 0.8 0.3) ngroups(2) alpha(0.05) power(0.90) 
+ WARNING: Mismatch between the number of proportions and the number of groups specified - ngroups value will be ign
+> ored.
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 3
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.500 0.800 0.300
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.900
+
+Total sample size (calculated)         69
+
+Sample size per group (calculated)     23 23 23
+Expected total number of events        36.8
+Expected number of events per group    11.5 18.4 6.9
+------------------------------------------------------------------------------
+
+. * gives a WARNING: Mismatch between the number of proportions and the number of groups specified - ngroups value 
+> will be ignored (as expected). 
+. 
+. * 3 groups of probability, NI design, one probability out of range
+. cap noi artbin, pr(0.5 0.8 1.1) alpha(0.05) power(0.90) 
+pr() invalid -- invalid numlist has elements outside of allowed range
+
+. * gives "pr() invalid -- invalid numlist has elements outside of allowed range" as expected
+. 
+. * 3 groups of probability, no specified design, probability 1 out of range
+. cap noi artbin, pr(1.1 0.8 0.5) alpha(0.05) power(0.90) 
+pr() invalid -- invalid numlist has elements outside of allowed range
+
+. * gives "pr() invalid -- invalid numlist has elements outside of allowed range" as expected
+. 
+. * 3 groups of probability, no specified design, probability 2 out of range
+. cap noi artbin, pr(0.8 1.1 0.5) alpha(0.05) power(0.90) 
+pr() invalid -- invalid numlist has elements outside of allowed range
+
+. * gives "pr() invalid -- invalid numlist has elements outside of allowed range" as expected
+. 
+. * 3 groups of probability, no specified design, probability 3 out of range
+. cap noi artbin, pr(0.5 0.8 1.1) alpha(0.05) power(0.90) 
+pr() invalid -- invalid numlist has elements outside of allowed range
+
+. * gives "pr() invalid -- invalid numlist has elements outside of allowed range" as expected
+. 
+. * 3 groups of probability, no specified design, probability 1 and 2 out of range
+. cap noi artbin, pr(1.1 1.1 0.5) alpha(0.05) power(0.90)
+pr() invalid -- invalid numlist has elements outside of allowed range
+
+. * gives "pr() invalid -- invalid numlist has elements outside of allowed range" as expected
+. 
+. * 3 groups of probability, no specified design, probability 1 and 3 out of range
+. cap noi artbin, pr(1.1 0.5 1.1) alpha(0.05) power(0.90) 
+pr() invalid -- invalid numlist has elements outside of allowed range
+
+. * gives "pr() invalid -- invalid numlist has elements outside of allowed range" as expected
+. 
+. * 3 groups of probability, no specified design, probability 2 and 3 out of range
+. cap noi artbin, pr(0.5 1.1 1.1) alpha(0.05) power(0.90)  
+pr() invalid -- invalid numlist has elements outside of allowed range
+
+. * gives "pr() invalid -- invalid numlist has elements outside of allowed range" as expected
+. 
+. * 3 groups of probability, no specified design, all probabilities out of range
+. cap noi artbin, pr(1.1 1.1 1.1) alpha(0.05) power(0.90) 
+pr() invalid -- invalid numlist has elements outside of allowed range
+
+. * gives "pr() invalid -- invalid numlist has elements outside of allowed range" as expected
+. 
+. * Same control and treatment proportions
+. cap noi artbin, pr(0.1 0.1) alpha(0.05) power(0.9) 
+Event probabilities can not be equal with 2 groups
+
+. * gives "Event probabilities can not be equal with 2 groups" (as expected)
+. 
+. 
+. * Trying incorrect/missing values of alpha 
+. ********************************************
+. 
+. * Missing alpha
+. cap noi artbin, pr(0.05 0.1) alpha() power(0.90) 
+option alpha() incorrectly specified
+
+. * gives "option alpha() incorrectly specified" (as expected)
+. 
+. * Alpha in superiority trial
+. artbin, pr(0.1 0.2) alpha(0.1) power(0.8) 
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        favourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.100  0.200 
+
+Alpha                                  0.100 (two-sided)
+                                        (taken as .05 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         314
+
+Sample size per group (calculated)     157 157
+Expected total number of events        47.1
+Expected number of events per group    15.7 31.4
+------------------------------------------------------------------------------
+
+. * output says alpha is 2-sided, can be for superiority trial (Ian confirmed)
+. 
+. * Alpha out of range: 0
+. cap noi artbin, pr(0.1 0.2) alpha(0) power(0.8) 
+alpha() out of range
+
+. * gives error message "alpha() out of range" as expected
+. 
+. * Alpha out of range: 1
+. cap noi artbin, pr(0.1 0.2) alpha(1) power(0.8) 
+alpha() out of range
+
+. * gives error message "alpha() out of range" as expected
+. 
+. * Alpha out of range: 100
+. cap noi artbin, pr(0.1 0.2) alpha(100) power(0.8) 
+alpha() out of range
+
+. * gives error message "alpha() out of range" as expected
+. 
+. * Alpha out of range: -0.05
+. cap noi artbin, pr(0.1 0.2) alpha(-0.05) power(0.8) 
+alpha() out of range
+
+. * gives error message "alpha() out of range" as expected
+. 
+. 
+. * Trying incorrect/missing values of power 
+. ********************************************
+. 
+. * Missing power
+. cap noi artbin, pr(0.05 0.1) alpha(0.05) power() 
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        favourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.050  0.100 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         870
+
+Sample size per group (calculated)     435 435
+Expected total number of events        65.25
+Expected number of events per group    21.75 43.5
+------------------------------------------------------------------------------
+
+. * gives the error message "option power() incorrectly specified" as required
+. 
+. * Power out of range: 0
+. cap noi artbin, pr(0.05 0.1) margin(0.1) alpha(0.05) power(0) 
+power() invalid -- invalid number, outside of allowed range
+
+. * gives the error message "power() out of range" as required
+. 
+. * Power out of range: 1
+. cap noi artbin, pr(0.05 0.1) margin(0.1) alpha(0.05) power(1) 
+power() invalid -- invalid number, outside of allowed range
+
+. * gives the error message "power() out of range" as required
+. 
+. * Power out of range: 100
+. cap noi artbin, pr(0.05 0.1) margin(0.1) alpha(0.05) power(100) 
+power() invalid -- invalid number, outside of allowed range
+
+. * gives the error message "power() out of range" as required
+. 
+. * Power out of range: -0.8
+. cap noi artbin, pr(0.05 0.1) margin(0.1) alpha(0.05) power(-0.8) 
+power() invalid -- invalid number, outside of allowed range
+
+. * gives the error message "power() out of range" as required
+. 
+. 
+. * Trying incorrect/missing values of n (if power is being calculated instead) 
+. ******************************************************************************
+. 
+. * Missing n
+. cap noi artbin, pr(0.05 0.1) alpha(0.05) n() 
+option n() incorrectly specified
+
+. * gives the error message "option n() incorrectly specified" as required
+. 
+. * n out of range: 0
+. artbin, pr(0.05 0.1) margin(0.1) alpha(0.05) n(0) 
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis                        H0: pi2 - pi1 >= .1
+Alternative hypothesis                 H1: pi2 - pi1 < .1
+
+Anticipated event probabilities        0.050  0.100 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         944
+
+Sample size per group (calculated)     472 472
+Expected total number of events        70.8
+Expected number of events per group    23.6 47.2
+------------------------------------------------------------------------------
+
+. * gives a result with a calculated sample size and a designed power of 0.8 as expected (by specifying n(0) / n() 
+> missing, sample size will be calculated by artbin)
+. 
+. * very low n: 1
+. artbin, pr(0.05 0.1) margin(0.1) alpha(0.05) n(1) 
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis                        H0: pi2 - pi1 >= .1
+Alternative hypothesis                 H1: pi2 - pi1 < .1
+
+Anticipated event probabilities        0.050  0.100 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (calculated)                     0.023
+
+Total sample size (designed)           1
+
+Sample size per group (designed)       .5 .5
+Expected total number of events        .07
+Expected number of events per group    .03 .05
+------------------------------------------------------------------------------
+
+. * calculates power, as expected
+. 
+. * very high n: 1,000,000
+. artbin, pr(0.05 0.1) margin(0.1) alpha(0.05) n(1000000) 
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis                        H0: pi2 - pi1 >= .1
+Alternative hypothesis                 H1: pi2 - pi1 < .1
+
+Anticipated event probabilities        0.050  0.100 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (calculated)                     1.000
+
+Total sample size (designed)           1000000
+
+Sample size per group (designed)       500000 500000
+Expected total number of events        75000
+Expected number of events per group    25000 50000
+------------------------------------------------------------------------------
+
+. * gives a power of 1 as expected (Ian confirmed)
+. 
+. * n out of range: -500
+. cap noi artbin, pr(0.05 0.1) margin(0.1) alpha(0.05) n(-500) 
+Sample size n() out of range
+
+. * Gives the error message "Sample size n() out of range" as required
+. 
+. 
+. * Testing error code: if margin & ((`npr'>2)|(`ngroups'>2)) di as err "Only two groups allowed for non-inferiorit
+> y/substantial superiority designs" Can not have margin with >2 groups/"
+. *****************************************************************************************************************
+> ********************************
+. 
+. * npr>2, sample size calculated, NI
+. cap noi artbin, pr(0.05 0.1 0.2) margin(0.1) alpha(0.05) power(0.8) 
+Can not have margin with >2 groups
+
+. * gives the error code "Can not have margin with >2 groups" as required
+. 
+. 
+. * ngroups>2, sample size calculated, NI
+. artbin, pr(0.05 0.1) margin(0.1) ngroups(3) alpha(0.05) power(0.8) 
+ WARNING: Mismatch between the number of proportions and the number of groups specified - ngroups value will be ign
+> ored.
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis                        H0: pi2 - pi1 >= .1
+Alternative hypothesis                 H1: pi2 - pi1 < .1
+
+Anticipated event probabilities        0.050  0.100 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         944
+
+Sample size per group (calculated)     472 472
+Expected total number of events        70.8
+Expected number of events per group    23.6 47.2
+------------------------------------------------------------------------------
+
+. * gives the a result and a warning message as expected: WARNING: Mismatch between the number of proportions and t
+> he number of groups specified - ngroups value will be ignored.
+. 
+. * npr>2 and ngroups>2, sample size calculated, NI
+. cap noi artbin, pr(0.05 0.1 0.2) margin(0.1) alpha(0.05) power(0.8) 
+Can not have margin with >2 groups
+
+. * gives the error code "Can not have margin with >2 groups" as required
+. 
+. * npr>2, ngroups<npr, sample size calculated, superiority
+. artbin, pr(0.05 0.1 0.2) ngroups(2) alpha(0.05) power(0.8) 
+ WARNING: Mismatch between the number of proportions and the number of groups specified - ngroups value will be ign
+> ored.
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 3
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.050 0.100 0.200
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         270
+
+Sample size per group (calculated)     90 90 90
+Expected total number of events        31.5
+Expected number of events per group    4.5 9 18
+------------------------------------------------------------------------------
+
+. * gives the message WARNING: Mismatch between the number of proportions and the number of groups specified - ngro
+> ups value will be ignored.
+. 
+. 
+. * ngroups>2, ngroups>npr, sample size calculated, superiority
+. artbin, pr(0.05 0.1) ngroups(3) alpha(0.05) power(0.8) 
+ WARNING: Mismatch between the number of proportions and the number of groups specified - ngroups value will be ign
+> ored.
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        favourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.050  0.100 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         870
+
+Sample size per group (calculated)     435 435
+Expected total number of events        65.25
+Expected number of events per group    21.75 43.5
+------------------------------------------------------------------------------
+
+. * gives the message WARNING: Mismatch between the number of proportions and the number of groups specified - ngro
+> ups value will be ignored.
+. 
+. * npr>2, power calculated, NI
+. cap noi artbin, pr(0.05 0.1 0.2) margin(0.1) ngroups(2) alpha(0.05) n(500) 
+Can not have margin with >2 groups
+
+. * gives the error code "Can not have margin with >2 groups" as required
+. 
+. 
+. * ngroups>2, power calculated, NI
+. artbin, pr(0.05 0.1) margin(0.1) ngroups(3) alpha(0.05) n(500) 
+ WARNING: Mismatch between the number of proportions and the number of groups specified - ngroups value will be ign
+> ored.
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis                        H0: pi2 - pi1 >= .1
+Alternative hypothesis                 H1: pi2 - pi1 < .1
+
+Anticipated event probabilities        0.050  0.100 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (calculated)                     0.518
+
+Total sample size (designed)           500
+
+Sample size per group (designed)       250 250
+Expected total number of events        37.5
+Expected number of events per group    12.5 25
+------------------------------------------------------------------------------
+
+. * gives the a result and a warning message as expected: WARNING: Mismatch between the number of proportions and t
+> he number of groups specified - ngroups value will be ignored.
+. 
+. * npr>2 and ngroups>2, power calculated, NI
+. cap noi artbin, pr(0.05 0.1 0.2) margin(0.1) alpha(0.05) n(500) 
+Can not have margin with >2 groups
+
+. * gives the error code "Can not have margin with >2 groups" as required
+. 
+. * npr>2, power calculated, superiority
+. artbin, pr(0.05 0.1 0.2) ngroups(2) alpha(0.05) n(500) 
+ WARNING: Mismatch between the number of proportions and the number of groups specified - ngroups value will be ign
+> ored.
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 3
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.050 0.100 0.200
+
+Alpha                                  0.050 (two-sided)
+Power (calculated)                     0.972
+
+Total sample size (designed)           500
+
+Sample size per group (designed)       166.67 166.67 166.67
+Expected total number of events        58.33
+Expected number of events per group    8.33 16.67 33.33
+------------------------------------------------------------------------------
+
+. * gives the a result and a warning message as expected: WARNING: Mismatch between the number of proportions and t
+> he number of groups specified - ngroups value will be ignored.
+. 
+. * ngroups>2, power calculated, superiority
+. artbin, pr(0.05 0.1) ngroups(3) alpha(0.05) n(500) 
+ WARNING: Mismatch between the number of proportions and the number of groups specified - ngroups value will be ign
+> ored.
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        favourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.050  0.100 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (calculated)                     0.565
+
+Total sample size (designed)           500
+
+Sample size per group (designed)       250 250
+Expected total number of events        37.5
+Expected number of events per group    12.5 25
+------------------------------------------------------------------------------
+
+. * gives the a result and a warning message as expected: WARNING: Mismatch between the number of proportions and t
+> he number of groups specified - ngroups value will be ignored.
+. 
+. 
+. * Testing the error code if `ccorrect' & (`ngroups'>2) di as err "Correction for contituity not allowed in compar
+> ison of > 2 groups"
+. *****************************************************************************************************************
+> ********************
+. 
+. * superiority, power to be calculated
+. cap noi artbin, pr(0.05 0.1 0.2) alpha(0.05) n(500) ccorrect(1)
+Correction for continuity not allowed in comparison of > 2 groups
+
+. * gives error code "Correction for contituity not allowed in comparison of > 2 groups" as required
+. 
+. * superiority, sample size to be calculated
+. cap noi artbin, pr(0.05 0.1 0.2) alpha(0.05) ccorrect(1)
+Correction for continuity not allowed in comparison of > 2 groups
+
+. * gives error code "Correction for contituity not allowed in comparison of > 2 groups" as required
+. 
+. * non-inferiority, power to be calculated
+. cap noi artbin, pr(0.05 0.1 0.2) margin(0.1) alpha(0.05) n(500) ccorrect(1)
+Can not have margin with >2 groups
+
+. * gives the error code "Can not have margin with >2 groups" as required
+. 
+. * non-inferiority, sample size to be calculated
+. cap noi artbin, pr(0.05 0.1 0.2) margin(0.1) alpha(0.05) ccorrect(1)
+Can not have margin with >2 groups
+
+. * gives the error code "Can not have margin with >2 groups" as required
+. 
+. 
+. * Testing the error code if `onesided' & (`ngroups'>2) di as err "One-sided not allowed in comparison of > 2 grou
+> ps"
+. *****************************************************************************************************************
+> ****
+. 
+. * superiority, power to be calculated
+. cap noi artbin, pr(0.05 0.1 0.2) alpha(0.05) onesided(1) n(100) 
+One-sided not allowed in comparison of > 2 groups unless trend/doses specified
+
+. * get the error code "One-sided not allowed in comparison of > 2 groups" as required
+. 
+. cap noi artbin, pr(0.05 0.1 0.2) alpha(0.05) onesided n(100) 
+One-sided not allowed in comparison of > 2 groups unless trend/doses specified
+
+. * get the error code "One-sided not allowed in comparison of > 2 groups" as required
+. 
+. * superiority, sample size to be calculated
+. cap noi artbin, pr(0.05 0.1 0.2) alpha(0.05) onesided(1) power(0.8) 
+One-sided not allowed in comparison of > 2 groups unless trend/doses specified
+
+. * get the error code "One-sided not allowed in comparison of > 2 groups" as required
+. 
+. cap noi artbin, pr(0.05 0.1 0.2) alpha(0.05) onesided power(0.8) 
+One-sided not allowed in comparison of > 2 groups unless trend/doses specified
+
+. * get the error code "One-sided not allowed in comparison of > 2 groups" as required
+. 
+. * non-inferiority, power to be calculated
+. cap noi artbin, pr(0.05 0.1 0.2) margin(0.1) alpha(0.05) onesided(1) n(500) 
+Can not have margin with >2 groups
+
+. * get the error code "Can not have margin with >2 groups" which has superseeded the one-sided error code.
+. 
+. cap noi artbin, pr(0.05 0.1 0.2) margin(0.1) alpha(0.05) onesided n(500) 
+Can not have margin with >2 groups
+
+. * get the error code "Can not have margin with >2 groups" which has superseeded the one-sided error code.
+. 
+. * non-inferiority, sample size to be calculated
+. cap noi artbin, pr(0.05 0.1 0.2) margin(0.1) alpha(0.05) onesided(1) power(0.8) 
+Can not have margin with >2 groups
+
+. * get the error code "Can not have margin with >2 groups" which has superseeded the one-sided error code.
+. 
+. cap noi artbin, pr(0.05 0.1 0.2) margin(0.1) alpha(0.05) onesided power(0.8) 
+Can not have margin with >2 groups
+
+. * get the error code "Can not have margin with >2 groups" which has superseeded the one-sided error code.
+. 
+. 
+. * Testing the error code if `ap2'<0 | `ap2'>1 di as err  "Group 2 event probability under the alternative hypothe
+> sis must be >0 & <1" (only for NI trials)
+. *****************************************************************************************************************
+> ********************************************
+. 
+. * sample size to be calculated, ap2<0
+. cap noi artbin, pr(0.2 0.2) margin(0.1) alpha(0.05) power(0.8) ap2(-0.1) 
+Group 2 event probability under the alternative hypothesis must be >0 & <1
+
+. * get the error code "Group 2 event probability under the alternative hypothesis must be >0 & <1" as required.
+. 
+. * power to be calculated, ap2<0
+. cap noi artbin, pr(0.2 0.2) margin(0.1) alpha(0.05) n(500) ap2(-0.1)
+Group 2 event probability under the alternative hypothesis must be >0 & <1
+
+. * get the error code "Group 2 event probability under the alternative hypothesis must be >0 & <1" as required.
+. 
+. * sample size to be calculated, ap2>1
+. cap noi artbin, pr(0.2 0.2) margin(0.1) alpha(0.05) power(0.8) ap2(1.5) 
+Group 2 event probability under the alternative hypothesis must be >0 & <1
+
+. * get the error code "Group 2 event probability under the alternative hypothesis must be >0 & <1" as required.
+. 
+. * power to be calculated, ap2>1
+. cap noi artbin, pr(0.2 0.2) margin(0.1) alpha(0.05) n(500) ap2(1.5)
+Group 2 event probability under the alternative hypothesis must be >0 & <1
+
+. * get the error code "Group 2 event probability under the alternative hypothesis must be >0 & <1" as required.
+. 
+. 
+. * test error code for aratios
+. **********************************
+. cap noi artbin, pr(.1 .2 .3) ar(2)      
+Please specify the same number of aratios() as pr() for >2 groups
+
+. * gives error code as required.
+. 
+. 
+. * Check that local and wald not allowed together
+. *************************************************
+. cap noi artbin, pr(0.1 0.2) local wald
+Local and Wald not allowed together
+
+. * error message as required: Local and Wald not allowed together
+. 
+. 
+. * Check that local and nvm!=3 not allowed together
+. *****************************************************
+. cap noi artbin, pr(0.1 0.2) local nvm(1)
+Need nvm(3) if local specified
+
+. * error message as required: Need nvm(3) if local specified
+. cap noi artbin, pr(0.1 0.2 0.3) local nvm(1)
+Need nvm(3) if local specified
+
+. * error message as required: Need nvm(3) if local specified
+. cap noi artbin, pr(0.1 0.2) local nvm(2)
+Need nvm(3) if local specified
+
+. * error message as required: Need nvm(3) if local specified
+. cap noi artbin, pr(0.1 0.2 0.3) local nvm(2)
+Need nvm(3) if local specified
+
+. * error message as required: Need nvm(3) if local specified
+. 
+. 
+. * Check that wald and nvm!=1 not allowed together
+. ***************************************************
+. cap noi artbin, pr(0.1 0.2) wald nvm(2)
+Need nvm(1) if Wald specified
+
+. * error message as required: Need nvm(1) if Wald specified
+. cap noi artbin, pr(0.1 0.2 0.3) wald nvm(2)
+Need nvm(1) if Wald specified
+
+. * error message as required: Need nvm(1) if Wald specified
+. cap noi artbin, pr(0.1 0.2) wald nvm(3)
+Need nvm(1) if Wald specified
+
+. * error message as required: Need nvm(1) if Wald specified
+. cap noi artbin, pr(0.1 0.2 0.3) wald nvm(3)
+Need nvm(1) if Wald specified
+
+. * error message as required: Need nvm(1) if Wald specified
+.         
+. 
+. * Test incorrect ltfu() inputs
+. **********************************
+. cap noi artbin, pr(0.7 0.75) margin(-0.1) power(0.8) ar(1 2) wald ltfu(2)
+ltfu() invalid -- invalid number, outside of allowed range
+
+. cap noi artbin, pr(0.7 0.75) margin(-0.1) power(0.8) ar(1 2) wald ltfu(-1)      
+ltfu() invalid -- invalid number, outside of allowed range
+
+. cap noi artbin, pr(0.7 0.75) margin(-0.1) power(0.8) ar(1 2) wald ltfu(0)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        favourable
+                                       Inferred by the program
+Allocation ratio                       1:2
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the wald test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis                        H0: pi2 - pi1 <= -.1
+Alternative hypothesis                 H1: pi2 - pi1 > -.1
+
+Anticipated event probabilities        0.700  0.750 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Loss to follow up assumed              0 %
+
+Total sample size (calculated)         318
+
+Sample size per group (calculated)     106 212
+Expected total number of events        233.2
+Expected number of events per group    74.2 159
+------------------------------------------------------------------------------
+
+. cap noi artbin, pr(0.7 0.75) margin(-0.1) power(0.8) ar(1 2) wald ltfu(1)
+ltfu() invalid -- invalid number, outside of allowed range
+
+. * Error messages as required
+. 
+. 
+. ******************************************************************************************************
+. * Testing when there is a mismatch between number of groups (ngroups) and number of proportions (npr)
+. *******************************************************************************************************
+. 
+. *Number of groups less than number of proportions:
+. *******************************************************
+. 
+. artbin, pr(0.1 0.2 0.3) ngroups(2)
+ WARNING: Mismatch between the number of proportions and the number of groups specified - ngroups value will be ign
+> ored.
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 3
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.100 0.200 0.300
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         231
+
+Sample size per group (calculated)     77 77 77
+Expected total number of events        46.2
+Expected number of events per group    7.7 15.4 23.1
+------------------------------------------------------------------------------
+
+. local samplesize1 = r(n)/2
+
+. * check the same as
+. artbin, pr(0.1 0.2 0.3) ngroups(3)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 3
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.100 0.200 0.300
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         231
+
+Sample size per group (calculated)     77 77 77
+Expected total number of events        46.2
+Expected number of events per group    7.7 15.4 23.1
+------------------------------------------------------------------------------
+
+. local samplesize2 = r(n)/2
+
+. 
+. if `samplesize1'!=`samplesize2' { 
+.         di as err "result is not as expected"
+.         exit 198
+. }
+
+. 
+. artbin, pr(0.1 0.2 0.3 0.4) ngroups(3)
+ WARNING: Mismatch between the number of proportions and the number of groups specified - ngroups value will be ign
+> ored.
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       4
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 4
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.100 0.200 0.300 0.400
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         164
+
+Sample size per group (calculated)     41 41 41 41
+Expected total number of events        41
+Expected number of events per group    4.1 8.2 12.3 16.4
+------------------------------------------------------------------------------
+
+. local samplesize3 = r(n)/2
+
+. * check the same as
+. artbin, pr(0.1 0.2 0.3 0.4) ngroups(4)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       4
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 4
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.100 0.200 0.300 0.400
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         164
+
+Sample size per group (calculated)     41 41 41 41
+Expected total number of events        41
+Expected number of events per group    4.1 8.2 12.3 16.4
+------------------------------------------------------------------------------
+
+. local samplesize4 = r(n)/2
+
+. 
+. if `samplesize3'!=`samplesize4' { 
+.         di as err "result is not as expected"
+.         exit 198
+. }
+
+. 
+. artbin, pr(0.1 0.2 0.3 0.4 0.5) ngroups(3)
+ WARNING: Mismatch between the number of proportions and the number of groups specified - ngroups value will be ign
+> ored.
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       5
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 5
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.100 0.200 0.300 0.400 0.500
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         125
+
+Sample size per group (calculated)     25 25 25 25 25
+Expected total number of events        37.5
+Expected number of events per group    2.5 5 7.5 10 12.5
+------------------------------------------------------------------------------
+
+. local samplesize5 = r(n)/2
+
+. * check the same as
+. artbin, pr(0.1 0.2 0.3 0.4 0.5) ngroups(5)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       5
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 5
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.100 0.200 0.300 0.400 0.500
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         125
+
+Sample size per group (calculated)     25 25 25 25 25
+Expected total number of events        37.5
+Expected number of events per group    2.5 5 7.5 10 12.5
+------------------------------------------------------------------------------
+
+. local samplesize6 = r(n)/2
+
+. 
+. if `samplesize5'!=`samplesize6' { 
+.         di as err "result is not as expected"
+.         exit 198
+. }
+
+. 
+. *Number of groups more than number of proportions:
+. ******************************************************
+. 
+. artbin, pr(0.1 0.2) ngroups(3)
+ WARNING: Mismatch between the number of proportions and the number of groups specified - ngroups value will be ign
+> ored.
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        favourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.100  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         398
+
+Sample size per group (calculated)     199 199
+Expected total number of events        59.7
+Expected number of events per group    19.9 39.8
+------------------------------------------------------------------------------
+
+. local samplesize7 = r(n)/2
+
+. * check the same as
+. artbin, pr(0.1 0.2) ngroups(2)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        favourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.100  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         398
+
+Sample size per group (calculated)     199 199
+Expected total number of events        59.7
+Expected number of events per group    19.9 39.8
+------------------------------------------------------------------------------
+
+. local samplesize8 = r(n)/2
+
+. 
+. if `samplesize7'!=`samplesize8' { 
+.         di as err "result is not as expected"
+.         exit 198
+. }
+
+. 
+. artbin, pr(0.1 0.2 0.3) ngroups(4)
+ WARNING: Mismatch between the number of proportions and the number of groups specified - ngroups value will be ign
+> ored.
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 3
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.100 0.200 0.300
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         231
+
+Sample size per group (calculated)     77 77 77
+Expected total number of events        46.2
+Expected number of events per group    7.7 15.4 23.1
+------------------------------------------------------------------------------
+
+. local samplesize9 = r(n)/2
+
+. * check the same as
+. artbin, pr(0.1 0.2 0.3) ngroups(3) 
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 3
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.100 0.200 0.300
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         231
+
+Sample size per group (calculated)     77 77 77
+Expected total number of events        46.2
+Expected number of events per group    7.7 15.4 23.1
+------------------------------------------------------------------------------
+
+. local samplesize10 = r(n)/2
+
+. * used to be the same as: artbin_EMZ, pr(0.1 0.2 0.3 0.2) ngroups(4) because created p4 as average of p1,p2,p3
+. 
+. if `samplesize9'!=`samplesize10' { 
+.         di as err "result is not as expected"
+.         exit 198
+. }
+
+. 
+. artbin, pr(0.1 0.2 0.3) ngroups(5)
+ WARNING: Mismatch between the number of proportions and the number of groups specified - ngroups value will be ign
+> ored.
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 3
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.100 0.200 0.300
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         231
+
+Sample size per group (calculated)     77 77 77
+Expected total number of events        46.2
+Expected number of events per group    7.7 15.4 23.1
+------------------------------------------------------------------------------
+
+. local samplesize11 = r(n)/2
+
+. * check the same as
+. artbin, pr(0.1 0.2 0.3) ngroups(3) 
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 3
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.100 0.200 0.300
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         231
+
+Sample size per group (calculated)     77 77 77
+Expected total number of events        46.2
+Expected number of events per group    7.7 15.4 23.1
+------------------------------------------------------------------------------
+
+. local samplesize12 = r(n)/2
+
+. 
+. if `samplesize11'!=`samplesize12' { 
+.         di as err "result is not as expected"
+.         exit 198
+. }
+
+. 
+.         
+. // REPORT SUCCESS
+. di as result _n "*************************************************************" ///
+>         _n "*** ARTBIN HAS PASSED ALL SOFTWARE TESTING POINTS 8 *********" ///
+>         _n "*************************************************************"
+
+*************************************************************
+*** ARTBIN HAS PASSED ALL SOFTWARE TESTING POINTS 8 *********
+*************************************************************
+
+.         
+.         
+. log close

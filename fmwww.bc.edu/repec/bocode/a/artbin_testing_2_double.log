@@ -1,0 +1,128 @@
+c:\ian\git\artbin\package\artbin.ado
+*!version 2.1.0 IW     04jan2024
+c:\ian\git\artbin\package\art2bin.ado
+*!version 1.01  09june2022
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        favourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the wald test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.050  0.100 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.900
+
+Total sample size (calculated)         1156
+
+Sample size per group (calculated)     578 578
+Expected total number of events        86.7
+Expected number of events per group    28.9 57.8
+------------------------------------------------------------------------------
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        favourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the wald test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.100  0.200 
+
+Alpha                                  0.100 (two-sided)
+                                        (taken as .05 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         310
+
+Sample size per group (calculated)     155 155
+Expected total number of events        46.5
+Expected number of events per group    15.5 31
+------------------------------------------------------------------------------
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        favourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the wald test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.050  0.100 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (calculated)                     0.900
+
+Total sample size (designed)           1156
+
+Sample size per group (designed)       578 578
+Expected total number of events        86.7
+Expected number of events per group    28.9 57.8
+------------------------------------------------------------------------------
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        favourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the wald test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.100  0.200 
+
+Alpha                                  0.100 (two-sided)
+                                        (taken as .05 one-sided)
+Power (calculated)                     0.801
+
+Total sample size (designed)           310
+
+Sample size per group (designed)       155 155
+Expected total number of events        46.5
+Expected number of events per group    15.5 31
+------------------------------------------------------------------------------
+
+*************************************************************
+*** ARTBIN HAS PASSED ALL SOFTWARE TESTING POINT 2 **********
+*************************************************************

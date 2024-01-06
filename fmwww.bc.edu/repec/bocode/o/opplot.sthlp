@@ -1,7 +1,7 @@
 {smcl}
 {...}
 {...}
-{* *! opplot.sthlp version 1.00 - Biostat Global Consulting - 2017-12-20}{...}
+{* *! opplot.sthlp version 1.04 - Biostat Global Consulting - 2024-01-04}{...}
 {* Change log: }{...}
 {* 				Updated}{...}
 {*				version}{...}
@@ -55,7 +55,24 @@
 	      {it:NLINEPattern}(string) 
 	      {it:YTITLE2}(string) 
 	      {it:YROUND2}(integer 5) 
- ] {p_end}
+         {it:LCTHRESHold}(integer 999)
+	 {it:BARCOLORHIGH1}(string)
+	 {it:BARCOLORMID1}(string) 
+	 {it:BARCOLORLOW1}(string) 
+	 {it:BARCOLORHIGH2}(string)
+	 {it:BARCOLORMID2}(string)
+	 {it:BARCOLORLOW2}(string)
+	 {it:LINECOLORHIGH1}(string)
+	 {it:LINECOLORMID1}(string)
+	 {it:LINECOLORLOW1}(string)
+	 {it:LINECOLORHIGH2}(string)
+	 {it:LINECOLORMID2}(string)
+	 {it:LINECOLORLOW2}(string)
+	 {it:FOOTNOTECOVG}
+	 {it:FOOTNOTEDEFF}
+	 {it:FOOTNOTEICC}
+	{it:STRATUMNAME}(string)
+	{it:HIGH}(integer 100)] {p_end}
 
  
 {synoptline}
@@ -119,24 +136,27 @@
 	   	   
 {pstd} {bf:STRATUM}(string) - The value of {cmd:stratvar} for which to make the plot.  E.g., 
        if you want to plot coverage in stratum 14, specify stratum(14). {p_end}
+
+{pstd} {bf:STRATUMNAME}(string) - The name of the stratum that will be added as a note to the dataset. Name should correspond with the value provided in {cmd:stratum} {p_end}
 	   	   
 {pstd} {bf:WEIGHTvar}(varname) - Variable that holds the survey weight.  The 
        weights are assumed to be equal if this option is omitted.{p_end}
 	   	   
 {pstd} {bf:BARCOLOR1}(string) - Valid Stata color used to represent respondents 
-       with yvar == 1.  This is the shade for the lower portion of the bars.{p_end}
+       with yvar == 1.  This is the shade for the lower portion of the bars.  
+	   Default is pink.{p_end}
 	   	   
 {pstd} {bf:BARCOLOR2}(string) - Valid Stata color used to represent respondents 
        with yvar == 0 or missing.  This is the shade for the upper portion of
-	   the bars.{p_end}
+	   the bars.  Default is white.{p_end}
 	   
 {pstd} {bf:LINECOLOR1}(string) - Valid Stata color used to mark the boundaries 
        between the lower portions of the bars.  (Should have good contrast
-	   with BARCOLOR1.){p_end}
+	   with BARCOLOR1.)  Default is barcolor1*1.5.{p_end}
 	   	   
 {pstd} {bf:LINECOLOR2}(string) - Valid Stata color used to mark the boundaries
        between the upper portions of the bars.  (Should have good contrast with 
-	   BARCOLOR2.){p_end}
+	   BARCOLOR2.)  Default is black*0.5.{p_end}
 	   	   
 {pstd} {bf:EQUALWIDTH} - If this option is included, all bars (clusters) that
        have at least one non-missing value of yvar will appear with equal width,
@@ -145,10 +165,10 @@
 	   to IGNORE the weightvar.){p_end}
 	   
 {pstd} {bf:SAVEDATA}(string) - If this option is specified, the command will 
-     save a dataset using the string specified, which doesn't need to be in
-	   double quotes. The dataset includes one row per bar in the plot.  The 
-	   left-most bar is represented by row 1 and the right-most bar by the last 
-	   row in the dataset.  The dataset holds several informative columns 
+       save a dataset and name it using the string specified, which doesn't need 
+	   to be in double quotes. The dataset includes one row per bar in the plot.  
+	   The left-most bar is represented by row 1 and the right-most bar by the 
+	   last row in the dataset.  The dataset holds several informative columns 
 	   describing what variable is summarized, how many respondents are 
 	   represented in each bar, the proportion of the population represented by
 	   each bar, and the sample coverage in each bar (rounded to the nearest 
@@ -193,6 +213,12 @@
        user specifies the PLOTN option.  The scale will run from 0 up to the
 	   (maximum number of respondents in a cluster plus one) rounded up to the next multiple
 	   of YROUND2.  Default is to round up to the next multiple of 5.{p_end}
+
+{pstd}	{bf:FOOTNOTECOVG} - Adds the Estimated Coverage as a footnote to the plot. {p_end}
+
+{pstd}  {bf:FOOTNOTEDEFF} - Adds the Design Effect as a footnote to the plot. {p_end}
+
+{pstd}  {bf:FOOTNOTEICC} - Adds the Intercluster Correlation Coefficient as a footnote to the plot. {p_end}
 	   
 {pstd} {bf:All Else} - Several standard twoway options are hard-coded as pass-thru 
 	   options here.  These include title, subtitle, note, xtitle, ytitle, xlabel, 
@@ -203,6 +229,61 @@
 	   code always includes the {it:replace} option when the user specifies a name.
 	   Note also that the {cmd:footnote} option is a 
 	   synonym for the note option.) (See {help twoway_options}). {p_end}	
+
+{dlgtab: Add High, Medium and Low Coverage Categories} 
+
+{pstd} The next set of input options should only be used to see the plot stratified into high, medium and low coverage categories. {p_end}
+
+{pstd} {bf:LCTHRESHold}(integer) - Low coverage threshold holds the numeric percent value used to identify low coverage. 
+All clusters with coverage less than or equal to this number will be assigned to the low category. 
+If not specified, all of the options listed below will be ignored. 
+If specified, you should use a note to tell the reader the meaning of the three bar colors.  (At this time, opplot does not use a legend.){p_end}
+
+{pstd} {bf:HIGH}(integer) - High coverage threshold holds the numeric percent value used to identify high coverage. 
+All clusters with coverage greater than or equal to this number will be assigned to the high cagtegory. Default value is 100.{p_end}
+
+{pstd} (Note: If you specify the same high and low threshold, then the plot will be stratified into only two categories: high vs. low and clusters with coverage EXACTLY equal to the threshold will fall in the low category.)
+
+{pstd} Each category (HIGH, MID and LOW) can have different color options specified for the bars and lines. {p_end}
+
+
+{pstd} {bf:BARCOLORHIGH1}(string) - Valid Stata color used to represent respondents with yvar == 1 with high coverage as specified in {cmd:high}.  
+This is the shade for the lower portion of the bars.  Default is dark blue with RGB values 103 169 207.{p_end}
+	  	   
+{pstd} {bf:BARCOLORHIGH2}(string) - Valid Stata color used to represent respondents with yvar == 0 or missing with high coverage as specified in {cmd:high}.  
+This is the shade for the upper portion of the bars.  Default is gs15.{p_end}
+	   
+{pstd} {bf:LINECOLORHIGH1}(string) - Valid Stata color used to mark the boundaries between the lower portions of the bars with high coverage as specified in {cmd:high}.
+  (Should have good contrast with BARCOLORHIGH1.)  Default is gs15.{p_end}
+	   	   
+{pstd} {bf:LINECOLORHIGH2}(string) - Valid Stata color used to mark the boundaries between the upper portions of the bars with high coverage as specified in {cmd:high}. 
+ (Should have good contrast with BARCOLORHIGH2.)  Default is black*0.5.{p_end}
+
+
+{pstd} {bf:BARCOLORMID1}(string) - Valid Stata color used to represent respondents with yvar == 1 with middle coverage.  
+This is the shade for the lower portion of the bars.  Default is light blue with RGB values 0 0 128.{p_end}
+	  	   
+{pstd} {bf:BARCOLORMID2}(string) - Valid Stata color used to represent respondents with yvar == 0 or missing with middle coverage.  
+This is the shade for the upper portion of the bars.  Default is gs15.{p_end}
+	   
+{pstd} {bf:LINECOLORMID1}(string) - Valid Stata color used to mark the boundaries between the lower portions of the bars with middle coverage.
+  (Should have good contrast with BARCOLORMID1.)  Default is gs15.{p_end}
+	   	   
+{pstd} {bf:LINECOLORMID2}(string) - Valid Stata color used to mark the boundaries between the upper portions of the bars with middle coverage. 
+ (Should have good contrast with BARCOLORMID2.)  Default is black*0.5.{p_end}
+
+
+{pstd} {bf:BARCOLORLOW1}(string) - Valid Stata color used to represent respondents with yvar == 1 with low coverage as specified in {cmd:lcthreshold}.  
+This is the shade for the lower portion of the bars.  Default is orange with RGB values 255 91 0.{p_end}
+	  	   
+{pstd} {bf:BARCOLORLOW2}(string) - Valid Stata color used to represent respondents with yvar == 0 or missing with low coverage as specified in {cmd:lcthreshold}.  
+This is the shade for the upper portion of the bars.  Default is gs15.{p_end}
+	   
+{pstd} {bf:LINECOLORLOW1}(string) - Valid Stata color used to mark the boundaries between the lower portions of the bars with low coverage as specified in {cmd:lcthreshold}.
+  (Should have good contrast with BARCOLORLOW1.)  Default is gs15.{p_end}
+	   	   
+{pstd} {bf:LINECOLORLOW2}(string) - Valid Stata color used to mark the boundaries between the upper portions of the bars with low coverage as specified in {cmd:lcthreshold}. 
+ (Should have good contrast with BARCOLORLOW2.)  Default is gs15.{p_end}
 
 {dlgtab:A note on bar width} 
 
@@ -253,25 +334,28 @@
 {cmd: . opplot y , clustvar(clusterid) stratvar(stratumid) stratum(0) title(Stratum 0) name(Demo0,replace)}
 {cmd: . opplot y , clustvar(clusterid) stratvar(stratumid) stratum(1) title(Stratum 1) name(Demo1,replace)}
 
+{cmd: * Without the stratum arguments, all data are plotted}
+{cmd: opplot y , clustvar(clusterid) title(All Strata) name(Demo2, replace) }
 
 {cmd: * Change bar colors}
 {cmd: . opplot y , clustvar(clusterid) stratvar(stratumid) ///}
-{cmd:  		stratum(1) title(Stratum 1) name(Demo2,replace) ///}
+{cmd:  		stratum(1) title(Stratum 1) name(Demo3,replace) ///}
 {cmd: 		barcolor1(red) barcolor2(gs8)}
 
 {cmd: * Demo different bar widths if weights differ}
 {cmd: . gen weight = 1}
 {cmd: . replace weight = 2 if clusterid == 1}
+{cmd: . save fauxdata, replace}
 
 {cmd: . opplot y , clustvar(clusterid) stratvar(stratumid) ///}
 {cmd: 		weightvar(weight) ///}
-{cmd: 		stratum(1) title(Stratum 1) name(Demo3,replace) ///}
+{cmd: 		stratum(1) title(Stratum 1) name(Demo4,replace) ///}
 {cmd: 		barcolor1(red) barcolor2(gs8)	}
 
 {cmd: * Change line colors		}
 {cmd: . opplot y , clustvar(clusterid) stratvar(stratumid) ///}
 {cmd: 		weightvar(weight) ///}
-{cmd: 		stratum(1) title(Stratum 1) name(Demo4,replace) ///}
+{cmd: 		stratum(1) title(Stratum 1) name(Demo5,replace) ///}
 {cmd: 		barcolor1(red) barcolor2(gs8)	///}
 {cmd: 		linecolor1(white) linecolor2(green)}
 
@@ -280,7 +364,7 @@
 {cmd: * Demo export}
 {cmd: . opplot y , clustvar(clusterid) stratvar(stratumid) ///}
 {cmd: 		weightvar(weight) ///}
-{cmd: 		stratum(1) title(Stratum 1) name(Demo5,replace) ///}
+{cmd: 		stratum(1) title(Stratum 1) name(Demo6,replace) ///}
 {cmd: 		ylabel(0(25)100,angle(0)) ///}
 {cmd: 		xtitle(XTitle) ytitle(YTitle) ///}
 {cmd: 		subtitle(Subtitle) footnote(Footnote) ///}
@@ -300,32 +384,66 @@
 
 {cmd: * Demo changing the aspect ratio of the figure using xsize and ysize		}
 {cmd: . opplot y , clustvar(clusterid) stratvar(stratumid) ///}
-{cmd: 		stratum(0) title(Stratum 0) name(Demo6,replace) ///}
+{cmd: 		stratum(0) title(Stratum 0) name(Demo7,replace) ///}
 {cmd:  		xsize(20) ysize(6) export(Stratum_0_wide.png)}
 
 {cmd: * Demo saving the accompanying dataset and having a look at it		}
 {cmd: . opplot y , clustvar(clusterid) stratvar(stratumid) ///}
-{cmd: 		stratum(0) title(Stratum 0) name(Demo6,replace) ///}
-{cmd:  		xsize(20) ysize(6) savedata(Stratum_6)}
-{cmd: . use Stratum_6, clear }
+{cmd: 		stratum(0) title(Stratum 0) name(Demo7,replace) ///}
+{cmd:  		xsize(20) ysize(6) savedata(Demo7)}
+{cmd: . use Demo7, clear }
 {cmd: . browse }
+
+{cmd: . use fauxdata, clear}
 
 {cmd: * Demo plotting the number of respondents		}
 {cmd: . opplot y , clustvar(clusterid) stratvar(stratumid) ///}
-{cmd: 		stratum(0) title(Stratum 0) name(Demo7,replace) ///}
+{cmd: 		stratum(0) title(Stratum 0) name(Demo8,replace) ///}
 {cmd:  		xsize(20) ysize(6) plotn}
 
 {cmd: * Demo plotting the number of respondents using all related options	}
 {cmd: . opplot y , clustvar(clusterid) stratvar(stratumid) ///}
-{cmd: 		stratum(0) title(Stratum 0) name(Demo8,replace) ///}
+{cmd: 		stratum(0) title(Stratum 0) name(Demo9,replace) ///}
 {cmd:  		xsize(20) ysize(6) plotn nlinecolor(red) nlinewidth(*2) ///}
-{cmd:   	nlinepattern(dash) ytitle2("Number of Respondents (N)") ///}
+{cmd:   	nlinepattern(dash) ytitle2(Number of Respondents (N)) ///}
 {cmd:   	yround2(2)}
-		
-{title:Author}
+
+
+{cmd: * Demo adding high, medium and low coverage categories.}
+{cmd: * Only specify the lcthreshold. All other values will use defaults.}
+{cmd: . opplot y , clustvar(clusterid) stratvar(stratumid) ///}
+{cmd: 		stratum(1) title(Stratum 1) name(Demo10,replace) ///}
+{cmd:  		lcthreshold(50) ///}
+{cmd:       note("Different colors for clusters with a) 100% coverage, b) >50% and < 100%, and c) <= 50%.")}
+
+{cmd: * Demo adding high, medium and low coverage categories.}
+{cmd: * Specify both the lcthreshold {it:(slightly lower than previous run)} and high. All other values will use defaults.}
+{cmd: . opplot y , clustvar(clusterid) stratvar(stratumid) ///}
+{cmd: 		stratum(0) title(Stratum 0) name(Demo11,replace) ///}
+{cmd:  		lcthreshold(20) high(90) ///}
+{cmd:       note("Different colors for clusters with a) >= 90% coverage, b) >20% and < 90%, and c) <= 20%.")}
+
+{cmd: * Demo adding high, medium and low coverage categories with specified barcolor options.}
+{cmd: * Change both the lcthreshold and high. Define barcolors for high, medium and low coverage categories.}
+{cmd: . opplot y , clustvar(clusterid) stratvar(stratumid) ///}
+{cmd: 		stratum(0) title(Stratum 0) name(Demo12,replace) ///}
+{cmd:  		lcthreshold(35) high(80) ///}
+{cmd:		barcolorhigh1(67 162 202) barcolormid1(123 204 196) barcolorlow1(186 228 188) ///}
+{cmd:       note("Different colors for clusters with a) >= 80% coverage, b) >35% and < 80%, and c) <= 35%.")}		
+
+{cmd: * Demo portraying only two categories by setting lcthreshold == high.}
+{cmd: * Note that in this case, any clusters exactly equal to the threshold are}
+{cmd: * shown in the *lower* category color.}
+{cmd: . opplot y , clustvar(clusterid) stratvar(stratumid) ///}
+{cmd:        stratum(0) title(Stratum 0) name(Demo13,replace) ///}
+{cmd:        lcthreshold(50) high(50) ///}
+{cmd:	 	 note("Different colors for clusters with a) > 50% coverage and b) <= 50%.")}
+
+
+{title:Authors}
 {p}
 
-Dale Rhoda, Biostat Global Consulting
+Dale Rhoda, Mary Prier, and Mary Kay Trimner, Biostat Global Consulting
 
 Email {browse "mailto:Dale.Rhoda@biostatglobal.com":Dale.Rhoda@biostatglobal.com}
 
@@ -346,5 +464,5 @@ Email {browse "mailto:Dale.Rhoda@biostatglobal.com":Dale.Rhoda@biostatglobal.com
 {pstd} Organ pipe plots were featured in a talk at the 2018 Stata Conference.{p_end}
 	   
 {pmore} {browse "https://www.stata.com/meeting/columbus18/slides/columbus18_Prier.pptx":2018 conference presentation}{p_end}
-{pmore} {browse "https://www.dropbox.com/s/o3psw0d50l0arvf/opplot_presentation.pptx?dl=0":2020 slides updated describing new features}{p_end}
+{pmore} {browse "https://www.dropbox.com/s/o3psw0d50l0arvf/opplot_presentation.pptx?dl=0":Includes additional slides that describe new features}{p_end}
 

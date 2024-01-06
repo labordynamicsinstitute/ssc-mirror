@@ -1,0 +1,2186 @@
+-------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\ian\git\artbin\testing\artbin_test_every_option.log
+  log type:  text
+ opened on:   4 Jan 2024, 19:03:45
+
+. which artbin`ver'
+c:\ian\git\artbin\package\artbin.ado
+*!version 2.1.0 IW     04jan2024
+
+. local returns 1
+
+. 
+. // UTILITIES
+. cap prog drop dicmd
+
+. prog def dicmd
+  1. noi di as input `"`0'"'
+  2. `0'
+  3. end
+
+. 
+. 
+. // 2 arms
+. local command artbin`ver', pr(.4 .2)
+
+. dicmd `command'
+artbin, pr(.4 .2)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.400  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         164
+
+Sample size per group (calculated)     82 82
+Expected total number of events        49.2
+Expected number of events per group    32.8 16.4
+------------------------------------------------------------------------------
+
+. local n=r(n)
+
+. * options expected to increase SS
+. foreach opt in "margin(-.1)" "alpha(0.01)" "aratios(1 2)" "local" "ccorrect(1)"  "ccorrect" "power(.9)" {
+  2.         di _n
+  3.         dicmd `command' `opt'
+  4.         if `returns' return list
+  5.         assert !mi(r(n))
+  6.         assert r(n) > `n'
+  7. }
+
+
+artbin, pr(.4 .2) margin(-.1)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          substantial-superiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis                        H0: pi2 - pi1 >= -.1
+Alternative hypothesis                 H1: pi2 - pi1 < -.1
+
+Anticipated event probabilities        0.400  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         640
+
+Sample size per group (calculated)     320 320
+Expected total number of events        192
+Expected number of events per group    128 64
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  192
+                  r(n) =  640
+              r(power) =  .8
+                 r(D2) =  64
+                 r(n2) =  320
+                 r(D1) =  128
+                 r(n1) =  320
+
+
+artbin, pr(.4 .2) alpha(0.01)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.400  0.200 
+
+Alpha                                  0.010 (two-sided)
+                                        (taken as .005 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         244
+
+Sample size per group (calculated)     122 122
+Expected total number of events        73.2
+Expected number of events per group    48.8 24.4
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  73.19999999999999
+                  r(n) =  244
+              r(power) =  .8
+                 r(D2) =  24.4
+                 r(n2) =  122
+                 r(D1) =  48.8
+                 r(n1) =  122
+
+
+artbin, pr(.4 .2) aratios(1 2)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       1:2
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.400  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         179
+
+Sample size per group (calculated)     60 119
+Expected total number of events        47.8
+Expected number of events per group    24 23.8
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  47.8
+                  r(n) =  179
+              r(power) =  .8
+                 r(D2) =  23.8
+                 r(n2) =  119
+                 r(D1) =  24
+                 r(n1) =  60
+
+
+artbin, pr(.4 .2) local
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       local
+Continuity correction                  no
+
+Anticipated event probabilities        0.400  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         166
+
+Sample size per group (calculated)     83 83
+Expected total number of events        49.8
+Expected number of events per group    33.2 16.6
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  49.8
+                  r(n) =  166
+              r(power) =  .8
+                 r(D2) =  16.6
+                 r(n2) =  83
+                 r(D1) =  33.2
+                 r(n1) =  83
+
+
+artbin, pr(.4 .2) ccorrect(1)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  yes
+
+Anticipated event probabilities        0.400  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         182
+
+Sample size per group (calculated)     91 91
+Expected total number of events        54.6
+Expected number of events per group    36.4 18.2
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  54.59999999999999
+                  r(n) =  182
+              r(power) =  .8
+                 r(D2) =  18.2
+                 r(n2) =  91
+                 r(D1) =  36.4
+                 r(n1) =  91
+
+
+artbin, pr(.4 .2) ccorrect
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  yes
+
+Anticipated event probabilities        0.400  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         182
+
+Sample size per group (calculated)     91 91
+Expected total number of events        54.6
+Expected number of events per group    36.4 18.2
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  54.59999999999999
+                  r(n) =  182
+              r(power) =  .8
+                 r(D2) =  18.2
+                 r(n2) =  91
+                 r(D1) =  36.4
+                 r(n1) =  91
+
+
+artbin, pr(.4 .2) power(.9)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.400  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.900
+
+Total sample size (calculated)         218
+
+Sample size per group (calculated)     109 109
+Expected total number of events        65.4
+Expected number of events per group    43.6 21.8
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  65.40000000000001
+                  r(n) =  218
+              r(power) =  .9
+                 r(D2) =  21.8
+                 r(n2) =  109
+                 r(D1) =  43.6
+                 r(n1) =  109
+
+. * options expected to decrease SS
+. foreach opt in "margin(.1)" "alpha(0.1)" "condit" "onesided(1)" "onesided" "wald"  "noround" "power(.7)" {
+  2.         di _n
+  3.         dicmd `command' `opt'
+  4.         if `returns' return list
+  5.         assert !mi(r(n))
+  6.         assert r(n) < `n'
+  7. }
+
+
+artbin, pr(.4 .2) margin(.1)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis                        H0: pi2 - pi1 >= .1
+Alternative hypothesis                 H1: pi2 - pi1 < .1
+
+Anticipated event probabilities        0.400  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         74
+
+Sample size per group (calculated)     37 37
+Expected total number of events        22.2
+Expected number of events per group    14.8 7.4
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  22.2
+                  r(n) =  74
+              r(power) =  .8
+                 r(D2) =  7.4
+                 r(n2) =  37
+                 r(D1) =  14.8
+                 r(n1) =  37
+
+
+artbin, pr(.4 .2) alpha(0.1)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.400  0.200 
+
+Alpha                                  0.100 (two-sided)
+                                        (taken as .05 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         128
+
+Sample size per group (calculated)     64 64
+Expected total number of events        38.4
+Expected number of events per group    25.6 12.8
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  38.40000000000001
+                  r(n) =  128
+              r(power) =  .8
+                 r(D2) =  12.8
+                 r(n2) =  64
+                 r(D1) =  25.6
+                 r(n1) =  64
+
+
+artbin, pr(.4 .2) condit
+ NOTE: As conditional has been selected local will be used.
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               Conditional test using Peto's
+                                        approximation to the odds ratio
+                                        using the score test
+Local or distant                       local
+Continuity correction                  no
+
+Anticipated event probabilities        0.400 0.200
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         156
+
+Sample size per group (calculated)     78 78
+Expected total number of events        46.8
+Expected number of events per group    31.2 15.6
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  46.8
+                  r(n) =  156
+              r(power) =  .8
+                 r(D2) =  15.6
+                 r(n2) =  78
+                 r(D1) =  31.2
+                 r(n1) =  78
+
+
+artbin, pr(.4 .2) onesided(1)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.400  0.200 
+
+Alpha                                  0.050 (one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         128
+
+Sample size per group (calculated)     64 64
+Expected total number of events        38.4
+Expected number of events per group    25.6 12.8
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  38.40000000000001
+                  r(n) =  128
+              r(power) =  .8
+                 r(D2) =  12.8
+                 r(n2) =  64
+                 r(D1) =  25.6
+                 r(n1) =  64
+
+
+artbin, pr(.4 .2) onesided
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.400  0.200 
+
+Alpha                                  0.050 (one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         128
+
+Sample size per group (calculated)     64 64
+Expected total number of events        38.4
+Expected number of events per group    25.6 12.8
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  38.40000000000001
+                  r(n) =  128
+              r(power) =  .8
+                 r(D2) =  12.8
+                 r(n2) =  64
+                 r(D1) =  25.6
+                 r(n1) =  64
+
+
+artbin, pr(.4 .2) wald
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the wald test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.400  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         158
+
+Sample size per group (calculated)     79 79
+Expected total number of events        47.4
+Expected number of events per group    31.6 15.8
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  47.40000000000001
+                  r(n) =  158
+              r(power) =  .8
+                 r(D2) =  15.8
+                 r(n2) =  79
+                 r(D1) =  31.6
+                 r(n1) =  79
+
+
+artbin, pr(.4 .2) noround
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.400  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         162.45
+
+Sample size per group (calculated)     81.22 81.22
+Expected total number of events        48.73
+Expected number of events per group    32.49 16.24
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  48.73454441727327
+                  r(n) =  162.4484813909109
+              r(power) =  .8
+                 r(D2) =  16.24484813909109
+                 r(n2) =  81.22424069545545
+                 r(D1) =  32.48969627818218
+                 r(n1) =  81.22424069545545
+
+
+artbin, pr(.4 .2) power(.7)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.400  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.700
+
+Total sample size (calculated)         130
+
+Sample size per group (calculated)     65 65
+Expected total number of events        39
+Expected number of events per group    26 13
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  39
+                  r(n) =  130
+              r(power) =  .7
+                 r(D2) =  13
+                 r(n2) =  65
+                 r(D1) =  26
+                 r(n1) =  65
+
+. * options expected not to change SS 
+. foreach opt in "power(.8)" "unfavourable" {
+  2.         di _n
+  3.         dicmd `command' `opt'
+  4.         if `returns' return list
+  5.         assert !mi(r(n))
+  6.         assert r(n) == `n'
+  7. }
+
+
+artbin, pr(.4 .2) power(.8)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.400  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         164
+
+Sample size per group (calculated)     82 82
+Expected total number of events        49.2
+Expected number of events per group    32.8 16.4
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  49.2
+                  r(n) =  164
+              r(power) =  .8
+                 r(D2) =  16.4
+                 r(n2) =  82
+                 r(D1) =  32.8
+                 r(n1) =  82
+
+
+artbin, pr(.4 .2) unfavourable
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.400  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         164
+
+Sample size per group (calculated)     82 82
+Expected total number of events        49.2
+Expected number of events per group    32.8 16.4
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  49.2
+                  r(n) =  164
+              r(power) =  .8
+                 r(D2) =  16.4
+                 r(n2) =  82
+                 r(D1) =  32.8
+                 r(n1) =  82
+
+. * options expected to cause error
+. foreach opt in "trend" /* "favourable" */ {
+  2.         di _n
+  3.         dicmd cap noi `command' `opt'
+  4.         assert _rc
+  5. }
+
+
+cap noi artbin, pr(.4 .2) trend
+Can not select trend option for a 2-arm trial
+
+. 
+. 
+. 
+. 
+. // 2 arms, NI
+. local command artbin`ver', pr(.2 .2) margin(.1)
+
+. dicmd `command'
+artbin, pr(.2 .2) margin(.1)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis                        H0: pi2 - pi1 >= .1
+Alternative hypothesis                 H1: pi2 - pi1 < .1
+
+Anticipated event probabilities        0.200  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         510
+
+Sample size per group (calculated)     255 255
+Expected total number of events        102
+Expected number of events per group    51 51
+------------------------------------------------------------------------------
+
+. local n=r(n)
+
+. * options expected to increase SS
+. foreach opt in "alpha(0.01)" "aratios(1 2)" "local" "ccorrect(1)"  "ccorrect" "power(.9)" {
+  2.         di _n
+  3.         dicmd `command' `opt'
+  4.         if `returns' return list
+  5.         assert !mi(r(n))
+  6.         assert r(n) > `n'
+  7. }
+
+
+artbin, pr(.2 .2) margin(.1) alpha(0.01)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis                        H0: pi2 - pi1 >= .1
+Alternative hypothesis                 H1: pi2 - pi1 < .1
+
+Anticipated event probabilities        0.200  0.200 
+
+Alpha                                  0.010 (two-sided)
+                                        (taken as .005 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         758
+
+Sample size per group (calculated)     379 379
+Expected total number of events        151.6
+Expected number of events per group    75.8 75.8
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  151.6
+                  r(n) =  758
+              r(power) =  .8
+                 r(D2) =  75.8
+                 r(n2) =  379
+                 r(D1) =  75.8
+                 r(n1) =  379
+
+
+artbin, pr(.2 .2) margin(.1) aratios(1 2)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       1:2
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis                        H0: pi2 - pi1 >= .1
+Alternative hypothesis                 H1: pi2 - pi1 < .1
+
+Anticipated event probabilities        0.200  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         524
+
+Sample size per group (calculated)     175 349
+Expected total number of events        104.8
+Expected number of events per group    35 69.8
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  104.8
+                  r(n) =  524
+              r(power) =  .8
+                 r(D2) =  69.8
+                 r(n2) =  349
+                 r(D1) =  35
+                 r(n1) =  175
+
+
+artbin, pr(.2 .2) margin(.1) local
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       local
+Continuity correction                  no
+Null hypothesis                        H0: pi2 - pi1 >= .1
+Alternative hypothesis                 H1: pi2 - pi1 < .1
+
+Anticipated event probabilities        0.200  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         512
+
+Sample size per group (calculated)     256 256
+Expected total number of events        102.4
+Expected number of events per group    51.2 51.2
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  102.4
+                  r(n) =  512
+              r(power) =  .8
+                 r(D2) =  51.2
+                 r(n2) =  256
+                 r(D1) =  51.2
+                 r(n1) =  256
+
+
+artbin, pr(.2 .2) margin(.1) ccorrect(1)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  yes
+Null hypothesis                        H0: pi2 - pi1 >= .1
+Alternative hypothesis                 H1: pi2 - pi1 < .1
+
+Anticipated event probabilities        0.200  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         548
+
+Sample size per group (calculated)     274 274
+Expected total number of events        109.6
+Expected number of events per group    54.8 54.8
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  109.6
+                  r(n) =  548
+              r(power) =  .8
+                 r(D2) =  54.8
+                 r(n2) =  274
+                 r(D1) =  54.8
+                 r(n1) =  274
+
+
+artbin, pr(.2 .2) margin(.1) ccorrect
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  yes
+Null hypothesis                        H0: pi2 - pi1 >= .1
+Alternative hypothesis                 H1: pi2 - pi1 < .1
+
+Anticipated event probabilities        0.200  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         548
+
+Sample size per group (calculated)     274 274
+Expected total number of events        109.6
+Expected number of events per group    54.8 54.8
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  109.6
+                  r(n) =  548
+              r(power) =  .8
+                 r(D2) =  54.8
+                 r(n2) =  274
+                 r(D1) =  54.8
+                 r(n1) =  274
+
+
+artbin, pr(.2 .2) margin(.1) power(.9)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis                        H0: pi2 - pi1 >= .1
+Alternative hypothesis                 H1: pi2 - pi1 < .1
+
+Anticipated event probabilities        0.200  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.900
+
+Total sample size (calculated)         680
+
+Sample size per group (calculated)     340 340
+Expected total number of events        136
+Expected number of events per group    68 68
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  136
+                  r(n) =  680
+              r(power) =  .9
+                 r(D2) =  68
+                 r(n2) =  340
+                 r(D1) =  68
+                 r(n1) =  340
+
+. * options expected to decrease SS
+. foreach opt in "alpha(0.1)" "onesided(1)" "onesided" "wald"  "noround" "power(.7)" {
+  2.         di _n
+  3.         dicmd `command' `opt'
+  4.         if `returns' return list
+  5.         assert !mi(r(n))
+  6.         assert r(n) < `n'
+  7. }
+
+
+artbin, pr(.2 .2) margin(.1) alpha(0.1)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis                        H0: pi2 - pi1 >= .1
+Alternative hypothesis                 H1: pi2 - pi1 < .1
+
+Anticipated event probabilities        0.200  0.200 
+
+Alpha                                  0.100 (two-sided)
+                                        (taken as .05 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         402
+
+Sample size per group (calculated)     201 201
+Expected total number of events        80.4
+Expected number of events per group    40.2 40.2
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  80.40000000000001
+                  r(n) =  402
+              r(power) =  .8
+                 r(D2) =  40.2
+                 r(n2) =  201
+                 r(D1) =  40.2
+                 r(n1) =  201
+
+
+artbin, pr(.2 .2) margin(.1) onesided(1)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis                        H0: pi2 - pi1 >= .1
+Alternative hypothesis                 H1: pi2 - pi1 < .1
+
+Anticipated event probabilities        0.200  0.200 
+
+Alpha                                  0.050 (one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         402
+
+Sample size per group (calculated)     201 201
+Expected total number of events        80.4
+Expected number of events per group    40.2 40.2
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  80.40000000000001
+                  r(n) =  402
+              r(power) =  .8
+                 r(D2) =  40.2
+                 r(n2) =  201
+                 r(D1) =  40.2
+                 r(n1) =  201
+
+
+artbin, pr(.2 .2) margin(.1) onesided
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis                        H0: pi2 - pi1 >= .1
+Alternative hypothesis                 H1: pi2 - pi1 < .1
+
+Anticipated event probabilities        0.200  0.200 
+
+Alpha                                  0.050 (one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         402
+
+Sample size per group (calculated)     201 201
+Expected total number of events        80.4
+Expected number of events per group    40.2 40.2
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  80.40000000000001
+                  r(n) =  402
+              r(power) =  .8
+                 r(D2) =  40.2
+                 r(n2) =  201
+                 r(D1) =  40.2
+                 r(n1) =  201
+
+
+artbin, pr(.2 .2) margin(.1) wald
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the wald test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis                        H0: pi2 - pi1 >= .1
+Alternative hypothesis                 H1: pi2 - pi1 < .1
+
+Anticipated event probabilities        0.200  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         504
+
+Sample size per group (calculated)     252 252
+Expected total number of events        100.8
+Expected number of events per group    50.4 50.4
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  100.8
+                  r(n) =  504
+              r(power) =  .8
+                 r(D2) =  50.40000000000001
+                 r(n2) =  252
+                 r(D1) =  50.40000000000001
+                 r(n1) =  252
+
+
+artbin, pr(.2 .2) margin(.1) noround
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis                        H0: pi2 - pi1 >= .1
+Alternative hypothesis                 H1: pi2 - pi1 < .1
+
+Anticipated event probabilities        0.200  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         508.44
+
+Sample size per group (calculated)     254.22 254.22
+Expected total number of events        101.69
+Expected number of events per group    50.84 50.84
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  101.6870818492644
+                  r(n) =  508.4354092463222
+              r(power) =  .8
+                 r(D2) =  50.84354092463222
+                 r(n2) =  254.2177046231611
+                 r(D1) =  50.84354092463222
+                 r(n1) =  254.2177046231611
+
+
+artbin, pr(.2 .2) margin(.1) power(.7)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis                        H0: pi2 - pi1 >= .1
+Alternative hypothesis                 H1: pi2 - pi1 < .1
+
+Anticipated event probabilities        0.200  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.700
+
+Total sample size (calculated)         402
+
+Sample size per group (calculated)     201 201
+Expected total number of events        80.4
+Expected number of events per group    40.2 40.2
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  80.40000000000001
+                  r(n) =  402
+              r(power) =  .7
+                 r(D2) =  40.2
+                 r(n2) =  201
+                 r(D1) =  40.2
+                 r(n1) =  201
+
+. /*
+> * options expected to change SS
+> foreach opt in {
+>         di _n
+>         dicmd `command' `opt'
+>         if `returns' return list
+>         assert !mi(r(n))
+>         assert r(n) != `n'
+> }
+> */
+. * options expected not to change SS 
+. foreach opt in "power(.8)" "unfavourable" {
+  2.         di _n
+  3.         dicmd `command' `opt'
+  4.         if `returns' return list
+  5.         assert !mi(r(n))
+  6.         assert r(n) == `n'
+  7. }
+
+
+artbin, pr(.2 .2) margin(.1) power(.8)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+                                       Inferred by the program
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis                        H0: pi2 - pi1 >= .1
+Alternative hypothesis                 H1: pi2 - pi1 < .1
+
+Anticipated event probabilities        0.200  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         510
+
+Sample size per group (calculated)     255 255
+Expected total number of events        102
+Expected number of events per group    51 51
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  102
+                  r(n) =  510
+              r(power) =  .8
+                 r(D2) =  51
+                 r(n2) =  255
+                 r(D1) =  51
+                 r(n1) =  255
+
+
+artbin, pr(.2 .2) margin(.1) unfavourable
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          non-inferiority
+Number of groups                       2
+Favourable/unfavourable outcome        unfavourable
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 2
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Null hypothesis                        H0: pi2 - pi1 >= .1
+Alternative hypothesis                 H1: pi2 - pi1 < .1
+
+Anticipated event probabilities        0.200  0.200 
+
+Alpha                                  0.050 (two-sided)
+                                        (taken as .025 one-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         510
+
+Sample size per group (calculated)     255 255
+Expected total number of events        102
+Expected number of events per group    51 51
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  102
+                  r(n) =  510
+              r(power) =  .8
+                 r(D2) =  51
+                 r(n2) =  255
+                 r(D1) =  51
+                 r(n1) =  255
+
+. * options expected to cause error
+. foreach opt in "favourable" "trend" {
+  2.         di _n
+  3.         dicmd cap noi `command' `opt'
+  4.         assert _rc
+  5.         di as input "Note: the above error message was expected"
+  6. }
+
+
+cap noi artbin, pr(.2 .2) margin(.1) favourable
+artbin thinks your outcome is unfavourable. Please check your command. If your command is correct then consider usi
+> ng the -force- option.
+Note: the above error message was expected
+
+
+cap noi artbin, pr(.2 .2) margin(.1) trend
+Can not select trend option for a 2-arm trial
+Note: the above error message was expected
+
+. 
+. 
+. 
+. 
+. // 3 arms
+. local command artbin`ver', pr(.4 .3 .2)
+
+. dicmd `command'
+artbin, pr(.4 .3 .2)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 3
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.400 0.300 0.200
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         303
+
+Sample size per group (calculated)     101 101 101
+Expected total number of events        90.9
+Expected number of events per group    40.4 30.3 20.2
+------------------------------------------------------------------------------
+
+. local n=r(n)
+
+. * options expected to increase SS
+. foreach opt in "alpha(0.01)" "aratios(3 2 1)" "local" "power(.9)" {
+  2.         di _n
+  3.         dicmd `command' `opt'
+  4.         if `returns' return list
+  5.         assert !mi(r(n))
+  6.         assert r(n) > `n'
+  7. }
+
+
+artbin, pr(.4 .3 .2) alpha(0.01)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 3
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.400 0.300 0.200
+
+Alpha                                  0.010 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         435
+
+Sample size per group (calculated)     145 145 145
+Expected total number of events        130.5
+Expected number of events per group    58 43.5 29
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  130.5
+                  r(n) =  435
+              r(power) =  .8
+                 r(D3) =  29
+                 r(n3) =  145
+                 r(D2) =  43.5
+                 r(n2) =  145
+                 r(D1) =  58
+                 r(n1) =  145
+
+
+artbin, pr(.4 .3 .2) aratios(3 2 1)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       3:2:1
+Statistical test assumed               unconditional comparison of 3
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.400 0.300 0.200
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         378
+
+Sample size per group (calculated)     189 126 63
+Expected total number of events        126
+Expected number of events per group    75.6 37.8 12.6
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  126
+                  r(n) =  378
+              r(power) =  .8
+                 r(D3) =  12.6
+                 r(n3) =  63
+                 r(D2) =  37.8
+                 r(n2) =  126
+                 r(D1) =  75.60000000000001
+                 r(n1) =  189
+
+
+artbin, pr(.4 .3 .2) local
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 3
+                                        binomial proportions
+                                        using the score test
+Local or distant                       local
+Continuity correction                  no
+
+Anticipated event probabilities        0.400 0.300 0.200
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         306
+
+Sample size per group (calculated)     102 102 102
+Expected total number of events        91.8
+Expected number of events per group    40.8 30.6 20.4
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  91.80000000000001
+                  r(n) =  306
+              r(power) =  .8
+                 r(D3) =  20.4
+                 r(n3) =  102
+                 r(D2) =  30.6
+                 r(n2) =  102
+                 r(D1) =  40.8
+                 r(n1) =  102
+
+
+artbin, pr(.4 .3 .2) power(.9)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 3
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.400 0.300 0.200
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.900
+
+Total sample size (calculated)         393
+
+Sample size per group (calculated)     131 131 131
+Expected total number of events        117.9
+Expected number of events per group    52.4 39.3 26.2
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  117.9
+                  r(n) =  393
+              r(power) =  .9
+                 r(D3) =  26.2
+                 r(n3) =  131
+                 r(D2) =  39.3
+                 r(n2) =  131
+                 r(D1) =  52.40000000000001
+                 r(n1) =  131
+
+. * options expected to decrease SS
+. foreach opt in "alpha(0.1)" "condit" "wald" "noround" "trend" "doses(1 2 3)" "power(.7)" {
+  2.         di _n
+  3.         dicmd `command' `opt'
+  4.         if `returns' return list
+  5.         assert !mi(r(n))
+  6.         assert r(n) < `n'
+  7. }
+
+
+artbin, pr(.4 .3 .2) alpha(0.1)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 3
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.400 0.300 0.200
+
+Alpha                                  0.100 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         243
+
+Sample size per group (calculated)     81 81 81
+Expected total number of events        72.9
+Expected number of events per group    32.4 24.3 16.2
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  72.90000000000001
+                  r(n) =  243
+              r(power) =  .8
+                 r(D3) =  16.2
+                 r(n3) =  81
+                 r(D2) =  24.3
+                 r(n2) =  81
+                 r(D1) =  32.4
+                 r(n1) =  81
+
+
+artbin, pr(.4 .3 .2) condit
+ NOTE: As conditional has been selected local will be used.
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               Conditional test using Peto's
+                                        approximation to the odds ratio
+                                        using the score test
+Local or distant                       local
+Continuity correction                  no
+
+Anticipated event probabilities        0.400 0.300 0.200
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         285
+
+Sample size per group (calculated)     95 95 95
+Expected total number of events        85.5
+Expected number of events per group    38 28.5 19
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  85.5
+                  r(n) =  285
+              r(power) =  .8
+                 r(D3) =  19
+                 r(n3) =  95
+                 r(D2) =  28.5
+                 r(n2) =  95
+                 r(D1) =  38
+                 r(n1) =  95
+
+
+artbin, pr(.4 .3 .2) wald
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 3
+                                        binomial proportions
+                                        using the wald test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.400 0.300 0.200
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         288
+
+Sample size per group (calculated)     96 96 96
+Expected total number of events        86.4
+Expected number of events per group    38.4 28.8 19.2
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  86.40000000000002
+                  r(n) =  288
+              r(power) =  .8
+                 r(D3) =  19.2
+                 r(n3) =  96
+                 r(D2) =  28.8
+                 r(n2) =  96
+                 r(D1) =  38.40000000000001
+                 r(n1) =  96
+
+
+artbin, pr(.4 .3 .2) noround
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 3
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.400 0.300 0.200
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         300.38
+
+Sample size per group (calculated)     100.13 100.13 100.13
+Expected total number of events        90.11
+Expected number of events per group    40.05 30.04 20.03
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  90.11286822952962
+                  r(n) =  300.3762274317654
+              r(power) =  .8
+                 r(D3) =  20.02508182878436
+                 r(n3) =  100.1254091439218
+                 r(D2) =  30.03762274317654
+                 r(n2) =  100.1254091439218
+                 r(D1) =  40.05016365756872
+                 r(n1) =  100.1254091439218
+
+
+artbin, pr(.4 .3 .2) trend
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 3
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Linear trend test: doses are           1, 2, 3
+
+Anticipated event probabilities        0.400 0.300 0.200
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         246
+
+Sample size per group (calculated)     82 82 82
+Expected total number of events        73.8
+Expected number of events per group    32.8 24.6 16.4
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  73.8
+                  r(n) =  246
+              r(power) =  .8
+                 r(D3) =  16.4
+                 r(n3) =  82
+                 r(D2) =  24.6
+                 r(n2) =  82
+                 r(D1) =  32.8
+                 r(n1) =  82
+
+
+artbin, pr(.4 .3 .2) doses(1 2 3)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 3
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+Linear trend test: doses are           1.00, 2.00, 3.00
+
+Anticipated event probabilities        0.400 0.300 0.200
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         246
+
+Sample size per group (calculated)     82 82 82
+Expected total number of events        73.8
+Expected number of events per group    32.8 24.6 16.4
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  73.8
+                  r(n) =  246
+              r(power) =  .8
+                 r(D3) =  16.4
+                 r(n3) =  82
+                 r(D2) =  24.6
+                 r(n2) =  82
+                 r(D1) =  32.8
+                 r(n1) =  82
+
+
+artbin, pr(.4 .3 .2) power(.7)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 3
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.400 0.300 0.200
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.700
+
+Total sample size (calculated)         243
+
+Sample size per group (calculated)     81 81 81
+Expected total number of events        72.9
+Expected number of events per group    32.4 24.3 16.2
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  72.90000000000001
+                  r(n) =  243
+              r(power) =  .7
+                 r(D3) =  16.2
+                 r(n3) =  81
+                 r(D2) =  24.3
+                 r(n2) =  81
+                 r(D1) =  32.4
+                 r(n1) =  81
+
+. * options expected not to change SS 
+. foreach opt in "power(.8)" "unfavourable" {
+  2.         di _n
+  3.         dicmd `command' `opt'
+  4.         if `returns' return list
+  5.         assert !mi(r(n))
+  6.         assert r(n) == `n'
+  7. }
+
+
+artbin, pr(.4 .3 .2) power(.8)
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 3
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.400 0.300 0.200
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         303
+
+Sample size per group (calculated)     101 101 101
+Expected total number of events        90.9
+Expected number of events per group    40.4 30.3 20.2
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  90.90000000000002
+                  r(n) =  303
+              r(power) =  .8
+                 r(D3) =  20.2
+                 r(n3) =  101
+                 r(D2) =  30.3
+                 r(n2) =  101
+                 r(D1) =  40.40000000000001
+                 r(n1) =  101
+
+
+artbin, pr(.4 .3 .2) unfavourable
+
+ART - ANALYSIS OF RESOURCES FOR TRIALS (binary version 2.1.0 04jan2024)
+------------------------------------------------------------------------------
+A sample size program by Abdel Babiker, Patrick Royston, Friederike Barthel, 
+Ella Marley-Zagar and Ian White
+MRC Clinical Trials Unit at UCL, London WC1V 6LJ, UK.
+------------------------------------------------------------------------------
+Type of trial                          superiority
+Number of groups                       3
+Favourable/unfavourable outcome        not determined
+Allocation ratio                       equal group sizes
+Statistical test assumed               unconditional comparison of 3
+                                        binomial proportions
+                                        using the score test
+Local or distant                       distant
+Continuity correction                  no
+
+Anticipated event probabilities        0.400 0.300 0.200
+
+Alpha                                  0.050 (two-sided)
+Power (designed)                       0.800
+
+Total sample size (calculated)         303
+
+Sample size per group (calculated)     101 101 101
+Expected total number of events        90.9
+Expected number of events per group    40.4 30.3 20.2
+------------------------------------------------------------------------------
+
+scalars:
+                  r(D) =  90.90000000000002
+                  r(n) =  303
+              r(power) =  .8
+                 r(D3) =  20.2
+                 r(n3) =  101
+                 r(D2) =  30.3
+                 r(n2) =  101
+                 r(D1) =  40.40000000000001
+                 r(n1) =  101
+
+. * options expected to cause error
+. foreach opt in "margin(.1)" "ccorrect" /* "favourable" */ "onesided" {
+  2.         di _n
+  3.         dicmd cap noi `command' `opt'
+  4.         assert _rc
+  5.         di as input "Note: an error message was expected above"
+  6. }
+
+
+cap noi artbin, pr(.4 .3 .2) margin(.1)
+Can not have margin with >2 groups
+Note: an error message was expected above
+
+
+cap noi artbin, pr(.4 .3 .2) ccorrect
+Correction for continuity not allowed in comparison of > 2 groups
+Note: an error message was expected above
+
+
+cap noi artbin, pr(.4 .3 .2) onesided
+One-sided not allowed in comparison of > 2 groups unless trend/doses specified
+Note: an error message was expected above
+
+. 
+. 
+. 
+. // REPORT SUCCESS
+. di as result _n "*************************************************************" ///
+>         _n "*** ARTBIN HAS PASSED TESTING OF EVERY OPTION ***************" ///
+>         _n "*************************************************************"
+
+*************************************************************
+*** ARTBIN HAS PASSED TESTING OF EVERY OPTION ***************
+*************************************************************
+
+. 
+. 
+. log close
+      name:  <unnamed>
+       log:  C:\ian\git\artbin\testing\artbin_test_every_option.log
+  log type:  text
+ closed on:   4 Jan 2024, 19:03:45
+-------------------------------------------------------------------------------------------------------------------
