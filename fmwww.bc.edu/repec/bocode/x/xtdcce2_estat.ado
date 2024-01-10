@@ -42,13 +42,15 @@ program define xtdcce2_estat , rclass
 				local ki = 1
 				local si = `si' + 1
 				foreach var in `mg_vars'  {
-					matrix `vali' = `ebb'[1,"`var'_`s'"]				
-					matrix `blockmat'[`si',`ki'] = `vali'
+					cap matrix `vali' = `ebb'[1,"`var'_`s'"]
+					if _rc == 0 matrix `blockmat'[`si',`ki'] = `vali'
+					else matrix `blockmat'[`si',`ki'] = .
 					local ki = `ki' + 1
 				}
 				foreach var in `pooled_vars' {
-					matrix `vali' = `ebb'[1,"`var'"]
-					matrix `blockmat'[`si',`ki'] = `vali'
+					cap matrix `vali' = `ebb'[1,"`var'"]
+					if _rc == 0 matrix `blockmat'[`si',`ki'] = `vali'
+					else matrix `blockmat'[`si',`ki'] = .
 					local ki = `ki' + 1
 				}
 			}

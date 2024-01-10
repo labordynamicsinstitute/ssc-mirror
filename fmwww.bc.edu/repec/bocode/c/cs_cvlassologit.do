@@ -1,7 +1,7 @@
 
 clear all 
 
-insheet using prostate.data, clear
+$loadprostate
 
 gen ybin = lpsa > 2
 
@@ -148,7 +148,7 @@ assert e(lse)==0.2
 
 clear all 
 
-insheet using prostate.data, clear
+$loadprostate
 
 gen ybin = lpsa > 2
 
@@ -163,7 +163,7 @@ cvlassologit ybin lcavol-pgg45 , plotcv plotopt(legend(off)) nfol(3)
 
 clear all 
 
-insheet using prostate.data, clear
+$loadprostate
 
 gen ybin = lpsa > 3
 

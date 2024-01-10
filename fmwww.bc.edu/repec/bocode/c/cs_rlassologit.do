@@ -8,7 +8,8 @@ clear all
 ***************************************************************
 
 
-insheet using "spam.data", clear delim(" ")
+$loadspam
+
 
 rlassologit v58 v1-v57  , hdmlambda
 mat S = e(beta)'

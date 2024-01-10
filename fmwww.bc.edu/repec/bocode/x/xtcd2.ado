@@ -157,7 +157,7 @@ program define xtcd2_int, rclass
 			exit
 		}
 		** Determine N, T and type of panel
-		qui tsset 
+		qui xtset2   , checkvars(`varlist') 
 		local id "`r(panelvar)'" 
 		local timevar "`r(timevar)'"
 		local balanced  "`r(balanced)'"
@@ -423,7 +423,7 @@ program define xtcd2_output
 	disp as text "References"
 	if "`r(pesaran)'" != ""  disp as smcl "  CD: {col 13} Pesaran ({help xtcd2##Pesaran2015:2015}, {help xtcd2##Pesaran2021:2021})"
 	if "`r(cdw)'" != "" disp as smcl "  CDw: {col 13} Juodis, Reese ({help xtcd2##JR2021:2021})"
-	if "`r(pea)'" != "" disp as smcl "  CDw+: {col 13} CDw with power enhancement from Fan et. al. ({help xtcd2##Fan2015:2015})"
+	if "`r(pea)'" != "" disp as smcl "  CDw+: {col 13} CDw with power enhancement from Fan et al. ({help xtcd2##Fan2015:2015})"
 	if "`r(cdstar)'" != "" disp as smcl "  CD*: {col 13} Pesaran, Xie ({help xtcd2##PesaranXie2021:2021}) with `r(npca)' PC(s)"
 	if `r(noadjust)' == 1 disp as smcl "Cross-sectional units not demeaned for calculation of cross-correlations."
 end
@@ -615,26 +615,14 @@ capture mata mata drop xtcd2_rho()
 mata:
 	function xtcd2_rho (real matrix r, real scalar N, real scalar T, real scalar stand,balanced,real scalar loop)	
 	{
-		
-		
-		
-		
 		if ((balanced == 1 & hasmissing(meanM) == 0 & loop == 0) | (nonmissing(r)==0)) {
 			"balanced"
-			if (stand == 0) {
-				meanM = mean(r)
-			}
-			else {
-				meanM = J(1,N,0)
-			}
-			"mean"
-			meanM
-			RHO = quadcorrelation(r :- meanM)*sqrt(T)
+			RHO = quadcorrelation(r)*sqrt(T)
 			RHO = sublowertriangle(RHO)'
 			_diag(RHO, 0)
 		}
 		else {
-			"unbalanced"
+			"unbalanced - or no demeaning"
 			if (stand == 0) {
 				meanM = quadcolsum(r) :/quadcolsum(r:!=.)
 			}
@@ -643,8 +631,6 @@ mata:
 			}
 			"mean"
 			meanM
-		
-			mean(r :- meanM)
 			RHO = quadcorrelation(r :- meanM)*sqrt(T)
 			RHO = sublowertriangle(RHO)'
 			_diag(RHO, 0)

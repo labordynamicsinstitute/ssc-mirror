@@ -179,12 +179,12 @@ mata:
 				/// 1..cols(A) makes sure variables from left are not dropped
 				A1 = invsym(A,(1..cols(A)))
 				rank = rows(A1)-diag0cnt(A1)
-				
 				if (rank < rows(A)) {	
 					/// not full rank, solve by hand
 					C = A1 * B
-					method = "invsym"
-					coln = xtdcce_selectindex(colsum(A1:==0):==rows(A1):==0)			
+					method = "invsym (not full rank)"					
+					if (A1[1,1] != 0 & rows(A1)==1 & cols(A1)==1) coln = xtdcce_selectindex(colsum(A1:==0):==rows(A1):==0)	
+									
 				}
 				else {
 					/// full rank use cholsolve
@@ -487,8 +487,17 @@ end
 ** option numberonly gives only lag number in cross_structure
 capture program drop xtdcce2_csa
 program define xtdcce2_csa, rclass
-	syntax varlist(ts) , idvar(varlist) tvar(varlist) cr_lags(numlist) touse(varlist) csa(string) [cluster(varlist) numberonly tousets(varlist) rcceindex rcce(string) ]
+	syntax varlist(ts) , idvar(varlist) tvar(varlist) cr_lags(numlist) touse(varlist) csa(string) [cluster(varlist) numberonly tousets(varlist) rcceindex rcce(string) hasconstant ///
+		trace 	///
+		/// rank condition test
+		rctest		///
+		rctestopt(string) 	///
+		]
 		
+
+		if "`cr_lags'" == "" {
+			local cr_lags = 0
+		}
 		
 		if "`tousets'" == "" {
 			local tousets "`touse'"
@@ -520,11 +529,34 @@ program define xtdcce2_csa, rclass
 			
 			local clist `clist' ``ii''
 			local c_i = `c_i' + 1
+
+			/// get list with correct variables
 			
 		}
-				
-		if "`cr_lags'" == "" {
-			local cr_lags = 0
+		
+		/// here rc test
+		if "`rctest'" != "" {
+			*noi disp "DO RC TEST"
+			local 0 , `rctestopt'
+			syntax [anything], [er gr REPlications(real 1000) STANDardize(real 5)]
+			local criterion `er' `gr' 
+			if "`criterion'" != "" & strlower("`criterion'") != "er" & strlower("`criterion'") != "gr" {
+				noi disp "Criterion invalid. Set to GR."
+				local criterion GR
+			}
+			else if wordcount("`criterion'") > 1 {
+				noi disp "Criterion invalid. Set to GR."
+				local criterion GR
+			}
+			if strlower("`criterion'") == "er" local criterion 1
+			else local criterion 2
+			
+			tempvar W
+			gen `W' = rnormal(0,1)
+			by `tvar', sort: replace `W' = `W'[1]
+			sort `idvar' `tvar'
+			tempname rctest_results
+			mata xtdcce2_rctest("`cvarlist'","`clist'","`W'","`touse'","`idvar' `tvar'",`criterion',`replications',`standardize',("`trace'"!=""),"`rctest_results'")		
 		}
 		local i = 1
 		local lagidef = 0
@@ -602,7 +634,7 @@ program define xtdcce2_csa, rclass
 			
 			if "`criterion'"!= "" & `npc' > 0 {
 				disp "rcce(criterion()) and rcce(npc()) cannot be combined. npc(`npc') ignored"
-				local npc ""
+				local npc 0
 			}
 			if "`criterion'" == "" & `npc' == 0 local criterion "ER"
  			if "`criterion'" == "none" local criterion ""
@@ -634,7 +666,10 @@ program define xtdcce2_csa, rclass
 			return local Type "`criterion'"
 			local cross_structure 0
 		}
-				
+	if "`rctest'"!= "" {
+		return matrix rctest = `rctest_results'	
+		return matrix rctest_det = `rctest_results'_det		
+	}
 	return local varlist "`clistn'"
 	return local cross_structure "`cross_structure'"
 end
@@ -655,6 +690,7 @@ mata:
 		T_min = panelstats(idx)[3]
 		T_max = panelstats(idx)[4]
 		
+		
 		ZbarL = st_data(.,varnames,tousen)
 
 		if (cvarlist != "") {
@@ -664,6 +700,7 @@ mata:
 		Sigma = J(cols(ZbarL),cols(ZbarL),0)
 		T_min,T_max
 		if (T_min:==T_max) {
+			"panel balanced"
 			Zbar = panelsubmatrix(ZbarL,1,idx)
 			if (cvarlist != "") {
 				"scale"
@@ -676,22 +713,32 @@ mata:
 			"Zbar loaded"
 		}
 		else {
+			"panel unbalanced"
+			cols(ZbarL)
+
 			Zbar = J(T_max,cols(ZbarL),.)
 			for (i=1;i<=N;i++) {
-				Ti = panelsubmatrix(idt[.,2],i,idx)	
+
+				Ti = panelsubmatrix(idt[.,2],i,idx)	:- min(idt[.,2]) :+1
 
 				Zbari = panelsubmatrix(ZbarL,i,idx)
+				Zbari
 				ZZbar = Zbar[Ti,.]
-				idxZ = selectindex(ZZbar:==.)
-				idxT = Ti[idxZ]
-				Zbar[idxiT,.] = Zbari[idxZ,.] 
+				///ZZbar
+				if (hasmissing(Zbar)) {
+					"add miss"
+					tmp3 = selectindex(Zbari:!=.)
+					tmp2 = Ti[tmp3]
+					
+					Zbar[tmp2,.] = Zbari[tmp3,.]
+				}				
 				
 				if (cvarlist!="") {
 					Zi = panelsubmatrix(Z,i,idx)					
 					ZZ = Zi:-Zbari
 					Sigma[Ti,.] = Sigma[Ti,.] :+ quadcross(ZZ,ZZ)
 				}
-				if (hasmissing(Tr)==0 & cvarlist == "") i = N+1
+				if (hasmissing(Zbar)==0 & cvarlist == "") i = N+1
 			}
 		}
 		if (cvarlist == "") {
@@ -715,7 +762,7 @@ mata:
     	"criterion"
     	criterion
     	if (criterion > 0) {
-    		allICs0  = numfac_int(F,cols(ZbarL))    
+    		allICs0  = numfac_int(F,cols(ZbarL),5)    
     		allICs0		
     		best_numfac0 = bestnum_ic_int(allICs0)
 			///best_numfac = (best_numfac0, allICs0[10,1])
@@ -733,7 +780,7 @@ mata:
     	Evec = Re(Evec)
     	    	
 		Fr = sqrt(T) * Evec[.,1..NumPC]  
-		
+
     	/// Return to Stata
 		idxv = st_addvar("double",csnames:+ strofreal((1..NumPC)))
 		real matrix viewM, Vi
@@ -747,9 +794,11 @@ mata:
 		}
 		else {
 			for (i=1;i<=N;i++) {
+				i
 				panelsubview(Vi,viewM,i,idx)
-				Ti = panelsubmatrix(idt[.,2],i,idx)		
-				Vi[Ti,.] = Fr[Ti,.]				
+				Ti = panelsubmatrix(idt[.,2],i,idx)	:- min(idt[.,2]) :+1	
+				
+				viewM[Ti,.] = Fr[Ti,.]				
 			}
 		}
 		
@@ -761,7 +810,11 @@ end
 
 *** From xtnumfac
 mata:
-function numfac_int(X0_s, kmax0)  {
+/// mean function which allows for missings
+function meanmiss(real matrix X) return(quadcolsum(X,0):/quadcolsum(X:!=.))
+function mymean(real matrix X) return(mean(X))
+
+function numfac_int(X0n, kmax0, stan)  {
 	"start numfac int"
 // numfac_int calculates the Bai&Ng (2002) and Ahn&Horenstein (2013) ICs for 
 // the number of factors.
@@ -771,9 +824,24 @@ function numfac_int(X0_s, kmax0)  {
 // The output is a matrix providing the IC values for factor models with 
 // k=1,2,...,kmax0 factors in its rows. The columns correspond to the following
 // statistics: 1:PC_p1,...,6:IC_p3, 7:ER, 8:GR, 9: GOS
-	T     = rows(X0_s)
-	N     = cols(X0_s)
+	T     = rows(X0n)
+	N     = cols(X0n)
     minNT = min((N, T))
+
+	X0_s = X0n
+
+	pointer mfunc
+	if (hasmissing(X0_s)==0) mfunc = &mymean()
+	else mfunc = &meanmiss()
+
+	if (stan == 2 | stan == 3) X0_s = X0_s - J(T,1,1)*(*mfunc)(X0_s)
+
+	if (stan == 4 | stan == 5) X0_s = X0_s - J(T,1,1)*(*mfunc)(X0_s) - (*mfunc)(X0_s')'*J(1,N,1) + J(T,1,1)*(*mfunc)(vec(X0_s))*J(1,N,1)
+	
+	if (stan == 3 | stan == 5) {
+		X_sd = sqrt(((*mfunc)(X0_s:^2) - (*mfunc)(X0_s):^2))'
+		X0_s = X0_s :/(J(T,1,1)*X_sd')
+	}
 
     /// add zero mean column to X0 to ensure max number of factors can be used; see Remark 6, Juodis (2022)
     seed = rseed()
@@ -782,7 +850,7 @@ function numfac_int(X0_s, kmax0)  {
 	missind = X0 :== .
 	missnum = sum(sum(missind)')
 	st_numscalar("e(missnum)", missnum)
-	
+
 	if ( missnum == 0) {
 		if (T > N) {
 				xx         = cross(X0,X0)
@@ -794,7 +862,8 @@ function numfac_int(X0_s, kmax0)  {
 		}	
 	}
 	else {
-		obsind  = J(T,N,1) - missind
+		
+		obsind  = J(T,cols(missind),1) - missind
 		
 	    X0mean  = J(T,1,1) * mean(editmissing(X0,0))
 		X0      = editmissing(X0,0) + X0mean:*missind
@@ -802,6 +871,7 @@ function numfac_int(X0_s, kmax0)  {
 		conv_crit = (X0 - X0mean):^2
 		conv_crit = mean(mean(conv_crit)')
 		upd       = conv_crit
+		
 		while (upd > 0.001*conv_crit) {
 			X0_old = X0
 			if (T > N) {
@@ -819,8 +889,7 @@ function numfac_int(X0_s, kmax0)  {
 			X0  = X0_old:*obsind + (uu_k*vee_k'):*missind:*sqrt(N*T)
 			upd = mean(mean(abs(X0-X0_old))')
 		}	
-	}		
-		
+	}				
 
     V_val     = J(1,kmax0+1,.)
 
@@ -854,12 +923,10 @@ function numfac_int(X0_s, kmax0)  {
     ER          = (mockEV/mus[1], ER)
     GR          = (ln(1 + mockEV)/ln(1+ mutildes[1]), GR)
 
-
 	allICs0 = ER \ GR
-
+	
 	return(allICs0)
 }
-
 // mata drop bestnum_ic_int()
 function bestnum_ic_int(allICs1) 
 {
@@ -1133,4 +1200,257 @@ mata:
 		}
 		return(X0)
 	}	
+end
+
+cap program drop xtdcce2_absorb_prog
+program define xtdcce2_absorb_prog, rclass
+	syntax anything(name=absorb) , [ TRACEhdfeopt partialonly] touse(string) vars(string) [donotoverwrite]
+
+	local singeltons = 0
+	if "`keepsingeltons'" == "" local singeltons = 1
+
+	local tracehdfe = 0
+		if "`tracehdfeopt'" != "" local noii noi
+
+	*** tempnames for mata objects
+	tempname xtdcce2_absorb 
+
+	cap which reghdfe
+	loc rc = _rc
+	cap which ftools
+	if _rc | `rc' {                			
+		di as err "option {it: absorb()} requires {help:reghdfe} and {help ftools}:"
+		di as err "  click {stata ssc install reghdfe} to install from SSC"
+		di as err "  click {stata ssc install ftools} to install from SSC"
+		exit 199
+	}
+	cap include "reghdfe.mata", adopath
+	cap {
+		mata: `xtdcce2_absorb' = FixedEffects()
+		mata: `xtdcce2_absorb'.absvars = "`absorb'"
+		mata: `xtdcce2_absorb'.tousevar = "`touse'"
+		mata: `xtdcce2_absorb'.init()
+		mata: `xtdcce2_absorb'.partial_out("`vars' ",0, 0)	
+	}
+	if _rc {
+		di as err "{bf:reghdfe} Mata library not found or error in {cmd:reghdfe}."
+		exit 199
+	}
+	
+	if "`noii'" != "" {
+		noi disp "Before reghdfe partial out"
+		noi sum `vars'
+	}	
+	
+	mata st_local("var_partial",invtokens("abs":+strofreal(1..cols(tokens("`vars'")))))	
+	mata st_store(`xtdcce2_absorb'.sample, st_addvar("double",tokens("`var_partial'")),"`touse'", `xtdcce2_absorb'.solution.data)
+	if "`noii'" != "" {
+		noi disp "After reghdfe partial out"
+		noi mata mean(`xtdcce2_absorb'.solution.data)
+		noi sum `var_partial'
+	}
+	if "`partialonly'" != "" {
+		error 199
+	}
+	mata mata drop  `xtdcce2_absorb'
+	
+	if "`donotoverwrite'" == "" {
+		local i = 1
+		foreach source in `var_partial' {
+			local aim = word("`vars'",`i')
+			replace `aim' = `source'
+			local i = 1 + `i'
+		}
+	}
+
+	return local absorb_vars "`var_partial'"
+end
+
+/// RC test
+mata:
+	function xtdcce2_rctest(string scalar yxvarsn, string scalar csan, string scalar Wn, string scalar tousen, string scalar idtn, real scalar criterion , real scalar boot, real scalar stand, real scalar trace, string scalar resultsn )
+	{
+		"Rank Test Program"
+		real matrix results, idt, idx,  YX, Z, Zbar, YXD, W, Zi, YXi,Wi, sigma, tmp, tmp2, tmp3, A1, A2, V,D,B, C, V1, D1, V2, D2, V3, D3, xx1, pval, ix, Ti, YXL
+		real scalar N,T, T_min,T_max, i, K, n0, reject, cnt
+		/// output
+		real scalar m, p, rc
+		timer_on(20)
+		st_view(idt,.,idtn,tousen)
+		st_view(Z,.,csan,tousen)
+		st_view(YX,.,yxvarsn,tousen)
+		st_view(W,.,Wn,tousen)
+
+		if (cols(W)==1) W = J(1,cols(Z),W)
+
+		idx = panelsetup(idt[.,1],1)
+		N = panelstats(idx)[1]
+		T = panelstats(idx)[4]
+		T_min = panelstats(idx)[3]
+		T_max = panelstats(idx)[4]
+		K = cols(Z)
+
+		
+		timer_on(21)
+		if (trace==1) sprintf("Dimensions T = %s, N= %s, K=%s",strofreal(T_max),strofreal(N),strofreal(K))
+
+		sigma = J(T_max*K,T_max*K,0)
+		Zbar = J(T_max,K,0)
+
+		if (T_max:==T_min) {
+			"balanced"
+			Zbar = panelsubmatrix(Z,1,idx)
+			
+			for (i=1;i<=N;i++) {
+				panelsubview(Wi,W,i,idx)
+				panelsubview(YXi,YX,i,idx)
+				///vec(Wi:*YXi :- Wi :* Zbar)
+				tmp = vec(Wi:*YXi :- Wi :* Zbar)'
+				
+				///quadcross(tmp,tmp)
+				sigma = sigma + quadcross(tmp,tmp) 
+			}
+			sigma= sigma/N
+			YXL = YX
+			
+			YXL = colshape(YXL',T_max)'
+		}
+		else {			
+			YXL = J(T_max,K*N,.)
+			cnt = 1
+			Zbar = J(T_max,K,0)
+			min_val_ti = min(idt[.,2])
+			for (i=1;i<=N;i++) {
+				i,T_max,T_min,K,cnt,N
+
+				panelsubview(Ti,idt[.,2],i,idx)					
+				panelsubview(Zi,Z,i,idx)
+				panelsubview(Wi,W,i,idx)
+				panelsubview(YXi, YX,i,idx)
+
+				/// ensure Ti always starts with 1
+				if (min_val_ti>1) Ti = Ti :- min_val_ti:+1				
+
+				YXL[Ti,cnt..cnt-1+cols(YXi)] = YXi
+				
+				cnt = cnt + cols(YXi)
+				tmp = vec(Wi:*YXi :- Wi :* Zi)'
+
+				Tii = J(K,1,1)#Ti :+ (((1..K)':-1)*T_max)#J(rows(Ti),1,1)
+				sigma[Tii,Tii] = sigma[Tii,Tii] :+ quadcross(tmp,tmp) :/ rows(Ti)
+
+				/// buid CSA
+				tmp3 = selectindex((rowmissing(Zi):==0))
+				
+				tmp2 = Ti[tmp3]
+
+				Zbar[tmp2,.] = Zi[tmp3,.]
+
+
+				///Wi = Wi[Ti,.]
+				//YXi = YXi[Ti,.]
+				//Zi = Zi[Ti,.]
+				///sigma[Ti,Ti] = sigma[Ti,Ti] + (quadcross(Wi,YXi) * quadcross(Wi,Zi)' ) / N
+
+
+				///if (hasmissing(Zbar)==0) i = N+1
+			}
+			"done"
+		}
+		timer_off(21)
+		/// Number of common factors
+		timer_on(22)
+		
+		m  = bestnum_ic_int(numfac_int(YXL,7,stand))[criterion]
+		
+		    
+		if (trace==1) sprintf("Estimated number of common factors %f",m)
+		timer_off(22)
+		timer_on(23)
+		/// Estimation of p
+		A1 = Zbar*Zbar'
+		A2 = quadcross(Zbar,Zbar)
+		
+		results = J(K,4,.)
+		n0 = 0
+		reject = 1
+		timer_off(23)
+		timer_on(24)
+		while (n0 < K & reject == 1) {
+			xtdcce2_eigenshuffle(&A1,D1=.,V1=.)	
+			"D1"
+			rows(D1),cols(D1)
+			///mean(D1)
+			"V1"	
+			rows(V1),cols(V1)
+			///mean(V1)	
+			C = V1[.,n0+1..cols(V1)]
+			/// check if Re() is correct		
+			results[n0+1,1] = Re(N*sum(D1[n0+1..min((T,K))]))
+
+			timer_on(26)
+			/// Bootstrap Distribution
+			xtdcce2_eigenshuffle(&A2,D2=.,V2=.)
+			D = V2[.,n0+1..cols(V2)]			
+			B = (D'#C')*sigma*(D#C)
+			timer_on(28)
+			xtdcce2_eigenshuffle(&B,D3=.,V3=.)
+			timer_off(28)
+			timer_on(29)	
+			xx1 = colsum((D3[.,1] * J(1,boot,1) :* rchi2(rows(D3),boot,1) ))'
+			timer_off(29)
+			timer_on(27)
+			results[n0+1,2] = mm_quantile(Re(xx1),1,0.95)
+			timer_off(27)
+			tmp = Re(xx1)\results[n0+1,1]
+			
+			tmp = tmp,(1::(boot+1))
+			
+			tmp = sort(tmp,-1)
+			
+			tmp[.,2]:==(boot+1)
+			ix = selectindex(tmp[.,2]:==(boot+1))
+			
+			pval = 1 - ix/(boot+1)
+			results[n0+1,3] = pval
+			timer_off(26)
+			/// Decision
+			if (results[n0+1,1] > results[n0+1,2] ) {
+				results[n0+1,4] = 1
+				n0 = n0 + 1
+			}
+			else {
+				results[n0+1,4] =0
+				reject =0
+			}
+		}
+		timer_off(24)
+		timer_on(25)
+		
+		p = sum(results[.,4])
+
+		st_matrix(resultsn,(1-(p<m),p,m))
+		names = J(3,1,""),("RC"\"p"\"m")
+		st_matrixcolstripe(resultsn,names)
+		
+		st_matrix(resultsn+"_det",results)
+		rnames = J(K,1,""),strofreal(1::K)
+		cnames = J(4,1,""),("stat"\"prct"\"pval"\"stat>prct")
+		st_matrixcolstripe(resultsn+"_det",cnames)
+		st_matrixrowstripe(resultsn+"_det",rnames)
+		timer_off(25)
+		timer_off(20)
+		 
+	}
+	void xtdcce2_eigenshuffle(transmorphic mat, real matrix Eval, real matrix Evec) {
+			real matrix idx
+			if (eltype(mat)== "real") eigensystem(mat,Evec=.,Eval=.)
+			else if (eltype(mat)== "pointer") eigensystem( (*mat),Evec=.,Eval=.)
+			else  _error(3250,"Matrix has to be real or pointer.")
+			
+			idx = order(Eval',-1)
+			Eval = Eval[idx]'
+			Evec = -Evec[idx,.]
+
+	}
 end

@@ -1,5 +1,12 @@
 *! xtdcce2fast - fast version of xtdcce2
-*! version 2.0 - November 2021
+*! version 2.1 - November 2023
+
+/*Changelog
+Version 2.1 - November 2023
+- added R2 and adjusted R2
+
+
+*/
 
 capture program drop xtdcce2fast
 program define xtdcce2fast, eclass sortpreserve
@@ -124,7 +131,7 @@ program define xtdcce2fast, eclass sortpreserve
 					local checkscsa "`varlist'"
 					local cropt `options'
 					if "`cr_lags'" == "" local cr_lags = 0
-					if `cr_lags' > 0 & "`rcceindex'`rcce'" != "" {
+					if "`cr_lags'" > "0" & "`rcceindex'`rcce'" != "" {
 						noi disp "Option rcce() cannot be combined with cr_lags(). Ignore rcce()."
 						local rcceindex ""
 						local rcce ""
@@ -268,7 +275,7 @@ program define xtdcce2fast, eclass sortpreserve
 			}
 			else {
 				gen `tousecr' = `touse'
-			}			
+			}
 						
 			if "`crosssectional'" != "" {
 				if "`rcce'" != "" local rcceOpt rcce(`rcce')	
@@ -365,7 +372,7 @@ program define xtdcce2fast, eclass sortpreserve
 			matrix colnames `V_output' = `rhs'
 			matrix rownames `V_output' = `rhs'
 		}
-		tempname r2mg N_g N K Tmin Tmax T K_csa
+		tempname r2mg N_g N K Tmin Tmax T K_csa r2 r2_a
 		scalar `N' = `stats'[1,1]
 		scalar `K' = `stats'[1,2]
 		scalar `N_g' = `stats'[1,3]
@@ -373,6 +380,8 @@ program define xtdcce2fast, eclass sortpreserve
 		scalar `Tmin' = `stats'[1,5]
 		scalar `Tmax' = `stats'[1,6]
 		scalar `T' = `stats'[1,7]
+		scalar `r2' = `stats'[1,8]
+		scalar `r2_a' = `stats'[1,9]
 		scalar `K_csa' = wordcount("`clistfull'")
 
 		
@@ -422,6 +431,8 @@ program define xtdcce2fast, eclass sortpreserve
 		ereturn scalar N_g = `N_g'
 		ereturn scalar K_mg = `K'
 		ereturn scalar r2_pmg = `r2mg'
+		ereturn scalar r2 = `r2'
+		ereturn scalar r2_a = `r2_a'
 		
 		if `Tmin' == `Tmax' {
 			ereturn scalar T = `T'
@@ -565,9 +576,12 @@ program define xtdcce2fast, eclass sortpreserve
 				local line2 `"_col(`=`maxline'-80+50') in gr "   p-value" _col(`=`maxline'-80+68') "=" _col(`=`maxline'-80+71') in ye in ye %9.4f e(cdp) "'	
 			}
 			
+			if `pooled' == 1 local R2_type "p"
+			else  local R2_type "mg"
+			
 			#delimit ;
 			di in gr "Number of "
-						_col(`=`maxline'-80+50') in gr "R-squared (mg)" _col(`=`maxline'-80+68') "="
+						_col(`=`maxline'-80+50') in gr "R-squared (`R2_type')" _col(`=`maxline'-80+68') "="
 						_col(`=`maxline'-80+71') in ye %9.2f e(r2_pmg) ;
 			di in gr _col(2) "cross-sectional lags" 
 						_col(37) "`cr_lags_disp'"	`line1' ;
@@ -816,13 +830,15 @@ mata:
 
 			order_i[i] = idt[index[i,1],1]
 
+			lower_i[i] =  quadcolsum(((Yi :- mean(Yi)):^2))
+
 			if (PooledHasFE == 1 ) {
 				/// demeaning, only for pooled
 				Xi = Xi :-mean(Xi)
 				Yi = Yi :-mean(Yi)
 			}
 
-			lower_i[i] =  quadcolsum(((Yi :- mean(Yi)):^2))
+			
 			/// partial out
 			if (nocsa == 1) {
 				csai = csa[|index[i,1],. \ index[i,2],.|]
@@ -876,6 +892,9 @@ mata:
 			///b_i = b_i
 			///b_i = b_p'#J(N_g,1,1)
 			residual[.,.] = Y_tilde - X_tilde * b_p
+
+			s2_i = residual'residual
+
 			"b_p"
 			b_p = b_p'
 		}
@@ -889,15 +908,17 @@ mata:
 		quadcolsum(lower_i)
 		"upper"
 		upper
-		"N_g" 
-		N_g
-		"T" 
-		T
-		"Ktotal" 
-		Ktotal
+		"N_g, N, T"
+		N_g, N, T
+		"Ktotal, K" 
+		Ktotal,K
 		r2mg = 1 - upper /  (quadcolsum(lower_i)/(N_g * (T-1)) )
 		"r2 mg"
-		r2mg
+		r2mg, upper, quadcolsum(lower_i)/(N_g * (T-1)) 
+		"r2"
+		r2 = 1- s2_i/quadcolsum(lower_i)
+		r2_a = 1- (1-r2) * (N-1)/(N-Ktotal-1)
+		r2, r2_a, (N-1)/(N-Ktotal-1)
 		"b_i before lr calcualtions"
 		
 		/// Long Run Coefficients (only ECM/ARDL)
@@ -990,7 +1011,7 @@ mata:
 		
 		st_matrix(outputb,b_mg)
 		st_matrix(outputV,V)
-		stats = (rows(X),K,N_g,r2mg,min(stats_i[.,1]),max(stats_i[.,1]),mean(stats_i[.,1]))
+		stats = (rows(X),K,N_g,r2mg,min(stats_i[.,1]),max(stats_i[.,1]),mean(stats_i[.,1]),r2,r2_a)
 		st_matrix(statsName,stats)
 		
 		if (pooled == 0) {

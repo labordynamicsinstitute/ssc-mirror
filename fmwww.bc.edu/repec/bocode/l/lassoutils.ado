@@ -1,5 +1,5 @@
-*! lassoutils 1.2.04 8dec2020
-*! lassopack package 1.4.1
+*! lassoutils 1.2.06 5jan2024
+*! lassopack package 1.4.3
 *! authors aa/cbh/ms
 
 * Adapted/expanded from lassoShooting version 12, cbh 25/09/2012
@@ -140,6 +140,9 @@
 *         Fixed bug in reporting of value of maximized obj fn for elastic net/ridge (missing 1/2 on L2 norm).
 *         EBIC now excludes omitted/base variables when calculating model size p.
 * 1.2.04  Bug fix to SD calculation for special case of lglmnet with unit loadings (=not prestandardized)
+* 1.2.05  Bug fix in special case of only unpenalized regressors (returned scalar psinegs was not initialized to missing)
+* 1.2.06  (5jan2024)
+*         Misc updates to support use of Python/sklearn.
 
 
 program lassoutils, rclass sortpreserve
@@ -461,6 +464,7 @@ program define _rlasso, rclass sortpreserve
 	tempname b bOLS sb sbOLS Psi sPsi ePsi stdvec
 	tempname bAll bAllOLS
 	tempname supscoremat CCK_ss CCK_p CCK_cv CCK_gamma
+	tempname psinegs
 	// initialize so that returns don't crash in case values not set
 	local k				=0						//  used as flag to indicate betas are non-missing
 	local N				=.
@@ -490,6 +494,7 @@ program define _rlasso, rclass sortpreserve
 	scalar `CCK_p'		=.
 	scalar `CCK_cv'		=.
 	scalar `CCK_gamma'	=.
+	scalar `psinegs'	=.
 
 	if `p' & ~`testonlyflag' {					//  there are penalized model variables; estimate
 	
@@ -587,7 +592,7 @@ program define _rlasso, rclass sortpreserve
 		scalar `gamma'		=r(gamma)
 		scalar `gammad'		=r(gammad)
 		// for HAC or 2-way cluster lasso (neg loadings possible)
-		local psinegs		=r(psinegs)
+		scalar psinegs		=r(psinegs)
 		local psinegvars	`r(psinegvars)'
 		*
 	}
@@ -668,7 +673,7 @@ program define _rlasso, rclass sortpreserve
 		local N_clust2		=r(N_clust2)
 
 		// for HAC or 2-way cluster lasso (neg loadings possible)
-		local psinegs		=r(psinegs)
+		scalar psinegs		=r(psinegs)
 		local psinegvars	`r(psinegvars)'
 	}
 	else {										//  shouldn't reach here
@@ -859,6 +864,7 @@ program define _lassopath, rclass sortpreserve
 		ploadings2(string)						/// set optional L2 penalty loadings as Stata row vector
 												///
 		LGLMnet									/// use glmnet scaling for lambda/alpha
+		sklearn									/// use Python sklearn
 												///
 		xnames_o(string)						/// original names in varXmodel if tempvars used (string so varlist isn't processed)
 		xnames_t(string)						/// temp names in varXmodel
@@ -929,16 +935,44 @@ program define _lassopath, rclass sortpreserve
 	local adaflag 		=("`adaptive'"!="")
 	local lglmnetflag	=("`lglmnet'"!="")
 	local noicflag		=("`noic'"!="")
-	if (~`consflag') {
-		local noconstant noconstant
-	}
 	local nodevcritflag	=("`nodevcrit'"!="")
+	local sklearnflag	=("`sklearn'"!="")
+	if (~`consflag')	local noconstant noconstant
 	*
-	
+
 	*** syntax checks
 	if `sqrtflag' & `lglmnetflag' {
 		di as err "lglmnet option not supported for square-root lasso"
 		exit 198
+	}
+	if `sklearnflag' {
+		// check that Stata is at least version 16 and Python is available
+		cap python query
+		if _rc==199 {
+			// Stata 15 or lower
+			di as err "error - sklearn option requires Stata 16 or higher and a Python-aware Stata"
+			exit 198
+		}
+		else if _rc==111 {
+			// Stata 16 but no Python
+			di as err "error - sklearn option requires a Python-aware Stata - see {helpb help python}"
+			exit 111
+		}
+		else if _rc>0 {
+			// some other error code
+			di as err "error - sklearn option requires Stata 16 or higher and a Python-aware Stata"
+			exit 198
+		}
+		// sklearn requires lglmnet
+		if ~`lglmnetflag' {
+			di as err "error - sklearn option requires lglmnet option"
+			exit 198
+		}
+		//  and no custom penalty loadings
+		if "`ploadings'`ploadings2'"~="" {
+			di as err "error - sklearn option does not currently support custom penalty loadings"
+			exit 198
+		}
 	}
 	
 	*** special case - lglmnet with unit loadings (=not prestandardized)
@@ -949,10 +983,10 @@ program define _lassopath, rclass sortpreserve
 		local sdY			= r(sd) * sqrt((r(N)-1)/r(N))
 		local mY			= r(mean)
 		if `consflag' {
-			gen double `tY'	= `mY' + (`varY' -`mY') * 1/`sdY'  if `toest'
+			qui gen double `tY'	= `mY' + (`varY' -`mY') * 1/`sdY'  if `toest'
 		}
 		else {
-			gen double `tY'	= `varY' * 1/`sdY'  if `toest'
+			qui gen double `tY'	= `varY' * 1/`sdY'  if `toest'
 		}
 		local varY			`tY'
 		mat `stdy'			= `sdY'
@@ -1031,6 +1065,7 @@ program define _lassopath, rclass sortpreserve
 					`lcount',			/// number of lambdas (optional; only used if lambda not specified)
 					`lminratio',		/// lmin/lmax ratio (optional; only used if lambda not specified)
 					`lglmnetflag',		/// 
+					`sklearnflag',		/// 
 					"`Psi'",			/// Optional L1 norm loadings
 					"`Psi2'",			/// Optional L2 norm loadings
 					"`stdy'",			/// Stata matrix with SD of dep var
@@ -1651,6 +1686,7 @@ program define _unpartial, rclass sortpreserve
 	// betaempty = 1 if not supplied
 	local betaempty		= `scorevar_ct'==0
 
+
 	if `scorevar_ct' {
 		mat `b' = `beta'
 		mat colnames `b' = `scorevars'
@@ -1665,6 +1701,7 @@ program define _unpartial, rclass sortpreserve
 	qui count if `yminus'==. & `touse'
 	local betamissing	= `r(N)' > 0
 	if `betamissing' {
+
 		// beta has missings so bpartial needs to be all missing
 		// and must create b as all missings
 		mat `b'				= J(1,`scorevar_ct',.)
@@ -1700,8 +1737,18 @@ program define _unpartial, rclass sortpreserve
 		if ~`consmodel' {
 			local noconstant noconstant
 		}
-		qui reg `yminus' `partial' if `touse' `wexp', `noconstant'
-		mat `bpartial' = e(b)
+
+		// if partial is empty and we are just recovering the constant, can use sum
+		if "`partial'"=="" & "`noconstant'"=="" {
+			sum `yminus' if `touse' `wexp', meanonly
+			mat `bpartial' = J(1,1,r(mean))
+			mat colnames `bpartial' = _cons
+			mat rownames `bpartial' = y1
+		}
+		else {
+			qui reg `yminus' `partial' if `touse' `wexp', `noconstant'
+			mat `bpartial' = e(b)
+		}
 	}
 
 	// replace temp names with original names
@@ -1866,13 +1913,15 @@ mata:
 // data structure
 struct dataStruct {
 	pointer colvector y
+	string scalar nameY			// name of actual variable (can be tempvar)
 	pointer matrix X
 	string colvector nameX		// names of actual variables (can be tempvars)
 	string colvector nameX_o	// original names of variables
+	string scalar touse			// name of touse variable
 	real scalar cons			// =1 if model also has a constant, =0 otherwise
 	real scalar dmflag			// =1 if data have mean zero or should be treated as demeaned, =0 otherwise
 	real scalar n				// number of observations
-	real scalar p				// number of columns in X (may included constant)
+	real scalar p				// number of columns in X (may include constant)
 	real rowvector sdvec		// vector of SDs of X
 	real rowvector varvec		// vector of variances of X
 	real scalar ysd				// standard deviation of y
@@ -1995,6 +2044,14 @@ struct betaStruct {
 	real scalar dev				// deviation (R-squared)
 }
 
+struct pathStruct {
+	real matrix betas			// estimated betas
+	real scalar m				// number of iterations
+	real vector fobj			// value of objective function
+	real vector dev				// deviation (R-squared)
+	real scalar lcount			// count of betas estimated
+}
+
 struct dataStruct scalar MakeData(	string scalar nameY,		/// #1
 									string scalar nameX,		/// #2
 									string scalar nameX_o,		/// #3
@@ -2055,12 +2112,14 @@ struct dataStruct scalar MakeData(	string scalar nameY,		/// #1
 	// dep var
 	st_view(y,.,nameY,touse)
 	d.y			=&y
+	d.nameY		=nameY
 
 	// X vars
 	st_view(X,.,nameX,touse)
 	d.X			=&X
 	d.nameX		=tokens(nameX)
 	d.nameX_o	=tokens(nameX_o)
+	d.touse		=touse
 	d.n			=rows(X)
 	d.p			=cols(X)
 	d.cons		=cons			//  model has constant to be recovered by estimation code; also used in variable counts
@@ -2275,7 +2334,6 @@ struct dataStruct scalar MakeData(	string scalar nameY,		/// #1
 // end MakeData
 
 
-
 // this function calculates lasso path for range of lambda values
 struct outputStructPath DoLassoPath(									///
 									struct dataStruct scalar d,			///
@@ -2292,57 +2350,68 @@ struct outputStructPath DoLassoPath(									///
 									real scalar devmax,					/// (glmnet) maximum fraction of explained deviance for stopping path
 									real scalar alpha,					/// 
 									real scalar lglmnet,				/// 
-									real scalar nodevcrit)
+									real scalar nodevcrit,				/// 
+									real scalar sklearn)
 {
 
 		struct outputStructPath scalar	t
 		struct betaStruct scalar		b
+		struct pathStruct scalar		bpath
 
 		if (verbose>=2) {
 			printf("Lambda list: %s\n",invtokens(strofreal(lvec)))
 		}
+	
+		if (sklearn) {
+			bpath = PyDoShootingPath(d,lvec,lvec2,verbose,optTol,maxIter,alpha)
+			lpath = bpath.betas
+			lcount1 = bpath.lcount
+			// also available: bpath.dev, bpath.fobj, bpath.m
+		}
+		else {
 		
-		lmax	= max(lvec)
-		lcount	= cols(lvec)
+			lmax	= max(lvec)
+			lcount	= cols(lvec)
 
-		// initialize deviance (R-sq)
-		dev		= 1
-		lpath	= J(lcount,d.p,.) // create empty matrix which stores coef path
-		if (verbose>=1) {
-			printf("Iterating over lambda:")
-		}
-		for (k = 1;k<=lcount;k++) { // loop over lambda
-
-			lambda	= lvec[1,k]
-			lambda2	= lvec2[1,k]
-
+			// initialize deviance (R-sq)
+			dev		= 1
+			lpath	= J(lcount,d.p,.) // create empty matrix which stores coef path
 			if (verbose>=1) {
-				printf(" %f",lambda)
+				printf("Iterating over lambda:")
 			}
-			
-			// set verbose to zero (no output for each lambda)
-			if (k==1) {
-				// DoShooting(.) handles default initial beta
-				b			= DoShooting(d,Psi,Psi2,lambda,lambda2,0,optTol,maxIter,zeroTol,alpha)
+			for (k = 1;k<=lcount;k++) { // loop over lambda
+	
+				lambda	= lvec[1,k]
+				lambda2	= lvec2[1,k]
+	
+				if (verbose>=1) {
+					printf(" %f",lambda)
+				}
+				
+				// set verbose to zero (no output for each lambda)
+				if (k==1) {
+					// DoShooting(.) handles default initial beta
+					b			= DoShooting(d,Psi,Psi2,lambda,lambda2,0,optTol,maxIter,zeroTol,alpha)
+				}
+				else {
+					// initial beta is previous beta on the path
+					b			= DoShooting(d,Psi,Psi2,lambda,lambda2,0,optTol,maxIter,zeroTol,alpha,beta)
+				}
+				beta		= b.beta
+				lpath[k,.]	= beta'
+				m			= b.m
+				fobj		= b.fobj
+				dev0		= dev
+				dev			= b.dev
+				lcount1		= k					// count of betas/lambdas estimated
+				if (nodevcrit==0) {												// check dev criterion for exit
+					if ((abs(dev-dev0) < fdev) & (dev>0))		break			// don't exit if dev=R-sq=0
+					if (dev >= devmax)							break
+				}
 			}
-			else {
-				// initial beta is previous beta on the path
-				b			= DoShooting(d,Psi,Psi2,lambda,lambda2,0,optTol,maxIter,zeroTol,alpha,beta)
+			if (verbose>=1) {
+				printf("\n")
 			}
-			beta		= b.beta
-			lpath[k,.]	= beta'
-			m			= b.m
-			fobj		= b.fobj
-			dev0		= dev
-			dev			= b.dev
-			lcount1		= k					// count of betas/lambdas estimated
-			if (nodevcrit==0) {												// check dev criterion for exit
-				if ((abs(dev-dev0) < fdev) & (dev>0))		break			// don't exit if dev=R-sq=0
-				if (dev >= devmax)							break
-			}
-		}
-		if (verbose>=1) {
-			printf("\n")
 		}
 
 		// small coefs set to zero IF NOT RIDGE
@@ -2505,7 +2574,7 @@ struct betaStruct DoShooting(									///
 {
 
 	// no initial beta supplied
-	noinitflag		= args()<11
+	noinitflag		= args()<12
 
 	// stores results
 	struct betaStruct scalar	b
@@ -2575,11 +2644,11 @@ struct betaStruct DoShooting(									///
 			w_old = beta
 			if (alpha==1) {
 				// lasso verbose output
-				printf("{txt}%8s %8s %10s %14s %14s\n","iter","shoots","n(w)","n(step)","f(w)")
+				printf("{txt}%8s %8s %10s %14s %14s %14s\n","iter","shoots","n(w)","n(step)","mse","f(w)")
 			}
 			else {
 				// elastic net verbose output
-				printf("{txt}%8s %8s %10s %14s %14s %14s %14s\n","iter","shoots","n1(w)","n1(step)","n2(w)","n2(step)","f(w)")
+				printf("{txt}%8s %8s %10s %14s %14s %14s %14s %14s\n","iter","shoots","n1(w)","n1(step)","n2(w)","n2(step)","mse","f(w)")
 			}
 		}
 		
@@ -2651,45 +2720,55 @@ struct betaStruct DoShooting(									///
 			m++
 
 			if (verbose==2) {
-				// multiply by d.cons to zero out the mean if no constant
-				mse			= mean( (((*d.y):-d.ymvec*d.cons) - ((*d.X):-d.mvec*d.cons)*beta):^2 )
+
+					// multiply by d.cons to zero out the mean if no constant
+					resid	= (((*d.y):-d.ymvec*d.cons) - ((*d.X):-d.mvec*d.cons)*beta)
+					mse		= mean(resid:^2)
+
 				if (alpha==1) {
 					// lasso
 					if (d.lglmnet) {
+						// d.ysd needed if lglmnet uses unit loadings
 						fobj	= 1/2*mse + lambda*Psi*abs(beta)*d.ysd
 					}
 					else {
 						fobj	= mse + lambda/d.n*Psi*abs(beta)
 					}
-					printf("{res}%8.0g %8.0g %14.8e %14.8e %14.8e\n",					///
-						m,																///
-						m*d.p,															///
-						colsum(abs(beta)),												///
-						colsum(abs(beta-w_old)),										///
-						fobj															///
+					printf("{res}%8.0g %8.0g %14.8e %14.8e %14.8e %14.8e\n",				///
+						m,																	///
+						m*d.p,																///
+						colsum(abs(beta)),													///
+						colsum(abs(beta-w_old)),											///
+						mse,																///
+						fobj																///
 						)
 					w_old = beta
 				}
 				else {
 					// elastic net
 					if (d.lglmnet) {
-						fobj	= 1/2*mse												///
-									+     lambda * alpha   *Psi*abs(beta)*d.ysd			///
-									+ 1/2*lambda2*(1-alpha)*(Psi2:^2)*(beta:^2)
+						fobj	= 1/2*mse													///
+									+     lambda*alpha										///
+											* Psi*abs(beta)*d.ysd							///
+									+ 1/2*lambda2*(1-alpha)									///
+											* (Psi2:^2)*(beta:^2)
 					}
 					else {
 						fobj	= mse														///
-									+     lambda/d.n *alpha    *Psi*abs(beta)				///
-									+ 1/2*lambda2*d.prestdy/d.n*(1-alpha)*(Psi2:^2)*(beta:^2)
+									+     lambda/d.n*alpha									///
+											* Psi*abs(beta)									///
+									+ 1/2*lambda2*d.prestdy/d.n*(1-alpha)					///
+											* (Psi2:^2)*(beta:^2)
 					}
-					printf("{res}%8.0g %8.0g %14.8e %14.8e %14.8e %14.8e %14.8e\n",		///
-						m,																///
-						m*d.p,															///
-						colsum(abs(beta)),												///
-						colsum(abs(beta-w_old)),										///
-						colsum(beta:^2),												///
-						colsum(beta:^2-w_old:^2),										///
-						fobj															///
+					printf("{res}%8.0g %8.0g %14.8e %14.8e %14.8e %14.8e %14.8e %14.8e\n",	///
+						m,																	///
+						m*d.p,																///
+						colsum(abs(beta)),													///
+						colsum(abs(beta-w_old)),											///
+						colsum(beta:^2),													///
+						colsum(beta:^2-w_old:^2),											///
+						mse,																///
+						fobj																///
 						)
 					w_old = beta
 				
@@ -2715,10 +2794,10 @@ struct betaStruct DoShooting(									///
 			}
 		}
 		
-		if ((verbose==2) & (alpha~=0)) {
-			printf("{txt}Initial beta and beta after estimation:\n")
-			(beta_init'\beta')
-		}	
+		//if ((verbose==2) & (alpha~=0)) {
+		//	printf("{txt}Initial beta and beta after estimation:\n")
+		//	(beta_init'\beta')
+		//}	
 	}
 	else {	// square-root lasso
 
@@ -2826,10 +2905,10 @@ struct betaStruct DoShooting(									///
 	}
 
 	// deviation (R-sq)
-	ERROR	= ((*d.y):-(d.ymvec*d.cons)) - ((*d.X):-(d.mvec*d.cons))*beta
+	ERROR		= ((*d.y):-(d.ymvec*d.cons)) - ((*d.X):-(d.mvec*d.cons))*beta
 
-	RSS		= quadcolsum(ERROR:^2)
-	RSQ		= 1-RSS:/d.TSS
+	RSS			= quadcolsum(ERROR:^2)
+	RSQ			= 1-RSS:/d.TSS
 
 	b.beta		= beta
 	b.m			= m
@@ -3232,7 +3311,8 @@ struct outputStruct scalar RLasso(							/// Mata code for BCH rlasso
 			printf("{txt}Initial estimator is ridge:\n")
 			beta_ridge'
 		}
-		betas	= DoLasso(d, Psi, Psi, lambda, lambda, verbose, optTol, maxIter, zeroTol, alpha, beta_ridge)
+		sklearn = 0
+		betas	= DoLasso(d, Psi, Psi, lambda, lambda, verbose, optTol, maxIter, zeroTol, alpha, sklearn, beta_ridge)
 		if (verbose>=1) {
 			printf("{txt}Selected variables: {res}%s\n\n",invtokens(betas.nameXSel'))
 		}
@@ -3271,7 +3351,8 @@ struct outputStruct scalar RLasso(							/// Mata code for BCH rlasso
 			beta_ridge'
 		}
 
-		betas	= DoLasso(d, Psi, Psi, lambda, lambda, verbose, optTol, maxIter, zeroTol, alpha, beta_ridge)
+		sklearn = 0
+		betas	= DoLasso(d, Psi, Psi, lambda, lambda, verbose, optTol, maxIter, zeroTol, alpha, sklearn, beta_ridge)
 		if (verbose>=1) {
 			printf("{txt}Selected variables: {res}%s\n\n",invtokens(betas.nameXSel'))
 		}
@@ -3306,7 +3387,8 @@ struct outputStruct scalar RLasso(							/// Mata code for BCH rlasso
 				printf("{txt}Obtaining new lasso estimate...\n")
 			}
 			// new lasso estimate
-			betas = DoLasso(d, Psi, Psi, lambda, lambda, verbose, optTol, maxIter, zeroTol, alpha, beta_ridge)
+			sklearn = 0
+			betas = DoLasso(d, Psi, Psi, lambda, lambda, verbose, optTol, maxIter, zeroTol, alpha, sklearn, beta_ridge)
 			if (verbose>=1) {
 				printf("{txt}Selected variables: {res}%s\n\n",invtokens(betas.nameXSel'))
 			}
@@ -4006,12 +4088,13 @@ struct outputStruct scalar RSqrtLasso(						/// Mata code for BCH sqrt rlasso
 		beta_ridge'
 	}
 
+	sklearn = 0
 	if ((d.hetero==0) & (d.nclust==0) & (d.bw==0)) {
 		// iid. No iteration necessary, even for x-dep.
 		if (verbose>=1) {
 			printf("Obtaining sqrt-lasso estimate...\n")
 		}
-		betas	= DoLasso(d, Psi, Psi, lambda, lambda, verbose, optTol, maxIter, zeroTol, alpha, beta_ridge)
+		betas	= DoLasso(d, Psi, Psi, lambda, lambda, verbose, optTol, maxIter, zeroTol, alpha, skearn, beta_ridge)
 		if (verbose>=1) {
 			printf("Selected variables: %s\n\n",invtokens(betas.nameXSel'))
 		}
@@ -4024,7 +4107,7 @@ struct outputStruct scalar RSqrtLasso(						/// Mata code for BCH sqrt rlasso
 		if (verbose>=1) {
 			printf("Obtaining initial sqrt-lasso estimate...\n")
 		}
-		betas	= DoLasso(d, Psi, Psi, lambda, lambda, verbose, optTol, maxIter, zeroTol, alpha, beta_ridge)
+		betas	= DoLasso(d, Psi, Psi, lambda, lambda, verbose, optTol, maxIter, zeroTol, alpha, sklearn, beta_ridge)
 		if (verbose>=1) {
 			printf("\n")
 		}
@@ -4070,7 +4153,7 @@ struct outputStruct scalar RSqrtLasso(						/// Mata code for BCH sqrt rlasso
 			}
 
 			// new lasso estimate
-			betas	= DoLasso(d, Psi, Psi, lambda, lambda, verbose, optTol, maxIter, zeroTol, alpha, beta_ridge)
+			betas	= DoLasso(d, Psi, Psi, lambda, lambda, verbose, optTol, maxIter, zeroTol, alpha, sklearn, beta_ridge)
 			if (verbose>=1) {
 				printf("Selected variables: %s\n\n",invtokens(betas.nameXSel'))
 			}
@@ -4137,6 +4220,7 @@ void EstimateLassoPath(							///  Complete Mata code for lassopath
 				real scalar lcount,				///
 				real scalar lminratio,			///
 				real scalar lglmnet,			///
+				real scalar sklearn,			///
 				string scalar PsiMat,			/// Optional L1 norm loadings
 				string scalar Psi2Mat,			/// Optional L2 norm loadings
 				string scalar stdymat,			/// 
@@ -4160,7 +4244,6 @@ void EstimateLassoPath(							///  Complete Mata code for lassopath
 				real scalar nodevcrit			///
 				)
 {
-
 	struct dataStruct scalar d
 	d			= MakeData(nameY,nameX,nameX_o,toest,cons,dmflag,dofminus,sdofminus,prestdflag,sqrtflag,stdymat,stdxmat,lglmnet)
 	
@@ -4402,12 +4485,12 @@ void EstimateLassoPath(							///  Complete Mata code for lassopath
 
 	if ((cols(lambda)==1) & (!hasmissing(lambda))) {				//  one lambda
 		struct outputStruct scalar OUT
-		OUT = DoLasso(d,Psi,Psi2,lambda,lambda2,verbose,optTol,maxIter,zeroTol,alpha)
+		OUT = DoLasso(d,Psi,Psi2,lambda,lambda2,verbose,optTol,maxIter,zeroTol,alpha,sklearn)
 		ReturnResults(OUT,d)
 	}
 	else if ((cols(lambda)>1) & (!hasmissing(lambda))) {		//  lambda is a vector or missing (=> default list)
 		struct outputStructPath scalar OUTPATH
-		OUTPATH = DoLassoPath(d,Psi,Psi2,lambda,lambda2,post,verbose,optTol,maxIter,zeroTol,fdev,devmax,alpha,lglmnet,nodevcrit)
+		OUTPATH = DoLassoPath(d,Psi,Psi2,lambda,lambda2,post,verbose,optTol,maxIter,zeroTol,fdev,devmax,alpha,lglmnet,nodevcrit,sklearn)
 		ReturnResultsPath(OUTPATH,d,nameX_o)
 		if (holdout!="") { // used for cross-validation
 			getMSPE(OUTPATH,nameY,nameX,holdout,d)  
@@ -4418,6 +4501,239 @@ void EstimateLassoPath(							///  Complete Mata code for lassopath
 	}
 }
 // end EstimateLassoPath
+
+// DoShooting for a single lambda/alpha using Python sklearn.
+// Assumes/requires prestandardization and glmnet metric.
+struct betaStruct PyDoShooting(									///
+							struct dataStruct scalar d,			/// 
+							real scalar lambda,					///  lambda (single value) (L1 norm)
+							real scalar lambda2,				///  lambda (single value) (L2 norm)
+							real scalar verbose,				/// 
+							real scalar optTol,					///
+							real scalar maxIter,				/// 
+							real scalar alpha					/// 
+							)
+
+{
+	// stores results
+	struct betaStruct scalar	b
+
+	// Mata externals start with __
+	external __X, __y
+	
+	// create new temporary views as externals; take up minimal additional memory
+	st_view(__X,.,d.nameX,d.touse)
+	st_view(__y,.,d.nameY,d.touse)
+
+	// scalars go to Python via Stata r(.) macros
+	st_numscalar("r(alpha)",alpha)
+	st_numscalar("r(tol)",optTol)
+	st_numscalar("r(max_iter)",maxIter)
+	st_numscalar("r(cons)",d.cons)
+	if (alpha>0) {
+		// elastic net, lasso
+		st_numscalar("r(lambda)",lambda)
+	}
+	else {
+		// ridge
+		// if prestd option used, don't need to normalize lambda by d.ysd
+		st_numscalar("r(lambda)",lambda*d.n)
+	}
+	
+	// Python objects start with sk
+	stata("python: import numpy as np")
+	stata("python: from sfi import Mata, Data, Macro, Matrix, Scalar")
+	stata("python: from sklearn.linear_model import ElasticNet,Ridge")
+	stata("python: sk_X = Mata.get('__X')")
+	stata("python: sk_y = np.squeeze(Mata.get('__y'))")
+	stata("python: sk_max_iter = int(Scalar.getValue('r(max_iter)'))")
+	stata("python: sk_tol = Scalar.getValue('r(tol)')")
+	stata("python: sk_alpha = Scalar.getValue('r(alpha)')")
+	stata("python: sk_lambda = Scalar.getValue('r(lambda)')")
+	stata("python: sk_cons = Scalar.getValue('r(cons)')")
+	
+	if (alpha>0) {
+		// elastic net, lasso
+		stata("python: model = ElasticNet(alpha=sk_lambda, l1_ratio=sk_alpha, fit_intercept=sk_cons, max_iter=sk_max_iter, random_state=0, tol=sk_tol)")
+		stata("python: model.fit(sk_X,sk_y)")
+		// Python => Stata r(.) macros => Mata
+		stata("python: Matrix.store('r(beta)',model.coef_)")
+		beta = st_matrix("r(beta)")
+		stata("python: Scalar.setValue('r(m)',model.n_iter_)")
+		m = st_numscalar("r(m)")
+		stata("python: Scalar.setValue('r(dual_gap)',model.dual_gap_)")
+		dual_gap = st_numscalar("r(dual_gap)")
+	}
+	else {
+		// ridge
+		stata("python: model = Ridge(alpha=sk_lambda, fit_intercept=sk_cons, max_iter=sk_max_iter)")
+		stata("python: model.fit(sk_X,sk_y)")
+		// Python => Stata r(.) macros => Mata
+		stata("python: Matrix.store('r(beta)',model.coef_)")
+		beta = st_matrix("r(beta)")
+		m = 0
+	}
+	stata("python: del model, sk_X, sk_y, sk_max_iter, sk_tol, sk_alpha, sk_lambda, sk_cons")
+
+	// residuals, MSE, R-sq, obj function
+	resid = ((*d.y):-(d.ymvec*d.cons)) - ((*d.X):-(d.mvec*d.cons))*beta
+	mse	= mean(resid:^2)
+	dev = 1-quadcolsum(resid:^2):/d.TSS
+
+	if (alpha==1) {
+		// lasso
+		fobj	= 1/2*mse + lambda*sum(abs(beta))
+	}
+	else if (alpha>0) {
+		// elastic net
+		fobj	= 1/2*mse + lambda*sum(abs(beta)) + 1/2*lambda2*(1-alpha)*sum(beta:^2)
+	}
+	else {
+		// ridge
+		fobj	= 1/2*mse + 1/2*lambda2*(1-alpha)*sum(beta:^2)
+	}
+	
+	// populate struct
+	b.beta	= beta
+	b.m		= m
+	b.fobj	= fobj
+	b.dev	= dev
+
+	// drop Mata externals
+	exList = ("__X", "__y")
+	for (i=1; i<=cols(exList); i++) {
+		rmexternal(exList[i])
+	}
+		
+	// return results
+	return(b)
+
+}
+
+// DoShooting for a lambda path using Python sklearn.
+// Assumes/requires a constant, prestandardization and glmnet metric.
+struct pathStruct PyDoShootingPath(								///
+							struct dataStruct scalar d,			/// 
+							real rowvector lvec,				/// vector of lambdas (L1 norm)
+							real rowvector lvec2,				/// vector of lambdas (L1 norm)
+							real scalar verbose,				/// 
+							real scalar optTol,					///
+							real scalar maxIter,				/// 
+							real scalar alpha					/// 
+							)
+
+{
+	// stores results
+	struct pathStruct scalar	bpath
+	
+	// assume lasso2 called with prestd option
+
+	// Mata externals start with __
+	external __X, __y
+
+	// create new temporary views as externals; take up minimal additional memory
+	st_view(__X,.,d.nameX,d.touse)
+	st_view(__y,.,d.nameY,d.touse)
+
+	// scalars and lambda vectors go to Python via Stata r(.) macros
+	st_numscalar("r(alpha)",alpha)
+	st_numscalar("r(tol)",optTol)
+	st_numscalar("r(max_iter)",maxIter)
+	st_numscalar("r(cons)",d.cons)
+	if (alpha>0) {
+		// elastic net, lasso
+		st_matrix("r(lvec)",lvec)
+	}
+	else {
+		// ridge
+		// if prestd option used, don't need to normalize lambda by d.ysd
+		st_matrix("r(lvec)",lvec*d.n)
+	}
+	
+	// Python objects start with sk
+	stata("python: import numpy as np")
+	stata("python: from sfi import Mata, Data, Macro, Matrix, Scalar")
+	stata("python: from sklearn.linear_model import ElasticNet,Ridge,enet_path")
+	stata("python: sk_X = Mata.get('__X')")
+	stata("python: sk_y = np.squeeze(Mata.get('__y'))")
+	stata("python: sk_max_iter = int(Scalar.getValue('r(max_iter)'))")
+	stata("python: sk_tol = Scalar.getValue('r(tol)')")
+	stata("python: sk_alpha = Scalar.getValue('r(alpha)')")
+	stata("python: sk_lvec = np.squeeze(Matrix.get('r(lvec)'))")
+	stata("python: sk_cons = Scalar.getValue('r(cons)')")
+	
+	if (alpha>0) {
+		// elastic net, lasso. enet_path currently does not support a fit_intercept option, so need to demean
+		if (d.dmflag==0) {
+			stata("python: sk_y = (sk_y - np.mean(sk_y,axis=0))")
+			stata("python: sk_X = sk_X - np.mean(sk_X,axis=0)")
+		}
+		stata("python: alphas_enet, coefs_enet, dual_gaps, n_iters = enet_path(sk_X, sk_y, alphas=sk_lvec, l1_ratio=sk_alpha, max_iter=sk_max_iter, tol=sk_tol, return_n_iter=True)")
+		// Python => Stata r(.) macros => Mata
+		stata("python: Matrix.store('r(betas)',coefs_enet)")
+		betas = st_matrix("r(betas)")'
+		stata("python: Matrix.store('r(m)',n_iters)")
+		stata("python: Matrix.store('r(dual_gaps)',dual_gaps)")
+		dual_gaps = st_matrix("r(dual_gaps)")
+		stata("python: Matrix.store('r(n_iters)',n_iters)")
+		m = st_matrix("r(n_iters)")
+		mse	= mean( ((*d.y) :- (*d.X)*betas'):^2 )
+		stata("python: del alphas_enet, coefs_enet, dual_gaps, n_iters")
+	}
+	else {
+		// ridge
+		betas = J(0,cols(d.XX),.)
+		for (i=1;i<=cols(lvec);i++) {
+			st_numscalar("r(lambda)",lvec[i]*d.n)
+			stata("python: sk_lambda = Scalar.getValue('r(lambda)')")
+			stata("python: model = Ridge(alpha=sk_lambda, fit_intercept=sk_cons, max_iter=sk_max_iter)")
+			stata("python: model.fit(sk_X,sk_y)")
+			// Python => Stata r(.) macros => Mata
+			stata("python: Matrix.store('r(beta)',model.coef_)")
+			beta = st_matrix("r(beta)")
+			betas = (betas \ beta')
+		}
+		m = 0
+		stata("python: del model")
+	}
+	stata("python: del sk_X, sk_y, sk_max_iter, sk_tol, sk_alpha, sk_lvec, sk_cons")
+
+	// residuals, R-sq, obj function
+//	resid = (*d.y) :- (*d.X)*betas'
+	resid = ((*d.y):-(d.ymvec*d.cons)) :- ((*d.X):-(d.mvec*d.cons))*betas'
+	dev = 1:-quadcolsum(resid:^2):/d.TSS
+	mse	= mean(resid:^2)
+	if (alpha==1) {
+		// lasso
+		fobj	= 1/2*mse + lvec :*colsum(abs(betas'))
+	}
+	else if (alpha>1) {
+		// elastic net
+		fobj	= 1/2*mse + lvec:*colsum(abs(betas')) + 1/2*lvec2:*(1-alpha)*colsum((betas'):^2)
+	}
+	else {
+		// ridge
+		fobj	= 1/2*mse + 1/2*lvec2:*(1-alpha)*colsum((betas'):^2)
+	}
+	
+	// populate struct
+	bpath.betas		= betas
+	bpath.m			= m
+	bpath.fobj		= fobj
+	bpath.dev		= dev
+	bpath.lcount	= cols(lvec)
+
+	// drop Mata externals
+	exList = ("__X", "__y")
+	for (i=1; i<=cols(exList); i++) {
+		rmexternal(exList[i])
+	}
+		
+	// return results
+	return(bpath)
+
+}
+
 
 struct outputStruct scalar DoLasso(								///
 							struct dataStruct scalar d,			/// #1  data (y,X)
@@ -4430,8 +4746,9 @@ struct outputStruct scalar DoLasso(								///
 							real scalar maxIter,				/// #8  max number of shooting iterations
 							real scalar zeroTol, 				/// #9  tolerance to set coefficient estimates to zero
 							real scalar alpha, 					/// #10 elastic net parameter
+							real scalar sklearn,				//  #11 flag to use sklearn
 							|									///
-							real colvector beta_init			/// #11 initial beta vector (optional)
+							real colvector beta_init			/// #12 initial beta vector (optional)
 							)
 {
 
@@ -4443,7 +4760,10 @@ struct outputStruct scalar DoLasso(								///
 
 	// no initial beta supplied (optional last argument) => will be initialized in DoShooting(.)
 	// get estimates
-	if (noinitflag) {
+	if (sklearn) {
+		b		= PyDoShooting(d,lambda,lambda2,verbose,optTol,maxIter,alpha)
+	}
+	else if (noinitflag) {
 		b		= DoShooting(d,Psi,Psi2,lambda,lambda2,verbose,optTol,maxIter,zeroTol,alpha)
 	}
 	else {
@@ -4562,7 +4882,7 @@ struct outputStruct scalar DoLasso(								///
 	
 	// R-squared. Same as "dev" (deviation)
 	t.r2		=dev
-	
+
 	// rescaling minimized objective function
 	if (d.lglmnet) {
 		// use glmnet definitions
@@ -4577,7 +4897,7 @@ struct outputStruct scalar DoLasso(								///
 		}
 		else {
 			// elastic net
-			t.objfn		= 1/2*(t.rmse)^2												///
+			t.objfn		= 1/2*(t.rmse)^2													///
 							+     lambda * alpha   *quadcross(Psi',abs(beta))*d.ysd			///
 							+ 1/2*lambda2*(1-alpha)*quadcross(Psi2':^2,beta:^2)
 		}
@@ -4593,7 +4913,7 @@ struct outputStruct scalar DoLasso(								///
 		}
 		else if (alpha==0) {
 			// ridge
-			t.objfn		= (t.rmse)^2													///
+			t.objfn		= (t.rmse)^2														///
 							+ 1/2*lambda2*d.prestdy/d.n * quadcross((Psi2'):^2,beta:^2)
 		}
 		else {

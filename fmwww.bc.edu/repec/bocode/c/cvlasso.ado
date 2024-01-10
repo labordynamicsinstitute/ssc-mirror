@@ -1,5 +1,5 @@
-*! cvlasso 1.0.11 27sept2020
-*! lassopack package 1.4.1
+*! cvlasso 1.0.13 18dec2023
+*! lassopack package 1.4.3
 *! authors aa/ms
 
 * Updates (release date):
@@ -29,6 +29,11 @@
 *         dev crit for path (nodevcrit = use full lambda list, no exiting path early).
 * 1.0.11  (27sept2020)
 *         added nopath option to calls to lasso2
+* 1.0.12  (7feb2022)
+*         bug fix for user-provided fold variable - was also checking out-of-sample obs
+* 1.0.13  (18dec2023)
+*         bug fix for norecover option
+*         force use of full lambda list when initializing
 
 program cvlasso, eclass sortpreserve
 	version 13
@@ -54,7 +59,7 @@ program cvlasso, eclass sortpreserve
 			* 										///
 			]
 
-	local lversion 1.0.11
+	local lversion 1.0.13
 	local pversion 1.1.01
 
 	if "`version'" != "" {							//  Report program version number, then exit.
@@ -206,8 +211,8 @@ program _cvlasso, eclass sortpreserve
 		* user-specified folds
 		di as text "Use user-specified fold variable."
 		tempname integercheck
-		gen `integercheck'=mod(`foldvar',2)
-		assert `integercheck'==0 | `integercheck'==1 // integer check
+		qui gen `integercheck'=mod(`foldvar',2)
+		assert `integercheck'==0 | `integercheck'==1 if `touse' // integer check
 		qui sum `foldvar', meanonly
 		local nfolds=r(max)
 		// check that there are no gaps in the fold list (e.g. "1 1 2 2 4 4")
@@ -252,7 +257,7 @@ program _cvlasso, eclass sortpreserve
 	*** get lambda **************************************************************
 	if ("`lambda'"=="") {
 		qui lasso2 `varlist' if `touse', `options'							///
-					lcount(`lcount') lminratio(`lminratio') lmax(`lmax')
+			lcount(`lcount') lminratio(`lminratio') lmax(`lmax') nodevcrit	//  force recovery of full lambda list
 		tempname lambdamat0
 		mat `lambdamat0'=e(lambdamat)'
 	}
@@ -352,7 +357,6 @@ program _cvlasso, eclass sortpreserve
 										lfac(`smpladjust')		///
 										holdout(`validation') 	///
 										alpha(`alphai')			///
-										verb norecover			///
 										nodevcrit				/// force use of full lambda list
 										nopath					///
 										`options' 	
@@ -431,7 +435,7 @@ program _cvlasso, eclass sortpreserve
 				// adjust lambda 
 				sum `training', meanonly
 				local smpladjust = r(sum)/`N'	
-				
+
 				* lasso estimation (for given lambda and specific fold)
 				qui lasso2 `varlist' if `touse', 				///
 										lambdamat(`lambdamat0') ///
@@ -444,7 +448,7 @@ program _cvlasso, eclass sortpreserve
 				if ("`saveest'"!="") {
 					estimates store `saveest'`rsam'
 				}
-				
+
 				// save mspe
 				if `trainend'==`origin' {  // first run
 					mat `Mspe' = e(mspe)

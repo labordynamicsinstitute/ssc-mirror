@@ -1,13 +1,14 @@
 clear all 
 
 
+global datafolder 
 
 ********************************************************************************
 *** Prostate data                                                            ***
 *** comparison with glmnet													 ***
 ********************************************************************************
  
-insheet using prostate.data, clear
+$loadprostate
 
 gen ybin = lpsa > 2
 
@@ -69,7 +70,7 @@ assert mreldif(bdense,e(beta_dense))<0.001
 *** comparison with glmnet													 ***
 ********************************************************************************
  
-insheet using "spam.data", clear delim(" ")
+$loadspam
 
 lassologit v58 v1-v57 , ///
 	l(0.18 .1 .05 .01 0.005 0.001) lambdan
@@ -109,7 +110,7 @@ assert mreldif(S,G)<0.01
 *** comparison with glmnet													 ***
 ********************************************************************************  
 
-insheet using "spam.data", clear delim(" ")
+$loadspam
 
 // OK
 lassologit v58 v1-v57 , lambdan lcount(3)
@@ -141,7 +142,7 @@ assert reldif(L[1,1],43.80048)<10e-5
 *** comparison with glmnet													 ***
 ********************************************************************************  
 
-insheet using prostate.data, clear
+$loadprostate
 
 gen ybin = lpsa > 2
 
@@ -176,7 +177,7 @@ assert reldif(L[1,1],12.14948)<10e-5
 
 clear all 
 
-insheet using prostate.data, clear
+$loadprostate
 
 gen ybin = lpsa > 2
 
@@ -193,7 +194,8 @@ lassologit ybin lcavol-pgg45, plotpath(norm)
 
 clear all 
 
-insheet using "spam.data", clear delim(" ")
+
+$loadspam
 
 foreach lam of numlist 0.187 0.1 0.07 0.05 0.01 0.005 {
  
@@ -226,7 +228,8 @@ foreach lam of numlist 0.187 0.1 0.07 0.05 0.01 0.005 {
 
 clear all 
 
-insheet using "spam.data", clear delim(" ")
+$loadspam
+
 
 *******
 

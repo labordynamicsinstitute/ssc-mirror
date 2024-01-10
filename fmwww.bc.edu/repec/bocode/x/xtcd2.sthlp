@@ -38,7 +38,7 @@
 {p 4 4}{cmd:xtcd2} tests residuals or a variables for weak cross sectional dependence in a panel data model. 
 It implements the tests by Pesaran ({help xtcd2##Pesaran2015:2015}, {help xtcd2##Pesaran2021:2021}),
 the weighted CD test (CDw) by
-Juodis & Reese ({help xtcd2##JR2021:2022}) including the power enhancement (Fang et. al., {help xtcd2##Fang2015:2015}).
+Juodis & Reese ({help xtcd2##JR2021:2022}) including the power enhancement (Fang et al., {help xtcd2##Fang2015:2015}).
 It also implements the CD* from Pesaran & Xie ({help xtcd2##PesaranXie2021:2021}).
 As a default all four test statistics are calculated and presented next to each other.
 p-values are displayed in parenthesis.{p_end}
@@ -91,14 +91,14 @@ which take on the values 1 or -1 with equal probability.
 To reduce the dependence on the random Rademacher weights,
 the draw can be repeated using the {cmd:reps()} option.{p_end} 
 
-{marker pea}{p 4 4}{ul:{bf:Power Enhanced CD test }}{ul:{bf:(Juodis and Reese, {help xtcd2##JR2021:2022} and }}{ul:{bf:Fan et. al., {help xtcd2##Fan2015:2015})}}{break}
+{marker pea}{p 4 4}{ul:{bf:Power Enhanced CD test }}{ul:{bf:(Juodis and Reese, {help xtcd2##JR2021:2022} and }}{ul:{bf:Fan et al., {help xtcd2##Fan2015:2015})}}{break}
 A second alternative proposed by Juodis and Reese ({help xtcd2##JR2021:2022}) is the 
-Power Enhancement Approach (PEA) by Fan et. al. ({help xtcd2##Fan2015:2015}). 
+Power Enhancement Approach (PEA) by Fan et al. ({help xtcd2##Fan2015:2015}). 
 The power of the CD test is improved by calculating the CD test as:{p_end}
 
 {p 8} CD = [2*T / (N*(N-1))]^(1/2) * sum(i=1,N-1) sum(j=i+1,N) rho(ij) + sum(i=2,N)sum(j=1,N-1}|rho(ij)|*(|rho(ij)>2 log(N)^(1/2)T^(-1){p_end}
 
-{p 4 4}Fan et. al. ({help xtcd2##Fan2015:2015}) show that the PEA works if the number of cross-sectional units (N) is very large. 
+{p 4 4}Fan et al. ({help xtcd2##Fan2015:2015}) show that the PEA works if the number of cross-sectional units (N) is very large. 
 Therefore it is advisable to use the PEA method only for such datasets.{p_end} 
 
 {marker cdstar}{p 4 4}{ul:{bf:CD Star (Pesaran & Xie, {help xtcd2##PesaranXie:2021})}}{break}
@@ -136,7 +136,7 @@ see {help xtcd2##oCD:Description of Pesaran (2015)}.{p_end}
 {p 4 4}{cmd:cdw} calculates the weighted CD test following Juodis and Reese (2019), see {help xtcd2##CDw:Description of Juodis and Reese (2021)}.
 Results vary if {it:seed} not specified.{p_end}
 
-{p 4 4}{cmd:pea} uses the Power Enhancement Approach (PEA) by Fan et. al. (2015), see {help xtcd2##pea:Description of Fan et. al. (2015)}.
+{p 4 4}{cmd:pea} uses the Power Enhancement Approach (PEA) by Fan et al. (2015), see {help xtcd2##pea:Description of Fan et al. (2015)}.
 This method is designed for large panel panel datasets.{p_end}
 
 {p 4 4}{cmd:cdstar} calculates the bias corrected CD test following Pesaran & Xie ({help xtcd2##PesaranXie2021:2021}),

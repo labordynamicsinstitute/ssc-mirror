@@ -1,7 +1,7 @@
 {smcl}
 {* *! version 4oct2019}{...}
 {hline}
-{cmd:help lassologit}{right: lassopack v1.4.1}
+{cmd:help lassologit}{right: lassopack v1.4.2}
 {cmd:help rlassologit}
 {cmd:help cvlassologit}
 {hline}
@@ -421,6 +421,7 @@ the model selected by cross-validation (using
 {cmd:xb}
 {cmdab:p:r}
 {cmdab:c:lass}
+{cmd:est}
 {cmdab:postl:ogit}
 {cmd:lse}
 {cmd:lopt}
@@ -439,8 +440,12 @@ predicted probabilities
 {synopt:{cmdab:c:lass}}
 predicted class (either 1 or 0)
 {p_end}
+{synopt:{cmd:est}}
+re-estimate model with chosen lambda; used in combination with {cmdab:postl:ogit}
+from {cmd:e(betas)} or {cmd:e(b)}
+{p_end}
 {synopt:{cmdab:postl:ogit}}
-use post-logit (default is to use {cmd:e(b)}
+use post-logit (default is to use coefficients stored in {cmd:e(betas)} or {cmd:e(b)})
 {p_end}
 {synopt:{cmd:lic}{cmd:(}{it:string}{cmd:)}}
 after {cmd:lassologit}: selects which information criterion to use for prediction.

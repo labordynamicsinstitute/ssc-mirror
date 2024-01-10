@@ -1,4 +1,4 @@
-*! xtdcce2 4 - 08.02.2023
+*! xtdcce2 4.6 - 09.01.2024
 *! author Jan Ditzen
 *! www.jan.ditzen.net - jan.ditzen@unibz.it
 *! see viewsource xtdcce2.ado for more info.
@@ -142,6 +142,19 @@ fixed. was before assuming same s2 for all csu
 		   - added option fast2 for use of xtdcce2fast
 18.03.2022 - added option mgmissing
 20.02.2023 - added option rcce and bootstrap support
+----------------------------------------xtdcce2 4.1
+14.04.2023 - fixed bug when using different lag lengths for CSA
+----------------------------------------xtdcce2 4.2
+15.05.2023 - fixed bug in xtcd2
+----------------------------------------xtdcce2 4.3
+21.05.2023 - fixed bug in var/cov estimation when using pooled coefficients and R matrix is zero
+----------------------------------------xtdcce2 4.4
+13.10.2023 - fixed bug in trend option
+----------------------------------------xtdcce2 4.5
+13.10.2023 - supports new reghdfe version
+----------------------------------------xtdcce2 4.6
+06.12.2023 - fixed bug in rcce option when using unbalanced panels
+09.01.2023 - fixed bug when absorb() and cross section averages used
 */
 
 program define xtdcce2 , eclass sortpreserve
@@ -151,7 +164,7 @@ program define xtdcce2 , eclass sortpreserve
 		exit
 	}
 	version 11.1
-	local xtdcce2_version = 4
+	local xtdcce2_version = 4.6
 	if replay() {
 		syntax [, VERsion replay * ] 
 		if "`version'" != "" {
@@ -206,6 +219,7 @@ program define xtdcce2int, eclass
 			*/ JACKknife RECursive fullsample /*
 			*/ ivslow  /*
 			*/ fast /*
+			*/ absorb(string)	/*
 			*/ BLOCKDIAGuse /* Use block diagonal rather than own routine. Much slower!
 			*/ NODIMcheck /* time dimension check
 			*/ NOOMITted  /* option included again for omitting omitted variable tests.
@@ -271,6 +285,10 @@ program define xtdcce2int, eclass
 			local exponent "exponent"
 		}
 		
+		if "`absorb'" != "" {
+			local noconstant noconstant
+		}
+
 		* fast option
 		if "`fast'" == "fast" {
 			local fast = 1
@@ -362,7 +380,7 @@ program define xtdcce2int, eclass
 				egen `tvar' = group(`d_tvar')
 				keep if `inital_touse' == 1 
 				drop `inital_touse'	
-				`tracenoi' disp "Panel balanced."
+				`tracenoi' disp "Panel was unbalanced, now balanced."
 			}
 			else {
 				xtdcce_err 199 `d_idvar' `d_tvar' , msg("Cannot balance panel. Please make sure neither `d_idvar' nor `d_tvar' contain missings.")
@@ -448,7 +466,7 @@ program define xtdcce2int, eclass
 							local init_lags "`cr_lags'"
 
 							local 0 `crosssectional'
-							syntax varlist(ts) , [cr_lags(numlist) RCCEindex rcce(string)]
+							syntax varlist(ts) , [cr_lags(numlist) RCCEindex rcce(string) RCTest RCTestoptions(string)]
 							fvunab scrosssectional : `varlist'								
 							
 							*if "`rcce'`rcceindex'" != "" local scr_lags = 0
@@ -459,12 +477,24 @@ program define xtdcce2int, eclass
 							else if "`init_lags'" != "" & "`cr_lags'" != "" local scr_lags `init_lags'
 							else if "`init_lags'" == "" & "`cr_lags'" != "" local scr_lags `cr_lags'
 							
-							if `scr_lags' > 0 & "`rcceindex'`rcce'" != "" {
+							if "`scr_lags'" > "0" & "`rcceindex'`rcce'" != "" {
 								noi disp "Option rcce() cannot be combined with cr_lags(). Ignore rcce()."
 								local rcceindex ""
 								local rcce ""
 							}
 							
+							if "`scr_lags'" > "0" & "`norctest'`rctestoptions'" != "" {
+								noi disp "Ranktest cannot be combined with cr_lags()."
+								local rcopt ""
+								local rctestoptions ""
+							}
+
+							*noi disp "`rctest'"
+							*local rctest rctest
+							if "`rctest'" == "" & "`rctestoptions'" != "" local rctest rctest 
+							if "`rctestoptions'" != "" local rcopt rctestopt(`rctestoptions') 
+							
+							*noi disp "rctest `rctest'"
 						}
 						
 						if "`globalcrosssectional'" != "" {
@@ -786,7 +816,7 @@ program define xtdcce2int, eclass
 				if "`pooledtrend'" != "" | "`trend'" != "" {
 					tempvar trendv
 					sum `d_tvar'
-					gen double `trendv' = `tvar'
+					gen double `trendv' = `tvar' / `r(max)'
 					
 					mata `mata_varlist'  = (`mata_varlist'  \ ("trend" , "`trendv'", J(1,10,"0")))
 					
@@ -902,7 +932,12 @@ program define xtdcce2int, eclass
 						}
 					}
 
-				}			
+				}
+
+
+				
+
+
 				
 				**add lags to var matrix		
 				if "`crosssectional'" != "" {
@@ -1031,12 +1066,20 @@ program define xtdcce2int, eclass
 						tempname scsa
 						
 						if "`rcce'" != "" local rcceOpt rcce(`rcce')						
-						`tracenoi' xtdcce2_csa `scrosssectionalt' , idvar(`idvar') tvar(`tvar') cr_lags(`scr_lags') touse(`tousecr') csa(`scsa')  numberonly tousets(`touse') `rcceindex' `rcceOpt'
+						`tracenoi' xtdcce2_csa `scrosssectionalt' , idvar(`idvar') tvar(`tvar') cr_lags(`scr_lags') touse(`tousecr') csa(`scsa')  numberonly tousets(`touse') `rcceindex' `rcceOpt' `rctest' `rcopt'
 						local scsa `r(varlist)'	
 						local cr_lags "`r(cross_structure)'"
 						if "`rcce'`rcceindex'`rcceOpt'" != "" {
 							local rcce_Type `r(Type)'
 							local rcce_NumPC `r(NumPc)'
+						}
+						if "`rctest'" != "" {
+							tempname rc_results rc_results_detail
+							matrix `rc_results' = r(rctest)
+							matrix `rc_results_detail' = r(rctest_det)
+
+							*noi matrix list r(rctest)
+							*noi matrix list r(rctest_det)
 						}
 					}
 					
@@ -1157,6 +1200,27 @@ program define xtdcce2int, eclass
 					}
 									
 				}
+				
+				*********************************************************************************************************
+				*******************************************  Absorb *********************************************
+				**********************************************************************************************************
+				if "`absorb'" != "" {
+					local indepdepvars `lhs' `rhs' `pooled' /*`crosssectional'*/ `clist1'  `endogenous_vars' `exogenous_vars' `endo_pooled' `exo_pooled'
+					local indepdepvars : list uniq indepdepvars
+					///local noconstant noconstant]
+					gettoken 1 2: absorb, parse(",")
+					gettoken 3 4: 2					
+					`tracenoi' xtdcce2_absorb_prog `1' , `4' touse(`touse') vars(`indepdepvars') 
+
+					///local indepdepvars `r(absorb_vars)'
+					///local spatial =word("`indepdepvars'",1)
+
+	            			*** adjust touse
+					*markout `lhs' `rhs' `pooled' `clist1' `endogenous_vars' `exogenous_vars' `endo_pooled' `exo_pooled'
+									
+				}
+				
+
 				*noi disp "jack vars `jackvars' - `clist1'"
 				*noi disp "`lhs' `pooled' `rhs' `exogenous_vars' `endogenous_vars' `endo_pooled' `exo_pooled'"
 				**********************************************************************************************************
@@ -1168,7 +1232,7 @@ program define xtdcce2int, eclass
 					`tracenoi' disp "Before partial"			
 					`tracenoi' tabstat `lhs' `pooled' `rhs' `exogenous_vars' `endogenous_vars' `endo_pooled' `exo_pooled' if `touse', s(N mean sd min max) save
 
-				
+					
 					tempname mrk
 					local mata_drop `mata_drop' `mrk'
 					
@@ -1302,7 +1366,7 @@ program define xtdcce2int, eclass
 						predict double `residuals' if `touse' , xb
 											
 						matrix `cov_i' = e(V)
-
+						matrix `cov_i'eb_pi = e(V)
 						mata st_matrix("`sd_i'",sqrt(diagonal(st_matrix("`cov_i'"))))
 						mata st_matrix("`t_i'",st_matrix("`eb_pi'")':/st_matrix("`sd_i'"))					
 						
@@ -1815,14 +1879,22 @@ program define xtdcce2int, eclass
 					*/ N_clust1 N_clust2 bw lambda kclass full sargan sarganp sargandf j jp arubin /*
 					*/ arubinp arubin_lin arubin_linp arubindf idstat idp iddf widstat arf arfp archi2 /*
 					*/ archi2p ardf ardf_r redstat redp reddf cstat cstatp cstatdf cons center partialcons partial_ct {
-						if "`ivreg2_`scal''" != "" ereturn scalar ivreg2_`scal' = `ivreg2_`scal''
+						
+						cap confirm  scalar  ivreg2_`scal'
+						
+						if _rc == 0 ereturn scalar ivreg2_`scal' = ivreg2_`scal'
 				}
 				foreach macr in cmd cmdline ivreg2cmd version model depvar instd insts inexog exexog collin dups ecollin clist redlist partial small wtype /*	
-					*/ wexp clustvar vcetype kernel firsteqs rfeq sfirsteq predict{
-					if "`ivreg2_`macr''" != "" 	ereturn local  ivreg2_`macr'  "`ivreg2_`macr''"
+					*/ wexp clustvar vcetype kernel firsteqs rfeq sfirsteq predict {
+						
+						cap confirm  scalar  ivreg2_`macr'
+						if _rc == 0 ereturn scalar ivreg2_`macr' = ivreg2_`macr'
+					
 				}
 				foreach matr in b V S W first ccev dcef {
-					if "`ivreg2_`matr''" != "" matrix  ivreg2_`matr' = `ivreg2_`matr''
+					cap confirm  scalar  ivreg2_`matr'
+					if _rc == 0 ereturn scalar ivreg2_`matr' = ivreg2_`matr'
+					
 				}
 			} 			
 		}
@@ -1888,6 +1960,16 @@ program define xtdcce2int, eclass
 				ereturn local rcce_Type  "`rcce_Type'"
 				ereturn hidden local rcce_options "`rcceindex' `rcceOpt'"
 			}
+
+			if "`rctest'" !="" {
+				ereturn scalar rct = `rc_results'[1,1]
+				ereturn scalar rct_p = `rc_results'[1,2]
+				ereturn scalar rct_m = `rc_results'[1,3]
+				ereturn hidden matrix rctest = `rc_results'
+
+			}
+			if "`rctest'" != "" ereturn hidden matrix rctest_details = `rc_results_detail'
+
 			ereturn local gcr_lags = "`gcr_lags'"
 			ereturn local ccr_lags = "`ccr_lags'"
 			
@@ -2088,7 +2170,7 @@ program define xtdcce2int, eclass
 	
 	if e(K_omitted) != 0 {
 		#delimit ;
-			di in gr  _col(2) "omitted Variables:" _col(37) "=" _col(39) e(K_omitted)	
+			di in gr  _col(2) "omitted Variables:" _col(37) "=" _col(39) `e(K_omitted)'	
 					_col(`=`maxline'-80+50') in gr "Root MSE" _col(`=`maxline'-80+68') "="
 					_col(`=`maxline'-80+71') in ye %9.2f e(rmse) ;
 		#delimit cr
@@ -2393,7 +2475,7 @@ program define xtdcce2int, eclass
 	
 	if strtrim("`omitted_var'") != "" {
 		display  as text "Omitted Variables:"
-		mata st_local("omitted_var",`mata_varlist'[xtdcce2_mm_which2(`mata_varlist'[.,2],tokens("`omitted_var'")'),1])
+		cap mata st_local("omitted_var",invtokens(`mata_varlist'[xtdcce2_mm_which2(`mata_varlist'[.,2],tokens("`omitted_var'")'),1]))
 		display  as text _col(2) "`omitted_var'"
 	}
 	if "`constant_type'" == "1" {
@@ -2422,7 +2504,8 @@ program define xtdcce2int, eclass
 	** check for failure of rank condition for CSA regression
 	if `rank_cond' > 0 {
 		display in red "Warning:" 
-		display as text "Rank condition on matrix of cross product of cross sectional averages not satisfied!" _n "Only mean group estimates are consistent, unit specific estimates are inconsistent." /*_n "See Chudik, Pesaran (2015, Journal of Econometrics), Assumption 6 and page 398." */ 
+		*display as text "Rank condition on matrix of cross product of cross sectional averages not satisfied!" _n "Only mean group estimates are consistent, unit specific estimates are inconsistent." /*_n "See Chudik, Pesaran (2015, Journal of Econometrics), Assumption 6 and page 398." */ 
+		display as text "Cross-Section Averages are not of full rank!" 
 	}
 	** check for failure of rank condition for main regression, only for non-IV case
 	if `IV' == 0 {
@@ -2434,16 +2517,34 @@ program define xtdcce2int, eclass
 			if "`mgmissing'" != "" display as text "Collinearities detected. One or more individual coefficients are excluded from MG regression."
 			display as text in smcl "Use {stata estat ebistructure} to display more details." 
 				
-			matrix colnames `UsedCols' = `rhs_vars' `pooled_vars'
+			cap matrix colnames `UsedCols' = `rhs_vars' `pooled_vars'
 			ereturn matrix omitted_var_i = `UsedCols'
 			ereturn hidden matrix rankreg = `RankReg'			
 		}
+	}
+	if "`rctest'" != "" {
+		tempname rc_testr rc_p rc_m rc_all
+		matrix `rc_all' = e(rctest)
+		scalar `rc_testr' = `rc_all'[1,1]
+		scalar `rc_p' = `rc_all'[1,2]
+		scalar `rc_m' = `rc_all'[1,3]
+		di as text "{hline `=`maxline'-`col_i'-2'}"
+		di as text "Test for Rank Condition (De Vos et al., 20xx)"
+		local maxline = `maxline' - 2
+		di as text "{hline 14}{c TT}{hline `=`maxline'-`col_i'-15'}"
+		di as smcl _col(6) "RC" _col(15) "{c |}" _col(20) "Estimated"
+		di as text _col(2) "(1-I(p<m))*" _col(15) "{c |}" _col(18) "Rank" _col(25) "# Factors" 
+		di as text "{hline 14}{c +}{hline `=`maxline'-`col_i'-15'}"
+		di as result _col(6) `rc_testr' _col(15) "{c |}" _col(19) `rc_p' _col(27) `rc_m'
+		di as text "{hline 14}{c BT}{hline `=`maxline'-`col_i'-15'}"
+		dis as text "* RC=1 indicates rank condition holds."
+
 	}	
 	
 	if "`exponent'" != "" & "`fast'" == "0" & "`alphaM'" != "" {
 		di ""
 		noi disp as text "Estimation of Cross-Sectional Exponent (alpha)"
-	
+		
 		local level =  `c(level)'
 		local col_i = `abname' + 1
 		local maxline = `maxline' - 2
@@ -2714,7 +2815,7 @@ mata:
 						tmp_y = select(Y,indic)
 						tmp_xx = quadcross(tmp_x,tmp_x)
 						tmp_xy = quadcross(tmp_x,tmp_y)
-						"start calculating b"
+						"start calculating bi"
 						bii = m_xtdcce_solver(tmp_xx,tmp_xy,useqr,ranki=.,colni=0,method="")
 						b_output = (b_output \ bii)
 						"cols"
@@ -3187,6 +3288,7 @@ mata:
 		}
 		"mg done"
 		"calculate MG"
+		useweights
 		if (useweights == 0) {
 			b_mg = mean(b_mg_w')		
 		}
@@ -3199,6 +3301,7 @@ mata:
 				weight_mat_sum = weight_mat_sum:*weight_mat[,vi]
 			}
 		}
+		"weighting done"
 		/// if pooled only then b_mg used for pooled
 		b_1 = b_mg_w :- b_mg'
 		b_1p = b_1
@@ -3262,6 +3365,8 @@ mata:
 			}			
 "herexx"
 input_pooled_vnames
+"b_pooled"
+b_pooled
 			if (FixedTVCE == 0) {
 				"standard vce"
 				/// Standard VarianceCovarianceEstimator from Pesaran 2006, Eq 67 - 69.
@@ -3286,7 +3391,7 @@ input_pooled_vnames
 						/// eq. 26 from Pesaran, Tosetti (2011); no difference as long as weights 1/N then w_tilde = 1
 						/// eq. 67 Pesaran 2006
 						///tmp_R = w_tilde:^2 :* tmptmp*b_i1*b_i1'*tmptmp
-						if (sum(b_i1:==0) == 0 & hasmissing(tmptmp*b_i1*b_i1'*tmptmp) == 0) {
+						if (allof(b_i1,0)==0 & hasmissing(tmptmp*b_i1*b_i1'*tmptmp) == 0) {
 							R = R :+ w_tilde:^2 :* tmptmp*b_i1*b_i1'*tmptmp
 						}
 						else {
@@ -3297,12 +3402,17 @@ input_pooled_vnames
 				}
 				///divide by N-1
 				R = R / (N - 1)
+				if (allof(R,0)) {
+					"R matrix for COV calculation of pooled coefficients is zero!"
+					R = J(rows(PSI),cols(PSI),0)
+				}
 				PSI1 = m_xtdcce_inverter(PSI,useqr)
 				"psi"
 				PSI1
 				"R"
 				R
 				//// eq. 69 Pesaran 2006
+				
 				cov_p =  w_s :* PSI1 * R * PSI1 
 			}
 			if (FixedTVCE == 1)  {

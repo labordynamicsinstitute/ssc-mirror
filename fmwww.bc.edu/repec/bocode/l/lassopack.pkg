@@ -44,7 +44,7 @@ d KW: sparsity
 d
 d Requires: Stata version 13.1
 d
-d Distribution-Date: 20201214
+d Distribution-Date: 20240109
 d
 d Author: Achim Ahrens, Economic and Social Research Institute, Republic of Ireland
 d Support: email achim.ahrens@@esri.ie
@@ -76,5 +76,7 @@ f ../c/cs_lasso2.do
 f ../c/cs_cvlassologit.do
 f ../c/cs_rlassologit.do
 f ../c/cs_lassologit.do
+f ../c/cs_lassologit_predict.do
+f ../c/cs_lassologit_weights.do
 f ../c/cs_cvlasso.smcl
 f ../c/cs_lasso2.smcl

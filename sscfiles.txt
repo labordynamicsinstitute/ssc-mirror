@@ -4583,6 +4583,7 @@ fmwww.bc.edu/repec/bocode/c/chitest6.html
 fmwww.bc.edu/repec/bocode/c/chitest.ado
 fmwww.bc.edu/repec/bocode/c/cddens.sthlp
 fmwww.bc.edu/repec/bocode/c/ceqdientropy.ado
+fmwww.bc.edu/repec/bocode/c/cs_lassologit_weights.do
 fmwww.bc.edu/repec/bocode/c/cgssm.sthlp
 fmwww.bc.edu/repec/bocode/c/cfby.ado
 fmwww.bc.edu/repec/bocode/c/conddens.ado
@@ -4740,6 +4741,7 @@ fmwww.bc.edu/repec/bocode/c/clemio2.html
 fmwww.bc.edu/repec/bocode/c/circcorr.html
 fmwww.bc.edu/repec/bocode/c/cs_pdslasso.do
 fmwww.bc.edu/repec/bocode/c/clarify.sthlp
+fmwww.bc.edu/repec/bocode/c/cs_lassologit_predict.do
 fmwww.bc.edu/repec/bocode/c/cmogram.html
 fmwww.bc.edu/repec/bocode/c/color-mrcyellow.style
 fmwww.bc.edu/repec/bocode/c/cenpois.pkg

@@ -1,6 +1,6 @@
-*! lassologit (v0.3)
-*! part of lassopack v1.4.1
-*! last edited: 15oct2019
+*! lassologit (v0.3.1)
+*! part of lassopack v1.4.2
+*! last edited: 27mar2021
 *! authors: aa/ms/cbh
 
 * Updates 	(release date):
@@ -8,6 +8,9 @@
 *			fixed exp.exp bug that was affecting Stata 13
 * v0.3		(15oct2019)
 *			fixed remaining exp.exp bug that was affecting Stata 13
+* v0.3.1	(27mar2021)
+*			added warm-start lambda value if only one lambda 
+*			predict doesn't re-estimate model by default but uses e(betas)
 
 program lassologit, eclass sortpreserve
 
@@ -24,6 +27,7 @@ program lassologit, eclass sortpreserve
 						PLOTVar(varlist)					///
 						PLOTLabel							///
 						lambdan	nopath settingup			///
+						debug 								///
 						* ]
 							
 	if "`version'" != "" {							//  Report program version number, then exit.
@@ -42,7 +46,7 @@ program lassologit, eclass sortpreserve
 	if (!replay()) {
 	
 		tokenize "`0'", parse(",")
-		_lassologit `1', `options' newlambda(`newlambda') `lambdan'  
+		_lassologit `1', `options' newlambda(`newlambda') `lambdan' `debug'
 		ereturn local cmdoptions `options'
 	
 	}
@@ -60,7 +64,7 @@ program lassologit, eclass sortpreserve
 							`options' 						///
 							newlambda(`newlambda') 			///
 							`cmdoptions0' 					///
-							`lambdan'
+							`lambdan'  `debug'
 		ereturn local cmdoptions `cmdoptions0'
 	
 	}
@@ -106,7 +110,7 @@ program lassologit, eclass sortpreserve
 							`options' 						///
 							newlambda(`newlambda') 			///
 							`cmdoptions0' 					///
-							`lambdan'
+							`lambdan'  `debug'
 		ereturn local cmdoptions `cmdoptions0'
 	
 	}	
@@ -187,7 +191,7 @@ program lassologit, eclass sortpreserve
 								[`weight' `exp'] , 		///
 								`cmdoptions' 			///
 								newlambda(`newlambda') 	///
-								`lambdan'
+								`lambdan'  `debug'
 		ereturn local cmdoptions `cmdoptions' 
 	}
 	*
@@ -624,9 +628,7 @@ program _lassologit, eclass sortpreserve
 			di as err "Options rigorous and lambda() not allowed as the same time."
 		}
 		//
-	
-		//
-		
+			
 		*** estimation & output
 
 		// fit model	
@@ -649,7 +651,7 @@ program _lassologit, eclass sortpreserve
 		// initialize ereturned results with depname
 		ereturn post , depname(`varY_o')
 		// Mata routine to post all results except e(b)
-		mata: PostResults(`data',`fitResults',"`lossmeasure'",`savepredmat')
+		mata: PostResults(`data',`fitResults',"`lossmeasure'",`savepredmat',`debugflag')
 		// post e(b) only
 		if (`lcount'==1) {
 			tempname theb
@@ -1218,7 +1220,7 @@ program define DisplayPath
 
 end
 
-
+//" 
 
 // Display varlist with specified indentation
 program define DispVars
@@ -1359,9 +1361,8 @@ end
 #################  MATA SECTION ################################################
 ##############################################################################*/
 
+version 13
 mata: 
-
-mata clear
 
 struct dataStruct {
 	
@@ -2174,6 +2175,12 @@ struct outStruct scalar fit(struct dataStruct d,
 
 	// lambda_grid
 	lambda_num = cols(lambda_grid)
+	one_lambda = lambda_num==1
+	if (one_lambda) {
+		// add initial lambda as a warm start
+		lambda_grid = (lambda_grid*10,lambda_grid)
+		lambda_num = cols(lambda_grid)
+	}
 	
 	// initial beta
 	if (cons) {
@@ -2194,7 +2201,7 @@ struct outStruct scalar fit(struct dataStruct d,
 	//	printf("----+--- 1 ---+--- 2 ---+--- 3 ---+--- 4 ---+--- 5\n")
 	//}
 	
-	if (lambda_num==1) {
+	if (one_lambda) {
 		d.progbar = 0
 	}
 	if (d.progbar) {
@@ -2295,6 +2302,12 @@ struct outStruct scalar fit(struct dataStruct d,
 		printf("\n")
 	}
 	
+	// remove initial lambda
+	if (one_lambda) {
+		lambda_grid = lambda_grid[2]
+		beta_path = beta_path[,2]
+	}
+
 	// return beta path
 	r.betas_std = beta_path 
 	r.lambdas = lambda_grid
@@ -2308,11 +2321,12 @@ struct outStruct scalar fit(struct dataStruct d,
 void PostResults(struct dataStruct d,			 
 						struct outStruct r, 
 						string scalar losstype,
-						real scalar savephat
+						real scalar savephat,
+						real scalar debugflag
 						)
 {
 	// return beta in e() objects
-	ereturn_beta(d,r)
+	ereturn_beta(d,r,debugflag)
 	
 	// return other parameters
 	ereturn_params(d,r)
@@ -2742,7 +2756,8 @@ real colvector logit_est(struct dataStruct d,
 // end
 
 void ereturn_beta(struct dataStruct d,
-						struct outStruct r)
+						struct outStruct r,
+						real scalar debugflag)
 {
 
 	// set colnames of beta
@@ -2768,6 +2783,15 @@ void ereturn_beta(struct dataStruct d,
 		dense_names = (J(r.shat0,1,""),tokens(selected0)')
 		r.sel=selected
 		r.sel0=selected0
+
+		if (debugflag==1) {
+			r.betas'
+			r.betas_std'
+			select(r.betas,r.ix)'
+			r.betas_post'
+			r.betas_std_post'
+			select(r.betas_post,r.ix)'
+		}
 		
 		// sparsity
 		st_numscalar("e(shat)",r.shat)
@@ -2795,6 +2819,27 @@ void ereturn_beta(struct dataStruct d,
 		st_matrixcolstripe("e(beta_post_dense)",dense_names)
 	}
 	else {
+
+		if (debugflag==1) {
+			"shat="
+			r.shat
+			"shat0="
+			r.shat0
+			"lambdas="
+			r.lambdas
+			"l1 norm="
+			r.L1norm
+			"beta="
+			mean(r.betas')
+			"beta std="
+			mean(r.betas_std')
+			"brnames="
+			brnames
+			"num_feat="
+			d.num_feat
+			"Xnamescon="
+			d.XnamesCons_o
+		}
 		
 		// sparsity
 		st_matrix("e(shat)",r.shat)
@@ -2834,6 +2879,7 @@ void ereturn_beta(struct dataStruct d,
 void ereturn_params(struct dataStruct d,
 						struct outStruct r)
 {
+	st_numscalar("e(postlogit)",d.postlogit)
 	st_numscalar("e(p)",d.num_feat-d.cons)
 	st_numscalar("e(cons)",d.cons)
 	st_numscalar("e(std)",d.std)
