@@ -84,7 +84,7 @@ p armaroots module to compute roots of AR- and MA-polynomials
 p array package to support arrays of variables 
 p arrowplot module to produce combined plot for graphing inter-group and intra-group trends
 p art module to compute sample size and power for complex randomised trial designs with binary or time-to-event outcomes
-p artbin module to compute extended sample size for randomised trials with binary outcomes
+p artbin module to calculate sample size or power for randomized trials with binary outcomes
 p artcat module to calculate sample size or power for a two-group trial with ordered categorical outcome
 p ascii module to display the ASCII character set
 p asciiplot module to generate ASCII character map

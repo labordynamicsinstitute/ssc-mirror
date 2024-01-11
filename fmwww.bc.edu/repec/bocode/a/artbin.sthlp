@@ -1,8 +1,10 @@
 {smcl}
-{* *! version 0.17 23may2023}{...}
+{* *! version 2.1.0 04jan2024}{...}
 {vieweralsosee "sampsi (if installed)" "sampsi"}{...}
 {vieweralsosee "power (if installed)" "power"}{...}
 {vieweralsosee "artbin_whatsnew" "artbin_whatsnew"}{...}
+{vieweralsosee "art" "art"}{...}
+{vieweralsosee "artsurv" "artsurv"}{...}
 {viewerjumpto "Syntax" "artbin##syntax"}{...}
 {viewerjumpto "Description" "artbin##description"}{...}
 {viewerjumpto "Options" "artbin##options"}{...}
@@ -13,6 +15,7 @@
 {viewerjumpto "References" "artbin##references"}{...}
 {viewerjumpto "Citation" "artbin##citation"}{...}
 {viewerjumpto "Authors" "artbin##authors"}{...}
+{viewerjumpto "Stored results" "artbin##stored"}{...}
 {viewerjumpto "Also see" "artbin##also_see"}{...}
 
 {title:Title}
@@ -48,23 +51,26 @@
 
 {syntab:Test}
 {synopt :{opt al:pha(#)}}significance level for testing treatment effect(s){p_end}
-{synopt :{opt o:nesided}}specifies that the significance level given by {opt alpha()} is one-sided{p_end}
-{synopt :{opt tr:end}}specifies a linear trend test{p_end}
+{synopt :{opt o:nesided}}the significance level given by {opt alpha()} is one-sided{p_end}
+{synopt :{opt tr:end}}applies a linear trend test{p_end}
 {synopt :{opt do:ses(dose_list)}}doses for linear trend test{p_end}
 {synopt :{opt co:ndit}}applies a conditional test{p_end}
-{synopt :{opt wa:ld}}specifies Wald test{p_end}
+{synopt :{opt wa:ld}}applies a Wald test{p_end}
 {synopt :{opt c:correct}}applies a continuity correction{p_end}
 
 
 {syntab:Method}
-{synopt :{opt lo:cal}}calculations under the local hypothesis{p_end}
-{synopt :{opt noround}}specifies that the calculated sample size should not be rounded up to the nearest integer{p_end}
-{synopt :{opt force}}used to override the program's inference of the favourable/ unfavourable outcome type{p_end}
+{synopt :{opt lo:cal}}calculates under local alternatives (only valid for small treatment effects){p_end}
+{synopt :{opt noround}}the calculated sample size in each group should not be rounded up to the nearest integer{p_end}
+{synopt :{opt force}}overrides the program's inference of the favourable/ unfavourable outcome type{p_end}
 {synoptline}
 
 
 {marker description}{...}
 {title:Description}
+
+{pstd}
+{cmd:artbin} is part of the {help art:ART} suite: {cmd:A}ssessment of {cmd:R}esources for {cmd:T}rials.
 
 {pstd}
 {cmd:artbin} calculates the power or total sample size for various tests comparing {it:K}
@@ -112,6 +118,7 @@ unfavourable.
 If this option is omitted, {cmd:artbin} infers favourability status from the
 {opt pr()} and {opt margin()} options. If {it:pi2^a > pi1^a + margin}, the outcome
 is assumed to be favourable, otherwise unfavourable.
+
 
 {marker options}{...}
 {title:Options}
@@ -244,7 +251,7 @@ available with {opt condit}. The default is no continuity correction.
 
 {phang}
 {opt local} specifies that the calculation should use the variance of the difference in proportions only under the null.
-This approximation is valid when the treatment effect is small. 
+This approximation is valid when the treatment effect is small ("local alternatives"). 
 The default uses the variance of the difference in proportions both under the null and under the alternative hypothesis.  
 The local method is not recommended and is only included to allow comparisons with other software.
 
@@ -252,8 +259,7 @@ The local method is not recommended and is only included to allow comparisons wi
 The Wald test inherently allows for distant alternatives so {opt wald} and {opt local} can not be used together.
 
 {phang}
-{opt noround} prevents rounding of the calculated sample size in each group
-up to the nearest integer. The default is to round.
+{opt noround} prevents rounding of the calculated sample size. The default is to round the calculated sample size in each group up to the nearest integer. 
 
 {phang}
 {opt force} can be used with two-group studies to override the program's inference of the
@@ -285,7 +291,6 @@ given in the output table (which have been rounded up to the nearest integer unl
 This approximation may fail with very small sample sizes, in which case the continuity correction should be used.
 We suggest using the usual rule for the Pearson chi-squared test, namely to mistrust the results when any expected 
 cell count is lower than about 5. Concerned users should check the power by simulation.
-
  
 {pstd}
 For a full description of the methods and formulae used in {cmd:artbin}, please see {help artbin##citation:the accompanying Stata Journal paper}.
@@ -312,6 +317,13 @@ calculate sample size or power for a 2-group trial with ordered categorical outc
 For a detailed description of what's new in artbin, please see {helpb artbin_whatsnew}.
 
 
+{title:Changes from {cmd:artbin} version 2.0.1 to version 2.1}
+
+{pstd}An error in the {cmd:ltfu()} option when calculating power from sample size has been corrected.
+
+{pstd}Rounding now behaves exactly as stated in the help file, i.e. sample sizes are rounded up to the nearest integer in each group.
+
+
 {marker examples}{...}
 {title:Examples}
 
@@ -328,6 +340,10 @@ For a detailed description of what's new in artbin, please see {helpb artbin_wha
 {pstd}The same, but assuming a Wald test and requiring 90% power:
 
 {phang}. {stata "artbin, pr(0.25 0.35) favourable wald power(0.9)"}
+
+{pstd}The same, but allowing for 20% loss to follow-up:
+
+{phang}. {stata "artbin, pr(0.25 0.35) ltfu(0.2)"}
 
 {pstd}Find the sample size for a trial comparing four groups using a Pearson chisquared test,
 with event probability 0.15 in the control group and 0.25 to 0.45 in the experimental groups:
@@ -359,6 +375,23 @@ Trials 21, 145 (2020). {browse "https://doi.org/10.1186/s13063-020-4070-4"}
 {phang}Ella Marley-Zagar, Ian R. White, Patrick Royston, Friederike M.-S. Barthel, Mahesh K B Parmar, Abdel G. Babiker. artbin: Extended sample size for randomised trials with binary outcomes. Stata J 2023:1;24-52.
 {browse "https://journals.sagepub.com/doi/pdf/10.1177/1536867X231161971"}
 
+
+{marker stored}{...}
+{title:Stored results}
+
+{synoptset 15 tabbed}{...}
+{p2col 5 15 19 2: Scalars}{p_end}
+{synopt:{cmd:r(n)}}Sample size (total){p_end}
+{synopt:{cmd:r(n1)}}Sample size in group 1 {p_end}
+{synopt:{cmd:r(n2)}}Sample size in group 2 {p_end}
+{synopt:{cmd:r(D)}}Events expected  (total) {p_end}
+{synopt:{cmd:r(D1)}}Events expected in group 1 {p_end}
+{synopt:{cmd:r(D2)}}Events expected in group 2 {p_end}
+{synopt:{cmd:r(power)}}Power  {p_end}
+{pstd}The same quantities are returned, whether {cmd:artbin} has calculated power from sample size or sample size from power.
+Further scalars {cmd:r(n3)} etc. are returned for trials with more than 2 arms.
+
+
 {marker authors}{...}
 {title:Authors}
 
@@ -387,6 +420,6 @@ Trials 21, 145 (2020). {browse "https://doi.org/10.1186/s13063-020-4070-4"}
     Manual:  {hi:[R] power}
 
 {p 4 13 2}
-Online:  help for {help artmenu}, {help artbindlg}
+Online:  help for {help artmenu}, {help artbindlg}, {help art}, {help artsurv}
 
 

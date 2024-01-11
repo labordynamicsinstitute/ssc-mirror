@@ -56,6 +56,7 @@ p epidata module Data entry system for use with Stata, SPSS, SAS, Excel, text fo
 p epimodels module to implement epidemiological models and simulations
 p episens module for basic sensitivity analysis of epidemiological results
 p episensrri module for basic sensitivity analysis for unmeasured confounders
+p epitable module to more easily create table 2 and table 3 for epidemiological studies
 p epiweek module to create epidemiological week and equivalent epidemiological year
 p epresent module to present non-linear relationships in regression models with log or logit-link
 p epsigr module to save graph in EPSF format in UNIX environment
@@ -80,6 +81,7 @@ p estrat module to perform Endogenous Stratification for Randomized Experiments
 p estsave module to save estimation results with current dataset
 p estudy module to perform an event study
 p estwrite module to store estimation results on disk
+p eth2grecal module to convert dates from the Ethiopian calendar to the Gregorian calendar
 p etime module to time how long a program runs
 p eurostatuse module to import data from Eurostat repository into Stata
 p eurouse module to import data from Eurostat

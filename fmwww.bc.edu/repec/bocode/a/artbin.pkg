@@ -1,42 +1,43 @@
-d 'ARTBIN': module to compute extended sample size for randomised trials with binary outcomes
+d 'ARTBIN': module to calculate sample size or power for randomized trials with binary outcomes
 d
-d	artbin calculates the power or total sample size for
-d various tests comparing K proportions. Power is calculated if n()
-d is	specified as a positive number, otherwise total sample size
-d is estimated. artbin can be used in designing superiority,   
+d   artbin is part of the ART suite: Assessment of Resources for
+d Trials. artbin calculates the power or total sample size for
+d various tests comparing K anticipated probabilities. Power is   
+d calculated if n() is specified, otherwise total sample size is
+d estimated. artbin can be used in designing superiority,   
 d non-inferiority and substantial-superiority trials. 
 d
+d KW: trials
 d KW: power
 d KW: sample size
-d KW: proportions
-d KW: clinical trials
 d
-d Requires: Stata version 8 
+d Requires: Stata version 8
 d
-d Distribution-Date: 20211116
+d Distribution-Date: 20240110
 d
-d Author: Abdel Babiker,  MRC Clinical Trials Unit at UCL
+d Author:  Abdel Babiker, MRC Clinical Trials Unit at UCL
 d Support: email a.babiker@@ucl.ac.uk
 d
-d Author: Friederike Maria-Sophie Barthel, NA
+d Author:  Friederike Maria-Sophie Barthel, NA
 d Support: email sophie@@fm-sbarthel.de
 d
-d Author: Babak Choodari-Oskooei, MRC Clinical Trials Unit at UCL
+d Author: Babak Choodari-Oskooei , MRC Clinical Trials Unit at UCL
 d Support: email b.choodari-oskooei@@ucl.ac.uk
 d
-d Author: Patrick Royston, MRC Clinical Trials Unit at UCL
-d Support: email  j.royston@@ucl.ac.uk
+d Author:  Patrick Royston, MRC Clinical Trials Unit at UCL
+d Support: email j.royston@@ucl.ac.uk
 d
 d Author:  Ella Marley-Zagar, MRC Clinical Trials Unit at UCL
 d Support: email e.marley-zagar@@ucl.ac.uk
 d
-d Author:  Ian White, MRC Clinical Trials Unit at UCL
+d Author: Ian White, MRC Clinical Trials Unit at UCL
 d Support: email ian.white@@ucl.ac.uk
 d
-f artbin.sthlp
-f artbindlg.sthlp
-f art.sthlp
-f artbin_whatsnew.sthlp
 f artbin.ado
 f art2bin.ado
+f artformatnos.ado
+f artbin.sthlp
+f artbin_whatsnew.sthlp
 f artbin.dlg
+f artbindlg.sthlp
+f artbin_examples.do

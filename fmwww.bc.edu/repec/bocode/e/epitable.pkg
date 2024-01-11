@@ -1,0 +1,34 @@
+d 'EPITABLE': module to more easily create table 2 and table 3 for epidemiological studies
+d
+d   epitable2 creates a composite table using Stata’s collect
+d commands. The composite table contains regression coefficients,
+d 95% confidence intervals, and trend p-values after running a set
+d of multivariable models. It is commonly referred to as Table 2 in
+d epidemiological studies. epitable3 creates a table of association
+d using Stata’s collect commands. The association between an
+d exposure variable and an outcome variable is shown, with
+d coefficients, confidence intervals, and p-values broken down by
+d various stratification (factor) variables. A p-value for trend is
+d shown for each within-variable category, and a p-value for
+d interaction is shown for each overall stratified (factor)
+d variable. It is commonly referred to as Table 3 in
+d epidemiological studies. 
+d
+d KW: epidemiological tables
+d KW: table 2
+d KW: table 3
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20240110
+d
+d Author: Laura Whiting,  Survey Design and Analysis Services 
+d Support: email   support@@surveydesign.com.au
+d
+d Author:   Zumin Shi,  Qatar University
+d Support: email NA
+d
+f epitable2.ado
+f epitable2.sthlp
+f epitable3.ado
+f epitable3.sthlp

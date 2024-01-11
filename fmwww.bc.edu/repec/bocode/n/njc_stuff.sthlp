@@ -1,6 +1,6 @@
 {smcl}
 {hline}
-index of NJC's Stata stuff (version 13 May 2022)
+index of NJC's Stata stuff (version 6 January 2024)
 {hline}
 
 {title:Description}
@@ -517,27 +517,37 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help distinct}
 {space 4}SSC (G. Longton, NJC)
 {space 4}display number of distinct values of variables
-{space 4}+ 
+{space 4}sup(SJ 23-4)
 
 {space 4}{help distinct}
 {space 4}dm0042 sj8-4 (G. Longton, NJC)
 {space 4}display number of distinct values of variables
-{space 4}sup(SJ 20-4) 
+{space 4}sup(SJ 23-4) 
 
 {space 4}{help distinct}
 {space 4}dm0042_1 sj12-2 (G. Longton, NJC)
 {space 4}display number of distinct values of variables
-{space 4}sup(SJ 20-4) 
+{space 4}sup(SJ 23-4) 
 
 {space 4}{help distinct}
 {space 4}dm0042_2 sj15-3 (G. Longton, NJC)
 {space 4}display number of distinct values of variables
-{space 4}sup(SJ 20-4)
+{space 4}sup(SJ 23-4)
  
 {space 4}{help distinct}
 {space 4}dm0042_3 sj20-4 (G. Longton, NJC)
 {space 4}display number of distinct values of variables
-{space 4}+            
+{space 4}sup(SJ 23-4)
+ 
+{space 4}{help distinct}
+{space 4}dm0042_4 sj23-2 (G. Longton, NJC)
+{space 4}display number of distinct values of variables
+{space 4}sup(SJ 23-4)
+
+{space 4}{help distinct}
+{space 4}dm0042_5 sj23-4 (G. Longton, NJC)
+{space 4}display number of distinct values of variables
+{space 4}+
 
 {space 4}{help distplot}
 {space 4}SSC (NJC)
@@ -753,35 +763,50 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}SSC (NJC) 
 {space 4}write lines to end or beginning of text files
 
+{space 4}{help find_denom}
+{space 4}SSC (NJC)
+{space 4}minimum sample size from percentages 
+{space 4}sup(SJ 23-4)
+
+{space 4}{help find_denom}
+{space 4}st0737 sj23-4 (NJC)
+{space 4}minimum sample size from percentages
+{space 4}+ 
+
 {space 4}{help findname}
 {space 4}SSC (NJC)
 {space 4}list variables matching name patterns or other properties
-{space 4}sup(SJ 20-2)
+{space 4}sup(SJ 23-4)
 
 {space 4}{help findname}
 {space 4}dm0048 sj10-2 (NJC) 
 {space 4}list variables matching name patterns or other properties
-{space 4}sup(SJ 20-2)
+{space 4}sup(SJ 23-4)
 
 {space 4}{help findname}
 {space 4}dm0048_1 sj10-4 (NJC) 
 {space 4}list variables matching name patterns or other properties
-{space 4}sup(SJ 20-2)
+{space 4}sup(SJ 23-4)
 
 {space 4}{help findname}
 {space 4}dm0048_2 sj12-1 (NJC) 
 {space 4}list variables matching name patterns or other properties
-{space 4}sup(SJ 20-2) 
+{space 4}sup(SJ 23-4) 
 
 {space 4}{help findname}
 {space 4}dm0048_3 sj15-2 (NJC) 
 {space 4}list variables matching name patterns or other properties
-{space 4}sup(SJ 20-2) 
+{space 4}sup(SJ 23-4) 
 
 {space 4}{help findname}
 {space 4}dm0048_4 sj20-2 (NJC) 
 {space 4}list variables matching name patterns or other properties
-{space 4}+
+{space 4}sup(SJ 23-4)
+
+{space 4}{help findname}
+{space 4}dm0048_5 sj23-4 (NJC) 
+{space 4}list variables matching name patterns or other properties
+{space 4}+             
 
 {space 4}{help firstdigit}
 {space 4}SSC (NJC)
@@ -942,6 +967,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}SSC (NJC)
 {space 4}filter names into variable names and others
 
+{space 4}{help jaccard}
+{space 4}SSC (NJC)
+{space 4}Jaccard similarity or dissimilarity of sets
+{space 4}+
+
 {space 4}{help kaplansky}
 {space 4}SSC (NJC)
 {space 4}graph examples of distributions of varying kurtosis
@@ -987,6 +1017,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}SSC (NJC)
 {space 4}linked (connected) scatter plots
 {space 4}+ (note also OS pcarrow, etc.)
+
+{space 4}{help listfirst}
+{space 4}SSC (NJC)
+{space 4}list so many observations 
+{space 4}+
 
 {space 4}{help listutil}
 {space 4}SSC (NJC)
@@ -1110,22 +1145,27 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help missings} 
 {space 4}SSC (NJC) 
 {space 4}various utilities for managing missing values (1) 
-{space 4}sup(SJ 20-4) 
+{space 4}sup(SJ 23-2)         
 
 {space 4}{help missings} 
 {space 4}dm0085 sj15-4  
 {space 4}various utilities for managing missing values (2) 
-{space 4}sup(SJ 20-4)
+{space 4}sup(SJ 23-2) 
 
 {space 4}{help missings} 
 {space 4}dm0085_1 sj17-3  
 {space 4}various utilities for managing missing values (3) 
-{space 4}sup(SJ 20-4)
+{space 4}sup(SJ 23-2)
 
 {space 4}{help missings} 
 {space 4}dm0085_2 sj20-4  
 {space 4}various utilities for managing missing values (3) 
-{space 4}+           
+{space 4}sup(SJ 23-2)
+
+{space 4}{help missings} 
+{space 4}dm0085_3 sj23-2  
+{space 4}various utilities for managing missing values (4) 
+{space 4}+ 
 
 {space 4}{help mlowess}
 {space 4}SSC (NJC)
@@ -1139,15 +1179,20 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help modeldiag}
 {space 4}SSC (NJC)
 {space 4}generate graphics after regression
-{space 4}(also SJ 4-4)
+{space 4}(sup SJ 23-1)
 
 {space 4}{help modeldiag}
 {space 4}gr0009 sj4-4 (NJC)
 {space 4}generate graphics after regression
-{space 4}sup(SJ 10-1) 
+{space 4}sup(SJ 23-1) 
 
 {space 4}{help modeldiag}
 {space 4}gr0009_1 sj10-1 (NJC)
+{space 4}generate graphics after regression
+{space 4}sup(SJ 23-1) 
+
+{space 4}{help modeldiag}
+{space 4}gr0009_2 sj23-1 (NJC)
 {space 4}generate graphics after regression
 {space 4}+
 
@@ -1268,6 +1313,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}axis labels or ticks on transformed scales
 {space 4}+
 
+{space 4}{help mylabels}
+{space 4}gr0092 (sj22-4) (NJC)
+{space 4}axis labels or ticks on transformed scales
+{space 4}+
+
 {space 4}{help mypkg}
 {space 4}SSC (NJC)
 {space 4}inform on packages installed over net
@@ -1286,6 +1336,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 
 {space 4}{help nicelabels}
 {space 4}SSC (NJC)
+{space 4}nice axis labels for general scales
+{space 4}sup(SJ 22-4)
+
+{space 4}{help nicelabels}
+{space 4}gr0092 (sj22-4) (NJC)
 {space 4}nice axis labels for general scales
 {space 4}+
 
@@ -1526,6 +1581,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}SSC (NJC)
 {space 4}quantile-quantile plots
 {space 4}obs(OS qqplot)
+
+{space 4}{help qqplotg}
+{space 4}SSC
+{space 4}quantile-quantile plots, generalized
+{space 4}+
 
 {space 4}{help qsbayes}, {help qsbayesi} 
 {space 4}st0168 sj9-2 (NJC)
@@ -1924,20 +1984,25 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help tabplot}
 {space 4}gr0066 sj16-2 (NJC)
 {space 4}one-, two- and three-way bar charts for tables (1) 
-{space 4}sup(SJ 20-3)
+{space 4}sup(SJ 22-2)
 
 {space 4}{help tabplot}
 {space 4}gr0066_1 sj17-3 (NJC)
 {space 4}one-, two- and three-way bar charts for tables (2)
-{space 4}sup(SJ 20-3) 
+{space 4}sup(SJ 22-2) 
 
 {space 4}{help tabplot}
 {space 4}SSC (NJC)
 {space 4}one-, two- and three-way bar charts for tables (3) 
-{space 4}+ 
+{space 4}+
 
 {space 4}{help tabplot}
 {space 4}gr0066_2 sj20-3 (NJC)
+{space 4}one-, two- and three-way bar charts for tables (4) 
+{space 4}+
+
+{space 4}{help tabplot}
+{space 4}gr0066_3 sj22-2 (NJC)
 {space 4}one-, two- and three-way bar charts for tables (4) 
 {space 4}+
 
@@ -2062,6 +2127,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}SSC (NJC)
 {space 4}summary statistics in matrix form (2)
 
+{space 4}{help upsetplot}
+{space 4}SSC (T. Morris, NJC)
+{space 4}Euler or Venn diagrams mapped to bar charts, upsetplot style
+{space 4}+
+
 {space 4}{help vallab}
 {space 4}SSC (NJC)
 {space 4}pack values and labels into a new string variable
@@ -2089,6 +2159,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help vclose}
 {space 4}SSC (NJC)
 {space 4}close viewer windows
+
+{space 4}{help vennbar}
+{space 4}SSC (NJC, T. Morris)
+{space 4}Euler or Venn diagrams mapped to bar or dot charts
+{space 4}+
 
 {space 4}{help vplplot}
 {space 4}paired data plots

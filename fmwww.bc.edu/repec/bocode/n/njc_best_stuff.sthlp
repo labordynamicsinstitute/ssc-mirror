@@ -1,6 +1,6 @@
 {smcl}
 {hline}
-index of NJC's best Stata stuff (version 13 May 2022)  
+index of NJC's best Stata stuff (version 6 January 2024)  
 {hline}
 
 {title:Description} 
@@ -61,6 +61,7 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help favplots}            formatted added-variable plot(s)
 {space 4}{help floatplot}           floating or sliding stacked bar plot
 {space 4}{help fractileplot}        smoothing with distribution function predictors
+{space 4}{help jaccard}             Jaccard similarity or dissimilarity of sets 
 {space 4}{help kaplansky}           graph examples of distributions of varying kurtosis 
 {space 4}{help linkplot}            linked scatter plots 
 {space 4}{help localp}              kernel-weighted local polynomial smoothing 
@@ -80,6 +81,7 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help polarsm}             polar smoothing 
 {space 4}{help ppplot}              P-P plots 
 {space 4}{help qplot}               quantile plots
+{space 4}{help qqplotg}             quantile-quantile plots, generalized 
 {space 4}{help rcspline}            restricted cubic spline smoothing
 {space 4}{help sdline}              SD line (reduced major axis)
 {space 4}{help sepscatter}          scatter plots separated by a third variable 
@@ -94,6 +96,8 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help transplot}           plots for trying out transformations 
 {space 4}{help triplot}             triangular plots 
 {space 4}{help trimplot}            plots of trimmed means 
+{space 4}{help upsetplot}           Euler or Venn diagrams mapped to bar charts, upsetplot style 
+{space 4}{help vennbar}             Euler or Venn diagrams mapped to bar or dot charts 
 {space 4}{help zmap}                binned scatter maps
 
 {title:Distribution fitting and plotting}
@@ -133,6 +137,7 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help diptest}             dip statistic to test for unimodality
 {space 4}{help entropyetc}          entropy and related measures for categories
 {space 4}{help extremes}            list extreme values  
+{space 4}{help find_denom}          minimum sample size from percentages 
 {space 4}{help firstdigit}          first digits of numeric variables
 {space 4}{help glmcorr}             correlation and RMS error for GLMs
 {space 4}{help group1d}             grouping or clustering in one dimension
@@ -168,6 +173,7 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help fs}                  show names of files in compact form
 {space 4}{help groups}              list group frequencies    
 {space 4}{help labmask}             values or value labels of one variable as value labels of another
+{space 4}{help listfirst}           list so many observations
 {space 4}{help longshape}           reshape to long (limited alternative)
 {space 4}{help mipolate}            interpolate missing values
 {space 4}{help missings}            utilities for managing missing values
@@ -207,7 +213,8 @@ available at {help njc_stuff:NJC stuff}.
 {bind:U. Kohler,} 
 {bind:G. Longton,} 
 {bind:J.N. Luchman,} 
-{bind:S. Merryman,} 
+{bind:S. Merryman,}
+{bind:T. Morris,}
 {bind:R. Picard,} 
 {bind:B. Rising,} 
 {bind:G. Rossman,} 

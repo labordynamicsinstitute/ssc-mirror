@@ -1,0 +1,23 @@
+d 'ETH2GRECAL': module to convert dates from the Ethiopian calendar to the Gregorian calendar
+d
+d  eth2grecal converts dates from the Ethiopian calendar to the
+d Gregorian calendar, taking into account the leap years in both
+d calendars. It creates new variables for the Gregorian year,
+d month, and day based on the provided Ethiopian date variables. 
+d The conversion is accurate for Ethiopian calendar dates within
+d the Gregorian year range of 1901-2099. 
+d
+d KW: date handling
+d KW: data management
+d KW: calendar
+d KW: Ethiopia
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20240110
+d
+d Author: Kalle Hirvonen, International Food Policy Research Institute (IFPRI)
+d Support: email K.Hirvonen@@cgiar.org
+d
+f eth2grecal.ado
+f eth2grecal.sthlp
