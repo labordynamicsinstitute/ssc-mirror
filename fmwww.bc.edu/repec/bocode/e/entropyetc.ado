@@ -1,125 +1,88 @@
+*! 3.0.0 NJC 11 January 2024 
+*! 2.0.2 NJC 29 June 2021 
+*! 2.0.1 NJC 15 June 2020 
 *! 2.0.0 NJC 5 July 2018
 *! 1.0.0 NJC 20 November 2016
-program entropyetc, rclass    
-        version 11.2
-        syntax varname [if] [in] [aweight fweight] /// 
-        [, by(varlist) Generate(str) Format(str) * ]
+program entropyetc, sortpreserve    
+    version 8.2
+    syntax varname [if] [in] [aweight fweight/] /// 
+    [, GENerate(str)  by(varlist) list Format(str) * ]
+	
+	if "`generate'`list'" == "" { 
+		di "nothing to do"
+		exit 0 
+	}
 
 	quietly { 
 		marksample touse, strok  
 		if "`by'" != "" markout `touse' `by', strok 
 		count if `touse' 
 		if r(N) == 0 error 2000 
+	
+		if "`by'" == "" { 
+			tempvar by 
+			gen byte `by' = `touse' 
+			label def `by' 1 "all"
+			label val `by' `by'
+			char `by'[varname] " "
+		}
 
 		if "`generate'" != "" parsegenerate `generate' 
-		
-		tempvar group which Shannon Simpson Shannon2 Simpson2 dissim 
-	        tempname mylbl matname matrix vector results 
-
-		if "`by'" != "" { 
-			egen `group' = group(`by') if `touse', label 
-			su `group', meanonly  
-			local ng = r(max) 
-		} 	
-		else { 
-			gen byte `group' = `touse' 
-			local ng = 1 
-			label define `group' 1 "all"
-			label val `group' `group' 
-		}
+	
+		tempvar freq total S p Shannon Simpson Shannon2 Simpson2 
+	
+		if "`exp'" == ""  local exp = 1 
+	
+		bysort `touse' `by' `varlist' : gen double `freq' = sum(`touse' * `exp')   
+		by `touse' `by' `varlist' : replace `freq' = cond(_n == _N, `freq'[_N], .)
+		by `touse' `by' `varlist' : gen `S' = cond(_n == _N, `freq'[_N] > 0, .)
+		bysort `touse' `by' (`S') : replace `S' = sum(`S')
+		by `touse' `by' : replace `S' = `S'[_N]
+		by `touse' `by' : gen double `total' = sum(`freq')
+		by `touse' `by' : replace `total' = `total'[_N] 
 			
-        	gen long `which' = _n
-                compress `which'
-                
-		foreach s in Shannon Simpson Shannon2 Simpson2 dissim { 
-			gen ``s'' = . 
-		} 
-
+		gen double `p' = `freq' / `total'
+	
+		by `touse' `by': gen double `Shannon' = sum(`p' * ln(1/`p'))
+		by `touse' `by': replace `Shannon' = `Shannon'[_N]
+		gen double `Shannon2' = exp(`Shannon')
+	
+		by `touse' `by': gen double `Simpson' = sum(`p'^2)
+		by `touse' `by': replace `Simpson' = `Simpson'[_N]
+		gen double `Simpson2' = 1/`Simpson'
+	
+		label var `S'        "distinct"
 		label var `Shannon'  "Shannon H" 
 		label var `Shannon2' "exp(H)" 
 		label var `Simpson'  "Simpson" 
 		label var `Simpson2' "1/Simpson" 
-		label var `dissim'   "dissim." 
-
-	        mat `matname' = J(`ng', 5, 0) 
-
-		tab `group' `varlist' [`weight' `exp'] if `touse', ///
-		matcell(`matrix') 
-
-		local J = colsof(`matrix') 
-		return scalar categories = `J' 
-
-		forval i = 1/`ng' { 
-			matrix `vector' = `matrix'[`i', 1..`J'] 						
-			noisily mata: my_entropyetc("`vector'", "`results'") 
-	
-			su `which' if `group' == `i', meanonly  
-			local where = r(min) 
-
-	                replace `Shannon' = `results'[1,1] in `where'
-		        replace `Simpson' = `results'[1,2] in `where'
-        		replace `Shannon2' = exp(`results'[1,1]) in `where'
-	                replace `Simpson2' = 1/`results'[1,2] in `where'
-			replace `dissim' = `results'[1,3] in `where' 
-		
-			mat `matname'[`i',1] = `results'[1,1]
-			mat `matname'[`i',2] = `results'[1,2]
-			mat `matname'[`i',3] = exp(`results'[1,1])
-			mat `matname'[`i',4] = 1/`results'[1, 2]
-			mat `matname'[`i',5] = `results'[1, 3]
 			
-			local V = trim(`"`: label (`group') `i''"')
-			local rownames `"`rownames' `"`V'"'"' 
-		} /// loop over groups 
-
-       	        mat colnames `matname' = ///
-		Shannon exp_H Simpson rec_lambda dissim 
-
-		capture mat rownames `matname' = `rownames' 
-		if _rc { 
-			numlist "1/`ng'" 
-			mat rownames `matname' = `r(numlist)' 
-		}
-
-		label var `group' "Group" 
 		if "`format'" == "" local format "%4.3f"
+		format `S' %1.0f 
+		format `Shannon' `Shannon2' `Simpson' `Simpson2' `format'
 	}	
-        	
-	tabdisp `group' if `touse', ///
-	c(`Shannon' `Shannon2' `Simpson' `Simpson2' `dissim') ///
-	format(`format') `options' 
 
-	quietly if "`generate'" != "" { 
-		local lbl1 "Shannon H" 
-		local lbl2 "exp(H)" 
-		local lbl3 "Simpson" 
-		local lbl4 "1/Simpson" 
-		local lbl5 "dissimilarity index" 
-
-		tokenize `Shannon' `Shannon2' `Simpson' `Simpson2' `dissim'  
+	tokenize `S' `Shannon' `Shannon2' `Simpson' `Simpson2'   
+	
+	if "`list'" != "" {
 		forval j = 1/5 { 
-			if "`var_`j''" != "" { 
-				egen `var_`j'' = max(``j''), by(`group') 
-				label var `var_`j'' "`lbl`j''" 
-			}
+			char ``j''[varname] "`: var label ``j'''"
 		}
-	}  
+	
+		tempvar tolist 
+		egen `tolist' = tag(`touse' `by')
+	
+		list `by' `S' `Shannon' `Shannon2' `Simpson' `Simpson2' if `touse' & `tolist', ///
+		abbrev(9) subvarname noobs `options' 
+	}	
 
-	return matrix entropyetc = `matname' 
+	forval j = 1/5 { 
+		if "`var_`j''" != "" { 
+			gen `var_`j'' = ``j'' if `touse'
+		}
+	}
+
 end
-
-mata : 
-
-void my_entropyetc(string scalar matname, string scalar resultsname) { 
-	real colvector p 
-	real rowvector results 
-	p = st_matrix(matname') 
-	p = p / sum(p) 
-	results = -sum(p :* ln(p)), sum(p:^2), 0.5 * sum(abs(p :- (1/cols(p))))
-	st_matrix(resultsname, results) 
-} 
-
-end 
 
 program parsegenerate 
 	tokenize `0' 
@@ -131,7 +94,7 @@ program parsegenerate
 	forval j = 1/5 { 
 		if "``j''" != "" { 
 			gettoken no rest : `j', parse(=)  
-			capture numlist "`no'", max(1) int range(>=1 <=5) 
+			capture numlist "`no'", max(1) int range(>=1 <=4) 
 			if _rc { 
 				di as err "generate() error: ``j''"
 				exit _rc 

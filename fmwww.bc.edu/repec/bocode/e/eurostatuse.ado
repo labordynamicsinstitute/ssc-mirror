@@ -1,9 +1,9 @@
 /*	
-	Authors: Sebastien Fontenay (UCL - sebastien.fontenay@uclouvain.be)
+	Authors: Sebastien Fontenay (UAH, ULB- sebastien.fontenay@uah.es / sebastien.fontenay@ulb.be)
 	         Sem Vandekerckhove (HIVA, KUL - sem.vandekerckhove@kuleuven.be)
 
-	Version: 2.0
-	Last update: September 2018
+	Version: 3.0
+	Last update: Januari 2024
  
 	This program uses syntax from Diego Jose Torres Torres (diegotorrestorres@gmail.com).
 	We also thank Duarte Gonçalves for the early feedback and spontaneously sent help file.
@@ -30,6 +30,8 @@ syntax namelist(name=indicator) [, long noflags nolabel noerase save ///
 
 quietly {
 
+local indicator = upper("`indicator'")
+
 // Clear data and check whether the database exists
 
 if `"`clear'"' == "clear" {
@@ -39,7 +41,8 @@ if (c(changed) == 1) & (`"`clear'"' == "" ) {
     error 4
 }
 
-insheet using "https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=table_of_contents_en.txt"
+copy "https://ec.europa.eu/eurostat/api/dissemination/files/inventory?type=data" databaselist.txt, replace
+insheet using databaselist.txt, clear names
 keep if code=="`indicator'"
 count
 if r(N)==0 {
@@ -47,6 +50,9 @@ if r(N)==0 {
 	clear
 	exit
 }
+
+/* OLD (hope to recover this from another source)
+
 else {
 	replace title=ltrim(title)
 	noisily display in green ///
@@ -57,6 +63,16 @@ else {
 	_newline
 	clear
 }
+*/
+
+/* NEW: no start/end nor title, just latest change */
+else {
+	noisily display in green ///
+	_newline _col(5) "Last update: " lastdatachange ///
+	_newline
+	clear
+}
+
 
 // Check that 7-zip is installed on Windows computer
 
@@ -70,10 +86,13 @@ if c(os)=="Windows" {
 		}
 }
 
-// Download data from Eurostat bulk download facility
+cap erase databaselist.txt 
+
+
+// Download data from Eurostat bulk download facility (2024 migration)
 
 noisily di "Downloading and formating data ..."
-copy  "https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=data%2F`indicator'.tsv.gz" `indicator'.tsv.gz, replace
+copy  "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/`indicator'/?format=TSV&compressed=true" `indicator'.tsv.gz, replace
 if c(os)=="Windows" {
 	shell "C:\Program Files\7-Zip\7zG.exe" x -y `indicator'.tsv.gz
 }
@@ -284,35 +303,86 @@ forvalues i=1/`N_DIMENSIONS' {
 
 drop DimensionS
 
+/* NEW */
+
+/* 
+
+the new (2024) inventory gives this download link (3.0, which does not work):			
+https://ec.europa.eu/eurostat/api/dissemination/sdmx/3.0/structure/codelist/ESTAT/ACCIDENT/1.2?format=TSV&formatVersion=2.0
+
+the online table shows this (works, 2.1, which works):
+https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/codelist/ESTAT/EFFECT/?compressed=true&format=TSV&lang=en			
+
+*/	
+
 // Download labels from Eurostat bulk download facility (default: label variables)
 
 preserve
 
-if "`label'" == "nolabel" {
-}
-else {
-	noisily display in green "Downloading and formating labels ..."
-}
+	// new database has upper case variables, ado appears to not accept placeholder for all variables
+	ds 
+	foreach var of varlist `r(varlist)' {
+		local upper = upper("`var'")
+		cap rename `var' `upper'
+		}
 
-ds *`indicator'*, not
-foreach var of varlist `r(varlist)' {
-	insheet using "https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=dic%2Fen%2Fdimlst.dic", tab clear
-	replace v1=lower(v1)
-	keep if v1=="`var'"
-	local lb`var'=v2
+	if "`label'" == "nolabel" {
+	}
+	else {
+		noisily display in green "Downloading and formating labels ..."
+	}
+
+	ds *`indicator'*, not
+	
+	// First download the list before looping (varlist still in memory)
+	
+	copy "https://ec.europa.eu/eurostat/api/dissemination/files/inventory?type=codelist" codelist.txt, replace
+	insheet using codelist.txt, clear
+	
+	foreach var in `r(varlist)' {
+	di "`var'"
+		*insheet using "https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=dic%2Fen%2Fdimlst.dic", tab clear
+		insheet using codelist.txt, clear
+		*replace v1=lower(v1)
+		gene v1 = lower(code)
+		keep if v1=="`var'"
+		*local lb`var'=v2
+		local lb`var'=label
+		
+		* Download value labels (need to be unzipped)
 		if "`label'" == "nolabel" {
-		}
+			}
 		else {
-			cap insheet using "https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=dic%2Fen%2F`var'.dic", tab clear
-			cap tempfile `var'_file
-			cap rename v1 `var'
-			cap rename v2 `var'_label
-			cap save ``var'_file', replace
+			local lbls = upper("`var'")
+			di "`lbls'"
+			copy "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/codelist/ESTAT/`lbls'/?compressed=true&format=TSV&lang=en" `lbls'.tsv.gz, replace
+				if c(os)=="Windows" {
+					shell "C:\Program Files\7-Zip\7zG.exe" x -y `lbls'.tsv.gz
+				}
+				if c(os)=="MacOSX" {
+					shell gunzip `lbls'.tsv.gz
+				}
+			insheet using `lbls'.tsv, tab double clear
+			
+				cap tempfile `var'_file
+				cap rename v1 `var'
+				cap rename v2 `var'_label
+				cap save ``var'_file', replace
+				erase `lbls'.tsv
+			}
 		}
-}
-
+		
 restore
 
+cap erase codelist.txt
+
+	ds 
+	foreach var of varlist `r(varlist)' {
+		local upper = upper("`var'")
+		cap rename `var' `upper'
+		}
+	ds
+	
 ds *`indicator'*, not
 foreach var of varlist `r(varlist)' {
 	if "`var'"!="time" {
@@ -345,9 +415,15 @@ else {
 }
 
 
-// Save in Stata format 
+// Save in Stata format with lower case variables
 
 compress
+
+ds 
+foreach var of varlist `r(varlist)' {
+	local lower = lower("`var'")
+	cap rename `var' `lower'
+	}
 
 if "`save'" == "save" {
 	save `indicator'.dta, replace

@@ -1,15 +1,13 @@
 d 'FRACTILEPLOT': module for smoothing with respect to distribution function predictors
 d
-d  fractileplot computes and graphs smooths of a response on all of
-d a set  of predictors simultaneously; that is, each smooth is
-d adjusted for the  others. Each predictor is treated on the scale
-d of its distribution function. By default smoothing is with
-d lowess. Optionally smoothing may be with  locpoly. This
-d implements a modern version of the "fractile graphical analysis"
-d of Mahalanobis (Econometrica 1960). The package includes the
-d original version files  under the name fractileplot1.  By default
-d smoothing is with lowess. Optionally smoothing may be with 
-d locpoly. 
+d    fractileplot computes and graphs smooths of a response on all
+d of  a set  of predictors simultaneously; that is, each smooth is 
+d adjusted for the  others. Each predictor is treated on the scale 
+d of its distribution function. By default smoothing is with 
+d lpoly. This implements a modern version of the "fractile
+d graphical   includes the original version files  under the name
+d fractileplot1.    In the original smoothing by default was with
+d lowess. but	optionally smoothing it may be with locpoly. 
 d
 d KW:  distribution function
 d KW: fractile plot

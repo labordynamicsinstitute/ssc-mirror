@@ -2,10 +2,14 @@ d 'ENTROPYETC': module for entropy and related measures for categories
 d
 d  entropyetc treats a single supplied variable, numeric or string,
 d as categorical, so that distinct values define distinct
-d categories, and calculates Shannon entropy H, exp H, Simpson's
-d sum of squared probabilities R, 1/R, and the dissimilarity index
-d D.  Results are  displayed and saved as a matrix. Optionally, new
-d variables may be generated containing results. 
+d categories, and calculates the number of distinct categories
+d observed, Shannon entropy H, exp H, Simpson's sum of squared
+d probabilities R and 1/R.  entropyetc2 is the previous version,
+d similar in principle, but different in detail and implementation.
+d It is renamed but kept on SSC to allow reproduction of results by
+d the previous version. The major issue with this version is that
+d it could fail when asked to produce results for very large
+d numbers of categories. 
 d
 d KW: inequality
 d KW: diversity
@@ -18,12 +22,14 @@ d KW: Herfindahl
 d KW: Hirschman
 d KW: Turing   
 d
-d Requires: Stata version 11.2
+d Requires: Stata version 8.2 (entropyyetc), 11.2 (entropyetc2)
 d
-d Distribution-Date: 20210704
+d Distribution-Date: 20240112
 d
 d Author: Nicholas J. Cox, Durham University
 d Support: email N.J.Cox@@durham.ac.uk
 d
 f entropyetc.ado
 f entropyetc.sthlp
+f entropyetc2.ado
+f entropyetc2.sthlp

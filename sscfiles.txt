@@ -10323,6 +10323,7 @@ fmwww.bc.edu/repec/bocode/i/invmvt.ado
 fmwww.bc.edu/repec/bocode/i/iati.sthlp
 fmwww.bc.edu/repec/bocode/i/intllf_sgt_group.ado
 fmwww.bc.edu/repec/bocode/e/egenmore.html
+fmwww.bc.edu/repec/bocode/e/entropyetc2.sthlp
 fmwww.bc.edu/repec/bocode/e/eformat.hlp
 fmwww.bc.edu/repec/bocode/e/epi_sir.ado
 fmwww.bc.edu/repec/bocode/e/episens.html
@@ -11061,6 +11062,7 @@ fmwww.bc.edu/repec/bocode/e/epitable3.sthlp
 fmwww.bc.edu/repec/bocode/e/epi_seir.ado
 fmwww.bc.edu/repec/bocode/e/etab_s1.dta
 fmwww.bc.edu/repec/bocode/e/ex2_datadictionary.csv
+fmwww.bc.edu/repec/bocode/e/entropyetc2.ado
 fmwww.bc.edu/repec/bocode/e/estout_summary_statistics_options.html
 fmwww.bc.edu/repec/bocode/e/emplorenz.mo
 fmwww.bc.edu/repec/bocode/e/encoder.pkg
