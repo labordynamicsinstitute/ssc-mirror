@@ -101,3 +101,12 @@
 {pstd}China Stata Club(爬虫俱乐部){p_end}
 {pstd}Kaifeng, China{p_end}
 {pstd}yzhfang1@163.com{p_end}
+
+{pstd}Dr. Muhammad Usman{p_end}
+{pstd}UE Business School, Division of Management and Administrative Sciences, University of Education{p_end}
+{pstd}Lahore, Pakistan{p_end}
+{pstd}m.usman@ue.edu.pk{p_end}
+
+
+
+

@@ -36,6 +36,10 @@ up according to the user requirements.
 {p_end}
 
 {phang}
+{opt model(string)} Set a model which calculate abnormal returns. 1 is the default, represents the CAPM, 2 represents the Constant Mean Return Model, 3 represents the Market Adjusted Model.
+{p_end}
+
+{phang}
 {opt index(string)}  Set index which stands for the market's daily return.The default is 300. users may have many choices to use 
 different indeces. 
 {p_end}
@@ -50,8 +54,6 @@ different indeces.
 	{pstd}399006 Shenzhen Growth Enterprise Market Index.{p_end}
 	{pstd}399008 Shenzhen small and mediam sized 300-firm Index.{p_end}
 	
-
-
 {phang}
 {opt estsmpn(int)}  Set the minimum number which stands for the sample size within the 365 days before the event date.
 The default is 50. If there are less than 50 trading days in the 365 days before the event date, the event study for the 
@@ -79,10 +81,14 @@ output charts of other types, they can add other output types to graph. The foll
 {opt t(filename)}  Examine whether specific events had a significant effect on the CAR by t-test,and output the docx.
 {p_end}
 
+{phang}
+{opt wilcoxon(filename)}  requests cnevent to perform the Wilcoxon signed-rank test and produce an output .docx file.
+{p_end}
+
 {marker description}{...}
 {title:Description}
    
-{pstd}{it:cnevent} can carry out a standard market model event study. It calculates the abnormal returns and Cumulative abnormal 
+{pstd}{it:cnevent} can carry out a standard event study. It calculates the abnormal returns and Cumulative abnormal 
 returns for each event.
 To run this command, you only need to load your event list into memory containing necessary variables. The event list contains a 
 variable of event date that record the date when the event happens and a variable of event firm id which identifies the subject of
@@ -102,7 +108,7 @@ each sample. For instance:
 {pstd}After reading the event data, you need to specify the relative parameters to the event date to set the event window and estimate
 window. For example, you may choose (-200,-10) as the estimate window and (-3,5) as the event window, and then you may set parameters 
 like this: ...estw(-200 -10) eventw(-3 5).
-In this command, we use the market model to calculate the abnormal return. A output file will be stored in CAR.dta or the file name 
+In this command, we can select the market model and other models to calculate the abnormal return. A output file will be stored in CAR.dta or the file name 
 you specified with the {it:cnevent} option. which contains variables of your event list, abnormal returns and and the Cumulative 
 Abnormal Return. 
 {p_end}
@@ -151,6 +157,17 @@ Abnormal Return.
 {phang}
 {stata `"cnevent stkcd edate,index(1) estsmpn(100)"'}
 {p_end}
+{phang}
+{stata `"cnevent stkcd edate,index(1) model(2) estsmpn(100)"'}
+{p_end}
+{phang}
+{stata `"cnevent stkcd edate,index(1) model(2) estsmpn(100) t(t1) wilcoxon(w1)"'}
+{p_end}
+
+{phang}
+{stata `"cnevent stkcd edate,index(1) model(2) estsmpn(100) graph(p,png)"'}
+{p_end}
+
 
 
 {title:Examples2}
@@ -177,7 +194,7 @@ Abnormal Return.
 {stata `"keep stkcd ed"'}
 {p_end}
 {phang}
-{stata `"cnevent stkcd ed,estw(-190,-10) eventw(-3,3 -2,3 -1,5) ar(AR_k) car(CAR_k) index(1) estsmpn(150)  filename(myeventstudy) graph(1p,pdf) t(ttest)"'}
+{stata `"cnevent stkcd ed,estw(-190,-10) eventw(-3,3 -2,3 -1,5) ar(AR_k) car(CAR_k) index(1) estsmpn(150)  filename(myeventstudy) graph(1p,pdf) t(ttest) wilcoxon(w)"'}
 {p_end}
 
 

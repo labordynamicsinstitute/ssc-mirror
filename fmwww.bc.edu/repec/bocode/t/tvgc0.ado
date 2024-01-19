@@ -6,7 +6,7 @@
 capture program drop tvgc0
 // do not clear mata!
 program tvgc0, rclass 
-version 13
+version 14
 
 syntax varlist(min=2 numeric ts) [if] [in]  , ///
 											P(integer) ///

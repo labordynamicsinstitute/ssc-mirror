@@ -15,9 +15,9 @@ d KW: ARIMA
 d KW: seasonal time series
 d KW: stationarity
 d
-d Requires: Stata version 13, hegy from SJ/st0453 and kpss from SSC (q.v.) 
+d Requires: Stata version 15.1, hegy from SJ/st0453 and kpss from SSC (q.v.) 
 d
-d Distribution-Date: 20230528
+d Distribution-Date: 20240118
 d
 d Author: Ilya Bolotov, Prague University of Economics and Business
 d Support: email ilya.bolotov@@vse.cz

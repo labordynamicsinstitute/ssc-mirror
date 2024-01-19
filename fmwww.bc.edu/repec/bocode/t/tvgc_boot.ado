@@ -6,7 +6,7 @@
 capture program drop tvgc_boot
 // do not clear mata!
 program tvgc_boot, rclass 
-version 13
+version 14
 
 syntax varlist(min=2 numeric ts) [if] [in] [, ///
 											TREND ///
@@ -15,7 +15,7 @@ syntax varlist(min=2 numeric ts) [if] [in] [, ///
 											WINdow(integer -1) ///
 											BOOT(integer -1) ///
 											SEED(integer -1) ///
-											SIZECONTROL(integer 12) ///
+											SIZEcontrol(integer 12) ///
 											ROBUST ///
 											noPRINT]
 										

@@ -19,9 +19,9 @@ d KW: Phillips
 d KW: Shi
 d KW: Hurn
 d
-d Requires: Stata version 13 and moremata from SSC (q.v.)
+d Requires: Stata version 14 and moremata from SSC (q.v.)
 d
-d Distribution-Date: 20220924
+d Distribution-Date: 20240118
 d
 d Author: Jesús Otero, Universidad del Rosario
 d Support: email jesus.otero@@urosario.edu.co

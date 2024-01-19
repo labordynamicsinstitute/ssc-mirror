@@ -1,8 +1,9 @@
 * Authors:
 * Chuntao Li, Ph.D. , China Stata Club(爬虫俱乐部)(chtl@zuel.edu.cn)
 * Yizhuo Fang, China Stata Club(爬虫俱乐部)(yzhfang1@163.com)
+* Dr. Muhammad Usman，UE Business school, Division of Management and Administrative Sciences, University of Education (m.usman@ue.edu.pk)
 * January 3rd, 2023
-* Program written by Dr. Chuntao Li and Yizhuo Fang
+* Program written by Dr. Chuntao Li , Yizhuo Fang and Muhammad Usman
 * Draw a Candlestick Chart with the Chinese listed stock code or index.
 * Can only be used in Stata version 17.0 or above
 
@@ -68,12 +69,12 @@ program define cnkchart
 		}
 		else{
 			cntrade `stkcd',index	
-		} 
-		
+		}
 		while length("`stkcd'")<6{
 			local stkcd 0`stkcd'
 		}
-		rm `stkcd'.dta
+	cap	rm `stkcd'.dta
+	cap	rm index`stkcd'.dta
 	}
 	
 	if `"`traday'"' != ""{
@@ -141,7 +142,7 @@ program define cnkchart
         qui	keep in -90/-1
 		} 
     	else{
-			disp as error "The number of observations(" _N ") is less than default(90), please reset by option traday()"
+			disp as error "The number of observations(" _N ") is less than default(90)"
 			exit 601
 		}	
 	}

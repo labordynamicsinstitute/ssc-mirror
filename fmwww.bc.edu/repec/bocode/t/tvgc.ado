@@ -6,11 +6,12 @@
 *! v1.4 cfb 17jan2021 added restab
 *! v1.5 cfb 01mar2021 adjust handling of notitle
 *! v1.5 cfb 24sep2022 remove mata clear
+*! v1.5 cfb 18jan2024 requires v14 for runiformint()
 
 capture program drop tvgc
 // DISABLE mata: mata clear
 program tvgc, rclass 
-version 13
+version 14
 
 syntax varlist(min=2 numeric ts) [if] [in] [, ///
 											TREND ///
