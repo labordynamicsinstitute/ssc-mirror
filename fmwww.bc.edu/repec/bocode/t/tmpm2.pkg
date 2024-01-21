@@ -22,7 +22,7 @@ d KW: ICD-10
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20221023
+d Distribution-Date: 20240120
 d
 d Author:  Alan Cook, Baylor University Medical Center
 d Support: email adcookmd@@gmail.com
@@ -30,3 +30,4 @@ d
 f tmpm2.ado
 f tmpm2.sthlp
 f ../m/marc_table.dta
+f ../m/marc2_table.dta
