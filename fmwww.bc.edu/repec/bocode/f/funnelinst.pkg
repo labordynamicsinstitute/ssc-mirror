@@ -1,0 +1,33 @@
+d 'FUNNELINST': module to generate funnel plots for comparing institutional performance
+d
+d  funnelinst generates funnel plots for comparing units (e.g.
+d physicians, hospitals, etc.) on a given performance measure (e.g.
+d readmission, mortality, etc.) either cross-sectionally or
+d longitudinally (i.e. the change between two timepoints), as
+d described in Spiegelhalter (2005a, 2005b, 2012). The funnel plot
+d may be thought of as a control chart in which units that fall
+d outside of the confidence limits be considered "out of
+d statistical control". A particularly salient feature of
+d funnelinst is an option to account for over-dispersion of the
+d performance measure due to unmeasured risk factors, which could
+d lead to a large number of units being inappropriately classified
+d as out of control. 
+d
+d KW: control charts
+d KW: funnel plots
+d KW: outliers
+d KW: over-dispersion
+d KW: institutional profiling
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20240122
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f funnelinst.ado
+f funnelinst.sthlp
+f ../m/mean.dta
+f ../c/cabg.dta
+f ../t/teenage.dta

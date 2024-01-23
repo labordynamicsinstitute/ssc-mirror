@@ -118,6 +118,7 @@ p ftree module to save directory information in text file (Windows only)
 p full_palette module to display color palette
 p fulltab module to generate 'full tables' which can be stacked into matrices
 p funnelcompar module to perform funnel plot for institutional comparison
+p funnelinst module to generate funnel plots for comparing institutional performance
 p funnelperform module to produce funnel plot for institutional comparison
 p fuzzydid module to estimate Fuzzy Difference-in-Difference Designs
 p fvfix module to compute the future value of a series of equal payments (cash flows)

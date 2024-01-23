@@ -1,0 +1,20 @@
+d 'ONEDRIVE': module to find and set Microsoft OneDrive local folder as Stata's working directory
+d
+d  onedrive locates a user's Microsoft OneDrive directory and sets
+d Stata's working directory to that location. The command is useful
+d for running do-files saved in OneDrive across different computers
+d (e.g., office or home) or shared between colleagues without the
+d need to manually amend the working directory in the do-file. 
+d
+d KW: data management
+d KW: OneDrive
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20240122
+d
+d Author: Giacomo Zanello, University of Reading
+d Support: email g.zanello@@reading.ac.uk
+d
+f onedrive.ado
+f onedrive.sthlp

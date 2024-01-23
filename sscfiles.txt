@@ -3591,6 +3591,7 @@ fmwww.bc.edu/repec/bocode/c/color-tflbrown.style
 fmwww.bc.edu/repec/bocode/c/collapse2.html
 fmwww.bc.edu/repec/bocode/c/chardef.ado
 fmwww.bc.edu/repec/bocode/c/cnar.pkg
+fmwww.bc.edu/repec/bocode/c/cabg.dta
 fmwww.bc.edu/repec/bocode/c/cem.ado
 fmwww.bc.edu/repec/bocode/c/cirkdevm.ado
 fmwww.bc.edu/repec/bocode/c/cntraveltime.sthlp
@@ -7609,6 +7610,7 @@ fmwww.bc.edu/repec/bocode/f/fracdiff.ado
 fmwww.bc.edu/repec/bocode/f/fitstat_ers.ado
 fmwww.bc.edu/repec/bocode/f/ftools_common.mata
 fmwww.bc.edu/repec/bocode/f/fastcd.hlp
+fmwww.bc.edu/repec/bocode/f/funnelinst.sthlp
 fmwww.bc.edu/repec/bocode/f/fbep.sthlp
 fmwww.bc.edu/repec/bocode/f/flowchart.sthlp
 fmwww.bc.edu/repec/bocode/f/fabplot.sthlp
@@ -8026,6 +8028,7 @@ fmwww.bc.edu/repec/bocode/f/f_able.pkg
 fmwww.bc.edu/repec/bocode/f/funnelcompar.pkg
 fmwww.bc.edu/repec/bocode/f/findunique.sthlp
 fmwww.bc.edu/repec/bocode/f/fdta.pkg
+fmwww.bc.edu/repec/bocode/f/funnelinst.ado
 fmwww.bc.edu/repec/bocode/f/frmt_opts.html
 fmwww.bc.edu/repec/bocode/f/fastmic.html
 fmwww.bc.edu/repec/bocode/f/fasterxtile.ado
@@ -8280,6 +8283,7 @@ fmwww.bc.edu/repec/bocode/f/factext.hlp
 fmwww.bc.edu/repec/bocode/f/framingham.dta
 fmwww.bc.edu/repec/bocode/f/fdta.html
 fmwww.bc.edu/repec/bocode/f/frexp.ado
+fmwww.bc.edu/repec/bocode/f/funnelinst.pkg
 fmwww.bc.edu/repec/bocode/f/frm_ggoff.sthlp
 fmwww.bc.edu/repec/bocode/f/frontier_teci.sthlp
 fmwww.bc.edu/repec/bocode/f/fisid.ado
@@ -12207,6 +12211,7 @@ fmwww.bc.edu/repec/bocode/o/opchar_gs.sthlp
 fmwww.bc.edu/repec/bocode/o/outtable7.hlp
 fmwww.bc.edu/repec/bocode/o/ovport.ado
 fmwww.bc.edu/repec/bocode/o/optifact.hlp
+fmwww.bc.edu/repec/bocode/o/onedrive.ado
 fmwww.bc.edu/repec/bocode/o/outseries.ado
 fmwww.bc.edu/repec/bocode/o/ODKexample.csv
 fmwww.bc.edu/repec/bocode/o/ordplot.html
@@ -12253,6 +12258,7 @@ fmwww.bc.edu/repec/bocode/o/oma.ado
 fmwww.bc.edu/repec/bocode/o/omamatv3.linux.plugin
 fmwww.bc.edu/repec/bocode/o/outwrite.sthlp
 fmwww.bc.edu/repec/bocode/o/ofrtplot.ado
+fmwww.bc.edu/repec/bocode/o/onedrive.pkg
 fmwww.bc.edu/repec/bocode/o/orse.ado
 fmwww.bc.edu/repec/bocode/o/ordplot.ado
 fmwww.bc.edu/repec/bocode/o/oeratio.html
@@ -12366,6 +12372,7 @@ fmwww.bc.edu/repec/bocode/o/overlay.ado
 fmwww.bc.edu/repec/bocode/o/omodel.html
 fmwww.bc.edu/repec/bocode/o/outsum.html
 fmwww.bc.edu/repec/bocode/o/oaxaca_rif.sthlp
+fmwww.bc.edu/repec/bocode/o/onedrive.sthlp
 fmwww.bc.edu/repec/bocode/o/outreg2.html
 fmwww.bc.edu/repec/bocode/o/omninorm.hlp
 fmwww.bc.edu/repec/bocode/o/outreg.sthlp
@@ -14459,6 +14466,7 @@ fmwww.bc.edu/repec/bocode/t/ttable.html
 fmwww.bc.edu/repec/bocode/t/transint.sthlp
 fmwww.bc.edu/repec/bocode/t/twitter2stata.sthlp
 fmwww.bc.edu/repec/bocode/t/tabhbar.html
+fmwww.bc.edu/repec/bocode/t/teenage.dta
 fmwww.bc.edu/repec/bocode/t/triangular.ado
 fmwww.bc.edu/repec/bocode/t/triangular.sthlp
 fmwww.bc.edu/repec/bocode/t/twexp.sthlp
@@ -21248,6 +21256,7 @@ fmwww.bc.edu/repec/bocode/m/micombine.html
 fmwww.bc.edu/repec/bocode/m/mp_b_dta.sthlp
 fmwww.bc.edu/repec/bocode/m/marc2_table.dta
 fmwww.bc.edu/repec/bocode/m/mvsamp1i.ado
+fmwww.bc.edu/repec/bocode/m/mean.dta
 fmwww.bc.edu/repec/bocode/m/mregress.sthlp
 fmwww.bc.edu/repec/bocode/m/mf_somdtransf.html
 fmwww.bc.edu/repec/bocode/m/mvtnorm_mata.do
