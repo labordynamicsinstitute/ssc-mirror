@@ -89,6 +89,7 @@ p evalue module for conducting sensitivity analyses for unmeasured confounding i
 p evalue_estat module for conducting postestimation sensitivity analyses of unmeasured confounding in observational studies
 p evalues module to calculate E-values
 p event_plot module to plot the staggered-adoption diff-in-diff ("event study") estimates
+p eventbaseline module to correct event study after xthdidregress
 p eventcoefplot module to produce advanced event-study graphical analysis
 p eventdd module to panel event study models and generate event study plots
 p eventstudy module to perform event studies in finance

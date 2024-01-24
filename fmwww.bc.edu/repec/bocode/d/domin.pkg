@@ -19,7 +19,7 @@ d KW:  shapley values
 d
 d Requires: Stata version 15 and package moremata from SSC (q.v.)
 d
-d Distribution-Date: 20230820
+d Distribution-Date: 20240123	
 d
 d Author: Joseph N. Luchman, Fors Marsh
 d Support: email  jluchman@@forsmarsh.com
@@ -27,7 +27,6 @@ d
 f domin.ado
 f domin.sthlp
 f dominance.mata
-f dominance0.mata
 f domme.ado
 f domme.sthlp
 f ../f/fitdom.ado
@@ -38,4 +37,3 @@ f ../m/mixdom.ado
 f ../m/mixdom.sthlp
 f ../m/mvdom.ado
 f ../m/mvdom.sthlp
-f ../l/lb_dominance.mlib

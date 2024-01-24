@@ -1,0 +1,24 @@
+d 'EVENTBASELINE': module to correct event study after xthdidregress
+d
+d  eventbaseline transforms the coefficients estimated by
+d xthdidregress into a correct event study relative to a   
+d baseline. The reported coefficients are the average treatment
+d effects on the treated (ATT) for each period	  relative to the
+d baseline. The baseline can be either a period before the
+d treatment or the average of the    pre-treatment periods. 
+d
+d KW: event study
+d KW: heterogeneous DiD
+d KW: ATET
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20240123
+d
+d Author: Miklos Koren, Central European University
+d Support: email KorenM@@ceu.edu
+d
+f eventbaseline.ado
+f eventbaseline.sthlp
+f eventbaseline.do
+f ../d/df.dta
