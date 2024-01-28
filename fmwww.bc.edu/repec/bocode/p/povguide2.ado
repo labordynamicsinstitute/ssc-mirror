@@ -3,6 +3,7 @@ POVGUIDE2
 by Reginald Hebert (rhebert3@student.gsu.edu)
 (Update to POVGUIDE, originally written by David Kantor)
 *******************************************************************************
+24 January 2024		- Updated help file to amend a typo; added 2024 tables
 20 September 2023 	- Code cleanup
 20 August 2023 		- 	Added Alaska and Hawaii tables, plus option for enabling 
 					state FIPS as an argument
@@ -97,7 +98,8 @@ matrix input `povtable' = (
 /*2020*/	12760, 4480 \
 /*2021*/	12880, 4540 \
 /*2022*/	13590, 4720 \
-/*2023*/	14850, 5140 
+/*2023*/	14850, 5140 \
+/*2024*/	15060, 5380
 );
 #delimit cr
 
@@ -157,7 +159,8 @@ matrix input `povtableAK' = (
 /*2020*/	15950,	5600	\
 /*2021*/	16090,	5680	\
 /*2022*/	16990,	5900	\
-/*2023*/	18210,	6430	
+/*2023*/	18210,	6430	\
+/*2024*/	18810,  6730
 );
 #delimit cr
 
@@ -219,13 +222,14 @@ matrix input `povtableHI' = (
 /*2020*/	14680,	5150	\
 /*2021*/	14820,	5220	\
 /*2022*/	15630,	5430	\
-/*2023*/	16770,	5910	
+/*2023*/	16770,	5910	\
+/*2024*/	17310,  6190
 );
 #delimit cr
 
 
 local yearlo "1973"
-local yearhi "2023"
+local yearhi "2024"
 
 
 

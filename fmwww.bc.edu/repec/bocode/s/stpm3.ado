@@ -1,4 +1,4 @@
-*! version 1.05 2023-10-25
+*! version 1.06 2024-01-25
 
 program stpm3, eclass byable(onecall)
 	version 16.1
@@ -38,7 +38,7 @@ program Estimate, eclass
          INITVALUESLOOP                                       ///
          KNOTs(passthru)                                      /// internal knots
          KNOTSTVC(passthru)                                   /// 
-         Level(real `c(level)')                               /// 
+         /*Level(real `c(level)')*/                           /// 
          MLMETHOD(string)                                     ///
          NEQ(integer 2)                                       ///
          noCONStant                                           ///
@@ -120,7 +120,7 @@ program Estimate, eclass
     local extfunclist `"`extfunclist' `r(extfunclist)'"'
     local tvc `r(cleanedvarlist)'
   }
-  stpm3_gen_extended_functions `extfunclist', xb("`anything'") tvc("`tvc'")
+  stpm3_gen_extended_functions `extfunclist', xb("`anything'") tvc("`tvc'") 
   
   if `"`tvc'"' != "" local tvcopt tvc(`tvc')  
   
@@ -173,7 +173,9 @@ program Estimate, eclass
     
 // ml options
   _get_diopts diopts options, `options'   
+  di "`options'"
   mlopts mlopts, `options'    
+  di "`mlopts'"
   if "`offset'" != "" {
   	di as error "Offset option not currently implemented."
 	exit 198
@@ -305,7 +307,7 @@ program Estimate, eclass
         capture `cmdline' initmod(`initmodname')
         capture mata: rmexternal("`stpm3_struct'")
         if "`e(converged)'"=="1" {
-          Replay, level(`level')  `eform' `diopts' `header'   
+          Replay, `eform' `diopts' `header'   
           di as result "Warning: This is a test version of stpm3"
           exit
         }
@@ -399,14 +401,14 @@ program Estimate, eclass
   
   
   if `empty_varlist' local eform
-  Replay, level(`level')  `eform' `diopts' `header' neq(`neq')  
+  Replay,  `eform' `diopts' `header' neq(`neq')  
 end
 
 program Replay
-  syntax [, EFORM Level(int `c(level)') noHEADer neq(integer 2) * ]
+  syntax [, EFORM noHEADer neq(integer 2) * ]
   _get_diopts diopts, `options'
 
-   ml display, `eform' level(`level') `diopts' `header' neq(`neq')
+   ml display, `eform' `diopts' `header' neq(`neq')
    if "`e(scale)'" == "lnhazard" {
      di as result "Quadrature method: Gauss-Legendre with `e(nodes)' nodes"
    }
@@ -871,23 +873,28 @@ program define stpm3_extfun_options, rclass
 
   local 0 `ns'`bs'`rcs'`fp'`poly'`fn'
   if "`ns'`bs'`rcs'" != "" {
-    syntax varname, [bknots(numlist min=2 max=2)     ///
-	                   df(string)                      ///
+    syntax varname, [allknots(string)     ///
+                     bknots(string)     ///
                      CENTer                          ///
                      CENTerv(numlist min=1 max=1)    ///
                      degree(integer 3)               ///
-					           allknots(numlist ascending)     ///
-                     knots(numlist ascending)        ///
-                     winsor(string)]
-            
-    return local varname  `varlist'
-    return local df       `df'   
-    return local allknots `allknots'
-    return local knots    `knots'
-    return local center   `center'
-    return local centerv  `centerv'
-    return local winsor   `winsor' 
-    return local functype `functype'
+	                   df(string)                      ///
+                     knots(string)        ///
+                     LNTime                          ///
+                     PERCentile                      ///
+                     winsor(string)                  ///
+                     ]
+                     
+    return local varname    `varlist'
+    return local df         `df'   
+    return local allknots   `allknots'
+    return local knots      `knots'
+    return local center     `center'
+    return local centerv    `centerv'
+    return local lntime     `lntime'
+    return local percentile `percentile'
+    return local winsor     `winsor' 
+    return local functype   `functype'
     if "`bs'" != "" return local degree `degree'
   }
   else if "`fp'" != "" {

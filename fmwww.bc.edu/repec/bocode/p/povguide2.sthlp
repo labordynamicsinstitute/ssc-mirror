@@ -1,5 +1,5 @@
 {smcl}
-{* 4aug2023}
+{* 24jan2024}
 {hline}
 help for {hi:povguide2}
 {hline}
@@ -7,7 +7,7 @@ help for {hi:povguide2}
 {title:Generate the U.S. Poverty Guideline value for a given family size and year}
 
 {p 8 17 2}
-{cmd:povguide, gen(}{it:newvar}{cmd:)}
+{cmd:povguide2, gen(}{it:newvar}{cmd:)}
 {cmd:famsize(}{it:famsize}{cmd:)}
 {cmd:year(}{it:year}{cmd:)}
 [{cmd:fips(}{it:fips}{cmd:)}]
@@ -17,7 +17,7 @@ help for {hi:povguide2}
 
 {p 4 4 2}
 {cmd:povguide2} generates a numeric variable representing the official
-U.S. poverty guideline. This is an update to the original {cmd:povguide} by David Kantor. Supports years 1973-2023, plus guideline values for Alaska and Hawaii.
+U.S. poverty guideline. This is an update to the original {cmd:povguide} by David Kantor. Supports years 1973-2024, plus guideline values for Alaska and Hawaii.
 
 {p 4 4 2}
 Important: this is one of two official poverty levels

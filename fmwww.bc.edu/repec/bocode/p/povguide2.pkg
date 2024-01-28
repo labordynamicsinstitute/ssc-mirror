@@ -1,7 +1,7 @@
-d 'POVGUIDE2': module to compute Federal Poverty Guidelines by family size and year, 1973-2023
+d 'POVGUIDE2': module to compute Federal Poverty Guidelines by family size and year, 1973-2024
 d
 d  This is an extension of the original Stata module POVGUIDE by
-d David Kantor written to include guideline data from 2009-2023,
+d David Kantor written to include guideline data from 2009-2024,
 d whereas the original module stopped at 2008. Moreover, we have
 d added the official guideline data for Alaska and Hawaii. The FIPS
 d code argument is optional. When omitted, the command defaults to
@@ -16,7 +16,7 @@ d KW: data management
 d
 d Requires: Stata version 17
 d
-d Distribution-Date: 20230921
+d Distribution-Date: 20240127
 d
 d Author: Reginald Hebert, Georgia State University
 d Support: email rhebert3@@student.gsu.edu

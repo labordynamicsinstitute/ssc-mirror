@@ -1,8 +1,8 @@
-*! reghdfejl 0.6.0 20 December 2023
+*! reghdfejl 0.6.1 26 January 2024
 
 // The MIT License (MIT)
 //
-// Copyright (c) 2023 David Roodman
+// Copyright (c) 2023-24 David Roodman
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -36,7 +36,7 @@ program define reghdfejl, eclass
 		exit 0
 	}
 
-  local cmdline `0'
+  local cmdline: copy local 0
 
   if `"`0'"'=="mask" {
     cap findfile reghdfe.ado
@@ -88,7 +88,7 @@ program define reghdfejl, eclass
   }
 
 	syntax anything [if] [in] [aw pw iw/], [Absorb(string) Robust CLuster(string) vce(string) RESIDuals ITerations(integer 16000) gpu THReads(integer 0) ///
-                                          noSAMPle TOLerance(real 1e-8) Level(real `c(level)') NOHEADer NOTABLE compact VERBose noCONStant *]
+                                          noSAMPle TOLerance(real 1e-8) Level(real `c(level)') NOHEADer NOTABLE compact VERBose INTERruptible noCONStant KEEPSINgletons *]
   local sample = "`sample'"==""
 
   _assert `iterations'>0, msg("{cmdab:It:erations()} must be positive.") rc(198)
@@ -102,6 +102,7 @@ program define reghdfejl, eclass
   if "`gpu'"!="" local methodopt , method = :`gpulib'
 
   if `threads' local threadsopt , nthreads = `threads'
+  if "`keepsingletons'"!="" local singletonopt , drop_singletons = false
   
   reghdfejl_load
 
@@ -111,14 +112,14 @@ program define reghdfejl, eclass
       tempname wtvar
       gen double `wtvar' = `exp' if `touse'
     }
-    else local wtvar `exp'
+    else local wtvar: copy local exp
     local wtopt , weights = :`wtvar'
     local haspw = "`weight'"=="pweight"
   }
 
   fvunab anything: `anything'
   tokenize `anything'
-  local depname `1'
+  local depname: copy local 1
   macro shift
 
   local hasiv = strpos(`"`*'"', "=")
@@ -148,7 +149,15 @@ program define reghdfejl, eclass
       _assert `size'>=0, msg("size() must be a positive integer") rc(198)
       _assert `procs'>=0, msg("procs() must be a positive integer") rc(198)
       if `procs'==0 local procs 1
-      local bscluster `cluster'
+
+      cap confirm numeric var `cluster'
+      if _rc {
+        tempvar t
+        qui egen long `t' = group(`cluster')
+        local bslcuster: copy local t
+      }
+      else local bscluster: copy local cluster
+
       if `"`seed'"'!="" set seed `seed'
     }
     else if "`cluster'"!="" local cluster `*'
@@ -163,8 +172,9 @@ program define reghdfejl, eclass
     local cluster: subinstr local cluster " # # " "#", all
     local cluster: subinstr local cluster " # " "#", all
     foreach term in `cluster' {
-      if strpos(`"`term'"', "#") {  // allow clustering on interactions
-        local term: subinstr local term "#" " ", all
+      cap confirm numeric var `term'
+      if _rc {  // allow clustering on interactions
+        if strpos(`"`term'"', "#") local term: subinstr local term "#" " ", all
         tempvar t
         qui egen long `t' = group(`term')
         local _cluster `_cluster' `t'
@@ -184,9 +194,12 @@ program define reghdfejl, eclass
         _ms_parse_parts `var'
         if !r(omit) {
           local `varset'name ``varset'name' `var'
-          tempvar t
-          qui gen double `t' = `var' if `touse'
-          local `varset' ``varset'' `t'
+          if "`r(op)'"=="" local `varset' ``varset'' `var'
+          else {
+            tempvar t
+            qui gen double `t' = `var' if `touse'
+            local `varset' ``varset'' `t'
+          }
         }
       }
     }
@@ -196,7 +209,8 @@ program define reghdfejl, eclass
   _assert `kdep'==1, msg("Multiple dependent variables specified.") rc(198) 
 
   if `"`absorb'"' != "" {
-    local 0 `absorb'
+    ExpandAbsorb `absorb'
+    local 0 `r(exp)'
     syntax anything(equalok), [SAVEfe]
     tokenize `anything', parse(" =")
 
@@ -211,12 +225,12 @@ program define reghdfejl, eclass
       local feterms `feterms' `1'
       macro shift
     }
-    local absorb `feterms'
+    local absorb: copy local feterms
     local N_hdfe: word count `feterms'
 
     local feterms i.`: subinstr local feterms " " " i.", all'
 
-    local absorbvars `feterms'
+    local absorbvars: copy local feterms
     local feterms: subinstr local feterms "##c." ")*(", all
     local feterms: subinstr local feterms "#c." ")&(", all
     local feterms: subinstr local feterms "##i." ")*fe(", all
@@ -258,7 +272,7 @@ program define reghdfejl, eclass
   else {
     local 0, `_options'
     syntax, [RESIDuals(name) *]
-    local _options `options'
+    local _options: copy local options
   }
 
   if `"`_options'"' != "" di as inp `"`_options'"' as txt " ignored" _n
@@ -289,12 +303,15 @@ program define reghdfejl, eclass
   }
 
   * Estimate!
-  jl, qui: f = @formula(`dep' ~ `inexog' `ivarg' `feterms')
+  local flinejl f = @formula(`dep' ~ `inexog' `ivarg' `feterms')
+  local cmdlinejl reg(df, f `wtopt' `vcovopt' `methodopt' `threadsopt' `singletonopt' `saveopt', tol=`tolerance', maxiter=`iterations')
+  jl, qui: `flinejl'
   if "`verbose'"!="" {
-    di "`reg(df, @formula(`dep' ~ `inexog' `ivarg' `feterms') `wtopt' `vcovopt' `methodopt' `threadsopt' `saveopt', tol=`tolerance', maxiter=`iterations')'"
-    jl: m = reg(df, f `wtopt' `vcovopt' `methodopt' `threadsopt' `saveopt', tol=`tolerance', maxiter=`iterations')
+    di `"`flinejl'"'
+    di `"`cmdlinejl'"'
+    jl, `interruptible': m = `cmdlinejl'
   }
-  else jl, qui: m = reg(df, f `wtopt' `vcovopt' `methodopt' `threadsopt' `saveopt', tol=`tolerance', maxiter=`iterations')
+  else jl, qui `interruptible': m = `cmdlinejl'
 
   tempname k
   jl, qui: k = length(coef(m)); SF_scal_save("`k'", k)
@@ -322,7 +339,7 @@ program define reghdfejl, eclass
         jl, qui: s = Set(df.`bscluster');                                                                               ///
                  Nclust = length(s);                                                                                    ///
                  _id = SharedVector(getindex.(Ref(Dict(zip(s, 1:Nclust))), df.`bscluster')) /* ordinalize cluster id */ 
-      else
+      else                                                                                                              ///
         jl, qui: Nclust = size(df,1);                                                                                   ///
                  _id = Colon()
        
@@ -355,12 +372,12 @@ program define reghdfejl, eclass
   }
 
   if "`savefe'`namedfe'" != "" {
-    jl, qui: FEs = fe(m); SF_macro_save("reghdfejl_FEnames", join(names(FEs), " "))
+    jl, qui: FEs = fe(m); rename!(FEs, "FE" .* string.(1:`N_hdfe'))
     forvalues a = 1/`N_hdfe' {
       local fename: word `a' of `fenames'
       if "`savefe'`fename'"!="" {
         if "`fename"=="" local fename __hdfe`a'__
-        jl GetVarsFromDF `fename' if `touse', source(FEs) col(`:word `a' of $reghdfejl_FEnames')
+        jl GetVarsFromDF `fename' if `touse', source(FEs) col(FE`a')
         label var `fename' "[FE] `:word `a' of `absorb''"
       }
     }
@@ -448,7 +465,20 @@ program define reghdfejl, eclass
     ereturn scalar sumweights = `t'
   }
 
-  if "`cluster'`robust'"=="" ereturn local vce ols
+  if 0`bs' {
+    ereturn local vce bootstrap
+    ereturn local vcetype Bootstrap
+    jl, qui: SF_scal_save("`t'", Nclust)
+    ereturn scalar N_clust = `t'
+    ereturn scalar N_clust1 = `t'
+    if "`bscluster'"!="" {
+      ereturn local cluster: copy local bscluster
+      ereturn local clustvar1: copy local bscluster
+      ereturn local title3 Statistics cluster-robust
+    }
+    else ereturn local title3 Statistics robust to heteroskedasticity
+  }
+  else if "`cluster'`robust'"=="" ereturn local vce ols
   else {
     ereturn local vcetype Robust
     if "`cluster'"=="" {
@@ -457,11 +487,11 @@ program define reghdfejl, eclass
     }
     else {
       ereturn local vce cluster
-      ereturn local clustvar `cluster'
+      ereturn local clustvar: copy local cluster
       ereturn scalar N_clustervars = `:word count `cluster''
       tokenize `cluster'
       forvalues i=1/`e(N_clustervars)' {
-        ereturn local clustvar`i' ``i''
+        ereturn local clustvar`i': copy local `i'
         jl, qui: SF_scal_save("`t'", m.nclusters[`i'])
         ereturn scalar N_clust`i' = `t'
       }
@@ -471,30 +501,46 @@ program define reghdfejl, eclass
     }
   }
 
-  ereturn scalar drop_singletons = e(num_singletons) > 0
+  ereturn scalar drop_singletons = "`keepsingletons'"==""
   ereturn scalar report_constant = `hascons'
-  ereturn local depvar `depname'
+  ereturn local depvar: copy local depname
   ereturn local indepvars `inexogname' `instdname'
-  ereturn local resid `residuals'
+  ereturn local resid: copy local residuals
 
   if `hasiv' {
     ereturn local model iv
-    ereturn local inexog `inexogname'
-    ereturn local instd `instdname'
-    ereturn local insts `instsname'
+    ereturn local inexog: copy local inexogname
+    ereturn local instd: copy local instdname
+    ereturn local insts: copy local instsname
   }
   else ereturn local model ols
 
   ereturn local title HDFE `=cond(`hasiv', "2SLS", "linear")' regression with Julia
   if 0`N_hdfe' ereturn local title2 Absorbing `N_hdfe' HDFE `=plural(0`N_hdfe', "group")'
-  ereturn local absvars `absorb'
+  ereturn local absvars: copy local absorb
   ereturn local marginsnotok Residuals SCore
   ereturn local predict reghdfejl_p
   ereturn local estat_cmd reghdfejl_estat
   ereturn local cmdline reghdfejl `cmdline'
+  ereturn local flinejl: copy local flinejl
+  ereturn local cmdlinejl: copy local cmdlinejl
   ereturn local cmd reghdfejl
 
   Display, `diopts' level(`level') `noheader' `notable'
+end
+
+* Expand nested expression like absorb(a#c.(b c)) without using fvunab, which apparently scans all vars for their levels, taking time
+program define ExpandAbsorb, rclass
+  while `"`0'"' != "" {
+    gettoken car 0: 0, bind
+    if regexm("`car'", "([^\(]*)\((.*)\)([^\)]*)") {
+      local prefix = regexcapture(1)
+      local suffix = regexcapture(3)
+      ExpandAbsorb `=regexcapture(2)'
+      mata st_local("car", invtokens("`prefix'" :+ tokens("`r(exp)'") :+ "`suffix'"))
+    }
+    return local exp `return(exp)' `car'
+  }
 end
 
 program define Display
@@ -502,10 +548,12 @@ program define Display
   syntax [, Level(real `c(level)') noHEADer notable *]
   _get_diopts diopts, `options'
 
+  if !e(drop_singletons) di as err `"WARNING: Singleton observations not dropped; statistical significance is biased {browse "http://scorreia.com/reghdfe/nested_within_cluster.pdf":(link)}"'
+  if e(num_singletons) di as txt `"(dropped `e(num_singletons)' {browse "http://scorreia.com/research/singletons.pdf":singleton observations})"'
+  di as txt `"({browse "http://scorreia.com/research/hdfe.pdf":MWFE estimator} converged in `e(ic)' iterations)"'
+  di
+
   if "`header'"=="" {
-    if e(drop_singletons) di as txt `"(dropped `e(num_singletons)' {browse "http://scorreia.com/research/singletons.pdf":singleton observations})"'
-    di as txt `"({browse "http://scorreia.com/research/hdfe.pdf":MWFE estimator} converged in `e(ic)' iterations)"'
-    di
     di as txt "`e(title)' " _col(51) "Number of obs" _col(67) "= " as res %10.0fc e(N)
     di as txt "`e(title2)'" _col(51) "F(" as res %4.0f e(df_m) as txt "," as res %7.0f e(df_r)-e(report_constant) as txt ")" _col(67) "= " as res %10.2f e(F)
     di as txt "`e(title3)'" _col(51) "Prob > F"      _col(67) "= " as res %10.4f Ftail(e(df_m), e(df_r)-e(report_constant), e(F))
@@ -523,6 +571,11 @@ program define Display
     di
   }
 
+  if "`e(vce)'"=="bootstrap" & "`e(cluster)'"!="" {
+    local N_clust = strtrim(string(e(N_clust),"%10.0gc"))
+    di _col(`=50-strlen("`N_clust'`e(cluster)'")') as txt "(Replications based on " as res "`N_clust'" as txt " clusters in " as res e(cluster) as txt ")"
+  }
+
   if "`table'"=="" ereturn display, level(`level') `diopts'
 end
 
@@ -535,7 +588,8 @@ end
 * 0.4.0 Added mask and unmask
 * 0.4.1 Handle varlists with -/?/*/~
 * 0.4.2 Set version minima for some packages
-* 0.4.3 Add julia.ado version check. Fix bug in posting sample size. Prevent crash on insufficient observations.
-* 0.5.0 Add gpu & other options to partialhdfejl. Document the command. Create reghdfejl_load.ado.
-* 0.5.1 Fix dropping of some non-absorbed interaction terms. Handle noconstant when no a().
-* 0.6.0 Added vce(bs).
+* 0.4.3 Add julia.ado version check. Fix bug in posting sample size. Prevent crash on insufficient observations
+* 0.5.0 Add gpu & other options to partialhdfejl. Document the command. Create reghdfejl_load.ado
+* 0.5.1 Fix dropping of some non-absorbed interaction terms. Handle noconstant when no a()
+* 0.6.0 Added vce(bs)
+* 0.6.1 Bug fixes. Added interruptible option.

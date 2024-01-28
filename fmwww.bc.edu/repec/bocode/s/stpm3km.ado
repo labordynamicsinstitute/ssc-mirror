@@ -1,7 +1,7 @@
 *! version 0.4 2023-10-25
-program define stpm3km
+program define stpm3km, rclass
   version 16.1
-  syntax [varlist(default=none)]                           ///
+  syntax [varlist(default=none fv max=1)]                  ///
                     [if] [in],   [                         ///
                                    CIF                     ///
                                    CRMODels(string)        ///
@@ -25,7 +25,6 @@ program define stpm3km
                                    SURVival                ///
                                    *                       ///
                                  ]
-
 // crmodels 
 //   --X parse crmodels
 //   --X first model is default for PITime
@@ -62,6 +61,12 @@ program define stpm3km
 // default options
   if "`crmodels'" != "" & "`survival'`failure'" == "" local cif cif
   else if "`survival'`failure'" == "" local survival survival
+
+  if "`s(fvops)'" != "" {
+    local factor factor
+    fvrevar `varlist', list
+    local varlist `r(varlist)'
+  }
   
   if "`factor'" != "" & `groups' != 0 {
     di as error "You cannot use the groups() optons with factor variables."
@@ -77,6 +82,19 @@ program define stpm3km
   if `groups' == 0 local groups 5
 
   local egenopt = cond("`cut'"!="","at(`cut')","group(`groups')")
+  
+  
+  // frame options 
+  if "`frame'" != "" { 
+  	getframeoptions `frame'
+    mata: st_local("frameexists",strofreal(st_frameexists(st_local("resframe"))))
+    if `frameexists' & "`framereplace'" == "" & "`framemerge'" == "" {
+      di as error "Frame `resframe' exists. Use replace suboption or another framename."
+      exit 198
+    }
+    else if `frameexists' & "`framereplace'" != "" capture frame drop `resframe'
+  }
+	
   
   // Competing risks and multistate models
   if "`crmodels'" != "" & "`msmodels'" != "" {
@@ -148,7 +166,8 @@ program define stpm3km
     if `groups' != 1 {
   	  tempvar vgrp
       qui egen `vgrp' = cut(`varlist') if `touse', `egenopt' icodes
-      qui replace `vgrp' = `vgrp' + 1 if `touse'
+      summ `vgrp', meanonly
+      qui replace `vgrp' = `vgrp' - `r(min)' + 1 if `touse'
       qui levelsof `vgrp' if `touse'
       local Ngroups `r(r)'
       local levels `r(levels)'
@@ -167,7 +186,6 @@ program define stpm3km
     local Ngroups `r(r)'
     local vgrp `varlist'
   }
-	
   tempvar tt
   if "`maxt'" == "" {
     qui summ _t if `touse', meanonly
@@ -181,6 +199,7 @@ program define stpm3km
     tempvar S`i'
     local atlist `atlist' `S`i''
   }
+  
   if `Nmodels' >1 & "`cif'" != "" {
     forvalues m = 1/`Nmodels' {
       tempvar `S`i''_m`m'
@@ -188,7 +207,6 @@ program define stpm3km
     }
     local stubnamesopt stub2(`stubnames')
   }
-    
   if "`crmodels'" != "" local crmodelsopt crmodels(`crmodels')
   standsurv , `standsurvtype' timevar(`tt')        ///
                    over(`vgrp')  atvar(`atlist') `crmodelsopt' ///
@@ -275,26 +293,22 @@ program define stpm3km
              , `options' `title' `xtitle' `ytitle' `legend' `name'
     }
   }		 
-  if "`frame'" != "" {
-    mata: st_local("frameexists",strofreal(st_frameexists(st_local("frame"))))
-    if `frameexists' {
-      di as error "Frame `frame' exists."
-      exit 198
-    }
-	forvalues i = 1/`Ngroups' {
+  if "`resframe'" != "" {
+	  foreach i in `levels' {
       local Slist `Slist' `S`i''
     }
-  	frame put _t `vgrp' `Skm' `tt'  `Slist' if `touse', into(`frame')
-	frame `frame' {
+  	frame put _t `vgrp' `Skm' `tt'  `Slist' if `touse', into(`resframe')
+	  frame `resframe' {
       local Z = cond("`failure'"!="","F","S")
-      rename `Skm' `Z'km
-      rename `vgrp' group
-      forvalues i = 1/`Ngroups' {
-        rename `S`i'' `Z'`i'
-      }
-	  rename `tt' tt
+      qui rename `Skm' `Z'km
+      qui rename `vgrp' group
+        foreach i in `levels' {
+          rename `S`i'' `Z'`i'
+        }
+	    rename `tt' tt
     }		
-  }		 
+  }
+  return scalar Ngroups = `Ngroups'
 end
 
 // change to commas
@@ -304,4 +318,11 @@ program addcommas, rclass
   local result "`r(numlist)'"
   local result : subinstr local result " " ",", all
   return local numlist "`result'"
+end
+
+// get frame options
+program define getframeoptions
+  syntax [anything], [replace]
+  c_local resframe       `anything'
+  c_local framereplace   `replace'
 end

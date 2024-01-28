@@ -4,7 +4,7 @@ version 16.0;
 /*
  Convert a list of value labels to variables in a new data frame.
 *!Author: Roger Newson
-*!Date: 18 November 2020
+*!Date: 23 January 2024
 */
 
 syntax [ namelist ] ,  FRame(string asis)
@@ -67,6 +67,15 @@ if `"`frame'"'!="" {;
 local oldframe=c(frame);
 tempname tempframe addframe;
 frame create `tempframe';
+qui frame `tempframe' {;
+  set obs 0;
+  gene `namevar'="`labname'";
+  gene byte `valuevar'=.;
+  gene `labelvar'="";
+  lab var `namevar' "Name";
+  lab var `valuevar' "Value";
+  lab var `labelvar' "Label";
+};
 
 *
  Populate temporary frame as append of additional frames
@@ -80,11 +89,8 @@ foreach labname in `namelist' {;
   qui frame `addframe' {;
     set obs `N_values';
     gene `namevar'="`labname'";
-    gene double `valuevar'=.;
-    gene strL `labelvar'="";
-    lab var `namevar' "Name";
-    lab var `valuevar' "Value";
-    lab var `labelvar' "Label";
+    gene byte `valuevar'=.;
+    gene `labelvar'="";
   };
   * Extract value labels to variables in frame to be added *;
   mata: extract_label_for_vallabframe("`oldframe'","`labname'",
@@ -93,7 +99,10 @@ foreach labname in `namelist' {;
   qui frame `addframe': compress;    
   qui frame `tempframe': _appendframe `addframe', fast drop;
 };
-qui frame `tempframe': sort `namevar' `valuevar', stable;
+qui frame `tempframe' {;
+  compress;
+  sort `namevar' `valuevar', stable;
+};
 
 *
  Rename temporary frame to frame name (if frame is specified)
@@ -200,7 +209,7 @@ program define _appendframe
 		frlink 1:1 `temp_n', frame(`frame_name') gen(`temp_link')
 		
 		* Import shared variables to old dataset *
-		if "`shared_varlist'"!="" {
+		if "`shared_varlist'"!="" & `from_N'>0 {
 		  tempvar temphome
 		  foreach X of varlist `shared_varlist' {
 		    frget `temphome'=`X', from(`temp_link')

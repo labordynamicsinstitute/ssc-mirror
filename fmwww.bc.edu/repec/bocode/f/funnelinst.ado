@@ -1,3 +1,4 @@
+*! 1.0.0 Ariel Linden 23jan2024 // added exact stats for smr (cross-sectional)
 *! 1.0.0 Ariel Linden 21dec2023
 
 capture program drop funnelinst
@@ -16,7 +17,7 @@ version 11.0
 				LOGtrans					/// log tranformation for prop/rate and SMR
 				ARCsintrans					/// arc sin transformation for prop/rate and SMR
 				SQRttrans					/// square root tranformation for SMR 
-				EXact						/// offers exact estimation (works currently for prop and rate)
+				EXact						/// offers exact estimation (works currently for prop/rate for cross-sectional and smr for change data)
 				PVal(numlist max=2 sort)	/// p-values used as basis to generate CIs
 				YMIn(numlist max=1)			/// truncate values below specified min on Y axis
 				YMAx(numlist max=1)			/// truncate values above specified mqax on Y axis
@@ -97,13 +98,11 @@ version 11.0
 			* variables used in every case
 			tempvar rho y varY z zwins rhopoints rhopoints2 varplot msum b1a1 b2a2  ///
 				y1 y2 se se1 se2 y_SE2 one_se2 w w2 n1 n2 pibar o1 e1 o2 e2 ///
-				meanSMR g qbinom c x
-			
+				meanSMR g qbinom qpois c x
 
 			forval i = 1/`pcnt' { 
 				tempvar ll`i' ul`i' 
 			} 
-
 			
 			*********************
 			// Setting targets 
@@ -240,7 +239,7 @@ version 11.0
 			} // end target mean	
 	
 			*****************************************************************
-			// generate Y and `varY' depending on datatype and transformation
+			// generate Y and varY depending on datatype and transformation
 			*****************************************************************
 			if inlist("`estype'", substr("prop", 1, max(4,`lcmd')), substr("rate", 1, max(4,`lcmd'))) {
 				if (`varcnt' == 2) {	
@@ -349,9 +348,9 @@ version 11.0
 			********************
 			gen `z' = (`y' - `target')/sqrt(`varY')
 
-			***************************************************************************
+			****************************************************************************
 			// compute phi (the dispersion %) and tau (when overdispersion is additive)
-			***************************************************************************
+			****************************************************************************
 			if ("`overdisp'" != "") {
 				
 				*********************
@@ -389,9 +388,9 @@ version 11.0
 				local tau2 = `tau'^2
 			} // end add
 			
-			*********************************************
-			// generate CI variables (`rho'points, `varplot')
-			*********************************************
+			**********************************************
+			// generate CI variables (rhopoints, varplot)
+			**********************************************
 			* check that Npoints are <= than current obs before setting obs larger
 			if `nobs' < `npoints' {
 				set obs `npoints'
@@ -403,12 +402,13 @@ version 11.0
 			}
 			
 			local xrangelow = 0
-			gen `rhopoints' = 0
+			gen double `rhopoints' = 0
 			forvalues i = 1/`npoints' {
-				replace `rhopoints' = `xrangelow' + (`i' * (`xrangehigh' - `xrangelow')) /  `npoints' in `i'
+				replace `rhopoints' = round(`xrangelow' + (`i' * (`xrangehigh' - `xrangelow')) /  `npoints', .1) in `i'
 			}
 			replace `rhopoints' = . if `rhopoints'==0
 			
+			// prop and rate
 			if inlist("`estype'", substr("prop", 1, max(4,`lcmd')), substr("rate", 1, max(4,`lcmd'))) {
 				if (`varcnt' == 2) {					
 					if ("`logtrans'" != "") {
@@ -438,6 +438,7 @@ version 11.0
 				} // end change prop/rate
 			} // prop/rate
 			
+			// smr
 			if inlist("`estype'", substr("smr", 1, max(3,`lcmd'))) {
 				if (`varcnt' == 2) {					
 					if ("`logtrans'" != "") {
@@ -458,13 +459,14 @@ version 11.0
 				} // end change
 			} // end smr
 			
+			// mean
 			if inlist("`estype'", substr("mean", 1, max(4,`lcmd'))) {
 				gen `varplot' = 1 / `rhopoints'
 			} // end mean	
 
-			***************************************************
+			****************************************************
 			// if overdisp is null or additive (random-effects)
-			***************************************************
+			****************************************************
 			if ("`overdisp'" != "add") {				
 				local tau2 = 0 
 			}
@@ -474,7 +476,6 @@ version 11.0
 				gen `ul`i'' = `target' + invnormal(1-`p') * sqrt(`varplot' + `tau2')
 				local i = `i' + 1
 			}
-
 			
 			**********************************
 			// if target is a range
@@ -533,12 +534,12 @@ version 11.0
 				}
 			}
 			
-			******************************************
-			// Exact CIs for prop and rate subcommands
-			******************************************
-			if !inlist("`estype'", substr("prop", 1, max(4,`lcmd')), substr("rate", 1, max(4,`lcmd'))) & (`varcnt' == 2) {
+			************************************************
+			// Exact CIs for prop, rate and smr subcommands
+			************************************************
+			if !inlist("`estype'", substr("prop", 1, max(4,`lcmd')), substr("rate", 1, max(4,`lcmd')), substr("smr", 1, max(3,`lcmd'))) & (`varcnt' == 2) {
 				if ("`exact'" != "") {
-					noi di as err " 'exact' may only be specified with 'prop' or 'rate' subcommands for cross-sectional analysis"
+					noi di as err " 'exact' may only be specified with 'prop', 'rate' or 'smr' subcommands for cross-sectional analysis"
 					exit 198
 				}
 			}
@@ -589,8 +590,51 @@ version 11.0
 					} // end pval					
 				} // end exact
 			} // end prop/rate
-
-			// Exact SMR ratio
+			
+			// Exact for "smr" cross-sectional
+			if inlist("`estype'", substr("smr", 1, max(3,`lcmd'))) {
+				if ("`exact'" != "") & (`varcnt' == 2) {	
+					
+					// first loop is for LCLs
+					local i = 1
+					foreach p in `pval' {
+						gen `qpois' = .	
+						forvalues ii = 1/`npoints' {
+							local r = `rhopoints'[`ii']
+							mata : st_numscalar("k", invcdfpoisson(`r' * `target', `p'))
+							replace `qpois' = scalar(k) in `ii'
+						}
+						// Hayley's method
+						gen `c' = (`p' - poisson(`rhopoints' * `target', `qpois' - 1))  / poissonp(`rhopoints' * `target', `qpois') if `qpois' != 0 						
+						replace `c' = (`p' - 0)  / poissonp(`rhopoints' * `target', `qpois') if `qpois' == 0
+						gen `x' = `qpois' - 0.5 + `c'
+						replace `ll`i'' = `x' / `rhopoints'
+						drop `qpois' `c' `x'
+						local i = `i' + 1
+					} // end pval
+					
+					// second loop is for UCLs	
+					local i = 1
+					foreach p in `pval' {
+						gen `qpois' = .	
+						forvalues ii = 1/`npoints' {
+							local r = `rhopoints'[`ii']
+							mata : st_numscalar("k", invcdfpoisson(`r' * `target', 1 - `p'))
+							replace `qpois' = scalar(k) in `ii'
+						}
+						// Hayley's method
+						gen `c' = ((1 - `p') - poisson(`rhopoints' * `target', `qpois' - 1))  / poissonp(`rhopoints' * `target', `qpois') if `qpois' != 0 						
+						replace `c' = ((1 - `p') - 0)  / poissonp(`rhopoints' * `target', `qpois') if `qpois' == 0
+						gen `x' = `qpois' - 0.5 + `c'
+*						replace `x' = 0 if `x' < 0
+						replace `ul`i'' = `x' / `rhopoints'
+						drop `qpois' `c' `x'
+						local i = `i' + 1
+					} // end pval	
+				}	// end if
+			} // // end smr cross-sectional					
+			
+			// *** Exact SMR ratio (for change) *** //
 			if inlist("`estype'", substr("smr", 1, max(3,`lcmd'))) {
 				if ("`exact'" != "") & (`varcnt' == 4) {
 					* work out conditional limits and then transform back
@@ -634,9 +678,9 @@ version 11.0
 				} // end exact for change
 			} // end SMR 
 			
-			*********
-			// graph 
-			*********
+			******************************
+			//			figure			//	 
+			******************************
 			if ("`overdisp'" == "mult") {
 					local note1 "Overdispersion: `phipct'%"
 					local note2 "Winsorized: `winsor'%"
@@ -781,12 +825,13 @@ version 11.0
 			********************
 			if `"`saving'"' != "" {
 				forvalue i = 1/`pcnt' {
-					gen ll`i' = `ll`i''
-					gen ul`i' = `ul`i''
+					qui gen ll`i' = `ll`i'' 
+					qui gen ul`i' = `ul`i''
 				
 				local ci "`ci' ll`i' ul`i'"
 				}
-				keep `ci'
+				qui keep `ci' 
+				qui keep in 1 / `npoints'
 				save `saving'
 			} // end saving				
 
@@ -797,22 +842,21 @@ capture program drop _winsor
 program _winsor, rclass
 version 11.0
 		
-		syntax [varlist(default=none)] [, z(varname) zwins(varname) WINsor(numlist max=1) nobs(numlist max=1)]
+	syntax [varlist(default=none)] [, z(varname) zwins(varname) WINsor(numlist max=1) nobs(numlist max=1)]
 
-				local p = (`winsor' / 100)
-				local h = int(`p' * `nobs')
-				sort `z'
+		local p = (`winsor' / 100)
+		local h = int(`p' * `nobs')
+		sort `z'
 
-				* upper range
-				local up = `nobs' - `h'
-				local uz = `z'[`up']
+		* upper range
+		local up = `nobs' - `h'
+		local uz = `z'[`up']
 
-				* lower range
-				local low = `h' + 1
-				local lz = `z'[`low']
+		* lower range
+		local low = `h' + 1
+		local lz = `z'[`low']
 				
-				qui replace `zwins' = cond(`z' < `lz', `lz', cond(`z' > `uz', `uz', `z'))
-		
+		qui replace `zwins' = cond(`z' < `lz', `lz', cond(`z' > `uz', `uz', `z'))
 	
 end	
 

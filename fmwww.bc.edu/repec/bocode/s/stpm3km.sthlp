@@ -58,6 +58,8 @@ and compared to the corresponding Kaplan-Meier estimate.
 
 {phang}
 If {it:varname} is not specified then the prognostic index is categorized.
+Use factor variable notation, e.g. {cmd:i.sex} to denote that a variable is
+categorical. Alternatively you can use the {cmd:factor} option.
 
 {phang}
 The default number of groups is 5. This can be changed with the {cmd:groups(#)} option.

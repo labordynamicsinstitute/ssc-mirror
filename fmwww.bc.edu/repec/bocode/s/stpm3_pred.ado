@@ -1,4 +1,4 @@
-*! version 1.05 2023-10-25
+*! version 1.06 2024-01-25
 
 program stpm3_pred, sortpreserve
   version 16.1
@@ -230,7 +230,7 @@ program stpm3_pred, sortpreserve
       exit 198  
     }
     local 0 `2'`3'
-    syntax ,[ATIF(string) ATTIMEVAR(string) SETBasline ZEROS OBSvalues TOFFset(string)]    // could add atmean option??
+    syntax ,[ATIF(string) ATTIMEVAR(string) SETBasline ZEROS OBSvalues IGNORE TOFFset(string)]    // could add atmean option??
     if "`zeros'" != "" local setbaseline setbaseline
     if `hasif' & `"`atif'"' != "" {
       di as error "You can either use an if statement or the atif() suboptions" _newline ///
@@ -243,6 +243,9 @@ program stpm3_pred, sortpreserve
     }
     else {
       qui gen byte `touse_at`i'' = (`atif')
+    }
+    if "`ignore'" != "" {
+      local ignore`i' ignore`i'
     }
 // attimevar
     if "`notimevaropt'" == "" & "`attimevar'" != "" {
@@ -471,11 +474,17 @@ program stpm3_pred, sortpreserve
     else {
       tempvar cenvartmp`i' touse_centile`i'
     }
-    local extra_at_vars
+    // add variable whne using "=" in at option
     foreach v in `at`i'vars' {
       local extra_at_vars `extra_at_vars' `at`i'_`v'_variable'
     }
-
+    // add variable listed in at, but not in model_vars
+    local atvars_not_in_model
+    foreach v in `at`i'vars' {
+      if strpos("`allmodelvars'","`v'") == 0 {
+        local atvars_not_in_model `atvars_not_in_model' `v'
+      }
+    }
     if "`centile'" == "" {
       if "`framemerge'" == "" & `timevalues`i'' {
         local nopt = cond("`timevalues`i'_n'"!="","n(`timevalues`i'_n')","")
@@ -514,17 +523,18 @@ program stpm3_pred, sortpreserve
       local centilewritelist `centilewritelist' `centvar`i''
     }
     // age at diagnosis
-  
     local allpmvars `agediag`i'_var' `datediag`i'_var' `pmother' 
-    
-    // 
     tempvar tousetmp
     local tousetmp = cond("`centile'"=="","`touse_timevar`i''","`touse_centile`i''")
 
     forvalues m = 1/`Nmodels' {
       tempname atframe`i'_m`m'
       qui estimates restore `=word("`modelslist'",`m')'
-      frame put `timevartmp`i'' `cenvartmp`i'' `allmodelvars' `extra_at_vars' `allpmvars' if `tousetmp' & `touse', into(`atframe`i'_m`m'')
+      if "`ignore`i''" != "" {
+        local add_atvars_not_in_model `atvars_not_in_model'
+      }
+      frame put `timevartmp`i'' `cenvartmp`i'' `allmodelvars' `extra_at_vars' ///
+                `add_atvars_not_in_model' `allpmvars' if `tousetmp' & `touse', into(`atframe`i'_m`m'')
       frame `atframe`i'_m`m'' {
         local Nat`i' = _N
         foreach v in `at`i'vars' {
@@ -968,7 +978,7 @@ program stpm3_pred, sortpreserve
     forvalues i = 1/`Natoptions' {
       tempvar attage`i' yeardiag`i' attyear`i'
 
-      
+      set trace on
       if "`agediag`i'_val'" == "" {
         summ `agediag`i'' if `touse', meanonly
         local minage = min(floor(`r(min)'),`minage')
@@ -982,7 +992,7 @@ program stpm3_pred, sortpreserve
         summ `attage`i'' if `touse', meanonly
         local maxattage = min(max(ceil(`r(max)'),`maxattage'),`pmmaxage')        
       }
-
+      set trace off
       if "`datediag`i'_val'" == "" {
         qui gen `yeardiag`i'' = year(`datediag`i'_var') if `touse'
         summ `yeardiag`i'' if `touse', meanonly
@@ -1001,8 +1011,8 @@ program stpm3_pred, sortpreserve
     tempname popmortframe
     frame create `popmortframe'
     frame `popmortframe' {
-      use "`popmortfile'" if inrange(`pmage',`minage',`maxattage') &   ///
-	                           inrange(`pmyear',`minyear',`maxattyear')   
+      qui use "`popmortfile'" if inrange(`pmage',`minage',`maxattage') &   ///
+	                               inrange(`pmyear',`minyear',`maxattyear')   
       summ `pmage', meanonly
       if `maxattage'>`r(max)' {
         di as error "Maximum attained age is greater than maximum age in popmort file."

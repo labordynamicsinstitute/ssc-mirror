@@ -1,4 +1,5 @@
 {smcl}
+{* *! version 1.0.1 23Jan2024}{...}
 {* *! version 1.0.0 28Oct2023}{...}
 
 {title:Title}
@@ -67,7 +68,7 @@ funnelinst for a continuous variable:
 {pstd}
 In the syntax for {cmd:funnelinst} {opt prop} and {opt rate}, the {it:numerator} is the {ul:number} of events and the {it:denominator} is the population size.{p_end}
 {pstd}In the syntax for {cmd:funnelinst} {opt smr}, the {it:numerator} is the observed {ul:number} of events and the {it:denominator} is the predicted {ul:number} of events.{p_end}
-{pstd}In the syntax for {cmd:funnelinst} {opt mean}, the {it:numerator} is the mean and the {it:denominator} is the standard error.{p_end}
+{pstd}In the syntax for {cmd:funnelinst} {opt mean}, the {it:numerator} is the {ul:mean} and the {it:denominator} is the {ul:standard error}.{p_end}
 
 {pstd} For all subcommands, when only two variables are specified (numerator1, denominator1), {cmd:funnelinst} analyzes the performance cross-sectionally. 
 When four variables are specified (numerator1, denominator1, numerator2, denominator2), {cmd:funnelinst} analyzes the change in the performance indicator
@@ -87,8 +88,8 @@ and "or" (odds ratio) {p_end}
 {synopt:{opt arc:sintrans}}arc sin transformation of the performance measure {it:Y} (numerator/denominator); available for subcommands {cmd:prop} and {cmd:rate} {p_end}
 {synopt:{opt sqr:ttrans}}square root tranformation of the performance measure {it:Y} (numerator/denominator); available for subcommand {cmd:smr} {p_end}
 {synopt :{opt pv:al(numlist)}}p-value(s) used as the basis for generating confidence intervals (up to a maximum of {cmd:two}); default is {cmd: pval(0.001 0.025)}  {p_end}
-{synopt:{opt ex:act}}perform exact estimation; available for subcommands {cmd:prop} and {cmd:rate} when two variables are specified, and {cmd:smr} when four variables 
-are specified {p_end}
+{synopt:{opt ex:act}}perform exact estimation; available for subcommands {cmd:prop}, {cmd:rate} and {cmd:smr} when two variables are specified, and {cmd:smr} when four 
+variables are specified {p_end}
 {synopt:{opt win:sor(#)}}percent of observations to be winsorized; default is no winsorizing {cmd: winsor(0)} {p_end}
 {synopt:{opt over:disp(string)}}adjust for overdispersion; options are additive {cmd:overdisp(add)} and multiplicative {cmd:overdisp(mult)} {p_end}
 {synopt:{opt yper:cent}}multiplies performance measure by 100; available for subcommands {cmd:prop} and {cmd:smr} {p_end}
@@ -149,7 +150,8 @@ largest {it:denominator} value.
 which are roughly equivalent to 2 and 3 standard deviations.
 
 {p 4 8 2}
-{cmd:exact} performs exact estimation, rather than the default normal approximation. Available for subcommands {cmd:prop} and {cmd:rate}. 
+{cmd:exact} performs exact estimation, rather than the default normal approximation. Available for subcommands {cmd:prop}, {cmd:rate} and {cmd:smr} for cross-sectional analyses,
+and {cmd:smr} for longitudinal analyses. 
 
 {p 4 8 2}
 {cmd:winsor(}{it:#}{cmd:)} indicates the percent of the observations to be winsorized in each tail. More specifically, all values above (below) the percent specified are
@@ -236,6 +238,11 @@ default settings.
 {pmore} Here we set a target range to be between 0 and 2, and modify the titles on the X and Y axes.  {p_end}
 {pmore2}{cmd:. funnelinst smr deaths expected, target(0 2) figure(ytitle(Observed number of deaths) xtitle(Expected number of deaths))}
 
+{pmore2}{cmd:. funnelinst smr deaths expected}{p_end}
+
+{pmore} Same as above, but we specify that 'exact' statistics be used to construct the CIs  {p_end}
+{pmore2}{cmd:. funnelinst smr deaths expected, target(0 2) figure(ytitle(Observed number of deaths) xtitle(Expected number of deaths)) exact}
+
 
 {pstd}
 {opt 4) funnelinst for a continuous measure:}{p_end}
@@ -321,7 +328,8 @@ Spiegelhalter, D. J., Sherlaw-Johnson, C., Bardsley, M., Blunt, I., Wood, C. and
 to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
-Linden A. & D. J. Spiegelhalter (2024). FUNNELINST: Stata module for generating a funnel plot to compare institutional performance{p_end}
+Linden A. & D. J. Spiegelhalter (2024). FUNNELINST: Stata module for generating a funnel plot to compare institutional performance.  
+{browse "https://ideas.repec.org/c/boc/bocode/s459283.html":https://ideas.repec.org/c/boc/bocode/s459283.html} {p_end}
 
 
 
@@ -343,7 +351,7 @@ University of Cambridge{break}
 {title:Acknowledgments}
 
 {p 4 4 2}
-We thank Daniel Klein for providing the mata code to compute the inverse CDF of the binomial distribution for the "exact" option. 
+We thank Daniel Klein for providing the mata code to compute the inverse CDF of the binomial distribution and Poisson distribution for the "exact" option. 
 We also wish to thank John Moran for advocating that we write this package and testing it.
 
 

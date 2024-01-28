@@ -106,7 +106,6 @@ program define stpm3_gensplines,
     
     if `sharedtvc_knots' {
       //if "`bknots'" != "" local gensplineopt `gensplineopt' bknots(`bknots')
-      // not yet working for knots *****
       local gensplinesopt
       if "`dftvc'" != "" local gensplinesopt df(`dftvc')      
       if "`allknotstvc'" != "" local gensplinesopt `gensplinesopt' allknots(`allknotstvc')

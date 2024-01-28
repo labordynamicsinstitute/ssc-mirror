@@ -116,8 +116,8 @@ Drop created frames:
 {title:Author}
 
 {pstd}
-Roger Newson, Imperial College London, UK.{break}
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, Queen Mary University London, UK.{break}
+Email: {browse "mailto:r.newson@qmul.ac.uk":r.newson@qmul.ac.uk}
 
 
 {title:Also see}

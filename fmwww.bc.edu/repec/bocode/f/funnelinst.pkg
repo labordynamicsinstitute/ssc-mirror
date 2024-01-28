@@ -21,10 +21,13 @@ d KW: institutional profiling
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20240122
+d Distribution-Date: 20240127
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org
+d
+d Author: David J Spiegelhalter, University of Cambridge
+d Support: email  David@@statslab.cam.ac.uk
 d
 f funnelinst.ado
 f funnelinst.sthlp

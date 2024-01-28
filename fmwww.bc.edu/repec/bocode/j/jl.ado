@@ -1,5 +1,5 @@
-*! jl 0.8.0 28 December 2023
-*! Copyright (C) 2023 David Roodman
+*! jl 0.9.0 26 January 2024
+*! Copyright (C) 2023-24 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -81,6 +81,10 @@ program define assure_julia_started
 
       jl AddPkg DataFrames, minver(1.6.1)
       jl, qui: using DataFrames
+      qui jl: String(gensym())
+      global julia_task `"var"`r(ans)'""'
+      qui jl: String(gensym())
+      global julia_time `"var"`r(ans)'""'
     }
     if _rc global julia_loaded
   }
@@ -91,7 +95,7 @@ program define jl, rclass
   version 14.1
 
   if `"`0'"'=="version" {
-    return local version 0.8.0
+    return local version 0.9.0
     exit
   }
 
@@ -125,13 +129,7 @@ program define jl, rclass
       if `notinstalled' | `r(ans)' {
         di as txt "The Julia package `namelist' is not installed and up-to-date. Attempting to update it. This could take a few minutes." _n 
         mata displayflush() 
-        local addcmd Pkg.add(PackageSpec(name="`namelist'" `=cond("`minver'"=="", "", `", version=v"`minver'" "')'))
-        cap {
-          if c(os)=="Unix" {
-            !julia -E"using Pkg; `addcmd'"
-          }
-          else jl, qui: `addcmd'  // this crashes Stata in Ubuntu 22.04
-        }
+        jl, qui: Pkg.add(PackageSpec(name=String(:`namelist') `=cond("`minver'"=="", "", `", version=VersionNumber(`:subinstr local minver "." ",", all') "')'))
         if _rc {
           di as err _n "Failed to update the Julia package `namelist'."
           di as err "You should be able to install it by running Julia and typing:" _n `"{cmd:using Pkg; Pkg.update("`namelist'")}"'
@@ -148,7 +146,7 @@ program define jl, rclass
         confirm names `cols'
         _assert `:word count `cols''>=cond("`varlist'"=="",c(k),`:word count `varlist''), msg("Too few destination columns specified.") rc(198) 
       }
-      plugin call _julia `varlist' `if' `in', PutVarsToDFNoMissing `"`destination'"' _cols `:strlen local cols'
+      plugin call _julia `varlist' `if' `in', PutVarsToDFNoMissing `"`destination'"' `cols'
       if "`cmd'"=="PutVarsToDF" {
         jl, qui: allowmissing!(`destination')
         jl, qui: replace!.(x -> x >= reinterpret(Float64, 0x7fe0000000000000) ? missing : x, eachcol(`destination'))
@@ -181,7 +179,7 @@ program define jl, rclass
         cap gen double `var' = .
       }
       if "`cmd'"=="GetVarsFromDF" jl, qui: replace!.(eachcol(`source'), missing=>NaN)
-      plugin call _julia `namelist' `if' `in', `cmd' `"`source'"' _cols `:strlen local cols'
+      plugin call _julia `namelist' `if' `in', `cmd' `"`source'"' `cols'
     }
     else if `"`cmd'"'=="GetMatFromMat" {
       syntax name, [source(string asis)]
@@ -203,22 +201,29 @@ program define jl, rclass
     }
   }
   else {  // "jl: ..."
-    local before = `"`s(before)'"'
     local after = `"`s(after)'"'
-    
+    local 0 `"`s(before)'"'
+    syntax, [QUIetly INTERruptible]
+    local varlist = cond(c(k),"*","")
     assure_julia_started
 
-    local 0 `before'
-    syntax, [QUIetly]
-    if "`quietly'"!="" plugin call _julia `=cond(c(k),"*","")', evalqui `"`after'"'
-    else {
-      plugin call _julia `=cond(c(k),"*","")', eval `"`after'"'
-      return local ans `ans'
-      local ans `ans'  // strips quote marks
-      if `"`ans'"' != "nothing" display_multiline `ans'
+    if "`interruptible'" != "" {  // Run Julia 1 sec at a time to allow Ctrl-Break, checking if task finished every .01 sec
+      plugin   call _julia `varlist', evalqui `"$julia_task = @async (`after')"'
+      plugin   call _julia, eval `"$julia_time=time()+1; for _ in 1:100 (istaskdone($julia_task) || time()>$julia_time) && break; sleep(.01) end; Int(!istaskdone($julia_task))"'
+      while `ans' {
+        plugin call _julia, eval `"$julia_time=time()+1; for _ in 1:100 (istaskdone($julia_task) || time()>$julia_time) && break; sleep(.01) end; Int(!istaskdone($julia_task))"'
+      }
+      if "`quietly'"=="" plugin call _julia, eval fetch($julia_task)
+    }
+    else plugin call _julia `varlist', eval`=cond("`quietly'"!="","qui","")' `"`after'"'
+
+    if "`quietly'"=="" {
+      return local ans: copy local ans
+      cap noi local ans `ans'  // strips quote marks
+      cap noi if `"`ans'"' != "nothing" display_multiline `ans'
     }
   }
-  return local ans `ans'
+  return local ans: copy local ans
 end
 
 program _julia, plugin using(jl.plugin)
@@ -251,3 +256,5 @@ end
 * 0.7.2 Better handling of exceptions in Julia 
 * 0.7.3 Fixed bug in PutMatToMat
 * 0.8.0 Added SetEnv command
+* 0.8.1 Recompiled in Ubuntu 20.04; fixed Unix AddPkg bug
+* 0.9.0 Added interruptible option and multithreaded variable copying

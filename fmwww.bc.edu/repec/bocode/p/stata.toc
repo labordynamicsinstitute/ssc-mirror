@@ -118,7 +118,7 @@ p povcalnet module to access World Bank Global Poverty and Inequality measures
 p povdeco module to calculate poverty indices with decomposition by subgroup
 p poverty module to calculate poverty measures
 p povguide module to generate the U.S. Poverty Guideline value for a given family size and year
-p povguide2 module to compute Federal Poverty Guidelines by family size and year, 1973-2023
+p povguide2 module to compute Federal Poverty Guidelines by family size and year, 1973-2024
 p povimp module to provide poverty estimates in the absence of actual consumption data
 p povtime module to compute aggregate intertemporal poverty measures (poverty in a panel accounting for time)
 p power_concord module to compute power and sample size for Lin's concordance correlation coefficient
