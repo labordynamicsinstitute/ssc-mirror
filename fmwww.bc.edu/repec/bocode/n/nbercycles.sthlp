@@ -1,7 +1,7 @@
 {smcl}
 {* 26jul2006}{...}
 {hline}
-help for {hi:nbercycles}                         SSC distribution 14 March 2021
+help for {hi:nbercycles}                         SSC distribution 30 January 2024
 {hline}
 
 {title:Generate graph command (and optionally graph) timeseries vs. NBER recession dating}
@@ -30,7 +30,7 @@ and that the variable defining the calendar have a time-series format.{p_end}
 {p 4 4}{cmd:nbercycles} accesses a copy of the National Bureau of Economic Research (NBER)
 record of economic cycles (see {browse "http://www.nber.org/cycles/cyclesmain.html":http://www.nber.org/cycles/cyclesmain.html}), the official dating
 of U.S. business cycle phases: contractions (recessions) and expansions, defined
-by their peaks and troughs, from 1854-February 2020. The ancillary Stata database distributed in the {cmd:nbercycles}
+by their peaks and troughs, from 1854-2024. The ancillary Stata database distributed in the {cmd:nbercycles}
 package reproduces the data on the NBER web page, and adds quarterly dating 
 information.
  {p_end}

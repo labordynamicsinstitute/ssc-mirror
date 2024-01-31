@@ -36,7 +36,7 @@ d KW: gllamm
 d 
 d Requires: Stata version 9.0 and MLwiN version 2.36 or higher
 d 
-d Distribution-Date: 20230912
+d Distribution-Date: 20240130
 d 
 d Author: George Leckie, Centre for Multilevel Modelling, University of Bristol
 d Support: email g.leckie@@bristol.ac.uk
@@ -68,13 +68,11 @@ g WIN runmlwin_quietshell.win32 runmlwin_quietshell.plugin
 g WIN64A runmlwin_quietshell.win64 runmlwin_quietshell.plugin
 g WIN runmlwin_mcmcdiagnostics.win32 runmlwin_mcmcdiagnostics.plugin
 g WIN64A runmlwin_mcmcdiagnostics.win64 runmlwin_mcmcdiagnostics.plugin
-g MACINTEL runmlwin_mcmcdiagnostics.mac runmlwin_mcmcdiagnostics.plugin
 g MACINTEL64 runmlwin_mcmcdiagnostics.mac runmlwin_mcmcdiagnostics.plugin
-g OSX.X86 runmlwin_mcmcdiagnostics.mac runmlwin_mcmcdiagnostics.plugin
 g OSX.X8664 runmlwin_mcmcdiagnostics.mac runmlwin_mcmcdiagnostics.plugin
-g MAC runmlwin_mcmcdiagnostics.mac runmlwin_mcmcdiagnostics.plugin
-g OSX.PPC runmlwin_mcmcdiagnostics.mac runmlwin_mcmcdiagnostics.plugin
 g LINUX runmlwin_mcmcdiagnostics.lin32 runmlwin_mcmcdiagnostics.plugin
 g LINUX64 runmlwin_mcmcdiagnostics.lin64 runmlwin_mcmcdiagnostics.plugin
+g MACARM64 runmlwin_mcmcdiagnostics.arm64 runmlwin_mcmcdiagnostics.plugin
+g OSX.ARM64 runmlwin_mcmcdiagnostics.arm64 runmlwin_mcmcdiagnostics.plugin
 h runmlwin_mcmcdiagnostics.plugin
 

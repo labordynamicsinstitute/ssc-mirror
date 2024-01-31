@@ -1,10 +1,11 @@
-*! nbercycles 1.0.6 14mar2021 CFBaum 
+*! nbercycles 1.0.7 30jan2024 CFBaum 
 *  1.0.1 revise syntax for max=1, minval/maxval
 *  1.0.2 require from and to if varname not provided
 *  1.0.3 error trap above should ref varlist
 *  1.0.4 add current recession, logic to handle
 *  1.0.5 add end of 2007-2009 recession
 *  1.0.6 add start of pandemic recession; set end to current month/quarter while recession is underway
+*  1.0.7 terminate pamdemic recession in April 2020 
 
 program define nbercycles, rclass
 	version 9.2
@@ -65,16 +66,16 @@ program define nbercycles, rclass
 		local tsl 1
 	}
 * generate the selected range of peaks and troughs
-// add recession starting in feb 2020
-// assuming it is still ongoing, get current month, quarter using 9.2 syntax for date()
-    loc cdt "`c(current_date)'"
-    loc qqqq = qofd(date("`cdt'", "dmy"))
-    loc mmmm = mofd(date("`cdt'", "dmy"))  
+// add recession for feb-apr 2020
+// DISABLE assuming it is still ongoing, get current month, quarter using 9.2 syntax for date()
+ //   loc cdt "`c(current_date)'"
+ //   loc qqqq = qofd(date("`cdt'", "dmy"))
+ //   loc mmmm = mofd(date("`cdt'", "dmy"))  
 	if "`u2min'" == "m" {
-	    mat nber = ( -1231,-1213 \ -1191,-1183 \ -1137,-1105 \ -1087,-1069 \ -1035,-970 \ -934,-896 \ -874,-861 \ -834,-824 \ -804,-787 \ -769,-751 \ -727,-709 \ -688,-665 \ -632,-619 \ -600,-576 \ -564,-541 \ -497,-490 \ -480,-462 \ -440,-426 \ -399,-386 \ -366,-322 \ -272,-259 \ -179,-171 \ -134,-123 \ -78,-68 \ -29,-21 \ 3,13 \ 119,130 \ 166,182 \ 240,246 \ 258,274 \ 366,374 \ 494,502 \ 575,593 \ 721, `mmmm')
+	    mat nber = ( -1231,-1213 \ -1191,-1183 \ -1137,-1105 \ -1087,-1069 \ -1035,-970 \ -934,-896 \ -874,-861 \ -834,-824 \ -804,-787 \ -769,-751 \ -727,-709 \ -688,-665 \ -632,-619 \ -600,-576 \ -564,-541 \ -497,-490 \ -480,-462 \ -440,-426 \ -399,-386 \ -366,-322 \ -272,-259 \ -179,-171 \ -134,-123 \ -78,-68 \ -29,-21 \ 3,13 \ 119,130 \ 166,182 \ 240,246 \ 258,274 \ 366,374 \ 494,502 \ 575,593 \ 721,723)
 	}
 	else {
-		mat nber = ( -411,-405 \ -397,-395 \ -379,-369 \ -363,-357 \ -345,-324 \ -312,-299 \ -292,-287 \ -278,-275 \ -268,-263 \ -257,-251 \ -243,-237 \ -230,-222 \ -211,-207 \ -200,-192 \ -188,-181 \ -166,-164 \ -160,-154 \ -147,-142 \ -133,-129 \ -122,-108 \ -91,-87 \ -60,-57 \ -45,-41 \ -26,-23 \ -10,-7 \ 1,4 \ 39,43 \ 55,60 \ 80,82 \ 86,91 \ 122,124 \ 164,167 \ 191,197 \ 240, `qqqq')
+		mat nber = ( -411,-405 \ -397,-395 \ -379,-369 \ -363,-357 \ -345,-324 \ -312,-299 \ -292,-287 \ -278,-275 \ -268,-263 \ -257,-251 \ -243,-237 \ -230,-222 \ -211,-207 \ -200,-192 \ -188,-181 \ -166,-164 \ -160,-154 \ -147,-142 \ -133,-129 \ -122,-108 \ -91,-87 \ -60,-57 \ -45,-41 \ -26,-23 \ -10,-7 \ 1,4 \ 39,43 \ 55,60 \ 80,82 \ 86,91 \ 122,124 \ 164,167 \ 191,197 \ 240,241)
 	}
 	svmat long nber, names(`nber')
 //	l `nber'1 `nber'2 if `nber'1 < .	

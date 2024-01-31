@@ -1,5 +1,5 @@
-*! boottest 4.4.8 22 December 2023
-*! Copyright (C) 2015-23 David Roodman
+*! boottest 4.4.10 30 January 2024
+*! Copyright (C) 2015-24 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -124,9 +124,9 @@ program define _boottest, rclass sortpreserve
       exit 198
     }
     parse "`r(version)'", parse(".")
-    local v1 `1'
-    local v2 `3'
-    local v3 `5'
+    local v1: copy local 1
+    local v2: copy local 3
+    local v3: copy local 5
     parse "`JLVERSION'", parse(".")
     if `v1'<`1' | `v1'==`1' & `v2'<`3' | `v1'==`1' & `v2'==`3' & `v3'<`5' {
       di as txt "The Stata package {cmd:julia} is not up to date. Attempting to update it with {stata ssc install julia, replace}." _n
@@ -171,7 +171,7 @@ program define _boottest, rclass sortpreserve
 				di as err "option " as res "svmat(" `svmat' ")" as err " not allowed."
 				error 198
 			}
-			if "`svmat'" == "" local svmat `_svmat'
+			if "`svmat'" == "" local svmat: copy local _svmat
 		}
 
 	if `"`options'"' != "" {
@@ -190,7 +190,7 @@ program define _boottest, rclass sortpreserve
 	local madjust `bonferroni'`sidak'
 
 	if `"`graphname'"' != "" {
-		local 0 `graphname'
+		local 0: copy local graphname
 		syntax [anything(name=graphname)], [replace]
 	}
 	else local graphname Graph
@@ -225,7 +225,7 @@ program define _boottest, rclass sortpreserve
 	
 	if `"`robust'`cluster'"' != "" {
 		local hasrobust 1
-		local clustvars `cluster'
+		local clustvars: copy local cluster
 		if `"`clustvars'"'!="" confirm var `clustvars'
 		local override 1
 		di as txt _n "Overriding estimator's cluster/robust settings with " as res `"`=cond("`clustvars'"=="", "robust", "cluster(`clustvars')")'"'
@@ -275,9 +275,9 @@ program define _boottest, rclass sortpreserve
 		exit 198
 	}
 
-	local ML = e(converged) != .
+	local ML = e(converged) != . & !inlist("`cmd'", "reghdfe", "ivreghdfe", "reghdfejl")
 	local IV = "`e(instd)'`e(endogvars)'" != ""
-	local LIML = ("`cmd'"=="ivreg2" & "`e(model)'"=="liml") | ("`cmd'"=="ivregress" & "`e(estimator)'"=="liml")| (inlist("`cmd'","reghdfe","ivreghdfe") & strpos("`e(title)'", "LIML"))
+	local LIML = ("`cmd'"=="ivreg2" & "`e(model)'"=="liml") | ("`cmd'"=="ivregress" & "`e(estimator)'"=="liml") | (inlist("`cmd'","reghdfe","ivreghdfe") & strpos("`e(title)'", "LIML"))
 	local WRE = `"`boottype'"'!="score" & `IV' & `reps'
 	local small = (e(df_r) != . | "`small'" != "" | e(cmd)=="cgmreg") & "`nosmall'"==""
   local partial = `:word count `e(partial1)'' & inlist("`e(cmd)'", "ivreg2", "xtivreg2", "ivreghdfe")
@@ -340,7 +340,7 @@ program define _boottest, rclass sortpreserve
       tempvar FEname
       qui egen long `FEname' = group(`_FEname') if e(sample)
     }
-    else local FEname `_FEname'
+    else local FEname: copy local _FEname
   }
 
   if "`cmd'" == "xtreg" {
@@ -350,7 +350,7 @@ program define _boottest, rclass sortpreserve
   }
   else if inlist("`cmd'","xtivreg","xtivreg2","xtdidregress") local FEdfadj 0
   else if inlist("`cmd'", "reghdfe", "ivreghdfe") local FEdfadj = max(1, e(df_a))
-  else local FEdfadj `NFE'
+  else local FEdfadj: copy local NFE
 
 	if `"`seed'"'!="" set seed `seed'
 
@@ -364,7 +364,7 @@ program define _boottest, rclass sortpreserve
 			qui gen double `wtname' `e(wexp)'
 		}
 		else if c(varabbrev)=="on" unab wtname: `2'
-    else local wtname `2'
+    else local wtname: copy local 2
 	}
 
 	if `"`h0s'"' != "" {
@@ -423,7 +423,7 @@ program define _boottest, rclass sortpreserve
         if `"`: constraint `c''"' == "" di as res "Constraint `c' not found and will be skipped."
       }
     }
-		local h0_1 `h0'
+		local h0_1: copy local h0
 	}
 
 	if `N_h0s'==1 local madjust
@@ -477,7 +477,7 @@ program define _boottest, rclass sortpreserve
       }
 		}
 		else {
-			local Xnames_exog `colnames'
+			local Xnames_exog: copy local colnames
       if inlist("`e(cmd)'", "didregress", "xtdidregress") local Xnames_exog: subinstr local Xnames_exog "r1vs0." ""
 		}
 
@@ -503,7 +503,7 @@ program define _boottest, rclass sortpreserve
 					}
 				}
 			}
-			local `varlist' `_revarlist'
+			local `varlist': copy local _revarlist
 		}
 		mata _boottestkeepC = st_matrix("`keepC'"); _boottestp = cols(_boottestkeepC)? _boottestp[_boottestkeepC] : J(0,1,0)
 
@@ -528,7 +528,7 @@ program define _boottest, rclass sortpreserve
 		}
 
 		if `"`bootcluster'"' == "" {
-			local bootcluster `clustvars'
+			local bootcluster: copy local clustvars
 			if `reps' & `NErrClustVar'>1 di as txt "({cmdab:bootcl:uster(`clustvars')} assumed)"
 		}
 		local    clustvars `:list clustvars & bootcluster' `:list clustvars - bootcluster'
@@ -544,7 +544,7 @@ program define _boottest, rclass sortpreserve
 			}
 			else local _allclustvars `_allclustvars' `clustvar'
 		}
-		local allclustvars `_allclustvars'
+		local allclustvars: copy local _allclustvars
 	}
   local NBootClustVar: word count `bootcluster'
 
@@ -668,7 +668,7 @@ program define _boottest, rclass sortpreserve
         _parse expand lc lg: cmdline, common(CONSTraints(passthru) from(passthru) INIt(passthru) ITERate(passthru) Robust)  // would be nice to extract, thus remove, cluster() option for speed, but it affects sample
         local 0, `lg_op'
         syntax, [from(passthru) INIt(passthru) ITERate(passthru) *]
-        local 0 `lc_1'
+        local 0: copy local lc_1
 				syntax [anything] [aw pw fw iw] [if] [in], [*]
 
 				if "`e(cmd)'"=="ml" local max max  // tack on max option in case ml run in interactive model and cmdline() is missing it
@@ -762,7 +762,7 @@ program define _boottest, rclass sortpreserve
           qui forvalues i=1/`k' {
             if "``i''" != "`lasteq'" | "``i''"=="/" {
               local ++eq
-              local lasteq ``i''
+              local lasteq: copy local `i'
             }
             local var: word `i' of `colnames'
             if "`var'"=="_cons" | strmatch("`var'","*._cons") | "``i''"=="/" local _sc `_sc' `:word `eq' of `scnames'' // constant term or free parameter
@@ -772,7 +772,7 @@ program define _boottest, rclass sortpreserve
               local _sc `_sc' `t'
             }
           }
-          local scnames `_sc'
+          local scnames: copy local _sc
         }
       }
 
@@ -808,9 +808,9 @@ program define _boottest, rclass sortpreserve
     if `margins' {
       cap drop `touse'
       gen byte `touse' = `hold' & `marginstouse'
-      local sample `touse'
+      local sample: copy local touse
     }
-    else local sample `hold'
+    else local sample: copy local hold
 
     return local seed = cond("`seed'"!="", "`seed'", "`c(seed)'")
 
@@ -1072,7 +1072,7 @@ program define _boottest, rclass sortpreserve
 			mat colnames `cimat' = lo hi
       cap mat rownames `cimat' = `h0text'
 			return matrix CI`_h' = `cimat'
-			return local CIstr`_h' `CIstr'
+			return local CIstr`_h': copy local CIstr
 		}
 		
 		if "`statistic'"=="c" & `df'==1 {
@@ -1091,10 +1091,10 @@ program define _boottest, rclass sortpreserve
   cap mat_put_rr `C'  // can fail in boottest, margins
 	return scalar level = `level'
 	return scalar ptol = `ptolerance'
-	return local statistic `statistic'
-	return local weighttype `weighttype'
-	return local boottype `boottype'
-	return local clustvars `clustvars'
+	return local statistic: copy local statistic
+	return local weighttype: copy local weighttype
+	return local boottype: copy local boottype
+	return local clustvars: copy local clustvars
 	return scalar null = `null'
 	return scalar reps = `repsname'
   return scalar NH0s = `N_h0s'
@@ -1102,155 +1102,157 @@ end
 
 
 * Version history
-* 4.4.8 Revamped Julia link
-* 4.4.7 Fixed "mlabformat() not allowed" in Stata <16
-* 4.4.6 Tweaks to work with more ML-based commands and to error on xttobit, xtintreg
-* 4.4.5 Fixed crash after hierarchical models (mixed, mecloglog, etc.). When imposing null on ML estimate, run user's estimator under current Stata version.
-*       No longer add r to returned numerators with svmat(numer). Affects that result matrix when r!=0.
-* 4.4.4 Increase WildBootTests.jl version 0.9.0. Fixed bug in WRE jk test stat computation when clusters are many ("granular"). Changed ptol() default to 1e-3. Fixed computation bug in WRE with classical errors.
-*       Correct dof when constraints include restrictions on o. and b. regressors
-* 4.4.3 Fixed bug in WRE jackknife test stat computation when clusters are many ("granular"). Changed ptol() default to 1e-3. Fixed computation bug in WRE with classical errors.
-* 4.4.2 Fixed wrong "robust" CI's after OLS
-* 4.4.1 Fixed crash in AR test after over-ID'd regression; added mention of jackknifing to output
-* 4.4.0 Minimized O(N) operations in non-jk WRE when clustering is coarse. Skip FE code in WRE if FE = cluster grouping. Bumped Julia version to 0.8.5.
-* 4.3.1 Bumped Julia version to 0.8.3. Check for Python 2. Restored code path of memory-intensive granular WRE computation of denominator.
-* 4.3.0 Added jackknife for WRE; fixed failure to detect constant term after ivreg; fixed incorrect computation in "WUE"
-* 4.2.1 jk bug fixes
-* 4.2.0 Added jackknife (WCU/WCR_31) for OLS and Anderson-Rubin
-* 4.1.1 Made margins option honor if/in clause in margins call. Clarifed in help that margins option is only for linear predictions.
-* 4.1.0 Added format option.
-* 4.0.5 Fixed bugs in support for xtivreg2. Moved to WildBootTests version 0.7.13.
-* 4.0.4 Fixed Julia crash. Moved to WildBootTests version 0.7.11.
-* 4.0.3 Bumped WildBootTests version to 0.7.10. Fixed failure to incorporate constraints into dof calculation for small-sample correction
-* 4.0.2 Fixed bugs in Julia installation.
-* 4.0.1 Bumped WildBootTests version to 0.7.8. Added messages about installation process.
-* 4.0.0 Added Julia support. Fixed plotting bug in artest with >1 instrument. Added sensitivity to (iv)reghdfe's e(df_a) return value.
-* 3.2.6 For tests of dimension > 2 return symmetric r(V), not upper triangle; fixed crash in WRE with matsizegb() and obs weights; added support for one-way FEs based on interactions in reghdfe
-* 3.2.5 Added nosmall option and check for missing sample marker
-* 3.2.4 Fixed bug in test statistic in no-null tests after IV/GMM. Fixed Fuller adjustment always being treated as 1. Fixed bad value in lower left corner of contour plots.
-*       Fixed crash in WRE for hypotheses involving exogenous vars
-*       Prevented crash after margins, post.
-*       Label result matrices with hypothesis text. Return r(NH0s).
-*       Fixed 3.2.2 crash after xtreg with if, in, or weights clause
-* 3.2.3 After (xt)didregress, default to testing treatment effect; Fixed bug in pXB(). Properly handle nointeract, nogteffects, aggmethod options of (xt)didregress.
-* 3.2.2 Add didregress, xtdidregress support. After xtXXX estimation, emulate those commands in not counting FE in dof adjustment, unless "xtreg, dfadj"
-* 3.2.1 Prevent it from expanding data set when number of points in graph exceed # of rows in data set
-* 3.2.0 Added margins option
-* 3.1.4 Fixed crashes with matsizegb() and with "granular" (many-clustered) FE estimates with FE & cluster groups coherent
-* 3.1.3 Fixed crash on stat(c) after OLS
-* 3.1.2 Incorporated small-sample factor in r(dist)
-* 3.1.1 Minor bug fixes and speed-ups
-* 3.1.0 Complete overhaul of WRE for ~200X speed gain. Dropped GMM support. Added support for ivreg2's partial().
-* 3.0.2 Dropped "KK" calculation (last expression in eq 60 in paper) because inefficient when interpolating. Refined plotting to minimize interpolation anchor resets. Refined criterion to use "granular"-optimized code (many small clusters).
-* 3.0.1 Recompiled in Stata 13
-* 3.0.0 Exploit linearity/quadratic form in denominators too. ~10X speed-up over 2018 version for inverting tests after OLS.
-* 2.8.1 Fix 2.8.0 bugs. Even more fully exploit linearity in test stat numerators, for ~2X speed gain in inverting test after OLS.
-* 2.8.0 More fully exploit linearity of numerators and K matrices as in appendix A.2. Recenter classical score test even for non-OLS, reversing 2.4.1 change. Added ptolerance() option.
-* 2.7.4 Fixed errors affecting results after GMM
-* 2.7.3 Prevented crash on WRE bootstrap-t with svmat(numer)
-* 2.7.2 Added error check for absorbed interaction terms in (iv)reghdfe
-* 2.7.1 Fixed crash after IV without clustering. Added check for regress with undocumented IV syntax. Fixed crash on 2-D test with "nonull" but not "nograph".
-* 2.7.0 Require Stata 13 or later, so no need to work around possible lack of panelsum()
-* 2.6.0 Added svv option.
-* 2.5.7 If lusolve() fails on non-invertible matrix, resort to invsym() for generalized inverse.
-* 2.5.6 Fixed 2.4.0 bug: look in e(df_a_initial) rather than e(df_a). Matters if clustering on the absorbed var.
-* 2.5.5 Fixed wrong results when absorbed variable is type string
-* 2.5.4 Added support for ivreghdfe
-* 2.5.3 Fixed crash in score test (including waldtest) after "robust" estimation without observation weights
-* 2.5.2 More graceful handling of degenerate cases: multiway t stat = .; test hypothesis refers to dropped/constrained variable
-* 2.5.1 Fixed 2.5.0 bug after "robust" estimation
-* 2.5.0 Added bootstrap-c. Fixed bug affecting results from WCU when using Mammen/Rademacher/Webb and Rademacher universe not exhausted; doubles test stat in published Conley & Tabor reanalysis.
-* 2.4.3 minor bug fixes and edits
-* 2.4.2 Fixed 2.4.1 bug. Added r(b) and r(V) return values.
-* 2.4.1 Optimized classical tests; removed bug in score test after FE est (wrongly droped term 2 in (63) in non-classical use of score test)
-* 2.4.0 After reghdfe look for FE count in e(df_a) as well as e(K1)
-* 2.3.9 Prevented crash in pure "robust" non-WRE
-* 2.3.8 Prevented crash when it can't recompile boottest.mata; instead issues an explanatory warning
-* 2.3.7 Fixed crash after tobit estimation in Stata 15
-* 2.3.6 Fixed crash in score test/bootstrap with multiple independent hypotheses
-* 2.3.5 Fixed stupid 2.3.4 crash
-* 2.3.4 Dropped "Rejection" from axis labels. Added check for right number of entries in gridmin(), gridmax(), gridpoints().
-* 2.3.3 Eliminated false warning that neg Hessian not pos def when a parameter is constrained to 0 in model
-* 2.3.2 Fixed 2.2.0 crash when errors are non-robust
-* 2.3.1 Fixed 2.2.0 bug--left behind temporary variables
-* 2.3.0 Removed optimization hacks from WRE code because they created matrices with 1 row per obs and 1 col per replication
-* 2.2.2 Allowed quietly option in ado interface to suppress dots. Made sorts in Mata code stable.
-*       For LIML, reverted to finding eigenvalue of I-TT/TPZT instead of TT/TPZT; seems to avoid instances of eigensystem() returning all missing
-* 2.2.1 Fixed failure to detect # of FE after areg in Stata version < 15
-* 2.2.0 Added contour plotting for 2-D tests.
-* 2.1.9 Work-around for Stata crash when number of fixed effects is very large: require # of FE as input, and don't represent them as linked list.
-* 2.1.8 Fixed 2.1.6 crash with FE. Fixed parsing of matsizegb() option.
-* 2.1.6 Changed to faster computation for WCR with many clusters, but not quite WB. In multiway only applies to intersection of all clusters.
-* 2.1.4 Fixed CI scaling issue introduced in 2.0.5 that affects scoretest, waldtest
-* 2.1.3 Fixed crash on testing of multiple independent hypotheses on ML models
-*       Added more return values and Roodman et al. cite to help file. Blocked warning about \alpha(B+1) being an integer for Rademacher with <=12 groups.
-* 2.1.2 Fixed error in removing half-counting of ties in 2.0.6
-*       Stopped crashes after mlogit (and probably other mlogit and mprobit commands)
-* 2.1.1 Fixed failure to detect FE variable after xtreg, fe cluster()
-* 2.1.0 Added matsizegb feature.
-*       Fixed 2.0.6 failure to subtract 1 from Mammen, Webb weights in WRE non-AR
-*       Fixed failure in subcluster bootstrap to sort data by error clusterings before bootstrap clustering
-*       Avoided creating diagonal/sparse crosstab matrix
-*       Terminate search for CI bounds when bracketing p values are within 1/reps (2/reps for equaltail), with 1 last linear interpolation, rather than find precise step-up point, which not so meaningful
-*       Fixed minor new bugs when using Mata interface
-* 2.0.6 Stopped (half-)counting ties. Changed default reps from 1000 to 999. Fixed swapped labeling of equal-tail and symmetric p-values(!).
-* 2.0.5 Fixed subcluster bootstrap bugs: need to sort data even when c=1; don't falsely flag pure-robust case in WB subcluster
-*       Fixed possible failure to find graph bounds when many replications infeasible and bounds not manually set
-*       Fixed crash in FE estimation when FE cluster = error cluster
-*       Accelerated generation of some wild weights by exploiting fact that results are invariant to rescaling of the weights
-*       Finally optimized CI construction for nonull case.
-*       Made default plot bounds more symmetric.
-* 2.0.4 Made "unrestricted WRE" (WUE?) work.
-* 2.0.3 Added automatic reporting of any infeasible replication statistics in multi-way clustering. Made r(reps) return value reflect possible reduction to 2^G.
-* 2.0.2 Dropped citations from output but added reporting of weight type. Added warning if alpha*(B+1) not integer. Sped up Webb weight generation.
-*       If seed() not specified, then return c(seed) in r(seed). For waldtest, nograph just compute CI analytically.
-*       Prevented WRE crash when no clustering.
-* 2.0.1 Reworked info matrix construction and organization to fix 2.0.0 bug in "subcluster" bootstrapping
-* 2.0.0 Implemented code optimized for pure robust case. Allowed bootstrapping clusters to be chosen arbitrarily, independent of error clusterings.
-* 1.9.7 Fixed crash on score bootstrap without observation weights. Improved run time when clusters are many by avoiding computation of Q'Q.
-*       Fixed failure to recenter score test (not score bootstrap); bug introduced circa 1.9.0. Fixed failure to square t/z to make r(F)/r(chi2).
-*       Fixed 1.9.6 bug causing normal weights to be replace by Mammen weights.
-* 1.9.6 Added Gamma(4, .5) - 2 wild weight distribution option per Liu (1988)
-* 1.9.5 Fixed score test bugs from 1.9.0, and bugs after ML estimation in Stata 15 because of new free parameter matrix label system
-* 1.9.4 Cleaned up display of results for symmetric, equal-tail, etc.
-* 1.9.3 Tweaked to no longer explode wild weights in multiway clustering; not needed since 1.9.0
-* 1.9.2 Fixed crash with FE and omitted dummies for other vars. Fixed 1.9.0 crash in old Stata versions.
-* 1.9.1 Fixed crash with FE and df>1. Stopped waldtest and scoretest ignoring small
-* 1.9.0 Added fixed effect support
-* 1.8.3 Added svmat(numer) option
-* 1.8.2 Fixed bug after ML: was using V from unconstrained instead of constrained fit
-* 1.8.1 Fixed bugs in handling robust non-cluster
-* 1.8.0 Reworked multiway clustering to first collapse data to one obs per all-cluster-var intersections.
-*       Reworked test stat computation for df>1 to mostly iterate over constraints rather than replications. Speeds AR test too.
-* 1.7.1 Changed residual dof for multi-way clustered, small-sample-corrected models to smallest number of groups across grouping variables
-* 1.7.0 Made bootcluster() accept more than one variable. Fixed error causing it to always bootstrap on combination of all vars in multi-way clustered models.
-* 1.6.2 Fixed ado bug in 1.6.1
-* 1.6.1 Fixed AR test crash. Dropped nowarning in favor of capture because commands such as poisson don't accept it. Changed left and right to lower and upper. Fixed bugs.
-*       Suppressed non-concavity warning when imposing null after ML that was incorrectly triggered by omitted factor variables.
-* 1.6.0 Added left and right p value types. Added cmdline option. Added nowarning option to ml, iter(0) call to suppress non-convergence warning.
-* 1.5.7 renamed _selectindex() to boottest_selectindex() to reduce conflicts with old cmp versions
-* 1.5.6 Fixed crash on waldtest after ML
-* 1.5.5 Fixed bug in determining confidence intervals when some test results is missing.
-* 1.5.4 Fixed two bugs causing crashes after GMM estimation
-* 1.5.3 Simplify _selectindex(). Switch from invt() to invttail() since invt() added in Stata 13. Work around Mata garbage-collecting bug.
-* 1.5.2 Switch from "[]" to "{}" in multiple hypothesis syntax. Prevent crashes if hypothesis applies to constrained/dropped parameter, or in non-robust ML.
-* 1.5.1 Make wrapper accept level() and graphname(). Handle graphopt() options relevant for format of line.
-* 1.5.0 Added Anderson-Rubin test, new null hypothesis syntax, multiple hypothesis testing and corrections thereof
-* 1.4.0 Added WRE for LIML, sped up WRE, k-class and Fuller support after ivreg2
-* 1.3.1 Bug fixes in WRE with observation weights and no clusters; and in clustered non-ML estimation with time series operators
-*       Added level(100) option to disable plotting of CI's
-* 1.3.0 Implemented Davidson & MacKinnon WRE. Bug fixes affecting non-robust fweight, weighted OLS/2SLS/GMM when null imposed
-* 1.2.5 Added stable option to sort by cluster, for stability of results
-* 1.2.4 More thorough clean-up of fv handling.
-* 1.2.3 Fixed bug in search for upper bound of CI
-* 1.2.2 Fixed bug in handling of fv base vars in non-ML estimation
-* 1.2.1 LIML bug fixes.
-* 1.2.0 Added svmat option. LIML support. Fixed bug in handling of weights. Replaced ci option with noci.
-* 1.1.6 Fixed minor 1.1.4 and 1.1.5 bugs.
-* 1.1.5 After ML estimation, don't restrict to sample until after scores generated, in case of ts ops
-* 1.1.4 Erase old mlib before compiling new one. Don't recenter Z'e inside sandwich if not bootstrapping.
-* 1.1.3 Fixed bug in multiway cluster ci's. Made compatible with estimation commands whose constraints() option only accept numlists. Drop out-of-sample obs *after* predicting scores.
-* 1.1.2 Force use of score bootstrap after 2SLS/GMM. Thanks to Federico Belotti.
-* 1.1.1 Added support for single-equation linear GMM with ivreg2 and ivregress.
-* 1.1.0 Fixed 1.0.1 bug in observation weight handling. Added multiway clustering, robust, cluster(), and bootcluster() options. Added waldtest wrapper.
-* 1.0.1 Added check for empty constraints. Fixed crash on use of weights after clustered estimation in Stata >13.
+* 4.4.10 Fixed crash after latest versions of *reghdfe*
+* 4.4.9  Added jl SetEnv call to create private Julia package environment
+* 4.4.8  Revamped Julia link
+* 4.4.7  Fixed "mlabformat() not allowed" in Stata <16
+* 4.4.6  Tweaks to work with more ML-based commands and to error on xttobit, xtintreg
+* 4.4.5  Fixed crash after hierarchical models (mixed, mecloglog, etc.). When imposing null on ML estimate, run user's estimator under current Stata version.
+*        No longer add r to returned numerators with svmat(numer). Affects that result matrix when r!=0.
+* 4.4.4  Increase WildBootTests.jl version 0.9.0. Fixed bug in WRE jk test stat computation when clusters are many ("granular"). Changed ptol() default to 1e-3. Fixed computation bug in WRE with classical errors.
+*        Correct dof when constraints include restrictions on o. and b. regressors
+* 4.4.3  Fixed bug in WRE jackknife test stat computation when clusters are many ("granular"). Changed ptol() default to 1e-3. Fixed computation bug in WRE with classical errors.
+* 4.4.2  Fixed wrong "robust" CI's after OLS
+* 4.4.1  Fixed crash in AR test after over-ID'd regression; added mention of jackknifing to output
+* 4.4.0  Minimized O(N) operations in non-jk WRE when clustering is coarse. Skip FE code in WRE if FE = cluster grouping. Bumped Julia version to 0.8.5.
+* 4.3.1  Bumped Julia version to 0.8.3. Check for Python 2. Restored code path of memory-intensive granular WRE computation of denominator.
+* 4.3.0  Added jackknife for WRE; fixed failure to detect constant term after ivreg; fixed incorrect computation in "WUE"
+* 4.2.1  jk bug fixes
+* 4.2.0  Added jackknife (WCU/WCR_31) for OLS and Anderson-Rubin
+* 4.1.1  Made margins option honor if/in clause in margins call. Clarifed in help that margins option is only for linear predictions.
+* 4.1.0  Added format option.
+* 4.0.5  Fixed bugs in support for xtivreg2. Moved to WildBootTests version 0.7.13.
+* 4.0.4  Fixed Julia crash. Moved to WildBootTests version 0.7.11.
+* 4.0.3  Bumped WildBootTests version to 0.7.10. Fixed failure to incorporate constraints into dof calculation for small-sample correction
+* 4.0.2  Fixed bugs in Julia installation.
+* 4.0.1  Bumped WildBootTests version to 0.7.8. Added messages about installation process.
+* 4.0.0  Added Julia support. Fixed plotting bug in artest with >1 instrument. Added sensitivity to (iv)reghdfe's e(df_a) return value.
+* 3.2.6  For tests of dimension > 2 return symmetric r(V), not upper triangle; fixed crash in WRE with matsizegb() and obs weights; added support for one-way FEs based on interactions in reghdfe
+* 3.2.5  Added nosmall option and check for missing sample marker
+* 3.2.4  Fixed bug in test statistic in no-null tests after IV/GMM. Fixed Fuller adjustment always being treated as 1. Fixed bad value in lower left corner of contour plots.
+*        Fixed crash in WRE for hypotheses involving exogenous vars
+*        Prevented crash after margins, post.
+*        Label result matrices with hypothesis text. Return r(NH0s).
+*        Fixed 3.2.2 crash after xtreg with if, in, or weights clause
+* 3.2.3  After (xt)didregress, default to testing treatment effect; Fixed bug in pXB(). Properly handle nointeract, nogteffects, aggmethod options of (xt)didregress.
+* 3.2.2  Add didregress, xtdidregress support. After xtXXX estimation, emulate those commands in not counting FE in dof adjustment, unless "xtreg, dfadj"
+* 3.2.1  Prevent it from expanding data set when number of points in graph exceed # of rows in data set
+* 3.2.0  Added margins option
+* 3.1.4  Fixed crashes with matsizegb() and with "granular" (many-clustered) FE estimates with FE & cluster groups coherent
+* 3.1.3  Fixed crash on stat(c) after OLS
+* 3.1.2  Incorporated small-sample factor in r(dist)
+* 3.1.1  Minor bug fixes and speed-ups
+* 3.1.0  Complete overhaul of WRE for ~200X speed gain. Dropped GMM support. Added support for ivreg2's partial().
+* 3.0.2  Dropped "KK" calculation (last expression in eq 60 in paper) because inefficient when interpolating. Refined plotting to minimize interpolation anchor resets. Refined criterion to use "granular"-optimized code (many small clusters).
+* 3.0.1  Recompiled in Stata 13
+* 3.0.0  Exploit linearity/quadratic form in denominators too. ~10X speed-up over 2018 version for inverting tests after OLS.
+* 2.8.1  Fix 2.8.0 bugs. Even more fully exploit linearity in test stat numerators, for ~2X speed gain in inverting test after OLS.
+* 2.8.0  More fully exploit linearity of numerators and K matrices as in appendix A.2. Recenter classical score test even for non-OLS, reversing 2.4.1 change. Added ptolerance() option.
+* 2.7.4  Fixed errors affecting results after GMM
+* 2.7.3  Prevented crash on WRE bootstrap-t with svmat(numer)
+* 2.7.2  Added error check for absorbed interaction terms in (iv)reghdfe
+* 2.7.1  Fixed crash after IV without clustering. Added check for regress with undocumented IV syntax. Fixed crash on 2-D test with "nonull" but not "nograph".
+* 2.7.0  Require Stata 13 or later, so no need to work around possible lack of panelsum()
+* 2.6.0  Added svv option.
+* 2.5.7  If lusolve() fails on non-invertible matrix, resort to invsym() for generalized inverse.
+* 2.5.6  Fixed 2.4.0 bug: look in e(df_a_initial) rather than e(df_a). Matters if clustering on the absorbed var.
+* 2.5.5  Fixed wrong results when absorbed variable is type string
+* 2.5.4  Added support for ivreghdfe
+* 2.5.3  Fixed crash in score test (including waldtest) after "robust" estimation without observation weights
+* 2.5.2  More graceful handling of degenerate cases: multiway t stat = .; test hypothesis refers to dropped/constrained variable
+* 2.5.1  Fixed 2.5.0 bug after "robust" estimation
+* 2.5.0  Added bootstrap-c. Fixed bug affecting results from WCU when using Mammen/Rademacher/Webb and Rademacher universe not exhausted; doubles test stat in published Conley & Tabor reanalysis.
+* 2.4.3  minor bug fixes and edits
+* 2.4.2  Fixed 2.4.1 bug. Added r(b) and r(V) return values.
+* 2.4.1  Optimized classical tests; removed bug in score test after FE est (wrongly droped term 2 in (63) in non-classical use of score test)
+* 2.4.0  After reghdfe look for FE count in e(df_a) as well as e(K1)
+* 2.3.9  Prevented crash in pure "robust" non-WRE
+* 2.3.8  Prevented crash when it can't recompile boottest.mata; instead issues an explanatory warning
+* 2.3.7  Fixed crash after tobit estimation in Stata 15
+* 2.3.6  Fixed crash in score test/bootstrap with multiple independent hypotheses
+* 2.3.5  Fixed stupid 2.3.4 crash
+* 2.3.4  Dropped "Rejection" from axis labels. Added check for right number of entries in gridmin(), gridmax(), gridpoints().
+* 2.3.3  Eliminated false warning that neg Hessian not pos def when a parameter is constrained to 0 in model
+* 2.3.2  Fixed 2.2.0 crash when errors are non-robust
+* 2.3.1  Fixed 2.2.0 bug--left behind temporary variables
+* 2.3.0  Removed optimization hacks from WRE code because they created matrices with 1 row per obs and 1 col per replication
+* 2.2.2  Allowed quietly option in ado interface to suppress dots. Made sorts in Mata code stable.
+*        For LIML, reverted to finding eigenvalue of I-TT/TPZT instead of TT/TPZT; seems to avoid instances of eigensystem() returning all missing
+* 2.2.1  Fixed failure to detect # of FE after areg in Stata version < 15
+* 2.2.0  Added contour plotting for 2-D tests.
+* 2.1.9  Work-around for Stata crash when number of fixed effects is very large: require # of FE as input, and don't represent them as linked list.
+* 2.1.8  Fixed 2.1.6 crash with FE. Fixed parsing of matsizegb() option.
+* 2.1.6  Changed to faster computation for WCR with many clusters, but not quite WB. In multiway only applies to intersection of all clusters.
+* 2.1.4  Fixed CI scaling issue introduced in 2.0.5 that affects scoretest, waldtest
+* 2.1.3  Fixed crash on testing of multiple independent hypotheses on ML models
+*        Added more return values and Roodman et al. cite to help file. Blocked warning about \alpha(B+1) being an integer for Rademacher with <=12 groups.
+* 2.1.2  Fixed error in removing half-counting of ties in 2.0.6
+*        Stopped crashes after mlogit (and probably other mlogit and mprobit commands)
+* 2.1.1  Fixed failure to detect FE variable after xtreg, fe cluster()
+* 2.1.0  Added matsizegb feature.
+*        Fixed 2.0.6 failure to subtract 1 from Mammen, Webb weights in WRE non-AR
+*        Fixed failure in subcluster bootstrap to sort data by error clusterings before bootstrap clustering
+*        Avoided creating diagonal/sparse crosstab matrix
+*        Terminate search for CI bounds when bracketing p values are within 1/reps (2/reps for equaltail), with 1 last linear interpolation, rather than find precise step-up point, which not so meaningful
+*        Fixed minor new bugs when using Mata interface
+* 2.0.6  Stopped (half-)counting ties. Changed default reps from 1000 to 999. Fixed swapped labeling of equal-tail and symmetric p-values(!).
+* 2.0.5  Fixed subcluster bootstrap bugs: need to sort data even when c=1; don't falsely flag pure-robust case in WB subcluster
+*        Fixed possible failure to find graph bounds when many replications infeasible and bounds not manually set
+*        Fixed crash in FE estimation when FE cluster = error cluster
+*        Accelerated generation of some wild weights by exploiting fact that results are invariant to rescaling of the weights
+*        Finally optimized CI construction for nonull case.
+*        Made default plot bounds more symmetric.
+* 2.0.4  Made "unrestricted WRE" (WUE?) work.
+* 2.0.3  Added automatic reporting of any infeasible replication statistics in multi-way clustering. Made r(reps) return value reflect possible reduction to 2^G.
+* 2.0.2  Dropped citations from output but added reporting of weight type. Added warning if alpha*(B+1) not integer. Sped up Webb weight generation.
+*        If seed() not specified, then return c(seed) in r(seed). For waldtest, nograph just compute CI analytically.
+*        Prevented WRE crash when no clustering.
+* 2.0.1  Reworked info matrix construction and organization to fix 2.0.0 bug in "subcluster" bootstrapping
+* 2.0.0  Implemented code optimized for pure robust case. Allowed bootstrapping clusters to be chosen arbitrarily, independent of error clusterings.
+* 1.9.7  Fixed crash on score bootstrap without observation weights. Improved run time when clusters are many by avoiding computation of Q'Q.
+*        Fixed failure to recenter score test (not score bootstrap); bug introduced circa 1.9.0. Fixed failure to square t/z to make r(F)/r(chi2).
+*        Fixed 1.9.6 bug causing normal weights to be replace by Mammen weights.
+* 1.9.6  Added Gamma(4, .5) - 2 wild weight distribution option per Liu (1988)
+* 1.9.5  Fixed score test bugs from 1.9.0, and bugs after ML estimation in Stata 15 because of new free parameter matrix label system
+* 1.9.4  Cleaned up display of results for symmetric, equal-tail, etc.
+* 1.9.3  Tweaked to no longer explode wild weights in multiway clustering; not needed since 1.9.0
+* 1.9.2  Fixed crash with FE and omitted dummies for other vars. Fixed 1.9.0 crash in old Stata versions.
+* 1.9.1  Fixed crash with FE and df>1. Stopped waldtest and scoretest ignoring small
+* 1.9.0  Added fixed effect support
+* 1.8.3  Added svmat(numer) option
+* 1.8.2  Fixed bug after ML: was using V from unconstrained instead of constrained fit
+* 1.8.1  Fixed bugs in handling robust non-cluster
+* 1.8.0  Reworked multiway clustering to first collapse data to one obs per all-cluster-var intersections.
+*        Reworked test stat computation for df>1 to mostly iterate over constraints rather than replications. Speeds AR test too.
+* 1.7.1  Changed residual dof for multi-way clustered, small-sample-corrected models to smallest number of groups across grouping variables
+* 1.7.0  Made bootcluster() accept more than one variable. Fixed error causing it to always bootstrap on combination of all vars in multi-way clustered models.
+* 1.6.2  Fixed ado bug in 1.6.1
+* 1.6.1  Fixed AR test crash. Dropped nowarning in favor of capture because commands such as poisson don't accept it. Changed left and right to lower and upper. Fixed bugs.
+*        Suppressed non-concavity warning when imposing null after ML that was incorrectly triggered by omitted factor variables.
+* 1.6.0  Added left and right p value types. Added cmdline option. Added nowarning option to ml, iter(0) call to suppress non-convergence warning.
+* 1.5.7  renamed _selectindex() to boottest_selectindex() to reduce conflicts with old cmp versions
+* 1.5.6  Fixed crash on waldtest after ML
+* 1.5.5  Fixed bug in determining confidence intervals when some test results is missing.
+* 1.5.4  Fixed two bugs causing crashes after GMM estimation
+* 1.5.3  Simplify _selectindex(). Switch from invt() to invttail() since invt() added in Stata 13. Work around Mata garbage-collecting bug.
+* 1.5.2  Switch from "[]" to "{}" in multiple hypothesis syntax. Prevent crashes if hypothesis applies to constrained/dropped parameter, or in non-robust ML.
+* 1.5.1  Make wrapper accept level() and graphname(). Handle graphopt() options relevant for format of line.
+* 1.5.0  Added Anderson-Rubin test, new null hypothesis syntax, multiple hypothesis testing and corrections thereof
+* 1.4.0  Added WRE for LIML, sped up WRE, k-class and Fuller support after ivreg2
+* 1.3.1  Bug fixes in WRE with observation weights and no clusters; and in clustered non-ML estimation with time series operators
+*        Added level(100) option to disable plotting of CI's
+* 1.3.0  Implemented Davidson & MacKinnon WRE. Bug fixes affecting non-robust fweight, weighted OLS/2SLS/GMM when null imposed
+* 1.2.5  Added stable option to sort by cluster, for stability of results
+* 1.2.4  More thorough clean-up of fv handling.
+* 1.2.3  Fixed bug in search for upper bound of CI
+* 1.2.2  Fixed bug in handling of fv base vars in non-ML estimation
+* 1.2.1  LIML bug fixes.
+* 1.2.0  Added svmat option. LIML support. Fixed bug in handling of weights. Replaced ci option with noci.
+* 1.1.6  Fixed minor 1.1.4 and 1.1.5 bugs.
+* 1.1.5  After ML estimation, don't restrict to sample until after scores generated, in case of ts ops
+* 1.1.4  Erase old mlib before compiling new one. Don't recenter Z'e inside sandwich if not bootstrapping.
+* 1.1.3  Fixed bug in multiway cluster ci's. Made compatible with estimation commands whose constraints() option only accept numlists. Drop out-of-sample obs *after* predicting scores.
+* 1.1.2  Force use of score bootstrap after 2SLS/GMM. Thanks to Federico Belotti.
+* 1.1.1  Added support for single-equation linear GMM with ivreg2 and ivregress.
+* 1.1.0  Fixed 1.0.1 bug in observation weight handling. Added multiway clustering, robust, cluster(), and bootcluster() options. Added waldtest wrapper.
+* 1.0.1  Added check for empty constraints. Fixed crash on use of weights after clustered estimation in Stata >13.

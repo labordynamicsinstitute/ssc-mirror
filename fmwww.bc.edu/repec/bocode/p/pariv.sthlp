@@ -36,9 +36,9 @@ The partitioned regression is more robust to near collinearity among the instrum
 {it:Nearly Collinear Robust Procedures for 2SLS Estimation.}
 {p_end}
 
-{phang} {cmd:pariv} reports the maximum R2 found in regressing any one instrument on the others.  In other Stata 2SLS commands, maximum R2 Values in excess of .99999 
-may generate substantive sensitivity to econometrically irrelevant procedures such as the reordering of the data and variables.  {cmd:pariv} is much less
-sensitive to near collinearity, but to check that reported results are robust to this issue, the user can call for {opth reps(#)} > 0 random 
+{phang} {cmd:pariv} reports the maximum R2 found in regressing any one instrument on the others.  In Stata's built-in 2SLS commands {cmd:ivregress} and {cmd:xtivreg}, 
+maximum R2 values in excess of .99999 may generate substantive sensitivity to econometrically irrelevant procedures such as the reordering of the data and variables.  
+{cmd:pariv} is much less sensitive to near collinearity, but to check that reported results are robust to this issue, the user can call for {opth reps(#)} > 0 random 
 permutations of data and variable order.  {cmd:pariv} will report the min to max range of the coefficient and standard errors estimates of the partitioned
 2SLS regression across these permutations.  If the minimum and maximum are the same, the user can be confident that the reported results are not sensitive to near collinearity.  
 If the user does not provide a random number {hi:seed}, the seed is set to 1. Regardless, the seed is restored to its pre-program value on termination.

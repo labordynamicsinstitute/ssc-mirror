@@ -1,6 +1,8 @@
 program define mvdcmp
 *! version 3.0 10jul2023 Dan Powers 
-//////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// 15sep23 allow for two formats of sampling weights in svy design and appropriate subpopulation processing
+// 15sep23 nbreg/svynbreg use current Stata versions 
 // 10jul23 logit, svylogit, probit, svyprobit implemented in glm to handle fractional response
 // 30jun23 added support for svy models 
 // 20jun23 default difference = higher value outcome - lower value outcome
@@ -20,8 +22,8 @@ program define mvdcmp
 // changed ereturns e(Var) to e(V) and e(Coef) to e(b)
 // version 10 added 17sept2010 
 // e(sample) added  06apr2010
-////////////////////////////////////////////////////////////////////////////////////////////
-version 15.0
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+version 16.0
 gettoken mvdcmp_cmd model:0, parse(":")
 gettoken grp 1:mvdcmp_cmd, parse(",")
 gettoken 1 options:1
@@ -321,10 +323,16 @@ svyset
 
 // descriptives outcome
 forval i = 0/1 {
-	svy: mean `depvar' if `by' == `val`i''	
-	qui svy: regress `depvar' `varlist' if `by'==`val`i'' 
-local wv = e(wvar)      // use for svy:mean estimation & args to subroutines
-
+	tempvar sp
+    gen `sp' = cond(`by' == `val`i'', 1, 0)
+	svy, subpop(`sp') : mean `depvar'		
+	qui svy, subpop(`sp') : regress `depvar' `varlist' if `by'==`val`i'' 
+// ruling out more complex designs
+local wv = e(wvar)            // under: svyset psuid [pw=weightvar], strata(strataid)
+  if ("`wv'" == ".") {
+  	 local wv = e(weight1)    // under: svyset psuid, weight(weightvar) strata(strataid)
+  }
+  
 local normal`i' `normal'
 if "`normal`i''"!=""{
 	local j 0
@@ -634,10 +642,21 @@ svyset
 
 forval i = 0/1 {
 // descriptives outcome
-	svy: mean `depvar' if `by' == `val`i''	
-	qui svy: glm `depvar' `varlist' if `by'==`val`i'' , family(b) link(logit) 
+// the appropriate way is to use subpop arg. (for correct std. errors)
+//
+tempvar sp
+    gen `sp' = cond(`by' == `val`i'', 1, 0)
+	svy, subpop(`sp') : mean `depvar'	
+	qui svy, subpop(`sp') : glm `depvar' `varlist' , family(b) link(logit) 
+	
+// two ways to specify sampling weights in -svyset- that give identical results in single stage design
+// ruling out more complex designs
 
-local wv = e(wvar)
+local wv = e(wvar)            // under: svyset psuid [pw=weightvar], strata(strataid)
+  if ("`wv'" == ".") {
+  	 local wv = e(weight1)    // under: svyset psuid, weight(weightvar) strata(strataid)
+  }
+
 
 local normal`i' `normal'
 if "`normal`i''"!=""{
@@ -901,7 +920,7 @@ end
 program svyprobitDecomp, eclass
 syntax anything(id="varlist"), BY(varname) [REVerse NORmal(string) Scale(integer 1)] 
 
-// pweight from e(wvar) is used for means of x's 
+// svy-weighted results for response and means
 tempname matrix
 capture tab `by', matrow(`matrix')
 // check if returned matrix and rows=2
@@ -947,10 +966,21 @@ svyset
 
 forval i = 0/1 {
 // descriptives outcome
-	svy: mean `depvar' if `by' == `val`i''
-	qui svy: glm `depvar' `varlist' if `by'==`val`i'' , family(b) link(probit)
-// get pweight (from svy cmd)
-local wv = e(wvar)
+// the appropriate way is to use subpop arg. (for correct std. errors)
+//
+tempvar sp
+    gen `sp' = cond(`by' == `val`i'', 1, 0)
+	svy, subpop(`sp') : mean `depvar'	
+	qui svy, subpop(`sp') : glm `depvar' `varlist' , family(b) link(probit) 
+// 
+// two ways to specify sampling weights in -svyset- that give identical results in single stage design
+// ruling out more complex designs
+local wv = e(wvar)            // under: svyset psuid [pw=weightvar], strata(strataid)
+  if ("`wv'" == ".") {
+  	 local wv = e(weight1)    // under: svyset psuid, weight(weightvar) strata(strataid)
+  }
+
+
 local normal`i' `normal'
 if "`normal`i''"!=""{
 local j 0
@@ -1283,10 +1313,20 @@ di "               "
 di "svy information"
 svyset
 forval i = 0/1 {
-	svy: poisson `depvar' if `by'==`val`i'' , offset(`offset') irr
-	qui svy: poisson `depvar' `varlist' if `by'==`val`i'' , offset(`offset') 
-// get pwweight
-local wv = e(wvar)
+	//
+tempvar sp
+    gen `sp' = cond(`by' == `val`i'', 1, 0)
+	svy, subpop(`sp') : poisson `depvar', offset(`offset') irr
+	qui svy, subpop(`sp') : poisson `depvar' `varlist' , offset(`offset')
+	
+// two ways to specify sampling weights in -svyset- that give identical results in single stage design
+// ruling out more complex designs
+local wv = e(wvar)            // under: svyset psuid [pw=weightvar], strata(strataid)
+  if ("`wv'" == ".") {
+  	 local wv = e(weight1)    // under: svyset psuid, weight(weightvar) strata(strataid)
+  }
+
+	
 local normal`i' `normal'
 if "`normal`i''"!=""{
 local j 0
@@ -1387,8 +1427,6 @@ end
 // nbreg
 
 program nbregDecomp, eclass
-// force version 12 for nbreg
-version 12
 //
 syntax anything(id="varlist") [fw pw iw], BY(varname) [OFFset(varname) ///
 REVerse NORmal(string) Scale(integer 1) CLUSter(varname) ROBust]
@@ -1505,9 +1543,9 @@ local modvarlist: colnames e(b)
 local cons _cons
 local modvarlist2: list modvarlist - cons /*get rid of the first cons*/
 // fix problem due to renaming of scale parameter in Stata 15
-local cons2 _cons
-//local cons2 lnalpha
-local modvarlist2: list modvarlist2 - cons2 /*get rid of lnalpha*/
+// local cons2 _cons
+local cons2 "lnalpha"
+local modvarlist2: list modvarlist2 - cons2 //  get rid of lnalpha from e(b) //
 mata: st_view(x`i', ., (tokens("`modvarlist2'"), "`_cons'"), "`touse'")
 mata: b=st_matrix("e(b)")
 mata: b`i'=0
@@ -1584,7 +1622,7 @@ end
 
 program svynbregDecomp, eclass
 // force version 12 for nbreg
-version 12
+// version 12
 //
 syntax anything(id="varlist"), BY(varname) [OFFset(varname) REVerse NORmal(string) Scale(integer 1)]
 	if ("`offset'"==""){
@@ -1634,9 +1672,21 @@ di "               "
 di "svy information"
 svyset
 forval i = 0/1 {
-	svy: nbreg `depvar' if `by'==`val`i'' , offset(`offset') irr
-qui svy: nbreg `depvar' `varlist' if `by'==`val`i'', offset(`offset') 
-local wv = e(wvar)
+//	
+// the appropriate way is to use subpop arg. (for correct std. errors)
+//
+tempvar sp
+    gen `sp' = cond(`by' == `val`i'', 1, 0)
+	svy, subpop(`sp') : nbreg `depvar', offset(`offset') irr
+qui svy, subpop(`sp') : nbreg `depvar' `varlist' , offset(`offset') 
+
+// two ways to specify sampling weights in -svyset- that give identical results in single stage design
+// ruling out more complex designs
+local wv = e(wvar)            // under: svyset psuid [pw=weightvar], strata(strataid)
+  if ("`wv'" == ".") {
+  	 local wv = e(weight1)    // under: svyset psuid, weight(weightvar) strata(strataid)
+  }
+
 local normal`i' `normal'
 if "`normal`i''"!=""{
 local j 0
@@ -1664,8 +1714,8 @@ local modvarlist: colnames e(b)
 local cons _cons
 local modvarlist2: list modvarlist - cons /*get rid of the first cons*/
 // fix problem due to renaming of scale parameter in Stata 15
-local cons2 _cons
-//local cons2 lnalpha
+//local cons2 _cons
+local cons2 "lnalpha"
 local modvarlist2: list modvarlist2 - cons2 /*get rid of lnalpha*/
 mata: st_view(x`i', ., (tokens("`modvarlist2'"), "`_cons'"), "`touse'")
 mata: b=st_matrix("e(b)")
@@ -1959,10 +2009,22 @@ svyset
 // estimation by group
 forval i = 0/1 {
 // descriptives outcome
-svy: mean `depvar' if `by' == `val`i''
- qui svy: cloglog `depvar' `varlist' if `by'==`val`i'' 
-// get pweight (from svy cmd)
-local wv = e(wvar)
+//	
+// the appropriate way is to use subpop arg. (for correct std. errors)
+//
+tempvar sp
+    gen `sp' = cond(`by' == `val`i'', 1, 0)
+	svy, subpop(`sp') : mean `depvar'	
+ qui svy, subpop(`sp') : cloglog `depvar' `varlist' 
+// 
+// two ways to specify sampling weights in -svyset- that give identical results in single stage design
+// ruling out more complex designs
+local wv = e(wvar)            // under: svyset psuid [pw=weightvar], strata(strataid)
+  if ("`wv'" == ".") {
+  	 local wv = e(weight1)    // under: svyset psuid, weight(weightvar) strata(strataid)
+  }
+
+
 local normal`i' `normal'
 if "`normal`i''"!=""{
 	local j 0
@@ -2182,6 +2244,11 @@ mata:VarR[${mvdcmp_nvar}*2+3,1]=sR0^2
 mata:temp=J(1,${mvdcmp_nvar}*2,0)
 mata:eV=eV\temp\temp\temp
 mata:eV=eV,VarE,VarC,VarR
+// check missing coefs 
+mata: mflag = missing(Coef)
+mata: if (mflag > 0) display("    --------------------------------------------------------------------------   " \  "      Warning: all predictors have identical values across groups    " \  "    --------------------------------------------------------------------------   " );;
+// all missing replaced by 0 
+mata:Coef=editmissing(Coef,0)
 mata:st_matrix("Coef", Coef)
 mata:st_matrix("eV", eV)
 mat coln Coef = `cvarlist'
