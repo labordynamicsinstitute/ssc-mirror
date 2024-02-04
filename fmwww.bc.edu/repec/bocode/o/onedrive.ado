@@ -1,11 +1,12 @@
+*! Version 1.1 1Feb2024
+*! Version 1.0 22Jan2024
+*! Based on the user-written program 'dropbox'. All credits to their authors, Raymond Hicks and Dustin Tingley.
+
+
 program define onedrive, rclass
 	syntax
 
-*! First written 22/01/2024
-*! Version 1.0 (22/01/2024)
-*! Based on the user-written program 'dropbox'. All credits to their authors, Raymond Hicks and Dustin Tingley.
-
-version 14
+version 10
 
 	if "`c(os)'" == "Windows" {
 		local _db "/Users/`c(username)'"

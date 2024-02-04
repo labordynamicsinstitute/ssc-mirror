@@ -1,0 +1,30 @@
+d 'TSCB': module to implement the two-stage cluster bootstrap estimator
+d
+d  This package implements the two-stage cluster bootstrap (TSCB)
+d estimator described in Abadie et al., ("When Should You Adjust
+d Standard Errors for Clustering?", QJE, 2023).  The TSCB estimator
+d allows for the calculation of standard errors and confidence
+d intervals for average treatment effects in both OLS and fixed
+d effect regressions which account for both sampling uncertainty,
+d and design-based uncertainty.  This bootstrap-based estimator can
+d be more efficient than the standard cluster-robust variance
+d estimator, particularly when the number of samples clustered
+d approaches the total number of clusters in a population. 
+d
+d KW: two-stage cluster bootstrap
+d KW: ATE
+d KW: sampling uncertainty
+d KW: design-based uncertainty 
+d
+d Requires: Stata version 13 and moremata from SSC (q.v.)
+d
+d Distribution-Date: 20240203
+d
+d Author: Daniel Pailañir, Universidad de Santiago de Chile
+d Support: email dpailanir@@fen.uchile.cl
+d
+d Author: Damian Clarke, Universidad de Santiago de Chile
+d Support: email dclarke@@fen.uchile.cl
+d
+f tscb.ado
+f tscb.sthlp

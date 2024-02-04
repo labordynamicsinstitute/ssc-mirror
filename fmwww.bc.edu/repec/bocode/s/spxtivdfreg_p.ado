@@ -1,4 +1,4 @@
-*! version 1.3.1  28feb2023
+*! version 1.4.1  31jan2024
 *! Sebastian Kripfganz, www.kripfganz.de
 *! Vasilis Sarafidis, sites.google.com/view/vsarafidis
 
@@ -70,7 +70,7 @@ program define spxtivdfreg_p, sort
 				fvrevar `var'
 				loc var				"`r(varlist)'"
 				tempvar sp`var'
-				qui gen `sp`var'' = `var'
+				qui gen double `sp`var'' = `var'
 				loc spvarlist		"`spvarlist' `sp`var''"
 			}
 			sort `_dta[_TStvar]' `_dta[_TSpanel]'
@@ -125,7 +125,7 @@ program define spxtivdfreg_p, sort
 					loc var				"`r(varlist)'"
 				}
 				tempvar `var'
-				qui gen ``var'' = `var'
+				qui gen double ``var'' = `var'
 				loc indepvarlist	"`indepvarlist' ``var''"
 			}
 		}
@@ -144,7 +144,7 @@ program define spxtivdfreg_p, sort
 				fvrevar `var'
 				loc var				"`r(varlist)'"
 				tempvar sp`var'
-				qui gen `sp`var'' = `var'
+				qui gen double `sp`var'' = `var'
 				loc spvarlist		"`spvarlist' `sp`var''"
 			}
 		}

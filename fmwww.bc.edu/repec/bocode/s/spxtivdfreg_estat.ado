@@ -1,4 +1,4 @@
-*! version 1.3.1  28feb2023
+*! version 1.4.1  31jan2024
 *! Sebastian Kripfganz, www.kripfganz.de
 *! Vasilis Sarafidis, sites.google.com/view/vsarafidis
 
@@ -85,7 +85,7 @@ program define spxtivdfreg_estat_impact, rclass sort
 		loc K1				= colsof(`b1')
 		loc spvars			: coln `b1'
 		if e(splag) {
-			if `b'[1, "W:`depvar'"] >= 1 / e(maxeig) {
+			if el(`b1', 1, 1) >= 1 / e(maxeig) {
 				if "`force'" == "" {
 					di as err "stability condition of the model violated"
 					exit 322
@@ -141,7 +141,7 @@ program define spxtivdfreg_estat_impact, rclass sort
 		else {
 			loc sptsum			= 0
 		}
-		if `tsum' + `lambda' + `sptsum' >= 1 / e(maxeig) {
+		if (`tsum' + `sptsum' * e(maxeig)) / (1 - `lambda' * e(maxeig)) >= 1 {
 			if "`force'" == "" {
 				di as err "stability condition of the model violated"
 				exit 322
@@ -166,10 +166,9 @@ program define spxtivdfreg_estat_impact, rclass sort
 					loc var				"`r(varlist)'"
 				}
 				tempvar `var'_d `var'_i `var'_t
-				qui gen ``var'_d' = 1
-				qui gen ``var'_t' = 1
+				qui gen double ``var'_d' = 1
+				qui gen double ``var'_t' = 1
 				loc indepvarlist_d	"`indepvarlist_d' ``var'_d'"
-				loc indepvarlist_i	"`indepvarlist_i' ``var'_i'"
 				loc indepvarlist_t	"`indepvarlist_t' ``var'_t'"
 				mat `coefpos0'		= (nullmat(`coefpos0'), `k')
 			}
@@ -191,10 +190,9 @@ program define spxtivdfreg_estat_impact, rclass sort
 				fvrevar `var'
 				loc var				"`r(varlist)'"
 				tempvar sp`var'_d sp`var'_i sp`var'_t
-				qui gen `sp`var'_d' = 1
-				qui gen `sp`var'_t' = 1
+				qui gen double `sp`var'_d' = 1
+				qui gen double `sp`var'_t' = 1
 				loc spvarlist_d		"`spvarlist_d' `sp`var'_d'"
-				loc spvarlist_i		"`spvarlist_i' `sp`var'_i'"
 				loc spvarlist_t		"`spvarlist_t' `sp`var'_t'"
 				mat `coefpos1'		= (nullmat(`coefpos1'), `k')
 			}

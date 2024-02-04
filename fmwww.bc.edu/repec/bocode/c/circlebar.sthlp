@@ -1,11 +1,11 @@
 {smcl}
-{* 22Jan2024}{...}
+{* 02Feb2024}{...}
 {hi:help circlebar}{...}
-{right:{browse "https://github.com/asjadnaqvi/stata-circlebar":circlebar v1.3 (GitHub)}}
+{right:{browse "https://github.com/asjadnaqvi/stata-circlebar":circlebar v1.31 (GitHub)}}
 
 {hline}
 
-{title:circlebar}: A Stata package for circular bar graphs.
+{title:circlebar}: A Stata package for polar bar graphs.
 
 
 
@@ -126,8 +126,8 @@ See {browse "https://github.com/asjadnaqvi/stata-circlebar":GitHub}.
 
 {title:Package details}
 
-Version      : {bf:circlebar} v1.3
-This release : 22 Jan 2024
+Version      : {bf:circlebar} v1.31
+This release : 02 Feb 2024
 First release: 18 Nov 2022
 Repository   : {browse "https://github.com/asjadnaqvi/stata-circlebar":GitHub}
 Keywords     : Stata, circle bar graphs

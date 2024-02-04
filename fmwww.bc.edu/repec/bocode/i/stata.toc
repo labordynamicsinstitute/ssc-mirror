@@ -26,6 +26,7 @@ p igini1 module to perform Gini index decomposition by individual and group
 p ihelp module to display the help documents in PDF format using the default browser
 p ihstrans module for generating inverse hyperbolic sine (IHS) transformed variables
 p iia module to test the iia assumption in conditional logistic regression (version 5)
+p ilr module to compute a isometric log-ratio (ILR) transformation of a set of variables
 p imbalance module to check covariate imbalance before and after matching
 p imperfectiv module to estimate bounds with "Imperfect Instrumental Variables" (Nevo and Rosen, 2012)
 p importsav module to convert SPSS file to Stata 

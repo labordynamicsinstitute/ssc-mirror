@@ -1,0 +1,23 @@
+d 'ILR': module to compute a isometric log-ratio (ILR) transformation of a set of variables
+d
+d  ilr computes a isometric log-ratio (ILR) transformation on a set
+d of variables (n>2). ILR transformation is a	 mathematical
+d technique used in compositional data analysis. Compositional data
+d are parts of a whole and carry relative    information, typically
+d constrained by a constant sum, such as 100% or 1440 (e.g. the
+d minutes in a day). This type of    data often arises in
+d economics, environmental science, ecology, and other fields. 
+d
+d KW: isometric log ratio
+d KW: compositional data
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20240203
+d
+d Author: Giacomo Zanello,  University of Reading
+d Support: email g.zanello@@reading.ac.uk
+d
+f ilr.ado
+f ilr.sthlp
+f ../g/gdp.dta

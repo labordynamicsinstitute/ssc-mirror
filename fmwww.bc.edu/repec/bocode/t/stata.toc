@@ -128,6 +128,7 @@ p truecrypt module to mount or dismount TrueCrypt volumes
 p truernd module to generate true random numbers 
 p try module to call a Stata command repeatedly until it succeeds
 p tryem module to run all possible subset regressions
+p tscb module to implement the two-stage cluster bootstrap estimator
 p tscollap module to compact timeseries into dataset of means, sums, end-of-period values
 p tsegen module to call an egen function using a time-series varlist
 p tsgraph module to produce time series line graph

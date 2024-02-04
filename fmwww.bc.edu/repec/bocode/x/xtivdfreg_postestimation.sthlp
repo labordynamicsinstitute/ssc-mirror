@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.3.1  28feb2023}{...}
+{* *! version 1.4.1  31jan2024}{...}
 {* *! Sebastian Kripfganz, www.kripfganz.de}{...}
 {* *! Vasilis Sarafidis, sites.google.com/view/vsarafidis}{...}
 {vieweralsosee "xtivdfreg" "help xtivdfreg"}{...}
@@ -136,7 +136,7 @@ The test is not valid and therefore not reported for a model with heterogeneous 
 Sebastian Kripfganz, University of Exeter, {browse "http://www.kripfganz.de"}
 
 {pstd}
-Vasilis Sarafidis, BI Norwegian Business School, {browse "https://sites.google.com/view/vsarafidis"}
+Vasilis Sarafidis, Brunel University London, {browse "https://sites.google.com/view/vsarafidis"}
 
 
 {marker references}{...}

@@ -1,0 +1,26 @@
+d 'NOPO': module to perform Nopo (2008) matching decompositions
+d
+d  nopo implements a matching-based decomposition analysis of
+d differences in outcomes between two groups following Ñopo
+d (REStat, 2008) and some convenient postestimation features.
+d Allowed matching types are (coarsened) exact matching,
+d multivariate-distance matching, and propensity-score matching. 
+d
+d KW: matching
+d KW: coarsened exact matching
+d KW: propensity score matching
+d
+d Requires: Stata version 15 and kmatch, moremata from SSC (q.v.)
+d
+d Distribution-Date: 20240203
+d
+d Author: Maximilian Sprengholz ,  Humboldt-Universität zu Berlin
+d Support: email maximilian.sprengholz@@hu-berlin.de
+d
+d Author: Maik Hamjediers,  Humboldt-Universität zu Berlin
+d Support: email maik.hamjediers@@hu-berlin.de
+d
+f nopo.ado
+f nopo.sthlp
+f nopo_postestimation.sthlp
+f nopo_ex.ado

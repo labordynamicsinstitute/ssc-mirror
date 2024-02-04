@@ -88,6 +88,7 @@ and "or" (odds ratio) {p_end}
 {synopt:{opt arc:sintrans}}arc sin transformation of the performance measure {it:Y} (numerator/denominator); available for subcommands {cmd:prop} and {cmd:rate} {p_end}
 {synopt:{opt sqr:ttrans}}square root tranformation of the performance measure {it:Y} (numerator/denominator); available for subcommand {cmd:smr} {p_end}
 {synopt :{opt pv:al(numlist)}}p-value(s) used as the basis for generating confidence intervals (up to a maximum of {cmd:two}); default is {cmd: pval(0.001 0.025)}  {p_end}
+{synopt :{opt bon:ferroni}}Bonferroni adjusts the 95% confidence intervals to account for multiple testing; {opt bon:ferroni} overrides p-values specified in {cmd:pval}  {p_end}
 {synopt:{opt ex:act}}perform exact estimation; available for subcommands {cmd:prop}, {cmd:rate} and {cmd:smr} when two variables are specified, and {cmd:smr} when four 
 variables are specified {p_end}
 {synopt:{opt win:sor(#)}}percent of observations to be winsorized; default is no winsorizing {cmd: winsor(0)} {p_end}
@@ -150,6 +151,10 @@ largest {it:denominator} value.
 which are roughly equivalent to 2 and 3 standard deviations.
 
 {p 4 8 2}
+{cmd:bonferroni} uses the Bonferroni method to adjust the 95% confidence interval to account for multiple testing (which is simply 0.05 / N). {cmd:bonferroni} will override any {cmd:pval(}{it:#}{cmd:)} that
+the user may have specified. The graph will present unadjusted and adjusted 95% confidence intervals. 
+
+{p 4 8 2}
 {cmd:exact} performs exact estimation, rather than the default normal approximation. Available for subcommands {cmd:prop}, {cmd:rate} and {cmd:smr} for cross-sectional analyses,
 and {cmd:smr} for longitudinal analyses. 
 
@@ -186,6 +191,7 @@ at zero rather than showing lower CI values which may be negative.
 {opt 1) funnelinst for a proportion:}{p_end}
 
 {pmore} Set-up {p_end}
+
 {pmore2}{cmd:. use cabg.dta, clear} {p_end}
 
 {pmore} Data are 30-day mortality rates following coronary artery bypass grafts in New York state, 1997–1999, for 33 hospitals. The numerator here is 
@@ -211,6 +217,7 @@ on the y-axis is 0 and the maximum value on the y-axis is 8, and that values on 
 {opt 2) funnelinst for a rate:}{p_end}
 
 {pmore} Set-up {p_end}
+
 {pmore2}{cmd:. use teenage.dta, clear} {p_end}
 
 {pmore} Data are the under-18 conception rate for English health authorities, 2000–2001. The numerator here is the unadjusted number of teenage pregnancies as a rate per 1000.
@@ -223,11 +230,16 @@ that the rate should be computed and displayed as "per thousand". {p_end}
 
 {pmore2}{cmd:. funnelinst rate No2001 pop2001, xrangehigh(26000) pval(0.025 0.001) ymin(0) ratedenom(1000) wins(10) over(add) figure(ytitle(Rate per 1000) xtitle(Population ('000s)))}
 
+{pmore} Same as above but use Bonferroni adjustment to account for multiple testing rather than use the specified {cmd:pval(#)}. 
+
+{pmore2}{cmd:. funnelinst rate No2001 pop2001, xrangehigh(26000) ymin(0) ratedenom(1000) wins(10) over(add) figure(ytitle(Rate per 1000) xtitle(Population ('000s))) bon}
+
 
 {pstd}
 {opt 3) funnelinst for an indirect standardized rate (SMR):}{p_end}
 
 {pmore} Set-up {p_end}
+
 {pmore2}{bf:{cmd: . use cabg.dta, clear}} {p_end}
 
 {pmore} Data are 30-day adjusted and unadjusted mortality rates following coronary artery bypass grafts in New York state, 1997–1999. Here we use all {cmd:funnelinst} 
@@ -236,11 +248,11 @@ default settings.
 {pmore2}{cmd:. funnelinst smr deaths expected}{p_end}
 
 {pmore} Here we set a target range to be between 0 and 2, and modify the titles on the X and Y axes.  {p_end}
+
 {pmore2}{cmd:. funnelinst smr deaths expected, target(0 2) figure(ytitle(Observed number of deaths) xtitle(Expected number of deaths))}
 
-{pmore2}{cmd:. funnelinst smr deaths expected}{p_end}
-
 {pmore} Same as above, but we specify that 'exact' statistics be used to construct the CIs  {p_end}
+
 {pmore2}{cmd:. funnelinst smr deaths expected, target(0 2) figure(ytitle(Observed number of deaths) xtitle(Expected number of deaths)) exact}
 
 
@@ -248,6 +260,7 @@ default settings.
 {opt 4) funnelinst for a continuous measure:}{p_end}
 
 {pmore} Set-up {p_end}
+
 {pmore2}{bf:{cmd: . use mean.dta, clear}} {p_end}
 
 {pmore} These are artificial data of a hypothetical performance indicator measured on a continuous scale. We start by using all {cmd:funnelinst} 
@@ -260,6 +273,7 @@ default settings. {p_end}
 {pmore2}{cmd:. funnelinst mean means se, wins(10) over(add)}
 
 {pmore} Same as above but we set the target to range between 4.5 and 5.5.{p_end}
+
 {pmore2}{cmd:. funnelinst mean means se, wins(10) over(add) target(4.5 6.5)}
 
 
@@ -267,6 +281,7 @@ default settings. {p_end}
 {opt 5) funnelinst for a change over time:}{p_end}
 
 {pmore} Set-up {p_end}
+
 {pmore2}{cmd:. use teenage.dta, clear} {p_end}
 
 {pmore} We revisit the data for the under-18 conception rate for English health authorities. However, we now compare the 
@@ -352,7 +367,7 @@ University of Cambridge{break}
 
 {p 4 4 2}
 We thank Daniel Klein for providing the mata code to compute the inverse CDF of the binomial distribution and Poisson distribution for the "exact" option. 
-We also wish to thank John Moran for advocating that we write this package and testing it.
+We also wish to thank John Moran for advocating that we write this package.
 
 
 {title:Also see}

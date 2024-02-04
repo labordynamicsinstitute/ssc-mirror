@@ -1,4 +1,4 @@
-*! version 1.3.1  28feb2023
+*! version 1.4.1  31jan2024
 *! Sebastian Kripfganz, www.kripfganz.de
 *! Vasilis Sarafidis, sites.google.com/view/vsarafidis
 
@@ -62,16 +62,17 @@ end
 program define xtivdfreg_iv, eclass sort
 	version 13.0
 	gettoken fsyntax 0 : 0
-	syntax varlist(num ts fv) [if] [in] , MOPT(name) [	Absorb(varlist num fv)		///
-														noCONStant					///
-														FACTmax(integer 4)			///
-														noEIGratio					///
-														STD							///
-														FSTAGE						///
-														FSTEP						/// historical since version 1.0.2
-														MG							///
-														`fsyntax'					/// DOUBLEdefact noDOUBLEdefact
-														*]							// parsed separately: IV()
+	syntax varlist(num ts fv) [if] [in] , MOPT(name) [	Absorb(varlist num fv)			///
+														noCONStant						///
+														FACTmax(integer 4)				///
+														noEIGratio						///
+														STD								///
+														FSTAGE							///
+														FSTEP							/// historical since version 1.0.2
+														MG								///
+														MGi(numlist int miss max=1)		///
+														`fsyntax'						/// DOUBLEdefact noDOUBLEdefact
+														*]								// parsed separately: IV()
 	loc fv				= ("`s(fvops)'" == "true")
 	if `fv' {
 		fvexpand `varlist'
@@ -93,6 +94,17 @@ program define xtivdfreg_iv, eclass sort
 	}
 	else {
 		loc regnames		"`regnames' _cons"
+	}
+	if "`mgi'" != "" {
+		tempvar id
+		egen long `id' = group(`_dta[_TSpanel]')
+		sum `id' if `_dta[_TSpanel]' == `mgi', mean
+		if r(N) == 0 {
+			di as err "option mg() out of range"
+			exit 175
+		}
+		mata: xtivdfreg_init_mg(`mopt', "on", `r(mean)')
+		loc mg				"mg"
 	}
 	if "`mg'" != "" {
 		mata: xtivdfreg_init_mg(`mopt', "on")
@@ -145,6 +157,9 @@ program define xtivdfreg_iv, eclass sort
 	if _rc == 459 | r(N) == 0 {
 		error 2000
 	}
+	if `factmax' >= r(min) {
+		error 2001
+	}
 
 	*--------------------------------------------------*
 	*** absorption of fixed effects ***
@@ -195,14 +210,14 @@ program define xtivdfreg_iv, eclass sort
 		}
 	}
 	else {
-		cap which reghdfe
-		loc rc				= _rc
-		cap which ftools
-		if _rc | `rc' {
+		cap {
+			which reghdfe
+			which ftools
+		}
+		if _rc {
 			di as err "option absorb() requires further community-contributed packages:"
 			di as err "  type {stata ssc install reghdfe} to install {bf:reghdfe}"
 			di as err "  type {stata ssc install ftools} to install {bf:ftools}"
-			di as err "if the problem persists, type {stata reghdfe, version} to check for other required packages"
 			exit 199
 		}
 		_rmcoll i.(`absorb')
@@ -212,14 +227,29 @@ program define xtivdfreg_iv, eclass sort
 				loc indepvars_a		"`indepvars_a' `indepvar`j'_a'"
 			}
 		}
-		cap mata: xtivdfreg_hdfe = fixed_effects("`absorb'", "`touse'", "", "", 1, -1)
+// 		cap mata: xtivdfreg_hdfe = fixed_effects("`absorb'", "`touse'", "", "", 1, -1)
+// 		if _rc {
+// 			di as err "{bf:reghdfe} Mata library not found:"
+// 			di as err "  type {stata reghdfe, check} to compile the library"
+// 			exit 3499
+// 		}
+		cap include "reghdfe.mata", adopath
+		cap {
+			mata: xtivdfreg_hdfe = FixedEffects()
+			mata: xtivdfreg_hdfe.absvars = "`absorb'"
+			mata: xtivdfreg_hdfe.tousevar = "`touse'"
+			mata: xtivdfreg_hdfe.init()
+			mata: xtivdfreg_hdfe.partial_out("`depvar' `indepvars'", 1, 0)
+			mata: st_store(xtivdfreg_hdfe.sample, st_addvar("double", tokens("`depvar_a' `indepvars_a'")), xtivdfreg_hdfe.solution.data)
+		}
 		if _rc {
-			di as err "{bf:reghdfe} Mata library not found:"
-			di as err "  type {stata reghdfe, check} to compile the library"
+			di as err "option absorb() requires reghdfe version 6.12.3 or higher and ftools version 2.49.1 or higher:"
+			di as err "  type {stata adoupdate reghdfe, update} to update {bf:reghdfe} to its latest version"
+			di as err "  type {stata adoupdate ftools, update} to update {bf:ftools} to its latest version"
 			exit 3499
 		}
-		mata: xtivdfreg_hdfe_var = xtivdfreg_hdfe.partial_out("`depvar' `indepvars'")
-		mata: st_store(xtivdfreg_hdfe.sample, st_addvar("double", tokens("`depvar_a' `indepvars_a'")), xtivdfreg_hdfe_var)
+// 		mata: xtivdfreg_hdfe_var = xtivdfreg_hdfe.partial_out("`depvar' `indepvars'")
+// 		mata: st_store(xtivdfreg_hdfe.sample, st_addvar("double", tokens("`depvar_a' `indepvars_a'")), xtivdfreg_hdfe_var)
 		markout `touse' `depvar_a'
 		mata: xtivdfreg_init_touse(`mopt', "`touse'")				// marker variable
 		mata: xtivdfreg_init_by(`mopt', "`_dta[_TSpanel]'")		// panel identifier
@@ -231,14 +261,34 @@ program define xtivdfreg_iv, eclass sort
 				tempvar ivvar`k'_`j'_a
 				loc ivvars`k'_a		"`ivvars`k'_a' `ivvar`k'_`j'_a'"
 			}
-			mata: xtivdfreg_hdfe_var = xtivdfreg_hdfe.partial_out("`ivvars`k''")
-			mata: st_store(xtivdfreg_hdfe.sample, st_addvar("double", tokens("`ivvars`k'_a'")), xtivdfreg_hdfe_var)
+			cap {
+				mata: xtivdfreg_hdfe.partial_out("`ivvars`k''", 0, 0)
+				mata: st_store(xtivdfreg_hdfe.sample, st_addvar("double", tokens("`ivvars`k'_a'")), xtivdfreg_hdfe.solution.data)
+			}
+			if _rc {
+				di as err "option absorb() requires reghdfe version 6.12.3 or higher and ftools version 2.49.1 or higher:"
+				di as err "  type {stata adoupdate reghdfe, update} to update {bf:reghdfe} to its latest version"
+				di as err "  type {stata adoupdate ftools, update} to update {bf:ftools} to its latest version"
+				exit 3499
+			}
+// 			mata: xtivdfreg_hdfe_var = xtivdfreg_hdfe.partial_out("`ivvars`k''")
+// 			mata: st_store(xtivdfreg_hdfe.sample, st_addvar("double", tokens("`ivvars`k'_a'")), xtivdfreg_hdfe_var)
 			forv j = 1 / `: word count `factvars`k''' {
 				tempvar factvar`k'_`j'_a
 				loc factvars`k'_a	"`factvars`k'_a' `factvar`k'_`j'_a'"
 			}
-			mata: xtivdfreg_hdfe_var = xtivdfreg_hdfe.partial_out("`factvars`k''")
-			mata: st_store(xtivdfreg_hdfe.sample, st_addvar("double", tokens("`factvars`k'_a'")), xtivdfreg_hdfe_var)
+			cap {
+				mata: xtivdfreg_hdfe.partial_out("`factvars`k''", 0, 0)
+				mata: st_store(xtivdfreg_hdfe.sample, st_addvar("double", tokens("`factvars`k'_a'")), xtivdfreg_hdfe.solution.data)
+			}
+			if _rc {
+				di as err "option absorb() requires reghdfe version 6.12.3 or higher and ftools version 2.49.1 or higher:"
+				di as err "  type {stata adoupdate reghdfe, update} to update {bf:reghdfe} to its latest version"
+				di as err "  type {stata adoupdate ftools, update} to update {bf:ftools} to its latest version"
+				exit 3499
+			}
+// 			mata: xtivdfreg_hdfe_var = xtivdfreg_hdfe.partial_out("`factvars`k''")
+// 			mata: st_store(xtivdfreg_hdfe.sample, st_addvar("double", tokens("`factvars`k'_a'")), xtivdfreg_hdfe_var)
 			mata: xtivdfreg_init_ivvars(`mopt', `k', "`ivvars`k'_a'")		// demeaned instrumental variables
 			if !`std`k'' {
 				mata: xtivdfreg_init_ivvars_factvars(`mopt', `k', "`factvars`k'_a'")		// demeaned defactoring variables
@@ -251,7 +301,8 @@ program define xtivdfreg_iv, eclass sort
 				loc factvars		"`factvars' `factvars`k'_a'"
 			}
 		}
-		mata: mata drop xtivdfreg_hdfe xtivdfreg_hdfe_var
+// 		mata: mata drop xtivdfreg_hdfe xtivdfreg_hdfe_var
+		mata: mata drop xtivdfreg_hdfe
 	}
 	if "`factvars'" != "" {
 		mata: xtivdfreg_init_factvars(`mopt', "`factvars'")
@@ -265,7 +316,7 @@ program define xtivdfreg_iv, eclass sort
 			if `std`k'' {
 				foreach var in `factvars`k'_a' {
 					tempname std`var'
-					cap by `_dta[_TStvar]': egen `std`var'' = std(`var') if `touse'
+					cap by `_dta[_TStvar]': egen double `std`var'' = std(`var') if `touse'
 					if _rc == 190 {
 						di as err "option std requires Stata 16.1 (with latest updates) or higher"
 						exit 199
@@ -284,7 +335,7 @@ program define xtivdfreg_iv, eclass sort
 			}
 		}
 		if "`stdvars'" != "" {
-			mata: xtivdfreg_init_factvars(`mopt', "`factvars'")
+			mata: xtivdfreg_init_factvars(`mopt', "`stdvars'")
 		}
 	}
 
@@ -309,6 +360,19 @@ program define xtivdfreg_iv, eclass sort
 	mat coln `b'		= `regnames'
 	mat rown `V'		= `regnames'
 	mat coln `V'		= `regnames'
+	if "`mg'" != "" {
+		qui levelsof `_dta[_TSpanel]' if `touse'
+		loc groups			"`r(levels)'"
+		tempname b_mg se_mg
+		mata: st_matrix("r(b_mg)", xtivdfreg_result_coefs(`mopt', ., 0))
+		mata: st_matrix("r(se_mg)", sqrt(xtivdfreg_result_V(`mopt', ., 0)))
+		mat `b_mg'			= r(b_mg)
+		mat `se_mg'			= r(se_mg)
+		mat rown `b_mg'		= `groups'
+		mat coln `b_mg'		= `regnames'
+		mat rown `se_mg'	= `groups'
+		mat coln `se_mg'	= `regnames'
+	}
 
 	if "`factvars'" != "" {
 		mata: st_numscalar("r(fact1)", xtivdfreg_result_factnum(`mopt', 1))
@@ -390,6 +454,11 @@ program define xtivdfreg_iv, eclass sort
 	}
 	else {
 		eret loc estimator	"mg"
+		eret mat se_mg		= `se_mg'
+		eret mat b_mg		= `b_mg'
+	}
+	if "`mgi'" != "" {
+		eret sca mg_id		= `mgi'
 	}
 
 	*--------------------------------------------------*
@@ -440,7 +509,13 @@ program define xtivdfreg_display
 			di _n as txt "First-stage estimator (model with homogeneous slope coefficients)"
 		}
 		else if "`e(estimator)'" == "mg" {
-			di _n as txt "Mean-group estimator (model with heterogeneous slope coefficients)"
+			di _n as txt "Mean-group estimator " _c
+			if e(mg_id) < . {
+				di "for group " as res e(mg_id)
+			}
+			else {
+				di "(model with heterogeneous slope coefficients)"
+			}
 		}
 	}
 	if "`table'" == "" {
@@ -473,19 +548,25 @@ program define xtivdfreg_display
 			if "`e(estimator)'" != "mg" {
 				di ""
 			}
-			di as txt "* Number of factors in stage 1:"
-			loc ivsets			: coln e(factnum)
-			loc K				= colsof(e(factnum))
-			forv k = 1 / `K' {
-				loc ivset			: word `k' of `ivsets'
-				di as res %5.0f el(e(factnum), 1, `k') as txt " -> " _c
-				loc ivnames			= cond(`ivset' < ., "`e(factset`ivset')'", "`e(doubledefact)' (doubledefact)")
-				loc p				= 1
-				loc piece			: piece 1 69 of "`ivnames'", nobreak
-				while "`piece'" != "" {
-					di _col(10) "`piece'"
-					loc ++p
-					loc piece			: piece `p' 69 of "`ivnames'", nobreak
+			cap conf mat e(factnum)
+			if _rc {
+				di as txt "* note: no instruments specified"
+			}
+			else {
+				di as txt "* Number of factors in stage 1:"
+				loc ivsets			: coln e(factnum)
+				loc K				= colsof(e(factnum))
+				forv k = 1 / `K' {
+					loc ivset			: word `k' of `ivsets'
+					di as res %5.0f el(e(factnum), 1, `k') as txt " -> " _c
+					loc ivnames			= cond(`ivset' < ., "`e(factset`ivset')'", "`e(doubledefact)' (doubledefact)")
+					loc p				= 1
+					loc piece			: piece 1 69 of "`ivnames'", nobreak
+					while "`piece'" != "" {
+						di _col(10) "`piece'"
+						loc ++p
+						loc piece			: piece `p' 69 of "`ivnames'", nobreak
+					}
 				}
 			}
 		}
@@ -657,6 +738,14 @@ end
 
 *==================================================*
 *** version history ***
+* version 1.4.1  31jan2024  bug fixed with estat impact under Stata versions before Stata 16
+* version 1.4.0  30jan2024  option mg() added for group-specific estimates
+* version 1.3.7  24jan2024  matrix e(se_mg) returned with option mg
+* version 1.3.6  17jan2024  bug fixed due to incompatibility of sortpreserve with reghdfe; matrix e(b_mg) returned with option mg
+* version 1.3.5  11sep2023  option absorb() updated for version 6 of reghdfe
+* version 1.3.4  13jul2023  bug fixed with option std in combination with option doubledefact
+* version 1.3.3  11jul2023  stability condition for long-run impacts in estat impact corrected
+* version 1.3.2  26may2025  bug fixed with too few time periods; stability condition for long-run impacts in estat impact corrected
 * version 1.3.1  28feb2023  model stability checks implemented for estat impact; short-run impacts for lagged dependent variable in estat impact suppressed
 * version 1.3.0  26feb2023  options tlags() and sptlags() added to spxtivdfreg; options lr and post added to estat impact
 * version 1.2.5  03jan2023  varlist and option constant added to estat impact; Delta method standard errors implemented for estat impact

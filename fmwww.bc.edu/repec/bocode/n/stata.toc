@@ -33,6 +33,7 @@ p nnest module to perform J test and Cox-Pesaran-Deaton test for nonnested model
 p nnipolate module for nearest neighbour interpolation
 p nnmatch module to compute nearest-neighbor bias-corrected estimators
 p nonparmde module to calculate the minimum detectable effect in randomized experiment
+p nopo module to perform Nopo (2008) matching decompositions
 p nopomatch module to implement Nopo's decomposition
 p norm module to normalize variables
 p norm_dist module providing  normal and inverse normal distribution functions with added mean and standard deviation

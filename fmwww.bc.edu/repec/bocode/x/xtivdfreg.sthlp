@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.3.1  28feb2023}{...}
+{* *! version 1.4.1  31jan2024}{...}
 {* *! Sebastian Kripfganz, www.kripfganz.de}{...}
 {* *! Vasilis Sarafidis, sites.google.com/view/vsarafidis}{...}
 {vieweralsosee "xtivdfreg postestimation" "help xtivdfreg_postestimation"}{...}
@@ -46,6 +46,7 @@
 {synopt:{opt nocons:tant}}suppress constant term{p_end}
 
 {syntab:Reporting}
+{synopt:{opt mg(#)}}display the group-specific estimates for group {it:#}{p_end}
 {synopt:{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}{p_end}
 INCLUDE help shortdes-coeflegend
 {synopt:{opt nohe:ader}}suppress output header{p_end}
@@ -62,7 +63,8 @@ INCLUDE help shortdes-displayoptall
 {synoptline}
 {p2colreset}{...}
 {marker absvars}{...}
-{p 4 6 2}* This option requires the community-contributed packages {cmd:reghdfe} and {cmd:ftools} to be installed; see {helpb reghdfe} and {helpb ftools}. {it:{help reghdfe##absvar:absvars}} is a list of categorical variables to be absorbed.
+{p 4 6 2}* This option requires the community-contributed packages {cmd:reghdfe} (version 6.12.3 or higher) and {cmd:ftools} (version 2.49.1 or higher) to be installed; see {helpb reghdfe} and {helpb ftools}.
+{it:{help reghdfe##absvar:absvars}} is a list of categorical variables to be absorbed.
 Typical use is {cmd:absorb(}{it:{help xtset:panelvar}}{cmd:)} or {cmd:absorb(}{it:{help xtset:panelvar}} {it:{help xtset:timevar}}{cmd:)} for one-way or two-way fixed effects, respectively.{p_end}
 {p 4 6 2}# These options are only relevant for unbalanced panel data.
 
@@ -89,7 +91,7 @@ See {helpb xtivdfreg postestimation} for features available after estimation.{p_
 {title:Description}
 
 {pstd}
-{cmd:xtivdfreg} implements the instrumental variables (IV) estimator for large panel data models, as developed by Norkute, Sarafidis, Yamagata, and Cui (2020) and Cui, Norkute, Sarafidis, and Yamagata (2022).
+{cmd:xtivdfreg} implements the instrumental variables (IV) estimator for large panel data models, as developed by Norkute, Sarafidis, Yamagata, and Cui (2021) and Cui, Norkute, Sarafidis, and Yamagata (2022).
 The instruments are defactored to control for a multifactor error structure. Heterogeneous slope coefficients can be allowed using a mean-group (MG) estimator.
 The command accommodates unbalanced panel data and permits highly flexible instrumentation strategies. Examples in Kripfganz and Sarafidis (2021) illustrate several features of {cmd:xtivdfreg}.
 
@@ -142,12 +144,15 @@ The default is set by the global option [{cmd:no}]{cmd:doubledefact}.
 {opt fstage} requests the first-stage IV estimator to be computed instead of the second-stage estimator.
 
 {phang}
-{opt mg} requests the mean-group estimator to be computed that allows for heterogeneous slopes.
+{opt mg} requests the mean-group estimator to be computed that allows for heterogeneous slopes. Group-specific coefficients and standard errors are stored in matrices {cmd:e(b_mg)} and {cmd:e(se_mg)}, respectively.
 
 {phang}
 {opt noconstant}; see {helpb estimation options##noconstant:[R] estimation options}.
 
 {dlgtab:Reporting}
+
+{phang}
+{opt mg(#)} requests to display the group-specific estimates for group {it:#} instead of the mean-group estimates. {it:#}.{it:{help xtset:panelvar}} must identify a group in the estimation sample.
 
 {phang}
 {opt level(#)}; see {helpb estimation options##level():[R] estimation options}.
@@ -191,7 +196,7 @@ The default is the number set using {helpb set maxiter}. This option has no effe
 
 {pstd}
 For the model with homogeneous slopes, the first-stage IV estimator is asymptotically biased and therefore not recommended.
-For the model with heterogeneous slopes, only the first-stage MG estimator is available because estimating factors based on residuals may be very inefficient; see the discussion below Theorem 4 in Norkute, Sarafidis, Yamagata, and Cui (2020)
+For the model with heterogeneous slopes, only the first-stage MG estimator is available because estimating factors based on residuals may be very inefficient; see the discussion below Theorem 4 in Norkute, Sarafidis, Yamagata, and Cui (2021)
 and footnote 10 in Kripfganz and Sarafidis (2021).
 
 {pstd}
@@ -204,7 +209,7 @@ excluding lags specified with the {opt lags(#)} suboption. Variable sets can be 
 
 {pstd}
 For the model with homogeneous slopes, by default only one defactorization stage is applied in the first estimation stage because the additional defactorization stage is asymptotically redundant when the second-stage IV estimator is used;
-see footnote 20 in Norkute, Sarafidis, Yamagata, and Cui (2020) and footnote 7 in Kripfganz and Sarafidis (2021).
+see footnote 20 in Norkute, Sarafidis, Yamagata, and Cui (2021) and footnote 7 in Kripfganz and Sarafidis (2021).
 The additional defactorization stage can still be applied by specifying suboption {cmd:doubledefact} for at least one set of instruments.
 
 {pstd}
@@ -289,6 +294,7 @@ The standard error of the constant term is computed using the influence-function
 {synopt:{cmd:e(zrank)}}number of instruments{p_end}
 {synopt:{cmd:e(fact1)}}number of factors in the first stage{p_end}
 {synopt:{cmd:e(fact2)}}number of factors in the second stage{p_end}
+{synopt:{cmd:e(mg_id)}}group ID for displayed group-specific estimates; not always saved{p_end}
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Macros}{p_end}
@@ -309,6 +315,8 @@ The standard error of the constant term is computed using the influence-function
 {synopt:{cmd:e(b)}}coefficient vector{p_end}
 {synopt:{cmd:e(V)}}variance-covariance matrix of the estimators{p_end}
 {synopt:{cmd:e(factnum)}}variable-specific number of factors in the first stage{p_end}
+{synopt:{cmd:e(b_mg)}}matrix of group-specific coefficients; not always saved{p_end}
+{synopt:{cmd:e(se_mg)}}matrix of group-specific standard errors; not always saved{p_end}
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Functions}{p_end}
@@ -339,7 +347,7 @@ The SSC version is less frequently updated and may not be the latest available v
 Sebastian Kripfganz, University of Exeter, {browse "http://www.kripfganz.de"}
 
 {pstd}
-Vasilis Sarafidis, BI Norwegian Business School, {browse "https://sites.google.com/view/vsarafidis"}
+Vasilis Sarafidis, Brunel University London, {browse "https://sites.google.com/view/vsarafidis"}
 
 
 {title:Acknowledgements}

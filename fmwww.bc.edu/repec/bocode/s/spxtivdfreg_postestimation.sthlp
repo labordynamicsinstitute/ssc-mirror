@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.3.1  28feb2023}{...}
+{* *! version 1.4.1  31jan2024}{...}
 {* *! Sebastian Kripfganz, www.kripfganz.de}{...}
 {* *! Vasilis Sarafidis, sites.google.com/view/vsarafidis}{...}
 {vieweralsosee "spxtivdfreg" "help spxtivdfreg"}{...}
@@ -175,6 +175,23 @@ The overidentification test statistic is constructed as a quadratic form of the 
 The test is not valid and therefore not reported for a model with heterogeneous slopes that is estimated with the mean-group estimator.
 
 
+{marker example}{...}
+{title:Example}
+
+{pstd}Setup (requires Stata version 15 or higher){p_end}
+{pstd}(The data set and spatial weights matrix are available as ancillary files for the {cmd:xtivdfreg} package.){p_end}
+{phang2}. {stata "use http://www.kripfganz.de/stata/spxtivdfreg_example"}{p_end}
+{phang2}. {stata "copy http://www.kripfganz.de/stata/spxtivdfreg_example_spmat.stswm ."}{p_end}
+{phang2}. {stata spmatrix use W using spxtivdfreg_example_spmat}{p_end}
+
+{pstd}Defactored IV estimation with spatial lag and time lag, homogeneous slopes{p_end}
+{phang2}. {stata spxtivdfreg NPL INEFF CAR SIZE BUFFER PROFIT QUALITY LIQUIDITY, absorb(ID) splag tlags(1) spmatrix(W) iv(INTEREST CAR SIZE BUFFER PROFIT QUALITY LIQUIDITY, splags lag(1)) std}{p_end}
+
+{pstd}Short-run and long-run impacts{p_end}
+{phang2}. {stata estat impact, sr}{p_end}
+{phang2}. {stata estat impact, lr}{p_end}
+
+
 {marker results}{...}
 {title:Saved results}
 
@@ -205,7 +222,7 @@ The test is not valid and therefore not reported for a model with heterogeneous 
 Sebastian Kripfganz, University of Exeter, {browse "http://www.kripfganz.de"}
 
 {pstd}
-Vasilis Sarafidis, BI Norwegian Business School, {browse "https://sites.google.com/view/vsarafidis"}
+Vasilis Sarafidis, Brunel University London, {browse "https://sites.google.com/view/vsarafidis"}
 
 
 {marker references}{...}

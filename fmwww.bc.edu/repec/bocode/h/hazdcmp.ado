@@ -1,8 +1,9 @@
 program define hazdcmp, eclass
 *! version 1.0 25jan2022 Dan Powers, Myeong-Su Yun, Hiro Yoshioka
 // update 25may2023: conformable e-returns, add pweights
+// update 25nov2023: add discrete optopns (logit, cloglog) all weights
 version 15	
-syntax varlist [pw], by(varname) id(varname) OFFset(varname) [REVerse SCAle(integer 1) CLUSter(varname) ROBust DISCrete]
+syntax varlist [fw pw iw aw], by(varname) id(varname) OFFset(varname) [REVerse SCAle(integer 1) CLUSter(varname) ROBust DIScrete(string)]
 tempname matrix
 capture tab `by', matrow(`matrix')
 
@@ -18,19 +19,23 @@ if _rc==0 & r(r) !=2  | (`matrix'[1,1] != 0 & `matrix'[2,1] != 1) {
 else {   // start else
 	
 gettoken depvar varlist : varlist
-
 local pwght [`weight'`exp']
 
-/////   determining high-low outcome order
+// weight from cmd line
 
 if ("`weight'" != "") {
-	local wv `exp'
+	tempvar wv
+	qui gen `wv' `exp'
+	
   }
 	else {
 	tempvar wv
 	qui gen `wv' = 1
   }
- 
+
+/////   getting outcome means and determining high-low outcome order
+
+
     forval row = 1/2 {
 		local val =  `matrix'[`row',1]
         tempvar t_dep`row'
@@ -39,12 +44,15 @@ if ("`weight'" != "") {
         qui egen `t_exp`row'' = total(exp(`offset') * `wv') if `by'==`val'
         tempvar rate`row'
         qui gen `rate`row'' = `t_dep`row''/`t_exp`row''
-	  	sum `rate`row'' if `by'==`val', meanonly
+	  	qui sum `rate`row'' if `by'==`val', meanonly
 		local m`row' = r(mean)
 	}
 		
- }    // end else  
-      // group swapping (if reverse)
+ }    // end else 
+ 
+ 
+// group swapping (if reverse)
+
 
 if (`m2'>=`m1' & "`reverse'"=="") | (`m2'<`m1' & "`reverse'"!="") {
 		local val0 = `matrix'[2,1]
@@ -77,15 +85,57 @@ if ("`cluster'" !="") {
   local copt = ""
  }
 
+// handle links for discrete time models
+
+/*
+if ("`discrete'" == "logit") {
+ local dopt = "`discrete(logit)'"
+}
+
+else if ("`discrete'" == "cloglog") {
+ local dopt = "`discrete(cloglog)'"
+}
+
+else {
+	local dopt = ""
+}
+
+di "dopt"
+*/
+
+
+   if ("`discrete'" == "logit" | "`discrete'" == "cloglog" | "`discrete'" =="") {
+}
+else {
+	di as error "Unrecognized link. Please specify one the following:  discrete(logit) or discrete(cloglog)"
+ exit
+}
+
 forval i = 0/1 {
 
-if ("`discrete'" == "") {
-	qui poisson `depvar' `varlist' `pwght' if `by'==`val`i'', offset(`offset') nocons `ropt' `copt'  
+if ( "`discrete'" == "") {
+	qui glm `depvar' `varlist' `pwght' if `by'==`val`i'', f(p) offset(`offset') nocons `ropt' `copt'  
   }
-  else {
-	qui logit `depvar' `varlist' `pwght' if `by'==`val`i'', offset(`offset') nocons `ropt' `copt'
+   else if ( "`discrete'" == "logit" ) {
+	qui glm `depvar' `varlist' `pwght' if `by'==`val`i'', f(b) offset(`offset') nocons `ropt' `copt' 
   }
-  
+   else if ( "`discrete'" == "cloglog" ) {
+  	qui glm `depvar' `varlist' `pwght' if `by'==`val`i'', f(b) link(cloglog) offset(`offset') nocons `ropt' `copt'  
+  } 
+
+
+
+// get weights from model call
+
+  if ("`weight'" != "") {
+	tempvar wv
+	qui gen `wv' `exp'
+	
+  }
+	else {
+	tempvar wv
+	qui gen `wv' = 1
+  }
 
 	local lab`i' "`by' == `val`i''"
 	local df`i' = e(df_m)
@@ -95,32 +145,24 @@ if ("`discrete'" == "") {
 	mata: indx`i' = 0
 	mata: st_view(indx`i', ., (tokens("`varlist'")), "`touse'")
 	mata: indx`i' = indx`i'
-	mata: b`i' = st_matrix("e(b)")
+	mata: b`i'    = st_matrix("e(b)")
 	mata: varb`i' = st_matrix("e(V)")
-	mata: off`i' = 0
+	mata: off`i'  = 0
 	mata: st_view(off`i', ., "`offset'", "`touse'")
-	mata: off`i' = off`i'
-
-		if ("`weight'" != "") {
-			tempvar tempwv
-			local wv `exp'
-			gen `tempwv' = `wv'
-			mata: wv`i' = 0
-			mata: st_view(wv`i', ., (tokens("`tempwv'")), "`touse'")
-		}
-		else {
-			tempvar tempwv
-			gen `tempwv' = 1
-			mata: wv`i' = 0
-			mata: st_view(wv`i', ., (tokens("`tempwv'")), "`touse'")
-		}
-
+	mata: off`i'  = off`i'
+	mata: wv`i' = 0
+	mata: st_view(wv`i', ., "`wv'", "`touse'")	
+	// aggregate 
 	tempvar id`i'
 	tempvar awt`i'
 	tempvar nwt`i'
+	tempvar wt`i'
 	qui gen `id`i'' = `id' if `by' == `val`i''
+	// question to use weighted means. no
+	// qui gen `wt`i'' = `wv' if `by' == `val`i''
+	qui gen `wt`i'' = 1 if `by' == `val`i''
 	qui bysort `id': egen `nwt`i'' = count(`id`i'')
-	qui gen `awt`i'' = `tempwv'/`nwt`i'' 
+	qui gen `awt`i'' = `wt`i'' / `nwt`i'' 
 	local nv : word count `varlist'
 	mata: mx`i' = J(1, `nv', .)
 
@@ -134,6 +176,9 @@ if ("`discrete'" == "") {
 	mata: mx`i' = mean(mx`i')  // individ-level means
  }
 
+//mata: mx0
+//mata: mx1
+
 // check if the number of independent variables
 // included in each model is identical
 
@@ -145,13 +190,16 @@ if `df0' != `df1' {
 
 //// estimation
 
+
 if ("`discrete'" == "") {
-	mata: PDF00 = f_pois(indx0,b0,off0,wv0)
+    mata: PDF00 = f_pois(indx0,b0,off0,wv0)
     mata: PDF10 = f_pois(indx1,b0,off1,wv1) // fix args 04/30/23 add weighting 05/26/23
     mata: PDF11 = f_pois(indx1,b1,off1,wv1)
-    mata: E = sum(F_pois(indx0, b0, off0, wv0))/sum(exp(off0) :* wv0) - sum(F_pois(indx1, b0, off1, wv1))/sum(exp(off1) :* wv1)
+    mata: E = sum(F_pois(indx0, b0, off0, wv0))/sum(exp(off0) :* wv0) - ///
+	          sum(F_pois(indx1, b0, off1, wv1))/sum(exp(off1) :* wv1)
 	mata: st_matrix("E", E)
-	mata: C = sum(F_pois(indx1, b0, off1, wv1))/sum(exp(off1) :* wv1) - sum(F_pois(indx1, b1, off1, wv1))/sum(exp(off1) :* wv1)
+	mata: C = sum(F_pois(indx1, b0, off1, wv1))/sum(exp(off1) :* wv1) - ///
+	          sum(F_pois(indx1, b1, off1, wv1))/sum(exp(off1) :* wv1)
 	mata: st_matrix("C", C)
 	mata: Wdx = Wdx_F(mx0, mx1, b0)
 	mata: Wdb = Wdb_F(b0, b1, mx1)
@@ -160,19 +208,41 @@ if ("`discrete'" == "") {
 	mata: dWx = dW_F(b0, mx0, mx1)
 }
 
-else  {
+else if ("`discrete'" == "logit")  {
+	
 	mata: PDF00 = f_lgt(indx0,b0,off0, wv0)
 	mata: PDF10 = f_lgt(indx1,b0,off1, wv1)
 	mata: PDF11 = f_lgt(indx1,b1,off1, wv1)
-	mata: E = sum(F_lgt(indx0, b0, off0, wv0))/sum(exp(off0):*wv0) - sum(F_lgt(indx1, b0, off1, wv1))/sum(exp(off1):*wv1)
+	mata: E = sum(F_lgt(indx0, b0, off0, wv0))/sum(exp(off0) :* wv0) - ///
+	          sum(F_lgt(indx1, b0, off1, wv1))/sum(exp(off1) :* wv1)
 	mata: st_matrix("E", E)
-	mata: C = sum(F_lgt(indx1, b0, off1, wv1))/sum(exp(off1):*wv1) - sum(F_lgt(indx1, b1, off1, wv1))/sum(exp(off1):*wv1)
+	mata: C = sum(F_lgt(indx1, b0, off1, wv1))/sum(exp(off1) :* wv1) - ///
+	          sum(F_lgt(indx1, b1, off1, wv1))/sum(exp(off1) :* wv1)
 	mata: st_matrix("C", C)
 	mata: Wdx = Wdx_F(mx0, mx1, b0)
 	mata: Wdb = Wdb_F(b0, b1, mx1)
 	mata: wbA = dwA_F(b0, b1, mx1)
 	mata: wbB = dwB_F(b0, b1, mx1)
 	mata: dWx = dW_F(b0, mx0, mx1)
+}
+
+else if ("`discrete'" == "cloglog" | "`discrete'" == "cll") {
+	
+	mata: PDF00 = f_cll(indx0,b0,off0, wv0)
+	mata: PDF10 = f_cll(indx1,b0,off1, wv1)
+	mata: PDF11 = f_cll(indx1,b1,off1, wv1)
+	mata: E = sum(F_cll(indx0, b0, off0, wv0))/sum(exp(off0) :* wv0) - /// 
+	          sum(F_cll(indx1, b0, off1, wv1))/sum(exp(off1) :* wv1)
+	mata: st_matrix("E", E)
+	mata: C = sum(F_cll(indx1, b0, off1, wv1))/sum(exp(off1) :* wv1) - /// 
+	          sum(F_cll(indx1, b1, off1, wv1))/sum(exp(off1) :* wv1)
+	mata: st_matrix("C", C)
+	mata: Wdx = Wdx_F(mx0, mx1, b0)
+	mata: Wdb = Wdb_F(b0, b1, mx1)
+	mata: wbA = dwA_F(b0, b1, mx1)
+	mata: wbB = dwB_F(b0, b1, mx1)
+	mata: dWx = dW_F(b0, mx0, mx1)
+
 }
 
 //
@@ -181,17 +251,17 @@ else  {
 
 mata: dCdb1 = dCdb1(indx1, Wdb, wbA, wv1, off1, PDF10, C)
 mata: dCdb2 = dCdb2(indx1, Wdb, wbB, wv1, off1, PDF11, C)
-mata: dEdb = dEdb(indx0, indx1, Wdx, dWx, E, wv0, wv1, off0, off1, PDF00, PDF10)
+mata: dEdb  = dEdb(indx0, indx1, Wdx, dWx, E, wv0, wv1, off0, off1, PDF00, PDF10)
 mata: Var_E_k = varcomp(dEdb, varb0)
 mata: seWdx = colsum(sqrt(diag(Var_E_k)))
 mata: st_matrix("seWdx", seWdx)
 mata: Var_C_k = varcoef(dCdb1, dCdb2, varb0, varb1)
 mata: seWdb = colsum(sqrt(diag(Var_C_k)))
 mata: st_matrix("seWdb", seWdb)
-mata: dEdb0 = dEdb0(indx0, indx1, wv0, wv1, off0, off1, PDF00, PDF10)
+mata: dEdb0  = dEdb0(indx0, indx1, wv0, wv1, off0, off1, PDF00, PDF10)
 mata: dCdb0A = dCdbA(indx1, wv1, off1, PDF10)
 mata: dCdb0B = dCdbA(indx1, wv1, off1, PDF11)
-mata: varE0 = varE(dEdb0, varb0)
+mata: varE0  = varE(dEdb0, varb0)
 mata: sE0 = sqrt(varE0) 
 mata: st_matrix("sE0", sE0)
 mata: varC0 = varC(varb0, varb1, dCdb0A, dCdb0B)
@@ -217,13 +287,13 @@ mata: ZCWdb = C*Wdb:/seWdb
 mata: st_matrix("ZCWdb", ZCWdb)
 mata: PCTcoe = 100*(C*Wdb:/(E+C))
 mata: st_matrix("PCTcoe", PCTcoe)
-mata: DCE = E:*Wdx :* `scale'      // scaled
+mata: DCE = E:*Wdx :* `scale'      
 mata: st_matrix("DCE", DCE)
 local R = R[1,1] * `scale'
 local E = E[1,1] * `scale'
 local C = C[1,1] * `scale'
-local sE0 = sE0[1,1] * `scale'    //
-local sC0 = sC0[1,1] * `scale'    //
+local sE0 = sE0[1,1] * `scale'      
+local sC0 = sC0[1,1] * `scale'      
 local ZE = ZE[1,1] 
 local ZC = ZC[1,1]
 mata: PZE = 2*normal(-abs(ZvalueE))
@@ -310,7 +380,7 @@ eret clear
 //
 // return e(b) e(V) (05/20/23)
 //
-mata:DCEu = E:*Wdx              // unscaled
+mata:DCEu = E:*Wdx                // unscaled
 mata:st_matrix("bE", DCEu)
 mata:st_matrix("VarE", Var_E_k)  
 mata:CWdbu = C*Wdb                // unscaled        
@@ -667,4 +737,31 @@ return(f)
 }
 end
 
-///////////// DP 5/27/23
+
+**********************************************
+*                                            *
+*           functions for cloglog            *
+*                                            *
+**********************************************
+
+mata:
+function F_cll(real matrix x, real matrix b, real matrix off, real matrix weight)
+{
+ xb = x*b'
+ F = (1 :- exp(-exp(xb :+ off))) :* weight
+return(F)
+}
+end
+
+mata:
+function f_cll(real matrix x, real matrix b, real matrix off, real matrix weight)
+{
+ xb = x*b'
+ f = weight :* exp(-exp(xb :+ off))
+return(f)
+}
+end
+
+///////////// DP 11/20/23
+
+

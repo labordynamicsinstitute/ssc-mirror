@@ -17,13 +17,13 @@ d KW: mean-group estimator
 d
 d Requires: Stata version 13 and reghdfe, ftools from SSC (q.v.)
 d
-d Distribution-Date: 20230303
+d Distribution-Date: 20240203
 d
 d Author:  Sebastian Kripfganz, University of Exeter Business School
 d Support: email S.Kripfganz@@exeter.ac.uk
 d
-d Author:  Vasilis Sarafidis, BI Norwegian Business School
-d Support: email  vasilis.sarafidis@@bi.no
+d Author:  Vasilis Sarafidis, Brunel University London
+d Support: email   Vasilis.Sarafidis@@brunel.ac.uk
 d
 f xtivdfreg.ado
 f xtivdfreg.sthlp
@@ -37,3 +37,6 @@ f ../s/spxtivdfreg_estat.ado
 f ../s/spxtivdfreg_postestimation.sthlp
 f ../l/lxtivdfreg.mlib
 f xtivdfreg_example.dta
+f ../s/spxtivdfreg_example.dta
+f ../s/spxtivdfreg_example_spmat.stswm
+f ../s/spxtivdfreg_example_spmat.csv

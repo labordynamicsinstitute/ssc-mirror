@@ -19,6 +19,7 @@ version 11.0
 				SQRttrans					/// square root tranformation for SMR 
 				EXact						/// offers exact estimation (works currently for prop/rate for cross-sectional and smr for change data)
 				PVal(numlist max=2 sort)	/// p-values used as basis to generate CIs
+				BONferroni					/// adjust p-value to account for multiple testing
 				YMIn(numlist max=1)			/// truncate values below specified min on Y axis
 				YMAx(numlist max=1)			/// truncate values above specified mqax on Y axis
 				SAVing(string asis)			/// save CIs to a new file 
@@ -87,7 +88,14 @@ version 11.0
 				exit 198
 			}	
 
-			if ("`pval'" == "") {
+			// Bonferroni adjustment
+			if ("`bonferroni'" != "") { 
+				local pval = (0.05 / `nobs')
+				local pval `pval' 0.025
+			}
+
+			// default p-values			
+			if ("`pval'" == "") & ("`bonferroni'" == "") {
 				local pval 0.001 0.025
 			}
 			local pcnt : word count `pval'				
@@ -626,7 +634,6 @@ version 11.0
 						gen `c' = ((1 - `p') - poisson(`rhopoints' * `target', `qpois' - 1))  / poissonp(`rhopoints' * `target', `qpois') if `qpois' != 0 						
 						replace `c' = ((1 - `p') - 0)  / poissonp(`rhopoints' * `target', `qpois') if `qpois' == 0
 						gen `x' = `qpois' - 0.5 + `c'
-*						replace `x' = 0 if `x' < 0
 						replace `ul`i'' = `x' / `rhopoints'
 						drop `qpois' `c' `x'
 						local i = `i' + 1
@@ -783,8 +790,15 @@ version 11.0
 				local legci`i' = (1 - 2 * `p') * 100
 				local i = `i' + 1
 			}
-			local legci1: display %2.1f `legci1'
-			local legci2: display %2.1f `legci2'
+			if ("`bonferroni'" == "") { 
+				local legci1: display %2.1f `legci1'
+				local legci2: display %2.1f `legci2'
+			}
+			else {
+				local legci1: display %2.0f 95
+				local legci2: display %2.0f 95
+				local bon " (Bonf. Adj)"
+			}
 			
 		} // end quietly
 	
@@ -793,7 +807,7 @@ version 11.0
 				twoway(line `ll1' `ul1' `rhopoints', sort lcolor(blue blue)) ///
 					(line `ll2' `ul2' `rhopoints', sort lcolor(green green)) ///
 					(scatter `y' `rho', mcolor(red) yline(`target', lpattern(shortdash) lcolor(black) lwidth(medthick)) ///
-					note("`note1'" "`note2'") legend(order(1 "`legci1'% CI" 3 "`legci2'% CI") pos(2) col(1) ring(0)) `ytitle' `xtitle' `figure')
+					note("`note1'" "`note2'") legend(order(1 "`legci1'% CI `bon'" 3 "`legci2'% CI") pos(2) col(1) ring(0)) `ytitle' `xtitle' `figure')
 			}		
 			else {
 				twoway(line `ll1' `ul1' `rhopoints' , sort lcolor(blue blue)) ///
@@ -899,6 +913,57 @@ function invcdfbinomial(real scalar n, real scalar x, real scalar p)
         while (binomial(n,k,p) <= x)
             k++
 	
+    return(k)
+}
+
+end
+
+version 11.0
+
+mata :
+
+real scalar invcdfpoisson(real scalar m, real scalar x)
+
+{
+    real scalar mu
+    real scalar sigma
+    real scalar gamma
+    real scalar z
+    real scalar k
+    
+    
+    if ( hasmissing((m,x)) )
+        return(.)
+        
+    if (m < 0)
+        _error(3300)
+    
+    if ( (x<0)|(x>1) )
+        _error(3300)
+    
+    if (m == 0)
+        return(0)
+    
+    if (x == 0)
+        return(0)
+    
+    if (x == 1)
+        return(.)
+    
+    mu    = m
+    sigma = sqrt(m)
+    gamma = 1/sigma
+    
+    z = invnormal(x)
+    k  = round(mu + sigma * (z + gamma*(z*z-1)/6) + 0.5)
+    
+    if (poisson(m,k) >= x)
+        while ( k & (poisson(m,k-1)>x) )
+            k--
+    else
+        while (poisson(m,k) <= x)
+            k++
+
     return(k)
 }
 

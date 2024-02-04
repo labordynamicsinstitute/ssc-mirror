@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.3.1  28feb2023}{...}
+{* *! version 1.4.1  31jan2024}{...}
 {* *! Sebastian Kripfganz, www.kripfganz.de}{...}
 {* *! Vasilis Sarafidis, sites.google.com/view/vsarafidis}{...}
 {vieweralsosee "spxtivdfreg postestimation" "help spxtivdfreg_postestimation"}{...}
@@ -16,6 +16,7 @@
 {viewerjumpto "Description" "spxtivdfreg##description"}{...}
 {viewerjumpto "Options" "spxtivdfreg##options"}{...}
 {viewerjumpto "Remarks" "spxtivdfreg##remarks"}{...}
+{viewerjumpto "Example" "spxtivdfreg##example"}{...}
 {viewerjumpto "Saved results" "spxtivdfreg##results"}{...}
 {viewerjumpto "Authors" "spxtivdfreg##authors"}{...}
 {viewerjumpto "References" "spxtivdfreg##references"}{...}
@@ -61,7 +62,7 @@
 {varlist} [{cmd:,} {opt spl:ags} {opt sp:iv(spvarlist)} {opt fvar(fvars)} {opt l:ags(#)} {opt fact:max(#)} [{cmdab:no:}]{opt eig:ratio} [{cmd:no}]{opt std} [{cmdab:no:}]{opt double:defact}]
 
 {p 4 6 2}
-You must {cmd:xtset} your data before using {cmd:spxtivdfreg}; see {helpb xtset:[XT] xtset}.{p_end}
+You must {cmd:xtset} your data before using {cmd:spxtivdfreg}; see {helpb xtset:[XT] xtset}. The panel data set must be strongly balanced.{p_end}
 {p 4 6 2}
 All {it:varlists} may contain factor variables; see {help fvvarlist}. This requires the community-contributed package {cmd:ftools} to be installed; see {helpb ftools}.{p_end}
 {p 4 6 2}
@@ -74,12 +75,12 @@ All {it:varlists} may contain factor variables; see {help fvvarlist}. This requi
 {title:Description}
 
 {pstd}
-{cmd:spxtivdfreg} implements the instrumental variables (IV) estimator for large spatial panel data models, as developed by Cui, Sarafidis, and Yamagata (2022) as an extension of
-Norkute, Sarafidis, Yamagata, and Cui (2020) and Cui, Norkute, Sarafidis, and Yamagata (2022) to models with spatial lags of the dependent and independent variables.
+{cmd:spxtivdfreg} implements the instrumental variables (IV) estimator for large spatial panel data models, as developed by Cui, Sarafidis, and Yamagata (2023) and Chen, Cui, Sarafidis, and Yamagata (2023)
+as an extension of Norkute, Sarafidis, Yamagata, and Cui (2021) and Cui, Norkute, Sarafidis, and Yamagata (2022) to models with spatial lags of the dependent and independent variables.
 The instruments are defactored to control for a multifactor error structure. Heterogeneous slope coefficients can be allowed using a mean-group (MG) estimator.
 
 {pstd}
-The defactorization procedure and related options are explained in detail by Kripfganz and Sarafidis (2021); see {helpb xtivdfreg}.
+The defactorization procedure and related options are explained in detail by Kripfganz and Sarafidis (2021, 2024); see {helpb xtivdfreg}.
 
 
 {marker options}{...}
@@ -149,7 +150,7 @@ The default is set by the global option [{cmd:no}]{cmd:doubledefact}.
 {dlgtab:Optimization}
 
 {phang}
-{it:xtivdfreg_options}: {opt noeigratio}, {opt std}, {opt iterate(#)}, {opt ltolerance(#)}, and {opt nodots}; see {helpb xtivdfreg}.
+{it:xtivdfreg_options}: {opt noeigratio} and {opt std}; see {helpb xtivdfreg}.
 
 
 {marker remarks}{...}
@@ -157,7 +158,7 @@ The default is set by the global option [{cmd:no}]{cmd:doubledefact}.
 
 {pstd}
 Factors are extracted from the specified instruments excluding their spatial lags, because the latter are driven by the same factors. The user is encouraged to become familiar with the details on the defactorization stages by studying
-the {helpb xtivdfreg##remarks:xtivdfreg} help file and the discussion in Kripfganz and Sarafidis (2021).
+the {helpb xtivdfreg##remarks:xtivdfreg} help file and the discussion in Kripfganz and Sarafidis (2021, 2024).
 
 {pstd}
 After the estimation, the command leaves the spatial weights matrix in memory as a Mata matrix named {cmd:spxtivdfreg_spmat}.
@@ -166,6 +167,38 @@ However, this Mata matrix is overwritten each time the command is run. If this i
 
 {pstd}
 It is the user's responsibility to check that the ordering of the elements in the specified spatial weights matrix is the same as that of the cross-sectional groups in the data set.
+
+
+{marker example}{...}
+{title:Example}
+
+{pstd}Setup (requires Stata version 15 or higher){p_end}
+{pstd}(The data set and spatial weights matrix are available as ancillary files for the {cmd:xtivdfreg} package. The spatial weights matrix files will be copied to the current working directory.){p_end}
+{phang2}. {stata "use http://www.kripfganz.de/stata/spxtivdfreg_example"}{p_end}
+{phang2}. {stata "copy http://www.kripfganz.de/stata/spxtivdfreg_example_spmat.stswm ."}{p_end}
+{phang2}. {stata "copy http://www.kripfganz.de/stata/spxtivdfreg_example_spmat.csv ."}{p_end}
+
+{pstd}Defactored IV estimation with spatial lag and time lag, homogeneous slopes{p_end}
+{pstd}Spatial weights matrix from {cmd:spmatrix}{p_end}
+{phang2}. {stata spmatrix use W using spxtivdfreg_example_spmat}{p_end}
+{phang2}. {stata spxtivdfreg NPL INEFF CAR SIZE BUFFER PROFIT QUALITY LIQUIDITY, absorb(ID) splag tlags(1) spmatrix(W) iv(INTEREST CAR SIZE BUFFER PROFIT QUALITY LIQUIDITY, splags lag(1)) std}{p_end}
+{pstd}Spatial weights matrix from Excel or delimited file{p_end}
+{phang2}. {stata spxtivdfreg NPL INEFF CAR SIZE BUFFER PROFIT QUALITY LIQUIDITY, absorb(ID) splag tlags(1) spmatrix("spxtivdfreg_example_spmat.csv", import) iv(INTEREST CAR SIZE BUFFER PROFIT QUALITY LIQUIDITY, splags lag(1)) std}{p_end}
+
+{pstd}Defactored IV estimation with spatial lag and time lag, heterogeneous slopes{p_end}
+{phang2}. {stata spxtivdfreg NPL INEFF CAR SIZE BUFFER PROFIT QUALITY LIQUIDITY, absorb(ID) splag tlags(1) spmatrix(W) iv(INTEREST CAR SIZE BUFFER PROFIT QUALITY LIQUIDITY, splags lag(1)) std mg}{p_end}
+
+{pstd}IV estimation with spatial lag and time lag, no common shocks{p_end}
+{phang2}. {stata spxtivdfreg NPL INEFF CAR SIZE BUFFER PROFIT QUALITY LIQUIDITY, absorb(ID) splag tlags(1) spmatrix(W) iv(INTEREST CAR SIZE BUFFER PROFIT QUALITY LIQUIDITY, splags lag(1)) std factmax(0)}{p_end}
+
+{pstd}Defactored IV estimation with spatial lag, time lag, and spatial time lag{p_end}
+{phang2}. {stata spxtivdfreg NPL INEFF CAR SIZE BUFFER PROFIT QUALITY LIQUIDITY, absorb(ID) splag tlags(1) sptlags(1) spmatrix(W) iv(INTEREST CAR SIZE BUFFER PROFIT QUALITY LIQUIDITY, splags lag(1)) std}{p_end}
+
+{pstd}Defactored IV estimation with spatial lag, time lag, and spatially lagged independent variable (dynamic spatial Durbin model){p_end}
+{phang2}. {stata spxtivdfreg NPL INEFF CAR SIZE BUFFER PROFIT QUALITY LIQUIDITY, absorb(ID) splag tlags(1) spindepvars(PROFIT) spmatrix(W) iv(INTEREST CAR SIZE BUFFER PROFIT QUALITY LIQUIDITY, splags lag(1)) std}{p_end}
+
+{pstd}Defactored IV estimation with time lag but no spatial lags{p_end}
+{phang2}. {stata spxtivdfreg NPL INEFF CAR SIZE BUFFER PROFIT QUALITY LIQUIDITY, absorb(ID) tlags(1) spmatrix(W) iv(INTEREST CAR SIZE BUFFER PROFIT QUALITY LIQUIDITY, lag(1)) std}{p_end}
 
 
 {marker results}{...}
@@ -189,7 +222,7 @@ In addition to results saved by {helpb xtivdfreg##results:xtivdfreg}, {cmd:spxti
 Sebastian Kripfganz, University of Exeter, {browse "http://www.kripfganz.de"}
 
 {pstd}
-Vasilis Sarafidis, BI Norwegian Business School, {browse "https://sites.google.com/view/vsarafidis"}
+Vasilis Sarafidis, Brunel University London, {browse "https://sites.google.com/view/vsarafidis"}
 
 
 {marker references}{...}
@@ -201,19 +234,29 @@ Eigenvalue ratio test for the number of factors.
 {it:Econometrica} 81: 1203-1227.
 
 {phang}
+Chen, J., G. Cui, V. Sarafidis, and T. Yamagata. 2023.
+IV estimation of heterogeneous spatial dynamic panels with interactive effects.
+{it:Manuscript}.
+
+{phang}
 Cui, G., M. Norkute, V. Sarafidis, and T. Yamagata. 2022.
 Two-stage instrumental variable estimation of linear panel data models with interactive effects.
 {it:Econometrics Journal} 25: 340-361.
 
 {phang}
-Cui, G., V. Sarafidis, and T. Yamagata. 2022.
+Cui, G., V. Sarafidis, and T. Yamagata. 2023.
 IV estimation of spatial dynamic panels with interactive effects: Large sample theory and an application on bank attitute toward risk.
-{it:Econometrics Journal}: forthcoming.
+{it:Econometrics Journal}: 26: 124-146.
 
 {phang}
 Kripfganz, S., and V. Sarafidis. 2021.
 Instrumental-variable estimation of large-T panel-data models with common factors.
 {it:Stata Journal} 21: 659-686.
+
+{phang}
+Kripfganz, S., and V. Sarafidis. 2024.
+Estimating spatial dynamic panel data models with unobserved common factors in Stata.
+{it:Manuscript}.
 
 {phang}
 Norkute, M., V. Sarafidis, T. Yamagata, and G. Cui. 2021.

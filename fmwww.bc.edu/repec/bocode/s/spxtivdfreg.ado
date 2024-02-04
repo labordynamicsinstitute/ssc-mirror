@@ -1,11 +1,17 @@
-*! version 1.3.1  28feb2023
+*! version 1.4.1  31jan2024
 *! Sebastian Kripfganz, www.kripfganz.de
 *! Vasilis Sarafidis, sites.google.com/view/vsarafidis
 
 *==================================================*
 ****** Defactored IV dynamic spatial panel data estimation ******
 
-program define spxtivdfreg, eclass prop(xt) sort
+*** citation ***
+
+/*	Kripfganz, S., and V. Sarafidis. 2024.
+	Estimating spatial dynamic panel data models with unobserved common factors in Stata.
+	Manuscript.		*/
+
+program define spxtivdfreg, eclass prop(xt)			// option sortpreserve incompatible with package reghdfe
 	version 13.0
 	if replay() {
 		if "`e(cmd)'" != "spxtivdfreg" {
@@ -89,7 +95,7 @@ program define spxtivdfreg, eclass prop(xt) sort
 				fvrevar `var'
 				loc var				"`r(varlist)'"
 				tempvar sp`var'
-				qui gen `sp`var'' = `var'
+				qui gen double `sp`var'' = `var'
 				loc spvarlist		"`spvarlist' `sp`var''"
 			}
 		}
@@ -123,20 +129,28 @@ program define spxtivdfreg, eclass prop(xt) sort
 					fvrevar `var'
 					loc var				"`r(varlist)'"
 					tempvar sp`var'
-					qui gen `sp`var'' = `var'
+					qui gen double `sp`var'' = `var'
 					loc spivvarlist		"`spivvarlist' `sp`var''"
 				}
 				loc spiv			`"`spiv' iv(`ivvars' `spivvarlist', `ivoptions' varnames(`ivvars' `spivnames'))"'
 			}
 		}
-		sort `_dta[_TStvar]' `_dta[_TSpanel]'
+		sort `_dta[_TStvar]' `_dta[_TSpanel]', stable
 		if "`spvarlist'" != "" {
-			mata: spxtivdfreg_spgen("`spvarlist'", "`_dta[_TStvar]'", "", `spmat')
+			cap mata: spxtivdfreg_spgen("`spvarlist'", "`_dta[_TStvar]'", "", `spmat')
+		}
+		if _rc {
+			sort `_dta[_TSpanel]' `_dta[_TStvar]', stable
+			exit _rc
 		}
 		if "`spivvarlist'" != "" {
-			mata: spxtivdfreg_spgen("`spivvarlist'", "`_dta[_TStvar]'", "", `spmat')
+			cap mata: spxtivdfreg_spgen("`spivvarlist'", "`_dta[_TStvar]'", "", `spmat')
 		}
-		sort `_dta[_TSpanel]' `_dta[_TStvar]'
+		if _rc {
+			sort `_dta[_TSpanel]' `_dta[_TStvar]', stable
+			exit _rc
+		}
+		sort `_dta[_TSpanel]' `_dta[_TStvar]', stable
 
 		*--------------------------------------------------*
 		*** estimation ***
@@ -264,7 +278,11 @@ program define spxtivdfreg_parse_spmatrix, sclass
 		exit 198
 	}
 	if "`import'" == "" {
-		conf name `anything'
+		cap conf name `anything'
+		if _rc {
+			di as err "option spmatrix() incorrectly specified -- invalid name"
+			exit 198
+		}
 		if `"`options'"' != "" {
 			di as err `"`options' not allowed"'
 			exit 198
@@ -287,15 +305,12 @@ program define spxtivdfreg_parse_spmatrix, sclass
 		loc rows			= r(rows)
 		mata: st_numscalar("r(cols)", cols(`anything'))
 		loc cols			= r(cols)
-		mata: st_numscalar("r(diag0)", diag0cnt(`anything'))
-		loc diag0			= (r(diag0) == `n')
 	}
 	else if "`stata'" != "" {
 		conf mat `anything'
 		loc miss			= matmissing(`anything')
 		loc rows			= rowsof(`anything')
 		loc cols			= colsof(`anything')
-		loc diag0			= (diag0cnt(`anything') == `n')
 	}
 	else if "`import'" != "" {
 		conf file `"`anything'"'
@@ -336,8 +351,6 @@ program define spxtivdfreg_parse_spmatrix, sclass
 		loc rows			= r(rows)
 		mata: st_numscalar("r(cols)", cols(`W'))
 		loc cols			= r(cols)
-		mata: st_numscalar("r(diag0)", diag0cnt(`W'))
-		loc diag0			= (r(diag0) == `n')
 	}
 	else {
 		capture spmatrix dir
@@ -371,6 +384,17 @@ program define spxtivdfreg_parse_spmatrix, sclass
 	if `rows' > `n' {
 		di as err "conformability error -- matrix `anything' too large"
 		exit 503
+	}
+	if "`mata'" != "" {
+		mata: st_numscalar("r(diag0)", diag0cnt(`anything'))
+		loc diag0			= (r(diag0) == `n')
+	}
+	else if "`stata'" != "" {
+		loc diag0			= (diag0cnt(`anything') == `n')
+	}
+	else if "`import'" != "" {
+		mata: st_numscalar("r(diag0)", diag0cnt(`W'))
+		loc diag0			= (r(diag0) == `n')
 	}
 	if !`diag0' {
 		di as err "matrix `anything' has nonzero values on diagonal"

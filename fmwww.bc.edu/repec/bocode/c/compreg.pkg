@@ -1,0 +1,28 @@
+d 'COMPREG': module to  estimate a compositional regression with isometric log-ratio (ILR) transformation of the components
+d
+d  compreg estimates a compositional regression with isometric
+d log-ratio (ILR) transformation of the components.   
+d Compositional regression with isometric log-ratio (ILR)
+d transformation is a statistical method used when dealing with   
+d compositional data, independent variables represent parts of a
+d whole and sum up to a constant, e.g. 1, 100%, or any	  number
+d (1440 for the minutes in a day). Such data are common in multiple
+d fields, for example economics, environment,	 ecology, in which
+d data are often proportions or percentages. The challenge with
+d compositional data is their constrained    nature, which can lead
+d to spurious correlations and statistical issues if standard
+d regression techniques are applied    directly. 
+d
+d KW: isometric log ratio
+d KW: compositional data
+d
+d Requires: Stata version 10 and ilr from SSC (q.v.)
+d
+d Distribution-Date: 20240203
+d
+d Author: Giacomo Zanello,  University of Reading
+d Support: email g.zanello@@reading.ac.uk
+d
+f compreg.ado
+f compreg.sthlp
+f ../g/gdp.dta

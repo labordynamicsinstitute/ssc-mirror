@@ -28,7 +28,7 @@ Returned results facilitate add-hoc manipulations, such as averaging results fro
 {title:Syntax}
 
 {p 8 16 2}
-{cmd:hazdcmp} {depvar} {indepvars} [pw] [, {it:options} ]  {cmdab:by(}{it:groupvar}{cmd:)} {cmdab:id(}{it:idvar}{cmd:)} {cmdab:offset(}{it:offvar}{cmd:)} 
+{cmd:hazdcmp} {depvar} {indepvars} [aw iw pw fw] [, {it:options} ]  {cmdab:by(}{it:groupvar}{cmd:)} {cmdab:id(}{it:idvar}{cmd:)} {cmdab:offset(}{it:offvar}{cmd:)} 
 {p_end}
 
 {p 4 4 2} where
@@ -37,7 +37,7 @@ Returned results facilitate add-hoc manipulations, such as averaging results fro
 
 {p 8 16 2} {cmd:id(}{it:idvar}{cmd:)} specifies the id number associated with the {it:person-level} record (see, e.g., {helpb stset});
 
-{p 8 16 2} {cmd:offset(}{it:offvar}{cmd:)} specifies the required logged exposure time for the continuous-time model, i.e., log(_t - _t0) or 0 (or logged time-interval width) for the discrete-time model (see, e.g., {helpb stsplit});
+{p 8 16 2} {cmd:offset(}{it:offvar}{cmd:)} specifies the required logged exposure time for continuous-time models, i.e., log(_t - _t0) or 0 (or logged time-interval width) for discrete-time models (see, e.g., {helpb stsplit});
 
 {synoptset 25 tabbed}{...}
 {marker opt}{synopthdr:options}
@@ -46,9 +46,9 @@ Returned results facilitate add-hoc manipulations, such as averaging results fro
     {p_end}
 {synopt :{opt scale(real)}}multiply coefficients and standard errors by a scaling factor [default scale(1)].
     {p_end}
-{synopt :{opt discrete}}fit a discrete-time logit hazard model [default continuous-time (piecewise-constant exponential) hazard model].
+{synopt :{opt discrete(string)}}fit a discrete-time hazard model where string is logit or cloglog [default continuous-time (piecewise-constant exponential) hazard model].
     {p_end} 
-{col 6} {cmd:pweight}s are allowed (see {helpb weight}); {opt robust} and {opt cluster} are supported (see {helpb robust} and {helpb cluster}).
+{col 6} {cmd:aweight}, {cmd:iweight}, {cmd:pweight}, and {cmd:fweight}s are allowed (see {helpb weight}); {opt robust} and {opt cluster} are supported (see {helpb robust} and {helpb cluster}).
     
 
 {title:Example: Hazard Rate Regression Decomposition (continuous and discrete time) }
@@ -56,7 +56,7 @@ Returned results facilitate add-hoc manipulations, such as averaging results fro
 
 {pstd} hazdcmp devnt a1-a6 pctsmom nfamtran medu inc1000 nosibs magebir, by(blk) id(iid) offset(logexp) scale(1000)
 
-{pstd} hazdcmp devnt a1-a6 pctsmom nfamtran medu inc1000 nosibs magebir, by(blk) id(iid) offset(logone) scale(100) discrete
+{pstd} hazdcmp devnt a1-a6 pctsmom nfamtran medu inc1000 nosibs magebir, by(blk) id(iid) offset(logone) scale(100) discrete(logit)
 
 
 
@@ -124,11 +124,11 @@ Returned results facilitate add-hoc manipulations, such as averaging results fro
 {cmd:hazdcmp} saves the following macros:
 
 {synoptset 15 tabbed}{...}
-{synopt:{cmd:e(indvars)}}  a list of independent variables used in the input to  {cmd:hazdcmp} (i.e., the model's varlist)
+{synopt:{cmd:e(indvars)}}  a list of independent variables input to {cmd:hazdcmp} (i.e., the model's varlist)
     {p_end}
-{synopt:{cmd:e(depvar}}  dependent variable
+{synopt:{cmd:e(depvar)}}  dependent variable
     {p_end}
-{synopt:{cmd:e(scale}}  scaling value
+{synopt:{cmd:e(scale)}}  scaling value
     {p_end}
 {synopt:{cmd:e(cvarlist)}}  list of coefficient names in output table of {cmd:hazdcmp}
     {p_end}
