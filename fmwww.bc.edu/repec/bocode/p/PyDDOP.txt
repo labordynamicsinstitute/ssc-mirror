@@ -1,0 +1,763 @@
+# -*- coding: utf-8 -*-
+#******************************************************************************
+#   Name of the program: PyDDOP
+#   Title of the program: Python Module for Determining the Dimension of the
+#   Optimal Portfolio
+#   Version: 01
+# 
+#   This program is released under GNU General Public License, version 3.
+# 
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+# 
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+# 
+#   You should have received a copy of the GNU General Public License
+#   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# 
+#   This software has been developed by Dr. Alan Mustafa under supervision of 
+#   Prof. Abdulnasser Hatemi-J.
+#   Contacts:
+#    - Prof. Abdulnasser Hatemi-J: AHatemi@uaeu.ac.ae
+#    - Dr. Alan Mustafa: Alan.Mustafa@ieee.org
+#
+#   
+#   In case this module is used it needs to be cited as the following:
+#   Mustafa A. and Hatemi-J A. (2024) PyDDOP: Python Module for Determining the Dimension of the Optimal Portfolio,
+#   Statistical Software Components,Boston College Department of Economics. 
+# 
+#   Date: January 2024
+#
+#  Financial support by the CBE Annual Research Program (CARP2022) at the UAE University is thankfully acknowledged.
+#
+#   © 2024 Dr. Alan Mustafa and Prof. Abdulnasser Hatemi-J
+# 
+#******************************************************************************
+import numpy as np
+import pandas as pd
+import math
+import os
+from datetime import datetime
+#######################################
+import tkinter as tk
+import itertools as it
+from tkinter.filedialog import askopenfilename
+from tabulate import tabulate
+import matplotlib.pyplot as plt
+###############################################################################
+#                         Start of GUI
+###############################################################################
+
+#========================= functions =========================================
+
+class create_window_menu_UI2(tk.Frame):
+    def __init__(self, master):
+        tk.Frame.__init__(self, master)
+        self.master = master
+        #============= Application Title --------------------------------------
+        self.lblTitle = tk.Label(self, text="Python Module for Determining the Dimension of the Optimal Portfolio", font=("Helvetica", 16))
+        self.lblTitle.grid(row=1, column=0, columnspan=5, sticky="EW")        
+        
+        # hr = tk.Frame(self,height=10,width=850,bg="green")
+        hr = tk.Frame(self,height=3,width=850,bg="green")
+        hr.grid(row=2, column=0, columnspan=5, sticky="NWNESWSE")
+
+        
+        #============= Adding a Blank Row -------------------------------------
+        self.lblBlnkRow = tk.Label(self, text="", font=("Helvetica", 12))
+        self.lblBlnkRow.grid(row=16, column=0, sticky="EW")
+
+        #============= Load My Data Button ---------------------------------
+        self.btnSelectDataFile = tk.Button(self, text="Select the Dataset File", command=lambda: [var_DatasetFile.set(os.path.split(askopenfilename())[1]),activateBtnCalcPD(self)], font=("Arial", 12), state='normal')
+        self.btnSelectDataFile.grid(row=20, column=0, sticky="E")
+
+        var_DatasetFile = tk.StringVar()
+        self.tbx_DatasetFile = tk.Entry(self, textvariable=var_DatasetFile, font=("Helvetica", 10), state="disabled", justify="center")
+        self.tbx_DatasetFile.grid(row=20, column=1, sticky="EW")
+
+        #============= Adding a label for OR sign -----------------------------
+        self.btnLoadMydata = tk.Label(self, text="OR ", font=("Arial Narrow", 12))
+        self.btnLoadMydata.grid(row=20, column=2, sticky="EW")
+
+        #============= Load Sample Data Button --------------------------------
+        self.btnLoadSmplData = tk.Button(self, text="Load the Sample Data \nand Calculate the Portfolio", command=lambda:[loadSampleData(decNo,self),disableBtnSelectDataFile(self),showInfoOnSampleData()], font=("Arial", 12), state="normal")
+        self.btnLoadSmplData.grid(row=20, column=3, rowspan=2, sticky="WE")
+
+        #============= Format with the Number of Decimal points ---------------
+        self.btnLoadMydata = tk.Label(self, text="Present the output with number of decimal points:", font=("Arial", 12))
+        self.btnLoadMydata.grid(row=40, column=0, sticky="EW")
+        
+        decNo = tk.IntVar(self, value=5, name=None)    # variable to format the number of decimals of the outputing reports
+        self.radioDecNo5 = tk.Radiobutton(self, text="5", variable=decNo, value=5, font=("Arial", 12))
+        self.radioDecNo5.grid(row=40, column=1, sticky="W")
+        self.radioDecNo20 = tk.Radiobutton(self, text="20", variable=decNo, value=20, font=("Arial", 12))
+        self.radioDecNo20.grid(row=40, column=1, sticky="E")
+        
+        vr = tk.Frame(self,height=10,width=1,bg="green")
+        vr.grid(row=40, column=2, rowspan=30, sticky="NS")
+
+
+        theDecNo = tk.IntVar()   # theDecNo: The Decimal No value
+        self.radioDecNoOther = tk.Radiobutton(self, text="or prefered as:", variable=decNo, value=theDecNo.get(), command=lambda:activateTxtBox(self), font=("Arial", 12))
+        self.radioDecNoOther.grid(row=41, column=1, sticky="W")
+
+        self.tbx_DecNoValue = tk.Entry(self, textvariable=decNo, font=("Helvetica", 10), state="disable", justify="center", width=4)
+        self.tbx_DecNoValue.grid(row=41, column=1, sticky="E")
+
+        #============= Calculate Proftfolio Diversification Button ------------command=lambda:[funct1(),funct2()]
+        self.btnCalcPD = tk.Button(self, text="Calculate the Protfolio", command=lambda:[indicatorActive(self),LoadDataFile(var_DatasetFile,decNo,self),indicatorEnd(self)], font=("Arial", 12), state="disable")
+        self.btnCalcPD.grid(row=51, column=0, sticky="E")
+
+        #============= Data Processing Indicator ------------------------------
+        self.lblIndicator = tk.Label(self, text=chr(9608), font=("Arial Narrow", 12), fg='#eee')
+        self.lblIndicator.grid(row=51, column=1, sticky="WE")
+        
+        #============= Dataset File Selection ---------------------------------
+        self.btnExit = tk.Button(self, text="    Close    ", command=self.master.destroy, font=("Arial", 12))
+        self.btnExit.grid(row=51, column=3, sticky="WE")
+
+        #============= Blankrow -----------------------------------------------
+        self.lblBlankRow = tk.Label(self, text=" ", font=("Arial Narrow", 8))
+        self.lblBlankRow.grid(row=55, column=0, columnspan=3, sticky="WE")
+  
+        #============= Output EndNote         ---------------------------------
+        hr = tk.Frame(self,height=1,width=850,bg="green")
+        hr.grid(row=60, column=0, columnspan=4, sticky="NWNESWSE")
+
+
+        #============= Listbox Labels -----------------------------------------
+        self.lblTestlbl = tk.Label(self, text="Portfolio No | [No of Assets] |   MV  |   MRAR   | List of Assets", font=("Arial Narrow", 12))
+        self.lblTestlbl.grid(row=70, column=0, columnspan=3, sticky="W")
+          
+
+        #============= Start Printing a Scrollbar of Portfolios ---------------
+        self.scrollbar = tk.Scrollbar(self, orient= 'vertical')
+        self.scrollbar.grid(row=110, column=2)
+
+        #============= Start of Listbox ---------------------------------------
+        list1 = ""
+        self.listbox = tk.Listbox(self, width= 50, yscrollcommand= self.scrollbar.set, listvariable=list1, selectmode = tk.MULTIPLE, bg='#ecf7dd', font=('Arial 10'))
+        self.listbox.config(width=50,height=15)
+        self.listbox.grid(row=110, column=0, columnspan=2, sticky="ew")
+        self.scrollbar.config(command= self.listbox.yview)
+        self.scrollbar.grid(row=110, column=2, sticky="nsw")
+        
+        #============= Construct Selected Proftfolio(s) -----------------------
+        self.btnConstSP = tk.Button(self, text="Construct Selected Protfolio(s)", command=lambda: selected_item(fileNameP1,df_Portfolios,frmtDec,self), font=("Arial", 12), state="disable")
+        self.btnConstSP.grid(row=110, column=3, columnspan=2, sticky="NE")
+
+        #============= Key Description ----------------------------------------
+        txtKeyDesc = ' '
+        # txtKeyDesc = '_______________________\n'
+        # txtKeyDesc = txtKeyDesc + 'Reports in *.txt format are produced in the same folder as this module resides in.\n'
+        # txtKeyDesc = txtKeyDesc + 'PyDDOP_YMD_HMS_P[PFNo].txt\n' # File name: [PyDDOP (title of the code)] _ [Date_Time] _ [P[PFNo] (Portfolio + Number)]
+        # txtKeyDesc = txtKeyDesc + 'PyDDOP_YMD_HMS_All.txt\n'
+        # txtKeyDesc = txtKeyDesc  + '_______________________\n'
+        # txtKeyDesc = txtKeyDesc + 'Denotations:\nMV: Minimum Variance approach\nMRAR: Maximum Risk Adjusted Return'
+        self.lblListDesc_Key = tk.Label(self, text=txtKeyDesc, font=("Arial Narrow", 10), justify="left", wraplength=200)
+        self.lblListDesc_Key.grid(row=110, column=3, columnspan=2, sticky="SWE")
+        
+        #============= Output EndNote         ---------------------------------
+        hr = tk.Frame(self,height=1,width=850,bg="green")
+        hr.grid(row=200, column=0, columnspan=4, sticky="NWNESWSE")
+
+        self.msgEndNote = tk.Message(self, text="", font=("Helvetica", 8, "italic"), anchor="w", justify="left", bg="#d4d4d4")
+        self.msgEndNote.bind("<Configure>", lambda e: self.msgEndNote.configure(width=e.width-10))
+        self.msgEndNote.grid(row=210, column=0, columnspan=4, sticky="ew")
+        
+###############################################################################
+#                           End of GUI                                        #
+###############################################################################
+
+###############################################################################
+##################      START OF SAMPLE DATA    ###############################
+###############################################################################
+
+def loadSampleData(frmtDec_,self):
+    frmtDec = frmtDec_.get()
+    
+    headers=["Date_of_Assets","USD-JPY","Brent Oil","DAX","Dow Jones"]
+
+    dates = ['02/01/2019', '03/01/2019', '04/01/2019', '07/01/2019', '08/01/2019', '09/01/2019', '10/01/2019', '11/01/2019', '14/01/2019', '15/01/2019', '16/01/2019',
+             '17/01/2019', '18/01/2019', '21/01/2019', '22/01/2019', '23/01/2019', '24/01/2019', '25/01/2019', '28/01/2019', '29/01/2019', '30/01/2019', '31/01/2019',
+             '01/02/2019', '04/02/2019', '05/02/2019', '06/02/2019', '07/02/2019', '08/02/2019', '11/02/2019', '12/02/2019', '13/02/2019', '14/02/2019', '15/02/2019',
+             '18/02/2019', '19/02/2019', '20/02/2019', '21/02/2019', '22/02/2019', '25/02/2019', '26/02/2019', '27/02/2019', '28/02/2019', '01/03/2019', '04/03/2019',
+             '05/03/2019', '06/03/2019', '07/03/2019', '08/03/2019', '11/03/2019', '12/03/2019', '13/03/2019', '14/03/2019', '15/03/2019', '18/03/2019', '19/03/2019',
+             '20/03/2019', '21/03/2019', '22/03/2019', '25/03/2019', '26/03/2019', '27/03/2019', '28/03/2019', '29/03/2019']
+
+    asset1 = [108.88, 107.67, 108.53, 108.72, 108.75, 108.17, 108.42, 108.55, 108.17, 108.67, 109.09, 109.24, 109.78, 109.67, 109.38, 109.6, 109.64, 109.55, 109.36,
+    109.39, 109.03, 108.88, 109.5, 109.89, 109.97, 109.97, 109.81, 109.73, 110.38, 110.48, 111, 110.48, 110.5, 110.62, 110.62, 110.86, 110.7, 110.69, 111.06, 110.58,
+    111, 111.39, 111.92, 111.75, 111.89, 111.77, 111.59, 111.17, 111.2, 111.36, 111.17, 111.72, 111.47, 111.42, 111.39, 110.69, 110.81, 109.92, 109.97, 110.64, 110.52,
+    110.64, 110.86]
+    
+    asset2 = [54.91, 55.95, 57.06, 57.33, 58.72, 61.44, 61.68, 60.48, 58.99, 60.64, 61.32, 61.18, 62.7, 62.74, 61.5, 61.14, 61.09, 61.64, 59.93, 61.32, 61.65, 61.89,
+    62.75, 62.51, 61.98, 62.69, 61.63, 62.1, 61.51, 62.42, 63.61, 64.57, 66.25, 66.5, 66.45, 67.08, 67.07, 67.12, 64.76, 65.21, 66.39, 66.03, 65.07, 65.67, 65.86, 65.99,
+    66.3, 65.74, 66.58, 66.67, 67.55, 67.23, 67.16, 67.54, 67.61, 68.5, 67.86, 67.03, 67.21, 67.97, 67.83, 67.82, 68.39]
+    
+    asset3 = [10580.19, 10416.66, 10767.69, 10747.81, 10803.98, 10893.32, 10921.59, 10887.46, 10855.91, 10891.79, 10931.24, 10918.62, 11205.54, 11136.2, 11090.11,
+    11071.54, 11130.18, 11281.79, 11210.31, 11218.83, 11181.66, 11173.1, 11180.66, 11176.58, 11367.98, 11324.72, 11022.02, 10906.78, 11014.59, 11126.08, 11167.22, 11089.79,
+    11299.8, 11299.2, 11309.21, 11401.97, 11423.28, 11457.7, 11505.39, 11540.79, 11487.33, 11515.64, 11601.68, 11592.66, 11620.74, 11587.63, 11517.8, 11457.84, 11543.48,
+    11524.17, 11572.41, 11587.47, 11685.69, 11657.06, 11788.41, 11603.89, 11549.96, 11364.17, 11346.65, 11419.48, 11419.04, 11428.16, 11526.04]
+    
+    asset4 = [23346.24, 22686.22, 23433.16, 23531.35, 23787.45, 23879.12, 24001.92, 23995.95, 23909.84, 24065.59, 24207.16, 24370.1, 24706.35, 24706.35, 24404.48,
+    24575.62, 24553.24, 24737.2, 24528.22, 24579.96, 25014.86, 24999.67, 25063.89, 25239.37, 25411.52, 25390.3, 25169.53, 25106.33, 25053.11, 25425.76, 25543.27, 25439.39,
+    25883.25, 25883.25, 25891.32, 25954.44, 25850.63, 26031.81, 26091.95, 26057.98, 25985.16, 25916, 26026.32, 25819.65, 25806.63, 25673.46, 25473.23, 25450.24, 25650.88,
+    25554.66, 25702.89, 25709.94, 25848.87, 25914.1, 25887.38, 25745.67, 25962.51, 25502.32, 25516.83, 25657.73, 25625.59, 25717.46, 25928.68]
+    
+    csvFileName = 'PyDDOP_SampleData.csv' # PD: Portfolio Diversification
+
+    df = pd.DataFrame(dates)
+    df['Asset1'] = asset1
+    df['Asset2'] = asset2
+    df['Asset3'] = asset3
+    df['Asset4'] = asset4
+    
+    df.columns = headers
+    df.to_csv(csvFileName, header=True, index=False)
+    
+    calc_pd_vrar(df,frmtDec,self)
+
+###############################################################################
+##################      END SAMPLE DATA      ##################################
+###############################################################################
+
+###############################################################################
+##################      START OF LOADING DATA FILE       ######################
+###############################################################################
+
+def LoadDataFile(fileName,frmtDec_,self): # df: DataFrame
+    frmtDec = frmtDec_.get()
+    
+    theFile = pd.read_csv(fileName.get(), sep = ',', decimal = ',', header=0, index_col=False)
+    df2 = pd.DataFrame(theFile)
+    headers_list = list(df2.columns.values)
+    for column in headers_list[1:]:
+        df2[column] = df2[column].astype(np.float64)
+
+    calc_pd_vrar(df2,frmtDec,self)
+
+###############################################################################
+##################       END OF LOADING DATA FILE          ####################
+###############################################################################
+
+###############################################################################
+#       Start of Importing Selected Portfolios for Construction               #
+###############################################################################
+
+def selected_item(fileNameP1,df_Portfolios,frmtDec,self):
+    selected_PFs = []
+    for i in self.listbox.curselection():
+        idxOfPortfolios1 = self.listbox.get(i)
+        idxOfPortfolios2 = idxOfPortfolios1.split('[')
+        idxOfPortfolios = str(idxOfPortfolios2[0]).replace('Portfolio ', '')
+        selected_PFs.append(idxOfPortfolios)
+
+    for s in range(len(selected_PFs)):
+        print_outcome_Selected(fileNameP1,df_Portfolios,int(selected_PFs[s]),frmtDec,self)
+
+###############################################################################
+#         End of Importing Selected Portfolios for Constructdion              #
+###############################################################################
+        
+###############################################################################
+#       Start of Calculations: Construction of Portfolios                     #
+###############################################################################
+def calc_pd_vrar(df_,frmtDec,self): # df: DataFrame
+    print("\014")
+
+    noOfCols = len(df_.iloc[0, :].values);
+    
+    #==========================================================================
+    #                                                             Start of loop
+    #==========================================================================
+    
+    M = 0
+    n = noOfCols - 1
+    for i in range(0,n-1):
+        M = M + math.factorial(int(n)) / (math.factorial(int(n - i)) * math.factorial(int(i)))
+
+    print ("Number of all Portfolios = " + str(int(M)))
+    
+    nCols = list(range(1,noOfCols))
+
+
+    newList = []    
+    coun_ter = 0 
+    for rng in range(2,noOfCols):
+        newList_ = list(it.combinations(nCols, rng))    # creating a list of possible combinations
+
+        #=====================================================================================
+        newList_2=[]
+        temp = []
+        for i_ in newList_:
+            i = list(i_)
+            temp = i.insert(0,0)
+            newList_2.append(i)
+    
+        newList.append(newList_2)
+        #=====================================================================================
+
+    PD_MV_RAR = []
+    PD_MRAR_RAR = []
+    df_Portfolios = []  # list of dataframes for all portfolios
+    
+    for subList in range(0,len(newList)):
+        for sub_subList in range(0,len(newList[subList])):
+            
+            df_2 = df_.iloc[: , np.array(newList[subList][sub_subList])].copy()        
+            df = pd.DataFrame.from_records(df_2)
+            ignore_0, PD_MV_RAR_, PD_MRAR_RAR_ = construct_pd(df,frmtDec);
+            df_Portfolios.append(df)
+            PD_MV_RAR.append(PD_MV_RAR_)
+            PD_MRAR_RAR.append(PD_MRAR_RAR_)
+
+            coun_ter += 1;
+
+    print("Max of PD_MV_RAR:",np.round(max(PD_MV_RAR),decimals=frmtDec))
+    print("Max of PD_MRAR_RAR:",np.round(max(PD_MRAR_RAR),decimals=frmtDec))
+
+    print("\n")
+
+    max_PD_MV_RAR = PD_MV_RAR.index(max(PD_MV_RAR))+1
+    max_PD_MRAR_RAR = PD_MRAR_RAR.index(max(PD_MRAR_RAR))+1
+    # print("Index_max of PD_MV_RAR:",PD_MV_RAR.index(max(PD_MV_RAR))+1)
+    # print("Index_max of PD_MRAR_RAR:",PD_MRAR_RAR.index(max(PD_MRAR_RAR))+1)
+    print("Index_max of PD_MV_RAR: ",max_PD_MV_RAR)
+    print("Index_max of PD_MRAR_RAR: ",max_PD_MRAR_RAR)
+    
+    #--------------------------------------------------------------------------
+    #self.msgEndNote["text"] = "%s" % (txtEndNote)
+    #============= Key Description ----------------------------------------
+    txtKeyDesc = '_______________________\n'
+    txtKeyDesc = txtKeyDesc + 'Reports in *.txt format are produced in the same folder as this module resides in.\n'
+    txtKeyDesc = txtKeyDesc + 'PyDDOP_YMD_HMS_P[PFNo].txt\n' # File name: [PyDDOP (title of the code)] _ [Date_Time] _ [P[PFNo] (Portfolio + Number)]
+    txtKeyDesc = txtKeyDesc + 'PyDDOP_YMD_HMS_All.txt\n'
+    txtKeyDesc = txtKeyDesc  + '_______________________\n'
+    txtKeyDesc = txtKeyDesc + 'Denotations:\nMV: Minimum Variance approach\nMRAR: Maximum Risk Adjusted Return'
+    txtKeyDesc = txtKeyDesc  + '_______________________\n'
+    txtKeyDesc = txtKeyDesc  + 'MV Portfolio: ' + str(max_PD_MV_RAR) + '\n'
+    txtKeyDesc = txtKeyDesc  + 'MRAR Portfolio: ' + str(max_PD_MRAR_RAR) + '\n'
+    # self.lblListDesc_Key = tk.Label(self, text=txtKeyDesc, font=("Arial Narrow", 10), justify="left", wraplength=200)
+    # self.lblListDesc_Key.grid(row=110, column=3, columnspan=2, sticky="SWE")
+    self.lblListDesc_Key["text"] = "%s" % (txtKeyDesc)
+
+    #--------------------------------------------------------------------------
+    
+
+    fileNameP1 = fillingTheListBox(fileName_Pt1(),PD_MV_RAR,PD_MRAR_RAR,df_Portfolios,frmtDec,self)    # theDF: New DataFrame
+
+    print_RARs(fileNameP1,PD_MV_RAR,PD_MRAR_RAR,df_Portfolios,frmtDec,self)
+    
+    printAllPortfolios(fileName_All(fileNameP1),PD_MV_RAR,PD_MRAR_RAR,df_Portfolios,frmtDec,self)
+
+def fileName_Pt1():
+    now = datetime.now()
+    fileNameP1 = 'PyDDOP_' + now.strftime("%Y%m%d_%H%M%S") + '_'
+    return fileNameP1
+    
+def fileName_All(fileNameP1):
+    fileName_All = fileNameP1 + 'All.txt'
+    return fileName_All
+    
+def print_RARs(fileNameP1,PD_MV_RAR,PD_MRAR_RAR,df_Portfolios,frmtDec,self):
+    lblRAR_MV = 'MV\nMinimum Variance Approach'
+    plotVars = PD_MV_RAR
+    PF_no_MV = PD_MV_RAR.index(max(PD_MV_RAR))
+    fileNameP1_MV = fileNameP1 + 'MV_'
+    print_outcome(fileNameP1_MV,lblRAR_MV,plotVars,PD_MV_RAR,PD_MRAR_RAR,df_Portfolios,PF_no_MV,frmtDec,self)
+
+    lblRAR_MRAR = 'MRAR\nMaximum Risk Adjusted Return Approach'
+    plotVars = PD_MRAR_RAR
+    PF_no_MRAR = PD_MRAR_RAR.index(max(PD_MRAR_RAR))
+    fileNameP1_MRAR = fileNameP1 + 'MRAR_'
+    print_outcome(fileNameP1_MRAR,lblRAR_MRAR,plotVars,PD_MV_RAR,PD_MRAR_RAR,df_Portfolios,PF_no_MRAR,frmtDec,self)
+    
+def print_outcome(fileNameP1,lblRAR,plotVars,PD_MV_RAR,PD_MRAR_RAR,df_Portfolios,Portfolio_no,frmtDec,self):
+    plot_Portfolios(lblRAR,plotVars,df_Portfolios,Portfolio_no)   # ploting bar plot for portfolios
+    df_to_print, ignore_1, ignore_2 = construct_pd(df_Portfolios[Portfolio_no],frmtDec);
+    txtFileName = create_rprt_file(fileNameP1,df_to_print,PD_MV_RAR,PD_MRAR_RAR,df_Portfolios,Portfolio_no,frmtDec,self);
+
+    EndNote(txtFileName,self);
+    return
+
+    
+def print_outcome_Selected(fileNameP1,df_Portfolios,Portfolio_no,frmtDec,self):
+    Portfolio_no = Portfolio_no - 1
+    df_to_print, ignore_1, ignore_2 = construct_pd(df_Portfolios[Portfolio_no],frmtDec);
+
+    PD_MV_RAR = []
+    PD_MV_RAR = list(range(1,len(df_Portfolios)))
+    PD_MRAR_RAR = []
+    PD_MRAR_RAR = PD_MV_RAR
+
+    txtFileName = create_rprt_file(fileNameP1,df_to_print,PD_MV_RAR,PD_MRAR_RAR,df_Portfolios,Portfolio_no,frmtDec,self);
+    EndNote(txtFileName,self);
+
+    
+    #==========================================================================
+    #                                                               End of Loop
+    #==========================================================================
+def construct_pd(df,frmtDec): # df: DataFrame
+
+    x = df.iloc[:, 1:].values;
+    noOfCols = len(df.iloc[0, :].values);
+
+    roa = np.exp(np.diff(np.log(x), axis = 0))-1    # => roa = (b2 - b1)/b1 : Return of Asset
+    theCov = np.cov(roa, rowvar=False)
+    Er = np.average(roa, axis=0)                    # Er: Average Return Values
+    
+    SD = np.std(roa, axis=0, ddof=1)
+        
+    RAdjR = np.divide(Er, SD)
+    
+    #===============        Calculating Hs&K and Cs&E     =====================
+    # Hs: the selected columns from K
+    # K: calculating values from both matrices of Ev and Cov
+    # Cs: table of covariance
+    # E: selected columns from Covariance table
+    
+    rows = len(theCov) - 1
+    cols = len(theCov[0])
+    
+    Cij = np.array([[0 for i in range(cols)] for j in range(rows)], dtype=float)
+    Kij = np.array([[0 for i in range(cols)] for j in range(rows)], dtype=float)
+
+    for iRows in range(0,rows):
+        for jCols in range(0,cols):
+            Cij[iRows,jCols] = (2*theCov[iRows+1,jCols])-(2*theCov[iRows, jCols])
+            Kij[iRows,jCols] = (Er[iRows]*2*theCov[iRows+1,jCols])-(Er[iRows+1]*2*theCov[iRows, jCols])
+            
+    theOnes = np.ones(rows+1)
+    Cij = np.vstack([Cij, theOnes])
+    Kij = np.vstack([Kij, theOnes])
+
+    detC = np.linalg.det(Cij)
+    detK = np.linalg.det(Kij)
+
+    #===============        Calculating Ws      ===============================
+    # Es stands for 'W (weight) for MV'
+    # Ws stands for W (weight) for MRAR
+    wRows = len(Kij)
+    wCols = len(Kij[0])
+    Ei = np.array([0 for i in range(wCols)], dtype=float)
+    Wi = np.array([0 for i in range(wCols)], dtype=float)
+    Eij = np.array([[0 for i in range(wCols-1)] for j in range(wRows-1)], dtype=float)
+    Wij = np.array([[0 for i in range(wCols-1)] for j in range(wRows-1)], dtype=float)
+
+    WijCol = 0
+    for theWiCol in range(0,wCols):
+        for jwCols in range(0,wCols):
+            if theWiCol != jwCols:
+            
+                for iwRows in range(0,wRows-1):
+                    Eij[iwRows,WijCol] = Cij[iwRows, jwCols]
+                    Wij[iwRows,WijCol] = Kij[iwRows, jwCols]
+                WijCol +=1
+        sign_p = (theWiCol + 1) + wCols;    # One is added to theWiCol becuase the loop start from 0.
+        sign_ = (-1)**sign_p;
+
+        Ei[theWiCol] = sign_ * (np.linalg.det(Eij) / detC)
+        Wi[theWiCol] = sign_ * (np.linalg.det(Wij) / detK)
+        
+        WijCol =0
+
+    PD_MV_AR = np.sum(np.array(Er) * np.array(Ei))
+    PD_MRAR_AR = np.sum(np.array(Er) * np.array(Wi))
+
+    noOfAssets = noOfCols - 1;
+
+    sigma_p_ = 0
+    sigma_p_c_ = 0
+    for sd_i in range(0,noOfAssets):
+     	for sd_j in range(0,noOfAssets):
+    
+            w_sd_i = Ei[sd_i];
+            w_sd_j = Ei[sd_j];
+            w_D_sd_i = Wi[sd_i];
+            w_D_sd_j = Wi[sd_j];
+            
+            sigma_p_ = sigma_p_ + (w_sd_i * w_sd_j * theCov[sd_i, sd_j]);
+            sigma_p_c_ = sigma_p_c_ + (w_D_sd_i * w_D_sd_j * theCov[sd_i, sd_j]);
+            
+    PD_MV_sigma_p = np.sqrt(sigma_p_);
+    PD_MRAR_sigma_p_c = np.sqrt(sigma_p_c_);    
+
+    PD_MV_RAR = PD_MV_AR / PD_MV_sigma_p;
+    
+    PD_MRAR_RAR = PD_MRAR_AR / PD_MRAR_sigma_p_c;
+
+    MV = [np.round(PD_MV_AR,decimals=frmtDec),np.round(PD_MV_sigma_p,decimals=frmtDec),np.round(PD_MV_RAR,decimals=frmtDec),'','']
+    MRAR = [np.round(PD_MRAR_AR,decimals=frmtDec),np.round(PD_MRAR_sigma_p_c,decimals=frmtDec),np.round(PD_MRAR_RAR,decimals=frmtDec),'','']
+    
+    Asset_df = []
+    Er_df = []
+    SD_df = []
+    RAdjR_df = []
+    Ei_df = []
+    Wi_df = []
+
+    PD_MV = []
+    PD_MRAR = []
+    
+    Asset_df = 'Assets'
+    Er_lbl = 'E(r)'
+    SD_df = 'Standard Deviation'
+    RAdjR_df = 'Risk Adjusted Return'
+    Ei_df = 'w for MV'
+    Wi_df = 'w for MRAR'
+    
+    PD_MV = 'Portfolio - Minimum Variance (MV)'
+    PD_MRAR = 'Portfolio - Maximum Risk Adjusted Return (MRAR)'
+    
+    Asset_df = np.append(Asset_df,df.columns[1:])
+    Er_df = np.append(Er_lbl,Er)
+    Er_df = np.append(Er_lbl,np.round(Er,decimals=frmtDec))
+    SD_df = np.append(SD_df,np.round(SD,decimals=frmtDec))
+    RAdjR_df = np.append(RAdjR_df,np.round(RAdjR,decimals=frmtDec))
+    Ei_df = np.append(Ei_df,np.round(Ei,decimals=frmtDec))
+    Wi_df = np.append(Wi_df,np.round(Wi,decimals=frmtDec))
+    PD_MV = np.append(PD_MV,MV)
+    PD_MRAR = np.append(PD_MRAR,MRAR)
+
+    estResult=[]
+
+    estResult = Asset_df
+    estResult = np.vstack((estResult,Er_df))
+    estResult = np.vstack((estResult,SD_df))
+    estResult = np.vstack((estResult,RAdjR_df))
+    estResult = np.vstack((estResult,Ei_df))
+    estResult = np.vstack((estResult,Wi_df))
+    
+    estResult2 = estResult.transpose()
+    estResult4 = np.vstack((estResult2,PD_MV))
+    df_to_print = np.vstack((estResult4,PD_MRAR))
+    return df_to_print,PD_MV_RAR,PD_MRAR_RAR;
+    
+################################################
+def create_rprt_file(fileNameP1,theDF,PD_MV_RAR,PD_MRAR_RAR,df_Portfolios,Portfolio_no,frmtDec,self):    # theDF: New DataFrame
+    txtFileName = fileNameP1 + 'P' +str(Portfolio_no+1) + '.txt'
+    
+    output_rprt_file = open(txtFileName,'w')
+
+    output_rprt_file.write('#############################################################################\n')
+    output_rprt_file.write('#                                                                           #\n')
+    output_rprt_file.write('#           DETERMINING THE DIMENSION OF THE OPTIMAL PORTFOLIO              #\n')
+    output_rprt_file.write('#                                                                           #\n')
+    output_rprt_file.write('#############################################################################\n')
+    output_rprt_file.write(tabulate(theDF))
+    output_rprt_file.write('\n')
+
+    output_rprt_file.close
+
+    return(txtFileName)
+    
+def fillingTheListBox(fileNameP1,PD_MV_RAR,PD_MRAR_RAR,df_Portfolios,frmtDec,self):    # theDF: New DataFrame
+
+    values2 = []
+    # length of RAR is used to find the total number of portfolios
+    Portfolio_no = len(PD_MV_RAR)
+
+    #Adding values to the Listbox
+    for i in range(1,Portfolio_no+1):
+        listAssets = df_Portfolios[i-1].columns[1:]
+        NoOfSubPortfolios = str(len(df_Portfolios[i-1].columns[1:]))
+        values2.append('Portfolio ' + str(i) + '  [' + NoOfSubPortfolios + '] ' + str(fDcml(PD_MV_RAR[i-1],frmtDec)) + str(' ') + str(fDcml(PD_MRAR_RAR[i-1],frmtDec)) + str(' ') + str(listAssets.tolist()))
+    
+    values = tk.StringVar(value=values2)
+    
+    self.listbox["listvariable"] = values
+    self.btnConstSP["command"] = lambda: selected_item(fileNameP1,df_Portfolios,frmtDec,self)
+    self.btnConstSP['state'] = 'normal'
+
+    
+    
+    return fileNameP1
+    
+################################################
+def printAllPortfolios(FileNameAll,PD_MV_RAR_0,PD_MRAR_RAR_0,df_Portfolios,frmtDec,self):
+    lblPF = []
+    allPortfolios = []
+    lblPF = list(range(1,len(PD_MV_RAR_0) +1))
+    lblPF = ['Portfolio ' + str(x) for x in lblPF]
+    listAssets_ = []
+    for aPF in range(0, len(df_Portfolios)):
+        listAssets_.append(df_Portfolios[aPF].columns[1:])
+    listAssets = np.asanyarray(listAssets_,dtype=object)
+    
+    PD_MV_RAR = np.round(PD_MV_RAR_0,decimals=frmtDec)
+    PD_MRAR_RAR = np.round(PD_MRAR_RAR_0,decimals=frmtDec)
+
+    allPortfolios = np.vstack((PD_MV_RAR,PD_MRAR_RAR))
+    allPortfolios = np.vstack((allPortfolios,listAssets))
+    allPortfolios = allPortfolios.transpose()
+    allPortfolios = np.asanyarray(allPortfolios)
+    
+    col_lbl = ['MV','MRAR','List of Assets']
+
+    theDF_All = pd.DataFrame(allPortfolios,index=lblPF,columns=col_lbl)
+
+    tabulate_ = tabulate(theDF_All, headers=col_lbl)
+    
+    #=============== creating Report File for All Portfolios ==================
+    output_rprt_file = open(FileNameAll,'w')
+
+    # output_rprt_file.write('#############################################################################\n')
+    # output_rprt_file.write('#                                                                           #\n')
+    # output_rprt_file.write('#           DETERMINING THE DIMENSION OF THE OPTIMAL PORTFOLIO              #\n')
+    # output_rprt_file.write('#                                                                           #\n')
+    # output_rprt_file.write('#############################################################################\n')
+    
+    output_rprt_file.write(tabulate_)
+    output_rprt_file.write('\n')
+    output_rprt_file.close
+    
+
+################################################
+def EndNote(fileName,self):
+    output_rprt_file = open(fileName,'a');
+
+    output_rprt_file.write('\n');
+    output_rprt_file.write('==========================================================================================\n');
+    output_rprt_file.write('|							REFERENCES													|\n');
+    output_rprt_file.write('|	- Markowitz H. (1952) Portfolio Selection, Journal of Finance, vol. 7(1), 77-91.		|\n');
+    output_rprt_file.write('|	- Hatemi-J A. and El-Khatib Y. (2015) Portfolio Selection: An Alternative Approach,	|\n');
+    output_rprt_file.write('|	Economics Letters, vol. 135, 141-143.												|\n');
+    output_rprt_file.write('|	- Hatemi-J A., Hajji, M.A. and El-Khatib Y. (2022) Exact solution for the portfolio 	|\n');
+    output_rprt_file.write('|	diversification problem based on maximizing the risk adjusted return. Research in 	|\n');
+    output_rprt_file.write('|	International Business and Finance, 59, 101548.										|\n');
+    output_rprt_file.write('|																						|\n');
+    output_rprt_file.write('==========================================================================================\n');
+    output_rprt_file.write('\n');
+    
+    output_rprt_file.write('==========================================================================================\n');
+    output_rprt_file.write('|							ADDITIONAL INFORMATION										|\n');
+    output_rprt_file.write('|																						|\n');
+    output_rprt_file.write('|	This program code is the copyright of the authors. Applications are allowed 			|\n');
+    output_rprt_file.write('|	only if proper reference and acknowledgments are 									|\n');
+    output_rprt_file.write('|	provided. For non-Commercial  applications only. No performance guarantee is			|\n');
+    output_rprt_file.write('|	made. Bug reports are welcome. If this code is used for research or in any			|\n');
+    output_rprt_file.write('|	other code, proper attribution needs to be included.									|\n');
+    output_rprt_file.write('|																						|\n');
+    output_rprt_file.write('|	© 2023 Dr. Alan Mustafa and Prof. Abdulnasser Hatemi-J								|\n');
+    output_rprt_file.write('==========================================================================================\n');
+    
+    output_rprt_file.close;
+    # --------------------------------------------------------------------------
+    
+    txtEndNote = "";
+    txtEndNote = txtEndNote + """REFERENCES:
+    - Markowitz H. (1952) Portfolio Selection, Journal of Finance, vol. 7(1), 77-91.
+    - Hatemi-J A. and El-Khatib Y. (2015) Portfolio Selection: An Alternative Approach, Economics Letters, vol. 135, 141-143.
+    - Hatemi-J A., Hajji, M.A. and El-Khatib Y. (2022) Exact solution for the portfolio diversification problem based on maximizing the risk adjusted return. Research in International Business and Finance, 59, 101548.
+
+    ADDITIONAL INFORMATION:
+    This program code is the copyright of the authors. Applications are allowed only if proper reference and acknowledgments are provided. For non-Commercial 
+    applications only. No performance guarantee is made. Bug reports are welcome. If this code is used for research or in any other code, proper attribution 
+    needs to be included.
+    © 2023 Dr. Alan Mustafa and Prof. Abdulnasser Hatemi-J
+    """
+    self.msgEndNote["text"] = "%s" % (txtEndNote)
+    
+    return;    
+###############################################################################
+#              End of Calculations: Constrction of Portfolios                 #
+###############################################################################
+
+###############################################################################
+#              Start of Plotting Portfolios                                   #
+###############################################################################
+def plot_Portfolios(lblRAR,plotVars,df_Portfolios,Portfolio_no):   # ploting a barchart for portfolios):
+    portfolios = list(range(1,len(plotVars)+1))
+    values = list(plotVars)
+    fig, ax2 = plt.subplots() 
+    clrs = ['lightblue' if (x < max(values)) else 'red' for x in values ]
+    plt.bar(portfolios, values, color =clrs)
+    
+    ax2.grid(axis='y')
+    ax2.set_axisbelow(True)
+
+    idx_maxValues = values.index(max(values))
+    
+    for i in range(len(portfolios)):
+        if (i == idx_maxValues):
+            lblText = 'Portfolio ' + str(i + 1)
+        else:
+            lblText = ''
+        plt.text(i+1, values[i], lblText, ha = 'center', va='bottom')
+        
+    plt.xlabel("Portfolio Number")
+    plt.ylabel("Risk Adjusted Return")
+    plt.title(lblRAR,)
+    plt.show()
+    listAssets = df_Portfolios[Portfolio_no-1].columns[1:]
+    print("List of assets: ",listAssets.tolist())
+
+###############################################################################
+#              End of Plotting Portfolios                                     #
+###############################################################################
+
+
+###############################################################################
+#             Start of Formating Numbers                                      #
+###############################################################################
+def fDcml(value,frmtDec):   # fDcml = Format the value with Decimal
+    return (round(value, frmtDec))
+###############################################################################
+#              End of Formating Numbers                                       #
+###############################################################################
+
+def getDecNo(theDecNo,self):
+    loadSampleData(theDecNo,self)
+    return
+
+def activateTxtBox(self):
+    self.tbx_DecNoValue['state'] = 'normal'
+
+def activateBtnCalcPD(self):
+    if self.tbx_DatasetFile.get() != '':
+        self.btnCalcPD['state'] = 'normal'
+        self.btnLoadSmplData['state'] = 'disable'
+        # self.btnConstSP['state'] = 'normal'
+        
+    else:
+        self.btnCalcPD['state'] = 'disable'
+        self.btnLoadSmplData['state'] = 'disable'
+        self.btnConstSP['state'] = 'disable'
+        
+def disableBtnSelectDataFile(self):
+    self.btnSelectDataFile['state'] = 'disable'
+
+def indicatorActive(self):
+    self.lblIndicator['fg'] = '#e52b50'
+    self.lblIndicator['text'] = '  ' + chr(9608) + ' in progress ...'
+    self.update()
+
+def indicatorEnd(self):
+    self.lblIndicator['fg'] = '#53af9b'
+    self.lblIndicator['text'] = '  ' + chr(9608) + ' Complete!      '
+    self.update()
+    
+def showInfoOnSampleData():
+    txtShowInfo = "A copy of sample data has been created in the same folder as this module resides in, labeled as PyDDOP_SampleData.csv\nMake sure your dataset is in the same format."
+    tk.messagebox.showinfo("Info on sample data",  txtShowInfo)
+
+#In the main function, create the GUI and pass it to the App class
+def main():
+
+    window2= tk.Tk()
+    window2.title("PyDDOP-v1")
+    # window2.geometry('950x900')
+    window2.geometry('850x700+10+10')
+
+    create_window_menu_UI2(window2).grid(row=0, column=0, columnspan=1, sticky="W")
+    window2.mainloop()
+
+#Run the main function
+if __name__ == "__main__":
+    main()
+
