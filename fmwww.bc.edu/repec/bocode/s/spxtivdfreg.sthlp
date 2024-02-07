@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.4.1  31jan2024}{...}
+{* *! version 1.4.2  06feb2024}{...}
 {* *! Sebastian Kripfganz, www.kripfganz.de}{...}
 {* *! Vasilis Sarafidis, sites.google.com/view/vsarafidis}{...}
 {vieweralsosee "spxtivdfreg postestimation" "help spxtivdfreg_postestimation"}{...}
@@ -140,7 +140,7 @@ The default is set by the global option [{cmd:no}]{cmd:doubledefact}.
 
 {marker xtivdfreg_options}{...}
 {phang}
-{it:xtivdfreg_options}: {cmd:absorb(}{it:{help reghdfe##absvar:absvars}}{cmd:)}, {opt fact:max(#)}, [{cmdab:no:}]{opt double:defact}, {opt fstage}, {opt mg}, and {opt nocons:tant}; see {helpb xtivdfreg}.
+{it:xtivdfreg_options}: {cmd:absorb(}{it:{help xtivdfreg##absorb:absvars}}{cmd:)}, {opt fact:max(#)}, [{cmdab:no:}]{opt double:defact}, {opt fstage}, {opt mg}, and {opt nocons:tant}; see {helpb xtivdfreg}.
 
 {dlgtab:Reporting}
 
@@ -199,6 +199,8 @@ It is the user's responsibility to check that the ordering of the elements in th
 
 {pstd}Defactored IV estimation with time lag but no spatial lags{p_end}
 {phang2}. {stata spxtivdfreg NPL INEFF CAR SIZE BUFFER PROFIT QUALITY LIQUIDITY, absorb(ID) tlags(1) spmatrix(W) iv(INTEREST CAR SIZE BUFFER PROFIT QUALITY LIQUIDITY, lag(1)) std}{p_end}
+
+{pstd}See Kripfganz and Sarafidis (2024) for a detailed discussion of some of these examples.{p_end}
 
 
 {marker results}{...}

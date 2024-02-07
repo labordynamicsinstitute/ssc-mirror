@@ -1,4 +1,4 @@
-*! version 1.4.1  31jan2024
+*! version 1.4.2  06feb2024
 *! Sebastian Kripfganz, www.kripfganz.de
 *! Vasilis Sarafidis, sites.google.com/view/vsarafidis
 
@@ -40,7 +40,7 @@ program define xtivdfreg, eclass prop(xt)
 		xtivdfreg_init , `s(options)'
 		loc mopt			"`s(mopt)'"
 		loc doubledefact	= cond("`s(mg)'" == "", "DOUBLEdefact", "noDOUBLEdefact")
-		xtivdfreg_iv `doubledefact' `varlist' `if' `in', mopt(`mopt') `s(mg)' `s(options)'
+		xtivdfreg_iv `doubledefact' `varlist' `if' `in', mopt(`mopt') `s(mg)' `s(mgi)' `s(options)'
 		if "`spvarlist'" != "" {
 			xtivdfreg_sp , `spvarlist' `spregnames'
 			loc diopts		"`diopts' neq(2)"
@@ -62,17 +62,17 @@ end
 program define xtivdfreg_iv, eclass sort
 	version 13.0
 	gettoken fsyntax 0 : 0
-	syntax varlist(num ts fv) [if] [in] , MOPT(name) [	Absorb(varlist num fv)			///
-														noCONStant						///
-														FACTmax(integer 4)				///
-														noEIGratio						///
-														STD								///
-														FSTAGE							///
-														FSTEP							/// historical since version 1.0.2
-														MG								///
-														MGi(numlist int miss max=1)		///
-														`fsyntax'						/// DOUBLEdefact noDOUBLEdefact
-														*]								// parsed separately: IV()
+	syntax varlist(num ts fv) [if] [in] , MOPT(name) [	Absorb(varlist num fv)				///
+														noCONStant							///
+														FACTmax(integer 4)					///
+														noEIGratio							///
+														STD									///
+														FSTAGE								///
+														FSTEP								/// historical since version 1.0.2
+														MG									///
+														MGi(numlist int min=2 max=2)		///
+														`fsyntax'							/// DOUBLEdefact noDOUBLEdefact
+														*]									// parsed separately: IV()
 	loc fv				= ("`s(fvops)'" == "true")
 	if `fv' {
 		fvexpand `varlist'
@@ -95,19 +95,19 @@ program define xtivdfreg_iv, eclass sort
 	else {
 		loc regnames		"`regnames' _cons"
 	}
-	if "`mgi'" != "" {
-		tempvar id
-		egen long `id' = group(`_dta[_TSpanel]')
-		sum `id' if `_dta[_TSpanel]' == `mgi', mean
-		if r(N) == 0 {
-			di as err "option mg() out of range"
-			exit 175
-		}
-		mata: xtivdfreg_init_mg(`mopt', "on", `r(mean)')
-		loc mg				"mg"
-	}
 	if "`mg'" != "" {
-		mata: xtivdfreg_init_mg(`mopt', "on")
+		loc id				"`_dta[_TSpanel]'"
+		if !`: list id in absorb' & "`constant'" == "" {
+			di as err "option absorb() or noconstant required with option mg"
+			exit 198
+		}
+		if "`mgi'" != "" {
+			gettoken mg_id mgi : mgi
+			mata: xtivdfreg_init_mg(`mopt', "on", `mgi')
+		}
+		else {
+			mata: xtivdfreg_init_mg(`mopt', "on")
+		}
 		loc fstage			"fstage"
 		if "`doubledefact'" == "" {
 			loc doubledefact	"doubledefact"
@@ -457,8 +457,8 @@ program define xtivdfreg_iv, eclass sort
 		eret mat se_mg		= `se_mg'
 		eret mat b_mg		= `b_mg'
 	}
-	if "`mgi'" != "" {
-		eret sca mg_id		= `mgi'
+	if "`mg_id'" != "" {
+		eret sca mg_id		= `mg_id'
 	}
 
 	*--------------------------------------------------*
@@ -591,7 +591,7 @@ program define xtivdfreg_init, sclass
 	version 13.0
 	sret clear
 	loc maxiter			= c(maxiter)
-	syntax [, ITERate(integer `maxiter') noDOTs LTOLerance(real 1e-4) MG *]
+	syntax [, ITERate(integer `maxiter') noDOTs LTOLerance(real 1e-4) MG MGi(numlist int miss max=1) *]
 
 	if `iterate' < 0 {
 		di as err "option iterate() incorrectly specified -- outside of allowed range"
@@ -604,9 +604,26 @@ program define xtivdfreg_init, sclass
 		mata: xtivdfreg_init_dots(`mopt', "off")
 	}
 	mata: xtivdfreg_init_conv_vtol(`mopt', `ltolerance')
+	if "`mgi'" != "" {
+		if `mgi' < . {
+			tempvar id
+			egen long `id' = group(`_dta[_TSpanel]')
+			sum `id' if `_dta[_TSpanel]' == `mgi', mean
+			if r(N) == 0 {
+				di as err "option mg() out of range"
+				exit 175
+			}
+			loc mgi				"mgi(`mgi' `r(mean)')"
+		}
+		else {
+			loc mgi				""
+		}
+		loc mg				"mg"
+	}
 
 	sret loc mopt		"`mopt'"
 	sret loc mg			"`mg'"
+	sret loc mgi		"`mgi'"
 	sret loc options	`"`options'"'
 end
 
@@ -738,6 +755,7 @@ end
 
 *==================================================*
 *** version history ***
+* version 1.4.2  06feb2024  option mg now requires either option absorb(panelvar) or noconstant; bug fixed with option mg() in combination with option nodoubledefact
 * version 1.4.1  31jan2024  bug fixed with estat impact under Stata versions before Stata 16
 * version 1.4.0  30jan2024  option mg() added for group-specific estimates
 * version 1.3.7  24jan2024  matrix e(se_mg) returned with option mg

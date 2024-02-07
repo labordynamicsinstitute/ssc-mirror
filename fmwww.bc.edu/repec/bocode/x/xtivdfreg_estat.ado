@@ -1,4 +1,4 @@
-*! version 1.4.1  31jan2024
+*! version 1.4.2  06feb2024
 *! Sebastian Kripfganz, www.kripfganz.de
 *! Vasilis Sarafidis, sites.google.com/view/vsarafidis
 

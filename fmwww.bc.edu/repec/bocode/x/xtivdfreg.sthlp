@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.4.1  31jan2024}{...}
+{* *! version 1.4.2  06feb2024}{...}
 {* *! Sebastian Kripfganz, www.kripfganz.de}{...}
 {* *! Vasilis Sarafidis, sites.google.com/view/vsarafidis}{...}
 {vieweralsosee "xtivdfreg postestimation" "help xtivdfreg_postestimation"}{...}
@@ -37,7 +37,7 @@
 {synopthdr:options}
 {synoptline}
 {syntab:Model}
-{p2coldent :* {opt a:bsorb}{cmd:(}{it:{help xtivdfreg##absvars:absvars}}{cmd:)}}categorical variables that identify the fixed effects to be absorbed{p_end}
+{p2coldent :* {opt a:bsorb}{cmd:(}{it:{help xtivdfreg##absorb:absvars}}{cmd:)}}categorical variables that identify the fixed effects to be absorbed{p_end}
 {synopt:{opt iv}{cmd:(}{it:{help xtivdfreg##options_spec:iv_spec}}{cmd:)}}instruments; can be specified more than once{p_end}
 {synopt:{opt fact:max(#)}}specify the maximum number of factors{p_end}
 {synopt:[{cmdab:no:}]{opt double:defact}}implement a further defactorization stage of the entire model for the first-stage estimator{p_end}
@@ -62,9 +62,9 @@ INCLUDE help shortdes-displayoptall
 {p2coldent :# {opt nodot:s}}do not display dots for the iteration steps{p_end}
 {synoptline}
 {p2colreset}{...}
-{marker absvars}{...}
+{marker absorb}{...}
 {p 4 6 2}* This option requires the community-contributed packages {cmd:reghdfe} (version 6.12.3 or higher) and {cmd:ftools} (version 2.49.1 or higher) to be installed; see {helpb reghdfe} and {helpb ftools}.
-{it:{help reghdfe##absvar:absvars}} is a list of categorical variables to be absorbed.
+{it:{help reghdfe##absorb:absvars}} is a list of categorical variables to be absorbed.
 Typical use is {cmd:absorb(}{it:{help xtset:panelvar}}{cmd:)} or {cmd:absorb(}{it:{help xtset:panelvar}} {it:{help xtset:timevar}}{cmd:)} for one-way or two-way fixed effects, respectively.{p_end}
 {p 4 6 2}# These options are only relevant for unbalanced panel data.
 
@@ -105,7 +105,7 @@ An extension of the estimator to models with spatially lagged variables is imple
 {dlgtab:Model}
 
 {phang}
-{cmd:absorb(}{it:{help reghdfe##absvar:absvars}}{cmd:)} specifies categorical variables that identify the fixed effects to be absorbed; see {helpb reghdfe:reghdfe} (if installed).
+{cmd:absorb(}{it:{help reghdfe##absorb:absvars}}{cmd:)} specifies categorical variables that identify the fixed effects to be absorbed; see {helpb reghdfe:reghdfe} (if installed).
 
 {phang}
 {cmd:iv(}{varlist} [{cmd:,} {opt fvar(fvars)} {opt l:ags(#)} {opt fact:max(#)} [{cmdab:no:}]{opt eig:ratio} [{cmd:no}]{opt std} [{cmdab:no:}]{opt double:defact}]{cmd:)} specifies instrumental variables.
@@ -145,6 +145,7 @@ The default is set by the global option [{cmd:no}]{cmd:doubledefact}.
 
 {phang}
 {opt mg} requests the mean-group estimator to be computed that allows for heterogeneous slopes. Group-specific coefficients and standard errors are stored in matrices {cmd:e(b_mg)} and {cmd:e(se_mg)}, respectively.
+This option requires either option {cmd:absorb(}{it:{help xtset:panelvar}}{cmd:)} or {opt noconstant} to be specified as well.
 
 {phang}
 {opt noconstant}; see {helpb estimation options##noconstant:[R] estimation options}.
@@ -152,7 +153,7 @@ The default is set by the global option [{cmd:no}]{cmd:doubledefact}.
 {dlgtab:Reporting}
 
 {phang}
-{opt mg(#)} requests to display the group-specific estimates for group {it:#} instead of the mean-group estimates. {it:#}.{it:{help xtset:panelvar}} must identify a group in the estimation sample.
+{opt mg(#)} requests to display the group-specific estimates for group {it:#} instead of the mean-group estimates. {it:#}.{it:{help xtset:panelvar}} must identify a group in the estimation sample. This option implies option {opt mg}.
 
 {phang}
 {opt level(#)}; see {helpb estimation options##level():[R] estimation options}.
@@ -237,6 +238,7 @@ Similarly, an additional iteration loop is performed for the factor extraction f
 
 {pstd}
 The constant term is estimated as the mean of the residuals in a separate stage after computing the slope coefficients. For the model with heterogeneous slopes, the intercept is also treated as heterogeneous.
+For this reason, either of the options {opt absorb(panelvar)} or {opt noconstant} must be specified together with option {opt mg}.
 Whether a constant term is estimated or not has no effect on the computation of the slope coefficients because the latter are computed for the demeaned model, with or without the absorption of fixed effects.
 The standard error of the constant term is computed using the influence-function approach of Kripfganz and Schwarz (2019).
 
