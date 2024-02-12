@@ -2,26 +2,37 @@
 	Authors: Sebastien Fontenay (UAH, ULB- sebastien.fontenay@uah.es / sebastien.fontenay@ulb.be)
 	         Sem Vandekerckhove (HIVA, KUL - sem.vandekerckhove@kuleuven.be)
 
-	Version: 3.0
-	Last update: Januari 2024
+	Version: 3.2
+	Last update: 8 Februari 2024 (date fixes, labels, notes)
  
-	This program uses syntax from Diego Jose Torres Torres (diegotorrestorres@gmail.com).
-	We also thank Duarte Gonçalves for the early feedback and spontaneously sent help file.
+	Thanks to:
+	- Nikolaos Kanellopoulos (nkanel@kepe.gr): date fix
+	- Diego Jose Torres Torres (diegotorrestorres@gmail.com): early syntax
+	- Duarte Gonçalves: early feedback and help file
 
 	**********************************************************************************************************************************
 	**********************************************************************************************************************************
 	**	                                            	                                                                            **
+	**	NOTES                                            	                                                                        **
+	**	                                            	                                                                            **
+	**	EUROSTAT has migrated its database in 2024. Some previous functionality with respect to time variables and indicator        **
+	**  labels, is currently lost. For datasets with a high time frequency (e.g. monthly data), it may be much faster to not use    **
+	**	the 'long' option and to reshape the data in your syntax.                                            	                    **
+	**	                                            	                                                                            **
+	**	Please let us know if you experience other issues in the mean time.                                                         **
+	**	                                            	                                                                            **
+	**	                                            	                                                                            **
+	**	INSTALLATION                                            	                                                                **
+	**	                                            	                                                                            **
 	**	If you are using Stata on a Windows computer, you need to have 7-zip (http://www.7-zip.org/)                                **
 	**	installed in the program files folder (C:\Program Files\7-Zip\7zG.exe) in order to unzip the gunzip (.gz) files.            **
-	**	                                                                                                                	        **
-	**	Note that downloading from Stata is preferred over downloading through a browser, as                                        **
-	**	Eurostat data is wrongly transferred over http in some browsers (notably using Google Chrome).                              **
 	**	                                                                                                         	                **
 	**	If you are behind a proxy you should consult: http://www.stata.com/support/faqs/web/common-connection-error-messages/       **
 	**                                                                                                                              **
 	**********************************************************************************************************************************
 	*********************************************************************************************************************************/
 
+capture program drop eurostatuse
 program define eurostatuse
 version 11.0
 syntax namelist(name=indicator) [, long noflags nolabel noerase save ///
@@ -36,22 +47,22 @@ local indicator = upper("`indicator'")
 
 if `"`clear'"' == "clear" {
 	clear
-} 
+	} 
 if (c(changed) == 1) & (`"`clear'"' == "" ) {
     error 4
-}
+	}
 
 copy "https://ec.europa.eu/eurostat/api/dissemination/files/inventory?type=data" databaselist.txt, replace
-insheet using databaselist.txt, clear names
+insheet using databaselist.txt, clear names // this tale doesn't have the variable labels anymore
 keep if code=="`indicator'"
 count
 if r(N)==0 {
 	noisily display in red "Dataset does not exist - Consult Eurostat website: https://ec.europa.eu/eurostat/data/database"
 	clear
 	exit
-}
+	}
 
-/* OLD (hope to recover this from another source)
+/* OLD (hope to recover this metadata)
 
 else {
 	replace title=ltrim(title)
@@ -71,7 +82,7 @@ else {
 	_newline _col(5) "Last update: " lastdatachange ///
 	_newline
 	clear
-}
+	}
 
 
 // Check that 7-zip is installed on Windows computer
@@ -84,9 +95,9 @@ if c(os)=="Windows" {
 			noisily di in red "Install 7-zip here: C:\Program Files\7-Zip\7zG.exe, or edit ado."
 			exit
 		}
-}
+	}
 
-cap erase databaselist.txt 
+cap erase databaselist.txt // toggle for troubleshooting 
 
 
 // Download data from Eurostat bulk download facility (2024 migration)
@@ -95,10 +106,10 @@ noisily di "Downloading and formating data ..."
 copy  "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/`indicator'/?format=TSV&compressed=true" `indicator'.tsv.gz, replace
 if c(os)=="Windows" {
 	shell "C:\Program Files\7-Zip\7zG.exe" x -y `indicator'.tsv.gz
-}
+	}
 if c(os)=="MacOSX" {
 	shell gunzip `indicator'.tsv.gz
-}
+	}
 
 insheet using `indicator'.tsv, tab names double
 ds
@@ -231,6 +242,7 @@ drop DimensionS2
 ds DimensionS, not
 foreach var of varlist `r(varlist)' {
 	local geotime : variable label `var'
+	local geotime = subinstr("`geotime'","-","", .) // new version 3.1
 	rename `var' `indicator'`geotime'
 	label var `indicator'`geotime'
 	if "`flags'" != "noflags" {
@@ -242,51 +254,71 @@ foreach var of varlist `r(varlist)' {
 	destring `indicator'`geotime', replace ignore("b c d e f i n p r s u z :")
 }
 
-// Reshape dataset to long format (option)
+
+* Reshape dataset to long format (long option)
+* ============================================
 
 if "`long'" == "long" {
 	noisily di "Reshaping dataset ..."
 	if "`flags'" == "noflags" {
 		reshape long `indicator', i(DimensionS) j(geotime, string)
-	}
+		}
 	else {
 		reshape long `indicator' flags_`indicator', i(DimensionS) j(geotime, string)
-	}
+		}
 	order geotime, before(`indicator')
 
-// Fix time or geo dimension
+	// Fix time or geo dimension
 
-lookfor \time
-if "`r(varlist)'"=="DimensionS" { 
-	rename geotime date
-	*Daily
-	if regexm(date, "D") {
-	replace date=subinstr(date, "M", "/", .)
-	replace date=subinstr(date, "D", "/", .)
-	gen time=daily(date, "YMD")
-	format time %td
+	lookfor \time
+	if "`r(varlist)'"=="DimensionS" { 
+		rename geotime date
+		local annual = 1
+		* Daily
+		if regexm(date, "D") {
+			replace date=subinstr(date, "M", "/", .)
+			replace date=subinstr(date, "D", "/", .)
+			gen time=daily(date, "YMD")
+			format time %td
+			noisily di "Time format: daily"
+			local annual = 0
+			}
+		* Monthly
+		if regexm(date, "M") {
+			gen time=monthly(date, "YM")
+			format time %tm
+			noisily di "Time format: monthly"
+			local annual = 0
+			}
+		* Quarterly
+		if regexm(date, "Q") {
+			gen time=quarterly(date, "YQ")
+			format time %tq
+			noisily di "Time format: quarterly"
+			local annual = 0
+			}
+		* Half yearly // New version 3.2
+		if regexm(date, "S") {
+			cap gen time=halfyearly(date, "YH")
+			format time %th
+			noisily di "Time format: half yearly"
+			local annual = 0
+			}
+		* Yearly
+		cap destring date, replace
+		cap gen time=date
+		cap order time, after(date)
+		cap drop date
+		
+		if `annual' == 1 {
+			noisily di "Time format: yearly"
+			}
 	}
-	*Monthly
-	if regexm(date, "M") {
-	gen time=monthly(date, "YM")
-	format time %tm
+	lookfor \geo
+		if "`r(varlist)'"=="DimensionS" {
+			rename geotime geo
+			}
 	}
-	*Quarterly
-	if regexm(date, "Q") {
-	gen time=quarterly(date, "YQ")
-	format time %tq
-	}
-	*Yearly
-	cap destring date, replace
-	cap gen time=date
-	cap order time, after(date)
-	cap drop date
-}
-lookfor \geo
-if "`r(varlist)'"=="DimensionS" {
-	rename geotime geo
-}
-}
 
 // Split DimensionS
 
@@ -299,23 +331,26 @@ local N_DIMENSIONS : word count `DIMENSIONS'
 forvalues i=1/`N_DIMENSIONS' {
 	capture local varname`i' : word `i' of `DIMENSIONS'
 	capture rename Dimension_`i' `varname`i'' 
-}
+	}
 
 drop DimensionS
 
-/* NEW */
+/* NEW 2024 */
 
 /* 
 
-the new (2024) inventory gives this download link (3.0, which does not work):			
+The 2024 inventory gives this download link (3.0, which does not work):			
 https://ec.europa.eu/eurostat/api/dissemination/sdmx/3.0/structure/codelist/ESTAT/ACCIDENT/1.2?format=TSV&formatVersion=2.0
 
-the online table shows this (works, 2.1, which works):
+The online table shows this (works, 2.1, which works):
 https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/codelist/ESTAT/EFFECT/?compressed=true&format=TSV&lang=en			
 
 */	
 
-// Download labels from Eurostat bulk download facility (default: label variables)
+
+* Labels
+* ======
+/* Download and apply labels from Eurostat bulk download facility (default: label variables)*/
 
 preserve
 
@@ -343,9 +378,11 @@ preserve
 	di "`var'"
 		*insheet using "https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=dic%2Fen%2Fdimlst.dic", tab clear
 		insheet using codelist.txt, clear
+		keep if code=="`var'"
+		
 		*replace v1=lower(v1)
 		gene v1 = lower(code)
-		keep if v1=="`var'"
+		
 		*local lb`var'=v2
 		local lb`var'=label
 		
@@ -374,7 +411,7 @@ preserve
 		
 restore
 
-cap erase codelist.txt
+cap erase codelist.txt // toggle for troubleshooting labels
 
 	ds 
 	foreach var of varlist `r(varlist)' {
@@ -397,7 +434,12 @@ foreach var of varlist `r(varlist)' {
 			}
 		}
 	
-}
+	}
+.
+
+
+* Finish process
+* ==============
 
 // Sort data
 
@@ -413,7 +455,6 @@ if "`erase'" == "noerase" {
 else {
 	erase `indicator'.tsv
 }
-
 
 // Save in Stata format with lower case variables
 

@@ -1,5 +1,5 @@
 {smcl}
-{* *!version 2.0 7/14/2020}{...}
+{* *!version 2.0 31/1/2024}{...}
 {cmd:help rctable}
 {hline}
 {title:Title}
@@ -37,7 +37,7 @@
 {synopt:{ opt  sheet(string asis[, replace|modify])}} replace a worksheet in an already existing excel document. Sub-options replace or modify are necessary if the worksheet already exists (see export excel command) {p_end} 
 {synopt:{ opt  qval(name)}} display the qvalues in square parenthesis underneath the standard error. You cannot specifify pvalue and qvalue. The qvalues are computed using the qqvalue command and the fdr sharpened qvalue strategy by Anderson(2008).   
 Varname specifies the multiple-test procedure method to be used for calculating the q-values from the input P-values. The method is one of bonferroni | sidak | holm | holland | hochberg | simes | yekutieli | bky.  These method names specify that the q-values will be calculated from the input P-values by inverting the multiple-test procedure specified by the method() option of the same name for the multproc option of the smileplot package. 
-bky method does not rely on qqvalue command but ccorresponds to the sharpened qvalue developped by Benjamini etal. (2006) and described in Anderson(2008). Command qqvalue is automatically installed from SSC when option qvalue is specified. 
+bky method does not rely on qqvalue command but corresponds to the sharpened qvalue developped by Benjamini etal. (2006) and described in Anderson(2008). Command qqvalue is automatically installed from SSC when option qvalue is specified. 
 {synoptline}
 
 {p2colreset}{...}

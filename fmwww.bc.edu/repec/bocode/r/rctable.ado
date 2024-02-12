@@ -1,7 +1,8 @@
-*! version 2.6  31/01/2022
-* This is rctable with 3 digits precision
+*! version 2.7  31/01/2024
+* This is rctable with 3 digits precision.
+* Last fix: Qvalues for several treatment branches.
 
-version 13.1
+version 16.0
 cap program drop rctable
 program define rctable
 set more off
@@ -491,63 +492,60 @@ local k= `k'+1
 }
 
 
-
-* qvalues
-
-if mi("`qvalue'")==0  & mi("`qvalue'")==0  {
-	quietly {
-		forval h=1/`c' {
-			
-			tempvar Q`h'
-			tempvar q`h'
-			gen `Q`h''=.
-			
-			local count=1
-			
-			foreach q in `pvalues' {
-				replace `Q`h''=`q' if _n==`count'	
-				local count= `count'+1 
-			}
-			
-			qqvalue `Q`h'', method(`qvalue') qvalue(`q`h'')
+  if mi("`qvalue'")==0  & mi("`qvalue'")==0 & "`qvalue'" !="bky"  {
+ 	quietly {
+  				
+  			tempvar P
+  			gen `P'=.
+			tempvar Q
+  			local count=1
 				
-			local j=0
-			local qcount=0
-			foreach varq in `varlist' { 
-				local j= `j'+3
-				local qcount= `qcount'+1
-				replace COEF`h'="`: display %7.2fc `q`h''[`qcount']'" if _n==`j'
-				replace COEF`h'=subinstr(COEF`h'," ","",.) if _n==`j'
-				replace COEF`h'="["+COEF`h'+"]" if  _n==`j'
-			} 
-			drop `Q`h'' `q`h''
+  			foreach p in `pvalues' {
+  				replace `P'=`p' if _n==`count'	
+  				local count= `count'+1 
+ 			}	
 			
-		}
-	}
-}
+			qqvalue `P', method(`qvalue') qvalue(`Q')	
+			
+  			local j=0
+ 			local qcount=0
+  			foreach varq in `varlist' { 
+  				local j= `j'+3
+  				forval h=1/`c' {
+					local qcount= `qcount'+1
+					replace COEF`h'="`: display %7.3fc `Q'[`qcount']'" if _n==`j'
+					replace COEF`h'=subinstr(COEF`h'," ","",.) if _n==`j'
+					replace COEF`h'="["+COEF`h'+"]" if  _n==`j'
+				}
+  			
+			
+  		}
+ 	}
+  drop `Q' `P'
+  }
 
 if  "`qvalue'" =="bky" {
 quietly {
-	forval h=1/`c' {
-			
-		tempvar Q`h'
-		tempvar q`h'
-		gen `Q`h''=.
+		
+		tempvar Q
+		tempvar q
+		gen `Q'=.
 		local count=1
 			
-		foreach q in `pvalues' {
-			replace `Q`h''=`q' if _n==`count'	
+		foreach k in `pvalues' {
+			replace `Q'=`k' if _n==`count'	
 			local count= `count'+1 
 		}
 			
-	sum `Q`h''
+	sum `Q'
+	
 	local totalpvals = r(N)
 	* Sort the p-values in ascending order and generate a variable that codes each p-value's rank
 	tempvar original_sorting_order
 	 gen int `original_sorting_order' = _n
-	 sort `Q`h''
+	 sort `Q'
 	 tempvar rank
-	 gen int `rank' = _n if `Q`h''!=.
+	 gen int `rank' = _n if `Q'!=.
 
 	* Set the initial counter to 1 
 
@@ -555,7 +553,7 @@ quietly {
 
 	* Generate the variable that will contain the BKY (2006) sharpened q-values
 
-	gen `q`h'' = 1 if `Q`h''!=.
+	gen `q' = 1 if `Q'!=.
 
 	* Set up a loop that begins by checking which hypotheses are rejected at q = 1.000, then checks which hypotheses are rejected at q = 0.999, then checks which hypotheses are rejected at q = 0.998, etc.  The loop ends by checking which hypotheses are rejected at q = 0.001.
 
@@ -595,30 +593,33 @@ quietly {
 		egen `total_rejected2' = max(`reject_rank2')
 
 		* A p-value has been rejected at level q if its rank is less than or equal to the rank of the max p-value that meets the above condition
-		replace `q`h'' = `qval' if `rank' <= `total_rejected2' & `rank'!=.
+		replace `q' = `qval' if `rank' <= `total_rejected2' & `rank'!=.
 		* Reduce q by 0.001 and repeat loop
 		
 		drop   `fdr_temp1' `reject_temp1' `reject_rank1' `total_rejected1' `fdr_temp2' `reject_temp2'  `reject_rank2' `total_rejected2'
 		local qval = `qval' - .001
 		
 	}
+	
 	quietly sort `original_sorting_order'
 
 			local j=0
 			local qcount=0
-			foreach varq in `varlist' { 
-				local j= `j'+3
-				local qcount= `qcount'+1
-				replace COEF`h'="`: display %7.2fc `q`h''[`qcount']'" if _n==`j'
-				replace COEF`h'=subinstr(COEF`h'," ","",.) if _n==`j'
-				replace COEF`h'="["+COEF`h'+"]" if  _n==`j'
-			} 
-
+			
+				foreach varq in `varlist' { 
+					local j= `j'+3
+					forval h=1/`c' {
+					local qcount= `qcount'+1
+					replace COEF`h'="`: display %7.3fc `q'[`qcount']'" if _n==`j'
+					replace COEF`h'=subinstr(COEF`h'," ","",.) if _n==`j'
+					replace COEF`h'="["+COEF`h'+"]" if  _n==`j'
+				}
+			}
 			drop `q`h'' `Q`h'' `original_sorting_order'
 
 }
 }
-}
+
 * Summary variable at the bottom of the table
 quietly {
 if mi("`if'")==1 { 

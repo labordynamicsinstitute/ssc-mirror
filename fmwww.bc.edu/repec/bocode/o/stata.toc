@@ -8,6 +8,7 @@ p ocratio modules to fit continuation-ratio models on ordinal response data
 p oda module for conducting Optimal Discriminant Analysis (Windows only)
 p oddsrisk module to convert Logistic Odds Ratios to Risk Ratios
 p odi module to score Oswestry Disability Index
+p odk_validate module to validdate ODK survey forms
 p odkexport module to export xlsForms to readable docx or xlsx files
 p odkmeta module to import ODK data
 p odksplit module to split and label multiple response variables generated from ODK or SurveyCTO
