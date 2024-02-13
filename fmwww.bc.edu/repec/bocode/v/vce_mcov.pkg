@@ -1,0 +1,25 @@
+d 'VCE_MCOV': module to compute the Leave-Cluster-Out-Crossfit (LCOC) variance estimates for user-chosen coefficients in a linear regression model.
+d
+d     vce_mcov is an eclass command that can be used after running
+d reg. It replaces the entries of the variance	  matrix (stored in
+d e(V)) relating to user-chosen parameter(s) of inferential
+d interest with the    Leave-Cluster-Out-Crossfit (LCOC) estimates
+d (see Anatolyev and Ng, 2024). All postestimation commands will   
+d work as usual. 
+d
+d KW: variance-covariance matrix
+d KW: crossfit estimates
+d KW: clustered standard errors
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20240212
+d
+d Author:  Stanislav Anatolyev , CERGE-EI, Prague
+d Support: email stanislav.anatolyev@@cerge-ei.cz
+d
+d Author:  Cheuk Fai Ng , University of Cambridge
+d Support: email cfn24@@cam.ac.uk
+d
+f vce_mcov.ado
+f vce_mcov.sthlp

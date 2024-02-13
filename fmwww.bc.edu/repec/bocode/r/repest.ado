@@ -1,4 +1,4 @@
-*!*** version 1.12.2 04072023
+*!*** version 1.12.3 11012024
 
 ** L256 over(var) conditionn dans average 23/03
 ** L260 correction display average long_over: line 260 is now ignored and even deleted (29/05/15)  -- 16 apr 2015
@@ -46,6 +46,9 @@
 * IEA surveys: ICCS, ICILS, PIRLS, TIMSS - 18/4/2023
 * make stata: prefix optional - 3/5/2023
 * correction bug freq          - 3/7/2023
+* SSES2023          - 11/01/2024
+* SSES and SSES 2023 - flags          - 25/01/2024
+
 global regressions_command="cnsreg etregress glm intreg nl regress tobit truncreg" ///
 	+" sem  stcox  streg biprobit cloglog  hetprobit logistic logit   probit scobit"  /// 
 	+" clogit mlogit mprobit ologit oprobit slogit gnbreg nbreg poisson  tnbreg"  ///
@@ -805,7 +808,7 @@ program define repest_flags,rclass
 		capture assert inlist(`varlist',`min_value',`max_value') `if'
 		local isbinary= (_rc==0)
 		}
-	if "${svyname}"=="PISA" | "${svyname}"=="PISA2015" | "${svyname}"=="TALISTCH" | "${svyname}"=="IELS"  | "${svyname}"=="STAFF_TALISEC" | "${svyname}"=="TALISEC_STAFF" {	
+	if "${svyname}"=="PISA" | "${svyname}"=="PISA2015" | "${svyname}"=="TALISTCH" | "${svyname}"=="IELS"  | "${svyname}"=="STAFF_TALISEC" | "${svyname}"=="TALISEC_STAFF" | "${svyname}"=="SSES2023"  | "${svyname}"=="SSES" {	
 		if "`binarytest'"!="" & "`isbinary'"=="1" & "`varlist'"!="" {
 			qui count  `if' & `varlist'==`min_value'
 			local nobs0 = r(N)
@@ -1102,6 +1105,17 @@ program define repest_parser, rclass
 			local rep_weight_name="rwgt"	
 			local variancefactor=1/2 
 			local NREP = 76
+			local groupflag_name="SchID"
+			local keepsvy "SchID"
+			}
+		else if "${svyname}"=="SSES2023" {
+			local NBpv=1
+			local final_weight_name="WT2023"
+			local rep_weight_name="rwgt"	
+			local variancefactor=1/20 
+			local NREP = 80
+			local groupflag_name="SchID"
+			local keepsvy "SchID
 			}
 		else if "${svyname}"=="ALL" | "${svyname}"=="IALS" {
 			local NBpv=10*(`pv_here'==1)+1*(`pv_here'==0)

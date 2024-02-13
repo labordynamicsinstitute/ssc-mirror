@@ -27,6 +27,7 @@ p vartyp module to set variable types for codebook2
 p vbkw module to perform Vector-Based Kernel Weighting
 p vc_pack module for the estimation of smooth varying coefficient models 
 p vce2way module to adjust a Stata command's standard errors for two-way clustering
+p vce_mcov module to compute the Leave-Cluster-Out-Crossfit (LCOC) variance estimates for user-chosen coefficients in a linear regression model.
 p vcemway module to adjust a Stata command's standard errors for multi-way clustering
 p vcf module to import VCF (Variant Caller Format) Files into Stata and format genotype data
 p vclose module to close viewer windows

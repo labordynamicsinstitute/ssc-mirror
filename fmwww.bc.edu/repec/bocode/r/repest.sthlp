@@ -72,7 +72,7 @@ reported and the imputation error is added to the variance estimator.
 {pstd}
 {it:svyname} is a shortcut for declaring survey settings. Use {it:svyname} to indicate the data 
 source. {it:svyname}  must be equal to one of the supported survey datasets: {bf:ALL}, {bf:IALS}, {bf:ICCS}, {bf:ICILS}, {bf:IELS}, {bf:PIAAC}, {bf:PIRLS}, {bf:PISA}, {bf:PISAOOS}, 
-{bf:SSES}, {bf:TALISSCH}, {bf:TALISTCH}, {bf:TALISEC_STAFF}, {bf:TALISEC_LEADER}, {bf:TIMSS} 
+{bf:SSES}, {bf:SSES2023}, {bf:TALISSCH}, {bf:TALISTCH}, {bf:TALISEC_STAFF}, {bf:TALISEC_LEADER}, {bf:TIMSS} 
 (see {help repest##svyremarks:remarks}, below, for the corresponding definitions and parameters). 
 In addition, {it:svyname} can be equal to {bf:SVY}: in this case, you must specify survey settings using option {bf:svyparms()}.
 
@@ -381,13 +381,20 @@ gen WGT = TOTWGT  	// note: use TOTWGT for student weights, SCHWGT for school we
 {p2col:Number of replications} 30 {p_end}
 {p2col:Number of plausible values} 10 {p_end}
 
-{p 10 10 15}{bf:SSES}: Survey of Social and Emotional Skills  {p_end}
+{p 10 10 15}{bf:SSES}: Survey of Social and Emotional Skills (Round 1) {p_end}
 {p2line}
 {p2col:Final weight} {bf:WT2019}{p_end}
 {p2col:Replicate weights} {bf:rwgt1-rwgt76}{p_end}
+{p2col:Variance method} Jackknife 1 {p_end}
+{p2col:Number of replications} 76{p_end}
+
+{p 10 10 15}{bf:SSES2023}: Survey of Social and Emotional Skills (Round 2)  {p_end}
+{p2line}
+{p2col:Final weight} {bf:WT2023}{p_end}
+{p2col:Replicate weights} {bf:rwgt1-rwgt80}{p_end}
 {p2col:Variance method} balanced repeated replication with Fay's adjustment {p_end}
 {p2col:Fay's parameter} 0.5{p_end}
-{p2col:Number of replications} 76{p_end}
+{p2col:Number of replications} 80{p_end}
 
 {p 10 10 15}{bf:TALISTCH}: Teaching and Learning International Survey (teacher weights){p_end}
 {p2line}
