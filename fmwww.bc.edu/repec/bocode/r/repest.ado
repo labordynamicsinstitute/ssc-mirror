@@ -1115,7 +1115,7 @@ program define repest_parser, rclass
 			local variancefactor=1/20 
 			local NREP = 80
 			local groupflag_name="SchID"
-			local keepsvy "SchID
+			local keepsvy "SchID"
 			}
 		else if "${svyname}"=="ALL" | "${svyname}"=="IALS" {
 			local NBpv=10*(`pv_here'==1)+1*(`pv_here'==0)
