@@ -20145,6 +20145,7 @@ fmwww.bc.edu/repec/bocode/t/stata.toc
 fmwww.bc.edu/repec/bocode/t/test_sandwich_ftests.mo
 fmwww.bc.edu/repec/bocode/t/transint.zip
 fmwww.bc.edu/repec/bocode/t/tabletutorial_11.html
+fmwww.bc.edu/repec/bocode/t/tiva2023_mataMYindicators.mata
 fmwww.bc.edu/repec/bocode/t/textfind.pkg
 fmwww.bc.edu/repec/bocode/t/txt.ado
 fmwww.bc.edu/repec/bocode/t/tlogit.ado
@@ -20413,6 +20414,7 @@ fmwww.bc.edu/repec/bocode/t/tabstatout.ado
 fmwww.bc.edu/repec/bocode/t/tofirsttreat.sthlp
 fmwww.bc.edu/repec/bocode/t/txttool.ado
 fmwww.bc.edu/repec/bocode/t/testout.sthlp
+fmwww.bc.edu/repec/bocode/t/tiva2023_getConditionFromLocal.ado
 fmwww.bc.edu/repec/bocode/t/tabhbar.pkg
 fmwww.bc.edu/repec/bocode/t/tvgc.ado
 fmwww.bc.edu/repec/bocode/t/tsplot.html
@@ -20799,6 +20801,7 @@ fmwww.bc.edu/repec/bocode/t/twopm.pkg
 fmwww.bc.edu/repec/bocode/t/tolerancei.ado
 fmwww.bc.edu/repec/bocode/t/tabletutorial_12.ihlp
 fmwww.bc.edu/repec/bocode/t/tabcount.html
+fmwww.bc.edu/repec/bocode/t/tiva2023_mataUpDownIndicators.mata
 fmwww.bc.edu/repec/bocode/t/tabletutorial_32.ihlp
 fmwww.bc.edu/repec/bocode/t/tex2col.sthlp
 fmwww.bc.edu/repec/bocode/t/ted.ado

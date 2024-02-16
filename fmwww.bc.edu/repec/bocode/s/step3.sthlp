@@ -14,7 +14,7 @@
 {title:Syntax}
 {p}
 
-{cmd:step3} {varlist}{cmd:,} {opt posterior(stub)} {opt id(varname)} [{opt distal} {opt uneq} {opt base(#)} {opt rrr} {opt diff} {opt iter(#)}]
+{cmd:step3} {varlist}{cmd:,} {opt posterior(stub)} {opt id(varname)} [{opt distal} {opt uneq} {opt base(#)} {opt rrr} {opt pval} {opt diff} {opt iter(#)}]
  
 {marker description}{...}
 {title:Description}
@@ -47,6 +47,8 @@ In {varlist} it is advisable to use the appropriate {it:i.} operator before a fa
 {phang}{opt base(#)} specifies the reference class that will be used as the base outcome; default is {opt base(1)}.
  
 {phang}{opt rrr} will report the results in relative risk ratios.
+
+{phang}{opt pval} will report the exact p-value instead of stars.
 
 {phang}{opt diff} specifies to use a different stepping algorithm in nonconcave regions.
 

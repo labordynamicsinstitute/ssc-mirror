@@ -1,13 +1,19 @@
-d 'LPPINV': module to solve an under-, over- and identified linear problem without an objective function with the Moore-Penrose pseudoinverse and singular value decomposition (SVD) 
+d 'LPPINV': module providing a non-iterated general implementation of the LPLS estimator for cOLS, TM, and custom cases
 d
-d  The algorithm solves "hybrid" least squares linear programming
-d (LS-LP) problems with the help of the Moore-Penrose inverse
-d (pseudoinverse), calculated using singular value decomposition
-d (SVD), with emphasis	on estimation of non-typical constrained
-d OLS (cOLS), Transaction Matrix (TM), and custom (user-defined)
-d cases. Eventual regression analysis and a Monte-Carlo-based
-d t-test of mean NRMSE is performed, the sample being drawn from a
-d uniform or a user-specified distribution (Mata function). 
+d      The program implements the LPLS (linear programming through
+d least squares) estimator with the help of the Moore-Penrose	
+d inverse (pseudoinverse), calculated using singular value
+d decomposition (SVD), with emphasis on the estimation of OLS	
+d constrained in values (cOLS), Transaction Matrix (TM), and custom
+d (user-defined) cases. The pseudoinverse offers a    unique
+d minimum-norm least-squares solution, which is the best linear
+d unbiased estimator (BLUE); see Albert (1972,	  Chapter VI).
+d (Over)determined problems are accompanied by regression analysis,
+d which is feasible in their case. For such    and especially all
+d remaining cases, a Monte Carlo-based t-test of mean NRMSE
+d (normalized by the standard deviation of    the RHS) is
+d performed, the sample being drawn from a uniform or user-provided
+d distribution (via a Mata function). 
 d
 d KW: linear programming
 d KW: least squares
@@ -16,7 +22,7 @@ d KW: singular value decomposition
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20221005
+d Distribution-Date: 20240215
 d
 d Author: Ilya Bolotov, Prague University of Economics and Business
 d Support: email ilya.bolotov@@vse.cz

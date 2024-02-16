@@ -1,4 +1,4 @@
-*! version 1.1.4  10feb2024  Ben Jann
+*! version 1.1.9  15feb2024  Ben Jann
 
 program violinplot
     version 15
@@ -217,7 +217,7 @@ program violinplot
     }
     else {
         if "`line'"!="" local key "line"
-        gettoken key : plotlist
+        else gettoken key : plotlist
     }
     // - further option
     if "`n'"!="" local nopt n(`n')
@@ -488,11 +488,15 @@ program violinplot
     }
     
     // prepare tempvars
-    local ids  byid overid splitid grpid varid
+    local ids  tag byid overid splitid grpid varid
     local vres pos avg med blo bup wlo wup dup dlo at
-    if "`rag'"!="" local vres `vres' xrag
-    tempvar tag `ids' `vres'
-    qui gen byte `tag' = . // tag start of new result
+    if "`rag'"!="" {
+        local ids `ids' rtag
+        local vres `vres' xrag
+        if "`weight'"=="" & "`rag_unique'"=="" local rag_noweight noweight
+        if "`rag_noweight'"=="" local vres `vres' wrag wvar
+    }
+    tempvar `ids' `vres'
     foreach v of local ids {
         qui gen byte ``v'' = .
     }
@@ -502,6 +506,11 @@ program violinplot
     tempvar TOUSE
     if "`by'`over'`split'"!="" {
         qui gen byte `TOUSE' = .
+    }
+    if "`wvar'"!="" {
+        if "`weight'"!="" qui replace `wvar' `exp'
+        else              qui replace `wvar' = 1
+        local ragwgt [aw=`wrag']
     }
     
     // fill in byid for existing observations so that addplot() will
@@ -568,16 +577,19 @@ program violinplot
                             mata: st_store((`a',`b'-1), "`at'", ///
                                 st_matrix("e(at)")')
                         }
+                        // tag start and end of density estimate
+                        qui replace `tag' = 1 in `a' // first row
+                        qui replace `tag' = 2 in `b' // last row (missing)
                         // stats
                         Fit_stats `"`stats'"' "`xvar'" `"`wgt'"' `"`iff'"' `a'/*
                             */ `avg' `med' `blo' `bup' `wlo' `wup' `"`qdef'"'
                         // rag: copy data
                         if "`rag'"!="" {
+                            qui replace `rtag' = 1 in `a' // first row
                             mata: _copyrag(`a', `b', "`rag_outsides'", /*
-                                */ "`rag_unique'"!="")
+                                */ "`rag_unique'"!="",  "`wvar'")
                         }
                         // ids
-                        qui replace `tag'     = 1   in `a'
                         qui replace `varid'   = `i' in `a'/`b'
                         qui replace `grpid'   = `g' in `a'/`b'
                         qui replace `splitid' = `s' in `a'/`b'
@@ -596,7 +608,7 @@ program violinplot
     // sort results
     if "`over_sort'"!="" {
         tempname sorttag
-        qui gen byte `sorttag' = `tag'<. & `varid'==`over_sort2'/*
+        qui gen byte `sorttag' = `tag'==1 & `varid'==`over_sort2'/*
             */ & `grpid'==1 & `byid'==1 in `=`r0'+1'/`r1'
         mata: _over_sort((`r0'+1, `r1'))
     }
@@ -697,7 +709,8 @@ program violinplot
     }
     else if "`dstype'"=="subgraph" {
         forv j = 1/`k_`By'' {
-            _dscale `dup' `dlo' `pos' if ``By'id'==`j' `in', dscale(`dscale')
+            _dscale `dup' `dlo' `pos' if ``By'id'==`j' `in',/*
+                */ dscale(`dscale')
         }
     }
     else {
@@ -757,31 +770,24 @@ program violinplot
                 qui gen double `RPOS' = `pos' + `rag_offset'*cond(`splitid'==1,-1,1) `in'
             }
         }
-        else if "`rag_spread'"!="" {
+        else if "`rag_spread'`rag_stack'"!="" {
             tempname RPOS
             qui gen double `RPOS' = `pos' `in'
         }
         else local RPOS `pos'
-        if "`rag_spread'"!="" {
-            tempvar drag
-            qui gen double `drag' = .
-            mata: _ipolate_PDF_rag(`r0'+1, `r1', `rag_spread_d')
-            if "`rag_left'`rag_right'"!="" {
-                if "`rag_left'"!="" {
-                    if "`vertical'"!="" local dir -1
-                    else                local dir  1
-                }
-                else {
-                    if "`vertical'"!="" local dir  1
-                    else                local dir -1
-                }
-                qui replace `RPOS' = `RPOS' +/*
-                    */ abs(rbeta(`rag_spread', `rag_spread')-.5)*`drag'/*
-                    */ * cond(`splitid'==1,`dir',0-`dir') `in'
+        if "`rag_spread'`rag_stack'"!="" {
+            local rag_dir = "`rag_left'`rag_right'"!=""
+            if `rag_dir' {
+                if      "`rag_left'"!="" & "`vertical'"!=""  local rag_dir -1
+                else if "`rag_right'"!="" & "`vertical'"=="" local rag_dir -1
+            }
+            if "`rag_spread'"!="" {
+                mata: _rag_spread(`r0'+1, `r1', `rag_spread', `rag_spread2',/*
+                    */ `rag_dir')
             }
             else {
-                qui replace `RPOS' = `RPOS' +/*
-                    */ (rbeta(`rag_spread', `rag_spread')-.5)*`drag' `in'
+                mata: _rag_stack(`r0'+1, `r1', `rag_stack', `rag_stack2',/*
+                    */ `rag_dir')
             }
         }
     }
@@ -843,7 +849,6 @@ program violinplot
             local preserve
             tempvar dupl
             qui expand 2 if `touse'==1, generate(`dupl')
-            fre `dupl'
             qui replace `byid' = `k_by' if `dupl'==1
         }
     }
@@ -1178,7 +1183,7 @@ program violinplot
             local popts `axes' pstyle(p`p') `p_`i'' `msopts' `colr'/*
                 */ `rag2' `p_`i'rag'
             local prag `prag'/*
-                */ (scatter `vlist' if ``PID'id'==`i', `popts')
+                */ (scatter `vlist' `ragwgt' if ``PID'id'==`i', `popts')
         }
     }
     
@@ -1506,31 +1511,64 @@ program _parse_count_stats
 end
 
 program _parse_rag
-    syntax [, OFFset(numlist) Unique/*
-        */ SPread SPread2(numlist max=2 missingokay) Left Right/*
-        */  BOUTsides OUTsides * ]
-    gettoken s spread2 : spread2
-    gettoken d         : spread2
-    if "`s'"!="" {
-        if `s'>=. local s 1
-        capt n numlist "`s'", range(>=.001 <=100) 
-        if _rc==1 exit _rc
-        if _rc {
-            di as err "error in spread()"
-            exit _rc
+    syntax [, OFFset(numlist) Unique noWeight/*
+        */ SPread SPread2(numlist max=2 missingokay)/*
+        */ STack STack2(str)/*
+        */ Left Right/*
+        */ BOUTsides OUTsides * ]
+    // spread
+    if "`spread'`spread2'"!="" {
+        if `"`stack'`stack2'"'!="" {
+            di as err "rag(): spread() and stack() not both allowed"
+            exit 198
         }
-        local s `r(numlist)'
+        gettoken spread spread2 : spread2
+        gettoken spread2        : spread2
+        if "`spread'"!="" {
+            if `spread'>=. local spread 1
+            capt n numlist "`spread'", range(>=.001 <=100) 
+            if _rc==1 exit _rc
+            if _rc {
+                di as err "rag(): error in spread()"
+                exit _rc
+            }
+            local spread `r(numlist)'
+        }
+        else local spread 1
+        local spread = 100/`spread'
+        if "`spread2'"=="" local spread2 .
     }
-    else if "`spread'"!="" local s 1
-    if "`s'"!="" local s = 100/`s'
-    if "`d'"=="" local d .
-    if "`spread2'"!="" local spread2 = 100/`spread2'
+    else if `"`stack'`stack2'"'!="" {
+        if "`unique'"!="" {
+            di as err "rag(): stack() and unique not both allowed"
+            exit 198
+        }
+        local stack = substr(`"`stack2'"',1,1)=="*"
+        if `stack' local stack2 = strtrim(substr(`"`stack2'"',2,.))
+        if `"`stack2'"'!="" {
+            capt n numlist "`stack2'", max(1) missingok
+            if _rc==1 exit _rc
+            if _rc {
+                di as err "rag(): error in stack()"
+                exit _rc
+            }
+            local stack2 `r(numlist)'
+            if `stack2'>=. local stack 0
+            else           local ++stack
+        }
+        else local stack2 .
+        /* stack = 1: fixed value, stack = 2: factor; stack = 0: missing */
+    }
+    // spread
     if      "`boutsides'"!="" local outsides b
     else if "`outsides'"!=""  local outsides w
     c_local rag_offset   `offset'
     c_local rag_unique   `unique'
-    c_local rag_spread   `s'
-    c_local rag_spread_d `d'
+    c_local rag_noweight `weight'
+    c_local rag_spread   `spread'
+    c_local rag_spread2  `spread2'
+    c_local rag_stack    `stack'
+    c_local rag_stack2   `stack2'
     c_local rag_left     `left'
     c_local rag_right    `right'
     c_local rag_outsides `outsides'
@@ -1765,10 +1803,10 @@ program _dscale
     gettoken pos     : pos
     if `dscale'<. {
         su `dup' `if', meanonly
-        local scale "*`dscale'/r(max)"
+        qui replace `dup' = `dup' * (`dscale' / r(max)) `if' `in'
     }
-    qui replace `dup' = `dup'`scale' + `pos' `if' `in'
-    qui replace `dlo' = 2*`pos' - `dup'      `if' `in'
+    qui replace `dup' = `dup'   + `pos' `if' `in'
+    qui replace `dlo' = 2*`pos' - `dup' `if' `in'
 end
 
 program _get_split_offset
@@ -1783,23 +1821,42 @@ version 15
 mata:
 mata set matastrict on
 
-void _copyrag(real scalar a, real scalar b, string scalar out, real scalar uniq)
+void _copyrag(real scalar a, real scalar b, string scalar out,
+    real scalar uniq, string scalar wvar)
 {
-    real scalar    n
-    real colvector x
+    real scalar    n, wmean, wrag
+    real colvector x, w, p
     
     // get data
     x = st_data(., st_local("xvar"), st_local("tousej"))
-    x = select(x, x:<.)
-    if (uniq) x = mm_unique(x)
-    if (out!="") x = select(x,
-        x:<st_numscalar("r("+out+"lo)") :| x:>st_numscalar("r("+out+"up)"))
-    if (!length(x)) return // nothing to store
-    // store data
+    x = x[p = selectindex(x:<.)]
+    if (wvar!="") {
+        w = abs(st_data(., wvar, st_local("tousej"))[p])
+        wmean = mean(w)
+    }
+    if (uniq) {
+        if (wvar!="") _copyrag_unique(x, w)
+        else          x = mm_unique(x)
+    }
+    if (out!="") {
+        p = selectindex(x:<st_numscalar("r("+out+"lo)") :|
+                        x:>st_numscalar("r("+out+"up)"))
+        if (!length(p)) p = J(0,1,.)
+        x = x[p]
+        if (wvar!="") w = w[p]
+    }
     n = rows(x)
-    if ((a+n)>b) {
+    if (!n) return // nothing to store
+    // reorder data in case of weights (so that large dots will be at the back)
+    if (wvar!="") {
+        p = order((w,(1::n)), (-1,2)) // keep original order within ties
+        _collate(w, p)
+        _collate(x, p)
+    }
+    // store data
+    if ((a+n+1)>b) {
         // update range and add observations if necessary
-        b = a + n
+        b = a + n+1
         st_local("b", strofreal(b))
         if (b>st_nobs()) {
             stata(st_local("preserve"))
@@ -1808,7 +1865,39 @@ void _copyrag(real scalar a, real scalar b, string scalar out, real scalar uniq)
                 st_local("tousej"))
         }
     }
-    st_store((a, a + n - 1), st_local("xrag"), x)
+    st_store((a, a+n-1), st_local("xrag"), x)
+    _st_store(a+n+1, st_varindex(st_local("rtag")), 2) // tag last row
+    if (wvar!="") {
+        wrag = st_varindex(st_local("wrag"))
+        st_store((a, a+n-1), wrag, w)
+        /* including mean(w) and mean(w)*100 among the weights ensures that the
+           average weight corresponds to the default (unweighted) marker size
+           (unless the maximum weight is larger than 100 times the average);
+           inclusion of mean(w) is needed because options unique and
+           [b]outsides may lead to a situation in which all remaining weights
+           are larger than mean(w) */
+        _st_store(a+n, wrag, wmean)
+        _st_store(a+n+1, wrag, wmean*100) 
+    }
+}
+
+void _copyrag_unique(real colvector x, real colvector w)
+{
+    real scalar    i, a, b
+    real colvector p
+    
+    p = order(x,1)
+    _collate(x, p)
+    _collate(w, p)
+    p = selectindex(_mm_unique_tag(x))
+    a = rows(x) + 1
+    for (i = rows(p);i;i--) {
+        b = a - 1
+        a = p[i]
+        w[a] = sum(w[|a \ b|])
+    }
+    x = x[p]
+    w = w[p]
 }
 
 void _over_sort(real rowvector ab)
@@ -1835,29 +1924,112 @@ void _over_sort(real rowvector ab)
     st_local("overlbls", invtokens(lbls'))
 }
 
-void _ipolate_PDF_rag(real scalar a0, real scalar b0, real scalar d)
-{
-    real scalar    j, dlo, dup, at, xrag, drag, a, b
+void _rag_stack(real scalar a0, real scalar b0, real scalar typ,
+    real scalar val, real scalar dir)
+{   // typ=1: val contains fixed step size
+    // typ=2: val contains factor; scale automatic step size by val
+    // typ=0: val is missing; use automatic step size
+    real scalar    j, d, n, sgn
+    real scalar    xrag, rpos, spid
+    real colvector D, X
     real matrix    idx
     
-    dlo  = st_varindex(st_local("dlo"))
-    dup  = st_varindex(st_local("dup"))
-    at   = st_varindex(st_local("at"))
     xrag = st_varindex(st_local("xrag"))
-    drag = st_varindex(st_local("drag"))
-    idx  = _ipolate_PDF_index(a0, b0)
+    rpos = st_varindex(st_local("RPOS"))
+    spid = st_varindex(st_local("splitid"))
+    if (typ!=1) {
+        d = max(abs(st_data((a0,b0), st_local("dup")) - 
+                    st_data((a0,b0), st_local("dlo")))) / 2
+        n = 5
+    }
+    idx = _get_index(a0, b0, "rtag", 2)
+    D   = J(b0-a0+1,1,.)
     for (j=rows(idx);j;j--) {
-        a = idx[j,1]; b = idx[j,2]
-        if (d<.) { // fixed value specified by user
-            st_store((a,b), drag, J(b-a+1, 1, d))
-            continue
+        if (dir) sgn = (-1)^(_st_data(idx[j,1], spid)!=1) * dir
+        else     sgn = 0
+        st_view(X=., idx[j,], xrag)
+        D[|idx[j,]':+(1-a0)|] = _rag_stack_offset(X, sgn, n)
+    }
+    if (typ!=1) {
+        d = d / (n - 1) * .8
+        if (d>=.) d = 0
+        printf("{txt}(stacked rag: step size set to %g", d)
+        if (typ) {
+            d = d * val
+            printf(" * %g", val)
         }
-        st_store((a,b), drag,
-            editmissing(
-                mm_ipolate(st_data((a,b), at),
-                           st_data((a,b), dup)-st_data((a,b), dlo),
-                           st_data((a,b), xrag))
-            , 0))
+        printf(")\n")
+    }
+    else d = val
+    st_store((a0,b0), rpos, st_data((a0,b0), rpos) + D * d)
+}
+
+real _rag_stack_offset(real colvector X, real scalar sgn, real scalar nmax)
+{   // updates nmax
+    real scalar    j, n, a, b
+    real colvector L, d, D, p
+
+    // sort order
+    p = order((X,(1::rows(X))), (1,2))
+    // identify groups (X is sorted)
+    L = 0 \ selectindex(_mm_unique_tag(X[p], 1))
+    // generate offsets
+    j = rows(L)
+    D = J(L[j],1,.)
+    a = L[j--] + 1
+    while (j) {
+        b = a - 1
+        a = L[j--] + 1
+        n = b - a + 1
+        nmax = max((nmax, n))
+        if (sgn) {
+            // asymmetric stack
+            D[|a\b|] = (0::n-1) * sgn
+        }
+        else {
+            // symmetric stack: generate index that forms groups of two
+            // (and a group of 1 with index 0 if n is uneven) and make one of
+            // each group negative
+            d = floor(((0::n-1):+mod(n,2))/2) :+ !mod(n,2)
+            D[|a\b|] = d :* (-1):^mod(1::n,2)[order((d,uniform(n,1)),(1,2))]
+        }
+    }
+    // return offsets
+    return(D[invorder(p)])
+}
+
+void _rag_spread(real scalar a0, real scalar b0, real scalar s1, real scalar s2,
+    real scalar dir)
+{
+    real scalar    j, n, sgn
+    real scalar    xrag, spid, wrag, dlo, dup, at
+    real colvector D, d, X, a
+    real matrix    idx, pdf
+    
+    xrag = st_varindex(st_local("xrag"))
+    spid = st_varindex(st_local("splitid"))
+    if (st_local("wrag")!="") wrag = st_varindex(st_local("wrag"))
+    idx = _get_index(a0, b0, "rtag", 2)
+    if (s2>=.) {
+        pdf = _get_index(a0, b0, "tag", 1)
+        dlo  = st_varindex(st_local("dlo"))
+        dup  = st_varindex(st_local("dup"))
+        at   = st_varindex(st_local("at"))
+    }
+    st_view(D=., ., st_varindex(st_local("RPOS")))
+    for (j=rows(idx);j;j--) {
+        n = idx[j,2] - idx[j,1] + 1
+        if (dir) sgn = (-1)^(_st_data(idx[j,1], spid)!=1) * dir
+        if (wrag<. | s2>=.) st_view(X=., idx[j,], xrag)
+        if (wrag<.) a = rowmin((J(n,1,1e5),rowmax((J(n,1,1),
+            s1 :* (st_data(idx[j,], wrag) / _st_data(idx[j,2]+1, wrag))))))
+        else a = J(n, 1, s1)
+        if (s2<.) d = s2
+        else d = editmissing(mm_ipolate(st_data(pdf[j,], at),
+            st_data(pdf[j,], dup)-st_data(pdf[j,], dlo), X), 0)
+        if (dir) d = d :* (sgn * abs(rbeta(1,1,a,a):-.5))
+        else     d = d :* (          rbeta(1,1,a,a):-.5)
+        D[|idx[j,]'|] = D[|idx[j,]'|] + d
     }
 }
 
@@ -1887,7 +2059,7 @@ void _ipolate_PDF(real scalar a, real scalar b)
             st_local("avg_dlo"), st_local("avg_dup")))
     }
     // get index of results
-    idx = _ipolate_PDF_index(a, b)
+    idx = _get_index(a, b, "tag", 1)
     // compute
     for (j=rows(idx);j;j--) {
         if (idx[j,2]<=idx[j,1]) continue // must have at least two obs
@@ -1895,19 +2067,6 @@ void _ipolate_PDF(real scalar a, real scalar b)
         if (length(med)) _ipolate_PDF_line(idx[j,1], idx[j,2], d, med)
         if (length(avg)) _ipolate_PDF_line(idx[j,1], idx[j,2], d, avg)
     }
-}
-
-real matrix _ipolate_PDF_index(real scalar a, real scalar b)
-{
-    real scalar    r
-    real colvector idx
-    
-    // start of result
-    idx = (a-1) :+ selectindex(st_data((a,b), st_local("tag")):<.)
-    // end of result (assuming one empty row between results)
-    r = rows(idx)
-    if (r>1) return((idx, (idx[|2 \ r|]:-2 \ b-1)))
-    return((idx, b-1)) 
 }
 
 void _ipolate_PDF_box(real scalar a, real scalar b, real rowvector did,
@@ -1949,6 +2108,16 @@ void _ipolate_PDF_line(real scalar a, real scalar b, real rowvector did,
         _st_data(a, lid[1]))
     _st_store(a, lid[3], d)
     _st_store(a, lid[2], 2*_st_data(a, did[3]) - d)
+}
+
+real matrix _get_index(real scalar a, real scalar b, string scalar tag,
+    real scalar offset) // returns indices of start and end of each result
+{
+    real scalar t
+    
+    t = st_varindex(st_local(tag))
+    return((a-1) :+ (selectindex(st_data((a,b), t):==1),
+                     selectindex(st_data((a,b), t):==2) :- offset))
 }
 
 void _lswap(string scalar a, string scalar b)

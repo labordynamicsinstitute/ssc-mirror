@@ -1,4 +1,6 @@
-*! v1.42 FRA. flexible PLOT
+*! v1.5 FRA. Fix Bug with Continuous treatment
+*!           adds PTA test   
+* v1.42 FRA. flexible PLOT
 * v1.41 FRA. Changes | fpr &
 * v1.4 FRA. Allows for treatment to be continuous. With ASIS
 * v1.37 FRA. Adds Over for Simple aggregations: Will allow for other aggregations at will
@@ -229,12 +231,12 @@ program define jwdid_calendar, rclass
 end
 
 program define jwdid_event, rclass
-	syntax, [* post estore(str) esave(str) replace  other(varname) PLOT PLOT1(string asis)]
+	syntax, [post estore(str) esave(str) replace  other(varname) PLOT PLOT1(string asis) asis * pretrend ]
 		capture drop __event__
 		tempvar aux
 		qui:bysort `e(gvar)' `e(ivar)':egen `aux'=min(`e(tvar)') if e(sample)
 		qui:sum `e(tvar)' if e(sample), meanonly
-		qui:gen __event__ =  `e(tvar)'-`e(gvar)' if `e(gvar)'!=0 & e(sample) 
+		qui:gen __event__ = `e(tvar)'-`e(gvar)' if `e(gvar)'!=0 & e(sample) 
 		
 		capture:est store `lastreg'	
 		tempname lastreg
@@ -259,23 +261,24 @@ program define jwdid_event, rclass
  
 		}
 		else if "`e(type)'"=="never" {
+            local nvr = "on"
 			capture drop __event2__
 			qui:sum __event__, meanonly
 			local rmin = r(min)
-			qui:replace __event__=__event__-r(min)
+			qui:replace __event__=1+__event__-r(min)
 			qui:levelsof __event__, local(lv)
 			foreach i of local lv {
-				label define __event__ `i' "`=`i'+`rmin''", modify
+				label define __event__ `i' "`=-1+`i'+`rmin''", modify
 			}
 			label values __event__ __event__
 
 			if "`asis'"=="" {
-				qui:margins , subpop(if __tr__==1 `otherif') at(__tr__=(0 1)) ///
+				qui:margins , subpop(if __tr__!=0 `otherif') at(__tr__=(0 1)) ///
 					  over(__event__) noestimcheck contrast(atcontrast(r)) ///
 					  `options'  post
 			}
 			else {
-				qui:margins  ,  subpop(if __tr__==1 `otherif') at(__tr__=0) at((asobserved) __tr__) ///
+				qui:margins  ,  subpop(if __tr__!=0 `otherif') at(__tr__=0) at((asobserved) __tr__) ///
 						over(__event__) noestimcheck contrast(atcontrast(r)) ///
 					  `options'  post
 			}
@@ -301,6 +304,16 @@ program define jwdid_event, rclass
 
 		ereturn display
 		
+        *** PTA
+        
+        if "`pretrend'"!="" & "`nvr'"=="on" {
+            qui:levelsof __event__, local(lv)
+			foreach i of local lv {
+				if `=-1+`i'+`rmin''<-1 local totest `totest' `i'.__event__ 
+			}
+            test `totest'
+        }
+        
 		if "`estore'"!="" est store `estore'
 		if "`esave'"!="" est save `estore', `replace'
 		if "`post'"=="" qui:est restore `lastreg'

@@ -18,7 +18,7 @@ d KW: difference-in-differences
 d
 d Requires: Stata version 16 and hdfe, reghdfe, ftools from SSC (q.v.)
 d
-d Distribution-Date: 20231117
+d Distribution-Date: 20240215
 d
 d Author: Fernando Rios-Avila, Levy Economics Institute of Bard College
 d Support: email friosavi@@levy.org

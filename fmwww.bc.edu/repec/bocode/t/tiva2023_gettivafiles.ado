@@ -63,7 +63,8 @@ program define tiva2023_getTivaFiles, nclass
 
 			Z = Z \ st_data(1::hN*K, 2..hN*K+1)
 			Y = Y \ st_data(1::hN*K, hN*K+2.. hN*K+N*F+1)
-			v = v \ colsum(st_data(hN * K + 2:: hN * K + 3, 2..hN*K+1))'
+			v = v \ colsum(st_data(hN * K + 1:: hN * K + 2, 2..hN*K+1))'
+			// v = v \ colsum(st_data(hN * K + 2:: hN * K + 3, 2..hN*K+1))'
 			x = x \ st_data(hN*K+3, 2..hN*K+1)'
 			}
 

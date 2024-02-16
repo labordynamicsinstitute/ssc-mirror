@@ -1,5 +1,5 @@
 {smcl}
-{* 10feb2024}{...}
+{* 14feb2024}{...}
 {hi:help violinplot}{...}
 {right:{browse "https://github.com/benjann/violinplot/"}}
 {hline}
@@ -618,8 +618,20 @@
     (upper) limit of the box. {cmd:boutsides} implies {cmd:outsides}.
 
 {phang2}
-    {opt u:nique} omits markers for repeated data points. Use this option to
-    reduce graph size in larger datasets.
+    {opt u:nique} omits markers for repeated data points and, unless
+    {cmd:noweight} is specified, scales marker sizes in proportion to the
+    number (or sum of weights) of represented observations.
+
+{phang2}
+    {opt now:eight} uses the same size for all markers even if weights have been
+    applied or if points have been collapsed by {cmd:unique}. By default, if
+    weights are applied or if {cmd:unique} is specified, marker sizes (in terms
+    of covered area) are scaled in proportion to the represented data mass. The scaling
+    will be such that the average weight (within
+    observations used to compute a specific result) corresponds to the default
+    (unweighted) marker size (unless the largest weight exceeds 100 times the
+    average, in which case the average-weight marker size will decrease). Specify
+    {opt noweight} if you want to use the same size for each marker.
 
 {phang2}
     {opth off:set(numlist)} shifts the position of the rag(s) by the specified
@@ -635,7 +647,8 @@
     to the density estimate at that level (such that the rag mimics the shape of the
     violin). Argument {it:#1} in [0.001, 100] sets the degree of
     spreading; {it:#1}=100 (maximum spreading) is equivalent to using
-    a uniform error distribution; the default is {it:#1}=1 (moderate spreading).
+    a uniform error distribution; the default is {it:#1}=1
+    (moderate spreading).
 
 {pmore2}
     Optional argument {it:#2} sets the width of the spread to a fixed value
@@ -648,6 +661,14 @@
     100 in this example so that the markers are spread out uniformly across
     the width). If {cmd:dscale(.)} is specified, argument {it:#2} is in
     absolute units (or half-units).
+
+{phang2}
+    {opt st:ack}[{cmd:(}[{cmd:*}]{it:#}{cmd:)}] prints stacks of markers at the unique
+    values of the data. Use this option to create raindrop plots. Argument
+    {it:#} sets the step size between markers within stacks. A suitable value for the step
+    size is determined from the data if {it:#} is omitted or set to missing. Type
+    {cmd:*}{it:#} to multiply the default step size by {it:#}. Only
+    one of {cmd:stack()} and {cmd:spread()} is allowed.
 
 {phang2}
     {opt l:eft} spreads the rag in direction of the left half of the violin. The

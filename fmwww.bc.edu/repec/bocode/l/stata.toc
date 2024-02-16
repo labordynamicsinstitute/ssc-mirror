@@ -206,7 +206,7 @@ p lowyseattlea module for tables, statistics, data management, output
 p lowyseattleb module for creating, transforming, labeling, variables
 p lpdensity module to perform Local Polynomial Density Estimation and Inference
 p lpdid module implementing Local Projections Difference-in-Differences (LP-DiD) estimator
-p lppinv module to solve an under-, over- and identified linear problem without an objective function with the Moore-Penrose pseudoinverse and singular value decomposition (SVD) 
+p lppinv module providing a non-iterated general implementation of the LPLS estimator for cOLS, TM, and custom cases
 p lprplot module to produce logistic regression partial residual plots
 p lrchg module to calculate change in coefficients between logistic models 
 p lrdrop1 module to calculate likelihood-ratio test after dropping one term

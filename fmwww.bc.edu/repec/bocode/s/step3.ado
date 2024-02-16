@@ -1,5 +1,5 @@
 * Bias-Adjusted 3Step Latent Class Analysis
-* v1.2 – 21oct2023
+* v1.3 – 15feb2024
 * Written by Giovanbattista Califano
 * Dept. Agricultural Sciences – Economics and Policy Group
 * University of Naples Federico II
@@ -8,7 +8,7 @@
 cap program drop step3
 program step3
 version 15.1
-syntax varlist(numeric fv), posterior(string) id(string) [base(integer 1) rrr uneq distal diff iter(integer 20)]
+syntax [varlist(numeric fv default=none)] [if] [in], posterior(string) id(string) [base(integer 1) rrr uneq distal diff iter(integer 20) pval]
 
 local fvops = "`s(fvops)'"
 
@@ -43,12 +43,20 @@ local unequal = "lcinvariant(none)"
 }
 
 local oddsr = ""
-local active = "legend: (multinomial) log-odds"
+local active = "in (multinomial) log-odds"
 
 if "`rrr'" !="" {
     local oddsr = "eform"
-    local active "legend: odds/relative risk ratios"
+    local active "in odds/relative risk ratios"
 }
+
+if "`pval'" !="" {
+    local pval = "p(%9.3f)"
+}
+if "`pval'" == "" {
+    local pval = "star"
+}
+
 
 cap qui drop prob_w_*
 cap qui drop prob_x_*
@@ -57,6 +65,7 @@ cap qui drop L_CLASS
 cap qui drop CPP_*
 cap qui drop ___c*
 cap qui drop modal_CLASS
+cap qui drop step3_std_*
 cap qui ren _merge MeRgE
 
 tempvar max obs1 obs2 class
@@ -131,10 +140,6 @@ forvalues x=1/`k' {
    }
 }
 
-***************
-*** CODE 1- ***
-***************
-
 local constraints = ""
   forvalues i=1/`k' {
   forvalues j=1/`k'  {
@@ -148,17 +153,19 @@ local constraints = ""
         *** CODE 11 ***
 
 if `code'==11 {
-    gsem `constraints' (class <- `varlist'), lclass(class `k', base(`base')) nocapslatent nocnsr notable `diff' vce(robust) emopts(iterate(`iter')) startvalues(classid L_CLASS) `unequal'
+    gsem `constraints' (class <- `varlist') `if' `in', lclass(class `k', base(`base')) nocapslatent nocnsr notable `diff' vce(cluster `id') emopts(iterate(`iter')) startvalues(classid L_CLASS) `unequal'
+	est store step3
     qui predict CPP_2_*, classposteriorpr
 
-    est tab, d(i.class) star(0.10 0.05 0.01) b(%9.3f) title("Bias-Adjusted 3Step ML Results: `varlist' -> Classes") noomitted `oddsr' noempty
-    di as text "`active'"
+    est tab, d(i.class) b(%9.3f) `pval'  title("Bias-Adjusted 3Step ML Results `active': `varlist' -> Classes") noomitted `oddsr' noempty
+
 }
 
         *** CODE 12 ***
 
 else if `code'==12 { 
-gsem `constraints' (`varlist' <-), lclass(class `k', base(`base')) nocapslatent nocnsr notable `diff' vce(robust) emopts(iterate(`iter')) `unequal'
+gsem `constraints' (`varlist' <-) `if' `in', lclass(class `k', base(`base')) nocapslatent nocnsr notable `diff' vce(cluster `id') emopts(iterate(`iter')) `unequal'
+est store step3
 qui predict CPP_2_*, classposteriorpr
 
 if "`fvops'" != "true" {
@@ -213,8 +220,7 @@ mat list PWCp, format(%10.3f) noheader
     local estab "`estab'`tab_`l''"
 }
 
-est tab, k(`estab') b(%9.3f) se(%9.3f) title("Bias-Adjusted 3Step ML Results: Classes -> `varlist'") noempty noomitted `oddsr'
-di as text "`active'"
+est tab, k(`estab') b(%9.3f) `pval' title("Bias-Adjusted 3Step ML Results `active': Classes -> `varlist'") noempty noomitted `oddsr'
 
 foreach l of local levels {
     local wald_`l' ""
@@ -236,6 +242,7 @@ if r(df) > 0 {
 }
 }
 
+
                 *** CCTEST ***
 qui gen `obs1' = _n
 qui reshape long CPP_1_ CPP_2_, i(`obs1') j(___c2)
@@ -249,17 +256,17 @@ qui reshape wide CPP_, i(`obs2') j(___c1)
 drop `obs2'
 qui reshape wide CPP_1 CPP_2, i(`obs1') j(___c2)
 
-if `pvalue' < 0.1 {
+if `pvalue' < 0.05 {
     di ""
     di as error "The original composition of latent classes has likely changed"
   }
-if `pvalue' < 0.1 & "`uneq'"=="" {
+if `pvalue' < 0.05 & "`uneq'"=="" {
     di as error "– try with option 'uneq'"
   }
 
                 *** Classic Proportional with sandwich ***
 
-if `pvalue' < 0.1 & "`uneq'"!="" {
+if `pvalue' < 0.05 & "`uneq'"!="" {
     di as text "– estimating with classic proportional assignment..."
     sleep 3000
     qui reshape long CPP_1, i(`obs1') j(modal_CLASS)
@@ -267,8 +274,7 @@ if `pvalue' < 0.1 & "`uneq'"!="" {
     if "`distal'" == "" {
         qui mlogit modal_CLASS `varlist' [iw=CPP_1], vce(cluster `id') b(`base')
         di ""
-        est tab, star(0.10 0.05 0.01) b(%9.3f) title("3Step Results: `varlist' -> Classes") noomitted `oddsr' noempty
-        di as text "`active'"
+        est tab, star(0.10 0.05 0.01) b(%9.3f) title("3Step Results `active': `varlist' -> Classes") noomitted `oddsr' noempty
         di as text "Note: Results from classical proportional assignment; variances estimated using the sandwich estimator for clustered and weighted observations"
     } 
 
@@ -293,16 +299,16 @@ if `pvalue' < 0.1 & "`uneq'"!="" {
     }
 qui reshape wide    
 }
-     
 
+qui est restore step3
 
 cap qui drop prob_w_*
 cap qui drop prob_x_*
 cap qui drop temp_*
-cap qui drop L_CLASS
 cap qui drop CPP_*
 cap qui drop ___c*
 cap qui drop modal_CLASS
+cap qui drop step3_std_*
 cap qui ren MeRgE _merge
 
 

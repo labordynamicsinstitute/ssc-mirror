@@ -1,4 +1,7 @@
-*! 1.0.0 Ariel Linden 23jan2024 // added exact stats for smr (cross-sectional)
+*! 1.3.0 Ariel Linden 12feb2024 // replaced 'bonferroni' option with 'madjust' which adjusts using both bonferroni and FDR
+								// provided for an additional pval (total of three available now)
+*! 1.2.0 Ariel Linden 30jan2024 // added Bonferroni adjustment option
+*! 1.1.0 Ariel Linden 23jan2024 // added exact stats for smr (cross-sectional)
 *! 1.0.0 Ariel Linden 21dec2023
 
 capture program drop funnelinst
@@ -18,8 +21,9 @@ version 11.0
 				ARCsintrans					/// arc sin transformation for prop/rate and SMR
 				SQRttrans					/// square root tranformation for SMR 
 				EXact						/// offers exact estimation (works currently for prop/rate for cross-sectional and smr for change data)
-				PVal(numlist max=2 sort)	/// p-values used as basis to generate CIs
-				BONferroni					/// adjust p-value to account for multiple testing
+				PVal(numlist max=3 sort)	/// p-values used as basis to generate CIs
+				M(numlist max=1)			/// not documented. Multiplies Y and CIs by a specified amount to scale the data.
+				MADJust						/// present Bonferroni and FDR adjusted CIs
 				YMIn(numlist max=1)			/// truncate values below specified min on Y axis
 				YMAx(numlist max=1)			/// truncate values above specified mqax on Y axis
 				SAVing(string asis)			/// save CIs to a new file 
@@ -87,15 +91,9 @@ version 11.0
 				noi di as err "logtrans and sqrttrans cannot be specified together"
 				exit 198
 			}	
-
-			// Bonferroni adjustment
-			if ("`bonferroni'" != "") { 
-				local pval = (0.05 / `nobs')
-				local pval `pval' 0.025
-			}
-
+					
 			// default p-values			
-			if ("`pval'" == "") & ("`bonferroni'" == "") {
+			if ("`pval'" == "") & ("`madjust'" == "") {
 				local pval 0.001 0.025
 			}
 			local pcnt : word count `pval'				
@@ -107,10 +105,7 @@ version 11.0
 			tempvar rho y varY z zwins rhopoints rhopoints2 varplot msum b1a1 b2a2  ///
 				y1 y2 se se1 se2 y_SE2 one_se2 w w2 n1 n2 pibar o1 e1 o2 e2 ///
 				meanSMR g qbinom qpois c x
-
-			forval i = 1/`pcnt' { 
-				tempvar ll`i' ul`i' 
-			} 
+	
 			
 			*********************
 			// Setting targets 
@@ -214,7 +209,7 @@ version 11.0
 			if inlist("`estype'", substr("mean", 1, max(4,`lcmd'))) {
 				if (`varcnt' == 2) {	
 					gen `rho' = 1 / `den'^2
-					gen `y' = `num' 				
+					gen `y' = `num'
 					if ("`target'" == "") | ("`range1'" != "") {						
 						sum `rho', meanonly	
 						local rhosum = r(sum)
@@ -249,6 +244,7 @@ version 11.0
 			*****************************************************************
 			// generate Y and varY depending on datatype and transformation
 			*****************************************************************
+			// prop and rate
 			if inlist("`estype'", substr("prop", 1, max(4,`lcmd')), substr("rate", 1, max(4,`lcmd'))) {
 				if (`varcnt' == 2) {	
 					gen `rho' = `den'
@@ -308,12 +304,13 @@ version 11.0
 				} // end change
 			} // end `y' and `varY' for prop/rate
 		
+			// smr
 			if inlist("`estype'", substr("smr", 1, max(3,`lcmd'))) {
 				if (`varcnt' == 2) {					
 					gen `rho' = `den'				
 					if "`logtrans'" != "" {
 						gen `c' = min(0.5, `den'/2)
-						gen `y' = log((`num' + `c')/`den')
+						gen `y' = log((`num' + `c')/`den') 
 						gen `varY' = `target' / `rho' 				
 					}
 					if "`sqrttrans'" != "" {
@@ -345,6 +342,7 @@ version 11.0
 				} // end change smr	
 			} // end smr					
 				
+			// mean
 			if inlist("`estype'", substr("mean", 1, max(4,`lcmd'))) {
 				// All other variables are created under "target" block above
 				gen `varY' = 1 / `rho'
@@ -395,10 +393,13 @@ version 11.0
 				local tau = sqrt((`q'-(`nobs'- 1)) / `denom')
 				local tau2 = `tau'^2
 			} // end add
+			else if ("`overdisp'" != "add") {				
+				local tau2 = 0 
+			}
 			
-			**********************************************
-			// generate CI variables (rhopoints, varplot)
-			**********************************************
+			**************************************************
+			// generate variables for CIs (rhopoints, varplot)
+			**************************************************
 			* check that Npoints are <= than current obs before setting obs larger
 			if `nobs' < `npoints' {
 				set obs `npoints'
@@ -466,29 +467,80 @@ version 11.0
 					gen `varplot' = `g' / `rhopoints'
 				} // end change
 			} // end smr
-			
+		
 			// mean
 			if inlist("`estype'", substr("mean", 1, max(4,`lcmd'))) {
 				gen `varplot' = 1 / `rhopoints'
 			} // end mean	
 
+			
 			****************************************************
-			// if overdisp is null or additive (random-effects)
-			****************************************************
-			if ("`overdisp'" != "add") {				
-				local tau2 = 0 
+			// generate naive CIs
+			****************************************************			
+gen z_test = `z'
+********
+	
+			// adjust for multiple tests
+			if ("`madjust'" != "") {
+				local pbon = (0.05 / `nobs')				
+				_qval , z(`z') nobs(`nobs')
+				local pfdr = r(qval)
+				local pval `pbon' `pfdr' 0.05				
 			}
+			
+			local pcnt : word count `pval'
+			forval i = 1/`pcnt' { 
+				tempvar ll`i' ul`i' 
+			} 			
+			
 			local i = 1
 			foreach p in `pval' {
-				gen `ll`i'' = `target' + invnormal(`p') * sqrt(`varplot' + `tau2')
-				gen `ul`i'' = `target' + invnormal(1-`p') * sqrt(`varplot' + `tau2')
+				gen `ll`i'' = `target' + invnormal(`p') * sqrt(`varplot')
+				gen `ul`i'' = `target' + invnormal(1-`p') * sqrt(`varplot')
 				local i = `i' + 1
-			}
+			}			
+			
+			********************************************
+			// if overdisp is additive (random-effects)
+			********************************************
+			if ("`overdisp'" == "add") {
+				** replace Z
+				replace `z' = (`y' - `target')/sqrt(`varY' + `tau2')
+
+				// adjust for multiple tests
+				if ("`madjust'" != "") {
+					local pbon = (0.05 / `nobs')				
+					_qval , z(`z') nobs(`nobs')
+					local pfdr = r(qval)
+					local pval `pbon' `pfdr' 0.05				
+				}
+				local pcnt : word count `pval'	
+			
+				local i = 1
+				foreach p in `pval' {
+					replace `ll`i'' = `target' + invnormal(`p') * sqrt(`varplot' + `tau2')
+					replace `ul`i'' = `target' + invnormal(1-`p') * sqrt(`varplot' + `tau2')
+					local i = `i' + 1
+				}
+			} // end "add"
 			
 			**********************************
 			// if target is a range
 			**********************************			
 			if ("`range1'" != "")  {
+				** replace Z
+				replace `z' = (`y' - `range2')/sqrt(`varY') if `y' > `range2'
+				replace `z' = (`y' - `range1')/sqrt(`varY') if `y' < `range2'				
+
+				// adjust for multiple tests			
+				if ("`madjust'" != "") {
+					local pbon = (0.05 / `nobs')				
+					_qval , z(`z') nobs(`nobs')
+					local pfdr = r(qval)
+					local pval `pbon' `pfdr' 0.05				
+				}
+				local pcnt : word count `pval'	
+		
 				local i = 1
 				foreach p in `pval' {
 					replace `ll`i'' = `range1' + invnormal(`p') * sqrt(`varplot')
@@ -507,6 +559,7 @@ version 11.0
 			// if overdisp is multiplicative
 			*********************************
 			if ("`overdisp'" == "mult") {
+				// z-scores are not updated here because CIs do not require new p-value 
 				forvalue i = 1/`pcnt' {
 					replace `ll`i'' = `target' + (`ll`i'' - `target') * sqrt(`phi')				
 					replace `ul`i'' = `target' + (`ul`i'' - `target') * sqrt(`phi')				
@@ -558,20 +611,20 @@ version 11.0
 					exit 198
 				}
 			}
-			
+		
 			// Exact for "prop" and "rate" for cross-sectional analysis
 			if inlist("`estype'", substr("prop", 1, max(4,`lcmd')), substr("rate", 1, max(4,`lcmd'))) {
 				if ("`exact'" != "") & (`varcnt' == 2) {
 					replace `rhopoints' = `rhopoints' + 1
-					levelsof `rhopoints', local(points)
 
 					// first loop is for LCLs
 					local i = 1
 					foreach p in `pval' {
-						gen `qbinom' = .	
-						foreach ii of local points {
-							mata : st_numscalar("k", invcdfbinomial(`ii', `p', `target'))
-							replace `qbinom' = scalar(k) if `rhopoints' == `ii'							
+						gen `qbinom' = .
+						forvalues ii = 1/`npoints' {
+							local r = `rhopoints'[`ii']
+							mata : st_numscalar("k", invcdfbinomial(`r', `p', `target'))
+							replace `qbinom' = scalar(k) in `ii'	
 						}
 						gen `c' = (`p' - binomial(`rhopoints', `qbinom'-1, `target')) / binomialp(`rhopoints', `qbinom', `target') 
 						gen `x' = `qbinom' - 0.5 + `c'
@@ -585,9 +638,10 @@ version 11.0
 					local i = 1
 					foreach p in `pval' {
 						gen `qbinom' = .	
-						foreach ii of local points {
-							mata : st_numscalar("k", invcdfbinomial(`ii', 1-`p', `target'))
-							replace `qbinom' = scalar(k) if `rhopoints' == `ii'							
+						forvalues ii = 1/`npoints' {
+							local r = `rhopoints'[`ii']
+							mata : st_numscalar("k", invcdfbinomial(`r', 1-`p', `target'))
+							replace `qbinom' = scalar(k) in `ii'	
 						}
 						gen `c' = ((1-`p') - binomial(`rhopoints', `qbinom'-1, `target')) / binomialp(`rhopoints', `qbinom', `target') 
 						gen `x' = `qbinom' - 0.5 + `c'
@@ -598,11 +652,10 @@ version 11.0
 					} // end pval					
 				} // end exact
 			} // end prop/rate
-			
+
 			// Exact for "smr" cross-sectional
 			if inlist("`estype'", substr("smr", 1, max(3,`lcmd'))) {
 				if ("`exact'" != "") & (`varcnt' == 2) {	
-					
 					// first loop is for LCLs
 					local i = 1
 					foreach p in `pval' {
@@ -612,7 +665,6 @@ version 11.0
 							mata : st_numscalar("k", invcdfpoisson(`r' * `target', `p'))
 							replace `qpois' = scalar(k) in `ii'
 						}
-						// Hayley's method
 						gen `c' = (`p' - poisson(`rhopoints' * `target', `qpois' - 1))  / poissonp(`rhopoints' * `target', `qpois') if `qpois' != 0 						
 						replace `c' = (`p' - 0)  / poissonp(`rhopoints' * `target', `qpois') if `qpois' == 0
 						gen `x' = `qpois' - 0.5 + `c'
@@ -630,7 +682,6 @@ version 11.0
 							mata : st_numscalar("k", invcdfpoisson(`r' * `target', 1 - `p'))
 							replace `qpois' = scalar(k) in `ii'
 						}
-						// Hayley's method
 						gen `c' = ((1 - `p') - poisson(`rhopoints' * `target', `qpois' - 1))  / poissonp(`rhopoints' * `target', `qpois') if `qpois' != 0 						
 						replace `c' = ((1 - `p') - 0)  / poissonp(`rhopoints' * `target', `qpois') if `qpois' == 0
 						gen `x' = `qpois' - 0.5 + `c'
@@ -685,9 +736,9 @@ version 11.0
 				} // end exact for change
 			} // end SMR 
 			
-			******************************
-			//			figure			//	 
-			******************************
+			*******************************
+			//*			figure			*//	 
+			*******************************
 			if ("`overdisp'" == "mult") {
 					local note1 "Overdispersion: `phipct'%"
 					local note2 "Winsorized: `winsor'%"
@@ -751,6 +802,17 @@ version 11.0
 				local target `range1' `range2'
 			} // end ranges
 			
+			// scale y according to specified 'm' (based on Jones et al 2008 for SMR)
+			if ("`m'" != "") {
+				replace `y' = `y' * `m'
+				local target = `m'
+			
+				forvalue i = 1/`pcnt' {
+					replace `ll`i'' = `ll`i'' * `m'
+					replace `ul`i'' = `ul`i'' * `m'	
+				}
+			} // end m
+			
 			// truncate values at specified min on Y axis
 			if ("`ymin'" !="") {
 				forvalue i = 1/`pcnt' {
@@ -758,6 +820,7 @@ version 11.0
 				}	
 				replace `y' = . if `y' < `ymin'
 			}
+			
 			// truncate values at specified max on Y axis
 			if ("`ymax'" !="") {
 				forvalue i = 1/`pcnt' {
@@ -766,7 +829,7 @@ version 11.0
 				replace `y' = . if `y' > `ymax'
 			}
 			
-			// default titles
+			// default X and Y titles
 			if inlist("`estype'", substr("smr", 1, max(3,`lcmd'))) {
 				local ytitle ytitle(SMR)
 				local xtitle xtitle(Expected)
@@ -790,31 +853,45 @@ version 11.0
 				local legci`i' = (1 - 2 * `p') * 100
 				local i = `i' + 1
 			}
-			if ("`bonferroni'" == "") { 
+
+			if ("`madjust'" == "") { 
 				local legci1: display %2.1f `legci1'
 				local legci2: display %2.1f `legci2'
+				local legci3: display %2.1f `legci3'
 			}
-			else {
+			else if ("`madjust'" != "") { 
 				local legci1: display %2.0f 95
 				local legci2: display %2.0f 95
-				local bon " (Bonf. Adj)"
+				local legci3: display %2.0f 95				
+				local adj1 " (Bonf. Adj)"
+				local adj2 " (FDR Adj)"
+				local adj3 " (One-sided)"				
 			}
-			
+	
 		} // end quietly
 	
-			// generate figure if 2 p-values are specified, else generate figure if 1 p-value is specified
+			// generate figure if 1, 2 or 3 p-values are specified
+			if (`pcnt' == 3) {
+				twoway(line `ll1' `ul1' `rhopoints', sort lcolor(blue blue)) ///
+					(line `ll2' `ul2' `rhopoints', sort lcolor(green green)) ///
+					(line `ll3' `ul3' `rhopoints', sort lcolor(orange orange)) ///					
+					(scatter `y' `rho', mcolor(red) msize(small) yline(`target', lpattern(shortdash) lcolor(black) lwidth(medthick)) ///
+					note("`note1'" "`note2'") legend(order(1 "`legci1'% CI `adj1'" 3 "`legci2'% CI `adj2'" 5 "`legci3'% CI `adj3'") pos(2) col(1) ring(0)) `ytitle' `xtitle' `figure')
+			}
+			
 			if (`pcnt' == 2) {
 				twoway(line `ll1' `ul1' `rhopoints', sort lcolor(blue blue)) ///
 					(line `ll2' `ul2' `rhopoints', sort lcolor(green green)) ///
-					(scatter `y' `rho', mcolor(red) yline(`target', lpattern(shortdash) lcolor(black) lwidth(medthick)) ///
-					note("`note1'" "`note2'") legend(order(1 "`legci1'% CI `bon'" 3 "`legci2'% CI") pos(2) col(1) ring(0)) `ytitle' `xtitle' `figure')
+					(scatter `y' `rho', mcolor(red) msize(small) yline(`target', lpattern(shortdash) lcolor(black) lwidth(medthick)) ///
+					note("`note1'" "`note2'") legend(order(1 "`legci1'% CI `adj'" 3 "`legci2'% CI") pos(2) col(1) ring(0)) `ytitle' `xtitle' `figure')
 			}		
-			else {
+			else if (`pcnt' == 1) {
 				twoway(line `ll1' `ul1' `rhopoints' , sort lcolor(blue blue)) ///
-					(scatter `y' `rho', mcolor(red) yline(`target', lpattern(shortdash) lcolor(black) lwidth(medthick)) ///
+					(scatter `y' `rho', mcolor(red) msize(small) yline(`target', lpattern(shortdash) lcolor(black) lwidth(medthick)) ///
 					note("`note1'" "`note2'") legend(order(1 "`legci1'% CI") pos(2) col(1) ring(0)) `ytitle' `xtitle' `figure')
 			}
 	
+
 			******************
 			// saved results
 			******************
@@ -833,7 +910,12 @@ version 11.0
 				return scalar tau = `rtau'
 			}
 			return scalar winsor = `winsor'
-			
+
+			if ("`madjust'" != "") {
+				return scalar pbon = `pbon'				
+				return scalar pfdr = `pfdr'
+			}
+
 			********************
 			// save CIs to file
 			********************
@@ -847,11 +929,57 @@ version 11.0
 				qui keep `ci' 
 				qui keep in 1 / `npoints'
 				save `saving'
-			} // end saving				
+			} // end saving		
 
-end			
+end
+*/
+capture program drop _qval
+program _qval, rclass
+version 11.0
+		
+	syntax [varlist(default=none)] [, z(varname) nobs(numlist max=1)]
+
+		tempvar pv rank fdr q_fdr qfdr
+		// compute p-values only for the positive Z's (upper CIs) 
+		gen double `pv' = 2 - 2 * normal(abs(`z')) 
+		sum `pv', meanonly
+		
+		// set qval to 0.05 (one-sided test) if no p-values are < 0.05
+		if (r(min) >= 0.05) {
+			return scalar qval = 0.05
+		}
+		else {
+			sort `pv'
+			gen `rank' = _n
+			gen `fdr' = (`rank' / `nobs') * 0.05
 	
-
+			// non-ordered Q-FDR
+			gen `q_fdr' = 1 * (`pv' * `nobs'/`rank') in 1/l
+			gen `qfdr' = `q_fdr'
+	
+			// get cumulative minimum
+			forvalues ii = 2 / `nobs' {
+				replace `qfdr' = min(`qfdr', `qfdr'[_n + 1]) in 1/l 		
+			}
+	
+			// find fdr at 1st q-value > 0.05
+			local i = 1
+			local ii = 2
+			while (`qfdr'[`i'] <= 0.05) & (`i' < `nobs' )  {
+				local qval = `fdr'[`ii']
+				noi di "`qval'"
+				local i = `i' + 1
+				local ii = `ii' + 1	
+			}
+			if "`qval'" == "" {
+				local qval = 0.05
+			}
+			return scalar qval = `qval'
+		} // end else
+		
+		
+end		
+	
 capture program drop _winsor
 program _winsor, rclass
 version 11.0
@@ -920,10 +1048,15 @@ end
 
 version 11.0
 
+
 mata :
 
-real scalar invcdfpoisson(real scalar m, real scalar x)
-
+real scalar invcdfpoisson(
+    
+    real scalar m,
+    real scalar x
+    
+    )
 {
     real scalar mu
     real scalar sigma
@@ -956,6 +1089,7 @@ real scalar invcdfpoisson(real scalar m, real scalar x)
     
     z = invnormal(x)
     k  = round(mu + sigma * (z + gamma*(z*z-1)/6) + 0.5)
+    k = max((0,k))
     
     if (poisson(m,k) >= x)
         while ( k & (poisson(m,k-1)>x) )
