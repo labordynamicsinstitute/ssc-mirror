@@ -1,3 +1,4 @@
+*! version 1.1, Chao Wang, 16/02/2024
 *! version 1.0, Chao Wang, 25/05/2022
 * calculates polytomous discrimination index (PDI)
 * see: Dover, DC, Islam, S, Westerhout, CM, Moore, LE, Kaul, P, Savu, A. Computing the polytomous discrimination index. Statistics in Medicine. 2021; 40: 3667– 3681. https://doi.org/10.1002/sim.8991
@@ -26,11 +27,11 @@ forvalues i = 1/`varnum' {
 
 local pdi=`pdi'/`varnum'
 
-di "The overall polytomous discrimination index (PDI) is: " as result %5.3f `pdi'
+di as text "The overall polytomous discrimination index (PDI) is: " as result %5.3f `pdi'
 return scalar pdi=`pdi'
 
 di ""
-di "PDI for each outcome:"
+di as text "PDI for each outcome:"
 local seps: di _dup(`varnum') "&"
 matlist `result', cspec(& %6s | %9.3g o2&) rspec(&-`seps')
 

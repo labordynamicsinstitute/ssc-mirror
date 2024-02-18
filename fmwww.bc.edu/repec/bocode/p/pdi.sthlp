@@ -43,5 +43,5 @@ The program may fail if there are too many distinct values of predicted probabil
 
 {title:Author}
 
-{pstd} Chao Wang, BEng MSc DIC PhD, Senior Lecturer at Kingston University, UK. Email: excelwang@gmail.com.
+{pstd} Chao Wang, BEng MSc DIC PhD, Associate Professor in Health & Social Care Statistics at Kingston University, UK. Email: excelwang@gmail.com.
 {p_end}

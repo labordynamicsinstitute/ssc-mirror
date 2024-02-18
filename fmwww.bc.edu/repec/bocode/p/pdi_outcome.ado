@@ -1,3 +1,4 @@
+*! version 1.2, Chao Wang, 16/02/2024
 *! version 1.1, Chao Wang, 24/05/2023
 *! version 1.0, Chao Wang, 25/05/2022
 * calculates contribution to polytomous discrimination index (PDI) for a specific level of outcome
@@ -61,10 +62,12 @@ frame `_temp' {
 		
 		qui ds weight term*
 		local formula=subinstr("`r(varlist)'", " ", "*",.)
-		gen contribution=`formula'
+		qui gen double contribution=`formula'
 			
 		qui sum contribution
-		local contribution=`contribution'+`r(mean)'*`r(N)'
+		capture local contribution=`contribution'+`r(mean)'*`r(N)'
+		* for binary outcome contribution=. (since c, weight, term etc=.) for the last i, so 'capture' is required as it would otherwise cause error
+		
 		drop c* weight term* contribution
 	}	
 }
@@ -80,6 +83,6 @@ forvalues i=1/`num_outcomes' {
 local pdi_outcome=`contribution'/`combinations'
 
 di ""
-di "The contribution to PDI for outcome level `outcome' is: " as result %5.3f `pdi_outcome'
+di as text "The contribution to PDI for outcome level `outcome' is: " as result %5.3f `pdi_outcome'
 return scalar pdi_outcome=`pdi_outcome'
 end
