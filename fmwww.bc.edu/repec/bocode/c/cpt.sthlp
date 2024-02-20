@@ -1,3 +1,4 @@
+
 {smcl}
 {* *! version 0.2 2024-02-16}{...}
 {vieweralsosee "" "--"}{...}
@@ -103,7 +104,7 @@ different data subsets.
 
 {pstd}Using a single cross-validation once is affected by random variations in 
 data splitting.
-We reduce bias and obtain more precise estimates by Repeating cross-validation 
+We reduce bias and obtain more precise estimates by repeating cross-validation 
 multiple times (e.g., 100 repeats of 10-fold cross-validation).
 In summary, ROC curves, cross-validation, and repetition are essential tools 
 for evaluating and understanding the performance of classification models. 

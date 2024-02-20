@@ -1,5 +1,6 @@
-*! version 0.2 2023-12-16 Niels Henrik Bruun
+*! version 0.21 2023-12-16 Niels Henrik Bruun
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
+*! 2024-02-19 v0.21 Minor bug fixed
 *! 2024-02-16 v0.2 Returns more detailed scalar information
 *! 2024-02-16 v0.2 Cross-validation and repetition added
 * 2023-12-16 v0.1   created
@@ -68,7 +69,9 @@ program define cpt, rclass
   label variable fpr_`lbl2' "False positive rate (1-specificity)"
   format `lbl2' fpr_`lbl2' tpr_`lbl2' %5.2f
 
-	local lbl3 `: var l `2''
+	if regexm("`2'", "\.(.+)$") local vn = regexs(1)
+	else local vn `2'
+	local lbl3 `: var l `vn''
 	if "`lbl3'" == "" local lbl3 `2'
 	qui logit `varlist'
   mata: st_numscalar("youden_v", pwlin(m, st_numscalar("youden_p")))
