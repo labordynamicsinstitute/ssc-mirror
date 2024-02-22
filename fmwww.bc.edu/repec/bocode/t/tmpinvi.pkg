@@ -1,0 +1,29 @@
+d 'TMPINVI': module providing an iterated (multistep) Transaction Matrix (TM)-specific implementation of the LPLS estimator
+d
+d  The program implements an iterated (multistep) Transaction
+d Matrix (TM)-specific LPLS estimator for linear programming with
+d the help of the Moore-Penrose inverse (pseudoinverse), calculated
+d using singular value decomposition (SVD). Estimation using 2x2 to
+d 50x50 contiguous submatrices, repeated with compensatory slack
+d variables until NRMSE is minimized in a given number of
+d iterations, is followed by an F-test from linear
+d regression/t-test of mean NRMSE from a pre-simulated distribution
+d (Monte-Carlo, 50,000 iterations with matrices consisting of
+d normal random variates). The result is adjusted for extreme
+d values to match the RHS via shares of estimated row/column sums
+d if the corresponding option is specified. 
+d
+d KW: linear programming
+d KW: least squares
+d KW: pseudoinverse
+d KW: singular value decomposition
+d
+d Requires: Stata version 16, moremata and tmpinv from SSC (q.v.)
+d
+d Distribution-Date: 20240221
+d
+d Author: Ilya Bolotov, Prague University of Economics and Business
+d Support: email ilya.bolotov@@vse.cz
+d
+f tmpinv.ado
+f tmpinv.sthlp

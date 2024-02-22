@@ -49,6 +49,7 @@ p histbox module to generate histogram with boxplot
 p historaj module to produce histogram with descriptive statistics
 p histplot module to produce histogram for frequency distribution
 p hkar module to download historical financial data for a list of Hong Kong public firms from s.askci.com
+p hkprlink module to obtain and download disclosure reports from 1999-04-01 onward on the official website of the Hong Kong Stock Exchange
 p hkstock module to download stock names and codes for Hong Kong listed companies
 p hktrade module to download historical stock transaction records for Hong Kong listed companies from Tencent.com
 p hkwarrant module to download warrant or warrant's information associated with the codes you entered from Eastmoney.com

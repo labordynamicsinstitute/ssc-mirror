@@ -1,4 +1,4 @@
-*! version 1.06 2024-01-25
+*! version 1.07 2024-02-21
 
 program stpm3_pred, sortpreserve
   version 16.1
@@ -978,7 +978,6 @@ program stpm3_pred, sortpreserve
     forvalues i = 1/`Natoptions' {
       tempvar attage`i' yeardiag`i' attyear`i'
 
-      set trace on
       if "`agediag`i'_val'" == "" {
         summ `agediag`i'' if `touse', meanonly
         local minage = min(floor(`r(min)'),`minage')
@@ -992,7 +991,7 @@ program stpm3_pred, sortpreserve
         summ `attage`i'' if `touse', meanonly
         local maxattage = min(max(ceil(`r(max)'),`maxattage'),`pmmaxage')        
       }
-      set trace off
+
       if "`datediag`i'_val'" == "" {
         qui gen `yeardiag`i'' = year(`datediag`i'_var') if `touse'
         summ `yeardiag`i'' if `touse', meanonly
@@ -1392,6 +1391,7 @@ end
 /////////////////////////////
 program define Parse_expsurv_options
   syntax [, AGEDiag(string)            ///
+			EXPRMSTNODES(integer 30)   ///
             EXPVars(string)            ///
             DATEDiag(string)           ///
             PMAGE(string)              ///
@@ -1404,6 +1404,7 @@ program define Parse_expsurv_options
             USING(string)              ///
             NENTER(real 30)            ///
             NATOPTIONS(integer 1)      ///
+			OLDEXPSURV                 ///
             *                          ///
          ]
   
@@ -1619,6 +1620,8 @@ program define Parse_expsurv_options
   c_local popmortfile     `popmortfile'  
   c_local N_at_options_pm `Natoptions_pm'
   c_local hasatoptions_pm `hasatoptions' 
+  c_local oldexpsurv      `oldexpsurv'
+  c_local exprmstnodes    `exprmstnodes'
 end
 
 program define stpm3_pred_varlist_add_bn, rclass

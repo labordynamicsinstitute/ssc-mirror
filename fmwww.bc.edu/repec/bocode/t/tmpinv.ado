@@ -1,9 +1,9 @@
-*! version 1.1.1  07oct2022  I I Bolotov
+*! version 1.1.2  20feb2024  I I Bolotov
 program define tmpinv, eclass byable(recall)
 	version 16.0
 	/*
-		The algorithm solves "hybrid" linear programming-least squares (LP-LS)  
-		Transaction Matrix (TM) problems with the help of the Moore-Penrose     
+		The program implements a non-iterated Transaction Matrix (TM)-specific  
+		LPLS estimator for linear programming with the help of the Moore-Penrose
 		inverse (pseudoinverse), calculated using singular value decomposition  
 		(SVD). Estimation using 2x2 to 50x50 contiguous submatrices, repeated   
 		with compensatory slack variables until NRMSE is minimized in a given   
@@ -21,12 +21,10 @@ program define tmpinv, eclass byable(recall)
 	syntax																	///
 	anything [if] [in] [,													///
 		Values(string) Slackvars(string)									///
-		ZERODiagonal 														///
-		TOLerance(real 0) Level(cilevel)									///
-		SUBMatrix(int 2) ITERate(int 1) ADJustment(string)					///
-		DISTribution TRACE													///
+		ZERODiagonal ADJustment(string)										///
+		SUBMatrix(int 2) TOLerance(real 0) Level(cilevel)					///
+		DISTribution TRACE ITERate(int 1)									///
 	]
-	di as err "`adj'"
 	// adjust and preprocess options                                            
 	if `"`values'"' != "" & "`zerodiagonal'" != "" { // either cOLS or TM option
 		di as err "options values and zerodiagonal are mutually incompatible"
@@ -91,7 +89,7 @@ mata set matastrict on
 `VV' tmpinv(`SS' rhs, `SS' rhs_v, `SS' lhs_s, |`RS' f_d, `RS' f_t, `RS' lim,    
             `RS' iter, `RS' adj, `RS' tol, `RS' lvl)               /* solver  */
 {
-	`RS' r, c, i, j, mc_N
+	`RS' r, c, i, j, mc_N, r2_c, r2_v
 	`RV' v, e
 	`RM' RHS, RHS_V, LHS_S, D, C, M, S, d, a, b, X, T
 	`TM' tmp, f
@@ -120,8 +118,8 @@ mata set matastrict on
 	adj   = adj  != . ? adj  : 0                     /* flag: adjustment      */
 	tol   = tol  != . ? tol  : .                     /* tolerance             */
 	lvl   = lvl  != . ? lvl  : c("level")            /* confidence level      */
-	mc_N  =                     50000                /* Monte-Carlo sample    */
-	/* check dimensions of RHS, V, S (the elements of `a`) and `b`            */
+	mc_N  =                    50000                 /* Monte-Carlo sample    */
+	/* check the dimensions of RHS, V, S (the elements of `a`), and `b`       */
 	if (! rows(rhs) | (rows(RHS)   & cols(RHS)   != 2)                         |
 	                  (rows(RHS_V) & cols(RHS_V) != 1)                         |
 	                  (rows(LHS_S) & cols(LHS_S) != 2)) {
@@ -168,7 +166,7 @@ mata set matastrict on
 			                     rows(RHS_V),1,.))[
 			                     colshape(colshape(1..length(X),cols(X))[|d|],1)
 			                     ],c-(tmp=rows(RHS) > lim ? 1 : 0)),
-			                     J(r-tmp,tmp,.)\J(tmp,c,.)), tmp)
+			                     J(r-tmp,tmp,.)\J(tmp,c,.)), 1)
 			/* M, C, S -> `a`                                                 */
 			C = I(r)#J(1,c,1)\J(1,r,1)#I(c)
 			S = (rows(LHS_S) ? LHS_S[1..r,1]\
@@ -184,7 +182,7 @@ mata set matastrict on
 			/*subM*/(rows(RHS_V) ? I(r*c)[|(1\rows(v)),(.\.)|] :
 			          J(0,r*c,.)) :
 			/*full*/(rows(RHS_V) ? I(r*c) : J(0,r*c,.))))
-			a = C,(rows(S) ? S      : J(rows(C),0,.))\
+			a = C,(rows(S) ? S            : J(rows(C),0,.))\
 			      (rows(M) ? M,J(rows(M),cols(S),0) : J(0,cols(C)+cols(S),.))
 			C = S = M = .                            /* clear memory          */
 			/*`b` -> (, 1)                                                    */
@@ -204,13 +202,13 @@ mata set matastrict on
 			b = select(b, (tmp)                             :== 0)
 			/* SVD-based solution, repeated until NRMSE is minimized          */
 			e = sqrt(cross(
-			    (tmp=(b-a*(S=svsolve(a,b,.,tol)))[1..r+c]),tmp) /
+			    (tmp=(b-a*(S=svsolve(a,b,.,tol)))[1..r+c]),tmp)                /
 			    rows(b) / variance(b))
 			if(lim > 2 & rows(RHS_V)) {              /* if `V` are defined    */
-				S = (v\J(cols(LHS_S),1,0)),S
+				S = (v\J(cols(LHS_S)!=0,1,0)),S
 				e = .\e
-				while((iter=iter == 1 ? 500 : iter) & e[rows(e)] >= e[2]       &
-				      rows(e) < iter + 2) {
+				while((iter=iter == 1 ? c("maxiter") : iter)                   &
+				      e[rows(e)] >= e[2] & rows(e) < iter + 2) {
 					e = e\sqrt(cross((tmp=(b-a*(S=S,svsolve(
 					        (a,(J(r+c,1,0)\select(
 					        (tmp=S[,max((1,cols(S)-1))]-S[,cols(S)])[1..r*c],
@@ -224,7 +222,7 @@ mata set matastrict on
 			    e[(tmp=selectindex(e :== min(e))[1])]
 			X[|d|] = colshape((S=S[,tmp])[1..r*c],c)[|(1\d[2,1]-d[1,1]+1),
 			                                        (1\d[2,2]-d[1,2]+1)|]
-			/* identified and over-identified TM: F-test from Stata's regress */
+			/* determined and overdetermined TM: F-test from Stata's regress  */
 			tmp = (tmp=select(D,(D[,1] :== r :& D[,2] :== c :& D[,3] :== f_d)))\
 			      J((tmp == J(0,cols(D),.)),cols(D),.)
 			if (lim <= 2 & cols(a) <= rows(b)){
@@ -239,7 +237,7 @@ mata set matastrict on
 				             st_numscalar("e(df_r)"),
 				             Ftail(st_numscalar("e(df_m)"),
 				             st_numscalar("e(df_r)"),st_numscalar("e(F)"))
-			/* under-identified TM: t-test of mean NRMSE from MC distribution */
+			/* underdetermined TM: t-test of mean NRMSE from MC distribution  */
 			} else if (lim > 2 & (e[2]+tmp[3]) != .) {
 				(void) _stata("`version' ttesti "+strofreal(mc_N)              +
 				                              " "+strofreal(tmp[4])            +
@@ -263,6 +261,16 @@ mata set matastrict on
 	    /*cols*/ rowmissing(RHS[,2]) :== 0)',0) : J(rows(X),cols(X),0)))       /
 	             (adj != 1.5 ? 1 : 2)
 
+	// calculate the R-squared and R-squared for CONSTRAINTS                 
+	r    = sum(rowmissing(RHS[,1]) :== 0)
+	c    = sum(rowmissing(RHS[,2]) :== 0)
+	C    = I(r)#J(1,c,1)\J(1,r,1)#I(c)
+	b    = select(RHS[,1]\RHS[,2], rowmissing(RHS[,1]\RHS[,2]) :== 0)
+	r2_c =                  (1 - cross((tmp=b      - C * colshape(X, 1)), tmp) /
+	                             cross((tmp=b     :- mean(b)           ), tmp))
+	if (rows(RHS_V)) r2_v = (1 - cross((tmp=RHS_V  -     colshape(X, 1)), tmp) /
+                                 cross((tmp=RHS_V :- mean(RHS_V)       ), tmp))
+
 	// return the solution `X`, tests `T`, and MC distribution percentiles `D`  
 	st_eclear()
 	st_rclear()
@@ -278,6 +286,10 @@ mata set matastrict on
 	(J(rows(tmp),1,""),strofreal(1::rows(tmp))))
 	st_matrixcolstripe("r(nrmse_dist)",
 	(J(10,1,""),("NRMSE","p1","p5","p10","p25","p50","p75","p90","p95","p99")'))
+	st_numscalar("r(r2_v)", r2_v >= 0 & r2_v <= 1 ? r2_v
+                                      : .)
+	st_numscalar("r(r2_c)", r2_c >= 0 & r2_c <= 1 ? r2_c
+                                      : .)
 }
 
 end

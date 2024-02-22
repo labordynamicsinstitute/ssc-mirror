@@ -1,0 +1,28 @@
+d 'HKPRLINK': module to obtain and download disclosure reports from 1999-04-01 onward on the official website of the Hong Kong Stock Exchange
+d
+d  This routine Obtains and downloads disclosure reports from
+d 1999-04-01 onward on the official website of the Hong Kong Stock 
+d	Exchange. 
+d
+d KW: data management
+d KW: Hong Kong
+d KW: disclosure reports
+d
+d Requires: Stata version 17 for Windows
+d
+d Distribution-Date: 20240221
+d
+d Author: Chuntao Li, China Stata Club
+d Support: email  chtl@@zuel.edu.cn
+d
+d Author:  Tianyao Luo,  Xinjiang University Business School, China
+d Support: email   cnl1426@@163.com
+d
+d Author: Muhammad Usman,  University of Education, Lahore, Pakistan
+d Support: email  m.usman@@ue.edu.pk
+d
+d Author:  Haitao Si,  Wuhan University, China
+d Support: email  sihaitao0114@@163.com
+d
+f hkprlink.ado
+f hkprlink.sthlp

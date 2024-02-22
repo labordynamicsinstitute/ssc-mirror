@@ -257,6 +257,7 @@ p muxyplot module to produce scatter plots with multiple x and y variables
 p mvcorr module to generate moving-window correlation or autocorrelation in time series or panel
 p mvdcmp module to compute multivariate decomposition for nonlinear response models
 p mvfiles module to provide  a convenient way to move/copy matched files from a specified input directory (also including, if wanted, additionally recursively matched subsets of files within distinctly matched offspring-directories) to a specified output directory
+p mvfilter module to compute multivariate time-series filter 
 p mvmeta module to perform multivariate random-effects meta-analysis
 p mvnxpb module for  computation of multivariate normal probabilities using bivariate conditioning 
 p mvport module for Collection, Optimization and Backtest of Financial Portfolios

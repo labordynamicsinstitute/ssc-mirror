@@ -1,0 +1,34 @@
+d 'DLTABLE': module to produce regression tables for Randomized Controlled Trials Using Double LASSO
+d
+d      dltable creates regressions and tables (with the subcommand
+d using) for experimental studies using double LASSO	estimation
+d (Belloni et al., 2014) It is the sister command of rctable.
+d dltable is particularly well adadpted to    Randomized Controlled
+d Trial or any analysis comparing different (experimental) groups. 
+d dltable creates several    variables: VAR (the variable name) LAB
+d (its label) A (the average in both groups) C (the average in the
+d control group),    and COEF1 [COEF2...], which record the
+d treatment control different estimated via double LASSO. With the
+d using option,    dltable exports the table in an excel, csv or
+d text format. The variables created are then dropped, unless the
+d keep	  option is specify. dltable can also be used without
+d using.  The command accepts multiple treatment branches and can
+d also	  be used to create tables with interaction terms. For
+d multiple treatment branches, include one dummy per treatment
+d branch    but do not include a control dummy.  The double LASSO
+d estimation is conducted using dsregress stata command. 
+d
+d KW:  experimental studies
+d KW: RCT
+d KW: regression tables
+d KW: double LASSO
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20240221
+d
+d Author: Adrien Bouguen, Santa Clara University
+d Support: email abouguen@@scu.edu
+d
+f dltable.ado
+f dltable.sthlp

@@ -1,4 +1,4 @@
-*! version 1.1.5  14feb2024  I I Bolotov
+*! version 1.1.6  20feb2024  I I Bolotov
 program define lppinv, rclass byable(recall)
 	version 16.0
 	/*
@@ -109,9 +109,9 @@ mata set matastrict on
 	iter  = iter  != . ? iter : 500                  /* MC iterations         */
 	dist  = dist       ? dist : &lppinv_runiform()   /* MC distribution       */
 
-	// prepare LHS (left-hand side), `a`, and RHS (right-hand side), `b`        
+	// prepare the LHS (left-hand side), `a`, and RHS (right-hand side), `b`    
 	if (strlower(lp) == "cols") {                    /* LS-LP type: cOLS      */
-		if (rows(C) + rows(M) < rows(b)) b = b,b
+		if (rows(C) + rows(M) > rows(b)) b = b\b
 	}
 	if (strlower(lp) == "tm") {                      /* LS-LP type: TM        */
 		if (! rows(b) | (rows(b) & cols(b) != 2)                               |
@@ -125,7 +125,8 @@ mata set matastrict on
 		c = rows(select(tmp=b[1..i,2], tmp :< .))
 		C = I(r)#J(1,c,1)\J(1,r,1)#I(c)              /* row- (first), colsums */
 		/* S -> characteristic matrix                                         */
-		if (S != J(0,0,.)) S = select(S[,1]\S[,2], S[,1]\S[,2] :< .)
+		if (S != J(0,0,.))
+			S = select(S[,1]\S[,2], S[,1]\S[,2] :< .)
 	}
 	/* M, C, S -> `a`                                                         */
 	if (f_d & strlower(lp) == "tm")
@@ -135,28 +136,29 @@ mata set matastrict on
 	a = (rows(C) ? C,(rows(S) ? S : J(rows(C),0,.)) : J(0,cols(M) + cols(S),.))\
 	    (rows(M) ? M,J(rows(M),cols(S),0) : J(0,cols(C) + cols(S),.))
 	/*`b` -> (, 1)                                                            */
-	b = strlower(lp) == "tm" ?
-	    b[1..r,1]\b[1..c,2]\(rows(b)>max((r, c)) ? b[max((r, c))+1..rows(b),1] :
-	    J(0,1,.)) : colshape(b, 1)
-	if (f_d) b = b\(f_d ? J(rows(a)-rows(b),1,0) : J(0,1,0))
-	/* drop missing values of `a` and `b`                                     */
+	if (strlower(lp) == "tm")
+		b = b[1..r,1]\b[1..c,2]\
+		    (rows(b)>max((r,c)) ? rowsum(b[max((r,c))+1..rows(b),]) : J(0,1,.))
+	if (f_d & strlower(lp) == "tm")
+		b = b\(f_d ? J(rows(a)-rows(b),1,0) : J(0,1,.))
+	/* check the dimensions of `a` and `b`                                    */
+	if (rows(a) != rows(b)) {
+		errprintf("Error: `a` and `b` are not conformable\n")
+		exit(503)
+	}
+	/* drop missing values in `a` and `b`                                     */
 	a = select(a, (tmp=rowmissing(a)+rowmissing(b)) :== 0)
 	b = select(b,  tmp                              :== 0)
 	st_matrix("r(a)", a, "hidden")
 	st_matrix("r(b)", b, "hidden")
 	C = M = rows(select(C, rowmissing(C) :== 0))     /* clear memory          */
 	S =     cols(S)
-	/* check dimensions of `a` and `b`                                        */
-	if (rows(a) != rows(b)) {
-		errprintf("Error: `a` and `b` are not conformable\n")
-		exit(503)
-	}
 
 	// obtain the SVD-based solution of the matrix equation `a @ x = b`         
 	x = svsolve(a, b, ., tol)                        /* solution, NRMSE, R2_C */
 	e = e\sqrt(cross((tmp=b - a * x), tmp) / (r=rows(b)) / variance(b))\        
-          (C ? 1 - cross((tmp=b - a *  x)[1..C], tmp[1..C]) /                   
-                   cross((tmp=b - b :/ C)[1..C], tmp[1..C]) : .)
+	      (C ? 1 - cross((tmp=b[1..C]  - (a * x)[1..C]), tmp[1..C])            /
+	               cross((tmp=b[1..C] :- mean(b[1..C])), tmp[1..C]) : .)
 	/* regression results (if applicable)                                     */
 	st_framecreate(f=st_tempname())
 	if (cols(a) <= rows(b)) {
@@ -189,9 +191,9 @@ mata set matastrict on
 	st_matrix("r(solution)", strlower(lp) == "tm" ? colshape(x[1..rows(x)-S], c)
                                                   : x[1..rows(x)-S])
 	st_matrix("r(a)",        a, "hidden")
+	st_numscalar("r(r2_c)",  strlower(lp) == "tm" & e[2] >= 0 & e[2] <= 1 ? e[2]
+                                                                          : .)
 	st_numscalar("r(nrmse)", e[1])
-	st_numscalar("r(r2_c)",  strlower(lp) == "tm" ? e[2]
-                                                  : .)
 }
 
 `RM' lppinv_runiform(`RS' r, `RS' c) return(runiform(r, c))        /* dummy   */

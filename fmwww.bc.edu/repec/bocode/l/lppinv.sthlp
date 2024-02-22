@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.5  14feb2024}{...}
+{* *! version 1.1.6  20feb2024}{...}
 {vieweralsosee "[TS] arima" "mansection TS arima"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[TS] arima postestimation" "help arima postestimation"}{...}
@@ -33,7 +33,7 @@ estimator for cOLS, TM, and custom cases
 {synopt:{opt cols}}OLS constrained in values ({bf:cOLS})
         (see {help lppinv##description:Description})
         {p_end}
-{synopt:{opt tm}}Transaction matrix ({bf:TM}), options {opt cols} and {opt tm}
+{synopt:{opt tm}}Transaction Matrix ({bf:TM}), options {opt cols} and {opt tm}
         are mutually exclusive (not specifying any of them equals {bf:custom})
         {p_end}
 
@@ -120,7 +120,7 @@ constraints may vary in the LHS (e.g., level, derivatives, etc.).
 
 {pstd}
 Transaction Matrix ({bf:TM}) of size ({bf:M x N}) is a formal model of
-interaction (allocation, assignment, etc.). between {bf:M} and {bf:N} elements
+interaction (allocation, assignment, etc.) between {bf:M} and {bf:N} elements
 in any imaginable system, such as intercompany transactions (netting tables),
 industries within/between economies (input-output tables), cross-border
 trade/investment (trade/investment matrices), etc., where {bf:row} and
@@ -245,12 +245,12 @@ For Python-savvy users, there is a Python version of {cmd:lppinv}
 {break}{browse "mailto:ilya.bolotov@vse.cz":ilya.bolotov@vse.cz}
 
 {pstd}
-    Thanks for citing this software and my works on the topic:
+Thanks for citing this software and my works on the topic:
 
 {p 8 8 2}
-    Bolotov, I. (2024). LPPINV: A non-iterated general implementation of the
-    LPLS estimator in Stata.
-    Available from {browse "https://ideas.repec.org/c/boc/bocode/s459045.html"}.
+Bolotov, I. (2024). 'LPPINV': module providing a non-iterated general
+implementation of the LPLS estimator for cOLS, TM, and custom cases. Available
+from {browse "https://ideas.repec.org/c/boc/bocode/s459045.html"}.
 
 {marker references}{...}
 {title:References}

@@ -121,6 +121,7 @@ p xtregsam module to estimate Swamy-Arora Random-Effects Panel Data: Ridge and W
 p xtregtwo module to estimate panel regression with standard errors robust to two-way clustering and serial correlation in time effects
 p xtregwem module to estimate Within-Effects Panel Data: Ridge and Weighted Regression
 p xtregwhm module to estimate Wallace-Hussain Random-Effects Panel Data: Ridge and Weighted Regression
+p xtrevu module to reverse the order of values of time series and panel data variables
 p xtrobreg module providing pairwise-differences and first-differences robust regression estimators
 p xtscc module to calculate robust standard errors for panels with cross-sectional dependence
 p xtsel module for selection of variables and specification in a panel-data framework

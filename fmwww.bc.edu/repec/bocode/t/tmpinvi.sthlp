@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.2  20feb2024}{...}
+{* *! version 1.0.0  20feb2024}{...}
 {viewerjumpto "Syntax" "tmpinv##syntax"}{...}
 {viewerjumpto "Description" "tmpinv##description"}{...}
 {viewerjumpto "Methods and formulas" "tmpinv##methods"}{...}
@@ -10,14 +10,14 @@
 
 {title:Title}
 {phang}
-{bf:tmpinv} {hline 2} a non-iterated Transaction Matrix (TM)-specific
+{bf:tmpinvi} {hline 2} an iterated (multistep) Transaction Matrix (TM)-specific
 implementation of the LPLS estimator
 
 {marker syntax}{...}
 {title:Syntax}
 
 {p 8 17 2}
-{cmdab:tmpinv}
+{cmdab:tmpinvi}
 {help varlist|matname:{it:varlist|matname}} (rowsums first, missing skipped)
 {ifin}
 [{cmd:,} {it:options}]
@@ -66,6 +66,24 @@ implementation of the LPLS estimator
         minimize the NRMSE
         {it:(compensatory operations require non-empty {bf:values()})}
         {p_end}
+
+{syntab:Multistep estimation}
+{synopt:{opth l:owerbound(real)}}lower bound for each element in the solution,
+        each value lower than which is replaced by a missing one ({bf:.})
+        {p_end}
+{synopt:{opth u:pperbound(real)}}upper bound for each element in the solution,
+        each value higher than which is replaced by a missing one ({bf:.})
+        {p_end}
+{synopt:{opth r:ound(real)}}{it:y} in {helpb round()}, in the units of which the
+        solution is rounded before comparing its elements with {bf:lowerbound()}
+        and/or {bf:upperbound()} (by default: {bf:8e-307})
+        {p_end}
+{synopt:{opt pen:alization}}add the number of missing values in rows and columns
+        of the solution as {bf:slackvars()} in the model to compensate for the
+        use of {bf:lowerbound()} and/or {bf:upperbound()}{p_end}
+{synopt:{opth stepn:umber(#)}}number of steps in addition to the initial
+        estimation (by default: {bf:2})
+        {p_end}
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
@@ -96,7 +114,7 @@ consisting of normal random variates, estimated with increased precision,
 if {bf:adjustment()} is specified.
 
 {pstd}
-{cmd:tmpinv} is a sister program to {helpb lppinv} 1) focusing on a single type
+{helpb tmpinv} is a sister program to {helpb lppinv} 1) focusing on a single type
 of LP problems ({bf:TM}), 2) dividing the {bf:TM} into contiguous submatrices
 with the size of up to {bf:(49 + sum of the rest)x(49 + sum of the rest)}, 3)
 being based on {helpb regress} results (F-test) for {bf:subm(≤2)} or on a
@@ -116,6 +134,16 @@ sample, which yielded the highest errors; ergo, poor test results indicate a
 grossly misspecified model. Use the {bf:distribution} option to compare
 the NRMSE for each submatrix with the main percentiles of the sample (they are
 sometimes easier to interprete than the t-test).
+
+{pstd}
+{cmd:tmpinvi} is an iterated (multistep) version of {helpb tmpinv}. Each further
+step, the number of which is controlled in {bf:stepnumber()}, uses the solution
+obtained in the previous step, adjusted to eventual {bf:lowerbound()} and
+{bf:upperbound()}, as {bf:values()} in the model with/without {bf:penalization}
+of the number of missing values in rows and columns as {bf:slackvars()},
+maximizing the {bf:R-squared for CONSTRAINTS}. If R-squared for CONSTRAINTS is
+out of bounds (below {bf:0} or above {bf:1}), the command reports
+non-convergence.
 
 {pstd}
 {bf:What is a TM?}
@@ -143,7 +171,7 @@ diagonal elements may be equal to zero;
 to this problem, see (Bolotov, 2015).
 
 {pstd}
-{cmd:tmpinv} clears estimation results and returns matrix {bf:r(solution)},
+{cmd:tmpinvi} clears estimation results and returns matrix {bf:r(solution)},
 matrix {bf:r(tests)}, scalar {bf:r(r2_c)} (R-squared for CONSTRAINTS), and
 scalar {bf:r(r2_v)} (R-squared for KNOWN VALUES) (if available). In addition,
 matrix {bf:r(nrmse_dist)} is available with the help of the command:
@@ -194,20 +222,24 @@ where {bf:M} and {bf:N} are the dimensions of the transaction matrix.
 {marker examples}{...}
 {title:Examples}
 
-        TM problem with Monte Carlo t-test based on the uniform distribution:
+        TM problem with F-test from linear regression:
         {cmd:. clear}
-        {cmd:. set obs 30}
-        {cmd:. gen rowsum = rnormal(15, 100)}
-        {cmd:. gen colsum = rnormal(12, 196)}
-        {cmd:. tmpinv rowsum colsum, level(90)}
-        {cmd:. tmpinv rowsum colsum, zerod dist}
-
-        TM problem with compensatory operations:
-        ...
-        {cmd:. mata: st_matrix("RHS", st_data(1::5,1..2))}
-        {cmd:. gen known = rnormal(18, 252) if _n <= 25}
-        {cmd:. tmpinv RHS in 1/25, v(known) subm(50) level(90)}
+        {cmd:. set obs 10}
+        {cmd:. gen str13 country_id = ""}
+        {cmd:. mata: st_local("b", "Country #"); st_local("e", "Rest of World")}
+        {cmd:. mata: st_sstore(., "country_id", ("`b'":+strofreal(1::9)\"`e'"))}
+        {cmd:. gen float exports = runiform(0, 1000)}
+        {cmd:. gen float imports = runiform(0, 1000)}
+        {cmd:. list}
+        {cmd:. tmpinvi exports imports, zerod adj(ave)          l(0) u(1000)}
         {cmd:. matlist r(solution)}
+        {cmd:. return list}
+
+        TM problem with Monte Carlo t-test based on the uniform distribution:
+        ...
+        {cmd:. tmpinvi exports imports, zerod adj(ave) subm(10) l(0) u(1000)}
+        {cmd:. matlist r(solution)}
+        {cmd:. return list}
 
 {title:Author}
 
@@ -221,8 +253,8 @@ where {bf:M} and {bf:N} are the dimensions of the transaction matrix.
 Thanks for citing this software and my works on the topic:
 
 {p 8 8 2}
-Bolotov, I. (2024). 'TMPINV': module providing a non-iterated Transaction
-Matrix (TM)-specific implementation of the LPLS estimator. Available
+Bolotov, I. (2024). 'TMPINVI': module providing an iterated (multistep)
+Transaction Matrix (TM)-specific implementation of the LPLS estimator. Available
 from {browse "https://ideas.repec.org/c/boc/bocode/s459131.html"}.
 
 {marker references}{...}

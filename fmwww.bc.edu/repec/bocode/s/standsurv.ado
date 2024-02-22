@@ -1,4 +1,4 @@
-*! version 1.05 2023-11-05
+*! version 1.06 2023-02-14
 program define standsurv, rclass sortpreserve
   version 16.1
   syntax [anything] [if] [in],        ///

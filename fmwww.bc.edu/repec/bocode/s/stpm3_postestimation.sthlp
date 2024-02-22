@@ -296,7 +296,12 @@ For example,
 
 {phang3}
 datediag(2015-1-1)        
-        
+        		
+{phang2}
+{opt exprmstnodes(#)} gives the number of nodes used to calculate rmst for 
+expected survival using Gauss-Legendre quadrature.
+The default is 30.	
+		
 {phang2}
 {opt expvars(stub | newvarnames)} gives the names of the new variables to be
 created for expected survival ({cmd:survival} option), expected hazard ({cmd:hazard} option),
@@ -307,6 +312,11 @@ not be stored. The names can be specified as a {it:varlist} equal to the number
 of {cmd:at()} options or a {it:stub} where new variables are named {it:stub}{bf:1} - 
 {it:stub}{bf:n}. 
         
+{phang2}
+{opt oldexpsurv} calculate expected survival / rmst in the old way using ODEs. 
+Now expected rmst is calculated using Gauss-Legendre quadrature. 
+Note this is only for expected survival / rmst.
+		
 {phang2}
 {opt pmage(varname)} gives the age variable in the population mortality file.
         

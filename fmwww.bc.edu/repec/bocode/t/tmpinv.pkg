@@ -1,17 +1,17 @@
-d 'TMPINV': module to solve an under-, over- and identified Transaction Matrix (TM) problem with the help of the Moore-Penrose pseudoinverse, singular value decomposition (SVD), an F-test from linear regression/t-test of mean normalized RMSE, and results adjustment for extreme values.
+d 'TMPINV': module to providing a non-iterated Transaction Matrix (TM)-specific implementation of the LPLS estimator
 d
-d  The algorithm solves "hybrid" linear programming-least squares
-d (LP-LS) Transaction Matrix (TM) problems with the help of the
-d Moore-Penrose inverse (pseudoinverse), calculated using singular
-d value decomposition (SVD). Estimation using 2x2 to 50x50
+d  The program implements a non-iterated Transaction Matrix
+d (TM)-specific LPLS estimator for linear programming with the help
+d of the Moore-Penrose inverse (pseudoinverse), calculated using
+d singular value decomposition (SVD). Estimation using 2x2 to 50x50
 d contiguous submatrices, repeated with compensatory slack
 d variables until NRMSE is minimized in a given number of
 d iterations, is followed by an F-test from linear
 d regression/t-test of mean NRMSE from a pre-simulated distribution
-d (Monte-Carlo, 50,000 iterations with matrices consisting of
+d (Monte-Carlo,  50,000 iterations with matrices consisting of
 d normal random variates). The result is adjusted for extreme
 d values to match the RHS via shares of estimated row/column sums
-d if the corresponding option is specified. 
+d if the corresponding option is specified.  
 d
 d KW: linear programming
 d KW: least squares
@@ -20,7 +20,7 @@ d KW: singular value decomposition
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20230124
+d Distribution-Date: 20240221
 d
 d Author: Ilya Bolotov, Prague University of Economics and Business
 d Support: email ilya.bolotov@@vse.cz

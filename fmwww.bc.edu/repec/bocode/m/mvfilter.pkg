@@ -1,0 +1,26 @@
+d 'MVFILTER': module to compute multivariate time-series filter 
+d
+d      mvfilter uses the sspace high-pass filter to separate a time
+d series into trend and cyclical components.  The trend   
+d component may contain a deterministic or a stochastic trend.	The
+d smoothing parameter determines the periods of the    stochastic
+d cycles that drive the stationary cyclical component. It allows
+d for and AR(p) process in the cyclical    component and for
+d exogenous variables in the observed equation of the sspace
+d representation. 
+d
+d KW: filter
+d KW: time series
+d KW: sspace
+d KW: trend
+d KW: cycle
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20240221
+d
+d Author: Gregorio Impavido, IMF
+d Support: email gimpavido@@imf.org
+d
+f mvfilter.ado
+f mvfilter.sthlp

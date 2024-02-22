@@ -97,6 +97,7 @@ p dlagif Module to Estimate Irving Fisher Arithmetic Distributed Lag Model
 p dldq module to compute treatment effects under alternative Parallel-q assumptions
 p dlist module to list with variable labels
 p dlogit2 modules to compute marginal effects for logit, probit, and mlogit 
+p dltable module to produce regression tables for Randomized Controlled Trials Using Double LASSO
 p dmariano module to calculate Diebold-Mariano comparison of forecast accuracy
 p dmerge module to merge datasets using a modification of Stata's merge
 p dmexogxt module to test consistency of OLS vs XT-IV estimates

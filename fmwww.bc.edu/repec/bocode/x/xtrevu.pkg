@@ -1,0 +1,31 @@
+d 'XTREVU': module to reverse the order of values of time series and panel data variables
+d
+d  Reverse the order of values of time series and panel data
+d variables by substituting the original values or by creating new
+d variables with a prefixed identifier. If a "colon" command is
+d provided, an estimation procedure is executed on the inverted
+d variables. The results of this estimation, including predictions,
+d residuals, and others, are stored as either existing variables or
+d new ones. Additionally, a comprehensive post-estimation command
+d can be executed.Reverse the order of values of time series and
+d panel data variables by substituting the original values or by
+d creating new variables with a prefixed identifier. If a "colon"
+d command is provided, an estimation procedure is executed on the
+d inverted variables. The results of this estimation, including
+d predictions, residuals, and others, are stored as either existing
+d variables or new ones. Additionally, a comprehensive
+d post-estimation command can be executed. 
+d
+d KW: data management
+d KW: time series
+d KW: panel data
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20240221
+d
+d Author: Ilya Bolotov, Prague University of Economics and Business
+d Support: email ilya.bolotov@@vse.cz
+d
+f xtrevu.ado
+f xtrevu.sthlp

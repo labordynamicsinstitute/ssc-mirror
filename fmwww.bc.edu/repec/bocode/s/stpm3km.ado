@@ -1,4 +1,4 @@
-*! version 0.4 2023-10-25
+*! version 0.5 2023-02-21
 program define stpm3km, rclass
   version 16.1
   syntax [varlist(default=none fv max=1)]                  ///
