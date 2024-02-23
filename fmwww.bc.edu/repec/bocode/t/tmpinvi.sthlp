@@ -1,11 +1,11 @@
 {smcl}
-{* *! version 1.0.0  20feb2024}{...}
-{viewerjumpto "Syntax" "tmpinv##syntax"}{...}
-{viewerjumpto "Description" "tmpinv##description"}{...}
-{viewerjumpto "Methods and formulas" "tmpinv##methods"}{...}
-{viewerjumpto "Examples" "tmpinv##examples"}{...}
-{viewerjumpto "Remarks" "tmpinv##remarks"}{...}
-{viewerjumpto "References" "tmpinv##references"}{...}
+{* *! version 1.0.1  20feb2024}{...}
+{viewerjumpto "Syntax" "tmpinvi##syntax"}{...}
+{viewerjumpto "Description" "tmpinvi##description"}{...}
+{viewerjumpto "Methods and formulas" "tmpinvi##methods"}{...}
+{viewerjumpto "Examples" "tmpinvi##examples"}{...}
+{viewerjumpto "Remarks" "tmpinvi##remarks"}{...}
+{viewerjumpto "References" "tmpinvi##references"}{...}
 {p2colset 1 15 17 2}{...}
 
 {title:Title}
@@ -254,8 +254,8 @@ Thanks for citing this software and my works on the topic:
 
 {p 8 8 2}
 Bolotov, I. (2024). 'TMPINVI': module providing an iterated (multistep)
-Transaction Matrix (TM)-specific implementation of the LPLS estimator. Available
-from {browse "https://ideas.repec.org/c/boc/bocode/s459131.html"}.
+Transaction Matrix (TM)-specificimplementation of the LPLS estimator. Available
+from {browse "https://ideas.repec.org/c/boc/bocode/s459294.html"}.
 
 {marker references}{...}
 {title:References}

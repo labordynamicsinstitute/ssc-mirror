@@ -1,13 +1,13 @@
-*! version 1.1 17DEC2024 DIME Analytics dimeanalytics@worldbank.org
+*! version 1.2 20240222 - DIME Analytics & LSMS Team, The World Bank - dimeanalytics@worldbank.org, lsms@worldbank.org
 
 cap program drop   repkit
     program define repkit, rclass
 
-    version 13.0
+    version 14.1
 
     * UPDATE THESE LOCALS FOR EACH NEW VERSION PUBLISHED
-  	local version "1.1"
-  	local versionDate "17DEC2024"
+    local version "1.2" 
+    local versionDate "20240222" 
     local cmd    "repkit"
 
   	syntax [anything]
@@ -38,7 +38,7 @@ cap program drop   repkit
 
         noi di _n "{hline}" _n
         noi di as text "{pstd}{ul:{red:Warning:} This command {inp:`subtwo'} is currently only released as a beta release}{p_end}" _n
-        noi di as text `"{pstd}We're excited to introduce a beta release of the command {inp:`subtwo'}. Feedback from users like you will help us refine and finalize this command. We, especially during the beta phase, welcome bug reports, feature requests, and any other comments at: {browse "https://github.com/dime-worldbank/repkit/issues"}.{p_end}"' _n
+        noi di as text `"{pstd}We're excited to introduce a beta release of the command {inp:`subtwo'}. Feedback from users like you will help us refine and finalize this command. We, especially during the beta phase, welcome bug reports, feature requests, and any other comments at: {browse "https://github.com/worldbank/repkit/issues"}.{p_end}"' _n
         noi di as text "{pstd}Please note that during the beta release we might rename or remove options without building in backward compatibility, and some still experimental features might not be fully documented.{p_end}" _n
         noi di _n "{hline}"
       }

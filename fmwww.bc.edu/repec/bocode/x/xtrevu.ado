@@ -1,4 +1,4 @@
-*! version 1.0.0  20fev2024  I I Bolotov
+*! version 1.0.1  20fev2024  I I Bolotov
 program define xtrevu, rclass
 	version 16.0
 	/*
@@ -57,20 +57,16 @@ program define xtrevu, rclass
 	qui g           `touse'  = .
 	mata:            X       = .
 	foreach i    in `values'                          {
-		qui          {
-			replace `touse'         = cond(`panelvar' == `i', 1, 0) `if' `in'
-			ds      `varlist',      has(type numeric)
-			if       "`r(varlist)'" != ""									///
-			mata:    st_view(  X, ., "`r(varlist)'", "`touse'");            ///
-				     X[1..rows(X),.] = X[rows(X)..1,.]
-			ds      `varlist',      has(type string )
-			if       "`r(varlist)'" != ""									///
-			mata:    st_sview( X, ., "`r(varlist)'", "`touse'");            ///
-				     X[1..rows(X),.] = X[rows(X)..1,.]
-		}
+		qui replace `touse'         = cond(`panelvar' == `i', 1, 0) `if' `in'
+		mata: for (i=1; i<=cols((v = tokens("`varlist'"))); i++) {;         ///
+			      if  (st_isnumvar(v[i]))                                   ///
+			           st_view( (x=J(0,0,. )), ., v[i], "`touse'");         ///
+			      else st_sview((x=J(0,0,"")), ., v[i], "`touse'");         ///
+			      x[.,.] = x[rows(x)..1,.];                                 ///
+			  };
 	}
 	drop            `touse'
-	mata:            mata drop X
+	mata:            mata drop i v x
 	/* rename variables                                                       */
 	if `"`prefix'"'                 != ""             {
 		foreach var  of varl       `varlist'          {

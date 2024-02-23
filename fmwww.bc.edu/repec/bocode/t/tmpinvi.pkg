@@ -20,7 +20,7 @@ d KW: singular value decomposition
 d
 d Requires: Stata version 16, moremata and tmpinv from SSC (q.v.)
 d
-d Distribution-Date: 20240221
+d Distribution-Date: 20240222
 d
 d Author: Ilya Bolotov, Prague University of Economics and Business
 d Support: email ilya.bolotov@@vse.cz

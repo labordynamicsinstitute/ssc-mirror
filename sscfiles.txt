@@ -16908,6 +16908,7 @@ fmwww.bc.edu/repec/bocode/r/rmse.ado
 fmwww.bc.edu/repec/bocode/r/runmlwin_mcmcdiagnostics.lin64
 fmwww.bc.edu/repec/bocode/r/rtmvt.ado
 fmwww.bc.edu/repec/bocode/r/rts.dlg
+fmwww.bc.edu/repec/bocode/r/reproot_search.ado
 fmwww.bc.edu/repec/bocode/r/rtfinsert.ado
 fmwww.bc.edu/repec/bocode/r/reganat.ado
 fmwww.bc.edu/repec/bocode/r/rsort.sthlp
@@ -17320,6 +17321,7 @@ fmwww.bc.edu/repec/bocode/r/radar.hlp
 fmwww.bc.edu/repec/bocode/r/reweight2.ado
 fmwww.bc.edu/repec/bocode/r/runmplus_fits.hlp
 fmwww.bc.edu/repec/bocode/r/raewma.pkg
+fmwww.bc.edu/repec/bocode/r/reproot.ado
 fmwww.bc.edu/repec/bocode/r/rho_xtregar.ado
 fmwww.bc.edu/repec/bocode/r/reghdfe5.sthlp
 fmwww.bc.edu/repec/bocode/r/r2reg3.html
@@ -17416,6 +17418,7 @@ fmwww.bc.edu/repec/bocode/r/rforest.pkg
 fmwww.bc.edu/repec/bocode/r/rrlogit_postestimation.hlp
 fmwww.bc.edu/repec/bocode/r/rds_toy_example.do
 fmwww.bc.edu/repec/bocode/r/relrank.ado
+fmwww.bc.edu/repec/bocode/r/reproot_parse.ado
 fmwww.bc.edu/repec/bocode/r/richness.pdf
 fmwww.bc.edu/repec/bocode/r/roman.mata
 fmwww.bc.edu/repec/bocode/r/reshape3.ado
@@ -17787,6 +17790,7 @@ fmwww.bc.edu/repec/bocode/r/RecessionDummies.dta
 fmwww.bc.edu/repec/bocode/r/r2nlsur.dlg
 fmwww.bc.edu/repec/bocode/r/running.pkg
 fmwww.bc.edu/repec/bocode/r/ranvar2.html
+fmwww.bc.edu/repec/bocode/r/reproot.sthlp
 fmwww.bc.edu/repec/bocode/r/rollstat.sthlp
 fmwww.bc.edu/repec/bocode/r/rewrite.html
 fmwww.bc.edu/repec/bocode/r/rtnorm.mata.do

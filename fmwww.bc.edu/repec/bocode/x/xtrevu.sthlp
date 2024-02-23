@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.2  07oct2022}{...}
+{* *! version 1.0.1  20feb2024}{...}
 {viewerjumpto "Syntax" "xtrevu##syntax"}{...}
 {viewerjumpto "Syntax" "xtrevu##description"}{...}
 {viewerjumpto "Examples" "xtrevu##examples"}{...}
@@ -90,6 +90,10 @@ a comprehensive post-estimation command can be executed, see
 {break}Prague University of Economics and Business
 {break}Prague, Czech Republic
 {break}{browse "mailto:ilya.bolotov@vse.cz":ilya.bolotov@vse.cz}
-
 {pstd}
-    Thanks for citing this software and my works!
+Thanks for citing this software and my works on the topic:
+
+{p 8 8 2}
+Bolotov, I. (2024). 'XTREVU': module to reverse the order of values of time
+series and panel data variables. Available from
+{browse "https://ideas.repec.org/c/boc/bocode/s459296.html"}.

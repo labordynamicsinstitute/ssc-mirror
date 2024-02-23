@@ -1,4 +1,4 @@
-*! version 1.0.0  20feb2024  I I Bolotov
+*! version 1.0.1  20feb2024  I I Bolotov
 program define tmpinvi, eclass byable(recall)
 	version 16.0
 	/*

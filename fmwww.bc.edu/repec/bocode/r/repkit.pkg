@@ -13,9 +13,9 @@ d KW: reproducibility
 d KW: ado
 d KW: ado-management
 d
-d Requires: Stata version 12
+d Requires: Stata version 14.1
 d
-d Distribution-Date: 20240118
+d Distribution-Date: 20240222
 d
 d Author: DIME Analytics, The World Bank, DECIE
 d Support: email dimeanalytics@@worldbank.org
@@ -27,3 +27,7 @@ f repado.sthlp
 f reprun_dataline.ado
 f reprun.ado
 f reprun.sthlp
+f reproot.ado
+f reproot.sthlp
+f reproot_parse.ado
+f reproot_search.ado
