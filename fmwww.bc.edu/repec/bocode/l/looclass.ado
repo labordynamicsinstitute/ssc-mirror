@@ -1,3 +1,4 @@
+*! 2.3.2 Ariel Linden 22Feb2024 	// fixed error in rforest model 
 *! 2.3.1 Ariel Linden 04Nov2020 	// Changed -randomforest- to -rforest- since the former no longer exists as a package
 *! 2.3.0 Ariel Linden 24Dec2018 	// Added "sort touse" before LOO loop to ensure that LOO properly captures if/in criteria
 *! 2.2.0 Ariel Linden 20Aug2018 	// Added -svmachines- and -boost- as model options
@@ -124,7 +125,7 @@ version 11.0
 				predict `yhat2' if _n==`i' & `touse'
 			}
 			else if "`model'" == "rforest" { 
-				randomforest `dvar' `xvar' if _n!=`i' & `touse', type(class) `options'
+				rforest `dvar' `xvar' if _n!=`i' & `touse', type(class) `options'
 				predict `yhat1' `yhat2' if _n==`i' & `touse', pr
 				drop `yhat1'
 			}

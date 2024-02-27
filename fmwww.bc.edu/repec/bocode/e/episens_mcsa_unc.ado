@@ -1,7 +1,8 @@
+*! v 3.0.0 2024feb24 Thanks to Ian R. Dohoo & Javier Sanchez for correcting some typos
 *! v.1.0.0 N.Orsini 7aug2007
 
-capture program drop episens_mcsa_unc
-program episens_mcsa_unc, rclass
+capture program drop episens_mcsa_unc_mod
+program episens_mcsa_unc_mod, rclass
 version 9.2
 
         syntax anything [ , obs(integer 5000) spexp(string) spunexp(string) srrcd(string) sorce(string) scorrprev(string)  ///
@@ -318,15 +319,32 @@ if "`sorce'" != "" {
 
  if "`spexp'" != "" & "`sorce'" == "" {	
 
-  	 scalar `rrxz' = [(`prz1')*(1-`prz0')]/[(1-`prz1')*(`prz0')] 
+  	/*Original command - changed to get correct RR 
+	scalar `rrxz' = [(`prz1')*(1-`prz0')]/[(1-`prz1')*(`prz0')] 
  	 scalar `b11' = `prz1' * `c'  
 	 scalar `b01' = `prz0' * `d'  
 	 scalar `a11' = (`rrdz'*`a'*`b11')/(`rrdz'*`b11' +`c'-`b11')  
 	 scalar `a01' = (`rrdz'*`b'*`b01')/(`rrdz'*`b01'+`d'-`b01') 
 
+	
+	
+	*/
+
+	
+	 scalar `rrxz' = [(`prz1')*(1-`prz0')]/[(1-`prz1')*(`prz0')] 
+   	 scalar `b11' = `prz1' * (`c'+`a')  
+  	 scalar `b01' = `prz0' * (`d'+`b')  
+	 scalar `a11' = (`rrdz'*`a'*`b11')/(`rrdz'*`b11' + ((`c'+`a')-`b11'))  
+	 scalar `a01' = (`rrdz'*`b'*`b01')/(`rrdz'*`b01'+ ((`d'+`b')-`b01')) 
+
+
 	if "`studytype'" == "cc"  scalar `rrdx' = (`a11'*`b01')/(`b11'*`a01')  
 	if "`studytype'" == "ir"  scalar `rrdx' = (`a11'/`b11')/(`a01'/`b01')  
-	if "`studytype'" == "cs"  scalar `rrdx' = (`a11'/(`a11'+`b11'))/(`a01'/(`a01'+`b01'))
+*	if "`studytype'" == "cs"  scalar `rrdx' = (`a11'/(`a11'+`b11'))/(`a01'/(`a01'+`b01')) 
+	if "`studytype'" == "cs"  scalar `rrdx' = (`a11'/(`b11'))/(`a01'/(`b01')) 
+	
+	
+	
  }
 
 /*
