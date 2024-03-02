@@ -1,6 +1,10 @@
-*! Version:	1.0.0
+*! Version:	1.0.1
 *! Author: Gregorio Impavido, International Monetry Fund, Email: gimpavido@imf.org
-
+*
+* 1.0.1 	2/26/2024. cleans up the help file. Adds notification in details, 
+* 			when betacap option is used. Adds error message when betcap is 
+*			used with AR(2).
+*
 program define mvfilter, rclass 
 	
 	version 16.0
@@ -87,7 +91,6 @@ program define mvfilter, rclass
 			display as error "There is nothing to adjust if you are not running the dynamic filter. Please drop the option {bf:adjust}"
 			error 198
 		}
-		
 
 	if ("`ar'">="1" & "`optimal'"!="") { // case 1: inconsistent options
 		display as error "The AR parameter(s) are estimated ex-ante for a given lambda. Hence, you cannot specify both {bf:AR(p)} with p>=1 and {bf:optimal}"
@@ -104,6 +107,11 @@ program define mvfilter, rclass
 		error 198
 	}
 	
+	if ("`ar'"=="2" & "`betacap'"!="") { // case 1: inconsistent options
+		display as error "The autoregressive parameter can be capped to min(beta,0.85) only with AR(1)"
+		error 198
+	}
+
 ********************************************************************************
 ********************************** end checks **********************************
 ********************************************************************************
@@ -381,7 +389,10 @@ program define mvfilter, rclass
 ********************************************************************************
 ****************************** label the estimates *****************************
 ********************************************************************************
-	if ("`details'"!="") sspace, noomitted
+	if ("`details'"!="") {
+		sspace, noomitted
+		if ("`betacap'"!="") di "NB: Autoregressive parameter capped at min(beta,0.85)"
+	}
 
 	if (`filtertype'=="onesided") {
 		if ("`trend'"!="") {

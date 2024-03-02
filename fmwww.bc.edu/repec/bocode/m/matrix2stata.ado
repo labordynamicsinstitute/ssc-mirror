@@ -1,7 +1,7 @@
-*! Part of package matrixtools v. 0.30
+*! Part of package matrixtools v. 0.31
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
-*! 2019-03-13 nhb >	Zipsettings added
-*! 2019-03-12 nhb >	Label on blank separator line
+* 2019-03-13 nhb >	Zipsettings added
+* 2019-03-12 nhb >	Label on blank separator line
 program matrix2stata, rclass
 	version 12.1
 	syntax anything(name=matrixexp), [Clear Ziprows ZIpsettings(string)]

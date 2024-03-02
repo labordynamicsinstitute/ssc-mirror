@@ -1,4 +1,5 @@
 {smcl}
+{* *! version 1.0.1 26Feb2024}{...}
 {* *! version 1.0.0 24Sept2019}{...}
 
 {title:Title}
@@ -33,7 +34,7 @@ E-value for testing against a different value:
 way to identify the {it: coef_name} assigned by the estimation model is to specify the {cmd: coeflegend} option; see {helpb estimation options}.  
 
 {pstd}
-For continuous outcomes estimated with {helpb regress}, {helpb tobit}, {helpb truncreg} or { helpb hetregress}, 
+For continuous outcomes estimated with {helpb regress}, {helpb tobit}, {helpb truncreg}, { helpb hetregress}, {helpb xtreg}, {helpb intreg}, {helpb meintreg}, or {helpb metobit},    
 {it: coef_name} must be a binary variable, as {cmd: evalue_estat} computes the standardized mean difference between 2 levels of a variable.
 
 
@@ -49,8 +50,9 @@ on the measured covariates.
 {pstd}
 {opt evalue_estat} computes E-values for point estimates and confidence limits for several common outcome types, including risk and rate ratios, 
 odds ratios with common or rare outcomes, hazard ratios with common or rare outcomes, and standardized mean differences in outcomes. Estimation models currently supported by 
-{opt evalue_estat} are {helpb logistic}, {helpb logit}, {helpb cloglog}, {helpb scobit}, {helpb clogit}, {helpb stcox}, {helpb streg}, {helpb poisson}, {helpb cpoisson}, {helpb tpoisson}, {helpb nbreg}, {helpb zip}, {helpb zinb}, 
-{helpb regress}, {helpb tobit}, {helpb truncreg}, {helpb hetregress}, and {helpb xtreg}.
+{opt evalue_estat} are {helpb logistic}, {helpb logit}, {helpb cloglog}, {helpb scobit}, {helpb clogit}, {helpb melogit}, {helpb mecloglog}, {helpb stcox}, {helpb streg}, 
+{helpb mestreg}, {helpb poisson}, {helpb cpoisson}, {helpb tpoisson}, {helpb nbreg}, {helpb zip}, {helpb zinb}, {helpb mepoisson}, {helpb menbreg},
+{helpb regress}, {helpb tobit}, {helpb truncreg}, {helpb hetregress}, {helpb intreg}, {helpb xtreg}, {helpb metobit} and {helpb meintreg}.
 
 {pstd}
 See {helpb evalue} for a comprehensive discussion of how to interpret results produced by {opt evalue_estat}.
@@ -63,7 +65,7 @@ See {helpb evalue} for a comprehensive discussion of how to interpret results pr
 {opt 1) E-value for a risk ratio:}{p_end}
 
 {pmore} Set-up {p_end}
-{pmore2}{bf:{stata "webuse dollhill3": . webuse dollhill3}} {p_end}
+{pmore2}{bf:{stata "webuse dollhill3, clear": . webuse dollhill3, clear}} {p_end}
 
 {pmore} Estimate a Poisson model {p_end}
 {pmore2}{bf:{stata "poisson deaths smokes i.agecat, exposure(pyears) irr": . poisson deaths smokes i.agecat, exposure(pyears) irr}} {p_end}
@@ -79,7 +81,7 @@ See {helpb evalue} for a comprehensive discussion of how to interpret results pr
 {opt 2) E-value for an odds ratio:}{p_end}
 
 {pmore} Set-up {p_end}
-{pmore2}{bf:{stata "webuse lbw": . webuse lbw}} {p_end}
+{pmore2}{bf:{stata "webuse lbw, clear": . webuse lbw, clear}} {p_end}
 
 {pmore} Estimate a logistic regression model. Note that, in this example, the exposure variable {cmd:smoke} is specified as a factor variable. {p_end}
 {pmore2}{bf:{stata "logistic low age lwt i.race i.smoke ptl ht ui": . logistic low age lwt i.race i.smoke ptl ht ui}} {p_end}
@@ -92,7 +94,7 @@ See {helpb evalue} for a comprehensive discussion of how to interpret results pr
 {opt 3) E-value for a hazard ratio:}{p_end}
 
 {pmore} Set-up {p_end}
-{pmore2}{bf:{stata "webuse drugtr": . webuse drugtr}} {p_end}
+{pmore2}{bf:{stata "webuse drugtr, clear": . webuse drugtr, clear}} {p_end}
 
 {pmore} Estimate a Cox regression model.{p_end}
 {pmore2}{bf:{stata "stcox drug age": . stcox drug age}} {p_end}
@@ -111,7 +113,7 @@ See {helpb evalue} for a comprehensive discussion of how to interpret results pr
 {opt 4) E-value for a standardized mean difference:}{p_end}
 
 {pmore} Set-up  {p_end}
-{pmore2}{bf:{stata "sysuse auto": . sysuse auto}} {p_end}
+{pmore2}{bf:{stata "sysuse auto, clear": . sysuse auto, clear}} {p_end}
 
 {pmore} Estimate a linear regression model  {p_end}
 {pmore2}{bf:{stata "regress mpg weight foreign": . regress mpg weight foreign}} {p_end}
@@ -136,7 +138,7 @@ See {helpb evalue} for a comprehensive discussion of how to interpret results pr
 {synopt:{cmd:r(eval_ci)}}E-value for the confidence interval{p_end}
 
 
-{p2col 5 16 20 2: When {cmd:regress}, {cmd:tobit}, {cmd:truncreg}, {cmd:hetregress}, or {cmd:xtreg} is the estimation model, these scalars are also added:}{p_end} 
+{p2col 5 16 20 2: When {cmd:regress}, {cmd:tobit}, {cmd:truncreg}, {cmd:hetregress}, {cmd:xtreg}, {cmd:intreg}, {cmd:meintreg}, or {cmd:metobit} is the estimation model, these scalars are also added:} {p_end} 
 
 {synopt:{cmd:r(d)}}Cohen's d{p_end}
 {synopt:{cmd:r(se_d)}}standard error of the Cohen's d estimate{p_end}

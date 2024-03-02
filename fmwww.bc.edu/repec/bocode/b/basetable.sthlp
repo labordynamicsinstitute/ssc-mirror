@@ -122,8 +122,9 @@ specify a csv file to save the csv output in.{p_end}
         Default	is count (percentages).{p_end}
 	{synopt :{opt notop:count}}Exclude the first row with count and percentages for 
     row columns{p_end}
-  {synopt :{opt not:otal}}Exclude the Total column.{p_end}
-  {synopt :{opt nop:value}}Exclude the P-value column.{p_end}
+	{synopt :{opt not:otal}}Exclude the Total column.{p_end}
+	{synopt :{opt nop:value}}Exclude the P-value column.{p_end}
+    {synopt :{opt col:umnorder}}Chose sets of column number (>1, <8) to show.{p_end}
 	{synopt:{opt cap:tion(string)}}Caption for the output. Same as the {opt ti:tle} option.{p_end}
 	{synopt:{opt ti:tle(string)}}Title for the output. Same as the {opt cap:tion} option.
         The {opt ti:tle} option overwrites the {opt cap:tion} option.{p_end}
@@ -159,6 +160,11 @@ specify a csv file to save the csv output in.{p_end}
 	- (Optional) columnn widths in parentheses. If more columns than widths the 
       last column width is used for the rest
 	{p_end}
+{synopt:{opt todocx:(string)}}A string containing one or two values separated 
+	by a comma. The values are:{break}
+	* path and filename on the excel book to save in.{break}
+	* (Optional) replace - replace/overwrite the content in the sheet{break}
+	{p_end}
 {synoptline}
 {p2colreset}{...}
 
@@ -189,15 +195,28 @@ specify a csv file to save the csv output in.{p_end}
 {phang}{stata type tbl1.tex}{p_end}
 
 {phang}Save tables for "all" and "young mothers" in sheets all and young_mothers in 
-Excel workbook tbls.xls(x) at current directory:{p_end}
+the Excel workbook tbls.xls(x) at current directory:{p_end}
 {phang}{stata basetable low race(c) age(%6.2f), toxl(tbls, all)}{p_end}
 {phang}{stata basetable low race(c) age(%6.2f) if age < 20, toxl(tbls, young_mothers)}{p_end}
 {phang}To see current directory:{p_end}
 {phang}{stata cd}{p_end}
-{phang}To see Excel workbook (stata 13):{p_end}
+{phang}To see the Excel workbook (stata 13):{p_end}
 {phang}{stata shell tbls.xls}{p_end}
-{phang}To see Excel workbook (stata 14 and up):{p_end}
+{phang}To see the Excel workbook (stata 14 and up):{p_end}
 {phang}{stata shell tbls.xlsx}{p_end}
+
+{phang}Save tables for "all" and "young mothers" in sheets all at row 6 and 
+column 8:{p_end}
+{phang}{stata basetable low race(c) age(%6.2f), toxl(tbls, all, replace,6,8)}{p_end}
+{phang}To see the Excel workbook (stata 13):{p_end}
+{phang}{stata shell tbls.xls}{p_end}
+{phang}To see the Excel workbook (stata 14 and up):{p_end}
+{phang}{stata shell tbls.xlsx}{p_end}
+
+{phang}Save table for "all" the Word document tbl.docx at current directory:{p_end}
+{phang}{stata basetable low race(c) age(%6.2f), todocx(tbl, all)}{p_end}
+{phang}To see the Word document (One can not add several tables to the same Word file):{p_end}
+{phang}{stata shell tbl.docx}{p_end}
 
 {phang}Anonymize individuals by hiding small counts and pseudo percentiles:{p_end}
 {phang}{stata basetable low age(%6.2f) ftv(c), hidesmall pseudo}{p_end}

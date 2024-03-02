@@ -1,11 +1,17 @@
-*! Part of package matrixtools v. 0.30
+*! Part of package matrixtools v. 0.31
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
-*! 2023-01-01 > Option nozero added
-*! 2022-12-29 > st_ regressions added as stregmat
-*! 2022-12-29 > se(b) = . for base
-*! 2022-12-29 > When convergence isn't achieved, missings are inserted
-*! 2022-12-29 > run_regressions renamed to nhb_mt_run_regressions and moved to matrixtools
-*! 2022-12-29 > tolabels renamed to nhb_mt_tolabels and moved to matrixtools
+*! 2024-02-29	> Bugfix: double if
+*! 2024-02-25 > Handling mixed regression
+*! 2024-02-23 > Option todocx added
+*TODO lookfor option: If the argument isn't a varlist then the varlist generated from using -lookfor- on the argument should be the argument 
+* 2023-08-04 > Regression generator simplified, now handles mixed regressions correct - not working replay is set to 1
+* 2023-05-25 > s removed from code. Did prevent code from working
+* 2023-01-01 > Option nozero added
+* 2022-12-29 > st_ regressions added as stregmat
+* 2022-12-29 > se(b) = . for base
+* 2022-12-29 > When convergence isn't achieved, missings are inserted
+* 2022-12-29 > run_regressions renamed to nhb_mt_run_regressions and moved to matrixtools
+* 2022-12-29 > tolabels renamed to nhb_mt_tolabels and moved to matrixtools
 * 2021-01-03 > Option names for alternative adjustment names
 * 2021-01-03 > toxl added
 * 2021-01-03 > Option btext for alternative column name for b added
@@ -32,6 +38,11 @@ program define stregmat, rclass
 	capture _on_colon_parse `0'
 	
 	local 0 `s(before)'
+	local after `s(after)'
+	_prefix_command regmat: `s(after)'
+	local _cmd `s(cmdname)'
+	local _options = subinstr("`after'", "`_cmd'", "", .)
+
 	syntax [using], /*
 		*/Exposures(varlist min=1 fv) /*
 		*/[ /*
@@ -57,8 +68,9 @@ program define stregmat, rclass
             */noEqstrip /*
             */noZero /*
             */toxl(passthru) /*
+            */todocx(passthru) /*
 		*/]
-s
+
 	if "`verbose'" != "" macro dir
 	
 	if `"`adjustments'"' == "" local adjustments  `""""'
@@ -98,24 +110,16 @@ s
     if `"`names'"' != "" capture mata: __names = `names'
     if _rc mata __names = J(1,0,"")
 	
-	_prefix_command regmat: `s(after)'
-	if "`verbose'" != "" return list
-	if "`verbose'" != "" sreturn list
-	local _cmd `s(cmdname)'
-	*local __postcmd = subinstr(`"`s(command)'"', `"`_cmd'"', "", 1)	// 2018-12-03
-	local __postcmd `"`s(anything0)'"'	// 2018-12-03
-	if "`s(options)'" != "" local _options ", `s(options)'" // 2018-12-07
-	*local eform = ("`s(efopt)'" != "") // 2018-12-16
-	local eform = ("`eform'" != "") // 2018-12-16
+	local eform = ("`eform'" != "")
 	
 	mata: __regressions = J(0,length(tokens(`"`adjustments'"')),"")
-  foreach exposure in `exposures' {
-    mata _row = J(1,0,"")
-    foreach adj in `adjustments' {
-      mata _row = _row, `"`_cmd' `outcome' `exposure' `adj' `s(if)' `s(in)' `__postcmd' `_options'"'
-    }
-    mata __regressions = __regressions \ _row
-  }
+	foreach exposure in `exposures' {
+		mata _row = J(1,0,"")
+		foreach adj in `adjustments' {
+			mata _row = _row, `"`_cmd' `outcome' `exposure' `adj' `_options'"'
+		}
+		mata __regressions = __regressions \ _row
+	}
 	mata: __regmattbl = nhb_mt_run_regressions(__regressions, "`base'" == "", ///
   `eform', __showcode, __addquietly, `"`btext'"', __names)
     
@@ -128,12 +132,12 @@ s
 	}
 	mata: __regmattbl = nhb_mt_tolabels(__regmattbl, "`labels'" != "")
 	mata: __regmattbl = __regmattbl.regex_select(__str_slct, __keep, 1, 0)
-  mata: __regmattbl.row_equations("")
+	mata: __regmattbl.row_equations("")
 	mata: __regmattbl.to_matrix("r(regmat)")
 
 	*** matprint ***************************************************************
 	matprint r(regmat) `using',	`style' `decimals' `title' `top' `undertop'  ///
-    `bottom' `replace' `eqstrip' `zero' `toxl'
+    `bottom' `replace' `eqstrip' `zero' `toxl' `todocx'
 	****************************************************************************
 	
 	return add

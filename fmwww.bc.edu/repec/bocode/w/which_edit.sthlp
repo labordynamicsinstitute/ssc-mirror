@@ -1,4 +1,5 @@
 {smcl}
+{* *! version 0.31}{...}
 {viewerjumpto "Syntax" "which_edit##syntax"}{...}
 {viewerjumpto "Examples" "which_edit##examples"}{...}
 {viewerjumpto "Author and support" "which_edit##author"}{...}

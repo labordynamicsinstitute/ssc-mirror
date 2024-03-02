@@ -1,4 +1,5 @@
 {smcl}
+{* *! version 0.31}{...}
 {viewerjumpto "Syntax" "ado_nhb/dummynizer##syntax"}{...}
 {viewerjumpto "Description" "ado_nhb/dummynizer##description"}{...}
 {viewerjumpto "Examples" "ado_nhb/dummynizer##examples"}{...}

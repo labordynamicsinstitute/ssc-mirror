@@ -1,7 +1,8 @@
-*! Part of package matrixtools v. 0.30
+*! Part of package matrixtools v. 0.31
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
-*! 2020-06-10 > frequency weights are now working
+* 2020-06-10 > frequency weights are now working
 
+* TODO: Reverse order for rows and columns
 * TODO: Return nx table (to integrate with regmat)
 * TODO: Oneway crossmat with by-option for varlist (to integrate with regmat) 
 * TODO crossmat option hide

@@ -1,11 +1,14 @@
-*! Part of package matrixtools v. 0.30
+*! Part of package matrixtools v. 0.31
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
+*TODO lookfor option: If the argument isn't a varlist then the varlist generated from using -lookfor- on the argument should be the argument 
+*TODO Long and short versions = with and without opening the datasets
 /*
-2020-05-24 >    nhb_msa_variable_description() has been modified
+2020-05-24 >	nhb_msa_variable_description() has been modified
 2019-06-11 >	Caption/Title added
 2017-08-31 >	When the dataset changed it is saved 
 2017-07-21 >	Bug in metadata regarding value labels fixed
 */
+* TODO: To have a short version with opening the datasets based on -describe using-
 * TODO: Filters such as max filesize
 * TODO: Undgå at ikke gemte tilføjelser slettes med metadata
 program define metadata

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.23}{...}
+{* *! version 0.31}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Help statsby" "help statsby"}{...}
 {vieweralsosee "Help table" "help table"}{...}
@@ -88,6 +88,11 @@ Default is dependent of the value of the style option{p_end}
 	* (Optional) row, column numbers for the upper right corner of the table in the sheet{break}
 	* (Optional) columnn widths in parentheses. If more columns than widths the last column width is used for the rest
 	{p_end}
+{synopt:{opt todocx:(string)}}A string containing one or two values separated 
+	by a comma. The values are:{break}
+	* path and filename on the excel book to save in.{break}
+	* (Optional) replace - replace/overwrite the content in the sheet{break}
+	{p_end}
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
@@ -160,17 +165,25 @@ mpg by foreign (columns) and rep78 (rows)
 (see {help matprint:matprint}):{p_end}
 {phang}{stata `"sumat price mpg, statistics(n fraction missing unique median iqi) rowby(rep78) colby(foreign) decimals(J(1,2,(0,2,0,0,1,1,1)))"'}{p_end}
 
-{phang}The output from {cmd: sumat} can easily be exported to excel (and word) 
+{phang}The output from {cmd: sumat} can easily be exported to excel 
 using option {opt toxl:}.{p_end}
 {phang}Here the output is saved in sheet "tbl" at the Excel workbook "tbls.xls(x)"
 in current directory:{p_end}
 {phang}{stata `"sumat price mpg, statistics(median iqi) rowby(rep78) colby(foreign) decimals(1) toxl(tbls, tbl)"'}{p_end}
 {phang}To see current directory:{p_end}
 {phang}{stata cd}{p_end}
-{phang}To see Excel workbook (stata 13):{p_end}
+{phang}To see the Excel workbook (stata 13):{p_end}
 {phang}{stata shell tbls.xls}{p_end}
-{phang}To see Excel workbook (stata 14 and up):{p_end}
+{phang}To see the Excel workbook (stata 14 and up):{p_end}
 {phang}{stata shell tbls.xlsx}{p_end}
+
+{phang}The output from {cmd: sumat} can easily be exported to word 
+using option {opt todocx:}.{p_end}
+{phang}Here the output is saved in the Word workbook "tbl.docx"
+in current directory:{p_end}
+{phang}{stata `"sumat price mpg, statistics(median iqi) rowby(rep78) colby(foreign) decimals(1) title(Comment) todocx(tbl, replace)"'}{p_end}
+{phang}To see the Word document (One can not add several tables to the same Word file):{p_end}
+{phang}{stata shell tbl.docx}{p_end}
 
 {phang}The option {opt f:ull} is to maintain same tablesize when using {opt row:by}:{p_end}
 {phang}{stata `"sumat foreign if !foreign, statistics(n fraction) rowby(rep78) total full"'}{p_end}

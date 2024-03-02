@@ -1,12 +1,12 @@
-*! Part of package matrixtools v. 0.30
-*! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
-
+*! Part of package matrixtools v. 0.31
+*> 2023-09-13 > bug in IF fixed
+*> 2023-08-14 > IF added
 program define _gmarktop
 	version 13
 	gettoken type 0 : 0
 	gettoken vn   0 : 0
 	gettoken eqs  0 : 0    /* known to be = */
-	syntax varlist (min=1 max=1 numeric), /*
+	syntax varlist (min=1 max=1 numeric) [if/], /*
     */[ /*
       */Top(integer 5) /*
       */Singles(numlist) /*
@@ -16,12 +16,13 @@ program define _gmarktop
 
     capture drop __marktopvar
     capture label drop __marktoplbl
+    if "`if'" != "" local if & `if'
     if "`other'" == "" local other other
     mata: __singles = J(1, 0, .)
     if "`top'" != "" & `top' > 0 mata: __singles = __singles, nhb_sae_outliers("`varlist'", `top')'
     if "`singles'" != ""  mata: __singles = __singles, strtoreal(tokens("`singles'"))
     mata: select_singles("$EGEN_Varname", "`varlist'", "`other'", __singles)
-    quietly generate double __marktopvar = cond(inlist(`varlist', `__marktop'), `varlist', .r) if !missing(`varlist')
+    quietly generate double __marktopvar = cond(inlist(`varlist', `__marktop'), `varlist', .r) if !missing(`varlist') `if'
     label copy `:value label `varlist'' __marktoplbl
     label define  __marktoplbl .r "`other'", modify
     label values __marktopvar __marktoplbl

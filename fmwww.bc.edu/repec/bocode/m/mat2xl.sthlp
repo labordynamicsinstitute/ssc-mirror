@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 29 Jul 2020}{...}
+{* *! version 0.31}{...}
 {viewerjumpto "Syntax" "mat2xl##syntax"}{...}
 {viewerjumpto "Description" "mat2xl##description"}{...}
 {viewerjumpto "Examples" "mat2xl##examples"}{...}

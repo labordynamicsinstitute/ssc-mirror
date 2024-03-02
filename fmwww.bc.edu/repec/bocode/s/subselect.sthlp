@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.28 2022-12-30}{...}
+{* *! version 0.31}{...}
 {viewerjumpto "Syntax" "subselect##syntax"}{...}
 {viewerjumpto "Description" "subselect##description"}{...}
 {viewerjumpto "Examples" "subselect##examples"}{...}

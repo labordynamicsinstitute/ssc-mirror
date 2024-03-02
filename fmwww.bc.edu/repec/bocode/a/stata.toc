@@ -1,6 +1,7 @@
 p a2reg module to estimate models with two fixed effects
 p aaniv module to compute unbiased IV regression
 p aaplot module for scatter plot with linear and/or quadratic fit, automatically annotated
+p ab2022 module to provide Gradient Solver for Ahlfeldt & Barr (2022): The economics of skyscrapers
 p abar module to perform Arellano-Bond test for autocorrelation 
 p abg module to implement the Alpha-Beta-Gamma Method of Distributional Analysis
 p aboutreg module providing tutorial on regression diagnostics

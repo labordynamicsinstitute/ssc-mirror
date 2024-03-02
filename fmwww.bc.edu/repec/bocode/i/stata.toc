@@ -104,6 +104,7 @@ p iscoil module to recode Israeli CBS occupation standard classification into IS
 p iscooesch module to recode ISCO codes into Oesch class scheme
 p isko module to recode 4 digit ISCO-88 occupational codes
 p isocodes module to generate standardized country codes and names
+p isogini module to estimate isogini measures at different percentiles
 p isograph module to compute inequality over logit ranks of social hierarchy
 p isopoverty module to generate data for Inequality-Poverty and Iso-Poverty curves
 p istdize module to generate indirectly standardized rates using a standard population

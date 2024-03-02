@@ -1,0 +1,18 @@
+d 'ISOGINI': module to estimate isogini measures at different percentiles
+d
+d      isogini produces estimates of isogini inequality measures at
+d percentiles 10 25 50 75 and 90.	 Rapid bootstrap n>20 is
+d provided to generate the standard errors of estimates. 
+d
+d KW: Gini coefficients
+d KW: bootstrap
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20170425
+d
+d Author:    Louis Chauvel, University of Luxembourg
+d Support: email   louis.chauvel@@uni.lu
+d
+f isogini.ado
+f isogini.sthlp

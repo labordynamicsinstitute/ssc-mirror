@@ -1,4 +1,7 @@
-*! version 0.2.8  2022-04-20 > Option noTOPcount now only for first row
+*!version 0.2.9  2024-02-25 > Option todocx added
+*!version 0.2.9  2023-08-02 > Option for column order is added
+*!version 0.2.9  2023-04-26 > cleanup in mata must be specific in "mata mata drop __* __*()". A capture is added preliminary
+* version 0.2.8  2022-04-20 > Option noTOPcount now only for first row
 * version 0.2.6  2021-05-24 > Bug in basetable_parser(): basetable::n_pct_by_value() not called when value ends on r. Thanks to Kasper Norman
 * version 0.2.6  2021-04-15 > NoTotal and NoPvalue now also for toxl
 * version 0.2.4 2020-10-08 > Bug in basetable::n_pct_by_value() fixed
@@ -125,25 +128,27 @@ mata:
 									string vector undertop,
 									string vector bottom,
 									real scalar show_pv,
-									real scalar show_total)
+									real scalar show_total,
+									real rowvector order)
 		{
 			real rowvector slct_columns
-      real colvector slct
+			real colvector slct
 			string scalar str_regex
 			string colvector lines
-      string matrix to_print
+			string matrix to_print
 			
 			if ( show_total ) str_regex = "^Total$"
 			if ( show_pv ) str_regex = "^P-value$"
 			if ( show_total & show_pv ) str_regex = "^Total$|^P-value$"
 			
 			slct_columns = this.regex_select_columns(str_regex)
-      to_print = this.output
-      slct = select(1::rows(to_print), strmatch(to_print[.,1], "  *"))
-      if (style == "md" & slct != J(0, 1, .) ) {
-        to_print[slct,1] = "*" :+ substr(to_print[slct,1],3,.) :+ "*"
-      }
-			lines = nhb_mt_mata_string_matrix_styled(to_print[., slct_columns], 
+			to_print = this.output[.,slct_columns]
+			slct = select(1::rows(to_print), strmatch(to_print[.,1], "  *"))
+			if (style == "md" & slct != J(0, 1, .) ) {
+				to_print[slct,1] = "*" :+ substr(to_print[slct,1],3,.) :+ "*"
+			}
+			if ( order == J(0, 1, .) ) order = .
+			lines = nhb_mt_mata_string_matrix_styled(to_print[., order], 
 				style, ("-", ""), 1, caption, top, undertop, bottom, filename, replace)
 		}
 

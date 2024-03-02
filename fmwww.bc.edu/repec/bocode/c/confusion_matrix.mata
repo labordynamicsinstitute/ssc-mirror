@@ -1,4 +1,8 @@
-* https://en.wikipedia.org/wiki/Sensitivity_and_specificity
+*! Part of package matrixtools v. 0.31
+*! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
+* 2023-01-07 Created
+
+* see https://en.wikipedia.org/wiki/Sensitivity_and_specificity
 /*
 mata mata clear
 mata mata set matalnum on

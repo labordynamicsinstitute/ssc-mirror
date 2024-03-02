@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 23 Jun 2020}{...}
+{* *! version 0.31}{...}
 {viewerjumpto "Syntax" "filaby##syntax"}{...}
 {viewerjumpto "Description" "filaby##description"}{...}
 {viewerjumpto "Examples" "filaby##examples"}{...}

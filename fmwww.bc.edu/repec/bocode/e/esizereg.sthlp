@@ -1,4 +1,5 @@
 {smcl}
+{* *! version 2.0.1 26Feb2024}{...}
 {* *! version 2.0.0 29May2019}{...}
 
 {title:Title}
@@ -76,8 +77,8 @@ In either version of {cmd:esizereg}, the coefficient must be for binary level va
 {opt esizereg} is a postestimation command that calculates Cohen's {it:d} effect size (Cohen 1988) for the {it: adjusted} mean difference of a continuous variable 
 between two groups. {opt esizereg} uses the unstandardized regression coefficient of the treatment variable as the numerator (which is equivalent to the difference 
 between two covariate adjusted means) and estimates the within groups pooled standard deviation as the denominator. Estimation models currently supported by {opt esizereg} 
-are {helpb regress}, {helpb tobit}, {helpb truncreg}, {helpb hetregress}, and {helpb xtreg}. When {cmd: aweights} are specified in the estimation model, 
-{opt esizereg} produces a weighted effect size estimate.
+are {helpb regress}, {helpb tobit}, {helpb truncreg}, {helpb hetregress}, {helpb xtreg}, {helpb intreg}, {helpb meintreg} and {helpb metobit}. When {cmd: aweights} are 
+specified in the estimation model, {opt esizereg} produces a weighted effect size estimate.
 
 {pstd}
 {cmd: esizeregi} is the immediate form of {cmd:esizereg}; see {helpb immed}.

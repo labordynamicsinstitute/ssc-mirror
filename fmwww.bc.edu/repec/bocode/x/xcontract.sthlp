@@ -1,9 +1,9 @@
 {smcl}
 {hline}
-help for {hi:xcontract}{right:(Roger Newson)}
+help for {cmd:xcontract} and {cmd:freqtop}{right:(Roger Newson)}
 {hline}
 
-{title:Create dataset of variable combinations with frequencies and percents}
+{title:Create or extend dataset of variable combinations with frequencies and percents}
 
 {p 8 17 2}{cmd:xcontract} {it:varlist} [{it:weight}] [{cmd:if} {it:exp}] [{cmd:in} {it:range}] [{cmd:,}
  {break}
@@ -16,18 +16,37 @@ help for {hi:xcontract}{right:(Roger Newson)}
  {break}
  {cmdab:f:req:(}{it:newvarname}{cmd:)} {cmdab:p:ercent:(}{it:newvarname}{cmd:)}
  {cmdab:cf:req:(}{it:newvarname}{cmd:)} {cmdab:cp:ercent:(}{it:newvarname}{cmd:)}
- {cmdab:pty:pe}{cmd:(}{it:storage_type}{cmd:)}
+ {break}
+ {cmdab:pty:pe}{cmd:(}{it:storage_type}{cmd:)} {cmdab:pfo:rmat}{cmd:(}{it:format}{cmd:)} {cmdab:zto:tal}{cmd:(}{it:#}{cmd:)}
+ {break}
  {cmd:by(}{it:by_varlist}{cmd:)}
+ {break}
+ {cmdab:z:ero} {cmd:nomiss}
+ {break}
  {cmdab:idn:um}{cmd:(}{it:#}{cmd:)} {cmdab:nidn:um}{cmd:(}{it:newvarname}{cmd:)}
  {cmdab:ids:tr}{cmd:(}{it:string}{cmd:)} {cmdab:nids:tr}{cmd:(}{it:newvarname}{cmd:)}
  {break}
  {cmdab:fo:rmat}{cmd:(}{it:varlist_1 format_1 ... varlist_n format_n}{cmd:)}
  {break}
- {cmdab:z:ero} {cmd:nomiss}
  ]
 
+ {p 8 17 2}{cmd:freqtop} [{cmd:if} {it:exp}] [{cmd:in} {it:range}] [{cmd:,}
+  {break}
+ {cmdab:f:req:(}{it:newvarname}{cmd:)} {cmdab:p:ercent:(}{it:newvarname}{cmd:)}
+ {cmdab:cf:req:(}{it:newvarname}{cmd:)} {cmdab:cp:ercent:(}{it:newvarname}{cmd:)}
+ {break}
+ {cmdab:pty:pe}{cmd:(}{it:storage_type}{cmd:)} {cmdab:pfo:rmat}{cmd:(}{it:format}{cmd:)} {cmdab:zto:tal}{cmd:(}{it:#}{cmd:)}
+ {break}
+ {cmd:by(}{it:by_varlist}{cmd:)}
+ {break}
+ {cmd:fast} {cmd:replace}
+ {break}
+ ]
+
+ 
 {p 4 4 2}
-{cmd:fweight}s, {cmd:aweight}s, {cmd:pweight}s, and {cmd:iweight}s are allowed, and are all treated in the same way;
+{cmd:fweight}s, {cmd:aweight}s, {cmd:pweight}s, and {cmd:iweight}s are allowed for {cmd:xcontract},
+and are all treated in the same way;
 see help for {help weights}.
 
 
@@ -35,8 +54,10 @@ see help for {help weights}.
 
 {p 4 4 2}
 {cmd:xcontract} is an extended version of {helpb contract}.
-It creates an output data set with 1 observation per combination of values of the variables in {it:varlist}
-and data on the frequencies and percents of those combinations of values in the existing data set,
+It creates an output data set (or resultsset),
+with 1 observation per combination of values of the variables in {it:varlist},
+and data on the frequencies and percents of those combinations of values
+in the existing data set,
 and, optionally, the cumulative frequencies and percents of those combinations.
 If the {cmd:by()} option is used, then the output data set
 has one observation per combination of values of the {it:varlist} variables per by-group,
@@ -44,22 +65,78 @@ and percents are calculated within each by-group.
 The output data set created by {cmd:xcontract}
 may be listed to the Stata log, or saved to a {help frame:data frame}, or saved to a disk file, or written to the memory
 (overwriting any pre-existing data set).
+{cmd:freqtop} inputs an existing frequency variable in the current dataset,
+which is typically an output dataset made by {cmd:xcontract}.
+It generates new variables, in the same dataset,
+containing the corresponding cumulative frequencies and/or percents and/or cumulative percents,
+optionally defined within user-specified by-groups.
 
 
-{title:Options for use with {cmd:xcontract}}
+{title:Options for use with {cmd:xcontract} and {cmd:freqtop}}
 
 {p}
-{cmd:xcontract} has a large number of options, which are listed in 3 groups:
+{cmd:xcontract} and {cmd:freqtop} have a large number of options, which are listed in 4 groups:
 
-{p 0 4}{bf:1.} Output-destination options.
+{p 0 4}{bf:1.} Options for {cmd:xcontract} and {cmd:freqtop}.{p_end}
+
+{p 0 4}{bf:2.} Output-destination options for {cmd:xcontract}.
 (These specify where the output data set will be written.){p_end}
 
-{p 0 4}{bf:2.} Output-variable options. (These specify the variables in the output data set.){p_end}
+{p 0 4}{bf:3.} Other options for {cmd:xcontract} only.{p_end}
 
-{p 0 4}{bf:3.} Other options. (These specify the observations in the output data set.){p_end}
+{p 0 4}{bf:4.} Other options for {cmd:freqtop}.{p_end}
 
 
-{title:Output-destination options}
+{title:Options for {cmd:xcontract} and {cmd:freqtop}}
+
+{p 4 8 2}{cmd:freq}{cmd:(}{it:newvarname}{cmd:)} specifies a name for the output frequency
+variable (for {cmd:xcontract})
+or the input frequency variable (for {cmd:freqtop}).
+If not specified, the name {cmd:_freq} is used.
+
+{p 4 8 2}{cmd:percent}{cmd:(}{it:newvarname}{cmd:)} specifies a name for the percent
+variable.  If not specified, {cmd:_percent} is used.
+If the {cmd:by()} option is used,
+then the percent for each combination of values of the
+{it:varlist} variables in each by-group is calculated as a percent of the by-group.
+
+{p 4 8 2}{cmd:cfreq}{cmd:(}{it:newvarname}{cmd:)} specifies a name for the cumulative
+frequency variable.  If not specified, no cumulative frequency variable is created.
+If the {cmd:by()} option is used,
+then the cumulative frequency for each combination of values of the
+{it:varlist} variables in each by-group is calculated as a cumulative frequency within the by-group.
+
+{p 4 8 2}{cmd:cpercent}{cmd:(}{it:newvarname}{cmd:)} specifies a name for the cumulative
+percent variable.  If not specified, no cumulative percent variable is created.
+If the {cmd:by()} option is used,
+then the cumulative percent for each combination of values of the
+{it:varlist} variables in each by-group is calculated as a cumulative percent of the by-group.
+
+{p 4 8 2}{cmd:ptype(}{it:storage_type}{cmd:)} specifies a {help type:storage type}
+for generating the percent variables specified by {cmd:percent()} and {cmd:cpercent()}.
+If {cmd:type()} is not specified, then these variables will be generated as variables
+of type {helpb float}. All generated variables are compressed to the smallest
+storage type possible without loss of precision. See help for {helpb compress}.
+
+{p 4 8 2}{cmd:pformat(}{it:format}{cmd:)} specifies a {help format:display format}
+for the percent variables specified by {cmd:percent()} and {cmd:cpercent()}.
+If {cmd:pformat()} is not specified,
+then these variables will have format {cmd:%8.2f},
+unless the formats are changed using the {cmd:format()} option.
+
+{p 4 8 2}{cmd:ztotal(}{it:#}{cmd:)} specifies a numeric value (usually {help missing})
+to which percents are evaluated if the denominator from which they are derived is zero.
+For instance, {cmd:ztotal(.z)} evaluates such percents to the missing value {cmd:.z}.
+The default is {cmd:ztotal(.)}, using the standard numeric missing value.
+
+{p 4 8 2}{cmd:by(}{it:by_varlist}{cmd:)} specifies a list of by-variables. If {cmd:by()}
+is specified, then all percents will be calculated as percents of their by-groups.
+Note that, if the {helpb if} expression or the {help weight} expression contains the
+reserved names {hi:_n} and {hi:_N}, then these will be interpreted as the observation sequence number
+and the number of observations, respectively, within the whole data set, not within the by-group.
+
+
+{title:Output-destination options for {cmd:xcontract}.}
 
 {p 4 8 2}
 {cmd:list(}{it:varlist} [{cmd:if} {it:exp}] [{cmd:in} {it:range}] [, {it:list_options} ] {cmd:)}
@@ -103,8 +180,9 @@ then {cmd:xcontract} will go to extra work so that
 it can restore the original data if the user presses {helpb break:Break}.
 
 {p 4 8 2}
-Note that the user must specify at least one of the four options {cmd:list()}, {cmd:saving()}, {cmd:norestore}
-and {cmd:fast}. These four options specify whether the output data set is listed to the Stata log,
+Note that the user must specify at least one of the five options {cmd:list()}, {cmd:frame()},
+{cmd:saving()}, {cmd:norestore}, and {cmd:fast}.
+These options specify whether the output data set is listed to the Stata log,
 saved to a disk file, or written to the memory (overwriting any pre-existing data set). More than
 one of these options can be specified.
 
@@ -118,40 +196,15 @@ output of a sequence of output data sets.
 These files may later be concatenated using {helpb append}.
 
 
-{title:Output-variable options}
+{title:Other options for {cmd:xcontract} only}
 
-{p 4 8 2}{cmd:freq}{cmd:(}{it:newvarname}{cmd:)} specifies a name for the frequency
-variable.  If not specified, {cmd:_freq} is used.
+{p 4 8 2}{cmd:zero} specifies that combinations of values of the variables in {it:varlist}
+with zero frequency in the input data set will be included in the output data set.
 
-{p 4 8 2}{cmd:percent}{cmd:(}{it:newvarname}{cmd:)} specifies a name for the percent
-variable.  If not specified, {cmd:_percent} is used.
-If the {cmd:by()} option is used,
-then the percent for each combination of values of the
-{it:varlist} variables in each by-group is calculated as a percent of the by-group.
-
-{p 4 8 2}{cmd:cfreq}{cmd:(}{it:newvarname}{cmd:)} specifies a name for the cumulative
-frequency variable.  If not specified, no cumulative frequency variable is created.
-If the {cmd:by()} option is used,
-then the cumulative frequency for each combination of values of the
-{it:varlist} variables in each by-group is calculated as a cumulative frequency within the by-group.
-
-{p 4 8 2}{cmd:cpercent}{cmd:(}{it:newvarname}{cmd:)} specifies a name for the cumulative
-percent variable.  If not specified, no cumulative percent variable is created.
-If the {cmd:by()} option is used,
-then the cumulative percent for each combination of values of the
-{it:varlist} variables in each by-group is calculated as a cumulative percent of the by-group.
-
-{p 4 8 2}{cmd:ptype(}{it:storage_type}{cmd:)} specifies a {help type:storage type}
-for generating the percent variables specified by {cmd:percent()} and {cmd:cpercent()}.
-If {cmd:type()} is not specified, then these variables will be generated as variables
-of type {helpb float}. All generated variables are compressed to the smallest
-storage type possible without loss of precision. See help for {helpb compress}.
-
-{p 4 8 2}{cmd:by(}{it:by_varlist}{cmd:)} specifies a list of by-variables. If {cmd:by()}
-is specified, then all percents will be calculated as percents of their by-groups.
-Note that, if the {helpb if} expression or the {help weight} expression contains the
-reserved names {hi:_n} and {hi:_N}, then these will be interpreted as the observation sequence number
-and the number of observations, respectively, within the whole data set, not within the by-group.
+{p 4 8 2}{cmd:nomiss} specifies that observations with missing values for any of
+the variables in {it:varlist} will be excluded from the output data set.
+If not specified, all observations are included,
+except if excluded by the {helpb if} and {helpb in} qualifiers or given zero {help weights}.
 
 {p 4 8 2}{cmd:idnum(}{it:#}{cmd:)} specifies an ID number for the output data set.
 It is used to create a numeric variable, with default name {hi:idnum}, in the output data set,
@@ -160,7 +213,7 @@ This is useful if the output data set is concatenated with other {cmd:xcontract}
 using {helpb append}.
 
 {p 4 8 2}{cmd:nidnum(}{it:newvarname}{cmd:)} specifies a name for the numeric ID variable
-evaluated by {cmd:idnum()}. If {cmd:idnum()} is present and {cmd:nidnum()} is absent,
+evaluated by {cmd:idnumrher  If {cmd:idnum()} is present and {cmd:nidnum()} is absent,
 then the name of the numeric ID variable is set to {hi:idnum}.
 
 {p 4 8 2}{cmd:idstr(}{it:string}{cmd:)} specifies an ID string for the output data set.
@@ -184,15 +237,20 @@ and the other variables have the same formats as the variables of the same names
 in the input data set.
 
 
-{title:Other options}
+{title:Other options for {cmd:freqtop}}
 
-{p 4 8 2}{cmd:zero} specifies that combinations of values of the variables in {it:varlist}
-with zero frequency in the input data set will be included in the output data set.
+{p 4 8 2}
+{cmd:fast} is intended for use by programmers.
+It specifies that the pre-existing data set in the memory will not be restored,
+even if the user presses {helpb break:Break} during the execution of {cmd:freqtop}.
+If {cmd:fast} is absent,
+then {cmd:freqtop} will go to extra work so that
+it can restore the original data if the user presses {helpb break:Break}.
 
-{p 4 8 2}{cmd:nomiss} specifies that observations with missing values for any of
-the variables in {it:varlist} will be excluded from the output data set.
-If not specified, all observations are included,
-except if excluded by the {helpb if} and {helpb in} qualifiers or given zero {help weights}.
+{p 4 8 2}
+{cmd:replace} specifies that, if there are existing variables in the current dataset,
+with the same names as the output percents and/or cumulative frequencies created by {cmd:freqtop},
+then those existing variables will be replaced.
 
 
 {title:Examples}
@@ -257,6 +315,37 @@ The following examples use the {cmd:frame()} option to create an output data set
 {p 4 8 2}{cmd:. describe, full}{p_end}
 {p 4 8 2}{cmd:. frame drop outframe}{p_end}
 
+{p}
+The following advanced example
+uses {cmd:freqtop} to add row and column percents
+to a resultsset created by {cmd:xcontract}.
+We start by creating the resultsset using {cmd:xcontract},
+with 1 observation per combination of {cmd:foreign} and {cmd:rep78},
+including combinations with no observations (because of the {cmd:zero} option),
+and overwriting the dataset in memory (because of the {cmd:fast} option).
+We then add a variable {cmd:_colpercent},
+containing percents foreach each {cmd:rep78} value in by-groups defined by {cmd:foreign} values.
+We then add a variable {cmd:_rowpercent},
+containing percents foreach each {cmd:foreign} value in by-groups defined by {cmd:rep78} values.
+The dataset then represents a table, with columns corresponding to {cmd:foreign} values,
+and rows corresponding to {cmd:rep78} values.
+Note that the column percents sum to 100.00 percent
+in the columns (but not in the rows),
+and the row percents sum to 100.00 percent
+in the rows (but not in the columns).
+
+{p 4 8 2}{cmd:. sysuse auto, clear}{p_end}
+{p 4 8 2}{cmd:. xcontract foreign rep78, zero fast}{p_end}
+{p 4 8 2}{cmd:. describe, full}{p_end}
+{p 4 8 2}{cmd:. by foreign: list, abbr(32)}{p_end}
+{p 4 8 2}{cmd:. freqtop, percent(_colpercent) by(foreign)}{p_end}
+{p 4 8 2}{cmd:. describe, full}{p_end}
+{p 4 8 2}{cmd:. by foreign: list, abbr(32) sum(_percent _colpercent)}{p_end}
+{p 4 8 2}{cmd:. freqtop, percent(_rowpercent) by(rep78)}{p_end}
+{p 4 8 2}{cmd:. describe, full}{p_end}
+{p 4 8 2}{cmd:. by foreign: list, abbr(32) sum(_percent _colpercent _rowpercent)}{p_end}
+{p 4 8 2}{cmd:. bysort rep78 (foreign): list, abbr(32) sum(_percent _colpercent _rowpercent)}{p_end}
+
 
 {title:Acknowledgements}
 
@@ -274,8 +363,8 @@ I also re-engineered some of the code for {cmd:xcontract}.
 {title:Author}
 
 {p}
-Roger Newson, Imperial College London, UK.
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, Queen Mary University London, UK.
+Email: {browse "mailto:r.newson@qmul.ac.uk":r.newson@qmul.ac.uk}
 
 
 {title:Also see}

@@ -1,4 +1,4 @@
-*! Part of package matrixtools v. 0.30
+*! Part of package matrixtools v. 0.31
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
 * 2020-08-23 added
 * 2020-06-29 created

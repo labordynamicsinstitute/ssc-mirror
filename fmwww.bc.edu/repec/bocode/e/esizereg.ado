@@ -1,3 +1,4 @@
+*! 2.0.2 Ariel Linden 26Feb2024 // added -intreg-, -meintreg- and -metobit- models
 *! 2.0.1 Ariel Linden 27Oct2021 // changed 'est' to a scalar to avoid issues with squaring negative values (which happens with local)
 *! 2.0.0 Ariel Linden 29May2019 // made esizereg a postestimation command and converted version 1.0.0 to an immediate command (esizeregi)
 *! 1.0.0 Ariel Linden 02Feb2019
@@ -12,7 +13,7 @@ version 11.0
 			// * store model estimates * //
 			estimates store results
 
-			if !inlist("`e(cmd)'", "regress", "tobit", "truncreg", "hetregress", "xtreg") {
+			if !inlist("`e(cmd)'", "regress", "tobit", "truncreg", "hetregress", "xtreg", "intreg") & !inlist("`e(cmd2)'", "meintreg", "metobit") {
 				di as err `"`e(cmd)' is not supported by {bf:esizereg}"'
 				exit 198
 			}	

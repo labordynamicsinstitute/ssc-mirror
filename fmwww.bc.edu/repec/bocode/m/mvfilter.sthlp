@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0  16feb2024}{...}
+{* *! version 1.1  22feb2024}{...}
 {viewerdialog "mvfilter" "dialog mvfilter, message(-mvfilter-)"}{...}
 {vieweralsosee "[TS] tsfilter hp" "mansection TS tsfilterhp"}{...}
 {vieweralsosee "" "--"}{...}
@@ -61,8 +61,7 @@ to match the static {bf:Hodrick-Prescott} filter{p_end}
 dynamic filter to the static {bf:Hodrick-Prescott} filter{p_end}
 
 {synopt:{opt beta:cap}}constraints the autoregressive parameter to 
-min(beta,0.85). The default is unconstrained beta.
-dynamic filter to the static {bf:Hodrick-Prescott} filter{p_end}
+min(beta,0.85). The default is unconstrained beta.{p_end}
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
@@ -127,10 +126,11 @@ This works only for AR(0) (see technical remarks).
 {opt details} display the oytput of the Kalman filter estimation 
 
 {phang}
-{opt adjust} With AR(p) p>=1, a small sample problem is introduced. {opt adjusts}
-adjusts the sample variance ratio of the cycle over change in the slope of 
-the trend in the dynamic filter to match the sample variance ratio in the 
-static HP filter following Borio et al. (2013 and 2014).
+{opt adjust} With AR(p>=1), a small sample problem is introduced. {opt adjusts}
+allows you to adjust the ratio of the sample variance of the cycle over the 
+sample variance of the change in the slope of the trend in the dynamic filter 
+to match the sample variance ratio in the static HP filter following 
+Borio et al. (2013 and 2014).
 
 {phang}
 {opt loop} returns the adjustment factor, the SS and HP sample variance ratios
@@ -144,18 +144,17 @@ would converge to its mean only after very olong time.
 {title:Tecnical Remarks}
 
 {phang}
-{opt optimal} with AR(p>=1), you cannot specify {opt optimal}. This is due to the 
-fact that {cmd:sspace} does not allow for non linear constraints. Indeed, in the 
-case of AR(1), the joint estimation of {bf:lambda} and the AR parameter would 
-require a linear constraint in the observed equation such that the parameter (beta1)
-in front of the lagged observed variable is equal to minus the parameter in front of the 
+{opt optimal} works only with AR(0). This is due to the fact that {cmd:sspace} 
+does not allow for non linear constraints. Indeed, in the case of AR(1) (say), 
+the joint estimation of {bf:lambda} and the AR parameter would require a linear 
+constraint in the observed equation such that the parameter (beta1) in front 
+of the lagged observed variable is equal to minus the parameter in front of the 
 lagged state variable and a non-linear constraint on variance ratio such that it is 
 equal to lambda*(1-beta1^2). Because {cmd:sspace} cannot handle this second 
-constraint, {opt option} is allowed only for the static filter
-with AR(0).
+constraint, {opt option} is allowed only for the static filter with AR(0).
 
 {phang}
-with AR(p>=1), {cmd:sspace} cannot estimate the autoregressive parameters.
+the autoregressive parameters cannot be estimated by the Kalman filter. 
 These are estimated before by regressing the cyclycal component of the static 
 filter with AR(0) on its lag(s) and then imposed as linear restriction(s) in the 
 {cmd:sspace} representation. This is due again to the fact that {cmd:sspace} does
@@ -166,8 +165,8 @@ lambda*(1-beta1^2-beta2^2) in the case of AR(2).
 
 {phang}
 {opt loop} adjusts the sample variance ratio of the dynamic filter with p>=1 to
-match the sample varance ratio of the static filter with p=0. The implementation 
-comes from code used for a similar application in Berger et al. (2015).
+match the sample varance ratio of the static filter with p=0. The code for 
+the {opt loop} implementation comes code accompanying Berger et al. (2015).
 
 {phang}
 {opt smooth(#)} Unless specified, the smoothing parameter is set as a function of the
@@ -176,7 +175,7 @@ or yearly) following Ravn and Uhlig (2002). The Ravn-Uhlig rule sets {it:#} to
 1600n^4, where n is the number of periods per quarter. 
 
 {phang}
-NB: if {cmd:mvfilter} fails to converge, there is no option to adjust the intial 
+{bf:NB}: if {cmd:mvfilter} fails to converge, there is no option to adjust the intial 
 conditions. This is for future implementation. At present the only suggestion to
 help convergence is to change sample.
 

@@ -1,6 +1,6 @@
-*! Part of package matrixtools v. 0.30
+*! Part of package matrixtools v. 0.31
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
-*! 2020-06-15 Bug with zero length variables fixed
+* 2020-06-15 Bug with zero length variables fixed
 program define strofnum
 	version 12.1
 	syntax varlist [, keep]

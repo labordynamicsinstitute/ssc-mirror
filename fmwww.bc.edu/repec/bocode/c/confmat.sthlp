@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0  5 Aug 2021}{...}
+{* *! version 0.31}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Install diagt" "ssc install diagt"}{...}
 {vieweralsosee "Help diagt (if installed)" "help diagt"}{...}

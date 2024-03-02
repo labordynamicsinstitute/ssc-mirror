@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 27 Feb 2021}{...}
+{* *! version 0.31}{...}
 {viewerjumpto "Syntax" "onewai##syntax"}{...}
 {viewerjumpto "Options" "onewai##options"}{...}
 {viewerjumpto "Examples" "onewai##examples"}{...}

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0  7 Jun 2021}{...}
+{* *! version 0.31}{...}
 {viewerjumpto "Syntax" "_gmarktop##syntax"}{...}
 {viewerjumpto "Description" "_gmarktop##description"}{...}
 {viewerjumpto "Options" "_gmarktop##options"}{...}

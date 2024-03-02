@@ -11,11 +11,12 @@ version 16.0;
   This program contains re-engineered code
   originally derived from official Stata's -contract- and -fillin-.
 *! Author: Roger Newson
-*! Date: 31 December 2020
+*! Date: 01 March 2024
 */
 
 syntax varlist [if] [in] [fw aw pw iw] [,  LIst(string asis) FRAme(string asis) SAving(string asis) noREstore FAST FList(string)
-  Freq(name) Percent(name) CFreq(name) CPercent(name) PTYpe(string) by(varlist)
+  Freq(name) Percent(name) CFreq(name) CPercent(name) ZTOtal(passthru) PTYpe(passthru) PFOrmat(passthru)
+  by(varlist)
   IDNum(string) NIDNum(name) IDStr(string) NIDStr(name)
   FOrmat(string)
   Zero noMISS ];
@@ -61,6 +62,8 @@ Output-variable options:
   (created only if specified).
 -ptype- is the storage type for generated percentage variable(s)
   (defaulting to -float-).
+-pformat- specifies a format for output percent variables.
+-ztotal()- specifies a value (usually missing) for percents from zero totals.
 -by- contains a list of by-variables.
 -idnum- is an ID number for the output data set,
   used to create a numeric variable idnum in the output data set
@@ -292,52 +295,12 @@ sort `bygrp' `varlist';
 *
  Add percent and cumulative frequency variables
 *;
-
-
-* Default type for percent variables *;
-if "`ptype'" == "" {;
-  local ptype "float";
+if "`percent'"=="" {;
+  local percent "_percent";
 };
-
-
-* Default format for percent variables *;
-local pformat "%8.2f";
-
-
-* Default names for percent and cumulative frequency variables *;
-if "`percent'"=="" {;local percent "_percent";};
-if "`cfreq'"=="" & "`cpercent'"!="" {;
-  tempvar tempcfreq;
-  local cfreq "`tempcfreq'";
-};
-
-
-* Evaluate percent and cumulative frequency variables *;
-tempvar Ninbygrp;
-qui {;
-  by `bygrp': egen double `Ninbygrp'=total(`freq');
-  gene `ptype' `percent'=(100*`freq')/`Ninbygrp';
-  lab var `percent' "Percent";
-  format `percent' `pformat';
-  if "`cfreq'"!="" {;
-    by `bygrp': gene double `cfreq'=sum(`freq');
-    lab var `cfreq' "Cumulative frequency";
-  };
-  if "`cpercent'"!="" {;
-    by `bygrp': gene `ptype' `cpercent'=(100*sum(`freq'))/`Ninbygrp';
-    lab var `cpercent' "Cumulative percent";
-    format `cpercent' `pformat';
-  };
-  drop `Ninbygrp';
-};
-
-
-*
- Compress percent and cumulative frequency variables
- to minimum type possible without loss of precision
-*;
-qui compress `freq' `percent' `cfreq' `cpercent';
-
+freqtop, freq(`freq') percent(`percent') cfreq(`cfreq') cpercent(`cpercent')
+ `ptype' `pformat' by(`bygrp') fast;
+ 
 
 *
  Keep only wanted variables in final order and sort order

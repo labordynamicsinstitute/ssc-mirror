@@ -1,0 +1,21 @@
+d 'AB2022': module to provide Gradient Solver for Ahlfeldt & Barr (2022): The economics of skyscrapers
+d
+d  Abstract: AB2022 is a gradient solver developed by Gabriel M
+d Ahlfeldt, based on the model published in Ahlfeldt & Barr (2022):
+d "The economics of skyscrapers", Journal of Urban Economics. The
+d programme solves for the spatial general equilibrium and
+d illustrates floor space rent gradients, height gradients, land
+d rent gradients, the land use pattern, as well as total employment
+d and wage. 
+d
+d KW: gradient solver 
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20240302
+d
+d Author:  Gabriel Ahlfeldt, LSE
+d Support: email  G.Ahlfeldt@@lse.ac.uk
+d
+f ab2022.ado
+f ab2022.sthlp

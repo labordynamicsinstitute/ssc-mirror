@@ -1,6 +1,7 @@
-*! Part of package matrixtools v. 0.30
+*! Part of package matrixtools v. 0.31
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
-*! 2021-01-29 option label and extend added
+* 2023-11-27 label list is reset foreach variable (local __lbl_values)
+* 2021-01-29 option label and extend added
 * TODO Sometimes unnecessary value labels are added/inherited
 
 program define strtonum
@@ -23,7 +24,8 @@ program define strtonum
                     }
                     label variable `vn' "`: variable label __`vn''"
                     label define `vn' `__lbl_values', replace
-                    label values `vn' `vn'                	
+                    label values `vn' `vn'
+										local __lbl_values
                 }
                 else {
                 	if "`extend'" == "" local extend noextend

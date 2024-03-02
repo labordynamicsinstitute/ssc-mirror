@@ -1,7 +1,9 @@
-*! Part of package matrixtools v. 0.30
+*! Part of package matrixtools v. 0.31
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
 * 2023-02-04 Bug wrt include fixed
 * 2023-01-07 Created
+* TODO save count table
+* TODO reverse order on count table
 /*
 cls
 capture program drop confmat

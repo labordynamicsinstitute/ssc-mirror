@@ -1,3 +1,4 @@
+*! version 1.1.0  //  Ariel Linden 26Feb2024 // added several new models 
 *! version 1.0.0  //  Ariel Linden 24Aug2019 
 
 program define evalue_estat, rclass
@@ -43,7 +44,8 @@ version 11.0
 			local ul = b[6,colnumb(matrix(b),"`treat'")]
 		
 			// * Exponentiate if eform = 0	for exponentiated models * //	
-			if inlist("`e(cmd)'", "logistic", "logit", "cloglog", "scobit", "clogit", "stcox", "streg") | inlist("`e(cmd)'", "tpoisson", "nbreg", "zip", "zinb", "poisson", "cpoisson") {
+			if inlist("`e(cmd)'", "logistic", "logit", "cloglog", "scobit", "clogit") | inlist("`e(cmd)'", "tpoisson", "nbreg", "zip", "zinb", "poisson", "cpoisson") ///
+					| inlist("`e(cmd2)'", "stcox", "streg", "melogit", "mecloglog", "mepoisson", "menbreg", "mestreg") {
 				if b[9,colnumb(matrix(b),"`treat'")] == 0 {
 					local est = exp(`est')
 					local ll = exp(`ll')
@@ -54,7 +56,7 @@ version 11.0
 			**************
 			* Odds Ratio *
 			**************
-			if inlist("`e(cmd)'", "logistic", "logit", "cloglog", "scobit", "clogit") {
+			if inlist("`e(cmd)'", "logistic", "logit", "cloglog", "scobit", "clogit") | inlist("`e(cmd2)'", "melogit", "mecloglog") {
 				
 				// * assess whether outcome is common * //
 				sum `e(depvar)' if e(sample), meanonly
@@ -68,7 +70,7 @@ version 11.0
 			****************
 			* Hazard Ratio *
 			****************
-			else if inlist("`e(cmd2)'", "stcox", "streg") {
+			else if inlist("`e(cmd2)'", "stcox", "streg", "mestreg") {
 				
 				// * assess whether outcome is common * //
 				sum `e(depvar)' if e(sample), meanonly
@@ -82,7 +84,7 @@ version 11.0
 			**************
 			* Rate Ratio *
 			**************
-			else if inlist("`e(cmd)'", "poisson", "cpoisson", "tpoisson", "nbreg", "zip", "zinb") {
+			else if inlist("`e(cmd)'", "poisson", "cpoisson", "tpoisson", "nbreg", "zip", "zinb") | inlist("`e(cmd2)'", "mepoisson", "menbreg") {
 				
 				// * run evalue *//
 				evalue rr `est', lcl(`ll') ucl(`ul') true(`exp')
@@ -92,7 +94,7 @@ version 11.0
 			*********************************
 			* Standardized Mean Difference *
 			*********************************
-			else if inlist("`e(cmd)'", "regress", "tobit", "truncreg", "hetregress", "xtreg") {
+			else if inlist("`e(cmd)'", "regress", "tobit", "truncreg", "hetregress", "xtreg", "intreg") | inlist("`e(cmd2)'", "metobit", "meintreg")  {
 			
 				// * get effect size * //
 				qui esizereg `treat'
@@ -116,7 +118,7 @@ version 11.0
 			*****************
 			* saved results * 		
 			*****************
-			if inlist("`e(cmd)'", "regress", "tobit", "truncreg", "hetregress", "xtreg") { 
+			if inlist("`e(cmd)'", "regress", "tobit", "truncreg", "hetregress", "xtreg", "intreg") | inlist("`e(cmd2)'", "metobit", "meintreg") { 
 				return scalar n2 = `n2'	
 				return scalar n1 = `n1'
 				return scalar sdy = `sdy'				

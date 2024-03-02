@@ -17,7 +17,7 @@ d KW: summary statistics
 d
 d Requires: Stata version 12 
 d
-d Distribution-Date: 20230204
+d Distribution-Date: 20240302
 d
 d Author: Niels Henrik Bruun, Aalborg University Hospital
 d Support: email niels.henrik.bruun@@gmail.com
@@ -61,6 +61,7 @@ f ../w/which_edit.sthlp
 f ../l/lmatrixtools.mata
 f ../l/ltoxl_v13.mata
 f ../l/ltoxl_v14.mata
+f ../l/ltodocx_v13.mata
 f ../l/ltoxl_v13.mlib
 f ../l/ltoxl_v14.mlib
 f ../l/lmatrixtools.mlib

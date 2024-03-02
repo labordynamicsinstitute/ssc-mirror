@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.23}{...}
+{* *! version 0.31}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Help log2markup (Is installed with matprint" "help log2markup"}{...}
 {vieweralsosee "Help basetable (Is installed with matprint" "help basetable"}{...}
@@ -104,6 +104,11 @@ Default is dependent of the value of the style option.{p_end}
 	* (Optional) row, column numbers for the upper right corner of the table in the sheet{break}
 	* (Optional) columnn widths in parentheses. If more columns than widths the last column width is used for the rest
 	{p_end}
+{synopt:{opt todocx:(string)}}A string containing one or two values separated 
+	by a comma. The values are:{break}
+	* path and filename on the excel book to save in.{break}
+	* (Optional) replace - replace/overwrite the content in the sheet{break}
+	{p_end}
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
@@ -148,34 +153,45 @@ are to be estimated.{p_end}
 In the regression we use the option vce(robust).{p_end}
 {phang}{stata `"regmat, outcome(wage hours) exposure(i.married i.collgrad) adjustment("" "age i.race") names("crude", "adjusted") btext(mean diff): regress, vce(robust)"'}{p_end}
 
-{phang}The output from {cmd: regmat} can easily be exported to excel (and word) 
-using option {opt toxl:}.{p_end}
+{phang}The output from {cmd: regmat} can easily be exported to Excel using 
+option {opt toxl:}.{p_end}
 {phang}Here the output is saved in sheet "tbl" at the Excel workbook "tbls.xls(x)"
 in current directory:{p_end}
 {phang}{stata `"regmat, outcome(wage hours) exposure(i.married i.collgrad) adjustment("" "age i.race") names("crude", "adjusted") btext(mean diff) toxl(tbls, tbl): regress, vce(robust)"'}{p_end}
 {phang}To see current directory:{p_end}
 {phang}{stata cd}{p_end}
-{phang}To see Excel workbook (stata 13):{p_end}
+{phang}To see the Excel workbook (stata 13):{p_end}
 {phang}{stata shell tbls.xls}{p_end}
-{phang}To see Excel workbook (stata 14 and up):{p_end}
+{phang}To see the Excel workbook (stata 14 and up):{p_end}
 {phang}{stata shell tbls.xlsx}{p_end}
+
+{phang}The output from {cmd: regmat} can easily be exported to Word using 
+option {opt todocs:}.{p_end}
+{phang}Here the output is saved in sheet "tbl" in a new Word file "tbl1.docx"
+in current directory (One can not add several tables to the same Word file):{p_end}
+{phang}{stata `"regmat, outcome(wage hours) exposure(i.married i.collgrad) adjustment("" "age i.race") names("crude", "adjusted") btext(mean diff) todocx(tbl1, replace) title(comment text): regress, vce(robust)"'}{p_end}
+{phang}To see the Word docx-file:{p_end}
+{phang}{stata shell tbl1.docx}{p_end}
+
 
 {title:{cmd:stregmat} example}
 
 {pstd}Get example data:{p_end}
-
 {phang}{stata `"webuse hypoxia, clear"'}{p_end}
 
 {pstd}Declare data to be survival-time data and declare the failure event of 
 interest, that is, the event to be modeled{p_end}
-
 {phang}{stata `"stset dftime, failure(failtype==1)"'}{p_end}
 
 {pstd}Estimate the crude and adjusted ({it:age} and {it:hgb}) effects of 
 {it:hp5} and  and {it:ifp} in a competing-risks model with failtype==2 as the 
 competing event{p_end}
+{phang}{stata `"stregmat,exposures(hp5 ifp) adjustments("" "age hgb") eform btext(HzRR) names("crude", "adjusted"): stcrreg, compete(failtype==2)"'}{p_end}
 
-{phang}{stata `"stregmat,exposures(hp5 ifp) adjustments("" "age hgb") eform btext(sHz) names("crude", "adjusted"): stcrreg, compete(failtype==2)"'}{p_end}
+{pstd}A summary of mixed time-to-event analysis:{p_end}
+{phang}{stata `"webuse catheter"'}{p_end}
+{phang}{stata `"stregmat, e(age female) noc: mestreg || patient:, distribution(weibull)"'}{p_end}
+
 
 {marker results}{...}
 {title:Stored results}

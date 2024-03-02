@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.23}{...}
+{* *! version 0.31}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Help matlist" "help matlist"}{...}
 {vieweralsosee "Help log2markup (if installed)" "help log2markup"}{...}
@@ -58,6 +58,11 @@ Default is the value 0, ie no hidding{p_end}
 	* (Optional) replace - replace/overwrite the content in the sheet{break}
 	* (Optional) row, column numbers for the upper right corner of the table in the sheet{break}
 	* (Optional) columnn widths in parentheses. If more columns than widths the last column width is used for the rest
+	{p_end}
+{synopt:{opt todocx:(string)}}A string containing one or two values separated 
+	by a comma. The values are:{break}
+	* path and filename on the excel book to save in.{break}
+	* (Optional) replace - replace/overwrite the content in the sheet{break}
 	{p_end}
 {synoptline}
 {p2colreset}{...}
@@ -141,15 +146,21 @@ preferred that the output in the log is in latex/tex or html like below:{p_end}
 {phang}The table output can also be saved in a file in the current directory:{p_end}
 {phang}{stata `"matprint b12 using table_b12.tex, title(Regression summary table) decimals(3) style(tex)"'}{p_end}
 
-{phang}Or table output can be saved in sheet "b12" at Excel workbook "tbls.xls(x)" in the 
-current directory:{p_end}
+{phang}The table output can be saved in sheet "b12" at the Excel workbook 
+"tbls.xls(x)" in the current directory:{p_end}
 {phang}{stata `"matprint b12, title(Regression summary table) decimals(3) toxl(tbls, b12)"'}{p_end}
 {phang}To see current directory:{p_end}
 {phang}{stata cd}{p_end}
-{phang}To see Excel workbook (stata 13):{p_end}
+{phang}To see the Excel workbook (stata 13):{p_end}
 {phang}{stata shell tbls.xls}{p_end}
-{phang}To see Excel workbook (stata 14 and up):{p_end}
+{phang}To see the Excel workbook (stata 14 and up):{p_end}
 {phang}{stata shell tbls.xlsx}{p_end}
+
+{phang}The table output can be saved in Word document "tbl.docx" in the 
+current directory:{p_end}
+{phang}{stata `"matprint b12, title(Regression summary table) decimals(3) todocx(tbl, replace)"'}{p_end}
+{phang}To see the Word document (One can not add several tables to the same Word file):{p_end}
+{phang}{stata shell tbl.docx}{p_end}
 
 {phang}Show replicated roweq and coleg values:{p_end}
 {phang}{stata `"matprint b12, noeqstrip"'}{p_end}

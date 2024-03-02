@@ -1,5 +1,8 @@
-*! Package basetable v 0.2.8
+*! Package basetable v 0.2.9
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
+*!version 0.2.9  2024-02-25 > Option todocx added
+*!version 0.2.9  2023-08-02 > Option for column order is added
+*!version 0.2.9  2023-04-26 > cleanup in mata must be specific in "mata mata drop __* __*()". A capture is added preliminary
 *version 0.2.8  2022-12-28 > category row titles in italics for style markdown see code in ::log_print()
 *version 0.2.8  2022-12-22 > Bug in option toxl fixed. Now more tables can be saved in the same sheet 
 *version 0.2.8  2022-04-20 > Option noTOPcount now only for first row
@@ -76,9 +79,10 @@ version 12
 
 program define basetable
 	* input_list is required by syntax, so input_list is not empty 
-	syntax anything(name=input_list) [if] [in] [using/] /*
+	syntax anything(name=input_list) [if/] [in] [using/] /*
 		*/[,/*
 			*/Toxl(string) /*
+			*/todocx(string) /*
 			*/Nthousands /*
 			*/PCtformat(string) /*
 			*/PVformat(string) /*
@@ -100,9 +104,11 @@ program define basetable
 			*/Exact(integer 0) /*
 			*/CAtegoricalreport(string) /*
 			*/noTOPcount /*
+			*/COLumnorder(numlist integer >1 <8) /*
 		*/]
         
-    local fn `using'
+	if "`if'" != "" local if if (`if')
+  local fn `using'
         
 	local QUIETLY "quietly"
 	if `"`log'"' == "log" local QUIETLY ""
@@ -132,59 +138,69 @@ program define basetable
 		`"`missing'"' == "missing", `"`if'"', `"`in'"', `exact', ///
 		`"`categoricalreport'"', `"`topcount'"' == "")
 
-    mata: tbl.log_print(`"`style'"', `"`fn'"', `"`replace'"' != "", ///
+	if `"`columnorder'"' != "" mata order = 1, strtoreal(tokens("`columnorder'"))
+	else mata order = .
+	mata: tbl.log_print(`"`style'"', `"`fn'"', `"`replace'"' != "", ///
 						`"`caption'"', `"`top'"', `"`undertop'"', `"`bottom'"', ///
-						`"`pvalue'"' != "", `"`total'"' != "")
+						`"`pvalue'"' != "", `"`total'"' != "", order)
 
-    if "`toxl'" != "" { 
-        if `c(stata_version)' >= 13 {
-            if `c(stata_version)' >= 14 mata: __xlz = xlsetup14()
-            else mata: __xlz = xlsetup13()
+	if "`toxl'" != "" { 
+		if `c(stata_version)' >= 13 {
+			if `c(stata_version)' >= 14 mata: __xlz = xlsetup14()
+			else mata: __xlz = xlsetup13()
 
-            `QUIETLY' mata: __xlz.thisversion
-            
-            mata: __xlz.stringset(`"`toxl'"')
-            `QUIETLY' mata: __xlz.xlfile()
-            `QUIETLY' mata: __xlz.sheet()
-            `QUIETLY' mata: __xlz.start()
-            `QUIETLY' mata: __xlz.replacesheet()
-            if `c(stata_version)' >= 14 {
-            	mata: __2xl_cw = __xlz.columnwidths()
-                mata: __2xl_cw = __2xl_cw[1] != . ? __2xl_cw : (70, 20)
-                mata: __xlz.columnwidths(__2xl_cw)
-                `QUIETLY' mata: __xlz.columnwidths()            	
-            }
+			`QUIETLY' mata: __xlz.thisversion
+			
+			mata: __xlz.stringset(`"`toxl'"')
+			`QUIETLY' mata: __xlz.xlfile()
+			`QUIETLY' mata: __xlz.sheet()
+			`QUIETLY' mata: __xlz.start()
+			`QUIETLY' mata: __xlz.replacesheet()
+			if `c(stata_version)' >= 14 {
+				mata: __2xl_cw = __xlz.columnwidths()
+				mata: __2xl_cw = __2xl_cw[1] != . ? __2xl_cw : (70, 20)
+				mata: __xlz.columnwidths(__2xl_cw)
+				`QUIETLY' mata: __xlz.columnwidths()            	
+			}
 
-            mata: __str_regex = ""
-            if `"`total'"' != "" mata: __str_regex = "^Total$"
+			mata: __str_regex = ""
+			if `"`total'"' != "" mata: __str_regex = "^Total$"
 			if  `"`pvalue'"' != "" mata: __str_regex = "^P-value$"
 			if `"`total'"' != "" & `"`pvalue'"' != "" mata: __str_regex = "^Total$|^P-value$"
-            mata: __slct_columns = tbl.regex_select_columns(__str_regex)
-            mata: __output = tbl.output[., __slct_columns]
+			mata: __slct_columns = tbl.regex_select_columns(__str_regex)
+			mata: __output = tbl.output[., __slct_columns]
 
-            mata: __xlz.insert_matrix(__output)
-            if `c(stata_version)' >= 14 {
-                mata: __xlz.set_alignments("left", (0, 0), (rows(__output)-1, 0), 1)
-                mata: __xlz.set_alignments("left", (0, 0), (0, cols(__output)-1), 1)
-                mata: __xlz.set_alignments("right", (1, 1), (rows(__output)-1, cols(__output)-1), 1)
-            }
-            if inlist(`"`style'"', "", "smcl") ///
-                mata printf(`"Table saved in "%s", in sheet "%s"... \n"', __xlz.xlfile(), __xlz.sheet())
-
-        }
+			mata: __xlz.insert_matrix(__output)
+			if `c(stata_version)' >= 14 {
+				mata: __xlz.set_alignments("left", (0, 0), (rows(__output)-1, 0), 1)
+				mata: __xlz.set_alignments("left", (0, 0), (0, cols(__output)-1), 1)
+				mata: __xlz.set_alignments("right", (1, 1), (rows(__output)-1, cols(__output)-1), 1)
+			}
+			if inlist(`"`style'"', "", "smcl") ///
+				mata printf(`"Table saved in "%s", in sheet "%s"... \n"', __xlz.xlfile(), __xlz.sheet())
+		}
 		else {
 			display "{error:Option toxl do not work in version 12 for Stata.}" 
 			display "Use csv output file at the {help using:using} modifier and option style(csv) instead"
 		}
-    }
-    mata mata drop __* __*()
+  }
+	
+	*** mat2docx *****************************************************************
+	if "`todocx'" != "" {
+		if `c(stata_version)' >= 13 mata: msm2d("`todocx'", tbl.output, "`caption'")
+		else display "{error:Option todocx do not work in version 12 for Stata.}" 
+	}
+	******************************************************************************
+	capture mata mata drop __* __*()
 end
 
 if `c(stata_version)' >= 13 {
-    mata st_local( "__fn", findfile("ltoxl_v13.mata"))
-    include "`__fn'"
+	mata st_local( "__fn", findfile("ltoxl_v13.mata"))
+	include "`__fn'"
+	mata st_local( "__2docx_fn", findfile("ltodocx_v13.mata"))
+	include "`__2docx_fn'"
 }
 if `c(stata_version)' >= 14 {
-    mata st_local( "__fn", findfile("ltoxl_v14.mata"))
-    include "`__fn'"
+	mata st_local( "__fn", findfile("ltoxl_v14.mata"))
+	include "`__fn'"
 }

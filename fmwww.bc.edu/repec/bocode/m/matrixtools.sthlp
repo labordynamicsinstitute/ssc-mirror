@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.23}{...}
+{* *! version 0.31}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Install log2markup" "ssc install log2markup"}{...}
 {vieweralsosee "Help log2markup (if installed)" "help log2markup"}{...}

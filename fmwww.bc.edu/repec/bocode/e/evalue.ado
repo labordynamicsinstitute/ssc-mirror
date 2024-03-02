@@ -1,4 +1,4 @@
-*! 1.3.0 Ariel Linden 23Sep2019 // changed instances of "substr()" to "substr()" because of Stata version issues
+*! 1.3.0 Ariel Linden 23Sep2019 // changed instances of "bsubstr()" to "substr()" because of Stata version issues
 *! 1.2.0 Ariel Linden 05Aug2019 // made "rare" the default for OR and HR, and made "common" the user-specified option
 								// added CI to figure
 

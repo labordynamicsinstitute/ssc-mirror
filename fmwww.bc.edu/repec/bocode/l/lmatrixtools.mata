@@ -1,5 +1,6 @@
-*! Part of package matrixtools v. 0.30
+*! Part of package matrixtools v. 0.31
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
+*!2023-08-04 > nhb_mt_tolabels() modified
 *!2022-12-23 > Bug in nhb_sae_summary_row() for idi
 *!2022-12-29 > nhb_mt_tolabels() added
 *!2022-12-29 > nhb_mt_run_regressions() added
@@ -1702,7 +1703,7 @@ mata:
     sms.print()
 		return(sms)
 	}
-  
+
    class nhb_mt_labelmatrix nhb_mt_tolabels(	
      class nhb_mt_labelmatrix mat_tbl,
     |real scalar uselbl,
@@ -1723,7 +1724,21 @@ mata:
 		C = rows(eq)
 		if ( uselbl ) for(c=1;c<=C;c++) eq[c] = st_varlabel(eq[c])
 		for(c=1;c<=C;c++) {
-			if ( regexm(nms[c], "([0-9]+)b?\.(.+)$") ) {
+			if ( regexm(nms[c], "([0-9]+)bn?\.(.+)$") ) {
+				if ( uselbl ) {
+					varnametxt = st_varlabel(regexs(2))
+					if ( st_varvaluelabel(regexs(2)) != "" ) {
+						varvaluetxt = nhb_sae_labelsof(regexs(2), 
+														strtoreal(regexs(1)))
+					} else {
+						varvaluetxt = regexs(1)
+					}
+				} else {
+					varnametxt = regexs(2)
+					varvaluetxt = regexs(1)
+				}
+				nms[c] = sprintf("%s (%s)", varnametxt, varvaluetxt)
+			} else if ( regexm(nms[c], "([0-9]+)?\.(.+)$") ) {
 				if ( uselbl ) {
 					varnametxt = st_varlabel(regexs(2))
 					if ( st_varvaluelabel(regexs(2)) != "" ) {

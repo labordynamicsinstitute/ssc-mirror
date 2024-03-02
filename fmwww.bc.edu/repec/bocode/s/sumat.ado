@@ -1,7 +1,9 @@
-*! Part of package matrixtools v. 0.30
+*! Part of package matrixtools v. 0.31
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
-*! 2023-01-01 > Option nozero added
-*! 2022-12-23 > FIXED: lower value in idi is wrong: sysuse auto, clear; sumat price, stat(idi, p10 p90)
+*! 2024-02-23 > Option todocx added
+*! 2024-02-23 > lookfor option: If the argument isn't a varlist then the varlist generated from using -lookfor- on the argument should be the argument 
+*2023-01-01 > Option nozero added
+*2022-12-23 > FIXED: lower value in idi is wrong: sysuse auto, clear; sumat price, stat(idi, p10 p90)
 *2021-01-03 > toxl added
 *2019-03-14 > Option transposed added
 *2017-10-09 > If only one variable is chosen, row names are set to row equations. And row euations are removed
@@ -15,7 +17,7 @@
 
 program define sumat, rclass
 	version 12.1
-	syntax varlist [if] [in] [using], /*
+	syntax [varlist] [if] [in] [using], /*
 		*/STATistics(string) /*
 		*/[ /*
 			*/coleq(string) /*
@@ -30,6 +32,7 @@ program define sumat, rclass
 			*/Verbose /*
 			*/TRanspose /*
 			*/noCleanupmata /*
+			*/Lookfor(string) /*
 			matprint options
 			*/Style(passthru) /*
 			*/Decimals(passthru) /*
@@ -41,7 +44,14 @@ program define sumat, rclass
 			*/noEqstrip /*
 			*/noZero /*
       */toxl(passthru) /*
+      */todocx(passthru) /*
 		*/]
+		
+	if "`lookfor'" != "" {
+		qui lookfor `lookfor'
+		local varlist `r(varlist)'
+	}
+	if "`varlist'" == "" mata: _error("The var list is empty")
 
 	if `hide' < 0 {
 		display "{error:hide must have a non-negative integer argument. Is set to 0}"
@@ -66,7 +76,7 @@ program define sumat, rclass
 	
 	*** matprint ***************************************************************
 	matprint r(sumat) `using',	`style' `decimals' `title' `top' `undertop' ///
-    `bottom' `replace' `eqstrip' `zero' `toxl'
+    `bottom' `replace' `eqstrip' `zero' `toxl' `todocx'
 	****************************************************************************
 	capture drop __if_in
 	capture mata: mata drop __add_quietly
