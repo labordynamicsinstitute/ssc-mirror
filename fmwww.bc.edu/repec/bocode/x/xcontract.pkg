@@ -19,10 +19,12 @@ d KW: percentages
 d
 d Requires: Stata version 16.0
 d
-d Distribution-Date: 20210101
+d Distribution-Date: 20240302
 d
 d Author: Roger Newson,  King's College London
 d Support: email roger.newson@@kcl.ac.uk
 d
 f xcontract.ado
 f xcontract.sthlp
+f ../f/freqtop.ado
+f ../f/freqtop.sthlp
