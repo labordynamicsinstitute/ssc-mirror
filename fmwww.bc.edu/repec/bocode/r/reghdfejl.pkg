@@ -10,7 +10,7 @@ d KW: plugins
 d
 d Requires: Stata version 16, julia from SSC, Julia 1.9, Python 3.x
 d
-d Distribution-Date: 20240127
+d Distribution-Date: 20240306
 d
 d Author: David Roodman
 d Support: email david@@davidroodman.com

@@ -1,4 +1,4 @@
-*! jl 0.9.0 26 January 2024
+*! jl 0.10.0 3 March 2024
 *! Copyright (C) 2023-24 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
@@ -44,7 +44,7 @@ program define assure_julia_started
   version 14.1
 
   if `"$julia_loaded"' == "" {
-    cap {
+    cap noi {
       cap wheresjulia
       cap if _rc & c(os)!="Windows" wheresjulia ~/.juliaup/bin/
       cap if _rc & c(os)=="MacOSX" {
@@ -72,19 +72,18 @@ program define assure_julia_started
       exit 198
     }
 
-    qui findfile stataplugininterface.jl
     cap noi {
+      jl AddPkg DataFrames, minver(1.6.1)
+      jl AddPkg CategoricalArrays, minver(0.10.8)
+      jl, qui: using DataFrames, CategoricalArrays
+
+      qui findfile stataplugininterface.jl
       jl, qui: pushfirst!(LOAD_PATH, dirname(expanduser(raw"`r(fn)'")))
       jl, qui: using stataplugininterface
       qui findfile jl.plugin
       jl, qui: stataplugininterface.setdllpath(expanduser(raw"`r(fn)'"))
 
-      jl AddPkg DataFrames, minver(1.6.1)
-      jl, qui: using DataFrames
-      qui jl: String(gensym())
-      global julia_task `"var"`r(ans)'""'
-      qui jl: String(gensym())
-      global julia_time `"var"`r(ans)'""'
+      jl, qui: const stataplugininterface.type2intDict = Dict(Int8=>1, Int16=>2, Int32=>3, Int64=>4, Float32=>5, Float64=>6, String=>7)
     }
     if _rc global julia_loaded
   }
@@ -95,7 +94,7 @@ program define jl, rclass
   version 14.1
 
   if `"`0'"'=="version" {
-    return local version 0.9.0
+    return local version 0.10.0
     exit
   }
 
@@ -111,14 +110,15 @@ program define jl, rclass
     
     assure_julia_started
     
-    local cmd `1'
     tokenize `"`0'"', parse(" ,")
+    local cmd `1'
     macro shift
     local 0 `*'
 
     if `"`cmd'"'=="SetEnv" {
       jl, qui: using Pkg; Pkg.activate(joinpath(dirname(Base.load_path_expand("@v#.#")), "`1'"))  // move to an environment specific to this package
       jl AddPkg DataFrames
+      jl AddPkg CategoricalArrays
     }
     else if `"`cmd'"'=="AddPkg" {
       syntax name, [MINver(string)]
@@ -137,25 +137,70 @@ program define jl, rclass
         }
       }
     }
-    else if inlist(`"`cmd'"', "PutVarsToDF", "PutVarsToDFNoMissing") {
-      syntax [varlist] [if] [in], [DESTination(string) COLs(string)]
+    else if `"`cmd'"'=="use" {
+      syntax namelist [using/], [clear]
+      if c(changed) & "`clear'"=="" error 4
+      drop _all
+      if `"`using'"'=="" {
+        _assert `:word count `namelist''==1, msg("Just specify one source DataFrame.") rc(198) 
+        local source `namelist'
+        qui jl: join(names(`source'), " ")
+        local cols `r(ans)'
+      }
+      else {
+        local source `using'
+        local cols `namelist'
+      }
+      qui jl: size(`source',1)
+      qui set obs `r(ans)'
+      jl GetVarsFromDF `cols', source(`source') 
+    }
+    else if `"`cmd'"'=="PutVarsToDF" {
+      syntax [varlist] [if] [in], [DESTination(string) COLs(string) DOUBLEonly noMISSing noLABel]
       if `"`destination'"'=="" local destination df
         else confirm names `destination'
-      if `"`cols'"'=="" local cols `varlist'
+      local ncols = cond("`varlist'"=="",c(k),`:word count `varlist'')
+      if `"`cols'"'=="" unab cols: `varlist'
       else {
         confirm names `cols'
-        _assert `:word count `cols''>=cond("`varlist'"=="",c(k),`:word count `varlist''), msg("Too few destination columns specified.") rc(198) 
+        _assert `:word count `cols''!=`ncols', msg("Source and destination variable lists different lengths.") rc(198) 
       }
-      plugin call _julia `varlist' `if' `in', PutVarsToDFNoMissing `"`destination'"' `cols'
-      if "`cmd'"=="PutVarsToDF" {
-        jl, qui: allowmissing!(`destination')
-        jl, qui: replace!.(x -> x >= reinterpret(Float64, 0x7fe0000000000000) ? missing : x, eachcol(`destination'))
+      if "`doubleonly'"=="" {
+        foreach col in `cols' {
+          local type: type `col'
+          local types `types' `=cond(substr("`type'",1,3)=="str", "str", "`type'")'
+        }
+      }
+      else local types = "double " * `ncols'
+      if "`doubleonly'"=="" local dfcmd `destination' = DataFrame([n=>Vector{stataplugininterface.S2Jtypedict[t]}(undef,%i) for (n,t) in zip(eachsplit("`cols'"), eachsplit("`types'"))])
+      plugin call _julia `varlist' `if' `in', PutVarsToDF`missing' `"`destination'"' `"`dfcmd'"'
+      if "`missing'"=="" jl, qui: stataplugininterface.NaN2missing(`destination')
+      if "`doubleonly'"!="" jl, qui: rename!(`destination', vec(split("`cols'")))
+      if "`label'"=="" {
+        foreach col in `cols' {
+          local labname: value label `col'
+          if "`labname'" != "" {
+            local recodecmd
+            qui levels `col'
+            foreach l in `r(levels)' {
+              local lab: label(`col') `l'
+              if "`lab'"!="" {
+                local recodecmd `recodecmd', `l'=>raw"`lab'"
+              }
+            }
+            cap noi jl, qui: `destination'.`col' = CategoricalVector(recode(`destination'.`col' `recodecmd'))
+          }
+        }        
       }
     }
-    else if inlist(`"`cmd'"', "PutVarsToMat", "PutVarsToMatNoMissing") {
-      syntax [varlist] [if] [in], DESTination(string)
+    else if `"`cmd'"'=="save" {
+      syntax [namelist(max=1)], [NOLABel DOUBLEonly NOMISSing]
+      jl PutVarsToDF, dest(`namelist') `nolabel' `doubleonly' `nomissing'
+    }
+    else if `"`cmd'"'=="PutVarsToMat" {
+      syntax [varlist] [if] [in], DESTination(string) [noMISSing]
       confirm names `destination'
-      plugin call _julia `varlist' `if' `in', `cmd' `"`destination'"'
+      plugin call _julia `varlist' `if' `in', `cmd'`missing' `"`destination'"'
     }
     else if `"`cmd'"'=="GetVarsFromMat" {
       syntax namelist [if] [in], source(string asis) [replace]
@@ -166,20 +211,31 @@ program define jl, rclass
       }
       plugin call _julia `namelist' `if' `in', GetVarsFromMat `"`source'"'
     }
-    else if inlist(`"`cmd'"', "GetVarsFromDF", "GetVarsFromDFNoMissing") {
-      syntax namelist [if] [in], [source(string) replace COLs(string asis)]
+    else if `"`cmd'"'=="GetVarsFromDF" {
+      syntax namelist [if] [in], [source(string) replace COLs(string asis) noMISSing]
       if `"`source'"'=="" local source df
       if `"`cols'"'=="" local cols `namelist'
-      else {
-        confirm names `cols'
-        _assert `:word count `cols''<=cond("`varlist'"=="",c(k),`:word count `varlist''), msg("Too few destination variables specified.") rc(198) 
-      }
+        else {
+          confirm names `cols'
+          _assert `:word count `cols''<=cond("`varlist'"=="",c(k),`:word count `varlist''), msg("Too few destination variables specified.") rc(198) 
+        }
       if "`replace'"=="" confirm new var `namelist'
-      foreach var in `namelist' {
-        cap gen double `var' = .
+      qui jl: stataplugininterface.statatypes(`source', "`cols'")
+      local types `r(ans)'
+      local ncols: word count `cols'
+      forvalues v=1/`ncols' {
+        local type: word `v' of `types'
+        local col : word `v' of `cols'
+        local name: word `v' of `namelist'
+        cap gen `type' `name' = `=cond(substr("`type'",1,3)=="str", `""""', ".")'
+        qui jl: Int(`source'.`col' isa CategoricalVector)
+        if `r(ans)' {
+          qui jl: join([string(i) * " \"" * l * "\"" for (i,l) in enumerate(levels(`source'.`col'))], " ")
+          label define `name' `=subinstr(`"`r(ans)'"', `"\""', `"""', .)', replace
+          label values `name' `name'
+        }
       }
-      if "`cmd'"=="GetVarsFromDF" jl, qui: replace!.(eachcol(`source'), missing=>NaN)
-      plugin call _julia `namelist' `if' `in', `cmd' `"`source'"' `cols'
+      plugin call _julia `namelist' `if' `in', GetVarsFromDF`nomissing' `"`source'"' _cols `:strlen local cols' `ncols'
     }
     else if `"`cmd'"'=="GetMatFromMat" {
       syntax name, [source(string asis)]
@@ -208,12 +264,12 @@ program define jl, rclass
     assure_julia_started
 
     if "`interruptible'" != "" {  // Run Julia 1 sec at a time to allow Ctrl-Break, checking if task finished every .01 sec
-      plugin   call _julia `varlist', evalqui `"$julia_task = @async (`after')"'
-      plugin   call _julia, eval `"$julia_time=time()+1; for _ in 1:100 (istaskdone($julia_task) || time()>$julia_time) && break; sleep(.01) end; Int(!istaskdone($julia_task))"'
+      plugin   call _julia `varlist', evalqui `"stataplugininterface.julia_task = @async (`after')"'
+      plugin   call _julia, eval `"stataplugininterface.julia_time=time()+1; for _ in 1:100 (istaskdone(stataplugininterface.julia_task) || time()>stataplugininterface.julia_time) && break; sleep(.01) end; Int(!istaskdone(stataplugininterface.julia_task))"'
       while `ans' {
-        plugin call _julia, eval `"$julia_time=time()+1; for _ in 1:100 (istaskdone($julia_task) || time()>$julia_time) && break; sleep(.01) end; Int(!istaskdone($julia_task))"'
+        plugin call _julia, eval `"stataplugininterface.julia_time=time()+1; for _ in 1:100 (istaskdone(stataplugininterface.julia_task) || time()>stataplugininterface.julia_time) && break; sleep(.01) end; Int(!istaskdone(stataplugininterface.julia_task))"'
       }
-      if "`quietly'"=="" plugin call _julia, eval fetch($julia_task)
+      if "`quietly'"=="" plugin call _julia, eval fetch(stataplugininterface.julia_task)
     }
     else plugin call _julia `varlist', eval`=cond("`quietly'"!="","qui","")' `"`after'"'
 
@@ -244,17 +300,19 @@ end
 
 
 * Version history
-* 0.5.0 Initial commit
-* 0.5.1 Fixed memory leak in C code. Added documentation. Bug fixes.
-* 0.5.4 Bug and documentation fixes.
-* 0.5.5 Tweaks
-* 0.5.6 File reorganization
-* 0.6.0 Implemented dynamic runtime loading of libjulia for robustness to Julia installation type
-* 0.6.2 Fixed 0.6.0 crashes in Windows
-* 0.7.0 Dropped UpPkg and added minver() option to AddPkg
-* 0.7.1 Try single as well as double quotes in !julia. Further attack on Windows crashes on errors.
-* 0.7.2 Better handling of exceptions in Julia 
-* 0.7.3 Fixed bug in PutMatToMat
-* 0.8.0 Added SetEnv command
-* 0.8.1 Recompiled in Ubuntu 20.04; fixed Unix AddPkg bug
-* 0.9.0 Added interruptible option and multithreaded variable copying
+* 0.5.0  Initial commit
+* 0.5.1  Fixed memory leak in C code. Added documentation. Bug fixes.
+* 0.5.4  Bug and documentation fixes.
+* 0.5.5  Tweaks
+* 0.5.6  File reorganization
+* 0.6.0  Implemented dynamic runtime loading of libjulia for robustness to Julia installation type
+* 0.6.2  Fixed 0.6.0 crashes in Windows
+* 0.7.0  Dropped UpPkg and added minver() option to AddPkg
+* 0.7.1  Try single as well as double quotes in !julia. Further attack on Windows crashes on errors.
+* 0.7.2  Better handling of exceptions in Julia 
+* 0.7.3  Fixed bug in PutMatToMat
+* 0.8.0  Added SetEnv command
+* 0.8.1  Recompiled in Ubuntu 20.04; fixed Unix AddPkg bug
+* 0.9.0  Added interruptible option and multithreaded variable copying
+* 0.9.1  Reverted to complex syntax for C++ variable copying routines, to avoid limit on # of vars
+* 0.10.0 Full support for Stata data types, including strings. Map CategoricalVector's to data labels. Add use and save commands.

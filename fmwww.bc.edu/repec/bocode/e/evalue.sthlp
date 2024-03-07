@@ -1,4 +1,5 @@
 {smcl}
+{* *! version 1.5.0 05Mar2024}{...}
 {* *! version 1.4.0 23Aug2019}{...}
 
 {title:Title}
@@ -232,8 +233,8 @@ and childhood leukemia by a risk ratio of 1.0-fold each could do so, but weaker 
 {pmore2}{bf:{stata "evalue smd 0.5, se(0.2) true(0.1) fig": . evalue smd 0.5, se(0.2) true(0.1) fig}} {p_end}
 
 {pmore} example using {helpb esizeregi} to first compute the SMD and SE from a regression model and then plug the respective values into {cmd: evalue}  {p_end}
-{pmore2}{bf:{stata "esizeregi -224.422, sdy(578.8196) n1(864) n2(3778)": . esizeregi -224.422, sdy(578.8196) n1(864) n2(3778)}} {p_end}
-{pmore2}{bf:{stata "evalue smd -0.383382, se(0.037920)": . evalue smd -0.383382, se(0.037920)}} {p_end}
+{pmore2}{bf:{stata "esizeregi -224.422, sdp(562.35602) n1(864) n2(3778)": . esizeregi -224.422, sdp(562.35602) n1(864) n2(3778)}} {p_end}
+{pmore2}{bf:{stata "evalue smd -0.399075, se(0.037937)": . evalue smd -0.399075, se(0.037937)}} {p_end}
 
 {pmore} or alternatively,  {p_end}
 {pmore2}{bf:{stata "evalue smd `d', se(`se')": . evalue smd `d', se(`se')}} {p_end}
@@ -267,17 +268,17 @@ and childhood leukemia by a risk ratio of 1.0-fold each could do so, but weaker 
 {title:References}
 
 {p 4 8 2}
-Linden, A., Mathur, M.B., and T. J. VanderWeele. Conducting Sensitivity Analysis for Unmeasured Confounding in Observational Studies using E-values: The evalue package. 
-{it: Stata Journal}, Forthcoming. 
-
-{p 4 8 2}
 Ding, P. and T. J. VanderWeele. (2016). Sensitivity analysis without assumptions. {it: Epidemiology}, 27: 368-377.{p_end}
 
 {p 4 8 2}
-VanderWeele, T. J. and P. Ding. (2017). Sensitivity analysis in observational research: introducing the E-value. {it: Annals of Internal Medicine}, 167(4): 268-274.{p_end}
+Linden, A., Mathur, M. B., and T. J. VanderWeele. Conducting sensitivity analysis for unmeasured confounding in observational studies using E-values: The evalue package. 
+{it: Stata Journal}, 2020: 162-175. 
 
 {p 4 8 2}
-Mathur, M.B., Ding, P., Riddell, C.A. and T. J. VanderWeele. (2018). Website and R package for computing E-values. {it: Epidemiology}, 29(5): e45-e47.{p_end}
+Mathur, M.B., Ding, P., Riddell, C.A. and T. J. VanderWeele. (2018). Website and R package for computing E-values. {it: Epidemiology}, 29: e45-e47.{p_end}
+
+{p 4 8 2}
+VanderWeele, T. J. and P. Ding. (2017). Sensitivity analysis in observational research: introducing the E-value. {it: Annals of Internal Medicine}, 167: 268-274.{p_end}
 
 
 

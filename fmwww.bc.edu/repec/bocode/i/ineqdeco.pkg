@@ -1,6 +1,6 @@
 d 'INEQDECO': module to calculate inequality indices with decomposition by subgroup
 d
-d	ineqdeco estimates a range of inequality and related
+d	 ineqdeco estimates a range of inequality and related
 d indices      commonly  used by economists, plus optional
 d decompositions of a subset of      these indices by  population
 d subgroup.  Indices estimated are:	  members of the single
@@ -24,11 +24,10 @@ d KW: decomposition
 d
 d Requires: Stata version 8.2 (5.0 for ineqdeco5)
 d
+d Distribution-Date: 20240306
 d
 d Author: Stephen P. Jenkins, London School of Economics
 d Support: email s.jenkins@@lse.ac.uk
-d
-d Distribution-Date: 20210215
 d
 f ineqdeco.ado
 f ineqdeco.sthlp

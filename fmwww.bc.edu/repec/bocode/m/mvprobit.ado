@@ -1,9 +1,11 @@
-*! version 2.1.1  31dec2005  Cappellari & Jenkins 
-*! 	add -quietly- in aa block  
+*! version 3.0.1  05may2024 Cappellari & Jenkins   
+*!  fix rarely-biting bug in Replay (thanks to Jeff Pitblado for suggested fix)
+*! version 3.0.0  12april2006 Cappellari & Jenkins            
+*!	revised: aa algorithm, draw vble naming scheme
 *! version 2.1.0  19may2005  Cappellari & Jenkins            
-*!	update to version 8.2; aa option added
+*!	update to version 8.2
 *! version 1.0.0  15jan2003  Cappellari & Jenkins            (SJ3-3:st0045)
-*! Multivariate probit by method of SML.  
+*! Multivariate probit by method of MSL.  
 
 program define mvprobit, eclass byable(onecall)
 	version 8.2
@@ -75,7 +77,7 @@ program define Estimate, eclass byable(recall)
 	capture macro drop S_MLE_z*
 
 
-			/* number of equations */
+			/* number of equations/integration dimensions */
 	local neq = `i'-1  
 	global S_MLE_M "`neq'"   
 
@@ -90,10 +92,11 @@ program define Estimate, eclass byable(recall)
 		*/ Level(integer $S_level) Beta0  Seed(integer 123456789)    /*
 		*/ ATRho0(string) AA noLOG MLOpts(string) * ]
 
-	global S_MLE_D  "`draws'"
-	global S_MLE_AA "`aa'"
+	local D "`draws'"
+	global S_MLE_D = `D'
+	if "`aa'" != ""  global S_MLE_D = 2*`D'
 
-	local title "Multivariate probit (SML, # draws = $S_MLE_D)"
+	local title "Multivariate probit (MSL, # draws = $S_MLE_D)"
 	set seed `seed'
 
 	local option0 `options'
@@ -167,13 +170,13 @@ program define Estimate, eclass byable(recall)
 	tempname b0    
 
 	forval i = 1/$S_MLE_M {
-		forval d = 1/$S_MLE_D {
+		forval d = 1/`D' {
 			tempvar z a
 			draws `z' `touse'
-			global S_MLE_z`i'`d' "`z'" 
+			global S_MLE_z`i'_`d' "`z'" 
 			if "`aa'" != "" {
-				quietly ge `a'`z' = 1 - `z' if `touse'
-				global S_MLE_az`i'`d' "`a'`z'" 
+				ge double `a'`z' = 1 - `z'
+				global S_MLE_z`i'_`=`D'+`d'' "`a'`z'" 
 			}
 		}
  
@@ -195,10 +198,9 @@ program define Estimate, eclass byable(recall)
 
 		global S_MLE_eqs "$S_MLE_eqs (`dep`i'n': `dep`i'' = `ind`i'', `nc`i'') "
 		global S_MLE_I "$S_MLE_I S_MLE_I`i'"
-		global S_MLE_tvar "$S_MLE_tvar k`i' d`i' sp`i' arg`i' da`i' arga`i'"
+		global S_MLE_tvar "$S_MLE_tvar k`i' d`i' sp`i' arg`i' "
 
-		local jj = `i'+1
-		forval j = `jj'/$S_MLE_M { 
+		forval j = `=`i'+1'/$S_MLE_M { 
 			global S_MLE_rho "$S_MLE_rho rho`j'`i' ="
 			global S_MLE_atrho "$S_MLE_atrho atrho`j'`i'"
 			global S_MLE_slatrho "$S_MLE_slatrho /atrho`j'`i'"
@@ -219,9 +221,9 @@ program define Estimate, eclass byable(recall)
 	eret scalar ll0 = `ll0'
 	eret scalar chi2_c = abs(-2*(e(ll0)-e(ll)))
 	eret scalar nrho = (e(neqs)-1)*e(neqs)/2
-	eret scalar aa = 0
+	eret local aa no
 	if "`aa'" != "" {
-		eret scalar aa = 1
+		eret local aa yes
 	}
 
 	eret local cmd "mvprobit"
@@ -229,8 +231,7 @@ program define Estimate, eclass byable(recall)
 	forval i = 1/$S_MLE_M {
 		eret local rhs`i' "`ind`i''"
 		eret local nrhs`i' "`ninds`i''"
-		local jj = `i'+1
-		forval j = `jj'/$S_MLE_M { 
+		forval j = `=`i'+1'/$S_MLE_M { 
 			local t = [atrho`j'`i']_b[_cons]
 			local tse = [atrho`j'`i']_se[_cons]
 			eret scalar rho`j'`i' = 	(exp(2*`t')-1)/(exp(2*`t')+1)	
@@ -262,11 +263,12 @@ program define Estimate, eclass byable(recall)
 	foreach g in S_MLE_C S_MLE_I S_MLE_tvar S_MLE_rho S_MLE_atrho S_MLE_slatrho  { 
 	        global `g' 
 	} 
-	capture macro drop S_MLE_z* S_MLE_az*
+	capture macro drop S_MLE_z* 
 end
 
 
 program define Display
+	global S_MLE_M = e(neqs)
 	syntax [,Level(int $S_level)]
 	ml display, level(`level') neq($S_MLE_M) plus
 
@@ -312,7 +314,7 @@ end
 
 
 program define draws
-	quietly gen `1' = uniform() if `2'
+	quietly gen double `1' = uniform() if `2'
 end
 
 

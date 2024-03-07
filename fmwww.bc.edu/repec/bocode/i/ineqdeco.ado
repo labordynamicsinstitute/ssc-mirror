@@ -1,3 +1,4 @@
+*! 2.2.0 SPJ March 2024. Change from using -gsort- (speedup suggested Caspar Kaiser)
 *! 2.1.0 SPJ Feb 2021 Add pweight so that use PVK's -rhsbsample- & svy bootstrap 
 *! 2.0.2 SPJ May 2008 (fix bug arising if bygroup() and `touse' lead to no obs in a group)
 *!   bug fix method provided by Austin Nichols (many thanks!)
@@ -103,8 +104,10 @@ quietly {
 	}
 	gen double `fi' = `wi' / `sumwi' if `touse'
 
-	gsort -`touse' `inc' 
-
+	tempvar notuse 					// was: gsort -`touse' `inc' 
+	gen  byte `notuse' = -`touse'
+	sort  `notuse'  `inc'
+ 
 	gen double `py' = (2 * sum(`wi') - `wi' + 1)/(2 * `sumwi' ) if `touse'
 
 	egen double `gini' = sum(`fi'*(2 / `meany') * `py' * (`inc' - `meany')) if `touse'
@@ -316,7 +319,10 @@ if "`bygroup'" != "" {
 
 	return local levels "`group'"
 	
-	gsort -`first' `bygroup'
+	tempvar firsts 				// was: gsort -`first' `bygroup'
+	gen byte `firsts' = - `first'
+	sort `firsts' `bygroup'
+	
 	local i = 1
 	foreach k of local group	{
 		return scalar gem1_`k' = `im1k'[`i']
@@ -422,7 +428,10 @@ if "`bygroup'" != "" {
 		tabdisp `touse' if `touse' , c(`awithh' `awith1' `awith2')  f(%9.5f)
 	}
 
-	gsort -`first' `bygroup'
+	tempvar firsts 				// was: gsort -`first' `bygroup'
+	gen byte `firsts' = - `first'
+	sort `firsts' `bygroup'
+		
 	local i = 1
 	foreach k of local group	{
 		return scalar ahalf_`k' = `ahalfk'[`i']
@@ -477,7 +486,10 @@ if "`bygroup'" != "" {
 			tabdisp `bygroup' if `first', c(`edehalfk' `ede1k' `ede2k')  f(%15.5f)
 		}
 
-		gsort -`first' `bygroup'
+		tempvar firsts 				// was: gsort -`first' `bygroup'
+		gen byte `firsts' = - `first'
+		sort `firsts' `bygroup'
+	
 		local i = 1
 		foreach k of local group	{
 			return scalar edehalf_`k' = `edehalfk'[`i']
@@ -504,7 +516,10 @@ if "`bygroup'" != "" {
 			tabdisp `bygroup' if `first', c(`whalfk' `w1k' `w2k' `wginik')  f(%15.5f)
 		}  
 
-		gsort -`first' `bygroup'
+		tempvar firsts 				// was: gsort -`first' `bygroup'
+		gen byte `firsts' = - `first'
+		sort `firsts' `bygroup'
+	
 		local i = 1
 		foreach k of local group	{
 			return scalar whalf_`k' = `whalfk'[`i']

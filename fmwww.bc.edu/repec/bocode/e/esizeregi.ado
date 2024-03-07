@@ -1,11 +1,13 @@
+*! 2.0.0 Ariel Linden 05MAr2024 //  -esizeregi- now requires user to specify pooled SD
 *! 1.0.1 Ariel Linden 27Oct2021 // changed 'anything' to a scalar `est' to avoid issues with squaring negative values (which happens with local)
 *! 1.0.0 Ariel Linden 29May2019
 
+capture program drop esizeregi
 program define esizeregi, rclass
 version 11.0
 
 			syntax  anything ,				 	///
-				SDy(numlist max=1)				///
+				SDp(numlist max=1)				///
 				n1(numlist max=1)				///
 				n2(numlist max=1)				///
 				[, LEVel(cilevel) ]
@@ -14,16 +16,12 @@ version 11.0
 
 			tempname est N sdpooled d v se iz CohensD_Lower CohensD_Upper 
 
-			// make a scalar out of `anything'
+			// make a scalar out of varlist
 			scalar `est' = `anything'
 			scalar `N' = `n1' + `n2'
 
-			// Original formula for the within groups standard deviation from Lipsey and Wilson (2001) (formula 14 - Table B10)  
-*			scalar `sdpooled' = sqrt(((`sdy'^2) * (`N'-1) - ((`m1'^2) + (`m2'^2) - 2 * (`m1') * (`m2')) * (`n1' * `n2') /`N') / (`N'-1))
-
-			// This pooled SD is algebraically equivalent to formula 14, but more parsimonious
-			scalar `sdpooled' = sqrt(((`sdy'^2) * (`N'-1) - (`est'^2) * (`n1' * `n2') / `N') / (`N'-1))
-			scalar `d' = `est' / `sdpooled'
+			// Compute values
+			scalar `d' = `est' / `sdp'
 			scalar `v' = (`n1' + `n2') / (`n1' * `n2') + (`d'^2) / (2 *(`n1' + `n2'))
 			scalar `se' = sqrt(`v')
 			scalar `iz' = invnorm(1-(1-`level'/100)/2)

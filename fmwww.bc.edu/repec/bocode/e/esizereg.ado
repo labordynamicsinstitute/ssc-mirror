@@ -1,8 +1,10 @@
+*! 3.0.0 Ariel Linden 04Mar2024 // -esizereg- now uses variance produced by margins to compute pooled std. dev. 
 *! 2.0.2 Ariel Linden 26Feb2024 // added -intreg-, -meintreg- and -metobit- models
 *! 2.0.1 Ariel Linden 27Oct2021 // changed 'est' to a scalar to avoid issues with squaring negative values (which happens with local)
 *! 2.0.0 Ariel Linden 29May2019 // made esizereg a postestimation command and converted version 1.0.0 to an immediate command (esizeregi)
 *! 1.0.0 Ariel Linden 02Feb2019
 
+capture program drop esizereg
 program define esizereg, rclass
 version 11.0
 
@@ -11,7 +13,11 @@ version 11.0
 			gettoken treat : 0
 			
 			// * store model estimates * //
-			estimates store results
+			if "`e(cmd)'" == "margins" {
+				di as err "You must re-estimate the regression model"
+				exit 198				
+			}
+			else estimates store results
 
 			if !inlist("`e(cmd)'", "regress", "tobit", "truncreg", "hetregress", "xtreg", "intreg") & !inlist("`e(cmd2)'", "meintreg", "metobit") {
 				di as err `"`e(cmd)' is not supported by {bf:esizereg}"'
@@ -40,10 +46,6 @@ version 11.0
 			tempname est
 			scalar `est' = b[1,colnumb(matrix(b),"`treat'")]
 			
-			if "`e(wtype)'" != "" & "`e(wtype)'" != "aweight" {
-				di as err "{bf:esizereg} accepts only {bf:aweights} in the estimation model"
-				exit 101
-			}	
 			local weightexp `e(wtype)' `e(wexp)'
 				
 			// extract treat varname from that produced in -regress- using factor variables (e.g. 1.treat) 
@@ -68,18 +70,22 @@ version 11.0
 			local n1 = r(N)
 			qui count if `treatvar' == 0 & e(sample)
 			local n0 = r(N)
-				
 
-			// * get std dev of outcome * //
-			qui sum `e(depvar)' [`weightexp'] if e(sample)
-			local sdy = r(sd)
-	
-			tempname N sdpooled d v se iz CohensD_Lower CohensD_Upper 
-
+			// * get variance of model using margins * //
+			tempname V  N sdpooled d v se iz CohensD_Lower CohensD_Upper 
+			
+			if "`e(cmd)'" == "meglm" {
+				qui margins, post predict(mu fixed)
+			}
+			else {
+				qui margins, post
+			}
+			matrix `V' = r(V)
+			scalar `V' = `V'[1,1]
 			scalar `N' = `n1' + `n0'
 
-			// This pooled SD is algebraically equivalent to formula 14 [Table B10] in Lipsey and Wilson (2001), but more parsimonious
-			scalar `sdpooled' = sqrt(((`sdy'^2) * (`N'-1) - (`est'^2) * (`n1' * `n0') / `N') / (`N'-1))
+			// Compute values
+			scalar `sdpooled' = sqrt(`V' * `N')		
 			scalar `d' = `est' / `sdpooled'
 			scalar `v' = (`n1' + `n0') / (`n1' * `n0') + (`d'^2) / (2 *(`n1' + `n0'))
 			scalar `se' = sqrt(`v')
@@ -131,7 +137,8 @@ version 11.0
 			return scalar d = `d'
 			return scalar n2 = `n0'
 			return scalar n1 = `n1'
-			return scalar sdy = `sdy'
+			return scalar sdpooled = `sdpooled'
+			return scalar V = `V'			
 			return scalar est = `est'
 	
 			// Make a c_local macro of d and se 

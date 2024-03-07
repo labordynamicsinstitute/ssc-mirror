@@ -1,6 +1,6 @@
 {smcl}
-{right:version:  5.7}
-{cmd:help asrol} {right:April 1, 2022}
+{right:version:  5.8}
+{cmd:help asrol} {right:Feb 29 1, 2024}
 {hline}
 {viewerjumpto "Statistics" "asrol##stat"}{...}
 {viewerjumpto "Window" "asrol##window"}{...}
@@ -596,6 +596,7 @@ The results are stored in a new variable, {it:gmean10}.
 {psee}{stata "ssc desc ascol":ascol : for converting asset returns and prices from daily to a weekly, monthly, quarterly, and yearly frequency}{p_end}
 {psee}{stata "ssc desc searchfor":searchfor : for searching text in data sets} {p_end}
 {psee}{stata "ssc desc flexmat":flexmat : Creates a flexible matrix of real, string and complex elements} {p_end}
+{psee}{stata} "ssc desc fillmissing":fillmissing: Fills missing values in a variable based on a given criterion}{p_end}
 
 {title:Acknowledgements}
 

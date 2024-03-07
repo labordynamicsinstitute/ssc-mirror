@@ -3,6 +3,8 @@
 module stataplugininterface
 export SF_sdatalen, SF_var_is_string, SF_var_is_strl, SF_var_is_binary, SF_nobs, SF_nvars, SF_nvar, SF_ifobs, SF_in1, SF_in2, SF_col, SF_row, SF_is_missing, SF_missval, SF_vstore, SF_sstore, SF_mat_store, SF_macro_save, SF_scal_save, SF_display, SF_error, SF_vdata, SF_sdata, SF_mat_el, SF_macro_use, SF_scal_use, SF_varindex
 
+using DataFrames, CategoricalArrays
+
 global const dllpath = Ref{String}(raw"c:\ado\plus\j\jl.plugin")  # where to look for plugin with accessible wrappers for Stata interface functions
 
 setdllpath(s::String) = (dllpath[] = s)
@@ -202,5 +204,31 @@ SF_scal_use(scal::AbstractString) =
       rc!=0 && throw(rc);
       z[] 
   end
+
+S2Jtypedict = Dict("float"=>Float32, "double"=>Float64, "byte"=>Int8, "int"=>Int16, "long"=>Int32, "str"=>String, "str1"=>Char);
+
+cvindextype(::Type{CategoricalValue{T, N}}) where {T, N} = N
+
+# Given data column, return appropriate Stata type
+function statatype(v::AbstractVector)::String
+    jltype = v |> eltype |> nonmissingtype
+    jltype <: CategoricalValue && (jltype = cvindextype(jltype))
+
+    jltype <: AbstractString ? "str" * string(min(2045, mapreduce(length, max, v, init=0))) :
+    jltype <: Integer ?
+        typemax(jltype)<=32741 ? "int"   : "long"   :
+        jltype == Float32      ? "float" : "double"
+end
+
+# Stata types for columns in a DF named in a string, returned in a string
+statatypes(df::DataFrame, colnames::String) = join(statatype.(eachcol(df[!,split(colnames)])), " ")
+
+function NaN2missing(df::DataFrame)
+    allowmissing!(df)
+    Threads.@threads for x ∈ eachcol(df)
+        t = x |> eltype |> nonmissingtype
+        t<:Number && replace!(x, (t<:Integer ? typemax(t) : t==Float32 ? NaN32 : reinterpret(Float64, 0x7fe0000000000000)) => missing)
+    end
+end
 
 end
