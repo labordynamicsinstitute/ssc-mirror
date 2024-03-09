@@ -42,11 +42,13 @@
 *	- added option to alter rendition of survival smoother 		 *
 *	- added ttesmoothergroups() to define bins for smoother      *
 *	- updated "lowess" language to "smoother" in general		 *	
+*	Updated: 06/03/2024											 *
+*	- bug fix for smoother package dependency					 *
 *																 *
-*  2.2.1 J. Ensor								 				 *
+*  2.2.2 J. Ensor								 				 *
 ******************************************************************
 
-*! 2.2.1 J.Ensor 14Jun2023
+*! 2.2.2 J.Ensor 06Mar2024
 
 program define pmcalplot, rclass
 
@@ -97,6 +99,17 @@ tempvar binvar obs obsn exp binvar2 exp2 events nonevents outcomp ///
 			lowvar_lci lowvar_uci histbinvar histeventn histnoneventn histexp ///
 			droplinebase pseudo groups
 
+			
+// check for packages 
+	local package running
+	foreach pack of local package {
+		capture which `pack'
+		if _rc==111 {	
+			di as txt "Package 'running' is required for this version on pmcalplot" _n "Installation will begin now ..."
+			ssc install `pack', replace
+			}
+		}
+		
 // check on the if/in statement
 marksample touse
 qui count if `touse'
@@ -497,9 +510,9 @@ if "`statistics'"!="nostatistics"  {
 		local o = r(mean)
 		qui su `1' if `touse'
 		local e = r(mean)
-		local eo = `e'/`o'
-		local eo : di %4.3f `eo'
-		return scalar eo_ratio = `eo'
+		local oe = `o'/`e'
+		local oe : di %4.3f `oe'
+		return scalar oe_ratio = `oe'
 
 		* c-index
 		qui pmcstat `binary_lp' `2' if `touse'
@@ -507,7 +520,7 @@ if "`statistics'"!="nostatistics"  {
 		local cstat : di %4.3f `cstat'
 		return scalar cstat = `cstat'
 		
-		local st1 = `" text(`maxr' `minr' "E:O = `eo'" "CITL = `citl'" "Slope = `cslope'" "AUC = `cstat'", size(small) place(se) just(left))"'
+		local st1 = `" text(`maxr' `minr' "O:E = `oe'" "CITL = `citl'" "Slope = `cslope'" "AUC = `cstat'", size(small) place(se) just(left))"'
 		}
 		
 		// stats for survival outcomes
@@ -576,7 +589,7 @@ if "`continuous'"!="continuous" {
 	graph twoway function y=x, range(`minr' `maxr') lp(-) || ///
 		scatter `obs' `exp' if (`exp'<=`maxr') & (`exp'>=`minr') & (`obs'<=`maxr') & (`obs'>=`minr'), mcol(dkgreen) ///
 		msym(Oh)  graphr(col(white)) ///
-		xlab(#5) ylab(#5) ///
+		xlab(#5, angle(h) format(%3.1f)) ylab(#5, angle(h) format(%3.1f)) ///
 		ytitle("Observed") xtitle("Expected") aspect(1) ///
 				legend(pos(3) order(`leglaborder') ///
 						`labs' col(1) size(small)) ///
@@ -596,7 +609,7 @@ if "`continuous'"=="continuous" {
 		qui graph twoway function y=x, range(`minr' `maxr') lp(-) || ///
 			scatter `obs' `exp' if (`1'<`maxr') & (`1'>`minr'), mcol(dkgreen) ///
 			msym(Oh) graphr(col(white)) ///
-			xlab(#5) ylab(#5) nodraw ///
+			xlab(#5, angle(h)) ylab(#5, angle(h)) nodraw ///
 			ytitle("") xtitle("") aspect(1)	legend(off) saving(`sc_graph', replace) ///
 							`scatteropts' `options' `ci1' `st1' `addplot'  `lo1'
 		
@@ -616,7 +629,7 @@ if "`continuous'"=="continuous" {
 			graph twoway function y=x, range(`minr' `maxr') lp(-) || ///
 			scatter `obs' `exp' if (`1'<`maxr') & (`1'>`minr'), mcol(dkgreen) ///
 			msym(Oh) graphr(col(white)) ///
-			xlab(#5) ylab(#5) ///
+			xlab(#5, angle(h)) ylab(#5, angle(h)) ///
 			ytitle("Observed") xtitle("Expected") aspect(1) ///
 					legend(pos(3) order(`leglaborder') ///
 							`labs' col(1) size(small)) ///
@@ -660,6 +673,18 @@ end
 // END OF PROGRAM
 *********************************************************************************
 
+
+**************************************************
+*												 *
+*  PROGRAM TO CALCULATE C-STAT					 *
+*  16/06/21 									 *
+*  			 									 *
+*												 *
+*  1.0.0 J. Ensor								 *
+**************************************************
+
+*! 1.0.0 J.Ensor 16Jun2021
+
 program define pmcstat, rclass
 
 /* Syntax
@@ -670,7 +695,7 @@ program define pmcstat, rclass
 */
 
 syntax varlist(min=1 max=2 numeric) [if] [in], [noPRINT  ///
-				MATrix(name local) FASTER]
+				MATrix(name local) HANley FASTER]
 
 *********************************************** SETUP/CHECKS
 *SET UP TEMPs
@@ -709,6 +734,9 @@ cap assert `outcome'==0 | `outcome'==1 if `touse'
                 error 450
         }
 
+// preserve data & keep only the touse sample
+preserve
+keep if `touse'
 
 *********************************************** C-STAT
 
@@ -723,35 +751,36 @@ if "`faster'"=="faster" {
 		}
 		
 	// discordant pairs
-	hashsort `p' `outcome' 		// add if/in statements throughout?
-	qui gen `rank_disc' = _n
+	hashsort `p' `outcome' 		
+	qui gen `rank_disc' = _n if `touse'
 
 	hashsort `outcome' `p' `rank_disc'
-	qui gen `rank2_disc' = _n
+	qui gen `rank2_disc' = _n if `touse'
 
-	qui gen `diff_disc' = (`rank_disc' - `rank2_disc') if `outcome'==0
+	qui gen `diff_disc' = (`rank_disc' - `rank2_disc') if (`outcome'==0) & (`touse')
 
 	// concordant pairs
 	qui gen `inv_outcome' = (`outcome'==0)
 	hashsort `p' `inv_outcome'
-	qui gen `rank_cord' = _n
+	qui gen `rank_cord' = _n if `touse'
 
 	hashsort `inv_outcome' `p' `rank_cord'
-	qui gen `rank2_cord' = _n
+	qui gen `rank2_cord' = _n if `touse'
 
 	qui gen `diff_cord' = (`rank_cord' - `rank2_cord') if `inv_outcome'==0
 
 	// total possible pairs
-	qui gstats sum `outcome' if `outcome'!=. , meanonly
+	qui gstats sum `outcome' if (`outcome'!=.) & (`touse'), meanonly
 	local obs = r(N)
+	local prev = r(mean)
 	local events = r(sum)
 	local nonevents = r(N) - r(sum)
 	local pairs = `events'*`nonevents'  
 
 	// compute c-stat (allowing for ties)
-	qui gstats sum `diff_disc'
+	qui gstats sum `diff_disc' if `touse'
 	local disc = r(sum)
-	qui gstats sum `diff_cord'
+	qui gstats sum `diff_cord' if `touse'
 	local cord = r(sum)
 
 	local ties = `pairs'-`disc'-`cord'
@@ -760,7 +789,7 @@ if "`faster'"=="faster" {
 	}
 	else {
 		// discordant pairs
-		sort `p' `outcome' 		// add if/in statements throughout?
+		sort `p' `outcome' 		
 		qui gen `rank_disc' = _n if `touse'
 
 		sort `outcome' `p' `rank_disc' 
@@ -769,18 +798,19 @@ if "`faster'"=="faster" {
 		qui gen `diff_disc' = (`rank_disc' - `rank2_disc') if (`outcome'==0) & (`touse')
 
 		// concordant pairs
-		qui gen `inv_outcome' = (`outcome'==0)
+		qui gen `inv_outcome' = (`outcome'==0) if `touse'
 		sort `p' `inv_outcome' 
 		qui gen `rank_cord' = _n if `touse'
 
 		sort `inv_outcome' `p' `rank_cord' 
 		qui gen `rank2_cord' = _n if `touse'
 
-		qui gen `diff_cord' = (`rank_cord' - `rank2_cord') if `inv_outcome'==0
+		qui gen `diff_cord' = (`rank_cord' - `rank2_cord') if (`inv_outcome'==0) & (`touse')
 
 		// total possible pairs
 		qui su `outcome' if (`outcome'!=.) & (`touse'), meanonly
 		local obs = r(N)
+		local prev = r(mean)
 		local events = r(sum)
 		local nonevents = r(N) - r(sum)
 		local pairs = `events'*`nonevents'  
@@ -795,11 +825,32 @@ if "`faster'"=="faster" {
 
 		local cstat = (`cord'+(0.5*`ties'))/(`pairs')
 	}
+	
+***************************************** CI
+
+if "`hanley'"=="" {
+	// default use necombe SE formula
+	local newcombe_c = `cstat'
+	local cstat_se = ((`cstat'*(1-`cstat'))*(1+(((`obs'/2)-1)*((1-`cstat')/(2-`cstat'))) ///
+	+((((`obs'/2)-1)*`cstat')/(1+`cstat')))/((`obs'^2)*`prev'*(1-`prev')))^.5
+	local cstat_lb = `cstat' - (1.96*`cstat_se')
+	local cstat_ub = `cstat' + (1.96*`cstat_se')
+}
+else {
+	// if hanley option set then use hanley SE formula 
+	local Q1 = `cstat' / (2 - `cstat')
+	local Q2 = 2 * `cstat'^2 / (1 + `cstat')
+	local hanley_c = `cstat'
+	local cstat_se = sqrt((`cstat' * (1 - `cstat') + (`nonevents' - 1) * (`Q1' - `cstat'^2) + (`events' - 1) * (`Q2' - `cstat'^2)) / (`nonevents' * `events'))
+	local cstat_lb = `cstat' - (1.96*`cstat_se')
+	local cstat_ub = `cstat' + (1.96*`cstat_se')
+}
+
 
 ***************************************** OUTPUT
 
 // Creating matrix of results
-	local res cstat  
+local res cstat 
 
 	tempname rmat
 	matrix `rmat' = J(1,5,.)
@@ -808,15 +859,15 @@ if "`faster'"=="faster" {
 		local ++i
 		matrix `rmat'[`i',1] = `obs'
 		matrix `rmat'[`i',2] = ``r''
-/*
 		matrix `rmat'[`i',3] = ``r'_se'
 		matrix `rmat'[`i',4] = ``r'_lb'
 		matrix `rmat'[`i',5] = ``r'_ub'
-*/
+
 		//local rown "`rown' `r'"
 		}
 		mat colnames `rmat' = Obs Estimate SE Lower_CI Upper_CI
 		mat rownames `rmat' = "C-Statistic" //`rown'
+
 		
 // print matrix 
 if "`matrix'"!="" {
@@ -840,7 +891,7 @@ if "`matrix'"!="" {
 				}
 				
 // Return scalars
-local res cstat cord disc ties  obs
+local res cstat cstat_se cstat_lb cstat_ub cord disc ties  obs
  
 		foreach r of local res {
 			return scalar `r' = ``r''
@@ -854,8 +905,7 @@ local res cstat cord disc ties  obs
 		    return matrix rmat = `rmat'
 		}
 		
+restore
 
 end
-
-
 

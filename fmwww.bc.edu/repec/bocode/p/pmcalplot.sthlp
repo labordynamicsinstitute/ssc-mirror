@@ -1,7 +1,7 @@
 
 {smcl}
 
-{* *! version 2.1.0 23Dec2019}
+{* *! version 2.2.2 06Mar2024}
 {cmd:help pmcalplot}
 {hline}
 
@@ -283,7 +283,7 @@ Telling {cmd: pmcalplot} the number of factors in the model also allows R-square
 {synoptset 15 tabbed}{...}
 {p2col 5 15 19 2: Scalars}{p_end}
 {synopt:{cmd:r(cstat)}}C-statistic for model discrimination{p_end}
-{synopt:{cmd:r(eo_ratio)}}Ratio of expected and observed events for model calibration{p_end}
+{synopt:{cmd:r(oe_ratio)}}Ratio of observed and expected events for model calibration{p_end}
 {synopt:{cmd:r(citl)}}Calibration-in-the-large for model calibration{p_end}
 {synopt:{cmd:r(cslope)}}Calibration slope for model calibration{p_end}
 {synopt:{cmd:r(r2)}}R-squared for overall model performance (linear models){p_end}
