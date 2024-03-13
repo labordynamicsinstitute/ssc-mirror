@@ -5,6 +5,7 @@ p ab2022 module to provide Gradient Solver for Ahlfeldt & Barr (2022): The econo
 p abar module to perform Arellano-Bond test for autocorrelation 
 p abg module to implement the Alpha-Beta-Gamma Method of Distributional Analysis
 p aboutreg module providing tutorial on regression diagnostics
+p abrs module to provide Toolkit for counterfactuals based on a spatial equilibrium framework with heterogenous preferences by Ahlfeldt, Bald, Roth, Seidel: “Measuring quality of life under spatial frictions"    
 p absdid module to estimate treatment effect with Abadie semiparametric DID estimator
 p acelong module to fit multilevel mixed-effects ACE, AE and ADE variance decomposition models 
 p acplot module to plot the autocorrelogram

@@ -1,9 +1,11 @@
-*! version 0.21 2023-12-16 Niels Henrik Bruun
+*! version 0.22 2024-03-12 Niels Henrik Bruun
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
-*! 2024-02-19 v0.21 Minor bug fixed
-*! 2024-02-16 v0.2 Returns more detailed scalar information
-*! 2024-02-16 v0.2 Cross-validation and repetition added
-* 2023-12-16 v0.1   created
+* 2024-03-10 v0.22 Bug in lookup is fixed
+* 2024-03-10 v0.22 Option seed added
+* 2024-02-19 v0.21 Minor bug fixed
+* 2024-02-16 v0.2 Returns more detailed scalar information
+* 2024-02-16 v0.2 Cross-validation and repetition added
+* 2023-12-16 v0.1 created
 
 *mata mata clear
 *capture program drop cpt
@@ -20,6 +22,7 @@ program define cpt, rclass
       BInomial                     ///
       cv(integer 0)                ///
       reps(integer 1)              ///
+			seed(string)								 ///
       GRaph                        ///
       *	                           /// /*Twoway graph options*/
     ]
@@ -27,18 +30,21 @@ program define cpt, rclass
 	qui su `1' `if', mean
 	local prev = r(mean)
   if "`format'" == "" local format "%9.3f"
-	tempvar pr k
-	if !`cv' {
+	if wordcount(`"`varlist'"') == 2 & !regexm("`2'", "\.") {
+		tempvar xb pr
 		qui logit `varlist' `if'
-		qui predict `pr' if e(sample), pr
+		qui predict double `pr' if e(sample), pr
+		qui generate `xb' = (logit(`pr') - _b[_cons]) / _b[`2']
+		mata: lookup = uniqrows(st_data(., "`pr' `xb'"))
 	}
-	else {
+	else mata: lookup = J(0, 2, .)
+	if `cv' {
+		tempvar pr
 		if `cv' < 2 mata: _error("CV must be an integer greater than or equal to 2")
-		cvpredict `k' `pr' `if', regression(logit `varlist') cv(`cv') reps(`reps')
+		cvpredict `pr' `if', regression(logit `varlist') cv(`cv') reps(`reps') seed(`seed')
 	}
 	
-	if wordcount(`"`varlist'"') == 2 mata: m = uniqrows(st_data(., ("`pr'", "`2'")))
-	else mata: m = J(0, 2, .)
+	*m: prd = st_data(., "`pr'")
   qui roctab `1' `pr', detail `binomial' `bamber' `hanley'
   local auc = "AUC(%) = `=string((r(area))*100, "%6.1f")' [`=string((r(lb))*100, "%6.1f")'; `=string((r(ub))*100, "%6.1f")']"
 	mata: cpt = select((cpt=tokens("`r(cutpoints)'")'), regexm(cpt, "[0-9]$"))
@@ -74,13 +80,13 @@ program define cpt, rclass
 	local lbl3 `: var l `vn''
 	if "`lbl3'" == "" local lbl3 `2'
 	qui logit `varlist'
-  mata: st_numscalar("youden_v", pwlin(m, st_numscalar("youden_p")))
+  mata: st_numscalar("youden_v", pwlin(lookup, st_numscalar("youden_p")))
 	if youden_v < . {
 		local youden_text Youden: `lbl3' `=cond(_b[`2'] > 0, ">=", "<=")' `=string(youden_v, "`format'")'
 		return scalar Youden_v = youden_v
 		return local Youden_text = "`youden_text'"
 	}
-  mata: st_numscalar("liu_v", pwlin(m, st_numscalar("liu_p")))
+  mata: st_numscalar("liu_v", pwlin(lookup, st_numscalar("liu_p")))
 	if liu_v < . {
 		local liu_text Liu: `lbl3' `=cond(_b[`2'] > 0, ">=", "<=")' `=string(liu_v, "`format'")'
 		return scalar Liu_v = liu_v
@@ -110,27 +116,30 @@ program define cpt, rclass
 end 
 
 program define cvpredict
-    syntax newvarlist(min=2 max=2) [if/], Regression(string) ///
-			[noQuietly cv(integer 10) reps(integer 1)]
+    syntax newvarname [if/], Regression(string) ///
+			[noQuietly cv(integer 10) reps(integer 1) SEED(string)]
+		if "`seed'" != "" {
+			`version' set seed `seed'
+		}
+		local seed `c(seed)'
     if "`quietly'" == "" local QUIETLY quietly
 		if "`if'" != "" local if  & `if'
-    tokenize `"`varlist'"'
-    `QUIETLY' generate `1' = runiformint(1, `cv')
-			tempname repsum
+		tempname k repsum
+    `QUIETLY' generate `k' = runiformint(1, `cv')
 		forvalues rep = 1/`reps' {
 			local lstcv
 			forvalues r=1/`cv'{
-					tempname xb xbr prdct`r' repval
+					tempname prdct`r' repval
 					local lstcv `lstcv' , `prdct`r''
-					`QUIETLY' `regression' if `1' != `r' `if'
-					`QUIETLY' predict `prdct`r'' if `1' == `r', pr
+					`QUIETLY' `regression' if `k' != `r' `if'
+					`QUIETLY' predict double `prdct`r'' if `k' == `r', pr
 			}
-			`QUIETLY' generate `repval' = min(`lstcv') // cv-1 missing values and one non-missing
+			`QUIETLY' generate double `repval' = min(`lstcv') // cv-1 missing values and one non-missing
 			`QUIETLY' drop `=subinstr("`lstcv'", ",", "", .)'
-			`QUIETLY' if `rep' == 1 generate `repsum' = `repval'
+			`QUIETLY' if `rep' == 1 generate double `repsum' = `repval'
 			`QUIETLY' else replace `repsum' = `repsum' + `repval'
 		}
-		`QUIETLY' generate `2' = `repsum' / `reps'
+		`QUIETLY' generate `varlist' = `repsum' / `reps'
 end
 
 mata:

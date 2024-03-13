@@ -1,0 +1,16 @@
+d 'ECONSIG': module to quickly calculate six types of economic significance to simplify your empirical process.
+d
+d  econsig quickly calculates six types of economic significance to
+d simplify your empirical process. 
+d
+d KW: economic significance
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20240312
+d
+d Author: Shutter Zor	 , Xiamen University
+d Support: email Shutter_Z@@outlook.com
+d
+f econsig.ado
+f econsig.sthlp

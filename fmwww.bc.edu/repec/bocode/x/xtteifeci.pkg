@@ -1,0 +1,29 @@
+d 'XTTEIFECI': module to provide Estimation and Inference of Treatment Effects through a Factor-Based Approach
+d
+d   xtteifeci is designed for estimation and inference of treatment
+d effects and provides nonparametric confidence intervals for panel
+d data models with interactive fixed effects as proposed by Li et
+d al. (2024), which augments the works of Gobillon and Magnac
+d (2016), Xu (2017), and Bai and Ng (2021). xtteifeci supports
+d statistical inference through reporting confidence intervals and
+d p-values, applicable to models with diverse specifications,
+d including those with or without covariates and/or nonstationary
+d trends. For detailed guidance on the usage of xtteifeci, see Yan
+d et al. (2024). 
+d
+d KW: treatment effects
+d KW: factor approach
+d KW: nonparametric confidence intervals
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20240312
+d
+d Author: Guanpeng Yan , Shandong University of Finance and Economics
+d Support: email guanpengyan@@yeah.net
+d
+f xtteifeci.ado
+f xtteifeci.sthlp
+f xtteifeci_example.do
+f ../g/growth2.dta
+f ../s/smoking2.dta

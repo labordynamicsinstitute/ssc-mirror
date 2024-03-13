@@ -44,6 +44,8 @@ Default value is 0, i.e., no cross-validation.{p_end}
 {synopt:{opt reps:(#)}}  average # repetions of the predictions for the ROC.
 Default value is 1, i.e., no averaging.{p_end}
 
+{synopt:{opt seed:}} Set seed value for the options {opt cv:} and {opt reps:}.{p_end}
+
 {synopt:{opt gr:aph}} Generate a default graph.{p_end}
 
 {synopt:{opt twoway options:}} Generate a default graph with the twoway options.
