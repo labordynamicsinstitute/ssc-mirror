@@ -1,6 +1,6 @@
 d 'FESE': module to calculate standard errors for fixed effects
 d
-d fese implements a fixed-effects regression using areg and saves
+d  fese implements a fixed-effects regression using areg and saves
 d the estimated fixed effects and their standard errors as new
 d variables on the data. Note that areg produces identical results
 d to {help xtreg} with the fe option except when the cluster-robust

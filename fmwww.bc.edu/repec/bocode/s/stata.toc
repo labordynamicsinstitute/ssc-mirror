@@ -11,6 +11,7 @@ p simulate2 module enhancing and parallelising simulate
 p sivqr module to perform smoothed IV quantile regression
 p skewreg module to estimate skewness and kurtosis regressions
 p sotable module to produce tests and confidence bands for multiple comparisons of two-sided or one-sided hypotheses
+p spgen module to generate spatially lagged variables
 p spider module for spider plots
 p sq module for sequence analysis
 p staggered module implementing R staggered package based on Roth and Sant'Anna (2023)
