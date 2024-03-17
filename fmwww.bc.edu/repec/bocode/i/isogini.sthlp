@@ -1,5 +1,6 @@
 {smcl}
-{* 1.0.0 created 2024-3-01}{...}
+{* 1.0.2 updated 2024-3-14 / small correction / addition of sigma and }{...}
+{* 1.0.1 created 2024-3-01}{...}
 {vieweralsosee "[On SSC] isograph" "help isograph"}{...}
 {hline}
 {hi:help isogini}{...}
@@ -8,7 +9,7 @@
 
 {title:Title}
 
-{pstd}isogini  {hline 2} Stata module to estimate isogini measures at different percentiles {p_end}
+{pstd}isogini  {hline 2} Stata module to estimate isogini measures at different percentiles plus sigma and pi (version  1.0.2 ) {p_end}
 
 {marker syntax}{...}
 {title:Syntax}
@@ -34,8 +35,12 @@
 {p_end}	
 {pstd}
 	Rapid bootstrap n>20 is provided to generate the standard errors of estimates. 
+{p_end}	
+{pstd}
 	See, among many others, Chauvel (2016 & 2024).
-
+{p_end}	
+{pstd}
+        Many thanks to Philippe Van Kerm for a precise review of the earlier version of this ssc install isogini module. 
 
 
 {marker options}{...}
@@ -122,6 +127,10 @@ The indices and their standard deviations "sd" are saved in scalars.{p_end}
 {synopt:{cmd:r(ig50)}} => isogini at the median = p50 percentile threshold {p_end}
 {synopt:{cmd:r(sdig50)}} => ig50 standard deviation {p_end}
 {synopt:{cmd:r(ig25)}} => etc. {p_end}
+{synopt:{cmd:r(sigma)}} => sigma coefficient etc. {p_end}
+{synopt:{cmd:r(ssigma)}} => its standard deviation {p_end}
+{synopt:{cmd:r(pi)}} => pi coefficient etc. {p_end}
+{synopt:{cmd:r(spi)}} => its standard deviation {p_end}
 
 
 {title:References}

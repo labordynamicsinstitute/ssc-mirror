@@ -1,17 +1,18 @@
 d 'ESIZEREG': module  for computing the effect size based on a linear regression coefficient
 d
 d  esizereg is a postestimation command that calculates Cohen's d
-d effect size (Cohen 1988) for the adjusted mean difference of a
-d continuous variable between two groups. esizereg uses the
-d unstandardized regression coefficient of the treatment variable
-d as the numerator (which is equivalent to the difference between
-d two covariate adjusted means) and estimates the within groups
-d pooled standard deviation as the denominator. Estimation models
-d currently supported by esizereg are regress, tobit, truncreg,
-d hetregress, and xtreg. When aweights are specified in the
-d estimation model, esizereg produces a weighted effect size
-d estimate. esizeregi is the immediate form of esizereg. 
-d
+d (Cohen 1988) and Hedges's g (Hedges 1981) effect size for both
+d the unadjusted and adjusted mean difference of a continuous
+d variable between two groups. esizereg uses the unstandardized
+d regression coefficient of the treatment variable as the numerator
+d (which is equivalent to the difference between two covariate
+d unadjusted or adjusted means) and uses the pooled within-sample
+d estimate of the population standard deviation (estimated with
+d margins) as the denominator. Estimation models currently
+d supported by esizereg are regress, tobit, truncreg, hetregress,
+d xtreg, intreg, meintreg and metobit. When a weight is specified
+d in the estimation model, esizereg produces a weighted effect size
+d estimate. esizeregi is the immediate form of esizereg; see immed. d
 d KW: effect size
 d KW: Cohen’s d
 d KW: linear regression
@@ -19,7 +20,7 @@ d KW: standardized mean difference
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20240306
+d Distribution-Date: 20240316
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org

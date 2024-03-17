@@ -1,5 +1,6 @@
-*! version 0.22 2024-03-12 Niels Henrik Bruun
+*! version 0.23 2024-03-13 Niels Henrik Bruun
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
+* 2024-03-13 v0.23 Mysterious bug fixed
 * 2024-03-10 v0.22 Bug in lookup is fixed
 * 2024-03-10 v0.22 Option seed added
 * 2024-02-19 v0.21 Minor bug fixed
@@ -30,10 +31,11 @@ program define cpt, rclass
 	qui su `1' `if', mean
 	local prev = r(mean)
   if "`format'" == "" local format "%9.3f"
+	tempvar pr
+	qui logit `varlist' `if'
+	qui predict double `pr' if e(sample), pr
 	if wordcount(`"`varlist'"') == 2 & !regexm("`2'", "\.") {
-		tempvar xb pr
-		qui logit `varlist' `if'
-		qui predict double `pr' if e(sample), pr
+			tempvar xb
 		qui generate `xb' = (logit(`pr') - _b[_cons]) / _b[`2']
 		mata: lookup = uniqrows(st_data(., "`pr' `xb'"))
 	}

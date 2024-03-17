@@ -1,0 +1,24 @@
+d 'LISTREG': module for the analysis of list experiments using linear regression
+d
+d   listreg fits a linear model to data from a list experiment
+d (a.k.a. item count technique) or to data collected by the
+d item-sum technique. Single-list and double-list designs are
+d supported. 
+d
+d KW: list experiment
+d KW: item count technique
+d KW: item sum technique
+d KW: linear regression
+d
+d Requires: Stata version 14 
+d
+d Distribution-Date: 20240316
+d
+d Author: Ben Jann, University of Bern
+d Support: email jann@@soz.unibe.ch
+d
+f listreg.ado
+f ../_/_listreg_svy.ado
+f listreg.sthlp
+f listreg.dta
+f listreg.zip

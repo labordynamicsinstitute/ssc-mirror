@@ -4017,6 +4017,7 @@ fmwww.bc.edu/repec/bocode/_/_gtreg.ado
 fmwww.bc.edu/repec/bocode/_/_update_wbopendata.ado
 fmwww.bc.edu/repec/bocode/_/_gston.ado
 fmwww.bc.edu/repec/bocode/_/_gfgt.ado
+fmwww.bc.edu/repec/bocode/_/_listreg_svy.ado
 fmwww.bc.edu/repec/bocode/_/_ddml_nnls.ado
 fmwww.bc.edu/repec/bocode/_/_gnasd.ado
 fmwww.bc.edu/repec/bocode/_/_pecats.html
@@ -19759,6 +19760,7 @@ fmwww.bc.edu/repec/bocode/l/lpdensity_fn.mo
 fmwww.bc.edu/repec/bocode/l/libhtml.pkg
 fmwww.bc.edu/repec/bocode/l/lmoments.ado
 fmwww.bc.edu/repec/bocode/l/lmhhp2.dlg
+fmwww.bc.edu/repec/bocode/l/listreg.zip
 fmwww.bc.edu/repec/bocode/l/labelvar.mo
 fmwww.bc.edu/repec/bocode/l/lablist.ado
 fmwww.bc.edu/repec/bocode/l/LWdata_RawData.dta
@@ -19782,6 +19784,7 @@ fmwww.bc.edu/repec/bocode/l/lmadurm.pkg
 fmwww.bc.edu/repec/bocode/l/lmaznl.sthlp
 fmwww.bc.edu/repec/bocode/l/lassologit.sthlp
 fmwww.bc.edu/repec/bocode/l/lmoments6.hlp
+fmwww.bc.edu/repec/bocode/l/listreg.ado
 fmwww.bc.edu/repec/bocode/l/lognormal_lefttrunc.ado
 fmwww.bc.edu/repec/bocode/l/ldir.html
 fmwww.bc.edu/repec/bocode/l/lowyupdate.ado
@@ -20485,6 +20488,7 @@ fmwww.bc.edu/repec/bocode/l/lmalbnl.pkg
 fmwww.bc.edu/repec/bocode/l/lmnadnl.dlg
 fmwww.bc.edu/repec/bocode/l/lppinv.pkg
 fmwww.bc.edu/repec/bocode/l/lfsummvl.hlp
+fmwww.bc.edu/repec/bocode/l/listreg.dta
 fmwww.bc.edu/repec/bocode/l/ldecomp.ado
 fmwww.bc.edu/repec/bocode/l/ldtestmp.ado
 fmwww.bc.edu/repec/bocode/l/lmavon2.dlg
@@ -20674,6 +20678,7 @@ fmwww.bc.edu/repec/bocode/l/lpdf.sthlp
 fmwww.bc.edu/repec/bocode/l/lbpower.ado
 fmwww.bc.edu/repec/bocode/l/lmcovreg3.pkg
 fmwww.bc.edu/repec/bocode/l/lrseq.ado
+fmwww.bc.edu/repec/bocode/l/listreg.sthlp
 fmwww.bc.edu/repec/bocode/l/lmhmss2.ado
 fmwww.bc.edu/repec/bocode/l/lcureregr_lf.mlib
 fmwww.bc.edu/repec/bocode/l/lmnjb.dta
@@ -20928,6 +20933,7 @@ fmwww.bc.edu/repec/bocode/l/longplot.ado
 fmwww.bc.edu/repec/bocode/l/lmadwnl.sthlp
 fmwww.bc.edu/repec/bocode/l/loocv.sthlp
 fmwww.bc.edu/repec/bocode/l/levinlin.ado
+fmwww.bc.edu/repec/bocode/l/listreg.pkg
 fmwww.bc.edu/repec/bocode/l/lsfcross.mlib
 fmwww.bc.edu/repec/bocode/l/labmvs9.ado
 fmwww.bc.edu/repec/bocode/l/lmalb2.html

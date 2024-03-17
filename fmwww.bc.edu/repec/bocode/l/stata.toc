@@ -66,6 +66,7 @@ p linuxlsdl module to create a dataset of file records from the output of a Linu
 p lisrelinput module to generate input for pasting into LISREL
 p listfirst module to list first so many observations
 p listmiss module to analyse missing values related to an estimation command
+p listreg module for the analysis of list experiments using linear regression
 p listsome module to list a (possibly random) sample of observations
 p listtab module to list variables as rows of a TeX, HTML or word processor table
 p listtex module to list variables as rows of a TeX, HTML or word processor table
