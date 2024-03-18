@@ -1,0 +1,27 @@
+d 'PRETTY_SUITE': module with programs to aid with routine reporting for clinical trials
+d
+d  pretty_suite contains a suite of programmes which are designed
+d to aid with routine reporting for clinical trials. The suite
+d comprised the programme pretty_baseline which makes routinely
+d encountered tables of baseline characteristics for both grouped
+d and ungrouped data. It allows for positioning of the categories
+d of output vertically within the table and many other customisable
+d features. The second package pretty_logistic accomplishes the
+d similar aim of automating the output for logistic regression
+d analyses (including hierarchical analyses). 
+d
+d KW: descriptive table
+d KW: baseline characteristics
+d KW: clinical trials
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20240317
+d
+d Author: Rafael Gafoor, University College London
+d Support: email r.gafoor@@ucl.ac.uk
+d
+f pretty_baseline.ado
+f pretty_baseline.sthlp
+f pretty_logistic.ado
+f pretty_logistic.sthlp

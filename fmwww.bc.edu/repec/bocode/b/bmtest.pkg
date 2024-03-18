@@ -1,0 +1,29 @@
+d 'BMTEST': module for computing the independent two-sample Brunner-Munzel test
+d
+d  bmtest implements the Brunner–Munzel test for two independent
+d samples (Brunner & Munzel 2000; Neubert & Brunner 2007; Karch
+d 2023) featuring fewer assumptions than the
+d Wilcoxon–Mann–Whitney test (Karch 2023). The Brunner–Munzel
+d test produces a relative effect estimate of group affiliation on
+d the outcome. In words, the relative effect p represents the
+d probability that a randomly selected individual from the second
+d group will have a larger outcome than a randomly selected
+d individual from the first group. 
+d
+d KW: Brunner–Munzel test
+d KW: independent two-sample test
+d KW: ranked sums
+d KW: Wilcoxon–Mann–Whitney test
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20240317
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+d Author: John L. Adams,  Kaiser Permanente
+d Support: email 
+d
+f bmtest.ado
+f bmtest.sthlp

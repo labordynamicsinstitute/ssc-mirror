@@ -10766,6 +10766,7 @@ fmwww.bc.edu/repec/bocode/p/prodest_m.ado
 fmwww.bc.edu/repec/bocode/p/persuasio4ytz.sthlp
 fmwww.bc.edu/repec/bocode/p/plotbeta.hlp
 fmwww.bc.edu/repec/bocode/p/pc_bootstrap_units.ado
+fmwww.bc.edu/repec/bocode/p/pretty_suite.pkg
 fmwww.bc.edu/repec/bocode/p/pcm000201_lf.ado
 fmwww.bc.edu/repec/bocode/p/pdplot.html
 fmwww.bc.edu/repec/bocode/p/punaf.pkg
@@ -11623,6 +11624,7 @@ fmwww.bc.edu/repec/bocode/p/psemail.pkg
 fmwww.bc.edu/repec/bocode/p/posis.pdf
 fmwww.bc.edu/repec/bocode/p/postlist.hlp
 fmwww.bc.edu/repec/bocode/p/parseloc.ado
+fmwww.bc.edu/repec/bocode/p/pretty_logistic.ado
 fmwww.bc.edu/repec/bocode/p/pwcorrs.ado
 fmwww.bc.edu/repec/bocode/p/plausexog.ado
 fmwww.bc.edu/repec/bocode/p/ppssampford.ado
@@ -11797,6 +11799,7 @@ fmwww.bc.edu/repec/bocode/p/pagetrend.pkg
 fmwww.bc.edu/repec/bocode/p/peermean.pkg
 fmwww.bc.edu/repec/bocode/p/pcorrmat.pkg
 fmwww.bc.edu/repec/bocode/p/plotprocess.ado
+fmwww.bc.edu/repec/bocode/p/pretty_logistic.sthlp
 fmwww.bc.edu/repec/bocode/p/pdagum.html
 fmwww.bc.edu/repec/bocode/p/paretofit.hlp
 fmwww.bc.edu/repec/bocode/p/pvtest.hlp
@@ -15479,6 +15482,7 @@ fmwww.bc.edu/repec/bocode/b/bctobit.html
 fmwww.bc.edu/repec/bocode/b/bpass.html
 fmwww.bc.edu/repec/bocode/b/bimap.ado
 fmwww.bc.edu/repec/bocode/b/barplot.html
+fmwww.bc.edu/repec/bocode/b/bmtest.ado
 fmwww.bc.edu/repec/bocode/b/barplot.ado
 fmwww.bc.edu/repec/bocode/b/baconde.ado
 fmwww.bc.edu/repec/bocode/b/bunchtobit.ado
@@ -15505,6 +15509,7 @@ fmwww.bc.edu/repec/bocode/b/btcompass2dir.sthlp
 fmwww.bc.edu/repec/bocode/b/bipolar.pkg
 fmwww.bc.edu/repec/bocode/b/baryhat.ado
 fmwww.bc.edu/repec/bocode/b/boost_predict.ado
+fmwww.bc.edu/repec/bocode/b/bmtest.pkg
 fmwww.bc.edu/repec/bocode/b/baum.san2012.pdf
 fmwww.bc.edu/repec/bocode/b/bootsamb.ado
 fmwww.bc.edu/repec/bocode/b/bttickposition.sthlp
@@ -15557,6 +15562,7 @@ fmwww.bc.edu/repec/bocode/b/b1x2.ado
 fmwww.bc.edu/repec/bocode/b/bic.ado
 fmwww.bc.edu/repec/bocode/b/btmargin.sthlp
 fmwww.bc.edu/repec/bocode/b/basetable2xlv14.mata
+fmwww.bc.edu/repec/bocode/b/bmtest.sthlp
 fmwww.bc.edu/repec/bocode/b/birthsim.html
 fmwww.bc.edu/repec/bocode/b/bhatt.pkg
 fmwww.bc.edu/repec/bocode/b/biasepi.sthlp

@@ -66,6 +66,7 @@ p bme module to compute Bounded midpoint estimator
 p bmi module to compute Body Mass Index
 p bmjcip module to format confidence intervals and P-values for medical journals
 p bmp2dta module to convert bitmap files to Stata datasets
+p bmtest module for computing the independent two-sample Brunner-Munzel test
 p bnormpdf module to calculate the bivariate normal density
 p boost module to perform boosted regression
 p boottest module to provide fast execution of the wild bootstrap with null imposed

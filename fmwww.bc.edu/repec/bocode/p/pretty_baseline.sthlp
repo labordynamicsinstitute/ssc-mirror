@@ -12,7 +12,7 @@
 help for {cmd:pretty_baseline} {right: Version 2.0 13 December 2023}
 {hline}
 {title:Author}
-{tab}Rafael Gafoor 
+{tab}Georgia McRedmond & Rafael Gafoor 
 {tab}University College London, London UNITED KINGDOM 
 {tab}{cmd:r.gafoor@ucl.ac.uk}
 
@@ -40,10 +40,8 @@ help for {cmd:pretty_baseline} {right: Version 2.0 13 December 2023}
 {synoptset 32 tabbed}{...}
 {synopthdr}
 {synoptline}
-{syntab:Required }
-{synopt:{opt by:}({help varname})} - grouping variable by which results are to be presented
-
 {syntab:Optional}
+{synopt:{opt by:}({help varname})} - grouping variable by which results are to be presented {p_end}
 {synopt:{opt contn:ormal}({help varname})} - continuous, normally distributed variables. Summary statistics of mean and standard deviation returned{p_end}
 {synopt:{opt conts:kewed}({help varname})} - continuous, skewed variables. Summary statistics of median and interquartile range returned.{p_end}
 {synopt:{opt categ:orical}({help varname})} - categorical variables. Summary statistics of frequency and percentages returned. {p_end}
@@ -94,8 +92,11 @@ The default variable labels for the table are the value labels from the dataset.
 {phang} {cmd:. webuse nhanes2l, clear}{p_end}
 {tab}Second National Health and Nutrition Examination Survey
 
-{tab} {bf: Basic Table}
+{tab} {bf: Basic table}
 {phang} {cmd:. pretty_baseline, by(sex) contn(age) conts(height weight) categ(race)}
+
+{tab} {bf: Basic table with no grouping variable}
+{phang} {cmd:. pretty_baseline, contn(age) conts(height weight) categ(race)}
 
 {tab} {bf:Table with formatting of output}
 {phang} {cmd:. pretty_baseline, by(sex) contn(age) conts(height weight) categ(race) fcont(%9.3fc) fcateg(%9.1fc)}

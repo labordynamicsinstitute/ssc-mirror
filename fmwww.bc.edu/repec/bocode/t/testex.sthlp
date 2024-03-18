@@ -48,16 +48,26 @@ The program gives a caution when there is no crossing of conditional CDFs requir
 
 {phang}{cmd:. testex y x z}{p_end}
 
-{phang}Setting the number of multiplier bootstrap iterations to 2000
+{phang}Setting the number of multiplier bootstrap iterations to 2000:
 
 {phang}{cmd:. testex y x z, numboot(2000)}{p_end}
+
+{phang}Including additive {bf:controls}:
+
+{phang}{cmd:. reg y controls}{p_end}
+{phang}{cmd:. predict residy, resid}{p_end}
+{phang}{cmd:. reg x controls}{p_end}
+{phang}{cmd:. predict residx, resid}{p_end}
+{phang}{cmd:. reg z controls}{p_end}
+{phang}{cmd:. predict residz, resid}{p_end}
+{phang}{cmd:. testex residy residx residz}{p_end}
 
 
 {marker stored}{...}
 {title:Stored results}
 
 {phang}
-{bf:robustate} stores the following in {bf:r()}: 
+{bf:testex} stores the following in {bf:r()}: 
 {p_end}
 
 {phang}
