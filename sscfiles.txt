@@ -2403,6 +2403,7 @@ fmwww.bc.edu/repec/bocode/s/sskapp.pkg
 fmwww.bc.edu/repec/bocode/s/sbbq.html
 fmwww.bc.edu/repec/bocode/s/svmatf.html
 fmwww.bc.edu/repec/bocode/s/standsurv.sthlp
+fmwww.bc.edu/repec/bocode/s/stocdom.sthlp
 fmwww.bc.edu/repec/bocode/s/summdate.pkg
 fmwww.bc.edu/repec/bocode/s/stddiff.ado
 fmwww.bc.edu/repec/bocode/s/simsum.pkg
@@ -2649,6 +2650,7 @@ fmwww.bc.edu/repec/bocode/s/spundir.html
 fmwww.bc.edu/repec/bocode/s/spregcs12.ado
 fmwww.bc.edu/repec/bocode/s/slower.ado
 fmwww.bc.edu/repec/bocode/s/sankey_plot.sthlp
+fmwww.bc.edu/repec/bocode/s/stocdom.ado
 fmwww.bc.edu/repec/bocode/s/scheme-white_jet.scheme
 fmwww.bc.edu/repec/bocode/s/sqclusterdat.ado
 fmwww.bc.edu/repec/bocode/s/spregsdm4.ado
@@ -3458,6 +3460,7 @@ fmwww.bc.edu/repec/bocode/s/synth.ado
 fmwww.bc.edu/repec/bocode/s/smwoodbury_sym2_posdef.sthlp
 fmwww.bc.edu/repec/bocode/s/spweightcs.sthlp
 fmwww.bc.edu/repec/bocode/s/spread.sthlp
+fmwww.bc.edu/repec/bocode/s/stocdom.pkg
 fmwww.bc.edu/repec/bocode/s/strsrcs_pred.ado
 fmwww.bc.edu/repec/bocode/s/savastata.txt
 fmwww.bc.edu/repec/bocode/s/subsetbyvif.ado

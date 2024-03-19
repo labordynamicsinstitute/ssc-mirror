@@ -1,7 +1,19 @@
-*! miesize - version 1.0.0 Paul A Tiffin    2023-02-06
+*! miesize - version 1.0.1 Paul A Tiffin 2023-02-06; Note; now updated with the ability to specify confidence intervals between 50 and 99.99%.
 program define miesize, rclass
 version 15.0
-syntax varname [if] [in] , BY(varname)[,GLASS COUNTDOWN]
+
+syntax varname [if] [in] , BY(varname) [,GLass COUNTdown Level(cilevel)]
+
+*This will calculate the z value that will be used for the confidence interval estimation (e.g. 1.96 for 95% CIs)
+local z=abs(invnormal(((100-`level')/100)/2))
+
+*This produces an error message if an out of range value for the confidence intervals are selected 
+if `level'<10 | `level'>99.99 {
+		di in red 	///
+		"{bf:level()} must be between 10 and 99.99 inclusive for {bf:miesize}"
+		exit 198
+	}
+
 return local varname `varlist'
 return local by_var `by'  
 marksample touse,strok novarlist
@@ -101,11 +113,11 @@ qui gen vtotal_`by'= vw_`by' + vb_`by' + (vb_`by'/`=scalar(m)') if _n==1
 qui gen sep_`by'=sqrt(vtotal_`by') if _n==1
 scalar pooled_se= sep_`by' 
 
-scalar ub_`by'=(`=scalar(rd)') + (1.96*(`=scalar(pooled_se)'))
-scalar lb_`by'=(`=scalar(rd)') - (1.96*(`=scalar(pooled_se)'))
+scalar ub_`by'=(`=scalar(rd)') + (`z'*(`=scalar(pooled_se)'))
+scalar lb_`by'=(`=scalar(rd)') - (`z'*(`=scalar(pooled_se)'))
 
-return local ub_g1=(`=scalar(rd)') + (1.96*(`=scalar(pooled_se)'))
-return local lb_g1=(`=scalar(rd)') - (1.96*(`=scalar(pooled_se)'))
+return local ub_g1=(`=scalar(rd)') + (`z'*(`=scalar(pooled_se)'))
+return local lb_g1=(`=scalar(rd)') - (`z'*(`=scalar(pooled_se)'))
 return local pt_est_g1 `=scalar(rd)'
 return local pooled_se_g1 `=scalar(pooled_se)'
 return local pooled_se_g1 `=scalar(pooled_se)'
@@ -173,11 +185,11 @@ qui gen vtotal_`by'= vw_`by' + vb_`by' + (vb_`by'/`=scalar(m)') if _n==1
 qui gen sep_`by'=sqrt(vtotal_`by') if _n==1
 scalar pooled_se= sep_`by' 
 
-scalar ub2_`by'=(`=scalar(rdt)') + (1.96*(`=scalar(pooled_se)'))
-scalar lb2_`by'=(`=scalar(rdt)') - (1.96*(`=scalar(pooled_se)'))
+scalar ub2_`by'=(`=scalar(rdt)') + (`z'*(`=scalar(pooled_se)'))
+scalar lb2_`by'=(`=scalar(rdt)') - (`z'*(`=scalar(pooled_se)'))
 
-return local ub_g2=(`=scalar(rdt)') + (1.96*(`=scalar(pooled_se)'))
-return local lb_g2=(`=scalar(rdt)') - (1.96*(`=scalar(pooled_se)'))
+return local ub_g2=(`=scalar(rdt)') + (`z'*(`=scalar(pooled_se)'))
+return local lb_g2=(`=scalar(rdt)') - (`z'*(`=scalar(pooled_se)'))
 return local pt_est_g2 `=scalar(rdt)'
 return local pooled_se_g2 `=scalar(pooled_se)'
 
@@ -194,10 +206,10 @@ disp as text "Average obs per Group 1 " as res group_count_n1
 disp as text "Average obs per Group 2 " as res group_count_n2
 
 di as text "                                                           "
-di as text "Effect size    {c |} Pooled estimate" _col(37) "    [95% conf. interval]"
+di as text "Effect size    {c |} Pooled estimate" _col(37) "    [`level'% conf. interval]"
 di as text "{hline 15}{c +}{hline 53}"
-di as text "Glass's Delta 1{c |}" as result     %9.0g rd  "              " %9.0g lb_`by' 	"       " %9.0g ub_`by' 
-di as text "Glass's Delta 2{c |}" as result     %9.0g rdt "              "%9.0g lb2_`by' "       " %9.0g ub2_`by' 
+di as text "Glass's Delta 1{c |} " as result     %9.0g rd  "              " %9.0g lb_`by' 	"       " %9.0g ub_`by' 
+di as text "Glass's Delta 2{c |} " as result     %9.0g rdt "              "%9.0g lb2_`by' "       " %9.0g ub2_`by' 
 
 *Drop temporary variables
 drop se_temp*  se_sq_temp*  D_m* mean* vtotal_* sep_* vw_* var_* sum_var_* vb_*
@@ -265,10 +277,10 @@ qui gen vtotal_`by'= vw_`by' + vb_`by' + (vb_`by'/`=scalar(m)') if _n==1
 qui gen sep_`by'=sqrt(vtotal_`by') if _n==1
 scalar pooled_se= sep_`by' 
 
-scalar ub_d_`by'=(`=scalar(rdd)') + (1.96*(`=scalar(pooled_se)'))
-scalar lb_d_`by'=(`=scalar(rdd)') - (1.96*(`=scalar(pooled_se)'))
-return local ub_d=(`=scalar(rdd)') + (1.96*(`=scalar(pooled_se)'))
-return local lb_d=(`=scalar(rdd)') - (1.96*(`=scalar(pooled_se)'))
+scalar ub_d_`by'=(`=scalar(rdd)') + (`z'*(`=scalar(pooled_se)'))
+scalar lb_d_`by'=(`=scalar(rdd)') - (`z'*(`=scalar(pooled_se)'))
+return local ub_d=(`=scalar(rdd)') + (`z'*(`=scalar(pooled_se)'))
+return local lb_d=(`=scalar(rdd)') - (`z'*(`=scalar(pooled_se)'))
 
 return local pt_est_d `=scalar(rdd)'
 return local pooled_se_d `=scalar(pooled_se)'
@@ -338,11 +350,11 @@ qui gen vtotal_`by'= vw_`by' + vb_`by' + (vb_`by'/`=scalar(m)') if _n==1
 qui gen sep_`by'=sqrt(vtotal_`by') if _n==1
 scalar pooled_se= sep_`by' 
 
-scalar ub_g_`by'=(`=scalar(rdg)') + (1.96*(`=scalar(pooled_se)'))
-scalar lb_g_`by'=(`=scalar(rdg)') - (1.96*(`=scalar(pooled_se)'))
+scalar ub_g_`by'=(`=scalar(rdg)') + (`z'*(`=scalar(pooled_se)'))
+scalar lb_g_`by'=(`=scalar(rdg)') - (`z'*(`=scalar(pooled_se)'))
 
-return local ub_g=(`=scalar(rdg)') + (1.96*(`=scalar(pooled_se)'))
-return local lb_g=(`=scalar(rdg)') - (1.96*(`=scalar(pooled_se)'))
+return local ub_g=(`=scalar(rdg)') + (`z'*(`=scalar(pooled_se)'))
+return local lb_g=(`=scalar(rdg)') - (`z'*(`=scalar(pooled_se)'))
 return local pt_est_g `=scalar(rdg)'
 return local pooled_se_g `=scalar(pooled_se)'
 return local pooled_se_g `=scalar(pooled_se)'
@@ -363,10 +375,10 @@ disp as text "Average obs per Group 2 " as res group_count_n2
 drop se_temp*  se_sq_temp*  D_m* mean* vtotal_* sep_* vw_* var_* sum_var_* vb_* 
 
 di as text "                                                           "
-di as text "Effect size    {c |} Pooled estimate" _col(37) "    [95% conf. interval]"
+di as text "Effect size    {c |} Pooled estimate" _col(37) "    [`level'% conf. interval]"
 di as text "{hline 15}{c +}{hline 53}"
-di as text "Cohen's {it:d}      {c |}" as result     %9.0g rdd  "              " %9.0g lb_d_`by' 	"       " %9.0g ub_d_`by' 
-di as text "Hedges' {it:g}      {c |}" as result     %9.0g rdg  "              " %9.0g lb_g_`by' 	"       " %9.0g ub_g_`by' 
+di as text "Cohen's {it:d}      {c |} " as result     %9.0g rdd  "              " %9.0g lb_d_`by' 	"       " %9.0g ub_d_`by' 
+di as text "Hedges' {it:g}      {c |} " as result     %9.0g rdg  "              " %9.0g lb_g_`by' 	"       " %9.0g ub_g_`by' 
 }
 }
  ***************************************** If Grouping variable not imputed and outcome imputed  m>1 **************************************************************************************************
@@ -439,11 +451,11 @@ qui gen vtotal_`by'= vw_`by' + vb_`by' + (vb_`by'/`=scalar(m)') if _n==1
 qui gen sep_`by'=sqrt(vtotal_`by') if _n==1
 scalar pooled_se= sep_`by' 
 
-scalar ub_`by'=(`=scalar(rd)') + (1.96*(`=scalar(pooled_se)'))
-scalar lb_`by'=(`=scalar(rd)') - (1.96*(`=scalar(pooled_se)'))
+scalar ub_`by'=(`=scalar(rd)') + (`z'*(`=scalar(pooled_se)'))
+scalar lb_`by'=(`=scalar(rd)') - (`z'*(`=scalar(pooled_se)'))
 
-return local ub_g1=(`=scalar(rd)') + (1.96*(`=scalar(pooled_se)'))
-return local lb_g1=(`=scalar(rd)') - (1.96*(`=scalar(pooled_se)'))
+return local ub_g1=(`=scalar(rd)') + (`z'*(`=scalar(pooled_se)'))
+return local lb_g1=(`=scalar(rd)') - (`z'*(`=scalar(pooled_se)'))
 return local pt_est_g1 `=scalar(rd)'
 return local pooled_se_g1 `=scalar(pooled_se)'
 return local pooled_se_g1 `=scalar(pooled_se)'
@@ -511,11 +523,11 @@ qui gen vtotal_`by'= vw_`by' + vb_`by' + (vb_`by'/`=scalar(m)') if _n==1
 qui gen sep_`by'=sqrt(vtotal_`by') if _n==1
 scalar pooled_se= sep_`by' 
 
-scalar ub2_`by'=(`=scalar(rdt)') + (1.96*(`=scalar(pooled_se)'))
-scalar lb2_`by'=(`=scalar(rdt)') - (1.96*(`=scalar(pooled_se)'))
+scalar ub2_`by'=(`=scalar(rdt)') + (`z'*(`=scalar(pooled_se)'))
+scalar lb2_`by'=(`=scalar(rdt)') - (`z'*(`=scalar(pooled_se)'))
 
-return local ub_g2=(`=scalar(rdt)') + (1.96*(`=scalar(pooled_se)'))
-return local lb_g2=(`=scalar(rdt)') - (1.96*(`=scalar(pooled_se)'))
+return local ub_g2=(`=scalar(rdt)') + (`z'*(`=scalar(pooled_se)'))
+return local lb_g2=(`=scalar(rdt)') - (`z'*(`=scalar(pooled_se)'))
 return local pt_est_g2 `=scalar(rdt)'
 return local pooled_se_g2 `=scalar(pooled_se)'
 
@@ -532,10 +544,10 @@ disp as text "Average obs per Group 1 " as res group_count_n1
 disp as text "Average obs per Group 2 " as res group_count_n2
 
 di as text "                                                           "
-di as text "Effect size    {c |} Pooled estimate" _col(37) "    [95% conf. interval]"
+di as text "Effect size    {c |} Pooled estimate" _col(37) "    [`level'% conf. interval]"
 di as text "{hline 15}{c +}{hline 53}"
-di as text "Glass's Delta 1{c |}" as result     %9.0g rd  "              " %9.0g lb_`by' 	"       " %9.0g ub_`by' 
-di as text "Glass's Delta 2{c |}" as result     %9.0g rdt "              "%9.0g lb2_`by' "       " %9.0g ub2_`by' 
+di as text "Glass's Delta 1{c |} " as result     %9.0g rd  "              " %9.0g lb_`by' 	"       " %9.0g ub_`by' 
+di as text "Glass's Delta 2{c |} " as result     %9.0g rdt "              "%9.0g lb2_`by' "       " %9.0g ub2_`by' 
 
 *Drop temporary variables
 drop se_temp*  se_sq_temp*  D_m* mean* vtotal_* sep_* vw_* var_* sum_var_* vb_*
@@ -603,11 +615,11 @@ qui gen vtotal_`by'= vw_`by' + vb_`by' + (vb_`by'/`=scalar(m)') if _n==1
 qui gen sep_`by'=sqrt(vtotal_`by') if _n==1
 scalar pooled_se= sep_`by' 
 
-scalar ub_d_`by'=(`=scalar(rdd)') + (1.96*(`=scalar(pooled_se)'))
-scalar lb_d_`by'=(`=scalar(rdd)') - (1.96*(`=scalar(pooled_se)'))
+scalar ub_d_`by'=(`=scalar(rdd)') + (`z'*(`=scalar(pooled_se)'))
+scalar lb_d_`by'=(`=scalar(rdd)') - (`z'*(`=scalar(pooled_se)'))
 
-return local ub_d=(`=scalar(rdd)') + (1.96*(`=scalar(pooled_se)'))
-return local lb_d=(`=scalar(rdd)') - (1.96*(`=scalar(pooled_se)'))
+return local ub_d=(`=scalar(rdd)') + (`z'*(`=scalar(pooled_se)'))
+return local lb_d=(`=scalar(rdd)') - (`z'*(`=scalar(pooled_se)'))
 return local pt_est_d `=scalar(rdd)'
 return local pooled_se_d `=scalar(pooled_se)'
 
@@ -676,11 +688,11 @@ qui gen vtotal_`by'= vw_`by' + vb_`by' + (vb_`by'/`=scalar(m)') if _n==1
 qui gen sep_`by'=sqrt(vtotal_`by') if _n==1
 scalar pooled_se= sep_`by' 
 
-scalar ub_g_`by'=(`=scalar(rdg)') + (1.96*(`=scalar(pooled_se)'))
-scalar lb_g_`by'=(`=scalar(rdg)') - (1.96*(`=scalar(pooled_se)'))
+scalar ub_g_`by'=(`=scalar(rdg)') + (`z'*(`=scalar(pooled_se)'))
+scalar lb_g_`by'=(`=scalar(rdg)') - (`z'*(`=scalar(pooled_se)'))
 
-return local ub_g=(`=scalar(rdg)') + (1.96*(`=scalar(pooled_se)'))
-return local lb_g=(`=scalar(rdg)') - (1.96*(`=scalar(pooled_se)'))
+return local ub_g=(`=scalar(rdg)') + (`z'*(`=scalar(pooled_se)'))
+return local lb_g=(`=scalar(rdg)') - (`z'*(`=scalar(pooled_se)'))
 return local pt_est_g `=scalar(rdg)'
 return local pooled_se_g `=scalar(pooled_se)'
 return local pooled_se_g `=scalar(pooled_se)'
@@ -701,10 +713,10 @@ disp as text "Average obs per Group 2 " as res group_count_n2
 drop se_temp*  se_sq_temp*  D_m* mean* vtotal_* sep_* vw_* var_* sum_var_* vb_* 
 
 di as text "                                                           "
-di as text "Effect size    {c |} Pooled estimate" _col(37) "    [95% conf. interval]"
+di as text "Effect size    {c |} Pooled estimate" _col(37) "    [`level'% conf. interval]"
 di as text "{hline 15}{c +}{hline 53}"
-di as text "Cohen's {it:d}      {c |}" as result     %9.0g rdd  "              " %9.0g lb_d_`by' 	"       " %9.0g ub_d_`by' 
-di as text "Hedges' {it:g}      {c |}" as result     %9.0g rdg  "              " %9.0g lb_g_`by' 	"       " %9.0g ub_g_`by' 
+di as text "Cohen's {it:d}      {c |} " as result     %9.0g rdd  "              " %9.0g lb_d_`by' 	"       " %9.0g ub_d_`by' 
+di as text "Hedges' {it:g}      {c |} " as result     %9.0g rdg  "              " %9.0g lb_g_`by' 	"       " %9.0g ub_g_`by' 
 }
  
 } 
@@ -778,11 +790,11 @@ qui gen vtotal_`by'= vw_`by' + vb_`by' + (vb_`by'/`=scalar(m)') if _n==1
 qui gen sep_`by'=sqrt(vtotal_`by') if _n==1
 scalar pooled_se= sep_`by' 
 
-scalar ub_`by'=(`=scalar(rd)') + (1.96*(`=scalar(pooled_se)'))
-scalar lb_`by'=(`=scalar(rd)') - (1.96*(`=scalar(pooled_se)'))
+scalar ub_`by'=(`=scalar(rd)') + (`z'*(`=scalar(pooled_se)'))
+scalar lb_`by'=(`=scalar(rd)') - (`z'*(`=scalar(pooled_se)'))
 
-return local ub_g1=(`=scalar(rd)') + (1.96*(`=scalar(pooled_se)'))
-return local lb_g1=(`=scalar(rd)') - (1.96*(`=scalar(pooled_se)'))
+return local ub_g1=(`=scalar(rd)') + (`z'*(`=scalar(pooled_se)'))
+return local lb_g1=(`=scalar(rd)') - (`z'*(`=scalar(pooled_se)'))
 return local pt_est_g1 `=scalar(rd)'
 return local pooled_se_g1 `=scalar(pooled_se)'
 return local pooled_se_g1 `=scalar(pooled_se)'
@@ -850,11 +862,11 @@ qui gen vtotal_`by'= vw_`by' + vb_`by' + (vb_`by'/`=scalar(m)') if _n==1
 qui gen sep_`by'=sqrt(vtotal_`by') if _n==1
 scalar pooled_se= sep_`by' 
 
-scalar ub2_`by'=(`=scalar(rdt)') + (1.96*(`=scalar(pooled_se)'))
-scalar lb2_`by'=(`=scalar(rdt)') - (1.96*(`=scalar(pooled_se)'))
+scalar ub2_`by'=(`=scalar(rdt)') + (`z'*(`=scalar(pooled_se)'))
+scalar lb2_`by'=(`=scalar(rdt)') - (`z'*(`=scalar(pooled_se)'))
 
-return local ub_g2=(`=scalar(rdt)') + (1.96*(`=scalar(pooled_se)'))
-return local lb_g2=(`=scalar(rdt)') - (1.96*(`=scalar(pooled_se)'))
+return local ub_g2=(`=scalar(rdt)') + (`z'*(`=scalar(pooled_se)'))
+return local lb_g2=(`=scalar(rdt)') - (`z'*(`=scalar(pooled_se)'))
 return local pt_est_g2 `=scalar(rdt)'
 return local pooled_se_g2 `=scalar(pooled_se)'
 
@@ -871,10 +883,10 @@ disp as text "Average obs per Group 1 " as res group_count_n1
 disp as text "Average obs per Group 2 " as res group_count_n2
 
 di as text "                                                           "
-di as text "Effect size    {c |} Pooled estimate" _col(37) "    [95% conf. interval]"
+di as text "Effect size    {c |} Pooled estimate" _col(37) "    [`level'% conf. interval]"
 di as text "{hline 15}{c +}{hline 53}"
-di as text "Glass's Delta 1{c |}" as result     %9.0g rd  "              " %9.0g lb_`by' 	"       " %9.0g ub_`by' 
-di as text "Glass's Delta 2{c |}" as result     %9.0g rdt "              "%9.0g lb2_`by' "       " %9.0g ub2_`by' 
+di as text "Glass's Delta 1{c |} " as result     %9.0g rd  "              " %9.0g lb_`by' 	"       " %9.0g ub_`by' 
+di as text "Glass's Delta 2{c |} " as result     %9.0g rdt "              "%9.0g lb2_`by' "       " %9.0g ub2_`by' 
 
 *Drop temporary variables
 drop se_temp*  se_sq_temp*  D_m* mean* vtotal_* sep_* vw_* var_* sum_var_* vb_*
@@ -942,11 +954,11 @@ qui gen vtotal_`by'= vw_`by' + vb_`by' + (vb_`by'/`=scalar(m)') if _n==1
 qui gen sep_`by'=sqrt(vtotal_`by') if _n==1
 scalar pooled_se= sep_`by' 
 
-scalar ub_d_`by'=(`=scalar(rdd)') + (1.96*(`=scalar(pooled_se)'))
-scalar lb_d_`by'=(`=scalar(rdd)') - (1.96*(`=scalar(pooled_se)'))
+scalar ub_d_`by'=(`=scalar(rdd)') + (`z'*(`=scalar(pooled_se)'))
+scalar lb_d_`by'=(`=scalar(rdd)') - (`z'*(`=scalar(pooled_se)'))
 
-return local ub_d=(`=scalar(rdd)') + (1.96*(`=scalar(pooled_se)'))
-return local lb_d=(`=scalar(rdd)') - (1.96*(`=scalar(pooled_se)'))
+return local ub_d=(`=scalar(rdd)') + (`z'*(`=scalar(pooled_se)'))
+return local lb_d=(`=scalar(rdd)') - (`z'*(`=scalar(pooled_se)'))
 return local pt_est_d `=scalar(rdd)'
 return local pooled_se_d `=scalar(pooled_se)'
 
@@ -1015,11 +1027,11 @@ qui gen vtotal_`by'= vw_`by' + vb_`by' + (vb_`by'/`=scalar(m)') if _n==1
 qui gen sep_`by'=sqrt(vtotal_`by') if _n==1
 scalar pooled_se= sep_`by' 
 
-scalar ub_g_`by'=(`=scalar(rdg)') + (1.96*(`=scalar(pooled_se)'))
-scalar lb_g_`by'=(`=scalar(rdg)') - (1.96*(`=scalar(pooled_se)'))
+scalar ub_g_`by'=(`=scalar(rdg)') + (`z'*(`=scalar(pooled_se)'))
+scalar lb_g_`by'=(`=scalar(rdg)') - (`z'*(`=scalar(pooled_se)'))
 
-return local ub_g=(`=scalar(rdg)') + (1.96*(`=scalar(pooled_se)'))
-return local lb_g=(`=scalar(rdg)') - (1.96*(`=scalar(pooled_se)'))
+return local ub_g=(`=scalar(rdg)') + (`z'*(`=scalar(pooled_se)'))
+return local lb_g=(`=scalar(rdg)') - (`z'*(`=scalar(pooled_se)'))
 return local pt_est_g `=scalar(rdg)'
 return local pooled_se_g `=scalar(pooled_se)'
 return local pooled_se_g `=scalar(pooled_se)'
@@ -1040,10 +1052,10 @@ disp as text "Average obs per Group 2 " as res group_count_n2
 drop se_temp*  se_sq_temp*  D_m* mean* vtotal_* sep_* vw_* var_* sum_var_* vb_* 
 
 di as text "                                                           "
-di as text "Effect size    {c |} Pooled estimate" _col(37) "    [95% conf. interval]"
+di as text "Effect size    {c |} Pooled estimate" _col(37) "    [`level'% conf. interval]"
 di as text "{hline 15}{c +}{hline 53}"
-di as text "Cohen's {it:d}      {c |}" as result     %9.0g rdd  "              " %9.0g lb_d_`by' 	"       " %9.0g ub_d_`by' 
-di as text "Hedges' {it:g}      {c |}" as result     %9.0g rdg  "              " %9.0g lb_g_`by' 	"       " %9.0g ub_g_`by' 
+di as text "Cohen's {it:d}      {c |} " as result     %9.0g rdd  "              " %9.0g lb_d_`by' 	"       " %9.0g ub_d_`by' 
+di as text "Hedges' {it:g}      {c |} " as result     %9.0g rdg  "              " %9.0g lb_g_`by' 	"       " %9.0g ub_g_`by' 
 }
  
 } 

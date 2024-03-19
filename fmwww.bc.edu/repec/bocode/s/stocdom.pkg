@@ -1,0 +1,22 @@
+d 'STOCDOM': module to compute bounds assuming stochastic dominance
+d
+d    stocdom calculates bounds for treatment effects in randomized
+d controlled trials in the presence of survey attrition, when
+d stochastic dominance is assumed as in Zhang and Rubin (2003). In
+d this context stochastic dominance implies that the outcomes of   
+d individuals that are always observed are higher than those that
+d are observed contingent on treatment assignment. The command
+d bounds the treatment effect for the always observed. 
+d
+d KW: stochastic dominance
+d KW: bounds
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20240318
+d
+d Author: Alejandro Ome, NORC at the University of Chicago 
+d Support: email Ome-Alejandro@@norc.org
+d
+f stocdom.ado
+f stocdom.sthlp
