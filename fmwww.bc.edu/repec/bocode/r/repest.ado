@@ -1,4 +1,4 @@
-*!*** version 1.12.3 11012024
+*!*** version 1.12.4 18032024
 
 ** L256 over(var) conditionn dans average 23/03
 ** L260 correction display average long_over: line 260 is now ignored and even deleted (29/05/15)  -- 16 apr 2015
@@ -48,7 +48,7 @@
 * correction bug freq          - 3/7/2023
 * SSES2023          - 11/01/2024
 * SSES and SSES 2023 - flags          - 25/01/2024
-
+* STATA codes for ASCII characters          - 18/03/2024
 global regressions_command="cnsreg etregress glm intreg nl regress tobit truncreg" ///
 	+" sem  stcox  streg biprobit cloglog  hetprobit logistic logit   probit scobit"  /// 
 	+" clogit mlogit mprobit ologit oprobit slogit gnbreg nbreg poisson  tnbreg"  ///
@@ -2186,8 +2186,8 @@ preserve
 						}
 					di "`var' `cflagvar' `xvar'"
 					if "`xvar'" != "" {
-						replace `cflagvar' = "†" if `xvar' < `level1' & `xvar' != 0
-						replace `cflagvar' = "‡" if `xvar' < `level2' & `xvar' != 0
+						replace `cflagvar' = uchar(8224) if `xvar' < `level1' & `xvar' != 0  // 8224 ="†"
+						replace `cflagvar' = uchar(8225) if `xvar' < `level2' & `xvar' != 0 // 8225 ="‡"
 						}
 					else {
 						replace `cflagvar' = "."

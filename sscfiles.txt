@@ -6760,6 +6760,7 @@ fmwww.bc.edu/repec/bocode/m/maxwelli.sthlp
 fmwww.bc.edu/repec/bocode/m/mp_smclpres.mpb
 fmwww.bc.edu/repec/bocode/m/mvtobit_ll.ado
 fmwww.bc.edu/repec/bocode/m/margdistfit_mata_nb1.do
+fmwww.bc.edu/repec/bocode/m/mean_ci_plot.ado
 fmwww.bc.edu/repec/bocode/m/mlcoint.pkg
 fmwww.bc.edu/repec/bocode/m/matrsort.html
 fmwww.bc.edu/repec/bocode/m/meoprobit.ado
@@ -6778,6 +6779,7 @@ fmwww.bc.edu/repec/bocode/m/mmsrm.html
 fmwww.bc.edu/repec/bocode/m/mrprjlik.ado
 fmwww.bc.edu/repec/bocode/m/mvnormal.sthlp
 fmwww.bc.edu/repec/bocode/m/matcfa.ado
+fmwww.bc.edu/repec/bocode/m/mean_ci_plot.sthlp
 fmwww.bc.edu/repec/bocode/m/mf_mm_invtokens.hlp
 fmwww.bc.edu/repec/bocode/m/mcsimul.ado
 fmwww.bc.edu/repec/bocode/m/mtreatreg_negbin1_p.ado
@@ -8440,6 +8442,7 @@ fmwww.bc.edu/repec/bocode/m/mirubin.ado
 fmwww.bc.edu/repec/bocode/m/mtefe.pkg
 fmwww.bc.edu/repec/bocode/m/mtpi.pkg
 fmwww.bc.edu/repec/bocode/m/mbsens.sthlp
+fmwww.bc.edu/repec/bocode/m/mean_ci_plot.pkg
 fmwww.bc.edu/repec/bocode/m/movavg.pkg
 fmwww.bc.edu/repec/bocode/m/mahascore2.ado
 fmwww.bc.edu/repec/bocode/m/merlin_postestimation.sthlp

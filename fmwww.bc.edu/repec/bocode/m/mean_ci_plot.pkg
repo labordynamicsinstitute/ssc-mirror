@@ -1,0 +1,23 @@
+d 'MEAN_CI_PLOT': module to plot means and confidence intervals
+d
+d    mean_ci_plot offers a user-friendly command for visualizing
+d means and confidence intervals of specified	 variables, with an
+d option for disaggregation. It also offers the flexibility to
+d adapt to a wide range of    graphical preferences. 
+d
+d KW: graphics
+d KW: means
+d KW: confidence intervals
+d
+d Requires: Stata version 11 and coefplot from SSC (q.v.)
+d
+d Distribution-Date: 20240321
+d
+d Author:  Zaeen de Souza , Frontline Impact
+d Support: email  zaeen.desouza19_mec@@apu.edu.in
+d
+d Author:  Kabira Namit , World Bank
+d Support: email  knamit@@worldbank.org
+d
+f mean_ci_plot.ado
+f mean_ci_plot.sthlp

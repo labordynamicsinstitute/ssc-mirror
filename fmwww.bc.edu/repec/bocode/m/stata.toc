@@ -71,6 +71,7 @@ p mdensity module for univariate kernel density estimation, for variables or gro
 p mdepriv module to compute synthetic indicators of multiple deprivation
 p mdesc module to tabulate prevalence of missing values 
 p mean2 module to make a table of estimate means with subpopulation differences
+p mean_ci_plot module to plot means and confidence intervals
 p meaning module to use internet search for the meaning for a word or phrase
 p medcouple module to compute medcouple measure of asymmetry and heaviness of the tails
 p median module to perform the median test
