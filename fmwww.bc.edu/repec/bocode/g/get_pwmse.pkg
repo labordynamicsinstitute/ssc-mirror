@@ -1,0 +1,24 @@
+d 'GET_PWMSE': module to execute PWMSE-based model evaluation
+d
+d   get_pwmse implements the estimation method documented in Cui,
+d Xiaomeng, Bulat Gafarov, Dalia Ghanem, and Todd Kuffner. "On
+d model selection criteria for climate change impact studies."
+d Journal of Econometrics 239, no. 1 (2024): 105511. 
+d
+d KW: estimation
+d KW: model selection criteria
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20240322
+d
+d Author:   Xiaomeng Cui, Institute for Economic and Social Research (IESR), Jinan University
+d Support: email  xiaomengcui1@@gmail.com
+d
+f get_pwmse.ado
+f get_pwmse.sthlp
+f ../f/form_norms.ado
+f ../f/form_norms.sthlp
+f ../d/demo_PWMSE.do
+f ../d/DataReg.dta
+f ../d/DataMY.dta

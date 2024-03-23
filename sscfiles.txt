@@ -12427,6 +12427,7 @@ fmwww.bc.edu/repec/bocode/d/dep4asm.ado
 fmwww.bc.edu/repec/bocode/d/descsave.pkg
 fmwww.bc.edu/repec/bocode/d/data_madot_dichotomous_customized.dta
 fmwww.bc.edu/repec/bocode/d/dynpandoc.sthlp
+fmwww.bc.edu/repec/bocode/d/demo_PWMSE.do
 fmwww.bc.edu/repec/bocode/d/des_gehan.sthlp
 fmwww.bc.edu/repec/bocode/d/doseresponse_model.ado
 fmwww.bc.edu/repec/bocode/d/dtanotes.ado
@@ -12652,6 +12653,7 @@ fmwww.bc.edu/repec/bocode/d/ddf2dct.html
 fmwww.bc.edu/repec/bocode/d/dtalink_slides.pdf
 fmwww.bc.edu/repec/bocode/d/dolog.hlp
 fmwww.bc.edu/repec/bocode/d/dmariano.hlp
+fmwww.bc.edu/repec/bocode/d/DataMY.dta
 fmwww.bc.edu/repec/bocode/d/DiscreteChoiceInattention_master.pdf
 fmwww.bc.edu/repec/bocode/d/descgen.ado
 fmwww.bc.edu/repec/bocode/d/doubleb.html
@@ -12808,6 +12810,7 @@ fmwww.bc.edu/repec/bocode/d/domin.pkg
 fmwww.bc.edu/repec/bocode/d/did_imputation.ado
 fmwww.bc.edu/repec/bocode/d/drmwws_proof.do
 fmwww.bc.edu/repec/bocode/d/dragonfly2.dta
+fmwww.bc.edu/repec/bocode/d/DataReg.dta
 fmwww.bc.edu/repec/bocode/d/dfsummary.pkg
 fmwww.bc.edu/repec/bocode/d/denton.html
 fmwww.bc.edu/repec/bocode/d/dualaxislabcontour.ado
@@ -19772,6 +19775,7 @@ fmwww.bc.edu/repec/bocode/l/lpdensity_fn.mo
 fmwww.bc.edu/repec/bocode/l/libhtml.pkg
 fmwww.bc.edu/repec/bocode/l/lmoments.ado
 fmwww.bc.edu/repec/bocode/l/lmhhp2.dlg
+fmwww.bc.edu/repec/bocode/l/lexpgen.ado
 fmwww.bc.edu/repec/bocode/l/listreg.zip
 fmwww.bc.edu/repec/bocode/l/labelvar.mo
 fmwww.bc.edu/repec/bocode/l/lablist.ado
@@ -21296,6 +21300,7 @@ fmwww.bc.edu/repec/bocode/l/lmadurmnl.html
 fmwww.bc.edu/repec/bocode/l/lrmatx.hlp
 fmwww.bc.edu/repec/bocode/l/logithetm.pkg
 fmwww.bc.edu/repec/bocode/l/lvr2plot2.pkg
+fmwww.bc.edu/repec/bocode/l/lexpgen.sthlp
 fmwww.bc.edu/repec/bocode/l/lmadurm.dlg
 fmwww.bc.edu/repec/bocode/l/lmadurmnl.pkg
 fmwww.bc.edu/repec/bocode/l/lmhhpxt.ado
@@ -21685,6 +21690,7 @@ fmwww.bc.edu/repec/bocode/g/geekel2d.hlp
 fmwww.bc.edu/repec/bocode/g/gb2pred.ado
 fmwww.bc.edu/repec/bocode/g/gstats_sum.sthlp
 fmwww.bc.edu/repec/bocode/g/gs2sls.ado
+fmwww.bc.edu/repec/bocode/g/get_pwmse.ado
 fmwww.bc.edu/repec/bocode/g/genefetch.ado
 fmwww.bc.edu/repec/bocode/g/getdata.pkg
 fmwww.bc.edu/repec/bocode/g/gsgroup.pkg
@@ -21907,6 +21913,7 @@ fmwww.bc.edu/repec/bocode/g/gformula.html
 fmwww.bc.edu/repec/bocode/g/genspec.sthlp
 fmwww.bc.edu/repec/bocode/g/goprobit_p.ado
 fmwww.bc.edu/repec/bocode/g/giacross_test_data.csv
+fmwww.bc.edu/repec/bocode/g/get_pwmse.pkg
 fmwww.bc.edu/repec/bocode/g/grstyle.zip
 fmwww.bc.edu/repec/bocode/g/geonear.hlp
 fmwww.bc.edu/repec/bocode/g/gquantiles.sthlp
@@ -22010,6 +22017,7 @@ fmwww.bc.edu/repec/bocode/g/getdatacodes.ado
 fmwww.bc.edu/repec/bocode/g/grouplabs.ado
 fmwww.bc.edu/repec/bocode/g/gciget.sthlp
 fmwww.bc.edu/repec/bocode/g/geninteract.ado
+fmwww.bc.edu/repec/bocode/g/get_pwmse.sthlp
 fmwww.bc.edu/repec/bocode/g/GSS_2010.dta
 fmwww.bc.edu/repec/bocode/g/googleplaces.sthlp
 fmwww.bc.edu/repec/bocode/g/getgeneids.ado
@@ -22611,6 +22619,7 @@ fmwww.bc.edu/repec/bocode/f/fragility.pkg
 fmwww.bc.edu/repec/bocode/f/fmm_normal_p.ado
 fmwww.bc.edu/repec/bocode/f/funnel.html
 fmwww.bc.edu/repec/bocode/f/filelist.pkg
+fmwww.bc.edu/repec/bocode/f/form_norms.sthlp
 fmwww.bc.edu/repec/bocode/f/framingham30.sthlp
 fmwww.bc.edu/repec/bocode/f/fmlogit_ex.ado
 fmwww.bc.edu/repec/bocode/f/frcount.pkg
@@ -22801,6 +22810,7 @@ fmwww.bc.edu/repec/bocode/f/fixedrho.sthlp
 fmwww.bc.edu/repec/bocode/f/fdrisk.dlg
 fmwww.bc.edu/repec/bocode/f/find_denom.pkg
 fmwww.bc.edu/repec/bocode/f/filelist.sthlp
+fmwww.bc.edu/repec/bocode/f/form_norms.ado
 fmwww.bc.edu/repec/bocode/f/findname.hlp
 fmwww.bc.edu/repec/bocode/f/fmerge.sthlp
 fmwww.bc.edu/repec/bocode/f/fns.hlp

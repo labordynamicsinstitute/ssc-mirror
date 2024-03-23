@@ -1,18 +1,23 @@
 {smcl}
 {hline}
-help for {cmd:expgen}{right:(Roger Newson)}
+help for {cmd:expgen} and {cmd:lexpgen}{right:(Roger Newson)}
 {hline}
 
 {title:Duplicate observations sorted in original order with generated variables}
 
 {p 8 21 2}
-{cmd:expgen} {help newvar:{it:newvarname1}} {cmd:=} {it:ncexp} {ifin} [ {cmd:,} 
+{cmd:expgen} [ [ {help newvar:{it:newvarname1}} ] {cmd:=} ] {it:ncexp} {ifin} [ {cmd:,} 
 {cmdab:o:ldseq}{cmd:(}{help newvar:{it:newvarname2}}{cmd:)}
 {cmdab:c:opyseq}{cmd:(}{help newvar:{it:newvarname3}}{cmd:)}
 {cmdab:s:ortedby}{cmd:(}{it:sortedby_interpretation}{cmd:)}
 {cmdab:or:der}
 {cmdab:m:issing} {cmdab:z:ero}
 {cmd:fast}
+]
+
+{p 8 21 2}
+{cmd:lexpgen} [ {help newvar:{it:newvarname1}} ] {ifin} {cmd:,} {cmdab:le:vels(}{help numlist:{it:numlist}}{cmd:)} [ {cmdab:clev:els}{cmd:(}{help newvarname:{it:newvarname4}}{cmd:)}
+{it:expgen_options}
 ]
 
 {pstd}
@@ -22,7 +27,8 @@ where {it:sortedby_interpretation} is one of
 {cmdab:i:gnore} | {cmdab:g:roup} | {cmdab:u:nique}
 
 {pstd}
-or any abbreviation of any of these.
+or any abbreviation of any of these,
+and {it:expgen_options} are any options used by {cmd:expgen}.
 
 
 {title:Description}
@@ -40,9 +46,17 @@ generated from its original observation).
 If {cmd:missing} and/or {cmd:zero} is specified,
 then observations in the old dataset with missing and/or non-positive values
 for {cmd:int(}{it:ncexp}{cmd:)} are each replaced by one observation in the new dataset.
+{cmd:lexpgen} is an alternative version of {cmd:expgen}.
+It replaces each observation in the
+current dataset with one copy of the observation for each of a user-specified input list of numbers,
+sorted primarily in the original order,
+and secondarily by the numbers in the list.
+It may add the new variables added by {cmd:expgen},
+and/or another new variable {help newvar:{it:newvarname4}},
+containing the number in the input list of numbers corresponding to the copy.
 
 
-{title:Options for use with {cmd:expgen}}
+{title:Options for {cmd:expgen} and {cmd:lexpgen}}
 
 {phang}
 {cmd:oldseq(}{help newvar:{it:newvarname2}}{cmd:)} specifies a new variable to be generated, containing the sequential
@@ -93,7 +107,8 @@ then {cmd:sortedby(ignore)} is assumed.
 Note that, whichever {cmd:sortedby()} option is specified,
 the order of the observations in the output dataset will be the same,
 and will be primarily the order of the observations in the input dataset from which the copies were made,
-and secondarily by the {cmd:copyseq()} variable (if specified).
+and secondarily by the {cmd:copyseq()} variable (if specified),
+or equivalently by the {cmd:clevel()} variable (if specified by {cmd:lexpgen}).
 The {cmd:sortedby()} option only affects the list of variables recognized by Stata
 as defining the sorting order,
 as reported by {helpb describe}.
@@ -117,8 +132,30 @@ If {cmd:zero} is absent, then such old observations are deleted from the new dat
 
 {phang}
 {cmd:fast} is an option for programmers.
-It specifies that {cmd:expgen} will take no action to restore the original dataset
-if {cmd:expgen} fails, or if the user presses {help break:Break}.
+It specifies that {cmd:expgen} and {cmd:lexpgen} will take no action to restore the original dataset
+if {cmd:expgen} or {cmd:lexpgen} fails,
+or if the user presses {help break:Break}.
+
+
+{title:Options for {cmd:lexpgen} only}
+
+{phang}
+{cmd:levels(}{help numlist:{it:numlist}}{cmd:)} is compulsory.
+It specifies an input list of numeric levels
+which {cmd:lexpgen} will use to create an expanded dataset,
+with 1 observation per number in the list
+per original observation in the unexpanded dataset.
+Note that the input list may contain {help missing:numeric missing values},
+but repeated values are removed.
+
+{phang}
+{cmd:clevel(}{help newvarname:{it:newvarname}}{cmd:)} specifies the name of a new numeric variable,
+containing, in each observation in the expanded dataset,
+the corresponding number in the list of numbers specified by the {cmd:levels()} option.
+Observations in the new dataset will then be multiple copies of observations in the old unexpanded dataset,
+sorted
+primarily by the position of the corresponding observation in the old unexpanded dataset,
+and secondarily by the value of the new variable specified by {cmd:clevels()}.
 
 
 {title:Remarks}
@@ -182,12 +219,32 @@ of US states to a dataset of combinations of US state and age group:
 {p 8 12 2}{cmd:. desc}{p_end}
 {p 8 12 2}{cmd:. list state agegp popul}{p_end}
 
+{pstd}
+The following example uses the {help sysuse:housing} dataset,
+and uses {cmd:lexpgen} to expand it from a dataset
+of US states to a dataset of combinations of US state and current year.
+Note that the option {cmd:sortedby(unique)}
+specifies that the variable {cmd:state} identifies the input observations uniquely,
+and ensures that the output dataset is identified as being sorted by {cmd:state} and {cmd:year}:
+
+{p 8 12 2}{cmd:. use http://www.stata-press.com/data/r9/hsng.dta, clear}{p_end}
+{p 8 12 2}{cmd:. desc}{p_end}
+{p 8 12 2}{cmd:. gene pop70=pop*100/(100+popgrow)}{p_end}
+{p 8 12 2}{cmd:. lab var pop70 "Population in 1970"}{p_end}
+{p 8 12 2}{cmd:. lexpgen, levels(1970 1980) clevel(year) sortedby(unique)}{p_end}
+{p 8 12 2}{cmd:. gene popul = pop70*(year==1970) + pop*(year==1980)}{p_end}
+{p 8 12 2}{cmd:. format popul %10.1f}{p_end}
+{p 8 12 2}{cmd:. lab var year "Current year"}{p_end}
+{p 8 12 2}{cmd:. lab var popul "Current population"}{p_end}
+{p 8 12 2}{cmd:. desc, fu}{p_end}
+{p 8 12 2}{cmd:. list state year popul, sepby(state)}{p_end}
+
 
 {title:Author}
 
 {pstd}
-Roger Newson, National Heart and Lung Institute, Imperial College London, UK.{break}
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, Queen Mary University London, UK.{break}
+Email: {browse "mailto:r.newson@qmul.ac.uk":r.newson@qmul.ac.uk}
 
 
 {title:Also see}

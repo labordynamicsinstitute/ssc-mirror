@@ -1,4 +1,5 @@
 {smcl}
+{* *! version 2.0.4 21Mar2024}{...}
 {* *! version 2.0.3 07Mar2024}{...}
 {* *! version 2.0.2 29Feb2024}{...}
 {* *! version 2.0.1 26Feb2024}{...}
@@ -25,6 +26,7 @@ Postestimation version of esizereg
 [
 {opt coh:ensd} 
 {opt hed:gesg}
+{opt z:distribution}
 {opt lev:el(#)}
 ]
 
@@ -42,6 +44,7 @@ Immediate form of esizereg
 [
 {opt coh:ensd} 
 {opt hed:gesg}
+{opt z:distribution}
 {opt lev:el(#)}
 ]
 
@@ -63,6 +66,7 @@ In either version of {cmd:esizereg}, the coefficient must be for binary level va
 {synoptline}
 {synopt:{opt coh:ensd}}report Cohen's {it:d} (1988) {p_end}
 {synopt:{opt hed:gesg}}report Hedges's {it:g} (1981) {p_end}
+{synopt:{opt z:distribution}}compute confidence limits using {it:z} test instead of default {it:t} test (with non-centrality parameter) {p_end}
 {synopt:{opt lev:el(#)}}set confidence level; default is {cmd:level(95)}{p_end}
 {synoptline}
 
@@ -75,6 +79,7 @@ In either version of {cmd:esizereg}, the coefficient must be for binary level va
 {p2coldent:* {opt n2(#)}}number of observations in group 2{p_end}
 {synopt:{opt coh:ensd}}report Cohen's {it:d} (1988) {p_end}
 {synopt:{opt hed:gesg}}report Hedges's {it:g} (1981) {p_end}
+{synopt:{opt z:distribution}}compute confidence limits using {it:z} test instead of default {it:t} test (with non-centrality parameter) {p_end}
 {synopt:{opt lev:el(#)}}set confidence level; default is {cmd:level(95)}{p_end}
 {synoptline}
 {p 4 6 2}* {opt sdp, n1} and {opt n2} are required.{p_end}
@@ -89,20 +94,11 @@ and {it: adjusted} mean difference of a continuous variable between two groups. 
 variable as the numerator (which is equivalent to the difference between two covariate {it:unadjusted} or {it:adjusted} means) and uses the pooled within-sample 
 estimate of the population standard deviation (estimated with {helpb margins}) as the denominator. Estimation models currently supported by {opt esizereg} 
 are {helpb regress}, {helpb tobit}, {helpb truncreg}, {helpb hetregress}, {helpb xtreg}, {helpb intreg}, {helpb meintreg} and {helpb metobit}. When a 
-{helpb weight} is specified in the estimation model, {opt esizereg} produces a weighted effect size estimate.
+{help weight} is specified in the estimation model, {opt esizereg} produces a weighted effect size estimate.
 
 {pstd}
 {cmd: esizeregi} is the immediate form of {cmd:esizereg}; see {helpb immed}.
 
-
-{title:Remarks}
-
-{pstd}
-Whereas {help esize} computes confidence intervals based on the {it:t}-distribution, {cmd:esizereg} computes confidence intervals based on the 
-{it:z}-distribution. The reason for this descrepancy is that {cmd:esizereg} is a post-estimation command following most regression-type models 
-that estimate values on the {it:z}-distribution (with the exception of {help regress}), while {help esize} is based on the {it:t}-test. Functionally, 
-the confidence intervals produced by the two methods are nearly identical, even when the sample size is small. The user can test this issue by comparing 
-the results of {cmd:esizereg} and {help esize} at different sample sizes using {it:unadjusted} data.
 
 
 {title:Options}
@@ -124,6 +120,10 @@ treatment variable; {cmd: n1() is required for esizeregi}.
 
 {p 4 8 2}
 {cmd:hedgesg} specifies that Hedges's {it:g} (1981) be reported.
+
+{p 4 8 2}
+{cmd:zdistribution} specifies that the {it:z} distribution be used to compute confidence limits rather than the default {it:t} distribution 
+(with a non-centrality parameter).
 
 {p 4 8 2}
 {cmd:level(}{it:#}{cmd:)} specifies the confidence level, as a percentage, for confidence intervals. The default is {cmd:level(95)}. 
@@ -153,6 +153,10 @@ treatment variable; {cmd: n1() is required for esizeregi}.
 {pmore} Compute the effect size for {cmd: mbsmoke}. {p_end}
 {pmore2}{bf:{stata "esizereg mbsmoke": . esizereg mbsmoke}} {p_end}
 
+{pmore} Use a {it:z} distribution to compute confidence limits instead of the default {it:t} distribution (with a non-centrality parameter). {p_end}
+{pmore2}{bf:{stata "regress bweight mbsmoke mmarried mage fbaby medu": . regress bweight mbsmoke mmarried mage fbaby medu}} {p_end}
+{pmore2}{bf:{stata "esizereg mbsmoke , z": . esizereg mbsmoke , z}} {p_end}
+
 {pmore} Re-estimate the model, now specifying {cmd:mbsmoke} as a factor variable, and adding a pweight. {p_end}
 {pmore2}{bf:{stata "regress bweight i.mbsmoke mmarried mage fbaby medu [pw=nprenatal]": . regress bweight i.mbsmoke mmarried mage fbaby medu [pw=nprenatal]}} {p_end}
 
@@ -175,7 +179,10 @@ treatment variable; {cmd: n1() is required for esizeregi}.
 {pmore2}{bf:{stata "tab mbsmoke": . tab mbsmoke}} {p_end}
 
 {pmore} Compute the effect size. {p_end}
-{pmore2}{bf:{stata "esizeregi -224.422, sdp(562.35602) n1(864) n2(3778)": . esizeregi -224.422, sdp(562.35602) n1(864) n2(3778)}} {p_end}
+{pmore2}{bf:{stata "esizeregi -224.422, sdp(562.355997) n1(864) n2(3778)": . esizeregi -224.422, sdp(562.355997) n1(864) n2(3778)}} {p_end}
+
+{pmore} Compute confidence limits using {it:z} distribution. {p_end}
+{pmore2}{bf:{stata "esizeregi -224.422, sdp(562.355997) n1(864) n2(3778) zdist": . esizeregi -224.422, sdp(562.355997) n1(864) n2(3778) zdist}} {p_end}
 
 {pmore} Conduct a sensitivity analysis using the effect size and standard error values produced by {cmd: esizereg}. {p_end}
 {pmore2}{bf:{stata "evalue smd  -0.399075, se(0.037937)": . evalue smd  -0.399075, se(0.037937)}} {p_end}

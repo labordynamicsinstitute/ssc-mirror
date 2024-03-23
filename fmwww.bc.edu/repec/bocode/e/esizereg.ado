@@ -1,3 +1,4 @@
+*! 3.0.1 Ariel Linden 20Mar2024 // added z-distribution option (default is t-distribution with noncentrality parameter)
 *! 3.0.0 Ariel Linden 07Mar2024 // added Hedges g option
 								// -esizereg- now uses variance produced by margins to compute pooled std. dev. 
 *! 2.0.2 Ariel Linden 26Feb2024 // added -intreg-, -meintreg- and -metobit- models
@@ -9,7 +10,7 @@ capture program drop esizereg
 program define esizereg, rclass
 version 11.0
 
-			syntax anything [, COHensd HEDgesg LEVel(cilevel) ] 
+			syntax anything [, COHensd HEDgesg Zdistribution LEVel(cilevel) ] 
 			
 			gettoken treat : 0
 			// * store model estimates * //
@@ -72,7 +73,7 @@ version 11.0
 			local n0 = r(N)
 
 			// * get variance of model using margins * //
-			tempname V  N sdpooled d v se iz CohensD_Lower CohensD_Upper 
+			tempname V  N sdpooled CohensD v se iz CohensD_Lower CohensD_Upper 
 			
 			if "`e(cmd)'" == "meglm" {
 				qui margins, post predict(mu fixed)
@@ -83,28 +84,43 @@ version 11.0
 			matrix `V' = r(V)
 			scalar `V' = `V'[1,1]
 			scalar `N' = `n1' + `n0'
-
+			
 			// CALCULATE COHEN'S D
 			// ==============================================================
 			scalar `sdpooled' = sqrt(`V' * `N')		
-			scalar `d' = `est' / `sdpooled'
-			scalar `v' = (`n1' + `n0') / (`n1' * `n0') + (`d'^2) / (2 *(`n1' + `n0'))
+			scalar `CohensD' = `est' / `sdpooled'
+			scalar `v' = (`n1' + `n0') / (`n1' * `n0') + (`CohensD'^2) / (2 *(`n1' + `n0'))
 			scalar `se' = sqrt(`v')
-			scalar `iz' = invnorm(1-(1-`level'/100)/2)
-			scalar `CohensD_Lower' = `d' - `iz' * sqrt(`v')
-			scalar `CohensD_Upper' = `d' + `iz' * sqrt(`v')
+			
+			if "`zdistribution'" != "" {
+				scalar `iz' = invnorm(1-(1-`level'/100)/2)
+				scalar `CohensD_Lower' = `CohensD' - `iz' * sqrt(`v')
+				scalar `CohensD_Upper' = `CohensD' + `iz' * sqrt(`v')
+			}
+			else {
+				tempname alpha AlphaLower AlphaUpper ns df LowerLambda UpperLambda
+				scalar `alpha' = 1-(`level'/100)
+				scalar `AlphaLower' = `alpha'/2
+				scalar `AlphaUpper' = 1 - (`alpha'/2)
+				scalar `ns' = sqrt((`n1'*`n0')/(`n1'+`n0'))
+				scalar `df' = `N' - 2
+				scalar `LowerLambda' = npnt(`df',`CohensD'*`ns',`AlphaUpper')
+				scalar `UpperLambda' = npnt(`df',`CohensD'*`ns',`AlphaLower')
+				scalar `CohensD_Lower' = `LowerLambda' * sqrt((`n1'+`n0')/(`n1'*`n0'))
+				scalar `CohensD_Upper' = `UpperLambda' * sqrt((`n1'+`n0')/(`n1'*`n0'))
+			}
 			
 			// CALCULATE HEDGE'S G 
 			// =================================================================
 			// EXACT BIAS CORRECTION: Hedges (1981) pg 111, Equation 6e
-			tempname m BiasCorrectionFactor g HedgesG_Lower HedgesG_Upper
+			tempname m BiasCorrectionFactor HedgesG HedgesG_Lower HedgesG_Upper
 			scalar `m' = (`n1'+`n0'- 2)
 			scalar `BiasCorrectionFactor' = exp(lngamma(`m'/2) - 1/2 * ln(`m'/2) - lngamma((`m'-1)/2))
 			// Turner & Bernard (2006) , Eq 4
-			scalar `g' = `d' * `BiasCorrectionFactor'
+			scalar `HedgesG' = `CohensD' * `BiasCorrectionFactor'
 			scalar `HedgesG_Lower' = `CohensD_Lower' * `BiasCorrectionFactor'
 			scalar `HedgesG_Upper' = `CohensD_Upper' * `BiasCorrectionFactor'
-
+			
 
 			// DISPLAY OUTPUT
 			// ====================================================================
@@ -113,7 +129,6 @@ version 11.0
 				local cohensd "cohensd"
 				local hedgesg "hedgesg"
 			}
-
 			
 			// Display Title (weighted or unweighted)
 			if "`weightexp'" == "" {
@@ -134,7 +149,7 @@ version 11.0
 			.`mytab'.width    20   |11  12  12    12
 			.`mytab'.titlefmt  .     .   . %24s   .
 			.`mytab'.pad       .     1   1  3     3
-			.`mytab'.numfmt    . %9.6f %9.6f %9.6f %9.6f
+			.`mytab'.numfmt    . %9.0g %9.0g %9.0g %9.0g
 			.`mytab'.strcolor result  .  .  .  .
 			.`mytab'.strfmt    %19s  .  .  .  .
 			.`mytab'.strcolor   text  .  .  .  .
@@ -147,14 +162,14 @@ version 11.0
                 .`mytab'.strfmt    %24s  .  .  .  .
 			if "`cohensd'" != "" {
                 .`mytab'.row    "Cohen's {it:d}"        ///
-                        `d' 	                      	///
+                        `CohensD' 	                   	///
                         `se'							///
 						`CohensD_Lower'                 ///
                         `CohensD_Upper'
 			}	
 			if "`hedgesg'" != "" {
                 .`mytab'.row    "Hedges's {it:g}"       ///
-                        `g' 	                      	///
+                        `HedgesG'                      	///
                         `se'							///
 						`HedgesG_Lower'                 ///
                         `HedgesG_Upper'
@@ -165,24 +180,24 @@ version 11.0
 			if "`hedgesg'" != "" {
                 return scalar ub_g = `HedgesG_Upper'
                 return scalar lb_g = `HedgesG_Lower'
-                return scalar g = `g'
+                return scalar g = `HedgesG'
 			}
 			if "`cohensd'" != "" {
                 return scalar ub_d = `CohensD_Upper'
                 return scalar lb_d = `CohensD_Lower'
-                return scalar d = `d'
+                return scalar d = `CohensD'
 			}
 			
 			return scalar se = `se'
-			return scalar n2 = `n0'
+			return scalar n0 = `n0'
 			return scalar n1 = `n1'
 			return scalar sdpooled = `sdpooled'
 			return scalar V = `V'			
 			return scalar est = `est'
 	
 			// Make a c_local macro of d, g and se 
-			c_local d = `d'
-			c_local g = `g'			
+			c_local d = `CohensD'
+			c_local g = `HedgesG'			
 			c_local se = `se'
 
 end
