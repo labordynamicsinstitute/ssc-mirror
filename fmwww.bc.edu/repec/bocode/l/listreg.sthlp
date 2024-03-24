@@ -1,5 +1,5 @@
 {smcl}
-{* 14mar2024}{...}
+{* 19mar2024}{...}
 {hi:help listreg}{...}
 {right:{browse "https://github.com/benjann/listreg/"}}
 {hline}
@@ -20,12 +20,10 @@
     {help listreg##opt:{it:options}}
     ]
 
-{pmore}
-    {it:ovar} is the outcome variable from the list experiment.
-    {p_end}
-{pmore}
-    {it:tvar} is a variable identifying the long-list group ({it:tvar}==1) and
-    the short-list group ({it:tvar}!=1).
+{pstd}
+    where {it:ovar} is the outcome variable from the list experiment, and where
+    {it:tvar} is a variable identifying the experimental groups
+    ({it:tvar}==1: long-list group; {it:tvar}!=1: short-list group).
 
 {pstd}
     Double-list design:
@@ -36,13 +34,11 @@
     {help listreg##opt:{it:options}}
     ]
 
-{pmore}
-    {it:ovar1} and {it:ovar2} are the two outcome variables from the double-list experiment.
-    {p_end}
-{pmore}
-    {it:tvar} is a variable identifying the
-    long-list group ({it:tvar}==1 for {it:ovar1}, {it:tvar}!=1 for {it:ovar2})
-    and the short-list group ({it:tvar}!=0 for {it:ovar1}, {it:tvar}==1 for {it:ovar2}).
+{pstd}
+    {it:ovar1} and {it:ovar2} are the two outcome variables from the double-list experiment, and where
+    {it:tvar} is a variable identifying the experimental groups
+    ({it:tvar}==1: long-list group for {it:ovar1} and short-list group for {it:ovar2};
+    {it:tvar}!=1: short-list group for {it:ovar1} and long-list group for {it:ovar2}).
 
 
 {synoptset 20 tabbed}{...}
@@ -55,6 +51,12 @@
     {p_end}
 {synopt :{opt ave:rage}}use alternative double-list estimator
     {p_end}
+{synopt :{opt list:wise}}use listwise deletion to handle missing values
+    {p_end}
+{synopt :{opt case:wise}}synonym for {cmd:listwise}
+    {p_end}
+{synopt :{opt aeq:uations}}include auxiliary equations in results
+    {p_end}
 {synopt :{opt noi:sily}}display output from estimation process
     {p_end}
 
@@ -63,7 +65,7 @@
     {p_end}
 {synopt :{opt cl:uster(clustvar)}}synonym for {cmd:vce(cluster} {it:clustvar}{cmd:)}
     {p_end}
-{synopt :{opt nodf}}report large-sample test statistics
+{synopt :{opt nodf:r}}report large-sample test statistics
     {p_end}
 {synopt :{opt nose}}omit variance estimation
     {p_end}
@@ -87,21 +89,27 @@
 
 {pstd}
     {cmd:listreg} fits a linear model to data from a list experiment
-    (a.k.a. item count technique; see, e.g., Droitcour et al. 1991,
-    Blair and Imai 2012, Glynn 2013, Blair et al. 2020, Ehler et al. 2021)
-    or to data collected by the item-sum technique (Trappmann et al. 2014,
-    Krumpal et al. 2018). Single-list and double-list designs are supported.
+    (a.k.a. item count technique; see, e.g.,
+    {browse "https://doi.org/10.1002/9781118150382.ch11":Droitcour et al. 1991},
+    {browse "https://doi.org/10.1093/pan/mpr048":Blair and Imai 2012},
+    {browse "https://doi.org/10.1093/poq/nfs070":Glynn 2013},
+    {browse "https://doi.org/10.1017/S0003055420000374":Blair et al. 2020},
+    {browse "https://doi.org/10.1093/poq/nfab002":Ehler et al. 2021})
+    or to data collected by the item-sum technique
+    ({browse "https://doi.org/10.1093/jssam/smt019":Trappmann et al. 2014},
+    {browse "https://doi.org/10.18148/srm/2018.v12i2.7247":Krumpal et al. 2018}).
+    Single-list and double-list designs are supported.
 
 {pstd}
     {cmd:listreg} only covers linear (least-squares) models. For a more comprehensive
     package featuring alternative methods see the {helpb kict} package by
-    Tsai (2019).
+    {browse "https://doi.org/10.1177/1536867X19854018":Tsai (2019)}.
 
 {pstd}
     Variance estimation in {cmd:listreg} is based on influence functions
-    (see Jann 2020). Complex survey estimation is supported, but
-    you need to specify option {cmd:vce(svy)} rather than applying the
-    {helpb svy} prefix command.
+    (see {browse "https://ideas.repec.org/p/bss/wpaper/35.html":Jann 2020}). Complex
+    survey estimation is supported, although you need to specify option
+    {cmd:vce(svy)} rather than applying the {helpb svy} prefix command.
 
 {pstd}
     A distinct feature of {cmd:listreg} is that the control equation modeling
@@ -148,10 +156,24 @@
     is to report coefficients from a pooled outcome model across both lists.
 
 {phang}
+    {opt listwise} handles missing values through listwise deletion,
+    meaning that the same set of observations will be used for both
+    outcome variables. This is only relevant in case of the double-list
+    design. By default, {cmd:listreg} determines the available observations
+    individually for each list.
+
+{phang}
+    {opt casewise} is a synonym for {cmd:listwise}.
+
+{phang}
+    {opt aequations} specifies that the coefficients from the
+    auxiliary equations (short-list models, separate long-list models in case of
+    {cmd:average}) be included in the results. By default, {cmd:listreg}
+    only includes the main coefficients.
+
+{phang}
     {opt noisily} displays a trace of the output from the estimation
-    process. For example, {cmd:listcoef} does not include the
-    coefficients from the short-list models in its regular output; specify
-    {cmd:noisily} to see these coefficients. Note that the standard errors in
+    process. Note that the standard errors in
     the output made visible by {cmd:noisily} may not be valid.
 
 {marker vce}{...}
@@ -179,10 +201,10 @@
     {opt cluster(clustvar)} is a synonym for {cmd:vce(cluster} {it:clustvar}{cmd:)}.
 
 {phang}
-    {opt nodf} divides variances by N rather than N-1 and reports test statistics
+    {opt nodfr} divides variances by N rather than N-1 and reports test statistics
     based on the standard normal distribution rather than the
     t-distribution. Use this option to obtain results that are equivalent to
-    results returned by {helpb gmm}. {cmd:nodf} has no effect if {cmd:vce(svy)},
+    results returned by {helpb gmm}. {cmd:nodfr} has no effect if {cmd:vce(svy)},
     {cmd:vce(bootstrap)}, or {cmd:vce(jackknife)} is specified.
 
 {phang}
@@ -212,11 +234,12 @@
 {dlgtab:Data}
 
 {pstd}
-    Coutts et al. (2011) report results from a list experiment on plagiarism 
+    {browse "https://doi.org/10.1515/jbnst-2011-5-612":Coutts et al. (2011)}
+    report results from a list experiment on plagiarism
     (intentional inclusion of text from another source without citation) by
     university students. An excerpt from the data of this study is as follows.
 
-        {com}. {stata "use https://raw.githubusercontent.com/benjann/listreg/main/listreg.dta, clear"}
+        {com}. {stata "use http://fmwww.bc.edu/repec/bocode/l/listreg.dta, clear"}
         . {stata describe}{txt}
 
 {pstd}
@@ -297,17 +320,25 @@
 
 {pstd}
     The results of the short-list models are not included in the {cmd:listreg}
-    output because they are not of substantive interest. However, you can specify
-    option {cmd:noisily} to display a trace of the estimation process, including
-    the short-list models. Alternatively, it is easy to replicate the short-list
+    output because they are not of primary interest. If you are interested in these
+    models, you can specify option {cmd:noisily} to display a trace of the estimation
+    process, including the short-list models. Alternatively, specify option
+    {cmd:aequations} to include the auxiliary models in the final output as separate
+    equations:
+
+{p 8 12 2}
+{com}. {stata listreg plagiarism_* longlist i.unaware i.female, controls(i.unaware i.female year i.working i.papers) aequations}{txt}
+
+{pstd}
+    Furthermore, it is typically easy to replicate the short-list
     models outside of {cmd:listreg} by applying {cmd:regress} to the short-list
     subsamples. In the current example, the two models are as follows:
 
 {p 8 12 2}
-{com}. {stata regress plagiarism_1 i.unaware i.female year i.working i.papers if longlist!=1}{txt}
+{com}. {stata regress plagiarism_1 i.unaware i.female year i.working i.papers if longlist!=1, robust}{txt}
     {p_end}
 {p 8 12 2}
-{com}. {stata regress plagiarism_2 i.unaware i.female year i.working i.papers if longlist==1}{txt}
+{com}. {stata regress plagiarism_2 i.unaware i.female year i.working i.papers if longlist==1, robust}{txt}
 
 {pstd}
     Note that you can specify two {cmd:controls()} options, if you want
@@ -329,7 +360,7 @@
         gmm (1: (`T'!=1)*(`Y' - {xb0:`Z' _cons})) ///
             (2: (`T'==1)*(`Y' - {xb0:} - {xb1:`X' _cons})) ///
             , instruments(1:`Z') instruments(2:`X') winitial(identity)
-        listreg `Y' `T' `X', controls(`Z') nodf{txt}
+        listreg `Y' `T' `X', controls(`Z') nodfr{txt}
 
 {pstd}
     Example for the double-list design:
@@ -345,7 +376,36 @@
             (3: (`T'==1)*(`Y1' - {xb0:}) + (`T'!=1)*(`Y2' - {xb1:}) - {xb2:`X' _cons}) ///
             , instruments(1:`Z1') instruments(2:`Z2') instruments(3:`X') ///
               winitial(identity)
-        listreg `Y1' `Y2' = `T' `X', controls(`Z1') controls(`Z2') nodf{txt}
+        listreg `Y1' `Y2' = `T' `X', controls(`Z1') controls(`Z2') nodfr listwise{txt}
+
+{dlgtab:Relation to treatment effect estimation}
+
+{pstd}
+    The single-list estimator implemented in {cmd:listreg} is equivalent to a
+    regression-adjustment (RA) estimator of the average treatment effect on the
+    treated (ATET). Here is an example illustrating the equivalence between
+    {cmd:listreg} and {helpb teffects ra} (treatment effect of smoking on birth weight):
+
+        {com}. {stata webuse cattaneo2, clear}
+{p 8 12 2}
+        . {stata teffects ra (bweight prenatal1 mmarried mage fbaby) (mbsmoke), atet}
+    {p_end}
+{p 8 12 2}
+        . {stata listreg bweight mbsmoke, controls(prenatal1 mmarried mage fbaby) nodfr}{txt}
+
+{pstd}
+    This means that {cmd:listreg} can be used for treatment effect heterogeneity
+    analysis. For example, we might be interested in whether the treatment effect
+    of smoking on birth weight varies by first-trimester exam status and
+    first-birth status:
+
+{p 8 12 2}
+        . {stata listreg bweight mbsmoke prenatal1 fbaby, controls(prenatal1 mmarried mage fbaby) nodfr}{txt}
+
+{pstd}
+    First-trimester exam status does not seem to play a role, but the results
+    indicate that the treatment effect is less pronounced in case of a
+    first baby.
 
 
 {title:Returned results}
@@ -386,7 +446,7 @@
 {phang2}6. Report the average of the coefficients from steps 4 and 5.{p_end}
 
 {pstd}
-    Variance estimation is conducted at the end based on influence functions
+    Variance estimation is conducted at the end, based on the influence functions
     implied by the chain of estimation steps.
 
 
@@ -409,11 +469,11 @@
     231(5-6):749-760. {browse "https://doi.org/10.1515/jbnst-2011-5-612":doi.org/10.1515/jbnst-2011-5-612}
     {p_end}
 {phang}
-    Droitcour, J., R. A. Caspar, M. L. Hubbard, T. L. Parsely, W. Visscher,
-    T. M. Ezzati. 1991. The Item Count Technique as a Method of Indirect
+    Droitcour, J., R.A. Caspar, M.L. Hubbard, T.L. Parsely, W. Visscher,
+    T.M. Ezzati. 1991. The Item Count Technique as a Method of Indirect
     Questioning: A Review of its Development and a Case Study Application. P. 185–210
-    in: P. Biemer, R. M. Groves, L. Lyberg, N. Mathiowetz, S. Sudman (eds.). Measurement
-    Errors in Surveys. New York: Wiley.
+    in: P.P. Biemer, R.M. Groves, L.E. Lyberg, N.A. Mathiowetz, S. Sudman (eds.). Measurement
+    Errors in Surveys. New York: Wiley. {browse "https://doi.org/10.1002/9781118150382.ch11":doi.org/10.1002/9781118150382.ch11}
     {p_end}
 {phang}
     Ehler, I., F. Wolter, J. Junkermann. 2021. Sensitive Questions in
@@ -458,11 +518,11 @@
 {pmore}
     Jann, B. (2024). listreg: Stata module for the analysis of list experiments
     using linear regression. Available from
-    {browse "https://github.com/benjann/listreg/"}.
+    {browse "https://ideas.repec.org/c/boc/bocode/s459304.html"}.
 
 
 {title:Also see}
 
 {psee}
     Online:  help for
-    {helpb regress}, {helpb gmm}
+    {helpb regress}, {helpb gmm}, {helpb teffects ra}

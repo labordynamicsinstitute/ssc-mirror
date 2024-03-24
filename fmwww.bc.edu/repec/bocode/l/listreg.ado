@@ -1,4 +1,4 @@
-*! version 1.0.1  14mar2024  Ben Jann
+*! version 1.0.2  23mar2024  Ben Jann
 
 program listreg, eclass properties(svyb svyj mi)
     version 14
@@ -125,38 +125,37 @@ program Display
         di ""
     }
     eret display, `options'
-    if `"`e(controls_1)'`e(controls_2)'"'!="" {
-        local dl 1
-        local space "  "
+    local J = e(k_list)
+    if `"`e(indepvars)'`e(controls)'`e(controls_1)'`e(controls_2)'"'==""/*
+        */ local S 0
+    else   local S = e(k_eq)==1
+    if `S' {
+        local S = `S' + (`"`e(controls_1)'`e(controls_2)'"'!="")
+        if `S'==2 local space "  "
     }
-    else {
-        local dl 0
-        local space ""
-    }
-    if `"`e(dlmethod)'"'!="" {
+    if `J'>1 {
         di as txt "Double-list method:  `space'" as res e(dlmethod)
         di as txt "Outcome variables:   `space'" as res e(depvar)
     }
-    di as txt "Long-list indicator: `space'" as res e(tvar) as txt " (N = " /*
-        */ as res el(e(_N),1,2) as txt " in group 1, N = "/*
-        */ as res el(e(_N),1,1) as txt " in group 0)"
-    if !`dl' {
-        if `"`e(indepvars)'`e(controls)'"'=="" exit
+    di as txt "Long-list indicator: `space'" as res e(tvar)
+    forv j = 1/`J' {
+        if `J'>1 di as txt "List `j' group sizes:  `space'" _c
+        else     di as txt "Group sizes:         `space'" _c
+        di as res el(e(_N),`j',1) as txt " in short-list, "/*
+        */ as res el(e(_N),`j',2) as txt " in long-list"
     }
-    forv i = 1/2 {
-        if `dl' {
-            local sfx _`i'
-            local lbl "Short-list `i' equation: "
+    if !`S' exit
+    forv j = 1/`S' {
+        if `S'>1 {
+            local sfx _`j'
+            local lbl "Short-list `j' controls: "
         }
         else {
             local sfx
-            local lbl "Short-list equation: "
+            local lbl "Short-list controls: "
         }
         if `"`e(controls`sfx')'"'=="" {
             local msg `""(empty)""'
-        }
-        else if `"`e(controls`sfx')'"'==`"`e(indepvars)'"' {
-            local msg `""(same as main equation)""'
         }
         else if strlen(`"`e(controls`sfx')'"')>57 {
             local msg `""{bf:{stata display e(controls`sfx'):e(controls`sfx')}}""'
@@ -165,7 +164,6 @@ program Display
             local msg as res e(controls`sfx')
         }
         di as txt "`lbl'" `msg'
-        if "`sfx'"=="" continue, break
     }
 end
 
@@ -173,21 +171,21 @@ program Estimate, eclass
     version 14
     
     // syntax
-    gettoken ovar1 0 : 0, parse(" ,")
-    gettoken ovar2 0 : 0, parse(" =,")
-    gettoken eq      : 0, parse(" =,")
+    gettoken ovar_1 0 : 0, parse(" ,")
+    gettoken ovar_2 0 : 0, parse(" =,")
+    gettoken eq       : 0, parse(" =,")
     if `"`eq'"'=="=" {
         gettoken eq 0 : 0, parse(" =,")
-        local ovar `ovar1' `ovar2'
+        local ovar `ovar_1' `ovar_2'
         gettoken tvar 0 : 0, parse(" ,")
     }
-    else if `"`ovar2'"'=="=" {
-        local ovar `ovar1'
+    else if `"`ovar_2'"'=="=" {
+        local ovar `ovar_1'
         gettoken tvar 0 : 0, parse(" ,")
     }
     else {
-        local ovar `ovar1'
-        local tvar `ovar2'
+        local ovar `ovar_1'
+        local tvar `ovar_2'
     }
     capt n _parse_ovar `ovar'
     if _rc==1 exit _rc
@@ -195,62 +193,80 @@ program Estimate, eclass
         di as err "invalid {it:ovar}"
         exit _rc
     }
-    local dl = `: list sizeof ovar'==2
+    local J: list sizeof ovar
+    gettoken ovar_1 ovar_2 : ovar
+    gettoken ovar_2        : ovar_2
     capt n _parse_tvar `tvar'
     if _rc==1 exit _rc
     if _rc {
         di as err "invalid {it:tvar}"
         exit _rc
     }
-    if `dl' local opts *
-    else    local opts
     syntax [varlist(default=none numeric fv)] [if] [in] [pw fw iw] [,/*
-        */ noCONStant Controls(str) AVErage NOIsily/*
-        */ NOSE vce(passthru) Robust CLuster(passthru) NODF/*
+        */ noCONStant AEQuations NOIsily AVErage LISTwise CASEwise/*
+        */ NOSE vce(passthru) Robust CLuster(passthru) NODFr/*
         */ IFGENerate(str) replace/*
         */ saveifuninmata/* technical option for svy; do not use manually
         */ Level(cilevel)/* (not used)
-        */ `opts' ]
+        */ * ]
+    if "`listwise'"!="" local casewise casewise
+    if "`noisily'"==""  local qui quietly
+    else                local qui
     if "`constant'"!="" {
         if "`varlist'"=="" {
             di as err "{bf:noconstant} not allowed if {it:indepvars} is empty"
             exit 198
         }
     }
-    _parse_controls `controls' // returns controls and zcons
+    local dl = (`J'==2)
     if `dl' {
         local dl = `dl' + ("`average'"!="")
-        local controls_0 `controls'
-        local zcons_0 `zcons'
-        local znone_0 `znone'
-        _parse_controls_2, `options'
-        if "`controls_1'`znone_1'"=="" {
-            local controls_1 `controls'
-            local zcons_1 `zcons'
-            local znone_1 `znone'
+        _parse_controls 1 options, `options'
+        _parse_controls 2, `options'
+        if "`controls_2'`znone_2'"=="" {
+            local controls_2 `controls_1'
+            local zcons_2 `zcons_1'
+            local znone_2 `znone_1'
         }
-        else local controls: list controls | controls_1
-        local zcons
-        local znone
     }
-    else local average
-    if "`noisily'"=="" local qui quietly
-    else               local qui
+    else {
+        local average
+        _parse_controls 1, `options'
+    }
 
     // process vce
     _parse_vce, `vce' `robust' `cluster' // returns vceopt, clustvar
-
     // mark sample and weights
     marksample touse
-    markout `touse' `ovar' `tvar' `controls'
+    markout `touse' `tvar'
     if "`clustvar'"!="" {
         markout `touse' `clustvar', strok
+    }
+    if `dl' {
+        if "`casewise'"=="" {
+            forv j = 1/`J' {
+                tempvar touse_`j'
+                qui gen byte `touse_`j'' = `touse'
+                markout `touse_`j'' `ovar_`j'' `controls_`j''
+            }
+            qui replace `touse' = (`touse_1' | `touse_2')
+        }
+        else {
+            markout `touse' `ovar' `controls_1' `controls_2'
+            local touse_1 `touse'
+            local touse_2 `touse'
+        }
+    }
+    else {
+        markout `touse' `ovar' `controls_1'
+        local touse_1 `touse'
     }
     tempvar wvar
     _parse_wvar `wvar' [`weight'`exp'] if `touse'
     if "`wvar'"!="" {
         local wgt  [`weight'=`wvar']
-        local iwgt [iw=`wvar']
+        local iwgt [iw=`wvar'] // for regress
+        local awgt [aw=`wvar'] // for _ms_build_info
     }
     _nobs `touse' `wgt' if `touse'
     local N = r(N)
@@ -259,116 +275,137 @@ program Estimate, eclass
     tempvar T
     qui gen byte `T' = (`tvar')==1 if `touse'
     tempname _N
-    mat `_N' = J(1,2,.)
-    mat coln `_N' = 0 1
-    capt _nobs `touse' `wgt' if `touse' & `T'==1
-    if _rc==2000 {
-        di as err "no observations in group 1"
-        exit 2000
+    mat `_N' = J(`J', 2, .)
+    mat rown `_N' = `ovar'
+    mat coln `_N' = short-list long-list
+    forv j = 1/`J' {
+        forv i = 0/1 {
+            local tval = (2-`j')==`i'
+            capt _nobs `touse_`j'' `wgt' if `T'==`tval'
+            if _rc==2000 {
+                if `i'==0 local msg "short-list group"
+                else      local msg "long-list group"
+                if `dl'   local msg "`msg' for {bf:`ovar_`j''}"
+                di as err "no observations in `msg'"
+                exit 2000
+            }
+            mat `_N'[`j',`=`i'+1'] = r(N)
+        }
     }
-    else if _rc error _rc
-    mat `_N'[1,2] = r(N)
-    capt _nobs `touse' `wgt' if `touse' & `T'==0
-    if _rc==2000 {
-        di as err "no observations in group 0"
-        exit 2000
-    }
-    else if _rc error _rc
-    mat `_N'[1,1] = r(N)
     
     // expand factor variables and fill in controls if needed
     fvexpand `varlist' if `touse'
     local xvars `r(varlist)'
-    forv i=0/1 {
-        if `dl' local sfx _`i'
-        else    local sfx
-        if "`controls`sfx''`znone`sfx''"=="" {
-            local controls`sfx' `varlist'
-            local zvars`sfx' `xvars'
-            local zcons`sfx' `constant'
+    forv j = 1/`J' {
+        if "`controls_`j''`znone_`j''"=="" {
+            local controls_`j' `varlist'
+            local zvars_`j' `xvars'
+            local zcons_`j' `constant'
         }
-        else if "`znone`sfx''"=="" {
-            fvexpand `controls`sfx'' if `touse'
-            local zvars`sfx' `r(varlist)'
+        else if "`znone_`j''"=="" {
+            fvexpand `controls_`j'' if `touse_`j''
+            local zvars_`j' `r(varlist)'
         }
         else {
-            local zvars`sfx'
-            local zcons`sfx'
+            local zvars_`j'
+            local zcons_`j'
         }
-        if "`sfx'"=="" continue, break // single list
     }
     
-    // parse ifgenerate()
-    if `"`ifgenerate'"'!="" {
-        if strpos(`"`ifgenerate'"',"*") {
-            gettoken ifstub rest : ifgenerate, parse("* ")
-            if `"`rest'"'!="*" {
-                di as err "ifgenerate() invalid; " /*
-                    */ "must specify {it:stub}{bf:*} or {it:namelist}"
-                exit 198
+    // generate names of IFs and parse ifgenerate()
+    local IF = "`nose'"=="" | "`ifgenerate'`saveifuninmata'"!=""
+    if `IF' {
+        local k: list sizeof xvars
+        if "`constant'"=="" local k = `k' + 1
+        forv i = 1/`k' {
+            tempname tmp
+            local IFb `IFb' `tmp'
+        }
+        if "`aequations'"!="" {
+            if `dl'==2 {
+                forv j = 1/2 {
+                    forv i = 1/`k' {
+                        tempname tmp
+                        local IFb_`j' `IFb_`j'' `tmp'
+                    }
+                }
             }
-            confirm name `ifstub'
-            local k: list sizeof xvars
-            if "`constant'"=="" local k = `k' + 1
-            local ifgenerate
-            forv i = 1/`k' {
-                local ifgenerate `ifgenerate' `ifstub'`i'
+            forv j = 1/`J' {
+                local k: list sizeof zvars_`j'
+                if "`zcons_`j''"=="" local k = `k' + 1
+                forv i = 1/`k' {
+                    tempname tmp
+                    local IFc_`j' `IFc_`j'' `tmp'
+                }
             }
         }
-        confirm names `ifgenerate'
-        if "`replace'"=="" {
-            confirm new variable `ifgenerate'
+        local IFs `IFb' `IFb_1' `IFb_2' `IFc_1' `IFc_2'
+        if `"`ifgenerate'"'!="" {
+            if strpos(`"`ifgenerate'"',"*") {
+                gettoken ifstub rest : ifgenerate, parse("* ")
+                if `"`rest'"'!="*" {
+                    di as err "ifgenerate() invalid; " /*
+                        */ "must specify {it:stub}{bf:*} or {it:namelist}"
+                    exit 198
+                }
+                confirm name `ifstub'
+                local k: list sizeof IFs
+                local ifgenerate
+                forv i = 1/`k' {
+                    local ifgenerate `ifgenerate' `ifstub'`i'
+                }
+            }
+            confirm names `ifgenerate'
+            if "`replace'"=="" {
+                confirm new variable `ifgenerate'
+            }
         }
     }
-    local IF = "`nose'"=="" | "`ifgenerate'`saveifuninmata'"!=""
     
     // short-list model
-    if `dl' {
-        local i 0
-        foreach v of local ovar {
-            `qui' di _n as txt "- short list `=`i'+1'"
-            tempvar rz_`i' invGz_`i'
-            `qui' regress `v' `zvars_`i'' `iwgt' if `T'==`i' & `touse',/*
-                */ `zcons_`i''
-            if `IF' mat `invGz_`i'' = e(V) / e(rmse)^2
-            qui predict double `rz_`i'' if `touse', resid
-            local ++i
-        }
-        if `dl'<2 {
-            tempvar rz
-            qui gen double `rz' = cond(`T'==1, `rz_0', `rz_1') if `touse'
-        }
+    forv j = 1/`J' {
+        if `dl' local msg " `j'"
+        else    local msg
+        `qui' di _n as txt "- short list`msg'"
+        tempvar rz_`j' c_`j' invGz_`j'
+        `qui' regress `ovar_`j'' `zvars_`j'' `iwgt'/*
+            */ if `T'==(`j'-1) & `touse_`j'', `zcons_`j''
+        mat `c_`j'' = e(b)
+        if `IF' mat `invGz_`j'' = e(V) / e(rmse)^2
+        qui predict double `rz_`j'' if `touse_`j'', resid
     }
-    else {
-        `qui' di _n as txt "- short list"
-        tempvar rz invGz
-        `qui' regress `ovar' `zvars' `iwgt' if `T'==0 & `touse', `zcons'
-        if `IF' mat `invGz' = e(V) / e(rmse)^2
-        predict double `rz', resid
+    if `dl'==1 {
+        tempvar touse_p rz
+        if "`touse_1'"=="`touse_2'" local touse_p "`touse'"
+        else {
+            qui gen byte `touse_p' = 0
+            qui replace `touse_p' = 1 if `touse_1' & (`T'==1)
+            qui replace `touse_p' = 1 if `touse_2' & (`T'==0)
+        }
+        qui gen double `rz' = cond(`T'==1, `rz_1', `rz_2') if `touse_p'
     }
+    else local rz `rz_1'
     
     // long-list model
     if `dl'==2 {
-        local i 0
-        foreach v of local ovar {
-            `qui' di _n as txt "- residualized long list `=`i'+1'"
-            tempname r_`i' b_`i' invG_`i'
-            `qui' regress `rz_`i'' `xvars' `iwgt'/*
-                */ if `T'!=`i' & `touse', `constant'
-            mat `b_`i'' = e(b)
+        forv j = 1/`J' {
+            `qui' di _n as txt "- residualized long list `j'"
+            tempname r_`j' b_`j' invG_`j'
+            `qui' regress `rz_`j'' `xvars' `iwgt'/*
+                */ if `T'==(2-`j') & `touse_`j'', `constant'
+            mat `b_`j'' = e(b)
             if `IF' {
-                mat `invG_`i'' = e(V) / e(rmse)^2
-                qui predict double `r_`i'' if `touse', resid
+                mat `invG_`j'' = e(V) / e(rmse)^2
+                qui predict double `r_`j'' if `touse_`j'', resid
             }
-            local ++i
         }
         tempname b
-        mat `b' = (`b_0' + `b_1') / 2
+        mat `b' = (`b_1' + `b_2') / 2
     }
     else {
         `qui' di _n as txt "- residualized long list"
         tempname r b invG
-        if `dl' local iff `touse'
+        if `dl' local iff `touse_p'
         else    local iff `T'==1 & `touse'
         `qui' regress `rz' `xvars' `iwgt' if `iff', `constant'
         mat `b' = e(b)
@@ -378,16 +415,45 @@ program Estimate, eclass
         }
     }
     
+    // put together coefficient vector
+    local k = colsof(`b')
+    if "`aequations'"!="" {
+        mat coleq `b' = "Main"
+        if `dl' {
+            mat coleq `c_1' = "SL1"
+            mat coleq `c_2' = "SL2"
+            if `dl'==2 {
+                mat coleq `b_1' = "LL1"
+                mat coleq `b_2' = "LL2"
+                mat `b' = `b', `b_1', `b_2', `c_1', `c_2'
+            }
+            else {
+                mat `b' = `b', `c_1', `c_2'
+            }
+        }
+        else {
+            mat coleq `c_1' = "SL"
+            mat `b' = `b', `c_1'
+        }
+    }
+    _ms_build_info `b' if `touse' `awgt'
+    
     // variance estimation
     if `IF' {
         // compute IFs
-        local k = colsof(`b')
-        forv i = 1/`k' {
-            tempname tmp
-            qui gen double `tmp' = .
-            local IFs `IFs' `tmp'
+        foreach v of local IFs {
+            qui gen double `v' = 0 if `touse'
         }
-        mata: listreg_IF(`dl', "`touse'")
+        if `dl'==2 { // averaged double list
+            mata: _listreg_IF_avg(1, "`aequations'"!="")
+            mata: _listreg_IF_avg(2, "`aequations'"!="")
+        }
+        else if `dl' { // pooled double list
+            mata: _listreg_IF_dl("`aequations'"!="")
+        }
+        else { // single list
+            mata: _listreg_IF_sl("`aequations'"!="")
+        }
         
         // compute e(V)
         if "`nose'"=="" {
@@ -406,13 +472,12 @@ program Estimate, eclass
                 local vce "robust"
                 local vcetype "Robust"
             }
-            mat coln `V' = `: coln `b''
-            mat rown `V' = `: coln `b''
-            if "`nodf'"!="" { // ignore df_r, like GMM
+            mat coln `V' = `: colfullnames `b''
+            mat rown `V' = `: colfullnames `b''
+            if "`nodfr'"!="" { // ignore df_r, like GMM
                 mat `V' = `V' * ((`Nc'-1) / `Nc')
             }
         }
-        
         if "`saveifuninmata'"!="" {
             mata: *crexternal("_LISTREG_TMP_IFs") = st_data(., st_local("IFs"))
             mata: st_replacematrix(st_local("V"), I(`=colsof(`V')'))
@@ -429,21 +494,28 @@ program Estimate, eclass
     if `dl' {
         if `dl'==2 eret local dlmethod "average"
         else       eret local dlmethod "pooled"
-        if "`controls_0'"=="`controls_1'" {
-            eret local controls "`controls_0'"
+        if "`controls_1'"=="`controls_2'" {
+            eret local controls "`controls_1'"
         }
         else {
-            eret local controls_1 "`controls_0'"
-            eret local controls_2 "`controls_1'"
+            eret local controls_1 "`controls_1'"
+            eret local controls_2 "`controls_2'"
         }
     }
     else {
-        eret local controls "`controls'"
+        eret local controls "`controls_1'"
     }
+    eret scalar k_list = 1 + (`dl'!=0)
+    if "`aequations'"!="" {
+        if `dl'==2   eret scalar k_eq = 5
+        else if `dl' eret scalar k_eq = 3
+        else         eret scalar k_eq = 2
+    }
+    else eret scalar k_eq = 1
     eret matrix _N = `_N'
     if "`nose'"=="" {
         eret scalar rank = `rank'
-        if "`nodf'"=="" {
+        if "`nodfr'"=="" {
             eret scalar df_r = `Nc' - 1
         }
         eret local vce `"`vce'"'
@@ -454,8 +526,8 @@ program Estimate, eclass
         }
         if "`xvars'"!="" { // overall model test
             qui test `xvars'
-            if "`nodf'"!="" eret scalar chi2 = r(chi2)
-            else            eret scalar F    = r(F)
+            if "`nodfr'"!="" eret scalar chi2 = r(chi2)
+            else             eret scalar F    = r(F)
             eret scalar df_m = r(df)
             eret scalar p    = r(p)
         }
@@ -463,7 +535,7 @@ program Estimate, eclass
     
     // generate
     if "`ifgenerate'"!="" {
-        local coln: coln e(b)
+        local coln: colfullnames e(b)
         foreach v of local ifgenerate {
             gettoken tmp IFs : IFs
             gettoken nm coln: coln
@@ -492,20 +564,29 @@ program _parse_tvar
 end
 
 program _parse_controls
+    _parse comma lhs 0 : 0 
+    gettoken i lhs : lhs
+    gettoken lhs : lhs
+    if `"`lhs'"'!="" {
+        syntax [, Controls(str) * ]
+        c_local `lhs' `options'
+    }
+    else {
+        syntax [, Controls(str) ]
+    }
+    __parse_controls `controls'
+    c_local controls_`i' `controls'
+    c_local zcons_`i' `zcons'
+    c_local znone_`i' `znone'
+end
+
+program __parse_controls
     syntax [varlist(default=none numeric fv)] [, noCONStant NONE ]
     if "`varlist'"=="" local constant
     else               local none
     c_local controls `varlist'
     c_local zcons `constant'
     c_local znone `none'
-end
-
-program _parse_controls_2
-    syntax [, Controls(str) ]
-    _parse_controls `controls'
-    c_local controls_1 `controls'
-    c_local zcons_1 `zcons'
-    c_local znone_1 `znone'
 end
 
 program _parse_vce
@@ -567,53 +648,119 @@ version 14
 mata:
 mata set matastrict on
 
-void listreg_IF(real scalar dl, string scalar touse)
+void _listreg_IF_sl(real scalar aeq)
 {
-    real scalar    c
+    real scalar    c, touse
     real colvector w, t
-    real matrix    IF, X
+    real matrix    X
+    real matrix    IFc, Gxz
     
-    st_view(IF=., ., st_local("IFs"), touse)
+    touse = st_varindex(st_local("touse"))
     if (st_local("wvar")=="") w = 1
-    else                      st_view(w=., ., st_local("wvar"), touse)
+    else st_view(w=., ., st_local("wvar"), touse)
     st_view(t=., ., st_local("T"), touse)
     st_view(X=., ., st_local("varlist"), touse)
     c = st_local("constant")==""
-    if (dl<2) IF[.,.] =  listreg_IFx("",  dl, w,  t, X, c, touse)
-    else      IF[.,.] = (listreg_IFx("_0", 0, w,  t, X, c, touse) +
-                         listreg_IFx("_1", 0, w, !t, X, c, touse)) / 2
+    IFc = _listreg_IFc("_1", w, t, X, c, touse, Gxz=.)
+    st_store(., tokens(st_local("IFb")), touse,
+        _listreg_IFb("", t, X, c, touse, IFc, Gxz))
+    if (aeq) st_store(., tokens(st_local("IFc_1")), touse, IFc)
 }
 
-real matrix listreg_IFx(string scalar sfx, real scalar dl, real colvector w,
-    real colvector t, real matrix X, real scalar c, string scalar touse)
+void _listreg_IF_dl(real scalar aeq)
+{
+    real scalar    hasw, c, touse
+    real rowvector IFb
+    real colvector w, t, r
+    real matrix    X
+    real matrix    Gxz, IFc
+    
+    // setup
+    IFb = st_varindex(tokens(st_local("IFb")))
+    hasw = st_local("wvar")!=""
+    if (!hasw) w = 1
+    c = st_local("constant")==""
+    // ll
+    touse = st_varindex(st_local("touse_p"))
+    if (hasw) st_view(w=., ., st_local("wvar"), touse)
+    st_view(r=., ., st_local("r"), touse)
+    st_view(X=., ., st_local("varlist"), touse)
+    st_store(., IFb, touse, (X:*r, J(1,c,r)))
+    // sl1
+    touse = st_varindex(st_local("touse_1"))
+    if (hasw) st_view(w=., ., st_local("wvar"), touse)
+    st_view(t=., ., st_local("T"), touse)
+    st_view(X=., ., st_local("varlist"), touse)
+    IFc = _listreg_IFc("_1", w, t, X, c, touse, Gxz=.)
+    st_store(., IFb, touse, st_data(., IFb, touse) - IFc * Gxz')
+    if (aeq) st_store(., tokens(st_local("IFc_1")), touse, IFc)
+    // sl2
+    touse = st_varindex(st_local("touse_2"))
+    if (hasw) st_view(w=., ., st_local("wvar"), touse)
+    t = !st_data(., st_local("T"), touse)
+    st_view(X=., ., st_local("varlist"), touse)
+    IFc = _listreg_IFc("_2", w, t, X, c, touse, Gxz=.)
+    st_store(., IFb, touse, st_data(., IFb, touse) - IFc * Gxz')
+    if (aeq) st_store(., tokens(st_local("IFc_2")), touse, IFc)
+    // finish
+    touse = st_varindex(st_local("touse"))
+    st_store(., IFb, touse, st_data(., IFb, touse) *
+        st_matrix(st_local("invG"))')
+}
+
+void _listreg_IF_avg(real scalar l, real scalar aeq)
+{
+    string scalar  sfx
+    real scalar    c, touse
+    real colvector w, t
+    real matrix    X
+    real matrix    IFb, IFc, Gxz
+    
+    if (l==2) sfx = "_2"
+    else      sfx = "_1"
+    touse = st_varindex(st_local("touse"+sfx))
+    if (st_local("wvar")=="") w = 1
+    else st_view(w=., ., st_local("wvar"), touse)
+    if (l==2) t = !st_data(., st_local("T"), touse)
+    else      st_view(t=., ., st_local("T"), touse)
+    st_view(X=., ., st_local("varlist"), touse)
+    c = st_local("constant")==""
+    IFc = _listreg_IFc(sfx, w,  t, X, c, touse, Gxz=.)
+    IFb = _listreg_IFb(sfx, t, X, c, touse, IFc, Gxz)
+    st_store(., tokens(st_local("IFb")), touse,
+        st_data(., st_local("IFb"), touse) + IFb/2)
+    if (aeq) {
+        st_store(., tokens(st_local("IFc"+sfx)), touse, IFc)
+        st_store(., tokens(st_local("IFb"+sfx)), touse, IFb)
+    }
+}
+
+real matrix _listreg_IFb(string scalar sfx, real colvector t, 
+    real matrix X, real scalar c, real scalar touse, real matrix IFc,
+    real matrix Gxz)
 {
     real colvector r
     real matrix    invG
     
     st_view(r=., ., st_local("r"+sfx), touse)
     invG = st_matrix(st_local("invG"+sfx)) // = (X'X)^(-1)
-    if (dl) return(((X:*r, J(1,c,r))
-        - listreg_IFz("_0", w,  t, X, c, touse)
-        - listreg_IFz("_1", w, !t, X, c, touse)) * invG')
-    return(((X:*r, J(1,c,r)) :* t
-        - listreg_IFz(sfx, w, t, X, c, touse)) * invG')
+    return(((X:*r, J(1,c,r)) :* t - IFc * Gxz') * invG')
 }
 
-
-real matrix listreg_IFz(string scalar sfx, real colvector w, real colvector t,
-    real matrix X, real scalar c, string scalar touse)
+real matrix _listreg_IFc(string scalar sfx, real colvector w, real colvector t,
+    real matrix X, real scalar c, real scalar touse, real matrix Gxz)
 {
     real scalar    cz
     real colvector rz
     real matrix    Z
-    real matrix    invGz, Gxz
+    real matrix    invGz
     
     st_view(Z=., ., st_local("zvars"+sfx), touse)
     cz = st_local("zcons"+sfx)==""
     st_view(rz=., ., st_local("rz"+sfx), touse)
     invGz = st_matrix(st_local("invGz"+sfx))
     Gxz   = cross(X,c, w:*t, Z,cz)
-    return(((Z:*rz, J(1,cz,rz)) :* !t) * invGz' * Gxz')
+    return(((Z:*rz, J(1,cz,rz)) :* !t) * invGz')
 }
 
 end
