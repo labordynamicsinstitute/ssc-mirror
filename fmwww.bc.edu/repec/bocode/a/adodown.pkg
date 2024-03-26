@@ -1,0 +1,60 @@
+d 'ADODOWN': module making Stata packages easier to develop and document using modern tools
+d
+d  For developers, adodown offers workflow commands that automate
+d manual tasks at each stage of development.  At project's start,
+d adodown creates the necessary scaffolding for the package (e.g.,
+d folders, `pkg` file, etc).  For each package command, it uses
+d templates to create necessary files (i.e., ado, documentation,
+d unit test) and  adds appropriate entries in the pkg file. For
+d documentation, it allows developers draft in plain Markdown while
+d  creating standard help files in SMCL. And for publication,
+d adodown collects the required files, puts them in proper  format,
+d and prepares a zip file for SSC submission.  Also, adodown
+d automatically deploys a package documentation website. For users,
+d this provides an easy way to discover  packages, to understand
+d what they do, and to explore how commands work--all without
+d installing the package. For  developers, this provides packages
+d with a welcome web presence and offers a home for additional
+d documentation  (e.g., how-to guides, technical notes, FAQs), and
+d keeps HTML documentation up to date with SMCL documentation
+d through  continuous deployment via GitHub Actions. 
+d
+d KW: package management
+d KW: templates
+d KW: SSC
+d
+d Requires: Stata version 14.1
+d
+d Distribution-Date: 20240225
+d
+d Author: LSMS Team, The World Bank
+d Support: email lsms@@worldbank.org
+d
+f ad_update.ado
+f ad_pkg_meta.ado
+f adodown.ado
+f ad_publish.ado
+f ad_setup.ado
+f ad_command.ado
+f ad_sthlp.ado
+f ad_update.sthlp
+f adodown.sthlp
+f ad_publish.sthlp
+f ad_command.sthlp
+f ad_setup.sthlp
+f ad_sthlp.sthlp
+f ad-cmd-command.ado
+F ad-cmd-command.do
+F ad-cmd-command.md
+F ad-gh-workflows.yaml
+F ad-gh.gitignore
+F ad-reproot.yaml
+F ad-src-ado-README.md
+F ad-src-dev-description.txt
+F ad-src-dev-README.md
+F ad-src-mdhlp-README.md
+F ad-src-package.pkg
+F ad-src-stata.toc
+F ad-src-sthlp-README.md
+F ad-src-tests-README.md
+F ad-src-vignettes-README.md

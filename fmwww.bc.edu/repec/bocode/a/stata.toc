@@ -27,6 +27,7 @@ p adjprop module to calculate adjusted probabilities from logistic regression es
 p adjust module (corrected) to compute adjusted predictions and probabilities after estimation
 p admetan module to provide comprehensive meta-analysis
 p adodev module to reorder ado-path for developers and other independent-minded users
+p adodown module making Stata packages easier to develop and document using modern tools
 p adoedit module to edit ado file in Stata's do-file editor
 p adoinstall module to install Stata packages in a specified path
 p adolist module to manage lists of ado packages
