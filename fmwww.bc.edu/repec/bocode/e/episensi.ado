@@ -1,12 +1,9 @@
 *! v 3.0.0 2024feb24 Thanks to Ian R. Dohoo & Javier Sanchez for correcting some typos
 *! v 2.0.0 N.Orsini 17sep2007 Probabilistic Sensitivity Analysis
 *! v 1.0.0 N.Orsini 01mar2007 Deterministic Sensitivity Analysis
-*change lines episens_mcsa_unc by episens_mcsa_unc_mod
-*change lines episens_unc for episens_unc_mod
 
-
-capture program drop episensi_mod
-program  episensi_mod, rclass
+capture program drop episensi 
+program  episensi , rclass
 version 9.2
 syntax anything  [ , /// 
 DPExp(string) DPUnexp(string  ) DRRcd(string) DORce(string)   /// Unmeasured confounding bias parameters - distribution of values
@@ -866,7 +863,7 @@ if ("`ordsel'" == "Yes") & ("`combined'" == "")  {
 if ("`ordunc'" == "Yes") & ("`combined'" == "")  {
 
  di _n as text "Deterministic sensitivity analysis for unmeasured confounding""
-	episens_unc_mod `a'  `b'  `c'  `d' , prz1(`ns_pexp') prz0(`ns_punexp') orze(`ns_orce') rrdz(`ns_rrcd') arrdx(`arrdx') type(`type')
+	episens_unc `a'  `b'  `c'  `d' , prz1(`ns_pexp') prz0(`ns_punexp') orze(`ns_orce') rrdz(`ns_rrcd') arrdx(`arrdx') type(`type')
  
 /*  	di _col(4) as text "External adjusted `effect' [95% Conf. Interval] = " `fmt' as res r(rrdx_unc) ///
           in g " [" in y `fmt' `lbarr'/(`arrdx'/r(rrdx_unc)) in gr ", " in y `fmt' `ubarr'/(`arrdx'/r(rrdx_unc)) in gr "]" 
@@ -936,7 +933,7 @@ if  ("`combined'" != "")  {
 
 	if  ("`ordunc'" == "Yes") & ("`combunc'" == "Yes")  {
 
-	      episens_unc_mod `a'  `b'  `c'  `d'  , prz1(`ns_pexp') prz0(`ns_punexp') orze(`ns_orce') rrdz(`ns_rrcd') arrdx(`rrstep') type(`type') ordered
+	      episens_unc  `a'  `b'  `c'  `d'  , prz1(`ns_pexp') prz0(`ns_punexp') orze(`ns_orce') rrdz(`ns_rrcd') arrdx(`rrstep') type(`type') ordered
 
 		di _col(1) as text _n "Unmeasured confounding"
   		di _col(4) as text "External adjusted `effect' = " `fmt' as res r(rrdx_unc)
@@ -1121,14 +1118,14 @@ di "`name_dist_orce'  `ns_orce'"
 if "`dorce'" == ""  {
 simulate adjrruncsys =r(adj_rr_unc) adj_fac_unc = r(adj_factor_unc) perc_bias_unc = r(perc_bias) pc1 = r(pc1) pc0 = r(pc0) rrcd = r(rrcd) orce = r(orce) ///
            a1 = r(a1) a0 = r(a0) b1 = r(b1) b0 = r(b0) rhoprev = r(rhoprev)  , reps(`reps') seed(`seed') nolegend `nodots' saving(`saving') : ///
-            episens_mcsa_unc_mod `a'  `b'  `c'  `d' , spexp(`name_dist_pexp'  `ns_pexp') spunexp(`name_dist_punexp'  `ns_punexp') ///
+            episens_mcsa_unc  `a'  `b'  `c'  `d' , spexp(`name_dist_pexp'  `ns_pexp') spunexp(`name_dist_punexp'  `ns_punexp') ///
 					                    srrcd(`name_dist_rrcd'  `ns_rrcd') sorce(`name_dist_orce'  `ns_orce') ///
 								  apprr(`arrdx') applb(`lbarr') appub(`ubarr') obs(`ndraw')  studytype(`type') scorrprev(`corrprev') 
 }
 else {
 simulate adjrruncsys =r(adj_rr_unc) adj_fac_unc = r(adj_factor_unc) perc_bias_unc = r(perc_bias)  pc0 = r(pc0) rrcd = r(rrcd) orce = r(orce) ///
             , reps(`reps') seed(`seed') nolegend `nodots' saving(`saving') : ///
-            episens_mcsa_unc_mod `a'  `b'  `c'  `d' , spexp(`name_dist_pexp'  `ns_pexp') spunexp(`name_dist_punexp'  `ns_punexp') ///
+            episens_mcsa_unc  `a'  `b'  `c'  `d' , spexp(`name_dist_pexp'  `ns_pexp') spunexp(`name_dist_punexp'  `ns_punexp') ///
 					                    srrcd(`name_dist_rrcd'  `ns_rrcd') sorce(`name_dist_orce'  `ns_orce') ///
 								  apprr(`arrdx') applb(`lbarr') appub(`ubarr') obs(`ndraw')  studytype(`type') scorrprev(`corrprev') 
 
@@ -1413,8 +1410,8 @@ syntax [anything]  [ ,  spscex(string) spscun(string)  spsnex(string) spsnun(str
 	return scalar sel_bf = `sel_bias_factor' 
 end
 
-capture program drop episens_unc_mod
-program episens_unc_mod, rclass
+capture program drop episens_unc 
+program episens_unc , rclass
 version 9.2
 syntax  [anything]  [ ,  prz1(string)  rrdz(string)   arrdx(string)  type(string) prz0(string) orze(string) ordered ]
 

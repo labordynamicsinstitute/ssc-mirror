@@ -1,8 +1,8 @@
 *! v 3.0.0 2024feb24 Thanks to Ian R. Dohoo & Javier Sanchez for correcting some typos
 *! v.1.0.0 N.Orsini 7aug2007
 
-capture program drop episens_mcsa_unc_mod
-program episens_mcsa_unc_mod, rclass
+capture program drop episens_mcsa_unc
+program episens_mcsa_unc, rclass
 version 9.2
 
         syntax anything [ , obs(integer 5000) spexp(string) spunexp(string) srrcd(string) sorce(string) scorrprev(string)  ///
