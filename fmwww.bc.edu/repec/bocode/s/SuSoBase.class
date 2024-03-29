@@ -1,7 +1,7 @@
 /* 
 
    Survey Solutions API base class
-   Sergiy Radyakin, Тhе Wоrld Bаnk, 2020-2021
+   Sergiy Radyakin, Тhе Wоrld Bаnk, 2020-2022
    
 */
 
@@ -103,6 +103,28 @@ program define .guidstandard, rclass
          substr("`guid'",13, 4) + "-" + ///
          substr("`guid'",17, 4) + "-" + ///
          substr("`guid'",21,12)
+end
+
+
+program define version_normalize, rclass
+    // Internal: Normalize "22.06.0.32682-rc" to "22.06.0 (build 32682)-rc"
+    version 16.0
+	syntax , Version(string)
+	local v=`"`version'"'
+	
+	local p=strpos(`"`v'"', "-")
+	if (`p'>0) {
+		local branch=substr(`"`v'"',`p'+1,strlen(`"`v'"')-`p')
+		local vfull=substr(`"`v'"',1,`p'-1)
+		local l=strpos(strreverse(`"`vfull'"'),".")-1
+		local build=substr(`"`vfull'"', strlen(`"`vfull'"')-`l'+1,`l')
+		local core=substr(`"`vfull'"',1,strlen(`"`vfull'"')-`l'-1)
+		local result=`"`core' (build `build')-`branch'"'
+		return local version=`"`result'"'
+	}
+	else {
+		return local version=`"`version'"'
+	}
 end
 
 
