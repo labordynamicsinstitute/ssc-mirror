@@ -124,7 +124,7 @@ Similarly, if the {opt saving()} option is omitted,
 
 {phang}
 {cmdab:usep:ackage(}{it:pkg}[{cmd:,} {help styletextab##pkgopts:{it:pkg_opts}}]{cmd:)} specifies a LaTeX package to be included in the document.
-{cmd:usepackage()} may be specified multiple times to add multiple packages in the specified order.
+{cmd:usepackage()} may be specified multiple times to add packages in the specified order.
 
 {phang2}
 {it:pkg_opts} are
@@ -133,9 +133,9 @@ Similarly, if the {opt saving()} option is omitted,
 {opt nextlines(strlist)}.
 
 {phang3}
-{opth opt:(styletextab##optlist:optlist)} specifies the set of options used with the LaTeX package loaded.
+{opth opt:(styletextab##optlist:optlist)} specifies the set of options for the LaTeX package loaded.
 {opt opts()} is the multiline version of {cmd:opt()}, putting each option to its own line,
-which is useful for quickly commenting/uncommenting distinct options to see their effects.
+which is useful for quickly commenting and uncommenting distinct options to see their effects.
 
 {phang3}
 {opt pre} specifies whether the LaTeX package should be loaded at the beginning of the preamble (the default is to load the package at the end of the preamble).
@@ -191,7 +191,7 @@ has several basic visual imperfections:
 horizontal lines are drawn by {bf:\cline},
 footnotes are centered by default and do not have the same width as the table,
 and there is no option to rotate the table.
-{cmd:styletextab}, by default, addresses these issues.
+{cmd:styletextab} addresses these issues.
 It replaces {bf:\cline} with the {bf:\cmidrule} of the
 {browse "https://ftp.heanet.ie/mirrors/ctan.org/tex/macros/latex/contrib/booktabs/booktabs.pdf":booktabs} package for aesthetically pleasing vertical spacing.
 It also wraps footnotes within the {bf:\tablenotes} environment of the
@@ -202,10 +202,20 @@ by wrapping tables within the {bf:\landscape} environment of
 {browse "https://ftp.heanet.ie/mirrors/ctan.org/tex/macros/latex/contrib/pdflscape/pdflscape.pdf":pdflscape} package.
 
 {pstd}
+{cmd:styletextab}
+is extensible as other LaTeX packages can be added to further customize the preamble
+(for example,
+{browse "https://ftp.heanet.ie/mirrors/ctan.org/tex/macros/latex/contrib/geometry/geometry.pdf":geometry}
+to change the page layout).
+It also allows for simple reporting with the ability to add text before or after the table.
+
+{pstd}
 {cmd:styletextab} operates by dissecting a .tex table file into its constituent sections
 and utilizing {help file} commands to reformat and improve the look of the tables.
 An advantage of {cmd:styletextab} is its ability to transition seamlessly between
 different modes without the need to recreate the table from scratch.
+For example, one can go from portrait to landscape mode and then back to portrait
+mode without needing to re-export the table at each step.
 
 
 {marker examples}{...}

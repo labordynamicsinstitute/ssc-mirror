@@ -1,0 +1,35 @@
+d 'WEAKIVTEST2': module to compute Robust Test for Weak Instruments with Multiple Endogenous Regressors
+d
+d     weakivtest2 implements the weak instrument test with multiple
+d endogenous regressors in Two-Stage Least Squares    (Lewis and
+d Mertens, 2022).  It is a postestimation command for ivreg2 and
+d xtivreg2 (fixed effect only).    weakivtest2 tests the null
+d hypothesis of weak instruments.  The test rejects the null
+d hypothesis when the test    statistic exceeds a critical value,
+d which depends on the estimator, the significance level, and the
+d desired    weak instrument threshold tau.  weakivtest2 extends
+d the Stock and Yogo's (2005) test by allowing	 
+d heteroskedasticity and autocorrelation, and extends Montiel Olea
+d and Pflueger's (2013) test by allowing    multiple endogenous
+d regressors. 
+d
+d KW: instrumental variables
+d KW: weak instruments
+d KW: Lewis
+d KW: Mertens
+d KW: Stock
+d KW: Yoo
+d KW: Olea
+d KW: Pflueger
+d
+d Requires: Stata version 17 and ivreg2, xtivreg2, avar from SSC (q.v.)
+d
+d Distribution-Date: 20240329
+d
+d Author:   Lingyun Zhou,  PBC School of Finance, Tsinghua University.
+d Support: email  zhouly.23@@pbcsf.tsinghua.edu.cn
+d
+f weakivtest2.ado
+f weakivtest2.sthlp
+f weakivtest2_demo.do
+f weakivtest2.dta

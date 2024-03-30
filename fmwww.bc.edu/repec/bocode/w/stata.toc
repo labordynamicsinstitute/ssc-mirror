@@ -11,6 +11,7 @@ p wdiscrim module to compute earnings discrimination statistics
 p weakiv module to perform weak-instrument-robust tests and confidence intervals for instrumental-variable (IV) estimation of linear, probit and tobit models
 p weakiv10 module to perform weak-instrument-robust tests and confidence intervals for instrumental-variable (IV) estimation of linear, probit and tobit models
 p weakivtest module to perform weak instrument test for a single endogenous regressor in TSLS and LIML 
+p weakivtest2 module to compute Robust Test for Weak Instruments with Multiple Endogenous Regressors
 p weathr module to display US weather conditions
 p weaver module to produce dynamic reports in HTML, LaTeX and PDF
 p webdoc module to create a HTML or Markdown document including Stata output

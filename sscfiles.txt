@@ -15719,6 +15719,7 @@ fmwww.bc.edu/repec/bocode/w/Weaver_mathematical_notation.sthlp
 fmwww.bc.edu/repec/bocode/w/wid.pkg
 fmwww.bc.edu/repec/bocode/w/wtdttt.sthlp
 fmwww.bc.edu/repec/bocode/w/wcbregress.sthlp
+fmwww.bc.edu/repec/bocode/w/weakivtest2.sthlp
 fmwww.bc.edu/repec/bocode/w/wtdttt.pkg
 fmwww.bc.edu/repec/bocode/w/weavermarkup.ado
 fmwww.bc.edu/repec/bocode/w/wtdttt_ex.do
@@ -15844,6 +15845,7 @@ fmwww.bc.edu/repec/bocode/w/wosload.html
 fmwww.bc.edu/repec/bocode/w/wtdq.hlp
 fmwww.bc.edu/repec/bocode/w/wgtcellcollapse.ado
 fmwww.bc.edu/repec/bocode/w/whichpkg.pkg
+fmwww.bc.edu/repec/bocode/w/weakivtest2.ado
 fmwww.bc.edu/repec/bocode/w/wclist.ado
 fmwww.bc.edu/repec/bocode/w/wid.sthlp
 fmwww.bc.edu/repec/bocode/w/wtpcikr.ado
@@ -15914,6 +15916,7 @@ fmwww.bc.edu/repec/bocode/w/wtd.ado
 fmwww.bc.edu/repec/bocode/w/winratiotest_example.dta
 fmwww.bc.edu/repec/bocode/w/webdoc.zip
 fmwww.bc.edu/repec/bocode/w/wordy.ado
+fmwww.bc.edu/repec/bocode/w/weakivtest2.dta
 fmwww.bc.edu/repec/bocode/w/whatsdeff.ado
 fmwww.bc.edu/repec/bocode/w/word.sthlp
 fmwww.bc.edu/repec/bocode/w/wosload.hlp
@@ -15943,6 +15946,7 @@ fmwww.bc.edu/repec/bocode/w/wbopendata_populate_list.ado
 fmwww.bc.edu/repec/bocode/w/wtdtttpreddur.sthlp
 fmwww.bc.edu/repec/bocode/w/writekml.pkg
 fmwww.bc.edu/repec/bocode/w/weibull_leftcensor.ado
+fmwww.bc.edu/repec/bocode/w/weakivtest2_demo.do
 fmwww.bc.edu/repec/bocode/w/white.ado
 fmwww.bc.edu/repec/bocode/w/wbopendata
 fmwww.bc.edu/repec/bocode/w/wtddat.dta
@@ -16017,6 +16021,7 @@ fmwww.bc.edu/repec/bocode/w/wald_mse.ado
 fmwww.bc.edu/repec/bocode/w/welflossas.sthlp
 fmwww.bc.edu/repec/bocode/w/wtd.pkg
 fmwww.bc.edu/repec/bocode/w/wbopendata.html
+fmwww.bc.edu/repec/bocode/w/weakivtest2.pkg
 fmwww.bc.edu/repec/bocode/w/winratiopower.sthlp
 fmwww.bc.edu/repec/bocode/w/weibullfit.hlp
 fmwww.bc.edu/repec/bocode/w/wtd_perc.pkg
