@@ -1,0 +1,15 @@
+d 'TWOWAY__WHISTOGRAM_GEN': module for generating histogram variables using aweights or iweights 
+d
+d
+d KW: histograms
+d KW: graphics
+d
+d Requires: Stata version 8
+d
+d Distribution-Date: 20240330
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f twoway__whistogram_gen.ado
+f twoway__whistogram_gen.sthlp

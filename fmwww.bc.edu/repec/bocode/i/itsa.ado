@@ -1,3 +1,4 @@
+*! 2.3.0 Ariel Linden 28Mar2024						// added lowess option 
 *! 2.2.1 Ariel Linden 22Mar2021						// fixed error with trperiod() loop   
 *! 2.2.0 Ariel Linden 10Mar2021 					// added parsing code to extract date(s) from trperiod() 
 *! 2.1.0 Ariel Linden 03Mar2021						// fixed code to handle depvar when using ts operators (e.g. L.depvar) 
@@ -19,6 +20,7 @@
 *! 1.0.0 Ariel Linden 12Feb2014
 *! 0.0.9 Ariel Linden 01Jan2014
 
+capture program drop itsa
 program define itsa, sort
 version 11.0
 
@@ -32,6 +34,7 @@ version 11.0
 	PRAIS        												///
     POSTTRend                                                   ///
 	FIGure   FIGure2(str asis)                              	///
+	LOWess														///
 	REPLace PREfix(str) *]
 
 	if "`exp'" != "" & "`prais'" != "" {
@@ -98,15 +101,16 @@ version 11.0
 				local trperiod `trp'
 			}  // end if
 		} // end while
-
+				local trper `trperiod'
+		
 		/* check if trperiod is among tvars */
 		levelsof `tvar' if `touse', local(levt)
 		if !`: list trperiod in levt' {
-			di as err "Treatment periods not found in time variable:" ///
-			" check trperiod()"
-			exit 498
+			di as err "{p}Treatment period(s) not found in the time variable: check {bf:trperiod()} to ensure that dates are specified correctly,{p_end}"
+			di as err "{p} and that multiple dates are separated by semicolons (;).{p_end}"
+			exit 198
 		}
-
+		
 		/* New error 1 */
 		if "`treatid'" !="" & "`pvar'"==""{
 			di as err "treatid requires a tsset panel variable"
@@ -293,7 +297,7 @@ version 11.0
 		 *                PLOT SECTION FOR TYPE 1                    *
 		 *************************************************************/
 
-		if `"`figure'`figure2'"' != ""{   /* Start Figure Loop */
+		if `"`figure'`figure2'"' != "" {   /* Start Figure Loop */
 			/* graph; get variable labels if they exist */
 			local ydesc : var label `dvar'
 			if `"`ydesc'"' == "" local ydesc "`dvar'"
@@ -338,7 +342,7 @@ version 11.0
 
 		 /* Set up Plot Variables */
 				forvalues k = 1/`tct' {
-					local plotvars `plotvars'  `plt_t`k''
+					local plotvars `plotvars' `plt_t`k''
 					local cpart `cpart' l
 					local mspart `mspart' none
 					local lblack `lblack' black
@@ -348,7 +352,7 @@ version 11.0
 
 		/* connect and msymbol options */
 		local cpart c(. l `cpart')
-		local lc   lcolor(black `lblack' black)
+		local lc lcolor(black `lblack' black)
 		local mspart  ms(O none `mspart')
 		local plotvars `plotvars' `pltx'
 		
@@ -357,18 +361,25 @@ version 11.0
 			local tper = strofreal(`t',"`tsf'")
 			local tperlist `tperlist' `tper'
 		}
+		if "`lowess'" != "" {
+			local low (lowess `dvar' `tvar' if `touse', lcolor(red))
+			local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) order(2 3 1) label(1 "Lowess") label(2 "Actual") label(3 "Predicted"))),
+		}
+		else {
+			local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) order(1 2) label(1 "Actual") label(2 "Predicted"))),
+		}
 		#delim ;
-		noi scatter  `dvar' `plotvars' `tvar' if `touse' [`weight' `exp'],
+		noi tw  `low'
+		(scatter  `dvar' `plotvars' `tvar' if `touse' [`weight' `exp'],
 			`cpart' `mspart' `lc'
 			xline(`trperiod', lpattern(shortdash) lcolor(black))
 			mcolor(black)
-			legend(rows(1) order(1 2)
-			label(1 "Actual") label(2 "Predicted"))
 			note(`"`note'"')
 			ytitle("`ydesc'")
 			xtitle("`tdesc'")
 			title("`treatdesc'")
-			subtitle("Intervention starts: `tperlist'")
+			`nolow'
+			`lowleg'
             `figure2'
 		;
 
@@ -458,9 +469,9 @@ version 11.0
 				in gr in smcl "{hline 13}{c BT}{hline 64}"
 				;
 				#delim cr
-			}
+			} /* end trperiod */
 		
-		} /* END IF POSTTREND & LINCOM BLOCK */
+		} /* end if posttrend and lincom block */
 
 		quietly predict `prefix'_s_`dvar'_pred
 		local itsavars `dvar' `rhs' `prefix'_s_`dvar'_pred
@@ -470,7 +481,7 @@ version 11.0
 		*             PLOT SECTION FOR TYPE 2           *
 		*************************************************/
 
-		if `"`figure'`figure2'"' != ""{   /* Start Figure Loop */
+		if `"`figure'`figure2'"' != "" {   /* Start Figure Loop */
 			/* graph; get variable labels if they exist */
 			local ydesc : var label `dvar'
 			if `"`ydesc'"' == "" local ydesc "`dvar'"
@@ -487,10 +498,10 @@ version 11.0
 				local note "Regression with Newey-West standard errors - lag(`lag')"
 			}
 
-		/* CREATE PREDICTED VALUE FOR PLOTS */
-		qui{
-			tempvar ypred_t
-			gen `ypred_t' = `prefix'_s_`dvar'_pred
+			/* create predicted values for plots */
+			qui{
+				tempvar ypred_t
+				gen `ypred_t' = `prefix'_s_`dvar'_pred
 
 				local tct: word count `trperiod'
 				local tmax: word `tct' of `trperiod'
@@ -515,33 +526,41 @@ version 11.0
 					if `k' ==`tct' {
 						tempvar pltx
 						gen `pltx' = `ypred_t' if `tvar'>=`tmax' & e(sample)
-						}
+					}
 				}  /* end of TRPERIOD LOOP */
 
-		 /* Set up Plot Variables */
+				/* Set up Plot Variables */
 				forvalues k = 1/`tct' {
 					local plotvars `plotvars'  `plt_t`k''
 					local cpart `cpart' l
 					local mspart `mspart' none
 					local lblack `lblack' black
 				}
+			} /* end of quietly loop */
 
-		} /* end of quietly loop */
+			/* connect and msymbol options */
+			local cpart c(. l `cpart')
+			local lc   lcolor(black `lblack' black)
+			local mspart  ms(O none `mspart')
+			local plotvars `plotvars' `pltx'
 
-		/* connect and msymbol options */
-		local cpart c(. l `cpart')
-		local lc   lcolor(black `lblack' black)
-		local mspart  ms(O none `mspart')
-		local plotvars `plotvars' `pltx'
+			/* separate multiple trperiods for subtitle */
+			foreach t in `trperiod' {
+				local tper = strofreal(`t',"`tsf'")
+				local tperlist `tperlist' `tper'
+			}
 
-		/* separate multiple trperiods for subtitle */
-		foreach t in `trperiod' {
-			local tper = strofreal(`t',"`tsf'")
-			local tperlist `tperlist' `tper'
-		}
-		
-		#delim ;
-		scatter  `dvar' `plotvars' `tvar' if `pvar'==`treatid' & `touse' [`weight' `exp'],
+			if "`lowess'" != "" {
+				local low (lowess `dvar' `tvar' if `pvar'==`treatid' & `touse', lcolor(red))
+				local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) order(2 3 1) label(1 "Lowess") label(2 "Actual") label(3 "Predicted"))),
+			}
+			else {
+				local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) order(1 2) label(1 "Actual") label(2 "Predicted"))),
+			}
+
+			#delim ;
+			noi tw  `low'		
+			(scatter  `dvar' `plotvars' `tvar' if `pvar'==`treatid' & `touse' [`weight' `exp'],
 			`cpart' `mspart' `lc'
 			xline(`trperiod', lpattern(shortdash) lcolor(black))
 			mcolor(black)
@@ -551,10 +570,11 @@ version 11.0
 			ytitle("`ydesc'")
 			xtitle("`tdesc'")
 			title("`treatdesc'")
-			subtitle("Intervention starts: `tperlist'")
-               `figure2'
-		;
-		#delim cr
+			`nolow'
+			`lowleg'
+			`figure2'
+			;
+			#delim cr
 		} /* END OF FIGURE BLOCK */
 	} /* END OF TYPE 2 BLOCK */
 
@@ -581,8 +601,7 @@ version 11.0
 				/* zxt will test difference between groups in pre-post slopes */
 				gen `prefix'_z_x_t`tper' = `prefix'_x_t`tper' * `prefix'_z if `touse'
 				local rhs `rhs' `prefix'_x`tper' `prefix'_x_t`tper' `prefix'_z_x`tper' `prefix'_z_x_t`tper'
-			}
-
+			} /* end trperiod */
 		} //end quietly
 
 		/* run Prais or Newey regression */
@@ -720,13 +739,15 @@ version 11.0
 			local istreat   `prefix'_z==1
 			local iscontrol `prefix'_z==0
 
-			qui {   /* Start Quietly Loop */
+			/* Start quietly loop */			
+			qui {   
 				tempvar ypred_t ypred_c
 
 				gen `ypred_t' =  `prefix'_m_`dvar'_pred if `istreat'
 				gen `ypred_c' =  `prefix'_m_`dvar'_pred if `iscontrol'
 
-				if "`xvar'"==""{   /*START NO XVAR LOOP*/
+				/* no xvars */
+				if "`xvar'" == "" {   
 					local tct: word count `trperiod'
 					local tmax: word `tct' of `trperiod'
 
@@ -751,9 +772,9 @@ version 11.0
 							tempvar pltx_t
 							gen `pltx_t' = `ypred_t' if `tvar'>=`tmax' &  `istreat'
 						}
-					} /* END TPERIOD LOOP */
+					} /* end trperiod loop - treatment */
 
-					/* Set up Plot Variables for Treated*/
+					/* Set up plot variables for Treated*/
 					forvalues k = 1/`tct' {
 						local plotvars_t `plotvars_t'  `plt_t`k''
 						local cpart `cpart' l
@@ -764,39 +785,39 @@ version 11.0
 
 					/* connect and msymbol options */
 					local cpart c(. l `cpart')
-					local lc   lcolor(black `lblack' black)
-					local mc   mcolor(black `mblack' black)
+					local lc lcolor(black `lblack' black)
+					local mc mcolor(black `mblack' black)
 
 					local tmspart  ms(O none `mspart')
 					local plotvars_t `plotvars_t' `pltx_t'
 
-					/* NEW CONTROL PLOT SECTION */
+					/* New control plot section */
 					local k = 0
 					foreach t in `trperiod' {
 						local k = `k' + 1
 						tempvar tp_c`k' plt_c`k'
-					if `k'== 1 {
-						gen `tp_c`k'' = `ypred_c' if `tvar'<=`t' & `iscontrol'
-						replace `tp_c`k''=. if `tvar'==`t' & `iscontrol'
-						ipolate `tp_c`k'' `tvar' if `tvar' <=`t' & `iscontrol', gen(`plt_c`k'') epolate
-					}
-					if `k'> 1 & `k'<=`tct' {
-						local klast = `k'-1
-						local tlast: word `klast' of `trperiod'
-						gen `tp_c`k'' = `ypred_c' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol'
-						replace `tp_c`k'' = . if `tvar'==`t' & `iscontrol'
-						ipolate `tp_c`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol', ///
-						 gen(`plt_c`k'') epolate
-					}
-					if `k' ==`tct' {
-						tempvar pltx_c
-						gen `pltx_c' = `ypred_c' if `tvar'>=`tmax' &  `iscontrol'
-					}
-					} /* END TPERIOD LOOP */
+						if `k'== 1 {
+							gen `tp_c`k'' = `ypred_c' if `tvar'<=`t' & `iscontrol'
+							replace `tp_c`k''=. if `tvar'==`t' & `iscontrol'
+							ipolate `tp_c`k'' `tvar' if `tvar' <=`t' & `iscontrol', gen(`plt_c`k'') epolate
+						}
+						if `k'> 1 & `k'<=`tct' {
+							local klast = `k'-1
+							local tlast: word `klast' of `trperiod'
+							gen `tp_c`k'' = `ypred_c' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol'
+							replace `tp_c`k'' = . if `tvar'==`t' & `iscontrol'
+							ipolate `tp_c`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol', ///
+							gen(`plt_c`k'') epolate
+						}
+						if `k' ==`tct' {
+							tempvar pltx_c
+							gen `pltx_c' = `ypred_c' if `tvar'>=`tmax' &  `iscontrol'
+						}
+					} /* end trperiod loop - controls */
 
-					/* Set up Plot Variables */
+					/* Set up plot variables */
 					forvalues k = 1/`tct' {
-					local plotvars_c `plotvars_c'  `plt_c`k''
+					local plotvars_c `plotvars_c' `plt_c`k''
 					local clp `clp' dash
 					}
 
@@ -805,9 +826,10 @@ version 11.0
 					local clp lpattern(blank `clp' dash)
 
 					local plotvars_c `plotvars_c' `pltx_c'
-				} /* END OF NO XVARS BLOCK */
+				} /* end no xvars  */
 
-				if "`xvar'"!=""{   /*XVARS Present*/
+				/* if xvars */
+				if "`xvar'" != ""{   
 					local plotvars_t `ypred_t'
 					local plotvars_c `ypred_c'
 				}
@@ -815,11 +837,8 @@ version 11.0
 				tempvar  dvar_t dvar_c
 				gen `dvar_t' = `dvar' if `istreat'
 				gen `dvar_c' = `dvar' if `iscontrol'
-			} /* END Quietly Block */
+			} /* end quietly */
 
-			local ctrl1 = `tct'+3
-			local ctrl2 = `tct'+4
-			
 			/* separate multiple trperiods for subtitle */
 			foreach t in `trperiod' {
 				local tper = strofreal(`t',"`tsf'")
@@ -827,7 +846,6 @@ version 11.0
 			}
 			
 			#delim ;
-
 			 /* Titles for Two-Group Comparison */
 			local titlesec
 			ytitle("`ydesc'")
@@ -835,44 +853,68 @@ version 11.0
 			title("`treatdesc' and average of controls")
 			subtitle("Intervention starts: `tperlist'")
 			;
+			#delim cr
 
-			if "`xvar'"' == "" {;
-				twoway
-				(scatter  `dvar_t' `plotvars_t'   `tvar',
-						  `cpart' `tmspart' `lc' `mc')
+			/* if no covariates */
+			if "`xvar'" == "" {
+				local ctrl1 = `tct' + 3				
+				local ctrl2 = `tct' + 4	
+				local low1 = `ctrl2' + `tct' + 1
+				local low2 = `ctrl2' + `tct' + 2
+			
+				if "`lowess'" != "" {
+					twoway ///
+					(scatter  `dvar_t' `plotvars_t' `tvar', `cpart' `tmspart' `lc' `mc') ///
+					(scatter  `dvar_c' `plotvars_c' `tvar', `cpart' `cmspart' `lc' `mc' `clp') ///
+					(lowess `dvar_t'  `tvar', lcolor(red)) ///
+					(lowess `dvar_c'  `tvar', lcolor(orange)), ///
+					xline(`trperiod', lpattern(shortdash) lcolor(black)) ///
+					legend(rows(2) order(- "`treatdesc': " 1 2 `low1' - "Controls average:" `ctrl1' `ctrl2' `low2') ///
+					label(1 "Actual") label(2 "Predicted") label(`ctrl1' "Actual") label(`ctrl2' "Predicted") ///					
+					label(`low1' "Lowess") label(`low2' "Lowess") ///
+					symxsize(8)) `titlesec' note(`"`note'"') `figure2'
+				} /* end lowess */
+				
+				/* no lowess */
+				if "`lowess'" == "" {
+					twoway ///
+					(scatter  `dvar_t' `plotvars_t'   `tvar', `cpart' `tmspart' `lc' `mc') ///
+					(scatter  `dvar_c' `plotvars_c'   `tvar', `cpart' `cmspart' `lc' `mc' `clp'), ///
+					xline(`trperiod', lpattern(shortdash) lcolor(black)) ///
+					legend(rows(2) order(- "`treatdesc': " 1 2 - "Controls average:" `ctrl1' `ctrl2') ///
+					label(1 "Actual") label(2 "Predicted") label(`ctrl1' "Actual") label(`ctrl2' "Predicted") ///
+					symxsize(8)) `titlesec' note(`"`note'"') `figure2'
+				} /* end no lowess */
+			} /* end no xvars */
 
-				(scatter  `dvar_c' `plotvars_c'   `tvar',
-						  `cpart' `cmspart' `lc' `mc' `clp'),
-				xline(`trperiod', lpattern(shortdash) lcolor(black))
-				legend(rows(2)
-				order(- "`treatdesc': " 1 2
-					  - "Controls average:" `ctrl1' `ctrl2')
-				label(1       "Actual") label(2       "Predicted")
-				label(`ctrl1' "Actual") label(`ctrl2' "Predicted")
-				symxsize(8))
-				`titlesec'
-				note(`"`note'"')
-                  `figure2';
-				#delim cr
-			}
-			else {  /* WITH COVARIATES  */
-				#delim ;
-				twoway scatter
-					`dvar_t' `ypred_t' `dvar_c' `ypred_c'  `tvar',
-					c(. l . l) ms(O none Oh none) mcolor(black black black black )
-                    lcolor(black black black black) lpattern(blank solid blank dash)
-					xline(`trperiod', lpattern(shortdash) lcolor(black))
-					legend(rows(2)
-						order(- "`treatdesc': " 1 2  - "Controls average:" 3 4)
-						label(1 "Actual") label(2 "Predicted")
-						label(3 "Actual") label(4 "Predicted")
-						symxsize(8))
-					`titlesec'
-					note(`"`note'"')
-                       `figure2';
-				#delim cr
-			}
+			/* with xvars */
+			else if "`xvar'" != "" {
+				/* with lowess */
+				if "`lowess'" != "" {
+					twoway ///
+					(scatter `dvar_t' `ypred_t' `dvar_c' `ypred_c'  `tvar', c(. l . l) ms(O none Oh none) mcolor(black black black black) ///
+						lcolor(black black black black) lpattern(blank solid blank dash) xline(`trperiod', lpattern(shortdash) lcolor(black))) ///
+					(lowess `dvar_t'  `tvar', lcolor(red))	///
+					(lowess `dvar_c'  `tvar', lcolor(orange) ///
+						legend(rows(2) order(- "`treatdesc': " 1 2 5 - "Controls average:" 3 4 6) ///
+							label(1 "Actual") label(2 "Predicted") label(3 "Actual") ///
+							label(4 "Predicted") label(5 "Lowess") label(6 "Lowess") symxsize(8)) ///
+							`titlesec' note(`"`note'"')), `figure2' 	
+				} /* end lowess */
+			
+				/* no lowess */
+				if "`lowess'" == "" {
+					twoway ///
+					(scatter `dvar_t' `ypred_t' `dvar_c' `ypred_c'  `tvar', c(. l . l) ms(O none Oh none) mcolor(black black black black) ///
+						lcolor(black black black black) lpattern(blank solid blank dash) xline(`trperiod', lpattern(shortdash) lcolor(black)) ///
+						legend(rows(2) order(- "`treatdesc': " 1 2  - "Controls average:" 3 4) ///
+							label(1 "Actual") label(2 "Predicted") label(3 "Actual") label(4 "Predicted") symxsize(8)) ///
+							`titlesec' note(`"`note'"')), `figure2'
+				} /* end no lowess */
+			} /* end with xvars */
 		}   /* End of Figure Block */
 	}   /* End of Type 3 */
+
 end
 
+					

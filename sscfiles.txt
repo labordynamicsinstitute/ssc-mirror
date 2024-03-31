@@ -4715,6 +4715,7 @@ fmwww.bc.edu/repec/bocode/t/tabcount7.hlp
 fmwww.bc.edu/repec/bocode/t/tkdensity.pkg
 fmwww.bc.edu/repec/bocode/t/table1.pkg
 fmwww.bc.edu/repec/bocode/t/tfconcat.sthlp
+fmwww.bc.edu/repec/bocode/t/twoway__whistogram_gen.ado
 fmwww.bc.edu/repec/bocode/t/tkdensity.html
 fmwww.bc.edu/repec/bocode/t/tesensitivity.sthlp
 fmwww.bc.edu/repec/bocode/t/table1_mc.sthlp
@@ -5403,6 +5404,7 @@ fmwww.bc.edu/repec/bocode/t/tolerance.hlp
 fmwww.bc.edu/repec/bocode/t/translog.sthlp
 fmwww.bc.edu/repec/bocode/t/twoway_parea.hlp
 fmwww.bc.edu/repec/bocode/t/test_cnssc_v2.do
+fmwww.bc.edu/repec/bocode/t/twoway__whistogram_gen.pkg
 fmwww.bc.edu/repec/bocode/t/tmvnormalden.ado
 fmwww.bc.edu/repec/bocode/t/testmnt.sthlp
 fmwww.bc.edu/repec/bocode/t/table1_mc_dta2docx.ado
@@ -5669,6 +5671,7 @@ fmwww.bc.edu/repec/bocode/t/tabletutorial_5.html
 fmwww.bc.edu/repec/bocode/t/tabplot6.html
 fmwww.bc.edu/repec/bocode/t/treatoprobit.pkg
 fmwww.bc.edu/repec/bocode/t/theilr2.ado
+fmwww.bc.edu/repec/bocode/t/twoway__whistogram_gen.sthlp
 fmwww.bc.edu/repec/bocode/t/tkdensity.ado
 fmwww.bc.edu/repec/bocode/t/treatoprobit_p.ado
 fmwww.bc.edu/repec/bocode/t/torumm.pkg

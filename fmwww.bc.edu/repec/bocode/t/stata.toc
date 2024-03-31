@@ -162,6 +162,7 @@ p twofold module to perform multiple imputation using the two-fold fully conditi
 p twopm module to estimate two-part models
 p twostep module to perform twostep multilevel analysis
 p twostepweakiv module to implement two-step weak-instrument-robust confidence sets for linear instrumental-variable (IV) models
+p twoway__whistogram_gen module for generating histogram variables using aweights or iweights 
 p twoway_estfit module to enable graph twoway estfit
 p twoway_parea module to generate area graph with pattern fills (Windows only)
 p twowayfeweights module to estimate the weights and measure of robustness to treatment effect heterogeneity attached to two-way fixed effects regressions
