@@ -19163,6 +19163,7 @@ fmwww.bc.edu/repec/bocode/r/report.pkg
 fmwww.bc.edu/repec/bocode/r/rforest.sthlp
 fmwww.bc.edu/repec/bocode/r/rightalign.hlp
 fmwww.bc.edu/repec/bocode/r/raschify.pkg
+fmwww.bc.edu/repec/bocode/r/ratio_plot.pkg
 fmwww.bc.edu/repec/bocode/r/runmixregmls.ado
 fmwww.bc.edu/repec/bocode/r/regmat.sthlp
 fmwww.bc.edu/repec/bocode/r/robreg10.zip
@@ -19373,6 +19374,7 @@ fmwww.bc.edu/repec/bocode/r/rtmvnormal.ado
 fmwww.bc.edu/repec/bocode/r/robumeta.html
 fmwww.bc.edu/repec/bocode/r/rqrplot.sthlp
 fmwww.bc.edu/repec/bocode/r/robumeta.pkg
+fmwww.bc.edu/repec/bocode/r/ratio_plot.ado
 fmwww.bc.edu/repec/bocode/r/reshape8.pkg
 fmwww.bc.edu/repec/bocode/r/rdvce.mo
 fmwww.bc.edu/repec/bocode/r/racplot.ado
@@ -20573,6 +20575,7 @@ fmwww.bc.edu/repec/bocode/r/rotate2.ado
 fmwww.bc.edu/repec/bocode/r/randomizr.do
 fmwww.bc.edu/repec/bocode/r/rori.sthlp
 fmwww.bc.edu/repec/bocode/r/rely.sthlp
+fmwww.bc.edu/repec/bocode/r/ratio_plot.sthlp
 fmwww.bc.edu/repec/bocode/r/rwolf.ado
 fmwww.bc.edu/repec/bocode/r/rdesigni.pkg
 fmwww.bc.edu/repec/bocode/r/reg2docx.pkg

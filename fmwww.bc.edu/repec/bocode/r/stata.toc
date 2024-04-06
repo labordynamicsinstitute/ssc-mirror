@@ -41,6 +41,7 @@ p raschtest module to estimate parameters of the Rasch model by CML, MML or GEE
 p raschtestv7 module to estimate parameters of the Rasch model by CML, MML or GEE (v7)
 p rasprt module to plot the risk adjusted sequential probability ratio test (+/- risk adjusted cusum)
 p rassign module to perform regression-based test for random assignment to peer groups 
+p ratio_plot module to plot ratios and confidence intervals of specified variables
 p rbiprobit module to estimate recursive bivariate probit regressions
 p rbounds module to perform Rosenbaum sensitivity analysis for average treatment effects on the treated
 p rc2 module to estimate Goodman's Row and Columns model 2

@@ -1,7 +1,7 @@
 /*
 artsurv
 
-VERSION 1.0.3 SB/SB 20dec2004
+VERSION 1.0.4 SB/SB 27mar2024
 
 Survival outcomes
 
@@ -53,35 +53,51 @@ LIST tunit_val
 		7
 	END
 
+DEFINE wd1 60 
+DEFINE wd2 90
+DEFINE wd3 180
+DEFINE wd4 240
+DEFINE wd5 220
+DEFINE wd6 170
+DEFINE wd7 160
+DEFINE wd8 150
+DEFINE wd9 120    
+DEFINE wd10 200
+DEFINE wd11 210
+DEFINE wd12 100
+DEFINE wd13 110
+DEFINE wd14 50
+DEFINE wd15 135
+	
 DIALOG main1, title("ART - ANALYSIS OF RESOURCES FOR TRIALS - Survival outcomes") tabtitle("Panel 1")
 BEGIN
  /*--+----1----+----2----+----3----+----4----+----5----+----6----+----7----+*/
  
  GROUPBOX gb_setup    	10      10      _iwd    _ht14h, label("Set-up")	
- TEXT tx_np		15	30	90	., label("Number of periods") 
- EDIT vl_np 		160	@	60	., label("Number of periods") default(1) option(nperiod)
- TEXT tx_nu		250	30	90	., label("Number of groups") 
- EDIT vl_ngroups	410	@	60	., label("Number of groups") default(2) option(ngroups)
- TEXT tx_tunit		15	60 	180	., label("Time unit (= 1 period)") 
- COMBOBOX cb_tunit	130	@	90	., label("Time unit (= 1 period)") option(tunit) contents(tunit) dropdownl value(tunit_val)
- TEXT tx_alp		250	60	90	., label("Alpha (2-sided)")
- EDIT vl_alpha	410	@	60	., label("alpha") default(0.05) option(alpha)
- CHECKBOX ck_med	15	90	135	., label("Median survival time") option(med) onclickon("script med_on") onclickoff("script med_off")
- EDIT vl_med		160	@	60	., label("Median survival time") option(median)
- TEXT tx_pow		250	90	90	., label("Power or N")
- EDIT vl_pow		410	@	60	., label("power") default(0.8) option(power)
- TEXT tx_pro		15	120	240	., label("Baseline survival or failure probabilities")
- EDIT vl_pr		250	@	220	., label("Baseline survival or failure probabilities") option(pr)
- TEXT tx_per		15	150	240	., label("At the end of period(s)") 
- EDIT vl_per		250	@	220	., label("At the end of period(s)") option(per)
+ TEXT tx_np		15	30	wd3	., label("Number of periods") 
+ EDIT vl_np 		170	@	wd1	., label("Number of periods") default(1) option(nperiod)
+ TEXT tx_nu		250	30	wd3	., label("Number of groups") 
+ EDIT vl_ngroups	410	@	wd1	., label("Number of groups") default(2) option(ngroups)
+ TEXT tx_tunit		15	60 	wd3	., label("Time unit (= 1 period)") 
+ COMBOBOX cb_tunit	140	@	wd2	., label("Time unit (= 1 period)") option(tunit) contents(tunit) dropdownl value(tunit_val)
+ TEXT tx_alp		250	60	wd2	., label("Alpha (2-sided)")
+ EDIT vl_alpha	410	@	wd1	., label("alpha") default(0.05) option(alpha)
+ CHECKBOX ck_med	15	90	wd15	., label("Median survival time") option(med) onclickon("script med_on") onclickoff("script med_off")
+ EDIT vl_med		170	@	wd1	., label("Median survival time") option(median)
+ TEXT tx_pow		250	90	wd2	., label("Power or N")
+ EDIT vl_pow		410	@	wd1	., label("power") default(0.8) option(power)
+ TEXT tx_pro		15	120	wd4	., label("Baseline survival or failure probabilities")
+ EDIT vl_pr		250	@	wd5	., label("Baseline survival or failure probabilities") option(pr)
+ TEXT tx_per		15	150	wd4	., label("At the end of period(s)") 
+ EDIT vl_per		250	@	wd5	., label("At the end of period(s)") option(per)
  
  GROUPBOX gb_options 	10	190	_iwd	_ht7h, label("Options")
- RADIO r1_pow		15	210	170	., first label("Specify power") option(power)
- RADIO r2_samp		250	@	170	., last label("Specify sample size") option(n)
- RADIO r1_sp		15	240	220	., first label("Specify baseline survival probabilities")
- RADIO r2_fp		250	@	220	., last label("Specify baseline failure probabilities") option(fp)
- CHECKBOX ck_ni		15	270	170	., label("Non-inferiority design") option(ni)
- CHECKBOX ck_ones	250	@	170	., label("One-sided alpha") option(onesided)
+ RADIO r1_pow		15	210	wd6	., first label("Specify power") option(power)
+ RADIO r2_samp		250	@	wd6	., last label("Specify sample size") option(n)
+ RADIO r1_sp		15	240	wd5	., first label("Specify baseline survival probabilities")
+ RADIO r2_fp		250	@	wd5	., last label("Specify baseline failure probabilities") option(fp)
+ CHECKBOX ck_ni		15	270	wd6	., label("Non-inferiority design") option(ni)
+ CHECKBOX ck_ones	250	@	wd6	., label("One-sided alpha") option(onesided)
  
 END
 
@@ -118,54 +134,54 @@ END
 DIALOG main2, tabtitle("Panel 2")
 BEGIN
  GROUPBOX gb_arm	10 	10	_iwd	_ht24h, label("Required treatment arm set-up")
- TEXT tx_arm		20	30	160	., label("Choose treatment group:")
+ TEXT tx_arm		20	30	wd7	., label("Choose treatment group:")
  LISTBOX  lb_arm        20      50      _cwd1   _ht4h, label("Choose groups") contents(eqn_con) onselchangelist(eqn_sel)
  
  GROUPBOX gb_hr		20	135	_cwd1	_ht5h, label("Hazard ratios")
- TEXT tx_rel		25	155	200	., label("Enter relative to the control distribution")
- TEXT tx_hr		25	185	50	., label("Group 1")
- EDIT vl_hr1		70	@	160	., label("HR Group 1") option(hr1) default(1)
+ TEXT tx_rel		25	155	wd11	., label("Enter relative to the control distribution")
+ TEXT tx_hr		25	185	wd14	., label("Group 1")
+ EDIT vl_hr1		70	@	wd7	., label("HR Group 1") option(hr1) default(1)
  
- EDIT vl_hr2 		70	@	160	., label("HR Group 2") option(hr2)
+ EDIT vl_hr2 		70	@	wd7	., label("HR Group 2") option(hr2)
  
- EDIT vl_hr3		70	@	160	., label("HR Group 3") option(hr3)
+ EDIT vl_hr3		70	@	wd7	., label("HR Group 3") option(hr3)
  
- EDIT vl_hr4		70	@	160	., label("HR Group 4") option(hr4)
+ EDIT vl_hr4		70	@	wd7	., label("HR Group 4") option(hr4)
  
- EDIT vl_hr5		70	@	160	., label("HR Group 5") option(hr5)
+ EDIT vl_hr5		70	@	wd7	., label("HR Group 5") option(hr5)
  
- EDIT vl_hr6		70	@	160	., label("HR Group 6") option(hr6)
+ EDIT vl_hr6		70	@	wd7	., label("HR Group 6") option(hr6)
  
  GROUPBOX gb_ar		250	135	_cwd1 	_ht5h, label("Allocation ratio")
- TEXT tx_def		255	155	200	., label("Default: equal allocation for all groups")
- TEXT tx_ar		255	185	50	., label("Group 1")
- EDIT vl_ar1		310	@	160	., label("Group 1 ar") option(ar1) default(1)
+ TEXT tx_def		255	155	wd11	., label("Default: equal allocation for all groups")
+ TEXT tx_ar		255	185	wd14	., label("Group 1")
+ EDIT vl_ar1		310	@	wd7	., label("Group 1 ar") option(ar1) default(1)
  
- EDIT vl_ar2		310	@	160	., label("Group 2 ar") option(ar2) default(1)
+ EDIT vl_ar2		310	@	wd7	., label("Group 2 ar") option(ar2) default(1)
  
- EDIT vl_ar3		310	@	160	., label("Group 3 ar") option(ar3)
+ EDIT vl_ar3		310	@	wd7	., label("Group 3 ar") option(ar3)
  
- EDIT vl_ar4		310	@	160	., label("Group 4 ar") option(ar4)
+ EDIT vl_ar4		310	@	wd7	., label("Group 4 ar") option(ar4)
  
- EDIT vl_ar5		310	@	160	., label("Group 5 ar") option(ar5)
+ EDIT vl_ar5		310	@	wd7	., label("Group 5 ar") option(ar5)
  
- EDIT vl_ar6		310	@	160	., label("Group 6 ar") option(ar6)
+ EDIT vl_ar6		310	@	wd7	., label("Group 6 ar") option(ar6)
  
- CHECKBOX ck_trend	020	240	90	., label("Trend") option(trend) onclickon("script dose_on") onclickoff("script dose_off")
+ CHECKBOX ck_trend	020	240	wd2	., label("Trend") option(trend) onclickon("script dose_on") onclickoff("script dose_off")
  
  GROUPBOX gb_dose	250	220	_cwd1	_ht2h, label("Dose")	
- TEXT tx_doses		255	240	90	., label("Group 1")
- EDIT vl_doses1	310	@	160	., label("Group 1 ds") option(doses1)
+ TEXT tx_doses		255	240	wd2	., label("Group 1")
+ EDIT vl_doses1	310	@	wd7	., label("Group 1 ds") option(doses1)
  
- EDIT vl_doses2 	310	@	160	., label("Group 2 ds") option(doses2)
+ EDIT vl_doses2 	310	@	wd7	., label("Group 2 ds") option(doses2)
  
- EDIT vl_doses3 	310	@	160	., label("Group 3 ds") option(doses3)
+ EDIT vl_doses3 	310	@	wd7	., label("Group 3 ds") option(doses3)
  
- EDIT vl_doses4 	310	@	160	., label("Group 4 ds") option(doses4)
+ EDIT vl_doses4 	310	@	wd7	., label("Group 4 ds") option(doses4)
  
- EDIT vl_doses5 	310	@	160	., label("Group 5 ds") option(doses5)
+ EDIT vl_doses5 	310	@	wd7	., label("Group 5 ds") option(doses5)
  
- EDIT vl_doses6 	310	@	160	., label("Group 6 ds") option(doses6)
+ EDIT vl_doses6 	310	@	wd7	., label("Group 6 ds") option(doses6)
 
 END
 
@@ -331,25 +347,25 @@ DIALOG main3, tabtitle("Panel 3")
 BEGIN
  
  GROUPBOX gb_pr		10	10	_iwd	_ht8h, label("Patient recruitment")
- TEXT tx_du		15	30	50	., label("Duration")
- EDIT vl_du		170	@	60	., label("Duration") default(0) option(duration)
- TEXT tx_prop		250	@	160	., label("Proportion recruited at start")
- EDIT vl_prop	415	@	60	., label("prop") default(0) option(prop)
- RADIO rb_wei1		15	60	150	., first label("Equal weights over periods") option(eq) clickon("script wgt_off")
- RADIO rb_wei2		15	90	120	., last label("Unequal weights:") option(uneq) clickon("script wgt_on")
- EDIT vl_wei		170	@	60	., label("weights") option(weights)
- RADIO rb_dis1		250	60	120	., first label("Uniform accrual") option(uni) clickon("script exp_off")
- RADIO rb_dis2		250	90	120	., last label("Exponential accrual:") option(exp) clickon("script exp_on")
- EDIT vl_dis		415	@	60	., label("dis") option(dis)
+ TEXT tx_du		15	30	wd14	., label("Duration")
+ EDIT vl_du		170	@	wd1	., label("Duration") default(0) option(duration)
+ TEXT tx_prop		250	@	wd7	., label("Proportion recruited at start")
+ EDIT vl_prop	415	@	wd1	., label("prop") default(0) option(prop)
+ RADIO rb_wei1		15	60	wd10	., first label("Equal weights over periods") option(eq) clickon("script wgt_off")
+ RADIO rb_wei2		15	90	wd9	., last label("Unequal weights:") option(uneq) clickon("script wgt_on")
+ EDIT vl_wei		170	@	wd1	., label("weights") option(weights)
+ RADIO rb_dis1		250	60	wd10	., first label("Uniform accrual") option(uni) clickon("script exp_off")
+ RADIO rb_dis2		250	90	wd10	., last label("Exponential accrual:") option(exp) clickon("script exp_on")
+ EDIT vl_dis		415	@	wd1	., label("dis") option(dis)
  
  GROUPBOX gb_op		10	140	_iwd	_ht8h, label("Model Options")
- RADIO r1_loc		15	160	170	., first label("Local alternatives")
- RADIO r2_dist		250	@	170	., last label("Distant alternatives") option(distant)
- TEXT tx_meth		15	190	170	., label("Method of sample size calculation") 
- COMBOBOX cb_meth	190	@	210	., label("Method") option(method) contents(method) dropdownl value(meth_val)
- CHECKBOX ck_det	15	220	170	., label("Additional details in output") option(detail)
- TEXT tx_use		250	@	100	., label("Save using filename")
- EDIT vl_use		360	@	110	., label("Save using filename") option(filename)
+ RADIO r1_loc		15	160	wd6	., first label("Local alternatives")
+ RADIO r2_dist		250	@	wd6	., last label("Distant alternatives") option(distant)
+ TEXT tx_meth		15	195	wd3	., label("Method of sample size calculation") 
+ COMBOBOX cb_meth	200	@	wd11	., label("Method") option(method) contents(method) dropdownl value(meth_val)
+ CHECKBOX ck_det	15	220	wd6	., label("Additional details in output") option(detail)
+ TEXT tx_use		250	@	wd13	., label("Save using filename")
+ EDIT vl_use		360	@	wd13	., label("Save using filename") option(filename)
  
 END
 
@@ -411,55 +427,55 @@ END
 
 DIALOG options, tabtitle("Advanced options")
 BEGIN
- TEXT tx_chgr		10 	10	160	., label("Choose treatment group:")
+ TEXT tx_chgr		10 	10	wd7	., label("Choose treatment group:")
  LISTBOX  lb_loss       10      30       _cwd1     _ht4h, label("Choose groups options") contents(loss_cross) onselchangelist(loss_sel)
  
- GROUPBOX gb_loss	250 	10	240	_ht8h, label("Loss to follow-up")
- TEXT tx_loss		255	30	170	., label("Enter cumulative distribution")
- TEXT tx_gr1l		255	50	50	., label("Group 1")
- EDIT vl_gr1l	310	@	160	., label("Group 1 l") option(gr1loss)
- EDIT vl_gr2l	310	@	160	., label("Group 2 l") option(gr2loss)
- EDIT vl_gr3l	310	@	160	., label("Group 3 l") option(gr3loss)
- EDIT vl_gr4l	310	@	160	., label("Group 4 l") option(gr4loss)
- EDIT vl_gr5l	310	@	160	., label("Group 5 l") option(gr5loss)
- EDIT vl_gr6l	310	@	160	., label("Group 6 l") option(gr6loss)
- TEXT tx_perl		255	70	170	., label("At the end of period(s)")
- TEXT tx_per1l		255	90	50	., label("Group 1")
- EDIT vl_per1l	310	@	160	., label("At the end of period(s)") option(per1l)
- EDIT vl_per2l	310	@	160	., label("At the end of period(s)") option(per2l)
- EDIT vl_per3l	310	@	160	., label("At the end of period(s)") option(per3l)
- EDIT vl_per4l	310	@	160	., label("At the end of period(s)") option(per4l)
- EDIT vl_per5l	310	@	160	., label("At the end of period(s)") option(per5l)
- EDIT vl_per6l	310	@	160	., label("At the end of period(s)") option(per6l)
+ GROUPBOX gb_loss	250 	10	wd4	_ht8h, label("Loss to follow-up")
+ TEXT tx_loss		255	30	wd6	., label("Enter cumulative distribution")
+ TEXT tx_gr1l		255	50	wd14	., label("Group 1")
+ EDIT vl_gr1l	310	@	wd7	., label("Group 1 l") option(gr1loss)
+ EDIT vl_gr2l	310	@	wd7	., label("Group 2 l") option(gr2loss)
+ EDIT vl_gr3l	310	@	wd7	., label("Group 3 l") option(gr3loss)
+ EDIT vl_gr4l	310	@	wd7	., label("Group 4 l") option(gr4loss)
+ EDIT vl_gr5l	310	@	wd7	., label("Group 5 l") option(gr5loss)
+ EDIT vl_gr6l	310	@	wd7	., label("Group 6 l") option(gr6loss)
+ TEXT tx_perl		255	70	wd6	., label("At the end of period(s)")
+ TEXT tx_per1l		255	90	wd14	., label("Group 1")
+ EDIT vl_per1l	310	@	wd7	., label("At the end of period(s)") option(per1l)
+ EDIT vl_per2l	310	@	wd7	., label("At the end of period(s)") option(per2l)
+ EDIT vl_per3l	310	@	wd7	., label("At the end of period(s)") option(per3l)
+ EDIT vl_per4l	310	@	wd7	., label("At the end of period(s)") option(per4l)
+ EDIT vl_per5l	310	@	wd7	., label("At the end of period(s)") option(per5l)
+ EDIT vl_per6l	310	@	wd7	., label("At the end of period(s)") option(per6l)
  
  GROUPBOX gb_with	10	130	_iwd	_ht12h, label("Withdrawal from allocated treatment")
- TEXT tx_with		15	150	170	., label("Enter cumulative distribution")
- TEXT tx_gr1w		15	180	50	., label("Group 1")
- EDIT vl_gr1w	70	@	160	., label("Group 1 w") option(gr1with)
- EDIT vl_gr2w	70	@	160	., label("Group 2 w") option(gr2with)
- EDIT vl_gr3w	70	@	160	., label("Group 3 w") option(gr3with)
- EDIT vl_gr4w	70	@	160	., label("Group 4 w") option(gr4with)
- EDIT vl_gr5w	70	@	160	., label("Group 5 w") option(gr5with)
- EDIT vl_gr6w	70	@	160	., label("Group 6 w") option(gr6with)
- TEXT tx_perw		250	150	170	., label("At the end of period(s)")
- TEXT tx_per1w		250	180	50	., label("Group 1")
- EDIT vl_per1w	305	@	160	., label("At the end of period(s)") option(per1w)
- EDIT vl_per2w	305	@	160	., label("At the end of period(s)") option(per2w)
- EDIT vl_per3w	305	@	160	., label("At the end of period(s)") option(per3w)
- EDIT vl_per4w	305 	@	160	., label("At the end of period(s)") option(per4w)
- EDIT vl_per5w	305 	@	160	., label("At the end of period(s)") option(per5w)
- EDIT vl_per6w	305	@	160	., label("At the end of period(s)") option(per6w)
- TEXT tx_tar		15	210	220	., label("Enter post-withdrawal hazard ratios, or target")
- TEXT tx_targ		15	225	170	., label("groups on cross-over")	
- TEXT tx_tar1		15	250	50	., label("Group 1")
- EDIT vl_tar1	70	@	160	., label("Group 1 t") option(tar1)
- EDIT vl_tar2	70	@	160	., label("Group 2 t") option(tar2)
- EDIT vl_tar3	70	@	160	., label("Group 3 t") option(tar3)
- EDIT vl_tar4	70	@	160	., label("Group 4 t") option(tar4)
- EDIT vl_tar5	70	@	160	., label("Group 5 t") option(tar5)
- EDIT vl_tar6	70	@	160	., label("Group 6 t") option(tar6)
- RADIO r1_tar		250	220	200	., first label("Specify target group on cross-over") option(r1tar)
- RADIO r2_haz		250	250	200	., last label("Specify hazard ratios post-withdrawal") option(r2tar)
+ TEXT tx_with		15	150	wd6	., label("Enter cumulative distribution")
+ TEXT tx_gr1w		15	180	wd14	., label("Group 1")
+ EDIT vl_gr1w	70	@	wd7	., label("Group 1 w") option(gr1with)
+ EDIT vl_gr2w	70	@	wd7	., label("Group 2 w") option(gr2with)
+ EDIT vl_gr3w	70	@	wd7	., label("Group 3 w") option(gr3with)
+ EDIT vl_gr4w	70	@	wd7	., label("Group 4 w") option(gr4with)
+ EDIT vl_gr5w	70	@	wd7	., label("Group 5 w") option(gr5with)
+ EDIT vl_gr6w	70	@	wd7	., label("Group 6 w") option(gr6with)
+ TEXT tx_perw		250	150	wd6	., label("At the end of period(s)")
+ TEXT tx_per1w		250	180	wd14	., label("Group 1")
+ EDIT vl_per1w	305	@	wd7	., label("At the end of period(s)") option(per1w)
+ EDIT vl_per2w	305	@	wd7	., label("At the end of period(s)") option(per2w)
+ EDIT vl_per3w	305	@	wd7	., label("At the end of period(s)") option(per3w)
+ EDIT vl_per4w	305 	@	wd7	., label("At the end of period(s)") option(per4w)
+ EDIT vl_per5w	305 	@	wd7	., label("At the end of period(s)") option(per5w)
+ EDIT vl_per6w	305	@	wd7	., label("At the end of period(s)") option(per6w)
+ TEXT tx_tar		15	210	wd5	., label("Enter post-withdrawal hazard ratios, or")
+ TEXT tx_targ		15	225	wd6	., label("target groups on cross-over")	
+ TEXT tx_tar1		15	250	wd14	., label("Group 1")
+ EDIT vl_tar1	70	@	wd7	., label("Group 1 t") option(tar1)
+ EDIT vl_tar2	70	@	wd7	., label("Group 2 t") option(tar2)
+ EDIT vl_tar3	70	@	wd7	., label("Group 3 t") option(tar3)
+ EDIT vl_tar4	70	@	wd7	., label("Group 4 t") option(tar4)
+ EDIT vl_tar5	70	@	wd7	., label("Group 5 t") option(tar5)
+ EDIT vl_tar6	70	@	wd7	., label("Group 6 t") option(tar6)
+ RADIO r1_tar		250	220	wd11	., first label("Specify target group on cross-over") option(r1tar)
+ RADIO r2_haz		250	250	wd5	., last label("Specify hazard ratios post-withdrawal") option(r2tar)
 
 END
 
@@ -850,7 +866,19 @@ BEGIN
 	
 END
 
-	
+/*
+26mar2024 TMP updated the following lines:
+	Line 141 	TEXT tx_rel			25	155	wd10	., label("Enter relative to the control distribution")
+	Line 156  	TEXT tx_def			255	155	wd10	., label("Default: equal allocation for all groups")
+	Line 354  	RADIO rb_wei1		15	60	wd8		., first label("Equal weights over periods") option(eq) clickon("script wgt_off")
+	Line 358    RADIO rb_dis2		250	90	wd9		., last label("Exponential accrual:") option(exp) clickon("script exp_on")
+	Line 364  	TEXT tx_meth		15	190	wd6		., label("Method of sample size calculation") 
+	Line 365	COMBOBOX cb_meth	190	@	wd11	., label("Method") option(method) contents(method) dropdownl value(meth_val)
+	Line 468  	TEXT tx_tar			15	210	wd5		., label("Enter post-withdrawal hazard ratios, or target")
+	Line 469	TEXT tx_targ		15	225	wd6		., label("groups on cross-over")	
+	Line 477	RADIO r1_tar		250	220	wd10	., first label("Specify target group on cross-over") option(r1tar)
+	Line 478  	RADIO r2_haz		250	250	wd10	., last label("Specify hazard ratios post-withdrawal") option(r2tar)	
+*/	
 
 
 

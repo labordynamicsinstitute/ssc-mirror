@@ -1,0 +1,24 @@
+d 'RATIO_PLOT': module to plot ratios and confidence intervals of specified variables
+d
+d   ratio_plot is designed to plot ratios and confidence intervals
+d of specified variables with an option for disaggregation.
+d Essentially, ratio_plot mirrors the output of Stata's in-built
+d ratio command in a graphical format. It also offers the
+d flexibility to adapt to a wide range of graphical preferences. 
+d
+d KW: graphics
+d KW: ratios
+d KW: confidence intervals
+d
+d Requires: Stata version 11 and coefplot from SSC (q.v.)
+d
+d Distribution-Date: 20240405
+d
+d Author:  Kabira Namit, World Bank
+d Support: email knamit@@worldbank.org
+d
+d Author:  Zaeen de Souza, Frontline Impact
+d Support: email zaeen.desouza19_mec@@apu.edu.in
+d
+f ratio_plot.ado
+f ratio_plot.sthlp
