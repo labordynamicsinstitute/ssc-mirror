@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.2  07oct2022}{...}
+{* *! version 1.0.3  07oct2022}{...}
 {vieweralsosee "[TS] arima" "mansection TS arima"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[TS] arima postestimation" "help arima postestimation"}{...}
@@ -68,6 +68,8 @@ panels with the help of {helpb arimaauto}
         be ignored{p_end}
 {synopt:{helpb kpss##options:kpss(...)}}options directly passed to {helpb kpss}
         except {opth maxl:ag(#)} which will be ignored{p_end}
+{synopt:{opt sd:test}}a test for heterogeneity, i.e., whether the standard
+        deviations of #p, #d, #q, #P, #D, #Q across the panel are {bf:0}{p_end}
 
 {syntab:ARIMA-related}
 {synopt:{opt nocons:tant}}suppress constant term if both
@@ -199,6 +201,14 @@ examples.
 {bf:PS} The maximum lag length in the unit root tests is calculated with the
 help of the Schwert (1989) formula(s) (the default) or {cmd:xtarimau}'s
 {opth maxl:ag(#)} option.
+
+{pstd}
+{ul:Heterogeneity tests:}
+
+{pstd}
+A set of {helpb sdtesti} commands, called via the {bf:{opt sd:test}} option,
+is used to test whether the standard deviations of #p, #d, #q, #P, #D, #Q in
+{bf:r(models)} are equal to 0.
 
 {marker options}{...}
 {title:Options}

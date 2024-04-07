@@ -1,4 +1,4 @@
-*! version 1.0.5  07oct2022  I I Bolotov
+*! version 1.0.6  07oct2022  I I Bolotov
 program define arimaauto, rclass byable(recall)
 	version 15.1
 	/*
@@ -98,6 +98,22 @@ program define arimaauto, rclass byable(recall)
 	loc iw        = cond(`"`weight'`exp'"' == "", "",  `"[`weight'`exp']"'     )
 	loc maxlag    = cond(`"`maxlag'"'      == "", ".", `"`maxlag'"'            )
 	loc maxmodels = cond(`"`maxmodels'"'   == "", ".", `"`maxmodels'"'         )
+	// examine data
+	qui tsset, noq
+	if "`r(panelvar)'" != "" {
+		di as err "command may not be used with panel data"
+		exit 459
+	}
+	if trim(`"`seasonal'"') == "" &   ! inlist(r(unit1), ".", "q", "m") {
+		di as err "hegy must be used with monthly or quarterly data"		///
+		_n as txt "please check " as res "tsset" as txt " or " as res "xtset"
+		exit 459
+	}
+	if trim(`"`seasonal'"') == "" & _N <= cond(r(unit1) == "q",  4, 12) {
+		di as err "observation numbers out of range for hegy"				///
+		_n as txt "must be greater than " as res cond(r(unit1) == "q", 4, 12)
+		exit 459
+	}
 	// pass arguments to ARIMAAuto                                              
 	mata: AA = ARIMAAuto()
 	mata: AA.put("varlist","`varlist'"                                         )

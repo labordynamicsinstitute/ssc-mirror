@@ -1,4 +1,4 @@
-*! version 1.0.2  07oct2022  I I Bolotov
+*! version 1.0.3  07oct2022  I I Bolotov
 program define xtarimau, rclass
 	version 16.0
 	/*
@@ -50,13 +50,17 @@ program define xtarimau, rclass
 	syntax																	///
 	[varlist(ts fv)] [if] [in] [iw] [,										///
 		PREestimation(string asis) POSTestimation(string asis)				///
-		export(string asis) *												///
+		export(string asis) SDtest *										///
 	]
 	// adjust and preprocess options                                            
 	loc `tmp' = ustrregexm(`"`options'"', ".*ic\((\w+)\).*", 1)
 	loc ic    = cond(ustrregexs(1) == "", "aic", ustrregexs(1))
 	// get timevar, panelvar and panelval                                       
 	qui tsset, noq
+	if "`r(panelvar)'" == "" {						 // examine data
+		di as err "command requires panel data"
+		exit 459
+	}
 	loc `timevar'  = r(timevar)
 	loc `panelvar' = r(panelvar)
 	qui levelsof ``panelvar'', matrow(`panelval')
@@ -157,6 +161,24 @@ program define xtarimau, rclass
 		loc `cspec' = "& %12s | %5.0f & %5.0f & %5.0f & %5.0f & " +			///
 					  "%5.0f & %5.0f & %6.0f | %12.4f &"
 		matlist `models', title(``title'') rspec(``rspec'') cspec(``cspec'')
+	}
+	// print tests
+	if trim(`"`sdtest'"') != "" {
+		mata: p = (! strpos(st_local("options"), "stat") ? 1..3 :    (1,3)), /*
+			   */ (! strpos(st_local("options"), "seas") ? 4..6 : J(1,0,.))
+		mata: for(i = 1; i <= cols(p); i++) {;                              ///
+			  printf("\n{res}"  + ("p","d","q","P","D","Q")[p[i]]         + ///
+			         " {txt}in {res}" + (p[i] <= 3 ? "arima(#p,#d,#q)"      ///
+			                                       : "sarima(#P,#D,#Q)")    ///
+			);                                                              ///
+			  (void) _stata("sdtesti "                                    + ///
+			                strofreal(rows(st_matrix("`models'")))        + ///
+			                "      . "                                    + ///
+			                strofreal(sqrt(variance(                        ///
+			                               st_matrix("`models'")[.,p[i]]    ///
+			                ))) + " 0"                                      ///
+			); };
+		mata: mata drop p i
 	}
 	// return output                                                            
 	cap ret        loc ictests  ``ictests''

@@ -1,4 +1,4 @@
-*! version 1.1.2  07oct2022  I I Bolotov
+*! version 1.1.3  07oct2022  I I Bolotov
 program def xtimportu, rclass
 	version 14.0
 	/*
@@ -131,12 +131,12 @@ program def xtimportu, rclass
 		}
 		if trim("`timevar'") == "_var1" {	// transpose data (if required)
 			foreach `var' of varlist * {
-				rename ``var'' `=subinstr("``var''", "_var", "v", .)'
+				cap rename ``var'' `=subinstr("``var''", "_var", "v", .)'
 			}
 			sxpose2, clear force
 			ds _var1, not					// reshape data
 			foreach `var' of varlist `r(varlist)' {
-				rename ``var'' value`=``var''[1]'
+				cap rename ``var'' value`=``var''[1]'
 			}
 			drop if _n == 1
 			rename _var1 `panelvar'

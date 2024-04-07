@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.2  07oct2022}{...}
+{* *! version 1.1.3  07oct2022}{...}
 {viewerjumpto "Syntax" "xtimportu##syntax"}{...}
 {viewerjumpto "Description" "xtimportu##description"}{...}
 {viewerjumpto "Options" "xtimportu##options"}{...}
@@ -300,7 +300,9 @@ For detailed information on {cmd:sxpose2}, see {helpb sxpose2}.
         {cmd:. local url "`url'non-official-document/webdiaeia2014d3_USA.xls"}
 
         * import the panel data to memory, export a copy as a CSV file
-        {cmd:. xtimportu excel "`url'", sheet("inflows") cellrange(E5)} ///
+        {cmd:. view browse "`url'"}
+        {cmd:. xtimportu excel {My Downloads}/webdiaeia2014d3_USA.xls,} ///
+        {cmd:      sheet("inflows") cellrange(E5)} ///
         {cmd:      regex(`regex') tfreq(Y) clear tde} ///
         {cmd:      export(delimited "./usa_fdi_matrix.csv", replace)}
 
