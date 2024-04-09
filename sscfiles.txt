@@ -17394,6 +17394,7 @@ fmwww.bc.edu/repec/bocode/g/gitee.sthlp
 fmwww.bc.edu/repec/bocode/g/538.sthlp
 fmwww.bc.edu/repec/bocode/g/givgauss2.pkg
 fmwww.bc.edu/repec/bocode/g/giacross.sthlp
+fmwww.bc.edu/repec/bocode/g/garbage_mixl.ado
 fmwww.bc.edu/repec/bocode/g/getdataconfig.ado
 fmwww.bc.edu/repec/bocode/g/gstats_moving.sthlp
 fmwww.bc.edu/repec/bocode/g/grand2.html
@@ -17657,6 +17658,7 @@ fmwww.bc.edu/repec/bocode/g/gdsum.sthlp
 fmwww.bc.edu/repec/bocode/g/GSS_2010.dta
 fmwww.bc.edu/repec/bocode/g/gcontract.sthlp
 fmwww.bc.edu/repec/bocode/g/gphudak.pkg
+fmwww.bc.edu/repec/bocode/g/garbage_mixlogit.pluginWIN64
 fmwww.bc.edu/repec/bocode/g/gs3sls.dta
 fmwww.bc.edu/repec/bocode/g/gaussgibbs.readme.txt
 fmwww.bc.edu/repec/bocode/g/gllasim.hlp
@@ -17856,6 +17858,7 @@ fmwww.bc.edu/repec/bocode/g/grinset.ado
 fmwww.bc.edu/repec/bocode/g/geivars.pkg
 fmwww.bc.edu/repec/bocode/g/ghansen.html
 fmwww.bc.edu/repec/bocode/g/genicv.ado
+fmwww.bc.edu/repec/bocode/g/garbage_mixlogit.pluginMACARM64
 fmwww.bc.edu/repec/bocode/g/gensurvsim_core.ado
 fmwww.bc.edu/repec/bocode/g/grby.pkg
 fmwww.bc.edu/repec/bocode/g/grstyle.pkg
@@ -17879,6 +17882,7 @@ fmwww.bc.edu/repec/bocode/g/georoute.ado
 fmwww.bc.edu/repec/bocode/g/graphlog.pkg
 fmwww.bc.edu/repec/bocode/g/graphbinary.html
 fmwww.bc.edu/repec/bocode/g/_gsqgaplength.ado
+fmwww.bc.edu/repec/bocode/g/garbage_mixl.sthlp
 fmwww.bc.edu/repec/bocode/g/gsa.hlp
 fmwww.bc.edu/repec/bocode/g/getregstats.sthlp
 fmwww.bc.edu/repec/bocode/g/genstacks.ado
@@ -17993,6 +17997,7 @@ fmwww.bc.edu/repec/bocode/g/gcollapse.sthlp
 fmwww.bc.edu/repec/bocode/g/genicv.sthlp
 fmwww.bc.edu/repec/bocode/g/geonear.ado
 fmwww.bc.edu/repec/bocode/g/gsample.html
+fmwww.bc.edu/repec/bocode/g/garbage_mixlogit.pluginLINUX64
 fmwww.bc.edu/repec/bocode/g/gssage.dta
 fmwww.bc.edu/repec/bocode/g/GKB_persuasio.dta
 fmwww.bc.edu/repec/bocode/g/grlogit.ado
@@ -18035,6 +18040,7 @@ fmwww.bc.edu/repec/bocode/g/gb2pred.ado
 fmwww.bc.edu/repec/bocode/g/grstest2.sthlp
 fmwww.bc.edu/repec/bocode/g/gensplines.sthlp
 fmwww.bc.edu/repec/bocode/g/geodist.pkg
+fmwww.bc.edu/repec/bocode/g/garbage_mixl.pkg
 fmwww.bc.edu/repec/bocode/g/grand.html
 fmwww.bc.edu/repec/bocode/g/genscore.pkg
 fmwww.bc.edu/repec/bocode/g/genidseq.pkg

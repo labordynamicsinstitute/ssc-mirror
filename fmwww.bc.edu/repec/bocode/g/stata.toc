@@ -3,6 +3,7 @@ p gam module for generalised additive models
 p gamet module to perform game-theoretic calculations
 p gammafit module to fit a two-parameter gamma distribution
 p gammasym module to compute the value of the symmetrical gamma function
+p garbage_mixl module to perform Bayesian garbage class mixed logit model estimation
 p gausshermite module to estimate integrals using Gauss Hermite quadratures
 p gb2fit module to fit Generalized Beta of the Second Kind distribution by maximum likelihood
 p gb2lfit module to fit Generalized Beta of the Second Kind distribution by maximum likelihood (log parameter metric)

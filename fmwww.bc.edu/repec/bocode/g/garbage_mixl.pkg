@@ -1,0 +1,22 @@
+d 'GARBAGE_MIXL': module to perform Bayesian garbage class mixed logit model estimation
+d
+d     garbage_mixl fits standard and garbage class mixed logit
+d models using Bayesian MCMC methods via a C++ plugin for   
+d computational efficiency 
+d
+d KW: mixed logit
+d KW: Bayesian MCMC
+d
+d Requires: Stata version 9.2
+d
+d Distribution-Date: 20240408
+d
+d Author:   Marcel F. Jonker , Erasmus University Rotterdam
+d Support: email marcel@@mfjonker.com
+d
+f garbage_mixl.ado
+f garbage_mixl.sthlp
+G LINUX64 garbage_mixlogit.pluginLINUX64 garbage_mixlogit.plugin
+G MACARM64 garbage_mixlogit.pluginMACARM64 garbage_mixlogit.plugin
+G WIN64 garbage_mixlogit.pluginWIN64 garbage_mixlogit.plugin
+h garbage_mixlogit.plugin
