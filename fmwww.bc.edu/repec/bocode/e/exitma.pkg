@@ -1,0 +1,29 @@
+d 'EXITMA': module to define the exit status of a meta-analysis
+d
+d  exitma performs a cumulative meta-analysis, computes a
+d convergence index (DAts - Doi-Abdulmajeed trial stability index),
+d and displays a convergence plot to assess stability and assess
+d its ‘exit' status.	An exit meta-analysis implies that there is
+d no need to update the meta-analysis and there are no future
+d primary studies required on this question. 
+d
+d KW: meta-analysis
+d KW: exit status
+d KW: convergence index 
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20240411
+d
+d Author: Luis Furuya-Kanamori,  The University of Queensland
+d Support: email l.furuya@@uq.edu.au
+d
+d Author: Jazeel Abdulmajeed,  Qatar University
+d Support: email NA
+d
+d Author: Suhail AR Doi,  Qatar University
+d Support: email NA
+d
+f exitma.ado
+f exitma.sthlp
+f exitma_example_data.dta

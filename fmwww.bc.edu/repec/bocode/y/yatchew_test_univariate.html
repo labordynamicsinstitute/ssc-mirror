@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<title>Univariate Yatchew Test</title>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+</script>
+<script type="text/javascript"
+  src="http://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+</head>
+
+<body>
+    <h2><b>Univariate Yatchew Test</b></h2>
+
+Let $Y$ and $D$ be two random variables. Let $m(D) = E[Y|D]$. The null hypothesis of the test is that $m(D) = \alpha_0 + \alpha_1 D$ for two real numbers $\alpha_0$ and $\alpha_1$. This means that, under the null, $m(.)$ is linear in $D$. The outcome variable can be decomposed as $Y = m(D) + \varepsilon$, with $E[\varepsilon|D] = 0$ and $\Delta Y = \Delta \varepsilon$ for $\Delta D \to 0$.  In a dataset with $N$ i.i.d. realisations of $(Y, D)$, one can test this hypothesis as follows: 
+<ol>
+    <li>sort the dataset by $D$;</li>
+    <li>denote the corresponding observations by $(Y_{(i)}, D_{(i)})$, with $i \in \lbrace 1, ..., N\rbrace$;</li>
+    <li>approximate $\hat{\sigma}^2_{\text{diff}}$, i.e. the variance of the first differenced residuals $\varepsilon_{(i)} - \varepsilon_{(i-1)}$, by the variance of $Y_{(i)} - Y_{(i-1)}$;</li>
+    <li>compute $\hat{\sigma}^2_{\text{lin}}$, i.e. the variance of the residuals from an OLS regression of $Y$ on $D$.</li>
+</ol>
+
+Heuristically, the validity of step (3) derives from the fact that $Y_{(i)} - Y_{(i-1)}$ = $m(D_{(i)}) - m(D_{(i-1)})$ + $\varepsilon_{(i)} - \varepsilon_{(i-1)}$ and the first difference term is close to zero for $D_{(i)} \approx D_{(i-1)}$. Sorting at step (1) ensures that consecutive $D_{(i)}s$  are as close as possible, and when the sample size goes to infinity the distance between consecutive observations goes to zero. Then, Yatchew (1997) shows that under homoskedasticity and regularity conditions $$T := \sqrt{G}\left(\dfrac{\hat{\sigma}^2_{\text{lin}}}{\hat{\sigma}^2_{\text{diff}}}-1\right) \stackrel{d}{\longrightarrow} \mathcal{N}\left(0,1\right).$$
+Then, one can reject the linearity of $m(.)$ with significance level $\alpha$ if $T > \Phi(1-\alpha)$. 
+
+If the homoskedasticity assumption fails, this test leads to overrejection. De Chaisemartin, D'Haultfoeuille & Gurgand (2024) propose a heteroskedasticity-robust version of the test statistic above. This version of the Yatchew (1997) test can be implemented by running the command with the option <b>het_robust</b>.
+</body>
+</html>

@@ -1,0 +1,25 @@
+d 'ROSNER': module implementing Rosner's generalized extreme studentized deviate (ESD) procedure to detect multiple outliers
+d
+d  rosner implements Rosner's (1983) generalized extreme
+d studentized deviate (ESD) procedure to test for up to k potential
+d outliers. Rosner's test has an advantage over some other
+d procedures because it is designed to avoid "masking", which
+d occurs when an outlier goes undetected because it is close in
+d value to another outlier. Of note, Rosner (1983) indicates that
+d this approximation does not work well for small samples (n < 25)
+d and the procedure's accuracy is still unknown when applied to
+d non-normally distributed data. 
+d
+d KW: outliers
+d KW: normal distribution
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20240411
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f rosner.ado
+f rosner.sthlp
+f rosner_table4.dta

@@ -1,4 +1,5 @@
 {smcl}
+{* 10Apr2024}{...}
 {* 29Mar2024}{...}
 {* 10Mar2021}{...}
 {* 03Mar2021}{...}
@@ -23,7 +24,7 @@
 
 {p 8 12 2}
 {cmd:itsa} {depvar} [{indepvars}] {ifin} {weight}{cmd:,}
-{cmdab:trp:eriod(}{it:{help numlist:numlist}}{cmd:)} 
+{cmdab:trp:eriod(}{it:{help datetime:date}}{cmd:)} 
 [{opt sing:le} {opt treat:id(#)}
 {cmdab:cont:id(}{it:{help numlist:numlist}}{cmd:)} {opt prais} {opt lag(#)}
 {opt fig:ure}[{cmd:(}{it:{help twoway_options:twoway_options}}{cmd:)}]
@@ -75,14 +76,14 @@ multiple treatment periods.{p_end}
 {title:Options}
 
 {phang}
-{cmd:trperiod(}{it:numlist}{cmd:)} specifies the time period when the
-intervention begins.  The value(s) entered for time period(s) must be in the same
+{cmd:trperiod(}{it:date}{cmd:)} specifies the time period when the
+intervention begins. The value(s) entered for time period(s) must be in the same
 units as the panel time variable specified in {cmd:tsset} {it:timevar}; see
 {helpb tsset}. Dates should be specified using the respective
 pseudofunction (see {helpb datetime:datetime}), such as {cmd:trperiod(2020)} 
-for a four-digit year, or {cmd:trperiod(2019m11)} 
-for quarterly data. Multiple periods may be specified, separated by a semicolon, as
-{cmd:trperiod(2019m6; 2019m11)}; {cmd:trperiod()} is
+for a four-digit year, {cmd:trperiod(2019m11)} for quarterly data or 
+{cmd:trperiod(20jan2021)} for daily data. Multiple periods may be specified, 
+separated by a semicolon, as {cmd:trperiod(2019m6; 2019m11)}; {cmd:trperiod()} is
 required.
 
 {phang}

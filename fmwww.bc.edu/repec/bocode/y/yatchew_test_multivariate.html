@@ -1,0 +1,36 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<title>Multivariate Yatchew Test</title>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+</script>
+<script type="text/javascript"
+  src="http://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+</head>
+
+<body>
+    <h2><b>Multivariate Yatchew Test</b></h2>
+
+    Let $\textbf{D}$ be a vector of $K$ random variables. Let $g(\textbf{D}) = E[Y|\textbf{D}]$. Denote with $||.,.||$ the Euclidean distance between two vectors. The null hypothesis of the multivariate test is $g(\textbf{D}) = \alpha_0 + A'\textbf{D}$, with $A = (\alpha_1,..., \alpha_K)$, for $K+1$ real numbers $\alpha_0$, $\alpha_1$, ..., $\alpha_K$. This means that, under the null, $g(.)$ is linear in $\textbf{D}$. Following the same logic as the univariate case, in a dataset with $N$ i.i.d. realisations of $(Y, \textbf{D})$ we can approximate the first difference $\Delta \varepsilon$ by $\Delta Y$ valuing $g(.)$ between consecutive observations. The program runs a nearest neighbor algorithm to find the sequence of observations such that the Euclidean distance between consecutive positions is minimized. The algorithm has been programmed in C++ and it has been integrated in Stata via OS-specific plugins and in R thanks to the Rcpp library. 
+
+    The program follows a very simple nearest neighbor approach:
+    <ol>
+        <li>collect all the Euclidean distances between all the possible unique pairs of rows in $\textbf{D}$ in the matrix $M$, where $M_{n,m} = ||\textbf{D}_n,\textbf{D}_m||$ with $n,m \in \lbrace 1, ..., N\rbrace$; </li>
+        <li>setup the queue to $Q = \lbrace 1, ..., N\rbrace$, the (empty) path vector $I = \lbrace\rbrace$ and the starting index $i = 1$;</li>
+        <li>remove $i$ from $Q$ and find the column index $j$ of M such that $M_{i,j} = \min_{c \in Q} M_{i,c}$;</li>
+        <li>append $j$ to $I$ and start again from step 3 with $i = j$ until $Q$ is empty.</li>
+    </ol>
+
+    To improve efficiency, the program collects only the $N(N-1)/2$ Euclidean distances corresponding to the lower triangle of matrix $M$ and chooses $j$ such that $M_{i,j} = \min_{c \in Q} 1\lbrace c < i\rbrace M_{i,c} + 1\lbrace c > i\rbrace M_{c,i}$. The output of the algorithm, i.e. the vector $I$, is a sequence of row numbers such that the distance between the corresponding rows $\textbf{D}_{i}s$ is minimized. The program also uses two refinements suggested in Appendix A of Yatchew (1997):
+    <ul>
+        <li>The entries in $\textbf{D}$ are normalized in $[0,1]$;</li>
+        <li>The algorithm is applied to sub-cubes, i.e. partitions of the $[0,1]^K$ space, and the full path is obtained by joining the extrema of the subpaths.</li>
+    </ul>
+
+    By convention, the program computes $(2\lceil \log_{10} N \rceil)^K$ subcubes, where each univariate partition is defined by grouping observations in $2\lceil \log_{10} N \rceil$ quantile bins. If $K = 2$, the user can visualize in a ggplot graph the exact path across the normalized $\textbf{D}_{i}s$ by running the command with the option <b>path_plot</b>.
+
+    Once the dataset is sorted by $I$, the program resumes from step (2) of the univariate case.
+</body>
+</html>

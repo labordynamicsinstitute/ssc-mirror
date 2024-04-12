@@ -101,7 +101,6 @@ version 11.0
 				local trperiod `trp'
 			}  // end if
 		} // end while
-				local trper `trperiod'
 		
 		/* check if trperiod is among tvars */
 		levelsof `tvar' if `touse', local(levt)
@@ -369,7 +368,7 @@ version 11.0
 			local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) order(1 2) label(1 "Actual") label(2 "Predicted"))),
 		}
 		#delim ;
-		noi tw  `low'
+		tw  `low'
 		(scatter  `dvar' `plotvars' `tvar' if `touse' [`weight' `exp'],
 			`cpart' `mspart' `lc'
 			xline(`trperiod', lpattern(shortdash) lcolor(black))

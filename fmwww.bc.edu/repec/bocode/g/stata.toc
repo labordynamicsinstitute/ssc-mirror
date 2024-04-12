@@ -18,6 +18,7 @@ p gcrobustvar module to compute a VAR-based Granger-causality Test in the Presen
 p gdecomp module to compute decomposition of outcome differentials after nonlinear models
 p gdsum module to summarize grouped data
 p ge_gravity module to solve a simple general equilibrium one sector Armington-CES trade model
+p ge_gravity2 module to solve a gravity model within the universal gravity class 
 p geekel2d module to estimate the parameters of unidimensional and bidimensional IRT models
 p geivars module to calculate Generalized Entropy inequality indices
 p gen_tail module to work with indicator observations

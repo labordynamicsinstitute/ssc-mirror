@@ -1,0 +1,23 @@
+d 'GE_GRAVITY2': module to solve a gravity model within the universal gravity class 
+d
+d    ge_gravity2 Solves and simulates a gravity model with a
+d positive supply elasticity as described in the article by   
+d Campos, Reggio, and Timini (2024). 
+d
+d KW: gravity model. trade flows
+d
+d Requires: Stata version 11.2
+d
+d Distribution-Date: 20240411
+d
+d Author:   Rodolfo G. Campos,    Banco de España
+d Support: email rodolfo.campos@@bde.es
+d
+d Author:   Iliana Reggio ,  Universidad Autónoma de Madrid
+d Support: email iliana.reggio@@uam.es
+d
+d Author: Jacopo Timini,    Banco de España
+d Support: email jacopo.timini@@bde.es
+d
+f ge_gravity2.ado
+f ge_gravity2.sthlp

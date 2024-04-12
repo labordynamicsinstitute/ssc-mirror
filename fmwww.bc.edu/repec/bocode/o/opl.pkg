@@ -1,0 +1,45 @@
+d 'OPL': module for optimal policy learning
+d
+d    OPL is a package for learning optimal policies from data for
+d empirical welfare maximization.  Specifically, OPL allows to find
+d "treatment assignment rules" that maximize	the overall
+d welfare, defined as the sum of the policy effects estimated over
+d all the policy beneficiaries.  OPL learns the optimal policy
+d empirically, i.e. based on data    and observations obtained from
+d previous (same or similar) implemented policies.  OPL carries out
+d empirical welfare maximization within three policy classes: (i)  
+d  Threshold-based; (ii) Linear-combination; and (iii)
+d Decision-tree.    Empirical welfare maximization requires the
+d estimation of the Conditional Average Treatment Effect (CATE) of
+d the past policy. Currently, OPL estimates CATE via linear    and
+d non-linear Regression Adjustment (RA), allowing for the target
+d outcome to be continuous, binary, count, or fractional.  The
+d treatment variable of reference must be    binary 0/1. 
+d
+d KW: optimal policy learning
+d KW: welfare maximization
+d KW: regression adjustment
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20240411
+d
+d Author: Giovanni Cerulli, IRCrES-CNR
+d Support: email giovanni.cerulli@@ircres.cnr.it
+d
+f opt.sthlp
+f ../m/make_cate.ado
+f ../m/omake_cate.sthlp
+f opl_dt_c.ado
+f opl_dt_c.sthlp
+f opl_dt.ado
+f opl_dt.sthlp
+f opl_lc_c.ado
+f opl_lc_c.sthlp
+f opl_lc.ado
+f opl_lc.sthlp
+f opl_tb_c.ado
+f opl_tb_c.sthlp
+f opl_tb.ado
+f opl_tb.sthlp
+f OptimalPolicyLearning.pdf

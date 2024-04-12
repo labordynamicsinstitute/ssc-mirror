@@ -1,0 +1,35 @@
+d 'YATCHEW_TEST': module to perform Yatchew (1997), de Chaisemartin, D'Haultfoeuille & Gurgand (2024) linearity test 
+d
+d	This program implements a non-parametric test that the
+d expectation of Y given D is linear.  The program implements both 
+d   the original test proposed by Yatchew (1997) and its
+d heteroskedasticity-robust version proposed by de Chaisemartin,   
+d D'Haultfoeuille & Gurgand (2024). 
+d
+d KW: linearity test
+d KW: non-parametric
+d KW: Yatchew
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20240411
+d
+d Author:  Clément de Chaisemartin,  Economics Department, Sciences Po
+d Support: email  chaisemartin.packages@@gmail.com
+d
+d Author:   Xavier D'Haultfoeuille, CREST-ENSAE
+d Support: email   xavier.dhaultfoeuille@@ensae.fr
+d
+d Author:  Diego Ciccia, Economics Department, Sciences Po
+d Support: email chaisemartin.packages@@gmail.com
+d
+d Author:  Felix Knau, Economics Department, Sciences Po
+d Support: email chaisemartin.packages@@gmail.com
+d
+d Author:    Doulo Sow, CREST-ENSAE
+d Support: email chaisemartin.packages@@gmail.com
+d
+f yatchew_test.ado
+f yatchew_test.sthlp
+f yatchew_test_univariate.html
+f yatchew_test_multivariate.html

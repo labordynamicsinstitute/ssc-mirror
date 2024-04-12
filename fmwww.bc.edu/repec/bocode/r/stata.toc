@@ -221,6 +221,7 @@ p romantoarabic module  for converting roman numerals to arabic numbers
 p rori module for estimation of selection bias through relative odds ratio (ROR) with large sample confidence interval 
 p ros module for estimation of regression order statistics
 p rosali module to detect of response shift at item-level between two times of measurement
+p rosner module implementing Rosner's generalized extreme studentized deviate (ESD) procedure to detect multiple outliers
 p rosssekh module to perform forecast comparison and forecast rationality tests
 p rotate2 module to produce sorted and labeled rotated matrix
 p rowmat_utils module to perform parallel computation on sequences of matrices in Mata

@@ -1,83 +1,97 @@
+*! 1.2.0 Ariel Linden 10Apr2024 // fixed trperiod() to allow the user to enter a pseudofunction datetime e.g. (20jan1988)
 *! 1.1.0 Ariel Linden 21Nov2017 // Added local()option
 *! 1.0.0 Ariel Linden 21October2017
 
+capture program drop itsamatch
 program define itsamatch, rclass
 version 11.0
 
 	/* obtain settings */
-	syntax varlist(min=1 numeric) [if] [in] [aweight] ,       		/// weight only relevant for -newey-
-	TRPeriod(numlist min=1 max=1 sort)								///     
-	TREATid(numlist min=1 max=1 int sort)                         	///
-	[ Pr(numlist max=1 >0 <1)										/// 
-	LAG(int -1)														/// lag only relevant for -newey-
-	PRAIS															///
-	Local(str)														/// macro that can be used in -itsa-
+	syntax varlist(min=1 numeric ts fv) [if] [in] [aweight] ,	/// weight only relevant for -newey-
+	TRPeriod(string)											///     
+	TREATid(numlist min=1 max=1 int sort)						///
+	[ Pr(numlist max=1 >0 <1)									/// 
+	LAG(int -1)													/// lag only relevant for -newey-
+	PRAIS														///
+	Local(str)													/// macro that can be used in -itsa-
 	* ]
 								
+	preserve
+	quietly {
 
-preserve
-quietly {
+		marksample touse
+		count if `touse'
+		if r(N) == 0 error 2000
+		local N = r(N)
+		replace `touse' = -`touse'
 
-	/* check if data is tsset with panel and time var */
-	
-	marksample touse
-	count if `touse'
-	if r(N) == 0 error 2000
-	local N = r(N)
-	replace `touse' = -`touse'
-	
-	tsset
-	local tvar `r(timevar)'
-	local pvar `r(panelvar)'
-
-	/********* validate options ************/
-	if "`exp'" != "" & "`prais'" != "" {
-		di as err "weights may not be specified with prais option"
-		exit 101
-	}
-	
-	if "`prais'" != "" {
-		if `lag' != -1 {
-			di as err "lag() may not be specified with prais option"
+		/* check if data is tsset with panel and time var */
+		/* -tsset- errors out if no time variable set */
+		tsset
+		local tvar `r(timevar)'
+		local pvar `r(panelvar)'
+		loc tsf `r(tsfmt)'
+		* check format of date
+		if substr("`tsf'",2,1) == "t" {
+			local tsfr = substr("`tsf'",1,3)
+			local period = lower(substr("`tsf'", 3, 1))
+		}
+		else local tsfr `tsf'
+		
+		local cnt: word count `trperiod'
+		if `cnt' > 1 {
+			di as err "{p}Only one treatment period can be specified{p_end}"
+			exit 198			
+		}
+		
+		/* parse dates in trperiod() */
+		tokenize "`trperiod'", parse(";")
+		local done = 0
+		local i = 0
+		local count = 0
+		while !`done' {  
+			local ++i
+			local next = "``i''"
+			local done = ("`next'" == "")
+			// keep dates only (exclude semicolon)
+			if ("`next'" != ";") & (!`done') {
+				local ++count
+				local trp`count' = `period'(`next') 
+				local trp `trp' `trp`count''
+				local trperiod2 `trp'
+			}  // end if
+		} // end while
+		
+		/* check if trperiod is among tvars */
+		levelsof `tvar' if `touse', local(levt)
+		if !`: list trperiod2 in levt' {
+			di as err "{p}Treatment period not found in the time variable: check {bf:trperiod()} to ensure that the date is specified correctly{p_end}"
 			exit 198
 		}
-	}
-	else if `lag' == -1 local lag 0
+		
+		/* check if treatid is among pvars */
+		levelsof `pvar' if `touse', local(pevt)
+		if ! `: list treatid in pevt' {
+			di as err "treatid(`treatid') is not found in the `pvar' variable"
+			exit 498
+		}
 	
-	if "`pr'" == "" {
-	local pr = 0 
-	}
+		// Parse varlist and generate _z and _zt variables
+		tokenize `varlist'
+		local varcount : word count `varlist'
 	
-	/* check if trperiod is among tvars */
-	levelsof `tvar' if `touse', local(levt)
-	if !`: list trperiod in levt' {
-		di as err "trperiod(`trperiod') is not found in the `tvar' variable" 
-		exit 498
-	}
+		foreach var of varlist `varlist'  {
+			gen _z`var' =.
+			gen _zt`var' =.
+			local clist `clist' _z`var' _zt`var'
+		}
 
-	/* check if treatid is among pvars */
-	levelsof `pvar' if `touse', local(pevt)
-	if ! `: list treatid in pevt' {
-		di as err "treatid(`treatid') is not found in the `pvar' variable"
-		exit 498
-	}
-	
-	// Parse varlist and generate _z and _zt variables
-	tokenize `varlist'
-	local varcount : word count `varlist'
-	
-	foreach var of varlist `varlist'  {
-		gen _z`var' =.
-		gen _zt`var' =.
-	local clist `clist' _z`var' _zt`var'
-	}
+		// Get unique levels of the panel (group) variable 
+		tab `pvar' if `touse'
+		local num = r(r) - 1
+		levelsof `pvar' if `touse', local(levels)
 
-	// Get unique levels of the panel (group) variable 
-	tab `pvar' if `touse'
-	local num = r(r) - 1
-	levelsof `pvar' if `touse', local(levels)
-
-} // end quietly	
+	} // end quietly	
 
 		// setup for dots
 		di _n
@@ -89,7 +103,7 @@ quietly {
 		
 		// loop thru -itsa- for each panel within each variable of varlist
 		foreach num of local levels {
-		_dots `varcount' 0
+			_dots `varcount' 0
 			foreach var of varlist `varlist'  {
 				
 				if `num' != `treatid' {
@@ -105,10 +119,10 @@ quietly {
 				mat `D' = `B'["pvalue","_z_t"]
 				replace _z`var' = trace(`C') if `pvar' == `num'	
 				replace _zt`var' = trace(`D') if `pvar' == `num'
-			} //qui
-				} //num
+			} // !treatid
+				} //qui
 			} //foreach var
-	} //foreach num
+		} //foreach num
 
 	// Collapse _z and _zt variables by panel, and compute minimum row value 
 	collapse `clist' if `pvar' !=`treatid' & `touse', by(`pvar')

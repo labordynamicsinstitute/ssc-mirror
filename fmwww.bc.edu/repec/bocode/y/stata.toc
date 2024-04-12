@@ -1,2 +1,3 @@
 p yalescheme module providing a modern Stata scheme for Yale University-branded data visualizations
+p yatchew_test module to perform Yatchew (1997), de Chaisemartin, D'Haultfoeuille & Gurgand (2024) linearity test 
 p yrdif module to calculate daily date differences

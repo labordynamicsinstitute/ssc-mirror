@@ -109,6 +109,7 @@ p excelclean module to clean and integrate excel files
 p excelcol module to convert a column index into a name of an Excel column
 p exceloutput module to output regression results directly to specific cells in excel file
 p excelsave module to provide a convenient way to export matched Stata datasets from a specified input directory (also including, if wanted, additionally recursively matched subsets of files within distinctly matched offspring-directories) to Excel-files
+p exitma module to define the exit status of a meta-analysis
 p expand_n module to expand dataset
 p expandby module to duplicate observations by variable
 p expandihlp module to expand the help file preprocessor directive for substituting repeated material in a given help file
