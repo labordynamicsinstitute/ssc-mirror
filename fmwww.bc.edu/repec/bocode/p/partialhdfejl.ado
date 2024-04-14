@@ -2,7 +2,9 @@
 
 cap program drop partialhdfejl
 program define partialhdfejl
-  syntax varlist [if] [in] [aw pw fw iw/], Absorb(string) [GENerate(string) PREfix(string) replace ITerations(integer 16000) gpu TOLerance(real 1e-8) compact INTERruptible]
+  version 15
+
+  syntax varlist [if] [in] [aw pw fw iw/], Absorb(string) [GENerate(string) PREfix(string) replace ITerations(integer 16000) gpu TOLerance(real 1e-8) compact]
 
   _assert `iterations'>0, msg("{cmdab:It:erations()} must be positive.") rc(198)
   _assert `tolerance'>0, msg("{cmdab:tol:erance()} must be positive.") rc(198)
@@ -87,22 +89,22 @@ program define partialhdfejl
   local vars: list uniq vars
 
   jl PutVarsToDF `vars' if `touse', nomissing double
-  qui jl: size(df,1)
+  qui _jl: size(df,1)
   _assert `r(ans)', rc(2001) msg(insufficient observations)
 
   if "`compact'" !="" drop _all
 
-  jl, qui `interruptible': p = partial_out(df, @formula(`:subinstr local varlist " " " + ", all' ~ 1 `feterms') `wtopt', tol=`tolerance', maxiter=`iterations' `methodopt')
+  _jl: p = partial_out(df, @formula(`:subinstr local varlist " " " + ", all' ~ 1 `feterms') `wtopt', tol=`tolerance', maxiter=`iterations' `methodopt');
 
   if "`compact'"!="" {
-    jl, qui: GC.gc()
+    _jl: GC.gc();
     use `compactfile'
   }
 
   if `"`prefix'"' != "" local generate `prefix'`: subinstr local varlist " " " `prefix'", all'
     else if "`replace'"!="" {
       tempname t
-      jl, qui: SF_scal_save("`t'", size(df)[1])
+      _jl: SF_scal_save("`t'", size(df)[1]);
       if `t' < _N {
         foreach var in `generate' {
           cap replace `var' = .
@@ -116,5 +118,5 @@ program define partialhdfejl
     label var `var' "Residuals"
   }
 
-  jl: df = p = nothing
+  _jl: df = p = nothing;
 end

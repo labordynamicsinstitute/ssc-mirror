@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.6.0 23dec2023}{...}
+{* *! version 0.6.2 16feb2024}{...}
 
 {title:Title}
 
@@ -43,13 +43,13 @@
 {synopt: {cmdab:a:bsorb}({it:absvars}, [{cmdab:save:fe}])}categorical variables representing the fixed effects to be absorbed{p_end}
 {synopt: {opth vce:(reghdfejl##model_opts:vcetype)}}{it:vcetype} may be {opt un:adjusted} (default), {opt r:obust}, {opt bs}/{opt boot:strap}, {opt cl:uster} {help fvvarlist} (allowing multi-way clustering){p_end}
 {synopt: {opth res:iduals(newvar)}}save regression residuals; required for postestimation "{it:predict <varname>, d}" {p_end}
-{synopt:{opt tol:erance(#)}}criterion for convergence. default is 1e-8{p_end}
+{synopt: {opth res:iduals(newvar)}}save regression residuals; required for postestimation "{it:predict <varname>, d}" {p_end}
+{synopt:{opt ivreg2}}call ivreg2 for IV estimation{p_end}
 {synopt:{opt iter:ate(#)}}maximum number of iterations; default is 16,000{p_end}
 {synopt:{opt nosamp:le}}will not create {it:e(sample)}, saving some space and speed{p_end}
 {synopt:{opt compact}}temporarily saves all data to disk in order to free memory{p_end}
 {synopt:{opt threads(#)}}number of CPU threads Julia should use{p_end}
 {synopt:{opt gpu}}use NVIDIA or Apple Silicon GPU{p_end}
-{synopt:{opt inter:ruptible}}At small speed cost, allow Ctrl-Break or the like to stop estimation{p_end}
 {synopt:{opt l:evel(#)}}set confidence level; default is normally 95{p_end}
 {synopt:{it:display options}}{help ml##display_options:standard options} governing results display{p_end}
 {synoptline}
@@ -69,7 +69,6 @@ cannot be of the form {it:i.y} though, only {it:#.y} (where # is a number){p_end
 {synopt:{opt gen:erate(varlist)}}names for partialled-out results{p_end}
 {synopt:{opt pre:fix(string)}}prefix stub for partialled-out results{p_end}
 {synopt:{opt replace}}overwrite any existing variables identified by {opt gen:erate()} or {opt pre:fix()}{p_end}
-{synopt:{opt inter:ruptible}}At small speed cost, allow Ctrl-Break or the like to stop estimation{p_end}
 {synoptline}
 {p 4 6 2}Exactly one of {opt gen:erate()} and {opt pre:fix()} must be specified.
 
@@ -86,8 +85,8 @@ cannot be of the form {it:i.y} though, only {it:#.y} (where # is a number){p_end
 can run ~10 times faster because it relies on the Julia program {browse "https://github.com/FixedEffects/FixedEffectModels.jl":FixedEffectsModel.jl},
 by Matthieu Gomez, which implements similar methods (Correia 2016).
 {cmd:reghdfejl} also fits instrumental variables models
-with two-stage least squares. In this capacitiy it is not as full-featured as {cmd:ivreghdfe}, because it does not (yet) work as a wrapper for 
-{cmd:ivreg2}.
+with two-stage least squares. In this capacity it is not by default as full-featured as {cmd:ivreghdfe}, because it does not work as a wrapper for 
+{cmd:ivreg2}. The {cmd:ivreg2} option of {cmd:reghdfejl} overrides that default, but then {cmd:reghdfejl} is no faster than {cmd:ivreghdfe}.
 
 {pstd}
 To run, {cmd:reghdfejl} requires that the Stata command {cmd:jl} be installed; "{stata ssc install julia}" should suffice. It also needs
@@ -137,7 +136,7 @@ useful when you have plenty of RAM, when the number of non-absorbed regressors i
 {cmd:reghdfejl} offers several novel features that can increase speed. The first is access to multithreading in Julia, even in 
 flavors of Stata that do not offer multiprocessing. The {opt threads(#)}
 option pertains to this feature. But it can only {it:reduce} the number of CPU threads Julia uses. The default number--and the 
-maximum--is set by the {browse "https://docs.julialang.org/en/v1/manual/multi-threading/":system environment variable JULIA_NUM_THREADS}. It is 
+maximum--is set when the Julia session inside Stata is started. It is 
 possible for the default to be too high as well as too low. If you set it high, then you can experiment using {opt threads(#)}. See 
 {help jl##threads:help jl} for more on determining and controlling the number of threads.
 
@@ -179,7 +178,7 @@ if the destination variables already exist, unless {cmd:replace} is also specifi
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}- To save the estimates of specific absvars, write {newvar}{inp:={it:absvar}}. This works with {cmd:reghdfejl}, not {cmd:partialhdfejl}.{p_end}
-{p 4 6 2}-  However, be aware that estimates for the fixed effects are generally inconsistent and not econometrically identified.{p_end}
+{p 4 6 2}- However, be aware that estimates for the fixed effects are generally inconsistent and not econometrically identified.{p_end}
 {p 4 6 2}- Using categorical interactions (e.g. {it:x}{cmd:#}{it:z}) is easier and faster than running {it:egen group(...)} beforehand.{p_end}
 {p 4 6 2}- {browse "http://scorreia.com/research/singletons.pdf":Singleton observations} are dropped iteratively until no more singletons are found (see the linked article for details).{p_end}
 {p 4 6 2}- Slope-only absvars ("state#c.time") have poor numerical stability and slow convergence. If you need those, either i) increase tolerance or
@@ -249,6 +248,12 @@ This option carries a small time cost but is required for subsequent calls to {c
 {phang}
 {opth tol:erance(#)} specifies the tolerance criterion for convergence. The default is 1e-8.
 In general, low tolerances (1e-8 to 1e-14) return more accurate results, more slowly.
+
+{phang}
+{opt ivreg2} causes {cmd:reghdfejl} to work more like {cmd:ivreghdfe} when performing instrumental variables estimation. It calls Julia to partial
+fixed effects out of all other variables, and then passes the results to {stata ssc describe ivreg2:ivreg2}. This gives access to a much wider
+array of estimation options and weak identification diagnostics. However, because {cmd:ivreg2} dominates the run time, this is no faster than using
+{cmd:ivreghdfe}.
 
 {phang}
 {opth it:erations(#)}
@@ -329,6 +334,9 @@ the resulting variable will always be of type {it:double}.{p_end}
 {phang}. {stata partialhdfejl ln_wage age ttl_exp tenure not_smsa south, absorb(year occ_code) prefix(_) replace}{p_end}
 {phang}. {stata reghdfejl _ln_wage  _age _ttl_exp _tenure _not_smsa _south, cluster(year occ_code) nocons}  // same point estimates as in previous regression{p_end}
 
+{phang}. {stata reghdfejl ln_wage (age  = ttl_exp tenure) not_smsa south, absorb(year occ_code) cluster(year occ_code)}{p_end}
+
+
 {marker results}{...}
 {title:Stored results}
 
@@ -354,6 +362,7 @@ the resulting variable will always be of type {it:double}.{p_end}
 {synopt:{cmd:e(ll)}}log-likelihood{p_end}
 {synopt:{cmd:e(ll_0)}}log-likelihood of fixed-effect-only regression{p_end}
 {synopt:{cmd:e(F)}}F statistic{p_end}
+{synopt:{cmd:e(widstat)}}For IV regression, Kleibergen-Paap weak identification {it:F}{p_end}
 {synopt:{cmd:e(rank)}}rank of {cmd:e(V)}{p_end}
 {synopt:{cmd:e(N_clustervars)}}number of cluster variables{p_end}
 {synopt:{cmd:e(N_clust}#{cmd:)}}number of clusters for the #th cluster variable{p_end}
@@ -446,7 +455,7 @@ On a Mac with an M2 Pro chip--with 8 performance cores and 4 efficiency cores--t
 {phang}. qui areg      y x1 x2, a(id1) cluster(id1){p_end}
 {phang}t=490.93{p_end}
 
-{phang}. qui reghdfe   y x1 x2, a(id1) cluster(id1){p_end}
+{phang}. qui reghdfe   y x1 x2, a(id1) cluster(id1) dof(none){p_end}
 {phang}t=68.74{p_end}
 
 {phang}. qui reghdfejl y x1 x2, a(id1) cluster(id1){p_end}
@@ -455,7 +464,7 @@ On a Mac with an M2 Pro chip--with 8 performance cores and 4 efficiency cores--t
 {phang}. qui reghdfejl y x1 x2, a(id1) cluster(id1) gpu{p_end}
 {phang}t=15.92{p_end}
 
-{phang}. qui reghdfe   y x1 x2, a(id1 id2) cluster(id1 id2){p_end}
+{phang}. qui reghdfe   y x1 x2, a(id1 id2) cluster(id1 id2) dof(none){p_end}
 {phang}t=315.05{p_end}
 
 {phang}. qui reghdfejl y x1 x2, a(id1 id2) cluster(id1 id2){p_end}
@@ -464,28 +473,28 @@ On a Mac with an M2 Pro chip--with 8 performance cores and 4 efficiency cores--t
 {phang}. qui reghdfejl y x1 x2, a(id1 id2) cluster(id1 id2) gpu{p_end}
 {phang}t=24.48{p_end}
 
-{phang}. set processors 8{p_end}
+{phang}. set processors 6{p_end}
 
 {phang}. qui areg      y x1 x2, a(id1) cluster(id1){p_end}
-{phang}t=99.43 {p_end}
+{phang}t=99.24 {p_end}
 
-{phang}. qui reghdfe   y x1 x2, a(id1) cluster(id1){p_end}
-{phang}t=44.15{p_end}
+{phang}. qui reghdfe   y x1 x2, a(id1) cluster(id1) dof(none){p_end}
+{phang}t=44.69{p_end}
 
 {phang}. qui reghdfejl y x1 x2, a(id1) cluster(id1){p_end}
-{phang}t=13.38{p_end}
+{phang}t=14.00{p_end}
 
 {phang}. qui reghdfejl y x1 x2, a(id1) cluster(id1) gpu{p_end}
-{phang}t=12.20{p_end}
+{phang}t=12.23{p_end}
 
-{phang}. qui reghdfe   y x1 x2, a(id1 id2) cluster(id1 id2){p_end}
-{phang}t=238.35{p_end}
+{phang}. qui reghdfe   y x1 x2, a(id1 id2) cluster(id1 id2) dof(none){p_end}
+{phang}t=243.90{p_end}
 
 {phang}. qui reghdfejl y x1 x2, a(id1 id2) cluster(id1 id2){p_end}
-{phang}t=24.80{p_end}
+{phang}t=27.88{p_end}
 
 {phang}. qui reghdfejl y x1 x2, a(id1 id2) cluster(id1 id2) gpu{p_end}
-{phang}t=20.100{p_end}
+{phang}t=19.77{p_end}
 
 {title:Author}
 

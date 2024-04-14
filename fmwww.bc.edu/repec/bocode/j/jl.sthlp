@@ -1,5 +1,5 @@
 {smcl}
-{* *! jl 0.10.0 3mar2024}{...}
+{* *! jl 1.0.0 8apr2024}{...}
 {help jl:jl}
 {hline}{...}
 
@@ -11,7 +11,10 @@ Bridge to Julia{p_end}
 {title:Syntax}
 
 {phang}
-{cmd:jl} [, {cmdab:qui:etly} {cmdab:inter:ruptible}]: {it:juliaexpr}
+{cmd:jl}: {it:juliaexpr}
+
+{phang}
+{cmd:_jl}: {it:juliaexpr}
 
 {phang2}
 where {it:juliaexpr} is an expression to be evaluated in Julia.
@@ -32,6 +35,7 @@ where {it:juliaexpr} is an expression to be evaluated in Julia.
 {synopt:{opt PutMatToMat}}Copy Stata matrix to Julia matrix, mapping missing to NaN{p_end}
 {synopt:{opt GetMatFromMat}}Copy Stata matrix from Julia matrix, mapping NaN to missing{p_end}
 {synopt:{opt SetEnv}}Switch to named package environment{p_end}
+{synopt:{opt GetEnv}}Get name of current package environment{p_end}
 {synopt:{opt AddPkg}}Install Julia package if not installed, or update if version below threshold{p_end}
 {synoptline}
 {p2colreset}{...}
@@ -44,10 +48,10 @@ where {it:juliaexpr} is an expression to be evaluated in Julia.
 {phang}{cmd:jl use} [{varlist}] {cmd:using} {it:dataframename}, [{opt clear}]{p_end}
 
 {phang}
-{cmd:jl save} {it:dataframename}, [{opt nolab:el} {opt nomiss:ing} {opt double:only}]
+{cmd:jl save} [{it:dataframename}], [{opt nolab:el} {opt nomiss:ing} {opt double:only}]
 
 {phang}
-{cmd:jl PutVarsToDF} [{varlist}] {ifin}, [{opt dest:ination(string)} {opt col:s(string)} {opt nomiss:ing} {opt double:only}]
+{cmd:jl PutVarsToDF} [{varlist}] {ifin}, [{opt dest:ination(string)} {opt col:s(string)} {opt nolab:el} {opt nomiss:ing} {opt double:only}]
 
 {phang}
 {cmd:jl GetVarsFromDF} {varlist} {ifin}, [{opt cols(string)} {opt source(string)} {opt replace} {opt nomiss:ing}]
@@ -65,7 +69,10 @@ where {it:juliaexpr} is an expression to be evaluated in Julia.
 {cmd:jl GetMatFromMat} {it:matname}, [{opt source(string)}]
 
 {phang}
-{cmd:jl SetEnv} {it:name}
+{cmd:jl SetEnv} [{it:name}]
+
+{phang}
+{cmd:jl GetEnv}
 
 {phang}
 {cmd:jl AddPkg} {it:name}, [{opt min:ver(string)}]
@@ -76,29 +83,36 @@ where {it:juliaexpr} is an expression to be evaluated in Julia.
 
 {pstd}
 {cmd:jl} gives access from the Stata prompt to the free programming language Julia. It provides three
-main sorts of tools:
+sets of tools:
 
 {p 4 7 0}
-1. The {cmd:jl:} prefix command, which allows you to send commands to Julia and see the results. Example: {cmd:jl: 1+1}.
+1. {it:The {cmd:jl:} prefix command, which allows you to send commands to Julia and see the results.} (But results
+are suppressed for lines ending with ";".) Example: 
+{cmd:jl: "Hellow world!"}. Typing {cmd:jl:} or {cmd:jl} by itself starts an interactive mode, in which
+multiple lines can be typed. This mode stops when the user types {cmd:exit()}.
 
 {p 4 7 0}
-2. Subcommands, listed above, for high-speed copying of data between Julia and Stata, as well as for installation of Julia packages.
+2. {it:Subcommands, listed above, for high-speed copying of data between Julia and Stata, managing installation of Julia packages.}
 
 {p 4 7 0}
-3. An automatically loaded library of Julia functions to allow reading and writing of Stata variables, macros, matrices, and scalars. These
-functions hew closely to those in the {browse "https://www.stata.com/plugins":Stata Plugin Interface}. For example,
-{cmd:jl: SF_macro_save("a", "3")} is equivalent to {cmd:global a 3}.
+3. {it:A library of Julia functions to allow reading and writing of Stata variables, macros, matrices, and scalars.} Most of
+the functions hew closely to those in the {browse "https://www.stata.com/plugins":Stata plugin interface}. For example,
+{cmd:jl: SF_vdata(1, 2)} getsts the value in the second row of the first variable in the Stata data set. Some
+are higher level: st_data("price mpg") returns a two-column matrix with the contents of those variables.
 
 {pstd}
-Because Julia does just-in-time-compilation, {it:Julia-based commands take longer on first use in a Stata session and even longer on first use ever.}
+Because Julia does just-in-time-compilation, {it:Julia-based commands take longer on first use in a Stata session and even longer on first use on a given machine.}
 
 {pstd}
-The {cmd:jl:} prefix only accepts single-line expressions. But in a .do or .ado file, you can stretch that limit:{p_end}
+The interactive mode does not work in do files. That is, while you can begin a Mata or Python
+block in a do file withe the {cmd:mata} or {cmd:python} command, you cannot do the same for 
+Julia. You can work around that limitation. You can put several commands in one
+line, separating them with semicolons. And you can break what are logically single lines into many, using Stata's
+continuation token, "///":{p_end}
 
-{pmore}{inp} jl: local s = 0; for i in 1:10 s += i end; s {p_end}
+{pmore}{inp} jl: s = 0; for i in 1:10 s += i end; s {p_end}
 
-{pmore}{inp} jl: {space 14}/// {p_end}
-{pmore}{inp} {space 4}local s = 0; {space 1}/// {p_end}
+{pmore}{inp} jl: s = 0; {space 7}/// {p_end}
 {pmore}{inp} {space 4}for i in 1:10 /// {p_end}
 {pmore}{inp} {space 8}s += i {space 3}/// {p_end}
 {pmore}{inp} {space 4}end; {space 9}/// {p_end}
@@ -107,25 +121,27 @@ The {cmd:jl:} prefix only accepts single-line expressions. But in a .do or .ado 
 {pstd}
 The {cmd:jl start} command is often not needed. If it is not used, then Julia will be automatically started anyway the first time it is called in a Stata 
 session. The one reason to call {cmd:jl start} is to control the number of CPU threads available to Julia, through the {opt t:hreads()} option. Many Julia 
-programs exploit multithreading to save time. In Windows and Linux, but not macOS, you can also control the number of threads by editing the JULIA_NUM_THREADS 
+programs exploit multithreading for speed. In Windows and Linux, but not macOS, you can also control the number of threads by editing the JULIA_NUM_THREADS 
 environment variable. {cmd:jl start} will have no effect unless it comes before every other {cmd:jl} command in a Stata session, and before any use of
-packages such as {cmd:reghdfejl} and {cmd:boottest} that call {cmd:jl}. For more, see {help jl##threads:section on threads below}.
+packages such as {cmd:reghdfejl} and {cmd:boottest} that call {cmd:jl}. For more, see {help jl##threads:section on threads below}. You
+do not need Stata/MP to run mulithreaded Julia code.
 
 {pstd}
 The data-copying subcommands come in high- and low-level variants. The high-level {cmd:jl use} and {cmd:jl save} subcommands have similar syntax
-to Stata's {help use} and {help save}, but copy to and from Julia DataFrames. Unlike {cmd:jl GetVarsFromDF}, {cmd:jl use}
+to Stata's {help use} and {help save}, but copy to and from Julia DataFrames. Unlike the low-level {cmd:jl GetVarsFromDF}, {cmd:jl use}
 will clear the current data set if the {opt clear} option is included, and ensure that the new data set has enough rows to receive all the data.
 
 {pstd}
-The low-level routines give more control over data copying and include options to improve performance that are 
-useful when using {cmd:jl} to write a Stata program. By default, the {cmd:jl PutVarsToDF} subcommand will map Stata data columns
+The low-level routines give more include options to improve performance that are 
+useful when using {cmd:jl} to write a Julia back end for a Stata package. By default, the {cmd:jl PutVarsToDF} subcommand will map Stata data columns
 to Julia DataFrame columns of corresponding type, and mark all destination columns to allow missing values. {cmd:jl GetVarsFromDF} does
 something similar in the other direction. {cmd:PutVarsToDF}'s {opt nomiss:ing} option increases speed and is appropriate for variables known to contain no missing values. 
 Another time-saving option, {opt double:only}, causes {cmd:jl PutVarsToDF} to map all numeric Stata {help data_types:data types}, to double-precision numbers--called {cmd:double} in Stata
-and {cmd:Float64} in Julia. (Treatment of strings is then undefined.)
+and {cmd:Float64} in Julia. Treatment of strings is then undefined. Without this option, the target
+columns will have the same types as the source columns.
 
 {pstd}
-When copying to Julia, any existing DataFrame of the same name is automatically overwritten.
+When copying to Julia, any existing DataFrame or matrix of the same name is overwritten.
 
 {pstd}
 The subcommands mapping between Stata data and Julia DataFrames translate between Stata variables with value labels and Julia categorical vectors. However,
@@ -139,7 +155,12 @@ packages. Switching to a dedicated environment minimizes version conflicts with 
 downloaded for other purposes. The directory used for the dedicated environment will be a 
 subdirectory of Julia's default package environment directory, for example,
 "`~/.julia/environments/v1.10/MyEnvironment". It will be created if it does not exist. If new,
-it will only have the DataFrames package.
+it will only have the DataFrames package. Calling {cmd:SetEnv} without any arguments reverts to
+the default package environment.
+
+{pstd}
+The {cmd:GetEnv} displays the name and location of the current package environment and
+saves the results as r() macros.
 
 {pstd}
 The {cmd:AddPkg} subcommand updates a package to the latest version in Julia's general registry if the package is not installed at all, or if
@@ -227,17 +248,6 @@ To determine how many threads are available, type "{stata "jl: Threads.nthreads(
 {title:Options}
 
 {pstd}
-{cmd:jl,} {opt qui:etly}{cmd::...} is nearly the same as {cmd:quietly jl:...}. The difference
-is that the first will stop the software from copying the output of a Julia command to Stata before suppressing
-that output. This will save time if the output is very long.
-
-{pstd}
-The {opt inter:ruptible} option of the {cmd:jl:} prefix command makes it possible, at a small performance cost, to interrupt a Julia command the way you
-interrupt Stata commands, such as with Ctrl-Break (Windows), Command+. (Mac), or the red X icon in the Stata toolbar. Just as 
-with regular Stata commands, the response to an interruption will not always be immediate. For example, a large matrix multiplication
-or inversion operation can delay the response.
-
-{pstd}
 In the data-copying subcommands, the {varlist}'s and {opt matname}'s before the commas always
 refer to Stata variables or matrices. If a {varlist} is omitted where it is optional,
 the variable list will default to {cmd:*}, i.e., all variables in the current data frame in 
@@ -254,6 +264,14 @@ Destination Stata matrices and Julia matrices and DataFrames are entirely replac
 variables will be created or, if {opt replace} is specified, overwritten, subject to any
 {ifin} restriction.
 
+{pstd}
+The {cmd:_jl:} prefix command is for programmers. It works the same as {cmd:jl:}, except that for the sake of speed it disables
+certain features of {cmd:jl:} that enhance the interactive Julia experience within Stata. These include showing output from {cmd:print()}
+and other commands, not generating syntax errors partway through multi-line code blocks such as for loops, and 
+{browse "https://docs.julialang.org/en/v1/manual/variables-and-scoping/#local-scope":interpreting soft-scoped assignments as if in interactive mode}. The 
+time savings from {cmd:_jl:} can be small in absolute terms (~0.01 seconds per call). But it adds up in a program that issues many
+Julia commands.
+
 
 {title:Stored results}
 
@@ -264,43 +282,66 @@ variables will be created or, if {opt replace} is specified, overwritten, subjec
 {title:Stata interface functions}
 
 {pstd}
-The {cmd:julia.ado} package includes, and automatically loads, a Julia module that gives access to the 
-{browse "https://www.stata.com/plugins":Stata Plugin Interface}, which see for more information on 
+The {cmd:julia.ado} package automatically loads a Julia module that gives access to the 
+{browse "https://www.stata.com/plugins":Stata Plugin Interface} (SPI), which see for more information on 
 syntax. The functions in the module allow one to read and write
-Stata objects from Julia. The major departure in syntax from the C-based Stata Plugin Interface is that the functions
-that return data, such as an element of a Stata matrix, do so through the return value rather than a
-supplied pointer to a pre-allocated storage location. For example, {cmd:jl: SF_scal_use("X")}
-returns the value of the Stata scalar {cmd:X}.
+Stata objects from Julia. They can be roughly divided into low- and high-level groups. The low-level
+functions closely mimic the foundational SPI functions, which let you, for example, determine
+the size of the data set and read and write individual data points. The high-level functions
+work similarly to the Mata functions they are named after: {cmd:st_global()}, {cmd:st_local()}, {cmd:st_matrix()}, {cmd:st_data()}, and 
+{cmd:st_view()}. In particular, {cmd:st_view()} lets you treat one or more Stata variables as a matrix, which can be read
+and written with Julia commands.
 
-{synoptset 62 tabbed}{...}
+{synoptset 59 tabbed}{...}
 {synopthdr:Function}
 {synoptline}
 {synopt:{bf:SF_nobs()}}Number of observations in Stata data set{p_end}
 {synopt:{bf:SF_nvar()}}Number of variables{p_end}
-{synopt:{bf:SF_varindex(s::AbstractString)}}Index of variable named s in data set{p_end}
 {synopt:{bf:SF_var_is_string(i::Int)}}Whether variable i is string{p_end}
 {synopt:{bf:SF_var_is_strl(i::Int)}}Whether variable i is a strL{p_end}
 {synopt:{bf:SF_var_is_binary(i::Int, j::Int)}}Whether observation i of variable j is a binary strL{p_end}
-{synopt:{bf:SF_sdatalen(i::Int, j::Int)}}String length of variable i, observation j{p_end}
+{synopt:{bf:SF_sdatalen(j::Int, i::Int)}}String length of variable i, observation j{p_end}
 {synopt:{bf:SF_is_missing()}}Whether a Float64 value is Stata missing{p_end}
 {synopt:{bf:SV_missval()}}Stata floating-point value for missing{p_end}
-{synopt:{bf:SF_vstore(i::Int, j::Int, val::Real)}}Set observation j of variable i to val (numeric){p_end}
-{synopt:{bf:SF_sstore(i::Int, j::Int, s::AbstractString)}}Set observation j of variable i to s (string) {p_end}
-{synopt:{bf:SF_vdata(i::Int, j::Int)}}Return observation j of variable i (numeric){p_end}
-{synopt:{bf:SF_sdata(i::Int, j::Int)}}Return observation j of variable i (string){p_end}
-{synopt:{bf:SF_macro_save(mac::AbstractString, tosave::AbstractString)}}Set macro value{p_end}
-{synopt:{bf:SF_macro_use(mac::AbstractString, maxlen::Int)}}First maxlen characters of macro mac{p_end}
-{synopt:{bf:SF_scal_save(scal::AbstractString, val::Real)}}Set scalar value{p_end}
-{synopt:{bf:SF_scal_use(scal::AbstractString)}}Return scalar scal{p_end}
-{synopt:{bf:SF_row(mat::AbstractString)}}Number of rows of matrix mat{p_end}
-{synopt:{bf:SF_col(mat::AbstractString)}}Number of columns of matrix mat{p_end}
-{synopt:{bf:SF_macro_save(mac::AbstractString, tosave::AbstractString)}}Set global macro{p_end}
-{synopt:{bf:SF_mat_store(mat::AbstractString, i::Int, j::Int, val::Real)}}mat[i,j] = val{p_end}
-{synopt:{bf:SF_mat_el(mat::AbstractString, i::Int, j::Int)}}Return mat[i,j]{p_end}
-{synopt:{bf:SF_display(s::AbstractString)}}Print to Stata results window{p_end}
-{synopt:{bf:SF_error(s::AbstractString)}}Print error to Stata results window{p_end}
+{synopt:{bf:SF_vstore(j::Int, i::Int, val::Real)}}Set observation j of variable i to val (numeric){p_end}
+{synopt:{bf:SF_sstore(j::Int, i::Int, s::String)}}Set observation j of variable i to s (string) {p_end}
+{synopt:{bf:SF_vdata(j::Int, i::Int)}}Get observation j of variable i (numeric){p_end}
+{synopt:{bf:SF_sdata(j::Int, i::Int)}}Get observation j of variable i (string){p_end}
+{synopt:{bf:SF_macro_save(mac::String, tosave::String)}}Set macro value{p_end}
+{synopt:{bf:SF_macro_use(mac::String)}}Get macro mac{p_end}
+{synopt:{bf:SF_scal_save(scal::String, val::Real)}}Set scalar value{p_end}
+{synopt:{bf:SF_scal_use(scal::String)}}Get scalar scal{p_end}
+{synopt:{bf:SF_row(mat::String)}}Number of rows of matrix mat{p_end}
+{synopt:{bf:SF_col(mat::String)}}Number of columns of matrix mat{p_end}
+{synopt:{bf:SF_mat_store(mat::String, i::Int, j::Int, val::Real)}}mat[i,j] = val{p_end}
+{synopt:{bf:SF_mat_el(mat::String, i::Int, j::Int)}}Get mat[i,j]{p_end}
+{synopt:{bf:SF_display(s::String)}}Print to Stata results window{p_end}
+{synopt:{bf:SF_error(s::String)}}Print error to Stata results window{p_end}
+
+{synopt:{bf:st_nobs()}}Number of observations in Stata data set; same as SF_nobs(){p_end}
+{synopt:{bf:st_nvar()}}Number of Stata variables; same as SF_nvar(){p_end}
+{synopt:{bf:st_varindex(s::String)}}Index in data set of variable named s{p_end}
+{synopt:{bf:st_global(mac::String)}}Get global macro mac{p_end}
+{synopt:{bf:st_global(mac::String, tosave::String)}}Set global macro mac{p_end}
+{synopt:{bf:st_local(mac::String, tosave::String)}}Set local macro mac{p_end}
+{synopt:{bf:st_numscalar(scal::String)}}Get scalar scal; same as SF_scal_use(){p_end}
+{synopt:{bf:st_numscalar(scal::String, val::Real)}}Set scalar scal; same as SF_scal_save(){p_end}
+{synopt:{bf:st_matrix(matname::String)}}Get numeric Stata matrix{p_end}
+{synopt:{bf:st_matrix(matname::String, jlmat::Matrix)}}Put Julia matrix in pre-existing Stata matrix{p_end}
+{synopt:{bf:st_data(varnames::String)}}Get Stata variables in space-delimited list, as matrix{p_end}
+{synopt:{bf:st_data(varnames::Vector{<:String})}}Get Stata variables in string vector, as matrix{p_end}
+{synopt:{bf:st_data(varnames::String, sample::Vector{Bool})}}Get Stata variables, with sample restriction, as matrix{p_end}
+{synopt:{bf:st_data(varnames::Vector{<:String}, sample::Vector{Bool})}}Get Stata variables, with sample restriction, as matrix{p_end}
+{synopt:{bf:st_view(varnames::String)}}Get Stata variables in space-delimited list, as view{p_end}
+{synopt:{bf:st_view(varnames::Vector{<:String})}}Get Stata variables in string vector, as view{p_end}
+{synopt:{bf:st_view(varnames::String, sample::Vector{Bool})}}Get Stata variables, with sample restriction, as view{p_end}
+{synopt:{bf:st_view(varnames::Vector{<:String}, sample::Vector{Bool})}}Get Stata variables, with sample restriction, as view{p_end}
 {synoptline}
 {p2colreset}{...}
+
+{pstd}
+Used with {cmd:jl}, but not {cmd:_jl}, {cmd:st_local()} allows one to {it:write} locals. One-line {cmd:jl:} and {cmd:_jl:} commands
+can access locals by quoting them, such as with {cmd:jl: X = st_data("`varnames'")}
 
 
 {title:Author}

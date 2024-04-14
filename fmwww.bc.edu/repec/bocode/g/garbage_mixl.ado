@@ -323,4 +323,5 @@ program Replay
   
 end
 
-program garbage_mixlogit, plugin
+cap program drop garbage_mixlogit
+program garbage_mixlogit, plugin using(garbage_mixlogit.plugin)

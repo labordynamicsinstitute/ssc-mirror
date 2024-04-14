@@ -1,4 +1,4 @@
-*! reghdfejl 0.6.2 3 March 2024
+*! reghdfejl 1.0.0 12 April 2024
 
 // The MIT License (MIT)
 //
@@ -26,8 +26,18 @@
 * Version history at bottom
 
 cap program drop reghdfejl
-program define reghdfejl, eclass
-  version 16
+program define reghdfejl
+  qui jl GetEnv
+  local env `r(env)'
+  qui jl SetEnv reghdfejl
+  cap noi _reghdfejl `0'
+  if _rc & "`noncompactfile'"!="" use `noncompactfile'
+  qui jl SetEnv `env'
+end
+
+cap program drop _reghdfejl
+program define _reghdfejl, eclass
+  version 15
 
   if replay() {
 		if "`e(cmd)'" != "reghdfejl" error 301
@@ -88,25 +98,32 @@ program define reghdfejl, eclass
   }
 
 	syntax anything [if] [in] [aw pw iw/], [Absorb(string) Robust CLuster(string) SMall vce(string) RESIDuals ITerations(integer 16000) gpu THReads(integer 0) ///
-                                          noSAMPle TOLerance(real 1e-8) Level(real `c(level)') NOHEADer NOTABLE compact VERBose INTERruptible noCONStant KEEPSINgletons *]
+                                          noSAMPle TOLerance(string) Level(real `c(level)') NOHEADer NOTABLE compact VERBose INTERruptible noCONStant ///
+                                          /*EXPosure(varlist max=1) OFFset(varlist max=1)*/ KEEPSINgletons SEParation(string) FAMily(string) link(string) ivreg2 *]
   local sample = "`sample'"==""
+  local compact = "`compact'"!=""
+  local ivreg2 = "`ivreg2'"!=""
+  local GLM = `"`family'`link'"'!=""
 
-  _assert `iterations'>0, msg("{cmdab:It:erations()} must be positive.") rc(198)
-  _assert `tolerance'>0, msg("{cmdab:tol:erance()} must be positive.") rc(198)
+  _assert `iterations'>0, msg({cmdab:It:erations()} must be positive) rc(198)
 
-  _get_diopts diopts _options, `options'
+	_get_eformopts, soptions eformopts(`options') allowed(hr shr IRr or RRr)
+	local eformopts `s(eform)'
+  _get_diopts diopts _options, `s(options)'
 
   marksample touse
-  
+
   local gpulib = cond(c(os)=="MacOSX", "Metal", "CUDA")
   if "`gpu'"!="" local methodopt , method = :`gpulib'
 
   if `threads' local threadsopt , nthreads = `threads'
   if "`keepsingletons'"!="" local singletonopt , drop_singletons = false
-  
+
   reghdfejl_load
 
   if `"`exp'"' != "" {
+    local wtype: copy local weight
+    local wexp `"=`exp'"'
     cap confirm var `exp'
     if _rc {
       tempname wtvar
@@ -114,27 +131,31 @@ program define reghdfejl, eclass
     }
     else local wtvar: copy local exp
     local wtopt , weights = :`wtvar'
-    local robust robust
+    if "`weight'"=="pweight" local robust robust
   }
-
-  tokenize `anything'
-  local depname: copy local 1
-  macro shift
-
-  local hasiv = strpos(`"`*'"', "=")
-  if `hasiv' {
-    local t = regexm(`"`*'"', "^([^\(]*)\(([^=]*)=([^\)]*)\)(.*)$")  // standard IV syntax
-    fvunab inexogname: `=regexs(1)' `=regexs(4)'
-    fvunab instdname: `=regexs(2)'
-    fvunab instsname: `=regexs(3)'
+  
+  local hasiv 0
+  gettoken depname anything: anything, bind
+  while "`anything'"!="" {
+    gettoken term anything: anything, match(parenflag) bind
+    if "`parenflag'"=="(" {
+      _assert !`GLM', msg(IV only for linear models) rc(198)
+      local hasiv 1
+      tokenize "`term'", parse("=")
+      local instdname: copy local 1
+      local instsname: copy local 3
+      local inexogname `inexogname' `anything'
+      continue, break
+    }
+    else local inexogname `inexogname' `term'
   }
-  else fvunab inexogname: `*'
+  if !`hasiv' local ivreg2 0
 
   markout `touse' `depname' `instdname' `inexogname' `instsname'
 
   if `"`vce'"' != "" {
-    _assert `"`cluster'"'=="", msg("only one of cluster() and vce() can be specified") rc(198)
-    _assert `"`robust'"' =="", msg("only one of robust and vce() can be specified"   ) rc(198)
+    _assert `"`cluster'"'=="", msg(only one of cluster() and vce() can be specified) rc(198)
+    _assert `"`robust'"' =="", msg(only one of robust and vce() can be specified   ) rc(198)
     tokenize `"`vce'"', parse(" ,")
     local 0, `1'
     syntax, [Robust CLuster UNadjusted ols bs BOOTstrap]
@@ -142,11 +163,12 @@ program define reghdfejl, eclass
     local bs = "`bs'`bootstrap'" != ""
     macro shift
     if `bs' {
+      _assert !`ivreg2', msg(fast bootstrapping not available when using ivreg2) rc(198)
       local 0 `*'
       syntax, [CLuster(string) Reps(integer 50) mse seed(string) SIze(integer 0) PROCs(integer 1)]
-      _assert `reps'>1, msg("reps() must be an integer greater than 1") rc(198)
-      _assert `size'>=0, msg("size() must be a positive integer") rc(198)
-      _assert `procs'>=0, msg("procs() must be a positive integer") rc(198)
+      _assert `reps'>1, msg(reps() must be an integer greater than 1) rc(198)
+      _assert `size'>=0, msg(size() must be a positive integer) rc(198)
+      _assert `procs'>=0, msg(procs() must be a positive integer) rc(198)
       if `procs'==0 local procs 1
 
       cap confirm numeric var `cluster'
@@ -184,44 +206,22 @@ program define reghdfejl, eclass
     mata st_local("vcovopt", " , Vcov.cluster(" + invtokens(":":+tokens("`_cluster'"),",") + ")")
   }
 
-  foreach varset in dep inexog instd insts {
-    if strpos("``varset'name'", ".") | strpos("``varset'name'", "#") | strpos("``varset'name'", "-") | strpos("``varset'name'", "?") | strpos("``varset'name'", "*") | strpos("``varset'name'", "~") {
-      fvexpand ``varset'name' if `touse'
-      local `varset'
-      local `varset'name
-      foreach var in `r(varlist)' {
-        _ms_parse_parts `var'
-        if !r(omit) {
-          local `varset'name ``varset'name' `var'
-          if "`r(op)'`r(op1)'"=="" local `varset' ``varset'' `var'
-          else {
-            tempvar t
-            qui gen double `t' = `var' if `touse'
-            local `varset' ``varset'' `t'
-          }
-        }
-      }
-    }
-    else local `varset' ``varset'name'
-    local k`varset': word count ``varset''
-  }
-  _assert `kdep'==1, msg("Multiple dependent variables specified.") rc(198) 
-
   if `"`absorb'"' != "" {
-    ExpandAbsorb `absorb'
-    local 0 `r(exp)'
+    local 0 `absorb'
     syntax anything(equalok), [SAVEfe]
     tokenize `anything', parse(" =")
 
     while `"`1'"' != "" {
-      if `"`2'"' == "=" {
+      local t = "`2'"' == "="
+      if `t' {
         confirm new var `1'
         local fenames = `"`fenames'"' + " `1'"
         macro shift 2
         local namedfe 1
       }
-      else local fenames = `"`fenames'"' + `" "" "'
-      local feterms `feterms' `1'
+      fvunab varlist: `1'
+      local feterms `feterms' `varlist'
+      local fenames = `"`fenames'"' + `" "" "' * (`:word count `varlist'' - `t')
       macro shift
     }
     local absorb: copy local feterms
@@ -246,6 +246,7 @@ program define reghdfejl, eclass
     local absorbvars: subinstr local absorbvars "i." " ", all
     local absorbvars: subinstr local absorbvars "c." " ", all
     local absorbvars: subinstr local absorbvars "#" " ", all
+    local absorbvars: list uniq absorbvars
 
     foreach var in `absorbvars' {
       cap confirm numeric var `var'
@@ -261,8 +262,79 @@ program define reghdfejl, eclass
   }
   else if "`constant'"!="" local feterms + 0
 
-  local vars `dep' `inexog' `instd' `insts' `_cluster' `wtvar' `absorbvars' `bscluster'
-  local vars: list uniq vars
+  if `GLM' {
+    local nl nl
+    _assert `"`absorb'"'!="", msg(Doesn't yet accept nonlinear models with no fixed effects. Use {help glm} instead.) rc(198)
+
+    _assert !`hasiv', msg(instrumental variables not accepted for nonlinear models) rc(198)
+    _assert "`wtopt'"=="", msg(weights not yet supported for nonlinear models) rc(198)
+    _assert "`tolerance'"=="", msg(the tolerance() option is for linear models) rc(198)
+
+    if `"`separation'"'!="" {
+      local 0, `separation'
+      syntax, [fe ir simplex mu]
+      _assert "`simplex'"=="", msg(separation(simplex) not yet supported) rc(198)
+      local separation `fe' `ir' `simplex' `mu'
+      local sepopt , separation=[:`:subinstr local separation " " ", :", all']
+    }
+
+    local families gaussian igaussian binomial nbinomial poisson gamma bernoulli geometric
+
+    if `"`family'"'=="" local family gaussian
+    else {
+      tokenize `family'
+      local 0, `1'
+      syntax, [GAUssian IGaussian BInomial NBinomial Poisson Gamma BErnoulli GEOmetric]
+      local family `gaussian' `igaussian' `binomial' `nbinomial' `poisson' `gamma' `bernoulli' `geometric'
+      _assert `:word count `family''==1, msg(family(`*') not allowed) rc(198)
+      if "`nbinomial'" != "" {
+        if "`2'"=="" local 2 1  // default to (negative) binomial with denominator=1
+          else confirm integer number `2'
+        local familyopt , NegativeBinomial(`2')
+      }
+      else {
+        if "`binomial'" != "" {
+          sum `dep' if `touse', meanonly
+          if r(max) != 1 {
+            if "`dep'"!="`depname'" replace `dep' = `dep' / r(max) if `touse'
+            else {
+              tempname t
+              gen double `t' = `dep' / r(max) if `touse'  // rescale dep var to [0,1]
+              local dep: copy local t
+            }
+          }
+        }
+        local n: list posof "`family'" in families
+        local familyopt , `:word `n' of Normal InverseGuassian Binomial NegativeBinomial Poisson Gamma Bernoulli Geometric'()
+      }
+    }
+
+    if `"`link'"'=="" {
+      local n: list posof "`family'" in families
+      local linkopt , `:word `n' of Identity InverseSquareLink LogitLink LogLink LogLink InverseLink LogitLink LogLink'()  // canonical links but log for nbinomial
+    }
+    else {
+      tokenize `0'
+      local 0, `1'
+      syntax, [Identity log Logit Probit Cloglog POWer OPOwer NBinomial LOGLog logc]
+      _assert "`opower'`loglog'`logc'`probit'"=="", msg(link(`link') not supported) rc(198)
+      local link `identity' `log' `logit' `cloglog' `nbinomial'
+      _assert `:word count `link''==1, msg(link(`link') not allowed) rc(198)
+      if "`power'"!="" {
+        confirm number `2'
+        local linkopt , PowerLink(`power')
+      }
+      else {
+        local links identity log logit cloglog nbinomial
+        local n: list posof "`link'" in links
+        local linkopt , `:word `n' of Identity Log Logit Cloglog NegativeBinomial'Link()
+      }
+    }
+  }
+  else if `"`tolerance'"'!="" {
+    _assert `tolerance'>0, msg({cmdab:tol:erance()} must be positive) rc(198)
+    local tolopt, tol=`tolerance', progress_bar=false
+  }
 
   if "`residuals'" != "" {
     cap drop _reghdfejl_resid
@@ -276,46 +348,213 @@ program define reghdfejl, eclass
 
   if `"`_options'"' != "" di as inp `"`_options'"' as txt " ignored" _n
 
-  local saveopt = cond("`residuals'`savefe'`namedfe'"=="", "", ", save = :" + cond("`residuals'"=="", "fe", cond("`savefe'`namedfe'"=="", "residuals", "all")))
+  if "`residuals'`savefe'`namedfe'"!="" {
+    _assert !`ivreg2', msg(residuals, savefe, and namedfe features not available when using ivreg2) rc(198)
+    local saveopt , save = :`=cond("`residuals'"=="", "fe", cond("`savefe'`namedfe'"=="", "residuals", "all"))'
+  }
 
-  if "`compact'"!="" {
-    tempfile compactfile
-    save "`compactfile'"
+  _fv_check_depvar `dep'
+
+  if `ivreg2' {
+    foreach varset in dep inexog instd insts {
+      fvexpand ``varset'name' if `touse'
+      local `varset'expanded `r(varlist)'
+      fvrevar ``varset'name' if `touse'
+      local `varset'vars `r(varlist)'
+      foreach var of local `varset'vars {
+        tempname t
+        local `varset'partialled ``varset'partialled' `t'
+      }
+      local allvars `allvars' ``varset'vars'
+      local allpartialled `allpartialled' ``varset'partialled'
+    }
+  }
+  else {
+    // translate varlists into StatsModels formulas, translating factor terms directly when possible, fvrevar'ing otherwise; do in main proc because may create temp vars
+    tempname termtab dummyrows freqs
+    foreach varset in dep inexog instd insts {
+      if `'"``varset'name'"'!="" {
+        fvexpand ``varset'name' if `touse'
+        local `varset'expanded `r(varlist)'
+
+        mata `termtab' = J(0,3,"")
+        fvunab varlist: ``varset'name'
+        gettoken term varlist: varlist, bind
+        while "`term'"!="" {
+          local goodterm 1
+          tokenize `term', parse("#")
+          local _term `*'
+          local _term: list uniq _term
+          foreach factor of local _term {
+            if "`factor'" != "#" {
+              if regexm("`factor'", "^i(b([0-9]+)){0,1}\.(.*)$") {
+                mata `termtab' = `termtab' \ "i", `"`=cond(regexs(2)=="", "nothing", regexs(2))'"', "`=regexs(3)'"
+              }
+              else {
+                if substr(`"`factor'"',1,2)=="c." local factor = substr("`factor'", 3, .)
+                cap confirm var `factor'
+                if _rc {  // bad syntax; or ts op or "ib...." that can't be expressed with StatsModels.jl DummyCoding()
+                  fvexpand `term' if `touse'
+                  local `varset'names ``varset'names' `r(varlist)'
+                  foreach var in `r(varlist)' {  // equivalent to fvrevar `r(varlist)' but a bit faster on big data sets
+                    tempvar t
+                    qui gen `t' = `var' if `touse'
+                    local `varset'vars ``varset'vars' `t'
+                    local `varset'formula ``varset'formula' `t'
+                  }
+                  local goodterm 0
+                  continue, break
+                }
+                mata `termtab' = `termtab' \ "c", "", "`factor'"
+              }
+            }
+          }
+          if `goodterm' {
+            local `varset'formula ``varset'formula' `term'
+            local goodterms `goodterms' `term'
+          }
+          gettoken term varlist: varlist, bind
+        }
+        fvrevar `goodterms', list
+        local `varset'vars ``varset'vars' `r(varlist)'
+        local `varset'names ``varset'names' `r(varlist)'
+
+        mata `termtab' = uniqrows(`termtab')
+        mata `dummyrows' = selectindex(`termtab'[,1]:=="i")
+        mata st_local("t", invtokens(":" :+ `termtab'[`dummyrows',3]' :+ "=>DummyCoding(base=" :+ `termtab'[`dummyrows',2]' :+ "), "))
+        local DummyCodingargs "`DummyCodingargs' `t'"
+        mata `dummyrows' = uniqrowsfreq(uniqrows(`termtab'[, 1\3])[,2], `freqs'=.)
+        cap mata st_local("dups", invtokens(`dummyrows'[selectindex(`freqs':>1)]'))
+        foreach dup in `dups' {  // any vars appearing with both i. and c.? (rare)
+          tempname t
+          local `varset'formula: subinstr local `varset'formula "c.`dup'" "c.`t'", word all
+          local `varset'formula: subinstr local `varset'formula "`dup'"   "`t'", word all
+          local dfaliascmds `dfaliascmds' df.`t' = df.`dup'; 
+          local `varset'names ``varset'names' `dup'
+          local `varset'vars ``varset'vars' `t'
+        }
+        
+        local `varset'formula: subinstr local `varset'formula "#" "&", all
+        local `varset'formula: subinstr local `varset'formula "i." "", all
+        local `varset'formula: subinstr local `varset'formula "c." "", all
+        local `varset'formula: subinstr local `varset'formula " " " + ", all
+      }
+     }
+  }
+
+  local vars `depvars' `inexogvars' `instdvars' `instsvars' `_cluster' `wtvar' `absorbvars' `bscluster'
+  local vars: list uniq vars
+
+  if `compact' {
+    tempfile noncompactfile
+    save "`noncompactfile'"
+    c_local noncompactfile `noncompactfile'
     keep `vars' `touse'
     qui keep if `touse'
+    local iftouse
   }
+  else local iftouse if `touse'
 
-  jl PutVarsToDF `vars' if `touse', nomissing doubleonly // put all vars in Julia DataFrame named df
+  jl PutVarsToDF `vars' `iftouse', nomissing doubleonly nolabel  // put all vars in Julia DataFrame named df
+  _jl: `dfaliascmds';
 
-  if "`verbose'"!="" jl: df
+  if "`verbose'"!="" _jl: df
 
-  qui jl: size(df,1)
+  qui _jl: size(df,1)
   _assert `r(ans)', rc(2001) msg(insufficient observations)
 
-  if "`compact'" !="" drop _all
+  if `compact' drop _all
 
-  mata: st_local("inexog", invtokens(tokens("`inexog'"), "+"))  // put +'s in var lists
-  if `hasiv' {
-    mata: st_local("instd", invtokens(tokens("`instd'"), "+"))
-    mata: st_local("insts", invtokens(tokens("`insts'"), "+"))
-    local ivarg + (`instd' ~ `insts')
+  if `ivreg2' {
+    tempname D p ic df_a res esample
+    forvalues i=1/`:word count `allvars'' {
+      local var: word `i' of `allvars'
+      _jl: `p' = reg(df, @formula(`:word `i' of `allvars'' ~ 1 `feterms') `wtopt' `tolopt', maxiter=`iterations' `methodopt', progress_bar=false, save=:residuals);
+      _jl: `res' = residuals(`p'); replace!(`res', missing=>NaN);
+      jl GetVarsFromMat `:word `i' of `allpartialled'' `iftouse', source(`res')
+      _jl: `res' = nothing;
+    }
+    _jl: st_numscalar("`df_a'", dof_fes(`p'))
+    _jl: st_numscalar("`ic'", `p'.iterations);
+    di as txt `"({browse "http://scorreia.com/research/hdfe.pdf":MWFE estimator} converged in `=`ic'' iterations)"'
+    _jl: `esample' = Vector{Float64}(`p'.esample);
+//     _jl: `p' = partial_out(df, @formula(`:subinstr local allvars " " " + ", all' ~ 1 `feterms') `wtopt' `tolopt', maxiter=`iterations' `methodopt');
+//     jl GetVarsFromDF `allpartialled' `iftouse', source(`p'[1]) cols(`allvars')
+//     _jl: st_numscalar("`df_a'", `p'[5] - 1)
+//     _jl: st_numscalar("`ic'", maximum(`p'[3]))
+//     _jl: `esample' = Vector{Float64}(`p'[2]);
+
+    jl GetVarsFromMat `touse' `iftouse', source(`esample') replace
+    _jl: `esample' = nothing;
+
+    local 0, `_options'
+    syntax, [partial(string) first sfirst ffirst rf level(passthru) NOHEader NOFOoter EForm(passthru) DEPname(passthru) plus *]
+    if `"`partial'"'!="" {
+      fvexpand `partial' `iftouse'
+      foreach var in `r(varlist)' {
+        cap local _partial `_partial': word `:posof "`var'" in `inexog'expanded' of "`inexog'partialled'"
+        if _rc _assert 0, msg(variable `var' not found) rc(111)
+      }
+    }
+
+    * Estimate with ivreg2!
+    cap ivreg2 `deppartialled' `inexogpartialled' (`instdpartialled' = `instspartialled') if `touse', partial(`_partial') cluster(`_cluster') `robust' `small' `options' nocons sdofminus(`=`df_a'') // XXX other VCE types
+    if _rc error `=_rc'
+    
+    tempname M
+    mat `M' = e(b)
+    local colnames: colnames `M'
+    _jl: `D' = Dict(x=>y for (x,y) in zip(split("`allpartialled'"), split("`allvars'")));  // mapping from partialled, revar'D var names for ivreg2 back to display names
+    _jl: join(getindex.(Ref(`D'), split("`colnames'")), " ")
+    mat colnames `M' = `r(ans)'
+    ereturn repost b=`M', rename
+    foreach mat in S W {
+      cap mat `M' = e(`mat')
+      cap mat colnames `M' = `colnames'
+      cap mat rownames `M' = `colnames'
+      ereturn matrix `mat' = `M'
+    }
+    foreach macro in depvar depvar0 depvar1 instd instd0 instd1 insts insts0 insts1 exexog exexog0 exexog1 inexog inexog0 inexog1 partial partial0 partial1 {
+      local t `e(`macro')'
+      if "`t'"!="" {
+        _jl: join(getindex.(Ref(`D'), split("`t'")), " ")
+        ereturn local `macro' `r(ans)'
+      }
+    }
+
+    ereturn scalar df_a = `df_a'
+    ereturn scalar N_hdfe = `N_hdfe'
+    ereturn scalar ic = `ic'
+//     _jl: st_numscalar("`M'", size(`p'[1],1) - sum(`p'[2]));
+    _jl: st_numscalar("`M'", size(df,1) - nobs(`p'));
+    ereturn scalar num_singletons = `M'
+    if `M' di as txt `"(dropped `e(num_singletons)' {browse "http://scorreia.com/research/singletons.pdf":singleton observations})"'
+
+    ereturn local title `e(title)' with Julia
+    ereturn local cmdline reghdfejl `cmdline'
+    ivreg2, `diopts' `first' `sfirst' `ffirst' `rf' `level' `noheader' `nofooter' `eform' `depname' `plus'
+    exit
   }
 
+  if `hasiv' local ivarg + (`instdformula' ~ `instsformula')
+
   * Estimate!
-  local flinejl f = @formula(`dep' ~ `inexog' `ivarg' `feterms')
-  local cmdlinejl reg(df, f `wtopt' `vcovopt' `methodopt' `threadsopt' `singletonopt' `saveopt', tol=`tolerance', maxiter=`iterations')
-  jl, qui: `flinejl'
+  local flinejl f = @formula(`depformula' ~ `inexogformula' `ivarg' `feterms')
+  local cmdlinejl `nl'reg(df, f `familyopt' `linkopt' `wtopt' `vcovopt' `methodopt' `threadsopt' `singletonopt' `saveopt' `sepopt' `tolopt', maxiter=`iterations', contrasts=Dict{Symbol, DummyCoding}(`DummyCodingargs'))
+  _jl: `flinejl';
   if "`verbose'"!="" {
     di `"`flinejl'"'
     di `"`cmdlinejl'"'
-    jl, `interruptible': m = `cmdlinejl'
+    _jl, `interruptible': m = `cmdlinejl'
   }
-  else jl, qui `interruptible': m = `cmdlinejl'
+  else _jl, `interruptible': m = `cmdlinejl';
 
+  _assert `"`r(ans)'"'!="sample is empty", msg(no observations) rc(2000)
+  
   tempname k
-  jl, qui: k = length(coef(m)); SF_scal_save("`k'", k)
-  jl, qui: sizedf = size(df)
-  if "`wtvar'"!="" jl, qui: sumweights = mapreduce((w,s)->(s ? w : 0), +, df.`wtvar', m.esample; init = 0)
+  _jl: k = length(coef(m)); st_numscalar("`k'", k);
+  _jl: sizedf = size(df);
+  if "`wtvar'"!="" _jl: sumweights = mapreduce((w,s)->(s ? w : 0), +, df.`wtvar', m.esample; init = 0);
 
   if `k' {
     tempname b V
@@ -325,53 +564,55 @@ program define reghdfejl, eclass
       local hasclust = "`bscluster'"!=""
       tempname bswt
 
-      qui jl: nworkers()
+      qui _jl: nworkers()
       if `procs' != `r(ans)' {
-        jl, qui: rmprocs(procs())
-        if `procs'>1 jl, qui:  addprocs(`procs', exeflags="-t1");  /* single-threaded workers */                                                                  ///
-                               @everywhere using `=cond(c(os)=="MacOSX", "Metal, AppleAccelerate", "CUDA, BLISBLAS")', StableRNGs, DataFrames, FixedEffectModels, SharedArrays
+        _jl: rmprocs(procs());
+        if `procs'>1 _jl:  addprocs(`procs', exeflags="-t1 --project=$(Base.active_project())");  /* single-threaded workers */                                                                  ///
+                          @everywhere using `=cond(c(os)=="MacOSX", "Metal, AppleAccelerate", "CUDA, BLISBLAS")', DataFrames, FixedEffectModels;
       }
 
-      jl, qui: rngs = [StableRNG(`=runiformint(0, 1e6)' * i + 42) for i in 1:maximum(workers())]  // different, deterministic seeds for each worker
+      _jl: @everywhere using SharedArrays, StableRNGs;
+      _jl: rngs = [StableRNG(`=runiformint(0, 1e6)' * i + 42) for i in 1:maximum(workers())];  // different, deterministic seeds for each worker
 
       if `hasclust' ///
-        jl, qui: s = Set(df.`bscluster');                                                                               ///
-                 Nclust = length(s);                                                                                    ///
-                 _id = SharedVector(getindex.(Ref(Dict(zip(s, 1:Nclust))), df.`bscluster')) /* ordinalize cluster id */ 
-      else                                                                                                              ///
-        jl, qui: Nclust = size(df,1);                                                                                   ///
-                 _id = Colon()
+        _jl: s = Set(df.`bscluster');                                                                               ///
+            Nclust = length(s);                                                                                    ///
+            _id = SharedVector(getindex.(Ref(Dict(zip(s, 1:Nclust))), df.`bscluster')); /* ordinalize cluster id */ 
+      else                                                                                                         ///
+        _jl: Nclust = size(df,1);                                                                                   ///
+                 _id = Colon();
        
-      jl, qui: bssize = `=cond(0`size',"`size'","Nclust")';                                                             ///
-               bsweights = Vector{Int}(undef, Nclust);                                                                  ///
-               @everywhere function reghdfejlbs(bsweights, bssize, rngs, Nclust, df, _id, f)                            ///
-                 fill!(bsweights, 0);                                                                                   ///
-                 rng = rngs[myid()];                                                                                    ///
-                 @inbounds for i in 1:bssize  /* bs draws */                                                            ///
-                   bsweights[rand(rng, 1:Nclust)] += 1                                                                  ///
-                 end;                                                                                                   ///
-                 df.`bswt' = bsweights[_id];                                                                            ///
-                 `=cond("`wtopt'"!="", "df.`bswt' .*= df.`wtvar';", "")'                                                ///
-                 b = coef(reg(df, f, weights=:`bswt' `methodopt' `threadsopt', tol=`tolerance', maxiter=`iterations')); ///
-                 [b, b*b']                                                                                              ///
-               end;                                                                                                     ///
-               retval = @distributed (+) for m in 1:`reps'                                                              ///
-                 reghdfejlbs(bsweights, bssize, rngs, Nclust, df, _id, f)                                               ///
-               end;                                                                                                     ///
-               Vbs = retval[2];                                                                                         ///
-               Vbs .-= retval[1] ./ `reps' .* retval[1]';                                                               ///
-               Vbs ./= `reps' - `="`mse'"==""'
+      _jl: bssize = `=cond(0`size',"`size'","Nclust")';                                                             ///
+          bsweights = Vector{Int}(undef, Nclust);                                                                  ///
+          @everywhere function reghdfejlbs(bsweights, bssize, rngs, Nclust, df, _id, f)                            ///
+            fill!(bsweights, 0);                                                                                   ///
+            rng = rngs[myid()];                                                                                    ///
+            @inbounds for i in 1:bssize  /* bs draws */                                                            ///
+              bsweights[rand(rng, 1:Nclust)] += 1                                                                  ///
+            end;                                                                                                   ///
+            df.`bswt' = bsweights[_id];                                                                            ///
+            `=cond("`wtopt'"!="", "df.`bswt' .*= df.`wtvar';", "")'                                                ///
+            b = coef(`nl'reg(df, f `familyopt' `linkopt', weights=:`bswt' `methodopt' `threadsopt'  `sepopt' `tolopt', maxiter=`iterations')); ///
+            [b, b*b']                                                                                              ///
+          end;                                                                                                     ///
+          retval = @distributed (+) for m in 1:`reps'                                                              ///
+            reghdfejlbs(bsweights, bssize, rngs, Nclust, df, _id, f)                                               ///
+          end;                                                                                                     ///
+          Vbs = retval[2];                                                                                         ///
+          Vbs .-= retval[1] ./ `reps' .* retval[1]';                                                               ///
+          Vbs ./= `reps' - `="`mse'"==""';
     }
   }
 
-  if "`verbose'"=="" jl, qui: df = nothing  // yield memory
-  if "`compact'"!="" {
-    jl, qui: GC.gc()
-    use `compactfile'
+  if "`verbose'"=="" _jl: df = nothing;  // yield memory
+  if `compact' {
+    _jl: GC.gc();
+    use `noncompactfile'
+    c_local noncompactfile
   }
 
   if "`savefe'`namedfe'" != "" {
-    jl, qui: FEs = fe(m); rename!(FEs, "FE" .* string.(1:`N_hdfe'))
+    _jl: FEs = fe(m); rename!(FEs, "FE" .* string.(1:`N_hdfe'));
     forvalues a = 1/`N_hdfe' {
       local fename: word `a' of `fenames'
       if "`savefe'`fename'"!="" {
@@ -380,42 +621,49 @@ program define reghdfejl, eclass
         label var `fename' "[FE] `:word `a' of `absorb''"
       }
     }
-    jl, qui: FEs = nothing
+    _jl: FEs = nothing;
   }
 
   if "`residuals'"!="" {
-    jl, qui: res = residuals(m); replace!(res, missing=>NaN)
+    _jl: res = residuals(m); replace!(res, missing=>NaN);
     jl GetVarsFromMat `residuals' if `touse', source(res) `replace'
     label var `residuals' "Residuals"
-    jl, qui: res = nothing
+    _jl: res = nothing;
   }
 
-  tempname t N
+  tempname t N I
 
-  jl, qui: SF_scal_save("`N'", nobs(m))
+  _jl: st_numscalar("`N'", nobs(m));
 
   if `sample' {
-    jl, qui: esample = Vector{Float64}(m.esample)
-    jl GetVarsFromMat `touse' if `touse', source(esample) replace
-    jl, qui: esample = nothing
+    tempname esample
+    _jl: `esample' = Vector{Float64}(m.esample);
+    jl GetVarsFromMat `touse' if `touse', source(`esample') replace
+    _jl: `esample' = nothing;
   }
 
   if `k' {
-    jl, qui: SF_scal_save("`t'", coefnames(m)[1]=="(Intercept)")
+    _assert `"`r(ans)'"'!="sample is empty", msg(no coefficients estimated) rc(111)
+    _jl: st_numscalar("`t'", coefnames(m)[1]=="(Intercept)");
     local hascons = `t'
 
-    jl, qui: I = [1+`kinexog'+`hascons':`kinexog'+`hascons'+`kinstd' ; 1+`hascons':`kinexog'+`hascons' ; 1:`hascons']  // cons-exog-endog -> endog-exog-cons
-    jl, qui: `b' = collect(coef(m)[I]')
-    jl, qui: `V' = iszero(0`bs') ? vcov(m) : Vbs
-    jl, qui: `V' = replace!(`V'[I,I], NaN=>0.)
+    _jl: `b' = coef(m);
+    _jl: `V' = iszero(0`bs') ? vcov(m) : Vbs;
+    _jl: `V' = replace!(`V', NaN=>0.);
+    _jl: join(coefnames(m), "|")
+    local coefnames `r(ans)'
+    varlistJ2S, jlcoefnames(`coefnames') vars(`inexogvars' `instdvars') varnames(`inexognames' `instdnames')
+    local coefnames `r(stcoefs)'
+    _jl: `I' = [s=="_cons" ? 3 : s in split("`instdnames'") ? 1 : 2 for s in split("`coefnames'")] |> sortperm;  // order endog-exog-cons
+    _jl: `b' = collect(`b'[`I']'); `V' = `V'[`I',`I'];
+    _jl: join(split("`coefnames'")[`I'], " ")
+    local coefnames `r(ans)'
     jl GetMatFromMat `b'
     jl GetMatFromMat `V'
-    local coefnames `instdname' `inexogname' `=cond(`hascons', "_cons", "")'
-
     mat colnames `b' = `coefnames'
     mat colnames `V' = `coefnames'
     mat rownames `V' = `coefnames'
-   
+
     forvalues i=1/`:word count `coefnames'' {
       if `V'[`i',`i']==0 di as txt "note: `:word `i' of `coefnames'' omitted because of collinearity"
     }
@@ -424,54 +672,69 @@ program define reghdfejl, eclass
 
   ereturn post `b' `V', depname(`depname') obs(`=`N'') buildfvinfo findomitted `=cond(`sample', "esample(`touse')", "")'
 
+  ereturn local wtype: copy local wtype
+  ereturn local wexp: copy local wexp
+
   ereturn scalar N_hdfe = 0`N_hdfe'
-  jl, qui: SF_scal_save("`t'", sizedf[1])
+  _jl: st_numscalar("`t'", sizedf[1]);
   ereturn scalar N_full = `t'
   mata st_numscalar("e(rank)", rank(st_matrix("e(V)")))
   ereturn scalar df_m = e(rank)
-  jl, qui: SF_scal_save("`t'", dof_fes(m))
-  ereturn scalar df_a = `t'
-  jl, qui: SF_scal_save("`t'", dof_residual(m))
-  ereturn scalar df_r = `t'
-  jl, qui: SF_scal_save("`t'", rss(m))
-  ereturn scalar rss = `t'
-  jl, qui: SF_scal_save("`t'", mss(m))
-  ereturn scalar mss = `t'
-  jl, qui: SF_scal_save("`t'", r2(m))
-  ereturn scalar r2`' = `t'
-  jl, qui: SF_scal_save("`t'", adjr2(m))
-  ereturn scalar r2_a = `t'
-  jl, qui: SF_scal_save("`t'", m.F)
-  ereturn scalar F = `t'
-  if `hasiv' {
-    jl, qui: SF_scal_save("`t'", m.F_kp)
-    ereturn scalar widstat = `t'
-  }
-  jl, qui: SF_scal_save("`t'", m.iterations)
-  ereturn scalar ic = `t'
-  jl, qui: SF_scal_save("`t'", m.converged)
-  ereturn scalar converged = `t'
-  jl, qui: SF_scal_save("`t'", sizedf[1] - nobs(m))
-  ereturn scalar num_singletons = `t'
-  ereturn scalar rmse = sqrt(e(rss) / (e(N) - e(df_a) - e(rank)))
-  ereturn scalar ll  = -e(N)/2*(1 + log(2*_pi / e(N) *  e(rss)          ))
-  ereturn scalar ll0 = -e(N)/2*(1 + log(2*_pi / e(N) * (e(rss) + e(mss))))
 
-  if 0`N_hdfe' {
-    jl, qui: SF_scal_save("`t'", m.r2_within)
-    ereturn scalar r2_within = `t'
+  _jl: st_numscalar("`t'", m.iterations);
+  ereturn scalar ic = `t'
+  _jl: st_numscalar("`t'", m.converged);
+  ereturn scalar converged = `t'
+  _jl: st_numscalar("`t'", sizedf[1] - nobs(m));
+  ereturn scalar num_singletons = `t'
+
+  if "`nl'"!="" {
+    _jl: st_numscalar("`t'", m.loglikelihood);
+    ereturn scalar ll = `t'
+    _jl: st_numscalar("`t'", m.nullloglikelihood);
+    ereturn scalar ll0 = `t'
+    ereturn local family `family'
+    ereturn local link `link'
+  }
+  else {
+    _jl: st_numscalar("`t'", dof_fes(m));
+    ereturn scalar df_a = `t'
+    _jl: st_numscalar("`t'", dof_residual(m));
+    ereturn scalar df_r = `t'
+    _jl: st_numscalar("`t'", rss(m));
+    ereturn scalar rss = `t'
+    _jl: st_numscalar("`t'", mss(m));
+    ereturn scalar mss = `t'
+    _jl: st_numscalar("`t'", r2(m));
+    ereturn scalar r2`' = `t'
+    _jl: st_numscalar("`t'", adjr2(m));
+    ereturn scalar r2_a = `t'
+    _jl: st_numscalar("`t'", m.F);
+    ereturn scalar F = `t'
+    if `hasiv' {
+      _jl: st_numscalar("`t'", m.F_kp);
+      ereturn scalar widstat = `t'
+    }
+    ereturn scalar rmse = sqrt(e(rss) / (e(N) - e(df_a) - e(rank)))
+    ereturn scalar ll  = -e(N)/2*(1 + log(2*_pi / e(N) *  e(rss)          ))
+    ereturn scalar ll0 = -e(N)/2*(1 + log(2*_pi / e(N) * (e(rss) + e(mss))))
+
+    if 0`N_hdfe' {
+      _jl: st_numscalar("`t'", m.r2_within);
+      ereturn scalar r2_within = `t'
+    }
   }
 
   if "`wtvar'"=="" ereturn scalar sumweights = e(N)
   else {
-    jl, qui: SF_scal_save("`t'", sumweights)
+    _jl: st_numscalar("`t'", sumweights);
     ereturn scalar sumweights = `t'
   }
 
   if 0`bs' {
     ereturn local vce bootstrap
     ereturn local vcetype Bootstrap
-    jl, qui: SF_scal_save("`t'", Nclust)
+    _jl: st_numscalar("`t'", Nclust);
     ereturn scalar N_clust = `t'
     ereturn scalar N_clust1 = `t'
     if "`bscluster'"!="" {
@@ -495,10 +758,10 @@ program define reghdfejl, eclass
       tokenize `cluster'
       forvalues i=1/`e(N_clustervars)' {
         ereturn local clustvar`i': copy local `i'
-        jl, qui: SF_scal_save("`t'", m.nclusters[`i'])
+        _jl: st_numscalar("`t'", m.nclusters[`i']);
         ereturn scalar N_clust`i' = `t'
       }
-      jl, qui: SF_scal_save("`t'", minimum(m.nclusters))
+      _jl: st_numscalar("`t'", minimum(m.nclusters));
       ereturn scalar N_clust = `t'
       ereturn local title3 Statistics cluster-robust
     }
@@ -512,13 +775,13 @@ program define reghdfejl, eclass
 
   if `hasiv' {
     ereturn local model iv
-    ereturn local inexog: copy local inexogname
-    ereturn local instd: copy local instdname
-    ereturn local insts: copy local instsname
+    ereturn local inexog: copy local inexogexpanded
+    ereturn local instd: copy local instdexpanded
+    ereturn local insts: copy local instsexpanded
   }
   else ereturn local model ols
 
-  ereturn local title HDFE `=cond(`hasiv', "2SLS", "linear")' regression with Julia
+  ereturn local title HDFE `=cond(`hasiv', "2SLS", cond("`nl'"=="","linear","nonlinear"))' regression with Julia
   if 0`N_hdfe' ereturn local title2 Absorbing `N_hdfe' HDFE `=plural(0`N_hdfe', "group")'
   ereturn local absvars: copy local absorb
   ereturn local marginsnotok Residuals SCore
@@ -528,28 +791,43 @@ program define reghdfejl, eclass
   ereturn local flinejl: copy local flinejl
   ereturn local cmdlinejl: copy local cmdlinejl
   ereturn local cmd reghdfejl
+//   ereturn local exposure `exposure'
+//   ereturn local offset `offset'
 
-  Display, `diopts' level(`level') `noheader' `notable'
+  Display, `diopts' `eformopts' level(`level') `noheader' `notable'
 end
 
-* Expand nested expression like absorb(a#c.(b c)) without using fvunab, which apparently scans all vars for their levels, taking time
-program define ExpandAbsorb, rclass
-  while `"`0'"' != "" {
-    gettoken car 0: 0, bind
-    if regexm("`car'", "([^\(]*)\((.*)\)([^\)]*)") {
-      local prefix = regexcapture(1)
-      local suffix = regexcapture(3)
-      ExpandAbsorb `=regexcapture(2)'
-      mata st_local("car", invtokens("`prefix'" :+ tokens("`r(exp)'") :+ "`suffix'"))
+
+// translate a pipe-delimited coefficient list back to Stata syntax, and replace temp vars with their names
+cap program drop varlistJ2S
+program define varlistJ2S, rclass
+  syntax, jlcoefnames(string) vars(string) varnames(string)
+  gettoken jlcoef jlcoefnames: jlcoefnames, parse("|")
+  while "`jlcoef'"!="" {
+    if "`jlcoef'"=="(Intercept)" {
+      return local hascons 1
+      return local stcoefs `return(stcoefs)' _cons
     }
-    return local exp `return(exp)' `car'
+    else if "`jlcoef'"!="|" {
+      tokenize `jlcoef', parse("&")
+      local cdot = cond("`2'"!="", "c.", "")
+      local stcoef
+      while "`1'"!="" {
+        if regexm("`1'", "^([^:&]*)(:(.*)){0,1}$") {  // "[coef]" or "[coef]: [x]"
+          local stcoef `=cond("`stcoef'"=="","","`stcoef'#")'`=cond(regexs(3)!="","`=real(regexs(3))'.", "`cdot'")'`:word `:list posof "`=regexs(1)'" in vars' of `varnames''
+        }
+        macro shift
+      }
+      return local stcoefs `return(stcoefs)' `stcoef'
+    }
+    gettoken jlcoef jlcoefnames: jlcoefnames, parse("|")
   }
 end
 
+cap program drop Display
 program define Display
-  version 16
+  version 15
   syntax [, Level(real `c(level)') noHEADer notable *]
-  _get_diopts diopts, `options'
 
   if !e(drop_singletons) di as err `"WARNING: Singleton observations not dropped; statistical significance is biased {browse "http://scorreia.com/reghdfe/nested_within_cluster.pdf":(link)}"'
   if e(num_singletons) di as txt `"(dropped `e(num_singletons)' {browse "http://scorreia.com/research/singletons.pdf":singleton observations})"'
@@ -579,15 +857,14 @@ program define Display
     di _col(`=50-strlen("`N_clust'`e(cluster)'")') as txt "(Replications based on " as res "`N_clust'" as txt " clusters in " as res e(cluster) as txt ")"
   }
 
-  if "`table'"=="" ereturn display, level(`level') `diopts'
+  if "`table'"=="" ereturn display, level(`level') `options'
   
   if e(model)=="iv" {
     local res `:di %10.3f e(widstat)'
     di "Weak identification test (Kleibergen-Paap rk Wald F statistic):" _col(`=79-strlen("`res'")') as res `res'
-    di as txt "{hline 78}"
+    di as txt "{hline 80}"
   }
 end
-
 
 * Version history
 * 0.3.0 Added support for absorbing string vars and clustering on interactions
@@ -603,4 +880,5 @@ end
 * 0.6.0 Added vce(bs)
 * 0.6.1 Bug fixes. Added interruptible option.
 * 0.6.2 Bug fixes. Add Kleibergen-Paap return value. Catch small option.
-* 0.6.3 Bug fixes, including [pw] not triggering robust. Bump to julia.ado 0.10.0.
+* 0.6.3 Bug fixes, including [pw] not triggering robust. Bump to julia.ado 0.10.0. Speed up handling of non-absorbed factor variables--don't fvrevar and then copy.
+* 1.0.0 Support wildcards in absorb(). Added ivreg2 option.

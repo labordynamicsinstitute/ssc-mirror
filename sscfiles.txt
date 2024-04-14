@@ -5284,6 +5284,7 @@ fmwww.bc.edu/repec/bocode/c/ceqcov.ado
 fmwww.bc.edu/repec/bocode/c/circvm.ado
 fmwww.bc.edu/repec/bocode/c/cwmbootstrap.ado
 fmwww.bc.edu/repec/bocode/c/color-538rs2.style
+fmwww.bc.edu/repec/bocode/_/_jl.ado
 fmwww.bc.edu/repec/bocode/_/_adminregion.ado
 fmwww.bc.edu/repec/bocode/_/_countrycode_iso2.ado
 fmwww.bc.edu/repec/bocode/_/_gadjl.ado
@@ -18253,7 +18254,6 @@ fmwww.bc.edu/repec/bocode/j/julia.sthlp
 fmwww.bc.edu/repec/bocode/j/join.sthlp
 fmwww.bc.edu/repec/bocode/j/jfile.ico
 fmwww.bc.edu/repec/bocode/j/jhpoi_ll.ado
-fmwww.bc.edu/repec/bocode/j/jl.pluginWIN64.exp
 fmwww.bc.edu/repec/bocode/j/joinvars.sthlp
 fmwww.bc.edu/repec/bocode/j/jontertest.do
 fmwww.bc.edu/repec/bocode/j/stata.toc
@@ -18287,7 +18287,6 @@ fmwww.bc.edu/repec/bocode/j/jb.html
 fmwww.bc.edu/repec/bocode/j/jnsw.hlp
 fmwww.bc.edu/repec/bocode/j/joyplot.pkg
 fmwww.bc.edu/repec/bocode/j/jb6.pkg
-fmwww.bc.edu/repec/bocode/j/jl.pluginWIN64.lib
 fmwww.bc.edu/repec/bocode/z/ztnbp.html
 fmwww.bc.edu/repec/bocode/z/zoib.pkg
 fmwww.bc.edu/repec/bocode/z/zinb.html
