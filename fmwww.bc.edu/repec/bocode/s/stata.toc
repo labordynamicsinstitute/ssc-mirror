@@ -5,6 +5,7 @@
 p sadi Sequence analysis distance measures
 p sankey module for Sankey diagrams 
 p scatterfit module to produce scatter plots with fit lines
+p scheme_scientific module to provide a graphic scheme favored by many scientific journals
 p setroot module to find the root path of a project and set it as a global variable
 p simsum module to perform analyses of simulation studies including Monte Carlo error
 p simulate2 module enhancing and parallelising simulate
@@ -29,6 +30,7 @@ p submatrix module to perform advanced matrix subscripting
 p summclust module to compute cluster level measures of leverage, influence, and a cluster jackknife variance estimator
 p summtab module to compute summary statistics overall and/or across levels of a categorical variable 
 p sunburst module for (half) sunburst plots
+p susoapi module to provide Survey Solutions API client class for Stata
 p svycanon module to assess the statistical significance of the canonical correlations incorporating complex survey design factors
 p swpermute module to compute Permutation tests for Stepped-Wedge Cluster-Randomised Trials
 p synth2 module to implement synthetic control method (SCM) with placebo tests, robustness test and visualization
