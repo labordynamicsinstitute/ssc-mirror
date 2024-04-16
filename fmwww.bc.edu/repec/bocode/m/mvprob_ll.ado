@@ -1,8 +1,12 @@
-*! version 1.0.0  15jan2003 Cappellari & Jenkins 
+*! version 3.0.0  12april2006 Cappellari & Jenkins            
+*!	revised: aa algorithm, draw vble naming scheme
+*! version 2.1.0  19may2005  Cappellari & Jenkins            
+*!	update to version 8.2
+*! version 1.0.0  15jan2003 Cappellari & Jenkins              (SJ3-3: st0045)
 *! Multivariate probit by method of SML. 
 
 program define mvprob_ll
-	version 7.0
+	version 8.2
 	args lnf $S_MLE_I $S_MLE_atrho
 	tempvar $S_MLE_tvar sp0
 	tokenize $ML_y 
@@ -23,8 +27,7 @@ program define mvprob_ll
 	mat `A' = I($S_MLE_M)                             
 
 	forval i = 1/$S_MLE_M {  
-		local jj = `i'+1
-		forval j = `jj'/$S_MLE_M {
+		forval j = `=`i'+1'/$S_MLE_M {
 
 				/* atrho`j'`i' is a variable with constant
 				   values; we need to get this constant
@@ -80,12 +83,12 @@ program define mvprob_ll
 			forval i = 1/$S_MLE_M {
 				replace `arg`i'' = `k`i''*`S_MLE_I`i''
 				if `i' > 1 {
-					local jjj = `i'-1
-					forval j = `jjj'(-1)1 {
+					forval j = `=`i'-1'(-1)1 {
 						replace `arg`i'' = `arg`i''-`k`i''*`k`j''*`d`j''*`c`i'`j''
-					}
+						}
 				}
-				replace `d`i'' = invnorm(${S_MLE_z`i'`d'}*normprob((`arg`i'')/`c`i'`i''))
+				replace `d`i'' = invnorm(${S_MLE_z`i'_`d'}*normprob((`arg`i'')/`c`i'`i''))
+
 				local j = `i'-1
 				replace `sp`i'' = normprob((`arg`i'')/`c`i'`i'')*`sp`j''
 			}
