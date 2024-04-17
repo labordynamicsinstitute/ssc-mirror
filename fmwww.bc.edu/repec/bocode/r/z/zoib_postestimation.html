@@ -1,0 +1,76 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>zoib postestimation</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>zoib postestimation</b> -- Postestimation tools for zoib
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+The following standard postestimation commands are available:
+<p>
+    command         description
+    -------------------------------------------------------------------------
+INCLUDE help post_estat
+INCLUDE help post_estimates
+INCLUDE help post_lincom
+INCLUDE help post_lrtest
+      <b>margins</b>       marginal means, predictive margins, marginal effects, and
+                      average marginal effects
+INCLUDE help post_mfx
+INCLUDE help post_nlcom
+      <b>predict</b>       predictions
+INCLUDE help post_predictnl
+INCLUDE help post_suest
+INCLUDE help post_test
+INCLUDE help post_testnl
+    -------------------------------------------------------------------------
+<p>
+<p>
+<a name="predict"></a><b><u>Syntax for predict</u></b>
+<p>
+        <b>predict</b> [<i>type</i>] <i>newvar</i> [<i>if</i>] [<i>in</i>] [ <b>,</b> <i>statistic</i> <b><u>eq</u></b><b>uation(</b><i>eqno</i><b>)</b> ]
+<p>
+    <i>statistic</i>       Description
+    -------------------------------------------------------------------------
+      <b><u>p</u></b><b>roportion</b>    proportion (the default)
+      <b>prcond</b>        proportion conditional on 0 &lt; <i>depvar</i> &lt; 1
+      <b>pr0</b>           probability <i>depvar</i> = 0
+      <b>pr1</b>           probability <i>depvar</i> = 1
+      <b>xb</b>            xb, fitted values
+      <b>stdp</b>          standard error of the prediction
+      <b><u>sc</u></b><b>ore</b>         first derivative of the log likelihood with respect to
+                      the linear predictor.
+    -------------------------------------------------------------------------
+INCLUDE help unstarred
+<p>
+<p>
+<b><u>Options for predict</u></b>
+<p>
+    <b>proportion</b> the default, calculates the proportions.
+<p>
+    <b>prcond</b> proportion conditional on 0 &lt; <i>depvar</i> &lt; 1
+<p>
+    <b>pr0</b> probability <i>depvar</i> = 0
+<p>
+    <b>pr1</b> probability <i>depvar</i> = 1
+<p>
+    <b>score</b> calculates the first derivative of the log likelihood with respect
+        to the linear predictions. This is only available for Stata version
+        9.2 and higher.
+<p>
+    <b>xb</b> calculates the linear prediction.
+<p>
+    <b>stdp</b> calculates the standard error of the linear prediction.
+<p>
+    <b><u>eq</u></b><b>uation(</b><i>eqno</i><b>)</b> specify equation, see predict.
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online: help for <b>zoib</b>, <b>estimates</b>, <b>lincom</b>, <b>lrtest</b>, <b>mfx</b>, <b>nlcom</b>, <b>predict</b>, 
+             <b>predictnl</b>, <b>suest</b>, <b>test</b>, <b>testnl</b>
+<p>
+</pre>

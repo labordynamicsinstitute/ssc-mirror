@@ -1,8 +1,6 @@
-*! rlasso 1.0.11 29jul2020
-*! lassopack package 1.4.1
+*! rlasso 1.0.05 30jan2018
 *! authors aa/cbh/ms
 
-* Also see lassoutils.ado notes for details of code updates.
 * Updates (release date):
 * 1.0.05  (30jan2018)
 *         First public release.
@@ -15,36 +13,12 @@
 *         partial and nocons no longer compatible.
 *         Removed hdm version of sup-score stat.
 *         Removed misc debug code.
-* 1.0.06  (10feb2018)
-*         Support for Sergio Correia's FTOOLS FE transform (if installed).
-* 1.0.07  (29aug2018)
-*         Added support for string cluster variable.
-*         Added support for aweights and pweights (equivalent) by preweighting.
-*         Fixed display bug when no penalized or unpenalized vars selected.
-* 1.0.08  (26nov2018)
-*         Added saved value of objective function (pmse for lasso, prmse for sqrt-lasso).
-*         Added two undocumented options: sigma(.) to override lasso estimation of initial sigma
-*           and ssiid to override use of multiplier bootstrap for sup-score test.
-* 		  changed "partial" to "PARtial" option
-* 1.0.09  (11dec2018)
-*         Added support for combination of partial(.) + nocons
-*         Bug fix that would cause exit with error if cluster + no penalized vars.
-* 1.0.10  (13jan2019)
-*         Replaced pols option with ols option; fixed reporting of e(estimator) macro; more use of flag macros.
-*         Replace Ups terminology with Psi (penalty loadings). Dropped usage of gammad.
-*         Bug fix - FE + weights would fail if data were not sorted on xtset panel var.
-* 1.0.11  (29july2020)
-*         Added e(r2), e(cmdline); support for 2-way clustering; norecover option; psolver(.) option.
-*
-
-* to do - noftools + weights
 
 program rlasso, eclass sortpreserve
 
 	version 13
 	
-	syntax [anything] [if] [in] [aw pw]	///
-		[,								///
+	syntax [anything] [if] [in] [,		///
 		displayall						///
 		varwidth(int 17)				///
 		VERsion							///
@@ -53,22 +27,18 @@ program rlasso, eclass sortpreserve
 		*								///
 		]
 		
-	local lversion 1.0.11
-	local pversion 1.4.0
+	local lversion 1.0.05
 
 	if "`version'" != "" {							//  Report program version number, then exit.
-		di in gr "rlasso version `lversion'"
-		di in gr "lassopack package version `pversion'"
+		di in gr "`lversion'"
 		ereturn clear
-		ereturn local version		`lversion'
-		ereturn local pkgversion	`pversion'
+		ereturn local version `lversion'
 		exit
 	}
 
 	if ~replay() {									//  not replay so estimate
-		_rlasso `anything'							///
-			`if' `in' [`weight' `exp'],				///
-			`options' `supscore' `testonly'
+		_rlasso `anything' `if' `in',				///
+		`options' `supscore' `testonly'
 	}
 	else if e(cmd)~="rlasso" {						//  replay, so check that rlasso results exist
 		di as err "last estimates not found"
@@ -90,20 +60,15 @@ program _rlasso, eclass sortpreserve
 
 	version 13
 
-	syntax varlist(numeric fv ts min=2)					///
-		[aw pw/] [if] [in]								///
-		[,												///
+	syntax varlist(numeric fv ts min=2) [if] [in] [,	///
 														/// specify options with varlists to be used by marksample/markout
 		PNOTPen(varlist fv ts numeric)					/// list of variables not penalised
-		PARtial(string)									/// string so that list can contain "_cons"
-		NORecover										/// don't recover partialled-out coeffs
+		partial(string)									/// string so that list can contain "_cons"
 		fe												/// do within-transformation
 		NOCONStant										///  
-		CLuster(varlist max=2)							/// penalty level/loadings allow for within-panel dependence & heterosk.
-		ols												/// post-lasso coefs in e(b) (default=lasso)
-		pols											/// legacy option (equivalent to ols)
+		CLuster(varlist max=1)							/// penalty level/loadings allow for within-panel dependence & heterosk.
+		pols											/// post-lasso coefs in e(b) (default=lasso)
 		prestd											///
-		dm												/// treat data as having zero mean (for debugging use)
 		VERbose											/// pass to lassoutils
 		VVERbose										/// pass to lassoutils
 		dots											///
@@ -113,141 +78,63 @@ program _rlasso, eclass sortpreserve
 		debug											/// used for debugging
 		postall											/// full coef vector in e(b) (default=selected only)
 		testonly										/// obtain supscore test only
-		NOFTOOLS										///
-		psolver(string)									/// optional choice of solver for partialling-out
-		*												/// additional options
+		*												/// additional options to be passed to lassoutils
 		]
-
-	// save at beginning, return at the end
-	local cmdline `0'
 
 	*** rlasso-specific
 	//  to distinguish between lasso2 and rlasso treatment of notpen,
 	//  rlasso option is called pnotpen
 	//  to keep lasso2 and rlasso code aligned, rename to notpen here
 	//  and at end of program save macros as pnotpen
-	//  temporary measure until lasso2 and rlasso code is merged
+	//  temporary measure until lasso2 and rlasso code is merge
 	local notpen	`pnotpen'
-
-	//  flags
-	local olsflag		=("`ols'`pols'"~="")	// pols is a legacy option equivalent to ols
+	//  supscore test flag
 	local testonlyflag	=("`testonly'"~="")
-	local debugflag		=("`debug'"~="")
-	local postallflag	=("`postall'"~="")
-	local feflag=("`fe'"~="")
+	*
+
+	*** debug mode; create flag
+	local debugflag	=("`debug'"~="")
 	*
 
 	*** Record which observations have non-missing values
 	marksample touse
-	if `feflag' {
-		cap xtset
-		local ivar	`r(panelvar)'
-	}
-	markout `touse' `varlist' `cluster' `ivar', strok
-	sum `touse' if `touse', meanonly
+	markout `touse' `varlist' `cluster' `ivar'
+	sum `touse' if `touse', meanonly		//  will sum weight var when weights are used
 	local N		= r(N)
 	*
-	
+
 	*** FEs. Create 1/0 flag.
+	// Get panel id
+	local feflag=("`fe'"~="")
 	if `feflag' {
-		if "`ivar'"=="" {
+		cap _xt
+		if _rc ~= 0 {
 			di as err "Error: fe option requires data to be xtset"
 			exit 459
 		}
-		// fe transformation may expect data to be sorted on ivar
-		local sortvar	: sortedby
-		local sortvar	: word 1 of `sortvar'				// in case sorted on multiple variables
-		if "`ivar'"~="`sortvar'" {
-			di as text "(sorting by xtset panelvar `ivar')"
-			sort `ivar'
+		else {
+			local ivar	`r(ivar)'
 		}
 	}
-	*
-	
-	*** prestd flag
-	// nb: if model has constant, prestd will demean (i.e. partial it out)
-	local prestdflag	=("`prestd'"~="")
-	*
-	
-	*** weight flag
-	local weightflag	=("`weight'"~="")
 	*
 	
 	*** constant, partial, etc.
 	// conmodel: constant in original model
 	// consflag: constant in transformed equation to estimate
-	// dmflag:   treat data as zero-mean
-	if `weightflag' & ("`noconstant'"~="") {
-		// incompatible options - with weights, must have a constant to partial out or remove by FE
-		di as err "incompatible options - weights + noconstant"
-		exit 198
-	}
-	local consmodel		=("`noconstant'"=="")
-	if `feflag' {
-		local consmodel	0									//  if fe, then consmodel=0 always
-	}
-	// model with weights must have a constant before partialling out or FE transformation
-	// weighting implies special treatment of constant - must be partialled-out
-	// will be automatic if fe
-	if `weightflag' & ~`feflag' {
-		local partial		`partial' _cons					//  duplicate _cons not a problem since removed below
-	}
-	local partialflag	=("`partial'"~="")					//  =1 even if just cons is being partialled out
-	// tell estimation code if cons will have been partialled out or there isn't one in the first place
-	// note that prestandardizing always implies the constant, if present, is to be calculated by the calling program
-	if `feflag' | `partialflag' | `prestdflag' | (`consmodel'==0) {
+	local consmodel		=("`noconstant'"=="") & ~`feflag'	//  if fe, then consmodel=0 & partialcons=""
+	local partialflag	=("`partial'"~="")					//  =1 even if just cons being partialled out
+	local prestdflag	=("`prestd'"~="")
+	// "_cons" allowed as an argument to partial(.) - remove it
+	local partial		: subinstr local partial "_cons" "", all word count(local pconscount)
+	local notpen		: subinstr local notpen "_cons" "", all word count(local notpenconscount)
+	// Tell estimation code if cons has been partialled out or there isn't one in the first place
+	if `feflag' | `partialflag' | `prestdflag' | (~`consmodel') {
 		local consflag	0
 	}
 	else {
 		local consflag	1
 	}
-	// "_cons" allowed as an argument to partial(.) - remove it
-	local partial		: subinstr local partial "_cons" "", all word count(local pconscount)
-	local notpen		: subinstr local notpen "_cons" "", all word count(local notpenconscount)
-	if "`dm'"~="" {
-		// dmflag tells estimation code to treat data as zero-mean; user can force this with dm option
-		local dmflag	1
-	}
-	else if `consmodel' {
-		// model has an constant that will be partialled out or treated as unpenalized
-		local dmflag	0
-	}
-	else {
-		// special case - nocons and no FEs means treat vars as if demeaned
-		local dmflag	1
-	}
-	// ignore norecover if no partialled-out variables
-	local parrflag		= ("`norecover'"=="") & (`partialflag' | `prestdflag')
 	*
-
-	*** weights ***
-	// create weight variable wvar
-	if `weightflag' {
-		// pw = aw + robust ... and more commands allow aw
-		local wtexp `"[aw=`exp']"'
-		tempvar wvar
-		qui gen double `wvar'=`exp'
-		sum `wvar' if `touse' `wtexp', meanonly
-		if r(min)<0 {
-			di as err "error - negative weights encountered"
-			exit 101
-		}
-		// Weight statement
-		di as text "(sum of wgt is " %14.4e `r(sum_w)' ")"
-		// normalize to have unit mean
-		qui replace `wvar' = `wvar' * `N'/r(sum_w)
-	}
-	if "`weight'"=="pweight" {
-		// pw => robust
-		local options	`options' robust
-		local options	: list uniq options
-	}
-	*
-
-	*** create variable used for getting lags etc. in Mata
-	tempvar tindex
-	qui gen `tindex'=1 if `touse'
-	qui replace `tindex'=sum(`tindex') if `touse'
 
 	*** create main varlist and tempvars
 	// remove duplicates from varlist
@@ -317,6 +204,10 @@ program _rlasso, eclass sortpreserve
 		di as err "error: incompatible options, partial(_cons) and fe"
 		exit 198
 	}
+	if "`partial'"~="" & "`noconstant'"~="" {
+		di as err "error: incompatible options, partial and nocons"
+		exit 198
+	}
 	if `feflag' & "`noconstant'"~="" {
 		di as err "error: incompatible options, fe and nocons"
 		exit 198
@@ -326,7 +217,7 @@ program _rlasso, eclass sortpreserve
 	*** Create _t varlists: Y, X, notpen, partial
 	// _o list is vars with original names
 	// _t list is temp vars if transform needed, original vars if not
-	if `feflag' | `weightflag' {								//  everything needs to be transformed including partial
+	if `feflag' {												//  everything needs to be transformed including partial
 		local temp_ct : word count `varlist_o'
 		mata: s_maketemps(`temp_ct')
 		local varlist_t `r(varlist)'
@@ -405,158 +296,103 @@ program _rlasso, eclass sortpreserve
 	local p		=`p0'-`pminus'
 	// warn
 	if `p'<=0 {
-		di as text "warning: no penalized variables; estimates are OLS"
+		di as text "warning: no penalized regressors; results are OLS"
 	}
 	//  now for error-checking below, p0 should INCLUDE constant unless partialled-out etc.
 	local p0	=`p0'+`consflag'
 	*
 
-	******************* FE, partialling out, standardization, weighting *****************************
-	//  varX are all X vars including partial
-	//  varXmodel are model vars excluding partial
-	//  FE transform applies to varX; incorporates weighting in FE transform but does not weight transformed vars.
-	//  Partialling applies to varXmodel; same treatment of weights and vars as with FE.
-	//  Weights transform applies to varXmodel after possible FE/partial; multiplies vars by sqrt(wvar).
-	//  Prestd transform applies to varX model after possible FE/partial/weighting; standardizes vars.
-	//  If FE:    partial-out FEs from Xmodel temp variables, then preserve,
+	******************* FE, partialling out, standardization ************************************
+	//  If FE:    partial-out FEs from temp variables, then preserve,
 	//            then partial-out low-dim ctrls from temp variables
 	//            restore will restore all temp vars with only FEs partialled-out
 	//  If no FE: leave original variables unchanged.
-	//            partial-out low-dim ctrls from Xmodel temp variables.
+	//            partial-out low-dim ctrls from temp variables.
 	//            if no FE/low-dim ctrls, no transform needed
-	//  NB: unpartial routine expects unweighted vars and recovers partialled-out coeffs from weighted OLS.
-	//      hence with FE, preserve after FE transformation but before weighting.
 
-	if `feflag' {												//  FE-transform all variables including those to partial-out
-		// first FE transformation
-		fvrevar `varY_o' `varX_o' if `touse'					//  in case any FV or TS vars in _o list
-		local vlist		`r(varlist)'
-		local vlist_t	`varY_t' `varX_t'						//  everything including partialling Xs
-		lassoutils `vlist',										/// call on _o list
-						touse(`touse')							///
-						tvarlist(`vlist_t')						/// initialize _t vars
-						wvar(`wvar')							/// weighted demeaning but vars left unweighted
-						`noftools'								///
-						fe(`ivar')								//  triggers branching to FE utility
-		local dmflag	=1										//  data are now demeaned
-		local N_g	=r(N_g)										//  N_g will be empty if no FEs
-		local noftools `r(noftools)'							//  either not installed or user option
-		// now partialling-out if any
-		if `partialflag' {										//  And then partial out any additional vars	
-			preserve											//  preserve the original values of tempvars before partialling out
-			local vlist		`varY_t' `varXmodel_t'				//  model vars have been FE-transformed already
-			local vlist_t	`varY_t' `varXmodel_t'				//  corresponding temp vars
-			local pvlist	`partial_t'							//  partial vars have been FE-transformed already
-			lassoutils `vlist',									///
-							touse(`touse')						/// don't need tvarlist because vars already created
-							tvarlist(`vlist_t')					/// overwrite these (were initialized by FE utility)
-							partial(`pvlist')					/// partial vars are already FE-transformed
-							partialflag(`partialflag')			/// triggers branching to partial utility
-							wvar(`wvar')						/// weight vars if necessary
-							psolver(`psolver')					/// optional choice of solver
-							dmflag(1)							//  FE => data already demeaned
+	local dmflag	=0										//  initialize demeaned flag
+	if `feflag' {											//  FE-transform all variables
+		fvrevar `varY_o' `varX_o' if `touse'				//  in case any FV or TS vars in _o list
+		local vlist `r(varlist)'
+		lassoutils `vlist',									/// call on _o list
+						touse(`touse')						///
+						tvarlist(`varY_t' `varX_t')			/// overwrite/initialize these
+						fe(`ivar')							//  triggers branching to FE utility
+		local N_g	=r(N_g)									//  N_g will be empty if no FEs
+		local dmflag=1										//  data are now demeaned
+		if `partialflag' {									//  And then partial out any additional vars	
+			preserve										//  preserve the original values of tempvars before partialling out
+			lassoutils `varY_t' `varXmodel_t',				/// _t vars have been created and filled so use here
+							touse(`touse')					/// don't need tvarlist because vars already created
+							partial(`partial_t')			/// _t vars have been created and filled so use here
+							partialflag(`partialflag')		/// triggers branching to partial utility
+							dmflag(1)						//  FE => mean zero
 		}
-		if `weightflag' {										//  applies only to Y and Xmodel vars
-			lassoutils `varY_t' `varXmodel_t',					/// _t vars have been created and filled so use here
-							touse(`touse')						/// don't need tvarlist because vars already created
-							tvarlist(`varY_t' `varXmodel_t')	/// overwrite these (were initialized by FE utility)
-							wvar(`wvar')						//  triggers branching to weighting utility
-		}
-		if `prestdflag' {										//  applies only to Y and Xmodel vars
+		if `prestdflag' {
 			tempname prestdY prestdX
-			lassoutils `varY_t',								/// _t vars have been created and filled so use here
-							touse(`touse')						/// don't need tvarlist because vars already created
-							tvarlist(`varY_t')					/// overwrite this (was initialized by FE utility)
-							std									///
-							dmflag(1)							//  FE => data already demeaned
+			lassoutils `varY_t',							/// _t vars have been created and filled so use here
+							touse(`touse')					/// don't need tvarlist because vars already created
+							std								///
+							dmflag(1)						//  FE => data already mean zero
 			mat `prestdY'=r(stdvec)
-			lassoutils `varXmodel_t',							/// 
-							touse(`touse')						/// 
-							tvarlist(`varXmodel_t')				/// overwrite this (was initialized by FE utility)
-							std									///
-							dmflag(1)							//  FE => data already demeaned 
+			lassoutils `varXmodel_t',						/// 
+							touse(`touse')					/// 
+							std								///
+							dmflag(1)						//  FE => data already mean zero 
 			mat `prestdX'=r(stdvec)
 		}
 	}
-	else if `partialflag' {										//  no FE but partial out from Y and Xmodel vars
-																//  always enter with weights unless no cons in model
-		fvrevar `varY_o' `varXmodel_o' if `touse'				//  in case any FV or TS vars in _o list
-		local vlist		`r(varlist)'							//  Y and Xmodel _o lists after fvrevar-ing
-		local vlist_t	`varY_t' `varXmodel_t'					//  corresponding temp vars; Y and Xmodel only
-		fvrevar `partial_o' if `touse'							//  in case any FV or TS vars in _o list
-		local pvlist	`r(varlist)'							//  partial_o list after fvrevar-ing
-		lassoutils `vlist',										/// apply to Y and Xmodel_o list after fvrevar-ing
-						touse(`touse')							///
-						partial(`pvlist')						/// use partial_o list after fvrevar-ing
-						wvar(`wvar')							/// use weights when partialling out
-						tvarlist(`vlist_t')						/// initialize the tempvars
-						partialflag(`partialflag')				/// triggers branching to partial utility
-						psolver(`psolver')						/// optional choice of solver
-						dmflag(`dmflag')						//  treat data as not yet demeaned unless nocons
-		local dmflag	=1										//  data are now demeaned
-		if `weightflag' {										//  initialized tempvars now need to be weighted by sqrt(wvar)
-			lassoutils `vlist_t',								/// applies to Y and Xmodel only
-							touse(`touse')						///
-							tvarlist(`vlist_t')					/// overwrite these
-							wvar(`wvar')						//  triggers branching to weighting utility
-		}
-		if `prestdflag' {										//  applies to Y and Xmodel only
+	else if `partialflag' {									//  Just partial out
+		fvrevar `varY_o' `varXmodel_o' if `touse'			//  in case any FV or TS vars in _o list
+		local vlist `r(varlist)'
+		fvrevar `partial_o' if `touse'						//  in case any FV or TS vars in _o list
+		local pvlist `r(varlist)'
+		lassoutils `vlist',									/// call on _o list
+						touse(`touse')						///
+						partial(`pvlist')					///
+						tvarlist(`varY_t' `varXmodel_t')	/// overwrite/initialize these
+						partialflag(`partialflag')			/// triggers branching to partial utility
+						dmflag(0)							//  data are not yet demeaned
+		local dmflag	=1									//  data are now demeaned
+		if `prestdflag' {
 			tempname prestdY prestdX
-			lassoutils `varY_t',								/// apply to varY_t vars (already initialized by partialling)
-							touse(`touse')						/// 
-							tvarlist(`varY_t')					/// overwrite _t var
-							std									///
-							dmflag(1)							//  partial => data already demeaned
+			lassoutils `varY_t',							/// _t vars have been created and filled so use here
+							touse(`touse')					/// don't need tvarlist because vars already created
+							std								///
+							dmflag(1)						//  partial => already mean zero
 			mat `prestdY'=r(stdvec)
-			lassoutils `varXmodel_t',							/// apply to varXmodel_t vars (already initialized by partialling)
-							touse(`touse')						/// 
-							tvarlist(`varXmodel_t')				/// overwrite _t vars
-							std									///
-							dmflag(1)							//  partial => data already demeaned
+			lassoutils `varXmodel_t',						/// 
+							touse(`touse')					/// 
+							std								///
+							dmflag(1)						//  partial => already mean zero 
 			mat `prestdX'=r(stdvec)
 		}
 	}
-	else if `weightflag' & `prestdflag' {						//  should not enter here since weights => constant => partial
-		di as err "internal rlasso error - weightflag+prestdflag"
-		exit 499
-	}
-	else if `prestdflag' {										//  nothing partialled out so varXmodel = varX
-																//  data are unweighted
+	else if `prestdflag' {
 		tempname prestdY prestdX
-		fvrevar			`varY_o' if `touse'						//  first standardize varY
-		local vlist		`r(varlist)'							//  varY_o list after fvrevar-ing
-		local vlist_t	`varY_t'								//  corresponding temp var
-		lassoutils `vlist',										///
-						touse(`touse')							///
-						std										///
-						tvarlist(`vlist_t')						/// initialize these
-						consmodel(`consmodel')					///
-						dmflag(`dmflag')						//  data not mean zero unless overridden by user
+		lassoutils `varY_o',								/// call on _o list
+						touse(`touse')						///
+						std									///
+						tvarlist(`varY_t')					/// overwrite/initialize these
+						consmodel(`consmodel')				/// =1 => data should be demeaned
+						dmflag(0)							//  data not yet mean zero
 		mat `prestdY'=r(stdvec)
-		fvrevar			`varXmodel_o' if `touse'				//  now standardize varXmodel_o
-		local vlist		`r(varlist)'							//  varXmodel_o list after fvrevar-ing
-		local vlist_t	`varXmodel_t'							//  corresponding temp vars
-		lassoutils `vlist',										///
-						touse(`touse')							///
-						std										///
-						tvarlist(`vlist_t')						/// initialize these
-						consmodel(`consmodel')					///
-						dmflag(`dmflag')						//  data not mean zero unless overridden by user
+		fvrevar `varXmodel_o' if `touse'					//  in case any FV or TS vars in _o list
+		local vlist `r(varlist)'
+		lassoutils `vlist',									/// call on _o list
+						touse(`touse')						///
+						std									///
+						tvarlist(`varXmodel_t')				/// overwrite/initialize these
+						consmodel(`consmodel')				/// =1 => data should be demeaned
+						dmflag(0)							//  data not yet mean zero
 		mat `prestdX'=r(stdvec)
-	}
-	else if `weightflag' {										//  nothing partialled out, no std, varXmodel=varX
-																//  only reach here if no constant (since cons is partialled out)
-		fvrevar			`varY_o' `varXmodel_o' if `touse'		//  in case any FV or TS vars in _o list
-		local vlist		`r(varlist)'							//  _o list after fvrevar-ing
-		local vlist_t	`varY_t' `varXmodel_t'					//  corresponding temp vars
-		lassoutils `vlist',										/// call on _o list after fvrevar-ing
-						touse(`touse')							///
-						tvarlist(`vlist_t')						/// initialize the tempvars
-						wvar(`wvar')							//  triggers branching to weighting utility
+		if `consmodel' {
+			local dmflag	=1								//  if cons in model, data are now demeaned
+		}
 	}
 
 	************* Partialling/standardization END ***********************************************
-
+	
 	************* Lasso estimation with transformed/partialled-out vars *************************
 	if "`verbose'`vverbose'`dots'"=="" {
 		local quietly "quietly"							//  don't show lassoutils output
@@ -576,7 +412,6 @@ program _rlasso, eclass sortpreserve
 						pminus(`pminus')				///
 						stdy(`prestdY')					///
 						stdx(`prestdX')					///
-						tindex(`tindex')				/// variable used for time-series lags etc.
 						`verbose' `vverbose' `dots'		///
 						`testonly'						///
 						`options'
@@ -584,35 +419,32 @@ program _rlasso, eclass sortpreserve
 
 	************* Finish up ********************************************************
 	*** e-return lasso estimation results
-	tempname b beta betaOLS Psi sPsi ePsi
+	tempname b beta betaOLS Ups sUps eUps
 	tempname betaAll betaAllOLS
-	tempname lambda slambda lambda0 rmse rmseOLS objfn r2
-	tempname c gamma
+	tempname lambda slambda lambda0 rmse rmseOLS
+	tempname c gamma gammad
 	tempname supscore supscore_p supscore_cv supscore_gamma
-
+	
 	if ~`testonlyflag' {
 	
 		if "`cluster'" ~= "" {
-			local N_clust	=r(N_clust)
-			local N_clust1	=r(N_clust1)
-			local N_clust2	=r(N_clust2)
+			local N_clust		=r(N_clust)
 		}
 		mat `beta'			=r(beta)		//  may be empty!
 		mat `betaOLS'		=r(betaOLS)		//  may be empty!
 		mat `betaAll'		=r(betaAll)
 		mat `betaAllOLS'	=r(betaAllOLS)
-		mat `Psi'			=r(Psi)
-		mat `sPsi'			=r(sPsi)
-		mat `ePsi'			=r(ePsi)
+		mat `Ups'			=r(Ups)
+		mat `sUps'			=r(sUps)
+		mat `eUps'			=r(eUps)
 		scalar `lambda'		=r(lambda)
 		scalar `slambda'	=r(slambda)
 		scalar `lambda0'	=r(lambda0)
 		scalar `c'			=r(c)
 		scalar `gamma'		=r(gamma)
+		scalar `gammad'		=r(gammad)
 		scalar `rmse'		=r(rmse)		//  Lasso RMSE
 		scalar `rmseOLS'	=r(rmseOLS)		//  post-Lasso RMSE
-		scalar `r2'			=r(r2)
-		scalar `objfn'		=r(objfn)
 		local selected		`r(selected)'	//  EXCL NOTPEN/CONS
 		local selected0		`r(selected0)'	//  INCL NOTPEN, EXCL CONS
 		local s				=r(s)			//  EXCL NOTPEN/CONS; number of elements in selected
@@ -623,21 +455,14 @@ program _rlasso, eclass sortpreserve
 		local method		`r(method)'		//  lasso or sqrt-lasso
 		local niter			=r(niter)
 		local maxiter		=r(maxiter)
-		local npsiiter		=r(npsiiter)
-		local maxpsiiter	=r(maxpsiiter)
+		local nupsiter		=r(nupsiter)
+		local maxupsiter	=r(maxupsiter)
 		// these can be missings
 		scalar `supscore'		=r(supscore)
 		scalar `supscore_p'		=r(supscore_p)
 		scalar `supscore_cv'	=r(supscore_cv)
 		scalar `supscore_gamma'	=r(supscore_gamma)
 		local ssnumsim			=r(ssnumsim)
-		// for HAC and 2-way cluster lasso
-		local bw				=r(bw)					// will overwrite existing bw macro
-		local kernel			`r(kernel)'				// will overwrite existing kernel macro
-		local psinegs			=r(psinegs)
-		local psinegvars		`r(psinegvars)'
-		// remove duplicates
-		local psinegvars		: list uniq psinegvars
 
 		// flag for empty beta (consflag=0 means rlasso didn't estimate a constant)
 		local betaempty		=(`s0'==0 & `consflag'==0)
@@ -652,12 +477,6 @@ program _rlasso, eclass sortpreserve
 		if `niter'==`maxiter' {
 			di as text "Warning: reached max shooting iterations w/o achieving convergence."
 		}
-		// issue warning if negative penalty loadings encountered
-		if `psinegs' {
-			di as text "Warning: `psinegs' negative penalty loadings encountered/adjusted."
-			di as text "Variables affected: `psinegvars'"
-		}
-				
 		// error check - p0s and ps should match
 		if `p0'~=r(p0) {					//  number of all variables in betaAll INCL NOTPEN/CONS (if present or not partialled etc.)
 			di as err "internal _rlasso error - p0 count of model vars `p0' does not match returned value `r(p0)'"
@@ -689,24 +508,21 @@ program _rlasso, eclass sortpreserve
 		if `feflag' & `partialflag' {					//  FE case and there are partialled-out notpen vars
 			restore										//  Restores dataset with tempvars after FE transform but before notpen partialled out
 		}
-		if (`partialflag' | (`prestdflag' & `consmodel')) & (`parrflag') {	//  standardization removes constant so must enter for that
+		if `partialflag' | (`prestdflag' & `consmodel') {	//  standardization removes constant so must enter for that
 			if `feflag' {
-				local depvar `varY_t'					//  use FE-transformed depvar and X vars before any weighting
+				local depvar `varY_t'					//  use FE-transformed depvar and X vars
 				local scorevars `cnames_t'
-				local partialvars `partial_t'
 			}
 			else {
 				local depvar `varY_o'					//  use original depvar and X vars
 				local scorevars `cnames_o'
-				local partialvars `partial_o'
 			}
 			lassoutils `depvar',						///
 				unpartial								///
 				touse(`touse')							///
 				beta(`beta')							///
 				scorevars(`scorevars')					///
-				partial(`partialvars')					///
-				wvar(`wvar')							/// unpartial routine expects UNWEIGHTED vars + weight vector
+				partial(`partial_t')					///
 				names_o(`varX_d')						/// dictionary
 				names_t(`varX_t')						///	dictionary
 				consmodel(`consmodel')
@@ -717,8 +533,7 @@ program _rlasso, eclass sortpreserve
 				touse(`touse')							///
 				beta(`betaOLS')							///
 				scorevars(`scorevars')					///
-				partial(`partialvars')					///
-				wvar(`wvar')							///
+				partial(`partial_t')					///
 				names_o(`varX_d')						/// dictionary
 				names_t(`varX_t')						///	dictionary
 				consmodel(`consmodel')
@@ -733,48 +548,46 @@ program _rlasso, eclass sortpreserve
 			local betaempty	=0
 		}
 		*
-
+	
 		*** Prepare and post results
-		if ~`olsflag' & ~`postallflag' {										//  selected lasso coefs by default
+		if "`pols'"=="" & "`postall'"=="" {										//  selected lasso coefs by default
 			mat `b' = `beta'
 		}
-		else if `olsflag' & ~`postallflag' {								//  selected post-lasso coefs
+		else if "`pols'"~="" & "`postall'"=="" {								//  selected post-lasso coefs
 			mat `b' = `betaOLS'
 		}
-		else if ~`olsflag' {												//  full lasso coef vector
+		else if "`pols'"=="" {												//  full lasso coef vector
 			mat `b' = `betaAll'
 		}
 		else {																	//  full post-lasso coef vector
 			mat `b' = `betaAllOLS'
 		}
-		if `betaempty' & ~`postallflag' {										//  no vars in b
+		if `betaempty' & "`postall'"=="" {										//  no vars in b
 			ereturn post    , obs(`N') depname(`varY_d') esample(`touse')		//  display name
 		}
 		else {																	//  b has some selected/nonpen/cons
 			ereturn post `b', obs(`N') depname(`varY_d') esample(`touse')		//  display name
 		}	
 		// additional returned results
-		ereturn local noftools		`noftools'
 		ereturn local postall		`postall'
 		ereturn scalar niter		=`niter'
 		ereturn scalar maxiter		=`maxiter'
-		ereturn scalar npsiiter		=`npsiiter'
-		ereturn scalar maxpsiiter	=`maxpsiiter'
+		ereturn scalar nupsiter		=`nupsiter'
+		ereturn scalar maxupsiter	=`maxupsiter'
 		ereturn local robust		`robust'
 		ereturn local ivar			`ivar'
 		ereturn local selected		`selected'			//  selected only
 		ereturn local varXmodel		`varXmodel_d'		//  display name
 		ereturn local varX			`varX_d'			//  display name
-		if `olsflag' {
+		if "`pols'"=="" {
 			ereturn local estimator	ols
 		}
 		else {
-			ereturn local estimator	`method'
+			ereturn local estimator	postlasso
 		}
 		ereturn local method		`method'
 		ereturn local predict		rlasso_p
 		ereturn local cmd			rlasso
-		ereturn local cmdline		`"rlasso `cmdline'"'
 		ereturn scalar center		=`center'
 		ereturn scalar cons			=`consmodel'
 		ereturn scalar lambda		=`lambda'
@@ -782,12 +595,7 @@ program _rlasso, eclass sortpreserve
 		ereturn scalar slambda		=`slambda'
 		ereturn scalar c			=`c'
 		ereturn scalar gamma		=`gamma'
-		
-		// HAC or 2-way cluster lasso (neg loadings possible)
-		ereturn local psinegs		=`psinegs'
-		ereturn local psinegvars	`psinegvars'
-		ereturn scalar bw			=`bw'
-		ereturn local kernel		`kernel'
+		ereturn scalar gammad		=`gammad'
 	
 		if `supscore' < . {
 			ereturn scalar ssnumsim			=`ssnumsim'
@@ -798,12 +606,8 @@ program _rlasso, eclass sortpreserve
 		}
 	
 		if "`N_clust'" ~= "" {
-			ereturn local clustvar			`clustvar'
-			ereturn scalar N_clust			=`N_clust'
-			if `N_clust2'>0 & `N_clust2'<. {
-				ereturn scalar N_clust1		=`N_clust1'
-				ereturn scalar N_clust2		=`N_clust2'
-			}
+			ereturn local clustvar	`clustvar'
+			ereturn scalar N_clust	=`N_clust'
 		}
 		if "`N_g'" ~= "" {
 			ereturn scalar N_g		=`N_g'
@@ -811,21 +615,14 @@ program _rlasso, eclass sortpreserve
 		ereturn scalar fe			=`feflag'
 		ereturn scalar rmse			=`rmse'
 		ereturn scalar rmseOLS		=`rmseOLS'
-		ereturn scalar r2			=`r2'
-		if "`method'"=="sqrt-lasso" {
-			ereturn scalar prmse	=`objfn'
-		}
-		else {
-			ereturn scalar pmse		=`objfn'
-		}
 		ereturn scalar pminus		=`pminus'
 		ereturn scalar p			=`p'					//  number of all penalized vars; excludes omitteds etc.
 		ereturn scalar s0			=`s0'					//  number of all estimated coefs (elements of beta)
 		ereturn scalar s			=`s'					//  number of selected
 	
-		ereturn matrix sPsi 		=`sPsi'
-		ereturn matrix ePsi 		=`ePsi'
-		ereturn matrix Psi 			=`Psi'
+		ereturn matrix sUps 		=`sUps'
+		ereturn matrix eUps 		=`eUps'
+		ereturn matrix Ups 			=`Ups'
 		ereturn matrix betaAllOLS	=`betaAllOLS'
 		ereturn matrix betaAll		=`betaAll'
 		ereturn matrix betaOLS		=`betaOLS'
@@ -862,17 +659,7 @@ program _rlasso, eclass sortpreserve
 		ereturn clear
 
 		ereturn scalar N				=r(N)
-		if "`N_clust'" ~= "" {
-			ereturn local clustvar		`clustvar'
-			ereturn scalar N_clust		=`N_clust'
-			if `N_clust2'>0 & `N_clust2'<. {
-				ereturn scalar N_clust1	=`N_clust1'
-				ereturn scalar N_clust2	=`N_clust2'
-			}
-		}
-		if "`N_g'" ~= "" {
-			ereturn scalar N_g			=`N_g'
-		}
+		ereturn scalar N_clust			=r(N_clust)
 		ereturn scalar gamma			=r(gamma)
 		ereturn scalar c				=r(c)
 		ereturn scalar p				=`p'
@@ -881,14 +668,6 @@ program _rlasso, eclass sortpreserve
 		ereturn scalar supscore_p		=r(supscore_p)
 		ereturn scalar supscore_cv		=r(supscore_cv)
 		ereturn scalar supscore_gamma	=r(supscore_gamma)
-
-		// HAC or 2-way cluster lasso (neg loadings possible)
-		// for HAC and 2-way cluster lasso
-		ereturn local psinegs			=r(psinegs)
-		local psinegvars				`r(psinegvars)'
-		// remove duplicates
-		local psinegvars				: list uniq psinegvars
-		ereturn local psinegvars		`psinegvars'
 		
 		ereturn local cmd				rlasso
 		ereturn scalar cons				=`consmodel'
@@ -917,18 +696,17 @@ end
 // Used in rlasso and lasso2.
 // version  2017-12-20
 // updated 31dec17 to accommodate e(pnotpen)
-// updated 27july20 to accommodate norecover
 prog DisplayCoefs
 
 	syntax	,								///
 		[									///
 		displayall							///  full coef vector in display (default=selected only)
 		varwidth(int 17)					///
+		NORecover 							///
 		]
 	
 	local cons			=e(cons)
-
-	if colsof(e(betaAll)) > e(p) {
+	if ("`norecover'"=="") {
 		local partial		`e(partial)'
 		local partial_ct	=e(partial_ct)
 	}
@@ -957,7 +735,7 @@ prog DisplayCoefs
 		local vlistOLS	: colnames `betaOLS'
 		local baselevels baselevels
 	}
-	else if e(s0)>0 {							//  display only selected, but only if there are any
+	else if e(k)>0 {							//  display only selected, but only if there are any
 		mat `beta'		=e(beta)
 		mat `betaOLS'	=e(betaOLS)
 		local col_ct	=colsof(`beta')
@@ -967,7 +745,7 @@ prog DisplayCoefs
 	else {										//  nothing selected, zero columns in beta
 		local col_ct	=0
 	}
-	if e(s0)>0 {
+	if e(k)>0 {
 		_ms_build_info `beta' if e(sample)
 		_ms_build_info `betaOLS' if e(sample)
 	}

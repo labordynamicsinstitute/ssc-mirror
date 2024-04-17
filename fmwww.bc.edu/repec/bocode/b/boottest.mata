@@ -1,4 +1,4 @@
-*! boottest 4.4.3 11 February 2023
+*! boottest 4.4.11 12 April 2024
 *! Copyright (C) 2015-23 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
@@ -265,7 +265,6 @@ void boottestARubin::InitVars(| pointer(real matrix) pRperp) {
   real matrix H, X2X1, _X2X1, _X1, _X2, tmp; real colvector S, X1y1, X2y1; real scalar g
 
   u1ddot = smatrix(1 + parent->jk)  // for jackknife, need jk'd residuals but also non-jk'd residuals for original test stat
-
   X2X1 = cross(*parent->pX2, *parent->pX1)
   H = cross(*parent->pX1, *parent->pX1), X2X1' \ X2X1, cross(*parent->pX2, *parent->pX2)
   pA = &invsym(H)
@@ -494,10 +493,11 @@ void boottestIVGMM::InitVars(|pointer(real matrix) scalar pRperp) {
     X1y1 = cross(*pX1, *py1)
     y1y1 = cross(*py1, *py1)
   }
+
   Z = Z - *pZperp * (*pinvZperpZperp * ZperpZ)  // XXX when is this avoidable, like in jk?
 
-  Zy1  = cross(Z, *py1)    
-  XZ   = cross(*pX1, Z) \ cross(*pX2, Z)
+  Zy1 = cross(Z, *py1)    
+  XZ  = cross(*pX1, Z) \ cross(*pX2, Z)
   V = invXX * XZ
   ZZ  =  cross(Z,Z)
   if (parent->WREnonARubin) ZY2 = cross(Z, *pY2)
@@ -525,6 +525,7 @@ void boottestIVGMM::InitVars(|pointer(real matrix) scalar pRperp) {
       for (g=parent->Nstar; g; g--)
         invHg[g].M = invsym(kappa==1? H_2SLSg[g].M : ZZg[g].M + kappa * H_2SLSmZZg[g].M)
     H_2SLS = V ' XZ  // Hessian
+
     if (kappa!=1 | LIML) H_2SLSmZZ = H_2SLS - ZZ
     if (LIML==0)  // DGP is LIML except possibly when getting confidence peak for A-R plot; but LIML=0 when exactly id'd, for then kappa=1 always and Hessian doesn't depend on r1 and can be computed now
       MakeH()
@@ -961,6 +962,7 @@ real scalar boottest::getp(|real scalar classical) {
       return(_p)
     p = _p  // only save as the official p if this was not requested by plot() for AR case
   }
+
   return(p)
 }
 
@@ -1058,7 +1060,6 @@ void boottest::Init() {  // for efficiency when varying r repeatedly to make CI,
   real matrix Combs, tmp, IDCap
   real scalar i, j, c, minN, _B, i_FE, sumFEwt, _df
   pragma unset pIDAllData; pragma unset pIDCapData
-
   Nobs = rows(*py1)
   NClustVar = cols(*pID)
   kX = (kX1 = cols(*pX1)) + (kX2 = cols(*pX2))
@@ -1281,7 +1282,6 @@ void boottest::Init() {  // for efficiency when varying r repeatedly to make CI,
 
   if (ML)
     df = rows(*pR)
-    
   else {
     if (ARubin) {
       pR  = &(J(kX2,kX1,0), I(kX2))  // attack surface is all endog vars
@@ -2252,6 +2252,7 @@ void boottest::MakeInterpolables() {
         if (newPole[h1]) {
           poles[h1] = (*pr)[h1] - anchor[h1]
           (tmp = anchor)[h1] = (*pr)[h1]  // if q>1 this creates anchor points that are not graphed, an inefficiency. But simpler to make the deviations from 1st point orthogonal
+
           _MakeInterpolables(tmp)  // calculate linear stuff at new anchor
 
           dnumerdr[h1].M = (*pnumer - numer0) / poles[h1]
@@ -2698,7 +2699,7 @@ real scalar boottest::search(real scalar alpha, real scalar f1, real scalar x1, 
 // derive wild bootstrap-based CI, for case of linear model with one-degree null imposed
 // also prepare data to plot confidence curve or surface
 void boottest::plot() {
-  real scalar tmp, alpha, _quietly, c, d, i, j, halfwidth, p_lo, p_hi, p_confpeak; real colvector lo, hi; pointer (real colvector) scalar _pr
+  real scalar tmp, alpha, _quietly, c, d, i, j, halfwidth, p_lo, p_hi, p_confpeak, Phi; real colvector lo, hi; pointer (real colvector) scalar _pr
 
   _quietly = quietly; _pr = pr
   setquietly(1)
@@ -2706,11 +2707,13 @@ void boottest::plot() {
   _editmissing(gridpoints, 25)
 
   boottest()
-  if (ARubin==0) {
-    halfwidth = (-1.5 * invnormal(alpha/2)) * sqrt(diagonal(getV()))
+  Phi = invnormal(alpha/2)
+  if (ARubin)
+    halfwidth = abs(confpeak * sqrt((abs((*pDist)[1]) * multiplier) / df) / Phi)  //  abs(confpeak) * invnormal(getpadj(1)/2) / invnormal(alpha/2)
+  else {
+    halfwidth = (-1.5 * Phi) * sqrt(diagonal(getV()))
     confpeak = getb() + *pr
-  } else
-    halfwidth = abs(confpeak) * invnormal(getpadj(1)/2) / invnormal(alpha/2)
+  }
 
   if (q==2) {  // 2D plot
     lo = hi = J(2, 1, .)
@@ -2753,7 +2756,7 @@ void boottest::plot() {
           return
         }
       }
-     
+
       if (abs(lo - *pr) > abs(hi - *pr)) {  // brute force way to ensure that first trial bound tested is the farther one from *pr, for better interpolation
         if (gridmin[1]==. & ptype!=2)  // unless lower-tailed p value, try at most 10 times to bracket confidence set by symmetrically widening
           for (i=10; i & -(p_lo=r_to_p(lo)) < -alpha; i--) {

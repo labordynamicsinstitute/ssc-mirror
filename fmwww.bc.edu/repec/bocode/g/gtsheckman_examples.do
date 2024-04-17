@@ -8,7 +8,9 @@ program drop _all
 set more off
 set linesize 80
 cls
-version // make sure it is version 11.0 or higher
+version 11.0 // make sure it is version 11.0 or higher
+capture log close
+log using gtsheckman_examples.log, replace
 
 ***** Example 1 *****
 *********************
@@ -67,7 +69,7 @@ if _rc!=0{
 	scalar rc = rc+1
 }
 timer on 2
-capture xtheckman y x1, select(s = x1 x2) intmethod(ghermite) intpoints(3) vce(cluster id)
+capture noisily xtheckman y x1, select(s = x1 x2) intmethod(ghermite) intpoints(3) vce(cluster id)
 timer off 2
 if _rc!=0{
 	display as error "Update Stata for xtheckman command"
@@ -110,8 +112,12 @@ else{
 return scalar b_xtheckman = [y]_b[x1]
 }
 end
+* Test program
+RCsampleselection
 * Simulate 100 times and report summary
 simulate b_heckman = r(b_heckman) b_gtsheckman = r(b_gtsheckman) b_xtheckman = r(b_xtheckman), reps(100) seed(1234): RCsampleselection
 sum b_heckman b_gtsheckman b_xtheckman
 
 * End of file
+
+log close

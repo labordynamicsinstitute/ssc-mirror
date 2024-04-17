@@ -50,6 +50,9 @@ As in {helpb heckman}, {it:depvar} is the dependent variable, subject to sample 
 
 {syntab:Reporting}
 {p2col:{bf:lambda}}generates the (scaled) inverse mills ratio (lambda) as a variable{p_end}
+
+{syntab:Maximize}
+{p2col:{it:maximize_options}}controls the maximization process; seldom used{p_end}
 {synoptline}
 {pstd} *{opt sel:ect()} is required.
 
@@ -91,6 +94,11 @@ The methodology was proposed and studied by Carlson and Joshi (2022).
 
 {phang}
 {opt lambda} generates the (scaled) inverse mills ratio as a new variable named {cmd:lambda}. The inverse mills ratio is calculated from the first stage selection equation estimates, and will be scaled by the inverse of the conditional variance estimates when the option {cmd: het()} is specified. Some post estimation commands (like {helpb margins} and {helpb predict}) will require the {cmd:lambda} option be specified.  
+
+{dlgtab:Maximization}
+
+{phang}
+{it:maximize_options} controls the maximization process; see help {help maximize}.  Use of them is likely to be rare.
 
 
 {marker examples}{...}
@@ -155,8 +163,9 @@ carlsonah@missouri.edu{break}{browse "https://carlsonah.mufaculty.umsystem.edu/"
 {title:References}
 
 {phang}
-Carlson, A. H., and Joshi, R. 2022.
+Carlson, A. H., and Joshi, R. 2024.
 Sample Selection in Linear Panel Data Models with Heterogenous Coefficents. 
-Working Paper. 
-URL: {browse "https://econpapers.repec.org/paper/umcwpaper/2103.htm"}
+{it:Journal of Applied Econometrics}
+39(2):237-255. 
+URL: {browse "https://doi.org/10.1002/jae.3022"}
 

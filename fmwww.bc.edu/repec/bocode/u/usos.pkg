@@ -1,0 +1,27 @@
+d 'USOS': module for computing the unweighted sum of squares test for global goodness of fit after logistic model
+d
+d  usos is a post-estimation (estat) command following
+d logistic/logit regression that implements the unweighted sum of
+d squared errors (USOS) test for global goodness of fit (GOF). This
+d method has been attributed to Copas (1989) and le Cessie and van
+d Houwelingen (1995). Hosmer et al. (1997) report that this method
+d (in addition to the Pearson chi-square method which is available
+d in official Stata (logistic estat gof) offers superior power
+d based on simulations. As such, they recommend the use of these
+d two GOF approaches for confirmation of model fit or lack-of-fit.
+d usos is based on Frank Harrell's residuals.lrm {rms} package in R
+d (https://cran.r-project.org/web/packages/rms/rms.pdf). 
+d
+d KW: logistic regression
+d KW: logit
+d KW: goodness of fit
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20240416
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f usos.ado
+f usos.sthlp

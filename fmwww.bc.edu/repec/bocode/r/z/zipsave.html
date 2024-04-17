@@ -1,0 +1,155 @@
+<pre>
+<p>
+-------------------------------------------------------------------------------
+help for <b>zipsave</b>, <b>zipsaveold</b>, <b>zipuse</b>, <b>zipappend</b>, <b>zipmerge</b>     (Henrik Stovring)
+-------------------------------------------------------------------------------
+<p>
+<b><u>Save and use datasets compressed by zip on WindowsXP/Unix/Linux/MacOSX</u></b>
+<p>
+        <b>zipsave</b> [<i>filename</i>] [<b>,</b> <b>replace</b> <i>save_options</i>]
+<p>
+        <b>zipsaveold</b> [<i>filename</i>] [<b>,</b> <b>replace</b> <i>saveold_options</i>]
+<p>
+        <b>zipuse</b> <i>filename</i> <b>,</b> <b>clear</b> <b>dtafile</b>(<i>dtafilename</i>) <i>use_options</i>]
+<p>
+        <b>zipuse</b> [<i>varlist</i>] [<i>if</i>] [<i>in</i>] <b>using</b> <i>filename</i> [<b>,</b> <b>clear</b>
+             <b>dtafile</b>(<i>dtafilename</i>) <i>use_options</i>]
+<p>
+        <b>zipappend</b> [<i>varlist</i>] <b>using</b> <i>filename</i> [<i>filename</i> <b>...</b>] [<b>,</b>
+             <b>dtafile</b>(<i>dtafilename</i>) <i>append_options</i>]
+<p>
+        <b>zipmerge</b> [<i>varlist</i>] <b>using</b> <i>filename</i> [<i>filename</i> <b>...</b>] [<b>,</b>
+             <b>dtafile</b>(<i>dtafilename</i>) <i>merge_options</i>]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>zipsave</b> compress and stores the dataset currently in memory on disk under
+    the name <i>filename</i>. If no <i>filename</i> is specified, the command tries to open
+    the last filename under which the data were last known to Stata
+    (c(filename)). If <i>filename</i> is specified without an extension, <b>.dta.zip</b> is
+    used.
+<p>
+    <b>zipuse</b> loads a Stata-format dataset into memory that was previously saved
+    and zipped, either directly by <b>zipsave</b> or manually. If the zip-file
+    <i>filename</i> is specified without an extension, <b>.dta.zip</b> is assumed. If the
+    zip-file <i>filename</i> only contains one datafile, <i>dtafilename</i> need not be
+    specified, but if the zip-file is an archive containing more files, then
+    <i>dtafilename</i> must be specified to indicate the relevant file for
+    de-compression.
+<p>
+    <b>zipappend</b> appends a Stata-format dataset previously saved in zip-format
+    (see description above for <b>zipuse</b>) to the current dataset in memory.
+<p>
+    <b>zipmerge</b> merges one or more Stata-format dataset(s) previously saved in
+    zip-format (see description above for <b>zipuse</b>) with the current dataset in
+    memory.
+<p>
+    Obviously, the commands require the zip command to be available at the
+    command line.  It can be downloaded for free at http://www.info-zip.org,
+    but is preinstalled on most Unix/Linux systems. On Unix/Linux/MacOSX you
+    can check if zip is available with
+<p>
+        <b>. shell which zip</b>
+<p>
+    which should return something like '/usr/bin/zip'. On Windows the zip.exe
+    and unzip.exe must similarly be found in the path, cf. the documentation
+    on your Windows version. The easiest way to check if your path is set up
+    correctly on Windows is to try out <b>zipsave</b> and <b>zipuse</b> on a test dataset
+    (ie. an artificial dataset you can afford to lose!). <b>If it does not work,</b>
+    <b>you either have not installed zip or your path is not configured</b>
+    <b>correctly.</b>
+<p>
+    In principle, the command should work on any system with zip installed
+    and ordinary shell commands available. The command has however only been
+    tested on the platforms mentioned above, so as always <b>use at your own</b>
+    <b>risk!</b>
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>replace</b> permits gzsave to overwrite an existing dataset. <b>replace</b> may not
+        be abbreviated.
+<p>
+    <b>clear</b> permits the data to be loaded even if there is a dataset already in
+        memory and even if that dataset has changed since the data were last
+        saved.
+<p>
+    <b>dtafile</b> must be specified when the zip-file contains two or more
+        datafiles. The full name of the datafile must be given.
+<p>
+    save_options are all options available with save.
+<p>
+    saveold_options are all options available with saveold.
+<p>
+    use_options are all options available with use.
+<p>
+    append_options are all options available with append.
+<p>
+    merge_options are all options available with merge.
+<p>
+<b><u>Remarks</u></b>
+<p>
+    These commands are useful for two purposes:
+<p>
+    First, they obviously help lowering the space used on disk by a dataset,
+        which may be important when storing very large datasets.
+<p>
+    Second, they may help reduce network load and hence the time used for
+        storing and opening datasets when using a distributed disk system
+        such as NFS. This is due to the fact that the commands only transfer
+        the compressed datasets over the network, since the uncompressed
+        dataset is only stored as a temporay datafile, which typically
+        resides on the local disk (where local is relative to the running
+        instance of Stata).
+<p>
+    The price paid for saving disk space (and network load) is the CPU time
+    used by gzip - please, test for yourself whether compression is actually
+    advantageous in your specific set-up.
+<p>
+    Note, that with {zipsave} the filename listed inside the zip-archive is
+    that of a temporary file created in the process (St12709.0000001 for
+    example), and so you should not extract the dataset using a simple unzip
+    command. Put differently, you should only use the command <b>zipuse</b> to open
+    data saved with <b>zipsave</b>. <b>zipuse</b> can however also open a manually created
+    zip-archive consisting of one or more datafiles by use of the option
+    <b>dtafile</b>.
+<p>
+    Also note, that the <b>zipsave</b> and <b>zipuse</b> commands sets the filename
+    associated with the dataset, so that for example <b>describe</b> correctly
+    reports the originating filename of the compressed dataset. An unwanted
+    side-effect of this occurs when issuing a <b>save, replace</b> on a dataset
+    opened with <b>zipuse</b>, as this will save an uncompressed dataset replacing
+    the original compressed dataset. This is, however, considered a feature,
+    as it ensures that commands such as <b>describe</b> points exactly to the
+    relevant file, and it remains the users responsibility to be aware which
+    filename is actually used in the command <b>save, replace</b>.
+<p>
+    If you prefer to use <b>gzip</b> for compression, have a look at gzsave.
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. zipsave myfile</b>
+    <b>. zipsave myfile, replace</b>
+<p>
+    <b>. zipuse myfile</b>
+    <b>. zipuse myfile, clear</b>
+    <b>. zipuse multfile.zip, clear dtafile(data.dta)</b>
+<p>
+    <b>. zipappend using myfile2</b>
+    <b>. zipappend using multfile2, dtafile(data2.dta)</b>
+<p>
+    <b>. zipmerge id using myfile3, unique</b>
+<p>
+<b><u>Author</u></b>
+<p>
+{
+    Henrik Stovring (stovring@biostat.au.dk), Biostatistics, Department of
+    Public Health, Aarhus University, Denmark.
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[R] save</b>
+<p>
+    Online: help for save, use, compress, append, merge, gzsave (if
+             installed, otherwise describe gzsave)
+</pre>
