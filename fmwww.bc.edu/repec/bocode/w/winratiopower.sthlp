@@ -22,11 +22,12 @@
 {title:Syntax}
 
 {phang}
-{opt wrpow:er} {cmd:,} [
+{opt winratiopow:er} {cmd:,} 
+{opt outcome(outcome_type outcome_options)} [
 {opt p:ower(number)} 
+{opt n(number)} 
 {opt a:lpha(number)} 
-{opt n:ratio(number)} 
-{opt outcome(outcome_type outcome_options)}
+{opt nrat:io(number)} 
 ]
 
 
@@ -46,16 +47,6 @@ assumed.
 
 {marker options}{...}
 {title:Options}
-
-
-{phang}
-{bf: power} is the required power for the trial and must lie between 0 and 1. {bf:power(0.8)} i.e. 80% power, is the default. 
-
-{phang}
-{bf: alpha} is the required significance level for the trial, and must lie between 0 and 1. {bf:alpha(0.05)} i.e. 5% significance level, is the default. 
-
-{phang}
-{bf: nratio} is the ratio of sample sizes, N2/N1. {bf:nratio(1)} i.e. 1:1 randomisation, is the default. 
 
 {phang}
 {bf: outcome({it:outcome_type outcome_options})} is a repeated option. It is used to specify the type of outcome along with information about the anticipated treatment effect at each level of the hierarchy, starting with the first
@@ -85,13 +76,28 @@ Caclulations are based on the assumption that the continuous outcome is normally
 {bf:m1} and {bf:m2} are the expected mean event rates in the intervention and control groups respectively. 
 {bf:winoption} will be either {bf:fewer} or {bf:more} to indicate whether a win is represented by having fewer, or more events, respectively. 
 {bf:d} is the expected dispersion. Repeat events are assumed to follow a negative binomial model. The dispersion parameter represents the degree of over-dispersion.
-The negative binomial model can be written as a Gamma-Poisson mixture, and dispersion represents the variance of the gamma distribution. Larger values imply a greater tendency for events to cluster in high-risk patients. The default value is 0, implying no overdispersion (i.e. events do not cluster at all
+The negative binomial model can be written as a Gamma-Poisson mixture, and dispersion represents the variance of the gamma distribution. Larger values imply a greater tendency for events to cluster in high-risk patients. The default value is 0, 
+implying no overdispersion (i.e. events do not cluster at all
 and follow a Poisson distribution) - whether or not this is realistic depends on the specific application. 
 
 {p 8 8 2}
 {bf:time-to-event} outcomes (whether ts or tf) require {bf:eventprob(p)} and {bf:hr(hr)}. 
 {bf:p} is the expected event probability in the control group. 
-{bf:hr} is the expected hazard ratio. For a treatment benefit we require hr<1 for {bf:tf} and hr>1 for {bf:ts}. Proportional hazards is assumed.
+{bf:hr} is the expected hazard ratio. For a treatment benefit we require hr<1 for {bf:tf} and hr>1 for {bf:ts}. 
+
+
+{phang}
+{bf: power} is the required power for the trial and must lie between 0 and 1. {bf:power(0.8)} i.e. 80% power, is the default. 
+
+{phang}
+{bf: n} is the total sample size; required when computing power for a given sample size. 
+
+{phang}
+{bf: alpha} is the required significance level for the trial, and must lie between 0 and 1. {bf:alpha(0.05)} i.e. 5% significance level, is the default. 
+
+{phang}
+{bf: nratio} is the ratio of sample sizes, N2/N1. {bf:nratio(1)} i.e. 1:1 randomisation, is the default. 
+
 
  
 {marker examples}{...}
@@ -122,7 +128,7 @@ If we wish to calculate the sample size required for 85% power in such a study a
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Scalars}{p_end}
-{synopt:{cmd:r(sigma_sq)}} variance of the log win ratio{p_end}
+{synopt:{cmd:r(sigma^2)}} sigma^2 as defined in Yu and Ganju {cmd:[3]}. The variance of the log win ratio will be approximately equal to sigma^2/N{p_end}
 {synopt:{cmd:r(N)}} Total number of patients required{p_end}
 {synopt:{cmd:r(winratio)}} True win ratio under user-provided assumptions{p_end}
 {synopt:{cmd:r(wins)}} Expected proportion of wins{p_end}
@@ -131,7 +137,7 @@ If we wish to calculate the sample size required for 85% power in such a study a
 {synopt:{cmd:r(wins#)}} Expected proportion of wins at level #{p_end}
 {synopt:{cmd:r(losses#)}} Expected proportion of losses at level #{p_end}
 {synopt:{cmd:r(ties#)}} Expected proportion of ties at level #{p_end}
-
+{synopt:{cmd:r(power)}} Estimated power for given sample size (if n is specified) {p_end}
 
 {marker references}{...}
 {title:References}

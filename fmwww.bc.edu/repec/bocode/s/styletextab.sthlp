@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.2  02oct2023}{...}
+{* *! version 1.3  16apr2024}{...}
 {viewerjumpto "Syntax" "styletextab##syntax"}{...}
 {viewerjumpto "Description" "styletextab##description"}{...}
 {viewerjumpto "Options" "styletextab##options"}{...}
@@ -27,14 +27,18 @@
 {synoptset 28}{...}
 {synopthdr}
 {synoptline}
-{synopt:{opt frag:ment}}keep only the LaTeX {it:tabular} environment{p_end}
 {synopt:{opt table:only}}keep only the LaTeX {it:table} environment{p_end}
+{synopt:{opt frag:ment}}keep only the LaTeX {it:tabular} environment{p_end}
 {synopt:[{cmd:no}]{opt book:tabs}}specify whether to use LaTeX booktabs rules (default is {opt booktabs}){p_end}
 {synopt:{opth lab:el(styletextab##marker:marker)}}label the table for cross-referencing{p_end}
 {synopt:{opt ls:cape}}wrap the table in a LaTeX {it:landscape} environment{p_end}
 {synopt:{cmdab:usep:ackage(}{it:pkg}[{cmd:,} {help styletextab##pkgopts:{it:pkg_opts}}]{cmd:)}}load a LaTeX package{p_end}
 {synopt:{cmdab:before:text(}{it:strlist}{cmd:)}}add text before table{p_end}
 {synopt:{cmdab:after:text(}{it:strlist}{cmd:)}}add text after table{p_end}
+{synopt:{cmd:pt(}{it:#}{cmd:)}}set the size of the main font used in the document{p_end}
+{synopt:{cmdab:paper:size(}{it:papersize}{cmd:)}}set the paper size{p_end}
+{synopt:{cmdab:tabs:ize(}{it:fontsize}{cmd:)}}set the size of the font used in the table{p_end}
+
 {synoptline}
 
 {synoptset 28}{...}
@@ -98,18 +102,18 @@ Similarly, if the {opt saving()} option is omitted,
 {phang}
 {cmd:tableonly} keeps the {it:table} section only (and discards the rest):
 
-{p 8 8 2} {it:\begin{tabular}} {p_end}
+{p 8 8 2} {it:\begin{table}[!h]} {p_end}
 {p 8 8 2} ... {p_end}
-{p 8 8 2} {it:\end{tabular}} {p_end}
+{p 8 8 2} {it:\end{table}} {p_end}
 
 {p 8 8 2} The resulting .tex file can be included in a LaTeX document via {bf:\input} macro.
 
 {phang}
 {cmd:fragment} keeps the {it:tabular} section only (and discards the rest):
 
-{p 8 8 2} {it:\begin{table}[!h]} {p_end}
+{p 8 8 2} {it:\begin{tabular}} {p_end}
 {p 8 8 2} ... {p_end}
-{p 8 8 2} {it:\end{table}} {p_end}
+{p 8 8 2} {it:\end{tabular}} {p_end}
 
 {p 8 8 2} The resulting .tex file can be manually wrapped inside a custom {it:table} environment in a LaTeX document via {bf:\input} macro. {p_end}
 
@@ -162,6 +166,20 @@ for single quotation and double quotation, respectively.
 These allow for using quotations within text.
 Otherwise, {help local} and {help global} macros can be used
 within text as usual.
+
+{phang}
+{opt pt(#)} sets the point size of the main font used in the document.
+# can be one of {it:10}, {it:11}, or {it:12}.
+
+{phang}
+{opt papersize(papersize)} sets the paper size of the document.
+{it:papersize} can be any paper size allowed by the {it:article} document class.
+Common options are {it:a4} for A4 paper, {it:legal} for Legal paper, and {it:letter} for Letter paper.
+
+{phang}
+{opt tabsize(fontsize)} sets the size of the font used in the table.
+{it:fontsize} can be one of {it:tiny}, {it:scriptsize}, {it:footnotesize},
+{it:small}, {it:normalsize}, {it:large}, {it:Large}, {it:LARGE}, {it:huge}, and {it:Huge}.
 
 
 {marker remarks}{...}
@@ -245,8 +263,18 @@ mode without needing to re-export the table at each step.
 {phang}{cmd:> {space 4}before(Table~\ref{fig:reg1} presents regressions.) ///}{p_end}
 {phang}{cmd:> {space 4}after(This text comes after Table~\ref{fig:reg1}.)}{p_end}
 
+{pstd}Change the page and font sizes:{p_end}
+{phang}{cmd:. styletextab, {space 41} ///}{p_end}
+{phang}{cmd:> {space 4}pt(11) paper(a4){space 34} ///}{p_end}
+{phang}{cmd:> {space 4}tabsize(small){space 36} ///}{p_end}
+{phang}{cmd:> {space 4}label(fig:reg1){space 35} ///}{p_end}
+{phang}{cmd:> {space 4}before(Table~\ref{fig:reg1} presents regressions.) ///}{p_end}
+{phang}{cmd:> {space 4}after(This text comes after Table~\ref{fig:reg1}.)}{p_end}
+
 {pstd}Add multiple paragraphs of text and increase page margins:{p_end}
 {phang}{cmd:. styletextab, {space 52} ///}{p_end}
+{phang}{cmd:> {space 4}pt(11) paper(a4){space 45} ///}{p_end}
+{phang}{cmd:> {space 4}tabsize(small){space 47} ///}{p_end}
 {phang}{cmd:> {space 4}label(fig:reg1){space 46} ///}{p_end}
 {phang}{cmd:> {space 4}usepackage(geometry, opt(margin=1in) pre){space 20} ///}{p_end}
 {phang}{cmd:> {space 4}usepackage(lipsum, nextl(%Preamble ends here!)){space 14} ///}{p_end}

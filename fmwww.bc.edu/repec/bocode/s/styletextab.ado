@@ -1,8 +1,12 @@
-*! version 1.2.2  27dec2023  Gorkem Aksaray <aksarayg@tcd.ie>
+*! version 1.3  16apr2024  Gorkem Aksaray <aksarayg@tcd.ie>
 *! Restyle LaTeX tables exported by the collect suite of commands
 *! 
 *! Changelog
 *! ---------
+*!   [1.3]
+*!     - Added three size options: pt() for setting the size of the main
+*!       font used in the document, papersize() for setting the paper size,
+*!       and tabsize() for setting the size of the font used in the table.
 *!   [1.2.2]
 *!     - usepackage() option when specified with LaTeX package names that
 *!       do not satisfy the naming convention of Stata (e.g., unicode-math)
@@ -36,16 +40,19 @@ program styletextab, rclass
         local  aftertext  "`aftertext'  AFTERtext`i'(string asis)"
     }
     
-    syntax [using/] [,                          ///
-                     SAVing(string asis)        ///
-                     FRAGment                   ///
-                     TABLEonly                  ///
-                     LScape                     ///
-                     noBOOKtabs                 ///
-                     LABel(string)              ///
-                     `usepackage'               ///
-                     `beforetext'               ///
-                     `aftertext'                ///
+    syntax [using/] [,                                      ///
+                     SAVing(string asis)                    ///
+                     FRAGment                               ///
+                     TABLEonly                              ///
+                     LScape                                 ///
+                     noBOOKtabs                             ///
+                     LABel(string)                          ///
+                     `usepackage'                           ///
+                     `beforetext'                           ///
+                     `aftertext'                            ///
+                     pt(numlist min=1 max=1 >=10 <=12 int)  ///
+                     PAPERsize(string)                      ///
+                     TABSize(string)                        ///
                     ]
     
     local global_skip = 2
@@ -105,6 +112,29 @@ program styletextab, rclass
         exit 198
     }
     
+    capture assert ///
+        inlist("`papersize'", "a0", "a1", "a2", "a3", "a4", "a5", "a6")         | ///
+        inlist("`papersize'", "b0", "b1", "b2", "b3", "b4", "b5", "b6")         | ///
+        inlist("`papersize'", "c0", "c1", "c2", "c3", "c4", "c5", "c6")         | ///
+        inlist("`papersize'", "b0j", "b1j", "b2j", "b3j", "b4j", "b5j", "b6j")  | ///
+        inlist("`papersize'", "ansia", "ansib", "ansic", "ansid", "ansie")      | ///
+        inlist("`papersize'", "letter", "executive", "legal", "")
+    if _rc == 9 {
+        di as err "{p 0 0 2}"
+        di as err "incorrect paper size specified"
+        di as err "{p_end}"
+        exit 198
+    }
+    
+    capture assert ///
+        inlist("`tabsize'", "tiny", "scriptsize", "footnotesize", "small", "normalsize", "large", "Large", "LARGE", "huge", "Huge", "")
+    if _rc == 9 {
+        di as err "{p 0 0 2}"
+        di as err "incorrect table size specified"
+        di as err "{p_end}"
+        exit 198
+    }
+    
     confirm file `"`using'"'
     
     tempname fh
@@ -117,7 +147,14 @@ program styletextab, rclass
     if "`tableonly'" == "" {
     
     * preamble
-    file write `tf' "\documentclass{article}" _n
+    if "`pt'" != "" {
+        local pt "`pt'pt"
+    }
+    if "`papersize'" != "" {
+        local papersize "`papersize'paper"
+    }
+    local docclassopts = subinstr(`"`= strtrim("`pt' `papersize'")'"', " ", ",", .)
+    file write `tf' "\documentclass[`docclassopts']{article}" _n
     if `"`usepackage0'"' != "" {
         forvalues i = 0/`repeated_option_maxcount' {
             if `"`usepackage`i''"' != "" {
@@ -248,6 +285,9 @@ program styletextab, rclass
         file write `tf' "\begin{landscape}" _n
     }
     file write `tf' "\begin{table}[!h]" _n
+    if "`tabsize'" != "" {
+        file write `tf' "\\`tabsize'" _n
+    }
     
     * caption
     file seek `fh' tof

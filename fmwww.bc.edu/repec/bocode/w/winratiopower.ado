@@ -1,13 +1,14 @@
-*! Version 1.0.1 20-01-2023
-*! Version 1.0.2 06-04-2023
-*! Version 1.0.3 30-08-2023
+*! Version 1.0.4 22-03-2024
+* Version 1.0.3 30-08-2023
+* Version 1.0.2 06-04-2023
+* Version 1.0.1 20-01-2023
 
 prog winratiopower , rclass 
 
 version 12.0 
 preserve 
 
-syntax , outcome(string) [ power(real 0.8) alpha(real 0.05) nratio(real 1)  *  ]
+syntax , outcome(string) [ power(real 0.8) n(integer 0) alpha(real 0.05) nratio(real 1)  *  ]
 
 * ------------------------------------------
 * Checks other than outcome()
@@ -23,7 +24,8 @@ if !(0<`alpha' & `alpha'<1) {
 if `nratio'<=0  {
 	di in r "nratio must be positive"
 	exit
-}				
+}
+			
 * ------------------------------------------
 
 * Calculate proportion allocated to treatment group
@@ -137,10 +139,12 @@ wrrepeat , `outcome`j''
 local max_mean=max(`r(mean_t)', `r(mean_c)')
 local max_events=0
 local ev_prob=1
+local cum_prob=0
 
-* Excluding >N events where event probability is less than 1 in a billion
-while `ev_prob'>0.000000001 {
-	local ++max_events
+* Excluding >N events where event probability is less than 1 in a billion and where the cumulative probability distribution function is already very close to 1 
+ 
+while `ev_prob'>0.000000001 | `cum_prob'<0.999999999 {
+
 	if `r(disp)'==0 {
 		local ev_prob=poissonp(`max_mean',`max_events')
 		}
@@ -154,10 +158,12 @@ while `ev_prob'>0.000000001 {
 		if `ev_prob'==. {
 		* Hopefully this is never required! If dispersion is very small 
 		* Stata fails to calculate the probability 
-		di as err "Event probability could not be calculated - dispersion parameter may be too small."
-		exit
+		di as err "The event probability could not be calculated for the repeat event outcome. In our experience, this is most likely to occur when there is a reasonable probability that a very large numbers of repeat events could occur. Usually this is because either the assumed mean values or the assumed dispersion parameter is large. Consider altering the assumed distribution of repeat event outcome."
+		exit 198 
 		}
 		}
+		local cum_prob=`cum_prob'+`ev_prob'
+		local ++max_events
 }
 	
 * It's a win if fewer events on control than treatment
@@ -170,18 +176,22 @@ while `ev_prob'>0.000000001 {
 		local prob=poissonp(`r(mean_t)',`ev_t')*poissonp(`r(mean_c)',`ev_c')
 		}
 	else {
+		*Calculating event probability in the treatment group
 		local nb1_num=exp(lngamma(`ev_t'+1/`r(disp)')) 
 		local nb1_den=exp(lngamma(1/`r(disp)'))*exp(lngamma(`ev_t'+1))
 		local nb1=`nb1_num'/`nb1_den'
 		local nb2=((`r(disp)'*`r(mean_t)'^2)/(`r(mean_t)'+`r(disp)'*`r(mean_t)'^2))^`ev_t'
 		local nb3=(1/(1+`r(mean_t)'*`r(disp)'))^(1/`r(disp)')
 		local ev_prob_t=`nb1'*`nb2'*`nb3'
+		
+		* Calcuating event probability in the control group
 		local nb1_num=exp(lngamma(`ev_c'+1/`r(disp)')) 
 		local nb1_den=exp(lngamma(1/`r(disp)'))*exp(lngamma(`ev_c'+1))
 		local nb1=`nb1_num'/`nb1_den'
 		local nb2=((`r(disp)'*`r(mean_c)'^2)/(`r(mean_c)'+`r(disp)'*`r(mean_c)'^2))^`ev_c'
 		local nb3=(1/(1+`r(mean_c)'*`r(disp)'))^(1/`r(disp)')
-		local ev_prob_c=`nb1'*`nb2'*`nb3'	
+		local ev_prob_c=`nb1'*`nb2'*`nb3'
+		* Calculating probability in both groups 
 		local prob=`ev_prob_t'*`ev_prob_c'
 		}
 	
@@ -238,16 +248,19 @@ forvalues i=1/`noutcomes' {
 }		
 
 * ------------------------------------------
-* CALCULATE LOG(WR) AND N
+* CALCULATE LOG(WR) AND N or POWER 
 * ------------------------------------------
 local log_win_ratio=log(`all_wins'/`all_losses')
 local sigma_sq=4*(1+`remaining_ties')/ ((3*`allocation')*(1-`allocation')*(1-`remaining_ties'))		
+
+if `n'==0 {
 local N=(`sigma_sq'*(`z_alpha'+`z_power')^2)/(`log_win_ratio'^2)
+}
 
-* ------------------------------------------
-* IF DROPOUT SPECIFIED
-* ------------------------------------------
-
+else {
+local z_power=sqrt(`n'*`log_win_ratio'^2/`sigma_sq')-`z_alpha'
+local power=normal(`z_power') 
+}
 
 * ------------------------------------------
 * RETURNED VALUES
@@ -262,7 +275,12 @@ return scalar ties = `remaining_ties'
 return scalar losses = `all_losses'
 return scalar wins = `all_wins'
 return scalar winratio = exp(`log_win_ratio')
+if "`n'"=="" {
 return scalar N = `N'
+}
+else {
+return scalar power=`power'
+}
 return scalar sigma_sq=`sigma_sq'
 
 * ------------------------------------------
@@ -273,10 +291,16 @@ di as text "{title: Estimated sample size for the win ratio}"
 di 
 disp  "{text: Study parameters:}"
 di 
-disp as text _col(5) "alpha =  " %5.4f `alpha'
-disp as text  _col(5) "power =  " %5.4f `power'
+disp as text _col(5) "alpha = " %3.2f `alpha'
+if `n'==0 {
+disp as text  _col(5) "power = " %3.2f `power'
+}
+else {
+disp as text  _col(5) "N = " %2.0f `n'	
+}
+
 if "`dropout'"!="" {
-disp _col(5) "dropout = " %5.4f `dropout'
+disp _col(5) "dropout = " %5.2f `dropout'
 }
 
 di 
@@ -292,11 +316,29 @@ disp _col(5) _dup(43)"-"
 disp _col(5) "Overall"  	_col(20) %3.2f `all_wins'  _col(30)  %3.2f `remaining_ties' _col(40) %3.2f `all_losses'
 disp _col(5) _dup(43)"-" 
 
+if `n'==0 {
 di 
 di "{text: Estimated sample size:}"
 dis
-disp _col(5) "N = " %4.1f `N'
-disp _col(5) "N per group = " %4.1f `N'/2
+disp _col(5) "N = " %2.1f `N'
+if `nratio'==1 {
+	disp _col(5) "N per group = " %2.1f `N'/2
+	}
+else {
+	local N1=`nratio'*`N'/(`nratio'+1)
+	local N2=`N'/(`nratio'+1)
+	disp _col(5) "N Group 1 = " %2.1f `N1'
+	disp _col(5) "N Group 2 = " %2.1f `N2'
+	}
+}
+
+else {
+di 
+di "{text: Estimated power:}"
+dis
+disp _col(5) "Power = " %3.2f `power'
+}
+
 
 end 
 
@@ -361,6 +403,11 @@ end
 cap prog drop wrrepeat
 prog wrrepeat , rclass
 syntax  ,  mean(numlist min=2 max=2) win(string) [dispersion(real 0)]
+
+if `dispersion'>0 & `dispersion'<0.01 {
+	disp in red "Dispersion parameter has to be either 0 or ≥0.01."
+	exit 198
+	}
 
 tokenize `mean' 
 local mean_t=`1'
