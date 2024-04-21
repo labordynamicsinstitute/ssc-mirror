@@ -1,3 +1,5 @@
+*! 1.0.1 Ariel Linden 18Apr2024 	// fixed issue with "dots" not displaying properly
+									// changed trperiod() to "string" so that command will work with updated itsamatch and itsa
 *! 1.0.0 Ariel Linden 03Apr2018
 
 
@@ -6,7 +8,7 @@ version 11.0
 
 	/* obtain settings */
 	syntax varlist(min=1 numeric) [if] [in] [aweight] ,       		/// weight only relevant for -newey-
-	TRPeriod(numlist min=1 max=1 sort)								/// start time of intervention    
+	TRPeriod(string)												/// start time of intervention    
 	TREATid(numlist min=1 max=1 int sort)                         	/// ID of actual treated unit
 	[ Pr(numlist max=1 >0 <1)										/// minimum p-value for balancing covariates
 	MATCHvar(varlist)												/// variables used for matching
@@ -62,9 +64,10 @@ version 11.0
 	
 		/* Get unique levels of the panel (pvar) variable */
 		sum `pvar' if `touse'
-		local rmin =r(min)
-		local rmax =r(max)
+		local rmin = r(min)
+		local rmax = r(max)
 		levelsof `pvar' if `touse', local(levels)
+		local cnt = r(r)
 
 		/* determine if pvar has value labels and assign them to ID*/
 		local pvarlabl: value label `pvar'
@@ -93,7 +96,7 @@ version 11.0
 	/* setup for dots */
 		if "`noisily'" == "" {
 		di _n
-		di as txt "Iterating across (" as res `cnt' as txt ") units of `pvar' "
+		di as txt "Iterating across (" as res `cnt' as txt ") units of {bf:`pvar'} "
 		di as txt "{hline 4}{c +}{hline 3} 10 " "{hline 3}{c +}{hline 3} 20 " "{hline 3}{c +}{hline 3} 30 " "{hline 3}{c +}{hline 3} 40 " "{hline 3}{c +}{hline 3} 50 "
 		}
 	/* loop thru -itsamatch- then -itsa- for each unit of pvar */
@@ -103,7 +106,7 @@ version 11.0
 		}
 		else if "`noisily'" != "" {
 		di _n
-		di "ID#: `i'"
+		 di as txt "ID#: `i'"
 		}
 		capture `noisily' {
 			qui replace id = `i' in `r' 

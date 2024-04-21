@@ -1,4 +1,5 @@
 {smcl}
+{* 19Apr2024}{...}
 {* 03Apr2018}{...}
 {title:Title}
 
@@ -11,7 +12,7 @@
 
 {p 8 12 2}
 {cmd:itsaperm} {depvar} [{indepvars}] {ifin} {weight}{cmd:,}
-{opt trp:eriod(#)}
+{cmdab:trp:eriod(}{it:{help datetime:date}}{cmd:)} 
 {opt treat:id(#)}
 [ {opt p:r(#)}
 {opt l:ag(#)}
@@ -32,7 +33,7 @@ or {cmd:xtset} {it:panelvar} {it:timevar}. See {helpb tsset} or {helpb xtset}.{p
 {synoptset 24 tabbed}{...}
 {synopthdr}
 {synoptline}
-{p2coldent:* {opt trp:eriod(#)}}specifies the time period when the intervention begins{p_end}
+{p2coldent:* {cmdab:trp:eriod(}{it:{help datetime:date}}{cmd:)}}specifies the time period when the intervention begins{p_end}
 {p2coldent:* {opt treat:id(#)}}specifies the identifier of the true treated unit{p_end}
 {synopt:{opt p:r(#)}}specifies the minimum significance level ({it:P}-value) for assessing balance{p_end}
 {synopt :{opt l:ag(#)}}specifies the maximum lag to be considered when a {cmd:newey} model is chosen; 
@@ -76,10 +77,14 @@ treatment unit cannot be attributed to the intervention (see [Linden 2018b] for 
 {title:Options}
 
 {phang}
-{cmd:trperiod(}{it:#}{cmd:)} specifies the time period when the
-intervention begins. The values entered for time period must be in the same
-units as the panel time variable specified in {cmd:tsset} {it:timevar}; see
-{helpb tsset}. {cmd:trperiod()} is required.
+{cmd:trperiod(}{it:date}{cmd:)} specifies the time period (date) when the
+intervention begins. The value entered for the time period must be in the same
+time unit as the panel time variable specified in {cmd:tsset} {it:timevar}; see
+{helpb tsset}. The date should be specified using the respective
+pseudofunction (see {helpb datetime:datetime}), such as {cmd:trperiod(2020)} 
+for a four-digit year, {cmd:trperiod(2019m11)} for quarterly data or 
+{cmd:trperiod(08jan2021)} for daily data. {cmd:trperiod()} is
+required.
 
 {phang}
 {cmd:treatid(}{it:#}{cmd:)} specifies the identifier of the true treated

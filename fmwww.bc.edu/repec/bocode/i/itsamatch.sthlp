@@ -1,4 +1,5 @@
 {smcl}
+{* 18Apr2024}{...}
 {* 10Apr2024}{...}
 {* 21Nov2017}{...}
 {* 27Oct2017}{...}
@@ -188,6 +189,8 @@ by specifying "retprice" as the dependent variable in the {helpb itsa} model.{p_
 {synoptset 15 tabbed}{...}
 {p2col 5 15 19 2: matrices}{p_end}
 {synopt:{cmd:r(contids)}}matrix containing control identifiers{p_end}
+{synopt:{cmd:r(results)}}matrix containing results{p_end}
+
 
 
 {title:Acknowledgments}

@@ -1,3 +1,4 @@
+*! 1.2.1 Ariel Linden 18Apr2024 // changed how the results are displayed, now presenting pvar unit labels instead of underlying values
 *! 1.2.0 Ariel Linden 10Apr2024 // fixed trperiod() to allow the user to enter a pseudofunction datetime e.g. (20jan1988)
 *! 1.1.0 Ariel Linden 21Nov2017 // Added local()option
 *! 1.0.0 Ariel Linden 21October2017
@@ -7,7 +8,7 @@ program define itsamatch, rclass
 version 11.0
 
 	/* obtain settings */
-	syntax varlist(min=1 numeric ts fv) [if] [in] [aweight] ,	/// weight only relevant for -newey-
+	syntax varlist(min=1 numeric) [if] [in] [aweight] ,	/// weight only relevant for -newey-
 	TRPeriod(string)											///     
 	TREATid(numlist min=1 max=1 int sort)						///
 	[ Pr(numlist max=1 >0 <1)									/// 
@@ -75,7 +76,7 @@ version 11.0
 			di as err "treatid(`treatid') is not found in the `pvar' variable"
 			exit 498
 		}
-	
+		
 		// Parse varlist and generate _z and _zt variables
 		tokenize `varlist'
 		local varcount : word count `varlist'
@@ -129,8 +130,11 @@ version 11.0
 	egen `rowmin' =rowmin(`clist')
 	
 	// make a matrix of values for those panels exceeding the specified p-value cutoff
-	mkmat `pvar' `clist' if `rowmin' > `pr' , matrix(`OPT')
+	mkmat `pvar' `clist' if `rowmin' > `pr' , matrix(`OPT')	
 	
+	// display results
+	list `pvar' `clist' if `rowmin' > `pr',  noobs  divider separator(0)	
+
 	//make a matrix of just the control IDs
 	mat `contid' = `OPT'[1..., 1]'
 			
@@ -142,12 +146,8 @@ version 11.0
 		c_local `local' `"`Y'"'  
 	}
 	
-	restore
-	
-	// show results 
-	di _n
-	matlist `OPT', names(col)
-	// save control IDs in matrix format
-	return matrix contids = `contid' 
+	// save matrices for control ids and for results
+	return matrix contids = `contid'
+	return matrix results = `OPT'
 
 end
