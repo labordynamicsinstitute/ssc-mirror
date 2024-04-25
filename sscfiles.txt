@@ -3187,6 +3187,7 @@ fmwww.bc.edu/repec/bocode/r/robscale.src
 fmwww.bc.edu/repec/bocode/r/raschtest.pkg
 fmwww.bc.edu/repec/bocode/r/r2var.pkg
 fmwww.bc.edu/repec/bocode/r/regsave.pkg
+fmwww.bc.edu/repec/bocode/r/renlabv.pkg
 fmwww.bc.edu/repec/bocode/r/rotate2.ado
 fmwww.bc.edu/repec/bocode/r/reg2logit.pkg
 fmwww.bc.edu/repec/bocode/r/rddensity_senate.dta
@@ -3405,6 +3406,7 @@ fmwww.bc.edu/repec/bocode/r/reghdfejl_p.ado
 fmwww.bc.edu/repec/bocode/r/rdmse.pkg
 fmwww.bc.edu/repec/bocode/r/rowmat_utils.pkg
 fmwww.bc.edu/repec/bocode/r/robstat.sthlp
+fmwww.bc.edu/repec/bocode/r/reganat.sthlp
 fmwww.bc.edu/repec/bocode/r/reldist.zip
 fmwww.bc.edu/repec/bocode/r/rndpoi.html
 fmwww.bc.edu/repec/bocode/r/reghdfejl_masker.ado
@@ -3667,6 +3669,7 @@ fmwww.bc.edu/repec/bocode/r/reg_ss.ado
 fmwww.bc.edu/repec/bocode/r/rdci.ado
 fmwww.bc.edu/repec/bocode/r/reuters.csv
 fmwww.bc.edu/repec/bocode/r/rqrs.ado
+fmwww.bc.edu/repec/bocode/r/renlabv.ado
 fmwww.bc.edu/repec/bocode/r/rcl.pkg
 fmwww.bc.edu/repec/bocode/r/raschcvt.ado
 fmwww.bc.edu/repec/bocode/r/relrank.ado
@@ -3959,6 +3962,7 @@ fmwww.bc.edu/repec/bocode/r/reweight.pkg
 fmwww.bc.edu/repec/bocode/r/r2nlsur.sthlp
 fmwww.bc.edu/repec/bocode/r/rtfsect.sthlp
 fmwww.bc.edu/repec/bocode/r/rdbwselect_2014_functions.do
+fmwww.bc.edu/repec/bocode/r/renlabv.sthlp
 fmwww.bc.edu/repec/bocode/r/rollreg.html
 fmwww.bc.edu/repec/bocode/r/rcl_functions_merger_simulation.do
 fmwww.bc.edu/repec/bocode/r/running.pkg
@@ -6190,7 +6194,6 @@ fmwww.bc.edu/repec/bocode/e/educationdata.pkg
 fmwww.bc.edu/repec/bocode/e/eventbaseline.sthlp
 fmwww.bc.edu/repec/bocode/e/estread.html
 fmwww.bc.edu/repec/bocode/e/effects1.ado
-fmwww.bc.edu/repec/bocode/reganat.sthlp
 fmwww.bc.edu/repec/bocode/s/save13.sthlp
 fmwww.bc.edu/repec/bocode/s/svr.html
 fmwww.bc.edu/repec/bocode/s/sheafcoef.pkg

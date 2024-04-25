@@ -1,4 +1,4 @@
-*! runmlwin.ado, George Leckie and Chris Charlton, 08Sep2023
+*! runmlwin.ado, George Leckie and Chris Charlton, 23Apr2024
 program runmlwin, eclass
   if c(stata_version) >= 15 local user user
   if _caller() >= 12 version 12.0, `user'
@@ -3743,8 +3743,8 @@ program Estimates, eclass sortpreserve
             mata: st_local("tmpname", validname("OD:bcons_1"))
             file write `macro2' "NAME  G25[1] '`tmpname''" _n
           }
-          //file write `macro2' "DESC   G25[1] ' 'RP1:var(bcons_1)'" _n
-          file write `macro2' "DESC   G25[1] ' 'OD:bcons_1'" _n
+          //file write `macro2' "DESC   G25[1] 'RP1:var(bcons_1)'" _n
+          file write `macro2' "DESC   G25[1] 'OD:bcons_1'" _n
           file write `macro2' "GSET 2 G21 G25 G21" _n
           file write `macro2' "LINK 0 G25" _n
         }
@@ -3872,11 +3872,7 @@ program Estimates, eclass sortpreserve
             file write `macro2' "ERAS G25[1]" _n
             file write `macro2' "REPE `numresi`l'' G25[2] G25[3]" _n
             file write `macro2' "ERAS G25[2]" _n
-            file write `macro2' "LOOP b42 1 b40" _n
-            //forvalues i = 1/`=`chainlength'' {
-              file write `macro2' "APPE G25[1] G25[3] G25[1]" _n
-            //}
-            file write `macro2' "ENDL" _n
+            file write `macro2' "CODE G25[3] 1 b40 G25[1]" _n
             file write `macro2' "ERAS G25[3]" _n
             // Temporary rename level ID column so there isn't a duplicate
             file write `macro2' "NAME '`lev`l'id'' '_`lev`l'id''" _n
@@ -4949,7 +4945,7 @@ program define runmlwin_calcresiduals
   }
 
   if "`adjust'" == "noadjust" {
-    file write `macro1' "RTYP 3" _n                 // No adjustment
+    file write `macro1' "RTYP 4" _n                 // No adjustment
   }
   else if "`rpadjust'" ~= "" {
     file write `macro1' "RTYP 2" _n                 // Fixed and Random part adjustment

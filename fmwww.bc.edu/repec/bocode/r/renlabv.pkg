@@ -1,0 +1,26 @@
+d 'RENLABV': module to rename (all) value labels to match the names of the assigned variables
+d
+d     As a wrapper of the SSC program elabels by Daniel Klein,
+d renlabv renames value labels to match the name(s) of the   
+d assigned variable(s). Hence, the program will require that
+d elabels is installed. After using renlabv without specifying	 
+d any variable the names of all value labels of the data set will
+d be equal to the names of the assigned variables. By	 default
+d renlabv will drop the original value labels. Note that value
+d labels not assigned to variables will not be	  renamed or
+d dropped. 
+d
+d KW: label values
+d KW: recode
+d KW: elabel
+d KW: data management
+d
+d Requires: Stata version 11.2 and elabel from SSC (q.v.)
+d
+d Distribution-Date: 20240423
+d
+d Author: Dirk Enzmann, University of Hamburg
+d Support: email dirk.enzmann@@uni-hamburg.de
+d
+f renlabv.ado
+f renlabv.sthlp

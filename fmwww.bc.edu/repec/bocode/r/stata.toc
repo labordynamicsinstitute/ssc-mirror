@@ -133,6 +133,7 @@ p relyplot module to graph reliability plot of predictions for linear or logisti
 p remr module to implement robust error meta-regression method for dose–response meta-analysis
 p renames module to rename variables
 p renfiles module providing a convenient way to change filenames for (a matched subset of) files in a directory of choice (and, if wanted, also recursively in a matched subset of offspring-directories)
+p renlabv module to rename (all) value labels to match the names of the assigned variables
 p rensheet module to edit variable names and labels
 p renvarlab module to rename variables, with option of using variable labels to create new variable names
 p reorder module to reorder variables in dataset, reversibly
