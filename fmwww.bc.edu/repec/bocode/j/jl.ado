@@ -1,4 +1,4 @@
-*! jl 1.0.0 12 April 2024
+*! jl 1.0.1 24 April 2024
 *! Copyright (C) 2023-24 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 * Version history at bottom
-
+  
 
 // Take 1 argument, possible path for julia executable, return workable path, if any, in caller's libpath and libname locals; error otherwise
 cap program drop wheresjulia
@@ -147,7 +147,6 @@ cap program drop PutVarsToDF
 program define PutVarsToDF
   syntax [varlist] [if] [in], [DESTination(string) COLs(string) DOUBLEonly noMISSing noLABel]
   if `"`destination'"'=="" local destination df
-    else confirm names `destination'
   local ncols = cond("`varlist'"=="",c(k),`:word count `varlist'')
   if `"`cols'"'=="" unab cols: `varlist'
   else {
@@ -190,7 +189,7 @@ program define jl, rclass
   version 14.1
 
   if `"`0'"'=="version" {
-    return local version 1.0.0
+    return local version 1.0.1
     exit
   }
 
@@ -230,11 +229,13 @@ program define jl, rclass
       local __jlans `__jlans'  // strip quotes
       return local envdir: subinstr local __jlans "\\" "\", all
       plugin call _julia, eval `"dirname(Base.load_path_expand("@v#.#"))"'
-	  if "`return(envdir)'" != `__jlans' {
-	  	plugin call _julia, eval `"splitpath(Base.active_project())[end-1]"'
-		return local env `__jlans'  // strip quotes
-	  }
-      di as txt `"Current package environment: `=cond("`return(env)'"=="","(default)","`return(env)'")', at `return(envdir)'"'
+      local __jlans: subinstr local __jlans "\\" "\", all
+      if "`return(envdir)'" == `__jlans' return local env .
+      else {
+        plugin call _julia, eval `"splitpath(Base.active_project())[end-1]"'
+        return local env `__jlans'  // strip quotes
+      }
+      di as txt `"Current environment: `=cond("`return(env)'"==".","(default)","`return(env)'")', at `return(envdir)'"'
     }
     else if `"`cmd'"'=="AddPkg" AddPkg `0'
     else if `"`cmd'"'=="use" {
@@ -266,12 +267,10 @@ program define jl, rclass
     }
     else if `"`cmd'"'=="PutVarsToMat" {
       syntax [varlist] [if] [in], DESTination(string) [noMISSing]
-      confirm names `destination'
       plugin call _julia `varlist' `if' `in', `cmd'`missing' `"`destination'"' `"`if'`in'"'
     }
     else if `"`cmd'"'=="GetVarsFromMat" {
       syntax namelist [if] [in], source(string asis) [replace]
-      confirm names `source'
       if "`replace'"=="" confirm new var `namelist'
       foreach var in `namelist' {
         cap gen double `var' = .
@@ -427,4 +426,5 @@ program _julia, plugin using(jl.plugin)
 * 0.10.1 Fixed memory leak
 * 0.10.2 threads() option on start
 * 0.10.3 Bug fix for 0.10.2
-*  1.0.0 Add GetEnv, support for closing ";", and interactive mode
+* 1.0.0 Add GetEnv, support for closing ";", and interactive mode
+* 1.0.1 Drop confirm names on Julia source and destination matrices so they can be views or other things

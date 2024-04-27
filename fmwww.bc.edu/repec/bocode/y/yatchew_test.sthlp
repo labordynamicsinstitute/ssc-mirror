@@ -10,7 +10,7 @@
 {title:Title}
 
 {p 4 4}
-{cmd:yatchew_test} {hline 2} Yatchew (1997), de Chaisemartin, D'Haultfoeuille & Gurgand (2024) linearity test.
+{cmd:yatchew_test} {hline 2} Yatchew (1997), de Chaisemartin and D'Haultfoeuille (2024) linearity test.
 {p_end}
 
 {marker syntax}{...}
@@ -33,11 +33,11 @@ This program implements a non-parametric test that
 the expectation of Y given D is linear.
 The program implements both the original test proposed
 by Yatchew (1997) and its heteroskedasticity-robust version proposed 
-by de Chaisemartin, D'Haultfoeuille & Gurgand (2024). 
+by de Chaisemartin and D'Haultfoeuille (2024). 
 In the vignettes linked below, we sketch the intuition behind the two tests, as 
 to motivate the use of the package and its options. 
 Please refer to Yatchew (1997) and 
-Section 3 of de Chaisemartin, D'Haultfoeuille & Gurgand (2024) for further details.
+Section 3 of de Chaisemartin and D'Haultfoeuille (2024) for further details.
 {p_end}
 
 {p 4 4}
@@ -103,7 +103,7 @@ distance between each pair of consecutive observations
 {marker references}{...}
 {title:References}
 {p 4 4}
-de Chaisemartin, C, D'Haultfoeuille, X, Gurgand, M. (2024).
+de Chaisemartin, C, D'Haultfoeuille, X (2024).
 {browse "https://ssrn.com/abstract=4284811":Two-way Fixed Effects and Difference-in-Difference Estimators in Heterogeneous Adoption Designs}.
 {p_end}
 {p 4 4}
@@ -132,7 +132,7 @@ Doulo Sow, CREST-ENSAE, France.
 
 {title:Contact}
 {p 4 4}
-{browse "mailto:chaisemartin.packages@gmail.com":chaisemartin.packages@gmail.com}
+If you wish to inquire about the functionalities of this package or to report bugs/suggestions, feel free to post your question in the Issue section of the {browse "https://github.com/chaisemartinPackages/yatchew_test":yatchew_test GitHub repository}. 
 {p_end}
 
 {title:Acknowledgement}

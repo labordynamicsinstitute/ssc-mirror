@@ -13,7 +13,7 @@
 <body>
     <h2><b>Multivariate Yatchew Test</b></h2>
 
-    Let $\textbf{D}$ be a vector of $K$ random variables. Let $g(\textbf{D}) = E[Y|\textbf{D}]$. Denote with $||.,.||$ the Euclidean distance between two vectors. The null hypothesis of the multivariate test is $g(\textbf{D}) = \alpha_0 + A'\textbf{D}$, with $A = (\alpha_1,..., \alpha_K)$, for $K+1$ real numbers $\alpha_0$, $\alpha_1$, ..., $\alpha_K$. This means that, under the null, $g(.)$ is linear in $\textbf{D}$. Following the same logic as the univariate case, in a dataset with $N$ i.i.d. realisations of $(Y, \textbf{D})$ we can approximate the first difference $\Delta \varepsilon$ by $\Delta Y$ valuing $g(.)$ between consecutive observations. The program runs a nearest neighbor algorithm to find the sequence of observations such that the Euclidean distance between consecutive positions is minimized. The algorithm has been programmed in C++ and it has been integrated in Stata via OS-specific plugins and in R thanks to the Rcpp library. 
+    Let $\textbf{D}$ be a vector of $K$ random variables. Let $g(\textbf{D}) = E[Y|\textbf{D}]$. Denote with $||.,.||$ the Euclidean distance between two vectors. The null hypothesis of the multivariate test is $g(\textbf{D}) = \alpha_0 + A'\textbf{D}$, with $A = (\alpha_1,..., \alpha_K)$, for $K+1$ real numbers $\alpha_0$, $\alpha_1$, ..., $\alpha_K$. This means that, under the null, $g(.)$ is linear in $\textbf{D}$. Following the same logic as the univariate case, in a dataset with $N$ i.i.d. realisations of $(Y, \textbf{D})$ we can approximate the first difference $\Delta \varepsilon$ by $\Delta Y$ valuing $g(.)$ between consecutive observations. The program runs a nearest neighbor algorithm to find the sequence of observations such that the Euclidean distance between consecutive positions is minimized.
 
     The program follows a very simple nearest neighbor approach:
     <ol>
@@ -29,7 +29,7 @@
         <li>The algorithm is applied to sub-cubes, i.e. partitions of the $[0,1]^K$ space, and the full path is obtained by joining the extrema of the subpaths.</li>
     </ul>
 
-    By convention, the program computes $(2\lceil \log_{10} N \rceil)^K$ subcubes, where each univariate partition is defined by grouping observations in $2\lceil \log_{10} N \rceil$ quantile bins. If $K = 2$, the user can visualize in a ggplot graph the exact path across the normalized $\textbf{D}_{i}s$ by running the command with the option <b>path_plot</b>.
+    By convention, the program computes $(2\lceil \log_{10} N \rceil)^K$ subcubes, where each univariate partition is defined by grouping observations in $2\lceil \log_{10} N \rceil$ quantile bins. If $K = 2$, the user can visualize in a graph the exact path across the normalized $\textbf{D}_{i}s$ by running the command with the option <b>path_plot</b>.
 
     Once the dataset is sorted by $I$, the program resumes from step (2) of the univariate case.
 </body>

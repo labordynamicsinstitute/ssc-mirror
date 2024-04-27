@@ -46,12 +46,14 @@
 {synopt: {opth res:iduals(newvar)}}save regression residuals; required for postestimation "{it:predict <varname>, d}" {p_end}
 {synopt:{opt ivreg2}}call ivreg2 for IV estimation{p_end}
 {synopt:{opt iter:ate(#)}}maximum number of iterations; default is 16,000{p_end}
-{synopt:{opt nosamp:le}}will not create {it:e(sample)}, saving some space and speed{p_end}
+{synopt:{opt keepsin:gletons}}do not drop fixed effect singletons{p_end}
+{synopt:{opt nosamp:le}}do not create {it:e(sample)}, saving some space and speed{p_end}
 {synopt:{opt compact}}temporarily saves all data to disk in order to free memory{p_end}
 {synopt:{opt threads(#)}}number of CPU threads Julia should use{p_end}
 {synopt:{opt gpu}}use NVIDIA or Apple Silicon GPU{p_end}
 {synopt:{opt l:evel(#)}}set confidence level; default is normally 95{p_end}
 {synopt:{it:display options}}{help ml##display_options:standard options} governing results display{p_end}
+{synopt:{opt verb:ose}}show and leave behind Julia regression command & data{p_end}
 {synoptline}
 {p 4 6 2}{it:depvar} and {it:indepvars} may contain {help tsvarlist:factor variables} and {help tsvarlist:time-series operators}. {it:depvar} 
 cannot be of the form {it:i.y} though, only {it:#.y} (where # is a number){p_end}
@@ -73,7 +75,7 @@ cannot be of the form {it:i.y} though, only {it:#.y} (where # is a number){p_end
 {p 4 6 2}Exactly one of {opt gen:erate()} and {opt pre:fix()} must be specified.
 
 {p 4 6 2}{cmd:vce(bootstrap,} {it:bsoptions}{cmd:)} accepts these standard {help bootstrap:bootstrap options}: {opt r:obust}, {opt cl:uster(varname)}, {opt seed(#)}, {opt reps(#)}, {opt mse}, 
-{opt size(#)}. In addition it accepts a {opt proc:s()} option to accelerate the bootstrap through multitasking.
+{opt size(#)}, {cmdab:sav:ing(}{it:filename} {cmd:[, {ul:doub}le replace])}. In addition it accepts a {opt proc:s()} option to accelerate the bootstrap through multitasking.
 
 
 {marker description}{...}
@@ -141,14 +143,18 @@ possible for the default to be too high as well as too low. If you set it high, 
 {help jl##threads:help jl} for more on determining and controlling the number of threads.
 
 {pstd}
-In a similar vein, {cmd:reghdfejl} offers accelerated bootstrapping for the purpose of computing standard errors, via the {cmd:bs}/{cmd:bootstrap}
+In a similar vein, {cmd:reghdfejl} offers accelerated bootstrapping for computing standard errors, via the {cmd:bs}/{cmd:bootstrap}
 suboption of the {opt vce()} option. The results should be the same, asymptotically, as if one prefixes a {cmd:reghdfejl} command line with
 Stata's {cmd:bootstrap} command. But they should come much faster because copying of data between Stata and Julia is minimized, and multiple
 copies of Julia are launched for parallelization.
 
 {pstd}
 A final new feature is access to GPU-based computation. The {cmd:gpu} specifies the use of NVIDIA or Apple Silicon 
-GPUs for computation. Typically this modestly increases speed.
+GPUs for computation. Typically this modestly increases speed. On non-Apple computers, {cmd:reghdfejl} installs the latest 
+version of the Julia package CUDA.jl, which currently requires CUDA drivers 11.0 or later. (CUDA is NVIDIA's programming
+interface for GPUs.) You can visit the 
+{browse "https://developer.nvidia.com/cuda-downloads":CUDA download site} for the latest drivers.
+
 
 {pstd}
 The command {cmd:reghdfejl mask} redirects all {cmd:reghdfe} calls to {cmd:reghdfejl}. {cmd:reghdfejl unmask} stops the redirection. This is useful is when using other Stata packages that call {cmd:reghdfe}, such as 
@@ -225,12 +231,14 @@ are correlated within groups. Multi-way-clustering is allowed.
 {cmd:vce(bootstrap,} {it:bsoptions}{cmd:)}} and {cmd:vce(bs,} {it:bsoptions}{cmd:)} are synonyms. They request estimation of standard errors using the non-parametric or "pairs" 
 bootstrap. In expectation, {cmd: reghdfejl ..., ... vce(bs,} {it:bsoptions}{cmd:)} should return the same results as {cmd: bs,} {it:bsoptions}{cmd:: reghdfejl ..., ...}. But the 
 first is faster because it avoids copying data from Stata to Julia on every replication and can exploit mulitasking. {it:bsoptions} 
-may include any of the following suboptions: {opt r:obust}, {opt cl:uster(varname)}, {opt seed(#)}, {opt reps(#)}, {opt mse}, {opt size(#)}, and 
+may include any of the following suboptions: {opt r:obust}, {opt cl:uster(varname)}, {opt seed(#)}, {opt reps(#)}, {opt mse}, {opt size(#)}, 
+{cmdab:sav:ing(}{it:filename} {cmd:[, {ul:doub}le replace])}, and 
 {opt proc:s(#)}. All but the last are standard {help bootstrap:bootstrap options}. The last instructs {cmd:reghdfejl} to launch several
 copies of Julia in order to run the bootstrap in parallel. The {opt proc:s(#)} suboption is semantically distinct from {cmd:reghdfejl}'s {opt threads()}
-option. The latter triggers low-level multitasking: the Julia package FixedEffectModels.jl spreads certain loops across multiple threads. The former instead runs 
-multiple copies of Julia, each of which loads and runs FixedEffectModels.jl, on just one thread. This set-up is efficient for "embarrassingly parallel"
-tasks such as bootstrapping. While the options are implemented in different ways, the principles governing the optimal number to choose are the 
+option. The latter triggers low-level multitasking: the Julia package FixedEffectModels.jl spreads certain loops across multiple threads within one Julia 
+instance. The former instead runs 
+multiple copies of Julia, each of which loads and runs FixedEffectModels.jl, on just one thread each. While 
+the options are implemented in different ways, the principles governing the optimal number of threads and processes are the 
 same. See {help jl##threads:help jl}.
 
 {pmore}
@@ -263,6 +271,9 @@ specifies the maximum number of iterations; the default is 16,000.
 {opt nosample} will not create {it:e(sample)}, saving some space and speed.
 
 {phang}
+{opt keepsin:gletons} prevents dropping of observations that constitute singleton fixed-effect groups (Correia 2015).
+
+{phang}
 {opt compact} temporarily saves all data to disk in orer to free memory for estimation--at the cost of a bit of time.
 
 {phang}
@@ -280,6 +291,9 @@ This option is often used in programs and ado-files.
 {opt nofoot:note} suppresses display of the footnote table that lists the absorbed fixed effects, including the number of categories/levels of each fixed effect,
 redundant categories (collinear or otherwise not counted when computing degrees-of-freedom), and the difference between both.
 
+{phang}
+{opt verb:ose} causes {cmd:reghdfejl} to show more of its work--to display the Julia copy of the data set, the formula for the regression model, and the regression command. The data set and formula
+are left behind for the user to work with through {help jl}, not erased as they normally are.{p_end}
 
 {marker postestimation}{...}
 {title:Postestimation syntax}
@@ -517,6 +531,7 @@ postestimation functionality is copied from {cmd:reghdfe}, as are parts of this 
 {marker references}{...}
 {title:References}
 
+{p 4 8 2}Correia, S. 2015. Singletons, cluster-robust standard rrrors and fixed effects: A bad mix{browse "https://scorreia.com/research/singletons.pdf"}.{p_end}
 {p 4 8 2}Correia, S. 2016. A feasible estimator for linear models with multi-way fixed effects. {browse "http://scorreia.com/research/hdfe.pdf"}.{p_end}
 
 

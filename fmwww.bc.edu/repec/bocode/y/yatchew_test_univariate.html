@@ -24,6 +24,6 @@ Let $Y$ and $D$ be two random variables. Let $m(D) = E[Y|D]$. The null hypothesi
 Heuristically, the validity of step (3) derives from the fact that $Y_{(i)} - Y_{(i-1)}$ = $m(D_{(i)}) - m(D_{(i-1)})$ + $\varepsilon_{(i)} - \varepsilon_{(i-1)}$ and the first difference term is close to zero for $D_{(i)} \approx D_{(i-1)}$. Sorting at step (1) ensures that consecutive $D_{(i)}s$  are as close as possible, and when the sample size goes to infinity the distance between consecutive observations goes to zero. Then, Yatchew (1997) shows that under homoskedasticity and regularity conditions $$T := \sqrt{G}\left(\dfrac{\hat{\sigma}^2_{\text{lin}}}{\hat{\sigma}^2_{\text{diff}}}-1\right) \stackrel{d}{\longrightarrow} \mathcal{N}\left(0,1\right).$$
 Then, one can reject the linearity of $m(.)$ with significance level $\alpha$ if $T > \Phi(1-\alpha)$. 
 
-If the homoskedasticity assumption fails, this test leads to overrejection. De Chaisemartin, D'Haultfoeuille & Gurgand (2024) propose a heteroskedasticity-robust version of the test statistic above. This version of the Yatchew (1997) test can be implemented by running the command with the option <b>het_robust</b>.
+If the homoskedasticity assumption fails, this test leads to overrejection. De Chaisemartin & D'Haultfoeuille (2024) propose a heteroskedasticity-robust version of the test statistic above. This version of the Yatchew (1997) test can be implemented by running the command with the option <b>het_robust</b>.
 </body>
 </html>
