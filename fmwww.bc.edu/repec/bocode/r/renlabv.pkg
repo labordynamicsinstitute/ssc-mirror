@@ -1,6 +1,6 @@
 d 'RENLABV': module to rename (all) value labels to match the names of the assigned variables
 d
-d     As a wrapper of the SSC program elabels by Daniel Klein,
+d     As a wrapper of the SSC program elabel by Daniel Klein,
 d renlabv renames value labels to match the name(s) of the   
 d assigned variable(s). Hence, the program will require that
 d elabels is installed. After using renlabv without specifying	 
