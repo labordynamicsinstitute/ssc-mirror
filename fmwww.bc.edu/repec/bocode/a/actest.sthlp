@@ -1,5 +1,5 @@
 {smcl}
-{* 16Mar2014}{...}
+{* 29apr2024}{...}
 {hline}
 help for {hi:actest}
 {hline}
@@ -26,7 +26,7 @@ help for {hi:actest}
 ]
 
 {p}{cmd:actest} may be used on the univariate time series specified in {it:varname}
-or after {help regress}, {help newey}, {help ivreg}, {help ivregress}, {help ivreg2} and {help newey2}.
+or after {help regress}, {help newey}, {help ivreg}, {help ivregress}, {help ivreg2}, {help newey2} and conditionally {help glm}.
 {cmd:actest} is for use with time-series data.  You must {cmd:tsset} your data before 
 using {cmd:actest}; see {help tsset}. You may apply {cmd:actest} to a panel dataset that has been defined by {help tsset} or
 {help xtset}.{p_end}
@@ -72,6 +72,8 @@ The C-H test is then essentially the same test as the Arellano and Bond (1991) t
 {p} The options available in {cmd:actest} permit the user to conduct, as special cases of the C-H test, a B-P-L-B {it:Q} test, a B-G test, or an A-B test, as well as tests appropriate for non-i.i.d. time series.{p_end}
 
 {p} {cmd:actest} may be used as a standalone command by specifying a {it:varname}, or it may be used as a postestimation command after several regression commands. In the latter case, {cmd:actest} operates on the residuals of the prior regression.{p_end}
+
+{p} {cmd:actest} can be used after {help glm} if that command is specified with family(gaussian) and link(identity) options, as that GLM is a linear regression. We thank Ariel Linden for that modification. {p_end}
 
 {title:Options}
 
@@ -159,6 +161,8 @@ See {cmd:return list}.{p_end}
 {p 8 12}{stata "webuse lutkepohl" : . webuse lutkepohl }{p_end}
 {p 8 12}{stata "qui reg investment L(1/4).income" : . qui reg investment L(1/4).income}{p_end}
 {p 8 12}{stata "estat bgodfrey, lags(1/8)" : . estat bgodfrey, lags(1/8)}{p_end}
+{p 8 12}{stata "actest, lags(8)" : . actest, lags(8)}{p_end}
+{p 8 12}{stata "qui glm investment L(1/4).income" : . qui glm investment L(1/4).income}{p_end}
 {p 8 12}{stata "actest, lags(8)" : . actest, lags(8)}{p_end}
 
 {p} Application in an IV context {p_end}

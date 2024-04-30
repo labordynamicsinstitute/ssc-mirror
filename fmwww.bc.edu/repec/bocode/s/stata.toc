@@ -6,11 +6,13 @@ p sadi Sequence analysis distance measures
 p sankey module for Sankey diagrams 
 p scatterfit module to produce scatter plots with fit lines
 p scheme_scientific module to provide a graphic scheme favored by many scientific journals
+p scores module to creates scores (row-wise) of a set of variables allowing the specification of the number of valid values required and/or to produce various transformations of scores
 p setroot module to find the root path of a project and set it as a global variable
 p simsum module to perform analyses of simulation studies including Monte Carlo error
 p simulate2 module enhancing and parallelising simulate
 p sivqr module to perform smoothed IV quantile regression
 p skewreg module to estimate skewness and kurtosis regressions
+p sortl module to sort factor loadings or rotated matrix from PCA or factor
 p sotable module to produce tests and confidence bands for multiple comparisons of two-sided or one-sided hypotheses
 p spgen module to generate spatially lagged variables
 p spider module for spider plots

@@ -593,6 +593,7 @@ fmwww.bc.edu/repec/bocode/x/xtregbn.dlg
 fmwww.bc.edu/repec/bocode/x/xframeappend.ado
 fmwww.bc.edu/repec/bocode/x/xtpedroni.pkg
 fmwww.bc.edu/repec/bocode/x/xfrac.html
+fmwww.bc.edu/repec/bocode/x/xtnondynthreshsfa.ado
 fmwww.bc.edu/repec/bocode/x/xtregbem.dlg
 fmwww.bc.edu/repec/bocode/x/xtqreg.pkg
 fmwww.bc.edu/repec/bocode/x/xtcd.pkg
@@ -826,6 +827,7 @@ fmwww.bc.edu/repec/bocode/x/xtivreg2.html
 fmwww.bc.edu/repec/bocode/x/xttest3.ado
 fmwww.bc.edu/repec/bocode/x/xtheckmanfe.pkg
 fmwww.bc.edu/repec/bocode/x/xvalols.pkg
+fmwww.bc.edu/repec/bocode/x/xtnondynthreshsfacomps.ado
 fmwww.bc.edu/repec/bocode/x/xrigls.pkg
 fmwww.bc.edu/repec/bocode/x/xtfixedcoeftvcu_p.ado
 fmwww.bc.edu/repec/bocode/x/xttrans2.pkg
@@ -849,6 +851,7 @@ fmwww.bc.edu/repec/bocode/x/xtgrangert.pkg
 fmwww.bc.edu/repec/bocode/x/xthrtest.pkg
 fmwww.bc.edu/repec/bocode/x/xtpmg_examples.do.txt
 fmwww.bc.edu/repec/bocode/x/xtivdfreg_postestimation.sthlp
+fmwww.bc.edu/repec/bocode/x/xtnondynthreshsfa.pkg
 fmwww.bc.edu/repec/bocode/x/xsmle.sthlp
 fmwww.bc.edu/repec/bocode/x/xtlhazard.pkg
 fmwww.bc.edu/repec/bocode/x/xauto.txt
@@ -880,6 +883,7 @@ fmwww.bc.edu/repec/bocode/x/xtregbem.dta
 fmwww.bc.edu/repec/bocode/x/xtendothresdpdconv.ado
 fmwww.bc.edu/repec/bocode/x/xdir.ado
 fmwww.bc.edu/repec/bocode/x/xtcaec.ado
+fmwww.bc.edu/repec/bocode/x/xtnondynthreshsfadata.dta
 fmwww.bc.edu/repec/bocode/x/xri_nll.ado
 fmwww.bc.edu/repec/bocode/x/xtmis.ado
 fmwww.bc.edu/repec/bocode/x/xml_tab.ado
@@ -1048,6 +1052,7 @@ fmwww.bc.edu/repec/bocode/x/xtdolshm.ado
 fmwww.bc.edu/repec/bocode/x/xtivreg28.html
 fmwww.bc.edu/repec/bocode/x/xls2stata.html
 fmwww.bc.edu/repec/bocode/x/xcontract.sthlp
+fmwww.bc.edu/repec/bocode/x/xtnondynthreshsfa.sthlp
 fmwww.bc.edu/repec/bocode/x/xtdolshmdata.dta
 fmwww.bc.edu/repec/bocode/x/xtdcce2133_p.ado
 fmwww.bc.edu/repec/bocode/x/xframeappend.pkg
@@ -14682,6 +14687,7 @@ fmwww.bc.edu/repec/bocode/c/colrspace.pkg
 fmwww.bc.edu/repec/bocode/c/chewfile.pkg
 fmwww.bc.edu/repec/bocode/c/cprd_patient.sthlp
 fmwww.bc.edu/repec/bocode/c/cnssc.pkg
+fmwww.bc.edu/repec/bocode/c/cs_actest_1.0.15.do
 fmwww.bc.edu/repec/bocode/c/cs_weakiv_1.0.06.do
 fmwww.bc.edu/repec/bocode/c/cf2.hlp
 fmwww.bc.edu/repec/bocode/c/clan.sthlp

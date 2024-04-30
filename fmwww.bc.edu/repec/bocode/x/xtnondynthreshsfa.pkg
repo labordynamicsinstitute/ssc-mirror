@@ -1,0 +1,32 @@
+d 'XTNONDYNTHRESHSFA': module to estimate Threshold Effects in Non-Dynamic Panel Data Stochastic Frontier Models
+d
+d  xtnondynthreshsfa performs estimations of threshold effects in
+d non-dynamic panel data stochastic frontier models. This command
+d estimates fixed-effects non-dynamic panel data stochastic
+d frontier models with threshold effects. It allows to obtain both
+d single and multiple thresholds estimates alongside the slope
+d coefficients. It also tests for the existence of threshold
+d effects. After estimation, the command permits to calculate both
+d the time-invariant technical inefficiency and the
+d individual-specific efficiency scores. xtnondynthreshsfa is an
+d extension of Wang (The Stata Journal, 2015) xthreg command to the
+d world of panel data stochastic frontier models in the presence of
+d threshold effects. The theory behind the command
+d xtnondynthreshsfa is provided by Yelou, Larue and Tran (Economic
+d Modelling, 2010). 
+d
+d KW: threshold effects
+d KW: panel data
+d KW: stochastic frontier
+d
+d Requires: Stata version 17 and xthreg from SJ st0373
+d
+d Distribution-Date: 20240429
+d
+d Author: Diallo Ibrahima Amadou, FERDI, University of Clermont Auvergne
+d Support: email zavren@@gmail.com
+d
+f xtnondynthreshsfa.ado
+f xtnondynthreshsfacomps.ado
+f xtnondynthreshsfa.sthlp
+f xtnondynthreshsfadata.dta 

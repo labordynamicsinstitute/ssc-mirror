@@ -1061,8 +1061,8 @@ di as text "Hedges' {it:g}      {c |} " as result     %9.0g rdg  "              
 } 
 
 if match_by==0 & match_var==0 { 
-disp as text "It appears that neither of the variables are imputed. The standard 'esize twosample' analysis will be performed."
-disp as text "You may wish to check your imputed data is in standard stata wide format."
+disp as text "It appears that neither of the variables is imputed. The standard 'esize twosample' analysis will be performed."
+disp as text "You may wish to check your imputed data are in standard stata wide format."
 if "`glass'" =="glass" {
 esize twosample `varlist', by(`by') glass
 }
@@ -1073,7 +1073,7 @@ else esize twosample `varlist', by(`by')
 ******If both variables are imputed only once (m=1) *************************************************************************************************************************************
 
 if both_vars==1 & m==1 {
-disp as text "Your data appears to have only one imputation for both grouping and outcome variables. Therefore a two sample effect size for the imputed dataset will be calculated using esize, not miesize."   
+disp as text "Your data appear to have only one imputation for both grouping and outcome variables. Therefore a two sample effect size for the imputed dataset will be calculated using esize, not miesize."   
 
 if "`glass'" =="glass" {
 *Deriving an average for the glass effect size in the singly imputed dataset
@@ -1087,7 +1087,7 @@ else esize twosample _1_`varlist', by(_1_`by')
 *************************************************************************************************************************************************************************************
 ****If grouping variable imputed once ****************************************************************************************
 if match_by==1 & match_var==0 & m==1 {
-disp as text "Your data appears to have only one imputation for the grouping variable and no imputations for the outcome variable. Therefore a two sample effect size for the imputed dataset will be calculated using esize, not miesize."   
+disp as text "Your data appear to have only one imputation for the grouping variable and no imputations for the outcome variable. Therefore a two sample effect size for the imputed dataset will be calculated using esize, not miesize."   
 
 if "`glass'" =="glass" {
 *Deriving an average for the glass effect size in the singly imputed dataset
@@ -1103,7 +1103,7 @@ else esize twosample `varlist', by(_1_`by')
 ****If outcome variable imputed once ****************************************************************************************
 
 if match_by==0 & match_var==1 & m==1 {
-disp as text "Your data appears to have only one imputation for the outcome variable and no imputations for the grouping variable. Therefore a two sample effect size for the imputed dataset will be calculated using esize, not miesize."   
+disp as text "Your data appear to have only one imputation for the outcome variable and no imputations for the grouping variable. Therefore a two sample effect size for the imputed dataset will be calculated using esize, not miesize."   
 
 if "`glass'" =="glass" {
 *Deriving an average for the glass effect size in the singly imputed dataset

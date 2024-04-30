@@ -1,4 +1,4 @@
-*! actest 2.0.14 CFB/MES 25Jan2015
+*! actest 2.0.15 CFB/MES 29apr2024 
 *! see end of file for version comments
 
 if c(version) < 12 {
@@ -15,7 +15,7 @@ if c(version) < 12 {
 
 program define actest, rclass sortpreserve
 
-	local lversion 02.0.14
+	local lversion 02.0.15
 
 * Minimum of version 9 required
 	version 9
@@ -126,7 +126,9 @@ di as err "actest not allowed after ivreg2 with partialling-out option"
 			"`e(cmd)'" ~= "regress" &		///
 			"`e(cmd)'" ~= "ivregress" &		///
 			"`e(cmd)'" ~= "newey" &			///
-			"`e(cmd)'" ~= "newey2" {
+			"`e(cmd)'" ~= "newey2" &		///
+			"`e(cmd)'" ~= "glm" & "`e(varfunct)'" ~= "Gaussian" & "`e(linkt)'" ~= "Identity" /// Ariel's addition
+			{
 di as err "`e(cmd)' not supported by actest"
 			exit 198
 		}
@@ -179,7 +181,12 @@ di as err "[`weight'=`exp'] not allowed - cannot change weights used by original
 
 * Generate residuals
 		tempvar uhat
-		qui predict double `uhat' if `touse', resid
+		* if GLM 
+		if "`e(cmd)'" == "glm" & "`e(varfunct)'" == "Gaussian" & "`e(linkt)'" == "Identity" {
+			qui predict double `uhat' if `touse', deviance
+		}
+		* if OLS
+		else qui predict double `uhat' if `touse', resid
 	
 * dofminus used by ivreg2, needed by m_omega()
 		if "`e(dofminus)'"=="" {
@@ -944,3 +951,5 @@ end
 *                  Added version option.  Changed subroutine name from acstat to s_acstat.
 * 2.0.14 25Jan2015 Minor reordering of version option so that fork to actest9 is after version check.
 *                  Added actestcmd macro (="actest" or "actest9")
+* 2.0.15 29apr2024 Accepted Ariel Linden's modifications to allow execution after glm 
+*                  with family(gaussian) and link(identity)

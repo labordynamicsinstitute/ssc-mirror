@@ -10,7 +10,7 @@ d KW: plugins
 d
 d Requires: Stata version 15, julia from SSC, Julia 1.9
 d
-d Distribution-Date: 20240426
+d Distribution-Date: 20240429
 d
 d Author: David Roodman
 d Support: email david@@davidroodman.com
