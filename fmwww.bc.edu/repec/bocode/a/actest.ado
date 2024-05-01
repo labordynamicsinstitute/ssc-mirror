@@ -1,4 +1,4 @@
-*! actest 2.0.15 CFB/MES 29apr2024 
+*! actest 2.0.15 CFB/MES 30apr2024 
 *! see end of file for version comments
 
 if c(version) < 12 {
@@ -127,7 +127,7 @@ di as err "actest not allowed after ivreg2 with partialling-out option"
 			"`e(cmd)'" ~= "ivregress" &		///
 			"`e(cmd)'" ~= "newey" &			///
 			"`e(cmd)'" ~= "newey2" &		///
-			"`e(cmd)'" ~= "glm" & "`e(varfunct)'" ~= "Gaussian" & "`e(linkt)'" ~= "Identity" /// Ariel's addition
+			"`e(cmd)'" ~= "glm" 			///	accepts any GLM specification		
 			{
 di as err "`e(cmd)' not supported by actest"
 			exit 198
@@ -181,9 +181,9 @@ di as err "[`weight'=`exp'] not allowed - cannot change weights used by original
 
 * Generate residuals
 		tempvar uhat
-		* if GLM 
-		if "`e(cmd)'" == "glm" & "`e(varfunct)'" == "Gaussian" & "`e(linkt)'" == "Identity" {
-			qui predict double `uhat' if `touse', deviance
+		* if GLM (any specification)
+		if "`e(cmd)'" == "glm" {			
+			qui predict double `uhat' if `touse', response
 		}
 		* if OLS
 		else qui predict double `uhat' if `touse', resid
@@ -951,5 +951,5 @@ end
 *                  Added version option.  Changed subroutine name from acstat to s_acstat.
 * 2.0.14 25Jan2015 Minor reordering of version option so that fork to actest9 is after version check.
 *                  Added actestcmd macro (="actest" or "actest9")
-* 2.0.15 29apr2024 Accepted Ariel Linden's modifications to allow execution after glm 
-*                  with family(gaussian) and link(identity)
+* 2.0.15 30apr2024 Accepted Ariel Linden's modifications to allow execution after any glm 
+*                  with predict, response

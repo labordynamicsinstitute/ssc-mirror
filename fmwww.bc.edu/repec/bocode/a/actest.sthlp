@@ -26,7 +26,7 @@ help for {hi:actest}
 ]
 
 {p}{cmd:actest} may be used on the univariate time series specified in {it:varname}
-or after {help regress}, {help newey}, {help ivreg}, {help ivregress}, {help ivreg2}, {help newey2} and conditionally {help glm}.
+or after {help regress}, {help newey}, {help ivreg}, {help ivregress}, {help ivreg2}, {help newey2} and {help glm}.
 {cmd:actest} is for use with time-series data.  You must {cmd:tsset} your data before 
 using {cmd:actest}; see {help tsset}. You may apply {cmd:actest} to a panel dataset that has been defined by {help tsset} or
 {help xtset}.{p_end}
@@ -73,7 +73,7 @@ The C-H test is then essentially the same test as the Arellano and Bond (1991) t
 
 {p} {cmd:actest} may be used as a standalone command by specifying a {it:varname}, or it may be used as a postestimation command after several regression commands. In the latter case, {cmd:actest} operates on the residuals of the prior regression.{p_end}
 
-{p} {cmd:actest} can be used after {help glm} if that command is specified with family(gaussian) and link(identity) options, as that GLM is a linear regression. We thank Ariel Linden for that modification. {p_end}
+{p} {cmd:actest} can be used after {help glm}. The predict command, with option response, is used to generate the residual series. We thank Ariel Linden for that modification. {p_end}
 
 {title:Options}
 
@@ -164,6 +164,12 @@ See {cmd:return list}.{p_end}
 {p 8 12}{stata "actest, lags(8)" : . actest, lags(8)}{p_end}
 {p 8 12}{stata "qui glm investment L(1/4).income" : . qui glm investment L(1/4).income}{p_end}
 {p 8 12}{stata "actest, lags(8)" : . actest, lags(8)}{p_end}
+
+{p 8 12}{stata "webuse sp500" : . webuse sp500 }{p_end}
+{p 8 12}{stata "tsset date, daily" : . tsset date, daily }{p_end}
+{p 8 12}{stata "g magchange = abs(int(change/2))" : . g magchange = abs(int(change/2))}{p_end}
+{p 8 12}{stata "qui glm magchange date volume, family(poisson)" : . glm magchange date volume, family(poisson)}{p_end}
+{p 8 12}{stata "actest, lags(5)" : . actest, lags(5)}{p_end}
 
 {p} Application in an IV context {p_end}
 {p 8 12}{stata "qui ivreg2 investment (income=L(1/2).income)" : . qui ivreg2 investment (income=L(1/2).income)}{p_end}

@@ -9,7 +9,7 @@ d KW: fit
 d
 d Requires: Stata version 13.1 and gtools, ftools, palettes, colrspace, blindschemes, and labutil from SSC (q.v.)
 d
-d Distribution-Date: 20231006
+d Distribution-Date: 20240430
 d
 d Author: Leo Ahrens, University of Konstanz
 d Support: email leo@@ahrensmail.de
