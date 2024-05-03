@@ -21,11 +21,14 @@ d KW: quasi-experimental studies
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20240420
+d Distribution-Date: 20240502
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org
 d
 f itsamatch.ado
 f itsamatch.sthlp
+f itsa.ado
+f itsa.sthlp
+f ../g/glm2.ado
 f ../c/cigsales.dta

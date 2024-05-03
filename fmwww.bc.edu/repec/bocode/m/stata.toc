@@ -18,6 +18,7 @@ p manski_ci module to use Manski type bounds (Manski 2003) to calculate confiden
 p manyweakiv module to implement the weak-identification robust jackknife AR test from Mikusheva and Sun (2022)
 p map module to map string variables using an external dictionary file
 p mapch module map chains of events
+p mapsm module to perform multiple arms propensity score matching
 p maptile module to map a variable
 p margdistfit module to check the distributional assumptions underlying a parametric regression model
 p margeff module to compute average marginal effects for categorical and limited dependent variable models

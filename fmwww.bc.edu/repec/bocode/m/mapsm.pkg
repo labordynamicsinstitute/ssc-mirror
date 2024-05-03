@@ -1,0 +1,49 @@
+d 'MAPSM': module to perform multiple arms propensity score matching
+d
+d  The mapsm command; stands for “Multiple Arms Propensity Score
+d Matching”, matches the propensity scores predicted	   from
+d binary logistic regression (or multinomial logistic regression),
+d which indicates the likeliness of choosing or     being assigned
+d to one among other treatment arms for each subject. In case of
+d two-treatment arms study, the propensity     score (probability
+d of 0-1.0) derived from binary logistic regression will be divided
+d into 10 strata, 0-0.1, 0.1-0.2     until 0.9-1.0. Study subjects
+d from either of the two arms will be sampled to match with the
+d opposite arm within the     same propensity score strata, with
+d 1:1 ratio.	      In case of three or more arms, the propensity
+d scores will be derived from multinomial logistic regression,	  
+d yielding sets of propensity scores equal to number of arms,
+d indicating the likeliness of choosing or being assigned to	
+d one among other treatment arms for each subject. Each set of the
+d propensity scores will be divided into 10 strata     similar to
+d the two-treatment arms. Subjects from each arm within the same
+d strata of the propensity score will be     sampled to obtain a
+d matched set of 1:1:1 ratio in case of three arms, and 1:1:1:1 in
+d case of four arms, and so on. 	 In order to obtain the
+d most similar post-matched contrast groups, the command also rerun
+d the matching process and     reported the best post-matched
+d contrast groups which has the best balance diagnostic property,
+d such as standardized	   mean difference. The best seed-setting
+d number (among those selected) will be reported in order to
+d re-obtain the best	 post-matched cohort. 
+d
+d KW: propensity score matching
+d KW: multiple arms
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20240502
+d
+d Author:  Suppachai Lawanaskol, Chaiprakarn hospital, Chiang Mai, Thailand
+d Support: email suppachai.lawanaskol@@gmail.com
+d
+d Author: Phichayut Phinyo,  Chiang Mai University
+d Support: email phichayut.phinyo@@gmail.com
+d
+d Author:  Jayanton Patumanond,  Chiang Mai University
+d Support: email jpatumanond@@gmail.com
+d
+f mapsm.ado
+f mapsm.sthlp
+f ../c/chocolate_cyst.dta 
+f ../c/cabg.dta 

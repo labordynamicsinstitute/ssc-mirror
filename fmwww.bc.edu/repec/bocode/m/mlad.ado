@@ -1,4 +1,4 @@
-*! version 1.02 2023-11-22
+*! version 1.2 2024-05-01
 
 program define mlad
   version 16.1 
@@ -6,18 +6,24 @@ program define mlad
                   llfile(string)                 ///
                   [                              ///
                    ADTYPE(string)                ///
+                   ALLBetas                      ///   
                    ID(varname)                   ///
                    INIT(string)                  ///
                    noJIT                         ///
+                   LLSETup(string)               ///
                    MATrices(string)              ///
                    MATNames(string)              ///
+                   MINLIKE                       ///
                    MLMETHod(string)              ///
                    OTHERvars(varlist)            ///
                    OTHERVARnames(string)         /// 
-                   PYGradient                    ///
+                   PYGradient                    ///   
                    PYHessian                     ///
+                   PYMINIMIZEOPTS(string)        /// Not implemented yet
+                   PYOPTimize                    ///
                    PYSETup(string)               ///
                    ROBUSTOK                      ///
+                   SCORETYPE(string)             ///
                    SCALars(string)               ///
                    SCALARNames(string)           ///
                    STATICScalars(string)         /// 
@@ -47,6 +53,11 @@ program define mlad
     exit 198
   }
   
+
+  if "`robustok'" != "" {
+    if "`scoretype'" == "" local scoretype equation
+  }
+
 // check python and modules
   quietly python query
   if "`r(execpath)'" == "" {
@@ -75,8 +86,10 @@ program define mlad
 // new ID variables
   if "`id'" != "" {
     tempvar tmpid
-    egen `tmpid' = group(`id')
-    replace `tmpid' = `tmpid' - 1
+    qui egen `tmpid' = group(`id') if `touse'
+    qui replace `tmpid' = `tmpid' - 1 if `touse'
+    qui levelsof `tmpid' if `touse'
+    local Nid `r(r)'
   }
   
 // matrices
@@ -124,11 +137,17 @@ program define mlad
   global MLAD_hasjit        = "`jit'" == ""
   global MLAD_haspygradient = "`pygradient'" != ""
   global MLAD_haspyhessian  = "`pyhessian'" != ""
+  global MLAD_allbetas      = "`allbetas'" != ""  
+  global MLAD_minlike       = "`minlike'" != ""  
+  global MLAD_pyoptimize    = "`pyoptimize'" != ""  
+  global MLAD_verbose       = "`verbose'" != ""
 
   global MLAD_touse          `touse'
   global MLAD_othervars      `othervars'
   global MLAD_othervarnames  `othervarnames'
   global MLAD_idvar          `tmpid'
+  global MLAD_idorig         `id'
+  global MLAD_Nid            `Nid'
   global MLAD_matrices       `matrices'
   global MLAD_matnames       `matnames' 
   global MLAD_scalars        `scalars'
@@ -136,9 +155,10 @@ program define mlad
   global MLAD_staticscalars  `staticscalars'
   global MLAD_hessian_adtype `adtype'
   global MLAD_llfile         `llfile'
-  global MLAD_setupfile      `pysetup' 
+  global MLAD_pysetupfile    `pysetup' 
+  global MLAD_llsetup        `llsetup' 
+  global MLAD_scoretype      `scoretype'
   global MLAD_firstcall      1
-  global MLAD_verbose        `verbose'
 
   if "`search'" != "" local search search(`search')
   if "`init'" != "" local init init(`init')
@@ -172,7 +192,10 @@ program define mlad
                      staticscalars  hessian_adtype            ///
                      hasfv1 hasfv2 hasfv3 hasfv4              ///
                      haspyhessian haspygradient               ///
-                     setupfile                                ///
+                     setupfile allbetas                       ///
+                     pyoptimize minlike verbose               ///
+                     llsetup stpm3_hazard_setup               ///
+                     scoretype Nid idorig                     ///
   {
     macro drop MLAD_`n'
   }

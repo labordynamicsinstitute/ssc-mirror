@@ -170,4 +170,69 @@ Use {cmd:vdrcsgen} for a vectorized version of drcsgen.
 {it:eq} - equation number
 
 
+{pstd}
+{cmd:tanhsinh_quad}({it:Nnodes},{it:N}) - tanh-sinh quadrature
+
+{phang2}
+{it:Nnodes} - Number of nodes
+
+{phang2}
+{it:N} - defines range (-N,N) to evaluate integral
+
+{phang2}
+Returns 2 Nx1 vectors: nodes and weights.
+
+
+{pstd}
+{cmd:bs}({it:x},{it:degree},{it:knots},{it:bknots},{it:calcintercept},{it:calcderiv}) - B-splines
+
+{phang2}
+{it:x} - X variables
+
+{phang2}
+{it:degree} - degree of B-spline
+
+{phang2}
+{it:knots} - internal knots
+
+{phang2}
+{it:bknots} - boundary knots
+
+{phang2}
+{it:calcintecept} - True/False (default)
+
+{phang2}
+{it:calcderiv} - True/False (default)
+
+{phang2}
+Returns array of splines or 2 arrays with {it:calcderiv} option
+
+{phang2}
+USe {cmd:vbs}() for vmap version (and jitted)
+
+{pstd}
+{cmd:ns}({it:x},{it:knots},{it:bknots},{it:calcintercept},{it:calcderiv}) - Natural splines
+
+{phang2}
+{it:x} - X variables
+
+{phang2}
+{it:knots} - internal knots
+
+{phang2}
+{it:bknots} - boundary knots
+
+{phang2}
+{it:calcintecept} - True/False (default)
+
+{phang2}
+{it:calcderiv} - True/False (default)
+
+{phang2}
+Returns array of splines or 2 arrays with {it:calcderiv} option
+
+{phang2}
+USe {cmd:vns}() for vmap version (and jitted)
+
+
 

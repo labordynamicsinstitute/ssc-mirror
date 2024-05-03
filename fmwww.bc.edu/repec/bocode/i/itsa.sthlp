@@ -1,4 +1,5 @@
 {smcl}
+{* 01May2024}{...}
 {* 10Apr2024}{...}
 {* 29Mar2024}{...}
 {* 10Mar2021}{...}
@@ -35,7 +36,7 @@
 {it:indepvars} may contain factor variables; see {helpb fvvarlist}.
 {it:depvar} and {it:indepvars} may contain time-series operators; see 
 {helpb tsvarlist}.  {opt aweight}s are allowed with the {cmd:newey} option; see {helpb weight}.  See
-{manhelp newey_postestimation TS:newey postestimation} and 
+{manhelp glm_postestimation R:glm postestimation} and 
 {manhelp prais_postestimation TS:prais postestimation} for features available
 after estimation.{p_end}
 
@@ -58,19 +59,21 @@ introduction (Campbell and Stanley 1966; Glass, Willson, and Gottman 1975;
 Shadish, Cook, and Campbell 2002).
 
 {pstd}
-{cmd:itsa} is a wrapper program for {helpb newey} by default, which produces
-Newey-West standard errors for coefficients estimated by ordinary
-least-squares regression.  It can optionally be a wrapper for {helpb prais},
-which uses the generalized least-squares method to estimate the parameters in
-a linear regression model in which the errors are assumed to follow a
-first-order autoregressive process.
+{cmd:itsa} is a wrapper program for {helpb glm} by default, and produces
+Newey-West standard errors to adjust for an error structure that is assumed 
+to be heteroskedastic and possibly autocorrelated up to some user-defined lag.
+It can optionally be a wrapper for {helpb prais}, which uses the generalized 
+least-squares method to estimate the parameters in a linear regression model 
+in which the errors are assumed to follow a first-order autoregressive process.
 
 {pstd}
 {cmd:itsa} estimates treatment effects for either a single treatment group
 (with preintervention and postintervention observations) or a multiple-group
 comparison (that is, the single treatment group is compared with one or more
 control groups).  Additionally, {cmd:itsa} can estimate treatment effects for
-multiple treatment periods.{p_end}
+multiple treatment periods. Because itsa is a wrapper for {helpb glm}, all
+available model options are allowed. {p_end}
+
 
 
 {title:Options}
@@ -149,7 +152,7 @@ created by {cmd:itsa}.  Short prefixes are recommended.
 {phang}
 {it:model_options} specify all available options for {helpb prais} when the
 {cmd:prais} option is chosen; otherwise, all available options for 
-{helpb newey} other than {cmd:lag()} are specified.
+{helpb glm} can be specified.
 
 
 {title:Remarks} 
@@ -249,6 +252,19 @@ discussion.){p_end}
 {phang3}{bf:{stata "itsa cigsale, single trperiod(1989) lag(1) figure posttrend": . itsa cigsale, single trperiod(1989) lag(1) fig posttrend}}{p_end}
 {phang3}{bf:{stata "actest, lags(12)": . actest, lags(12)}}{p_end}
 
+{pmore}
+Same as above but now we use the rescaled outcome ({opt cigsale_scaled}) which lies between 0 and 1, and accordingly, we specify the binomial GLM family with logit link {p_end}
+
+{phang3}{bf:{stata "itsa cigsale_scaled, single trperiod(1989) lag(1) figure posttrend f(binomial) replace": . itsa cigsale_scaled, single trperiod(1989) lag(1) figure posttrend f(binomial) l(logit) replace}}{p_end}
+{phang3}{bf:{stata "actest, lags(12)": . actest, lags(12)}}{p_end}
+
+{pmore}
+Now we use the rescaled outcome ({opt cigsale_count}) which is a non-negative integer, and accordingly, we specify the poisson GLM family with log link {p_end}
+
+{phang3}{bf:{stata "itsa cigsale_count, single trperiod(1989) lag(1) figure posttrend f(poisson) l(log) replace": . itsa cigsale_scaled, single trperiod(1989) lag(1) figure posttrend f(poisson)l(log) replace}}{p_end}
+{phang3}{bf:{stata "actest, lags(12)": . actest, lags(12)}}{p_end}
+
+
 {pstd}
 {opt 2) Single-group ITSA in data with multiple panels:}{p_end}
 
@@ -261,9 +277,12 @@ Load multiple-panel data and declare the dataset as panel: {p_end}
 {pmore}
 We specify a single-group ITSA with California (state number 3 in the study)
 as the treatment group and 1989 as the first year of the intervention, plot
-the results with an added lowess smoother, and produce a table of the posttreatment trend estimates.
+the results with an added lowess smoother, and produce a table of the posttreatment trend estimates. 
+We then run {helpb actest} to test for autocorrelation over the past 12
+periods.
 
-{phang3}{bf:{stata "itsa cigsale, single treat(3) trperiod(1989) lag(1) figure low posttrend": . itsa cigsale, single treatid(3) trperiod(1989) lag(1) figure low posttrend}}{p_end}
+{phang3}{bf:{stata "itsa cigsale, single treat(3) trperiod(1989) lag(1) figure low posttrend replace": . itsa cigsale, single treatid(3) trperiod(1989) lag(1) figure low posttrend replace}}{p_end}
+{phang3}{bf:{stata "actest, lags(12)": . actest, lags(12)}}{p_end}
 
 {pmore}
 Same as above, but we specify {cmd:prais} to fit an AR(1) model.  We
@@ -283,6 +302,7 @@ Here we limit the range of observations to the period 1975 to 1995.
 
 {phang3}{bf:{stata "itsa cigsale if inrange(year, 1975, 1995), single treatid(3) trperiod(1982; 1989) lag(1) figure posttr replace":. itsa cigsale if inrange(year, 1975, 1995), single treatid(3) trperiod(1982; 1989) lag(1) figure posttr replace}}
 
+
 {pstd}
 {opt 3) Multiple-group ITSA:}{p_end}
 
@@ -293,10 +313,26 @@ other groups in the file to be used as control groups.{p_end}
 {phang3}{bf:{stata "itsa cigsale, treatid(3) trperiod(1989) lag(1) figure(xlabel(1970(5)2000)) posttrend replace":. itsa cigsale, treatid(3) trperiod(1989) lag(1) figure(xlabel(1970(5)2000)) posttrend replace}}{p_end}
 
 {pmore}
-Same as above, but we indicate specific control groups to use in the
-analysis. These matches were identified using {helpb itsamatch}.
+Here we specify the ITSA model using weights described in Abadie et al. (2010) as {opt aweights} and estimate the weighted model.
+
+{phang3}{bf:{stata "itsa cigsale [aw=weights], treatid(3) trperiod(1989) replace figure(xlabel(1970(5)2000)) posttrend": . itsa cigsale [aw=weights], treatid(3) trperiod(1989) replace figure(xlabel(1970(5)2000)) posttrend}}
+
+{pmore}
+Same as above, but we now indicate specific control groups to use in the
+analysis that were identified using {helpb itsamatch}.
 
 {phang3}{bf:{stata "itsa cigsale, treatid(3) trperiod(1989) contid(4 8 19) lag(1) replace figure(xlabel(1970(5)2000)) posttrend": . itsa cigsale, treatid(3) trperiod(1989) contid(4 8 19) lag(1) replace figure(xlabel(1970(5)2000)) posttrend}}
+
+{pmore}
+Same as above, but now we use the rescaled [0,1] version of the outcome ({opt cigsale_scaled}) with matches identified using {helpb itsamatch}.
+
+{phang3}{bf:{stata "itsa cigsale_scaled, trperiod(1989) treatid(3) contid(23) replace posttrend f(binomial) fig": . itsa cigsale_scaled, trperiod(1989) treatid(3) contid(23) replace posttrend f(binomial) fig}}
+
+{pmore}
+Now we use the rescaled count version of the outcome ({opt cigsale_count}) with matches identified using {helpb itsamatch}.
+
+{phang3}{bf:{stata "itsa  cigsale_count, trperiod(1989) treatid(3) contid(4 8 19) replace posttrend f(poisson) fig": . itsa  cigsale_count, trperiod(1989) treatid(3) contid(4 8 19) replace posttrend f(poisson) fig}}
+
 
 
 {marker output_table}{...}
@@ -390,6 +426,12 @@ Persistent threats to validity in single-group interrupted time series analysis 
 {it:Journal of Evaluation in Clinical Practice}.
 23: 419-425.
 
+{phang}
+------. 2022.
+{browse "https://journals.sagepub.com/doi/full/10.1177/1536867X221083929":Erratum: A comprehensive set of postestimation measures to enrich interrupted time-series analysis}.
+{it:Stata Journal}
+22: 231-233. 
+
 {phang} 
 Linden, A., and J. L. Adams. 2011. 
 Applying a propensity-score based weighting model to interrupted time
@@ -424,7 +466,7 @@ Simonton, D. K. 1977b. Erratum to Simonton. {it:Psychological Bulletin}
 
 {pstd}Ariel Linden{p_end}
 {pstd}Linden Consulting Group, LLC{p_end}
-{pstd}{browse "mailto:alinden@lindenconsulting.org":alinden@lindenconsulting.org}{p_end}
+{pstd}alinden@lindenconsulting.org{p_end}
        
  
 {title:Also see}
@@ -437,5 +479,5 @@ Simonton, D. K. 1977b. Erratum to Simonton. {it:Psychological Bulletin}
                     {it:Stata Journal}, volume 16, number 2: {browse "http://www.stata-journal.com/article.html?article=up0051":st0389_1},{break}
                     {it:Stata Journal}, volume 15, number 2: {browse "http://www.stata-journal.com/article.html?article=st0389":st0389}
 
-{p 7 14 2}Help:  {helpb newey}, {helpb prais}, {helpb actest} (if installed), {helpb itsamatch} (if installed), {helpb itsaperm} (if installed), {helpb xtitsa} (if installed)
+{p 7 14 2}Help: {helpb glm}, {helpb newey}, {helpb prais}, {helpb actest} (if installed), {helpb itsamatch} (if installed), {helpb itsaperm} (if installed), {helpb xtitsa} (if installed)
  {p_end}

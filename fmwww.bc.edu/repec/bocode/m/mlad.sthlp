@@ -27,22 +27,27 @@ llfile(filename)
 {synopthdr}
 {synoptline}
 {synopt :{opt adtype(adtype)}}type of automatic differentiation to calculate hessian{p_end}
+{synopt :{opt allbetas}}combine betas from each equation when sending to Python{p_end}
 {synopt :{opt id(varname)}}name of id variable to pass to Python{p_end}
 {synopt :{opt init(init)}}set initial values{p_end}
 {synopt :{opt llfile(filename)}}filename of Python likelihood file{p_end}
+{synopt :{opt llsetup(meta function)}} mata function called once to setup{p_end}
 {synopt :{opt nojit}}Do not invoke just in time compliation{p_end}
-{synopt :{opt mat:rices(mat list)}}list of matrices to pass to Python{p_end}
+{synopt :{opt mat:rices(matrix list)}}list of matrices to pass to Python{p_end}
 {synopt :{opt mat:names(list)}}names of matrices in Python{p_end}
+{synopt :{opt minlike}}python function returns minium rather than maximum{p_end}
 {synopt :{opt mlmeth:od(method)}}method of estimation{p_end}
 {synopt :{opt other:vars(varlist)}}variables to be passed to Python{p_end}
 {synopt :{opt othervarsn:ames(list)}}names of variables in Python{p_end}
 {synopt :{opt pyg:radient}}python gradient function provided{p_end}
 {synopt :{opt pyh:essian}}python Hessian function provided{p_end}
+{synopt :{opt pyoptimize}}optimize likelihood in python{p_end}
 {synopt :{opt othervarsn:ames(list)}}names of variables in Python{p_end}
 {synopt :{opt pyset:up(filename)}}python file for data manipulation prior to estimation{p_end}
 {synopt :{opt robustok}}calculate robust standard errors{p_end}
 {synopt :{opt scal:ars(scalar list)}}list of scalars to pass to Python{p_end}
 {synopt :{opt scalarn:ames(list)}}names of scalars in Python{p_end}
+{synopt :{opt scoretype(score type)}}how to calculate scores for robust standard errors{p_end}
 {synopt :{opt search(search option)}}initial values search options{p_end}
 {synopt :{opt statics:calars(scalar list)}}scalars treated as static arguments in Python{p_end}
 {synopt :{{manhelp maximize R}}}control the maximization process; seldom used{p_end}
@@ -68,7 +73,7 @@ The Python function for the log-likelihood needs to use Jax's versions of the nu
 Some of the advantages of using Jax are as follows.
 
 {phang2}
-1) Jax incorprates automatic differentiation. This means thee is no need and sit and derive the gradient and hessian functions for your log-likelihood.
+1) Jax incorprates automatic differentiation. This means there is no need and sit and derive the gradient and hessian functions for your log-likelihood.
 
 {phang2}
 2) Jax uses a XLA compiler for the Python code. This allows it to use multiple CPUs and potentially GPUs. This makes computation fast and allows those with multple CPUs to get the benefit, even without Stata MP.
@@ -83,12 +88,10 @@ Some of the advantages of using Jax are as follows.
 In order to use {cmd:mlad} you need to have Stata 16 or above and access to Python. 
 You also need certain Python modules installed. 
 These are {cmd:jax}, {cmd:jaxlib}, {cmd:numpy}, {cmd: scipy} and {cmd:importlib}. 
-Currently, there is not possible to directly install the {cmd:jaxlib} module for Windows, but it is possible to 
-{browse "https://jax.readthedocs.io/en/latest/developer.html#additional-notes-for-building-jaxlib-from-source-on-windows":build from source}.
-I can't help with this process. 
+I have only used the CPU version of Jax - if you try {cmd:mlad} using the GPU version I would be interested in hearing whether there are speed advantages. 
 
 {pstd}
-Factor variables: {cmd:mlad} works with factor variables. However if speed is important to you, then you should create indicator variables / interactions  yourself as this will be  faster. 
+Factor variables: {cmd:mlad} works with factor variables. There are some minor speed improvements if you calculate dummy variables and interactions yourself.
 
 
 Some examples of using {cmd:mlad} can be found here, {browse "https://pclambert.net/software/mlad":https://pclambert.net/software/mlad}.
@@ -102,6 +105,10 @@ Some examples of using {cmd:mlad} can be found here, {browse "https://pclambert.
 This can be any combination of forward (fwd) and reverse (rev),
 i.e. {cmd: revrev}, {cmd: revfwd}, {cmd: fwdrev}, {cmd: fwdfwd}.
 The default is {cmd: revrev}.
+
+{phang}
+{opt allbetas} will combine the beta coefficients from each equation rather than store separately. 
+The only reason I have used this is when using the {cmd:pyoptimize} option.
 
 {phang}
 {opt id(varname)} gives the name of an id variable. This will be required if the log-likelihood needs to
@@ -125,6 +132,11 @@ See {browse "https://jax.readthedocs.io/en/latest/jax-101/02-jitting.html":https
 {opt llfile(filename)} python filename containing log-likelhood function. The function must be named {cmd:python_ll}.
 
 {phang}
+{opt llsetup(mata function)} will call a mata function to help with setup. 
+The function is called just after {cmd:ml} is called for the first time. This gives access to 
+the beta matrix and the global macros {ml} sets up.
+
+{phang}
 {opt matrices(matrix list)} will pass matrices to Python if required for estimation of the log-likelihood. For example,the location of the knots when incorporating restricted cubic splines. 
 These will be stored in a dictionary in Python with either the same names specified in {it: matrix list} or
 the names specified in {cmd:matnames()} option.
@@ -133,6 +145,10 @@ the names specified in {cmd:matnames()} option.
 {opt matnames(list)} list of names that the matrices will be named in Python. 
 If not specified these will default to the same names in the {cmd:matrices} option. 
 However, these will often be ugly, tempory names and so it useful to give them more meaningful names.
+
+{phang}
+{opt minlike} states that the Python likelhood function returns the negative of 
+the likelhood. This is required when using the {cmd:pyoptimize} option.
 
 {phang}
 {opt mlmethod(method)} asks to use a ml method other than the default of {cmd:d2}. Only {cmd:dtype} estimators are available. 
@@ -157,6 +173,13 @@ This means that automatic differentiation will not be used to calculate the grad
 The function must be named {cmd:python_grad} with the same options as the log likelihood function.
 
 {phang}
+{opt pygradient} This will first try to optmize the function in python before 
+returning control to Stata. The likelhood is optimized using the optimize function of the
+python module. To implement this you need to also use the {cmd:allbetas} and {minlike} options.
+Even if the Python optimizer has converged Stata will still assses convergence.
+I have found few situations where this option leads to speed improvements.
+
+{phang}
 {opt pyhessian} Python Hessian function is supplied in {it: llfile}. 
 This means that automatic differentiation will not be used to calculate the Hessian matrix.
 The function must be named {cmd:python_hessian} with the same options as the log likelihood function.
@@ -179,6 +202,12 @@ Python likelhood function is "jitable" - see the {cmd:staticscalars()} option.
 {opt scalarnames(list)} list of names that the scalars will be named in Python. 
 If not specified these will default to the same names in the {cmd:scalars} option. 
 However, these will often be ugly,   tempory names and so it useful to give them more meaningful names.
+
+{phang}
+{opt scoretype(name)} give the methods to derive scores when obtaining robust standard errors.
+The default is {cmd:equation} which means that equation level derivatives are obtained in Python
+usingh automatic differentiation and then passed to Stata's {cmd:_robust} command. 
+The alternative option is {cmd:direct} which does all calculation in Python.
 
 {phang}
 {opt search(search option)} gives the search option to be paseed to {cmd:ml}. See {help ml##ml_noninteract_descript}
@@ -260,7 +289,7 @@ With survival data the log-likelhood conribution of the ith individual can be ex
 
 {phang}
 Where {bf:t_i} is the survival time and {bf:d_i} the event indicator for the ith individual. So for the Weibull model
-the log-likelhood can be expressed as, 
+the log-likelihood can be expressed as, 
 
 {phang2}
 {bf:lli = d_i*(ln(lambda) + ln(gamma) + (gamma-1)*ln(t)) - lambda*t^(gamma-1)} 
@@ -282,7 +311,7 @@ If using {cmd:ml} then an ado file would be written, here named {cmd:weib_d0}. U
     {cmd:end}
 
 {pstd}
-For details, see {help ml}, but in brief, the program extracts the linear predictor for both ln(lambda) and ln(gamma) using {cmd:mleval} and then feeds these into the log-likelhood function, which is summed using {cmd:mlsum}. 
+For details, see {help ml}, but in brief, the program extracts the linear predictor for both ln(lambda) and ln(gamma) using {cmd:mleval} and then feeds these into the log-likelihood function, which is summed using {cmd:mlsum}. 
 
 {pstd}
 An example of fiting the model can be seen below

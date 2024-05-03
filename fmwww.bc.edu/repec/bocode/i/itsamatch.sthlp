@@ -1,4 +1,5 @@
 {smcl}
+{* 01May2024}{...}
 {* 18Apr2024}{...}
 {* 10Apr2024}{...}
 {* 21Nov2017}{...}
@@ -33,18 +34,19 @@ or {cmd:xtset} {it:panelvar} {it:timevar}. See {helpb tsset} or {helpb xtset}.{p
 {synoptline}
 {p2coldent:* {cmdab:trp:eriod(}{it:{help datetime:date}}{cmd:)}}specifies the time period when the intervention begins{p_end}
 {p2coldent:* {opt treat:id(#)}}specifies the identifier of the single treated unit{p_end}
-{synopt:{opt p:r(#)}}specifies the minimum significance level ({it:P}-value) for assessing balance{p_end}
-{synopt :{opt l:ag(#)}}specifies the maximum lag to be considered when a {cmd:newey} model is chosen; 
+{synopt:{opt p:r(#)}}specifies the minimum significance level ({it:P}-value) for assessing balance; default is {cmd:pr(0.05)}{p_end}
+{synopt :{opt l:ag(#)}}specifies the maximum lag to be considered when a model with Newey-West standard errors is estimated; 
 the default is {cmd:lag(0)}.{p_end}
-{synopt:{opt prais}}specifies to fit a {helpb prais} model; the default model is {helpb newey}{p_end}
+{synopt:{opt prais}}specifies to fit a {helpb prais} model; the default is a {helpb glm} model with Newey-West standard errors {p_end}
 {synopt:{opt l:ocal(macname)}}stores the control identifiers in local macro {it:macname}, making them accessible for later use.{p_end}
 {synopt:{it:model_options}}specifies all available options for {help prais} when the {cmd:prais} 
-option is chosen; otherwise all available options of {help newey} {p_end}
+option is chosen; otherwise all available options of {help glm} {p_end}
 {synoptline}
 {marker weight}{...}
 {p 4 6 2}* Both {opt trperiod()} and {opt treatid()} must be specified.{p_end}
-{p 4 6 2}{opt aweight}s are allowed when a {helpb newey} model is specified; see
-{help weight}.{p_end}
+{p 4 6 2}{opt aweight}s are allowed when a {helpb glm} model (the default) 
+is specified; see {help weight}.{p_end}
+
 
 
 {title:Description}
@@ -86,18 +88,20 @@ specified in {cmd:tsset} {it:panelvar timevar}; see {helpb tsset}.
 balance on each variable in the {it:{varlist}}. While {cmd:pr} can be set to any value between
 0 and 1.0, 0.05 is the usual convention for considering balance. Naturally, higher values will
 ensure closer balance, but it comes at a trade-off of losing observations as potential matches.
+The default is {opt pr(0.05)}.
 
 {phang}
 {cmd:prais} specifies to fit a {helpb prais} model.  If {cmd:prais} is
-not specified, {cmd:itsa} will use {helpb newey} as the default model.
+not specified, {cmd:itsa} will use {helpb glm} with Newey-West standard errors, 
+as the default model.
 
 {phang}
 {cmd:lag(}{it:#}{cmd:)} specifies the maximum lag to be considered in the
-autocorrelation structure when a {cmd:newey} model is chosen.  If the user
-specifies {cmd:lag(0)}, the default, the output is the same as {cmd:regress,}
-{cmd:vce(robust)}.  An error message will appear if both {cmd:prais} and
-{cmd:lag()} are specified, because {cmd:prais} implements an AR(1) model by
-design.
+autocorrelation structure when a {cmd:glm} model with Newey-West standard errors 
+is chosen.  If the user specifies {cmd:lag(0)}, the default, the output is the 
+same as {cmd:glm,} {cmd:vce(robust)}.  An error message will appear if 
+both {cmd:prais} and {cmd:lag()} are specified, because {cmd:prais} implements 
+an AR(1) model by design.
 
 {phang}
 {cmd:local(}{it:macname}{cmd:)} stores the control identifiers in local macro {it:macname} within the calling program's space, 
@@ -106,7 +110,7 @@ thereby making the control identifiers accessible after {cmd:itsamatch} has fini
 {phang}
 {it:model_options} specify all available options for {helpb prais} when the
 {cmd:prais} option is chosen; otherwise, all available options for 
-{helpb newey} other than {cmd:lag()} are specified.
+{helpb glm} are specified.
 
 
 {title:Remarks} 
@@ -180,6 +184,18 @@ by specifying "retprice" as the dependent variable in the {helpb itsa} model.{p_
 
 {phang3}{cmd:. itsa retprice, treatid(3) trperiod(1989) contid(`controls') lag(1) replace figure(xlabel(1970(5)2000)) posttrend}{p_end}
 
+{pmore}
+We now find controls that match the treated unit(3) on a count outcome variable "cigsale_count" specifying the Poisson family() in {help glm}. 
+We set the minimum cutoff {it:P}-value at 0.40, specify autocorrelation at lag 1, and specify that the the stored local macro be named "controls".{p_end}
+
+{phang3}{cmd:. itsamatch cigsale_count, trperiod(1989) treat(3) p(0.40) local(controls) f(poisson)}{p_end}
+
+{pmore}
+Same as above, but we now use a scaled (between 0 and 1) outcome variable "cigsale_scaled" specifying the binomial family() in {help glm}. 
+We set the minimum cutoff {it:P}-value at 0.20, specify autocorrelation at lag 1, and specify that the the stored local macro be named "controls".{p_end}
+
+{phang3}{cmd:. itsamatch cigsale_scaled, trperiod(1989) treat(3) p(0.20) local(controls) f(binomial)}{p_end}
+
 
 {title:Stored results}
 
@@ -196,7 +212,7 @@ by specifying "retprice" as the dependent variable in the {helpb itsa} model.{p_
 {title:Acknowledgments}
 
 {p 4 4 2}
-I wish to thank Nicholas J. Cox for his support in developing {cmd: itsamatch}.
+I wish to thank Nicholas J. Cox for his support in the original development of {cmd: itsamatch}.
 
 
 {title:References}
@@ -236,6 +252,12 @@ A matching framework to improve causal inference in interrupted time series anal
 {it:Journal of Evaluation in Clinical Practice}.
 DOI:10.1111/jep.12874
 
+{phang}
+------. 2022.
+{browse "https://journals.sagepub.com/doi/full/10.1177/1536867X221083929":Erratum: A comprehensive set of postestimation measures to enrich interrupted time-series analysis}.
+{it:Stata Journal}
+22: 231-233. 
+
 {phang} 
 Linden, A., and J. L. Adams. 2011. 
 Applying a propensity-score based weighting model to interrupted time
@@ -249,10 +271,10 @@ series data: Improving causal inference in program evaluation.
 
 {pstd}Ariel Linden{p_end}
 {pstd}Linden Consulting Group, LLC{p_end}
-{pstd}{browse "mailto:alinden@lindenconsulting.org":alinden@lindenconsulting.org}{p_end}
+{pstd}alinden@lindenconsulting.org{p_end}
        
  
 {title:Also see}
 
-{p 7 14 2}Help:  {helpb newey}, {helpb prais}, {helpb itsa} (if installed)
+{p 7 14 2}Help: {helpb glm}, {helpb newey}, {helpb prais}, {helpb itsa} (if installed), {helpb itsaperm} (if installed)
  {p_end}

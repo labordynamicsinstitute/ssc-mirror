@@ -1,3 +1,4 @@
+*! 3.0.0 Ariel Linden 01Apr2024						// changed default model to -glm- with Newey-West std errors
 *! 2.3.0 Ariel Linden 28Mar2024						// added lowess option 
 *! 2.2.1 Ariel Linden 22Mar2021						// fixed error with trperiod() loop   
 *! 2.2.0 Ariel Linden 10Mar2021 					// added parsing code to extract date(s) from trperiod() 
@@ -188,6 +189,8 @@ version 11.0
 			local dvar = "_" + subinstr("`dvar1'",".","_",.)
 			local dvar  `prefix'`dvar'
 			rename `dvar2' `dvar'
+			local w : variable label `dvar1'
+			if `"`w'"' != "" label variable `dvar' `"`w'"'			
 		}
 		else {
 			tempvar dvar2
@@ -234,8 +237,18 @@ version 11.0
 		tsset
 		if "`prais'" != "" {
 			prais `dvar' `rhs' `xvar' if `touse' , `options'
+			local z_t t
+			local z_t_p P>|t|	
 		}
-		else newey `dvar' `rhs' `xvar'  if `touse' [`weight' `exp'], lag(`lag') `options'
+		else {
+			* first run is to get values for vfactor
+			qui glm2 `dvar' `rhs' `xvar'  if `touse' [`weight' `exp'], force nodisplay `options'
+			local vfac =  `e(N)'  /  `e(df)'
+			* rerun it again, now with adjustment for autocorrelation
+			glm2 `dvar' `rhs' `xvar'  if `touse' [`weight' `exp'], force vce(hac nwest `lag') vfactor(`vfac') `options'		
+			local z_t z			
+			local z_t_p P>|z|
+		}
 
 		/*********************************************************
 		*  LINCOM: SINGLE GROUP SINGLE PANEL                     *
@@ -257,7 +270,6 @@ version 11.0
 				local bexp = "`bexp'+_b[`prefix'_x_t`tper']"
 				qui lincom `"`bexp'"', level(`clv')
 				qui return list
-				local zp P>|z|
 				di _newline(1)
 				di in smcl in green _col(20) " Postintervention Linear Trend: `tperl'"  _newline
 				di  "Treated: `bexp'"
@@ -266,8 +278,8 @@ version 11.0
 				_newline "Linear Trend {c |}"
 				_col(21) "Coef. "
 				_col(29) "Std. Err."
-				_col(44) "t"
-				_col(49) "`tp'"
+				_col(44) "`z_t'"
+				_col(49) "`z_t_p'"
 				_col(`=61-`cil'') `"[`clv'% Conf. Interval]"'
 				_newline
 				in gr in smcl "{hline 13}{c +}{hline 64}"
@@ -276,7 +288,7 @@ version 11.0
 				_col(14) "{c |}" in ye
 				_col(17) %9.7g r(estimate)
 				_col(28) %9.7g r(se)
-				_col(38) %8.2f r(t)
+				_col(38) %8.2f r(`z_t')
 				_col(46) %8.3f r(p)
 				_col(58) %9.7g r(lb)
 				_col(70) %9.7g r(ub)
@@ -306,8 +318,8 @@ version 11.0
 				local note "Prais-Winsten and Cochrane-Orcutt regression - lag(1)"
 			}
 			else {
-				local note "Regression with Newey-West standard errors - lag(`lag')"
-			}
+				local note "GLM model: family(`e(varfunct)'), link(`e(linkt)') with Newey-West standard errors - lag(`lag')"
+			} 
 
 		/* CREATE PREDICTED VALUE FOR PLOTS */
 		qui{
@@ -369,7 +381,7 @@ version 11.0
 		}
 		#delim ;
 		tw  `low'
-		(scatter  `dvar' `plotvars' `tvar' if `touse' [`weight' `exp'],
+ 		(scatter  `dvar' `plotvars' `tvar' if `touse' [`weight' `exp'],		
 			`cpart' `mspart' `lc'
 			xline(`trperiod', lpattern(shortdash) lcolor(black))
 			mcolor(black)
@@ -418,8 +430,18 @@ version 11.0
 		tsset
 		if "`prais'" != "" {
 			prais `dvar' `rhs' `xvar' if `touse' & `pvar'==`treatid' , `options'
+			local z_t t
+			local z_t_p P>|t|			
 		}
-		else newey `dvar' `rhs' `xvar' if `touse' & `pvar'==`treatid' [`weight' `exp'], lag(`lag') `options'
+		else {
+			* first run is to get values for vfactor
+			qui glm2 `dvar' `rhs' `xvar' if `touse' & `pvar'==`treatid' [`weight' `exp'], force nodisplay `options'
+			local vfac =  `e(N)'  /  `e(df)'
+			* rerun it again, now with adjustment for autocorrelation
+			glm2 `dvar' `rhs' `xvar' if `touse' & `pvar'==`treatid' [`weight' `exp'], force vce(hac nwest `lag') vfactor(`vfac') `options'	
+			local z_t z
+			local z_t_p P>|z|				
+		}
 
 		/**************************************************************
 		*  LINCOM: SINGLE GROUP MULTIPLE PANELS                     *
@@ -441,7 +463,6 @@ version 11.0
 				local bexp = "`bexp'+_b[`prefix'_x_t`tper']"
 				qui lincom `"`bexp'"', level(`clv')
 				qui return list
-				local zp P>|z|
 				di _newline(1)
 				di in smcl in green _col(20) " Postintervention Linear Trend: `tperl'"  _newline
 				di  "Treated: `bexp'"
@@ -450,8 +471,8 @@ version 11.0
 				_newline "Linear Trend {c |}"
 				_col(21) "Coef. "
 				_col(29) "Std. Err."
-				_col(44) "t"
-				_col(49) "`tp'"
+				_col(44) "`z_t'"
+				_col(49) "`z_t_p'"
 				_col(`=61-`cil'') `"[`clv'% Conf. Interval]"'
 				_newline
 				in gr in smcl "{hline 13}{c +}{hline 64}"
@@ -460,7 +481,7 @@ version 11.0
 				_col(14) "{c |}" in ye
 				_col(17) %9.7g r(estimate)
 				_col(28) %9.7g r(se)
-				_col(38) %8.2f r(t)
+				_col(38) %8.2f r(`z_t')
 				_col(46) %8.3f r(p)
 				_col(58) %9.7g r(lb)
 				_col(70) %9.7g r(ub)
@@ -494,7 +515,7 @@ version 11.0
 				local note "Prais-Winsten and Cochrane-Orcutt regression - lag(1)"
 			}
 			else {
-				local note "Regression with Newey-West standard errors - lag(`lag')"
+				local note "GLM model: family(`e(varfunct)'), link(`e(linkt)') with Newey-West standard errors - lag(`lag')"
 			}
 
 			/* create predicted values for plots */
@@ -606,9 +627,19 @@ version 11.0
 		/* run Prais or Newey regression */
 		tsset
 		if "`prais'" != "" {
-			prais `dvar' `rhs' `xvar'   if `touse' `if2' , `options'
+			prais `dvar' `rhs' `xvar' if `touse' `if2' , `options'
+			local z_t t
+			local z_t_p P>|t|				
 		}
-		else newey `dvar' `rhs' `xvar' if `touse' `if2' [`weight' `exp'], lag(`lag') force `options'
+		else {
+			* first run is to get values for vfactor
+			qui glm2 `dvar' `rhs' `xvar' if `touse' `if2' [`weight' `exp'], force nodisplay `options'
+			local vfac =  `e(N)'  /  `e(df)'
+			* rerun it again, now with adjustment for autocorrelation
+			glm2 `dvar' `rhs' `xvar' if `touse' `if2' [`weight' `exp'], force vce(hac nwest `lag') vfactor(`vfac') `options'	
+			local z_t z
+			local z_t_p P>|z|			
+		}
 
 		quietly predict `prefix'_m_`dvar'_pred // consider adding "if e(sample)"
 		local itsavars `dvar' `rhs' `prefix'_m_`dvar'_pred
@@ -655,8 +686,8 @@ version 11.0
 				_newline "Linear Trend {c |}"
 				_col(21) "Coef. "
 				_col(29) "Std. Err."
-				_col(44) "t"
-				_col(49) "P>|t|"
+				_col(44) "`z_t'"
+				_col(49) "`z_t_p'"
 				_col(`=61-`cil'') `"[`clv'% Conf. Interval]"'
 				_newline
 				in gr in smcl "{hline 13}{c +}{hline 64}"
@@ -666,7 +697,7 @@ version 11.0
 				_col(14) "{c |}" in ye
 				_col(17) %9.7g r(estimate)
 				_col(28) %9.7g r(se)
-				_col(38) %8.2f r(t)
+				_col(38) %8.2f r(`z_t')
 				_col(46) %8.3f r(p)
 				_col(58) %9.7g r(lb)
 				_col(70) %9.7g r(ub)
@@ -683,7 +714,7 @@ version 11.0
 				_col(14) "{c |}" in ye
 				_col(17) %9.7g r(estimate)
 				_col(28) %9.7g r(se)
-				_col(38) %8.2f r(t)
+				_col(38) %8.2f r(`z_t')
 				_col(46) %8.3f r(p)
 				_col(58) %9.7g r(lb)
 				_col(70) %9.7g r(ub);
@@ -699,7 +730,7 @@ version 11.0
 				_col(14) "{c |}" in ye
 				_col(17) %9.7g r(estimate)
 				_col(28) %9.7g r(se)
-				_col(38) %8.2f r(t)
+				_col(38) %8.2f r(`z_t')
 				_col(46) %8.3f r(p)
 				_col(58) %9.7g r(lb)
 				_col(70) %9.7g r(ub);
@@ -727,7 +758,7 @@ version 11.0
 				local note "Prais-Winsten and Cochrane-Orcutt regression - lag(1)"
 			}
 			else {
-				local note "Regression with Newey-West standard errors - lag(`lag')"
+				local note "GLM model: family(`e(varfunct)'), link(`e(linkt)') with Newey-West standard errors - lag(`lag')"
 			}
 
 			 preserve

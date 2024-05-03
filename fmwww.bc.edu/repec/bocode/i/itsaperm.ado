@@ -1,3 +1,4 @@
+*! 1.0.2 Ariel Linden 01May2024		// set default pr() to 0.05 
 *! 1.0.1 Ariel Linden 18Apr2024 	// fixed issue with "dots" not displaying properly
 									// changed trperiod() to "string" so that command will work with updated itsamatch and itsa
 *! 1.0.0 Ariel Linden 03Apr2018
@@ -10,7 +11,7 @@ version 11.0
 	syntax varlist(min=1 numeric) [if] [in] [aweight] ,       		/// weight only relevant for -newey-
 	TRPeriod(string)												/// start time of intervention    
 	TREATid(numlist min=1 max=1 int sort)                         	/// ID of actual treated unit
-	[ Pr(numlist max=1 >0 <1)										/// minimum p-value for balancing covariates
+	[ Pr(real 0.05)													/// minimum p-value for balancing covariates
 	MATCHvar(varlist)												/// variables used for matching
 	LAG(int -1)														/// lag only relevant for -newey-
 	PRAIS															///	use -prais- rather than default -newey-
@@ -81,7 +82,7 @@ version 11.0
 		gen strL idC = "" if `touse'
 		gen estimate =. if `touse'
 		gen se = . if `touse'
-		gen t = . if `touse'
+		gen z = . if `touse'
 		gen p = . if `touse'
 		gen lcl = . if `touse'
 		gen ucl = . if `touse'
@@ -118,7 +119,7 @@ version 11.0
 		quietly {
 			replace estimate = r(estimate) in `r' 
 			replace se = r(se) in `r'
-			replace t = r(t) in `r'
+			replace z = r(z) in `r'
 			replace p = r(p) in `r'
 			replace lcl = r(lb) in `r'
 			replace ucl = r(ub) in `r'
@@ -128,7 +129,7 @@ version 11.0
 	} // end foreach
 	
 	/* track variables generated */
-     local itsapermvars id nC idC estimate se t p lcl ucl
+     local itsapermvars id nC idC estimate se z p lcl ucl
      char def _dta[_itsapermvars] "`itsapermvars'"
 
 	/* generate forest-plot */

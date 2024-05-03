@@ -1,3 +1,4 @@
+*! 1.3.0 Ariel Linden 01May2024 // made changes to allow -itsamatch- to work with the new version of -itsa- that implements -glm2-.
 *! 1.2.1 Ariel Linden 18Apr2024 // changed how the results are displayed, now presenting pvar unit labels instead of underlying values
 *! 1.2.0 Ariel Linden 10Apr2024 // fixed trperiod() to allow the user to enter a pseudofunction datetime e.g. (20jan1988)
 *! 1.1.0 Ariel Linden 21Nov2017 // Added local()option
@@ -11,12 +12,13 @@ version 11.0
 	syntax varlist(min=1 numeric) [if] [in] [aweight] ,	/// weight only relevant for -newey-
 	TRPeriod(string)											///     
 	TREATid(numlist min=1 max=1 int sort)						///
-	[ Pr(numlist max=1 >0 <1)									/// 
+	[ Pr(real 0.05)												/// 
 	LAG(int -1)													/// lag only relevant for -newey-
 	PRAIS														///
 	Local(str)													/// macro that can be used in -itsa-
 	* ]
-								
+
+* Pr(numlist max=1 >0 <1)			
 	preserve
 	quietly {
 
@@ -86,7 +88,7 @@ version 11.0
 			gen _zt`var' =.
 			local clist `clist' _z`var' _zt`var'
 		}
-
+		
 		// Get unique levels of the panel (group) variable 
 		tab `pvar' if `touse'
 		local num = r(r) - 1
@@ -106,22 +108,20 @@ version 11.0
 		foreach num of local levels {
 			_dots `varcount' 0
 			foreach var of varlist `varlist'  {
-				
 				if `num' != `treatid' {
-		
-			qui {
-					if "`prais'" != "" { 
-						itsa `var' if `touse', treat(`treatid') trp(`trperiod') cont(`num') replace prais `options'
-					}
-				else itsa `var' if `touse' [`weight' `exp'], treat(`treatid') trp(`trperiod') cont(`num') lag(`lag') replace `options'
-			
-				mat `B' = r(table)
-				mat `C' = `B'["pvalue","_z"]
-				mat `D' = `B'["pvalue","_z_t"]
-				replace _z`var' = trace(`C') if `pvar' == `num'	
-				replace _zt`var' = trace(`D') if `pvar' == `num'
-			} // !treatid
-				} //qui
+					qui {
+						if "`prais'" != "" { 
+							itsa `var' if `touse', treat(`treatid') trp(`trperiod') cont(`num') replace prais `options'
+						}
+						else itsa `var' if `touse' [`weight' `exp'], treat(`treatid') trp(`trperiod') cont(`num') lag(`lag') replace `options'
+						mat `B' = r(table)
+						matrix coleq `B' = ""
+						mat `C' = `B'["pvalue","_z"]
+						mat `D' = `B'["pvalue","_z_t"]
+						replace _z`var' = trace(`C') if `pvar' == `num'	
+						replace _zt`var' = trace(`D') if `pvar' == `num'
+					} // qui
+				} // ! treated
 			} //foreach var
 		} //foreach num
 
@@ -133,7 +133,7 @@ version 11.0
 	mkmat `pvar' `clist' if `rowmin' > `pr' , matrix(`OPT')	
 	
 	// display results
-	list `pvar' `clist' if `rowmin' > `pr',  noobs  divider separator(0)	
+	list `pvar' `clist' if `rowmin' > `pr',  noobs  divider separator(0)  abbreviate(129)   
 
 	//make a matrix of just the control IDs
 	mat `contid' = `OPT'[1..., 1]'

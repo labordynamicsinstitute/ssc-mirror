@@ -168,7 +168,7 @@ See {cmd:return list}.{p_end}
 {p 8 12}{stata "webuse sp500" : . webuse sp500 }{p_end}
 {p 8 12}{stata "tsset date, daily" : . tsset date, daily }{p_end}
 {p 8 12}{stata "g magchange = abs(int(change/2))" : . g magchange = abs(int(change/2))}{p_end}
-{p 8 12}{stata "qui glm magchange date volume, family(poisson)" : . glm magchange date volume, family(poisson)}{p_end}
+{p 8 12}{stata "qui glm magchange date volume, family(poisson)" : . qui glm magchange date volume, family(poisson)}{p_end}
 {p 8 12}{stata "actest, lags(5)" : . actest, lags(5)}{p_end}
 
 {p} Application in an IV context {p_end}

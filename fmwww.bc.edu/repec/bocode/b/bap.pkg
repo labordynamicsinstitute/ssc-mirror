@@ -1,0 +1,24 @@
+d 'BAP': module to generate a Bland-Altman plot 
+d
+d	The command bap is yet another Bland-Altman plot generator.
+d    It is fairly simple and quite flexible to use.    There is an
+d option for having a lowess curve to visualize a trend instead of
+d the mean line.    Further, the command bap returns a matrix
+d containing key information on the measurements:  The mean
+d measurements with    95% CI, the bias with 95% CI, the SEM, and
+d the LOA limits. 
+d
+d KW: graphics
+d KW: Bland
+d KW: Altman
+d KW: plot
+d
+d Requires: Stata version 14.2
+d
+d Distribution-Date: 20240502
+d
+d Author: Niels Henrik Bruun, Aalborg University Hospital
+d Support: email niels.henrik.bruun@@gmail.com
+d
+f bap.ado
+f bap.sthlp

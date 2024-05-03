@@ -6,6 +6,7 @@ p bacondecomp module to perform a Bacon decomposition of difference-in-differenc
 p baing module to determine and estimate the number of common factors following Bai and Ng 
 p balancetable module to build a balance table and print it in a LaTeX file or an Excel file
 p bandplot module to plot summary statistics of responses for bands of predictors
+p bap module to generate a Bland-Altman plot 
 p baplot module to produce Bland-Altman plots
 p barplot module to plot varlist against xvar
 p barplot2 module to produce bar plot with optional error bars

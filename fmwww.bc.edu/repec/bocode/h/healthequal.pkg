@@ -1,0 +1,37 @@
+d 'HEALTHEQUAL': module to calculate summary measures of health inequality
+d
+d  healthequal calculates a range of summary measures of health
+d inequality using disaggregated data, including the slope index of
+d inequality, the absolute and relative concentration indices, mean
+d difference from mean, mean difference from best-performing
+d subgroup, index of disparity, between-group variance, coefficient
+d of variation, Theil index, mean log deviation, and population
+d attributable risk. Summary measures for ordered dimensions of
+d inequality (e.g., slope index of inequality and concentration
+d index) can also be calculated using individual-level and survey
+d data. 
+d
+d KW: health inequality
+d KW: concentration index
+d KW: population attributable risk
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20240502
+d
+d Author:  Katherine Kirkby, World Health Organization, Switzerland
+d Support: email kirkbyk@@who.int
+d
+d Author:  Daniel A. Antiporta, World Health Organization, Switzerland
+d Support: email NA
+d
+d Author:  Anne Schlotheuber, World Health Organization, Switzerland
+d Support: email NA
+d
+d Author:  Ahmad Reza Hosseinpoor , World Health Organization, Switzerland
+d Support: email hosseinpoora@@who.int
+d
+f healthequal.ado
+f healthequal.sthlp
+f ../s/sample_dhs.dta 
+f ../s/sample_rmnch.dta 

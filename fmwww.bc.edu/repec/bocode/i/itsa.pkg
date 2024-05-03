@@ -16,7 +16,8 @@ d effects for either a single treatment group (with pre- and
 d post-intervention observations) or a multiple-group comparison
 d (i.e., the single treatment group is compared with one or more
 d control groups). Additionally, itsa can estimate treatment
-d effects for multiple treatment periods. 
+d effects for multiple treatment periods. Because itsa is a wrapper
+d for glm, all available model options are allowed. 
 d
 d KW: interrupted time series
 d KW: quasi-experimental studies
@@ -24,12 +25,13 @@ d KW: causal inference
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20240420
+d Distribution-Date: 20240502
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org
 d
 f itsa.ado
 f itsa.sthlp
+f ../g/glm2.ado
 f ../c/cigsales.dta
 f ../c/cigsales_single.dta

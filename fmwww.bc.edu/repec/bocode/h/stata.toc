@@ -22,6 +22,7 @@ p hdfe module to partial out variables with respect to a set of fixed effects
 p hdquantile module for Harrell-Davis estimator of quantiles
 p heabs module to calculate the ICER and Net Benefit for up to two datasets
 p head module to print the head observations (first observations in data set)
+p healthequal module to calculate summary measures of health inequality
 p heart module to make coding fun and accessible
 p heatmapgraph module to measure the evolution of risks to financial stability over the financial cycle 
 p heatplot module to create heat plots and hexagon plots
