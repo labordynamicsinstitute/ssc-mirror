@@ -1,6 +1,7 @@
-*! 2.9.2 NJC 11 December 2023
-*! 2.9.1 NJC 30 January 2022     
-*! 2.9.0 NJC 10 July 2021     
+*! 2.10.0 NJC 5 May 2024
+* 2.9.2 NJC 11 December 2023
+* 2.9.1 NJC 30 January 2022     
+* 2.9.0 NJC 10 July 2021     
 * 2.8.1 NJC 11 October 2020 
 * 2.8.0 NJC 4 July 2018 
 * 2.7.2 NJC 8 June 2017 
@@ -28,7 +29,7 @@
 * 2.1.2 NJC 11 August 2004
 * 2.1.1 NJC 21 July 2004
 * 2.1.0 NJC 13 February 2004
-* 2.0.3 NJC 17 July 2003 *!*
+* 2.0.3 NJC 17 July 2003 
 * 2.0.2 NJC 7 July 2003 
 * 2.0.1 NJC 6 July 2003 
 * 2.0.0 NJC 3 July 2003 
@@ -44,10 +45,12 @@ program stripplot, sort
     tufte TUFTE2(str asis)                                             ///
 	iqr IQR2(numlist >0 max=1) PCTile(numlist >=0 <=100 max=1)         ///
     WHiskers(str asis) medianbar(str asis) OUTside OUTside2(str asis)  ///
-    CUMULate CUMULative CUMPRob                                        ///
+    CUMULate CUMULative CUMPRob TRSCale(str asis)                      ///
 	PLOT(str asis) ADDPLOT(str asis) variablelabels SEParate(varname)  ///
 	REFline REFline2(str) reflevel(str) reflinestretch(real 0.05)      ///
 	refvar(varname) * ] 
+	
+* cumulative undocumented 
 
 	// parse options 
 	if "`fraction'" != "" {
@@ -62,6 +65,11 @@ program stripplot, sort
 	
 	if "`floor'" != "" & "`ceiling'" != "" { 
 		di as err "must choose between floor and ceiling"
+		exit 198 
+	}
+
+	if `"`box'`box2'"' != "" & `"`bar'`bar2'"' != "" & `"`tufte'`tufte2'"' != "" { 
+		di as err "may not combine bar, box, and tufte"
 		exit 198 
 	}	
 
@@ -78,32 +86,10 @@ program stripplot, sort
 	if `"`tufte'`tufte2'"' != "" & `"`bar'`bar2'"' != "" { 
 		di as err "may not combine bar and tufte"
 		exit 198 
-	}	
-
-	if `"`box'`box2'"' != "" & `"`bar'`bar2'"' != "" & `"`tufte'`tufte2'"' != "" { 
-		di as err "may not combine bar, box, and tufte"
-		exit 198 
-	}	
+	}		
 
 	if `"`bar2'"' != "" { 
-		local 0 , `bar2' 
-		local opts `options'
-		local vars `varlist' 
-		local ifspec `if' 
-		local inspec `in' 
-
-		syntax [ , Level(int `c(level)') Poisson Binomial    ///
-		EXAct WAld Agresti Wilson Jeffreys Exposure(varname) ///
-		mean(str asis) * ]
-
-		local ciopts level(`level') `poisson' `binomial' `exact' ///
-		`wald' `agresti' `wilson' `jeffreys' 
-		local baropts `options' 
-		local meanopts `mean' 
-		local options `opts'
-		local varlist `vars' 
-		local if `ifspec' 
-		local in `inspec' 
+		ParseBar , `bar2' 
 	}
 
 	if "`cumulative'" != "" local cumulate "cumulate" 
@@ -122,8 +108,9 @@ program stripplot, sort
 	
 	if "`iqr'`iqr2'" != "" { 
 		if "`pctile'" != "" {
-			local which = cond("`iqr2'", "iqr()", "iqr") 
-			di as err "may not combine `which' and pctile() options" 			exit 198
+			local which = cond("`iqr2'" != "", "iqr()", "iqr") 
+			di as err "may not combine `which' and pctile() options" 			
+			exit 198
 		} 
 
 		if  "`iqr2'" != "" { 
@@ -131,8 +118,6 @@ program stripplot, sort
 		} 
 		else local mult = 1.5
 	} 
-
-	local nprev = 0
 
 	if `"`refline'`refline2'"' != "" {
 		if "`reflevel'" != "" { 
@@ -162,6 +147,23 @@ program stripplot, sort
 			tempvar SEPARATE 
 			clonevar `SEPARATE' = `separate'
 			local separate `SEPARATE'
+		}
+	}
+	
+	if "`trscale'" != "" {
+		if "`cumprob'" == "" {
+			di as err "trscale() specified without cumprob, so ignored"
+			local trscale 
+		}
+		else if "`cumulate'" == "" { 
+			di as err "trscale() specified without cumulate, so ignored"
+			local trscale 
+		}
+		else {
+			if !index("`trscale'", "@") { 
+				di as err "trscale() does not contain @"
+				exit 198 
+			}
 		}
 	}
 
@@ -330,6 +332,14 @@ program stripplot, sort
 
 				if "`cumprob'" != "" { 
 					by `by' `negstack' : gen `count' = (_n - 0.5)/_N 
+					if "`trscale'" != "" {
+						local defn : subinstr local trscale "@" "`count'", all 
+						by `by' `negstack': replace `count' = `defn'
+						tempvar MIN MAX 
+						by `by' `negstack' : egen `MIN' = min(`count')
+						by `by' `negstack' : egen `MAX' = max(`count')
+						replace `count' = (`count' - `MIN')/(`MAX' - `MIN')
+					}
 				} 
 				else by `by' `negstack' : gen `count' = _n  
 
@@ -485,6 +495,14 @@ program stripplot, sort
 
 			if "`cumprob'" != "" {
 				by `by' `negover': gen `count' = (_n - 0.5)/_N 
+				if "`trscale'" != "" {
+					local defn : subinstr local trscale "@" "`count'", all 
+					by `by' `negover': replace `count' = `defn'
+					tempvar MIN MAX 
+					by `by' `negover' : egen `MIN' = min(`count')
+					by `by' `negover' : egen `MAX' = max(`count')
+					replace `count' = (`count' - `MIN')/(`MAX' - `MIN')
+				}
 			}
 			else by `by' `negover': gen `count' = _n  
 
@@ -557,15 +575,16 @@ program stripplot, sort
 	local margin = cond(r(max) == r(min), 0.1, 0.05 * (r(max) - r(min)))
 	local stretch "r(`= r(min) - `margin'' `= r(max) + `margin'')" 
 	if "`vertical'" != "" local stretch "xsc(`stretch')" 
-	else local stretch "ysc(`stretch')" 
+	else local stretch "ysc(`stretch')"
 
+	local nprev = 0  
 
 	quietly if "`vertical'" != "" { 
 		if `"`box'`box2'"' != "" { 
 			gen `yshow2' = `Y' + `boffset' 
 			if "`medianbar'" != "" { 
 				local medianbar ///
-		rbar `median' `median' `yshow2', barw(0.4) bcolor(none) blcolor(black) `medianbar' 
+		rbar `median' `median' `yshow2', barw(0.4) bfcolor(none) blcolor(black) `medianbar' 
 				local nprev = `nprev' + 1 
 			}
 			if "`iqr'`iqr2'`pctile'" != "" { 
@@ -666,7 +685,7 @@ program stripplot, sort
 			gen `yshow2' = `Y' + `boffset' 
 			if "`medianbar'" != "" { 
 				local medianbar ///
-		rbar `median' `median' `yshow2', barw(0.4) bcolor(none) blcolor(black) hor `medianbar' 
+		rbar `median' `median' `yshow2', barw(0.4) bfcolor(none) blcolor(black) hor `medianbar' 
 				local nprev = `nprev' + 1 
 			}
 			if "`iqr'`iqr2'`pctile'" != "" { 
@@ -772,3 +791,13 @@ end
 
 */ 
 
+program ParseBar 
+		syntax [ , Level(int `c(level)') Poisson Binomial    ///
+		EXAct WAld Agresti Wilson Jeffreys Exposure(varname) ///
+		mean(str asis) * ]
+
+		c_local ciopts level(`level') `poisson' `binomial' `exact' ///
+		`wald' `agresti' `wilson' `jeffreys' 
+		c_local baropts `options' 
+		c_local meanopts `mean' 
+end 

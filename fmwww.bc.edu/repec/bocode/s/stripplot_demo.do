@@ -3,7 +3,7 @@
 . stripplot mpg, name(ST1, replace) 
 . stripplot mpg, aspect(0.05) name(ST2, replace)
 . stripplot mpg, over(rep78) name(ST3, replace)
-. stripplot mpg, over(rep78) by(foreign) name(ST4, replace)
+. stripplot mpg, over(rep78) by(foreign, note("")) name(ST4, replace)
 . stripplot mpg, over(rep78) vertical yla(, ang(h)) name(ST5, replace)
 . stripplot mpg, over(rep78) vertical stack yla(, ang(h)) name(ST6, replace)
 . stripplot mpg, over(rep78) vertical stack yla(, ang(h)) h(0.4) name(ST7, replace)
@@ -13,10 +13,10 @@
 . stripplot price, over(rep78) ms(none) mla(pipe) mlabpos(0) name(ST9, replace)
 . stripplot price, over(rep78) w(200) stack h(0.4) name(ST10, replace)
 
-// (5 here is empirical: adjust for your variable)
-. gen price1 = price - 5
-. gen price2 = price + 5
-. stripplot price, over(rep78) box ms(none) addplot(rbar price1 price2 rep78, horizontal barw(0.2) bcolor(gs6)) name(ST11, replace)
+// (10 here is empirical: adjust for your variable)
+. gen price1 = price - 10
+. gen price2 = price + 10 
+. stripplot price, over(rep78) box ms(none) addplot(rbar price1 price2 rep78, horizontal barw(0.2) bcolor(navy)) name(ST11, replace)
 
 . stripplot mpg, over(rep78) stack h(0.5) bar(lcolor(red)) name(ST12, replace)
 . stripplot mpg, over(rep78) box name(ST13, replace)
@@ -29,7 +29,7 @@
 
 . gen digit = mod(mpg, 10)
 . stripplot mpg, stack vertical mla(digit) mlabpos(0) ms(i) over(foreign) height(0.2) yla(, ang(h)) xla(, ang(-0.001) tlength(*2) tlcolor(none)) name(ST20, replace)
-. stripplot mpg, stack vertical mla(digit) mlabpos(0) ms(i) by(foreign) yla(, ang(h)) name(ST21, replace)
+. stripplot mpg, stack vertical mla(digit) mlabpos(0) ms(i) by(foreign, note("")) yla(, ang(h)) name(ST21, replace)
 
 . stripplot mpg, over(rep78) separate(foreign) stack name(ST22, replace)
 . stripplot mpg, by(rep78) separate(foreign) stack name(ST23, replace)
@@ -37,7 +37,7 @@
 // (fulcrums to mark means as centres of gravity)
 . gen rep78_1 = rep78 - 0.1
 . egen mean = mean(mpg), by(foreign rep78)
-. stripplot mpg, over(rep78) by(foreign, compact) addplot(scatter rep78_1 mean, ms(T)) stack name(ST24, replace)
+. stripplot mpg, over(rep78) by(foreign, compact note("")) addplot(scatter rep78_1 mean, ms(T)) stack name(ST24, replace)
 
 . egen mean_2 = mean(mpg), by(rep78)
 . gen rep78_L = rep78 - 0.1
@@ -67,7 +67,7 @@
 . egen mean = mean(mpg), by(foreign)
 . egen min = min(mpg)
 . egen n = count(mpg), by(foreign)
-. gen shown = "n = " + string(n)
+. gen shown = "{it:n} = " + string(n)
 . gen foreign2 = foreign + 0.15
 . gen foreign3 = foreign - 0.15
 . gen showmean = string(mean, "%2.1f")
@@ -76,7 +76,7 @@
 // (Stata's blood pressure data)
 . sysuse bplong, clear
 . egen group = group(age sex), label
-. stripplot bp*, bar over(when) by(group, compact col(1) note("")) ysc(reverse) subtitle(, pos(9) ring(1) nobexpand bcolor(none) placement(e)) ytitle("") xtitle(Blood pressure (mm Hg)) name(ST30, replace)
+. stripplot bp*, bar over(when) by(group, compact col(1) note("")) ysc(reverse) subtitle(, pos(9) ring(1) nobexpand bcolor(none) placement(e)) ytitle("") xtitle(Systolic blood pressure (mm Hg)) name(ST30, replace)
 
 // (Stata's US city temperature data)
 . sysuse citytemp, clear
@@ -88,14 +88,15 @@
 . reshape long temp, i(id) j(month) string
 . replace month = cond(month == "jan", "January", "July")
 . label var temp "Mean temperature ({&degree}F)"
-. stripplot temp, over(region) by(month) cumul vertical yla(14 32 50 68 86, ang(h)) bar centre name(ST33, replace)
-. stripplot temp, over(region) by(month) cumul cumpr vertical yla(14 32 50 68 86, ang(h)) box(barw(0.5) blcolor(gs12)) height(0.4) centre name(ST34, replace)
+. stripplot temp, over(region) by(month, note("")) cumul vertical yla(14 32 50 68 86, ang(h)) bar centre name(ST33, replace)
+. stripplot temp, over(region) by(month, note("")) cumul cumpr vertical yla(14 32 50 68 86, ang(h)) box(barw(0.5) blcolor(gs12)) height(0.4) centre name(ST34, replace)
+. stripplot temp, over(region) by(month, note("") subtitle(normal quantile plots with means)) cumul cumpr trscale(invnormal(@)) centre vertical yla(14 32 50 68 86, ang(h))  refline name(ST35, replace)
 
 . gen tempC = (5/9) * temp - 32
 . label var tempC "Mean temperature ({&degree}C)"
-. stripplot tempC, over(division) by(month, xrescale note("whiskers to 5 and 95% points")) xla(, ang(h)) box pctile(5) outside(ms(oh) mcolor(red)) ms(none) name(ST35, replace)
+. stripplot tempC, over(division) by(month, xrescale note("whiskers to 5 and 95% points")) xla(, ang(h)) box pctile(5) outside(ms(oh) mcolor(red)) ms(none) name(ST36, replace)
 
 // (Tufte, quartile or midgap plots)
 . sysuse auto, clear
-. stripplot mpg , over(foreign) stack tufte boffset(-0.07) yla(, ang(h)) xla(, noticks) vertical ms(Sh) height(0.2) name(ST36, replace)
+. stripplot mpg , over(foreign) stack tufte boffset(-0.07) yla(, ang(h)) xla(, noticks) vertical ms(Sh) height(0.2) name(ST37, replace)
  
