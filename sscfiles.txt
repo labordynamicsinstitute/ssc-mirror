@@ -7031,6 +7031,7 @@ fmwww.bc.edu/repec/bocode/s/sccendif.ado
 fmwww.bc.edu/repec/bocode/s/stackedev.pkg
 fmwww.bc.edu/repec/bocode/s/sequence.ado
 fmwww.bc.edu/repec/bocode/s/stns.html
+fmwww.bc.edu/repec/bocode/s/svmat2.sthlp
 fmwww.bc.edu/repec/bocode/s/strrec.html
 fmwww.bc.edu/repec/bocode/s/survey_fieldname.csv
 fmwww.bc.edu/repec/bocode/s/shapley.html
@@ -8107,6 +8108,7 @@ fmwww.bc.edu/repec/bocode/s/scheme-white_brbg.scheme
 fmwww.bc.edu/repec/bocode/s/somersd.sthlp
 fmwww.bc.edu/repec/bocode/s/sunburst.ado
 fmwww.bc.edu/repec/bocode/s/sdline.pkg
+fmwww.bc.edu/repec/bocode/s/svmat2.ado
 fmwww.bc.edu/repec/bocode/s/stnet.ado
 fmwww.bc.edu/repec/bocode/s/svrcalc.ado
 fmwww.bc.edu/repec/bocode/s/stpm.pkg
@@ -12991,6 +12993,7 @@ fmwww.bc.edu/repec/bocode/n/nonparamreg.m
 fmwww.bc.edu/repec/bocode/n/ngram_example.ado
 fmwww.bc.edu/repec/bocode/n/nytimes.pkg
 fmwww.bc.edu/repec/bocode/n/normalizepath.sthlp
+fmwww.bc.edu/repec/bocode/n/nnls.pkg
 fmwww.bc.edu/repec/bocode/n/NonlinTstMltvar.m
 fmwww.bc.edu/repec/bocode/n/network_rank.sthlp
 fmwww.bc.edu/repec/bocode/n/NullDistr.dta
@@ -13328,6 +13331,8 @@ fmwww.bc.edu/repec/bocode/n/nnipolate.html
 fmwww.bc.edu/repec/bocode/n/npivcv.sthlp
 fmwww.bc.edu/repec/bocode/n/numids.hlp
 fmwww.bc.edu/repec/bocode/n/nehurdle_trunc_het.ado
+fmwww.bc.edu/repec/bocode/n/nnls_predict.ado
+fmwww.bc.edu/repec/bocode/n/nnls.ado
 fmwww.bc.edu/repec/bocode/n/nearest.ado
 fmwww.bc.edu/repec/bocode/n/nb_adj.mata
 fmwww.bc.edu/repec/bocode/n/nligeset.ado
@@ -13365,6 +13370,7 @@ fmwww.bc.edu/repec/bocode/n/netreg.pkg
 fmwww.bc.edu/repec/bocode/n/network_table.ado
 fmwww.bc.edu/repec/bocode/n/nct2inv.html
 fmwww.bc.edu/repec/bocode/n/nb_adjust.bak
+fmwww.bc.edu/repec/bocode/n/nlls.pkg
 fmwww.bc.edu/repec/bocode/n/nproc.pkg
 fmwww.bc.edu/repec/bocode/n/nwreciprocity.ado
 fmwww.bc.edu/repec/bocode/n/network_forest.sthlp
@@ -13388,6 +13394,7 @@ fmwww.bc.edu/repec/bocode/n/nuamodes.ado
 fmwww.bc.edu/repec/bocode/n/nct2inv.hlp
 fmwww.bc.edu/repec/bocode/n/neweydmexog.ado
 fmwww.bc.edu/repec/bocode/n/nca_parse_scope.ado
+fmwww.bc.edu/repec/bocode/n/nnls.sthlp
 fmwww.bc.edu/repec/bocode/n/nbstrat.ado
 fmwww.bc.edu/repec/bocode/n/nbfit.ado
 fmwww.bc.edu/repec/bocode/n/nwANND.ado

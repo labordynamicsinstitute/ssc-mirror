@@ -18,15 +18,21 @@ d KW: multiple periods
 d KW: event study
 d KW: non-binary treatment
 d
-d Requires: Stata version 12 
+d Requires: Stata version 12 and gtools from SSC (q.v.avity2)
 d
 d Distribution-Date: 20240424
 d
 d Author:  Clément de Chaisemartin,  Economics Department, Sciences Po
 d Support: email  chaisemartin.packages@@gmail.com
 d
+d Author:   Diego Ciccia, Sciences Po
+d Support: email   chaisemartin.packages@@gmail.com
+d
 d Author:   Xavier D'Haultfoeuille, CREST-ENSAE
 d Support: email   xavier.dhaultfoeuille@@ensae.fr
+d
+d Author:   Felix Knau, Sciences Po
+d Support: email   chaisemartin.packages@@gmail.com
 d
 d Author:  Mélitine Malézieux, Economics Department, Sciences Po
 d Support: email  melitine.malezieux@@sciencespo.fr

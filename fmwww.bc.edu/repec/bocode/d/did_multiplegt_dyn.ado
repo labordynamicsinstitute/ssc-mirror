@@ -19,7 +19,7 @@ capture program drop did_multiplegt_dyn
 
 program did_multiplegt_dyn, eclass
 	version 12.0
-	syntax varlist(min=4 max=4 numeric) [if] [in] [, effects(integer 1) placebo(integer 0) switchers(string) controls(varlist numeric) trends_nonparam(varlist numeric) weight(varlist numeric max=1) dont_drop_larger_lower NORMALIZED cluster(varlist numeric max=1) graphoptions(string) save_results(string) graph_off same_switchers same_switchers_pl effects_equal  drop_if_d_miss_before_first_switch trends_lin ci_level(integer 95) by(varlist numeric max=1) predict_het(string) design(string) date_first_switch(string)  NORMALIZED_weights CONTinuous(integer 0) save_sample less_conservative_se by_path(string) bootstrap(string)]
+	syntax varlist(min=4 max=4 numeric) [if] [in] [, effects(integer 1) placebo(integer 0) switchers(string) only_never_switchers controls(varlist numeric) trends_nonparam(varlist numeric) weight(varlist numeric max=1) dont_drop_larger_lower NORMALIZED cluster(varlist numeric max=1) graphoptions(string) save_results(string) graph_off same_switchers same_switchers_pl effects_equal  drop_if_d_miss_before_first_switch trends_lin ci_level(integer 95) by(varlist numeric max=1) predict_het(string) design(string) date_first_switch(string)  NORMALIZED_weights CONTinuous(integer 0) save_sample less_conservative_se by_path(string) bootstrap(string)]
 
 ////////// 1. Checking that necessary tools to run command installed, and that syntax correctly specified.	
 		
@@ -533,7 +533,7 @@ if r(N)==0{
 	di as error "No treatment effect can be estimated."
 	di as error "This is because Design Restriction 1 in"
 	di as error "de Chaisemartin & D'Haultfoeuille (2024)"
-	di as error "is not satisfied in the data, given the""
+	di as error "is not satisfied in the data, given the"
 	di as error "options requested. This may be due to"
 	di as error "the fact that groups' period-one treatment" 
 	di as error "is continuous, or takes a large number of values," 
@@ -1019,7 +1019,7 @@ if ("`switchers'"=="in"&(L_u_XX==.|L_u_XX==0))|("`switchers'"=="out"&(L_a_XX==.|
 	di as error "No treatment effect can be estimated."
 	di as error "This is because Design Restriction 1 in"
 	di as error "de Chaisemartin & D'Haultfoeuille (2024)"
-	di as error "is not satisfied in the data, given the""
+	di as error "is not satisfied in the data, given the"
 	di as error "options requested. This may be due to"
 	di as error "the fact that groups' period-one treatment" 
 	di as error "is continuous, or takes a large number of values," 
@@ -1195,7 +1195,7 @@ global l_placebo_graph_XX=`=-l_placebo_XX'
 capture graph drop graph_`k'_XX
 
 // call did_multiplegt_dyn with the corresponding options
-noisily did_multiplegt_dyn `1' `2' `3' `4' if (different_paths_XX==`k'|cont_path_alt_XX==1), effects(`=l_XX') placebo(`=l_placebo_XX') same_switchers switchers(`switchers') controls(`controls') trends_nonparam(`trends_nonparam') weight(`weight') `dont_drop_larger_lower' `normalized' cluster(`cluster') `same_switchers_pl' `trends_lin' by(`by_var_path') predict_het(`predict_het') ci_level(`ci_level') design(`design') date_first_switch(`date_first_switch') continuous(`continuous') `less_conservative_se' `normalized_weights' `graph_off' `save_sample' graphoptions(xlabel(`=-l_placebo_XX'[1]`=l_XX') title(Treatment path (${path_`k'_XX}); ${num_g_path_`k'_XX} switchers, size(small)) xtitle(Relative time to last period before treatment changes (t=0), size(small)) graphregion(color(white)) plotregion(color(white)) legend(pos(6) order(`graph_options_int') rows(1) size(small)) name(graph_`k'_XX) legend(off))
+noisily did_multiplegt_dyn `1' `2' `3' `4' if (different_paths_XX==`k'|cont_path_alt_XX==1), effects(`=l_XX') placebo(`=l_placebo_XX') same_switchers switchers(`switchers') `only_never_switchers' controls(`controls') trends_nonparam(`trends_nonparam') weight(`weight') `dont_drop_larger_lower' `normalized' cluster(`cluster') `same_switchers_pl' `trends_lin' by(`by_var_path') predict_het(`predict_het') ci_level(`ci_level') design(`design') date_first_switch(`date_first_switch') continuous(`continuous') `less_conservative_se' `normalized_weights' `graph_off' `save_sample' graphoptions(xlabel(`=-l_placebo_XX'[1]`=l_XX') title(Treatment path (${path_`k'_XX}); ${num_g_path_`k'_XX} switchers, size(small)) xtitle(Relative time to last period before treatment changes (t=0), size(small)) graphregion(color(white)) plotregion(color(white)) legend(pos(6) order(`graph_options_int') rows(1) size(small)) name(graph_`k'_XX) legend(off))
 
 // Save global with all the graph names to do the combine 
 global graph_by_path "$graph_by_path graph_`k'_XX"
@@ -1348,7 +1348,7 @@ if L_u_XX!=.&L_u_XX!=0{
 * Perform the estimation of effects and placebos outside of the loop on 
 * number of effects if trends_lin not specified
 if "`trends_lin'"==""{
-	did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`=l_XX') placebo(`=l_placebo_XX') switchers_core(in) controls(`controls') trends_nonparam(`trends_nonparam') `normalized' `same_switchers' `same_switchers_pl' `effects_equal' continuous(`continuous') `less_conservative_se' weight(`weight')
+	did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`=l_XX') placebo(`=l_placebo_XX') switchers_core(in) `only_never_switchers' controls(`controls') trends_nonparam(`trends_nonparam') `normalized' `same_switchers' `same_switchers_pl' `effects_equal' continuous(`continuous') `less_conservative_se' weight(`weight')
 
 	// Store the number of the event-study effect for switchers-in
 		forv k = 1/`=l_XX' {
@@ -1362,7 +1362,7 @@ forvalue i=1/`=l_XX'{
 * if trends_lin is specified
 * Note that if the option trends_lin was specified, same_switchers must also be specified.
 if "`trends_lin'"!=""{
-	did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`i') switchers_core(in) controls(`controls') trends_nonparam(`trends_nonparam') `normalized' same_switchers `effects_equal' trends_lin continuous(`continuous') `less_conservative_se' weight(`weight')
+	did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`i') switchers_core(in) `only_never_switchers' controls(`controls') trends_nonparam(`trends_nonparam') `normalized' same_switchers `effects_equal' trends_lin continuous(`continuous') `less_conservative_se' weight(`weight')
 
 	// Store the number of the event-study effect for switchers-in
 	replace switcher_tag_XX = `i' if distance_to_switch_`i'_XX == 1
@@ -1391,7 +1391,7 @@ if l_placebo_XX!=0{
 	forvalue i=1/`=l_placebo_XX'{
 		
 		if "`trends_lin'"!=""{
-	did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`i') placebo(`i') switchers_core(in) controls(`controls') trends_nonparam(`trends_nonparam') `normalized' same_switchers same_switchers_pl `effects_equal' trends_lin continuous(`continuous') `less_conservative_se' weight(`weight')
+	did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`i') placebo(`i') switchers_core(in) `only_never_switchers' controls(`controls') trends_nonparam(`trends_nonparam') `normalized' same_switchers same_switchers_pl `effects_equal' trends_lin continuous(`continuous') `less_conservative_se' weight(`weight')
 }
 				
 		if N1_placebo_`i'_XX!=0{
@@ -1428,7 +1428,7 @@ if ("`switchers'"==""|"`switchers'"=="out"){
 if L_a_XX!=.&L_a_XX!=0{
 	
 if "`trends_lin'"==""{	
-did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`=l_XX') placebo(`=l_placebo_XX') switchers_core(out) controls(`controls')  trends_nonparam(`trends_nonparam') `normalized' `same_switchers' `same_switchers_pl' `effects_equal' continuous(`continuous') `less_conservative_se' weight(`weight')
+did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`=l_XX') placebo(`=l_placebo_XX') switchers_core(out) `only_never_switchers' controls(`controls')  trends_nonparam(`trends_nonparam') `normalized' `same_switchers' `same_switchers_pl' `effects_equal' continuous(`continuous') `less_conservative_se' weight(`weight')
 
 	// Store the number of the event-study effect for switchers-out
 		forv k = 1/`=l_XX' {
@@ -1440,7 +1440,7 @@ did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`=
 forvalue i=1/`=l_XX'{
 	
 if "`trends_lin'"!=""{	
-	did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`i') switchers_core(out) controls(`controls') trends_nonparam(`trends_nonparam') `normalized' same_switchers `effects_equal' trends_lin continuous(`continuous') `less_conservative_se' weight(`weight')
+	did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`i') switchers_core(out) `only_never_switchers' controls(`controls') trends_nonparam(`trends_nonparam') `normalized' same_switchers `effects_equal' trends_lin continuous(`continuous') `less_conservative_se' weight(`weight')
 
 	// Store the number of the event-study effect for switchers-out
 	replace switcher_tag_XX = `i' if distance_to_switch_`i'_XX == 1
@@ -1469,7 +1469,7 @@ if l_placebo_XX!=0{
 	forvalue i=1/`=l_placebo_XX'{
 		
 if "`trends_lin'"!=""{	
-	did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`i') placebo(`i') switchers_core(out) controls(`controls') trends_nonparam(`trends_nonparam') `normalized' same_switchers same_switchers_pl `effects_equal' trends_lin continuous(`continuous') `less_conservative_se' weight(`weight')
+	did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`i') placebo(`i') switchers_core(out) `only_never_switchers' controls(`controls') trends_nonparam(`trends_nonparam') `normalized' same_switchers same_switchers_pl `effects_equal' trends_lin continuous(`continuous') `less_conservative_se' weight(`weight')
 }
 		
 	if N0_placebo_`i'_XX!=0{
@@ -1843,10 +1843,10 @@ if `bootstrap_XX'!=0{
 	
 	// bootstrap the whole command
 	if "`cluster'"==""{
-		bootstrap "`coefs'", reps(`bootstrap_XX') cluster(`2') `seed_XX': did_multiplegt_dyn `1' `2' `3' `4', effects(`=l_XY') placebo(`=l_placebo_XY') `same_switchers' switchers(`switchers') controls(`controls_bs_orig_XX') trends_nonparam(`trends_nonparam') weight(`weight') `dont_drop_larger_lower' `drop_if_d_miss_before_first_switch' `normalized' `same_switchers_pl' `trends_lin' continuous(`continuous') graph_off
+		bootstrap "`coefs'", reps(`bootstrap_XX') cluster(`2') `seed_XX': did_multiplegt_dyn `1' `2' `3' `4', effects(`=l_XY') placebo(`=l_placebo_XY') `same_switchers' switchers(`switchers') `only_never_switchers' controls(`controls_bs_orig_XX') trends_nonparam(`trends_nonparam') weight(`weight') `dont_drop_larger_lower' `drop_if_d_miss_before_first_switch' `normalized' `same_switchers_pl' `trends_lin' continuous(`continuous') graph_off
 	}
 	else if "`cluster'"!=""{
-		bootstrap "`coefs'", reps(`bootstrap_XX') cluster(`cluster') `seed_XX': did_multiplegt_dyn `1' `2' `3' `4', effects(`=l_XY') placebo(`=l_placebo_XY') `same_switchers' switchers(`switchers') controls(`controls_bs_orig_XX') trends_nonparam(`trends_nonparam') weight(`weight') `dont_drop_larger_lower' `normalized' `same_switchers_pl' `drop_if_d_miss_before_first_switch' `trends_lin' continuous(`continuous') graph_off
+		bootstrap "`coefs'", reps(`bootstrap_XX') cluster(`cluster') `seed_XX': did_multiplegt_dyn `1' `2' `3' `4', effects(`=l_XY') placebo(`=l_placebo_XY') `same_switchers' switchers(`switchers') `only_never_switchers' controls(`controls_bs_orig_XX') trends_nonparam(`trends_nonparam') weight(`weight') `dont_drop_larger_lower' `normalized' `same_switchers_pl' `drop_if_d_miss_before_first_switch' `trends_lin' continuous(`continuous') graph_off
 	}
 	
 	global bootstrap_on_XX ""
@@ -2551,7 +2551,7 @@ qui{
 sort group_XX time_XX	
 
 // Define number of effects we want to calculate
-if "`het_effects'"==""{
+if "`het_effects'"=="all"{
 local all_effects_XX ""	
 // Take all effects corresponding to the number of requested effect estimates
 forvalues i=1/`=l_XX'{
@@ -2559,7 +2559,7 @@ local all_effects_XX "`all_effects_XX' `i'"
 }
 }
 
-if "`het_effects'"!=""{ 
+if "`het_effects'"!="all"{ 
 // allow to only show some effects specified in the option
 local all_effects_XX "`het_effects'"
 local test_eff_XX : subinstr local het_effects " " ",", all 
@@ -3380,7 +3380,7 @@ keep time_to_treat point_estimate* se_point_estimate* lb_CI_95* up_CI_95* N* N_s
 
 // Store information about the dataset
 label data "Stores did_multiplegt_dyn estimates' information: Type 'notes' for details." 
-local command_options_XX effects(`effects') placebo(`placebo') switchers(`switchers') controls(`controls') trends_nonparam(`trends_nonparam') weight(`weight') `dont_drop_larger_lower' `normalized' cluster(`cluster') `same_switchers' `trends_lin' by(`by') predict_het(`predict_het') ci_level(`ci_level') design(`design') date_first_switch(`date_first_switch') continuous(`continuous') `less_conservative_se' `normalized_weights'
+local command_options_XX effects(`effects') placebo(`placebo') switchers(`switchers') `only_never_switchers' controls(`controls') trends_nonparam(`trends_nonparam') weight(`weight') `dont_drop_larger_lower' `normalized' cluster(`cluster') `same_switchers' `trends_lin' by(`by') predict_het(`predict_het') ci_level(`ci_level') design(`design') date_first_switch(`date_first_switch') continuous(`continuous') `less_conservative_se' `normalized_weights'
 notes : "{bf:{ul:Date of Run:}} `c(current_date)' at `c(current_time)'"
 notes : "{bf:{ul:Command Syntax:}} did_multiplegt `1' `2' `3' `4' `if' `in', `command_options_XX' "
 notes : "{bf:{ul:Path of the Used Dataset:}} `dataset_name_XX' "
@@ -3421,7 +3421,7 @@ capture program drop did_multiplegt_dyn_core_new
 
 program did_multiplegt_dyn_core_new, eclass
 	version 12.0
-	syntax varlist(min=4 max=4 numeric) [, effects(integer 1) placebo(integer 0) switchers(string) controls(varlist numeric) trends_nonparam(varlist numeric) weight(varlist numeric) dont_drop_larger_lower NORMALIZED cluster(varlist numeric) graphoptions(string) SAVe_results(string) graph_off same_switchers same_switchers_pl effects_equal  drop_if_d_miss_before_first_switch trends_lin ci_level(integer 95) by(varlist numeric max=1) predict_het(string) design(string) date_first_switch(string) NORMALIZED_weights CONTinuous(string) switchers_core(string) less_conservative_se]
+	syntax varlist(min=4 max=4 numeric) [, effects(integer 1) placebo(integer 0) switchers(string) only_never_switchers controls(varlist numeric) trends_nonparam(varlist numeric) weight(varlist numeric) dont_drop_larger_lower NORMALIZED cluster(varlist numeric) graphoptions(string) SAVe_results(string) graph_off same_switchers same_switchers_pl effects_equal  drop_if_d_miss_before_first_switch trends_lin ci_level(integer 95) by(varlist numeric max=1) predict_het(string) design(string) date_first_switch(string) NORMALIZED_weights CONTinuous(string) switchers_core(string) less_conservative_se]
 	qui{
 		
 ////////// 1. Scalars initialization
@@ -3557,6 +3557,10 @@ gen cohort_fullpath_0_XX=(num_g_paths_0_XX>1)
 
 ///// Identifying the control (g,t)s in the estimation of dynamic effect i 
 bys group_XX: gen never_change_d_`i'_XX=(F_g_XX>time_XX) if diff_y_`i'_XX!=.
+
+if "`only_never_switchers'" != "" {
+	replace never_change_d_`i'_XX = 0 if F_g_XX > time_XX & F_g_XX < T_max_XX + 1 & diff_y_`i'_XX != .
+}
 
 ///// Creating N^g_t:
 ///// number of control groups for g at t

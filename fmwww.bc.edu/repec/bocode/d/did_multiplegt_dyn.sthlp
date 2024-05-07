@@ -38,6 +38,7 @@ using panel data with multiple groups and periods.
 {cmd:same_switchers}
 {cmd:same_switchers_pl}
 {cmd:switchers(}{it:string}{cmd:)}
+{cmd:only_never_switchers}
 {cmd:ci_level(}{it:#}{cmd:)}
 {cmd:graphoptions(}{it:string}{cmd:)}
 {cmd:graph_off}
@@ -360,6 +361,12 @@ they switch is lower than their period-one treatment.
 In that case, one should run the command first with
 the {cmd:switchers(}{it:in}{cmd:)} option,
 and then with the {cmd:switchers(}{it:out}{cmd:)} option.
+{p_end}
+
+{p 4 8}
+{cmd:only_never_switchers}: if this option is specified,
+the command estimates the event-study effects using only
+never-switchers as control units.
 {p_end}
 
 {p 4 8}
