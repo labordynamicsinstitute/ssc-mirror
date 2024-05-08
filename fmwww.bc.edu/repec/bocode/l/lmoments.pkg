@@ -1,6 +1,6 @@
 d 'LMOMENTS': module to generate L-moments and derived statistics
 d
-d lmoments generates L-moments and derived statistics. L-moments
+d  lmoments generates L-moments and derived statistics. L-moments
 d offer  a systematic, satisfying and indeed elegant approach to
 d the  summarization of theoretical distributions and data samples
 d and have  applications in the estimation of parameters and of
@@ -13,10 +13,15 @@ d lmose.  (Previous versions are also included as lmoments9,
 d lmoments8 and  lmoments6, for which the minimum requirements are
 d Stata 9, 8 and  6 respectively.) 
 d
-d Author: Nicholas J. Cox, University of Durham
-d Support: email N.J.Cox@@durham.ac.uk
+d KW: L-moments
+d KW: frequency distributions
+d
+d Requires: Stata version 10 (9 for lmoments 9, 8 for lmoments8, 6 for lmoments6)
 d
 d Distribution-Date: 20131022
+d
+d Author: Nicholas J. Cox, University of Durham
+d Support: email N.J.Cox@@durham.ac.uk
 d
 f lmoments.ado
 f lmoments.sthlp

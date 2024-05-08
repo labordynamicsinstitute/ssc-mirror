@@ -1,4 +1,4 @@
-*! version 1.07 2024-02-21
+*! version 1.08 2024-05-07
 
 program stpm3, eclass byable(onecall)
 	version 16.1
@@ -21,37 +21,38 @@ end
 
 program Estimate, eclass 
 	st_is 2 analysis	
-  syntax [anything] [fw pw iw aw] [if] [in],                  ///
-         [                                                    ///
-         ALLKNots(passthru)                                   /// allknots
-         ALLKNOTSTvc(passthru)                                /// allknots tvc
-         ALLNUM                                               /// currently the default
-         BHAZard(varname numeric)                             /// 
-         BKNOTs(passthru)                                     /// bknots
-         BKNOTSTVC(passthru)                                  /// bknotstvc
-         DEGree(integer 3)                                    /// 
-         DF(passthru)                                         ///
-         DFTVC(passthru)                                      /// 
-         EFORM                                                ///
-         FROM(string)                                         ///
-         INITModel(string)                                    ///
-         INITVALUESLOOP                                       ///
-         KNOTs(passthru)                                      /// internal knots
-         KNOTSTVC(passthru)                                   /// 
-         /*Level(real `c(level)')*/                           /// 
-         MLMETHOD(string)                                     ///
-         NEQ(integer 2)                                       ///
-         noCONStant                                           ///
-         NODEs(integer 30)                                    ///
-         OFFset(varname numeric)                              ///
-         PYthon                                               ///
-         SCale(string)                                        ///
-         SPLINEType(string)                                   ///
-         TTRans(string)                                       ///
-         TVC(string asis)                                     ///   
-         TVCOFFset(string)                                    /// not yet implemented
-         VERBOSE                                              ///
-                *                                             /// -mlopts- options
+  syntax [anything] [fw pw iw aw] [if] [in],     ///
+         [                                       ///
+         ALLKNots(passthru)                      /// allknots
+         ALLKNOTSTvc(passthru)                   /// allknots tvc
+         BHAZard(varname numeric)                /// bhazard for RS models
+         BKNOTs(passthru)                        /// bknots
+         BKNOTSTVC(passthru)                     /// bknotstvc
+         INTEGOPTions(string)                    /// integoptions
+         DEGree(integer 3)                       /// degree for BS splines
+         DF(passthru)                            /// df for basleine
+         DFTVC(passthru)                         /// df for tvc
+         EFORM                                   ///
+         FROM(string)                            ///
+         INITModel(string)                       ///
+         INITVALUESLOOP                          ///
+         KNOTs(passthru)                         /// internal knots
+         KNOTSTVC(passthru)                      /// 
+         MLADOPTions(string)                     ///
+         MLMETHOD(string)                        ///
+         NEQ(integer 2)                          ///
+         noCONStant                              ///
+         NODEs(integer 30)                       ///
+         OFFset(varname numeric)                 ///
+         PYthon                                  ///
+         SCale(string)                           ///
+         SPLINEType(string)                      ///
+         TTRans(string)                          ///
+         TVC(string asis)                        ///   
+         TVCOFFset(string)                       /// not yet implemented
+         VCE(string)                             ///
+         VERBOSE                                 ///
+                *                                /// -mlopts- options
          ]
 
   local cmdline `"stpm3 `0'"'         
@@ -88,6 +89,22 @@ program Estimate, eclass
   if !inlist("`splinetype'","ns","bs","rcs","ms") {
     di as error "Only ns, bs or rcs splines currently implemented."
   }
+
+  if "`python'" != "" {
+    capture  which  mlad
+    if  _rc  >0  {
+      display as  error "You need to install the  -mlad- command to the the python option." ///
+                           "This can  be  installed  using,"
+      display in error  ".  {stata ssc install mlad}"
+      exit    198
+    }
+    if "`scale'" != "lnhazard" {
+      di as error "The python option can only be used with scale(lnhazard) models."
+      exit 198
+    }
+  }  
+  
+ 
   
 // drop spline vars etc if previous model fitted 
   capture drop _ns*
@@ -107,6 +124,17 @@ program Estimate, eclass
   marksample touse
 	qui replace `touse' = 0  if _st==0 | `touse' == . | _st==.  
   
+// log or transformed time  
+  if "`ttrans'" == "" local ttrans lnt
+  
+  if "`integoptions'" != "" {
+    if "`scale'" != "lnhazard" {
+      di as error "Only set integoptions() for lnhazard models"
+      exit 198
+    }
+  }
+  if "`scale'" == "lnhazard" parse_integ_options, `integoptions' ttrans(`ttrans')
+
 // extended functions varlist
   local varlist_original `anything'  
   local tvc_orignal `tvc'
@@ -114,6 +142,7 @@ program Estimate, eclass
   stpm3_extract_extfunction `anything' 
   local anything `r(cleanedvarlist)'
   local extfunclist `"`r(extfunclist)'"'
+  
   
   if "`tvc'" != "" {
     stpm3_extract_extfunction `tvc', tvc 
@@ -127,9 +156,19 @@ program Estimate, eclass
   // add to touse (for missing covariates)
   markout `touse' `model_vars' 
   
-  
   qui count if `touse'
-	local Nobs=r(N)  
+  local Nobs `r(N)'
+	if `r(N)' == 0 {
+    display in red "No observations"
+    exit 2000
+  }
+  
+  qui count if `touse' & _d
+  if `r(N)' == 0 {
+    display in red "No failures"
+    exit 198
+  }  
+  
 	summ _t0 if `touse' , meanonly
   local hasdelentry = cond(`r(max)'>0,1,0)
   if `hasdelentry' {
@@ -140,7 +179,6 @@ program Estimate, eclass
     tempvar cons 
     qui gen byte `cons'  = 1 if `touse' // Needed for st_view
   }
-  if "`ttrans'" == "" local ttrans lnt
 // bhazard  
   if "`bhazard'" != "" {
     qui count if missing(`bhazard') & `touse'
@@ -173,23 +211,15 @@ program Estimate, eclass
     
 // ml options
   _get_diopts diopts options, `options'   
-  di "`options'"
   mlopts mlopts, `options'    
-  di "`mlopts'"
+
   if "`offset'" != "" {
   	di as error "Offset option not currently implemented."
-	exit 198
+    exit 198
   }
 
   if "`s(constraints)'" != "" local constraints constraints(`s(constraints)')
-  if "`scale'" == "probit" & "`mlmethod'" == "" {
-    local mlmethod = cond("`bhazard'"=="","gf1","gf0")
-  }
-  if "`scale'" == "lnodds" & "`mlmethod'" == "" {
-    local mlmethod = cond("`bhazard'"=="","gf2","gf0")
-  }  
-  
-  if "`mlmethod'" == "" local mlmethod gf2
+
 
 // Weights 
   local wt: char _dta[st_w]       
@@ -203,12 +233,17 @@ program Estimate, eclass
                                 type(`splinetype') hasdelentry(`hasdelentry')   ///
                                 ttrans(`ttrans') degree(`degree')               ///
                                 subcentile(_d==1) scale(`scale') wtvar(`wtvar')
-                               
+
+  if "`scale'" == "lnhazard" & `df'==1 {
+    di as error "Minimum df for lnhazard models is 2"
+    exit 198
+  }                                
+                                
 // initial values
   if "`from'" == "" {
     if "`verbose'" != "" di "Obtaining Initial Values"
     tempname initbeta
-    if "`initmodel'" == "" local initmodel = cond("`scale'"!="lnhazard","cox","exp")
+    if "`initmodel'" == "" local initmodel = cond("`scale'"!="lnhazard","cox","cox")
     CoxInit `varlist' if `touse', scale(`scale') splinevars(`splinelist') ///
                                   splinetvcvars(`splinelist_tvc')         ///
                                   `constant'                              ///
@@ -228,7 +263,6 @@ program Estimate, eclass
 
   
 // store columns for tvc  
-// currently only for shared tvc
   fvexpand `varlist'
   local start = wordcount("`r(varlist)'") + 1
   local end = colsof(e(b))
@@ -258,32 +292,74 @@ program Estimate, eclass
       }
     }
   }
-  
-// Set up structure in Mata
-  if "`verbose'" != "" di "Setting up Mata Structure"
-  local alldsplinevars `dsplinelist' `dsplinelist_tvc'
-  local delentryvars   `delentryvars' `=cond("`constant'"=="","`cons'","")'
-  local rs = cond("`bhazard'"!="","_rs","")
-  if "`scale'" == "lnhazard" local allnum _allnum
-  if "`allnum'" != "" local allnum _allnum
-  local Nsplinevars = wordcount("`splinelist' `splinelist_tvc'")
-  
-	tempname stpm3_struct
-	mata: stpm3_setup("`stpm3_struct'")
-	local userinfo userinfo(`stpm3_struct')    
 
+// For integration up to first knot and after last knot  
+  if "`allnum'" == "" & inlist("`splinetype'","ns","rcs") & "`scale'" == "lnhazard" {
+    
+    // ERROR IF BSPLINES
+    // NEED TO ADD RCS
+    
+    
+    tempvar P1_lower P1_upper P2_lower P2_upper
+    tempvar P3_lower P3_upper
+    tempvar includefirstint includesecondint includethirdint
+   
+    
+    local minknot = word("`bknots'",1)
+    local maxknot = word("`bknots'",2)
+    if "`ttrans'" == "lnt" {
+      local minknot = exp(`minknot')
+      local maxknot = exp(`maxknot')
+    }
+    
+    
+    // NEED TO ADD WHERE MINIMUM IS WITH TVCs
+    
+    qui gen double `P1_upper' = cond(_t>=`minknot',`minknot',_t)         if `touse'
+    qui gen double `P1_lower' = _t0                                      if `touse'
+    qui gen double `P2_lower' = cond(_t0>`P1_upper',_t0,`P1_upper')      if `touse'
+    qui gen double `P2_upper' = cond(_t>=`maxknot',`maxknot',_t)         if `touse'
+    qui gen double `P3_lower' = cond(_t0<`maxknot',`maxknot',_t0)        if `touse'
+    qui gen double `P3_upper' = _t                                       if `touse'
+    qui gen byte   `includefirstint'  = _t0<`P1_upper'                   if `touse'
+    qui gen byte   `includesecondint' = (_t0<`maxknot') & (_t>`minknot') if `touse'
+    qui gen byte   `includethirdint'  = _t>`P3_lower'                    if `touse'  
+  }
+  
 // need to add `offopt'  & call bhazard etc.
-  if "`verbose'" != "" di "Fitting Model"
   if "`offset'" != ""  local offopt "offset(`offset')"
   if "`varlist'" != "" local xb (xb: =  `varlist', nocons `offopt')
   local empty_varlist = "`varlist'"==""
 
+// maximize likelihood in Stata  
   if "`python'" == "" {
+// Set up structure in Mata
+    if "`verbose'" != "" di "Setting up Mata Structure"
+    local alldsplinevars `dsplinelist' `dsplinelist_tvc'
+    local delentryvars   `delentryvars' `=cond("`constant'"=="","`cons'","")'
+    local rs = cond("`bhazard'"!="" & "`scale'" != "lnhazard","_rs","")
+
+    if "`allnum'" != "" local allnum _allnum
+    local Nsplinevars = wordcount("`splinelist' `splinelist_tvc'")
+
+    tempname stpm3_struct
+    mata: stpm3_setup("`stpm3_struct'")
+    local userinfo userinfo(`stpm3_struct')     	
+	
     if "`initvaluesloop'" != "" {
       local captureml capture
       local initvalmodels exp weibull stpm2
     }
-
+    if "`scale'" == "probit" & "`mlmethod'" == "" {
+      local mlmethod = cond("`bhazard'"=="","gf1","gf0")
+    }
+    if "`scale'" == "lnodds" & "`mlmethod'" == "" {
+      local mlmethod = cond("`bhazard'"=="","gf2","gf0")
+    }  
+    
+    if "`mlmethod'" == "" local mlmethod gf2    
+    if "`vce'" != "" local vce vce(`vce')
+    
     `captureml' ml model `mlmethod' stpm3_gf2_`scale'`rs'`allnum'()         /// 			
 	  			               `xb'                                               ///
                          (time: = `splinelist'                              ///
@@ -292,6 +368,7 @@ program Estimate, eclass
 	  			               if `touse'                                         ///
 	  			               `wt',                                              ///
 	  			               `mlopts'                                           ///
+                         `vce'                                              ///
                          `constraints'                                      ///
                          `offopt'                                           ///
                          userinfo(`stpm3_struct')                           ///
@@ -299,7 +376,7 @@ program Estimate, eclass
                          `initopt'                                          ///
 	  			               maximize  
     
-    if (c(rc) == 1400) & "`initvaluesloop'" != "" {
+    if ((c(rc) == 1400) | !`e(converged)') & "`initvaluesloop'" != "" {
       capture mata: rmexternal("`stpm3_struct'")    
       forvalues m=1/3 {
         local initmodname = word("`initvalmodels'",`m')
@@ -308,8 +385,7 @@ program Estimate, eclass
         capture mata: rmexternal("`stpm3_struct'")
         if "`e(converged)'"=="1" {
           Replay, `eform' `diopts' `header'   
-          di as result "Warning: This is a test version of stpm3"
-          exit
+          continue, break
         }
         if `m' == 3 {
           di "Model not converged"
@@ -321,9 +397,132 @@ program Estimate, eclass
 
     
   }
-//  else {
-//    // add call to mlad here
-//  }
+  else {
+// maximize likelihood in Python    
+    tempname Nnodes Ntvc hasbhazard ttrans_log hasvarlist hasconstant
+    tempname spline_bs spline_ns spline_rcs bs_degree pyallnumint
+    tempname hastanhsinh pytanhsinh_N 
+    
+    scalar `Nnodes' = `nodes'
+    scalar `ttrans_log' = "`ttrans'" == "lnt"
+    qui count if `touse'
+    scalar `Ntvc' = wordcount("`tvc_included'")
+    scalar `hasbhazard' = "`bhazard'" != ""
+    scalar `hasvarlist'    = "`varlist'" != ""
+    
+    scalar `spline_bs'  = "`splinetype'" == "bs"
+    scalar `spline_ns'  = "`splinetype'" == "ns"
+    scalar `spline_rcs' = "`splinetype'" == "rcs"
+    scalar `bs_degree'  =  `degree'
+    scalar `hasconstant' = "`constant'" == ""
+    scalar `pyallnumint' = "`allnum'" != ""
+   
+    scalar `hastanhsinh' = "`tanhsinh'" != ""
+    if !`hastanhsinh' local tanhsinh_N 0
+    scalar `pytanhsinh_N'  = `tanhsinh_N'
+    
+    
+    local scalarlist `spline_bs' `spline_ns' `spline_rcs' `bs_degree' ///
+                     `hasbhazard' `Nnodes' `ttrans_log' `Ntvc' `pyallnumint' ///
+                     `hastanhsinh' `pytanhsinh_N' 
+    local scalarnames spline_bs spline_ns spline_rcs bs_degree ///
+                      hasbhazard Nnodes ttrans_log Ntvc pyallnumint ///
+                      hastanhsinh tanhsinh_N 
+    local staticscalars `hasvarlist' `hasconstant' `ttrans_log'                 
+        
+    tempname knots_matrix
+    mata: st_matrix(st_local("knots_matrix"),strtoreal(tokens(st_local("knots"))))
+    local matlist `knots_matrix'
+    local matnames_list knots
+ 
+ // add tvc stuff here (this is from strcs2)
+    local j 1
+    foreach tvcvar in `tvc_included' {
+      tempname knotstvc_mat`j'
+      if `sharedtvc_knots' {
+        mata: st_matrix(st_local("knotstvc_mat`j'"),strtoreal(tokens(st_local("knots_tvc"))))
+      }
+      else {
+        mata: st_matrix(st_local("knotstvc_mat`j'"),strtoreal(tokens(st_local("knots_tvc_`tvcvar'"))))
+      }
+      local matlist `matlist' `knotstvc_mat`j''
+      local matnames_list `matnames_list' tvcknots`j'
+      local tvcnames `tvcnames' tvc`j'
+      fvrevar `tvcvar'
+      local tvctemplist `tvctemplist' `r(varlist)'
+      local j = `j' + 1
+    }
+    
+    // zeros used for non bhazard models
+    tempvar zeros
+    gen `zeros' =  0    
+    local othervn_list t0 t d bh
+    if "`bhazard'" == "" {
+      local bhazard `zeros'
+    }
+    local othervn_list `othervn_list' `tvcnames'   
+    local othervarslist _t0 _t _d `bhazard' `tvctemplist'  
+    
+    if "`allnum'" == "" {
+      local othervarslist `othervarslist' `P1_lower' `P1_upper'       ///
+                          `P2_lower' `P2_upper' `P3_lower' `P3_upper' ///
+                          `includefirstint' `includesecondint' `includethirdint'
+      local othervn_list `othervn_list' P1_lower P1_upper    ///
+                         P2_lower P2_upper P3_lower P3_upper ///
+                         includefirstint includesecondint includethirdint
+    }
+    
+   
+    // robust standard errors (should be able to add this??)
+    if "`vce'" != "" {
+      _vce_parse , optlist(Robust) argoptlist(CLuster) : , vce(`vce')
+      local hasrobust = "`r(robust)'" != ""
+      local hasid     = "`r(cluster)'" != ""
+      if `hasid' local idopt id(`r(cluster)')
+      if `hasrobust' local robustopt robustok scoretype(direct)
+    }
+
+    if "`mlmethod'" != "" {
+      local mlmethodopt mlmethod(`mlmethod')
+      
+    }
+    
+    // mlad program
+    local mlad_program = cond("`allnum'"=="","stpm3_hazard_3parts","stpm3_hazard_numint") 
+    
+    // need to store tvcname in global so mlad has access
+    global stpm3_mlad_time_varlist `splinelist' `splinelist_tvc'
+ 
+    mlad `xb'                                          ///
+         (time: = `splinelist'                         ///
+                  `splinelist_tvc',                    ///
+                  `constant' )                         ///
+         if  `touse'                                   ///
+         `wt',                                         ///
+         llfile(`mlad_program')                        ///
+         pysetup(stpm3_hazard_setup)                   ///
+         othervars(`othervarslist')                    ///
+         othervarnames(`othervn_list')                 ///
+         matrices(`matlist')                           ///
+         matnames(`matnames_list')                     ///
+         scalars(`scalarlist')                         ///
+         scalarnames(`scalarnames')                    ///
+         staticscalars(`staticscalars')                ///
+         llsetup(stpm3_mlad_ll_setup)                  ///
+         `initopt'                                     ///
+         `constraints'                                 ///
+         `log'                                         ///
+         `idopt'                                       ///
+         `mlopts'                                      ///
+         `robustopt'                                   ///
+         `mlmethodopt'                                 ///
+         `verbose'                                     ///
+         `mladoptions'                                 ///
+         minlike allbetas                              ///
+         search(off)  
+    
+    macro drop stpm3_mlad_time_varlist
+  }
 
   capture mata: rmexternal("`stpm3_struct'") 
   
@@ -364,9 +563,8 @@ program Estimate, eclass
       }
     }
   }
-  
-  
-  
+
+  ereturn local python           `python'
   ereturn local splinetype       `splinetype'
   ereturn local ttrans           `ttrans'
   ereturn local degree           `degree'
@@ -396,12 +594,17 @@ program Estimate, eclass
     ereturn local ef_fn`i'_centerval `ef_fn`i'_centerval'
     ereturn local ef_fn`i'_opts `ef_fn`i'_opts'
   }
-  if "`scale'" == "lnhazard" ereturn local nodes `nodes'
+  if "`scale'" == "lnhazard" {
+    ereturn local nodes `nodes'
+    ereturn local integ_method = cond("`allnum'"!="","allnum","3part")
+    ereturn local quadrature = cond("`tanhsinh'"!="","tanhsinh","legendre")
+    if "`tanhsinh'" != "" ereturn local tanhsinh_N = `tanhsinh_N'
+  }
   ereturn local predict stpm3_pred
   
   
   if `empty_varlist' local eform
-  Replay,  `eform' `diopts' `header' neq(`neq')  
+  Replay,  `eform' `diopts' `header' neq(`neq') 
 end
 
 program Replay
@@ -410,7 +613,15 @@ program Replay
 
    ml display, `eform' `diopts' `header' neq(`neq')
    if "`e(scale)'" == "lnhazard" {
-     di as result "Quadrature method: Gauss-Legendre with `e(nodes)' nodes"
+     local quadmethod = cond("`e(quadrature)'"=="tanhsinh",             ///
+                             "tanh-sinh","Gauss-Legendre")
+     di as result "Quadrature method: `quadmethod' with `e(nodes)' nodes."
+     if "`e(integ_method)'" == "3part" {
+       di as result "Analytical integration before first and after last knot."
+     }              
+     if "`e(python)'" != "" {
+       di as result "log-likelihood, gradient and Hessian calculated in Python."
+     }
    }
    local j 1
    if "`e(ef_varlist)'" != "" {
@@ -459,14 +670,16 @@ program define CoxInit, rclass
   }
   
   local bhazinit 0.2
+
   
   if "`model'" == "cox" {
     qui stcox `varlist' if `touse', estimate 
-    qui predict `coxindex' if `touse', xb
+    qui predict double `coxindex' if `touse', xb
     qui sum `coxindex' if `touse'
     qui replace `coxindex'=`coxindex'-`r(mean)' if `touse'
     qui stcox `coxindex' if `touse', 
-    qui predict double `S', basesurv
+    qui predict double `S' if `touse', basechazard
+    qui replace `S' = exp(-`S')
     if "`bhazard'" != "" {
       qui replace `S' = `S'/exp(-`bhazinit'*`bhazard'*_t) if `touse'
     }
@@ -484,7 +697,7 @@ program define CoxInit, rclass
   else if "`model'" == "weibull" {
     qui streg `varlist' if `touse', dist(weib) 
     local predopt = cond("`scale'"!="lnhazard","csurv","hazard")
-    predict double `Sadj' if `touse', `predopt'  
+    qui predict double `Sadj' if `touse', `predopt'  
     if "`bhazard'" != "" {
       qui replace `Sadj' = `Sadj'/exp(-`bhazinit'*`bhazard'*_t)
     }       
@@ -514,14 +727,15 @@ program define CoxInit, rclass
   else if "`scale'"=="hazard" {
      qui gen double `Z' = `hadj' 
   }
-   
+  
+  
   
   qui regress `Z' `varlist' `splinevars' `splinetvcvars' if `touse' & _d == 1 , `constant'
   
   tempname initmat
   matrix `initmat' = e(b)
 
-  
+
   // fix to get better starting values for log hazard models
   //if "`scale'" == "lnhazard"  & "`constant'" == "" {
   //   local Ncol: colsof `initmat'
@@ -737,14 +951,14 @@ program define stpm3_gen_extended_functions, rclass
       if "`functype'" != "fn" {
         local  `v'_f`Nf'_vars `r(splinevarlist)' `r(fpvars)' `r(polyvars)'                                  
         foreach k in `r(splinevarlist)' `r(fpvars)' `r(polyvars)' `r(fnvarname)' {
-          local add_v_extend`j' `add_v_extend`j'' c.`k'
+          local add_v_extend`j' `add_v_extend`j'' `k'
         }
       
-        local add_v_extend`j' (`add_v_extend`j'')
+        local add_v_extend`j' c.(`add_v_extend`j'')
         local ++j
       }
       else {
-        local add_v_userfunc`ef_Nuser' (c.`r(fnvarname)')
+        local add_v_userfunc`ef_Nuser' c.(`r(fnvarname)')
       }
       local newfunc 0
     }
@@ -773,7 +987,6 @@ program define stpm3_gen_extended_functions, rclass
     local firstm = word("`efmatch_`v''",1)
     foreach m in `efmatch_`v'' {
       local xb = subinstr("`xb'","@"+"`extfunc_o`m''","`add_v_extend`m''",.)
-      
       if "`tvc'" != "" & strpos("`tvc'","`extfunc_o`m''") {
         local tvc = subinstr("`tvc'","@"+"`extfunc_o`m''","`add_v_extend`m''",.)
       }      
@@ -838,6 +1051,7 @@ program define stpm3_gen_extended_functions, rclass
   c_local varlist `xb'
   c_local tvc `tvc'
   c_local model_vars `model_vars'
+
 end
 
 
@@ -936,31 +1150,23 @@ program define stpm3_extfun_options, rclass
     return local functype fn
   }  
 end
+
+program define parse_integ_options
+  syntax, [tanhsinh gl N(real 3) allnum ttrans(string)]
   
-// program to add quotes to extended varlist
-//program define stpm3_parse_varlist, rclass
-//  syntax [anything(id = varlist)] 
-//  local text =  stritrim(`"`anything'"')
-//  local Nchar = strlen("`text'")
-//  
-//  local bracecount 0
-//  forvalues i  = 1/`Nchar' {
-//    local c = substr("`text'",`i',1)
-//    local cnext = cond(`i' != `Nchar',substr("`text'",`=`i'+1',1)," ")
-//    
-//    if "`c'" == "(" local bracecount = `bracecount' + 1
-//    if "`c'" == ")" local bracecount = `bracecount' - 1
-//    
-//    if `bracecount' == 0 & "`cnext'" == " " { 
-//      local addword "`addword'`c'"
-//      local newtext `"`newtext' "`addword'""'
-//      local addword
-//    }
-//    else if ("`c'" != " ") | ("`c'" == " " & `bracecount' != 0)  {
-//      local addword `"`addword'`c'"'
-//    }
-//  }
-//  return local varlist = strtrim(`"`newtext'"')
-//end 
+  if "`tanhsinh'" != "" & "`gl'" != "" {
+    di as error "Only one of the tanhsinh or gl options can be used."
+    exit 198
+  }
+  if "`gl'" != "" local gausslegendre gausslegendre
+  if "`tanhsinh'`gausslegendre'" == "" {
+    if "`ttrans'" == "lnt" local tanhsinh tanhsinh
+    else local gausslegendre `gausslegendre'
+  }
+  c_local tanhsinh      `tanhsinh'
+  c_local gausslegendre `gausslegendre'
+  c_local tanhsinh_N    `n'
+  c_local allnum        `allnum'
+end
  
  

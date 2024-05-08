@@ -1,8 +1,11 @@
 ************************************
 *!Author: Laura C Whiting
 *!Contact: support@surveydesign.com.au
-*!Date: 08 January 2024
-*!Version: 2.0
+*!Date: 7 May 2024
+*!Version: 2.1
+*!Change Log
+*! 240507 - the 240404 Stata updated changed the handling of factor variables which resulted in a error.  version 2.1 updates epitable2 to handle factor variables in the new manner. 
+*! 240507 - added capture collect drop table3 to the start to allow re-running of the command without the need to perform clean up first.
 ************************************
 /*
 syntax is epitable2 xvar, dp(integer) cilimiter(string) title(string) notes(multiple strings with double-quotes) include long export showp
@@ -31,6 +34,9 @@ showp will show all the p-values for the given xvar and any covariates (if shown
 program epitable2, nclass
 version 18.0
 syntax varname(fv) [, DP(integer 2) CIlimiter(string) TItle(string) NOtes(string asis) INClude LONG EXPORT SHOWp]
+
+//zs 240507 - added to allow re-running of the command without needing to perform clean up first.
+capture collect drop table3
 
 // if no cilimiter given apply default
 if "`cilimiter'" == "" {
@@ -197,7 +203,8 @@ else {
 
 // hide all other model p-values unless asked to keep them
 if "`showp'" == "" {
-	quietly collect remap result[_r_p] = result[hide], fortags(colname[`varlist'])
+	//zs 240507 - Corrected to handle factor variables in the new manner.  added i. to the variable list.
+	quietly collect remap result[_r_p] = result[hide], fortags(colname[i.`varlist'])
 	//Remap vars2 if it exists, as remap command would run if vars2 was missing but apply to all, which breaks the table
 	if "`vars2'" != "" {
 		quietly collect remap result[_r_p] = result[hide], fortags(`vars2')

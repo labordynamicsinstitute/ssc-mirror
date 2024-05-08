@@ -72,7 +72,7 @@ program define stpm3_gensplines,
   }                           
   local intknots     `r(internal_knots)'
   local knots        `r(knots)'
-  local bknots_orginal `bknots'
+  local bknots_original `bknots'
   local bknots       `r(bknots)'
   local splinelist   `r(splinevarlist)'  
   local dsplinelist  `r(dsplinevarlist)' 
@@ -101,29 +101,34 @@ program define stpm3_gensplines,
 // tvc splines 
   if "`tvc'" != "" {  
     // inherit bknotstvc from bknots if not specified.
-    if "`bknotstvc'" == "" local bknotstvc `bknots_original'
-    parsetvc `tt' if `touse', tvc(`tvc') `dftvc' `allknotstvc' `knotstvc' `bknotstvc' ttrans(`ttrans')
-    
+    if "`bknotstvc'" == "" {
+      local bknotstvc `bknots_original' 
+      local bknotsopt bknotstvc(`bknotstvc')
+    }
+    parsetvc `tt' if `touse', tvc(`tvc') `dftvc' `allknotstvc' `knotstvc' `bknotsopt' ttrans(`ttrans')
+
+
     if `sharedtvc_knots' {
       //if "`bknots'" != "" local gensplineopt `gensplineopt' bknots(`bknots')
+
       local gensplinesopt
       if "`dftvc'" != "" local gensplinesopt df(`dftvc')      
       if "`allknotstvc'" != "" local gensplinesopt `gensplinesopt' allknots(`allknotstvc')
       if "`knotstvc'"  != "" local gensplinesopt `gensplinesopt' knots(`knotstvc')
       if "`bknotstvc'" != "" local gensplinesopt `gensplinesopt' bknots(`bknotstvc')
 
-      
       if inlist("`scale'","lncumhazard","probit","lnodds")  local dgen dgen(_d`type'_tvc)
       
-     
       gensplines `tt' if `touse', `gensplinesopt' gen(_`type'_tvc) `dgen'  ///
-                                   type(`type') degree(`degree') `subcentile' `iw'
+                                   type(`type') degree(`degree') `subcentile' `iw' 
+                                
       local dftvc = wordcount("`r(splinevarlist)'")
       local splinevars_tvc   `splinevars_tvc' `r(splinevarlist)'
       local intknots_tvc     `r(internal_knots)'
       local knots_tvc        `r(knots)'
       local bknots_tvc       `r(bknots)'
       local k = 1
+
       foreach v in `r(splinevarlist)' {
          label variable `v' "`splinename' `k' (tvc)"
          local k = `k' + 1

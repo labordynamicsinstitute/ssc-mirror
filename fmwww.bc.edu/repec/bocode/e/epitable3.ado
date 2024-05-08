@@ -1,8 +1,11 @@
 ************************************
 *!Author: Laura C Whiting
 *!Contact: support@surveydesign.com.au
-*!Date: 08 January 2024
-*!Version: 2.25
+*!Date: 6 May 2024
+*!Version: 2.3
+*! zs - 240507 - updated line 156 to adopt the corrected use of categorical variables which was introduced in Stata 18 release 4 April 2024.
+*! zs - 240507 - updated line 293 and added line 294 to present the table without the table information above it.
+*! zs - 240507 - added capture collect drop table3 to clear table3 at start.
 ************************************
 /*
 syntax is epitable3 command depvar xvar covars [if] [in] [weights], by(groupvars)
@@ -30,7 +33,7 @@ title will add a title to your table
 
 notes allows you to add one or more notes to your table. Each note must be enclosed in double-quotes, and notes should be separated from each other by a single space
 
-aftercovars is REQUIRED for MIXED regressions, or any other regression where you need to put something additonal after the independent variables are given
+aftercovars is REQUIRED for MIXED regressions, or any other regression where you need to put something additional after the independent variables are given
 
 collection allows you to name the collection the table is output to. Default is table3. Give the replace option after the name to replace a collection already in memory. E.g. collection(table3c, replace)
 
@@ -52,6 +55,9 @@ version 18.0
 syntax anything [if/] [in] [fw aw pw iw], BY(varlist min=1 numeric) [ PREcmd(string) DP(integer 2) ///
 CIlimiter(string) TItle(string) NOtes(string asis) PTRendvar(varname numeric) ///
 AFTERcovars(string) COLLECTion(string) EXPORT OPCON *]
+
+//zs 240507 - clear out table3 so that the command can re-run without the need to clean it up beforehand.
+capture collect drop table3
 
 //Separate out varlist from model
 gettoken cmd varlist : anything
@@ -87,7 +93,7 @@ if "`collection'" == "" {
 	quietly collect dir
 	//Check default doesn't already exist, if it does exit
 	if ustrpos("`s(collections)'", "table3") > 0 {
-		display as error `"Default table name "table3" is in use."'
+		display as error `"Default table name "table3" is in use by david- 1053."'
 		display as error "Please specify a table name with the collection({it:name}) option."
 		exit 110
 	}
@@ -153,7 +159,8 @@ if "`prefix'" == "c." {
 	quietly collect remap colname[`xvar'] = colname[`newxvar']
 }
 else {
-	local newxvar = "`xvar'"
+	//ZS - 240505 - correction to address update by StataCorp in their release of 240404.  changed "`xvar'" to "i.`xvar'"
+	local newxvar = "i.`xvar'"
 }
 
 // collect ci's into single level
@@ -290,7 +297,11 @@ foreach var of varlist `by' {
 }
 
 // The final layout for the combined collection. This is the only layout that most will see.
-collect layout (`layout') (colname[`newxvar']#result[coefci2]#collection[`c1'] colname[`xvar'p]#result[_r_p]#collection[`c2'] result[p])
+// ZS 240505 - updated line to perform the collect layout quietly and then do a collect preview. This removes the table meta data when presenting.
+//collect layout (`layout') (colname[`newxvar']#result[coefci2]#collection[`c1'] colname[`xvar'p]#result[_r_p]#collection[`c2'] result[p])
+quietly collect layout (`layout') (colname[`newxvar']#result[coefci2]#collection[`c1'] colname[`xvar'p]#result[_r_p]#collection[`c2'] result[p])
+collect preview
+
 
 // Apply table title if given
 if "`title'" != "" {

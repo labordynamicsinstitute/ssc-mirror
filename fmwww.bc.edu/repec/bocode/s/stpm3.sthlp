@@ -2,6 +2,7 @@
 {* *! version 1.0.0}{...}
 {vieweralsosee "stpm3 postestimation" "help stpm3_postestimation"}{...}
 {vieweralsosee "stpm3 extended varlist" "help stpm3_extfunctions"}{...}
+{vieweralsosee "stpm3km" "help stpm3km"}{...}
 {vieweralsosee "standsurv" "help standsurv"}{...}
 {viewerjumpto "Syntax" "stpm3##syntax"}{...}
 {viewerjumpto "Description" "stpm3##description"}{...}
@@ -36,10 +37,13 @@ for some examples.
 {synopt:{opt deg:ree(#)}}degree when using B-splines{p_end}
 {synopt:{opt df(#)}}degress of freedom for the baseline hazard{p_end}
 {synopt:{opt dftvc(df_list)}}degrees of freedom for each time-dependent effect{p_end}
+{synopt:{opt integoptsions(options)}}different options for numerical integration{p_end}
 {synopt:{opt knots(numlist)}}knot locations for baseline hazard{p_end}
 {synopt:{opt knotst:vc(numlist)}}knot locations for time-dependent effects{p_end}
+{synopt:{opt mladoptsions(options)}}pass specifc options to {cmd:mlad}{p_end}
 {synopt:{opt offset(varname)}}include offset{p_end}
 {synopt:{opt nocon:stant}}suppress constant term{p_end}
+{synopt:{opt python}}Use python to estimate parameters (loghazard scale models){p_end}
 {synopt:{opt sc:ale(scalename)}}scale on which the survival model is
  to be fitted{p_end}
 {synopt:{opt splinet:ype(splinetype)}}type of spline for modelling effect of time{p_end}
@@ -171,10 +175,35 @@ The second syntax allows different knot positions to be specified for each
 variable included in {cmd:tvc()}.
 
 {phang}
+{opt integoptions(options)} This controls numerical integration options when fitting
+models on the log hazard scale. 
+When the spline functions are a function of log time the default method is
+{cmd:tanhsinh} quadrature and when the spline functions are a function of 
+untransformed time Gauss-Legendre ({cmd:gl}) quadrature is the default.
+Three part integration is the default for both tanh-sinh quadrature and
+Gauss-Legendre quadrature, where analytical derivatives 
+are used before the lowest knot and after the highest knot, with numerical 
+integration used between the lowest and highest knots. 
+This can be overridden with the {cmd:allnum} option, where numerical integration
+is used over the whole time scale. 
+
+{phang}
+{opt mladoptions(options)} Pass various options to {cmd:mlad} (see {help mlad}). This was mainly
+used when developing the {cmd:python} option, so will not be relevant for
+most users.
+
+{phang}
 {opt offset(varname)} This is not currently implemented and will result in an error. 
 
 {phang}
 {opt noconstant} excludes the constant from the model.
+
+{phang}
+{opt python} will use Python to to do some of the more computationally intensive 
+methods for models on the loghazard scale. To use this option, you need to have
+installed the {cmd:mlad} command from SSC as well as have installed Python
+and some specific Python modules. See  {browse "https://pclambert.net/software/mlad/":https://pclambert.net/software/mlad/}
+for more details.
 
 {phang}
 {opt scale(scalename)} specifies the scale on which the survival model is to be

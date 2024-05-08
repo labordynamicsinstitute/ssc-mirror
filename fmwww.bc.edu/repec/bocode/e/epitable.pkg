@@ -20,13 +20,13 @@ d KW: table 3
 d
 d Requires: Stata version 18
 d
-d Distribution-Date: 20240110
+d Distribution-Date: 20240507
 d
 d Author: Laura Whiting,  Survey Design and Analysis Services 
 d Support: email   support@@surveydesign.com.au
 d
 d Author:   Zumin Shi,  Qatar University
-d Support: email NA
+d Support: email zumin@@qu.edu.qa
 d
 f epitable2.ado
 f epitable2.sthlp

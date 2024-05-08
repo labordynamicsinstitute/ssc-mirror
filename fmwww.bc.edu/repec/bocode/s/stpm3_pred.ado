@@ -1,4 +1,4 @@
-*! version 1.07 2024-02-21
+*! version 1.08 2024-05-07
 
 program stpm3_pred, sortpreserve
   version 16.1
@@ -19,6 +19,7 @@ program stpm3_pred, sortpreserve
                                LEVel(real `c(level)') ///
                                LNHAZard               ///
                                MERGE                  ///
+                               ODE                    ///
                                ODEOPTions(string)     /// ODE integration options
                                noGEN                  /// do not generate at variables
                                noOFFset               ///
@@ -66,6 +67,7 @@ program stpm3_pred, sortpreserve
   
   if "`xbnobaseline'" != "" local xbnotime xbnotime
  
+
 // crmodels option
   tempname current_model
   if "`crmodels'" != "" {
@@ -383,29 +385,36 @@ program stpm3_pred, sortpreserve
   //}
   
 // whether derivatives of spines varaibles are required
+  local needsquadrature 0
   if `Nmodels' == 1 {
     if("`e(scale)'" == "lncumhazard")    {
-      local needsode = wordcount("`rmst'`rmft'`crudeprob'`centilenospace'") == 1
+      local needsode = wordcount("`rmst'`rmft'`crudeprob'`centilenospace'") == 1 | "`ode'" != ""
       if "`hastoffset'" != "" & wordcount("`survival'`failure'") == 1 local needsode 1
       local needsdxb1 = "`hazard'`lnhazard'" != "" | `needsode'
     }
     else if("`e(scale)'" == "lnhazard")  {
-      local needsode = wordcount("`survival'`failure'`cumhazard'`rmst'`rmft'`crudeprob'`centilenospace'") == 1
+      //local needsode = wordcount("`survival'`failure'`cumhazard'`rmst'`rmft'`crudeprob'`centilenospace'") == 1
+      local needsode = wordcount("`rmst'`rmft'`crudeprob'`centilenospace'") == 1 | "`ode'" != ""
+      if !`needsode' {
+        if wordcount("`survival'`failure'`cumhazard'") == 1 {
+          local needsquadrature 1
+        }
+      }
       local needsdxb1 0
     }
     else if("`e(scale)'" == "lnodds")   {
-      local needsode = wordcount("`rmst'`rmft'`centilenospace'") == 1
+      local needsode = wordcount("`rmst'`rmft'`centilenospace'") == 1 | "`ode'" != ""
       local needsdxb1 = "`hazard'`lnhazard'" != "" | `needsode'    
     }
     else if("`e(scale)'" == "probit")   {
-      local needsode = wordcount("`rmst'`rmft'`centilenospace'") == 1
+      local needsode = wordcount("`rmst'`rmft'`centilenospace'") == 1 | "`ode'" != ""
       local needsdxb1 = "`hazard'`lnhazard'" != "" | `needsode'    
     }    
   }
   else {
     local needsode 1
     if inlist("`e(scale)'","lncumhazard","lnodds","probit") local needsdxb 1
-  }    
+  }
   
   
   if "`atreference'" != "1" {
@@ -614,11 +623,11 @@ program stpm3_pred, sortpreserve
         }
         
       // splines
-      // note currently generate derivatives all the time (add scale)?.
       // *********************TVC********************
-         if "`e(tvc)'" != "" {
+        local ttransopt = cond("`e(ttrans)'"=="lnt","lntime","")
+        if "`e(tvc)'" != "" {
           if `e(sharedtvc_knots)' {
-            if "`e(knots_tvc)'" != "" local tvcopt tvc(`e(tvc)') allknotstvc(`e(knots_tvc)', lntime)
+            if "`e(knots_tvc)'" != "" local tvcopt tvc(`e(tvc)') allknotstvc(`e(knots_tvc)', `ttransopt')
             else local tvcopt tvc(`e(tvc)') dftvc(1)
           }
           else {
@@ -626,10 +635,11 @@ program stpm3_pred, sortpreserve
             foreach v in `e(tvcvars)' {
               local tvcopt `tvcopt' `v' `e(knots_tvc_`v')'
             }
-            local tvcopt `tvcopt' , lntime)
+            local tvcopt `tvcopt' , `ttransopt')
           }
         }
-        local knotsopt = cond("`e(knots)'"!="","allknots(`e(knots)', lntime)","df(1)")
+        
+        local knotsopt = cond("`e(knots)'"!="","allknots(`e(knots)', `ttransopt')","df(1)")
       
       // splines needs to be genereated when using centiles
       // use midpoint
@@ -1032,7 +1042,7 @@ program stpm3_pred, sortpreserve
   if "`resframe'" != "" di as text "Predictions are stored in frame - `resframe'"
 
   // additions for t=0
-  stpm3_pred_addt0 `newvarlist', `xb'`survival'`failure'`cumhazard'`crudeprob'`cif' ///
+  stpm3_pred_addt0 `newvarlist', `xb'`survival'`failure'`cumhazard'`crudeprob'`cif'`rmst'`rmft' ///
                                  `ci' frame(`resframe') timevars(`timevarfinal') ///
                                  per(`per') expvars(`expvars') crnames(`crnames') ///
                                  `gen'
@@ -1194,6 +1204,7 @@ end
 
 program define get_variable_type
   local fvnames : colfullnames e(b)
+
   foreach var in `fvnames' {
     _ms_parse_parts `var'
     if `r(omit)' continue
@@ -1208,9 +1219,12 @@ program define get_variable_type
       forvalues k=1/`r(k_names)' {
         if "`r(op`k')'" == "c" local tmptype variable
         else local tmptype factor
-        if strpos("`allvars'","`r(name`k')'") >0 {
-          check_mixed_variable_type `tmptype' ``r(name`k')'_type'
-          continue
+        if inlist("`r(type)'","factor","variable") {
+          if strpos("`allvars'","`r(name`k')'") >0 {
+
+            check_mixed_variable_type `tmptype' ``r(name`k')'_type'
+            continue
+          }
         }
         local `r(name`k')'_type `tmptype'
         local allvars `allvars' `r(name`k')'      

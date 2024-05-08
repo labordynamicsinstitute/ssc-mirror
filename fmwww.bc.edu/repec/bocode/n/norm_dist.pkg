@@ -1,4 +1,4 @@
-d 'NORM_DIST': module providing  normal and inverse normal distribution functions with added mean and standard deviation
+d 'NORM_DIST': module providing normal and inverse normal distribution functions with added mean and standard deviation
 d
 d   invnorm computes the inverse cumulative standard normal
 d distribution function and normd computes the cumulative   

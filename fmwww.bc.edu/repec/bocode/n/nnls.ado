@@ -1,7 +1,7 @@
 ********************************************************************************
 * "nnls": Nonnegative Least Squares in Stata using Python
-* GCerulli, 12 April 2024
-* Version: 3
+* GCerulli, 6 May 2024
+* Version: 4
 ********************************************************************************
 
 cap program drop nnls
@@ -65,13 +65,13 @@ program nnls , eclass
 	mat `M'=M
 	matrix rownames `M'=`X'
 	matrix colnames `M'=Weights
-	matlist `M' , title(UNSTANDARDIZED WEIGHTS)
+	matlist `M' , title(WEIGHTS: not summing up to 1)
 	mata : st_matrix("`B'", colsum(st_matrix("`M'")))
     scalar _s=`B'[1,1]
 	mat `C'=`M'/_s
 	matrix rownames `C'=`X'
-	matrix colnames `C'=Std_Weights
-	matlist `C' , title(STANDARDIZED WEIGHTS)
+	matrix colnames `C'=Unit_Weights
+	matlist `C' , title(WEIGHTS: summing up to 1)
 
 	* Keep the index and prediction, then merge onto original data
 	keep `index' `prediction'
@@ -88,7 +88,7 @@ program nnls , eclass
 	ereturn local num_features "`num_features'"
 	ereturn local cmd "_nnls"
 	ereturn matrix Weights=`M'
-	ereturn matrix Std_Weights=`C'
+	ereturn matrix Unit_Weights=`C'
 	ereturn scalar VERSION=5
 	
 	* Importance graph
@@ -96,11 +96,11 @@ program nnls , eclass
 	preserve
 	* Convert the matrix to a variable
 	tempname M
-	matrix `M'=e(Std_Weights)
+	matrix `M'=e(Unit_Weights)
 	tempvar imp
 	svmat2 `M' , names(col) r(`imp')
 	*Graph the results
-	qui graph hbar (mean) Std_Weights , over(`imp', sort(1)) ytitle(Importance) saving(`graph_save',replace)
+	qui graph hbar (mean) Unit_Weights , over(`imp', sort(1)) ytitle(Importance) saving(`graph_save',replace)
 	restore
 	}
 

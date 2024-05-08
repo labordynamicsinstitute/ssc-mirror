@@ -1,0 +1,28 @@
+d 'SCCSDTA': module to generate a dataset for the self-controlled case series method (SCCS)
+d
+d      The SCCS method examines the association between a
+d time-varying exposure and an event outcome.	 The study samples
+d only cases, and it requires that an event has occurred during
+d the observation period.    The method doesn't compare incidences
+d for cases with incidences for references.    Instead, it
+d contrasts incidences in periods of risk with incidences in
+d periods where the case is not at risk.    In this approach, cases
+d serve as their control for fixed confounders.    It's feasible to
+d adjust for time effects such as age.	  The intervals are marked
+d by risk, time, and individual.    For each interval, the number
+d of incidences and the width of the interval are determined. 
+d
+d KW: time-varying exposure
+d KW: event outcome
+d KW: self-controlled cases
+d
+d Requires: Stata version 12.1
+d
+d Distribution-Date: 20240507
+d
+d Author: Niels Henrik Bruun, Aalborg University Hospital
+d Support: email niels.henrik.bruun@@gmail.com
+d
+f sccsdta.ado
+f sccsdta.sthlp
+f sccsdta_mmr.dta 

@@ -1,8 +1,9 @@
-*! version 0.5 2023-02-21
+*! version 0.5 2024-04-24
 program define stpm3km, rclass
   version 16.1
   syntax [varlist(default=none fv max=1)]                  ///
                     [if] [in],   [                         ///
+                                   noAJ                    ///
                                    CIF                     ///
                                    CRMODels(string)        ///
                                    COMPET1(numlist)        ///
@@ -261,8 +262,12 @@ program define stpm3km, rclass
         local vtitle: variable label `varlist'
         if `"`vtitle'"' == "" local vtitle `varlist'
         local title title(`"`vtitle'"')
+        local vlabel `varlist'
       }
-      else if `Ngroups'>1 local title title("Prognostic Index")
+      else if `Ngroups'>1 {
+        local title title("Prognostic Index")
+        local vlabel Prognostic Index
+      }
     }
     if `"`s(ytitle)'"' == "" {
       if "`cif'" == "" local ytitle = cond("`failure'" != "",`"ytitle("F(t)")"',`"ytitle("S(t)")"')
@@ -275,7 +280,7 @@ program define stpm3km, rclass
         local c 1
         foreach i in `levels' {
           local order `"`order' `c' "`i'""'
-          local legend legend(order(`order') cols(`Ngroups'))
+          local legend legend(order(`order') cols(1))
           local ++c
         } 
       }
@@ -294,17 +299,42 @@ program define stpm3km, rclass
     }
   }		 
   if "`resframe'" != "" {
-	  foreach i in `levels' {
-      local Slist `Slist' `S`i''
+    if "`crmodels'" == "" {
+	    foreach i in `levels' {
+        local Slist `Slist' `S`i''
+      }
     }
-  	frame put _t `vgrp' `Skm' `tt'  `Slist' if `touse', into(`resframe')
+    else {
+	    foreach i in `levels' {
+        forvalues m = 1/`Nmodels' {
+          local CIFlist `CIFlist' `S`i''_m`m'
+        }
+      }      
+    }
+  	frame put _t `eventvar' `vgrp' `Skm' `CIFaj' `tt'  `Slist' `CIFlist' if `touse', into(`resframe')
 	  frame `resframe' {
       local Z = cond("`failure'"!="","F","S")
-      qui rename `Skm' `Z'km
-      qui rename `vgrp' group
-        foreach i in `levels' {
+      qui rename `vgrp' groups
+      if `Nmodels'==1 & "`km'" == "" {
+        qui rename `Skm' `Z'km          
+      }
+      else if `Nmodels'>1 & "`aj'" == "" {
+        qui rename `CIFaj' CIFaj
+      }
+      foreach i in `levels' {
+        if `Nmodels'==1 {
+
           rename `S`i'' `Z'`i'
+          label variable `Z'`i' `"Level `i' of `vlabel'"'
         }
+        else {
+          forvalues m = 1/`Nmodels' {
+            local mname = word("`crmodels'",`m') 
+            rename `S`i''_m`m' CIF`i'_`mname'
+            label variable CIF`i'_`mname' `"`mname': Level `i' of `vlabel'"'
+          }
+        }
+      }
 	    rename `tt' tt
     }		
   }

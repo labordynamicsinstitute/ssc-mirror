@@ -1,5 +1,5 @@
 {smcl}
-{* 15April2024}{...}
+{* 07May2024}{...}
 {cmd:help nnls}
 {hline}
 
@@ -64,7 +64,6 @@ Remark 1: In order to execute this program, it is necessary to have both Stata 1
 {phang} 
 Remark 2. Please, consider to keep updated with future versions of this command.  
 
-
 {dlgtab:Example}
 
 {pstd}{bf:Example}: Non-negative least squares applied to the Boston dataset{p_end}
@@ -78,6 +77,10 @@ Remark 2. Please, consider to keep updated with future versions of this command.
 {phang3} {stata nnls $y $X , graph graph_save("my_graph")}{p_end}
 {phang2} Generate predictions{p_end}
 {phang3} {stata predict PRED_ustd}{p_end}
+{phang2} Clear all the Stata environment{p_end}
+{phang3} {stata clear all}{p_end}
+{phang2} Load again initial dataset from ancillary file{p_end}
+{phang3} {stata use boston, clear}{p_end}
 {phang2} Run "nnls" using standardized variables{p_end}
 {phang3} {stata nnls $y $X , graph graph_save("my_graph") standardize}{p_end}
 {phang2} Generate predictions{p_end}

@@ -14,9 +14,6 @@ d The use of extended functions enables simple predictions from
 d complex models involving non-linear effects, interactions and
 d time-dependent effects. 
 d
-d KW: survival
-d KW: survival function
-d KW: hazard function
 d
 d Requires: Stata version 16.1
 d
