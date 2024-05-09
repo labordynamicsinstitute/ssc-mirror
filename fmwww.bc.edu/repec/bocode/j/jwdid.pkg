@@ -18,10 +18,16 @@ d KW: difference-in-differences
 d
 d Requires: Stata version 16 and hdfe, reghdfe, ftools from SSC (q.v.)
 d
-d Distribution-Date: 20240215
+d Distribution-Date: 20240408
 d
 d Author: Fernando Rios-Avila, Levy Economics Institute of Bard College
 d Support: email friosavi@@levy.org
+d
+d Author:   Arne J. Nagengast,  Deutsche Bundesbank
+d Support: email arne.nagengast@@bundesbank.de
+d
+d Author: Yoto V. Yotov, School of Economics, Drexel University
+d Support: email  yotov@@drexel.edu
 d
 f jwdid.ado
 f jwdid_estat.ado

@@ -17,7 +17,7 @@ d
 d
 d Requires: Stata version 16.1
 d
-d Distribution-Date: 20240221
+d Distribution-Date: 20240508
 d
 d Author: Paul Lambert, University of Leicester
 d Support: email paul.lambert@@le.ac.uk
@@ -31,10 +31,15 @@ f stpm3_pred.ado
 f stpm3_predictions_eg.ado
 f stpm3_userfunc.ado
 f stpm3km.ado
+f stpm3quadchk.ado
 f ../l/lstpm3.mlib
+f stpm3_hazard_3parts.py
+f stpm3_hazard_numint.py
+f stpm3_hazard_setup.py
 f stpm3.sthlp
 f stpm3_competing_risks.sthlp
 f stpm3_extfunctions.sthlp
 f stpm3_postestimation.sthlp
 f stpm3_predictions.sthlp
 f stpm3km.sthlp
+f stpm3quadchk.sthlp

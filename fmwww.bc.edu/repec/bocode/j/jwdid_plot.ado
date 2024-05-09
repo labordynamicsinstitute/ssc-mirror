@@ -1,4 +1,7 @@
-* v1 Clone for jwdid
+*!v1.3 Allows Tight Graph
+*v1.2 Bugs with Lwidth
+*v1.1 Plot for SIMPLE OVER
+* v1 Clone for jwdid:
 /*capture program drop  csdid_plot
 capture program drop  adds
 capture program drop jwdid_default
@@ -18,18 +21,21 @@ program jwdid_agg_cat, sclass
 		else if "`agg'"=="event"     local agg_cat=2
 		else if "`agg'"=="calendar"  local agg_cat=3
 		else if "`agg'"=="group"     local agg_cat=4
+		else if "`agg'"=="simple"     local agg_cat=5
 	}
 	else if "`ragg'"!="" {
 		if "`ragg'"=="attgt" 		 local agg_cat=1
 		else if "`ragg'"=="event"    local agg_cat=2
 		else if "`ragg'"=="calendar" local agg_cat=3
 		else if "`ragg'"=="group"    local agg_cat=4
+		else if "`ragg'"=="simple"   local agg_cat=5
 	}
 	else if "`eagg'"!="" {
 		if "`eagg'"=="attgt" 		 local agg_cat=1
 		else if "`eagg'"=="event"    local agg_cat=2
 		else if "`eagg'"=="calendar" local agg_cat=3
 		else if "`eagg'"=="group"    local agg_cat=4
+		else if "`eagg'"=="simple"   local agg_cat=5
 	}
 	sreturn local agg_cat = `agg_cat'
 end
@@ -39,6 +45,7 @@ program jwdid_plot, rclass
 	local cmd `r(cmd)'
 	local agg `r(agg)'
 	tempname  b V table
+	if "`e(agg)'"!="" qui:ereturn display
 	matrix `b' = r(b)
 	matrix `V' = r(V)
 	matrix `table' = r(table)
@@ -54,7 +61,7 @@ end
 program jwdid_plot_wh
 	syntax, [style(passthru) title(passthru) name(passthru) Group(str) ///
 							 ytitle(passthru) xtitle(passthru)	///
-							 legend(passthru) agg(str) * ]
+							 legend(passthru) agg(str) * tight ]
 	tempvar mm  b
 	tempvar kk
 	
@@ -84,7 +91,7 @@ program jwdid_plot_wh
 		 	    local k = `k'+1
 			qui:replace `kk'=`i' in `k'
 		}
-	
+ 
 		jwdid_plot_event `kk'  `mm1'  `mm5' `mm6'	, ///
 					`style' `title' `name'  `ytitle'	`xtitle' `legend'	`options'    
 	}
@@ -110,8 +117,13 @@ program jwdid_plot_wh
 		 	qui:replace `kk'="`i'" in `k'
 		}
 		tempname k2
-		qui:encode `kk', gen(`k2')
-		 
+		qui:destring `kk', gen(`k2')
+		if "`tight'"!="" {
+			tempvar mm7 
+			qui:egen `mm7'=group(`k2'), label
+			qui:drop `k2'
+			qui:rename `mm7' `k2'
+		} 		 
 		jwdid_plot_group `k2'  `mm1'  `mm5' `mm6'	, ///
 					`style' `title' `name'  `ytitle'	`xtitle' `legend'	 `options'  
 		*drop `mm'? 
@@ -139,13 +151,41 @@ program jwdid_plot_wh
 		 	qui:replace `kk'="`i'" in `k'
 		}
 		tempname k2
-		qui:encode `kk', gen(`k2')
-		 
+		qui:destring `kk', gen(`k2')
+		if "`tight'"!="" {
+			tempvar mm7 
+			qui:egen `mm7'=group(`k2'), label
+			qui:drop `k2'
+			qui:rename `mm7' `k2'
+		} 
 		jwdid_plot_calendar `k2'  `mm1'  `mm5' `mm6'	, ///
 					`style'	  `title' `name'  `ytitle'	`xtitle' `legend' `options'		   
 		*drop `mm'? 
 	}
 	
+	else if `s(agg_cat)'==5 {
+		*if "`e(agg)'"=="Simple"  
+		
+		matrix `b'=r(table)		
+		local coln:colname `b'
+ 
+		matrix `mm'=r(table)'
+		
+		tempvar mm1 mm2 mm3 mm4 mm5 mm6
+		qui:tsvmat `mm', name(`mm1' `mm2' `mm3' `mm4' `mm5' `mm6')
+		
+		qui:gen str `kk' =""
+		foreach i of local coln {
+		 	local k = `k'+1
+		 	qui:replace `kk'="`i'" in `k'
+		}
+		tempname k2
+		qui:encode `kk', gen(`k2')
+		 
+		jwdid_plot_simple `k2'  `mm1'  `mm5' `mm6'	, ///
+					`style'	  `title' `name'  `ytitle'	`xtitle' `legend' `options'		   
+		*drop `mm'? 
+	}
 end
 
 /***
@@ -224,29 +264,46 @@ program jwdid_default, sclass
 	else local color1 color(`"`color1'"')
 	if "`color2'"=="" local color2 color(%40)
 	else local color2 color(`"`color2'"')
-	
+
+	  
 	if "`style'"=="rspike" {
-		if "`lwidth1'"=="" local lwidth1 lwidth(3)		
+		if "`lwidth1'"=="" local lwidth1 lwidth(3)
+		else               local lwidth1 lwidth(`lwidth1') 
 		if "`lwidth2'"=="" local lwidth2 lwidth(3)
+        else               local lwidth2 lwidth(`lwidth2') 
 	}
 	
 	if "`style'"=="rarea" {
 		if "`lwidth1'"=="" local lwidth1 lwidth(0)		
+   		else               local lwidth1 lwidth(`lwidth1') 
+
 		if "`lwidth2'"=="" local lwidth2 lwidth(0) 
+		else               local lwidth2 lwidth(`lwidth2') 
+        
 		local conn connect(l)
 	}
 	
 	if "`style'"=="rcap" {
 		if "`lwidth1'"=="" local lwidth1 lwidth(1)		
+		else               local lwidth1 lwidth(`lwidth1') 
+        
 		if "`lwidth2'"=="" local lwidth2 lwidth(1) 
+		else               local lwidth2 lwidth(`lwidth2') 
+        
 		local conn connect(l)
 	}
 		
 	if "`style'"=="rbar" {
 		if "`lwidth1'"=="" local lwidth1 lwidth(0)		
+   		else               local lwidth1 lwidth(`lwidth1') 
+
 		if "`lwidth2'"=="" local lwidth2 lwidth(0) 
+		else               local lwidth2 lwidth(`lwidth2') 
+        
 		if "`barwidth1'"=="" local barwidth1 barwidth(0.5)		
+        else                 local barwidth1 barwidth(`barwidth1')	
 		if "`barwidth2'"=="" local barwidth2 barwidth(0.5)
+        else                 local barwidth2 barwidth(`barwidth2')	
 		local conn connect(l)
 	}
 	 
@@ -283,8 +340,8 @@ end
 
 program jwdid_plot_event 
 	syntax varlist, [style(passthru) title(passthru) name(passthru) ///
-					ytitle(passthru) xtitle(passthru)	///
-					legend(passthru) *  ]
+					ytitle(passthru) * xtitle(passthru)	///
+					legend(passthru)  ]
 	gettoken t rest:varlist
 	gettoken b rest:rest
 	gettoken ll rest:rest 
@@ -296,6 +353,8 @@ program jwdid_plot_event
 	
 	if `"`legend'"'=="" local legend legend(order(1 "Pre-treatment" 3 "Post-treatment"))
 	jwdid_default , `options' `style'
+
+	local antigap (`e(antigap)')
 	
 	local gf11  `s(df11)'
 	local gf12 `s(df12)'
@@ -303,10 +362,12 @@ program jwdid_plot_event
 	local gf22 `s(df22)'
 	local style `s(style)'
 	local dels  `s(delse)'
- 	two   (`style'  `ll' `uu' `t'  if `t'<-1 , `gf11') ///
-		  (scatter  `b'      `t'   if `t'<-1 , `gf12')  ///
-		  (`style'  `ll' `uu' `t'  if `t'>-1, `gf21')  ///
-		  (scatter  `b'      `t'   if `t'>-1, `gf22') , ///
+
+
+ 	two   (`style'  `ll' `uu' `t'  if `t'<=-`antigap' , `gf11') ///
+		  (scatter  `b'      `t'   if `t'<=-`antigap' , `gf12')  ///
+		  (`style'  `ll' `uu' `t'  if `t'>-`antigap', `gf21')  ///
+		  (scatter  `b'      `t'   if `t'>-`antigap', `gf22') , ///
 		   `legend'  `xtitle' `ytitle' ///
 		  yline(0 , lp(dash) lcolor(black)) `title' `name'  `dels'
  
@@ -322,18 +383,18 @@ program jwdid_plot_group
 	gettoken ll rest:rest 
 	gettoken uu rest:rest 
 		
-	qui:levelsof `t', local(tlev)
+	/*qui:levelsof `t', local(tlev)
 	local tlb: value label `t'
 	local xlab 0 " "
 	foreach i of local tlev {
 	    local j = `j'+1
 	    local xlab `xlab' `i' "`:label `tlb' `i''"
-	}
+	}*/
 	
 	if `"`xtitle'"'=="" local xtitle xtitle("Groups")
 	if `"`ytitle'"'=="" local ytitle ytitle("ATT")
 	
-	local xlab `xlab' `=`j'+1' " "
+	*local xlab `xlab' `=`j'+1' " "
 	
 	jwdid_default , `options' `style'
 	local gf11  `s(df11)'
@@ -345,7 +406,7 @@ program jwdid_plot_group
 	two   (`style'  `ll' `uu' `t'  , `gf11' )  ///
 		  (scatter  `b'      `t'   , `gf12' ) , ///
 		  legend(off) `xtitle'  `ytitle'  ///
-		  yline(0 , lp(dash) lcolor(black)) `title' `name' xlabel(`xlab') `dels'
+		  yline(0 , lp(dash) lcolor(black)) `title' `name'  `dels'
 	
 end
 
@@ -358,6 +419,43 @@ program jwdid_plot_calendar
 	gettoken ll rest:rest 
 	gettoken uu rest:rest 
 		
+	/*qui:levelsof `t', local(tlev)
+	local tlb: value label `t'
+	local xlab 0 " "
+	foreach i of local tlev {
+	    local j = `j'+1
+	    local xlab `xlab' `i' "`:label `tlb' `i''"
+	}*/
+	
+	if `"`xtitle'"'=="" local xtitle xtitle("Periods")
+	if `"`ytitle'"'=="" local ytitle ytitle("ATT")
+	
+
+	*local xlab `xlab' `=`j'+1' " "
+	
+	jwdid_default , `options' `style'
+	local gf11  `s(df11)'
+	local gf12 `s(df12)'
+	
+	local style `s(style)'
+	local dels  `s(delse)'
+
+	
+	two   (`style'  `ll' `uu' `t'  , `gf11' )  ///
+		  (scatter  `b'      `t'   , `gf12'  ) , ///
+		  legend(off) `xtitle'  `ytitle'  ///
+		  yline(0 , lp(dash) lcolor(black)) `title' `name'  `dels'
+end
+
+
+program jwdid_plot_simple
+	syntax varlist, [title(passthru) name(passthru)	///
+						*		ytitle(passthru) xtitle(passthru) * ]
+	gettoken t rest:varlist
+	gettoken b rest:rest
+	gettoken ll rest:rest 
+	gettoken uu rest:rest 
+	
 	qui:levelsof `t', local(tlev)
 	local tlb: value label `t'
 	local xlab 0 " "
@@ -366,7 +464,7 @@ program jwdid_plot_calendar
 	    local xlab `xlab' `i' "`:label `tlb' `i''"
 	}
 	
-	if `"`xtitle'"'=="" local xtitle xtitle("Periods")
+	if `"`xtitle'"'=="" local xtitle xtitle("Over Groups")
 	if `"`ytitle'"'=="" local ytitle ytitle("ATT")
 	
 
@@ -383,9 +481,8 @@ program jwdid_plot_calendar
 	two   (`style'  `ll' `uu' `t'  , `gf11' )  ///
 		  (scatter  `b'      `t'   , `gf12'  ) , ///
 		  legend(off) `xtitle'  `ytitle'  ///
-		  yline(0 , lp(dash) lcolor(black)) `title' `name' xlabel(`xlab') `dels'
+		  yline(0 , lp(dash) lcolor(black)) `title' `name'  `dels'
 end
-
 
 
 /***
