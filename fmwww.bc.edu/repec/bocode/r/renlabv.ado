@@ -1,10 +1,10 @@
-*! version 2.0.0  Dirk Enzmann  24april2024
+*! version 2.0.1  Dirk Enzmann  27april2024
 
 program renlabv, rclass
    version 11.2
    cap which elabel
    if _rc {
-     di as err "-renlabv- requires -elabels- (available on SSC)" 
+     di as err "-renlabv- requires -elabel- (available on SSC)" 
      exit 199
    } 
    syntax [varlist] [, NODrop]
@@ -21,7 +21,7 @@ program renlabv, rclass
       local vl "`r(varlist)'"
       foreach v of varlist `vl' {
          elabel list (`v'), var
-         if "`r(name)'" != "`v'" & {
+         if "`r(name)'" != "`v'" {
             local ll "`ll' `r(name)'"  // all renamed value labels
             elabel copy `v':`r(name)' `v', replace
             label val `v' `v'

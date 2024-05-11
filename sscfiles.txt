@@ -3272,6 +3272,7 @@ fmwww.bc.edu/repec/bocode/r/rbiprobit_p.ado
 fmwww.bc.edu/repec/bocode/r/rdrobust_groupid.mo
 fmwww.bc.edu/repec/bocode/r/robmv_p.ado
 fmwww.bc.edu/repec/bocode/r/repkit.pkg
+fmwww.bc.edu/repec/bocode/r/repadolog.sthlp
 fmwww.bc.edu/repec/bocode/r/rtmcii.ado
 fmwww.bc.edu/repec/bocode/r/rbounds.pkg
 fmwww.bc.edu/repec/bocode/r/rhetplot.html
@@ -4144,6 +4145,7 @@ fmwww.bc.edu/repec/bocode/r/read_convergence.ado
 fmwww.bc.edu/repec/bocode/r/robit7.sthlp
 fmwww.bc.edu/repec/bocode/r/Rcall.sthlp
 fmwww.bc.edu/repec/bocode/r/relyplot.ado
+fmwww.bc.edu/repec/bocode/r/repadolog.ado
 fmwww.bc.edu/repec/bocode/r/rvlrplot.hlp
 fmwww.bc.edu/repec/bocode/r/rndlgn.hlp
 fmwww.bc.edu/repec/bocode/r/rely.pkg
@@ -9729,6 +9731,7 @@ fmwww.bc.edu/repec/bocode/t/tabletutorial_example4.pdf
 fmwww.bc.edu/repec/bocode/t/testjfe.sthlp
 fmwww.bc.edu/repec/bocode/t/tsoumpou2009cancertreatrevfig2WNL.dta
 fmwww.bc.edu/repec/bocode/t/tw3xls_description.pdf
+fmwww.bc.edu/repec/bocode/t/trim_vars.pkg
 fmwww.bc.edu/repec/bocode/t/tic.ado
 fmwww.bc.edu/repec/bocode/t/MilanoPolice-Database.dta
 fmwww.bc.edu/repec/bocode/t/tab2way.pkg
@@ -9848,6 +9851,7 @@ fmwww.bc.edu/repec/bocode/t/test_xtavplot.do
 fmwww.bc.edu/repec/bocode/t/tpoisson.html
 fmwww.bc.edu/repec/bocode/t/tabhbar.hlp
 fmwww.bc.edu/repec/bocode/t/tip_chicago.dta
+fmwww.bc.edu/repec/bocode/t/trim_vars.ado
 fmwww.bc.edu/repec/bocode/t/tabone.ado
 fmwww.bc.edu/repec/bocode/t/tablecol.html
 fmwww.bc.edu/repec/bocode/t/torumm.html
@@ -10184,6 +10188,7 @@ fmwww.bc.edu/repec/bocode/t/triplot.hlp
 fmwww.bc.edu/repec/bocode/t/tmpinv.sthlp
 fmwww.bc.edu/repec/bocode/t/tmap_deviation.ado
 fmwww.bc.edu/repec/bocode/t/tslstarmod_p.ado
+fmwww.bc.edu/repec/bocode/t/trim_vars.sthlp
 fmwww.bc.edu/repec/bocode/t/tgraph.pkg
 fmwww.bc.edu/repec/bocode/t/tobexog.html
 fmwww.bc.edu/repec/bocode/t/theilr2.sthlp

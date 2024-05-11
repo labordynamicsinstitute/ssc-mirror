@@ -117,6 +117,7 @@ p treecluster module for plotting clustered trees
 p treemap module for treemaps
 p treeplot module to graph a tree in Stata
 p trellis module to create a trellis graph
+p trim_vars module to trim blanks in a varlist
 p trimlabs module to trim variable labels
 p trimmean module for trimmed means as descriptive or inferential statistics
 p trimplot module for plots of trimmed means

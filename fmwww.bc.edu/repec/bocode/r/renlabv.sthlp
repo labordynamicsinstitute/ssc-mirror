@@ -1,5 +1,5 @@
 {smcl}
-{* version 2.0.0  24april2024}{...}
+{* version 2.0.1  27april2024}{...}
 {cmd:help renlabv}
 {hline}
 
@@ -24,9 +24,9 @@
 {title:Description}
 
 {pstd}
-As a wrapper of the SSC program {hi:elabels} by Daniel Klein, {cmd:renlabv} renames
+As a wrapper of the SSC program {hi:elabel} by Daniel Klein, {cmd:renlabv} renames
 value labels to match the name(s) of the assigned variable(s). Hence, the program
-will require that {hi:elabels} is installed. After using {hi:renlabv} without
+will require that {hi:elabel} is installed. After using {hi:renlabv} without
 specifying any variable the names of all value labels of the data set will be
 equal to the names of the assigned variables. By default {cmd:renlabv} will
 drop the original value labels. Note that value labels not assigned to variables
@@ -34,18 +34,18 @@ will not be renamed or dropped.
 
 {pstd}
 Stata allows to attach a value label to several variables; this may be regarded
-as a feature (see the PDF documentation [D] for {help label}). However, if the
-sign (sense) of some items (variables) of a scale have to be recoded (e.g. reversed)
-such that all items correlate positively with each other, their value labels should
-be recoded, as well. But if only one (or only some) of the scale items have to be
-recoded (reversed) and the user is not aware that their value label is shared
-with other items it may happen that recoding this value label inadvertently
-recodes (reverses) the value label of the other items, as well, resulting in
-improper value labels for some items and consequently wrong conclusions from the
-analyses.
+as a feature (see the PDF documentation [D] for {help label}). However, if for
+example the sign (sense) of only some items (variables) of a scale have to be
+recoded (e.g. reversed) such that all items correlate positively with each
+other, their value labels should be recoded, as well. But if only one (or only
+some) of the scale items have to be recoded (reversed) and the user is not aware
+that their value label is shared with other items it may happen that recoding
+this value label inadvertently recodes (reverses) the value label of the other
+items, as well, resulting in improper value labels for some items and
+consequently wrong conclusions from the analyses.
 
 {pstd}
-You could use {hi:elabels} (from SSC) to avoid this. As an example:
+You could use {hi:elabel} (from SSC) to avoid this. As an example:
 
     {com}. sysuse auto, clear
     {txt}(1978 automobile data)
@@ -101,16 +101,25 @@ You could use {hi:elabels} (from SSC) to avoid this. As an example:
 {pstd}
 But you can use {cmd:renlabv} to avoid altogether the problem of inadvertently
 recoding value labels when recoding only some items of a set of items originally
-assigned to the same value labels. After having run {cmd:renlabv} you can then
-use the tandem of {help recode} and {cmd:elabels} to safely recode some of the
-scale items.
+assigned to the same value label. After having run {cmd:renlabv} you can then
+use the tandem of {help recode} and {cmd:elabel recode} -- without the option
+{cmd:define()} -- to safely recode some of the scale items.
 
 {pstd}
 Of course, the issue {hi:renlabv} is intended so solve is not only restricted
 to scale items but to any value label that is assigned to several variables, for
 example dichotomous variables with values coded 0 for "no" and 1 for "yes", etc.
+
+{pstd}
+Another use of {hi:renlabv} might be that you import SPSS data containing variables
+with value labels defined into Stata: Stata will automatically generate label
+values named "labels0", "labels1", "labels2", etc. Running {hi:renlabv} will
+rename them to better recognizable names since they will match the names of the
+assigned variables.
+
+{pstd}
 The disadvantage of using {hi:renlabv} is that subsequently you cannot longer
-use Stata's feature to relabel several variables instantaneously by redefining
+use Stata's feature to relabel several variables simultaneously by redefining
 their common value label. If this bothers you, you can call {hi:renlabv} by
 specifying only those variables which you actually want to recode.
 
@@ -204,7 +213,7 @@ the assigned variable(s) and recode only one item and its value label:
     
 {pstd}
 Use {hi:renlabv} for renaming value labels to match the name(s)
-of {bf:only some} assigned assigned variable(s):
+of {bf:only some} assigned variable(s):
 
     {com}. sysuse auto, clear
     {txt}(1978 automobile data)
@@ -268,8 +277,7 @@ of {bf:only some} assigned assigned variable(s):
 
 {title:Acknowlegements}
 
-    Thanks to Daniel Klein for assistance in solving my problems using
-    the {hi:elabel} command.
+    Thanks to Daniel Klein for assistance in solving my problems using {hi:elabel}.
 
 
 {title:Also see}

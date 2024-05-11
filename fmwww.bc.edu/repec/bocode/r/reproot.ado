@@ -1,4 +1,4 @@
-*! version 1.2 20240222 - DIME Analytics & LSMS Team, The World Bank - dimeanalytics@worldbank.org, lsms@worldbank.org
+*! version 2.0 20240509 - DIME Analytics & LSMS Team, The World Bank - dimeanalytics@worldbank.org, lsms@worldbank.org
 
 cap program drop   reproot
     program define reproot, rclass
@@ -94,7 +94,7 @@ qui {
       * Test if this location has a root file
       cap confirm file "`env_file'"
       if (_rc) {
-        noi di as text `"{phang}No file {inp:reproot-env.yaml} found in home directory {it:`homedir'}. This file is required to set up once per computer to use {cmd:reproot}. See instructions on how to set up this file {browse "https://dime-worldbank.github.io/repkit/articles/reproot-files.html":here}.{p_end}"' _n
+        noi di as text `"{phang}No file {inp:reproot-env.yaml} found in home directory {it:`homedir'}. This file is required to set up once per computer to use {cmd:reproot}. See instructions on how to set up this file {browse "https://worldbank.github.io/repkit/articles/reproot-files.html":here}.{p_end}"' _n
         error 601
         exit
       }

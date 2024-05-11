@@ -1,0 +1,21 @@
+d 'TRIM_VARS': module to trim blanks in a varlist
+d
+d    The trim_vars command removes leading and trailing Unicode
+d whitespace characters        and blanks, as well as multiple,
+d consecutive internal blanks, from the list of        variable[s]
+d the user inputs.	  trim_vars finds all of the string
+d variables in the current dataset and performs        trimming on
+d them if _all or * are specified in varlist. 
+d
+d KW: data management
+d KW: string variables
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20240510
+d
+d Author:  Kaifeng Deng, NA
+d Support: email deng.28@@outlook.com
+d
+f trim_vars.ado
+f trim_vars.sthlp
