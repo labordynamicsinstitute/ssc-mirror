@@ -9651,6 +9651,7 @@ fmwww.bc.edu/repec/bocode/t/t2docx.sthlp
 fmwww.bc.edu/repec/bocode/t/tabletutorial_18.ihlp
 fmwww.bc.edu/repec/bocode/t/t2t2innerv3.ado
 fmwww.bc.edu/repec/bocode/t/trpois0.ado
+fmwww.bc.edu/repec/bocode/t/twowayfeweights_out.sthlp
 fmwww.bc.edu/repec/bocode/t/tomata.html
 fmwww.bc.edu/repec/bocode/t/titebeta.sthlp
 fmwww.bc.edu/repec/bocode/t/t2way5.html
@@ -9774,6 +9775,7 @@ fmwww.bc.edu/repec/bocode/t/tuni.ado
 fmwww.bc.edu/repec/bocode/t/tablemat.html
 fmwww.bc.edu/repec/bocode/t/tlablist.hlp
 fmwww.bc.edu/repec/bocode/t/tolerance.html
+fmwww.bc.edu/repec/bocode/t/twowayfeweights_out.ado
 fmwww.bc.edu/repec/bocode/t/TestSNPs.do
 fmwww.bc.edu/repec/bocode/t/tobithetm.sthlp
 fmwww.bc.edu/repec/bocode/t/tvgc_boot.ado
