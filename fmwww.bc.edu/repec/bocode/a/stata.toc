@@ -50,6 +50,7 @@ p alignedpairs module to perform the aligned ranks test for matched pairs (Hodge
 p alignedranks module to perform a two-sample aligned rank-sum (Hodges-Lehmann) test with exact statistics for small samples
 p alignedsets module to perform aligned ranks test for matched sets (Hodges-Lehmann)
 p alignmicro module to perform alignment in microsimulation
+p allcatplot module to ensure that all predefined response categories for a variable, including those that are not present in the dataset are included in a graph.
 p allcross modules to create variables corresponding to moment matrices
 p allpossible module to fit all possible models with subsets of predictors
 p allsubsets module to perform all subsets (combinatorial) meta-analysis in a set of studies 

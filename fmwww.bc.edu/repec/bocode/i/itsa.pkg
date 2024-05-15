@@ -8,7 +8,7 @@ d interrupted time series because the intervention is expected to
 d "interrupt" the level and/or trend subsequent to its
 d introduction. itsa is a wrapper program for, by default, newey,
 d which produces Newey-West standard errors for coefficients
-d estimated by OLS regression, or optionally prais, which uses the
+d estimated by OLS regression, or optionally prais,  which uses the
 d generalized least-squares method to estimate the parameters in a
 d linear regression model in which the errors are assumed to follow
 d a first-order autoregressive process. itsa estimates treatment
@@ -16,8 +16,8 @@ d effects for either a single treatment group (with pre- and
 d post-intervention observations) or a multiple-group comparison
 d (i.e., the single treatment group is compared with one or more
 d control groups). Additionally, itsa can estimate treatment
-d effects for multiple treatment periods. Because itsa is a wrapper
-d for glm, all available model options are allowed. 
+d effects for multiple treatment periods.  Because itsa is a
+d wrapper for glm, all available model options are allowed. 
 d
 d KW: interrupted time series
 d KW: quasi-experimental studies
@@ -25,7 +25,7 @@ d KW: causal inference
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20240502
+d Distribution-Date: 20240514
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org

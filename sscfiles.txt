@@ -69,6 +69,7 @@ fmwww.bc.edu/repec/bocode/o/onewayplot.ado
 fmwww.bc.edu/repec/bocode/o/ofrtplot.hlp
 fmwww.bc.edu/repec/bocode/o/odkmeta.pkg
 fmwww.bc.edu/repec/bocode/o/opplot.pkg
+fmwww.bc.edu/repec/bocode/o/ordwarm2.dta
 fmwww.bc.edu/repec/bocode/o/outtex.pkg
 fmwww.bc.edu/repec/bocode/o/onespell.html
 fmwww.bc.edu/repec/bocode/o/oparallel.ado
@@ -1105,6 +1106,7 @@ fmwww.bc.edu/repec/bocode/a/apcd.html
 fmwww.bc.edu/repec/bocode/a/artbindlg.sthlp
 fmwww.bc.edu/repec/bocode/a/admetani.sthlp
 fmwww.bc.edu/repec/bocode/a/array.zip
+fmwww.bc.edu/repec/bocode/a/allcatplot.pkg
 fmwww.bc.edu/repec/bocode/a/avg_effect.pkg
 fmwww.bc.edu/repec/bocode/a/anogi.html
 fmwww.bc.edu/repec/bocode/a/aelong.ado
@@ -1217,6 +1219,7 @@ fmwww.bc.edu/repec/bocode/a/autofill.pkg
 fmwww.bc.edu/repec/bocode/a/adjustrcspline.ado
 fmwww.bc.edu/repec/bocode/a/actest.pkg
 fmwww.bc.edu/repec/bocode/a/allsynth.sthlp
+fmwww.bc.edu/repec/bocode/a/allcatplot.ado
 fmwww.bc.edu/repec/bocode/a/apctlag.ado
 fmwww.bc.edu/repec/bocode/a/artpep.sthlp
 fmwww.bc.edu/repec/bocode/a/autorename.hlp
@@ -1362,6 +1365,7 @@ fmwww.bc.edu/repec/bocode/a/adorestore.sthlp
 fmwww.bc.edu/repec/bocode/a/asinhburr7.ado
 fmwww.bc.edu/repec/bocode/a/adolist.html
 fmwww.bc.edu/repec/bocode/a/annearly.m
+fmwww.bc.edu/repec/bocode/a/allcatplot.sthlp
 fmwww.bc.edu/repec/bocode/a/adfreg.m
 fmwww.bc.edu/repec/bocode/a/ajv.html
 fmwww.bc.edu/repec/bocode/a/allcross.hlp

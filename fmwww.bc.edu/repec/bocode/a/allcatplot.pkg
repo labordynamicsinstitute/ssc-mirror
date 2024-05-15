@@ -1,0 +1,36 @@
+d 'ALLCATPLOT': module to ensure that all predefined response categories for a variable, including those that are not present in the dataset are included in a graph.
+d
+d    allcatplot ensures that all predefined response categories for
+d a variable, including those that are not present in the   
+d dataset, are included in a graph. Traditional plotting methods
+d omit such unselected categories, potentially skewing	 
+d interpretation. allcatplot uses the predefined value labels to
+d identify and label such omitted response options and add    them
+d to the graph as zero-height bars. It also supports custom lists,
+d labels and graph customization directly through the	 program
+d syntax.    This program is especially useful for surveys and
+d assessments utilizing likert scales or other structured response 
+d   options, where it offers a holistic view of all potential
+d responses in the graph, thereby ensuring a comprehensive   
+d understanding of the full range of response options. 
+d
+d KW: data management
+d KW: graphics
+d KW: categorical variables
+d KW: factor variables
+d
+d Requires: Stata version 11.2 and elabel, splitvallabels from SSC (q.v.)
+d
+d Distribution-Date: 20240510
+d
+d Author:  Kabira Namit, World Bank
+d Support: email knamit@@worldbank.org
+d
+d Author:  Zaeen de Souza, National Social Protection Secretariat - The Gambia
+d Support: email zaeen.desouza19_mec@@apu.edu.in
+d
+d Author:  Prabhmeet Kaur Matta, University of Oxford
+d Support: email  prabhmeet.matta@@economics.ox.ac.uk
+d
+f allcatplot.ado
+f allcatplot.sthlp

@@ -27,7 +27,7 @@ d KW: heterogeneous choice models
 d
 d Requires: Stata version 11.2
 d
-d Distribution-Date: 20160831
+d Distribution-Date: 20240514
 d
 d Author: Richard Williams, University of Notre Dame
 d Support: email Richard.A.Williams.5@@ND.edu
@@ -37,3 +37,4 @@ f oglm_ll.ado
 f oglm_p.ado
 f oglm_svy_check.ado
 f oglm.sthlp
+f ordwarm2.dta

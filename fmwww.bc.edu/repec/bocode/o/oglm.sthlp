@@ -1,7 +1,7 @@
 {smcl}
-{* Last revised Aug 30, 2016}{...}
+{* Last revised May 14, 2024}{...}
 {hline}
-help for {hi:oglm} version 2.30 released August 30, 2016
+help for {hi:oglm} version 2.31 released May 14, 2024
 {hline}
 
 {title:Ordinal Generalized Linear Models}
@@ -358,7 +358,7 @@ category, etc.
 models as {cmd:ologit}.  The {opt store} option is convenient for saving results if you
 want to contrast different models.
 
-{p 8 12 2}{cmd:. use http://www.indiana.edu/~jslsoc/stata/spex_data/ordwarm2.dta, clear}{p_end}
+{p 8 12 2}{cmd:. use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
 {p 8 12 2}{cmd:. oglm  warm i.yr89 i.male i.white age ed prst}{p_end}
 {p 8 12 2}{cmd:. oglm  warm i.yr89 i.male i.white age ed prst, store(m1)}{p_end}
 {p 8 12 2}{cmd:. oglm  warm i.yr89 i.male i.white age ed prst, robust}{p_end}
@@ -371,7 +371,7 @@ want to contrast different models.
 
 {p 4 4 2} {it}Example 3.  The {cmd:predict} command. {sf} 
 
-{p 8 12 2}{cmd:. use http://www.indiana.edu/~jslsoc/stata/spex_data/ordwarm2.dta, clear}{p_end}
+{p 8 12 2}{cmd:. use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
 {p 8 12 2}{cmd:. quietly oglm  warm i.yr89 i.male i.white age ed prst}{p_end}
 {p 8 12 2}{cmd:. predict p1 p2 p3 p4}{p_end}
 
@@ -383,7 +383,7 @@ currently supports the use of linear constraints, such as two
 variables having equal effects.  {cmd:oglm} can be used for this
 purpose.  For example,
 
-{p 8 12 2}{cmd:. use http://www.indiana.edu/~jslsoc/stata/spex_data/ordwarm2.dta, clear}{p_end}
+{p 8 12 2}{cmd:. use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
 {p 8 12 2}{cmd:. recode warm (1 2  = 0)(3 4 = 1), gen(agree)}{p_end}
 {p 8 12 2}{cmd:. * Constrain the effects of male and white to be equal}{p_end}
 {p 8 12 2}{cmd:. constraint 1 1.male = 1.white}{p_end}
@@ -398,7 +398,7 @@ specify probit, complementary log log, log log or log links.  In the following e
 same model is estimated using each of the links supported by oglm (note that {opt link(log)}
 is considered experimental and possibly wrong.}
 
-{p 8 12 2}{cmd:. use http://www.indiana.edu/~jslsoc/stata/spex_data/ordwarm2.dta, clear}{p_end}
+{p 8 12 2}{cmd:. use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
 {p 8 12 2}{cmd:. oglm warm i.yr89 i.male i.white age ed prst, link(l)}{p_end}
 {p 8 12 2}{cmd:. oglm warm i.yr89 i.male i.white age ed prst, link(p)}{p_end}
 {p 8 12 2}{cmd:. oglm warm i.yr89 i.male i.white age ed prst, link(c)}{p_end}
@@ -410,7 +410,7 @@ is considered experimental and possibly wrong.}
 Stata's prefix commands. But remember that many prefix commands do not support
 factor variables. For example,
 
-{p 8 12 2}{cmd:. use http://www.indiana.edu/~jslsoc/stata/spex_data/ordwarm2.dta, clear}{p_end}
+{p 8 12 2}{cmd:. use use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear, clear}{p_end}
 {p 8 12 2}{cmd:. sw, pe(.05): oglm warm yr89 male}{p_end}
 {p 8 12 2}{cmd:. nestreg: oglm warm (yr89 male  white age) (ed prst)}{p_end}
 
@@ -426,7 +426,7 @@ equations. Note that it is possible to estimate a heteroskedasticity-only
 model, and that the variables in the two equations do not need to
 be the same.
 
-{p 8 12 2}{cmd:. use http://www.indiana.edu/~jslsoc/stata/spex_data/ordwarm2.dta, clear}{p_end}
+{p 8 12 2}{cmd:. use use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
 {p 8 12 2}{cmd:. oglm warm i.yr89 i.male i.white age ed prst, het(i.yr89) hc}{p_end}
 {p 8 12 2}{cmd:. oglm warm i.yr89 i.male white age ed prst, scale(i.male i.white) ls link(p)}{p_end}
 {p 8 12 2}{cmd:. oglm warm, eq2(i.male)}{p_end}
@@ -448,7 +448,7 @@ the following examples, because of the {opt flip} option, the choice
 variables are yr89, male, white, age, ed, and prst, while the hetero variables
 are yr89, male, and white.
 
-{p 8 12 2}{cmd:. use http://www.indiana.edu/~jslsoc/stata/spex_data/ordwarm2.dta, clear}{p_end}
+{p 8 12 2}{cmd:. use use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear, clear}{p_end}
 {p 8 12 2}{cmd:. sw, pe(.05) lr: oglm warm yr89 male white, eq2(yr89 male white age ed prst) flip}{p_end}
 {p 8 12 2}{cmd:. nestreg, lr: oglm warm yr89 male white, eq2(yr89 male white age ed prst) flip}{p_end}
 
@@ -458,7 +458,7 @@ outcome command, so you have to tell {cmd:margins} which outcome you want the pr
 or marginal effects for. Also, keep in mind that not all prefix commands work when factor
 variables are used.
 
-{p 8 12 2}{cmd:. use http://www.indiana.edu/~jslsoc/stata/spex_data/ordwarm2.dta, clear}{p_end}
+{p 8 12 2}{cmd:. use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
 {p 8 12 2}{cmd:. recode warm (1 2  = 0)(3 4 = 1), gen(agree)}{p_end}
 {p 8 12 2}{cmd:. oglm agree i.yr89 i.male i.white age ed prst}{p_end}
 {p 8 12 2}{cmd:. margins yr89 male white, predict(outcome(1))}{p_end}
