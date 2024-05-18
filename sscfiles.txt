@@ -9133,6 +9133,7 @@ fmwww.bc.edu/repec/bocode/p/projix.sthlp
 fmwww.bc.edu/repec/bocode/p/product.dta
 fmwww.bc.edu/repec/bocode/p/powerq.ado
 fmwww.bc.edu/repec/bocode/p/paramed.mata
+fmwww.bc.edu/repec/bocode/p/polarbar.ado
 fmwww.bc.edu/repec/bocode/p/pvenn.ado
 fmwww.bc.edu/repec/bocode/p/pip_update.ado
 fmwww.bc.edu/repec/bocode/p/probitiv.pkg
@@ -9195,6 +9196,7 @@ fmwww.bc.edu/repec/bocode/p/pcorr2.html
 fmwww.bc.edu/repec/bocode/p/pcm000101_lf.ado
 fmwww.bc.edu/repec/bocode/p/power_swgee.sthlp
 fmwww.bc.edu/repec/bocode/p/povcalnet_query.ado
+fmwww.bc.edu/repec/bocode/p/polarbar.sthlp
 fmwww.bc.edu/repec/bocode/p/psweight.pkg
 fmwww.bc.edu/repec/bocode/p/postlist.html
 fmwww.bc.edu/repec/bocode/p/parmest.ado
@@ -9265,6 +9267,7 @@ fmwww.bc.edu/repec/bocode/p/pariv.pkg
 fmwww.bc.edu/repec/bocode/p/pandoc.ado
 fmwww.bc.edu/repec/bocode/p/panelthin.ado
 fmwww.bc.edu/repec/bocode/p/preserve_globals.sthlp
+fmwww.bc.edu/repec/bocode/p/polarspike.pkg
 fmwww.bc.edu/repec/bocode/p/processrank.m
 fmwww.bc.edu/repec/bocode/p/plotmatrix.html
 fmwww.bc.edu/repec/bocode/p/psiduse.ado
@@ -10055,6 +10058,7 @@ fmwww.bc.edu/repec/bocode/p/pcacoefsave.sthlp
 fmwww.bc.edu/repec/bocode/p/pwploti.pkg
 fmwww.bc.edu/repec/bocode/p/python.pkg
 fmwww.bc.edu/repec/bocode/p/pmvalsampsize.ado
+fmwww.bc.edu/repec/bocode/p/polarspike.sthlp
 fmwww.bc.edu/repec/bocode/p/parmest_outdest_opts.html
 fmwww.bc.edu/repec/bocode/p/povdeco.pkg
 fmwww.bc.edu/repec/bocode/p/psbayesm.html
@@ -10145,6 +10149,7 @@ fmwww.bc.edu/repec/bocode/p/prtab.sthlp
 fmwww.bc.edu/repec/bocode/p/path.ado
 fmwww.bc.edu/repec/bocode/p/propcnsreg_sim.html
 fmwww.bc.edu/repec/bocode/p/plotplainblind.sthlp
+fmwww.bc.edu/repec/bocode/p/polarspike.ado
 fmwww.bc.edu/repec/bocode/p/powersim.pkg
 fmwww.bc.edu/repec/bocode/p/petpoisson.sthlp
 fmwww.bc.edu/repec/bocode/p/plztowknr.sthlp
@@ -19157,6 +19162,7 @@ fmwww.bc.edu/repec/bocode/s/sls_postestimation.sthlp
 fmwww.bc.edu/repec/bocode/s/spautoc.pkg
 fmwww.bc.edu/repec/bocode/s/sctostreamcsv.ado
 fmwww.bc.edu/repec/bocode/s/spagg.ado
+fmwww.bc.edu/repec/bocode/s/splinefit.sthlp
 fmwww.bc.edu/repec/bocode/s/spregxt24.ado
 fmwww.bc.edu/repec/bocode/s/sdindexplot.ado
 fmwww.bc.edu/repec/bocode/s/smwoodbury_sym1_posdef.sthlp
@@ -19933,6 +19939,7 @@ fmwww.bc.edu/repec/bocode/s/slpower1.dta
 fmwww.bc.edu/repec/bocode/s/spautoc5.html
 fmwww.bc.edu/repec/bocode/s/smrtbl.pkg
 fmwww.bc.edu/repec/bocode/s/scheme-dsModeration.scheme
+fmwww.bc.edu/repec/bocode/s/splinefit.pkg
 fmwww.bc.edu/repec/bocode/s/spike.pkg
 fmwww.bc.edu/repec/bocode/s/spautoreg.ado
 fmwww.bc.edu/repec/bocode/s/staft.ado
@@ -19968,6 +19975,7 @@ fmwww.bc.edu/repec/bocode/s/scheme-white_brbg.scheme
 fmwww.bc.edu/repec/bocode/s/svycanon.ado
 fmwww.bc.edu/repec/bocode/s/spregsemxt3.ado
 fmwww.bc.edu/repec/bocode/s/spellutil.pkg
+fmwww.bc.edu/repec/bocode/s/splinefit.ado
 fmwww.bc.edu/repec/bocode/s/saswrapper.ado
 fmwww.bc.edu/repec/bocode/s/stgenreg_gaussquad.ado
 fmwww.bc.edu/repec/bocode/s/synthopt.linux64

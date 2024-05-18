@@ -1,6 +1,9 @@
-*! streamplot v1.61 (15 Jan 2024)
+*! streamplot v1.81 (30 Apr 2024)
 *! Asjad Naqvi (asjadnaqvi@gmail.com)
 
+* v1.81	(30 Apr 2024): added area option to creat
+* v1.8	(25 Apr 2024): added labscale option. Added percent/share as substitutes. more flexible for generic options.
+* v1.7	(01 Apr 2024): trendline, yline, drop if by() is missing
 * v1.61 (15 Jan 2024): fixed wrong locals. changed ylab to just lab.
 * v1.6  (15 Oct 2023): cat() option added. yrev, labcond() fixed. major code cleanup.
 * v1.52 (25 Aug 2023): Support for aspect(), saving(), nolabel, nodraw, xscale() and graphregion() added.
@@ -9,8 +12,8 @@
 * v1.4  (08 Nov 2022): Major code cleanup and some parts reworked. Observation checks. Palette options. label controls.
 * v1.3  (20 Jun 2022): Add marker labels and format options 
 * v1.2  (14 Jun 2022): passthru optimizations. error checks. reduce the default smoothing. labels fix
-* v1.1  (08 Apr 2022)
-* v1.0  (06 Aug 2021)
+* v1.1  (08 Apr 2022): First release
+* v1.0  (06 Aug 2021): Beta version
 
 
 cap program drop streamplot
@@ -20,14 +23,12 @@ program streamplot, sortpreserve
 version 15
  
 	syntax varlist(min=2 max=2 numeric) [if] [in], by(varname)  ///
-		[ palette(string) alpha(real 100) smooth(real 3) ] ///
-		[ LColor(string)  LWidth(string) labcond(real 0) ] 		///					
-		[ LABSize(string) LABColor(string) offset(real 15)    ] ///
-		[ xlabel(passthru) xtitle(passthru) title(passthru) subtitle(passthru) note(passthru) scheme(passthru) name(passthru) xsize(passthru) ysize(passthru)  ] ///
-		[ PERCENT FORMAT(string) RECenter(string) ]  ///
-		[ aspect(passthru) saving(passthru) NOLABel nodraw xscale(passthru) graphregion(passthru) ]  /// v1.5x
-		[ cat(varname) YREVerse  ]   // v1.6
-		
+		[ palette(string) alpha(real 100) smooth(real 3) LColor(string)  LWidth(string) labcond(real 0) ] 		///					
+		[ LABSize(string) LABColor(string) offset(real 15) format(string) RECenter(string) ]  ///
+		[ NOLABel nodraw  ]  /// v1.5x
+		[ cat(varname) YREVerse  ]  ///  // v1.6
+		[ tline TLColor(string) TLWidth(string) TLPattern(string) droplow 	 ] ///	// v1.7
+		[ * labprop labscale(real 0.3333) percent share area ]  // 1.8 options
 		
 		
 	// check dependencies
@@ -53,8 +54,6 @@ version 15
 		}
 	}
 
-	if `"`format'"' == "" local format "%12.0fc"
-	
 
 
 qui {
@@ -62,7 +61,15 @@ preserve
 	
 	keep if `touse'
 	
+	cap confirm numeric var `by'	
+		if !_rc {  
+			drop if `by'==.
+		}
+		else {
+			drop if `by'==""
+		}
 	
+	recode `yvar' (. = 0)
 	
 	if "`cat'"=="" {
 		gen _cat = 1  // run a dummy
@@ -75,10 +82,9 @@ preserve
 	
 	collapse (sum) `yvar', by(`xvar' `by' `cat')
 	
-	
-	
-	gen ones = 1
-	bysort `by': egen counts = sum(ones)
+
+	gen _ones = 1
+	bysort `by': egen counts = sum(_ones)
 	egen tag = tag(`by')
 	summ counts, meanonly
 	  
@@ -101,47 +107,48 @@ preserve
 		exit
 	}
 	
-	drop ones tag counts
+	drop _ones tag counts
 	
-		fillin  `by' `xvar' 
+	fillin  `by' `xvar' 
 	recode `yvar' (.=0)
-	sort `xvar' `by' 	
+	sort `by' `cat' `xvar'
 	
 	
 	
 	// pass on cat variable to added observations
 	
-	bysort `by': replace `cat' = `cat'[_N] if `cat'==.
+	bysort `by': replace `cat' = `cat'[1] if `cat'==.
 	cap drop _fillin
 
 	egen _order = group(`cat' `by')  // this is the primary order category
 	
-	
 
 	cap confirm numeric var `by'	
-		if _rc!=0 {        // if numeric, make sure its numeric is ordered from 1
-			tempvar tempov
-			encode `by', gen(`tempov')
-			labmask _order, val(`by')
-		}
-		else {  // if string
-			 
-						
-			if "`: value label `by''" != "" {
+		if !_rc {        // if numeric
+			if "`: value label `by''" != "" {   // with val labels
 				tempvar tempov
 				decode `by', gen(`tempov')		
-				labmask _order, val(`tempov')
+				cap labmask _order, val(`tempov')
+				lab val _order _order
 			}
-			else {
-				labmask _order, val(`by')
-
+			else {				// without val labels
+				tempvar tempov
+				encode `by', gen(`tempov')
+				cap labmask _order, val(`by')
+				lab val _order _order
 			}
 		}
+		else {  // if string
+			label list
+			cap labmask _order, val(`by')
+			lab val _order _order
+		}
+	
+	
 	
 	local by _order
 	
-	
-	
+
 	if "`yreverse'" != "" {
 					
 		clonevar over2 = `by'
@@ -161,13 +168,23 @@ preserve
 	}		
 	
 	
+	
 	keep  `xvar' `cat' `by' `yvar' 
 	order `xvar' `cat' `by' `yvar' 
 	
 	xtset `by' `xvar'  
 	
-
+	
 	replace `yvar' = 0 if `yvar' < 0	 // this is technically wrong but we do it anyways   // fix in later versions
+	
+	
+	if "`area'" != "" {
+		bysort `xvar': egen double _sum = sum(`yvar')
+		replace `yvar' = (`yvar' / _sum) * 100
+		drop _sum
+	}
+	
+	
 	tssmooth ma _ma  = `yvar' , w(`smooth' 1 0) 
 
 	// add the range variable on the x-axis
@@ -182,6 +199,15 @@ preserve
 	sort `xvar' `by' // extremely important for stack order.	
 	by `xvar': gen double _stack = sum(_ma) 
 	
+	if `rebasecat' == 1 {
+		egen _temp = group(`cat')
+		gen _nsval = _ma * (_temp==2) + -_ma * (_temp==1)
+		by `xvar': egen double _linevar = sum(_nsval) 
+	}
+	else {
+		bysort `xvar': egen double _linevar = max(_stack)
+	}
+	
 
 	** preserve the labels for use later
 
@@ -195,7 +221,6 @@ preserve
 	}
 
 
-
 	if "`yreverse'" == "" {
 		summ `cat'
 		summ _order if `cat'==r(max)
@@ -207,13 +232,16 @@ preserve
 		local rebase = r(max) 
 	}
 
-
+	summ _order, meanonly
+	local lastval = r(max)
+	
+	
 	ren `yvar' _yvar
-	drop `cat'
+	
+	cap drop `cat' _temp _nsval
 
 	
-
-	reshape wide _stack _yvar _ma  , i(`xvar') j(`by')  
+	reshape wide _stack _yvar _ma  , i(`xvar' _linevar) j(`by')  
 
 	foreach x of local idlabels {        // here we know how many variables we have    
 
@@ -222,10 +250,11 @@ preserve
 		lab var _yvar`x'  "`idlab_`x''" 
 	}
 
-		
-	 
+	
 	gen _stack0 = 0  // we need this for area graphs
 
+	
+	
 	order `xvar' _stack0
 	
 	
@@ -252,76 +281,78 @@ preserve
 	}
 	
 	
+	if "`area'" != "" { 	// overwrite
+		cap drop _meanval
+		gen _meanval = 0
+	}
+	
+	
 	
 	foreach x of varlist _stack* {
 		gen double `x'_norm  = `x' - _meanval
 	}	
 	
-	drop _meanval
-
-
+	if `rebasecat' == 0 	replace _linevar = _linevar - _meanval
+	
 	// this part is for the mid points 		
 
-	summ `xvar'
-	gen last = 1 if `xvar'==r(max)
-
+	gen double _ylab 		= .
+	gen double _yval 		= .
+	gen double _yshare 		= .
+	gen _yname = ""
 	
 	ds _stack*_norm
 	local items : word count `r(varlist)'
 	local items = `items' - 2
 
-
+	local counter = 1
 
 	forval i = 0/`items' {
 		local i0 = `i'
 		local i1 = `i' + 1
-
-		gen double _ylab`i1'  = (_stack`i0'_norm + _stack`i1'_norm) / 2 if last==1
+		local t : var lab _ma`i1'
+		
+		replace _ylab  = (_stack`i0'_norm[_N] + _stack`i1'_norm[_N]) / 2 in `counter'
+		
+		replace _yval = _yvar`i1'[_N] in `counter'
+		
+		replace _yname = "`t'" in `counter'
+		
+		local ++counter
 	}
 
 
+	sum _yval, meanonly
+	replace _yshare = (_yval / `r(sum)') * 100
 
-	egen double _lastsum  = rowtotal(_ma*)  if last==1
-
-
-	foreach x of varlist _ma* {
-		gen double `x'_share = (`x' / _lastsum) * 100
-		}
-
-
-	drop _lastsum
-
-
-**** automate this part
+	summ `xvar', meanonly
+	gen _xlab = r(max) if _yval!=.
+	
+	**** automate this part
 
 
 	ds _stack*norm
 	local items : word count `r(varlist)'
 	local items = `items' - 1
 
-	foreach x of numlist 1/`items' {
-		
-		   if `"`percent'"' != "" {
-			local ylabvalues `"string(_ma`x'_share, `"`format'"') + "%""'
-			
-			local labvar _ma`x'_share
-			
-		   }
-		   else {
-			local ylabvalues `"string(_yvar`x', `"`format'"')"'
-			
-			local labvar _yvar`x'
-		   }
-		   
-		   
-
-		local t : var lab _ma`x'
-		gen _label`x'  = "`t'" + " (" + `ylabvalues' + ")" if last==1 & `labvar' >= `labcond' 
-
+	
+	if "`format'"  == "" {
+		if "`percent'"=="" & "`share'"=="" & "`area'"=="" {			
+			local format %15.0fc
+		}
+		else {
+			local format %6.1f
+		}
+	}		
+	
+   
+	if "`percent'" != "" | "`share'"!="" {
+		gen _label  = _yname + " (" + string(_yshare, "`format'")  + "%)" if _yval!=.  
+	}
+	else {
+		gen _label  = _yname + " (" + string(_yval, "`format'")  + ")" if _yval!=.     //if last==1 & `labvar' >= `labcond' 
 	}
 
-	
-	
 	
 	if "`labsize'"  == "" 			local labsize 1.6
 	if "`lcolor'"    == "" 			local lcolor white
@@ -338,7 +369,7 @@ preserve
 	
 	
 
-summ _stack0_norm, meanonly	
+	summ _stack0_norm, meanonly	
 
 	if "`recenter'" == "" | "`recenter'" == "middle" | "`recenter'" == "mid"  | "`recenter'" == "m" { 
 
@@ -367,51 +398,86 @@ summ _stack0_norm, meanonly
 		local ymax =  1 * abs(r(max)) * 1.05	
 	}
 	
+
+	if "`tline'" != "" {
+		
+		if "`tlcolor'"   == "" 	local tlcolor black
+		if "`tlwidth'"   == "" 	local tlwidth 0.3
+		if "`tlpattern'" == "" 	local tlpattern solid
+		
+		local trendline (line _linevar `xvar', lc(`tlcolor') lw(`tlwidth') lp(`tlpattern'))
+	}
+	
+
+
+	if "`nolabel'"=="" & "`labprop'" == "" & "`labcolor'" =="" {
+		local labels  `labels'  (scatter _ylab _xlab if _yval >= `labcond' , mlabel(_label) mcolor(none) mlabsize(`labsize') mlabcolor("`labcolor'")) 
+	}
+	
+	
+	summ _yval, meanonly
+	local height = r(max)
+	
 	
 	ds _stack*norm
 	local items : word count `r(varlist)'
 	local items = `items' - 2
-	
 
-	
+	local counter = 1
+
 	forval x = 0/`items' {  
 
-	local numcolor = `items' + 1
+		local numcolor = `items' + 1
 
-	colorpalette `palette', n(`numcolor') nograph `poptions'
+		colorpalette `palette', n(`numcolor') nograph `poptions'
 
 		local x0 =  `x'
 		local x1 =  `x' + 1
 
 		local areagraph `areagraph' rarea _stack`x0'_norm _stack`x1'_norm `xvar', fcolor("`r(p`x1')'") fi(100) lcolor(`lcolor') lwidth(`lwidth') ||
-
+	
 		
 		if "`labcolor'" == "palette" {
 			local ycolor  "`r(p`x1')'"
 		}
-		
+
 		
 		if "`nolabel'"=="" {
-			local labels  `labels'  (scatter _ylab`x1' `xvar' if last==1, mlabel(_label`x1') mcolor(none) mlabsize(`labsize') mlabcolor("`ycolor'")) || 		
-			
-		}	
+			if "`labprop'" != "" {
+				summ _yval in `counter' , meanonly
+				local labwgt = `labsize' * (r(max) / `height')^`labscale' 
 
+				local labels `labels' (scatter _ylab _xlab in `counter'  if _yval >= `labcond'	, mlabel(_label) mcolor(none) mlabsize(`labwgt') 	mlabcolor("`ycolor'")) 
+				local ++counter
+			}
+			
+			
+			if  "`labprop'"=="" & "`labcolor'"=="palette" {
+
+				local labels  `labels'  (scatter _ylab _xlab in `counter'  if _yval >= `labcond', mlabel(_label) mcolor(none) mlabsize(`labsize')	mlabcolor("`ycolor'")) 
+				local ++counter
+			}	
+		}		
 	}
 
 	
+
+	*** final graph
+	
 	twoway /// 
 		`areagraph' ///
-		`labels'	///
+		`labels'	///									
+		`trendline'	///
 			, ///
 				legend(off) ///
 				yscale(noline) ///
 				ytitle("") `xtitle'  ///
 				ylabel(`ymin' `ymax', nolabels noticks nogrid) ///
-				`xlabel' xscale(noline range(`xrmin' `xrmax'))   ///  
-				`title' `subtitle' `note' `scheme' `xsize' `ysize' `name' `aspect' `saving' `nodraw' `xscale' `graphregion'
-
-				
+				xscale(noline range(`xrmin' `xrmax')) ///
+				`options'  
+	
 	*/
+
 restore
 }		
 		
@@ -422,3 +488,9 @@ end
 *********************************
 ******** END OF PROGRAM *********
 *********************************
+
+
+
+
+
+

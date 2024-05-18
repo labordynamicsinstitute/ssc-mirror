@@ -1,9 +1,10 @@
-d 'ARCPLOT': module for arc plots
+d 'POLARSPIKE': module for polar spike graphs
 d
-d  This is a Stata package to produce arc plots. 
+d  This is a module for polar spike graphs. 
 d
 d KW: graphics
-d KW: arc plots
+d KW: polar plots
+d KW: spike plots
 d
 d Requires: Stata version 15 and palettes, colrspace, labmask from SSC
 d
@@ -12,5 +13,5 @@ d
 d Author: Asjad Naqvi, WU Vienna
 d Support: email asjadnaqvi@@gmail.com
 d
-f arcplot.ado
-f arcplot.sthlp
+f polarspike.ado
+f polarspike.sthlp

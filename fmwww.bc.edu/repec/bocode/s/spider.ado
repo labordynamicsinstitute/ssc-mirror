@@ -1,6 +1,8 @@
-*! spider v1.23 (12 Nov 2023)
+*! spider v1.31 (11 May 2024)
 *! Asjad Naqvi (asjadnaqvi@gmail.com)
 
+* v1.31	(11 May 2024): changed raformat() to format(). Format default improved. by() and over() error checks added. passthru changed to *.
+* v1.3	(16 Feb 2024): rewrite to suport long form, add rotate label, better legend controls.
 * v1.23 (12 Nov 2023): Added slabcolor(), saving()
 * v1.22 (03 Jul 2023): Fixed bug with numerical variables not passing correctly.
 * v1.21 (10 Jun 2023): Options added: ralabcolor() ralabangle().
@@ -12,30 +14,24 @@
 * Step-by-step guide on Medium   *
 **********************************
 
-* if you want to go for even more customization, you can read this guide:
+* Based on this guide:
 * Spider plots (26 Jan, 2021) https://medium.com/the-stata-guide/stata-graphs-spider-plots-613808b51f73
 
 cap program drop spider
-
 
 program spider, sortpreserve
 
 version 15
  
-	syntax varlist(numeric) [if] [in], over(varname) ///
-		[ alpha(real 5) ROtate(real 30) DISPLACELab(real 15) DISPLACESpike(real 2)  palette(string) 				] ///   	
-		[ RAnge(numlist min=2 max=2) cuts(real 6) smooth(numlist max=1 >=0 <=1) raformat(string)  RALABSize(string) ] ///
+	syntax varlist(numeric max=1) [if] [in], by(varname) ///
+		[ over(varname) alpha(real 10) ROtate(real 30) DISPLACELab(real 15) DISPLACESpike(real 2)  palette(string) 				] ///   	
+		[ RAnge(numlist min=2 max=2) cuts(real 6) smooth(numlist max=1 >=0 <=1) format(string)  RALABSize(string) ] ///
 		[ LWidth(string) MSYMbol(string) MSize(string) MLWIDth(string)  											] /// // spider properties
 		[ CColor(string) CWidth(string)	SColor(string) SWidth(string) SLABSize(string)								] /// // circle = C, spikes = S
-		[ title(passthru) subtitle(passthru) note(passthru) scheme(passthru) name(passthru) saving(passthru)		] /// 
-		[ NOLEGend LEGPOSition(real 6) LEGCOLumns(real 5) LEGSize(real 2.2) xsize(real 1) ysize(real 1) ] ///  // v1.2 updates.
-		[ RALABColor(string) RALABAngle(string) SLABColor(string) ]  // v1.2X options
+		[ NOLEGend LEGPOSition(real 6) LEGCOLumns(real 3) LEGSize(real 2.2)  ] ///  // v1.2 updates.
+		[ RALABColor(string) RALABAngle(string) SLABColor(string) ROTATELABel ] ///  // v1.2X options
+		[ xsize(real 1) ysize(real 1) * ]
 		
-		// TODO: 
-		// ROTATELABel: allow label rotations
-		// POLYgon    : replace circles with polygons
-		// legend(passthru) not working. If labels have breaks, it breaks down. Check and fix.
-		// add a by() option for long data
 		
 	// check dependencies
 	cap findfile colorpalette.ado
@@ -56,40 +52,71 @@ version 15
 qui {
 preserve		
 	keep if `touse'
+	keep `varlist' `by' `over'
 	
-	keep `varlist' `over'
+	levelsof `by'
+	if r(r) < 3 {
+		display as error "by() variable should contain at least three categories."
+		exit
+	}
 	
-	local length : word count `varlist'
 	
-	cap confirm numeric var `over'
-
+	cap confirm numeric var `by'
+	
 	if _rc!=0 {  // if string
-		tempvar over2
-		encode `over', gen(over2)
-		local over over2 
+		encode `by', gen(_by)
+		local by _by
 	}
 	else {
-		egen   over2 = group(`over')
-		
-		if "`: value label `over''" != "" {
-			
+		egen _by = group(`by')
+		if "`: value label `by''" != "" {
 			tempvar tempov
-			decode `over', gen(`tempov')		
-			labmask over2, val(`tempov')
-			
+			decode  `by', gen(`tempov')		
+			labmask _by , val(`tempov')		
 		}
-		local over over2 
+		local by _by 
 	}	
 	
 	
-	
-	
-	collapse (mean) `varlist', by(`over')
-	
-	tempvar varmin varmax
-	egen double `varmin' = rowmin(`varlist')
-	egen double `varmax' = rowmax(`varlist')
+	if "`over'" == "" {
+		gen _over = 1
+		local over _over
+		local overswitch = 1
+	}
+	else {
+		
+		levelsof `over'
 
+		if r(r) < 2 {
+			display as error "over() variable should contain at least two categories."
+			exit
+		}		
+		
+		local overswitch = 0
+		cap confirm numeric var `over'
+		
+		if _rc!=0 {  // if string
+			encode `over', gen(_over)
+			local over _over
+		}
+		else {
+			egen _over = group(`over')
+			if "`: value label `over''" != "" {
+				tempvar tempov
+				decode `over', gen(`tempov')		
+				labmask _over, val(`tempov')	
+			}
+			local over _over 
+		}	
+	}
+	
+	collapse (mean) `varlist', by(`by' `over')
+
+	sum `varlist', meanonly
+	local varmin = r(min)
+	local varmax = r(max)
+	
+	
 	/////////////////////
 	// set the scales  //  
 	/////////////////////
@@ -101,50 +128,51 @@ preserve
 		
 	}
 	else {
-		summ `varmin', meanonly
-			local gmin = r(min)
-		summ `varmax', meanonly
-			local gmax = r(max)
 		
-		local disp = (`gmax' - `gmin') * 0.1  // displace minmax by 10%
+		local disp = (`varmax' - `varmin') * 0.1  // displace minmax by 10%
 		
-		local norm1 = `gmin' - `disp'
-		local norm2 = `gmax' + `disp'
+		local norm1 = `varmin' - `disp'
+		local norm2 = `varmax' + `disp'
 	}
 
 	
 	// rescale variables between [0,100] from their global min/max. This ensures that negative numbers are there as well
-	foreach x of varlist `varlist' {
-		replace `x' = ((`x' - `norm1') / (`norm2' - `norm1')) * 100
-	}
+		replace `varlist' = ((`varlist' - `norm1') / (`norm2' - `norm1')) * 100
+
 	
-		
-	levelsof `over'
+	sort `over' `by'  
+	bysort `over': gen _seq = _n
+	
+	levelsof `by'
 	local items = r(r)
 
-
 	local ro = `rotate' * _pi / 180  	
-	gen double angle = (_n * 2 * _pi / `items') + `ro'
+	gen double angle = (_seq * 2 * _pi / `items') + `ro'
 
-	
+
 	//////////////////////////
 	// generate the points  //
 	//////////////////////////
 	
+		gen double x = `varlist' * cos(angle)	
+		gen double y = `varlist' * sin(angle)	
 
-		foreach x of varlist `varlist' {
-			gen double x_`x' = `x' * cos(angle)	
-			gen double y_`x' = `x' * sin(angle)	
-		}
-	
-	
+		sort _over _by 
+		
 		if "`smooth'" != "" {
-			foreach x of varlist `varlist' {
+		
+			*if _N < 50 set obs 50 // generate the points
+		
+			levelsof `over', local(lvls)
+			
+			foreach x of local lvls {
+				
 				cap drop _m
-				smoother y_`x' x_`x', rho(`smooth')		
-				ren Cx x_`x'_pts
-				ren Cy y_`x'_pts
-				sort `over' _id
+				
+				smoother y x if `over'==`x' , rho(`smooth')		
+				ren Cx x`x'_pts   // 
+				ren Cy y`x'_pts   // 
+
 			}		
 		}
 	
@@ -174,13 +202,12 @@ preserve
 
 		}	
 
-		
 	///////////////////////
 	//   circle labels   //
 	///////////////////////			
 	
 	
-	if "`raformat'" == "" local raformat %5.0f
+	if "`format'" == "" local format %12.1f
 	
 	local gap2 = (`norm2' - `norm1') / (`cuts' - 1)
 	
@@ -191,7 +218,7 @@ preserve
 	local i = 1
 
 	forval x = 0(`gap')100 {
-		replace xlab = string(`norm1' + ((`i' - 1) * `gap2'), "`raformat'")  in `i' 
+		replace xlab = string(`norm1' + ((`i' - 1) * `gap2'), "`format'")  in `i' 
 		replace xvar =  `x'  in `i'	
 		replace yvar =  0  in `i'	
 	   
@@ -217,6 +244,7 @@ preserve
 		
 		}	
 
+		
 	/////////////////
 	//   labels	   //
 	/////////////////
@@ -224,23 +252,33 @@ preserve
 	if "`slabsize'"  == "" local slabsize 2.2
 	if "`slabcolor'" == "" local slabcolor black
 	
-	gen double markerx   = (100 + `displacelab') * cos(angle)
-	gen double markery   = (100 + `displacelab') * sin(angle)	
+	gen double markerx = .
+	gen double markery = .
+	gen 	 markerlab = ""
 	
-	local labs
+	levelsof `by'
+	local byitems = r(r)
 		
-		forval i = 1/`items' {
-
+	forval i = 1/`byitems' {
+	
+		replace markerx   = (100 + `displacelab') * cos(angle) in `i'
+		replace markery   = (100 + `displacelab') * sin(angle) in `i'	
+	
+		local varn : label `by' `i'
+		replace markerlab = "`varn'" in `i'
+	
 			if "`rotatelabel'" != "" {
 				sum   angle in `i', meanonly
-				local angle = (r(mean)  * (180 / _pi)) + 255
+				local angle = (r(mean)  * (180 / _pi)) - 90
 			} 
-		 
-			local labs `labs' (scatter markery markerx in `i', mc(none) mlab(`over') mlabpos(0) mlabcolor(`slabcolor') mlabangle(`angle')  mlabsize(`slabsize'))  ///  // 
+	
+	
+		local labs `labs' (scatter markery markerx in `i', mc(none) mlab("markerlab") mlabpos(0) mlabcolor(`slabcolor') mlabangle(`angle')  mlabsize(`slabsize'))  ///  // 
 		  
-		} 		
+	
+	
+	}
 		
-
 	/////////////////
 	//   spiders   //
 	/////////////////	
@@ -259,45 +297,46 @@ preserve
 		local poptions `3'
 	}
 	
-	forval i = 1/`length' {
+	qui levelsof `over'
+	local items = r(r)
 	
-	tokenize `varlist'
+	forval i = 1/`items' {
 	
-		local varn = "``i''"
-		
+	
 		colorpalette `palette', nograph `poptions'
 		
 		if "`smooth'" == "" {
-			local spider  `spider'  (area y_`varn'     x_`varn'    , nodropbase fi(100) fcolor("`r(p`i')'%`alpha'") lc("`r(p`i')'") lw(`lwidth')) ||
+			local spider  `spider'  (area y x if `over'==`i'    , nodropbase fi(100) fcolor("`r(p`i')'%`alpha'") lc("`r(p`i')'") lw(`lwidth')) 
 		
 		}
 		else {
-			local spider  `spider'  (area y_`varn'_pts x_`varn'_pts, nodropbase fi(100) fcolor("`r(p`i')'%`alpha'") lc("`r(p`i')'") lw(`lwidth')) ||
+			local spider  `spider'  (area y`i'_pts x`i'_pts, nodropbase fi(100) fcolor("`r(p`i')'%`alpha'") lc("`r(p`i')'") lw(`lwidth')) 
 			
 		}
 		
 		
-		local spider2 `spider2' (scatter y_`varn' x_`varn', msize(`msize') mc("`r(p`i')'") msymbol("`msymbol'") mlwidth(`mlwidth')) || 
+		local spider2 `spider2' (scatter y x if `over'==`i' , msize(`msize') mc("`r(p`i')'") msymbol("`msymbol'") mlwidth(`mlwidth')) 
 		
 		
 	}
 
+	
 	/////////////////
 	//   legend	   //  
 	/////////////////	
 	
-
-	if "`nolegend'" != "" {
+	
+	if "`nolegend'" != "" | `overswitch' == 1  {
 		local mylegend legend(off)
 				
 	}
 	else {
 	
-		forval i = 1/`length' {
+		forval i = 1/`items' {
 			
-			local j = `i' + (`cuts' * 2) + `items'
-			
-			local varn = "``i''"
+			local j = `i' + (`cuts' * 2) + `byitems' 
+			local varn : label `over' `i'
+		
 			local entries `" `entries' `j'  "`varn'"  "'
 		}
 	
@@ -306,10 +345,6 @@ preserve
 		
 	}
 	
-
-	
-
-
 	
 	//////////////////////
 	//   final graph	//
@@ -334,7 +369,7 @@ preserve
 							xscale(off) yscale(off)	///
 							xlabel(, nogrid) ylabel(, nogrid) ///
 							`mylegend' ///
-							`title' `subtitle' `note' `scheme' `name' `saving'
+							`options'
 								
 									
 			
@@ -344,7 +379,6 @@ restore
 }
 
 
-		
 end
 
 
@@ -354,21 +388,28 @@ end
 
 cap program drop smoother
 
-program smoother , sortpreserve
+program smoother, sortpreserve
 
 version 15
  
 	syntax varlist(numeric min=2 max=2) [if] [in], [ rho(real 0.5) obs(real 50) ] 
  
+	marksample touse, strok
+
 	tokenize `varlist'
 	local vary `1'
 	local varx `2'
 	
 
 preserve	
+
+	keep if `touse'
  
 	cap drop _id
 	keep `varlist'
+	
+	noi list `varlist'
+	
 	drop if `varx'==.
 	gen pts = _n
 	order pts
@@ -447,8 +488,8 @@ preserve
 	
 		**** calculate the Cs
 
-		gen Cx`x' = (((`t2' - t`x') / (`t2' - `t1')) * `B1x') + (((t`x' - `t1') / (`t2' - `t1')) * `B2x')
-		gen Cy`x' = (((`t2' - t`x') / (`t2' - `t1')) * `B1y') + (((t`x' - `t1') / (`t2' - `t1')) * `B2y')	
+		gen double Cx`x' = (((`t2' - t`x') / (`t2' - `t1')) * `B1x') + (((t`x' - `t1') / (`t2' - `t1')) * `B2x')
+		gen double Cy`x' = (((`t2' - t`x') / (`t2' - `t1')) * `B1y') + (((t`x' - `t1') / (`t2' - `t1')) * `B2y')	
 			
 	}	
  
@@ -459,9 +500,13 @@ preserve
 	reshape long Cx Cy t, i(id) j(spline)
 	sort spline t 
  
+	*list Cy Cy spline
+ 
 	drop id spline t
 	gen _id = _n
 	order _id
+	
+	
 	
 	tempfile mysplines
 	save `mysplines', replace

@@ -1,259 +1,126 @@
 {smcl}
-{* *! version 1.0  25mar2022}{...}
-{vieweralsosee "twoway scatter" "help twoway scatter"}{...}
-{viewerjumpto "Syntax" "waffle##syntax"}{...}
-{viewerjumpto "Menu" "waffle##menu"}{...}
-{viewerjumpto "Description" "waffle##description"}{...}
-{viewerjumpto "Options" "waffle##options"}{...}
-{viewerjumpto "Examples" "waffle##examples"}{...}
-{viewerjumpto "Author" "waffle##author"}{...}
-{viewerjumpto "Reference" "waffle##reference"}{...}
+{* 05May2024}{...}
+{hi:help waffle}{...}
+{right:{browse "https://github.com/asjadnaqvi/stata-waffle":waffle v1.11 (GitHub)}}
 
-{p2colset 6 16 18 2}{...}
-{p2col:{bf:waffle} {hline 2}}Draw waffle charts{p_end}
-{p2colreset}{...}
+{hline}
 
-{marker syntax}{...}
-{title:Syntax}
+{title:waffle}: A Stata package for Waffle plots. 
 
-{p 8 16 2}
-{cmd:waffle} {varlist} {ifin} [{cmd:,} {it:options}]
+{p 4 4 2}
+The command is based on the {browse "https://medium.com/the-stata-guide/stata-graphs-waffle-charts-32afc7d6f6dd":Waffle plots} guide on Medium.
 
-{synoptset 35 tabbed}{...}
-{synopthdr}
-{synoptline}
-{syntab:Waffle Design}
-{synopt :{opt wide}}change square shape to wide rectangle{p_end}
-{synopt :{opt by(varlist)}}produce multiple waffle charts by categorical {varlist}{p_end}
-{synopt :{opt color:s(colorlist)}}specify colors of each category separated by a space; default colors are Tableau palette{p_end}
-{synopt :{opt empty:colors(colorlist)}}specify the color of empty squares; default is (gs14){p_end}
-{synopt :{opt outl:inecolors(colorlist)}}specify the color of the square outlines; default is (none){p_end}
-{synopt :{opt emptyoutl:inecolors(colorlist)}}specify the color of the empty square outlines; default is (none){p_end}
-{synopt :{opt mark:ersize(numlist)}}change the size of the squares; defaults have been determined by other options specified{p_end}
-{synopt :{opt sch:eme(schemename)}}set the scheme for your chart{p_end}
 
-{syntab: Add Information}
-{synopt :{opt t:itle(tinfo)}}overall title, can use title options from {opt twoway}{p_end}
-{synopt :{opt n:ote(tinfo)}}include a note at the bottom of your chart{p_end}
-{synopt :{opt name(tinfo)}}name your chart to reference later. Can be used the same way as twoway naming options{p_end}
-{synopt :{cmdab:leg:end:(}[{it:{help legend_options##contents:contents}}] [{it:{help legend_options##location:location}}]{cmd:)}}include and format a legend; available only if multiple variables specified{p_end}
+{marker syntax}{title:Syntax}
+{p 8 15 2}
 
-{syntab:Misc.}
-{synopt :{opt cools:graph}}draw a Cool S Graph instead!!{p_end}
-{synoptline}
+{cmd:waffle} {it:numvar(s)} {ifin}, 
+                {cmd:[} {cmd:by}({it:variable}) {cmd:over}({it:variable}) {cmd:normvar}({it:variable}) {cmd:percent} {cmd:showpct} {cmd:format}({it:fmt}) {cmd:palette}({it:name})
+                  {cmdab:rowd:ots}({it:num}) {cmdab:cold:ots}({it:num}) {cmd:aspect}({it:num}) {cmdab:msym:bol}({it:list}) {cmdab:ms:ize}({it:list}) {cmdab:mlwid:th}({it:list})
+                  {cmdab:ndsym:bol}({it:str}) {cmdab:nds:ize}({it:str}) {cmdab:ndc:olor}({it:str}) {cmd:cols}({it:num}) {cmd:margin}({it:str}) {cmdab:legcol:umns}({it:num}) {cmdab:legpos:ition}({it:pos}) {cmdab:legs:ize}({it:str})
+                  {cmd:note}({it:str}) {cmd:subtitle}({it:str}) *                                  
+                {cmd:]}
 
-{marker menu}{...}
-{title:Menu}
-{phang}{bf:Graphics > Twoway graph (scatter, line, etc.)}
+{p 4 4 2}
+The options are described as follows:
 
-{marker description}{...}
-{title:Description}
+{it:Option 1: Wide form}
+{p2coldent : {opt waffle numvars}}Use this option if the data is in wide form and each category is stored in a separate variable. Here one can specify
+a list of variables. Drawing is currently in alphabetical order.{p_end}
 
-{pstd}
-{cmd:waffle} is a wrapper for {helpb twoway scatter} and draws waffle charts based on variables containing percents or decimals. The standard waffle chart will be a 10x10 grid with colored squares indicating the percent value; specifying 
-{opt wide} will make the grid 5x20. 
-If only one variable is listed in {varlist}, {opt by()} is allowed and will make a different waffle chart for each category of {opt by()}. You can specify up to 5 variables in {varlist} and indicate the colors of each category.
-Other {opt twoway} options not listed here are not allowed because waffle charts rely on specific options of {opt twoway} being specified.
+{it:Option 2: Long form}
+{p2coldent : {opt waffle numvar, by(var)}}Use this option if the data is in long form and a single {it:numvar} can be split using the {opt by()} variable.{p_end}
 
-{marker options}{...}
-{title:Options}
+{p2coldent : {opt over(var)}}Further splits the waffle into {opt over()} groups where each is assigned a different color.{p_end}
 
-{dlgtab:Waffle Design}
+{p2coldent : {opt normvar(var)}}Normalize the heights based on the {opt normvar()} variable. Otherwise the category with the highest value will be shown as fully covering 
+all the dots in the waffle. The gaps to the full height as shown as no data (nd) symbols. See options below. It is highly recommended to calculate the {opt normvar()} 
+beforehand. For wide form the sum of {opt normvar()} values are taken since each row is assumed to be a subset, for long form the mean of {opt normvar()} is taken.
+This option might still evolve to better fit user cases.{p_end}
 
-{phang}
-{opt wide} transforms the 10x10 grid default to a 5x20 grid for all waffles being drawn.
+{p2coldent : {opt percent}}This will normalize each category to 100% split into own {opt over()} categories.{p_end}
 
-{phang}
-{opt by(varlist)} produces a waffle chart for each category in {varlist}. This option is not allowed if more than one variable is listed in by() and is also not allowed with more than one percent/decimal specified. 
-This feature will hopefully be resolved soon! If you would like multiple waffle charts with multiple color categories, I recommend drawing multiple individually and combining using {cmd: graph combine} or
-the user-written command {opt grc1leg}. Can be used with select {cmd: twoway} {opt by()} options, such as {opt rows()}.
+{p2coldent : {opt showpct}}Show percentage share instead of actual totals in the waffle plot.{p_end}
 
-{phang}
-{opt color:s(colorlist)} allows you to specify the colors of your percent/decimal variables. Colors will be assigned in order of your specified {varlist}. Default colors are based on the Tableau scheme from {opt schemepack}.
+{p2coldent : {opt format(fmt)}}Format the values displayed. Defaults are {opt format(%15.0fc)} and {opt format(%6.2f)} if the {opt showpct} option is specified.{p_end}
 
-{phang}
-{opt empty:colors(colorlist)} allows you to specify the colors of the "empty" squares in the waffle. The empty squares are all squares up to 100 not included in your defined percent/decimal variables. The default is {opt gs14}.
+{p2coldent : {opt palette(name)}}Color name is any named scheme defined in the {stata help colorpalette:colorpalette} package. Default is {stata colorpalette tableau:{it:tableau}}.
+The {opt over()} option shows colors.{p_end}
 
-{phang}
-{opt outl:inecolors(colorlist)} allows you to specify the outline colors of your filled in waffle squares. The default is {opt none}.
+{p2coldent : {opt rowd:ots(num)}, {opt cold:ots(num)}}These options can be used to control the number of dots in the waffle. Defaults are {opt rowdots(20)} and {opt coldots(20)}.
+Changing these will automatically trigger a change in the aspect ratio to ensure that dot spacing is even. If not, then overwrite the {opt aspect()} option.{p_end}
 
-{phang}
-{opt emptyoutl:inecolors(colorlist)} allows you to specify the outline colors of the "empty" squares in the waffle. This is separated from {opt outlinecolors} in the event that you would like to make the empty squares white with an outline, etc.
+{p2coldent : {opt aspect(num)}}Aspect ratio of the waffle plots. Default is {opt coldots()}/{opt rowdots()}.{p_end}
 
-{phang}
-{opt mark:ersize(numlist)} allows you to alter the size of the markers. The default sizes are based on other options, designed to adjust for number of categories in {opt by()} and whether or not {opt wide} is specified. The size is also dependent on the aspect ratio, which changes depending on the {opt wide} specification.
+{p2coldent : {opt msym:bol(list)}}Provide a list of acceptable marker symbols for each {opt over()} category. If the length of symbols is less than the {opt over()} layers,
+then the last specified symbol is used for the remaining layers. Default is {opt msymb(square)}, which is an obvious choice for a waffle plot.{p_end}
 
-{phang}
-{opt sch:eme(schemename)} allows you to change the scheme of the chart. Because other graph aspects, such as axes, are not allowed, this mostly determines the look of the background and the legend. 
-A recommended scheme is {opt white_tableau} from {opt schemepack} (available on ssc).
+{p2coldent : {opt ms:ize(list)}}Provide a list of marker sizes for each {opt over()} category. Default is {opt msize(0.85)}.{p_end}
 
-{dlgtab:Add Information}
+{p2coldent : {opt mlwid:th(list)}}Provide a list of marker line widths for each {opt over()} category. Useful if hollow symbols are used, which look very
+slim compared to filled symbols. Default is {opt mlwid(0.05)}.{p_end}
 
-{phang}
-{opt t:itle(tinfo)} allows you give your chart a title. If {opt by()} is specified, this will be the overall title, with individual waffle titles being identified by the value labels in {opt by(varlist)}.
+{p2coldent : {opt ndsym:bol(str)}}Symbol of filler no data category. Default is {opt ndsymb(square)}.{p_end}
 
-{phang}
-{opt n:ote(tinfo)} adds a note at the bottom left of the chart.
+{p2coldent : {opt nds:ize(str)}}Size of the no data category. Default is {opt ndsize(0.5)}.{p_end}
 
-{phang}
-{opt name(name [, replace])} gives the chart a name Stata will recognize, which is important if you would like to {opt combine} multiple graphs.
+{p2coldent : {opt ndc:olor(str)}}Color of the no data category. Default is {opt ndc(gs14)} if a the {normvar()} option is used, otherwise, it is turned off.{p_end}
 
-{phang}
-{cmd:legend(}{it:{help legend_options##contents:contents}}{cmd:,} {it:{help legend_options##location:location}}{cmd:)} determines the look of a legend. All legend options allowed in {helpb twoway} are allowed here. 
-This option is only available if multiple categories are specified.
+{p2coldent : {opt cols(num)}}Number of waffle columns. Default is {opt cols(4)}.{p_end}
 
-{dlgtab:Misc.}
+{p2coldent : {opt margin(str)}}Margin of the waffle columns. Here one needs to specify valid margin options.{p_end}
 
-{phang}
-{opt cools:graph} transports you back in time!
+{p2coldent : {opt legcol:umns(num)}}Number of legend columns. Default is {opt legcol(4)}.{p_end}
 
-{marker examples}{...}
+{p2coldent : {opt legpos:ition(str)}}The position of the legend. Default is {opt legpos(6)}.{p_end}
+
+{p2coldent : {opt legs:ize(str)}}The size of the legend labels. Default is {opt legs(2.2)}.{p_end}
+
+{p2coldent : {opt note(str)}}Can be used for displaying more information about the {opt by()} variables. To turn it off use {opt note("")}.{p_end}
+
+{p2coldent : {opt subtitle(str)}}Can be used customizing the labels of the waffle. Default is {opt subtitle( , pos(6) size(2.5) nobox)}.{p_end}
+
+{p2coldent : {opt *}}All other twoway options not elsewhere specified.{p_end}
+
+{title:Dependencies}
+
+The {browse "http://repec.sowi.unibe.ch/stata/palettes/index.html":palette} package (Jann 2018, 2022) is required for {cmd:waffle}:
+
+{stata ssc install palettes, replace}
+{stata ssc install colrspace, replace}
+
+Even if you have these installed, it is highly recommended to check for updates: {stata ado update, update}
+
 {title:Examples}
 
-{pstd}{opt Example 1: Recreate example from Asjad Naqvi's original post}{p_end}
+See {browse "https://github.com/asjadnaqvi/stata-streamplot":GitHub}.
 
-{pstd}First pull in data and create percent variables and other data cleaning{p_end}
-{phang2}{cmd:. ssc install schemepack, replace}{p_end}
-{phang2}{cmd:. set scheme white_tableau}{p_end}
-{phang2}{cmd:. graph set window fontface "Arial Narrow"}{p_end}
-{phang2}{cmd:. import delim using "https://covid.ourworldindata.org/data/owid-covid-data.csv", clear}{p_end}
-{phang2}{cmd:. gen date2 = date(date, "YMD")}{p_end}
-{phang2}{cmd:. format date2 %tdDD-Mon-yy}{p_end}
-{phang2}{cmd:. drop date}{p_end}
-{phang2}{cmd:. ren date2 date}{p_end}
-{phang2}{cmd:. ren location country}{p_end}
-{phang2}{cmd:. keep iso_code continent country date people_fully_vaccinated population}{p_end}
-{phang2}{cmd:. keep if length(iso_code) > 3}{p_end}
-{phang2}{cmd:. drop if inlist(iso_code,"OWID_KOS","OWID_CYN","OWID_HIC","OWID_LIC","OWID_LMC","OWID_UMC")}{p_end}
-{phang2}{cmd:. bysort country: egen last = max(date) if people_fully_vaccinated != .}{p_end}
-{phang2}{cmd:. keep if date == last}{p_end}
-{phang2}{cmd:. summ date}{p_end}
-{phang2}{cmd:. global dateval: di %tdd_m_y `r(max)'}{p_end}
-{phang2}{cmd:. di "$dateval"}{p_end}
-{phang2}{cmd:. gen share = people_fully_vaccinated / population}{p_end}
-{phang2}{cmd:. gen country2 = country + " (" + string(share * 100, "%9.1f") + "%)"}{p_end}
-
-{pstd} Now we can use the {opt waffle} command for the rest{p_end}
-{phang2}{cmd:. waffle share,}{p_end}
-{phang2}{cmd:. by(country2, rows(2)) markersize(2)}{p_end}
-{phang2}{cmd:. title("{fontface Arial Bold:Share of population fully vaccinated}", margin(medlarge))}{p_end}
-{phang2}{cmd:. note("Source: Our World in Data. Data updated: $dateval.")}{p_end}
-
-{pstd}{opt Example 2: Using Stata's Census 2000 data to show whole range of waffle command}{p_end}
-
-{pstd}First pull in and prep data{p_end}
-{phang2}{cmd:. sysuse pop2000, clear}{p_end}
-{pstd}create another category variable{p_end}
-{phang2}{cmd:. gen small_age_cat = 0}{p_end}
-{phang2}{cmd:. replace small_age_cat = 1 if inrange(agegrp,1,6)}{p_end}
-{phang2}{cmd:. replace small_age_cat = 2 if inrange(agegrp,7,13)}{p_end}
-{phang2}{cmd:. replace small_age_cat = 3 if inrange(agegrp,14,17)}{p_end}
-{phang2}{cmd:. label define age_cat 1 "Under 30" 2 "30-64" 3 "65 & up"}{p_end}
-{phang2}{cmd:. lab val small_age_cat age_cat}{p_end}
-{pstd}create total percents, regardless of category{p_end}
-{phang2}{cmd:. foreach x in black white asian total}{p_end}
-{phang3}{cmd:. egen tot_`x' = sum(`x')}{p_end}
-{phang2}{cmd:. gen pct_tot_black = tot_black / tot_total}{p_end}
-{phang2}{cmd:. gen pct_tot_white = tot_white / tot_total}{p_end}
-{phang2}{cmd:. gen pct_tot_asian = tot_asian / tot_total}{p_end}
-{pstd}create percents based on two different age categories{p_end}
-{phang2}{cmd:. egen small_age_tot_total = sum(total), by(small_age_cat)}{p_end}
-{phang2}{cmd:. foreach x in white black asian}{p_end}
-{phang3}{cmd:. gen pct_`x'_age = `x' / total}{p_end}
-{phang3}{cmd:. egen small_age_tot_`x' = sum(`x'), by(small_age_cat)}{p_end}
-{phang3}{cmd:. gen pct_`x'_small_age = small_age_tot_`x' / small_age_tot_total}{p_end}
-{phang3}{cmd:. drop small_age_tot_`x'}{p_end}
-{pstd}keep just categorical variables and percents{p_end}
-{phang2}{cmd:. drop total-femisland tot_black-tot_total small_age_tot_total}{p_end}
-
-{pstd}{opt Create a simple waffle chart of the total share of Black population in Census 2000}{p_end}
-{phang2}{cmd:. waffle pct_tot_black}{p_end}
-{pstd}try it in wide mode{p_end}
-{phang2}{cmd:. waffle pct_tot_black, wide}{p_end}
-{pstd}add a title with correct margins, a note, and change the colors, outlines, and size of the squares{p_end}
-{phang2}{cmd:. waffle pct_tot_black, ///}{p_end}
-{phang3}{cmd:. title("Share of Black U.S. population in 2000 Census", margin(medlarge)) ///}{p_end}
-{phang3}{cmd:. note("Data from the U.S. 2000 Census") ///}{p_end}
-{phang3}{cmd:. markersize(6) colors(teal) emptycolors(white) outlinecolors(gs5) emptyoutlinecolors(gs5)}{p_end}
-{pstd}look at share of Black population by age group{p_end}
-{phang2}{cmd:. waffle pct_black_age, by(agegrp)}{p_end}
-{pstd}works with string category variables too{p_end}
-{phang2}{cmd:. waffle pct_black_age, by(agestr)}{p_end}
-{pstd}now smaller age group{p_end}
-{phang2}{cmd:. waffle pct_black_small_age, by(small_age_cat)}{p_end}
-{pstd}let's put them on one row{p_end}
-{phang2}{cmd:. waffle pct_black_small_age, by(small_age_cat, rows(1))}{p_end}
-{pstd}now add title, note, size and color adjustments{p_end}
-{phang2}{cmd:. waffle pct_black_small_age, by(small_age_cat, rows(1)) ///}{p_end}
-{phang3}{cmd:. title("Share of Black U.S. population in 2000 Census by Age", margin(medlarge)) ///}{p_end}
-{phang3}{cmd:. note("Data from the U.S. 2000 Census") ///}{p_end}
-{phang3}{cmd:. markersize(4) colors(teal) emptycolors(white) outlinecolors(gs5) emptyoutlinecolors(gs5)}{p_end}
-{pstd}now look at a multi-waffle in wide mode{p_end}
-{phang2}{cmd:. waffle pct_black_small_age, by(small_age_cat, rows(3)) ///}{p_end}
-{phang3}{cmd:. title("Share of Black U.S. population in 2000 Census by Age", margin(medlarge)) ///}{p_end}
-{phang3}{cmd:. note("Data from the U.S. 2000 Census") ///}{p_end}
-{phang3}{cmd:. markersize(3) colors(teal) emptycolors(white) outlinecolors(gs5) emptyoutlinecolors(gs5) wide}{p_end}
-
-{pstd}{opt Create a multi-category waffle chart}{p_end}
-{phang2}{cmd:. waffle pct_tot_black pct_tot_white pct_tot_asian}{p_end}
-{pstd}add a legend, title, note, size and color adjustments{p_end}
-{phang2}{cmd:. waffle pct_tot_black pct_tot_white pct_tot_asian, ///}{p_end}
-{phang3}{cmd:. title("Racial/ethnic composition of the U.S. in 2000", margin(medlarge)) ///}{p_end}
-{phang3}{cmd:. note("Data from the U.S. 2000 Census") ///}{p_end}
-{phang3}{cmd:. markersize(5) colors(ltblue teal navy) emptycolors(white) outlinecolors(gs5) emptyoutlinecolors(gs5) ///}{p_end}
-{phang3}{cmd:. legend(order(1 "Black" 2 "White" 3 "Asian" 4 "Other") pos(6) rows(1))}{p_end}
-{pstd}create this multi_category waffle for a specific age range{p_end}
-{phang2}{cmd:. waffle pct_black_small_age pct_white_small_age pct_asian_small_age if small_age_cat == 1, ///}{p_end}
-{phang3}{cmd:. title("Racial/ethnic composition of the U.S. in 2000 under age 30", margin(medlarge)) ///}{p_end}
-{phang3}{cmd:. note("Data from the U.S. 2000 Census") ///}{p_end}
-{phang3}{cmd:. markersize(5) colors(ltblue teal navy) emptycolors(white) outlinecolors(gs5) emptyoutlinecolors(gs5) ///}{p_end}
-{phang3}{cmd:. legend(order(1 "Black" 2 "White" 3 "Asian" 4 "Other") pos(6) rows(1))}{p_end}
-{pstd}try it in wide mode{p_end}
-{phang2}{cmd:. waffle pct_black_small_age pct_white_small_age pct_asian_small_age if small_age_cat == 1, ///}{p_end}
-{phang3}{cmd:. title("Racial/ethnic composition of the U.S. in 2000 under age 30", margin(medlarge)) ///}{p_end}
-{phang3}{cmd:. note("Data from the U.S. 2000 Census") ///}{p_end}
-{phang3}{cmd:. markersize(6) colors(ltblue teal navy) emptycolors(white) outlinecolors(gs5) emptyoutlinecolors(gs5) ///}{p_end}
-{phang3}{cmd:. legend(order(1 "Black" 2 "White" 3 "Asian" 4 "Other") pos(6) rows(1)) wide}{p_end}
-{pstd}store the charts and use graph combine to create a multi-waffle with multiple categories{p_end}
-{phang2}{cmd:. preserve}{p_end}
-{phang3}{cmd:. duplicates drop pct_black_small_age pct_white_small_age pct_asian_small_age small_age_cat, force}{p_end}
-{phang3}{cmd:. forvalues i = 1/3}{p_end}
-{pmore3}{cmd:. local l = small_age_cat[`i']}{p_end}
-{pmore3}{cmd:. local lbe : value label small_age_cat}{p_end}
-{pmore3}{cmd:. local title : label `lbe' `l'}{p_end}
-{pmore3}{cmd:. waffle pct_black_small_age pct_white_small_age pct_asian_small_age if small_age_cat == `i', ///}{p_end}
-{pmore3}{cmd:. title("`title'", margin(medsmall)) ///}{p_end}
-{pmore3}{cmd:. note("Data from the U.S. 2000 Census") ///}{p_end}
-{pmore3}{cmd:. markersize(3) colors(ltblue teal navy) emptycolors(white) outlinecolors(gs5) emptyoutlinecolors(gs5) ///}{p_end}
-{pmore3}{cmd:. legend(order(1 "Black" 2 "White" 3 "Asian" 4 "Other") pos(6) rows(1)) wide name(waffle_`i', replace)}{p_end}
-{phang2}{cmd:. restore}{p_end}
-{phang2}{cmd:. graph combine waffle_1 waffle_2 waffle_3}{p_end}
-{pstd}combine using a single legend with user-written grc1leg{p_end}
-{phang2}{cmd:. ssc install grc1leg, replace}{p_end}
-{phang2}{cmd:. grc1leg waffle_1 waffle_2 waffle_3, cols(1) imargin(zero) ///}{p_end}
-{phang3}{cmd:. title("Racial/ethnic composition of the U.S. in 2000 by age")}{p_end}
+{hline}
 
 
-{marker author}{...}
-{title:Author}
+{title:Package details}
 
-{phang}
-Jared Colston {p_end}
-{phang}
-Educational Leadership & Policy Analysis, University of Wisconsin-Madison {p_end}
-{phang}
-colston@wisc.edu {p_end}
-{phang}
-jaredcolston.com {p_end}
-{phang}
-March 2022 {p_end}
+Version      : {bf:waffle} v1.11
+This release : 05 May 2024
+First release: 01 Mar 2022
+Repository   : {browse "https://github.com/asjadnaqvi/stata-waffle":GitHub}
+Keywords     : Stata, graph, waffle
+License      : {browse "https://opensource.org/licenses/MIT":MIT}
 
-{marker reference}{...}
-{title:Reference}
+Authors      : {browse "https://github.com/asjadnaqvi":Asjad Naqvi} & {browse "jaredcolston.com":Jared Colston}
+E-mail       : asjadnaqvi@gmail.com, colston@wisc.edu
+Twitter      : {browse "https://twitter.com/AsjadNaqvi":@AsjadNaqvi}
 
-{phang}
-Initial code for developing waffle charts in Stata come from Asjad Naqvi, found here: 
-{p_end}
-{phang}
-https://medium.com/the-stata-guide/stata-graphs-waffle-charts-32afc7d6f6dd
-{p_end}
+
+{title:References}
+
+{p 4 8 2}Jann, B. (2018). {browse "https://www.stata-journal.com/article.html?article=gr0075":Color palettes for Stata graphics}. The Stata Journal 18(4): 765-785.
+
+{p 4 8 2}Jann, B. (2022). {browse "https://ideas.repec.org/p/bss/wpaper/43.html":Color palettes for Stata graphics: An update}. University of Bern Social Sciences Working Papers No. 43. 
+
+
+{title:Other visualization packages}
+
+{psee}
+    {helpb arcplot}, {helpb alluvial}, {helpb bimap}, {helpb bumparea}, {helpb bumpline}, {helpb circlebar}, {helpb circlepack}, {helpb clipgeo}, {helpb delaunay}, {helpb joyplot}, 
+	{helpb marimekko}, {helpb sankey}, {helpb schemepack}, {helpb spider}, {helpb streamplot}, {helpb sunburst}, {helpb treecluster}, {helpb treemap}, {helpb waffle}

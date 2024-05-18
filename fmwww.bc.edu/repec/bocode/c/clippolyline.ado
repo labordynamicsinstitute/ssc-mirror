@@ -19,7 +19,7 @@ program define clippolyline, eclass
 	// check gtools
 	capture findfile gtools.ado
 	if _rc != 0 {
-		display as error "gtools package is missing. Click here to install: {stata ssc install clipline, replace}"
+		display as error "gtools package is missing. Click here to install: {stata ssc install gtools, replace}"
 		exit
 	}		
 	

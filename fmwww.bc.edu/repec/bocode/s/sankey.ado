@@ -1,6 +1,8 @@
-*! sankey v1.71 (15 Jan 2024)
+*! sankey v1.73 (18 Mar 2024)
 *! Asjad Naqvi (asjadnaqvi@gmail.com)
 
+*v1.73 (18 Mar 2024): Values determine the order of drawing. Add caution that numbers mean the same across the categories.
+*v1.72 (12 Feb 2024): labprop fixes, valcond() fixes. by() changed to optional. Assumes one layer with a warning. ctcolor() added. ctsize() switched to string.
 *v1.71 (15 Jan 2024): fixed a bug where value labels of to() and from() were overwriting each other.
 *v1.7  (06 Nov 2023): fix valcond() dropping labels in bars, added percent (still in beta), added ctpos() option. minor cleanups  
 *v1.61 (22 Jul 2023): Adding saving() option. minor fixes
@@ -27,18 +29,18 @@ program sankey, sortpreserve
 
 version 15
  
-	syntax varlist(numeric max=1) [if] [in], From(varname) To(varname) by(varname) ///
-		[ palette(string) smooth(numlist >=1 <=8) gap(real 5) RECENter(string) colorby(string) alpha(real 75) ]  ///
+	syntax varlist(numeric max=1) [if] [in], From(varname) To(varname)  ///
+		[ by(varname) palette(string) smooth(numlist >=1 <=8) gap(real 5) RECENter(string) colorby(string) alpha(real 75) ]  ///
 		[ LABAngle(string) LABSize(string) LABPOSition(string) LABGap(string) SHOWTOTal  ] ///
 		[ VALSize(string)  VALCONDition(real 0) format(string) VALGap(string) NOVALues   ] ///
 		[ LWidth(string) LColor(string)  	 ]  ///
 		[ offset(real 0) LABColor(string) 	 ]  ///  // added v1.1
 		[ BOXWidth(string)	 				 ]  ///  // added v1.3
-		[ wrap(real 7) CTITLEs(string asis) CTGap(real -10) CTSize(real 2.5) colorvar(varname) colorvarmiss(string) colorboxmiss(string)  ] ///  // v1.4 options
-		[ valprop labprop valscale(real 0.33333) labscale(real 0.3333) NOVALRight NOVALLeft NOLABels ]      ///  // v1.5
+		[ wrap(real 7) CTITLEs(string asis) CTGap(real 0) CTSize(string) colorvar(varname) colorvarmiss(string) colorboxmiss(string)  ] ///  // v1.4 options
+		[ valprop labprop valscale(real 0.33333) labscale(real 0.33333) NOVALRight NOVALLeft NOLABels ]      ///  // v1.5
 		[ stock sort1(string) sort2(string)  ]  /// // v1.6
-		[ percent ctpos(string) ]    /// // v1.7 
-		[ title(passthru) subtitle(passthru) note(passthru) scheme(passthru) name(passthru) xsize(passthru) ysize(passthru)	saving(passthru) ] 
+		[ percent ctpos(string) CTColor(string) ]    /// // v1.7 
+		[ * ] 
 		
 
 	// check dependencies
@@ -75,17 +77,17 @@ version 15
 	
 	
 	if "`stype2'" != "" & "`stype2'" != "order" & "`stype2'" != "value" {
-		di as err "Valid options for {bf:sort2()} are {it:order (default)} or {it:value}."
+		display as error "Valid options for {bf:sort2()} are {it:order (default)} or {it:value}."
 		exit 198
 	}	
 	
 	if "`colorby'" != "" & "`colorvar'" != "" {
-		di as err "Both colorby() and colorvar() are not allowed."
+		display as error "Both colorby() and colorvar() are not allowed."
 		exit 198
 	}
 	
 	if "`novalleft'" != "" & "`novalright'" != "" {
-		di as err "Both {it:novalleft} and {it:novalright} are not allowed. If you want to hide values use the {it:novalues} option instead."
+		display as error "Both {it:novalleft} and {it:novalright} are not allowed. If you want to hide values use the {it:novalues} option instead."
 		exit 198
 	}	
 	
@@ -94,7 +96,7 @@ version 15
 		qui gen `_temp' = mod(`colorvar',1)
 		summ `_temp', meanonly
 		if r(max) > 0 {
-			di as err "colorvar() needs to be integers starting at 1."
+			display as error "colorvar() needs to be integers starting at 1."
 			exit 198
 		}
 	}
@@ -112,6 +114,13 @@ preserve
 	keep if `touse'
 	drop if `varlist' ==.
 	
+	if "`by'" == "" {
+		gen _layer = 1
+		local by _layer
+		noisily display in yellow "WARNING: No {bf:by()} option specified. Assuming one layer."
+	}
+	
+	
 	if "`colorvar'" != "" {
 		ren `colorvar' clrlvl
 		recode clrlvl (. = 0)
@@ -123,26 +132,58 @@ preserve
 	
 	keep `varlist' `from' `to' `by' clrlvl
 	
-		// convert value labels to strings
-		cap confirm numeric var `from'
-		if _rc==0 {
-			if "`: value label `from''" != "" {
-				decode `from', gen(temp1)		
-				drop `from'
-				ren temp1 `from'
-			}
+		// drop missing categories
+		cap confirm numeric var `from'	
+		if !_rc {  
+			local fcheck = 0
+			drop if `from'==.
+			local lab1 : value label `from'
+		}
+		else {
+			local fcheck = 1
+			drop if `from'==""
+		}
+	
+		cap confirm numeric var `to'	
+		if !_rc {  
+			local tcheck = 0
+			drop if `to'==.
+			local lab2 : value label `to'
+		}
+		else {
+			local tcheck = 1
+			drop if `to'==""
+		}	
+	
+		if ("`fcheck'"=="0" & "`tcheck'"=="1") | ("`tcheck'"=="0" & "`fcheck'"=="1") {
+			noisily display as error "Format error: {bf:from()} and {bf:to()} have different formats. They should be both either numeric or string variables."
+			exit 198
 		}
 		
-		cap confirm numeric var `to'
-		if _rc==0 {
-			if "`: value label `to''" != "" {
-				decode `to', gen(temp2)		
-				drop `to'
-				ren temp2 `to'
-			}
-		}		
+				
+		if "`lab1'" != "`lab2'" {
+			noisily display in yellow "WARNING: {bf:from()} and {bf:to()} have different value labels. {bf:from()} will overwrite {bf:to()} value labels."
+		}
+		
 	
-	
+		// if strings, convert to numeric, otherwise leave them alone.
+		
+		/*
+		cap confirm string var `from'
+		if !_rc {
+			encode `from', gen(_temp1)		
+			drop `from'
+			ren _temp1 `from'
+		}
+		
+		cap confirm string var `to'
+		if !_rc {
+			encode `to', gen(_temp2)		
+			drop `to'
+			ren _temp2 `to'
+		}	
+			*/
+
 	collapse (sum) `varlist' (mean) clrlvl , by(`from' `to' `by')
 
 	gen markme = .
@@ -691,23 +732,28 @@ preserve
 		
 		
 		if "`labprop'" != "" {
-			summ height if tag==1, meanonly
+			summ height if tag_spike==1, meanonly
 			gen labwgt = `labsize' * (height / r(max))^`labscale' if tag_spike==1
 			
-			levelsof id, local(lvls)
+			
+			tempvar _lablyr
+			egen `_lablyr' = group(id layer2) if tag_spike==1  // to prevent duplicates names
+			
+			
+			levelsof `_lablyr', local(lvls)
 			
 			foreach x of local lvls {
-				summ labwgt if id==`x', meanonly
-				local labw = r(mean)
+				summ labwgt if `_lablyr'==`x' & tag_spike==1 & ymid!=., meanonly
+				local labw = r(max)
 				
-				local boxlabel `boxlabel' (scatter ymid layer2 if tag_spike==1 & id==`x',  msymbol(none) mlabel(lab2) mlabsize(`labw') mlabpos(`labposition') mlabgap(`labgap') mlabangle(`labangle') mlabcolor(`labcolor')) ///
+				local boxlabel `boxlabel' (scatter ymid layer2 if tag_spike==1 & `_lablyr'==`x' & height >= `valcondition',  msymbol(none) mlabel(lab2) mlabsize(`labw') mlabpos(`labposition') mlabgap(`labgap') mlabangle(`labangle') mlabcolor(`labcolor')) 
 			
 			}
 			
 		}
 		else {
 			
-			local boxlabel (scatter ymid layer2 if tag_spike==1 ,  msymbol(none) mlabel(lab2) mlabsize(`labsize') mlabpos(`labposition') mlabgap(`labgap') mlabangle(`labangle') mlabcolor(`labcolor')) ///
+			local boxlabel (scatter ymid layer2 if tag_spike==1  & height >= `valcondition',  msymbol(none) mlabel(lab2) mlabsize(`labsize') mlabpos(`labposition') mlabgap(`labgap') mlabangle(`labangle') mlabcolor(`labcolor')) 
 			
 		}	
 	}	
@@ -721,6 +767,8 @@ preserve
 	}
 	
 
+
+	
 	**** arc labels
 	
 	if "`valprop'" != "" {
@@ -772,7 +820,7 @@ preserve
 	if `"`ctitles'"' != "" {
 		
 		if "`ctpos'" == "bot" | "`ctpos'" == "" {
-			local cty = -5 + `ctgap'
+			local cty = -5 - `ctgap'
 		}
 		
 		if "`ctpos'" == "top" {
@@ -799,8 +847,11 @@ preserve
 	
 	**** column labels 
 	
+	if "`ctsize'"  == ""  local ctsize  2.5
+	if "`ctcolor'" == ""  local ctcolor black
+	
 	if `"`ctitles'"' != "" {
-		local lvllab (scatter title_y title_x, msymbol(none) mlabel(title_name) mcolor(black) mlabpos(0) mlabsize(`ctsize')) ///
+		local lvllab (scatter title_y title_x, msymbol(none) mlabel(title_name) mlabcolor(`ctcolor') mlabpos(0) mlabsize(`ctsize')) ///
 		
 	}
 
@@ -825,8 +876,7 @@ preserve
 				legend(off) 										 ///
 					xlabel(, nogrid) ylabel(0 `yrange' , nogrid)     ///
 					xscale(off range(`xrmin' `xrmax')) yscale(off)	 ///
-					`title' `subtitle' `note' `scheme' `name' 		 ///
-					`xsize' `ysize' `saving'
+					`options'
 		
 */
 restore

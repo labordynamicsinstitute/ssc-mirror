@@ -107,6 +107,7 @@ p pobrezaecu module to predict poverty in Ecuador
 p poi2hdfe module to estimate a Poisson regression with two high-dimensional fixed effects
 p poisml module to estimate maximum likelihood Poisson regression models
 p polar module to plot polar coordinates
+p polarspike module for polar spike graphs
 p polyspline module to generate sensible bases for polynomials and other splines
 p pooledsd module to calculate pooled standard deviation for a continuous variable by a factor variable
 p poparms module for potential outcome parameter estimation

@@ -1,0 +1,19 @@
+d 'SPLINEFIT': module for smooth connected line plots
+d
+d  This is a Stata package for smooth connected line plots.  The
+d routine is based on the Catmull-Rom spline function. 
+d
+d KW: graphics
+d KW: splines
+d KW: line plots
+d KW: smoother
+d
+d Requires: Stata version 15 and palettes, colrspace, labmask from SSC
+d
+d Distribution-Date: 20240517
+d
+d Author: Asjad Naqvi, WU Vienna
+d Support: email asjadnaqvi@@gmail.com
+d
+f splinefit.ado
+f splinefit.sthlp

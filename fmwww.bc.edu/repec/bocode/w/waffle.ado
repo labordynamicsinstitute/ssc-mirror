@@ -1,1116 +1,356 @@
-* 1.0 Jared Colston March 2022
+*! waffle v1.11 (05 May 2024)
+*! Asjad Naqvi and Jared Colston
 
-* Program for creating Waffle Charts
+*v1.11 (05 May 2024): Bug fixes to how data was collapsed under different conditions. normvar now needs to be already the sum value.
+*v1.1  (04 Apr 2024): Re-release. Allows wide and long form data.
+*v1.0  (01 Mar 2022): First release by Jared Colston
+
+* Code is based on the Waffle guide on Medium: https://medium.com/the-stata-guide/stata-graphs-waffle-charts-32afc7d6f6dd
 
 
 
 capture program drop waffle 
-program waffle
-version 17
 
-syntax varlist(numeric min=1 max=5) [if] [in], ///
-	[WIDE BY(passthru) Title(str) COLORs(str) ///
-	EMPTYcolors(str) OUTLinecolors(str) EMPTYOUTLinecolors(str) ///
-	SCHeme(str) Note(str) MARKersize(numlist min=1 max=1) ///
-	BYRows(numlist min=1 max=1) NAME(passthru) ///
-	LEGend(passthru) COOLSgraph]
+program waffle, sortpreserve
+version 15
+
+syntax varlist(numeric min=1) [if] [in], ///
+	[	///
+		by(varname) over(varname) normvar(varname numeric) percent showpct format(string) palette(string)  ///
+		ROWDots(real 20) COLDots(real 20) MSYMbol(string) MLWIDth(string) MSize(string)	 ///
+		NDSYMbol(string)  NDSize(string) NDColor(string)	///   // No Data = ND
+		COLs(real 4) LEGPOSition(string) LEGCOLumns(real 4) LEGSize(string) NOLEGend margin(string) ///
+		aspect(numlist max=1 >0) note(passthru) title(passthru) subtitle(passthru) * 	]
+
 	
-preserve																			// Store original data
+	// check dependencies
+	cap findfile colorpalette.ado
+	if _rc != 0 {
+		display as error "The palettes package is missing. Install the {stata ssc install palettes, replace:palettes} and {stata ssc install colrspace, replace:colrspace} packages."
+		exit
+	}	
+	
+	marksample touse, strok
+	
+preserve																			
 quietly {
-	tokenize `varlist'																// Define the varlist in macros
-	marksample touse
-	if "`missing'" == "" markout `touse', strok  
-	count if `touse' 
-	if r(N) == 0 exit 2000 
-	capture keep if `touse' == 1													// Allow "if" conditions
 	
-	*cool s graph easter egg. This is just a silly add-on
-		if "`coolsgraph'" != "" {
-			di as err "You just drew a Cool S Graph! Nice! Only this time not on your middle school textbook."
-			graph twoway scatteri 3 9 8 9, lcolor(red) recast(line) ///
-			yscale(range(0 20)) xscale(range(0 20)) ylabel(, nogrid noticks nolabel) ///
-			xlabel(, nogrid noticks nolabel) legend(off) ytitle("") xtitle("") ///
-			|| scatteri 3 10 8 10, lcolor(red) recast(line) ///
-			|| scatteri 3 11 8 11, lcolor(red) recast(line) ///
-			|| scatteri 10 9 15 9, lcolor(red) recast(line) ///
-			|| scatteri 10 10 15 10, lcolor(red) recast(line) ///
-			|| scatteri 10 11 15 11, lcolor(red) recast(line) ///
-			|| scatteri 15 9 18 10, lcolor(red) recast(line) ///
-			|| scatteri 18 10 15 11, lcolor(red) recast(line) ///
-			|| scatteri 3 9 1 10, lcolor(red) recast(line) ///
-			|| scatteri 1 10 3 11, lcolor(red) recast(line) ///
-			|| scatteri 10 9 8 10, lcolor(red) recast(line) ///
-			|| scatteri 10 10 8 11, lcolor(red) recast(line) ///
-			|| scatteri 8 9 8.5 9.5, lcolor(red) recast(line) ///
-			|| scatteri 10 11 9.5 10.5, lcolor(red) recast(line)
-			exit 198
+	keep if `touse'
+	tokenize `varlist'		
+	
+	
+	// preamble
+	
+	if "`over'" == ""	{
+		gen _over = 1 
+		local over _over
+		local ovswitch  = 1
+	}
+	
+
+	keep `varlist' `normvar' `over' `by'
+
+	local length : word count `varlist'
+	
+	if `length' > 1 {
+		foreach x of local varlist {
+			local `x'_lab : var label `x'
 		}
 		
-	// GENERAL OPTIONS
-		*assign titles based on "by" option 
-			if "`title'" != "" {
-				local title_by "`title'"
-				local title_noby "`title'"
-			}
-			
-		*define colors of markers
-			if "`colors'" != "" {
-				local mcolor1 : word 1 of `colors'
-				local mcolor2 : word 2 of `colors'
-				local mcolor3 : word 3 of `colors'
-				local mcolor4 : word 4 of `colors'
-				local mcolor5 : word 5 of `colors'
-			}
-			
-			else {
-				local mcolor1 "78 121 167"
-				local mcolor2 "242 142 43"
-				local mcolor3 "89 161 79"
-				local mcolor4 "176 122 161"
-				local mcolor5 "255 157 167"
-			}
-			
-			if "`emptycolors'" != "" {
-				local ecolor "`emptycolors'"
-			}
-			
-			else {
-				local ecolor "gs14"
-			}
-			
-		*define outline colors of markers
-			if "`outlinecolors'" != "" {
-				local ocolor "`outlinecolors'"
-			}
-			
-			else {
-				local ocolor "none"
-			}
-			
-			if "`emptyoutlinecolors'" != "" {
-				local eocolor "`emptyoutlinecolors'"
-			}
-			
-			else {
-				local eocolor "none"
-			}
-			
-		*allow scheme
-			if "`scheme'" != "" {
-				local scheme "`scheme'"
-			}
-			
-		*allow note
-			if "`note'" != "" {
-				local note "`note'"
-			}
+		collapse (sum) `varlist' `normvar', by(`over')
 
-		*parse byvar from passthru code
-		if "`by'" != "" {
-			local byvar `by'
-			local byvar : subinstr local byvar "by(" "", all 
-			local byvar : subinstr local byvar ")" "", all 
-			local byvar : subinstr local byvar "," " ", all
-			local byvar : word 1 of `byvar'
+		// flatten to long
+		foreach x of local varlist  {
+			ren `x' y_`x'
+		}	
+		
+		gen _i = _n
+		
+		reshape long y_, i(_i `over') j(_cats) string
+		
+		foreach x of  local varlist {
+			replace _cats = "``x'_lab'" if _cats=="`x'"
+		}		
+		
+	}
+	if `length' == 1 {	
+		
+		if "`by'" == ""	{
+			gen _by = 1 
+			local by _by
+		}		
+		
+		cap ren `by' _cats
+		
+		if "`normvar'"=="" {
+			collapse (sum) `varlist', by(_cats `over')
+		}
+		else {
+			collapse (sum) `varlist' (mean) `normvar', by(_cats `over')
+		}
+
+		cap ren `varlist' y_
+	}	
+	
+	sort _cats `over'
+	ren y_ _val
+
+	
+	egen _grp = group(_cats)
+	
+	
+	local max = 0
+	
+	if `length' > 1 {
+		if "`normvar'" == "" {
+			levelsof _grp, local(lvls)
 			
-			*convert byvar to numeric if string 
-			local byvartype : type `byvar'
-			if substr("`byvartype'",1,3) == "str" {
-				encode `byvar', gen(`byvar'_waf)
-				local byvar `byvar'_waf
+			foreach x of local lvls {
+				summ _val if _grp==`x', meanonly
+				if r(sum) > `max' local max = r(sum)
 			}
 		}
+		else {
+			levelsof _grp, local(lvls)
 			
-	// IF ONLY ONE VARIABLE SPECIFIED
-	if "`2'" == "" & "`3'" == "" & "`4'" == "" & "`5'" == "" {
-	
-		capture keep `1' `byvar' `touse'
-		capture duplicates drop `1' `byvar' `touse', force
-		
-		*transform values to decimals if not
-			if `1' > 100 {
-				di as err "Variable does not appear to be a percent or decimal (it is higher than 100)"
-				exit 198
+			foreach x of local lvls {
+				summ `normvar' if _grp==`x', meanonly
+				if r(sum) > `max' local max = r(sum)
 			}
 			
-			if `1' > 1 {
-				replace `1' = (`1' / 100)
-			}
-		
-		*waffle structure
-			if "`wide'" != "" {
-				local rows = 20
-				local cols = 5
-				local aspectratio = .20
-				local msize = 5
-			}
-			
-			else if "`wide'" == "" {
-				local rows = 10
-				local cols = 10
-				local aspectratio = 1
-				local msize = 7
-			}
-			
-		local obsv = `cols' * `rows'
-		expand `obsv'
-		
-		*address issues with non-unique obs 
-			if "`by'" == "" & _N > 100 {
-				di as err "Variable selection does not uniquely define percent. Try combining with by()"
-				exit 198
-			}
-			
-			duplicates report `1' `byvar'
-			local unique_value = `r(unique_value)'
-			gen unique_val = `unique_value'
-			capture levelsof `byvar'
-			capture local groups = `r(r)'
-			capture gen groups = `groups'
-			gen error_dummy = 0
-			capture replace error_dummy = 1 if unique_val > groups		
-			if "`by'" != "" & error_dummy == 1 {
-				di as err "Variable contains too many unique values. Your by() variable levels must match the number of unique values"
-				exit 198
-			}
-			
-		*by variables
-			if "`by'" != "" {
-				bysort `byvar' :	egen y = seq(), b(`cols')
-								egen x = seq(), t(`cols')
-				by `byvar' 	: 	gen id = _n 
-				egen tag = tag(`byvar')
-				gen category = .
-				local msize = 2
-				levelsof `byvar', local(lvls)
-				foreach x of local lvls {
-					summ `1' if `byvar' == `x' & tag == 1
-					local share = `r(mean)'
-					summ id if `byvar' == `x'
-					replace category = id <= int(`share' * `r(max)') if `byvar' == `x'
-				}
-			}
-			
-			else {
-				egen y = seq(), b(`cols')
-				egen x = seq(), t(`cols')
-				gen id = _n 
-				gen category = .
-				summ `1'
-				local share = `r(mean)'
-				summ id 
-				replace category = id <= int(`share' * `r(max)')
-			}
-		
-		*reverse structure for wide 
-			if "`wide'" != "" {
-				local y x
-				local x y
-			}
-
-			else {
-				local y y 
-				local x x
-			}
-			
-		*allow msize 
-			if "`markersize'" != "" {
-				local msize = `markersize'
-			}
-
-		*plot charts
-			if "`by'" != "" {				
-				twoway	(scatter `y' `x' if `touse' & category == 1, 				///
-							msymbol(square) mfcolor("`mcolor1'")					///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) 		///
-						(scatter `y' `x' if `touse' & category == 0, 				///
-							msymbol(square) mfcolor("`ecolor'") 					///
-							mlwidth(vthin) mlcolor("`eocolor'") msize(`msize') 		///
-						ytitle("") yscale(noline) ylabel(, nogrid noticks nolabels) ///
-						xtitle("") xscale(noline) xlabel(, nogrid noticks nolabels) ///
-						legend(off) aspectratio(`aspectratio')			 			///
-						by(, legend(off) noiyaxes noixaxes noiytick 				///
-							noixtick noiylabel noixlabel note("`note'")				///
-							title(`title_by')) `by'									///
-						subtitle(, nobox) scheme(`scheme') `name')
-			}
-			
-			else {
-				twoway	(scatter `y' `x' if `touse' & category == 1, 				///
-							msymbol(square) mfcolor("`mcolor1'") 					///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) 		///
-						(scatter `y' `x' if `touse' & category == 0, 				///
-							msymbol(square) mfcolor("`ecolor'") 					///
-							mlwidth(vthin) mlcolor("`eocolor'") msize(`msize') 		///
-						ytitle("") yscale(noline) ylabel(, nogrid noticks nolabels) ///
-						xtitle("") xscale(noline) xlabel(, nogrid noticks nolabels) ///
-						legend(off) aspectratio(`aspectratio') title(`title_noby')	///
-						scheme(`scheme') note("`note'") `name')
-			}
+		}
+	}
+	if `length'==1 {
+		summ `normvar', meanonly
+		local max = r(max)
 	}
 	
-	// IF TWO VARIABLES SPECIFIED
-	else if "`2'" != "" & "`3'" == "" & "`4'" == "" & "`5'" == "" {
-		capture keep `1' `2' `byvar' `touse'
-		capture duplicates drop `1' `2' `byvar' `touse', force
-		
-		*transform values to decimals if not
-			if `1' > 100 | `2' > 100 {
-				di as err "Variable does not appear to be a percent or decimal (it is higher than 100)"
-				exit 198
-			}
-			
-			if `1' > 1 {
-				replace `1' = (`1' / 100)
-			}
-			
-			if `2' > 1 {
-				replace `2' = (`2' / 100)
-			}
-		
-		*waffle structure
-			if "`wide'" != "" {
-				local rows = 20
-				local cols = 5
-				local aspectratio = .20
-				local msize = 4
-			}
-			
-			else if "`wide'" == "" {
-				local rows = 10
-				local cols = 10
-				local aspectratio = 1
-				local msize = 6
-			}
-			
-		local obsv = `cols' * `rows'
-		expand `obsv'
-		
-		*address issues with non-unique obs 
-			if "`by'" == "" & _N > 100 {
-				di as err "Variable selection does not uniquely define percent. Try combining with by()"
-				exit 198
-			}
-			
-			/*
-			duplicates report `1' `2' `byvar'
-			local unique_value = `r(unique_value)'
-			gen unique_val = `unique_value'
-			capture levelsof `byvar'
-			capture local groups = `r(r)'
-			capture gen groups = `groups'
-			gen error_dummy = 0
-			capture replace error_dummy = 1 if unique_val > groups		
-			if "`by'" != "" & error_dummy == 1 {
-				di as err "Variable contains too many unique values. Your by() variable levels must match the number of unique values"
-				exit 198
-			}
-			*/
-			
-		gen seq_cat1 = `1'
-		gen seq_cat2 = seq_cat1 + `2'
-		
-		*by variables
-			if "`by'" != "" {
-				bysort `byvar' :	egen y = seq(), b(`cols')
-								egen x = seq(), t(`cols')
-				by `byvar' 	: 	gen id = _n 
-				egen tag = tag(`byvar')
-				gen category = .
-				gen color_cat1 = .
-				gen color_cat2 = .
-				local msize = 2
-				levelsof `byvar', local(lvls)
-				
-				foreach x of local lvls {
-					summ seq_cat1 if `byvar' == `x' & tag == 1
-					local share = `r(mean)'
-					summ id if `byvar' == `x'
-					replace color_cat1 = id <= int(`share' * `r(max)') if `byvar' == `x'
-				}
-				
-				foreach x of local lvls {
-					summ seq_cat2 if `byvar' == `x' & tag == 1
-					local share = `r(mean)'
-					summ id if `byvar' == `x'
-					replace color_cat2 = id <= int(`share' * `r(max)') if `byvar' == `x'
-				}
-			}
-			
-			else {
-				egen y = seq(), b(`cols')
-				egen x = seq(), t(`cols')
-				gen id = _n 
-				gen category = .
-				gen color_cat1 = .
-				gen color_cat2 = .
-				
-				summ seq_cat1
-				local share = `r(mean)'
-				summ id 
-				replace color_cat1 = id <= int(`share' * `r(max)')
-				
-				summ seq_cat2
-				local share = `r(mean)'
-				summ id 
-				replace color_cat2 = id <= int(`share' * `r(max)')
-			}
-			
-			replace category = color_cat1
-			replace category = 2 if color_cat2 == 1 & category == 0
-			
-			
-		*reverse structure for wide 
-			if "`wide'" != "" {
-				local y x
-				local x y
-			}
 
-			else {
-				local y y 
-				local x x
-			}
-			
-		*allow legends when multiple variables specified
-			if "`legend'" != "" {
-				local legend `legend'
-				local msize = 5
-			}
-			
-			else {
-				local legend legend(off)
-			}
-			
-		*allow msize 
-			if "`markersize'" != "" {
-				local msize = `markersize'
-			}
+	cap drop `normvar'
+	
+	gen double _share = .
 
-		*plot charts
-			if "`by'" != "" {
-				if "`byrows'" != "" {
-					local byr = `byrows'
-				}
-				
-				/*
-				twoway	(scatter `y' `x' if `touse' & category == 1, ///
-							msymbol(square) mfcolor("`mcolor1'") ///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) ///
-						(scatter `y' `x' if `touse' & category == 2, ///
-							msymbol(square) mfcolor("`mcolor2'") ///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) ///
-						(scatter `y' `x' if `touse' & category == 0, ///
-							msymbol(square) mfcolor("`ecolor'") ///
-							mlwidth(vthin) mlcolor("`eocolor'") msize(`msize') ///
-						ytitle("") yscale(noline) ylabel(, nogrid noticks nolabels) ///
-						xtitle("") xscale(noline) xlabel(, nogrid noticks nolabels) ///
-						legend(off) aspectratio(`aspectratio')					 	///
-						by(`byvar', `legend' noiyaxes noixaxes noiytick 		///
-							noixtick noiylabel noixlabel note("`note'")				///
-							title(`title_by')) 										///
-						subtitle(, nobox) scheme(`scheme') `name')
-				*/
-				
-				di as err "by() cannot be used with multiple variables. Feature will be added later. You could try plotting separately and combining."
-				
-			}
-			
-			else {
-				twoway	(scatter `y' `x' if `touse' & category == 1, ///
-							msymbol(square) mfcolor("`mcolor1'") ///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) ///
-						(scatter `y' `x' if `touse' & category == 2, ///
-							msymbol(square) mfcolor("`mcolor2'") ///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) ///	
-						(scatter `y' `x' if `touse' & category == 0, ///
-							msymbol(square) mfcolor("`ecolor'") ///
-							mlwidth(vthin) mlcolor("`eocolor'") msize(`msize') ///
-						ytitle("") yscale(noline) ylabel(, nogrid noticks nolabels) ///
-						xtitle("") xscale(noline) xlabel(, nogrid noticks nolabels) ///
-						`legend' aspectratio(`aspectratio') title(`title_noby')	///
-						scheme(`scheme') note("`note'") `name')
-			}
+	if "`percent'" == "" {
+		replace _share = _val / `max' 
+	}
+	else {
+		levelsof _grp, local(lvls)
+		foreach x of local lvls {
+			summ _val if _grp==`x', meanonly
+						
+			replace _share = _val / r(sum) if _grp==`x' 
+		}
 	}
 	
-	// IF THREE VARIABLES SPECIFIED
-	else if "`2'" != "" & "`3'" != "" & "`4'" == "" & "`5'" == "" {
-		capture keep `1' `2' `3' `byvar' `touse'
-		capture duplicates drop `1' `2' `3' `byvar' `touse', force
-		
-		*transform values to decimals if not
-			if `1' > 100 | `2' > 100 | `3' > 100 {
-				di as err "Variable does not appear to be a percent or decimal (it is higher than 100)"
-				exit 198
-			}
-			
-			if `1' > 1 {
-				replace `1' = (`1' / 100)
-			}
-			
-			if `2' > 1 {
-				replace `2' = (`2' / 100)
-			}
-			
-			if `3' > 1 {
-				replace `2' = (`2' / 100)
-			}
-		
-		*waffle structure
-			if "`wide'" != "" {
-				local rows = 20
-				local cols = 5
-				local aspectratio = .20
-				local msize = 4
-			}
-			
-			else if "`wide'" == "" {
-				local rows = 10
-				local cols = 10
-				local aspectratio = 1
-				local msize = 6
-			}
-			
-		local obsv = `cols' * `rows'
-		expand `obsv'
-		
-		*address issues with non-unique obs 
-			if "`by'" == "" & _N > 100 {
-				di as err "Variable selection does not uniquely define percent. Try combining with by()"
-				exit 198
-			}
-			
-			/*
-			duplicates report `1' `2' `byvar'
-			local unique_value = `r(unique_value)'
-			gen unique_val = `unique_value'
-			capture levelsof `byvar'
-			capture local groups = `r(r)'
-			capture gen groups = `groups'
-			gen error_dummy = 0
-			capture replace error_dummy = 1 if unique_val > groups		
-			if "`by'" != "" & error_dummy == 1 {
-				di as err "Variable contains too many unique values. Your by() variable levels must match the number of unique values"
-				exit 198
-			}
-			*/
-			
-		gen seq_cat1 = `1'
-		gen seq_cat2 = seq_cat1 + `2'
-		gen seq_cat3 = seq_cat2 + `3'
-		
-		*by variables
-			if "`by'" != "" {
-				bysort `byvar' :	egen y = seq(), b(`cols')
-								egen x = seq(), t(`cols')
-				by `byvar' 	: 	gen id = _n 
-				egen tag = tag(`byvar')
-				gen category = .
-				gen color_cat1 = .
-				gen color_cat2 = .
-				gen color_cat3 = .
-				local msize = 2
-				levelsof `byvar', local(lvls)
-				
-				foreach x of local lvls {
-					summ seq_cat1 if `byvar' == `x' & tag == 1
-					local share = `r(mean)'
-					summ id if `byvar' == `x'
-					replace color_cat1 = id <= int(`share' * `r(max)') if `byvar' == `x'
-				}
-				
-				foreach x of local lvls {
-					summ seq_cat2 if `byvar' == `x' & tag == 1
-					local share = `r(mean)'
-					summ id if `byvar' == `x'
-					replace color_cat2 = id <= int(`share' * `r(max)') if `byvar' == `x'
-				}
 
-				foreach x of local lvls {
-					summ seq_cat3 if `byvar' == `x' & tag == 1
-					local share = `r(mean)'
-					summ id if `byvar' == `x'
-					replace color_cat3 = id <= int(`share' * `r(max)') if `byvar' == `x'
-				}
+	egen _tag = tag(_grp)
+	
+	bysort _cats: egen double _share_tot = sum(_share)
+	
+	
+	local obsv = `rowdots' * `coldots'  // calculate the total number of rows per group
+	
+	expand `obsv' if _tag==1, gen(_control)	
+		
+	sort _grp  _cats _control `over'
+	
+	
+	bysort _grp:	egen _y = seq(), b(`rowdots')  
+	bysort _grp:	egen _x = seq(), t(`rowdots') 	
 
-			}
-			
-			else {
-				egen y = seq(), b(`cols')
-				egen x = seq(), t(`cols')
-				gen id = _n 
-				gen category = .
-				gen color_cat1 = .
-				gen color_cat2 = .
-				gen color_cat3 = .
-				
-				summ seq_cat1
-				local share = `r(mean)'
-				summ id 
-				replace color_cat1 = id <= int(`share' * `r(max)')
-				
-				summ seq_cat2
-				local share = `r(mean)'
-				summ id 
-				replace color_cat2 = id <= int(`share' * `r(max)')
-				
-				summ seq_cat3
-				local share = `r(mean)'
-				summ id 
-				replace color_cat3 = id <= int(`share' * `r(max)')
-			}
-			
-			replace category = color_cat1
-			replace category = 2 if color_cat2 == 1 & category == 0
-			replace category = 3 if color_cat3 == 1 & category == 0
-			
-			
-		*reverse structure for wide 
-			if "`wide'" != "" {
-				local y x
-				local x y
-			}
+	by _grp: gen _id = _n				
 
-			else {
-				local y y 
-				local x x
-			}
-			
-		*allow legends when multiple variables specified
-			if "`legend'" != "" {
-				local legend `legend'
-				local msize = 5
-			}
-			
-			else {
-				local legend legend(off)
-			}
-			
-		*allow msize 
-			if "`markersize'" != "" {
-				local msize = `markersize'
-			}
+	drop if _id > `obsv'
+	drop _tag
+	
+	gen _dot = 0 
+	
+	egen _tag2 = tag(_grp `over')
+	egen _tag3 = group(`over')
+	
+	levelsof _grp , local(lvls)
+	levelsof _tag3, local(ovrs)
+	
+	local items = r(r)
+	
 
-		*plot charts
-			if "`by'" != "" {
-				
-				/*
-				twoway	(scatter `y' `x' if `touse' & category == 1, ///
-							msymbol(square) mfcolor("`mcolor1'") ///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) ///
-						(scatter `y' `x' if `touse' & category == 2, ///
-							msymbol(square) mfcolor("`mcolor2'") ///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) ///
-						(scatter `y' `x' if `touse' & category == 0, ///
-							msymbol(square) mfcolor("`ecolor'") ///
-							mlwidth(vthin) mlcolor("`eocolor'") msize(`msize') ///
-						ytitle("") yscale(noline) ylabel(, nogrid noticks nolabels) ///
-						xtitle("") xscale(noline) xlabel(, nogrid noticks nolabels) ///
-						legend(off) aspectratio(`aspectratio')					 	///
-						by(`byvar', `legend' noiyaxes noixaxes noiytick 		///
-							noixtick noiylabel noixlabel note("`note'")				///
-							title(`title_by')) 										///
-						subtitle(, nobox) scheme(`scheme') `name')
-				*/
-				
-				di as err "by() cannot be used with multiple variables. Feature will be added later. You could try plotting separately and combining."
-				
-			}
+	foreach x of local lvls {
+		
+		local start = 1
+		local counter = 1
+		
+		foreach y of local ovrs {
+					
+			summ _share if _grp==`x' & _tag3==`y' & _tag2==1, meanonly
+			local share = r(mean)
 			
-			else {
-				twoway	(scatter `y' `x' if `touse' & category == 1, ///
-							msymbol(square) mfcolor("`mcolor1'") ///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) ///
-						(scatter `y' `x' if `touse' & category == 2, ///
-							msymbol(square) mfcolor("`mcolor2'") ///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) ///
-						(scatter `y' `x' if `touse' & category == 3, ///
-							msymbol(square) mfcolor("`mcolor3'") ///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) ///	
-						(scatter `y' `x' if `touse' & category == 0, ///
-							msymbol(square) mfcolor("`ecolor'") ///
-							mlwidth(vthin) mlcolor("`eocolor'") msize(`msize') ///
-						ytitle("") yscale(noline) ylabel(, nogrid noticks nolabels) ///
-						xtitle("") xscale(noline) xlabel(, nogrid noticks nolabels) ///
-						`legend' aspectratio(`aspectratio') title(`title_noby')	///
-						scheme(`scheme') note("`note'") `name')
+			if `r(N)' > 0 {
+				summ _id  if _grp==`x', meanonly
+
+				local gap = int(`share' * `r(max)')			
+				local end = `start' + `gap'
+				
+				qui replace _dot = `counter' if _grp==`x' & inrange(_id, `start', `end') 
+				local start = `end' + 1
+				
 			}
+			local ++counter
+		}
+	}	
+	
+
+	cap confirm numeric var _cats
+	if !_rc {
+		decode _cats, gen(_temp)
+	}
+	else {
+		gen _temp = _cats
 	}
 	
-	// IF FOUR VARIABLES SPECIFIED
-	else if "`2'" != "" & "`3'" != "" & "`4'" != "" & "`5'" == "" {
-		capture keep `1' `2' `3' `4' `byvar' `touse'
-		capture duplicates drop `1' `2' `3' `4' `byvar' `touse', force
-		
-		*transform values to decimals if not
-			if `1' > 100 | `2' > 100 | `3' > 100 | `4' > 100 {
-				di as err "Variable does not appear to be a percent or decimal (it is higher than 100)"
-				exit 198
-			}
-			
-			if `1' > 1 {
-				replace `1' = (`1' / 100)
-			}
-			
-			if `2' > 1 {
-				replace `2' = (`2' / 100)
-			}
-			
-			if `3' > 1 {
-				replace `2' = (`2' / 100)
-			}
-			if `4' > 1 {
-				replace `4' = (`4' / 100)
-			}
-		
-		*waffle structure
-			if "`wide'" != "" {
-				local rows = 20
-				local cols = 5
-				local aspectratio = .20
-				local msize = 4
-			}
-			
-			else if "`wide'" == "" {
-				local rows = 10
-				local cols = 10
-				local aspectratio = 1
-				local msize = 6
-			}
-			
-		local obsv = `cols' * `rows'
-		expand `obsv'
-		
-		*address issues with non-unique obs 
-			if "`by'" == "" & _N > 100 {
-				di as err "Variable selection does not uniquely define percent. Try combining with by()"
-				exit 198
-			}
-			
-			/*
-			duplicates report `1' `2' `byvar'
-			local unique_value = `r(unique_value)'
-			gen unique_val = `unique_value'
-			capture levelsof `byvar'
-			capture local groups = `r(r)'
-			capture gen groups = `groups'
-			gen error_dummy = 0
-			capture replace error_dummy = 1 if unique_val > groups		
-			if "`by'" != "" & error_dummy == 1 {
-				di as err "Variable contains too many unique values. Your by() variable levels must match the number of unique values"
-				exit 198
-			}
-			*/
-			
-		gen seq_cat1 = `1'
-		gen seq_cat2 = seq_cat1 + `2'
-		gen seq_cat3 = seq_cat2 + `3'
-		gen seq_cat4 = seq_cat3 + `4'
-		
-		*by variables
-			if "`by'" != "" {
-				bysort `byvar' :	egen y = seq(), b(`cols')
-								egen x = seq(), t(`cols')
-				by `byvar' 	: 	gen id = _n 
-				egen tag = tag(`byvar')
-				gen category = .
-				gen color_cat1 = .
-				gen color_cat2 = .
-				gen color_cat3 = .
-				gen color_cat4 = .
-				local msize = 2
-				levelsof `byvar', local(lvls)
-				
-				foreach x of local lvls {
-					summ seq_cat1 if `byvar' == `x' & tag == 1
-					local share = `r(mean)'
-					summ id if `byvar' == `x'
-					replace color_cat1 = id <= int(`share' * `r(max)') if `byvar' == `x'
-				}
-				
-				foreach x of local lvls {
-					summ seq_cat2 if `byvar' == `x' & tag == 1
-					local share = `r(mean)'
-					summ id if `byvar' == `x'
-					replace color_cat2 = id <= int(`share' * `r(max)') if `byvar' == `x'
-				}
+	
+	if "`format'"  == "" {
+		if "`showpct'"  == "" {
+			local format %15.0fc
+		}
+		else {
+			local format %6.2f
+		}
+	}		
+	
+	
+	gen _label = ""
 
-				foreach x of local lvls {
-					summ seq_cat3 if `byvar' == `x' & tag == 1
-					local share = `r(mean)'
-					summ id if `byvar' == `x'
-					replace color_cat3 = id <= int(`share' * `r(max)') if `byvar' == `x'
-				}
-				
-				foreach x of local lvls {
-					summ seq_cat4 if `byvar' == `x' & tag == 1
-					local share = `r(mean)'
-					summ id if `byvar' == `x'
-					replace color_cat4 = id <= int(`share' * `r(max)') if `byvar' == `x'
-				}
-
-			}
-			
-			else {
-				egen y = seq(), b(`cols')
-				egen x = seq(), t(`cols')
-				gen id = _n 
-				gen category = .
-				gen color_cat1 = .
-				gen color_cat2 = .
-				gen color_cat3 = .
-				gen color_cat4 = .
-				
-				summ seq_cat1
-				local share = `r(mean)'
-				summ id 
-				replace color_cat1 = id <= int(`share' * `r(max)')
-				
-				summ seq_cat2
-				local share = `r(mean)'
-				summ id 
-				replace color_cat2 = id <= int(`share' * `r(max)')
-				
-				summ seq_cat3
-				local share = `r(mean)'
-				summ id 
-				replace color_cat3 = id <= int(`share' * `r(max)')
-				
-				summ seq_cat4
-				local share = `r(mean)'
-				summ id 
-				replace color_cat4 = id <= int(`share' * `r(max)')
-
-			}
-			
-			replace category = color_cat1
-			replace category = 2 if color_cat2 == 1 & category == 0
-			replace category = 3 if color_cat3 == 1 & category == 0
-			replace category = 4 if color_cat4 == 1 & category == 0
-			
-			
-		*reverse structure for wide 
-			if "`wide'" != "" {
-				local y x
-				local x y
-			}
-
-			else {
-				local y y 
-				local x x
-			}
-			
-		*allow legends when multiple variables specified
-			if "`legend'" != "" {
-				local legend `legend'
-				local msize = 5
-			}
-			
-			else {
-				local legend legend(off)
-			}
-			
-		*allow msize 
-			if "`markersize'" != "" {
-				local msize = `markersize'
-			}
-
-		*plot charts
-			if "`by'" != "" {
-				
-				/*
-				twoway	(scatter `y' `x' if `touse' & category == 1, ///
-							msymbol(square) mfcolor("`mcolor1'") ///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) ///
-						(scatter `y' `x' if `touse' & category == 2, ///
-							msymbol(square) mfcolor("`mcolor2'") ///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) ///
-						(scatter `y' `x' if `touse' & category == 0, ///
-							msymbol(square) mfcolor("`ecolor'") ///
-							mlwidth(vthin) mlcolor("`eocolor'") msize(`msize') ///
-						ytitle("") yscale(noline) ylabel(, nogrid noticks nolabels) ///
-						xtitle("") xscale(noline) xlabel(, nogrid noticks nolabels) ///
-						legend(off) aspectratio(`aspectratio')					 	///
-						by(`byvar', `legend' noiyaxes noixaxes noiytick 		///
-							noixtick noiylabel noixlabel note("`note'")				///
-							title(`title_by')) 										///
-						subtitle(, nobox) scheme(`scheme') `name')
-				*/
-				
-				di as err "by() cannot be used with multiple variables. Feature will be added later. You could try plotting separately and combining."
-				
-			}
-			
-			else {
-				twoway	(scatter `y' `x' if `touse' & category == 1, ///
-							msymbol(square) mfcolor("`mcolor1'") ///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) ///
-						(scatter `y' `x' if `touse' & category == 2, ///
-							msymbol(square) mfcolor("`mcolor2'") ///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) ///
-						(scatter `y' `x' if `touse' & category == 3, ///
-							msymbol(square) mfcolor("`mcolor3'") ///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) ///	
-						(scatter `y' `x' if `touse' & category == 4, ///
-							msymbol(square) mfcolor("`mcolor4'") ///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) ///	
-						(scatter `y' `x' if `touse' & category == 0, ///
-							msymbol(square) mfcolor("`ecolor'") ///
-							mlwidth(vthin) mlcolor("`eocolor'") msize(`msize') ///
-						ytitle("") yscale(noline) ylabel(, nogrid noticks nolabels) ///
-						xtitle("") xscale(noline) xlabel(, nogrid noticks nolabels) ///
-						`legend' aspectratio(`aspectratio') title(`title_noby')	///
-						scheme(`scheme') note("`note'") `name')
-			}
+	if "`showpct'" == "" {
+		levelsof _grp, local(lvls)
+	
+		foreach x of local lvls {
+			summ _val if _grp==`x' & _tag2==1, meanonly
+			replace _label = _temp + " (" + string(r(sum), "`format'") + ")"	if _grp==`x'
+		}
+	}
+	else {
+		replace _label = _temp + " (" + string(_share_tot * 100, "`format'") + "%)"	
 	}
 	
-	// IF FIVE VARIABLES SPECIFIED
-	else if "`2'" != "" & "`3'" != "" & "`4'" != "" & "`5'" != "" {
-		capture keep `1' `2' `3' `4' `5' `byvar' `touse'
-		capture duplicates drop `1' `2' `3' `4' `5' `byvar' `touse', force
-		
-		*transform values to decimals if not
-			if `1' > 100 | `2' > 100 | `3' > 100 | `4' > 100 | `5' > 100 {
-				di as err "Variable does not appear to be a percent or decimal (it is higher than 100)"
-				exit 198
-			}
-			
-			if `1' > 1 {
-				replace `1' = (`1' / 100)
-			}
-			
-			if `2' > 1 {
-				replace `2' = (`2' / 100)
-			}
-			
-			if `3' > 1 {
-				replace `2' = (`2' / 100)
-			}
-			
-			if `4' > 1 {
-				replace `4' = (`4' / 100)
-			}
-			
-			if `5' > 1 {
-				replace `5' = (`5' / 100)
-			}
-		
-		*waffle structure
-			if "`wide'" != "" {
-				local rows = 20
-				local cols = 5
-				local aspectratio = .20
-				local msize = 4
-			}
-			
-			else if "`wide'" == "" {
-				local rows = 10
-				local cols = 10
-				local aspectratio = 1
-				local msize = 6
-			}
-			
-		local obsv = `cols' * `rows'
-		expand `obsv'
-		
-		*address issues with non-unique obs 
-			if "`by'" == "" & _N > 100 {
-				di as err "Variable selection does not uniquely define percent. Try combining with by()"
-				exit 198
-			}
-			
-			/*
-			duplicates report `1' `2' `byvar'
-			local unique_value = `r(unique_value)'
-			gen unique_val = `unique_value'
-			capture levelsof `byvar'
-			capture local groups = `r(r)'
-			capture gen groups = `groups'
-			gen error_dummy = 0
-			capture replace error_dummy = 1 if unique_val > groups		
-			if "`by'" != "" & error_dummy == 1 {
-				di as err "Variable contains too many unique values. Your by() variable levels must match the number of unique values"
-				exit 198
-			}
-			*/
-			
-		gen seq_cat1 = `1'
-		gen seq_cat2 = seq_cat1 + `2'
-		gen seq_cat3 = seq_cat2 + `3'
-		gen seq_cat4 = seq_cat3 + `4'
-		gen seq_cat5 = seq_cat4 + `5'
-		
-		*by variables
-			if "`by'" != "" {
-				bysort `byvar' :	egen y = seq(), b(`cols')
-								egen x = seq(), t(`cols')
-				by `byvar' 	: 	gen id = _n 
-				egen tag = tag(`byvar')
-				gen category = .
-				gen color_cat1 = .
-				gen color_cat2 = .
-				gen color_cat3 = .
-				gen color_cat4 = .
-				gen color_cat5 = .
-				local msize = 2
-				levelsof `byvar', local(lvls)
-				
-				foreach x of local lvls {
-					summ seq_cat1 if `byvar' == `x' & tag == 1
-					local share = `r(mean)'
-					summ id if `byvar' == `x'
-					replace color_cat1 = id <= int(`share' * `r(max)') if `byvar' == `x'
-				}
-				
-				foreach x of local lvls {
-					summ seq_cat2 if `byvar' == `x' & tag == 1
-					local share = `r(mean)'
-					summ id if `byvar' == `x'
-					replace color_cat2 = id <= int(`share' * `r(max)') if `byvar' == `x'
-				}
 
-				foreach x of local lvls {
-					summ seq_cat3 if `byvar' == `x' & tag == 1
-					local share = `r(mean)'
-					summ id if `byvar' == `x'
-					replace color_cat3 = id <= int(`share' * `r(max)') if `byvar' == `x'
-				}
-				
-				foreach x of local lvls {
-					summ seq_cat4 if `byvar' == `x' & tag == 1
-					local share = `r(mean)'
-					summ id if `byvar' == `x'
-					replace color_cat4 = id <= int(`share' * `r(max)') if `byvar' == `x'
-				}
-				
-				foreach x of local lvls {
-					summ seq_cat5 if `byvar' == `x' & tag == 1
-					local share = `r(mean)'
-					summ id if `byvar' == `x'
-					replace color_cat5 = id <= int(`share' * `r(max)') if `byvar' == `x'
-				}
-			}
-			
-			else {
-				egen y = seq(), b(`cols')
-				egen x = seq(), t(`cols')
-				gen id = _n 
-				gen category = .
-				gen color_cat1 = .
-				gen color_cat2 = .
-				gen color_cat3 = .
-				gen color_cat4 = .
-				gen color_cat5 = .
-				
-				summ seq_cat1
-				local share = `r(mean)'
-				summ id 
-				replace color_cat1 = id <= int(`share' * `r(max)')
-				
-				summ seq_cat2
-				local share = `r(mean)'
-				summ id 
-				replace color_cat2 = id <= int(`share' * `r(max)')
-				
-				summ seq_cat3
-				local share = `r(mean)'
-				summ id 
-				replace color_cat3 = id <= int(`share' * `r(max)')
-				
-				summ seq_cat4
-				local share = `r(mean)'
-				summ id 
-				replace color_cat4 = id <= int(`share' * `r(max)')
-				
-				summ seq_cat5
-				local share = `r(mean)'
-				summ id 
-				replace color_cat5 = id <= int(`share' * `r(max)')
-
-			}
-			
-			replace category = color_cat1
-			replace category = 2 if color_cat2 == 1 & category == 0
-			replace category = 3 if color_cat3 == 1 & category == 0
-			replace category = 4 if color_cat4 == 1 & category == 0
-			replace category = 5 if color_cat5 == 1 & category == 0
-			
-		*reverse structure for wide 
-			if "`wide'" != "" {
-				local y x
-				local x y
-			}
-
-			else {
-				local y y 
-				local x x
-			}
-			
-		*allow legends when multiple variables specified
-			if "`legend'" != "" {
-				local legend `legend'
-				local msize = 5
-			}
-			
-			else {
-				local legend legend(off)
-			}
-			
-		*allow msize 
-			if "`markersize'" != "" {
-				local msize = `markersize'
-			}
-
-		*plot charts
-			if "`by'" != "" {
-				
-				/*
-				twoway	(scatter `y' `x' if `touse' & category == 1, ///
-							msymbol(square) mfcolor("`mcolor1'") ///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) ///
-						(scatter `y' `x' if `touse' & category == 2, ///
-							msymbol(square) mfcolor("`mcolor2'") ///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) ///
-						(scatter `y' `x' if `touse' & category == 0, ///
-							msymbol(square) mfcolor("`ecolor'") ///
-							mlwidth(vthin) mlcolor("`eocolor'") msize(`msize') ///
-						ytitle("") yscale(noline) ylabel(, nogrid noticks nolabels) ///
-						xtitle("") xscale(noline) xlabel(, nogrid noticks nolabels) ///
-						legend(off) aspectratio(`aspectratio')					 	///
-						by(`byvar', `legend' noiyaxes noixaxes noiytick 		///
-							noixtick noiylabel noixlabel note("`note'")				///
-							title(`title_by')) 										///
-						subtitle(, nobox) scheme(`scheme') `name')
-				*/
-				
-				di as err "by() cannot be used with multiple variables. Feature will be added later. You could try plotting separately and combining."
-				
-			}
-			
-			else {
-				twoway	(scatter `y' `x' if `touse' & category == 1, ///
-							msymbol(square) mfcolor("`mcolor1'") ///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) ///
-						(scatter `y' `x' if `touse' & category == 2, ///
-							msymbol(square) mfcolor("`mcolor2'") ///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) ///
-						(scatter `y' `x' if `touse' & category == 3, ///
-							msymbol(square) mfcolor("`mcolor3'") ///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) ///	
-						(scatter `y' `x' if `touse' & category == 4, ///
-							msymbol(square) mfcolor("`mcolor4'") ///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) ///	
-						(scatter `y' `x' if `touse' & category == 5, ///
-							msymbol(square) mfcolor("`mcolor4'") ///
-							mlwidth(vthin) mlcolor("`ocolor'") msize(`msize')) ///	
-						(scatter `y' `x' if `touse' & category == 0, ///
-							msymbol(square) mfcolor("`ecolor'") ///
-							mlwidth(vthin) mlcolor("`eocolor'") msize(`msize') ///
-						ytitle("") yscale(noline) ylabel(, nogrid noticks nolabels) ///
-						xtitle("") xscale(noline) xlabel(, nogrid noticks nolabels) ///
-						`legend' aspectratio(`aspectratio') title(`title_noby')	///
-						scheme(`scheme') note("`note'") `name')
-			}
+	capture drop _i 
+	capture drop _control 
+	capture drop _temp
+	
+	if "`msize'"   		== "" 	local msize		0.85	
+	if "`msymbol'" 		== "" 	local msymbol	square	
+	if "`mlwidth'" 		== "" 	local mlwidth	0.05	
+	if "`ndsymbol'"		== "" 	local ndsymbol	square		
+	if "`ndsize'"   	== "" 	local ndsize	0.5
+	if "`legposition'"  == "" 	local legposition	6
+	
+	if "`ndcolor'" 	== "" 	{
+		if "`normvar'" == "" {
+			local ndcolor none
+		}
+		else {
+			local ndcolor gs14
+		}
 	}
-}
+	
+	if "`palette'" == "" {
+		local palette tableau
+	}
+	else {
+		tokenize "`palette'", p(",")
+		local palette  `1'
+		local poptions `3'
+	}
+	
+	
+	if "`legsize'"   == "" 	local legsize 2.2	
+	
+	// dots
+
+	levelsof `over', local(ovlvls)
+	
+	local mlen : word count `msymbol' 
+	local slen : word count `msize'
+	local wlen : word count `mlwidth'
+	
+
+	levelsof _dot if _dot > 0, local(lvls)
+	foreach x of local lvls {
+		
+		local b = min(`x', `mlen')
+		local a : word `b' of `msymbol'
+		
+		local c = min(`x', `slen')
+		local f : word `c' of `msize'
+		
+		local k = min(`x', `wlen')
+		local p : word `k' of `mlwidth'		
+		
+		colorpalette `palette', nograph	n(`items') `poptions'
+		local dots `dots' (scatter _y _x if _dot==`x',  msymbol(`a') msize(`f') mcolor("`r(p`x')'") mlwidth(`p') ) ///
+	
+		
+		// legend
+		
+		capture confirm numeric variable `over'
+		if !_rc {	
+			local varn : label `over' `x'
+			local entries `" `entries' `x'  "`varn'"  "'
+		}
+		else {
+			local varn : word `x' of `ovlvls'
+			local entries `" `entries' `x'  "`varn'"  "'
+		}
+			
+			local mylegend legend(order("`entries'") position(`legposition') size(`legsize') col(`legcolumns')) 
+		 
+		
+	}
+	
+	
+	if "`ovswitch'" != "1" local myleg2 legend(position(`legposition'))
+	
+
+	if "`nolegend'" != ""  {
+		local legswitch legend(off)
+		local mylegend legend(off)		
+		local myleg2 
+	}	
+	
+	if "`ovswitch'" == "1"  {
+		local legswitch legend(off)
+		local mylegend legend(off)
+	}
+	
+	
+	if "`aspect'" == "" local aspect = `coldots' / `rowdots' // a good approximation
+	if "`subtitle'" == "" local subtitle subtitle( , pos(6) size(2.5) nobox)
+	
+	
+	// draw the graph
+	
+	twoway ///
+		`dots' ///
+		(scatter _y _x if _dot==0, msize(`ndsize') msymbol(`ndsymbol') mcolor(`ndcolor')) ///
+			, ///
+			ytitle("") yscale(noline) ylabel(, nogrid) ///
+			xtitle("") xscale(noline) xlabel(, nogrid) ///
+			by(, noiyaxes noixaxes noiytick noixtick noiylabel noixlabel `myleg2'	 ) ///
+			by(_label, `title' `note' rows(`rows') cols(`cols') imargin(`margin') `legswitch' ) ///
+			`subtitle' ///
+			`mylegend'	///
+				aspect(`aspect') `options'	
+						
+	
+	
+	*/
+	}
 restore
 end
+
+
+
+
+*************************
+**** END OF PROGRAM *****
+*************************
