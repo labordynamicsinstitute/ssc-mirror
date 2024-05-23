@@ -24,6 +24,7 @@ p xriml module for estimation of reference intervals ('normal ranges') by maximu
 p xsampsi module to calculate sample size for cross-over trials with continuous measures
 p xsmle module for spatial panel data models estimation
 p xsvmat module to convert a matrix to variables in an output dataset
+p xt2treatments module to estimate event studies with two treatments
 p xtab module to tabulate longitudinal data
 p xtable module for exporting table output to Excel 
 p xtabond2 module to extend xtabond dynamic panel data estimator 

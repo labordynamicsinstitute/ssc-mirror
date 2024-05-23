@@ -1,0 +1,21 @@
+d 'XT2TREATMENTS': module to estimate event studies with two treatments
+d
+d   xt2treatments estimates average treatment effects on the
+d treated (ATT) when there are two treatments. The first treatment 
+d   is the treatment of interest, and the second treatment is the
+d control. 
+d
+d KW: treatments
+d KW: event studies
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20240522
+d
+d Author: Miklos Koren, Central European University
+d Support: email KorenM@@ceu.edu
+d
+f xt2treatments.ado
+f xt2treatments_create_test_data.do
+f xt2treatments.sthlp
+f xt2treatments_testdata.dta 

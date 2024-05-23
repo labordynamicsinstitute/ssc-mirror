@@ -1,0 +1,64 @@
+d 'DID_HAD': module to estimate the effect of a treatment on an outcome in a heterogeneous adoption design with no stayers but some quasi stayers
+d
+d     did_had estimates the effect of a treatment on an outcome in
+d a heterogeneous adoption design (HAD) with no stayers but some   
+d     quasi stayers. HADs are designs where all groups are
+d untreated in the first period, and then some groups receive a    
+d    strictly positive treatment dose at a period F, which has to
+d be the same for all treated groups (with variation in       
+d treatment timing, the did_multiplegt_dyn package may be used). 
+d Therefore, there is variation in treatment intensity, but	  
+d no variation in treatment timing.  HADs without stayers are
+d designs where all groups receive a strictly positive	     
+d treatment dose at period F: no group remains untreated. Then, one
+d cannot use untreated units to recover the	   counterfactual
+d outcome evolution that treated groups would have experienced from
+d before to after F, without treatment. To	  circumvent this,
+d did_had implements the estimator from de Chaisemartin and
+d D'Haultfoeuille (2024) which uses so-called	     "quasi
+d stayers" as the control group.  Quasi stayers are groups that
+d receive a "small enough" treatment dose at F to be	   
+d regarded as "as good as untreated".  Therefore, did_had can only
+d be used if there are groups with a treatment dose "close	 
+d to zero".  Formally, the density of groups' period-two treatment
+d dose needs to be strictly positive at zero, something        that
+d can be assessed by plotting a kernel density estimate of that
+d density.  The command makes use of the lprobust	 command by
+d Calonico, Cattaneo and Farrell (2019) to determine an optimal
+d bandwidth, i.e.  a treatment dose below which        groups can
+d be considered as quasi stayers.  To estimate the treatment's
+d effect, the command starts by computing the	     difference
+d between the change in outcome of all groups and the intercept in
+d a local linear regression of the outcome	  change on the
+d treatment dose among quasi-stayers. Then, that difference is
+d scaled by groups' average treatment dose at	     period two.
+d Standard errors and confidence intervals are also computed
+d leveraging lprobust.	We recommend that users of	  did_had
+d cite de Chaisemartin and D'Haultfoeuille (2024), Calonico,
+d Cattaneo and Farrell (2019), and Calonico, Cattaneo	     and
+d Farrell (2018). 
+d
+d KW: treatment effects
+d KW: quasi stayers 
+d
+d Requires: Stata version 12 and lprobust (search nprobust)
+d
+d Distribution-Date: 20240522
+d
+d Author:  Clément de Chaisemartin,  Economics Department, Sciences Po
+d Support: email  chaisemartin.packages@@gmail.com
+d
+d Author:  Diego Ciccia, Economics Department, Sciences Po
+d Support: email chaisemartin.packages@@gmail.com
+d
+d Author:   Xavier D'Haultfoeuille, CREST-ENSAE
+d Support: email   xavier.dhaultfoeuille@@ensae.fr
+d
+d Author:  Felix Knau, Economics Department, Sciences Po
+d Support: email chaisemartin.packages@@gmail.com
+d
+d Author:    Doulo Sow, CREST-ENSAE
+d Support: email chaisemartin.packages@@gmail.com
+d
+f did_had.ado
+f did_had.sthlp

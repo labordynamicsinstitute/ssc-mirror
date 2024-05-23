@@ -59,6 +59,7 @@ p diagtest module to report summary statistics for diagnostic test
 p dichoct module to dichotomizes a variable at a specified centile and generates a new variable containing the dichotomized values
 p dict module to loop over multiple arguments
 p did2s module to estimate a TWFE model using the two-stage difference-in-differences approach 
+p did_had module to estimate the effect of a treatment on an outcome in a heterogeneous adoption design with no stayers but some quasi stayers
 p did_imputation module to perform treatment effect estimation and pre-trend testing in event studies
 p did_multiplegt module to estimate sharp Difference-in-Difference designs with multiple groups and periods
 p did_multiplegt_dyn module to estimate event-study Difference-in-Difference (DID) estimators in designs with multiple groups and periods, with a potentially non-binary treatment that may increase or decrease multiple times

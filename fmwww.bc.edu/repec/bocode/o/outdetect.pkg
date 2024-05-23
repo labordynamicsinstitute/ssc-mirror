@@ -1,4 +1,4 @@
-d 'OUTDETECT': module to perform outlier detection and diagnostics for welfare analysts
+d 'OUTDETECT': module to perform Outlier Detection for Inequality and Poverty Analysis
 d
 d  outdetect identifies outliers (extreme values) in the
 d distribution of a variable, and assesses their impact on a
@@ -24,7 +24,7 @@ d KW: welfare analysis
 d
 d Requires: Stata version 15 and moremata from SSC (q.v.)
 d
-d Distribution-Date: 20230225
+d Distribution-Date: 20230522
 d
 d Author: Federico Belotti, University of Rome Tor Vergata
 d Support: email federico.belotti@@uniroma2.it
@@ -38,3 +38,6 @@ d
 f outdetect.ado
 f outdetect.sthlp
 f ../l/lout.mlib
+f ../l/lout15.mlib
+f ../l/lout17.mlib
+f ../l/lout18.mlib

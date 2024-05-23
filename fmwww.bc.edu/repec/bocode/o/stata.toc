@@ -45,7 +45,7 @@ p orthog module to orthogonalize variables
 p osgen module to add Python os_stat() file attributes to a xdir resultsset
 p osort module to reorder variable(s) and sort data
 p outdat module to export data to other statistical packages
-p outdetect module to perform outlier detection and diagnostics for welfare analysts
+p outdetect module to perform Outlier Detection for Inequality and Poverty Analysis
 p outfix module to produce fixed format output (version 5)
 p outfix2 module to output formatted data
 p outfixt module to write fixed-format text file

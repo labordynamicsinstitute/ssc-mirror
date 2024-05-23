@@ -10,7 +10,7 @@ version 16.0;
  This program is an easy-to-use front end
  for the bspline package.
 *! Author: Roger Newson
-*! Date: 17 July 2022
+*! Date: 21 May 2024
 */
 
 syntax varname [if] [in] , Generate(passthru)
@@ -31,7 +31,7 @@ syntax varname [if] [in] , Generate(passthru)
 *
  Check package dependencies
 *;
-_whichlist bspline frencurv flexcurv, package(bspline);
+qui _whichlist bspline frencurv flexcurv, package(bspline);
 if trim("`r(incomplete)'")=="bspline" {;
   disp as error "Package bspline must be installed for polyspline to work."
     _n as error "To install bspline from SSC, type:"

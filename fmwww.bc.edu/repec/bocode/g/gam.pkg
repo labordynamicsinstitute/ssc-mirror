@@ -1,32 +1,24 @@
-d 'GAM': module for generalised additive models
+v 3                                                       
+d gam. Package for generalized additive modelling.                       
+d Program by Patrick Royston and Gareth Ambler.
 d
-d gam fits a generalized or proportional hazards additive model
-d (GAM) by	mazimizing a penalized log likelihood function.
-d Each component of the      resulting estimated function of the
-d covariates is a cubic smoothing      spline. The smoothness of
-d each component function is determined by the	    'equivalent
-d degrees of freedom' of the corresponding covariate.	   Models
-d supported:	  Normal (Gaussian) errors, binomial, Poisson,
-d gamma, Cox (now with Stata's	    stcox), and link functions
-d among identity, log, logit and inverse.      This package is an
-d update to accommodate the latest versions of the Windows     
-d operating system (specifically, Win 2000 and XP) and supersedes
-d the version	   published in the STB (Royston P, Ambler G (1998)
-d Generalized additive models.	    Stata Technical Bulletin 42:
-d 38-43.) 
+d Distribution-Date: 20120712. Version: 2.0.11.
 d
-d KW: generalized additive models
-d KW: proportional hazards
+d gam fits a generalized or proportional hazards additive model (GAM) by
+d      mazimizing a penalized log likelihood function. Each component of the
+d      resulting estimated function of the covariates is a cubic smoothing
+d      spline. The smoothness of each component function is determined by the
+d      'equivalent degrees of freedom' of the corresponding covariate.
+d      Models supported:
+d      Normal (Gaussian) errors, binomial, Poisson, gamma, Cox (now with Stata's
+d      stcox), and link functions among identity, log, logit and inverse.
+d      This package is an update to accommodate the latest versions of the Windows
+d      operating system (specifically, Win 2000 and XP) and supersedes the version
+d      published in the STB (Royston P, Ambler G (1998) Generalized additive models.
+d      Stata Technical Bulletin 42: 38-43.) 
+d      As the SSC Archive does not allow executable images to be distributed,
+d      the most recent version of this software is accessible via the Stata command
+d      net from http://www.homepages.ucl.ac.uk/~ucakjpr/stata
+      
+d Please direct queries to Patrick Royston (pr@ctu.mrc.ac.uk)
 d
-d Requires: Stata version 6.0 for Windows
-d
-d
-d Author: Patrick Royston, UK Medical Research Council
-d Support: email pr@@ctu.mrc.ac.uk
-d
-d Author: Gareth Ambler, University College London
-d Support: email gareth@@stats.ucl.ac.uk
-d
-d Distribution-Date: 20120717
-d
-f gam.zip

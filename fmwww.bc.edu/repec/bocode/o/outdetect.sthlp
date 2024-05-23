@@ -253,7 +253,15 @@ namely the poverty headcount (H), poverty gap (PG), and poverty gap squared (PG2
 {opt graph}({it:gtype} [, {it:twoway_options}]) produces diagnostic plots. Any options documented in {help twoway_options} other than {cmd:by()} can be specified. {it:gtype} can be chosen among the following:
 
 {phang2}
-{cmd:qqplot} plots the quantiles of the normalized variable against the quantiles of a Normal distribution with the same mean and variance (Quantile-Quantile plot). It uses Stata's {help qnorm}. It can be used to assess the success of the normalization of {help varname}.
+{opt qqpl:ot} plots the quantiles of the normalized {help varname} against the quantiles of a Normal distribution with the same mean and variance (Quantile-Quantile plot). 
+It uses Stata's {help qnorm}. It can be used to assess the success of the normalization of {help varname}.
+
+{phang2}
+{opt qqpa:reto} plots the quantiles of the log-transformed {help varname} against the quantiles of the standard exponential distribution. 
+Since a log-transformed Pareto random variable is exponentially distributed, {cmd:qqpareto} can be used to assess whether {help varname} follows a Pareto distribution.
+
+{phang2}
+{opt zipf}({help outdetect##zipf_options:{it:zipf_options}}) plots the log of {help varname} against the log of the {help varname}'s rank.
 
 {phang2}
 {opt itc}([{it:#} :] {help outdetect##itc_options:{it:itc_options}}) produces the Incremental Trimming Curve (ITC) for a statistic of interest {help outdetect##MV2021:(Mancini and Vecchi, 2021)}.
@@ -264,6 +272,14 @@ the horizontal axis reports the number of trimmed observations as a percentage o
 
 {phang2}
 {opt ifc}([{it:#} :] {help outdetect##ifc_options:{it:ifc_options}}) produces the Influence Function Curve (IFC) for inequality indexes {help outdetect##CF2007:(Cowell and Flachaire, 2007)}. The IFC reports a measure of sensitivity of the index of interest to influential observations. The measure is a function of the i-th smallest or largest observation, i.e. IF(i) = [I-I(i)]/I, where I is the index estimate obtained using the full sample, and I(i) is the index estimate obtained using a sample from which the i-th observation has been omitted.
+
+
+{marker zipf_options}{...}
+{synoptset 20 tabbed}{...}
+{synopthdr:zipf_options}
+{synoptline}
+{synopt :{opt logn:ormal}}shows the theoretical Zipf plot for the log normal{p_end}
+{synoptline}
 
 
 {marker itc_options}{...}
@@ -388,7 +404,8 @@ the horizontal axis reports the number of trimmed observations as a percentage o
 
 {marker MV2021}{...}
 {phang}
-Belotti, F., G. Mancini, and G. Vecchi. 2022. {it:Outlier Detection for Welfare Analysis}. Unpublished manuscript, University of Rome “Tor Vergata”.
+Belotti, F., G. Mancini, and G. Vecchi. 2022. {browse "http://documents1.worldbank.org/curated/en/099536211152218834/pdf/IDU0d8c0f49d0042704e31095c7006964c6e8ce5.pdf":{it:Outlier Detection for Welfare Analysis}}.
+Policy Research working paper, 10231, Washington, DC: World Bank.
 
 {phang}
 Mancini, G. and G. Vecchi. 2022.
@@ -427,18 +444,18 @@ To report any issues, please contact Giovanni Vecchi (giovanni.vecchi@uniroma2.i
 
 {pstd}Federico Belotti{p_end}
 {pstd}Department of Economics and Finance{p_end}
-{pstd}University of Rome Tor Vergata{p_end}
+{pstd}Tor Vergata University of Rome{p_end}
 {pstd}Rome, Italy{p_end}
 {pstd}federico.belotti@uniroma2.it{p_end}
 
 {pstd}Giulia Mancini{p_end}
-{pstd}Department of Economics and Finance{p_end}
-{pstd}University of Rome Tor Vergata{p_end}
+{pstd}Department of Economics and Business{p_end}
+{pstd}University of Sassari{p_end}
 {pstd}Rome, Italy{p_end}
-{pstd}giulia.mancini@uniroma2.it{p_end}
+{pstd}gmancini@uniss.it{p_end}
 
 {pstd}Giovanni Vecchi{p_end}
 {pstd}Department of Economics and Finance{p_end}
-{pstd}University of Rome Tor Vergata{p_end}
+{pstd}Tor Vergata University of Rome{p_end}
 {pstd}Rome, Italy{p_end}
 {pstd}giovanni.vecchi@uniroma2.it{p_end}

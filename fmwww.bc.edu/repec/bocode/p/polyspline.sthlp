@@ -328,8 +328,8 @@ and to be 0 otherwise.
 {title:Author}
 
 {pstd}
-Roger Newson, King's College London, UK.
-Email: {browse "mailto:roger.newson@kcl.ac.uk":roger.newson@kcl.ac.uk}
+Roger Newson, Queen Mary University of London, UK.
+Email: {browse "mailto:r.newson@qmul.ac.uk":r.newson@qmul.ac.uk}
 
 
 {marker polyspline_references}{...}
