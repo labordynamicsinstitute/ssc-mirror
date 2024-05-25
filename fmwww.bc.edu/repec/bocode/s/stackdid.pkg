@@ -1,0 +1,26 @@
+d 'STACKDID': module to estimate Stacked Difference-in-Differences Regression
+d
+d  stackdid performs a stacked difference-in-differences regression
+d for staggered treatment settings, as described in Gormley and
+d Matsa (2011).  It offers three primary advantages compared to a
+d standard difference-in-differences approach in such settings:    
+d    (1) is not subject to earlier bias from dynamic effects	   
+d (2) can easily isolate a particular window if interest around
+d each event	    (3) can easily be extended into a
+d triple-difference specification This method generally requires
+d restructuring the data in memory into "stacks" of "cohorts"
+d centered on treatment events.  stackdid will create these stacks
+d and perform the specified regression. 
+d
+d KW: difference in differences
+d KW: dynamic effects
+d
+d Requires: Stata version 11.2 and reghdfe, ppmlhdfe, ftools from SSC
+d
+d Distribution-Date: 20240524
+d
+d Author: Jacob Triplett, Carnegie-Mellon University
+d Support: email jacobtri@@andrew.cmu.edu>
+d
+f stackdid.ado
+f stackdid.sthlp

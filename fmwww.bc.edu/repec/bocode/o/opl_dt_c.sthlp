@@ -1,5 +1,5 @@
 {smcl}
-{* 10April2024}{...}
+{* 24AMay2024}{...}
 {cmd:help opl_dt_c}
 {hline}
 
@@ -102,7 +102,7 @@ class a 2-layer fixed-depth decision-tree at specific splitting variables and th
 {phang3} {stata keep if _train_new_index=="new"}{p_end}
 {phang2} Drop "my_cate_train" as in the new dataset treatment assignment and outcome performance are unknown{p_end}
 {phang3} {stata drop my_cate_train $w $y}{p_end}
-{phang2} Run "opl_dt" to find the optimal linear-combination parameters{p_end}
+{phang2} Run "opl_dt" to find the optimal decision-tree splitting variables and thresholds{p_end}
 {phang3} {stata opl_dt  ,  xlist($z) cate($T)}{p_end}
 {phang2} Save the optimal splitting variables into three global macros{p_end}
 {phang3} {stata global x1_opt `e(best_x1)'}{p_end}

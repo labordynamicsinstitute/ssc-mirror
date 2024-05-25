@@ -1,7 +1,7 @@
 ********************************************************************************
 * PROGRAM "opl_dt"
 ********************************************************************************
-*! opl_dt, v1, GCerulli, 24June2022
+*! opl_dt, v1, GCerulli, 24may2024
 program opl_dt , eclass
 version 16
 syntax , xlist(varlist max=2 min=2) cate(varlist max=1 min=1)
@@ -32,7 +32,7 @@ foreach y1 of local xlist{
 foreach y2 of local xlist{
 foreach y3 of local xlist{
 ********************************************************************************
-opl_dt_c `xlist' , x1(`y1') x2(`y2') x3(`y3') c1(`k') c2(`j') c3(`h') cate(`cate')
+opl_dt_c  , xlist(`xlist') x1(`y1') x2(`y2') x3(`y3') c1(`k') c2(`j') c3(`h') cate(`cate')
 ********************************************************************************
 local yname1: word 1 of `xlist'
 local yname2: word 2 of `xlist'
@@ -80,7 +80,12 @@ tempvar max_w
 drop if `A'7==.
 egen `max_w'=max(`A'7)
 keep if `A'7 ==`max_w'
+keep `A'1 `A'2 `A'3 `A'4 `A'5 `A'6 `A'7 `max_w'
 duplicates drop `A'7 , force
+*collapse _all
+*replace `A'1=trunc(`A'1) 
+*replace `A'2=trunc(`A'2) 
+*replace `A'3=trunc(`A'3) 
 ********************************************************************************
 qui sum `A'1 if `A'7==`max_w'
 if r(mean)==1{
@@ -125,3 +130,4 @@ ereturn scalar opt_perc_treat=100*round(`p',0.001)
 restore
 ********************************************************************************
 end
+********************************************************************************

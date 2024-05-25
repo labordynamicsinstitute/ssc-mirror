@@ -18,7 +18,7 @@ d KW: self-controlled cases
 d
 d Requires: Stata version 12.1
 d
-d Distribution-Date: 20240507
+d Distribution-Date: 20240524
 d
 d Author: Niels Henrik Bruun, Aalborg University Hospital
 d Support: email niels.henrik.bruun@@gmail.com
@@ -26,3 +26,5 @@ d
 f sccsdta.ado
 f sccsdta.sthlp
 f sccsdta_mmr.dta 
+f sccsdta_itp.dta 
+f sccsdta_intuss.dta 

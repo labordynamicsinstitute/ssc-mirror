@@ -1,8 +1,8 @@
 ********************************************************************************
 * PROGRAM "opl_dt_c"
 ********************************************************************************
-*! opl_dt_c, v2, GCerulli, 14Nov2023
-program opl_dt_c, eclass
+*! opl_dt_c, v2, GCerulli, 24may2024
+program opl_dt_c , eclass
 version 16
 syntax , ///
 xlist(varlist max=2 min=2) ///

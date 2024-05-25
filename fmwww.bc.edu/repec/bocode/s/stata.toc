@@ -20,6 +20,7 @@ p spgen module to generate spatially lagged variables
 p spider module for spider plots
 p splinefit module for smooth connected line plots
 p sq module for sequence analysis
+p stackdid module to estimate Stacked Difference-in-Differences Regression
 p staggered module implementing R staggered package based on Roth and Sant'Anna (2023)
 p standsurv module to compute standardized (marginal) survival and related functions
 p stata_linter module providing a tool to detect and correct bad Stata coding practices

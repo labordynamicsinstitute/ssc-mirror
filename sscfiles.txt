@@ -17385,6 +17385,7 @@ fmwww.bc.edu/repec/bocode/s/spnorm.ado
 fmwww.bc.edu/repec/bocode/s/stpm.hlp
 fmwww.bc.edu/repec/bocode/s/semean.html
 fmwww.bc.edu/repec/bocode/s/stemmer_example.do
+fmwww.bc.edu/repec/bocode/s/stackdid.pkg
 fmwww.bc.edu/repec/bocode/s/setdtapaper.ado
 fmwww.bc.edu/repec/bocode/s/spregsdmxt4.ado
 fmwww.bc.edu/repec/bocode/s/strgroup.ado
@@ -17955,6 +17956,7 @@ fmwww.bc.edu/repec/bocode/s/statplot.hlp
 fmwww.bc.edu/repec/bocode/s/spmstardxt11.ado
 fmwww.bc.edu/repec/bocode/s/seqlogit10_postestimation.html
 fmwww.bc.edu/repec/bocode/s/spregcs07.ado
+fmwww.bc.edu/repec/bocode/s/sccsdta itp.dta
 fmwww.bc.edu/repec/bocode/s/sqindexplot.sthlp
 fmwww.bc.edu/repec/bocode/s/stowcmd.hlp
 fmwww.bc.edu/repec/bocode/s/sptobitmstarhxt.dlg
@@ -18062,6 +18064,7 @@ fmwww.bc.edu/repec/bocode/s/stpm3_gensplines.ado
 fmwww.bc.edu/repec/bocode/s/spsurv.html
 fmwww.bc.edu/repec/bocode/s/sto.html
 fmwww.bc.edu/repec/bocode/s/spregrext.sthlp
+fmwww.bc.edu/repec/bocode/s/stackdid.sthlp
 fmwww.bc.edu/repec/bocode/s/survsim_user.ado
 fmwww.bc.edu/repec/bocode/s/solvcui.html
 fmwww.bc.edu/repec/bocode/s/scat3.ado
@@ -19314,6 +19317,7 @@ fmwww.bc.edu/repec/bocode/s/stockquote.html
 fmwww.bc.edu/repec/bocode/s/smwoodbury_lu.sthlp
 fmwww.bc.edu/repec/bocode/s/spregxt28.ado
 fmwww.bc.edu/repec/bocode/s/stexpect.pkg
+fmwww.bc.edu/repec/bocode/s/stackdid.ado
 fmwww.bc.edu/repec/bocode/s/sptobitmstar1.ado
 fmwww.bc.edu/repec/bocode/s/spmat_permute.html
 fmwww.bc.edu/repec/bocode/s/scheme-neon.scheme
@@ -19783,6 +19787,7 @@ fmwww.bc.edu/repec/bocode/s/spregxt02.ado
 fmwww.bc.edu/repec/bocode/s/spgmm.dlg
 fmwww.bc.edu/repec/bocode/s/subsave.pkg
 fmwww.bc.edu/repec/bocode/s/sliceplot.hlp
+fmwww.bc.edu/repec/bocode/s/sccsdta mmr.dta
 fmwww.bc.edu/repec/bocode/s/stmd2dyn.dlg
 fmwww.bc.edu/repec/bocode/s/stpm2cm.html
 fmwww.bc.edu/repec/bocode/s/stdbeta.ado
@@ -20036,6 +20041,7 @@ fmwww.bc.edu/repec/bocode/s/scheme_rbn1mono.sthlp
 fmwww.bc.edu/repec/bocode/s/slideviewer.html
 fmwww.bc.edu/repec/bocode/s/soepadd.sthlp
 fmwww.bc.edu/repec/bocode/s/stkap.ado
+fmwww.bc.edu/repec/bocode/s/sccsdta intuss.dta
 fmwww.bc.edu/repec/bocode/s/sfkk.ado
 fmwww.bc.edu/repec/bocode/s/sqstattab2.hlp
 fmwww.bc.edu/repec/bocode/s/sbbq.ado
