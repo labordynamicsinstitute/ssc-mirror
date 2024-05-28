@@ -161,6 +161,7 @@ p missings module to manage missing values
 p misum module to calculate summary statistics in MI dataset
 p mivcausal module for testing the hypothesis about the signs of the 2SLS weights
 p mivif module to calculate variance inflation factors after mi estimate regress
+p mixlelast module to compute mixed logit sample elasticities and marginal effects
 p mixlogit module to fit mixed logit models by using maximum simulated likelihood
 p mixlogitwtp module to estimate mixed logit models in WTP space
 p mixmcm module to estimate finite mixtures of non-stationary Markov chain models  by maximum likelihood (ML) and the Expectation-Maximization (EM) algorithm

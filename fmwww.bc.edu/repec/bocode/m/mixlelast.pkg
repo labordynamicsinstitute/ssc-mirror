@@ -1,0 +1,34 @@
+d 'MIXLELAST': module to compute mixed logit sample elasticities and marginal effects
+d
+d      mixlelast is a post-estimation command for mixlogit (Hole
+d 2007) that computes mixed logit samlpe elasticities and marginal 
+d   effects. It produces a matrix of dimension JxJ, where J is the
+d number alternatives. Diagonal elements are direct effects,   
+d off-diagonal elements are cross effects where each entry is the
+d effect on the row alternative given an attribute change in	the
+d column alternative. Unless the nosd option is specified,
+d mixlelast reports standard deviations in addition to the   
+d average effects over all decision makers in the sample.   
+d mixlelast allows the user to compute elasticities/marginal
+d effects for marginal attribute changes (point method), which is  
+d  the default, or for non-marginal changes (arc method).
+d Non-marginal changes can be either be specified as a percentage
+d or	an absolute change. The dummy option allows the user to
+d obtain effects for dummy variables. 
+d
+d KW: mixed logit
+d KW: elasticities
+d KW: marginal effects
+d
+d Requires: Stata version 14.1
+d
+d Distribution-Date: 20240528
+d
+d Author: Lars Zeigermann, NA
+d Support: email lars.zeigermann@@posteo.de
+d
+f mixlelast.ado
+f mixlelast.sthlp
+f ../e/example_het.dta 
+f ../e/example_hom.dta 
+f mixlelast.pdf

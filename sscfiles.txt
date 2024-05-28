@@ -3921,6 +3921,7 @@ fmwww.bc.edu/repec/bocode/e/ellipticity.ado
 fmwww.bc.edu/repec/bocode/e/elapse.hlp
 fmwww.bc.edu/repec/bocode/e/epi_sir.dlg
 fmwww.bc.edu/repec/bocode/e/elabel_functions.sthlp
+fmwww.bc.edu/repec/bocode/e/example_het.dta
 fmwww.bc.edu/repec/bocode/e/elabel_numlist.sthlp
 fmwww.bc.edu/repec/bocode/e/extreme_small.ado
 fmwww.bc.edu/repec/bocode/e/es_event_wrk_dlg.ado
@@ -4453,6 +4454,7 @@ fmwww.bc.edu/repec/bocode/e/eventcoefplot.sthlp
 fmwww.bc.edu/repec/bocode/e/esli.html
 fmwww.bc.edu/repec/bocode/e/efolder.sthlp
 fmwww.bc.edu/repec/bocode/e/estout.zip
+fmwww.bc.edu/repec/bocode/e/example_hom.dta
 fmwww.bc.edu/repec/bocode/e/estout_tex.def
 fmwww.bc.edu/repec/bocode/e/est2vec.ado
 fmwww.bc.edu/repec/bocode/e/eclplot.html
@@ -21579,6 +21581,7 @@ fmwww.bc.edu/repec/bocode/m/mark_changes.ado
 fmwww.bc.edu/repec/bocode/m/mtefe_gendata.ado
 fmwww.bc.edu/repec/bocode/m/mrgraph.html
 fmwww.bc.edu/repec/bocode/m/mvnormal.sthlp
+fmwww.bc.edu/repec/bocode/m/mixlelast.pkg
 fmwww.bc.edu/repec/bocode/m/micombine7.hlp
 fmwww.bc.edu/repec/bocode/m/mf_mm_strexpand.html
 fmwww.bc.edu/repec/bocode/m/multicoefplot.sthlp
@@ -22129,6 +22132,7 @@ fmwww.bc.edu/repec/bocode/m/mp_rlog.mpb
 fmwww.bc.edu/repec/bocode/m/mixreg_plugin.lin32
 fmwww.bc.edu/repec/bocode/m/mf_mm_sample.hlp
 fmwww.bc.edu/repec/bocode/m/mktab.pkg
+fmwww.bc.edu/repec/bocode/m/mixlelast.ado
 fmwww.bc.edu/repec/bocode/m/mf_rpnstackfcn.html
 fmwww.bc.edu/repec/bocode/m/miesize_validation_do_v15.do
 fmwww.bc.edu/repec/bocode/m/nuamodes.ado
@@ -22347,6 +22351,7 @@ fmwww.bc.edu/repec/bocode/m/miesize.pkg
 fmwww.bc.edu/repec/bocode/m/mcmcconverge.html
 fmwww.bc.edu/repec/bocode/m/mf_mm_integrate.hlp
 fmwww.bc.edu/repec/bocode/m/mf_mz_trimrows.hlp
+fmwww.bc.edu/repec/bocode/m/mixlelast.pdf
 fmwww.bc.edu/repec/bocode/m/merlin_postestimation.sthlp
 fmwww.bc.edu/repec/bocode/m/masum.sthlp
 fmwww.bc.edu/repec/bocode/m/mkstrsn.pkg
@@ -23099,6 +23104,7 @@ fmwww.bc.edu/repec/bocode/m/mvdcmp.ado
 fmwww.bc.edu/repec/bocode/m/meresc.mo
 fmwww.bc.edu/repec/bocode/m/multicolinRidge.m
 fmwww.bc.edu/repec/bocode/m/mycd10.ado
+fmwww.bc.edu/repec/bocode/m/mixlelast.sthlp
 fmwww.bc.edu/repec/bocode/m/mstdize6.ado
 fmwww.bc.edu/repec/bocode/m/mte1_cov.eps.pdf
 fmwww.bc.edu/repec/bocode/m/mat2txt.hlp
