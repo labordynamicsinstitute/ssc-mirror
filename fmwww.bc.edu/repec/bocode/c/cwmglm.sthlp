@@ -1,5 +1,5 @@
 {smcl}
-{* 31maj2022}{...}
+{* 24oct2023}{...}
 {hline}
 help {hi:cwmglm}
 
@@ -9,14 +9,13 @@ help {hi:cwmglm}
 {marker syntax}{...}
 {title:Syntax}
 {p 8 17 2}
-{cmd:cwmglm} {it:{help varname:depvar indepvars}} {ifin}, {cmdab:post:erior(stub)} [{cmd: start({it:svmethod)} k(#)} {cmdab:iter:ate(#)} {help cwmglm##xnormal_opts:{it:xnormal_opts}} {cmdab:xn:ormal(varlist)} {cmdab:xpoi:sson(varlist)} {cmdab:xbin:omial(varlist)} {cmdab:xmult:inomial(varlist)} {cmdab:nd:raw(#)} {cmdab:iteratex:norm(#)}  {cmdab:conv:crit(#)}]
+{cmd:cwmglm} {it:{help varname:depvar indepvars}} {ifin}, {cmdab:post:erior(stub)} [{cmd: start({it:svmethod)} k(#)} {cmdab:iter:ate(#)} {help cwmglm##xnormal_opts:{it:xnormal_opts}} {cmdab:xn:ormal(varlist)} {cmdab:xpoi:sson(varlist)} {cmdab:xbin:omial(varlist)} {cmdab:xmult:inomial(varlist)} {cmdab:nd:raw(#)} {cmdab:iteratex:norm(#)}  {cmdab:conv:crit(#)} {cmd:nolog} {cmdab:nocl:ustertable} {cmdab:nodev:iance} {cmdab:nomar:ginal} {cmdab:noregt:able}]
 
 {synoptset 22 tabbed}{...}
 {synopthdr}
 {synoptline}
 {syntab:Main Options}
-{synopt:{opt posterior(stub)}} generates posterior probabilities. Required option. {p_end}
-{synopt:{opt k(#)}} the number of mixture components. Default is 2 {p_end}
+{synopt:{opt k(#)}} the number of mixture components. Default is 2. {p_end}
 
 {syntab:Marginalization Options}
 {synopt:{opt xnormal}({help varname:varlist})} normal covariates (marginal distribution)  {p_end}
@@ -37,6 +36,12 @@ help {hi:cwmglm}
 {synopt:{opt iteratexnorm(#)}} the number of iterations for the maximization of parsimonious models {p_end}
 {synopt:{opt convcrit(#)}} the stopping criterion for the Aitken acceleration. (Default 1e-5)  {p_end}
 
+{syntab:Display options}
+{synopt:{opt nlog}} supresses iteration log {p_end}
+{synopt:{opt noclustertable}} requests {cmd: cwmglm} not to display the clustering table  {p_end}
+{synopt:{opt nodeviance}} requests {cmd: cwmglm} not to display the deviance measures {p_end}
+{synopt:{opt nomarginal}} requests {cmd: cwmglm} not to display the parameters of the marginal distributions {p_end}
+{synopt:{opt noregtable}} requests {cmd: cwmglm} not to display the regression table  {p_end}
 
 
 {synoptline}
@@ -52,24 +57,19 @@ help {hi:cwmglm}
 
 
 {title:Options}
-
-
-
 {synoptset 30 tabbed}{...}
 {dlgtab:Main  options}
 
-{synopt: {opt posterior(stub)}} Required option. Generates a set posterior group probabilities  (one variable for each mixture component) {p_end} 
-{synopt: {opt k(#)}} the number of mixture components. Default is 2 {p_end}
+{synopt: {opt k(#)}} the number of mixture components. Default is 2 ,  the mimimum is 1. {p_end}
 
 {dlgtab:Marginalization options}
 
 {synopt: {opt xnormal(varlist)}}      variables having normal distributions {p_end}
 {synopt: {opt xpoisson(varlist)}}     variables having poisson distributions {p_end}
-{synopt: {opt xbinomial(varlist)}}    variables having binomial distributions {p_end}
+{synopt: {opt xbinomial(varlist)}}    variables having binomial distributions. This options only accepts {0,1} binary variables. {p_end}
 {synopt: {opt xmultinomial(varlist)}} variables having multinomial distributions. Factor variable syntax is not allowed. Categories are detected automatically. {p_end}
-{synopt: {it: xnormal_opts}} indicates the parsimonious model to be fitted in {opt xnormal(varlist)}. If the number of variables in {opt xnormal(varlist)} is equal to one the possibile options are {opt eee} and {opt vvv}. Default is {opt vvv}. (see {help cwmglm##refrlink:Celeux and Govaert, 1995}) The possible multivariate normal models are the following{p_end}
+{synopt: {it: xnormal_opts}} indicates the parsimonious model to be fitted in {opt xnormal(varlist)} (see {help cwmglm##refrlink:Celeux and Govaert, 1995}) . If the number of variables in {opt xnormal(varlist)} is equal to one the possibile options are {opt eee} and {opt vvv}. Default is {opt vvv}. The possible multivariate normal models are the following{p_end}
 {marker xnormal_opts}{...} 
-{pstd}
 
 {synopt: {opt eii}} Equal volume, spherical shape {p_end}
 {synopt: {opt vii}} Variable volume, spherical shape {p_end}
@@ -110,6 +110,15 @@ observations to initial classes.  {p_end}
 {synopt: {opt iterate(#)}} the number of EM iterations. Default is 1200 {p_end}
 {synopt: {opt iteratexnorm(#)}} the number of iterations for the parisimonious models (see {cmd: xnorm(varlist)} and {help cwmglm##xnormal_opts:{it:xnormal_opts}} options). It affects only the estimations of vee, eve, vve, vev and vei models. Default is 200 {p_end}
 {synopt: {opt convcrit(#)}} the stopping criterion for the Aitken acceleration procedure. Default threshold is 1e-5. {p_end}
+
+{dlgtab:Display options}
+
+{synopt:{opt nlog}} supresses iteration log {p_end}
+{synopt:{opt noclustertable}} requests {cmd: cwmglm} not to display the clustering table  {p_end}
+{synopt:{opt nodeviance}} requests {cmd: cwmglm} not to display the deviance measures {p_end}
+{synopt:{opt nomarginal}} requests {cmd: cwmglm} not to display the parameters of the marginal distributions {p_end}
+{synopt:{opt noregtable}} requests {cmd: cwmglm} not to display the regression table  {p_end}
+
 
 {title:Saved Results}
 
@@ -169,13 +178,25 @@ observations to initial classes.  {p_end}
 
 {pstd}Setup{p_end}
 
+{phang2}{cmd: . use covid, clear}
+
+{phang2}{cmd: . describe}
+
+{pstd}Mixture of Poisson GLM with random covariates (k=2){p_end}
+
+{phang2}{cmd: . cwmglm y x1 x2 x3 n1 female, xnormal(x1 x2 x3) vvv xpoisson(n1) xbin(female) k(2)  family(poisson)}
+
+{hline}
+
+{pstd}Setup{p_end}
+
 {phang2} {cmd:. use students, clear}    
 
 {phang2} {cmd:. describe}    
 
 
 {pstd}Mixture of regressions with random covariates, model EEE{p_end}
-{phang2} {cmd:. cwmglm weight height heightf,  k(2)  posterior(z) xnormal(height heightf) eee  }
+{phang2} {cmd:. cwmglm weight height heightf,  k(2)  xnormal(height heightf) eee  }
 
 {hline}
 
@@ -187,11 +208,7 @@ observations to initial classes.  {p_end}
 
 {phang2} {cmd:. local models vev evv vvv eei vei evi vvi eii vii eee vee eve vve eev }
 
-{phang2} {cmd:. local bestbic=10e20}
-
-{phang2} {cmd:. local bestaic=10e20}
-
-{phang2} {cmd:. cap matrix drop res}   
+{phang2} {cmd:. global CWMs}
 
 {pstd} Looping over different parsimonious multivariate normal models and letting k range from 2 to 5 {p_end}
 
@@ -199,43 +216,15 @@ observations to initial classes.  {p_end}
 
 {phang3} {cmd:. forval i=2/5 {c -(}}
 
-{phang3} {cmd:. cap drop _tau*}
-
 {phang3} {c 47}{c 47} note the absence of {it: depvar indepvars}
 
-{phang3} {cmd:. quietly cwmglm, xnorm(x1 x2) k(`i') posterior(_tau) `model'}
+{phang3} {cmd:. quietly cwmglm, xnorm(x1 x2) k(`i') `model'}
 
 {phang3}{space 4}{cmd:.if (e(converged)==1) {c -(}}
 
-{phang3}{space 4}{cmd:.matrix ic=(e(ic),`i', e(ll))}
+{phang3}{space 4}{cmd:.estimates store `model'`i' }
 
-{phang3}{space 4}{cmd:.matrix rownames ic= "`model'"}
-
-{phang3}{space 4}{cmd:.matrix res = nullmat(res) \ ic}
-
-{phang3}{space 4}{cmd:.local current_BIC=e(ic)[1,2]}
-
-{phang3}{space 4} {cmd:. if (`current_BIC'<`bestbic') {c -(}}
-			
-{phang3}{space 8} {cmd:. local bestbic=`current_BIC'}
-			
-{phang3}{space 8} {cmd:. local bestk_BIC=`i'}
-			
-{phang3}{space 8} {cmd:. local bestmodel_BIC `model'}
-
-{phang3}{space 8} {cmd:. {c )-}}
-			
-{phang3}{space 4}{cmd:.local current_AIC=e(ic)[1,1]}
-
-{phang3}{space 4} {cmd:. if (`current_AIC'<`bestAIC') {c -(}}
-			
-{phang3}{space 8} {cmd:. local bestAIC=`current_AIC'}
-			
-{phang3}{space 8} {cmd:. local bestk_AIC=`i'}
-			
-{phang3}{space 8} {cmd:. local bestmodel_AIC `model'}
-
-{phang3}{space 8} {cmd:. {c )-}}
+{phang3}{space 4}{cmd:.global CWMs $CWMs `model'`i'}
 
 {phang3}{space 4} {cmd:. {c )-}}
 
@@ -245,10 +234,15 @@ observations to initial classes.  {p_end}
 
 {phang2}{space 2}{cmd:. {c )-}}
 
-{phang2}{space 2}{cmd:. di as result "best model according to BIC: k=`bestk_BIC' type `bestmodel_BIC'"}
+{pstd} Model selection {p_end}
 
+{phang2}{space 2}{cmd:. cwmcompare $CWMs}
 
-{phang2}{space 2}{cmd:. di as result "best model according to AIC: k=`bestk_AIC' type `bestmodel_AIC'"}
+{pstd} Activating the estimates from the best model {p_end}
+
+{phang2}{space 2}{cmd:. estimates restore `r(bestAIC)' }
+ 
+
 
 {title:References}
 {marker refrlink}{...} 

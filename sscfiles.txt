@@ -1643,6 +1643,7 @@ fmwww.bc.edu/repec/bocode/c/color-538rs8.style
 fmwww.bc.edu/repec/bocode/c/color-538bs3.style
 fmwww.bc.edu/repec/bocode/c/combival.pkg
 fmwww.bc.edu/repec/bocode/c/cptest.ado
+fmwww.bc.edu/repec/bocode/c/cwmcompare.ado
 fmwww.bc.edu/repec/bocode/c/ceqextsig.sthlp
 fmwww.bc.edu/repec/bocode/c/color-mrcpurple.style
 fmwww.bc.edu/repec/bocode/c/creplace.pkg
@@ -7888,6 +7889,7 @@ fmwww.bc.edu/repec/bocode/l/lognfit.pkg
 fmwww.bc.edu/repec/bocode/l/lasreg.mlib
 fmwww.bc.edu/repec/bocode/l/lpdensity_cgen.mo
 fmwww.bc.edu/repec/bocode/l/labvalcl.ado
+fmwww.bc.edu/repec/bocode/l/lstfform.mlib
 fmwww.bc.edu/repec/bocode/l/listtex_vars.html
 fmwww.bc.edu/repec/bocode/l/lrowmat_utils.mlib
 fmwww.bc.edu/repec/bocode/l/lmhgl.sthlp
@@ -18852,6 +18854,7 @@ fmwww.bc.edu/repec/bocode/s/spsurv.ado
 fmwww.bc.edu/repec/bocode/s/spmstardxt.ado
 fmwww.bc.edu/repec/bocode/s/stns_list.html
 fmwww.bc.edu/repec/bocode/s/spmat_drop.html
+fmwww.bc.edu/repec/bocode/s/stfform.ado
 fmwww.bc.edu/repec/bocode/s/somersd_mata.sthlp
 fmwww.bc.edu/repec/bocode/s/spregsem3.ado
 fmwww.bc.edu/repec/bocode/s/spregsemxt.ado
@@ -19397,6 +19400,7 @@ fmwww.bc.edu/repec/bocode/s/safedrop.hlp
 fmwww.bc.edu/repec/bocode/s/sptobitmstardxt.ado
 fmwww.bc.edu/repec/bocode/s/spglsxt1.dta
 fmwww.bc.edu/repec/bocode/s/smcfcs.sthlp
+fmwww.bc.edu/repec/bocode/s/stfform.sthlp
 fmwww.bc.edu/repec/bocode/s/SPWmxt1.dta
 fmwww.bc.edu/repec/bocode/s/spgmm.do
 fmwww.bc.edu/repec/bocode/s/scheme-black_hue.scheme

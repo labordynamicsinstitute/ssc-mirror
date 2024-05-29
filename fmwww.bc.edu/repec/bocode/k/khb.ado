@@ -1,4 +1,4 @@
-*! version 2.14 Juni 7, 2022 @ 17:24:33 UK
+*! version 2.15 Mai 28, 2024 @ 10:45:43 UK
 *! Decomposing total effects using the KHB method 
 *! Support: ukohler@uni-potsdam.de
 
@@ -25,6 +25,8 @@
 * 2.12: Changes names of residuals stored with -khb ..., keep-
 * 2.13: Version 2.12 accidently outcommented a line. -> fixed
 * 2.14: Updated to Stata 17, removed some noisily debug lines
+* 2.15: iweights allowed
+
 
 // Caller Program
 // ==============
@@ -38,7 +40,7 @@ version 17
 	// Low level parsing
 	// -----------------
 	
-	syntax [anything] [if] [in] [aweight fweight pweight] 		/// 
+	syntax [anything] [if] [in] [aweight fweight pweight iweight] 		/// 
 	  [, Concomitant(varlist fv) Summary ape Disentangle  ///
 	  vce(string) Verbose Keep or ///
 	  continuous NOTable OUTcome(string) XStandard ZStandard nopost *]
@@ -113,7 +115,7 @@ version 17
 	if `"`zstandard'"' == `"zstandard"' _KHB_Std `Z', weight(`aweight')
 
 	// SUREG or SUEST?
-	if "`weight'" == "pweight" local suest suest
+	if "`weight'" == "pweight" | "`weight'" == "iweight" local suest suest
 	if "`suest'" == "" & "`vce'" != "" local suest suest
 	if "`suest'" == "" {
 		foreach var of local Z {
