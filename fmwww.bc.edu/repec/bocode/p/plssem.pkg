@@ -19,7 +19,7 @@ d KW: latent variables
 d
 d Requires: Stata version 14.2
 d
-d Distribution-Date: 20200804
+d Distribution-Date: 20240531
 d
 d Author:   Sergio Venturini,     Department of Decision Sciences, Università Bocconi, Italy
 d Support: email     sergio.venturini@@unibocconi.it
@@ -30,7 +30,10 @@ d
 f plssem.ado
 f plssem.sthlp
 f plssemc.ado
+f plssemc_mi.ado
 f plssemc.sthlp
+f plssem_mi.ado
+f plssem_mi.sthlp
 f plssemcmat.ado
 f plssemmat.ado
 f plssem_estat.ado

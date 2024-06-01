@@ -1,5 +1,5 @@
-*!plssem_p version 0.3.0
-*!Written 01Oct2017
+*!plssem_p version 0.4.1
+*!Written 17Feb2024
 *!Written by Sergio Venturini and Mehmet Mehmetoglu
 *!The following code is distributed under GNU General Public License version 3 (GPL-3)
 
@@ -24,6 +24,15 @@ program plssem_p, rclass sortpreserve
 	
 	tempvar __touse__
 	quietly generate `__touse__' = e(sample)
+
+  local ismi = (e(cmd) == "mi estimate")
+
+  if (`ismi') {
+    display as error "plssem postestimation is not available after multiple imputation"
+    exit
+  }
+
+  local tempnamelist
 	
 	// check that estimation sample has not changed
 	// checkestimationsample
@@ -55,8 +64,8 @@ program plssem_p, rclass sortpreserve
 		display as txt "(the model doesn't include any structural part; " _continue
 		display as txt "quantities saved only for the measurement part)"
 	}
-	local noscale "unscaled"
-	local isnoscale : list noscale in props
+	local unscaled "unscaled"
+	local isunscaled : list unscaled in props
 	local knnimp "knn"
 	local isknnimp : list knnimp in props
 	local meanimp "mean"
@@ -74,6 +83,7 @@ program plssem_p, rclass sortpreserve
 	/* Save original data set */
 	local allindicators = e(mvs)
 	tempname original_data original_data_exp
+  local tempnamelist "`tempnamelist' `original_data' `original_data_exp'"
 	mata: `original_data' = st_data(., "`: list uniq allindicators'", "`__touse__'")
 	mata: `original_data_exp' = st_data(., "`allindicators'", "`__touse__'")
 	
@@ -108,6 +118,7 @@ program plssem_p, rclass sortpreserve
 		
 		mata: st_matrix("`ohat'", J(`nobs', 0, .))
 		tempname mvs_idx load_var load_idx load_nm num_block
+    local tempnamelist "`tempnamelist' `mvs_idx' `load_var' `load_idx' `load_nm' `num_block'"
 		mata: `mvs_idx' = J(0, 1, .)
 		foreach var in `modeA' {
 			local lv_col : list posof "`var'" in lvs_adj
@@ -140,6 +151,7 @@ program plssem_p, rclass sortpreserve
 	/* -- inner model -- */
 	if (`isstruct') {
 		tempname adj_struct path endo path_mata ihat lvs_endo_nm
+    local tempnamelist "`tempnamelist' `endo' `path_mata' `lvs_endo_nm'"
 		matrix `adj_struct' = e(adj_struct)
 		matrix `path' = e(pathcoef)
 		mata: `endo' = colsum(st_matrix("`adj_struct'"))
@@ -162,7 +174,8 @@ program plssem_p, rclass sortpreserve
 	/* -- outer model -- */
 	if (!`noreflective') {
 		tempname ores mvs_nm
-		if (!`isnoscale') {
+    local tempnamelist "`tempnamelist' `mvs_nm'"
+		if (!`isunscaled') {
 			mata: st_matrix("`indicators_std'", ///
 				scale(st_matrix("`indicators'")[., `mvs_idx']))
 			matrix `ores' = `indicators_std' - `ohat'
@@ -237,19 +250,20 @@ program plssem_p, rclass sortpreserve
 	
 	if ("`xb'" != "") {
 		if ("`noouter'" == "") & (!`noreflective') {
-			forvalues j = 1/`n_ind' {
+      forvalues j = 1/`n_ind' {
 				local varname "`: word `j' of `ohat_nm''"
 				capture confirm new variable `varname'
 				if (_rc == 110) {
 					quietly drop `varname'
 				}
-				quietly generate `varname' = .
+				quietly generate double `varname' = .
 				label variable `varname' "Fitted values for outer model (`: word `j' of `indvs'') [`now']"
 			}
 			tempname ohat_mata orig_m orig_s
+      local tempnamelist "`tempnamelist' `ohat_mata' `orig_m' `orig_s'"
 			mata: `ohat_mata' = st_matrix("`ohat'")
-			mata: `orig_m' = mean(`original_data_exp')
-			mata: `orig_s' = sd(`original_data_exp')
+			mata: `orig_m' = mean(`original_data_exp')[`mvs_idx']
+			mata: `orig_s' = sd(`original_data_exp')[`mvs_idx']
 			mata: st_matrix("`ohat'", unscale(scale(`ohat_mata'), `orig_s', `orig_m'))
 			mata: st_store(., tokens("`ohat_nm'"), "`__touse__'", st_matrix("`ohat'"))
 		}
@@ -260,7 +274,7 @@ program plssem_p, rclass sortpreserve
 				if (_rc == 110) {
 					quietly drop `varname'
 				}
-				quietly generate `varname' = .
+				quietly generate double `varname' = .
 				label variable `varname' "Fitted values for inner model (`: word `j' of `endovs'') [`now']"
 			}
 			mata: st_store(., tokens("`ihat_nm'"), "`__touse__'", st_matrix("`ihat'"))
@@ -275,7 +289,7 @@ program plssem_p, rclass sortpreserve
 				if (_rc == 110) {
 					quietly drop `varname'
 				}
-				quietly generate `varname' = .
+				quietly generate double `varname' = .
 				label variable `varname' "Residuals for outer model (`: word `j' of `indvs'') [`now']"
 			}
 			mata: st_store(., tokens("`ores_nm'"), "`__touse__'", st_matrix("`ores'"))
@@ -287,7 +301,7 @@ program plssem_p, rclass sortpreserve
 				if (_rc == 110) {
 					quietly drop `varname'
 				}
-				quietly generate `varname' = .
+				quietly generate double `varname' = .
 				label variable `varname' "Residuals for inner model (`: word `j' of `endovs'') [`now']"
 			}
 			mata: st_store(., tokens("`ires_nm'"), "`__touse__'", st_matrix("`ires'"))
@@ -300,7 +314,8 @@ program plssem_p, rclass sortpreserve
 		mata: st_store(., tokens("`: list uniq allindicators'"), "`__touse__'", ///
 			`original_data')
 	}
-	capture mata: cleanup()
+	capture mata: cleanup(st_local("tempnamelist"))
+  /* End of cleaning up */
 	
 	/* Return values */
 	if (!`noreflective') | (`isstruct') {
@@ -309,4 +324,5 @@ program plssem_p, rclass sortpreserve
 		return matrix struct_fit = `ihat'
 		return matrix meas_fit = `ohat'
 	}
+  /* End of returning */
 end

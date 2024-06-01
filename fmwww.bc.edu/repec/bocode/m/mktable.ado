@@ -160,6 +160,7 @@ program mktable
 	local secondline "`secondline'" "`: display "{hline ""`colwidth'""}"'"
 	local lastline "`lastline'" "`: display "{hline ""`colwidth'""}"'"
 	
+  /* Start printing in Results window */
 	display
 	display as text _skip(`skip0') "`title'"
 	display as text "`firstline'"
@@ -280,8 +281,8 @@ program mktable
 				else if (`num' == `nrows') {
 					display as text "`lastline'"
 				}
+				break
 			}
-			break
 		}
 	}
 	

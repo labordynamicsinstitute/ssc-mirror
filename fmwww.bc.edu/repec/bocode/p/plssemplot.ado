@@ -1,10 +1,17 @@
-*!plssemplot version 0.3.0
-*!Written 27Apr2018
+*!plssemplot version 0.4.0
+*!Written 05Jul2023
 *!Written by Sergio Venturini and Mehmet Mehmetoglu
 *!The following code is distributed under GNU General Public License version 3 (GPL-3)
 
 program plssemplot
 	version 15.1
+
+  local ismi = (e(cmd) == "mi estimate")
+
+  if (`ismi') {
+    display as error "plssem postestimation is not available after multiple imputation"
+    exit
+  }
 
 	if (("`e(cmd)'" != "plssem") & ("`e(cmd)'" != "plssemc")) {
 		error 301
@@ -32,6 +39,8 @@ program _plssemplot
 
 	tempvar __touse__
 	quietly generate `__touse__' = e(sample)
+
+  local tempnamelist
 
 	// check that estimation sample has not changed
 	// checkestimationsample
@@ -62,6 +71,7 @@ program _plssemplot
 		}
 
 		tempname adjmat
+    local tempnamelist "`tempnamelist' `adjmat'"
 		mata: `adjmat' = st_matrix("e(adj_struct)")
 		
 		preserve
@@ -74,6 +84,7 @@ program _plssemplot
 			exit
 		}
 		
+		quietly nwclear
 		quietly nwset, mat(`adjmat') directed labs(`e(lvs)')
 		quietly nwplot, lab layout(circle) title("Structural model" " ") ///
 			labelopt(mlabposition(0)) nodefactor(4.5) arcstyle(automatic) ///
@@ -136,6 +147,7 @@ program _plssemplot
 			/* Save original data set */
 			local allindicators = e(mvs)
 			tempname original_data
+      local tempnamelist "`tempnamelist' `original_data'"
 			mata: `original_data' = st_data(., "`: list uniq allindicators'", "`__touse__'")
 			
 			/* Recovery of missing values */
@@ -423,8 +435,11 @@ program _plssemplot
 		twoway (line `e(mvs)' `iter', lpattern(solid)), ///
 			by(`lv', legend(position(3)) title("Outer weights convergence") ///
 			note("")) xtitle("Iteration") ytitle("Outer weights") xlabel(#`niter') ///
-			legend(cols(1) size(vsmall)) scheme(s2gcolor)
+			legend(cols(1) size(vsmall)) scheme(sj) // scheme(s2gcolor)
 
 		restore
-	}	
+	}
+
+  /* Clean up */
+  capture mata: cleanup(st_local("tempnamelist"))
 end

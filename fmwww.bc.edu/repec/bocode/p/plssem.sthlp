@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.3.0  12Apr2019}{...}
+{* *! version 0.6.1  29May2024}{...}
 {vieweralsosee "plssem postestimation" "help plssem postestimation"}{...}
 {vieweralsosee "plssemplot" "help plssemplot"}{...}
 {vieweralsosee "plssemc" "help plssemc"}{...}
@@ -71,6 +71,10 @@ and P the number of latent variables in the model).
 {synopt:{cmd:no}{cmdab:sc:ale}}manifest variables are not standardized before running the algorithm{p_end}
 {synopt:{cmdab:conv:crit(relative)}}relative convergence criterion; the default{p_end}
 {synopt:{cmdab:conv:crit(square)}}square convergence criterion{p_end}
+{synopt:{opth ord:inal(varlist)}}list of ordinal indicators{p_end}
+{synopt:{cmdab:rob:ust(none)}}use non-robust correlation measures (see below for more details){p_end}
+{synopt:{cmdab:rob:ust(spearman)}}use the Spearman rank correlation measure{p_end}
+{synopt:{cmdab:rob:ust(mcd)}}use a robust correlation measure (minimum covariance determinant, MCD){p_end}
 {synoptline}
 
 {p 4 6 2}
@@ -205,10 +209,11 @@ can get the results based on permutation or bootstrap resampling. The default nu
 of replications for both permutation and bootstrap is 100. However, this can be
 changed by adding the suboption {bf:reps(#)}. Further, with the suboption {bf:groupseed(#)}
 one can also set a certain seed number to be able reproduce the bootstrap or permutation
-results. Finally, by using the suboption {bf:plot} we can get a graphical output
+results. By specifying the suboption {bf:plot} we can get a graphical output
 showing the estimates differences between the groups based on alpha level of 0.05
 (default). The significance level can also be changed by adding the suboption
-{bf:alpha(#)}.
+{bf:alpha(#)}. Finally, the {bf:unequal} suboption indicates that unequal variances
+must be assumed in the parametric bootstrap test.
 
 {phang}{opt correlate(mv lv cross [, cutoff(#)])}
 lets the user ask for correlations among the indicators
@@ -229,6 +234,20 @@ the manifest variables are not standardized before running the algorithm.
 {phang}{opt convcrit(convergence_criterion)}
 the convergence criterion to use. Alternative choices are {bf:relative} or {bf:square}. The
 default is {bf:relative}.
+
+{phang}{opt ordinal(ind)}
+specifies the list of indicators to treat as ordinal; for these variables, the polyserial
+or polychoric measures are used to assess the correlation with the other indicators. In
+other terms, this option implements a version of ordinal PLS (OrdPLS) approach (see {help plssem##CantaluppiBoari2016:Cantaluppi and Boari 2016})
+
+{phang}{opt robust(corr_method)}
+specifies the method to use for computing the correlation among the indicators. If
+{it:corr_method} is set to {bf:none}, the standard Bravais-Pearson correlation is used
+if the indicators are numerical, while the polyserial or polychoric correlations are
+used for the ordinal/categorical indicators (OrdPLS). If {it:corr_method} is set to
+{bf:spearman}, the Spearman rank correlation measure is used. Finally, if
+{it:corr_method} is set to {bf:mcd}, the minimum covariance determinant (MCD) approach
+is used (see {help plssem##RousseeuwvanDriessen1999:Rousseeuw and K. van Driessen 1999}). The latter provides an implementation of the robust PLS (Robust PLS) approach (see {help plssem##Schambergeretal2020:Schamberger et al. 2020}).
 
 
 {marker examples}{...}
@@ -254,7 +273,7 @@ default is {bf:relative}.
 {phang2}{cmd:. estat vif}{p_end}
 
 {pstd}Multigroup analysis using bootstrap{p_end}
-{phang2}{cmd:. plssem (Attractive > face sexy) (Appearance > body appear attract) (Weight > lweight calories cweight), structural(Appearance Attractive, Weight Appearance) group(women, method(bootstrap) reps(50) plot)}{p_end}
+{phang2}{cmd:. plssem (Attractive > face sexy) (Appearance > body appear attract) (Weight > lweight calories cweight), structural(Appearance Attractive, Weight Appearance) group(women, method(bootstrap) reps(500) unequal plot)}{p_end}
 
     {hline}
 {pstd}Setup{p_end}
@@ -301,9 +320,9 @@ default is {bf:relative}.
 {title:Authors}
 
 {pstd} Sergio Venturini{break}
-Department of Management{break}
-Università degli Studi di Torino, Italy{break}
-{browse "mailto:sergio.venturini@unito.it":sergio.venturini@unito.it}{break}
+Department of Economics and Social Sciences{break}
+Università Cattolica del Sacro Cuore, Italy{break}
+{browse "mailto:sergio.venturini@unicatt.it":sergio.venturini@unicatt.it}{break}
 
 {pstd} Mehmet Mehmetoglu{break}
 Department of Psychology{break}
@@ -322,15 +341,19 @@ Norwegian University of Science and Technology{break}
 {p2col 5 24 28 2: Scalars}{p_end}
 {synopt:{cmd:e(N)}}number of observations{p_end}
 {synopt:{cmd:e(reps)}}number of bootstrap replications{p_end}
+{synopt:{cmd:e(n_inadmissibles)}}number of inadmissable bootstrap replications{p_end}
 {synopt:{cmd:e(iterations)}}number of iterations to reach convergence{p_end}
 {synopt:{cmd:e(tolerance)}}chosen tolerance value{p_end}
 {synopt:{cmd:e(maxiter)}}maximum number of iterations allowed{p_end}
 {synopt:{cmd:e(converged)}}equal to 1 if convergence is achieved; 0 otherwise{p_end}
+{synopt:{cmd:e(k_aux)}}number of auxiliary variables{p_end}
+{synopt:{cmd:e(df_m)}}model degrees of freedom{p_end}
 
 {synoptset 24 tabbed}{...}
 {p2col 5 24 28 2: Macros}{p_end}
 {synopt:{cmd:e(cmd)}}{cmd:plssem}{p_end}
 {synopt:{cmd:e(cmdline)}}command as typed{p_end}
+{synopt:{cmd:e(vce)}}type of the variance-covariance matrix of the estimators{p_end}
 {synopt:{cmd:e(estat_cmd)}}program used to implement {cmd:estat}{p_end}
 {synopt:{cmd:e(predict)}}program used to implement {cmd:predict}{p_end}
 {synopt:{cmd:e(title)}}title in estimation output{p_end}
@@ -346,19 +369,33 @@ Norwegian University of Science and Technology{break}
 whether the bootstrap has been used, whether the model has a structural part, whether the
 {cmd:rawsum} option has been used, and whether the manifest variables have been scaled or
 not{p_end}
+{synopt:{cmd:e(robust)}}robust correlation method used{p_end}
+{synopt:{cmd:e(ordinal)}}list of indicators treated as ordinal (if any){p_end}
 
 {synoptset 24 tabbed}{...}
 {p2col 5 24 28 2: Matrices}{p_end}
+{synopt:{cmd:e(b)}}coefficient vector{p_end}
+{synopt:{cmd:e(V)}}variance-covariance matrix of the estimators{p_end}
 {synopt:{cmd:e(loadings)}}outer loadings matrix{p_end}
+{synopt:{cmd:e(loadings_breps)}}outer loadings bootstrap replications (available only
+if the {cmd:boot()} option is chosen){p_end}
 {synopt:{cmd:e(loadings_bs)}}bootstrap-based outer loadings matrix (available only
 if the {cmd:boot()} option is chosen){p_end}
 {synopt:{cmd:e(loadings_se)}}matrix of the outer loadings standard errors{p_end}
 {synopt:{cmd:e(cross_loadings)}}cross loadings matrix{p_end}
+{synopt:{cmd:e(cross_loadings_breps)}}cross loadings bootstrap replications (available only
+if the {cmd:boot()} option is chosen){p_end}
 {synopt:{cmd:e(cross_loadings_bs)}}bootstrap-based cross loadings matrix (available only
 if the {cmd:boot()} option is chosen){p_end}
 {synopt:{cmd:e(cross_loadings_se)}}matrix of the cross loadings standard errors{p_end}
 {synopt:{cmd:e(adj_meas)}}adjacency matrix for the measurement (outer) model{p_end}
 {synopt:{cmd:e(outerweights)}}matrix of outer weights{p_end}
+{synopt:{cmd:e(ow_breps)}}outer weights bootstrap replications (available only
+if the {cmd:boot()} option is chosen){p_end}
+{synopt:{cmd:e(ow_bs)}}bootstrap-based outer weights matrix (available only
+if the {cmd:boot()} option is chosen){p_end}
+{synopt:{cmd:e(ow_se)}}matrix of the outer weights standard errors (available only
+if the {cmd:boot()} option is chosen){p_end}
 {synopt:{cmd:e(ow_history)}}matrix of outer weights evolution{p_end}
 {synopt:{cmd:e(relcoef)}}matrix of reliability coefficients{p_end}
 {synopt:{cmd:e(sqcorr)}}matrix of squared correlations among the latent variables{p_end}
@@ -367,6 +404,8 @@ if the {cmd:boot()} option is chosen){p_end}
 {synopt:{cmd:e(struct_se)}}matrix of path coefficients' standard errors (short form){p_end}
 {synopt:{cmd:e(struct_table)}}table combining estimation results for the structural (inner) model{p_end}
 {synopt:{cmd:e(pathcoef)}}path coefficients matrix (extended form){p_end}
+{synopt:{cmd:e(pathcoef_breps)}}path coefficients bootstrap replications (available only
+if the {cmd:boot()} option is chosen){p_end}
 {synopt:{cmd:e(pathcoef_bs)}}bootstrap-based path coefficients matrix (extended form; available only
 if the {cmd:boot()} option is chosen){p_end}
 {synopt:{cmd:e(adj_struct)}}adjacency matrix for the structural (inner) model{p_end}
@@ -378,6 +417,12 @@ if the {cmd:boot()} option is chosen){p_end}
 {synopt:{cmd:e(imputed_data)}}matrix of imputed indicators; available only if the
 the {cmd:missing} option has been used{p_end}
 {synopt:{cmd:e(R)}}latent variable correlation matrix{p_end}
+{synopt:{cmd:e(ind_vcv)}}indicators' variance-covariance matrix{p_end}
+{synopt:{cmd:e(proxy_vcv)}}proxies' variance-covariance matrix{p_end}
+{synopt:{cmd:e(construct_vcv)}}constructs' variance-covariance matrix{p_end}
+{synopt:{cmd:e(resid_corr)}}residuals' correlation matrix{p_end}
+{synopt:{cmd:e(struct_vif)}}inner model's variance inflation factors{p_end}
+{synopt:{cmd:e(reliabilities)}}construct reliabilities{p_end}
 
 {synoptset 24 tabbed}{...}
 {p2col 5 24 28 2: Functions}{p_end}
@@ -394,13 +439,29 @@ Baron, R. M., and Kenny, D. A. 1986. The Moderator-Mediator Variable Distinction
 Research: Conceptual, Strategic, and Statistical Considerations. Journal of
 Personality and Social Psychology, 51, 1173-1182.
 
-{marker Hairetal2017}{...}
+{marker CantaluppiBoari2016}{...}
 {phang}
-Hair, J. F., Hult, G. T. M., Ringle, C. M., and Sarstedt, M. 2017. {it:A Primer on Partial Least Squares Structural Equation Modeling (PLS-SEM)}. Second edition. Sage.
+Cantaluppi, G., and Boari, G. 2016. A Partial Least Squares Algorithm Handling Ordinal Variables. In Abdi, H., Esposito Vinzi, V., Russolillo, G., Saporta, G. and Trinchera, L. (Eds.), {it:The Multiple Facets of Partial Least Squares and Related Methods}, (pp. 295-306). Springer.
+
+{marker Hairetal2022}{...}
+{phang}
+Hair, J. F., Hult, G. T. M., Ringle, C. M., and Sarstedt, M. 2022. {it:A Primer on Partial Least Squares Structural Equation Modeling (PLS-SEM)}. Third edition. Sage.
 
 {marker Lohmoller1989}{...}
 {phang}
 Lohmöller, J. B. 1989. {it:Latent Variable Path Modeling with Partial Least Squares}. Heidelberg: Physica.
+
+{marker MehmetogluVenturini2021}{...}
+{phang}
+Mehmetoglu, M., and Venturini, S. 2021. {it:Structural Equation Modelling with Partial Least Squares Using Stata and R}. CRC Press.
+
+{marker RousseeuwvanDriessen1999}{...}
+{phang}
+Rousseeuw, P. J. and van Driessen, K. 1999. A Fast Algorithm For The Minimum Covariance Determinant Estimator. Technometrics, 41, 212–223.
+
+{marker Schambergeretal2020}{...}
+{phang}
+Schamberger, T., Schuberth, F., Henseler, J., and Dijkstra, T. K. 2020. Robust Partial Least Squares Path Modeling. Behaviormetrika, 47, 1, 307–334.
 
 {marker Sobel1982}{...}
 {phang}

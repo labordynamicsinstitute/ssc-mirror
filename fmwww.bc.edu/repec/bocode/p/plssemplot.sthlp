@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.0.1  06Oct2017}{...}
+{* *! version 0.0.1  09Feb2022}{...}
 {vieweralsosee "plssem" "help plssem"}{...}
 {vieweralsosee "plssem postestimation" "help plssem postestimation"}{...}
 {viewerjumpto "Syntax" "plssemplot##syntax"}{...}
@@ -103,12 +103,20 @@ the block defining the latent variable {cmd:LV}.
 {title:Authors}
 
 {pstd} Sergio Venturini{break}
-Department of Management{break}
-Università degli Studi di Torino, Italy{break}
-{browse "mailto:sergio.venturini@unito.it":sergio.venturini@unito.it}{break}
+Department of Economics and Social Sciences{break}
+Università Cattolica del Sacro Cuore, Italy{break}
+{browse "mailto:sergio.venturini@unicatt.it":sergio.venturini@unicatt.it}{break}
 
 {pstd} Mehmet Mehmetoglu{break}
 Department of Psychology{break}
 Norwegian University of Science and Technology{break}
 {browse "mailto:mehmetm@svt.ntnu.no":mehmetm@svt.ntnu.no}{break}
 {p_end}
+
+
+{marker references}{...}
+{title:References} 
+
+{marker MehmetogluVenturini2021}{...}
+{phang}
+Mehmetoglu, M., and Venturini, S. 2021. {it:Structural Equation Modelling with Partial Least Squares Using Stata and R}. CRC Press
