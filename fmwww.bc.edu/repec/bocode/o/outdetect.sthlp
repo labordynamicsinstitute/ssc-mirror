@@ -289,13 +289,9 @@ the horizontal axis reports the number of trimmed observations as a percentage o
 {synopt :{opt #}}specifies the maximum percentage of trimmed observations. Default is 10%{p_end}
 {synopt :{opt abs:olute}}treats {opt #} as the number of trimmed observations{p_end}
 {synopt :{opt gi:ni}}Gini index (default){p_end}
-{synopt :{opt m:ean}}Sample mean{p_end}
-{synopt :{opt mld}}Mean Logarithmic Deviation{p_end}
-{synopt :{opt th:eil}}Theil index{p_end}
-{synopt :{opt cv2}}Squared coefficient of variation{p_end}
-{synopt :{opt atk0}}Atkinson index, A(0.125){p_end}
-{synopt :{opt atk1}}Atkinson index, A(1){p_end}
-{synopt :{opt atk2}}Atkinson index, A(2){p_end}
+{synopt :{opt m:ean}}sample mean{p_end}
+{synopt :{cmd:ge[({it:theta})]}}generalized entropy (Shorrocks, 1980) with parameter {it:theta}; default is {it:theta}=1 (Theil index){p_end}
+{synopt :{cmd:atk[({it:epsilon})]}}Atkinson index with parameter {it:epsilon}>=0; default is {it:epsilon}=1{p_end}
 {synopt :{opt h}}Poverty headcount ratio{p_end}
 {synopt :{opt pg}}Poverty gap index{p_end}
 {synopt :{opt pg2}}Poverty gap squared index{p_end}
@@ -309,12 +305,8 @@ the horizontal axis reports the number of trimmed observations as a percentage o
 {synoptline}
 {synopt :{opt #}}specifies the maximum # of large and small observations which, one at a time, are omitted for the calculation of the influence curve. Default is 10{p_end}
 {synopt :{opt gi:ni}}Gini index (default){p_end}
-{synopt :{opt mld}}Mean Logarithmic Deviation{p_end}
-{synopt :{opt th:eil}}Theil index{p_end}
-{synopt :{opt cv2}}Squared coefficient of variation{p_end}
-{synopt :{opt atk0}}Atkinson index, A(0.125){p_end}
-{synopt :{opt atk1}}Atkinson index, A(1){p_end}
-{synopt :{opt atk2}}Atkinson index, A(2){p_end}
+{synopt :{cmd:ge[({it:theta})]}}generalized entropy (Shorrocks, 1980) with parameter {it:theta}; default is {it:theta}=1 (Theil index){p_end}
+{synopt :{cmd:atk[({it:epsilon})]}}Atkinson index with parameter {it:epsilon}>=0; default is {it:epsilon}=1{p_end}
 {synoptline}
 
 
@@ -371,7 +363,10 @@ the horizontal axis reports the number of trimmed observations as a percentage o
 {phang2}{it:{stata "outdetect pce, graph(itc(5:pg pline(300000))) excel(demo, replace)":outdetect pce, graph(itc(5:pg pline(300000))) excel(demo, replace)}}
 
 {pstd}Generate the Influence Function Curve (IFC) for the mean logarithm deviation index, discarding the 5 smallest and largest observations{p_end}
-{phang2}{it:{stata "outdetect pce, graph(ifc(5: mld))":outdetect pce, graph(ifc(5: mld))}}
+{phang2}{it:{stata "outdetect pce, graph(ifc(5: ge))":outdetect pce, graph(ifc(5: ge))}}
+
+{pstd}Generate the Influence Function Curve (IFC) for the Atkinson index with parameter {it:epsilon}=0.5, discarding the 10 smallest and largest observations{p_end}
+{phang2}{it:{stata "outdetect pce, graph(ifc(10: atk(0.5)))":outdetect pce, graph(ifc(10: atk(0.5)))}}
 
 
 {marker results}{...}
@@ -408,11 +403,6 @@ Belotti, F., G. Mancini, and G. Vecchi. 2022. {browse "http://documents1.worldba
 Policy Research working paper, 10231, Washington, DC: World Bank.
 
 {phang}
-Mancini, G. and G. Vecchi. 2022.
-{browse "https://documents.worldbank.org/en/publication/documents-reports/documentdetail/099225003092220001/p1694340e80f9a00a09b20042de5a9cd47e":{it:On the Construction of the Consumption Aggregate for Inequality and Poverty Analysis}}.
-Washington, DC: World Bank.
-
-{phang}
 Box, G. E., and Cox, D. R. 1964. {it:An analysis of transformations}. Journal of the Royal Statistical Society: Series B (Methodological), 26(2), 211-243.
 
 {phang}
@@ -422,7 +412,16 @@ Foster, J., Greer, J., and Thorbecke, E. 1984. {it:A class of decomposable pover
 Friedline, T., Masa, R. D., and Chowa, G. A. 2015. {it:Transforming wealth: Using the inverse hyperbolic sine (IHS) and splines to predict youth’s math achievement}. Social science research, 49, 264-287.
 
 {phang}
+Mancini, G. and G. Vecchi. 2022.
+{browse "https://documents.worldbank.org/en/publication/documents-reports/documentdetail/099225003092220001/p1694340e80f9a00a09b20042de5a9cd47e":{it:On the Construction of the Consumption Aggregate for Inequality and Poverty Analysis}}.
+Washington, DC: World Bank.
+
+{phang}
 Rousseeuw, P. J., and Croux, C. 1993. {it:Alternatives to the median absolute deviation}. Journal of the American Statistical association, 88(424), 1273-1283.
+
+{phang}
+Shorrocks, A.F. (1980). {it:The Class of Additively Decomposable Inequality Measures}. Econometrica 48(3): 613-625.
+{p_end}
 
 {phang}
 Snedecor, G. W., Cochran, W. G. 1989. {it:Statistical methods}. Ames: Iowa State Univ. Press.

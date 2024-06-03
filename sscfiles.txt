@@ -48,7 +48,6 @@ fmwww.bc.edu/repec/bocode/b/bpass.ado
 fmwww.bc.edu/repec/bocode/b/background_grey.zip
 fmwww.bc.edu/repec/bocode/b/bpagan.pkg
 fmwww.bc.edu/repec/bocode/b/bys.html
-fmwww.bc.edu/repec/bocode/b/lboottest.mlib
 fmwww.bc.edu/repec/bocode/b/bayesqual13_linux.plugin
 fmwww.bc.edu/repec/bocode/b/brrmodel.hlp
 fmwww.bc.edu/repec/bocode/b/baltagireplication.do
@@ -371,7 +370,6 @@ fmwww.bc.edu/repec/bocode/b/bsopm.ado
 fmwww.bc.edu/repec/bocode/b/basetable.ado
 fmwww.bc.edu/repec/bocode/b/betterbar.sthlp
 fmwww.bc.edu/repec/bocode/b/btgridlinestyle.sthlp
-fmwww.bc.edu/repec/bocode/b/btascore.pkg
 fmwww.bc.edu/repec/bocode/b/bot.tex
 fmwww.bc.edu/repec/bocode/b/btsymbolsize.sthlp
 fmwww.bc.edu/repec/bocode/b/betafit.html

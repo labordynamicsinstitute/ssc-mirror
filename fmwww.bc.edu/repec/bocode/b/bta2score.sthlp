@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 18.0 21dec2023}{...}
+{* *! version 1.3 31May2024}{...}
 {viewerdialog bta2score "dialog bta2score"}{...}
 {viewerjumpto "Syntax" "bta2score##syntax"}{...}
 {viewerjumpto "Description" "bta2score##description"}{...}
@@ -70,21 +70,21 @@ User-prespecify Newvar can build a wide range of decimal-rounded scores, buildin
 {p 5 5 3}
 Import Hosmer & Lemeshow low birth weight example dataset
 
-{phang2}{stata webuse lbw,clear: webuse lbw,clear}
+{phang2}{stata webuse lbw,clear}
 
 {p 5 5 3}
 Estimate logistic regression with potential predictors for low birth weight
 
-{phang2}{stata logistic low i.race smoke i.ht i.ui: logistic low i.race smoke i.ht i.ui}
+{phang2}{stata logistic low i.race smoke i.ht i.ui}
 
 {p 5 5 3}
 Immediately do after regression with specify name of the new score “lbwscore” predict the probability of low birth weight on the round-to-0.5 score. Show the score assignment table. Also reports AIC, BIC, C-statistic.
 
-{phang2}{stata bta2score ,name(lbwscore) tabulation decimal(0.5) aic bic cstat: bta2score ,name(lbwscore) tabulation decimal(0.5) aic bic cstat}
+{phang2}{stata bta2score, name(lbwscore) tabulation decimal(0.5) aic bic cstat}
 
 {p 5 5 3}Determine discrimination index with AuROC by roctab
 
-{phang2}{stata roctab low lbwscore ,graph detail: roctab low lbwscore ,graph detail}
+{phang2}{stata roctab low lbwscore, graph detail}
 
 
 {marker results}{...}

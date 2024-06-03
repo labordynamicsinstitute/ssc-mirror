@@ -86,7 +86,6 @@ p bsens module to compute Sensitivity metric using McNemar's test
 p bsopm module to compute Black-Scholes European Option Pricing Model
 p bspline modules to compute B-splines parameterized by their values at reference points
 p bta2score module to generate beta to score
-p btascore module to generate beta to score
 p btobit module to produce a test of the tobit specification
 p buckley module to implement Buckley-James method for analysing censored data
 p bugsdat module to convert a Stata datafile into the S-plus format used in Winbugs

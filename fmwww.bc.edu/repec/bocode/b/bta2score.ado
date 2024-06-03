@@ -1,3 +1,4 @@
+*! version 1.2 30May2024
 ***Suppachai Lawanaskol, MD***
 program define bta2score , rclass
 	version 16.0
@@ -135,8 +136,17 @@ _column(2) "{hline 40}"
 			drop _`name'*
 		}
 	}
-	egen `name'=rowtotal(_`name'*)
+	
+	
+	
+	**Generate the total sum score**
+	egen `name'=rowtotal(_`name'*),missing
+	**Define the misssing predictors**
+	capture drop _rowmiss
+	egen _rowmiss=rowmiss(_`name'*)
+	replace `name'=. if _rowmiss>0
 	display in green _column(2)"Score variable, `name', was created"
+	drop _rowmiss
 	drop _`name'*
 	
 	**Reporting score part**
@@ -150,9 +160,10 @@ _column(2) "{hline 40}"
 			display in green _col(2)"Score Harrell's C-statistic" in yellow _column(30) %9.4f `=scalar(cstat)'
 		}
 		else if "`e(cmd2)'"=="stcox"{
+			qui stcox `name'
 			qui estat con
 			scalar cstat=round(r(C),0.0001)
-			
+			display in green _col(2)"Score Harrell's C-statistic" in yellow _column(30) %9.4f `=scalar(cstat)'
 		}
 		else{
 			display in green _col(2)"The Final model is not binary regression"
@@ -185,7 +196,7 @@ _column(2) "{hline 40}"
 			return scalar aic=aic
 		}
 		else if "`e(cmd2)'"=="stcox"{
-			qui `e(cmd)' `name'
+			qui `e(cmd2)' `name'
 			qui estat ic
 			scalar aic=round(r(S)[1,5],0.01)
 			display in green _column(2)"Score AIC" in yellow  %9.2f _column(30) `=scalar(aic)'
@@ -246,10 +257,14 @@ _column(2) "{hline 40}"
 		else if "`e(cmd2)'"=="stcox" & "`e(stepwise)'"=="stepwise"{
 			display in green _column(2)"The Final model is under stepwise command prefix"
 		}
+		else if "`e(cmd2)'"=="stcox" & "`e(stepwise)'"!="stepwise"{
+			qui str2d: `e(cmd2)' `name'
+			scalar rsquare=r(r2)
+		}
 		else{
 			scalar rsquare=round((1 - e(ll)/e(ll_0)),0.01)
 		}
-			display in green _col(2)"Score R-square" in yellow %9.2f _column(30)`=scalar(rsquare)'
+			display in green _col(2)"Score R-square" in yellow %9.4f _column(30)`=scalar(rsquare)'
 		return scalar rsquare=rsquare	
 	}
 	

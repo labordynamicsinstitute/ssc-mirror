@@ -1,12 +1,9 @@
 
 ** Author: Federico Belotti, Giulia Mancini and Giovanni Vecchi
-*! version 3.2.0 - 14may2024
+*! version 3.2.1 - 29may2024
 *! See the end of ado file for versioning
 
-
-version 14
-
-capture program drop outdetect
+version 15
 program define outdetect, rclass byable(recall, noheader) sortpreserve
 
 syntax varlist(max=1) [if] [in] [pw aw/] [, ///
@@ -21,178 +18,156 @@ syntax varlist(max=1) [if] [in] [pw aw/] [, ///
 						    NOI FORCE FORCEFraction(real 0.5) TIMER NORMVAR(string) SMALL ]
 
 
-loc cutoff `alpha'
-if "`timer'"!="" timer clear
-if "`timer'"!="" timer on 1
-
-loc working_version 1
-
-*** Set formats for table display
-if "`sformat'"=="" loc sfmt %9.2f
-else loc sfmt "`sformat'"
-if "`iformat'"=="" loc ifmt %9.4f
-else loc ifmt "`iformat'"
-
-if "`replace'"!="" & "`generate'"!="" {
-	di as error "replace and nogenerate options are mutually exclusive"
-	error 198
-}
-
-/*
-capt findfile erepost.ado
-if _rc {
-	di in yel "Installing dependence: package -erepost- ...", _cont
-    qui ssc install erepost
-    di in gre "done"
-}
-*/
-
-capt findfile lmoremata.mlib
-if _rc {
-	di in yel "Installing dependence: package -moremata- ...", _cont
-    qui ssc install moremata
-    di in gre "done"
-}
-
-*** Get sample of interest
-marksample touse
-
-*** From now-on j contains the varname
-local j "`varlist'"
-
-**********************************
-***** Parsing of svy settings ****
-**********************************
-
-tempvar wvar
-loc svyyes 0
-loc weightyes 0
-qui svyset
-if ("`r(wvar)'"!="" & "`weight'"=="") | ///
-   ("`r(wvar)'"!="" & "`weight'"!="") ///
- {
-	if ("`r(wvar)'"!="" & "`weight'"!="") {
-		di in gr "Warning: survey settings are currently specified via {help svyset}.
-		di _col(10) in gr "Option {help weight} is ignored."
+	capt findfile lmoremata.mlib
+	if _rc {
+		di in yel "Installing dependence: package -moremata- ...", _cont
+		qui ssc install moremata
+		di in gre "done"
 	}
-	loc svyyes 1
-	loc wvar_name "`r(wvar)'"
-	qui gen double `wvar'=`r(wvar)' if `touse'
-	loc weight_type "`r(wtype)'"
-	if "`r(strata1)'"!="" loc _strata "`r(strata1)'"
-	if "`r(strata2)'"!="" {
-		// TOCHECK:Is that really true??
-		di as error "outdetect cannot handle multiple-stage sampling designs."
+
+	* Timer option (not documented)
+	loc cutoff `alpha'
+	if "`timer'"!="" timer clear
+	if "`timer'"!="" timer on 1
+		
+	if "`replace'"!="" & "`generate'"!="" {
+		di as error "replace and nogenerate options are mutually exclusive"
 		error 198
 	}
-}
-else if "`r(wvar)'"=="" & "`weight'"!="" {
-	qui clonevar `wvar'=`exp' if `touse'
-	loc weight_type "`weight'"
-	loc wvar_name "`exp'"
-	loc weightyes 1
-}
-else if "`r(wvar)'"=="" & "`weight'"=="" {
-	qui gen byte `wvar'= 1 if `touse'
-	loc weight_type ""
-}
 
-*****************************************
-******** Parsing of normalization *******
-*****************************************
+	*** Get sample of interest
+	marksample touse
 
-ParseNorm normalize : `"`normalize'"'
+	*** From now-on j contains the varname
+	local j "`varlist'"
 
-************************************
-******** Parsing of outliers *******
-************************************
 
-ParseOut _out_type : `"`outliers'"'
+	**********************************
+	**** Parsing of table formats ****
+	**********************************
 
-**********************************
-******** Parsing of bysort *******
-**********************************
+	if "`sformat'"=="" loc sfmt %9.2f
+	else loc sfmt "`sformat'"
+	if "`iformat'"=="" loc ifmt %9.4f
+	else loc ifmt "`iformat'"
 
-if "`_byvars'"!="" {
-	loc _nby: word count `_byvars'
-	if `_nby'>1 {
-		noi di as error "Only one byvariable is allowed"
-		error 198
+
+	**********************************
+	***** Parsing of svy settings ****
+	**********************************
+
+	tempvar wvar
+	loc svyyes 0
+	loc weightyes 0
+	qui svyset 
+	if ("`r(wvar)'"!="" & "`weight'"=="") | ///
+	   ("`r(wvar)'"!="" & "`weight'"!="") ///
+	 {
+		if ("`r(wvar)'"!="" & "`weight'"!="") {
+			di in gr "Warning: survey settings are currently specified via {help svyset}.
+			di _col(10) in gr "Option {help weight} is ignored."
+		}
+		loc svyyes 1
+		loc wvar_name "`r(wvar)'"
+		qui gen double `wvar'=`r(wvar)' if `touse'
+		loc weight_type "`r(wtype)'"
+		if "`r(strata1)'"!="" loc _strata "`r(strata1)'"
+		if "`r(strata2)'"!="" {
+			// TOCHECK:Is that really true??
+			di as error "outdetect cannot handle multiple-stage sampling designs."
+			error 198
+		}
 	}
-	else {
-		qui levelsof `_byvars' /*if `touse'*/
-		*noi di "`r(levels)'"
-		loc levels_by "`r(levels)'"
-		di in smcl as text "{hline `=c(linesize)-1'}"
-		loc _byind = _byindex()
-		loc _bylev :word `_byind' of `levels_by'
-		di as text "-> `_byvars' = `_bylev'"
+	else if "`r(wvar)'"=="" & "`weight'"!="" {
+		qui clonevar `wvar'=`exp' if `touse'
+		loc weight_type "`weight'"
+		loc wvar_name "`exp'"
+		loc weightyes 1
 	}
-}
+	else if "`r(wvar)'"=="" & "`weight'"=="" {
+		qui gen byte `wvar'= 1 if `touse'
+		loc weight_type ""
+	}
 
-**********************************
-***** Parsing of graph() *********
-**********************************
+	*****************************************
+	******** Parsing of normalization *******
+	*****************************************
 
-gettoken graph gph_options : graph, parse(",")
-ParseG, `graph'
-** Get s(macros) from parsing
-if "`s(itc)'"!="" loc _itc_trim_extent `s(itc)'
-if "`s(hoc)'"!="" loc _hoc_trim_extent `s(hoc)'
-if "`s(qqplot)'"!="" loc _qqplot "`s(qqplot)'"
-if "`s(qqpareto)'"!="" loc _qqpareto "`s(qqpareto)'"
-if "`s(zipf)'"!="" loc _zipf "`s(zipf)'"
-if "`s(zipf_opt)'"!="" loc _zipf_opt "`s(zipf_opt)'"
-if "`s(plinevar)'"!= "" local _g_plinevar "`s(plinevar)'"
-if "`_g_plinevar'"=="" local _g_plinevar 0
-if "`s(pline)'"!="" loc _g_pline "`s(pline)'"
-if "`s(_table_note)'"!= "" local _g_table_note "`s(_table_note)'"
-if "`s(itc_stat)'"!= "" local _itc_stat "`s(itc_stat)'"
-if "`s(itc_abs)'"!= "" local _itc_abs "`s(itc_abs)'"
-if "`_itc_abs'"=="abs" local _itc_abs 1
-else if "`_itc_abs'"!="abs" & "`s(hoc)'"=="" local _itc_abs 0
-if "`s(hoc_stat)'"!= "" local _hoc_stat "`s(hoc_stat)'"
-if "`s(hoc_abs)'"!= "" local _hoc_abs "`s(hoc_abs)'"
-if "`_hoc_abs'"=="abs" local _hoc_abs 1
-else local _hoc_abs 0
+	ParseNorm normalize : `"`normalize'"'
 
+	************************************
+	******** Parsing of outliers *******
+	************************************
 
-***********************************************
-****** Parsing of method() and zscore() *******
-***********************************************
+	ParseOut _out_type : `"`outliers'"'
 
-gettoken stat1 stat2: zscore
-ParseLoc loc : `"`stat1'"'
-ParseMeth method : `"`stat2'"'
+	**********************************
+	******** Parsing of bysort *******
+	**********************************
 
-/**********************************
-***** Parsing of dplotopt() ******
-**********************************
-** Make backup of touse due to the synatx below
-loc back_touse `touse'
+	if "`_byvars'"!="" {
+		loc _nby: word count `_byvars'
+		if `_nby'>1 {
+			noi di as error "Only one byvariable is allowed"
+			error 198
+		}
+		else {
+			qui levelsof `_byvars' /*if `touse'*/
+			*noi di "`r(levels)'"
+			loc levels_by "`r(levels)'"
+			di in smcl as text "{hline `=c(linesize)-1'}"
+			loc _byind = _byindex()
+			loc _bylev :word `_byind' of `levels_by'
+			di as text "-> `_byvars' = `_bylev'"
+		}
+	}
 
-gettoken path_and_name ploptions: dplotopt, parse(",")
-loc path_and_name = strtrim("`path_and_name'")
-loc ploptions = subinstr("`ploptions'", ",", "",.)
-loc 0 `", `ploptions'"'
-syntax [, KDENSity QNorm GScheme(string) COMBINE REPLACE KDOPTions(string) QNOPTions(string) ]
+	**********************************
+	***** Parsing of graph() *********
+	**********************************
 
-if "`dplotopt'"!="" & "`kdensity'" == "" & "`qnorm'" == "" {
-	di as error "At least one between -kdensity- and -qnorm- must be specified"
-	error 198
-}
+	gettoken graph gph_options : graph, parse(",")
+	ParseG, `graph'
+	** Get s(macros) from parsing
+	if "`s(itc)'"!="" loc _itc_trim_extent `s(itc)'
+	if "`s(hoc)'"!="" loc _hoc_trim_extent `s(hoc)'
+	if "`s(qqplot)'"!="" loc _qqplot "`s(qqplot)'"
+	if "`s(qqpareto)'"!="" loc _qqpareto "`s(qqpareto)'"
+	if "`s(zipf)'"!="" loc _zipf "`s(zipf)'"
+	if "`s(zipf_opt)'"!="" loc _zipf_opt "`s(zipf_opt)'"
+	if "`s(plinevar)'"!= "" local _g_plinevar "`s(plinevar)'"
+	if "`_g_plinevar'"=="" local _g_plinevar 0
+	if "`s(pline)'"!="" loc _g_pline "`s(pline)'"
+	if "`s(_table_note)'"!= "" local _g_table_note "`s(_table_note)'"
+	if "`s(itc_stat)'"!= "" local _itc_stat "`s(itc_stat)'"
+	if "`s(itc_param)'"!= "" local _itc_param "`s(itc_param)'"
+	if "`s(itc_abs)'"!= "" local _itc_abs "`s(itc_abs)'"
+	if "`_itc_abs'"=="abs" local _itc_abs 1
+	else if "`_itc_abs'"!="abs" & "`s(hoc)'"=="" local _itc_abs 0
+	if "`s(hoc_stat)'"!= "" local _hoc_stat "`s(hoc_stat)'"
+	if "`s(hoc_param)'"!= "" local _hoc_param "`s(hoc_param)'"
+	if "`s(hoc_abs)'"!= "" local _hoc_abs "`s(hoc_abs)'"
+	if "`_hoc_abs'"=="abs" local _hoc_abs 1
+	else local _hoc_abs 0
+	if inlist("`_itc_stat'", "ge", "atk")==0 local _itc_param .
+	if inlist("`_hoc_stat'", "ge", "atk")==0 local _hoc_param .
+	
+	* Check if svyset is on and warn if itc or ifc
+	qui svyset 
+	if "`r(wvar)'"!="" & !mi("`_itc_stat'`_hoc_stat'") {
+		
+		if "`_itc_stat'"!="" loc warntext itc
+		if "`_hoc_stat'"!="" loc warntext ifc
+		di in gr "Warning: survey settings are currently specified via {help svyset}. `warntext'(`_itc_stat'`_hoc_stat') can be non monotonic
+	}
+ 
+	***********************************************
+	****** Parsing of method() and zscore() *******
+	***********************************************
 
-if "`combine'"!="" & !("`kdensity'" == "" & "`qnorm'" == "") {
-	di as error "-combine- requires both -kdensity- and -qnorm- options"
-	error 198
-}
-
-if "`timer'"!="" timer off 1
-
-** Get back the touse
-loc touse `back_touse'
-*/
-
+	gettoken stat1 stat2: zscore
+	ParseLoc loc : `"`stat1'"'
+	ParseMeth method : `"`stat2'"'
 
 
 if ("`_itc_trim_extent'" == "" & "`_hoc_trim_extent'" == "" & "`_zipf'"=="" & "`_qqpareto'"=="") {
@@ -556,27 +531,6 @@ if ("`_itc_trim_extent'" == "" & "`_hoc_trim_extent'" == "" & "`_zipf'"=="" & "`
 	mat colnames _out_detected`_bylev' = "Freq." "Percent" "Share"
 	mat rownames _out_detected`_bylev' = "Bottom" "Top" "Total"
 
-/* OLD code - probably will be recovered
-	if `todrop_and_rename'==1 {
-		// restore original situa
-		if "`generate'" != "" {
-			if `_transf_replace'==1 cap drop `j'_`transf'
-			clonevar `j'_`transf' = `jjj'
-			label var `j'_`transf' "`lab_`j''"
-			*label var `j' "`lab_`j''"
-		}
-	}
-*/
-
-	*loc _stats_colnames "`_stats_colnames' `j'"
-	*if `=length("`j'")' > 3 loc _fmt "`_fmt' %`=length("`j'")'.`sfmt'f &"
-	*else loc _fmt "`_fmt' %`=length("`j'")+3'.`sfmt'f &"
-
-	/// Compute welfare indicators (post-detection)
-
-	// Re-compute the weight variable according to the svy settings
-	// taking into account the observations now considered as outliers
-
 	sum `_out`_bylev'', mean
 	tempvar sumwt osumwt twvar
 	if `r(mean)'>0 & (`svyyes'==1 | `weightyes'==1) {
@@ -610,8 +564,8 @@ if ("`_itc_trim_extent'" == "" & "`_hoc_trim_extent'" == "" & "`_zipf'"=="" & "`
 	`noi' m _odt = _out_getdata("`j'", "`twvar'", "`weight_type'", "`touse'")
 
 	// Here the gini function needs to stay on its own due to the sort, stable
-	// Actually we pass the _od structure to collect info
-	/// that can be used in subsequent functions
+	// We are passing the _od structure to collect info
+	// that can be used in subsequent functions
 	preserve
 	sort `j', stable
 	cap `noi' m _odt = _out_gini("`j'", "`twvar'", "`weight_type'", "`touse'", _odt, "no")
@@ -759,11 +713,7 @@ if ("`_itc_trim_extent'" == "" & "`_hoc_trim_extent'" == "" & "`_zipf'"=="" & "`
 		local savename = subinstr("`savename'", " ", "", .)
 		local replace = subinstr("`replace'", ",", "", .)
 		local replace = strtrim("`replace'")
-
-		if c(stata_version) < 15 {
-			local export _out_excel
-		}
-		else if c(stata_version) < 17 {
+		if c(stata_version) < 17 {
 			local export _out_excel15
 		}
 		else if c(stata_version) < 18 {
@@ -772,7 +722,6 @@ if ("`_itc_trim_extent'" == "" & "`_hoc_trim_extent'" == "" & "`_zipf'"=="" & "`
 		else {
 			local export _out_excel18
 		}
-
 		m `export'("`savename'", "`replace'")
 	}
 
@@ -797,13 +746,13 @@ if ("`_itc_trim_extent'" == "" & "`_hoc_trim_extent'" == "" & "`_zipf'"=="" & "`
 	return scalar N_trimmed = r(N)
 
 	// Post MAd, S and Q
-	// Todo: should we post also std?
+	// TODO: should we post also std?
 	if inlist("`method'", "mad", "s", "q") return scalar `=upper("`method'")' = _meth_value_
 
 	if "`_qqplot'" != "" {
 		if "`normalize'"!="none" loc qqplot_ti "Normalized `j'"
 		else loc qqplot_ti "`j'"
-		if "`gph_options'"=="" {
+		if `"`gph_options'"'=="" {
 			loc gph_options ", yti("`qqplot_ti'") aspectratio(1) graphregion(fcolor(white)) ylab(, grid angle(360) labsi(*.8) glwidth(vthin)) ms(oh) mcol(red*1.25) rlopts(lc(black))  ytit(, si(*.8)) xlab(, grid labsi(*.8)) xtit(, si(*.8))"
 		}
 		qui swilk `jjj' if `touse'
@@ -825,38 +774,7 @@ else {
 	tempvar touse_raw
 	gen `touse_raw' = (`touse'==1)
 
-	/* Why is this here ? muted
-	// Check if MAD is 0. This is crucial.
-	// If it is 0, (eventually) remove the block of duplicate values for detection purposes
-	mata: _out_MADn("`j'","`touse'",`madfactor',0,"`weight_type'","`wvar'")
-	if `_meth_value_'==0 & "`force'" == "" {
-		di as error "MAD/S/Q of `j' are 0. Cannot compute robust scale measures for this variable."
-		di as error "Use option -force- to exclude the block of duplicate values which are causing the issue."
-		error 198
-	}
-	else if `_meth_value_'>0 & "`force'" == "" {
-		tempvar tag
-		qui duplicates tag `j' if `touse', gen(`tag')
-		sum `tag' if `touse', mean
-		loc __max__ = r(max)+1
-		loc __n__ = r(N)
-		loc __frac__ = `__max__'/`__n__'*100
-
-		di as result "`j' has " %4.2f `__frac__' "% obs duplicated ..."
-	}
-	else if `_meth_value_'==0 & "`force'" != "" {
-
-		tempvar tag
-		qui duplicates tag `j' if `touse', gen(`tag')
-		sum `tag' if `touse', mean
-		loc __core_duplicates__ = r(max)
-		tempvar __mark_duplicates__
-			gen `__mark_duplicates__' = 0 if `touse'
-			replace `__mark_duplicates__'=. if `touse' & `tag'==`__core_duplicates__'
-			markout `touse' `__mark_duplicates__'
-	}
-	*/
-
+	
 	// Give warnings on data here
 	// Also implement nozero and nonegative options
 	qui count if missing(`j')==1
@@ -904,14 +822,9 @@ else {
 		qui {
 			/// Compute welfare indicators (pre-incidental trimming)
 
-			/// Here we need to sort stable for gini se computation
 			/// Only Gini computations have their own data input strategy
 			/// For all other computation use data from _out_getdata()
 			`noi' m _od = _out_getdata("`j'", "`wvar'", "`weight_type'", "`touse'")
-
-			// Here the trimiming() function needs to stay on its own due to the sort, stable needed for gini
-			// Actually we pass the _od structure to collect info
-			// that can be used in subsequent functions though. Think about adding Atkinson and other indicators
 
 			/// Move out top extreme values
 			preserve
@@ -920,7 +833,7 @@ else {
 			gen `sort_index' = _n if `touse'
 			gsort - `sort_index'
 
-			`noi' m  _top_extremes = _out_trimming("`j'", "`wvar'", "`weight_type'", "`touse'", _od, "no", `_itc_trim_extent', "`sort_index'", "`_itc_stat'", `_itc_abs', "`_g_pline'", `_g_plinevar')
+			`noi' m  _top_extremes = _out_trimming("`j'", "`wvar'", "`weight_type'", "`touse'", _od, "no", `_itc_trim_extent', "`sort_index'", "`_itc_stat'", `_itc_abs', `_itc_param', "`_g_pline'", `_g_plinevar')
 			restore
 
 			/// Move out bottom extreme values
@@ -929,7 +842,7 @@ else {
 			tempvar sort_index
 			gen `sort_index' = _n if `touse'
 
-			`noi' m  _bottom_extremes = _out_trimming("`j'", "`wvar'", "`weight_type'", "`touse'", _od, "no", `_itc_trim_extent', "`sort_index'", "`_itc_stat'", `_itc_abs', "`_g_pline'", `_g_plinevar')
+			`noi' m  _bottom_extremes = _out_trimming("`j'", "`wvar'", "`weight_type'", "`touse'", _od, "no", `_itc_trim_extent', "`sort_index'", "`_itc_stat'", `_itc_abs', `_itc_param', "`_g_pline'", `_g_plinevar')
 			restore
 
 			tempvar _top_extremes _bottom_extremes _psample_t _psample_b
@@ -975,10 +888,9 @@ else {
 			loc _ict_table_rowlab "`_ict_table_rowlab' `rr'"
 		}
 		mat rownames _itc_table = `_ict_table_rowlab'
-		if inlist("`_itc_stat'", "mean", "gini", "theil") mat coleq _itc_table = `"`=proper("`_itc_stat'")'"' `"`=proper("`_itc_stat'")'"'
-		else if inlist("`_itc_stat'", "atk0")  mat coleq _itc_table = "A(0.125)" "A(0.125)"
-		else if inlist("`_itc_stat'", "atk1")  mat coleq _itc_table = "A(1)" "A(1)"
-		else if inlist("`_itc_stat'", "atk2")  mat coleq _itc_table = "A(2)" "A(2)"
+		if inlist("`_itc_stat'", "mean", "gini") mat coleq _itc_table = `"`=proper("`_itc_stat'")'"' `"`=proper("`_itc_stat'")'"'
+		else if inlist("`_itc_stat'", "atk")  mat coleq _itc_table = "A(`_itc_param')" "A(`_itc_param')"
+		else if inlist("`_itc_stat'", "ge")  mat coleq _itc_table = "GE(`_itc_param')" "GE(`_itc_param')"
 		else mat coleq _itc_table = `"`=upper("`_itc_stat'")'"' `"`=upper("`_itc_stat'")'"'
 
 		// Get and adjust the table's format
@@ -991,20 +903,18 @@ else {
 		}
 		di ""
 		matlist _itc_table, format(`sfmt') twidth(18) border(b) aligncolnames(center) /*row(Statistics)*/ tind(1) title("Incremental trimming curve for `j':") noblank  row("`_itc_tab_rowtitle'") showcoleq(c)
-
-		if "`gph_options'" == "" {
+			
+ 
+		if `"`gph_options'"' == "" {
 
 			if "`_itc_stat'"=="gini" loc _ytit "Gini coefficient (%)"
 			if "`_itc_stat'"=="mean" loc _ytit "Mean"
 			if "`_itc_stat'"=="h" loc _ytit "Poverty headcount ratio (%)"
 			if "`_itc_stat'"=="pg" loc _ytit "Poverty gap index (%)"
 			if "`_itc_stat'"=="pg2" loc _ytit "Poverty gap squared index (%)"
-			if "`_itc_stat'"=="mld" loc _ytit "Mean logarithmic deviation index (%)"
-			if "`_itc_stat'"=="theil" loc _ytit "Theil index (%)"
-			if "`_itc_stat'"=="cv2" loc _ytit "Squared coefficient of variation (%)"
-			if "`_itc_stat'"=="atk0" loc _ytit "Atkinson index (%) - A(0.125)"
-			if "`_itc_stat'"=="atk1" loc _ytit "Atkinson index (%) - A(1)"
-			if "`_itc_stat'"=="atk2" loc _ytit "Atkinson index (%) - A(2)"
+			if "`_itc_stat'"=="ge" loc _ytit "Generalized entropy index (%, {&theta} = `_itc_param')"
+			if "`_itc_stat'"=="atk" loc _ytit "Atkinson index (%, {&epsilon} = `_itc_param')"
+
 
 			twoway line `_top_extremes' `_bottom_extremes' `_psample_t', sort ///
 				lc(red*1.25 black) lw(medthick medthick) lp(solid -) ///
@@ -1015,6 +925,7 @@ else {
 				xtit(, si(*.8)) note("`_g_table_note'", size(*.7) span)
 		}
 		else {
+
 			twoway line `_top_extremes' `_bottom_extremes' `_psample_t' `gph_options'
 		}
 
@@ -1025,7 +936,16 @@ else {
 			local savename = subinstr("`savename'", " ", "", .)
 			local replace = subinstr("`replace'", ",", "", .)
 			local replace = strtrim("`replace'")
-			m _out_excel("`savename'", "`replace'", "yes", "")
+			if c(stata_version) < 17 {
+				local export _out_excel15
+			}
+			else if c(stata_version) < 18 {
+				local export _out_excel17
+			}
+			else {
+				local export _out_excel18
+			}
+			m `export'("`savename'", "`replace'", "yes", "")
 		}
 
 		******************************
@@ -1046,14 +966,9 @@ else {
 		qui {
 			/// Compute welfare indicators (pre-hoc detection)
 
-			/// Here we need to sort stable for gini se computation
 			/// Only Gini computations have their own data input strategy
 			/// For all other computation use data from _out_getdata()
 			`noi' m _od = _out_getdata("`j'", "`wvar'", "`weight_type'", "`touse'")
-
-			// Here the trimiming() function needs to stay on its own due to the sort, stable needed for gini
-			// Actually we pass the _od structure to collect info
-			// that can be used in subsequent functions though. Think about adding Atkinson and other indicators
 
 			/// Move out top extreme values
 			preserve
@@ -1062,7 +977,7 @@ else {
 			gen `sort_index' = _n if `touse'
 			gsort - `sort_index'
 
-			`noi' m _top_extremes = _out_hoc("`j'", "`wvar'", "`weight_type'", "`touse'", _od, "no", `_hoc_trim_extent', "`sort_index'", "`_hoc_stat'", `_hoc_abs', "`_g_pline'", `_g_plinevar', 0)
+			`noi' m _top_extremes = _out_hoc("`j'", "`wvar'", "`weight_type'", "`touse'", _od, "no", `_hoc_trim_extent', "`sort_index'", "`_hoc_stat'", `_hoc_abs', `_hoc_param',"`_g_pline'", `_g_plinevar', 0)
 			restore
 
 			/// Move out bottom extreme values
@@ -1071,7 +986,7 @@ else {
 			tempvar sort_index
 			gen `sort_index' = _n if `touse'
 
-			`noi' m _bottom_extremes = _out_hoc("`j'", "`wvar'", "`weight_type'", "`touse'", _od, "no", `_hoc_trim_extent', "`sort_index'", "`_hoc_stat'", `_hoc_abs', "`_g_pline'", `_g_plinevar', 0)
+			`noi' m _bottom_extremes = _out_hoc("`j'", "`wvar'", "`weight_type'", "`touse'", _od, "no", `_hoc_trim_extent', "`sort_index'", "`_hoc_stat'", `_hoc_abs', `_hoc_param', "`_g_pline'", `_g_plinevar', 0)
 			restore
 
 			tempvar _top_extremes _bottom_extremes _psample_t _psample_b
@@ -1104,14 +1019,6 @@ else {
 		// Display table
 		tempname do_select _top_extremes_tab _bottom_extremes_tab _hoc_table round_perc hocdiff min_hocdiff
 
-		/* The following is not needed here - absolute imposed in the ParseITC_HOC
-
-		cap gen `round_perc' = round(`_psample_t') if `_psample_t'!=.
-		cap gen double `hocdiff' = abs(`_psample_t' - `round_perc') if `_psample_t'!=.
-		cap bys `round_perc': egen double `min_hocdiff' = min(`hocdiff') if `_psample_t'!=.
-		cap gen `do_select' = (`min_hocdiff' == `hodiff') if `_psample_t'!=.
-		*/
-
 		mkmat `_top_extremes' if `_psample_t'!=., mat(`_top_extremes_tab')
 		mkmat `_bottom_extremes' if `_psample_t'!=., mat(`_bottom_extremes_tab')
 
@@ -1121,10 +1028,9 @@ else {
 			loc _ict_table_rowlab "`_ict_table_rowlab' `rr'"
 		}
 		mat rownames _hoc_table = `_ict_table_rowlab'
-		if inlist("`_hoc_stat'", "mean", "gini", "theil") mat coleq _hoc_table = `"`=proper("`_hoc_stat'")'"' `"`=proper("`_hoc_stat'")'"'
-		else if inlist("`_hoc_stat'", "atk0")  mat coleq _hoc_table = "A(0.125)" "A(0.125)"
-		else if inlist("`_hoc_stat'", "atk1")  mat coleq _hoc_table = "A(1)" "A(1)"
-		else if inlist("`_hoc_stat'", "atk2")  mat coleq _hoc_table = "A(2)" "A(2)"
+		if inlist("`_itc_stat'", "mean", "gini") mat coleq _hoc_table = `"`=proper("`_hoc_stat'")'"' `"`=proper("`_hoc_stat'")'"'
+		else if inlist("`_hoc_stat'", "atk")  mat coleq _hoc_table = "A(`_hoc_param')" "A(`_hoc_param')"
+		else if inlist("`_hoc_stat'", "ge")  mat coleq _hoc_table = "GE(`_hoc_param')" "GE(`_hoc_param')"
 		else mat coleq _hoc_table = `"`=upper("`_hoc_stat'")'"' `"`=upper("`_hoc_stat'")'"'
 
 		// Get and adjust the table's format
@@ -1139,19 +1045,16 @@ else {
 
 		matlist _hoc_table, format(`sfmt') twidth(18) border(b) aligncolnames(center) /*row(Statistics)*/ tind(1) title("Influence curve for `j':") noblank  row("`_hoc_tab_rowtitle'") showcoleq(c)
 
-		if "`gph_options'" == "" {
+		if `"`gph_options'"' == "" {
 
 			if "`_hoc_stat'"=="gini" loc _ytit "Gini coefficient"
 			if "`_hoc_stat'"=="mean" loc _ytit "Mean"
 			if "`_hoc_stat'"=="h" loc _ytit "Poverty headcount ratio"
 			if "`_hoc_stat'"=="pg" loc _ytit "Poverty gap index"
 			if "`_hoc_stat'"=="pg2" loc _ytit "Poverty gap squared index"
-			if "`_hoc_stat'"=="mld" loc _ytit "Mean logarithmic deviation index"
-			if "`_hoc_stat'"=="theil" loc _ytit "Theil index"
-			if "`_hoc_stat'"=="cv2" loc _ytit "Squared coefficient of variation"
-			if "`_hoc_stat'"=="atk0" loc _ytit "Atkinson index - A(0.125)"
-			if "`_hoc_stat'"=="atk1" loc _ytit "Atkinson index - A(1)"
-			if "`_hoc_stat'"=="atk2" loc _ytit "Atkinson index - A(2)"
+			if "`_hoc_stat'"=="ge" loc _ytit "Generalized entropy index (%, {&theta} = `_hoc_param')"
+			if "`_hoc_stat'"=="atk" loc _ytit "Atkinson index (%, {&epsilon} = `_hoc_param')"
+			
 
 			tempname gbottom gtop
 			twoway scatter `_bottom_extremes' `_psample_t', sort ///
@@ -1190,7 +1093,16 @@ else {
 			local savename = subinstr("`savename'", " ", "", .)
 			local replace = subinstr("`replace'", ",", "", .)
 			local replace = strtrim("`replace'")
-			m _out_excel("`savename'", "`replace'", "", "yes")
+			if c(stata_version) < 17 {
+				local export _out_excel15
+			}
+			else if c(stata_version) < 18 {
+				local export _out_excel17
+			}
+			else {
+				local export _out_excel18
+			}
+			m `export'("`savename'", "`replace'", "", "yes")
 		}
 
 		******************************
@@ -1225,14 +1137,21 @@ else {
 			local xstep = round((`yax_max'-`yax_min')/5)
 			label var `logx' "log(`j')"
 			label var `logrank' "log(rank(`j'))"
-			twoway line `logx' `logrank', ///
-					lc(red*1.25) lw(medthick) lp(solid) ///
-					graphregion(fcolor(white)) ///
-					ylab(`yax_min'(`step')`yax_max', angle(h) format(%12.0gc) ///
-					grid glwidth(vthin) labsi(*.8))  ///
-					ytit(log(`j'), si(*.8)) ///
-					xlab(`xax_min'(`xstep')`xax_max', labsi(*.8)) ///
-					xtit(log(rank(`j')), si(*.8)) 
+			
+			if `"`gph_options'"' == "" {
+				twoway line `logx' `logrank', ///
+						lc(red*1.25) lw(medthick) lp(solid) ///
+						graphregion(fcolor(white)) ///
+						ylab(`yax_min'(`step')`yax_max', angle(h) format(%12.0gc) ///
+						grid glwidth(vthin) labsi(*.8))  ///
+						ytit(log(`j'), si(*.8)) ///
+						xlab(`xax_min'(`xstep')`xax_max', labsi(*.8)) ///
+						xtit(log(rank(`j')), si(*.8)) 
+			}
+			else {
+				
+				twoway line `logx' `logrank' `gph_options'
+			}
 		}
 		else if "`_zipf_opt'"=="lognormal" {
 			tempvar logx logrank logx_ln logrank_ln
@@ -1247,16 +1166,25 @@ else {
 			local xstep = round((`yax_max'-`yax_min')/5)
 			label var `logx' "log(`j')"
 			label var `logrank' "log(rank(`j'))"
-			twoway (line `logx' `logrank' , lc(red*1.25) lw(medthick) lp(solid)) ///
-				   (line `logx_ln' `logrank_ln' if `logrank_ln'>=0, lc(black) lw(medthick) lp(-)), ///
-					graphregion(fcolor(white)) ///
-					ylab(`yax_min'(`step')`yax_max', angle(h) format(%12.0gc) ///
-					grid glwidth(vthin) labsi(*.8))  ///
-					ytit(log(`j'), si(*.8)) ///
-					xlab(`xax_min'(`xstep')`xax_max', labsi(*.8)) ///
-					xtit(log(rank(`j')), si(*.8)) ///
-					leg(pos(6) lab(1 "log(`j')") lab(2 "Lognormal") r(1))
-			 
+			
+			if `"`gph_options'"' == "" {
+				
+				twoway (line `logx' `logrank' , lc(red*1.25) lw(medthick) lp(solid)) ///
+					   (line `logx_ln' `logrank_ln' if `logrank_ln'>=0, lc(black) lw(medthick) lp(-)), ///
+						graphregion(fcolor(white)) ///
+						ylab(`yax_min'(`step')`yax_max', angle(h) format(%12.0gc) ///
+						grid glwidth(vthin) labsi(*.8))  ///
+						ytit(log(`j'), si(*.8)) ///
+						xlab(`xax_min'(`xstep')`xax_max', labsi(*.8)) ///
+						xtit(log(rank(`j')), si(*.8)) ///
+						leg(pos(6) lab(1 "log(`j')") lab(2 "Lognormal") r(1))
+			}
+			else {
+				
+				twoway (line `logx' `logrank' , lc(red*1.25) lw(medthick) lp(solid)) ///
+					   (line `logx_ln' `logrank_ln' if `logrank_ln'>=0, lc(black) lw(medthick) lp(-)) `gph_options'
+				
+			}
 			*list `logx' `logrank' `logx_ln' `logrank_ln' in 1/20
 			
 		}
@@ -1274,14 +1202,22 @@ else {
 		local step = round((`yax_max'-`yax_min')/5)
 		label var `logx' "log(`j')"
 		label var `qexp' "Quantiles of standard exponential"
-		twoway line `logx' `qexp', ///
-				lc(red*1.25) lw(medthick) lp(solid) ///
-				graphregion(fcolor(white)) ///
-				ylab(`yax_min'(`step')`yax_max', angle(h) format(%12.0gc) ///
-				grid glwidth(vthin) labsi(*.8))  ///
-				ytit(log(`j'), si(*.8)) ///
-				xlab(`_gxlab', labsi(*.8)) ///
-				xtit("Quantiles of standard exponential", si(*.8)) 
+		
+		if `"`gph_options'"' == "" {
+			
+			twoway line `logx' `qexp', ///
+					lc(red*1.25) lw(medthick) lp(solid) ///
+					graphregion(fcolor(white)) ///
+					ylab(`yax_min'(`step')`yax_max', angle(h) format(%12.0gc) ///
+					grid glwidth(vthin) labsi(*.8))  ///
+					ytit(log(`j'), si(*.8)) ///
+					xlab(`_gxlab', labsi(*.8)) ///
+					xtit("Quantiles of standard exponential", si(*.8)) 
+		}
+		else {
+			
+			twoway line `logx' `qexp' `gph_options'
+		}
 
 	}
 
@@ -1384,7 +1320,7 @@ program define ParseZIPF, sclass
 end 
 	
 program define ParseITC_HOC, sclass
-	syntax [, ABSolute Mean GIni MLD THeil CV2 ATK0 ATK1 ATK2 H PG PG2 PLine(string) HOC ]
+	syntax [, ABSolute Mean GIni GE GEp(string) CV2 ATK ATKp(string) H PG PG2 PLine(string) HOC ]
 
 	** For hoc: only inequality indexes are available
 	if "`hoc'"!="" & "`mean'`h'`pg'`pg2'"!="" {
@@ -1392,14 +1328,30 @@ program define ParseITC_HOC, sclass
 		exit 198
 	}
 
-	local wc : word count `mean' `gini' `mld' `theil' `cv2' `h' `pg' `pg2' `atk0' `atk1' `atk2'
+	local wc : word count `mean' `gini' `ge' `gep' `cv2' `h' `pg' `pg2' `atk' `atkp'
 	if `wc' > 1 {
 		di as error "itc() invalid, only " /*
 			*/ "one stat can be specified"
 		exit 198
 	}
-
-	local stat `mean' `gini' `h' `pg' `pg2' `mld' `theil' `cv2' `atk0' `atk1' `atk2'
+	
+	// Parse ge() and atk() parameters 
+	if "`ge'"!="" | "`gep'"!="" {
+		if "`gep'"!="" local ge_param `gep'
+		else local ge_param 1
+		local ge "ge"
+	}
+	if "`atk'"!="" | "`atkp'"!="" {
+		if "`atkp'"!="" local atk_param `atkp'
+		else local atk_param 1
+		if `atk_param'<0 {
+			di as error "atk() parameter cannot be negative"
+			exit 198
+		}
+		local atk "atk"
+	}
+	
+	local stat `mean' `gini' `ge' `cv2' `h' `pg' `pg2' `atk'
 	if "`stat'"=="" local stat gini
 
 	if inlist("`stat'", "h", "pg", "pg2")==1 {
@@ -1452,12 +1404,14 @@ program define ParseITC_HOC, sclass
 
 	if "`hoc'"=="" {
 		sret local itc_stat "`stat'"
+		sret local itc_param "`ge_param'`atk_param'"
 		if "`absolute'"!= "" sret local itc_abs "abs"
 	}
 	else {
 		** For hoc: only abs is available
 		local absolute absolute
 		sret local hoc_stat "`stat'"
+		sret local hoc_param "`ge_param'`atk_param'"
 		if "`absolute'"!= "" sret local hoc_abs "abs"
 	}
 
@@ -1710,6 +1664,7 @@ exit
 ** version 3.1.8 - 30oct2023 - Allows the save() option with all Stata versions till 18. The workaround is the only available, suggested by Jeff Pitblado. From now on -outdetetct- runs smoothly on Stata from 14 to 18
 ** version 3.1.9 - 8may2024 - Added options graph(zipf) and graph(qqpareto)
 ** version 3.2.0 - 14may2024 - Added sub-option lognormal for zipf: graph(zipf(logn)). Added GE(-1) to the list of ineq indicators. New display format.
+** version 3.2.1 - 29may2024 - Now the user can ask for the ITC or IFC of the full GE() or ATK() family of indicators. Added warning for non monotonicity of ifc and itc when weights or svy settings are specified
 
 /* TODO: Look at pshare (BJ), update DASP */
 /* TODO: share bottom40, Watts */
