@@ -17,7 +17,7 @@ d
 d
 d Requires: Stata version 16.1
 d
-d Distribution-Date: 20240508
+d Distribution-Date: 20240603
 d
 d Author: Paul Lambert, University of Leicester
 d Support: email paul.lambert@@le.ac.uk
@@ -30,6 +30,7 @@ f stpm3_polygen.ado
 f stpm3_pred.ado
 f stpm3_predictions_eg.ado
 f stpm3_userfunc.ado
+f stpm3aj.ado
 f stpm3km.ado
 f stpm3quadchk.ado
 f ../l/lstpm3.mlib

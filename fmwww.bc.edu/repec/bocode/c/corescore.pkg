@@ -1,0 +1,34 @@
+d 'CORESCORE': module to produce Comorbid Operative Risk Evaluation (CORE) Score macro
+d
+d  corescore takes a set of diagnoses from an input database
+d containing ICD-10 diagnostic codes and calculates the CORE   
+d score (COREscore), a comorbidity score initially designed for use
+d in surgical database research by Dr. Nikhil Chervu	under the
+d guidance of Dr. Peyman Benharash. ICD-10 codes can either be
+d formatted with or without a decimal point. The    diagnosis codes
+d must be stored as string, with numbers 1 to the maximum number of
+d comorbidities recorded, forming the	 suffix. These comorbidity
+d variables must all begin with the same root(the prefix) and
+d either form the varlist or be    defined by the root string given
+d in the diagprfx(string) option. The user has the choice of units:
+d hospital visits or	patients. 
+d
+d KW: comorbidities
+d KW: ICD-10
+d KW: diagnostics 
+d
+d Requires: Stata version 16.1
+d
+d Distribution-Date: 20240603
+d
+d Author:  Nikhil Chervu, University of California Los Angeles,
+d Support: email NChervu@@mednet.ucla.edu
+d
+d Author:   Jeffrey Balian, University of California Los Angeles,
+d Support: email NA
+d
+d Author:  Peyman Benharash  , University of California Los Angeles,
+d Support: email PBenharash@@mednet.ucla.edu
+d
+f corescore.ado
+f corescore.sthlp

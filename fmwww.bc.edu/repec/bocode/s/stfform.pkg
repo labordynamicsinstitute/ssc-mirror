@@ -1,0 +1,21 @@
+d 'STFFORM': module to provide Functional form test for Cox Models
+d
+d   stfform is a postestimation tool of stcox that tests the
+d specification of the functional form of a Cox model based on Lin
+d et al (1993). Checking the Cox model with cumulative sums of
+d martingale-based residuals. Biometrika, 80(3), 557-572. 
+d
+d KW: Cox model
+d KW: survival data
+d KW: functional form
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20240528
+d
+d Author: Daniele Spinelli , University of Milano-Bicocca
+d Support: email daniele.spinelli@@unimib.it
+d
+f ../c/stfform.ado
+f ../c/stfform.sthlp
+f ../l/lstfform.mlib

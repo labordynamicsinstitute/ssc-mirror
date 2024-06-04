@@ -13,6 +13,5 @@ d
 d Author: Liu Wei, School of Sociology and Population Studies, Renmin University of China
 d Support: email rucwz-stata@@yahoo.cn
 d
-f WIN64 ftree.ado
+f ftree.ado
 f ftree.sthlp
-h ftree.ado

@@ -21,6 +21,7 @@ program define stpm3km, rclass
                                    noKM                    ///
                                    GRoups(integer 0)       ///
                                    MAXT(string)            ///
+                                   NAME(string)            ///
                                    NTIMEvar(integer 100)   ///
                                    PITime(string)          ///
                                    SURVival                ///
@@ -60,8 +61,12 @@ program define stpm3km, rclass
   }
   
 // default options
-  if "`crmodels'" != "" & "`survival'`failure'" == "" local cif cif
-  else if "`survival'`failure'" == "" local survival survival
+  if wordcount("`survival' `failure' `cif'") > 1 {
+    di as err "Only one of the survival, failure and cif options can be specified."
+    exit 198
+  } 
+
+  if "`survival'`failure'`cif'" == "" local survival survival
 
   if "`s(fvops)'" != "" {
     local factor factor
@@ -192,6 +197,15 @@ program define stpm3km, rclass
     qui summ _t if `touse', meanonly
     local maxt `r(max)'
   } 
+  
+// extract labels
+  if "`factor'" != "" {
+    foreach i in `levels' {
+      local tmplabel: label (`varlist') `i'
+      if "`tmplabel'" == "" local tmplabel `i'
+      local label`i' `tmplabel'
+    }
+  }  
     
   qui range `tt' 0 `maxt' `ntimevar'
   local standsurvtype = "`failure'`survival'`cif'"
@@ -213,7 +227,7 @@ program define stpm3km, rclass
                    over(`vgrp')  atvar(`atlist') `crmodelsopt' ///
                    `stubnamesopt' 
 
-  if `Nmodels'==1 & "`km'" == "" {
+  if (`Nmodels'==1 & "`km'" == "") | "`cif'" == "" {
     tempvar Skm
     local kmtype = cond("`failure'" != "","f","s")
     qui sts gen `Skm' = `kmtype' if `touse', by(`vgrp')
@@ -244,7 +258,7 @@ program define stpm3km, rclass
         } 
       }
       // Model-based estimates
-      if `Nmodels' == 1 {
+      if "`survival'`failure'" != "" {
         local pline_m1 `pline_m1' (line `S`i'' `tt' , sort lcolor("scheme p`c'") lpattern(dash) lwidth(thin))
       }
       else {
@@ -254,7 +268,7 @@ program define stpm3km, rclass
       }
 	    local ++c
     }	
-    _get_gropts, graphopts(`options') getallowed(legend xtitle ytitle title name)
+    _get_gropts, graphopts(`options') getallowed(legend xtitle ytitle title)
 
 
     if `"`s(title)'"' == "" {
@@ -277,26 +291,39 @@ program define stpm3km, rclass
 
     if `Ngroups'>1 {
       if `"`s(legend)'"' == "" {
+        local legendpos = cond("`survival'"!="","pos(1)","pos(11)")
         local c 1
         foreach i in `levels' {
-          local order `"`order' `c' "`i'""'
-          local legend legend(order(`order') cols(1))
+          if "`factor'" == "" local label`i' `i'
+          local order `"`order' `c' "`label`i''""'
+          local legend legend(order(`order') cols(1) `legendpos')
           local ++c
         } 
       }
       else local legend legend(`s(legend)')
     }
     else if `"`s(legend)'"' == ""  local legend legend(off)
-    forvalues m = 1/`Nmodels' {
-      if "`crmodels'" != "" {
+    
+    if `"`name'"' != "" grname `name'
+    
+    if "`cif'" != "" {
+      forvalues m = 1/`Nmodels' {
         local mname = word("`crmodels'",`m') 
-        if `"`s(name)'"' == "" local name name(`mname', replace)
-        else local name name(`s(name)'_`mname',replace) // FIX THIS
+        if `"`gname'"' == "" local name name(`mname', replace)
+        else local name name(`gname'_`mname',`greplace') 
+ 
+        twoway   `npline_m`m''  ///
+                 `pline_m`m''   ///
+               , `options' `title' `xtitle' `ytitle' `legend' `name'
       }
-      twoway   `npline_m`m''  ///
-               `pline_m`m''   ///
-             , `options' `title' `xtitle' `ytitle' `legend' `name'
     }
+    else {
+      if "`gname'" != "" local name name(`gname',`greplace')
+      twoway   `npline_m1'  ///
+               `pline_m1'   ///
+             , `options' `title' `xtitle' `ytitle' `legend' `name'      
+    }
+    
   }		 
   if "`resframe'" != "" {
     if "`crmodels'" == "" {
@@ -339,6 +366,13 @@ program define stpm3km, rclass
     }		
   }
   return scalar Ngroups = `Ngroups'
+end
+
+// extract reurn from name() in graph options
+program grname, rclass
+  syntax anything, [replace]
+  c_local gname `anything'
+  c_local greplace `replace'
 end
 
 // change to commas

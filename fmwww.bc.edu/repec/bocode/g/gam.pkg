@@ -1,8 +1,4 @@
-v 3                                                       
-d gam. Package for generalized additive modelling.                       
-d Program by Patrick Royston and Gareth Ambler.
-d
-d Distribution-Date: 20120712. Version: 2.0.11.
+d GAM: Stata module for generalised additive models
 d
 d gam fits a generalized or proportional hazards additive model (GAM) by
 d      mazimizing a penalized log likelihood function. Each component of the
@@ -19,6 +15,17 @@ d      Stata Technical Bulletin 42: 38-43.)
 d      As the SSC Archive does not allow executable images to be distributed,
 d      the most recent version of this software is accessible via the Stata command
 d      net from http://www.homepages.ucl.ac.uk/~ucakjpr/stata
-      
-d Please direct queries to Patrick Royston (pr@ctu.mrc.ac.uk)
+d
+d KW: generalized additive models
+d KW: proportional hazards
+d
+d requires: Stata version 6.0 for Windows
+d
+d Distribution-Date: 20240522
+d
+d Author: Patrick Royston, UK Medical Research Council
+d Support: pr@ctu.mrc.ac.uk
+d
+d Author: Gareth Ambler, University College London 
+d Support: gareth@stats.ucl.ac.uk
 d

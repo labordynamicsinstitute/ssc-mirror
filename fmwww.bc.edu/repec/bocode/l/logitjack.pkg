@@ -1,0 +1,33 @@
+d 'LOGITJACK': module to provide cluster robust inference for logit models
+d
+d      logitjack is a stand-alone command that calculates a
+d linearized version of the wild cluster bootstrap for logit
+d models.    It will calculate a CV1 variance estimate, with
+d p-values calculated using the t(G-1) distribution for the
+d t-statistics.    Native Stata uses the t(N-k) distribution which
+d usually results in over-rejection of the null hypothesis.
+d logitjack    calculates a jackknife variance for the linearized
+d model, CV3L, which in practice is very similar to the
+d computationally    demandind CV3 variance. logitjack also
+d optionally calculates the brute-force cluster jackknife CV3
+d variance estimator for    logit models. 
+d
+d KW: logit
+d KW: logistic regression
+d KW: wild cluster bootstrap
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20240603
+d
+d Author:  James G. MacKinnon , Queen's University
+d Support: email mackinno@@queensu.ca
+d
+d Author:  Morten Ørregaard Nielsen, Aarhus University
+d Support: email mon@@econ.au.dk
+d
+d Author:  Matthew D. Webb , Carleton University
+d Support: email matthewdwebb@@gmail.com
+d
+f logitjack.ado
+f logitjack.sthlp

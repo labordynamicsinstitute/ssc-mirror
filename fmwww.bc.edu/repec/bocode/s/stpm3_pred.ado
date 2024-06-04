@@ -1,4 +1,4 @@
-*! version 1.09 2024-05-08
+*! version 1.10 2024-06-03
 
 program stpm3_pred, sortpreserve
   version 16.1
@@ -294,7 +294,7 @@ program stpm3_pred, sortpreserve
     }
 
 // setbaseline/zeros    
-    if "`setbaseline'" != "" & "`setbasline'" != "" {
+    if "`setbaseline'" != "" & "`allsetbaseline'" != "" {
       di as error "You can't specify both the setbasline/zeros main option and setbasline/zeros suboption"
       exit 198
     }
@@ -638,6 +638,7 @@ program stpm3_pred, sortpreserve
             local tvcopt `tvcopt' , `ttransopt')
           }
         }
+        else local tvcopt
         
         local knotsopt = cond("`e(knots)'"!="","allknots(`e(knots)', `ttransopt')","df(1)")
       
@@ -649,6 +650,8 @@ program stpm3_pred, sortpreserve
         }
       
         if "`hastoffset'" != "" local toffsetopt toffset(`toffset`i'_m`m'')
+
+
         stpm3_gensplines, `knotsopt' `tvcopt'               ///
                           type(`e(splinetype)') hasdelentry(0)     ///
                           ttrans(`e(ttrans)') degree(`e(degree)')  ///
@@ -1252,6 +1255,7 @@ program define get_variable_type
       }
     }
   }
+
   // for factor variables with no baseline set lowest to baseline
   // **1NEED TO FIX - SHOULD BE MINIMUM OF LEVELS**
   foreach v in `allvars' {

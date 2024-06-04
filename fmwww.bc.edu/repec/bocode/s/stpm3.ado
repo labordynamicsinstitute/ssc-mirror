@@ -1,4 +1,4 @@
-*! version 1.09 2024-05-08
+*! version 1.10 2024-06-03
 
 program stpm3, eclass byable(onecall)
 	version 16.1
@@ -138,8 +138,9 @@ program Estimate, eclass
 // extended functions varlist
   local varlist_original `anything'  
   local tvc_orignal `tvc'
-  
+
   stpm3_extract_extfunction `anything' 
+
   local anything `r(cleanedvarlist)'
   local extfunclist `"`r(extfunclist)'"'
   
@@ -801,6 +802,7 @@ program define stpm3_extract_extfunction, rclass
             if "`r(`opt')'" != "" local allopts `allopts' `opt'(`r(`opt')')
           }          
           local extfunc`extf_count' `r(functype)'(`r(function)',`allopts')
+          local anythingret = subinstr("`anythingret'","@"+"`extfunc`extf_count'_original'","@"+"`extfunc`extf_count''",.)
         }
         
         local ++extf_count
@@ -814,10 +816,10 @@ program define stpm3_extract_extfunction, rclass
   forvalues i = 1/`extf_count' {
     local extfunclist `"`extfunclist' "`extfunc`i''""'
   }
-  local macret = cond("`tvc'"=="","anything","bobby")
   
   return local cleanedvarlist `"`anythingret'"'
   return local extfunclist = `"`extfunclist'"'
+  
 end
 
 
@@ -831,7 +833,7 @@ program define stpm3_gen_extended_functions, rclass
   foreach ef in `anything' {
     local ++o
     local extfunc_o`o' `ef'
-
+    
     stpm3_extfun_options, `ef'
     local allopts
 
@@ -911,7 +913,7 @@ program define stpm3_gen_extended_functions, rclass
         local ef_fn_varlist `ef_fn_varlist' `r(expvarnames)'
         local ef_fn_varlist: list uniq ef_varlist
         local ef_fn`ef_Nuser'_varlist `r(expvarnames)'
-        local userfunc`ef_Nuser' `ef'        
+        local userfunc`ef_Nuser' `ef'       
         local ef_fn`ef_Nuser'_function `r(function)'
         local ef_fn`ef_Nuser'_stub `r(stub)'
         local ef_fn`ef_Nuser'_opts `allopts'
@@ -995,7 +997,7 @@ program define stpm3_gen_extended_functions, rclass
   forvalues i =1/`ef_Nuser' {
     local xb = subinstr("`xb'","@"+"`userfunc`i''","`add_v_userfunc`i''",.)
       if "`tvc'" != "" {
-        local tvc = subinstr("`tvc'","@"+"`ef_`ef_Nuser''","`add_v_userfunc`i''",.)
+        local tvc = subinstr("`tvc'","@"+"`userfunc`i''","`add_v_userfunc`i''",.)
     }          
   }  
   // obtain model_vars  

@@ -9,6 +9,7 @@ p sccsdta module to generate a dataset for the self-controlled case series metho
 p scheme_scientific module to provide a graphic scheme favored by many scientific journals
 p scores module to creates scores (row-wise) of a set of variables allowing the specification of the number of valid values required and/or to produce various transformations of scores
 p setroot module to find the root path of a project and set it as a global variable
+p shuffle module to shuffle a list
 p sicff module to create Fama French Industry Variable from SIC Code
 p simsum module to perform analyses of simulation studies including Monte Carlo error
 p simulate2 module enhancing and parallelising simulate
@@ -26,6 +27,7 @@ p standsurv module to compute standardized (marginal) survival and related funct
 p stata_linter module providing a tool to detect and correct bad Stata coding practices
 p stckar module to draw stacked area graphs
 p step3 module to relate latent class membership to external variables
+p stfform module to provide Functional form test for Cox Models
 p stocdom module to compute bounds assuming stochastic dominance
 p stpm3 module to fit flexible parametric survival models
 p stpp module to compute Pohar-Perme non-parametric estimate of marginal relative (net) survival
