@@ -1,4 +1,5 @@
-*! ivreg2m 1.0.4 01Jul2022 cfb 
+*! ivreg2m 1.0.5 04Jun2024 cfb 
+*!         1.0.5: fix robust option
 *!         1.0.4: remove BS, lincomest code, add proper e(b) and e(V) returns
 *!         1.0.3: cleanup of option handling
 *!         1.0.2 10may2020
@@ -28,7 +29,7 @@
 
 program define ivreg2m, eclass byable(recall)
 	version 15
-	local lversion 01.0.4
+	local lversion 01.0.5
 // will be overridden by ivreg2 e(version) for ivreg2_p
 
 // Needed for call to ivreg2
@@ -59,11 +60,12 @@ program define ivreg2m, eclass byable(recall)
 
 		local cmdline "ivreg2m `*'"
 // ivreg2m: allow for only one clustering variable
-// 1.0.4: add gmm2s, liml options
+// 1.0.4: add gmm2s, liml options 
+// 1.0.5: add robust option
 		syntax [anything(name=0)] [if] [in] [aw fw pw iw/] , /* 
 		    */  TA(numlist integer sort) TB(numlist integer sort) /* 
-			*/	[ Ivar(varname) Tvar(varname) FIRST ffirst rf GMM2s liml Robust /*
-			*/	savefirst SAVEFPrefix(name) saverf SAVERFPrefix(name) CLuster(varname)	/*
+			*/	[ Ivar(varname) Tvar(varname) FIRST ffirst rf GMM2s liml /*
+			*/	savefirst SAVEFPrefix(name) saverf SAVERFPrefix(name) ROBust CLuster(varname)	/*
 			*/	orthog(string) ENDOGtest(string) REDundant(string) PARTIAL(string)		/*
 			*/	BW(string) SKIPCOLL														/*
 			*/	GEN1 GEN2(string) NOOUTput Z(string) NOI  ]			
@@ -77,6 +79,7 @@ program define ivreg2m, eclass byable(recall)
 		local lhs `r(depvar)'
 		loc origlhs `r(depvar)'
 		local exexog `r(exexog)'
+
 /*
 di in r "lhs: `lhs'"
 di in r "inexog: `inexog'"
@@ -321,7 +324,7 @@ stack `sla' `slb', into(`into') clear
 				loc pf noi
 			}
 			version `ver': `pf' `ivreg2_cmd' `lhs' `ntin' (`nendog' = `ntex') `nkon' `wtexp' if `touse', ///
-						dofminus(`dofminus') `nocons'  `first' `ffirst' `rf' ///
+						dofminus(`dofminus') `nocons'  `first' `ffirst' `rf' `robust' ///
 						cluster(`cluster') orthog(`orthog_t') endog(`endogtest_t') ///
 						redundant(`redundant_t') partial(`partial_t') tvar(`tvar') bw(`bw') `options'
 
@@ -370,6 +373,7 @@ stack `sla' `slb', into(`into') clear
 		eret sca mrlate_pvalue = `mrlate_pvalue'
 		eret sca mrlate_ll = `mrlate_ll'
 		eret sca mrlate_ul = `mrlate_ul'
+		eret loc robust `robust'
 		eret loc cluster `cluster'
 		eret loc inexog `inexog'
 		eret loc exexog `exexog'
@@ -453,6 +457,7 @@ di as err `"the equal sign "=" is required"'
 		return local inexog	"`inexog'"
 		return local exexog	"`exexog'"
 		return local endo	"`endo'"
+		return local robust "`robust'"
 
 end
 

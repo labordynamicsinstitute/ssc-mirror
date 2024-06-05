@@ -13,7 +13,7 @@ d KW: measurement error
 d
 d Requires: Stata version 15 and ivreg2, ranktest from SSC (q.v.)
 d
-d Distribution-Date: 20220702
+d Distribution-Date: 20240604
 d
 d Author: Christopher F Baum, Boston College 
 d Support: email baum@@bc.edu
