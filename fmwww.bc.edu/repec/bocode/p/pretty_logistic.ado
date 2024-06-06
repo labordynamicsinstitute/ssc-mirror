@@ -2,11 +2,11 @@
 
 capture program drop pretty_logistic
 	program define pretty_logistic
-	version 17.0
+	version 18.0
 	syntax [if] [in] [fweight], ///
 	PREDictor(varname) ///
-	[LOGtype(string)] ///
-	[OUTcomes(varlist)] ///
+	LOGtype(string) ///
+	OUTcomes(varlist) ///
 	[CONfounders(varlist fv ts)] ///
 	[TITLE(string)] ///
 	[SAVing(string)] ///
@@ -69,7 +69,7 @@ capture program drop pretty_logistic
 		
 	if "`vlname'" != "" {
 		
-	foreach level of local levelcheck{
+	qui foreach level of local levelcheck{
 	local m = `m' + 1
 	local vl`m':label `vlname' `level'
 	}
@@ -108,103 +108,27 @@ capture program drop pretty_logistic
 	
 	}
 	
-************************
-** NO OPTION DEFINED **
-************************
 	
-	******************************************************************
-	** Creating empty table if no variables defined except predictor**
-	******************************************************************
+	****************************************
+	** Labelling outcomes if not labelled ** 
+	****************************************
 	
-		if `:word count `outcomes'' == 0 {
+	foreach var of local outcomes {
 		
-		qui table `weight', stat(fvfrequency `predictor') ///
-		stat(fvpercent `predictor')
-
-		qui collect recode result ///
-		`"fvfrequency"' = `"1"' `"fvpercent"' = `"2"'
-		qui collect layout () (`predictor'#result[1 2])
-		qui collect label levels result 1 "N" 2 "(%)", modify
-		qui collect style cell result[2], ///
-		nformat (`fcateg') sformat("(%s%%)")
+		if "`: variable label `var''" == "" {
+			
+			la var `var' `var'
+			
+		} 
 		
-			
-		*Counts
-		qui count if `predictor' == 0
-		local A_N `r(N)'
-		
-		qui count if `predictor' == 1 
-		local B_N `r(N)'
-
-		*Label and combine counts and frequencies
-		qui collect label levels `predictor' 0 ///
-		"`a' [N = `A_N']" 1 "`b' [N = `B_N']", replace 
-		
-		qui collect style cell colname#result[2], ///
-		nformat(%5.1fc) sformat("(%s%%)")
-		
-		qui collect label dim `predictor' "Treatment Arm"
-	 
-	 
-		*Recode frequency and percent results
-		qui collect recode result `"fvfrequency"' = `"1"' ///
-		`"fvpercent"' = `"2"'
-
-		
-		*Relabel count and frequency
-		qui collect label levels result 1 "N" 2 "(%)" ///
-
-		
-		***************************************
-		** GENERAL FORMATTING FOR ALL TABLES ** 		
-		****************************************
-			
-			******************
-			** Adding title	**
-			******************
-			if `"`title'"' != "" {
-				collect title "`title'"
-			}
-
-			
-			***************************
-			** Setting export format **
-			***************************
-		
-			collect style putdocx, layout(autofitcontents)
-			
-			************************
-			** Exporting document **
-			************************
-			if `"`saving'"' != "" {
-			collect export "`saving'/`title'", as(docx) `replace'
-			}
-			
-			
-			*********************************
-			** Displaying table on console **
-			*********************************
-			collect preview
-			
-
-			
-			*********************************
-			** Replacing original dataset **
-			*********************************
-			qui use `data', clear
+	}
 	
-		
-		}
-		
-		
 	
 **********************************
 ** SET LOOP FOR MULTIPLE TABLES **	
 **********************************	
-
-	else {
 	
-	foreach j of numlist 1/ `:word count `logtype'' {
+	qui foreach j of numlist 1/ `:word count `logtype'' {
 	
 	collect clear 
 	
@@ -215,18 +139,71 @@ capture program drop pretty_logistic
 ** CALCULATE DESCRIPTIVES FOR LOGISTIC TABLES **
 ************************************************ 
 	*Freq and Percent
-	qui table () (`predictor') `weight', ///
+	table () (`predictor') `weight', ///
 	stat(fvfrequency `outcomes') ///
 	stat(fvpercent `outcomes')
 		
 	*Counts
-	qui count if `predictor' == 0
+	count if `predictor' == 0
 	local A_N `r(N)'
 		
-	qui count if `predictor' == 1 
+	count if `predictor' == 1 
 	local B_N `r(N)'
 		
+	** Bold Category Headings 	
+	qui foreach var of local outcomes {
+	local q = `q' + 1
+	local variablelabel :variable label `var'
+	
+	levelsof `var', local(`var'f)
+	
+	qui foreach l of local `var'f {
+	
+	local `var'fl ``var'fl' `l'.`var'
+	
+
+	}
+	
+	
+	if "`variablelabel'" != "" {
+	collect addtags varheading`q'["`:variable label `var''"], ///
+	fortags(colname[``var'fl'])
+
+	}
+
+	
+	else {
+	collect addtags varheading`q'[`var'], fortags(colname[``var'fl'])
+	}
+	
+	collect style cell varheading`q'#cell_type[row-header], ///
+	font(, bold)
+	
+	collect style cell colname[``var'fl']#cell_type[row-header], ///
+	font(, nobold)
+	
+	collect style header varheading`q'#cell_type[row-header], title(hide) level(label)
+	
+	collect style header colname[``var'fl'], title(hide)
+
+	}
+	
+		** Hide New Dimension Headings 
+		qui foreach var of local outcomes {
+		local p = `p' + 1
+			
+			if `p' == 1 {
+			local categoricalheading varheading`p'#colname[``var'fl'] 
+			local tagheading ``var'fl'
+		}
 		
+			else {
+			local categoricalheading `categoricalheading' varheading`p'#colname[``var'fl'] 
+			local tagheading `tagheading' ``var'fl'
+			}
+		
+		}		
+			
 		
 *********************
 ** RISK DIFFERENCE **
@@ -247,6 +224,8 @@ capture program drop pretty_logistic
 		collect get _r_b _r_lb _r_ub: margins, dydx(`predictor')
 		local i = `i' + 1
 		collect remap colname[1.`predictor']=colname[1.`var'], ///
+		fortags(cmdset[`i'])
+		collect remap colname[0.`predictor']=colname[0.`var'], ///
 		fortags(cmdset[`i'])
 		collect recode result _r_p = _r_incorrect
 		}
@@ -413,11 +392,11 @@ capture program drop pretty_logistic
 		
 		}
 		
-	qui collect label levels result _r_b "Risk Difference", modify
+	collect label levels result _r_b "Risk Difference", modify
 	
 		}
 		
-		
+			
 ****************
 ** RISK RATIO **
 ****************
@@ -626,6 +605,8 @@ capture program drop pretty_logistic
 		local i = `i' + 1
 		collect remap colname[1.`predictor']=colname[1.`var'], ///
 		fortags(cmdset[`i'])
+		collect remap colname[0.`predictor']=colname[0.`var'], ///
+		fortags(cmdset[`i'])
 		}
 						
 		} 
@@ -714,6 +695,8 @@ capture program drop pretty_logistic
 		local i = `i' + 1
 		collect remap colname[1.`predictor']=colname[1.`var'], ///
 		fortags(cmdset[`i'])
+		collect remap colname[0.`predictor']=colname[0.`var'], ///
+		fortags(cmdset[`i'])
 		}
 		
 		** Add note for confounders
@@ -760,36 +743,49 @@ capture program drop pretty_logistic
 *****************************************
 
 	*Combine upper and lower limits for 95% CI
-	qui collect composite define _r_combined = _r_lb _r_ub, ///
+	collect composite define _r_combined = _r_lb _r_ub, ///
 	delimiter(" to ") replace trim
 		
 	*Collect risk difference and probibility statistics
-	qui collect composite define _r_logistic= _r_b , replace
+	collect composite define _r_logistic= _r_b , replace
 		
-	qui collect composite define _r_prob = _r_p, replace
+	collect composite define _r_prob = _r_p, replace
+	
+	foreach var of local outcomes {
+		
+	local outcomecount = `outcomecount' + 1
 
+	collect addtags varheading`outcomecount'["`:variable label `var''"], fortags(result[_r_logistic _r_prob _r_combined])
+	 
+	}
 
+	foreach var of local outcomes {
+	collect addtags extra[logistic], fortags(result[_r_logistic]#colname[1.`var'])
+	collect addtags extra[probability], fortags(result[_r_prob]#colname[1.`var'])
+	collect addtags extra[ci], fortags(result[_r_combined]#colname[1.`var'])
+	}
+	
 
 	*****************************************
 	** Formatting results for all logistic **
 	*****************************************
 	
 	*Label and combine counts and frequencies
-	qui collect label levels `predictor' ///
+	collect label levels `predictor' ///
 	0 "`a' [N = `A_N']" ///
 	1 "`b' [N = `B_N']" ///
 	, replace 
 	
-	qui collect label dim `predictor' "Treatment Arm"
+	collect label dim `predictor' "Treatment Arm"
  
  
 	*Recode frequency and percent results
-	qui collect recode result `"fvfrequency"' = `"1"' ///
+	collect recode result `"fvfrequency"' = `"1"' ///
 	`"fvpercent"' = `"2"'
 
 	
 	*Relabel statistics
-	qui collect label levels result 1 "N" 2 "(%)" ///
+	collect label levels result 1 "N" 2 "(%)" ///
 	_r_combined "95% CI" ///
 	_r_prob "p-Value", modify
 
@@ -798,113 +794,67 @@ capture program drop pretty_logistic
 	collect style cell result[_r_p], minimum(0.001)
 
 	*Format decimal places
-	qui collect style cell result[_r_combined], ///
+	collect style cell result[_r_combined], ///
 	sformat("(%s)") nformat(`fci')
 	
-	qui collect style cell result[2 ], nformat(`fp')
+	collect style cell result[2 ], nformat(`fp')
 	
-	qui collect style cell result[_r_b], nformat(`flog')
+	collect style cell result[_r_b], nformat(`flog')
 	
 	
 	**********************
 	** Formatting table **
 	**********************
 	
-	*Hide base level of outcome variables
-	qui foreach var of local outcomes {
-	qui collect style header colname[0.`var'], ///
-	level(hide) title(hide) 
-	}
+	** Hid tag headings of column headers
+	collect style header extra[probability ci logistic], ///
+	level(hide) title(hide)
 	
-	qui collect style header `outcomes', level(hide) title(label)
+	** General alignment formatting
+	collect style cell, halign(left)
 	
-	*Hide Tag Labels 
-	qui collect style header vartype, title(hide)
-	
-	*Format horizontal alignment of headings
-	qui collect style cell, halign(left)
-	
-	qui collect style cell colname#result[2], ///
+	** Formatting % and N headers
+	collect style cell colname#result[2], ///
 	nformat(%5.1fc) sformat("(%s)") halign(left)
 	
-	qui collect style cell colname#result[1], halign(right)
+	collect style cell colname#result[1], halign(right)
 	
-	qui collect style cell result[_r_combined], halign(center)
+	** Formatting Results alignment
+	collect style cell result[1], halign(right)
 	
-	qui collect style cell result[1], halign(right)
+	collect style cell result[2], halign(right)
 	
-	qui collect style cell result[2], halign(left)
+	collect style cell result[_r_prob _r_logistic _r_combined], halign(center)
+
+	** Bold column headings
+	collect style cell cell_type[column-header], font(, bold)
 	
 	*Format vertical alignment 
-	qui collect style cell, valign(center)
+	collect style cell, valign(center)
 	
-	*Hide Tag Lables 
-	qui collect style header vartype, title(hide)
+	collect style cell result[_r_prob _r_logistic _r_combined]#cell_type[column-header], valign(bottom) 
 	
 	*Widen margins
-	qui collect style putdocx, ///
+	collect style putdocx, ///
 	cellmargin(bottom, 0.08) cellmargin(top, 0.03) ///
 	layout(autofitcontents)
 	
 	*Change font size of notes
 	collect style notes, font(calibri, size(10))
 	
+	
 		************************************
 		** Assembing Final Logistic Table **
 		************************************
-		qui foreach v of local outcomes {
-		local k = `k' + 1
-		if `k' == 1 {
-				local finalrows "1.`v'"
-					}
-					else {
-						local nextrow "1.`v'"
-						local finalrows `finalrows' + `nextrow'
-					}
-			} 
-			
-			
-		*COLLECT LAYOUT FOR 1 ROW TABLE 
-		if `:word count `outcomes'' == 1 | ///
-		`:word count `nosubheadings'' != 0 {
-		qui collect layout (colname[`finalrows']) ///
+		qui collect layout (`categoricalheading') ///
 		(`predictor'[0 1]#result[1 2] ///
-		result[_r_logistic _r_combined _r_prob])
+		extra[logistic ci probability]#result[_r_logistic _r_combined _r_prob])
 		
-		}
-			
-		*COLLECT LAYOUT FOR MULTIPLE RDs
-		else {
-			
-		*Add in Subheadings
-		tokenize "`outcomes'"
-		local first "`1'"
-		macro shift
-		local rest "`*'"
-		
-		qui collect addtags vartype["Primary Outcome"], ///
-		fortags(colname[`first'])
-		
-		qui collect addtags vartype["Secondary Outcomes"], ///
-		fortags(colname[`rest']) 
-		
-		*Bold Row Subheadings
-		qui collect style cell vartype, font(Calibri, bold)
-		qui collect style cell result, font(Calibri, nobold)
-		qui collect style cell (colname[1.`outcomes']), ///
-		font(Calibri, nobold)
-		
-		
-		qui collect style row stack, spacer
-		
-		qui collect layout (vartype#colname[`finalrows']) ///
-		(`predictor'[0 1]#result[1 2] ///
-		result[_r_logistic _r_combined _r_prob])
-		}
-		
+		*Add a space between lines
+		collect style row stack, spacer nobinder
 	
 	
-		
+	
 ***************************************
 ** GENERAL FORMATTING FOR ALL TABLES ** 		
 ****************************************
@@ -949,7 +899,7 @@ capture program drop pretty_logistic
 	************************
 		
 	if "`saving'" != "" {
-	collect export "`saving'/`exporttitle'", as(docx) `replace'	
+	collect export "`saving'", as(docx) `replace'	
 	}
 
 		
@@ -968,8 +918,13 @@ capture program drop pretty_logistic
 	
 	
 	}
-		
-	}
+	
+	collect preview
 	
 	end
+	
+	
+	
+	
+	
 	

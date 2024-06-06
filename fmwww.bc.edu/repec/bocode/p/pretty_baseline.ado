@@ -25,6 +25,9 @@
 	
 	
 
+**************
+** SET - UP **
+**************
 	
 	************************************************
 	** Setting up environment and clearing macros **
@@ -34,29 +37,24 @@
 	tempfile data
 	qui save `data'
 	
-	capture drop pretty_replacement_by 
-	capture label drop prettybylabel
-	capture drop pretty_replacement_by
 
 	if "`saving'" != "" {
 	putdocx clear
 	}
 	
 	
-	********************************************
-	** Generating macro for frequency weight **
-	********************************************
+	**********************
+	** Frequency Weight **
+	**********************
 	local weight "[`weight'`exp']"
 	if "`weight'" == "[]"{
 		local weight
 	}
 
-
-
 	
-	********************************
-	** Setting formats for output **
-	********************************
+	********************
+	** Decimal Format **
+	********************
 	 if `:word count `fcont'' == 0{
 	 	local fcont "%9.2fc"
 	 }
@@ -65,15 +63,14 @@
 	 	local fcateg "%9.2fc"
 	 }
 	
-
-	
-	*********************************************************************
-	** Creating empty table if no variables defined except by variable **
-	**********************************************************************
-
-	if `:word count `contnormal'' == 0 & `:word count `contskewed'' == 0 & `:word count `categorical'' == 0 {
 	
 	
+	
+**********************
+** ONLY BY VARIABLE ** 
+**********************
+	
+	if `:word count `contnormal'' == 0 & `:word count `contskewed'' == 0 & `:word count `categorical'' == 0 {	
 	
 	qui table, stat(fvfrequency `by') stat(fvpercent `by')
 	collect recode result `"fvfrequency"' = `"1"' `"fvpercent"' = `"2"'
@@ -81,13 +78,19 @@
 	collect label levels result 1 "N" 2 "(%)", modify
 	collect style cell result[2], nformat (`fcateg') sformat("(%s%%)")
 	}
-else{
 	
 
+	
+
+*****************************
+** BY AND VARIABLES TABLES **
+*****************************	
+else{
+	
+	
 	******************************************
 	** Setting ordering of results in table **
 	*******************************************
-	
 		if `:word count `contnormal'' != 0 & `: word count `position'' == 0 {
 			local position2  "contn"
 			}
@@ -111,10 +114,28 @@ else{
 	** If no by variable is defined **
 	**********************************
 	
-
+	qui ds `by', has(type string)
+	
+	if "`r(varlist)'" != "" {
+	
+	local string_by = r(varlist)
+	
+	foreach var of local string_by {
+		
+	local new = `new' + 1	
+	
+	encode `var', gen(new`new')
+	drop `var'
+	rename new`new' `var'
+	
+	}
+	
+	}
+	
+	
 	if `:word count `by'' == 0 {
 		local no_by = 1 
-		gen pretty_replacement_by = 1
+		capture gen pretty_replacement_by = 1
 		local by pretty_replacement_by
 	}
 	
@@ -123,21 +144,23 @@ else{
 	}
 	
 	if "`: value label `by''" == "" {
-		label define prettynobylabel 0 "0" 1 "1", replace
+		capture label define prettynobylabel 0 "0" 1 "1", replace
 		label value `by' prettynobylabel
 	}
 	
+
 		
 	****************************
 	** Recoding by if not 0/1 **
 	****************************
+
 	qui levelsof(`by'), local(levelcheck)
 	
 	qui tab `by'
 	
 	local number_of_levels = r(r)
 	
-	forvalues i = 0/`number_of_levels' {
+	qui forvalues i = 0/`number_of_levels' {
 		
 		capture drop label`i'
 	
@@ -149,7 +172,7 @@ else{
 		
 	if "`vlname'" != "" {
 		
-	foreach level of local levelcheck{
+	qui foreach level of local levelcheck{
 	local m = `m' + 1
 	local vl`m':label `vlname' `level'
 	}
@@ -157,7 +180,7 @@ else{
 	}
 
 		
-	foreach level of local levelcheck {
+	qui foreach level of local levelcheck {
 	local begin = `begin' + 1
 		
 		if `begin' == 1 {
@@ -173,46 +196,82 @@ else{
 	
 	
 	qui levelsof `by', local(levelfinal)
+	
+	
 	************************************
 	** Collecting value labels for by ** 
-	************************************	
+	************************************
+	
 	if "`vlname'" != "" {
 		
-	label define prettybylabel 0 "`vl1'" 1 "`vl2'"
+	label define prettybylabel 0 "`vl1'" 1 "`vl2'", replace
 	label values `by' prettybylabel
 	
 	}
 
 	
 	*******************************************
-	** Creating macros for the column headers**
-	******************************************
+	** Encoding string categorical variables **
+	*******************************************
+	qui ds `categorical', has(type string)
+	
+	if "`r(varlist)'" != "" {
+	
+	local string_categ = r(varlist)
+	
+	foreach var of local string_categ {
+		
+	local newc = `newc' + 1	
+	
+	encode `var', gen(newc`newc')
+	drop `var'
+	rename newc`newc' `var'
+	
+	}
+	
+	}
+	
+	
+	***********************
+	** Labelling Missing **
+	***********************
+	
+	qui foreach var of local categorical {
+	
+	if "`: value label `var''" != "" {
+	
+	local prettylabel :value label `var'
+	
+	replace `var' = 999 if `var' == . 
+	
+	label define `prettylabel' 999 "Missing", modify
+	
+	label values `var' `prettylabel'
+	
+	}
+	
+	else {
+		
+	replace `var' = 999 if `var' == . 
+	
+	label define prettylabel 999 "Missing", replace
+	
+	label values `var' prettylabel
+		
+	}
+	
+	}
 
-	** Creating value lables if string variable
-	    qui foreach var of local by {
-        local has_label = ("`: value label `var''" != "") 
-		local not_string = ("`: type `var''" != "str")
-        if `has_label' != 1 & `not_string' != 1 {
-			qui drop if missing(`by')
-           encode `var', gen(new`var')
-		   drop `var'
-		   rename new`var' `var'
-        }
-		qui else if `has_label' != 1 & `not_string' == 1 {
-		tostring `var', replace
-		encode `var', gen(new`var')
-			drop `var'
-			rename new`var' `var'
-			qui levelsof `var', local(cat_ord_levels)	
-		}
-		}
+	*******************************
+	** Formatting Column Headers **
+	*******************************
 	
 	preserve
 	cap qui keep if `touse'
 	qui drop if missing(`by')
 
 	qui levelsof `by', local(levels_by_var)
-	global levels_by_var `levels_by_var'
+	
 	
 	if `no_by' == 0 {
 	qui contract `by' `weight'	, freq(n) percent(p)
@@ -261,78 +320,13 @@ else{
 
 	}
 	
-	/*qui count if `by' == 1
-	local n2 = r(N)
-	local p2 = (`n2'/`n')*100
 	
-	gen label2 = "N = " +string(`n2', "%9.0fc") + " (" + string(`p2', "%9.1fc") + "%)"
-	local label2 = label2*/
+*****************************
+** CONTINUOUS NORMAL TABLE **
+*****************************
 	
-	***************************************************
-	** Adding labels for  categorical data **
-	**************************************************
-	
-	*****************
-	** STRING DATA **
-	*****************
-
-	
-	** Creating value lables if string variable  and not numeric for categorical variables
-	qui foreach var of local categorical {
-			local has_label
-			local is_string
-        local has_label = ("`: value label `var''" != "")
-	 ds `var', has(type string)
-		local is_string `: word count `r(varlist)''
-        if `has_label' == 0  & `is_string' >0{
-           encode `var', gen(new`var')
-		 drop `var'
-		  rename new`var' `var'
-		  replace `var' = 999 if `var' == .
-		  label define `:value label `var'' 999 "Missing", modify
-        }
-		}
-		
-		
-	** creating value labels if nominal variable with levels and a value label
-	qui foreach var of local categorical {
-		local is_numeric 
-		local has_label
-        local has_label = ("`: value label `var''" != "")
-		qui ds `var', has(type numeric)
-		local is_numeric = ("':  `r(varlist)''" != "")
-        if `has_label' == 1  & `is_numeric' == 1{
-            qui replace `var' = 999 if `var' == .
-			label define `:value label `var'' 999 "Missing", modify
-		}
-        }
-		
-
-		
-	** Creating value lables if numeric  variable  and has no label
-	    qui foreach var of local categorical {
-		local is_numeric 
-		local has_label
-        local has_label = ("`: value label `var''" != "")
-		qui ds `var', has(type numeric)
-		local is_numeric = ("':  `r(varlist)''" != "")
-        if `has_label' == 0  & `is_numeric' == 1{
-		replace `var' = 999 if `var' == . 
-		levelsof `var', local(levelsof`var')
-		foreach l of local levelsof`var' {
-		local nolabel = `nolabel' + 1
-		label define prettycategorical`nolabel' `l' "`l'" 
-		label values `var' prettycategorical`nolabel'
-		}
-		label define `:value label `var'' 999 "Missing", modify
-		}
-        }
-	
-	*****************************
-	** CONTINUOUS NORMAL TABLE **
-	*****************************
-		qui foreach i of local position2 {
-		 if "`i'" == "contn"  {
+	qui foreach i of local position2 {
+	if "`i'" == "contn"  {
 
 	preserve
 	qui keep if `touse'
@@ -344,30 +338,29 @@ else{
 						   
 	qui collect recode result `"mean"' = `"1"' ///
 						  `"sd"' = `"2"' 
-					  
-	qui collect layout (var) (`by'#result[1 2])
+	
 	qui collect style cell result#colname[`contnormal'], nformat(`fcont')
 	qui collect style cell result[2]#colname[`contnormal'], sformat("(%s)")
 	
 	restore
 	
 	local contnormal colname[name2 `contnormal' empty]
-}
+	}
 		 }
 		 
 		 
 		 
-	*****************************
-	** CONTINUOUS SKEWED TABLE **
-	*****************************
+*****************************
+** CONTINUOUS SKEWED TABLE **
+*****************************
 
-		qui foreach i of local position2 {
-		 if "`i'" == "conts"  {
+	qui foreach i of local position2 {
+	if "`i'" == "conts"  {
 	
 	preserve
 	qui keep if `touse'
 	
-** Creating table 		
+	** Creating table 		
 	qui table (var) (`by') () `weight', statistic(median `contskewed') ///
 						   statistic(iqr `contskewed') ///
 						   missing append
@@ -375,31 +368,32 @@ else{
 	qui collect recode result `"median"' = `"1"' ///
 						  `"iqr"' = `"2"' 
 					  
-	qui collect layout (var) (`by'#result[1 2])
+	
 	qui collect style cell result#colname[`contskewed'], nformat(`fcont')
 	qui collect style cell result[2]#colname[`contskewed'], sformat("(%s)")
 	
 	restore
 	
 	local contskewed colname[name3 `contskewed' empty]
-}
-		}
-
-
-
-	***********************
-	** CATEGORICAL TABLE **
-	***********************
 	
-
+	}
 	
-		qui foreach i of local position2 {
-		 if "`i'" == "categ"  {
+	
+	}
+
+
+
+***********************
+** CATEGORICAL TABLE **
+***********************
+	
+	qui foreach i of local position2 {
+	if "`i'" == "categ"  {
 	
 	preserve
 	cap qui keep if `touse'
 	
-** Creating table 		
+	** Creating table 		
 	qui table (var) (`by') () `weight', statistic(fvfrequency `categorical') ///
 						   statistic(fvpercent `categorical') ///
 						   missing append
@@ -407,28 +401,40 @@ else{
 	qui collect recode result `"fvfrequency"' = `"1"' ///
 						  `"fvpercent"' = `"2"' 
 					  
-	qui collect layout (var) (`by'#result[1 2])
+	
 	qui collect style cell result[1]#colname[`categorical'], nformat(%9.0fc)
 	qui collect style cell result[2]#colname[`categorical'], nformat(`fcateg')
 	qui collect style cell result[2]#colname[`categorical'], sformat("(%s)")
 	
 	
 	restore
+	
 
-		
+	** Bold Category Headings 	
 	qui foreach var of local categorical {
 	local q = `q' + 1
 	local variablelabel :variable label `var'
 	
+	qui levelsof `var', local(`var'f)
+	
+	foreach l of local `var'f {
+	
+	local `var'fl ``var'fl' `l'.`var'
+	
+	di "``var'fl'"
+
+	}
+	
+	
 	if "`variablelabel'" != "" {
 	collect addtags varheading`q'["`:variable label `var''"], ///
-	fortags(colname[`var'])
+	fortags(colname[``var'fl'])
 
 	}
 
 	
 	else {
-	collect addtags varheading`q'[`var'], fortags(colname[`var'])
+	collect addtags varheading`q'[`var'], fortags(colname[``var'fl'])
 	}
 	
 	collect addtags varheading`q'["name1"], fortags(colname[name1])
@@ -437,32 +443,39 @@ else{
 	collect style cell varheading`q'#cell_type[row-header], ///
 	font(, bold)
 	
-	collect style cell colname[`var']#cell_type[row-header], ///
+	collect style cell colname[``var'fl']#cell_type[row-header], ///
 	font(, nobold)
 	
 	collect style header varheading`q'#cell_type[row-header], title(hide) level(label)
 	
-	collect style header colname[`var'], title(hide)
+	collect style header colname[``var'fl'], title(hide)
+	
+	qui collect style cell result[1]#colname[``var'fl'], nformat(%9.0fc)
+	qui collect style cell result[2]#colname[``var'fl'], nformat(`fcateg')
+	qui collect style cell result[2]#colname[``var'fl'], sformat("(%s)")
 	
 	}
 	
-	qui foreach var of local categorical {
-	local p = `p' + 1
+	
+		** Hide New Dimension Headings 
+		qui foreach var of local categorical {
+		local p = `p' + 1
+			
+			if `p' == 1 {
+			local categoricalheading varheading`p'#colname[``var'fl'] 
+		}
 		
-		if `p' == 1 {
-		local categoricalheading varheading`p'#colname[`var'] 
-	}
-	
-		else {
-		local categoricalheading `categoricalheading' varheading`p'#colname[`var'] 
+			else {
+			local categoricalheading `categoricalheading' varheading`p'#colname[``var'fl'] 
+			}
+		
 		}
-	
-	}
-	
-	local categoricalheading colname[name1] `categoricalheading' colname[empty]
-}
+		
+		local categoricalheading colname[name1] `categoricalheading' colname[empty]
 		}
+			}
 
+			
 
 	*********************************************
 	** Creating empty rows and column headings **
@@ -479,16 +492,12 @@ else{
 	qui collect get _r_b7 = "(IQR)", tags(`by'[`i'] colname[name3])
 	}
 	
-	
 	qui collect get _r_b2 = "n", tags(`by'[.m] colname[name1]) 
 	qui collect get _r_b3 = "(%)", tags(`by'[.m] colname[name1])
 	qui collect get _r_b4 = "Mean", tags(`by'[.m] colname[name2]) 
 	qui collect get _r_b5 = "(sd)", tags(`by'[.m] colname[name2])
 	qui collect get _r_b6 = "Median", tags(`by'[.m] colname[name3]) 
 	qui collect get _r_b7 = "(IQR)", tags(`by'[.m] colname[name3])
-	
-	
-	
 	
 	qui collect recode result `"_r_b2"' = `"1"' ///
 							  `"_r_b3"' = `"2"' ///
@@ -499,6 +508,39 @@ else{
 							  `"_r_b1"' = `"1"'
 							  
 							 
+	
+**********************
+** FINAL FORMATTING **	
+**********************	
+	
+	**************************
+	** Formatting 0 percent ** 
+	**************************
+	
+	foreach var of local categorical {
+	local format0 = `format0' + 1	
+	
+	qui levelsof `var', local(levels_of_`format0')
+	
+	foreach level of local levels_of_`format0' {
+	
+	foreach l of local levels_by_var {
+	
+	qui count if `var' == `level' & `by' == `l'
+	local `level'`l'count = r(N)
+	qui count if `by' == `l'
+	local count`l' = r(N)
+
+	if ``level'`l'count' == 0  | ``level'`l'count' == `count`l'' {
+	qui collect style cell `by'[`l']#colname[`level'.`var'], nformat(%9.0fc)
+	}
+	
+	}
+	
+	}
+	}
+
+	
 	
 	***************************
 	** Assembing Final Table **
@@ -519,33 +561,9 @@ else{
 		local colname2 `colname2' `categoricalheading'
 	}
 	
-}
-
-	**************************
-	** Formatting 0 percent ** 
-	**************************
-	
-	foreach var of local categorical {
-	qui levelsof `var', local(levels_of_`var')
-	
-	foreach level of local levels_of_`var' {
-	
-	foreach l of local levels_by_var {
-	
-	qui count if `var' == `level' & `by' == `l'
-	local `level'`l'count = r(N)
-	qui count if `by' == `l'
-	local count`l' = r(N)
-
-	if ``level'`l'count' == 0  | ``level'`l'count' == `count`l'' {
-	qui collect style cell `by'[`l']#colname[`level'.`var'], nformat(%9.0fc)
-	}
-	
-	}
-	
-	}
 	}
 
+	
 	
 	************************
 	** Collecting Layouts **
@@ -562,12 +580,13 @@ else{
 	
 	}
 	
-	qui collect label levels `by' .m "Total N =  `total' (100%)" 
+	qui collect label levels `by' .m "Total N = `total' (100%)", modify
 	
 	qui collect label levels result 1 "N" 2 "%"
 	
 	qui collect layout (`colname2') (`by'[`levelfinal' .m]#result[1 2])
- }
+	
+	}
 
 	
 	else {
@@ -580,21 +599,25 @@ else{
 	
 	
 	
-}
-	********************************
-	** Formatting header or table **
-	********************************
-	qui collect style cell cell_type[column-header],  font(, size(11) bold)
-	qui collect style cell colname[name1 name2 name3], font(, bold)
-	qui collect style cell result[2], halign(right)
+	}
+	
 	
 	****************************
 	** Formatting Final Table **
 	****************************
+	
+	qui collect style cell cell_type[column-header],  font(, size(11) bold)
+	qui collect style cell result[2], halign(right)
+	
+	
 	qui collect style header colname[empty], level(hide)
 	qui collect style header colname[name1], level(hide)
 	qui collect style header colname[name2], level(hide) 
-	qui collect style header colname[name3], level(hide)
+	qui collect style header colname[name3], level(hide) 
+	
+	qui collect style header result, level(hide)
+	
+	qui collect style header cell_type[row-header], level(label)
 
 	qui collect style cell ///
 	colname[contnormal]#cell_type[column-header], font(, bold)
@@ -603,47 +626,50 @@ else{
 	colname[contskewed]#cell_type[column-header], font(, bold)
 	
 	qui collect style row stack, nobinder indent spacer
-	qui collect style header result, level(hide)
 	
 	 
 	******************
 	** Adding title	**
 	******************
+	
 	if `"`title'"' != "" {
 		collect title "`title'"
 	}
 	
+	
 	***************************
 	** Setting export format **
 	***************************
+	
 	collect style putdocx, layout(autofitcontents)
+	
 	
 	************************
 	** Exporting document **
 	************************
 	
-	
 	if `"`saving'"' != "" {
 		collect export "`saving'", as(docx) `replace'
 	}
 	
+	
 	*********************************
 	** Displaying table on console **
 	*********************************
+	
 	collect preview
+	
 	
 	*********************************
 	** Replacing original dataset **
 	********************************
+	
 	qui use `data', clear
+	
 	
 	******************
 	** Cleaning up 	**
 	******************
-	macro drop location name_table con_row cat_row by_var data by_label_1 ///
-	by_label_2 levels_by_var _p _q
-	
-	capture drop pretty_replacement_by
 	capture label drop prettybylabel 
 	
 

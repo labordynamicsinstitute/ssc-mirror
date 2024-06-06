@@ -16,6 +16,6 @@ d
 d Author: Daniele Spinelli , University of Milano-Bicocca
 d Support: email daniele.spinelli@@unimib.it
 d
-f ../c/stfform.ado
-f ../c/stfform.sthlp
+f stfform.ado
+f stfform.sthlp
 f ../l/lstfform.mlib

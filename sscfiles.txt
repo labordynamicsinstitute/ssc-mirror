@@ -21909,6 +21909,7 @@ fmwww.bc.edu/repec/bocode/m/multimport.sthlp
 fmwww.bc.edu/repec/bocode/m/mcmcconverge.ado
 fmwww.bc.edu/repec/bocode/m/markstat.pkg
 fmwww.bc.edu/repec/bocode/m/mf_elabel_eexp_class.sthlp
+fmwww.bc.edu/repec/bocode/m/mswtable.pkg
 fmwww.bc.edu/repec/bocode/m/marktouse.zip
 fmwww.bc.edu/repec/bocode/m/mktable.ado
 fmwww.bc.edu/repec/bocode/m/metannt.hlp
@@ -22491,6 +22492,7 @@ fmwww.bc.edu/repec/bocode/m/mauchly.ado
 fmwww.bc.edu/repec/bocode/m/mf_mm_sample.html
 fmwww.bc.edu/repec/bocode/m/mf_mm_rbinomial.hlp
 fmwww.bc.edu/repec/bocode/m/mimerge.ado
+fmwww.bc.edu/repec/bocode/m/mswtable.sthlp
 fmwww.bc.edu/repec/bocode/m/metan7.sthlp
 fmwww.bc.edu/repec/bocode/m/msp.ado
 fmwww.bc.edu/repec/bocode/m/margin.ado
@@ -22682,6 +22684,7 @@ fmwww.bc.edu/repec/bocode/m/mifit.ado
 fmwww.bc.edu/repec/bocode/m/mireset.hlp
 fmwww.bc.edu/repec/bocode/m/mmsrm.html
 fmwww.bc.edu/repec/bocode/m/mstfreq.ado
+fmwww.bc.edu/repec/bocode/m/mswtable.ado
 fmwww.bc.edu/repec/bocode/m/mfpmi.pkg
 fmwww.bc.edu/repec/bocode/m/mrsprep.pkg
 fmwww.bc.edu/repec/bocode/m/mkdashsn.ado

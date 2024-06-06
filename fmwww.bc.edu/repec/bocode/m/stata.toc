@@ -234,6 +234,7 @@ p msplot module for multiple median-spline plots
 p mss module to perform heteroskedasticity test for quantile and OLS regressions
 p mstdize module to produce marginal standardization of two-way tables
 p mstore module to Store and Retrieve Matrices with Dataset
+p mswtable module to provide wrapper for putdocx table
 p mtab module to store results in a matrix
 p mtad module to perform Multinomial Test of Agglomeration and Dispersion
 p mtebinary module to compute Marginal Treatment Effects (MTE) With a Binary Instrument
