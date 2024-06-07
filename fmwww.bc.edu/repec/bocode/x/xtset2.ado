@@ -1,11 +1,13 @@
-*! xtset2 1.1 - June 2020
+*! xtset2 1.2 - Feb 2024
 *! author Jan Ditzen
-*! www.jan.ditzen.net - j.ditzen@hw.ac.uk
+*! www.jan.ditzen.net - jan.ditzen@unibz.it
 *! see viewsource xtset2.ado for more info.
 /*
 xtset2 extends xtset.
 
 Version history
+1.1 to 1.2
+- support for time series operator
 1.0 to 1.1
 - bug fix in svmat .. ,name(); adds a "1" to the name, fixed.
 
@@ -15,9 +17,9 @@ version 11.1
 
 capture program drop xtset2
 program define xtset2, rclass
-	syntax [varlist(numeric default=none)] [if], [* checkvars(varlist) matrix showxtset version]
+	syntax [varlist(numeric ts default=none)] [if], [* checkvars(varlist ts fv ) matrix showxtset version]
 	if "`version'" != "" {
-		display "xtset2, version 1.0"
+		display "xtset2, version 1.2"
 		return scalar version = 1
 	}
 	else {
@@ -46,6 +48,11 @@ program define xtset2, rclass
 			**Determine type of balance
 			if "`checkvars'" == "" {
 				local checkvars "`idvar' `tvar'"
+			}
+			else {
+				 
+				fvrevar `checkvars'
+				local checkvars `r(varlist)'
 			}
 			/*
 			1) T = Ti (same number of periods)

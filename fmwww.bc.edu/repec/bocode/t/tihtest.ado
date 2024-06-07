@@ -1,5 +1,7 @@
-*! version 1.1 20feb2023
+*! version 1.1.1 4jun2024
 *! Federico Belotti
+
+* version 1.1.1: This version works from Stata 14 to Stata 18
 
 program define tihtest, rclass byable(onecall) prop(xt /*svyb svyj swml*/)
 
@@ -24,7 +26,7 @@ program define tihtest, rclass byable(onecall) prop(xt /*svyb svyj swml*/)
         by `_byvars' `_byrc0': tihtest_est `0'
     }
     else tihtest_est `0'
-    version 11: return local cmdline `"tihtest `0'"'
+    version 14: return local cmdline `"tihtest `0'"'
 	return add
 end
 
@@ -32,7 +34,7 @@ end
 
 program define tihtest_est, rclass byable(recall) sortpreserve
 
-version 11
+version 14
 syntax varlist(min=2 fv ts) [if] [in] [aweight fweight pweight/] , [ Model(string)   ///
                         VCE(passthru) CLuster(passthru) Robust Level(cilevel) ///
 						FROM(string) DISPLAYestimates ///
@@ -46,7 +48,7 @@ local vv : di "version " string(max(11,c(stata_version))) ", missing:"
 local __cmdline "`0'"
 
 /// Manage Mata function according to Stata version
-local __version = round(c(stata_version))
+local __version = int(c(stata_version))
 
 *** Check for Panel setup
 _xt, trequired

@@ -7628,6 +7628,7 @@ fmwww.bc.edu/repec/bocode/l/lablist.ado
 fmwww.bc.edu/repec/bocode/l/lognormal_lefttrunc.ado
 fmwww.bc.edu/repec/bocode/l/lmhcw.pkg
 fmwww.bc.edu/repec/bocode/l/libdem80.dta
+fmwww.bc.edu/repec/bocode/l/ltihtest18.mlib
 fmwww.bc.edu/repec/bocode/l/lrmatx.hlp
 fmwww.bc.edu/repec/bocode/l/labvalcl.pkg
 fmwww.bc.edu/repec/bocode/l/locpoly3.ado
@@ -7907,6 +7908,7 @@ fmwww.bc.edu/repec/bocode/l/lrseq.ado
 fmwww.bc.edu/repec/bocode/l/lpdensity_quantile.mo
 fmwww.bc.edu/repec/bocode/l/lmhgl.dlg
 fmwww.bc.edu/repec/bocode/l/lmhhpxt.dta
+fmwww.bc.edu/repec/bocode/l/ltihtest17.mlib
 fmwww.bc.edu/repec/bocode/l/lmsrd.dta
 fmwww.bc.edu/repec/bocode/l/lclogit.html
 fmwww.bc.edu/repec/bocode/l/lpdensity_illustration.do
@@ -8048,6 +8050,7 @@ fmwww.bc.edu/repec/bocode/l/locpr.html
 fmwww.bc.edu/repec/bocode/l/lxhuse.ado
 fmwww.bc.edu/repec/bocode/l/lrpn.mlib
 fmwww.bc.edu/repec/bocode/l/lmetapreg.mlib
+fmwww.bc.edu/repec/bocode/l/ltihtest16.mlib
 fmwww.bc.edu/repec/bocode/l/lmharchnl.sthlp
 fmwww.bc.edu/repec/bocode/l/lclogit2_postestimation.sthlp
 fmwww.bc.edu/repec/bocode/l/lmnjbnl.pkg
@@ -8940,6 +8943,7 @@ fmwww.bc.edu/repec/bocode/l/lmawxt.dlg
 fmwww.bc.edu/repec/bocode/l/lookfor2.pkg
 fmwww.bc.edu/repec/bocode/l/ljust.ado
 fmwww.bc.edu/repec/bocode/l/lmharchxt.ado
+fmwww.bc.edu/repec/bocode/l/ltihtest14.mlib
 fmwww.bc.edu/repec/bocode/l/lasmom.mlib
 fmwww.bc.edu/repec/bocode/l/labsort.pkg
 fmwww.bc.edu/repec/bocode/l/lincheck.pkg
@@ -9001,6 +9005,7 @@ fmwww.bc.edu/repec/bocode/l/lmnad.ado
 fmwww.bc.edu/repec/bocode/l/lmgc.html
 fmwww.bc.edu/repec/bocode/l/lmadurh.dta
 fmwww.bc.edu/repec/bocode/l/lmavonnl.ado
+fmwww.bc.edu/repec/bocode/l/ltihtest15.mlib
 fmwww.bc.edu/repec/bocode/l/linkplot.html
 fmwww.bc.edu/repec/bocode/l/lassoregress.sthlp
 fmwww.bc.edu/repec/bocode/l/lmabg2.sthlp
