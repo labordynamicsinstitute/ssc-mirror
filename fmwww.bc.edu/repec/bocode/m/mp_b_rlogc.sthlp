@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.1}{...}
+{* *! version 2.1.3}{...}
 {vieweralsosee "mkproject" "help mkproject"}{...}
 {vieweralsosee "boilerplate" "help boilerplate"}{...}
 {title:Title}
@@ -11,8 +11,8 @@ boilerplate template rlogc {hline 2} research log for a course
 {title:Description}
 
 {pstd} 
-This template starts a research log. Here you keep track of what you are doing
-and why.
+This template starts a research log for a project a student might do for a
+course. Here you keep track of what you are doing and why.
 
 
 {title:Boilerplate}
@@ -47,7 +47,6 @@ This template creates a .do file with the following content:
     
     - deadline: 
     - max word count: 
-    
 {txt}
 
 {title:Tags}

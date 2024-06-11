@@ -1,6 +1,6 @@
 <header>
 <mkproject> project
-<version> 2.0.0
+<version> 2.1.0
 <label> Research project with git, display project with dirtree
 <reqs> git
 <reqs> dirtree
@@ -8,9 +8,15 @@
 {pstd} 
 This template sets up a directory for a medium sized research project that uses
 {browse "https://git-scm.com/":git} to keep track of its history.
+ 
+{pstd} 
+The only difference with the {help mp_p_research_git:research_git} template is
+that this template shows the content of the created project folder using
+{help dirtree}, and the {it:research_git} template does not.
 </description>
 </header>
 
+<body> -------------------------------------------------------------------------
 <dir> docu
 <dir> data
 <dir> ana
@@ -20,10 +26,11 @@ This template sets up a directory for a medium sized research project that uses
 <file> ignore .ignore
 <file> rlog   docu/research_log.md
 <file> main   ana/<abbrev>_main.do
-<file> dta    ana/<abbrev>_dta01.do
+<file> dta_g  ana/<abbrev>_dta01.do
 <file> ana    ana/<abbrev>_ana01.do
 
 <cmd> !git init -b main
 <cmd> !git add .
 <cmd> !git commit -m "initial commit"
 <cmd> dirtree
+</body> ------------------------------------------------------------------------

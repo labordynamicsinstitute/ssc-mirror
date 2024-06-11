@@ -1,6 +1,6 @@
 <header>
 <mkproject> project
-<version> 2.0.0
+<version> 2.1.0
 <label> Research with git
 <reqs> git
 <description>
@@ -10,6 +10,7 @@ This template sets up a directory for a medium sized research project that uses
 </description>
 </header>
 
+<body> -------------------------------------------------------------------------
 <dir> docu
 <dir> data
 <dir> ana
@@ -19,7 +20,7 @@ This template sets up a directory for a medium sized research project that uses
 <file> ignore .ignore
 <file> rlog   docu/research_log.md
 <file> main   ana/<abbrev>_main.do
-<file> dta    ana/<abbrev>_dta01.do
+<file> dta_g  ana/<abbrev>_dta01.do
 <file> ana    ana/<abbrev>_ana01.do
 
 <cmd> !git init -b main
@@ -30,3 +31,4 @@ This template sets up a directory for a medium sized research project that uses
 <cmd> doedit "<abbrev>_main.do"
 <cmd> doedit "<abbrev>_dta01.do"
 <cmd> doedit "<abbrev>_ana01.do"
+</body> ------------------------------------------------------------------------

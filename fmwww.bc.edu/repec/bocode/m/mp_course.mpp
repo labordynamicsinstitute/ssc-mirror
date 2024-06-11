@@ -1,6 +1,6 @@
 <header>
 <mkproject> project
-<version> 2.0.0
+<version> 2.1.0
 <label> Small research project as part of a course
 <reqs> dirtree
 <description>
@@ -11,6 +11,7 @@ would be a project someone has to do for a course.
 </description>
 </header>
 
+<body> -------------------------------------------------------------------------
 <dir> docu
 <dir> data
 <dir> ana
@@ -22,3 +23,4 @@ would be a project someone has to do for a course.
 <file> ana    ana/<abbrev>_ana01.do
 
 <cmd> dirtree
+</body> ------------------------------------------------------------------------

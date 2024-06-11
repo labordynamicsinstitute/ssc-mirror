@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.1}{...}
+{* *! version 2.1.3}{...}
 {vieweralsosee "boilerplate" "help boilerplate"}{...}
 {vieweralsosee "create new templates" "help mkproject_create"}{...}
 {vieweralsosee "smclpres (if installed)" "help smclpres"}{...}
@@ -46,6 +46,8 @@ directory is to be created{p_end}
 {synopt:{opt remove(template_name)}}removes the template {it:template_name}{p_end}
 {synopt:{opt default(template_name)}}set the default template to {it:template_name}{p_end}
 {synopt:{opt resetdef:ault}}sets the default template back to {it:long}{p_end}
+{synopt:{opt replace}}allow an existing template to be replaced when using the 
+{opt create()} option{p_end}
 {synoptline}
 {p2colreset}{...}
 

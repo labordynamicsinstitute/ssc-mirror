@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.1}{...}
+{* *! version 2.1.3}{...}
 {vieweralsosee "mkproject" "help mkproject"}{...}
 {vieweralsosee "boilerplate" "help boilerplate"}{...}
 {title:Title}
@@ -13,6 +13,11 @@ project template researcht_git {hline 2} Research project with git, display proj
 {pstd} 
 This template sets up a directory for a medium sized research project that uses
 {browse "https://git-scm.com/":git} to keep track of its history.
+ 
+{pstd} 
+The only difference with the {help mp_p_research_git:research_git} template is
+that this template shows the content of the created project folder using
+{help dirtree}, and the {it:research_git} template does not.
 
 
 {title:File structure}
@@ -23,7 +28,7 @@ This template will create the following sub-directories and files:
     proj_abbrev /  
     ├──  ana /
     |    ├── {help mp_b_ana:proj_abbrev_ana01.do}
-    |    ├── {help mp_b_dta:proj_abbrev_dta01.do}
+    |    ├── {help mp_b_dta_g:proj_abbrev_dta01.do}
     |    └── {help mp_b_main:proj_abbrev_main.do}
     ├──  data /
     ├──  docu /

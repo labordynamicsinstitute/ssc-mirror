@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.1}{...}
+{* *! version 2.1.3}{...}
 {vieweralsosee "mkproject" "help mkproject"}{...}
 {vieweralsosee "boilerplate" "help boilerplate"}{...}
 {title:Title}
@@ -11,7 +11,7 @@ project template long {hline 2} based on (Long 2009)
 {title:Description}
 
 {pstd} 
-This template starts a project folder for a medium sized a research project. It
+This template starts a project folder for a medium sized research project. It
 is loosely based on J. Scott Long (2009) The workflow of data analysis using Stata.
 College Station, TX: Stata Press.
  

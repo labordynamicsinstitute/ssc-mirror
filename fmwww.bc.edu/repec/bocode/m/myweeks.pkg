@@ -1,0 +1,27 @@
+d 'MYWEEKS': module for generating numbered weeks from daily date variables
+d
+d  myweeks takes a numeric daily date variable assumed to follow
+d Stata's rule that daily dates are integers counted from 0 at 1
+d January 1960 and generates a new variable numbering the distinct
+d weeks in which they occur with distinct integers. This is an
+d alternative to Stata's own idiosyncratic week definitions.
+d myweeks uses a rule that each week starts on a particular day of
+d the week, one of Sunday to Saturday. By default the first
+d complete week within 1960 is numbered 0. Optionally you may
+d specify that weeks are indexed by the daily dates that start
+d them. Indexing by the daily dates that end them is just a twist
+d on the default. 
+d
+d KW: data management
+d KW: weekly data
+d KW: dates
+d
+d Requires: Stata version 8.2
+d
+d Distribution-Date: 20240610
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f myweeks.ado
+f myweeks.sthlp

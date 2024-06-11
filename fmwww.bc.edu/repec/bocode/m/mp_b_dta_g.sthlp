@@ -5,7 +5,7 @@
 {title:Title}
 
 {phang}
-boilerplate template dta {hline 2} data preparation
+boilerplate template dta_g {hline 2} data preparation for a project using git
 
 
 {title:Description}
@@ -30,7 +30,7 @@ This template creates a .do file with the following content:
     clear all
     macro drop _all
     
-    *use ../../posted/data/[original_data_file.dta]
+    *use ../data/[original_data_file.dta]
     
     *rename *, lower
     *keep
@@ -65,4 +65,4 @@ This file may contain one or more of the following tags:{p_end}
 
 {title:Source code}
 
-    {view "c:\ado\plus/m\mp_dta.mpb":mp_dta.mpb}
+    {view "c:\ado\plus/m\mp_dta_g.mpb":mp_dta_g.mpb}

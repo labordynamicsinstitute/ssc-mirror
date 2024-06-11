@@ -1,13 +1,15 @@
 <header>
 <mkproject> boilerplate
-<version> 2.0.0
-<label> readme.md for when you want to put your project on github or the like
+<version> 2.1.0
+<label> readme.txt for a smclpres presentation
 <description>
 {pstd} 
 This template creates a readme.txt file that tells users of your presentation
 how to use your presentation.
 </description>
 </header>
+
+<body> -------------------------------------------------------------------------
 Readme
 ======
 
@@ -40,3 +42,4 @@ o Install smclpres by typing -ssc install smclpres-
 o use -cd- to change to this directory
 o make the presentation by typing 
   -smclpres using presentation.do , dir(../presentation) replace-
+</body> ------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.1}{...}
+{* *! version 2.1.3}{...}
 {vieweralsosee "boilerplate" "help boilerplate"}{...}
 {vieweralsosee "mkproject" "help mkproject"}{...}
 {viewerjumpto "Syntax" "mkproject##syntax"}{...}
@@ -15,9 +15,10 @@
 
 {pstd}
 As a mimimum you can create a new template by creating a .do file with the 
-boilerplate code you want, then type in Stata 
-{cmd:boilerplate, create(}{it:that_do_file}{cmd:)}. Based on that .do file 
-{cmd:boilerplate} will create the template, and the corresponding help file.
+boilerplate code you want between the tags {cmd:<body>} and {cmd:</body>}, then 
+type in Stata {cmd:boilerplate, create(}{it:that_do_file}{cmd:)}. Based on that 
+.do file {cmd:boilerplate} will create the template, and the corresponding help 
+file.
 
 {pstd}
 You can also the following tags, to your .do file:{p_end}
@@ -30,8 +31,8 @@ You can also the following tags, to your .do file:{p_end}
 {pmore}{cmd:<as of #>} will include whatever comes after that tag only if the Stata version is # or higher{p_end}
 
 {pstd}
-You can also add meta information in the heaer. Within the header you can add f
-ive types of meta data:
+You can also add meta information in the header. Within the header you can add 
+five types of meta data:
 
 {pmore}
 {cmd:<mkproject>} Indicates that this is a template, and the word after it can 
@@ -69,10 +70,10 @@ bottom there is a link that will show the source code for that template in the
 viewer.
 
     --------------- begin template -------------------
-    {cmd}{...}
+{cmd}{...}
     <header>
     <mkproject> boilerplate
-    <version> 2.0.0
+    <version> 2.1.2
     <label> course exercise
     <description>
     {c -(}pstd{c )-} 
@@ -80,6 +81,8 @@ viewer.
     exercise in a course.
     </description>
     </header>
+    
+    <body>
     capture log close
     log using <stub>.txt, replace text
     
@@ -111,5 +114,6 @@ viewer.
     
     log close
     exit
+    </body>
 {txt}{...}
     -------------- end template --------------------

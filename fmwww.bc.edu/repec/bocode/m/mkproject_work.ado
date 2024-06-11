@@ -1,4 +1,4 @@
-*! version 2.0.1 15Sep2023 MLB
+*! version 2.1.3 22May2024 MLB
 program define mkproject_work
     version 15.1
     syntax [anything], calling(string) [TEMPLate1(string) debug CREATE(string) query remove(string) default(string) RESETDEFault] *
@@ -105,6 +105,7 @@ program define mkproject_main
 			exit 198
 		}
         mata: `proj' = boilerplate()
+		mata: `proj'.parse_anything()
         mata: `proj'.copy_boiler(`"`anything'"', "`template1'")
 		doedit `"`anything'"'
     }

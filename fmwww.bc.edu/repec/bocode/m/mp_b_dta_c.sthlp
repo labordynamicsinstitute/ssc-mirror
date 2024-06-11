@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.1}{...}
+{* *! version 2.1.3}{...}
 {vieweralsosee "mkproject" "help mkproject"}{...}
 {vieweralsosee "boilerplate" "help boilerplate"}{...}
 {title:Title}
@@ -11,7 +11,8 @@ boilerplate template dta_c {hline 2} data preparation for course
 {title:Description}
 
 {pstd} 
-This is a template of a .do file that cleans the data.
+This is a template of a .do file that cleans the data in a smaller project, like
+a project a student might do for a course.
 
 
 {title:Boilerplate}
@@ -28,7 +29,6 @@ This template creates a .do file with the following content:
     
     version <stata_version>
     clear all
-    <as of 16>frames reset
     macro drop _all
     
     *use ../data/[original_data_file.dta]

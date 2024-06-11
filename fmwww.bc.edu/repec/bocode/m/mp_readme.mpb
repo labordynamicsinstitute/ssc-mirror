@@ -1,6 +1,6 @@
 <header>
 <mkproject> boilerplate
-<version> 2.0.0
+<version> 2.1.0
 <label> readme.md for when you want to put your project on github or the like
 <description>
 {pstd} 
@@ -8,6 +8,8 @@ This template creates a readme.md file that will be used if you put your project
 on github to introduce your project to people visiting your project page.
 </description>
 </header>
+
+<body> -------------------------------------------------------------------------
 # Title
 
 *Author*
@@ -33,3 +35,4 @@ To use these .do files you:
 3. Obtain the raw data files [name1, name2, ...]  from  https://doi.org/######### and save those in the directory `data`
 4. In ana/main.do change line 5 (`cd ..."`) to where your directory is
 5. run main.do 
+</body> ------------------------------------------------------------------------

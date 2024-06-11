@@ -1,6 +1,6 @@
 <header>
 <mkproject> project
-<version> 2.0.0
+<version> 2.1.0
 <label> excercise for a course
 <description>
 {pstd} 
@@ -9,6 +9,8 @@ a course
 </description>
 </header>
 
+<body> -------------------------------------------------------------------------
 <file> excer <abbrev>.do
 
 <cmd> doedit <abbrev>.do
+</body> ------------------------------------------------------------------------

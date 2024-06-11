@@ -1,13 +1,15 @@
 <header>
 <mkproject> boilerplate
-<version> 2.0.0
+<version> 2.1.0
 <label> research log for a course
 <description>
 {pstd} 
-This template starts a research log. Here you keep track of what you are doing
-and why.
+This template starts a research log for a project a student might do for a
+course. Here you keep track of what you are doing and why.
 </description>
 </header>
+
+<body> -------------------------------------------------------------------------
 # Research log: [project name]
 
 ## <date>: Preliminaries
@@ -34,4 +36,4 @@ data, where and how to get it, when we got it
 
 - deadline: 
 - max word count: 
-
+</body> ------------------------------------------------------------------------

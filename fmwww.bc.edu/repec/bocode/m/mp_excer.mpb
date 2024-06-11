@@ -1,6 +1,6 @@
 <header>
 <mkproject> boilerplate
-<version> 2.0.0
+<version> 2.1.0
 <label> course exercise
 <description>
 {pstd} 
@@ -8,6 +8,9 @@ This a a template for a .do file that a student can use to do an
 exercise in a course.
 </description>
 </header>
+
+<body> -------------------------------------------------------------------------
+cd "<basedir>"
 capture log close
 log using <stub>.txt, replace text
 
@@ -20,8 +23,6 @@ log using <stub>.txt, replace text
 
 version <stata_version>
 clear all
-<as of 16>frames reset
-macro drop _all
 
 *use [original_data_file.dta]
 
@@ -39,3 +40,4 @@ Answer
 
 log close
 exit
+</body> ------------------------------------------------------------------------

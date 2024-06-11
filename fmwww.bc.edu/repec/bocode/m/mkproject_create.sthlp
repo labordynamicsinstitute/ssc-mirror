@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.1}{...}
+{* *! version 2.1.3}{...}
 {vieweralsosee "boilerplate" "help boilerplate"}{...}
 {vieweralsosee "mkproject" "help mkproject"}{...}
 {viewerjumpto "Syntax" "mkproject##syntax"}{...}
@@ -13,9 +13,15 @@
 
 {title:Description}
 
-{pstd}
-To create a new template you are going to create a text file telling 
-{cmd:mkproject} what actions it should take, and then type in Stata 
+{pstd}To create a new template you are going to create a text file with two 
+parts:{p_end}
+{pmore}a part within the {cmd:<header>} and {cmd:</header>} tags containing 
+meta-data, like a label, and{p_end}
+{pmore}a part within the {cmd:<body>} and {cmd:</body>} tags containing the 
+actual steps you want {cmd:mkproject} to take when creating a new project.{p_end}
+
+
+{pstd} After creating that file you type in Stata 
 {cmd:mkproject, create(}{it:that_text_file}{cmd:)}. Based on that text file 
 {cmd:mkproject} will create the template, and the corresponding help file.
 
@@ -50,7 +56,7 @@ viewer.
 {cmd}{...}
     <header>
     <mkproject> project
-    <version> 2.0.0
+    <version> 2.1.2
     <label> Small research project as part of a course
     <reqs> dirtree
     <description>
@@ -61,6 +67,7 @@ viewer.
     </description>
     </header>
     
+    <body>
     <dir> docu
     <dir> data
     <dir> ana
@@ -72,6 +79,7 @@ viewer.
     <file> ana    ana/<abbrev>_ana01.do
     
     <cmd> dirtree
+    </body>
 {txt}{...}
     -------------- end template --------------------
 
@@ -80,22 +88,7 @@ Lines between {cmd:<header>} and {cmd:</header>} contain
 meta-information, like the label for that template. 
 
 {pstd}
-Lines starting with {cmd:<dir>} tell you what sub-directories that template will
-create
-
-{pstd}
-Lines starting with {cmd:<file>} have two elements, the first "word" is the name
-of the template that {help boilerplate} will use to create a file, and the second
-"word" is the filename. This filename can contain the tag {cmd:<abbrev>} which 
-{cmd:mkproject} will replace with the {it:proj_abbrev} you will specify when using
-{cmd:mkproject} to create a project folder.  
-
-{pstd}
-Lines starting with {cmd:<cmd>} tell you what commands {cmd:mkproject} will run
-after creating those directories and files
-
-{pstd}
-Within the header you can add five types of meta data:
+Within the header you can add five types of meta-data:
 
 {pmore}
 {cmd:<mkproject>} Indicates that this is a template, and the word after it can 
@@ -125,6 +118,24 @@ tag have a requirement, then that will be automatically copied here by
 The lines between {cmd:<description>} and {cmd:</description>} give a longer
 description of the template as it will appear in the help-fearing. It may contain
 {help smcl} tags.
+
+{pstd}
+Within the {cmd:<body>} and {cmd:</body>} tags is the actual template:
+
+{pstd}
+Lines starting with {cmd:<dir>} tell you what sub-directories that template will
+create
+
+{pstd}
+Lines starting with {cmd:<file>} have two elements, the first "word" is the name
+of the template that {help boilerplate} will use to create a file, and the second
+"word" is the filename. This filename can contain the tag {cmd:<abbrev>} which 
+{cmd:mkproject} will replace with the {it:proj_abbrev} you will specify when using
+{cmd:mkproject} to create a project folder.  
+
+{pstd}
+Lines starting with {cmd:<cmd>} tell you what commands {cmd:mkproject} will run
+after creating those directories and files
 
 {pstd}
 In practice, the easiest way to create a new template is usually to look for a

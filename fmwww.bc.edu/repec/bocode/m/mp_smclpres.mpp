@@ -1,6 +1,6 @@
 <header>
 <mkproject> project
-<version> 2.0.0
+<version> 2.1.0
 <label> a smclpres presentation project
 <reqs> smclpres
 <description>
@@ -9,6 +9,7 @@ This template sets up a directory for a {help smclpres} presentation.
 </description>
 </header>
 
+<body> -------------------------------------------------------------------------
 <dir> source
 <dir> handout
 <dir> presentation
@@ -18,3 +19,4 @@ This template sets up a directory for a {help smclpres} presentation.
 
 <cmd> qui cd source
 <cmd> doedit presentation.do
+</body> ------------------------------------------------------------------------

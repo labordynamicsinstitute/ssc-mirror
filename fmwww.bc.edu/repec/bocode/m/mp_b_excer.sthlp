@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.1}{...}
+{* *! version 2.1.3}{...}
 {vieweralsosee "mkproject" "help mkproject"}{...}
 {vieweralsosee "boilerplate" "help boilerplate"}{...}
 {title:Title}
@@ -21,6 +21,7 @@ exercise in a course.
 This template creates a .do file with the following content: 
 
 {cmd}
+    cd "<basedir>"
     capture log close
     log using <stub>.txt, replace text
     
@@ -33,8 +34,6 @@ This template creates a .do file with the following content:
     
     version <stata_version>
     clear all
-    <as of 16>frames reset
-    macro drop _all
     
     *use [original_data_file.dta]
     

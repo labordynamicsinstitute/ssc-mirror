@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.1}{...}
+{* *! version 2.1.3}{...}
 {vieweralsosee "mkproject" "help mkproject"}{...}
 {vieweralsosee "boilerplate" "help boilerplate"}{...}
 {title:Title}
@@ -52,10 +52,6 @@ This template creates a .do file with the following content:
     ### Intended Journal
     
     journal, requirements, e.g. max word count
-    
-    
-    
-    
 {txt}
 
 {title:Tags}

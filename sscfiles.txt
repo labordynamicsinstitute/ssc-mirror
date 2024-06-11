@@ -22055,6 +22055,7 @@ fmwww.bc.edu/repec/bocode/m/modeldiag.pkg
 fmwww.bc.edu/repec/bocode/m/makematrix.pkg
 fmwww.bc.edu/repec/bocode/m/mlmr2.sthlp
 fmwww.bc.edu/repec/bocode/m/mf_mm_matlist.hlp
+fmwww.bc.edu/repec/bocode/m/myweeks.sthlp
 fmwww.bc.edu/repec/bocode/m/mgen.html
 fmwww.bc.edu/repec/bocode/m/mapch.pkg
 fmwww.bc.edu/repec/bocode/m/metap.dlg
@@ -22066,6 +22067,7 @@ fmwww.bc.edu/repec/bocode/m/MonteCarloSimulation_Multishell_panel_client.do
 fmwww.bc.edu/repec/bocode/m/mf_rpnbinop.hlp
 fmwww.bc.edu/repec/bocode/m/medadheredata.dta
 fmwww.bc.edu/repec/bocode/m/multibar.html
+fmwww.bc.edu/repec/bocode/m/mp_dta_g.mpb
 fmwww.bc.edu/repec/bocode/m/metan7.dlg
 fmwww.bc.edu/repec/bocode/m/mf_mm_plot.hlp
 fmwww.bc.edu/repec/bocode/m/mhtexp.pkg
@@ -22143,6 +22145,7 @@ fmwww.bc.edu/repec/bocode/m/mf_range_mv.sthlp
 fmwww.bc.edu/repec/bocode/m/metan_hlp_run.ado
 fmwww.bc.edu/repec/bocode/m/mp_research_git.mpp
 fmwww.bc.edu/repec/bocode/m/mi_impute_cmd_wmlogit_init.ado
+fmwww.bc.edu/repec/bocode/m/myweeks.pkg
 fmwww.bc.edu/repec/bocode/m/mm_regress.pkg
 fmwww.bc.edu/repec/bocode/m/mmqreg_example.do
 fmwww.bc.edu/repec/bocode/m/mf_bcsf_bracketing.html
@@ -22190,6 +22193,7 @@ fmwww.bc.edu/repec/bocode/m/multimport_example_data.do
 fmwww.bc.edu/repec/bocode/m/mol.ado
 fmwww.bc.edu/repec/bocode/m/mf_mm_hl.hlp
 fmwww.bc.edu/repec/bocode/m/matrix2stata.sthlp
+fmwww.bc.edu/repec/bocode/m/mp_b_dta_g.sthlp
 fmwww.bc.edu/repec/bocode/m/models.sthlp
 fmwww.bc.edu/repec/bocode/m/mvadmar.dta
 fmwww.bc.edu/repec/bocode/m/mstdize.hlp
@@ -22273,7 +22277,6 @@ fmwww.bc.edu/repec/bocode/m/mido.hlp
 fmwww.bc.edu/repec/bocode/m/metadta.ado
 fmwww.bc.edu/repec/bocode/m/mobs.ado
 fmwww.bc.edu/repec/bocode/m/movestay_p.ado
-fmwww.bc.edu/repec/bocode/m/mkprofile.html
 fmwww.bc.edu/repec/bocode/m/mf_mm_freq.hlp
 fmwww.bc.edu/repec/bocode/m/meta_lr.hlp
 fmwww.bc.edu/repec/bocode/m/matwrite.html
@@ -22306,7 +22309,6 @@ fmwww.bc.edu/repec/bocode/m/miappend.hlp
 fmwww.bc.edu/repec/bocode/m/mkvtrial.dta
 fmwww.bc.edu/repec/bocode/m/mi_impute_cmd_wlogit_return.ado
 fmwww.bc.edu/repec/bocode/m/mrprobit.ado
-fmwww.bc.edu/repec/bocode/m/mkspline2.html
 fmwww.bc.edu/repec/bocode/m/mkname1.ado
 fmwww.bc.edu/repec/bocode/m/multidensity.sthlp
 fmwww.bc.edu/repec/bocode/m/mvsampsi.ado
@@ -22400,6 +22402,7 @@ fmwww.bc.edu/repec/bocode/m/mlt2stage.ado
 fmwww.bc.edu/repec/bocode/m/mkproject.pkg
 fmwww.bc.edu/repec/bocode/m/mog.html
 fmwww.bc.edu/repec/bocode/m/mgof.zip
+fmwww.bc.edu/repec/bocode/m/myweeks.ado
 fmwww.bc.edu/repec/bocode/m/mycolours.sthlp
 fmwww.bc.edu/repec/bocode/m/mf_mm_histogram.html
 fmwww.bc.edu/repec/bocode/m/mcmcmixed.ado

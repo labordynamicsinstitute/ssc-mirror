@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.1}{...}
+{* *! version 2.1.3}{...}
 {vieweralsosee "mkproject" "help mkproject"}{...}
 {vieweralsosee "boilerplate" "help boilerplate"}{...}
 {title:Title}
@@ -27,6 +27,11 @@ and afterwards continued to work on it. After a while someone comes up to you an
 asks you how you did something for that presentation. If you have taken a snapshot
 of your project just before the presentation, you can return to that state and
 answer the question. If not ...
+ 
+{pstd} 
+The only difference with the {help mp_p_long:long} template is that this template
+shows the content of the created project folder using {help dirtree}, and the
+{it:long} template does not.
 
 
 {title:File structure}

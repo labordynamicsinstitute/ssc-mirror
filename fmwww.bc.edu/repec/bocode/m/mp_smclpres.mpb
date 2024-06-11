@@ -1,6 +1,6 @@
 <header>
 <mkproject> boilerplate
-<version> 2.0.0
+<version> 2.1.0
 <label> a smclpres presentation
 <reqs> smclpres
 <description>
@@ -8,6 +8,8 @@
 This template starts a {help smclpres} presentation.
 </description>
 </header>
+
+<body> -------------------------------------------------------------------------
 //version 4.0.2
 
 //layout toc title(subsection) link(subsection) 
@@ -31,3 +33,4 @@ txt*/
 //ex
 //endex
 //endslide ------------------------------------------------------------------------
+</body> ------------------------------------------------------------------------

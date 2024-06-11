@@ -280,3 +280,4 @@ p mycolours module for setting a palette of colours through local macros
 p mydatelabels module to generate axis labels with a label every time a component changes
 p mylabels module for axis labels or ticks on transformed scales or for daily dates
 p mypkg module to inform on packages installed over net
+p myweeks module for generating numbered weeks from daily date variables
