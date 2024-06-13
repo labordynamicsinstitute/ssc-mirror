@@ -1,5 +1,5 @@
 {smcl}
-{* 2022july15, 2023jun27, sep26, oct18}
+{* 2022july15, 2023jun27, sep26, oct18, 2024may13}
 {hline}
 help for {hi:tree}
 {hline}
@@ -217,7 +217,7 @@ on variable names (see {help reswords:naming conventions}), but they also are li
 Certain other restrictions apply, as will be explained under {help tree##further_remarks:Further Remarks}.
 
 {p 4 4 2}The length should be <=29 if you intend to call {cmd:tree eval} with the
-{opt rawsum} or {opt means} option(s), followed by {cmd:tree diffs},"
+{opt rawsum} or {opt means} option(s), followed by {cmd:tree diffs},
 {cmd:tree a_minus_b}, or {cmd:tree values} with a prefix longer than 1.
 
 {p 4 4 2}
@@ -866,7 +866,7 @@ a value from a specific observation, though {cmd:tree values} can also do that.)
 Terminal nodes are marked with an asterisk to the right of the node name.
 
 {p 4 4 2}
-The observation numbers will not necessarily in sequential order.
+The observation numbers will not necessarily be in sequential order.
 The order diplayed reflects the tree structure, whereas the observation
 numbers reflect the order in which the tree was built (the order in which nodes
 were added).
@@ -1386,8 +1386,8 @@ perform these steps.
 {p 4 4 2}
 As this involves switching back and forth between different datasets, an natural technique
 might be to use {help frames}, switching between frames, rather than swapping datasets in and out.
-{cmd:frames} is available in Stata 16 and higher. The author has not yet tried this
-technique.
+{cmd:frames} is available in Stata 16 and higher. The author has tried this technique
+with some success.
 
 {p 4 4 2}
 Some other possibilities for transferring values from the input-generation process

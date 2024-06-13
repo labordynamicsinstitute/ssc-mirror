@@ -10,7 +10,9 @@ prog def tree
 * 2023jun28: public release.
 * version 1.3.1 2023jun28
 * version 1.3.2 2023oct10
-*! version 1.4.0 2023oct18
+* version 1.4.0 2023oct18
+*! version 1.5.0 2024jun10
+
 
 /*
 2023oct02: edited comments.
@@ -700,9 +702,6 @@ else {
 	global tree_depth_`depth'_has_more_children
 }
 
-/*~~~
-/* ~~~debug */ disp ".. node `id', depth `depth', indic <${tree_depth_`depth'_has_more_children}>"
-~~~~*/
 disp %6.0g `id' " " _cont
 draw_node_prefix, depth(`depth')
 if `depth' > 0 {
@@ -739,7 +738,6 @@ foreach v of global tree_drawvars {
 
 
 
-/*~~~~debug: disp " depth `depth'" _cont  */
 
 disp /* end line */
 
@@ -1015,7 +1013,12 @@ foreach v of local varlist {
 			`qui' replace R_prob = .z in `id'
 		}
 		else {
-			capture replace R_`v' = `=`textval'' in `id'
+			capture replace R_`v' = (`textval') in `id'
+			/* prior to 2024jun6, this was `=`textval''.
+			That did not work correctly for non-simple expressios, esp ones
+			that reference other variables. Such references would take values from
+			obs 1.
+			*/
 			if _rc {
 				global tree_eval_errors "Y"
 				disp as err "error evaluating R_`v', node `id'"
