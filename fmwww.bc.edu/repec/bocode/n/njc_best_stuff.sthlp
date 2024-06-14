@@ -1,6 +1,6 @@
 {smcl}
 {hline}
-index of NJC's best Stata stuff (version 6 January 2024)  
+index of NJC's best Stata stuff (version 12 June 2024)  
 {hline}
 
 {title:Description} 
@@ -96,6 +96,8 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help transplot}           plots for trying out transformations 
 {space 4}{help triplot}             triangular plots 
 {space 4}{help trimplot}            plots of trimmed means 
+{space 4}{help twoway__whistogram_gen}
+{space 4}                           histogram subroutine supporting aweights and iweights
 {space 4}{help upsetplot}           Euler or Venn diagrams mapped to bar charts, upsetplot style 
 {space 4}{help vennbar}             Euler or Venn diagrams mapped to bar or dot charts 
 {space 4}{help zmap}                binned scatter maps
@@ -180,6 +182,7 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help moss}                multiple occurrences of substrings 
 {space 4}{help multencode}          encode multiple string variables into numeric
 {space 4}{help myaxis}              reorder categorical variable by specified sort criterion
+{space 4}{help myweeks}             numbered weeks from daily dates
 {space 4}{help numdate}             generate numeric date-time variable
 {space 4}{help panelthin}           observations for thinned panel dataset
 {space 4}{help rowranks}            row ranks of a set of variables 
@@ -234,7 +237,6 @@ available at {help njc_stuff:NJC stuff}.
 {bind:D.E. Williams,} 
 {bind:N. Winter,} 
 {bind:F. Wolfe} 
-and those contributing to the text editors FAQ
 
 
 {title:Author} 

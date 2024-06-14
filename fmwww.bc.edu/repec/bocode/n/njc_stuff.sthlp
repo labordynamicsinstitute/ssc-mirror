@@ -1,6 +1,6 @@
 {smcl}
 {hline}
-index of NJC's Stata stuff (version 6 January 2024)
+index of NJC's Stata stuff (version 12 June 2024)
 {hline}
 
 {title:Description}
@@ -1311,16 +1311,26 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help mylabels}
 {space 4}SSC (NJC, S. Merryman)
 {space 4}axis labels or ticks on transformed scales
-{space 4}+
+{space 4}psup(SJ 24-1)
 
 {space 4}{help mylabels}
 {space 4}gr0092 (sj22-4) (NJC)
+{space 4}axis labels or ticks on transformed scales
+{space 4}sup(SJ 24-1)
+
+{space 4}{help mylabels}
+{space 4}gr0092_1 (sj24-1) (NJC)
 {space 4}axis labels or ticks on transformed scales
 {space 4}+
 
 {space 4}{help mypkg}
 {space 4}SSC (NJC)
 {space 4}inform on packages installed over net
+
+{space 4}{help myweeks}
+{space 4}SSC (NJC)
+{space 4}numbered weeks from daily dates
+{space 4}+
 
 {space 4}{help nbfit}
 {space 4}SSC (NJC, R.G. Gutierrez)
@@ -2117,6 +2127,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}SSC (J.N. Luchman, NJC)
 {space 4}selecting all possible tuples from a list 
 {space 4}Stata 8 or 9 only 
+
+{space 4}{help twoway__whistogram_gen}
+{space 4}SSC
+{space 4}histogram subroutine supporting aweights and iweights
+{space 4}+
 
 {space 4}{help univstat}
 {space 4}www.stata.com/users/njc (NJC)

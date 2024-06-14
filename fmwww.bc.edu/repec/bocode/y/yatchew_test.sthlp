@@ -17,9 +17,10 @@
 {title:Syntax}
 
 {p 4 4}
-{cmd:yatchew_test Y D} {if}
+{cmd:yatchew_test Y D [if]}
 [{cmd:,}
 {cmd:het_robust}
+{cmd:order(}{it:#}{cmd:)}
 {cmd:path_plot}]
 {p_end}
 
@@ -69,6 +70,16 @@ of homoskedasticity (Yatchew, 1997).
 If this option is specified, the test 
 is performed using the heteroskedasticity-robust 
 test statistic proposed by de Chaisemartin and D'Haultfoeuille (2024).
+{p_end}
+
+{p 4 4}
+{cmd:order(}{it:#}{cmd:)}
+If this option is specified, the program tests
+whether the conditional expectation of {cmd:Y} given {cmd:D} is
+a {it:#}-degree polynomial in {cmd:D}.
+With {cmd:order(}{it:0}{cmd:)}, the command tests 
+the hypothesis that the conditional mean of {cmd:Y} 
+given {cmd:D} is constant.
 {p_end}
 
 {p 4 4}

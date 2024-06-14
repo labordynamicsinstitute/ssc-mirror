@@ -1,10 +1,22 @@
 cap program drop yatchew_test
 program define yatchew_test, rclass
 version 12.0
-syntax varlist(min = 2 numeric) [if] [, het_robust path_plot]
+syntax varlist(min = 2 numeric) [if] [, het_robust path_plot order(string)]
+
+if "`order'" != "" {
+    if mod(`order', 1) != 0 {
+        noi di as err "Invalid order input."
+        exit
+    }
+}
 
 local var_base = strtrim("`varlist'")
 local var_count = length("`var_base'") - length(subinstr("`var_base'", " ", "", .))
+
+if "`order'" != "" & (`var_count' > 1) {
+    noi di as err "When the order option is specified, the D argument can only contain one variable."
+    exit
+}
 
 if "`path_plot'" != "" & `var_count' != 2 {
     noi di as err "The path_plot option can only be specified with 2 treatment variables."
@@ -107,6 +119,18 @@ else {
 }
 
 // Variance of residuals from linear regression
+if "`order'" != "" {
+    forv j = 0/`order' {
+        gen D_1_`j'_XX = D_1_XX^`j'
+    }
+    local D_vars_XX ""
+    if `order' == 0 local D_vars_XX "D_1_0_XX"
+    else {
+        forv j = 1/`order' {
+            local D_vars_XX "`D_vars_XX' D_1_`j'_XX"
+        }
+    }
+}
 reg Y_XX `D_vars_XX'
 predict e_lin_XX, res
 sum e_lin_XX
@@ -152,13 +176,18 @@ else {
     local setting = "- Heteroskedasticity-robust Test"
     local addon ", robust version of de Chaisemartin & D'Haultfoeuille (2024)"
 }
+
+local ord_ext ""
+if "`order'" != "" {
+    local ord_ext " a degree `order' polynomial in"
+}
 }
 
 noi di as text ""
 noi di as text "Yatchew (1997) test`addon'"
 noisily matlist results, names(c)
 noi di as text ""
-noi di as text "H0: E[Y|D] linear in D `setting'"
+noi di as text "H0: E[Y|D] linear in`ord_ext' D `setting'"
 
 ret clear
 return matrix results = results
