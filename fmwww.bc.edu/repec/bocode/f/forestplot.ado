@@ -48,7 +48,8 @@
 * _USE == 3  subgroup effects
 * _USE == 4  between-subgroup heterogeneity info and/or `hetinfo' placed on new line 
 * _USE == 5  overall effect
-* _USE == 6  blank lines/anything else
+* _USE == 6  blank lines (text/data in such rows will be ignored in the plot)
+* _USE == 7  prediction interval data
 * _USE == 9  titles (internal only)
 
 * version 2.0  David Fisher  11may2017
@@ -111,11 +112,18 @@
 * version 4.06  David Fisher  12oct2022
 // new option "sepline" for drawing prediction interval lines separately (below) confidence interval lines instead of straddling them
 
-*! version 4.07  David Fisher  15sep2023
+* version 4.07  David Fisher  15sep2023
+// no changes; upversioned to v4.07 alongside metan.ado
+
+*! version 4.08  David Fisher  17jun2024
 // Q heterogeneity p-value now shows in forestplot as "< 0.001" rather than "= 0.000"
 // right-alignment of columns in -forestplot- now done via mlabpos() rather than explicit indentation
-// works with metan v4.07: new value _USE==7 defining prediction intervals
+// works with metan v4.07+ : new value _USE==7 defining prediction intervals
+// fixed bug whereby matname `usedims' might be misinterpreted by Stata as a varname, leading to error
+// fixed bug whereby untransformed proportions led to forestplot expecting _Prop_ES etc. rather than _ES, leading to error
 // improvements to ocilineopts() and rfcilineopts()
+// text printed to screen no longer includes "use() labels() wgt() by()" if these options are empty
+// `colsonly' option moved out of beta and fully documented
 
 
 program define forestplot, sortpreserve rclass
@@ -145,8 +153,9 @@ program define forestplot, sortpreserve rclass
 		if `"`usevlist'"'==`""' local usevlist `fpusevlist'
 		if `"`useifin'"'==`""'  local useifin  `fpuseifin'
 
+		local fpcmdline = trim(itrim(`"forestplot `usevlist' `if' `in', `fpuseopts' `graphopts'"'))
 		nois disp as text `"Full command line as defined by {bf:useopts} is as follows:"'
-		nois disp as res `"  forestplot `usevlist' `if' `in', `fpuseopts' `graphopts'"'
+		nois disp as res `"  `fpcmdline'"'
 		nois disp as text `"(Note: any or all of this information may be over-ridden by other options;"'
 		nois disp as text `" in general only the rightmost of any repeated options will be honoured, but see {help repeated_options})"'
 	}
@@ -161,7 +170,7 @@ program define forestplot, sortpreserve rclass
 		BY(varname) EFORM EFFect(string asis) LABels(varname string) DP(integer 2) KEEPAll USESTRICT /*(undocumented)*/ ///
 		INTERaction LCols(namelist) RCols(namelist) LEFTJustify COLSONLY RFDIST(varlist numeric min=2 max=2) RFLevel(passthru) ///
 		NULLOFF noNAmes noNULL NULL2(string) noKEEPVars noOVerall noSUbgroup noSTATs noWT noHET LEVEL(passthru) ILevel(passthru) OLevel(passthru) ///
-		XTItle(passthru) FAVours(passthru) /// /* N.B. -xtitle- is parsed here so that a blank title can be inserted if necessary */
+		XTItle(passthru) /*FAVours(passthru)*/ /// /* N.B. -xtitle- is parsed here so that a blank title can be inserted if necessary */
 		CUmulative INFluence /*PRoportion*/ DENOMinator(passthru) /// /* undocumented; passed through from -metan-; needed in order to implement "hide" option... */
 		/// /* ...and to control default null line/x-axis (e.g. for proportion/influence)
 		/// /* Sub-plot identifier for applying different appearance options, and dataset identifier to separate plots */
@@ -170,7 +179,6 @@ program define forestplot, sortpreserve rclass
 		TEXTSize(passthru) /// /* legacy -metan9- option, implemented here as a post-hoc option; use at own risk */
 		/// /* "fine-tuning" options */
 		SAVEDIms(name) USEDIms(name) ASText(real -9) noADJust ///
-		FP(string) /// 		/*(deprecated; now a favours() suboption)*/
 		noPREFIXWARN ///	/*(undocumented; suppress "using default varlist" message if passing directly from -metan- using prefix()*/
 		KEEPXLabs * ]		/*(undocumented; colsonly option)*/
 
@@ -189,13 +197,33 @@ program define forestplot, sortpreserve rclass
 			nois disp as err `"{bf:_WT} and {bf:_USE} should now be specified using options {bf:wgt()} and {bf:use()}"'
 			exit 198
 		}
+		if `"`2'"'==`""' | `"`3'"'==`""' {
+			nois disp as err `"{it:varlist} detected but with too few members; syntax is {it:es lci uci}"'
+			exit 198
+		}		
 	}
 	else {		// if not specified, assume "standard" varnames
-		if `"`denominator'"'!=`""' local varlist `prefix'_Prop_ES `prefix'_Prop_LCI `prefix'_Prop_UCI		// August 2023
-		else local varlist `prefix'_ES `prefix'_LCI `prefix'_UCI
-		if `"`prefixwarn'"'==`""' {
-			nois disp as text `"Note: no {it:varlist} specified; using default {it:varlist}"' as res `" {bf:`varlist'}"'
-			if `"`denominator'"'!=`""' nois disp as text `" due to option {bf:denominator(}{it:#}{bf:)} being specified"'
+		if `"`denominator'"'==`""' {
+			local varlist `prefix'_ES `prefix'_LCI `prefix'_UCI
+			if `"`prefixwarn'"'==`""' nois disp as text `"Note: no {it:varlist} specified; using default {it:varlist}"' as res `" {bf:`varlist'}"'
+		}
+		else {
+			local varlist `prefix'_Prop_ES `prefix'_Prop_LCI `prefix'_Prop_UCI		// August 2023
+			if `"`prefixwarn'"'==`""' {
+				nois disp as text `"Note: no {it:varlist} specified; using default {it:varlist}"' as res `" {bf:`varlist'}"'
+				nois disp as text `" due to option {bf:denominator(}{it:#}{bf:)} being specified"'
+			}
+			foreach x in Prop_ES Prop_LCI Prop_UCI {
+				cap confirm var `prefix'_`x'
+				if _rc {
+					if `"`prefixwarn'"'==`""' {
+						nois disp as text `"Note: expected to find variable "' as res `"{bf:`prefix'_`x'}"' as text `", but failed;"'
+						nois disp as text `"assuming proportions pooled on untransformed scale using variables "' as res `"{bf:`prefix'_ES}, {bf:`prefix'_LCI}, {bf:`prefix'_UCI}"'
+					}
+					local varlist `prefix'_ES `prefix'_LCI `prefix'_UCI				// March 2024
+					continue, break
+				}
+			}
 		}
 		tokenize `varlist'
 	}
@@ -207,7 +235,7 @@ program define forestplot, sortpreserve rclass
 	// Set up data sample to use
 	local _USE `use'
 	if `"`use'"'==`""' {
-		capture confirm numeric var `prefix'_USE
+		cap confirm numeric var `prefix'_USE
 		if !_rc {
 			if `"`prefixwarn'"'==`""' {
 				nois disp as text `"Note: option {bf:use(}{it:varname}{bf:)} not specified; using default {it:varname}"' as res `" {bf:`prefix'_USE}"'
@@ -255,7 +283,7 @@ program define forestplot, sortpreserve rclass
 	// Weighting variable
 	local _WT `wgt'
 	if `"`wgt'"'==`""' {
-		capture confirm numeric var `prefix'_WT
+		cap confirm numeric var `prefix'_WT
 		if !_rc {
 			if `"`prefixwarn'"'==`""' {
 				nois disp as text `"Note: option {bf:wgt(}{it:varname}{bf:)} not specified; using default {it:varname}"' as res `" {bf:`prefix'_WT}"'
@@ -540,10 +568,22 @@ program define forestplot, sortpreserve rclass
 	local lcolsN : word count `lcols'
 	local rcolsN : word count `rcols'
 
-	// if no columns AND colsonly supplied, exit with error
-	if !`lcolsN' & !`rcolsN' & `"`colsonly'"'!=`""' {
-		disp as err `"Option {bf:colsonly} supplied with no columns of data; nothing to plot"'
-		exit 2000
+	// [Revised May 2024 for v4.08]
+	// `colsonly' option expects exactly one of `lcolsN' or `rcolsN' to be nonzero
+	if `"`colsonly'"'!=`""' {
+		if !`lcolsN' & !`rcolsN' {
+			disp as err `"Option {bf:colsonly} supplied with no columns of data; nothing to plot"'
+			exit 2000
+		}
+		else if `lcolsN' & `rcolsN' {
+			disp as err `"Option {bf:colsonly} requires either left-side or right-side data columns, but not both"'
+			exit 198
+		}
+	}
+	// Check that `keepxlabs' implies `colsonly';  so that later we may use `keepxlabs' in place of `colsonly' where appropriate
+	else if `"`keepxlabs'"'!=`""' {
+		disp as err `"Option {bf:keepxlabs} cannot be specified without {bf:colsonly}"'
+		exit 198
 	}
 	
 	
@@ -554,7 +594,7 @@ program define forestplot, sortpreserve rclass
 	
 	// N.B. `DXmin', `DXmax' are the left and right co-ords of the graph part
 	// These are NOT NECESSARILY the same as the limits of xlabels, xticks etc.
-	// e.g. if range() was specified with values outside the limits of xlabels, xticks etc., then DXmin, DXmax == range.
+	// In particular, if range() is specified then DXmin, DXmax == range;  regardless of xlabels, xticks etc.
 	
 	// First, sort out null-line
 	local h0 = 0							// default
@@ -666,51 +706,32 @@ program define forestplot, sortpreserve rclass
 		}
 	}	
 	
-	cap nois ProcessXLabs `DXmin' `DXmax', `eform' h0(`h0') `null' `graphopts' `denominator'
+	cap nois ProcessXAxis `DXmin' `DXmax', `eform' h0(`h0') `null' `denominator' `colsonly' `graphopts'
 	if _rc {
-		if _rc==1 nois disp as err `"User break in {bf:forestplot.ProcessXLabs}"'
-		nois disp as err `"Error in {bf:forestplot.ProcessXLabs}"'
+		if _rc==1 nois disp as err `"User break in {bf:forestplot.ProcessXAxis}"'
+		nois disp as err `"Error in {bf:forestplot.ProcessXAxis}"'
 		c_local err noerr		// tell calling program (e.g. -metan- ) not to also report an error
 		exit _rc
 	}
-	if "`twowaynote'"!="" c_local twowaynote notwowaynote	// so that -metan- does not print an additional message regarding "xlabel" or "force" 
+	if "`twowaynote'"!="" c_local twowaynote notwowaynote	// so that -metan- does not print an additional message regarding "xlabel" or "force"
 	
 	local CXmin = r(CXmin)		// limits of data plotting (i.e. off-scale arrows)... = DX by default
 	local CXmax = r(CXmax)
 	local DXmin = r(DXmin)		// limits of data plot region
 	local DXmax = r(DXmax)
-	local XLmin = r(XLmin)		// limits of x-axis labelled values
-	local XLmax = r(XLmax)
 	
 	return local range `"`DXmin' `DXmax'"'
 	
-	// local xtitleval = r(xtitleval)	// position of xtitle
-	
-	local xlablist `"`r(xlablist)'"'
-	local xlabcmd  `"`r(xlabcmd)'"'
-	local xlabopts `"`r(xlabopts)'"'
+	local xtitleval = r(xtitleval)	// position of xtitle [May 2024: not currently implemented]
 
-	local xmlablist `"`r(xmlablist)'"'
-	local xmlabcmd  `"`r(xmlabcmd)'"'
-	local xmlabopts `"`r(xmlabopts)'"'
+	// May 2024
+	local graphopts `"`r(xlabopt2)' `r(xlabopt)' `r(xmlabopt2)' `r(xmlabopt)' `r(favopt)' `r(xtickopt2)' `r(xtickopt)' `r(xmtickopt2)' `r(xmtickopt)' `r(options)'"'
 	
-	local xticklist  `"`r(xticklist)'"'
-	local xtickopts  `"`r(xtickopts)'"'
-	local xmticklist `"`r(xmticklist)'"'
-	local xmtickopts `"`r(xmtickopts)'"'
-
 	// Nov 2017
 	local null      `"`r(null)'"'
-	local xlabfmt   `"`r(xlabfmt)'"'
-	local xmlabfmt  `"`r(xmlabfmt)'"'
-	local graphopts `"`r(options)'"'
-	
 	local rowsxlab  = r(rowsxlab)
 	local rowsxmlab = r(rowsxmlab)
-	
-	local adjust = cond(`"`colsonly'"'==`""', `"`adjust'"', `"noadjust"')
-
-	// END OF TICKS AND LABELS
+	local rowsfav   = r(rowsfav)
 	
 	
 	** Need to make changes to pre-existing data now
@@ -728,40 +749,41 @@ program define forestplot, sortpreserve rclass
 		qui replace `_LABELS' = "" if `touse' & `_USE'==6
 	}
 	qui replace `_WT' = . if `touse' & inlist(`_USE', 2, 6) & `"`wt'"'==`""'
+			
 	
-		
-	// find `lcimin' = left-most confidence limit among the "diamonds" (including predictive intervals)
-	tempvar lci2
+	* Find `lcimin' = left-most confidence limit among the "diamonds" (including predictive intervals)
+	* (Note: this is *only* used within the `adjust' subroutine within ProcessColumns)
+    tempvar lci2
 	qui gen `lci2' = cond(`"`null'"'==`""', cond(`_LCI'>`h0', `h0', ///
 		cond(`_LCI'>`CXmin', `_LCI', `CXmin')), cond(`_LCI'>`CXmin', `_LCI', `CXmin'))
-		
-	if `"`rfdist'"'!=`""' {			// unecessary if passed thru from -metan-, but do it anyway
+	if `"`rfdist'"'!=`""' {
 		qui replace `lci2' = cond(`"`null'"'==`""', cond(`_rfLCI'>`h0', `h0', ///
 			cond(`_rfLCI'>`CXmin', `_rfLCI', `CXmin')), cond(`_rfLCI'>`CXmin', `_rfLCI', `CXmin'))
 	}
-		
 	summ `lci2' if `touse' & inlist(`_USE', 3, 5, 7), meanonly
-	local lcimin = cond(r(N), r(min), cond(`"`null'"'==`""', `h0', `CXmin'))		// modified 28th June 2017
-	drop `lci2'
-
+	local lcimin = cond(r(N), r(min), cond(`"`null'"'==`""', `h0', `CXmin'))
+	drop `lci2'	
 
 	* Unpack `usedims'
 	local DXwidthChars = -9			// initialize
 	if `"`usedims'"'!=`""' {
-		local DXwidthChars = `usedims'[1, `=colnumb(`usedims', "cdw")']
+		cap confirm matrix `usedims'
+		if _rc {
+			nois disp as err "Error in option {bf:usedims()}: " _c
+			confirm matrix `usedims'
+		}
+		
+		local DXwidthChars = `usedims'[1, `=colnumb(matrix(`usedims'), "cdw")']
 		confirm number `DXwidthChars'
 		assert `DXwidthChars' >= 0
-		local dxwidcopt `"dxwidthchars(`DXwidthChars')"'
 
-		local oldLCImin = `usedims'[1, `=colnumb(`usedims', "lcimin")']
+		local oldLCImin = `usedims'[1, `=colnumb(matrix(`usedims'), "lcimin")']
 		confirm number `oldLCImin'		// can be <0
-		
-		if `"`usedims'"'!=`""' {
-			local lcimin = min(`lcimin', `oldLCImin')
-		}
+		local lcimin = min(`lcimin', `oldLCImin')
 	}
 
-	// astext or dxwidth
+	// Pass exactly one of `DXwidthChars' or `astext' to ProcessColumns
+	// (if specified, `astext' trumps `DXwidthChars')
 	if `"`usedims'"'!=`""' & `astext'==-9 {
 		local astextopt `"dxwidthchars(`DXwidthChars')"'
 	}
@@ -812,7 +834,7 @@ program define forestplot, sortpreserve rclass
 				if `"`leftjustify'"'!=`""' local flen = -abs(`2')
 			}
 			
-			capture confirm string var ``x'coli'
+			cap confirm string var ``x'coli'
 			if !_rc local `xx'LB`i' : copy local `x'coli	// if string
 			else {											// if numeric
 				tempvar `xx'LB`i'
@@ -837,6 +859,8 @@ program define forestplot, sortpreserve rclass
 			tempvar left1
 			local lvallist `left1'
 		}
+		
+		local `x'optlist `x'vallist(``x'vallist') `x'lablist(``x'lablist') `x'fmtlist(``x'fmtlist')
 	}
 		
 	
@@ -848,9 +872,7 @@ program define forestplot, sortpreserve rclass
 	local oldN = _N
 	cap nois ProcessColumns `_USE' `_EFFECT' if `touse', id(`id') `wt' ///
 		lrcolsn(`lcolsN' `rcolsN') lcimin(`lcimin') dx(`DXmin' `DXmax') ///
-		lvallist(`lvallist') llablist(`llablist') lfmtlist(`lfmtlist') ///
-		rvallist(`rvallist') rlablist(`rlablist') rfmtlist(`rfmtlist') `rfcolopts' ///
-		`astextopt' `adjust' `graphopts'
+		`loptlist' `roptlist' `rfcolopts' `astextopt' `adjust' `colsonly' `graphopts'
 	
 	if _rc {
 		if _rc==1 nois disp as err `"User break in {bf:forestplot.ProcessColumns}"'
@@ -861,9 +883,15 @@ program define forestplot, sortpreserve rclass
 	
 	local leftWDtot = r(leftWDtot)
 	local rightWDtot = r(rightWDtot)
+	local astext = r(astext)
+
 	local AXmin = r(AXmin)
 	local AXmax = r(AXmax)
-	local astext = r(astext)
+	if `"`colsonly'"'!=`""' {
+		if       `lcolsN' & !`rcolsN' local AXmax = `DXmin'
+		else if !`lcolsN' &  `rcolsN' local AXmin = `DXmax'
+		local AXval = (`AXmax' + `AXmin') / 2
+	}
 	
 	// June 2023
 	local lposlist `r(lposlist)'
@@ -877,7 +905,7 @@ program define forestplot, sortpreserve rclass
 
 	
 	*** FIND OPTIMAL TEXT SIZE AND ASPECT RATIOS (given user input)
-	// We already have an estimate of the height taken up by x-axis labelling (this is `rowsxlab' from ProcessXLabs)
+	// We already have an estimate of the height taken up by x-axis labelling (this is `rowsxlab' from ProcessXAxis)
 	// Next, find basic height to send to GetAspectRatio
 	// Apr 2020: Note that this was previously derived in terms of number of observations
 	// but now we use `id' instead due to `double' option
@@ -908,66 +936,26 @@ program define forestplot, sortpreserve rclass
 		local reduceHeight = r(N)
 	}
 	else {			// user-specified "hide"
-		local hide
-		local 0 `", `graphopts'"'
-		syntax [, OCILINEOPts(string asis) RFCILINEOPts(string asis) * ]
-		local 0 `", `ocilineopts'"'
-		syntax [, HIDE * ]
-		if `"`hide'"'!=`""' {
-			qui count if `touse' & inlist(`_USE', 3, 5, 7)
-			local reduceHeight = r(N)
-		}
-		else {
-			local 0 `", `rfcilineopts'"'
-			syntax [, HIDE * ]
-			if `"`hide'"'!=`""' {
-				qui count if `touse' & inlist(`_USE', 3, 5, 7)
-				local reduceHeight = r(N)
-			}
-			else {
-				summ `plotid' if `touse', meanonly
-				forvalues p = 1/`r(max)' {
-					local hide
-					local 0 `", `graphopts'"'
-					syntax [, OCILINE`p'opts(string asis) RFCILINE`p'opts(string asis) * ]
-					local 0 `", `ociline`p'opts'"'
-					syntax [, HIDE * ]
-					if `"`hide'"'!=`""' {
-						qui count if `touse' & `plotid'==`p' & inlist(`_USE', 3, 5, 7)
-						local reduceHeight = `reduceHeight' + r(N)
-					}
-					else {
-						local 0 `", `rfciline`p'opts'"'
-						syntax [, HIDE * ]
-						if `"`hide'"'!=`""' {
-							qui count if `touse' & `plotid'==`p' & inlist(`_USE', 3, 5, 7)
-							local reduceHeight = `reduceHeight' + r(N)
-						}
-					}
-				}
-			}
-		}
+		UserSpecHide `_USE' if `touse', plotid(`plotid') `graphopts'
+		local reduceHeight = r(N)
 	}
 	local height = `height' - `reduceHeight'
 	
 	qui count if `touse' & `_USE'==9
 	if r(N) local ++height				// add 1 to overall height if titles present, to account for the "gap" in `id' (see later)
 		
-	local usedimsopt = cond(`"`usedims'"'==`""', `""', `"usedims(`usedims')"')
 	local colWDtot = `leftWDtot' + `rightWDtot'
+	if `"`usedims'"'==`""' {
+		local DXwidthChars = `colWDtot'*((100/`astext') - 1)
+	}
 
 	// height of "xmlabel" text is assumed to be ~60% of "xlabel" text ... unless favours which uses xmlabel differently!
-	local rowsxlabval = cond(`"`favours'"'!=`""', `rowsxlab', max(`rowsxlab', .6*`rowsxmlab'))
-		
-	GetAspectRatio, astext(`astext') colwdtot(`colWDtot') height(`height') rowsxlab(`rowsxlabval') ///
-		`xtitle' `favours' `graphopts' `usedimsopt' `dxwidcopt' `textsize' `colsonly'
+	local rowsxlabval = cond(`rowsfav', `rowsxlab', max(`rowsxlab', .6*`rowsxmlab'))
+	
+	GetAspectRatio, astext(`astext') colwdtot(`colWDtot') height(`height') rowsxlab(`rowsxlabval') rowsfav(`rowsfav') ///
+		usedims(`usedims') `xtitle' `textsize' `colsonly' `graphopts'
 
 	local graphopts `"`r(graphopts)'"'
-
-	local leftfav  `"`r(leftfav)'"'
-	local rightfav `"`r(rightfav)'"'
-	local favopt   `"`r(favopt)'"'
-	local rowsfav = r(rowsfav)
 
 	local xsize = r(xsize)
 	local ysize = r(ysize)
@@ -980,80 +968,55 @@ program define forestplot, sortpreserve rclass
 	local approxChars = r(approxchars)
 	local graphAspect = r(graphaspect)
 	local plotAspect = r(plotaspect)
-	local DXwidthChars = cond(`"`usedims'"'!=`""', `DXwidthChars', `colWDtot'*((100/`astext') - 1))
 
 	* If specified, store in a matrix the quantities needed to recreate proportions in subsequent forestplot(s)
-	// [`lcimin' added 18th Sep 2017, and `height' added 2nd Nov 2017]
+	// [`lcimin' added Sep 2017; `height' added Nov 2017]
 	if `"`savedims'"'!=`""' {
 		mat `savedims' = `DXwidthChars', `spacing', `plotAspect', `ysize', `xsize', `textSize', `height', `yheight', `lcimin'
 		mat colnames `savedims' = cdw spacing aspect ysize xsize textsize height yheight lcimin
 	}
 
-	* Extra work on x-labels and aspect ratio, only needed if `colsonly' [** BETA **]
-	if `"`colsonly'"'!=`""' {
-	
-		if `lcolsN' & !`rcolsN' {
-			// local plotAspect = `plotAspect' * `approxChars'/`leftWDtot'
-			// local xsize = `xsize' * `leftWDtot'/`approxChars' 			// Nov 2017: do this or not?
-			local AXmax = `DXmin'
+	* Insert labsize(`textSize2') into existing x[m]labopt(s)
+	local 0 `", `graphopts'"'
+	syntax [, XLAbel(string asis) XMLabel(string asis) * ]
+	local graphopts `"`options'"'
+
+	while trim(`"`xlabel'`xmlabel'"')!=`""' {
+		foreach xop in xlabel xmlabel {
+			if `"``xop''"'!=`""' {
+				local 0 `"``xop''"'
+				syntax [anything(name=xcmd)] , [LABSize(string) LABGAP(string) FAVOURS * ]
+
+				// colsonly: now add in "dummy" value to x[m]label command
+				if `"`colsonly'"'!=`""' {
+					gettoken tok rest : xcmd
+					if `"`tok'"'==`"__DUMMY__"' local xcmd `AXval' `rest'
+				}
+				if "`xop'"=="xlabel" {
+					local labsizeopt labsize(`textSize2')
+					local labgapopt
+				}
+				else {
+					local labsize = cond(`"`favours'"'!=`""', `textSize2', .6*`textSize2')
+					local labsizeopt labsize(`labsize')
+					if `"`favours'"'!=`""' local labgapopt labgap(5)
+				}
+				local newopts `"`newopts' `xop'(`xcmd', `labsizeopt' `labgapopt' `options')"'
+			}
 		}
-		else if !`lcolsN' & `rcolsN' {
-			// local plotAspect = `plotAspect' * `approxChars'/`rightWDtot'
-			// local xsize = `xsize' * `rightWDtot'/`approxChars' 			// Nov 2017: do this or not?
-			local AXmin = `DXmax'
-		}
-		
-		ExtraColsOnly,   xlablist(`xlablist')    xmlablist(`xmlablist') ///
-			   xlabopt(`xlabcmd', `xlabopts')    xmlabopt(`xmlabcmd', `xmlabopts') ///
-			xtickopt(`xticklist', `xtickopt') xmtickopt(`xmticklist', `xmtickopt') ///
-			ax(`AXmin' `AXmax') rowsxlab(`rowsxlab' `rowsxmlab' `rowsfav') `keepxlabs' 	// Feb 2018: removed `graphopts'
 
-		// xlabel:  insert `textSize2'
-		local xlabopt `"xlabel(`s(xlabcmd)', labsize(`textSize2') `s(xlabopts)')"'
-
-		// xmlabel: insert `textSize' if `favours', otherwise default to 0.6*`textSize'
-		local labsizeopt = cond(`"`favours'"'!=`""', `"labsize(`textSize2')"', `"labsize(`=.6*`textSize2'')"')
-		local xmlabopt = cond(trim(`"`s(xmlabcmd)'`s(xmlabopts)'"')==`""', `""', ///
-			`"xmlabel(`s(xmlabcmd)', `labsizeopt' `s(xmlabopts)')"')
-		
-		// xtick and xmtick: simply use returned options from ExtraColsOnly
-		local xtickopt  `"`s(xtickopt)'"'
-		local xmtickopt `"`s(xmtickopt)'"'
-	}
-
-	// Else, just need to insert labsize(`textSize') into existing `xlabopt' [** DEFAULT **]
-	else {
-	
-		// Amended Feb 2019 for v3.3
-		local 0 `", `xlabopts'"'
-		syntax [, LABSize(string) * ]
-		local xlabopts `"`macval(options)'"'
-		if `"`labsize'"'==`""' local labsize `textSize2'
-		local xlabopt `"xlabel(`xlabcmd', labsize(`labsize') `xlabopts')"'
-
-		// If `favours', text size of xmlabel defaults to `textSize'; otherwise to 0.6*`textSize';  similarly for lapgap
-		local 0 `", `xmlabopts'"'
-		syntax [, LABSize(string) LABGAP(string) * ]
-		local xmlabopts `"`macval(options)'"'
-		if `"`labsize'"'==`""' {
-			local labsize = cond(`"`favours'"'!=`""', `textSize2', .6*`textSize2')
-		}
-		if `"`labgap'"'==`""' & `"`favours'"'!=`""' local labgap = 5
-		if `"`labgap'"'!=`""' local labgapopt `"labgap(`labgap')"'
-		local xmlabopt = cond(trim(`"`xmlabcmd'`xmlabopts'"')==`""', `""', ///
-			`"xmlabel(`xmlabcmd', labsize(`labsize') `labgapopt' `xmlabopts')"')
-			
-		local xtickopt = cond(trim(`"`xticklist'`xtickopts'"')==`""', `""', ///
-			`"xtick(`xticklist', `xtickopts')"')
-		local xmtickopt = cond(trim(`"`xmticklist'`xmtickopts'"')==`""', `""', ///
-			`"xmtick(`xmticklist', `xmtickopts')"')
-	}
-	
+		// Test for repeated options and loop if necessary
+		// Parse for "add" and discard repeated options if appropriate
+		// so that later parsing and updating/replacing of "labsize()" is accurate
+		local 0 `", `graphopts'"'
+		syntax [, XLAbel(string asis) XMLabel(string asis) * ]
+		local graphopts `"`options'"'
+	}		// end while loop
 
 	// local graphopts `"xsize(`xsize') ysize(`ysize') fxsize(`fxsize') fysize(`fysize') aspect(`plotAspect') `graphopts'"'
 	// Modified Jan 2018: f{x|y}size only if usedims/savedims
-	local graphopts `"xsize(`xsize') ysize(`ysize') aspect(`plotAspect') `graphopts'"'
-	if trim(`"`savedims'`usedims'"')!=`""' local graphopts `"fxsize(`fxsize') fysize(`fysize') `graphopts'"'
+	local graphopts `"xsize(`xsize') ysize(`ysize') aspect(`plotAspect') `newopts' `macval(graphopts)'"'
+	if trim(`"`savedims'`usedims'"')!=`""' local graphopts `"fxsize(`fxsize') fysize(`fysize') `macval(graphopts)'"'
 		
 	// Return useful quantities
 	return scalar aspect = `plotAspect'
@@ -1072,89 +1035,6 @@ program define forestplot, sortpreserve rclass
 		return scalar fxsize = `fxsize'
 	}
 
-
-	** FAVOURS (part 2)
-	// now check for inappropriate options
-	if `"`favours'"' != `""' {
-	
-		// continue to allow fp as a main option, but deprecate it in documentation
-		// documented way is to specify fp() as a suboption to favours()
-		local oldfp `fp'
-		local 0 `", `favopt'"'
-		syntax [, FP(string) FORMAT(string) ANGLE(string) LABGAP(string) LABSTYLE(string) LABSize(string) LABColor(string) noSYMmetric * ]
-		if `"`options'"' != `""' {
-			nois disp as err `"inappropriate suboptions found in {bf:favours()}"'
-			exit 198
-		}
-
-		local labsizeopt = cond(`"`labsize'"'!=`""', `"labsize(`labsize')"', `"labsize(`textSize2')"')
-		local labgapopt  = cond(`"`labgap'"'!=`""',  `"labgap(`labgap')"',   `"labgap(5)"')
-		local favopt `"`labsizeopt' `labgapopt'"'
-		foreach opt in format angle labstyle labcolor {
-			if `"``opt''"'!=`""' local favopt `"`favopt' `opt'(``opt'')"'
-		}
-		
-		// modified Jan 30th 2018, and again May 21st 2018
-		local fp = cond(`"`fp'"'==`""' & `"`oldfp'"'!=`""', `"`oldfp'"', `"`fp'"')
-		if `"`fp'"'==`""' {
-			// August 2018: default is...
-			// May 2018: use smaller of distances from h0 to min(DXmin, XLmin) or max(DXmax, XLmax)
-			local fpmin = min(`DXmin', `XLmin')
-			local fpmax = max(`DXmax', `XLmax')
-			
-			if `"`symmetric'"'==`""' {
-				local fp =  min(cond(`fpmin' <= `h0' & `"`leftfav'"'!=`""',  (`h0' - `fpmin')/2, .), ///
-								cond(`fpmax' >= `h0' & `"`rightfav'"'!=`""', (`fpmax' - `h0')/2, .))
-				local leftfp  = cond(`fpmin' <= `h0' & `"`leftfav'"'!=`""',  `"`=`h0' - `fp'' `"`leftfav'"'"',  `""')
-				local rightfp = cond(`fpmax' >= `h0' & `"`rightfav'"'!=`""', `"`=`h0' + `fp'' `"`rightfav'"'"', `""')
-			}
-			
-			// ...but may be overruled with option `nosymmetric', e.g. if distances are extremely unbalanced
-			else {
-				local leftfp  = cond(`fpmin' <= `h0' & `"`leftfav'"'!=`""',  `"`=(`h0' + `fpmin')/2' `"`leftfav'"'"',  `""')
-				local rightfp = cond(`fpmax' >= `h0' & `"`rightfav'"'!=`""', `"`=(`h0' + `fpmax')/2' `"`rightfav'"'"', `""')
-			}
-		}
-		
-		// modified Jan 2020
-		// User-specified fp()
-		else {
-			numlist `"`fp'"', miss max(2)
-			tokenize `fp'
-			args fpleft fpright
-			if `"`eform'"'!=`""' local fpleft = ln(`fpleft')			// fp() should be given on same scale as xlabels
-
-			if `"`fpright'"'==`""' {		// only one value given
-				local fpleft  = cond(`fpleft' <= `h0', `fpleft', 2*`h0' - `fpleft')
-				local fpright = 2*`h0' - `fpleft'
-			}
-			else {		// two values given: should be one either side of null line)
-				cap assert `fpleft' <= `h0'
-				if _rc {
-					if `h0' != 0 local extra `" (`h0')"'
-					nois disp as err `"Error in {bf:fp()}: left-hand value should lie to the left of the null value`extra'"'
-					exit 198
-				}
-				cap assert `fpright' >= `h0'
-				if _rc {
-					if `h0' != 0 local extra `" (`h0')"'
-					nois disp as err `"Error in {bf:fp()}: right-hand value should lie to the right of the null value`extra'"'
-					exit 198
-				}
-			}
-			local leftfp  `fpleft' `"`leftfav'"'
-			local rightfp `fpright' `"`rightfav'"'
-		}
-
-		// Nov 2017 [modified Feb 2018]
-		// local favopt = cond(trim(`"`leftfp'`rightfp'"')=="", "", `"xmlabel(`leftfp' `rightfp', noticks labels norescale `favopts')"')
-		if trim(`"`leftfp'`rightfp'"')==`""' local favopt
-		else {
-			local addopt = cond(`"`xmlabopt'"'==`""', "", "add")		// if xmlabel is also used elsewhere
-			local favopt `"xmlabel(`leftfp' `rightfp', noticks norescale `favopt' `addopt')"'
-		}
-	}		// end if trim(`"`leftfav'`rightfav'"') != `""'
-	
 
 	
 	************************************
@@ -1211,16 +1091,12 @@ program define forestplot, sortpreserve rclass
 		exit _rc
 	}
 
-	// local scPlot        `"`s(scplot)'"'
-	// local CIPlot        `"`s(ciplot)'"'
 	local RFPlot        `"`s(rfplot)'"'
 	local PCIPlot       `"`s(pciplot)'"'
 	local diamPlot      `"`s(diamplot)'"'
 	local pointPlot     `"`s(pointplot)'"'
 	local ppointPlot    `"`s(ppointplot)'"'
-	// local olinePlot     `"`s(olineplot)'"'
 	local olineAreaPlot `"`s(olineareaplot)'"'
-	// local nullCommand   `"`s(nullcommand)'"'
 	local borderCommand `"`s(bordercommand)'"'
 
 	local graphopts     `"`s(options)'"'
@@ -1272,7 +1148,7 @@ program define forestplot, sortpreserve rclass
 			SAVEDIms(name) USEDIms(name) ASText(real -9) noADJust ///
 			FP(string) /// 		/*(deprecated; now a favours() suboption)*/
 			KEEPXLabs /// 	/*(undocumented; colsonly option)*/
-			RAnge(string) CIRAnge(string) /// /* from ProcessXLabs*/
+			RAnge(string) CIRAnge(string) /// /* from ProcessXAxis*/
 			DXWIDTHChars(real -9) LBUFfer(real 0) RBUFfer(real 1) /// /* from ProcessColumns */
 			noADJust noLCOLSCHeck TArget(integer 0) MAXWidth(integer 0) MAXLines(integer 0) noTRUNCate ///
 			ADDHeight(real 0) /// /* from GetAspectRatio */
@@ -1314,7 +1190,6 @@ program define forestplot, sortpreserve rclass
 	
 	/* WEIGHTED SCATTERPLOT BOXES (plus plot-specific options) */ 
 	/*  and CONFIDENCE INTERVALS (incl. "offscale" if necessary) */
-		/*`scPlot' `CIPlot'*/
 		`firstPlot' `secondPlot'
 	
 	/* OVERALL AND NULL LINES (plus plot-specific options) (Nov 2021: unless placed underneath; see above) */ 
@@ -1333,9 +1208,13 @@ program define forestplot, sortpreserve rclass
 		, `favopt' `xtitleopt'
 	
 	/* Y-AXIS OPTIONS */
-		yscale(range(`DYmin' `DYmax') noline) ylabel(none) ytitle("") `borderCommand'
+	// Note that, as yscale is merged-implicit, range(`AXmin' `AXmax') noline will take precedence over any user-specified range() sub-option to yscale,
+	// ...but other yscale() options will be honored.  Users cannot over-ride the y-range; nor can they supply ylabels or ytitle.
+		yscale(range(`DYmin' `DYmax') noline) ylabel(none) ytitle(`""') `borderCommand'
 	
 	/* X-AXIS OPTIONS */
+	// Note that, as xscale is merged-implicit, range(`AXmin' `AXmax') will take precedence over any user-specified range() sub-option to xscale,
+	// ...but other xscale() options will be honored.  Users should specify the x-range via the separate, command-specific range() option.
 		xscale(range(`AXmin' `AXmax')) `xlabopt' `xmlabopt' `xtickopt' `xmtickopt' `legend_opt'
 
 	/* OTHER TWOWAY OPTIONS (`graphopts' = user-specified) */
@@ -1449,11 +1328,11 @@ program define CheckOpts, sclass
 	local summstat = cond(`"`s(opt)'"'==`"eform"', `""', `"`s(opt)'"')
 
 	if "`summstat'"=="rrr" {
-		local effect `"Risk Ratio"'		// Stata by default refers to this as a "Relative Risk Ratio" or "RRR"
+		local effect `"Risk ratio"'		// Stata by default refers to this as a "Relative Risk Ratio" or "RRR"
 		local summstat rr				//  ... but in MA context most users will expect "Risk Ratio"
 	}
 	else if "`summstat'"=="nohr" {		// nohr and noshr are accepted by _get_eformopts
-		local effect `"Haz. Ratio"'		//  but are not assigned names; do this manually
+		local effect `"Haz. ratio"'		//  but are not assigned names; do this manually
 		local summstat hr
 		local logopt nohr
 	}
@@ -1499,7 +1378,7 @@ program define CheckOpts, sclass
 			local summstat = cond(`"`summstat'"'==`""', trim(`"`smd'`rd'"'), `"`summstat'"')
 		}
 		else if "`nohr'"!="" {
-			local effect `"Haz. Ratio"'
+			local effect `"Haz. ratio"'
 			local summstat hr
 			local logopt nohr
 		}
@@ -1550,70 +1429,192 @@ end
 
 * Subroutine to sort out labels and ticks for x-axis, and find DXmin/DXmax (and CXmin/CXmax if different)
 * Created August 2016
-* Last modified Jan 2018 for v2.2
+* Modified & renamed May 2024
 
-program define ProcessXLabs, rclass
+program define ProcessXAxis, rclass
 
-	syntax anything [, XLAbel(string asis) XMLabel(string asis) XTick(string) XMTick(string) FORCE ///
-		RAnge(string) CIRAnge(string) EFORM H0(real 0) noNULL /*PRoportion*/ DENOMinator(string) * ]
-	
+	syntax anything [, RAnge(string) CIRAnge(string) EFORM H0(real 0) noNULL DENOMinator(passthru) COLSONLY FAVours(string asis) ///
+		FP(string) FORCE /* deprecated -metan9- options; now handled differently */ * ]
+		
 	local graphopts `"`options'"'
 	tokenize `anything'
-	args DXmin DXmax
-	
+	args DXmin DXmax	
 
-	* Parse `range' and `cirange'
-	// in both cases, "min" and "max" refer to range of data in terms of LCI, UCI
-	// (that is, initial values of `DXmin', `DXmax')
-	if "`range'" != `""' {
-		tokenize `range'
-		cap {
-			assert `"`2'"'!=`""'
-			assert `"`3'"'==`""'
+	
+	* Initial parse of xlabel and xtick
+	// [added May 2020] In case old (v3.x and earlier) syntax is used, with comma-separated values and no sub-options
+	// Otherwise, ignore and send through as-is to -twoway- to pick up any other issues
+	// Note: doesn't apply to xmlabel, xmtick as these were not allowed by -metan9-
+	// Note: MAY 2024: Look for repeated options -- these would not have been *expected* by -metan9-
+	// ... but -twoway- would still have accepted them if supplied
+	local 0 `", `graphopts'"'
+	syntax [, XLAbel(string asis) XTick(string) * ]
+	local graphopts `"`options'"'
+
+	while trim(`"`xlabel'`xtick'"')!=`""' {
+		foreach xop in xlabel xtick {
+			ParseOldXLabel `"``xop''"', xop(`xop') h0(`h0') `eform' `force' `twowaynote'
+			if `"`r(xlablist)'"'!=`""' local `xop'new `"``xop'new' `xop'(`r(xlablist)')"'
 		}
-		if _rc {
-			disp as err `"option {bf:range()} must contain exactly two elements"'
-			exit 198
+		local 0 `", `graphopts'"'
+		syntax [, XLAbel(string asis) XTick(string) * ]
+		local graphopts `"`options'"'
+	}
+	if "`twowaynote'"!="" c_local twowaynote notwowaynote	// so that -metan- does not print an additional message regarding "xlabel" or "force"	
+	
+	* If `eform', need to extract correct format to use when assembling labels in exponentiated scale
+	if `"`eform'"'!=`""' {
+		local use_format
+		local formatopts `"`graphopts' `xlabelnew'"'
+		local 0 `", `formatopts'"'
+		syntax [, XLAbel(string asis) XMLabel(string asis) * ]
+		local formatopts `"`options'"'
+		while trim(`"`xlabel'`xmlabel'"')!=`""' {
+			foreach xop in xlabel xmlabel {
+				local 0 `"``xop''"'		// xlabel, xmlabel
+				syntax [anything] , [FORMAT(string) * ]	
+				if `"`format'"'!=`""' local use_format : copy local format		// format() is right-most
+			}
+			local 0 `", `formatopts'"'
+			syntax [, XLAbel(string asis) XMLabel(string asis) * ]
+			local formatopts `"`options'"'			
 		}
-		
-		if inlist(`"`1'"', "min", "max") | inlist(`"`2'"', "min", "max") {
-			if `"`eform'"'!=`""' {
-				forvalues i=1/2 {
-					cap confirm number ``i''
-					if !_rc local `i' = ln(``i'')
+	}	
+	
+	* Full parse x[m]label and x[m]tick, if supplied by user
+	* (Note: we now assume all options follow standard Stata -twoway- syntax)
+	*  - Extract numlists for labels & ticks, from which to calculate size of plot (CXmin/max, DXmin/max etc.)
+	*  - If `eform', interpret user-supplied label values as on the exponentiated scale; apply labels on the interval scale accordingly
+	*  - Calculate no. of rows in case of `colsonly'
+	* But keep repeated options etc. as-is to send to -twoway- , so that subtleties are honoured
+	local 0 `", `graphopts' `xlabelnew' `xticknew'"'
+	syntax [, XLAbel(string asis) XMLabel(string asis) XTick(string) XMTick(string) * ]
+	local graphopts `"`options'"'
+	
+	local rowsxmlab = 0
+	local rowsxlab = 0
+	local firstadd = 1
+	while trim(`"`xlabel'`xmlabel'`xtick'`xmtick'"')!=`""' {
+		foreach xop in xlabel xmlabel xtick xmtick {
+			local xab : copy local xop
+			if "`xop'"=="xlabel" local xab xlab
+			else if "`xop'"=="xmlabel" local xab xmlab
+			
+			local 0 `"``xop''"'
+			syntax [anything(name=`xab'cmd)] , [FORCE ADD ADDNEW /*colsonly-specific option*/ ALTernate /*rightmost, unless "add|addnew" */ * ]
+			
+			// Parse x[m]lablist and obtain numlist (Nov 2017)
+			ProcessXLabels ``xab'cmd', dx(`DXmin' `DXmax') xop(`xop') format(`use_format') `eform' `colsonly'
+			
+			// Add results to previous (if repeated options with `add')
+			if trim(`"`add'`addnew'"')==`""' {
+				local `xab'list `"`r(xlablist)'"'
+				if trim(`"`r(xlabcmd)'`options'"')!=`""' {
+					local `xab'opt `"`xop'(`r(xlabcmd)', `options')"'
 				}
 			}
-			local range `"`1' `2'"'
-			local range = subinstr(`"`range'"', `"min"', `"`DXmin'"', .)
-			local range = subinstr(`"`range'"', `"max"', `"`DXmax'"', .)
-			numlist "`range'", min(2) max(2) sort
-			local range = r(numlist)
-			tokenize "`range'"
-			args RXmin RXmax
-		}	
-		
-		else {
-			if `"`eform'"'!=`""' {
-				numlist "`range'", min(2) max(2) range(>0) sort
-				local range `"`=ln(`1')' `=ln(`2')'"'
-			}
 			else {
-				numlist "`range'", min(2) max(2) sort
-				local range = r(numlist)
+				if `"`colsonly'"'!=`""' & `"`addnew'"'!=`""' {
+					if `firstadd' local firstadd = 0
+					else local addopt add
+					
+					local `xab'list2 `"``xab'list2' `r(xlablist)'"'							// append values
+					if trim(`"`r(xlabcmd)'`options'"')!=`""' {
+						local `xab'opt2 `"``xab'opt2' `xop'(`r(xlabcmd)', `options' `addopt')"'	// repeated options + sub-options
+					}					
+					if trim(`"``xab'opt2'"')!=`""' local addcustom add custom		// for later
+				}
+
+				local `xab'list `"``xab'list' `r(xlablist)'"'						// append values
+				if trim(`"`r(xlabcmd)'`options'"')!=`""' {
+					local `xab'opt `"``xab'opt' `xop'(`r(xlabcmd)', `options' add)"'	// repeated options + sub-options
+				}
 			}
-			tokenize "`range'"
-			args RXmin RXmax
+			if !inlist("`xop'", "xtick", "xmtick") {
+				local rows`xab' = max(`rows`xab'', `=`r(rows)' + (`"`alternate'"'!=`""')')
+			}
+			
+			// `force' option
+			if `"`force'"'!=`""' {
+				if `"`xop'"'!=`"xlabel"' {			// "force" option only applies to xlab, not xmlab or ticks
+					nois disp as err "option {bf:force} is not allowed with {bf:`xop'()}"
+					exit 198
+				}
+				if "`cirange'"!="" {
+					disp as err `"Note: both {bf:cirange()} and {bf:xlabel(, force)} were specifed; {bf:cirange()} takes precedence"'
+				}
+				else if `"`xlablist'"'!=`""' {
+					local xlablist2 : copy local xlablist
+					local min : word 1 of `xlablist2'
+					if inlist(`"`min'"', `"none"', `"."') {
+						gettoken none xlablist2 : xlablist
+					}
+					numlist `"`xlablist2'"', sort
+					local n : word count `r(numlist)'
+					local min : word 1 of `r(numlist)'
+					local max : word `n' of `r(numlist)'
+					if `"`CRXmin'"'==`""' local CRXmin = `min'
+					else {
+						local CRXmin = max(`CRXmin', `min')		// if multiple "force" options, use most restrictive
+					}
+					if `"`CRXmax'"'==`""' local CRXmax = `max'
+					else {
+						local CRXmax = min(`CRXmax', `max')		// if multiple "force" options, use most restrictive
+					}
+					local forceopt force	// indicator that "force" has been specified
+				}
+			}
+		}		// end foreach
+
+		// Test for repeated options and loop if necessary
+		// Parse for "add" and discard repeated options if appropriate
+		// so that later parsing and updating/replacing of "labsize()" is accurate
+		local 0 `", `graphopts'"'
+		syntax [, XLAbel(string asis) XMLabel(string asis) XTick(string) XMTick(string) * ]
+		local graphopts `"`options'"'
+	}		// end while loop
+		
+	
+	* If `colsonly', blank out the labels, and make ticks and gridlines invisible
+	if `"`colsonly'"'!=`""' {
+		foreach xop in xlabel xmlabel xtick xmtick {
+			local xab : copy local xop
+			if "`xop'"=="xlabel" local xab xlab
+			else if "`xop'"=="xmlabel" local xab xmlab
+
+			if inlist("`xop'", "xlabel", "xmlabel") {
+				if `"``xab'opt'"'!=`""' {
+					forvalues i=1/`rows`xab'' {
+						local `xab'txt `"``xab'txt' `" "'"'
+					}
+					if `rows`xab'' > 1 local `xab'txt `"`"``xab'txt'"'"'
+					local `xab'opt `"`xop'( __DUMMY__ ``xab'txt', tlc(none) glc(none) `addcustom')"'
+				}
+			}
+			else {		// Process ticklists: these are easier as no labels
+				if `"``xab'opt'"'!=`""' {
+					local `xab'opt `"`xop'( __DUMMY__ , tlc(none) glc(none) `addcustom')"'
+				}
+			}
 		}
 	}
 	
-	if "`cirange'" != `""' {
-		tokenize `cirange'
+	
+	* Parse `range' and `cirange'
+	// in both cases, "min" and "max" refer to range of data in terms of LCI, UCI
+	// (that is, initial values of `DXmin', `DXmax')
+	foreach op in range cirange {
+		if `"``op''"'==`""' continue
+		local opmin = cond("`op'"=="range", "RXmin", "CXmin")
+		local opmax = cond("`op'"=="range", "RXmax", "CXmax") 
+		
+		tokenize `"``op''"'
 		cap {
 			assert `"`2'"'!=`""'
 			assert `"`3'"'==`""'
 		}
 		if _rc {
-			disp as err "option {bf:cirange()} must contain exactly two elements"
+			disp as err `"option {bf:`op'()} must contain exactly two elements"'
 			exit 198
 		}
 		
@@ -1625,259 +1626,40 @@ program define ProcessXLabs, rclass
 					if !_rc local `i' = ln(``i'')
 				}
 			}
-			local cirange `"`1' `2'"'
-			local cirange = subinstr(`"`cirange'"', `"min"', `"`DXmin'"', .)
-			local cirange = subinstr(`"`cirange'"', `"max"', `"`DXmax'"', .)
-			numlist "`cirange'", min(2) max(2) sort
-			local cirange = r(numlist)
-			tokenize "`cirange'"
-			args CXmin CXmax
+			local `op' `"`1' `2'"'
+			local `op' = subinstr(`"``op''"', `"min"', `"`DXmin'"', .)
+			local `op' = subinstr(`"``op''"', `"max"', `"`DXmax'"', .)
+			numlist `"``op''"', min(2) max(2) sort
+			local `op' = r(numlist)
+			tokenize `"``op''"'
+			args `opmin' `opmax'
 		}	
-
+		
 		else {
 			if `"`eform'"'!=`""' {
-				numlist "`cirange'", min(2) max(2) range(>0) sort
-				local cirange `"`=ln(`1')' `=ln(`2')'"'
+				numlist `"``op''"', min(2) max(2) range(>0) sort
+				local `op' `"`=ln(`1')' `=ln(`2')'"'
 			}
 			else {
-				numlist "`cirange'", min(2) max(2) sort
-				local cirange = r(numlist)
+				numlist `"``op''"', min(2) max(2) sort
+				local `op' = r(numlist)
 			}
-			tokenize "`cirange'"
-			args CXmin CXmax
+			tokenize `"``op''"'
+			args `opmin' `opmax'
 		}
 	}
 	
-	
-	* Initial parse of xlabel and xtick
-	// In case old (v3.x and earlier) syntax is used, with comma-separated values and no sub-options
-	// [added May 2020]
-	local done = 0
-	foreach xl in xlabel xtick {
-		local comma = 0
-		local csv = 1
-		local lblcmd
-		tokenize `"``xl''"', parse(",")
-		while `"`1'"' != `""' {
-			cap confirm number `1'
-			if !_rc local lblcmd `"`lblcmd' `1'"'
-			else cap assert `"`1'"'==`","'
-			if !_rc local comma = 1
-			else local csv = 0
-			mac shift
+	// "force" option
+	if trim(`"`CRXmin'`CRXmax'"')!=`""' {
+		if `"`range'"'==`""' {				// if `range' not specified, default to "forced" xlab limits
+			local RXmin = `CRXmin'
+			local RXmax = `CRXmax'
+			local range = trim(`"`CRXmin' `CRXmax'"')
 		}
-		if `csv' {
-			if `"`lblcmd'"'!=`""' {
-				capture numlist `"`lblcmd'"'
-				if _rc {
-					nois disp as err `"error in option {bf:`xl'()}: invalid numlist"'
-					exit _rc
-				}
-				local `xl' = r(numlist)
-
-				if `comma' {										
-					// [Oct 2020:] If `h0' is absent, add it back in.
-					// Previous versions of -metan- added h0 by default (unless "nonull"), so that e.g. "xlabel(.1, 10) eform" would result in .1, 1 and 10 being marked.
-					// With the "new" syntax based on standard -twoway- options, `h0' needs to be included in xlabel() in order for it to appear.					
-					if "`null'"=="" {
-						local newh0 = cond("`eform'"!="", exp(`h0'), `h0')
-						if !`: list newh0 in `xl'' local `xl' ``xl'' `newh0'
-					}
-					numlist `"``xl''"', sort
-					local `xl' = r(numlist)
-					
-					if !`done' {
-						nois disp as err _n `"Note: with {bf:metan} version 4 and above, the preferred syntax is for {bf:`xl'()}"'
-						nois disp as err `" to contain a standard Stata numlist, so e.g. {bf:`xl'(``xl'')}; see {help numlist:help numlist}"'
-					}
-					local done = 1
-					c_local twowaynote notwowaynote		// so that -metan- does not print an additional message regarding "force"
-				}
-			}
-		}
-	}
-
-	// legacy -force- option
-	if "`force'"!="" & `csv' {
-		if `done' local xlabel `"`xlabel', force"'
-		else {
-			nois disp as err "option {bf:force} not allowed"
-			exit 198
-		}
-		c_local twowaynote notwowaynote		// so that -metan- does not print an additional message regarding "force"
-	}
-
-	
-	* Parse x[m]label if supplied by user
-	local rowsxmlab = 0
-	local rowsxlab = 0
-	foreach xl in xlab xmlab {
-		
-		local 0 `"``xl'el'"'		// xlabel, xmlabel
-		syntax [anything(name=`xl'cmd)] , [FORCE FORMAT(string) * ]
-		local forceopt = cond(`"`xl'"'==`"xlab"', `"`force'"', `"`forceopt'"')		// "force" option only applies to xlab, not xmlab
-		local `xl'opts `"`options'"'
-		
-		// Parse x[m]lablist and obtain numlist (Nov 2017)
-		if `"``xl'cmd'"'!=`""' {
-			local rows`xl' = 1
-			
-			local lbl
-			local lbl2
-			local qed
-			local rest : copy local `xl'cmd
-			while `"`rest'"'!=`""' | `"`lbl'"'!=`""' {			// Feb 2018: added the second part of this stmt
-				if `"`lbl'"'!=`""' local lbl2 `"`lbl'"'			// Nov 2017: user-specified labels need to go round the loop once, before being applied
-				local lbl
-				
-				gettoken tok rest : rest, qed(qed)
-				if `"`tok'"'!=`""' {
-				
-					// if text label found, check for embedded quotes (i.e. multiple lines)
-					if `qed' {
-						local rest2 `"`"`tok'"'"'
-						gettoken el : rest2, quotes qed(qed2)
-						if !`qed2' {
-							disp as err `"invalid label specifier, : ``xl'list':"'
-							exit 198
-						}
-						local new`xl'cmd `"`new`xl'cmd' `rest2'"'
-						while `"`rest2'"'!=`""' {
-							gettoken el rest3 : rest2, quotes
-							if `"`el'"'==`"`""'"' {
-								local newlist : list rest2 - el	// modified Feb 2018; check
-								continue, break
-							}
-							local newlist `"`newlist' `el'"'
-							local rest2 `"`rest3'"'
-						}
-						local rows`xl' = max(`rows`xl'', `: word count `newlist'')
-						local lbl2				
-					}	// end if `qed'
-					
-					// else, check if valid numlist
-					else {
-						cap numlist `"`tok'"'
-						if _rc {
-							if substr(`"`tok'"', 1, 1)==`"#"' {
-								disp as err `"Cannot use the {bf:#} syntax in the {bf:`xl'el()} option of {bf:forestplot}; please use a {it:numlist} instead"'
-							}
-							else numlist `"`tok'"'
-						}
-						if `"`eform'"'!=`""' {
-							cap numlist `"`tok'"', range(>0)
-							if _rc {
-								disp as err `"option {bf:eform} specified, but {bf:`xl'el()} contains non-positive values"'
-								exit 198
-							}
-						
-							// if eform, need to expand numlist and take logs
-							local nl = r(numlist)
-							local N : word count `nl'
-							forvalues i=1/`N' {
-								local el : word `i' of `nl'
-								local `xl'list `"``xl'list' `=ln(`el')'"'
-								local new`xl'i `"`=ln(`el')'"'
-								
-								local lbl = cond("`format'"=="", string(`el'), string(`el', "`format'"))
-								if `i'==1 & `"`lbl2'"'!=`""' local new`xl'i `"`"`lbl2'"' `new`xl'i'"'
-								if `i'<`N'                   local new`xl'i `"`new`xl'i' `"`lbl'"'"'
-								local lbl2
-								// don't add the last label yet, in case user has specified their own label
-								
-								local new`xl'cmd `"`new`xl'cmd' `new`xl'i'"'
-							}
-						}
-						
-						// else, can simply add unexpanded numlist
-						else {
-							local `xl'list `"``xl'list' `tok'"'
-							local new`xl'cmd `"`new`xl'cmd' `tok'"'
-							local lbl2
-						}
-					}		// end else
-				}		// end if `"`tok'"'!=`""'
-					
-				// if lbl, add it now
-				if `"`lbl2'"'!=`""' {
-					local new`xl'cmd `"`new`xl'cmd' `"`lbl2'"'"'
-					local lbl
-					local lbl2
-				}
-
-			}	// while loop
-			
-			local `xl'list = trim(`"``xl'list'"')
-			local `xl'cmd  = trim(`"`new`xl'cmd'"')
-		}
-
-		cap assert `"``xl'cmd'"'==`""' if `"``xl'list'"'==`""'
-		if _rc {
-			disp as err "Error in {bf:`xl'el()}"
-			exit 198
-		}
-		
-		local `xl'fmt : copy local format		// added 1st May 2018
-	}
-	
-	if `"`xlablist'"' != `""' {
-		if "`forceopt'"!=`""' {
-			if "`cirange'"!="" {
-				disp as err `"Note: both {bf:cirange()} and {bf:xlabel(, force)} were specifed; {bf:cirange()} takes precedence"'
-			}
-			else {
-				numlist "`xlablist'", sort
-				local n : word count `r(numlist)'
-				
-				// added Sep 2017 for v2.1
-				if `"`range'"'==`""' {
-					local RXmin : word 1 of `r(numlist)'		// if `range' not specified, default to "forced" xlab limits
-					local RXmax : word `n' of `r(numlist)'
-					local range `"`RXmin' `RXmax'"'
-				}
-				else {
-					local CXmin : word 1 of `r(numlist)'		// otherwise, set `cirange' instead
-					local CXmax : word `n' of `r(numlist)'
-					local cirange `"`CXmin' `CXmax'"'
-				}
-			}
-		}		
-	}
-
-	
-	* Parse ticks
-	// JUN 2015 -- for future: is there any call for allowing FORCE, or similar, for ticks??
-	foreach tick in xtick xmtick {
-		if `"``tick''"' != "" {
-			local 0 `"``tick''"'
-			syntax [anything(name=`tick'list)] , [ FORCE * ]	
-			local `tick'opts `"`options'"'	
-		
-			if `"`force'"'!=`""' {
-				nois disp as err "option {bf:force} is not allowed with {bf:xtick()}"
-				exit 198
-			}
-		
-			if `"``tick'list'"' != `""' {
-				cap numlist `"``tick'list'"'
-				if _rc {
-					disp as err `"invalid label specifier, : ``tick'list'"'
-					exit 198
-				}
-				if `"`eform'"'!=`""' {							// assume given on exponentiated scale if "eform" specified, so need to take logs
-					cap numlist "``tick'list'", range(>0)		// ...in which case, all values must be greater than zero
-					if _rc {
-						disp as err `"with {bf:eform} option, {bf:`tick'()} values are expected to be on the exponentiated scale"'
-						disp as err `"and therefore strictly greater than zero"'
-						exit 198
-					}
-					local e`tick'list ``tick'list'
-					local `tick'list
-					foreach xi of numlist `e`tick'list' {
-						local `tick'list `"``tick'list' `=ln(`xi')'"'
-					}
-				}
-			}
+		else {				// otherwise, set `cirange' instead (see message above)
+			local CXmin = `CRXmin'
+			local CXmax = `CRXmax'
+			local cirange = trim(`"`CRXmin' `CRXmax'"')
 		}
 	}
 	
@@ -1901,19 +1683,16 @@ program define ProcessXLabs, rclass
 	
 	// Jan 2018: Now re-set DXmin/DXmax if RXmin/RXmax are defined
 	// CHECK CONSEQUENCES OF THIS CAREFULLY
-	if `"`RXmin'`RXmax'"'!=`""' {
+	if trim(`"`RXmin'`RXmax'"')!=`""' {
 		local DXmin = `RXmin'
 		local DXmax = `RXmax'
 	}
 	
 	// remove null line if lies outside range of x values to be plotted
-	if "`null'"=="" & trim("`cirange'`range'`forceopt'")!="" {
+	if `"`null'"'==`""' & trim(`"`cirange'`range'`forceopt'"')!=`""' {
 		local removeNull = 0
-		if `"`cirange'"'!=`""' {
-			local removeNull = (`h0' < `CXmin' | `h0' > `CXmax')
-		}
-		else local removeNull = (`h0' < `RXmin' | `h0' > `RXmax')
-
+		if `"`cirange'"'!=`""' local removeNull = (`h0' < `CXmin' | `h0' > `CXmax')
+		else                   local removeNull = (`h0' < `RXmin' | `h0' > `RXmax')
 		if `removeNull' {
 			nois disp as err "null line lies outside of user-specified x-axis range and will be suppressed"
 			local null nonull
@@ -1921,190 +1700,47 @@ program define ProcessXLabs, rclass
 	}
 	return local null `null'
 
-
-
-	**********************************
-	* If xlabel not supplied by user *
-	**********************************
 	
-	// Need to choose sensible values:
-	// Default is for symmetrical limits, with 3 labelled values including null
-	// N.B. First modified from original -metan- code by DF, March 2013
-	//  with further improvements by DF, January 2015
-	// Last modifed by DF April 2017 to avoid interminable looping if [base]^`mag' = missing
-
-	local xlablim1=0		// init
-	if `"`xlablist'"' == `""' {
-	
-		// Mar 2020:
-		// If `proportion', simply choose 0, .5 and 1
-		/*
-		if `"`proportion'"'!=`""' {
-			local xlablist `"0 .5 1"'
-			local xlabcmd `"`xlablist'"'
-		}
-		*/
-		// Mar 2021: ... multiplied by `denominator'
-		// Apr 2021: ... but only if `range' not specified and smaller than DXmin/DXmax
-		if "`denominator'"!="" {
-			cap confirm number `denominator'
-			if _rc {
-				nois disp as err `"`denominator' found where number expected in option {bf:denominator(#)}"'
-				exit 198
-			}
-			
-			local xlablist
-			if `"`range'"'!=`""' {
-				local ii = max(`RXmin', 0)
-				local xlablist `"`xlablist' `ii'"'
-				local ii = min(`RXmax', `denominator')
-				local xlablist `"`xlablist' `ii'"'
-			}
-			else {
-				foreach i of numlist 0 .5 1 {
-					local ii = `denominator' * `i'
-					local xlablist `"`xlablist' `ii'"'
-				}
-			}
-			local xlabcmd `"`xlablist'"'
-		}
-		else {
-
-			// If null line, choose values based around `h0'
-			// (i.e. `xlabinit1' = `h0'... but `h0' is automatically selected anyway so no need to explicitly define `xlabinit1')
-			if "`null'" == "" | `h0' != 0 {		// [N.B. "h0 != 0" added Jan 2020]
-				local xlabinit2 = max(abs(`DXmin' - `h0'), abs(`DXmax' - `h0'))
-				local xlabinit "`xlabinit2'"
-			}
-			
-			// if `nulloff', choose values in two stages: firstly based on the midpoint between CXmin and CXmax (`xlab[init|lim]1')
-			//  and then based on the difference between CXmin/CXmax and the midpoint (`xlab[init|lim]2')
-			else {
-				local xlabinit1 = (`DXmax' + `DXmin')/2
-				local xlabinit2 = abs(`DXmax' - `xlabinit1')		// N.B. same as abs(`CXmin' - `xlabinit1')
-				if float(`xlabinit1') != 0 {
-					local xlabinit "`=abs(`xlabinit1')' `xlabinit2'"
-				}
-				else local xlabinit `xlabinit2'
-			}
-			assert "`xlabinit'"!=""
-			assert "`xlabinit2'"!=""
-			assert `: word count `xlabinit'' == ("`null'"!="" & `h0'==0)*(float(`DXmax')!=-float(`DXmin')) + 1		// should be >= 1
-			
-			local counter=1
-			foreach xval of numlist `xlabinit' {
-			
-				if `"`eform'"'==`""' {						// linear scale
-					local mag = floor(log10(`xval'))
-					local xdiff = abs(`xval'-`mag')
-					foreach i of numlist 1 2 5 10 {
-						local ii = `i' * 10^`mag'
-						if missing(`mag') local ii = 0		// March 2021: catch extreme case
-						if missing(`ii') {
-							local ii = `=`i'-1' * 10^`mag'
-							local xdiff = abs(float(`xval' - `ii'))
-							local xlablim = `ii'
-							continue, break
-						}
-						else if abs(float(`xval' - `ii')) <= float(`xdiff') {
-							local xdiff = abs(float(`xval' - `ii'))
-							local xlablim = `ii'
-						}
-					}
-				}
-				else {										// log scale
-					local mag = round(`xval'/ln(2))
-					local xdiff = abs(`xval' - ln(2))
-					forvalues i=1/`mag' {
-						local ii = ln(2^`i')
-						if missing(`ii') {
-							local ii = ln(2^`=`i'-1')
-							local xdiff = abs(float(`xval' - `ii'))
-							local xlablim = `ii'
-							continue, break
-						}
-						else if abs(float(`xval' - `ii')) <= float(`xdiff') {
-							local xdiff = abs(float(`xval' - `ii'))
-							local xlablim = `ii'
-						}
-					}
-					
-					// if effect is small, use 1.5, 1.33, 1.25 or 1.11 instead, as appropriate
-					foreach i of numlist 1.5 `=1/0.75' 1.25 `=1/0.9' {
-						local ii = ln(`i')
-						if abs(float(`xval' - `ii')) <= float(`xdiff') {
-							local xdiff = abs(float(`xval' - `ii'))
-							local xlablim = `ii'
-						}
-					}	
-				}
-				
-				// if nonull, center limits around `xlablim1', which should have been optimized by the above code
-				if "`null'" != "" & `h0'==0 {		// nonull
-					if `counter'==1 {
-						local xlablim1 = `xlablim'*sign(`xlabinit1')
-					}
-					if `counter'>1 | `: word count `xlabinit''==1 {
-						local xlablim2 = `xlablim'
-						local xlablims `"`=`xlablim1'+`xlablim2'' `=`xlablim1'-`xlablim2''"'
-					}
-				}
-				else local xlablims `"`xlablims' `xlablim'"'
-				local ++counter
-
-			}	// end foreach xval of numlist `xlabinit'
-				
-			// if nulloff, don't recalculate CXmin/CXmax
-			if "`null'" != "" & `h0'==0 numlist `"`xlablim1' `xlablims'"'
-			else {
-				numlist `"`=`h0' - `xlablims'' `h0' `=`h0' + `xlablims''"', sort	// default: limits symmetrical about `h0'
-				tokenize `"`r(numlist)'"'
-
-				// if data are "too far" from null (`h0'), take one limit (but not the other) plus null
-				//   where "too far" ==> abs(`CXmin' - `h0') > `CXmax' - `CXmin'
-				//   (this works whether data are "too far" to the left OR right, since our limits are symmetrical about `h0')
-				if abs(`DXmin' - `h0') > `DXmax' - `DXmin' {
-					if `3' > `DXmax'      numlist `"`1' `h0'"'
-					else if `1' < `DXmin' numlist `"`h0' `3'"'
-				}
-				else if trim("`range'`cirange'`forceopt'")=="" {		// "standard" situation
-					numlist `"`1' `h0' `3'"'
-					local DXmin = `h0' - `xlabinit2'
-					local DXmax = `h0' + `xlabinit2'
-				}
-			}
-			local xlablist=r(numlist)
-		}
-			
-		// if log scale, label with exponentiated values
-		if `"`eform'"'!=`""' {
-			local xlabcmd
-			foreach xi of numlist `xlablist' {
-				local lbl = cond("`xlabfmt'"=="", string(exp(`xi')), string(exp(`xi'), "`xlabfmt'"))
-				local xlabcmd `"`xlabcmd' `xi' `"`lbl'"'"'				
-			}
-			// return local xlabfmt `"`xlabfmt'"'	// Nov 2017: in case of colsonly + eform
-		}
-		else {
-			local xlabcmd `"`xlablist'"'
+	* Apply automated values if -xlabel- not supplied by user
+	// MAY 2024: Note: if xmlabel() is used, AutoXLabel is still potentially run; this matches with standard -twoway- behaviour
+	local xlablim1 = 0		// init
+	local xlablist_all `"`xlablist' `xlablist2'"'
+	local xlablist_all : list uniq xlablist_all
+	if inlist(`"`xlablist_all'"', `"none"', `"."', `"none ."', `". none"') local xlablist_all none
+	if `"`xlablist_all'"'==`""' {
+		AutoXLabel `DXmin' `DXmax', range(`range') `eform' format(`use_format') h0(`h0') `null' `denominator'
 		
-			// If formatting not used here (for string labelling), return it alongside other `xlabopts' to pass to -twoway-
-			// if `"`format'"'!=`""' local xlabopts `"`xlabopts' format(`format')"'
-		}
+		local DXmin = `r(DXmin)'
+		local DXmax  = `r(DXmax)'
+		local xlablim1 = `r(xlablim1)'
+		
+		local xlablist `"`r(xlablist)'"'
+		local xlabopt `"`r(xlabopt)' `xlabopt'"'
 		
 		// Added Feb 2018: If automatic labelling, set rows to 1 (rowsxmlab remains at 0)
 		local rowsxlab = 1
-		
+		if `"`colsonly'"'!=`""' local xlabopt `"xlabel(__DUMMY__ `" "', tlc(none) glc(none))"'
 	}		// end if "`xlablist'" == ""
-	
-	if `"`xlabfmt'"'!=`""'  local xlabopts   `"`xlabopts' format(`xlabfmt')"'
-	if `"`xmlabfmt'"'!=`""' local xmlabopts `"`xmlabopts' format(`xmlabfmt')"'
-
-	numlist `"`xlablist' `xticklist' `xmticklist'"', sort
-	local n : word count `r(numlist)' 
-	local XLmin : word 1 of `r(numlist)'
-	local XLmax : word `n' of `r(numlist)'
-	
+		
+	// Final parsing of x-axis labelling quantities (excluding "favours" and [xab]list2/newadd ), to form `XLmin' `XLmax'
+	local xlablist_all `"`xlablist' `xticklist' `xmticklist'"'
+	local xlablist_all : list uniq xlablist_all
+	if inlist(`"`xlablist_all'"', `"none"', `"."', `"none ."', `". none"') local xlablist_all none
+	cap assert `"`xlablist_all'"'!=`""'
+	if _rc {
+		disp as err "Something has gone wrong with x-axis value labelling"
+		exit 198
+	}
+	if `"`xlablist_all'"'==`"none"' {
+		local XLmin = `h0'
+		local XLmax = `h0'
+	}
+	else {
+		numlist `"`xlablist' `xticklist' `xmticklist'"', sort
+		local n : word count `r(numlist)' 
+		local XLmin : word 1 of `r(numlist)'
+		local XLmax : word `n' of `r(numlist)'
+	}
 	
 	* Use symmetrical plot area (around `h0'), unless data "too far" from null
 	if trim(`"`range'`cirange'`forceopt'"')==`""' {
@@ -2113,12 +1749,12 @@ program define ProcessXLabs, rclass
 		//   where "too far" ==> max(abs(`CXmin'-`h0'), abs(`CXmax'-`h0')) > `CXmax' - `CXmin'
 		local TooFar = 0
 		if "`null'"=="" | `h0' != 0 {		
-			if `h0' - `DXmax' > `DXmax' - `DXmin' {						// data "too far" to the left
-				local DXmax = max(`h0' + .5*(`DXmax'-`DXmin'), `XLmax')	// clip the right-hand side
+			if `h0' - `DXmax' > `DXmax' - `DXmin' {							// data "too far" to the left
+				local DXmax = max(`h0' + .5*(`DXmax'-`DXmin'), `XLmax')		// clip the right-hand side
 				local TooFar = 1
 			}	
-			if `DXmin' - `h0' > `DXmax' - `DXmin' {						// data "too far" to the right
-				local DXmin = min(`h0' - .5*(`DXmax'-`DXmin'), `XLmin')	// clip the left-hand side
+			if `DXmin' - `h0' > `DXmax' - `DXmin' {							// data "too far" to the right
+				local DXmin = min(`h0' - .5*(`DXmax'-`DXmin'), `XLmin')		// clip the left-hand side
 				local TooFar = 1
 			}
 		}
@@ -2144,7 +1780,122 @@ program define ProcessXLabs, rclass
 		local CXmax = `DXmax'
 	}	
 	
-	// Position of xtitle
+	
+	* Now parse `favours' option
+	*  - Use similar approach to x[m]label, and ultimately translate into an additional xmlabel option
+	*  - Calculate no. of rows in case of `colsonly'
+	local rowsfav = 0
+	if `"`favours'"' != `""' {
+		local oldfp : copy local fp	
+		local 0 `"`favours'"'
+		syntax [anything(everything)] [, FP(string) noSYMmetric /// /* these two are needed right now, others parsed simply to isolate inappropriate options */
+			FORMAT(string) ANGLE(string) LABGAP(string) LABSTYLE(string) LABSize(string) LABColor(string) noSYMmetric * ]
+		if `"`oldfp'"'!=`""' local fp : copy local oldfp
+		if `"`options'"' != `""' {
+			nois disp as err `"inappropriate suboptions found in {bf:favours()}"'
+			exit 198
+		}
+		
+		* Parse text, and count how many rows of text there are (i.e. separated with pairs of quotes)
+		local rowsleftfav = 0
+		local rowsrightfav = 0
+
+		gettoken leftfav rest : anything, parse("#") quotes		
+		if `"`leftfav'"'!=`"#"' {
+			while `"`rest'"'!=`""' {
+				local ++rowsleftfav
+				gettoken next rest : rest, parse("#") quotes
+				if `"`next'"'==`"#"' continue, break
+				local leftfav `"`leftfav' `next'"'
+			}
+		}
+		else local leftfav `""'		
+		local rightfav = trim(`"`rest'"')
+		if `"`rightfav'"'!=`""' {
+			while `"`rest'"'!=`""' {
+				local ++rowsrightfav
+				gettoken next rest : rest, quotes
+			}
+		}
+		local rowsfav = max(1, `rowsleftfav', `rowsrightfav')
+
+		// Feb 2021: Remove quotes if only a single line
+		if `rowsleftfav'==1 {
+		    gettoken new : leftfav, qed(qed)
+			if `qed' local leftfav : copy local new
+		}
+		if `rowsrightfav'==1 {
+		    gettoken new : rightfav, qed(qed)
+			if `qed' local rightfav : copy local new
+		}
+
+		// modified Jan 30th 2018, and again May 21st 2018
+		if `"`fp'"'==`""' {
+			// August 2018: default is...
+			// May 2018: use smaller of distances from h0 to min(DXmin, XLmin) or max(DXmax, XLmax)
+			local fpmin = min(`DXmin', `XLmin')
+			local fpmax = max(`DXmax', `XLmax')
+			
+			if `"`symmetric'"'==`""' {
+				local fp =  min(cond(`fpmin' <= `h0' & `"`leftfav'"'!=`""',  (`h0' - `fpmin')/2, .), ///
+								cond(`fpmax' >= `h0' & `"`rightfav'"'!=`""', (`fpmax' - `h0')/2, .))
+				local leftfp  = cond(`fpmin' <= `h0' & `"`leftfav'"'!=`""',  `"`=`h0' - `fp'' `"`leftfav'"'"',  `""')
+				local rightfp = cond(`fpmax' >= `h0' & `"`rightfav'"'!=`""', `"`=`h0' + `fp'' `"`rightfav'"'"', `""')
+			}
+			
+			// ...but may be overruled with option `nosymmetric', e.g. if distances are extremely unbalanced
+			else {
+				local leftfp  = cond(`fpmin' <= `h0' & `"`leftfav'"'!=`""',  `"`=(`h0' + `fpmin')/2' `"`leftfav'"'"',  `""')
+				local rightfp = cond(`fpmax' >= `h0' & `"`rightfav'"'!=`""', `"`=(`h0' + `fpmax')/2' `"`rightfav'"'"', `""')
+			}
+		}
+		
+		// modified Jan 2020
+		// User-specified fp()
+		else {
+			numlist `"`fp'"', miss max(2)
+			tokenize `fp'
+			args fpleft fpright
+			if `"`eform'"'!=`""' local fpleft = ln(`fpleft')			// fp() should be given on same scale as xlabels
+
+			if `"`fpright'"'==`""' {		// only one value given
+				local fpleft  = cond(`fpleft' <= `h0', `fpleft', 2*`h0' - `fpleft')
+				local fpright = 2*`h0' - `fpleft'
+			}
+			else {		// two values given: should be one either side of null line)
+				cap assert `fpleft' <= `h0'
+				if _rc {
+					if `h0' != 0 local extra `" (`h0')"'
+					nois disp as err `"Error in {bf:fp()}: left-hand value should lie to the left of the null value`extra'"'
+					exit 198
+				}
+				cap assert `fpright' >= `h0'
+				if _rc {
+					if `h0' != 0 local extra `" (`h0')"'
+					nois disp as err `"Error in {bf:fp()}: right-hand value should lie to the right of the null value`extra'"'
+					exit 198
+				}
+			}
+			local leftfp  `fpleft' `"`leftfav'"'
+			local rightfp `fpright' `"`rightfav'"'
+		}
+
+		// Nov 2017 [modified Feb 2018]
+		assert (`rowsfav'>0) == (trim(`"`leftfp'`rightfp'"')!=`""')
+		if `rowsfav' {
+			if `"`colsonly'"'!=`""' {
+				forvalues i=1/`rowsfav' {
+					local favtxt `"`favtxt' `" "'"'
+				}
+				if `rowsfav' > 1 local favtxt `"`"`favtxt'"'"'
+				local dummy __DUMMY__
+			}
+			else local favtxt `leftfp' `rightfp'
+			local favopt `"xmlabel(`dummy' `favtxt', tlc(none) glc(none) favours `addcustom' `favopt')"'		
+		}
+	}		
+	
+	// Position of xtitle [May 2024: not currently implemented]
 	local xtitleval = cond("`xlablist'"=="", `xlablim1', .5*(`CXmin' + `CXmax'))
 	return scalar xtitleval = `xtitleval'	
 	
@@ -2153,182 +1904,423 @@ program define ProcessXLabs, rclass
 	return scalar CXmax = `CXmax'
 	return scalar DXmin = `DXmin'
 	return scalar DXmax = `DXmax'
-	return scalar XLmin = `XLmin'
-	return scalar XLmax = `XLmax'
 	
-	// moved Feb 2018; modified Oct 2018
-	return scalar rowsxlab = `rowsxlab'
+	// moved Feb 2018; modified Oct 2018; modified May 2024
+	return scalar rowsxlab  = `rowsxlab'
 	return scalar rowsxmlab = `rowsxmlab'
+	return scalar rowsfav   = `rowsfav'
+
+	return local xlabopt   `"`xlabopt'"'
+	return local xmlabopt  `"`xmlabopt'"'
+	return local favopt    `"`favopt'"'
+	return local xtickopt  `"`xtickopt'"'
+	return local xmtickopt `"`xmtickopt'"'
 	
-	return local xlablist   `"`xlablist'"'
-	return local xlabcmd    `"`xlabcmd'"'
-	return local xlabopts   `"`xlabopts'"'
+	// New May 2024: for use with `colsonly'
+	return local xlabopt2   `"`xlabopt2'"'
+	return local xmlabopt2  `"`xmlabopt2'"'
+	return local xtickopt2  `"`xtickopt2'"'
+	return local xmtickopt2 `"`xmtickopt2'"'	
 
-	return local xmlablist  `"`xmlablist'"'
-	return local xmlabcmd   `"`xmlabcmd'"'
-	return local xmlabopts  `"`xmlabopts'"'
-
-	return local xticklist  `"`xticklist'"'
-	return local xtickopts  `"`xtickopts'"'
-
-	return local xmticklist `"`xmticklist'"'
-	return local xmtickopts `"`xmtickopts'"'
-
-	return local options    `"`graphopts'"'
+	return local options `"`graphopts'"'
 
 end
 
 
+* ParseOldXLabel: Initial parse of xlabel and xtick, in case old (v3.x and earlier) syntax is used
+// (with comma-separated values and no sub-options)
+// Originally written May 2020; moved into separate subroutine May 2024
+// subroutine of ProcessXAxis
+program define ParseOldXLabel, rclass
 
+	syntax [anything(name=xlabcmd)], XOP(string) /*for error messages*/ [ H0(real 0) EFORM FORCE noTWOWAYNOTE ]
 
-*********************************************************************************
+	local done = 0
+	local comma = 0
+	local csv = 1
+	local lblcmd
+	tokenize `xlabcmd', parse(",")
 
-* Subroutine to do extra work sorting out labels/ticks ONLY IF COLSONLY [** BETA **]
-// Created Nov 2017
-program define ExtraColsOnly, sclass
+	if inlist(`"`1'"', `"none"', `"minmax"') | substr(`"`1'"', 1, 1)==`"#"' {
+		gettoken xlablist : xlabcmd		// return original xlabel option as-is; presumably using modern Stata -twoway- syntax
+	}
+	else {
+		while `"`1'"' != `""' {
+			cap confirm number `1'
+			if !_rc {
+				if `"`2'"'==`""' & `"`lblcmd'"'==`""' local csv = 0
+				local lblcmd `"`lblcmd' `1'"'
+			}
+			else {
+				cap assert `"`1'"'==`","'
+				if !_rc local comma = 1
+				else local csv = 0
+			}
+			mac shift
+		}
+		if `csv' {		// originally a comma-separated list of numbers; but now commas replaced by spaces
+			if `"`lblcmd'"'!=`""' {
+				capture numlist `"`lblcmd'"'
+				if _rc {
+					nois disp as err `"error in option {bf:`xlname'()}: invalid numlist"'
+					exit _rc
+				}
+				local xlablist = r(numlist)
 
-	syntax [, XLABLIST(numlist) XMLABLIST(numlist) ///
-		XLABOPT(string asis) XMLABOPT(string asis) XTICKOPT(string asis) XMTICKOPT(string asis) ///
-		AX(numlist) ROWSXLAB(numlist >=0) KEEPXLabs ]		// Feb 2018: blanked out * and added xmlablist/opt
-
-	tokenize `ax'
-	args AXmin AXmax
-	
-	tokenize `rowsxlab'
-	args rowsxlab rowsxmlab rowsfav
-	local rowsxmlab = max(`rowsfav', `rowsxmlab')
-		
-	// adjust xticklist and xlablist if needed
-	// NOV 2017: NEEDS RE-DOING:  (Oct 2018: include in next version??)
-	// INCLUDE XMTICK
-	// BUT ALSO, NEED TO TAKE ACCOUNT OF TEXT LABELS IN XLABLIST (BELOW) -- see revised code of ProcessXLabs
-	local lt = cond(`"`keepxlabs'"'==`""', `"<="', `"<"')
-	local gt = cond(`"`keepxlabs'"'==`""', `">="', `">"')
-	
-	// Ticklists: these are easy since no labels, so can use subinstr()
-	foreach tick in xtick xmtick {
-		local 0 `"``tick'opt'"'
-		syntax [anything(name=`tick'list)] [, *]
-		local `tick'opts `"`options'"'
-	
-		local old`tick' = 0
-		if `"``tick'list'"'!=`""' {
-			local old`tick' = 1
-			numlist `"``tick'list'"'
-			local `tick'list = r(numlist)		
-			foreach xi of numlist ``tick'list' {
-				if `xi' `lt' `AXmin' | `xi' `gt' `AXmax' {
-					local `tick'list = subinstr(`" ``tick'list' "', `" `xi' "', `" "', .)
+				if `comma' {										
+					// [Oct 2020:] If `h0' is absent, add it back in.
+					// Previous versions of -metan- added h0 by default (unless "nonull"), so that e.g. "xlabel(.1, 10) eform" would result in .1, 1 and 10 being marked.
+					// With the "new" syntax based on standard -twoway- options, `h0' needs to be included in xlabel() in order for it to appear.					
+					if `"`null'"'==`""' {
+						local newh0 = cond(`"`eform'"'!=`""', exp(`h0'), `h0')
+						if !`: list newh0 in xlablist' local xlablist `xlablist' `newh0'
+					}
+					numlist `"`xlablist'"', sort
+					local xlablist = r(numlist)
+					
+					if !`done' & `"`twowaynote'"'==`""' {
+						nois disp as err _n `"Note: with {bf:metan} version 4 and above, the preferred syntax is for {bf:`xop'()}"'
+						nois disp as err `" to contain a standard Stata numlist, so e.g. {bf:`xop'(`xlablist')}; see {help numlist:help numlist}"'
+					}
+					local done = 1
+					c_local twowaynote notwowaynote		// so that -metan- does not print an additional message regarding "force"
 				}
 			}
-			local `tick'list = trim(itrim(`"``tick'list'"'))
+		}
+		else gettoken xlablist : xlabcmd		// return original xlabel option as-is; presumably using modern Stata -twoway- syntax
+
+		// convert legacy -force- option into modern twoway xlabel option
+		if `"`xop'"'==`"xlabel"' & `"`force'"'!=`""' & `csv' {
+			if `done' local xlablist `"`xlablist', force"'
+			else {
+				if `"`xlablist'"'==`""' {
+					nois disp as err `"main option {bf:force} not allowed without {bf:xlabel()}"'
+				}
+				else nois disp as err `"option {bf:force} only allowed as a suboption to {bf:xlabel()}"'
+				exit 198
+			}
+			c_local twowaynote notwowaynote		// so that -metan- does not print an additional message regarding "force"
 		}
 	}
+	
+	return local xlablist `"`xlablist'"'
 
-	// Process xlabcmd and xmlabcmd
-	foreach xl in xlab xmlab {
-		local 0 `"``xl'opt'"'
-		syntax [anything(name=`xl'cmd)] [, FORMAT(string) *]
-		local `xl'fmt `"`format'"'
-		local `xl'opts `"`options'"'
+end
+
+
+* ProcessXLabels: Parse user-specified x[m]label() and x[m]tick() options
+// Moved into separate subroutine May 2024; now also handles repeated options
+// subroutine of ProcessXAxis
+program define ProcessXLabels, rclass
+	
+	syntax [anything(name=xlabcmd)], XOP(string) /*for error messages*/ DX(numlist min=2 max=2) /*in case of "minmax" rule*/ ///
+		[ EFORM COLSONLY FORMAT(string) /*KEEPXLabs*/ ]
+
+	local rows = 0	// init
 		
-		// technique for xlablist:  first, find which values need to be removed
-		// then (assuming there are any) find them within `xlabcmd'
-		// and remove them AND any associated label.
-		if `"``xl'list'"'!=`""' {
-			numlist `"``xl'list'"'
-			local `xl'list = r(numlist)		
-			foreach xi of numlist ``xl'list' {
-				if `xi' `lt' `AXmin' | `xi' `gt' `AXmax' {
-					local remove `"`remove' `xi'"'
+	// First, look at ticks; these are easier (no labels!)
+	if inlist("`xop'", "xtick", "xmtick") {
+		if `"`xlabcmd'"'!=`""' {
+			cap numlist `"`xlabcmd'"'
+			if _rc {
+				disp as err `"invalid label specifier, : `xlabcmd'"'
+				exit 198
+			}
+			if `"`eform'"'!=`""' {						// assume given on exponentiated scale if "eform" specified, so need to take logs
+				cap numlist "`xlabcmd'", range(>0)		// ...in which case, all values must be greater than zero
+				if _rc {
+					disp as err `"option {bf:eform} specified, but {bf:`xop'()} contains non-positive values"'
+					exit 198
+				}
+				local exlabcmd `"`xlabcmd'"'
+				local xlabcmd
+				foreach xi of numlist `exlabcmd' {
+					local xlabcmd `"`xlabcmd' `=ln(`xi')'"'
 				}
 			}
-			if `: word count `remove'' {
-				local `xl'list : list `xl'list - remove
+			local newxlabcmd: copy local xlabcmd	// to match with code further down
+			local xlablist: copy local xlabcmd		// to match with code further down
+		}
+	}
+	// end of ticks
+	
+	else {
+		local rest : copy local xlabcmd
+		while `"`rest'"'!=`""' | `"`lbl'"'!=`""' {			// Feb 2018: added the second part of this stmt
+			if `"`lbl'"'!=`""' local lbl2 `"`lbl'"'			// Nov 2017: user-specified labels need to go round the loop once, before being applied
+			local lbl
+			
+			gettoken tok rest : rest, qed(qed)
+			if `"`tok'"'!=`""' {
+			
+				// if text label found, check for embedded quotes (i.e. multiple lines)
+				if `qed' {
+					local rest2 `"`"`tok'"'"'
+					gettoken el : rest2, qed(qed2)
+					if !`qed2' {
+						disp as err `"invalid label specifier, : ``xl'list':"'
+						exit 198
+					}
+					local newxlabcmd `"`newxlabcmd' `rest2'"'
+					local newlist
+					local rest2 : copy local el
+					while `"`rest2'"'!=`""' {
+						gettoken el rest3 : rest2, quotes
+						if `"`el'"'==`"`""'"' {
+							// local newlist : list rest2 - el	// modified Feb 2018; check
+							continue, break
+						}
+						local newlist `"`newlist' `el'"'
+						local rest2 `"`rest3'"'
+					}
+					local rows = max(`rows', `: word count `newlist'')
+					local lbl2				
+				}	// end if `qed'
 				
-				local rest : copy local `xl'cmd
-				local `xl'cmd
-				local flag = 0
-				while `"`rest'"'!=`""' {
-					gettoken el rest : rest, quotes qed(qed)
-					if !`qed' local flag=0
-					if `: list el in remove' local flag=1
+				// else, check if valid numlist
+				else {
+					if substr(`"`tok'"', 1, 1)==`"#"' {
+						local hash `"#"'
+						if substr(`"`tok'"', 2, 1)==`"#"' local hash `"##"'
+						disp as err `"Cannot use the {bf:`hash'}# syntax in the {bf:`xop'()} option of {bf:forestplot}; please use a {it:numlist} instead"'
+						exit 198
+					}
+					if inlist(`"`tok'"', `"none"', `"."') local rule_none : copy local tok
+					else {
+						if `"`tok'"'==`"minmax"' local tok `DXmin' `DXmax'
+						numlist `"`tok'"'
+						local rows = max(`rows', 1)
+
+						if `"`eform'"'!=`""' {
+							cap numlist `"`tok'"', range(>0)
+							if _rc {
+								disp as err `"option {bf:eform} specified, but {bf:`xop'()} contains non-positive values"'
+								exit 198
+							}
+						
+							// if eform, need to expand numlist and take logs
+							local nl = r(numlist)
+							local N : word count `nl'
+							forvalues i=1/`N' {
+								local el : word `i' of `nl'
+								local xlablist `"`xlablist' `=ln(`el')'"'
+								local newxli `"`=ln(`el')'"'
+								
+								local lbl = cond("`format'"=="", string(`el'), string(`el', "`format'"))
+								if `i'==1 & `"`lbl2'"'!=`""' local newxli `"`"`lbl2'"' `newxli'"'
+								if `i'<`N'                   local newxli `"`newxli' `"`lbl'"'"'
+								local lbl2
+								// don't add the last label yet, in case user has specified their own label
+								
+								local newxlabcmd `"`newxlabcmd' `newxli'"'
+							}
+						}
 					
-					if `flag'!=1 {
-						local `xl'cmd `"``xl'cmd' `el'"'
-						if `qed' local flag=0
+						// else, can simply add unexpanded numlist
+						else {
+							local xlablist `"`xlablist' `tok'"'
+							local newxlabcmd `"`newxlabcmd' `tok'"'
+							local lbl2
+						}
+					}
+				}		// end else
+			}		// end if `"`tok'"'!=`""'
+				
+			// if lbl, add it now
+			if `"`lbl2'"'!=`""' {
+				local newxlabcmd `"`newxlabcmd' `"`lbl2'"'"'
+				local lbl
+				local lbl2
+			}
+
+		}	// end while loop
+	}		// end else (if not ticks)
+	
+	local xlablist = trim(`"`rule_none' `xlablist'"')
+	local xlabcmd = trim(`"`rule_none' `newxlabcmd'"')
+
+	cap assert `"`xlabcmd'"'==`""' if `"`xlablist'"'==`""'
+	if _rc {
+		disp as err "Error in {bf:`xop'()}"
+		exit 198
+	}
+
+	return local xlablist `"`xlablist'"'
+	return local xlabcmd `"`xlabcmd'"'		// Note: xlabcmd and xlablist should be identical except that xlabcmd may also have labels
+	
+	return scalar rows = `rows'
+end
+
+
+* AutoXLabel: If xlabel not supplied by user, choose sensible values.
+// Default is for symmetrical limits, with 3 labelled values including null
+// N.B. First modified from original -metan- code by DF, March 2013
+//  with further improvements by DF, January 2015
+// Modifed April 2017 to avoid interminable looping if [base]^`mag' = missing
+// Modified & renamed May 2024
+// subroutine of ProcessXAxis
+program define AutoXLabel, rclass
+
+	syntax anything [, RANGE(numlist min=2 max=2) EFORM FORMAT(string) H0(real 0) noNULL FORCE DENOMinator(string) ]
+	tokenize `anything'
+	args DXmin DXmax
+	tokenize `range'
+	args RXmin RXmax
+
+	local xlablim1 = 0	// init
+	
+	// [Mar 2020] If `proportion', simply choose 0, .5 and 1 ... [Mar 2021] multiplied by `denominator'
+	// [Apr 2021] ... but only if `range' not specified and smaller than DXmin/DXmax
+	if "`denominator'"!="" {
+		cap confirm number `denominator'
+		if _rc {
+			nois disp as err `"`denominator' found where number expected in option {bf:denominator(#)}"'
+			exit 198
+		}
+		
+		local xlablist
+		if `"`range'"'!=`""' {
+			local ii = max(`RXmin', 0)
+			local xlablist `"`xlablist' `ii'"'
+			local ii = min(`RXmax', `denominator')
+			local xlablist `"`xlablist' `ii'"'
+		}
+		else {
+			foreach i of numlist 0 .5 1 {
+				local ii = `denominator' * `i'
+				local xlablist `"`xlablist' `ii'"'
+			}
+		}
+		local xlabopt `"`xlablist'"'
+	}
+	else {
+
+		// If null line, choose values based around `h0'
+		// (i.e. `xlabinit1' = `h0'... but `h0' is automatically selected anyway so no need to explicitly define `xlabinit1')
+		if "`null'" == "" | `h0' != 0 {		// [N.B. "h0 != 0" added Jan 2020]
+			local xlabinit2 = max(abs(`DXmin' - `h0'), abs(`DXmax' - `h0'))
+			local xlabinit "`xlabinit2'"
+		}
+		
+		// if `nulloff', choose values in two stages: firstly based on the midpoint between CXmin and CXmax (`xlab[init|lim]1')
+		//  and then based on the difference between CXmin/CXmax and the midpoint (`xlab[init|lim]2')
+		else {
+			local xlabinit1 = (`DXmax' + `DXmin')/2
+			local xlabinit2 = abs(`DXmax' - `xlabinit1')		// N.B. same as abs(`CXmin' - `xlabinit1')
+			if float(`xlabinit1') != 0 {
+				local xlabinit "`=abs(`xlabinit1')' `xlabinit2'"
+			}
+			else local xlabinit `xlabinit2'
+		}
+		assert "`xlabinit'"!=""
+		assert "`xlabinit2'"!=""
+		assert `: word count `xlabinit'' == ("`null'"!="" & `h0'==0)*(float(`DXmax')!=-float(`DXmin')) + 1		// should be >= 1
+		
+		local counter = 1
+		foreach xval of numlist `xlabinit' {
+		
+			if `"`eform'"'==`""' {						// linear scale
+				local mag = floor(log10(`xval'))
+				local xdiff = abs(`xval'-`mag')
+				foreach i of numlist 1 2 5 10 {
+					local ii = `i' * 10^`mag'
+					if missing(`mag') local ii = 0		// March 2021: catch extreme case
+					if missing(`ii') {
+						local ii = `=`i'-1' * 10^`mag'
+						local xdiff = abs(float(`xval' - `ii'))
+						local xlablim = `ii'
+						continue, break
+					}
+					else if abs(float(`xval' - `ii')) <= float(`xdiff') {
+						local xdiff = abs(float(`xval' - `ii'))
+						local xlablim = `ii'
 					}
 				}
 			}
-		}
-		
-		if `"``xl'list'"'!=`""' {
-			if `"`eform'"'!=`""' {
-				local `xl'cmd
-				foreach xi of numlist ``xl'list' {
-					local lbl = cond("``xl'fmt'"=="", string(exp(`xi')), string(exp(`xi'), "``xl'fmt'"))
-					local `xl'cmd `"``xl'cmd' `xi' `"`lbl'"'"'
+			else {										// log scale
+				local mag = round(`xval'/ln(2))
+				local xdiff = abs(`xval' - ln(2))
+				forvalues i=1/`mag' {
+					local ii = ln(2^`i')
+					if missing(`ii') {
+						local ii = ln(2^`=`i'-1')
+						local xdiff = abs(float(`xval' - `ii'))
+						local xlablim = `ii'
+						continue, break
+					}
+					else if abs(float(`xval' - `ii')) <= float(`xdiff') {
+						local xdiff = abs(float(`xval' - `ii'))
+						local xlablim = `ii'
+					}
+				}
+				
+				// if effect is small, use 1.5, 1.33, 1.25 or 1.11 instead, as appropriate
+				foreach i of numlist 1.5 `=1/0.75' 1.25 `=1/0.9' {
+					local ii = ln(`i')
+					if abs(float(`xval' - `ii')) <= float(`xdiff') {
+						local xdiff = abs(float(`xval' - `ii'))
+						local xlablim = `ii'
+					}
+				}	
+			}
+			
+			// if nonull, center limits around `xlablim1', which should have been optimized by the above code
+			if "`null'" != "" & `h0'==0 {		// nonull
+				if `counter'==1 {
+					local xlablim1 = `xlablim'*sign(`xlabinit1')
+				}
+				if `counter'>1 | `: word count `xlabinit''==1 {
+					local xlablim2 = `xlablim'
+					local xlablims `"`=`xlablim1'+`xlablim2'' `=`xlablim1'-`xlablim2''"'
 				}
 			}
-			else local `xl'cmd `"``xl'list'"'
-			local `xl'cmd = trim(`"``xl'cmd'"')
-		}
-		
-		// If xlablist has been entirely removed, use blank lines to use up the same space as labels would
-		else if `"`xl'"'==`"xlab"' & `rowsxlab' {
-			forvalues i=1/`rowsxlab' {
-				local xlabtxt `"`xlabtxt' `" "'"'
+			else local xlablims `"`xlablims' `xlablim'"'
+			local ++counter
+
+		}	// end foreach xval of numlist `xlabinit'
+			
+		// if nulloff, don't recalculate CXmin/CXmax
+		if "`null'" != "" & `h0'==0 numlist `"`xlablim1' `xlablims'"'
+		else {
+			numlist `"`=`h0' - `xlablims'' `h0' `=`h0' + `xlablims''"', sort	// default: limits symmetrical about `h0'
+			tokenize `"`r(numlist)'"'
+
+			// if data are "too far" from null (`h0'), take one limit (but not the other) plus null
+			//   where "too far" ==> abs(`CXmin' - `h0') > `CXmax' - `CXmin'
+			//   (this works whether data are "too far" to the left OR right, since our limits are symmetrical about `h0')
+			if abs(`DXmin' - `h0') > `DXmax' - `DXmin' {
+				if `3' > `DXmax'      numlist `"`1' `h0'"'
+				else if `1' < `DXmin' numlist `"`h0' `3'"'
 			}
-			if `rowsxlab' > 1 local xlabtxt `"`"`xlabtxt'"'"'
-			local xlabcmd `"`AXmin' `xlabtxt'"'
-			local xlabopts `"`xlabopts' tlc(none)"'
-		}
-		
-		// same for xmlablist/favours
-		else if `"`xl'"'==`"xmlab"' & `rowsxmlab' {
-			forvalues i=1/`rowsxmlab' {
-				local xmlabtxt `"`xmlabtxt' `" "'"'
+			else if trim("`range'`cirange'`forceopt'")=="" {		// "standard" situation
+				numlist `"`1' `h0' `3'"'
+				local DXmin = `h0' - `xlabinit2'
+				local DXmax = `h0' + `xlabinit2'
 			}
-			if `rowsxmlab' > 1 local xmlabtxt `"`"`xmlabtxt'"'"'
-			local xmlabcmd `"`AXmin' `xmlabtxt'"'
-			local xmlabopts `"`xmlabopts' tlc(none)"'
+		}
+		local xlablist=r(numlist)
+	}
+		
+	// if log scale, label with exponentiated values
+	local xlabopt `"`xlablist'"'
+	if `"`eform'"'!=`""' {
+		local xlabopt
+		foreach xi of numlist `xlablist' {
+			local lbl = cond("`format'"=="", string(exp(`xi')), string(exp(`xi'), "`format'"))
+			local xlabopt `"`xlabopt' `xi' `"`lbl'"'"'				
 		}
 	}
+
+	return scalar DXmin = `DXmin'
+	return scalar DXmax = `DXmax'
+	return scalar xlablim1 = `xlablim1'
 	
-	// Process ticklists: these are easier as no labels (see above)
-	foreach tick in xtick xmtick {
-		if `old`tick'' {
-			local `tick'list `AXmin'
-			local `tick'opts `"``tick'opts' tlc(none)"'
-		}
-	}
-	
-	// Oct 2018: CONSIDERATIONS FOR NEXT VERSION
-	// local xlabopt = cond(`"`xlabcmd'"'==`""', `"xlabel(none)"', `"xlabel(`xlabcmd', labsize(`textSize') `xlabopts')"')
-	// local xtickopt = cond(`"`xticklist'"'==`""', `"xtick(none)"', `"xtick(`xticklist', `xtickopts')"')
-	// Nov 2017: what about mtick?? also NEED TO USE BLANK LINES TO USE UP SAME SPACE AS LABELS WOULD.  also at the moment user-defined labvalues are not appearing
-	// amend ProcessXLabs so that xlabel "labels" are extracted and tested for number of lines
-	// revisit use of xmlabel in favour of xtitle??  any reason for this now?  YES because plot might not be centered
+	return local xlablist `"`xlablist'"'
+	return local xlabopt `"xlabel(`xlabopt')"'
 
-	sreturn local xlablist   `"`xlablist'"'
-	sreturn local xlabcmd    `"`xlabcmd'"'
-	sreturn local xlabopts   `"`xlabopts'"'
-
-	sreturn local xmlablist  `"`xmlablist'"'
-	sreturn local xmlabcmd   `"`xmlabcmd'"'
-	sreturn local xmlabopts  `"`xmlabopts'"'
-
-	if trim(`"`xticklist'`xtickopts'"')!=`""' {
-		sreturn local xtickopt `"`xticklist', `xtickopts'"'
-	}
-	if trim(`"`xmticklist'`xmtickopts'"')!=`""' {
-		sreturn local xmtickopt `"`xmticklist', `xmtickopts'"'
-	}
-
-	sreturn local options    `"`graphopts'"'
-	
 end
 
+// End of subroutines of ProcessXAXis
 
 
 	
@@ -2337,11 +2329,11 @@ end
 * Process left and right columns -- obtain co-ordinates etc.
 program define ProcessColumns, rclass
 
-	syntax varlist(min=1 max=2) [if] [in], ID(varname numeric) LRCOLSN(numlist integer >=0) LCIMIN(real) DX(numlist) ///
+	syntax varlist(min=1 max=2) [if] [in], ID(varname numeric) LRCOLSN(numlist integer >=0) LCIMIN(real) DX(numlist min=2 max=2) ///
 		[LVALlist(namelist) LLABlist(varlist) LFMTLIST(string) ///
 		 RVALlist(namelist) RLABlist(varlist) RFMTLIST(string) RFINDENT(varname) RFCOL(integer 1) ///
 		 DXWIDTHChars(real -9) ASText(integer -9) LBUFfer(real 0) RBUFfer(real 1) ///
-		 noADJust noLCOLSCHeck TArget(integer 0) MAXWidth(integer 0) MAXLines(integer 0) noTRUNCate noWT DOUBLE * ]
+		 noADJust noLCOLSCHeck TArget(integer 0) MAXWidth(integer 0) MAXLines(integer 0) noTRUNCate noWT DOUBLE COLSONLY * ]
 	
 	local graphopts `"`options' `double'"'
 	
@@ -2355,7 +2347,6 @@ program define ProcessColumns, rclass
 
 	tokenize `lrcolsn'
 	args lcolsN rcolsN
-	local rcolsN = cond(`"`rcolsN'"'==`""', 0, `rcolsN')
 	
 	tokenize `dx'
 	args DXmin DXmax
@@ -2480,10 +2471,10 @@ program define ProcessColumns, rclass
 			
 			local leftWD`i' = `leftWD`i'' + (2 - (`i'==`lcolsN'))*`digitwid'	// having calculated the indent, add a buffer (2x except for last col)
 			local leftWDtot = `leftWDtot' + `leftWD`i''							// running calculation of total width (including titles)
-
+			
 			drop `strlen' `strwid'
-		}		// end of forvalues i=1/`lcolsN'
-
+		}								// end of forvalues i=1/`lcolsN'
+		
 		
 		** Right columns
 		local rightWDtot = 0
@@ -2602,8 +2593,11 @@ program define ProcessColumns, rclass
 			drop `strlen' `strwid'
 		}								// end of forvalues i=1/`rcols'
 
-		local rightWDtot = `rightWDtot' + (1 + `rbuffer')*`digitwid'	// default: 1x buffer before first RHS column and after last, but can be overwritten
-		local rightWDtot = max(`rightWDtot', `digitwid')				// in case of no `rcols'
+		if !`rcolsN' & `"`colsonly'"'!=`""' local rightWDtot = 0		// if `colsonly', set to zero... [ADDED MAY 2024]
+		else {
+			local rightWDtot = `rightWDtot' + `rbuffer'*`digitwid'		// ...otherwise use a minimal buffer (default 1x but can be overwritten)
+			local leftWDtot = max(`leftWDtot', `digitwid')				// ...before first RHS column and after last
+		}
 
 		
 		** "Adjust" routine
@@ -2742,11 +2736,14 @@ program define ProcessColumns, rclass
 			}
 		}		// end if "`adjust'" == ""
 
-		local leftWDtot = `leftWDtot' + `lbuffer'		// LHS buffer; default is zero
+		if !`lcolsN' & `"`colsonly'"'!=`""' local leftWDtot = 0			// if `colsonly', set to zero... [ADDED MAY 2024]
+		else {
+			local leftWDtot = `leftWDtot' + `lbuffer'*`digitwid'		// LHS buffer; default is zero
+			local leftWDtot = max(`leftWDtot', `digitwid')				// ...otherwise use a minimal buffer for LHS of plotted data
+		}
 		
 		// Calculate `textWD', using `astext' (% of graph width taken by text)
 		//  to relate the width of plot area in "plot units" to the width of the columns in "text units"
-		// [modified sep 2017... for latest beta??]
 		if `DXwidthChars'!=-9 & (`astext'==-9 | `"`newleftWDtot'"'!=`""') {
 			local astext2 = (`leftWDtot' + `rightWDtot')/`DXwidthChars'
 			local astext = 100 * `astext2'/(1 + `astext2')
@@ -3042,11 +3039,63 @@ end
 
 *********************************************************************************
 
+program define UserSpecHide, rclass
+
+	syntax varname [if] [in], PLOTID(varname numeric) [ OCILINEOPts(string asis) RFCILINEOPts(string asis) * ]
+	local _USE : copy local varlist
+	marksample touse
+	local reduceHeight = 0
+	
+	local 0 `", `ocilineopts'"'
+	syntax [, HIDE * ]
+	if `"`hide'"'!=`""' {
+		qui count if `touse' & inlist(`_USE', 3, 5, 7)
+		local reduceHeight = r(N)
+	}
+	else {
+		local 0 `", `rfcilineopts'"'
+		syntax [, HIDE * ]
+		if `"`hide'"'!=`""' {
+			qui count if `touse' & inlist(`_USE', 3, 5, 7)
+			local reduceHeight = r(N)
+		}
+		else {
+			summ `plotid' if `touse', meanonly
+			forvalues p = 1/`r(max)' {
+				local hide
+				local 0 `", `graphopts'"'
+				syntax [, OCILINE`p'opts(string asis) RFCILINE`p'opts(string asis) * ]
+				local 0 `", `ociline`p'opts'"'
+				syntax [, HIDE * ]
+				if `"`hide'"'!=`""' {
+					qui count if `touse' & `plotid'==`p' & inlist(`_USE', 3, 5, 7)
+					local reduceHeight = `reduceHeight' + r(N)
+				}
+				else {
+					local 0 `", `rfciline`p'opts'"'
+					syntax [, HIDE * ]
+					if `"`hide'"'!=`""' {
+						qui count if `touse' & `plotid'==`p' & inlist(`_USE', 3, 5, 7)
+						local reduceHeight = `reduceHeight' + r(N)
+					}
+				}
+			}
+		}
+	}
+	return scalar N = `reduceHeight'
+	
+end
+
+
+
+
+*********************************************************************************
+
 *** FIND OPTIMAL TEXT SIZE AND ASPECT RATIOS (given user input)
 
 // Notes:  (David Fisher, July 2014)
 	
-// Let X, Y be dimensions of graphregion (controlled by xsize(), ysize()); x, y be dimensions of plotregion (controlled by aspect()).
+// Let X, Y be dimensions of graphregion (outer; controlled by xsize(), ysize()); x, y be dimensions of plotregion (inner; controlled by aspect()).
 // `approxChars' is the approximate width of the plot, in "character units" (i.e. width of [LHS text + RHS text] divided by `astext')
 	
 // Note that a "character unit" is the width of a character relative to its height; 
@@ -3065,18 +3114,16 @@ end
 
 //  - Note that this code has been changed considerably from the original -metan9- code.
 
-// Moved into separate subroutine Nov 2017 for v2.2 beta
-// GetAspectRatio, astext(`astext') colwdtot(`colWDtot') height(`height') rowsxlab(`rowsxlab') `graphopts' `usedimsopt'
-// Jan 2018: double check that NOT returning graphopts doesn't cause any problems
+// Moved into separate subroutine Nov 2017 (for v2.2 beta)
 
 program define GetAspectRatio, rclass
 
 	syntax [, ASTEXT(real 50) COLWDTOT(real 0) HEIGHT(real 0) USEDIMS(name) ///
 		ASPECT(real -9) SPacing(real -9) XSIZe(real -9) YSIZe(real -9) FXSIZe(real -9) FYSIZe(real -9) ///
 		TItle(string asis) SUBtitle(string asis) CAPTION(string asis) NOTE2(string asis) noNOTE noWARNing ///
-		XTItle(string asis) FAVours(string asis) ADDHeight(real 0) /*(undocumented)*/ ///
+		XTItle(string asis) ROWSFAV(real 0) ADDHeight(real 0) /*(undocumented)*/ ///
 		TEXTSize(real 100.0) /// /* legacy -metan9- option, implemented here as a post-hoc option; use at own risk */
-		ROWSXLAB(real 0) DXWIDTHChars(real -9) DOUBLE COLSONLY * ]
+		ROWSXLAB(real 0) /*DXWIDTHChars(real -9)*/ DOUBLE COLSONLY * ]
 	
 	local graphopts `"`options'"'
 	
@@ -3092,20 +3139,17 @@ program define GetAspectRatio, rclass
 	
 	* Unpack `usedims'
 	local DXwidthChars : copy local dxwidthchars		// added Feb 2018: clarity
-	// local DXwidthChars = -9		// initialize
-	local oldTextSize = -9			// initialize
+	local DXwidthChars = -9		// initialize
+	local oldTextSize = -9		// initialize
 	if `"`usedims'"'!=`""' {
-		// local DXwidthChars = `usedims'[1, `=colnumb(`usedims', "cdw")']
-		local spacing = cond(`spacing'==-9, `usedims'[1, `=colnumb(`usedims', "spacing")'], `spacing')
-		// local oldPlotAspect = cond(`aspect'==-9, `usedims'[1, `=colnumb(`usedims', "aspect")'], `aspect')
-		// local xsize = cond(`xsize'==-9, `usedims'[1, `=colnumb(`usedims', "xsize")'], `xsize')
-		// local ysize = cond(`ysize'==-9, `usedims'[1, `=colnumb(`usedims', "ysize")'], `ysize')
-		local oldPlotAspect = `usedims'[1, `=colnumb(`usedims', "aspect")']		// modified 2nd Nov 2017 for v2.2 beta
-		local oldXSize = `usedims'[1, `=colnumb(`usedims', "xsize")']
-		local oldYSize = `usedims'[1, `=colnumb(`usedims', "ysize")']
-		local oldTextSize = `usedims'[1, `=colnumb(`usedims', "textsize")']
-		local oldHeight = `usedims'[1, `=colnumb(`usedims', "height")']			// added 18th Sep 2017 for v2.2 beta
-		local oldYheight = `usedims'[1, `=colnumb(`usedims', "yheight")']		// added 18th Sep 2017 for v2.2 beta
+		local DXwidthChars = `usedims'[1, `=colnumb(matrix(`usedims'), "cdw")']
+		local spacing = cond(`spacing'==-9, `usedims'[1, `=colnumb(matrix(`usedims'), "spacing")'], `spacing')
+		local oldPlotAspect = `usedims'[1, `=colnumb(matrix(`usedims'), "aspect")']		// modified Nov 2017
+		local oldXSize = `usedims'[1, `=colnumb(matrix(`usedims'), "xsize")']
+		local oldYSize = `usedims'[1, `=colnumb(matrix(`usedims'), "ysize")']
+		local oldTextSize = `usedims'[1, `=colnumb(matrix(`usedims'), "textsize")']
+		local oldHeight = `usedims'[1, `=colnumb(matrix(`usedims'), "height")']			// added Sep 2017
+		local oldYheight = `usedims'[1, `=colnumb(matrix(`usedims'), "yheight")']		// added Sep 2017
 		
 		numlist "`DXwidthChars' `spacing' `oldPlotAspect' `oldXSize' `oldYSize' `oldTextSize' `oldHeight' `oldYheight'", min(8) max(8) range(>=0)
 	}
@@ -3113,7 +3157,7 @@ program define GetAspectRatio, rclass
 
 	* Obtain number of rows within each title element
 	// (see help title_options)
-	// [modified Nov 2017 for v2.2 beta]
+	// [modified Nov 2017]
 	// (N.B. favours will be done separately)
 	// [modified Feb 2018]
 	// [Jan 2019: converted to subroutine for better parsing of compound quotes]
@@ -3121,54 +3165,6 @@ program define GetAspectRatio, rclass
 		GetRows ``opt''
 		local rows`opt' = r(rows)
 	}
-	
-
-	* Do the same for `favours'
-	// (N.B. syntax is more complicated so need to do separately)
-	local rowsfav = 0
-	if `"`favours'"' != `""' {
-		local 0 `"`favours'"'
-		syntax [anything(everything)] [, * ]
-		
-		* Parse text, and count how many rows of text there are (i.e. separated with pairs of quotes)
-		local rowsleftfav = 0
-		local rowsrightfav = 0
-
-		gettoken leftfav rest : anything, parse("#") quotes
-		
-		if `"`leftfav'"'!=`"#"' {
-			while `"`rest'"'!=`""' {
-				local ++rowsleftfav
-				gettoken next rest : rest, parse("#") quotes
-				if `"`next'"'==`"#"' continue, break
-				local leftfav `"`leftfav' `next'"'
-			}
-		}
-		else local leftfav `""'		
-		local rightfav = trim(`"`rest'"')
-		if `"`rightfav'"'!=`""' {
-			while `"`rest'"'!=`""' {
-				local ++rowsrightfav
-				gettoken next rest : rest, quotes
-			}
-		}
-		local rowsfav = max(1, `rowsleftfav', `rowsrightfav')
-
-		// Feb 2021: Remove quotes if only a single line
-		if `rowsleftfav'==1 {
-		    gettoken new : leftfav, qed(qed)
-			if `qed' local leftfav : copy local new
-		}
-		if `rowsrightfav'==1 {
-		    gettoken new : rightfav, qed(qed)
-			if `qed' local rightfav : copy local new
-		}
-		
-		return local leftfav  `"`leftfav'"'
-		return local rightfav `"`rightfav'"'
-		return local favopt   `"`options'"'
-	}	
-	return scalar rowsfav = `rowsfav'
 
 	local condtitle = 2*`rowstitle' + 1.5*`rowssubtitle' + 1.25*`rowscaption' + 1.25*`rowsnote'	// approximate multipliers for different text sizes + gaps
 	local condtitle = `condtitle' + (`"`title'"'!=`""' & `"`subtitle'"'!=`""')					// additional gap between title and subtitle, if *both* specified
@@ -3193,7 +3189,7 @@ program define GetAspectRatio, rclass
 		local approxChars = 100*`colwdtot'/`astext'
 		
 		if `aspect' != -9 {					// user-specified aspect of plotregion
-			if `spacing' == -9 local spacing = `aspect' * `approxChars' / `height'		// [modified 2nd Nov 2017 for v2.2]
+			if `spacing' == -9 local spacing = `aspect' * `approxChars' / `height'		// [modified Nov 2017]
 			local plotAspect = `aspect'
 		}
 		else {								// if not user-specified
@@ -3206,7 +3202,7 @@ program define GetAspectRatio, rclass
 		}
 	}
 	else {	// if `usedims' supplied
-		local approxChars = `colwdtot' + cond(`"`colsonly'"'!=`""' /*& (`lcolsN'*`rcolsN'==0)*/, 0, `DXwidthChars')		// modified Feb 2018
+		local approxChars = `colwdtot' + cond(`"`colsonly'"'!=`""', 0, `DXwidthChars')		// modified Feb 2018
 		local plotAspect = cond(`aspect'==-9, `spacing'*`height'/`approxChars', `aspect')
 		// `spacing' here is from `usedims' unless over-ridden by user
 	}
@@ -3214,7 +3210,7 @@ program define GetAspectRatio, rclass
 
 	
 	* Derive graphAspect = Y/X (defaults to 4/5.5  = 0.727 unless specified)
-	// [modified 2nd Nov 2017 for v2.2 beta]
+	// [modified Nov 2017]
 	if `"`usedims'"'==`""' {
 		local oldYSize = 4
 		local oldXSize = 5.5
@@ -3250,16 +3246,11 @@ program define GetAspectRatio, rclass
 			local textSize = 100 / (`xdelta' * `approxChars')
 		}
 		
-		// [added 1st Nov 2017 for v2.2 beta]
+		// [added Nov 2017]
 		// If Y/X = `graphAspect' <= 1 ("wide"), set fysize to 100; else ("tall") set fxsize to 100
 		// in other words, min dimension is always 100; the other is >100
 		local fxsize = cond(`fxsize' == -9, cond(`graphAspect' <= 1, 100/`graphAspect', 100), `fxsize')
 		local fysize = cond(`fysize' == -9, cond(`graphAspect' <= 1, 100, 100*`graphAspect'), `fysize')
-		// local fxsize = cond(`fxsize' == -9, 100, `fxsize')
-		// local fysize = cond(`fysize' == -9, 100, `fysize')
-		// local fsizeopt `"fxsize(`fxsize') fysize(`fysize')"'
-		// return scalar fxsize = `fxsize'
-		// return scalar fysize = `fysize'
 	}
 
 	* Else if `usedims' supplied:
@@ -3314,13 +3305,12 @@ program define GetAspectRatio, rclass
 			if `xsize'==-9 | `ysize'==-9 {
 				local graphAspect = `graphAspect' * `plotAspect' / `oldPlotAspect'
 
-				// [modified 2nd Nov 2017 for v2.2 beta]
+				// Modified Nov 2017
 				if `xsize'==-9 & `ysize'==-9 local xsize = `oldYSize' / `graphAspect'
 				else {
 					if `xsize'==-9 local xsize = `ysize' / `graphAspect'
 					else           local ysize = `xsize' * `graphAspect'
 				}
-				// local xsize = `ysize' / `graphAspect'
 			}
 		}
 			
@@ -3333,13 +3323,12 @@ program define GetAspectRatio, rclass
 				local oldGraphAspect = `graphAspect'
 				local graphAspect = `oldGraphAspect' * `plotAspect' / `oldPlotAspect'
 
-				// [modified 2nd Nov 2017 for v2.2 beta]
+				// Modified Nov 2017
 				if `xsize'==-9 & `ysize'==-9 local xsize = `oldYSize' / `graphAspect'
 				else {
 					if `xsize'==-9 local xsize = `ysize' / `graphAspect'
 					else           local ysize = `xsize' * `graphAspect'
 				}
-				// local xsize = `ysize' / `graphAspect'
 
 				// 3a, 4a
 				if `graphAspect' <= 1 {
@@ -3348,17 +3337,9 @@ program define GetAspectRatio, rclass
 			}
 		}
 		
-		// [added 1st Nov 2017 for v2.2 beta]
-		// local fxsize = cond(`fxsize'==-9, 100*(`oldPlotAspect'/`plotAspect')*(`height'/`oldHeight'), `fxsize')
-		// local fysize = cond(`fysize'==-9, 100*`ydelta'*`height'/`oldYheight', `fysize')
-		
-		// Revised Feb 2018
+		// Added Nov 2017, revised Feb 2018
 		local fxsize = cond(`fxsize'==-9, 100*(`oldPlotAspect'/`plotAspect')*(`height'/`oldHeight')*(`oldXSize'/`oldYSize'), `fxsize')
 		local fysize = cond(`fysize'==-9, 100*`ydelta'*`height'/`oldYheight', `fysize')
-		
-		// local fsizeopt `"fxsize(`fxsize') fysize(`fysize')"'
-		// return scalar fxsize = `fxsize'
-		// return scalar fysize = `fysize'
 	}
 	
 	* Notes: for random-effects analyses, sample-size weights, or user-defined (will overwrite the first two)
@@ -3366,7 +3347,7 @@ program define GetAspectRatio, rclass
 		local 0 `"`note2'"'
 		syntax [anything(name=notetxt everything)] [, SIze(string) * ]
 		if "`size'"=="" local size = `textSize' * .75 * `textscale'/100		// use 75% of text size used for rest of plot
-		if "`colsonly'"!="" local notetxt `"`" "'"'							// added Feb 2018
+		if "`colsonly'"!="" local notetxt `"" ""'							// added Feb 2018
 		
 		// May 2018: Having parsed the note, now suppress it if noWARNing or noNOTE
 		if `"`warning'`note'"'==`""' local noteopt `"note(`notetxt', size(`size') `options')"'
@@ -3384,8 +3365,8 @@ program define GetAspectRatio, rclass
 	
 	
 	* Return scalars
-	return scalar xsize = cond(`xsize'==-9, 5.5, `xsize')		// [added 2nd Nov for v2.2 beta]
-	return scalar ysize = cond(`ysize'==-9, 4, `ysize')			// [added 2nd Nov for v2.2 beta]
+	return scalar xsize = cond(`xsize'==-9, 5.5, `xsize')		// added Nov 2017
+	return scalar ysize = cond(`ysize'==-9, 4, `ysize')			// added Nov 2017
 	return scalar fxsize = `fxsize'
 	return scalar fysize = `fysize'
 	return scalar yheight = `ydelta'*`height'
@@ -4779,7 +4760,10 @@ program define BuildPlotCmds, sclass
 	sreturn local options `"`macval(opts_rest)'"'	// This is now *just* the standard "twoway" options
 													//   i.e. the specialist "forestplot" options have been filtered out
 	
-	// Return plot commands [unless `colsonly' **BETA**]
+	// Return plot commands...
+	sreturn local bordercommand `"`borderCommand'"'
+	
+	// ... unless `colsonly'
 	if `"`colsonly'"'==`""' {
 		sreturn local scplot        `"`scPlot'"'
 		sreturn local ciplot        `"`CIPlot'"'
@@ -4791,7 +4775,6 @@ program define BuildPlotCmds, sclass
 		sreturn local olineplot     `"`olinePlot'"'
 		sreturn local olineareaplot `"`olineAreaPlot'"'
 		sreturn local nullcommand   `"`nullCommand'"'
-		sreturn local bordercommand `"`borderCommand'"'
 		
 		// Nov 2021: see notes above
 		sreturn local g_olinefirst  `"`g_olinefirst'"'

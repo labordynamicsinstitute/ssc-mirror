@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 4.07  David Fisher  15sep2023}{...}
+{* *! version 4.08  David Fisher  17jun2024}{...}
 {vieweralsosee "metan" "help metan"}{...}
 {vieweralsosee "forestplot" "help forestplot"}{...}
 {vieweralsosee "metani" "help metani"}{...}
@@ -44,6 +44,7 @@ or heterogeneity data (see {opt use(varname)}){p_end}
 {synopt :{it:{help twoway_options}}}other Stata twoway graph options, as appropriate{p_end}
 
 {syntab: Advanced}
+{synopt :{opt colsonly}}Plot the left-hand (or right-hand) columns of text only, without the data{p_end}
 {synopt :{cmd:dataid(}{it:varname} [{cmd:, newwt}]{cmd:)}}define groups of observations making up a complete forestplot{p_end}
 {synopt :{opt double}}allow column text to run over two lines in the plot{p_end}
 {synopt :{opt dp(#)}}number of decimal places with which to format effect sizes, confidence intervals and predictive distributions{p_end}
@@ -212,7 +213,7 @@ affects other characteristics of the plot even if the line itself does not appea
 
 {phang}
 {opt xlabel(...)} and {opt xtick(...)} have the same syntax as described under {it:{help axis_label_options}},
-except for the following points:
+except for the details below. In particular, {help repeated_options} may be used.
 
 {phang2}
 If {it:{help eform_option}} is specified, the {it:x}-axis is automatically shown on an expontiated scale, with a value of 1 indicating a null effect.
@@ -226,6 +227,16 @@ The smallest and largest values supplied to {opt xlabel()} then become the plott
 
 
 {dlgtab:Advanced}
+
+{phang}
+{opt colsonly} facilitates the creation of "compound" forest plots.
+For example, you might wish to present two forest plots side-by-side, with the same dimensions; but without repeating the study labels to the left.
+You can use {opt colsonly} to construct a plot containing the study labels alone, to be aligned with the other plots using {help graph combine}.
+To do so: take the code for constructing the plots, and remove the right-hand columns (e.g. by specifying {opt nostats nowt}).
+Leave in place any {it:x}-axis labelling, including {opt favours()}, and titles; these will be replaced by blank spaces so as to maintain the correct dimensions.
+Run the code for each plot, using the {opt savedims()} option for at least one (see "Fine tuning" below).
+Finally, run the {cmd:forestplot} command with the {opt colsonly} and {opt usedims()} options.
+See the final {help forestplot##examples:example below}.
 
 {phang}
 {cmd:dataid(}{it:varname} [{cmd:, newwt}]{cmd:)} define groups of observations making up a complete forest plot.
@@ -690,129 +701,75 @@ The option {opt hide} is used to suppress the pooled-effect diamond, as it is no
 
 
 {pstd}
-Finally, as a more advanced example, we will recreate Figure 2 of {help metan##refs:Fisher et al (2017)},
-which demonstrates a novel form of forest plot designed to facilitate the presentation of treatment-covariate interactions.
-It involves creating two related but different plots, and presenting them side-by-side such that their pertinent features align.
-The original data were presented in Analysis 8.2 of a Cochran review by {help metan##refs:Fearon et al (2012)}.
+Finally, as a more advanced example, we will recreate Figure 3 of {help metan##refs:Leeflang et al (2008)},
+in which diagnostic test accuracy results are presented using side-by-side forest plots of sensitivty and specificity.
+This example demonstrates the {opt savedims()} and {opt usedims()} options to ensure that dimensions of two or more plots
+are consistent, and therefore that the plots will align correctly;
+and the {opt colsonly} option which creates a separate plot containing the study names and associated information.
 
 {cmd}{...}
 {* example_start - forestplot_ex6a}{...}
 {phang2}
-. use http://fmwww.bc.edu/repec/bocode/f/forestplot_fisher2017, clear{p_end}
+. use http://fmwww.bc.edu/repec/bocode/l/leeflang2008, clear{p_end}
 {phang2}
 
 {phang2}
-// Create the "results set" for the left-hand sub-plot{p_end}
+// Create variables containing the denominators of sensitivity and specificity:{p_end}
 {phang2}
-. metan n1 mean1 sd1 n0 mean0 sd0, wmd by(trial) lcols(carer){* ///}{p_end}
-{p 16 20 2}
-nooverall nosubgroup nograph saving(fig2a){p_end}
+. gen int SensDenom = TP + FN{p_end}
 {phang2}
-
-{phang2}
-// Create the "results set" for the right-hand sub-plot{p_end}
-{phang2}
-//  (using built-in {help statsby:{bf:statsby}}, but note that {help ipdmetan:{bf:ipdmetan}} could also be used{p_end}
-{phang2}
-//   and would pool the coefficients at the same time (see later)){p_end}
-{phang2}
-. statsby _b[carer] _se[carer], by(trial) saving(fig2b) : vwls _ES carer, sd(_seES){p_end}
+. gen int SpecDenom = TN + FP{p_end}
 {* example_end}{...}
 {txt}{...}
 {pmore}
-{it:({stata metan_hlp_run forestplot_ex6a using forestplot.sthlp:click to run})}{p_end}
-
-{pmore}
-Left-hand sub-plot:
+{it:({stata metan_hlp_run forestplot_ex6a using forestplot.sthlp, restpres:click to run})}{p_end}
 
 {cmd}{...}
 {* example_start - forestplot_ex6b}{...}
 {phang2}
-// Create an extra observation for the missing category of the Montreal trial{p_end}
+// Generate forest plots of sensitivity and specificity, using the {opt proportion} option.{p_end}
 {phang2}
-. use fig2a, clear{p_end}
+// Note the {opt nonames} option to suppress the study names here; and the use of the {savedims()} and {usedims()} options:{p_end}
 {phang2}
-. expand 2 if _BY=="Montreal 2000":_BY & _USE==1{p_end}
-{phang2}
-. replace _LABELS = "No carer" in L{p_end}
-{phang2}
-. replace _USE = 2 in L{p_end}
-{phang2}
-. sort _BY _USE _STUDY{p_end}
-{phang2}
-
-{phang2}
-// Create three more dummy obs at the end, to line up with the "overall" part of the right-hand side{p_end}
-{phang2}
-. local oldN = _N{p_end}
-{phang2}
-. local oldN_3 = `oldN' + 3{p_end}
-{phang2}
-. set obs `oldN_3'{p_end}
-{phang2}
-. replace _USE = 6 if _n > `oldN'{p_end}
-{phang2}
-. forestplot, wmd keepall nostats nowt{* ///}{p_end}
+. metan TP SensDenom, proportion effect(Sensitivity) nooverall{* ///}{p_end}
 {p 16 20 2}
-favours("Favours" "ESD" " " # "Favours" "no ESD" " "){* ///}{p_end}
+forestplot(xlabel(0(.2)1) nobox nonote nonames nowt savedims(A) name(SensPlot)){p_end}
+{phang2}
+. metan TN SpecDenom, proportion effect(Specificity) nooverall{* ///}{p_end}
 {p 16 20 2}
-xlabel(-50 0 50, force) astext(35) savedims(A) name(fig2a){p_end}
+forestplot(xlabel(0(.2)1) nobox nonote nonames nowt usedims(A) name(SpecPlot)){p_end}
 {* example_end}{...}
 {txt}{...}
 {pmore}
-{it:({stata metan_hlp_run forestplot_ex6b using forestplot.sthlp, restpres:click to run})}{p_end}
-
-{pmore}
-Right-hand sub-plot:
+{it:({stata metan_hlp_run forestplot_ex6a using forestplot.sthlp, restpres:click to run})}{p_end}
 
 {cmd}{...}
 {* example_start - forestplot_ex6c}{...}
 {phang2}
-// Load the "results set" into memory, and pool the interaction coefficients{p_end}
+// Before creating the left-hand plot containing the study names and associated information, we need to consider the space taken up by column headings.{p_end}
 {phang2}
-. use fig2b, clear{p_end}
+// In the above forest plots, headings will spill over two lines, so we force one of the variables in the left-hand plot to also spill over two lines:{p_end}
 {phang2}
-. metan _stat_1 _stat_2, lcols(trial) effect(Diff. in mean diffs.){* ///}{p_end}
-{p 16 20 2}
-keepall keeporder nograph clear{p_end}
+. label variable Cutoff `"`" "' `"Cutoff"'"'{p_end}
 {phang2}
 
 {phang2}
-// To make the two subplots line up, need to generate 2 new observations per trial, plus 1 for overall{p_end}
+// Now we can create the plot, using {opt colsonly} and {opt usedims()}:{p_end}
 {phang2}
-// before creating, and saving, the right-hand sub-plot{p_end}
-{phang2}
-. gen toexpand = 1 + 3*inlist(_USE, 1, 2) + 2*(_USE==5){p_end}
-{phang2}
-. local oldN = _N{p_end}
-{phang2}
-. expand toexpand, gen(expand){p_end}
-{phang2}
-. replace _USE = 6 * (1 - (_n > `oldN' & !mod(_n, 3))) if expand{p_end}
-{phang2}
-. replace _WT = . if _USE==0{p_end}
-{phang2}
-. sort _STUDY _USE{p_end}
-{phang2}
-. forestplot, useopts interaction usedims(A) nonames{* ///}{p_end}
+. metan TN SpecDenom, proportion effect(Specificity) nooverall label(namevar=Author, yearvar=Year) lcols(TP FP FN TN Cutoff){* ///}{p_end}
 {p 16 20 2}
-favours("Favours greater effect" "of ESD with" "carer present"{* ///}{p_end}
-{p 16 20 2}
-# "Favours greater effect" "of ESD with" "no carer present", fp(40)){* ///}{p_end}
-{p 16 20 2}
-xlabel(-50 0 50, force)	name(fig2b){p_end}
+forestplot(xlabel(0(.2)1) nobox nonote nostats nowt colsonly usedims(A) name(NamesPlot)){p_end}
 {* example_end}{...}
 {txt}{...}
 {pmore}
-{it:({stata metan_hlp_run forestplot_ex6c using forestplot.sthlp, restpres:click to run})}{p_end}
-
-{pmore}
-Finally, show both sub-plots side-by-side:
+{it:({stata metan_hlp_run forestplot_ex6a using forestplot.sthlp, restpres:click to run})}{p_end}
 
 {cmd}{...}
 {* example_start - forestplot_ex6d}{...}
 {phang2}
-. graph combine fig2a fig2b, imargin(zero) xsize(4){p_end}
+// Finally, we combine the plots:{p_end}
+{phang2}
+. graph combine NamesPlot SensPlot SpecPlot, rows(1) imargin(zero){p_end}
 {* example_end}{...}
 {txt}{...}
 {pmore}

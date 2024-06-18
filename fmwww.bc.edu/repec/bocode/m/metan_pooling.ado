@@ -8,7 +8,7 @@
 // - Content of subroutine metan_pooling.Heterogi is identical to that of subroutine metan.Heterogi
 // - Content of Mata subroutines is identical to that of compiled Mata library lmetan.mlib
 
-*! version 4.07  15sep2023
+*! version 4.08  17jun2024
 *! Current version by David Fisher
 *! Previous versions by Ross Harris and Michael Bradburn
 
@@ -20,7 +20,7 @@ program define metan_pooling, rclass
 		OEVLIST(varlist numeric min=2 max=2) INVLIST(varlist numeric min=2 max=6) ///
 		NPTS(varname numeric) WGT(varname numeric) WTVAR(varname numeric) ///
 		HKsj KRoger BArtlett SKovgaard RObust LOGRank PRoportion TN(string) POVERV(real 2) /*noTRUNCate*/ TRUNCate(string) EIM OIM ///
-		ISQSA(real -99) TSQSA(real -99) PHISA(real -99) POOLed /*Added Sep 2023*/ QWT(varname numeric) INIT(name) ///
+		ISQSA(real -99) TSQSA(real -99) PHISA(real -99) HETPooled /*Added Sep 2023*/ QWT(varname numeric) INIT(name) ///
 		OLevel(cilevel) HLevel(cilevel) RFLevel(cilevel) CItype(passthru) ///
 		ITOL(real 1.0x-1a) MAXTausq(real -9) REPS(real 1000) MAXITer(real 1000) QUADPTS(real 100) DIFficult TECHnique(string) * ]
 
@@ -50,12 +50,12 @@ program define metan_pooling, rclass
 	qui count if `touse'
 	if !r(N) exit 2000		// no observations *after* effect of marksample, novarlist
 	scalar `k' = r(N)
-	if `k' == 1 {
-		if "`model'"!="peto" {
+	if `k' == 1 & "`hetpooled'"=="" {
+		if !inlist("`model'", "peto", "qe") {
 			local model iv
 			local isqparam
 		}
-		if "`teststat'"!="z" local teststat z
+		local teststat z
 		local hksj
 	}
 	
@@ -94,18 +94,14 @@ program define metan_pooling, rclass
 		
 	tempname eff se_eff crit pvalue
 	qui replace `wtvar' = 1/`_seES'^2 if `touse'
-	summ `_ES' [aw=`wtvar'] if `touse', meanonly
+	qui summ `_ES' [aw=`wtvar'] if `touse' /*, meanonly*/
 	scalar `eff' = r(mean)
 	scalar `se_eff' = 1/sqrt(r(sum_w))		// I-V common-effect SE
 
 	// Derive Cochran's Q
-	tempvar qhet
-	qui gen double `qhet' = `wtvar'*((`_ES' - `eff')^2)
-	summ `qhet' if `touse', meanonly
 	assert r(N) == `k'
-	
 	tempname Q Qdf
-	scalar `Q' = r(sum)
+	scalar `Q' = cond(missing(r(Var)), 0, r(Var)*r(sum_w)*(r(N)-1)/r(N))
 	scalar `Qdf' = r(N) - 1
 	
 	// Derive sigmasq and tausq
@@ -115,14 +111,13 @@ program define metan_pooling, rclass
 	scalar `sigmasq' = `Qdf'/`c'						// [general note: can this be generalised to other (non-IV) methods?]
 	scalar `tausq' = max(0, (`Q' - `Qdf')/`c')			// default: D+L estimator
 
-	
 
 	**********************************
 	* Non-iterative tausq estimators *
 	**********************************
 	// (other than D+L, already derived above)
 	
-	if "`pooled'"=="" {
+	if "`hetpooled'"=="" {
 
 		** Setup two-stage estimators sj2s and dk2s
 		// consider *initial* estimate of tsq
@@ -179,7 +174,8 @@ program define metan_pooling, rclass
 		}
 	
 		** Hartung-Makambi estimator (>0)
-		else if "`model'"=="hm" {
+		// [Note Sep 2023] *NOT* "else if", because of potential role-switch of `model' and `init' above
+		if "`model'"=="hm" {
 			scalar `tausq' = `Q'^2 / (`c'*(`Q' + 2*`Qdf'))
 		}
 	
@@ -196,10 +192,7 @@ program define metan_pooling, rclass
 			
 			// empirical variance (>0)
 			if "`model'"=="ev" {
-				tempvar residsq
-				qui gen double `residsq' = (`_ES' - r(mean))^2
-				summ `residsq', meanonly
-				scalar `tausq' = r(mean)
+				scalar `tausq' = `var_eff'*(`k' - 1)/`k'
 			}
 			
 			// Hedges aka "variance component" aka Cochran ANOVA-type estimator
@@ -221,7 +214,7 @@ program define metan_pooling, rclass
 	}
 	
 	// Sensitivity analysis: use given Isq/tausq and sigmasq to generate tausq/Isq
-	if "`model'"=="sa" | "`pooled'"!="" {		// modified Sep 2023
+	if "`model'"=="sa" | "`hetpooled'"!="" {		// modified Sep 2023
 		if `tsqsa'==-99 scalar `tausq' = `isqsa'*`sigmasq'/(100 - `isqsa')
 		else if `phisa'==-99 scalar `tausq' = `tsqsa'
 	}
@@ -257,7 +250,7 @@ program define metan_pooling, rclass
 	local maxtausq = cond(`maxtausq'==-9, max(10*`tausq', 100), `maxtausq')
 		
 	// Iterative, using Mata
-	if "`pooled'"=="" & inlist("`model'", "dlb", "mp", "pmm", "ml", "pl", "reml") {
+	if "`hetpooled'"=="" & inlist("`model'", "dlb", "mp", "pmm", "ml", "pl", "reml") {
 	
 		// Bootstrap D+L
 		// (Kontopantelis PLoS ONE 2013)
@@ -371,12 +364,16 @@ program define metan_pooling, rclass
 	if `"`wgt'"'!=`""' {
 		qui replace `wtvar' = `wgt' if `touse'
 	}
-	
+
+	tempvar Qhet
 	tempname Qr				// will also be used for post-hoc variance correction
-	if "`final'"!="" {		
-		qui replace `qhet' = ((`_ES' - `eff')^2)/((`_seES'^2) + `tausq')
-		summ `qhet' if `touse', meanonly
-		scalar `Qr' = r(sum)
+	if "`final'"!="" {
+		tempvar wt0
+		qui gen double `wt0' = 1/((`_seES'^2) + `tausq')
+		qui summ `_ES' [aw=`wt0'] if `touse'
+		scalar `eff' = r(mean)		
+		assert r(N) == `k'
+		scalar `Qr' = cond(missing(r(Var)), 0, r(Var)*r(sum_w)*(r(N)-1)/r(N))
 		
 		if "`final'"=="sj2s" {					// two-step Sidik-Jonkman
 			// scalar `tausq' = cond(`tausq'==0, `sigmasq'/99, `tausq') * `Qr'/`Qdf'		// March 2018: if tsq=0, use Isq=1%
@@ -390,14 +387,13 @@ program define metan_pooling, rclass
 			*/
 		}
 		else if "`final'"=="dk2s" {				// two-step DerSimonian-Kacker (MM only)
-			tempname wi1 wi2 wis1 wis2 
-			summ `wtvar' if `touse', meanonly
-			scalar `wi1' = r(sum)				// sum of weights
-			summ `wtvar' [aw=`wtvar'] if `touse', meanonly
+			tempname wi1 wi2 wis1 wis2
+			summ `wt0' [aw=`wt0'] if `touse', meanonly
+			scalar `wi1' = r(sum_w)				// sum of weights
 			scalar `wi2' = r(sum)				// sum of squared weights				
-			summ `wtvar' [aw=`_seES'^2] if `touse', meanonly
+			summ `wt0' [aw=`_seES'^2] if `touse', meanonly
 			scalar `wis1' = r(sum)				// sum of weight * variance
-			summ `wtvar' [aw=`wtvar' * (`_seES'^2)] if `touse', meanonly
+			summ `wt0' [aw=`wt0' * (`_seES'^2)] if `touse', meanonly
 			scalar `wis2' = r(sum)				// sum of squared weight * variance
 			
 			scalar `tausq' = (`Qr' - (`wis1' - `wis2'/`wi1')) / (`wi1' - `wi2'/`wi1')
@@ -420,27 +416,33 @@ program define metan_pooling, rclass
 	if "`model'"=="qe" {
 
 		// check `qwt' >= 0
-		cap {
+		cap nois {
 			confirm numeric variable `qwt'
 			summ `qwt' if `touse', meanonly
 			assert r(min) >= 0
 		}
 		if _rc {
 			nois disp as err `"error in option {bf:qwt()}: variable {bf:`qwt'} must be numeric with no negative values"'
-			exit _rc
+			exit 2002
 		}
+		if r(sum)==0 {
+			nois disp as err `"error in option {bf:qwt()}: no non-zero quality weights found"'
+			exit 2002
+		}		
 
 		// re-scale scores relative to highest value
-		tempvar newqe tauqe
-		tempname sumwt sumnewqe
+		tempname qmax qsum
+		scalar `qmax' = r(max)
+		scalar `qsum' = r(sum)
+		tempvar newqe
+		qui gen double `newqe' = `qwt' / `qmax'
+		
+		tempname sumwt
 		summ `wtvar' if `touse', meanonly
 		scalar `sumwt' = r(sum)				// sum of original weights (inverse-variances)
-		summ `qwt' if `touse', meanonly
-		qui gen double `newqe' = `qwt' / r(max)
-		summ `newqe' if `touse', meanonly
-		scalar `sumnewqe' = r(sum)
-		
+
 		// correction to reduce estimator bias (Appendix A of CCT 2015, but without factor of 1/(k-1) as this cancels anyway)
+		tempvar tauqe
 		qui gen double `tauqe' = 0
 		qui replace `tauqe' = `wtvar' * (1 - `newqe') if `newqe' < 1
 		summ `tauqe' if `touse', meanonly
@@ -448,12 +450,18 @@ program define metan_pooling, rclass
 		// Point estimate uses weights = qi/vi + tauhati
 		// ...but expressions presented in CCT 2015 involve addition & subtraction of very similar quantities with risk of rounding error.
 		// Instead, we use the expression below, which can be shown to be equivalent to Equation 7 of CCT 2015
-		qui replace `wtvar' = `newqe' * (`wtvar' + (r(sum) / `sumnewqe')) if `touse'
+		qui replace `wtvar' = `newqe' * (`wtvar' + (r(sum) * `qmax' / `qsum')) if `touse'		
 		summ `wtvar' if `touse', meanonly
 		cap assert float(r(sum))==float(`sumwt')	// compare sum of new weights with sum of original weights
 		if _rc {
-			nois disp as err "Error encountered whilst calculating quality weights"		// DF Dec 2021: this error should never be seen
-			exit _rc
+			local rc = _rc
+			if r(sum)==0 {
+				cap assert `qsum'==0
+				if !_rc nois disp as err `"error in option {bf:qwt()}: no non-zero quality weights found"'
+				else nois disp as err "Error encountered whilst calculating quality weights"	// DF Dec 2021: this error message should never be seen
+			}
+			else nois disp as err "Error encountered whilst calculating quality weights"		// DF Dec 2021: this error message should never be seen
+			exit `rc'
 		}
 	}
 	
@@ -538,8 +546,8 @@ program define metan_pooling, rclass
 		// Similarly to M-H and Peto methods, re-calculate Q based on standard variance weights
 		// but with respect to the *weighted* pooled effect size
 		if `"`wgt'"'!=`""' {
-			qui replace `qhet' = ((`_ES' - `eff') / `_seES')^2
-			summ `qhet' if `touse', meanonly
+			qui gen double `Qhet' = ((`_ES' - `eff') / `_seES')^2
+			summ `Qhet' if `touse', meanonly
 			scalar `Q' = cond(r(N), r(sum), .)
 		}
 	}
@@ -569,8 +577,9 @@ program define metan_pooling, rclass
 	tempname Hstar
 	scalar `Qr' = `Q'
 	if !inlist("`model'", "iv", "peto", "mu") | "`wgt'"!="" {		// Note: if I-V common-effect (e.g. for "mu"), Qr = Q and Hstar = H
-		qui replace `qhet' = `wtvar'*((`_ES' - `eff')^2)
-		summ `qhet' if `touse', meanonly
+		cap drop `Qhet'
+		qui gen double `Qhet' = `wtvar'*((`_ES' - `eff')^2)
+		summ `Qhet' if `touse', meanonly
 		scalar `Qr' = cond(r(N), r(sum), .)
 	}
 	scalar `Hstar' = sqrt(`Qr'/`Qdf')
@@ -584,7 +593,7 @@ program define metan_pooling, rclass
 	// (Roever et al, BMC Med Res Methodol 2015; Jackson et al, Stat Med 2017; van Aert & Jackson, Stat Med 2019)
 
 	local nzt = 0
-	if "`model'"=="sa" | "`pooled'"!="" {	// added Sep 2023
+	if "`model'"=="sa" | "`hetpooled'"!="" {	// added Sep 2023
 		if `phisa'!=-99 {
 			scalar `Hstar' = sqrt(`phisa')
 			scalar `se_eff' = `se_eff' * `Hstar'
@@ -676,11 +685,10 @@ program define metan_pooling, rclass
 
 	return scalar Hstar = `Hstar'
 	return scalar nzt = `nzt'
-	if "`model'"=="mu" | ("`pooled'"!="" & `phisa'!=99) {
+	if "`model'"=="mu" | ("`hetpooled'"!="" & `phisa'!=99) {
 		return scalar phi = `Hstar'^2
 	}
 	if !inlist("`model'", "iv", "peto") {
-		nois disp `Qr'
 		return scalar Qr = `Qr'
 	}
 
@@ -718,7 +726,7 @@ program define metan_pooling, rclass
 				else nois disp as err `"Error in {bf:metan_analysis.GenConfIntsPr}"'
 				c_local err noerr		// tell -metan- not to also report an "error in metan_analysis.PerformMetaAnalysis"
 				exit _rc
-			}			
+			}
 			return scalar prop_eff = r(es)
 			return scalar prop_lci = r(lb)
 			return scalar prop_uci = r(ub)
@@ -1218,36 +1226,36 @@ program define Heterogi, rclass
 		
 		if "`tausqlist'"!="" {
 			matrix `hetstats'[rownumb(`hetstats', "tausq"), 1] = `tausq'
-			matrix `hetstats'[rownumb(`hetstats', "H"), 1]     = sqrt((`tausq' + `sigmasq') / `sigmasq')
-			matrix `hetstats'[rownumb(`hetstats', "Isq"), 1]   = 100* `tausq' / (`tausq' + `sigmasq')
-			matrix `hetstats'[rownumb(`hetstats', "HsqM"), 1]  = `tausq' / `sigmasq'
+			matrix `hetstats'[rownumb(`hetstats', "H"),     1] = sqrt((`tausq' + `sigmasq') / `sigmasq')
+			matrix `hetstats'[rownumb(`hetstats', "Isq"),   1] = 100* `tausq' / (`tausq' + `sigmasq')
+			matrix `hetstats'[rownumb(`hetstats', "HsqM"),  1] = `tausq' / `sigmasq'
 		}
 		
 		// If `tausq' not defined for this model, store H, Isq and HsqM (& CIs) based on Q instead
 		else {
-			matrix `hetstats'[rownumb(`hetstats', "H"), 1]    = max(1, sqrt(`Q' / `Qdf'))
-			matrix `hetstats'[rownumb(`hetstats', "Isq"), 1]  = 100* max(0, (`Q' - `Qdf') / `Q')
+			matrix `hetstats'[rownumb(`hetstats', "H"),    1] = max(1, sqrt(`Q' / `Qdf'))
+			matrix `hetstats'[rownumb(`hetstats', "Isq"),  1] = 100* max(0, (`Q' - `Qdf') / `Q')
 			matrix `hetstats'[rownumb(`hetstats', "HsqM"), 1] = max(0, (`Q' - `Qdf') / `Qdf')
 			
-			matrix `hetstats'[rownumb(`hetstats', "H_lci"), 1]    = max(1, sqrt(`Q_lci' / `Qdf'))
-			matrix `hetstats'[rownumb(`hetstats', "Isq_lci"), 1]  = 100* max(0, (`Q_lci' - `Qdf') / `Q_lci')
+			matrix `hetstats'[rownumb(`hetstats', "H_lci"),    1] = max(1, sqrt(`Q_lci' / `Qdf'))
+			matrix `hetstats'[rownumb(`hetstats', "Isq_lci"),  1] = 100* max(0, (`Q_lci' - `Qdf') / `Q_lci')
 			matrix `hetstats'[rownumb(`hetstats', "HsqM_lci"), 1] = max(0, (`Q_lci' - `Qdf') / `Qdf')
 
-			matrix `hetstats'[rownumb(`hetstats', "H_uci"), 1]    = max(1, sqrt(`Q_uci' / `Qdf'))
-			matrix `hetstats'[rownumb(`hetstats', "Isq_uci"), 1]  = 100* max(0, (`Q_uci' - `Qdf') / `Q_uci')
+			matrix `hetstats'[rownumb(`hetstats', "H_uci"),    1] = max(1, sqrt(`Q_uci' / `Qdf'))
+			matrix `hetstats'[rownumb(`hetstats', "Isq_uci"),  1] = 100* max(0, (`Q_uci' - `Qdf') / `Q_uci')
 			matrix `hetstats'[rownumb(`hetstats', "HsqM_uci"), 1] = max(0, (`Q_uci' - `Qdf') / `Qdf')
 		}
 		
 		// Confidence intervals, if appropriate
 		if `"`tsq_lci'"'!=`""' {
-			matrix `hetstats'[rownumb(`hetstats', "tsq_lci"), 1]  = `tsq_lci'
-			matrix `hetstats'[rownumb(`hetstats', "H_lci"), 1]    = sqrt((`tsq_lci' + `sigmasq') / `sigmasq')
-			matrix `hetstats'[rownumb(`hetstats', "Isq_lci"), 1]  = 100* `tsq_lci' / (`tsq_lci' + `sigmasq')
+			matrix `hetstats'[rownumb(`hetstats', "tsq_lci"),  1] = `tsq_lci'
+			matrix `hetstats'[rownumb(`hetstats', "H_lci"),    1] = sqrt((`tsq_lci' + `sigmasq') / `sigmasq')
+			matrix `hetstats'[rownumb(`hetstats', "Isq_lci"),  1] = 100* `tsq_lci' / (`tsq_lci' + `sigmasq')
 			matrix `hetstats'[rownumb(`hetstats', "HsqM_lci"), 1] = `tsq_lci' / `sigmasq'
 			
-			matrix `hetstats'[rownumb(`hetstats', "tsq_uci"), 1]  = `tsq_uci'
-			matrix `hetstats'[rownumb(`hetstats', "H_uci"), 1]    = sqrt((`tsq_uci' + `sigmasq') / `sigmasq')
-			matrix `hetstats'[rownumb(`hetstats', "Isq_uci"), 1]  = 100* `tsq_uci' / (`tsq_uci' + `sigmasq')
+			matrix `hetstats'[rownumb(`hetstats', "tsq_uci"),  1] = `tsq_uci'
+			matrix `hetstats'[rownumb(`hetstats', "H_uci"),    1] = sqrt((`tsq_uci' + `sigmasq') / `sigmasq')
+			matrix `hetstats'[rownumb(`hetstats', "Isq_uci"),  1] = 100* `tsq_uci' / (`tsq_uci' + `sigmasq')
 			matrix `hetstats'[rownumb(`hetstats', "HsqM_uci"), 1] = `tsq_uci' / `sigmasq'
 		}
 		

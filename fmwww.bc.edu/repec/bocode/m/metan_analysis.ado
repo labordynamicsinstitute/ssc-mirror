@@ -2,7 +2,7 @@
 * Subroutine to run the actual meta-analysis modelling
 * Called by metan.ado; do not run directly
 
-*! version 4.07  David Fisher 15sep2023
+*! version 4.08  David Fisher  17jun2024
 
 
 program define metan_analysis, rclass
@@ -67,7 +67,7 @@ program define metan_analysis, rclass
 		local opts_adm `"`macval(options)'"'
 		
 		local 0 `", `model`m'opts'"'
-		syntax [, POOLed HKSj RObust KRoger BArtlett SKovgaard WGT(passthru) ///
+		syntax [, HETPooled HKSj RObust KRoger BArtlett SKovgaard WGT(passthru) ///
 			CC(string) * ]	// <-- cc() for later checking for missing effect size/std. error
 		
 		// May 2022: Extract info on user-defined weights to send to metan_output.ado
@@ -100,7 +100,7 @@ program define metan_analysis, rclass
 			if `"`bartlett'"'!=`""' local model `model'_bart
 			if `"`skovgaard'"'!=`""' local model `model'_skov
 		}
-		if `"`pooled'"'!=`""' local model `model'_pool
+		if `"`hetpooled'"'!=`""' local model `model'_pool
 		
 		if `: list model in mcolnames' {
 			local j=2
@@ -245,7 +245,7 @@ program define metan_analysis, rclass
 		// can't just clear the matrix, because "return add" above may have already returned (a version of) it
 		// therefore, instead redefine it as missing and (re-)return it.
 		// main routine will then detect that it is missing and discard it.
-		matrix `ovstats' = .
+		matrix define `ovstats' = .
 	}
 	else {
 		// reduce rows if necessary
@@ -276,14 +276,13 @@ program define metan_analysis, rclass
 		// can't just clear the matrix, because "return add" above may have already returned (a version of) it
 		// therefore, instead redefine it as missing and (re-)return it.
 		// main routine will then detect that it is missing and discard it.
-		matrix `hetstats' = .
+		matrix define `hetstats' = .
 	}
 	else {
 		// reduce rows if necessary
 		// if no models which estimate tausq CIs, just keep rows containing point estimates
 		if `"`: list UniqModels & RefREModList'"'==`""' {		// RefREModList = mp pmm ml pl reml bt dlb
-			matrix `hetstats' = `hetstats'[rownumb(`hetstats', "tausq"), 1...] \ `hetstats'[rownumb(`hetstats', "H"), 1...] ///
-				\ `hetstats'[rownumb(`hetstats', "Isq"), 1...] \ `hetstats'[rownumb(`hetstats', "HsqM"), 1...]
+			matrix define `hetstats' = `hetstats'["tausq", 1...] \ `hetstats'["H", 1...] \ `hetstats'["Isq", 1...] \ `hetstats'["HsqM", 1...]
 		}
 		matrix colnames `hetstats' = `hetcolnames'
 	}
@@ -305,12 +304,12 @@ program define metan_analysis, rclass
 			// can't just clear the matrix, because "return add" above may have already returned (a version of) it
 			// therefore, instead redefine it as missing and (re-)return it.
 			// main routine will then detect that it is missing and discard it.
-			matrix `mwt' = .
+			matrix define `mwt' = .
 		}
 		
 		if `"`subgroup'"'==`""' {
 			tempname byQ
-			matrix `byQ' = r(byQ)
+			matrix define `byQ' = r(byQ)
 			if `: list model1 in RefFEModList' matrix colnames `byQ' = fe
 			else if "`model1'"=="user" local colnames `byQ' = user
 			else matrix colnames `byQ' = re
@@ -570,7 +569,7 @@ program define metan_analysis, rclass
 		local xrownames `s(xrownames)'
 		
 		local npts_el npts
-		local not_xrownames Q Qdf Q_lci Q_uci sigmasq _WT2		// these elements *only* appear in `xrownames', *never* in `rownames'
+		local not_xrownames Q Qdf Q_lci Q_uci sigmasq _WT2 _WT_Final	// these elements *only* appear in `xrownames', *never* in `rownames'
 		local toremove : list xrownames - rownames
 		local toremove : list toremove - not_xrownames
 		local toremove : list toremove - npts_el			// June 2020: npts will be removed from `xoutvlist' *anyway*
@@ -578,8 +577,14 @@ program define metan_analysis, rclass
 															// ... so don't also remove it here						
 		local oldrownames : list oldrownames - npts_el
 		local test : list oldrownames - rownames
-		assert "`test'"=="`toremove'"
-															
+		cap assert `"`test'"'==`"`toremove'"'
+		if _rc {
+			nois disp as err "Something has gone wrong in metan_analysis.ado"		// should never see this error message
+			exit _rc
+		}
+
+		local xoutvlist `xoutvlist' `_WT'		// Added Feb 2024
+
 		if `"`toremove'"'!=`""' {
 			tokenize `xoutvlist'
 			foreach el of local toremove {
@@ -606,8 +611,6 @@ program define metan_analysis, rclass
 		}
 		
 		local xoutvlist : list xoutvlist - outvlist
-		// local xv_opt xoutvlist(`xoutvlist')
-		// Nov 2021: ^^ don't use `xv_opt'; instead *always* send `xoutvlist' to BuildResultsSet, because this now also may include `summaryonly'
 	}
 	return local outvlist `outvlist'
 	return local xoutvlist `xoutvlist'
@@ -635,7 +638,7 @@ program define GetXRowNames, sclass
 		local xrownames `xrownames' Q Qdf Q_lci Q_uci
 		if `: list posof "tausq" in rownames' local xrownames `xrownames' sigmasq
 		if `"`cumulative'`influence'"'!=`""' {
-			local xrownames `xrownames' _WT2
+			local xrownames `xrownames' _WT2 _WT_Final
 		}
 		sreturn local xrownames `xrownames'
 	}
@@ -665,10 +668,10 @@ program define PerformMetaAnalysis, rclass sortpreserve
 		TESTBased ISQParam ROWNAMES(namelist) FIRST /* N.B. "first" is marker that this is the first/main/primary model */ ///
 		OUTVLIST(varlist numeric min=5 max=7) XOUTVLIST(varlist numeric) ///
 		noOVerall noSUbgroup OVWt SGWt ALTWt WGT(varname numeric) CUmulative INFluence PRoportion noINTeger ///
-		LOGRank ILevel(passthru) CC(passthru) KRoger POOLed /// from `opts_model'; needed in main routine
+		LOGRank ILevel(passthru) CC(passthru) KRoger HETPooled /// from `opts_model'; needed in main routine
 		* ]
 
-	local opts_model `"`macval(options)' `kroger' `pooled'"'	// model`j'opts; add `kroger' and `pooling' back in (this means they are duplicated...
+	local opts_model `"`macval(options)' `kroger' `hetpooled'"'	// model`j'opts; add `kroger' and `pooling' back in (this means they are duplicated...
 																//  ...but `opts_model' is only used in this subroutine so it shouldn't matter)
 	marksample touse, novarlist		// -novarlist- option prevents -marksample- from setting `touse' to zero if any missing values in `varlist'
 									// we want to control this behaviour ourselves, e.g. by using KEEPALL option
@@ -874,7 +877,7 @@ program define PerformMetaAnalysis, rclass sortpreserve
 	// NEW SEP 2023
 	// If heterogeneity parameter is "pooled" (i.e. stratified by) subgroup, need to estimate it once, now
 	// and pass it through to subsequent analyses as if it were a "sensitivity analysis"
-	if `"`pooled'"'!=`""' {
+	if `"`hetpooled'"'!=`""' {
 		tempvar by2
 		egen `by2' = group(`by') if `touse', missing
 		qui tab `by2' if `touse'
@@ -956,7 +959,7 @@ program define PerformMetaAnalysis, rclass sortpreserve
 		// otherwise, PerformPooling will generate a tempvar, and `_WT' will remain empty
 		local wtvar = cond(`"`ovwt'"'!=`""', `"`_WT'"', `""')
 
-		
+
 		** Cumulative/influence analysis
 		// Run extra loop to store results of each iteration within the currrent dataset (`xoutvlist')
 		if `"`cumulative'`influence'"' != `""' {
@@ -983,7 +986,7 @@ program define PerformMetaAnalysis, rclass sortpreserve
 					exit _rc
 				}
 			}
-
+			
 			local xwt `r(xwt)'			// extract _WT2 from `xoutvlist'
 		}
 
@@ -1043,7 +1046,7 @@ program define PerformMetaAnalysis, rclass sortpreserve
 			
 			tokenize `xoutvlist'
 			args `xrownames' _WT2
-			
+	
 			// Store (non-normalised) weight in the dataset
 			qui replace `_WT2' = r(totwt) if `obsj' == `rN'
 
@@ -1167,7 +1170,7 @@ program define PerformMetaAnalysis, rclass sortpreserve
 									// e.g. r(OR), r(RR); tsq-related stuff; chi2; data-derived heterogeneity (e.g. Cochran's Q); matrix hetstats
 	
 		// END OF REFERENCES TO RETURN LIST r() FROM PerformPooling
-	
+
 		// Normalise weights overall (if `ovwt')
 		if `"`ovwt'"'!=`""' {
 
@@ -1179,9 +1182,10 @@ program define PerformMetaAnalysis, rclass sortpreserve
 			if `"`xwt'"'!=`""' & `"`altwt'"'==`""' {
 				qui replace `_WT' = 100*`_WT' / r(sum) if `touse'
 				// ^^ if *not* altwt, also normalize the "standard" weight, for storing in memory as _WT
+				// Use the same value of r(sum);  this is the cumulative sum applicable to both `_WT' and `_WT2'
 			}
+		
 		}
-
 		return matrix ovstats = `ovstats'		// needs to be returned separately from "return add" above, as it has been edited
 
 	}		// end if `"`overall'"'==`""' | `"`ovwt'"'!=`""'
@@ -1284,7 +1288,7 @@ program define PerformMetaAnalysis, rclass sortpreserve
 			cap summ `_CC' if `touse' & float(`by')==float(`byi'), meanonly
 			if !_rc & r(N) local equals `"<="'
 
-		
+			
 			** Cumulative/influence analysis
 			// Run extra loop to store results of each iteration within the currrent dataset (`xoutvlist')
 			local rc = 0
@@ -1321,7 +1325,7 @@ program define PerformMetaAnalysis, rclass sortpreserve
 				
 				local xwt `r(xwt)'			// extract _WT2 from `xoutvlist'
 			}
-
+			
 			
 			** Main subgroup meta-analysis			    
 			cap nois PerformPooling `_ES' `_seES' if `touse' & float(`by')==float(`byi'), ///
@@ -1433,7 +1437,7 @@ program define PerformMetaAnalysis, rclass sortpreserve
 				scalar `avg_eff_denom' = `avg_eff_denom' + (      1 / (r(se_eff)^2) )
 				
 				// END OF REFERENCES TO RETURN LIST r() FROM PerformPooling
-								
+				
 				// Normalise weights by subgroup (if `sgwt')
 				if `"`sgwt'"'!=`""' {
 					local _WT2 = cond(`"`xwt'"'!=`""', `"`xwt'"', `"`_WT'"')		// use _WT2 from `xoutvlist' if applicable
@@ -1500,7 +1504,7 @@ program define PerformMetaAnalysis, rclass sortpreserve
 			foreach el of local old_rownames {
 				forvalues i = 1 / `nby' {	
 					if `: list el in rownames_reduced_by' {
-						matrix `bystats2'[rownumb(`bystats2', "`el'"), `i'] = `bystats'[rownumb(`bystats', "`el'"), `i']
+						matrix `bystats2'[rownumb(`bystats2', "`el'"), `i'] = `bystats'["`el'", `i']
 					}
 					else assert missing(`bystats'[rownumb(`bystats', "`el'"), `i'])
 				}
@@ -1513,8 +1517,8 @@ program define PerformMetaAnalysis, rclass sortpreserve
 		scalar `Qbet' = 0
 		local nby1 = 0					// alternative `nby' reflecting the number of subgroups *with data in*
 		forvalues i = 1 / `nby' {		// use `nby' so that the sum becomes missing if any subgroups are missing
-			scalar `eff_i'    = `bystats'[rownumb(`bystats', "eff"),    `i']
-			scalar `se_eff_i' = `bystats'[rownumb(`bystats', "se_eff"), `i']
+			scalar `eff_i'    = `bystats'["eff",    `i']
+			scalar `se_eff_i' = `bystats'["se_eff", `i']
 			scalar `Qbet' = `Qbet' + ((`eff_i' - `avg_eff') / `se_eff_i')^2
 			if !missing(`eff_i'/`se_eff_i') local ++nby1
 		}
@@ -1550,12 +1554,10 @@ program define PerformMetaAnalysis, rclass sortpreserve
 			// reduce rows if necessary
 			// if current model does not estimate tausq CIs, just keep rows containing point estimates
 			if inlist("`model'", "iv", "mh", "peto", "mu") {
-				matrix define `byhet' = `byhet'[rownumb(`byhet', "H"), 1...] ///
-					\ `byhet'[rownumb(`byhet', "Isq"), 1...] \ `byhet'[rownumb(`byhet', "HsqM"), 1...]
+				matrix define `byhet' = `byhet'["H", 1...] \ `byhet'["Isq", 1...] \ `byhet'["HsqM", 1...]
 			}
 			else if !inlist("`model'", "mp", "pmm", "ml", "pl", "reml", "bt", "dlb") {
-				matrix define `byhet' = `byhet'[rownumb(`byhet', "tausq"), 1...] \ `byhet'[rownumb(`byhet', "H"), 1...] ///
-					\ `byhet'[rownumb(`byhet', "Isq"), 1...] \ `byhet'[rownumb(`byhet', "HsqM"), 1...]
+				matrix define `byhet' = `byhet'["tausq", 1...] \ `byhet'["H", 1...] \ `byhet'["Isq", 1...] \ `byhet'["HsqM", 1...]
 			}
 			matrix colnames `byhet' = `modelstr'
 			matrix coleq    `byhet' = `bylist'
@@ -1636,7 +1638,7 @@ program define ProcessPoolingVarlist, sclass
 		// Continuity correction: already prepared by ParseModel (for `ccval'>0)
 		if `"`cc'"'!=`""' {
 			local 0 `"`cc'"'
-			syntax [anything(name=ccval)] [, *]
+			syntax [anything(name=ccval)] [, MHUNCORR /* Internal option only */ * ]
 			if "`options'"!="" {
 				nois disp as err "options not allowed"
 				exit 101
@@ -2149,7 +2151,7 @@ program define PerformPoolingIV, rclass
 		OEVLIST(varlist numeric min=2 max=2) INVLIST(varlist numeric min=2 max=6) ///
 		NPTS(varname numeric) WGT(varname numeric) WTVAR(varname numeric) ///
 		HKsj KRoger BArtlett SKovgaard RObust LOGRank PRoportion TN(string) POVERV(real 2) /*noTRUNCate*/ TRUNCate(string) EIM OIM ///
-		ISQSA(real -99) TSQSA(real -99) PHISA(real -99) POOLed /*Added Sep 2023*/ QWT(varname numeric) INIT(name) ///
+		ISQSA(real -99) TSQSA(real -99) PHISA(real -99) HETPooled /*Added Sep 2023*/ QWT(varname numeric) INIT(name) ///
 		OLevel(cilevel) HLevel(cilevel) RFLevel(cilevel) CItype(passthru) ///
 		ITOL(real 1.0x-1a) MAXTausq(real -9) REPS(real 1000) MAXITer(real 1000) QUADPTS(real 100) DIFficult TECHnique(string) * ]
 
@@ -2179,12 +2181,12 @@ program define PerformPoolingIV, rclass
 	qui count if `touse'
 	if !r(N) exit 2000		// no observations *after* effect of marksample, novarlist
 	scalar `k' = r(N)
-	if `k' == 1 {
-		if "`model'"!="peto" {
+	if `k' == 1 & "`hetpooled'"=="" {
+		if !inlist("`model'", "peto", "qe") {
 			local model iv
 			local isqparam
 		}
-		if "`teststat'"!="z" local teststat z
+		local teststat z
 		local hksj
 	}
 	
@@ -2223,7 +2225,7 @@ program define PerformPoolingIV, rclass
 		
 	tempname eff se_eff crit pvalue
 	qui replace `wtvar' = 1/`_seES'^2 if `touse'
-	qui summ `_ES' [aw=`wtvar'] if `touse'
+	qui summ `_ES' [aw=`wtvar'] if `touse' /*, meanonly*/
 	scalar `eff' = r(mean)
 	scalar `se_eff' = 1/sqrt(r(sum_w))		// I-V common-effect SE
 
@@ -2247,7 +2249,7 @@ program define PerformPoolingIV, rclass
 	**********************************
 	// (other than D+L, already derived above)
 	
-	if "`pooled'"=="" {
+	if "`hetpooled'"=="" {
 		
 		** Setup two-stage estimators sj2s and dk2s
 		// consider *initial* estimate of tsq
@@ -2344,7 +2346,7 @@ program define PerformPoolingIV, rclass
 	}
 	
 	// Sensitivity analysis: use given Isq/tausq and sigmasq to generate tausq/Isq
-	if "`model'"=="sa" | "`pooled'"!="" {		// modified Sep 2023
+	if "`model'"=="sa" | "`hetpooled'"!="" {		// modified Sep 2023
 		if `tsqsa'==-99 scalar `tausq' = `isqsa'*`sigmasq'/(100 - `isqsa')
 		else if `phisa'==-99 scalar `tausq' = `tsqsa'
 	}
@@ -2380,7 +2382,7 @@ program define PerformPoolingIV, rclass
 	local maxtausq = cond(`maxtausq'==-9, max(10*`tausq', 100), `maxtausq')
 		
 	// Iterative, using Mata
-	if "`pooled'"=="" & inlist("`model'", "dlb", "mp", "pmm", "ml", "pl", "reml") {
+	if "`hetpooled'"=="" & inlist("`model'", "dlb", "mp", "pmm", "ml", "pl", "reml") {
 	
 		// Bootstrap D+L
 		// (Kontopantelis PLoS ONE 2013)
@@ -2546,27 +2548,33 @@ program define PerformPoolingIV, rclass
 	if "`model'"=="qe" {
 
 		// check `qwt' >= 0
-		cap {
+		cap nois {
 			confirm numeric variable `qwt'
 			summ `qwt' if `touse', meanonly
 			assert r(min) >= 0
 		}
 		if _rc {
 			nois disp as err `"error in option {bf:qwt()}: variable {bf:`qwt'} must be numeric with no negative values"'
-			exit _rc
+			exit 2002
 		}
-
+		if r(sum)==0 {
+			nois disp as err `"error in option {bf:qwt()}: no non-zero quality weights found"'
+			exit 2002
+		}
+		
 		// re-scale scores relative to highest value
-		tempvar newqe tauqe
-		tempname sumwt sumnewqe
+		tempname qmax qsum
+		scalar `qmax' = r(max)
+		scalar `qsum' = r(sum)
+		tempvar newqe
+		qui gen double `newqe' = `qwt' / `qmax'
+		
+		tempname sumwt
 		summ `wtvar' if `touse', meanonly
 		scalar `sumwt' = r(sum)				// sum of original weights (inverse-variances)
-		summ `qwt' if `touse', meanonly
-		qui gen double `newqe' = `qwt' / r(max)
-		summ `newqe' if `touse', meanonly
-		scalar `sumnewqe' = r(sum)
-		
+
 		// correction to reduce estimator bias (Appendix A of CCT 2015, but without factor of 1/(k-1) as this cancels anyway)
+		tempvar tauqe
 		qui gen double `tauqe' = 0
 		qui replace `tauqe' = `wtvar' * (1 - `newqe') if `newqe' < 1
 		summ `tauqe' if `touse', meanonly
@@ -2574,13 +2582,19 @@ program define PerformPoolingIV, rclass
 		// Point estimate uses weights = qi/vi + tauhati
 		// ...but expressions presented in CCT 2015 involve addition & subtraction of very similar quantities with risk of rounding error.
 		// Instead, we use the expression below, which can be shown to be equivalent to Equation 7 of CCT 2015
-		qui replace `wtvar' = `newqe' * (`wtvar' + (r(sum) / `sumnewqe')) if `touse'
-		
+		qui replace `wtvar' = `newqe' * (`wtvar' + (r(sum) * `qmax' / `qsum')) if `touse'		
 		summ `wtvar' if `touse', meanonly
+
 		cap assert float(r(sum))==float(`sumwt')	// compare sum of new weights with sum of original weights
 		if _rc {
-			nois disp as err "Error encountered whilst calculating quality weights"		// DF Dec 2021: this error should never be seen
-			exit _rc
+			local rc = _rc
+			if r(sum)==0 {
+				cap assert `qsum'==0
+				if !_rc nois disp as err `"error in option {bf:qwt()}: no non-zero quality weights found"'
+				else nois disp as err "Error encountered whilst calculating quality weights"	// DF Dec 2021: this error message should never be seen
+			}
+			else nois disp as err "Error encountered whilst calculating quality weights"		// DF Dec 2021: this error message should never be seen
+			exit `rc'
 		}
 	}
 	
@@ -2712,7 +2726,7 @@ program define PerformPoolingIV, rclass
 	// (Roever et al, BMC Med Res Methodol 2015; Jackson et al, Stat Med 2017; van Aert & Jackson, Stat Med 2019)
 
 	local nzt = 0
-	if "`model'"=="sa" | "`pooled'"!="" {	// added Sep 2023
+	if "`model'"=="sa" | "`hetpooled'"!="" {	// added Sep 2023
 		if `phisa'!=-99 {
 			scalar `Hstar' = sqrt(`phisa')
 			scalar `se_eff' = `se_eff' * `Hstar'
@@ -2804,7 +2818,7 @@ program define PerformPoolingIV, rclass
 
 	return scalar Hstar = `Hstar'
 	return scalar nzt = `nzt'
-	if "`model'"=="mu" | ("`pooled'"!="" & `phisa'!=99) {
+	if "`model'"=="mu" | ("`hetpooled'"!="" & `phisa'!=99) {
 		return scalar phi = `Hstar'^2
 	}
 	if !inlist("`model'", "iv", "peto") {
@@ -3635,39 +3649,39 @@ program define Heterogi, rclass
 		local r : word count `t2rownames'
 		matrix define `hetstats' = J(`r', 1, .)
 		matrix rownames `hetstats' = `t2rownames'
-		
+
 		if "`tausqlist'"!="" {
 			matrix `hetstats'[rownumb(`hetstats', "tausq"), 1] = `tausq'
-			matrix `hetstats'[rownumb(`hetstats', "H"), 1]     = sqrt((`tausq' + `sigmasq') / `sigmasq')
-			matrix `hetstats'[rownumb(`hetstats', "Isq"), 1]   = 100* `tausq' / (`tausq' + `sigmasq')
-			matrix `hetstats'[rownumb(`hetstats', "HsqM"), 1]  = `tausq' / `sigmasq'
+			matrix `hetstats'[rownumb(`hetstats', "H"),     1] = sqrt((`tausq' + `sigmasq') / `sigmasq')
+			matrix `hetstats'[rownumb(`hetstats', "Isq"),   1] = 100* `tausq' / (`tausq' + `sigmasq')
+			matrix `hetstats'[rownumb(`hetstats', "HsqM"),  1] = `tausq' / `sigmasq'
 		}
 		
 		// If `tausq' not defined for this model, store H, Isq and HsqM (& CIs) based on Q instead
 		else {
-			matrix `hetstats'[rownumb(`hetstats', "H"), 1]    = max(1, sqrt(`Q' / `Qdf'))
-			matrix `hetstats'[rownumb(`hetstats', "Isq"), 1]  = 100* max(0, (`Q' - `Qdf') / `Q')
+			matrix `hetstats'[rownumb(`hetstats', "H"),    1] = max(1, sqrt(`Q' / `Qdf'))
+			matrix `hetstats'[rownumb(`hetstats', "Isq"),  1] = 100* max(0, (`Q' - `Qdf') / `Q')
 			matrix `hetstats'[rownumb(`hetstats', "HsqM"), 1] = max(0, (`Q' - `Qdf') / `Qdf')
 			
-			matrix `hetstats'[rownumb(`hetstats', "H_lci"), 1]    = max(1, sqrt(`Q_lci' / `Qdf'))
-			matrix `hetstats'[rownumb(`hetstats', "Isq_lci"), 1]  = 100* max(0, (`Q_lci' - `Qdf') / `Q_lci')
+			matrix `hetstats'[rownumb(`hetstats', "H_lci"),    1] = max(1, sqrt(`Q_lci' / `Qdf'))
+			matrix `hetstats'[rownumb(`hetstats', "Isq_lci"),  1] = 100* max(0, (`Q_lci' - `Qdf') / `Q_lci')
 			matrix `hetstats'[rownumb(`hetstats', "HsqM_lci"), 1] = max(0, (`Q_lci' - `Qdf') / `Qdf')
 
-			matrix `hetstats'[rownumb(`hetstats', "H_uci"), 1]    = max(1, sqrt(`Q_uci' / `Qdf'))
-			matrix `hetstats'[rownumb(`hetstats', "Isq_uci"), 1]  = 100* max(0, (`Q_uci' - `Qdf') / `Q_uci')
+			matrix `hetstats'[rownumb(`hetstats', "H_uci"),    1] = max(1, sqrt(`Q_uci' / `Qdf'))
+			matrix `hetstats'[rownumb(`hetstats', "Isq_uci"),  1] = 100* max(0, (`Q_uci' - `Qdf') / `Q_uci')
 			matrix `hetstats'[rownumb(`hetstats', "HsqM_uci"), 1] = max(0, (`Q_uci' - `Qdf') / `Qdf')
 		}
 		
 		// Confidence intervals, if appropriate
 		if `"`tsq_lci'"'!=`""' {
-			matrix `hetstats'[rownumb(`hetstats', "tsq_lci"), 1]  = `tsq_lci'
-			matrix `hetstats'[rownumb(`hetstats', "H_lci"), 1]    = sqrt((`tsq_lci' + `sigmasq') / `sigmasq')
-			matrix `hetstats'[rownumb(`hetstats', "Isq_lci"), 1]  = 100* `tsq_lci' / (`tsq_lci' + `sigmasq')
+			matrix `hetstats'[rownumb(`hetstats', "tsq_lci"),  1] = `tsq_lci'
+			matrix `hetstats'[rownumb(`hetstats', "H_lci"),    1] = sqrt((`tsq_lci' + `sigmasq') / `sigmasq')
+			matrix `hetstats'[rownumb(`hetstats', "Isq_lci"),  1] = 100* `tsq_lci' / (`tsq_lci' + `sigmasq')
 			matrix `hetstats'[rownumb(`hetstats', "HsqM_lci"), 1] = `tsq_lci' / `sigmasq'
 			
-			matrix `hetstats'[rownumb(`hetstats', "tsq_uci"), 1]  = `tsq_uci'
-			matrix `hetstats'[rownumb(`hetstats', "H_uci"), 1]    = sqrt((`tsq_uci' + `sigmasq') / `sigmasq')
-			matrix `hetstats'[rownumb(`hetstats', "Isq_uci"), 1]  = 100* `tsq_uci' / (`tsq_uci' + `sigmasq')
+			matrix `hetstats'[rownumb(`hetstats', "tsq_uci"),  1] = `tsq_uci'
+			matrix `hetstats'[rownumb(`hetstats', "H_uci"),    1] = sqrt((`tsq_uci' + `sigmasq') / `sigmasq')
+			matrix `hetstats'[rownumb(`hetstats', "Isq_uci"),  1] = 100* `tsq_uci' / (`tsq_uci' + `sigmasq')
 			matrix `hetstats'[rownumb(`hetstats', "HsqM_uci"), 1] = `tsq_uci' / `sigmasq'
 		}
 		

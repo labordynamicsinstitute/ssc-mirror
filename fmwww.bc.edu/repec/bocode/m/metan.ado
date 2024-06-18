@@ -1,7 +1,7 @@
 * metan.ado
 * Study-level (aka "aggregate-data" or "published data") meta-analysis
 
-*! version 4.07  15sep2023
+*! version 4.08  17jun2024
 *! Current version by David Fisher
 *! Previous versions by Ross Harris and Michael Bradburn
 
@@ -153,6 +153,16 @@
 // - weights from multiple models may now be displayed in forestplot and/or saved to new dataset, with new `allweights' option
 // - added Viechtbauer (2021) median-unbiased version of Mandel-Paule tausq estimator
 
+* version 4.08
+// Bug fixes:
+// - fixed bug (due to incorrect/inconsistent values of _USE) giving error when rfdist used with heterogeneity placed on separate line from effect size (e.g. with counts)
+// - small p-value for heterogeneity now displays as "p < 0.001" rather than "p = 0.000"
+// - fixed bug which displayed the same heterogeneity info for all subgroups in the forest plot (or sometimes failed to display any het. info for subgroups)
+// - qe() with cumulative/influence and "generic" effect sizes gave syntax error in some circumstances
+// Improvements:
+// - added functionality from -meta5- for empirical Bayes shrunk estimates
+// - improved labelling and documentation for random-effects cumulative/influence analysis; new saved variable _WT_Final
+
 
 program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 
@@ -219,7 +229,7 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 	// effect options parsed by CheckOpts (e.g. `rr', `rd', `md', `smd', `wmd', `log')
 	// nograph, nohet, nobetween, nooverall, nosubgroup, nowarning, nowt, nostats
 	// effect, hetinfo, lcols, rcols, plotid, ovwt, sgwt, sgweight
-	// cumulative, efficacy, influence, interaction
+	// cumulative, efficacy, ebshrinkage, influence, interaction
 	// counts, group1, group2 (for compatibility with previous version of metan.ado)
 	// rfdist, rflevel (for compatibility with previous version of metan.ado)
 
@@ -511,8 +521,8 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 		}
 		if !_rc {
 			tempname bystats`j'
-			matrix `bystats`j'' = r(bystats`j')
-			local bystatslist `"`bystatslist' `bystats`j''"'
+			matrix define `bystats`j'' = r(bystats`j')
+			local bystatslist `bystatslist' `bystats`j''
 			return matrix bystats`jj' = `bystats`j'', copy
 		}
 		
@@ -522,7 +532,7 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 		}
 		if !_rc {
 			tempname byhet`j'
-			matrix `byhet`j'' = r(byhet`j')
+			matrix define `byhet`j'' = r(byhet`j')
 			local byhetlist `"`byhetlist' `byhet`j''"'
 			return matrix byhet`jj' = `byhet`j'', copy
 		}
@@ -538,7 +548,7 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 		if !_rc {
 			local lowerx = lower("`x'")
 			tempname `x'
-			matrix ``x'' = r(`x')
+			matrix define ``x'' = r(`x')
 			local mmatlist `"`mmatlist' `lowerx'(``x'')"'
 			return matrix `x' = ``x'', copy
 		}
@@ -551,7 +561,7 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 	}
 	if !_rc {
 		tempname mwt
-		matrix `mwt' = r(mwt)
+		matrix define `mwt' = r(mwt)
 		local mmatlist `"`mmatlist' mwt(`mwt')"'
 		// N.B. don't return matrix `mwt'; this is for internal use only
 	}	
@@ -627,6 +637,7 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 		return scalar Qsum = r(Qsum)
 		return scalar Qbet = r(Qbet)
 		return scalar F   = r(Fstat)
+		local nby = r(nby)
 		return scalar nby = r(nby)
 	}
 
@@ -667,10 +678,10 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 					return `historical' scalar ci_upp_2 = `ci_upp_2'
 				}
 				else if `m'==2 {			// if `second' is a model name e.g. "second(random)"
-					return `historical' scalar ES_2      = exp(`ovstats'[rownumb(`ovstats', "eff"), 2])
-					return `historical' scalar selogES_2 =     `ovstats'[rownumb(`ovstats', "se_eff"), 2]
-					return `historical' scalar ci_low_2  = exp(`ovstats'[rownumb(`ovstats', "eff_lci"), 2])
-					return `historical' scalar ci_upp_2  = exp(`ovstats'[rownumb(`ovstats', "eff_uci"), 2])
+					return `historical' scalar ES_2      = exp(`ovstats'["eff", 2])
+					return `historical' scalar selogES_2 =     `ovstats'["se_eff", 2]
+					return `historical' scalar ci_low_2  = exp(`ovstats'["eff_lci", 2])
+					return `historical' scalar ci_upp_2  = exp(`ovstats'["eff_uci", 2])
 				}
 			}
 		}
@@ -692,10 +703,10 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 					return `historical' scalar ci_upp_2 = `ci_upp_2'
 				}
 				else if `m'==2 {				// if `second' is a model name e.g. "second(random)"
-					return `historical' scalar ES_2     = `ovstats'[rownumb(`ovstats', "eff"), 2]
-					return `historical' scalar seES_2   = `ovstats'[rownumb(`ovstats', "se_eff"), 2]
-					return `historical' scalar ci_low_2 = `ovstats'[rownumb(`ovstats', "eff_lci"), 2]
-					return `historical' scalar ci_upp_2 = `ovstats'[rownumb(`ovstats', "eff_uci"), 2]
+					return `historical' scalar ES_2     = `ovstats'["eff", 2]
+					return `historical' scalar seES_2   = `ovstats'["se_eff", 2]
+					return `historical' scalar ci_low_2 = `ovstats'["eff_lci", 2]
+					return `historical' scalar ci_upp_2 = `ovstats'["eff_uci", 2]
 				}
 			}
 		}
@@ -775,7 +786,7 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 
 	// Now parse additional options needed in this part of the code (AND in metan_output)
 	local 0 `", `opts_adm'"'
-	syntax [, SAVING(passthru) CLEAR CLEARSTACK noGRaph KEEPAll KEEPOrder ///
+	syntax [, SAVING(passthru) CLEAR CLEARSTACK noGRaph KEEPAll KEEPOrder SGWT EBShrinkage ///
 		PREfix(name local) ILevel(cilevel) OLevel(cilevel) * ]
 	
 	// [Aug 2023] consistency check r.e. cumul/influence
@@ -807,14 +818,15 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 	// if cumul/influence, `outvlist' contains cumul/influence effect sizes
 	// but r(coeffs) and saved variables should contain original study-specific effect sizes
 	if `"`oldvlist'"'==`""' tokenize `outvlist'				// default
-	else {													// if cumul/influence
-		tokenize `oldvlist'		
-		local extravarlab `"`cumulative'`influence' "'		// for later
+	else {
+		tokenize `oldvlist'
 		
 		// May-Aug 2023: `altsavedvars' option
 		// This over-rides the default behaviour regarding cumulative/influence data saved *in the current dataset* (or in matrix r(coeffs))
 		// By default, such data mirrors the raw data, i.e. it is *not* cumulative/influence.
 		if `"`altsavedvars'"'!=`""' {
+			local extravarlab `"`cumulative'`influence' "'		// for later
+			
 			tempvar _NN2
 			qui gen byte `_NN2' = .
 			
@@ -825,12 +837,46 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 			// Instead, retokenize for use within metan.ado only
 			// (i.e. GetMatCoeffs, and then finishing off after metan_ouput)
 			
-			FillDown `outvlist', newn(`_NN2') sortby(`sortby' `obs') `opts_adm'
-			// Because in some situations the fill-down routine within metan_output will not be executed,
-			//  just do it here instead (within a subroutine, in order to use `sortpreserve')
+			cap confirm numeric variable `_NN'
+			if !_rc {			
+				FillDown `outvlist', newn(`_NN2') sortby(`sortby' `obs') `opts_adm'
+				// Because in some situations the fill-down routine within metan_output will not be executed,
+				//  just do it here instead (within a subroutine, in order to use `sortpreserve')
+			}
 		}
 	}
-	args _ES _seES _LCI _UCI _WT _NN _CC	
+	args _ES _seES _LCI _UCI _WT _NN _CC
+
+	** [FEB 2024] Empirical Bayes shrinkage estimates
+	// (carried over from -metan5- )
+	if `"`ebshrinkage'"'!=`""' {
+		tempvar _EBS_ES _EBS_seES
+		qui gen double `_EBS_ES' = .
+		qui gen double `_EBS_seES' = .
+		label variable `_EBS_ES' "Empirical Bayes shrinkage estimate"
+		label variable `_EBS_seES' "Empirical Bayes shrinkage standard error"		
+		
+		tempname eff se_eff tausq
+		if `"`sgwt'"'!=`""' {
+			local bystats : word 1 of `bystatslist'		// use first model only
+			qui levelsof `_BY' if `touse', missing local(bylist)			
+			forvalues i = 1 / `nby' {
+				local byi : word `i' of `bylist'
+				scalar `eff' = `bystats'["eff", `i']
+				scalar `se_eff' = `bystats'["se_eff", `i']
+				scalar `tausq' = `bystats'["tausq", `i']
+				qui replace `_EBS_ES' = (`_ES'*`tausq' + `eff'*`_seES'^2) / (`_seES'^2 + `tausq') if `_USE'==1 & `_BY'==`byi'
+				qui replace `_EBS_seES' = sqrt( `_seES'^2 *`tausq'/(`_seES'^2 + `tausq') + (`se_eff'*`_seES'^2 / (`_seES'^2 + `tausq'))^2 ) if `_USE'==1 & `_BY'==`byi'
+			}
+		}
+		else {
+			scalar `eff' = `ovstats'["eff", 1]			// use first model only
+			scalar `se_eff' = `ovstats'["se_eff", 1]
+			scalar `tausq' = `ovstats'["tausq", 1]			
+			qui replace `_EBS_ES' = (`_ES'*`tausq' + `eff'*`_seES'^2) / (`_seES'^2 + `tausq') if `_USE'==1
+			qui replace `_EBS_seES' = sqrt( `_seES'^2 *`tausq'/(`_seES'^2 + `tausq') + (`se_eff'*`_seES'^2 / (`_seES'^2 + `tausq'))^2 ) if `_USE'==1
+		}
+	}	
 	
 	if `"`keepvars'"'!=`""' {
 		
@@ -850,15 +896,17 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 		
 		else {			
 			// do this in a subroutine, so that we can use -sortpreserve-
-			GetMatCoeffs `_BY' `_STUDY' `_ES' `_seES' `_NN' `_WT' if `touse', sortby(`_BY' `tempuse' `sortby' `obs')
+			GetMatCoeffs `_BY' `_STUDY' `_ES' `_seES' `_NN' `_WT' `_EBS_ES' `_EBS_seES' if `touse', sortby(`_BY' `tempuse' `sortby' `obs')
 			tempname coeffs
-			matrix `coeffs' = r(coeffs)
+			matrix define `coeffs' = r(coeffs)
 			
 			if `"`_BY'"'!=`""' local _BYexist _BY
 			if `"`_NN'"'!=`""' local _NNexist _NN
 			if `"`_WT'"'!=`""' local _WTexist _WT
+			if `"`_EBS_ES'"'!=`""' local _EBS_ESexist _EBS_ES
+			if `"`_EBS_seES'"'!=`""' local _EBS_seESexist _EBS_seES
 			
-			matrix colnames `coeffs' = `_BYexist' _STUDY _ES _seES `_NNexist' `_WTexist'			
+			matrix colnames `coeffs' = `_BYexist' _STUDY _ES _seES `_NNexist' `_WTexist' `_EBS_ESexist' `_EBS_seESexist'
 			return matrix coeffs = `coeffs'
 		}
 	}	
@@ -916,11 +964,8 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 	// List of these "permanent" names = _ES _seES _LCI _UCI _WT _NN ... plus _CC if applicable
 	//   (as opposed to `outvlist', which contains the *temporary* names `_ES', `_seES', etc.)
 	//   (N.B. this code applies whether or not cumulative/influence options are present)	
-	if `"`keepvars'"'==`""' {
-	
-		// July 2021: _CC is defined within DrawTableAD using c_local
-		local tostore _ES _seES _LCI _UCI _WT _NN _CC
-		
+	if `"`keepvars'"'==`""' {	
+		local tostore _ES _seES _LCI _UCI _WT _EBS_ES _EBS_seES _NN _CC
 		foreach v of local tostore {
 			if `"``v''"'!=`""' {
 				if `"``v''"'!=`"`prefix'`v'"' {		// If pre-existing var has the same name (i.e. was named _ES etc.), nothing needs to be done.
@@ -940,7 +985,7 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 			else cap drop `prefix'`v'		// in any case, drop existing vars named _ES etc.
 		}
 		// qui compress `tvlist'
-		order `_ES' `_seES' `_LCI' `_UCI' `_WT' `_NN' `_CC' `_rsample', last
+		order `_ES' `_seES' `_LCI' `_UCI' `_WT' `_EBS_ES' `_EBS_seES' `_NN' `_CC' `_rsample', last
 		
 		char define `_LCI'[Level] `ilevel'
 		char define `_UCI'[Level] `ilevel'
@@ -955,6 +1000,10 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 		label variable `_UCI' "`ilevel'% upper confidence limit"
 		label variable `_WT' `"`=proper(`"`extravarlab'"')'% Weight"'
 		format `_WT' %6.2f
+		if `"`_EBS_ES'`_EBS_seES'"'!=`""' {		// added Feb 2024
+			label variable `_EBS_ES' "Empirical Bayes shrinkage estimate"
+			label variable `_EBS_seES' "Standard error of empirical Bayes shrinkage estimate"
+		}
 		if `"`_NN'"'!=`""' {
 			StrProper `extravarlab'no.
 			label variable `_NN' `"`s(result)' pts"'
@@ -1065,12 +1114,14 @@ program define GetMatCoeffs, rclass sortpreserve
 	mkmat `varlist' if `touse', matrix(`coeffs')
 	return matrix coeffs = `coeffs'
 end		
-		
+
+
 program define StrProper, sclass
 	gettoken word1 rest : 0
 	local result = proper(`"`word1'"') + lower(`"`rest'"')
 	sreturn local result `"`result'"'
 end
+
 
 
 
@@ -1145,7 +1196,7 @@ program define ParseFPlotOpts, sclass
 	local 0 `", `options'"'
 	syntax [, EFFect(string asis) ///
 		HETINFO(string) HETStat(string) OVStat(string) /// /* N.B. `hetstat' and `ovstat' are legacy synonyms for `hetinfo' */
-		OVWt SGWt OVWEIGHT SGWEIGHT /// /* synonyms */
+		OVWt SGWt OVWEIGHT SGWEIGHT INFluence LEAVEoneout /// /* synonyms */
 		COUNTS2 COUNTS(string asis) GROUP1(passthru) GROUP2(passthru) * ]
 		/* ^^ modern syntax has "group1" and "group2" as sub-options to "count"; older syntax had them as separate options */
 
@@ -1154,7 +1205,9 @@ program define ParseFPlotOpts, sclass
 	local sgweight
 	local ovwt = cond("`ovweight'"!="", "ovwt", "`ovwt'")		// ovweight is a synonym (for consistency with sgweight)
 	local ovweight
-
+	local influence = cond("`leaveoneout'"!="", "influence", "`influence'")		// leaveoneout is a synonym for influence (c.f. Stata16+ -meta-)
+	local leaveoneout
+	
 	if (`"`hetinfo'"'!=`""') + (`"`hetstat'"'!=`""') + (`"`ovstat'"'!=`""') > 1 {
 		nois disp as err `"only one of {bf:hetinfo()}, {bf:hetstat()}, or {bf:ovstat()} is allowed"'
 		exit 184												// hetstat and ovstat are synonyms (carried over from -admetan- )
@@ -1201,10 +1254,11 @@ program define ParseFPlotOpts, sclass
 	
 	
 	** Main parse of options supplied directly to -(ipd)metan- 
-	local optlist0 GRaph HET BETWeen OVerall SUbgroup WARNing WT STATs BOX					// "stand-alone" options: optionally-off
-	local optlist1 CUmulative INFluence INTERaction EFFIcacy RFDist	OVWt SGWt FORCE NOPR	// "stand-alone" options: optionally-on (note "NOPR")
-	local optlist2 PLOTID HETINFO RFLevel COUNTS BOXSCale EXTRALine							// options requiring content within brackets (passthru)
-	local optlist3 LCOLS RCOLS 																// options which cannot conflict
+	local optlist0 GRaph HET BETWeen OVerall SUbgroup WARNing WT STATs BOX	// "stand-alone" options: optionally-off
+	local optlist1 CUmulative INFluence INTERaction EFFIcacy				// "stand-alone" options: optionally-on (1)
+	local optlist1 `optlist1' RFDist EBShrinkage OVWt SGWt FORCE NOPR		// "stand-alone" options: optionally-on (2) (note "NOPR")
+	local optlist2 PLOTID HETINFO RFLevel COUNTS BOXSCale EXTRALine			// options requiring content within brackets (passthru)
+	local optlist3 LCOLS RCOLS 												// options which cannot conflict
 	
 	local nooptlist0
 	foreach op of local optlist0 {
@@ -1219,7 +1273,7 @@ program define ParseFPlotOpts, sclass
 		local optlist3p `optlist3p' `op'(passthru)
 	}
 	
-	local 0 `", `s(options)' `counts' `ovwt' `sgwt' `hetinfo'"'
+	local 0 `", `s(options)' `counts' `ovwt' `sgwt' `influence' `hetinfo'"'
 	syntax [, `nooptlist0' `optlist1' `optlist2p' `optlist3p' * ]
 	local opts_main `"`macval(options)'"'
 	
@@ -1237,7 +1291,7 @@ program define ParseFPlotOpts, sclass
 		local 0 `", `forestplot'"'
 		syntax [, EFFect(string asis) ///
 			HETINFO(string) HETStat(string) OVStat(string) /// /* N.B. `hetstat' and `ovstat' are legacy synonyms for `hetinfo' */
-			OVWt SGWt OVWEIGHT SGWEIGHT /// /* synonyms */
+			OVWt SGWt OVWEIGHT SGWEIGHT INFluence LEAVEoneout /// /* synonyms */
 			COUNTS2 COUNTS(string asis) GROUP1(passthru) GROUP2(passthru) * ]
 			/* ^^ modern syntax has "group1" and "group2" as sub-options to "count"; older syntax had them as separate options */
 
@@ -1246,7 +1300,9 @@ program define ParseFPlotOpts, sclass
 		local sgweight
 		local ovwt = cond("`ovweight'"!="", "ovwt", "`ovwt'")		// ovweight is a synonym (for consistency with sgweight)
 		local ovweight
-
+		local influence = cond("`leaveoneout'"!="", "influence", "`influence'")		// leaveoneout is a synonym for influence (c.f. Stata16+ -meta-)
+		local leaveoneout
+	
 		if (`"`hetinfo'"'!=`""') + (`"`hetstat'"'!=`""') + (`"`ovstat'"'!=`""') > 1 {
 			nois disp as err `"only one of {bf:hetinfo()}, {bf:hetstat()}, or {bf:ovstat()} is allowed"'
 			exit 184												// hetstat and ovstat are synonyms (carried over from -admetan- )
@@ -1287,7 +1343,7 @@ program define ParseFPlotOpts, sclass
 		
 		
 		** Main parse of options supplied within -forestplot- option 
-		local 0 `", `s(options)' `counts' `ovwt' `sgwt' `hetinfo'"'
+		local 0 `", `s(options)' `counts' `ovwt' `sgwt' `influence' `hetinfo'"'
 		syntax [, `nooptlist0' `optlist1' `optlist2p' `optlist3p' * ]
 		local opts_fplot `"`macval(options)'"'
 		
@@ -1362,9 +1418,18 @@ program define ParseFPlotOpts, sclass
 		local 0 `", `plotid'"'
 		syntax [, PLOTID(string) ]
 		local 0 `plotid'
-		syntax varname [, *]
-		qui levelsof `varlist' if `touse'
-		CheckPlotIDOpts, plotid(`r(levels)') `opts_main'
+		syntax name(name=plname id="plotid variable") [, *]
+		cap confirm variable `plname'
+		if !_rc {
+			qui levelsof `plname' if `touse'
+			CheckPlotIDOpts, plotid(`r(levels)') `opts_main'
+		}
+		else {
+			cap assert inlist(`"`plname'"', `"_BYAD"', `"_n"')
+			if _rc {
+				syntax varname [, *]
+			}
+		}
 	}
 	
 	// Return locals
@@ -1429,11 +1494,11 @@ program define CheckOpts, sclass
 	local summstat = cond(`"`s(opt)'"'==`"eform"', `""', `"`s(opt)'"')
 
 	if "`summstat'"=="rrr" {
-		local effect `"Risk Ratio"'		// Stata by default refers to this as a "Relative Risk Ratio" or "RRR"
+		local effect `"Risk ratio"'		// Stata by default refers to this as a "Relative Risk Ratio" or "RRR"
 		local summstat rr				//  ... but in MA context most users will expect "Risk Ratio"
 	}
 	else if "`summstat'"=="nohr" {		// nohr and noshr are accepted by _get_eformopts
-		local effect `"Haz. Ratio"'		//  but are not assigned names; do this manually
+		local effect `"Haz. ratio"'		//  but are not assigned names; do this manually
 		local summstat hr
 		local logopt nohr
 	}
@@ -1479,7 +1544,7 @@ program define CheckOpts, sclass
 			local summstat `smd'`rd'
 		}
 		else if "`nohr'"!="" {
-			local effect `"Haz. Ratio"'
+			local effect `"Haz. ratio"'
 			local summstat hr
 			local logopt nohr
 		}
@@ -2102,7 +2167,7 @@ program define ProcessData, sclass
 				
 				local params = 2
 				local summstat hr
-				local effect `"Haz. Ratio"'
+				local effect `"Haz. ratio"'
 				args _OE _V
 				
 				cap assert `_V'>=0 if `touse'
@@ -2133,24 +2198,6 @@ program define ProcessData, sclass
 					exit 184
 				}
 				local params = 2
-
-				if "`denominator'"=="" local effect "Proportion"
-				else {
-					cap confirm number `denominator'
-					if _rc {
-						nois disp as err `"`denominator' found where number expected in option {bf:denominator(#)}"'
-						exit 198
-					}
-					cap assert `denominator' > 0
-					if _rc {
-						nois disp as err `"Error in option {bf:denominator(#)}: value must be greater than zero"'
-						exit 198
-					}
-					if `denominator'==1 local effect "Proportion"
-					else if `denominator'==100 local effect "Percentage"
-					else local effect `"Events per `denominator' obs."'
-				}
-				if "`nopr'"!="" local effect "Transformed proportion"
 				
 				args succ _NN
 				cap assert `succ'<=`_NN' if `touse' & !missing(`succ')
@@ -2167,16 +2214,7 @@ program define ProcessData, sclass
 						nois disp as err "Non-integer cell counts found; use the {bf:nointeger} option if appropriate" 
 						exit _rc
 					}
-				}
-				/*
-				else if !inlist(`"`citype'"', `""', `"wald"') {
-					nois disp as err `"Cannot specify {bf:citype(`citype')} with {bf:nointeger}"'
-					exit 198
-				}
-				*/
-				// DF July 2021: Removed; since CIs for proportions may have to be generated manually anyway (see GenConfIntsPr)
-				// there is no real need for this restriction
-				
+				}				
 				cap assert `succ'>=0 & `_NN'>=0 if `touse'
 				if _rc {
 					nois disp as err "Non-positive cell counts found" 
@@ -2188,9 +2226,8 @@ program define ProcessData, sclass
 					    nois disp as err `"Cannot specify both {bf:ftt} and {bf:transform()}"'
 						exit 184
 					}
-					local transform ftt
+					local transform ftukey
 				}
-				
 				local 0 `transform'
 				syntax [name(name=transform id="transform" ) ] [, N(string) POVERV(real 2) Arithmetic Geometric Harmonic IVariance INVVariance ]
 				// N.B. `n' is an undocumented generalisation of `arithmetic' | `geometric' | `harmonic'
@@ -2242,7 +2279,7 @@ program define ProcessData, sclass
 						nois disp as err `"option {bf:transform()} invalid;"'
 						nois disp as err `"option {bf:n(}#{bf:)} only allowed with {bf:transform(ftukey)}"'
 						exit 198
-					}
+					}					
 					if `"`arithmetic'`geometric'`harmonic'`ivariance'`invvariance'"'!=`""' {
 						local erropt : word 1 of `arithmetic' `geometric' `harmonic' `ivariance' `invvariance'
 						nois disp as err `"option {bf:transform()} invalid;"'
@@ -2250,6 +2287,24 @@ program define ProcessData, sclass
 						exit 198
 					}
 					if "`summstat'"=="" local summstat pr
+				}
+
+				local effect "Proportion"
+				if "`nopr'"!="" & "`summstat'"!="pr" local effect "Transformed proportion"				
+				if "`denominator'"!="" {
+					cap confirm number `denominator'
+					if _rc {
+						nois disp as err `"`denominator' found where number expected in option {bf:denominator(#)}"'
+						exit 198
+					}
+					cap assert `denominator' > 0
+					if _rc {
+						nois disp as err `"Error in option {bf:denominator(#)}: value must be greater than zero"'
+						exit 198
+					}
+					if `denominator'==1 local effect "Proportion"
+					else if `denominator'==100 local effect "Percentage"
+					else local effect `"Events per `denominator' obs."'
 				}
 				
 				// Identify studies with insufficient data (`_USE'==2)
@@ -2377,7 +2432,7 @@ program define ProcessData, sclass
 					}
 					else disp `"{error}Note: Woolf-type confidence intervals specified; odds ratios assumed"'
 					local summstat or
-					local effect `"Odds Ratio"'
+					local effect `"Odds ratio"'
 				}
 			}
 
@@ -2389,7 +2444,7 @@ program define ProcessData, sclass
 				else if "`summstat'"=="" {
 					disp `"{error}Note: Chi-squared option specified; odds ratios assumed"' 
 					local summstat or
-					local effect `"Odds Ratio"'
+					local effect `"Odds ratio"'
 				}
 			}
 						
@@ -2406,7 +2461,7 @@ program define ProcessData, sclass
 						
 						disp `"{error}`opttxt' specified; odds ratios assumed"'
 						local summstat or
-						local effect `"Odds Ratio"'
+						local effect `"Odds ratio"'
 					}
 				}
 			}
@@ -2418,7 +2473,7 @@ program define ProcessData, sclass
 				else if "`summstat'"=="" {
 					disp `"{error}Note: Peto method specified; odds ratios assumed"' 
 					local summstat or
-					local effect `"Odds Ratio"'
+					local effect `"Odds ratio"'
 				}
 				local chi2 chi2
 			}
@@ -2589,11 +2644,11 @@ program define ProcessData, sclass
 	if `params'==4 {
 		if `"`s(summnew)'"'==`"or"' {	// corrective macro: only applies to 2x2 count data; is either "or" or nothing
 			local summstat or
-			local effect `"Odds Ratio"'
+			local effect `"Odds ratio"'
 		}
 		else if `"`summstat'"'==`""' {
 			local summstat rr
-			local effect `"Risk Ratio"'
+			local effect `"Risk ratio"'
 		}
 	
 		// Finalize studies with insufficient data (`_USE'==2)
@@ -2683,7 +2738,7 @@ program define ProcessModelOpts, sclass
 	
 	// Now parse options needed for reference only; pass these back to main routine as-is
 	local 0 `", `opts_adm'"'
-	syntax [, RFDist CUmulative INFluence LOGRank PRoportion * ]
+	syntax [, CUmulative INFluence LOGRank PRoportion * ]
 
 	
 	
@@ -2768,8 +2823,10 @@ program define ProcessModelOpts, sclass
 		local gl_error `gl_error' `s(gl_error)'
 	}
 	
-	// collect remaining options
-	local opts_adm `"`s(opts_adm)'"'
+	// collect remaining options, but first parse `rfdist' and `ebshrinkage' for error handling a few lines below [Mar 2024]
+	local 0 `", `s(opts_adm)'"'
+	syntax [, RFDist EBShrinkage * ]
+	local opts_adm `"`macval(options)'"'
 	
 	// Compare `qstat' to `model1'
 	gettoken model1 : modellist
@@ -2794,28 +2851,31 @@ program define ProcessModelOpts, sclass
 		}
 		disp `"{error}Note: global option {bf:`opt'} is not applicable to all models; local defaults will apply"'
 	}
-	if "`rfdist'"!="" {
-		if `"`cumulative'"'!=`""' {
-			nois disp as err `"Options {bf:cumulative} and {bf:rfdist} are not compatible"'
-			exit 184
-		}
-		if `"`influence'"'!=`""' {
-			nois disp as err `"Options {bf:influence} and {bf:rfdist} are not compatible"'
-			exit 184
-		}		// Note: cumulative and influence have not yet been tested for exclusivity, hence the repetition here
-		
-		local nopredint mh iv peto bt hc ivhet qe mu pl user
-		if `"`: list modellist - nopredint'"'==`""' | (`m'==1 & "`kroger'"!="") {
-			disp `"{error}Note: predictive interval cannot be estimated under "' _c
-			if `m'==1 disp `"{error}the specified model; {bf:rfdist} will be ignored"'
-			else disp as err `"{error}any of the specified models; {bf:rfdist} will be ignored"'
-			local rfdist
-		}		
-		else if `"`: list modellist & nopredint'"'!=`""' | "`kroger'"!="" {
-			disp as err `"{error}Note: predictive interval cannot be estimated for all models"'
+	foreach opt in rfdist ebshrinkage {		// amended Feb-Mar 2024
+		if `"``opt''"'!=`""' {
+			if `"`cumulative'"'!=`""' {
+				nois disp as err `"Options {bf:cumulative} and {bf:`opt'} are not compatible"'
+				exit 184
+			}
+			if `"`influence'"'!=`""' {
+				nois disp as err `"Options {bf:influence} and {bf:`opt'} are not compatible"'
+				exit 184
+			}		// Note: cumulative and influence have not yet been tested for exclusivity, hence the repetition here
+			
+			local opt_text = cond("``opt''"=="rfdist", "predictive interval", "empirical Bayes shrinkage")
+			local estimated = cond("``opt''"=="rfdist", "estimated", "performed")
+			local nopredint mh iv peto bt hc ivhet qe mu pl user
+			if `"`: list modellist - nopredint'"'==`""' | (`m'==1 & "`kroger'"!="") {
+				disp `"{error}Note: `opt_text' cannot be `estimated' under "' _c
+				if `m'==1 disp `"{error}the specified model; {bf:`opt'} will be ignored"'
+				else disp as err `"{error}any of the specified models; {bf:`opt'} will be ignored"'
+				local `opt'
+			}		
+			else if `"`: list modellist & nopredint'"'!=`""' | "`kroger'"!="" {
+				disp as err `"{error}Note: `opt_text' cannot be `estimated' for all models"'
+			}
 		}
 	}
-
 
 	
 	***********************
@@ -2874,7 +2934,7 @@ program define ProcessModelOpts, sclass
 	
 	// Return options
 	sreturn clear
-	sreturn local options `"`macval(opts_adm)'"'	// non model-specific options
+	sreturn local options `"`macval(opts_adm)' `rfdist' `ebshrinkage'"'	// non model-specific options
 	sreturn local rownames     `rownames'
 	sreturn local modellist    `modellist'
 	sreturn local teststatlist `teststatlist'
@@ -3145,7 +3205,7 @@ program define ParseModel, sclass
 		Z T CHI2 CMH CMHNocc ///													// test statistic options
 		HKSj HKnapp KHartung KRoger BArtlett PETO RObust SKovgaard EIM OIM QWT(varname numeric) /*contains quality weights*/ ///
 		INIT(name) CC(passthru) noCC2 LOGRank PRoportion TN(passthru) POVERV(passthru) ///
-		POOLed SGPooled SGCommon /*Added Sep 2023: requests that het. param. is "pooled" (Borenstein) or "common" (Schwarzer, Carpenter, Ruecker) across subroups */ ///
+		POOLed SGPooled SGCommon HETPooled HETCommon /*Added Sep 2023: requests that het. param. is "pooled" (Borenstein) or "common" (Schwarzer, Carpenter, Ruecker) across subroups */ ///
 		LAbel(string asis) EXtralabel(string asis) FIRST /*SECOND*/ ///		// [Oct 2020:] user-defined model labelling
 		WGT(passthru) TRUNCate(passthru) ISQ(string) TAUSQ(string) PHI(string) ///
 		ITOL(passthru) MAXTausq(passthru) REPS(passthru) MAXITer(passthru) QUADPTS(passthru) DIFficult TECHnique(passthru) ]
@@ -3356,8 +3416,8 @@ program define ParseModel, sclass
 		//   see e.g. Borenstein et al 2009 for the DerSimonian-Laird case
 		// Since this approach is equivalent to meta-regression on subgroup indicators, it can also be done using REML or EB (see e.g. -metareg-)
 		// Similarly, a weighted OLS regression on subgroup indicators yields a "pooled" *multiplicative* parameter (see e.g. Thompson & Sharp 1999)
-		if `"`pooled'`sgpooled'`sgcommon'"'!=`""' {
-			local errword : word 1 of `pooled' `sgpooled' `sgcommon'
+		if `"`hetpooled'`hetcommon'`pooled'`sgpooled'`sgcommon'"'!=`""' {
+			local errword : word 1 of `hetpooled' `hetcommon' `pooled' `sgpooled' `sgcommon'
 			cap assert inlist("`model'", "dl", "reml", "mp", "mu")
 			if _rc {
 				nois disp as err `"Option {bf:`errword'} specified, requesting that heterogeneity parameter be stratified by subgroup"'
@@ -3370,7 +3430,7 @@ program define ParseModel, sclass
 				nois disp as err `"Type {stata findit metareg:findit metareg} to find and install it"'
 				exit 499
 			}
-			local pooled pooled
+			local hetpooled hetpooled
 		}
 
 		// dependencies
@@ -3618,7 +3678,7 @@ program define ParseModel, sclass
 	** OTHER OPTIONS
 	// "Pooled heterogeneity" (across subgroups) only valid with by()
 	// (this is the only reason to consider by() alongside model-related options; other option checks are performed by ParseOptions)
-	if `"`pooled'"'!=`""' {
+	if `"`hetpooled'"'!=`""' {
 		if `"`by'"'==`""' {
 			nois disp as err `"Option {bf:`errword'} is not valid without {bf:by()}"'
 			exit 184
@@ -3703,7 +3763,8 @@ program define ParseModel, sclass
 			// Macro for uncorrected M-H, so that study estimates & weights *are* corrected if necessary
 			// [ but *not* if correction was explicitly set to zero, via either nocc or cc(0) ]
 			// [ and *not* for Risk Differences ]
-			if "`model'"=="mh" {
+			// June 2024: also do this if "user" (i.e. no actual modelling)
+			if inlist("`model'", "mh", "user") {
 				local ccval = 0.5
 				local mhuncorr mhuncorr
 			}
@@ -3773,11 +3834,11 @@ program define ParseModel, sclass
 		else if "`bartlett'"!=""  local label `"`label'+Bart."'
 		else if "`skovgaard'"!="" local label `"`label'+Skov."'
 		else if "`teststat'"=="t" {
-			if "`pooled'"!="" local label `"`label' (t CI, Pooled)"'
+			if "`hetpooled'"!="" local label `"`label' (t CI, Pooled)"'
 			else local label `"`label' (t CI)"'
 			local labt = 1
 		}
-		if "`pooled'"!="" & !`labt' local label `"`label' (Pooled)"'
+		if "`hetpooled'"!="" & !`labt' local label `"`label' (Pooled)"'
 	}
 	
 	
@@ -3786,7 +3847,7 @@ program define ParseModel, sclass
 
 	// Model options
 	local modelopts `"`cmhnocc' `robust' `hksj_opt' `kr_opt' `bartlett' `skovgaard' `eim' `oim' `ccopt_final' `tn' `poverv'"'
-	local modelopts `"`modelopts' `wgt' `pooled' `truncate' `isqsa_opt' `tsqsa_opt' `phisa_opt' `qe_opt' `init_opt'"'	// N.B. `tsqlevel' removed June 2022
+	local modelopts `"`modelopts' `wgt' `hetpooled' `truncate' `isqsa_opt' `tsqsa_opt' `phisa_opt' `qe_opt' `init_opt'"'	// N.B. `tsqlevel' removed June 2022
 	local modelopts `"`modelopts' `itol' `maxtausq' `reps' `maxiter' `quadpts' `difficult' `technique'"'
 	local modelopts = trim(itrim(`"`modelopts'"'))
 	

@@ -37,9 +37,9 @@ d KW: cumulative
 d KW: influence
 d KW: nnt 
 d
-d Requires: Stata version 9 (version 9 for metan9, or version 7 for metan7)
+d Requires: Stata version 11 (version 9 for metan9, or version 7 for metan7)
 d
-d Distribution-Date: 20230919
+d Distribution-Date: 20240617
 d
 d Author: David Fisher, MRC Clinical Trials Unit at UCL
 d Support: email d.fisher@@ucl.ac.uk
@@ -96,4 +96,4 @@ f metannt.sthlp
 f metan_examples.ado
 f ../l/lmetan.mlib
 f metan_example_data.dta
-f ../f/forestplot_fisher2017.dta
+f ../f/leeflang2008.dta

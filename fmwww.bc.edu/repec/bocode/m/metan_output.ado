@@ -3,7 +3,7 @@
 *   principally on-screen table and saved dataset (with optional call to -forestplot-)
 * Called by metan.ado; do not run directly
 
-*! version 4.07  David Fisher 15sep2023
+*! version 4.08  David Fisher  17jun2024
 
 
 program define metan_output, rclass
@@ -12,7 +12,7 @@ program define metan_output, rclass
 
 	syntax varlist(numeric min=3 max=7 default=none) [if] [in] , STUDY(varname numeric) ///
 		[ TOUSE2(varname) SAVING(passthru) CLEAR CLEARSTACK BY(varname numeric) noTABle noGRaph ///
-		noHEADER noINTeger * ]	/* <-- not needed for this subroutine; parse them and then discard */
+		noHEADER noINTeger HETPooled * ]	/* <-- not needed for this subroutine; parse them and then discard */
 	
 	local use_invlist `varlist'	// for clarity: this contains `_USE' `invlist'
 	marksample touse, novarlist		// -novarlist- option prevents -marksample- from setting `touse' to zero if any missing values in `varlist'
@@ -108,7 +108,7 @@ program define metan_output, rclass
 		
 		cap nois BuildResultsSet `use_invlist' if `touse2', labels(`_LABELS') `useflag' study(`study') ///
 			`fpnote' `graph' `saving' `clear' `options' // <-- passed back from PrintDesc
-		
+
 		if _rc {
 			if `"`err'"'==`""' {
 				if _rc==1 nois disp as err `"User break in {bf:metan_output.BuildResultsSet}"'
@@ -167,7 +167,7 @@ program define DrawTableAD, sclass sortpreserve
 	syntax , SORTBY(varlist) MODELLIST(namelist) TESTSTATLIST(namelist) QSTAT(name) OUTVLIST(varlist numeric min=5 max=7) ///
 		[ SUMMSTAT(name) LABTITLE(string) EFFECT(string) noMODELLABels /* <-- NEW NOV 2020 */ ///
 		BY(varname numeric) BYLIST(numlist miss) BYSTATSLIST(namelist) BYQ(name) QLIST(numlist miss min=2 max=7) ///
-		HETSTATS(name) MWT(name) OVSTATS(name) PRoportion PRVLIST(varlist numeric min=3 max=3) DENOMinator(real 1) ///
+		HETSTATS(namelist) MWT(name) OVSTATS(name) PRoportion PRVLIST(varlist numeric min=3 max=3) DENOMinator(real 1) ///
 		CUmulative INFluence noOVerall noSUbgroup noSECsub SUMMARYONLY OVWt SGWt EFORM ///
 		noTABle noHET noBETWeen noWT KEEPOrder ILevel(cilevel) OLevel(cilevel) HLevel(cilevel) TESTBased ISQParam * ]
 	
@@ -178,7 +178,14 @@ program define DrawTableAD, sclass sortpreserve
 	// - label#opt(string) -- model label (e.g. IV, or Fixed);  c.f. "desc" in "first(es lci uci desc)" or "second(...)"
 	// - extra#opt(string) -- "extra" label (e.g. heterogeneity, for forest plot);  c.f. firststats(), secondstats()
 	// - user#stats(numlist min=3 max=3) -- c.f. "es lci uci" in "first(es lci uci desc)" or "second(...)"
-
+	
+	// June 2024: improve error message due to similarity between hetstats (matrix) and hetinfo (option)
+	if `: word count `hetstats''>1 {
+		nois disp as err "option hetstats():  too many names specified"
+		nois disp as err "Check whether the option {bf:hetinfo()} was intended instead"
+		exit 103
+	}
+	
 	// unpack outvlist
 	tokenize `outvlist'
 	args _ES _seES _LCI _UCI _WT _NN _CC
@@ -193,9 +200,7 @@ program define DrawTableAD, sclass sortpreserve
 		qui replace `tempuse' = 1 if `_USE'==2		// keep "insufficient data" studies in original study order (default is to move to end)
 	}
 	else local tempuse `_USE'
-	
-	gettoken model1 : modellist	
-	
+		
 	sort `touse' `by' `tempuse' `sortby'
 	tempvar obs
 	qui gen long `obs' = _n
@@ -227,6 +232,7 @@ program define DrawTableAD, sclass sortpreserve
 	// ... and `bystatslist' only has elements for *non* user-defined models
 	// ... similar for `byhet', `mwt'
 
+	gettoken model1 : modellist	
 	local m : word count `modellist'
 	local options2 : copy local options
 	forvalues j = `m' (-1) 1 {			// in reverse so that `model1opts' are left in memory
@@ -313,22 +319,38 @@ program define DrawTableAD, sclass sortpreserve
 			}
 		}
 		
-		// June 2020
-		if "`wt'"=="" & `m' > 1 & `elines'==1 & `slines'==1 {
-			local etitle2 : copy local etitle1
-			local etitle1
-			local stitle2 : copy local stitle1
-			local stitle1
+		// June 2020, modified March 2024: now calculate `nl'...
+		local nl = max(`elines', `slines')
+		if "`wt'"=="" & (`m' > 1 | `"`cumulative'`influence'"'!=`""') local nl = max(`nl', 2)
+
+		// ...and arrange etitle & stitle so they appear together on the lowest lines
+		local old_nl = max(`elines', `slines')
+		if `old_nl' < `nl' {
+			local diff = `nl' - `old_nl'
+			forvalues i = `elines' (-1) 1 {				// run backwards, otherwise macros are deleted by the time they're needed
+				local etitle`=`i'+`diff'' : copy local etitle`i'
+			}
+			forvalues i = `slines' (-1) 1 {				// run backwards, otherwise macros are deleted by the time they're needed
+				local stitle`=`i'+`diff'' : copy local stitle`i'
+			}
+			forvalues i = 1 / `diff' {
+				local etitle`i'
+				local stitle`i'
+			}
 		}
-		
 		
 		* Now display the title lines, starting with the "extra" lines and ending with the row including CI & weight
 		local nl = max(`elines', `slines')
+		local wtitle`nl'
 		local wwidth = 1	// nowt
 		if "`wt'"=="" {
 			local wwidth = 11
-			local wtitle`nl' `"{col `=`swidth'+`ewidth'+27'}% Weight"'
-			if `m' > 1 {
+			if `"`cumulative'`influence'"'!=`""' {
+				local nl = max(`nl', 2)
+				local wtitle`=`nl'-1' `"{col `=`swidth'+`ewidth'+27'}Ratio of"'
+				local wtitle`nl'      `"{col `=`swidth'+`ewidth'+27'}Variances"'
+			}
+			else if `m' > 1 {
 				local nl = max(`elines', `slines', 2)
 				local wtitle`=`nl'-1' `"{col `=`swidth'+`ewidth'+27'}% Weight,"'
 				
@@ -340,6 +362,7 @@ program define DrawTableAD, sclass sortpreserve
 					local wtitle`nl' `"{col `=`swidth'+`ewidth'+28'}`abbr'"'
 				}
 			}
+			else local wtitle`nl' `"{col `=`swidth'+`ewidth'+27'}% Weight"'
 		}
 		
 		disp as text _n `"{hline `swidth'}{c TT}{hline `=`ewidth'+24+`wwidth''}"'
@@ -387,7 +410,7 @@ program define DrawTableAD, sclass sortpreserve
 			if r(N) & `"`summaryonly'"'==`""' {
 				forvalues k = `r(min)' / `r(max)' {
 					if `_USE'[`k']==2 | missing(`_seES'[`k']) | float(`_seES'[`k'])==0 {
-						if `_USE'[`k']==1 /*& `: list posof "mh" in modellist'*/ {		// June 2020, updated June 2022
+						if `_USE'[`k']==1 & "`model1'"!="qe" /*& `: list posof "mh" in modellist'*/ {		// June 2020, updated June 2022, updated Jan 2024
 							disp as text substr(`_LABELS'[`k'], 1, 32) `"{col `=`swidth'+1'}{c |}{col `=`swidth'+4'} (Insufficient data for IV)"'
 						}
 						else if !missing(`_ES'[`k']) {				// June 2020
@@ -452,13 +475,13 @@ program define DrawTableAD, sclass sortpreserve
 					if `"`wgtopt`j''"'!=`""' local wgtstar " **"
 				
 					local bystats : word `j' of `bystatslist'
-					scalar `_ES_' = `denominator' * `bystats'[rownumb(`bystats', "`eff'"), `i']
+					scalar `_ES_' = `denominator' * `bystats'["`eff'", `i']
 					if missing(`_ES_') {
 						disp as text `"Subgroup`modText'`wgtstar'{col `=`swidth'+1'}{c |}{col `=`swidth'+4'} (Insufficient data)"'
 					}
 					else {
-						scalar `_LCI_' = `denominator' * `bystats'[rownumb(`bystats', "`eff_lci'"), `i']
-						scalar `_UCI_' = `denominator' * `bystats'[rownumb(`bystats', "`eff_uci'"), `i']
+						scalar `_LCI_' = `denominator' * `bystats'["`eff_lci'", `i']
+						scalar `_UCI_' = `denominator' * `bystats'["`eff_uci'", `i']
 
 						disp as text `"Subgroup`modText'`wgtstar'{col `=`swidth'+1'}{c |}{col `=`swidth'+`ewidth'-6'}"' ///
 							as res %7.3f `xexp'(`_ES_') `"{col `=`swidth'+`ewidth'+5'}"' ///
@@ -517,13 +540,13 @@ program define DrawTableAD, sclass sortpreserve
 					local wgtstar
 					if `"`wgtopt`j''"'!=`""' local wgtstar " **"					
 
-					scalar `_ES_' = `denominator' * `ovstats'[rownumb(`ovstats', "`eff'"), `index']
+					scalar `_ES_' = `denominator' * `ovstats'["`eff'", `index']
 					if missing(`_ES_') {
 						disp as text `"Overall`modText'`wgtstar'{col `=`swidth'+1'}{c |}{col `=`swidth'+4'} (Insufficient data)"'
 					}
 					else {
-						scalar `_LCI_' = `denominator' * `ovstats'[rownumb(`ovstats', "`eff_lci'"), `index']
-						scalar `_UCI_' = `denominator' * `ovstats'[rownumb(`ovstats', "`eff_uci'"), `index']
+						scalar `_LCI_' = `denominator' * `ovstats'["`eff_lci'", `index']
+						scalar `_UCI_' = `denominator' * `ovstats'["`eff_uci'", `index']
 
 						// N.B. sum of (normalised) weights: will be 1 unless `sgwt'
 						disp as text %-20s `"Overall`modText'`wgtstar'{col `=`swidth'+1'}{c |}{col `=`swidth'+`ewidth'-6'}"' ///
@@ -586,19 +609,19 @@ program define DrawTableAD, sclass sortpreserve
 				local wgtstar
 				if `m' > 1 & `"`wgtopt`index''"'!=`""' local wgtstar " **"
 		
-				scalar `testStat' = `bystats'[rownumb(`bystats', "`teststat'"), `i']
+				scalar `testStat' = `bystats'["`teststat'", `i']
 				scalar `df' = .
 				if "`teststat'"=="t" {
-					scalar `df' = `bystats'[rownumb(`bystats', "df"), `i']
+					scalar `df' = `bystats'["df", `i']
 					
 					// if only one study, revert to z [IN PRACTICE, THIS SHOULD ALREADY HAVE BEEN DETECTED]
 					if `df'==0 {
 						local teststat z
-						scalar `testStat' = `bystats'[rownumb(`bystats', "`teststat'"), `i']
+						scalar `testStat' = `bystats'["`teststat'", `i']
 						scalar `df' = .
 					}
 				}
-				scalar `pvalue' = `bystats'[rownumb(`bystats', "pvalue"), `i']
+				scalar `pvalue' = `bystats'["pvalue", `i']
 			
 				// Text to display: chisq distributions
 				local testDist
@@ -668,12 +691,12 @@ program define DrawTableAD, sclass sortpreserve
 			local teststat : word `index' of `teststatlist'
 			
 			// Extract test statistics from `ovstats'
-			scalar `testStat' = `ovstats'[rownumb(`ovstats', "`teststat'"), `j']
+			scalar `testStat' = `ovstats'["`teststat'", `j']
 			scalar `df' = .
 			if "`teststat'"=="t" {
-				scalar `df' = `ovstats'[rownumb(`ovstats', "df"), `j']
+				scalar `df' = `ovstats'["df", `j']
 			}
-			scalar `pvalue' = `ovstats'[rownumb(`ovstats', "pvalue"), `j']
+			scalar `pvalue' = `ovstats'["pvalue", `j']
 
 			// Text to display: chisq distributions
 			local testDist
@@ -845,12 +868,7 @@ program define DrawTableAD, sclass sortpreserve
 			tokenize `qlist'
 			args Q Qdf Q_lci Q_uci Qsum Qbet nbyQ
 		}
-		/*
-		assert inlist(`: word count `qlist'', 0, 3, 7)
-		tokenize `qlist'
-		if `"`overall'"'!=`""' args Qsum Qbet nbyQ		// if nooverall, only have between-subgroup Q
-		else args Q Qdf Q_lci Q_uci Qsum Qbet nbyQ
-		*/
+
 		
 		**********************
 		* Multiple subgroups *
@@ -898,19 +916,19 @@ program define DrawTableAD, sclass sortpreserve
 				if `Qi'==0 | `Qdfi'==0 scalar `Isq' = .
 				scalar `Isqmax' = max(`Isqmax', `Isq')
 				
-				if !missing(`Qi') {
+				if missing(`Qi') disp as text `"{col `=`swidth'+5'}(Insufficient data)"'
+				else {
 					scalar `Qpval' = chi2tail(`Qdfi', `Qi')
 					disp as text `"{col `=`swidth'+5'}"' as res %7.2f `Qi' `"{col `=`swidth'+18'}"' %3.0f `Qdfi' `"{col `=`swidth'+25'}"' %7.3f `Qpval' `"{col `=`swidth'+38'}"' %4.1f `Isq' _c
 					if !missing(`Isq') disp as res "%"
 					else disp ""
 				}
-				else disp as text `"{col `=`swidth'+5'}(Insufficient data)"'
-				
 			}
 
 			if `"`overall'"'==`""' {
 				disp as text `"Overall{col `=`swidth'+1'}{c |}"' _c
-				if !missing(`Q') {
+				if missing(`Q') disp as text `"{col `=`swidth'+5'}(Insufficient data)"'
+				else {
 					scalar `Qpval' = chi2tail(`Qdf', `Q')
 					scalar `Isq' = max(0, 100*(`Q' - `Qdf') / `Q')
 					if `Q'==0 | `Qdf'==0 scalar `Isq' = .
@@ -919,7 +937,6 @@ program define DrawTableAD, sclass sortpreserve
 					if !missing(`Isq') disp as res "%"
 					else disp ""
 				}
-				else disp as text `"{col `=`swidth'+5'}(Insufficient data)"'
 			}
 			
 			// Mar 2020: want `nby' to reflect the number of subgroups *with data in*
@@ -999,7 +1016,8 @@ program define DrawTableAD, sclass sortpreserve
 		****************
 
 		else {
-			disp as text _n(2) `"Heterogeneity measures, calculated from the data"'
+			if `"`cumulative'`influence'"'!=`""' local totality "totality of "
+			disp as text _n(2) `"Heterogeneity measures, calculated from the `totality'data"'
 			if `m'==1 & "`model1'"=="sa" {
 				if `udw' local hetextra `"(based on standard inverse-variance weights)"'
 			}
@@ -1029,11 +1047,11 @@ program define DrawTableAD, sclass sortpreserve
 			else local hetText1 "Cochran's Q"
 			
 			disp as text `"`hetText1'{col `=`swidth'+1'}{c |}"' _c
-			if !missing(`Q') {
+			if missing(`Q') disp as text `"{col `=`swidth'+5'}(Insufficient data)"'
+			else {
 				scalar `Qpval' = chi2tail(`Qdf', `Q')
 				disp as text `"{col `=`swidth'+5'}"' as res %7.2f `Q' `"{col `=`swidth'+18'}"' %3.0f `Qdf' `"{col `=`swidth'+25'}"' %7.3f `Qpval'
 			}
-			else disp as text `"{col `=`swidth'+5'}(Insufficient data)"'
 
 			// Special case: Single sensitivity analysis
 			if `m'==1 & "`model1'"=="sa" {
@@ -1048,7 +1066,7 @@ program define DrawTableAD, sclass sortpreserve
 
 				foreach x in tausq H Isq HsqM {
 					tempname `x'
-					scalar ``x'' = `hetstats'[rownumb(`hetstats', "`x'"), 1]
+					scalar ``x'' = `hetstats'["`x'", 1]
 				}
 				
 				disp as text `"tau{c 178} {col `=`swidth'+1'}{c |}{col `=`swidth'+4'}"' as res %8.4f `tausq'
@@ -1098,7 +1116,8 @@ program define DrawTableAD, sclass sortpreserve
 				local tsq_ci_warn = 0
 				if `TotUniqREModels' {
 				
-					disp as text _n(2) "Heterogeneity variance estimates"
+					if `"`cumulative'`influence'"'!=`""' local totality ", calculated from the totality of data"
+					disp as text _n(2) "Heterogeneity variance estimates`totality'"
 					local RefModList mp pmm ml pl reml bt dlb
 					if `"`: list UniqModels & RefModList'"'==`""' local newHetWidth = 13
 					else {
@@ -1136,15 +1155,15 @@ program define DrawTableAD, sclass sortpreserve
 						local c_list `c_list' `c'
 
 						tempname tausq
-						scalar `tausq' = `ovstats'[rownumb(`ovstats', "tausq"), `c']
+						scalar `tausq' = `ovstats'["tausq", `c']
 
 						disp as text `"`hetlab`c'opt'{col `=`swidth'+1'}{c |}{col `=`swidth'+4'}"' ///
 							as res %8.4f `tausq' _c
 						if `"`: list mod & RefModList'"'==`""' disp ""		// cancel _c
 						else {
 							tempname tsq_lci tsq_uci
-							scalar `tsq_lci' = `ovstats'[rownumb(`ovstats', "tsq_lci"), `c']
-							scalar `tsq_uci' = `ovstats'[rownumb(`ovstats', "tsq_uci"), `c']
+							scalar `tsq_lci' = `ovstats'["tsq_lci", `c']
+							scalar `tsq_uci' = `ovstats'["tsq_uci", `c']
 							disp as text `"{col `=`swidth'+14'}"' ///
 								as res %8.4f `tsq_lci' `"{col `=`swidth'+24'}"' %8.4f `tsq_uci'
 								
@@ -1183,7 +1202,7 @@ program define DrawTableAD, sclass sortpreserve
 						foreach c of numlist `c_list' {
 							foreach x in Isq Isq_lci Isq_uci {
 								tempname `x'
-								scalar ``x'' = `hetstats'[rownumb(`hetstats', "`x'"), `c']
+								scalar ``x'' = `hetstats'["`x'", `c']
 							}
 
 							// N.B. `hetlab`c'opt' has already been parsed; no need to do so again
@@ -1254,7 +1273,7 @@ program define PrintDesc, sclass
 	// Extract model options (from first model if multiple)
 	// Plus user-defined weights
 	local opts_adm `"`macval(options)'"'	
-	local toparse1 CC(string) ISQSA(real -99) TSQSA(real -99) PHISA(real -99) POOLED INIT(name) BArtlett HKsj KRoger RObust SKovgaard TRUNCate(string)
+	local toparse1 CC(string) ISQSA(real -99) TSQSA(real -99) PHISA(real -99) HETPooled INIT(name) BArtlett HKsj KRoger RObust SKovgaard TRUNCate(string)
 	local udw = 0
 	forvalues j = 1 / `m' {
 		local 0 `", `opts_adm'"'
@@ -1422,7 +1441,7 @@ program define PrintDesc, sclass
 			
 			// Multiplicative heterogeneity model
 			else if "`model1'"=="mu" {
-				if "`pooled'"!="" local pooledtext ", pooled across subgroups"
+				if "`hetpooled'"!="" local pooledtext ", pooled across subgroups"
 				disp as text "with " as res `"multiplicative heterogeneity`pooledtext'"'
 			}
 			
@@ -1451,9 +1470,7 @@ program define PrintDesc, sclass
 				local linktext = cond(`"`hksj'`kroger'`robust'"'!=`""' | inlist("`model1'", "pl", "bt", "ivhet", "qe", "hc"), "based on", "with")
 				
 				// Added May 2023, modified Sep 2023
-				if "`pooled'"!="" {
-					if "`pooled'"!="" local pooledtext ", pooled across subgroups"
-				}
+				if "`hetpooled'"!="" local pooledtext ", pooled across subgroups"
 				
 				// Sensitivity analysis
 				if "`model1'"=="sa" {
@@ -1864,10 +1881,17 @@ program define BuildResultsSet, rclass
 
 	local 0 `", `opts_adm'"'
 	syntax [, noOVerall noSUbgroup noSECsub QLIST(numlist miss min=2 max=7) ///
-		BYSTATSLIST(namelist) OVSTATS(name) HETSTATS(name) BYHETLIST(namelist) BYQ(name) ///
-		MWT(name) SGWt OVWt ALLWTNAMES(namelist) ///
+		BYSTATSLIST(namelist) OVSTATS(name) HETSTATS(namelist) BYHETLIST(namelist) BYQ(name) ///
+		MWT(name) SGWt OVWt ALLWTNAMES(namelist) CUmulative INFluence ///
 		XOUTVLIST(varlist numeric) PRVLIST(varlist numeric min=3 max=3) RFDist USEFLAG * ]
 
+	// June 2024: improve error message due to similarity between hetstats (matrix) and hetinfo (option)
+	if `: word count `hetstats''>1 {
+		nois disp as err "option hetstats():  too many names specified"
+		nois disp as err "Check whether the option {bf:hetinfo()} was intended instead"
+		exit 103
+	}		
+		
 	// Sep 2020: Unpack `qlist'
 	tokenize `qlist'
 	if `"`overall'"'!=`""' args Qsum Qbet nbyQ		// if nooverall, only have between-subgroup Q
@@ -1885,6 +1909,7 @@ program define BuildResultsSet, rclass
 			local xrownames : list rownames - core
 			local xrownames `xrownames' Q Qdf Q_lci Q_uci
 			if `: list posof "tausq" in rownames' local xrownames `xrownames' sigmasq
+			if `"`cumulative'`influence'"'!=`""' local xrownames `xrownames' WT_Final
 			
 			local nx : word count `xoutvlist'
 			assert `nx' == `: word count `xrownames''
@@ -2151,9 +2176,8 @@ program define BuildResultsSet, rclass
 	*******************************	
 	
 	local 0 `", `options'"'
-	syntax [, SUMMSTAT(string) COUNTS(string asis) EFFIcacy OEV LRVLIST(varlist numeric) LOGRank CUmulative INFluence ALTWt ///
-		PRoportion NOPR DENOMinator(real 1) ///
-		/*CUMINFN(name)*/ /* <-- internal options from elsewhere [July 2022, May 2023] */ * ]
+	syntax [, SUMMSTAT(string) COUNTS(string asis) EBShrinkage EFFIcacy OEV LRVLIST(varlist numeric) LOGRank /*CUmulative INFluence*/ ALTWt ///
+		PRoportion NOPR DENOMinator(real 1) * ]
 	local opts_adm `"`macval(options)'"'		// because -syntax- used below with `counts'
 	
 	// Setup `counts' and `oev' options
@@ -2313,20 +2337,6 @@ program define BuildResultsSet, rclass
 		foreach x of local sumvlist {
 			local `x' `sum_`x''
 		}
-
-		/*
-		// [May 2023] for use with `savedvars' option (see metan.ado)
-		// 1) save contents of `sum__NN' into pre-generated tempvar `cuminfn'
-		// 2) point local macro _NN to sum__NN *within this subroutine only*
-		// 3) outside of this subroutine, `_NN' still contains the observed study sample sizes
-		// (Note: this effectively performs the same function as FillDown in metan.ado for r(coeffs)...
-		//  ...here is the "saved data" version, there is the "not saved in memory but provided in a matrix" version)
-		if `"`cuminfn'"'!=`""' & `"`sum__NN'"'!=`""' {
-			qui drop `cuminfn'
-			qui rename `_NN' `cuminfn'
-			local _NN `cuminfn'
-		}
-		*/
 	}
 
 	
@@ -2428,6 +2438,39 @@ program define BuildResultsSet, rclass
 		drop `strlen'
 	}
 
+	** [FEB 2024] Empirical Bayes shrinkage estimates
+	// (carried over from -metan5- )
+	if `"`ebshrinkage'"'!=`""' {
+		tempvar _EBS_ES _EBS_seES
+		qui gen double `_EBS_ES' = .
+		qui gen double `_EBS_seES' = .
+		format %6.3f `_EBS_ES' `_EBS_seES'
+		label variable `_EBS_ES' "Empirical Bayes shrinkage estimate"
+		label variable `_EBS_seES' "Standard error of empirical Bayes shrinkage estimate"
+		local EBS_opt _EBS_ES _EBS_seES			// for `tosave' below
+
+		tempname eff se_eff tausq
+		if `"`sgwt'"'!=`""' {
+			local bystats : word 1 of `bystatslist'		// use first model only
+			forvalues i = 1 / `nby' {
+				local byi : word `i' of `bylist'
+				scalar `eff' = `bystats'["eff", `i']
+				scalar `se_eff' = `bystats'["se_eff", `i']
+				scalar `tausq' = `bystats'["tausq", `i']
+				qui replace `_EBS_ES' = (`_ES'*`tausq' + `eff'*`_seES'^2) / (`_seES'^2 + `tausq') if `_USE'==1 & `_BY'==`byi'
+				qui replace `_EBS_seES' = sqrt( `_seES'^2 *`tausq'/(`_seES'^2 + `tausq') + (`se_eff'*`_seES'^2 / (`_seES'^2 + `tausq'))^2  ) if `_USE'==1 & `_BY'==`byi'
+			}
+		}
+		else {
+			scalar `eff' = ovstats["eff", 1]			// use first model only
+			scalar `se_eff' = ovstats["se_eff", 1]
+			scalar `tausq' = ovstats["tausq", 1]
+			qui replace `_EBS_ES' = (`_ES'*`tausq' + `eff'*`_seES'^2) / (`_seES'^2 + `tausq') if `_USE'==1
+			qui replace `_EBS_seES' = sqrt( `_seES'^2 *`tausq'/(`_seES'^2 + `tausq') + (`se_eff'*`_seES'^2 / (`_seES'^2 + `tausq'))^2  ) if `_USE'==1
+		}
+	}
+	
+	
 	** Weights
 	// Aug 2023: moved upwards, and expand to include multiple models if `allwtnames'
 	// May 2020: if modeltext is included, use compound quotes to force "% Weight" into a single line, with modeltext underneath
@@ -2445,6 +2488,11 @@ program define BuildResultsSet, rclass
 			tokenize `allwtnames'
 			args `newwtnames'		// for `tosave' below
 		}
+	}
+	// NEW JAN 2024: If cumulative or influence, replace "% Weight" with "Ratio of Variances"
+	else if `"`cumulative'`influence'"'!=`""' {
+		label variable `_WT' `"`"Ratio of"' `"Variances"'"'
+		label variable `_WT_Final' "% Weight from final model"
 	}
 	else label variable `_WT' "% Weight"
 	format `_WT' %6.2f
@@ -2466,9 +2514,9 @@ program define BuildResultsSet, rclass
 	//  - beginning with "_counts" 
 	// (Oct 2018: N.B. was `badnames'; Nov 2021 new `badnames' code added below)
 	local badnames _USE _SOURCE _STUDY _LABELS _BY
-	local badnames `badnames' _ES _seES _LCI _UCI _WT _NN _rfLCI _rfUCI _OE _V _CC _VE
+	local badnames `badnames' _ES _seES _LCI _UCI _WT _NN _rfLCI _rfUCI _OE _V _CC _VE _EBS_ES _EBS_seES
 	if `"`cumulative'`influence'"'!=`""' {
-		local badnames `badnames' _crit _chi2 _dfkr _pvalue _Q _Qdf _Qlci _Quci _H _Isq _HsqM _sigmasq _tausq _tsq_lci _tsq_uci
+		local badnames `badnames' _crit _chi2 _dfkr _pvalue _Q _Qdf _Qlci _Quci _H _Isq _HsqM _sigmasq _tausq _tsq_lci _tsq_uci _WT_Final
 	}
 	// also _Prop*, _counts* ; see below
 	
@@ -2559,11 +2607,11 @@ program define BuildResultsSet, rclass
 	local core _ES _seES _LCI _UCI `PR_vnames' _WT
 	
 	// tosave':  additional "internal" vars created by specific options
-	// [may contain:  _NN;  _OE _V if `oev';  `COUNTSvl' if `counts';  _VE if `efficacy';  _CC if `cc';  _rfLCI _rfUCI if `rfdist']
+	// [may contain: _NN; _OE _V if `oev'; `COUNTSvl' if `counts'; _VE if `efficacy'; _EBS_ES _EBS_seES if `ebshrinkage'; _CC if `cc'; _rfLCI _rfUCI if `rfdist']
 	cap confirm numeric var `_CC'
 	if !_rc local CC_opt _CC
 	
-	local tosave `NN_opt' `OEV_vlist' `COUNTSvl' `VE_opt' `CC_opt' `RFDnames' `newwtnames'
+	local tosave `NN_opt' `OEV_vlist' `COUNTSvl' `VE_opt' `EBS_opt' `CC_opt' `RFDnames' `newwtnames'
 	if `"`xoutvlist'"'!=`""' local tosave : list tosave | vnames
 	local tosave : list tosave - core
 	
@@ -2604,8 +2652,8 @@ program define BuildResultsSet, rclass
 			if `"``v''"'!=`"`prefix'`v'"' {
 				cap drop `prefix'`v'
 				
-				// If ``v'' is in `lrcols', use -clonevar-, so as also to keep original name
-				if `: list `v' in lrcols' {
+				// If ``v'' is in `lrcols' or `sortby', use -clonevar-, so as also to keep original name
+				if `: list `v' in lrcols' | `: list `v' in sortby' {
 					qui clonevar `prefix'`v' = ``v'' if `touse'
 				}
 				else qui rename ``v'' `prefix'`v'
@@ -2626,7 +2674,7 @@ program define BuildResultsSet, rclass
 			// SO THAT -forestplot- USES ORIGINAL FORMAT
 			// APPLIES TO _ES, _seES, _LCI, _UCI
 			else if inlist("`v'", "_ES", "_seES", "_LCI", "_UCI") {
-				format  %6.3f `prefix'`v'
+				// format %6.3f `prefix'`v'
 				label variable `prefix'`v' `"`prefix'`v'"'
 			}
 
@@ -2812,11 +2860,12 @@ program define BuildResultsSet, rclass
 
 		// "overall" labels
 		if `"`overall'"'==`""' {
-			local ovhetlab
+			local ovhetlab1
+			local ovhetlab2
 			
 			if `"`het'"'==`""' {
 				if `"`extra`j'opt'"'!=`""' | "`model'"=="user" {	// May 2023: if model=user, `extra`j'opt' might be blank; still don't want to run ParseHetInfo
-					local ovhetlab : copy local extra`j'opt
+					local ovhetlab1 : copy local extra`j'opt
 					if `"`defhetinfo'"'==`""' {
 						nois disp `"{error}Note: option {bf:extra`j'label()} will take precedence over {bf:hetinfo()}"'
 					}
@@ -2856,7 +2905,7 @@ program define BuildResultsSet, rclass
 						}
 						qui replace `_USE'  = 59 in `newN'
 						qui replace `useModel' = `m' in `newN'
-						qui replace `_LABELS' = `"(`ovhetlab2')"' in `newN'
+						qui replace `_LABELS' = `"(`ovhetlab2')"' in `newN'		// N.B. `ovhetlab2' is not used henceforth
 					}
 				}		// end if `"`first'"'!=`""'
 			}		// end if `"`het'"'==`""'
@@ -2870,9 +2919,9 @@ program define BuildResultsSet, rclass
 			if `ilevel'!=`olevel' local addText `"`addText' (`olevel'% CI)"'			
 			if `"`ovhetlab1'"'!=`""' local addText `"`addText' (`ovhetlab1')"'
 			qui replace `_LABELS' = `"Overall`addText'"' if `_USE'==50 & `useModel'==`j'
-			local ovhetlab
+			
 		}	// end if `"`overall'"'==`""'
-
+		
 		// subgroup ("by") headings & labels
 		if `"`_BY'"'!=`""' {
 			tempname Qi Qdfi
@@ -2897,7 +2946,8 @@ program define BuildResultsSet, rclass
 					
 					if `"`summaryonly'"'!=`""' local sglabel `"`bylabi'"'
 					else local sglabel "Subgroup"		// amended Feb 2018 due to local x = ... issue with version <13
-					local sghetlab
+					local sghetlab1
+					local sghetlab2
 				
 					if `"`het'"'==`""' {
 						
@@ -2907,27 +2957,28 @@ program define BuildResultsSet, rclass
 							continue, break
 						}
 						
-						scalar `Qi'   = `byq'[rownumb(`byq', "Q"),  `i']
-						scalar `Qdfi' = `byq'[rownumb(`byq', "Qdf"), `i']
+						scalar `Qi'   = `byq'["Q",   `i']
+						scalar `Qdfi' = `byq'["Qdf", `i']
 						
 						ParseHetInfo `hetinfo', ovstats(`bystats') hetstats(`byhet') ///
 							col(`i') model(`model') `first' qlist(`=`Qi'' `=`Qdfi'') `isqparam'
 						local sghetlab1 `"`s(hetlab1)'"'			// Modified Aug2023
 						local sghetlab2 `"`s(hetlab2)'"'
-
+						
 						if `"`first'"'!=`""' {
+							
 							// Heterogeneity info to be placed after the *first* model if extraline=yes (modified Aug 2023)
 							if `"`sghetlab1'"'!=`""' & `"`extraline'"'==`"yes"' {
-								qui replace `_LABELS' = `"(`sghetlab1')"' if `_USE'==38
+								qui replace `_LABELS' = `"(`sghetlab1')"' if `_USE'==38 & `_BY'==`byi' & `useModel'==1
 								local sghetlab1			// sghetlab on line below so no conflict with lcols; then clear macro
 							}
-							else qui drop if `_USE'==38
-							
+							else qui drop if `_USE'==38 & `_BY'==`byi' & `useModel'==1
+
 							// Final heterogeneity info to be placed after the *last* model (modified Aug 2023)
 							if `"`sghetlab2'"'!=`""' {
-								qui replace `_LABELS' = `"(`sghetlab2')"' if `_USE'==39
+								qui replace `_LABELS' = `"(`sghetlab2')"' if `_USE'==39 & `_BY'==`byi' & `useModel'==`m'
 							}
-							else qui drop if `_USE'==39
+							else qui drop if `_USE'==39 & `_BY'==`byi' & `useModel'==`m'
 						}
 					}		// end if `"`het'"'==`""'
 					
@@ -3006,7 +3057,7 @@ program define BuildResultsSet, rclass
 	*********************
 
 	local 0 `", `opts_adm'"'
-	syntax [, KEEPALL KEEPOrder noWT noSTATs noWARNing noGRaph INTERaction PLOTID(passthru) EFORM EFFect(string asis) WGT(varname numeric) ///
+	syntax [, KEEPALL KEEPOrder noWT noSTATs noWARNing noGRaph INTERaction PLOTID(string) EFORM EFFect(string asis) WGT(varname numeric) ///
 		CREATEDBY(string) FORESTplot(string asis) FPNOTE(string asis) SFMTLEN(integer 8) * ]
 	local twowayopts `"`macval(options)'"'
 
@@ -3018,6 +3069,19 @@ program define BuildResultsSet, rclass
 	}
 	else local tempuse `_USE'
 	
+	/* MAY 2024 */
+	local 0 `plotid'
+	syntax [name(name=plname id="plotid")] [, *]
+	if `"`plname'"'==`"_BYAD"' {
+		cap confirm numeric variable `_SOURCE'
+		if _rc {
+			nois disp as err "option {bf:plotid(_BYAD)} supplied, but identifier of data source not found"
+			exit 198
+		}
+		local plotid `"plotid(`_SOURCE', `options')"'
+	}
+	else if `"`plname'"'!=`""' local plotid `"plotid(`plotid')"'
+	
 	qui isid `touse' `use5' `_BY' `useModel' `tempuse' `_SOURCE' `sortby', sort missok
 	
 	** Tidy up `_USE' (and scale back down by 10)
@@ -3026,7 +3090,7 @@ program define BuildResultsSet, rclass
 		// gen byte `use5' = inlist(`_USE', 35, 55)		// now `use5' is a marker of predictive interval data, if applicable
 		replace `_USE' =  0 if `_USE' == -10				// 0 = blank row
 		// replace `_USE' = 30 if `_USE' ==  35				// 3 = subgroup pooled effect
-		replace `_USE' = 40 if inlist(`_USE', 39, 49, 59)	// 4 = heterogeneity info (either between-subgroup, or extra rows for het. stats if needed)
+		replace `_USE' = 40 if inlist(`_USE', 38, 39, 49, 58, 59)	// 4 = heterogeneity info (either between-subgroup, or extra rows for het. stats if needed)
 		// replace `_USE' = 50 if `_USE' ==  55				// 5 = overall pooled effect
 		replace `_USE' = 60 if `_USE' ==  41				// 6 = blank line
 		replace `_USE' = 70 if inlist(`_USE', 35, 55)		// 7 = predictive interval data (if applicable)
@@ -3141,8 +3205,8 @@ program define BuildResultsSet, rclass
 		// But -forestplot- automatically applies prefix() (if supplied) to "core" variables
 		// Therefore, in this case do not explicitly send these varnames to -forestplot-
 		local fpvlist
-		foreach x in _LABELS _STUDY _BY _USE _WT {
-			local fp`x'
+		foreach x in LABELS STUDY BY USE WT {
+			local fp_`x'
 		}
 		local noprefixwarn noprefixwarn		// suppress "using default varlist" message in -forestplot-
 	}
@@ -3175,12 +3239,15 @@ program define BuildResultsSet, rclass
 	// *BUT* watch out for options that contain text strings!  They must be left alone.
 	// This involves: effect() and note(), plus `forestplot' and `twowayopts' which could contain anything
 	// if "`prvlist'"=="" local proportion			// only pass `proportion' to -forestplot- if on original scale
+	local useopts
 	if `"`prefix'"'!=`""' local useopts prefix(`prefix')
-	local useopts  = trim(itrim(`"`macval(useopts)' use(`fp_USE') labels(`fp_LABELS') wgt(`fp_WT') `cumulative' `influence' `denom_opt' `eform'"'))
-	local useopts2 = trim(itrim(`"`interaction' `keepall' `overall' `subgroup' `het' `wt' `stats' `warning' `plotid'"'))
-	
+	foreach x in USE LABELS WT {
+		local lowerx = cond("`x'"=="WT", "wgt", lower("`x'"))
+		if `"`fp_`x''"'!=`""' local useopts `"`useopts' `lowerx'(`fp_`x'')"'
+	}
+	local useopts `"`macval(useopts)' `cumulative' `influence' `denom_opt' `eform'"'
 	if `"`effect'"'!=`""' local useopts `"`macval(useopts)' effect(`effect')"'
-	local useopts `"`macval(useopts)' `macval(useopts2)'"'
+	local useopts = trim(itrim(`"`macval(useopts)' `interaction' `keepall' `overall' `subgroup' `het' `wt' `stats' `warning' `plotid'"'))
 
 	// lcols() option [tweaked AUG 2021]
 	if `"`npts'"'!=`""' local lcols_opt `_NN'
@@ -3196,7 +3263,7 @@ program define BuildResultsSet, rclass
 	}
 	if `"`forestplot'"'!=`""'   local useopts `"`macval(useopts)' `forestplot'"'
 	if `"`twowayopts'"'!=`""'   local useopts `"`macval(useopts)' `twowayopts'"'
-	if `"`_BY'"'!=`""'          local useopts `"`macval(useopts)' by(`fp_BY')"'	
+	if `"`fp_BY'"'!=`""'        local useopts `"`macval(useopts)' by(`fp_BY')"'	
 	if `"`allwtnames'`_VE'`rcols'"' != `""' local useopts `"`macval(useopts)' rcols(`allwtnames' `_VE' `rcols')"'	// modified Aug 2023
 	if `"`rfdist'"'!=`""'       local useopts `"`macval(useopts)' rfdist(`_rfLCI' `_rfUCI')"'
 	
@@ -3358,10 +3425,6 @@ program define ApplyLabels
 		else if `"`influence'"'!=`""'  label variable `_NN' "Remaining no. pts"
 	}
 	
-	// Aug 2023: weights from multiple models (optional)
-	if `"`allwtnames'"'!=`""' {
-	}
-	
 	if `"`rfdist'"'!=`""' {
 		label variable `_rfLCI' "rfLCI"
 		label variable `_rfUCI' "rfUCI"
@@ -3489,7 +3552,11 @@ program define ParseHetInfo, sclass
 
 		// default: if not `isqparam', parse other elements only for *first* model; tausq is a special case
 		if inlist("`1'", "tausq", "tau2") {
-			local tausq = `ovstats'[rownumb(`ovstats', "tausq"), `col']
+			local tausq = .
+			local rownumb = rownumb(`ovstats', "tausq")
+			if !missing(`rownumb') {
+				local tausq = `ovstats'[`rownumb', `col']
+			}
 			if missing(`tausq') c_local disperr_tausq = 1
 			else {
 				if substr(`"`2'"', 1, 1) == `"%"' local fmt : copy local 2
@@ -3529,13 +3596,13 @@ program define ParseHetInfo, sclass
 				if `"`firstonly'"'!=`""' local part_opt part1
 				else local part_opt part2
 				if -log10(`Qpval') > `dp' {
-					local `part_opt' = `"p < "' + string(0, "`fmt'")
+					local `part_opt' = `"p < "' + string(1e-`dp', "`fmt'")
 				}
 				else local `part_opt' = `"p = "' + string(`Qpval', "`fmt'")
 			}
 			else if inlist("`1'", "h", "H") {
 				if `"`hetstats'"'!=`""' {
-					local H = `hetstats'[rownumb(`hetstats', "H"), `col']
+					local H = `hetstats'["H", `col']
 				}
 				else local H = sqrt(`Q' / `Qdf')
 				
@@ -3553,7 +3620,7 @@ program define ParseHetInfo, sclass
 			}
 			else if inlist(lower("`1'"), "isq", "i2") {
 				if "`hetstats'"!="" {
-					local Isq = `hetstats'[rownumb(`hetstats', "Isq"), `col']
+					local Isq = `hetstats'["Isq", `col']
 				}
 				else local Isq = max(0, 100*(`Q' - `Qdf') / `Q')
 				if substr(`"`2'"', 1, 1) == `"%"' local fmt : copy local 2
@@ -3570,7 +3637,7 @@ program define ParseHetInfo, sclass
 			}
 			else if inlist(lower("`1'"), "h2m", "hsqm") {
 				if "`hetstats'"!="" {
-					local HsqM = `hetstats'[rownumb(`hetstats', "HsqM"), `col']
+					local HsqM = `hetstats'["HsqM", `col']
 				}
 				else local HsqM = `Isq' / (100 - `Isq')
 				if substr(`"`2'"', 1, 1) == `"%"' local fmt : copy local 2
@@ -3590,6 +3657,13 @@ program define ParseHetInfo, sclass
 				exit 198
 			}
 		}		// end else if !(`col' > 1 & `"`isqparam'"'==`""')
+		
+		/* Special case [TO DO/REVISIT JAN 2024]
+		If `"`part1'"'!=`""' & `"`part2'"'!=`""' but DL is the only random-effects model
+		then concatenate `part1' and `part2' together, and return as `part2'
+		*/
+		// nois disp `"part1: `part1'"'
+		// nois disp `"part2: `part2'"'
 		
 		if `"`part1'"'!=`""' {
 			if `"`hetlab1'"'==`""' local hetlab1 : copy local part1

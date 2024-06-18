@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 4.07  David Fisher  15sep2023}{...}
+{* *! version 4.08  David Fisher  17jun2024}{...}
 {vieweralsosee "metan_model" "help metan_model"}{...}
 {vieweralsosee "metan_binary" "help metan_binary"}{...}
 {vieweralsosee "metan_continuous" "help metan_continuous"}{...}
@@ -124,14 +124,15 @@ This incorporates all the functionalities of the previous version of {cmd:metan}
 {synopt :{cmd:label(}[{cmd:namevar=}{it:namevar}] [{cmd:, yearvar=}{it:yearvar}]{cmd:)}}alternative way to label studies{p_end}
 {synopt :{cmd:by(}{it:subgroup_id} [{cmd:, {ul:m}issing}]{cmd:)}}subgroup meta-analysis{p_end}
 {synopt :{opt cumul:ative}}cumulative meta-analysis{p_end}
-{synopt :{opt inf:luence}}investigate influence of each study in turn on the overall estimate{p_end}
+{synopt :{opt inf:luence} | {opt leave:oneout}}investigate influence of each study in turn on the overall estimate ("leave-one-out" meta-analysis){p_end}
 {synopt :{opt altw:t}}display study weights from the standard (that is, non-cumulative or non-influence) meta-analysis{p_end}
 
 {syntab :Options}
 {synopt :{opt ci:type(ci_type)}}method of constructing confidence intervals for reporting of individual studies ({ul:not} pooled results){p_end}
 {synopt :{opt level(#)} {opt il:evel(#)} {opt ol:evel(#)}}set confidence level for reporting confidence intervals. Default is {help creturn##output:c_level}; see {help set level}{p_end}
-{synopt :{opt eform}}display exponentiated (antilog) effect sizes and confidence limits{p_end}
+{synopt :{opt ebs:hrinkage}}create new variables within the dataset in memory containing empirical Bayes shrinkage estimates for each study{p_end}
 {synopt :{opt eff:ect(string)}}title for "effect size" column in the output{p_end}
+{synopt :{opt eform}}display exponentiated (antilog) effect sizes and confidence limits{p_end}
 {synopt :{opt keepa:ll}}display all studies in the output, even those for which no effect could be estimated{p_end}
 {synopt :{opt keepo:rder}}display "no effect" studies in the order in which they would otherwise appear (by default these are moved to the end){p_end}
 {synopt :{opt labtitle(text)}}override the default heading for the list of studies{p_end}
@@ -225,22 +226,22 @@ See also the notes following {opt influence} below.
 
 {phang}
 {opt influence} requests that each study in turn is removed from the meta-analysis to investigate its influence on the overall result.
+(This is also called "leave-one-out" meta-analysis, so {opt leaveoneout} is a valid synonym.)
 Pooled effect information on screen remains identical to that if {opt influence} were not specified.
 However, in the forest plot the usual diamond shape representing the pooled effect is replaced by vertical lines,
 to allow a visual assessment of influence. Note that no formal test of influence is given.
 
 {pmore}
-Note that for both {opt cumulative} and {opt influence}, use of random-effects or variance-correction models
-may result in weights greater than 100%, since weights are expressed relative to the total weight in the model with all studies included.
-Only a single pooling method may be used with {opt cumulative} and {opt influence}.
-
-{phang2}
 {opt altwt} does not alter the effect estimates, but presents the original weights corresponding to each individual study,
 rather than the relative weights of each fitted {opt cumulative} or {opt influence} model.
 In other words, presented weights are as if {opt cumulative} or {opt influence} were not specified.
 If applicable, presented participant numbers in the forest plot are treated similarly;
 that is, the original participant numbers are presented with {opt altwt},
 in preference to either a cumulative sum (if {opt cumulative}) or a difference from the total (if {opt influence}).
+
+{phang2}
+Only a single pooling method may be used with {opt cumulative} or {opt influence}.
+See also the notes in the section {help metan##saved_datasets:Saved datasets} regarding use of {opt cumulative} or {opt influence} with a random-effects model.
 
 
 {dlgtab:Options}
@@ -263,10 +264,16 @@ otherwise degrees of freedom of {it:n-2} are assumed, where {it:n} is the study 
 Additional {it:ci_type}s may also be specified with {help metan_binary:two-group binary comparisons} or {help metan_proportion:proportion data}.
 
 {phang}
-{opt eform} specifies that effect sizes and confidence limits should be exponentiated in the table and forest plot.
+{opt ebshrinkage} creates {help metan##saved_results:saved results} within the dataset in memory containing empirical Bayes shrinkage estimates
+and standard errors for each study. These estimates are calculated by shrinking the observed study estimates towards the pooled random effects estimate
+by a factor which depends on the relative magnitude of the estimated within- and between-study variances.
+As such, this option is only applicable with {help metan_model:random-effects models}.
 
 {phang}
 {opt effect(string)} specifies a heading for the effect size column in the output.
+
+{phang}
+{opt eform} specifies that effect sizes and confidence limits should be exponentiated in the table and forest plot.
 
 {phang}
 {opt keepall}, {opt keeporder} request that all values of {it:study_id} should be visible in the table and forest plot,
@@ -480,9 +487,9 @@ in a similar way to Stata's built-in {cmd:meta esize}, or {cmd:escalc} within th
 These new variables may be suppressed using the {opt nokeepvars} or {opt norsample} options.
 
 {pstd}
-(Note that these variables are always consistent with the original raw data from individual studies, regardless of other options.
+Note that these variables are always consistent with the original raw data from individual studies, regardless of other options.
 In particular, if options {opt cumulative} or {opt influence} are specified, these variables will {ul:not} be consistent with the results table shown on-screen.
-To consistently obtain the data shown on-screen and in the forest plot, use {help metan##saved_datasets:"results sets"} as described below.)
+To consistently obtain the data shown on-screen and in the forest plot, use {help metan##saved_datasets:"results sets"} as described below.
 
 {pstd}
 The following new variables may be added:
@@ -493,7 +500,9 @@ The following new variables may be added:
 {p2col 7 32 36 2:{cmd:_UCI}}Upper confidence limit for ES{p_end}
 {p2col 7 32 36 2:{cmd:_WT}}Study percentage weight (between 0 and 100) associated with first requested {help metan_model##model:pooling method}{p_end}
 {p2col 7 32 36 2:{cmd:_NN}}Study sample size{p_end}
-{p2col 7 32 36 2:{cmd:_CC}}Marker of whether continuity correction was applied{p_end}
+{p2col 7 32 36 2:{cmd:_CC}}Marker of whether continuity correction was applied (see {help metan_binary##options:{bf:cc} option}){p_end}
+{p2col 7 32 36 2:{cmd:_EBS_ES}}Empirical Bayes shrinkage estimate (see {opt ebshrinkage} option){p_end}
+{p2col 7 32 36 2:{cmd:_EBS_seES}}Standard error of Empirical Bayes shrinkage estimate (see {opt ebshrinkage} option){p_end}
 {p2col 7 32 36 2:{cmd:_rsample}}Marker of which observations were used in the analysis{p_end}
 
 {pstd}
@@ -597,11 +606,12 @@ Otherwise, variables are given standardised names, as follows:
 {synopt:{cmd:_UCI}}Upper confidence limit for ES (see {help metan##saved_results:saved results}){p_end}
 {synopt:{cmd:_NN}}Study sample size (see {help metan##saved_results:saved results}){p_end}
 {synopt:{cmd:_WT}}Study percentage weight (see {help metan##saved_results:saved results}){p_end}
+{synopt:}...but also see text below if {opt cumulative} or {opt influence} with random-effects{p_end}
 {synopt:{cmd:_EFFECT}}String containing the effect size and confidence limits together, on the display scale (i.e. exponentiated if specified){p_end}
 
 {p2col 5 20 24 2: Option-dependent variables}{p_end}
 {synopt:{cmd:_BY}}Value-labelled numeric variable identifying study subgroups (see {opt by()} option){p_end}
-{synopt:{cmd:_CC}}Marker of whether continuity correction was applied (see {opt cc} option){p_end}
+{synopt:{cmd:_CC}}Marker of whether continuity correction was applied (see {help metan##saved_results:saved results}){p_end}
 {synopt:{cmd:_counts1}}String containing "events/total" numbers in the research arm (see {opt counts} option){p_end}
 {synopt:{cmd:_counts0}}String containing "events/total" numbers in the control arm (see {opt counts} option){p_end}
 {synopt:{cmd:_counts1msd}}String containing "mean (SD)" in the research arm (see {opt counts} option){p_end}
@@ -609,6 +619,7 @@ Otherwise, variables are given standardised names, as follows:
 {synopt:{cmd:_OE}}Logrank {it:O-E}{p_end}
 {synopt:{cmd:_V}}Logrank {it:V}{p_end}
 {synopt:{cmd:_VE}}String containing vaccine efficacy and confidence limits (see {opt efficacy} option){p_end}
+{synopt:{cmd:_WT_Final}}Study percentage weight corresponding to final model (if {opt cumulative} or {opt influence} with random-effects){p_end}
 {synopt:{cmd:_rfLCI}}Lower confidence limit of approximate predictive distribution (see {opt rfdist} option){p_end}
 {synopt:{cmd:_rfUCI}}Upper confidence limit of approximate predictive distribution (see {opt rfdist} option){p_end}
 {synopt:{cmd:_Prop_ES}}Proportion (see {opt proportion} option){p_end}
@@ -616,14 +627,21 @@ Otherwise, variables are given standardised names, as follows:
 {synopt:{cmd:_Prop_UCI}}Upper confidence limit of proportion (see {opt proportion} option){p_end}
 
 {pstd}
-With {opt cumulative} or {opt influence}, additional variables will be saved corresponding to the entries
-of {cmd:r(ovstats)} not covered by the above lists, plus Q statistics and degrees of freedom.
-
-{pstd}
 Some of these variables have associated characteristics; type {bf:{help char:char list}} to see these.
 
 {pstd}
 If the {opt prefix(string)} option is specified, then the variable names above become {it:string}{cmd:_USE} and so on.
+
+{pstd}
+With {opt cumulative} or {opt influence}, additional variables will be saved corresponding to the entries
+of {cmd:r(ovstats)} not covered by the above lists, plus Q statistics and degrees of freedom.
+Note also that, if a random-effects model is specified, the amount of heterogeneity present will be re-calculated at each step of the analysis,
+such that precision may either increase or decrease.
+By default, {cmd:metan} percentage weights are with respect to the "total" weight; that is, the weight derived from a model which includes all relevant observations.
+Although this does not makes {it:statistical} sense under random-effects, such weights remain useful for showing relative precision (i.e. width of confidence intervals)
+visually in the forest plot, via weighted boxes.
+To make this clear, the "weight" column (variable {cmd:_WT}) is instead labelled "Ratio of Variances"; and an additional variable {cmd:_WT_Final} is created
+containing the weights corresponding to the "final" random-effects model including all relevant observations.
 
 
 {marker diffs_metan9}{...}

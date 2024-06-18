@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 4.07  David Fisher  15sep2023}{...}
+{* *! version 4.08  David Fisher  17jun2024}{...}
 {vieweralsosee "metan" "help metan"}{...}
 {vieweralsosee "metan_model" "help metan_model"}{...}
 {vieweralsosee "metan_binary" "help metan_binary"}{...}
@@ -62,6 +62,12 @@ Option {opt proportion} {ul:must} be supplied in this context, in order to disam
 from {cmd:metan}'s other two-variable syntax of {it:ES} {it:seES}.
 
 {pstd}
+By default, proportions are pooled on their natural (untransformed) scale, such that {it:p} = {it:n_events}/{it:n_total}
+and Var({it:p}) = {it:p}(1-{it:p})/{it:n_total}.
+This Normal approximation to the true binomial distribution performs best when {it:n_total} is large, and when observed proportions are close to 0.5.
+Alternatively, proportion data may be transformed prior to pooling, with option {opt transform()}.
+
+{pstd}
 {help metan:Click here} to return to the main {bf:{help metan}} help page
 and to find documentation for {it:{help metan_model:model_spec}} and {it:{help metan##options_main:options_main}}.
 
@@ -118,7 +124,7 @@ and to stabilise variances.  The following transformations are available using {
 so by default a continuity correction of 0.5 is applied; see {opt cc()}
 
 {pmore}
-{opt ar:csine} specifies the Arcsine transform, for which continuity correction is not required.
+{opt ar:csine} specifies the (single) arcsine transform, for which continuity correction is not required.
 
 {pmore}
 {opt ft:ukey} specifies the Freeman-Tukey double-arcsine transform. Again, continuity correction is not required.
