@@ -25,6 +25,7 @@ p stackdid module to estimate Stacked Difference-in-Differences Regression
 p staggered module implementing R staggered package based on Roth and Sant'Anna (2023)
 p standsurv module to compute standardized (marginal) survival and related functions
 p stata_linter module providing a tool to detect and correct bad Stata coding practices
+p stata_sage module to answer your research questions
 p stckar module to draw stacked area graphs
 p step3 module to relate latent class membership to external variables
 p stfform module to provide Functional form test for Cox Models

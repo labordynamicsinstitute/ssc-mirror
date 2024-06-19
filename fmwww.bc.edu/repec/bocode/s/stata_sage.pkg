@@ -1,0 +1,21 @@
+d 'STATA_SAGE': module to answer your research questions
+d
+d   stata_sage generates a fun, random response to any question
+d that you ask. Use it to lighten the mood or to make decisions
+d when you are feeling indecisive. 
+d
+d KW: statistics
+d KW: humor
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20240618
+d
+d Author:  Prabhmeet Kaur Matta ,  World Bank
+d Support: email  NA
+d
+d Author:   Kabira Namit,  World Bank
+d Support: email   knamit@@worldbank.org
+d
+f stata_sage.ado
+f stata_sage.sthlp

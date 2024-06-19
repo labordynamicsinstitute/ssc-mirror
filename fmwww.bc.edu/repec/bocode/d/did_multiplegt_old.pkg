@@ -1,0 +1,33 @@
+d 'DID_MULTIPLEGT_OLD': module to estimate sharp Difference-in-Difference designs with multiple groups and periods
+d
+d	did_multiplegt_old estimates the effect of a treatment on
+d an outcome, using group- (e.g. county- or state-) level panel   
+d data with multiple groups and periods.  Like other recently
+d proposed DID estimation commands (csdid, didimputation, ...),   
+d did_multiplegt_old can be used with a binary and staggered
+d (absorbing) treatment. But unlike those other commands,   
+d did_multiplegt_old can also be used with a non-binary treatment
+d (discrete or continuous) that can increase or decrease   
+d multiple times.  The panel of groups may be unbalanced: not all
+d groups have to be observed at every period (see FAQ section	
+d for more info on that). The data may also be at a more
+d disaggregated level than the group level (e.g. individual-level
+d wage	  data to measure the effect of a regional-level
+d minimum-wage on individuals' wages). 
+d
+d KW: DID
+d KW: binary treatment
+d KW: sharp design
+d
+d Requires: Stata version 12 and fuzzydid from SSC (q.v.)
+d
+d Distribution-Date: 20240618
+d
+d Author:  Clément de Chaisemartin,  Economics Department, Sciences Po
+d Support: email  chaisemartin.packages@@gmail.com
+d
+d Author:   Xavier D'Haultfoeuille, CREST
+d Support: email   xavier.dhaultfoeuille@@ensae.fr
+d
+f did_multiplegt_old.ado
+f did_multiplegt_old.sthlp

@@ -5,7 +5,10 @@ d cardiovascular disease (ASCVD) event (defined as first occurrence
 d of non-fatal myocardial infarction, congestive heart disease
 d death, or fatal or nonfatal stroke), based on American College of
 d Cardiology/American Heart Association (ACC/AHA) guidelines (Goff
-d et al. 2014). ascvdi is the immediate form of ascvd; see immed. 
+d et al. 2014).  As of early 2024, AHA has produced a new set of
+d risk models (see Khan et al [2024]), which can be downloaded as a
+d new package from SSC called prevent. ascvdi is the immediate form
+d of ascvd; see immed. 
 d
 d KW: Framingham Heart Study
 d KW: Cardiovascular disease

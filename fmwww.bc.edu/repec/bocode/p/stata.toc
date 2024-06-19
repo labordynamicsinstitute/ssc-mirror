@@ -155,6 +155,7 @@ p preserve_globals module to preserve global macros
 p pretrends module to produce power calculations for pre-trends tests
 p pretty_baseline module to make a commonly encountered table of baseline characteristics
 p pretty_suite module with programs to aid with routine reporting for clinical trials
+p prevent module for computing AHA 10-year and 30-year risk of cardiovascular disease--atherosclerotic and heart failure
 p primes module to generate prime numbers
 p printgph module to execute command for each matching file
 p prismscore module to calculate PRISM III and PRISM IV pediatric risk of mortality scores

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0 02jan2023}{...}
+{* *! version 1.1.0 18Jub2024}{...}
 
 {title:Title}
 
@@ -18,7 +18,7 @@
 				{cmdab:ascvd}
 				{ifin}
 				{cmd:,}
-				{opt fe:male}({it:varname}) 
+				{opt fem:ale}({it:varname}) 
 				{opt bla:ck}({it:varname}) 				
 				{opt age:}({it:varname}) 
 				{opt chol:}({it:varname}) 				
@@ -37,7 +37,7 @@ Immediate form of {cmd:ascvd}
 {p 8 17 2}
 				{cmd:ascvdi}
 				{cmd:,} 
-				{opt fe:male}({it:0/1}) 
+				{opt fem:ale}({it:0/1}) 
 				{opt bla:ck}({it:0/1}) 				
 				{cmdab:age:}({it:#}) 
 				{cmdab:chol:}({it:#})  
@@ -54,7 +54,7 @@ Immediate form of {cmd:ascvd}
 {synopthdr:ascvd options}
 {synoptline}
 {syntab:Required}
-{synopt:{opt fe:male(varname)}}gender, where female = 1 and male = 0{p_end}
+{synopt:{opt fem:ale(varname)}}gender, where female = 1 and male = 0{p_end}
 {synopt:{opt bla:ck(varname)}}race, where black = 1 and all others = 0{p_end}
 {synopt:{opt age:}(varname)}age in years{p_end}
 {synopt:{opt chol:}(varname)}total cholesterol level (mg/dL){p_end}
@@ -73,7 +73,7 @@ Immediate form of {cmd:ascvd}
 {synopthdr:immediate options}
 {synoptline}
 {syntab:Required}
-{synopt:{opt fe:male(#)}}gender, where female = 1 and male = 0{p_end}
+{synopt:{opt fem:ale(#)}}gender, where female = 1 and male = 0{p_end}
 {synopt:{opt bla:ck(#)}}race, where black = 1 and all others = 0{p_end}
 {synopt:{opt age:}(#)}age in years{p_end}
 {synopt:{opt chol:}(#)}total cholesterol level (mg/dL){p_end}
@@ -96,6 +96,9 @@ Immediate form of {cmd:ascvd}
 {cmd:ascvd} Computes 10-year risk for an initial hard atherosclerotic cardiovascular disease (ASCVD) event (defined as first occurrence 
 of non-fatal myocardial infarction, congestive heart disease death, or fatal or nonfatal stroke), based on American College of 
 Cardiology/American Heart Association (ACC/AHA) guidelines (Goff et al. 2014). 
+
+{pstd}
+As of early 2024, AHA has produced a new set of risk models (see Khan et al [2024]), which can be downloaded as a new package from SSC called {helpb prevent}. 
 
 {pstd}
 {opt ascvdi} is the immediate form of {opt ascvd}; see {help immed}.
@@ -158,6 +161,10 @@ Levy, D., O'donnell, C.J. and J.G. Robinson. 2014. 2013 ACC/AHA guideline on the
 a report of the American College of Cardiology/American Heart Association Task Force on Practice Guidelines. 
 {it:Circulation} 129(25_suppl_2), S49-S73.{p_end}
 
+{p 4 8 2}
+Khan, S. S., Matsushita, K., Sang, Y., et al. Development and validation of the American Heart Association 
+Predicting Risk of Cardiovascular Disease EVENTs (PREVENT^TM) equations. Circulation 2024;149:30–449.{p_end}
+
 {p 4 8 2} 
 see also: {browse "https://www.cvriskcalculator.com/":"https://www.cvriskcalculator.com/"} {p_end}
 
@@ -177,11 +184,10 @@ Linden, Ariel (2023). ASCVD: Stata module for computing ACC/AHA 10-year risk for
 
 {p 4 8 2}	Ariel Linden{p_end}
 {p 4 8 2}	President, Linden Consulting Group, LLC{p_end}
-{p 4 8 2}{browse "mailto:alinden@lindenconsulting.org":alinden@lindenconsulting.org}{p_end}
-{p 4 8 2}{browse "http://www.lindenconsulting.org"}{p_end}
+{p 4 8 2}	alinden@lindenconsulting.org{p_end}
+
 
          
-
 {title:Acknowledgments} 
 
 {p 4 4 2} I would like to thank Albert Botchway for advocating that I write this package.
@@ -190,7 +196,7 @@ Linden, Ariel (2023). ASCVD: Stata module for computing ACC/AHA 10-year risk for
 
 {title:Also see}
 
-{p 4 8 2} {helpb framingham} (if installed){p_end}
+{p 4 8 2} {helpb prevent} (if installed), {helpb framingham} (if installed){p_end}
 
 
 

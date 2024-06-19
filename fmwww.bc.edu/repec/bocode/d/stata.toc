@@ -63,6 +63,7 @@ p did_had module to estimate the effect of a treatment on an outcome in a hetero
 p did_imputation module to perform treatment effect estimation and pre-trend testing in event studies
 p did_multiplegt module to estimate sharp Difference-in-Difference designs with multiple groups and periods
 p did_multiplegt_dyn module to estimate event-study Difference-in-Difference (DID) estimators in designs with multiple groups and periods, with a potentially non-binary treatment that may increase or decrease multiple times
+p did_multiplegt_old module to estimate sharp Difference-in-Difference designs with multiple groups and periods
 p didplacebo module for  in-time, in-space and mixed placebo tests for estimating difference-in-differences (DID) models
 p didq module to compute treatment effects under alternative Parallel-q assumptions
 p difd module to evaluate test items for differential item functioning (DIF)

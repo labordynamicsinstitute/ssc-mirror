@@ -1,0 +1,36 @@
+d 'PREVENT': module for computing AHA 10-year and 30-year risk of cardiovascular disease--atherosclerotic and heart failure
+d
+d  prevent10 computes 10-year risk for coronary vascular disease
+d (CVD), atherosclerotic cardiovascular disease (ASCVD), and heart
+d failure (HF). Similarly, prevent30 computes the 30-year risk for
+d CVD,	ASCVD, and HF. The risk equations were developed by the
+d American Heart Association Cardiovascular-Kidney-Metabolic
+d Scientific Advisory Group and were derived and validated in a
+d large, diverse sample of over 6 million individuals (Khan et al
+d 2024).  prevent10 and prevent30 produce risk estimates using the
+d base model described in Khan et al (2024). prevent10i and
+d prevent30i are the immediate forms of prevent10 and prevent30,
+d respectively; see immed. 
+d
+d KW: risk prediction
+d KW: risk assessment
+d KW: American Heart Association
+d KW: cardiovascular disease
+d KW: heart failure
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20240618
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f prevent10.ado
+f prevent.sthlp
+f prevent10i.ado
+f prevent10i.sthlp
+f prevent30.ado
+f prevent30.sthlp
+f prevent30i.ado
+f prevent30i.sthlp
+f ../e/example_prevent.dta 
