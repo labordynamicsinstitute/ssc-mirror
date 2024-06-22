@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 4.1 02aug2023}{...}
+{* *! version 4.2 18jun2024}{...}
 {cmd:help georoute}{right: ({browse "https://doi.org/10.1177/1536867X221083857":SJ22-1: dm0092_1})}
 {hline}
 
@@ -33,7 +33,7 @@ Command with immediate arguments:{p_end}
 [{it:options}]
 
 
-{synoptset 37 tabbed}{...}
+{synoptset 43 tabbed}{...}
 {synopthdr}
 {synoptline}
 {syntab: Compulsory arguments}
@@ -46,7 +46,7 @@ Command with immediate arguments:{p_end}
 {syntab:Routing options}
 {p2coldent: * {opt tm:ode(string|varname)}}transport mode{p_end}
 {p2coldent: * {opt rt:ype(string|varname)}}routing type{p_end}
-{p2coldent: * {cmdab:dt:ime(}{c -(}{it:string}{cmd:,}{it:mask}{c )-}|{it:varname}|{cmd:"now")}}date and time of departure{p_end}
+{p2coldent: * {cmdab:dt:ime(}{c -(}{it:string}{cmd:,}{it:mask}{c )-}|{it:varname}|{cmd:"now"}|{cmd:"any")}}date and time of departure{p_end}
 {synopt: {opt av:oid(string)}}avoid specific routing features{p_end}
 
 {syntab:New variables}
@@ -190,11 +190,12 @@ composed of the routing types exactly as above (possibly abbreviated).  Any
 missing values will be assigned the default routing type ({cmd:"fast"}).
 
 {phang}
-{cmd:dtime(}{c -(}{it:string}{cmd:,}{it:mask}{c )-}|{it:varname}|{cmd:"now")}
+{cmd:dtime(}{c -(}{it:string}{cmd:,}{it:mask}{c )-}|{it:varname}|{cmd:"now"}|{cmd:"any")}
 specifies the date and time travel is expected to start (see also 
-{browse "https://developer.here.com/documentation/routing/dev_guide/topics/example-time-aware-route.html":HERE documentation}
+{browse "https://www.here.com/docs/bundle/routing-api-developer-guide-v8/page/topics/use-cases/departure-time.html":HERE documentation}
 for details).  The default is {cmd:dtime("now")}, that is, the current time as
-of running the calculation.
+of running the calculation.  It is also possible to use {cmd:dtime("any")} to specify a route without a specific departure time.
+Note that sending the same request with departure time set to {cmd:dtime("any")} at different times may result in different responses.
 
 {pmore}
 Departure time can be specified either via a string and a mask (for instance,
@@ -334,7 +335,7 @@ observations were discarded and why.
 
 {pstd}
 Sylvain Weber{break}
-University of Applied Sciences and Arts of Western Switzerland (HES-SO){break}
+University of Applied Sciences Western Switzerland (HES-SO){break}
 Geneva, Switzerland{break}
 {browse "mailto:sylvain.weber@hesge.ch?subject=Question/remark about -georoute-&cc=martin.peclat@bluewin.ch;augustjwarren@gmail.com":sylvain.weber@hesge.ch}
 

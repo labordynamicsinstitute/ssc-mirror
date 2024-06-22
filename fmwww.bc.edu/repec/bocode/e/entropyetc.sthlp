@@ -1,5 +1,5 @@
 {smcl}
-{* *! NJC 20nov2016/15jun2020/29jun2021/11jan2024}{...}
+{* *! NJC 20nov2016/15jun2020/29jun2021/11jan2024/19jun2024}{...}
 {cmd:help entropyetc}
 {hline}
 
@@ -53,6 +53,9 @@ categories, and calculates
 new variables may be generated containing results. 
 Hence the syntax supports those who want a listing, but not 
 new variables, and conversely.  
+
+{pstd}Hence you should ask for at least one of those options. 
+Otherwise, there is nothing to do. 
 
 
 {title:Remarks} 
@@ -138,6 +141,11 @@ using the {cmd:format()} option.
 
 {pstd}Nicholas J. Cox, Durham University{break}
 n.j.cox@durham.ac.uk
+
+
+{title:Acknowledgments}
+
+{pstd}Paris Rira reported a problem if 5 variables were named in {cmd:generate()}. 
 
 
 {title:Also see}

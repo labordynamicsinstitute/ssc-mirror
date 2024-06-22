@@ -6101,6 +6101,7 @@ fmwww.bc.edu/repec/bocode/v/narr_sign_restrict.sthlp
 fmwww.bc.edu/repec/bocode/v/validate_validly.do
 fmwww.bc.edu/repec/bocode/v/venndiag.html
 fmwww.bc.edu/repec/bocode/v/varsearch.html
+fmwww.bc.edu/repec/bocode/v/validarcae_sim.ado
 fmwww.bc.edu/repec/bocode/v/viewresults.zip
 fmwww.bc.edu/repec/bocode/v/varflist.hlp
 fmwww.bc.edu/repec/bocode/v/hd_plot.sthlp

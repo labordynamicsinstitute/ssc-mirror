@@ -17,7 +17,7 @@ d KW: geocoding
 d
 d Requires: Stata version 11 and insheetjson, libjson from SSC (q.v.)
 d
-d Distribution-Date: 20230804
+d Distribution-Date: 20240621
 d
 d Author: Sylvain Weber, University of Neuchâtel, Institute of Economic Research
 d Support: email sylvain.weber@@unine.ch

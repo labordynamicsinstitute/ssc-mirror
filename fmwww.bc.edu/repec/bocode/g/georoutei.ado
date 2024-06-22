@@ -1,9 +1,9 @@
 **************************************************
 ** Sylvain Weber, Martin Péclat & August Warren **
-**        This version: August 2, 2023          **
+**         This version: June 18, 2024          **
 **************************************************
 
-*! version 4.1 by Sylvain Weber, Martin Péclat & August Warren 02aug2023
+*! version 4.2 by Sylvain Weber, Martin Péclat & August Warren 18jun2024
 /*
 Revision history:
 - version 1.1 (2nov2016):
@@ -43,6 +43,8 @@ Revision history:
 		- URL links for geocoding
 		- Columns in JSON requests
 		- Method for controlling HERE credentials
+- version 4.2 (18jun2024)
+	- Integration of possibility to use "any" in dtime to specify a route without a specific departure time
 */
 
 
@@ -210,7 +212,7 @@ if "`dtime'"=="" | "`dtime'"=="now" {
 	if "`dtime'"=="now" local dtimedefault = "(now)"
 	if "`dtime'"=="" local dtimedefault = "(now; assigned by default)"
 }
-if "`dtime'"!="" & "`dtime'"!="now" {
+if "`dtime'"!="" & "`dtime'"!="now" & "`dtime'"!="any" {
 	tokenize "`dtime'", parse(",")
 	local date = "`1'"
 	local mask = "`3'"
@@ -232,7 +234,10 @@ if "`dtime'"!="" & "`dtime'"!="now" {
 	local dtimeapi: di %tcCCYY-NN-DD!THH:MM:SS clock("`date'","`mask'")
 	local dtimedisp: di %tcDD_Mon_CCYY_HH:MM:SS clock("`date'","`mask'")
 }
-
+if "`dtime'"=="any" {
+	local dtimeapi = "any"
+	local dtimedisp = "any"
+}
 
 *** Parse routing features (avoid) ***
 *Default: none (unused)

@@ -1,3 +1,4 @@
+*! 3.0.1 NJC 17 June 2024 
 *! 3.0.0 NJC 11 January 2024 
 *! 2.0.2 NJC 29 June 2021 
 *! 2.0.1 NJC 15 June 2020 
@@ -94,7 +95,7 @@ program parsegenerate
 	forval j = 1/5 { 
 		if "``j''" != "" { 
 			gettoken no rest : `j', parse(=)  
-			capture numlist "`no'", max(1) int range(>=1 <=4) 
+			capture numlist "`no'", max(1) int range(>=1 <=5) 
 			if _rc { 
 				di as err "generate() error: ``j''"
 				exit _rc 
