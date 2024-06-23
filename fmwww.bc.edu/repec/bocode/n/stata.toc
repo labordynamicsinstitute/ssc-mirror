@@ -60,6 +60,7 @@ p nstagebinopt module to compute admissible multi-arm multi-stage trial designs 
 p ntreatreg module for estimation of treatment effects in the presence of neighbourhood interactions
 p num2base26 module to provide an interface to Mata's numtobase26() function
 p num2words module to convert numbers to text
+p number_exporting module to format a numeric value and export in LaTeX format
 p numdate module to generate date-times or components 
 p nvars module to count the number of variables
 p nw_fromlist module to build a network from a list of long-form data

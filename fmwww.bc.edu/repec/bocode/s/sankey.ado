@@ -1,6 +1,7 @@
-*! sankey v1.73 (18 Mar 2024)
+*! sankey v1.74 (11 Jun 2024)
 *! Asjad Naqvi (asjadnaqvi@gmail.com)
 
+*v1.74 (10 Jun 2024): add wrap() option.
 *v1.73 (18 Mar 2024): Values determine the order of drawing. Add caution that numbers mean the same across the categories.
 *v1.72 (12 Feb 2024): labprop fixes, valcond() fixes. by() changed to optional. Assumes one layer with a warning. ctcolor() added. ctsize() switched to string.
 *v1.71 (15 Jan 2024): fixed a bug where value labels of to() and from() were overwriting each other.
@@ -36,10 +37,11 @@ version 15
 		[ LWidth(string) LColor(string)  	 ]  ///
 		[ offset(real 0) LABColor(string) 	 ]  ///  // added v1.1
 		[ BOXWidth(string)	 				 ]  ///  // added v1.3
-		[ wrap(real 7) CTITLEs(string asis) CTGap(real 0) CTSize(string) colorvar(varname) colorvarmiss(string) colorboxmiss(string)  ] ///  // v1.4 options
+		[ CTITLEs(string asis) CTGap(real 0) CTSize(string) colorvar(varname) colorvarmiss(string) colorboxmiss(string)  ] ///  // v1.4 options
 		[ valprop labprop valscale(real 0.33333) labscale(real 0.33333) NOVALRight NOVALLeft NOLABels ]      ///  // v1.5
 		[ stock sort1(string) sort2(string)  ]  /// // v1.6
 		[ percent ctpos(string) CTColor(string) ]    /// // v1.7 
+		[ align wrap(numlist >=0 max=1)  ]	///	
 		[ * ] 
 		
 
@@ -264,8 +266,14 @@ preserve
 	sort layer var marker
 	recode val_in val_out (.=0)
 
+	
+	
+	
 	egen double height = rowmax(val_in val_out) // this is the maximum height for each category for each group.
 
+	
+	
+	
 	// sort by name or value
 
 
@@ -338,6 +346,9 @@ preserve
 
 	cap drop heightsum
 
+	
+	
+	
 
 	*************************
 	** generate the links  **
@@ -429,17 +440,20 @@ preserve
 		
 	}
 	
+	
 
 	gen stack_x = layer2
 
 	sort layer2 markme id
+	
+	
 	
 	// mark the highest value and the layer
 
 	summ y2, meanonly
 	local hival = r(max)
 	
-
+	
 	//recenter
 	
 	*** recenter to middle
@@ -471,6 +485,14 @@ preserve
 		
 		replace stack_end   = stack_end   + `displace' if layer2==`x'
 		replace stack_start = stack_start + `displace' if layer2==`x'		
+	}
+	
+	
+	if "`align'" != "" {  // start here
+		
+		
+		
+		
 	}
 	
 	
@@ -603,8 +625,7 @@ preserve
 	}
 	
 		
-	
-	
+
 	format val `format'	
 	
 	
@@ -730,6 +751,18 @@ preserve
 			gen lab2 = name if tag_spike==1
 		}
 		
+
+		
+		if "`wrap'" != "" {
+			gen _length = length(lab2) if lab2!=""
+			summ _length, meanonly		
+			local _wraprounds = floor(`r(max)' / `wrap')
+			
+			forval i = 1 / `_wraprounds' {
+				local wraptag = `wrap' * `i'
+				replace lab2 = substr(lab2, 1, `wraptag') + "`=char(10)'" + substr(lab2, `=`wraptag' + 1', .) if _length > `wraptag' & _length!=.
+			}
+		}
 		
 		if "`labprop'" != "" {
 			summ height if tag_spike==1, meanonly
