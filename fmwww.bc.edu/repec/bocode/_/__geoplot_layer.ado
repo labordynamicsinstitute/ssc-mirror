@@ -1,30 +1,19 @@
-*! version 1.1.4  02nov2023  Ben Jann
+*! version 1.1.6  24jun2024  Ben Jann
 
 /*
     Syntax:
 
-    o case 1: layer using data from specified frame
-
-          __geoplot_layer 0 <plottype> <layer> <p> <frame> ...
+      __geoplot_layer <plottype> <layer> <p> <frame> ...
 
       where <plottype> is one of area, line, scatter, pcspike, ..., pcscatter
             <layer> is the index of the current layer
             <p> is the twoway plot counter
             <frame> is the name of the frame
 
-    o case 2: layer with immediate arguments
+    <layer> may be . to create a "hidden" layer, i.e. a layer that will not be
+    available to legend().
 
-          __geoplot_layer 1 <plottype> <layer> <p> <immediate_values> ...
-
-      where <plottype> is one of scatteri, pci, pcarrowi
-            <layer> is the index of the current layer
-            <p> is the twoway plot counter
-            <immediate_values> are the immediate coordinates
-
-    In both cases, <layer> may be . to create a "hidden" layer, i.e. a layer
-    that will not be available to legend().
-
-    Outline of a (case 1) program making used of __geoplot_layer:
+    Outline of a program making used of __geoplot_layer:
 
     program _geoplot_mylayer
         version 16.1
@@ -35,7 +24,7 @@
            core of program: parse input, do whatever operations are necessary,
            set plottype, myframe, myarguments, and myoptions
         ***
-        __geoplot_layer 0 `plottype' `layer' `p' `myframe' `myarguments', `myoptions'
+        __geoplot_layer `plottype' `layer' `p' `myframe' `myarguments', `myoptions'
         c_local plot `plot'
         c_local p `p'
     end
@@ -47,54 +36,20 @@
 
 program __geoplot_layer
     version 16.1
-    gettoken i 0 : 0
-    if `i' {
-        _layeri `0'
-    }
-    else {
-        _layer `0'
-    }
-    c_local plot `plot'
-    c_local p `p'
-end
-
-program _layeri
-    gettoken plottype 0 : 0
-    gettoken layer 0 : 0
-    gettoken p 0 : 0
-    _parse comma lhs 0 : 0
-    syntax [, LABel(str asis) * ]
-    _process_coloropts options, `options'
-    local ++p
-    if `layer'<. {
-        _parse_label `label'
-        if `"`label'"'=="" local label `"`plottype'"'
-        _add_quotes label `label'
-        if `:list sizeof label'>1 local label `"`"`label'"'"'
-        char LAYER[hasz_`layer'] 0
-        char LAYER[keys_`layer'] `p'
-        char LAYER[labels_`layer'] `"`label'"'
-    }
-    c_local p `p'
-    c_local plot (`plottype' `lhs', `options')
-end
-
-program _layer
     // setup
     gettoken plottype 0 : 0
     gettoken layer 0 : 0
     gettoken p 0 : 0
     gettoken frame 0 : 0, parse(" ,")
     local hasSHP 0
-    local TYPE
     local OPTS NOLEGEND LABel(str asis) Feature(passthru) box BOX2(str)/*
         */ SELect(str asis)
     local hasPLV 0
     local PLVopts
     local WGT
     local MLABopts
-    local Zopts COLORVar(varname numeric fv)/*
-        */ LEVels(str) cuts(numlist sort min=2) DISCRete MISsing(str asis) /*
+    local Zopts COLORVar(str)/*
+        */ LEVels(str) cuts(numlist) DISCRete MISsing(str asis) /*
         */ COLor(passthru) LWidth(passthru) LPattern(passthru)
     local Zel color lwidth lpattern
     local YX Y X // coordinate variable names used in plot data
@@ -116,13 +71,16 @@ program _layer
     else {
         if substr(`"`plottype'"',1,2)=="pc" { // paired coordinate plot
             local TYPE pc
+            local hasSHP 1
             local OPTS `OPTS' COORdinates(namelist min=4 max=4)
             local YX  Y  X Y2 X2 // variable names used in plot data
         }
         else {  // scatter assumed
-            local TYPE unit
+            local TYPE attribute
             local OPTS `OPTS' COORdinates(namelist min=2 max=2)/*
-                */ wmax WMAX2(numlist max=1 >0)
+                */ wmax WMAX2(numlist max=1 >0)/*
+                */ shp lock IFshp(str asis) id(name)/*
+                */ CENTRoids(varlist numeric min=2 max=2)
             local WGT [iw/]
             local wgt "[aw=W]"
         }
@@ -137,13 +95,22 @@ program _layer
     // collect info from syntax, frame and possible shpframe
     frame `frame' {
         // syntax
-        qui syntax [varlist(default=none max=1 numeric fv)] [if] [in] `WGT'/*
+        qui syntax [anything] [if] [in] `WGT'/*
             */ [, `OPTS' `Zopts' `PLVopts' `MLABopts' * ]
         // check zvar
+        _parse_zvar 0 varlist `anything'
+        _parse_zvar 1 colorvar `colorvar'
         if `"`colorvar'"'!="" local zvar `colorvar'
         else                  local zvar `varlist'
-        _parse_zvar `zvar' // returns zvar, discrete
+        if substr("`zvar'",1,2)=="i." {    // i.zvar
+            local zvar = substr("`zvar'",3,.)
+            local discrete 1
+        }
+        else local discrete = "`discrete'"!=""
         local hasZ = `"`zvar'"'!=""
+        _parse_levels `levels' // => levels, method, l_wvar
+        local cuts: list uniq cuts
+        _parse_label `label' // => label, nolabel, format, reverse
         // varia
         if `"`box2'"'!="" local box box
         local hasMLAB = (`"`mlabi'"'!="") + ("`mlabz'"!="") + ("`mlabel'"!="")
@@ -151,12 +118,9 @@ program _layer
             di as err "only one of mlabel(), mlabi(), and mlabz allowed"
             exit 198
         }
-        local cuts: list uniq cuts
         _parse_size `size' // => size, s_max, s_scale
         local hasSIZE = `"`size'"'!=""
-        _parse_levels `levels' // => levels, method, l_wvar
         if `"`fcolor'"'!="" mata: _get_colors("fcolor")
-        _parse_label `label' // => label, nolabel, format, reverse
         // sample
         marksample touse, novarlist
         // feature
@@ -168,30 +132,49 @@ program _layer
                 if "`fintensity'"=="" local fintensity fintensity(50)
             }
         }
-        // check shpframe
+        // check shpframe and determine data type(s)
+        if "`shp'"!="" local hasSHP 1 // scatter with option shp
         if `hasSHP' {
             geoframe get shpframe, local(shpframe)
             local hasSHP = `"`shpframe'"'!=""
         }
         if `hasSHP' {
+            geoframe get type, local(type)
+            if `"`type'"'=="" local type attribute
+            frame `shpframe' {
+                if "`TYPE'"=="pc" local type pc // enforce pc
+                else {
+                    geoframe get type, local(typeSHP)
+                    if `"`typeSHP'"'=="" local typeSHP shape
+                }
+            }
             local org `touse'
             local tgt `touse'
         }
-        else local shpframe `frame'
+        else {
+            local shpframe `frame'
+            if "`TYPE'"=="pc" local type pc // enforce pc
+            else {
+                geoframe get type, local(type)
+                if `"`type'"'=="" local type `TYPE'
+            }
+            local typeSHP `"`type'"'
+        }
         // handle ifshp()
         if strtrim(`"`ifshp'"')!="" {
-            if `hasSHP' {
-                frame `shpframe' {
-                    // tag units with nonzero selection
+            if `hasSHP' local SHPFRAME `shpframe'
+            else        geoframe get shpframe, local(SHPFRAME)
+            if `"`SHPFRAME'"'!="" {
+                frame `SHPFRAME' { // tag units with nonzero selection
                     tempvar merge
-                    geoframe copy `frame' `touse', target(`merge') quietly
-                    qui replace `merge' = 0 if `merge'>=.
-                    qui replace `merge' = 0 if `merge' & !(`ifshp')
-                    geoframe get id, local(shpid) strict
-                    mata: _set_one_if_any("`shpid'" , "`merge'")
+                    qui gen byte `merge' = 1
+                    qui replace  `merge' = 0 if !(`ifshp')
+                    geoframe get id, local(SHPID) strict
+                    mata: _set_one_if_any("`SHPID'" , "`merge'")
                 }
-                drop `touse'
-                geoframe copy `shpframe' `merge', target(`touse') quietly
+                qui geoframe copy `SHPFRAME' `merge'
+                qui replace `touse' = 0 if `touse' & `merge'!=1
+                drop `merge'
             }
             else {
                 qui replace `touse' = 0 if `touse' & !(`ifshp')
@@ -199,11 +182,6 @@ program _layer
         }
         // handle coordinates, PLV, and unit ID
         frame `shpframe' {
-            if "`TYPE'"=="pc" local typeSHP pc // enforce pc
-            else {
-                geoframe get type, local(typeSHP)
-                if `"`typeSHP'"'=="" local typeSHP `TYPE'
-            }
             if "`coordinates'"!="" geoframe flip `coordinates', local(yx)
             else geoframe get coordinates, strict flip local(yx) `typeSHP'
             local ORG `yx'
@@ -236,31 +214,67 @@ program _layer
         else local wgt
         // handle Z
         if `hasZ' {
-            local zfmt: format `zvar'
-            if "`TYPE'"=="shape" & "`id'"=="" geoframe get id, local(id)
+            // tag first obs per ID if type is shape or pc and id is available
+            // or if id() has been specified
+            if inlist(`"`type'"',"shape","pc") & "`id'"=="" {
+                geoframe get id, local(id)
+            }
             if "`id'"!="" {
-                // tag first obs per ID if type is shape and id is available
                 tempname ztouse
                 qui gen byte `ztouse' = `touse'
                 qui replace `ztouse' = 0/*
                     */ if `id'==`id'[_n-1] & `touse'==`touse'[_n-1]
             }
             else local ztouse `touse'
+            // categorize
             tempname ZVAR CUTS NOBS NMIS
-            mata: _z_cuts("`CUTS'", "`zvar'", "`l_wvar'", "`ztouse'") /*
-                fills in CUTS, returns levels */
-            if "`discrete'"!="" & "`nolabel'"=="" {
-                _z_labels `zvar' `levels' `CUTS' // => zlabels
-            }
-            _z_categorize `CUTS' `NOBS' `NMIS', levels(`levels') zvar(`zvar')/*
-                */ gen(`ZVAR') touse(`touse') ztouse(`ztouse') `discrete'
-                /* returns zlevels discrete */
-            if `"`cuts'"'!="" { // check for unmatched obs if cuts() specified
-                qui count if `ZVAR'>=. & `touse'
-                if r(N) {
-                    di as txt "(layer `layer': `zvar' contains values not"/*
-                        */ " covered by cuts())"
+            capt confirm string variable `zvar'
+            if _rc==1 exit 1
+            if _rc { // numeric zvar
+                // determine cuts/levels
+                mata: _z_cuts("`CUTS'", st_local("cuts"), `levels',/*
+                    */ `discrete', "`zvar'", "`method'", "`l_wvar'",/*
+                    */ "`ztouse'") /* fills in CUTS and returns levels */
+                // categorize zvar
+                qui gen `=cond(`levels'>32740,"long",/*
+                    */cond(`levels'>100, "int", "byte"))' `ZVAR' = .
+                mata: _z_categorize("`CUTS'", "`NOBS'", "`NMIS'", `levels',/*
+                    */ `discrete', "`zvar'", "`ZVAR'", "`ztouse'") /* fills in
+                       NOBS, NMIS, ZVAR and returns zindex */
+                if `"`cuts'"'!="" { // check for unmatched obs
+                    qui count if `ZVAR'>=. & `ztouse'
+                    if r(N) local zvarnotcomplete 1
                 }
+                // collect labels/display format
+                if `discrete' & "`nolabel'"=="" {
+                    _z_labels `zvar' `levels' `CUTS' // => zlabels
+                }
+                local zfmt: format `zvar'
+            }
+            else { // string zvar
+                local zvarstr 1
+                local discrete 1
+                local zfmt %8.0g
+                capt numlist "`cuts'", int min(0) range(>0)
+                if _rc==1 exit 1
+                if _rc {
+                    di as err "{it:zvar} is string: values in cuts()"/*
+                        */ " must be positive and integer"
+                    exit 126
+                }
+                local reverse = !`reverse' // flip default order in legend
+                mata: _z_strvar("`CUTS'", st_local("cuts"), /*
+                    */ "`NOBS'", "`NMIS'", "`zvar'", "`ZVAR'", "`ztouse'",/*
+                    */ "`nolabel'"!="") /* fills in CUTS, NOBS, NMIS, ZVAR and
+                       returns levels, zindex, zlabels, zvarnotcomplete */
+            }
+            // fill in remaining obs
+            if "`touse'"!="`ztouse'" { 
+                qui replace `ZVAR' = `ZVAR'[_n-1] if `touse' & !`ztouse'
+            }
+            if "`zvarnotcomplete'"=="1" {
+                di as txt "(layer `layer': {it:zvar} contains values"/*
+                    */ " not covered by cuts())"
             }
             if `hasSHP' {
                 local org `org' `ZVAR'
@@ -351,10 +365,18 @@ program _layer
                 mata: _generate_mlabels("`MLAB'", "`mlabel'", "`mlabformat'",/*
                     */ "`touse'")
             }
+            if `hasSHP' {
+                local org `org' `MLAB'
+                local tgt `tgt' `MLAB'
+            }
             local ORG `ORG' `MLAB'
             local TGT `TGT' MLAB
         }
         else local mlabcolor
+        // remove obs with missing ZVAR (only if zvar is string)
+        if "`zvarstr'`zvarnotcomplete'"=="11" {
+            qui replace `touse' = 0 if `ZVAR'>=.
+        }
         // select option
         if strtrim(`"`select'"')!="" {
             qui replace `touse' = 0 if `touse' & !(`select')
@@ -366,7 +388,11 @@ program _layer
     // copy relevant variables from unit frame into shpframe
     if `hasSHP' {
         frame `shpframe' {
-            geoframe copy `frame' `org', target(`tgt') quietly
+            capt geoframe copy `frame' `org', target(`tgt') unique
+            if _rc==1 exit 1
+            if _rc { // try again with estimation sample only
+                qui geoframe copy `frame' `org' if `touse', target(`tgt') unique
+            }
             qui replace `touse' = 0 if `touse'>=.
             if strtrim(`"`ifshp'"')!="" {
                 qui replace `touse' = 0 if `touse' & !(`ifshp')
@@ -375,7 +401,7 @@ program _layer
     }
     // copy data into main frame
     local n0 = _N + 1
-    qui geoframe append `shpframe' `ORG', target(`TGT') touse(`touse')
+    qui geoframe append `shpframe' `ORG', target(`TGT') touse(`touse') raw fast
     local n1 = _N
     //local n1 = _N
     if `n1'<`n0' {
@@ -451,9 +477,12 @@ program _layer
             if `"`color'"'=="" local color `"`mlabcolor'"'
         }
         // - process missing
-        if `NMIS' _z_parse_missing `plottype' `hasMLAB', `missing'
+        if `NMIS' {
+            _z_parse_missing `plottype' `hasMLAB', `missing'
+            if !`levels' local COLOR color // turn color on if only missing
+        }
     }
-    else local zlevels 0
+    else local zindex 0
     // Set default options
     if `"`plottype'"'=="area" {
         local opts cmissing(n) nodropbase lalign(center) `opts'
@@ -503,11 +532,11 @@ program _layer
                 local `EL': copy local `el'
             }
         }
-        foreach i of local zlevels {
+        foreach i of local zindex {
             local IFF `iff'
             if `hasZ' {
-                if `i'==0 {
-                    local OPTS `opts' `missing' // missing
+                if `i'==0 { // missing
+                    local OPTS `opts'
                 }
                 else {
                     local OPTS
@@ -537,6 +566,11 @@ program _layer
             if `enclave' local OPTS `OPTS' fcolor(`ecolor')
             else         local OPTS `OPTS' `fcolor'
             local OPTS `OPTS' `options'
+            if `hasZ' {
+                if `i'==0 { // missing
+                    local OPTS `OPTS' `missing'
+                }
+            }
             if `"`OPTS'"'!="" {
                 local IFF `IFF', `OPTS'
             }
@@ -611,7 +645,7 @@ program _layer
         else             local MLBLS mlabi
         if `hasZ' {
             local MLABI
-            foreach i of local zlevels {
+            foreach i of local zindex {
                 if `"`MLABI'"'=="" { // recycle
                     local MLABI: copy local `MLBLS'
                 }
@@ -665,19 +699,39 @@ program _layer
     c_local p `p'
 end
 
-program _parse_zvar
-    if "`0'"=="" exit
-    if substr("`0'",1,2)=="i." {    // i.zvar
-        c_local zvar = substr("`0'",3,.)
-        c_local discrete discrete
+program _parse_zvar // parse [i.]zvar; remove "i." if zvar is string
+    gettoken opt 0 : 0
+    gettoken lnm 0 : 0
+    // nothing to do if empty
+    local l: list sizeof 0
+    if `l'==0 {
+        c_local `lnm'
         exit
     }
-    capt confirm variable `0'
-    if _rc==1 exit _rc
-    if _rc {
-        di as err `"`0' not allowed"'
-        exit 198
+    // must be single token
+    if `l'>1 {
+        if `opt' di as err "`lnm'(): " _c
+        di as err "too many variables specified"
+        exit 103
     }
+    gettoken 0 : 0 // strip leading space
+    // strip "i." if string
+    if substr(`"`0'"',1,2)=="i." {
+        local 00: copy local 0
+        local 0 = substr(`"`0'"',3,.)
+        capt syntax varname(str)
+        if _rc==1 exit 1
+        if _rc local 0: copy local 00
+    }
+    // parse varlist
+    if `opt' {
+        local 0 `", `lnm'(`0')"'
+        syntax, `lnm'(varname fv)
+        c_local `lnm' ``lnm''
+        exit
+    }
+    syntax varname(fv)
+    c_local `lnm' `varlist'
 end
 
 program _parse_feature
@@ -696,7 +750,10 @@ program _parse_size
 end
 
 program _parse_levels
-    if `"`0'"'=="" exit
+    if `"`0'"'=="" {
+        c_local levels .
+        exit
+    }
     capt n __parse_levels `0'
     if _rc==1 exit _rc
     if _rc {
@@ -734,31 +791,6 @@ program __parse_levels
     c_local levels `n'
     c_local method `method'
     c_local l_wvar `weight'
-end
-
-program _z_categorize
-    syntax anything, levels(str) zvar(str) gen(str)/*
-        */ touse(str) ztouse(str) [ discrete ]
-    gettoken CUTS anything : anything
-    gettoken NOBS anything : anything
-    gettoken NMIS anything : anything
-    //local nobs
-    local discrete = "`discrete'"!=""
-    tempname tmp
-    local dtype byte
-    if      `levels'>32740 local dtype long
-    else if `levels'>100   local dtype int
-    qui gen `dtype' `tmp' = .
-    mata: _z_categorize(`levels', `discrete', "`CUTS'", "`NOBS'", "`NMIS'",/*
-        */ "`zvar'", "`tmp'", "`ztouse'")
-    if "`touse'"!="`ztouse'" {
-        // fill in remaining obs of shape units
-        qui replace `tmp' = `tmp'[_n-1] if `touse' & !`ztouse'
-    }
-    if "`zvar'"=="`gen'" drop `zvar'
-    rename `tmp' `gen'
-    c_local zlevels `zlevels'
-    c_local discrete `discrete'
 end
 
 program _get_plevel
@@ -808,39 +840,16 @@ program _z_colors
     local 0 `", `0'"'
     syntax [, `nm'(str asis) ]
     mata: _z_color_parselastcomma("`nm'") // returns color and 0
-    syntax [, NOEXPAND n(passthru) IPolate(passthru)/*
-        */ OPacity(passthru) INtensity(passthru) * ]
+    syntax [, class(passthru) n(passthru) IPolate(passthru) * ]
     if "`noexpand'"=="" local noexpand noexpand
     if `"`n'`ipolate'"'=="" local n n(`k')
-    if `"`color'"'!="" {
-        mata: _parse_colorspec("color") // check for kw, *#, %#
-        if "`color_is_kw'"!="" {
-            c_local `nm' `"`color'"'
-            c_local sizeofel 1
-            exit
-        }
-        if "`color_is_op'"!="" {
-            if `"`opacity'"'=="" {
-                local opacity opacity(`color_is_op')
-                local color
-            }
-        }
-        if "`color_is_in'"!="" {
-            if `"`intensity'"'=="" {
-                local intensity intensity(`color_is_in')
-                local color
-            }
-        }
-    }
     if `"`color'"'=="" {
-        if `discrete' local color Set1
+        if `discrete' local color st
         else          local color viridis
     }
-    colorpalette `color', nograph `noexpand' `n' `ipolate'/*
-        */ `opacity' `intensity' `options'
+    if `"`class'"'=="" & `discrete' local class class(categorical)
+    colorpalette `color', nograph `class' `n' `ipolate' `options'
     local color `"`r(p)'"'
-    local pclass `"`r(pclass)'"'
-    if `"`pclass'"'=="" & `discrete' local pclass "categorical"
     local l: list sizeof color
     if `l'==0 {
         c_local `nm'
@@ -852,9 +861,8 @@ program _z_colors
         c_local sizeofel 1
         exit
     }
-    if `l'!=`k' {
-        // recycle or interpolate colors if wrong number of colors
-        colorpalette `color', nograph n(`k') class(`pclass')
+    if `l'!=`k' { // recycle colors if wrong number of colors
+        colorpalette `color', nograph class(categorical) n(`k')
         local color `"`r(p)'"'
     }
     c_local `nm' `"`color'"'
@@ -1017,23 +1025,25 @@ program _box
     gettoken n0     args : args
     gettoken n1     args : args
     gettoken TYPE   args : args
-    syntax [, ROTate CIRcle hull PADding(passthru) n(passthru) line/*
-        */ box BOX2(passthru) SIze(passthru) COLORVar(passthru) * ]
+    syntax [, PADding(passthru) ROTate hull CIRcle n(passthru) ANGle(passthru)/*
+        */ noADJust line box BOX2(passthru) SIze(passthru) COLORVar(passthru)/*
+        */ * ]
     if `"`box'`box2'`size'`colorvar'"'!="" {
         di as err "box(): invalid syntax"
         exit 198
     }
+    local boxopts `padding' `rotate' `hull' `circle' `n' `angle' `adjust'
     // copy relevant data into new frame
     tempname XY
     frame create `XY'
     mata: _box_copy_XY("`XY'", `n0', `n1', "`TYPE'"=="pc")
     // generate frame containing box
     tempname BOX
-    frame `XY': qui geoframe bbox `BOX', `rotate' `circle' `hull' `padding' `n'
+    frame `XY': qui geoframe bbox `BOX', `boxopts'
     // compile plot
     if "`line'"!="" local plottype line
     else            local plottype area
-    _layer `plottype' . `p' `BOX', `options'
+    __geoplot_layer `plottype' . `p' `BOX', `options'
     // returns
     c_local plot `plot'
     c_local p `p'
@@ -1045,21 +1055,18 @@ mata set matastrict on
 
 void _set_one_if_any(string scalar id, string scalar touse)
 {
-    real scalar    i, n
-    real colvector a, b 
+    real scalar    i, n, a, b
+    real colvector p
     real matrix    ID, TOUSE
     
     st_view(ID=., ., id)
     st_view(TOUSE=., ., touse)
-    n = rows(ID)
-    a = selectindex(_mm_uniqrows_tag(ID))
-    i = rows(a)
-    if (i<=1) b = n
-    else      b = a[|2 \. |] :- 1 \ n
+    p = selectindex(_mm_unique_tag(ID))
+    i = rows(p)
+    a = rows(ID) + 1
     for (;i;i--) {
-        if (anyof(TOUSE[|a[i] \ b[i]|],1)) {
-            TOUSE[|a[i] \ b[i]|] = J(b[i] - a[i] + 1, 1, 1)
-        }
+        b = a - 1; a = p[i]
+        if (anyof(TOUSE[|a \ b|],1)) TOUSE[|a \ b|] = J(b - a + 1, 1, 1)
     }
 }
 
@@ -1072,18 +1079,16 @@ transmorphic vector _vecrecycle(real scalar k, transmorphic vector x)
     return(J(1, ceil(k/c), x)[|1\k|])
 }
 
-void _z_cuts(string scalar CUTS, string scalar zvar, string scalar wvar,
-    string scalar touse)
+void _z_cuts(string scalar CUTS, string scalar cuts, real scalar k,
+    real scalar discrete, string scalar zvar, string scalar method,
+    string scalar wvar, string scalar touse)
 {
-    string scalar  cuts, method
-    real scalar    discrete, k, lb, ub
+    real scalar    lb, ub
     real rowvector minmax
     real colvector C, X, w, p
     
     // CASE 1: cuts() specified
-    discrete = st_local("discrete")!=""
-    cuts     = st_local("cuts")
-    if (cuts!="") { // cuts() specified
+    if (cuts!="") {
         C = strtoreal(tokens(cuts)')
         k = length(C)
         if (!discrete) k = k - 1
@@ -1092,7 +1097,7 @@ void _z_cuts(string scalar CUTS, string scalar zvar, string scalar wvar,
         return
     }
     // CASE 2: discrete
-    if (discrete) { // discrete specified
+    if (discrete) {
         C = mm_unique(st_data(., zvar, touse))
         C = select(C, C:<.) // remove missing codes
         if (length(C)==0) C = J(0,1,.) // select() may return 0x0
@@ -1109,10 +1114,8 @@ void _z_cuts(string scalar CUTS, string scalar zvar, string scalar wvar,
         st_local("levels", "0")
         return
     }
-    // get requested number of levels and method
-    k = strtoreal(st_local("levels"))
-    if (k>=.) k = 5 // default number of levels
-    method = st_local("method")
+    // default number of levels
+    if (k>=.) k = 5
     // SPECIAL CASE 2: no variance
     lb = minmax[1]; ub = minmax[2]
     if (lb==ub) {
@@ -1176,9 +1179,9 @@ real colvector _z_cuts_kmeans(real scalar k, real colvector X)
     return(sort(select(X[p], _mm_unique_tag(C[p], 1)), 1))
 }
 
-void _z_categorize(real scalar k, real scalar discrete, string scalar cuts,
-    string scalar nobs, string scalar nmis, string scalar zvar,
-    string scalar ztmp, string scalar touse)
+void _z_categorize(string scalar cuts, string scalar nobs, string scalar nmis,
+    real scalar k, real scalar discrete, string scalar zvar,
+    string scalar ZVAR, string scalar touse)
 {
     real scalar    i, n, m, c0, c1
     real rowvector C, N
@@ -1187,7 +1190,7 @@ void _z_categorize(real scalar k, real scalar discrete, string scalar cuts,
     C = st_matrix(cuts)
     N = J(1, k, .)
     st_view(Z=., ., zvar, touse)
-    st_view(T=., ., ztmp, touse)
+    st_view(T=., ., ZVAR, touse)
     if (k) {
         if (!discrete) c0 = C[k+1]
         for (i=k;i;i--) {
@@ -1205,11 +1208,67 @@ void _z_categorize(real scalar k, real scalar discrete, string scalar cuts,
     m = length(p)
     if (m) {
         T[p] = J(m,1,0) // set missings to 0
-        st_local("zlevels", invtokens(strofreal(0..k)))
+        st_local("zindex", invtokens(strofreal(0..k)))
     }
-    else if (k) st_local("zlevels", invtokens(strofreal(1..k)))
-    else        st_local("zlevels", "")
+    else if (k) st_local("zindex", invtokens(strofreal(1..k)))
+    else        st_local("zindex", "")
     st_matrix(nobs, N)
+    st_numscalar(nmis, m)
+}
+
+void _z_strvar(string scalar CUTS, string scalar cuts,
+    string scalar NOBS, string scalar nmis, string scalar zvar,
+    string scalar ZVAR, string scalar touse, real scalar nolabel)
+{
+    real scalar      i, k, m, n
+    real colvector   Z, T, C, N, p
+    string colvector L
+    
+    // get levels
+    st_sview(Z=., ., zvar, touse)
+    L = mm_unique(Z)
+    p = L:!=""
+    m = rows(L) - sum(p)
+    if (m) L = select(L, p)
+    k = rows(L)
+    if (k) C = 1::k
+    else {
+        L = J(0,1,"")
+        C = J(0,1,.)
+    }
+    // select and reorder
+    p = strtoreal(tokens(cuts)')
+    if (length(p)) {
+        p = select(p, p:<=k)
+        if (length(p)) {; L = L[p]; C = C[p]; }
+        else           {; L = J(0,1,""); C = J(0,1,.); }
+        if (length(L)<k) {
+            k = length(L)
+            st_local("zvarnotcomplete","1")
+        }
+    }
+    // generate ZVAR
+    st_view(T=., .,
+        st_addvar(k>32740 ? "long" : (k>100 ? "int" : "byte"), ZVAR), touse)
+    N = J(k,1,.)
+    for (i=k;i;i--) {
+        p = selectindex(Z:==L[i])
+        N[i] = n = length(p)
+        if (n) T[p] = J(n,1,i)
+    }
+    // missings
+    if (m) {
+        T[.] = editmissing(T, 0)
+        st_local("zindex", invtokens(strofreal(0..k)))
+    }
+    else if (k) st_local("zindex", invtokens(strofreal(1..k)))
+    else        st_local("zindex", "")
+    // further returns
+    st_local("levels", strofreal(k))
+    if (nolabel) st_local("zlabels", invtokens(strofreal(C')))
+    else st_local("zlabels", invtokens(("`"+`"""'):+L':+(`"""'+"'")))
+    st_matrix(CUTS, C')
+    st_matrix(NOBS, N')
     st_numscalar(nmis, m)
 }
 
@@ -1285,26 +1344,13 @@ void _get_colors(string scalar lname, | string scalar lname2)
 {   /* function assumes that global ColrSpace object "_GEOPLOT_ColrSpace_S"
        exists; maintaining a global is less work than initializing ColrSpace
        in each call */
-    real scalar      i
-    string scalar    c
-    string rowvector C, kw1, kw2
     pointer (class ColrSpace scalar) scalar S
     
     if (args()<2) lname2 = lname
-    kw1 = ("none", ".", "bg", "fg", "background", "foreground")
-    kw2 = ("*", "%")
     S = findexternal("_GEOPLOT_ColrSpace_S")
     //if ((S = findexternal("_GEOPLOT_ColrSpace_S"))==NULL) S = &(ColrSpace())
-    C = tokens(st_local(lname2))
-    i = length(C)
-    for (;i;i--) {
-        c = C[i]
-        if (anyof(kw1, c)) continue
-        if (anyof(kw2, substr(c,1,1))) continue
-        S->colors("`"+`"""' + C[i] + `"""'+"'")
-        C[i] = S->colors()
-    }
-    st_local(lname, invtokens(C))
+    S->colors(st_local(lname2))
+    st_local(lname, S->colors())
 }
 
 void _parse_colorspec(string scalar lname)

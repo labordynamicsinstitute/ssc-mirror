@@ -1,18 +1,39 @@
 {smcl}
-{* 02nov2023}{...}
+{* 24jun2024}{...}
+{vieweralsosee "geoframe" "help geoframe"}{...}
+{vieweralsosee "colorpalette" "help colorpalette"}{...}
+{vieweralsosee "[G-2] graph" "help graph"}{...}
+{vieweralsosee "[D] frames" "help frames"}{...}
+{viewerjumpto "Syntax" "geoplot##syntax"}{...}
+{viewerjumpto "Description" "geoplot##description"}{...}
+{viewerjumpto "Layer types" "geoplot##layertypes"}{...}
+{viewerjumpto "Options" "geoplot##options"}{...}
+{viewerjumpto "Examples" "geoplot##examples"}{...}
+{viewerjumpto "Stored results" "geoplot##results"}{...}
+{viewerjumpto "Author" "geoplot##author"}{...}
 {hi:help geoplot}{...}
 {right:{browse "https://github.com/benjann/geoplot/"}}
 {hline}
 
 {title:Title}
 
-{pstd}{hi:geoplot} {hline 2} Command to draw maps from shape files
+{pstd}{hi:geoplot} {hline 2} Command to draw maps
 
 
+{marker syntax}{...}
 {title:Syntax}
 
 {p 8 15 2}
     {cmd:geoplot} {cmd:(}{it:layer}{cmd:)} [{cmd:(}{it:layer}{cmd:)} ...]
+    [{cmd:,}
+    {help geoplot##opt:{it:global_options}}
+    ]
+
+{pstd}
+or
+
+{p 8 15 2}
+    {cmd:geoplot} {it:layer} {cmd:||} [ {it:layer} {cmd:||} ...]
     [{cmd:,}
     {help geoplot##opt:{it:global_options}}
     ]
@@ -43,6 +64,8 @@
     {p_end}
 {synopt :{helpb geoplot##point:point}}single-coordinate markers
     {p_end}
+{synopt :{helpb geoplot##point:{ul:sc}atter}}synonym for {cmd:point}
+    {p_end}
 {synopt :{helpb geoplot##labels:{ul:lab}el}}single-coordinate labels
     {p_end}
 {synopt :{helpb geoplot##symbol:{ul:sym}bol}}single-coordinate symbols (circles,
@@ -54,31 +77,22 @@
 {p2coldent:* {helpb geoplot##bar:bar}}stacked bar charts
     {p_end}
 
-{synopt :{helpb geoplot##pcspike:pcspike}}paired-coordinate spikes
-    {p_end}
-{synopt :{helpb geoplot##pcspike:pccapsym}}paired-coordinate spikes capped with
-    symbols
-    {p_end}
-{synopt :{helpb geoplot##pcspike:pcarrow}}paired-coordinate arrows
-    {p_end}
-{synopt :{helpb geoplot##pcspike:pcbarrow}}paired-coordinate arrows with two
-    heads
-    {p_end}
-{synopt :{helpb geoplot##pcspike:pcpoint}}paired-coordinate markers
-    {p_end}
-
 {p2coldent:* {helpb geoplot##pointi:pointi}}{cmd:point} with immediate arguments
     {p_end}
-{p2coldent:* {helpb geoplot##pointi:pci}}{cmd:pcspike} with immediate arguments
+{p2coldent:* {helpb geoplot##pointi:scatteri}}synonym for {cmd:pointi}
     {p_end}
-{p2coldent:* {helpb geoplot##pointi:pcarrowi}}{cmd:pcarrow} with immediate
-    arguments
+{p2coldent:* {helpb geoplot##pointi:labeli}}{cmd:label} with immediate arguments
     {p_end}
 {p2coldent:* {helpb geoplot##symboli:symboli}}{cmd:symbol} with immediate arguments
     {p_end}
+
+{synopt :{helpb geoplot##pcspike:pcspike} etc.}paired-coordinate spikes, arrows, or markers
+    {p_end}
+{p2coldent:* {helpb geoplot##pci:pci} etc.}paired-coordinate plot with immediate arguments
+    {p_end}
 {synoptline}
 {p 4 6 2}
-    * {help geoplot##zopts:{it:zvar_options}} without asterisk not supported.
+    * Unstarred {help geoplot##zopts:{it:zvar_options}} not supported.
 
 
 {synoptset 20 tabbed}{...}
@@ -145,20 +159,22 @@
 {marker opt}{synopthdr:global_options}
 {synoptline}
 {syntab :Main}
+{synopt :{helpb geoplot##background:{ul:back}ground{sf:[}({it:opts}){sf:]}}}draw a
+    background frame behind the map
+    {p_end}
+{synopt :{helpb geoplot##grid:grid{sf:[}({it:options}){sf:]}}}draw grid lines on
+    top of the map
+    {p_end}
+{synopt :{helpb geoplot##tissot:tissot{sf:[}({it:options}){sf:]}}}draw Tissot's
+    indicatrices on top of the map
+    {p_end}
+{synopt :{helpb geoplot##project:{ul:proj}ect{sf:[}({it:spec}){sf:]}}}apply
+    projection (coordinates in degrees assumed)
+    {p_end}
 {synopt :{helpb geoplot##angle:{ul:ang}le({it:angle})}}rotate map by {it:angle}
     {p_end}
-{synopt :{helpb geoplot##tight:tight}}adjust graph size to dimension of map
+{synopt :{helpb geoplot##angle:rotate({it:angle})}}synonym for {cmd:angle()}
     {p_end}
-{synopt :{helpb geoplot##margin:{ul:m}argin({it:spec})}}specify (minimum) margin
-    around map
-    {p_end}
-{synopt :{helpb geoplot##refdim:{ul:ref}dim({it:spec})}}select reference
-    dimension
-    {p_end}
-{synopt :{helpb geoplot##aspect:{ul:aspect}ratio({it:spec})}}adjust aspect
-    ratio of map
-    {p_end}
-{synopt :{help geoplot##twopts:{it:twoway_options}}}twoway options, other than {cmd:by()}
 
 {syntab :Legends}
 {synopt :{helpb geoplot##legend:{ul:leg}end{sf:[}({it:options}){sf:]}}}add
@@ -178,6 +194,22 @@
     can be repeated
     {p_end}
 
+{syntab :Overall appearance}
+{synopt :{helpb geoplot##tight:tight}}adjust graph size to dimension of map
+    {p_end}
+{synopt :{helpb geoplot##margin:{ul:m}argin({it:spec})}}specify (minimum) margin
+    around map
+    {p_end}
+{synopt :{helpb geoplot##refdim:{ul:ref}dim({it:spec})}}select reference
+    dimension
+    {p_end}
+{synopt :{helpb geoplot##aspect:{ul:aspect}ratio({it:spec})}}adjust aspect
+    ratio of map
+    {p_end}
+{synopt :{helpb geoplot##axes:axes}}turn display of Stata's coordinate system on
+    {p_end}
+{synopt :{help geoplot##twopts:{it:twoway_options}}}twoway options, other than {cmd:by()}
+
 {syntab :Data}
 {synopt :{helpb geoplot##frame:frame({it:spec})}}store ploted data in new frame
     {p_end}
@@ -186,6 +218,7 @@
 {synoptline}
 
 
+{marker description}{...}
 {title:Description}
 
 {pstd}
@@ -196,7 +229,7 @@
 
 {pstd}
     Multiple layers of elements such as regions, borders, lakes, roads, labels,
-    etc., can be freely combined. The look of the elements can be varied
+    etc., can be freely combined, and the look of the elements can be varied
     depending on the values of variables.
 
 {pstd}
@@ -213,29 +246,28 @@
         {com}. {stata ssc install moremata}{txt}
 
 
+{marker layertypes}{...}
 {title:Layer types}
 
 {marker area}{...}
 {dlgtab:shapes, potentially filled}
 
 {p 8 15 2}
-    {cmd:area} {it:frame} [{help geoplot##zvar:{it:zvar}}] {ifin} {weight}
-    [{cmd:,}
-    {it:options} ]
+    {cmd:area} {it:frame} [[{cmd:i.}]{help geoplot##zvar:{it:zvar}}] {ifin} {weight}
+    [{cmd:,} {it:options} ]
 
 {pstd}
     where {it:frame} is the frame containing the shapes to be
-    plotted (see {helpb geoframe}; {it:frame} can be a shape frame or an 
-    attribute frame that has been linked to a shape frame), {help geoplot##zvar:{it:zvar}}
+    plotted (see {helpb geoframe}; {it:frame} can be a shape frame or an
+    attribute frame that is linked to a shape frame), {help geoplot##zvar:{it:zvar}}
     is an optional variable to determine styling, and {it:weight}, specified as
     {cmd:[}{cmdab:w:eight}{cmd:=}{it:exp}{cmd:]} or
     {cmd:[}{cmdab:iw:eight}{cmd:=}{it:exp}{cmd:]}, rescales the coordinates of
-    the shapes by the absolute (and normalized) values of {it:exp}. Type
-    {cmd:i.}{it:zvar} to treat {help geoplot##zvar:{it:zvar}} as a categorical
-    variable. {it:options} are as follows.
+    the shapes by the absolute (and normalized) values of {it:exp}. {it:options}
+    are as follows.
 
 {phang}
-    {it:{help geoplot##zopts:zvar_options}} are options determining the look of
+    {it:{help geoplot##zopts:zvar_options}} determine the look of
     the shapes (e.g. color) depending on the values of
     {help geoplot##zvar:{it:zvar}} as described
     {help geoplot##zvar_options:below}.
@@ -272,10 +304,10 @@
 
 {phang}
     {opth if:shp(exp)} specifies an additional {it:if} condition to be applied to
-    the shape frame. This is relevant if {it:frame} is an attribute frame that
-    has been linked to a shape frame. Observations in the shape frame that do not
+    the shape frame. This is relevant if {it:frame} is an attribute frame is
+    linked to a shape frame. Observations in the shape frame that do not
     satisfy the specified condition (i.e., observations for which {it:exp} evaluates
-    to zero), as well as units in the attribute frame for which {cmd:ifshp()}
+    to zero), as well as units in the attribute frame for which the condition
     leads to an empty selection in the shape frame, will be excluded. If {it:frame}
     is a shape frame (i.e. not an attribute frame linked to a shape frame), {cmd:ifshp()}
     is treated in the same way as the {it:{help if}} qualifier.
@@ -289,23 +321,25 @@
     covered by a corresponding exclave.
 
 {phang}
-    {it:{help area_options}} are options to affect the look of areas as
+    {it:{help area_options}} affect the look of areas as
     described in {helpb twoway area}. For example, use option {cmd:lcolor()} to
     set the outline color. Color options support {it:colorspec} as described in
     {helpb colorpalette##colorlist:colorpalette}.
 
 {phang}
-    {opt lock} causes the orientation of the shapes to be unaffected by global
-    option {helpb geoplot##angle:angle()}. That is, if {cmd:lock} is specified,
-    {helpb geoplot##angle:angle()} will rotate positions only.
+    {opt lock} causes the shapes to be unaffected by global
+    options {helpb geoplot##project:project()} and
+    {helpb geoplot##angle:angle()}, apart from location. For example,
+    if {cmd:lock} is specified, {helpb geoplot##angle:angle()} will rotate
+    only the positions of the shapes, but not their orientation.
 
 {phang}
     {opt box}[{cmd:(}{it:suboptions}{cmd:)}] draws a bounding box around the
     plotted shapes. {it:suboptions} are as follows.
 
 {phang2}
-    {opt rot:ate}, {opt cir:cle}, {opt hull}, {opt pad:ding(#)}, and {opt n(n)} as
-    described in help {helpb geoframe##bbox:geoframe bbox}.
+    {cmd:padding()}, {cmd:rotate}, {cmd:hull}, {cmd:circle}, {cmd:n()}, {cmd:angle()},
+    and {cmd:noadjust} as described in help {helpb geoframe##bbox:geoframe bbox}.
 
 {phang2}
     {opt line} plots the bounding box using plot type {helpb geoplot##line:line}. The
@@ -368,20 +402,18 @@
 {dlgtab:shapes, line only}
 
 {p 8 15 2}
-    {cmd:line} {it:frame} [{help geoplot##zvar:{it:zvar}}] {ifin} {weight}
+    {cmd:line} {it:frame} [[{cmd:i.}]{help geoplot##zvar:{it:zvar}}] {ifin} {weight}
     [{cmd:,}
     {it:options} ]
 
 {pstd}
     where {it:frame} is the frame containing the shapes to be
-    plotted (see {helpb geoframe}; {it:frame} can be a shape frame or an 
-    attribute frame that has been linked to a shape frame), {help geoplot##zvar:{it:zvar}}
+    plotted (see {helpb geoframe}; {it:frame} can be a shape frame or an
+    attribute frame that is linked to a shape frame), {help geoplot##zvar:{it:zvar}}
     is an optional variable to determine styling, and {it:weight}, specified as
     {cmd:[}{cmdab:w:eight}{cmd:=}{it:exp}{cmd:]} or
     {cmd:[}{cmdab:iw:eight}{cmd:=}{it:exp}{cmd:]}, rescales the coordinates of
-    the shapes by the absolute (and normalized) values of {it:exp}. Type
-    {cmd:i.}{it:zvar} to treat {help geoplot##zvar:{it:zvar}} as a categorical
-    variable. {it:options} are as follows.
+    the shapes by the absolute (and normalized) values of {it:exp}. {it:options} are as follows.
 
 {phang}
     {it:{help geoplot##zopts:zvar_options}}, {cmd:wmax()}, {cmd:size()}, {cmd:select()},
@@ -390,7 +422,7 @@
     options as described for layer type {helpb geoplot##area:area}.
 
 {phang}
-    {it:{help line_options}} are options to affect the look of lines as
+    {it:{help line_options}} affect the look of lines as
     described in {helpb twoway line}. For example, use option {cmd:lwidth()} to
     set the width of lines. Color options support {it:colorspec} as described in
     {helpb colorpalette##colorlist:colorpalette}.
@@ -399,7 +431,7 @@
 {dlgtab:single-coordinate markers}
 
 {p 8 15 2}
-    {cmd:point} {it:frame} [{help geoplot##zvar:{it:zvar}}] {ifin} {weight}
+    {cmd:point} {it:frame} [[{cmd:i.}]{help geoplot##zvar:{it:zvar}}] {ifin} {weight}
     [{cmd:,}
     {it:options} ]
 
@@ -410,28 +442,36 @@
     {cmd:[}{cmdab:w:eight}{cmd:=}{it:exp}{cmd:]} or
     {cmd:[}{cmdab:iw:eight}{cmd:=}{it:exp}{cmd:]}, scales the size of the
     markers by the absolute (and normalized) values of {it:exp} (also see
-    {help scatter##remarks14:Weighted markers} in {helpb twoway scatter}). Type
-    {cmd:i.}{it:zvar} to treat {help geoplot##zvar:{it:zvar}} as a categorical
-    variable. {cmdab:sc:atter} may be used as a synonym for {cmd:point}. {it:options}
+    {help scatter##remarks14:Weighted markers} in {helpb twoway scatter}). {it:options}
     are as follows.
 
 {phang}
     {it:{help geoplot##zopts:zvar_options}}, {cmd:wmax()}, {cmd:select()},
-    {opt box()}, and {opt coordinates()} are
+    {cmd:ifshp()}, {cmd:lock}, {opt box()}, {opt coordinates()}, {opt id()},
+    and {opt centroids()} are
     options as described for layer type {helpb geoplot##area:area}.
 
 {phang}
     {it:{help marker_options}}, {it:{help marker_label_options}},
-    {it:{help connect_options}}, and {it:jitter_options} are options to affect
+    {it:{help connect_options}}, and {it:jitter_options} affect
     the look of markers as described in {helpb twoway scatter}. For example,
     use option {cmd:msymbol()} to set the marker symbol. Color options
     support {it:colorspec} as described in {helpb colorpalette##colorlist:colorpalette}.
+
+{phang}
+    {cmd:shp} causes points to be plotted at the coordinates from the
+    linked shape frame. By default, layer type {cmd:point} uses the coordinates
+    from {it:frame} even if {it:frame} is linked to a shape frame. Option {cmd:shp} has
+    no effect if {it:frame} is not linked to a shape frame.
+
+{pstd}
+    {cmd:scatter} may be used as a synonym for {cmd:point}.
 
 {marker labels}{...}
 {dlgtab:single-coordinate labels}
 
 {p 8 15 2}
-    {cmd:label} {it:frame} {it:labelspec} [{help geoplot##zvar:{it:zvar}}] {ifin}
+    {cmd:label} {it:frame} {it:labelspec} [[{cmd:i.}]{help geoplot##zvar:{it:zvar}}] {ifin}
     [{cmd:,}
     {it:options} ]
 
@@ -439,15 +479,13 @@
     where {it:frame} is the frame containing the coordinates of the labels to be
     plotted (see {helpb geoframe}), {it:labelspec} provides the labels,
     and {help geoplot##zvar:{it:zvar}} is an optional
-    variable to determine styling. Type
-    {cmd:i.}{it:zvar} to treat {help geoplot##zvar:{it:zvar}} as a categorical
-    variable.
+    variable to determine styling.
 
 {pstd}
     The syntax of {it:labelspec} is as follows. To print labels from a variable, type
 
 {p 8 15 2}
-    {cmd:label} {it:frame} {help varname:{it:labelvar}} [{help geoplot##zvar:{it:zvar}}]
+    {cmd:label} {it:frame} {help varname:{it:labelvar}} [[{cmd:i.}]{help geoplot##zvar:{it:zvar}}]
     {ifin} [{cmd:,} {it:options} ]
 
 {pstd}
@@ -456,29 +494,31 @@
 
 {p 8 15 2}
     {cmd:label} {it:frame} {cmd:("}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} {it:...}]{cmd:)}
-    [{help geoplot##zvar:{it:zvar}}] {ifin} [{cmd:,} {it:options} ]
+    [[{cmd:i.}]{help geoplot##zvar:{it:zvar}}] {ifin} [{cmd:,} {it:options} ]
 
 {pstd}
-    If {help geoplot##zvar:{it:zvar}} is omitted, the first {cmd:"}{it:text}{cmd:"} element 
+    If {help geoplot##zvar:{it:zvar}} is omitted, the first {cmd:"}{it:text}{cmd:"} element
     will be assigned to all selected observations. Othewise
     the elements will be assigned one-by-one to the levels determined by
     {help geoplot##zvar:{it:zvar}} (using the first element for missing, if there
     are missing values; elements will be recycled if there are fewer elements than
     levels). SMCL markup directives can be used in {it:text}; see
     {help graph_text:{bf:[G-4]} {it:text}}. Finally, to print labels
-    as defined by {helpb geoplot##label:label()} and
+    as defined by options {helpb geoplot##label:label()} and
     {helpb geoplot##missing:missing(label())}, type
 
 {p 8 15 2}
-    {cmd:label} {it:frame} {cmd:.} [{help geoplot##zvar:{it:zvar}}] {ifin} [{cmd:,} {it:options} ]
+    {cmd:label} {it:frame} {cmd:.} [[{cmd:i.}]{help geoplot##zvar:{it:zvar}}] {ifin} [{cmd:,} {it:options} ]
 
 {pstd}
     {it:options} are as follows.
 
 {phang}
-    {it:{help geoplot##zopts:zvar_options}}, {opt box()}, {cmd:select()}, and
-    {opt coordinates()} are
-    options as described for layer type {helpb geoplot##area:area}.
+    {it:{help geoplot##zopts:zvar_options}}, {cmd:select()}, {cmd:ifshp()},
+    {cmd:lock}, {opt box()}, {opt coordinates()}, {opt id()},
+    and {opt centroids()} are
+    options as described for layer type {helpb geoplot##area:area}; option {cmd:shp}
+    is as described for layer type {helpb geoplot##point:point}.
 
 {phang}
     {opth si:ze(textsizestyle)},
@@ -506,7 +546,7 @@
 {dlgtab:single-coordinate symbols}
 
 {p 8 15 2}
-    {cmdab:sym:bol} {it:frame} [{help geoplot##zvar:{it:zvar}}] {ifin} {weight}
+    {cmdab:sym:bol} {it:frame} [[{cmd:i.}]{help geoplot##zvar:{it:zvar}}] {ifin} {weight}
     [{cmd:,}
     {it:options} ]
 
@@ -516,9 +556,7 @@
     variable to determine styling, and {it:weight}, specified as
     {cmd:[}{cmdab:w:eight}{cmd:=}{it:exp}{cmd:]} or
     {cmd:[}{cmdab:iw:eight}{cmd:=}{it:exp}{cmd:]}, scales the symbols by the
-    absolute (and normalized) values of {it:exp}. Type
-    {cmd:i.}{it:zvar} to treat {help geoplot##zvar:{it:zvar}} as a categorical
-    variable. {it:options} are as follows.
+    absolute (and normalized) values of {it:exp}. {it:options} are as follows.
 
 {phang}
     {opt sh:ape(spec)} selects or defines the shape of the symbols. {it:shape} may be
@@ -620,9 +658,7 @@
             }{txt}
 
 {pmore}
-    and then type {cmd:shape(Kite)}. Note that repeating the first point at the
-    end is not strictly necessary (at
-    least if option {cmd:line} is not specified). Multipart symbols can be
+    and then type {cmd:shape(Kite)}. Multipart symbols can be
     created by introducing a missing point between parts.
 
 {phang}
@@ -679,6 +715,9 @@
     option {cmd:line} has been specified, are regular graph options to affect
     the look of the symbols. Color options support {it:colorspec} as described in
     {helpb colorpalette##colorlist:colorpalette}.
+
+{phang}
+    {it:{help marker_label_options}} to add marker labels.
 
 {phang}
     {it:{help geoplot##zopts:zvar_options}}, {cmd:wmax()}, {cmd:select()}, {cmd:ecolor()}, {cmd:box()},
@@ -796,7 +835,7 @@
 {phang}
     {it:{help geoplot##zopts:zvar_options}}, {cmd:wmax()}, {cmd:select()},
     {it:{help area_options}}, {cmd:box()}, and {opt coordinates()} are options as described
-    for layer type {helpb geoplot##area:area}. {it:zvar_options} without asterisk
+    for layer type {helpb geoplot##area:area}. Unstarred {it:zvar_options}
     will be ignored.
 
 {marker bar}{...}
@@ -876,39 +915,129 @@
 {phang}
     {it:{help geoplot##zopts:zvar_options}}, {cmd:wmax()}, {cmd:select()},
     {it:{help area_options}}, {cmd:box()}, and {opt coordinates()} are options as described
-    for layer type {helpb geoplot##area:area}. {it:zvar_options} without asterisk
+    for layer type {helpb geoplot##area:area}. Unstarred {it:zvar_options}
     will be ignored.
+
+{marker pointi}{...}
+{dlgtab:point with immediate arguments}
+
+{p 8 15 2}
+    {cmd:pointi} {it:immediate_values} [{cmd:,} {it:options} ]
+
+{pstd}
+    where {it:immediate_values} is one or more of
+
+        {it:#_x} {it:#_y} [{cmd:(}{help clockposstyle:{it:clockpos}}{cmd:)}] [{cmd:"}{it:text}{cmd:"}]
+
+{pstd}
+    Arguments {it:#_x} and {it:#_y} specify the position of the point,
+    {bf:"}{it:text}{bf:"} specifies an optional marker label, and
+    {it:clockpos} specifies the location of the label
+    (see {it:{help clockposstyle}}). {it:options} are as follows.
+
+{phang}
+    {opt lab:el(label)} sets a key label
+    for use by {helpb geoplot##legend:legend()}, where {it:label} is
+    {cmd:"}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} {it:...}]. Multiple lines
+    are created if multiple {cmd:"}{it:text}{cmd:"} elements are specified.
+
+{phang}
+    Rendering options as described for layertype {helpb geoplot##point:point}.
+
+{pstd}
+    {cmd:scatteri} may be used as a synonym for {cmd:pointi}.
+
+{marker labeli}{...}
+{dlgtab:label with immediate arguments}
+
+{p 8 15 2}
+    {cmd:labeli} {it:immediate_values} [{cmd:,} {it:options} ]
+
+{pstd}
+    and where {it:immediate_values} is one or more of
+
+        {it:#_x} {it:#_y} [{cmd:(}{help clockposstyle:{it:clockpos}}{cmd:)}] {cmd:"}{it:text}{cmd:"}
+
+{pstd}
+    Arguments {it:#_x} and {it:#_y} specify the anchor point of the label,
+    {bf:"}{it:text}{bf:"} specifies the text of the label, and
+    {it:clockpos} specifies the location of the label
+    (see {it:{help clockposstyle}}; default is {cmd:0}). {it:options} are as follows.
+
+{phang}
+    {opt lab:el(label)} sets a key label
+    for use by {helpb geoplot##legend:legend()}, where {it:label} is
+    {cmd:"}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} {it:...}]. Multiple lines
+    are created if multiple {cmd:"}{it:text}{cmd:"} elements are specified.
+
+{phang}
+    Rendering options as described for layertype {helpb geoplot##labels:label}.
+
+{marker symboli}{...}
+{dlgtab:symbol with immediate arguments}
+
+{p 8 15 2}
+    {cmd:symboli} {it:immediate_values} [{cmd:,} {it:options} ]
+
+{pstd}
+    where {it:immediate_values} is one or more of
+
+        {it:#_x} {it:#_y} [{cmd:[}[{cmd:*}]{it:size}{cmd:]}] [{cmd:(}{help clockposstyle:{it:clockpos}}{cmd:)}] [{cmd:"}{it:text}{cmd:"}]
+
+{pstd}
+    Arguments {it:#_x} and {it:#_y} specify the position of the symbol and optional argument
+    {it:size} specifies a custom size for the symbol ({it:size} must be enclosed in
+    square brackets). Specify {cmd:*}{it:size} to multiply the default size by
+    {it:size}; specify {it:size} without {cmd:*} for an absolute size. Furthermore,
+    {bf:"}{it:text}{bf:"} specifies an optional label and {it:clockpos}
+    specifies the location of the label (see {it:{help clockposstyle}}). Options
+    are as follows.
+
+{phang}
+    {cmdab:si:ze(}[{cmd:*}]{it:size}{cmd:)} sets the size argument for those
+    symbols for which no custom size has been specified.
+
+{phang}
+    {opt lab:el(label)} sets a key label
+    for use by {helpb geoplot##legend:legend()}, where {it:label} is
+    {cmd:"}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} {it:...}]. Multiple lines
+    are created if multiple {cmd:"}{it:text}{cmd:"} elements are specified.
+
+{phang}
+    Rendering options as described for layertype {helpb geoplot##symbol:symbol}.
 
 {marker pcspike}{...}
 {dlgtab:paired-coordinate spikes, arrows, or markers}
 
 {p 8 15 2}
-    {cmd:pcspike} {it:frame} [{help geoplot##zvar:{it:zvar}}] {ifin}
-    [{cmd:,} {it:options} ]
-
-{p 8 15 2}
-    {cmd:pccapsym} {it:frame} [{help geoplot##zvar:{it:zvar}}] {ifin}
-    [{cmd:,} {it:options} ]
-
-{p 8 15 2}
-    {cmd:pcarrow} {it:frame} [{help geoplot##zvar:{it:zvar}}] {ifin}
-    [{cmd:,}  {it:options} ]
-
-{p 8 15 2}
-    {cmd:pbcarrow} {it:frame} [{help geoplot##zvar:{it:zvar}}] {ifin}
-    [{cmd:,} {it:options} ]
-
-{p 8 15 2}
-    {cmd:pcpoint} {it:frame} [{help geoplot##zvar:{it:zvar}}] {ifin}
+    {it:pctype} {it:frame} [{help geoplot##zvar:{it:zvar}}] {ifin}
     [{cmd:,} {it:options} ]
 
 {pstd}
-    where {it:frame} is the frame containing the paired coordinates (see
+    where {it:pctype} is
+
+{p2colset 9 22 25 2}{...}
+{p2col:{cmd:pcspike}}paired-coordinate spikes
+    {p_end}
+{p2col:{cmd:pccapsym}}paired-coordinate spikes capped with
+    symbols
+    {p_end}
+{p2col:{cmd:pcarrow}}paired-coordinate arrows
+    {p_end}
+{p2col:{cmd:pcbarrow}}paired-coordinate arrows with two
+    heads
+    {p_end}
+{p2col:{cmd:pcpoint}}paired-coordinate markers
+    {p_end}
+{p2col:{cmd:pcscatter}}synonym for {cmd:pcpoint}
+    {p_end}
+
+{pstd}
+    and {it:frame} is the frame containing the paired coordinates (see
     {helpb geoframe}) and {help geoplot##zvar:{it:zvar}} is an optional
     variable to determine styling. Type
     {cmd:i.}{it:zvar} to treat {help geoplot##zvar:{it:zvar}} as a categorical
-    variable. {cmd:pcscatter} may be used as a synonym
-    for {cmd:pcpoint}. {it:options} are as follows.
+    variable. {it:options} are as follows.
 
 {phang}
     {it:{help geoplot##zopts:zvar_options}}, {cmd:select()}, and {opt box()} are
@@ -926,48 +1055,52 @@
     default is to use the variables returned by
     {helpb geoframe##get:geoframe get coordinates}.
 
-{marker pointi}{...}
-{dlgtab:point, spikes, or arrows with immediate arguments}
+{marker pci}{...}
+{dlgtab:paired-coordinate spikes, arrows, or markers with immediate arguments}
 
 {p 8 15 2}
-    {cmd:pointi} {it:immediate_values} [{cmd:,} {opt lab:el(label)} {it:options} ]
-
-{p 8 15 2}
-    {cmd:pci} {it:immediate_values} [{cmd:,} {opt lab:el(label)} {it:options} ]
-
-{p 8 15 2}
-    {cmd:pcarrowi} {it:immediate_values} [{cmd:,} {opt lab:el(label)} {it:options} ]
+    {it:pcitype} {it:immediate_values} [{cmd:,} {it:options} ]
 
 {pstd}
-    where {it:immediate_values} and {it:options} as described in
-    {helpb twoway scatteri}, {helpb twoway pci}, and {helpb twoway pcarrowi},
-    respectively. Color options support {it:colorspec} as described in
-    {helpb colorpalette##colorlist:colorpalette}. {cmd:scatteri} may be used as
-    a synonym for {cmd:pointi}. Option {opt label(label)}, where {it:label} is
-    {cmd:"}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} {it:...}], sets a key label
-    for use by {helpb geoplot##legend:legend()}. Multiple lines are created if
-    multiple {cmd:"}{it:text}{cmd:"} elements are specified.
+    where {it:pcitype} is
+
+{p2colset 9 22 25 2}{...}
+{p2col:{cmd:pci}}{cmd:pcspike} with immediate arguments
+    {p_end}
+{p2col:{cmd:pccapsymi}}{cmd:pccapsym} with immediate arguments
+    {p_end}
+{p2col:{cmd:pcarrowi}}{cmd:pcarrow} with immediate arguments
+    {p_end}
+{p2col:{cmd:pcbarrowi}}{cmd:pcbarrow} with immediate arguments
+    {p_end}
+{p2col:{cmd:pcpointi}}{cmd:pcpoint} with immediate arguments
+    {p_end}
+{p2col:{cmd:pcscatteri}}synonym for {cmd:pcpointi}
+    {p_end}
 
 {pstd}
-    Note that {cmd:geoplot} passes {it:immediate_values} through to the underlying
-    graph command as is. This means that coordinates must be specified in
-    revere order (i.e. Y followed by X, not X followed by Y).
+    and where {it:immediate_values} is one or more of
 
-{marker symboli}{...}
-{dlgtab:symbol with immediate arguments}
-
-{p 8 15 2}
-    {cmd:symboli} {it:x1} {it:y1} {it:size1} [{it:x2} {it:y2} {it:size2} ...]
-        [{cmd:,} {opt lab:el(label)} {it:options} ]
+        {it:#_x1} {it:#_y1} {it:#_x2} {it:#_y2} [{bf:(}{help clockposstyle:{it:clockpos}}{bf:)}] [{bf:"}{it:text}{bf:"}]
 
 {pstd}
-    where each set of coordinates and size creates a symbol of the specified
-    size at the specified position. Option
-    {opt label(label)} specifies a key label for the legend. {it:options} are
-    as described for layertype {helpb geoplot##symbol:symbol}; option
-    {cmd:size()} will be ignored.
+    Arguments {it:#_x1}, {it:#_y1}, {it:#_x2}, and {it:#_y2} specify the
+    coordinates of the start point and the end point,
+    {bf:"}{it:text}{bf:"} specifies an optional marker label, and
+    {it:clockpos} specifies the location of the label (see
+    {it:{help clockposstyle}}). {it:options} are as follows.
+
+{phang}
+    {opt lab:el(label)} sets a key label
+    for use by {helpb geoplot##legend:legend()}, where {it:label} is
+    {cmd:"}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} {it:...}]. Multiple lines
+    are created if multiple {cmd:"}{it:text}{cmd:"} elements are specified.
+
+{phang}
+    Rendering options as described for layertype {helpb geoplot##pcspike:spcspike}.
 
 
+{marker options}{...}
 {title:Options}
 
 {marker zvar_options}{...}
@@ -975,7 +1108,7 @@
 
 {marker zvar}{...}
 {pstd}
-    Many layer types support (numeric) variable {help varname:{it:zvar}} (or
+    Many layer types support variable {help varname:{it:zvar}} (or
     {cmd:i.}{help varname:{it:zvar}}) as an argument. Specify {it:zvar}
     to determine the colors and other aspects of the
     units displayed in the layer by the values of {it:zvar}. The
@@ -983,15 +1116,19 @@
     level will be represented by a different style. Use the options below to
     determine how {it:zvar} is divided into levels, how the levels will be
     styled, and how the levels will be represented in the legend. Type
-    {cmd:i.}{it:zvar} to treat {help varname:{it:zvar}} as a categorical variable.
+    {cmd:i.}{it:zvar} to treat {help varname:{it:zvar}} as a categorical
+    variable. Each value of {it:zvar} will then be treated as a separate
+    level. Likewise, if {it:zvar} is a string variable, each unique value of
+    {it:zvar} will be treated as a separate level.
 
 {marker discrete}{...}
 {phang}
     {opt discr:ete} treats {help geoplot##zvar:{it:zvar}} as a discrete
-    variable. Each unique value of {help geoplot##zvar:{it:zvar}} will form a
+    variable. Each unique value of {help geoplot##zvar:{it:zvar}} will be treated as a
     separate level. Typing {cmd:i.}{it:zvar} implies {cmd:discrete}. Note that
     {cmd:i.}{it:zvar} only allows positive and integer values, while
-    {cmd:discrete} does not impose such a restriction.
+    {cmd:discrete} does not impose such a restriction. If {it:zvar} is a string
+    variable, {cmd:discrete} is implied.
 
 {marker levels}{...}
 {phang}
@@ -999,7 +1136,7 @@
     levels to be formed by {help geoplot##zvar:{it:zvar}}. By default, a regular grid
     (equidistant cuts) of 5 intervals from the observed minimum to the observed
     maximum of {help geoplot##zvar:{it:zvar}} will be used (first interval closed, remaining intervals
-    left-open). Specify {opt levels(#)} to create {it:#} intervals. Specify {it:method}
+    left-open). Specify {opt levels(#)} to create {it:#} intervals. Specify suboption {it:method}
     to use a non-regular grid, where {it:method} can be one of the following.
 
 {p2colset 13 23 25 2}{...}
@@ -1013,7 +1150,7 @@
     distribution of {help geoplot##zvar:{it:zvar}}. In case of {cmdab:quantile}, weights to be taken
     into account when computing the quantiles can be specified in suboption {cmd:weight()}. Option
     {cmd:levels()} has no effect if {cmd:i.}{it:zvar} or
-    {helpb geoplot##discrete:discrete} is specified.
+    {helpb geoplot##discrete:discrete} is specified, or if {it:zvar} is a string variable.
 
 {marker cuts}{...}
 {phang}
@@ -1022,16 +1159,22 @@
     {help geoplot##zvar:{it:zvar}}. For continuous {help geoplot##zvar:{it:zvar}},
     specify {it:#}+1 breaks to form {it:#} intervals (first interval closed, remaining
     intervals left-open). Observations with values below the first break or above
-    the last break will be ignored. If {cmd:i.}{it:zvar} or {helpb geoplot##discrete:discrete}
+    the last break will be ignored.
+
+{pmore}
+    If {cmd:i.}{it:zvar} or {helpb geoplot##discrete:discrete}
     is specified, {it:numlist} is interpreted as the distinct values of
-    {help geoplot##zvar:{it:zvar}} to be selected.
+    {help geoplot##zvar:{it:zvar}} to be selected. In this case, {it:numlist}
+    also affects the order in which the levels are printed in the legend. Behavior
+    is similar if {it:zvar} is a string variable, except that the
+    values in {it:numlist} are interpreted as indices of alphabetically sorted
+    values.
 
 {marker colorvar}{...}
 {phang}
-    {opt colorvar(zvar)} is an alternative to specifying
-    {help geoplot##zvar:{it:zvar}} as an argument. If both are specified,
-    {opt colorvar()} will take precedence. Type {cmd:colorvar(i.}{it:zvar}{cmd:)}
-    to treat {it:zvar} as categorical.
+    {cmd:colorvar(}[{cmd:i.}]{it:zvar}{cmd:)} is an alternative to specifying
+    [{cmd:i.}]{help geoplot##zvar:{it:zvar}} as an argument. If both are specified,
+    {opt colorvar()} will take precedence.
 
 {marker color}{...}
 {phang}
@@ -1041,9 +1184,10 @@
     palette allowed by {helpb colorpalette} (which can also be a simple list of colors, see
     help {it:{help colorpalette##colorlist:colorlist}}) and {it:palette_options} are
     corresponding options. For example, type {cmd:colors(hcl bluered, reverse)} for a
-    red to blue HCL color scheme. The default is {cmd:color(viridis)} or,
-    if {cmd:i.}{it:zvar} or {helpb geoplot##discrete:discrete} is specified,
-    {cmd:color(Set1)}. An appropriate number of colors will automatically
+    red to blue HCL color scheme. The default is {cmd:color(st)} if
+    {cmd:i.}{it:zvar} or {helpb geoplot##discrete:discrete} is specified or if
+    {it:zvar} is a string variable; in all other cases the default is
+    {cmd:color(viridis)}. An appropriate number of colors will automatically
     be retrieved from {it:palette} (applying interpolation or recycling, if necessary,
     depending on type of palette). Specify a single color if you do not want
     the color to depend on the values of {help geoplot##zvar:{it:zvar}}.
@@ -1106,9 +1250,8 @@
             [{it:value} [{cmd:=}]] {it:label} [ {it:value} [{cmd:=}] {it:label} {it:...} ]
 
 {pmore}
-    where {it:value} is the index of the level to be affected
-    in case of continuous {it:zvar}, or the relevant value of {it:zvar} in case
-    of {cmd:i.}{it:zvar} or {helpb geoplot##discrete:discrete}, and {it:label} is
+    where {it:value} is the index (continuous or string {it:zvar}) or
+    value (categorical {it:zvar}) of the level to be affected and {it:label} is
 
             {cmd:"}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} {it:...}]
 
@@ -1118,7 +1261,7 @@
 
 {pmore}
     {it:value} may be {it:#} to select a specific level
-    (e.g., in case of continuous {it:zvar}, {cmd:1} for the 1st level,
+    (e.g., {cmd:1} for the 1st level,
     {cmd:2} for 2nd level, etc.) or it may be a specification including
     wildcard characters {cmd:*} and {cmd:?} to select multiple levels
     (e.g. {cmd:?} for levels 1-9, {cmd:1?} for levels 10-19, {cmd:*} for all
@@ -1137,14 +1280,14 @@
     {p_end}
 {p2col: {cmd:@ub}}upper bound of the interval
     {p_end}
-{p2col: {cmd:@lab}}value label in case of {cmd:i.}{it:zvar} or
-    {helpb geoplot##discrete:discrete}, else equivalent to {cmd:@lb - @ub}
+{p2col: {cmd:@lab}}value label in case of categorical {it:zvar}, {cmd:@lb - @ub} in case of continuous {it:zvar}
     {p_end}
 {p2col: {cmd:@n}}number of units
     {p_end}
 
 {pmore}
-    In case of {cmd:i.}{it:zvar} or {helpb geoplot##discrete:discrete}, the default is
+    In case of {cmd:i.}{it:zvar} or {helpb geoplot##discrete:discrete}, or if {it:zvar} is a string variable,
+    the default is
     {cmd:label("@lab")}. For example, type {cmd:label("@lab (@n)")} to
     include the number of units in the label. For continuous {help geoplot##zvar:{it:zvar}},
     the default is equivalent to {cmd:label(1 = "[@lb,@ub]" * = "(@lb,@ub]")}. For example,
@@ -1209,92 +1352,149 @@
 
 {dlgtab:Global options}
 
+{marker background}{...}
+{phang}
+    {cmd:background}[{cmd:(}{it:options}{cmd:)}] draws a (rectangular)
+    background frame behind the map, where {it:options} are as follows.
+
+{phang2}
+    {opt water} sets the feature type of the background to {cmd:water}, affecting
+    how the background will be rendered by default.
+
+{phang2}
+    {opt l:imits(limits)} specifies custom limits for the size of the
+    background frame, where {it:limits} is
+
+                {it:xmin} {it:xmax} {it:ymin} {it:ymax}
+
+{pmore2}
+    The default is to use the observed limits of the coordinates included in the
+    map. Elements in {it:limits} that are omitted
+    or specified as {cmd:.} (missing) are set to the default.
+
+{phang2}
+    {opt pad:ding(#)} adds padding to limits of the background frame. This is only relevant for limits
+    that are determined automatically, not for custom limits. Argument
+    # is in percent of the size of the map in each dimension. For example,
+    type {cmd:padding(5)} to increase the frame by 5% on each side; type {cmd:padding(-5)}
+    decrease by 5%.
+
+{phang2}
+    {opt n(#)} specifies number of points used to draw each edge of the
+    background frame. Default is {cmd:n(1)} or, if {helpb geoplot##project:project()}
+    is specified, {cmd:n(100)}.
+
+{phang2}
+    {it:{help area_options}} affect the look of the background
+    frame as described in {helpb twoway area}. By default, only the outline will be
+    displayed (unless option {cmd:water} is specified). Specify option
+    {cmd:color()} to display a filled frame (without
+    outline); use options {cmd:fcolor()} and {cmd:lcolor()} to set the colors
+    of fill and outline separately. Color options support
+    {it:colorspec} as described in {helpb colorpalette##colorlist:colorpalette}.
+
+{marker grid}{...}
+{phang}
+    {cmd:grid}[{cmd:(}{it:options}{cmd:)}] draws grid lines on
+    top of the map, where {it:options} are as follows.
+
+{phang2}
+    {cmd:x()}, {cmd:y()}, {cmd:tight}, {cmd:padding()}, {cmd:radian},
+    {cmd:noextend}, {cmd:mesh}, and {cmd:n()} define the lines as described in
+    {helpb geoframe##grid:geoframe grid}.
+
+{phang2}
+    {it:{help line_options}} affect the look of lines as
+    described in {helpb twoway line}. For example, use option {cmd:lwidth()} to
+    set the width of lines. Color options support {it:colorspec} as described in
+    {helpb colorpalette##colorlist:colorpalette}.
+
+{phang2}
+    {cmdab:lab:els}[{cmd:(}{it:options}{cmd:)}] adds axis labels,
+    where {it:options} are as follows.
+
+{p 12 16 2}
+    {opt p:ositions(list)} selects the sides to be labeled and fine-tunes the
+    positioning of the labels. Argument {it:list} is one or more elements of the form
+
+                    {{cmd:l}|{cmd:r}|{cmd:b}|{cmd:t}} [[{cmd:=}] {it:{help clockpos}}]
+
+{p 16 16 2}
+    where {cmd:l} prints labels on the left, {cmd:r} on the right, {cmd:b} at the
+    bottom, and {cmd:t} at the top, and {it:{help clockpos}} fine-tunes the
+    positioning. Default {it:{help clockpos}} is {cmd:9} for {cmd:l}, {cmd:3} for
+    {cmd:r}, {cmd:6} for {cmd:b}, and {cmd:12} for {cmd:t}.
+
+{p 16 16 2}
+    The default is {cmd:positions(l b)} or, more precisely,
+    {cmd:positions(l=9 b=6)} or {cmd:positions(l 9 b 6)}. Type, for example,
+    {cmd:positions(l r b t)} to print labels on all four sides.
+
+{p 12 16 2}
+    {opth f:ormat(%fmt)} or {opth f:ormat(exp)} formats the labels. Use
+    {opth f:ormat(%fmt)} to apply a numerical format as
+    described in {helpb format}; use {opth f:ormat(exp)} for more involved
+    formatting, where {it:exp} is a string expression. Within {it:exp}, use
+    {cmd:X} for the numerical value and {cmd:axis} for the axis
+    to which a label belongs (1 = X axis, 2 = Y axis). For example,
+
+{p 22 24 2}
+    {com}format(string(X,"%9.1f") + "{&degree}"){txt}
+
+{p 16 16 2}
+    displays the labels with one decimal place and a degree symbol. Likewise,
+
+{p 22 24 2}
+    {com}format(string(abs(X)) + "{&degree}" + cond(X>0, cond(axis==1,"E","N"), cond(X<0, cond(axis==1,"W","S"), ""))){txt}
+
+{p 16 16 2}
+    displays the labels in absolute degrees including compass direction.
+
+{p 12 16 2}
+    {cmd:size()}, {cmd:color()}, {cmd:angle()}, {cmd:tstyle()}, and {cmd:gap()}
+    affect the rendering of the labels as described for {it:layertype}
+    {helpb geoplot##labels:label}.
+
+{marker tissot}{...}
+{phang}
+    {cmd:tissot}[{cmd:(}{it:options}{cmd:)}] draws Tissot's
+    indicatrices on top of the map, where {it:options} are as follows.
+
+{phang2}
+    {cmd:r()}, {cmd:x()}, {cmd:y()}, {cmd:tight}, {cmd:padding()}, {cmd:radian},
+    and {cmd:n()} define the indicatrices as described in
+    {helpb geoframe##tissot:geoframe tissot}.
+
+{phang2}
+    {it:{help area_options}} affect the look of the indicatrices as described
+    in {helpb twoway area}. By default, only the outline will be
+    displayed. Specify option {cmd:color()} to display a filled frame (without
+    outline); use options {cmd:fcolor()} and {cmd:lcolor()} to set the colors
+    of fill and outline separately. Color options support
+    {it:colorspec} as described in {helpb colorpalette##colorlist:colorpalette}.
+
+{phang2}
+    {cmdab:mark:ers}[{cmd:(}{it:{help marker_options}}{cmd:)}] displays a marker at the
+    center of each indicatrix, where {it:marker_options} affect
+    the look of markers as described in {helpb twoway scatter}. For example,
+    use option {cmd:msymbol()} to set the marker symbol. Color options
+    support {it:colorspec} as described in {helpb colorpalette##colorlist:colorpalette}.
+
+{marker project}{...}
+{phang}
+    {cmd:project}[{cmd:(}[{it:projection} [{it:args}]] [{cmd:,} {opt rad:ian}]{cmd:)}] applies the
+    specified projection, where {it:projection} and {it:args} are as described in
+    {helpb geoframe##project:geoframe project}. Original
+    coordinates are assumed to be in (unprojected) degrees; specify suboption {cmd:radian} if the
+    coordinates are in radians. If {cmd:project} is
+    specified without arguments, the {cmd:webmercator} projection is applied.
+
 {marker angle}{...}
 {phang}
     {opt angle(angle)} rotates the map by {it:angle} degrees (counterclockwise).
 
-{marker tight}{...}
 {phang}
-    {opt tight} adjusts the size of the overall graph such that it tightly fits
-    the map. If {cmd:tight} is not specified, the size of the graph is as set by
-    the chosen {help scheme:graph scheme}. Specify {cmd:tight} to remove
-    possible white space. By default, {cmd:tight} preserves the vertical size
-    of the graph and adjust the horizontal size such that the graph has the
-    same aspect ratio as the map. However, if {helpb region_options:xsize()}
-    is specified, the vertical size is adjusted. If {helpb region_options:xsize()}
-    and {helpb region_options:ysize()} are both specified, {cmd:tight} has no effect.
-
-{pmore}
-    Note that {cmd:tight} may not remove all white space if elements outside the
-    plot region, e.g. a {helpb title_options:title()}, are added to the
-    graph (in this case the available space for the map may have a different
-    aspect ratio than the overall graph, which means that the map will not use up
-    all available space). Also note that, by default, {cmd:geoplot} includes a small margin around
-    the plotregion such that the map will not touch the edges of the
-    graph. Specify {helpb region_options:graphregion(margin(zero))} to remove this margin.
-
-{marker margin}{...}
-{phang}
-    {cmd:margin(}{it:marginexp}{cmd:)} sets the margin by which
-    the plotregion extends the size of the map, where {it:marginexp} is
-    {it:#} [{it:#} {it:#} {it:#}] or one or more elements of the form
-
-            {{cmd:l}|{cmd:r}|{cmd:b}|{cmd:t}} [{cmd:=}] {it:#}
-
-{pmore}
-    such as {cmd:l=5} or {cmd:t=10}. Default is {cmd:margin(0)},
-    which means that the plotregion will tightly fit the map. Specify, for example,
-    {cmd:margin(1)} to increase the plotregion by 1 percent on each side of the
-    map. The default reference for computing the margins is the minimum of the horizontal
-    and vertical size of the map; also see option {helpb geoplot##refdim:refdim()}.
-
-{pmore}
-    Specify {cmd:margin(}{it:#} {it:#} {it:#} {it:#}{cmd:)} to use different
-    margins on the left, right, bottom, and top (numbers will be recycled if
-    less than four numbers are specified). For example, {cmd:margin(10 5 0 7)}
-    will increase the plotregion by 10 percent on the left, 5 percent on the
-    right, 0 percent at the bottom, and 7 percent at the top.
-
-{pmore}
-    Alternatively, use the {{cmd:l}|{cmd:r}|{cmd:b}|{cmd:t}}{cmd:=}{it:#}
-    syntax. For example, {cmd:margin(r=5 t=10)} will increase the plotregion
-    by 5 percent on the right and by 10 at the top (and by 0 percent on the other
-    sides).
-
-{pmore}
-    {cmd:margin()} may be useful, for example, if you need to make space for a
-    legend, such that it does not cover parts of the map.
-
-{marker refdim}{...}
-{phang}
-    {cmd:refdim(}{it:spec}{cmd:)} selects the reference dimension for size
-    calculations (e.g., when determining margins). {it:spec} may be {cmd:y} or
-    {cmdab:v:ertical} for the vertical dimension, or {cmd:x} or {cmdab:h:orizontal}
-    for the horizontal dimension. If {cmd:refdim()} is omitted, the
-    minimum of the horizontal and vertical size of the map is used a the
-    reference size.
-
-{marker aspect}{...}
-{phang}
-    {cmd:aspectratio(}[{it:#}] [{cmd:,} {it:pos_option}]{cmd:)} may be used to
-    adjust the aspect ratio of the map and to determine the placement of the
-    plotregion in the graph. By default, {cmd:geoplot} sets the aspect ratio
-    in a way such that horizontal and vertical distances are proportional to
-    the numeric values of the coordinates. Specify {opt aspectratio(#)} to multiply
-    the aspect ratio determined by {cmd:geoplot} by {it:#} (values between 0 and 1
-    will compress the map vertically, values larger than 1 will compress the map
-    horizontally). For {it:pos_option} see help {it:{help aspect_option}}.
-
-{marker twopts}{...}
-{phang}
-    {it:twoway_options} are general twoway options, other than {cmd:by()}, as
-    documented in help {it:{help twoway_options}}. {cmd:geoplot} imposes own
-    default settings for options such as {helpb region_options:graphregion()},
-    {helpb region_options:plotregion()}, {helpb axis_scale_options:xscale()},
-    {helpb axis_scale_options:yscale()}, or {cmd:bgcolor()} (an apparently
-    undocumented option to set the color of the canvas, which only becomes
-    visible if the graphregion has no color). Specify such options manually to
-    override {cmd:geoplot}'s defaults.
+    {opt rotate(angle)} is a synonym for {cmd:angle()}.
 
 {marker legend}{...}
 {phang}
@@ -1427,7 +1627,7 @@
     scale bar will be in kilometers.
 
 {phang2}
-    {opt l:ength(#)}, {it:#}>0, set the length of the scale bar in units of
+    {opt l:ength(#)}, {it:#}>0, sets the length of the scale bar in units of
     the scale bar. {cmd:geoplot} will abort with error
     if the resulting scale bar is too large (i.e., has
     coordinates outside of the plotregion). An appropriate
@@ -1450,7 +1650,7 @@
 
 {phang2}
     {opt lab:el(options)} affects the rendering of the numeric labels, where
-    {it:options} are {it:{help textbox_options}} such as {opt c:olor()} or {opt si:ze()}
+    {it:options} are {it:{help textbox_options}} such as {cmd:color()} or {cmd:size()}
     (defaults are {cmd:color(black)} and {cmd:size(vsmall)}), {cmd:minmax} to label
     only the minimum and maximum, {opt a:bove} to place the labels above the
     scale bar (rather than below), and {opth f:ormat(fmt)} to set the display
@@ -1463,8 +1663,8 @@
 
 {phang2}
     {cmdab:ti:tle(}{it:text}[{cmd:,} {it:options}]{cmd:)} adds a title above the
-    scale bar. {it:options} are {it:{help textbox_options}} such as {opt c:olor()}
-    or {opt si:ze()} (defaults are {cmd:color(black)} and {cmd:size(vsmall)}), and
+    scale bar. {it:options} are {it:{help textbox_options}} such as {cmd:color()}
+    or {cmd:size()} (defaults are {cmd:color(black)} and {cmd:size(vsmall)}), and
     {opt b:elow} to place the title below the scale bar (rather than above).
 
 {phang2}
@@ -1479,7 +1679,7 @@
 
 {phang2}
     {it:{help area_options}} are general options to affect the rendering of the
-    scale bar, such as {cmdab:c:olor()} or {cmdab:lw:idth()}. Defaults are
+    scale bar, such as {cmd:color()} or {cmd:lwidth()}. Defaults are
     {cmd:color(black)}, {cmd:fintensity(100)}, and {cmd:lwidth(vthin)}.
 
 {marker compass}{...}
@@ -1503,15 +1703,19 @@
     compass is too large (i.e., has coordinates outside of the plotregion).
 
 {phang2}
-    {opt lab:el}[{cmd:(}{it:options}{cmd:)}] affects the rendering of the compass
-    labels, where {it:options} are {it:{help textbox_options}} such as {opt c:olor()} or
-    {opt si:ze()} (defaults are {cmd:color(black)} and {cmd:size(vsmall)}) as
-    well as {opt g:ap(#)} to determine how far the labels will be moved out from
-    the edge of the compass. Argument {it:#}>0 is in percent of the size
-    (or half-size) of the compass; default is {cmd:gap(30)}. Labels are printed
-    for compass types 1 ("N", "S", "E", and "W") and 2 ("N" only) by default; specify
-    {cmd:label} to print label "N" in compass type 3. Specify {opt nolab:el}
-    to omit the labels in compass types 1 and 2.
+    {opt lab:el}[{cmd:(}{it:options}{cmd:)}] affects the contents and
+    rendering of the compass labels, where {it:options}
+    are: {opt t:ext(labels)} to override the default labels, which are
+    {cmd:text("N" "S" "E" "W")} for compass type 1 and {cmd:text("N")}
+    for compass types 2 and 3; {opt g:ap(#)} to determine how far the
+    labels will be moved out from the edge of the compass, where argument
+    {it:#}, with default value {cmd:30}, is in percent of the size (or half-size)
+    of the compass; as well as {it:{help textbox_options}} such as
+    {cmd:color()} or {cmd:size()}. Default settings are
+    {cmd:color(black)} and {cmd:size(vsmall)}. By default, labels are turned on
+    for compass types 1 and 2 and off for compass type 3. Type {opt nolabel}
+    to omit the labels in compass types 1 and 2; type {opt label} to turn labels
+    on in compass type 3.
 
 {phang2}
     {opt nocir:cle} omits the circle in compass types 1 and 3.
@@ -1569,7 +1773,7 @@
 
 {phang2}
     {cmd:box}[{cmd:(}{it:which}{cmd:)}] displays the origin bounding box and
-    the destination bounding box of the objects. Argument {it:what} can be
+    the destination bounding box of the objects. Argument {it:which} can be
     {cmdab:d:estination} (print destination  box only) or
     {cmdab:o:rigin} (print origin box only). Only one of {cmd:box} and
     {cmd:circle} is allowed.
@@ -1577,7 +1781,7 @@
 {phang2}
     {cmdab:cir:cle}[{cmd:(}{it:which}{cmd:)}] displays the origin MEC (minimum
     enclosing circle) and the destination MEC of the objects. Argument
-    {it:what} can be {cmdab:d:estination} (print destination circle only) or
+    {it:which} can be {cmdab:d:estination} (print destination circle only) or
     {cmdab:o:rigin} (print origin circle only). Only
     one of {cmd:circle} and {cmd:box} is allowed.
 
@@ -1615,7 +1819,7 @@
     {p_end}
 
 {phang2}
-    {it:{help area_options}} are options that affect the look of the bounding boxes
+    {it:{help area_options}} affect the look of the bounding boxes
     or MECs. For example, type {cmd:lcolor(cranberry)} to use red lines. The specified
     options also affect the connecting lines unless the options are overridden by options
     specified in {cmd:connect()}.
@@ -1627,8 +1831,94 @@
     objects lying behind it. To include a filled box or MEC that does not
     cover the objects, you may use {helpb geoframe##bbox:geoframe bbox} to
     generate a frame containing the coordinates of the box or MEC and then
-    add tit to the graph as regular layer using {it:layertype}
+    add it to the graph as regular layer using {it:layertype}
     {helpb geoplot##area:area}.
+
+{marker tight}{...}
+{phang}
+    {opt tight} adjusts the size of the overall graph such that it tightly fits
+    the map. If {cmd:tight} is not specified, the size of the graph is as set by
+    the chosen {help scheme:graph scheme}. Specify {cmd:tight} to remove
+    possible white space. By default, {cmd:tight} preserves the vertical size
+    of the graph and adjust the horizontal size such that the graph has the
+    same aspect ratio as the map. However, if {helpb region_options:xsize()}
+    is specified, the vertical size is adjusted. If {helpb region_options:xsize()}
+    and {helpb region_options:ysize()} are both specified, {cmd:tight} has no effect.
+
+{pmore}
+    Note that {cmd:tight} may not remove all white space if elements outside the
+    plot region, e.g. a {helpb title_options:title()}, are added to the
+    graph (in this case the available space for the map may have a different
+    aspect ratio than the overall graph, which means that the map will not use up
+    all available space). Also note that, by default, {cmd:geoplot} includes a small margin around
+    the plotregion such that the map will not touch the edges of the
+    graph. Specify {helpb region_options:graphregion(margin(zero))} to remove
+    this outer margin.
+
+{marker margin}{...}
+{phang}
+    {cmd:margin(}{it:marginexp}{cmd:)} sets the margin by which
+    the plotregion extends the size of the map, where {it:marginexp} is
+    {it:#} [{it:#} {it:#} {it:#}] or one or more elements of the form
+
+            {{cmd:l}|{cmd:r}|{cmd:b}|{cmd:t}} [{cmd:=}] {it:#}
+
+{pmore}
+    such as {cmd:l=5} or {cmd:t=10}. Default is {cmd:margin(0)},
+    which means that the plotregion will tightly fit the map. Specify, for example,
+    {cmd:margin(1)} to increase the plotregion by 1 percent on each side of the
+    map. Specify {cmd:margin(}{it:#} {it:#} {it:#} {it:#}{cmd:)} to use different
+    margins on the left, right, bottom, and top (numbers will be recycled if
+    less than four numbers are specified). For example, {cmd:margin(10 5 0 7)}
+    will increase the plotregion by 10 percent on the left, 5 percent on the
+    right, 0 percent at the bottom, and 7 percent at the top. Alternatively, use
+    the {{cmd:l}|{cmd:r}|{cmd:b}|{cmd:t}}{cmd:=}{it:#}
+    syntax. For example, {cmd:margin(r=5 t=10)} will increase the plotregion
+    by 5 percent on the right and by 10 at the top (and by 0 percent on the other
+    sides). The default reference for computing the margins is the minimum of the horizontal
+    and vertical size of the map; also see option {helpb geoplot##refdim:refdim()}.
+
+{pmore}
+    {cmd:margin()} may be useful, for example, if you need to make space for a
+    legend, such that it does not cover parts of the map. Note that, by default,
+    {cmd:geoplot} also includes a small margin around the plotregion. Specify option
+    {helpb region_options:graphregion(margin(zero))} to remove this outer margin.
+
+{marker refdim}{...}
+{phang}
+    {cmd:refdim(}{it:spec}{cmd:)} selects the reference dimension for size
+    calculations by {helpb geoplot##margin:margin()},
+    {helpb geoplot##compass:compass()}, and
+    {helpb geoplot##sbar:sbar()}. {it:spec} may be {cmd:y} or
+    {cmdab:v:ertical} for the vertical dimension, or {cmd:x} or {cmdab:h:orizontal}
+    for the horizontal dimension. If {cmd:refdim()} is omitted, the
+    minimum of the horizontal and vertical size of the map is used as the
+    reference size.
+
+{marker aspect}{...}
+{phang}
+    {cmd:aspectratio(}[{it:#}] [{cmd:,} {it:pos_option}]{cmd:)} may be used to
+    adjust the aspect ratio of the map and to determine the placement of the
+    plotregion in the graph. By default, {cmd:geoplot} sets the aspect ratio
+    in a way such that horizontal and vertical distances are proportional to
+    the numeric values of the coordinates. Specify {opt aspectratio(#)} to multiply
+    the aspect ratio determined by {cmd:geoplot} by {it:#} (values between 0 and 1
+    will compress the map vertically, values larger than 1 will compress the map
+    horizontally). For {it:pos_option} see help {it:{help aspect_option}}.
+
+{marker axes}{...}
+{phang}
+    {cmd:axes} turns the display of Stata's default coordinate system on
+    (axes and axis labels, plot and graph region styles as set by the current
+    scheme). By default, axes are suppressed, region styles are set to none, and
+    {cmd:bgcolor()} (an apparently undocumented option to set the color of the
+    canvas that becomes visible if the graph region has no color) is set to
+    white.
+
+{marker twopts}{...}
+{phang}
+    {it:twoway_options} are general twoway options, other than {cmd:by()}, as
+    documented in help {it:{help twoway_options}}.
 
 {marker frame}{...}
 {phang}
@@ -1648,6 +1938,7 @@
     computer time on rendering the graph.
 
 
+{marker examples}{...}
 {title:Examples}
 
 {pstd}
@@ -1657,7 +1948,7 @@
     {stata "local url http://fmwww.bc.edu/repec/bocode/i/"}
     {p_end}
 {p 8 12 2}
-    {stata geoframe create regions `url'Italy-RegionsData.dta, id(id) coord(xcoord ycoord) shpfile(Italy-RegionsCoordinates.dta)}
+    {stata geoframe create regions `url'Italy-RegionsData.dta, id(id) coord(xcoord ycoord) shp(Italy-RegionsCoordinates.dta)}
     {p_end}
 {p 8 12 2}
     {stata geoframe create country `url'Italy-OutlineCoordinates.dta}
@@ -1751,7 +2042,8 @@
     {p_end}
 
 
-{title:Returned results}
+{marker results}{...}
+{title:Stored results}
 
 {pstd} Scalars:
 
@@ -1804,6 +2096,7 @@
     {cmd:r(z_nobs_}{it:#}{cmd:)} corresponds to the missing category.
 
 
+{marker author}{...}
 {title:Author}
 
 {pstd}
@@ -1824,9 +2117,3 @@
     I am grateful to Asjad Naqvi for extensive testing and many valuable
     suggestions.
 
-
-{title:Also see}
-
-{psee}
-    Online:  help for
-    {helpb geoframe}, {helpb graph}, {helpb frames}, {helpb spshape2dta}

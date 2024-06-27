@@ -1,4 +1,4 @@
-*! version 1.10 2024-06-03
+*! version 1.11 2024-06-24
 
 program stpm3, eclass byable(onecall)
 	version 16.1

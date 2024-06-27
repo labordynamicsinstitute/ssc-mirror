@@ -145,6 +145,10 @@ There are some suboptions,
 {opt maxiter(#)} maximum number of iterations (default 100).
 
 {phang3}
+{opt nodes(#)} number of nodes for numeric integration (default 30).
+Only relevenat for {cmd:scale(lnhazard)} models.
+
+{phang3}
 {opt tol(#)} tolerence (default 1e-6).
 
 {phang}

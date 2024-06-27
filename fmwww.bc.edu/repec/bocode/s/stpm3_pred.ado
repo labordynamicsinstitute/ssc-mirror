@@ -1,4 +1,4 @@
-*! version 1.10 2024-06-03
+*! version 1.11 2024-06-24
 
 program stpm3_pred, sortpreserve
   version 16.1
@@ -115,8 +115,13 @@ program stpm3_pred, sortpreserve
   
 
   // centile option
-  if "`centile'" != "" Parse_centile_options `centile'
-
+  if "`centile'" != "" {
+    //if "`e(scale)'" == "lnhazard" & "`ci'" != "" {
+    //  di as err "CIs not currently available for centiles for scale(lnhazard) models."
+    //  exit 198
+    //}
+    Parse_centile_options `centile'
+  }
 // get variable type (factor or variable)
   get_variable_type  
   
@@ -394,9 +399,9 @@ program stpm3_pred, sortpreserve
     }
     else if("`e(scale)'" == "lnhazard")  {
       //local needsode = wordcount("`survival'`failure'`cumhazard'`rmst'`rmft'`crudeprob'`centilenospace'") == 1
-      local needsode = wordcount("`rmst'`rmft'`crudeprob'`centilenospace'") == 1 | "`ode'" != ""
+      local needsode = wordcount("`rmst'`rmft'`crudeprob'") == 1 | "`ode'" != ""
       if !`needsode' {
-        if wordcount("`survival'`failure'`cumhazard'") == 1 {
+        if wordcount("`survival'`failure'`cumhazard'`centilenospace'") == 1 {
           local needsquadrature 1
         }
       }
@@ -775,9 +780,11 @@ program stpm3_pred, sortpreserve
       if /*`hastimevar' &*/ "`centile'" == "" {
         frame put `timevarlist' `framecopy' `touse' if `touse_timevar1' & `touse', into(`resframe')
         local timevarfinal `timevarlist'
-        foreach tv in `timevarlist' {
-          note `tv': stpm3_timevar
-        }
+        //local uniqtimevar: list uniq timevarlist
+        //foreach tv in `uniqtimevar' {
+        //  di "bob: `tv'"
+        //  note `tv': stpm3_timevar
+        //}
       }
       else if "`centype'" == "variable" {
         frame put `centilewritelist' `framecopy' if `touse_centile1' & `touse', into(`resframe')
@@ -821,9 +828,12 @@ program stpm3_pred, sortpreserve
           tempvar tnot0_`i'
           gen byte `tnot0_`i'' = `timevar`i''>0 & !missing(`timevar`i'') `addtouse'
           local results_write `results_write' `tnot0_`i''     
-          foreach tv in `timevarfinal ' {
-            note `tv': stpm3_timevar
-          }      
+          local uniqtimevar: list uniq timevarfinal
+
+          foreach tv in `uniqtimevar ' {
+            notes _fetch tmpnote : `tv' 1
+            if "`tmpnote'" == "" note `tv': stpm3_timevar
+          }    
         }
         else {
           if "`centype'" == "numlist" {
@@ -1176,6 +1186,7 @@ program define getframeoptions
       notes _dir vars_with_notes
       local ntimevar 0 
       foreach v in `vars_with_notes' {
+        if "`v'" == "_dta" continue
         notes _fetch tempnote : `v' 1
         if "`tempnote'" == "stpm3_timevar" {
           local ntimevar = `ntimevar' + 1
@@ -1673,6 +1684,7 @@ program define Parse_centile_options
                     high(real 100)       ///
                     maxiter(integer 100) ///
                     centvar(string)      ///
+                    nodes(integer 30)    ///
                     ]
 
   capture numlist "`anything'", min(0) max(100)
@@ -1695,7 +1707,8 @@ program define Parse_centile_options
   c_local cenlow     `low'
   c_local cenhigh    `high'
   c_local cenmaxiter `maxiter'
-  c_local centvar     `centvar'
+  c_local centvar    `centvar'
+  c_local cennodes   `nodes'
 end
 
 // convert num list to a variable
@@ -1741,9 +1754,9 @@ program define stpm3_Check_Centile
   }
   // predicts at cenhigh
   foreach z in `atvars' {
-    `fr' qui count if `z'==`cenhigh'
+    `fr' qui count if `z'>`cenhigh'
     if `r(N)' {
-      di as text "Warning: predictons greater than default high value (100)" 
+      di as text "Warning: predictions greater than default high value (100)" 
       di as text "for centiles. If you did not intend this," 
       di as text "change your scale or use the high() suboption" 
       di as text "of the centile() option"
