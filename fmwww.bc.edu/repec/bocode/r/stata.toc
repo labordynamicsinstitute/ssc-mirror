@@ -1,4 +1,5 @@
 p r2_mz module to compute McKelvey & Zavoina's R2
+p r2_nakagawa module for computing Nakagawa's R-squared statistic for multilevel mixed-effects linear regression
 p r2c module to compute several fit statistics for count data models 
 p r2nlsur module to perform Overall System (NL-SUR) System R2, Adj. R2, F-Test, and Chi2-Test 
 p r2o module to calculate an ordinal explained variation statistic

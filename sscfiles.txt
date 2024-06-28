@@ -21308,6 +21308,7 @@ fmwww.bc.edu/repec/bocode/r/rrcalc.ado
 fmwww.bc.edu/repec/bocode/r/rcl_functions_ssnip.do
 fmwww.bc.edu/repec/bocode/r/all_bsadf.mtx
 fmwww.bc.edu/repec/bocode/r/rtnorm.pkg
+fmwww.bc.edu/repec/bocode/r/r2_nakagawa.ado
 fmwww.bc.edu/repec/bocode/r/reshape8.html
 fmwww.bc.edu/repec/bocode/r/roman.pkg
 fmwww.bc.edu/repec/bocode/r/Rcall_counter.ado
@@ -21405,6 +21406,7 @@ fmwww.bc.edu/repec/bocode/r/reproot.ado
 fmwww.bc.edu/repec/bocode/r/rndnblx.html
 fmwww.bc.edu/repec/bocode/r/rtfclose.sthlp
 fmwww.bc.edu/repec/bocode/r/rforest.ado
+fmwww.bc.edu/repec/bocode/r/r2_nakagawa.sthlp
 fmwww.bc.edu/repec/bocode/r/rrp.sthlp
 fmwww.bc.edu/repec/bocode/r/renlabv.sthlp
 fmwww.bc.edu/repec/bocode/r/reghdfe_old.ado
@@ -22010,6 +22012,7 @@ fmwww.bc.edu/repec/bocode/r/redi.pkg
 fmwww.bc.edu/repec/bocode/r/rowranks.hlp
 fmwww.bc.edu/repec/bocode/r/regcheck.pkg
 fmwww.bc.edu/repec/bocode/r/rq.sthlp
+fmwww.bc.edu/repec/bocode/r/r2_nakagawa.pkg
 fmwww.bc.edu/repec/bocode/r/rhetplot.html
 fmwww.bc.edu/repec/bocode/r/regife.pkg
 fmwww.bc.edu/repec/bocode/r/revrs.hlp

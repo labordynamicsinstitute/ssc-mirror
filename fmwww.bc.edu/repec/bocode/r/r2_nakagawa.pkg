@@ -1,0 +1,28 @@
+d 'R2_NAKAGAWA': module for computing Nakagawa's R-squared statistic for multilevel mixed-effects linear regression
+d
+d  r2_nakagawa is a post-estimation command (also see: estat) that
+d computes the R-squared statistic following -mixed-.  R-squared is
+d computed as described by Nakagawa and Schielzeth (2013) for
+d random intercepts, and extended to random slopes as described by
+d Johnson (2014). r2_nakagawa computes the marginal R-squared,
+d which is concerned with variance explained by the fixed effects,
+d and the conditional R-squared, which is concerned with variance
+d explained by both fixed and random effects (Nakagawa and
+d Schielzeth 2013). 
+d
+d KW: oefficient of determination
+d KW: goodness-of-fit
+d KW: linear mixed model
+d
+d Requires: Stata version 16.1
+d
+d Distribution-Date: 20240627
+d
+d Author: Daniel Klein, Universität Kassel
+d Support: email klein.daniel.81@@gmail.com
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f r2_nakagawa.ado
+f r2_nakagawa.sthlp
