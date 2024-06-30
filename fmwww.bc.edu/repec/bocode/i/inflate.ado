@@ -1,5 +1,7 @@
 *inflate command: inflates to real dollars using the all urban cpi
-*2022-01-06 Sean McCulloch <sean_mcculloch@brown.edu> 
+*2022-01-05 Sean McCulloch <sean_mcculloch@brown.edu> 
+*2024-06-22 Update to use import fred rather than freduse and requires 
+*inputting an API key
 
 cap prog drop inflate
 prog define inflate
@@ -18,7 +20,8 @@ prog define inflate
 	Quarter(varname numeric))								 ///
 															 ///
 	keepcpi  												 ///
-	update cpicheck]	
+	update cpicheck 										 ///
+	apikey(string)]	
 	
 	local inflatepath  "`c(sysdir_plus)'/i/"
 	
@@ -28,8 +31,14 @@ prog define inflate
 	if ((_rc != 0) | ("`update'" == "update")) {				
 		disp "Importing CPI from FRED API to `inflatepath'/cpi.dta"
 		
+		*check that api key is inputted if downloading new CPI data
+		if "`apikey'" == "" {
+			disp as error "FRED API key required to the download CPI series. Please input a FRED API key in the argument apikey()"
+			exit
+		}
+		
 		inflateopencpiframe // Open cpi
-		inflateimportfred, update_path(`inflatepath')
+		inflateimportfred, update_path(`inflatepath') apikey(`apikey')
 		frame drop cpi // Close cpi
 		
 		*exit if update
@@ -69,7 +78,6 @@ prog define inflate
 	
 	loc numvars: word count `varlist' // used later loop through/inflate variables 
 	
-	*--------
 	*Check variable names not already taken
 	loc genvars start_cpi end_cpi inflator 
 	if 	"`generate'" != "" {
@@ -93,8 +101,9 @@ prog define inflate
 		    loc genvars `genvars' `v'_real 
 		}
 	}
-	confirm new variable `genvars'
 	
+	confirm new variable `genvars'
+
 	*-----------
 	if "`start'" == "" & "`year'" == "" {
 		di as error "option start() or year() required"
@@ -284,11 +293,12 @@ end
 
 cap prog drop inflateimportfred
 prog define inflateimportfred
-	syntax[anything], update_path(string)
+	syntax[anything], update_path(string) apikey(string)
 		
+	set fredkey "`apikey'"
 	*Load CPI into separate frame in memory
 	frame cpi { 
-		freduse CPIAUCNS, clear	
+		import fred CPIAUCNS, clear	
 		*U.S. Bureau of Labor Statistics, 
 		*Consumer Price Index for All Urban Consumers: All Items in U.S. City Average [CPIAUCNS], 
 		*retrieved from FRED, Federal Reserve Bank of St. Louis

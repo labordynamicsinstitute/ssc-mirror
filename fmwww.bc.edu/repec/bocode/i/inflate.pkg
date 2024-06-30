@@ -12,18 +12,12 @@ d
 d KW: inflation
 d KW: FRED
 d
-d Requires: Stata version 16; includes freduse from SSC
+d Requires: Stata version 16
 d
-d Distribution-Date: 20220107
+d Distribution-Date: 20240629
 d
 d Author:  Sean McCulloch,  Brown University
 d Support: email sean_mcculloch@@brown.edu
 d
 f inflate.sthlp
 f inflate.ado
-f ../f/freduse.ado
-f ../f/freduse.hlp
-f ../_/_freduse.ado
-f ../_/_freduse2.ado
-f ../_/_fredweb.ado
-f ../l/lfreduse.mlib

@@ -6,7 +6,8 @@
 
 {pstd}
 {bf:number_exporting} - number_exporting formats a given numeric value (numeric_value) based on user specifications. It outputs the formatted number into a LaTeX compatible .tex file that can then called directly into the paper. 
-The function can handle absolute values, percentages, and specific decimal formatting, making it suitable for saving numeric data for reports or publications in LaTeX format and automatized the description of regression coefficients in the main text of a paper.
+The function can handle absolute values, percentages, and specific decimal formatting, making it suitable for saving numeric data for reports or publications in LaTeX format and automatized the description of regression coefficients in the main 
+text of a paper.
 
 
 
@@ -33,6 +34,7 @@ The function can handle absolute values, percentages, and specific decimal forma
 {phang}{opt name(string)}: Specifies the name of the output .tex file (there is no need to add the extension). This is a required option and determines the file name of the output.
 {p_end}
 
+
 {phang}{opt percent}: If specified, the number is treated as a percentage. This means the number will be multiplied by 100 and formatted with a percentage sign at the end for the LaTex output.
 {p_end}
 
@@ -50,14 +52,19 @@ and the output is: _b[DiD] = -0.04568
 
  {bf:1) Formatting a standard number without percentage or absolute transformations.} 
 	Typing:
-	{cmd:number_exporting `_b[DiD]', Name(example) digits(3)}
-	Produces an output file `example.tex' with the content "-0.046"
+	{cmd:number_exporting `_b[DiD]', name(example) digits(3)}
+	Produces an output file example.tex with the content "-0.046" in the working directory.
 
 
   {bf:2) Formatting a number as a percentage with absolute value transformation.} 
 	Typing:
-        {cmd:number_exporting `_b[DiD]', Name(percentage) percent digits(1) absolute}
-	Produces an output file `example.tex' with the content "5%"
+        {cmd:number_exporting `_b[DiD]', name(percentage) percent digits(1) absolute}
+	Produces an output file percentage.tex with the content "5%" in the working directory.
+
+  {bf:3) Formatting a number as a percentage with absolute value transformation and using a global as a path.} 
+	Typing:
+        {cmd:number_exporting `_b[DiD]', name($result/percentage) percent digits(1) absolute}
+	Produces an output file percentage.tex with the content "5%" in the folder where the global $result points to.
 
 
 {marker note}{...}

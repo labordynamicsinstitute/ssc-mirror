@@ -2,39 +2,43 @@
 *! Version: June, 2024
 *! Authors: Olena Bogdan, Adrien Matray, Pablo E. Rodriguez, and Chenzi Xu
 program define number_exporting
-syntax anything, Name(string) [percent digits(integer 2) absolute]
-version 13.0
+    syntax anything, Name(string) [percent digits(integer 2) absolute]
+    version 13.0
 
-* Take absolute value if specified
-if "`absolute'" != "" {
-    local anything = abs(`anything')
-}
+    // Ensure the specified name includes the full path and filename
+    local filepath `"`name'"'
 
-* Format the input value based on specified digits, and percent options
-local digits_format = "%9." + string(`digits') + "fc"
+    // Check if the .tex extension is included, if not, add it
+    if strpos("`filepath'", ".tex") == 0 {
+        local filepath = "`filepath'.tex"
+    }
 
+    // Take absolute value if specified
+    if "`absolute'" != "" {
+        local anything = abs(`anything')
+    }
 
-* Format for percentage if specified
-if "`percent'"!="" {
-	local anything = `anything' * 100
-    local anything = string(`anything', "`digits_format'")
-    local temp = "`anything'\%%"  // Escape the percent sign for LaTeX
-    local anything = "`temp'"
-}
-else{
-	local anything = string(`anything', "`digits_format'")
-    local temp = "`anything'%" 
-    local anything = "`temp'"
-	
-}
+    // Format the input value based on specified digits, and percent options
+    local digits_format = "%9." + string(`digits') + "fc"
 
-* Print output
-di "Final formatted output: `anything'"
+    // Format for percentage if specified
+    if "`percent'" != "" {
+        local anything = `anything' * 100
+        local anything = string(`anything', "`digits_format'")
+        local temp = "`anything'\%%"  // Escape the percent sign for LaTeX
+        local anything = "`temp'"
+    }
+    else {
+        local anything = string(`anything', "`digits_format'")
+    }
 
-* Set up file write
-tempname `name'
-file open `name' using "$number/`name'.tex", write text replace
-file write `name' "`anything'"
-file close `name'
+    // Print output
+    di "Final formatted output: `anything'"
+
+     // Set up file write using the specified path and filename
+    file open myfile using "`filepath'", write text replace
+    file write myfile "`anything'"
+    file close myfile
 
 end
+

@@ -49,6 +49,7 @@
 {synopt :{opt keepcpi}}keeps cpi values and multiplier used to inflate the variables {p_end}
 
 {syntab : CPI Data}
+{synopt :{opth apikey(string)}}specify a FRED API key for downloading the CPI data from FRED. {p_end}
 {synopt :{opt update}}updates CPI data to most recent release from FRED {p_end}
 {synopt :{opt cpicheck}}opens the current CPI data file stored {p_end}
 
@@ -64,7 +65,10 @@ Inflation is calculated according to the simple formula: newvar = oldvar*(CPI_en
 By default, {cmd:inflate} generates a new inflated variable suffixed with "_real" ordered after the original variable.
 
 {pstd}
-{cmd:inflate} relies on functionality introduced in Stata 16, specifically frame/frames. {cmd:inflate} requires {bf:{help freduse:freduse}} to pull CPI data from FRED.
+{cmd:inflate} relies on functionality introduced in Stata 16, specifically frame/frames.
+
+{pstd}
+{cmd:inflate} requires a FRED API key to download the CPI series. A FRED API key may be obtained from {browse "https://fred.stlouisfed.org/docs/api/api_key.html"}
 
 {marker updatecpi}{...}
 {title:Updating the CPI series}
@@ -76,7 +80,7 @@ By default, {cmd:inflate} generates a new inflated variable suffixed with "_real
 To update the CPI series stored locally to the most recent release, run:
 
 {pmore}
-{stata inflate, update}
+{stata inflate, update apikey(yourFREDapikey)}
 
 {pstd}
 {cmd:inflate} stores the CPI series in a Stata dta file in {bf:{help sysdir:PLUS}}/i folder. 
@@ -137,6 +141,9 @@ rather than naming each variable oldvariablename_real.
 
 {dlgtab:CPI Data}
 
+{phang}{opth apikey(string)} specify a FRED API key for downloading the CPI data from FRED. Required the first time using inflate or when updating the CPI data. A FRED API key can be obtained from 
+{browse "https://fred.stlouisfed.org/docs/api/api_key.html"}
+
 {phang}{opt update} updates the CPI series to the most recent FRED release. 
 Replaces CPI data in the {bf:{help sysdir:PLUS}}/i folder.
 
@@ -163,19 +170,19 @@ Replaces CPI data in the {bf:{help sysdir:PLUS}}/i folder.
 
 {pstd}{bf:Example 2: Multiple variables, inflate on year() and month()}
 
-{pstd}Install freduse via ssc.{p_end}
+{pstd}Set your FRED API key. To download other series from FRED.{p_end}
 {phang2}. {stata clear}{p_end}
-{phang2}. {stata ssc install freduse}{p_end}
+{phang2}. {stata set fredkey yourFREDapikey}{p_end}
 
 {pstd}Load monthly time series of the nominal M1 and M2 money stocks from FRED.{p_end}
-{phang2}. {stata freduse M1SL M2SL}{p_end}
+{phang2}. {stata import fred M1SL M2SL}{p_end}
 
 {pstd}Make year and month variables.{p_end}
 {phang2}. {stata gen year = year(daten)}{p_end}
 {phang2}. {stata gen month = month(daten)}{p_end}
 
-{pstd}Inflate both series to 2020 $.{p_end}
-{phang2}. {stata inflate M1SL M2SL, year(year) month(month) end(2020)}{p_end}
+{pstd}Inflate both series to 2023 $.{p_end}
+{phang2}. {stata inflate M1SL M2SL, year(year) month(month) end(2023)}{p_end}
 
 {marker author}{...}
 {title:Author}
@@ -186,7 +193,7 @@ Replaces CPI data in the {bf:{help sysdir:PLUS}}/i folder.
 {marker acknowledgements}{...}
 {title:Acknowledgements}
 
-{pstd}{cmd:inflate} would not be able to update the CPI series easily without FRED providing the CPI data series in their publicly available API and the functionality of David Drukker's {cmd:freduse}. 
+{pstd}{cmd:inflate} would not be able to update the CPI series easily without FRED providing the CPI data series in their publicly available API. 
 
 {pstd}
 FRED Citation: U.S. Bureau of Labor Statistics, Consumer Price Index for All Urban Consumers: All Items in U.S. City Average [CPIAUCSL], retrieved from FRED, Federal Reserve Bank of St. Louis
@@ -210,7 +217,7 @@ Online: {stata "findit cpiget": cpiget (on SSC)}{p_end}
 MIT License
 
 {pstd} 
-Copyright (c) 2022 Sean McCulloch
+Copyright (c) 2024 Sean McCulloch
 
 {pstd} 
 Permission is hereby granted, free of charge, to any person obtaining a copy
