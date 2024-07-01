@@ -1,10 +1,13 @@
-*! version 1.0.1  04dec2023  S. Derya Uysal, Tymon Sloczynski, and Jeffrey M. Wooldridge
+*! version 1.0.2  26jun2024  S. Derya Uysal, Tymon Sloczynski, and Jeffrey M. Wooldridge
 
-** changes: 
+** changes in version 1.0.1:
 ** tau_t,norm --> tau_u
 ** output: CBPS --> logit CB
 ** output: logit --> logit ML
 ** output: probit --> probit ML
+
+** changes in version 1.0.2:
+** allow for tau_u with multivalued treatments
 
 capture program drop kappalate
 program define kappalate, eclass
@@ -63,17 +66,16 @@ program define kappalate, eclass
 	}
 	
 	qui tab `tvar' if `touse'
-	if r(r)!=2 {
-		noi di as error "treatment must be binary"
-		error 450
+	if r(r)<2 {
+		noi di as error "treatment must take on at least two distinct values"
+		error 459
 		exit
 	}
-	
-	qui sum `tvar' if `touse'
-	if r(min)!=0 | r(max)!=1 {
-		noi di as error "treatment must only take on values zero or one"
-		error 450
-		exit
+	else if r(r)>2 local bintreat = 0
+	else if r(r)==2 {
+		qui sum `tvar' if `touse'
+		if r(min)!=0 | r(max)!=1 local bintreat = 0
+		else local bintreat = 1
 	}
 	
 	qui tab `zvar' if `touse'
@@ -121,22 +123,24 @@ program define kappalate, eclass
 	qui sum `tvar' if `zvar'==0 & `touse'==1
 	scalar `dmeanz0' = r(mean)
 	
-	if `dmeanz0'==`dmeanz1' {
-		noi di as error "zero denominator: LATE not defined"
-		error 459
-		exit
-	}
-	
-	else if `dmeanz1'==1 & `dmeanz0'==0 {
-		noi di as error "instrument identical to treatment"
-		error 459
-		exit
-	}
-	
-	else if `dmeanz1'==0 & `dmeanz0'==1 {
-		noi di as error "instrument identical to treatment"
-		error 459
-		exit
+	if `bintreat'==1 {
+		if `dmeanz0'==`dmeanz1' {
+			noi di as error "zero denominator: LATE not defined"
+			error 459
+			exit
+		}
+		
+		else if `dmeanz1'==1 & `dmeanz0'==0 {
+			noi di as error "instrument identical to treatment"
+			error 459
+			exit
+		}
+		
+		else if `dmeanz1'==0 & `dmeanz0'==1 {
+			noi di as error "instrument identical to treatment"
+			error 459
+			exit
+		}
 	}
 	
 	// main estimation procedure
@@ -345,60 +349,62 @@ program define kappalate, eclass
 		tempname tau_norm vc_tau_norm r_tau_norm var_tau_norm tau_a10 vc_tau_a10 r_tau_a10 var_tau_a10
 		
 		// estimation of the LATE
-		// tau_a
-		matrix `initial' = (`bips', `nums', `kappas', `late_a')
-		local k = colsof(`initial')
-		matrix `I' = I(`k')
-		gmm `eqips' `eq_delta' `eq_gamma' `eq_tau_a' if `touse', `eqips_inst' onestep winitial(`I') from(`initial') quickderivatives vce(`vce') iterate(0)
-		scalar `tau_a' = _b[tau_a:_cons]
-		matrix `vc_tau_a' = e(V)
-		scalar `r_tau_a' = rownumb(`vc_tau_a', "tau_a:_cons")
-		scalar `var_tau_a' = `vc_tau_a'[`r_tau_a', `r_tau_a']
-
-		// tau_a1
-		matrix `initial' = (`bips', `nums', `kappa_1s', `late_a1')
-		local k = colsof(`initial')
-		matrix `I' = I(`k')
-		gmm `eqips' `eq_delta' `eq_gamma1' `eq_tau_a1' if `touse', `eqips_inst' onestep winitial(`I') from(`initial') quickderivatives vce(`vce') iterate(0)
-		scalar `tau_a1' = _b[tau_a1:_cons]
-		matrix `vc_tau_a1' = e(V)
-		scalar `r_tau_a1' = rownumb(`vc_tau_a1', "tau_a1:_cons")
-		scalar `var_tau_a1' = `vc_tau_a1'[`r_tau_a1', `r_tau_a1']
-		
-		// tau_a0
-		matrix `initial' = (`bips', `nums', `kappa_0s', `late_a0')
-		local k = colsof(`initial')
-		matrix `I' = I(`k')
-		gmm `eqips' `eq_delta' `eq_gamma0' `eq_tau_a0' if `touse', `eqips_inst' onestep winitial(`I') from(`initial') quickderivatives vce(`vce') iterate(0)
-		scalar `tau_a0' = _b[tau_a0:_cons]
-		matrix `vc_tau_a0' = e(V)
-		scalar `r_tau_a0' = rownumb(`vc_tau_a0', "tau_a0:_cons")
-		scalar `var_tau_a0' = `vc_tau_a0'[`r_tau_a0', `r_tau_a0']
-
-		// tau_a10
-		matrix `initial' = (`bips', `num1hats', `kappa_1s', `num0hats', `kappa_0s', `late_a10')
-		local k = colsof(`initial')
-		matrix `I' = I(`k')
-		gmm `eqips' `eq_delta1' `eq_gamma1' `eq_delta0' `eq_gamma0' `eq_tau_a10' if `touse', `eqips_inst' onestep winitial(`I') from(`initial') quickderivatives vce(`vce') iterate(0)
-		scalar `tau_a10' = _b[tau_a10:_cons]
-		matrix `vc_tau_a10' = e(V)
-		scalar `r_tau_a10' = rownumb(`vc_tau_a10', "tau_a10:_cons")
-		scalar `var_tau_a10' = `vc_tau_a10'[`r_tau_a10', `r_tau_a10']
+		if `bintreat'==1 {
+			// tau_a
+			matrix `initial' = (`bips', `nums', `kappas', `late_a')
+			local k = colsof(`initial')
+			matrix `I' = I(`k')
+			gmm `eqips' `eq_delta' `eq_gamma' `eq_tau_a' if `touse', `eqips_inst' onestep winitial(`I') from(`initial') quickderivatives vce(`vce') iterate(0)
+			scalar `tau_a' = _b[tau_a:_cons]
+			matrix `vc_tau_a' = e(V)
+			scalar `r_tau_a' = rownumb(`vc_tau_a', "tau_a:_cons")
+			scalar `var_tau_a' = `vc_tau_a'[`r_tau_a', `r_tau_a']
+			
+			// tau_a1
+			matrix `initial' = (`bips', `nums', `kappa_1s', `late_a1')
+			local k = colsof(`initial')
+			matrix `I' = I(`k')
+			gmm `eqips' `eq_delta' `eq_gamma1' `eq_tau_a1' if `touse', `eqips_inst' onestep winitial(`I') from(`initial') quickderivatives vce(`vce') iterate(0)
+			scalar `tau_a1' = _b[tau_a1:_cons]
+			matrix `vc_tau_a1' = e(V)
+			scalar `r_tau_a1' = rownumb(`vc_tau_a1', "tau_a1:_cons")
+			scalar `var_tau_a1' = `vc_tau_a1'[`r_tau_a1', `r_tau_a1']
+			
+			// tau_a0
+			matrix `initial' = (`bips', `nums', `kappa_0s', `late_a0')
+			local k = colsof(`initial')
+			matrix `I' = I(`k')
+			gmm `eqips' `eq_delta' `eq_gamma0' `eq_tau_a0' if `touse', `eqips_inst' onestep winitial(`I') from(`initial') quickderivatives vce(`vce') iterate(0)
+			scalar `tau_a0' = _b[tau_a0:_cons]
+			matrix `vc_tau_a0' = e(V)
+			scalar `r_tau_a0' = rownumb(`vc_tau_a0', "tau_a0:_cons")
+			scalar `var_tau_a0' = `vc_tau_a0'[`r_tau_a0', `r_tau_a0']
+			
+			// tau_a10
+			matrix `initial' = (`bips', `num1hats', `kappa_1s', `num0hats', `kappa_0s', `late_a10')
+			local k = colsof(`initial')
+			matrix `I' = I(`k')
+			gmm `eqips' `eq_delta1' `eq_gamma1' `eq_delta0' `eq_gamma0' `eq_tau_a10' if `touse', `eqips_inst' onestep winitial(`I') from(`initial') quickderivatives vce(`vce') iterate(0)
+			scalar `tau_a10' = _b[tau_a10:_cons]
+			matrix `vc_tau_a10' = e(V)
+			scalar `r_tau_a10' = rownumb(`vc_tau_a10', "tau_a10:_cons")
+			scalar `var_tau_a10' = `vc_tau_a10'[`r_tau_a10', `r_tau_a10']
+		}
 		
 		// tau_norm
-		if `dmeanz0'!=0 & `dmeanz0'!=1 & `dmeanz1'!=0 & `dmeanz1'!=1 {
+		if `bintreat'==0 | (`dmeanz0'!=0 & `dmeanz0'!=1 & `dmeanz1'!=0 & `dmeanz1'!=1) {
 			matrix `initial' = (`bips', `num1s', `num0s', `denom1s', `denom0s', `late_norm')
 			local k = colsof(`initial')
 			matrix `I' = I(`k')
 			gmm `eqips' `eq_mu1' `eq_mu0' `eq_m1' `eq_m0' `eq_tau_norm' if `touse', `eqips_inst' onestep winitial(`I') from(`initial') quickderivatives vce(`vce') iterate(0)
 		}
-		else if `dmeanz0'==0 | `dmeanz0'==1 {
+		else if `bintreat'==1 & (`dmeanz0'==0 | `dmeanz0'==1) {
 			matrix `initial' = (`bips', `num1s', `num0s', `denom1s', `late_norm')
 			local k = colsof(`initial')
 			matrix `I' = I(`k')
 			gmm `eqips' `eq_mu1' `eq_mu0' `eq_m1' `eq_tau_norm' if `touse', `eqips_inst' onestep winitial(`I') from(`initial') quickderivatives vce(`vce') iterate(0)
 		}
-		else if `dmeanz1'==0 | `dmeanz1'==1 {
+		else if `bintreat'==1 & (`dmeanz1'==0 | `dmeanz1'==1) {
 			matrix `initial' = (`bips', `num1s', `num0s', `denom0s', `late_norm')
 			local k = colsof(`initial')
 			matrix `I' = I(`k')
@@ -414,45 +420,57 @@ program define kappalate, eclass
 	}
 	
 	// display results
-	if "`which'"=="all" {
-		if "`zmodel'"!="cbps" {
-			tempname b V
-			matrix `b' = (`tau_a', `tau_a1', `tau_a0', `tau_a10', `tau_norm')
-			matrix `V' = (`var_tau_a', 0, 0, 0, 0 \ 0, `var_tau_a1', 0, 0, 0 \ 0, 0,`var_tau_a0', 0, 0 \ 0, 0, 0, `var_tau_a10', 0 \ 0, 0, 0, 0, `var_tau_norm')
-			matrix rownames `b' = " "
-			matrix colnames `b' = "tau_a" "tau_a,1" "tau_a,0" "tau_a,10" "tau_u"
-			matrix rownames `V' = "tau_a" "tau_a,1" "tau_a,0" "tau_a,10" "tau_u"
-			matrix colnames `V' = "tau_a" "tau_a,1" "tau_a,0" "tau_a,10" "tau_u"
-		}
-		else if "`zmodel'"=="cbps" {
-			tempname b V
-			matrix `b' = (`tau_a', `tau_norm')
-			matrix `V' = (`var_tau_a', 0 \ 0, `var_tau_norm')
-			matrix rownames `b' = " "
-			matrix colnames `b' = "tau_a" "tau_u"
-			matrix rownames `V' = "tau_a" "tau_u"
-			matrix colnames `V' = "tau_a" "tau_u"
-		}
+	if `bintreat'==0 {
+		tempname b V
+		matrix `b' = (`tau_norm')
+		matrix `V' = (`var_tau_norm')
+		matrix rownames `b' = " "
+		matrix colnames `b' = "tau_u"
+		matrix rownames `V' = "tau_u"
+		matrix colnames `V' = "tau_u"
 	}
 	
-	else if "`which'"=="norm" {
-		if "`zmodel'"!="cbps" {
-			tempname b V
-			matrix `b' = (`tau_a10', `tau_norm')
-			matrix `V' = (`var_tau_a10', 0 \ 0, `var_tau_norm')
-			matrix rownames `b' = " "
-			matrix colnames `b' = "tau_a,10" "tau_u"
-			matrix rownames `V' = "tau_a,10" "tau_u"
-			matrix colnames `V' = "tau_a,10" "tau_u"
+	else {
+		if "`which'"=="all" {
+			if "`zmodel'"!="cbps" {
+				tempname b V
+				matrix `b' = (`tau_a', `tau_a1', `tau_a0', `tau_a10', `tau_norm')
+				matrix `V' = (`var_tau_a', 0, 0, 0, 0 \ 0, `var_tau_a1', 0, 0, 0 \ 0, 0,`var_tau_a0', 0, 0 \ 0, 0, 0, `var_tau_a10', 0 \ 0, 0, 0, 0, `var_tau_norm')
+				matrix rownames `b' = " "
+				matrix colnames `b' = "tau_a" "tau_a,1" "tau_a,0" "tau_a,10" "tau_u"
+				matrix rownames `V' = "tau_a" "tau_a,1" "tau_a,0" "tau_a,10" "tau_u"
+				matrix colnames `V' = "tau_a" "tau_a,1" "tau_a,0" "tau_a,10" "tau_u"
+			}
+			else if "`zmodel'"=="cbps" {
+				tempname b V
+				matrix `b' = (`tau_a', `tau_norm')
+				matrix `V' = (`var_tau_a', 0 \ 0, `var_tau_norm')
+				matrix rownames `b' = " "
+				matrix colnames `b' = "tau_a" "tau_u"
+				matrix rownames `V' = "tau_a" "tau_u"
+				matrix colnames `V' = "tau_a" "tau_u"
+			}
 		}
-		else if "`zmodel'"=="cbps" {
-			tempname b V
-			matrix `b' = (`tau_norm')
-			matrix `V' = (`var_tau_norm')
-			matrix rownames `b' = " "
-			matrix colnames `b' = "tau_u"
-			matrix rownames `V' = "tau_u"
-			matrix colnames `V' = "tau_u"
+		
+		else if "`which'"=="norm" {
+			if "`zmodel'"!="cbps" {
+				tempname b V
+				matrix `b' = (`tau_a10', `tau_norm')
+				matrix `V' = (`var_tau_a10', 0 \ 0, `var_tau_norm')
+				matrix rownames `b' = " "
+				matrix colnames `b' = "tau_a,10" "tau_u"
+				matrix rownames `V' = "tau_a,10" "tau_u"
+				matrix colnames `V' = "tau_a,10" "tau_u"
+			}
+			else if "`zmodel'"=="cbps" {
+				tempname b V
+				matrix `b' = (`tau_norm')
+				matrix `V' = (`var_tau_norm')
+				matrix rownames `b' = " "
+				matrix colnames `b' = "tau_u"
+				matrix rownames `V' = "tau_u"
+				matrix colnames `V' = "tau_u"
+			}
 		}
 	}
 	

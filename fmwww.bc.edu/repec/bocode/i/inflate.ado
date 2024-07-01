@@ -2,6 +2,7 @@
 *2022-01-05 Sean McCulloch <sean_mcculloch@brown.edu> 
 *2024-06-22 Update to use import fred rather than freduse and requires 
 *inputting an API key
+*2024-06-29 Make checks not case sensitive
 
 cap prog drop inflate
 prog define inflate
@@ -50,7 +51,7 @@ prog define inflate
 	if "`cpicheck'" == "cpicheck" {
 		di "option cpicheck will clear current working dataset. Is this ok (Y/N)?", ///
 		_request(check)
-		if "$check" == "Y" {
+		if "$check" == "Y" | "$check" == "y" {
 			di "continue..."
 		}
 		else {
@@ -131,7 +132,7 @@ prog define inflate
 		di as error "Will inflate some observations but not others. Is this ok (Y/N)?", ///
 		_request(check)
 		
-		if "$check" == "Y" {
+		if "$check" == "Y" | "$check" == "y" {
 			di "continue..."
 		}
 		else {
@@ -158,7 +159,7 @@ prog define inflate
 	if "`start'" != "" & "`start_timep'" != "`end_timep'" {
 		di as error "Start and end time periods are not consistent, e.g. year versus quarter." 
 		di as error "You specified starting time period as `start_timep' and the end as `end_timep'. Is this correct? (Y/N)", _request(check)
-		if "$check" == "Y" {
+		if "$check" == "Y" | "$check" == "y" {
 			di "continue..."
 		}
 		else {
@@ -280,7 +281,7 @@ prog define inflateopencpiframe
 	if _rc != 0 {
 		di "inflate will drop existing cpi frame from memory is this alright (Y/N)?", ///
 		_request(check)
-		if "$check" == "Y" {
+		if "$check" == "Y" | "$check" == "y" {
 			di "continue..."
 			frame drop cpi 
 			frame create cpi

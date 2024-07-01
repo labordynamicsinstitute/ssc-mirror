@@ -1,5 +1,5 @@
 ﻿{smcl}
-{* 04dec2023}{...}
+{* 26jun2024}{...}
 {hline}
 help for {hi:kappalate}
 {hline}
@@ -33,21 +33,25 @@ default is {opt cbps}{p_end}
 
 {title:Description}
 
-{pstd} {cmd:kappalate} estimates the local average treatment effect (LATE) using methods based on inverse probability weighting, each of which can be motivated by Abadie's (2003) kappa theorem.
-See Słoczyński, Uysal, and Wooldridge (2023) for a detailed treatment of the underlying theoretical results.
+{pstd} {cmd:kappalate} estimates the local average treatment effect (LATE) using methods based on inverse probability weighting, most of which can be motivated by Abadie's (2003) kappa theorem.
+See Słoczyński, Uysal, and Wooldridge (2024) for a detailed treatment of the underlying theoretical results.
 
 {pstd} The following variables should be designated.
 {it:depvar} is the outcome variable.
 {it:indepvars} is a list of control variables.
-{it:treatment} and {it:instrument} are the treatment and the instrumental variable, respectively, both of which must be binary and take on only the values 0, 1, or missing.
+{it:treatment} is the treatment variable.
+{it:instrument} is the instrumental variable, which must be binary and take on only the values 0, 1, or missing.
 {it:instrument} is assumed to be valid conditional on {it:indepvars} and needs to satisfy the monotonicity assumption.
 
 {pstd} {cmd:kappalate} displays up to five estimates of the LATE, dependent on the options chosen.
-The naming convention for the alternative estimates follows Słoczyński, Uysal, and Wooldridge (2023), who recommend normalized estimators (option {cmd:which(norm)}),
+The naming convention for the alternative estimates follows Słoczyński, Uysal, and Wooldridge (2024), who recommend normalized estimators (option {cmd:which(norm)}),
 and especially the estimator in Uysal (2011), referred to as {it:tau_u}, with covariate balancing propensity scores (option {cmd:zmodel(cbps)}), as in Heiler (2022).
-We also recommend standardizing nonbinary covariates prior to estimation (option {cmd:std(on)}), as this may improve the performance of Stata's optimization process without affecting the estimation results.
+We also recommend standardizing nonbinary covariates before estimation (option {cmd:std(on)}), as this may improve the performance of Stata's optimization process without affecting the estimation results.
 
-{pstd} If you use this program in your work, please cite Słoczyński, Uysal, and Wooldridge (2023).
+{pstd} {cmd:kappalate} allows for multivalued treatments, even though this case is not explicitly discussed by Słoczyński, Uysal, and Wooldridge (2024).
+The fact that, with a multivalued treatment, {it:tau_u} can be used to estimate the average causal response (ACR), a variant of the LATE, follows from Frölich (2007).
+
+{pstd} If you use this program in your work, please cite Słoczyński, Uysal, and Wooldridge (2024).
 
 
 {title:References}
@@ -56,10 +60,14 @@ We also recommend standardizing nonbinary covariates prior to estimation (option
 Abadie, Alberto (2003). "Semiparametric Instrumental Variable Estimation of Treatment Response Models." {it:Journal of Econometrics} 113(2), 231{c 150}263.
 
 {phang}
+Frölich, Markus (2007). "Nonparametric IV Estimation of Local Average Treatment Effects with Covariates." {it:Journal of Econometrics} 139(1), 35{c 150}75.
+
+{phang}
 Heiler, Phillip (2022). "Efficient Covariate Balancing for the Local Average Treatment Effect." {it:Journal of Business & Economic Statistics} 40(4), 1569{c 150}1582.
 
 {phang}
-Słoczyński, Tymon, S. Derya Uysal, and Jeffrey M. Wooldridge (2023). "Abadie's Kappa and Weighting Estimators of the Local Average Treatment Effect." arXiv:2204.07672. Available at {browse "https://arxiv.org/abs/2204.07672"}.
+Słoczyński, Tymon, S. Derya Uysal, and Jeffrey M. Wooldridge (2024). "Abadie's Kappa and Weighting Estimators of the Local Average Treatment Effect." {it:Journal of Business & Economic Statistics}, forthcoming.
+Available at {browse "https://doi.org/10.1080/07350015.2024.2332763"}.
 
 {phang}
 Uysal, S. Derya (2011). "Three Essays on Doubly Robust Estimation Methods." PhD dissertation, University of Konstanz.
@@ -119,6 +127,11 @@ Uysal, S. Derya (2011). "Three Essays on Doubly Robust Estimation Methods." PhD 
 {p2col 5 15 19 2: Functions}{p_end}
 {synopt:{cmd:e(sample)}}marks estimation sample{p_end}
 {p2colreset}{...}
+
+
+{title:Acknowledgments}
+
+{phang} We thank Alex Torgovitsky for helpful comments on this program.
 
 
 {title:Authors}
