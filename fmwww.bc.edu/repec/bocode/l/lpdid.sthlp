@@ -11,13 +11,13 @@
 
 {text}{phang2}{cmd:lpdid}
  {depvar} 
- [{it:if}] [{it:in}], 
+ [{it:if}] [{it:in}] [{it:weight}], 
  {opt u:nit}({it:varname}) 
  {opt t:ime}({it:varname}) 
  {opt treat}({it:varname}) 
  {opt pre:_window}({it:integer}) 
  {opt post:_window}({it:integer}) 
- [{it: options} ]{p_end}
+ [{it:options}]{p_end}
 
 {marker options}{...}
 {title:Options}
@@ -27,30 +27,68 @@
 {syntab:{bf: Main Parameters}}
 {synopthdr}
 {synoptline}
-{synopt :{opt unit}({it:varname}) } Variable indexing units of observation. (Also cluster unit for SEs, unless otherwise selected by the user). {p_end}
+{synopt :{opt unit}({it:varname}) } Variable indexing units of observation. 
+(Also cluster unit for SEs, unless otherwise selected by the user). {p_end}
 {synopt :{opt time}({it:varname}) } Variable indexing time periods (or time-equivalent). {p_end}
-{synopt :{opt treat}({it:varname}) } Treatment indicator (Note: we currently only support binary treatments, although continuous treatments are possible with local projections Diff-in-Diff). {p_end}
-{synopt :{opt pre_window}({it:#})} Length of the pre-treatment window of the event-study estimates. Positive integer >=2 required. Either pre_window or post_window needs to be specified. {p_end}
-{synopt :{opt post_window}({it:#})} Length of the post-treatment window of the event-study estimates. Positive integer >=0 required. Either pre_window or post_window needs to be specified. {p_end}
+{synopt :{opt treat}({it:varname}) } Treatment indicator 
+(Note: we currently only support binary treatments, although continuous treatments are potentially possible with local projections diff-in-diff). {p_end}
+{synopt :{opt pre_window}({it:#})} Length of the pre-treatment window of the event-study estimates. 
+Positive integer >=2 required. Either pre_window or post_window needs to be specified. {p_end}
+{synopt :{opt post_window}({it:#})} Length of the post-treatment window of the event-study estimates. 
+Positive integer >=0 required. 
+Either pre_window or post_window needs to be specified. {p_end}
 
 {synoptline}
 {syntab:{bf: Additional Diff-in-Diff Options}}
 {synopthdr}
 {synoptline}
 {synopt :{opt cluster}({it:varname}) } Cluster for SEs (default is to use the variable indexing units). {p_end}
-{synopt :{opt controls}({it:varlist}) } List of covariates (excluding lags of the dependent variable). Note: time-series operators are not allowed as arguments of the controls() option. To control for the lag (or the first difference) of a covariate, you should first create a new variable containing the lag (or the first difference) of that covariate. For example, if you want to control for the first lag of variable x, you should first create l1x=l.x, and then write controls(l1x). {p_end}
+{synopt :{opt controls}({it:varlist}) } List of covariates 
+(excluding lags of the dependent variable, which can be included using the ylags() or dylags() options described below). 
+Note: since version 1.0.1, time-series and other STATA operators are now allowed in the controls() option. {p_end}
+{synopt :{opt absorb}({it:varlist}) } Categorical variables that identify additional fixed effects to be absorbed. 
+Note 1: Time effects are always automatically included (otherwise it would not be DiD!); 
+if you only want to absorb time indicators, there is no need to use this option. 
+Note 2: Please remember that unit fixed effects are already filtered out by the differencing of the outcome. 
+Therefore, in most cases you will {it:not} want to include unit fixed effects in the LP-DiD specification. 
+Adding unit fixed effects to the LP-DiD specification is equivalent to including unit-specific linear time trends.  {p_end}
 {synopt :{opt ylags}({it:#})} Lags of the dependent variable to be included as covariates. {p_end}
 {synopt :{opt dylags}({it:#})} Lags of first-differenced dependent variable to be included as covariates. {p_end}
-{synopt :{opt nonabs:orbing}({it:#, [notyet] [firsttreat]})} Non-absorbing treatment. This option requires a numerical or string input of the format “# , [notyet] [firsttreat]”. The integer # is the post-treatment horizon at which effects are assumed to stabilize. The [notyet] suboption restricts the control group to not-yet treated units only; [firsttreat] restricts the treatment group to first treatments only. {p_end}
-{synopt :{opt never:treated}} Only use never treated observations as control units. Default is to use all clean controls, including not-yet treated units and possibly (in the case of non-absorbing treatment) treated units which treatment effects have stabilized. {p_end}
-{synopt :{opt noco:mp}} Rule out composition effects across the post-treatment window. It ensures that the set of clean control units is the same across all post-and pre-treatment time horizons. Default is to use all available clean controls at each time horizon, which might introduce composition effects. {p_end}
-{synopt :{opt rw}} Reweight observations to estimate an equally weighted ATE. Default is to not reweigh observations, which yields a variance-weighted ATE with strictly positive weights. {p_end}
-{synopt :{opt pmd}({it:#|max})} Pre-mean-differenced version of LP-DiD. The option argument indicates how many periods are used to compose the pre-treatment baseline; default is "max" if absorbing treatment; default is "L" = k if nonabsorbing treatment, unless firsttreat & (notyet | nevertreated) are selected; if instead of "max" an integer k is specified, pmd is interpreted as a moving average over [-k,-1]. {p_end}
+{synopt :{opt nonabs:orbing}({it:#, [notyet] [firsttreat]})} Non-absorbing treatment. 
+This option requires a numerical or string input of the format “# , [notyet] [firsttreat]”. 
+The integer # is the post-treatment horizon at which effects are assumed to stabilize. 
+The [notyet] suboption restricts the control group to not-yet treated units only; 
+[firsttreat] restricts the treatment group to first treatments only. {p_end}
+{synopt :{opt never:treated}} Only use never treated observations as control units. 
+(Default is to use all clean controls, including not-yet treated units and possibly, 
+if treatment is non-absorbing, treated units which treatment effects have stabilized.) {p_end}
+{synopt :{opt noco:mp}} Rule out composition effects across the post-treatment window. 
+It ensures that the set of clean control units is the same across all post-and pre-treatment time horizons. 
+Default is to use all available clean controls at each time horizon, which might introduce composition effects. {p_end}
+{synopt :{opt rw}} Reweight observations to estimate an equally weighted ATE. 
+Default is to not reweigh observations, which yields a variance-weighted ATE with strictly positive weights. {p_end}
+{synopt :{opt pmd}({it:#|max})} Pre-mean-differenced version of LP-DiD. 
+The option argument indicates how many periods are used to compose the pre-treatment baseline; 
+if "max" is selected, all available pre-treatment periods are used; 
+if instead of "max" an integer k is specified, pmd uses a moving average over [-k,-1]. 
+Default is "max" if absorbing treatment. 
+Default is k=L if nonabsorbing treatment, where L is the argument of the nonabsorbing() option, 
+unless firsttreat & (notyet | nevertreated) are selected, in which case the default is "max".  {p_end}
 {synopt :{opt boot:strap}({it:#})} Wild bootstrap for SE, argument is the number of repetitions. {p_end}
 {synopt :{opt seed}({it:#})} Set seed for bootstrap. {p_end}
-{synopt :{opt post_pooled}({it:#})} Sets the length of the post-treatment window for the pooled estimates. Default is [0, post_window], which means using the same post-treatment window as in the event study estimates. Users can either specify only one integer as input, which is then used to replace post_window, or they can specify two integers to set a custom interval. {p_end}
-{synopt :{opt pre_pooled}({it:#})} Sets the length of the pre-treatment window for the pooled estimates. Default is [-pre_window -2], which means using the same pre-treatment window as in the event study estimates. Users can either specify only one integer as input, which is then used to replace pre_window, or they can specify two integers to set a custom interval in the format (pooled_start pooled_end) (both positive integers). {p_end}
-{synopt :{opt weights}({it:varname})} Weight observations using the weights stored in variable {it:varname}. Note: if rw is not selected, the weights provided are applied on top of the variance-based weights (as a standard weighted regression would do); if rw is also selected, observations are weighted just based on {it:varname}. {p_end}
+{synopt :{opt post_pooled}({it:#})} Sets the length of the post-treatment window for the pooled estimates. 
+Default is [0, post_window], which means using the same post-treatment window as in the event study estimates. 
+Users can either specify only one integer as input, which is then used to replace post_window, 
+or they can specify two integers to set a custom interval. {p_end}
+{synopt :{opt pre_pooled}({it:#})} Sets the length of the pre-treatment window for the pooled estimates. 
+Default is [-pre_window -2], which means using the same pre-treatment window as in the event study estimates. 
+Users can either specify only one integer as input, which is then used to replace pre_window, 
+or they can specify two integers to set a custom interval in the format (pooled_start pooled_end) (both positive integers). {p_end}
+{synopt :{opt weights}({it:varname})} Weight observations using the weights stored in variable {it:varname}. 
+Note 1: if rw is not selected, the weights provided are applied on top of the variance-based weights (as a standard weighted regression would do); 
+if rw is also selected, observations are weighted just based on {it:varname}. 
+Note 2: Since version 1.0.1, weights can be applied using the standard STATA syntax [{it:weight}], 
+like in the 'regress' command, but this option is still available for backward compatibility.{p_end}
 
 {synoptline}
 {syntab:{bf: Reporting Options}}
@@ -69,7 +107,21 @@
 
 {pstd}{cmd:lpdid} performs the Local Projections Difference-in-Differences estimator (LP-DiD) proposed by Dube, Girardi, Jordà and Taylor (2023). {p_end}
 
-{pstd} LP-DiD is a convenient and flexible regression-based framework for implementing Difference-in-Differences. It uses panel data to estimate the average effect of a treatment under the assumptions of no-anticipation and (conditional) parallel trends. It can provide both dynamic event study estimates that track the treatment effect path at each time horizon after treatment, and 'pooled' estimates of the overall average effect in a post-treatment time window. Treatment can be absorbing (once a unit gets treated, it stays treated) or non-absorbing (units can enter and exit treatment multiple times). If treatment is non-absorbing, the nonabsorbing() option must be specified. The estimation sample is restricted to units entering treatment and 'clean' controls, thus avoiding the 'negative-weights' bias of TWFE estimators. The baseline version estimates a variance-weighted effect with strictly positive weights. The reweighed version (implemented through the rw option) estimates an equally-weighted average effect. LP-DiD offers flexibility in using either the last period before treatment (the default option) or an average of pre-treatment periods (the pmd() option) as the pre-treatment base period. It is possible to include pre-treatment lags of the outcome (or of other time-varying covariates) as control variables. See Dube, Girardi, Jordà and Taylor (2023) for a detailed exposition. {p_end}
+{pstd} LP-DiD is a convenient and flexible regression-based framework for implementing Difference-in-Differences. 
+It uses panel data to estimate the average effect of a treatment under the assumptions of no-anticipation and (conditional) parallel trends. 
+It can provide both dynamic event study estimates that track the treatment effect path at each time horizon after treatment, 
+and 'pooled' estimates of the overall average effect in a post-treatment time window. 
+Treatment can be absorbing (once a unit gets treated, it stays treated) or non-absorbing 
+(units can enter and exit treatment multiple times). 
+If treatment is non-absorbing, the nonabsorbing() option must be specified. 
+The estimation sample is restricted to units entering treatment and 'clean' controls, 
+thus avoiding the 'negative-weights' bias of TWFE estimators. The baseline version estimates 
+a variance-weighted effect with strictly positive weights. 
+The reweighed version (implemented through the rw option) estimates an equally-weighted average effect. 
+LP-DiD offers flexibility in using either the last period before treatment (the default option) or an average of pre-treatment periods 
+(the pmd() option) as the pre-treatment base period. 
+It is possible to include pre-treatment lags of the outcome (or of other time-varying covariates) as control variables. 
+See Dube, Girardi, Jordà and Taylor (2023) for a detailed exposition. {p_end}
 
 {marker remarks}{...}
 {title:Remarks}
@@ -151,6 +203,7 @@ This program requires the user-written commands bootstrap, reghdfe, and the pack
 {synopt :{cmd:e(cmdline)}} full command line with options selected {p_end}
 {synopt :{cmd:e(depvar)}} name of dependent variable {p_end}
 {synopt :{cmd:e(controls)}} name(s) of control variable(s) {p_end}
+{synopt :{cmd:e(absorb)}} name(s) of categorical variable(s) that identify additional fixed effects to be absorbed {p_end}
 {synopt :{cmd:e(ylags)}} number of lags of the dependent variable used on the rhs {p_end}
 {synopt :{cmd:e(dylags)}} number of first-differenced lags of the dependent variable used on the rhs {p_end}
 {synopt :{cmd:e(pre_window)}} number of pre periods {p_end}
@@ -164,26 +217,29 @@ This program requires the user-written commands bootstrap, reghdfe, and the pack
 
 {pstd}
 Alexander Busch{break}
-Institut zur Zukunft der Arbeit (IZA) {break}
-Bonn University {break}
-Berlin / Bonn, Germany {break}
-{browse "mailto:busch@iza.org":busch@iza.org}{p_end}
+Massachusetts Institute of Technology (USA) {break}
+{browse "mailto:busch@mit.edu":abusch@mit.edu}{p_end}
 
 {pstd}
 Daniele Girardi {break}
 King's College London (UK) {break}
-University of Massachusetts Amherst (USA) {break}
 {browse "mailto:daniele.girardi@kcl.ac.uk":daniele.girardi@kcl.ac.uk}{p_end}
 
 {marker acknowledgements}{...}
 {title:Acknowledgements}
 
-{pstd}We are grateful to Enrique Pinzon (StataCorp) and to Arin Dube, Òscar Jordà and Alan M. Taylor{p_end}
+{pstd}We are grateful to Enrique Pinzon (StataCorp), Liss Hall, Arin Dube, Òscar Jordà and Alan M. Taylor{p_end}
 
-{pstd}If you use this package, please cite:{p_end}
+{pstd}If you use this package, please cite both the package and the paper introducing the LP-DiD method:{p_end}
+
+{phang2}Busch A. and D. Girardi. 2023. 
+{browse "https://ideas.repec.org/c/boc/bocode/s459273.html":"LPDID : Stata module implementing Local Projections Difference-in-Differences (LP-DiD)."}
+{it:Statistical Software Components} S459273, Boston College Department of Economics.{p_end}
+
+{phang2}and
 
 {phang2}Dube, A., D. Girardi, Ò. Jordà and A. M. Taylor. 2023. 
-{browse "https://www.nber.org/papers/w31184":"A Local Projections Approach to Difference-in-Differences Event Studies."}
+{browse "https://www.nber.org/papers/w31184":"A Local Projections Approach to Difference-in-Differences."}
 {it:NBER Working Paper} 31184.{p_end}
 
 

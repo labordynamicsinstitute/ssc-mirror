@@ -44,7 +44,7 @@ f ad_command.sthlp
 f ad_setup.sthlp
 f ad_sthlp.sthlp
 f ad-cmd-command.ado
-f ad-cmd-command.do
+F ad-cmd-command.do
 F ad-cmd-command.md
 F ad-gh-workflows.yaml
 F ad-gh.gitignore

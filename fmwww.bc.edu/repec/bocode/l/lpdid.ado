@@ -1,14 +1,14 @@
-* lpdid program 
+* lpdid program, version 1.0.1
 
-* Authors: Alexander Busch (IZA, busch@iza.org) and Daniele Girardi (King's College London and University of Massachusetts Amherst, daniele.girardi@kcl.ac.uk), in collaboration with Arin Dube, Oscar Jordà and Alan M. Taylor
+* Authors: Alexander Busch (Massachusetts Institute of Technology, abusch@mit.edu) and Daniele Girardi (King's College London, daniele.girardi@kcl.ac.uk), in collaboration with Arin Dube, Oscar Jordà and Alan M. Taylor
+
+* Implementing Local Projections Difference-in-Differences (LP-DiD) as described in Dube, Girardi, Jordà, and Taylor (2023) "A Local Projections Approach to Difference-in-Differences", NBER Working Paper 31184, DOI 10.3386/w31184
 
 * Also see the Stata example files at the following repository
 * https://github.com/danielegirardi/lpdid/
 
-* Implementing Local Projections Difference-in-Differences (LP-DiD) as described in: 
-* Dube, Girardi, Jordà, and Taylor (2023) "A Local Projections Approach to Difference-in-Differences Event Studies", NBER Working Paper 31184, DOI 10.3386/w31184
-
-* Version 1.0.0 (released November 2023) 
+* Version 1.0.1 (July 2024): Added absorb() option for additional absorbed fixed effects. Now allows stata prefixes (including time-series operators) in the arguments of the controls() option. Now allows weights in the standard Stata format [pweight=weight]. 
+* Version 1.0.0 (Nov 2023): First release.
 
 ********************
 *** Main program ***
@@ -30,11 +30,11 @@ program define lpdid, eclass
 	
 	if "`debug'"!="" di "Syntax"
 
-	syntax varlist(max=1) [if] [in], 					/// dependent variable with optional [if] / [in] 
+	syntax varlist(max=1) [if] [in] [pweight/], 			/// dependent variable with optional [if] / [in] / [pweight] (the / after aweight ensures that the weightname `exp' is parsed as weight name only instead of "=weight_name")
 			time(varname) 								/// time or time-equivalent in DiD
 			unit(varname) 								/// DiD unit (also cluster unit for SEs, unless otherwise selected by the user)
 			treat(varname) 								/// treatment indicator  
-			[controls(string)]							/// control variables 
+			[controls(string)]							/// control variables, may include Stata notation like "l.varname" or "varname##i.varname2" 
 			[PRE_window(numlist min=1 max=1 >1)] 						/// pre-periods of event study 
 			[POST_window(numlist min=1 max=1 >=0)] 						/// post-periods 
 			[YLags(numlist >=1 int)] 					/// lags of dependent variable on RHS 
@@ -46,14 +46,15 @@ program define lpdid, eclass
 			[rw] 										/// if used, reweighting or regression adjustment is applied, to estimate an equally weighted ATE
 			[pmd(string)] 								/// if used, the pre-mean-differenced (PMD) version of LP-DiD is estimated; the option argument indicates how many periods are used to compose the pre-treatment baseline; default is "max" if absorbing treatment; default is "L" = k if nonabsorbing treatment, unless firsttreat & (notyet | nevertreated) are selected; if instead of "max" an integer k is specified, pmd is interpreted as a moving average over [-k,-1]
 			[NOgraph] 									/// no graphical output; default is to produce the graphical output 
-			[BOOTstrap(numlist min=1 max=1 >0)] 		/// if used, wild bootstrap SE with `reps' reps; default no bootstrapped SE 
+			[BOOTstrap(numlist min=1 max=1 >0)] 		/// if used, wild bootstrap with `reps' reps; default not bootstrapped  
 			[seed(numlist min=1 max=1)]					/// Set seed (relevant for wild bootstrap SEs); default no seed
 			[post_pooled(numlist min=1 max=2 >=0)] 						/// interval to estimate pooled effect; if only one number, it is assumed to be the lower end of the interval; default is [0, post_window]
 			[pre_pooled(numlist min=1 max=2 >1)] 						/// interval to estimate pooled pre-treatment "effect"; entered in reverse and without minus sign; for example [3 10] for the interval [-10,-3]; if only one number given it is assumed to be the upper end of the interval; default is [pre_window, -2] (as -1 is reference)
 			[only_pooled] 								/// skip event study and only calculate pooled 
 			[only_event] 								/// skip pooled spec and only calculate event study
 			[cluster(varname)]							/// cluster for SEs (default is to use the variable indexing units)
-			[weights(varname)]							/// weight observations
+			[absorb(string)] 							/// FE, always includes the time FE 
+			[weights(varname)]							/// v100 way of specifying weight, keeping this to allow backward compatibility 			
 			[debug] // debugging device, if turned on, display message at the start of a code section (helps localise errors)
 	
 
@@ -78,15 +79,25 @@ program define lpdid, eclass
 	}	
 	gettoken depvar 0 : varlist // first var as dependent var 
 	
+	* parse weight option
+	if "`weight'"!=""{
+		local weight_name "`exp'" // pweight/ ensures that this is parsed as varname instead of "=varname"
+		local weight_type "`weight'" // not used in code so far, as we only use aweight to begin with - but may be added at some later time once we allow for other weighting schemes 
+	}
+	if "`weights'"!=""{ // old v100 way of specifying weights 
+		local weight_name "`weights'"
+	}
+	
 	* preserve command as local for ereturn 
 	local cmdline "lpdid `depvar'"
 	if length("`if'")>0 local cmdline "`cmdline' if `if'"
 	if length("`in'")>0 local cmdline "`cmdline' in `in'"
+	if length("`weight'")>0 local cmdline "`cmdline' [`weight_type'=`weight_name']"
 	local cmdline "`cmdline', unit(`unit') time(`time') treat(`treat')" 
 	if "`pre_window'"!="" local cmdline "`cmdline' pre_window(`pre_window')"
 	if "`post_window'"!="" local cmdline "`cmdline' post_window(`post_window')"
-	if "`ylag'"!="" local cmdline "`cmdline' ylag(`ylag')"
-	if "`dylag'"!="" local cmdline "`cmdline' dylag(`dylag')"
+	if "`ylags'"!="" local cmdline "`cmdline' ylags(`ylags')"
+	if "`dylags'"!="" local cmdline "`cmdline' dylags(`dylags')"
 	if "`nonabsorbing'"!="" local cmdline "`cmdline' nonabsorbing(`nonabsorbing')"
 	if "`nevertreated'"!="" local cmdline "`cmdline' nevertreated"
 	if "`nocomp'"!="" local cmdline "`cmdline' nocomp"
@@ -103,7 +114,8 @@ program define lpdid, eclass
 	if "`only_pooled'"!="" local cmdline "`cmdline' only_pooled"
 	if "`only_event'"!="" local cmdline "`cmdline' only_event"	
 	if "`cluster'"!="" local cmdline "`cmdline' cluster(`cluster')"	
-	if "`weights'"!="" local cmdline "`cmdline' weights(`weights')"
+	if "`absorb'"!="" local cmdline "`cmdline' absorb(`absorb')"	
+	if "`weights'"!="" local cmdline "`cmdline' weights(`weights')"		
 	di "`cmdline'"
 
 	* set pre / post window to lowest value if not selected
@@ -150,21 +162,27 @@ program define lpdid, eclass
 		local `horizon'_CCS = max(``horizon'_pooled_end', ``horizon'_window')
 	}
 	if "`debug'"!="" di "Setting pre_CCS = `pre_CCS' and post_CCS=`post_CCS' "
-	* Add any outcome lags to the set of covariates
+	* build rhs of regression 
 	local rhs ""
 	if "`dylags'"!=""{
 		forvalues i = 1/`dylags'{
-			qui gen l`i'dy = L`i'.D.`depvar'
-			local rhs `rhs' l`i'dy
+			local rhs `rhs' L`i'.D.`depvar'
 		}
 	}		
 	if "`ylags'"!=""{
 		forvalues i = 1/`ylags'{
-			qui gen l`i'y = L`i'.`depvar'
-			local rhs `rhs' l`i'y
+			local rhs `rhs' L`i'.`depvar'
 		}
 	}
-	local rhs `rhs' `controls' // all rhs variables 	
+	local rhs `rhs' `controls' // all rhs variables for regression (incl. operators)
+	
+	* Add additional fixed effects to absorb
+	local fixed_effects `time'
+	if "`absorb'"!=""{
+		foreach fe in `absorb'{
+			if "`fe'"!="`time'" local fixed_effects `fixed_effects' `fe' // skips time FE 
+		}
+	} 
 	
 	
 	
@@ -220,15 +238,20 @@ program define lpdid, eclass
 		}
 	}	
 	* Determine whether regression adjustment estimator must be used + CHECK : rw bootstrap 
-	if "`rw'"!="" & ( ("`nonabsorbing'"!="" & ("`firsttreat'"=="" | ("`notyet'"=="" & "`nevertreated'"==""))) | "`controls'"!="" | "`ylags'"!="" | "`dylags'"!=""){
+	if "`rw'"!="" & ( ("`nonabsorbing'"!="" & ("`firsttreat'"=="" | ("`notyet'"=="" & "`nevertreated'"==""))) | "`controls'"!="" | "`ylags'"!="" | "`dylags'"!="" | "`fixed_effects'"!="`time'"){ // note that absorb is allowed if it only details the time variable 
 		local rw_ra "true" // regression adjustment necessary 
 		if "`bootstrap'"!=""{
 			di as error "Regression adjustment with bootstrapped standard errors has not been implemented in this version yet - we are sorry and hope to include this option soon!"
 			error 198 
 		}
-		else{
+		else if "`absorb'"!="" {
+			di "Your specification requires estimation through regression adjustment, which in the current version of the program uses a lot of computational power and hence may take a while. Note that regression adjustment is especially slow when including additional fixed effects. We are sorry and will update this in a new version to deliver a faster option soon!"		
+		}
+		else {
 			di "Your specification requires estimation through regression adjustment, which in the current version of the program uses a lot of computational power and hence may take a while. We are sorry and will update this in a new version to deliver a faster option soon!"			
 		}
+		fvrevar `rhs', tsonly stub(op_var) substitute // if RA must be used, then time-series and factor variables should substituted with newly created variables
+		local rhs `r(varlist)' 
 	}
 	* CHECK: inconsistency in asking only event study but also specifying pooled horizon; continue execution, assuming no pooled estimates
 	if ("`pre_pooled'"!=""|"`post_pooled'"!="") & "`only_event'"!="" {
@@ -239,11 +262,41 @@ program define lpdid, eclass
 		di as error "only_event and only_pooled both specified - please select only one of these options."
 		error 198 
 	}
+	* CHECK: weights & weight
+	if "`weights'"!="" & "`weight'"!=""{
+		di as error "weights() and [pw=] specified at the same time: you can use either option to include weights, but please only use one at a time. Both options are identical in their effect and we keep the old weights() option for backwards compatibility. "
+		error 198 		
+	}
+	* CHECK: absorb() and bootstrap 
+	if "`absorb'"!="" {
+		if "`absorb'"!="`time'" & "`bootstrap'"!=""{ // this does not get triggers if user specifies ONLY time fe
+			di as error "absorb() and bootstrap() specified at the same time: Since the user written command boottest this program relies on only allows one absorbed effect and the time fixed effects is already absorbed per default, you cannot use these two options at the same time. Please specify your additional fixed effects as control variables with the 'i.' prefix in the controls() option if you require bootstrapping. The results will be identical to using absorb(), but may take longer. "
+			error 198 			
+		}
+		foreach fe in `absorb'{ // this gets triggers if ANY fe in absorb is the time fe (it does not get triggered if the time variable name is simply a part of another varname, e.g. time(time) and absorb(time2 L5.time) does not raise the error)
+			if "`fe'"=="`time'" { 
+				di as error "absorb() includes the time (or time-equivalent) variable `time'; please note that lpdid always absorbs time fixed effects (otherwise it would not be a DiD!). Including time effects in the absorb() option is not necessary and does not improve runtime. "
+			}
+		}
+	}
+
+	
 	* CHECK : names 
 	* no input variable should be identical in name to a program variable 
-	local input_vars `depvar' `time' `unit' `treat' `rhs' `cluster' `weights'
+	local input_vars `depvar' `time' `unit' `treat' `rhs' `cluster' `weight_name' `absorb'
+	
+	if "`debug'"!="" di "input vars: `input_vars'"
+	
+	fvrevar `input_vars', list // get rid of stata operators while also avoiding duplicates in the list
+	local input_vars ""
+	foreach word in `r(varlist)' {
+	if regexm("`input_vars'", "\b`word'\b") == 0 {
+			local input_vars "`input_vars' `word'"
+		}
+	}
+		
 	local program_vars cumulative_y obs_n aveLY aveLY_help max_treat never_treated past_events status_entry_help status_entry reweight CCS_nocomp_event CCS_nocomp_pooled dtreat aveFY pooled_y cc0 max_cc0
-	local program_vars_dynamic1 CCS_ CCS_m nyt_  group_h num_weights_ den_weights_ gweight_ tdum
+	local program_vars_dynamic1 CCS_ CCS_m nyt_  group_h num_weights_ den_weights_ gweight_ 
 	local program_vars_dynamic2 D Dm
 	quietly su `time' , meanonly
 	local maxtime = `r(max)'
@@ -267,11 +320,11 @@ program define lpdid, eclass
 	}	
 	
 	* only keep variables which are required 
-	quietly keep `depvar' `time' `unit' `treat' `rhs' `cluster' `weights'
+	quietly keep `input_vars'
 				
 	* set time / unit structure  
 	quietly xtset `unit' `time'	
-	
+		
 	* Set seed if indicated by the user (relevant for boottest)
 	if "`seed'"!="" set seed `seed' 
 
@@ -425,13 +478,13 @@ program define lpdid, eclass
 		quietly bysort `unit' (`time') : gen cumulative_y = sum(`depvar')
 		quietly bysort `unit' (`time') : gen obs_n = _n
 		quietly gen aveLY = L.cumulative_y/(obs_n-1)
-		quietly drop obs_n
 		forval h = 0/`post_window' {
 			quietly gen D`h'y = F`h'.`depvar' - aveLY
 		}
 		forval h = 2/`pre_window' {
 			quietly gen Dm`h'y = L`h'.`depvar' - aveLY
 		}		
+		quietly drop obs_n		
 	}
 	else if "`pmd'"!="max" & "`pmd'"!=""{ // moving average of periods [-k,-1] 		
 		qui egen aveLY =  filter(`depvar'), lags(`pmd'/1) normalize // requires egenmore
@@ -469,7 +522,7 @@ program define lpdid, eclass
 				quietly replace weight_`h'=round(weight_`h',0.00000001)
 				quietly gen reweight_`h'=1/weight_`h'
 				quietly sort `unit' `time'
-				if "`weights'"!="" quietly replace reweight_`h' = reweight_`h' * `weights'
+				if "`weight_name'"!="" quietly replace reweight_`h' = reweight_`h' * `weight_name'
 			}
 		}
 		else if "`nocomp'"!="" { // if ruling out composition effects, weights are the same across all time horizons
@@ -483,29 +536,34 @@ program define lpdid, eclass
 			quietly replace weight_num_den=gweight if weight_num_den==.
 			quietly replace weight_num_den=round(weight_num_den,0.00000001)
 			quietly gen reweight=1/weight_num_den
-			if "`weights'"!="" quietly replace reweight = reweight * `weights'
+			if "`weight_name'"!="" quietly replace reweight = reweight * `weight_name'
 			quietly sort `unit' `time'				
 		}
 	}
 	else if "`rw'"=="" { // no weights, just assign an equal weight to each observation	
 		if "`nocomp'"!="" {
 			qui gen reweight = 1
-			if "`weights'"!="" quietly replace reweight = `weights'
+			if "`weight_name'"!="" quietly replace reweight = `weight_name'
 		}
 		else if "`nocomp'"=="" {
 			forvalues j=0/`post_leads'{
 				quietly gen reweight_`j' = 1
-				if "`weights'"!="" quietly replace reweight_`j' = `weights'
+				if "`weight_name'"!="" quietly replace reweight_`j' = `weight_name'
 			}
 		}
 	}
-	else if "`rw'"!="" & "`rw_ra'"!=""{ // variables for regression adjustment 
+	else if "`rw'"!="" & "`rw_ra'"!=""{ 		// variables for regression adjustment 
 		quietly gen dtreat=D.`treat'
-		quietly replace dtreat=. if dtreat==-1 // only matters with nonabsorbing treatment 
-		quietly tab `time', gen(tdum)
-		quietly su `time'
-		quietly cap drop tdum`r(min)' tdum`r(max)' // avoid collinearity and reduce teffects computation time a little bit
-		if "`weights'"!="" local `ra_reweight' "[pweight=`weights']"
+		quietly replace dtreat=. if dtreat==-1  // only matters with nonabsorbing treatment 
+		local fe ""
+		local addfe_n = 0
+		foreach add_fe in `fixed_effects' {
+			local addfe_n = `addfe_n' + 1 
+			quietly tab `add_fe', gen(dum`addfe_n'_)
+			quietly drop dum`addfe_n'_1
+			local fe `fe' dum`addfe_n'_*
+		}
+		if "`weight_name'"!="" local `ra_reweight' "[pweight=`weight_name']"
 	}
 	
 	
@@ -573,13 +631,13 @@ program define lpdid, eclass
 				if "`horizon'"=="post" local i = `pre_window' + `h' + 1
 				if "`horizon'"=="pre"  local i = `pre_window' - `h' + 1			
 				if "`rw_ra'"=="" {
-					quietly reghdfe `D'`h'y  						///
-							D.`treat' `rhs'   			 			///   	treatment indicator + any covariates
-							if `ccc'==1  							/// 	clean controls condition
-							[pweight=`reweight'],	 				/// 	get equally-weighted ATT if specified
-							absorb(`time') vce(cluster `cluster')	// 		time indicators
+					quietly reghdfe `D'`h'y  								///
+							D.`treat' `rhs'   			 					///   	treatment indicator + any covariates
+							if `ccc'==1  									/// 	clean controls condition
+							[pweight=`reweight'],	 						/// 	get equally-weighted ATT if specified
+							absorb(`fixed_effects') vce(cluster `cluster')	// 		time indicators + any additional absorbed FEs
 							
-					mat J[`i',1] = _b[D.`treat']
+					mat J[`i',1] = _b[D.`treat']	
 					mat J[`i',7] = e(N) 
 					if "`bootstrap'"!=""{
 						quietly boottest D.`treat', reps(`bootstrap') ///
@@ -599,9 +657,8 @@ program define lpdid, eclass
 					}					
 				}
 				else if "`rw_ra'"!="" { // using regression adjustment 
-					quietly cap teffects ra (`D'`h'y  tdum* `rhs') (dtreat)	///
+					quietly cap teffects ra (`D'`h'y  `rhs' `fe') (dtreat)	///
 							if `ccc'==1 `ra_reweight', atet iterate(0) vce(cluster `cluster')
-							
 					if _rc==0 {
 						mat J[`i',1] = r(table)[1,1]
 						mat J[`i',2] = r(table)[2,1]
@@ -609,7 +666,7 @@ program define lpdid, eclass
 						mat J[`i',4] = round(r(table)[4,1],0.0001)
 						mat J[`i',5] = r(table)[5,1]
 						mat J[`i',6] = r(table)[6,1] 
-						mat J[`i',7] = e(N) 
+						mat J[`i',7] = e(N) 						
 					}
 					else if _rc==459 & "`horizon'"=="pre" { // This is to accommodate situations where you are controlling for outcome lags, so first pre horizons are 0 by construction, producing collinearity & error message r(459)
 						mat J[`i',1] = 0
@@ -618,7 +675,7 @@ program define lpdid, eclass
 						mat J[`i',4] = .
 						mat J[`i',5] = .
 						mat J[`i',6] = .
-						mat J[`i',7] = .
+						mat J[`i',7] = .					
 					}
 				}
 			}
@@ -649,7 +706,7 @@ program define lpdid, eclass
 				mat P[`i',4] = .
 				mat P[`i',5] = .
 				mat P[`i',6] = .
-				mat P[`i',7] = .
+				mat P[`i',7] = .				
 				continue 
 			}			
 			
@@ -659,16 +716,15 @@ program define lpdid, eclass
 			if "`horizon'"=="pre" local pooled_start = `pre_pooled_start'			
 			if "`horizon'"=="post" local pooled_start = -`post_pooled_start' 
 			
+			* generating pooled dependent variable 
 			qui egen aveFY =  filter(`depvar'), lags(`pooled_end'/`pooled_start') normalize 
-			
-			* pre mean differenced (recall aveLY was created in the previous pmd section)
-			if "`pmd'"=="" {
+			if "`pmd'"=="" { // recall aveLY was created in the previous pmd section
 				qui gen pooled_y = aveFY - L.`depvar'
 			}
 			if "`pmd'"!="" {
 				qui gen pooled_y = aveFY - aveLY
 			} 
-
+			
 			* weights 
 			if "`horizon'"=="pre" local ccc "CCS_m`pre_pooled_end'"			
 			if "`horizon'"=="post" local ccc "CCS_`post_pooled_end'"			
@@ -682,13 +738,13 @@ program define lpdid, eclass
 			}
 			
 			if "`rw_ra'"=="" {
-				quietly reghdfe pooled_y  						///
-						D.`treat' `rhs'   			 			///   	treatment indicator + any covariates
-						if `ccc'==1  							/// 	clean controls condition
-						[pweight=`reweight'],	 				/// 	get equally-weighted ATT if specified
-						absorb(`time') vce(cluster `cluster')	// 		time indicators
+				quietly reghdfe pooled_y  								///
+						D.`treat' `rhs'   			 					///   	treatment indicator + any covariates
+						if `ccc'==1  									/// 	clean controls condition
+						[pweight=`reweight'],	 						/// 	get equally-weighted ATT if specified
+						absorb(`fixed_effects') vce(cluster `cluster')	// 		time indicators	+ any additional absorbed FEs
 				mat P[`i',1] = _b[D.`treat']
-				mat P[`i',7] = e(N) 
+				mat P[`i',7] = e(N) 				
 				if "`bootstrap'"!=""{
 					quietly boottest D.`treat', reps(`bootstrap') ///
 							nograph bootcluster(`cluster') level(`level')
@@ -707,7 +763,7 @@ program define lpdid, eclass
 				}
 			}
 			else if "`rw_ra'"!="" { // using regression adjustment 
-				quietly cap teffects ra (pooled_y tdum* `rhs') (dtreat)	///
+				quietly cap teffects ra (pooled_y `rhs' `fe') (dtreat)	///
 						if `ccc'==1 `ra_reweight', atet iterate(0) vce(cluster `cluster')
 				if _rc==0 {
 					mat P[`i',1] = r(table)[1,1]
@@ -716,7 +772,7 @@ program define lpdid, eclass
 					mat P[`i',4] = round(r(table)[4,1],0.0001)
 					mat P[`i',5] = r(table)[5,1]
 					mat P[`i',6] = r(table)[6,1]
-					mat P[`i',7] = e(N) 
+					mat P[`i',7] = e(N) 					
 				}
 				else if _rc==459 & "`horizon'"=="pre" { // This is to accommodate situations where you are controlling for outcome lags, so first pre horizons are 0 by construction, producing collinearity & error message r(459)
 					mat P[`i',1] = 0
@@ -725,10 +781,10 @@ program define lpdid, eclass
 					mat P[`i',4] = .
 					mat P[`i',5] = .
 					mat P[`i',6] = .
-					mat P[`i',7] = .
+					mat P[`i',7] = .					
 				}
 			}			
-			cap drop pooled_y aveFY
+			cap drop pooled_y aveFY 
 		} // horizon 
 	}		
 
@@ -769,11 +825,12 @@ program define lpdid, eclass
 	ereturn local cmdline = "`cmdline'"
 	ereturn local lpdid = "lpdid"
 	ereturn local depvar = "`depvar'"
-	if "`controls'"!="" ereturn local controls = "`controls'"
-	if "`ylags'"!="" ereturn scalar ylags = `ylags'
-	if "`dylags'"!="" ereturn scalar dylags = `dylags'
-	if "`pre_window'"!="" ereturn scalar pre_window = `pre_window'
-	if "`post_window'"!="" ereturn scalar post_window = `post_window'
+	if "`controls'"!="" 	ereturn local controls = "`controls'"
+	if "`ylags'"!="" 		ereturn scalar ylags = `ylags'
+	if "`absorb'"!="" 		ereturn local absorb = "`absorb'"
+	if "`controls'"!="" 	ereturn local controls = "`controls'"	
+	if "`pre_window'"!="" 	ereturn scalar pre_window = `pre_window'
+	if "`post_window'"!="" 	ereturn scalar post_window = `post_window'
 	if "`nevertreated'"=="" & ("`nonabsorbing'"=="" | "`nonabsorbing'"!="" & "`notyet'"!="") ereturn local control_group = "Not yet treated units"
 	if "`nevertreated'"!="" ereturn local control_group = "Never treated units"
 	if "`nevertreated'"=="" & "`nonabsorbing'"!="" & "`notyet'"=="" ereturn local control_group "Units with no change in treatment status between t-`L' and t+h"
@@ -784,15 +841,16 @@ program define lpdid, eclass
 	
 end
 
-***************************************************************
-*** Auxiliary program to parse suboptions of NONABSorbing() ***
-***************************************************************
+*************************************************************************
+*** 	Auxiliary program to parse suboptions of NONABSorbing() 	  ***
+*************************************************************************
 cap prog drop parse_nonabsorb
 program parse_nonabsorb , sclass 
 	version 13
 	
 	syntax [anything(id="integer")] , [NOTYet] [FIRSTtreat]
 	
+	* test input 
 	if "`anything'"!="" {
 		cap confirm integer number `anything'
 		if _rc{ // integer test 
@@ -801,9 +859,9 @@ program parse_nonabsorb , sclass
 		}
 	}
 		
+	* output 
 	if "`anything'"!="" sreturn local clean `anything'
 	sreturn local notyet `notyet'	
 	sreturn local firsttreat `firsttreat'
 
 end 
-
