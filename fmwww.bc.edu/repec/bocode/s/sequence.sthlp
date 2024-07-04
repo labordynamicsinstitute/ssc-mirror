@@ -1,156 +1,102 @@
+
+
+
 {smcl}
-{* *! version 1.0.0 14feb2019}{...}
-
-{title:Title}
-
-{p2colset 5 17 18 2}{...}
-{p2col:{hi:sequence} {hline 2}} Generates versatile numerical sequences {p_end}
-{p2colreset}{...}
+{cmd:help sequence}
+{hline}
 
 
-{marker syntax}{...}
 {title:Syntax}
 
-{p 8 14 2}
-{cmd:sequence}
-{it: newvarname}
-{cmd:,}
-[ {opt f:rom(#)}
-{opt t:o(#)}
-{opt by(#)}
-]
+{p 8 17 2}
+{cmdab:sequence:}
+[var1] [var2] ... [var30], diaryid(string) diaryst(n)
 
 
-{synoptset 14 tabbed}{...}
-{synopthdr}
-{synoptline}
-{synopt :{opt f:rom(#)}}the starting (lowest) value of the sequence. {cmd:from()} accepts negative and fractional values {p_end}
-{synopt :{opt t:o()}}the ending (highest) value of the sequence. {cmd:to()} is required when the data contain no observations (_N == 0), and {cmd:to()} must be larger than {cmd:from()}{p_end}
-{synopt:{opt by(#)}}the increment by which the sequence increases. {cmd:by()} must be a positive value. {cmd:by()} cannot be specified when there are observations in the current data (_N > 0) {p_end}
-{synoptline}
-
-
-
-{marker description}{...}
 {title:Description}
 
-{pstd}
-{opt sequence} is a versatile alternative to official Stata's {helpb egen seq()} for generating numerical sequences. In contrast to {helpb egen seq()}, 
-{opt sequence} can generate sequences when there are currently no observations in the data (_N == 0), and {opt sequence} accepts non-integer values for 
-{cmd:from()}, {cmd:to()}, and {cmd:by()} options, thereby generating non-integer sequences. Like {helpb egen seq()}, {opt sequence} can generate 
-sequences which are negative, or span from negative to positive values.
+{phang}
+{bf:sequence} {hline 2} transforms a time use file in calendar long format —where each row represents a time interval of constant duration in a person's day— into an episode-level file. 
+In the episode file, each row represents an episode of activity, a period of time during which there is no change in any of the variables specified in the syntax. 
+If however, you desire to create an episode-level file starting from another episode file, use the command {cmd:sequencex} instead.
 
 
 
-{title:Options}
+{title:Arguments}
 
-{p 4 8 2}
-{cmd:from(}{it:#}{cmd:)} specifies the starting (lowest) value of the sequence. Negative and fractional values may be specified.  
+{phang}
+{bf:var1 to var30}: variable/s used to define the episode of activity. These variables are usually the activity, and the other diary fields such as location, copresence, etc... 
+Up to 30 variables can be specified to define the episodes of activity. 
+The variables need to be numeric, strings are not allowed. 
 
-{p 4 8 2}
-{cmd:to(}{it:#}{cmd:)} specifies the ending (highest) value of the sequence. Negative and fractional values may be specified but {cmd:to()} 
-must be larger than {cmd:from()}. {cmd:to()} is required when the data contain no observations (_N == 0).
+{phang}
+{bf:diaryid(string)}: the names of the variable or variables that when considered jointly uniquely identify the diary. 
 
-{p 4 8 2}
-{cmd:by(}{it:#}{cmd:)} specifies the increment by which the sequence increases. {cmd:by()} must be a positive value but can take on fractional values. {cmd:by()} 
-cannot be specified when _N > 0.
-
-
-
-{title:Remarks}
-
-{pstd}
-{cmd:When _N == 0 (no observations)}:{p_end}
-
-        and {cmd:from()} is not specified but {cmd:by()} is specified, {cmd:from()} is set to the modulus of {cmd:to()} and {cmd:by()}; 
-
-        or when both {cmd:from()} and {cmd:by()} are not specified, {cmd:from()} and {cmd:by()} are set to 1; 
-
-        or when {cmd:from()} is specified but {cmd:by()} is not specified, {cmd:by()} is set to abs(({cmd:to} - {cmd:from}) / ({cmd:to} - 1)).  
+{phang}
+{bf:diaryst(n)}: diary start time, a number is expected. eg. 4 if the diary starts at 4 am or 0 if the diary starts at midnight. A 24-hour clock is used.
 
 
-{pstd}
-{cmd:When _N > 0 (observations exist in the data)}:{p_end}
+{title:Variables that need to exist}
 
-        and {cmd:from()} is not specified, {cmd:from()} is set to 1;
+{phang}
+In addition to the variables specified in the argument, the variable 'tslot' needs to be there for the program to work:
 
-        or when {cmd:to()} is not specified, {cmd:to()} is set to equal _N.
+{phang}
+{bf:tslot}: variable indicating the number of time slot for each row of data. 
+The time slots are the intervals of time into which the day is divided. 
+For example, in a diary organised into 10-minute time slots, 144 time slots are expected, taking values from 1 to 144. 
+Before creating the episodes, the program will check that all diaries have the same number of time slots and that they have the expected values. 
+If this variable is called something other than "tslot", simply rename it before running the program.
 
+{title:Outcomes} 
+
+{pstd} {bf:epnum}: variable indicating the episode number for each data row.
+
+{pstd} {bf:start}: variable showing the start time of the episode of activity expressed as minute of the day. It can take values from 0 to 1439.
+
+{pstd} {bf:end}: variable showing the end time of the episode of activity expressed as minute of the day. It can take values from 1 to 1440.
+
+{pstd} {bf:time}: shows the duration of the episode of activity. It is calculated as end-start. 
+
+{pstd} {bf:clockst}: start time of the activity expressed in clock format.   
 
 
 {title:Examples}
 
-{pstd}
-{opt 1) When _N == 0 (no observations in the data):}{p_end}
-	
-{pmore}Clear the data{p_end}
-{pmore2}{bf:{stata "clear": . clear}} {p_end}
+{pstd} The following lines of code load the dataset "example_calendar.dta" and convert it into an episode file. 
+In the first example the episodes are defined by the primary activity only. 
+In the second example the location field is used to define the episodes. 
+In the third example, three variables are used: the primary activity, the secondary activity and the location.
+Note how the number of episodes drops when fewer variables are used to define the episodes. The diary starts at 4:00 am and the diaries are uniquely identified by the variables 'personid' and 'diaryid'.
 
-{pmore} Generate a sequence named "test" that ranges from -30 to 30 in increments of 0.5. We then run {helpb summarize} to see the results{p_end}
-{pmore2}{bf:{stata "sequence test, from(-30) to(30) by(0.5)": . sequence test, from(-30) to(30) by(0.5)}} {p_end}
-{pmore2}{bf:{stata "sum test": . sum test}} {p_end}
+{bf:Example 1: episodes defined by primary only} 
 
-{pmore} Same as above but we do not specify {cmd:by()} {p_end}
-{pmore2}{bf:{stata "clear": . clear}} {p_end}
-{pmore2}{bf:{stata "sequence test, from(-30) to(30)": . sequence test, from(-30) to(30)}} {p_end}
-{pmore2}{bf:{stata "sum test": . sum test}} {p_end}
+{phang2}. {stata "net get calendar":net get calendar}{p_end}
+{phang2}. {stata "use example_calendar, clear":use example_calendar, clear}{p_end}
+{phang2}. {stata "sequence primary, diaryid(personid diaryid) diaryst(4)":sequence primary, diaryid(personid diaryid) diaryst(4)}{p_end}
 
-{pmore} Same as above but we do not specify {cmd:from()} {p_end}
-{pmore2}{bf:{stata "clear": . clear}} {p_end}
-{pmore2}{bf:{stata "sequence test, to(30) by(0.5)": . sequence test, to(30) by(0.5)}} {p_end}
-{pmore2}{bf:{stata "sum test": . sum test}} {p_end}
+{bf:Example 2: episodes defined by location} 
 
-{pmore} Same as above but we specify only {cmd:to()} {p_end}
-{pmore2}{bf:{stata "clear": . clear}} {p_end}
-{pmore2}{bf:{stata "sequence test, to(30)": . sequence test, to(30)}} {p_end}
-{pmore2}{bf:{stata "sum test": . sum test}} {p_end}
+{phang2}. {stata "net get calendar":net get calendar}{p_end}
+{phang2}. {stata "use example_calendar, clear":use example_calendar, clear}{p_end}
+{phang2}. {stata "sequence location, diaryid(personid diaryid) diaryst(4)":sequence location, diaryid(personid diaryid) diaryst(4)}{p_end}
 
+{bf:Example 3: episodes defined by primary, secondary and location} 
 
-{pstd}
-{opt 2) When _N > 0 (i.e. observations in the data):}{p_end}
-	
-{pmore}Use an existing dataset {p_end}
-{pmore2}{bf:{stata "sysuse auto, clear": . sysuse auto, clear}} {p_end}
-
-{pmore} Generate a sequence named "test1" that ranges from -30 to 30. We then run {helpb summarize} to see the results{p_end}
-{pmore2}{bf:{stata "sequence test1, from(-30) to(30)": . sequence test1, from(-30) to(30)}} {p_end}
-{pmore2}{bf:{stata "sum test1": . sum test1}} {p_end}
-
-{pmore} Generate a sequence named "test2", specifying only {cmd:from()}{p_end}
-{pmore2}{bf:{stata "sequence test2, from(-30)": . sequence test2, from(-30)}} {p_end}
-{pmore2}{bf:{stata "sum test2": . sum test2}} {p_end}
-
-{pmore} Generate a sequence named "test3", specifying only {cmd:to()}{p_end}
-{pmore2}{bf:{stata "sequence test3, to(30)": . sequence test3, to(30)}} {p_end}
-{pmore2}{bf:{stata "sum test3": . sum test3}} {p_end}
-
-{pmore} Generate a sequence named "test4", with no options specified{p_end}
-{pmore2}{bf:{stata "sequence test4": . sequence test4}} {p_end}
-{pmore2}{bf:{stata "sum test4": . sum test4}} {p_end}
-
-
-
-{marker citation}{title:Citation of {cmd:sequence}}
-
-{p 4 8 2}{cmd:sequence} is not an official Stata command. It is a free contribution
-to the research community, like a paper. Please cite it as such: {p_end}
-
-{p 4 8 2}
-Linden A. (2019). SEQUENCE: Stata module for generating versatile numeric sequences.
-{p_end}
-
-
+{phang2}. {stata "net get calendar":net get calendar}{p_end}
+{phang2}. {stata "use example_calendar, clear":use example_calendar, clear}{p_end}
+{phang2}. {stata "sequence primary secondary location, diaryid(personid diaryid) diaryst(4)":sequence primary secondary location, diaryid(personid diaryid) diaryst(4)}{p_end}
 
 {title:Author}
 
-{p 4 4 2}
-Ariel Linden{break}
-President, Linden Consulting Group, LLC{break}
-alinden@lindenconsulting.org{break}
+{pstd} Juana Lamote de Grignon Pérez, Centre for Time Use Research (UCL), juana.lamote@gmail.com
+
+{pstd} Thanks for citing this software as follows:
+
+{pmore}
+Lamote de Grignon, J. (2024). sequence: Stata module to create episode files from calendar files. Available from http://...”
 
 
+{title:Acknowledgments}
 
-{title:Also see}
-
-{p 4 8 2} Online: {helpb egen seq()}{p_end}
-
+{pstd} I am grateful to Elena Mylona and Margarita Vega Rapún for their feedback during the development of the program.

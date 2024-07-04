@@ -1,0 +1,79 @@
+d 'TIMEUSE': module to transform an episode file into a diary-level file containing basic time use information
+d
+d  Time use surveys are a rich data source that can inform many
+d disciplines. However, much of their potential remains untapped
+d due to the complexities involved in manipulating these
+d episode-level files. The timeuse package for Stata aims to make
+d time use data more accessible. The key programs included in the
+d package are timeuse, timeusex, sequence, and sequencex.  timeuse
+d and timeusex transform episode-level files into diary-level files
+d containing time use information that can be immediately utilized
+d by users without prior knowledge of time use data. timeuse
+d provides durations and instances of participation for several
+d activities, while timeusex offers more detailed information but
+d for a single category of activity.  sequence and sequencex create
+d episode files where the episode of activity is defined by the
+d variables or diary fields specified by the user. sequence should
+d be used when the starting file is in calendar format, and
+d sequencex when the starting file is already in episode format. 
+d
+d KW: time use
+d KW: sequences
+d KW: episodes
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20240703
+d
+d Author:   Juana Lamote de Grignon Pérez, Centre for Time Use Research (UCL)
+d Support: email juana.lamote@@gmail.com
+d
+f timeuse.ado
+f timeuse.sthlp
+f timeusex.ado
+f timeusex.sthlp
+f tocalendar.ado
+f tocalendar.sthlp
+f ../c/clocktominb.ado
+f ../c/clocktominb.sthlp
+f ../c/clocktomine.ado
+f ../c/clocktomine.sthlp
+f ../c/clocktomins.ado
+f ../c/clocktomins.sthlp
+f ../e/epichecks.ado
+f ../e/epicheck1.ado
+f ../e/epicheck2.ado
+f ../e/epicheck3.ado
+f ../e/epicheck4.ado
+f ../e/epichecks.sthlp
+f ../s/sequence.ado
+f ../s/sequence.sthlp
+f ../s/sequencex.ado
+f ../s/sequencex.sthlp
+f ../x/xclock0.ado
+f ../x/xclock1.ado
+f ../x/xclock2.ado
+f ../x/xclock3.ado
+f ../x/xclock4.ado
+f ../x/xclock5.ado
+f ../x/xclock6.ado
+f ../x/xclock7.ado
+f ../x/xclock8.ado
+f ../x/xclock9.ado
+f ../x/xclock10.ado
+f ../x/xclock11.ado
+f ../x/xclock12.ado
+f ../x/xclock13.ado
+f ../x/xclock14.ado
+f ../x/xclock15.ado
+f ../x/xclock16.ado
+f ../x/xclock17.ado
+f ../x/xclock18.ado
+f ../x/xclock19.ado
+f ../x/xclock20.ado
+f ../x/xclock21.ado
+f ../x/xclock22.ado
+f ../x/xclock23.ado
+f ../a/atusdiary.dta 
+f ../c/calendar.dta 
+f ../d/diary.dta 

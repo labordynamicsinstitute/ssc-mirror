@@ -73,6 +73,7 @@ p tidy module to ease reshaping of data
 p tihtest module to test for time invariant unobserved heterogeneity in generalized linear models for panel data
 p timeit module to provide single line version of timer on/off
 p timestamp module to obtain a UNIX timestamp and the current time of a user-specified timezone
+p timeuse module to transform an episode file into a diary-level file containing basic time use information
 p titebeta module to conduct toxicity monitoring for phase 2 (and 3) trials 
 p title module to create a title for logfiles
 p tiva2023 module to manipulate the OECD TiVA inter-country input-output tables database 
