@@ -1,0 +1,32 @@
+d 'DIFF_PLOT': module to visualize classic difference-in-differences model 
+d
+d   diff_plot is designed to create a customized visual
+d representation of the canonical difference-in-differences (DiD)
+d estimation, which is commonly used in causal inference. This
+d program is tailored for the simplest 2x2 case, where we have one
+d treatment group, one control group, one period prior to
+d intervention, and one period post-intervention. It generates a
+d line graph that illustrates the changes in an outcome variable
+d over the two time periods for both the treatment and control
+d groups. Crucially, the graph also includes an optional parallel
+d trend line, which simulates the counterfactual trend for the
+d treatment group in the absence of any treatment, based on the
+d parallel trend assumption. This tool is particularly useful for
+d organizations such as NGOs and research institutions that have
+d baseline and midline/endline data and want to visualize changes
+d in both the treatment and control groups as part of their project
+d evaluations. 
+d
+d KW: DiD
+d KW: graphics
+d KW: 2x2
+d
+d Requires: Stata version 11.2 and elabel from SSC (q.v.)
+d
+d Distribution-Date: 20240705
+d
+d Author:   Kabira Namit,  World Bank
+d Support: email   knamit@@worldbank.org
+d
+f diff_plot.ado
+f diff_plot.sthlp

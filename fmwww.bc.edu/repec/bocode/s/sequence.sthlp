@@ -63,7 +63,7 @@ If this variable is called something other than "tslot", simply rename it before
 
 {title:Examples}
 
-{pstd} The following lines of code load the dataset "example_calendar.dta" and convert it into an episode file. 
+{pstd} The following lines of code load the dataset "calendar.dta" and convert it into an episode file. 
 In the first example the episodes are defined by the primary activity only. 
 In the second example the location field is used to define the episodes. 
 In the third example, three variables are used: the primary activity, the secondary activity and the location.
@@ -71,20 +71,20 @@ Note how the number of episodes drops when fewer variables are used to define th
 
 {bf:Example 1: episodes defined by primary only} 
 
-{phang2}. {stata "net get calendar":net get calendar}{p_end}
-{phang2}. {stata "use example_calendar, clear":use example_calendar, clear}{p_end}
+{phang2}. {stata "net get timeuse":net get timeuse}{p_end}
+{phang2}. {stata "use calendar, clear":use calendar, clear}{p_end}
 {phang2}. {stata "sequence primary, diaryid(personid diaryid) diaryst(4)":sequence primary, diaryid(personid diaryid) diaryst(4)}{p_end}
 
 {bf:Example 2: episodes defined by location} 
 
-{phang2}. {stata "net get calendar":net get calendar}{p_end}
-{phang2}. {stata "use example_calendar, clear":use example_calendar, clear}{p_end}
+{phang2}. {stata "net get timeuse":net get timeuse}{p_end}
+{phang2}. {stata "use calendar, clear":use calendar, clear}{p_end}
 {phang2}. {stata "sequence location, diaryid(personid diaryid) diaryst(4)":sequence location, diaryid(personid diaryid) diaryst(4)}{p_end}
 
 {bf:Example 3: episodes defined by primary, secondary and location} 
 
-{phang2}. {stata "net get calendar":net get calendar}{p_end}
-{phang2}. {stata "use example_calendar, clear":use example_calendar, clear}{p_end}
+{phang2}. {stata "net get timeuse":net get timeuse}{p_end}
+{phang2}. {stata "use calendar, clear":use calendar, clear}{p_end}
 {phang2}. {stata "sequence primary secondary location, diaryid(personid diaryid) diaryst(4)":sequence primary secondary location, diaryid(personid diaryid) diaryst(4)}{p_end}
 
 {title:Author}
@@ -94,7 +94,7 @@ Note how the number of episodes drops when fewer variables are used to define th
 {pstd} Thanks for citing this software as follows:
 
 {pmore}
-Lamote de Grignon, J. (2024). sequence: Stata module to create episode files from calendar files. Available from http://...”
+Lamote de Grignon, J. (2024). sequence: Stata module to create episode files from calendar files. Available from: {browse "https://ideas.repec.org/c/boc/bocode/s459346.html":https://ideas.repec.org/c/boc/bocode/s459346.html.}
 
 
 {title:Acknowledgments}

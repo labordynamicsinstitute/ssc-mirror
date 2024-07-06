@@ -60,13 +60,13 @@ If no such variable exists in the dataset but the episodes of activity are order
 {title:Example}
 
 {p}
-The following lines of code load the dataset "example_atusdiary.dta" and creates the variables 'start', 'end', and 'end_atus' from the string variables included in the dataset.
+The following lines of code load the dataset "atusdiary.dta" and creates the variables 'start', 'end', and 'end_atus' from the string variables included in the dataset.
 'start', 'end', and 'end_atus' measure the time at which the activity ends expressed as minute-of-the-day. 
 "example_atusdiary.dta" is a small dataset with the exact same format as the American Time Use Survey (although with just a few variables). 
 The variables 'tustarttim' and 'tustoptime' are the variables containing the start and end time of the episode of activity.
 
-{phang2}. {stata "net get atusdiary":net get atusdiary}{p_end}
-{phang2}. {stata "use example_atusdiary, clear":use example_atusdiary, clear}{p_end}
+{phang2}. {stata "net get timeuse":net get timeuse}{p_end}
+{phang2}. {stata "use atusdiary, clear":use atusdiary, clear}{p_end}
 {phang2}. {stata "clocktominb tustarttim tustoptime, diaryid(tucaseid) epnum(tuactivity_n) diaryst(4)":clocktominb tustarttim tustoptime, diaryid(tucaseid) epnum(tuactivity_n) diaryst(4)}{p_end}
 
 
@@ -77,7 +77,8 @@ The variables 'tustarttim' and 'tustoptime' are the variables containing the sta
 {pstd} Thanks for citing this software as follows:
 
 {pmore}
-Lamote de Grignon, J. (2024). clocktominb: Stata module to convert episode start and end time from string to minute-of-the day. Available from http://...”
+Lamote de Grignon, J. (2024). clocktominb: Stata module to convert episode start and end time from string to minute-of-the-day. Available from: {browse "https://ideas.repec.org/c/boc/bocode/s459346.html":https://ideas.repec.org/c/boc/bocode/s459346.html.}
+
 
 
 {title:Acknowledgments}

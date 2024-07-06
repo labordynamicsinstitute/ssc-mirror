@@ -21,6 +21,7 @@ p catplot module for plots of frequencies, fractions or percents of categorical 
 p causaldata module providing datasets used in causal analysis
 p cb2html module to write a codebook to an HTML file
 p cbarplot module for centred bar plots of absolute or relative frequencies
+p cc_xd_didtextbook module to provide do-files and datafiles for textbook
 p ccmatch module to match cases and controls using specified  variables
 p ccmpre module to compute PRE Measures for Cultural Consensus Models
 p cctable module to calculate summary table for case-control study

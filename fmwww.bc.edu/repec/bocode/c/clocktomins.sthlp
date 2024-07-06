@@ -52,13 +52,13 @@ If the original data also contains a string variable with the end time of the ac
 {title:Example:}
 
 {p}
-The following lines of code load the dataset "example_atusdiary.dta" and creates the variables 'start' and 'end' from a variable containing the start time of the activity expressed as a clock.  
-"example_atusdiary.dta" is a small dataset with the exact same format as the American Time Use Survey (although with just a few variables).
+The following lines of code load the dataset "atusdiary.dta" and creates the variables 'start' and 'end' from a variable containing the start time of the activity expressed as a clock.  
+"atusdiary.dta" is a small dataset with the exact same format as the American Time Use Survey (although with just a few variables).
 In the American Time Use survey, the start and end time of activities is measured by the variables 'tustarttim' and 'tustoptime', but for the sake of the example we will assume we only have 'tustarttim'.
 
 
-{phang2}. {stata "net get atusdiary":net get atusdiary}{p_end}
-{phang2}. {stata "use example_atusdiary, clear":use example_atusdiary, clear}{p_end}
+{phang2}. {stata "net get timeuse":net get timeuse}{p_end}
+{phang2}. {stata "use atusdiary, clear":use atusdiary, clear}{p_end}
 {phang2}. {stata "clocktomins tustarttim, diaryid(tucaseid) epnum(tuactivity_n) diaryst(4)":clocktomins tustarttim, diaryid(tucaseid) epnum(tuactivity_n) diaryst(4)}{p_end}
 
 
@@ -69,7 +69,8 @@ In the American Time Use survey, the start and end time of activities is measure
 {pstd} Thanks for citing this software as follows:
 
 {pmore}
-Lamote de Grignon, J. (2024). clocktomins: Stata module to convert episode start time from string to minute-of-the day. Available from http://...”
+Lamote de Grignon, J. (2024). clocktomins: Stata module to convert episode start time from string to minute-of-the day. Available from: {browse "https://ideas.repec.org/c/boc/bocode/s459346.html":https://ideas.repec.org/c/boc/bocode/s459346.html.}
+
 
 
 {title:Acknowledgments}

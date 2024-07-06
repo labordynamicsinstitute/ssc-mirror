@@ -372,7 +372,8 @@ program define cnevent
 			putdocx save `wilcoxon'.docx, replace
 		}		
 		
-		cap drop  median* z* cntrade*name+
+		cap drop  median`car'* z`car'* 
+		cap drop cntrade*name+
 		
 	    save ``file''.dta,replace		
 		

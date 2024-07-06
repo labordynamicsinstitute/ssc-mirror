@@ -1,5 +1,5 @@
 {smcl}
-{* 24jun2024}{...}
+{* 04jul2024}{...}
 {vieweralsosee "geoframe" "help geoframe"}{...}
 {vieweralsosee "colorpalette" "help colorpalette"}{...}
 {vieweralsosee "[G-2] graph" "help graph"}{...}
@@ -74,14 +74,18 @@ or
 
 {p2coldent:* {helpb geoplot##pie:pie}}pie charts
     {p_end}
-{p2coldent:* {helpb geoplot##bar:bar}}stacked bar charts
+{p2coldent:* {helpb geoplot##bar:bar}}stacked (or unstacked) bar charts
     {p_end}
 
+{p2coldent:* {helpb geoplot##areai:areai}}{cmd:area} with immediate arguments
+    {p_end}
+{p2coldent:* {helpb geoplot##linei:linei}}{cmd:line} with immediate arguments
+    {p_end}
 {p2coldent:* {helpb geoplot##pointi:pointi}}{cmd:point} with immediate arguments
     {p_end}
 {p2coldent:* {helpb geoplot##pointi:scatteri}}synonym for {cmd:pointi}
     {p_end}
-{p2coldent:* {helpb geoplot##pointi:labeli}}{cmd:label} with immediate arguments
+{p2coldent:* {helpb geoplot##labeli:labeli}}{cmd:label} with immediate arguments
     {p_end}
 {p2coldent:* {helpb geoplot##symboli:symboli}}{cmd:symbol} with immediate arguments
     {p_end}
@@ -180,6 +184,12 @@ or
 {synopt :{helpb geoplot##legend:{ul:leg}end{sf:[}({it:options}){sf:]}}}add
     standard legend
     {p_end}
+{synopt :{helpb geoplot##glegend:{ul:gleg}end{sf:[}({it:options}){sf:]}}}add
+    geoplot legend (can be repeated)
+    {p_end}
+{synopt :{helpb geoplot##slegend:{ul:sleg}end({it:spec})}}add
+    size legend (can be repeated)
+    {p_end}
 {synopt :{helpb geoplot##clegend:{ul:cleg}end{sf:[}({it:options}){sf:]}}}add
     {helpb contour} plot legend (requires Stata 18)
     {p_end}
@@ -189,9 +199,12 @@ or
     compass
     {p_end}
 
-{syntab :Zoom}
-{synopt :{helpb geoplot##zoom:zoom({it:spec})}}zoom in on specific layers;
-    can be repeated
+{syntab :Zoom / Inset}
+{synopt :{helpb geoplot##zoom:zoom({it:spec})}}zoom in on specific layers
+    (can be repeated)
+    {p_end}
+{synopt :{helpb geoplot##inset:inset({it:spec})}}create inset from additional map
+    (can be repeated)
     {p_end}
 
 {syntab :Overall appearance}
@@ -340,6 +353,11 @@ or
 {phang2}
     {cmd:padding()}, {cmd:rotate}, {cmd:hull}, {cmd:circle}, {cmd:n()}, {cmd:angle()},
     and {cmd:noadjust} as described in help {helpb geoframe##bbox:geoframe bbox}.
+
+{phang2}
+    {cmdab:ref:ine} adds extra points to the edges of the box. Specify this
+    suboption to avoid undesired artifacts when applying global option
+    {helpb geoplot##project:project()}.
 
 {phang2}
     {opt line} plots the bounding box using plot type {helpb geoplot##line:line}. The
@@ -674,6 +692,22 @@ or
     is {it:n} = max(4, ceil({it:headsize} * 100)).
 
 {phang}
+    {opt align(align)} changes the zero point of the selected symbol shape, which
+    determines how the shape is aligned to the coordinate of its position. {cmd:align()}
+    is applied to the raw symbol shape, before applying options such as {cmd:ratio()},
+    {cmd:size()}, {cmd:angle()}, or {cmd:offset()}.
+
+{pmore}
+    {it:align} can contain one of {cmdab:l:eft} and {cmdab:r:ight}, one of
+    {cmdab:b:ottom} and {cmdab:t:op}, as well as {cmdab:c:enter}. For example,
+    type {cmd:align(bottom)} to move the zero point to the bottom, or type
+    {cmd:align(top left)} to move it to the top left corner. The default is to
+    leave the zero point unchanged, which is at the center for most shapes; type
+    {cmd:align(center)} if you want to recenter shapes that do not have their
+    zero point at the center. {cmd:left}, {cmd:right}, {cmd:bottom}, and {cmd:top}
+    take precedence over {cmd:center}.
+
+{phang}
     {opt ratio(#)} adjusts the ratio between the height and the width of the symbols. The default
     is {cmd:ratio(1)}. For example, type {cmd:ratio(2)} to double the height.
 
@@ -792,7 +826,7 @@ or
     map) for the radius of the pie. Alternatively, specify {cmd:size(*}{it:exp}{cmd:)}
     to multiply the default radius by {it:exp}. The default radius is set to 3% of the minimum
     of the horizontal and vertical size of the underlying map (as it exists at the point when the
-    symbols are added, including the positions of the pies; the smallest possible
+    pies are added, including the positions of the pies; the smallest possible
     default radius is 1).
 
 {phang}
@@ -839,7 +873,7 @@ or
     will be ignored.
 
 {marker bar}{...}
-{dlgtab:stacked bar charts}
+{dlgtab:bar charts}
 
 {p 8 15 2}
     {cmd:bar} {it:frame} {varlist} {ifin} {weight}
@@ -856,6 +890,10 @@ or
     are as follows.
 
 {phang}
+    {opt nostack} unstacks the bars. The default is to display stacked bar
+    charts. Specify {cmd:nostack} if you want to display regular (unstacked) bar charts.
+
+{phang}
     {opt asis} omits normalization of the values provided by {it:varlist}. By
     default, the values will be normalized such they sum to 100 across {it:varlist}
     in each row of the data. Option {cmd:asis} may be useful if the provided
@@ -863,18 +901,21 @@ or
     if the percentages do not sum up to 100.
 
 {phang}
+    {opt rev:erse} arranges the bars in reverse order.
+
+{phang}
     {opt ang:le(angle)} rotates the bar charts by {it:angle} degrees
     (counterclockwise). The default is to display upright bar charts. For
     example, Type {cmd:angle(-90)} for horizontal bar charts (west to east). Global
-    option {helpb geoplot##angle:angle()} has no effect on the orientation of the symbols.
+    option {helpb geoplot##angle:angle()} has no effect on the orientation of the bars.
 
 {phang}
     {cmdab:si:ze(}[{cmd:*}]{it:exp}{cmd:)} sets or adjusts the size of the
     bar charts. Type {opt size(exp)} to specify an absolute size (i.e. in units of
-    the underlying map) for the width of the bars. Alternatively, specify {cmd:size(*}{it:exp}{cmd:)} to
+    the underlying map) for the width of the charts. Alternatively, specify {cmd:size(*}{it:exp}{cmd:)} to
     multiply the default width by {it:exp}. The default width is set to 3% of the minimum
     of the horizontal and vertical size of the underlying map (as it exists at the
-    point when the symbols are added, including the positions of the bar charts;
+    point when the bar charts are added, including the positions of the bar charts;
     the smallest possible default width is 1).
 
 {phang}
@@ -918,6 +959,44 @@ or
     for layer type {helpb geoplot##area:area}. Unstarred {it:zvar_options}
     will be ignored.
 
+{marker areai}{...}
+{dlgtab:area with immediate arguments}
+
+{p 8 15 2}
+    {cmd:areai} {it:x1} {it:y1} [ {it:x2} {it:y2} ... ] [{cmd:,} {it:options} ]
+
+{pstd}
+    where arguments {it:x} and {it:y} specify the coordinates defining an
+    area; separate areas are delimited by setting {it:x} and {it:y} equal to
+    {cmd:.} (missing). {it:options} are as follows.
+
+{phang}
+    {opt lab:el(label)} sets a key label for the legend, where {it:label} is
+    {cmd:"}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} {it:...}]. Multiple lines
+    are created if multiple {cmd:"}{it:text}{cmd:"} elements are specified.
+
+{phang}
+    Rendering options as described for layertype {helpb geoplot##area:area}.
+
+{marker linei}{...}
+{dlgtab:line with immediate arguments}
+
+{p 8 15 2}
+    {cmd:linei} {it:x1} {it:y1} [ {it:x2} {it:y2} ... ] [{cmd:,} {it:options} ]
+
+{pstd}
+    where arguments {it:x} and {it:y} specify the coordinates defining a
+    line; separate lines are delimited by setting {it:x} and {it:y} equal to
+    {cmd:.} (missing). {it:options} are as follows.
+
+{phang}
+    {opt lab:el(label)} sets a key label for the legend, where {it:label} is
+    {cmd:"}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} {it:...}]. Multiple lines
+    are created if multiple {cmd:"}{it:text}{cmd:"} elements are specified.
+
+{phang}
+    Rendering options as described for layertype {helpb geoplot##line:line}.
+
 {marker pointi}{...}
 {dlgtab:point with immediate arguments}
 
@@ -936,8 +1015,7 @@ or
     (see {it:{help clockposstyle}}). {it:options} are as follows.
 
 {phang}
-    {opt lab:el(label)} sets a key label
-    for use by {helpb geoplot##legend:legend()}, where {it:label} is
+    {opt lab:el(label)} sets a key label for the legend, where {it:label} is
     {cmd:"}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} {it:...}]. Multiple lines
     are created if multiple {cmd:"}{it:text}{cmd:"} elements are specified.
 
@@ -965,8 +1043,7 @@ or
     (see {it:{help clockposstyle}}; default is {cmd:0}). {it:options} are as follows.
 
 {phang}
-    {opt lab:el(label)} sets a key label
-    for use by {helpb geoplot##legend:legend()}, where {it:label} is
+    {opt lab:el(label)} sets a key label for the legend, where {it:label} is
     {cmd:"}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} {it:...}]. Multiple lines
     are created if multiple {cmd:"}{it:text}{cmd:"} elements are specified.
 
@@ -998,8 +1075,7 @@ or
     symbols for which no custom size has been specified.
 
 {phang}
-    {opt lab:el(label)} sets a key label
-    for use by {helpb geoplot##legend:legend()}, where {it:label} is
+    {opt lab:el(label)} sets a key label for the legend, where {it:label} is
     {cmd:"}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} {it:...}]. Multiple lines
     are created if multiple {cmd:"}{it:text}{cmd:"} elements are specified.
 
@@ -1055,6 +1131,11 @@ or
     default is to use the variables returned by
     {helpb geoframe##get:geoframe get coordinates}.
 
+{phang}
+    {opt noshp} uses the coordinates found in {it:frame} even if {it:frame} is
+    linked to a shape frame. By default, the coordinates are taken from the
+    linked shape frame. Option {cmd:noshp} has no effect if {it:frame} is not linked to a shape frame.
+
 {marker pci}{...}
 {dlgtab:paired-coordinate spikes, arrows, or markers with immediate arguments}
 
@@ -1091,13 +1172,12 @@ or
     {it:{help clockposstyle}}). {it:options} are as follows.
 
 {phang}
-    {opt lab:el(label)} sets a key label
-    for use by {helpb geoplot##legend:legend()}, where {it:label} is
+    {opt lab:el(label)} sets a key label for the legend, where {it:label} is
     {cmd:"}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} {it:...}]. Multiple lines
     are created if multiple {cmd:"}{it:text}{cmd:"} elements are specified.
 
 {phang}
-    Rendering options as described for layertype {helpb geoplot##pcspike:spcspike}.
+    Rendering options as described for layertype {helpb geoplot##pcspike:pcspike}.
 
 
 {marker options}{...}
@@ -1245,7 +1325,7 @@ or
 {phang}
     {cmd:label(}[{it:labelinfo}] [{cmd:,} {it:options}]{cmd:)} determines how
     the levels formed by {help geoplot##zvar:{it:zvar}} will be labeled in
-    {helpb geoplot##legend:legend()}. {it:labelinfo} is
+    the legend. {it:labelinfo} is
 
             [{it:value} [{cmd:=}]] {it:label} [ {it:value} [{cmd:=}] {it:label} {it:...} ]
 
@@ -1321,7 +1401,7 @@ or
     legend that is displayed by default if there are layers containing a
     {help geoplot##zvar:{it:zvar}}. {opt nolegend} only affects the default
     behavior; you can still include the layer manually in the legend using the
-    {cmd:layer()} suboption of {helpb geoplot##legend:legend()}.
+    legend's {cmd:layer()} suboption.
 
 {marker missing}{...}
 {phang}
@@ -1373,11 +1453,18 @@ or
     or specified as {cmd:.} (missing) are set to the default.
 
 {phang2}
-    {opt pad:ding(#)} adds padding to limits of the background frame. This is only relevant for limits
-    that are determined automatically, not for custom limits. Argument
-    # is in percent of the size of the map in each dimension. For example,
-    type {cmd:padding(5)} to increase the frame by 5% on each side; type {cmd:padding(-5)}
-    decrease by 5%.
+    {opt pad:ding(marginexp)} adds padding to limits of the background frame. This is
+    only relevant for limits that are determined automatically, not for custom
+    limits. The values in {it:marginexp} are in percent of the size of the map
+    in each direction. For example, type {cmd:padding(5)} to increase the frame
+    by 5% on each side; type {cmd:padding(-5)} decrease by 5%. Provide multiple
+    values in {it:marginexp} to use different padding on the left, right,
+    bottom, and top (in this order; values will be recycled). Alternatively,
+    specify one or more elements of the form
+    {{cmd:l}|{cmd:r}|{cmd:b}|{cmd:t}} [{cmd:=}] {it:#}, such as
+    {cmd:padding(l=5)} (add 5% padding on the left; no padding on other sides)
+    or {cmd:padding(r=5 t=10)} (add 5% padding on the right and 10% padding at the top;
+    no padding on other sides).
 
 {phang2}
     {opt n(#)} specifies number of points used to draw each edge of the
@@ -1491,15 +1578,13 @@ or
 
 {marker angle}{...}
 {phang}
-    {opt angle(angle)} rotates the map by {it:angle} degrees (counterclockwise).
-
-{phang}
-    {opt rotate(angle)} is a synonym for {cmd:angle()}.
+    {opt angle(angle)} rotates the map by {it:angle} degrees
+    (counterclockwise). {cmd:rotate()} is a synonym for {cmd:angle()}.
 
 {marker legend}{...}
 {phang}
-    {cmd:legend}[{cmd:(}{it:options}{cmd:)}] prints a composite legend of the objects from one
-    or several layers. {it:suboptions} are as follows:
+    {cmd:legend}[{cmd:(}{it:options}{cmd:)}] prints a legend for one or several
+    layers, employing official Stata's legend option. {it:options} are as follows:
 
 {phang2}
     {opt l:ayout(layout)} selects and arranges the layers to be included in the
@@ -1511,15 +1596,19 @@ or
     where {it:el} is one of
 
 {p2colset 17 26 28 2}{...}
-{p2col: {it:#}}include the legend keys of layer {it:#}
+{p2col: {it:#}}include the legend keys of layer {it:#}; can specify
+    {it:{help numlist}} to select multiple layers
     {p_end}
-{p2col: {cmd:.}}add a gap between layers
+{p2col: {cmd:.}}add a gap
     {p_end}
 {p2col: {cmd:|}}start a new column (or a new row)
     {p_end}
 {p2col: {cmd:-} {it:title}}add a subtitle, where {it:title} is
     {cmd:"}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} {it:...}]
     {p_end}
+
+{pmore2}
+    {opt laye:rs()} can be used as a synonym for {cmd:layout()}.
 
 {phang2}
     {opt bot:tom} aligns the legend keys at the bottom (rightmost) if there are multiple
@@ -1533,9 +1622,8 @@ or
     {opt rev:erse} reverses the order of the legend keys within layers.
 
 {phang2}
-    {opt position(spec)} overrides the default location of the legend,
-    which is in the upper right corner. {it:spec} may be {it:{help compassdirstyle}}
-    or {it:{help clockposstyle}}.
+    {opth pos:ition(compassdirstyle)} overrides the default location of the legend,
+    which is in the upper right corner.
 
 {phang2}
     {opt out:side} places the legend outside of the plot region. The default is
@@ -1552,6 +1640,203 @@ or
 {pmore}
     Type {cmd:legend(off)} or {cmd:nolegend} to suppress the legend that is printed by default if
     {help geoplot##zvar:{it:zvar}} has been specified in at least one layer.
+
+{marker glegend}{...}
+{phang}
+    {cmd:glegend}[{cmd:(}{it:options}{cmd:)}] prints a legend for one or several
+    layers, employing a custom procedure that does not make use of
+    official Stata's legend option. Unlike the standard {helpb geoplot##legend:legend()} option,
+    {cmd:glegend()} supports the inclusion of symbols created by layertype
+    {helpb geoplot##symbol:symbol}. Furthermore, {cmd:glegend()} can be repeated to
+    create multiple legends. {it:options} are as follows:
+
+{phang2}
+    {opt l:ayout(layout)} selects and arranges the layers to be included in the
+    legend. {it:layout} is
+
+                {it:el} [ {it:el} ... ]
+
+{pmore2}
+    where {it:el} is one of
+
+{p2colset 17 26 28 2}{...}
+{p2col: {it:#}}include the legend keys of layer {it:#}; can specify
+    {it:{help numlist}} to select multiple layers
+    {p_end}
+{p2col: {cmd:.}}add a gap between layers
+    {p_end}
+{p2col: {cmd:|}}start a new column
+    {p_end}
+{p2col: {cmd:-} {it:title}}add a subtitle, where {it:title} is
+    {cmd:"}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} {it:...}]
+    {p_end}
+
+{pmore2}
+    {opt laye:rs()} can be used as a synonym for {cmd:layout()}.
+
+{phang2}
+    {opt bot:tom} aligns the legend keys at the bottom if there are multiple
+    columns in the legend. The default is to align the keys at the top.
+
+{phang2}
+    {opt rev:erse} reverses the order of the legend keys within layers.
+
+{phang2}
+    {opth pos:ition(compassdirstyle)} overrides the default location of the legend,
+    which is in the upper right corner. Default is {cmd:position(ne)}. The
+    legend will always be placed inside the plot region; use global option
+    {helpb geoplot##margin:margin()} to make space for the legend if needed.
+
+{phang2}
+    {cmd:box}[{cmd:(}{it:{help area_options}}{cmd:)}] prints a frame around the
+    the legend. Color options in {it:area_options} support {it:colorspec} as
+    described in {helpb colorpalette##colorlist:colorpalette}.
+
+{phang2}
+    {opt symy:size(#)} and {opt symx:size(#)} specify the height and width of the
+    space used for the keys' symbols, in percent
+    of the map's {help geoplot##refdim:reference size}. Defaults are
+    {cmd:symysize(3)} and {cmd:symxsize(3)}.
+
+{phang2}
+    {opt syms:cale(#)} specifies the relative size of symbols from layertype
+    {helpb geoplot##symbol:symbol}, in proportion to the height set by
+    {cmd:symysize()}. Default is {cmd:symscale(0.8)}.
+
+{phang2}
+    {opt rowg:ap(#)} specifies the vertical gap between legend keys, in percent
+    of the map's {help geoplot##refdim:reference size}. Default is
+    {cmd:rowgap(0)}.
+
+{phang2}
+    {opt colg:ap(#)} specifies the horizontal gap between legend columns, in percent
+    of the map's {help geoplot##refdim:reference size}. Default is
+    {cmd:colgap(3)}.
+
+{phang2}
+    {opt keyg:ap(#)} specifies the horizontal gap between the symbol
+    and the label of a key, in percent
+    of the map's {help geoplot##refdim:reference size}. Default is
+    {cmd:keygap(1)}.
+
+{phang2}
+    {opt textf:irst} places labels before symbols. The default
+    is to place symbols before labels.
+
+{phang2}
+    {opth textw:idth(numlist)} specifies the width of the space used for the keys' labels,
+    in percent of the map's {help geoplot##refdim:reference size}. Default is
+    {cmd:textwidth(12)}. Unlike the standard {helpb geoplot##legend:legend()}
+    option, {cmd:glegend()} uses a fixed width and does not adjust the size
+    to the content of the labels; use option {cmd:textwidth()} to adjust the
+    space if it is too wide or too narrow. Specify multiple values to use
+    different widths across columns (values will be recycled).
+
+{phang2}
+    {opt ta:lign(align)} specifies the alignment of the labels, where
+    {it:align} can be {opt l:eft}, {opt c:enter}, or {opt r:ight}. Default is
+    {cmd:talign(left)} or, if {cmd:textfirst} is specified,
+    {cmd:talign(right)}.
+
+{phang2}
+    {opth tsi:ze(textsizestyle)},
+    {cmdab:tcol:or(}{help colorpalette##colorlist:{it:colorspec}}{cmd:)},
+    and {opth tang:le(anglestyle)} specify the size, color, and angle of the
+    labels. Defaults are {cmd:tsize(vsmall)} and {cmd:tcolor(black)}.
+
+{phang2}
+    {opt linesk:ip(#)} specifies the size of the lineskip in multiline
+    labels, in percent of the map's
+    {help geoplot##refdim:reference size}. Default is {cmd:lineskip(2)}.
+
+{phang2}
+    {opt headsk:ip(before after)} specifies extra vertical gaps to be added
+    before and after subtitles. Default is {cmd:headskip(1 0.5)}.
+
+{phang2}
+    {opt ha:lign(align)} specifies the alignment of subtitles, where
+    {it:align} can be {opt l:eft}, {opt c:enter}, or {opt r:ight}. Default is
+    {cmd:halign(left)}.
+
+{phang2}
+    {opth hsi:ze(textsizestyle)},
+    {cmdab:hcol:or(}{help colorpalette##colorlist:{it:colorspec}}{cmd:)},
+    and {opth hang:le(anglestyle)} specify the size, color, and angle of the
+    subtitles. Default is the same setting as for labels.
+
+{phang2}
+    {opt nospan} restricts the space of subtitles to the space used for labels. By default,
+    the subtitles span the combined space of symbols and labels.
+
+{phang2}
+    {cmd:title()}, {cmd:margin()}, {cmd:xmargin()}, and {cmd:ymargin()} as
+    described for the {helpb geoplot##inset:inset()} option.
+
+{marker slegend}{...}
+{phang}
+    {cmd:slegend(}{it:values} [{cmd:,} {it:options}]{cmd:)} prints a legend
+    for symbol sizes created by applying weights in layertype
+    {helpb geoplot##symbol:symbol}. {cmd:slegend()} can be repeated to
+    create multiple legends. Argument {it:values} specifies the sizes
+    (values of the weighting variable) to be included in the legend. The syntax
+    of {it:values} is
+
+            {it:{help numlist}} [{cmd:"}{it:label}{cmd:"} [{it:numlist} [{cmd:"}{it:label}{cmd:"}] ... ]]
+
+{pmore}
+    where {it:label} specifies a custom label for the preceding value. The
+    default is to use numeric values as labels. {it:options} are as follows:
+
+{phang2}
+    {opt l:ayer(#)} selects the layer for which the legend be created. The default
+    is to use the first {helpb geoplot##symbol:symbol} layer to which weights have
+    been applied. No legend will be created if there is no such layer.
+
+{phang2}
+    {opt over:lay}[{cmd:(}{it:offset}{cmd:)}] creates a legend with overlayed
+    symbols. Use optional argument {it:offset} to stagger the positions of the symbols,
+    where {it:offset} specifies the proportion
+    of width by which each symbol will be shifted.
+
+{phang2}
+    {opt tfl:oat} causes the horizontal positions of labels to be adaptive to the
+    sizes of the symbols. The default is to align the labels at a fixed position.
+
+{phang2}
+    {opt sa:lign(align)} specifies the alignment of the symbols, where
+    {it:align} can be {opt l:eft}, {opt c:enter}, or {opt r:ight}. Default is
+    {cmd:salign(center)}.
+
+{phang2}
+    {cmdab:head:ing(}{cmd:"}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} ...]{cmd:)}
+    specifies a heading (subtitle) for the legend.  Multiple lines are
+    created if multiple {cmd:"}{it:text}{cmd:"} elements are specified. Use
+    options such as {cmd:halign()}, {cmd:hsize()}, and {cmd:hcolor()} to format
+    the heading (see below).
+
+{phang2}
+    {opth f:ormat(fmt)} selects the display format to be applied to numeric
+    labels.
+
+{phang2}
+    {cmd:reverse}, {cmd:position()}, {cmd:box()}, {cmd:symysize()},
+    {cmd:symxsize()}, {cmd:rowgap()}, {cmd:keygap()}, {cmd:textfirst},
+    {cmd:textwidth()}, {cmd:talign()}, {cmd:tsize()}, {cmd:tcolor()},
+    {cmd:tangle()}, {cmd:lineskip()}, {cmd:headskip()}, {cmd:halign()},
+    {cmd:hsize()}, {cmd:hcolor()}, {cmd:hangle()}, {cmd:nospan},
+    {cmd:title()}, {cmd:margin()}, {cmd:xmargin()}, and {cmd:ymargin()} as
+    described for option {helpb geoplot##glegend:glegend()}, with the following
+    differences: default for {cmd:position()} is {cmd:sw}; default for
+    {cmd:symysize()} and {cmd:symxsize()} is {cmd:2}; default for
+    {cmd:rowgap()} is {cmd:1}; {cmd:headskip()} only has a single argument
+    specifying the extra gap after the subtitle.
+
+{phang2}
+    {cmd:line} and {it:{help area_options}} or {it:{help line_options}} affect
+    the rendering of the symbols as described for layertype
+    {helpb geoplot##symbol:symbol}. By default, {cmd:slegend()} displays
+    raw symbols without applying rendering options. For
+    example, use option {cmd:color()} to add color.
 
 {marker clegend}{...}
 {phang}
@@ -1594,9 +1879,8 @@ or
     set the label for missing.
 
 {phang2}
-    {opt position(spec)} overrides the default location of the legend,
-    which is in the lower right corner. {it:spec} may be {it:{help compassdirstyle}}
-    or {it:{help clockposstyle}}.
+    {opth pos:ition(compassdirstyle)} overrides the default location of the legend,
+    which is in the lower right corner.
 
 {phang2}
     {opt out:side} places the legend outside of the plot region. The default is
@@ -1834,6 +2118,95 @@ or
     add it to the graph as regular layer using {it:layertype}
     {helpb geoplot##area:area}.
 
+{marker inset}
+{phang}
+    {opt inset(spec)} creates an inset containing an additional
+    map. Option {cmd:inset()} can be repeated to create multiple insets. The
+    syntax of {it:spec} is
+
+            {cmd:(}{it:layer}{cmd:)} [{cmd:(}{it:layer}{cmd:)} ...] [{cmd:,} {it:options} ]
+
+{pmore}
+or
+
+            {it:layer} {cmd:||} [ {it:layer} {cmd:||} ...] [{cmd:,} {it:options} ]
+
+{pmore}
+    where {help geoplot##syntax:{it:layer}} is as described above and options
+    are as follows.
+
+{phang2}
+    {opt below} prints the inset behind the main map. The default is to print the
+    inset on top.
+
+{phang2}
+    {opt ti:tle(tinfo)} adds a title to the inset, where {it:tinfo} is
+
+                {cmd:"}{it:text}{cmd:"} [{cmd:,} {it:suboptions} ]
+
+{pmore2}
+    {it:suboptions} are {opt bot:tom} to place the title at the bottom rather
+    than at the top, as well as rendering options {cmd:size()}, {cmd:color()},
+    {cmd:angle()}, {cmd:tstyle()}, {cmd:gap()}, and {cmd:position()} as described
+    for layertype {helpb geoplot##labels:label}.
+
+{phang2}
+    {opth box(area_options)} affects the rendering of frame around the
+    inset. Color options in {it:area_options} support {it:colorspec} as
+    described in {helpb colorpalette##colorlist:colorpalette}. Type {cmd:nobox}
+    to omit the frame.
+
+{phang2}
+    {cmd:margin(}{it:marginexp}{cmd:)} sets the (inner) margin of the inset
+    (i.e., the margin between the inset and its frame) in percent
+    of the map's {help geoplot##refdim:reference size}, where {it:marginexp} is
+    as described for global option {helpb geoplot##margin:margin()}. Default
+    is {cmd:margin(1)} unless {cmd:nobox} is specified, in which case the default
+    is {cmd:margin(0)}.
+
+{phang2}
+    {opth pos:ition(compassdirstyle)} determines the location of the inset in
+    the plotregion of the graph. Default is {cmd:position(0)} (in the
+    center). For example, type {cmd:position(ne)} to place the inset in the
+    upper right corner.
+
+{phang2}
+    {opt si:ze(#)} sets the size of the inset (excluding margin) in percent
+    of the map's {help geoplot##refdim:reference size}. Default
+    is {cmd:size(30)} which means that the width (or height) of the inset will
+    be 30% of the width (or height) of the plotregion. You may also type
+    {cmd:size(.)} to omit rescaling and print the
+    inset in its original size. In any case, however, the size of the inset will
+    be restricted in such a way that it fits into the plotregion of the main map.
+
+{phang2}
+    {opt xm:argin(#)} and {opt ym:argin(#)} specify how much the
+    inset will be moved away from the edge of the plotregion, in percent
+    of the map's {help geoplot##refdim:reference size}. The default
+    for {cmd:xmargin()} is {cmd:0}; for {cmd:ymargin()} the default
+    depends on context.
+
+{phang2}
+    {cmdab:back:ground}[{cmd:(}{it:options}{cmd:)}] adds a background to the
+    inset map; see global option {helpb geoplot##background:background()}.
+
+{phang2}
+    {cmd:grid}[{cmd:(}{it:options}{cmd:)}] adds gridlines to the inset map;
+    see global option {helpb geoplot##grid:grid()}.
+
+{phang2}
+    {cmdab:proj:ect}[{cmd:(}{it:spec}{cmd:)}] applies the specified projection
+    to the inset map; see global option {helpb geoplot##project:project()}. The
+    default is to apply the same projection as for the main map. Type
+    {cmdab:noproj:ect} to omit projection for the inset map.
+
+{phang2}
+    {opt ang:le(angle)} rotates the inset map by {it:angle}
+    degrees (counterclockwise). {cmd:rotate()} is a synonym for
+    {cmd:angle()}. The default is to apply rotation as set by
+    global option {helpb geoplot##angle:angle()}; type {cmd:angle(0)} to omit
+    rotation for the inset map.
+
 {marker tight}{...}
 {phang}
     {opt tight} adjusts the size of the overall graph such that it tightly fits
@@ -1887,7 +2260,8 @@ or
 {marker refdim}{...}
 {phang}
     {cmd:refdim(}{it:spec}{cmd:)} selects the reference dimension for size
-    calculations by {helpb geoplot##margin:margin()},
+    calculations by {helpb geoplot##margin:margin()}, {helpb geoplot##inset:inset()},
+    {helpb geoplot##glegend:glegend()},
     {helpb geoplot##compass:compass()}, and
     {helpb geoplot##sbar:sbar()}. {it:spec} may be {cmd:y} or
     {cmdab:v:ertical} for the vertical dimension, or {cmd:x} or {cmdab:h:orizontal}

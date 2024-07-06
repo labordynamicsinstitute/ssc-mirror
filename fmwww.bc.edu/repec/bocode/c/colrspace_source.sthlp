@@ -1,4 +1,4 @@
-*! version 1.1.5  30may2022  Ben Jann
+*! version 1.2.1  22may2024  Ben Jann
 * {smcl}
 * {title:lcolrspace.mlib source code}
 *
@@ -38,7 +38,8 @@ local DATA   `MAIN'_DATA
 local Data   struct `DATA' scalar
 local CAM02  `MAIN'_CAM02
 local Cam02  struct `CAM02' scalar
-local AA     class AssociativeArray scalar
+local DICT   AssociativeArray
+local Dict   class `DICT' scalar
 // real
 local RS     real scalar
 local RR     real rowvector
@@ -66,13 +67,12 @@ local TM     transmorphic matrix
 local PV     pointer vector
 local PS     pointer scalar
 local PData  pointer (`Data') scalar
+local PDict  pointer (`Dict') scalar
 // boolean
 local Bool   real scalar
 local BoolC  real colvector
 local TRUE   1
 local FALSE  0
-// palettes
-local PAL    `SC' `MAIN'
 
 * {smcl}
 * {marker class}{bf:Class and struct definitions} {hline}
@@ -124,9 +124,9 @@ class `MAIN' {
 
     // Data containers
     private:
-        `Data'  data          // main data container
-        `Data'  data1         // temporary data container
-        `PData' S             // pointer to relevant data container
+       `Data'   data          // main data container
+       `Data'   data1         // temporary data container
+      `PData'   S             // pointer to relevant data container
         `Int'   N1            // number of colors added last
         void    replacedata() // replace data by data1
         void    updatedata()  // replace last N1 colors in data by data1
@@ -141,11 +141,11 @@ class `MAIN' {
         void    settings()    // describe settings
         `RS'    N()           // number of colors
         `RS'    N_added()     // number of added colors
-        `T'     name()        // set or return name of palette
-        `T'     pclass()      // set or return type of palette
-        `T'     note()        // set or return palette description
-        `T'     source()      // set or return palette source
-        `Bool'  isipolate()   // 1 if interpolated; 0 else
+         `T'    name()        // set or return name of palette
+         `T'    pclass()      // set or return type of palette
+         `T'    note()        // set or return palette description
+         `T'    source()      // set or return palette source
+      `Bool'    isipolate()   // 1 if interpolated; 0 else
         `RM'    colipolate()  // interpolate columns
         `RM'    colipolate_c() // interpolate columns (circular)
         `TM'    colrecycle()  // recycle columns
@@ -153,8 +153,8 @@ class `MAIN' {
         `RM'    clip()        // clip values
     private:
         `SS'    gettok()      // split first token from rest
-        `Bool'  smatch()      // check abbreviated string
-        `SS'    findkey()     // find key in list (ignoring case; allowing abbreviation)
+      `Bool'    smatch(), _smatch() // check abbreviated string
+        `SS'    findkey(), _findkey() // find key in list
         void    assert_cols() // assert number of columns
         void    assert_size() // assert number of columns and rows
         `RV'    _colipolate_setrange() // parse interpolation range argument
@@ -169,9 +169,9 @@ class `MAIN' {
 
     // XYZ reference white
     public:
-        `T'     xyzwhite()    // set/retrieve XYZ whitepoint
+         `T'    xyzwhite()    // set/retrieve XYZ whitepoint
     private:
-        `AA'    illuminants
+      `Dict'    illuminants
         void    illuminants()
         `RR'    white
         `RR'    _white(), _white_set(), _white_get()
@@ -179,11 +179,11 @@ class `MAIN' {
     // RGB working spaces
     public:
         void    rgbspace()    // set RGB working space
-        `T'     rgb_gamma()   // set/retrieve gamma compression parameters
-        `T'     rgb_white()   // set/retrieve RGB reference white
-        `T'     rgb_xy()      // set/retrieve primaries of RGB working space
-        `T'     rgb_M()       // set/retrieve RGB-XYZ transformation matrix
-        `T'     rgb_invM()    // set/retrieve XYZ-RGB transformation matrix
+         `T'    rgb_gamma()   // set/retrieve gamma compression parameters
+         `T'    rgb_white()   // set/retrieve RGB reference white
+         `T'    rgb_xy()      // set/retrieve primaries of RGB working space
+         `T'    rgb_M()       // set/retrieve RGB-XYZ transformation matrix
+         `T'    rgb_invM()    // set/retrieve XYZ-RGB transformation matrix
     private:
         `RV'    rgb_gamma
         `RR'    rgb_white
@@ -191,10 +191,10 @@ class `MAIN' {
 
     // CIECAM02 viewing conditions and J'a'b' coefficients
     public:
-        `T'     viewcond()    // set/retrieve CAM02 viewing conditions
-        `T'     ucscoefs()    // parse coefficients for J'M'h and J'a'b'
+         `T'    viewcond()    // set/retrieve CAM02 viewing conditions
+         `T'    ucscoefs()    // parse coefficients for J'M'h and J'a'b'
     private:
-        `Cam02' C02
+     `Cam02'    C02
         `RS'    viewcond_parsenum()
         void    surround()
         `RR'    surround_get()
@@ -203,7 +203,7 @@ class `MAIN' {
     // Chromatic adaption
     public:
         `RM'    XYZ_to_XYZ()  // chromatic adaption
-        `T'     chadapt()     // set/retrieve chromatic adaption method
+         `T'    chadapt()     // set/retrieve chromatic adaption method
         `RM'    tmatrix()     // retrieve chromatic adaption matrix
     private:
         `SS'    chadapt       // chromatic adaption setting
@@ -211,33 +211,34 @@ class `MAIN' {
     // String IO
     public:
         `SS'    cvalid()       // check whether color specification is valid
-        `T'     colors()       // parse or return string colors (scalar)
-        `Int'   _colors()      // like colors(), but with return code
+         `T'    colors()       // parse or return string colors (scalar)
+       `Int'    _colors()      // like colors(), but with return code
         void    add_colors()   // append colors
-        `Int'   _add_colors()  // like add_colors(), but with return code
+       `Int'    _add_colors()  // like add_colors(), but with return code
         `SS'    colors_added() // return added colors (scalar)
-        `T'     Colors()       // parse or return string colors (vector)
-        `Int'   _Colors()      // like Colors(), but with return code
+         `T'    Colors()       // parse or return string colors (vector)
+       `Int'    _Colors()      // like Colors(), but with return code
         void    add_Colors()   // append colors
-        `Int'   _add_Colors()  // like add_Colors(), but with return code
+       `Int'    _add_Colors()  // like add_Colors(), but with return code
         `SC'    Colors_added() // return added colors (vector)
-        `T'     names()        // parse or return color names (scalar)
-        `T'     names_added()
-        `T'     Names()        // parse or return color names (vector)
-        `T'     Names_added()
-        `T'     info()         // parse or return color info (scalar)
-        `T'     info_added()
-        `T'     Info()         // parse or return color info (vector)
-        `T'     Info_added()
+         `T'    names()        // parse or return color names (scalar)
+         `T'    names_added()
+         `T'    Names()        // parse or return color names (vector)
+         `T'    Names_added()
+         `T'    info()         // parse or return color info (scalar)
+         `T'    info_added()
+         `T'    Info()         // parse or return color info (vector)
+         `T'    Info_added()
     private:
         `SS'    colors_get(), names_get(), info_get()
         `SC'    Colors_get(), _Colors_get(), Names_get(), Info_get()
         void    colors_set(), names_set(), info_set()
         void    Colors_set(), Names_set(), _Names_set(), Info_set(), _Info_set()
-        `Int'   _colors_set(), _Colors_set()
-        `Int'   parse_split(), _parse_split(), parse_convert(), _parse_convert()
-        `Bool'  parse_named(), isnamedcolor()
-        `SS'    parse_stcolorstyle(), parse_namedcolor()
+       `Int'    _colors_set(), _Colors_set()
+       `Int'    parse_split(), _parse_split(), parse_convert(), _parse_convert()
+      `Bool'    parse_named()
+        `SS'    parse_stcolorstyle()
+        `SR'    parse_namedcolor()
 
     // Set or retrieve colors
     public:
@@ -253,9 +254,9 @@ class `MAIN' {
 
     // Set or retrieve opacity and intensity
     public:
-        `T'     opacity(), alpha(), intensity()
+         `T'    opacity(), alpha(), intensity()
         void    add_opacity(), add_alpha(), add_intensity()
-        `T'     opacity_added(), alpha_added(), intensity_added()
+         `T'    opacity_added(), alpha_added(), intensity_added()
         void    add_opacity_added(), add_alpha_added(), add_intensity_added()
     private:
         `RC'    opacity_get(), alpha_get(), intensity_get()
@@ -286,10 +287,11 @@ class `MAIN' {
     // Intensify, saturate, luminate
     public:
         void    intensify(), add_intensify(), intensify_added(), add_intensify_added()
+        void    Intensify(), add_Intensify(), Intensify_added(), add_Intensify_added()
         void    saturate(), add_saturate(), saturate_added(), add_saturate_added()
         void    luminate(), add_luminate(), luminate_added(), add_luminate_added()
     private:
-        void    _intensify(), _saturate(), _luminate()
+        void    _intensify(), _Intensify(), _saturate(), _luminate()
         `RR'    __intensify()
 
     // Grayscale conversion
@@ -319,7 +321,7 @@ class `MAIN' {
     public:
         `TM'    convert()
     private:
-        `Bool'  convert_parse()
+      `Bool'    convert_parse()
         `SM'    convert_getpath()
         `TM'    convert_run()
     
@@ -367,9 +369,9 @@ class `MAIN' {
     public:
         `SM'    namedcolors()
     private:
-        `AA'    namedcolors
+     `PDict'    namedcolors
         void    namedcolorindex()
-        `Bool'  _namedcolorindex()
+      `Bool'    _namedcolorindex()
     
     // Palettes
     public:
@@ -377,11 +379,12 @@ class `MAIN' {
         `SM'    palettes()
         void    palette(), add_palette()
     private:
-        `AA'    palettes
-        `Int'   parse_palette()
-        void    paletteindex()
-        `Bool'  Palette()
-        `SC'    Palette_read()
+     `PDict'    palettes
+       `Int'    parse_palette()
+        void    paletteindex(), _paletteindex(), _palette_tput()
+        `TS'    _palette_tget()
+      `Bool'    Palette()
+        `SC'    Palette_read(), _Palette_read()
         void    Palette_palettes(), Palette_namedcolors(), Palette_lsmaps(),
                 Palette_generators(), Palette_rgbmaps(), Palette_internal(),
                 Palette_htmlcolors(), Palette_spmap()
@@ -404,7 +407,6 @@ mata:
 void `MAIN'::new()
 {
     clear()
-    clearindex()
     clearsettings()
     SPACES   = ("CMYK1", "RGB1", "lRGB", "HSV", "HSL", "XYZ", "xyY", 
                 "Lab", "LCh", "Luv", "HCL", "CAM02", "JMh", "Jab")'
@@ -430,10 +432,10 @@ void `MAIN'::clear()
 
 void `MAIN'::clearindex()
 {
-    palettes.clear()
-    palettes.notfound(0)
-    namedcolors.clear()
-    namedcolors.notfound("")
+    palettes = NULL
+    rmexternal("ColrSpace_paletteindex")
+    namedcolors = NULL
+    rmexternal("ColrSpace_namedcolorindex")
 }
 
 void `MAIN'::clearsettings()
@@ -482,8 +484,8 @@ void `MAIN'::appenddata()
 void `MAIN'::removeadded()
 {
     `Int' n
-    
-    if (N1=0) return
+
+    if (N1==0) return
     n = data.n - N1
     if (n==0) {
         data.n         = 0
@@ -671,28 +673,30 @@ void `MAIN'::settings()
 }
 
 `Bool' `MAIN'::smatch(`SS' s, `SS' s0)
+{   // replaces s by s0 if _smatch(s, s0) is true
+    if (_smatch(s, s0)) {
+        s = s0
+        return(`TRUE')
+    }
+    return(`FALSE')
+}
+
+`Bool' `MAIN'::_smatch(`SS' s, `SS' s0)
 {   // checks whether s matches s0, word by word, allowing abbreviation
     // assumes s to be lower case and checks against lowercase(s0)
     // abbreviation to "nothing" also counts as a match; i.e. empty s will 
     // match anything
-    // in case of a match, s is replaced by s0
     `Int'  i, c, c0
     `SR'   S, S0
     `SS'   si
     
     S = tokens(s); c = cols(S)
-    if (c==0) { // s is empty
-        s = s0
-        return(`TRUE')
-    }
+    if (c==0) return(`TRUE') // s is empty
     S0 = tokens(s0); c0 = cols(S0)
     if (c0==0) return(`FALSE') // no match if s0 is empty
     if (c>c0)  return(`FALSE') // no match if s has more words than s0
     if (c0==1) {
-        if (S==substr(strlower(S0), 1, strlen(S))) {
-            s = s0
-            return(`TRUE')
-        }
+        if (S==substr(strlower(S0), 1, strlen(S))) return(`TRUE')
         return(`FALSE')
     }
     if (c<c0) S = S, J(1, c0-c, "")
@@ -700,30 +704,66 @@ void `MAIN'::settings()
         si = S[i]
         if (si!=substr(strlower(S0[i]), 1, strlen(si))) return(`FALSE')
     }
-    s = s0
     return(`TRUE')
 }
 
-`SS' `MAIN'::findkey(`SS' s0, `SC' KEYS/*0*/, | `SS' def)
-{   // gets matching key, ignoring case and allowing abbreviation; returns
-    // alphabetically first match in case of multiple matches
-    // returns def is s0 is empty
+`SS' `MAIN'::findkey(`SS' s0, `SC' keys, | `SS' def)
+{   // finds matching key allowing abbreviation and differences in
+    // capitalization; in case of multiple matches, capitalization and
+    // alphabetical order are considered to determine the best match
+    // returns def if s0 is empty
     // returns empty string if key not found
-    `Int' i, r
-    `SS'  s
-    `SC'  /*KEYS,*/ keys
-    `RC'  p
+    `Int'  i
+    `IntC' p
+    `SS'   s
     
+    if (strtrim(s0)=="") return(def)
+    i = rows(keys)
+    if (i==0) return("")
+    // find all matching keys ignoring case and allowing abbreviation
+    p = J(i,1,.)
     s = strlower(s0)
-    if (strtrim(s)=="") return(def)
-    r = rows(KEYS/*0*/)
-    if (r==0) return("")
-    /*KEYS = KEYS0;*/ keys = strlower(KEYS)
-    p = ::order(keys, 1)
-    for (i=1; i<=r; i++) {
-        if (smatch(s, keys[p[i]])) return(KEYS[p[i]])
+    for (; i; i--) p[i] = _smatch(s, keys[i])
+    p = selectindex(p)
+    i = length(p)
+    // no match
+    if (i<1)  return("")
+    // unique match
+    if (i==1) return(keys[p])
+    // find best match
+    return(_findkey(s0, keys, p))
+}
+
+`SS' `MAIN'::_findkey(`SS' s, `SC' keys, `IntC' p) // p will be modified
+{   // select candidates based on capitalization, prioritizing from
+    // left to right; among remaining candidates, select topmost candidate
+    // based on alphabetical order
+    `Int'  i, i1, l, r
+    `IntC' I, m
+    
+    I = J(rows(keys),1,1)
+    l = strlen(s)
+    for (i=1;i<=l;i++) {
+        if (substr(s,i,1)==" ") continue // move to next token in s
+        // skip blanks before token in each candidate
+        while (any(m=(substr(keys[p],I[p],1):==" "))) I[p] = I[p] + m
+        // determine end of current token in s
+        i1 = i + strpos(substr(s,i+1,.)+" ", " ") - 1
+        // check case within token, character by character
+        for (;i<=i1;i++) {
+            m = selectindex(substr(s,i,1):==substr(keys[p],I[p],1))
+            r = rows(m)
+            if (r) {
+                if (r==1) return(keys[p[m]]) // unique match; done
+                if (r<rows(p)) p = p[m] // update list of candidates
+            } // note: all will be kept if none has a match
+            I[p] = I[p] :+ 1 // move to next character in each candidate
+        }
+        // move to next token in each candidate
+        if (i<l) I[p] = I[p] :+ strpos(substr(keys[p],I[p],.):+" ", " ")
     }
-    return("")
+    // no unique match; select top candidate based on alphabetical order
+    return(sort(keys[p],1)[1])
 }
 
 void `MAIN'::assert_cols(`T' M, `RS' c)
@@ -836,7 +876,7 @@ void `MAIN'::_colipolate_fromto(`Int' r, `Int' n, `RV' range, `RS' power,
     if (all(a:<b)) return(_colipolate(C0, from0, to)) // strictly ascending
     if (all(a:>b)) return(_colipolate(C0, from0, to)) // strictly descending
     p = ::order(from0, 1)
-    from = from0[p]; C = C0[p,]
+    from = from0[p,]; C = C0[p,]
     a = from[|1 \ rows(from)-1|]; b = from[|2 \ rows(from)|]
     if (any(a:==b)==0) return(_colipolate(C, from, to)) // no doubles
     _colipolate_collapse(C, from)
@@ -1730,14 +1770,33 @@ void `MAIN'::Colors_set(`SV' C)
 {
     `Int' n, i
     `SS'  tok
+    `SR'  pchars
     `T'   t
     
+    pchars = ("%","*")
     n = length(C)
-    t = tokeninit("", ("%","*"), "")
+    t = tokeninit("", pchars, "")
     for (i=1; i<=n; i++) {
         tokenset(t, C[i])
-        info[i] = strtrim(tokenget(t))
-        if ((tok = tokenget(t))=="") continue
+        tok = strtrim(tokenget(t))
+        if (anyof(pchars, tok)) {
+            info[i] = "_NULL_" // %... or *... without color
+        }
+        else {
+            if (tok=="_NULL_") return(i)
+            if (substr(tok,1,2)=="..") {
+                if (i<n)  return(1) // ".." and "..." only allowed at end
+                if (n==1) return(1)
+            }
+            else if (substr(tok,1,1)=="=") {
+                if (i==1) return(1) // "=" not allowed as first element
+                C[i] = C[i-1] // copy previous color
+                i--
+                continue
+            }
+            info[i] = tok
+            if ((tok = tokenget(t))=="") continue
+        }
         if (tok=="%") {
             alpha[i] = strtoreal(tokenget(t))/100
             if (alpha[i]<0 | alpha[i]>1) return(i)
@@ -1781,7 +1840,13 @@ void `MAIN'::Colors_set(`SV' C)
 
     type = J(r, 1, "")
     for (i=1; i<=r; i++) {
-        tok = strtrim(info[i])
+        tok = info[i]
+        if (tok=="_NULL_") { // %... or *... without color
+            info[i] = ""
+            stok[i] = `TRUE'
+            RGB[i,] = J(1,3,0)
+            continue
+        }
         if (substr(tok,1,1)=="#") { // HEX color
             RGB[i,] = _HEX_to_RGB(tok)/255
             if (missing(RGB[i,])) return(i)
@@ -1853,8 +1918,8 @@ void `MAIN'::Colors_set(`SV' C)
         if (t=="") continue
         if (convert_parse(tok, t, 0)) return(i)
         p = ::select(1::r, type:==t)
-        RGB[p,] = convert(RGB[p,], t, "RGB1")
-        type[p] = J(length(p), 1, "")
+        RGB[p,]  = convert(RGB[p,], t, "RGB1")
+        type[p,] = J(length(p), 1, "")
     }
     // done
     return(0)
@@ -1862,32 +1927,52 @@ void `MAIN'::Colors_set(`SV' C)
 
 `Bool' `MAIN'::parse_named(`SS' s, `Int' i, `RM' RGB, `SC' info, `RC' stok)
 {
-    `SS' c
-    `RR' RGB1
+    `SR' c
+    `RR' rgb
     
-    // get color from color-<name>.style; this includes Stata's official colors
-    if (!isnamedcolor(s)) { // only if no exact match in namedcolors
-        c = parse_stcolorstyle(s)
-        if (c!="") {
-            RGB1 = strtoreal(tokens(c))/255
-            if (length(RGB1)!=3) return(1) // invalid RGB code
+    // get color from dictionary
+    c = parse_namedcolor(s) // returns "" if not found
+    if (c[1]!="") { // skip system colors that have not yet been imported
+        rgb = _HEX_to_RGB(c[1])
+        if (missing(rgb)) return(1) // invalid HEX code
+        if (c[2]!="") {
             info[i] = ""
             stok[i] = `TRUE'
-            RGB[i,] = RGB1
-            return(0)
         }
+        else info[i] = c[1]
+        RGB[i,] = rgb/255
+        return(0)
     }
-    // get web color
-    c = parse_namedcolor(s)
+    // get color from color-<name>.style; this includes Stata's system colors
+    c = parse_stcolorstyle(s) // returns "" if not found 
     if (c!="") {
-        RGB1 = _HEX_to_RGB(c)/255
-        if (missing(RGB1)) return(1) // invalid HEX code
-        info[i] = c
-        RGB[i,] = RGB1
+        rgb = strtoreal(tokens(c))
+        if (length(rgb)!=3) return(1) // invalid RGB code
+        info[i] = ""
+        stok[i] = `TRUE'
+        RGB[i,] = rgb/255
+        namedcolors->put(s, (_RGB_to_HEX(rgb),"1")) // "1" => system color
         return(0)
     }
     // color not found
     return(1)
+}
+
+`SR' `MAIN'::parse_namedcolor(`SS' s0)
+{
+    `SS' s
+    `SR' c
+    
+    if (namedcolors==NULL) namedcolorindex()
+    c = namedcolors->get(s0) // only finds exact match, including case
+    if (c=="") {
+        s = findkey(s0, namedcolors->keys())
+        if (s!="") {
+            s0 = s
+            c = namedcolors->get(s0)
+        }
+    }
+    return(c)
 }
 
 `SS' `MAIN'::parse_stcolorstyle(`SS' s) // read RGB from color-<name>.style
@@ -1921,28 +2006,6 @@ void `MAIN'::Colors_set(`SV' C)
     }
     fclose(fh)
     return("") // no valid color definition found
-}
-
-`Bool' `MAIN'::isnamedcolor(`SS' s) // check for exact match, including case
-{
-    if (namedcolors.N()==0) namedcolorindex()
-    return(namedcolors.exists(s))
-}
-
-`SS' `MAIN'::parse_namedcolor(`SS' s0)
-{
-    `SS'  s, c
-    
-    // namedcolors already filled-in because isnamedcolor() has been called
-    c = namedcolors.get(s0) // only finds exact match, including case
-    if (c=="") {
-        s = findkey(s0, namedcolors.keys()) // ignore case and allow abbreviation
-        if (s!="") {
-            s0 = s
-            c = namedcolors.get(s0)
-        }
-    }
-    return(c)
 }
 
 `T' `MAIN'::names(| `SS' o1, `SS' o2)
@@ -2202,7 +2265,7 @@ void `MAIN'::__set(`T' C, `SS' space, `Bool' reset, | `IntV' p0)
         if (reset) rgb_reset(convert(C[,(1,2,3)], s, "RGB1"), p)
         else       rgb_set(convert(C[,(1,2,3)], s, "RGB1"))
         if (reset) {
-            if (length(p)) S->alpha[p] = C[,4]
+            if (length(p)) S->alpha[p,] = C[,4]
             else           S->alpha = C[,4]
         }
         else S->alpha = C[,4]
@@ -2251,16 +2314,16 @@ void `MAIN'::rgb_reset(`RM' rgb, | `IntV' p)
         return
     }
     assert_size(rgb, length(p), 3)
-    S->RGB[p,]  = rgb
-    S->names[p] = J(length(p), 1, "")
-    S->info[p]  = J(length(p), 1, "")
-    S->stok[p]  = J(length(p), 1, `FALSE')
+    S->RGB[p,]   = rgb
+    S->names[p,] = J(length(p), 1, "")
+    S->info[p,]  = J(length(p), 1, "")
+    S->stok[p,]  = J(length(p), 1, `FALSE')
 }
 
 void `MAIN'::info_reset(`SS' c, `T' C, | `SS' fmt, `IntV' p)
 {
-    if (length(p)==0) S->info    = _info_reset(c, C, fmt)
-    else              S->info[p] = _info_reset(c, C, fmt)
+    if (length(p)==0) S->info     = _info_reset(c, C, fmt)
+    else              S->info[p,] = _info_reset(c, C, fmt)
 }
 
 `SC' `MAIN'::_info_reset(`SS' c, `T' C, `SS' fmt)
@@ -2332,9 +2395,9 @@ foreach f in opacity alpha intensity {
         // set
         if (args()<2) noreplace = `FALSE'
         S = &data1
-        copydata()
+        copyadded()
         `f'_set(O, noreplace)
-        replacedata()
+        updatedata()
     }
     mata void `MAIN'::add_`f'_added(`RV' O, | `RS' noreplace)
     {
@@ -2424,7 +2487,7 @@ end
 * {asis}
 
 foreach f in recycle select drop order reverse shift ipolate mix intensify ///
-    saturate luminate gray cvd {
+    Intensify saturate luminate gray cvd {
     mata void `MAIN'::`f'(| `T' o1, `T' o2, `T' o3, `T' o4, `T' o5, `T' o6)
     {
         S = &data1
@@ -2531,11 +2594,11 @@ void `MAIN'::__select(`IntM' p)
     }
     S->n         = n
     S->RGB       = S->RGB[p,]
-    S->alpha     = S->alpha[p]
-    S->intensity = S->intensity[p]
-    S->names     = S->names[p]
+    S->alpha     = S->alpha[p,]
+    S->intensity = S->intensity[p,]
+    S->names     = S->names[p,]
     S->info      = S->info[p,]
-    S->stok      = S->stok[p]
+    S->stok      = S->stok[p,]
 }
 
 void `MAIN'::_drop(`IntV' p0)
@@ -2547,9 +2610,9 @@ void `MAIN'::_drop(`IntV' p0)
     p = p0
     if (cols(p)!=1) _transpose(p)
     p = (sign(p):!=-1):*p :+ (sign(p):==-1):*(n:+1:+p)
-    p = ::select(p, p:>=1 :& p:<=n)       // may return 0x0
-    if (length(p)==0) return              // nothing to drop
-    k = J(n,1,1); k[p] = J(length(p),1,0) // tag elements to be kept
+    p = ::select(p, p:>=1 :& p:<=n)        // may return 0x0
+    if (length(p)==0) return               // nothing to drop
+    k = J(n,1,1); k[p,] = J(length(p),1,0) // tag elements to be kept
     p = selectindex(k)
     __select(p)
 }
@@ -2566,7 +2629,7 @@ void `MAIN'::_order(`IntV' p0)
     p = ::select(p, p:>=1 :& p:<=n)
     if (length(p)==0) return
     rest = 1::n
-    rest[p] = J(length(p), 1, .)
+    rest[p,] = J(length(p), 1, .)
     rest = ::select(rest, rest:<.)
     if (length(rest)) p = p \ rest
     __select(p)
@@ -2814,6 +2877,13 @@ void `MAIN'::_intensify(`RV' p0)
     return(C)
 }
 
+// Intensify(): intensify() by intensity() and reset intensity()
+void `MAIN'::_Intensify()
+{
+    _intensify(S->intensity)
+    S->intensity = J(S->n,1,.)
+}
+
 // saturate(): change saturation/chroma
 // similar to color.saturate()/color.desaturate() in chroma.js
 // source: https://gka.github.io/chroma.js/
@@ -2827,7 +2897,7 @@ void `MAIN'::_saturate(`RV' p0, | `SS' method0, `Bool' level)
     `RM'   C
     
     if (args()<3) level = `FALSE'
-    method = findkey(strlower(method0), ("LCh", "HCL", "JCh", "JMh")', "LCh")
+    method = findkey(method0, ("LCh", "HCL", "JCh", "JMh")', "LCh")
     if (method=="") {
         display("{err}method '" + method0 + "' not allowed")
         exit(3498)
@@ -2866,8 +2936,8 @@ void `MAIN'::_luminate(`RV' p0, | `SS' method0, `Bool' level)
     `RM'   C
     
     if (args()<3) level = `FALSE'
-    method = findkey(strlower(method0), ("Lab", "LCh", "Luv", "HCL", 
-        "JCh", "JMh", "Jab")', "JMh")
+    method = findkey(method0, ("Lab", "LCh", "Luv", "HCL", "JCh", "JMh",
+        "Jab")', "JMh")
     if (method=="") {
         display("{err}method '" + method0 + "' not allowed")
         exit(3498)
@@ -2916,7 +2986,7 @@ void `MAIN'::_gray(| `RV' p0, `SS' method0)
     `RM'   C
     
     if (args()==0) p0 = 1
-    method = findkey(strlower(method0), ("LCh", "HCL", "JCh", "JMh")', "LCh")
+    method = findkey(method0, ("LCh", "HCL", "JCh", "JMh")', "LCh")
     if (method=="") {
         display("{err}method '" + method0 + "' not allowed")
         exit(3498)
@@ -2954,7 +3024,7 @@ void `MAIN'::_gray(| `RV' p0, `SS' method0)
         display("{err}proportion must be within 0 and 1")
         exit(3300)
     }
-    method = findkey(strlower(method0), ("LCh", "HCL", "JCh", "JMh")', "LCh")
+    method = findkey(method0, ("LCh", "HCL", "JCh", "JMh")', "LCh")
     if (method=="") {
         display("{err}method '" + method0 + "' not allowed")
         exit(3498)
@@ -4594,10 +4664,11 @@ mata:
 `SM' `MAIN'::namedcolors(| `SS' pattern, `Bool' strict)
 {
     `Int' i
-    `SC'  keys, hex
+    `SC'  keys
+    `SM'  C
     
-    if (namedcolors.N()==0) namedcolorindex()
-    keys = namedcolors.keys()
+    if (namedcolors==NULL) namedcolorindex()
+    keys = namedcolors->keys()
     if (pattern!="") {
         if (args()<2) strict = 0
         if (strict) keys = ::select(keys, strmatch(keys, pattern))
@@ -4605,18 +4676,79 @@ mata:
     }
     _sort(keys, 1)
     i = rows(keys)
-    hex = J(i,1,"")
-    for (i=rows(keys); i; i--) hex[i] = namedcolors.get(keys[i])
-    return((keys,hex))
+    C = J(i,2,"")
+    for (i=rows(keys); i; i--) C[i,] = namedcolors->get(keys[i])
+    return(::select((keys,C[,1]), C[,2]:=="")) // exclude system colors
 }
 
 void `MAIN'::namedcolorindex()
 {
+    `Bool' brk
+    `Int'  j
+    `SR'   kw
+    
+    // setup
+    namedcolors = findexternal("ColrSpace_namedcolorindex")
+    if (namedcolors!=NULL) {
+        if (classname(*namedcolors)=="`DICT'") return
+        namedcolors = NULL
+        rmexternal("ColrSpace_namedcolorindex")
+    }
+    brk = setbreakintr(0)
+    namedcolors = crexternal("ColrSpace_namedcolorindex")
+    *namedcolors = `DICT'()
+    namedcolors->notfound("")
+    // default library
     if (_namedcolorindex("namedcolors")) {
+        namedcolors = NULL
+        rmexternal("ColrSpace_namedcolorindex")
         display("{err}colrspace_library_namedcolors.sthlp not found")
         exit(error(601))
     }
+    // personal library
     (void) _namedcolorindex("namedcolors_personal")
+    // placeholders for (documented) system colors
+    kw = ("black","gs0","gs1","gs2","gs3","gs4","gs5","gs6","gs7","gs8","gs9",
+        "gs10","gs11","gs12","gs13","gs14","gs15","gs16","white","blue",
+        "bluishgray","brown","cranberry","cyan","dimgray","dkgreen","dknavy",
+        "dkorange","eggshell","emerald","forest_green","gold","gray","green",
+        "khaki","lavender","lime","ltblue","ltbluishgray","ltkhaki","magenta",
+        "maroon","midblue","midgreen","mint","navy","olive","olive_teal",
+        "orange","orange_red","pink","purple","red","sand","sandb","sienna",
+        "stone","teal","yellow","ebg","ebblue","edkblue","eltblue","eltgreen",
+        "emidblue","erose")
+    if (stataversion()>=1800) {
+        kw = kw, ("stc1","stc2","stc3","stc4","stc5",
+            "stc6","stc7","stc8","stc9","stc10","stc11","stc12","stc13",
+            "stc14","stc15","stblue","stgreen","stred","styellow")
+    }
+    else { // make additional Stata 18 colors available in Stata 17 or below
+        namedcolors->put(    "stc1", ("#1a85ff",""))
+        namedcolors->put(    "stc2", ("#d41159",""))
+        namedcolors->put(    "stc3", ("#00bf7f",""))
+        namedcolors->put(    "stc4", ("#ffd400",""))
+        namedcolors->put(    "stc5", ("#4f2c99",""))
+        namedcolors->put(    "stc6", ("#ff6333",""))
+        namedcolors->put(    "stc7", ("#4db7ff",""))
+        namedcolors->put(    "stc8", ("#7c0015",""))
+        namedcolors->put(    "stc9", ("#0fefaf",""))
+        namedcolors->put(   "stc10", ("#faa307",""))
+        namedcolors->put(   "stc11", ("#758bfd",""))
+        namedcolors->put(   "stc12", ("#fed9b7",""))
+        namedcolors->put(   "stc13", ("#08234c",""))
+        namedcolors->put(   "stc14", ("#f88dad",""))
+        namedcolors->put(   "stc15", ("#0f5156",""))
+        namedcolors->put(  "stblue", ("#1a85ff",""))
+        namedcolors->put( "stgreen", ("#00bf7f",""))
+        namedcolors->put(   "stred", ("#d41159",""))
+        namedcolors->put("styellow", ("#ffd400",""))
+    }
+    for (j=length(kw); j; j--) namedcolors->put(kw[j], ("","1"))
+    // additional keywords allowed by colorstyle (or colorstylelist)
+    kw = ("none", "fg", "foreground", "bg", "background", ".", "..", "...")
+    for (j=length(kw); j; j--) namedcolors->put(kw[j], ("#000000","1"))
+    // done
+    (void) setbreakintr(brk)
 }
 
 `Bool' `MAIN'::_namedcolorindex(`SS' lib)
@@ -4638,7 +4770,7 @@ void `MAIN'::namedcolorindex()
         c = substr(line,1,l-1)
         nm = strtrim(substr(line,l,.))
         if (nm=="") continue // color name is missing
-        namedcolors.put(nm, c)
+        namedcolors->put(nm, (c,"")) // second el "" => not a system color 
     }
     fclose(fh)
     return(0)
@@ -4658,7 +4790,7 @@ mata:
     `SS'  pal
     `SR'  SRC
     
-    if (palettes.N()==0) paletteindex()
+    if (palettes==NULL) paletteindex()
     pal = pal0
     t = parse_palette(pal)
     if (t) {
@@ -4677,10 +4809,10 @@ mata:
     `SC'  keys
     `SC'  src
     `SR'  SRC
-    `TV'  t
+    `TS'  t
     
-    if (palettes.N()==0) paletteindex()
-    keys = palettes.keys()
+    if (palettes==NULL) paletteindex()
+    keys = palettes->keys()
     if (pattern!="") {
         if (args()<2) strict = 0
         if (strict) keys = ::select(keys, strmatch(keys, pattern))
@@ -4692,7 +4824,7 @@ mata:
     src = J(i, 1, "")
     SRC = ("palettes", "namedcolors", "lsmaps", "generators", "rgbmaps")
     for (;i;i--) {
-        t = palettes.get(keys[i])
+        t = _palette_tget(keys[i])
         if (isstring(t)) continue
         if (t==99)     src[i] = "internal/alias"
         else if (t<10) src[i] = SRC[t]
@@ -4706,28 +4838,46 @@ mata:
 `Int' `MAIN'::parse_palette(`SS' p0) // p0 may be replaced
 {
     `SS' p
-    `TV' t
+    `TS' t
     
-    t = palettes.get(p0) // only finds exact match, including case
+    t = _palette_tget(p0) // only finds exact match, including case
     if (isstring(t)) {
         p0 = t
-        t = palettes.get(p0)
+        t = _palette_tget(p0)
     }
     if (t==0) {
-        p = findkey(p0, palettes.keys(), "s2") // ignore case and allow abbreviation
+        p = findkey(p0, palettes->keys(), stataversion()<1800 ? "s2" : "st")
         if (p!="") {
             p0 = p
-            t = palettes.get(p0)
+            t = _palette_tget(p0)
             if (isstring(t)) {
                 p0 = t
-                t = palettes.get(p0)
+                t = _palette_tget(p0)
             }
         }
     }
     return(t)
 }
 
-void `MAIN'::paletteindex() // create palette index
+void `MAIN'::paletteindex()
+{
+    `Bool' brk
+    
+    palettes = findexternal("ColrSpace_paletteindex")
+    if (palettes!=NULL) {
+        if (classname(*palettes)=="`DICT'") return
+        palettes = NULL
+        rmexternal("ColrSpace_paletteindex")
+    }
+    brk = setbreakintr(0)
+    palettes = crexternal("ColrSpace_paletteindex")
+    *palettes = `DICT'()
+    palettes->notfound((&0, NULL))
+    _paletteindex()
+    (void) setbreakintr(brk)
+}
+
+void `MAIN'::_paletteindex() // create palette index
 {
     `SS'  lib, fn, line, nm, tn
     `SR'  libraries
@@ -4763,11 +4913,11 @@ void `MAIN'::paletteindex() // create palette index
             if (substr(line,1,2)!=tn) continue // not a palette name
             nm = strtrim(substr(line,3,.))
             if (nm=="") continue // palette name is empty
-            palettes.put(nm, t)
+            _palette_tput(nm, t)
             if (t==2) {
                 if (substr(nm,1,4)=="HTML") { // create alias
                     nm = "webcolors" + substr(nm,5,.)
-                    palettes.put(nm, t)
+                    _palette_tput(nm, t)
                 }
             }
         }
@@ -4781,44 +4931,61 @@ void `MAIN'::paletteindex() // create palette index
             if (substr(line,1,2)!=tn) continue // not a palette name
             nm = strtrim(substr(line,3,.))
             if (nm=="") continue // palette name is empty
-            palettes.put(nm, t+10)
+            _palette_tput(nm, t+10)
         }
         fclose(fh)
     }
     t = 99
-    palettes.put("okabe"                      , t)
-    palettes.put("tab10"                      , t)
-    palettes.put("tab20"                      , t)
-    palettes.put("tab20b"                     , t)
-    palettes.put("tab20c"                     , t)
-    palettes.put("spmap blues"                , t)
-    palettes.put("spmap greens"               , t)
-    palettes.put("spmap greys"                , t)
-    palettes.put("spmap reds"                 , t)
-    palettes.put("spmap rainbow"              , t)
-    palettes.put("HTML"                       , t)
-    palettes.put("HTML redorange"             , t)
-    palettes.put("webcolors"                  , t)
-    palettes.put("webcolors redorange"        , t)
-    palettes.put("twilight shifted"           , t)
-    palettes.put("sb"        , "sb deep")
-    palettes.put("sb6"       , "sb deep6")
-    palettes.put("pals"      , "pals kelly")
-    palettes.put("tol"       , "tol muted")
-    palettes.put("carto"     , "carto bold")
-    palettes.put("ptol"      , "ptol qualitative")
-    palettes.put("lin"       , "lin carcolor")
-    palettes.put("sfso"      , "sfso blue")
-    palettes.put("sfso cmyk" , "sfso blue cmyk")
-    palettes.put("w3"        , "w3 default")
-    palettes.put("matplotlib", "matplotlib jet")
-    palettes.put("CET"       , "CET L20")
-    palettes.put("scico"     , "scico batlow")
-    palettes.put("HCL"       , "HCL qualitative")
-    palettes.put("LCh"       , "LCh qualitative")
-    palettes.put("JMh"       , "JMh qualitative")
-    palettes.put("HSV"       , "HSV qualitative")
-    palettes.put("HSL"       , "HSL qualitative")
+    _palette_tput("okabe"                      , t)
+    _palette_tput("tab10"                      , t)
+    _palette_tput("tab20"                      , t)
+    _palette_tput("tab20b"                     , t)
+    _palette_tput("tab20c"                     , t)
+    _palette_tput("spmap blues"                , t)
+    _palette_tput("spmap greens"               , t)
+    _palette_tput("spmap greys"                , t)
+    _palette_tput("spmap reds"                 , t)
+    _palette_tput("spmap rainbow"              , t)
+    _palette_tput("HTML"                       , t)
+    _palette_tput("HTML redorange"             , t)
+    _palette_tput("webcolors"                  , t)
+    _palette_tput("webcolors redorange"        , t)
+    _palette_tput("twilight shifted"           , t)
+    _palette_tput("sb"        , "sb deep")
+    _palette_tput("sb6"       , "sb deep6")
+    _palette_tput("pals"      , "pals kelly")
+    _palette_tput("tol"       , "tol muted")
+    _palette_tput("carto"     , "carto bold")
+    _palette_tput("ptol"      , "ptol qualitative")
+    _palette_tput("lin"       , "lin carcolor")
+    _palette_tput("sfso"      , "sfso blue")
+    _palette_tput("sfso cmyk" , "sfso blue cmyk")
+    _palette_tput("w3"        , "w3 default")
+    _palette_tput("matplotlib", "matplotlib jet")
+    _palette_tput("CET"       , "CET L20")
+    _palette_tput("scico"     , "scico batlow")
+    _palette_tput("HCL"       , "HCL qualitative")
+    _palette_tput("LCh"       , "LCh qualitative")
+    _palette_tput("JMh"       , "JMh qualitative")
+    _palette_tput("HSV"       , "HSV qualitative")
+    _palette_tput("HSL"       , "HSL qualitative")
+}
+
+void `MAIN'::_palette_tput(`SS' key, `TS' t0)
+{
+    `TS' t
+    
+    if (isfleeting(t0)) {
+        palettes->put(key, (&t0, NULL))
+        return
+    }
+    t = t0 // need to make copy
+    palettes->put(key, (&t, NULL))
+}
+
+`TS' `MAIN'::_palette_tget(`SS' key)
+{
+    return(*(palettes->get(key)[1]))
 }
 
 void `MAIN'::palette(| `SS' pal, `RS' n, `RV' o1, `RV' o2, `RV' o3, `RV' o4)
@@ -4861,7 +5028,7 @@ void `MAIN'::add_palette(| `SS' pal, `RS' n, `RV' o1, `RV' o2, `RV' o3, `RV' o4)
     `SS'  pal
     
     // find palette
-    if (palettes.N()==0) paletteindex()
+    if (palettes==NULL) paletteindex()
     pal = pal0
     t = parse_palette(pal)
     if (t==0) return(0)
@@ -4896,6 +5063,7 @@ void `MAIN'::add_palette(| `SS' pal, `RS' n, `RV' o1, `RV' o2, `RV' o3, `RV' o4)
             }
             else if (length(o1)) { // noexpand argument specified
                 if (o1==0) _ipolate(n)
+                else if (n<(S->n)) _recycle(n) // select first n colors
             }
             else _ipolate(n)
         }
@@ -4906,6 +5074,18 @@ void `MAIN'::add_palette(| `SS' pal, `RS' n, `RV' o1, `RV' o2, `RV' o3, `RV' o4)
 }
 
 `SC' `MAIN'::Palette_read(`SS' pal, `SS' lib)
+{
+    `PV' T
+    
+    T = palettes->get(pal)
+    if (T[2]==NULL) {
+        T[2] = &(_Palette_read(pal, lib))
+        palettes->put(pal, T)
+    }
+    return(*(T[2]))
+}
+
+`SC' `MAIN'::_Palette_read(`SS' pal, `SS' lib)
 {
     `Int' pos, r, i
     `SS'  fn, line, tn
@@ -4937,6 +5117,7 @@ void `MAIN'::add_palette(| `SS' pal, `RS' n, `RV' o1, `RV' o2, `RV' o3, `RV' o4)
         break
     }
     fclose(fh)
+    if (r) f = ::select(f, substr(f,1,1):!="*") // remove comment lines
     return(f)
 }
 
@@ -5039,6 +5220,9 @@ void `MAIN'::Palette_namedcolors(`SS' pal0, | `SS' personal)
             if (l==0) continue // color name is missing
             t = strtrim(substr(f[i],l,.))
             if (t=="") continue // color name is missing
+            if (substr(t,-1,1)=="*") { // remove * suffix in name
+                t = substr(t,1,strlen(t)-1)
+            }
             P[++j,] = (substr(f[i],1,l-1), t)
             continue
         }
@@ -5213,21 +5397,21 @@ void `MAIN'::Palette_htmlcolors(| `SV' keys)
         }
     }
     else {
-        keys = palettes.keys()
+        keys = palettes->keys()
         keys = ::select(keys, substr(keys,1,4):=="HTML")
         k = length(keys)
         for (i=1;i<=k;i++) {
-            if (palettes.get(keys[i])!=2) continue // palette is not from namedcolors library
+            if (_palette_tget(keys[i])!=2) continue // palette is not from namedcolors library
             Palette_namedcolors(keys[i])
             C = C \ S->RGB
             N = N \ S->names
             I = I \ S->info
         }
         p = ::order(N,1)  // sort colors by name
-        C = C[p,]; N = N[p]; I = I[p]
+        C = C[p,]; N = N[p,]; I = I[p,]
         // remove doubles
         p = selectindex(N :!= (N[|2\.|] \ N[1]))
-        C = C[p,]; N = N[p]; I = I[p]
+        C = C[p,]; N = N[p,]; I = I[p,]
     }
     rgb_set(C)
     S->names = N
@@ -5290,7 +5474,7 @@ void `MAIN'::generate(`SS' pal, `Int' n, `RV' h, `RV' c, `RV' l, `RV' p)
 {
     `SS'  space
     
-    space = findkey(strlower(gettok(pal)), ("HUE", "HCL", "LCh", "JMh", "HSV", "HSL")')
+    space = findkey(gettok(pal), ("HUE", "HCL", "LCh", "JMh", "HSV", "HSL")')
     if      (space=="HUE")              generate_HUE(n, h, c[1], l[1], p[1])
     else if (S->pclass=="qualitative")  generate_qual(space, n, h, c[1], l[1])
     else if (S->pclass=="sequential")   generate_seq(space, n, h, c, l, p)

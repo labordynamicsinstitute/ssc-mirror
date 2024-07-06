@@ -59,14 +59,14 @@ In case the user is working with a file from ATUS, the program provides a second
 {title:Example:}
 
 {p}
-The following lines of code load the dataset "example_atusdiary.dta" and creates the variables 'start', 'end', and 'end_atus' from from a variable containing the end time of the activity expressed as a clock. 
+The following lines of code load the dataset "atusdiary.dta" and creates the variables 'start', 'end', and 'end_atus' from from a variable containing the end time of the activity expressed as a clock. 
 'start', 'end', and 'end_atus' measure the time at which the activity ends expressed as minute-of-the-day. 
 "example_atusdiary.dta" is a small dataset with the exact same format as the American Time Use Survey (although with just a few variables). 
 In the American Time Use survey, both the start and end of the activities is provided but for the sake of the example, we pretend that we just have the end time which is contained in the variable 'tustoptime'. 
 
 
-{phang2}. {stata "net get atusdiary":net get atusdiary}{p_end}
-{phang2}. {stata "use example_atusdiary, clear":use example_atusdiary, clear}{p_end}
+{phang2}. {stata "net get timeuse":net get timeuse}{p_end}
+{phang2}. {stata "use atusdiary, clear":use atusdiary, clear}{p_end}
 {phang2}. {stata "clocktomine tustoptime, diaryid(tucaseid) epnum(tuactivity_n) diaryst(4)":clocktomine tustoptime, diaryid(tucaseid) epnum(tuactivity_n) diaryst(4)}{p_end}
 
 
@@ -77,7 +77,7 @@ In the American Time Use survey, both the start and end of the activities is pro
 {pstd} Thanks for citing this software as follows:
 
 {pmore}
-Lamote de Grignon, J. (2024). clocktomine: Stata module to convert episode end time from string to minute-of-the day. Available from http://...”
+Lamote de Grignon, J. (2024). clocktomine: Stata module to convert episode end time from string to minute-of-the day. Available from: {browse "https://ideas.repec.org/c/boc/bocode/s459346.html":https://ideas.repec.org/c/boc/bocode/s459346.html.}
 
  
 {title:Acknowledgments}

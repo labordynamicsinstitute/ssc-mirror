@@ -69,6 +69,7 @@ p didq module to compute treatment effects under alternative Parallel-q assumpti
 p difd module to evaluate test items for differential item functioning (DIF)
 p difdetect module to detect and adjust for differential item functioning (DIF)
 p diff module to perform Differences in Differences estimation
+p diff_plot module to visualize classic difference-in-differences model 
 p diffpi module to calculate difference expressed as a percentage
 p difwithpar module for detection of and adjustment for differential item functioning (DIF)
 p digdis module to analyze the distribution of digits

@@ -1,4 +1,4 @@
-*! version 1.0.0  27may2020  Ben Jann
+*! version 1.0.2  21may2024  Ben Jann
 * {smcl}
 * {title:ColrSpace namedcolors library}
 * 

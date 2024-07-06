@@ -57,7 +57,7 @@ The program creates a diary level file with the following variables:
 {title:Examples}
 
 {p}
-The following example loads the dataset "example_diary.dta" and runs the program {cmd:timeuse} to create a diary level file with time use information for the categories of activity included in the variable primary.
+The following example loads the dataset "diary.dta" and runs the program {cmd:timeuse} to create a diary level file with time use information for the categories of activity included in the variable primary.
 After running the problem a small report will be displayed in the results window that will tell the user whether or not the variables created containing the time spent on each category of activity add up to 1440 or not. That the categories of activity do not add up to 1440 is not necessarily a problem. Datasets often have missing values and in those cases, it is expected that the sum of the different activities does not add up to 1440 minutes.
 
 {bf:Example 1: time spent across the different categories of 'primary'} 
@@ -65,8 +65,8 @@ After running the problem a small report will be displayed in the results window
 {p}
 In this example, primary has missing values and as a result, the sum of the different categories of activity created does not add up to 1440. 
 
-{phang2}. {stata "net get diary":net get diary}{p_end}
-{phang2}. {stata "use example_diary, clear":use example_diary, clear}{p_end}
+{phang2}. {stata "net get timeuse":net get timeuse}{p_end}
+{phang2}. {stata "use diary, clear":use diary, clear}{p_end}
 {phang2}. {stata "timeuse primary, diaryid(personid diaryid)":timeuse primary, diaryid(personid diaryid)}{p_end}
 
 {bf:Example 2: time spent outdoors and indoors} 
@@ -74,8 +74,8 @@ In this example, primary has missing values and as a result, the sum of the diff
 {p}
 To have categories of activity adding up to 1440 minutes, we give valid values to the missing values in the variable 'inout'.
 
-{phang2}. {stata "net get diary":net get diary}{p_end}
-{phang2}. {stata "use example_diary, clear":use example_diary, clear}{p_end}
+{phang2}. {stata "net get timeuse":net get timeuse}{p_end}
+{phang2}. {stata "use diary, clear":use diary, clear}{p_end}
 {phang2}. {stata "lab define inout 4 unknown, modify":lab define inout 4 unknown, modify}{p_end}
 {phang2}. {stata "recode inout (.=4)":recode inout (.=4)}{p_end}
 {phang2}. {stata "timeuse inout, diaryid(personid diaryid)":timeuse inout, diaryid(personid diaryid)}{p_end}
@@ -89,7 +89,7 @@ To have categories of activity adding up to 1440 minutes, we give valid values t
 {pstd} Thanks for citing this software as follows:
 
 {pmore}
-Lamote de Grignon, J. (2024). timeuse: Stata module to extract basic time use information for multiple activities. Available from https://ideas.repec.org/c/boc/bocode/s459346.html”
+Lamote de Grignon, J. (2024). timeuse: Stata module to extract basic time use information for multiple activities. Available from: {browse "https://ideas.repec.org/c/boc/bocode/s459346.html":https://ideas.repec.org/c/boc/bocode/s459346.html.}
 
 
 

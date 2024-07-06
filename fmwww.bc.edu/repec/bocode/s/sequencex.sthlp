@@ -70,8 +70,8 @@ primary activity, secondary activity, copresence, location, and enjoyment among 
 {p}
 This could be useful if you are only interested in changes in the primary activity. 
 
-{phang2}. {stata "net get diary":net get diary}{p_end}
-{phang2}. {stata "use example_diary, clear":use example_diary, clear}{p_end}
+{phang2}. {stata "net get timeuse":net get timeuse}{p_end}
+{phang2}. {stata "use diary, clear":use diary, clear}{p_end}
 {phang2}. {stata "sequencex primary, diaryid(personid diaryid) diaryst(4)":sequencex primary, diaryid(personid diaryid) diaryst(4)}{p_end}
 
 
@@ -80,8 +80,8 @@ This could be useful if you are only interested in changes in the primary activi
 {p}
 If you are not interested in what people are doing but on where they are, this transformation could make sense.
 
-{phang2}. {stata "net get diary":net get diary}{p_end}
-{phang2}. {stata "use example_diary, clear":use example_diary, clear}{p_end}
+{phang2}. {stata "net get timeuse":net get timeuse}{p_end}
+{phang2}. {stata "use diary, clear":use diary, clear}{p_end}
 {phang2}. {stata "sequencex ww_alone ww_child ww_partner ww_other, diaryid(personid diaryid) diaryst(4)":sequencex ww_alone ww_child ww_partner ww_other, diaryid(personid diaryid) diaryst(4)}{p_end}
 
 {bf:Example 3: episodes defined by the enjoyment field} 
@@ -89,8 +89,8 @@ If you are not interested in what people are doing but on where they are, this t
 {p}
 This may be useful if you are interested in exploring how often people change their mood throughout the day.
 
-{phang2}. {stata "net get diary":net get diary}{p_end}
-{phang2}. {stata "use example_diary, clear":use example_diary, clear}{p_end}
+{phang2}. {stata "net get timeuse":net get timeuse}{p_end}
+{phang2}. {stata "use diary, clear":use diary, clear}{p_end}
 {phang2}. {stata "sequencex enjoyment, diaryid(personid diaryid) diaryst(4)":sequencex enjoyment, diaryid(personid diaryid) diaryst(4)}{p_end}
 
 
@@ -101,7 +101,7 @@ This may be useful if you are interested in exploring how often people change th
 {pstd} Thanks for citing this software as follows:
 
 {pmore}
-Lamote de Grignon, J. (2024). sequencex: Stata module to create episode files from other episode files. Available from http://...”
+Lamote de Grignon, J. (2024). sequencex: Stata module to create episode files from other episode files. Available from: {browse "https://ideas.repec.org/c/boc/bocode/s459346.html":https://ideas.repec.org/c/boc/bocode/s459346.html.}
 
 
 

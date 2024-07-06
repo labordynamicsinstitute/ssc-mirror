@@ -63,7 +63,7 @@ should start at minute 0.
 {title:Examples}
 
 {p}
-The following examples start by loading the dataset "example_diary.dta" and run the quality checks. 
+The following examples start by loading the dataset "diary.dta" and run the quality checks. 
 In the first example, the report shows that the diary file is unproblematic. 
 In the remaining examples, we introduce errors and show how the report displays them. 
 After the errors are fixed (by either actually fixing them or dropping the diaries that have problems), the program {cmd:epichecks} is run again to show how the report is clean once the problems have been solved. 
@@ -71,15 +71,15 @@ After the errors are fixed (by either actually fixing them or dropping the diari
 
 {bf:Example 1: a file without problems}
 
-{phang2}. {stata "net get diary":net get diary}{p_end}
-{phang2}. {stata "use example_diary, clear":use example_diary, clear}{p_end}
+{phang2}. {stata "net get timeuse":net get timeuse}{p_end}
+{phang2}. {stata "use diary, clear":use diary, clear}{p_end}
 {phang2}. {stata "epichecks, diaryid(personid diaryid)":epichecks, diaryid(personid diaryid)}{p_end}
 
 
 {bf:Example 2: a file problems in the diary start time}
 
-{phang2}. {stata "net get diary":net get diary}{p_end}
-{phang2}. {stata "use example_diary, clear":use example_diary, clear}{p_end}
+{phang2}. {stata "net get timeuse":net get timeuse}{p_end}
+{phang2}. {stata "use diary, clear":use diary, clear}{p_end}
 {phang2}. {stata "replace start=5 if personid<5 & epnum==1":replace start=5 if personid<5 & epnum==1}{p_end}
 {phang2}. {stata "epichecks, diaryid(personid diaryid)":epichecks, diaryid(personid diaryid)}{p_end}
 {phang2}. {stata "replace start=0 if personid<5 & epnum==1":replace start=0 if personid<5 & epnum==1}{p_end}
@@ -88,8 +88,8 @@ After the errors are fixed (by either actually fixing them or dropping the diari
 
 {bf:Example 3: a file problems in the diary end time}
 
-{phang2}. {stata "net get diary":net get diary}{p_end}
-{phang2}. {stata "use example_diary, clear":use example_diary, clear}{p_end}
+{phang2}. {stata "net get timeuse":net get timeuse}{p_end}
+{phang2}. {stata "use diary, clear":use diary, clear}{p_end}
 {phang2}. {stata "bysort personid diaryid: egen lastep=max(epnum)":bysort personid diaryid: egen lastep=max(epnum)}{p_end}
 {phang2}. {stata "replace end=1430 if personid<=5 & epnum==lastep":replace end=1430 if personid<=5 & epnum==lastep}{p_end}
 {phang2}. {stata "epichecks, diaryid(personid diaryid)":epichecks, diaryid(personid diaryid)}{p_end}
@@ -99,8 +99,8 @@ After the errors are fixed (by either actually fixing them or dropping the diari
 
 {bf:Example 4: a file with partly overlapping episodes}
 
-{phang2}. {stata "net get diary":net get diary}{p_end}
-{phang2}. {stata "use example_diary, clear":use example_diary, clear}{p_end}
+{phang2}. {stata "net get timeuse":net get timeuse}{p_end}
+{phang2}. {stata "use diary, clear":use diary, clear}{p_end}
 {phang2}. {stata "egen udid=group(personid diaryid)":egen udid=group(personid diaryid)}{p_end}
 {phang2}. {stata "xtset udid epnum":xtset udid epnum}{p_end}
 {phang2}. {stata "replace start=l1.end+2 if epnum==3 & udid<=5":replace start=l1.end+2 if epnum==3 & udid<=5}{p_end}
@@ -116,7 +116,7 @@ After the errors are fixed (by either actually fixing them or dropping the diari
 {pstd} Thanks for citing this software as follows:
 
 {pmore}
-Lamote de Grignon, J. (2024). epichecks: Stata module to detect errors in episode files. Available from http://...”
+Lamote de Grignon, J. (2024). epichecks: Stata module to detect errors in episode files. Available from: {browse "https://ideas.repec.org/c/boc/bocode/s459346.html":https://ideas.repec.org/c/boc/bocode/s459346.html.}
 
 
 

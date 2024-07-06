@@ -1,5 +1,5 @@
 {smcl}
-{* 30may2022}{...}
+{* 21may2024}{...}
 {cmd:help colrspace}{...}
 {right:{browse "http://github.com/benjann/colrspace/"}}
 ({browse "http://ideas.repec.org/p/bss/wpaper/42.html":PDF manual}){...}
@@ -340,7 +340,7 @@
 {p2col:{helpb colrspace##opint:{it:S}.alpha()}}set/retrieve opacity{p_end}
 {p2col:{helpb colrspace##chadapt:{it:S}.chadapt()}}set chromatic adaption method{p_end}
 {p2col:{helpb colrspace##clear:{it:S}.clear()}}remove all colors and meta data{p_end}
-{p2col:{helpb colrspace##clearindex:{it:S}.clearindex()}}clear internal look-up tables{p_end}
+{p2col:{helpb colrspace##clearindex:{it:S}.clearindex()}}clear external look-up tables{p_end}
 {p2col:{helpb colrspace##settings:{it:S}.clearsettings()}}clear color space settings{p_end}
 {p2col:{helpb colrspace##clip:{it:S}.clip()}}helper function for clipping{p_end}
 {p2col:{helpb colrspace##contrast:{it:S}.contrast()}}compute contrast ratios{p_end}
@@ -361,7 +361,8 @@
 {p2col:{helpb colrspace##info:{it:S}.info()}}color description input/output (scalar){p_end}
 {p2col:{helpb colrspace##info:{it:S}.Info()}}color description input/output (vector){p_end}
 {p2col:{helpb colrspace##intensify:{it:S}.intensify()}}adjust color intensity{p_end}
-{p2col:{helpb colrspace##intensity:{it:S}.intensity()}}set/retrieve intensity adjustment{p_end}
+{p2col:{helpb colrspace##intensify:{it:S}.Intensify()}}apply existing intensity multipliers{p_end}
+{p2col:{helpb colrspace##intensity:{it:S}.intensity()}}set/retrieve intensity multipliers{p_end}
 {p2col:{helpb colrspace##ipolate:{it:S}.ipolate()}}interpolate colors{p_end}
 {p2col:{helpb colrspace##isipolate:{it:S}.isipolate()}}whether interpolation has been applied{p_end}
 {p2col:{helpb colrspace##lsmap:{it:S}.lsmap()}}helper function to create linear segmented colormaps{p_end}
@@ -446,27 +447,42 @@
         {it:S}{cmd:.clear()}
 
 {pstd}
-    This will remove all colors and meta data from {it:S}.
+    This will remove all colors from {it:S}.
 
 {pstd}
-    Color space settings are not affected {it:S}{cmd:.clear()}. Use
+    Color space settings are not affected by {it:S}{cmd:.clear()}. Use
     {help colrspace##settings:{it:S}{bf:.clearsettings()}} if you want to reset the
     color space settings.
 
+{pstd}
+    The external look-up tables are not affected by {it:S}{cmd:.clear()}. Use
+    {help colrspace##clearindex:{it:S}{bf:.clearindex()}} if you want to clear the
+    look-up tables.
+
 {marker clearindex}{...}
-{dlgtab:Clear internal look-up tables}
+{dlgtab:Clear external look-up tables}
 
 {pstd}
-    Some of the functions below make use of look-up tables for palette names
-    and named colors. {cmd:ColrSpace} stores these tables in {it:S}
-    for reasons of efficiency. To remove these tables, type
+    Some of the functions below make use of look-up tables for palettes
+    and named colors. {cmd:ColrSpace} stores these tables as external global
+    objects for reasons of efficiency (the names of the external globals are
+    {bf:ColrSpace_paletteindex} and {cmd:ColrSpace_namedcolorindex}). To
+    ulink these objects from {it:S} and remove them from memory, type
 
         {it:S}{cmd:.clearindex()}
 
 {pstd}
-    This frees a little bit of memory, which may be relevant if you intend to
-    create a lot of {cmd:ColrSpace} objects. The tables will be rebuilt
-    automatically if a function is called that makes use of them.
+    The tables will be rebuilt automatically if a function is called that
+    makes use of them.
+
+{pstd}
+    Note that the memory consumed by the look-up tables will only be freed if
+    there are no other {cmd:ColrSpace} objects in memory that are linked to
+    them. That is, {it:S}{cmd:.clearindex()} removes the links to the look-up
+    tables in {it:S} and also drops the external globals, but it does not clear
+    the links that may exist in other {cmd:ColrSpace} objects. If
+    the tables are rebuilt, these other {cmd:ColrSpace} objects will remain linked
+    to the old copy of the tables.
 
 
 {marker meta}{...}
@@ -729,12 +745,10 @@
     {browse "http://www.w3schools.com/colors/colors_ral.asp":Traffic Colors}.
 
 {pmore}
-    The color names can be abbreviated and typed in lowercase letters. If
-    abbreviation is ambiguous, the first matching name in the alphabetically
-    ordered list will be used. In case of name conflict with a Stata color,
-    the color from {cmd:ColrSpace} will take precedence only if the specified name is an exact match
-    including case. For example, {cmd:pink} will refer to official Stata's
-    pink, whereas {cmd:Pink} will refer to HTML color pink.
+    Color names can be abbreviated and typed in lowercase letters. If
+    spelling is ambiguous, a choice will be made based on alphabetical order
+    and capitalization (for example, type {cmd:pink} to select official Stata's
+    pink, type {cmd:Pink} to select HTML color pink).
 
 {pstd}
     Example:
@@ -963,8 +977,9 @@
     where
 
 {phang}
-    {it:name} selects the palette; see {help colrspace##palettelist:below} for available names. Default
-    is {cmd:s2}; this default can also be selected by typing {cmd:""}.
+    {it:name} selects the palette; see {help colrspace##palettelist:below} for
+    available names. Default is {cmd:st} in Stata 18 or above and
+    {cmd:s2} in Stata 17 or below; the default can also be selected by typing {cmd:""}.
 
 {phang}
     {it:n} is the number of colors to be retrieved from the palette. Many
@@ -982,16 +997,14 @@
     {help colrspace##ipolate:{it:S}{bf:.ipolate()}}.
 
 {phang}
-    {it:noexpand}!=0 prevents
-    recycling or interpolating colors if {it:n}, the number of
-    requested colors, is larger (smaller) than the maximum (minimum) number of
-    colors defined by a palette. That is, if {it:noexpand}!=0 is specified, the
-    resulting number of colors in {it:S} may be different from the requested number
-    of colors. Exception: {it:noexpand}!=0 does not suppress "recycling"
-    qualitative palettes if {it:n} is smaller than the (minimum) number of colors
-    defined by the palette. In this case, the first {it:n} colors of the palette
-    are retrieved irrespective of whether {it:noexpand}!=0 has been specified or
-    not.
+    {it:noexpand}!=0 prevents recycling or interpolating colors if {it:n}, the
+    number of requested colors, is larger than the maximum number of colors
+    defined by a palette. That is, if {it:noexpand}!=0 is specified, the
+    resulting number of colors in {it:S} may be smaller than the requested number
+    of colors. If {it:n} is smaller than the minimum number of colors
+    defined by a palette, {it:noexpand}!=0 causes the first {it:n} colors
+    to be selected (for qualitative palettes this corresponds to the default
+    behavior; for other palettes the default would be to interpolate).
 
 {pstd}
     Example:
@@ -1009,7 +1022,8 @@
     installed):
 
 {p2colset 9 25 27 2}{...}
-{p2col:{stata colorpalette s2:{bf:s2}}}15 qualitative colors as in Stata's {helpb scheme s2:s2color} scheme{p_end}
+{p2col:{stata colorpalette st:{bf:st}}}15 qualitative colors as in Stata's {helpb scheme st:stcolor} scheme (default in Stata 18 or above){p_end}
+{p2col:{stata colorpalette s2:{bf:s2}}}15 qualitative colors as in Stata's {helpb scheme s2:s2color} scheme (default in Stata 17 or below){p_end}
 {p2col:{stata colorpalette s1:{bf:s1}}}15 qualitative colors as in Stata's {helpb scheme s1:s1color} scheme{p_end}
 {p2col:{stata colorpalette s1r:{bf:s1r}}}15 qualitative colors as in Stata's {helpb scheme s1:s1rcolor} scheme{p_end}
 {p2col:{stata colorpalette economist:{bf:economist}}}15 qualitative colors as in Stata's {helpb scheme economist:economist} scheme{p_end}
@@ -1114,8 +1128,8 @@
     {stata colorpalette tab Orange-Blue Light:{bf:Orange-Blue Light}},
     {stata colorpalette tab Temperature:{bf:Temperature}}
     {p_end}
-{p2col:{cmd:tol} [{it:scheme}]}color schemes by Paul Tol 
-    ({browse "http://personal.sron.nl/~pault/":personal.sron.nl/~pault}; 
+{p2col:{cmd:tol} [{it:scheme}]}color schemes by Paul Tol
+    ({browse "http://personal.sron.nl/~pault/":personal.sron.nl/~pault};
     using definitions from {browse "http://personal.sron.nl/~pault/data/tol_colors.py":tol_colors.py},
     which may deviate from {browse "http://personal.sron.nl/~pault/":personal.sron.nl/~pault}),
     where {it:scheme} is as follows
@@ -2299,6 +2313,22 @@
         . {stata `"mata: S.intensify((., .5))"'}
         . {stata "colorpalette mata(S), rows(2)"}
 
+{pstd}
+    If intensity multipliers have been set by
+    {helpb colrspace##string:{it:S}.colors()} or
+    {helpb colrspace##intensity:{it:S}.intensity()}, you can type
+
+        {it:S}{cmd:.}[{cmd:add_}]{cmd:Intensify}[{cmd:_added}]{cmd:()}
+
+{pstd}
+    (note the capital I) to adjust the colors by these multipliers and
+    then clear the information on intensity multipliers. {it:S}{cmd:.Intensify()}
+    operates on all existing colors; use
+    {it:S}{cmd:.Intensify_added()} if you only want to manipulate the colors
+    added last. Furthermore, use {it:S}{cmd:.add_Intensify()} or
+    {it:S}{cmd:.add_Intensify_added()} to leave the existing colors unchanged and
+    append the manipulated colors.
+
 {marker saturate}{...}
 {dlgtab:Saturate}
 
@@ -2442,6 +2472,10 @@
     and then converting the colors back.
 
 {pstd}
+    Opacity settings and intensity adjustment multipliers are ignored when
+    converting the colors.
+
+{pstd}
     Example:
 
         . {stata "mata: A = ColrSpace()"}
@@ -2499,6 +2533,10 @@
     retrieved as follows:
 
         {it:M} = {it:S}{cmd:.cvd_M(}[{it:p}{cmd:,} {it:method}]{cmd:)}
+
+{pstd}
+    Opacity settings and intensity adjustment multipliers are ignored when
+    converting the colors.
 
 {pstd}
     Example:
@@ -3546,7 +3584,7 @@
 {phang}
     Jann, B. 2022. ColrSpace: A Mata class for color management. University
     of Bern Social Sciences Working Papers No. 42. Available from
-    {browse "http://ideas.repec.org/p/bss/wpaper/42.html"}. 
+    {browse "http://ideas.repec.org/p/bss/wpaper/42.html"}.
     {p_end}
 {phang}
     Jann, B. 2019. colrspace: Stata module providing a class-based color

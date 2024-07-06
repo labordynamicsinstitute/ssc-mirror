@@ -84,6 +84,7 @@ fmwww.bc.edu/repec/bocode/c/color-538bs3.style
 fmwww.bc.edu/repec/bocode/c/cv_kfold.pkg
 fmwww.bc.edu/repec/bocode/c/cs_ivreg2_4.1.08.do
 fmwww.bc.edu/repec/bocode/c/cv.sthlp
+fmwww.bc.edu/repec/bocode/c/cc_xd_didtextbook.pkg
 fmwww.bc.edu/repec/bocode/c/ceqdes.ado
 fmwww.bc.edu/repec/bocode/c/cseplist.html
 fmwww.bc.edu/repec/bocode/c/circvm.hlp
@@ -520,6 +521,7 @@ fmwww.bc.edu/repec/bocode/c/carryforward.html
 fmwww.bc.edu/repec/bocode/c/c_boost.py
 fmwww.bc.edu/repec/bocode/c/color-538bs8.style
 fmwww.bc.edu/repec/bocode/c/color-ukriltblue.style
+fmwww.bc.edu/repec/bocode/c/cc_xd_didtextbook.zip
 fmwww.bc.edu/repec/bocode/c/cauchitasinhinnerw2.ado
 fmwww.bc.edu/repec/bocode/c/cddens.sthlp
 fmwww.bc.edu/repec/bocode/c/cdfquantreg.sthlp
@@ -1023,6 +1025,7 @@ fmwww.bc.edu/repec/bocode/c/concindc.hlp
 fmwww.bc.edu/repec/bocode/c/cprdent_13.sthlp
 fmwww.bc.edu/repec/bocode/c/clr_pb.ado
 fmwww.bc.edu/repec/bocode/c/cutpt.pkg
+fmwww.bc.edu/repec/bocode/c/cc_xd_didtextbook.html
 fmwww.bc.edu/repec/bocode/c/ceqef.sthlp
 fmwww.bc.edu/repec/bocode/c/chaidforest_pr.ado
 fmwww.bc.edu/repec/bocode/c/cnormp.sthlp
@@ -16112,6 +16115,7 @@ fmwww.bc.edu/repec/bocode/d/dirifit.ado
 fmwww.bc.edu/repec/bocode/d/demodata.dta
 fmwww.bc.edu/repec/bocode/d/dolog6.sthlp
 fmwww.bc.edu/repec/bocode/d/dashgph.hlp
+fmwww.bc.edu/repec/bocode/d/diff_plot.sthlp
 fmwww.bc.edu/repec/bocode/d/diagtest.html
 fmwww.bc.edu/repec/bocode/d/dummies.hlp
 fmwww.bc.edu/repec/bocode/d/ddml.pkg
@@ -16218,6 +16222,7 @@ fmwww.bc.edu/repec/bocode/d/digdis.hlp
 fmwww.bc.edu/repec/bocode/d/dummieslab.ado
 fmwww.bc.edu/repec/bocode/d/dirmul.ado
 fmwww.bc.edu/repec/bocode/d/didq.ado
+fmwww.bc.edu/repec/bocode/d/diff_plot.pkg
 fmwww.bc.edu/repec/bocode/d/dolog14.sthlp
 fmwww.bc.edu/repec/bocode/d/dataex.sthlp
 fmwww.bc.edu/repec/bocode/d/dta2md.ado
@@ -16878,6 +16883,7 @@ fmwww.bc.edu/repec/bocode/d/dagumpred.ado
 fmwww.bc.edu/repec/bocode/d/dkdensity.ado
 fmwww.bc.edu/repec/bocode/d/dbmscopybatch.pkg
 fmwww.bc.edu/repec/bocode/d/dbins.ado
+fmwww.bc.edu/repec/bocode/d/diff_plot.ado
 fmwww.bc.edu/repec/bocode/d/df_het.dta
 fmwww.bc.edu/repec/bocode/d/dgraph_example.do
 fmwww.bc.edu/repec/bocode/d/dfl.hlp

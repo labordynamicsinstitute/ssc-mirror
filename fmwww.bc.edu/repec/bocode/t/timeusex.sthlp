@@ -83,29 +83,29 @@ These variables should already exist in the data, simply rename them as 'start' 
 {title:Examples}
 
 {p}
-The following lines of code load the dataset "example_diary.dta" and convert it into a diary level file -where each row of data represents a day- with detailed information for several activities. 
+The following lines of code load the dataset "diary.dta" and convert it into a diary level file -where each row of data represents a day- with detailed information for several activities. 
 The first example explores eating, and the second explores solitary TV use (watching TV alone). The diary starts at 4:00 am and the diary identifier is the variable 'id'.
 
 {bf:Example 1: exploring eating}
 
-{phang2}. {stata "net get diary":net get diary}{p_end}
-{phang2}. {stata "use example_diary, clear":use example_diary, clear}{p_end}
+{phang2}. {stata "net get timeuse":net get timeuse}{p_end}
+{phang2}. {stata "use diary, clear":use diary, clear}{p_end}
 {phang2}. {stata "gen eating=0":gen eating=0}{p_end}
 {phang2}. {stata "replace eating=1 if primary==2|secondary==2":replace eating=1 if primary==2|secondary==2}{p_end}
 {phang2}. {stata "timeusex eating, diaryid(personid diaryid) diaryst(4)":timeusex eating, diaryid(personid diaryid) diaryst(4)}{p_end}
 
 {bf:Example 2: watching TV alone}
 
-{phang2}. {stata "net get diary":net get diary}{p_end}
-{phang2}. {stata "use example_diary, clear":use example_diary, clear}{p_end}
+{phang2}. {stata "net get timeuse":net get timeuse}{p_end}
+{phang2}. {stata "use diary, clear":use diary, clear}{p_end}
 {phang2}. {stata "gen tvalone=0":gen tvalone=0}{p_end}
 {phang2}. {stata "replace tvalone=1 if primary==14 & ww_alone==1":replace tvalone=1 if primary==14 & ww_alone==1}{p_end}
 {phang2}. {stata "timeusex tvalone, diaryid(personid diaryid) diaryst(4)":timeusex tvalone, diaryid(personid diaryid) diaryst(4)}{p_end}
 
 {bf:Example 3: exercising outdoors with others}
 
-{phang2}. {stata "net get diary":net get diary}{p_end}
-{phang2}. {stata "use example_diary, clear":use example_diary, clear}{p_end}
+{phang2}. {stata "net get timeuse":net get timeuse}{p_end}
+{phang2}. {stata "use diary, clear":use diary, clear}{p_end}
 {phang2}. {stata "gen exercise=0":gen exercise=0}{p_end}
 {phang2}. {stata "replace exercise=1 if primary==17 & inout==2 & ww_alone==0":replace exercise=1 if primary==17 & inout==2 & ww_alone==0}{p_end}
 {phang2}. {stata "timeusex exercise, diaryid(personid diaryid) diaryst(4)":timeusex exercise, diaryid(personid diaryid) diaryst(4)}{p_end}
@@ -118,7 +118,7 @@ The first example explores eating, and the second explores solitary TV use (watc
 {pstd} Thanks for citing this software as follows:
 
 {pmore}
-Lamote de Grignon, J. (2024). timeusex: Stata module to extract detailed time use information for a single activity. Available from http://...”
+Lamote de Grignon, J. (2024). timeusex: Stata module to extract detailed time use information for a single activity. Available from: {browse "https://ideas.repec.org/c/boc/bocode/s459346.html":https://ideas.repec.org/c/boc/bocode/s459346.html.}
 
 
 {title:Acknowledgments}
