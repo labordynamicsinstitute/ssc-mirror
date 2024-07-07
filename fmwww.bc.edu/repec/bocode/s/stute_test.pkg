@@ -1,0 +1,33 @@
+d 'STUTE_TEST': module to compute Stute (1997) linearity test.
+d
+d      This program implements the non-parametric test that the
+d expectation of Y given D is linear proposed by Stute (1997).	In 
+d   the companion vignette, we sketch the intuition behind the
+d test, as to motivate the use of the package and its options.	 
+d Please refer to Stute (1997) and Section 3 of de Chaisemartin and
+d D'Haultfoeuille (2024) for further details. 
+d
+d KW: Stute test 
+d
+d Requires: Stata version 12 
+d
+d Distribution-Date: 20240706
+d
+d Author:  Clément de Chaisemartin,  Economics Department, Sciences Po
+d Support: email  chaisemartin.packages@@gmail.com
+d
+d Author:   Xavier D'Haultfoeuille, CREST-ENSAE
+d Support: email   xavier.dhaultfoeuille@@ensae.fr
+d
+d Author:  Diego Ciccia, Economics Department, Sciences Po
+d Support: email chaisemartin.packages@@gmail.com
+d
+d Author:  Felix Knau, Economics Department, Sciences Po
+d Support: email chaisemartin.packages@@gmail.com
+d
+d Author:    Doulo Sow, CREST-ENSAE
+d Support: email chaisemartin.packages@@gmail.com
+d
+f stute_test.ado
+f stute_test.sthlp
+f stute_test.html

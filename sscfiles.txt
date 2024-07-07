@@ -9600,6 +9600,7 @@ fmwww.bc.edu/repec/bocode/s/spregsemxt3.ado
 fmwww.bc.edu/repec/bocode/s/svm_predict.ado
 fmwww.bc.edu/repec/bocode/s/smwoodbury_sym1_lu_solve.html
 fmwww.bc.edu/repec/bocode/s/spregdpd.dlg
+fmwww.bc.edu/repec/bocode/s/stute_test.html
 fmwww.bc.edu/repec/bocode/s/setpoisson.pkg
 fmwww.bc.edu/repec/bocode/s/surrog.pkg
 fmwww.bc.edu/repec/bocode/s/slopepower.sthlp
@@ -10741,6 +10742,7 @@ fmwww.bc.edu/repec/bocode/s/smwoodbury_sym2_qr_solve.html
 fmwww.bc.edu/repec/bocode/s/stak.hlp
 fmwww.bc.edu/repec/bocode/s/sptobitsemxt2.ado
 fmwww.bc.edu/repec/bocode/s/simulate2.ado
+fmwww.bc.edu/repec/bocode/s/stute_test.sthlp
 fmwww.bc.edu/repec/bocode/s/svrlog_p.ado
 fmwww.bc.edu/repec/bocode/s/stgtcalc.ado
 fmwww.bc.edu/repec/bocode/s/stepp_plot.ado
@@ -10845,6 +10847,7 @@ fmwww.bc.edu/repec/bocode/s/scenttest.sthlp
 fmwww.bc.edu/repec/bocode/s/simulate2.ihlp
 fmwww.bc.edu/repec/bocode/s/StataMo.ico
 fmwww.bc.edu/repec/bocode/s/stddiff.pkg
+fmwww.bc.edu/repec/bocode/s/stute_test.ado
 fmwww.bc.edu/repec/bocode/s/stpepemori.hlp
 fmwww.bc.edu/repec/bocode/s/savasas.hlp
 fmwww.bc.edu/repec/bocode/s/strgroup.pkg
@@ -11413,6 +11416,7 @@ fmwww.bc.edu/repec/bocode/s/stan.ado
 fmwww.bc.edu/repec/bocode/s/sql_do_script.sthlp
 fmwww.bc.edu/repec/bocode/s/skewplot6.hlp
 fmwww.bc.edu/repec/bocode/s/scheme-white_w3d.scheme
+fmwww.bc.edu/repec/bocode/s/stute_test.pkg
 fmwww.bc.edu/repec/bocode/s/spregrext.pkg
 fmwww.bc.edu/repec/bocode/s/sptobitmstarxt11.ado
 fmwww.bc.edu/repec/bocode/s/seqcountdata.dta
