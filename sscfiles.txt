@@ -10221,6 +10221,7 @@ fmwww.bc.edu/repec/bocode/s/sptobitsdm.ado
 fmwww.bc.edu/repec/bocode/s/songbl_cn.sthlp
 fmwww.bc.edu/repec/bocode/s/skprobit.pkg
 fmwww.bc.edu/repec/bocode/s/stpm_p.ado
+fmwww.bc.edu/repec/bocode/s/simulation_usecase.do
 fmwww.bc.edu/repec/bocode/s/stockquote.hlp
 fmwww.bc.edu/repec/bocode/s/sbplot5.html
 fmwww.bc.edu/repec/bocode/s/scatter3d.zip
@@ -13958,6 +13959,7 @@ fmwww.bc.edu/repec/bocode/p/ppmlhdfe.ado
 fmwww.bc.edu/repec/bocode/p/punaf.ado
 fmwww.bc.edu/repec/bocode/p/pbeta4.ado
 fmwww.bc.edu/repec/bocode/p/psgraph.hlp
+fmwww.bc.edu/repec/bocode/p/pyramid_chart.pkg
 fmwww.bc.edu/repec/bocode/p/panelhetero_illustration.do
 fmwww.bc.edu/repec/bocode/p/poswbic_gmm_logit.ado
 fmwww.bc.edu/repec/bocode/p/partpred.sthlp
@@ -14921,6 +14923,7 @@ fmwww.bc.edu/repec/bocode/p/putwrap.pkg
 fmwww.bc.edu/repec/bocode/p/psmatch2.ado
 fmwww.bc.edu/repec/bocode/p/processscore.m
 fmwww.bc.edu/repec/bocode/p/persuasio4yz.sthlp
+fmwww.bc.edu/repec/bocode/p/pyramid_chart.sthlp
 fmwww.bc.edu/repec/bocode/p/pcm010302_lf.ado
 fmwww.bc.edu/repec/bocode/p/psestimate.sthlp
 fmwww.bc.edu/repec/bocode/p/pisatools.pkg
@@ -14935,6 +14938,7 @@ fmwww.bc.edu/repec/bocode/p/psimulate2.sthlp
 fmwww.bc.edu/repec/bocode/p/puse.ado
 fmwww.bc.edu/repec/bocode/p/prosperity.sthlp
 fmwww.bc.edu/repec/bocode/p/polarbar.ado
+fmwww.bc.edu/repec/bocode/p/pyramid_chart.ado
 fmwww.bc.edu/repec/bocode/p/psmatch2.linux
 fmwww.bc.edu/repec/bocode/p/pd_data8.txt
 fmwww.bc.edu/repec/bocode/p/plssemplot.ado
@@ -17267,6 +17271,7 @@ fmwww.bc.edu/repec/bocode/k/khbtab.ado
 fmwww.bc.edu/repec/bocode/k/kappaetci.sthlp
 fmwww.bc.edu/repec/bocode/o/ordvar.pkg
 fmwww.bc.edu/repec/bocode/o/omav.ado
+fmwww.bc.edu/repec/bocode/o/ovbd.sthlp
 fmwww.bc.edu/repec/bocode/o/oglm.ado
 fmwww.bc.edu/repec/bocode/o/opencagegeo.ado
 fmwww.bc.edu/repec/bocode/o/osort.sthlp
@@ -17297,6 +17302,7 @@ fmwww.bc.edu/repec/bocode/o/omninorm7.html
 fmwww.bc.edu/repec/bocode/o/oglm9.pkg
 fmwww.bc.edu/repec/bocode/o/onewai.ado
 fmwww.bc.edu/repec/bocode/o/ocmt.ado
+fmwww.bc.edu/repec/bocode/o/ovbdc.ado
 fmwww.bc.edu/repec/bocode/o/outtex6.html
 fmwww.bc.edu/repec/bocode/o/orse.ado
 fmwww.bc.edu/repec/bocode/o/onewayplot.html
@@ -17618,6 +17624,7 @@ fmwww.bc.edu/repec/bocode/o/orse.html
 fmwww.bc.edu/repec/bocode/o/optifact.html
 fmwww.bc.edu/repec/bocode/o/overid.html
 fmwww.bc.edu/repec/bocode/o/outsum.pkg
+fmwww.bc.edu/repec/bocode/o/ovbdr.ado
 fmwww.bc.edu/repec/bocode/o/oaxaca.ado
 fmwww.bc.edu/repec/bocode/o/oneclick.pkg
 fmwww.bc.edu/repec/bocode/i/ipdover.sthlp

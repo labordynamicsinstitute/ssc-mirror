@@ -1,6 +1,6 @@
 d 'OVBD': module to generate correlated random binomial data
 d
-d ovbd generates correlated random binomial data, which might be
+d  ovbd generates correlated random binomial data, which might be
 d useful in Monte  Carlo simulations and for similar purposes. 
 d
 d KW: correlated binomial
@@ -8,13 +8,16 @@ d KW: random variate
 d KW: overdispersion
 d KW: underdispersion
 d
-d Requires: Stata version 9.2
+d Requires: Stata version 18
 d
-d Distribution-Date: 20070228
+d Distribution-Date: 20240707
 d
 d Author: Joseph Coveney, Cobridge Co., Ltd.
 d Support: email jcoveney@@bigplanet.com
 d
 f ovbd.ado
-f ovbd.hlp
+f ovbdc.ado
+f ovbdr.ado
+f ovbd.sthlp
 f ovbd_illustrator.do
+f ../s/simulation_usecase.do

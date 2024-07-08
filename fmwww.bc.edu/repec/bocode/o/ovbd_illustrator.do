@@ -1,101 +1,111 @@
-*! ovbd_illustrator.do Version 1.0 2007-02-27 JRC
-clear
-set more off
-set seed `=date("2007-02-27", "ymd")'
+*! ovbd_illustrator.do Version 2.0.0 JRC 2007-07-07
+
+version 18.0
+
+clear *
+
+set seed 1774624902
+
+which ovbd.ado
+which ovbdc.ado
+which ovbdr.ado
+
 *
-* Constant means (50%) and correlation coefficient (50%)
+* Constant means (0.5) and correlation coefficient (0.5)
 *
-matrix define M = J(1, 10, 0.5)
-matrix define C = J(10, 10, 0.5)
-forvalues i = 1/10 {
-    matrix define C[`i', `i'] = 1 // Not especially necessary. -ovbd- ignores the diagonals
-}
-ovbd , stub(rsp) means(M) corr(C) n(250) clear
-summarize rsp*, separator(0)
-pwcorr rsp*
-tetrachoric rsp* // Compare rho from -xtprobit-
-generate int pid = _n
+matrix define M50 = J(1, 10, 0.5)
+matrix define C50 = J(10, 10, 0.5) + I(10) * 0.5
+
+ovbd , stub(rsp) means(M50) corr(C50) n(250)
+
+generate `c(obs_t)' pid = _n
 quietly reshape long rsp, i(pid) j(tim)
-xtgee rsp tim, i(pid) t(tim) family(binomial) link(logit) corr(unstructured) nolog
-xtcorr
-xtgee rsp tim, i(pid) t(tim) family(binomial) link(logit) corr(exchangeable) nolog
+xtgee rsp tim, i(pid) family(binomial) link(logit) corr(exchangeable) nolog
+margins
 xtcorr, compact
-xtlogit rsp tim, i(pid) re intmethod(aghermite) intpoints(30) nolog
+
 *
-* Same mean vector, but 25% compound symmetric correlation matrix
+* Same mean vector, but 0.25 compound symmetric correlation matrix
 *
-matrix define C = J(10, 10, 0.25)
-forvalues i = 1/10 {
-    matrix define C[`i', `i'] = 1
-}
-ovbd , stub(rsp) means(M) corr(C) n(250) clear
-summarize rsp*, separator(0)
-pwcorr rsp*
-tetrachoric rsp*
-generate int pid = _n
+matrix define C25 = J(10, 10, 0.25) + I(10) * 0.75
+ovbd , stub(rsp) means(M50) corr(C25) n(250) clear
+
+generate `c(obs_t)' pid = _n
 quietly reshape long rsp, i(pid) j(tim)
-xtgee rsp tim, i(pid) t(tim) family(binomial) link(logit) corr(unstructured) nolog
-xtcorr
-xtgee rsp tim, i(pid) t(tim) family(binomial) link(logit) corr(exchangeable) nolog
+xtgee rsp tim, i(pid) family(binomial) link(logit) corr(exchangeable) nolog
+margins
 xtcorr, compact
-xtlogit rsp tim, i(pid) re intmethod(aghermite) intpoints(30) nolog
+
 *
-* Varying means with 50% constant correlation coefficient
+* Varying means with 0.5 constant correlation coefficient
 *
-matrix define M = J(1, 10, 0.5)
+matrix define MV = J(1, 10, 0.5)
 forvalues i = 1/10 {
-    matrix define M[1,`i'] = M[1,`i'] - (`i' - 5) / 30
+    matrix define MV[1,`i'] = MV[1,`i'] - (`i' - 5) / 30
 }
-matrix list M
-matrix define C = J(10, 10, 0.5)
-forvalues i = 1/10 {
-    matrix define C[`i', `i'] = 1
-}
-ovbd , stub(rsp) means(M) corr(C) n(250) clear
-summarize rsp*, separator(0)
-pwcorr rsp*
-tetrachoric rsp*
-generate int pid = _n
+matrix list MV
+
+ovbd , stub(rsp) means(MV) corr(C50) n(250) clear
+
+generate `c(obs_t)' pid = _n
 quietly reshape long rsp, i(pid) j(tim)
-xtgee rsp tim, i(pid) t(tim) family(binomial) link(logit) corr(unstructured) nolog
-xtcorr
-xtgee rsp tim, i(pid) t(tim) family(binomial) link(logit) corr(exchangeable) nolog
+xtgee rsp i.tim, i(pid) family(binomial) link(logit) corr(exchangeable) nolog
+margins tim
 xtcorr, compact
-xtlogit rsp tim, i(pid) re intmethod(aghermite) intpoints(30) nolog
+
 *
-* Varying means and first-order autoregresive correlation coefficient (75%)
+* Varying means and first-order autoregresive correlation coefficient (0.75)
 *
-matrix define C = J(10, 10, 0.75)
+matrix define CAR1 = J(10, 10, 0.75)
 forvalues i = 2/10 {
     forvalues j = 1/`=`i'-1' {
-        matrix define C[`i',`j'] = C[`i',`j']^abs(`i' - `j')
-        matrix define C[`j',`i'] = C[`i',`j']
+        matrix define CAR1[`i',`j'] = CAR1[`i',`j']^abs(`i' - `j')
+        matrix define CAR1[`j',`i'] = CAR1[`i',`j']
     }
 }
 forvalues i = 1/10 {
-    matrix define C[`i', `i'] = 1
+    matrix define CAR1[`i', `i'] = 1
 }
-matrix list C
-ovbd , stub(rsp) means(M) corr(C) n(250) clear
-summarize rsp*, separator(0)
-pwcorr rsp*
-tetrachoric rsp* // This the luck of the draw, but beware:  option -forcepsd- not used in call to -drawnorm-
-generate int pid = _n
+matrix list CAR1
+
+ovbd , stub(rsp) means(MV) corr(CAR1) n(250) clear
+
+generate `c(obs_t)' pid = _n
 quietly reshape long rsp, i(pid) j(tim)
-xtgee rsp tim, i(pid) t(tim) family(binomial) link(logit) corr(unstructured) nolog
-xtcorr
-xtgee rsp tim, i(pid) t(tim) family(binomial) link(logit) corr(ar 1) nolog
+xtgee rsp i.tim, i(pid) t(tim) family(binomial) link(logit) corr(ar 1) nolog
+margins tim
 xtcorr, compact
+
 *
 * Underdispersion
 *
-matrix define M = J(1, 2, 0.5)
-matrix define C = J(2, 2, -0.5)
+matrix define M50 = J(1, 2, 0.5)
+matrix define CU50 = J(2, 2, -0.5)
 forvalues i = 1/2 {
-    matrix define C[`i', `i'] = 1
+    matrix define CU50[`i', `i'] = 1
 }
-ovbd , stub(rsp) means(M) corr(C) n(250) clear
-summarize rsp*, separator(0)
-pwcorr rsp*
-tetrachoric rsp*
+
+ovbd , stub(rsp) means(M50) corr(CU50) n(250) clear
+
+generate `c(obs_t)' pid = _n
+quietly reshape long rsp, i(pid) j(tim)
+xtgee rsp tim, i(pid) family(binomial) link(logit) corr(exchangeable) nolog
+margins
+xtcorr, compact
+
+*
+* Imprudent target correlation structure
+*
+matrix define MI = J(1, 4, 0.5)
+matrix define CI = J(4, 4, 0.5) + I(4) * 0.5
+matrix define CI[1, 4] = 0
+matrix define CI[4, 1] = 0
+matrix define CI[2, 3] = 0
+matrix define CI[3, 2] = 0
+matrix list CI
+mata: rank(st_matrix("CI"))
+
+ovbd , stub(rsp) means(MI) corr(CI) n(250) verbose clear
+correlate // Undershoots (0.30 to 0.45 for 0.5) when target is ill-considered
+
 exit

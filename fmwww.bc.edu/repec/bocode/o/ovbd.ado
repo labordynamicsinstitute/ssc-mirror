@@ -1,75 +1,138 @@
-*! ovbd.ado Version 1.0 2007-02-27 JRC
+*! ovbd.ado Version 2.0.0 JRC 2024-07-07
 program define ovbd
-    version 9.2
-    syntax [newvarlist], Means(name) Corr(name) n(integer) [STub(string) SEED(integer 0) Verbose] clear
-*
-    tempname A B C
-*
-    capture assert rowsof(`means') == 1
-    if _rc {
-        display in smcl as error "Means must be a column vector."
-        exit = 99
+    version 18.0
+    syntax [anything], Means(name) Corr(name) ///
+        [n(integer `=_N') STub(string) SEED(string) ///
+        Verbose ITERate(passthru) TOLerance(passthru) clear]
+
+    mata: setC()
+
+    ovbdc , m(`means') c(`corr') `verbose' `iterate' `tolerance'
+
+    mata: setR()
+
+    ovbdr `varlist', z(`Z') a(`A')
+end
+
+version 18.0
+
+mata:
+mata set matastrict on
+
+//# setC
+
+void function setVarlist() {
+
+    string scalar varlist, stub
+    varlist = st_local("anything")
+    stub = st_local("stub")
+
+    real scalar mean_tally, index
+    // Defers checking Means
+    mean_tally = max( (rows(st_matrix(st_local("means"))), 
+        cols(st_matrix(st_local("means")))) )
+
+    if (!strlen(varlist + stub)) {
+        errprintf("one of newvarlist or stub() must be specified\n")
+        exit(error(198))
     }
-    local Columns = colsof(`means')
-    capture assert ((colsof(`corr') == `Columns') & (rowsof(`corr') == `Columns'))
-    if _rc {
-        display in smcl as error "Correlation matrix must have same number of rows and columns as columns of Means vector."
-        exit = 99
-    }
-    capture assert ("`varlist'" != "")
-    if _rc {
-        capture assert  ("`stub'" != "")
-        if _rc {
-            display in smcl as error "Either {it:newvarlist} or {it:stub()} must be specified."
-            exit = 99
+    else {
+        if (strlen(varlist) > 0) {
+            if (strlen(stub) > 0) {
+                errprintf("only one of newvarlist or stub() may be specified\n")
+                exit(error(198))
+            }
+            else {
+                if (cols(tokens(varlist)) != mean_tally) {
+                    errprintf("number of newvarlist is not equal to length of mean vector\n")
+                    exit(error(198))
+                }
+                else st_local("varlist", varlist)
+            }
         }
         else {
-            forvalues i = 1/`Columns' {
-                local varlist `varlist' `stub'`i'
+            for (index=1; index<=mean_tally; index++) {
+                varlist = varlist + " " + stub + strofreal(index)
             }
+            st_local("varlist", strtrim(varlist))
         }
     }
-    else { // STub() will be ignored if newvarlist is specified
-        capture assert (`: word count `varlist'' == `Columns')
-        if _rc {
-            display in smcl as error "Number of new variables must equal number of columns in mean vector."
-            exit = 99
+}
+
+void function checkNewvarlist() {
+
+    real rowvector Varindices
+    Varindices = _st_varindex(tokens(st_local("varlist")))
+
+    if (!allof(Varindices, .)) {
+        errprintf("%s already defined\n", invtokens(st_varname(
+            select(Varindices, Varindices :!= .))))
+        exit(110)
+    }
+}
+
+void function setC() {
+    setVarlist()
+    if (st_local("clear") == "") checkNewvarlist()
+}
+
+//# setR
+
+void function setN() {
+
+    real scalar n
+    n = strtoreal(st_local("n"))
+
+    if (n <= 0) exit(error(2000))
+    else {
+        if (!strlen(st_local("clear"))) {
+            if (!st_nobs()) st_addobs(n)
+            else if (n != st_nobs()) exit(error(4))
+            else {}
+        }
+        else {
+            st_dropvar(.)
+            st_addobs(n)
         }
     }
-*
-    drop _all
-    macro drop S_1
-    if (`seed' != 0) {
-            set seed `seed'
+}
+
+void function transferMatrices() {
+
+    string matrix Transfer
+    Transfer = st_tempname(2) \ ("r(Z)", "r(A)") \ ("Z", "A")
+
+    real scalar column
+    for (column=1; column<=cols(Transfer); column++) {
+        st_matrix(Transfer[1, column], st_matrix(Transfer[2, column]))
+        st_matrixcolstripe(Transfer[1, column], 
+            st_matrixcolstripe(Transfer[2, column]))
+        st_local(Transfer[3, column], Transfer[1, column])
+    }
+}
+
+void function setSeed() {
+
+    string scalar seed_string
+    seed_string = st_local("seed")
+
+    real scalar seed
+
+    if (strlen(seed_string) == 0) exit(0)
+    else {
+        seed = strtoreal(seed_string)
+        if (missing(seed) | ceil(abs(seed)) >= 2e31) {
+            errprintf(seed_string + " found where integer < 2^31 expected\n")
+            exit(error(198))
         }
-    if ("`verbose'" != "") {
-        local verbose noisily
+        else rseed(seed)
     }
-*
-    matrix define `A' = J(1, `Columns', .)
-    forvalues i = 1/`Columns' {
-        matrix define `A'[1,`i'] = invnormal(`means'[1,`i'])
-    }
-    matrix define `C' = J(`Columns', `Columns', 1)
-    forvalues i = 2/`Columns' {
-        forvalues j = 1/`=`i'-1' {
-            scalar define `B' = (sqrt(`means'[1,`i'] * (1 - `means'[1,`i']) * ///
-              (`means'[1,`j']) * (1 - `means'[1,`j']))) * abs(`corr'[`i',`j']) + `means'[1,`i'] * `means'[1,`j']
-            capture `verbose' ridder binormal(`A'[1,`i'], `A'[1,`j'], X) = `B' from 0.001 to 0.999
-            if _rc {
-                macro drop S_1
-                display in smcl as error "Root not found."
-                exit = 99
-            }
-            matrix define `C'[`i',`j'] = $S_1 * sign(`corr'[`i',`j'])
-            matrix define `C'[`j',`i'] = `C'[`i',`j'] // use -drawnorm-'s compact storage option to avoid this
-            macro drop S_1
-        }
-    }
-    drawnorm `varlist', double corr(`C') n(`n') clear
-    forvalues i = 1/`Columns' {
-        local a : word `i' of `varlist'
-        quietly replace `a' = (`a' <= `A'[1,`i'])
-    }
-    quietly compress `varlist'
+}
+
+void function setR() {
+    setN()
+    transferMatrices()
+    setSeed()
+}
+
 end

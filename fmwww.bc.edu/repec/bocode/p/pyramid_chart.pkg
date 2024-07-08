@@ -1,0 +1,19 @@
+d 'PYRAMID_CHART': module to generate a population pyramid chart  
+d
+d    pyramid_chart generates a population pyramid chart for a given
+d numeric variable, with    categories defined by two categorical
+d variables. The chart displays the distribution    of the numeric
+d variable across the levels of the first categorical variable,
+d split by    the levels of the second categorical variable. 
+d
+d KW: population pyramid
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20240707
+d
+d Author:   Masud Rahman, UNHCR
+d Support: email  write2masud@@gmail.com
+d
+f pyramid_chart.ado
+f pyramid_chart.sthlp
