@@ -1,4 +1,4 @@
-*! xtabond2 3.7.0 22 November 2020
+*! xtabond2 3.7.1 8 July 2024
 // Copyright (C) 2005-20 David Roodman. May be distributed free.
 
 // This program is free software: you can redistribute it and/or modify
@@ -227,7 +227,7 @@ real scalar xtabond2_mata() {
 		i = 0; GMM = GMMinsts
 		while (GMM != NULL) {
 			p = 0..i , i+1+GMM->NumInsts..j_GMM+1
-			InstOptInd[g, 2] = &(cols(p)>2 ? p[|2 \ cols(p) - 1|] : J(1, 0, .))
+			InstOptInd[g, 2] = cols(p)>2 ? &p[|2 \ cols(p) - 1|] : &J(1,0,.)
 			InstOptTxt[g--] = GMM->gmmstyle
 
 			if (SystemGMM & GMM->FullInstSetEq == 0) { // mark GMM instruments for difference equation, for inclusion in diff-Sargan test of levels instruments
@@ -412,7 +412,7 @@ real scalar xtabond2_mata() {
 	A1 = invsym(S)
 	V1 = invsym((XZA=quadcross(ZX, A1)) * ZX)
 	e1 = Y - X * (b1 = V1 * XZA * ZY)
-	pwe = &(weights? e1:/sqrt(wt) : e1)
+	pwe = weights? &(e1:/sqrt(wt)) : &e1
 	if (SystemGMM) pwe = &(*pwe :* ErrorEq)
 	sig2 = quadcross(*pwe,*pwe) / (2 - (orthogonal | h==1)) / wttot
 	A1 = A1 / sig2
@@ -475,7 +475,7 @@ real scalar xtabond2_mata() {
 		V2 = invsym((XZA = quadcross(ZX, A2)) * ZX) 
 		e2 = Y - X * (b2 = (VXZA = V2 * XZA) * ZY)
 		if (steps == 2) {
-			pwe = &(weights? e2:/sqrt(wt) : e2)
+			pwe = weights? &(e2:/sqrt(wt)) : &e2
 			if (SystemGMM) pwe = &(*pwe :* ErrorEq)
 			sig2 = quadcross(*pwe,*pwe) / (2 - (orthogonal | h==1)) / wttot
 		}
@@ -567,11 +567,13 @@ real scalar xtabond2_mata() {
 
 	pX = SystemGMM? &(X[tmp = SortByEqID[|NT+1 \ .|], .]) : &X  // for system GMM, drop difference equation from model fit test
 	DFm = rank(*pX) - consopt
+
 	if (!consopt) {  // In case constant is in column space of X, even despite noconstant, bump it out for F/chi2 test
 		ptouse = SystemGMM? &(touse[tmp]) : &touse
 		Xiota = cross(*pX, *ptouse)
-		DFm = DFm - mreldif(Xiota ' invsym(cross(X,X)) * Xiota, colsum(*ptouse)) < epsilon(1)*rows(*pX)
+		DFm = DFm - (mreldif(Xiota ' invsym(cross(X,X)) * Xiota, colsum(*ptouse)) < epsilon(1)*rows(*pX))
 	}
+
 	if (DFm)
 		if (small)
 			Fp = Ftail(DFm, DFr = (onestepnonrobust? NObsEff - DFm : (rows(clusts)? MinNClust : NGroups)) - consopt,
@@ -662,6 +664,8 @@ real scalar xtabond2_mata() {
 	st_numscalar("e(g_max)", TiMinMax[2])
 	st_numscalar("e(N_g)", NGroups)
 	st_numscalar("e(df_m)", DFm)
+"DFm"
+DFm
 	st_numscalar("e(h)", h)
 	if (rows(clusts)) {
 		st_global("e(clustvar)", st_local("cluster"))
@@ -1020,7 +1024,7 @@ real scalar _ParseInsts(real scalar j_IV, real scalar j_GMM, real scalar NIVOpti
 			// Get base vars filled out to NT rows
 			tmp = st_data(. , tokens(GMM->BaseVarNames), idSampleName)
 			(Base = J(NT, cols(tmp), .))[Fill, .] = tmp
-			pBase = &(GMM->InstOrthogonal? _Orthog(Base, N, T, NT, Complete, 0, 0) : Base)
+			pBase = GMM->InstOrthogonal? &_Orthog(Base, N, T, NT, Complete, 0, 0) : &Base
 			BaseNames = tokens(GMM->BaseVarNames)'
 			if (!GMM->collapse) {
 				pBase = &_Explode(*pBase, N, T, NT)
@@ -1082,7 +1086,7 @@ void _MakeIVinsts(pointer(real rowvector) matrix InstOptInd, string rowvector In
 	
 			if (strlen(IV->ivstyle)) { // leave constant term out of diff-sargan testing
 				p = 0..i , i+1+cols(IV->Base)..j_IV+1
-				InstOptInd[g, 1] = &(cols(p)>2 ? p[|2 \ cols(p) - 1|] : J(1, 0, .))
+				InstOptInd[g, 1] = cols(p)>2 ? &p[|2 \ cols(p) - 1|] : &J(1, 0, .)
 				InstOptTxt[g--] = IV->ivstyle
 			}
 			i = i + cols(IV->Base)
@@ -1280,7 +1284,7 @@ real matrix _MakeGMMinsts(real scalar N, real scalar T, real scalar NT, real sca
 				BaseAll[c] = &((*BaseAll[c])[|(id - 1) * T + 1, . \ id * T, .|])
 		
 		// Make instruments by copying columns sets from the "Wide" or (if collapse) original matrices.
-		SubscriptsStep = 1, (GMM->collapse? 0 : GMM->NumBaseVars)
+		SubscriptsStep = GMM->collapse? 1, 0 : 1, GMM->NumBaseVars
 		SubscriptsBase = GMM->Laglim[1]+GMM->FullInstSetEq > 0? 1+GMM->FullInstSetDiffed \ _NT-GMM->Laglim[1] : 2-GMM->FullInstSetEq-GMM->Laglim[1] \ _NT
 		SubscriptsBase = SubscriptsBase, (GMM->collapse? 1 \ GMM->NumBaseVars : (SubscriptsBase[1]-1) * GMM->NumBaseVars + 1 \ (SubscriptsBase[2] + T - _NT) * GMM->NumBaseVars)
 		InstOffset = GMM->FullInstSetEq * _NT + GMM->Laglim[1]
@@ -1293,7 +1297,6 @@ real matrix _MakeGMMinsts(real scalar N, real scalar T, real scalar NT, real sca
 				p = trunc(p :/ Zeros) :* T + mod(p, Zeros) :+ T - Zeros + 1
 				NewInsts[p,] = J(rows(p), cols(NewInsts), 0)
 			}
-
 			Z[|SubscriptsInst|] = NewInsts
 			ZGMMnames[|SubscriptsInst[,2],(.\.)|] = J(cols(NewInsts), 1, GMM->FullInstSetEq? "Levels" : (orthogonal? "Orthog eq" : "Diff eq")) , 
 			                                          _LF(Lag) :+ (*GMM->BaseNamesAll[GMM->FullInstSetDiffed+1]:+(GMM->collapse? "" : strofreal((GMM->BaseNameTs:+Lag)*tdelta:+tmin,tsfmt)))[|SubscriptsBase[,2]|]
@@ -1302,7 +1305,7 @@ real matrix _MakeGMMinsts(real scalar N, real scalar T, real scalar NT, real sca
 			if (Lag>=0) SubscriptsBase[2,] = SubscriptsBase[2,] - SubscriptsStep
 			if (Lag<0 | !Lag & !GMM->FullInstSetDiffed) SubscriptsBase[1,] = SubscriptsBase[1,] - SubscriptsStep
 		}
-	
+
 		if (GMM->MakeExtraInsts) {		
 			if (GMM->Laglim[1] > 0) { // if both lags positive, start at lag Laglim[1]-1 (as is standard) and search to deeper lags if neceesary
 				Lag = GMM->Laglim[1] - 1
@@ -1445,7 +1448,7 @@ real matrix _lag(real matrix X, | real scalar lag) {
 }
 
 string scalar _LF(real scalar lag)
-	return (lag!=0? (lag>0? "L" : "F") + strofreal(abs(lag)) + ".": "")
+	return (lag? (lag>0? "L" : "F") + strofreal(abs(lag)) + ".": "")
 
 pointer (transmorphic matrix) scalar xtabond2_clone(transmorphic matrix X) {
 	transmorphic matrix Y

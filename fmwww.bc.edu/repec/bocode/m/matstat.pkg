@@ -1,4 +1,4 @@
-d 'MATSTAT': module to format tabstat. assembling of results in one matrix
+d 'MATSTAT': module to format tabstat, assembling of results in one matrix
 d
 d  matstat executes tabstat and then assembles results in one
 d matrix.  Rationale:  tabstat, with the "save" option, saves the
@@ -30,7 +30,7 @@ d KW: matrix
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20240609
+d Distribution-Date: 20240711
 d
 d Author:   John Casterline, Ohio State University
 d Support: email casterline.10@@osu.edu

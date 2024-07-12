@@ -1,4 +1,4 @@
-*! version 16.4   8.6.24   John Casterline
+*! version 16.4   4.7.24   John Casterline
 capture program drop matstat
 program define matstat, rclass
 version 16
@@ -11,7 +11,7 @@ syntax [varlist] [if] [fw aw iw] ,
        stats(string) mat(string)
        [ by(varlist)  missing
          layout(string)
-         total(string)  xpose  names
+         total(string)  xpose  
          tabshow(string)
          outfile(string) ]; 
 
@@ -22,7 +22,7 @@ capture matrix drop `mat'
 local BY " "
 if "`by'" ~= ""  {
       local BY "by(`by')"
-      qui levelsof `by' `IF'
+      qui levelsof `by' `if'
       local n_cat = `r(r)'
       if "`missing'" ~= ""  {
          local n_cat = `n_cat' + 1
@@ -32,7 +32,11 @@ if "`by'" ~= ""  {
 }
 
 if "`layout'" == ""  {
-   local layout "horizontal"
+   local layout "horizontal1"
+}
+if "`layout'"~="" & "`layout'"~="horizontal1" & "`layout'"~="horizontal2" &"`layout'"~="vertical" {
+   noi di _n(2) in y "ERROR:  incorrect layout"
+   exit
 }
 
 local FORMAT " "
@@ -72,7 +76,7 @@ local LOUD = cond("`tabshow'"~="","noi","qui")
 
 `LOUD' tabstat `varlist' if `touse' [`weight'`exp'],      ///
     stat(`STATS') `BY' `missing' `nototal' `FORMAT' save
-    
+  
 
 if "`by'" ~= ""                 {
    forvalues i = 1/`n_cat'      {
@@ -99,15 +103,11 @@ if "`by'"~="" & `n_stat'==1   {
    forvalues i = 1/`n_cat'    {
       if `i'== 1  {
          matrix XxXx = r(Stat`i')
-         if "`names'" ~= ""   {
-            local rowname "`"`BYNAME`i''"'"
-         }
+         local rowname "`"`BYNAME`i''"'"
       }
       else   {
          matrix XxXx = XxXx \ r(Stat`i')
-         if "`names'" ~= ""   {
-            local rowname "`rowname' `"`BYNAME`i''"'"
-         }
+         local rowname "`rowname' `"`BYNAME`i''"'"
       }
    }
 
@@ -118,20 +118,15 @@ if "`by'"~="" & `n_stat'==1   {
       if "`total_place'" == "top"     {
          matrix `mat' = r(StatTotal) \ XxXx
       }
-   }
-   if "`nototal'" ~= ""  {
-      matrix `mat' = XxXx 
+      local rowname = cond("`total_place'"=="bottom",`"`rowname' Total"',`"Total `rowname'"')
    }
 
-   if "`names'" ~= ""         {
-      if "`nototal'" == ""    {
-         local rowname = cond("`total_place'"=="bottom",`"`rowname' Total"',`"Total `rowname'"')
-      }
-      if "`nototal'" ~= ""    {
-         local rowname `"`rowname'"'
-      }
-      matrix rownames `mat' = `rowname'
+   if "`nototal'" ~= ""  {
+      matrix `mat' = XxXx 
+      local rowname `"`rowname'"'
    }
+
+   matrix rownames `mat' = `rowname'
 
    capture matrix drop XxXx
 
@@ -155,15 +150,11 @@ if "`by'"~=""  &  `n_stat'>1  &  "`layout'"=="vertical"   {
    forvalues i = 1/`n_cat'    {
       if `i'== 1  {
          matrix XxXx = r(Stat`i')
-         if "`names'" ~= ""   {
-            local rowname1 `"`BYNAME`i''"'
-         }
+         local rowname1 `"`BYNAME`i''"'
       }
       else   {
          matrix XxXx = XxXx \ r(Stat`i')
-         if "`names'" ~= ""   {
-            local rowname`i' `"`BYNAME`i''"'
-         }
+         local rowname`i' `"`BYNAME`i''"'
       }
    }
    local n_by = `i' - 1
@@ -179,35 +170,33 @@ if "`by'"~=""  &  `n_stat'>1  &  "`layout'"=="vertical"   {
       matrix `mat' = XxXx 
    }
    
-   local ROW_LAB " "
+   local statlenmax = 0
+   forvalues s = 1/`n_stat'  {
+      local statlen = strlen("`stat`s''")
+      local statlemax = cond(`statlen'>`statlenmax',`statlen',`statlenmax')
+   }
    forvalues i = 1/`n_cat'         {
-      forvalues s = 1/`n_stat'     {
-         local ROW_LAB "`ROW_LAB' `stat`s''"
+      local lablen = `statlenmax' + 1 + (strlen("`rowname`i''"))
+      if `lablen' > 32             {
+         local labtrunc = (strlen("`rowname`i''")) - (`lablen' - 32)
+         local rowname`i' = abbrev("`rowname`i''",`labtrunc')
       }
    }
-   if "`nototal'" == ""            {
-      forvalues s = 1/`n_stat'     {
-         local ROW_LAB "`ROW_LAB' `stat`s''"
+   local ROW_LAB " "
+   forvalues i = 1/`n_cat'            {
+      forvalues s = 1/`n_stat'        {
+         local ROW_LAB `"`ROW_LAB' `"`rowname`i'', `stat`s''"'"'
       }
    }
-
-   if "`names'" ~= ""                    {
-      local ROW_LAB " "
-      forvalues b = 1/`n_cat'            {
-         forvalues s = 1/`n_stat'        {
-            local ROW_LAB `"`ROW_LAB' `"`rowname`b'', `stat`s''"'"'
+   if "`nototal'" == ""               {
+      if "`total_place'" == "bottom"  {
+         forvalues s = 1/`n_stat'     {
+            local ROW_LAB `" `ROW_LAB' `"Total, `stat`s''"' "'
          }
       }
-      if "`nototal'" == ""               {
-         if "`total_place'" == "bottom"  {
-            forvalues s = 1/`n_stat'     {
-               local ROW_LAB `" `ROW_LAB' `"Total, `stat`s''"' "'
-            }
-         }
-         if "`total_place'" == "top"     {
-            forvalues s = `n_stat'(-1)1  {
-               local ROW_LAB `" `"Total, `stat`s''"' `ROW_LAB' "'
-            }
+      if "`total_place'" == "top"     {
+         forvalues s = `n_stat'(-1)1  {
+            local ROW_LAB `" `"Total, `stat`s''"' `ROW_LAB' "'
          }
       }
    }
@@ -223,15 +212,13 @@ if "`by'"~=""  &  `n_stat'>1  &  "`layout'"=="vertical"   {
 *  HORIZONTAL
 
 
-if "`by'"~=""  &  `n_stat'>1  &  "`layout'"=="horizontal"   {
+if "`by'"~=""  &  `n_stat'>1  &  ("`layout'"=="horizontal1" | "`layout'"=="horizontal2") {
 
    local n_catX = `n_cat' + 1
 
    forvalues i = 1/`n_cat'              {
       matrix VV = r(Stat`i')
-      if "`names'" ~= ""                {
-         local byname`i' `"`BYNAME`i''"'
-      }
+      local byname`i' `"`BYNAME`i''"'
       forvalues v = 1/`n_var'           {
          matrix VV_`i'_`v' = VV[1...,`v']
          matrix V_`i'_`v'  = VV_`i'_`v''
@@ -274,26 +261,24 @@ if "`by'"~=""  &  `n_stat'>1  &  "`layout'"=="horizontal"   {
       }
    }
 
-   if "`names'" ~= ""                   {
-      local ROW_LAB " "
-      forvalues b = 1/`n_cat'           {
-         local ROW_LAB `" `ROW_LAB' `"`byname`b''"' "'
-      }
-      if "`nototal'" == ""              {
-         if "`total_place'" == "bottom" {
-            local ROW_LAB `" `ROW_LAB' `"Total"' "'
-         }
-         if "`total_place'" == "top"     {
-            local ROW_LAB `" `"Total"' `ROW_LAB' "'
-         }
-      }
-      local COL_LAB " "
-      forvalues v = 1/`n_var'            {
-         forvalues s = 1/`n_stat'        {
-            local COL_LAB `"`COL_LAB' `"`VAR`v'', `stat`s''"'"' 
-         }
-      }      
+   local ROW_LAB " "
+   forvalues b = 1/`n_cat'           {
+      local ROW_LAB `" `ROW_LAB' `"`byname`b''"' "'
    }
+   if "`nototal'" == ""              {
+      if "`total_place'" == "bottom" {
+         local ROW_LAB `" `ROW_LAB' `"Total"' "'
+      }
+      if "`total_place'" == "top"     {
+         local ROW_LAB `" `"Total"' `ROW_LAB' "'
+      }
+   }
+   local COL_LAB " "
+   forvalues v = 1/`n_var'            {
+      forvalues s = 1/`n_stat'        {
+         local COL_LAB `"`COL_LAB' `"`VAR`v'', `stat`s''"' "' 
+      }
+   }      
 
    matrix rownames `mat' = `ROW_LAB'
    matrix colnames `mat' = `COL_LAB'
@@ -304,6 +289,60 @@ if "`by'"~=""  &  `n_stat'>1  &  "`layout'"=="horizontal"   {
       forvalues v = 1/`n_var'      {
          capture matrix drop VV_`i'_`v'
          capture matrix drop V_`i'_`v'
+      }
+   }
+
+   if "`layout'" == "horizontal2"        {
+      matrix XxXxZz = `mat''
+      local start = 1
+      local end = `n_stat'
+      forvalues v = 1/`n_var'            {
+         matrix XxXxZz`v' = XxXxZz[`start'..`end',1...]
+         local start = `start' + `n_stat'
+         local end   = `end'   + `n_stat'
+      }
+      matrix `mat' = XxXxZz1
+      forvalues v = 2/`n_var'            {
+         matrix `mat' = `mat',XxXxZz`v'
+      }
+      local ROW_LAB " "
+      forvalues s = 1/`n_stat'        {
+         local ROW_LAB "`ROW_LAB' `stat`s''"
+      }
+      local varlenmax = 0
+      forvalues v = 1/`n_var'  {
+         local varlen = strlen("`VAR`v''")
+         local varlenmax = cond(`varlen'>`varlenmax',`varlen',`varlenmax')
+      }
+      forvalues i = 1/`n_cat'         {
+         local lablen = `varlenmax' + 1 + (strlen("`byname`i''"))
+         if `lablen' > 32             {
+            local labtrunc = (strlen("`byname`i''")) - (`lablen' - 32)
+            local byname`i' = abbrev("`byname`i''",`labtrunc')
+         }
+      }
+      local COL_LAB " "
+      forvalues v = 1/`n_var'               {
+         if "`nototal'" == ""               {
+            if "`total_place'" == "top"     {
+              local COL_LAB `" `COL_LAB' "`VAR`v'',Total" "'
+            }
+         }
+         forvalues i = 1/`n_cat'            {
+            local COL_LAB `" `COL_LAB' "`VAR`v'',`byname`i''" "' 
+         }
+         if "`nototal'" == ""               {
+            if "`total_place'" == "bottom"  {
+              local COL_LAB `" `COL_LAB' "`VAR`v'',Total" "'
+            }
+         }
+      }  
+      matrix rownames `mat' = `ROW_LAB'
+      matrix colnames `mat' = `COL_LAB'
+
+      capture matrix drop XxXxZz
+      forvalues v = 1/`n_var'  {
+         capture matrix drop XxXxZz`v'
       }
    }
 

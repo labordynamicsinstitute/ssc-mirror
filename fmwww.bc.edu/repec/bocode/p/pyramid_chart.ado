@@ -1,13 +1,27 @@
-*! version 1.1 07JULY2024  Masud Rahman
+// Version compatibility
+*! version 1.2 10JULY2024  Masud Rahman
 
 // Version compatibility
-version 17.0
+program version_tested
+    syntax, [ QUIetly]
+    if c(stata_version)<17 {
+        `qui' display "Tested with Stata 17+: Some features may not work "
+    }
+
+end
 
 program define pyramid_chart, rclass
     // Declare the syntax
-syntax varlist(numeric) [if] [in], OVER(varname) BY(varname) DEC(integer) [*]
+syntax varlist(numeric) [if] [in], OVER(varname) ///
+                                   BY(varname)   ///
+                                   DEC(integer)  ///
+                                   [QUIetly]     /// If version <17 give warning
+                                   [bar1(str asis)]  /// Options for Bar1    
+                                   [bar2(str asis)]  /// Options for Bar2
+                                   [sctopt(str asis)] /// Options for Scatter TEXT
+                                   [*]   //
+    version_tested
 
-    // Extract variables from the varlist
     local num_var `varlist'
     local ycat_var `over'
     local xcat_var `by'
@@ -26,7 +40,10 @@ syntax varlist(numeric) [if] [in], OVER(varname) BY(varname) DEC(integer) [*]
         di as error "Please provide a numeric variable, and two categorical variables."
         exit 198
     }
-
+    
+    // Check Default Option for SCTopt
+    if missing(`"`sctopt'"') local sctopt mlabcolor(gs0)
+    
     // Debugging: Confirm variables are set correctly
     di "Numeric Variable: `num_var'"
     di "Y-Categorical Variable: `ycat_var'"
@@ -104,10 +121,10 @@ syntax varlist(numeric) [if] [in], OVER(varname) BY(varname) DEC(integer) [*]
     }
 
     // Plot the `num_var` pyramid with additional options
-    twoway (bar `population_pct_neg' `ycat_var' if `xcat_var' == 1, horizontal base(0) color(navy)) ///
-           (bar `population_pct' `ycat_var' if `xcat_var' == 2, horizontal base(0) color(maroon)) ///
-           (scatter `ycat_var' `population_pct_neg' if `xcat_var' == 1, msymbol(i) mlab(`pct_left_label') mlabcolor(gs0) mlabp(9)) ///
-           (scatter `ycat_var' `population_pct' if `xcat_var' == 2, msymbol(i) mlab(`pct_right_label') mlabcolor(gs0) mlabp(3)), ///
+    twoway (bar `population_pct_neg' `ycat_var' if `xcat_var' == 1, horizontal base(0) `bar1' ) ///
+           (bar `population_pct' `ycat_var'     if `xcat_var' == 2, horizontal base(0) `bar2' ) ///
+           (scatter `ycat_var' `population_pct_neg' if `xcat_var' == 1, msymbol(i) `sctopt' mlab(`pct_left_label')  mlabp(9)) ///
+           (scatter `ycat_var' `population_pct'     if `xcat_var' == 2, msymbol(i) `sctopt' mlab(`pct_right_label')  mlabp(3)), ///
            legend(order(1 "`left_label'" 2 "`right_label'")) ///
            ylabel(`agegroups', valuelabel angle(0)) ///
            xlabel(`xlabel_list', format(%3.0f)) ///

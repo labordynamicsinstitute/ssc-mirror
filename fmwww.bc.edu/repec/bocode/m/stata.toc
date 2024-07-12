@@ -49,7 +49,7 @@ p matrixof module to produce matrix or vector of results for paired or single va
 p matrixtools module to build, present and style Stata matrices
 p matsave module to save and load matrices
 p matsort module to sort a matrix by a given column
-p matstat module to format tabstat. assembling of results in one matrix
+p matstat module to format tabstat, assembling of results in one matrix
 p matvsort module for sorting vectors or rows or columns of matrices
 p matwrite module to write Stata variables as MATLAB matrices
 p mauchly module to compute Mauchly’s sphericity test for repeated measures ANOVA models
