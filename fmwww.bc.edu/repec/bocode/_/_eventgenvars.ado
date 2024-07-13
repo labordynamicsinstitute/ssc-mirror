@@ -1,6 +1,5 @@
-version 11.2
+version 13
 
-cap program drop _eventgenvars
 program define _eventgenvars, rclass
 
 	#d;
@@ -10,12 +9,12 @@ program define _eventgenvars, rclass
 	Timevar(varname) /* Time variable */
 	POLicyvar(varname) /* Policy variable */
 	[
-	LWindow(real 0)
-	RWindow(integer 0) /* Estimation window. Need to set a default, but it has to be based on the dataset */
-	/* since lwindow and rwindow are now optional, a default value must be provided*/
+	LWindow(string) /* Left window */
+	RWindow(string) /* Right window */
+	w_type(string) /* Window defined by the user (numeric) or define window based on the data time limits (string: max or balanced) */
 	norm(numlist) /* Coefficients to normalize */
 	
-	impute(string) /*impute policyvar. There are three options: */
+	IMPute(string) /*impute policyvar. There are three options: */
 	/*nuchange  imputes outer missing values of policyvar without verifying staggered adoption*/
 	/*stag  imputes outer missing values of policyvar verifying staggered adoption*/
 	/*instag  imputes outer and inner missing values verifying staggered adoption*/
@@ -24,7 +23,7 @@ program define _eventgenvars, rclass
 	trcoef(real 0) /*inferior limit to start the trend*/
 	methodt(string) /* method for the trend computation*/
 	REPeatedcs /*indicate that the input data is a repeated cross-sectional datasets*/
-
+	mkvarlist(name) /* marker of non-missing observations in local varlist */ 
 	
 	]	
 	;
@@ -59,9 +58,11 @@ program define _eventgenvars, rclass
 			
 		
 		* Error check for window outside event time range
-		if abs(`lwindow') > `=abs(`tdiff')-1' | abs(`rwindow') > `=abs(`tdiff')-1' {
-			di as err _n "Window outside event-time range."
-			exit 301
+		if "`w_type'"=="numeric" {
+			if abs(`lwindow') > `=abs(`tdiff')-1' | abs(`rwindow') > `=abs(`tdiff')-1' {
+				di as err _n "Window outside event-time range."
+				exit 301
+			}
 		}
 		
 		* Error check for trend event time range
@@ -73,9 +74,11 @@ program define _eventgenvars, rclass
 			}
 					
 			* Error check for trend outside window
-			if abs(`trcoef')>abs(`lwindow') {
-				di as err _n "Trend outside window range."
-				exit 301
+			if "`w_type'"=="numeric" {
+				if abs(`trcoef')>abs(`lwindow') {
+					di as err _n "Trend outside window range."
+					exit 301
+				}
 			}
 		}
 		
@@ -99,7 +102,7 @@ program define _eventgenvars, rclass
 	
 	* Check for a variable named as the imputed policyvar
 	if "`saveimp'"!="" {
-		cap unab oldkvars : `policyvar'_imputed
+		cap confirm var `policyvar'_imputed, exact
 		if !_rc {
 			di as err _n "You have a variable named `policyvar'_imputed. This name is reserved for the imputed policy variable."
 			di as err _n "Please drop or rename this variable before proceeding."
@@ -114,6 +117,13 @@ program define _eventgenvars, rclass
 			di as err _n "{bf:`impute'} not allowed in option {bf:impute}."
 			exit 110
 		}
+	}
+	
+	*Window(max|balanced) must be specified along with impute(stag|instag) 
+	if "`w_type'"=="string" & !inlist("`impute'","stag","instag") {
+		di as err _n "Options {bf: window(max)} and {bf: window(balanced)} can be used only if the policyvar follows staggered adoption."
+		di as err _n "Add {bf:impute(stag)} or {bf:impute(instag)} to check if the policyvar follows staggered adoption and impute it."
+		exit 197
 	}
 	
 	*** repeated cross section databases
@@ -138,7 +148,7 @@ program define _eventgenvars, rclass
 	
 		*proceed with generation of event-time dummies in the repeated cs setting
 		preserve 
-		qui keep `panelvar' `timevar' `policyvar' `touse' `rr'
+		qui keep `panelvar' `timevar' `policyvar' `touse' `rr' `mkvarlist'
 		*sorting by policyvar guarantees not choosing a missing value 
 		qui keep if `touse'
 		qui bysort `panelvar' `timevar' (`policyvar'): keep if _n==1 //altervative: collapse (min) z if `touse', by(state t)
@@ -221,6 +231,10 @@ program define _eventgenvars, rclass
 		di "If event dummies and variables are saved, event-time will be missing."	
 		loc impute =""
 	}
+	if `bin'==0 & "`w_type'"=="string" {
+		di as err _n "Cannot use {bf:window(`lwindow')} if policyvar doesn't follow staggered adoption."
+		exit 199
+	}
 		
 	*********** verify no reversion  ****************************
 	*(e.g. if binary 0 and 1, once reached 1, never returns to zero)
@@ -241,6 +255,10 @@ program define _eventgenvars, rclass
 			di "Policyvar changes more than once for some units. Assuming non-staggered adoption (no imputation)."
 			loc impute=""
 		}
+		if `norever'==0 & "`w_type'"=="string" {
+		di as err _n "Cannot use {bf:window(`lwindow')} if policyvar doesn't follow staggered adoption."
+		exit 199
+	}
 
 		****** if no-reversion holds, verify "bounds" condition: e.g. if binary 0 and 1, verify 0 as the first observed value and 1 as the last observed value
 	if ("`impute'"=="stag" | "`impute'"=="instag") {
@@ -275,15 +293,34 @@ program define _eventgenvars, rclass
 			*sbmin is an indicator of the units that satisfied the first filter 
 			by `panelvar' (`timevar'): egen byte `sbmin'=min(`sb') if `timevar'>=`zmint2' & `timevar'<=`zmaxt2' & `touse'
 		}
-		cap assert inlist(`z',`rminz',`rmaxz') if `sbmin'==0
+		
+		* For obs that did not satisfy the first filter, policy var must be constant
+
+		tempvar tag ndistinct
+		egen `tag' = tag(`panelvar' `z') if `touse'
+		egen `ndistinct' = total(`tag'), by(`panelvar')
+		cap assert `ndistinct' == 1 if `sbmin' == 0 & `touse'
 		if !_rc loc bounds 1
+		
 		}
 	
 	
 		if `bounds'==0 & ("`impute'"=="stag" | "`impute'"=="instag") {
-				di "For some units, the changes in policyvar are not consistent with no-unobserved-change. Reverting to default (no imputation)."
-				loc impute =""	
+			di "For some units, the changes in policyvar are not consistent with no-unobserved-change. Reverting to default (no imputation)."
+			loc impute =""	
 		}
+	}
+
+	loc binnorev = 0 	
+	if `bin'==1 & `norever'==1 {
+		loc binnorev = 1
+	}
+	
+	return scalar binnorev = `binnorev'
+	
+	if `bounds'==0 & "`w_type'"=="string" {
+		di as err _n "Cannot use {bf:window(`lwindow')} if policyvar doesn't follow staggered adoption."
+		exit 199
 	}
 	
 	***************** apply no unobserved change ***************************
@@ -311,6 +348,73 @@ program define _eventgenvars, rclass
 		
 	}
 
+**************** find event-time limits based on observed data range ********
+
+	if "`w_type'"=="string" {
+		
+		* save window selection criteria
+		loc ws_type `lwindow'
+				
+		qui xtset `panelvar' `timevar', noquery
+		qui sort `panelvar' `timevar', stable
+		
+		*create relative-to-event-time variable 
+		tempvar d1z ttreat ttreat2 rtime minrtime maxrtime
+		qui gen long `d1z'=d1.`zn2' if `touse' & `mkvarlist'
+		qui gen long `ttreat' = `timevar' if `d1z'!=0 & !missing(`d1z') & `touse' & `mkvarlist'
+		qui by `panelvar' (`timevar'): egen long `ttreat2' = min(`ttreat') if `touse' & `mkvarlist'
+		qui by `panelvar' (`timevar'): gen long `rtime' = `timevar' - `ttreat2' if `touse' & `mkvarlist'
+		
+		if "`lwindow'"=="max" {
+			qui sum `rtime' if `touse' & `mkvarlist'
+			loc lwindow = r(min)
+			loc rwindow = r(max)
+		}
+		if "`lwindow'"=="balanced" {
+			qui by `panelvar' (`timevar'): egen long `minrtime' = min(`rtime') if `touse' & `mkvarlist'
+			qui by `panelvar' (`timevar'): egen long `maxrtime' = max(`rtime') if !missing(`rtime') & `touse'  & `mkvarlist'
+			qui sum `minrtime' if `touse' & `mkvarlist'
+			loc lwindow = r(max)
+			qui sum `maxrtime'
+			loc rwindow = r(min)
+		}
+		
+		*adjust for the endpoints 
+		loc lwindow = `lwindow' +1
+		loc rwindow = `rwindow' -1
+		
+		*message about calculated limits 
+		di "The calculated window by {bf:window(`ws_type')} is (`lwindow',`rwindow'), plus the endpoints `=`lwindow'-1' and `=`rwindow'+1'."
+		
+		**** Error messages if calculated window limits are not valid 
+		
+		*These checks were made earlier for numeric window. We check them again here once we know the calculated window 
+		
+		*make sure left window is negative and right window is positive 
+		if  (-`lwindow'<0 | `rwindow'<0) {
+			di as err _n "Left window can not be positive and right window can not be negative."
+			di as err _n "Check for first-treated units and last-treated units. Both types of units might have few common periods around treatment time which causes a narrow calculated window."
+			exit 198
+		}
+		
+		*Normalized coefficient for trend adjustment is outside estimation window
+		if "`trend'"!="" {
+			if `trcoef'<`lwindow'-1 | `trcoef'>`rwindow'+1 {
+				di as err "{bf:trend} is outside estimation window."
+				exit 301
+			}
+		}
+	
+		* Check that normalization is in window
+		if "`norm'"!="" {
+			if (`norm' < `=`lwindow'-1' | `norm' > `rwindow') {
+				di as err _n "The coefficient to be normalized to 0 is outside of the estimation window."
+				exit 498
+			}
+		}
+
+	}
+	
 ****************************** event-time dummies ***********************
 	*If impute is specified in the IV setting, note that the following code section is not executed in the first call to _eventgenvars because in the call the option static is added 
 	
@@ -335,14 +439,14 @@ program define _eventgenvars, rclass
 		
 		qui forv klevel=`lwindow'(1)`rwindow' {
 			loc absk = abs(`klevel')
-			
+						
 			if `klevel'<0 { 
 				loc plus = "m"
 				qui {
 					by `panelvar' (`timevar'): gen double _k_eq_`plus'`absk'=F`absk'.`zd' if ((`timevar'>=`minz2') & (`timevar'<=`maxz2')) & `touse'
 					la var _k_eq_`plus'`absk' "Event-time = - `absk'"
-					*this to impute zeros and complete the observed range
-					tempvar minp minp2 maxp maxp2
+					*this to impute zeros and complete the observed range	
+					tempvar minp minp2 maxp maxp2				
 					if "`impute'"!=""{
 						by `panelvar' (`timevar'): egen long `minp'=min(`timevar') if !missing(_k_eq_`plus'`absk')
 						by `panelvar' (`timevar'): egen long `minp2'=min(`minp')
@@ -359,6 +463,7 @@ program define _eventgenvars, rclass
 					la var _k_eq_`plus'`absk' "Event-time = + `absk'"
 					*this to impute zeros and complete the observed range 
 					cap drop `minp' `minp2' `maxp' `maxp2' 
+					tempvar minp minp2 maxp maxp2
 					if "`impute'"!=""{
 						by `panelvar' (`timevar'): egen long `minp'=min(`timevar') if !missing(_k_eq_`plus'`absk')
 						by `panelvar' (`timevar'): egen long `minp2'=min(`minp')
@@ -398,7 +503,10 @@ program define _eventgenvars, rclass
 			qui drop __k
 			exit 301
 		}
-			
+		
+		*Ordered list of event-time dummies 
+		unab evs : _k_eq_*
+		loc f_evs : word 1 of `evs'
 		
 		* Generate endpoint dummies
 		* Left
@@ -416,7 +524,7 @@ program define _eventgenvars, rclass
 				by `panelvar' (`timevar'): egen long `maxl2'=max(`maxl')
 				*replace with zeros (the last observed for the endpoint)
 				replace _k_eq_m`=-`lwindow'+1' = _k_eq_m`=-`lwindow'+1'[_n-1] if _k_eq_m`=-`lwindow'+1' == . & (`timevar'>`maxl2') & (`timevar'<=`maxz2') & `touse' 
-				order _k_eq_m`=-`lwindow'+1', before(_k_eq_m`=-`lwindow'')
+				order _k_eq_m`=-`lwindow'+1', before(`f_evs')
 				
 				* Right
 				tempvar seq3
@@ -439,7 +547,7 @@ program define _eventgenvars, rclass
 			qui {
 				* Left
 				gen double _k_eq_m`=-`lwindow'+1' = (1-f`=-`lwindow''.`zn2') if ((`timevar'>=`minz2') & (`timevar'<=`maxz2')) & `touse' 
-				order _k_eq_m`=-`lwindow'+1', before(_k_eq_m`=-`lwindow'')
+				order _k_eq_m`=-`lwindow'+1', before(`f_evs')
 				* Right
 				gen double _k_eq_p`=`rwindow'+1'= l`=`rwindow'+1'.`zn2' if ((`timevar'>=`minz2') & (`timevar'<=`maxz2')) & `touse' 		
 				order __k, after(_k_eq_p`=`rwindow'+1')
@@ -447,8 +555,8 @@ program define _eventgenvars, rclass
 		}
 		
 		
-		la var _k_eq_m`=-`lwindow'+1' "Event time <= - `=-`lwindow'+1'"
-		la var _k_eq_p`=`rwindow'+1' "Event time >= + `=`rwindow'+1'"
+		la var _k_eq_m`=-`lwindow'+1' "Left endpoint"
+		la var _k_eq_p`=`rwindow'+1' "Right endpoint"
 		
 		* Drop units where treatment can not be timed
 		
@@ -473,7 +581,8 @@ program define _eventgenvars, rclass
 				foreach j in `mis' {
 					di as txt _n "Unit `j' not used because of ambiguous event-time due to missing values in policyvar."
 				}
-				qui replace `touse' = 0 if `etmismax'==1 & `mz'>0 & `minz'==0 & `touse' 			
+				qui replace `touse' = 0 if `etmismax'==1 & `mz'>0 & `minz'==0 & `touse'
+				return local ambiguous = "`mis'" 			
 			}
 		}	
 		
@@ -549,6 +658,13 @@ program define _eventgenvars, rclass
 		return local komittrend= "`komittrend'" 
 		
 	}
+	
+	* if input window was max or balanced, return the calculated window limits 
+	if "`w_type'"=="string" {
+		return local lwindow = `lwindow'
+		return local rwindow = `rwindow'
+	}
+	
 	******* add the imputed policyvar to the database 
 
 	if "`impute'"!="" & "`saveimp'"!="" {
@@ -594,7 +710,6 @@ end
 
 
 * Program to parse impute 
-cap program drop parseimpute
 program define parseimpute, rclass
 
 	syntax [anything] , [saveimp]

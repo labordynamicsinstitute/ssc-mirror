@@ -1,14 +1,14 @@
-version 11.2
+version 13
 
-cap program drop _eventiv
 program define _eventiv, rclass
 	#d;
 	syntax varlist(fv ts numeric) [aw fw pw] [if] [in], /* Covariates go in varlist. Can add fv ts later */
 	Panelvar(varname) /* Panel variable */
 	Timevar(varname) /* Time variable */
 	POLicyvar(varname) /* Policy variable */
-	LWindow(integer) /* Estimation window. Need to set a default, but it has to be based on the dataset */
-	RWindow(integer)
+	LWindow(string) /* Left window */
+	RWindow(string) /* Right window */
+	w_type(string) /* Window defined by the user (numeric) or define window based on the data time limits (string: max or balanced) */
 	proxy (varlist numeric) /* Proxy variable(s) */
 	[
 	proxyiv(string) /* Instruments. Either numlist with lags or varlist with names of instrumental variables */
@@ -17,18 +17,22 @@ program define _eventiv, rclass
 	SAVek(string) /* Generate the time-to-event dummies, trend and keep them in the dataset */	
 	nogen /* Do not generate k variables */
 	kvars(string) /* Stub for event dummies to include, if they have been generated already */		
-	norm(integer -1) /* Normalization */	
+	norm(numlist integer max=1) /* Normalization */	
 	reghdfe /* Use reghdfe for estimation */	
-	impute(string) /*imputation on policyvar*/
+	IMPute(string) /*imputation on policyvar*/
 	*static /* in this ado used for calling the part of _eventgenvars that imputes*/
 	addabsorb(string) /* Absorb additional variables in reghdfe */ 
 	REPeatedcs /*indicate that the input data is a repeated cross-sectional dataset*/
+	DIFFavg /* Obtain regular DiD estimate implied by the model */
 	*
 	]
 	;
 	#d cr
 	
 	marksample touse
+	
+	tempvar mkvarlist
+	qui gen byte `mkvarlist' = `touse'
 		
 	tempname delta Vdelta bb VV bb2 VV2 delta2 Vdelta2 deltaov Vdeltaov deltax Vdeltax deltaxsc bby bbx VVy VVx tousegen
 	* bb delta coefficients
@@ -40,6 +44,9 @@ program define _eventiv, rclass
 	
 	* For eventgenvars, ignore missings in varlist
 	mark `tousegen' `if' `in'
+
+	* Set norm to -1 if missing
+	if "`norm'"=="" loc norm -1
 	
 	loc i = "`panelvar'"
 	loc t = "`timevar'"
@@ -47,23 +54,23 @@ program define _eventiv, rclass
 
 	*parse savek 
 	if "`savek'"!="" parsesavek `savek'
-	loc savek = r(savekl)
-	if "`savek'"=="." loc savek ""
-	return loc savek = "`savek'"
-	loc noestimate = r(noestimatel)
-	if "`noestimate'"=="." loc noestimate ""
-	return loc noestimate = "`noestimate'"
+	foreach l in savek noestimate kreplace {
+		loc `l' = r(`l')
+		if "``l''"=="." loc `l' ""
+		return loc `l' = "``l''"
+	}
 	
 	*If imputation is specified, _eventiv will call _eventgenvars twice.
 	*The first call only imputes the policyvar, but the second call imputes both the policyvar and the event-time dummies
 	*First call: bring the imputed policyvar calling only _eventgenvars' imputation code. This call is neccesary to choose the lead order using the imputed policyvar
-	if "`impute'"!=""{
+	if ("`impute'"!="") {
 		*rr is the tempvar to be imputed: create it in _eventiv, so after _eventgenvars we can still have access to it.
 		tempvar rr
 		qui gen double `rr'=.
 
 		*call _eventgenvars
-		_eventgenvars if `tousegen', panelvar(`panelvar') timevar(`timevar') policyvar(`policyvar') impute(`impute') static rr(`rr') `repeatedcs' //with option static, we skip the code that generates the event-time dummies 
+		_eventgenvars if `tousegen', panelvar(`panelvar') timevar(`timevar') policyvar(`policyvar') impute(`impute') static rr(`rr') lwindow(`lwindow') w_type(`w_type') mkvarlist(`mkvarlist') `repeatedcs' //with option static, we skip the code that generates the event-time dummies 
+		// Include options lwindow and w_type because when selecting lead order for proxyiv we need to evaluate all lead orders limited by the calculated left window in case the user specified window(max) or window(balanced)
 
 		loc impute=r(impute)
 		if "`impute'"=="." loc impute = ""
@@ -75,7 +82,16 @@ program define _eventiv, rclass
 		} 
 		*otherwise, keep using the original policyvar 
 		else loc z = "`policyvar'"
+		
+		* if window(max) or window(balanced), what value is left window? 
+		if "`w_type'"=="string" {
+			loc lwindow_call1 = r(lwindow)
+		}
 	}
+	
+	*define local for left window. Can be the input by the user or the value calculated with the data 
+	if "`w_type'"=="numeric" loc lwindow_iter = `lwindow'
+	else loc lwindow_iter = `lwindow_call1'
 	
 	* if dataset is repeated cross-sectional, create leads of policyvar at state level
 	if "`repeatedcs'"!=""{
@@ -87,7 +103,7 @@ program define _eventiv, rclass
 			keep `panelvar' `timevar' (`z')
 			bysort `panelvar' `timevar' (`z'): keep if _n==1
 			xtset `panelvar' `timevar'
-			forv v=1(1)`=-`lwindow''{
+			forv v=1(1)`=-`lwindow_iter''{
 				tempvar _fd`v'`z'
 				qui gen double `_fd`v'`z'' = f`v'.d.`z' 
 			}
@@ -99,6 +115,7 @@ program define _eventiv, rclass
 			merge m:1 `panelvar' `timevar' `z' using `state_level_leads', update nogen
 		}
 	}
+	
 	
 	loc leads : word count `proxy'
 	if "`proxyiv'"=="" & `leads'==1 loc proxyiv "select"
@@ -122,7 +139,12 @@ program define _eventiv, rclass
 		else {
 			di as text _n "proxyiv=select. Selecting lead order of differenced policy variable to use as instrument."
 			loc Fstart = 0
-			forv v=1(1)`=-`lwindow'' {
+			if `lwindow_iter'== 0 {
+				di as err _n "Estimation window must contain at least 1 period before the policy change"
+				di as err  "for proxy instrument selection."
+				exit 301
+			}
+			forv v=1(1)`=-`lwindow_iter'' {
 				if "`repeatedcs'"=="" {
 					tempvar _fd`v'`z'
 					qui gen double `_fd`v'`z'' = f`v'.d.`z' if `touse'
@@ -148,7 +170,6 @@ program define _eventiv, rclass
 		if _rc loc ++rc
 		loc ++ivwords
 	}
-	
 	* Three possible types of lists: all numbers for leads, all vars for external instruments, or mixed
 	* All numbers
 	if `rc' == 0 {
@@ -215,6 +236,15 @@ program define _eventiv, rclass
 			exit 301
 		}
 	}
+	
+	* Check that leads in proxyiv are in the estimation window 
+	foreach v in `proxyiv_numbers' {
+		if (`v' > `=-`lwindow_iter'+1') {
+			di as err "Lead `v' of policy variable to be used as instrument is outside estimation window."
+			exit 301
+		}
+	}
+
 	* Set normalizations in case these are numbers, so we are using leads of delta z
 	loc ivnorm ""
 	if "`instype'"=="numlist" | "`instype'"=="mixed" {
@@ -222,13 +252,21 @@ program define _eventiv, rclass
 			if `=-`v''==`norm' {
 				loc ivnorm "`ivnorm' `=-`v'-1'"
 				di as txt _n "The corresponding coefficient of lead `v' and the normalized coefficient were the same. Lead `=`v'' has been changed to `=`v'+1'."
+				if (-`ivnorm' > `=-`lwindow_iter'+1') {
+					di as err "Lead `= - `ivnorm'' of policy variable to be used as instrument is outside estimation window."
+					exit 301
+				}
 				loc repeatlead=strmatch("`proxyiv_numbers'","*`=`v'+1'*")
 				if "`repeatlead'"=="0"{
+					di as txt _n "The coefficient at `norm' is normalized to zero."
+					di as txt _n "For estimation with proxy variables, an additional coefficient needs to be normalized to zero." 
 					di as txt _n "The coefficient at `=-`v'-1' was selected to be normalized to zero."
 				}
 			}
 			else {
 				loc ivnorm "`ivnorm' -`v'"	
+				di as txt _n "The coefficient at `norm' is normalized to zero."
+				di as txt _n "For estimation with proxy variables, an additional coefficient needs to be normalized to zero." 
 				di as txt _n "The coefficient at `=-`v'' was selected to be normalized to zero."
 			}
 		}
@@ -238,7 +276,7 @@ program define _eventiv, rclass
 	*set normalizations for external instruments 
 	*get the pool of available coefficients for normalization
 	loc available ""
-	forvalues l=1/`=-`lwindow'+1'{
+	forvalues l=1/`=-`lwindow_iter'+1'{
 		loc l = -`l'
 		loc available "`available' `l'"
 	}
@@ -281,11 +319,17 @@ program define _eventiv, rclass
 	
 	if "`gen'" != "nogen" {	
 		*If impute was specified, this is the second call to _eventgenvars: this time, both the policyvar and the event-time dummies will be imputed. Additional computations will happen as well  (e.g., macros, etc.).
-		_eventgenvars if `tousegen', panelvar(`panelvar') timevar(`timevar') policyvar(`policyvar') lwindow(`lwindow') rwindow(`rwindow') `trend' norm(`norm') impute(`impute') `repeatedcs'
+		_eventgenvars if `tousegen', panelvar(`panelvar') timevar(`timevar') policyvar(`policyvar') lwindow(`lwindow') rwindow(`rwindow') w_type(`w_type') `trend' norm(`norm') impute(`impute') mkvarlist(`mkvarlist') `repeatedcs'
 		loc included=r(included)
 		loc names=r(names)	
 		loc komittrend=r(komittrend)
+		loc ambiguous = r(ambiguous)
 		if "`komittrend'"=="." loc komittrend = ""
+		*if window was max or balanced, use calculated left and right window limits 
+		if "`w_type'"=="string" {
+			loc lwindow = r(lwindow)
+			loc rwindow = r(rwindow)
+		}
 	}
 	else {
 		loc kvstub "`kvars'"		
@@ -318,7 +362,6 @@ program define _eventiv, rclass
 	loc komit: list uniq komit	
 	
 	* Check that the iv normalization works
-	
 	foreach v in `leadivs' `varivs' {
 		cap _rmdcoll `v' `included' if `touse'
 		if _rc {
@@ -516,6 +559,37 @@ program define _eventiv, rclass
 		
 		tempvar esample
 		gen byte `esample' = e(sample)
+
+		if "`diffavg'"!=""{
+		*list of omitted coefficients
+		loc komit_comma : subinstr local komit " " ",", all
+		* fill in lists of pre and post coefficients 
+		loc pre_plus ""
+		loc post_plus ""
+		forvalues v = `=`lwindow'-1'/`=`rwindow'+1' {
+			if inlist(`v', `komit_comma') continue 
+			if `v'<0 {
+				loc pre_plus "`pre_plus' _k_eq_m`=-`v''"
+			}
+			else {
+				loc post_plus "`post_plus' _k_eq_p`=`v''"
+			}
+		}
+		loc pre_plus = strtrim("`pre_plus'")
+		if "`pre_plus'"=="" {
+			di as err "No pre-event coefficients to calulate the difference in averages"
+			exit 301
+		}
+		loc post_plus = strtrim("`post_plus'")
+		if "`post_plus'"=="" {
+			di as err "No post-event coefficients to calulate the difference in averages"
+			exit 301
+		}
+		loc pre_plus : subinstr local pre_plus " " " + ", all
+		loc post_plus : subinstr local post_plus " " " + ", all
+		di as text _n "Difference in pre and post-period averages from lincom:"
+		lincom ((`post_plus') / (`rwindow' + 2)) - ((`pre_plus') / (`=-`lwindow'' + 1)), cformat(%9.4g)
+	}
 	
 		
 		* Plots	
@@ -523,8 +597,9 @@ program define _eventiv, rclass
 		* Calculate mean before change in policy for 2nd axis in plot
 		* This needs to be relative to normalization
 		tempvar temp_k
-		loc absnorm=abs(`norm0')
-		qui gen `temp_k'=_k_eq_m`absnorm' 
+		if `norm0' < 0 loc kvomit = "m`=abs(`norm0')'"
+		else loc kvomit "p`=abs(`norm0')'"
+		qui gen `temp_k'=_k_eq_`kvomit' 
 		
 		tokenize `varlist'
 		qui su `1' if `temp_k'!=0 & `temp_k'!=. & `esample', meanonly
@@ -577,18 +652,56 @@ program define _eventiv, rclass
 		mat `deltaxsc' = `factor'*`deltax'	
 	}
 	
+	*recover omitted k vars 
+	loc kvars_omit ""
+	if "`komit'"!=""{
+		foreach k in `komit' {
+			if `k'<0 loc kvars_omit "`kvars_omit' _k_eq_m`=abs(`k')'"
+			else loc kvars_omit "`kvars_omit' _k_eq_p`=abs(`k')'"
+		}
+	}
+	*full list of event-time dummies (included + omitted)
+	loc eventtd = "`included' `kvars_omit'"
+
 	* Drop variables
 	if "`savek'" == "" {
-		cap confirm var _k_eq_p0
-		if !_rc drop _k_eq*	
-		cap confirm var __k
-		if !_rc qui drop __k
-		if "`trend'"!="" qui drop _ttrend		
+		cap confirm var `eventtd', exact 
+		if !_rc drop `eventtd'
+		cap confirm var __k, exact
+		if !_rc qui drop __k	
 	}
 	else {
+		*change prefix
+		loc eventtd_savek : subinstr local eventtd "_k" "`savek'", all
+		
+		*If replace suboption, drop the existing variables before renaming the recently created ones 
+		if "`kreplace'"!="" {
+			*event-time dummies 
+			foreach v in `eventtd_savek' {
+				cap confirm variable `v', exact 
+				if !_rc drop `v'
+			}
+			*event-time variable 
+			cap confirm variable `savek'_evtime, exact
+			if !_rc drop `savek'_evtime
+		}
+		
+		*Check that variables don't exist 
+		cap confirm variable `eventtd_savek', exact
+		if !_rc {
+			di as err _n "You specified to save the event-time dummy variables using the prefix {bf:`savek'}, but you already have event-time dummy variables saved with that prefix."
+			di as err _n "Use the {bf:replace} suboption to replace the existing variables."
+			exit 110
+		}
+		cap confirm variable `savek'_evtime, exact
+		if !_rc {
+			di as err _n "You specified to save the event-time variable using the prefix {bf:`savek'}, but you already have an event-time variable saved with that prefix."
+			di as err _n "Use the {bf:replace} suboption to replace the existing variable."
+			exit 110
+		}
+		
 		ren __k `savek'_evtime
-		ren _k_eq* `savek'_eq*
-		if "`trend'"!="" ren _ttrend `savek'_trend	
+		ren (`eventtd') (`eventtd_savek')
 	}
 	if "`instype'"=="numlist" | "`instype'"=="mixed" {
 		foreach v in `leadivs' {
@@ -620,6 +733,7 @@ program define _eventiv, rclass
 	return local df = `df'
 	return local komit = "`komit'"
 	return local kmiss = "`kmiss'"
+	return local ambiguous = "`ambiguous'"
 	return local y1 = `y1'
 	return local depvar = "`depvar'"
 	if `x1'!=. return local x1 = `x1'
@@ -630,10 +744,11 @@ end
 *program to parse savek
 program define parsesavek, rclass
 
-	syntax [anything] , [NOEstimate]
+	syntax [anything] , [NOEstimate replace]
 		
-	return local savekl "`anything'"
-	return local noestimatel "`noestimate'"
+	return local savek "`anything'"
+	return local noestimate "`noestimate'"
+	return local kreplace "`replace'"
 end	
 
 *program to parse standar error specification 

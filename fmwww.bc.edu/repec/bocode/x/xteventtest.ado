@@ -1,8 +1,7 @@
-*! xteventtest.ado 2.2.0 Mar 15 2023
+*! xteventtest.ado 3.1.0 July 11, 2024
 
-version 11.2
+version 13
 
-cap program drop xteventtest
 program define xteventtest, rclass
 	#d;
 	syntax, 
@@ -10,7 +9,7 @@ program define xteventtest, rclass
 	coefs(numlist) /*Coefficients to test */
 	cumul /* Test sum of coefficients */
 	LINpretrend /* Test for linear pre-trend */
-	CONSTanteff /* Test for constant effects */
+	CONStanteff /* Test for constant effects */
 	TRend(numlist <0 integer min=1 max=1) /* Test significance of a linear trend from time a*/
 	overidpre(numlist >0 integer min=1 max=1) /* Test the leftmost coefficients as overid restriction */
 	overidpost(numlist >1 integer min=1 max=1) /* Test the rightmost coefficients as overid restriction */
@@ -63,6 +62,14 @@ program define xteventtest, rclass
 		
 	loc names = e(names)
 	
+	*if previous trend adjustment, remove the endpoints from the stored list of event-time dummy variables  
+	if "`=e(trend)'"=="trend"{
+		loc lendp "_k_eq_m`=-`=`e(lwindow)'-1''"
+		loc rendp "_k_eq_p`=`e(rwindow)'+1'"
+		loc names: subinstr local names "`lendp'" "", all
+		loc names: subinstr local names "`rendp'" "", all
+	}
+	
 	* Turn overid into overidpre and overidpost
 	if "`overid'"!="" {
 		if e(pre)==. {
@@ -81,6 +88,33 @@ program define xteventtest, rclass
 			loc overidpre=e(overidpre)
 			loc overidpost=e(overidpost)+1
 		}
+	}
+	
+	*Change the coefficients to test pretrends if there was trend adjustment with ols method and requested number of coefficients is greater than the number of available ones.
+	if "`=e(trendmethod)'"=="ols" & ("`overid'"!="" | "`overidpre'"!="") {
+		*number of available pre-event coefficients 
+		loc j=0
+		foreach w in `names' {
+			if regexm("`w'","_k_eq_m") loc ++j
+		}	
+		
+		if `j' == 0 {
+			di as err _n "Cannot test pretrends if there are 0 available pre-event coefficients after trend adjustment with OLS method."
+			exit 103 
+		}
+		loc checkadj = 0
+		if "`overid'"!="" & `overidpre'>`j' {
+			di as text _n "{bf:overidpre} value from {cmd: xtevent} is `e(overidpre)', but available pre-event coefficients are {bf:`j'} after trend adjustment with OLS method."
+			loc checkadj 1
+		}
+		if "`overidpre'"!="" & "`overid'"==""  & `overidpre'>`j'{
+			di as text _n "You requested pretrend test with the first {bf:`overidpre'} coefficients, but there are only {bf:`j'} available pre-event coefficients after trend adjustment with OLS method."
+			loc checkadj 1
+		}
+		if `checkadj'==1 {
+			di as text _n "The pretrend test will account only the {bf:`j'} available pre-event coefficients."
+			loc overidpre=`j'
+		}	
 	}
 		
 	* If overidpre, take the earlier coefs
@@ -205,6 +239,10 @@ program define xteventtest, rclass
 		}
 		loc d : word count `tt'
 		scalar `dim' = `d'
+		if `dim'<2 {
+			di as err _n "Cannot test linear pre-trend with less than 2 pre-event coefficients"
+			exit 199
+		}	
 		mata: trendtest("`dim'")
 		* scalar li Q
 		
@@ -257,7 +295,6 @@ program define xteventtest, rclass
 	
 end
 
-cap program drop returntest
 program define returntest, rclass
 	args stub
 	foreach x in p F df_r chi2 ss rss drop {

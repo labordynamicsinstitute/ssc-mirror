@@ -1,6 +1,6 @@
 
 {smcl}
-{* *! version 2.2.0 Mar 15 2023}{...}
+{* *! version 3.1.0 July 11 2024}{...}
 {cmd:help get_unit_time_effects}
 {hline}
 
@@ -17,7 +17,7 @@
 {p 8 17 2}
 {cmd:get_unit_time_effects}
 {depvar} [{indepvars}]
-{ifin}
+{ifin} {weight}
 {cmd:,}
 {opth p:anelvar(varname)}
 {opth t:imevar(varname)}
@@ -56,13 +56,13 @@ variables {it:panelvar}, {it:timevar}, and {it:_unittimeeffects}. The variable {
 {synoptline}
 
 {phang}
-{opth panelvar(varname)} specifies the group variable. For the Hansen (2007) estimator, the policy variable should vary at this group level.
+{opth panelvar(varname)} specifies the group variable. The policy variable should vary at this group level.
 
 {phang}
 {opth timevar(varname)} specifies the time variable. 
 
 {phang}
-{opt saving(filename, [replace])} specifies the name of the Stata data file which contains the unit-time effects estimates. If {opt saving} is
+{opt saving(filename, [replace])} specifies the name of the Stata data file to store the unit-time effects estimates. If {opt saving} is
  not specified, the file will be saved in the current directory with the name {it: unit_time_effects.dta}. The suboption {it:replace} overwrites
  the unit-time effects file.
 
@@ -115,7 +115,7 @@ variables {it:panelvar}, {it:timevar}, and {it:_unittimeeffects}. The variable {
 
 {title:References}
 
-{pstd}Hansen, C. (2007) . "Generalized Least Squares Inference in Panel and Multilevel Models 
+{pstd}Hansen, C. (2007). "Generalized Least Squares Inference in Panel and Multilevel Models 
 with Serial Correlation and Fixed Effects" Journal of Econometrics, 140(2), 670-694.{p_end}
 
  

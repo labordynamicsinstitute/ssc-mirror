@@ -1,8 +1,7 @@
-*! get_unit_time_effects.ado 2.2.0 March 15 2023
+*! get_unit_time_effects.ado 3.1.0 July 11, 2024
 
-version 11.2
+version 13
 
-cap program drop get_unit_time_effects
 program define get_unit_time_effects, eclass
 
 	#d;
@@ -92,7 +91,6 @@ program define get_unit_time_effects, eclass
 end
 
 * Program to parse saving
-cap program drop parsesaving
 program define parsesaving, rclass
 
 	syntax [anything] , [replace]

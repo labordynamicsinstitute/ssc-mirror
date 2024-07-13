@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.2.0 Mar 15 2023}{...}
+{* *! version 3.1.0 July 11 2024}{...}
 {cmd:help xteventtest}
 {hline}
 
@@ -27,9 +27,9 @@
 {p2coldent: {opt cumul}} test sum of coefficients{p_end}
 {p2coldent: {opt allpre}} test all pre-event coefficients{p_end}
 {p2coldent: {opt allpost}} test all post-event coefficients{p_end}
-{p2coldent: {opt lin:pretrend}} test for a linear pre-trend{p_end}
+{p2coldent: {opt lin:pretrend}} test for a linear pretrend{p_end}
 {p2coldent: {opt tr:end(#1)}} tests for a linear trend from time period #1 before treatment{p_end}
-{p2coldent: {opt const:anteff}} test for constant post-event coefficients{p_end}
+{p2coldent: {opt cons:tanteff}} test for constant post-event coefficients{p_end}
 {p2coldent: {opt overid}} test overidentifyng restrictions for pretrends and effects leveling off{p_end}
 {p2coldent: {opth overidpre(integer)}} test overidentifyng restriction for pretrends{p_end}
 {p2coldent: {opth overidpost(integer)}} test overidentifyng restriction for effects leveling off{p_end}
@@ -62,25 +62,27 @@
 {opt allpost} tests that all post-event coefficients are equal to 0. With {cmd:cumul}, it tests that the sum of all post-event coefficients is equal to 0.
 
 {phang}
-{opt linpretrend} requests a specification test to see if the coefficients before the event follow a linear trend.
+{opt linpretrend} requests a specification test to see if the coefficients follow a linear trend before the event.
 
 {phang}
-{opt trend(#1)} tests for a linear trend from time period #1 before the policy change. It uses {opt xtevent, trend(#1, method(ols))} to estimate the trend. #1 must be less than 0.
+{opt trend(#1)} tests for a linear trend from time period #1 before the policy change. It uses {opt xtevent, trend(#1, method(ols))} to estimate the trend. #1 must be less than -1.
 
 {phang}
 {opt constanteff} tests that all post-event coefficients are equal.
 
 {phang}
 {opt overid} tests overidentifying restrictions: a test for pre-trends and a test for events leveling-off. The periods to be tested are those
-used in the {cmd xtevent} call. See {help xtevent}.
+used in the {cmd: xtevent} call. See {help xtevent}.
 
 {phang}
 {opth overidpre(#1)} tests the pre-trends overidentifying restriction. It tests that the coefficients for the earliest #1 periods before the event
-are equal to 0. #1 must be greater than 0.
+are equal to 0, including the endpoints. For example, with a window of 3, {opt overidpre(2)} tests that the coefficients for event-times -4+
+ (the endpoint) and -3 are jointly equal to 0. #1 must be greater than 0.
 
 {phang}
 {opth overidpost(#1)} tests the effects leveling off overidentifying restriction. It tests that the coefficients for the latest #1 periods after  
-the event are equal. #1 must be greater than 0.
+the event are equal, including the endpoints. For example, with a window of 3, {opt overidpost(3)} tests that the coefficients for event-times
+ 4+ (the endpoint), 3, and 2 are equal to each other. #1 must be greater than 1. 
 
 {phang}
 {opt testopts(string)} specifies options to be passed to {cmd:test}. See {help test}.
@@ -133,11 +135,11 @@ Impute policy variable assuming no unobserved changes{p_end}
 
 {synoptset 15 tabbed}{...}
 {p2col 5 15 19 2: Macros}{p_end}
-{synopt:{cmd:r(mtmethod)}}method of adjustment for multiple testing{p_end}
+{synopt:{cmd:r(mtmethod)}}method of adjustment for multiple testing. This macro is inherited from {cmd:test}{p_end}
 
 {synoptset 15 tabbed}{...}
 {p2col 5 15 19 2: Matrices}{p_end}
-{synopt:{cmd:r(mtest)}}multiple test results{p_end}
+{synopt:{cmd:r(mtest)}}multiple test results. This matrix is inherited from {cmd:test}{p_end}
 
 
 {title:Authors}

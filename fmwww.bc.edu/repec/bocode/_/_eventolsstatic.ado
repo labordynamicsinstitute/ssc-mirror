@@ -1,6 +1,5 @@
-version 11.2
+version 13
 
-cap program drop _eventolsstatic
 program define _eventolsstatic, rclass
 
 	#d;
@@ -13,7 +12,7 @@ program define _eventolsstatic, rclass
 	note /* No time effects */	
 	reghdfe /* Use reghdfe for estimation */
 	addabsorb(string) /* Absorb additional variables in reghdfe */ 
-	impute(string) /*impute policyvar */
+	IMPute(string) /*impute policyvar */
 	STatic /* Estimate static model */
 	REPeatedcs /*data is repeated cross-sectional*/
 	*
@@ -22,6 +21,9 @@ program define _eventolsstatic, rclass
 	#d cr
 	
 	marksample touse
+	
+	tempvar mkvarlist
+	qui gen byte `mkvarlist' = `touse'
 	
 	tempname delta Vdelta bb VV bb2 VV2 delta2 Vdelta2 tousegen
 	
@@ -38,7 +40,7 @@ program define _eventolsstatic, rclass
 		tempvar rr
 		qui gen double `rr'=.
 
-	_eventgenvars if `tousegen', panelvar(`panelvar') timevar(`timevar') policyvar(`policyvar') impute(`impute') `repeatedcs' `static' rr(`rr')
+	_eventgenvars if `tousegen', panelvar(`panelvar') timevar(`timevar') policyvar(`policyvar') impute(`impute') `repeatedcs' `static' rr(`rr') mkvarlist(`mkvarlist')
 	
 		loc impute=r(impute)
 		if "`impute'"=="." loc impute = ""

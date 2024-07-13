@@ -1,8 +1,7 @@
-* xteventplot.ado 2.2.0 Mar 15 2023
+*! xteventplot.ado 3.1.0 July 11, 2024
 
-version 11.2
+version 13
 
-cap program drop xteventplot
 program define xteventplot
 	#d;
 	syntax [anything], 
@@ -10,10 +9,10 @@ program define xteventplot
 	noci /* Supress confidence intervals */
 	nosupt /* Omit sup-t CI */
 	NOZEROline /* Supress line at 0 */
-	NOMINus1label /* Supress label for value of dependent variable at event time = -1 */
+	NONORMLabel /* Supress label for value of dependent variable at event time = -1 */
 	noprepval /* Supress p-value for pre-trends test */
 	nopostpval /* Supress p-value for leveling-off test */
-	suptreps(integer 1000) /* Draws from multivariate normal for sup-t CI calculations */
+	suptreps(numlist integer max=1) /* Draws from multivariate normal for sup-t CI calculations */
 	overlay(string) /* Overlay plots: Trend, IV, or static */	
 	y /* Plot for dependent variable in IV setting */
 	proxy /* Plot for proxy variable in IV setting */	
@@ -65,7 +64,7 @@ program define xteventplot
 		exit 301
 	}
 	
-	if "`overlay'"=="trend" & "`=e(trend)'"!="trend" { 
+	if "`overlay'"=="trend" & ("`=e(trend)'"!="trend" | ("`=e(trend)'"=="trend" & "`e(trendsaveov)'"!="trendsaveov"))  { 
 		di as err "option {bf:overlay(trend)} only allowed after {cmd:xtevent, trend(, saveoverlay)}"
 		exit 301
 	}
@@ -74,6 +73,9 @@ program define xteventplot
 		di as err "option {bf:overlay(iv)} only allowed after {cmd:xtevent, proxy() proxyiv()}"
 		exit 301
 	}
+
+	* Set suptreps to 1000 if missing
+	if "`suptreps'"=="" loc suptreps = 1000
 			
 	* Get info from e
 	loc df = e(df)
@@ -105,9 +107,9 @@ program define xteventplot
 	}
 	
 	if "`ci'"=="noci" di as txt _n "option {bf:noci} has been specified. Confidence intervals won't be displayed"
-	if "`supt'"=="nosupt" di as txt _n "option {bf:nosupt} has been specified. Sup-t confidence intervals won't be displayed or calculated"
+	if "`supt'"=="nosupt" di as txt _n "option {bf:nosupt} has been specified. Sup-t confidence bands won't be displayed or calculated"
 	if "`nozeroline'"=="nozeroline" di as txt _n "option {bf:nozeroline} has been specified. The reference line at 0 won't be displayed"
-	if "`nominus1label'"=="nominus1label" di as txt _n "option {bf:nominus1label} has been specified. The label for the value of the depedent variable at event-time = -1 won't be displayed"
+	if "`nonormlabel'"=="nonormlabel" di as txt _n "option {bf:nonormlabel} has been specified. The label for the value of the dependent variable at event time corresponding to the normalized coefficient won't be displayed"
 	if "`prepval'"=="noprepval" di as txt _n "option {bf:noprepval} has been specified. The p-value for a pretrends test won't be displayed"
 	if "`postpval'"=="nopostpval" di as txt _n "option {bf:nopostpval} has been specified. The p-value for a test of effects leveling-off won't be displayed"
 	
@@ -120,6 +122,7 @@ program define xteventplot
 		di as txt _n "option {bf:smplotopts} specified but option {bf:smpath} is missing. option {bf:smplotopts} ignored"
 		loc smplotopts = ""
 	}
+	* "
 	if "`ciplotopts'"!="" & "`ci'"=="noci" {
 		di as txt _n "option {bf:ciplotopts} specified but option {bf:noci} is active. option {bf:ciplotopts} ignored"
 		loc ciplotopts = ""
@@ -205,8 +208,9 @@ program define xteventplot
 		if  "`imptype'"=="." loc imptype=""
 		loc saveimp = r(saveimpl)
 		if  "`saveimp'"=="." loc saveimp=""
-		
-		loc cmdpredict: subinstr local cmdpredict "`depvar'" "`yhat'", word	
+				
+		loc depvarpredict: word 2 of `cmdpredict'
+		loc cmdpredict: subinstr local cmdpredict "`depvarpredict'" "`yhat'", word	
 		qui est store `estimates'
 		
 		*the user didn't specify impute option
@@ -254,11 +258,7 @@ program define xteventplot
 		qui est restore `estimates'
 		restoresample `samplevar'
 	}
-		
-		
-		
-	
-			
+				
 	* Get Wald CIs and place overlays in coef2
 	
 	loc i=1
@@ -343,7 +343,7 @@ program define xteventplot
 				loc mcolor ""
 				gen double `ul' = `coef' + `ta2'*`se'
 				gen double `ll' = `coef' - `ta2'*`se'				
-				loc cigraph "rcap `ul' `ll' `kxaxis', pstyle(ci)"
+				loc cigraph "rcap `ul' `ll' `kxaxis', pstyle(p1)"
 			}
 			else if "`levels'"!="" {
 				loc cigraph = ""		
@@ -355,7 +355,7 @@ program define xteventplot
 					tempvar ul`l' ll`l'
 					gen double `ul`l'' = `coef' + `ta2'*`se'
 					gen double `ll`l'' = `coef' - `ta2'*`se'
-					loc cigraph "`cigraph' rcap `ul`l'' `ll`l'' `kxaxis', pstyle(ci)"				
+					loc cigraph "`cigraph' rcap `ul`l'' `ll`l'' `kxaxis', pstyle(p1)"				
 					if `j'!=`tot' loc cigraph "`cigraph' ||"
 					loc ++j
 				}				
@@ -369,14 +369,14 @@ program define xteventplot
 		if "`ci'"!="noci" {
 			if "`supt'"!="nosupt" {
 				if  "`levels'"!=""  {
-					di _n "Note: Sup-t confidence interval drawn for system confidence level = `=c(level)'"
+					di _n "Note: Sup-t confidence band drawn for system confidence level = `=c(level)'"
 				}
 				loc level=c(level)/100
-				mata: supt(`suptreps',"`se'",`level')
+				mata: supt(`suptreps',"`se'","`V'",`level')
 				tempvar ulsupt llsupt
 				gen double `ulsupt' = `coef' + q*`se'
 				gen double `llsupt' = `coef' - q*`se'
-				loc cigraphsupt "rspike `ulsupt' `llsupt' `kxaxis', pstyle(ci)"
+				loc cigraphsupt "rspike `ulsupt' `llsupt' `kxaxis', pstyle(p1)"
 			}
 			else loc cigraphsupt ""
 		}		
@@ -386,6 +386,11 @@ program define xteventplot
 	
 	if `"`smpath'"'!="" {	
 		* "
+		* Do not allow if left window is zero
+		if `kmin'== -1 {
+			di as err "Smoothest path cannot be calculated when the left window is zero."
+			exit 301
+		}
 		di _n "Note: Smoothest line drawn for system confidence level = `=c(level)'%"
 		parsesmpath `smpath'
 		loc postwindow = r(postwindow)	
@@ -506,9 +511,17 @@ program define xteventplot
 	if "`overlay'"!="trend" {
 		if "`y'"=="" & "`proxy'"=="" & "`overlay'"!="static" & "`overlay'"!="iv"& "`=e(trend)'"=="." {
 			if ("`prepval'"!="noprepval") | ("`postpval'"!="nopostpval") {
-				qui xteventtest, overid
-				loc pvalpre : di %9.2f r(pre_p)
-				loc pvalpost: di % 9.2f r(post_p)
+				* Skip this test if left window is zero
+				if `kmin'!= -1 {
+					qui xteventtest, overid
+					loc pvalpre : di %9.2f r(pre_p)
+					loc pvalpost: di % 9.2f r(post_p)					
+				}
+				else {
+					loc pvalpre = ""
+					qui xteventtest, overidpost(2)
+					loc pvalpost: di % 9.2f r(p)					
+				}
 				if "`overidpre'"!="" {
 					qui xteventtest, overidpre(`overidpre')
 					loc pvalpre : di %9.2f r(p)
@@ -581,7 +594,7 @@ program define xteventplot
 	else loc zeroline "yline(0, lpattern(dash) lstyle(refline))"
 
 	* Label for value of y at -1 by default, unless supressed
-	if "`nominus1label'"=="nominus1label" loc ylab ""
+	if "`nonormlabel'"=="nonormlabel" loc ylab ""
 	else loc ylab "ylab(#5 0 `y1plot')"	
 
 	tw  `smgraph' `smplotopts' || `cigraph' `ciplotopts' || `cigraphsupt' `suptciplotopts' || `cmdov' , xtitle("") ytitle("") `xaxis' pstyle(p1) `ylab' `note' msymbol(circle triangle_hollow) `scatterplotopts' || `addplots'	|| `trendplot' `trendplotopts' ||,`zeroline' `options' `legend'
@@ -589,7 +602,6 @@ program define xteventplot
 end
 
 * Program to parse smpath options
-cap program drop parsesmpath
 program define parsesmpath, rclass
 
 	syntax [anything] , [maxiter(integer 100) TECHnique(string) postwindow(real 0) maxorder(integer 10)]
@@ -608,7 +620,6 @@ program define parsesmpath, rclass
 end	
 
 * Program to get smline from mata
-cap program drop getsm
 program define getsm
 	
 	args fidget coef smline p fid
@@ -620,16 +631,14 @@ program define getsm
 end
 
 * Program to repost sample
-cap program drop restoresample
 program define restoresample, eclass
 	ereturn repost, esample(`1')
 end
 
 * Program to parse cmdline and return commands for overlay static plot
 
-cap program drop parsecmdline
 program define parsecmdline, rclass
-	syntax anything [aw fw pw] [if][in], samplevar(string) [Window(numlist min=1 max=2 integer) savek(string) plot proxy(string) POLicyvar(string) impute(string) *]
+	syntax anything [aw fw pw] [if][in], samplevar(string) [Window(string) savek(string) plot proxy(string) POLicyvar(string) impute(string) *]
 	
 	if "`if'"=="" loc ifs "if `samplevar'"
 	else loc ifs "`if' & `samplevar'"
@@ -644,7 +653,6 @@ program define parsecmdline, rclass
 end
 
 *program to parse impute option
-cap program drop parseimp
 program define parseimp, rclass
 	syntax [anything] , [saveimp]
 	return local imptype "`anything'"
@@ -951,21 +959,19 @@ mata
 		
 	void supt(real scalar suptreps,
 				string scalar se,
+				string scalar V,
 				real scalar level
 	)
-	{	real matrix senum,rmv,mv,means,var,sd,std,am
+	{	real matrix senum,Vnum,Vcor,rmv,am
 		real scalar q
 	
 		senum = st_matrix(se)
-		rmv=rnormal(suptreps,1,J(1,cols(senum),0),senum)
-		mv = meanvariance(rmv)
-		means = mv[1,.]
-		var   = mv[|2,1 \ .,.|]
-		sd = sqrt(diagonal(var))'
-		std = (rmv :- means):/sd
-		am = rowmax(abs(std))
+		Vnum = st_matrix(V)
+		Vcor=cholinv(diag(senum))*Vnum*cholinv(diag(senum))
+		rmv=rnormal(suptreps,1,J(1,cols(senum),0),J(1,cols(senum),1))*(cholesky(Vcor)')
+		am = rowmax(abs(rmv))
 		q = mm_quantile(am,1,level)		
-		st_numscalar("q",q)
+		st_numscalar("q",q)		
 	}
 
 	real matrix mm_quantile(real matrix X, | real colvector w,
@@ -1115,5 +1121,4 @@ end
 
 
 		
-
 
