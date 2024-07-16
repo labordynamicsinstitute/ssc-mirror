@@ -1,7 +1,8 @@
 * metan.ado
 * Study-level (aka "aggregate-data" or "published data") meta-analysis
 
-*! version 4.08  17jun2024
+*! version 4.08  David Fisher  17jun2024
+*! version 4.08.1  David Fisher  12jul2024
 *! Current version by David Fisher
 *! Previous versions by Ross Harris and Michael Bradburn
 
@@ -162,6 +163,9 @@
 // Improvements:
 // - added functionality from -meta5- for empirical Bayes shrunk estimates
 // - improved labelling and documentation for random-effects cumulative/influence analysis; new saved variable _WT_Final
+
+* version 4.08.1
+// Minor bug fixes to allow programs to run without error under Stata versions 15 and older
 
 
 program define metan, rclass properties(hr nohr shr noshr irr or rrr)
@@ -678,10 +682,16 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 					return `historical' scalar ci_upp_2 = `ci_upp_2'
 				}
 				else if `m'==2 {			// if `second' is a model name e.g. "second(random)"
-					return `historical' scalar ES_2      = exp(`ovstats'["eff", 2])
-					return `historical' scalar selogES_2 =     `ovstats'["se_eff", 2]
-					return `historical' scalar ci_low_2  = exp(`ovstats'["eff_lci", 2])
-					return `historical' scalar ci_upp_2  = exp(`ovstats'["eff_uci", 2])
+					// Modified July 2024 to avoid errors with Stata 15 and older
+					// "matrix operators that return matrices not allowed in this context
+					local r = rownumb(`ovstats', "eff")
+					return `historical' scalar ES_2      = exp(`ovstats'[`r', 2])
+					local r = rownumb(`ovstats', "se_eff")
+					return `historical' scalar selogES_2 =     `ovstats'[`r', 2]
+					local r = rownumb(`ovstats', "eff_lci")
+					return `historical' scalar ci_low_2  = exp(`ovstats'[`r', 2])
+					local r = rownumb(`ovstats', "eff_uci")
+					return `historical' scalar ci_upp_2  = exp(`ovstats'[`r', 2])
 				}
 			}
 		}
@@ -703,10 +713,16 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 					return `historical' scalar ci_upp_2 = `ci_upp_2'
 				}
 				else if `m'==2 {				// if `second' is a model name e.g. "second(random)"
-					return `historical' scalar ES_2     = `ovstats'["eff", 2]
-					return `historical' scalar seES_2   = `ovstats'["se_eff", 2]
-					return `historical' scalar ci_low_2 = `ovstats'["eff_lci", 2]
-					return `historical' scalar ci_upp_2 = `ovstats'["eff_uci", 2]
+					// Modified July 2024 to avoid errors with Stata 15 and older
+					// "matrix operators that return matrices not allowed in this context
+					local r = rownumb(`ovstats', "eff")
+					return `historical' scalar ES_2     = `ovstats'[`r', 2]
+					local r = rownumb(`ovstats', "se_eff")
+					return `historical' scalar seES_2   = `ovstats'[`r', 2]
+					local r = rownumb(`ovstats', "eff_lci")
+					return `historical' scalar ci_low_2 = `ovstats'[`r', 2]
+					local r = rownumb(`ovstats', "eff_uci")
+					return `historical' scalar ci_upp_2 = `ovstats'[`r', 2]
 				}
 			}
 		}
@@ -862,17 +878,29 @@ program define metan, rclass properties(hr nohr shr noshr irr or rrr)
 			qui levelsof `_BY' if `touse', missing local(bylist)			
 			forvalues i = 1 / `nby' {
 				local byi : word `i' of `bylist'
-				scalar `eff' = `bystats'["eff", `i']
-				scalar `se_eff' = `bystats'["se_eff", `i']
-				scalar `tausq' = `bystats'["tausq", `i']
+
+				// Modified July 2024 to avoid errors with Stata 15 and older
+				// "matrix operators that return matrices not allowed in this context
+				local r = rownumb(`bystats', "eff")
+				scalar `eff'    = `bystats'[`r', `i']
+				local r = rownumb(`bystats', "se_eff")
+				scalar `se_eff' = `bystats'[`r', `i']
+				local r = rownumb(`bystats', "tausq")
+				scalar `tausq'  = `bystats'[`r', `i']
+				
 				qui replace `_EBS_ES' = (`_ES'*`tausq' + `eff'*`_seES'^2) / (`_seES'^2 + `tausq') if `_USE'==1 & `_BY'==`byi'
 				qui replace `_EBS_seES' = sqrt( `_seES'^2 *`tausq'/(`_seES'^2 + `tausq') + (`se_eff'*`_seES'^2 / (`_seES'^2 + `tausq'))^2 ) if `_USE'==1 & `_BY'==`byi'
 			}
 		}
 		else {
-			scalar `eff' = `ovstats'["eff", 1]			// use first model only
-			scalar `se_eff' = `ovstats'["se_eff", 1]
-			scalar `tausq' = `ovstats'["tausq", 1]			
+			// Modified July 2024 to avoid errors with Stata 15 and older
+			// "matrix operators that return matrices not allowed in this context
+			local r = rownumb(`ovstats', "eff")
+			scalar `eff'    = `ovstats'[`r', 1]			// use first model only
+			local r = rownumb(`ovstats', "se_eff")
+			scalar `se_eff' = `ovstats'[`r', 1]
+			local r = rownumb(`ovstats', "tausq")
+			scalar `tausq'  = `ovstats'[`r', 1]			
 			qui replace `_EBS_ES' = (`_ES'*`tausq' + `eff'*`_seES'^2) / (`_seES'^2 + `tausq') if `_USE'==1
 			qui replace `_EBS_seES' = sqrt( `_seES'^2 *`tausq'/(`_seES'^2 + `tausq') + (`se_eff'*`_seES'^2 / (`_seES'^2 + `tausq'))^2 ) if `_USE'==1
 		}

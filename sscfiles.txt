@@ -13699,6 +13699,7 @@ fmwww.bc.edu/repec/bocode/d/delaunay.sthlp
 fmwww.bc.edu/repec/bocode/d/decomp.ado
 fmwww.bc.edu/repec/bocode/d/DoubleML_repl.R
 fmwww.bc.edu/repec/bocode/d/denton.hlp
+fmwww.bc.edu/repec/bocode/d/did_multiplegt_stat.sthlp
 fmwww.bc.edu/repec/bocode/d/data_narrsignrestrict.dta
 fmwww.bc.edu/repec/bocode/d/dgraph.ado
 fmwww.bc.edu/repec/bocode/d/des10.hlp
@@ -14266,6 +14267,7 @@ fmwww.bc.edu/repec/bocode/d/decompress.html
 fmwww.bc.edu/repec/bocode/d/durbinh.m
 fmwww.bc.edu/repec/bocode/d/diagreg.sthlp
 fmwww.bc.edu/repec/bocode/d/dsconcat.hlp
+fmwww.bc.edu/repec/bocode/d/did_multiplegt_stat.ado
 fmwww.bc.edu/repec/bocode/d/distmatch.hlp
 fmwww.bc.edu/repec/bocode/d/dta2sav.ado
 fmwww.bc.edu/repec/bocode/d/dolog8.sthlp
@@ -14328,6 +14330,7 @@ fmwww.bc.edu/repec/bocode/d/dissim.hlp
 fmwww.bc.edu/repec/bocode/d/dagfit.html
 fmwww.bc.edu/repec/bocode/d/dict.pkg
 fmwww.bc.edu/repec/bocode/d/distrate_example.ado
+fmwww.bc.edu/repec/bocode/d/did_multiplegt_stat.pkg
 fmwww.bc.edu/repec/bocode/d/datacheck.html
 fmwww.bc.edu/repec/bocode/d/detect.ado
 fmwww.bc.edu/repec/bocode/d/digdis.hlp
@@ -19068,6 +19071,7 @@ fmwww.bc.edu/repec/bocode/g/gsample.hlp
 fmwww.bc.edu/repec/bocode/g/germany19_Balz.pdf
 fmwww.bc.edu/repec/bocode/g/geocode.html
 fmwww.bc.edu/repec/bocode/g/ggtaxonomy.ado
+fmwww.bc.edu/repec/bocode/g/gazoline_did_multiplegt_stat.dta
 fmwww.bc.edu/repec/bocode/g/grpvars.ado
 fmwww.bc.edu/repec/bocode/g/gridsearch.ado
 fmwww.bc.edu/repec/bocode/g/gtools_unix_v2.plugin

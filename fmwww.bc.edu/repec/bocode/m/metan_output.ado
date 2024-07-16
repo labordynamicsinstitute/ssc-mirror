@@ -3,7 +3,11 @@
 *   principally on-screen table and saved dataset (with optional call to -forestplot-)
 * Called by metan.ado; do not run directly
 
-*! version 4.08  David Fisher  17jun2024
+*!  version 4.08  David Fisher  17jun2024
+*! version 4.08.1  David Fisher  12jul2024
+
+* version 4.08.1
+// Minor bug fixes to allow programs to run without error under Stata versions 15 and older
 
 
 program define metan_output, rclass
@@ -475,13 +479,19 @@ program define DrawTableAD, sclass sortpreserve
 					if `"`wgtopt`j''"'!=`""' local wgtstar " **"
 				
 					local bystats : word `j' of `bystatslist'
-					scalar `_ES_' = `denominator' * `bystats'["`eff'", `i']
+					
+					// Modified July 2024 to avoid errors with Stata 15 and older
+					// "matrix operators that return matrices not allowed in this context
+					local r = rownumb(`bystats', "`eff'")
+					scalar `_ES_' = `denominator' * `bystats'[`r', `i']
 					if missing(`_ES_') {
 						disp as text `"Subgroup`modText'`wgtstar'{col `=`swidth'+1'}{c |}{col `=`swidth'+4'} (Insufficient data)"'
 					}
 					else {
-						scalar `_LCI_' = `denominator' * `bystats'["`eff_lci'", `i']
-						scalar `_UCI_' = `denominator' * `bystats'["`eff_uci'", `i']
+						local r = rownumb(`bystats', "`eff_lci'")
+						scalar `_LCI_' = `denominator' * `bystats'[`r', `i']
+						local r = rownumb(`bystats', "`eff_uci'")
+						scalar `_UCI_' = `denominator' * `bystats'[`r', `i']
 
 						disp as text `"Subgroup`modText'`wgtstar'{col `=`swidth'+1'}{c |}{col `=`swidth'+`ewidth'-6'}"' ///
 							as res %7.3f `xexp'(`_ES_') `"{col `=`swidth'+`ewidth'+5'}"' ///
@@ -540,13 +550,18 @@ program define DrawTableAD, sclass sortpreserve
 					local wgtstar
 					if `"`wgtopt`j''"'!=`""' local wgtstar " **"					
 
-					scalar `_ES_' = `denominator' * `ovstats'["`eff'", `index']
+					// Modified July 2024 to avoid errors with Stata 15 and older
+					// "matrix operators that return matrices not allowed in this context
+					local r = rownumb(`ovstats', "`eff'")
+					scalar `_ES_' = `denominator' * `ovstats'[`r', `index']
 					if missing(`_ES_') {
 						disp as text `"Overall`modText'`wgtstar'{col `=`swidth'+1'}{c |}{col `=`swidth'+4'} (Insufficient data)"'
 					}
 					else {
-						scalar `_LCI_' = `denominator' * `ovstats'["`eff_lci'", `index']
-						scalar `_UCI_' = `denominator' * `ovstats'["`eff_uci'", `index']
+						local r = rownumb(`ovstats', "`eff_lci'")
+						scalar `_LCI_' = `denominator' * `ovstats'[`r', `index']
+						local r = rownumb(`ovstats', "`eff_uci'")
+						scalar `_UCI_' = `denominator' * `ovstats'[`r', `index']
 
 						// N.B. sum of (normalised) weights: will be 1 unless `sgwt'
 						disp as text %-20s `"Overall`modText'`wgtstar'{col `=`swidth'+1'}{c |}{col `=`swidth'+`ewidth'-6'}"' ///
@@ -609,19 +624,25 @@ program define DrawTableAD, sclass sortpreserve
 				local wgtstar
 				if `m' > 1 & `"`wgtopt`index''"'!=`""' local wgtstar " **"
 		
-				scalar `testStat' = `bystats'["`teststat'", `i']
+				// Modified July 2024 to avoid errors with Stata 15 and older
+				// "matrix operators that return matrices not allowed in this context
+				local r = rownumb(`bystats', "`teststat'")
+				scalar `testStat' = `bystats'[`r', `i']
 				scalar `df' = .
 				if "`teststat'"=="t" {
-					scalar `df' = `bystats'["df", `i']
+					local r = rownumb(`bystats', "df")
+					scalar `df' = `bystats'[`r', `i']
 					
 					// if only one study, revert to z [IN PRACTICE, THIS SHOULD ALREADY HAVE BEEN DETECTED]
 					if `df'==0 {
 						local teststat z
-						scalar `testStat' = `bystats'["`teststat'", `i']
+						local r = rownumb(`bystats', "`teststat'")
+						scalar `testStat' = `bystats'[`r', `i']
 						scalar `df' = .
 					}
 				}
-				scalar `pvalue' = `bystats'["pvalue", `i']
+				local r = rownumb(`bystats', "pvalue")
+				scalar `pvalue' = `bystats'[`r', `i']
 			
 				// Text to display: chisq distributions
 				local testDist
@@ -691,12 +712,17 @@ program define DrawTableAD, sclass sortpreserve
 			local teststat : word `index' of `teststatlist'
 			
 			// Extract test statistics from `ovstats'
-			scalar `testStat' = `ovstats'["`teststat'", `j']
+			// Modified July 2024 to avoid errors with Stata 15 and older
+			// "matrix operators that return matrices not allowed in this context
+			local r = rownumb(`ovstats', "`teststat'")
+			scalar `testStat' = `ovstats'[`r', `j']
 			scalar `df' = .
 			if "`teststat'"=="t" {
-				scalar `df' = `ovstats'["df", `j']
+				local r = rownumb(`ovstats', "df")
+				scalar `df' = `ovstats'[`r', `j']
 			}
-			scalar `pvalue' = `ovstats'["pvalue", `j']
+			local r = rownumb(`ovstats', "pvalue")
+			scalar `pvalue' = `ovstats'[`r', `j']
 
 			// Text to display: chisq distributions
 			local testDist
@@ -1064,9 +1090,12 @@ program define DrawTableAD, sclass sortpreserve
 				disp as text `"{col `=`swidth'+1'}{c |}{col `=`swidth'+7'}Value"'
 				disp as text `"{hline `swidth'}{c +}{hline 13}"'
 
+				// Modified July 2024 to avoid errors with Stata 15 and older
+				// "matrix operators that return matrices not allowed in this context
 				foreach x in tausq H Isq HsqM {
 					tempname `x'
-					scalar ``x'' = `hetstats'["`x'", 1]
+					local r = rownumb(`hetstats', "`x'") 
+					scalar ``x'' = `hetstats'[`r', 1]
 				}
 				
 				disp as text `"tau{c 178} {col `=`swidth'+1'}{c |}{col `=`swidth'+4'}"' as res %8.4f `tausq'
@@ -1154,16 +1183,21 @@ program define DrawTableAD, sclass sortpreserve
 						
 						local c_list `c_list' `c'
 
+						// Modified July 2024 to avoid errors with Stata 15 and older
+						// "matrix operators that return matrices not allowed in this context
 						tempname tausq
-						scalar `tausq' = `ovstats'["tausq", `c']
+						local r = rownumb(`ovstats', "tausq")
+						scalar `tausq' = `ovstats'[`r', `c']
 
 						disp as text `"`hetlab`c'opt'{col `=`swidth'+1'}{c |}{col `=`swidth'+4'}"' ///
 							as res %8.4f `tausq' _c
 						if `"`: list mod & RefModList'"'==`""' disp ""		// cancel _c
 						else {
 							tempname tsq_lci tsq_uci
-							scalar `tsq_lci' = `ovstats'["tsq_lci", `c']
-							scalar `tsq_uci' = `ovstats'["tsq_uci", `c']
+							local r = rownumb(`ovstats', "tsq_lci")
+							scalar `tsq_lci' = `ovstats'[`r', `c']
+							local r = rownumb(`ovstats', "tsq_uci")
+							scalar `tsq_uci' = `ovstats'[`r', `c']
 							disp as text `"{col `=`swidth'+14'}"' ///
 								as res %8.4f `tsq_lci' `"{col `=`swidth'+24'}"' %8.4f `tsq_uci'
 								
@@ -1202,7 +1236,8 @@ program define DrawTableAD, sclass sortpreserve
 						foreach c of numlist `c_list' {
 							foreach x in Isq Isq_lci Isq_uci {
 								tempname `x'
-								scalar ``x'' = `hetstats'["`x'", `c']
+								local r = rownumb(`hetstats', "`x'")
+								scalar ``x'' = `hetstats'[`r', `c']
 							}
 
 							// N.B. `hetlab`c'opt' has already been parsed; no need to do so again
@@ -1998,25 +2033,25 @@ program define BuildResultsSet, rclass
 					local el : word `k' of `rnames'
 					
 					if "`bystats'"!="" {
-						local rownumb = rownumb(`bystats', "`el'")
-						if !missing(`rownumb') {
-							qui replace ``v'' = `bystats'[`rownumb', `i'] in `=`omin' - 1 + `j''
+						local r = rownumb(`bystats', "`el'")
+						if !missing(`r') {
+							qui replace ``v'' = `bystats'[`r', `i'] in `=`omin' - 1 + `j''
 						}
 					}
 						
 					// ... or from `hetstats'
 					else if "`byhet'"!="" {
-						local rownumb = rownumb(`byhet', "`el'")
-						if !missing(`rownumb') {
-							qui replace ``v'' = `byhet'[`rownumb', `i'] in `=`omin' - 1 + `j''
+						local r = rownumb(`byhet', "`el'")
+						if !missing(`r') {
+							qui replace ``v'' = `byhet'[`r', `i'] in `=`omin' - 1 + `j''
 						}
 					}
 					
 					// ... or from `byQ'
 					else if "`byQ'"!="" {
-						local rownumb = rownumb(`byq', "`el'")
-						if !missing(`rownumb') {
-							qui replace ``v'' = `byq'[`rownumb', `i'] in `=`omin' - 1 + `j''
+						local r = rownumb(`byq', "`el'")
+						if !missing(`r') {
+							qui replace ``v'' = `byq'[`r', `i'] in `=`omin' - 1 + `j''
 						}
 					}
 					
@@ -2105,16 +2140,16 @@ program define BuildResultsSet, rclass
 				forvalues k = 1 / `na' {
 					local v  : word `k' of `vnames'
 					local el : word `k' of `rnames'
-					local rownumb = rownumb(`ovstats', "`el'")
-					if !missing(`rownumb') {
-						qui replace ``v'' = `ovstats'[`rownumb', `index'] in `=`omin' - 1 + `j''
+					local r = rownumb(`ovstats', "`el'")
+					if !missing(`r') {
+						qui replace ``v'' = `ovstats'[`r', `index'] in `=`omin' - 1 + `j''
 					}
 					
 					// ... or from `hetstats'
 					else if "`hetstats'"!="" {
-						local rownumb = rownumb(`hetstats', "`el'")
-						if !missing(`rownumb') {
-							qui replace ``v'' = `hetstats'[`rownumb', `index'] in `=`omin' - 1 + `j''
+						local r = rownumb(`hetstats', "`el'")
+						if !missing(`r') {
+							qui replace ``v'' = `hetstats'[`r', `index'] in `=`omin' - 1 + `j''
 						}
 					}
 						
@@ -2454,17 +2489,29 @@ program define BuildResultsSet, rclass
 			local bystats : word 1 of `bystatslist'		// use first model only
 			forvalues i = 1 / `nby' {
 				local byi : word `i' of `bylist'
-				scalar `eff' = `bystats'["eff", `i']
-				scalar `se_eff' = `bystats'["se_eff", `i']
-				scalar `tausq' = `bystats'["tausq", `i']
+				
+				// Modified July 2024 to avoid errors with Stata 15 and older
+				// "matrix operators that return matrices not allowed in this context
+				local r = rownumb(`bystats', "eff")
+				scalar `eff' = `bystats'[`r', `i']
+				local r = rownumb(`bystats', "se_eff")
+				scalar `se_eff' = `bystats'[`r', `i']
+				local r = rownumb(`bystats', "tausq")				
+				scalar `tausq' = `bystats'[`r', `i']
+				
 				qui replace `_EBS_ES' = (`_ES'*`tausq' + `eff'*`_seES'^2) / (`_seES'^2 + `tausq') if `_USE'==1 & `_BY'==`byi'
 				qui replace `_EBS_seES' = sqrt( `_seES'^2 *`tausq'/(`_seES'^2 + `tausq') + (`se_eff'*`_seES'^2 / (`_seES'^2 + `tausq'))^2  ) if `_USE'==1 & `_BY'==`byi'
 			}
 		}
 		else {
-			scalar `eff' = ovstats["eff", 1]			// use first model only
-			scalar `se_eff' = ovstats["se_eff", 1]
-			scalar `tausq' = ovstats["tausq", 1]
+			// Modified July 2024 to avoid errors with Stata 15 and older
+			// "matrix operators that return matrices not allowed in this context
+			local r = rownumb(`ovstats', "eff")
+			scalar `eff' = ovstats[`r', 1]			// use first model only
+			local r = rownumb(`ovstats', "se_eff")
+			scalar `se_eff' = ovstats[`r', 1]
+			local r = rownumb(`ovstats', "tausq")
+			scalar `tausq' = ovstats[`r', 1]
 			qui replace `_EBS_ES' = (`_ES'*`tausq' + `eff'*`_seES'^2) / (`_seES'^2 + `tausq') if `_USE'==1
 			qui replace `_EBS_seES' = sqrt( `_seES'^2 *`tausq'/(`_seES'^2 + `tausq') + (`se_eff'*`_seES'^2 / (`_seES'^2 + `tausq'))^2  ) if `_USE'==1
 		}
@@ -2957,8 +3004,12 @@ program define BuildResultsSet, rclass
 							continue, break
 						}
 						
-						scalar `Qi'   = `byq'["Q",   `i']
-						scalar `Qdfi' = `byq'["Qdf", `i']
+						// Modified July 2024 to avoid errors with Stata 15 and older
+						// "matrix operators that return matrices not allowed in this context
+						local r = rownumb(`byq', "Q")
+						scalar `Qi'   = `byq'[`r', `i']
+						local r = rownumb(`byq', "Qdf")
+						scalar `Qdfi' = `byq'[`r', `i']
 						
 						ParseHetInfo `hetinfo', ovstats(`bystats') hetstats(`byhet') ///
 							col(`i') model(`model') `first' qlist(`=`Qi'' `=`Qdfi'') `isqparam'
@@ -3553,9 +3604,9 @@ program define ParseHetInfo, sclass
 		// default: if not `isqparam', parse other elements only for *first* model; tausq is a special case
 		if inlist("`1'", "tausq", "tau2") {
 			local tausq = .
-			local rownumb = rownumb(`ovstats', "tausq")
-			if !missing(`rownumb') {
-				local tausq = `ovstats'[`rownumb', `col']
+			local r = rownumb(`ovstats', "tausq")
+			if !missing(`r') {
+				local tausq = `ovstats'[`r', `col']
 			}
 			if missing(`tausq') c_local disperr_tausq = 1
 			else {
@@ -3602,7 +3653,10 @@ program define ParseHetInfo, sclass
 			}
 			else if inlist("`1'", "h", "H") {
 				if `"`hetstats'"'!=`""' {
-					local H = `hetstats'["H", `col']
+					// Modified July 2024 to avoid errors with Stata 15 and older
+					// "matrix operators that return matrices not allowed in this context
+					local r = rownumb(`hetstats', "H")
+					local H = `hetstats'[`r', `col']
 				}
 				else local H = sqrt(`Q' / `Qdf')
 				
@@ -3620,7 +3674,10 @@ program define ParseHetInfo, sclass
 			}
 			else if inlist(lower("`1'"), "isq", "i2") {
 				if "`hetstats'"!="" {
-					local Isq = `hetstats'["Isq", `col']
+					// Modified July 2024 to avoid errors with Stata 15 and older
+					// "matrix operators that return matrices not allowed in this context
+					local r = rownumb(`hetstats', "Isq")
+					local Isq = `hetstats'[`r', `col']
 				}
 				else local Isq = max(0, 100*(`Q' - `Qdf') / `Q')
 				if substr(`"`2'"', 1, 1) == `"%"' local fmt : copy local 2
@@ -3637,7 +3694,10 @@ program define ParseHetInfo, sclass
 			}
 			else if inlist(lower("`1'"), "h2m", "hsqm") {
 				if "`hetstats'"!="" {
-					local HsqM = `hetstats'["HsqM", `col']
+					// Modified July 2024 to avoid errors with Stata 15 and older
+					// "matrix operators that return matrices not allowed in this context
+					local r = rownumb(`hetstats', "HsqM")				
+					local HsqM = `hetstats'[`r', `col']
 				}
 				else local HsqM = `Isq' / (100 - `Isq')
 				if substr(`"`2'"', 1, 1) == `"%"' local fmt : copy local 2

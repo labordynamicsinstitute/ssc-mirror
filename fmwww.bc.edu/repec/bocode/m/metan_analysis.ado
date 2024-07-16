@@ -2,7 +2,11 @@
 * Subroutine to run the actual meta-analysis modelling
 * Called by metan.ado; do not run directly
 
-*! version 4.08  David Fisher  17jun2024
+*!  version 4.08  David Fisher  17jun2024
+*! version 4.08.1  David Fisher  12jul2024
+
+* version 4.08.1
+// Minor bug fixes to allow programs to run without error under Stata versions 15 and older
 
 
 program define metan_analysis, rclass
@@ -1517,8 +1521,12 @@ program define PerformMetaAnalysis, rclass sortpreserve
 		scalar `Qbet' = 0
 		local nby1 = 0					// alternative `nby' reflecting the number of subgroups *with data in*
 		forvalues i = 1 / `nby' {		// use `nby' so that the sum becomes missing if any subgroups are missing
-			scalar `eff_i'    = `bystats'["eff",    `i']
-			scalar `se_eff_i' = `bystats'["se_eff", `i']
+			// Modified July 2024 to avoid errors with Stata 15 and older
+			// "matrix operators that return matrices not allowed in this context
+			local r = rownumb(`bystats', "eff")
+			scalar `eff_i'    = `bystats'[`r', `i']
+			local r = rownumb(`bystats', "se_eff")
+			scalar `se_eff_i' = `bystats'[`r', `i']
 			scalar `Qbet' = `Qbet' + ((`eff_i' - `avg_eff') / `se_eff_i')^2
 			if !missing(`eff_i'/`se_eff_i') local ++nby1
 		}

@@ -1,8 +1,11 @@
-*! version 1.3  16apr2024  Gorkem Aksaray <aksarayg@tcd.ie>
+*! version 1.3.1  8jul2024  Gorkem Aksaray <aksarayg@tcd.ie>
 *! Restyle LaTeX tables exported by the collect suite of commands
 *! 
 *! Changelog
 *! ---------
+*!   [1.3.1]
+*!     - Automatic conversion of hyphens as minus signs was causing special
+*!       characters to disappear. This is now fixed.
 *!   [1.3]
 *!     - Added three size options: pt() for setting the size of the main
 *!       font used in the document, papersize() for setting the paper size,
@@ -331,7 +334,8 @@ program styletextab, rclass
                 local newline = ///
                     regexreplaceall(`"`macval(line)'"', ///
                                     "\\multicolumn{[0-9]}{[|]?[clr][|]?}{-[^\}]*}", ///
-                                    "\\multicolumn{"+regexs(1)+"}{"+regexs(2)+"}{\\$-\\$"+regexs(3)+"}")
+                                    " \multicolumn{"+regexs(1)+"}{"+regexs(2)+"}{\\$-\\$"+regexs(3)+"}", ///
+                                    0, 1)
                 file write `tf' `"`newline'"' _n
             }
             else {

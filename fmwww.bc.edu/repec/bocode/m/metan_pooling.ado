@@ -8,9 +8,13 @@
 // - Content of subroutine metan_pooling.Heterogi is identical to that of subroutine metan.Heterogi
 // - Content of Mata subroutines is identical to that of compiled Mata library lmetan.mlib
 
-*! version 4.08  17jun2024
+*! version 4.08  David Fisher  17jun2024
+*! version 4.08.1  David Fisher  12jul2024
 *! Current version by David Fisher
 *! Previous versions by Ross Harris and Michael Bradburn
+
+* version 4.08.1
+// Minor bug fixes to allow programs to run without error under Stata versions 15 and older
 
 
 program define metan_pooling, rclass
@@ -1797,10 +1801,8 @@ real scalar ML_skov(real scalar b, real colvector yi, real colvector vi, real co
 		u = U(yi, wi, wi_b, eff, b)
 
 		// Improved (Skovgaard-corrected) signed likelihood statistic
-		if (callersversion()>=16.0) {	// make use of ln1p, for possible improvement in numerical stability when u very close to sll
-			sll = sll + (1/sll)*ln1p( (sll-u) / (-sll))
-		}
-		else sll = sll + (1/sll)*ln(u/sll)
+		// (original formula, not using ln1p() function as this was only introduced in Stata 16)
+		sll = sll + (1/sll)*ln(u/sll)
 	}
 	
 	sll = sign(eff - b)*sll

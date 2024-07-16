@@ -1,4 +1,4 @@
-*! version 16.19   3.6.2024   John Casterline
+*! version 16.21   15.7.2024   John Casterline
 capture program drop mswtable
 program define mswtable, rclass
 version 16
@@ -20,7 +20,7 @@ syntax , COLWidth(string)
            est_stat5(string)
            est_star(string)  est_se  est_se(string)  est_no(string) 
            est_means(string)  est_mat(string)
-           title(string) SUBTitle(string)
+           title(string asis) SUBTitle(string asis)
            note1(string) note2(string) note3(string) note4(string) note5(string)
            note6(string) note7(string) note8(string) note9(string)
            font(passthru)
@@ -183,9 +183,9 @@ if "`tabname'" == ""  {
 
 local FONT "Cambria"
 local t_fsize  "12.5"    //  title
-local s_fsize  "12.5"    //  sub-title
+local s_fsize  "12"      //  sub-title
 local l_fsize  "12"      //  column labels, row labels
-local b_fsize  "12"      //  body of table
+local b_fsize  "11.5"    //  body of table
 local st_fsize "11"      //  statistics 
 local ex_fsize "11"      //  extra information
 local se_fsize "10.5"    //  standard errors (including t and p)
@@ -211,9 +211,9 @@ if `"`font'"' ~= ""  {                     //  font is reset
       local l_fsize  "`font3'"             //  column labels, row labels
       local b_fsize  "`font4'"             //  body of table
       local b_fsizeX = real("`b_fsize'")
-      local st_fsize = `b_fsizeX' - 1.0    //  statistics
-      local ex_fsize = `b_fsizeX' - 1.0    //  extra information
-      local se_fsize = `b_fsizeX' - 1.5    //  standard errors (including t and p)
+      local st_fsize = `b_fsizeX' - 0.5    //  statistics
+      local ex_fsize = `b_fsizeX' - 0.5    //  extra information
+      local se_fsize = `b_fsizeX' - 1.0    //  standard errors (including t and p)
       local ci_fsize = `b_fsizeX' - 2.0    //  confidence intervals
       local a_fsize  = `b_fsizeX' - 1.5    //  asterisks
       local n_fsize  "`font5'"             //  notes
@@ -230,6 +230,7 @@ if "`font'"=="Arial"        {
 if "`font'"=="LM Roman 12"  {
    local inflate = 1.30
 }
+local bf016 = `b_fsize'*(2/12)
 local bf025 = `b_fsize'*(3/12)
 local bf033 = `b_fsize'*(4/12)
 local bf044 = `b_fsize'*(5/12)
@@ -249,6 +250,7 @@ local bf150 = `b_fsize'*(18/12)*`inflate'
 local bf167 = `b_fsize'*(20/12)*`inflate'
 local bf182 = `b_fsize'*(22/12)*`inflate'
 local bf250 = `b_fsize'*(30/12)*`inflate'
+local bf300 = `b_fsize'*(36/12)*`inflate'
 local bf375 = `b_fsize'*(45/12)*`inflate'
 
 
@@ -326,12 +328,32 @@ if "`rst_set'" ~= ""           {
 
 *  pt_set
 
-local pt_format "underline"
-if "`pt_set'" == "bold"    {
-   local pt_format "bold"
+local pt_format " "
+local pt_just "left"
+if "`pt_set'"=="" |        ///
+   ("`pt_set'"=="left" |  "`pt_set'"=="center" | "`pt_set'"=="right")   {
+   local pt_format "underline"
 }
-if "`pt_set'" == "none"    {
-   local pt_format ""
+if "`pt_set'" ~= ""            {
+   tokenize "`pt_set'", parse(" ,")
+   while "`1'" ~= ""           {
+      if "`1'" == "underline"  {
+         local pt_format "`pt_format' underline"
+      }
+      if "`1'" == "bold"       {
+         local pt_format "`pt_format' bold"
+      }
+      if "`1'" == "none"       {
+         local pt_format ""
+      }
+      if "`1'" == "center"     {
+         local pt_just "center"
+      }
+      if "`1'" == "right"      {
+         local pt_just "right"
+      }
+      mac shift
+   }
 }
 
 
@@ -348,7 +370,48 @@ while `"`1'"' ~= ""        {
    }
    mac shift
 }
- 
+
+
+
+*  title & subtitle
+
+if `"`title'"' ~= ""           {
+   local title_just "center"
+   tokenize `"`title'"', parse(" ,")
+   while "`1'" ~= ""           {
+      if "`1'" ~= ","          {
+         if "`1'"~="left" & "`1'"~="center" & "`1'"~="right"  {
+            local TITLE "`1'"
+         } 
+         if "`1'" == "left"    {
+            local title_just "left"
+         }
+         if "`1'" == "right"   {
+            local title_just "right"
+         }
+      }
+      mac shift
+   }
+}
+if `"`subtitle'"' ~= ""             {
+   local sub_just "center"
+   tokenize `"`subtitle'"', parse(" ,")
+   while "`1'" ~= ""           {
+      if "`1'" ~= ","          {
+         if "`1'"~="left" & "`1'"~="center" & "`1'"~="right"  {
+            local SUB "`1'"
+         } 
+         if "`1'" == "left"    {
+            local sub_just "left"
+         }
+         if "`1'" == "right"   {
+            local sub_just "right"
+         }
+      }
+      mac shift
+   }
+}
+
 
 
 * PUTDOCX table:  a few preliminaries
@@ -412,13 +475,13 @@ local n_p = `n_mat' + `n_est'
 
 
 if "`mat1'" ~= ""  {
-   if `n_mat' ~= `n_rt'     {
+   if (`n_mat'~=`n_rt') & "`rt1'"~=""     {
       noi di _n(2) _col(3) in y  "ERROR:  must have equal numbers of mat# and rt#"   _n(1) " "
       exit  
    }
 }
 if "`est1'" ~= ""  {
-   if `n_est' ~= `n_rt'  {
+   if (`n_est' ~= `n_rt') & "`rt1'"~=""   {
       noi di _n(2) _col(3) in y  "ERROR:  must have equal numbers of est# and rt#"   _n(1) " "
       exit  
    }
@@ -1235,7 +1298,7 @@ if "`BE'" == "beside"            {
       }
       if "`STPC'" == "ci"       {
          if "`cw`k''" ~= ""     {
-            local cwX = 1.8*`cw`k''
+            local cwX = 1.5*`cw`k''
             local colwidth`c' "`cwX'in"     
          }
       }
@@ -1266,7 +1329,7 @@ forvalues c = 1/`col_L'                              {
 
 
 *  format of data columns (number of decimals)  ( allowing extra columns for est_star and est_se "beside" )
-*  default = %8.1f
+*  default = %10.1fc
 
 if "`sdec'" ~= ""         {
    tokenize "`sdec'", parse(" ,")
@@ -1290,10 +1353,10 @@ if "`sdec'" ~= ""         {
 if "`est_star'"=="" & "`BE'"~="beside"  {
    local k = 1
    forvalues c = `col_F'/`col_L'        {
-      local nform`c' "%8.1f"
+      local nform`c' "%10.1fc"
       if "`sdec'" ~= ""                 {
          if "`nf`k''" ~= ""             {
-            local NFORM "%8.`nf`k''f"
+            local NFORM "%10.`nf`k''fc"
          }
          local nform`c' "`NFORM'"
       }
@@ -1328,10 +1391,10 @@ if "`est_star'"=="" & "`BE'"~="beside"  {
 if "`est_star'" ~= ""                   {
    local k = `col_DF' - 1
    forvalues c = `col_DF'(2)`col_DL'    {
-      local nform`c' "%8.1f"
+      local nform`c' "%10.1fc"
       if "`sdec'" ~= ""                 {
          if "`nf`k''" ~= ""             {
-            local NFORM "%8.`nf`k''f"
+            local NFORM "%10.`nf`k''fc"
          }
          local nform`c' "`NFORM'"
       }
@@ -1364,10 +1427,10 @@ if "`est_star'" ~= ""                   {
    if `col_MF' > 0                      {
       local k = cond("`ADD_SIDE'"=="right",`n_colD' + 1,1)
       forvalues c = `col_MF'/`col_ML'   {
-         local nform`c' "%8.1f"
+         local nform`c' "%10.1fc"
          if "`sdec'" ~= ""              {
             if "`nf`k''" ~= ""          {
-               local NFORM "%8.`nf`k''f"
+               local NFORM "%10.`nf`k''fc"
             }
             local nform`c' "`NFORM'"
          }
@@ -1379,10 +1442,10 @@ if "`est_star'" ~= ""                   {
 if "`BE'" == "beside"                   {
    local k = `col_DF' - 1
    forvalues c = `col_DF'(2)`col_DL'    {
-      local nform`c' "%8.1f"
+      local nform`c' "%10.1fc"
       if "`sdec'" ~= ""                 {
          if "`nf`k''" ~= ""             {
-            local NFORM "%8.`nf`k''f"
+            local NFORM "%10.`nf`k''fc"
          }
          local nform`c' "`NFORM'"
       }
@@ -1415,10 +1478,10 @@ if "`BE'" == "beside"                   {
    if `col_MF' > 0                      {
       local k = cond("`ADD_SIDE'"=="right",`n_colD' + 1,1)
       forvalues c = `col_MF'/`col_ML'   {
-         local nform`c' "%8.1f"
+         local nform`c' "%10.1fc"
          if "`sdec'" ~= ""              {
             if "`nf`k''" ~= ""          {
-               local NFORM "%8.`nf`k''f"
+               local NFORM "%10.`nf`k''fc"
             }
             local nform`c' "`NFORM'"
          }
@@ -1467,8 +1530,7 @@ if "`est_se'"~="" & "`BE'"=="beside"  {
 #d ;
 putdocx table `tabname' = mat(`mat'),
    rownames colnames 
-   nformat(%6.2f) 
-   layout(autofitcontents)
+   layout(autofitwindow)
    width(`WIDTH'in)
    `cellmargL' `cellmargR' `cellmargB'
    border(all, nil);
@@ -2610,9 +2672,20 @@ forvalues p = 1/`n_p'   {
       if "`pt1'" ~= ""  {
          putdocx table `tabname'(`row_F`p'',.), addrows(1,before)
          putdocx table `tabname'(`row_F`p'',1), colspan(`col_L')
-         putdocx table `tabname'(`row_F`p'',.), height(`bf167'pt, exact)
-         putdocx table `tabname'(`row_F`p'',1) = ("`pt`p''"),       ///
-            font(`font', `l_fsize') `pt_format'  halign(left) valign(center)    
+         tokenize "`pt`p''", parse("\")
+         if "`3'" == ""        {
+            putdocx table `tabname'(`row_F`p'',.), height(`bf167'pt, exact)
+            putdocx table `tabname'(`row_F`p'',1) = ("`1'"),                      ///
+                    font(`font', `l_fsize') `pt_format' halign(`pt_just') valign(center)   
+         }
+         if "`3'" ~= ""        {
+            local pt_formatX = cond(strltrim("`pt_format'")~="underline","`pt_format'","")
+            putdocx table `tabname'(`row_F`p'',.), height(`bf300'pt, exact)
+            putdocx table `tabname'(`row_F`p'',1) = ("`1'"), append linebreak(1)  ///
+                    font(`font', `l_fsize')  `pt_formatX'  halign(`pt_just') valign(center)   
+            putdocx table `tabname'(`row_F`p'',1) = ("`3'"),                      ///
+                    font(`font', `l_fsize')  `pt_format'  halign(`pt_just') valign(center) append
+         }
          local row_F   = `row_F'  + 1                //  first data/coeff row
          local row_L   = `row_L'  + 1                //  last data/coeff row
          local row_LS  = `row_LS' + 1                //  last data/coeff/stat row
@@ -2744,9 +2817,20 @@ forvalues p = 1/`n_p'   {
       if "`pt`p''" ~= ""  {
          putdocx table `tabname'(`row_F`p'',.), addrows(1,before)  border(bottom, nil)
          putdocx table `tabname'(`row_F`p'',1), colspan(`col_L')
-         putdocx table `tabname'(`row_F`p'',.), height(`bf167'pt, exact)
-         putdocx table `tabname'(`row_F`p'',1) = ("`pt`p''"),          ///
-            font(`font', `l_fsize')  `pt_format'  halign(left)  valign(center)  
+         tokenize "`pt`p''", parse("\")
+         if "`3'" == ""        {
+            putdocx table `tabname'(`row_F`p'',.), height(`bf167'pt, exact)
+            putdocx table `tabname'(`row_F`p'',1) = ("`1'"),                      ///
+                    font(`font', `l_fsize') `pt_format' halign(`pt_just') valign(center)   
+         }
+         if "`3'" ~= ""        {
+            local pt_formatX = cond(strltrim("`pt_format'")~="underline","`pt_format'","")
+            putdocx table `tabname'(`row_F`p'',.), height(`bf300'pt, exact)
+            putdocx table `tabname'(`row_F`p'',1) = ("`1'"), append linebreak(1)  ///
+                    font(`font', `l_fsize')  `pt_formatX'  halign(`pt_just') valign(center)   
+            putdocx table `tabname'(`row_F`p'',1) = ("`3'"),                      ///
+                    font(`font', `l_fsize')  `pt_format'  halign(`pt_just') valign(center) append
+         }
          local row_L   = `row_L'   + 1              //  last data/coeff row
          local row_LS  = `row_LS'  + 1              //  last data/coeff/stat row
          local row_LSE = `row_LSE' + 1              //  last data/coeff/stat/extra row            
@@ -2874,7 +2958,6 @@ if `"`cst11'"' ~= ""    {
 *  (syntax assumes three values in each cst#, separated by comma or space)
 *  (syntax allows for two lines maximum per piece of text, separated by slashes)
   
-   local cstitleht "single"
    forvalues s = 5(-1)1        {
       if `"`cst1`s''"' ~= ""   {
          local CST ""
@@ -2935,7 +3018,6 @@ if `"`cst1'"' ~= ""  {
 *  (syntax assumes three values in each cst#, separated by comma or space)
 *  (syntax allows for two lines maximum per piece of text, separated by slashes)
   
-   local cstitleht "single"
    forvalues s = 10(-1)1  {
       if `"`cst`s''"' ~= ""   {
          local CST ""
@@ -3011,27 +3093,55 @@ if "`slim'" ~= ""     {
 
 
 
-*  title and subtitle (including linespace after)
+*  title and subtitle (insert linespaces for separation - between and after)
 
-if "`title'" ~= ""           {
+if "`TITLE'" ~= ""       {
    putdocx table `tabname'(1,.), addrows(1,before)
    putdocx table `tabname'(1,1), colspan(`col_L')
-   putdocx table `tabname'(1,1) = ("`title'"), font(`font', `t_fsize')   
-   putdocx table `tabname'(1,1), halign(center) valign(center) 
-   if "`slim'" == ""         {
-      if "`subtitle'" == ""  {
+   tokenize "`TITLE'", parse("\")
+   if "`3'" == ""        {
+      putdocx table `tabname'(1,1) = ("`1'"), font(`font', `t_fsize')   
+      putdocx table `tabname'(1,1), halign(`title_just') valign(center) 
+   }
+   if "`3'" ~= ""        {
+      putdocx table `tabname'(1,1) = ("`1'"), font(`font', `t_fsize')     ///
+              halign(`title_just') valign(center) append linebreak(1)
+      putdocx table `tabname'(1,1) = ("`3'"), font(`font', `t_fsize')     ///
+              halign(`title_just') valign(center) append
+   }
+   local substart1 "1"
+   local substart2 "2"
+   local substart3 "3"
+   if "`slim'" == ""     {
+      if "`SUB'" ~= ""   {
+         putdocx table `tabname'(1,.), addrows(1,after)
+         putdocx table `tabname'(2,.), height(`bf016'pt, exact)
+         local substart1 "2"
+         local substart2 "3"
+         local substart3 "4"
+      }
+      if "`SUB'" == ""   {
          putdocx table `tabname'(1,.), addrows(1, after)
          putdocx table `tabname'(2,.), height(`bf092'pt, exact) 
       }
    }
-   if "`subtitle'" ~= ""     {
-      putdocx table `tabname'(1,.), addrows(1, after)
-      putdocx table `tabname'(2,1), colspan(`col_L')
-      putdocx table `tabname'(2,1) = ("`subtitle'"), font(`font', `s_fsize')  
-      putdocx table `tabname'(2,1), halign(center) valign(center)
-      if "`slim'" == ""      {
-         putdocx table `tabname'(2,.), addrows(1, after) 
-         putdocx table `tabname'(3,.), height(`bf092'pt, exact) 
+   if "`SUB'" ~= ""      {
+      putdocx table `tabname'(`substart1',.), addrows(1, after)
+      putdocx table `tabname'(`substart2',1), colspan(`col_L')
+      tokenize "`SUB'", parse("\")
+      if "`3'" == ""     {
+         putdocx table `tabname'(`substart2',1) = ("`1'"), font(`font', `s_fsize')   
+         putdocx table `tabname'(`substart2',1), halign(`sub_just') valign(center) 
+      }
+      if "`3'" ~= ""     {
+         putdocx table `tabname'(`substart2',1) = ("`1'"), font(`font', `s_fsize')     ///
+                 halign(`sub_just') valign(center) append linebreak(1)
+         putdocx table `tabname'(`substart2',1) = ("`3'"), font(`font', `s_fsize')     ///
+                 halign(`sub_just') valign(center) append
+      }
+      if "`slim'" == ""  {
+         putdocx table `tabname'(`substart2',.), addrows(1, after) 
+         putdocx table `tabname'(`substart3',.), height(`bf083'pt, exact) 
       }
    }
 }

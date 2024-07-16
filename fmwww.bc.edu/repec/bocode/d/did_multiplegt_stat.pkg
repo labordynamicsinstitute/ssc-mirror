@@ -1,0 +1,39 @@
+d 'DID_MULTIPLEGT_STAT': module for heterogeneity-robust difference-in differences (DID) estimators
+d
+d     Estimation of heterogeneity-robust difference-in differences
+d (DID) estimators, with a binary, discrete, or continuous
+d treatment or instrument, in designs with stayers, assuming that
+d past treatments do not affect the current outcome. 
+d
+d KW: DiD
+d KW: difference in differences
+d KW: heterogeneity
+d
+d Requires: Stata version 12 
+d
+d Distribution-Date: 20240715
+d
+d Author:  Clément de Chaisemartin,  Economics Department, Sciences Po
+d Support: email  chaisemartin.packages@@gmail.com
+d
+d Author:  Diego Ciccia, Economics Department, Sciences Po
+d Support: email chaisemartin.packages@@gmail.com
+d
+d Author:   Xavier D'Haultfoeuille, CREST-ENSAE
+d Support: email   xavier.dhaultfoeuille@@ensae.fr
+d
+d Author:  Felix Knau, Economics Department, Sciences Po
+d Support: email chaisemartin.packages@@gmail.com
+d
+d Author:  Felix Pasquier, CREST-ENSAE
+d Support: email chaisemartin.packages@@gmail.com
+d
+d Author:    Doulo Sow, CREST-ENSAE
+d Support: email chaisemartin.packages@@gmail.com
+d
+d Author:   Gonzalo Vazquez-Bare, UCSB
+d Support: email chaisemartin.packages@@gmail.com
+d
+f did_multiplegt_stat.ado
+f did_multiplegt_stat.sthlp
+f ../g/gazoline_did_multiplegt_stat.dta 

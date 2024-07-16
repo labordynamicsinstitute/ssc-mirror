@@ -1,5 +1,5 @@
 {smcl}
-{* 3jun2024}{...}
+{* 15july2024}{...}
 {hi:help mswtable}
 {hline}
 
@@ -92,7 +92,7 @@
   {p_end}
 {synopt :{opt pline}}draw line separating panels
   {p_end}
-{synopt :{opth pt_set(string)}}panel titles: set font (bold, underline, neither)
+{synopt :{opth pt_set(string)}}panel titles: set font (bold, underline, neither) and justification
   {p_end}
 {synopt :{opth pt#(string)}}panel titles, panel-specific
   {p_end}
@@ -127,11 +127,11 @@
 {pstd} {cmd:mswtable} will construct a table with multiple panels (five panels maximum).  See discussion below of multi-panel syntax.{p_end}
 
 {pstd} The constructed table can be saved as a MSWord table (option {bf:outfile}).
-Alternatively, if {bf:outfile} is {ul:not} specified but {bf:tabname} instead is specified,
-the table (as named in {bf:tabname}) is available for further development and polishing via {cmd:putdocx table}.{p_end}
+Alternatively, if {bf:outfile} is {ul:not} specified but {bf:tabname} instead, the
+table (as named in {bf:tabname}) is available for further development and polishing via {cmd:putdocx table}.{p_end}
 
 {pstd} {cmd:mswtable} applies the table aesthetics of the author (e.g. line spacing, justification).
-Some of this is modifiable, most is not.  (Note that option {cmd:slim} eliminates lines that are inserted for aesthetics only.){p_end}
+Some of this is modifiable, most is not.  (Note that option {cmd:slim} eliminates lines that are inserted for visual appearance only.){p_end}
 
 
 {p 1}{bf:{ul on}Options{ul off}}{p_end}
@@ -147,15 +147,15 @@ This includes column for row titles (first column on left).
 
 {phang} {opth mat(string)} identifies the input matrix.{p_end}
 
-{phang} {opth est(string)} identifies equations that have been stored via {cmd:estimates store}.  
-The equation names are separated by comma or space.  
-Note that {cmd:estimates store} can be applied after {cmd:margins} if the {cmd:post} option is specified in the {cmd:margins} command.{p_end}
+{phang} {opth est(string)} identifies equations that have been stored via {cmd:estimates store}.  Separate the names  
+by comma or space.  Note that {cmd:estimates store} can be 
+applied after {cmd:margins} if the {cmd:post} option is specified in the {cmd:margins} command.{p_end}
 {pmore} Examples:  {cmd:est(mod1 mod2 mod3 mod4)}{p_end}
 {p 19}             {cmd:est(eq1,eq2,eq3)}{p_end}
 
 {phang} {opth est_stat(string)} requests equation "statistics" (N, aic, etc).  
 These are placed at the bottom of the table, following the coefficients.  
-(Some are renamed, e.g. "r2_a" becomes "Adjusted R-squared".  For further renaming, insert at lines 277ff in mswtable.ado.  Also, note that statistics names can be included in row titles; see {cmd:rt} below.){p_end}
+(Some are renamed, e.g. "r2_a" becomes "Adjusted R-squared".  For further renaming, insert at lines 279ff in mswtable.ado.  Also, note that statistics names can be included in row titles; see {cmd:rt} below.){p_end}
 {pmore} Contents of {cmd:est_stat} are as follows:{p_end}
 {p 11 16} (i){space 2}name of the statistic (Stata naming convention){p_end}
 {p 11 16} (ii){space 1}number of decimal places for the statistic{p_end}
@@ -177,7 +177,7 @@ In the MSWord table, the first p-value will be denoted by one asterisk, the seco
 {pmore} (i){space 3}"se" or "t" or "p" or "ci" or "ci()", to request:{p_end}
 {p 14 19}        "se"{space 4}standard error{p_end}
 {p 14 19}        "t"{space 5}t-statistic (ratio of coefficient to standard error){p_end}
-{p 14 19}        "p"{space 5}p-value for t-stat (two-sided test){p_end}
+{p 14 19}        "p"{space 5}p-value for t-statistic (two-sided test){p_end}
 {p 14 19}        "ci"{space 4}confidence interval (95%){p_end}
 {p 14 19}        "ci()"{space 2}confidence interval, with p-value and size of font within parentheses{p_end}
 {p 8 14} (ii){space 2}"below" or "beside" - place below or immediately to the right of the coefficient{p_end}
@@ -208,25 +208,31 @@ The default is one decimal place.{p_end}
 {phang} {opth font(string)} identifies the name of the font (must be font available in MSWord) and font sizes.
 Current default font is Cambria, with font sizes (in points):{p_end}
 {p 11} 12.5{space 2}title{p_end}
-{p 11} 12.5{space 2}subtitle{p_end}
+{p 11} 12{space 4}subtitle{p_end}
 {p 11} 12{space 4}column and row titles{p_end}
-{p 11} 12{space 4}body of table{p_end}
+{p 11} 11.5{space 2}body of table{p_end}
 {p 11} 10.5{space 2}notes{p_end}
-{p 11 11} Fonts for statistics (N, aic, etc) and "extra" information are 1.0-point less than body-of-table font; these two settings (and other fonts) can be modified at lines 184ff in mswtable.ado.{p_end}
+{p 11 11} Fonts for statistics (N, aic, etc) and "extra" information are 0.5-point less than body-of-table font; font for
+standard errors (including t and p) is 1.0-point less than body-of-table font.  These font settings can be modified
+at lines 184ff in mswtable.ado.{p_end}
   
 {p 8}"string" can take two forms:{p_end}
 {p 11} (i){space 2}name of font only{p_end}
-{p 11} (ii){space 1}name of font and font sizes{p_end}
-{pmore} If (ii), then the name of font is specified followed by the five font sizes; {ul:all five} sizes must be specified and ordered as shown above.  Separate the elements by comma or space.  Some 
-font names are multiple words; place these names within quotation marks.{p_end}
+{p 11} (ii){space 1}name of font and font sizes (in points){p_end}
+{pmore} If (ii), then the name of font is specified followed by the five font sizes; {ul:all five} sizes must be specified
+and ordered as shown above.  Separate the elements by comma or space.  Some font names are multiple words; place these
+names within quotation marks.{p_end}
 
-{pmore} Examples:  {cmd:font(Garamond,12.5,12,12,11.5,10.5)}{p_end}
+{pmore} Examples:  {cmd:font(Garamond,12.5,12,12,12,10.5)}{p_end}
 {p 19}             {cmd:font("Lucida Sans")}{p_end}
 {p 19}             {cmd:font(Arial 12 12 11 10 10)}{p_end}
 
-{phang} {opth title(string)} adds a title above the table, center-justified.  
-{opth subt:itle(string)} adds a subtitle (further line under the title).  
-The title (and subtitle) are separated from remainder of table by one empty line.{p_end}
+{phang} {opth title(string)} adds a title above the table, and {opth subt:itle(string)} adds
+a subtitle (further line under the title).  The title (and subtitle) are separated from remainder
+of table by one empty line.  Place title/subtitle text within quotation marks.  Multiple
+lines in either title is indicated by using "\" as separator; maximum is two lines.  After text, 
+horizontal justification optionally can be specified as "left", "center" (default), or
+"right"; separate this option from title/subtitle text with comma or space.{p_end}
 
 {phang} {opth note1(string)} . . . {opth note9(string)} adds notes to the foot of the table (maximum is nine).  
 These should be text in quotes.  
@@ -254,9 +260,11 @@ Contents of {cmd:cst#} are as follows, in this order and separated by commas or 
 {p 11 17} (i){space 3}text for title, in quotes{p_end}
 {p 11 17} (ii){space 2}starting column for spanning title{p_end}
 {p 11 17} (iii){space 1}number of columns to be spanned{p_end}
-{pmore} "starting column" refers to the data matrix; columns added for {cmd:est_means} or {cmd:est_mat} are counted, 
-but row title column (1st column) and columns inserted for {cmd:est_star} or {cmd:est_se} are {ul:not} counted.  
-Multiple lines in the title are indicated by using "\" as separator in the text (item (i)); maximum is two lines.{p_end}
+{pmore}Item(i):{space 2}multiple lines in the title are indicated by using "\" as separator in the text; maximum is
+two lines.{p_end}
+{pmore}Item(ii):{space 1}"starting column" refers to the data matrix; columns added for {cmd:est_means} or {cmd:est_mat}
+are counted, but row title column (1st column) and columns inserted for {cmd:est_star} or {cmd:est_se} are {ul:not} 
+counted.{p_end}
 {pmore} Examples:  {cmd:cst1("Means" 1 3)}{p_end}
 {p 19}             {cmd:cst2("Demographic\Variables",2,3)}{p_end}
 
@@ -280,11 +288,11 @@ If {cmd:rt} is not specified, default is input matrix row names.{p_end}
 {pmore} Separate with comma or space.{p_end}
 {pmore} Example:  {cmd:rst_set(bold,indent)}{p_end}
 
-{phang} {opth rst1(string)} . . . {opth rst16(string)} are row titles for multiple rows.  
-The rows might be, for example, categories of a variable (e.g. for place of residence, "rural" "small city" "large city").  
-The row titles are inserted above the set of rows - text as specified, with the remainder of the row blank.  
-The spanning title may be bold or underlined, or neither (default); see {cmd:rst_set}.  
-Each {cmd:rst#} must consist of the following, separated by commas or spaces:{p_end}
+{phang} {opth rst1(string)} . . . {opth rst16(string)} are row-spanning titles, i.e. titles that apply to multiple
+rows.  The rows might be, for example, categories of a variable (e.g. for place of residence, "rural" "small city"
+"large city").  The row-spanning titles are inserted above the rows to which they apply - text as specified, with
+the remainder of the row blank.  The spanning title may be bold or underlined, or neither 
+(default); see {cmd:rst_set}.  Each {cmd:rst#} must consist of the following, separated by commas or spaces:{p_end}
 {p 11 16} (i){space 3}text for title, in quotes (row spanning titles cannot contain multiple lines){p_end}
 {p 11 16} (ii){space 2}starting row for spanning title{p_end}
 {p 11 16} (iii){space 1}number of rows encompassed by spanning title{p_end}
@@ -476,15 +484,18 @@ If only {cmd:est_stat} is specified, then the same set of statistics is provided
 {phang} {opt pline} draws single lines separating the panels.  
 The line is drawn immediately above the panel title (if any).{p_end}
 
-{phang} {opth pt_set(string)} formats the font for the panel titles (see {cmd:pt#}).  
-Options are "bold", "underline" (default), and "none".{p_end}
+{phang} {opth pt_set(string)} formats the panel titles (see {cmd:pt#}):{p_end}
+{p 11 15}{it:font}:  "bold", "underline" (default), "none"{p_end}
+{p 11 15}{it:horizontal justification}:  "left" (default), "center", "right"{p_end}
+{p 8 8} Both font and justification can be requested, and both "underline" and "bold".  Separate with comma or space.{p_end}
 
 {phang} {opth pt1(string)} . . . {opth pt5(string)} are text labels for the panels.  
 The suffix indexes the panel.  
 Text should be enclosed in quotes.  
-Multiple lines are {ul:not} allowed.  
-In the MSWord table, each panel title is inserted as a separate row, and by default is underlined (see {cmd:pt_set}).  
-Panel titles are optional: titles may be provided for all, some, or none of the panels.{p_end}
+Multiple lines are allowed, using "\" as separator; maximum is two lines.  
+In the MSWord table, each panel title is inserted as a separate row, and by default is underlined and
+left-justified (see {cmd:pt_set}).  Panel titles are optional: titles may be provided for all, some, 
+or none of the panels.{p_end}
 
 {phang} {opth rt1(string)} . . . {opth rt5(string)} identify text labels for the rows, with the suffix indexing the panel.  
 See {cmd:rt} above.{p_end}
@@ -506,17 +517,17 @@ inserted at the bottom of the table ({ul:not} panel-by-panel), and option {cmd:e
 
 {phang} {opth est_means(string)}.  
 An equation name for {ul:every} panel must be specified, in order.
-These must be consistent with the names in {cmd:est#}.
+These must be consistent with the names in {cmd:est#}.  Separate with comma or space.
 The panel-by-panel equation names follow "left" or "right", unless this is omitted ("left" is default).
 Note that placement "left" or "right" is the same in every panel.{p_end}
 {pmore} Examples:  {cmd:est_means(mod1 mod2 mod3)}{p_end}
 {p 19}             {cmd:est_means(right,eq1_1,eq2_1,eq3_1}}{p_end}
 
 {phang} {opth est_mat(string)}.  
-The matrices must be panel-specific, and ordered from first to last panel.  The panel-by-panel
-matrix names follow "left" or "right", unless this is omitted ("left" is default).
-Note that the placement "left" or "right" is the same in every panel.
-Also note that all {cmd:est_mat} matrices {ul:must} have the same number of columns.{p_end}
+The matrices must be panel-specific, and ordered from first to last panel.  Separate with comma or
+space.  The panel-by-panel matrix names follow "left" or "right", unless this is omitted ("left" is
+default).  Note that the placement "left" or "right" is the same in every panel.  Also
+note that all {cmd:est_mat} matrices {ul:must} have the same number of columns.{p_end}
 {pmore} Example:  {cmd:est_mat(right,X1,X2,X3}}{p_end}
 
 
@@ -542,7 +553,7 @@ Also note that all {cmd:est_mat} matrices {ul:must} have the same number of colu
                rt1("`xvars'") rt2("`xvars'")
                pt1("Low fertility (TFR < 4.5)")
                pt2("High fertility (TFR >= 4.5)")
-               pt_set(bold)
+               pt_set(center,bold)
                pline
                outfile("$D/analysis/tab3", replace);
 
@@ -550,8 +561,8 @@ Also note that all {cmd:est_mat} matrices {ul:must} have the same number of colu
 {smcl}
 {p 1}{bf:{ul on}Technical odds and ends{ul off}}{p_end}
 
-{pstd} {it:Cell justification} (horizontal):{p_end}
-{p 8 10} - row titles (first column on left) and notes are left-justified;{p_end}
+{pstd} {it:Cell justification} (horizontal), defaults:{p_end}
+{p 8 10} - row titles (first column on left), panel titles, and notes are left-justified;{p_end}
 {p 8 10} - title/subtitle and column-spanning titles are center-justified;{p_end}
 {p 8 10} - remaining columns are right-justified: column titles, all data cells,
 and row titles for the rows at the foot of the table (statistics, extra info){p_end}
@@ -569,7 +580,7 @@ Although MSWord does not always perfectly comply.
 {p 8 10} - p-values: three decimal points{p_end}
 {p 8 10} - confidence intervals: same as coefficients (see {cmd:sdec}){p_end}
 {pmore} {it:Font sizes}:{p_end}
-{p 8 10} - standard errors, t-statistic, p-value: 1.5-point less than body-of-table font{p_end}
+{p 8 10} - standard errors, t-statistic, p-value: 1.0-point less than body-of-table font{p_end}
 {p 8 10} - confidence interval: 2.0-point less than body-of-table font (but can be adjusted in "ci()"){p_end}
 {p 10 10}These two settings (and other fonts) can be modified at lines 184ff in mswtable.ado.{p_end}
 
