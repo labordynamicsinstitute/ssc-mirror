@@ -1,79 +1,125 @@
-*! version 2.0.0 07jan2014 Daniel Klein
-
-pr pwmci
-	vers 12.1
-	
-	syntax anything(id = "arguments") ///
-	[, PROCedure(passthru) MCOMPare(passthru) ///
-	Level(cilevel) PValues noTable ///
-	CFORMAT(passthru) PFORMAT(passthru) SFORMAT(passthru) ]
-	
-	// check args
-	foreach par in ( ) [ ] {
-		loc anything : subinstr loc anything "`par'" " " ,all
-	}
-	numlist "`anything'" ,min(9)
-	loc nargs : word count `anything'
-	if (mod(`nargs', 3)) {
-		di as err "wrong number of arguments"
-		e 198
-	}
-	loc k = `nargs'/3
-	
-	// procedure request
-	if ("`procedure'`mcompare'" == "") loc procedure c gh t2
-	else PwmciGetProc ,`procedure' `mcompare'
-	
-	// get stats
-	tempname stats
-	mat `stats' = J(`k', 3, .)
-	token `anything'
-	loc row 0
-	forv j = 1(`k')`nargs' {
-		loc ++row
-		conf integer n ``j''
-		mat `stats'[`row', 1] = ``j''
-		mat `stats'[`row', 2] = ``= `j' + 1''
-		loc j2 = `j' + 2
-		if ((``j2'') < 0) {
-			di as err "standard deviation must be positive"
-			e 498
-		}
-		mat `stats'[`row', 3] = ``j2''
-	}
-	
-	// Mata
-	m : mPwmc(st_matrix("`stats'"), tokens(st_local("procedure")), ///
-	`level', J(1, 1, (1::`k')))
-	
-	// replay r()
-	pwmc , `table' `pvalues' `cformat' `pformat' `sformat'
+*! version 3.0.0  17jul2024
+program pwmci
+    
+    version 12.1
+    
+    syntax anything(id = "arguments") [ , * ]
+    
+    confirm_options_allowed , `options'
+    
+    clean_anything `anything'
+    
+    tempname stats
+    
+    while (`"`anything'"' != "") {
+        
+        gettoken obs anything : anything , match(leftpar) quotes
+        if ("`leftpar'" == "(") {
+            gettoken obs rest : obs , quotes
+            local anything `rest' `anything'
+        }
+        gettoken mean anything : anything , quotes
+        gettoken sd   anything : anything , quotes
+        
+        confirm integer number `obs'
+        confirm         number `mean'
+        confirm         number `sd'
+        
+        if ( (`obs'<=0) | (`sd'<0) ) {
+            
+            if (`obs' <= 0) ///
+                local what observations
+            else ///
+                local what standard deviation
+            
+            display as err "`what' must be positive"
+            exit 498
+            
+        }
+        
+        matrix `stats' = nullmat(`stats'), (`mean',`sd',`obs')'
+        
+    }
+    
+    local k = colsof(`stats')
+    if (`k' < 2) ///
+        error 122
+    
+    matrix rownames `stats' = mean sd n
+    
+    return_stats `k' `stats'
+    
+    version `=_caller()' : pwmc , `options'
+    
 end
 
-pr PwmciGetProc
-	syntax [, procedure(str) mcompare(str) ]
-	if ("`mcompare'" != "") {
-		if !inlist("`procedure'", "", "`mcompare'") {
-			di as err "invalid option mcompare()"
-			e 198
-		}
-		loc procedure : copy loc mcompare
-	}
-	loc procedure = lower("`procedure'")
-	loc procedure : list uniq procedure
-	foreach x of loc procedure {
-		if !(inlist("`x'", "c", "gh", "t2")) {
-			di as err `"unknown procedure `x'"'
-			e 198
-		}
-	}
-	c_local procedure `procedure'
-end
-e
 
-2.0.0	07jan2014	no longer do any calculations
-					parse args and do minimal checking
-					call external Mata function
-					call -pwmc- to replay results
-					parentheses around args may be used
-1.0.0	28jan2013	initial release on SCC
+/*  _________________________________________________________________________
+                                                                utilities  */
+
+program confirm_options_allowed
+    
+    syntax                                          ///
+    [ ,                                             ///
+        MCOMPare(passthru)                          ///
+        PROCedure(passthru) /// synonym for mcompare(); no longer documented
+        noADJust     /// synonym for mcompare(noadjust)
+        HC3                                         ///
+        Welch                                       ///
+        Level(cilevel)                              ///
+        CIeffects                                   ///
+        PVEffects                                   ///
+        PValues     /// retained synonym for pveffects; no longer documented
+        EFFects                                     ///
+        CFORMAT(passthru)                           ///
+        PFORMAT(passthru)                           ///
+        SFORMAT(passthru)                           ///
+        noTABle                                     ///
+    ]
+    
+end
+
+
+program clean_anything
+    
+    syntax anything
+    
+    local anything : subinstr local anything "[" "(" , all
+    local anything : subinstr local anything "]" ")" , all
+    
+    local anything : subinstr local anything "(" " (" , all
+    local anything : subinstr local anything ")" ") " , all
+    
+    c_local anything : copy local anything
+    
+end
+
+
+program return_stats , rclass
+    
+    args k stats
+    
+    return visible scalar ks    = `k'*(`k'-1)/2
+    return visible scalar k     = `k'
+    return visible local  cmd     "pwmci"
+    return hidden  matrix stats = `stats'
+    
+end
+
+
+exit
+
+
+/*  _________________________________________________________________________
+                                                              version history
+
+3.0.0   17jul2024   complete rewrite
+                    new options -noadjust-, -hc3-, and -welch-
+                    no longer call external Mata function
+                    return r() results and pass to new pwmc.ado
+2.0.0   07jan2014   no longer do any calculations
+                    parse args and do minimal checking
+                    call external Mata function
+                    call -pwmc- to replay results
+                    parentheses around args may be used
+1.0.0   28jan2013   initial release on SCC

@@ -1,5 +1,5 @@
 {smcl}
-{* 04jul2024}{...}
+{* 17jul2024}{...}
 {vieweralsosee "geoframe" "help geoframe"}{...}
 {vieweralsosee "colorpalette" "help colorpalette"}{...}
 {vieweralsosee "[G-2] graph" "help graph"}{...}
@@ -144,7 +144,10 @@ or
 {p2coldent:* {helpb geoplot##label:{ul:lab}el({it:spec})}}set labels of legend
     keys and related settings
     {p_end}
-{synopt :{helpb geoplot##nolegend:nolegend}}do not consider the layer for the default
+{p2coldent:* {helpb geoplot##gloptions:{ul:gl}options({it:options})}}override options
+    for the symbols created by {helpb geoplot##glegend:glegend()}
+    {p_end}
+{p2coldent:* {helpb geoplot##nolegend:nolegend}}do not consider the layer for the default
     legend
     {p_end}
 
@@ -155,7 +158,7 @@ or
 {synoptline}
 {p 4 6 2}
     * These options are also effective if {help geoplot##zvar:{it:zvar}} is not
-    specified, albeit with different interpretation and syntax. See the
+    specified, possibly with different interpretation and syntax. See the
     descriptions of the options below.
 
 
@@ -167,7 +170,7 @@ or
     background frame behind the map
     {p_end}
 {synopt :{helpb geoplot##grid:grid{sf:[}({it:options}){sf:]}}}draw grid lines on
-    top of the map
+    top of the map (can be repeated)
     {p_end}
 {synopt :{helpb geoplot##tissot:tissot{sf:[}({it:options}){sf:]}}}draw Tissot's
     indicatrices on top of the map
@@ -597,6 +600,22 @@ or
 {p2col:{cmdab:a:rc} [{it:angle}]}section of circle; {it:angle} in [-360,360]
     {p_end}
 {p2col:{cmdab:sl:ice} [{it:angle}]}slice of circle; {it:angle} in [-360,360]
+    {p_end}
+{p2col:{cmdab:l:ine}}horizontal line
+    {p_end}
+{p2col:{cmd:pipe}}vertical line
+    {p_end}
+{p2col:{cmdab:pl:us}}upright cross
+    {p_end}
+{p2col:{cmd:x}}diagonal cross
+    {p_end}
+{p2col:{cmdab:di:amond}}diamond
+    {p_end}
+{p2col:{cmd:v}}V symbol
+    {p_end}
+{p2col:{cmdab:arr:ow}}arrow with open head
+    {p_end}
+{p2col:{cmdab:farr:ow}}arrow with closed head
     {p_end}
 {p2col:{cmdab:star}}5-pointed star
     {p_end}
@@ -1367,8 +1386,7 @@ or
 
 {pmore}
     In case of {cmd:i.}{it:zvar} or {helpb geoplot##discrete:discrete}, or if {it:zvar} is a string variable,
-    the default is
-    {cmd:label("@lab")}. For example, type {cmd:label("@lab (@n)")} to
+    the default is {cmd:label("@lab")}. For example, type {cmd:label("@lab (@n)")} to
     include the number of units in the label. For continuous {help geoplot##zvar:{it:zvar}},
     the default is equivalent to {cmd:label(1 = "[@lb,@ub]" * = "(@lb,@ub]")}. For example,
     type {cmd:label("@lb - @ub")} or {cmd:label("@lab")} to create labels
@@ -1395,6 +1413,13 @@ or
     set the label of the layer's legend key (the default is to use the name of
     the plotted frame as label). The above {it:options} and placeholders are ineffective in this case.
 
+{marker gloptions}{...}
+{phang}
+    {opt gl:options(options)} provides override options to be applied to
+    the symbols created by {helpb geoplot##glegend:glegend()}. Depending on layer
+    type, these are {it:{help area_options}},
+    {it:{help line_options}}, or {it:{help marker_options}}.
+
 {marker nolegend}{...}
 {phang}
     {opt nolegend} requests that the current layer not be considered for the
@@ -1407,6 +1432,11 @@ or
 {phang}
     {opt missing(options)} specifies the styling of elements for which {help geoplot##zvar:{it:zvar}}
     is missing, where {it:options} are as follows.
+
+{phang2}
+    Standard rendering options depending on layer type, such as {cmd:color()},
+    {cmd:lwidth()}, {cmd:lpattern()}, etc. In case of {helpb geoplot##area:area},
+    the default is to use color {cmd:gs14} for areas for which {help geoplot##zvar:{it:zvar}} is missing.
 
 {phang2}
     {cmdab:lab:el("}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} {it:...}]{cmd:)}
@@ -1426,9 +1456,8 @@ or
     {opt nogap} omits the gap between missing and the other keys in the legend.
 
 {phang2}
-    {cmd:color()}, {cmd:lwidth()}, {cmd:lpattern()}, etc. are standard graph
-    options depending on layer type. In case of {helpb geoplot##area:area},
-    the default is to use color {cmd:gs14} for areas for which {help geoplot##zvar:{it:zvar}} is missing.
+    {opt gl:options(options)} provides override options to be applied to
+    the missing symbol created by {helpb geoplot##glegend:glegend()}.
 
 {dlgtab:Global options}
 
@@ -1482,13 +1511,16 @@ or
 
 {marker grid}{...}
 {phang}
-    {cmd:grid}[{cmd:(}{it:options}{cmd:)}] draws grid lines on
-    top of the map, where {it:options} are as follows.
+    {cmd:grid}[{cmd:(}{it:options}{cmd:)}] draws grid lines on top of the
+    map. {cmd:grid()} can be repeated to draw multiple grids. {it:options} are
+    as follows.
 
 {phang2}
     {cmd:x()}, {cmd:y()}, {cmd:tight}, {cmd:padding()}, {cmd:radian},
     {cmd:noextend}, {cmd:mesh}, and {cmd:n()} define the lines as described in
-    {helpb geoframe##grid:geoframe grid}.
+    {helpb geoframe##grid:geoframe grid}. If {cmd:grid()} is repeated, shapes
+    created by earlier calls to {cmd:grid()} will be included in the
+    computations.
 
 {phang2}
     {it:{help line_options}} affect the look of lines as
@@ -1569,12 +1601,13 @@ or
 
 {marker project}{...}
 {phang}
-    {cmd:project}[{cmd:(}[{it:projection} [{it:args}]] [{cmd:,} {opt rad:ian}]{cmd:)}] applies the
-    specified projection, where {it:projection} and {it:args} are as described in
-    {helpb geoframe##project:geoframe project}. Original
-    coordinates are assumed to be in (unprojected) degrees; specify suboption {cmd:radian} if the
-    coordinates are in radians. If {cmd:project} is
-    specified without arguments, the {cmd:webmercator} projection is applied.
+    {cmd:project}[{cmd:(}[{it:projection} [{it:args}]] [{cmd:,} {opt rad:ian}]{cmd:)}]
+    applies the specified projection, where {it:projection} and {it:args} are
+    as described in {helpb geoframe##project:geoframe project}. Original
+    coordinates are assumed to represent latitude (Y) and longitude (X) in
+    degrees (typically WGS84); specify suboption {cmd:radian} if the
+    coordinates are in radians. If {cmd:project} is specified without
+    arguments, the {cmd:webmercator} projection is applied.
 
 {marker angle}{...}
 {phang}
@@ -1596,8 +1629,7 @@ or
     where {it:el} is one of
 
 {p2colset 17 26 28 2}{...}
-{p2col: {it:#}}include the legend keys of layer {it:#}; can specify
-    {it:{help numlist}} to select multiple layers
+{p2col: {it:#}}include the legend keys of layer {it:#}
     {p_end}
 {p2col: {cmd:.}}add a gap
     {p_end}
@@ -1608,7 +1640,8 @@ or
     {p_end}
 
 {pmore2}
-    {opt laye:rs()} can be used as a synonym for {cmd:layout()}.
+    Series of {it:#} elements can be specified using shorthand notation as described
+    in {it:{help numlist}}. {opt laye:rs()} can be used as a synonym for {cmd:layout()}.
 
 {phang2}
     {opt bot:tom} aligns the legend keys at the bottom (rightmost) if there are multiple
@@ -1660,8 +1693,7 @@ or
     where {it:el} is one of
 
 {p2colset 17 26 28 2}{...}
-{p2col: {it:#}}include the legend keys of layer {it:#}; can specify
-    {it:{help numlist}} to select multiple layers
+{p2col: {it:layers}}include the legend keys of the specified layers
     {p_end}
 {p2col: {cmd:.}}add a gap between layers
     {p_end}
@@ -1672,7 +1704,18 @@ or
     {p_end}
 
 {pmore2}
-    {opt laye:rs()} can be used as a synonym for {cmd:layout()}.
+    and {it:layers} is a single {it:#} to include the keys of layer {it:#}, a
+    {it:{help numlist}} to include the keys from multiple layers (one after
+    the other), or
+
+                {it:#1} {cmd:&} {it:#2} [ {cmd:&} {it:#3} ... ]
+
+{pmore2}
+    to include legend keys with composite symbols from two or more
+    layers (i.e., symbols from multiple layers printed on top of each
+    other; labels will be determined in such as way that for
+    each key the last non-empty label is printed). {opt laye:rs()}
+    can be used as a synonym for {cmd:layout()}.
 
 {phang2}
     {opt bot:tom} aligns the legend keys at the bottom if there are multiple
@@ -1794,12 +1837,12 @@ or
 
 {phang2}
     {opt over:lay}[{cmd:(}{it:offset}{cmd:)}] creates a legend with overlayed
-    symbols. Use optional argument {it:offset} to stagger the positions of the symbols,
-    where {it:offset} specifies the proportion
-    of width by which each symbol will be shifted.
+    symbols. Use optional argument {it:offset} to stagger the positions of the
+    symbols, where {it:offset} specifies the proportion of each symbol's width
+    that is used to shift the symbols.
 
 {phang2}
-    {opt tfl:oat} causes the horizontal positions of labels to be adaptive to the
+    {opt tfl:oat} makes the horizontal positions of labels dependent on the
     sizes of the symbols. The default is to align the labels at a fixed position.
 
 {phang2}
@@ -1946,10 +1989,15 @@ or
     this to denote units, e.g., {cmd:units(km)}.
 
 {phang2}
-    {cmdab:ti:tle(}{it:text}[{cmd:,} {it:options}]{cmd:)} adds a title above the
-    scale bar. {it:options} are {it:{help textbox_options}} such as {cmd:color()}
-    or {cmd:size()} (defaults are {cmd:color(black)} and {cmd:size(vsmall)}), and
-    {opt b:elow} to place the title below the scale bar (rather than above).
+    {cmdab:ti:tle(}{cmd:"}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} ...][{cmd:,} {it:suboptions}]{cmd:)}
+    adds a title to the scale bar. Multiple lines are created if multiple
+    {cmd:"}{it:text}{cmd:"} elements are specified. {it:suboptions} are
+    {opth pos:ition(compassdirstyle)} to set the position
+    of the title (default is at the top) as well as {it:{help textbox_options}} such
+    as {cmd:color()} or {cmd:size()} to affect the rendering of the title; color
+    options support {it:colorspec} as described in
+    {helpb colorpalette##colorlist:colorpalette}. Option
+    {cmd:title()} can be repeated to create multiple titles.
 
 {phang2}
     {opth pos:ition(compassdirstyle)} overrides the default location
@@ -2040,9 +2088,20 @@ or
     in northward direction. {it:options} are as follows.
 
 {phang2}
-    {opt abs:olute} specifies that {it:offset} is in absolute units of the map. The default
-    is to interpret {it:offset} as a percentage of the radius (half-diagonal) of the bounding box
-    (or enclosing circle) of the objects (including padding).
+    {opt ot:ype(type)} sets the scaling of the {it:offset} argument, where
+    {it:type} may be one of the following.
+
+{p2colset 13 23 25 2}{...}
+{p2col:{cmdab:z:oom}}{it:offset} is in percent of the radius (half-diagonal)
+    of the zoom's bounding box (or minimum enclosing circle), including padding
+    and magnification; this is the default
+    {p_end}
+{p2col:{cmdab:m:ap}}{it:offset} is in percent of the map's
+    {help geoplot##refdim:reference size}, before processing any {cmd:zoom()} option and
+    before processing {helpb geoplot##margin:margin()}
+    {p_end}
+{p2col:{opt a:bsolute}}{it:offset} is in absolute units of the map
+    {p_end}
 
 {phang2}
     {cmdab:pos:ition(}{it:x} {it:y} [{it:{help compassdirstyle}}]{cmd:)} moves
@@ -2054,6 +2113,17 @@ or
     ({it:x},{it:y}), or specify {cmd:se} to place the objects in south-east direction
     of ({it:x},{it:y}). Main arguments {it:offset} and {it:angle}, if specified, will
     be applied after {cmd:position()} has taken effect.
+
+{phang2}
+    {cmdab:ti:tle(}{cmd:"}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} ...][{cmd:,} {it:suboptions}]{cmd:)}
+    adds a title to the zoom. Multiple lines are created if multiple
+    {cmd:"}{it:text}{cmd:"} elements are specified. {it:suboptions} are
+    {opth pos:ition(compassdirstyle)} to set the position
+    of the title (default is at the top) as well as {it:{help textbox_options}} such
+    as {cmd:color()} or {cmd:size()} to affect the rendering of the title; color
+    options support {it:colorspec} as described in
+    {helpb colorpalette##colorlist:colorpalette}. Option
+    {cmd:title()} can be repeated to create multiple titles.
 
 {phang2}
     {cmd:box}[{cmd:(}{it:which}{cmd:)}] displays the origin bounding box and
@@ -2140,15 +2210,15 @@ or
     inset on top.
 
 {phang2}
-    {opt ti:tle(tinfo)} adds a title to the inset, where {it:tinfo} is
-
-                {cmd:"}{it:text}{cmd:"} [{cmd:,} {it:suboptions} ]
-
-{pmore2}
-    {it:suboptions} are {opt bot:tom} to place the title at the bottom rather
-    than at the top, as well as rendering options {cmd:size()}, {cmd:color()},
-    {cmd:angle()}, {cmd:tstyle()}, {cmd:gap()}, and {cmd:position()} as described
-    for layertype {helpb geoplot##labels:label}.
+    {cmdab:ti:tle(}{cmd:"}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} ...][{cmd:,} {it:suboptions}]{cmd:)}
+    adds a title to the inset. Multiple lines are created if multiple
+    {cmd:"}{it:text}{cmd:"} elements are specified. {it:suboptions} are
+    {opth pos:ition(compassdirstyle)} to set the position
+    of the title (default is at the top) as well as {it:{help textbox_options}} such
+    as {cmd:color()} or {cmd:size()} to affect the rendering of the title; color
+    options support {it:colorspec} as described in
+    {helpb colorpalette##colorlist:colorpalette}. Option
+    {cmd:title()} can be repeated to create multiple titles.
 
 {phang2}
     {opth box(area_options)} affects the rendering of frame around the
@@ -2183,8 +2253,8 @@ or
     {opt xm:argin(#)} and {opt ym:argin(#)} specify how much the
     inset will be moved away from the edge of the plotregion, in percent
     of the map's {help geoplot##refdim:reference size}. The default
-    for {cmd:xmargin()} is {cmd:0}; for {cmd:ymargin()} the default
-    depends on context.
+    for is {cmd:xmargin(0)} and {cmd:ymargin(0)} unless {cmd:title()} is specified,
+    in which case the default is {cmd:xmargin(3)} and {cmd:ymargin(3)}.
 
 {phang2}
     {cmdab:back:ground}[{cmd:(}{it:options}{cmd:)}] adds a background to the

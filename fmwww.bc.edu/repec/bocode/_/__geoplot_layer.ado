@@ -1,4 +1,4 @@
-*! version 1.1.9  03jul2024  Ben Jann
+*! version 1.2.3  17jul2024  Ben Jann
 
 /*
     Syntax:
@@ -42,8 +42,8 @@ program __geoplot_layer
     gettoken p 0 : 0
     gettoken frame 0 : 0, parse(" ,")
     local hasSHP 0
-    local OPTS NOLEGEND LABel(str asis) Feature(passthru) box BOX2(str)/*
-        */ SELect(str asis)
+    local OPTS NOLEGEND LABel(str asis) GLoptions(str) Feature(passthru)/*
+        */ box BOX2(str) SELect(str asis)
     local hasPLV 0
     local PLVopts
     local WGT
@@ -385,6 +385,9 @@ program __geoplot_layer
         // inject colors
         _process_coloropts options, `lcolor' `options'
         if `"`fcolor'"'!="" local fcolor fcolor(`fcolor')
+        if `"`gloptions'"'!="" {
+            _process_coloropts gloptions, `gloptions'
+        }
     }
     // copy relevant variables from unit frame into shpframe
     if `hasSHP' {
@@ -428,7 +431,7 @@ program __geoplot_layer
     }
     // prepare PLV
     if `hasPLV' {
-        if `"`ecolor'"'=="" local ecolor white // default for enclaves
+        if `"`ecolor'"'=="" local ecolor white%100 // default for enclaves
         mata: _get_colors("ecolor")
         qui replace PLV = 0 if PLV>=. `in' // treat missing as 0
         qui levelsof PLV `in'
@@ -519,7 +522,7 @@ program __geoplot_layer
     else local plot
     // compile plot
     if `hasWGT' local in inrange(_n,`n0',`n1')) | (_n<3)
-    local PLOTOPTS
+    local GLOPTS
     local p0 = `p' + 1
     gettoken pl0 : plevels
     foreach pl of local plevels {
@@ -576,7 +579,13 @@ program __geoplot_layer
             }
             if `layer'<. {
                 if `pl'==`pl0' {
-                    local PLOTOPTS `PLOTOPTS' (`OPTS')
+                    if `hasZ' & `i'==0 { // missing
+                        local GLOPT `OPTS' `missing_glopts'
+                    }
+                    else {
+                        local GLOPT `OPTS' `gloptions'
+                    }
+                    local GLOPTS `GLOPTS' (`GLOPT')
                 }
             }
             local OPTS `opts0' `OPTS'
@@ -674,7 +683,7 @@ program __geoplot_layer
     if `layer'<. {
         char LAYER[keys_`layer'] `keys'
         char LAYER[plottype_`layer'] `plottype'
-        char LAYER[plotopts_`layer'] `PLOTOPTS'
+        char LAYER[glopts_`layer'] `GLOPTS'
         char LAYER[labels_`layer'] `"`labels'"'
         char LAYER[nolegend_`layer'] `nolegend'
         char LAYER[hasz_`layer'] `hasZ'
@@ -923,8 +932,8 @@ end
 program _z_parse_missing
     gettoken plottype 0 : 0
     gettoken hasMLAB 0 : 0, parse(", ")
-    syntax [, NOLABel LABel(str asis) first nogap COLor(str asis)/*
-        */ MLABColor(passthru) * ]
+    syntax [, NOLABel LABel(str asis) GLoptions(str) first nogap/*
+        */ COLor(str asis) MLABColor(passthru) * ]
     if `"`label'"'=="" local label `"no data"'
     _add_quotes label `label'
     if `:list sizeof label'>1 local label `"`"`label'"'"'
@@ -937,9 +946,13 @@ program _z_parse_missing
         }
     }
     local options color(`color') `options'
+    if `"`gloptions'"'!="" {
+        _process_coloropts gloptions, `gloptions'
+    }
     c_local missing `options'
     c_local missing_color `"`color'"'
     c_local missing_lab   `"`label'"'
+    c_local missing_glopts `"`gloptions'"'
     c_local missing_nolab = "`nolabel'"!=""
     c_local missing_first = "`first'"!=""
     c_local missing_gap   = "`gap'"==""
@@ -1054,7 +1067,7 @@ program _box
     mata: _box_copy_XY("`XY'", `n0', `n1', "`TYPE'"=="pc")
     // generate frame containing box
     tempname BOX BOXSHP
-    frame `XY': qui geoframe bbox `BOX' `BOXSHP', `boxopts'
+    frame `XY': qui geoframe bbox `BOX' `BOXSHP', noshp `boxopts'
     if "`refine'"!="" {
         frame `BOX': qui geoframe refine, fast
     }
@@ -1358,48 +1371,16 @@ void _generate_mlabels(string scalar var, string scalar VAR, string scalar fmt,
     st_sstore(., var, touse, L)
 }
 
-void _get_colors(string scalar lname, | string scalar lname2)
+void _get_colors(string scalar lname)
 {   /* function assumes that global ColrSpace object "_GEOPLOT_ColrSpace_S"
        exists; maintaining a global is less work than initializing ColrSpace
        in each call */
     pointer (class ColrSpace scalar) scalar S
     
-    if (args()<2) lname2 = lname
     S = findexternal("_GEOPLOT_ColrSpace_S")
     //if ((S = findexternal("_GEOPLOT_ColrSpace_S"))==NULL) S = &(ColrSpace())
-    S->colors(st_local(lname2))
+    S->colors(st_local(lname))
     st_local(lname, S->colors())
-}
-
-void _parse_colorspec(string scalar lname)
-{
-    real scalar      l
-    string rowvector c
-    
-    c = tokens(st_local(lname))
-    if (length(c)!=1) return
-    if (anyof(("none", ".", "bg", "fg", "background", "foreground"), c)) {
-        st_local("color_is_kw","1")
-        return
-    }
-    if (substr(c,1,1)=="%") {
-        l = strpos(c,"*")
-        if (l) {
-            st_local("color_is_op", substr(c,2,l-2))
-            st_local("color_is_in", substr(c,l+1,.))
-        }
-        else st_local("color_is_op", substr(c,2,.))
-        return
-    }
-    if (substr(c,1,1)=="*") {
-        l = strpos(c,"%")
-        if (l) {
-            st_local("color_is_in", substr(c,2,l-2))
-            st_local("color_is_op", substr(c,l+1,.))
-        }
-        else st_local("color_is_in", substr(c,2,.))
-        return
-    }
 }
 
 void  _get_lbl(string scalar key, string scalar keys, string scalar lbls,
