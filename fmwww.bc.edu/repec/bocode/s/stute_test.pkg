@@ -1,4 +1,4 @@
-d 'STUTE_TEST': module to compute Stute (1997) linearity test.
+d 'STUTE_TEST': module to compute Stute (1997) linearity test
 d
 d      This program implements the non-parametric test that the
 d expectation of Y given D is linear proposed by Stute (1997).	In 
@@ -11,7 +11,7 @@ d KW: Stute test
 d
 d Requires: Stata version 12 
 d
-d Distribution-Date: 20240706
+d Distribution-Date: 20240719
 d
 d Author:  Clément de Chaisemartin,  Economics Department, Sciences Po
 d Support: email  chaisemartin.packages@@gmail.com

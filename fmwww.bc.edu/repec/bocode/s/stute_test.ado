@@ -18,7 +18,7 @@ qui {
     // Pre-allocate the result matrix, the sum of the test statistics and the sum of the bootstrapped test stat
     mata: res_mat = J(1, 3, .)
     mata: t_tot = 0
-    mata: t_boot = J(st_numscalar("breps"), 1, 0)
+    mata: t_boot = J(1, st_numscalar("breps"), 0)
 
     if "`3'" == "" & "`4'" == "" {
         // Cross section mode - Only Y and X
@@ -162,31 +162,21 @@ mata:
         }
         b = invsym(X'X) * X'Y
         e_lin = Y - X * b
-        mat_e_lin = e_lin * e_lin'
-
-        mat_temp = (1..N)'
-        for (j = 1; j <= N-1; j++) {
-            mat_temp = mat_temp, (J(j,1, j+1)\((j+1)..N)')
-        }
-        mat_temp = (J(N,N,(N+1)/N) - mat_temp)/N
-
         out_mat = J(1, 3, .)
-        out_mat[1,2] = sum(mat_e_lin :* mat_temp)/N
+        out_mat[1,2] = stute_core(e_lin)[1,1]
 
-        c1 = (sqrt(5) + 1)/(2+sqrt(5))
+        c1 = (sqrt(5) + 1)/(2*sqrt(5))
         c2 = (1 - sqrt(5))/2
         c3 = sqrt(5)
-        bres = J(brep, 1, .)
         F = V, D
         F = sort(F, cols(F))
-        for (i = 1; i <= brep; i++) {
-            Y_st = X * b + (J(N,1,c2) + c3*(floor(F[,i] :> J(N, 1, c1)))) :* e_lin
-            b_st = invsym(X'X) * X' Y_st
-            e_lin_st = Y_st - X * b_st
-            mat_e_lin_st = e_lin_st * e_lin_st'
-            bres[i, 1] = sum(mat_e_lin_st :* mat_temp)/N
-        }
-        out_mat[1,3] = mean(bres :> J(brep, 1, out_mat[1,2]))
+        F = F[,1..(cols(F)-1)]
+
+        Y_st = vrep(X * b, brep) + (J(N,brep,c2) + c3*(floor(F :> J(N, brep, c1)))) :* vrep(e_lin, brep)
+        b_st = invsym(X'X) * X' Y_st
+        e_lin_st = Y_st - X * b_st
+        bres = stute_core(e_lin_st)
+        out_mat[1,3] = mean((bres :> J(1, brep, out_mat[1,2]))')
 
         // The final results are first included as arguments, then recursively appended/summed and exported to the environment.
         res_mat = res_mat \ out_mat
@@ -205,7 +195,29 @@ mata:
 void aggte(t, B) {
     aggte_out = J(1, 2, .)
     aggte_out[1,1] = t
-    aggte_out[1,2] = mean(B :> J(rows(B), 1, t))
+    aggte_out[1,2] = mean((B :> J(1, rows(B), t))')
     st_matrix("aggte_out", aggte_out)
+}
+end
+
+// This function does the double summation
+cap mata: mata drop stute_core()
+mata:
+real matrix stute_core(E) {
+    N = rows(E)
+    L = lowertriangle(J(N,N,1))
+    res = (1/(N^2)) * J(1,N,1) * (L * E):^2
+    return(res)
+}
+end
+
+cap mata: mata drop vrep()
+mata:
+real matrix vrep(V, b) {
+    M = J(rows(V), b, .)
+    for (i = 1; i <= b; i++) {
+        M[,i] = V
+    }
+    return(M)
 }
 end
