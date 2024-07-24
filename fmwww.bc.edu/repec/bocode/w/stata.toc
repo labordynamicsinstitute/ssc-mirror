@@ -41,6 +41,7 @@ p witch module to mystically manage files on adopath
 p wntstmvq module to compute multivariate Ljung-Box Q test
 p wooldid module to estimate Difference-in-Differences Treatment Effects with Staggered Treatment Onset Using Heterogeneity-Robust Two-Way Fixed Effects Regressions
 p wordcb module to create a codebook in MS Word format
+p wordcloud module for drawing word cloud figure based on echarts developed by Baidu
 p wordconvert module to  transfer files among several types in Windows 
 p wordy module to play a silly word game and show your guesses on a Stata graph
 p workdays module to compute elapsed workdays

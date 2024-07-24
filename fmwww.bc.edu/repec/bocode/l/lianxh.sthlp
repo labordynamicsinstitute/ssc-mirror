@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.2  17nov2023}{...}
+{* *! version 1.4  22july2024}{...}
 {cmd:help lianxh {stata "help lianxh_cn": 中文版}}
 {hline}
 
@@ -15,9 +15,11 @@
 {title:Quick examples}
 
 {phang}. {stata "lianxh DID"}{p_end}
-{phang}. {stata "lianxh DID 多 +"}{p_end}
-{phang}. {stata "lianxh, new(10)"}{p_end}
-{phang}. {stata "lianxh, hot(10)"}{p_end}
+{phang}. {stata "lianxh DID 多期 +"}{p_end}
+{phang}. {stata "lianxh DID, new(10)"}{p_end}
+{phang}. {stata "lianxh DID, hot(10)"}{p_end}
+{phang}. {stata "lianxh Bootstrap, md"}{p_end}
+{phang}. {stata "lianxh Bootstrap, md0 nocat"}{p_end}
 {phang}. {stata "lianxh 张 李, f(author) gsort(-click) hot(20) c d"}{p_end}
 
 
@@ -202,18 +204,18 @@
 {title:Authors}
 
 {phang}
-{cmd:Yujun Lian* (连玉君)} Lingnan College, Sun Yat-Sen University, China.{break}
+{cmd:Yujun, Lian* (连玉君)} Lingnan College, Sun Yat-Sen University, China.{break}
 E-mail: {browse "mailto:arlionn@163.com":arlionn@163.com} {break}
 Blog: {browse "https://www.lianxh.cn":lianxh.cn} {break}
 {p_end}
 
 {phang}
-{cmd:Junjie Kang (康峻杰)} Shanghai Jiaotong University, China.{break}
+{cmd:Junjie, Kang (康峻杰)} Shanghai Jiaotong University, China.{break}
 E-mail: {browse "mailto:642070192@qq.com":642070192@qq.com} {break}
 {p_end}
 
 {phang}
-{cmd:Ruihan Liu (刘芮含)} National University of Singapore, Singapore.{break}
+{cmd:Ruihan, Liu (刘芮含)} National University of Singapore, Singapore.{break}
 E-mail: {browse "mailto:2428172451@qq.com":2428172451@qq.com} {break}
 {p_end}
 

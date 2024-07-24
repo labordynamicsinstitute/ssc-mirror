@@ -22,7 +22,8 @@
 {cmd:order(}{it:#}{cmd:)}
 {cmd:seed(}{it:#}{cmd:)}
 {cmd:brep(}{it:#}{cmd:)}
-{cmd:baseline(}{it:#}{cmd:)}]
+{cmd:baseline(}{it:#}{cmd:)}
+{cmd:no_updates}]
 {p_end}
 
 {p 4 4}
@@ -151,6 +152,12 @@ test the hypotheses that the expectations of
 specified in {cmd:panel} mode.
 {p_end}
 
+{p 4 8}
+{cmd:no_updates}: this option stops 
+automatic self-updates of the 
+program, which are performed 
+(on average) every 100 runs.
+{p_end}
 
 {marker examples}{...}
 {title:Examples}

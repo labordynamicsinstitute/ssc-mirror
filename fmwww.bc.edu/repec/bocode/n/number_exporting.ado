@@ -19,17 +19,19 @@ program define number_exporting
     }
 
     // Format the input value based on specified digits, and percent options
-    local digits_format = "%9." + string(`digits') + "fc"
+    local digits_format = "%9." + string(`digits') + "fc" 
 
     // Format for percentage if specified
     if "`percent'" != "" {
-        local anything = `anything' * 100
-        local anything = string(`anything', "`digits_format'")
-        local temp = "`anything'\%%"  // Escape the percent sign for LaTeX
-        local anything = "`temp'"
+        local anything 	= `anything' * 100
+        local anything 	= string(`anything', "`digits_format'")
+        local temp 		= "`anything'\%%"  // Escape the percent sign for LaTeX
+        local anything 	= "`temp'"
     }
     else {
-        local anything = string(`anything', "`digits_format'")
+       local anything 	= string(`anything', "`digits_format'")
+		local temp 		= "`anything'%"
+		local anything 	= "`temp'"
     }
 
     // Print output
@@ -40,5 +42,5 @@ program define number_exporting
     file write myfile "`anything'"
     file close myfile
 
-end
+end	
 

@@ -1,0 +1,24 @@
+d 'EVSTUDYDD': module to estimate event studies in D-i-D settings 
+d
+d  evstudydd is a command to estimate event studies in D-i-D
+d settings using the reghdfe routine.  It produces all the point
+d estimates and standard errors, together with a time indicator,
+d and save them in a .dta, which can them be merged or appended
+d with other files to produce more flexible graphs. 
+d
+d KW: event studies
+d KW: DiD
+d KW: difference in differences
+d
+d Requires: Stata version 13 and reghdfe from SSC (q.v.)
+d
+d Distribution-Date: 20240723
+d
+d Author:   Adrien Matray , Stanford University
+d Support: email  matray@@stanford.edu
+d
+d Author:  Pablo E. Rodriguez, MIT
+d Support: email  pablo6@@mit.edu
+d
+f evstudydd.ado
+f evstudydd.sthlp

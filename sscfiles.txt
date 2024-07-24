@@ -1341,6 +1341,7 @@ fmwww.bc.edu/repec/bocode/e/extreme.pkg
 fmwww.bc.edu/repec/bocode/e/elife.dta
 fmwww.bc.edu/repec/bocode/e/emc.ado
 fmwww.bc.edu/repec/bocode/e/elabel_variables.sthlp
+fmwww.bc.edu/repec/bocode/e/evstudydd.sthlp
 fmwww.bc.edu/repec/bocode/e/elabel_cmd_compare.ado
 fmwww.bc.edu/repec/bocode/e/export_svmlight.ado
 fmwww.bc.edu/repec/bocode/e/eperiod.sthlp
@@ -1374,6 +1375,7 @@ fmwww.bc.edu/repec/bocode/e/estout_defaults_options.hlp
 fmwww.bc.edu/repec/bocode/e/excel2latex_example_files.zip
 fmwww.bc.edu/repec/bocode/e/ebreg.sthlp
 fmwww.bc.edu/repec/bocode/e/eventstudyinteract.ado
+fmwww.bc.edu/repec/bocode/e/evstudydd.ado
 fmwww.bc.edu/repec/bocode/e/EXAMPLE_mata_narrsignrestrict.do
 fmwww.bc.edu/repec/bocode/e/elfs_outemail.sthlp
 fmwww.bc.edu/repec/bocode/e/estrat.ado
@@ -1595,6 +1597,7 @@ fmwww.bc.edu/repec/bocode/e/effmenu2.html
 fmwww.bc.edu/repec/bocode/e/estout_parameter_statistics_options.hlp
 fmwww.bc.edu/repec/bocode/e/exitma_example_data.dta
 fmwww.bc.edu/repec/bocode/e/example.dta
+fmwww.bc.edu/repec/bocode/e/evstudydd.pkg
 fmwww.bc.edu/repec/bocode/e/egenmore.html
 fmwww.bc.edu/repec/bocode/e/evi.pkg
 fmwww.bc.edu/repec/bocode/e/estout.pkg
@@ -9388,6 +9391,7 @@ fmwww.bc.edu/repec/bocode/w/wid_example1.png
 fmwww.bc.edu/repec/bocode/w/wedderburn.dta
 fmwww.bc.edu/repec/bocode/w/wid.pkg
 fmwww.bc.edu/repec/bocode/w/wbopendata_region.sthlp
+fmwww.bc.edu/repec/bocode/w/wordcloud_example.html
 fmwww.bc.edu/repec/bocode/w/wtdttt.ado
 fmwww.bc.edu/repec/bocode/w/wordy1.ado
 fmwww.bc.edu/repec/bocode/w/wbopendata_adminregion.sthlp
@@ -9576,6 +9580,7 @@ fmwww.bc.edu/repec/bocode/w/wbopendata.pkg
 fmwww.bc.edu/repec/bocode/w/wid_example3.ado
 fmwww.bc.edu/repec/bocode/w/whichlist.ado
 fmwww.bc.edu/repec/bocode/w/wtdttt.pkg
+fmwww.bc.edu/repec/bocode/w/wordcloud.pkg
 fmwww.bc.edu/repec/bocode/w/whichpkg.hlp
 fmwww.bc.edu/repec/bocode/w/wdireshape.pkg
 fmwww.bc.edu/repec/bocode/w/weakivtest2.sthlp
@@ -9621,6 +9626,8 @@ fmwww.bc.edu/repec/bocode/w/wbopendata_lendingtype.sthlp
 fmwww.bc.edu/repec/bocode/w/wald_mse.ado
 fmwww.bc.edu/repec/bocode/w/winsor2.sthlp
 fmwww.bc.edu/repec/bocode/w/wid_list_concepts.sthlp
+fmwww.bc.edu/repec/bocode/w/wordcloud.sthlp
+fmwww.bc.edu/repec/bocode/w/wordcloud.ado
 fmwww.bc.edu/repec/bocode/w/wb2008.csv
 fmwww.bc.edu/repec/bocode/w/weka.jar
 fmwww.bc.edu/repec/bocode/w/worldstatworld_coords.dta

@@ -1,0 +1,24 @@
+d 'WORDCLOUD': module for drawing word cloud figure based on echarts developed by Baidu
+d
+d  wordcloud is a program for drawing word clouds based on changes
+d made to  echarts for the Stata programming style. It relies
+d heavily on the versatility  and interactivity of HTML mapping.
+d Note that since the final HTML file  generated contains online
+d scripts, you need to make sure that your computer  is connected
+d to the Internet, otherwise you may not be able to load the final
+d image. 
+d
+d KW: data management
+d KW: text processing
+d KW: word clouds
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20240723
+d
+d Author: Shutter Zor	 , Xiamen University
+d Support: email Shutter_Z@@outlook.com
+d
+f wordcloud.ado
+f wordcloud.sthlp
+f wordcloud_example.html

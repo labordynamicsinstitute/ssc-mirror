@@ -21,7 +21,8 @@
 [{cmd:,}
 {cmd:het_robust}
 {cmd:order(}{it:#}{cmd:)}
-{cmd:path_plot}]
+{cmd:path_plot}
+{cmd:no_updates}]
 {p_end}
 
 {synoptset 28 tabbed}{...}
@@ -89,6 +90,13 @@ as the {it:D} argument. In this case, the program will produce
 a plot of the sequence of (D_1i, D_2i) that minimizes the euclidean 
 distance between each pair of consecutive observations 
 (see the {it:Multivariate Yatchew Test} vignette for further details).
+{p_end}
+
+{p 4 8}
+{cmd:no_updates}: this option stops 
+automatic self-updates of the 
+program, which are performed 
+(on average) every 100 runs.
 {p_end}
 
 {marker examples}{...}

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.2  17nov2023}{...}
+{* *! version 1.4  22july2024}{...}
 {cmd:help lianxh {stata "help lianxh": English Version}}
 {hline}
 
@@ -15,9 +15,11 @@
 {title:Quick examples}
 
 {phang}. {stata "lianxh DID"}{p_end}
-{phang}. {stata "lianxh DID 多 +"}{p_end}
-{phang}. {stata "lianxh, new(10)"}{p_end}
-{phang}. {stata "lianxh, hot(10)"}{p_end}
+{phang}. {stata "lianxh DID 多期 +"}{p_end}
+{phang}. {stata "lianxh DID, new(10)"}{p_end}
+{phang}. {stata "lianxh DID, hot(10)"}{p_end}
+{phang}. {stata "lianxh Bootstrap, md"}{p_end}
+{phang}. {stata "lianxh Bootstrap, md0 nocat"}{p_end}
 {phang}. {stata "lianxh 张 李, f(author) gsort(-click) hot(20) c d"}{p_end}
 
 
@@ -207,13 +209,6 @@ Stata 论坛 {browse "https://www.statalist.org/forums/":[Statalist]}，
 
 {phang2}Note: 默认情况下，{cmd:lianxh} 每天从 {browse "lianxh.cn":https://www.lianxh.cn} 下载一份数据，存储到本地 [../PLUS/l] 文件夹中。随后的检索均使用本地数据，这样可以大幅提高检索速度。
 若想更新到最新版，则可以使用 {cmd:updata} 选项。注意：不是 'update'，而是 'updata'。{p_end}
-
-{pstd}{ul:安装最新版}{p_end}
-
-{phang2}. 方式 1：{stata "cnssc install lianxh, replace"}{p_end}
-
-{phang2}. 方式 2：{stata `"net install lianxh, from("https://gitee.com/arlionn/lianxh/raw/master/src/") replace"'}{p_end}
-
 
 {title:作者}
 

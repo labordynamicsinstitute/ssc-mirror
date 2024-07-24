@@ -1,4 +1,4 @@
-* ghk2() 1.7.1  20 May 2021
+* ghk2() 1.7.3  21 July 2024
 *! Copyright (C) 2007-21 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
@@ -15,6 +15,8 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 * Version history
+* 1.7.3 Fixed crash in ghk2setup() for "ghalton"
+* 1.7.2 small speed tweaks
 * 1.7.1 Fixed crash when optional pfnScrambler arg not provided to ghk2setup()
 * 1.7.0 Added Faure-Lemieux (2009) scrambler
 * 1.6.1 Added a few more primes
@@ -46,22 +48,23 @@ struct smatrix {
 }
 
 struct ssmatrix {
-	struct smatrix colvector M
+	struct smatrix rowvector M
 }
 
 struct sssmatrix {
-	struct ssmatrix colvector M
+	struct ssmatrix rowvector M
 }
 
 struct ghk2points {
 	real scalar n, m, d
 	struct sssmatrix colvector W  // 2-vector (incl antitheticals) of m-vectors of d-1-vectors of n-vectors
+  struct smatrix rowvector p, vL, vK
 }
 
 struct ghk2points scalar ghk2setup(real scalar n, real scalar m, real scalar d, string scalar type, | real scalar pi, pointer (real colvector function) scalar pfnScrambler) {
-	real scalar itype, j, k, hammersley
+	real scalar itype, i, j, k, hammersley, d2, _d
 	real rowvector primes
-	real matrix U, S
+	real matrix U, S, t
 	struct ghk2points scalar pts
 
 	primes = 2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109
@@ -103,11 +106,24 @@ struct ghk2points scalar ghk2setup(real scalar n, real scalar m, real scalar d, 
 
 	pts.d=d; pts.m=m; pts.n=n; pts.W=sssmatrix(2,1); pts.W[1].M=pts.W[2].M=ssmatrix(m, 1)
 
+  pts.p = pts.vK = pts.vL = smatrix(d)
+  for (_d=d;_d;_d--) {
+    t = J(_d,_d,0)
+    d2 = 0.5*_d*(_d+1)
+    for (j=_d; j; j--)
+      for(i=j; i; i--)
+        t[j,i] = d2--
+    pts.p[_d].M = invorder(vech(t))
+    pts.vK[_d].M = vech(t = rowshape(1::_d*_d,_d))
+    pts.vL[_d].M = vech(t')
+  }
+  
 	for (U=J(n*m,k=d-1,0); k; k--)
-		U[,k] = itype? (itype==3? ghalton(n*m, primes[k], uniform(1,1)) :
-		                          hammersley & k==1? J(n,1,1)#(0.5::m)/m : 
-		                                             halton2(n*m, primes[k-hammersley], pfnScrambler)) :
-		               uniform(n*m,1)
+		U[,k] = itype?
+           (itype==3?          ghalton(n*m, primes[k], uniform(1,1)) :
+		       (hammersley & k==1? J(n,1,1)#(0.5::m)/m : 
+		                           halton2(n*m, primes[k-hammersley], pfnScrambler))) :
+		                           uniform(n*m,1)
 
 	S = (1::n)*m 
 	for (j=m; j; j--) {
@@ -144,6 +160,9 @@ real matrix ghk2_dTdV(real matrix T) {
 	vL = vech(t')
 	return ( qrinv((T#I(d))[vL,vL]+(I(d)#T)[vL,vK]) )
 }
+
+real matrix _ghk2_dTdV(real matrix T, real scalar d, struct ghk2points scalar pts)
+	return ( qrinv((T#I(d))[pts.vL[d].M, pts.vL[d].M] + (I(d)#T)[pts.vL[d].M, pts.vK[d].M]) )
 
 real colvector ghk2(struct ghk2points scalar pts, real matrix X, real matrix a3, real matrix a4, 
 		| real matrix a5, real matrix a6, real matrix a7, real matrix a8, real matrix a9) {
@@ -244,9 +263,11 @@ real colvector ghk2(struct ghk2points scalar pts, real matrix X, real matrix a3,
 
 real colvector _ghk2(struct ghk2points scalar pts, real matrix X, real matrix V, real scalar anti, real scalar s) {
 	real scalar j, k, d, n, a
-	real colvector p, pk, p1, Phib, u
+	real colvector p, p1, u
+  pointer(real colvector) scalar ppk
+  pragma unset ppk
 	real matrix T, z, sz, sW
-	struct smatrix colvector pT
+	struct smatrix rowvector pT, Phib
 
 	T = cholesky(V)
 	if (T[1,1] == .) {
@@ -256,7 +277,7 @@ real colvector _ghk2(struct ghk2points scalar pts, real matrix X, real matrix V,
 
 	if ((d = rows(V)) == 1) return (editmissing(normal(X/T), 1))
 
-	pT = smatrix(d, 1); for (j=d; j>1; j--) pT[j].M = (-T[|j,1 \ j,j-1|]' \ 1) / T[j,j]
+	pT = Phib = smatrix(d); for (j=d; j>1; j--) pT[j].M = (-T[|j,1 \ j,j-1|]' \ 1) / T[j,j]
 	p = J(n=rows(X), 1, 0); _editmissing(p1 = normal(X[,1] / T[1,1]), 1)
 	sz = J(2, 2, .); sW = s,. \ s-1+n, .
 	for (a=1+(anti!=0); a>0; a--)
@@ -266,14 +287,13 @@ real colvector _ghk2(struct ghk2points scalar pts, real matrix X, real matrix V,
 			z[,1] = invnormal(u :* p1)
 			for (j=2; j<=d-1; j++) {
 				sz[2,2] = j
-				_editmissing(Phib = normal(z[|sz|] * pT[j].M), 1)
-				pragma unset pk
-				pk = j==2? Phib : pk:*Phib
+				_editmissing(Phib[j].M = normal(z[|sz|] * pT[j].M), 1)
+				ppk = j==2? &Phib[2].M : &(*ppk :* Phib[j].M)
 				u = pts.W[a].M[k].M[j].M[|sW|]
-				z[,j] = invnormal(u :* Phib)
+				z[,j] = invnormal(u :* Phib[j].M)
 			}
-			_editmissing(Phib = normal(z * pT[d].M), 1)
-			p = p + (d==2? Phib : pk:*Phib)
+			_editmissing(Phib[d].M = normal(z * pT[d].M), 1)
+			p = p + (d==2? Phib[d].M : *ppk :* Phib[d].M)
 		}
 	return (p/(anti? 2*pts.m : pts.m) :* p1)
 }
@@ -331,11 +351,12 @@ real colvector _ghk2_binorm(struct ghk2points scalar pts, real matrix X, real ma
 
 real colvector _ghk2_2(struct ghk2points scalar pts, real matrix Xl, real matrix Xu, real matrix V, real scalar anti, real scalar s) {
 	real scalar j, k, d, n, a
-	real colvector p, pk, p1, Phib, Phibl, Phibl1, sign, sign1, L, U
-	pragma unset pk; pragma unset p1; pragma unset Phib
+	real colvector p, p1, Phibl, Phibl1, sign, sign1, L, U
+  pointer(real colvector) scalar ppk
+	pragma unset p1; pragma unset ppk
 	real rowvector Td
 	real matrix T, z, sz, sW, _Xu, _Xl, t
-	struct smatrix colvector pT
+	struct smatrix rowvector pT, Phib
 
 	T = cholesky(V)'
 	if (T[1,1] == .) {
@@ -343,7 +364,7 @@ real colvector _ghk2_2(struct ghk2points scalar pts, real matrix Xl, real matrix
 		exit(3352)
 	}
 
-	pT = smatrix(d=rows(V), 1)
+	pT = Phib = smatrix(d=rows(V))
 	for (j=d; j>1; j--) pT[j].M = T[|.,j \ j-1,j|] / -T[j,j]
 
 	Td = diagonal(T)'
@@ -366,14 +387,14 @@ real colvector _ghk2_2(struct ghk2points scalar pts, real matrix Xl, real matrix
 				t = z[|sz|] * pT[j].M
 				L = _Xl[,j] + t; U = _Xu[,j] + t
 				Phibl = normal((sign = (L+U:<=0)*2 :- 1) :* L)
-				z[,j] = sign :* invnormal(Phibl + pts.W[a].M[k].M[j].M[|sW|] :* (Phib = normal(sign:*U) - Phibl))
-				pk = j==2? Phib : pk:*Phib
+				z[,j] = sign :* invnormal(Phibl + pts.W[a].M[k].M[j].M[|sW|] :* (Phib[j].M = normal(sign:*U) - Phibl))
+				ppk = j==2? &(Phib[2].M) : &(*ppk :* Phib[j].M)
 			}
 			t = z[|sz|] * pT[d].M
 			L = _Xl[,d] + t; U = _Xu[,d] + t
 			sign = (L+U:<=0)*2 :- 1
-			Phib = normal(sign:*U) - normal(sign:*L)
-			p = p + abs(d==2? Phib : pk:*Phib)
+			Phib[d].M = normal(sign:*U) - normal(sign:*L)
+			p = p + abs(d==2? Phib[d].M : *ppk :* Phib[d].M)
 		}
 
 	return (p/(anti? 2*pts.m : pts.m) :* abs(p1))
@@ -381,9 +402,11 @@ real colvector _ghk2_2(struct ghk2points scalar pts, real matrix Xl, real matrix
 
 real colvector _ghk2_d(struct ghk2points scalar pts, real matrix X, real matrix V, real scalar anti, real scalar s, real matrix dfdx, real matrix dfdv) {
 	real scalar i, j, k, d, d2, n, g, l, a, Tdj
-	real colvector p, pg, Phib, Phib1, b, b1, phib, phib1, lambdab, u, T2j, Td
-	real matrix T, z, sz, sW, nd0, nd20, dlnfdxg, dlnpdtg, dlnfdxg1, dlnpdtg1, dzdb, dbdx, dbdt, t
-	struct smatrix colvector pT, pT2, dbdx0, dzdx, dzdt
+	real colvector p, Phib1, b, b1, phib, phib1, lambdab, u, T2j, Td
+  pointer(real colvector) scalar ppg
+  pragma unset ppg
+	real matrix T, z, sz, sW, nd0, nd20, dlnfdxg, dlnpdtg, dlnfdxg1, dlnpdtg1, dzdb, dbdx, dbdt
+	struct smatrix rowvector pT, pT2, dbdx0, dzdx, dzdt, Phib
 
 	T = cholesky(V)
 	if (T[1,1] == .) {
@@ -400,7 +423,7 @@ real colvector _ghk2_d(struct ghk2points scalar pts, real matrix X, real matrix 
 		return (Phib1)
 	}
 	n = rows(X)
-	pT = pT2 = dbdx0 = smatrix(d, 1)
+	pT = pT2 = dbdx0 = Phib = smatrix(d)
 	for (j=d; j>1; j--) {
 		pT[j].M = (pT2[j].M = T[|j,1 \ j,j-1|]' / -T[j,j]) \ 1/T[j,j]
 		dbdx0[j].M = J(n, 1, 1/T[j,j])
@@ -413,8 +436,8 @@ real colvector _ghk2_d(struct ghk2points scalar pts, real matrix X, real matrix 
 	dlnfdxg1 = nd0; dlnpdtg1 = nd20
 	dlnpdtg1[,1] = (dlnfdxg1[,1] = (phib1 :/ Phib1) / T[1,1]) :* -b1
 
-	dzdx = smatrix(d,  1); for (k=d;  k; k--) dzdx[k].M = J(n, d-1, 0)
-	dzdt = smatrix(d2, 1); for (k=d2; k; k--) dzdt[k].M = J(n, d-1, 0)
+	dzdx = smatrix(d ); for (k=d;  k; k--) dzdx[k].M = J(n, d-1, 0)
+	dzdt = smatrix(d2); for (k=d2; k; k--) dzdt[k].M = J(n, d-1, 0)
 
 	Td = -diagonal(T); Td[1] = -Td[1]
 
@@ -426,16 +449,16 @@ real colvector _ghk2_d(struct ghk2points scalar pts, real matrix X, real matrix 
 			// custom-coded first iteration over dimensions
 			u = pts.W[a].M[g].M.M[|sW|]
 			dzdb = u :* phib1 :/ normalden(z[,1] = invnormal(u :* Phib1))
-			dzdt.M[,1] = ( dzdx.M[,1] = dzdb / Td[1] ) :* (-b1) 
+			dzdt.M[,1] = ( dzdx.M[,1] = dzdb / Td[1] ) :* (-b1)
+
 			for (j=2; j<=d-1; j++) {
 				sz[2,2] = j; l = j*(j+1)*.5; T2j = pT2[j].M; Tdj = Td[j]
 				u = pts.W[a].M[g].M[j].M[|sW|]
-				b = z[|sz|] * pT[j].M; _editmissing(Phib = normal(b), 1); phib = normalden(b); lambdab = phib :/ Phib
+				b = z[|sz|] * pT[j].M; _editmissing(Phib[j].M = normal(b), 1); phib = normalden(b); lambdab = phib :/ Phib[j].M
 
-				pragma unset pg
-				pg = j==2? Phib : pg:*Phib
+				ppg = j==2? &Phib[2].M : &(*ppg :* Phib[j].M)
 				
-				dzdb = u :* phib :/ normalden(z[,j] = invnormal(u :* Phib))
+				dzdb = u :* phib :/ normalden(z[,j] = invnormal(u :* Phib[j].M))
 				dzdx[j  ].M[,j] = dzdb :* (dbdx[,j] = dbdx0[j].M)
 				dzdt[l--].M[,j] = dzdb :* (dbdt[,l] = b / Tdj)    // j = i = k
 	
@@ -454,11 +477,11 @@ real colvector _ghk2_d(struct ghk2points scalar pts, real matrix X, real matrix 
 	
 			// custom-coded last iteration
 			l = d2; T2j = pT2[d].M; Tdj = Td[d]
-			b = z * pT[d].M; _editmissing(Phib = normal(b), 1); lambdab = normalden(b) :/ Phib
+			b = z * pT[d].M; _editmissing(Phib[d].M = normal(b), 1); lambdab = normalden(b) :/ Phib[d].M
 			if (d==2) {
 				dbdx = nd0; dbdt = nd20
 			}
-			p = p + (pg = d==2? Phib : pg:*Phib)
+			p = p + *(ppg = &(d==2? Phib[d].M : *ppg :* Phib[d].M))
 			dbdx[,d] =  dbdx0[d].M
 			dbdt[,l--] = b / Tdj
 			dbdt[|.,l-d+2\.,l|] = z[|.,.\.,d-1|] / Tdj
@@ -467,14 +490,13 @@ real colvector _ghk2_d(struct ghk2points scalar pts, real matrix X, real matrix 
 				dbdx[,i] = dzdx[i].M * T2j
 				for (k=i; k; k--) dbdt[,l--] = dzdt[l].M * T2j
 			}
-			dfdx = dfdx + (dlnfdxg + lambdab :* dbdx) :* pg
-			dfdv = dfdv + (dlnpdtg + lambdab :* dbdt) :* pg
+			dfdx = dfdx + (dlnfdxg + lambdab :* dbdx) :* *ppg
+			dfdv = dfdv + (dlnpdtg + lambdab :* dbdt) :* *ppg
 		}
 
 	Phib1 = Phib1 / (anti? 2*pts.m : pts.m)
 	dfdx = dfdx :* Phib1
-	t = T; for (j=d; j; j--) for(i=j; i; i--) t[j,i] = d2--
-	dfdv = (dfdv :* Phib1) * ghk2_dTdV(T)[invorder(vech(t)),]
+	dfdv = (dfdv :* Phib1) * _ghk2_dTdV(T, d, pts)[pts.p[d].M,]
 	return (p :* Phib1)
 }
 
@@ -482,9 +504,11 @@ real colvector _ghk2_2d(struct ghk2points scalar pts, real matrix Xl, real matri
 				real scalar s, real matrix dfdxl, real matrix dfdxu, real matrix dfdv) {
 	real scalar i, j, j2, k, d, d2, n, g, l, a, Tdj
 	real rowvector Td
-	real colvector p, pg, Phibu, Phibu1, bu, bu1, phibu, phibu1, Phibl, Phibl1, bl, bl1, phibl, phibl1, u, Tj, p1, pgj, dlnpgjdbu, dlnpgjdbl, dzda, sign, sign1
+	real colvector p, Phibu, Phibu1, bu, bu1, phibu, phibu1, Phibl, Phibl1, bl, bl1, phibl, phibl1, u, Tj, p1, dlnpgjdbu, dlnpgjdbl, dzda, sign, sign1
+  pointer(real colvector) scalar ppg
+  pragma unset ppg
 	real matrix T, z, sz, sW, nd0, nd20, dlnpdxug, dlnpdxlg, dlnpdtg, dlnpdxug1, dlnpdxlg1, dlnpdtg1, dzdbu, dzdb, dbudxu, dbudxl, dbudt, dzdbl, dbldxu,dbldxl, dbldt, t, _Xu, _Xl
-	struct smatrix colvector pT, dbdx0, dzdxu, dzdxl, dzdt
+	struct smatrix rowvector pT, dbdx0, dzdxu, dzdxl, dzdt, pgj
 
 	T = cholesky(V)
 	if (T[1,1] == .) {
@@ -493,7 +517,7 @@ real colvector _ghk2_2d(struct ghk2points scalar pts, real matrix Xl, real matri
 	}
 
 	n = rows(Xl)
-	pT = dbdx0 = smatrix(d=rows(V), 1)
+	pT = dbdx0 = pgj = smatrix(d=rows(V))
 	for (j=d; j>1; j--) {
 		pT[j].M = T[|j,1 \ j,j-1|]' / -T[j,j]
 		dbdx0[j].M = J(n, 1, 1/T[j,j])
@@ -522,13 +546,13 @@ real colvector _ghk2_2d(struct ghk2points scalar pts, real matrix Xl, real matri
 	_editmissing(bu1, 0); _editmissing(bl1, 0)
 	dlnpdtg1[,1] = dlnpgjdbl :* bl1  - dlnpgjdbu :* bu1
 
-	dzdxu = dzdxl = smatrix(d, 1)
+	dzdxu = dzdxl = smatrix(d)
 	for (k=d; k; k--) {
 		dzdxl[k].M = J(n, d-1, 0)
 		dzdxu[k].M = J(n, d-1, 0)
 	}
 
-	dzdt = smatrix(d2, 1)
+	dzdt = smatrix(d2)
 	for (k=d2; k; k--) dzdt[k].M = J(n, d-1, 0)
 
 	sz = J(2, 2, .); sW = s,. \ s-1+n, .
@@ -552,16 +576,14 @@ real colvector _ghk2_2d(struct ghk2points scalar pts, real matrix Xl, real matri
 				sign = (bl+ bu:<=0)*2 :- 1
 				Phibu = normal(sign:*bu); phibu = normalden(bu)
 				Phibl = normal(sign:*bl); phibl = normalden(bl)
-				
 
-				pragma unset pg
-				pgj = abs(Phibu - Phibl)                                           // probability factor for this dimension
-				pg = j==2? pgj : pg:*pgj                                                // cumulative product of probability factors sans first 1
-				dlnpgjdbu = phibu :/ pgj                                                // dlnp_j/dbu_j = phi(bu_j)/(Phi(bu_j)-Phi(bl_j))
-				dlnpgjdbl = phibl :/ pgj                                                // abs(dlnp_j/dbu_j) = phi(bu_j)/(Phi(bu_j)-Phi(bl_j))
+				pgj[j].M = abs(Phibu - Phibl)                                           // probability factor for this dimension
+				ppg = j==2? &pgj[2].M : &(*ppg :* pgj[j].M)                             // cumulative product of probability factors sans first 1
+				dlnpgjdbu = phibu :/ pgj[j].M                                           // dlnp_j/dbu_j = phi(bu_j)/(Phi(bu_j)-Phi(bl_j))
+				dlnpgjdbl = phibl :/ pgj[j].M                                           // abs(dlnp_j/dbu_j) = phi(bu_j)/(Phi(bu_j)-Phi(bl_j))
 
 				u = pts.W[a].M[g].M[j].M[|sW|]                                         // the draws
-				dzda = 1:/ normalden(z[,j] = sign:* invnormal(sign :* u :* pgj :+ Phibl))              // z_j = invPhi(a_j). dz_j/da_j = 1/phi(z_j)
+				dzda = 1:/ normalden(z[,j] = sign:* invnormal(sign :* u :* pgj[j].M :+ Phibl))              // z_j = invPhi(a_j). dz_j/da_j = 1/phi(z_j)
 				t = u :* dzda; dzdbu = phibu :* t; dzdbl = phibl :* (dzda :- t)         // dz_j/dbu_j = u_j * phi(bu_j)/phi(z_j). dz_j/dbl_j = (1-u_j) * phi(bl_j)/phi(z_j)
 
 				dzdb = dzdbu + dzdbl                                                    // total derivative w.r.t bu and bl useful since in most cases dbu's=dbl's
@@ -597,12 +619,12 @@ real colvector _ghk2_2d(struct ghk2points scalar pts, real matrix Xl, real matri
 			t = z * (Tj = pT[d].M)
 			bu = _Xu[,j] + t; bl = _Xl[,j] + t; 
 			sign = (bl+ bu:<=0)*2 :- 1
-			pgj = abs(normal(sign:*bu) - normal(sign:*bl))
+			pgj[d].M = abs(normal(sign:*bu) - normal(sign:*bl))
 
-			dlnpgjdbu = normalden(bu) :/ pgj
-			dlnpgjdbl = normalden(bl) :/ pgj
+			dlnpgjdbu = normalden(bu) :/ pgj[d].M
+			dlnpgjdbl = normalden(bl) :/ pgj[d].M
 
-			p = p + (pg = d==2? pgj: pg :* pgj)
+			p = p + *(ppg = &(d==2? pgj[2].M: *ppg :* pgj[d].M))
 
 			dbudt[|.,d2-d+1\.,d2-1|] = z[|.,.\.,d-1|] / -Td[d]
 
@@ -617,16 +639,15 @@ real colvector _ghk2_2d(struct ghk2points scalar pts, real matrix Xl, real matri
 			_editvalue(bu, maxdouble(), 0); _editvalue(bl, -maxdouble(), 0)
 			dbudt[,d2] = bu / -Td[d]
 			dbldt[,d2] = bl / -Td[d]
-			
-			dfdxu = dfdxu + (dlnpdxug + dlnpgjdbu :* dbudxu - dlnpgjdbl :* dbldxu) :* pg 
-			dfdxl = dfdxl + (dlnpdxlg + dlnpgjdbu :* dbudxl - dlnpgjdbl :* dbldxl) :* pg 
-			dfdv  = dfdv  + (dlnpdtg  + dlnpgjdbu :* dbudt  - dlnpgjdbl :* dbldt ) :* pg
+
+			dfdxu = dfdxu + (dlnpdxug + dlnpgjdbu :* dbudxu - dlnpgjdbl :* dbldxu) :* *ppg 
+			dfdxl = dfdxl + (dlnpdxlg + dlnpgjdbu :* dbudxl - dlnpgjdbl :* dbldxl) :* *ppg 
+			dfdv  = dfdv  + (dlnpdtg  + dlnpgjdbu :* dbudt  - dlnpgjdbl :* dbldt ) :* *ppg
 		}
 	p1 = p1 / (anti? 2*pts.m : pts.m)
 	dfdxu = dfdxu :* p1
 	dfdxl = dfdxl :* p1
-	t = T; for (j=d; j; j--) for(i=j; i; i--) t[j,i] = d2--
-	dfdv = (dfdv :* p1) * ghk2_dTdV(T)[invorder(vech(t)),]
+	dfdv = (dfdv :* p1) * _ghk2_dTdV(T, d, pts)[pts.p[d].M,]
 	return (p :* p1)
 }
 

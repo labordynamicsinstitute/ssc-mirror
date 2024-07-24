@@ -99,6 +99,7 @@ p eventstudyinteract module to implement the interaction weighted estimator for 
 p eventstudyweights module to estimate the implied weights on the cohort-specific average treatment effects on the treated (CATTs) (event study specifications)
 p evhistplot module to produce event history plot
 p evi module to compute Epidemic Volatility Index (EVI) for detecting epidemic waves
+p evstudydd module to estimate event studies in D-i-D settings 
 p ewma module to calculate exponentially weighted moving average
 p ewreg module to estimate errors-in-variable model with mismeasured regressor
 p exampleobs module to prints example observations 

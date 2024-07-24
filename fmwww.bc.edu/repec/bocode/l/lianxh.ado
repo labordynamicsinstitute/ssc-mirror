@@ -1,4 +1,6 @@
-*! version 1.2  16nov2023  
+*! version 1.4  22July2024
+// text with link for option 'md', 'text', 'latex'
+*  version 1.2  16nov2023  
 // mirror update 2023/11/17 2:32
 *! version 1.1  11apr2021
 *! Yujun Lian  arlionn@163.com
@@ -7,6 +9,7 @@
 //  Ruihan Liu  2428172451@qq.com
 //  https://www.lianxh.cn
 
+cap progra drop lianxh
 program define lianxh, rclass
 
 version 14
@@ -421,17 +424,26 @@ qui{  //----------------------------------qui ----------01------
 //    Text              ///   // Author, Year, title, URL, 不空行
 
 
-*-Default format: show results in Results Window
+*-format for Stata Results Window
+
+  local catname_br `"{browse ""' + url_cat  + `"":"' + catname +`"}"'
   
+  local title_br   `"{browse ""' + url_blog + `"":"' + title   +`"}"' 
+  
+  local year_br    `"{browse ""' + url_blog + `"":"' + year   +`"}"'
+  
+
+*-Default format: show results in Results Window
+
   local dis_opt "`md'`mdc'`mdca'`md0'`md1'`md2'`md3'`latex'`lac'`weixin'`text'"
   
   if ("`dis_opt'" ==""){  
-      gen _Cat_br = `">>专题：{browse ""' + url_cat +`"": "' + catname +`"}"'
+      gen _Cat_Dis = `">>专题：`catname_br'"'
       if "`simple'" != ""{
-          gen _BlogDis = `"{browse ""' + url_blog +`"":"' + title +`"}"'`hot_new'
+          gen _BlogDis =                               `"`title_br'"'`hot_new'
       }
       else{  // default
-          gen _BlogDis = author + ", " + year + `", {browse ""' + url_blog +`"":"' + title +`"}"'`hot_new'
+          gen _BlogDis = author + ", " + year + ", " + `"`title_br'"'`hot_new'
       }
   }
   
@@ -441,11 +453,18 @@ qui{  //----------------------------------qui ----------01------
   }  
   
   
+  
+*>>> Notes:
+*    'xx_Dis'   variables used for displaying in Results Windows
+*    'xx_Exp'   variables used for exporting to .md, .txt files
+  
 *-Weixin / Text
 
   if ("`text'`weixin'" !=""){
-      gen _Cat_br = `">>专题："' + catname + " " + url_cat
-      gen _BlogDis = author + ", " + year + ", " + title + ". " + url_blog `hot_new'
+      gen _Cat_Dis = `">>专题：`catname_br'"'  // for display in Results Window
+      gen _Cat_Exp = `">>专题："' + catname + " " + url_cat  // for export to files
+      gen _BlogDis = author + ", " + year + ", " + `"`title_br'"' + ". " + url_blog `hot_new'
+      gen _BlogExp = author + ", " + year + ", " +    title       + ". " + url_blog `hot_new'
   }
   
   
@@ -459,52 +478,69 @@ qui{  //----------------------------------qui ----------01------
       local nocat "nocat"
   }
   
-
   if "`md'`md0'`mdca'`md1'`md2'" != ""{
-      local cat_br_md `""- 专题：[" + catname + "](" + url_cat  + ")""'
-      gen _Cat_br   = `cat_br_md'  
-      gen _title_link  = "[" + title   + "](" + url_blog + ")"
+      local cat_Head "- 专题：["
   }
-  if "`md3'" != ""{
-      local cat_br_md `""## " + catname"'
-      gen _Cat_br   = `cat_br_md'  
-      gen _title_link  = "[" + title   + "](" + url_blog + ")"
-  }  
+  else if "`md3'" != ""{
+      local cat_Head "## ["
+  }
+  
+
+// set trace on   
+  if "`md'`md0'`mdca'`md1'`md2'`md3'" != ""{
+      gen  _Cat_Dis  = "`cat_Head'" + `"`catname_br'"' + "](" + url_cat  + ")"  
+      gen  _Cat_Exp  = "`cat_Head'" +    catname       + "](" + url_cat  + ")"
+      gen _title_link     = "[" + title          + "](" + url_blog + ")"
+      gen _title_link_br  = "[" + `"`title_br'"' + "](" + url_blog + ")"
+  }
   if "`md'" !=""{
-      gen _BlogDis = "`item'" + author      + ", " + year + ", " + _title_link  + `"`jname_No'"' + id + "." `hot_new'
+      gen _BlogExp = "`item'" + author      + ", " + year + ", " + _title_link     + `"`jname_No'"' + id + "." `hot_new'
+      gen _BlogDis = "`item'" + author      + ", " + year + ", " + _title_link_br  + `"`jname_No'"' + id + "." `hot_new'
   }
   if "`md0'`md3'" !=""{
-      gen _BlogDis = "`item'" + author_link + ", " + year + ", " + _title_link  + `"`jname_No'"' + id + "." `hot_new'
+      gen _BlogExp = "`item'" + author_link + ", " + year + ", " + _title_link     + `"`jname_No'"' + id + "." `hot_new'
+      gen _BlogDis = "`item'" + author_link + ", " + year + ", " + _title_link_br  + `"`jname_No'"' + id + "." `hot_new'
   }
   if "`md1'" !=""{
-      gen _BlogDis = "`item'" + _title_link  `hot_new'
+      gen _BlogExp = "`item'" + _title_link     `hot_new'
+      gen _BlogDis = "`item'" + _title_link_br  `hot_new'
   }
   if "`md2'" !=""{
-      gen _BlogDis = "`item'" + author + ", " + year + ", " + _title_link  + "." `hot_new'
+      gen _BlogExp = "`item'" + author + ", " + year + ", " + _title_link     + "." `hot_new'
+      gen _BlogDis = "`item'" + author + ", " + year + ", " + _title_link_br  + "." `hot_new'
   }
-  if "`mdc'" !=""{   // Author([Year](blogurl))
-      *gen _Cat_br = `">>专题："' + catname + " " + url_cat
-      gen year_link = " ([" + year + "](" + url_blog + "))"  // ([2022](blogurl))
-      gen _BlogDis = author + year_link
+
+  if "`mdc'`mdca'" !=""{
+      gen year_link    = " ([" +    year       + "](" + url_blog + "))"  // ([2022](blogurl))
+      gen year_link_br = " ([" + `"`year_br'"' + "](" + url_blog + "))" 
+  }
+  if "`mdc'" != ""{   // Author([Year](blogurl))
+      gen _BlogExp = author + year_link
+      gen _BlogDis = author + year_link_br
   }
   if "`mdca'" !=""{  // [Author](author_link)([Year](blogurl))
-      *gen _Cat_br = `">>专题："' + catname + " " + url_cat
-      gen year_link = " ([" + year + "](" + url_blog + "))"  // ([2022](blogurl))
-      gen _BlogDis = author_link + year_link
+      gen _BlogExp = author_link + year_link
+      gen _BlogDis = author + year_link_br
   }
 
   
 *-LaTeX
 
   if "`latex'" != ""{    
-      gen _Cat_br   = "- \href{" + url_cat  + "}" + "{" + catname + "}"
+      gen _Cat_Exp   = "- \href{" + url_cat  + "}" + "{" +    catname       + "}"
+      gen _Cat_Dis   = "- \href{" + url_cat  + "}" + "{" + `"`catname_br'"' + "}"
       gen _title_link  = "\href{" + url_blog + "}" + "{" + title   + "}"
-      gen _BlogDis = "- " + author + ", " + year + ", " + _title_link  + `"`jname_No'"' + id + "." `hot_new'
+      gen _BlogExp = "- " + author + ", " + year + ", " + _title_link  + `"`jname_No'"' + id + "." `hot_new'
+      gen _title_link_br  = "\href{" + url_blog + "}" + "{" + `"`title_br'"'   + "}"
+      gen _BlogDis = "- " + author + ", " + year + ", " + _title_link_br  + `"`jname_No'"' + id + "." `hot_new'      
   }
   if "`lac'" != ""{
-      gen _Cat_br = `">>专题："' + catname + " " + url_cat
-      gen year_link = "\href{" + url_blog + "}" + "{(" + year   + ")}"
-      gen _BlogDis = author + year_link
+      gen _Cat_Exp   = "- \href{" + url_cat  + "}" + "{" +    catname       + "}"
+      gen _Cat_Dis   = "- \href{" + url_cat  + "}" + "{" + `"`catname_br'"' + "}"
+      gen year_link    = "\href{" + url_blog + "}" + "{(" +    year         + ")}"
+      gen year_link_br = "\href{" + url_blog + "}" + "{(" + `"`year_br'"'   + ")}"
+      gen _BlogDis = author + year_link_br
+      gen _BlogExp = author + year_link
   }
   
 
@@ -545,7 +581,7 @@ forvalues i = 1/`N'{
             dis " "
         } 
         if "`hot'`new'`mdc'`mdca'" == ""{
-            dis _Cat_br[`i']
+            dis _Cat_Dis[`i']
         }
     }
     
@@ -565,9 +601,9 @@ if ("`dis_opt'" != ""){
         if ("`mdc'`mdca'" == "") & ("`nocat'" == "") {  
             gen _tag2 = _tag + 1 if _tag==1
             expand _tag2, gen(orig)
-            replace _BlogDis = "" if orig==1
-            replace _BlogDis = "  " + _BlogDis if _BlogDis != "" 
-            replace _BlogDis = _Cat_br if _BlogDis == "" 
+            replace _BlogExp = "" if orig==1
+            replace _BlogExp = "  " + _BlogExp if _BlogExp != "" 
+            replace _BlogExp = _Cat_Exp if _BlogExp == "" 
          // gsort _Cat_br -orig  author title          // gsort 
             gsort url_cat -orig  author title          // new 2023/11/17 0:58
         }
@@ -594,7 +630,7 @@ if ("`dis_opt'" != ""){
     
 	local saving "_lianxh_temp_out_`fn_suffix'"
         
-    qui export delimited _BlogDis using `"`path'/`saving'"' , ///
+    qui export delimited _BlogExp using `"`path'/`saving'"' , ///
     	       novar nolabel delimiter(tab) replace
     local save "`saving'"   
     	    noi dis " "

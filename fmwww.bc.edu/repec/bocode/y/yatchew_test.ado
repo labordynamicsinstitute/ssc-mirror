@@ -1,7 +1,13 @@
 cap program drop yatchew_test
 program define yatchew_test, rclass
 version 12.0
-syntax varlist(min = 2 numeric) [if] [, het_robust path_plot order(string)]
+syntax varlist(min = 2 numeric) [if] [, het_robust path_plot order(string) no_updates]
+
+if "`no_updates'" == "" {
+	if uniform() < 0.01 {
+		noi ssc install yatchew_test, replace
+	}
+}
 
 if "`order'" != "" {
     if mod(`order', 1) != 0 {

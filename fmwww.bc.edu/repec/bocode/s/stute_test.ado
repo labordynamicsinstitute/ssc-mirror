@@ -1,6 +1,6 @@
 cap program drop stute_test
 program define stute_test, rclass
-syntax varlist(max = 4 min = 2) [if] [in] [, order(integer 1) seed(string) brep(integer 500) baseline(string)] 
+syntax varlist(max = 4 min = 2) [if] [in] [, order(integer 1) seed(string) brep(integer 500) baseline(string) no_updates] 
 version 12.0
 marksample touse_main
 qui {
@@ -8,6 +8,12 @@ qui {
     keep if `touse_main' // Outer sample selection
 
     tokenize `varlist'
+
+    if "`no_updates'" == "" {
+        if uniform() < 0.01 {
+            noi ssc install stute_test, replace
+        }
+    }
 
     // Setup seed and bootstrap reps
     if "`seed'" != "" set seed `seed'
