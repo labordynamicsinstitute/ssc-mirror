@@ -1,0 +1,39 @@
+d 'HALFNORM_DIST': module for computing half-normal distribution functions
+d
+d  halfnormden computes the half-normal density distribution
+d function, halfinvnorm computes the inverse cumulative standard
+d half-normal distribution function, and halfnorm computes the
+d cumulative standard half-normal distribution. The half-normal
+d distribution is a Normal distribution truncated to only have a
+d nonzero density for values to the right of the peak. In the
+d half-normal distribution, the parameter theta is related to the
+d standard deviation (sd) of the corresponding normal distribution
+d by the equation theta = sqrt(pi/2)/sd. The default theta is
+d sqrt(pi/2) which corresponds to sd = 1. halfnormdeni,
+d halfinvnormi and halfnormi are the immediate forms of
+d halfnormden, invnorm and normd, respectively; see immed. 
+d
+d KW: half normal density distribution
+d KW: half-normal cumulative standard distribution
+d KW: half-inverse cumulative standard normal
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20240627
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f halfnorm.ado
+f halfnorm.sthlp
+f halfnorm_dist.sthlp
+f halfinvnorm.ado
+f halfinvnorm.sthlp
+f halfinvnormi.ado
+f halfinvnormi.sthlp
+f halfnormden.ado
+f halfnormden.sthlp
+f halfnormdeni.ado
+f halfnormdeni.sthlp
+f halfnormi.ado
+f halfnormi.sthlp

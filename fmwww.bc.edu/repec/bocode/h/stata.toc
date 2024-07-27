@@ -2,6 +2,7 @@ p hadrilm module to perform Hadri panel unit root test
 p haif module to compute Homoskedastic Adjustment Inflation Factors for model selection
 p haiku module to randomly produce haikus
 p half module to compute homoskedastic adjustment inflation factors for model selection
+p halfnorm_dist module for computing half-normal distribution functions
 p hallt-skewt module to compute skewness-adjusted bootstrap t-statistics
 p hamiltonfilter module to calculate the Hamilton Filter for a Single Time Series or for a Panel Dataset
 p hammock module to implement Hammock plot, visualizing categorical (and continuous) data

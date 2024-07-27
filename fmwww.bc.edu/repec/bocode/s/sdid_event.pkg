@@ -1,0 +1,31 @@
+d 'SDID_EVENT': module providing Synthetic Difference-in-Differences (SDID) event-study estimators
+d
+d      sdid_event computes the event-study version of the Synthetic
+d Difference-in-Differences (SDID) estimators from Arkhangelsky   
+d et al. (2021). As the name suggests, this program is an extension
+d of sdid. As a result, all the conventions and requirement    for
+d the implementation of sdid also apply for sdid_event. sdid_event
+d can also be used in staggered adoption designs, with	 
+d differential timing of treatment adoption. Also, the command
+d supports both the bootstrap and placebo vce() options for   
+d inference. 
+d
+d KW: synthetic DiD
+d KW: difference in differences
+d KW: event study
+d
+d Requires: Stata version 12 and sdid, unique from SSC (q.v.)
+d
+d Distribution-Date: 20240726
+d
+d Author:  Diego Ciccia, Economics Department, Sciences Po
+d Support: email  diego.ciccia@@sciencespo.fr
+d
+d Author: Damian Clarke, Universidad de Santiago de Chile
+d Support: email dclarke@@fen.uchile.cl
+d
+d Author: Daniel Pailañir, Universidad de Santiago de Chile
+d Support: email dpailanir@@fen.uchile.cl
+d
+f sdid_event.ado
+f sdid_event.sthlp

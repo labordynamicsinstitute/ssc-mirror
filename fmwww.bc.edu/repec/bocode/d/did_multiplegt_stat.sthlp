@@ -92,8 +92,11 @@ The WAS estimator is also amenable to doubly-robust estimation, unlike the AS es
 
 {p 4 4}
 {cmd:Assumptions.}
-When the data has more than two time periods, the command assumes a static model: units' outcome at period t only depends on their period-t
-treatment, not on their lagged treatments. See the {cmd:did_multiplegt_dyn} command for estimators allowing for dynamic effects. 
+The command assumes a static model: units' outcome at period t only depends on their period-t
+treatment, not on their lagged treatments. It can be tweaked to
+obtain estimators robust to dynamic effects up to a pre-specified treatment lag, see Section 6.3 of 
+{browse "https://ssrn.com/abstract=4011782":de Chaisemartin et al (2022)}. 
+See also the {cmd:did_multiplegt_dyn} command for estimators allowing for unrestricted dynamic effects. 
 The command also makes a parallel trends assumption: the counterfactual outcome evolution
 switchers would have experienced if their treatment had not changed is assumed to be equal to
 the outcome evolution of stayers with the same baseline treatment. Importantly, this parallel-trends 
@@ -146,8 +149,8 @@ change may therefore not be the same. On the other hand, taxes
 may not respond to supply and demand shocks and may satisfy a parallel-trends assumption. In such cases, the command
 can compute the IV-WAS estimator introduced in 
 {browse "https://ssrn.com/abstract=4011782":de Chaisemartin et al (2022)}.
-The IV-WAS estimator is equal to the WAS estimator of the instrument's reduced-form effect on the outcome controlling for D_{t-1}, divided by the
-WAS estimator of the instrument's first-stage effect on the treatment controlling for D_{t-1}. 
+The IV-WAS estimator is equal to the WAS estimator of the instrument's reduced-form effect on the outcome, divided by the
+WAS estimator of the instrument's first-stage effect on the treatment. We recommend controlling for D_{t-1} in the estimation.
 See {browse "https://ssrn.com/abstract=4011782":de Chaisemartin et al (2022)} for some explanations as to why controlling for D_{t-1}
 is desirable in IV estimation.
 {p_end}
@@ -203,10 +206,14 @@ to the outcome evolution of stayers with the same baseline
 t-1-to-t outcome evolution of switchers and stayers with the same baseline
     treatment, and with the same controls at period t-1.
 Specifying too many control variables may lead to noisy estimators. If placebo estimators are small, insignificant and precisely estimated without
-control variables, including control variables may not be necessary.
+control variables, including control variables may not be necessary. 
+See {browse "https://drive.google.com/file/d/1ShWsx0vU-5DcLWgiXM0v0lQExOfuG43l/view?usp=drive_link":de Chaisemartin et al (2024)} 
+for some explanations as to how controls are accounted for in the estimation.
 
 {phang}
-{cmd:weights({varname}{cmd:})} : This option allows to compute estimators weighted by {varname}{cmd:}.
+{cmd:weights({varname}{cmd:})} : This option allows to compute estimators weighted by {varname}{cmd:}. 
+See {browse "https://drive.google.com/file/d/1ShWsx0vU-5DcLWgiXM0v0lQExOfuG43l/view?usp=drive_link":de Chaisemartin et al (2024)} 
+for further details on weighted estimators.
 
 {dlgtab:Options to estimate heterogeneous treatment effects}
 
@@ -384,7 +391,7 @@ which contains gasoline taxes, prices, and consumption for 48 US states, every y
 {title:References}
 
 {p 4 4}
-de Chaisemartin, C, D'Haultfoeuille, X, Pasquier, F, Vazquez‐Bare, G (2022)
+de Chaisemartin, C, D'Haultfoeuille, X, Pasquier, D, Sow, F, Vazquez‐Bare, G (2022)
 {browse "https://ssrn.com/abstract=4011782":Difference-in-Differences for Continuous Treatments and Instruments with Stayers}.
 {p_end}
 {p 4 4}
@@ -399,6 +406,11 @@ de Chaisemartin, C, D'Haultfoeuille, X (2021)
 Li, S, Linn, J, Muehlegger, E (2014)
 {browse "https://www.aeaweb.org/articles?id=10.1257/pol.6.4.302":Gasoline Taxes and Consumer Behavior}.
 {p_end}
+{p 4 4}
+de Chaisemartin, C, D'Haultfoeuille, X, Pasquier, D, Sow, F, Vazquez‐Bare, G (2024)
+{browse "https://drive.google.com/file/d/1ShWsx0vU-5DcLWgiXM0v0lQExOfuG43l/view?usp=drive_link":Difference-in-Differences for Continuous Treatments and Instruments with Stayers: extensions to estimators with control variables, weighted estimators, imbalanced panels, and clustered standard errors.}
+{p_end}
+
 
 {title:Authors}
 

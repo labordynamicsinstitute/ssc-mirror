@@ -8283,6 +8283,7 @@ fmwww.bc.edu/repec/bocode/h/hanoitower.ado
 fmwww.bc.edu/repec/bocode/h/histplot.hlp
 fmwww.bc.edu/repec/bocode/h/heckman_fixedrho_lf.ado
 fmwww.bc.edu/repec/bocode/h/hktrade.sthlp
+fmwww.bc.edu/repec/bocode/h/halfnormi.sthlp
 fmwww.bc.edu/repec/bocode/h/hlp2pdf.html
 fmwww.bc.edu/repec/bocode/h/heckprob2.ado
 fmwww.bc.edu/repec/bocode/h/hyphens.ado
@@ -8292,6 +8293,7 @@ fmwww.bc.edu/repec/bocode/h/hangr_beta.ado
 fmwww.bc.edu/repec/bocode/h/htmlinput.mata
 fmwww.bc.edu/repec/bocode/h/htmlimg.ado
 fmwww.bc.edu/repec/bocode/h/honestecos_macosx.plugin
+fmwww.bc.edu/repec/bocode/h/halfinvnorm.sthlp
 fmwww.bc.edu/repec/bocode/h/htmlul.mata
 fmwww.bc.edu/repec/bocode/h/histplot.ado
 fmwww.bc.edu/repec/bocode/h/hestonvanillasmile.m
@@ -8503,6 +8505,7 @@ fmwww.bc.edu/repec/bocode/h/htmlthead.mata
 fmwww.bc.edu/repec/bocode/h/hoishapley.pkg
 fmwww.bc.edu/repec/bocode/h/htmldetails.mata
 fmwww.bc.edu/repec/bocode/h/head.pkg
+fmwww.bc.edu/repec/bocode/h/halfnorm_dist.pkg
 fmwww.bc.edu/repec/bocode/h/htmltitle.mata
 fmwww.bc.edu/repec/bocode/h/hoi.pkg
 fmwww.bc.edu/repec/bocode/h/hlm.pkg
@@ -8516,9 +8519,11 @@ fmwww.bc.edu/repec/bocode/h/html_fw_jquerypopupoverlay.jel
 fmwww.bc.edu/repec/bocode/h/hlpedit.html
 fmwww.bc.edu/repec/bocode/h/hbar.html
 fmwww.bc.edu/repec/bocode/h/hbar.hlp
+fmwww.bc.edu/repec/bocode/h/halfnorm.ado
 fmwww.bc.edu/repec/bocode/h/hmap.html
 fmwww.bc.edu/repec/bocode/h/htmlhr.mata
 fmwww.bc.edu/repec/bocode/h/Head_and_neck_arm1_no_risk_table.txt
+fmwww.bc.edu/repec/bocode/h/halfnormdeni.ado
 fmwww.bc.edu/repec/bocode/h/hlmmkmdm3.ado
 fmwww.bc.edu/repec/bocode/h/hireg.ado
 fmwww.bc.edu/repec/bocode/h/hammock.sthlp
@@ -8533,6 +8538,7 @@ fmwww.bc.edu/repec/bocode/h/hte_sm.sthlp
 fmwww.bc.edu/repec/bocode/h/htmldiv.mata
 fmwww.bc.edu/repec/bocode/h/hcavar.ado
 fmwww.bc.edu/repec/bocode/h/hful_hlim.pkg
+fmwww.bc.edu/repec/bocode/h/halfnormi.ado
 fmwww.bc.edu/repec/bocode/h/hodgesl.ado
 fmwww.bc.edu/repec/bocode/h/holsti.ado
 fmwww.bc.edu/repec/bocode/h/htm.sthlp
@@ -8542,6 +8548,7 @@ fmwww.bc.edu/repec/bocode/h/htmldel.mata
 fmwww.bc.edu/repec/bocode/h/hadrilm.pkg
 fmwww.bc.edu/repec/bocode/h/homogamy.dta
 fmwww.bc.edu/repec/bocode/h/heatmapgraph.sthlp
+fmwww.bc.edu/repec/bocode/h/halfnormden.sthlp
 fmwww.bc.edu/repec/bocode/h/heart.sthlp
 fmwww.bc.edu/repec/bocode/h/hplot.html
 fmwww.bc.edu/repec/bocode/h/htmlstrong.mata
@@ -8550,10 +8557,12 @@ fmwww.bc.edu/repec/bocode/h/hlist.pkg
 fmwww.bc.edu/repec/bocode/h/hprescott8.hlp
 fmwww.bc.edu/repec/bocode/h/hangr_chi2.ado
 fmwww.bc.edu/repec/bocode/h/hvar.sthlp
+fmwww.bc.edu/repec/bocode/h/halfinvnorm.ado
 fmwww.bc.edu/repec/bocode/h/htmlli.mata
 fmwww.bc.edu/repec/bocode/h/htmlheader.mata
 fmwww.bc.edu/repec/bocode/h/hhi.hlp
 fmwww.bc.edu/repec/bocode/h/heart.pkg
+fmwww.bc.edu/repec/bocode/h/halfinvnormi.sthlp
 fmwww.bc.edu/repec/bocode/h/haloperidol.dta
 fmwww.bc.edu/repec/bocode/h/hshaz.html
 fmwww.bc.edu/repec/bocode/h/hildasetup.sthlp
@@ -8617,6 +8626,7 @@ fmwww.bc.edu/repec/bocode/h/hetred.ado
 fmwww.bc.edu/repec/bocode/h/hlTex.ado
 fmwww.bc.edu/repec/bocode/h/heckman_fixedrho.sthlp
 fmwww.bc.edu/repec/bocode/h/heatplot.pkg
+fmwww.bc.edu/repec/bocode/h/halfnorm.sthlp
 fmwww.bc.edu/repec/bocode/h/hangroot.html
 fmwww.bc.edu/repec/bocode/h/htmlwbr.mata
 fmwww.bc.edu/repec/bocode/h/hammock.pkg
@@ -8653,6 +8663,7 @@ fmwww.bc.edu/repec/bocode/h/hist3.pkg
 fmwww.bc.edu/repec/bocode/h/hotdeck.ado
 fmwww.bc.edu/repec/bocode/h/hkprlink.sthlp
 fmwww.bc.edu/repec/bocode/h/hl.pkg
+fmwww.bc.edu/repec/bocode/h/halfnorm_dist.sthlp
 fmwww.bc.edu/repec/bocode/h/htmlembed.mata
 fmwww.bc.edu/repec/bocode/h/histbox.pkg
 fmwww.bc.edu/repec/bocode/h/hamiltonfilter.ado
@@ -8733,6 +8744,7 @@ fmwww.bc.edu/repec/bocode/h/hbar.pkg
 fmwww.bc.edu/repec/bocode/h/haifcomp.sthlp
 fmwww.bc.edu/repec/bocode/h/htmlimg.mata
 fmwww.bc.edu/repec/bocode/h/hlp2pdf.hlp
+fmwww.bc.edu/repec/bocode/h/halfnormdeni.sthlp
 fmwww.bc.edu/repec/bocode/h/HHcte.prg
 fmwww.bc.edu/repec/bocode/h/hbox.ado
 fmwww.bc.edu/repec/bocode/h/htmlem.mata
@@ -8771,9 +8783,11 @@ fmwww.bc.edu/repec/bocode/h/hotdeck6.hlp
 fmwww.bc.edu/repec/bocode/h/haifcomp.html
 fmwww.bc.edu/repec/bocode/h/htmlstatic.mata
 fmwww.bc.edu/repec/bocode/h/htmlrt.mata
+fmwww.bc.edu/repec/bocode/h/halfnormden.ado
 fmwww.bc.edu/repec/bocode/h/hlmmkmdm2.ado
 fmwww.bc.edu/repec/bocode/h/hpc.ado
 fmwww.bc.edu/repec/bocode/h/htmlparam.mata
+fmwww.bc.edu/repec/bocode/h/halfinvnormi.ado
 fmwww.bc.edu/repec/bocode/h/htmls.mata
 fmwww.bc.edu/repec/bocode/h/hlTex.html
 fmwww.bc.edu/repec/bocode/h/hamiltonfilterdquarterly.dta
@@ -19697,6 +19711,7 @@ fmwww.bc.edu/repec/bocode/s/sequence.sthlp
 fmwww.bc.edu/repec/bocode/s/538.sthlp
 fmwww.bc.edu/repec/bocode/s/stcoxgof.pkg
 fmwww.bc.edu/repec/bocode/s/surveybias.ado
+fmwww.bc.edu/repec/bocode/s/sdid_event.pkg
 fmwww.bc.edu/repec/bocode/s/selectvars.hlp
 fmwww.bc.edu/repec/bocode/s/spregdpd.dlg
 fmwww.bc.edu/repec/bocode/s/spweight.sthlp
@@ -20866,6 +20881,7 @@ fmwww.bc.edu/repec/bocode/s/scheme-cblind1.scheme
 fmwww.bc.edu/repec/bocode/s/smfit.html
 fmwww.bc.edu/repec/bocode/s/sptobitmstarxt10.ado
 fmwww.bc.edu/repec/bocode/s/sizefx.ado
+fmwww.bc.edu/repec/bocode/s/sdid_event.sthlp
 fmwww.bc.edu/repec/bocode/s/sf36fr.hlp
 fmwww.bc.edu/repec/bocode/s/smileplot7.ado
 fmwww.bc.edu/repec/bocode/s/sptobitmstardxt12.ado
@@ -20919,6 +20935,7 @@ fmwww.bc.edu/repec/bocode/s/sqparcoord.ado
 fmwww.bc.edu/repec/bocode/s/sptobitmstarh3.ado
 fmwww.bc.edu/repec/bocode/s/spmstar3.ado
 fmwww.bc.edu/repec/bocode/s/spell.hlp
+fmwww.bc.edu/repec/bocode/s/sdid_event.ado
 fmwww.bc.edu/repec/bocode/s/sortlistby.pkg
 fmwww.bc.edu/repec/bocode/s/sptobitsac.sthlp
 fmwww.bc.edu/repec/bocode/s/smileplot.hlp
