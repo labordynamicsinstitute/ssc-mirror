@@ -26,7 +26,7 @@ help for {hi:hammock}{right:{hi: Matthias Schonlau}}
 
 {syntab :Highlighting}
 {synopt :{opt hivar:iable(varname)}} Name of variable to highlight {p_end}
-{synopt :{opt hival:ues(numlist)}}  List of values of {it:hivariable} to highlight {p_end}
+{synopt :{opt hival:ues(string)}}  List of values of {it:hivariable} to highlight {p_end}
 {synopt :{opt col:orlist(str)}} Default color and colors for highlighting {p_end}
 
 {syntab :Manipulating Spacing and Layout}
@@ -35,6 +35,7 @@ help for {hi:hammock}{right:{hi: Matthias Schonlau}}
 {synopt :{opt minbar:freq(int)}} Specify minimum bar width {p_end}
 {synopt :{opt label_min_dist(real)}} Specify minimum distance between two labels on the same axis{p_end}
 {synopt :{opt labelopt(str)}} Pass options to {it:{help added_text_options}}, e.g. to manipulate label text size{p_end}
+{synopt :{opt aspect:ratio(real)}} Aspect ratio of the plot region {p_end}
 {synopt :{opt no_outline}} Do not outline the edges of semi-translucent boxes {p_end}
 
 {syntab :Other options}
@@ -66,8 +67,23 @@ will usually appear to be a single line because each category typically
  only contains one observation.
 
 {pstd} The order of variables in {it:varlist} determines the order of variables in the graph.  
-All variables in {it:varlist} must be numerical. String variables should be 
+All variables in {it:varlist} must be numerical, but value labels can be used to assign labels to values.  
+String variables should be 
 converted to numerical variables first, e.g. using {cmd: encode} or {cmd: destring}. 
+
+{title:Installation}
+{phang} 
+Installation via the {browse "https://github.com/schonlau/hammock-stata":Github repository}.  
+The Github version may be more recent than the version on SSC.
+
+{phang2} 
+{cmd: . net install hammock, from "https://raw.githubusercontent.com/schonlau/hammock-stata/main/installation/" replace }
+
+{phang} 
+Installation via SSC: 
+
+{phang2}
+{cmd:. net install hammock, replace} 
 
 
 {title:Options}
@@ -95,15 +111,37 @@ can be used to specify which individual categories to highlight.
 A value that is highlighted appears in a different color and observations in this 
 category can be traced through the entire graph. 
 {it:hivariable } does not have to be part of {it:varlist}.
+If so, it can also be a string variable.
 
 {phang}
 {opt hivalues}
 specifies which values of {it: hivariable} are highlighted.
-For example, {it: hivalues(4 9)} will use different colors for {it:hivariable==4} and {it:hivariable==9}.
-All values except 4 and 9 use the default color, the first color in {it: colorlist}.
+{it: hivalues} allows either a numlist, 
+a scalar preceeded by ">=","<=",">" or "<", 
+or a string when highlighting a string variable.
+
+{pmore}
+{it:hivalues} as a numlist: 
+To highlight multiple values of {it: hivariable}, specify, for example, {it: hivalues(4 9)}. 
 Values 4 and 9 are assigned the second and third color in {it: colorlist}, respectively. 
-If more than 8 values are specified, colors are recycled.
-{it: hivalues} is ignored if {it: hivariable} is not specified. 
+(If desired, the second and third color may be the same color.) 
+All values except 4 and 9 use the default color, the first color in {it: colorlist}. 
+To highlight a single value of {it: hivariable}, specify, for example, {it: hivalues(4)}. 
+To highlight missing values of {it: hivariable}, specify {it: hivalues(.)}
+
+{pmore}
+{it:hivalues} with ">","<",">=","<=" comparisons: For example, {it: hivalues(>=3)} highlights all values greater than or equal to 3 
+using the same color  (the second color in {it: colorlist}).  
+
+{pmore}
+{it:hivalues} may specify strings or subsets of strings when {it:hivariable} is a string variable. 
+For example, for the Shakespeare data set, {it:hivar(play_name)} {it:hivalues(Richard Mac)} 
+highlights all plays that contain "Richard" in one color and those that contain "Mac" in another color. 
+Because variables in {it:varlist} must be numerical (with optional string labels), 
+this is only relevant if the {it:hivar} is NOT part of {it:varlist}.
+
+{pmore}
+{it: hivalues} is ignored if {it: hivariable} is not specified. If more than 8 values/strings are specified, colors are recycled.
 
 {phang}
 {opt colorlist} specifies a list of colors to be used.  
@@ -145,7 +183,7 @@ Space can be removed by using negative values as in {it:space(-0.1)}.
  By default, {it:minbarfreq} equals 1 observation.  
  In other words, by default this option has no effect.
  
- {pmore}
+{pmore}
  During highlighting, bars may consist of multiple segments with different colors. 
  In that case, {it:minbarfreq} is applied to each color segment separately.
   
@@ -168,6 +206,12 @@ The arguments are passed  to {it:{help added_text_options}}.
 This can be used to manipulate the text sizes of the labels, for example, {it: labelopt(size(vsmall))}.
 Text size names are explained in {it:{help textsizestyle}}. 
 By default, label size is "medium". If option {it:label} is not specified,  option {it:labelopt} is ignored. 
+  
+{phang}
+{opt aspectratio} specifies the aspect ratio of the plot region. By default, aspect=0.7272. Changing the default 
+also affects the space between the plot region and the available area. 
+If a long variable name displays partially outside the graph area, increasing the aspect ratio is 
+one way of ensuring variable names are fully visible. 
   
 {phang}
 {opt no_outline} (rarely needed) In Stata, translucent boxes (e.g. "red%50" , where the color is 50% translucent) 
@@ -207,10 +251,6 @@ In particular,  the option {it: xlab(,labsize(vsmall))} makes variable names sma
 {p_end}
 
 {phang2}{cmd:. sysuse bplong}{p_end}
-
-{pstd}  Specify a scheme to ensure a white background to the plot.
-
-{phang2}{cmd:. set scheme s1color}
 	
 {phang2}{cmd:. hammock sex agegrp when bp, label}{p_end}
 
@@ -273,7 +313,6 @@ We also find that life expectancy, GNP and safewater are highly correlated, beca
 {pstd}{it:({stata hammock_examples hammock_lifeexp:click to run})}{p_end}
 
 
-
 {dlgtab:Missing values 1}
 {pstd} Continuing with the lifeexp data, we check for missing values.  Missing values are indicated 
 by a category below the horizontal line near the bottom. 
@@ -286,7 +325,6 @@ occasionally due to a coding error.
 Here, there is no discernible pattern to the missing values.
 
 {pstd}{it:({stata hammock_examples hammock_lifeexp_missing:click to run})}{p_end}
-
 
 
 {dlgtab:Missing values 2}
@@ -321,10 +359,17 @@ We also add a little more space to the left and right margins so the variable na
 {pstd}{it:({stata hammock_examples hammock_agegroup2:click to run})}{p_end}
 
 
+{dlgtab: Stata Version 17 and earlier}
+
+{pstd}  In Stata 18 the default scheme, stcolor, has a white background. 
+If you are using Stata 17 or earlier, specify a scheme to ensure a white background to the plot as follows:
+
+{phang2}{cmd:. set scheme s1color}
+
 
 {title:Copyright}
 
-{pstd} Copyright 2002-2022 Matthias Schonlau {p_end}
+{pstd} Copyright 2002-2024 Matthias Schonlau {p_end}
 
 {pstd} This program is free software: you can redistribute it and/or modify it under the terms of the GNU General 
 Public License as published by the Free
@@ -339,10 +384,15 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more d
 
 {title:References}
 
+{p 0 8} Schonlau M. Hammock plots: visualizing categorical and numerical variables. 
+Journal of Computational and Graphical Statistics (to appear in print). 
+{break} Journal: {browse "https://www.tandfonline.com/doi/full/10.1080/10618600.2024.2322561"}
+{break} Preprint:{browse "https://schonlau.net/publication/24schonlau_hammock_JCGS.pdf"}
+
 {p 0 8}Schonlau M. Visualizing Categorical Data Arising in the Health Sciences 
 Using Hammock Plots. In Proceedings of the Section on Statistical Graphics, 
-American Statistical Association; 2003, CD-ROM. 
-Available from : {browse "http://www.schonlau.net/publication/03jsm_hammockplot.pdf"}
+American Statistical Association; 2003, 
+{browse "http://www.schonlau.net/publication/03jsm_hammockplot.pdf"}
 
 
 {title:Author}
@@ -354,7 +404,6 @@ Available from : {browse "http://www.schonlau.net/publication/03jsm_hammockplot.
 
 {title:Also see}
 
-{p 0 19}Stata Journal:  {hi:[SJ] clustergram} {p_end}
-{p 0 19}Stata Bulletin: {hi:[STB] parcoord}{p_end}
+{hi:Visualizing cluster assignments:} {helpb clustergram} 
 
 

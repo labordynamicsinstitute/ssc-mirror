@@ -15,9 +15,9 @@ d KW: Rasch analysis
 d KW: Equating
 d KW: Rasch Measurement Theory
 d
-d Requires: Stata version 14, genscore and gengroup from SSC (q.v.)
+d Requires: Stata version 18, genscore and gengroup from SSC (q.v.)
 d
-d Distribution-Date: 20230721
+d Distribution-Date: 20240727
 d
 d Author: Jean-Benoit Hardouin , University of Nantes, France
 d Support: email jean-benoit.hardouin@@univ-nantes.fr

@@ -1,14 +1,14 @@
 program define hammock
-*! 1.2.5   Oct 10, 2023: added option outline 
+*! 1.4.5 Jul 23, 2024: documentation on aspect ratio
 	version 14.2
 	syntax varlist [if] [in], [  Missing BARwidth(real 1) MINBARfreq(int 1) /// 
-		hivar(str) HIVALues(numlist  missingokay) SPAce(real 0.0) ///
+		hivar(str) HIVALues(string) SPAce(real 0.0) ///
 		LABel labelopt(str) label_min_dist(real 3.0) ///
 		SAMEscale(varlist) ///
-		ASPECTratio(real 0.72727) COLorlist(str) shape(str) no_outline * ]
+		ASPECTratio(real 0.72727) COLorlist(str) shape(str) no_outline  * ]
 
 	confirm numeric variable `varlist'
-	
+
 	local missing = "`missing'" != ""
 	local addlabel= "`label'" != ""
 	local same = "`samescale'" !=""
@@ -22,7 +22,11 @@ program define hammock
 		local varnamewidth=0.3   // if addlabel, change the default space to 0.3
 	}
 
-	check_sufficient_colors ,  hivar("`hivar'") hivalues("`hivalues'") colorlist("`colorlist'") 
+	parse_hivalues, hivalues("`hivalues'") hiprefix("") 
+	local hiprefix = r(hiprefix)  // if missing, this assigns hiprefix="."
+	local hivalues = r(hivalues)  // caution : overwrites hivalues
+	
+	check_sufficient_colors ,  hivar("`hivar'") hivalues("`hivalues'") colorlist(`"`colorlist'"') 
 	if ("`colorlist'"=="")	 local colorlist="black red  blue teal  yellow sand maroon orange olive magenta"
 
 
@@ -42,20 +46,37 @@ program define hammock
 	local separator "@"  /*one letter only, separates variable names */
 	
 	// Aspectratio
-	// Stata define aspectratio as height/width of the inner plotregion (see "help aspect"). I chose as default: aspect=4/5.5=0.7272
-	// Because it refers to the *inner* plot region, it is not affected by the xlabels at the bottom.
-	// aspectratio is explicitly specified in the syntax, but can be overwritten in "*"	
-	// Outside of Stata, the aspectratio is often defined the other way around (including in the initial drafts of this program)
+	// see "help region_options", "help aspect_option", see Glossary in Graphics manual
+	// `xsize' and `ysize' define the whole-graph (*available area*) aspectratio.  
+	// 		Stata's default up to version 17 was  ysize(4) xsize(5.5)
+	// 		In Stata 18, the default scheme switched to stcolor ysize(4.5) and xsize(7.5), aspect= 0.8181,
+	//		but I found leaving the old default, aspect=0.7272, used the available space better
+	// `aspect' defines the *plot region* aspect ratio.
+	// Stata defines aspect ratio as: height/width (rather than the other way around)
+	// I chose as default: aspect=ysize/xsize=4/5.5=0.7272 ,
+	//		i.e. I chose that the *plot region* has the same aspect ratio as the *available area*.) 
+	// Outside of Stata, aspectratio is often defined the other way around 
+	//		(including in initial versions of hammock.ado)
 	// Therefore defining a second quantity:
 	local ar_x= 1/`aspectratio'
-	// `xsize' and `ysize' define the whole-graph aspectratio.  `aspect' defines the plot aspect ratio.
-	// Stata's default is ysize(4) xsize(5.5)
-	// see "help region_options"
+	// aspectratio is explicitly specified in the syntax, but can be overwritten in "*"	
+	// The aspectratio(#) option constrains the ratio of the *plot region* to #. 
+	// The eventual plotting command below uses 
+	//    plotregion(style(none) m(zero)) aspect(`aspectratio')
+	// 		Because of margin(0): outer plotregion=inner plotregion
 	
+	// if "missing" not specified, drop observations with missing values
+	// do this before range transformation; or else obs may generate labels for non-missing x-vars, but obs are later removed
+	if (`missing'==0) {
+		foreach v of var `varlist' { 
+			qui drop if `v'==.
+		}
+	}
 
 	if `addlabel'==1 {
 		list_labels `varlist', separator(`separator')
-		matrix `label_coord'= r(label_coord)
+		// matrix has 3 cols: 1 variable values/levels, 2 variable index in `varlist',3  ./0 to mark start of new var
+		matrix `label_coord'= r(label_coord)  
 		local label_text  "`r(label_text)'"
 	}
 
@@ -63,42 +84,39 @@ program define hammock
 	local max=`k'
 	tokenize `varlist' 
 	
-	// if "missing" not specified, drop observations with missing values
-	// do this now, so the range calculations of earlier variables (with non-missing values)are not affected 
-	// before we find a missing value in a later variable
-	if (`missing'==0) {
-		foreach v of var `varlist' { 
-			qui drop if `v'==.
-		}
-	}
 
 	/*generate colorgroup variable for highlighting*/
 	/*later, missval replaces "." , so gen_colorgroup needs to go before*/
-    if "`hivar'"!="" 	qui gen_colorgroup , hivar(`hivar') hivalues(`hivalues') 
+	if "`hivar'"!=""    qui gen_colorgroup , hivar(`hivar') hivalues(`hivalues') hiprefix(`hiprefix')
 	else 				qui gen colorgroup=1
+	qui tab colorgroup
+	local ncolors=r(r) // number of colors
 	
 	* transform variables' range to be between 0 and 100, also adjust matrix w label coordinates
-
+	// Note this computes the midpoints (between 0 and 100), the upper/lower points may be a little wider
+	// Missing values are initially assigned -10, but after standardization (std_y) they equal 0
 	if `same' local addtmp = `"samescale(`samescale')"'  // if `same' specify this option
 	transform_variable_range `varlist', same(`same') addlabel(`addlabel') ///
 		rangeexpansion(`rangeexpansion') mat_label_coord("`label_coord'") miss(`missing') `addtmp'
+	// local yline=r(yline) //not currently using yline; 
+							//such a line can be passed directly as optional argument
 	if (`addlabel')  decide_label_too_close ,  mat_label_coord("`label_coord'") min_distance(`label_min_dist')
 	
 	* construct xlabel
 	local i=1
 	foreach v of var `varlist' {
 		if mod(`i', 2)  local xl "`xl' `i'" 
-      	else 			local tl "`tl' `i'" 
-      	local xlabel "`xlabel' `i' ``i''"
-      	local i = `i' + 1
-   	}
-   	local xl = substr("`xl'", 2, .)
-   	local xlab_num "`xl'"
+		else 			local tl "`tl' `i'" 
+		local xlabel "`xlabel' `i' ``i''"
+		local i = `i' + 1
+	}
+	local xl = substr("`xl'", 2, .)
+	local xlab_num "`xl'"
 	local xlab_num "`xl'`tl'" 
 
 	
 	* transform the data from one obs per data point to one obs per graphbox 
-	* 	using reshape and contract
+	* using reshape and contract
 
 	* variables yvar need be listed std_y1 std_y2 std_y3 etc.   
 	// "std_y" is a stub only; cannot replace by a tempvariable
@@ -119,11 +137,11 @@ program define hammock
 	* scatter std_y  `graphx'
 
 	qui replace _freq=max(`minbarfreq',_freq)
-
+	
 	
 	*** preparation for graph 
-      
-    * make room for labels in between rectangles
+	
+	* make room for labels in between rectangles
 	qui gen `graphxlag'= `graphx'+ (1-`varnamewidth'/2)
 	if (`varnamewidth'>0)	{ 
 		qui replace `graphx'= `graphx' + `varnamewidth'/2 
@@ -135,28 +153,15 @@ program define hammock
 	// Barwidth is a multiplicative increase from 0.2
 	qui gen `width' =_freq / `N' * `range' * 0.2* `barwidth' 
 	
-	* modify width; compute graphxlag
- 	local yrange= 100
+	*xrange
 	local xrange= `k'-1   /* number of x variables-1==xrange */
-		
-	// for parallelograms, change rightangle width to vertical width
-	// for rectangles, do nothing, width=rightangle width	
-	if ("`shape'"!="rectangle") {
-		tempvar width_y
-		qui gen `width_y'=.
-		compute_vertical_width `graphx' `graphxlag'  std_y `std_ylag'  `width' `width_y' ///
-			`xrange' `yrange' `ar_x'
-		qui replace `width'=`width_y'
-		*list `graphx' `graphxlag'  std_y `std_ylag'  `width' `width_y' 
-		*di as res "xrange `xrange' yrange `yrange' " 
-	}
- 
-    //reshape: previously each obs represented unique (box,color) combination
+	
+
+	//reshape: previously each obs represented unique (box,color) combination
 	//now each obs represents a unique box (with multiple colors). 
 	// color variables contain the width of the color and are missing otherwise
-    keep  `width' colorgroup `graphx' `graphxlag' std_y `std_ylag' 
-    qui reshape wide `width', j(colorgroup) i(`graphx' `graphxlag' std_y `std_ylag')
-
+	keep  `width' colorgroup `graphx' `graphxlag' std_y `std_ylag' 
+	qui reshape wide `width', j(colorgroup) i(`graphx' `graphxlag' std_y `std_ylag')
 	
 	// in trivial cases there may be fewer than 4 boxes. 
 	// 4 obs are needed for the rectangle vars
@@ -171,50 +176,41 @@ program define hammock
 	
 	if `addlabel'==1 {
 		compute_addlabeltext,  mat_label_coord(`label_coord') missing("`missing'") ///
-			label_text("`label_text'") separator(`separator')
+			label_text("`label_text'") separator(`separator') labelopt(`"`labelopt'"')
 		local addlabeltext=r(addlabeltext)  
 	}
 	else  local addlabeltext=""
 
 
-
-
-
-	/* computation of ylabmin and ylabmax */
+	// compute ylabmin (midpoint-1/2 width) and ylabmax (midpoint+1/2 width)
+	// If y_std contains missing values they are coded 0, just like any other minimum value
 	/* needed to avoid that some coordinates are off the graph screen*/
 	/* since def of width changes later this is only approximate */
 	// accumulate the width for different colors
-	tempvar width_for_maxmin
-    qui egen `width_for_maxmin' = rsum(`width'*)
-	Computeylablimit std_y `std_ylag' `width_for_maxmin'
-	local ylabmax=r(ylabmax)
+	tempvar width_total
+	qui egen `width_total' = rsum(`width'*)
+	computeylablimit std_y `std_ylag' `width_total'
+	local ylabmax=r(ylabmax)  
 	local ylabmin=r(ylabmin)
-	if (`missing') {
-	    local ylabmin = `ylabmin' - `rangeexpansion' * `yrange'
+
+	cap drop `width_total'  // if parallelogram, meaning of width_total changes
+	if ("`shape'"=="parallelogram") {
+		// iterate through computing vertical width and  updating ylabmax, ylabmin
+		iterate_width_range , xstart(`graphx') xend(`graphxlag')  ystart("std_y") yend(`std_ylag') ///
+			width(`width') xrange(`xrange') ar_x(`ar_x') ///
+			ncolors(`ncolors') ylabmax(`ylabmax') ylabmin(`ylabmin')
+		local ylabmax=r(ylabmax)
+		local ylabmin=r(ylabmin)
 	}
-
-
-	/* computation of ylabmin and ylabmax */
-	/* needed to avoid that some coordinates are off the graph screen*/
-	/* since def of width changes later this is only approximate */
-	// accumulate the width for different colors
-	tempvar width_for_maxmin
-    qui egen `width_for_maxmin' = rsum(`width'*)
-	Computeylablimit std_y `std_ylag' `width_for_maxmin'
-	local ylabmax=r(ylabmax)
-	local ylabmin=r(ylabmin)
-	if (`missing') {
-	    local ylabmin = `ylabmin' - `rangeexpansion' * `yrange'
-	}
-
+	local yrange=`ylabmax'-`ylabmin'
 
 	// each obs represents a unique box (with multiple colors)
 	// there is one `width' variable for each color: 
 	// `width' is the stub of the variable names; `width'i contains the width of color i
 	GraphBoxColor , xstart(`graphx') xend(`graphxlag') ystart(std_y) yend(`std_ylag') ///
-	     width(`width')  ylabmax(`ylabmax') ylabmin(`ylabmin') ///
-         aspectratio(`aspectratio') ar_x(`ar_x') xrange(`xrange') yrange(`yrange') ///
-		 xlab_num("`xlab_num'")  graphx("`graphx'") colorlist("`colorlist'") ///
+		width(`width')  ylabmax(`ylabmax') ylabmin(`ylabmin') ///
+		aspectratio(`aspectratio') ar_x(`ar_x') xrange(`xrange') yrange(`yrange') ///
+		 xlab_num("`xlab_num'")  graphx("`graphx'") colorlist(`"`colorlist'"') ///
 		 shape("`shape'") outline(`outline') ///
 		 options(`"`options'"') addlabeltext(`"`addlabeltext'"') yline(`"`yline'"')
 
@@ -222,14 +218,78 @@ program define hammock
 	
 end
 /**********************************************************************************/
+program iterate_width_range , rclass
+// for parallelogram only: 
+//		iterate through computing vertical width and  updating ylabmax, ylabmin
+// on exit: recompute ylabmin and ylabmax   
+//			(never shrinking range, could be slightly bigger than actual minima and maxima)
+// on exit: width has changed (and now refers to vertical width)
+	version 17
+	syntax , xstart(str) xend(str) ystart(str) yend(str)  ///
+			width(str) xrange(real) ar_x(real) ncolors(int) ///
+			ylabmax(real) ylabmin(real)
+			
+	local tol_limit=0.01  //stop iterating if increase in ylabmin/ylabmax is less than tol_limit
+	local ylabmax=`ylabmax'
+	local ylabmin=`ylabmin'
+	
+	local width_ylist= "" 
+	forvalues c=1/`ncolors'  {
+		tempvar width_y`c'      // need one var for each color
+		qui gen `width_y`c''=.
+		local width_ylist= "`width_ylist' `width_y`c''"
+		// macro `width_ylist' was created before loop and persists after loop;
+		// the var name `width_y`c'' was created inside of the loop and does not (but var is there)
+	}
+
+	local tol=`tol_limit'+1 // initialize current tolerance
+	while (`tol'>`tol_limit') { 
+		// compute width 
+		local yrange=`ylabmax'-`ylabmin'  // This is a key change; I used to use predefined range=100
+		forvalues c=1/`ncolors' { 
+			// compute width for one color  
+			// strategy: call program with the same width`c' each time, but with a different yrange
+			// on exit:  have different width_y`c'
+			local width_y_c = word("`width_ylist'",`c')
+			compute_vertical_width `xstart' `xend' `ystart' `yend'  ///
+				`width'`c' `width_y_c' `xrange' `yrange' `ar_x'
+		}
+
+		// compute ylabmax, ylabmin
+		cap drop `width_total'
+		tempvar width_total
+		qui egen `width_total' = rowtotal(`width_ylist')   //total width of a multi-color box
+						//stata syntax change: rsum changed to rowtotal, but rsum still works also; 
+						//both treat missing values as zero
+		computeylablimit `ystart' `yend' `width_total'
+		// tolerance is the increase either at the top or at the bottom range
+		// only interested in increases:   labmax new -old , labmin old -new
+		local tol=max( `r(ylabmax)'-`ylabmax' , `ylabmin'-`r(ylabmin)' )
+		if ((`tol'>`tol_limit')) {  	// if I update ylabmax/ylabmin, I have to recalculate width 
+										// no need to update if the range is shrinking
+			local ylabmax=r(ylabmax)	// update only after computing tolerance
+			local ylabmin=r(ylabmin)	// update only after computing tolerance
+		}
+		//di "Iteration: Tolerance= `=round(`tol',0.001)' ylabmax=`ylabmax'   ylabmin=`ylabmin'"
+	}
+	return local ylabmax `ylabmax'
+	return local ylabmin `ylabmin'
+
+	// caution: original `width' is lost after this
+	forvalues c=1/`ncolors' { 
+		local width_y_c = word("`width_ylist'",`c')
+		qui replace `width'`c'=`width_y_c'
+	}
+end 
+/**********************************************************************************/
 // compute_addlabeltext (needed for GraphBoxColor)
 // input: mat_label_coord arg is a matrix name. Matrix is manipulated. 
 //			Manipulations persist after this program closes.
-//          In this program the matrix is NOT changed
+//			In this program the matrix is NOT changed
 // label_text: Shakespeare example: label_text="adult@adolescent@child@0@1@2@3@4@5@20@0@1@2@3@4@5@6@7@female@male@"
 program  compute_addlabeltext, rclass
 	version 16
-	syntax , mat_label_coord(str) missing(str) label_text(str) separator(str)
+	syntax , mat_label_coord(str) missing(str) label_text(str) separator(str) [ labelopt(str) ]
 
 		* the labels are overwriting the plot. Plot before the graphboxes 
 		local n_labels = rowsof(`mat_label_coord')
@@ -241,13 +301,12 @@ program  compute_addlabeltext, rclass
 				local pos=`j'*2-1  /* positions 1,3,5,7, ...  */
 				// text to plot ="``pos''"      y = `mat_label_coord'[`j',1]        x= `mat_label_coord'[`j',2]  
 				// the matrix needs to be evaluated as  `=matrixelem'  ; otherwise just the name of the matrix elem appears
-				local addlabeltext= `"`addlabeltext' `=`mat_label_coord'[`j',1]' `=`mat_label_coord'[`j',2]' "``pos''" "'
+				local addlabeltext= `"`addlabeltext'`=`mat_label_coord'[`j',1]' `=`mat_label_coord'[`j',2]' "``pos''" "'
 			}
 		}
 		if (`missing'==1) local addlabeltext= `"`addlabeltext' 0 1 "missing" "'
 		* add label options 
-		local addlabeltext= `"`addlabeltext',`labelopt')"'
-	
+		local addlabeltext= `"`addlabeltext',`labelopt')"'	
 		return local addlabeltext=`"`addlabeltext'"' // does not allow empty "" returns
 end 
 /**********************************************************************************/
@@ -258,28 +317,28 @@ end
 *      where the xcoordinates range from 1...(#variables( and the y coordinates from 1..(# labels for corresponding variable)
 * on exit: label_text: a single string with "y1 x1 y2 x2 ... y_nlabel x_nlabel". For later use with tokenize
 program define list_labels, rclass
-   version 7
-   syntax varlist , separator(string)
+	version 7
+	syntax varlist , separator(string)
 
-   tempname one_ylabel label_coord
+	tempname one_ylabel label_coord
 
-   n_level_program `varlist'
-   local n_level= r(n_level)
-      
-   matrix `label_coord'=J(`n_level',3,0)
-   local label_text ""
-   local i=0   /* the ith variable (for x-axis) */
-   local offset=0  /* sum of the number of levels in previous x-variables */
-   
-   foreach v of var `varlist' { 
-      local i= `i'+1
-   	qui tab `v', matrow(`one_ylabel')
+	n_level_program `varlist'
+	local n_level= r(n_level)
+		
+	matrix `label_coord'=J(`n_level',3,0)
+	local label_text ""
+	local i=0	/* the ith variable (for x-axis) */
+	local offset=0  /* sum of the number of levels in previous x-variables */
+	
+	foreach v of var `varlist' { 
+		local i= `i'+1
+		qui tab `v', matrow(`one_ylabel')
 	local n_one_ylabel=r(r)
 
 	local g : value label `v'
 	forval  j = 1/`n_one_ylabel' {
 		local w=`one_ylabel'[`j',1]
-      	matrix `label_coord'[`offset'+`j',2]=`i'
+		matrix `label_coord'[`offset'+`j',2]=`i'
 		matrix `label_coord'[`offset'+`j',1]=`w'
 		if (`j'==1) {  
 			* This marks when a new variable starts. Needed in decide_labels_too_close
@@ -298,43 +357,37 @@ program define list_labels, rclass
 			local format_w=string(`w',"%6.0g") 
 			local label_text "`label_text'`format_w'`separator'"
 		}
-      }
-      local offset=`offset'+`n_one_ylabel'
-   }
-   return matrix label_coord `label_coord'
-   return local label_text `"`label_text'"' 
+	   }
+	   local offset=`offset'+`n_one_ylabel'
+	}
+	return matrix label_coord `label_coord'
+	return local label_text `"`label_text'"' 
 
 end 
 
 /**********************************************************************************/
 program define n_level_program, rclass
-   version 7
-   * compute the sum of the number of levels of all variables
-   * each level later corresponds to a label
-   syntax varlist 
+	version 7
+	* compute the sum of the number of levels of all variables
+	* each level later corresponds to a label
+	syntax varlist 
 
-   * calc the sum of number of levels of all vars
-   local n_level=0
-   foreach v of var `varlist' { 
+	* calc the sum of number of levels of all vars
+	local n_level=0
+	foreach v of var `varlist' { 
 		qui tab `v'
 		  local temp= r(r)
 		local n_level=`n_level' + `temp'
-   }
-   if (`n_level'>40) {
-		if (`n_level'<=800) {
-			set matsize `n_level'
-		}
-		else {
-			di as error "Error: Attempting to display more than 800 labels"
-			error 2000
-		}
-   }
-  return local n_level `n_level'
+	}
+	/* I used to set matsize here,
+	 but in modern flavours of stata "set matsize" is obsolete
+	 Stata flavour determines matsize (see help limits) */
+	return local n_level `n_level'
 
 end 
 /**********************************************************************************/
 program define globalminmax, rclass
-   version 7
+	version 7
 	* compute min and max values over all variables
 	syntax varlist
 
@@ -356,23 +409,60 @@ end
 /**********************************************************************************/
 program define compute_vertical_width
    version 7
-   * compute the difference of the y coordinates needed when width is taken to 
-   * mean right-angle width (distance between two parallel lines)
+   * compute the difference of the y coordinates needed 
+   * width is right-angle width (distance between two parallel lines)
    * ar_x: (aspectratio) how much longer is the x axis relative to the y axis
    * on input : width_y has already been "generate"d 
-   * width_y is computed as a result 
+   * width_y is computed as a result  
+   *	(if width has missing values, then width_y also has missing values)
+   
    args xstart xend ystart yend width width_y xrange yrange ar_x
 
+   *xdiff is the fraction of space relative to the range occupied by any particular parallelogram. 
+   *  For example, with 5 variables the xrange=5-1=4.   
+   *  Going from the 2nd to the third x-variable has an xdiff = 1/ 4  * ar_x .
+   *ydiff is the same thing for y, i.e. the fraction that y drops/increases for one box relative to its range.
    tempvar xdiff ydiff
    qui gen `xdiff'= .
    qui gen `ydiff'= .
    qui replace `xdiff'= (`xend'-`xstart')/`xrange' * `ar_x'
    qui replace `ydiff'= (`yend'-`ystart')/ `yrange'
+   
+   * The centerline of the parallelogram, xdiff and ydiff from a triangle with a right angle. 
+   * theta is the angle between xdiff and the centerline of the parallelogram.
+   * From this big triangle:  
+   *     Cos(theta) = xdiff/  sqrt(xdiff^2 +ydiff^2) 
+   * The angle theta reappears for width and width_y, as part of the parallelogram: 
+   *     Cos(theta)= width/ width_y  .
+   * Putting these together: 
+   *    Width/ width_y = xdiff/ sqrt(xdiff^2 +ydiff^2)
+   * Solving for width_y : 
+   *            width_y = width  / xdiff   * sqrt(xdiff^2 +ydiff^2)
    qui replace `width_y'=`width' / `xdiff' * sqrt(`xdiff'*`xdiff'+`ydiff'*`ydiff') 
 
 end 
 /**********************************************************************************/
-* generate the colorgroup variable
+* distinguish between colorgroup for strings and color group numeric
+* string variables allowed only when highlighting a variable not in varlist
+program define gen_colorgroup
+	version 16
+	syntax ,  hivar(varname) HIVALues(string) hiprefix(string)
+
+	if "`hiprefix'"!="." {
+		qui gen_colorgroup_prefix,  hivar(`hivar') hivalues(`hivalues') hiprefix(`hiprefix')
+	}
+	else {
+		capture confirm numeric variable `hivar'
+		if !_rc {
+			qui gen_colorgroup_num , hivar(`hivar') hivalues(`hivalues')  //numeric variable
+		}
+		else {
+			gen_colorgroup_str , hivar(`hivar') hivalues(`hivalues')  //string variable
+		} 
+	}
+end
+/**********************************************************************************/
+* generate the colorgroup variable,numeric
 * all values not mentioned in hivalues get color=1
 * colors are generated in sequence of hivalues
 * if value in hivalues not contained in hivar, then the corresponding color is just skipped
@@ -383,9 +473,9 @@ end
 * if hivalues contains all values of hivar, then the default color is never used
 * hivalues does not accept labels at this point
 * if hivalues not specified will give appropriate error
-program define gen_colorgroup
-   version 7
-   syntax  ,  hivar(varname) HIVALues(numlist missingokay) 
+program define gen_colorgroup_num
+	version 7
+	syntax  ,  hivar(varname) HIVALues(numlist missingokay) 
 
 	local pen=1
 	qui gen colorgroup=`pen'
@@ -396,14 +486,45 @@ program define gen_colorgroup
 			qui replace colorgroup=`pen' if  `hivar'==.
 		}
 	}
-	* list  `hivar' colorgroup
-
 end
 /**********************************************************************************/
-program define Computeylablimit, rclass
+* generate the colorgroup variable, string
+* same as for numeric; except the string comparison instead of ==  , and no missing values, and loop over i
+program define gen_colorgroup_str
+	version 16
+	syntax  ,  hivar(varname) HIVALues(string) 
+
+	local pen=1
+	qui gen colorgroup=`pen'
+	foreach v in `hivalues' {
+		local i=1
+		local pen=mod(`pen',8)+1
+		while (`i'<=_N) {
+			qui replace colorgroup=`pen' in `i' if  ustrregexm(`hivar'[`i'],"`v'")    // `hivar'==`v' 
+			local i=`i' + 1
+		}
+	}
+    *list  `hivar' colorgroup
+end
+/**********************************************************************************/
+* generate the colorgroup variable when the prefix ("<" or ">") is present
+* one highlighting color: 2
+* all values not mentioned in hivalues get color=1
+* syntax enforces that only a single hivalue is allowed
+* missing values are not highlighted when specifying, e.g.  >3 
+program define gen_colorgroup_prefix
+	version 16
+	syntax  ,  hivar(varname) HIVALues(real) hiprefix(string)
+
+	qui gen colorgroup=1
+	qui replace colorgroup=2 if `hivar' `hiprefix' `hivalues' & !missing(`hivar')
+end
+/**********************************************************************************/
+program define computeylablimit, rclass
 	version 7
-* compute maximum and minimum values for y to define graph region ylab
-* If I attempt to draw beyond the graph region the graph may draw triangles instead of parallelograms
+	* compute maximum and minimum values for y to define graph region ylab
+	* ylabmax and ylabmin are rounded to full numbers
+	* If I attempt to draw beyond the graph region the graph may draw triangles instead of parallelograms
 	args ystart yend width 
 
 	local ylabmin =0
@@ -474,11 +595,11 @@ end
 
 program define GraphBoxColor 
 	version 14.2
-    syntax , xstart(str) xend(str) ystart(str) yend(str) width(str) graphx(str) ///
-	    ylabmin(real) ylabmax(real) xlab_num(str) shape(str) outline(int) ///
+	syntax , xstart(str) xend(str) ystart(str) yend(str) width(str) graphx(str) ///
+		ylabmin(real) ylabmax(real) xlab_num(str) shape(str) outline(int) ///
 		aspectratio(real) ar_x(real) xrange(real) yrange(real) ///
 		[  colorlist(str) addlabeltext(str) yline(str)  options(str)  ]
-  
+
 	tempvar w increment
 	qui egen `w'= rsum(`width'*)  // total width of a multi-color box
 	qui gen `increment'=0	// sum of w_k before the current color
@@ -494,7 +615,7 @@ program define GraphBoxColor
 	foreach var of newlist `xlow' `xhigh' `xlaghigh' `xlaglow' `yhigh' `ylaghigh' `ylaglow' `ylow' {
 		qui gen `var'=.
 	}
-	// when "`shape'"=="rectangle", initialize and shrink x coordinates
+	// when "`shape'"=="rectangle", initialize 
 	if ("`shape'"=="rectangle") {
 		// o_tempvars hold the outer corners of the entire rectangle
 		tempvar o_ylow o_yhigh o_ylaglow o_ylaghigh o_xlow o_xhigh o_xlaglow o_xlaghigh 
@@ -505,26 +626,8 @@ program define GraphBoxColor
 		init_rectangle, xstart(`xstart') xend(`xend') ystart(`ystart') yend(`yend') w(`w') ///
 			o_ylow(`o_ylow') o_yhigh(`o_yhigh') o_ylaglow(`o_ylaglow') o_ylaghigh(`o_ylaghigh') ///
 			o_xlow(`o_xlow') o_xhigh(`o_xhigh') o_xlaglow(`o_xlaglow') o_xlaghigh(`o_xlaghigh') ///
-			xrange(`xrange') yrange(`yrange') ar_x(`ar_x') ylabmin(`ylabmin') ylabmax(`ylabmax')
-
-		// we do not shrink x coordinates for rectangles anymore
-        // because we have predefined a global max min yrange
-        //shrink_x_coordinates, shape("rectangle") xlow(`o_xlow') xhigh(`o_xhigh') xlaglow(`o_xlaglow') xlaghigh(`o_xlaghigh') ///
-        //    yrange(`yrange') ylabmax(`ylabmax') ylabmin(`ylabmin')
+			xrange(`xrange') ar_x(`ar_x') ylabmin(`ylabmin') ylabmax(`ylabmax')
 	}
-	// when "`shape'"=="parallelogram", shrink x coordinates for xstart and xend
-	// comment out the whole code block in the else condition if we don't want this behaviour
-	else{
-	    tempvar xstart_shrinked xend_shrinked
-	    qui gen `xstart_shrinked'=.
-	    qui gen `xend_shrinked'=.
-	    shrink_x_coordinates, shape("parallelogram") xlow(`xstart_shrinked') xhigh(`xstart') xlaglow(`xend_shrinked') xlaghigh(`xend') ///
-                    yrange(`yrange') ylabmax(`ylabmax') ylabmin(`ylabmin')
-        qui replace `xstart'=`xstart_shrinked'
-        qui replace `xend'=`xend_shrinked'
-
-	}
-
 
 	local N=_N
 	local addplot1 ""
@@ -556,7 +659,8 @@ program define GraphBoxColor
 
 			
 			// translate k into a color 
-			local color= word("`colorlist'",`k') 
+			tokenize `"`colorlist'"'
+			local color= "``k''"  // need double single quotes
 
 			// for a given color k, plot one parallelogram at a time.			
 			foreach i of  numlist 1/`N' {
@@ -587,18 +691,18 @@ program define GraphBoxColor
 						// for entire hammock.ado speed advantage using this routine is 1%-6%
 						plot_parallelogram `hi`i'`k'' `lo`i'`k'' `x`i'`k'', ///
 							yhigh(`yhigh1') ylaghigh(`ylaghigh1') x1(`xlow1') x2(`xlaglow1') ///
-							ylow(`ylow1')  ylaglow(`ylaglow1') color(`color') `no_outline'
+							ylow(`ylow1')  ylaglow(`ylaglow1') color("`color'") `no_outline'
 					}
 					else {						
 						// works for both general quadrangles and for parallelogram as a special case
-						plot_quadrangle `hi`i'`k'' `lo`i'`k'' `x`i'`k'', color(`color') `no_outline' ///
+						plot_quadrangle `hi`i'`k'' `lo`i'`k'' `x`i'`k'', color("`color'") `no_outline' ///
 							xhigh(`xhigh1') yhigh(`yhigh1') ///	     
 							xlow(`xlow1') ylow(`ylow1') ///
 							xlaghigh(`xlaghigh1') ylaghigh(`ylaghigh1') ///
 							xlaglow(`xlaglow1') ylaglow(`ylaglow1') 	
 					}
 					local temp = r(addplot)
-					assert "`temp'"!=""
+					assert `"`temp'"'!=""
 					// caution : addplot might get tooo long
 					if (`"`addplot'"'=="")  local addplot  `"`temp'"'
 					else 					local addplot  `"`addplot' || `temp'"'
@@ -608,13 +712,13 @@ program define GraphBoxColor
 		}
 	}
 	
-    // *most work happens in `addplot' (all parallelograms) and `addlabeltext' (all labels)
+	// *most work happens in `addplot' (all parallelograms) and `addlabeltext' (all labels)
 	// the rest just sets up the coordinates but plots nothing because msymbol(none)
 	// *xscale and yscale are explicitly specified because they were needed earlier to compute aspectratio
 	// *The twoway command cannot be moved up to the caller program because the caller program does not have 
 	// 	access to the many (e.g.200) variables used in `addplot'
 
-    /* 
+	/* 
 	//for debugging: This helps seeing the frame in the plot area on which aspectratio is built.
 	twoway scatter std_y `graphx', ///
 		ylab(`ylabmin' `ylabmax')  xlab(`xlab_num',) ylab(,valuelabel)  `yline'     ///
@@ -624,21 +728,23 @@ program define GraphBoxColor
 	*/
 	
 	twoway scatter std_y `graphx', ///
-		ylab(`ylabmin' `ylabmax')  xlab(`xlab_num',valuelabel noticks) ylab(,valuelabel noticks)  `yline'     ///
+		ylab(`ylabmin' `ylabmax')  xlab(`xlab_num',valuelabel noticks nogrid) ylab(,valuelabel noticks nogrid)  `yline'     ///
 		legend(off) ytitle("") xtitle("") yscale(off) xscale(noline) msymbol(none)  ///
 		plotregion(style(none) m(zero)) ///
 		aspect(`aspectratio') `options'  ||  `addplot' `addlabeltext'
 
 
-   // These options below produce a graph without any margins except for the x-labels at the bottom
-   // scatter y x,plotr(m(zero)) graphr(m(zero)) ytitle("") xtitle("") yscale(off) xscale(noline) 
-   //  graphr(m(zero)) : I can't set these to zero because the numbers go off the right/left side
+	// These options below produce a graph without any margins except for the x-labels at the bottom
+	// scatter y x,plotr(m(zero)) graphr(m(zero)) ytitle("") xtitle("") yscale(off) xscale(noline) 
+	//  graphr(m(zero)) : I can't set these to zero because the numbers go off the right/left side
 
 end 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 //  prepare plotting a single parallelogram: 
 //  create command `addplot' and create three variables needed for the plot
+//  rarea needs a different observation for each x-value. A parallelogram has 2 x-values, 
+//      so there are 2 observations here.
 program define plot_parallelogram, rclass
 	version 14.2
 	syntax varlist (min=3 max=3), yhigh(real) ylow(real) x1(real) ylaghigh(real) ylaglow(real) x2(real) [ * ]
@@ -648,11 +754,11 @@ program define plot_parallelogram, rclass
 	  di "`yhigh';  `ylow'; `x1';  `ylaghigh';  `ylaglow';  `x2' " 
 	  exit 
 	}
-    tokenize `varlist'
+	tokenize `varlist'
 	local hi `1'
 	local lo `2'
 	local x `3'
- 
+
 	quietly{
 		replace `x'= `x1' in 1
 		replace `x'= `x2' in 2
@@ -673,6 +779,8 @@ end
 //  prepare plotting a single quadrangle  (can be used for rectangles)
 //  create command `addplot' and create three variables needed for the plot
 //  varlist has only 3 variables, because rarea only needs 3 variables
+//  rarea needs a different observation for each of the four different x-values;
+//     the rectangle is plotted in 3 segements between the 4 x-values
 program define plot_quadrangle, rclass
 	version 17.0
 	syntax varlist (min=3 max=3), ///
@@ -686,68 +794,68 @@ program define plot_quadrangle, rclass
 	  di "`yhigh';  `ylow'; `xhigh';  `ylaghigh';  `ylaglow';  `xlaghigh' " 
 	  exit 
 	}
-    tokenize `varlist'
+	tokenize `varlist'
 	local yhi `1'
 	local ylo `2'
 	local x `3'
 
 	if (`yhigh' <= `ylaghigh'){
 
-        // compute y2hi, the missing upper point for the first sub-area
-        slopes, xleft(`xhigh') yleft(`yhigh')  xright(`xlaghigh') yright(`ylaghigh')
-        local y2hi= `=r(intercept)' + `=r(slope)' * `xlow'
+		// compute y2hi, the missing upper point for the first sub-area
+		slopes, xleft(`xhigh') yleft(`yhigh')  xright(`xlaghigh') yright(`ylaghigh')
+		local y2hi= `=r(intercept)' + `=r(slope)' * `xlow'
 
-        // compute y3lo, the missing lower point for the third sub-area
-        slopes, xleft(`xlow') yleft(`ylow')  xright(`xlaglow') yright(`ylaglow')
-        local y3lo= `=r(intercept)' + `=r(slope)' * `xlaghigh'
+		// compute y3lo, the missing lower point for the third sub-area
+		slopes, xleft(`xlow') yleft(`ylow')  xright(`xlaglow') yright(`ylaglow')
+		local y3lo= `=r(intercept)' + `=r(slope)' * `xlaghigh'
 
-        // for each x-value, give the upper and lower y-values of the area (could be identical)
-        quietly{
-            replace `x'= `xhigh' in 1
-            replace `yhi'= `yhigh' in 1
-            replace `ylo'= `yhigh' in 1
+		// for each x-value, give the upper and lower y-values of the area (could be identical)
+		quietly{
+			replace `x'= `xhigh' in 1
+			replace `yhi'= `yhigh' in 1
+			replace `ylo'= `yhigh' in 1
 
-            replace `x'= `xlow' in 2
-            replace `yhi'= `y2hi' in 2
-            replace `ylo'= `ylow' in 2
+			replace `x'= `xlow' in 2
+			replace `yhi'= `y2hi' in 2
+			replace `ylo'= `ylow' in 2
 
-            replace `x'= `xlaghigh' in 3
-            replace `yhi'= `ylaghigh' in 3
-            replace `ylo'= `y3lo' in 3
+			replace `x'= `xlaghigh' in 3
+			replace `yhi'= `ylaghigh' in 3
+			replace `ylo'= `y3lo' in 3
 
-            replace `x'= `xlaglow' in 4
-            replace `yhi'= `ylaglow' in 4
-            replace `ylo'= `ylaglow' in 4
-        }
-    }
-    else{
-        // compute y2hi, the missing upper point for the first sub-area
-        slopes, xleft(`xlow') yleft(`ylow')  xright(`xlaglow') yright(`ylaglow')
-        local y2low= `=r(intercept)' + `=r(slope)' * `xhigh'
+			replace `x'= `xlaglow' in 4
+			replace `yhi'= `ylaglow' in 4
+			replace `ylo'= `ylaglow' in 4
+		}
+	}
+	else{
+		// compute y2hi, the missing upper point for the first sub-area
+		slopes, xleft(`xlow') yleft(`ylow')  xright(`xlaglow') yright(`ylaglow')
+		local y2low= `=r(intercept)' + `=r(slope)' * `xhigh'
 
-        // compute y3lo, the missing lower point for the third sub-area
-        slopes, xleft(`xhigh') yleft(`yhigh')  xright(`xlaghigh') yright(`ylaghigh')
-        local y3high= `=r(intercept)' + `=r(slope)' * `xlaglow'
+		// compute y3lo, the missing lower point for the third sub-area
+		slopes, xleft(`xhigh') yleft(`yhigh')  xright(`xlaghigh') yright(`ylaghigh')
+		local y3high= `=r(intercept)' + `=r(slope)' * `xlaglow'
 
-        // for each x-value, give the upper and lower y-values of the area (could be identical)
-        quietly{
-            replace `x'= `xlow' in 1
-            replace `yhi'= `ylow' in 1
-            replace `ylo'= `ylow' in 1
+		// for each x-value, give the upper and lower y-values of the area (could be identical)
+		quietly{
+			replace `x'= `xlow' in 1
+			replace `yhi'= `ylow' in 1
+			replace `ylo'= `ylow' in 1
 
-            replace `x'= `xhigh' in 2
-            replace `yhi'= `yhigh' in 2
-            replace `ylo'= `y2low' in 2
+			replace `x'= `xhigh' in 2
+			replace `yhi'= `yhigh' in 2
+			replace `ylo'= `y2low' in 2
 
-            replace `x'= `xlaglow' in 3
-            replace `yhi'= `y3high' in 3
-            replace `ylo'= `ylaglow' in 3
+			replace `x'= `xlaglow' in 3
+			replace `yhi'= `y3high' in 3
+			replace `ylo'= `ylaglow' in 3
 
-            replace `x'= `xlaghigh' in 4
-            replace `yhi'= `ylaghigh' in 4
-            replace `ylo'= `ylaghigh' in 4
-        }
-    }
+			replace `x'= `xlaghigh' in 4
+			replace `yhi'= `ylaghigh' in 4
+			replace `ylo'= `ylaghigh' in 4
+		}
+	}
 
 	//twoway rarea  `yhi' `ylo' `x', `options'
 	
@@ -755,63 +863,6 @@ program define plot_quadrangle, rclass
 	return local addplot `"`addplot'"'
 
 end
-
-////////////////////////////////////////////////////////
-program shrink_x_coordinates
-	version 17
-    syntax, shape(str) xlow(str) xhigh(str) xlaglow(str) xlaghigh(str) ///
-		yrange(real) ylabmax(real) ylabmin(real)
-
-    local ymaxmin_diff= (`ylabmax'-`ylabmin')
-
-    // the case for rectangle is currently deprecated: we do not shrink x coordinates for rectangles anymore
-    // because we have predefined a global max min yrange
-    if "`shape'"=="rectangle" {
-
-        // Calculate the middle points for each pair of xs
-        // mid points will be the center for the shrinkage
-        tempvar xdiff_xhigh_xlaglow xdiff_xlow_xlaghigh xmid
-        gen `xdiff_xhigh_xlaglow' = abs(`xlaglow' - `xhigh')
-        gen `xdiff_xlow_xlaghigh' = abs(`xlaghigh' - `xlow')
-        gen `xmid' =  `xhigh' + `xdiff_xhigh_xlaglow' / 2
-
-        // Calculate the scale ratio
-        // The ratio is the proportion for the shrinkage
-        // The ratio is calculated based on the expected yrange and the actual yrange which is ylabmax-ylabmin
-        local ratio = `yrange'/`ymaxmin_diff'
-
-        // shrink the horizontal size of the plot by shrinking the x coordinates to the mid points by the
-        // ratio calculated above
-        qui replace `xhigh' = `xmid' - `xdiff_xhigh_xlaglow'*`ratio'/2
-        qui replace `xlaglow' = `xmid' + `xdiff_xhigh_xlaglow'*`ratio'/2
-        qui replace `xlow' = `xmid' - `xdiff_xlow_xlaghigh'*`ratio'/2
-        qui replace `xlaghigh' = `xmid' + `xdiff_xlow_xlaghigh'*`ratio'/2
-
-    }
-    else {
-        // Calculate the middle points for each pair of xs
-        // mid points will be the center for the shrinkage
-        tempvar xdiff xmid
-        gen `xdiff' = abs(`xlaghigh' - `xhigh')
-        gen `xmid' =  `xhigh' + `xdiff' / 2
-
-        // Calculate the scale ratio
-        // The ratio is the proportion for the shrinkage
-        // The ratio is calculated based on the expected yrange and the actual yrange which is ylabmax-ylabmin
-        local ratio = `yrange'/`ymaxmin_diff'
-
-        // shrink the horizontal size of the plot by shrinking the x coordinates to the mid points by the
-        // ratio calculated above
-
-        // in the case of parallelogram, xlow and xlaglow are placeholder for the empty vars which will be
-        // used to update the xstart and xend
-        qui replace `xlow' = `xmid' - `xdiff'*`ratio'/2
-        qui replace `xlaglow' = `xmid' + `xdiff'*`ratio'/2
-    }
-
-
-end
-
 ////////////////////////////////////////////////////////
 // compute the "outer" corners of a multi-color rectangle
 // input: 	xstart, xend, ystart, yend, w 
@@ -831,7 +882,7 @@ program init_rectangle
 	syntax, xstart(str) xend(str) ystart(str) yend(str) w(str) ///
 		o_ylow(str) o_yhigh(str) o_ylaglow(str) o_ylaghigh(str) ///
 		o_xlow(str) o_xhigh(str) o_xlaglow(str) o_xlaghigh(str) ///
-        xrange(real) yrange(real) ylabmin(real) ylabmax(real) ar_x(real)
+		xrange(real) ylabmin(real) ylabmax(real) ar_x(real)
 			
 	// y  (~0..~100) has a different scale than x (1..#xvar-1)
 	// When plotting, use the variables on their usual scale
@@ -925,7 +976,7 @@ end
 ////////////////////////////////////////////////////////
 // compute a,b in simple linear regression
 // opted not to use "regress" because that requires variables 
-//    and I would use preserve/ restore which is too slow
+//	and I would use preserve/ restore which is too slow
 program slopes , rclass
    version 17
    syntax , xleft(real) xright(real) yleft(real) yright(real)
@@ -1014,14 +1065,54 @@ program compute_4corners_rectangle
 	}
 end
 ///////////////////////////////////////////////////////////////////////////////////////////
+// parse hivalues: remove the <,>,<=,>= sign , if present
+// ">3" parses to prefix=">", hivalues="3"
+// "2 3 5" parses to  prefix="", hivalues="2 3 5"
+// "> 2 3 5" is nonsensical but does not produce an error(caught later in gen_colorgroup_prefix)
+// ">=2" parses to prefix">=", hivalues"2"
+// "=2" prases to  prefix="", hivalues"2"
+// "mild"  parses in prefix="" and hivalues="mild"
+program parse_hivalues, rclass
+	version 17
+	syntax , [ hivalues(string) hiprefix(string) ]
+	
+	local hiprefix=""
+	if "`hivalues'"!="" {
+		tokenize `hivalues', parse(">=<")
+		//note: ">=2" is parsed as ">=","2"
+		if "`3'"!="" {
+			di as error "Unexpected string in hivalues. (string was parsed into 3 or more substrings)" 
+			exit 
+		}
+		else if "`1'"=="<" || "`1'"==">" || "`1'"==">=" || "`1'"=="<=" {
+			local hiprefix="`1'"
+			local hivalues="`2'"
+		}
+		else if "`1'"=="=" {
+			// remove "=" from string, don't use it as a prefix
+			local hivalues="`2'"
+		}
+		// else leave hivalues as is 
+	}
+	return local hivalues "`hivalues'"
+	return local hiprefix "`hiprefix'"
+end 
+///////////////////////////////////////////////////////////////////////////////////////////
 // colorlist should not be smaller than number of values in hivalues + 1 (default color)
 program define check_sufficient_colors
 	version 16
-	syntax,  [ hivar(str) HIVALues(numlist missingokay)  COLorlist(str) ] 
+	syntax,  [ hivar(str) HIVALues(string)  COLorlist(str) ] 
 
 	if ("`hivar'"!="" & "`colorlist'"!="") {
 		local hicount: word count `hivalues'
-		local colcount: word count `colorlist'
+		
+		// colorlist may contain strings, so "word count" does not work
+		local colcount=0
+		tokenize `"`colorlist'"'
+		while "`*'" ~= "" {
+			macro shift
+			local colcount= `colcount' +1 
+		}
 		if (`colcount'<`hicount'+1) {
 			di as error " There are not enough colors for highlighting. "
 			di as error "(The first color is the default color and is not used for highlighting.)"
@@ -1032,12 +1123,16 @@ end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // purpose :  	transform variables to have a range between 0 and 100, 
 //				compute corresponding label positions
+//				Specifically, this refers to the center positions of the parallelograms.
+//				(Later, range will be extended to accommodate upper and lower points, and missing vals)
 // output: variables in varlist changed (we are in "preserve" mode, so changes disappear at the end)
 // output: label_coord matrix changed if labels are used
+// output: std_y`i' variables generated (lowest values (e.g. missing values) are standardized to 0)
 // note: miss is an int; previously option missing was present/absent
-program transform_variable_range 
+program transform_variable_range , rclass
 	version 16.0
-	syntax varlist ,  addlabel(int) same(int) mat_label_coord(str) miss(int) rangeexpansion(real) [ samescale(varlist) ]
+	syntax varlist ,  addlabel(int) same(int) mat_label_coord(str) miss(int) ///
+		rangeexpansion(real) [ samescale(varlist) ]
 
 	* compute max,min values over the variables specified in samescale
 	if `same' {
@@ -1067,7 +1162,7 @@ program transform_variable_range
 		}
 		if (`miss') {
 			* missing option specified 
-			local yline "yline(4, lcolor(black))" // horizontal line to separate missing values; number depends on range expansion
+			local yline "yline(4, lcolor(black))" 	// horizontal line to separate missing values
 			local missval=`min'-`rangeexpansion'*`range'
 			qui replace `v'=`missval' if `v'==.
 			local min=`missval'  /* redefine minimum value and range */
@@ -1086,15 +1181,16 @@ program transform_variable_range
 			}
 		}
 		
-	} 	
+	}
+	return local yline `"`yline'"'
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // purpose :  	decide whether the  label distance on the y-axis is too close. If yes, set mat_label_coord[,3]==0
 //				This has to happen *after* transforming variables to have a range between 0 and 100
-// input :      mat_label_coord[,3] has "." for the first element of each variable (where no distances are computed)
-//              min_distance: minimum distance between labels  (on a scale from 0-100)
+// input :	  mat_label_coord[,3] has "." for the first element of each variable (where no distances are computed)
+//			  min_distance: minimum distance between labels  (on a scale from 0-100)
 // assume :		labels are sorted in ascending order
-// output:      mat_label_coord[,3] contains decision (0= do not plot, 1= plot, .= bottom most label )
+// output:	  mat_label_coord[,3] contains decision (0= do not plot, 1= plot, .= bottom most label (also first label of new var in sequence)
 program decide_label_too_close 
 	version 16.0
 	syntax ,  mat_label_coord(str) min_distance(real)
@@ -1126,8 +1222,8 @@ end
 //*! 1.0.1   2 March 2003: Allow variables with one value, Bug fixed when barwidth was too large \ 
 //*! 1.0.2   13 March 2003: width changed to right-angle-width
 //*! 1.0.3   20 Nov 2003: hivar and hival options implemented \
-//*! 1.0.4	 no changes \
-//*! 1.0.5	 4 Nov 2008: added samescale option, fixed bug related to >8 colors
+//*! 1.0.4   no changes \
+//*! 1.0.5   4 Nov 2008: added samescale option, fixed bug related to >8 colors
 //*! 1.1.0    ongoing 2017: major rewrite due to use of twoway rarea for parallelograms
 //*! 1.1.1    17 May 2022: added labeltextsize option
 //*! 1.1.2    19 May 2022: added argument to samescale option
@@ -1139,3 +1235,14 @@ end
 //*! 1.2.3    Apr 12, 2023: Added warning if label value contains only white space
 //*! 1.2.4   May 24, 2023: label_min_dist option
 //*! 1.2.5   Oct 10, 2023: added option outline 
+//*! 1.2.6   Nov 10, 2023: allow hivar to be a string variable 
+//*! 1.2.7   Nov 13, 2023: remove display statement leftover from debugging
+//*! 1.2.8   Nov 16, 2023: fixed bug related to "labelopt" 
+//*! 1.2.9   Nov 17, 2023: colorlist now allows RGB values
+//*! 1.3.0   Jan 26, 2024: removed duplicate code, improved documentation compute_vertical_width
+//*! 1.4.0   Feb 21, 2024: For parallelogram, iterate between computing range and vertical width
+//*! 1.4.1   Apr 01, 2024: fixed bug plotting labels for obs with missing values when not specifying missing
+//*! 1.4.2   Apr 03, 2024: removed "set matsize" (obsolete in modern Stata) and corresponding error msg
+//*! 1.4.3   Apr 05, 2024: allow hivalues with <=,>= signs , e.g. hivalues(>=2) 
+//*! 1.4.4   Jul 22, 2024: accommodate scheme stcolor Stata18 adding xlab(,nogrid) ylab(,nogrid)
+//*! 1.4.5   Jul 23, 2024: documentation on aspect ratio

@@ -28,7 +28,7 @@ end
 
 program define hammock_bp
 	clear 
-	set scheme s1mono
+	//set scheme s1mono
 	sysuse bplong
 	hammock sex agegrp when bp, label 
 end 
