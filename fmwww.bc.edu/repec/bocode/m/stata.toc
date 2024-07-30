@@ -40,6 +40,7 @@ p markupest module for markup estimation via Micro and Macro approaches
 p mat2txt module to write matrix to ASCII file
 p matamatrix module to enable using Mata functions on Stata matrices
 p matchit module to match two datasets based on similar text patterns
+p matdrop module to delete multiple row and/or column using labels from matrix
 p matin4-matout4 module to import and export matrices
 p matmap module to perform elementwise calculations for matrices
 p matnames module to return matrix row and column names

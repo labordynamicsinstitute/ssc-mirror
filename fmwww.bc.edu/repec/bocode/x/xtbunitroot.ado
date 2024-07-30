@@ -1,7 +1,8 @@
-*! xtbunitroot version 1.1 - 29.04.2022
+*! xtbunitroot version 1.2 - 29.07.2024
 /*
 Changelog
 - 29.04.2022 - xtbunitroot now supports unbalanced panels. The new options include seed, showindex and level.
+- 29.07.2024 - Fix the issue with `if' option.
 */
 
 program xtbunitroot,rclass
@@ -672,7 +673,7 @@ set matsize 800
 
 tempvar diffyx diffmi dmi
 gen `diffyx'=`differy' if !missing(`lagdepvar')
-gen `dmi'=(`di'==0)
+gen `dmi'=(`di'==0) if `touse'
 gen `diffmi'=d.`dmi' if !missing(`lagdepvar')
 
 tempvar xtid
@@ -979,7 +980,7 @@ set matsize 800
 
 tempvar diffyx diffmi dmi
 gen `diffyx'=`differy' if !missing(`lagdepvar')
-gen `dmi'=(`di'==0)
+gen `dmi'=(`di'==0) if `touse'
 gen `diffmi'=d.`dmi' if !missing(`lagdepvar')
 
 tempvar xtid
@@ -1208,7 +1209,7 @@ tempname ori omi
 
 tempvar diffyx diffmi dmi
 gen `diffyx'=`differy' if !missing(`lagdepvar')
-gen `dmi'=(`di'==0)
+gen `dmi'=(`di'==0) if `touse'
 gen `diffmi'=d.`dmi' if !missing(`lagdepvar')
 
 tempvar xtid
@@ -1476,7 +1477,7 @@ di in smcl as text "{hline 78}"
 	
 
 	
-if `rho' < `p'{
+if `rho' <= `p'{
 di as result "Result: the null is rejected" 
 di as text "Estimated break date(s):" _c
 if "`showindex'"==""{
@@ -1636,7 +1637,7 @@ di in smcl as text "{hline 78}"
 	di in smcl as text "{hline 78}"
 
 
-if `rho' < `critival'{
+if `rho' <= `critival'{
 di as result "Result: the null is rejected" 
 
 di as text "Known break date(s):" _c

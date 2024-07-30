@@ -11931,6 +11931,7 @@ fmwww.bc.edu/repec/bocode/m/marhis.pkg
 fmwww.bc.edu/repec/bocode/m/muxyplot.ado
 fmwww.bc.edu/repec/bocode/m/mahapick.ado
 fmwww.bc.edu/repec/bocode/m/mcmcreg.sthlp
+fmwww.bc.edu/repec/bocode/m/matdrop.pkg
 fmwww.bc.edu/repec/bocode/m/margin.html
 fmwww.bc.edu/repec/bocode/m/mediate.html
 fmwww.bc.edu/repec/bocode/m/matcsort.ado
@@ -12431,6 +12432,7 @@ fmwww.bc.edu/repec/bocode/m/matnames.hlp
 fmwww.bc.edu/repec/bocode/m/mlboolpred.ado
 fmwww.bc.edu/repec/bocode/m/mediation.pkg
 fmwww.bc.edu/repec/bocode/m/mgof.zip
+fmwww.bc.edu/repec/bocode/m/matdrop.ado
 fmwww.bc.edu/repec/bocode/m/metaparm_outdest_opts.hlp
 fmwww.bc.edu/repec/bocode/m/mfpi_plot.ado
 fmwww.bc.edu/repec/bocode/m/mivreg.ado
@@ -12887,6 +12889,7 @@ fmwww.bc.edu/repec/bocode/m/mlogitroc.pkg
 fmwww.bc.edu/repec/bocode/m/mi_mvncat.html
 fmwww.bc.edu/repec/bocode/m/mf_rpnbinop.hlp
 fmwww.bc.edu/repec/bocode/m/matcfm.ado
+fmwww.bc.edu/repec/bocode/m/matdrop.sthlp
 fmwww.bc.edu/repec/bocode/m/metaeff.ado
 fmwww.bc.edu/repec/bocode/m/mlogpred.ado
 fmwww.bc.edu/repec/bocode/m/marg_normpp_prep.ado

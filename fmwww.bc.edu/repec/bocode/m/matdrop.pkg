@@ -1,0 +1,21 @@
+d 'MATDROP': module to delete multiple row and/or column using labels from matrix
+d
+d  Given a matrix, matdrop deletes all specified row names, or all
+d specified column names, or both together. matdrop command will
+d not delete (i.e. annihilate) entire row vectors or entire column
+d vectors. 
+d
+d KW: matrix
+d KW: labels
+d KW: rows
+d KW: columns
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20240729
+d
+d Author:   Niranjan Kumar, Centre for Advanced Financial Research and Learning 
+d Support: email niranjan.kumar@@cafral.org.in
+d
+f matdrop.ado
+f matdrop.sthlp
