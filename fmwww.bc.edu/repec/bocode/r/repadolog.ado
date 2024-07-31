@@ -1,4 +1,4 @@
-*! version 2.1 20240516 - DIME Analytics & LSMS Team, The World Bank - dimeanalytics@worldbank.org, lsms@worldbank.org
+*! version 2.2 20240730 - DIME Analytics & LSMS Team, The World Bank - dimeanalytics@worldbank.org, lsms@worldbank.org
 
 cap program drop   repadolog
     program define repadolog
@@ -53,6 +53,9 @@ qui {
       local trkfolder "`using'"
       local trkfile   "`trkfolder'/stata.trk"
     }
+
+
+    noi di as text _n "{pstd}Using {bf:stata.trk} file found at location {bf:`trkfolder'/}{p_end}"
 
     ************************
     * Handle csv output options
@@ -149,7 +152,7 @@ qui {
         if (substr(`"`macval(line)'"',1,2) == "e") {
 
           * Distribution date is options, explicitly set N/A when missing
-          if missing("`distdate'") local distdate "N/A"
+          if missing("`distdate'") local distdate "No date in stata.trk"
 
           local commands = trim(subinstr("`commands'",",","",1))
 

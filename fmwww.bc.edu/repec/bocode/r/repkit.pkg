@@ -15,7 +15,7 @@ d KW: ado-management
 d
 d Requires: Stata version 14.1
 d
-d Distribution-Date: 20240516
+d Distribution-Date: 20240730
 d
 d Author: DIME Analytics, The World Bank, DECIE
 d Support: email dimeanalytics@@worldbank.org
@@ -33,3 +33,5 @@ f reproot.ado
 f reproot.sthlp
 f reproot_parse.ado
 f reproot_search.ado
+f reproot_setup.ado
+f reproot_setup.sthlp

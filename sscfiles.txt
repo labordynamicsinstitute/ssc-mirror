@@ -14755,6 +14755,7 @@ fmwww.bc.edu/repec/bocode/r/reffadjust4nlcom.ado
 fmwww.bc.edu/repec/bocode/r/rrlogit.ado
 fmwww.bc.edu/repec/bocode/r/rtfopen.ado
 fmwww.bc.edu/repec/bocode/r/rtfclose.html
+fmwww.bc.edu/repec/bocode/r/reproot_setup.ado
 fmwww.bc.edu/repec/bocode/r/rcl_functions_shares.do
 fmwww.bc.edu/repec/bocode/r/riflogit.zip
 fmwww.bc.edu/repec/bocode/r/robit1.sthlp
@@ -14878,6 +14879,7 @@ fmwww.bc.edu/repec/bocode/r/randtreat.pkg
 fmwww.bc.edu/repec/bocode/r/rrreg.ado
 fmwww.bc.edu/repec/bocode/r/reorder.ado
 fmwww.bc.edu/repec/bocode/r/reg2logit.pkg
+fmwww.bc.edu/repec/bocode/r/reproot_setup.sthlp
 fmwww.bc.edu/repec/bocode/r/rowranks.ado
 fmwww.bc.edu/repec/bocode/r/respdiff.sthlp
 fmwww.bc.edu/repec/bocode/r/rct_minim.sthlp
