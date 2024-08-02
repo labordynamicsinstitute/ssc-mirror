@@ -1,10 +1,9 @@
 {smcl}
-{viewerjumpto "Syntax" "yatchew_test##syntax"}{...}
-{viewerjumpto "Description" "yatchew_test##description"}{...}
-{viewerjumpto "Vignettes" "yatchew_test##vignettes"}{...}
-{viewerjumpto "Options" "yatchew_test##options"}{...}
-{viewerjumpto "Examples" "yatchew_test##examples"}{...}
-{viewerjumpto "Saved results" "yatchew_test##saved_results"}{...}
+{viewerjumpto "Syntax" "sdid_event##syntax"}{...}
+{viewerjumpto "Description" "sdid_event##description"}{...}
+{viewerjumpto "Options" "sdid_event##options"}{...}
+{viewerjumpto "Examples" "sdid_event##examples"}{...}
+{viewerjumpto "Saved results" "sdid_event##saved_results"}{...}
 
 {title:Title}
 
@@ -165,7 +164,7 @@ of Clarke et al. (2023)
 {marker references}{...}
 {title:References}
 
-Arkhangelsky, D., Athey, S., Hirshberg, D., Imbens, G., Wager, S. (20121) {browse "https://www.nber.org/papers/w25532":Synthetic difference in differences}.
+Arkhangelsky, D., Athey, S., Hirshberg, D., Imbens, G., Wager, S. (2019) {browse "https://www.nber.org/papers/w25532":Synthetic difference in differences}.
 
 Ciccia, D. (2024) {browse "https://arxiv.org/abs/2407.09565":A Short Note on Event-Study Synthetic Difference-in-Differences Estimators}.
 

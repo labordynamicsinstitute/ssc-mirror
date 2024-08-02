@@ -263,7 +263,7 @@ p crhdreg module to estimate high-dimensional regressions based on cluster-robus
 p crm module to implement the continual reassessment model 
 p crossfold module to perform k-fold cross-validation
 p crossplot module for scatter (or other twoway) plots for each y vs each x variable
-p crossvalidate module to perform k-fold crossvalidation
+p crossvalidate module to implement Cross-Validation in Stata
 p crtest module to perform Cramer-Ridder Test for pooling states in a Multinomial logit 
 p crtrees module to compute Classification and Regression Trees algorithms
 p csdid module for the estimation of Difference-in-Difference models with multiple time periods

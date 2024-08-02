@@ -1,0 +1,67 @@
+{
+  "Labels": {
+    "Dimensions": {
+      "_dimensions": {
+        "border_block": "Table border block",
+        "cell_type": "Table cell type",
+        "cmdset": "Command results index",
+        "colname": "Covariate names and column names",
+        "program_class": "Result program class",
+        "result": "Result",
+        "result_type": "Result type",
+        "rowname": "Row names"
+      },
+      "result_type": {
+        "matrix": "Matrix"
+      },
+      "rowname": {
+        "acc": "Accuracy",
+        "bacc": "Balanced Accuracy",
+        "bias": "Total (Bias) Error",
+        "binr2": "Tetrachoric Correlation Coefficient",
+        "ccc": "Concordance Correlation Coefficient",
+        "f1": "F1 Statistic",
+        "huber": "Huber Loss",
+        "iic": "Index of Ideality of Correlation",
+        "jindex": "Youden's J Statistic",
+        "mae": "Mean Absolute Error",
+        "mape": "Mean Absolute Percentage Error",
+        "mbe": "Mean (Bias) Error",
+        "mcacc": "Multiclass Accuracy",
+        "mcbacc": "Multiclass Balanced Accuracy",
+        "mcc": "Matthews Correlation Coefficient",
+        "mcdetect": "Multiclass Detection Prevalence",
+        "mcf1": "Multiclass F1 Statistic",
+        "mcjindex": "Multiclass Youden's J Statistic",
+        "mckappa": "Multiclass Kappa",
+        "mcmcc": "Multiclass Matthews Correlation Coefficient",
+        "mcnpv": "Multiclass Negative Predictive Value",
+        "mcordr2": "Polychoric Correlation Coefficient ***",
+        "mcppv": "Multiclass Positive Predictive Value",
+        "mcprec": "Multiclass Precision",
+        "mcprev": "Multiclass Prevalence",
+        "mcrecall": "Multiclass Recall",
+        "mcsens": "Multiclass Sensitivity",
+        "mcspec": "Multiclass Specificity",
+        "mse": "Mean Squared Error",
+        "msle": "Mean Squared Log Error",
+        "npv": "Negative Predictive Value",
+        "phl": "Pseudo-Huber Loss",
+        "pll": "Poisson Log Loss",
+        "ppv": "Positive Predictive Value",
+        "prec": "Precision",
+        "prev": "Prevalence",
+        "r2": "Pearson Correlation Coefficient",
+        "r2ss": "Traditional R^2",
+        "recall": "Recall",
+        "rmse": "Root Mean Squared Error",
+        "rmsle": "Root Mean Squared Log Error",
+        "rpd": "Ratio of Performance to Deviation",
+        "rpiq": "Ratio of Performance to Interquartile Range",
+        "sens": "Sensitivity",
+        "smape": "Symmetric Mean Absolute Percentage Error",
+        "spec": "Specificity"
+      }
+    }
+  }
+}

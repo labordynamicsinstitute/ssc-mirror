@@ -1,0 +1,28 @@
+d 'ECOLLAPSE': module to extend collapse to string variables
+d
+d	This package extends base Stata collapse to summarize
+d string variables by group. Two    methods are supported so far:  
+d      (concat) Observations of varlist within the same by level
+d are stacked together. The	   user can set the concatenation
+d order with sorted() option.	     (union) Distinct values of
+d varlist within the same by level are stacked together.       
+d This collapse option is optimized via bitmasking. As a result,
+d this method is only	     feasible for string variables with at
+d most 25 different values.    Any other argument of collapse (e.g.
+d (max), (mean), (firstnm), ...) can be specified    within
+d ecollapse.  Differently from traditional collapse, variable
+d labels are preserved	  after collapsing. 
+d
+d KW: data management
+d KW: collapse
+d KW: string variables
+d
+d Requires: Stata version 12 
+d
+d Distribution-Date: 20240801
+d
+d Author:  Diego Ciccia, Economics Department, Sciences Po
+d Support: email  diego.ciccia@@sciencespo.fr
+d
+f ecollapse.ado
+f ecollapse.sthlp

@@ -1,537 +1,567 @@
-*! splitit, v2.0.1, Klaudia Erhardt & Ralf Kuenster, last updated: 2018-05-09
-*! update v2.0.1 bug: misvals instead of values in splitvars of one-spell-cases (files with more than 200,000 obs) is now corrrected
-*! update v2.0.0 adapted to Stata14
+/*******************************************************************************
+*                                                                              *
+*             Handles splitting the data set into train/test,                  *
+*               train/validation/test, or K-Fold samples.                      *
+*                                                                              *
+*******************************************************************************/
 
-capture program drop splitit
-program splitit
-	version 11.2
-	syntax varlist (min=5 max=5) [,SRT(varlist) PORtions(integer 0) CVars]
-	display "   "
-	display "{col 3}splitit v2.0.0, written by Klaudia Erhardt & Ralf Kuenster, last updated:  2017-01-09"
-	display "   "
+*! splitit
+*! v 0.0.11
+*! 28FEB2024
+
+// Drop program from memory if already loaded
+cap prog drop splitit
+
+// Define program
+prog def splitit, rclass sortpreserve
+
+	// Version statement 
+	version 15
 	
-/*##################################################################################################################
-############################                                           #############################################
-############################  A) DEFINITION OF PARAMETERS              #############################################
-############################                                           ###########################################*/
-
-	tempfile spfile cid temp_usp datum_1 datum_2 datum_wide
-	tempvar temp tempn nid h1 nsc datum x y z first first2 spell2 spid n_epidat
-	tempname recn time hrs min sec cmax port port_add resid span b a max_t 	  		/* naming scalars with tempnames */
-	scalar `time' = 0	/* initialising the scalars */
-	scalar `hrs' = 0
-	scalar `min' = 0
-	scalar `sec' = 0
-	scalar `cmax' = 0 
-	scalar `port' = 0
-	scalar `port_add' = 0
-	scalar `resid' = 0
-	scalar `span' =  0
-	scalar `b' = 0
-	scalar `a' = 0
-	scalar `max_t' = 0
-	scalar `recn' = 0
-
-	tokenize `varlist'
-	local id `1'			
-	local start `2'			
-	local end `3'
-	local sptype `4'
-	local spellid `5'
+	// Syntax for the splitit subroutine
+	syntax anything(name = props id = "Split proportion(s)") [if] [in] [, 	 ///   
+		   Uid(varlist) TPoint(string asis) KFold(integer 1) 				 ///   
+		   SPLit(string asis) loo ]
 	
-	local fivevars `varlist'	
-
-	local fmt : format `start'		/* determine the format of the start date variable in the source file */
-	
-	local u ""
-	if c(stata_version)>=14 {
-		local u "u"		/* prefix for unicode commands */
-	}
-
-	/* #####################    capture the state of the file and the settings and set timer on ################# */
-
-	local varabr = c(varabbrev)
-	set varabbrev off 
-	set more off
-	
-	timer clear
-	timer on 1		/* Measuring the runtime of the program */		
-	
-	/* #####################      definition of the names of program generated variables        ################# */
-	
-	local v1 "`start'_split"					/* start date of the split spells */
-	local v2 "`end'_split"						/* end date of the split spells */
-	local v3 "sid_split"						/* spell ID of the split spells */
-	local v4 "nspell"							/* number of spells within a case after splitting */
-	local v5 "levela"							/* running number of the isochronic spells per case and spelltype */
-	local v6 "levelb"							/* running number of the isochronic spells per case */
-	local v7 "nlevela"							/* number of the isochronic spells per case and spelltype */
-	local v8 "nlevelb"							/* number of the isochronic spells per case */
-
-	
-	/* finding new names if one ore more of the above named variables already exist */
-	
-		capture confirm new variable `v1' `v2' `v3' `v4' `v5' `v6' `v7' `v8', exact
-		local x = ""
-		while _rc != 0 {
-			local x = `x' + 1
-			capture confirm new variable `v1'`x' `v2'`x' `v3'`x' `v4'`x' `v5'`x' `v6'`x' `v7'`x' `v8'`x', exact
-		}
-	
-	local bege "`v1'`x'"						/* start date of the split spells */
-	local ende "`v2'`x'"						/* end date of the split spells */
-	local spneu "`v3'`x'"						/* spell ID of the split spells */
-	local nsp "`v4'`x'"							/* number of spells within a case after splitting */
-	if `u'strlen("`cvars'") > 0 {
-		local lev1 "`v5'`x'"					/* count of isochronic spells per case and spelltype */
-		local lev2 "`v6'`x'"					/* count of isochronic spells per case */
-		local nlev1 "`v7'`x'"					/* sum of isochronic spells per case and spelltype */
-		local nlev2 "`v8'`x'"					/* sum of isochronic spells per case */
-	}
-
-/*##################################################################################################################
-############################                                           #############################################
-############################  B) CHECK INPUT AND SET DEFAULTS          #############################################
-############################                                           ###########################################*/
-
-	/*	##############   assert that the variables id, start, end, sptype, spellid  have no missing values  ##### */	
-
-	local i ""
-    foreach x of varlist `fivevars' {
-		local vt : type `x'
-		if `u'strpos("`vt'", "str") == 0  { /* if variable is not type string */
-			capture assert `x' < . 
-		}
-		if `u'strpos("`vt'", "str") > 0  { /* if variable is type string */
-			capture assert trim(`x') != "" 
-		}
-		if _rc != 0 {
-			local i = "`i'" + "`x'" + " "
-		}
-	}
-	
-	/*	##############   assert that the variables start, end are integers      ################################# */		
-	local j ""
-    foreach x of varlist `start' `end' {
-		capture assert `x' == int(`x') 
-		if _rc != 0 {
-			local j = "`j'" + "`x'" + " "
-		}
-	}
-	
-	if `u'strlen("`i'") > 0 | `u'strlen("`j'") > 0 {
-		if `u'strlen("`i'") > 0 {
-			local message "There are missings or empty strings in variable(s) `i' - please correct this problem."
-			display as err " `message' "
-			display "   "
-		}
-		if `u'strlen("`j'") > 0 {
-			local message "Some values of variable(s) `j' are no integers -  please correct this problem."
-			display as err " `message' "
-			display "   "
-		}
-		exit
-	}
-
-	/*	##############   assert that always end > = start (spell duration is not negative)  ##################### */
-
-	capture assert `end'-`start' >= 0
-	if _rc != 0 {
-		local message "The duration of some spells (`end' minus `start') is negative." _n ///
-		"Please correct this problem. "
-		display as err " `message' "
-		display "   "
-		exit		
-	}
-
-	/*	#############   assert if the arguments form unique spell identifier within a case  ##################### */
-	
+	// Test for invalid KFold option
+	if `kfold' < 1 {
 		
-	bysort `fivevars' `srt': gen byte `temp' = _N
-	capture assert `temp' == 1
-	if _rc != 0 {
-		if `u'strlen("`srt'") > 0	{
-			local message "{col 3}Note: The variables `fivevars' and the sort variable(s) `srt'" _n ///
-			"{col 3}don't identify the spells uniquely. Spells with duplicate combinations of  " _n ///
-			"{col 3}the variables `fivevars' `srt' will be sorted at random."
-		}
-		else {
-			local message "{col 3}Note: The variables `fivevars' " _n ///
-			"{col 3}don't identify the spells uniquely. Spells with duplicate combinations of  " _n ///
-			"{col 3}the variables `fivevars' will be sorted at random."		
-		}
-		display "   "
-		display " `message' "
-		display "  "
-	}
-	drop `temp'
-
-
+		// Display an error message
+		di as err "There must always be at least 1 K-Fold.  This would be "	 ///   
+		"the training set in a simple train/test split.  You specified "	 ///   
+		"`kfold' K-Folds."
 		
-	/* ##################### Log of the arguments the program uses ############################################## */
+		// Return error code and exit
+		err 198
+		
+	} // End IF Block for invalid K-Fold argument
+		
+	// Mark the sample to handle any if/in arguments (can now pass if `touse') 
+	// for the downstream work to handle user specified if/in conditions.
+	marksample touse
+	
+	// First we'll check/verify that appropriate arguments are passed to the 
+	// parameters and handle as much defensive stuff up front as possible.
+	// Tokenize the first argument
+	gettoken train validate: props
+	
+	// Validate that the train value is numeric
+	if !ustrregexm("`train'", "^[\d\.]+[\d]*\$") {
+		
+		// Display an error message
+		di as err "Only numeric values can be passed for split proportions."
 
-	if `u'strlen("`cvars'") > 0 {
-		display "{col 3}Note: optional count variables will be generated " _n ///
-		"{col 3}-------------------------------------- " 
-		display "    "
-	}
+		// Throw an error code
+		err 121
+		
+	} // End IF Block for invalid training split value
+	
+	// Check validation split value
+	if !mi("`validate'") & !ustrregexm("`validate'", "^\s*[\d\.]+[\d]*\$") {
+		
+		// Display an error message
+		di as err "Only numeric values can be passed for split proportions."
 
+		// Throw an error code
+		err 121
+		
+	} // End IF Block for invalid training split value
+	
+	// Set a macro for label use later to define the type of splitting
+	if `: word count `props'' == 1 {
+		
+		// Define this as K-Fold if they want multiple cross-validation folds
+		if `kfold' > 1 loc stype "K-Fold Train/Test Split"
+		
+		// Otherwise, plain train/test split
+		else loc stype "Train/Test Split"
+		
+	} // End IF Block for train/test split types
+	
+	// If there are two thresholds it is tvt
+	if `: word count `props'' == 2 {
+		
+		// Define the split type macro to include K-Fold if the user wants that
+		if `kfold' > 1 loc stype "K-Fold Train/Validate/Test Split"
+		
+		// Set the split type macro to indicate train, validation, test split
+		else loc stype "Train/Validate/Test Split"
+		
+		// Replace the validate macro with the sum of train and validate
+		loc validate `= `train' + `validate''
 
-/*##################################################################################################################
-############################                                           #############################################
-############################      BEGIN OF THE CORE PROGRAM            #############################################
-############################                                           ###########################################*/
-
-	/* #####################    prepare the working file: only variables that are necessary for splitting  #######*/
+	} // End IF Block for train, validation, test split	
 	
-	local message "{col 3}Start of the core programm at $S_TIME on $S_DATE " _n ///
-				"    " _n ///
-				"{col 3}Processing.... Please wait while sorting and generating temporary variables... " _n ///
-				"    "
-	display "`message'  "
-
-	/* 	####### drop one-spell cases --> runtime reduction in large files, runtime penalty in small files ####### */
+	// Test if the user is requesting assigning all the data to the training set 
+	// without using K-Fold cv (effectively not splitting the data at all)
+	if `: word 1 of `props'' == 1 & `kfold' == 1 {
+		
+		// Display error message to the screen
+		di as err "You cannot assign all of the data to a single training split."
+		
+		// Return error code and exit
+		err 198
+		
+	} // End IF Block for invalid training proportion for non-K-Fold case
+		
+	// Define the flavor of the splits based on how the units are allocated
+	if !mi(`"`uid'"') & !mi("`tpoint'") loc flavor "Clustered & Panel Sample"
+	else if !mi(`"`uid'"') & mi("`tpoint'") loc flavor "Clustered Random Sample"
+	else if mi(`"`uid'"') & !mi("`tpoint'") loc flavor "Panel Unit Sample"
+	else if mi(`"`uid'"') & mi("`tpoint'") loc flavor "Simple Random Sample"
 	
-	scalar `recn' = _N 				/* determine N of obs. */
-	if `recn' > 200000	{	
-		preserve
-		keep `fivevars' `srt' 
-		by `id': gen `nsc' = _N		/* n of spells per case, used for sorting the file later on */		
-		quietly keep if `nsc' > 1	/* drop one-spell cases */
-	}
-	else	{
-		preserve
-		keep `fivevars' `srt' 
-		by `id': gen `nsc' = _N		/* n of spells per case, used for sorting the file later on */
-	}
-	by `fivevars' `srt': gen long `tempn' = _n  /* generate a key for merging later on */
+	// Allocate tempname for xt/group splitting
+	tempvar tag sgrp sgrp2 uni
 	
-	/* 	#############   determine the number of portions if not specified / if input for option was not valid ## */ 
+	// Determine if the values are not proportions
+	if `train' > 1 {
+		
+		// If not a proportion issue an error message
+		di as err "Splits must be specified as proportions of the sample."
+		
+		// Return error code 
+		error 198
+		
+	} // End of IF Block for non-proportion splits
 	
-	scalar `recn' = _N 				/* determine N of obs. */
-	
-	quietly {
-		by `id': gen byte `temp' = 1 if _n==1
-		count if `temp' == 1
-		scalar `cmax' = r(N)		/* determine no of cases */
-		drop `temp'
-	}
-	if `portions' <= 0 | `portions' > `cmax' {   /* set default if no portions-option or portions-option invalid */
-		if `recn' <= 25000 {
-			scalar `port' = 1
-		}
-		else   {
-			scalar `port' = int(`recn' / 25000)
-		}
-		/* --> 1 portion up to 49.999 obs.  */
-	}
-	else {  /* if portions option is valid, user specified number of portions will be processed */
-		scalar `port' = `portions'
-	}
-	
-	local message "{col 3}Start dividing the working file into portions at $S_TIME on $S_DATE " _n ///
-	"   "  _n ///
-	"{col 3}Processing.... Please wait while determining the number of cases per portion... "
-
-	if `port' > 1 {
-		display " `message' "
-		display "   "
-	}
-	
-	/* #### generate new consecutive case ID  and determine the number of cases per portion  #### */
-
-	sort `nsc' `id'
-	gen byte `h1' = cond(`id' != `id'[_n-1], 1, 0)	/* instead of egen group(), performs quicker ?*/
-	gen `nid' = sum(`h1')
-	drop `h1'
-	quietly save `cid', replace
-	scalar `cmax' = `nid'[_N]
-	scalar `span' =  int(`cmax'/`port') /* determine the number of cases per portion */
-	scalar `resid' = `cmax' - (`span' * `port') 
-	if `resid' > `span' {	/* if resid < span the remaining cases will be added to last portion  */
-		scalar `port_add' = int(`resid'/`span')
-		scalar `port' = `port' + `port_add'
-	}
-	
-	local message "{col 3}Portions no. 1 - " `port'-1  " contain " `span' " cases each, " _n ///
-	"{col 3}Portion no. " `port' " contains " (`cmax') - ((`port'-1) * `span') " cases." _n ///
-	"    " _n ///
-	"{col 3}Processing.... Please wait .... " _n ///
-	"    "
-	if `port' > 1 {
-		display " `message' "
-		display "   "
-	}
-	
-	/*##################################################################################################################
-	###################   Spell splitting in a loop over the portions which are extracted one after   ##################
-	###################    the other from the working file                                            ##################
-	################################################################################################################# */
-	
-	local portions = `port'		/* scalar `port' cannot be used for counting the loop */
-
-	forvalues k = 1(1)`portions' {
-		scalar `b' = `cmax' - `span' * (`k'-1)	/* b is set to the highest case number belonging to the portion */
-		scalar `a' = `b' - `span' + 1			/* a is set to the smallest case number belonging to the portion */
-		if `k' < `portions' {
-			quietly use "`cid'" if `nid' >= `a' & `nid' <= `b', clear
-		}
-		else if `k' == `portions' {		
-			quietly use "`cid'" if `nid' >= 1 & `nid' <= `b', clear  
-			/* --> the last portion contains the rest of the cases up to the highest case number */
-		}	
-		drop `nid'							/* the new case number is of no further use and can be dropped */
-
+	// Now test for invalid combination of splits
+	if !mi("`validate'") {
+		
+		// Test if the sum of the split proportions is greater than unity
+		if `validate' > 1 {
 			
-		/* An additional spell-ID is generated, which counts the spells per case from 1 to highest. */
-		sort `fivevars' `srt'
-		quietly {
-			by `id': gen int `spell2' = _n 
-			save "`temp_usp'", replace  /* The temporary file temp_usp stands for the portioned data file just being 
-										   processed */
-		}   
-		/* Storing start date, case-ID and the newly generated spell-ID in a separate file */
-		keep `id' `start'
-		quietly {
-			rename `start' `datum'
-			save "`datum_1'", replace
-		}
+			// Print error message
+			di as err "Invalid validation/test split.  The proportion is > 1."
+		
+			// Return error code
+			error 198
+		
+		} // End IF Block for invalid validation proportion
+		
+	} // End IF Block for proportions that sum to greater than unity
 
-		/* The end date is increased by 1 time unit (because potential splits of a spell are adjacent, i.e. beginning 
-		   one time unit later than the end of the preceding split) and also stored into a separate file . */
-		quietly use "`temp_usp'", clear
-		keep `id' `end'
-		quietly {
-			rename `end' `datum'
-			replace `datum' = `datum' + 1
-			save "`datum_2'", replace
-		}
-	
-		/* The two temporary "datum"-files get united and sorted  */
-		quietly use "`datum_2'", clear
-		append using "`datum_1'"
-		sort `id' `datum'
+	// Require an argument for split if the user wants a validation and test 
+	// split
+	if !mi("`validate'") & mi(`"`split'"') {
+		
+		// Check to see if _xvsplit is already defined
+		cap confirm v _xvsplit
 
-		/* Duplicate dates within a case are deleted */
-		by `id' `datum': gen `y' = _n 
-		quietly drop if `y' > 1
-		drop `y'
+		// If the variable exists
+		if _rc == 0 {
 			
-		/* Assessing the maximum number of date specifications that ever occur in a case. This number is stored to 
-			max_t and determines the number of date variables being generated in the next step. Also this number 
-			serves as a loop enumerator. */
-		by `id': gen int `z' = _N
-		quietly sum `z', meanonly
-		scalar `max_t' = r(max) 
-		drop `z'
+			// If no varname is passed to split
+			di as err "New varname required for validation/test splits if _xvsplit already exists."
+			
+			// Return error code
+			error 100	
+		
+		} // End IF Block for existing split variable defined
 
-		/* The "datum" temporary file is reshaped from long to wide and saved as such. In the process 
-			an index number running from 1 to max_t is appended automatically to the variable name "datum". */
-		by `id': gen int `y' = _n
-		quietly {
-			reshape wide `datum', i(`id') j(`y')
-			save "`datum_wide'", replace
-		}
+	} // End IF Block for new varname requirement for tvt splits
+	
+	// If no variable name is passed to split use _xvsplit
+	if mi("`split'") loc split _xvsplit
+	
+	// If tpoint is used expect that the data are xt/tsset
+	if !mi(`"`tpoint'"') {
 				
-		/* The "datum" variables are merged casewise to the portioned data file */
-		quietly {
-			use "`temp_usp'", clear
-			merge m:1 `id' using "`datum_wide'"
-			drop _merge
-		}
-	
-		/* The following loop goes over the "datum" variables and determines which of the data specifications
-		   lie within the boundaries of the respective spell. If they lie outside they are declared missing. 
-		   "n_epidat" counts how many data specifications lie within the boundary of the respective spell. */
-		quietly gen int `n_epidat' = 0
-		local md = `max_t'
-		
-		forvalues i = 1(1)`md'{
-			quietly {
-				replace `datum'`i' = . if `datum'`i' < `start' | `datum'`i' > `end'
-				replace `n_epidat' = `n_epidat' + 1 if `datum'`i' != .
-			}
-		}
+		// If not xt/ts set 
+		if mi(`"`: char _dta[tis]'"') {
 			
-		/* The following loop determines which of the "datum" variable holds the first nonmissing value and stores
-			the the respective index number in the variable "first" for later use. */
-		quietly gen int `first' = 0
-		
-		forvalues i = 1(1)`md'{
-			quietly replace `first' = `i' if `datum'`i' != . & `first' == 0
-		}
-
-		/* The spells get multiplicated by the number of date specifications that lie within their boundaries - that
-		   number has been stored in n_epidat. After that the expanded file is sorted and a count variable for the 
-		   splits is generated (after expansion the spell counter is no more unique, because all expanded splits 
-		   have the same value as their "mother" spell).  */
-		quietly expand `n_epidat'
-		sort `id' `spell2' 
-		quietly by `id' `spell2': gen int `spid' = _n
+			// Display an error message
+			di as err "Data required to be xt/tsset when using tpoint."
 			
-		/* The next step assesses the index of the "datum" variable where the start date 
-			is to be found for each split episode. The index is calculated as the index of the variable that holds
-			the start date of the non-split episode (which is the first variable with a nonmissing value) plus the 
-			value of the split count variable, minus 1. */
-		quietly gen int `first2' = `first' + `spid' - 1
+			// Return an error code
+			error 459
+			
+		} // End IF Block for non-xt/tsset data with panel data arguments
 		
-		/* After that the determined start date for each episode is transferred to a newly generated variable that 
-			designates the start date of the split episode. This is done in a loop over the "datum" variables. */
-		quietly gen int `bege' = .
-		format `bege' `fmt'   /* adopting the format of the start date variable in the unsplit source file. */
-		forvalues i = 1(1)`md'{
-			quietly replace `bege' = `datum'`i' if `i' == `first2'
-
-		}
+		// Store the panel variable in ivar
+		loc ivar `: char _dta[iis]'
 		
-		/* The end date variable of the splits is generated. As the splits of each episode are sorted in chonologic 
-			order, the end date can be derived from the start date of the next split stemming from the same
-			episode. If there is no next split the end date of the split is the same as the end date of the 
-			unsplit spell. */
-		quietly {
-			gen int `ende' = .
-			format `ende' `fmt'
-			by `id' `spell2': replace `ende' = `bege'[_n+1] - 1 
-			replace `ende' = `end' if `ende' == .
-			}
-
-		/* Deletion of all variables that are no more needed, save the split portion file, and confirmation
-			message. */ 
+		// Store the time variable in tvar
+		loc tvar `: char _dta[tis]'
+		
+		// Test if the `uid' parameter has an argument and if so if it includes 
+		// the panel variable, when there is a panel variable
+		if !mi(`"`uid'"') & !`: list ivar in uid' & !mi(`"`ivar'"') {
+			
+			// Test to see if the panel variable is nested within the clusters
+			mata: st_local("nested", strofreal(isnested("`uid' `ivar'", "`touse'")))
+			
+			// If the panel variable is not nested within the user defined 
+			// clusters
+			if `nested' == 0 {
+				
+				// Return an error message
+				di as err "The panel variable must be nested within the" ///   
+				" clustered identified in: `uid'."
+				
+				// Return an error code and exit
+				error 459
+				
+			} // End IF Block for non-nested panel vars within clusters
+			
+			// If the panel variable is nested, add it to the cluster ID macro
+			else loc uid `uid' `ivar'
+							
+		} // End IF Block for missing panel var in uid 
+		
+	} // End IF Block to check for the time point option
 	
-		tempfile tempf`k'
-		keep `fivevars' `srt' `bege' `ende' `tempn'
-		quietly save "`tempf`k''", replace	
-		if `port' > 1 {
-			local message "{col 3}Portion no. `k' processed at $S_TIME on $S_DATE " 
-		}
+	/***************************************************************************
+	* This is the section where we create a marker to identify how we will     *
+	* split the records.  For hierarchical/panel data, we need to assign whole *
+	* clusters of observations, while cross-sectional data can split the all   *
+	* of the records.  The temporary variable `tag' is used to mark the obs in *
+	* conjunction with any if/in expressions passed by the user.               *
+	***************************************************************************/
+	
+	// Test for presence of sampling unit id if provided
+	if !mi(`"`uid'"') {
+		
+		// Confirm the variable exists and let this handle returning the error 
+		confirm v `uid'
+		
+		// Test if time point is also listed to determine how to tag records
+		// If there is a time point, that should be included in the if condition
+		if !mi("`tpoint'") qui: egen byte `tag' = tag(`uid') if `touse' 
+		
+		// This will handle hierarchical cases as well
+		else qui: egen byte `tag' = tag(`uid') if `touse'
+		
+	} // End IF Block to verify variable in uid if specified
+	
+	// Handle the case where we use the xtset info for the xt case
+	else if mi(`"`uid'"') & !mi("`tpoint'") {
+		
+		// If a panel ID variable is defined by xtset
+		if !mi(`"`ivar'"') {
+			
+			// If the panel variable exists, flag an individual case per panel
+			// unit
+			qui: egen byte `tag' = tag(`ivar') if `touse' 
+			
+		} // End IF Block for panel data
+
+		// If this is a timeseries instead of a panel data set:
 		else {
-			local message "{col 3}File processed at $S_TIME on $S_DATE "
-		}
-		display " `message' "
-	}
-	scalar drop `max_t'
-	 
-	/*##############################################################################################################
-	###################   Cumulate the portions into a temporary  all-up data file     #############################
-	############################################################################################################# */
+			
+			// Create the tag for the timeseries including all obs 
+			qui: g byte `tag' = 1 if `touse' & `tvar' < `tpoint'
 
-	local message "{col 3}Please wait while the portions are accumulated..." 
-	display "    "
-	display "`message'"
-	display "    "
-	
-	local k = 1
-	quietly use "`tempf`k''", clear 
-		 
-	if `port' > 1 {			
-		forvalues k = 2(1)`portions' {	
-			quietly append using "`tempf`k''", nolabel
-		}   
-		local message "{col 3}File portions accumulated at $S_TIME on $S_DATE.  "
-		display "  "
-		display " `message' "
-		display "  "
-	}
-	
-	/*##############################################################################################################
-	###################   merge the split file to the original file                    #############################
-	############################################################################################################# */
-
-	
-	local message "{col 3}Processing.... Please wait while the splits are merged to original file... "
-	display " `message' "
-	display " 	 "
-	
-	quietly save "`spfile'", replace
-	restore 
-	by `fivevars' `srt': gen long `tempn' = _n  /* generate the key for merging */	
-	quietly merge 1:m `fivevars' `srt' `tempn' using "`spfile'"
-	drop _merge
-	drop `tempn'
-	
-	/* replacing the missvals in unsplit spells */
-	replace `bege' = `start' if `bege' == .
-	replace `ende' = `end' if `ende' == .
-
-	/*##################################################################################################################
-	############################   new casewise spell count and total no of spells per case  variables  ################
-	##################################################################################################################*/
-	*/
-
-	sort `id' `bege' `sptype' `srt' 
-	quietly {
-		by `id': gen int `spneu' = _n  	/* New casewise spell count variable (due to the splitting the original spell  
-										   counting is no more unique) */
-		by `id': gen int `nsp' = _N		/* New total number of spells per case  */
+		} // End ELSE Block for time series
 		
-	}
-	lab var `bege' "split spell start date"
-	lab var `ende' "split spell end date"
-	lab var `spneu' "spell ID after splitting"
-	lab var `nsp' "n of split spells per case"
-
-	/*##################################################################################################################
-	############################   Optional generation of spell count variables        #################################
-	##################################################################################################################*/
-	*/
-	if `u'strlen(trim("`cvars'")) > 0 {
-		sort `id' `bege' `sptype' `srt' `spneu' 
-		quietly {
-			by `id' `bege' `sptype': gen byte `lev1'=_n-1  // 
-			by `id' `bege': gen int `lev2'=_n-1
-			by `id' `bege' `sptype': gen byte `nlev1'=_N
-			by `id' `bege': gen int `nlev2'=_N
-		}
-		lab var `lev1' "by `id' `sptype': count of isochronic spells"
-		lab var `lev2' "by `id': count of isochronic spells"
-		lab var `nlev1' "by `id' `sptype': sum of isochronic spells"
-		lab var `nlev2' "by `id': sum of isochronic spells"
-	}
-
-	scalar drop `cmax' `span' `a' `b'	
-
-	sort `id' `bege' `sptype' `srt' `spneu'
-	describe, short
+	} // End IF block for xtset based splits
 	
-/*##################################################################################################################
-############################                                           #############################################
-############################      DISPLAY RUNTIME OF THE PROGRAM       #############################################
-############################                                           ###########################################*/
-
-	timer off 1
-	quietly timer list
-	scalar `time'=(r(t1))
-	scalar `hrs' = int(`time'/3600)
-	scalar `time' = (r(t1)) - (`hrs' * 3600)
-	scalar `min' = int(`time'/60)
-	scalar `sec' = round(`time' - (`min' * 60), .01)
-	local message "{col 3}END spell splitting at $S_TIME on $S_DATE "  _n ///
-	"  "  _n ///
-	"{col 3}runtime of the program: " `hrs' " hrs " `min' " min " `sec' " sec " _n ///
-	"   "
-
-	display "   "  _n ///
-	" {col 3}variables generated: "  _n ///
-	" {col 3}--------------------  "  _n ///
-	"	`bege'  {col 24}start date of the split spells"  _n ///
-	"	`ende'  {col 24}end date of the split spells"  _n ///
-	"	`spneu'  {col 24}enumerator of the split spells"  _n ///
-	"	`nsp'  {col 24}sum of spells by `id' after splitting"
-	if `u'strlen("`cvars'") > 0 {
-		display "   "  _n ///
-		"{col 3}optional count variables generated: " _n ///
-		"{col 3}-----------------------------------   "  _n ///
-		"	`lev1'  {col 24}count of isochronic spells by `id' and `sptype'"  _n ///
-		"	`lev2'  {col 24}count of isochronic spells by `id'"   _n ///
-		"	`nlev1'  {col 24}sum of isochronic spells by `id' and `sptype'"   _n ///
-		"	`nlev2'  {col 24}sum of isochronic spells by `id'"		
-	}
-	display "   "
-	display " `message' "
+	// Create the tag variable for non xt/hierarchical cases
+	else {
+		
+		// Create the tag for cases that don't involve clustering or panels
+		qui: g byte `tag' = 1 if `touse' 
+		
+	} // End ELSE Block for non-clustered/panel/timeseries sampling
 	
-	scalar drop _all
-	/* ### restore settings  ### */
-	set varabbrev `varabr'
-end	
+	// Generate a random uniform in [0, 1] for the tagged observations
+	qui: g double `uni' = runiform() if `touse' & `tag' == 1
+	
+	/***************************************************************************
+	* This is the section where the splits get defined now that we've ID'd the *
+	* way we will allocate the observations/clusters.                          *
+	***************************************************************************/
+	
+	// For the kfold case, we'll use xtile on the random uniform to create the 
+	// groups
+	if `kfold' != 1 & mi("`loo'") {
+		
+		// Generate the split group tempvar to create `kfold' equal groups
+		xtile `sgrp' = `uni' if `touse' & `tag' == 1 & `uni' <= `train',	 ///   
+		n(`kfold')
+			
+		// Define the training splits
+		mata: st_local("trainsplit", invtokens(strofreal(1..`kfold')))
+				
+		// Set number of levels for the splits
+		deflabs, val(`trainsplit') t(Training)
+		
+		// If there is no validation split 
+		if mi("`validate'") {
+			
+			// Define the test split
+			loc testsplit `= `kfold' + 1'
+			
+			// Add the testsplit ID to the variable for the test cases
+			qui: replace `sgrp' = `testsplit' if `touse' & `tag' == 1 & 	 ///   
+												 `uni' > `train' & !mi(`uni')
+			
+			// Generate the value label for the test split
+			deflabs, val(`testsplit') t(Test)
+			
+		} // End IF Block for KFold CV train/test split
+		
+		// If the user also wants to use kfold for a validation set as well:
+		else {
+			
+			// Create a macro with the validation splits
+			loc validsplit `= `kfold' + 1'
+			
+			// Set the value for the test set
+			loc testsplit `= `validsplit' + 1'
+			
+			// Add the validation group to the existing variable
+			qui: replace `sgrp' = `validsplit' if `touse' & `tag' == 1 &	 ///   
+										(`uni' > `train' & `uni' <= `validate')
 
+			// Create the test split in a similar fashion
+			qui: replace `sgrp' = `testsplit' if `touse' & `tag' == 1 &		 ///   
+												 (`uni' > `validate')
+			
+			// Generate value labels for the validation set
+			deflabs, val(`validsplit') t(Validation)
+			
+			// Generate value labels for the test set
+			deflabs, val(`testsplit') t(Test)
+				
+		} // End ELSE Block for kfold CV with validation and test splits
+		
+	} // End IF block to handle splitting the training set
+	
+	// For Leave-One-Out cross-validation splits
+	else if `kfold' > 1 & !mi("`loo'") {
+		
+		// Sort the data so all of the tagged cases appear first and the random
+		// uniform is sorted in ascending order
+		qui: gsort -`tag' -`touse' +`uni'
+		
+		// Now the _n should correspond with the order of the random uniform
+		// value and won't produce duplicates.  We'll use a long here just to 
+		// be safe but will compress before returning from the command.
+		qui: g long `sgrp' = _n if `touse' & `tag' == 1 & `uni' <= `train' & ///   
+							_n <= `kfold'
+		
+		// Define the training splits
+		mata: st_local("trainsplit", invtokens(strofreal(1..`kfold')))
+				
+		// Set number of levels for the splits
+		deflabs, val(`trainsplit') t(Training)
+		
+		// If there is no validation split 
+		if mi("`validate'") {
+			
+			// Define the test split
+			loc testsplit `= `kfold' + 1'
+			
+			// Add the testsplit ID to the variable for the test cases
+			qui: replace `sgrp' = `testsplit' if `touse' & `tag' == 1 & 	 ///   
+												 mi(`sgrp') & !mi(`uni') //`uni' > `train' & 
+			
+			// Generate the value label for the test split
+			deflabs, val(`testsplit') t(Test)
+			
+		} // End IF Block for KFold CV train/test split
+		
+		// If the user also wants to use kfold for a validation set as well:
+		else {
+			
+			// Create a macro with the validation splits
+			loc validsplit `= `kfold' + 1'
+			
+			// Set the value for the test set
+			loc testsplit `= `validsplit' + 1'
+			
+			// Add the validation group to the existing variable
+			qui: replace `sgrp' = `validsplit' if `touse' & `tag' == 1 &	 ///   
+							mi(`sgrp') & (`uni' > `train' & `uni' <= `validate') 
+
+			// Create the test split in a similar fashion
+			qui: replace `sgrp' = `testsplit' if `touse' & `tag' == 1 &		 ///   
+											   mi(`sgrp') & (`uni' > `validate') 
+			
+			// Generate value labels for the validation set
+			deflabs, val(`validsplit') t(Validation)
+			
+			// Generate value labels for the test set
+			deflabs, val(`testsplit') t(Test)
+				
+		} // End ELSE Block for kfold CV with validation and test splits
+		
+		// Compress the group identifier
+		qui: compress `sgp'
+		
+	} // End ELSEIF block for the LOO-CV case
+	
+	// For the other cases we can generate the train and validation splits 
+	// in a single step
+	else {
+		
+		// For train, validate, test splits:
+		if !mi("`validate'") {
+			
+			// Create the split indicator for the training, validation, and test set
+			g byte `sgrp' = cond(`touse' & `tag' == 1 & `uni' <= `train', 1, ///   
+							cond(`touse' & `tag' == 1 & `uni' > `train' & 	 ///   
+								 `uni' <= `validate' & !mi(`uni'), 2, 		 ///   
+							cond(`touse' & `tag' == 1 & `uni' > `validate' & ///   
+								 !mi(`uni'), 3, .)))
+			
+			// Generate value labels for the training set ID					 
+			deflabs, val(1) t(Training)
+			
+			// Generate value labels for the validation set ID
+			deflabs, val(2) t(Validation)
+			
+			// Generate value labels for the test set ID
+			deflabs, val(3) t(Test)
+														
+			// Stores the values of the split variable that identify the training split
+			loc trainsplit 1
+			
+			// Stores the value of the split variable for the validation split
+			loc validsplit 2
+			
+			// Stores the value of the split variable for the test split
+			loc testsplit 3
+		
+		} // End IF Block for TVT Split
+		
+		// Otherwise:
+		else {
+			
+			// Create the split indicator for training and test sets
+			g byte `sgrp' = cond(`touse' & `tag' == 1 & `uni' <= `train', 1, ///  
+							cond(`touse' & `tag' == 1 & `uni' > `train' & 	 ///   
+								 !mi(`uni'), 2, .))
+
+			// Generate value labels for the training set ID					 
+			deflabs, val(1) t(Training)
+			
+			// Generate value labels for the test set ID
+			deflabs, val(2) t(Test)
+			
+			// Stores the values of the split variable that identify the training split
+			loc trainsplit 1
+			
+			// Stores the value of the split variable for the test split
+			loc testsplit 2
+			
+		} // End ELSE Block for TT split
+
+	} // End IF block for train/validation/test splits
+	
+	/***************************************************************************
+	* This is the section where we will handle populating the split ID record  *
+	* for cases involving hierarchical/custered sampling, panel/timeseries, &  *
+	* combinations of the two cases, since we only assigned split IDs to a     *
+	* single record per cluster/group above.                                   *
+	***************************************************************************/
+	
+	// Handle populating the split ID for hierarchical cases/clustered splits
+	if !mi("`uid'") {
+
+		// This should fill in the split group ID assignment for the case of 
+		// hierarchical splitting
+		qui: bys `uid' (`sgrp'): replace `sgrp' = `sgrp'[_n - 1] if `touse'  ///   
+										  & mi(`sgrp'[_n]) & !mi(`sgrp'[_n - 1]) 
+							
+		// For clustered sampling with panel/timeseries data
+		if !mi("`tpoint'") { 
+			
+			// Create a new variable to identify the corresponding forecast sample
+			qui: g byte `split'xv4 = `sgrp' if `touse' & `tvar' > `tpoint'
+			
+			// Label the variable
+			la var `split'xv4 "Forecasting sample for the corresponding split"
+		
+			// Then unflag those records from the main sample
+			replace `sgrp' = . if `touse' & `tvar' > `tpoint'
+
+		} // End IF Block for timeseries/panel cases
+										
+	} // End IF Block to fill things in for hierarchical splits
+		
+	// Handle timeseries/panel case without additional hierarchy specified
+	else if mi("`uid'") & !mi("`tpoint'") & !mi(`"`ivar'"') {
+		
+		// This should fill in the split group ID assignment for the case of 
+		// hierarchical splitting
+		qui: bys `ivar' (`sgrp'): replace `sgrp' = `sgrp'[_n - 1] if `touse' ///   
+							& mi(`sgrp'[_n]) & !mi(`sgrp'[_n - 1]) 
+							
+		// Create the forecast identifier
+		qui: g long `split'xv4 = `sgrp' if `touse' & `tvar' > `tpoint'
+		
+		// Compress the forecast identifier
+		qui: compress `split'xv4
+		
+		// Label the variable
+		la var `split'xv4 "Forecasting sample for the corresponding split"
+		
+		// And now replace the split variables with missings for the forecast 
+		// sample
+		qui: replace `sgrp' = . if `touse' & `tvar' > `tpoint'
+
+	} // End ELSEIF Block for panel/timeseries data with a specified panel var
+	
+	// Create a variable label for the split IDs
+	la var `sgrp' `"`stype' Identifiers"'
+	
+	// For the last step we'll move the values from the tempvar into the 
+	// permanent variable (which could have happened earlier)
+	clonevar `split' = `sgrp' if `touse'
+	
+	// Apply the value label to the split group variable
+	la val `split' _splitvar
+	
+	// Set an r macro with the variable name with the split variable to make 
+	// sure it can be cleaned up by the calling command later in the process
+	ret loc splitter = "`split'"
+	
+	// Return the IDs that identifies the training splits
+	ret loc training = "`trainsplit'"
+	
+	// Return the IDs that identifies the validation splits
+	if !mi("`validsplit'") ret loc validation = `validsplit'
+	
+	// Return the ID that identifies the test split
+	if !mi("`testsplit'") ret loc testing = `testsplit'
+	
+	// Return the type of split
+	ret loc stype = `"`stype'"'
+	
+	// Return the flavor of the split
+	ret loc flavor = `"`flavor'"'
+	
+	// If using for panel/timeseries return the forecast variable name
+	if !mi("`tpoint'") ret loc forecastset = "`split'xv4"
+	
+// End of program definitions	
+end
+
+// Subroutine to define value labels for the split identifier
+prog def deflabs
+
+	// Declares the syntax for this subroutine
+	syntax, VALues(numlist integer min = 1 > 0) Type(string asis) 
+	
+	// If there is only a single ID passed to the command generate this style of 
+	// value label for that split type
+	if `: word count `values'' == 1 la def _splitvar `values' "`type' Split", modify
+	
+	// If multiple ID values are passed loop over them and construct the split 
+	// labels like this
+	else {
+		
+		// Loop over the values in the numlist
+		foreach i in `values' {
+			
+			// Generate a new value label with the split IDs
+			la def _splitvar `i' "`type' Split #`i'", modify
+			
+		} // End Loop over the range
+		
+	} // End ELSE Block for multiple values
+	
+// End sub-sub-routine for other label types	
+end
 
