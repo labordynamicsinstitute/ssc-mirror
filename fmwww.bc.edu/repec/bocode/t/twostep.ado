@@ -1,7 +1,8 @@
-*! version 2.3 Juli 9, 2024 @ 17:38:22 UK
+*! version 2.31 Juli 22, 2024 @ 18:19:19 UK
 *! Multilevel Analysis With 2 Step Approach
   
 // History
+// twostep 2.31: Variable names starting with _b returns errors -> fixed
 // twostep 2.3: Remove titles for graphs with defualt titeling did not work. -> fixed
 // twostep 2.2: 2nd R&R SJ
 // - Removed default titles for all plots
@@ -428,7 +429,7 @@ program define twostep_edv
 
 	syntax varlist(fv) [if] [in] [, Method(string) level(passthru) vce(passthru) NOCONStant Hascons keepweights(string) *]
 	gettoken depvar indepvars: varlist
-	local sename = subinstr("`depvar'", "_b","_se",.)
+	local sename = subinstr("`depvar'", "_b_","_se_",.)
 
 	tempvar omegavar sumomegavar weight
 
@@ -879,7 +880,7 @@ program define twostep_dot
 
 		if strpos("`depvar'","_b_") {
 
-			local sename = subinstr("`depvar'","_b","_se",.)
+			local sename = subinstr("`depvar'","_b_","_se_",.)
 
 			gen `lb' = `depvar' - `cif'*`sename' `if' `in'
 			gen `ub' = `depvar' + `cif'*`sename' `if' `in'

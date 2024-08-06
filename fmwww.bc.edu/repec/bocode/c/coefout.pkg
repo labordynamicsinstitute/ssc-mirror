@@ -1,0 +1,21 @@
+d 'COEFOUT': module to keeps the beta-coefficients for specified variables and labelnames from a regression.
+d
+d  Post regression, coefout saves the beta coefficients for all
+d specified variables and, or labelnames(given for any interaction
+d terms). The coefout has options to save  the regressors'
+d coefficients for a range of p-value. The output using this
+d command can be saved in matrix for further usage. 
+d
+d KW: coefficients
+d KW: beta coefficients
+d KW: labels
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20240805
+d
+d Author:   Niranjan Kumar, Centre for Advanced Financial Research and Learning 
+d Support: email niranjan.kumar@@cafral.org.in
+d
+f coefout.ado
+f coefout.sthlp

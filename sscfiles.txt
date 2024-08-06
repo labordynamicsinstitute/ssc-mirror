@@ -16555,6 +16555,7 @@ fmwww.bc.edu/repec/bocode/c/chlist.sthlp
 fmwww.bc.edu/repec/bocode/c/cureregr8.hlp
 fmwww.bc.edu/repec/bocode/c/cprd_patient.sthlp
 fmwww.bc.edu/repec/bocode/c/cbarplot.html
+fmwww.bc.edu/repec/bocode/c/coefout.sthlp
 fmwww.bc.edu/repec/bocode/c/clr_b.ado
 fmwww.bc.edu/repec/bocode/c/color-538bs6.style
 fmwww.bc.edu/repec/bocode/c/cprd_batchnumber.sthlp
@@ -17168,6 +17169,7 @@ fmwww.bc.edu/repec/bocode/c/chiplot.html
 fmwww.bc.edu/repec/bocode/c/cs_weights.do
 fmwww.bc.edu/repec/bocode/c/circgph.sthlp
 fmwww.bc.edu/repec/bocode/c/cmp_clear.ado
+fmwww.bc.edu/repec/bocode/c/coefout.ado
 fmwww.bc.edu/repec/bocode/c/cprdhesae_treatment.ado
 fmwww.bc.edu/repec/bocode/c/chunky.pkg
 fmwww.bc.edu/repec/bocode/c/cf3.ado
@@ -18171,6 +18173,7 @@ fmwww.bc.edu/repec/bocode/c/confa_postestimation.sthlp
 fmwww.bc.edu/repec/bocode/c/cluster.do
 fmwww.bc.edu/repec/bocode/c/chitest6.hlp
 fmwww.bc.edu/repec/bocode/c/cpspear.sthlp
+fmwww.bc.edu/repec/bocode/c/coefout.pkg
 fmwww.bc.edu/repec/bocode/c/cigsales_single.dta
 fmwww.bc.edu/repec/bocode/c/color-ukrigreen.style
 fmwww.bc.edu/repec/bocode/c/color-mrcgrey.style

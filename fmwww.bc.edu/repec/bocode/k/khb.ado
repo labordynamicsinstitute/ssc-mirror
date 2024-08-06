@@ -1,4 +1,4 @@
-*! version 2.15 Mai 28, 2024 @ 10:45:43 UK
+*! version 2.16 August 2, 2024 @ 11:21:01 UK
 *! Decomposing total effects using the KHB method 
 *! Support: ukohler@uni-potsdam.de
 
@@ -26,7 +26,7 @@
 * 2.13: Version 2.12 accidently outcommented a line. -> fixed
 * 2.14: Updated to Stata 17, removed some noisily debug lines
 * 2.15: iweights allowed
-
+* 2.16: Added postdisentangle for mulitple imputation contexts
 
 // Caller Program
 // ==============
@@ -43,7 +43,7 @@ version 17
 	syntax [anything] [if] [in] [aweight fweight pweight iweight] 		/// 
 	  [, Concomitant(varlist fv) Summary ape Disentangle  ///
 	  vce(string) Verbose Keep or ///
-	  continuous NOTable OUTcome(string) XStandard ZStandard nopost *]
+	  continuous NOTable OUTcome(string) XStandard ZStandard nopost postdisentangle *]
 
 	// Clean -permute-/-bootstrap- generated call
 	local anything: subinstr local anything ") (" " || ", all
@@ -57,6 +57,9 @@ version 17
 	fvunab Z: `Z'
 	local method = cond("`ape'"=="","KHB","APE")
 
+	// postdisentangle assumes disentangle
+	if "`postdisentangle'" != "" local disentangle = "disentangle"
+	
 	// Check for input errors
 	// ----------------------
 
@@ -131,7 +134,7 @@ version 17
 	_KHB `model', y(`Y') x(`X') z(`Z') method(`method')	/// 
 	  c(`concomitant') `summary' `disentangle' vce(`vce') `notable'     ///
 	  outcome(`outcome') `continuous' `options' `verbose' keep(`keep') 	/// 
-	  weight(`wexp') `suest' `or' caller(`caller')
+	  weight(`wexp') `suest' `or' caller(`caller') `postdisentangle'
 
 	tempname khb
 	estimates store `khb'
@@ -153,7 +156,7 @@ program _KHB, eclass
 	syntax anything, y(varlist) x(varlist fv) z(varlist fv) method(string) /// 
 	  [c(varlist fv) summary vce(string) NOTable continuous outcome(string) ///
      verbose weight(string) aweight(string) keep(string) disentangle suest ///
-     or caller(string) *]
+     or caller(string) postdisentangle *]
 
 	local nofz: word count `z'
 
@@ -400,15 +403,18 @@ program _KHB, eclass
 
 	// Table of coefficients
 	if "`or'" != "" local eform eform(or)
-	ereturn post _b _V, esample(`touse') obs(`N') depname(`y') 
-	ereturn local vcetype `vcetype'
-	if "`notable'" == "" {
-		ereturn display, `eform'
-		if "`method'" == "APE" display 		/// 
-		  "{txt} Note: Standard errors of difference not known" ///
-		  " for APE method"
-	}
 
+	if "`postdisentangle'" == "" { 
+		ereturn post _b _V, esample(`touse') obs(`N') depname(`y') 
+		ereturn local vcetype `vcetype'
+		if "`notable'" == "" {
+			ereturn display, `eform'
+			if "`method'" == "APE" display 		/// 
+			  "{txt} Note: Standard errors of difference not known" ///
+			  " for APE method"
+		}
+	}
+	
 	// Summary table
 	if "`summary'" != "" {
 		local rescaletitle 				/// 
@@ -444,7 +450,7 @@ program _KHB, eclass
 
 
 	// Disentangle table
-	if "`disentangle'" != "" {
+	if "`disentangle'" != "" | "`postdisentangle'" != "" {
 
 		local rspec
 		forv i = 2/`=rowsof(_DISENTANGLE)' {
@@ -452,14 +458,28 @@ program _KHB, eclass
 		}
 		
 		// Display table
-		matlist _DISENTANGLE ///
-		  , rowtitle(Z-Variable) title(Components of Difference) ///
-		  cspec(o4& %12s | %9.0g & %9.0g & %9.2f & %9.2f o2&)  ///
-		  rspec(&-`rspec'-)
+		if "`postdisentangle'" == "" {
+			matlist _DISENTANGLE ///
+			  , rowtitle(Z-Variable) title(Components of Difference) ///
+			  cspec(o4& %12s | %9.0g & %9.0g & %9.2f & %9.2f o2&)  ///
+			  rspec(&-`rspec'-)
 
-		ereturn matrix disentangle _DISENTANGLE
+			ereturn matrix disentangle _DISENTANGLE
+		}
+		else {
+			tempname disb disV
+			matrix `disb' = _DISENTANGLE[1...,1]'
+			matrix `disV' = diag(_DISENTANGLE[1...,2])*diag(_DISENTANGLE[1...,2])
+			
+			ereturn post `disb' `disV', esample(`touse') obs(`N') depname(`y') 
+			ereturn local vcetype `vcetype'
+			ereturn display, `eform'
+			if "`method'" == "APE" display 		/// 
+			  "{txt} Note: Standard errors of difference not known" ///
+			  " for APE method"
+		}
+
 	}
-
 
 	// Nonstandard Returns
 	// -------------------

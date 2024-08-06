@@ -1,5 +1,5 @@
 {smcl}
-{* September 7, 2015 @ 15:48:28}{...}
+{* August 5, 2024 @ 09:49:31 UK}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "khbtab" "khbtab"}{...}
 
@@ -24,6 +24,7 @@
 {syntab :Main}
 {synopt:{opt c:oncomitant(varlist)}}concomitants{p_end}
 {synopt:{opt d:isentangle}}disentangle difference for each z-var{p_end}
+{synopt:{opt postdisentangle}}post coefficient vector and variance of disentangle table{p_end}
 {synopt:{opt s:ummary}}summary of decomposition{p_end}
 {synopt:{opt or}}exponentiated coeficients{p_end}
 {synopt:{opt vce(vcetype)}}vcetype may be {cmd:robust}, {cmd:cluster}
@@ -151,6 +152,13 @@ rescaling, net of confounding.{p_end}
 {phang}{opt d:isentangle} request a table that show how much of the
 difference between the full and reduced model is contributed by each
 of the single z-variables. {p_end}
+
+{phang}{opt postdisentangle} By default, {cmd:khb} posts the coefficents
+and covariance matrix of the full model, the reduced model and the difference
+between both into {cmd:e(b)} and {cmd:e(V)}. With {cmd:postdisentangle}
+turned on, these results are ignored and the corresponding results of the disentangle option
+are being used. This is useful if you whish to re-use the results of the disentangle
+option in multiple imputation context, and the like. {p_end}
 
 {phang}{opt not:able} suppresses the display of the coefficient
 table. This normally involves the options {opt summarize} and/or
