@@ -15,11 +15,12 @@ d KW: heteroskedasticity
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20240416
+d Distribution-Date: 20240806
 d
 d Author:  Alyssa H. Carlson, University of Missouri
 d Support: email  carlsonah@@missouri.edu
 d
 f gtsheckman.ado
+f ../h/hetprobit_nodisplay.ado
 f gtsheckman.sthlp
 f gtsheckman_examples.do

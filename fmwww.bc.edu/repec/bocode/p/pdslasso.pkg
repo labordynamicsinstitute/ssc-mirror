@@ -36,7 +36,7 @@ d KW: post-regularization
 d
 d Requires: Stata version 13.1 and lassopack, ranktest from SSC (q.v.)
 d
-d Distribution-Date: 20190124
+d Distribution-Date: 20240806
 d
 d Author: Achim Ahrens, Economic and Social Research Institute, Republic of Ireland
 d Support: email achim.ahrens@@esri.ie

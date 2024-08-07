@@ -327,6 +327,7 @@ fmwww.bc.edu/repec/bocode/h/hangr_gb2.ado
 fmwww.bc.edu/repec/bocode/h/htmldel.mata
 fmwww.bc.edu/repec/bocode/h/HHcte.prg
 fmwww.bc.edu/repec/bocode/h/hangroot.pkg
+fmwww.bc.edu/repec/bocode/h/hetprobit_nodisplay.ado
 fmwww.bc.edu/repec/bocode/h/hausman.ado
 fmwww.bc.edu/repec/bocode/h/heckprobit_fixedrho.sthlp
 fmwww.bc.edu/repec/bocode/h/holsti.pkg

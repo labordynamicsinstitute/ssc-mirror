@@ -1,4 +1,4 @@
-*! version 16.4   4.7.24   John Casterline
+*! version 16.5   3.8.24   John Casterline
 capture program drop matstat
 program define matstat, rclass
 version 16
@@ -7,9 +7,10 @@ set adosize 60
 
 #d ;
 
-syntax [varlist] [if] [fw aw iw] ,
+syntax [varlist] [if] [fw aw] ,
        stats(string) mat(string)
        [ by(varlist)  missing
+         dist(string)
          layout(string)
          total(string)  xpose  
          tabshow(string)
@@ -19,16 +20,27 @@ syntax [varlist] [if] [fw aw iw] ,
 
 capture matrix drop `mat'
 
+tempname M1 M2 
+tempname M11 M12 M13 M13t
+
 local BY " "
 if "`by'" ~= ""  {
-      local BY "by(`by')"
-      qui levelsof `by' `if'
-      local n_cat = `r(r)'
-      if "`missing'" ~= ""  {
-         local n_cat = `n_cat' + 1
-      }
-      local BYTYPE : type `by'
-      local bytype = substr("`BYTYPE'",1,3)
+   local BY "by(`by')"
+   qui levelsof `by' `if', local(CATS)
+   local n_cat = `r(r)'
+   if "`missing'" ~= ""  {
+      local n_cat = `n_cat' + 1
+   }
+   local VALLAB : value label `by'
+   local i = 1
+   foreach c of local CATS     {
+      local BYNAME`i' : label `VALLAB' `c'
+      local ++i
+   }
+   if "`missing'" ~= ""        {
+      local BYNAME`n_cat' "missing"
+   }
+
 }
 
 if "`layout'" == ""  {
@@ -74,18 +86,60 @@ local total_place = cond("`total'"=="top","top","bottom")
 local LOUD = cond("`tabshow'"~="","noi","qui")
 
 
-`LOUD' tabstat `varlist' if `touse' [`weight'`exp'],      ///
-    stat(`STATS') `BY' `missing' `nototal' `FORMAT' save
-  
+if "`dist'" ~= ""             {
 
-if "`by'" ~= ""                 {
-   forvalues i = 1/`n_cat'      {
-      local BYNAME`i' "`r(name`i')'"
-      if "`BYNAME`i''" == "."   {
-         local BYNAME`i' "missing"
+   if "`layout'"=="vertical"  {
+      noi di _n(2) in y "ERROR:  dist not available with vertical layout"
+      exit
+   }
+   if `n_var'>1 & `n_stat'>1 & "`layout'"~="horizontal1"  {
+      noi di _n(2) in y "ERROR:  with 2+ variables and 2+ stats, layout must be horizontal1"
+      exit
+   }
+
+   `LOUD' di " "
+   `LOUD' tab `by' [`weight'`exp'], matcell(`M11') `missing'
+
+   local N_TOTAL = `r(N)'
+   matrix `M12' = 100*(`M11'/`N_TOTAL')
+   if "`nototal'" ~= ""              {
+      matrix `M13' = `M12'
+   }
+   if "`nototal'" == ""              {
+      local rows : rowsof `M12'
+      local rowsX = `rows' + 1
+      matrix `M13' = J(`rowsX',1,.)
+      if "`total_place'"=="bottom"   {
+         matrix `M13'[1,1] = `M12'
+         matrix `M13'[`rowsX',1] = 100.00
+      }
+      if "`total_place'"=="top"      {
+         matrix `M13'[2,1] = `M12'
+         matrix `M13'[1,1] = 100.00
       }
    }
+   local ROW_LAB " "
+   forvalues i = 1/`n_cat'        {
+      local ROW_LAB `" `ROW_LAB' `"`BYNAME`i''"' "'
+   }
+   if "`nototal'" == ""              {
+      if "`total_place'" == "bottom" {
+         local ROW_LAB `" `ROW_LAB' `"Total"' "'
+      }
+      if "`total_place'" == "top"     {
+         local ROW_LAB `" `"Total"' `ROW_LAB' "'
+      }
+   }
+
+   matrix rownames `M13' = `ROW_LAB'
+   matrix colnames `M13' = "dist"
+
 }
+
+
+`LOUD' di " "
+`LOUD' tabstat `varlist' if `touse' [`weight'`exp'],      ///
+    stat(`STATS') `BY' `missing' `nototal' `FORMAT' save
 
 
 
@@ -102,33 +156,40 @@ if "`by'"~="" & `n_stat'==1   {
    local i = 1
    forvalues i = 1/`n_cat'    {
       if `i'== 1  {
-         matrix XxXx = r(Stat`i')
+         matrix `M1' = r(Stat`i')
          local rowname "`"`BYNAME`i''"'"
       }
       else   {
-         matrix XxXx = XxXx \ r(Stat`i')
+         matrix `M1' = `M1' \ r(Stat`i')
          local rowname "`rowname' `"`BYNAME`i''"'"
       }
    }
 
    if "`nototal'" == ""               {
       if "`total_place'" == "bottom"  {
-         matrix `mat' = XxXx \ r(StatTotal)
+         matrix `mat' = `M1' \ r(StatTotal)
       }
       if "`total_place'" == "top"     {
-         matrix `mat' = r(StatTotal) \ XxXx
+         matrix `mat' = r(StatTotal) \ `M1'
       }
       local rowname = cond("`total_place'"=="bottom",`"`rowname' Total"',`"Total `rowname'"')
    }
 
-   if "`nototal'" ~= ""  {
-      matrix `mat' = XxXx 
+   if "`nototal'" ~= ""     {
+      matrix `mat' = `M1' 
       local rowname `"`rowname'"'
    }
 
    matrix rownames `mat' = `rowname'
 
-   capture matrix drop XxXx
+   if "`dist'" ~= ""        {
+      if "`dist'"=="first"  {
+         matrix `mat' = `M13',`mat'
+      }
+      if "`dist'"=="last"   {
+         matrix `mat' = `mat',`M13'
+      }
+   }
 
 }
 
@@ -149,25 +210,25 @@ if "`by'"~=""  &  `n_stat'>1  &  "`layout'"=="vertical"   {
 
    forvalues i = 1/`n_cat'    {
       if `i'== 1  {
-         matrix XxXx = r(Stat`i')
+         matrix `M1' = r(Stat`i')
          local rowname1 `"`BYNAME`i''"'
       }
       else   {
-         matrix XxXx = XxXx \ r(Stat`i')
+         matrix `M1' = `M1' \ r(Stat`i')
          local rowname`i' `"`BYNAME`i''"'
       }
    }
    local n_by = `i' - 1
    if "`nototal'" == ""               {
       if "`total_place'" == "bottom"  {
-         matrix `mat' = XxXx \ r(StatTotal)
+         matrix `mat' = `M1' \ r(StatTotal)
       }
       if "`total_place'" == "top"     {
-         matrix `mat' = r(StatTotal) \ XxXx
+         matrix `mat' = r(StatTotal) \ `M1'
       }
    }
    if "`nototal'" ~= ""  {
-      matrix `mat' = XxXx 
+      matrix `mat' = `M1' 
    }
    
    local statlenmax = 0
@@ -202,8 +263,6 @@ if "`by'"~=""  &  `n_stat'>1  &  "`layout'"=="vertical"   {
    }
 
    matrix rownames `mat' = `ROW_LAB'
-
-   capture matrix drop XxXx
 
 }
 
@@ -283,6 +342,15 @@ if "`by'"~=""  &  `n_stat'>1  &  ("`layout'"=="horizontal1" | "`layout'"=="horiz
    matrix rownames `mat' = `ROW_LAB'
    matrix colnames `mat' = `COL_LAB'
 
+   if "`dist'"~="" & "`layout'"~="horizontal2"  {
+      if "`dist'" == "first"       {
+         matrix `mat' = `M13',`mat'
+      }
+      if "`dist'" == "last"        {
+         matrix `mat' = `mat',`M13'
+      }
+   }    
+
    capture matrix drop VV
    forvalues i = 1/`n_catX'        {
       capture matrix drop V_`i'
@@ -293,17 +361,17 @@ if "`by'"~=""  &  `n_stat'>1  &  ("`layout'"=="horizontal1" | "`layout'"=="horiz
    }
 
    if "`layout'" == "horizontal2"        {
-      matrix XxXxZz = `mat''
+      matrix `M2' = `mat''
       local start = 1
       local end = `n_stat'
       forvalues v = 1/`n_var'            {
-         matrix XxXxZz`v' = XxXxZz[`start'..`end',1...]
+         matrix `M2'`v' = `M2'[`start'..`end',1...]
          local start = `start' + `n_stat'
          local end   = `end'   + `n_stat'
       }
-      matrix `mat' = XxXxZz1
+      matrix `mat' = `M2'1
       forvalues v = 2/`n_var'            {
-         matrix `mat' = `mat',XxXxZz`v'
+         matrix `mat' = `mat',`M2'`v'
       }
       local ROW_LAB " "
       forvalues s = 1/`n_stat'        {
@@ -340,9 +408,18 @@ if "`by'"~=""  &  `n_stat'>1  &  ("`layout'"=="horizontal1" | "`layout'"=="horiz
       matrix rownames `mat' = `ROW_LAB'
       matrix colnames `mat' = `COL_LAB'
 
-      capture matrix drop XxXxZz
+      if "`dist'" ~= ""               {
+         matrix `M13t' = `M13''
+         if "`dist'" == "first"       {
+            matrix `mat' = `M13t' \ `mat'
+         }
+         if "`dist'" == "last"        {
+            matrix `mat' = `mat' \ `M13t'
+         }
+      }    
+
       forvalues v = 1/`n_var'  {
-         capture matrix drop XxXxZz`v'
+         capture matrix drop `M2'`v'
       }
    }
 
@@ -394,7 +471,7 @@ if "`outfile'" ~= ""  {
    qui putexcel set `outfile', replace
    qui putexcel A1 = matrix(`mat'), names
    qui putexcel save
-   noi di _n(2) " "
+   noi di _n(1) " "
    noi di in g "File written out:" in y _col(20) "`outfile'"
    noi di _n(1) " "
 

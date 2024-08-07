@@ -1,5 +1,5 @@
 {smcl}
-{* 20june2024}{...}
+{* 3august2024}{...}
 {hi:help matstat}
 {hline}
 
@@ -11,15 +11,17 @@
 {p 1}{bf:{ul on}Syntax{ul off}}{p_end}
 
 {p 6 15 2}
-{cmd:matstat} {varlist} {ifin} {weight} , {opth stats(string)} {opth mat(string)}
+{cmd:matstat} {varlist} {ifin} {weight} ,  {opth mat(string)} {opth stats(string)}
    [ {help matstat##comopt:{it:options}} ]
 
 {synoptset 21 tabbed}{...}
 {marker comopt}{synopthdr:Options}
 {synoptline}
+{synopt :{opth mat(string)}}name for matrix to be constructed; required
+  {p_end}
 {synopt :{opth stats(statnames)}}statistic(s) to be calculated for each variable in {varlist}; required
   {p_end}
-{synopt :{opth mat(string)}}name for matrix to be constructed; required
+{synopt :{opth dist(string)}}requests percentage distribution of "by()" variable
   {p_end}
 {synopt :{opth by(varname)}}stratifying variable
   {p_end}
@@ -62,19 +64,24 @@ calculated.  Separate by space (usual {cmd:tabstat} syntax).  {varlist} is requi
 
 {p 1}{bf:{ul on}Options{ul off}}{p_end}
 
+{phang} {opth mat(string)} provides a name for the matrix to be constructed.  This option is required.{p_end}
+
 {phang} {opth stats(statnames)} specifies the statistic(s) to be calculated for each variable in {varlist}.  
 This can be any of the statistics available in {cmd:tabstat}.  
 More than one statistic can be requested; if so, separate by space or comma, and see {cmd:layout}() below.
 This option is required.{p_end}
 
-{phang} {opth mat(string)} provides a name for the matrix to be constructed.  This option is required.{p_end}
+{phang} {opth dist(string)} requests percentage distribution of {cmd:by}() variable, in addition to 
+statistics requested in {cmd:stats}().  This is not available for all matrix structures; see discussion
+below {ul:Percentage Distribution Vector}.  Options are "first" and "last", to place this vector left/top or 
+right/bottom, respectively, depending on matrix orientation.{p_end}
 
 {phang} {opth by(varname)} identifies stratifying variable.  
 Standard Stata syntax for "by( )".{p_end}
 
 {phang} {opth layout(string)} defines the structure of the matrix.
 This is applicable only if {bf:stats}() requests more than one statistic.
-One of three layouts can be chosen: "horizontal1" (default), "horizontal2", or "vertical".
+Three layouts are available: "horizontal1" (default), "horizontal2", or "vertical".
 See discussion below {ul:Matrix Structure}.{p_end}
 
 {phang} {opth total(string)} determines the treatment of the Total vector.
@@ -88,12 +95,13 @@ labels this category "missing", and ordinarily it is placed at the bottom of the
 {phang} {opt xpose} transposes the matrix once it is assembled.{p_end}
 
 {phang} {opth tabshow(%fmt)} asks for screen display of the {cmd:tabstat} table,
-with the format of the cells specified within parentheses.  Default is no display.
-This option does {ul:not} affect the format of the elements of the contructed matrix.{p_end}
+with the format of the cells specified within parentheses.  (If {cmd:dist}() is 
+requested, this tabulation too is displayed.){space 2}Default is no display.  This
+option does {ul:not} affect the format of the elements of the contructed matrix.{p_end}
 
 {phang} {opth outfile(string)} requests that the matrix be saved as an Excel file.
-Full file specification should be provided (exact directory + file name), and within quotes, but
-no file extension ({cmd:matstat} imposes "xlsx").  {cmd:matstat} uses {cmd:putexcel} to accomplish this.
+Provide full file specification (exact directory + file name), and within quotes, without
+file extension ({cmd:matstat} imposes "xlsx").  {cmd:matstat} uses {cmd:putexcel} to accomplish this.
 Row names and column names are preserved.
 Matrix {cmd:mat}() remains available whether or not {cmd:outfile} is requested.{p_end}
 
@@ -102,25 +110,23 @@ Matrix {cmd:mat}() remains available whether or not {cmd:outfile} is requested.{
 
 {phang} A {cmd:by}() variable is assumed under all scenarios below.{p_end}
 
-{phang} The simplest request is one variable in {varlist} and one statistic in {bf:stat}();
-{cmd:matstat} will construct a one-column vector, with categories of the {cmd:by}() variable
-constituting the rows.  This vector can be transformed to one-row vector via option {bf:xpose}.{p_end}
+{phang} Possible requests are as follows:{p_end}
 
-{phang} If the request is one variable in {varlist} and two+ statistics in {bf:stat}(),
-{cmd:matstat} will construct either a multi-column matrix or a one-column vector, depending
-on whether specified {cmd:layout}() is "horizontal" (default) or "vertical", respectively.  (See below.){p_end}
+{phang}{it:One variable in {varlist}, one statistic in {bf:stats}}(): {cmd:matstat} will construct
+a one-column vector, with categories of the {cmd:by}() variable constituting the rows.{p_end}
 
-{phang}If the request is two variables in {varlist} and one statistic in {bf:stat}(),
-{cmd:matstat} will construct a two-column matrix.  A request for three variables will yield
-a three-column matrix.  And so forth.  (Option {bf:layout}() is not available; effectively the layout
-is "vertical".){space 2}Note that the same matrix for two+ variables and one statistic can be
-produced by executing {cmd:matstat} successively for each variable and then combining the matrices
-via "column join" (see "matrix basics" below).{p_end}
+{phang}{it:One variable in {varlist}, two+ statistics in {bf:stats}}(): {cmd:matstat} will construct
+either a multi-column matrix or a one-column vector, depending on whether specified {cmd:layout}() is
+"horizontal" (default) or "vertical", respectively.{p_end}
 
-{phang} If {varlist} contains more than one variable and {bf:stats}() requests more than one statistic, 
-the matter is more complicated.
-{cmd:matstat} offers three structures via option {cmd:layout}(): "horizontal1" (default), "horizontal2", and 
-"vertical".  With the default placement of Total at the bottom, these layouts are as follows:{p_end}
+{phang}{it:Two variables in {varlist}, one statistic in {bf:stats}}(): {cmd:matstat} will construct
+a two-column matrix.  Three variables in {varlist} will yield a three-column matrix.  And so
+forth.  Option {bf:layout}() is not available; effectively the layout is "vertical".{p_end}
+
+{phang}{it:Two+ variables in {varlist}, two+ statistics in {bf:stats}}(): the matter is more
+complicated.  {cmd:matstat} offers three structures via option {cmd:layout}(): "horizontal1"
+(default), "horizontal2", and "vertical".  With the default placement of Total at the bottom, 
+these layouts are as follows:{p_end}
 {asis}
 
 
@@ -205,27 +211,44 @@ the above layouts:{p_end}
 {p 4 10} (ii){space 2}{cmd:stats}(): statistic shorthands, as required by {cmd:tabstat}, are used{p_end}
 {p 4 10} (iii){space 1}{cmd:by}() variable: value labels are carried over from {cmd:tabstat}; these
 are the macros "r(Name1)", "r(Name2)", and so forth{p_end}
+{p 4 10} (iv){space 2}{cmd:dist} vector is labeled simply "dist"{p_end}
 
 {phang} Composite labels:{p_end}
-{p 8 10} - {it:horizontal1}: column labels are an amalgam of the variable name and the statistic shorthand{p_end}
-{p 8 10} - {it:horizontal2}: column labels are an amalgam of the variable name and the stratum label (value label){p_end}
-{p 8 10} - {it:vertical}: row labels are an amalgam of the stratum label (value label) and the statistic shorthand{p_end}
-{p 8 8} These labels often will be long and unwieldy, but they have the virtue of being precise and unambiguous.{p_end}
+{p 6 8} - {it:horizontal1}: column labels are an amalgam of the variable name and the statistic shorthand{p_end}
+{p 6 8} - {it:horizontal2}: column labels are an amalgam of the variable name and the stratum label (value label){p_end}
+{p 6 8} - {it:vertical}: row labels are an amalgam of the stratum label (value label) and the statistic shorthand{p_end}
+{p 6 6} These labels often will be long and unwieldy, but they have the virtue of being precise and unambiguous.{p_end}
 
-{p 8 8} {it:note}: Stata has a limit of 32 characters for value labels.  There's a risk of exceeding this limit:  the
-column label under the {it:horizontal2} layout (variable name + stratum label), and the row label under
-the {it:vertical} layout (stratum label + statistic shorthand).  {cmd:matstat} checks whether these labels are
-too long and, if so, truncates the stratum label.{p_end}
+{p 6 6} {it:note}: Stata has a limit of 32 characters for value labels.  There's a risk of exceeding
+this limit, specifically:{p_end}
+{p 6 8} - column label under the {it:horizontal2} layout (variable name + stratum label){p_end}
+{p 6 8} - row label under the {it:vertical} layout (stratum label + statistic shorthand){p_end}
+{p 6 6} {cmd:matstat} checks whether these labels are too long and, if so, truncates the stratum label.{p_end}
+
+
+{p 1}{bf:{ul on}Percentage Distribution Vector{ul off}}{p_end}
+
+{pstd} This vector is {ul on}not{ul off} available with "vertical" layout.{p_end}
+
+{pstd} More specifically, {bf:dist}() adds vectors as follows:{p_end}
+{p 6 8} - {it:One variable in {varlist}, one statistic in {bf:stats}}(): additional column{p_end}
+{p 6 8} - {it:One variable in {varlist}, two+ statistic in {bf:stats}}(): additional column
+("horizontal1") or additional row ("horizontal2"){p_end}
+{p 6 8} - {it:Two+ variables in {varlist}, one statistic in {bf:stats}}(): additional column{p_end}
+{p 6 8} - {it:Two+ variables in {varlist}, two+ statistics in {bf:stats}}(): additional column (layout
+{ul:must} be "horizontal1"){p_end}
 
 
 {p 1}{bf:{ul on}Examples{ul off}}{p_end}
 {asis}
 
-    matstat unwant n_unwant, stats(mean) by(Region) total(no) xpose mat(R)
+    matstat tfr unwant, stats(mean) by(Region) total(no) xpose mat(R)
 
-    matstat unwant n_unwant  if v024==1  [aw=v005], stats(p50 n) by(Region) mat(A)
+    matstat tfr unwant  if v024==1  [aw=v005], stats(p50 n) by(Region) mat(A)
 
-    matstat unwant n_unwant, stats(mean,sd) by(Region) layout(vertical) total(top) mat(X) tabshow(%4.2f)
+    matstat tfr unwant, stats(mean,sd) by(Region) layout(vertical) total(top) mat(X) tabshow(%4.2f)
+
+    matstat tfr unwant, stats(mean) by(Region) dist(last) mat(X) tabshow(%4.2f)
 {smcl}
 
 
@@ -233,11 +256,12 @@ too long and, if so, truncates the stratum label.{p_end}
 
 {pstd} {cmd:statsmat} and {cmd:tabstatmat} are community-written procedures that offer some 
 of {cmd:matstat}'s functionality.  However:{p_end}
-{p 7 9} - while both can be employed to construct matrix with either "horizontal" layout (this 
+{p 6 8} - while both can be employed to construct matrix with either "horizontal" layout (this 
 entails successive executions, then joining matrices), neither command can be wielded to produce
 matrix with "vertical" layout{p_end}
-{p 7 9} - {cmd:statsmat} does not include Total category in the resulting matrix, and category value labels
+{p 6 8} - {cmd:statsmat} does not include Total category in the resulting matrix, and category labels
 are not fully preserved{p_end}
+{p 6 8} - neither offers the equivalent of {cmd:dist} option{p_end}
 
 
 {p 1}{bf:{ul on}Some matrix basics{ul off}}{p_end}
@@ -252,7 +276,7 @@ are not fully preserved{p_end}
 
      Combine matrices side-by-side:  matrix C = A,B  ("column join")
 
-     Stack matrices:  matrix D = A\B\C  ("row join")
+     Stack matrices:  matrix D = A \ B \ C  ("row join")
 
      Transpose matrix:  matrix B = A'
 

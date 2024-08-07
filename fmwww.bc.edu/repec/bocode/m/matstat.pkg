@@ -1,36 +1,23 @@
 d 'MATSTAT': module to format tabstat, assembling of results in one matrix
 d
-d  matstat executes tabstat and then assembles results in one
-d matrix.  Rationale:  tabstat, with the "save" option, saves the
-d results in a set of r() matrices, one matrix for each category of
-d the "by( )" variable.  These are denoted "r(Stat1)", "r(Stat2)",
-d and so forth.  matstat combines these separate matrices in one
-d matrix, making results from tabstat available in convenient form
-d for further use (for example putdocx, putexcel, estout, or
-d author's procedure mswtable).  When more than one statistic is
-d requested, several different matrix layouts are offered.  matstat
-d is more versatile than community-written procedures the author
-d has located that offer some/most of the same functionality (this
-d includes statsmat and tabstatmat).matstat executes Stata
-d procedure tabstat and then assembles results in one matrix. 
-d Rationale:  tabstat, with the "save" option, saves the results in
-d a set of r() matrices, one matrix for each category of the "by(
-d )" variable.	These are denoted "r(Stat1)", "r(Stat2)", and so
-d forth.  matstat combines these separate matrices in one matrix,
-d making results from tabstat available in convenient form for
-d further use (for example putdocx, putexcel, estout, or author's
-d procedure mswtable).	When more than one statistic is requested,
-d several different matrix layouts are offered.  matstat is more
-d versatile than community-written procedures the author has
-d located that offer some/most of the same functionality (this
-d includes statsmat and tabstatmat). 
+d  matstat executes Stata command tabstat and then assembles
+d results in one matrix.  Rationale:  tabstat, with the "save"
+d option, saves the results in a set of r() matrices, one matrix
+d for each category of the "by( )" variable.  matstat combines
+d these separate matrices in one matrix, making results from
+d tabstat available in convenient form for further use (for example
+d putdocx, putexcel, estout, or author's procedure mswtable).  When
+d more than one statistic is requested, several different matrix
+d layouts are offered.	matstat is more versatile than
+d community-written procedures the author has located that offer
+d some/most of the same functionality. 
 d
 d KW: tabstat
 d KW: matrix
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20240711
+d Distribution-Date: 20240807
 d
 d Author:   John Casterline, Ohio State University
 d Support: email casterline.10@@osu.edu
