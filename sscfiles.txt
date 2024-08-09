@@ -19732,6 +19732,7 @@ fmwww.bc.edu/repec/bocode/c/chinagcode.ado
 fmwww.bc.edu/repec/bocode/c/clustse.ado
 fmwww.bc.edu/repec/bocode/c/charto6.ado
 fmwww.bc.edu/repec/bocode/c/cistat.hlp
+fmwww.bc.edu/repec/bocode/c/crossvalidate2.pkg
 fmwww.bc.edu/repec/bocode/c/copycode.ado
 fmwww.bc.edu/repec/bocode/c/chaidforest_post.sthlp
 fmwww.bc.edu/repec/bocode/c/crossfold.ado
@@ -19758,6 +19759,7 @@ fmwww.bc.edu/repec/bocode/c/classifylasso.ado
 fmwww.bc.edu/repec/bocode/c/clr3.ado
 fmwww.bc.edu/repec/bocode/c/circwarp.ado
 fmwww.bc.edu/repec/bocode/c/contour.ado
+fmwww.bc.edu/repec/bocode/c/crossvalidate2.sthlp
 fmwww.bc.edu/repec/bocode/c/ceqdes.sthlp
 fmwww.bc.edu/repec/bocode/c/confnd.html
 fmwww.bc.edu/repec/bocode/c/cprplot2.pkg
