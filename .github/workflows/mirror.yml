@@ -45,6 +45,16 @@ jobs:
          chmod +x bin/mirror.repec.sh
          cd mirror/
          ../bin/mirror.repec.sh
+   # Capture all the PKG files
+    - name: Capture PKG files
+      run: |
+         zip -rp stata-pkg-files.zip $(find fmwww.bc.edu/repec/bocode -iname \*.pkg)
+   # Upload as artifact
+    - name: Upload artifact of PKG files
+      uses: actions/upload-artifact@v4
+      with:
+        name: stata-pkg-files
+        path: stata-pkg-files.zip
    # Deploy to a new branch      
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
