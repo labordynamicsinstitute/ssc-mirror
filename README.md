@@ -12,6 +12,9 @@ See [mirror.repec.sh](mirror.repec.sh). The process can take up to 60 minutes. T
 
 Tags are created every time the archive is mirrored. See [https://github.com/labordynamicsinstitute/ssc-mirror/tags](https://github.com/labordynamicsinstitute/ssc-mirror/tags).
 
+- The oldest tags are [2017-08-10](https://github.com/labordynamicsinstitute/ssc-mirror/releases/tag/2017-08-10), [2021-04-15](https://github.com/labordynamicsinstitute/ssc-mirror/releases/tag/2021-04-15), and [2021-08-10](https://github.com/labordynamicsinstitute/ssc-mirror/releases/tag/2021-08-10).
+- The oldest tag with continuous daily snapshots is [2021-12-23](https://github.com/labordynamicsinstitute/ssc-mirror/releases/tag/2021-12-23)
+
 ## Using the mirror
 
 While the `ssc` command in Stata will continue to go to the original location, you can leverage versioned packages from this mirror:
