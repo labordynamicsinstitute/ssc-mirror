@@ -42,9 +42,11 @@ jobs:
         path: mirror
     - name: Mirror archive data
       run: |
-         chmod +x bin/mirror.repec.sh
+         cp bin/mirror.repec.sh mirror/
+         cp README.md mirror/
+         chmod +x mirror/mirror.repec.sh
          cd mirror/
-         ../bin/mirror.repec.sh
+         ./mirror.repec.sh
    # Capture all the PKG files
    # - name: Capture PKG files
    #   run: |
