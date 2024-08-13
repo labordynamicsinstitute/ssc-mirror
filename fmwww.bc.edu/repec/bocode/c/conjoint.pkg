@@ -1,17 +1,24 @@
 d 'CONJOINT': module to analyse and visualise conjoint (factorial) experiments
 d
 d   conjoint can analyse and visualise conjoint (factorial)
-d experiments. More specifically, conjoint can estimate average
-d marginal component effects (AMCE) and marginal means (MM)
-d following the methods described in Hainmueller et al., (2014) and
-d Leeper et al, (2020) and implemented in the R packages, cjoint
-d (Barari et al., 2018) and cregg (Leeper and Barnfield, 2020).
-d conjoint can estimate these for fully randomised designs and
-d AMCEs for designs with unlimited and complex profile constraints.
-d conjoint can also calculate estimates across subgroups, with
-d different baselevels (AMCEs only) and null hypothesis values (MMs
-d only). The results can be simply and easily plotted via coefplot. d
-d KW: conjoint; survey experiment; average marginal component effect; AMCE; marginal mean; MM 
+d experiments.	More specifically, conjoint can estimate average
+d marginal component effects (AMCE)  and marginal means (MM)
+d following the methods described in Hainmueller et al., (2014) 
+d and Leeper et al, (2020) and implemented in the R packages,
+d cjoint (Barari et al., 2018)	and cregg (Leeper and Barnfield,
+d 2020). conjoint can estimate these for fully	randomised designs
+d and AMCEs for designs with unlimited and complex profile
+d constraints.	conjoint can also calculate estimates across
+d subgroups, with different baselevels (AMCEs only)  and null
+d hypothesis values (MMs only). The results can be simply and
+d easily plotted via coefplot. 
+d
+d KW: conjoint
+d KW: survey experiment
+d KW: average marginal component effect
+d KW: AMCE
+d KW: marginal mean
+d KW: MM 
 d
 d Requires: Stata version 16 and coefplot from SSC (q.v.)
 d

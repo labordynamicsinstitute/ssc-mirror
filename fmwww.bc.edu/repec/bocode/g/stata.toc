@@ -115,6 +115,7 @@ p graphbinary module to plot explanatory variables vs binary outcome
 p graphexportpdf module to produce PDF graphics on non-Windows systems
 p graphlog module to convert log files to PDF documents with embedded graphs using LaTeX
 p grby program to draw bar charts for each covariate pattern
+p grc1leg2 module to combine multiple graphs with a single common legend
 p grcomb module to create and combine several single graphs into one
 p grcompare module to make group comparisons in binary regression models
 p grep module to search within your datasets for keywords 

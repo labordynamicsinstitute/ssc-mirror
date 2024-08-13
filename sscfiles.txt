@@ -14724,6 +14724,7 @@ fmwww.bc.edu/repec/bocode/g/genass.pkg
 fmwww.bc.edu/repec/bocode/g/gb2lfit.hlp
 fmwww.bc.edu/repec/bocode/g/gs2slsxt.pkg
 fmwww.bc.edu/repec/bocode/g/gdecomp.ado
+fmwww.bc.edu/repec/bocode/g/grc1leg2.ado
 fmwww.bc.edu/repec/bocode/g/geocircles.pkg
 fmwww.bc.edu/repec/bocode/g/gausshermite.ado
 fmwww.bc.edu/repec/bocode/g/grnote.html
@@ -14797,6 +14798,7 @@ fmwww.bc.edu/repec/bocode/g/grstest.pkg
 fmwww.bc.edu/repec/bocode/g/getfilename2.hlp
 fmwww.bc.edu/repec/bocode/g/goprobit.html
 fmwww.bc.edu/repec/bocode/g/gcollapse.ado
+fmwww.bc.edu/repec/bocode/g/grc1leg2.dlg
 fmwww.bc.edu/repec/bocode/g/gstats_transform.sthlp
 fmwww.bc.edu/repec/bocode/g/gridsearch.ado
 fmwww.bc.edu/repec/bocode/g/gvselect.sthlp
@@ -14896,6 +14898,7 @@ fmwww.bc.edu/repec/bocode/g/gcrobustrvar.do
 fmwww.bc.edu/repec/bocode/g/grby.pkg
 fmwww.bc.edu/repec/bocode/g/gb2reg.pkg
 fmwww.bc.edu/repec/bocode/g/grlogit.pkg
+fmwww.bc.edu/repec/bocode/g/grc1leg2.sthlp
 fmwww.bc.edu/repec/bocode/g/gpscore2.sthlp
 fmwww.bc.edu/repec/bocode/g/googleplaces.ado
 fmwww.bc.edu/repec/bocode/g/gintreg.pkg
@@ -14958,6 +14961,7 @@ fmwww.bc.edu/repec/bocode/g/gologit29_ll.ado
 fmwww.bc.edu/repec/bocode/g/geneigen.ado
 fmwww.bc.edu/repec/bocode/g/genicv.html
 fmwww.bc.edu/repec/bocode/g/groups.ado
+fmwww.bc.edu/repec/bocode/g/grc1leg2_examples.ado
 fmwww.bc.edu/repec/bocode/g/group1d.html
 fmwww.bc.edu/repec/bocode/g/grlogit.ado
 fmwww.bc.edu/repec/bocode/g/genspec.sthlp
@@ -15094,6 +15098,7 @@ fmwww.bc.edu/repec/bocode/g/geo2xy_web_mercator.hlp
 fmwww.bc.edu/repec/bocode/g/gmap.pkg
 fmwww.bc.edu/repec/bocode/g/grdigap.ado
 fmwww.bc.edu/repec/bocode/g/gsvy.ado
+fmwww.bc.edu/repec/bocode/g/grc1test.do
 fmwww.bc.edu/repec/bocode/g/greshape.sthlp
 fmwww.bc.edu/repec/bocode/g/genmeans.ado
 fmwww.bc.edu/repec/bocode/g/genif.ado
@@ -15573,6 +15578,7 @@ fmwww.bc.edu/repec/bocode/g/grinset.pkg
 fmwww.bc.edu/repec/bocode/g/gph_seas.src
 fmwww.bc.edu/repec/bocode/g/gconc.ado
 fmwww.bc.edu/repec/bocode/g/ghsurv_p.ado
+fmwww.bc.edu/repec/bocode/g/grc1leg2.pkg
 fmwww.bc.edu/repec/bocode/g/gph.m
 fmwww.bc.edu/repec/bocode/g/gevfit.html
 fmwww.bc.edu/repec/bocode/g/ginireg.pkg
