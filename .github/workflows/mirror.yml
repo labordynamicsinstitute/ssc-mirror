@@ -43,7 +43,7 @@ jobs:
     - name: Mirror archive data
       run: |
          cp bin/mirror.repec.sh mirror/
-         cp README.md mirror/
+         cp bin/README.md mirror/
          chmod +x mirror/mirror.repec.sh
          cd mirror/
          ./mirror.repec.sh
