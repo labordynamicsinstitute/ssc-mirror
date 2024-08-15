@@ -1,4 +1,4 @@
-*! ivreg2 4.1.11  22Nov2019
+*! ivreg2 4.1.12  14aug2024
 *! authors cfb & mes
 *! see end of file for version comments
 
@@ -36,7 +36,7 @@ if c(version) < 12 & c(version) >= 9 {
 * Parent program, forks to versions as appropriate after version call
 * Requires byable(onecall)
 program define ivreg2, eclass byable(onecall) /* properties(svyj) */ sortpreserve
-	local lversion 04.1.11
+	local lversion 04.1.12
 
 * local to store Stata version of calling program
 	local caller = _caller()
@@ -4732,9 +4732,12 @@ end
 // 1.0.1 : redefine kernel names (3 instances) to match ivreg2
 // 1.1.0 : pass nobs and tobs to s_abw; abw bug fix and also handles gaps in data correctly
 
+// not allowing fv operators, and tsrevar doesn't like them
+// included fv and replaced tsrevar with fvrevar
+
 prog def abw, rclass
 	version 11.2
-	syntax varlist(ts), [ tindex(varname) nobs(integer 0) tobs(integer 0) NOConstant Kernel(string)]
+	syntax varlist(ts fv), [ tindex(varname) nobs(integer 0) tobs(integer 0) NOConstant Kernel(string)]
 // validate kernel 
 	if "`kernel'" == "" {
 		local kernel = "Bartlett"
@@ -4752,8 +4755,9 @@ prog def abw, rclass
 		if "`noconstant'" != "" {
 			local cons 0
 		}
-// deal with ts ops 
-		tsrevar `varlist'
+// deal with ts ops ** using fvrevar **
+//		tsrevar `varlist'
+		fvrevar `varlist'
 		local varlist1 `r(varlist)'
 		mata: s_abw("`varlist1'", "`tindex'", `nobs', `tobs', `cons', "`kernel'")
 		return scalar abw = `abw'
@@ -6807,3 +6811,5 @@ exit		//  exit before loading comments
 *          ranktest is called under version control as version 11.2: ranktest ...,
 *          otherwise it is called as version `caller': ranktest ... .
 *          Added macro e(ranktestcmd); will be ranktest, or ranktest11, or ....
+* 4.1.12   14aug2024 Found that abw did not work with FVs. Allowed FVs, substtuted
+*          fvrevar for tsrevar in the abw routine.

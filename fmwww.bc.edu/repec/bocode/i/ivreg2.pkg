@@ -38,7 +38,7 @@ d KW: heteroskedastic OLS,
 d
 d Requires: Stata version 11.2 and ranktest from SSC
 d
-d Distribution-Date: 20230730
+d Distribution-Date: 20240814
 d
 d Author: Christopher F Baum, Boston College
 d Support: email baum@@bc.edu
