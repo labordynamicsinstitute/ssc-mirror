@@ -6711,6 +6711,7 @@ fmwww.bc.edu/repec/bocode/l/labbe.ado
 fmwww.bc.edu/repec/bocode/l/lmavon2.sthlp
 fmwww.bc.edu/repec/bocode/l/lmndp.dlg
 fmwww.bc.edu/repec/bocode/l/lstpm2.mlib
+fmwww.bc.edu/repec/bocode/l/le8.sthlp
 fmwww.bc.edu/repec/bocode/l/lmavon.dta
 fmwww.bc.edu/repec/bocode/l/levinlin.ado
 fmwww.bc.edu/repec/bocode/l/lpretrends.mlib
@@ -7043,6 +7044,7 @@ fmwww.bc.edu/repec/bocode/l/ldbootpvalue4.mo
 fmwww.bc.edu/repec/bocode/l/lmcovvar.dlg
 fmwww.bc.edu/repec/bocode/l/labellist.html
 fmwww.bc.edu/repec/bocode/l/log2do2.ado
+fmwww.bc.edu/repec/bocode/l/le8.pkg
 fmwww.bc.edu/repec/bocode/l/lmhharv.ado
 fmwww.bc.edu/repec/bocode/l/lmabpgxt.dlg
 fmwww.bc.edu/repec/bocode/l/logittorisk.pkg
@@ -7129,6 +7131,7 @@ fmwww.bc.edu/repec/bocode/l/ltimbimata_source.hlp
 fmwww.bc.edu/repec/bocode/l/lastupto.pkg
 fmwww.bc.edu/repec/bocode/l/lmnwhitext.dlg
 fmwww.bc.edu/repec/bocode/l/labren.html
+fmwww.bc.edu/repec/bocode/l/le8.ado
 fmwww.bc.edu/repec/bocode/l/lmavonxt.ado
 fmwww.bc.edu/repec/bocode/l/lmadw.dta
 fmwww.bc.edu/repec/bocode/l/ljs.html
@@ -7209,6 +7212,7 @@ fmwww.bc.edu/repec/bocode/l/lgeoplot.mlib
 fmwww.bc.edu/repec/bocode/l/lmalbnl.dta
 fmwww.bc.edu/repec/bocode/l/lognpred.ado
 fmwww.bc.edu/repec/bocode/l/lmfreg.dta
+fmwww.bc.edu/repec/bocode/l/le8.dta
 fmwww.bc.edu/repec/bocode/l/licio15.mlib
 fmwww.bc.edu/repec/bocode/l/lsmwoodbury.mlib
 fmwww.bc.edu/repec/bocode/l/lmhwaldxt.dlg
@@ -15994,6 +15998,7 @@ fmwww.bc.edu/repec/bocode/_/_svm_train.ado
 fmwww.bc.edu/repec/bocode/_/_pecats.html
 fmwww.bc.edu/repec/bocode/_/_sgedden.ado
 fmwww.bc.edu/repec/bocode/_/_grmargd.html
+fmwww.bc.edu/repec/bocode/_/_gdistinct.pkg
 fmwww.bc.edu/repec/bocode/_/_ckneeded.ado
 fmwww.bc.edu/repec/bocode/_/_grownvals.ado
 fmwww.bc.edu/repec/bocode/_/_cureregr8.ado

@@ -17,9 +17,9 @@ d KW: relative importance
 d KW: relative weights
 d KW:  shapley values
 d
-d Requires: Stata version 15 and package moremata from SSC (q.v.)
+d Requires: Stata version 15 
 d
-d Distribution-Date: 20240123	
+d Distribution-Date: 20240816
 d
 d Author: Joseph N. Luchman, Fors Marsh
 d Support: email  jluchman@@forsmarsh.com

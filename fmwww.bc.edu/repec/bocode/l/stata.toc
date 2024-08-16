@@ -39,6 +39,7 @@ p lclogit2 module to estimate latent class conditional logit models
 p lcmc module to estimate latent class missing covariate model for continous main response, ordinal covariate with missing values, and informative selection
 p ldecomp module decomposing the total effects in a logistic regression into direct and indirect effects
 p ldtest module to compute Lorenz Dominance tests
+p le8 module to compute cardiovascular risk score based on the American Heart Association’s Life’s Essential 8 metrics
 p leanout module to produce lean output formatting for estimation results
 p leebounds module for estimating Lee (2009) treatment effect bounds
 p leedtwoway module to solve two way labor models

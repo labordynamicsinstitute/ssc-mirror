@@ -1,0 +1,21 @@
+d 'LE8': module to compute cardiovascular risk score based on the American Heart Association’s Life’s Essential 8 metrics
+d
+d  Le8 calculates the 8 components and the overall cardiovascular
+d health score of an individual, based on the Life’s Essential 8
+d of the American Heart Association (Lloyd-Jones DM et al. 2022). 
+d
+d KW: cardiovascular health score
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20240816
+d
+d Author:   Tilahun Haregu , The University of Melbourne
+d Support: email haregu.t@@unimelb.edu.au
+d
+d Author:   Marnie Downes, The University of Melbourne
+d Support: email  NA		
+d
+f le8.ado
+f le8.sthlp
+f le8.dta 

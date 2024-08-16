@@ -1,5 +1,6 @@
 p _gapport module to calculates seats in party-list proportional representation
 p _gclsort module to sort a single variable via egen
+p _gdistinct module providing egen function to count distinct values 
 p _grndraw module for random number generation from the GB2, Singh-Maddala, Dagum, Fisk and Pareto distributions
 p _gvreldif module to compute relative difference between successive observations
 p _gwmean module to compute optionally weighted means

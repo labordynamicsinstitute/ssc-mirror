@@ -1,0 +1,21 @@
+d '_GDISTINCT': module providing egen function to count distinct values 
+d
+d  _gdistinct is a function that works with egen to generate a
+d variable whose value is the count of distinct observations of
+d another variable (or list of variables). It takes a by option, so
+d that you can find the number of distinct observations of one set
+d of variables within a by-group. 
+d
+d KW: unique values
+d KW: distinct values
+d KW: egen function
+d
+d Requires: Stata version 7
+d
+d Distribution-Date: 20240816
+d
+d Author:    Noah Case, NA
+d Support: email noahcase119@@gmail.com
+d
+f _gdistinct.ado
+f _gdistinct.sthlp
