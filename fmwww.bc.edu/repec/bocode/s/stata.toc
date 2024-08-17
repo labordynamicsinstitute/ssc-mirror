@@ -8,6 +8,7 @@ p scatterfit module to produce scatter plots with fit lines
 p sccsdta module to generate a dataset for the self-controlled case series method (SCCS)
 p scheme_scientific module to provide a graphic scheme favored by many scientific journals
 p scores module to creates scores (row-wise) of a set of variables allowing the specification of the number of valid values required and/or to produce various transformations of scores
+p sdid module to perform synthetic difference-in-differences estimation, inference, and visualization
 p sdid_event module providing Synthetic Difference-in-Differences (SDID) event-study estimators
 p sequences module for generating versatile numeric sequences
 p setroot module to find the root path of a project and set it as a global variable

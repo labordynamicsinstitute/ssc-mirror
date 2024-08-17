@@ -18,13 +18,16 @@ d KW: Arkhangelsky
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20230303
+d Distribution-Date: 20240816
 d
 d Author: Daniel Pailañir, Universidad de Santiago de Chile
 d Support: email dpailanir@@fen.uchile.cl
 d
 d Author: Damian Clarke, Universidad de Santiago de Chile
 d Support: email dclarke@@fen.uchile.cl
+d
+d Author:  Diego Ciccia, Economics Department, Sciences Po
+d Support: email  diego.ciccia@@sciencespo.fr
 d
 f sdid.ado
 f sdid.sthlp

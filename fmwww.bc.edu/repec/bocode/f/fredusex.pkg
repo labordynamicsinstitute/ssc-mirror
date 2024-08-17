@@ -1,0 +1,28 @@
+d 'FREDUSEX': module to import FRED (Federal Reserve Economic Database) data
+d
+d   fredusex imports data from the 2024 HTML format of the Federal
+d Reserve Economic Data (FRED) repository into Stata The FRED
+d repository at http://fred.stlouisfed.org/ contains more than
+d 824,000 U.S. economic time series from 114 sources.	 Each time
+d series is stored in a separate file that also contains a
+d string-date variable and header with information about    the
+d series.  fredusex imports series into a Stata dataset.      This
+d routine updates David Drukker's very useful freduse routine,
+d published in the Stata Journal 6(3) and updated in	15(3).
+d Recent changes to the underlying text format used by FRED caused
+d the freduse routine to fail. 
+d
+d KW: data management
+d KW: macro data
+d KW: economic data
+d KW: FRED
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20240816
+d
+d Author: Kit Baum, Boston College
+d Support: email baum@@bc.edu
+d
+f fredusex.ado
+f fredusex.sthlp

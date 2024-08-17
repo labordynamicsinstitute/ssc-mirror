@@ -1,4 +1,4 @@
-*! version 1.2.9 2024-01-04
+*! version 1.3.0 2024-08-16
 
 program define stpp, rclass sortpreserve
   version 16.0
@@ -301,7 +301,7 @@ program define stpp, rclass sortpreserve
       if `"`s(ytitle)'"' == "" local ytitle ytitle("Marginal Relative Survival")
       if `"`s(xtitle)'"' == "" local xtitle xtitle("Time since diagnosis (years)")
       if `"`s(legend)'"' !=""  local haslegend haslegend
-	  set trace off
+	  
       preserve
         keep if `touse'
         tempvar group
@@ -588,7 +588,8 @@ struct stpp_info {
   transmorphic matrix   unique_t_sk,      // unique values of t by stand and by levels
                         unique_t_k,       // unique values of t by by levels
                         mint_k,           // minimum value of t by by levels
-                        maxt_k            // maximum value of t by by levels
+                        maxt_k ,          // maximum value of t by by levels
+                        maxtall_k         // maximum value of t (all) by by levels
   
   real         matrix   Nunique_t_sk,     // No. of unique t for stand and by levels
                         Nunique_t_k,      // No. of unique t for by levels
@@ -770,6 +771,7 @@ function PP_Get_stpp_info()
   S.Nunique_t_k  = J(1,S.Nbylevels,.)
   S.maxt_k       = asarray_create("real",1)
   S.mint_k       = asarray_create("real",1)
+  S.maxtall_k    = asarray_create("real",1)
   
   for(k=1;k<=S.Nbylevels;k++) {
     for(s=1;s<=S.Nstandlevels;s++) {
@@ -781,6 +783,7 @@ function PP_Get_stpp_info()
     S.Nunique_t_k[k] = rows(asarray(S.unique_t_k,(k)))
     asarray(S.mint_k,k,min(asarray(S.unique_t_k,(k))))
     asarray(S.maxt_k,k,max(asarray(S.unique_t_k,(k))))
+    asarray(S.maxtall_k,k,max(S.t[selectindex(rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars)]))
   }  
 
 // Read in popmort files  
@@ -893,9 +896,7 @@ void function PP_read_popmort(struct stpp_info scalar S)
    
 // error checks
     if(rows(S.popmort2) != rows(uniqrows(S.popmort2[,1..pm_endcol2]))) {
-            1
       errprintf(S.pmage2 + ", " + S.pmyear2 + ", " + invtokens(S.pmother2,", ") + " do not uniquely represent observations in using2 file\n")
-      2
       exit(198)
     }     
 
@@ -953,6 +954,7 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
 
 // loop over by groups and standstrata levels 
   for(k=1;k<=S.Nbylevels;k++) {
+
     for(s=1;s<=S.Nstandlevels;s++) {
       if(S.verbose) PP_verbose_print_by_strata(S,k,s)
       byselect     = rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars :& S.standstrata:==S.standlevels[s]
@@ -960,7 +962,7 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
 
       lambda_e_tmp     = J(S.Nunique_t_sk[s,k],1,.)
       lambda_e_tmp_var = J(S.Nunique_t_sk[s,k],1,.)
-      
+
       if(S.hascrudeprob | S.hasallcause) {
         lambda_all_tmp      = J(S.Nunique_t_sk[s,k],1,.)
         lambda_all_tmp_var  = J(S.Nunique_t_sk[s,k],1,.)
@@ -970,9 +972,10 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
       if(S.haspopmort2) lambda_pop2_tmp = J(S.Nunique_t_sk[s,k],1,.)
       if(!S.haspopmort2) expsurv2_tj = 1
 
-      t_rates_start = (0\asarray(S.unique_t_sk,(s,k))[|1 \ (S.Nunique_t_sk[s,k]:-1)|])
-      y = asarray(S.unique_t_sk,(s,k)) :- t_rates_start
+      if(S.Nunique_t_sk[s,k]:==1) t_rates_start = 0
+      else t_rates_start = (0\asarray(S.unique_t_sk,(s,k))[|1 \ (S.Nunique_t_sk[s,k]:-1)|])
 
+      y = asarray(S.unique_t_sk,(s,k)) :- t_rates_start
       expcumhaz     = J(S.Nobs_by_sk[s,k],1,0)
       if(S.haspopmort2) expcumhaz2 = J(S.Nobs_by_sk[s,k],1,0)
 
@@ -986,7 +989,7 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
       S.pmothervars_by = asarray_create("real",1)
       asarray(S.pmothervars_by,1,asarray(S.pmothervars,1)[byselect_ind,])
       if(S.haspopmort2) asarray(S.pmothervars_by,2,asarray(S.pmothervars,2)[byselect_ind,])
-     
+
 // loop over time points
       Nuniq = S.Nunique_t_sk[s,k]
       for(j=1;j<=Nuniq;j++) {
@@ -1033,7 +1036,7 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
             expsurv2_tj[tmpselect] = J(rows(tmpselect),1,S.minexpsurv)
           }
         }
-        died_tj = (t_by[atrisk_index]:==tj) :& d_by[atrisk_index] 
+        died_tj = (t_by[atrisk_index]:==tj) :& d_by[atrisk_index]  
         died_tj_select = selectindex(died_tj)
 	
         if(!S.ederer2) wt_atrisk = (indweights_by[atrisk_index]:*expsurv2_tj):/expsurv_tj        
@@ -1065,7 +1068,7 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
           }
         }
       }
-      
+
 // Store contribution to cumulative hazards      
       asarray(S.lambda_e_t,    (s,S.bylevels[k,]),(lambda_e_tmp))
       asarray(S.lambda_e_t_var,(s,S.bylevels[k,]),(lambda_e_tmp_var))
@@ -1198,7 +1201,10 @@ real matrix allcause, allcause_v,
 
       // Marginal all cause    
       if(S.hasallcause | S.hascrudeprob) {
-        lambda_c = asarray(S.lambda_all_t, (1,S.bylevels[k,])) :- asarray(S.lambda_pop1_t,(1,S.bylevels[k,]))
+        // replaced 15/8/2024
+        //lambda_c = asarray(S.lambda_all_t, (1,S.bylevels[k,])) :- asarray(S.lambda_pop1_t,(1,S.bylevels[k,]))
+        lambda_c = asarray(S.lambda_e_t,(1,S.bylevels[k,]))
+        
         allcause_v = quadrunningsum(asarray(S.lambda_all_t_var,(1,S.bylevels[k,])))
         if(S.hasflemhar) {
           if(S.haspopmort2) allcause = quadrunningsum(lambda_c :+ asarray(S.lambda_pop2_t,(1,S.bylevels[k,])))
@@ -1347,6 +1353,13 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
         if(S.hascrudeprob) CP_can_tmplist[i,1] = (S.list[i])  
         if(S.CP_calcother) CP_oth_tmplist[i,1] = (S.list[i])
       }
+
+      if(S.list[i]>asarray(S.maxt_k,k) & S.list[i]<=asarray(S.maxtall_k,k)) {
+        RS_tmplist[i,] = (S.list[i],asarray(S.RS_PP, k)[tminindex,])
+        if(S.hasallcause)  AC_tmplist[i,]     = (S.list[i],asarray(S.AC, k)[tminindex,])    
+        if(S.hascrudeprob) CP_can_tmplist[i,] = (S.list[i],asarray(S.CP_can, k)[tminindex,])  
+        if(S.CP_calcother) CP_oth_tmplist[i,] = (S.list[i],asarray(S.CP_oth, k)[tminindex,])
+      }        
     }
     asarray(RS_list_matrix,k,RS_tmplist)
     if(S.hasallcause)  asarray(AC_list_matrix ,k,AC_tmplist)

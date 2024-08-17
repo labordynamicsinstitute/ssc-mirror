@@ -1,4 +1,4 @@
-d 'LE8': module to compute cardiovascular risk score based on the American Heart Association’s Life’s Essential 8 metrics
+d 'LE8': module to compute cardiovascular health score based on the American Heart Association’s Life’s Essential 8 metrics
 d
 d  Le8 calculates the 8 components and the overall cardiovascular
 d health score of an individual, based on the Life’s Essential 8

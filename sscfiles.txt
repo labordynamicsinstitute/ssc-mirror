@@ -22631,6 +22631,7 @@ fmwww.bc.edu/repec/bocode/f/fieldarea.ado
 fmwww.bc.edu/repec/bocode/f/fgtest.pkg
 fmwww.bc.edu/repec/bocode/f/freshape.ado
 fmwww.bc.edu/repec/bocode/f/floatplot.ado
+fmwww.bc.edu/repec/bocode/f/fredusex.sthlp
 fmwww.bc.edu/repec/bocode/f/fbep.ado
 fmwww.bc.edu/repec/bocode/f/fracirf.ado
 fmwww.bc.edu/repec/bocode/f/far5.pkg
@@ -22649,6 +22650,7 @@ fmwww.bc.edu/repec/bocode/f/fmlogit_lf.ado
 fmwww.bc.edu/repec/bocode/f/fi_fgp.sthlp
 fmwww.bc.edu/repec/bocode/f/frontierhtail.pkg
 fmwww.bc.edu/repec/bocode/f/fbar.ado
+fmwww.bc.edu/repec/bocode/f/fredusex.pkg
 fmwww.bc.edu/repec/bocode/f/fdta.pkg
 fmwww.bc.edu/repec/bocode/f/frontierhtail_p.ado
 fmwww.bc.edu/repec/bocode/f/frm_ptest.ado
@@ -22904,6 +22906,7 @@ fmwww.bc.edu/repec/bocode/f/fitstat.ado
 fmwww.bc.edu/repec/bocode/f/funnelinst.sthlp
 fmwww.bc.edu/repec/bocode/f/fileutils.pkg
 fmwww.bc.edu/repec/bocode/f/floattolong.hlp
+fmwww.bc.edu/repec/bocode/f/fredusex.ado
 fmwww.bc.edu/repec/bocode/f/fiskfit.html
 fmwww.bc.edu/repec/bocode/f/fmmhist.pkg
 fmwww.bc.edu/repec/bocode/f/fiscal_impoverishment.pkg

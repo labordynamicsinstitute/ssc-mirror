@@ -25,9 +25,9 @@
 {syntab:Options}
 {synopt :{opt aged:iag(varname)}}age at diagnosis (in years){p_end}
 {synopt :{opt dated:iag(varname)}}date at diagnosis{p_end}
-{synopt :{opt allcause(newvarlist)}}calculate all-cause probabilities{varlist}{p_end}
+{synopt :{opt allcause(newvarlist)}}calculate all-cause probabilities{p_end}
 {synopt :{opt by(varlist)}}calculate separately in groupes defined in {varlist}{p_end}
-{synopt :{opt crudeprob(newvarlist)}}calculate crude probabilities{varlist}{p_end}
+{synopt :{opt crudeprob(newvarlist)}}calculate crude probabilities{p_end}
 {synopt :{opt deathprob}}calculate probabilities of death rather than survival{p_end}
 {synopt :{opt ederer2}}calculate Ederer II estimate rather than Pohar Perme{p_end}
 {synopt :{opt fh}}use Fleming Harrington estimator of survival{p_end}
@@ -80,7 +80,12 @@ The data must be {cmd:stset} before using {cmd:stpp}. There should only be 1 row
 {cmd:using} {it:filename} specifies a file containing general-population mortality rates typically stratified by age, sex, calendar year and potentially other variables. In the {cmd:using} file, age must be specified in one-year increments and calendar year in one-year intervals.
 
 {pstd}
-The {cmd:using2({it:filename})} option specifies a scecond file containing general-population mortality rates, which enables alternative weights to be used. This includes the methods descibed by Sasieni and Brentnall for net survival and reference adjusted measures for all-cause and crude probabilties. The aim of these methods is to estimate the survival that would be observed in a population with the expected survival defined by the rates in the {cmd:using2()} file.
+The {cmd:using2({it:filename})} option specifies a scecond file containing general-population mortality rates, 
+which enables alternative weights to be used. 
+This includes the methods descibed by Sasieni and Brentnall (2016) for net survival and 
+reference adjusted measures for all-cause and crude probabilties (Rutherford {it: et al.} 2022). 
+The aim of these methods is to estimate the survival that would be observed in a population 
+with the expected survival defined by the rates in the {cmd:using2()} file.
 
 
 {pstd}
@@ -163,7 +168,8 @@ The {it:numlist} should be of length equal to the number of levels specified in 
 
 {phang}
 {opt using2(filename, suboptions)} gives the name of a second population mortality file. 
-This can be incorporated as a second time-dependent weight so that the estimators of Sasieni and Brentnall are incorporated when calculating marginal relative survival. When used when calculating crude probabilities of death or all-cause survival the second popmort file is applied to ensure that crude-probabilities are comparable in that they should only differ due to differences in excess mortality (assuming they have been standardized appropriately).
+This can be incorporated as a second time-dependent weight so that the estimators of Sasieni and Brentnall are incorporated when calculating marginal relative survival. When used when calculating crude probabilities of death or all-cause survival the second popmort file is applied to ensure these measures are comparable in that they should only differ due to differences in excess mortality (assuming they have been standardized appropriately). 
+These give what are known as {it: Reference Adjusted} measures (Rutherford {et al}. 2022).
 
 {phang2} 
 The following suboptions are available.
@@ -318,10 +324,13 @@ as the combined results.
 {title:Author}
 
 {pstd}
-Paul C Lambert, University of Leicester, UK & Karolinska Institutet, Sweden.
-({browse "mailto:paul.lambert@leicester.ac.uk":paul.lambert@leicester.ac.uk})
+Paul C Lambert, Cancer Registry of Norway, NIPH, Norway & Karolinska Institutet, Sweden.
+({browse "mailto:pclt@kreftregisteret.no":pclt@kreftregisteret.no})
+
+{pstd}
 Mark J Rutherford
 ({browse "mailto:mark.rutherford@leicester.ac.uk":mark.rutherford@leicester.ac.uk})
+
 
 {title:References}
 
@@ -335,6 +344,11 @@ P.W. Dickman, E. Coviello, M.Hills, M. Estimating and modelling relative surviva
 {phang}
 M. Pohar Perme, J. Stare, J. Estève. On estimation in relative survival 
 {it:Biometrics} 2012;{bf:68}:113-120 
+
+{phang}
+MJ Rutherford MJ, TM-L Andersson, TÅ Myklebust, B Møller, PC Lambert PC. Non-parametric estimation of reference adjusted, 
+standardised probabilities of all-cause death and death due to cancer for population group comparisons. 
+{it: BMC Medical Research Methodology} 2022;{bf: 22}:2
 
 {phang}
 P. Sasieni, A.R. Brentnall. On standardized relative Survival 

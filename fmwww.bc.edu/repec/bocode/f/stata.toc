@@ -99,6 +99,7 @@ p frause module to access Wooldridge Stata datasets
 p frcount module to estimate fractional response model under the presence of count endogeneity and unobservable heterogeneity
 p fre module to display one-way frequency table
 p freduse module to Import FRED (Federal Reserve Economic Database) data
+p fredusex module to import FRED (Federal Reserve Economic Database) data
 p fren module to batch rename files (Windows only)
 p freplace module to batch convert ASCII text or binary patterns in files
 p freqindex module to generate an index of terms from string variable
