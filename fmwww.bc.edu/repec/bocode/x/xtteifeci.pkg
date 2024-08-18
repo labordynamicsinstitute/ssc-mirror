@@ -17,10 +17,19 @@ d KW: nonparametric confidence intervals
 d
 d Requires: Stata version 17
 d
-d Distribution-Date: 20240312
+d Distribution-Date: 20240817
 d
 d Author: Guanpeng Yan , Shandong University of Finance and Economics
 d Support: email guanpengyan@@yeah.net
+d
+d Author: Xingyu Li, Peking University
+d Support: email x.y@@pku.edu.cn 
+d
+d Author: Yan Shen, Peking University
+d Support: email yshen@@phbs.pku.edu.cn 
+d
+d Author: Qiankun Zhou , Louisiana State University
+d Support: email qzhou@@lsu.edu
 d
 f xtteifeci.ado
 f xtteifeci.sthlp

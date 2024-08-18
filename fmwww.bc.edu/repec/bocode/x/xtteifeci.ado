@@ -1,4 +1,4 @@
-*! xtteifeci 1.0.0 2024/03/08
+*! xtteifeci 2.0.0 2024/03/22
 prog def xtteifeci, eclass sortpreserve
 	version 17
 	preserve
@@ -12,10 +12,10 @@ prog def xtteifeci, eclass sortpreserve
 		exit 198		
 	}
 	syntax varlist [if] [in], TReatvar(varname) [ ///
-		r(numlist min = 1 max = 1 int) Iterate(integer 1000) TOLerance(real 0.0001) trend(integer 0) ///
+		r(numlist min = 1 max = 1 int) ITERate(integer 1000) TOLerance(real 0.0001) trend(integer 0) ///
 		BOOTStrap(integer 500) seed(integer 1) ///
 		RMEthod(string) rmax(numlist min = 1 max = 1 int) ///
-		citype(string) frame(string) noFIGure SAVEGraph(string) ]
+		CIType(string) frame(string) noFIGure SAVEGraph(string) ]
 	local panelVar "`r(panelvar)'"
     local timeVar "`r(timevar)'"
 	tempvar touse
@@ -753,4 +753,5 @@ mata:
 end
 
 * Version history
+* 2.0.0 Improve the help file
 * 1.0.0 Submit the initial version of xtteifeci

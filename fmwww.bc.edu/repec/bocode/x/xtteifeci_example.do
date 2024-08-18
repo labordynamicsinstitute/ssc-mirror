@@ -33,7 +33,7 @@ use smoking2, clear
 xtset state year
 * Visualize the configuration of the treatment variable "ctcp" for California's tobacco control program (CTCP) in panel data ("panelview" has been installed from SSC)
 qui panelview cigsale ctcp, i(state) t(year) type(treat)
-* Implement factor-based estimation for the model with covariates, a nonstationary trend and the number of factors calculated by ABC method
+* Implement factor-based estimation for the model with covariates, a nonstationary trend and the number of factors calculated by ABC information criterion
 xtteifeci cigsale lnincome eduattain poverty, treatvar(ctcp) trend(1) rmethod(abc)
 * List the names and values of the macros, scalars and matrix stored in e()
 ereturn list
