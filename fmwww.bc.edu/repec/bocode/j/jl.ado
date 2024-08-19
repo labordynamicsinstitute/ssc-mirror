@@ -1,4 +1,4 @@
-*! jl 1.0.1 24 April 2024
+*! jl 1.0.2 17 August 2024
 *! Copyright (C) 2023-24 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
@@ -219,7 +219,7 @@ program define jl, rclass
     assure_julia_started
 
     if inlist(`"`cmd'"',"SetEnv","GetEnv") {
-      if "`cmd'"=="SetEnv" {
+      qui if "`cmd'"=="SetEnv" {
         plugin call _julia, evalqui `"Pkg.activate(joinpath(dirname(Base.load_path_expand("@v#.#")), "`1'"))"'  // move to an environment specific to this package
         AddPkg DataFrames
         AddPkg CategoricalArrays
@@ -235,7 +235,8 @@ program define jl, rclass
         plugin call _julia, eval `"splitpath(Base.active_project())[end-1]"'
         return local env `__jlans'  // strip quotes
       }
-      di as txt `"Current environment: `=cond("`return(env)'"==".","(default)","`return(env)'")', at `return(envdir)'"'
+      di as txt `"Current environment: `=cond("`return(env)'"==".","(default)","`return(env)'")', at `return(envdir)'"' _n
+      jlcmd: Pkg.status()
     }
     else if `"`cmd'"'=="AddPkg" AddPkg `0'
     else if `"`cmd'"'=="use" {
@@ -307,6 +308,7 @@ program define jl, rclass
     assure_julia_started
 
     if `"`after'"' != "" {
+      _assert strlen(`"`after'"')<4991, rc(1003) msg("jl command line longer than 4990 characters")
       jlcmd `before': `after'
       foreach macro in `locals' {
         c_local `macro': copy local `macro'
@@ -367,7 +369,10 @@ program define jlcmd, rclass
     }
     else cap noi plugin call _julia `varlist', eval`multiline'`=cond(`noisily',"","qui")' `"`__jlcmd'"'
 
-    if _rc | "`multiline'"=="" continue, break
+    if _rc | "`multiline'"=="" {
+      plugin call _julia, reset  // clear any previous command lines
+      continue, break
+    }
 
     if !`__jlcomplete' di as txt "  .." _request(___jlcmd)  // (plugin overwrites `__jlcomplete')
     if strtrim(`"`__jlcmd'"')=="exit()" {
@@ -428,3 +433,4 @@ program _julia, plugin using(jl.plugin)
 * 0.10.3 Bug fix for 0.10.2
 * 1.0.0 Add GetEnv, support for closing ";", and interactive mode
 * 1.0.1 Drop confirm names on Julia source and destination matrices so they can be views or other things
+* 1.0.2 Fix crashes on really long included regressor lists; add status call to GetEnv & SetEnv; bug fixes
