@@ -10328,6 +10328,7 @@ fmwww.bc.edu/repec/bocode/q/qcm.ado
 fmwww.bc.edu/repec/bocode/q/qlogn.hlp
 fmwww.bc.edu/repec/bocode/q/qenvF.ado
 fmwww.bc.edu/repec/bocode/q/qenv_ex.ado
+fmwww.bc.edu/repec/bocode/q/qbplot.sthlp
 fmwww.bc.edu/repec/bocode/q/qregplot.sthlp
 fmwww.bc.edu/repec/bocode/q/qgumbel.hlp
 fmwww.bc.edu/repec/bocode/q/qgamma.pkg
@@ -10443,6 +10444,7 @@ fmwww.bc.edu/repec/bocode/q/qsub.ado
 fmwww.bc.edu/repec/bocode/q/qic.hlp
 fmwww.bc.edu/repec/bocode/q/quine.ado
 fmwww.bc.edu/repec/bocode/q/qualtricsload.sthlp
+fmwww.bc.edu/repec/bocode/q/qbplot.ado
 fmwww.bc.edu/repec/bocode/q/qcount.ado
 fmwww.bc.edu/repec/bocode/q/qap.ado
 fmwww.bc.edu/repec/bocode/q/qlist.html
@@ -10458,6 +10460,7 @@ fmwww.bc.edu/repec/bocode/q/quantiles.pkg
 fmwww.bc.edu/repec/bocode/q/stata.toc copy 3529
 fmwww.bc.edu/repec/bocode/q/qenv_sim_beta.ado
 fmwww.bc.edu/repec/bocode/q/qvgraph.ado
+fmwww.bc.edu/repec/bocode/q/qbplot.pkg
 fmwww.bc.edu/repec/bocode/q/qrisk2export.sthlp
 fmwww.bc.edu/repec/bocode/q/qfrplot.html
 fmwww.bc.edu/repec/bocode/q/qrprocess.sthlp
@@ -15978,6 +15981,7 @@ fmwww.bc.edu/repec/bocode/_/_gmehran.ado
 fmwww.bc.edu/repec/bocode/_/_usespss.ado
 fmwww.bc.edu/repec/bocode/_/_gnoccur.ado
 fmwww.bc.edu/repec/bocode/_/_website.ado
+fmwww.bc.edu/repec/bocode/_/_gdistinct.sthlp
 fmwww.bc.edu/repec/bocode/_/_lnevaluator.ado
 fmwww.bc.edu/repec/bocode/_/_gmld.ado
 fmwww.bc.edu/repec/bocode/_/_slaplaceevaluator.ado
@@ -16151,6 +16155,7 @@ fmwww.bc.edu/repec/bocode/_/_gsqgaplength.ado
 fmwww.bc.edu/repec/bocode/_/_svm_setenv_mac64.plugin
 fmwww.bc.edu/repec/bocode/_/_bcsf_bracketing.mata
 fmwww.bc.edu/repec/bocode/_/_wbopendata_update.ado
+fmwww.bc.edu/repec/bocode/_/_gdistinct.ado
 fmwww.bc.edu/repec/bocode/_/_gvreldif.ado
 fmwww.bc.edu/repec/bocode/_/_gtools_internal.mata
 fmwww.bc.edu/repec/bocode/_/_mpitb_stores.ado

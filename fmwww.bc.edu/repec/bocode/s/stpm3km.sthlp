@@ -11,10 +11,10 @@
 {viewerjumpto "Examples" "stpm3km##examples"}{...}
 
 {marker syntax}{...}
-{title:Syntax for stpm3km}
+{title:Syntax for stpm3aj}
 
 {pstd}
-Compare marginal survival predictions to Kaplan-Meier estimates 
+Compare model based marginal predictions to non-parametric estimates 
 after fitting a {helpb stpm3:stpm3} model.
 
 {pstd}
@@ -46,6 +46,7 @@ want to include data not in the model then use then
 {synopt :{opt nogr:aph}}do not plot graph{p_end}
 {synopt :{opt gr:oups(#)}}Number of groups for continuous covariates{p_end}
 {synopt :{opt nokm}}Do not include Kaplan-Meier estimates on graph{p_end}
+{synopt :{opt legoptions(options)}}additional legend options{p_end}
 {synopt :{opt maxt(#)}}maximum follow-up time{p_end}
 {synopt :{opt ntime:var(#)}}Number of timepoints for standsurv{p_end}
 {synopt :{opt pit:ime(#)}}Time for prognostic index when time-dependent effects{p_end}
@@ -124,6 +125,12 @@ If there are many ties in {it:varname} there may be less groups then specified.
 
 {phang}
 {opt nokm} exclude Kaplan-Meier estimate from, graph.
+
+{phang}
+{opt legoptions(options)} additional legend options. This may help with positioning
+size etc. For full control, you can supply your own {cmd:legend()} option. 
+If doing this {cmd:legoptions()} is ignored.
+case
 
 {phang}
 {opt maxt(#)} specifies the maxiumum follow-up time for survival predictions and for plotting
@@ -242,14 +249,15 @@ Compare marginal predictions in 4 groups based on distribution of age
 
 
 {title:Author}
-{pstd}Paul C. Lambert{p_end}
-{pstd}Biostatistics Research Group{p_end}
-{pstd}Department of Health Sciences{p_end}
-{pstd}University of Leicester{p_end}
-{pstd}{it: and}{p_end}
-{pstd}Department of Medical Epidemiology and Biostatistics{p_end}
-{pstd}Karolinska Institutet{p_end}
-{pstd}E-mail: {browse "mailto:paul.lambert@le.ac.uk":paul.lambert@le.ac.uk}{p_end}
+{p 5 12 2}{bf:Paul C. Lambert}{p_end}        
+{p 5 12 2}Cancer Registry of Norway{p_end}
+{p 5 12 2}National Institute of Public Health{p_end}
+{p 5 12 2}Oslo, Norway{p_end}
+{p 5 12 2}{it: and}{p_end}
+{p 5 12 2}Department of Medical Epidemiology and Biostatistics{p_end}
+{p 5 12 2}Karolinska Institutet{p_end}
+{p 5 12 2}Stockholm, Sweden{p_end}
+{p 5 12 2}pclt@kreftregisteret.no{p_end}
 
 
 

@@ -1,4 +1,4 @@
-*! version 1.11 2024-06-24
+*! version 1.12 2024-08-19
 
 program stpm3_pred, sortpreserve
   version 16.1
@@ -1365,10 +1365,6 @@ program define stpm3_pred_addt0
         if "`expvars'" != "" {
           local v = word("`expvars'",`i')
           `fr' qui replace `v' = 1*`per' if `tv' == 0
-          if "`ci'" != "" & "`crudeprob'" != "" {
-            `fr' qui replace `v'_lci = 1*`per' if `tv' == 0
-            `fr' qui replace `v'_uci = 1*`per' if `tv' == 0
-          }        
         }
       }
     }
@@ -1384,19 +1380,17 @@ program define stpm3_pred_addt0
           `fr' qui replace `v'_lci = 0 if `tv' == 0
           `fr' qui replace `v'_uci = 0 if `tv' == 0
         }
-        if "`expvars'" != "" {
+        if "`expvars'" != ""  {
           local v = word("`expvars'",`i')
           `fr' qui replace `v' = 0 if `tv' == 0
-          if "`ci'" != "" {
+          if "`ci'" != "" & "`crudeprob'" != "" {
             `fr' qui replace `v'_lci = 0 if `tv' == 0
             `fr' qui replace `v'_uci = 0 if `tv' == 0
           }        
         }      
       }
     } 
-  }
   
-  if "`gen'"=="" {
     if "`cif'" != "" {
       forvalues i = 1/`Natoptions' {
         local v = word("`anything'",`i')

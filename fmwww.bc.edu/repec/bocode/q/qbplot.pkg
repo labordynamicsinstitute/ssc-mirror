@@ -1,0 +1,29 @@
+d 'QBPLOT': module for quantile plot with box flavour 
+d
+d  qbplot is a dedicated pedagogic or propaganda command with the
+d aim of showing that a quantile plot can convey all the key
+d information given by a box plot showing median and quartiles.
+d Indeed, it can convey much more. The main part of the display is
+d a scatter plot showing ordered values against the so-called
+d plotting positions.  On the vertical axis, the values of the
+d minimum, maximum, median and quartiles are shown as axis labels.
+d The median and quartiles are connected using horizontal and
+d vertical line segments to plotting positions 0.25, 0.5, 0.75 on
+d the horizontal axis. These segments may be extended mentally to
+d imagine a conventional box showing  median and quartiles, as in
+d most variations of box plots. 
+d
+d KW: quantiles
+d KW: box plot
+d KW: graphics
+d KW: distributions
+d
+d Requires: Stata version 8.2
+d
+d Distribution-Date: 20240819
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f qbplot.ado
+f qbplot.sthlp

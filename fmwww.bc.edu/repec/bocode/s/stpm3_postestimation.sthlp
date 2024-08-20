@@ -511,15 +511,14 @@ These are very simple examples.  For more complex examples see
 {title:Author}
 
 {p 5 12 2}{bf:Paul C. Lambert}{p_end}        
-{p 5 12 2}Biostatistics Research Group{p_end}
-{p 5 12 2}Department of Population Health Sciences{p_end}
-{p 5 12 2}University of Leicester{p_end}
-{p 5 12 2}Leicester, UK{p_end}
+{p 5 12 2}Cancer Registry of Norway{p_end}
+{p 5 12 2}National Institute of Public Health{p_end}
+{p 5 12 2}Oslo, Norway{p_end}
 {p 5 12 2}{it: and}{p_end}
 {p 5 12 2}Department of Medical Epidemiology and Biostatistics{p_end}
 {p 5 12 2}Karolinska Institutet{p_end}
 {p 5 12 2}Stockholm, Sweden{p_end}
-{p 5 12 2}paul.lambert@le.ac.uk{p_end}
+{p 5 12 2}pclt@kreftregisteret.no{p_end}
 
 {title:References}
 

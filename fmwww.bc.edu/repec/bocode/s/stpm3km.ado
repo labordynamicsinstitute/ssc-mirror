@@ -20,6 +20,7 @@ program define stpm3km, rclass
                                    noGRaph                 ///
                                    noKM                    ///
                                    GRoups(integer 0)       ///
+                                   LEGOPTions(string)      ///
                                    MAXT(string)            ///
                                    NAME(string)            ///
                                    NTIMEvar(integer 100)   ///
@@ -291,12 +292,12 @@ program define stpm3km, rclass
 
     if `Ngroups'>1 {
       if `"`s(legend)'"' == "" {
-        local legendpos = cond("`survival'"!="","pos(1)","pos(11)")
+        if "`legoptions'" == "" local legendpos = cond("`survival'"!="","pos(1)","pos(11)")
         local c 1
         foreach i in `levels' {
           if "`factor'" == "" local label`i' `i'
           local order `"`order' `c' "`label`i''""'
-          local legend legend(order(`order') cols(1) `legendpos')
+          local legend legend(order(`order') `legendpos' `legoptions')
           local ++c
         } 
       }
