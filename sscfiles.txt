@@ -10477,6 +10477,7 @@ fmwww.bc.edu/repec/bocode/q/qqvalue.ado
 fmwww.bc.edu/repec/bocode/q/quadas.pkg
 fmwww.bc.edu/repec/bocode/q/qualtricsload.pkg
 fmwww.bc.edu/repec/bocode/q/quandl.hlp
+fmwww.bc.edu/repec/bocode/q/qbplot_test.do
 fmwww.bc.edu/repec/bocode/q/qenvgamma.ado
 fmwww.bc.edu/repec/bocode/q/qqvalue.sthlp
 fmwww.bc.edu/repec/bocode/q/Quadas2.pdf
