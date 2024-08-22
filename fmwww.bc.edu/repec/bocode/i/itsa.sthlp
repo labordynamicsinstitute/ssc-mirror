@@ -1,4 +1,5 @@
 {smcl}
+{* 20Aug2024}{...}
 {* 13May2024}{...}
 {* 01May2024}{...}
 {* 10Apr2024}{...}
@@ -12,7 +13,7 @@
 {* 06Aug2014}{...}
 {* 24Mar2014}{...}
 {* 11Feb2014}{...}
-{cmd:help itsa}{right: ({browse "https://doi.org/10.1177/1536867X211025840":SJ21-2: st0389_6})}
+{cmd:help itsa}{right: ({browse "https://doi.org/10.1177/1536867X241258015":SJ24-2: st0389_9})}
 {hline}
 
 {title:Title}
@@ -28,9 +29,15 @@
 {cmd:itsa} {depvar} [{indepvars}] {ifin} {weight}{cmd:,}
 {cmdab:trp:eriod(}{it:{help datetime:date}}{cmd:)} 
 [{opt sing:le} {opt treat:id(#)}
-{cmdab:cont:id(}{it:{help numlist:numlist}}{cmd:)} {opt prais} {opt lag(#)}
+{cmdab:cont:id(}{it:{help numlist:numlist}}{cmd:)} 
+{opt prais} 
+{opt lag(#)}
 {opt fig:ure}[{cmd:(}{it:{help twoway_options:twoway_options}}{cmd:)}]
-{opt low:ess} {opt posttr:end} {opt repl:ace} {opt pre:fix(string)}
+{opt ci}
+{opt low:ess} 
+{opt posttr:end} 
+{opt repl:ace} 
+{opt pre:fix(string)}
 [{it:model_options}]
 
 {pstd}
@@ -132,6 +139,13 @@ observations are averaged). Specifying {cmd:figure} without options uses the
 default graph settings. Note: in Stata version 18, the legend appears on
 the right side of the graph by default. To ensure that the legend appears at 
 the bottom center, type as an option: {cmd:figure(legend(position(6)))}
+
+{phang}
+{cmd:ci} plots the confidence interval(s) on the {cmd:figure}. By default,
+95% CIs are presented. This can be changed by specifying {cmd:level()} as 
+a model option. CIs are computed using the post-estimation linear prediction 
+({cmd:xb}) and standard error of the linear prediction ({cmd:stdp}). CIs 
+should be viewed with caution for non-linear models.
 
 {phang}
 {cmd:lowess} plots a lowess smoothed line of {it:depvar} on {it:timevar}.
@@ -257,15 +271,19 @@ discussion.){p_end}
 {phang3}{bf:{stata "actest, lags(12)": . actest, lags(12)}}{p_end}
 
 {pmore}
-Same as above but now we use the rescaled outcome ({opt cigsale_scaled}) which lies between 0 and 1, and accordingly, we specify the binomial GLM family with logit link {p_end}
+Same as above but we now specify that the confidence interval be added to the graph {p_end}
+{phang3}{bf:{stata "itsa cigsale, single trperiod(1989) lag(1) figure(legend(position(6))) posttrend ci replace": . itsa cigsale, single trperiod(1989) lag(1) figure(legend(position(6))) posttrend ci replace}}{p_end}
+
+{pmore}
+Now we use the rescaled outcome ({opt cigsale_scaled}) which lies between 0 and 1, and accordingly, we specify the binomial GLM family with logit link {p_end}
 
 {phang3}{bf:{stata "itsa cigsale_scaled, single trperiod(1989) lag(1) fig posttrend f(binomial) replace": . itsa cigsale_scaled, single trperiod(1989) lag(1) fig posttrend f(binomial) l(logit) replace}} {p_end}
 {phang3}{bf:{stata "actest, lags(12)": . actest, lags(12)}}{p_end}
 
 {pmore}
-Now we use the rescaled outcome ({opt cigsale_count}) which is a non-negative integer, and accordingly, we specify the poisson GLM family with log link {p_end}
+Now we use the rescaled count outcome ({opt cigsale_count}) which is a non-negative integer, and accordingly, we specify the poisson GLM family with log link. Additionally, we add a lowess smoother to the graph {p_end}
 
-{phang3}{bf:{stata "itsa cigsale_count, single trperiod(1989) lag(1) fig posttrend f(poisson) l(log) replace": . itsa cigsale_scaled, single trperiod(1989) lag(1) fig posttrend f(poisson)l(log) replace}}{p_end}
+{phang3}{bf:{stata "itsa cigsale_count, single trperiod(1989) lag(1) fig posttrend f(poisson) l(log) replace low": . itsa cigsale_count, single trperiod(1989) lag(1) fig posttrend f(poisson)l(log) replace low}}{p_end}
 {phang3}{bf:{stata "actest, lags(12)": . actest, lags(12)}}{p_end}
 
 
@@ -289,11 +307,15 @@ periods.
 {phang3}{bf:{stata "actest, lags(12)": . actest, lags(12)}}{p_end}
 
 {pmore}
-Same as above, but we specify {cmd:prais} to fit an AR(1) model.  We
-specify {cmd:rhotype(tscorr)}, which bases p on the autocorrelation of the
-residuals, and add robust standard errors.
+Same as above, but we now specify that CIs be presented on the graph instead of the lowess smoother.
 
-{phang3}{bf:{stata "itsa cigsale, single treatid(3) trperiod(1989) fig posttrend replace prais rhotype(tscorr) vce(robust)":. itsa cigsale, single treatid(3) trperiod(1989) fig posttrend replace prais rhotype(tscorr) vce(robust)}}{p_end}
+{phang3}{bf:{stata "itsa cigsale, single treat(3) trperiod(1989) lag(1) figure(legend(position(6))) posttrend replace ci": . itsa cigsale, single treatid(3) trperiod(1989) lag(1) figure(legend(position(6))) posttrend replace ci}}{p_end}
+
+{pmore}
+Now we specify {cmd:prais} to fit an AR(1) model.  We specify {cmd:rhotype(tscorr)}, which bases p on the autocorrelation of the
+residuals, and compute robust standard errors. We also add CIs to the graph
+
+{phang3}{bf:{stata "itsa cigsale, single treatid(3) trperiod(1989) posttrend replace prais rhotype(tscorr) vce(robust) fig ci":. itsa cigsale, single treatid(3) trperiod(1989) posttrend replace prais rhotype(tscorr) vce(robust) fig ci}} {p_end}
 
 {pmore}
 Here we specify two treatment periods, starting in 1982 and 1989 and specify
@@ -317,9 +339,14 @@ other groups in the file to be used as control groups.{p_end}
 {phang3}{bf:{stata "itsa cigsale, treatid(3) trperiod(1989) lag(1) figure(legend(position(6))) posttrend replace":. itsa cigsale, treatid(3) trperiod(1989) lag(1) figure(legend(position(6))) posttrend replace}}{p_end}
 
 {pmore}
-Here we specify the ITSA model using weights described in Abadie et al. (2010) as {opt aweights} and estimate the weighted model.
+Same as above, but we add CIs to the graph.
 
-{phang3}{bf:{stata "itsa cigsale [aw=weights], treatid(3) trperiod(1989) replace figure(xlabel(1970(5)2000)) posttrend": . itsa cigsale [aw=weights], treatid(3) trperiod(1989) replace figure(xlabel(1970(5)2000)) posttrend}}
+{phang3}{bf:{stata "itsa cigsale, treatid(3) trperiod(1989) lag(1) figure(legend(position(6))) posttrend replace ci":. itsa cigsale, treatid(3) trperiod(1989) lag(1) figure(legend(position(6))) posttrend replace ci}}{p_end}
+
+{pmore}
+Here we specify the ITSA model using weights described in Abadie et al. (2010) as {opt aweights} and estimate the weighted model. We also add CIs to the graph.
+
+{phang3}{bf:{stata "itsa cigsale [aw=weights], treatid(3) trperiod(1989) replace figure(xlabel(1970(5)2000)) posttrend low": . itsa cigsale [aw=weights], treatid(3) trperiod(1989) replace figure(xlabel(1970(5)2000)) posttrend low}}{p_end}
 
 {pmore}
 Same as above, but we now indicate specific control groups to use in the
@@ -328,14 +355,19 @@ analysis that were identified using {helpb itsamatch}.
 {phang3}{bf:{stata "itsa cigsale, treatid(3) trperiod(1989) contid(4 8 19) lag(1) replace figure(xlabel(1970(5)2000)) posttrend": . itsa cigsale, treatid(3) trperiod(1989) contid(4 8 19) lag(1) replace figure(xlabel(1970(5)2000)) posttrend}}
 
 {pmore}
-Same as above, but now we use the rescaled [0,1] version of the outcome ({opt cigsale_scaled}) with matches identified using {helpb itsamatch}.
+We now use the rescaled binary [0,1] version of the outcome ({opt cigsale_scaled}) with the best single match identified using {helpb itsamatch}. We also add a lowess smoother to the graph.
 
-{phang3}{bf:{stata "itsa cigsale_scaled, trperiod(1989) treatid(3) contid(23) replace posttrend f(binomial) fig": . itsa cigsale_scaled, trperiod(1989) treatid(3) contid(23) replace posttrend f(binomial) fig}}
+{phang3}{bf:{stata "itsa cigsale_scaled, trperiod(1989) treatid(3) contid(23) replace posttrend f(binomial) fig low": . itsa cigsale_scaled, trperiod(1989) treatid(3) contid(23) replace posttrend f(binomial) fig low}}
 
 {pmore}
 Now we use the rescaled count version of the outcome ({opt cigsale_count}) with matches identified using {helpb itsamatch}.
 
 {phang3}{bf:{stata "itsa  cigsale_count, trperiod(1989) treatid(3) contid(4 8 19) replace posttrend f(poisson) fig": . itsa  cigsale_count, trperiod(1989) treatid(3) contid(4 8 19) replace posttrend f(poisson) fig}}
+
+{pmore}
+Here we add a covariate {cmd:retprice} to the model and specify that estimates be computed at the 99% level. We also add CIs to the graph. One can see that with the addition of covariates,the estimates are no longer linear.   
+
+{phang3}{bf:{stata "itsa cigsale retprice, treatid(3) trperiod(1989) replace fig posttrend ci level(99)": . itsa cigsale retprice, treatid(3) trperiod(1989) replace fig posttrend ci level(99)}}{p_end}
 
 
 
@@ -491,14 +523,18 @@ Simonton, D. K. 1977b. Erratum to Simonton. {it:Psychological Bulletin}
        
  
 {title:Also see}
-{p 4 14 2}	
-          Article:  {it:Stata Journal}, volume 21, number 2: {browse "https://doi.org/10.1177/1536867X211025840":st0389_6},{break}
-					{it:Stata Journal}, volume 17, number 4: {browse "http://www.stata-journal.com/article.html?article=up0057":st0389_5},{break}
+{p 4 13 2}	
+          Article: {it:Stata Journal}, volume 24, number 2: {browse "https://doi.org/10.1177/1536867X241258015":st0389_9},{break}
+                    {it:Stata Journal}, volume 22, number 1: {browse "https://doi.org/10.1177/1536867X221083929":st0389_8},{break}
+                    {it:Stata Journal}, volume 21, number 3: {browse "https://doi.org/10.1177/1536867X211045584":st0389_7},{break}
+                    {it:Stata Journal}, volume 21, number 2: {browse "https://doi.org/10.1177/1536867X211025840":st0389_6},{break}
+                    {it:Stata Journal}, volume 17, number 4: {browse "http://www.stata-journal.com/article.html?article=up0057":st0389_5},{break}
                     {it:Stata Journal}, volume 17, number 2: {browse "http://www.stata-journal.com/article.html?article=up0055":st0389_4},{break}
                     {it:Stata Journal}, volume 17, number 1: {browse "http://www.stata-journal.com/article.html?article=st0389_3":st0389_3},{break}
                     {it:Stata Journal}, volume 16, number 3: {browse "http://www.stata-journal.com/article.html?article=up0052":st0389_2},{break}
                     {it:Stata Journal}, volume 16, number 2: {browse "http://www.stata-journal.com/article.html?article=up0051":st0389_1},{break}
                     {it:Stata Journal}, volume 15, number 2: {browse "http://www.stata-journal.com/article.html?article=st0389":st0389}
+
 
 {p 7 14 2}Help: {helpb glm}, {helpb newey}, {helpb prais}, {helpb actest} (if installed), {helpb itsamatch} (if installed), {helpb itsaperm} (if installed), {helpb xtitsa} (if installed)
  {p_end}
