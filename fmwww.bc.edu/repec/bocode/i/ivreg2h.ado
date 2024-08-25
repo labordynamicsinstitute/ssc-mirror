@@ -1,4 +1,4 @@
-*! ivreg2h  1.1.04  11jul2021  cfb/mes
+*! ivreg2h  1.1.05  24aug2024  cfb/mes
 *! cloned from
 *! xtivreg2 1.0.13 28Aug2011
 *! author mes
@@ -21,6 +21,8 @@
 *! 1.1.02: Was not passing * (`options') on to ivreg2, which meant that options such as robust were ignored
 *! 1.1.03: Add Z() option to select generated instruments
 *! 1.1.04: Disable execution in absence of included endogenous
+*! 1.1.05: correct refs to feest so that data are not centered in non-FE models, and 
+*!         gen insts can be recovered.
 
 program define ivreg2h, eclass byable(recall)
 	version 9
@@ -79,7 +81,8 @@ program define ivreg2h, eclass byable(recall)
 			error 198
 		}
 // validate fe option: require panel
-		loc feest " "
+// cfb 1.1.05: null string if !fe!
+		loc feest ""
 		capt xtset
 		if "`fe'" == "fe" & _rc>0 {
 			xtset
@@ -132,7 +135,7 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 			gen long `wvar'=1
 		}
 
-// di in r "Z = `z'" _n
+di in r "Z = `z'" _n
 
 * Begin estimation blocks
 			loc qnoout nooutput
@@ -172,6 +175,8 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 			local nocons 
 			local dofminus 0
 			
+// begin FE code
+			
 			if "`fe'" == "fe" {
 				qui xtset
 				loc pv `r(panelvar)'
@@ -192,9 +197,13 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 
 // casewise option in 1.0.9 (Jan2014) ensures that centering is done on the regression sample, and other
 // observations are set to missing
+di as err "pv `pv'"
 				qui by `pv': center `lhs_t' `endo_t' `exexog_t' `inexog_t' if e(sample), casewise inplace 
 				loc feest "Fixed Effects by(`pv'), `npan' groups"
 			}
+			
+// end FE code
+			
 // preserve here, prior to first sort
 // cfb disabled			preserve
 		tempname b V S W firstmat touse2
@@ -211,7 +220,9 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 			cap est drop StdIV
 		} 
 		else {
+			
 // COMPUTE STANDARD IV RESULTS IF EQUATION IS IDENTIFIED ---------------------------------
+
 			if "`nooutput'"=="" {
 				di as res _n "Standard IV Results" _n "`feest'"
 			}
@@ -341,6 +352,8 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 				local collin_dups	"`l_collin' `l_dups'"
 				
 // cfb
+// di as err "feest `feest'"
+
 				if "`feest'" != "" {
 					di as err _n "Warning: variables have been centered"
 					}
@@ -372,9 +385,15 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 					loc zlist `z_t'
 					loc zlist_t `z'
 					local zlist_t : subinstr local z "." "_", all
+// cfb 1.1.05: move zlist_t into zlist
+                    loc zlist `zlist_t'
 				}
-//  di as err ">>> `zlist_t'"
+				
+// di as err "zlist `zlist'"
+
 //				loc n_inexog: word count `inexog_t'
+
+
 				loc n_inexog: word count `zlist'
 				if `n_inexog' == 0 {
 					di in red _n "Error: no Z variables available for construction of generated instruments." _n
@@ -385,6 +404,7 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 				loc geninst
 				
 				loc i 0		
+// di as err "zlist `zlist'"
 				foreach e of local endo_t {
 //					qui reg `e' `inexog_t' if `touse'
 					qui reg `e' `zlist' if `touse'
@@ -427,6 +447,7 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 // remove orthog(`orthog_t') since std IVs not used here
 // changed `qq'(=qui) to nooutput option so that collinearity and duplicates messages reported
 // added ver from _caller() so that ivreg2 called correct ivreg2x under version control.
+
 			version `ver': `ivreg2_cmd' `lhs_t' `inexog_t' (`endo_t' = `geninst_t') `wtexp' if `touse', ///
 						dofminus(`dofminus') `nocons' `first' `ffirst' `rf' ///
 						savefprefix(`savefprefix') saverfprefix(`saverfprefix') ///
@@ -561,6 +582,7 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 //		corr `geninst' `inexog_t' if e(sample)
 
 // cfb
+// di as err "feest `feest'"
 				if "`feest'" != "" {
 					di as err _n "Warning: variables have been centered"
 					}
@@ -760,6 +782,8 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 		}	// end block for std+generated IVs
 		
 // cfb
+// di as err "feest `feest'"
+
 				if "`feest'" != "" {
 					di as err _n "Warning: variables have been centered"
 					}
