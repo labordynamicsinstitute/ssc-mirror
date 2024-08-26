@@ -1,4 +1,4 @@
-*! ivreg2h  1.1.05  24aug2024  cfb/mes
+*! ivreg2h  1.1.06  25aug2024  cfb/mes
 *! cloned from
 *! xtivreg2 1.0.13 28Aug2011
 *! author mes
@@ -23,10 +23,11 @@
 *! 1.1.04: Disable execution in absence of included endogenous
 *! 1.1.05: correct refs to feest so that data are not centered in non-FE models, and 
 *!         gen insts can be recovered.
+*! 1.1.06: fe option disabled. Should be implemented in ivreg2hfe.
 
 program define ivreg2h, eclass byable(recall)
 	version 9
-	local lversion 01.1.04
+	local lversion 01.1.06
 // will be overridden by ivreg2 e(version) for ivreg2_p
 
 // Needed for call to ivreg2
@@ -56,8 +57,8 @@ program define ivreg2h, eclass byable(recall)
 	else {
 
 		local cmdline "ivreg2h `*'"
-
-		syntax [anything(name=0)] [if] [in] [aw fw pw iw/] , [ FE  /* fd
+// disable fe
+		syntax [anything(name=0)] [if] [in] [aw fw pw iw/] , [ /* FE   fd
 			*/	Ivar(varname) Tvar(varname) first ffirst rf /*
 			*/	savefirst SAVEFPrefix(name) saverf SAVERFPrefix(name) CLuster(varlist)	/*
 			*/	orthog(string) ENDOGtest(string) REDundant(string) PARTIAL(string)		/*
@@ -82,7 +83,9 @@ program define ivreg2h, eclass byable(recall)
 		}
 // validate fe option: require panel
 // cfb 1.1.05: null string if !fe!
+// cfb 1.1.06: disable fe option
 		loc feest ""
+/*
 		capt xtset
 		if "`fe'" == "fe" & _rc>0 {
 			xtset
@@ -90,7 +93,7 @@ program define ivreg2h, eclass byable(recall)
 		}
 // macro saved if not ""
 		local xtmodel "`fe'"
-						
+*/						
 		local ivreg2_cmd "ivreg2"
 		tempname regest
 		capture _estimates hold `regest', restore
@@ -135,7 +138,7 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 			gen long `wvar'=1
 		}
 
-di in r "Z = `z'" _n
+// di in r "Z = `z'" _n
 
 * Begin estimation blocks
 			loc qnoout nooutput
@@ -145,14 +148,21 @@ di in r "Z = `z'" _n
 			local lhs_t "`r(varlist)'"
 			tsrevar `inexog', substitute
 			local inexog_t "`r(varlist)'"
+// di in r "inexog_t `inexog_t'"
 			loc n_inex : word count `inexog_t'
 // 1.1.03
 			if "`z'" == "" {
 				loc z `inexog'
 			}
+// 1.1.06
+			loc zts `z'
+			local zts : subinstr local zts "." "_", all	
+// di in r "z: `z'"
+// di in r "`zts: `zts'"
 			tsrevar `z', substitute
-			local z_t "`r(varlist)'"
-// di in r "@@ zt `z_t'"
+//			local z_t "`r(varlist)'"
+			local zlist_t "`r(varlist)'"
+// di in r "zlist_t: `zlist_t'"
 // di in r "n_inex `n_inex'" _n
 			tsrevar `endo', substitute
 			local endo_t "`r(varlist)'"
@@ -379,6 +389,7 @@ di as err "pv `pv'"
 //  di as err "`l_inexog'"
 //  di as err "`inexog_t'""
 
+/* 1.1.06: handled above, disable 
 // if Z() specified, override; should check to see that Z is subset of X 
 				loc zlist `inexog_t'
 				if "`z'" != "" {
@@ -388,13 +399,18 @@ di as err "pv `pv'"
 // cfb 1.1.05: move zlist_t into zlist
                     loc zlist `zlist_t'
 				}
-				
-// di as err "zlist `zlist'"
+*/				
+//  di as err "zlist_t `zlist_t'"
+
+// ******
+// 1.1.06: must grab original z content to rename generated instruments if TS ops are used
+// ******
 
 //				loc n_inexog: word count `inexog_t'
 
-
-				loc n_inexog: word count `zlist'
+// 1.1.06: refer to zlist_t
+//				loc n_inexog: word count `zlist'
+				loc n_inexog: word count `zlist_t'
 				if `n_inexog' == 0 {
 					di in red _n "Error: no Z variables available for construction of generated instruments." _n
 					error 198
@@ -405,30 +421,37 @@ di as err "pv `pv'"
 				
 				loc i 0		
 // di as err "zlist `zlist'"
+// di as err "zlist_t `zlist_t'"
+// di as err "inexog_t `inexog_t'"
 				foreach e of local endo_t {
-//					qui reg `e' `inexog_t' if `touse'
-					qui reg `e' `zlist' if `touse'
+// 1.1.06: revert to inexog_t tempvars
+					qui reg `e' `inexog_t' if `touse'
+//					qui reg `e' `zlist' if `touse'
 					tempvar `e'_eps
 					qui predict double ``e'_eps' if e(sample), residual
 					loc ++i
 					loc en: word `i' of `endo'
 					local j 1
+// 1.1.06: revert to zlist_t
+// di in r "zlist_t: `zlist_t'"
 //					foreach v of local inexog_t {
-					foreach v of local zlist {
+					foreach v of local zlist_t {
 // Federico: added (and some lines commented) to allows correct naming 
 // 			 in the case of more endo vars and to allow the -gen- option to work properly
 // 						local vn: word `j' of `l_inexog' 
- 						local vn: word `j' of `zlist_t'
+//						local vn: word `j' of `zlist_t'
+						loc vn: word `j' of `zts'
  						tempvar z_`e'_`v'_eps
 						su `v' if `touse', mean
 						qui g double `z_`e'_`v'_eps' = (`v' - r(mean)) * ``e'_eps' if `touse'
 						loc geninst_t "`geninst_t' `z_`e'_`v'_eps'"
+// 1.0.6: pull name from zts
 						loc geninst "`geninst' `en'_`vn'_g"
 						local j = `j' + 1 
 					}
 				}
 
-// di "geninst and geninst_t (immediately after creation):"
+//  di "geninst and geninst_t (immediately after creation):"
 //  di as err "`geninst'"
 //  di as err "`geninst_t'"
 

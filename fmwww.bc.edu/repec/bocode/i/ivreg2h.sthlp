@@ -32,13 +32,12 @@ indicator. Under the same assumptions, the technique could be employed where bot
 and regressor are binary.
 
 {p}This implementation has been built using the existing {cmd:xtivreg2} (Schaffer) 
-and {cmd:ivreg2} (Baum, Schaffer, Stillman) routines. It can be used on panel data using the 
-within transformation of a fixed effects model: see the {cmd:fe} option described below. 
+and {cmd:ivreg2} (Baum, Schaffer, Stillman) routines. 
 As {cmd:ivreg2h} is a variant of {cmd:ivreg2}, essentially
 all of the features and options of that program are available in {cmd:ivreg2h}. For that
 reason, you should consult {help ivreg2:help ivreg2} for details of the available options.
 
-{p}{cmd:ivreg2h} provides four additional options: {cmd:gen}, {cmd:gen(}{it:string}{cmd:[,replace])}, {cmd:fe} and {cmd:z()}.
+{p}{cmd:ivreg2h} provides three additional options: {cmd:gen}, {cmd:gen(}{it:string}{cmd:[,replace])},  and {cmd:z()}.
 If the {cmd:gen} option is given, the generated instruments are saved, with names built from
 the original variable names suffixed with {cmd:_g}. 
 If greater control over the naming
@@ -46,11 +45,10 @@ of the generated instruments is desired, use the {cmd:gen(}{it:string}{cmd:[,rep
 The {it:string} argument allows the specification of a stub, or prefix, for the generated variable names,
 which will also be suffixed with {cmd:_g}. 
 You may remove earlier instruments with those same names with the {cmd:replace} suboption.
-If the data have been declared as a panel, you can use the {cmd:fe} option to specify that
-a fixed-effects model should be estimated, as in {cmd:xtivreg2}.
 In order to use a subset of the included exogenous variables to construct instruments, include
 them in the {cmd:z()} option. Make sure that the variables listed here are in the list of included
-instruments.
+instruments. The current version of {cmd:ivreg2h} does not support fixed-effects models. They can
+be implemented by manually centering all variables in the regression.
 
 {p}{cmd:ivreg2h} can be invoked to estimate a traditionally identified single equation, 
 or a single equation that--before augmentation with the generated instruments--fails the 
@@ -112,13 +110,6 @@ If i.i.d. errors are assumed, and a Sargan test is displayed in the standard out
 {p 8 12}{stata "ivreg2h foodshare z_* (lrtotexp =), small robust gmm2s z(z_age-z_agesp2)" : . ivreg2h foodshare z_* (lrtotexp = lrinc), small robust gmm2s  z(z_age-z_agesp2)} 
 
 
-{p 8 12}Example using panel data and HAC standard errors. 
-
-{p 8 12}{inp:.} {stata "webuse grunfeld ": webuse grunfeld}
-
-{p 8 12}{inp:.} {stata "ivreg2h invest L(1/2).kstock (mvalue=), fe ": ivreg2h invest L(1/2).kstock (mvalue=), fe }
-
-{p 8 12}{inp:.} {stata "ivreg2h invest L(1/2).kstock (mvalue=L(1/4).mvalue), fe robust bw(2)": ivreg2h invest L(1/2).kstock (mvalue=L(1/4).mvalue), fe robust bw(2)}
 
 {title:Acknowledgements}
 
