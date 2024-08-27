@@ -34,4 +34,5 @@ g WIN64 synthopt.win64   synthopt.plugin
 g LINUX synthopt.linux32 synthopt.plugin
 g LINUX64 synthopt.linux64 synthopt.plugin
 g MACINTEL64 synthopt.mac synthopt.plugin
+g MACARM64 synthopt.mac synthopt.plugin
 h synthopt.plugin

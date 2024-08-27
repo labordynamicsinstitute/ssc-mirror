@@ -3527,6 +3527,7 @@ fmwww.bc.edu/repec/bocode/s/stjm_prothro.dta
 fmwww.bc.edu/repec/bocode/s/subsim_2.pkg
 fmwww.bc.edu/repec/bocode/s/sptobitmstardhxt.dta
 fmwww.bc.edu/repec/bocode/s/slideviewer.html
+fmwww.bc.edu/repec/bocode/s/synthopt.mac.x86
 fmwww.bc.edu/repec/bocode/s/staticfc.pkg
 fmwww.bc.edu/repec/bocode/s/strgroup.PC(64-bit_x86-64).Windows.plugin
 fmwww.bc.edu/repec/bocode/s/searchfor.sthlp
