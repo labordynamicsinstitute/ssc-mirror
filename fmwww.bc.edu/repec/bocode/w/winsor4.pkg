@@ -1,0 +1,31 @@
+d 'WINSOR4': module to winsorize a variable based on outliers defined by either percentiles or interquartile range
+d
+d  winsor4 provides methods for handling outliers in your data by
+d either trimming (i.,e., replacing the outliers with	 missing
+d values) or winsorizing (i.e., replacing outliers with the maximum
+d and minimum specified).  Outliers can either	  be identified by
+d specifying a pre-determined level in the distribution (e.g.,
+d bottom 5% and top 95%), or by using the    interquartile range
+d (IQR) method.  The distribution can be computed unconditionally
+d over the full distribution of     varname, or within specified
+d groups (e.g., for each year). Only one variable at a time is
+d supported. 
+d
+d KW: data management
+d KW: winsor
+d KW: outliers
+d KW: percentiles
+d KW: interquartile range
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20240827
+d
+d Author:   Adrien Matray , Stanford University
+d Support: email  matray@@stanford.edu
+d
+d Author:  Pablo E. Rodriguez, MIT
+d Support: email  pablo6@@mit.edu
+d
+f winsor4.ado
+f winsor4.sthlp

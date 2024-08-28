@@ -37,6 +37,7 @@ p winratio module to calculate the unmatched Win Ratio for prioritised outcomes
 p winratiotest module to calculate the unmatched Win Ratio for prioritised outcomes 
 p winsor module to Winsorize a variable
 p winsor2 module to winsorize data
+p winsor4 module to winsorize a variable based on outliers defined by either percentiles or interquartile range
 p witch module to mystically manage files on adopath
 p wntstmvq module to compute multivariate Ljung-Box Q test
 p wooldid module to estimate Difference-in-Differences Treatment Effects with Staggered Treatment Onset Using Heterogeneity-Robust Two-Way Fixed Effects Regressions

@@ -1,0 +1,31 @@
+d 'XTGPS': module to estimate Hoechle, Schmid, and Zimmermann's (2024) GPS regression model for analyzing asset returns
+d
+d  xtgps estimates the GPS regression model proposed by Hoechle,
+d Schmid, and Zimmermann (2024) in their working paper "Does
+d Unobservable Heterogeneity Matter for Portfolio-Based Asset
+d Pricing Tests?". The GPS-regression model is a regression-based
+d methodology for analyzing asset returns. The technique can easily
+d handle multiple dimensions and continuous firm, fund, or investor
+d characteristics. The method allows for investigating the
+d cross-section versus time-series predictability of stock returns,
+d and it provides a framework for formal tests of competing
+d specifications. The GPS-model nests conventional portfolio sorts
+d (where assets are sorted into portfolios based on one or more
+d characteristics) as a special case. Estimation results therefore
+d have a straightforward economic interpretation. 
+d
+d KW:  GPS model
+d KW: asset returns
+d
+d Requires: Stata version 9.2 and xtscc, estout from SSC (q.v.) 
+d
+d Distribution-Date: 20240827
+d
+d Author: Daniel Hoechle, University of Basel
+d Support: email  daniel.hoechle@@unibas.ch
+d
+f xtgps.ado
+f xtpsort.ado
+f xtgps.sthlp
+f xtpsort.sthlp
+f xtgps_material.zip

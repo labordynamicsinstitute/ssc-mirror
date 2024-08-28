@@ -1,4 +1,5 @@
 {smcl}
+{* 25Aug2024}{...}
 {* 10Mar2021}{...}
 
 {title:Title}
@@ -12,7 +13,7 @@
 
 {p 8 16 2}
 {cmd:xtitsa} {depvar} [{indepvars}] {ifin} {weight}{cmd:,}
-{cmdab:trp:eriod(}{it:{help numlist:numlist}}{cmd:)}
+{cmdab:trp:eriod(}{it:datelist}{cmd:)}
 [{cmd:}{it:options}]
 
 {pstd}
@@ -27,7 +28,7 @@ The panel data must be strongly balanced and be declared to be time-series data 
 {synoptset 25 tabbed}{...}
 {synopthdr}
 {synoptline}
-{p2coldent:* {opt trp:eriod}{cmd:(}{it:{help numlist:numlist}}{cmd:)}}specify the time period(s) when the intervention begins (e.g. {cmd:trperiod(2020)} or {cmd:trperiod(2001q2)} or {cmd:trperiod(21jan2020; 08feb2020)})  {p_end}
+{p2coldent:* {opt trp:eriod}{cmd:(}{it:datelist}{cmd:)}}specify the time period(s) when the intervention begins (e.g. {cmd:trperiod(2020)} or {cmd:trperiod(2001q2)} or {cmd:trperiod(21jan2020; 08feb2020)})  {p_end}
 {synopt:{opt sing:le}}indicate that {cmd:xtitsa} will be used for a single-group analysis {p_end}
 {synopt:{opt treat}{cmd:(}{it:{help varname:varname}}{cmd:)}}specify the binary treatment group variable. Not required when only the treatment group is in the data 
 and {cmd:single} is specified {p_end}
@@ -35,6 +36,8 @@ and {cmd:single} is specified {p_end}
 {synopt:{opt pre:fix}{cmd:(}{it:string}{cmd:)}}add a prefix to the names of variables created by {cmd:xtitsa}. Short prefixes are recommended {p_end}
 {synopt:{opt repl:ace}}replace variables created by {cmd:xtitsa} if they already exist {p_end}
 {synopt:{opt fig:ure}[{cmd:(}{it:{help twoway_options:twoway_options}}{cmd:)}]}plot the average actual and predicted {it:depvar} variable over time. Specifying {cmd:figure} without options uses the default graph settings {p_end}
+{synopt:{opt low:ess}}plots a lowess smoothed line of {it:depvar} on {it:timevar} {p_end}
+{synopt:{opt ci}}plots the confidence interval(s) on the {cmd:figure} {p_end}
 {synopt:[{it:model_options}]}specify all available options for {helpb xtgee}{p_end}
 {synoptline}
 {p 4 6 2}
@@ -70,7 +73,7 @@ all available options are allowed except "eform".
 {title:Options}
 
 {phang}
-{cmd:trperiod(}{it:numlist}{cmd:)} specifies the time period when the
+{cmd:trperiod(}{it:datelist}{cmd:)} specifies the time period when the
 intervention begins.  The value(s) entered for time period(s) must be in the same
 units as the panel time variable specified in {cmd:tsset} {it:timevar}; see
 {helpb tsset}. Dates should be specified as human readible dates using the respective
@@ -113,6 +116,16 @@ of the average actual values of {it:depvar} over time. Specifying {cmd:figure}
 without options uses the default graph settings.
 
 {phang}
+{cmd:ci} plots the confidence interval(s) on the {cmd:figure}. By default,
+95% CIs are presented. This can be changed by specifying {cmd:level()} as 
+a model option. CIs are computed using the post-estimation linear prediction 
+({cmd:xb}) and standard error of the linear prediction ({cmd:stdp}). CIs 
+should be viewed with caution for non-linear models.
+
+{phang}
+{cmd:lowess} plots a lowess smoothed line of {it:depvar} on {it:timevar}.
+
+{phang}
 {it:model_options} specify all available options for {helpb xtgee}.
 
 
@@ -123,7 +136,7 @@ Regression (with methods to account for autocorrelation) is the most commonly
 used modeling technique in interrupted time-series analyses.  When there is
 only one group under study (no comparison groups), the regression model
 assumes the following form (Simonton 1977a, 1977b; Huitema and McKean 2000;
-Linden and Adams 2011):
+Linden 2015):
 
 {pmore}
 Y_t = Beta_0 + Beta_1(T) + Beta_2(X_t) + Beta_3(TX_t){space 5}(1)
@@ -143,14 +156,14 @@ immediately following the introduction of the intervention (compared with the
 counterfactual).  Beta_3 represents the difference between preintervention and
 postintervention slopes of the outcome.  Thus we look for significant p-values
 in Beta_2 to indicate an immediate treatment effect, or in Beta_3 to indicate
-a treatment effect over time (Linden and Adams 2011).  However, single-group
+a treatment effect over time (Linden 2015).  However, single-group
 ITSA models may provide misleading results, so multiple-group ITSA models
 should be implemented whenever possible (Linden 2017b and 2017c).
 
 {pstd}
 When a control group is available for comparison, the regression
 model in (1) is expanded to include four additional terms (Beta_4 to Beta_7)
-(Simonton 1977a, 1977b; Linden and Adams 2011):
+(Simonton 1977a, 1977b; Linden 2015):
 
 {pmore} Y_t = Beta_0 + Beta_1(T) + Beta_2(X_t) + Beta_3(TX_t) +
 Beta_4(Z) + Beta_5(ZT) + Beta_6(ZX_t) + Beta_7(ZTX_t){space 5}(2)
@@ -180,7 +193,7 @@ expect similar levels and slopes prior to the intervention.  However, in an
 observational study where equivalence between groups cannot be ensured, any
 observed differences will likely raise concerns about the ability to draw
 causal inferences about the relationship between the intervention and the
-outcomes (Linden and Adams 2011).  See Linden (2017a) for many
+outcomes (Linden 2015).  See Linden (2017a) for many
 additional ITSA postestimation measures.
 
 
@@ -214,14 +227,14 @@ We now generate residuals and test them for autocorrelation using {helpb actest}
 {phang3}{bf:{stata "actest resid, lags(12) robust": . actest resid, lags(12) robust}}{p_end}
 
 {pmore}
-We see from the output that there is autocorrelation up to lag 9, so we reestimate the model specifying an autoregressive correlation.{p_end}
+We see from the output that there is autocorrelation up to lag 9, so we reestimate the model specifying an autoregressive correlation and add a lowess smoother to the graph.{p_end}
 
-{phang3}{bf:{stata "xtitsa y, single trperiod(2019m11) vce(robust) posttrend figure replace corr(ar 9)": . xtitsa y, single trperiod(2019m11) vce(robust) posttrend figure replace corr(ar 9)}}{p_end}
+{phang3}{bf:{stata "xtitsa y, single trperiod(2019m11) vce(robust) posttrend figure replace corr(ar 9) low": . xtitsa y, single trperiod(2019m11) vce(robust) posttrend figure replace corr(ar 9) low}}{p_end}
 
 {pmore}
-We specify a single-group ITSA for a fractional response (i.e. 0 to 1.0 scale) with family(binomial) link(logit) and vce(robust) {p_end}
+We specify a single-group ITSA for a fractional response (i.e. 0 to 1.0 scale) with family(binomial) link(logit) and vce(robust) and add a lowess smoother to the graph.{p_end}
 
-{phang3}{bf:{stata "xtitsa y01, single trperiod(2019m11) family(binomial) link(logit) vce(robust) figure posttr replace":. xtitsa y01, single trperiod(2019m11) family(binomial) link(logit) vce(robust) figure posttr replace}} {p_end}
+{phang3}{bf:{stata "xtitsa y01, single trperiod(2019m11) family(binomial) link(logit) vce(robust) figure posttr replace low":. xtitsa y01, single trperiod(2019m11) family(binomial) link(logit) vce(robust) figure posttr replace low}} {p_end}
 
 {pstd}
 {opt 2) Single-group ITSA in dataset with other data:}{p_end}
@@ -237,17 +250,27 @@ We specify a single-group ITSA with the variable z as the treatment group
 and period 2019m11 as the start of the intervention, plot
 the results, and produce a table of the posttreatment trend estimates.
 
-{phang3}{bf:{stata "xtitsa y, single treat(z) trperiod(2019m11) vce(robust) posttrend figure": . xtitsa y, single treat(z) trperiod(2019m11) vce(robust) posttrend figure}}{p_end}
+{phang3}{bf:{stata "xtitsa y, single treat(z) trperiod(2019m11) vce(robust) posttrend figure replace": . xtitsa y, single treat(z) trperiod(2019m11) vce(robust) posttrend figure replace}}{p_end}
 
 {pmore}
-Same as above, but we specify corr(ar 9) to fit an AR(9) model.
+Same as above, but we add a lowess smoother to the graph.
 
-{phang3}{bf:{stata "xtitsa y, single treat(z) trperiod(2019m11) vce(robust) posttrend figure replace corr(ar 9)":. xtitsa y, single treat(z) trperiod(2019m11) vce(robust) posttrend figure replace corr(ar 9)}}{p_end}
+{phang3}{bf:{stata "xtitsa y, single treat(z) trperiod(2019m11) vce(robust) posttrend figure replace low": . xtitsa y, single treat(z) trperiod(2019m11) vce(robust) posttrend figure replace low}}{p_end}
 
 {pmore}
-Here we specify two treatment periods - 2019m6 and 2019m11.
+Same as above, but we add a confidence interval to the graph.
 
-{phang3}{bf:{stata "xtitsa y, single treat(z) trperiod(2019m6; 2019m11) vce(robust) posttrend replace fig":. xtitsa y, single treat(z) trperiod(2019m6; 2019m11) vce(robust) posttrend replace fig}} {p_end}
+{phang3}{bf:{stata "xtitsa y, single treat(z) trperiod(2019m11) vce(robust) posttrend figure replace ci": . xtitsa y, single treat(z) trperiod(2019m11) vce(robust) posttrend figure replace ci}}{p_end}
+
+{pmore}
+We now specify corr(ar 9) to fit an AR(9) model and add a confidence interval to the graph.
+
+{phang3}{bf:{stata "xtitsa y, single treat(z) trperiod(2019m11) vce(robust) posttrend figure replace corr(ar 9) ci":. xtitsa y, single treat(z) trperiod(2019m11) vce(robust) posttrend figure replace corr(ar 9) ci}}{p_end}
+
+{pmore}
+Here we specify two treatment periods - 2019m6 and 2019m11 and add a lowess smoother to the graph.
+
+{phang3}{bf:{stata "xtitsa y, single treat(z) trperiod(2019m6; 2019m11) vce(robust) posttrend replace fig low":. xtitsa y, single treat(z) trperiod(2019m6; 2019m11) vce(robust) posttrend replace fig low}} {p_end}
 
 {pstd}
 {opt 3) Multiple-group ITSA (treatment vs control):}{p_end}
@@ -258,9 +281,19 @@ We specify a multiple-group ITSA by omitting {cmd:single}. The variable z includ
 {phang3}{bf:{stata "xtitsa y, treat(z) trperiod(2019m11) vce(robust) posttrend figure replace":. xtitsa y, treat(z) trperiod(2019m11) vce(robust) posttrend figure replace}}{p_end}
 
 {pmore}
-We specify a multiple-group ITSA for a fractional response (i.e. 0 to 1.0 scale) with family(binomial) link(logit) and vce(robust) {p_end}
+Same as above, but we add confidence intervals to the graph. {p_end}
 
-{phang3}{bf:{stata "xtitsa y01, treat(z) trperiod(2019m11) family(binomial) link(logit) vce(robust) figure replace":. xtitsa y01, treat(z) trperiod(2019m11) family(binomial) link(logit) vce(robust) figure replace}} {p_end}
+{phang3}{bf:{stata "xtitsa y, treat(z) trperiod(2019m11) vce(robust) posttrend figure replace ci":. xtitsa y, treat(z) trperiod(2019m11) vce(robust) posttrend figure replace ci}}{p_end}
+
+{pmore}
+Here we add a covariate {cmd:x} to the model and specify that estimates be computed at the 99% level. We also add CIs to the graph. One can see that, with the addition of covariates, the estimates are no longer linear. {p_end}
+
+{phang3}{bf:{stata "xtitsa y x, treat(z) trperiod(2019m11) vce(robust) posttrend figure replace ci level(99)":. xtitsa y x, treat(z) trperiod(2019m11) vce(robust) posttrend figure replace ci level(99)}}{p_end}
+
+{pmore}
+We specify a multiple-group ITSA for a fractional response (i.e. 0 to 1.0 scale) with family(binomial) link(logit) and vce(robust) and add lowess smoothers to the graph. {p_end}
+
+{phang3}{bf:{stata "xtitsa y01, treat(z) trperiod(2019m11) family(binomial) link(logit) vce(robust) figure replace low":. xtitsa y01, treat(z) trperiod(2019m11) family(binomial) link(logit) vce(robust) figure replace low}} {p_end}
 
 
 {marker output_table}{...}
@@ -377,7 +410,9 @@ Simonton, D. K. 1977b. Erratum to Simonton. {it:Psychological Bulletin}
 to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
-Linden A. (2021). XTITSA: Stata module to perform interrupted time-series analysis with panel data.{p_end}
+Linden A. (2021). XTITSA: Stata module to perform interrupted time-series analysis with panel data.
+Statistical Software Components S458903, Boston College Department of Economics.
+{browse "https://ideas.repec.org/c/boc/bocode/s458903.html":https://ideas.repec.org/c/boc/bocode/s458903.html} {p_end}
 
 
 
