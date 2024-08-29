@@ -5,7 +5,7 @@
 {viewerjumpto "Syntax" "opendf##functions"}{...}
 {viewerjumpto "Description" "opendf##description"}{...}
 {viewerjumpto "Remarks" "opendf##remarks"}{...}
-help for {cmd:opendf}{right: version 2.0.0 (27 August 2024)}
+help for {cmd:opendf}{right: version 2.0.2 (28 August 2024)}
 {hline}
 
 {phang}

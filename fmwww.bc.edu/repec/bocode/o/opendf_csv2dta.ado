@@ -16,7 +16,7 @@
 
 -----------------------------------------------------------------------------------*/
 *! opendf_csv2dta.ado: loads data from csvs including meta data to build a Stata dataset
-*! version 2.0.0 - 27 August 2024 - SSC Initial Release
+*! version 2.0.2 - 28 August 2024 - SSC Initial Release
 
 program define opendf_csv2dta 
 	version 16
@@ -331,14 +331,20 @@ program define opendf_csv2dta
 				if (`j'==1){
 					forvalues l = 1/`language_counter'{
 						if `"`_var`i'_label`j'_lan`_language`l'''"' != ""{
-							label define _var`i'_labels_`_language`l'' `_var`i'_value`j'' `"`_var`i'_label`j'_lan`_language`l'''"'
+							capture label define _var`i'_labels_`_language`l'' `_var`i'_value`j'' `"`_var`i'_label`j'_lan`_language`l'''"'
+							if (_rc == 198){
+								di "{red: Warning: Invalid value of value label. Label `_var`i'_label`j'_lan`_language`l''' for `_var`i'_value`j'' of variable `_varname`i'' was not assigned.}"
+							}
 						}
 					}	
 				}
 				if `j'>1 {
 					forvalues l = 1/`language_counter'{
 						if `"`_var`i'_label`j'_lan`_language`l'''"' != ""{
-							label define _var`i'_labels_`_language`l'' `_var`i'_value`j'' `"`_var`i'_label`j'_lan`_language`l'''"', add
+							capture label define _var`i'_labels_`_language`l'' `_var`i'_value`j'' `"`_var`i'_label`j'_lan`_language`l'''"', add
+							if (_rc == 198){
+								di "{red: Warning: Invalid value of value label. Label `_var`i'_label`j'_lan`_language`l''' for `_var`i'_value`j'' of variable `_varname`i'' was not assigned.}"
+							}
 						}
 					}
 				}

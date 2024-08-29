@@ -7,7 +7,7 @@
 {viewerjumpto "Options" "opendf_csv2dta##options"}{...}
 {viewerjumpto "Description" "opendf_csv2dta##description"}{...}
 {viewerjumpto "Examples" "opendf_csv2dta##examples"}{...}
-help for {cmd:opendf csv2dta (opendf_csv2dta)}{right: version 2.0.0 (27 August 2024)}
+help for {cmd:opendf csv2dta (opendf_csv2dta)}{right: version 2.0.21 (28 August 2024)}
 {hline}
 
 {phang}
@@ -66,7 +66,7 @@ This command from the opendf package is part of the Open Data Format Project bun
 {title:Examples}
 
 {phang}Builds a Stata dataset containing metadata in the characteristics and the labels from the four csvs located in "C:/Documents/Data". {p_end}
-{phang}{cmd:. csv2xml, input("C:/Documents/Data")}{p_end}
+{phang}{cmd:. opendf_csv2dta, csv_loc("C:/Documents/Data")}{p_end}
 
 
 {marker author}

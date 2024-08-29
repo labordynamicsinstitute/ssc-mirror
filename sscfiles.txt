@@ -3916,7 +3916,6 @@ fmwww.bc.edu/repec/bocode/i/ivreg2hdfe.ado
 fmwww.bc.edu/repec/bocode/i/inlist2.sthlp
 fmwww.bc.edu/repec/bocode/i/intercorr.ado
 fmwww.bc.edu/repec/bocode/i/ieduplicates.sthlp
-fmwww.bc.edu/repec/bocode/i/ivreg2h.html
 fmwww.bc.edu/repec/bocode/i/ivreg28.pkg
 fmwww.bc.edu/repec/bocode/i/ivcrc.pkg
 fmwww.bc.edu/repec/bocode/i/indexplot7.hlp
@@ -3963,7 +3962,6 @@ fmwww.bc.edu/repec/bocode/i/ivtreatreg_cerulli.pdf
 fmwww.bc.edu/repec/bocode/i/imperfectiv.ado
 fmwww.bc.edu/repec/bocode/i/ivhettest_cs.do
 fmwww.bc.edu/repec/bocode/i/ineqdec05.ado
-fmwww.bc.edu/repec/bocode/i/ivreg28.html
 fmwww.bc.edu/repec/bocode/i/idonepsu.hlp
 fmwww.bc.edu/repec/bocode/i/ivcheck.ado
 fmwww.bc.edu/repec/bocode/i/iati.sthlp
@@ -3986,6 +3984,7 @@ fmwww.bc.edu/repec/bocode/i/icio_clean.ado
 fmwww.bc.edu/repec/bocode/i/ivreg210.ado
 fmwww.bc.edu/repec/bocode/i/ineqdeco5.html
 fmwww.bc.edu/repec/bocode/i/ivreg28.ado
+fmwww.bc.edu/repec/bocode/i/ivreg2hfe.ado
 fmwww.bc.edu/repec/bocode/i/inccat.html
 fmwww.bc.edu/repec/bocode/i/igini1.ado
 fmwww.bc.edu/repec/bocode/i/itmeus.hlp
@@ -4009,7 +4008,6 @@ fmwww.bc.edu/repec/bocode/i/cigsales_single.dta
 fmwww.bc.edu/repec/bocode/i/iquantile.ado
 fmwww.bc.edu/repec/bocode/i/invgaussfit.hlp
 fmwww.bc.edu/repec/bocode/i/ivreg210.sthlp
-fmwww.bc.edu/repec/bocode/i/ivreg29.html
 fmwww.bc.edu/repec/bocode/i/ipfraking_report.ado
 fmwww.bc.edu/repec/bocode/i/ivendog.html
 fmwww.bc.edu/repec/bocode/i/insertat.ado
@@ -4322,7 +4320,6 @@ fmwww.bc.edu/repec/bocode/i/inequal7.html
 fmwww.bc.edu/repec/bocode/i/itpscore.ado
 fmwww.bc.edu/repec/bocode/i/i2ci.ado
 fmwww.bc.edu/repec/bocode/i/itpscore.pkg
-fmwww.bc.edu/repec/bocode/i/ivregress2.html
 fmwww.bc.edu/repec/bocode/i/influence_barchart.sthlp
 fmwww.bc.edu/repec/bocode/i/icc23.html
 fmwww.bc.edu/repec/bocode/i/irscharities.pkg
@@ -4338,6 +4335,7 @@ fmwww.bc.edu/repec/bocode/i/inlist2_example.do
 fmwww.bc.edu/repec/bocode/i/iscooesch.ado
 fmwww.bc.edu/repec/bocode/i/icp.sthlp
 fmwww.bc.edu/repec/bocode/i/iskolab.html
+fmwww.bc.edu/repec/bocode/i/ivreg2hfe.sthlp
 fmwww.bc.edu/repec/bocode/i/iscogen.pkg
 fmwww.bc.edu/repec/bocode/i/ineqdeco.html
 fmwww.bc.edu/repec/bocode/i/interflex_s4.dta

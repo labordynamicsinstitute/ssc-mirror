@@ -6,7 +6,7 @@
 {viewerjumpto "Description" "opendf write##description"}{...}
 {viewerjumpto "Remarks" "opendf write##remarks"}{...}
 {viewerjumpto "Examples" "opendf write##examples"}{...}
-help for {cmd:opendf write (opendf_write)}{right: version 2.0.0 (27 August 2024)}
+help for {cmd:opendf write (opendf_write)}{right: version 2.0.2 (28 August 2024)}
 {hline}
 
 {phang}
@@ -69,7 +69,7 @@ help for {cmd:opendf write (opendf_write)}{right: version 2.0.0 (27 August 2024)
 {phang}{cmd:. opendf write "out", languages("en")}{p_end}
 
 {phang}Saves the variables pid, cid, hid, syear, name, bap9001 from the dataset that is currently loaded in Stata with the labels and descriptions in english as zip-folder out.zip in the current working directory.{p_end}
-{phang}{cmd:. opendf write "out", languages("en") variables(pid cid hid syear name bap9001)}{p_end}
+{phang}{cmd:. opendf write "out.zip", languages("en") variables(pid cid hid syear name bap9001)}{p_end}
 
 
 {marker author}

@@ -16,7 +16,7 @@
 
 -----------------------------------------------------------------------------------*/
 *! opendf_read.ado: loads data from opendf format (zip) to Stata
-*! version 2.0.0 - 27 August 2024 - SSC Initial Release
+*! version 2.0.2 - 28 August 2024 - SSC Initial Release
 
 
 			

@@ -16,7 +16,7 @@
 
 -----------------------------------------------------------------------------------*/
 *! opendf.ado: provides programs to work with opendf data format
-*! version 2.0.0 - 27 August 2024 - SSC Initial Release
+*! version 2.0.2 - 28 August 2024 - SSC Initial Release
 
 program define opendf, rclass 
 	version 16

@@ -18,7 +18,9 @@ d instruments to improve the efficiency of the IV estimator.
 d Supplementing external instruments can also allow Sargan-Hansen
 d tests of the orthogonality conditions or overidentifying
 d restrictions to be performed, which would not be available in the
-d case	of exact identification by external instruments. 
+d case	of exact identification by external instruments. The
+d companion routine ivreg2hfe can be used to estimate the model
+d using panel data, which is then demeaned by panel unit. 
 d
 d KW: instrumental variables
 d KW: heteroskedasticity
@@ -26,7 +28,7 @@ d KW: identification
 d
 d Requires: Stata version 9 and ivreg2, ranktest from SSC
 d
-d Distribution-Date: 20240825
+d Distribution-Date: 20240828
 d
 d Author: Christopher F Baum, Boston College 
 d Support: email baum@@bc.edu
@@ -36,4 +38,6 @@ d Support: email m.e.schaffer@@hw.ac.uk
 d
 f ivreg2h.ado
 f ivreg2h.sthlp
+f ivreg2hfe.ado
+f ivreg2hfe.sthlp
 f ../u/UK12_baum.pdf

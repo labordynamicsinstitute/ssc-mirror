@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 8.1.0 27Jun2023}
+{* *! version 9.0.0 27Aug2024}
 {cmd:help summtab}
 {hline}
 
@@ -30,6 +30,7 @@
 {synopt :{cmd:bymiss}}Display missing values of the stratification variable as a separate category{p_end}
 {synopt :{cmd:bylabel}}Display the label of the stratification variable above the categories{p_end}
 {synopt :{cmd:total}}Display a total (overall) column{p_end}
+{synopt :{cmd:totalfirst}}Place the total column first rather than last; only works if {cmd:by} is specified{p_end}
 
 {syntab:Statistic Options}
 {synopt :{cmd:mean}}Display the means and standard deviations for continuous variables{p_end}
@@ -39,6 +40,7 @@
 {synopt :{cmd:pmiss}}Display the total number nonmissing and % missing for continuous variables on a separate row. May not be specified at the same time as pnonmiss.{p_end}
 {synopt :{cmd:rowperc}}Provide row percentages for categorical variables, rather than (the default) column percentages{p_end}
 {synopt :{cmd:catmisstype(}{it:string})}How to handle missing values for categorical variables.  Three options, detailed in the explanation section below.{p_end}
+{synopt :{cmd:totalncat}}Displays a denominator (N) for categorical variables{p_end}
 
 {syntab:P-Value Options}
 {synopt :{cmd:pval}}Compute and display p-values{p_end}
@@ -46,7 +48,7 @@
 {synopt :{cmd:catptype(}{it:integer})}Categorical p-value type{p_end}
 
 {syntab:Format Options}
-{synopt :{cmd:mnfmt(}{it:integer})}Number of digits to display after the decimal point for means and standard deviations; default is 2; maximum is 8{p_end}
+{synopt :{cmd:mnfmt(}{it:integer})}Number of digits to display after the decimal point for means and standard deviations; default is 1; maximum is 8{p_end}
 {synopt :{cmd:medfmt(}{it:integer})}Number of digits to display after the decimal point for medians and quartiles; default is 1; maximum is 8{p_end}
 {synopt :{cmd:rangefmt(}{it:integer})}Number of digits to display after the decimal point for minimums and maximums; default is 1; maximum is 8{p_end}
 {synopt :{cmd:pnonmissfmt(}{it:integer})}Number of digits to display after the decimal point for % non-missing; default is 1; maximum is 8{p_end}

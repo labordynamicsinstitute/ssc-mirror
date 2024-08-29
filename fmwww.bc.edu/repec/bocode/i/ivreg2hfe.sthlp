@@ -1,14 +1,14 @@
 {smcl}
-{* 29may2017}{...}
+{* 25aug2024}{...}
 {hline}
-help for {hi:ivreg2h}
+help for {hi:ivreg2hfe}
 {hline}
 
-{title:Instrumental variables estimation using heteroskedasticity-based instruments}
+{title:Instrumental variables fixed effects estimation using heteroskedasticity-based instruments}
 
 {title:Description}
 
-{p}{cmd:ivreg2h} estimates an instrumental variables regression model providing the
+{p}{cmd:ivreg2hfe} estimates an instrumental variables fixed effects regression model providing the
 option to generate instruments using Lewbel's (2012) method. This technique allows
 the identification of structural parameters in regression models with endogenous or 
 mismeasured regressors in the absence of traditional identifying information such as 
@@ -32,25 +32,29 @@ indicator. Under the same assumptions, the technique could be employed where bot
 and regressor are binary.
 
 {p}This implementation has been built using the existing {cmd:xtivreg2} (Schaffer) 
-and {cmd:ivreg2} (Baum, Schaffer, Stillman) routines. 
-As {cmd:ivreg2h} is a variant of {cmd:ivreg2}, essentially
+and {cmd:ivreg2} (Baum, Schaffer, Stillman) routines. It can be used on panel data using the 
+within transformation of a fixed effects model: see the {cmd:fe} option described below. 
+As {cmd:ivreg2hfe} is a variant of {cmd:ivreg2}, essentially
 all of the features and options of that program are available in {cmd:ivreg2h}. For that
 reason, you should consult {help ivreg2:help ivreg2} for details of the available options.
 
-{p}{cmd:ivreg2h} provides three additional options: {cmd:gen}, {cmd:gen(}{it:string}{cmd:[,replace])},  and {cmd:z()}.
+{p}{cmd:ivreg2hfe} provides three additional options: {cmd:gen}, {cmd:gen(}{it:string}{cmd:[,replace])}, and {cmd:z()}.
 If the {cmd:gen} option is given, the generated instruments are saved, with names built from
 the original variable names suffixed with {cmd:_g}. 
 If greater control over the naming
 of the generated instruments is desired, use the {cmd:gen(}{it:string}{cmd:[,replace]} option. 
 The {it:string} argument allows the specification of a stub, or prefix, for the generated variable names,
 which will also be suffixed with {cmd:_g}. 
-You may remove earlier instruments with those same names with the {cmd:replace} suboption.
+You can remove earlier instruments with those same names with the {cmd:replace} suboption.
 In order to use a subset of the included exogenous variables to construct instruments, include
 them in the {cmd:z()} option. Make sure that the variables listed here are in the list of included
-instruments. The current version of {cmd:ivreg2h} does not support fixed-effects models. They can
-be implemented by manually centering all variables in the regression.
+instruments. Time-series operators cannot be used in the {cmd:z()} option.
 
-{p}{cmd:ivreg2h} can be invoked to estimate a traditionally identified single equation, 
+{cmd:ivreg2hfe} requires that the data have been declared as a panel using {cmd:tsset}
+or {cmd:xtset}. In other cases, you should use {cmd:ivreg2h}, which can handle cross-section,
+time-series or pooled cross-section time-series data.
+
+{p}{cmd:ivreg2hfe} can be invoked to estimate a traditionally identified single equation, 
 or a single equation that--before augmentation with the generated instruments--fails the 
 order condition for identification:
 either ({cmd:a}) by having no excluded instruments, 
@@ -61,7 +65,7 @@ traditional identification.
 generated instruments, the program provides three sets of estimates: the traditional IV 
 estimates, estimates using only generated instruments, and estimates using both 
 generated and excluded instruments. 
-{cmd:ivreg2h} automatically produces a Hayashi "C" test of the excluded instruments' validity 
+{cmd:ivreg2hfe} automatically produces a Hayashi "C" test of the excluded instruments' validity 
 (equivalent to use of the {cmd:orthog} option in {cmd:ivreg2}). 
 The results of the third estimation (that including both generated and excluded instruments) are saved in the ereturn list. All three sets of estimates are saved, named {it:StdIV}, {it:GenInst} and {it:GenExtInst}, respectively.
 
@@ -72,8 +76,8 @@ generated instruments are displayed.
 If there are excluded instruments but too few to produce identification by 
 the order condition, the estimates using only generated instruments and those produced by 
 generated and excluded instruments will be displayed.
-Unlike {cmd:ivreg2} or {cmd:ivregress}, {cmd:ivreg2h} allows the syntax 
-{it:ivreg2h depvar exogvar (endogvar=)}, as after augmentation with the generated regressors, 
+Unlike {cmd:ivreg2} or {cmd:ivregress}, {cmd:ivreg2hfe} allows the syntax 
+{it:ivreg2hfe depvar exogvar (endogvar=)}, as after augmentation with the generated regressors, 
 the order condition for identification will be satisfied.
 The resulting estimates are saved in the 
 ereturn list and as a set of estimates named {it:GenInst} and, optionally, {it:GenExtInst}.
@@ -91,25 +95,14 @@ If i.i.d. errors are assumed, and a Sargan test is displayed in the standard out
  
 {title:Examples}
 
-{p 8 12}Example from Lewbel (2012). Note that centering of regressors is only used to match the results. 
 
-{p 8 12}{inp:.} {stata "ssc install center  ":ssc install center // (if needed)}
+{p 8 12}Example using panel data and HAC standard errors. 
 
-{p 8 12}{inp:.} {stata "ssc install bcuse  ":ssc install bcuse // (if needed)}
+{p 8 12}{inp:.} {stata "webuse grunfeld ": webuse grunfeld}
 
-{p 8 12}{inp:.} {stata "bcuse engeldat  ":bcuse engeldat}
+{p 8 12}{inp:.} {stata "ivreg2hfe invest L(1/2).kstock (mvalue=) ": ivreg2hfe invest L(1/2).kstock (mvalue=)}
 
-{p 8 12}{stata "center age-twocars, prefix(z_) " : . center age-twocars, prefix(z_)} 
-
-{p 8 12}{stata "ivreg2h foodshare z_* (lrtotexp=), small robust gen " : . ivreg2h foodshare z_* (lrtotexp=), small robust gen} 
-
-{p 8 12}{stata "ivreg2h foodshare z_* (lrtotexp = lrinc), small robust " : . ivreg2h foodshare z_* (lrtotexp = lrinc), small robust} 
-
-{p 8 12}{stata "ivreg2h foodshare z_* (lrtotexp = lrinc), small robust gmm2s " : . ivreg2h foodshare z_* (lrtotexp = lrinc), small robust gmm2s} 
-
-{p 8 12}{stata "ivreg2h foodshare z_* (lrtotexp =), small robust gmm2s z(z_age-z_agesp2)" : . ivreg2h foodshare z_* (lrtotexp = lrinc), small robust gmm2s  z(z_age-z_agesp2)} 
-
-
+{p 8 12}{inp:.} {stata "ivreg2hfe invest L(1/2).kstock (mvalue=L(1/4).mvalue), gen robust bw(2)": ivreg2hfe invest L(1/2).kstock (mvalue=L(1/4).mvalue), gen robust bw(2)}
 
 {title:Acknowledgements}
 
@@ -133,14 +126,13 @@ Economics Letters, 165, 10-12.
 
 {p 0 4} Baum CF, Lewbel, A, 2019. Advice on using Heteroscedasticity based identificatiom. Stata Journal, 19:4, 757-767. 
 
-
 {title:Citation}
 
-{p}{cmd:ivreg2h} is not an official Stata command. It is a free contribution
+{p}{cmd:ivreg2hfe} is not an official Stata command. It is a free contribution
 to the research community, like a paper. Please cite it as such: {p_end}
 
 {phang}Baum, CF, Schaffer, ME, 2012.
-ivreg2h: Stata module to perform instrumental variables estimation using heteroskedasticity-based instruments.
+ivreg2h: Stata module to perform instrumental variables fixed effects estimation using heteroskedasticity-based instruments.
 {browse "http://ideas.repec.org/c/boc/bocode/s457555.html":http://ideas.repec.org/c/boc/bocode/s457555.html}{p_end}
 
 {title:Authors}

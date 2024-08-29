@@ -1,6 +1,6 @@
-*! ivreg2h  1.1.07  28aug2024  cfb/mes
+*! ivreg2hfe  1.1.07  25aug2024  cfb/mes
 *! cloned from
-*! xtivreg2 1.0.13 28Aug2011
+*! ivreg2h    1.1.06 25aug2024
 *! author mes
 *! 1.0.4:  reinstate xtivreg2 code to fix up vnames
 *! 1.0.5:  deal with inadequate number excluded insts, logic driving est table
@@ -22,11 +22,11 @@
 *! 1.1.03: Add Z() option to select generated instruments
 *! 1.1.04: Disable execution in absence of included endogenous
 *! 1.1.05: correct refs to feest so that data are not centered in non-FE models, and 
-*!         gen insts can be recovered
+*!         gen insts can be recovered.
 *! 1.1.06: fe option disabled. Should be implemented in ivreg2hfe.
-*! 1.1.07: correct handling of excluded insts in genextinst code
+*! 1.1.07: centering before estimation now reversed by adding means to centered variables
 
-program define ivreg2h, eclass byable(recall)
+program define ivreg2hfe, eclass byable(recall)
 	version 9
 	local lversion 01.1.07
 // will be overridden by ivreg2 e(version) for ivreg2_p
@@ -57,8 +57,8 @@ program define ivreg2h, eclass byable(recall)
 // end replay()
 	else {
 
-		local cmdline "ivreg2h `*'"
-// disable fe
+		local cmdline "ivreg2hfe `*'"
+
 		syntax [anything(name=0)] [if] [in] [aw fw pw iw/] , [ /* FE   fd
 			*/	Ivar(varname) Tvar(varname) first ffirst rf /*
 			*/	savefirst SAVEFPrefix(name) saverf SAVERFPrefix(name) CLuster(varlist)	/*
@@ -66,6 +66,7 @@ program define ivreg2h, eclass byable(recall)
 			*/	BW(string) SKIPCOLL														/*
 			*/	GEN1 GEN2(string) NOOUTput Z(string)									/*
 			*/	* ]
+
 
 // ms - `gen'=1 if ivreg2h leaves behind generated instruments, =0 if not
 		local gen = ("`gen1'`gen2'"~="")
@@ -84,9 +85,8 @@ program define ivreg2h, eclass byable(recall)
 		}
 // validate fe option: require panel
 // cfb 1.1.05: null string if !fe!
-// cfb 1.1.06: disable fe option
 		loc feest ""
-/*
+		loc fe fe
 		capt xtset
 		if "`fe'" == "fe" & _rc>0 {
 			xtset
@@ -94,7 +94,7 @@ program define ivreg2h, eclass byable(recall)
 		}
 // macro saved if not ""
 		local xtmodel "`fe'"
-*/						
+						
 		local ivreg2_cmd "ivreg2"
 		tempname regest
 		capture _estimates hold `regest', restore
@@ -145,11 +145,12 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 			loc qnoout nooutput
 			marksample touse
 			markout `touse' `lhs' `inexog' `exexog' `endo' `cluster' /* `tvar' */, strok
+			tempvar touseemu
+			qui g `touseemu' = `touse'
 			tsrevar `lhs', substitute
 			local lhs_t "`r(varlist)'"
 			tsrevar `inexog', substitute
 			local inexog_t "`r(varlist)'"
-// di in r "inexog_t `inexog_t'"
 			loc n_inex : word count `inexog_t'
 // 1.1.03
 			if "`z'" == "" {
@@ -158,12 +159,10 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 // 1.1.06
 			loc zts `z'
 			local zts : subinstr local zts "." "_", all	
-// di in r "z: `z'"
-// di in r "`zts: `zts'"
 			tsrevar `z', substitute
 //			local z_t "`r(varlist)'"
 			local zlist_t "`r(varlist)'"
-// di in r "zlist_t: `zlist_t'"
+// di in r "@@ zt `z_t'"
 // di in r "n_inex `n_inex'" _n
 			tsrevar `endo', substitute
 			local endo_t "`r(varlist)'"
@@ -187,15 +186,16 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 			local dofminus 0
 			
 // begin FE code
-/*			
+			
 			if "`fe'" == "fe" {
 				qui xtset
 				loc pv `r(panelvar)'
-
-// di in r "lhs: `lhs_t'"
-// di in r "inexog: `inexog_t'"
-// di in r "endo: `endo_t'"
-// di in r "exexog: `exexog_t'"
+/*
+ di in r "lhs: `lhs_t'"
+ di in r "inexog_t: `inexog_t'"
+ di in r "endo: `endo_t'"
+ di in r "exexog: `exexog_t'"
+*/
 				su `lhs_t' `endo_t' `exexog_t' `inexog_t', mean
 
 				qui reg `lhs_t' `endo_t' `exexog_t' `inexog_t' if `touse'
@@ -206,13 +206,17 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 				loc dofminus = `npan'
 				loc nocons "nocons"
 
-// casewise option in 1.0.9 (Jan2014) ensures that centering is done on the regression sample, and other
-// observations are set to missing
-di as err "pv `pv'"
-				qui by `pv': center `lhs_t' `endo_t' `exexog_t' `inexog_t' if e(sample), casewise inplace 
+// casewise option in 1.0.9 (Jan2014) ensures that centering is done on the regression sample, 
+// and other observations are set to missing
+// di as err "pv `pv'"
+// su if `touse'
+				qui by `pv': center `lhs_t' `endo_t' `exexog_t' `inexog_t' ///
+				if e(sample), casewise means(EMU) double inplace 
+// di as err "after center"
+// su if `touse'
 				loc feest "Fixed Effects by(`pv'), `npan' groups"
 			}
-*/		
+			
 // end FE code
 			
 // preserve here, prior to first sort
@@ -231,8 +235,10 @@ di as err "pv `pv'"
 			cap est drop StdIV
 		} 
 		else {
-			
+
+// ---------------------------------------------------------------------------------------	
 // COMPUTE STANDARD IV RESULTS IF EQUATION IS IDENTIFIED ---------------------------------
+// ---------------------------------------------------------------------------------------	
 
 			if "`nooutput'"=="" {
 				di as res _n "Standard IV Results" _n "`feest'"
@@ -361,17 +367,12 @@ di as err "pv `pv'"
 // ms
 // For later use - any collinears or duplicates in standard IV estimation
 				local collin_dups	"`l_collin' `l_dups'"
-				
-// cfb
-// di as err "feest `feest'"
-/*
-				if "`feest'" != "" {
-					di as err _n "Warning: variables have been centered"
-					}
-*/
-					}	// end standard IV block
-			
+
+ 		}	// end standard IV block
+	
+// ---------------------------------------------------------------------------------------		
 // COMPUTE RESULTS FOR GENERATED INSTRUMENTS ONLY ----------------------------------------
+// ---------------------------------------------------------------------------------------	
 
 // Even if no excluded insts, must generate insts						
 // Lewbel hetero instruments, based only on centered included exog in FSR
@@ -401,13 +402,12 @@ di as err "pv `pv'"
 // cfb 1.1.05: move zlist_t into zlist
                     loc zlist `zlist_t'
 				}
-*/				
-//  di as err "zlist_t `zlist_t'"
+*/	
+				
+// di as err "zlist `zlist'"
+// di as err "zlist_t `zlist_t'"
 
-// ******
 // 1.1.06: must grab original z content to rename generated instruments if TS ops are used
-// ******
-
 //				loc n_inexog: word count `inexog_t'
 
 // 1.1.06: refer to zlist_t
@@ -423,8 +423,6 @@ di as err "pv `pv'"
 				
 				loc i 0		
 // di as err "zlist `zlist'"
-// di as err "zlist_t `zlist_t'"
-// di as err "inexog_t `inexog_t'"
 				foreach e of local endo_t {
 // 1.1.06: revert to inexog_t tempvars
 					qui reg `e' `inexog_t' if `touse'
@@ -447,15 +445,14 @@ di as err "pv `pv'"
 						su `v' if `touse', mean
 						qui g double `z_`e'_`v'_eps' = (`v' - r(mean)) * ``e'_eps' if `touse'
 						loc geninst_t "`geninst_t' `z_`e'_`v'_eps'"
-// 1.0.6: pull name from zts
 						loc geninst "`geninst' `en'_`vn'_g"
 						local j = `j' + 1 
 					}
 				}
 
 //  di "geninst and geninst_t (immediately after creation):"
-//  di as err "`geninst'"
-//  di as err "`geninst_t'"
+//   di as err "`geninst'"
+//   di as err "`geninst_t'"
 
 // even though residuals are uncorrelated with the regressors used to generate them, 
 // the product of residuals and the (centered) regressors are non-null
@@ -602,18 +599,13 @@ di as err "pv `pv'"
 				}
 // ms
 // undo hack
-				ereturn local cmd "ivreg2h"
+				ereturn local cmd "ivreg2hfe"
 //		su `geninst' if e(sample)
 //		corr `geninst' `inexog_t' if e(sample)
 
-// cfb
-// di as err "feest `feest'"
-/*
-				if "`feest'" != "" {
-					di as err _n "Warning: variables have been centered"
-					}
-*/				
+// ---------------------------------------------------------------------------------------				
 // COMPUTE RESULTS FOR GENERATED AND EXCLUDED INSTRUMENTS --------------------------------
+// ---------------------------------------------------------------------------------------	
 				
 // Lewbel hetero instruments, based on centered included exog + excluded exog in FSR
 // Z() overrides list in inexog, expanded into z_t
@@ -621,20 +613,18 @@ di as err "pv `pv'"
 		if "`exexog_t'" != "" {
                 local l_inexog    "`e(inexog)'"
                 local l_inexog : subinstr local l_inexog "." "_", all
-
-// di as err _n "exexog_t: `exexog_t'"
-// 1.1.06 handled above, disable                
+                
+/* 1.1.06: handled above, disable 
 // if Z() specified, override; should check to see that Z is subset of X 
-/*
 				loc zlist `inexog_t'
 				if "`z'" != "" {
 					loc zlist `z_t'
 					loc zlist_t `z'
 					local zlist_t : subinstr local z "." "_", all
+// cfb 1.1.05: move zlist_t into zlist
+                    loc zlist `zlist_t'
 				}
-*/
-// di as err ">>>>> `zlist'"
-
+*/	
 // 1.1.06: refer to zlist_t
 //				loc n_inexog: word count `zlist'
 				loc n_inexog: word count `zlist_t'
@@ -669,10 +659,10 @@ di as err "pv `pv'"
 						loc geninst_t "`geninst_t' `z_`e'_`v'_eps'"
 // 1.0.6: pull name from zts
 						loc geninst "`geninst' `en'_`vn'_g"
-						local j = `j' + 1 
+						local j = `j'+1 
 					}
 				}
-				
+
 // MS: if standard IV estimation identified, and orthog option empty,
 // automatically report test of orthogonality of generated IVs
 		if "exexog_t" ~= "" & "`orthog'"=="" {
@@ -688,7 +678,7 @@ di as err "pv `pv'"
 //			di as res "`orthogti' Instruments created from Z:" _n "`inexog'"
 			di as res "`orthogti' Instruments created from Z:"_n "`z'"
 		}
-//       di as err  _n  "geninst_t `geninst_t'"
+//         di as err    "`geninst_t'"
 //         di as err _n "`geninst'"
 // ms
 // changed `qq'(=qui) to nooutput option so that collinearity and duplicates messages reported
@@ -700,6 +690,8 @@ di as err "pv `pv'"
 						redundant(`redundant_t') partial(`partial_t') tvar(`tvar') bw(`bw') ///
 						`qnoout' `options'
 
+//						set trace on
+						
 // Replace any time series locals with original time series names
 
 // Now fix main results
@@ -718,7 +710,6 @@ di as err "pv `pv'"
                         local l_vnames_t "`lhs_t' `inexog_t' `endo_t' `exexog_t' `geninst_t'" 
 // Macros to be fixed
                         local l_insts     "`e(insts)'"
-// di as err _n "l_insts: `l_insts'"
                         local l_inexog    "`e(inexog)'"
                         local l_instd     "`e(instd)'"
                         local l_exexog    "`e(exexog)'"
@@ -762,8 +753,6 @@ di as err "pv `pv'"
                                 local l_exexog1 : subinstr local l_exexog1   "`vn_t'" "`vn'"
                                 local l_partial1: subinstr local l_partial1  "`vn_t'" "`vn'"
                         }
-						
-
                         mat colnames `b'       =`l_cnames'
                         mat colnames `V'       =`l_cnames'
                         mat rownames `V'       =`l_cnames'
@@ -818,16 +807,25 @@ di as err "pv `pv'"
 				}
 // ms
 // undo hack
-				ereturn local cmd "ivreg2h"
+				ereturn local cmd "ivreg2hfe"
 		}	// end block for std+generated IVs
-		
-// cfb
-// di as err "feest `feest'"
-/*
-				if "`feest'" != "" {
-					di as err _n "Warning: variables have been centered"
-					}
-*/
+
+
+// 1.1.07: add means back to variables that have been centered
+// su if `touseemu'
+qui ds EMU*
+foreach w in `r(varlist)' {
+//		sca `undsc' = strpos("`w'","_")
+		if strpos("`w'","_") == 0 {
+//		if `undsc'==0 {
+			local ww : subinstr local w "EMU" ""
+//			qui replace `ww' = `ww' + `w' if `touse'
+			qui replace `ww' = `ww' + `w' if `touseemu'
+		}
+}
+// su if `touseemu'
+drop EMU*
+
 // REPORT OUTPUT
 
 //			if "`exexog_t'" == "" {
@@ -845,11 +843,7 @@ di as err "pv `pv'"
 				}
 //			}
 
-// cfb
-//				if "`feest'" != "" {
-//					di as err _n "Warning: variables have been centered"
-//					}
-			
+					
 // ms - if requested, rename and leave behind generated instruments
 		if `gen' {
 			loc repl
@@ -900,7 +894,7 @@ di as res "Vars dropped:" _c
 		}
 * End estimation block
   }
-// cfb ivreg2h
+// cfb ivreg2hfe
 
 end
 
@@ -1019,4 +1013,58 @@ end
 
 exit
 
+/* dead code, replaced by parse_iv
 
+
+		local n 0
+
+		gettoken lhs 0 : 0, parse(" ,[") match(paren)
+		IsStop `lhs'
+		if `s(stop)' {
+			error 198
+		}
+		while `s(stop)'==0 {
+			if "`paren'"=="(" {
+				local n = `n' + 1
+				if `n'>1 { 
+capture noi error 198 
+di in red `"syntax is "(all instrumented variables = instrument variables)""'
+exit 198
+				}
+				gettoken p lhs : lhs, parse(" =")
+				while "`p'"!="=" {
+					if "`p'"=="" {
+capture noi error 198 
+di in red `"syntax is "(all instrumented variables = instrument variables)""'
+di in red `"the equal sign "=" is required"'
+exit 198 
+					}
+					local endo `endo' `p'
+					gettoken p lhs : lhs, parse(" =")
+				}
+* To enable Cragg HOLS estimator, allow for empty endo list
+				if "`endo'" != "" {
+					tsunab endo : `endo'
+				}
+* To enable OLS estimator with (=) syntax, allow for empty exexog list
+				if "`lhs'" != "" {
+					tsunab exexog : `lhs'
+				}
+			}
+			else {
+				local inexog `inexog' `lhs'
+			}
+			gettoken lhs 0 : 0, parse(" ,[") match(paren)
+			IsStop `lhs'
+		}
+		local 0 `"`lhs' `0'"'
+
+		tsunab inexog : `inexog'
+		tokenize `inexog'
+		local lhs "`1'"
+		local 1 " " 
+		local inexog `*'
+		
+		di as err "inexog: `inexog'"
+		di as err "exexog: `exexog'"
+ */

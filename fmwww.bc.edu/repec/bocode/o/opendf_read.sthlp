@@ -6,7 +6,7 @@
 {viewerjumpto "Description" "opendf read##description"}{...}
 {viewerjumpto "Remarks" "opendf read##remarks"}{...}
 {viewerjumpto "Examples" "opendf read##examples"}{...}
-help for  {cmd:opendf read (opendf_read)}{right: version 2.0.0 (27 August 2024)}
+help for  {cmd:opendf read (opendf_read)}{right: version 2.0.2 (28 August 2024)}
 {hline}
 
 {phang}
@@ -76,15 +76,15 @@ If option {opt replace} is specified, a former saved file will be overwritten.
 {marker examples}
 {title:Examples}
 
-{phang}Read the opendf-file testdata.zip from "https://thartl-diw.github.io/opendf/testdata.zip" into Stata. The clear ensures, that the old dataset is removed from Stata cache.{p_end}
+{phang}Read the opendf-file testdata.zip from "https://opendataformat.github.io/stata-package-opendf/example_data/soep_data.zip" into Stata. The clear ensures, that the old dataset is removed from Stata cache.{p_end}
 {phang}With the save()-option the dataset is saved as testdata.dta in the working directory. If it already exists, it testdata.dta is replaced, verbose option is set on.{p_end}
-{phang}{cmd:. opendf read "https://thartl-diw.github.io/opendf/testdata.zip", clear save("testdata") replace verbose}{p_end}
+{phang}{cmd:. opendf read "https://opendataformat.github.io/stata-package-opendf/example_data/soep_data.zip", clear save("testdata") replace verbose}{p_end}
 
-{phang}Read the opendf-file testdata.zip from "https://thartl-diw.github.io/opendf/testdata.zip" into Stata. {opt clear} ensures, that the old dataset is removed from Stata cache.{p_end}
-{phang}{cmd:. opendf read "https://thartl-diw.github.io/opendf/testdata.zip", clear}{p_end}
+{phang}Read the opendf-file testdata.zip from "https://opendataformat.github.io/stata-package-opendf/example_data/soep_data.zip" into Stata. {opt clear} ensures, that the old dataset is removed from Stata cache.{p_end}
+{phang}{cmd:. opendf read "https://opendataformat.github.io/stata-package-opendf/example_data/soep_data.zip", clear}{p_end}
 
-{phang}Read the first 10 lines of the opendf-file testdata.zip from "https://thartl-diw.github.io/opendf/testdata.zip" into Stata. Since the first line is also the header, the range has to be set to 11. {p_end}
-{phang}{cmd:. opendf read "https://thartl-diw.github.io/opendf/testdata.zip", rowrange(:11)}{p_end}
+{phang}Read the first 10 lines of the opendf-file testdata.zip from "https://opendataformat.github.io/stata-package-opendf/example_data/soep_data.zip" into Stata. Since the first line is also the header, the range has to be set to 11. {p_end}
+{phang}{cmd:. opendf read "https://opendataformat.github.io/stata-package-opendf/example_data/soep_data.zip", rowrange(:11)}{p_end}
 
 {marker author}
 {title:Author}

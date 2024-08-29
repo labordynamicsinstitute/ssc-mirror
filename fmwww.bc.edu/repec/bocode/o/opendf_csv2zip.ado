@@ -15,7 +15,7 @@
 
 -----------------------------------------------------------------------------------*/
 *! opendf_csv2zip.ado: builds opendf_zip-file containing data.csv and metadata.xml from 4 csvs
-*! version 2.0.0 - 27 August 2024 - SSC Initial Release
+*! version 2.0.2 - 28 August 2024 - SSC Initial Release
 
 program define opendf_csv2zip 
 	version 16
