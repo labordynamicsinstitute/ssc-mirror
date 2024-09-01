@@ -1,0 +1,36 @@
+d 'XTDPDSERIAL': module to perform panel data serial correlation tests
+d
+d    xtdpdserial implements serial correlation tests for linear
+d panel data models that fall into the framework of the   
+d portmanteau test developed by Jochmans (2020).  Special cases are
+d the Arellano and Bond (1991) and Yamagata (2008) tests,    and
+d further variants proposed by Kripfganz, Demetrescu, and
+d Hosseinkouchack (2024) designed to improve the power of the	
+d test.    By default, these are postestimation tests for serial
+d correlation in the idiosyncratic error component e_it from a
+d linear    error components model with combined error term u_i +
+d e_it, where u_i is the group-specific error component.  The test 
+d   accounts for the estimation error in the regression residuals.
+d If varname is specified, the command applies a standalone    test
+d to the specified variable instead of residuals.    Applied to
+d regression residuals, these tests allow the independent variables
+d in the regression model to be strictly    exogenous,
+d predetermined, or endogenous, as long as the estimator is
+d consistent under the null hypothesis of serially    uncorrelated
+d errors. The tests are robust to heteroskedasticity by
+d construction. 
+d
+d KW:  DPD
+d KW: serial correlation
+d KW: panel data
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20240831
+d
+d Author:  Sebastian Kripfganz, University of Exeter Business School
+d Support: email S.Kripfganz@@exeter.ac.uk
+d
+f xtdpdserial.ado
+f xtdpdserial.sthlp
+f ../l/lxtdpdserial.mlib

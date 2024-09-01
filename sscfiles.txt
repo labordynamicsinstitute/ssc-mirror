@@ -7241,6 +7241,7 @@ fmwww.bc.edu/repec/bocode/l/lkinkyreg.mlib
 fmwww.bc.edu/repec/bocode/l/longplot.html
 fmwww.bc.edu/repec/bocode/l/lrdrop1.ado
 fmwww.bc.edu/repec/bocode/l/lmngryxt.dta
+fmwww.bc.edu/repec/bocode/l/lxtdpdserial.mlib
 fmwww.bc.edu/repec/bocode/l/logittorisk.ado
 fmwww.bc.edu/repec/bocode/l/labbe.sthlp
 fmwww.bc.edu/repec/bocode/l/lportheory.mlib
@@ -18634,6 +18635,7 @@ fmwww.bc.edu/repec/bocode/x/xtitsa_example_single.dta
 fmwww.bc.edu/repec/bocode/x/xbrcspline.html
 fmwww.bc.edu/repec/bocode/x/xtidt.html
 fmwww.bc.edu/repec/bocode/x/xtmrho.ado
+fmwww.bc.edu/repec/bocode/x/xtdpdserial.ado
 fmwww.bc.edu/repec/bocode/x/xtidt.dlg
 fmwww.bc.edu/repec/bocode/x/xcontract.hlp
 fmwww.bc.edu/repec/bocode/x/xtwest.pkg
@@ -18774,6 +18776,7 @@ fmwww.bc.edu/repec/bocode/x/xtcsi.sthlp
 fmwww.bc.edu/repec/bocode/x/xthst.pkg
 fmwww.bc.edu/repec/bocode/x/xttest2.pkg
 fmwww.bc.edu/repec/bocode/x/xbalance.pkg
+fmwww.bc.edu/repec/bocode/x/xtdpdserial.sthlp
 fmwww.bc.edu/repec/bocode/x/xsmle.pkg
 fmwww.bc.edu/repec/bocode/x/xls2stata.sthlp
 fmwww.bc.edu/repec/bocode/x/xtsemipar.sthlp
@@ -19059,6 +19062,7 @@ fmwww.bc.edu/repec/bocode/x/xrewide.ado
 fmwww.bc.edu/repec/bocode/x/xi3.ado
 fmwww.bc.edu/repec/bocode/x/xtgps.pkg
 fmwww.bc.edu/repec/bocode/x/xtmg.pkg
+fmwww.bc.edu/repec/bocode/x/xtdpdserial.pkg
 fmwww.bc.edu/repec/bocode/x/xglm.ado
 fmwww.bc.edu/repec/bocode/x/xtnumfac.pkg
 fmwww.bc.edu/repec/bocode/x/xtdpdml.ado
@@ -23208,6 +23212,7 @@ fmwww.bc.edu/repec/bocode/v/v2seats.hlp
 fmwww.bc.edu/repec/bocode/v/varlabdef.html
 fmwww.bc.edu/repec/bocode/v/vt_xtoy.ado
 fmwww.bc.edu/repec/bocode/v/validscale.ado
+fmwww.bc.edu/repec/bocode/v/vreverse9.ado
 fmwww.bc.edu/repec/bocode/v/var_nr_irf.ado
 fmwww.bc.edu/repec/bocode/v/validly.pkg
 fmwww.bc.edu/repec/bocode/v/vmerge.pkg
@@ -23470,6 +23475,7 @@ fmwww.bc.edu/repec/bocode/v/varlab.html
 fmwww.bc.edu/repec/bocode/v/vecar6.ado
 fmwww.bc.edu/repec/bocode/v/vincenty.ado
 fmwww.bc.edu/repec/bocode/v/vclose.hlp
+fmwww.bc.edu/repec/bocode/v/vreverse9.sthlp
 fmwww.bc.edu/repec/bocode/v/vaf.sthlp
 fmwww.bc.edu/repec/bocode/v/venice.dta
 fmwww.bc.edu/repec/bocode/v/vce_mcov.sthlp
@@ -23529,6 +23535,7 @@ fmwww.bc.edu/repec/bocode/v/vclose.ado
 fmwww.bc.edu/repec/bocode/v/nr_set.sthlp
 fmwww.bc.edu/repec/bocode/v/var_nr_mata_functions.sthlp
 fmwww.bc.edu/repec/bocode/v/validarcae.ado
+fmwww.bc.edu/repec/bocode/v/vreverse9.pkg
 fmwww.bc.edu/repec/bocode/v/vmerge.sthlp
 fmwww.bc.edu/repec/bocode/v/vallabdef.ado
 fmwww.bc.edu/repec/bocode/v/viewresults.ado

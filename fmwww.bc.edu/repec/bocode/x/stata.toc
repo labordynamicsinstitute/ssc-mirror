@@ -55,6 +55,7 @@ p xtdpdbc module to perform bias-corrected estimation of linear dynamic panel da
 p xtdpdgmm module to perform generalized method of moments estimation of linear dynamic panel data models
 p xtdpdml module to estimate Dynamic Panel Data Models using Maximum Likelihood
 p xtdpdqml module to perform quasi-maximum likelihood linear dynamic panel data estimation
+p xtdpdserial module to perform panel data serial correlation tests
 p xtendothresdpd module to estimate a Dynamic Panel Data Threshold Effects Model with Endogenous Regressors
 p xteurostat module to import data from Eurostat in panel data structure
 p xtevent module to estimate and visualize linear panel event-study models

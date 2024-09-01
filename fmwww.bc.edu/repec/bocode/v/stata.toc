@@ -51,6 +51,7 @@ p vorter module to reorder variables in dataset based on sorted values
 p vplplot modules to generate paired data plots
 p vratio module to compute variation ratio and proportion of maximum heterogeneity (measures of dispersion) for categorical variables
 p vreverse module to reverse existing categorical variable
+p vreverse9 module to reverse existing categorical variable
 p vsave module to save Stata dataset under version control
 p vselect module to perform linear regression variable selection
 p vtokenize module to split a variable into its tokens 
