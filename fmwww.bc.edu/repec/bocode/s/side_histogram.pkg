@@ -1,0 +1,20 @@
+d 'SIDE_HISTOGRAM': module to plot side by side histograms 
+d
+d  side_histogram draws side-by-side histograms for a numeric
+d variable and precisely two groups of a grouping variable. Suppose
+d the bin width is w.  Then histogram bars for each bin and group
+d are by default placed side by side, each with bar width w/2. 
+d
+d KW: graphics
+d KW: distributions
+d KW: histograms
+d
+d Requires: Stata version 8.2
+d
+d Distribution-Date: 20240903
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f side_histogram.ado
+f side_histogram.sthlp

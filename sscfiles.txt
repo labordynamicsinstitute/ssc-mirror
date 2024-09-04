@@ -1340,6 +1340,7 @@ fmwww.bc.edu/repec/bocode/s/sptobitsdm.pkg
 fmwww.bc.edu/repec/bocode/s/sknor.pkg
 fmwww.bc.edu/repec/bocode/s/shuffle.html
 fmwww.bc.edu/repec/bocode/s/sptobitsarxt1.ado
+fmwww.bc.edu/repec/bocode/s/side_histogram.sthlp
 fmwww.bc.edu/repec/bocode/s/soepuse.pkg
 fmwww.bc.edu/repec/bocode/s/spmstardh2.ado
 fmwww.bc.edu/repec/bocode/s/stickyprices.dta
@@ -2406,6 +2407,7 @@ fmwww.bc.edu/repec/bocode/s/smhsiao.ado
 fmwww.bc.edu/repec/bocode/s/summout.hlp
 fmwww.bc.edu/repec/bocode/s/statflow.ado
 fmwww.bc.edu/repec/bocode/s/statsbyfast.hlp
+fmwww.bc.edu/repec/bocode/s/side_histogram.ado
 fmwww.bc.edu/repec/bocode/s/shp2dta.hlp
 fmwww.bc.edu/repec/bocode/s/semipar.ado
 fmwww.bc.edu/repec/bocode/s/strmst2.ado
@@ -2962,6 +2964,7 @@ fmwww.bc.edu/repec/bocode/s/shownear.hlp
 fmwww.bc.edu/repec/bocode/s/sccsdta intuss.dta
 fmwww.bc.edu/repec/bocode/s/single.plugin.32
 fmwww.bc.edu/repec/bocode/s/spregsarxt4.ado
+fmwww.bc.edu/repec/bocode/s/side_histogram.pkg
 fmwww.bc.edu/repec/bocode/s/spmstard.do
 fmwww.bc.edu/repec/bocode/s/samplepps.html
 fmwww.bc.edu/repec/bocode/s/staticfc.sthlp

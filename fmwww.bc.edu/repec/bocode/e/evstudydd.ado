@@ -1,5 +1,5 @@
 *! evstudydd: estimate event studies in D-i-D settings using the reghdfe or ppmlhdfe packages. It requires reghdfe and ppmlhdfe to be installed.
-*! Version: August, 2024
+*! Version: September, 2024
 *! Authors: Adrien Matray, Pablo E. Rodriguez
 
 qui{
@@ -50,7 +50,7 @@ version 13.0
     local after `2'
     
     * Check if `shockperiod` is a variable or a number
-    capture confirm variable `shockperiod'
+    capture confirm variable `shocktime'
     if _rc == 0 {
         local is_var = 1
     }

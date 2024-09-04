@@ -45,11 +45,8 @@ The variable should be time invariant within each unit. The interaction of {it: 
 {p_end}
 
 
-
 {phang}{opt period(string)}: Specifies the window to use for the event study. It should contain two values (e.g., 3 and 3) that will determine the time t-j and t+k of the event study (where t is the time of the shock as specified by the option {cmd:shocktime(string)}). The outcome will be an event study that produces j+1 coefficients in the pre-shock period and k+1 coefficients in the post-shock period. The extra time before and after the shock ensures that if the working sample has a longer time span around the shock than the window specified, the event study will include a dummy ``all the years prior to t-j'' and a dummy ``all the years after t+k.'' {cmd:period} is a required option.
 {p_end}
-
-
 
 
 {phang}{opt cluster(string)}: Specifies the level at which standard errors should be clustered. This is a required option.
@@ -59,14 +56,18 @@ The variable should be time invariant within each unit. The interaction of {it: 
 {phang}{opt fe(string)}: Specifies the variables that will be included as fixed effects (FE) in the absorb() part of reghdfe or ppmlhdfe. This is a required option. Let id be the variable identifying units (treated or not) and t the time period variable. Writing  {cmd:fe(id t)} yields the standard D-i-D (two-way FE) model. You can include fewer FEs: for example, only period FE by writing {cmd:fe(t)}. You can also include more FEs, or interactions: for example, assume that all units id can be assigned to a variable called geography, then you can write {cmd:fe(id geography#t)}.
 {p_end}
 
+
 {phang}{opt name(string)}: Specifies the name of the file where the point estimates, standard errors, and time indicators are saved after the event study is conducted. The name of the variables are B for point estimates, SE for standard errors, and time for time indicators. This is a required option. You can include the .dta extension in the command, but if not, the command will automatically add it. Thus, writing {cmd:name("example.dta")} and {cmd:name("example")} is equivalent. You can specify a full path. For example: {cmd:name("/Users/janedoe/project/example")}. You can also use globals. For example, after defining {cmd:global folder "/Users/janedoe/project"}, you can write {cmd:name("$folder/example")}.
 {p_end}
+
 
 {phang}{opt weight(name)}: Specifies the variable that will be used to weight the regression. This is not a required option. If not specified, the command automatically assumes that the regression is equally weighted. Weights can only be used with the reghdfe package.
 {p_end}
 
+
 {phang}{opt controls(string)}: List of continuous time-varying controls. This is not a required option. 
 {p_end}
+
 
 {phang}{opt estimator(string)}: Estimator used in the regression. It is either the reghdfe or the ppmlhdfe package. Default is reghdfe. Thus, if not specified, the command uses reghdfe. Writing {cmd:estimator(reghdfe)} or {cmd:estimator(ols)} uses the reghdfe package. Writing {cmd:estimator(ppmlhdfe)} or {cmd:estimator(poisson)} uses the ppmlhdfe package. This is not a required option. 
 {p_end}
@@ -77,32 +78,35 @@ The variable should be time invariant within each unit. The interaction of {it: 
 {title:Example}
 
 
- {phang}{bf:1)} D-i-D estimation for three periods before and after the shock. The outcome is the variable Y. The variable for the calendar period is year. Treated units are identified by the variable treat. The time of the shock is identified by the variable yrshock. Standard errors are clustered at the id level. Units and year fixed effects are included. The output file is called example.dta. Here the packaged used is reghdfe because the option estimator is not specified. The regression is equally weighted because the option weights is not specified. 
+{phang}{bf:1)} D-i-D estimation for three periods before and after the shock. The outcome is the variable Y. The variable for the calendar period is year. Treated units are identified by the variable treat. The time of the shock is identified by the variable yrshock. Standard errors are clustered at the id level. Units and year fixed effects are included. The output file is called example.dta. Here the packaged used is reghdfe because the option estimator is not specified. The regression is equally weighted because the option weights is not specified. 
 {p_end}
 
-{cmd:evstudydd Y year, treated(treat) shocktime(yrshock) period(3 3) cluster(id) fe(id year) name("example")}
+	{cmd:evstudydd Y year, treated(treat) shocktime(yrshock) period(3 3) cluster(id) fe(id year) name("example")}
 
 
-  {phang}{bf:2)} Same but here the regression is weighted by the variable w. 
+{phang}{bf:2)} Same but here the regression is weighted by the variable w. 
 {p_end}
 
-{cmd:evstudydd Y year, treated(treat) shocktime(yrshock) period(3 3) cluster(id) fe(id year) name("example") weight(w)}
+	{cmd:evstudydd Y year, treated(treat) shocktime(yrshock) period(3 3) cluster(id) fe(id year) name("example") weight(w)}
 
- {phang}{bf:3)} Same but include time-varying controls. The age of the unit, for example. 
+
+{phang}{bf:3)} Same but include time-varying controls. The age of the unit, for example. 
 {p_end}
 
-{cmd:evstudydd Y year, treated(treat) shocktime(yrshock) period(3 3) cluster(id) fe(id year) name("example") weight(w) controls(age)}
+	{cmd:evstudydd Y year, treated(treat) shocktime(yrshock) period(3 3) cluster(id) fe(id year) name("example") weight(w) controls(age)}
 
-  {phang}{bf:4)} Assume that all units id can be assigned to a variable called geography. D-i-D estimation for 6 periods before and  5 after the shock. The outcome is the variable Y. The variable for the calendar period is t. Treated units are identified by the variable treat. The time of the shock is identified by the variable tshock. Standard errors are clustered at the id level. Unit and geography by year fixed effects are included. The output file is called example.dta. Here the regression is equally weighted because the option weights is not specified.
+
+{phang}{bf:4)} Assume that all units id can be assigned to a variable called geography. D-i-D estimation for 6 periods before and  5 after the shock. The outcome is the variable Y. The variable for the calendar period is t. Treated units are identified by the variable treat. The time of the shock is identified by the variable tshock. Standard errors are clustered at the id level. Unit and geography by year fixed effects are included. The output file is called example.dta. Here the regression is equally weighted because the option weights is not specified.
 {p_end}
 	
         {cmd:evstudydd Y t, treated(treat) shocktime(tshock) period(6 5) cluster(id) fe(id geography#year) name("example")}
 
 
- {phang}{bf:5)} Same but use the ppmlhdfe package. Here the regression is equally weighted because the option estimator(ppmlhdfe) is used (remember that ppmlhdfe does not accept analytical weights). Writing estimator(ppmlhdfe) or estimator(poisson) here is equivalent. 
+{phang}{bf:5)} Same but use the ppmlhdfe package. Here the regression is equally weighted because the option estimator(ppmlhdfe) is used (remember that ppmlhdfe does not accept analytical weights). Writing estimator(ppmlhdfe) or estimator(poisson) here is equivalent. 
 {p_end}
 	
         {cmd:evstudydd Y t, treated(treat) shocktime(tshock) period(6 5) cluster(id) fe(id geography#year) name("example") estimator(ppmlhdfe)}
+
 
 {phang}{bf:6)} Same but specify the reghdfe package instead. Here the regression is equally weighted because the option weights is not specified. Writing estimator(reghdfe) or estimator(ols) here is equivalent. 
 {p_end}
