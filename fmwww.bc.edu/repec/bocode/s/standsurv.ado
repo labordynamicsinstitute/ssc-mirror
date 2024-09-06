@@ -290,7 +290,7 @@ program define standsurv, rclass sortpreserve
       local timevar `tempframevar'
     }
   }
-  
+
 // Extract at() options
   local optnum 1
   local end_of_ats 0
@@ -454,22 +454,28 @@ program define standsurv, rclass sortpreserve
   }
   
 // maximum observed time value  
-  summ _t if _d==1 & e(sample), meanonly
-  local maxt `r(max)'  
+
+  if("`mestimation'" != "") {
+    summ _t if _d==1 & e(sample), meanonly
+    local maxt `r(max)'  
+  }
+  else local maxt .
 
 // centiles  
   if "`centile'" != "" {
     if "`centvar'" == "" local centvar _centvals
     confirm new var `centvar'  
     tempvar touse_centiles
-    qui gen `centvar' = .
+    tempvar tmpcentvar
+    qui gen `tmpcentvar' = .
     local i = 1
     foreach c of numlist `centile' {
-      qui replace `centvar' = `c' in `i'
+      qui replace `tmpcentvar' = `c' in `i'
       local ++i
     }    
-    gen byte `touse_centiles' = `centvar' != .  
+    gen byte `touse_centiles' = `tmpcentvar' != .  
     if `centileupper' == -99 local centileupper = `maxt'*4
+    if missing(`centileupper') local centileupper 100
   }
   
 // time variable
@@ -504,9 +510,10 @@ program define standsurv, rclass sortpreserve
     gen byte `touse_time' = `timevar1' != .
   }
   
-  
-  qui count if e(sample) & _t0>0
-  local hasdel_entry = cond(`r(N)'>0,1,0)  
+  if("`mestimation'" != "") {
+    qui count if e(sample) & _t0>0
+    local hasdel_entry = cond(`r(N)'>0,1,0)  
+  }
   
 // enter option
   forvalues i = 1/`N_at_options' {
@@ -1099,15 +1106,24 @@ program define standsurv, rclass sortpreserve
     }
   }
   
+// write _centval is merge option and does not exist
+  if "`centile'" != "" & "`frame'" == "" {
+    capture confirm var `centvar'
+    if _rc {
+      qui gen `centvar' = `tmpcentvar'
+    }
+  }
+ 
 // Warnings
   if "`centile'" != "" {
+    if "`frame'" != "" local touse_centiles 1
     foreach var in `at_varnames' {
-      quietly count if (`var'>`maxt') & (`touse_centiles')
+      `fr' quietly count if (`var'>`maxt') & (`touse_centiles')
       if `r(N)'>0 {
         di as result "Warning: centile point estimate for `var' > maximum event time"
       }
       if "`ci'" != "" {
-        quietly count if (`var'_uci>`maxt') & (`touse_centiles')
+        `fr' quietly count if (`var'_uci>`maxt') & (`touse_centiles')
         if `r(N)'>0 {
           di as result "Warning: CI for centile for `var' > maximum event time"
         }  

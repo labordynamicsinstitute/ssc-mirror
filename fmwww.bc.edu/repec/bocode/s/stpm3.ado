@@ -1,4 +1,4 @@
-*! version 1.12 2024-08-19
+*! version 1.13 2024-09-05
 
 program stpm3, eclass byable(onecall)
 	version 16.1
@@ -377,7 +377,7 @@ program Estimate, eclass
                          `initopt'                                          ///
 	  			               maximize  
     
-    if ((c(rc) == 1400) | !`e(converged)') & "`initvaluesloop'" != "" {
+    if ((c(rc) == 1400) | "`e(converged)'" != "1") & "`initvaluesloop'" != "" {
       capture mata: rmexternal("`stpm3_struct'")    
       forvalues m=1/3 {
         local initmodname = word("`initvalmodels'",`m')
@@ -385,7 +385,7 @@ program Estimate, eclass
         capture `cmdline' initmod(`initmodname')
         capture mata: rmexternal("`stpm3_struct'")
         if "`e(converged)'"=="1" {
-          Replay, `eform' `diopts' `header'   
+          //Replay, `eform' `diopts' `header'   
           continue, break
         }
         if `m' == 3 {
@@ -395,7 +395,6 @@ program Estimate, eclass
         local ++m
       }    
     }
-
     
   }
   else {

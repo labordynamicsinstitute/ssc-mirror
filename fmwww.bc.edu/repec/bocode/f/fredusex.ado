@@ -2,10 +2,11 @@
 set more off 
 capt prog drop _all
 mata: mata clear
+mata: mata set matastrict off
 clear all
 
 *! freduse update to read 2024 HTML format data from FRED
-*! CFB 16aug2024
+*! CFB 16aug2024 rev 5sep2024 to turn matastrict off
 
 prog fredusex, rclass
 version 16

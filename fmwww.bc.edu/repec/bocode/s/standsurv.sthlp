@@ -38,7 +38,6 @@
 {synopt:{opt cif}}calculates cumulative incidence function for competing risks models{p_end}
 {synopt:{opt contrast()}}perform contrast between covariate patterns defined by at{it:n}() options{p_end}
 {synopt:{opt contrastv:ars()}}the new variable names (or stub) for each contrast{p_end}
-{synopt:{opt centile(numlist)}}list of centiles{p_end}
 {synopt:{opt crmod:els(modellist)}}names of competing risk models{p_end}
 {synopt:{opt crudepr:ob}}calculate crude probabilities{p_end}
 {synopt:{opt f:ailure}}calculate standardised failure function (1-S(t)){p_end}
@@ -254,8 +253,10 @@ new variable, {cmd:_centvar}, or that defined using the {cmd:centvar()} option.
 
 {phang}
 {opt centileupper(#)} upper starting value when calculating centiles of the 
-standardised failure curve. The default is four times the maximum survival time. 
-If you have to set this, it probably means you estimate is based on extrapolating 
+standardised failure curve. The default is four times the maximum survival time
+if there is a value of _t, otherwise it is 100. 
+If you have to set this, and the analysis data is in memory, 
+it probably means your estimate is based on extrapolating 
 the survival function way beyond your observed follow-up.
 
 {phang}
