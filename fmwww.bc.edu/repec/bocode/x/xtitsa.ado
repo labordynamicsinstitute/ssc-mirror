@@ -13,7 +13,7 @@ version 11.0
 	[ TREAT(varname numeric)													///
  	SINGle																		///
 	POSTTRend																	///
-	FIGure   FIGure2(str asis)													///
+	FIGure	FIGure2(str asis)													///
 	LOWess																		///
 	CI																			///	
 	REPLace PREfix(str) *]
@@ -634,7 +634,8 @@ version 11.0
 			}
 			
 			/* set up legend when lowess and/or CIs are specified */
-			if "`lowess'" != "" {
+			
+ 			if "`lowess'" != "" {
 				local low (lowess `dvar' `tvar' , lcolor(red))
 				if "`ci'" != "" {
 					local x = `tct' - 1	
@@ -649,6 +650,8 @@ version 11.0
 					local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) order(2 3 1) label(1 "Lowess") label(2 "Actual") label(3 "Predicted"))),
 				}			
 			} // end lowess
+			
+
 
 			else if "`lowess'" == "" {
 				if "`ci'" != "" {

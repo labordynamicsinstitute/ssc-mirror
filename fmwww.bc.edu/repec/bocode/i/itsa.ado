@@ -1,3 +1,4 @@
+*! 3.1.1 Ariel Linden 24Aug2024						// added sorting to trperiod()
 *! 3.1.0 Ariel Linden 07Aug2024						// added CI option
 *! 3.0.0 Ariel Linden 01Apr2024						// changed default model to -glm- with Newey-West std errors
 *! 2.3.0 Ariel Linden 28Mar2024						// added lowess option 
@@ -103,6 +104,8 @@ version 11.0
 				local trperiod `trp'
 			}  // end if
 		} // end while
+		/* sort the trperiods! */
+		local trperiod : list sort local(trperiod)			
 		
 		/* check if trperiod is among tvars */
 		levelsof `tvar' if `touse', local(levt)
@@ -341,7 +344,7 @@ version 11.0
 			} 
 
 		/* CREATE PREDICTED VALUE FOR PLOTS */
-		qui{
+		qui {
 			tempvar ypred_t
 			gen `ypred_t' = `prefix'_s_`dvar'_pred
 			local tct: word count `trperiod'

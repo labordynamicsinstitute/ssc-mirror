@@ -143,9 +143,11 @@ the bottom center, type as an option: {cmd:figure(legend(position(6)))}
 {phang}
 {cmd:ci} plots the confidence interval(s) on the {cmd:figure}. By default,
 95% CIs are presented. This can be changed by specifying {cmd:level()} as 
-a model option. CIs are computed using the post-estimation linear prediction 
-({cmd:xb}) and standard error of the linear prediction ({cmd:stdp}). CIs 
-should be viewed with caution for non-linear models.
+a model option. CIs are computed using the expected value of y ({cmd:mu}) 
+and standard error of the linear prediction ({cmd:stdp}). 
+CIs should be viewed with caution for non-linear models given that the {cmd:stdp}
+is based on the linear prediction {cmd:xb}, which is not the same as {cmd:mu} in
+non-linear models.
 
 {phang}
 {cmd:lowess} plots a lowess smoothed line of {it:depvar} on {it:timevar}.
@@ -344,7 +346,7 @@ Same as above, but we add CIs to the graph.
 {phang3}{bf:{stata "itsa cigsale, treatid(3) trperiod(1989) lag(1) figure(legend(position(6))) posttrend replace ci":. itsa cigsale, treatid(3) trperiod(1989) lag(1) figure(legend(position(6))) posttrend replace ci}}{p_end}
 
 {pmore}
-Here we specify the ITSA model using weights described in Abadie et al. (2010) as {opt aweights} and estimate the weighted model. We also add CIs to the graph.
+Here we specify the ITSA model using weights described in Abadie et al. (2010) as {opt aweights} and estimate the weighted model. We also add a lowess smoother to the graph.
 
 {phang3}{bf:{stata "itsa cigsale [aw=weights], treatid(3) trperiod(1989) replace figure(xlabel(1970(5)2000)) posttrend low": . itsa cigsale [aw=weights], treatid(3) trperiod(1989) replace figure(xlabel(1970(5)2000)) posttrend low}}{p_end}
 
@@ -365,7 +367,7 @@ Now we use the rescaled count version of the outcome ({opt cigsale_count}) with 
 {phang3}{bf:{stata "itsa  cigsale_count, trperiod(1989) treatid(3) contid(4 8 19) replace posttrend f(poisson) fig": . itsa  cigsale_count, trperiod(1989) treatid(3) contid(4 8 19) replace posttrend f(poisson) fig}}
 
 {pmore}
-Here we add a covariate {cmd:retprice} to the model and specify that estimates be computed at the 99% level. We also add CIs to the graph. One can see that with the addition of covariates,the estimates are no longer linear.   
+Here we add a covariate {cmd:retprice} to the model and specify that estimates be computed at the 99% level. We also add CIs to the graph. One can see that, with the addition of covariates, the estimates are no longer linear.   
 
 {phang3}{bf:{stata "itsa cigsale retprice, treatid(3) trperiod(1989) replace fig posttrend ci level(99)": . itsa cigsale retprice, treatid(3) trperiod(1989) replace fig posttrend ci level(99)}}{p_end}
 

@@ -29,6 +29,7 @@ p njc_stuff module documenting Stata programs and help files by Nicholas J. Cox
 p nlcheck module to check linearity assumption after model estimation
 p nlcorr module to compute correlation metric for cross-sample comparisons using non-linear probability models
 p nlls module to compute non-negative least squares in Stata
+p nmf module to perform matrix decomposition using non-negative matrix factorization (NMF)
 p nmissing module to show numbers of missing or present values
 p nnest module to perform J test and Cox-Pesaran-Deaton test for nonnested models
 p nnipolate module for nearest neighbour interpolation

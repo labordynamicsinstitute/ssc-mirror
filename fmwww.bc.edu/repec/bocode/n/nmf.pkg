@@ -1,0 +1,26 @@
+d 'NMF': module to perform matrix decomposition using non-negative matrix factorization (NMF)
+d
+d     The aim of nmf is to decompose matrix A into a lower-rank
+d matrix approximation such that X ≈ WH, where A, W and H are   
+d made up of non-negative, real numbers. Missing values are
+d permitted. If X is an n x m matrix, the dimensions of W and H   
+d will be n x k and k x m, respectively, whereby k represents the
+d rank of the decomposition. In many cases, a good    approximation
+d for A may be achieved with k << rank(A). 
+d
+d KW: non negative matrix factorisation
+d KW: unsupervised machine learning
+d KW: dimensionality reduction
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20240906
+d
+d Author: Jonathan Batty , University of Leeds
+d Support: email J.Batty@@leeds.ac.uk
+d
+f nmf.ado
+f nmf.sthlp
+f nsclc.dta
+f ../f/faces.dta
+f ../d/disease_matrix.dta

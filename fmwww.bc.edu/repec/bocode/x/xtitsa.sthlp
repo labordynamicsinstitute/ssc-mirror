@@ -118,9 +118,11 @@ without options uses the default graph settings.
 {phang}
 {cmd:ci} plots the confidence interval(s) on the {cmd:figure}. By default,
 95% CIs are presented. This can be changed by specifying {cmd:level()} as 
-a model option. CIs are computed using the post-estimation linear prediction 
-({cmd:xb}) and standard error of the linear prediction ({cmd:stdp}). CIs 
-should be viewed with caution for non-linear models.
+a model option. CIs are computed using the expected value of y ({cmd:mu}) 
+and standard error of the linear prediction ({cmd:stdp}). 
+CIs should be viewed with caution for non-linear models given that the {cmd:stdp}
+is based on the linear prediction {cmd:xb}, which is not the same as {cmd:mu} in
+non-linear models.
 
 {phang}
 {cmd:lowess} plots a lowess smoothed line of {it:depvar} on {it:timevar}.
@@ -149,14 +151,14 @@ otherwise 1), and TX_t is an interaction term.
 
 {pstd}
 In the case of a single-group study, Beta_0 represents the intercept or
-starting level of the outcome variable.  Beta_1 is the slope or trajectory of
-the outcome variable until the introduction of the intervention.  Beta_2
+starting level of the outcome variable. Beta_1 is the slope or trajectory of
+the outcome variable until the introduction of the intervention. Beta_2
 represents the change in the level of the outcome that occurs in the period
 immediately following the introduction of the intervention (compared with the
-counterfactual).  Beta_3 represents the difference between preintervention and
-postintervention slopes of the outcome.  Thus we look for significant p-values
+counterfactual). Beta_3 represents the difference between preintervention and
+postintervention slopes of the outcome. Thus we look for significant p-values
 in Beta_2 to indicate an immediate treatment effect, or in Beta_3 to indicate
-a treatment effect over time (Linden 2015).  However, single-group
+a treatment effect over time (Linden 2015). However, single-group
 ITSA models may provide misleading results, so multiple-group ITSA models
 should be implemented whenever possible (Linden 2017b and 2017c).
 
@@ -171,9 +173,9 @@ Beta_4(Z) + Beta_5(ZT) + Beta_6(ZX_t) + Beta_7(ZTX_t){space 5}(2)
 {pstd}
 Here Z is a dummy variable to denote the cohort assignment (treatment or
 control), and ZT, ZX_t, and ZTX_t are all interaction terms among previously
-described variables.  Now the coefficients Beta_0 to Beta_3 represent the
+described variables. Now the coefficients Beta_0 to Beta_3 represent the
 control group, and the coefficients Beta_4 to Beta_7 represent values of the
-treatment group.  More specifically, Beta_4 represents the difference in the
+treatment group. More specifically, Beta_4 represents the difference in the
 level (intercept) of the dependent variable between treatment and controls
 prior to the intervention, Beta_5 represents the difference in the slope
 (trend) of the dependent variable between treatment and controls prior to the
@@ -188,12 +190,12 @@ difference-in-differences of slopes).
 The two parameters Beta_4 and Beta_5 play a particularly important role in
 establishing whether the treatment and control groups are balanced on both the
 level and the trajectory of the dependent variable in the preintervention
-period.  If these data were from a randomized controlled trial, we would
-expect similar levels and slopes prior to the intervention.  However, in an
+period. If these data were from a randomized controlled trial, we would
+expect similar levels and slopes prior to the intervention. However, in an
 observational study where equivalence between groups cannot be ensured, any
 observed differences will likely raise concerns about the ability to draw
 causal inferences about the relationship between the intervention and the
-outcomes (Linden 2015).  See Linden (2017a) for many
+outcomes (Linden 2015). See Linden (2017a) for many
 additional ITSA postestimation measures.
 
 
@@ -373,6 +375,12 @@ Challenges to validity in single-group interrupted time series analysis.
 Persistent threats to validity in single-group interrupted time series analysis with a crossover design.
 {it:Journal of Evaluation in Clinical Practice}.
 23: 419-425.
+
+{phang}
+------. 2022.
+{browse "https://journals.sagepub.com/doi/full/10.1177/1536867X221083929":Erratum: A comprehensive set of postestimation measures to enrich interrupted time-series analysis}.
+{it:Stata Journal}
+22: 231-233. 
 
 {phang} 
 Linden, A., and J. L. Adams. 2011. 
