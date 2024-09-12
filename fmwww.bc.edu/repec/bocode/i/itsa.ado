@@ -1,4 +1,4 @@
-*! 3.1.1 Ariel Linden 24Aug2024						// added sorting to trperiod()
+*! 3.1.1 Ariel Linden 09Sep2024						// changed code in CI option to utilize -predictnl- for computing predictions and CIs
 *! 3.1.0 Ariel Linden 07Aug2024						// added CI option
 *! 3.0.0 Ariel Linden 01Apr2024						// changed default model to -glm- with Newey-West std errors
 *! 2.3.0 Ariel Linden 28Mar2024						// added lowess option 
@@ -104,8 +104,6 @@ version 11.0
 				local trperiod `trp'
 			}  // end if
 		} // end while
-		/* sort the trperiods! */
-		local trperiod : list sort local(trperiod)			
 		
 		/* check if trperiod is among tvars */
 		levelsof `tvar' if `touse', local(levt)
@@ -255,7 +253,7 @@ version 11.0
 		}
 		
 		/* capture level specified in estimation model */
-		local clv `=string(r(level))'
+		local clv `r(level)'		
 		local cil `=length("`clv'")'
 
 		/*********************************************************
@@ -306,25 +304,21 @@ version 11.0
 
 		/* generating CI values depending on whether the model was prais or GLM */
 		if "`ci'" == "" {
-			quietly predict `prefix'_s_`dvar'_pred if e(sample)
+			quietly predictnl `prefix'_s_`dvar'_pred = predict() if e(sample)
 			local itsavars `dvar' `rhs' `prefix'_s_`dvar'_pred
 			char def _dta[`prefix'_itsavars] "`itsavars'"
 		}
 		else {
-			tempvar stdp lcl ucl
-			quietly predict `prefix'_s_`dvar'_pred if e(sample)
-			quietly predict `stdp' if e(sample), stdp
-			if "`prais'" !="" {
-				local tz = abs(invttail(e(df_r), 1-(1-`=string(r(level))'/100)/2))
+			tempvar lcl ucl
+			if "`prais'" != "" {
+				quietly predictnl `prefix'_s_`dvar'_pred = predict() if e(sample), ci(`lcl' `ucl')  df(`e(df_r)') level(`clv')	
 			}
 			else {
-				local tz = abs(invnorm(1-(1-`=string(r(level))'/100)/2))	
+				quietly predictnl `prefix'_s_`dvar'_pred = predict() if e(sample), ci(`lcl' `ucl') level(`clv') 
 			}
-			quietly gen `lcl' = `prefix'_s_`dvar'_pred - (`tz' * `stdp')
-			quietly gen `ucl' = `prefix'_s_`dvar'_pred + (`tz' * `stdp')			
 			local itsavars `dvar' `rhs' `prefix'_s_`dvar'_pred
 			char def _dta[`prefix'_itsavars] "`itsavars'"			
-		}
+		} // end CI
 
 		/*************************************************************
 		 *                PLOT SECTION FOR TYPE 1                    *
@@ -344,7 +338,7 @@ version 11.0
 			} 
 
 		/* CREATE PREDICTED VALUE FOR PLOTS */
-		qui {
+		qui{
 			tempvar ypred_t
 			gen `ypred_t' = `prefix'_s_`dvar'_pred
 			local tct: word count `trperiod'
@@ -543,7 +537,7 @@ version 11.0
 		}
 		
 		/* capture level specified in estimation model */
-		local clv `=string(r(level))'
+		local clv `r(level)'
 		local cil `=length("`clv'")'		
 
 		/**************************************************************
@@ -591,28 +585,25 @@ version 11.0
 			} /* end trperiod */
 		
 		} /* end if posttrend and lincom block */
-
+		
 		/* generating CI values depending on whether the model was prais or GLM */
 		if "`ci'" == "" {
-			quietly predict `prefix'_s_`dvar'_pred if e(sample)
+			quietly predictnl `prefix'_s_`dvar'_pred = predict() if e(sample)
 			local itsavars `dvar' `rhs' `prefix'_s_`dvar'_pred
 			char def _dta[`prefix'_itsavars] "`itsavars'"
 		}
 		else {
-			tempvar stdp lcl ucl
-			quietly predict `prefix'_s_`dvar'_pred if e(sample)
-			quietly predict `stdp' if e(sample), stdp
-			if "`prais'" !="" {
-				local tz = abs(invttail(e(df_r), 1-(1-`=string(r(level))'/100)/2))
+			tempvar lcl ucl
+			if "`prais'" != "" {
+				quietly predictnl `prefix'_s_`dvar'_pred = predict() if e(sample), ci(`lcl' `ucl')  df(`e(df_r)') level(`clv')	
 			}
 			else {
-				local tz = abs(invnorm(1-(1-`=string(r(level))'/100)/2))	
+				quietly predictnl `prefix'_s_`dvar'_pred = predict() if e(sample), ci(`lcl' `ucl') level(`clv') 
 			}
-			quietly gen `lcl' = `prefix'_s_`dvar'_pred - (`tz' * `stdp') if e(sample)
-			quietly gen `ucl' = `prefix'_s_`dvar'_pred + (`tz' * `stdp') if e(sample)			
 			local itsavars `dvar' `rhs' `prefix'_s_`dvar'_pred
 			char def _dta[`prefix'_itsavars] "`itsavars'"			
-		}
+		} // end CI		
+		
 		
 		/************************************************
 		*             PLOT SECTION FOR TYPE 2           *
@@ -838,32 +829,29 @@ version 11.0
 			local z_t z
 			local z_t_p P>|z|			
 		}
-
+		
+		/* capture level specified in estimation model */
+		local clv `r(level)'
+		local cil `=length("`clv'")'
+		
 		/* generating CI values depending on whether the model was prais or GLM */
 		if "`ci'" == "" {
-			quietly predict `prefix'_m_`dvar'_pred if e(sample)
+			quietly predictnl `prefix'_m_`dvar'_pred = predict() if e(sample)
 			local itsavars `dvar' `rhs' `prefix'_m_`dvar'_pred
 			char def _dta[`prefix'_itsavars] "`itsavars'"
 		}
 		else {
-			tempvar stdp lcl ucl
-			quietly predict `prefix'_m_`dvar'_pred if e(sample)
-			quietly predict `stdp' if e(sample), stdp
-			if "`prais'" !="" {
-				local tz = abs(invttail(e(df_r), 1-(1-`=string(r(level))'/100)/2))
+			tempvar lcl ucl
+			if "`prais'" != "" {
+				quietly predictnl `prefix'_m_`dvar'_pred = predict() if e(sample), ci(`lcl' `ucl')  df(`e(df_r)') level(`clv')	
 			}
 			else {
-				local tz = abs(invnorm(1-(1-`=string(r(level))'/100)/2))	
+				quietly predictnl `prefix'_m_`dvar'_pred = predict() if e(sample), ci(`lcl' `ucl') level(`clv') 
 			}
-			quietly gen `lcl' = `prefix'_m_`dvar'_pred - (`tz' * `stdp')
-			quietly gen `ucl' = `prefix'_m_`dvar'_pred + (`tz' * `stdp')			
 			local itsavars `dvar' `rhs' `prefix'_m_`dvar'_pred
 			char def _dta[`prefix'_itsavars] "`itsavars'"			
-		}	
+		} // end CI			
 		
-		/* capture level specified in estimation model */
-		local clv `=string(r(level))'
-		local cil `=length("`clv'")'
 		
 		/*******************************************
 		 LINCOM:   MULTIPLE GROUP COMPARISON       *
@@ -1216,7 +1204,7 @@ version 11.0
 			local titlesec
 			ytitle("`ydesc'")
 			xtitle("`tdesc'")
-			title("`treatdesc' and Average of Controls")
+			title("`treatdesc' and average of controls")
 			subtitle("Intervention starts: `tperlist'")
 			;
 			#delim cr
@@ -1261,7 +1249,7 @@ version 11.0
 						local cl2 = `tct' + `low2' + (7 + `x')
 						local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 1 2 `low1' `cl1' - "Controls average:" `ctrl1' `ctrl2' `low2' `cl2') ///
 							label(1 "Actual") label(2 "Predicted") label(`ctrl1' "Actual") label(`ctrl2' "Predicted") ///					
-							label(`low1' "Lowess") label(`low2' "Lowess") label(`cl1' "`clv'% CI") label(`cl2' "`clv'% CI") symxsize(5))
+							label(`low1' "Lowess") label(`low2' "Lowess") label(`cl1' "`clv'% CI") label(`cl2' "`clv'% CI") symxsize(8))
 					}
 				} // end yes lowess
 				
@@ -1314,7 +1302,7 @@ version 11.0
 					if "`ci'" != "" {
 						local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 1 2 5 7 - "Controls average:" 3 4 6 9) ///
 							label(1 "Actual") label(2 "Predicted") label(3 "Actual") label(4 "Predicted") ///					
-							label(5 "Lowess") label(6 "Lowess") label(7 "`clv'% CI") label(9 "`clv'% CI") symxsize(5))
+							label(5 "Lowess") label(6 "Lowess") label(7 "`clv'% CI") label(9 "`clv'% CI") symxsize(8))
 					} // end yes ci
 				} // end yes lowess			
 

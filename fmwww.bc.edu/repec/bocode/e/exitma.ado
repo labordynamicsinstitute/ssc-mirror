@@ -1,5 +1,7 @@
-* exitma version 1.0 - 10 April 2024
+* exitma version 1.1 - 11 Sep 2024
 * Authors: Luis Furuya-Kanamori (l.furuya@uq.edu.au), Suhail AR Doi, Jazeel AbdulMajeed
+
+	*v1.1 revised reference (in help file) and fig y-label 
 
 	
 program define exitma, rclass
@@ -229,7 +231,7 @@ quietly keep if `touse'
 	if "`graph'" != "nograph"{	
 		twoway (rarea __lower __upper __prop, sort fcolor(gs10) fintensity(30) lcolor(white) cmissing(y)) ///
 			(connected __delta_c __prop, sort mcolor(navy) msymbol(circle) msize(large) lcolor(navy) yline(-.165 .165, lwidth(medthick) lpattern(dash) extend) xline(.5, lwidth(medthick) lpattern(dash) extend)), ///
-			ytitle(ΔC) ytitle(, size(vlarge)) ylabel(, labsize(vlarge) angle(horizontal) labgap(small)) ///
+			ytitle(ΔCi) ytitle(, size(vlarge)) ylabel(, labsize(vlarge) angle(horizontal) labgap(small)) ///
 			xtitle(Cumulative proportion of participants) xtitle(, margin(medium) size(vlarge)) xlabel(0(.25)1, labsize(vlarge) labgap(small)) ///
 			legend(off) graphregion(fcolor(white))	///
 			title(DAts = `dats_str1', size(medium) margin(medium)) 

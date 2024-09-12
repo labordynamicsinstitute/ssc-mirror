@@ -1,3 +1,4 @@
+*! 2.0.1 Ariel Linden 09Sep2024 // changed code in CI option to utilize -predictnl- for computing predictions and CIs
 *! 2.0.0 Ariel Linden 24Aug2024 // added lowess and CI options
 *! 1.1.1 Ariel Linden 22Mar2021 // fixed bug in trperiod() loop
 *! 1.1.0 Ariel Linden 10Mar2021 // added parsing code to extract date(s) from trperiod() 
@@ -13,7 +14,7 @@ version 11.0
 	[ TREAT(varname numeric)													///
  	SINGle																		///
 	POSTTRend																	///
-	FIGure	FIGure2(str asis)													///
+	FIGure   FIGure2(str asis)													///
 	LOWess																		///
 	CI																			///	
 	REPLace PREfix(str) *]
@@ -169,6 +170,10 @@ version 11.0
 		tsset
 		xtgee `dvar' `rhs' `xvar'  if `touse' [`weight' `exp'], `options'
 		
+		/* capture level specified in estimation model */
+		local clv `r(level)'		
+		local cil `=length("`clv'")'			
+
 		/* generating CI values depending on whether the model was prais or GLM */
 		if "`ci'" == "" {
 			quietly predict `prefix'_s_`dvar'_pred if e(sample)
@@ -176,20 +181,12 @@ version 11.0
 			char def _dta[`prefix'_itsavars] "`itsavars'"
 		}
 		else {
-			tempvar stdp lcl ucl
-			quietly predict `prefix'_s_`dvar'_pred if e(sample)
-			quietly predict `stdp' if e(sample), stdp
-			local tz = abs(invnorm(1-(1-`=string(r(level))'/100)/2))	
-			quietly gen `lcl' = `prefix'_s_`dvar'_pred - (`tz' * `stdp')
-			quietly gen `ucl' = `prefix'_s_`dvar'_pred + (`tz' * `stdp')			
+			tempvar lcl ucl
+			quietly predictnl `prefix'_s_`dvar'_pred = predict() if e(sample), ci(`lcl' `ucl') level(`clv') 
 			local itsavars `dvar' `rhs' `prefix'_s_`dvar'_pred
 			char def _dta[`prefix'_itsavars] "`itsavars'"			
-		}		
+		} // end CI		
 		
-		/* capture level specified in estimation model */
-		local clv `=string(r(level))'
-		local cil `=length("`clv'")'		
-
 		/*********************************************************
 		*  LINCOM: SINGLE GROUP SINGLE PANEL                     *
 		**********************************************************/
@@ -441,6 +438,10 @@ version 11.0
 		tsset
 		xtgee `dvar' `rhs' `xvar' if `touse' & `treat'==1 [`weight' `exp'], `options'
 		
+		/* capture level specified in estimation model */
+		local clv `r(level)'
+		local cil `=length("`clv'")'			
+	
 		/* generating CI values depending on whether the model was prais or GLM */
 		if "`ci'" == "" {
 			quietly predict `prefix'_s_`dvar'_pred if e(sample)
@@ -448,19 +449,11 @@ version 11.0
 			char def _dta[`prefix'_itsavars] "`itsavars'"
 		}
 		else {
-			tempvar stdp lcl ucl
-			quietly predict `prefix'_s_`dvar'_pred if e(sample)
-			quietly predict `stdp' if e(sample), stdp
-			local tz = abs(invnorm(1-(1-`=string(r(level))'/100)/2))	
-			quietly gen `lcl' = `prefix'_s_`dvar'_pred - (`tz' * `stdp')
-			quietly gen `ucl' = `prefix'_s_`dvar'_pred + (`tz' * `stdp')			
+			tempvar lcl ucl
+			quietly predictnl `prefix'_s_`dvar'_pred = predict() if e(sample), ci(`lcl' `ucl') level(`clv') 
 			local itsavars `dvar' `rhs' `prefix'_s_`dvar'_pred
 			char def _dta[`prefix'_itsavars] "`itsavars'"			
-		}		
-		
-		/* capture level specified in estimation model */
-		local clv `=string(r(level))'
-		local cil `=length("`clv'")'	
+		} // end CI		
 		
 		/**************************************************************
 		*  LINCOM: SINGLE GROUP MULTIPLE PANELS                     *
@@ -634,8 +627,7 @@ version 11.0
 			}
 			
 			/* set up legend when lowess and/or CIs are specified */
-			
- 			if "`lowess'" != "" {
+			if "`lowess'" != "" {
 				local low (lowess `dvar' `tvar' , lcolor(red))
 				if "`ci'" != "" {
 					local x = `tct' - 1	
@@ -650,8 +642,6 @@ version 11.0
 					local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) order(2 3 1) label(1 "Lowess") label(2 "Actual") label(3 "Predicted"))),
 				}			
 			} // end lowess
-			
-
 
 			else if "`lowess'" == "" {
 				if "`ci'" != "" {
@@ -721,25 +711,24 @@ version 11.0
 		/* run xtgee */
 		tsset
 		xtgee `dvar' `rhs' `xvar' if `touse' [`weight' `exp'], `options'
-
-		quietly predict `prefix'_m_`dvar'_pred // consider adding "if e(sample)"
-		local itsavars `dvar' `rhs' `prefix'_m_`dvar'_pred
-		char def _dta[`prefix'_itsavars] "`itsavars'"
-		
-		/* generating CI values */
-		if "`ci'" != "" {
-			tempvar stdp lcl ucl
-			quietly predict `stdp' if e(sample), stdp
-			local tz = abs(invnorm(1-(1-`=string(r(level))'/100)/2))	
-			quietly gen `lcl' = `prefix'_m_`dvar'_pred - (`tz' * `stdp')
-			quietly gen `ucl' = `prefix'_m_`dvar'_pred + (`tz' * `stdp')			
-		}	
-		local itsavars `dvar' `rhs' `prefix'_m_`dvar'_pred
-		char def _dta[`prefix'_itsavars] "`itsavars'"
 		
 		/* capture level specified in estimation model */
-		local clv `=string(r(level))'
-		local cil `=length("`clv'")'		
+		local clv `r(level)'
+		local cil `=length("`clv'")'	
+
+		/* generating CI values depending on whether the model was prais or GLM */
+		if "`ci'" == "" {
+			quietly predictnl `prefix'_m_`dvar'_pred = predict() if e(sample)
+			local itsavars `dvar' `rhs' `prefix'_m_`dvar'_pred
+			char def _dta[`prefix'_itsavars] "`itsavars'"
+		}
+		else {
+			tempvar lcl ucl
+			quietly predictnl `prefix'_m_`dvar'_pred = predict() if e(sample), ci(`lcl' `ucl') level(`clv') 
+		} // end CI
+		local itsavars `dvar' `rhs' `prefix'_m_`dvar'_pred
+		char def _dta[`prefix'_itsavars] "`itsavars'"			
+			
 
 		/*******************************************
 		 LINCOM:   MULTIPLE GROUP COMPARISON       *

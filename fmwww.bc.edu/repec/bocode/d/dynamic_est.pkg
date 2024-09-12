@@ -1,0 +1,22 @@
+d 'DYNAMIC_EST': module to visualize dynamic effects in TWFE models
+d
+d  This routine     simplifies the visualization of dynamic effects
+d in two-way fixed effects (TWFE) models. It is ideal for use	 in
+d event study or Difference-in-Differences (DID) analyses. This
+d command allows users to visualize    time-varying effects by
+d specifying key regression parameters and reference points. 
+d
+d KW: DiD
+d KW: TWFE
+d KW: graphics
+d KW: dynamic effects
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20240911
+d
+d Author: MengKe , China Institute for WTO studies, University of International Business and Economics
+d Support: email  uibemk@@126.com
+d
+f dynamic_est.ado
+f dynamic_est.sthlp

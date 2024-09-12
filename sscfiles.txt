@@ -8321,6 +8321,7 @@ fmwww.bc.edu/repec/bocode/d/dfl.hlp
 fmwww.bc.edu/repec/bocode/d/delta.html
 fmwww.bc.edu/repec/bocode/d/diagramconnection.ado
 fmwww.bc.edu/repec/bocode/d/diptest.html
+fmwww.bc.edu/repec/bocode/d/dynamic_est.sthlp
 fmwww.bc.edu/repec/bocode/d/digdis.zip
 fmwww.bc.edu/repec/bocode/d/ds3.ado
 fmwww.bc.edu/repec/bocode/d/dfgls.ado
@@ -8764,6 +8765,7 @@ fmwww.bc.edu/repec/bocode/d/dentonmq7.hlp
 fmwww.bc.edu/repec/bocode/d/dcreate.sthlp
 fmwww.bc.edu/repec/bocode/d/demo_PWMSE.do
 fmwww.bc.edu/repec/bocode/d/DAG_Estimation.sas
+fmwww.bc.edu/repec/bocode/d/dynamic_est.pkg
 fmwww.bc.edu/repec/bocode/d/des_gehan.ado
 fmwww.bc.edu/repec/bocode/d/dotex.ado
 fmwww.bc.edu/repec/bocode/d/dfuller2.ado
@@ -8929,6 +8931,7 @@ fmwww.bc.edu/repec/bocode/d/dirifit_ex.ado
 fmwww.bc.edu/repec/bocode/d/drmmws.sthlp
 fmwww.bc.edu/repec/bocode/d/disjoint.html
 fmwww.bc.edu/repec/bocode/d/dslab.ado
+fmwww.bc.edu/repec/bocode/d/dynamic_est.ado
 fmwww.bc.edu/repec/bocode/d/dubois_example.ado
 fmwww.bc.edu/repec/bocode/d/divratio_documentation.pdf
 fmwww.bc.edu/repec/bocode/d/domdiag.pkg

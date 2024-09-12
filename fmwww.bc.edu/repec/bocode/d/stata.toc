@@ -164,6 +164,7 @@ p dups module to identify and optionally remove duplicate observations
 p durbinh module to calculate Durbin's h test for serial correlation
 p dyadid module to perform Dyad ID matching
 p dyads module to transform observations into dyads
+p dynamic_est module to visualize dynamic effects in TWFE models
 p dynardl module to dynamically simulate autoregressive distributed lag (ARDL) models
 p dynpandoc module creating dynamic documents using dynamic tags and pandoc  
 p dynsimpie module to examine dynamic compositional dependent variables

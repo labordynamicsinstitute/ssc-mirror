@@ -1,4 +1,5 @@
 {smcl}
+{* 09Sep2024}{...}
 {* 25Aug2024}{...}
 {* 10Mar2021}{...}
 
@@ -117,12 +118,8 @@ without options uses the default graph settings.
 
 {phang}
 {cmd:ci} plots the confidence interval(s) on the {cmd:figure}. By default,
-95% CIs are presented. This can be changed by specifying {cmd:level()} as 
-a model option. CIs are computed using the expected value of y ({cmd:mu}) 
-and standard error of the linear prediction ({cmd:stdp}). 
-CIs should be viewed with caution for non-linear models given that the {cmd:stdp}
-is based on the linear prediction {cmd:xb}, which is not the same as {cmd:mu} in
-non-linear models.
+95% CIs are presented but can be changed by specifying {cmd:level()} as 
+a model option. 
 
 {phang}
 {cmd:lowess} plots a lowess smoothed line of {it:depvar} on {it:timevar}.
@@ -234,9 +231,9 @@ We see from the output that there is autocorrelation up to lag 9, so we reestima
 {phang3}{bf:{stata "xtitsa y, single trperiod(2019m11) vce(robust) posttrend figure replace corr(ar 9) low": . xtitsa y, single trperiod(2019m11) vce(robust) posttrend figure replace corr(ar 9) low}}{p_end}
 
 {pmore}
-We specify a single-group ITSA for a fractional response (i.e. 0 to 1.0 scale) with family(binomial) link(logit) and vce(robust) and add a lowess smoother to the graph.{p_end}
+We specify a single-group ITSA for a fractional response (i.e. 0 to 1.0 scale) with family(binomial) and vce(robust) and add CIs to the graph.{p_end}
 
-{phang3}{bf:{stata "xtitsa y01, single trperiod(2019m11) family(binomial) link(logit) vce(robust) figure posttr replace low":. xtitsa y01, single trperiod(2019m11) family(binomial) link(logit) vce(robust) figure posttr replace low}} {p_end}
+{phang3}{bf:{stata "xtitsa y01, single trperiod(2019m11) family(binomial) vce(robust) figure posttr replace ci":. xtitsa y01, single trperiod(2019m11) family(binomial) vce(robust) figure posttr replace ci}} {p_end}
 
 {pstd}
 {opt 2) Single-group ITSA in dataset with other data:}{p_end}
@@ -274,6 +271,11 @@ Here we specify two treatment periods - 2019m6 and 2019m11 and add a lowess smoo
 
 {phang3}{bf:{stata "xtitsa y, single treat(z) trperiod(2019m6; 2019m11) vce(robust) posttrend replace fig low":. xtitsa y, single treat(z) trperiod(2019m6; 2019m11) vce(robust) posttrend replace fig low}} {p_end}
 
+{pmore}
+We specify a single-group ITSA for a fractional response (i.e. 0 to 1.0 scale) with family(binomial) and vce(robust) and add CIs to the graph.{p_end}
+
+{phang3}{bf:{stata "xtitsa y01, single treat(z) trperiod(2019m11) family(binomial) vce(robust) figure posttr replace ci":. xtitsa y01, single treat(z) trperiod(2019m11) family(binomial) vce(robust) figure posttr replace ci}} {p_end}
+
 {pstd}
 {opt 3) Multiple-group ITSA (treatment vs control):}{p_end}
 
@@ -293,9 +295,14 @@ Here we add a covariate {cmd:x} to the model and specify that estimates be compu
 {phang3}{bf:{stata "xtitsa y x, treat(z) trperiod(2019m11) vce(robust) posttrend figure replace ci level(99)":. xtitsa y x, treat(z) trperiod(2019m11) vce(robust) posttrend figure replace ci level(99)}}{p_end}
 
 {pmore}
-We specify a multiple-group ITSA for a fractional response (i.e. 0 to 1.0 scale) with family(binomial) link(logit) and vce(robust) and add lowess smoothers to the graph. {p_end}
+We specify a multiple-group ITSA for a fractional response (i.e. 0 to 1.0 scale) with family(binomial) and vce(robust) and add lowess smoothers to the graph. {p_end}
 
-{phang3}{bf:{stata "xtitsa y01, treat(z) trperiod(2019m11) family(binomial) link(logit) vce(robust) figure replace low":. xtitsa y01, treat(z) trperiod(2019m11) family(binomial) link(logit) vce(robust) figure replace low}} {p_end}
+{phang3}{bf:{stata "xtitsa y01, treat(z) trperiod(2019m11) family(binomial) vce(robust) figure replace low":. xtitsa y01, treat(z) trperiod(2019m11) family(binomial) vce(robust) figure replace low}} {p_end}
+
+{pmore}
+Same as above but we specify that CIs should be presented on the graph {p_end}
+
+{phang3}{bf:{stata "xtitsa y01, treat(z) trperiod(2019m11) family(binomial) vce(robust) figure replace ci":. xtitsa y01, treat(z) trperiod(2019m11) family(binomial) vce(robust) figure replace ci}} {p_end}
 
 
 {marker output_table}{...}

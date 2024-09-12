@@ -1,4 +1,5 @@
 {smcl}
+{* 09Sep2024}{...}
 {* 20Aug2024}{...}
 {* 13May2024}{...}
 {* 01May2024}{...}
@@ -142,12 +143,8 @@ the bottom center, type as an option: {cmd:figure(legend(position(6)))}
 
 {phang}
 {cmd:ci} plots the confidence interval(s) on the {cmd:figure}. By default,
-95% CIs are presented. This can be changed by specifying {cmd:level()} as 
-a model option. CIs are computed using the expected value of y ({cmd:mu}) 
-and standard error of the linear prediction ({cmd:stdp}). 
-CIs should be viewed with caution for non-linear models given that the {cmd:stdp}
-is based on the linear prediction {cmd:xb}, which is not the same as {cmd:mu} in
-non-linear models.
+95% CIs are presented but can be changed by specifying {cmd:level()} as 
+a model option.
 
 {phang}
 {cmd:lowess} plots a lowess smoothed line of {it:depvar} on {it:timevar}.
@@ -277,15 +274,15 @@ Same as above but we now specify that the confidence interval be added to the gr
 {phang3}{bf:{stata "itsa cigsale, single trperiod(1989) lag(1) figure(legend(position(6))) posttrend ci replace": . itsa cigsale, single trperiod(1989) lag(1) figure(legend(position(6))) posttrend ci replace}}{p_end}
 
 {pmore}
-Now we use the rescaled outcome ({opt cigsale_scaled}) which lies between 0 and 1, and accordingly, we specify the binomial GLM family with logit link {p_end}
+Now we use the rescaled outcome ({opt cigsale_scaled}) which lies between 0 and 1, and accordingly, we specify the binomial GLM family with logit link. We also add CIs to the graph {p_end}
 
-{phang3}{bf:{stata "itsa cigsale_scaled, single trperiod(1989) lag(1) fig posttrend f(binomial) replace": . itsa cigsale_scaled, single trperiod(1989) lag(1) fig posttrend f(binomial) l(logit) replace}} {p_end}
+{phang3}{bf:{stata "itsa cigsale_scaled, single trperiod(1989) lag(1) fig posttrend f(binomial) replace ci": . itsa cigsale_scaled, single trperiod(1989) lag(1) fig posttrend f(binomial) l(logit) replace ci}} {p_end}
 {phang3}{bf:{stata "actest, lags(12)": . actest, lags(12)}}{p_end}
 
 {pmore}
-Now we use the rescaled count outcome ({opt cigsale_count}) which is a non-negative integer, and accordingly, we specify the poisson GLM family with log link. Additionally, we add a lowess smoother to the graph {p_end}
+Now we use the rescaled count outcome ({opt cigsale_count}) which is a non-negative integer, and accordingly, we specify the poisson GLM family with log link. Additionally, we add CIs to the graph {p_end}
 
-{phang3}{bf:{stata "itsa cigsale_count, single trperiod(1989) lag(1) fig posttrend f(poisson) l(log) replace low": . itsa cigsale_count, single trperiod(1989) lag(1) fig posttrend f(poisson)l(log) replace low}}{p_end}
+{phang3}{bf:{stata "itsa cigsale_count, single trperiod(1989) lag(1) fig posttrend f(poisson) l(log) replace ci": . itsa cigsale_count, single trperiod(1989) lag(1) fig posttrend f(poisson)l(log) replace ci}}{p_end}
 {phang3}{bf:{stata "actest, lags(12)": . actest, lags(12)}}{p_end}
 
 
@@ -362,9 +359,9 @@ We now use the rescaled binary [0,1] version of the outcome ({opt cigsale_scaled
 {phang3}{bf:{stata "itsa cigsale_scaled, trperiod(1989) treatid(3) contid(23) replace posttrend f(binomial) fig low": . itsa cigsale_scaled, trperiod(1989) treatid(3) contid(23) replace posttrend f(binomial) fig low}}
 
 {pmore}
-Now we use the rescaled count version of the outcome ({opt cigsale_count}) with matches identified using {helpb itsamatch}.
+Now we use the rescaled count version of the outcome ({opt cigsale_count}) with matches identified using {helpb itsamatch}. We also add CIs to the graph.
 
-{phang3}{bf:{stata "itsa  cigsale_count, trperiod(1989) treatid(3) contid(4 8 19) replace posttrend f(poisson) fig": . itsa  cigsale_count, trperiod(1989) treatid(3) contid(4 8 19) replace posttrend f(poisson) fig}}
+{phang3}{bf:{stata "itsa cigsale_count, trperiod(1989) treatid(3) contid(4 8 19) replace posttrend f(poisson) fig ci": . itsa cigsale_count, trperiod(1989) treatid(3) contid(4 8 19) replace posttrend f(poisson) fig ci}}
 
 {pmore}
 Here we add a covariate {cmd:retprice} to the model and specify that estimates be computed at the 99% level. We also add CIs to the graph. One can see that, with the addition of covariates, the estimates are no longer linear.   

@@ -1,5 +1,5 @@
 {smcl}
-{* 10april2024}{...}
+{* 11september2024}{...}
 {cmd:help exitma}
 {hline}
 
@@ -34,7 +34,7 @@
 
 {title:Description}
 
-{pstd} {cmd:exitma} performs a cumulative meta-analysis, computes a convergence index (DAts - Doi-Abdulmajeed trial stability index), and displays a convergence plot to assess stability and assess its ‘exit' status.  
+{pstd} {cmd:exitma} performs a cumulative meta-analysis, computes a convergence index (DAts - Doi-Abdulmajeed trial stability index), and displays a convergence plot to assess stability and ‘exit' status of the meta-analysis.  
 An exit meta-analysis implies that there is no need to update the meta-analysis and there are no future primary studies required on this question.{p_end}
 {pstd} DAts values of:{p_end}
 {p 6 8} - <0 implies exit status{p_end}
@@ -109,7 +109,7 @@ The latter two restrictions improve the robustness of the index and the converge
 
 {title:Reference}
 
-{pstd} Abdulmajeed J, Furuya-Kanamori L, Xu C, Chivese T, Thalib L, Doi SA. Defining the Exit Status of a Meta-Analysis [Under review].{p_end}
+{pstd} Abdulmajeed J, Furuya-Kanamori L, Chivese T, Xu C, Thalib L, Doi SA. Defining the exit meta-Analysis. JBI Evidence Synthesis | DOI: 10.11124/JBIES-24-00155.{p_end}
 
 {pstd} Doi SA, Barendregt JJ, Khan S, Thalib L, Williams GM. Advances in the meta-analysis of heterogeneous clinical trials I: The inverse variance heterogeneity model. Contemp Clin Trials. 2015;45(Pt A):130-8.{p_end}
 
