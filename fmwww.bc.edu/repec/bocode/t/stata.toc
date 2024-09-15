@@ -38,6 +38,7 @@ p tcod module to perform Gloudemans' COD tolerance tests
 p tddens module to estimate and graph bivariate density with heat map
 p tdpd module to analyze third-degree price discrimination
 p ted module to test Stability of Regression Discontinuity Models
+p ternary module for trivariate plots
 p tesensitivity module for assessing sensitivity to the unconfoundedness assumption
 p testcase module to provide a code-testing framework for Mata
 p testex module for a statistical test of the exclusion restriction of an instrumental variable (IV)
@@ -119,6 +120,7 @@ p treemap module for treemaps
 p treeplot module to graph a tree in Stata
 p trellis module to create a trellis graph
 p trim_vars module to trim blanks in a varlist
+p trimap module for trivariate maps
 p trimlabs module to trim variable labels
 p trimmean module for trimmed means as descriptive or inferential statistics
 p trimplot module for plots of trimmed means

@@ -1,0 +1,17 @@
+d 'TERNARY': module for trivariate plots
+d
+d  This is a module for trivariate plots. 
+d
+d KW: graphics
+d KW: trivariate
+d KW: triplot
+d
+d Requires: Stata version 15 and palettes, colrspace, moremata from SSC
+d
+d Distribution-Date: 20240914
+d
+d Author: Asjad Naqvi, Austrian Institute of Economic Research (WIFO)
+d Support: email asjadnaqvi@@gmail.com
+d
+f ternary.ado
+f ternary.sthlp

@@ -8,9 +8,9 @@ d KW: maps
 d
 d Requires: Stata version 15 and spmap, palettes, colrspace from SSC (q.v.)
 d
-d Distribution-Date: 20240622
+d Distribution-Date: 20240914
 d
-d Author: Asjad Naqvi, WU Vienna
+d Author: Asjad Naqvi, Austrian Institute of Economic Research (WIFO)
 d Support: email asjadnaqvi@@gmail.com
 d
 f bimap.ado

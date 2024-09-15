@@ -1,6 +1,9 @@
-*! waffle v1.11 (05 May 2024)
+*! waffle v1.22 (27 Aug 2024)
 *! Asjad Naqvi and Jared Colston
 
+*v1.22 (27 Aug 2024): fixed label issues for graphs with just one item. Fixed a bug where wrong totals were calculated under certain conditions.
+*v1.21 (27 Jun 2024): by _cats bug. Post graph now shows dotval as an output. return locals fixed.
+*v1.2  (26 May 2024): Fix long graph normalization bug. better treatment of null shares. r(dot) added.
 *v1.11 (05 May 2024): Bug fixes to how data was collapsed under different conditions. normvar now needs to be already the sum value.
 *v1.1  (04 Apr 2024): Re-release. Allows wide and long form data.
 *v1.0  (01 Mar 2022): First release by Jared Colston
@@ -11,7 +14,7 @@
 
 capture program drop waffle 
 
-program waffle, sortpreserve
+program waffle, rclass sortpreserve 
 version 15
 
 syntax varlist(numeric min=1) [if] [in], ///
@@ -40,7 +43,6 @@ quietly {
 	
 	
 	// preamble
-	
 	if "`over'" == ""	{
 		gen _over = 1 
 		local over _over
@@ -75,12 +77,20 @@ quietly {
 	}
 	if `length' == 1 {	
 		
+		local byoff = 0
+		
 		if "`by'" == ""	{
 			gen _by = 1 
 			local by _by
+			local byoff = 1
 		}		
 		
 		cap ren `by' _cats
+		
+		
+		fillin _cats `over'
+		recode `varlist' (.=0)
+		drop _fillin
 		
 		if "`normvar'"=="" {
 			collapse (sum) `varlist', by(_cats `over')
@@ -96,36 +106,36 @@ quietly {
 	ren y_ _val
 
 	
+	
+	
 	egen _grp = group(_cats)
+	
 	
 	
 	local max = 0
 	
-	if `length' > 1 {
-		if "`normvar'" == "" {
-			levelsof _grp, local(lvls)
-			
-			foreach x of local lvls {
-				summ _val if _grp==`x', meanonly
-				if r(sum) > `max' local max = r(sum)
-			}
-		}
-		else {
-			levelsof _grp, local(lvls)
-			
-			foreach x of local lvls {
-				summ `normvar' if _grp==`x', meanonly
-				if r(sum) > `max' local max = r(sum)
-			}
-			
-		}
-	}
-	if `length'==1 {
-		summ `normvar', meanonly
-		local max = r(max)
-	}
-	
 
+	if "`normvar'" == "" {
+		levelsof _grp, local(lvls)
+			
+		foreach x of local lvls {
+			summ _val if _grp==`x', meanonly
+			if r(sum) > `max' local max = r(sum)
+		}
+	}
+	else {
+		levelsof _grp, local(lvls)
+		
+		foreach x of local lvls {
+			summ `normvar' if _grp==`x', meanonly
+			if r(sum) > `max' local max = r(max)
+		}
+		
+	}
+
+	
+	
+	
 	cap drop `normvar'
 	
 	gen double _share = .
@@ -142,6 +152,7 @@ quietly {
 		}
 	}
 	
+	
 
 	egen _tag = tag(_grp)
 	
@@ -149,6 +160,21 @@ quietly {
 	
 	
 	local obsv = `rowdots' * `coldots'  // calculate the total number of rows per group
+	
+	
+	
+	return local maxdots `obsv'
+	
+	if "`percent'" != "" {
+		local dotval = 100 / `obsv'
+		return local dot `dotval'
+	}
+	else {
+		local dotval = `max' / `obsv'
+		return local dot `dotval'
+	}
+	
+	
 	
 	expand `obsv' if _tag==1, gen(_control)	
 		
@@ -168,6 +194,10 @@ quietly {
 	egen _tag2 = tag(_grp `over')
 	egen _tag3 = group(`over')
 	
+
+
+
+	
 	levelsof _grp , local(lvls)
 	levelsof _tag3, local(ovrs)
 	
@@ -184,7 +214,7 @@ quietly {
 			summ _share if _grp==`x' & _tag3==`y' & _tag2==1, meanonly
 			local share = r(mean)
 			
-			if `r(N)' > 0 {
+			if `r(N)' > 0 & `share' > 0 {
 				summ _id  if _grp==`x', meanonly
 
 				local gap = int(`share' * `r(max)')			
@@ -199,13 +229,21 @@ quietly {
 	}	
 	
 
-	cap confirm numeric var _cats
-	if !_rc {
-		decode _cats, gen(_temp)
+	if "`byoff'" != "1" {
+		
+		cap confirm numeric var _cats
+		if !_rc {
+			decode _cats, gen(_temp)
+		}
+		else {
+			gen _temp = _cats
+		}
 	}
 	else {
-		gen _temp = _cats
+		gen _temp = string(_cats)
 	}
+	
+	
 	
 	
 	if "`format'"  == "" {
@@ -224,34 +262,28 @@ quietly {
 		levelsof _grp, local(lvls)
 	
 		foreach x of local lvls {
-			summ _val if _grp==`x' & _tag2==1, meanonly
-			replace _label = _temp + " (" + string(r(sum), "`format'") + ")"	if _grp==`x'
+			summ _val if _grp==`x' & _control==0, meanonly
+			replace _label = _temp + " (" + string(r(sum), "`format'") + ")"	if _grp==`x' 
 		}
 	}
 	else {
-		replace _label = _temp + " (" + string(_share_tot * 100, "`format'") + "%)"	
+		replace _label = _temp + " (" + string(_share_tot * 100, "`format'") + "%)"	 
 	}
 	
-
+		
+	
 	capture drop _i 
 	capture drop _control 
 	capture drop _temp
 	
-	if "`msize'"   		== "" 	local msize		0.85	
+	if "`msize'"   		== "" 	local msize		0.90	
 	if "`msymbol'" 		== "" 	local msymbol	square	
 	if "`mlwidth'" 		== "" 	local mlwidth	0.05	
 	if "`ndsymbol'"		== "" 	local ndsymbol	square		
 	if "`ndsize'"   	== "" 	local ndsize	0.5
-	if "`legposition'"  == "" 	local legposition	6
-	
-	if "`ndcolor'" 	== "" 	{
-		if "`normvar'" == "" {
-			local ndcolor none
-		}
-		else {
-			local ndcolor gs14
-		}
-	}
+	if "`legposition'"  == "" 	local legposition	6	
+	if "`ndcolor'" 		== "" 	local ndcolor gs12
+
 	
 	if "`palette'" == "" {
 		local palette tableau
@@ -333,14 +365,19 @@ quietly {
 		`dots' ///
 		(scatter _y _x if _dot==0, msize(`ndsize') msymbol(`ndsymbol') mcolor(`ndcolor')) ///
 			, ///
-			ytitle("") yscale(noline) ylabel(, nogrid) ///
-			xtitle("") xscale(noline) xlabel(, nogrid) ///
+			ytitle("") yscale(off noline range(1 `coldots')) ylabel(, nogrid) ///
+			xtitle("") xscale(off noline range(1 `rowdots')) xlabel(, nogrid) ///
 			by(, noiyaxes noixaxes noiytick noixtick noiylabel noixlabel `myleg2'	 ) ///
 			by(_label, `title' `note' rows(`rows') cols(`cols') imargin(`margin') `legswitch' ) ///
 			`subtitle' ///
 			`mylegend'	///
 				aspect(`aspect') `options'	
 						
+	
+	noi display in yellow "Each dot has a value of `dotval'. See {stata return list} for stored values."
+	
+	
+
 	
 	
 	*/

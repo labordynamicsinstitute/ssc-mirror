@@ -1,0 +1,18 @@
+d 'TRIMAP': module for trivariate maps
+d
+d  This is a module for trivariate maps. 
+d
+d KW: graphics
+d KW: trivariate
+d KW: triplot
+d KW: trimap
+d
+d Requires: Stata version 16.1 and ternary, palettes, colrspace, geoplot, moremata from SSC
+d
+d Distribution-Date: 20240914
+d
+d Author: Asjad Naqvi, Austrian Institute of Economic Research (WIFO)
+d Support: email asjadnaqvi@@gmail.com
+d
+f trimap.ado
+f trimap.sthlp

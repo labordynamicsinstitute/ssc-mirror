@@ -22773,6 +22773,7 @@ fmwww.bc.edu/repec/bocode/t/tsgraph.ado
 fmwww.bc.edu/repec/bocode/t/tabstatmat.hlp
 fmwww.bc.edu/repec/bocode/t/ltihtest14.mlib
 fmwww.bc.edu/repec/bocode/t/triplot.hlp
+fmwww.bc.edu/repec/bocode/t/ternary.ado
 fmwww.bc.edu/repec/bocode/t/tab3way.html
 fmwww.bc.edu/repec/bocode/t/truecrypt.html
 fmwww.bc.edu/repec/bocode/t/survwgt.hlp
@@ -22916,6 +22917,7 @@ fmwww.bc.edu/repec/bocode/t/thromb.do
 fmwww.bc.edu/repec/bocode/t/tabletutorial.pkg
 fmwww.bc.edu/repec/bocode/t/title.pkg
 fmwww.bc.edu/repec/bocode/t/tabletutorial_14.ihlp
+fmwww.bc.edu/repec/bocode/t/ternary.pkg
 fmwww.bc.edu/repec/bocode/t/tabhbar.hlp
 fmwww.bc.edu/repec/bocode/t/treemap.sthlp
 fmwww.bc.edu/repec/bocode/t/treeplot.pkg
@@ -22964,6 +22966,7 @@ fmwww.bc.edu/repec/bocode/t/tiva2023_store.ado
 fmwww.bc.edu/repec/bocode/t/ttable2.sthlp
 fmwww.bc.edu/repec/bocode/t/trnclist.ado
 fmwww.bc.edu/repec/bocode/t/textbarplot.html
+fmwww.bc.edu/repec/bocode/t/ternary.sthlp
 fmwww.bc.edu/repec/bocode/t/tail.sthlp
 fmwww.bc.edu/repec/bocode/t/test_python_plugin.ado
 fmwww.bc.edu/repec/bocode/t/todummies.ado
@@ -23162,6 +23165,7 @@ fmwww.bc.edu/repec/bocode/t/tfdiff.ado
 fmwww.bc.edu/repec/bocode/t/tabsort6.html
 fmwww.bc.edu/repec/bocode/t/tscb.ado
 fmwww.bc.edu/repec/bocode/t/todate.pkg
+fmwww.bc.edu/repec/bocode/t/trimap.ado
 fmwww.bc.edu/repec/bocode/t/transint.pkg
 fmwww.bc.edu/repec/bocode/t/tabmenu1.ado
 fmwww.bc.edu/repec/bocode/t/tbconfirmed.dta
@@ -23283,6 +23287,7 @@ fmwww.bc.edu/repec/bocode/t/twofold.pkg
 fmwww.bc.edu/repec/bocode/t/t2cauchy.ado
 fmwww.bc.edu/repec/bocode/t/tabletutorial_20.html
 fmwww.bc.edu/repec/bocode/t/tabletutorial_29.ihlp
+fmwww.bc.edu/repec/bocode/t/trimap.pkg
 fmwww.bc.edu/repec/bocode/t/treatoprobit.sthlp
 fmwww.bc.edu/repec/bocode/t/trpois0.pkg
 fmwww.bc.edu/repec/bocode/t/tree.sthlp
@@ -23359,6 +23364,7 @@ fmwww.bc.edu/repec/bocode/t/tabone.pkg
 fmwww.bc.edu/repec/bocode/t/tabletutorial_21d.ihlp
 fmwww.bc.edu/repec/bocode/t/tarowi.ado
 fmwww.bc.edu/repec/bocode/t/tmap.hlp
+fmwww.bc.edu/repec/bocode/t/trimap.sthlp
 fmwww.bc.edu/repec/bocode/t/table1_mc.sthlp
 fmwww.bc.edu/repec/bocode/t/tabex.pkg
 fmwww.bc.edu/repec/bocode/t/traces.hlp
