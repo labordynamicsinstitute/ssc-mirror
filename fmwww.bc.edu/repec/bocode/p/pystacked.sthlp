@@ -1,7 +1,7 @@
 {smcl}
-{* *! version 1april2023}{...}
+{* *! version 7aug2023}{...}
 {hline}
-{cmd:help pystacked}{right: v0.7.1}
+{cmd:help pystacked}{right: v0.7.5}
 {hline}
 
 {title:Title}
@@ -36,7 +36,7 @@ algorithms.
 a Python installation and scikit-learn (0.24 or higher). {opt pystacked}
 has been 
 {browse "https://github.com/aahrens1/pystacked/tree/main/cert":tested} 
-with scikit-learn 0.24.2, 1.0.2, 1.1.3, and 1.2.1.
+with scikit-learn 0.24.2, 1.0.2, 1.1.3, 1.2.1 and 1.3.
 See {helpb python:here} and {browse "https://blog.stata.com/2020/08/18/stata-python-integration-part-1-setting-up-stata-to-use-python/":here} 
 for how to set up Python for Stata on your system.
 
@@ -211,9 +211,11 @@ Alternatives are {it:nnls0} (non-negative least squares without intercept
 and without the sum-to-one constraint), 
 {it:singlebest} (use base learner with minimum MSE),
 {it:ols} (ordinary least squares),
+{it:avg} for the unweighted average,
 {it:ls1} (least squares without an intercept and with the sum-to-one constraint), or
 {it:ridge} for (logistic) ridge, which is the
-sklearn default. For more information, 
+sklearn default.
+For more information, 
 see {helpb pystacked##section_stacking:here}.
 {p_end}
 {synopt:{opt nosavep:red}} do not save predicted values
@@ -242,6 +244,14 @@ integer fold variable for cross-validation.
 number of folds used for {it:base learners} that use 
 cross-validation (e.g. {it:lassocv}); 
 default is 5.  
+{p_end}
+{synopt:{opt cv}} 
+do cross-validation even if only one base learner is provided. 
+By default, {cmd:pystacked} does not conduct cross-valididation 
+if there is only one candidate learner since no stacking is 
+done. If you want to do get the cross-validated predicted values 
+anyway (e.g. to estimate RSMPE), add this option. 
+If there are multiple learners, this option is ignored.
 {p_end}
 {synopt:{opt norandom}} 
 folds are created using the ordering of the data. 

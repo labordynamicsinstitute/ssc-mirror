@@ -1,7 +1,6 @@
-#! pystacked v0.7.1
-#! last edited: 1april2023
+#! pystacked v0.7.5
+#! last edited: 7aug2023
 #! authors: aa/ms
-
 
 # Import SFI, always with stata 16
 from sfi import Data,Matrix,Scalar,Macro
@@ -62,10 +61,6 @@ def post_prediction(pred_var,basexb,cvalid,var_type,touse,pred_type):
 	elif basexb!="" and cvalid=="":
 		# learner predictions
 		from __main__ import transform as transf
-		if len(methods)==1:
-			SFIToolkit.stata('di as err "basexp not supported with only one learner"')
-			#"
-			SFIToolkit.error(198)
 		ncol = transf.shape[1]
 		for j in range(ncol):
 			if var_type == "double":
@@ -83,14 +78,10 @@ def post_prediction(pred_var,basexb,cvalid,var_type,touse,pred_type):
 				Data.setVarLabel(pred_var+str(j+1),"Predicted probability "+" "+methods[j])
 			else:
 				Data.setVarLabel(pred_var+str(j+1),"Predicted value"+" "+methods[j])
+			pred[touse==0] = np.nan
 			Data.store(var=pred_var+str(j+1),val=pred,obs=None)
 
 	elif basexb!="" and cvalid!="":
-		if len(methods)==1:
-			SFIToolkit.stata('di as err "cvalid not supported with only one learner"')
-			#"
-			SFIToolkit.error(198)
-		# learner cross-validated predictions
 		try:  
 			from __main__ import cvalid as transf
 			if np.isnan(transf).all():
@@ -104,6 +95,7 @@ def post_prediction(pred_var,basexb,cvalid,var_type,touse,pred_type):
 		id = id -1
 		id = id.tolist()
 		ncol = transf.shape[1]
+		touse =touse[id] 
 		for j in range(ncol):
 			if var_type == "double":
 				Data.addVarDouble(pred_var+str(j+1))
@@ -111,5 +103,14 @@ def post_prediction(pred_var,basexb,cvalid,var_type,touse,pred_type):
 				Data.addVarFloat(pred_var+str(j+1))
 			pred=transf[:,j]
 			predna =np.isnan(pred)
-			Data.setVarLabel(pred_var+str(j+1),"Predicted value"+" "+methods[j])
+			if pred_type=="class":
+				pred=(pred>0.5)*1 
+				pred=pred.astype(float)
+				pred[predna]=np.nan
+				Data.setVarLabel(pred_var+str(j+1),"Cross-validated predicted class "+" "+methods[j])
+			elif type=="class":
+				Data.setVarLabel(pred_var+str(j+1),"Cross-validated predicted probability "+" "+methods[j])
+			else:
+				Data.setVarLabel(pred_var+str(j+1),"Cross-validated predicted value"+" "+methods[j])
+			pred[touse==0] = np.nan
 			Data.store(var=pred_var+str(j+1),val=pred,obs=id)

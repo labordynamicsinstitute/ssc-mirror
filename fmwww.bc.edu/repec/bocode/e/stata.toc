@@ -51,6 +51,7 @@ p enforce module to force variables to satisfy a set of accounting identities
 p enlarge module to propagate constant values through group
 p entropy module to compute Shannon, Renyi, HCT entropy & Hill numbers
 p entropyetc module for entropy and related measures for categories
+p enwei module to implement the entropy method
 p eofplot module to plot coefficients or loadings after principal component or factor analysis 
 p eperiod module to calculate elapsed time between dates
 p epiconf module to assess confounding effects in epidemiological studies 

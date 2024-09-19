@@ -1,5 +1,5 @@
 {smcl}
-{* 19mar2024}{...}
+{* 18sep2024}{...}
 {hi:help listreg}{...}
 {right:{browse "https://github.com/benjann/listreg/"}}
 {hline}
@@ -15,7 +15,7 @@
     Single-list design:
 
 {p 8 15 2}
-    {cmd:listreg} {help varname:{it:ovar}} [{cmd:=}] {help varname:{it:tvar}} {help varlist:{it:indepvars}} {ifin} {weight}
+    {cmd:listreg} {help varname:{it:ovar}} [{cmd:=}] {help varname:{it:tvar}} [{help varlist:{it:indepvars}}] {ifin} {weight}
     [{cmd:,}
     {help listreg##opt:{it:options}}
     ]
@@ -29,7 +29,7 @@
     Double-list design:
 
 {p 8 15 2}
-    {cmd:listreg} {help varname:{it:ovar1}} {help varname:{it:ovar2}} {cmd:=} {help varname:{it:tvar}} {help varlist:{it:indepvars}} {ifin} {weight}
+    {cmd:listreg} {help varname:{it:ovar1}} {help varname:{it:ovar2}} {cmd:=} {help varname:{it:tvar}} [{help varlist:{it:indepvars}}] {ifin} {weight}
     [{cmd:,}
     {help listreg##opt:{it:options}}
     ]
@@ -231,6 +231,15 @@
 
 {title:Examples}
 
+        {help listreg##ex_data:Data}
+        {help listreg##ex_single:Single-list estimate}
+        {help listreg##ex_double:Double-list estimate}
+        {help listreg##ex_xvars:Adding predictors and controls}
+        {help listreg##ex_test:Consistency test in the double-list design}
+        {help listreg##ex_gmm:Relation to GMM}
+        {help listreg##ex_atet:Relation to treatment effect estimation}
+
+{marker ex_data}{...}
 {dlgtab:Data}
 
 {pstd}
@@ -249,6 +258,7 @@
     included in list 1; {cmd:longlist}=2 indicates that the sensitive item was
     included in list 2.
 
+{marker ex_single}{...}
 {dlgtab:Single-list estimate}
 
 {pstd}
@@ -265,6 +275,7 @@
     Both results indicate that about 10 percent of students have ever intentionally
     plagiarized in a term paper, but the estimates are rather imprecise.
 
+{marker ex_double}{...}
 {dlgtab:Double-list estimate}
 
 {pstd}
@@ -289,7 +300,8 @@
     Results are almost identical, which is not surprising since the two experimental
     groups are of similar size.
 
-{dlgtab:Predictors and controls}
+{marker ex_xvars}{...}
+{dlgtab:Adding predictors and controls}
 
 {pstd}
     Not all students seem to be aware of the university's plagiarism
@@ -347,6 +359,58 @@
 {p 8 12 2}
 {com}. {stata listreg plagiarism_* longlist i.unaware, controls(i.unaware i.female i.working i.papers) controls(i.unaware year)}{txt}
 
+{marker ex_test}{...}
+{dlgtab:Consistency test in the double-list design}
+
+{pstd}
+    A systematic difference in results between the two lists in a double-list
+    design indicates that the list experiment did not work as expected: apparently,
+    the choice of the shortlist, or other differences between the two
+    experimental groups, mattered for the results, which is at odds
+    with the basic assumptions of the list experiment.
+
+{pstd}
+    One approach to test the consistency of results
+    across lists is to specify options {cmd:average} and {cmd:aequations} so that
+    list-specific outcome equations are estimated and included
+    in the results. Then use command {helpb test} to evaluate
+    whether the two equations are different (when calling
+    {helpb test}, make sure to specify option {cmd:constant} so that the constant
+    is included in the test). Example:
+
+        {com}. {stata listreg plagiarism_* longlist, average aequations}{txt}
+        {com}. {stata test [LL1 = LL2], constant}{txt}
+
+{pstd}
+    This also works if there are predictors and controls in the model:
+
+{p 8 12 2}
+{com}. {stata listreg plagiarism_* longlist i.unaware i.female, average aequations controls(i.unaware i.female year i.working i.papers)}{txt}
+{p_end}
+        {com}. {stata test [LL1 = LL2], constant}{txt}
+
+{pstd}
+    An alternative approach is to add an indicator for the experimental group
+    to the outcome equation of the default estimator. The effect of the
+    group indicator is equal to the difference in results between the two lists.
+
+        {com}. {stata listreg plagiarism_* longlist i.longlist}{txt}
+
+{pstd}
+    If the model contains predictors, include all interactions between the group
+    indicator and the predictors and then use {helpb test} to perform a joint
+    test across the main effect and all interaction terms.
+
+{p 8 12 2}
+{com}. {stata listreg plagiarism_* longlist i.unaware i.female i.longlist i.longlist#(i.unaware i.female), controls(i.unaware i.female year i.working i.papers)}{txt}
+{p_end}
+{p 8 12 2}
+{com}. {stata test 2.longlist 2.longlist#1.unaware 2.longlist#1.female}{txt}
+
+{pstd}
+    The two outlined approaches lead to equivalent results.
+
+{marker ex_gmm}{...}
 {dlgtab:Relation to GMM}
 
 {pstd}
@@ -378,6 +442,7 @@
               winitial(identity)
         listreg `Y1' `Y2' = `T' `X', controls(`Z1') controls(`Z2') nodfr listwise{txt}
 
+{marker ex_atet}{...}
 {dlgtab:Relation to treatment effect estimation}
 
 {pstd}

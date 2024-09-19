@@ -1,5 +1,5 @@
-#! pystacked v0.7.1
-#! last edited: 1april2023
+#! pystacked v0.7.5
+#! last edited: 7aug2023
 #! authors: aa/ms
 
 # Import required Python modules
@@ -60,6 +60,23 @@ class SingleBest(BaseEstimator):
         check_is_fitted(self, 'is_fitted_')
         return X[:,self.best]
 
+class AvgEstimator(BaseEstimator):
+    """
+    Avg of learners
+    """
+    _estimator_type="regressor"
+    def fit(self, X, y):
+        X, y = check_X_y(X, y, accept_sparse=True)
+        self.is_fitted_ = True
+        ncols = X.shape[1]
+        self.coef_ = np.repeat(1/ncols,ncols)
+        self.cvalid=X
+        return self
+    def predict(self, X):
+        X = check_array(X, accept_sparse=True)
+        check_is_fitted(self, 'is_fitted_')
+        return X.mean(axis=1)
+
 class ConstrLS(BaseEstimator):
     """
     Constrained least squares, weights sum to 1 and optionally >= 0
@@ -104,10 +121,31 @@ class ConstrLSClassifier(ConstrLS):
     def predict_proba(self, X):
         return self.predict(X)
 
-class LinearRegressionClassifier(LinearRegression):
+class AvgClassifier(AvgEstimator):
     _estimator_type="classifier"
     def predict_proba(self, X):
         return self.predict(X)
+
+class SingleBestClassifier(SingleBest):
+    _estimator_type="classifier"
+    def predict_proba(self, X):
+        return self.predict(X)
+
+class LinearRegressionClassifier(LinearRegression):
+    _estimator_type="classifier"
+    def predict_proba(self, X):
+        self.cvalid=X
+        return self.predict(X)
+
+class LinearRegression2(LinearRegression):
+    def fit(self,X,y):
+        self.cvalid=X
+        return LinearRegression.fit(self,X,y)
+
+class RidgeCV2(RidgeCV):
+    def fit(self,X,y):
+        self.cvalid=X
+        return RidgeCV.fit(self,X,y)
 
 class SparseTransformer(TransformerMixin):
     def fit(self, X, y=None, **fit_params):
@@ -183,6 +221,7 @@ def run_stacked(type, # regression or classification
     njobs, # number of cores
     foldvar, # foldvar
     prefit, # don't do CV
+    cv, # also do CV if there is only one learner
     bfolds, #
     shuff, #
     idvar, # id var
@@ -279,7 +318,7 @@ def run_stacked(type, # regression or classification
             if methods[m]=="ols":
                 opt =allopt[m]
                 newmethod = build_pipeline(allpipe[m],xvars,allxvar_sel[m])
-                newmethod.append(('ols',LinearRegression(**opt)))
+                newmethod.append(('ols',LinearRegression2(**opt)))
             if methods[m]=="lassoic":
                 opt =allopt[m]
                 newmethod = build_pipeline(allpipe[m],xvars,allxvar_sel[m])
@@ -382,19 +421,25 @@ def run_stacked(type, # regression or classification
     elif finalest == "ridge" and type == "class": 
         fin_est = LogisticRegression()
     elif finalest == "nnls0" and type == "reg": 
-        fin_est = LinearRegression(fit_intercept=False,positive=True)
+        fin_est = LinearRegression2(fit_intercept=False,positive=True)
     elif finalest == "nnls_sk" and type == "reg": 
-        fin_est = LinearRegression(fit_intercept=False,positive=True)
+        fin_est = LinearRegression2(fit_intercept=False,positive=True)
     elif finalest == "nnls1" and type == "reg": 
         fin_est = ConstrLS()
     elif finalest == "ridge" and type == "reg": 
-        fin_est = RidgeCV()
+        fin_est = RidgeCV2()
+    elif finalest == "avg" and type == "reg": 
+        fin_est = AvgEstimator()
+    elif finalest == "avg" and type == "class": 
+        fin_est = AvgClassifier()
     elif finalest == "singlebest" and type == "reg": 
         fin_est = SingleBest()
+    elif finalest == "singlebest" and type == "class": 
+        fin_est = SingleBestClassifier()
     elif finalest == "ols" and type == "class": 
         fin_est = LinearRegressionClassifier()    
     elif finalest == "ols" and type == "reg": 
-        fin_est = LinearRegression()    
+        fin_est = LinearRegression2()    
     elif finalest == "ls1" and type == "reg":
         fin_est = ConstrLS(unit_interval=False)    
     elif finalest == "ls1" and type == "class":
@@ -405,11 +450,11 @@ def run_stacked(type, # regression or classification
         sfi.SFIToolkit.error(198)
 
     # if single base learner, use voting with weight = 1
-    if len(methods)==1:
+    if len(methods)==1 and cv=="":
         voting="voting"
         voteweights=""
         votetype="soft"
-        sfi.SFIToolkit.stata('di as text "Single base learner: no stacking done."')
+        sfi.SFIToolkit.stata('di as text "Single base learner: no stacking or cross-validation done."')
         #"
 
     if voting=="" and type=="reg":

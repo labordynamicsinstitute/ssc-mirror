@@ -1,5 +1,5 @@
-*! pystacked v0.7.1
-*! last edited: 1april2023
+*! pystacked v0.7.5
+*! last edited: 7aug2023
 *! authors: aa/ms
 
 // parent program
@@ -303,11 +303,14 @@ version 16.0
             local numopts `numopts' cmdopt`i'(string asis) pipe`i'(string asis) xvars`i'(varlist fv)
         }
     }
+    syntax varlist(min=2 fv) [if] [in] [aweight fweight], [*]
+    local globalopt `options'
     syntax varlist(min=2 fv) [if] [in] [aweight fweight], ///
                 [ ///
                     TYpe(string) /// classification or regression
                     FINALest(string) ///
                     NJobs(int 0) ///
+                    CV ///
                     Folds(int 5) ///
                     FOLDVar(varname) ///
                     PREFit ///
@@ -390,7 +393,7 @@ version 16.0
     }
 
     * set the Python seed using randomly drawn number 
-    if `pyseed'<0 {
+    if `pyseed'<0 & "`noestimate'"=="" {
         local pyseed = round(runiform()*10^8)
     }
 
@@ -460,7 +463,7 @@ version 16.0
     if "`foldvar'"=="" {
         *** gen folds
         tempvar uni cuni fid
-        if "`norandom'"~="" {
+        if "`norandom'"~="" | "`noestimate'"!="" {
             qui gen `uni' = _n
         }
         else {
@@ -631,6 +634,7 @@ version 16.0
                         `njobs' , ///
                         "`fid'", ///
                         "`prefit'", ///
+                        "`cv'", ///
                         `bfolds', ///
                         `shuffle', ///
                         "`id'", ///
@@ -657,6 +661,7 @@ version 16.0
         ereturn local xvars_o`i' `xvars_orig`i''
     }
     ereturn scalar mcount = `mcount'
+    ereturn local globalopt `globalopt'
 
 end
 
@@ -788,19 +793,22 @@ program define pystacked_graph_table, rclass
         // complete graph title
         local title `title' Predictions
             
-        tempvar stacking_p stacking_r stacking_p_cv stacking_r_cv
+        tempvar stacking_p stacking_r stacking_p_cv stacking_r_cv stacking_rsq stacking_rsq_cv
         predict double `stacking_p'
         label var `stacking_p' "Prediction: Stacking Regressor"
         qui gen double `stacking_r' = `y' - `stacking_p'
+        qui gen double `stacking_rsq' = (`stacking_r')^2
         qui predict double `stacking_p', basexb
         qui predict double `stacking_p_cv', basexb cv
         forvalues i=1/`nlearners' {
             local lname : word `i' of `learners'
             label var `stacking_p'`i' "Prediction: `lname'"
             label var `stacking_p_cv'`i' "Prediction (CV): `lname'"
-            tempvar stacking_r`i' stacking_r_cv`i'
+            tempvar stacking_r`i' stacking_rsq`i'  stacking_r_cv`i' stacking_rsq_cv`i'
             qui gen double `stacking_r`i'' = `y' - `stacking_p'`i'
+            qui gen double `stacking_rsq`i'' = (`stacking_r`i'')^2
             qui gen double `stacking_r_cv`i'' = `y' - `stacking_p_cv'`i'
+            qui gen double `stacking_rsq_cv`i''=(`stacking_r_cv`i'')^2
         }
         // assemble stacked CV prediction
         qui gen double `stacking_p_cv'=0
@@ -851,10 +859,11 @@ program define pystacked_graph_table, rclass
     else {
         // classification problem
         
-        tempvar stacking_p stacking_c stacking_p_cv stacking_c_cv stacking_r  stacking_r_cv
+        tempvar stacking_p stacking_c stacking_p_cv stacking_c_cv stacking_r stacking_r_cv stacking_rsq  stacking_rsq_cv
         qui predict double `stacking_p', pr
         label var `stacking_p' "Predicted Probability: Stacking Regressor"
         qui gen double `stacking_r' = `y' - `stacking_p'
+        qui gen double `stacking_rsq' = (`stacking_r')^2
         qui predict double `stacking_c', class
         label var `stacking_c' "Predicted Classification: Stacking Regressor"
         qui predict double `stacking_p', pr basexb
@@ -869,8 +878,11 @@ program define pystacked_graph_table, rclass
             label var `stacking_p_cv'`i' "Predicted Probability (CV): `lname'"
             label var `stacking_c_cv'`i' "Predicted Classification (CV): `lname'"
             tempvar stacking_r`i' stacking_r_cv`i'
+            tempvar stacking_rsq`i' stacking_rsq_cv`i'
             qui gen double `stacking_r`i'' = `y' - `stacking_p'`i'
             qui gen double `stacking_r_cv`i'' = `y' - `stacking_p_cv'`i'
+            qui gen double `stacking_rsq`i'' = (`stacking_r`i'')^2
+            qui gen double `stacking_rsq_cv`i'' = (`stacking_r_cv`i'')^2
        }
         // assemble stacked CV prediction
         qui gen double `stacking_p_cv'=0
@@ -971,29 +983,29 @@ program define pystacked_graph_table, rclass
         tempname m m_in m_cv m_out
         
         // column for in-sample RMSPE
-        qui sum `stacking_r' if e(sample)
-        mat `m_in' = r(sd) * sqrt( (r(N)-1)/r(N) )
+        qui sum `stacking_rsq' if e(sample)
+        mat `m_in' = sqrt(r(mean))
         forvalues i=1/`nlearners' {
-            qui sum `stacking_r`i'' if e(sample)
-            mat `m_in' = `m_in' \ (r(sd) * sqrt( (r(N)-1)/r(N) ))
+            qui sum `stacking_rsq`i'' if e(sample)
+            mat `m_in' = `m_in' \ (sqrt(r(mean)))
         }
         
         // column for in-sample RMSPE
-        qui sum `stacking_r_cv' if e(sample)
-        mat `m_cv' = r(sd) * sqrt( (r(N)-1)/r(N) )
+        // we don't report RMSPE for composite CV prediction
+        mat `m_cv' = .
         forvalues i=1/`nlearners' {
-            qui sum `stacking_r_cv`i'' if e(sample)
-            mat `m_cv' = `m_cv' \ (r(sd) * sqrt( (r(N)-1)/r(N) ))
+            qui sum `stacking_rsq_cv`i'' if e(sample)
+            mat `m_cv' = `m_cv' \ (sqrt(r(mean)))
         }
         
         // column for OOS MSPE
         if "`holdout'`holdout1'"~="" {
             // touse is the holdout indicator
-            qui sum `stacking_r' if `touse'
-            mat `m_out' = r(sd) * sqrt( (r(N)-1)/r(N) )
+            qui sum `stacking_rsq' if `touse'
+            mat `m_out' = sqrt(r(mean))
             forvalues i=1/`nlearners' {
-                qui sum `stacking_r`i'' if `touse'
-                mat `m_out' = `m_out' \ (r(sd) * sqrt( (r(N)-1)/r(N) ))
+                qui sum `stacking_rsq`i'' if `touse'
+                mat `m_out' = `m_out' \ (sqrt(r(mean)))
             }
         }
         else {
@@ -1018,10 +1030,13 @@ program define pystacked_graph_table, rclass
             local in_0    = r(N)
             qui count if `y'==1 & `stacking_c'==`r' & e(sample)
             local in_1    = r(N)
-            qui count if `y'==0 & `stacking_c_cv'==`r' & e(sample)
-            local cv_0    = r(N)
-            qui count if `y'==1 & `stacking_c_cv'==`r' & e(sample)
-            local cv_1    = r(N)
+	        // don't report for composite CV prediction
+            // qui count if `y'==0 & `stacking_c_cv'==`r' & e(sample)
+            // local cv_0    = r(N)
+            // qui count if `y'==1 & `stacking_c_cv'==`r' & e(sample)
+            // local cv_1    = r(N)
+            local cv_0 = .
+            local cv_1 = .
             if "`holdout'`holdout1'"~="" {
                 // touse is the holdout indicator
                 qui count if `y'==0 & `stacking_c'==`r' & `touse'

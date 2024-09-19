@@ -1,4 +1,4 @@
-*! version 1.1.0  16feb2023  hendri.adriaens@centerdata.nl
+*! version 1.2.0  18sep2024  hendri.adriaens@centerdata.nl
 program define docd
 	version 17
 
@@ -6,6 +6,13 @@ program define docd
 	splitpath "`path'"
 
 	local current "`c(pwd)'"
+	local isAbsolute = substr(trim("`path'"), 2, 1) == ":"
+	if `isAbsolute' {
+		local fullpath = "`path'"
+	}
+	else {
+		local fullpath = subinstr("`current'/`path'", "\", "/", .)
+	}
 	
 	// Change the working directory to the path of the do-file
 	capture cd "`r(directory)'"
@@ -28,6 +35,7 @@ program define docd
 
 	// Exit in case the do-file produced an error
 	if `error' != 0 {
+		disp as error "error in '`fullpath''"
 		exit `error'
 	}
 

@@ -1,73 +1,47 @@
-*! ddml v1.2
-*! last edited: 21 jan 2023
+*! ddml v1.4.4
+*! last edited: 30aug2024
 *! authors: aa/ms
 
 program _ddml_drop, eclass
-	version 13
+	version 16
 
 	syntax , mname(name)		// will already have verified that mname is a valid ddml mStruct
+	
+	*** extract details of estimation
+	mata: model_chars(`mname')
+	local nreps		= r(nreps)
+	local numeqnD	= r(numeqnD)
+	local numeqnZ	= r(numeqnZ)
 
-	// blank eqn - declare this way so that it's a struct and not transmorphic
-	tempname eqn
-	mata: `eqn' = init_eStruct()
+	// fold IDs
+	forvalues m=1/`nreps' {
+		local fidlist `fidlist' `mname'_fid_`m'
+	}
 	
-	// locals used below
-	mata: st_local("model",`mname'.model)
-	
-	mata: st_local("nameY",`mname'.nameY)
-	mata: st_local("nameD",invtokens(`mname'.nameD))
-	mata: st_local("nameZ",invtokens(`mname'.nameZ))
-	local numeqnY	: word count `nameY'				// can be zero if no variables created yet
-	local numeqnD	: word count `nameD'
-	local numeqnZ	: word count `nameZ'
+	// collect names of Y variables
+	local vlist `r(Y)' `r(Y_L)'
 
-	if `numeqnY' {
-		mata: `eqn' = (`mname'.eqnAA).get("`nameY'")
-		// equation struct naming is the model name + dep variable name
-		local eqnlist `mname'_`nameY'
-		mata: st_local("vtlistY",invtokens(`eqn'.vtlist))
-		mata: st_local("ssvname",invtokens(`eqn'.shortstack))
-		local vtlist `vtlistY' `ssvname'
+	// collect names of D variables
+	forvalues i=1/`numeqnD' {
+		local vlist `vlist' `r(D`i')' `r(D`i'_L)' `r(D`i'_h)'
 	}
 	
-	if `numeqnD' {
-		foreach var in `nameD' {
-			mata: `eqn' = (`mname'.eqnAA).get("`var'")
-			local eqnlist `eqnlist' `mname'_`var'
-			mata: st_local("lieflag",strofreal(`eqn'.lieflag))
-			mata: st_local("vtlistD",invtokens(`eqn'.vtlist))
-			mata: st_local("ssvname",invtokens(`eqn'.shortstack))
-			local vtlist `vtlist' `vtlistD' `ssvname'
-			mata: st_local("lieflag",strofreal(`eqn'.lieflag))
-			if `lieflag' {
-				foreach vn in `vtlistD' {
-					local vtlistD_h `vtlistD_h' `vn'_h
-				}
-				local vtlist `vtlist' `vtlistD_h'			
-			}
+	// collect names of Z variables
+	forvalues i=1/`numeqnZ' {
+		local vlist `vlist' `r(Z`i')' `r(Z`i'_L)'
+	}
+
+	// add rep numbers
+	foreach vn in `vlist' {
+		forvalues m=1/`nreps' {
+			local vreplist `vreplist' `vn'_`m'
 		}
 	}
-	
-	if `numeqnZ' {
-		foreach var in `nameZ' {
-			mata: `eqn' = (`mname'.eqnAA).get("`var'")
-			local eqnlist `eqnlist' `mname'_`var'
-			mata: st_local("vtlistZ",invtokens(`eqn'.vtlist))
-			mata: st_local("ssvname",invtokens(`eqn'.shortstack))
-			local vtlist `vtlistZ' `ssvname'
-		}
-	}
-	
-	*** Add wildcards, then unabbreviate
-	foreach var in `vtlist' {
-		// variables may not exist yet
-		cap unab evtlist : `var'*
-		if _rc==0 {
-			// variables exist so drop them
-			foreach var of varlist `evtlist' {
-				cap drop `var'
-			}
-		}
+
+	// drop vars may not exist, so use capture
+	foreach vn in `vreplist' {
+		cap confirm variable `vn', exact
+		if _rc==0	drop `vn'
 	}
 	
 	*** drop id, fold id, sample var
@@ -75,14 +49,7 @@ program _ddml_drop, eclass
 	cap drop `mname'_sample*
 	cap drop `mname'_fid*		// multiple folds
 	
-	*** drop eqn structs
-	foreach estruct in `eqnlist' {
-		// eqn structs may not exist yet
-		cap mata: mata drop `estruct'
-	}
-	mata: mata drop `eqn'		// temp eqn
-
-	*** drop model structs
-	mata: mata drop `mname'
+	*** drop model struct
+	cap mata: mata drop `mname'
 
 end

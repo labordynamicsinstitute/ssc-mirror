@@ -10,9 +10,9 @@ d
 d KW: machine learning
 d KW: double de-biased machine learning
 d
-d Requires: Stata version 14 and pystacked from SSC (q.v.)
+d Requires: Stata version 14 and pystacked (v16) from SSC (q.v.)
 d
-d Distribution-Date: 20230430
+d Distribution-Date: 20240918
 d
 d Author: Achim Ahrens, ETH Zürich
 d Support: email achim.ahrens@@gess.ethz.ch
@@ -50,10 +50,58 @@ f ddml.ado
 f ddml.sthlp
 f ddml_cert.do
 f ddml_extract.sthlp
-f doubleml_cert.log
+f ddml_crossfit.sthlp
+f ddml_examples.sthlp
+f ddml_export.sthlp
+f ddml_extract.sthlp
+f ddml_fiv.sthlp
+f ddml_init.sthlp
+f ddml_install_ref_auth.ihlp
+f ddml_interactive.sthlp
+f ddml_interactiveiv.sthlp
+f ddml_iv.sthlp
+f ddml_late.sthlp
+f ddml_overlap.sthlp
+f ddml_overview.sthlp
+f ddml_partial.sthlp
+f ddml_sample.sthlp
+f ddml_stacking.sthlp
+f ddml_example_describe.sthlp
+f ddml_example_export.sthlp
+f ddml_example_extract.sthlp
+f ddml_example_fcluster.sthlp
+f ddml_example_flexiv_anylearner_basic.sthlp
+f ddml_example_flexiv_anylearner_detailed.sthlp
+f ddml_example_interactive_pystacked_basic.sthlp
+f ddml_example_interactive_pystacked_detailed.sthlp
+f ddml_example_interactiveiv_pystacked_basic.sthlp
+f ddml_example_interactiveiv_pystacked_detailed.sthlp
+f ddml_example_overlap.sthlp
+f ddml_example_partial_anylearner_detailed.sthlp
+f ddml_example_partial_pystacked_basic.sthlp
+f ddml_example_partial_pystacked_detailed.sthlp
+f ddml_example_partial_pystacked_multitreat.sthlp
+f ddml_example_partialiv_anylearner_basic.sthlp
+f ddml_example_partialiv_pystacked_basic.sthlp
+f ddml_example_stacking.sthlp
+f ../c/cert_ddml_export.csv
+f ../m/m_ddml_sip1991.csv
+f ../b/BLP.dta
+f ../c/cattaneo2.dta
+f ../j/jtpa.dta
+f ../s/sipp1991.dta
 f ../l/lddml.do
 f ../l/lddml.mlib
 f ../q/qddml.ado
 f ../q/qddml.sthlp
 f ../q/qddml_cert.do
-f ../q/qddml_cert.log
+f ddml_cert_all.do
+f ddml_cert_crossfit.do
+f ddml_cert_fiv.do
+f ddml_cert_helpfiles.do
+f ddml_cert_interactive.do
+f ddml_cert_interactiveiv.do
+f ddml_cert_misc.do
+f ddml_cert_partial_iv.do
+f ddml_cert_partial.do
+f ddml_cert.do

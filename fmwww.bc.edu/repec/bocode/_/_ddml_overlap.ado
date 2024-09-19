@@ -1,9 +1,9 @@
-*! ddml v1.2
-*! last edited: 21 jan 2023
+*! ddml v1.4.4
+*! last edited: 30aug2024
 *! authors: aa/ms
 
 program define _ddml_overlap
-
+	version 16
 	syntax 		, [									///
 				mname(name)							///
 				replist(numlist integer min=1)		/// list of resamples
@@ -30,8 +30,8 @@ program define _ddml_overlap
 	local numeqnD : word count `nameD'
 	local numeqnZ : word count `nameZ'
 	
-	if "`model'"~="interactive" & "`model'"~="late" {
-		di as err "error - overlap supported only for interactive or late models"
+	if "`model'"~="interactive" & "`model'"~="interactiveiv" {
+		di as err "error - overlap supported only for interactive or interactiveiv (LATE) models"
 		exit 198
 	}
 	if "`model'"=="interactive" & `numeqnD'>1 {
@@ -44,9 +44,13 @@ program define _ddml_overlap
 	}
 	
 	// default title
-	if "`title'"=="" {
+	if "`title'"=="" & "`model'"=="interactive" {
 		local title "Propensity scores by treatment group"
 	}
+	else if "`title'"=="" {
+		local title "Propensity scores by assignment group"
+	}
+	
 	// default replist, graph subtitle
 	if "`replist'"=="" {
 		local replist 1/`nreps'
@@ -100,6 +104,8 @@ program define _ddml_overlap
 	foreach dtilde in `pslist' {
 		// gname is individual dtilde graph
 		local gname `dtilde'
+		// reset gcmd local
+		local gcmd
 		// loop through resamples
 		foreach r of numlist `replist' {
 			tempvar x0`r' x1`r' ps0`r' ps1`r' ps`r'

@@ -1,4 +1,4 @@
-*! version 1.0.1  22mar2023  hendri.adriaens@centerdata.nl
+*! version 1.0.2  18sep2024  hendri.adriaens@centerdata.nl
 program define replacen
 	version 17
 	gettoken n 0 : 0

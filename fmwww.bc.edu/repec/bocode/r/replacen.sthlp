@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.1 16mar2023}{...}
+{* *! version 1.0.2 18sep2024}{...}
 {viewerjumpto "Title" "replacen##title"}{...}
 {viewerjumpto "Syntax" "replacen##syntax"}{...}
 {viewerjumpto "Description" "replacen##description"}{...}
@@ -28,7 +28,7 @@ replacen {hline 2} Replace contents in exactly n observations.
 {title:Description}
 
 {pstd}
-{cmd:replacen} executes the {help replace} command, but checks whether exactly n observations have been modified. If not, an error is issued.
+{cmd:replacen} executes the {help replace} command, but checks whether exactly {it:n} observations have been modified. If not, an error is issued.
 
 
 {marker examples}{...}
@@ -37,8 +37,8 @@ replacen {hline 2} Replace contents in exactly n observations.
 The first call to {cmd:replacen} will not produce an error. The second, same, call will produce an error as no observations will be modified by the {cmd:replace} command.
 
 	{cmd:. sysuse auto, clear}
-	{cmd:. replace 1 price = 0 if make == "AMC Concord"}
-	{cmd:. replace 1 price = 0 if make == "AMC Concord"}
+	{cmd:. replacen 1 price = 0 if make == "AMC Concord"}
+	{cmd:. replacen 1 price = 0 if make == "AMC Concord"}
 
 
 {marker author}{...}

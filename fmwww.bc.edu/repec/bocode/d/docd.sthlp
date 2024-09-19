@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.0 16feb2023}{...}
+{* *! version 1.2.0 18sep2024}{...}
 {viewerjumpto "Title" "docd##title"}{...}
 {viewerjumpto "Syntax" "docd##syntax"}{...}
 {viewerjumpto "Description" "docd##description"}{...}
@@ -46,14 +46,17 @@ directory). This reduces the need for specifying hardwired paths in do-files in 
 to a bare minimum, making project management easier.
 
 {pstd}
-The commands pass at most 10 arguments to the do-file that is being executed.
+{it:path_to_dofile} can be relative or absolute, but of course relative paths are highly
+adviced in all cases, and required when sharing code across systems. When an error occurs
+in {it:path_to_dofile}, {cmd:docd} and {cmd:runcd} will display the absolute path of
+{it:path_to_dofile} so it will be immediately clear which file should be fixed.
 
 
 {marker examples}{...}
 {title:Examples}
 
-	{cmd:. docd "sub\dir\example.do"}
-	{cmd:. runcd "..\dir\example.do"}
+	{cmd:. docd "sub/dir/example.do"}
+	{cmd:. runcd "../dir/example.do"}
 
 
 {marker author}{...}

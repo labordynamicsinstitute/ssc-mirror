@@ -1,0 +1,20 @@
+d 'ENWEI': module to implement the entropy method
+d
+d  This command implements the entropy method to calculate
+d indicator weights and comprehensive scores based on
+d multi-dimensional data. 
+d
+d KW: entropy method
+d KW: multi-criteria evaluation
+d KW: weighting
+d KW: comprehensive score
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20240918
+d
+d Author: Jiang Qi, NA
+d Support: email deeptravonearth@@gmail.com
+d
+f enwei.ado
+f enwei.sthlp
