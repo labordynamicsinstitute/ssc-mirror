@@ -1,4 +1,4 @@
-*! version 1.2.7  17jul2024  Ben Jann
+*! version 1.3.4  18aug2024  Ben Jann
 
 capt which colorpalette
 if _rc==1 exit _rc
@@ -62,7 +62,7 @@ program _geoplot, rclass
         */ BACKground BACKground2(str) tissot TISSOT2(str)/*
         */ tight Margin(str) REFdim(str) ASPECTratio(str) PCYCle(passthru)/*
         */ YSIZe(passthru) XSIZe(passthru) axes SCHeme(passthru) /*
-        */ frame(str) NOGRAPH * ]
+        */ frame(str) NOGRAPH NOISily * ]
     if `"`project2'"'!=""    local project project
     if "`project'"!=""       _parse_project `project2'
     if `"`background2'"'!="" local background background
@@ -218,6 +218,7 @@ program _geoplot, rclass
         
     // project map
         _project `"`project2'"' `"`project_opts'"'
+        local xrescale = r(xrescale)
     
     // rotate map
         _rotate `angle'
@@ -322,8 +323,8 @@ program _geoplot, rclass
     
     // slegend
         forv i = 1/`slegend_n' {
-            capt n _Legend slegend "`refdim'" `refsize'/*
-                */ `Ymin' `Ymax' `Xmin' `Xmax', `slegend_`i'' // plot
+            capt n _Legend slegend "`refdim'" `refsize' `Ymin' `Ymax'/*
+                */ `Xmin' `Xmax', xrescale(`xrescale') `slegend_`i'' // plot
             if _rc==1 exit 1
             if _rc {
                 di as err "error in slegend()"
@@ -373,6 +374,11 @@ program _geoplot, rclass
         if "`nograph'"=="" {
             `graph'
         }
+    }
+    
+    // display graph command
+    if "`noisily'"!="" {
+        _di_grcmd `graph'
     }
     
     // returns
@@ -722,9 +728,14 @@ program _parse_project
     c_local project_opts `radian'
 end
 
-program _project
+program _project, rclass
     args project opts in
-    if strtrim(`"`project'"')=="" exit
+    tempname xrescale
+    scalar `xrescale' = 1
+    if strtrim(`"`project'"')=="" {
+        return scalar xrescale = `xrescale'
+        exit
+    }
     capt confirm var X2, exact
     if _rc==1 exit 1
     if _rc local XY X Y
@@ -733,22 +744,23 @@ program _project
     if _rc==1 exit 1
     if _rc==0 { // lock non-rotating shapes
         local XY `XY' cX cY
-        tempvar dY dX rescale
+        tempvar dY dX
         qui gen double `dY' = Y - cY if cY<. `in'
         qui gen double `dX' = X - cX if cX<. `in'
         qui replace Y = cY if cY<. `in'
         qui replace X = cX if cX<. `in'
         su X `in', meanonly
-        scalar `rescale' = r(max) - r(min)
+        scalar `xrescale' = r(max) - r(min)
     }
     geoframe project `project' `in', `opts' xy(`XY') fast noshp
     if "`dY'"!="" { // rescale and restore non-rotating shapes
         su X `in', meanonly
-        scalar `rescale' = (r(max) - r(min)) / `rescale'
-        if `rescale'>=. scalar `rescale' = 1
-        qui replace Y = Y + `dY'*`rescale' if cY<. `in'
-        qui replace X = X + `dX'*`rescale' if cX<. `in'
+        scalar `xrescale' = (r(max) - r(min)) / `xrescale'
+        if `xrescale'>=. scalar `xrescale' = 1
+        qui replace Y = Y + `dY'*`xrescale' if cY<. `in'
+        qui replace X = X + `dX'*`xrescale' if cX<. `in'
     }
+    return scalar xrescale = `xrescale'
 end
 
 program _rotate
@@ -1954,16 +1966,16 @@ program _Legend
         local 0 `", `glegend2'"'
         if "`pcycle'"=="" local pcycle 15
         local lhs
-        local opts Layout(str asis) LAYErs(str asis) BOTtom SYMScale(real .8)
+        local opts Layout(str asis) LAYErs(str asis) BOTtom SYMSCale(str)
     }
     else {
-        syntax [, slegend(str asis) ]
+        syntax [, slegend(str asis) xrescale(str) ]
         local 0: copy local slegend
         local lhs anything(id="{it:numlist}")
-        local opts Layer(numlist int max=1 >0) OVERlay OVERLay2(numlist max=1)/*
+        local opts Layer(numlist int max=1 >0) OVERlay OVERlay2(numlist max=1)/*
             */ SAlign(str) TFLoat Format(str) HEADing(str asis)
     }
-    syntax `lhs'[, `opts' REVerse/*
+    syntax `lhs'[, `opts' REVerse SYMSIze(numlist max=1)/*
         */ SYMYsize(numlist max=1) SYMXsize(numlist max=1) /* 
         */ KEYGap(real 1) ROWGap(numlist max=1) COLGap(real 3)/*
         */ LINESKip(real 2) TEXTFirst TEXTWidth(numlist) TAlign(str)/*
@@ -1978,15 +1990,13 @@ program _Legend
         local TITLE `TITLE' `title_`i''
     }
     if "`ltype'"=="glegend" {
-        if "`symysize'"==""   local symysize  3
-        if "`symxsize'"==""   local symxsize  3
+        if "`symsize'"==""    local symsize   3
         if "`rowgap'"==""     local rowgap    0
         if "`textwidth'"==""  local textwidth 12
         if `"`position'"'=="" local position  2
     }
     else {
-        if "`symysize'"==""   local symysize  2
-        if "`symxsize'"==""   local symxsize  2
+        if "`symsize'"==""    local symsize   2
         if "`rowgap'"==""     local rowgap    1
         if "`textwidth'"==""  local textwidth 12
         else                  gettoken textwidth : textwidth
@@ -1994,6 +2004,8 @@ program _Legend
         else                  gettoken headskiph : headskip
         if `"`position'"'=="" local position  7
     }
+    if "`symysize'"=="" local symysize `symsize'
+    if "`symxsize'"=="" local symxsize `symsize'
     local reverse = "`reverse'"!=""
     local tfirst  = "`textfirst'"!=""
     local span    = "`span'"==""
@@ -2028,7 +2040,7 @@ program _Legend
         tempname PC
         frame create `PC'  byte C double(_X1 _Y1 _X2 _Y2)
         _glegend `LBL' `SHP' `PC' `refsize'/*
-            */ `"`layout'"' `"`layers'"' "`bottom'" `symscale'/*
+            */ `"`layout'"' `"`layers'"' "`bottom'" `"`symscale'"'/*
             */ `reverse' `symysize' `symxsize' `keygap' `rowgap' `colgap'/*
             */ `lineskip' `tfirst' "`textwidth'" `talign' "`headskip'" `span'/*
             */ `halign' `"`topts'"' `"`hopts'"' `pcycle' `"`options'"'
@@ -2036,7 +2048,7 @@ program _Legend
     else {
         tempname SYM SYMBOL
         frame create `SYM' double(_X _Y W)
-        _slegend `LBL' `SYM' `SYMBOL' `refsize'/*
+        _slegend `LBL' `SYM' `SYMBOL' `refsize' `xrescale'/*
             */ `"`anything'"' `"`layer'"' "`overlay'" "`overlay2'"/*
             */ `"`salign'"' "`tfloat'" `"`format'"' `"`heading'"'/*
             */ `reverse' `symysize' `symxsize' `keygap' `rowgap' `colgap'/*
@@ -2070,6 +2082,7 @@ program _glegend
         */ lskip tfirst twidth talign hskip span/*
         */ halign topts hopts pcycle options
     _options_not_allowed, `options'
+    _glegend_parse_symscale `symscale' // symscale, scommon
     // select layer if layout() is empty
     if !`:list sizeof layout' local layout: copy local layers
     local layers
@@ -2104,6 +2117,48 @@ program _glegend
     foreach twd of local twidth {
         local TWIDTH `TWIDTH' `= `refsize' * (`twd'/100)'
     }
+    // parse layout
+    local LAYOUT
+    local j 0
+    while (`"`layout'"'!="") {
+        gettoken l layout : layout
+        if strtrim(`"`l'"')=="" continue
+        if `"`l'"'=="|" { // next column
+            local LAYOUT `LAYOUT' |
+            continue
+        }
+        if `"`l'"'=="." { // gap
+            local LAYOUT `LAYOUT' .
+            continue
+        }
+        if `"`l'"'=="-" { // title
+            _glegend_collect_label `layout' // lbl, layout
+            local LAYOUT `LAYOUT' - `"`lbl'"'
+            continue
+        }
+        _glegend_collect_layers `l' `layout' // returns layers, layout
+        local LAYOUT `LAYOUT' `layers'
+        while (`"`layers'"'!="") {
+            gettoken l layers : layers, match(paren)
+            gettoken lbl l : l // first element is label
+            local ++j
+            _glegend_symdim `j' `l'
+        }
+    }
+    local J `j'
+    // determine symbol scaling
+    local SYMSCALE .
+    forv j = 1/`J' {
+        if !`sym_`j'' continue
+        local scale_`j' = `symscale' * min(`wd'/`xdim_`j'', `ht'/`ydim_`j'')
+        local SYMSCALE = min(`SYMSCALE', `scale_`j'')
+    }
+    forv j = 1/`J' {
+        if !`sym_`j'' continue
+        if `scommon' local scale_`j' `SYMSCALE'
+        local xmid_`j' = `scale_`j'' * `xmid_`j''
+        local ymid_`j' = `scale_`j'' * `ymid_`j''
+    }
     // compile legend
     _glegend_post_lbl `LBL' 1 0 0 0 `ht'/2 0 "" // mark upper left corner
     local plots
@@ -2112,11 +2167,23 @@ program _glegend
     local c 1
     local twidth: copy local TWIDTH
     gettoken twd twidth : twidth
-    while (`"`layout'"'!="") {
-        gettoken l layout : layout
-        if strtrim(`"`l'"')=="" continue
-        // case 1: move to next column
-        if `"`l'"'=="|" { 
+    local j 0
+    while (`"`LAYOUT'"'!="") {
+        gettoken l LAYOUT : LAYOUT, match(paren)
+        // case 1: add keys and labels from selected layer(s)
+        if "`paren'"!="" {
+            local ++j
+            gettoken lbl l : l // first element is label
+            _glegend_plot_keys `LBL' `SHP' `PC' `x' `y' `c'/*
+                */ "`scale_`j''" "`xmid_`j''" "`ymid_`j''"/* (for symbol layers)
+                */ `reverse' `ht' `wd' `keygap' `rowgap' `lskip' `tfirst'/*
+                */ `twd' `talign' `pcycle' "`l'" `"`lbl'"'
+                // returns plot, updates y
+            local plots `plots' `plot'
+            continue
+        }
+        // case 2: move to next column
+        if "`l'"=="|" { 
             if `y'!=0 {
                 local y = `y' + `ht'/2 + `rowgap'
                 _glegend_post_lbl `LBL' `c' 0 0 `x' `y' 0 "" // mark bottom
@@ -2128,15 +2195,14 @@ program _glegend
             }
             continue
         }
-        // case 2: add empty row
-        if `"`l'"'=="." {
+        // case 3: add empty row
+        if "`l'"=="." {
             local y = `y' - `ht' - `rowgap'
             continue
         }
-        // case 3: add heading
-        if `"`l'"'=="-" {
+        // case 4: add heading
+        if "`l'"=="-" {
             if `y'!=0 local y = `y' - `hskip0'
-            _glegend_collect_label `layout' // lbl, layout
             local x0 `x'
             if `span' {
                 if      `halign'==9 local x0 = `x0' + `twd' + `wd' + `keygap'
@@ -2147,17 +2213,10 @@ program _glegend
                 if      `halign'==9 local x0 = `x0' + `twd'
                 else if `halign'==0 local x0 = `x0' + `twd'/2
             }
+            gettoken lbl LAYOUT : LAYOUT
             _glegend_post_lbl `LBL' `c' 1 `lskip' `x0' `y' `halign' `"`lbl'"'
             local y = `y' - `ht' - `rowgap' - `hskip1'
             continue
-        }
-        // case 4: add keys and labels from selected layer(s)
-        _glegend_collect_layers `l' `layout' // returns layers, layout
-        foreach l of local layers {
-            _glegend_plot_keys `LBL' `SHP' `PC' `x' `y' `c' `symscale'/*
-                */ `reverse' `ht' `wd' `keygap' `rowgap' `lskip' `tfirst'/*
-                */ `twd' `talign' `pcycle' "`l'" // returns plot, updates y
-            local plots `plots' `plot'
         }
     }
     local x = `x' + `wd' + `keygap' + `twd'
@@ -2168,8 +2227,18 @@ program _glegend
     if "`bottom'"!="" _glegend_bottom `c' `LBL' `SHP' `PC'
     // return plot command
     c_local plot `plots'/*
-        */ (label `LBL' L if !H, msize(0) vpos(P) `topts')/*
-        */ (label `LBL' L if H,  msize(0) vpos(P) `hopts')
+        */ (label `LBL' L if !H, vpos(P) `topts')/*
+        */ (label `LBL' L if H,  vpos(P) `hopts')
+end
+
+program _glegend_parse_symscale
+    _parse comma symscale 0 : 0
+    syntax [, Common ]
+    c_local scommon = "`common'"!=""
+    if `"`symscale'"'!="" local 0 , symscale(`symscale')
+    else                  local 0
+    syntax [, symscale(real 0.8) ]
+    c_local symscale `symscale'
 end
 
 program  _glegend_parse_align
@@ -2205,28 +2274,38 @@ end
 
 program _glegend_collect_layers
     // pass 1: expand numlists until next "|", ".", or "-"
-    local layout
+    local layout : copy local 0
+    local LAYOUT
     local ll
-    local space
-    while (`"`0'"'!="") {
-        gettoken l : 0, parse(" &|.-")
+    while (`"`layout'"'!="") {
+        gettoken l : layout, parse(" &|.-")
         if inlist(`"`l'"',"|",".","-") continue, break
-        gettoken l 0 : 0, parse(" &")
-        if `"`l'"'=="&" { // expand (sub)sequence
-            if `"`ll'"'=="" continue // ignore & at start of sequence
+        gettoken l layout : layout, parse(" &") qed(qed)
+        if `qed' | `"`l'"'=="&" { // expand (sub)sequence
+            if `"`ll'"'=="" {
+                if `qed' {
+                    di as err "invalid syntax in layout()"
+                    exit 198
+                }
+                else continue // ignore & at start of sequence
+            }
             capt numlist `"`ll'"', int range(>0)
             if _rc==1 exit 1
             if _rc {
                 di as err `"{bf:`ll'} not allowed in layout()"'
                 exit 198
             }
-            local layout `layout' `r(numlist)' &
+            if `qed' {
+                _glegend_collect_label `"`l'"' `layout' // lbl, layout
+                local LAYOUT `LAYOUT' `r(numlist)' `"`lbl'"'
+            }
+            else {
+                local LAYOUT `LAYOUT' `r(numlist)' &
+            }
             local ll
-            local space
             continue
         }
-        local ll `"`ll'`space'`l'"'
-        local space " "
+        local ll `ll' `l'
     }
     if `"`ll'"'!="" { // expand last (sub)sequence
         capt numlist `"`ll'"', int range(>0)
@@ -2235,38 +2314,114 @@ program _glegend_collect_layers
             di as err `"{bf:`ll'} not allowed in layout()"'
             exit 198
         }
-        local layout `layout' `r(numlist)'
+        local LAYOUT `LAYOUT' `r(numlist)'
     }
     // pass 2: process overlays (set of layers merged by &)
     local layers
     local ll
-    local space
-    while (`"`layout'"'!="") {
-        gettoken l layout : layout
+    while (`"`LAYOUT'"'!="") {
+        gettoken l LAYOUT : LAYOUT
         local ll `ll' `l'
-        gettoken amp : layout, parse(" &")
-        if `"`amp'"'=="&" {
-            gettoken amp layout : layout, parse(" &")
-            continue
+        gettoken lbl : LAYOUT, qed(qed)
+        if `qed' gettoken lbl LAYOUT : LAYOUT, qed(qed)
+        else {
+            local lbl
+            gettoken amp : LAYOUT, parse(" &")
+            if `"`amp'"'=="&" {
+                gettoken amp LAYOUT : LAYOUT, parse(" &")
+                continue
+            }
         }
-        local layers `"`layers'`space'"`ll'""'
-        local space " "
+        local layers `layers' (`"`lbl'"' `ll')
         local ll
     }
     if `"`ll'"'!="" { // add last set
-        local layers `"`layers'`space'"`ll'""'
+        local layers `layers' ("" `ll')
     }
-    c_local layers `"`layers'"'
-    c_local layout `"`0'"'
+    c_local layers `layers'
+    c_local layout `"`layout'"'
+end
+
+program _glegend_symdim, rclass
+    gettoken j 0 : 0
+    local symbol 0
+    local xmin .
+    local xmax .
+    local xdim 0
+    local ymin .
+    local ymax .
+    local ydim 0
+    foreach l of local 0 {
+        local ltype: char LAYER[layertype_`l']
+        if `"`ltype'"'!="symbol" continue
+        local symbol 1
+        local symbl: char LAYER[symbol_`l']
+        local symsi: char LAYER[symsize_`l']
+        local ptype: char LAYER[plottype_`l']
+        if `"`ptype'"'=="scatter" {
+            // symbol layer with shape("text")
+            __glegend_symtdim, size(`symsi') `symbl'
+        }
+        else {
+            // regular symbol layer
+            __glegend_symdim, size(`symsi') `symbl'
+        }
+        local xmin = min(`xmin', r(xmin))
+        local xmax = cond(`xmax'<., max(`xmax', r(xmax)), r(xmax))
+        local ymin = min(`ymin', r(ymin))
+        local ymax = cond(`ymax'<., max(`ymax', r(ymax)), r(ymax))
+        local xdim = max(`xdim', 2*`symsi') // min 2 units
+        local ydim = max(`ydim', 2*`symsi') // min 2 units
+    }
+    c_local sym_`j' `symbol'
+    if !`symbol' exit
+    c_local xdim_`j' = max(`xdim', `xmax'-`xmin')
+    c_local ydim_`j' = max(`ydim', `ymax'-`ymin')
+    c_local xmid_`j' = (`xmin' + `xmax') / 2
+    c_local ymid_`j' = (`ymin' + `ymax') / 2
+end
+
+program __glegend_symtdim, rclass
+    syntax [, size(str) offset(str) * ]
+    if `"`offset'"'!="" {
+        gettoken off oang : offset
+        gettoken oang     : oang
+        if "`oang'"=="" local oang 0
+        local x = `size' * `off' / 100 * cos(`oang'*_pi/180)
+        local y = `size' * `off' / 100 * sin(`oang'*_pi/180)
+    }
+    else {
+        local x 0
+        local y 0
+    }
+    return scalar xmin = `x' //- `size'
+    return scalar xmax = `x' //+ `size'
+    return scalar ymin = `y' //- `size'
+    return scalar ymax = `y' //+ `size'
+
+end
+
+program __glegend_symdim, rclass
+    tempname SYM SHP
+    qui geoframe symboli `SYM' `SHP' 0 0 `0'
+    frame `SHP' {
+        su _X, meanonly
+        return scalar xmin = r(min)
+        return scalar xmax = r(max)
+        su _Y, meanonly
+        return scalar ymin = r(min)
+        return scalar ymax = r(max) 
+    }
 end
 
 program _glegend_plot_keys // plot legend keys (possibly with stacked symbols)
-    args LBL SHP PC x y c symscale reverse ht wd keygap rowgap /*
-        */ lskip tfirst twd talign pcycle layers
+    args LBL SHP PC x y c symscale sxmid symid reverse ht wd keygap rowgap /*
+        */ lskip tfirst twd talign pcycle layers LBL0
     // collect keys and labels
     local n 0
     local j 0
-    local symsize 0
+    local nsym 0
+    local nz 0
     foreach l of local layers {
         if `"`: char LAYER[keys_`l']'"'=="" {
             di as txt "(glegend(): layer `l' not found)"
@@ -2276,12 +2431,15 @@ program _glegend_plot_keys // plot legend keys (possibly with stacked symbols)
         local ++j
         local KEYS_`j' : char LAYER[keys_`l']
         local LBLS     : char LAYER[labels_`l']
+        local MLBLS_`j': char LAYER[mlabels_`l']
         local OPTS_`j' : char LAYER[glopts_`l']
         local hasz_`j' = `"`: char LAYER[hasz_`l']'"'=="1"
+        if `hasz_`j'' local ++nz
         local hasmis_`j' = `"`: char LAYER[z_hasmis_`l']'"'=="1"
         if `hasmis_`j'' { // remove missing from lists
-            gettoken mkey_`j' KEYS_`j' : KEYS_`j'
-            gettoken mopt_`j' OPTS_`j' : OPTS_`j', bind
+            gettoken mkey_`j' KEYS_`j'  : KEYS_`j'
+            gettoken mopt_`j' OPTS_`j'  : OPTS_`j', bind
+            gettoken MLBL_`j' MLBLS_`j' : MLBLS_`j', quotes
             // use settings from last layer that has missing
             gettoken mlbl LBLS : LBLS, quotes
             local mleg: char LAYER[z_mleg_`l']
@@ -2289,14 +2447,18 @@ program _glegend_plot_keys // plot legend keys (possibly with stacked symbols)
         if (`"`:char LAYER[z_reverse_`l']'"'=="1")==`reverse' {
            mata: _glegend_reverse("KEYS_`j'")
            mata: _glegend_reverse("LBLS")
+           mata: _glegend_reverse("MLBLS_`j'")
            mata: _glegend_reverse("OPTS_`j'")
         }
-        local ltype_`j': char LAYER[layertype_`l']
         local ptype_`j': char LAYER[plottype_`l']
+        local ltype_`j': char LAYER[layertype_`l'] // (symbol and label only)
         if `"`ltype_`j''"'=="symbol" {
+            local ++nsym
             local symbl_`j': char LAYER[symbol_`l']
             local symsi_`j': char LAYER[symsize_`l']
-            local symsize = max(`symsize',`symsi_`j'')
+            if `"`ptype_`j''"'=="scatter" {
+                local tsize_`j': char LAYER[symtsize_`l']
+            }
         }
         // update global list of labels
         local i 0
@@ -2307,6 +2469,19 @@ program _glegend_plot_keys // plot legend keys (possibly with stacked symbols)
             local lbl_`i' `"`lbl'"'
         }
         local n = max(`n',`i')
+    }
+    if `"`LBL0'"'!="" { // override labels
+        if `nz' {
+            forv i=1/`n' {
+                gettoken lbl0 LBL0 : LBL0
+                if `"`lbl0'"'!="" {
+                    local lbl_`i' `"`lbl0'"'
+                }
+            }
+        }
+        else {
+            local lbl_1 `"`LBL0'"'
+        }
     }
     local J `j'
     if !inlist(`"`mleg'"',"1","2","3","4") local mleg 0
@@ -2343,37 +2518,54 @@ program _glegend_plot_keys // plot legend keys (possibly with stacked symbols)
         if `mleg' {
             if `hasmis_`j'' {
                 local i0 = 0
-                local KEYS_`j' `"`mkey_`j'' `KEYS_`j''"'
-                local OPTS_`j' `"`mopt_`j'' `OPTS_`j''"'
+                local KEYS_`j'  `"`mkey_`j'' `KEYS_`j''"'
+                local OPTS_`j'  `"`mopt_`j'' `OPTS_`j''"'
+                local MLBLS_`j' `"`MLBL_`j'' `MLBLS_`j''"'
             }
             else if `hasz_`j'' local i0 1
             else               local i0 0 // (no zvar; include missing)
         }
         else local i0 = 1
         if `"`ltype_`j''"'=="symbol" {
-            local symopt = `symscale' * (`symsi_`j''/`symsize') * `ht'/2
-            local symopt align(center) size(`symopt') `symbl_`j''
-            if `"`ptype_`j''"'=="line" local symopt `symopt' line
+            local symopt = `symscale' * `symsi_`j''
+            local symopt size(`symopt') `symbl_`j''
+            if `"`ptype_`j''"'=="scatter" {
+                if `nsym'==1 _glegend_remove_align, `symopt'
+                local tsize = `symscale' * `tsize_`j''
+                local symopt tsize(`tsize') `symopt'
+            }
+            else if `"`ptype_`j''"'=="line" {
+                local symopt `symopt' line
+            }
         }
         forv i = `i0'/`n' {
-            if `hasz_`j'' {
-                gettoken key KEYS_`j' : KEYS_`j'
+            if `hasz_`j'' | `i'==`i0' {
+                // (note: key will be repeated if no zvar)
+                gettoken key KEYS_`j'  : KEYS_`j'
                 if "`key'"=="" continue, break
-                gettoken opt OPTS_`j' : OPTS_`j', match(paren)
-            }
-            else { // (no zvar; repeat key)
-                if `i'==`i0' {
-                    gettoken key KEYS_`j' : KEYS_`j'
-                    gettoken opt OPTS_`j' : OPTS_`j', match(paren)
+                gettoken opt OPTS_`j'  : OPTS_`j', match(paren)
+                gettoken MLBL MLBLS_`j': MLBLS_`j'
+                if `"`ltype_`j''"'=="label" {
+                    _glegend_update_mlabopts, `opt'
+                }
+                else if `"`ptype_`j''"'=="scatter" {
+                    if `"`ltype_`j''"'=="symbol" {
+                        _glegend_update_mlabcol, `opt'
+                    }
+                    _glegend_remove_mlabopts, `opt'
+                }
+                else if substr(`"`ptype_`j''"',1,2)=="pc" {
+                    _glegend_remove_mlabopts, `opt'
                 }
             }
             local psty = mod(`key'-1,`pcycle') + 1
             local opt pstyle(p`psty') `opt'
             if `"`ltype_`j''"'=="symbol" {
-                _glegend_post_symbol `SHP' `c' `x0' `y_`i'', `symopt' `opt'
+                _glegend_post_symbol `SHP' `c' `x0' `sxmid' `y_`i'' `symid',/*
+                    */ `symopt' `opt'
             }
             else if `"`ltype_`j''"'=="label" {
-                _glegend_post_label `SHP' `c' `x0' `y_`i'', `opt'
+                _glegend_post_label `SHP' `c' `"`MLBL'"' `x0' `y_`i'', `opt'
             }
             else if `"`ptype_`j''"'=="area" {
                 _glegend_post_area `SHP' `c' `wd' `ht' `x0' `y_`i'', `opt'
@@ -2393,6 +2585,44 @@ program _glegend_plot_keys // plot legend keys (possibly with stacked symbols)
     }
     c_local y `y'
     c_local plot `plots'
+end
+
+program _glegend_remove_align
+    syntax [, align(passthru) * ]
+    c_local symopt `options'
+end
+
+program _glegend_update_mlabopts
+    syntax [, color(passthru) mlabcolor(passthru)/*
+        */ msymbol(passthru) msize(passthru) mlabposition(passthru) /* (ignore)
+        */ gap(passthru) ANGle(passthru) TSTYle(passthru) SIze(passthru)/*
+        */ Format(passthru) Justification(passthru) ALign(passthru)/*
+        */ MLABGap(passthru) MLABANGle(passthru) MLABTextstyle(passthru)/*
+        */ MLABSize(passthru) MLABFormat(passthru) MLABJUSTification(passthru)/*
+        */ mlabalign(passthru) * ]
+    if `"`tstyle'"'!="" local textstyle `tstyle'
+    local opts
+    foreach o in color gap angle textstyle size format justification align {
+        if `"``o''"'=="" local `o' `mlab`o''
+        if `"``o''"'!="" {
+            local opts `opts' ``o''
+        }
+    }
+    c_local opt `opts' `options'
+end
+
+program _glegend_update_mlabcol
+    syntax [, mlabcolor(str asis) * ]
+    if `"`mlabcolor'"'!="" local mlabcolor color(`mlabcolor')
+    c_local opt `mlabcolor' `options'
+end
+
+program _glegend_remove_mlabopts
+    syntax [, MLABSTYle(passthru) MLABPosition(passthru) MLABGap(passthru)/*
+        */ MLABANGle(passthru) MLABTextstyle(passthru) MLABSize(passthru)/*
+        */ MLABColor(passthru) MLABFormat(passthru)/*
+        */ MLABJUSTification(passthru) mlabalign(passthru) * ]
+    c_local opt `options'
 end
 
 program _glegend_post_lbl
@@ -2416,8 +2646,10 @@ program _glegend_post_symbol
     gettoken SHP 0 : 0
     gettoken c   0 : 0
     gettoken x   0 : 0
-    gettoken y   0 : 0, parse(" ,")
-    frame post `SHP' (`c') (`x') (`y')
+    gettoken cx  0 : 0
+    gettoken y   0 : 0
+    gettoken cy  0 : 0, parse(" ,")
+    frame post `SHP' (`c') (`x'-`cx') (`y'-`cy')
     frame `SHP': local n = _N
     c_local plot (symbol `SHP' in `n'`0')
 end
@@ -2425,13 +2657,12 @@ end
 program _glegend_post_label
     gettoken SHP 0 : 0
     gettoken c   0 : 0
+    gettoken lbl 0 : 0
     gettoken x   0 : 0
     gettoken y   0 : 0, parse(" ,")
     frame post `SHP' (`c') (`x') (`y')
-    syntax [, MLABPosition(passthru) /*MLABSize(passthru)*/ *]
     frame `SHP': local n = _N
-    c_local plot (label `SHP' ("...") in `n',/*
-        */ mlabpos(0) /*mlabsize(vsmall)*/ `options')
+    c_local plot (label `SHP' (`"`lbl'"') in `n'`0')
 end
 
 program _glegend_post_area
@@ -2501,7 +2732,7 @@ program _glegend_bottom
 end
 
 program _slegend
-    args LBL SYM SYMBOL refsize/*
+    args LBL SYM SYMBOL refsize xrescale/*
         */ levels layer overlay overlay2/*
         */ salign tfloat format heading/*
         */ reverse ht wd keygap rowgap colgap/* (colgap not used)
@@ -2534,6 +2765,7 @@ program _slegend
         c_local noplot noplot
         exit
     }
+    local symsize = `symsize' * `xrescale' // rescaling due to projection
     // parse levels
     _slegend_parse_levels `"`format'"' `levels' // levels, labels
     // parse remaining options
@@ -2582,14 +2814,15 @@ program _slegend
     local xl0 = `keygap'
     if      `talign'==cond(`tfirst',3,9) local xl0 = `xl0' + `twidth'
     else if `talign'==0                  local xl0 = `xl0' + `twidth'/2
-    if `overlay' local yl = `y' - `lskip'
+    if `overlay' local yl = `y' - .5*`lskip'
     foreach lev of local levels {
         local lysize = `ysize' * sqrt(`lev'/`wmax')
         local lxsize = `xsize' * sqrt(`lev'/`wmax')
         if `overlay' {
             local x = `x' + `offset' * max(`lxsize', `wd')
-            local y0 = `y'
-            local yl = max(`y0' + `lysize', `yl' + `lskip')
+            if `reverse' local y0 = `y' + `lysize'
+            else         local y0 = `y'
+            local yl = max(`y' + `lysize', `yl' + `lskip')
         }
         else {
             local lysize = max(`lysize', `ht')
@@ -2635,7 +2868,7 @@ program _slegend
         local y0 = `ysize' * sqrt(`lmin'/`wmax')
         local y0 = min(0, `y0' - `rowgap')
         local y1 = max(max(`ht',`ysize' * sqrt(`lmax'/`wmax')), `yl')
-        local y1 = `y1' + `rowgap'
+        local y1 = `y1'
     }
     else {
         local y0 0
@@ -2679,15 +2912,18 @@ program _slegend
     _glegend_post_lbl `LBL' 1 0 0 `x1' `y1' 0 ""
     // return plot command
     if `overlay' {
-        if `reverse' local align align(top)
-        else         local align align(bottom)
+        if `reverse' {
+            local topts mlabalign(bottom) `topts'
+        }
+        else {
+            local topts mlabalign(top) `topts'
+        }
     }
-    else local align align(center)
     c_local plot/*
         */ (symbol `SYM' [iw=W], wmax(`wmax') size(1) shape(`SYMBOL')/*
         */ `options')/*
-        */ (label `LBL' L if !H, msize(0) vpos(P) `topts')/*
-        */ (label `LBL' L if H,  msize(0) vpos(P) `hopts')
+        */ (label `LBL' L if !H, vpos(P) `topts')/*
+        */ (label `LBL' L if H,  vpos(P) `hopts')
 end
 
 program _slegend_parse_levels
@@ -3235,6 +3471,29 @@ program _options_not_allowed
     syntax [, _options_not_allowed ]
 end
 
+program _di_grcmd
+    _parse comma lhs 0 : 0
+    gettoken t lhs : lhs
+    di as txt `"`t' "' _c  // graph
+    gettoken t lhs : lhs
+    di as txt `"`t'"'  // twoway
+    while (`"`lhs'"'!="") {
+        gettoken t lhs : lhs, bind // plot
+        di as txt "{phang}"
+        di as txt `"`t'"'
+        di as txt "{p_end}"
+    }
+    gettoken t 0 : 0
+    if `"`t'"'=="" exit
+    di as txt _col(5) `"`t'"' // comma
+    while (`"`0'"'!="") {
+        gettoken t 0 : 0, bind // option
+        di as txt "{phang}"
+        di as txt `"`t'"'
+        di as txt "{p_end}"
+    }
+end
+
 program _geoplot_area
     __geoplot_layer area `0'
     c_local plot `plot'
@@ -3619,8 +3878,11 @@ void _inset(real scalar a, real scalar b, real scalar s,
     else                      st_view(X=., (a,b), "X")
     // determine scale
     yminmax = minmax(Y); xminmax = minmax(X)
-    if (refdim=="y") s = s<. ? refsize / (yminmax[2]-yminmax[1]) * (s/100) : 1
-    else             s = s<. ? refsize / (xminmax[2]-xminmax[1]) * (s/100) : 1
+    if (s<.) {
+        if (refdim=="y") s = refsize / (yminmax[2]-yminmax[1]) * (s/100)
+        else             s = refsize / (xminmax[2]-xminmax[1]) * (s/100)
+    }
+    if (s>=.) s = 1
     // add inner margin and fill in box
     yminmax[1] = yminmax[1] - refsize/s * (mrg[3]/100)
     yminmax[2] = yminmax[2] + refsize/s * (mrg[4]/100)
@@ -3689,7 +3951,8 @@ void _glegend_reverse(string scalar nm)
     t = tokeninit(" ", "", (`""""', `"`""'"',"()"))
     tokenset(t, st_local(nm))
     S = tokengetall(t)
-    st_local(nm, invtokens(S[length(S)..1]))
+    if (length(S)>1) st_local(nm, invtokens(S[length(S)..1]))
+    else             st_local(nm, invtokens(S))
 }
 
 void _slegend_symbol_update_tfpos(real scalar tfirst, real scalar tfpos0)

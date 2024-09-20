@@ -1,5 +1,5 @@
 {smcl}
-{* 17jul2024}{...}
+{* 08sep2024}{...}
 {vieweralsosee "geoplot" "help geoplot"}{...}
 {vieweralsosee "[D] frames" "help frames"}{...}
 {vieweralsosee "[SP] spshape2dta" "help spshape2dta"}{...}
@@ -65,13 +65,15 @@
     {p_end}
 
 {syntab :Generate shapes}
+{p2col :{helpb geoframe##raster:raster}}generate raster and store in new frame
+    {p_end}
 {p2col :{helpb geoframe##grid:grid}}store grid lines in new frame
     {p_end}
 {p2col :{helpb geoframe##tissot:tissot}}store Tissot's indicatrices in new frame
     {p_end}
 {p2col :{helpb geoframe##bbox:{ul:bb}ox}}store bounding box, enclosing circle, or convex hull in new frame
     {p_end}
-{p2col :{helpb geoframe##bshare:bshare}}store shared borders in new frame
+{p2col :{helpb geoframe##bshare:bshare}}store shared borders or outlines in new frame
     {p_end}
 {p2col :{helpb geoframe##symbol:{ul:sym}bol}}generate symbol shapes and store in new frame
     {p_end}
@@ -84,6 +86,10 @@
 {p2col :{helpb geoframe##contract:contract}}contract points from other frame into current frame
     {p_end}
 {p2col :{helpb geoframe##spjoin:spjoin}}match points in current frame to shapes from other frame
+    {p_end}
+
+{syntab :Spatial smoothing}
+{p2col :{helpb geoframe##spsmooth:spsmooth}}apply spatial smoothing to an attribute
     {p_end}
 
 {syntab :Merge and append}
@@ -1273,6 +1279,77 @@
 {pstd}
     {cmd:geoframe refine} cannot be used with paired-coordinates data.
 
+{marker raster}{...}
+{dlgtab:geoframe raster}
+
+{p 8 15 2}
+    [{cmd:frame} {it:frame}{cmd::}] {cmd:geoframe} {cmd:raster} {it:newname} [{it:newshpname}]
+    {ifin} [{cmd:,} {it:options} ]
+
+{pstd}
+    generates a raster covering the selected shapes
+    and stores it in a new frame called {it:newname} and an associated
+    shape frame called {it:newshpname}; {it:newname}{cmd:_shp} is used as name for the shape
+    frame if {it:newshpname} is omitted. The current frame may be a shape frame
+    or an attribute frame that is linked to a shape frame. {it:options} are as follows.
+
+{phang}
+    {opt sq:uare} (squares), {opt csq:square} (squares with gaps, like a
+    checkerboard), {opt hex:agon} (hexagons), {opt tri:angle} (triangles),
+    {opt ctri:angle} (triangles with gaps), or {opt p:oint} (points) selects
+    the type of raster to be generated. The default is {cmd:square}. In case of
+    {cmd:point} only an attribute frame is generated. In all other cases an attribute
+    frame and an associated shape frame will be created.
+
+{phang}
+    {cmd:n(#)} sets the number of raster cells in horizontal direction (before
+    rotating); default is {cmd:n(50)}.
+
+{phang}
+    {opt ang:le(angle)} rotates the raster by {it:angle} degrees
+    (counterclockwise).
+
+{phang}
+    {opt nocl:ip} omits merging and clipping of raster cells by the shapes in
+    the current frame. By default, raster cells are mapped to the shapes
+    in the current frame, which means that the cells will be clipped, if
+    necessary, and for each cell the ID of the
+    corresponding shape will be stored in variable {cmd:ID} in the generated
+    attribute frame (not to be confused with variable {cmd:_ID} which contains
+    the cell's own ID). Cells that have an overlap with multiple shapes will be
+    cut into pieces; cells that have no overlap with any of the shapes (or
+    cells that have an area of zero after clipping) will be dropped. The algorithm
+    used for the merging and clipping assumes that the shapes in the current
+    frame are non-overlapping and that nested shapes, if present, have been tagged
+    using {helpb geoframe##g_plevel:geoframe generate plevel}.
+
+{pmore}
+    If {cmd:noclip} is specified, no merging and clipping will be applied and variable
+    {cmd:ID} will not be generated, but cells will still be selected depending 
+    on whether they overlap with any of the shapes. That is,
+    only cells that overlap at least partially with (or touch) one of the shapes will
+    be kept.
+
+{phang}
+    {cmd:raw} generates a full (rectangular) raster grid without applying any
+    clipping or selection. {cmd:raw} implies {cmd:noclip}.
+
+{phang}
+    {opt nodot:s} suppresses the progress dots that are displayed by default.
+
+{phang}
+    {opt nos:hp} uses information on coordinates from the current frame even if
+    the current frame is linked to a shape frame.
+
+{phang}
+    {opt replace} allows overwriting existing frames.
+
+{phang}
+    {opt cur:rent} makes the created frame the current frame.
+
+{pstd}
+    {cmd:geoframe raster} cannot be used with paired-coordinates data.
+
 {marker grid}{...}
 {dlgtab:geoframe grid}
 
@@ -1485,19 +1562,27 @@
     {opt uniq:ue} omits duplicates. By default, each shared border is included
     twice (possibly with different orientation), once for each of the two shape
     items that share the border. Specify {cmd:unique} to keep only one of the two
-    copies. Only one of {cmd:unique}, {cmd:endpoints}, and
-    {cmd:not} is allowed.
+    copies. Only one of {cmd:unique}, {cmd:endpoints}, {cmd:not}, and {cmd:outline}
+    is allowed.
 
 {phang}
     {opt end:points} extracts start and end points of shared
-    borders only. Only one of {cmd:unique}, {cmd:endpoints}, and
-    {cmd:not} is allowed.
+    borders only. Only one of {cmd:unique}, {cmd:endpoints}, {cmd:not},
+    and {cmd:outline} is allowed.
 
 {phang}
     {cmd:not} extracts non-shared borders rather than shared borders. That is,
     from each shape item all sequences of vertices are extracted that do not
-    exist in any other item. Only one of {cmd:unique}, {cmd:endpoints}, and
-    {cmd:not} is allowed.
+    exist in any other item. Only one of {cmd:unique}, {cmd:endpoints}, {cmd:not},
+    and {cmd:outline} is allowed.
+
+{phang}
+    {opt out:line}[{cmd:(}{it:id}{cmd:)}] is like {cmd:not} but connects the
+    extracted line segments such that they form one or seveal outline
+    (and, possibly, enclave) polygons (assuming that the input shapes are
+    polygons). Optional argument {it:id} assignes a custom ID to the resulting
+    shape unit; the default ID is {cmd:1}. Only one of {cmd:unique},
+    {cmd:endpoints}, {cmd:not}, and {cmd:outline} is allowed.
 
 {phang}
     {opt nodot:s} suppresses the progress dots that are displayed by default.
@@ -1530,9 +1615,10 @@
     are as follows.
 
 {phang}
-    {cmd:shape()}, {cmd:n()}, {cmd:ratio()}, {cmd:angle()}, {cmd:size()}, and
-    {cmd:offset()} are options as described for
-    layertype {helpb geoplot##symbol:symbol} in {helpb geoplot}.
+    {cmd:shape()}, {cmd:n()}, {cmd:align()}, {cmd:ratio()}, {cmd:slant()}, {cmd:angle()},
+    {cmd:size()}, and {cmd:offset()} are options as described for layertype
+    {helpb geoplot##symbol:symbol} in
+    {helpb geoplot}. {cmd:shape("}{it:text}{cmd:")} is not allowed.
 
 {phang}
     {opt replace} allows overwriting existing frames.
@@ -1570,9 +1656,10 @@
     symbols for which no custom size has been specified.
 
 {phang}
-    {cmd:shape()}, {cmd:n()}, {cmd:ratio()}, {cmd:angle()}, and
+    {cmd:shape()}, {cmd:n()}, {cmd:align()}, {cmd:ratio()}, {cmd:slant()}, {cmd:angle()}, and
     {cmd:offset()} are options as described for
-    layertype {helpb geoplot##symbol:symbol} in {helpb geoplot}.
+    layertype {helpb geoplot##symbol:symbol} in
+    {helpb geoplot}.  {cmd:shape("}{it:text}{cmd:")} is not allowed.
 
 {phang}
     {opt replace} allows overwriting existing frames.
@@ -1702,6 +1789,90 @@
 {pstd}
     {cmd:geoframe spjoin} cannot be used with paired-coordinates data.
 
+{marker spsmooth}{...}
+{dlgtab:geoframe spsmooth}
+
+{p 8 15 2}
+    [{cmd:frame} {it:frame}{cmd::}] {cmd:geoframe} {cmd:spsmooth} {varname}
+    {ifin} {weight} [{cmd:,} {it:options} ]
+
+{pstd}
+    generates a variable containing smoothed values of {it:varname} using a
+    kernel-weighted local average or local linear fit based on euclidean
+    distances between origin and destination coordinates. The current frame is
+    typically an attribute frame and the coordinates are the centroids of the
+    shape units represented in the frame. {cmd:iweight}s are allowed; see
+    {help weight}. {it:options} are as follows.
+
+{phang}
+    {opt bw:idth}{cmd:(}[{cmd:*}]{it:#}{cmd:)} sets or adjusts the kernel
+    bandwidth. The default is to set the bandwidth to two percent of the length
+    of the diagonal of the bounding box of the origin coordinates, multiplied
+    by the canonical bandwidth of the chosen kernel. Specify
+    {cmd:bwidth(*}{it:#}{cmd:)} to multiply this default bandwidth by {it:#}. For
+    example, type {cmd:bwidth(*0.5)} to use half the default bandwidth. Alternatively, type
+    {cmd:bwidth(}{it:#}{cmd:)} to set the bandwidth to a specific value. The larger
+    the bandwidth, the stronger the smoothing. 
+
+{phang}
+    {opt k:ernel(kernel)} selects the kernel function. {it:kernel} can be one of
+    {cmdab:e:panechnikov}, {cmd:epan2}, {cmdab:b:iweight}, {cmdab:t:riweight},
+    {cmdab:c:osine}, {cmdab:g:aussian} (gaussian kernel clipped at +/- 4), {cmdab:G:aussian}
+    (unclipped gaussian kernel), {cmdab:p:arzen}, {cmdab:r:ectangle}, or
+    {cmdab:tria:ngle}. Default is {cmd:epan2}.
+
+{phang}
+    {opt ll} applies local linear smoothing. The default is to apply local average
+    smoothing.
+
+{phang}
+    {opt co:ordinates(X Y)} specifies custom origin coordinate variables. The
+    default is to use the variables returned by
+    {helpb geoframe##set:geoframe get coordinates} in the current frame.
+
+{phang}
+    {opt at(spec)} specifies alternative destination coordinates. By default,
+    the destination coordinates are
+    the same as the origin coordinates. That is, smoothed values of {it:varname}
+    will be obtained at the selected coordinates of the input data and stored
+    in the current frame. Specify option {cmd:at()} to obtain smoothed values
+    at alternative destination coordinates, either in the current frame or in
+    an alternative frame. The syntax of {it:spec} is
+
+            [{it:frame2}] {ifin} [, {opt co:ordinates(X Y)} {opt fill} ]
+
+{pmore}
+    where {it:frame2} is the frame containing the destination coordinates
+    (default is the current frame), {it:if} and {it:in} select the relevant
+    observations, and {cmd:coordinates()} specifies custom destination coordinate
+    variables (default is to use the variables returned by
+    {helpb geoframe##set:geoframe get coordinates} in {it:frame2}). The smoothed
+    values of {it:varname} will be stored in {it:frame2}.
+
+{pmore}
+    Suboption {cmd:fill} applies an unrestricted gaussian kernel as fallback to fill in
+    smoothed values for destination coordinates for which no origin
+    coordinates are within the range of the kernel window. {cmd:fill} has no
+    effect if {cmd:kernel()} is {cmd:Gaussian}.
+
+{phang}
+    {opth g:enerate(newvar)} specifies a custom name for the generated
+    variable. The default is to use the same name as for the input variable. This
+    implies that option {cmd:replace} is required if {cmd:generate()} is omitted, 
+    unless {cmd:at()} specifies an alternative destination frame does not yet
+    contain a variable with that name.
+
+{phang}
+    {cmd:replace} allows overwriting an existing variable. {cmd:replace} is
+    required unless {cmd:generate()} is specified or {cmd:at()} is used to 
+    select an alternative destination frame.
+
+{phang}
+    {opt nodot:s} suppresses the progress dots that are displayed by default.
+
+{pstd}
+    {cmd:geoframe spsmooth} cannot be used with paired-coordinates data.
+
 {marker copy}{...}
 {dlgtab:geoframe copy}
 
@@ -1830,11 +2001,10 @@
 {pstd}
     stacks the data of the specified frames and also creates
     a stacked shape frame if any of the specified frames is linked to a
-    shape frame. {it:framelist} must contain at least two names. A new
-    {cmd:_ID} variable will be generated to identify the units in the stacked frame
-    (replacing the existing IDs; other geoframe settings will be taken from
-    the first frame). Furthermore, variable {cmd:_FRAME} will be
-    added, containing the name of the source frame for each
+    shape frame. {it:framelist} must contain at least two names. Geoframe
+    settings will be taken from the first frame. If necessary, new IDs will
+    be generated to identify the units in the stacked frame. Variable
+    {cmd:_FRAME} will be added, containing the name of the source frame for each
     observation. {it:options} are as follows.
 
 {phang}

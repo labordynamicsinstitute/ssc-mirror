@@ -9,11 +9,13 @@
 *!     {helpb lgeoplot_source##geo_gtype:geo_gtype()}
 *!     {helpb lgeoplot_source##geo_hull:geo_hull()}
 *!     {helpb lgeoplot_source##geo_json:geo_json_import() and geo_json2xy()}
+*!     {helpb lgeoplot_source##geo_ksmooth:geo_ksmooth()}
 *!     {helpb lgeoplot_source##geo_orientation:geo_orientation()}
 *!     {helpb lgeoplot_source##geo_pid:geo_pid()}
 *!     {helpb lgeoplot_source##geo_plevel:geo_plevel()}
 *!     {helpb lgeoplot_source##geo_pointinpolygon:geo_pointinpolygon()}
 *!     {helpb lgeoplot_source##geo_project:geo_project()}
+*!     {helpb lgeoplot_source##geo_raster:geo_raster()}
 *!     {helpb lgeoplot_source##geo_refine:geo_refine()}
 *!     {helpb lgeoplot_source##geo_rotate:geo_rotate()}
 *!     {helpb lgeoplot_source##geo_simplify:geo_simplify()}
@@ -30,7 +32,7 @@ version 16.1
 
 *! {smcl}
 *! {marker geo_area}{bf:geo_area()}{asis}
-*! version 1.0.3  16jul2024  Ben Jann
+*! version 1.0.4  28aug2024  Ben Jann
 *!
 *! Computes area of each unit using the Shoelace formula; see
 *! https://en.wikipedia.org/wiki/Shoelace_formula. Only polygons are considered.
@@ -122,7 +124,7 @@ real rowvector __geo_area(real matrix XY)
     real scalar A
     
     if (rows(XY)<2) return(0)
-    A = sum(rowsum((1,-1) :* XY :* (XY[|2,1\.,.|] \ (.,.))[,(2,1)]))
+    A = quadsum(quadrowsum((1,-1) :* XY :* (XY[|2,1\.,.|] \ (.,.))[,(2,1)]))
     return(abs(editmissing(A,0))/2)
 }
 
@@ -341,7 +343,7 @@ end
 *!             representing the shared borders of each unit (each shared border
 *!             will be included twice); columns are (id, x, y) where id is the
 *!             unit id and x and y are the coordinates
-*!          2: result will be a r x 3 matrix containing for each unit a set of
+*!          2: result will be a q x 3 matrix containing for each unit a set of
 *!             shape items representing the segments that are not shared
 *!             borders; columns are (id, x, y) where id is the unit id and x and
 *!             y are the coordinates; q is the total length across all included
@@ -352,6 +354,11 @@ end
 *!             part of a shared border
 *!          5: result will be a n x 1 vector that tags all points in XY equal to
 *!             the start of a path with the length of the path
+*!          6: result will be a q x 4 matrix containing connected non-shared
+*!             borders (i.e. outlines and, possibly, enclaves); columns are
+*!             (id, x, y, plevel) where id is equal to 1, x and y are the
+*!             coordinates, and plevel is a plot level (enclave) indicator; q
+*!             is the total length across all included outlines and enclaves
 *!          default is 0; values other than the ones above are treated as 0
 *!  nodots  nodots!=0 suppresses progress dots
 *!
@@ -443,6 +450,7 @@ struct `NBRDRS' { // collection of non-shared border infos
     if (rtype==3) return(_geo_bshare_tag(3, B, P, rows(XY)))
     if (rtype==4) return(_geo_bshare_tag(4, B, P, rows(XY)))
     if (rtype==5) return(_geo_bshare_tag(5, B, P, rows(XY)))
+    if (rtype==6) return(_geo_bshare_r6(B, P, rows(XY), nodots))
                   return(_geo_bshare_r0(B, P))
 }
 
@@ -713,6 +721,72 @@ void _geo_bshare_r5(`BoolC' R, `Int' a, `Int' b, `Int' i, `Int' l,
     else if (j==b) R[a] = max((l,R[a]))
 }
 
+`RM' _geo_bshare_r6(`Brdrs' B, `pItems' P, `Int' n, `Bool' nodots)
+{   // overwrites P and n
+    `Int'  i, j, r
+    `IntC' ID
+    `RR'   xy0, xy1
+    `RM'   XY
+    
+    // obtain segments
+    XY = _geo_bshare_r2(B, P, n)[,(2,3)]
+    ID = J(rows(XY),1,1)
+    P = _geo_bshare_items(ID, geo_pid(ID, XY), XY)
+    // connect segments
+    if (!nodots) printf("(connecting extracted segments ...")
+    n = i = length(P)
+    for (;i;i--) {
+        if (P[i]==NULL)  continue
+        if (P[i]->gt==3) continue // segment is a polygon
+        xy0 = P[i]->XY[1,]
+        xy1 = P[i]->XY[rows(P[i]->XY),]
+        for (j = n; j; j--) {
+            if (i==j)        continue
+            if (P[j]==NULL)  continue
+            if (P[i]->gt==3) continue // segment is a polygon
+            r = rows(P[j]->XY)
+            if (xy1==P[j]->XY[1,]) { // end of i = start of j
+                xy1 = P[j]->XY[r,]
+                P[i]->XY = P[i]->XY \ P[j]->XY[2::r,]
+            }
+            else if (xy1==P[j]->XY[r,]) { // end of i = end of j
+                xy1 = P[j]->XY[1,]
+                P[i]->XY = P[i]->XY \ P[j]->XY[r-1::1,]
+            }
+            else if (xy0==P[j]->XY[r,]) { // start of i = end of j
+                xy0 = P[j]->XY[1,]
+                P[i]->XY = P[j]->XY[1::r-1,] \ P[i]->XY
+            }
+            else if (xy0==P[j]->XY[1,]) { // start of i = start of j
+                xy0 = P[j]->XY[r,]
+                P[i]->XY = P[j]->XY[r::2,] \ P[i]->XY
+            }
+            else continue
+            P[j] = NULL // remove item
+            j = n + 1   // start over
+        }
+    }
+    // obtain connected segments
+    r = 0
+    for (i=n;i;i--) {
+        if (P[i]==NULL) continue
+        r = r + rows(P[i]->XY) + 1
+    }
+    XY = J(r,2,.)
+    for (i=n;i;i--) {
+        if (P[i]==NULL) continue
+        j = rows(P[i]->XY)
+        XY[|r-j,1 \ r,2|] = (.,.) \ P[i]->XY
+        r = r - j - 1
+    }
+    P = NULL // clear memory
+    if (!nodots) display(" done)")
+    // identify enclaves and return
+    if (!nodots) display("(identifying plot levels)")
+    ID = J(rows(XY),1,1)
+    return((ID, XY, geo_plevel(1, ID, geo_pid(ID, XY), XY, nodots)))
+}
+
 void _geo_bshare(`Brdrs' B, `Item' pi, `Item' pj, `Int' id1, `Int' id2)
 {   // find shared borders among shape items
     `Int'   i0, i, ni, j, nj, l
@@ -855,7 +929,7 @@ end
 
 *! {smcl}
 *! {marker geo_centroid}{bf:geo_centroid()}{asis}
-*! version 1.0.3  16jul2024  Ben Jann
+*! version 1.0.4  28aug2024  Ben Jann
 *!
 *! Computes centroid of each unit. If a unit contains at least one polygon,
 *! the formula for polygons is used (https://en.wikipedia.org/wiki/Centroid) and
@@ -966,14 +1040,14 @@ real rowvector __geo_centroid(real scalar poly, real matrix XY)
     XY2 = XY[|2,1\.,.|] \ (.,.)
     // polygon
     if (poly) {
-        a = rowsum((1,-1) :* XY :* XY2[,(2,1)])
-        A = sum(a)
-        if (A & A<.) return(colsum(a :* (XY + XY2)) / (3 * A))
+        a = quadrowsum((1,-1) :* XY :* XY2[,(2,1)])
+        A = quadsum(a)
+        if (A & A<.) return(quadcolsum(a :* (XY + XY2)) / (3 * A))
     }
     // line
-    a = sqrt(rowsum((XY2 - XY):^2))
-    A = sum(a)
-    if (A & A<.) return(colsum(a :* (XY + XY2)) / (2 * A))
+    a = sqrt(quadrowsum((XY2 - XY):^2))
+    A = quadsum(a)
+    if (A & A<.) return(quadcolsum(a :* (XY + XY2)) / (2 * A))
     // point
     return(mean(XY))
 }
@@ -1133,7 +1207,7 @@ mata set matastrict on
 
 `RM' _geo_clip_or_select(`RM' XY, `RM' mask, `Int' method, | `Bool' map)
 {   // map will be replaced by an r x 4 matrix of input and output indices; each
-    // row contains (a0,b0,a1,b2) where (a0,b0) are the start and end indices of
+    // row contains (a0,b0,a1,b1) where (a0,b0) are the start and end indices of
     // the original item in XY and (a1,b1) are the start and end indices of the
     // transformed item (or set of items) in the output; a1>b1 for dropped items
     if (args()<4) map = 0
@@ -1286,6 +1360,7 @@ mata set matastrict on
         else {
             f = &_geo_clip_area()
             flip = geo_orientation(xy)==1        // is counterclockwise
+            //flip = geo_orientation(xy)==1        // is counterclockwise
             if (flip) xy = J(1,2,.) \ xy[r::2,.] // flip orientation
         }
     }
@@ -1572,19 +1647,25 @@ void _geo_clip_area_arrange(`RM' XY, `IntC' out)
             j, j1, _geo_clip_clpos(c, XY[j+1,]), _geo_clip_clpos(c, XY[j1,])
     }
     _sort(ab, -3)
+    //_sort(ab, -3)
     while (1) {
         p[|i \ i + ab[1,2] - ab[1,1]|] = ab[1,1]::ab[1,2]
         i = i + ab[1,2] - ab[1,1] + 1
         yin  = ab[1,3]
+        //yin  = ab[1,3]
         yout = ab[1,4]
+        //yout = ab[1,4]
         while (1) {
             K = rows(ab)
             for (k=K;k>1;k--) {
                 if (ab[k,3]>=ab[k,4]) continue // wrong orientation
+                //if (ab[k,3]>=ab[k,4]) continue // wrong orientation
                 if (ab[k,3]<yout | ab[k,3]>yin) continue // above or below 
+                //if (ab[k,3]<yout | ab[k,3]>yin) continue // above or below 
                 p[|i \ i + ab[k,2] - ab[k,1] - 1|] = (ab[k,1]+1)::ab[k,2]
                 i = i + ab[k,2] - ab[k,1] // (missing is skipped)
                 yout = ab[k,4]
+                //yout = ab[k,4]
                 ab = select(ab, (1::K):!=k)
                 break
             }
@@ -2389,6 +2470,245 @@ void _geo_json_features_properties(`T' t0, `Int' i, `T' F, `T' V, `SM' S,
 end
 
 *! {smcl}
+*! {marker geo_ksmooth}{bf:geo_ksmooth()}{asis}
+*! version 1.0.1  08sep2024  Ben Jann
+*!
+*! Function to obtain spatially smoothed values using a kernel-weighted local
+*! average or local linear fit based on euclidean distances.
+*!
+*! Syntax:
+*!
+*!      result = geo_ksmooth(Z, w, XY, XY1, bwidth [, kernel, ll, fill, nodots])
+*!
+*!  result  r x 1 colvector containing smoothed values of Z
+*!  Z       n x 1 colvector containing input values to be smoothed
+*!  w       n x 1 colvector containing weights; specify 1 to omit weights
+*!  XY      n x 2 matrix containing the origin coordinates associated with Z
+*!  XY1     r x 2 matrix containing the destination coordinates at which the
+*!          smooth be evaluated; can be the same as XY
+*!  bwidth  real scalar setting the kernel bandwidth
+*!  kernel  string scalar selecting the kernel function; can be "epanechnikov",
+*!          "epan2", "biweight", "triweight", "cosine", "gaussian" (gaussian
+*!           kernel clipped at +/- 4), "Gaussian" (unclipped gaussian kernel),
+*!          "parzen", "rectangle", or "triangle"; default is "epan2"
+*!  ll      ll!=0 applies local linear smoothing; default is to apply local
+*!          average smoothing
+*!  fill    fill!=0 uses an unrestricted gaussian kernel as fallback to fill
+*!          gaps; this has no effect if XY==XY1 or if kernel is "Gaussian"
+*!  nodots  nodots!=0 suppresses progress dots
+*!
+
+local Bool real scalar
+local Int  real scalar
+local IntC real colvector
+local RS   real scalar
+local SS   string scalar
+local RC   real colvector
+local RM   real matrix
+local PS   pointer scalar
+
+mata:
+
+`RM' geo_ksmooth(`RC' Z, `RC' w, `RM' XY, `RM' XY1, `RS' bw,
+    | `SS' kernel, `Bool' ll, `Bool' fill, `Bool' nodots, `Bool' naive)
+{
+    `RS' bw2
+    `SS' k
+    
+    if (args()<7) ll = 0
+    if (args()<8) nodots = 0
+    if (args()<9) naive = 0
+    if (cols(XY)!=2) {
+        errprintf("{it:XY} must have two columns\n")
+        exit(3200)
+    }
+    if (cols(XY1)!=2) {
+        errprintf("{it:XY1} must have two columns\n")
+        exit(3200)
+    }
+    if (kernel=="Gaussian") {
+        return(_geo_ksmooth_Gaussian(Z, w, XY, XY1, bw, ll, nodots))
+    }
+    if (fill) {
+        if (XY!=XY1) bw2 = bw * mm_kdel0_gaussian() / mm_kdel0(kernel)
+    }
+    k = _mm_unabkern(kernel) // default is epan2
+    if (naive) return(_geo_ksmooth_naive(Z, w, XY, XY1, bw, bw2, k, ll, nodots))
+    return(_geo_ksmooth(Z, w, XY, XY1, bw, bw2, k, ll, nodots))
+}
+
+`RC' _geo_ksmooth_Gaussian(`RC' Z, `RC' w, `RM' XY, `RM' XY1,
+    `RS' bw, `Bool' ll, `Bool' nodots)
+{
+    `Int' i, d, dn
+    `RC'  S
+
+    i = rows(XY1)
+    if (!nodots) {
+        displayas("txt")
+        d = _geo_progress_init("(")
+        dn = i
+    }
+    S = J(i,1,.)
+    for (;i;i--) {
+        if (!nodots) _geo_progress(d, 1-i/dn)
+        S[i] = __geo_ksmooth_Gaussian(Z, w, XY:-XY1[i,], bw, ll)
+    }
+    if (!nodots) _geo_progress_end(d, ")")
+    return(S)
+}
+
+`RS' __geo_ksmooth_Gaussian(`RC' Z, `RC' w, `RM' XY, `RS' bw, `Bool' ll)
+{
+    `RC'  kw
+    
+    kw = normalden(sqrt(rowsum(XY:^2)) :/ bw) :* w
+    if (ll) return(_geo_ksmooth_ll(Z, XY, kw))
+    return(_geo_ksmooth_mean(Z, kw))
+}
+
+`RC' _geo_ksmooth_naive(`RC' Z, `RC' w, `RM' XY, `RM' XY1,
+    `RS' bw, `RS' bw2, `SS' kernel, `Bool' ll, `Bool' nodots)
+{
+    `Int' i, d, dn
+    `RC'  S
+    `PS'  k
+
+    if (kernel=="gaussian") k = &_geo_ksmooth_gaussian()
+    else                    k = _mm_findkern(kernel)
+    i = rows(XY1)
+    if (!nodots) {
+        displayas("txt")
+        d = _geo_progress_init("(")
+        dn = i
+    }
+    S = J(i,1,.)
+    for (;i;i--) {
+        if (!nodots) _geo_progress(d, 1-i/dn)
+        S[i] = _geo_ksmooth_fit(Z, w, XY:-XY1[i,], bw, bw2, k, ll)
+    }
+    if (!nodots) _geo_progress_end(d, ")")
+    return(S)
+}
+
+`RC' _geo_ksmooth(`RC' Z, `RC' w, `RM' XY, `RM' XY1,
+    `RS' bw, `RS' bw2, `SS' kernel, `Bool' ll, `Bool' nodots)
+{   // algorithm using search window based on sum score
+    `Bool' hasW
+    `Int'  i, j, a, b, d, dn
+    `RS'   h, c
+    `IntC' p, p1, pi
+    `RC'   D, D1, S
+    `PS'   k
+    
+    // kernel
+    if (kernel=="gaussian") {
+        k = &_geo_ksmooth_gaussian()
+        h = 4
+    }
+    else {
+        k = _mm_findkern(kernel)
+        if (kernel=="epanechnikov") h = sqrt(5)
+        else if (kernel=="cosine")  h = .5
+        else                        h = 1
+    }
+    h = sqrt(2 * (h * bw)^2)
+    // sum scores
+    b = rows(XY)
+    if (!b) return(J(rows(XY1),1,.)) // no data
+    D = rowsum(XY)
+    p = order(D, 1)
+    if ((D[p[b]]-D[p[1]]) < 10*h) { // use naive algorithm if bwidth is large
+        return(_geo_ksmooth_naive(Z, w, XY, XY1, bw, bw2, kernel, ll, nodots))
+    }
+    if (XY!=XY1) {
+        i  = rows(XY1)
+        D1 = rowsum(XY1)
+        p1 = order(D1, 1)
+    }
+    else {; i = b; D1 = D; p1 = p; }
+    // run algorithm
+    hasW = rows(w)!=1
+    if (!nodots) {
+        displayas("txt")
+        d = _geo_progress_init("(")
+        dn = i
+    }
+    S = J(i,1,.)
+    for (;i;i--) {
+        if (!nodots) _geo_progress(d, 1-i/dn)
+        j = p1[i]
+        c = D1[j] + h
+        for (;b;b--) {
+            if (D[p[b]]<=c) break
+        }
+        if (!b) { // reached bottom; no more data
+            if (bw2<.) {
+                for (;i;i--) {
+                    j = p1[i]
+                    S[j] = __geo_ksmooth_Gaussian(Z, w, XY:-XY1[j,], bw2, ll)
+                }
+            }
+            break 
+        }
+        a = b
+        c = D1[j] - h
+        for (;a;a--) {
+            if (D[p[a]]<c) {; a++ ; break; }
+            if (a==1) break // reached bottom
+        }
+        if (a>b) { // no data within range
+            if (bw2<.) {
+                S[j] = __geo_ksmooth_Gaussian(Z, w, XY:-XY1[j,], bw2, ll)
+            }
+            continue
+        }
+        pi = p[|a\b|]
+        S[j] = _geo_ksmooth_fit(Z[pi], hasW ? w[pi] : w, XY[pi,]:-XY1[j,],
+            bw, bw2, k, ll)
+    }
+    if (!nodots) _geo_progress_end(d, ")")
+    return(S)
+}
+
+`RS' _geo_ksmooth_fit(`RC' Z, `RC' w, `RM' XY, `RS' bw, `RS' bw2, `PS' k,
+    `Bool' ll)
+{
+    `IntC' p
+    `RC'   kw
+    
+    kw = (*k)(sqrt(rowsum(XY:^2)) :/ bw) :* w
+    p = selectindex(kw)
+    if (!length(p)) {
+        if (bw2<.) return(__geo_ksmooth_Gaussian(Z, w, XY, bw2, ll)) // fallback
+        return(.)
+    }
+    if (rows(p)==rows(kw)) {
+        if (ll) return(_geo_ksmooth_ll(Z, XY, kw))
+        return(_geo_ksmooth_mean(Z, kw))
+    }
+    if (ll) return(_geo_ksmooth_ll(Z[p], XY[p,], kw[p]))
+    return(_geo_ksmooth_mean(Z[p], kw[p]))
+}
+
+`RS' _geo_ksmooth_mean(`RC' y, `RC' w)
+{
+    return(quadsum(w :* y) / quadsum(w)) // faster than mean(y, w)
+}
+
+`RS' _geo_ksmooth_ll(`RC' y, `RM' XY, `RC' w)
+{
+    return(mm_lsfit(y, XY, w, 1, 1, 0)[3]) // (quad precision, but no demeaning)
+}
+
+`RM' _geo_ksmooth_gaussian(`RM' x)
+{
+    return(normalden(x):*(x:>=-4 :& x:<=4)) // gaussian kernel clipped at +/- 4
+}
+
+end
+
+*! {smcl}
 *! {marker geo_orientation}{bf:geo_orientation()}{asis}
 *! version 1.0.2  01jun2024  Ben Jann
 *!
@@ -2508,7 +2828,7 @@ end
 
 *! {smcl}
 *! {marker geo_plevel}{bf:geo_plevel()}{asis}
-*! version 1.0.2  01jun2024  Ben Jann
+*! version 1.0.3  15aug2024  Ben Jann
 *!
 *! Determines plot levels of polygons: 0 = neither enclave nor exclave, 1 =
 *! enclave, 2 = exclave, 3 = enclave within exclave, 4 = exclave within
@@ -2563,7 +2883,7 @@ struct `UNIT' {
 
 `RM' geo_plevel(`Int' rtype, `RC' ID, `RC' PID, `RM' XY, | `Bool' nodots)
 {
-    `Int'    i, j, a, b, i0, n
+    `Int'    i, j, a, b, n, dn, di, dj
     `RM'     P
     `pUnits' u
     
@@ -2576,19 +2896,31 @@ struct `UNIT' {
     u = _geo_collect_units(ID, PID, XY)
     n = length(u)
     // determine within unit plot levels
-    if (!nodots) i0 = _geo_progress_init("(pass 1/2: ")
-    for (i=n;i;i--) {
-        _geo_plevel_within(*u[i])
-        if (!nodots) _geo_progress(i0, 1-(i-1)/n)
+    if (!nodots) {
+        dj = _geo_progress_init(n>1 ? "(pass 1/2: " : "(")
+        di = dn = 0
+        for (i=n;i;i--) dn = dn + comb(u[i]->n,2)
     }
-    if (!nodots) _geo_progress_end(i0, ")")
+    for (i=n;i;i--) {
+        _geo_plevel_within(*u[i], !nodots, dj, di, dn)
+        //if (!nodots) _geo_progress(dj, 1-(i-1)/n)
+    }
+    if (!nodots) _geo_progress_end(dj, ")")
     // update plot levels based on between unit comparisons
-    if (!nodots) i0 = _geo_progress_init("(pass 2/2: ")
-    for (i=n;i;i--) {
-        for (j=i-1; j; j--) _geo_plevel_between(*u[i], *u[j])
-        if (!nodots) _geo_progress(i0, 1-(i-1)/n)
+    if (n>1) {
+        if (!nodots) {
+            dj = _geo_progress_init("(pass 2/2: ")
+            di = dn = 0
+            for (i=n;i;i--) {
+                for (j=i-1; j; j--) dn = dn + u[i]->n * u[j]->n
+            }
+        }
+        for (i=n;i;i--) {
+            for (j=i-1; j; j--)
+                _geo_plevel_between(*u[i], *u[j], !nodots, dj, di, dn)
+        }
+        if (!nodots) _geo_progress_end(dj, ")")
     }
-    if (!nodots) _geo_progress_end(i0, ")")
     // fill in result
     if (rtype) {
         P = J(rows(ID), 1, .)
@@ -2613,12 +2945,12 @@ struct `UNIT' {
     return(P)
 }
 
-void _geo_plevel_within(`Unit' u)
+void _geo_plevel_within(`Unit' u, `Bool' dots, `Int' dj, `Int' di, `Int' dn)
 {
     `Int'      i, j
     `pPolygon' pi, pj
 
-    for (i=u.n;i;i--) {
+    for (i=u.n;i>1;i--) {
         pi = u.p[i]
         for (j=i-1; j; j--) {
             pj = u.p[j]
@@ -2641,6 +2973,10 @@ void _geo_plevel_within(`Unit' u)
             pi->l = pi->l + 1
             pj->d = pj->d \ i
         }
+        if (dots) {
+            di = di + i - 1
+            _geo_progress(dj, di/dn)
+        }
     }
 }
 
@@ -2657,7 +2993,8 @@ void _geo_plevel_within(`Unit' u)
     return(0)
 }
 
-void _geo_plevel_between(`Unit' ui, `Unit' uj)
+void _geo_plevel_between(`Unit' ui, `Unit' uj, `Bool' dots, `Int' dj, `Int' di,
+    `Int' dn)
 {
     `Int'      i, j, l
     `pPolygon' pi, pj
@@ -2681,6 +3018,10 @@ void _geo_plevel_between(`Unit' ui, `Unit' uj)
             }
             // pi is inside pj; increase plot level by 2
             pi->l = pi->l + 2
+        }
+        if (dots) {
+            di = di + uj.n
+            _geo_progress(dj, di/dn)
         }
     }
 }
@@ -3380,6 +3721,728 @@ real matrix geo_project_orthographic(real matrix XY, real scalar rad,
 end
 
 *! {smcl}
+*! {marker geo_raster}{bf:geo_raster()}{asis}
+*! version 1.0.1  30aug2024  Ben Jann
+*!
+*! Generate a raster covering the provided shape units.
+*!
+*! Syntax:
+*!
+*!      result = geo_raster(rtype, n, angle, XY [, ID, PL, mtype, nodots])
+*!
+*!  result   real matrix containing generated raster items; columns are
+*!           (id, x, y, [cx, cy, uid, pl]) where id contains a unique ID for
+*!           each item, x and y contain the shape coordinates, cx and
+*!           cy contain centroids (the original centroids before clipping),
+*!           uid contains the ID of the input unit to which the raster item
+*!           has been mapped, and pl contains the plot level index of the item;
+*!           cx and cy will be omitted if rtype=0, uid and pl will be omitted
+*!           unless mtype=0, pl will be omitted if PL is not provided or
+*!           if rtype=0 
+*!  rtype    real scalar selecting the type of raster to be generated, supported
+*!           types are 0 = point, 2 = triangle, 3 = triangle (every other only),
+*!           4 = square, 5 = square (every other only, i.e. a checkerboard),
+*!           6 = hexagon; any other value will be interpreted as 0
+*!  n        number of raster columns
+*!  angle    rotate the raster by angle degrees (counter clockwise), default
+*!           is 0
+*!  XY       n x 2 real matrix containing the (X,Y) coordinates of the shape
+*!           units to be covered by the raster
+*!  ID       n x 1 real colvector containing the IDs of the shape units in XY;
+*!           ID is set to 1 for all rows in XY if ID is omitted; can also
+*!           specify # to set the ID to # for all rows
+*!  PL       n x 1 real colvector containing the plot levels of the individual
+*!           shape items in XY; can specify PL as . to omit plot levels
+*!  mtype    real scalar selecting the type of merging; 0 = merge and clip
+*!           raster items to shape units; 1 = select raster items that overlap
+*!           with at least one shape unit; 2 = skip merging and return a full
+*!           (rectangular) raster; any other value will be interpreted as 0
+*!  nodots   nodots!=0 suppresses progress dots
+*!
+
+local Bool    real scalar
+local BoolC   real colvector
+local Int     real scalar
+local IntC    real colvector
+local IntM    real matrix
+local RS      real scalar
+local RC      real colvector
+local RM      real matrix
+local PS      pointer scalar
+local PC      pointer colvector
+local PM      pointer matrix
+local ITEM    _geo_raster_ITEM
+local Item    struct `ITEM' scalar
+local pItems  pointer (`Item') colvector
+
+mata:
+
+struct `ITEM' {
+    `Int' id, gt
+    `RS'  xmin, xmax, ymin, ymax
+    `RM'  XY
+    `RR'  xy
+}
+
+`RM' geo_raster(`Int' rtype, `Int' n0, `RS' angle, `RM' XY, | `RC' ID, 
+    `IntC' PL, `Int' mtype, `Bool' nodots)
+{
+    `Int'  n
+    `RM'   limits
+    `PS'   pID, pPL
+    transmorphic R
+    
+    // settings
+    if (args()<5)         pID = &J(rows(XY),1,1)
+    else if (rows(ID)==1) pID = &J(rows(XY),1,ID)
+    else                  pID = &ID
+    if (args()<6)         pPL = &J(0,1,.)
+    else if (rows(PL)==1) pPL = &J(0,1,.)
+    else                  pPL = &PL
+    if (args()<8) nodots = 0
+    if (cols(XY)!=2) {
+        errprintf("{it:XY} must have two columns\n")
+        exit(3200)
+    }
+    // raster size and range
+    if (!nodots) {
+        displayas("txt")
+        printf("(generating raster items ...")
+        displayflush()
+    }
+    if (n0>=.)     n = 50
+    else if (n0<1) n = 1
+    else           n = n0
+    limits = _geo_raster_limits(XY, angle)
+    // generate raw raster
+    if      (rtype==2) R = _geo_raster_triangle(n, limits, angle, 0)
+    else if (rtype==3) R = _geo_raster_triangle(n, limits, angle, 1)
+    else if (rtype==4) R = _geo_raster_square(n, limits, angle, 0)
+    else if (rtype==5) R = _geo_raster_square(n, limits, angle, 1)
+    else if (rtype==6) R = _geo_raster_hex(n, limits, angle)
+    else /*point*/ {
+        R = _geo_raster_point(n, limits, angle)
+        if (!nodots) {
+            display(" done)")
+            if (mtype!=2) display("(mapping raster items to shape units)")
+        }
+        return(_geo_raster_point_map(R, XY, *pID, *pPL, mtype, nodots))
+    }
+    // merge raster to shapes
+    if (!nodots) {
+        display(" done)")
+        if (mtype!=2) display("(mapping raster items to shape units)")
+    }
+    if      (mtype==2) R = _geo_raster_collect(R)
+    else if (mtype==1) R = _geo_raster_select(R, XY, *pID, *pPL, nodots)
+    else               R = _geo_raster_clip(R, XY, *pID, *pPL, nodots)
+    return(R)
+}
+
+`RM' _geo_raster_limits(`RM' XY, `RS' angle)
+{
+    `RR' range
+    `RM' limits
+    
+    if (angle!=0 & angle<.) limits = colminmax(geo_rotate(XY, -angle))
+    else                    limits = colminmax(XY)
+    range = limits[2,] - limits[1,]
+    if (!hasmissing(range)) {
+        if (all(range:>0)) return(limits) // all limits ok
+    }
+    if (range[1]>=.) {
+        if (range[2]>=.) return((0,0) \ (1,1)) // all limits missing
+        // X limits missing => copy Y limits
+        limits = J(1,2,limits[,2])
+        range  = J(1,2,range[2])
+    }
+    else if (range[2]>=.) {
+        // Y limits missing => copy X limits
+        limits = J(1,2,limits[,1])
+        range  = J(1,2,range[1])
+    }
+    if (range[1]==0) {
+        if (range[2]==0) return(limits + J(1,2, -.5 \ .5)) // zero X/Y-range
+        // zero X-range => copy Y-range
+        limits[,1] = limits[,1] + (-range[2]/2 \ range[2]/2)
+    }
+    else if (range[2]==0) {
+        // zero Y-range => copy X-range
+        limits[,2] = limits[,2] + (-range[1]/2 \ range[1]/2)
+    }
+    return(limits)
+}
+
+`pItems' _geo_raster_items(`RM' XY, `RC' ID)
+{
+    `Int'    i, a, b
+    `IntC'   p
+    `pItems' P
+    
+    p = selectindex(_mm_uniqrows_tag((ID, geo_pid(ID, XY))))
+    i = rows(p)
+    P = J(i,1,NULL)
+    a = rows(XY) + 1
+    for (;i;i--) {
+        b = a - 1; a = p[i]
+        P[i] = &_geo_raster_item(XY[|a,1 \ b,2|], ID[a])
+    }
+    return(P)
+}
+
+`Item' _geo_raster_item(`RM' XY, `Int' id)
+{
+    `Int'  r
+    `Item' p
+    
+    r = rows(XY)
+    if (r<=2) { // point (or missing)
+        p.gt = 1
+        if (r==1) p.XY = XY
+        else      p.XY = XY[2,] // ignore 1st row (missing)
+    }
+    else if (r<=4) { // line
+        p.gt = 2
+        p.XY = XY
+    }
+    else if (XY[2,]!=XY[r,]) { // line
+        p.gt = 2
+        p.XY = XY
+    }
+    else { // polygon
+        p.gt = 3
+        if (geo_orientation(XY)!=1) p.XY = XY
+        else p.XY = J(1,2,.) \ XY[r::2,.] // make clockwise
+    }
+    p.id = id
+    _geo_raster_minmax(p)
+    return(p)
+}
+
+void _geo_raster_minmax(`Item' p)
+{
+    `RM' M
+    
+    M = colminmax(p.XY)
+    p.xmin = M[1,1]
+    p.xmax = M[2,1]
+    p.ymin = M[1,2]
+    p.ymax = M[2,2]
+}
+
+`RS' _geo_raster_A0(`RM' mask, `RS' a, `RS' b)
+{
+    `RR' minmax
+    
+    minmax = minmax(mask)
+    a = minmax[1]
+    b = minmax[2] - minmax[1]
+    return(__geo_area((mask:-a)/b))
+}
+
+`Item' _geo_raster_ritem(`RM' XY, `RS' angle)
+{
+    `Item' p
+    
+    p.XY = (.,.) \ geo_rotate( XY, angle)
+    p.xy = __geo_centroid(1, p.XY)
+    return(p)
+}
+
+`RM' _geo_raster_point(`Int' n, `RM' limits, `RS' angle)
+{
+    `Int' r, i
+    `RS'  h, c
+    `RC'  X, Y
+    `RM'  XY
+
+    h = (limits[2,1] - limits[1,1]) / n             // step size
+    if (h>=.) h = 1                                 // set to 1 if range is 0
+    r = ceil((limits[2,2] - limits[1,2]) / h)       // number of rows
+    c = (h - (r*h + limits[1,2] - limits[2,2])) / 2 // vertical offset
+    X = rangen(limits[1,1]+h/2, limits[2,1]-h/2, n)
+    Y = rangen(limits[1,2]+c,   limits[2,2]-c, r)
+    XY = J(n*r, 2, .)
+    for (i=r;i;i--) XY[|(i-1)*n+1,1 \ i*n,2|] = X, J(n,1,Y[i])
+    if (angle!=0 & angle<.) return(geo_rotate(XY, angle))
+    return(XY)
+}
+
+`RM' _geo_raster_point_map(`RM' R, `RM' XY, `RC' ID, `IntC' PL, `Int' mtype,
+    `Bool' nodots)
+{
+    `RM' id
+    
+    if (mtype!=2) {
+        id = geo_spjoin(R, ID, geo_pid(ID, XY), XY, PL, nodots)
+        if (mtype==1) R = select(R, id[,2])
+        else          R = mm_sort(select((R,id[,1]), id[,2]), 3, 1)
+    }
+    return((1::rows(R)), R) // add raster item ID
+}
+
+/*`RM' _geo_raster_line(`Int' n, `RM' limits, `RS' angle)
+{
+    `Int' i, a, b, x, y1, y2
+    `RC'  X
+    `RM'  XY
+
+    X = rangen(limits[1,1], limits[2,1], n)
+    y1 = limits[1,2]; y2 = limits[2,2]
+    XY = J(n*3, 2, .0)
+    a = rows(XY) + 1
+    for (i=n;i;i--) {
+        b = a - 1; a = a - 3
+        x = X[i]
+        XY[|a,1 \ b,2|] = (.,.) \ (x,y1) \ (x,y2)
+    }
+    if (angle!=0 & angle<.) return(geo_rotate(XY, angle))
+    return(XY)
+}*/
+
+`pItems' _geo_raster_triangle(`Int' n, `RM' limits, `RS' angle, `Bool' checker)
+{
+    `Int'    r, i, j, k, ang, x1, x2, x3, y1, y2, jodd, odd
+    `RS'     h, hy, c
+    `RC'     X, Y
+    `RM'     xy
+    `pItems' R
+
+    ang = angle<. ? angle : 0
+    h = (limits[2,1] - limits[1,1]) / n              // horizontal step size
+    hy = sqrt(3) / 2 * h                             // vertical step size
+    r = ceil((limits[2,2] - limits[1,2]) / hy)       // number of rows
+    c = (r*hy + limits[1,2] - limits[2,2]) / 2       // vertical offset
+    X = rangen(limits[1,1]-h/2,limits[2,1]+h/2, (n+1)*2+1)
+    Y = rangen(limits[1,2]-c,limits[2,2]+c, r+1)
+    if (checker) k = ((n+1)*ceil(r/2) + n*floor(r/2))
+    else         k = (n * 2 + 1) * r
+    R = J(k, 1, NULL)
+    j = r + 1
+    y1 = Y[j--]
+    for (;j;j--) {
+        y2 = y1; y1 = Y[j]
+        jodd = mod(j,2)
+        i = (n+1)*2+1
+        x2 = X[i--]; x1 = X[i--]
+        for (;i;i--) {
+            x3 = x2; x2 = x1; x1 = X[i]
+            odd = (jodd + mod(i,2))==1
+            if (odd) {
+                if (checker) continue
+                xy = (x1,y2) \ (x2,y1) \ (x3,y2) \ (x1,y2)
+            }
+            else xy = (x1,y1) \ (x3,y1) \ (x2,y2) \ (x1,y1)
+            R[k--] = &_geo_raster_ritem(xy, ang)
+        }
+    }
+    return(R)
+}
+
+`pItems' _geo_raster_square(`Int' n, `RM' limits, `RS' angle, `Bool' checker)
+{
+    `Int'    r, i, j, k, ang, xlo, xup, ylo, yup
+    `RS'     h, c
+    `RC'     X, Y
+    `pItems' R
+
+    ang = angle<. ? angle : 0
+    if (n==1) {
+        h = (limits[2,1] - limits[1,1]) * 2
+        X = limits[1,1]-h/4, limits[2,1]+h/4
+    }
+    else {
+        h = (limits[2,1] - limits[1,1]) / (n-1)       // step size
+        X = rangen(limits[1,1]-h/2, limits[2,1]+h/2, n+1)
+    }
+    r = ceil((limits[2,2] - limits[1,2]) / h)         // number of rows
+    c = (r*h + limits[1,2] - limits[2,2]) / 2         // vertical offset
+    Y = rangen(limits[1,2]-c, limits[2,2]+c, r+1)
+    if (checker) k = (ceil(n/2)*ceil(r/2) + floor(n/2)*floor(r/2))
+    else         k = n * r
+    R = J(k, 1, NULL)
+    j = r + 1
+    ylo = Y[j--]
+    for (;j;j--) {
+        yup = ylo; ylo = Y[j]
+        i = n + 1
+        xlo = X[i--]
+        for (;i;i--) {
+            xup = xlo; xlo = X[i]
+            if (checker) {
+                if (mod(j,2)) {; if (!mod(i,2)) continue; }
+                else          {; if (mod(i,2))  continue; }
+            }
+            R[k--] = &_geo_raster_ritem((xlo,ylo) \ (xup,ylo) \ (xup,yup) \
+                (xlo,yup) \ (xlo,ylo), ang)
+        }
+    }
+    return(R)
+}
+
+`pItems' _geo_raster_hex(`Int' n, `RM' limits, `RS' angle)
+{
+    `Int'    r, i, j, k, ang, x1, x2, x3, y1, y2, y3, y4, odd
+    `RS'     h, hy, c
+    `RC'     X, Y
+    `pItems' R
+
+    ang = angle<. ? angle : 0
+    h = (limits[2,1] - limits[1,1]) / n              // horizontal step size
+    hy = h / sqrt(3)                                 // vertical step size
+    r = ceil((limits[2,2] - limits[1,2] + hy/2) / (1.5*hy)) // number of rows
+    c = (1.5*hy*r+hy/2 + limits[1,2] - limits[2,2]) / 2   // vertical offset
+    X = rangen(limits[1,1]-h/2,limits[2,1]+h/2, (n+1)*2+1)
+    Y = rangen(limits[1,2]-c,  limits[2,2]+c,   r*3+2)
+    k = n * r + floor(r/2)
+    R = J(k, 1, NULL)
+    j = r*3+2
+    y2 = Y[j--]; y1 = Y[j--]
+    for (;j;j--) {
+        j--
+        y4 = y2; y3 = y1; y2 = Y[j--]; y1 = Y[j]
+        odd = mod(j,2)
+        i = (n+1)*2 + 1
+        if (odd) i--
+        x1 = X[i--]
+        for (;i>1;i--) {
+            x3 = x1; x2 = X[i--]
+            x1 = X[i]
+            R[k--] = &_geo_raster_ritem((x1,y2) \ (x2,y1) \ (x3,y2) \ (x3,y3) \
+                (x2,y4) \ (x1,y3) \ (x1,y2), ang)
+        }
+    }
+    return(R)
+}
+
+`RM' _geo_raster_collect(`pItems' R)
+{
+    `Int' i, r, a, b
+    `RM'  XY
+    
+    a = 0
+    for (i=rows(R); i; i--) a = a + rows(R[i]->XY)
+    XY = J(a,5,.)
+    a++
+    for (i=rows(R); i; i--) {
+        r = rows(R[i]->XY)
+        b = a - 1
+        a = a - r
+        XY[|a,1 \ b,5|] = J(r, 1, i), R[i]->XY, J(r, 1, R[i]->xy)
+    }
+    return(XY)
+}
+
+`RM' _geo_raster_select(`pItems' R, `RM' XY, `RC' ID, `IntC' PL, `Bool' nodots)
+{
+    `Int'   i, k, K, d
+    `BoolC' P
+    `IntC'  p, L
+    `PS'    pl
+    
+    i = rows(R)
+    P = J(i,1,.)
+    for (;i;i--) _geo_raster_minmax(*R[i])
+    if (rows(PL)) {
+        if (hasmissing(PL)) pl = &editmissing(PL, 0) // treat missing as 0
+        else                pl = &PL
+        L = mm_unique(select(*pl, _mm_uniqrows_tag((ID, geo_pid(ID, XY)))))
+        K = length(L)
+        for (k=K;k;k--) {
+            if (!nodots)
+                d = _geo_progress_init(sprintf("(pass %g/%g: ", K-k+1, K))
+            p = selectindex(*pl:==L[k])
+            __geo_raster_select(P, R, _geo_raster_items(XY[p,], ID[p]),
+                mod(L[k],2), d)
+            if (!nodots) _geo_progress_end(d, ")")
+        }
+    }
+    else {
+        if (!nodots) d = _geo_progress_init("(")
+        __geo_raster_select(P, R, _geo_raster_items(XY, ID), 0, d)
+        if (!nodots) _geo_progress_end(d, ")")
+    }
+    _editmissing(P,0)
+    R = select(R, P)
+    return(_geo_raster_collect(R))
+}
+
+void __geo_raster_select(`BoolC' P, `pItems' R, `pItems' S, `Bool' odd, `Int' d)
+{
+    `Int' i, n, j, jj, r, o, off
+    `RS'  A0, a, b
+    
+    n = rows(P)
+    if (n) A0 = _geo_raster_A0(R[1]->XY, a=., b=.)
+    r = rows(S)
+    off = -1
+    for (i=n;i;i--) {
+        if (d<.) _geo_progress(d, 1-i/n)
+        if (P[i]<.) continue
+        for (j=r;j;j--) {
+            jj = mod(j + off, r) + 1
+            o = __geo_raster_select_i(*S[jj], *R[i], A0, a, b)
+            if (!o) continue
+            if (odd) {
+                if (o==2) P[i] = 0 // exclude cell if fully inside enclave
+            }
+            else P[i] = 1
+            off = jj - 2  // continue with next cell in same position
+            break
+        }
+    }
+}
+
+`Int' __geo_raster_select_i(`Item' p, `Item' p0, `RS' A0, `RS' a, `RS' b)
+{
+    if (p0.xmax < p.xmin) return(0)
+    if (p0.xmin > p.xmax) return(0)
+    if (p0.ymax < p.ymin) return(0)
+    if (p0.ymin > p.ymax) return(0)
+    if (p.gt==1) return(__geo_raster_select_pt(p.XY, p0.XY))
+    if (p.gt==2) return(__geo_raster_select_line(p.XY, p0.XY))
+    return(__geo_raster_select_area(p.XY, p0.XY, A0, a, b))
+}
+
+`Int' __geo_raster_select_pt(`RR' xy, `RM' mask)
+{   // returns 0 if point outside mask, 3 if point inside mask
+    `Int' i
+    `RS'  x, y, x0, x1, y0, y1
+    
+    x = xy[1]; y = xy[2]
+    i = rows(mask)
+    x0 = mask[i,1]; y0 = mask[i,2]; i--
+    for (;i>1;i--) { // ignore first row
+        x1 = x0; y1 = y0
+        x0 = mask[i,1]; y0 = mask[i,2]
+        if (sign((x - x0)*(y1 - y0) - (y - y0)*(x1 - x0))>0) return(0)
+    }
+    return(3)
+}
+
+`Int' __geo_raster_select_line(`RM' XY, `RM' mask)
+{   // return: 0 no overlap, 1 overlap, 3 XY inside mask
+    `Int' i, n
+    `RM'  xy
+    
+    xy = XY
+    n = rows(mask)
+    for (i=2;i<n;i++) xy = _geo_clip_line(xy, mask[|i,1 \ i+1,2|])
+    if (!rows(xy)) return(0) // no overlap
+    if (xy==XY) return(3)    // XY inside mask
+    return(1)                // overlap
+}
+
+`Int' __geo_raster_select_area(`RM' XY, `RM' mask, `RS' A0, `RS' a, `RS' b)
+{   // return: 0 no overlap, 1 overlap, 2 mask inside XY, 3 XY inside mask
+    `Int' i, n, r
+    `RM'  xy
+    
+    xy = XY
+    n = rows(mask)
+    for (i=2;i<n;i++) xy = _geo_clip_area(xy, mask[|i,1 \ i+1,2|])
+    r = rows(xy)
+    if (!r) return(0)     // no overlap
+    if (r==n) {
+        if (reldif(__geo_area((xy:-a)/b), A0)<1e-13)
+            return(2)     // mask inside XY
+    }
+    if (xy==XY) return(3) // XY inside mask
+    return(1)             // overlap
+}
+
+`RM' _geo_raster_clip(`pItems' R, `RM' XY, `RC' ID, `IntC' PL, `Bool' nodots)
+{
+    `Int'   i, k, K, l, l0, d
+    `BoolC' P, hasPL
+    `IntC'  p, L
+    `RM'    S
+    `PS'    pl
+    `PM'    I
+    
+    for (i=rows(R);i;i--) _geo_raster_minmax(*R[i])
+    hasPL = rows(PL)!=0
+    if (hasPL) {
+        if (hasmissing(PL)) pl = &editmissing(PL, 0) // treat missing as 0
+        else                pl = &PL
+        L = mm_unique(select(*pl, _mm_uniqrows_tag((ID, geo_pid(ID, XY)))))
+        K = length(L)
+        I = J(rows(R),K,NULL)
+        S = J(0,6,.)
+        l = .
+        for (k=K;k;k--) {
+            if (!nodots)
+                d = _geo_progress_init(sprintf("(pass %g/%g: ", K-k+1, K))
+            l0 = l; l = L[k]
+            p = selectindex(*pl:==L[k])
+            if (mod(l,2))       P = J(rows(R),1,0)
+            else if (l0!=(l+1)) P = J(rows(R),1,0)
+            I[,k] = __geo_raster_clip(P, R,
+                _geo_raster_items(XY[p,], ID[p]), mod(l,2), S, l, d)
+            if (!nodots) _geo_progress_end(d, ")")
+        }
+    }
+    else {
+        if (!nodots) d = _geo_progress_init("(")
+        I = __geo_raster_clip(J(rows(R),1,0), R,
+            _geo_raster_items(XY, ID), 0, S, l, d)
+        if (!nodots) _geo_progress_end(d, ")")
+    }
+    if (hasPL) S = runningsum(_mm_uniqrows_tag(S[,(5,6)])):+rows(I), S
+    else       S = J(0,6,.)
+    S = _geo_raster_clip_collect(I, hasPL, L) \ S
+    S = mm_sort(S, (1,6), 1)
+    S[,1] = runningsum(_mm_uniqrows_tag(S[,(1,6)])) // update raster item ID
+    return(S)
+}
+
+`PC' __geo_raster_clip(`BoolC' P, `pItems' R, `pItems' S, `Bool' odd, `RM' E,
+    `Int' pl, `Int' d)
+{
+    `Bool' inside
+    `Int'  i, n, j, jj, r, off
+    `RS'   A, AA, A0, a, b
+    `RM'   xy
+    `PC'   I
+    
+    n = rows(P)
+    if (n) A0 = _geo_raster_A0(R[1]->XY, a=., b=.)
+    I = J(n,1,NULL)
+    r = rows(S)
+    off = -1
+    for (i=n;i;i--) {
+        if (d<.) _geo_progress(d, 1-i/n)
+        if (P[i]) continue
+        AA = 0
+        for (j=r;j;j--) {
+            jj = mod(j + off, r) + 1
+            xy = __geo_raster_clip_i(*S[jj], *R[i])
+            if (!rows(xy)) continue
+            A = __geo_area((xy :- a) / b)
+            if (!A) continue
+            inside = reldif(A,A0)<1e-13 // cell is fully inside shape item
+            if (odd) { // enclave
+                if (inside) {
+                    P[i] = 1
+                    off = jj - 2 // continue with next cell in same position
+                    break
+                }
+                __geo_raster_clip_save(I, i, xy, *S[jj], *R[i])
+                continue
+            }
+            if (inside) {
+                __geo_raster_clip_save(I, i, R[i]->XY, *S[jj], *R[i])
+                off = jj - 2 // continue with next cell in same position
+                break
+            }
+            __geo_raster_clip_save(I, i, (.,.)\xy[rows(xy)::2,], *S[jj], *R[i])
+            AA = quadsum((AA, A))
+            if (reldif(AA,A0)<1e-13) { // cell is complete
+                off = jj - 2 // continue with next cell in same position
+                break
+            }
+        }
+    }
+    if (odd) _geo_raster_clip_E(E, S, pl) // collect enclaves
+    return(I)
+}
+
+void __geo_raster_clip_save(`PC' I, `Int' i, `RM' xy, `Item' p, `Item' p0)
+{
+    if (I[i]==NULL) I[i] =          &(xy, J(rows(xy),1,(p0.xy, p.id)))
+    else            I[i] = &(*I[i] \ (xy, J(rows(xy),1,(p0.xy, p.id))))
+}
+
+`RM' __geo_raster_clip_i(`Item' p, `Item' p0)
+{
+    `Int' i, n
+    `RM'  xy
+    
+    if (p.gt==1) return(J(0,2,.))
+    if (p.gt==2) return(J(0,2,.))
+    if (p0.xmax < p.xmin) return(J(0,2,.))
+    if (p0.xmin > p.xmax) return(J(0,2,.))
+    if (p0.ymax < p.ymin) return(J(0,2,.))
+    if (p0.ymin > p.ymax) return(J(0,2,.))
+    xy = p.XY
+    n = rows(p0.XY)
+    for (i=2;i<n;i++) xy = _geo_clip_area(xy, p0.XY[|i,1 \ i+1,2|])
+    return(xy)
+}
+
+`RM' _geo_raster_clip_collect(`PM' I, `Bool' hasPL, `IntC' L)
+{
+    `Int' i, n, l, k, K, r, a, b
+    `RM'  R
+    
+    n = rows(I)
+    if (!hasPL) {
+        a = 0
+        for (i=n; i; i--) {
+            if (I[i]==NULL) continue
+            a = a + rows(*I[i])
+        }
+        R = J(a,6,.)
+        a++
+        for (i=n; i; i--) {
+            if (I[i]==NULL) continue
+            r = rows(*I[i])
+            b = a - 1; a = a - r
+            R[|a,1 \ b,6|] = J(r,1,i), *I[i]
+        }
+        return(R)
+    }
+    K = length(L)
+    a = 0
+    for (k=K; k; k--) {
+        for (i=n; i; i--) {
+            if (I[i,k]==NULL) continue
+            a = a + rows(*I[i,k])
+        }
+    }
+    R = J(a,7,.)
+    a++
+    for (k=K; k; k--) {
+        l = L[k]
+        for (i=n; i; i--) {
+            if (I[i,k]==NULL) continue
+            r = rows(*I[i,k])
+            b = a - 1; a = a - r
+            R[|a,1 \ b,7|] = J(r,1,i), *I[i,k], J(r,1,l)
+        }
+    }
+    return(R)
+}
+
+void _geo_raster_clip_E(`RM' E, `pItems' S, `Int' pl)
+{
+    `Int' i, r, a, b
+    `RM'  XY, ID
+    
+    a = 0
+    for (i=rows(S); i; i--) {
+        if (S[i]->gt==1) continue
+        if (S[i]->gt==2) continue
+        a = a + rows(S[i]->XY)
+    }
+    ID = J(a,1,.)
+    XY = J(a,2,.)
+    a++
+    for (i=rows(S); i; i--) {
+        if (S[i]->gt==1) continue
+        if (S[i]->gt==2) continue
+        r = rows(S[i]->XY)
+        b = a - 1; a = a - r
+        XY[|a,1 \ b,2|] = S[i]->XY // (clockwise)
+        ID[|a \ b|]     = J(r, 1, S[i]->id)
+    }
+    E = (XY, geo_centroid(1, ID, XY), ID, J(rows(ID),1,pl)) \ E
+}
+
+end
+
+
+*! {smcl}
 *! {marker geo_refine}{bf:geo_refine()}{asis}
 *! version 1.0.2  02jun2024  Ben Jann
 *!
@@ -3457,7 +4520,7 @@ end
 
 *! {smcl}
 *! {marker geo_rotate}{bf:geo_rotate()}{asis}
-*! version 1.0.1  01jun2024  Ben Jann
+*! version 1.0.2  11aug2024  Ben Jann
 *!
 *! Rotates coordinates around (0,0) by angle degrees (counterclockwise)
 *!
@@ -3481,10 +4544,7 @@ real matrix geo_rotate(real matrix XY, real scalar angle)
 {
     real scalar r
     
-    if (cols(XY)!=2) {
-         errprintf("{it:XY} must have two columns\n")
-         exit(3200)
-    }
+    if (angle==0) return(XY)
     r  = angle * pi() / 180
     return((XY[,1] * cos(r) - XY[,2] * sin(r),
             XY[,1] * sin(r) + XY[,2] * cos(r)))
@@ -3760,7 +4820,7 @@ end
 
 *! {smcl}
 *! {marker geo_spjoin}{bf:geo_spjoin()}{asis}
-*! version 1.0.2  23oct2023  Ben Jann
+*! version 1.0.3  16aug2024  Ben Jann
 *!
 *! Spatially joins the points in xy to the polygons in XY
 *!
@@ -3768,7 +4828,8 @@ end
 *!
 *!      result = geo_spjoin(xy, ID, PID, XY [, PL, nodots])
 *!
-*!  result  r x 1 colvector containing matched IDs
+*!  result  r x 2 colvector containing matched IDs in 1st column and matching
+*!          flag in 2nd column (1 if matched, 0 else)
 *!  xy      r x 2 matrix containing points to be matched
 *!  ID      n x 1 real colvector of unit IDs
 *!  PID     n x 1 real colvector of within-unit polygon IDs
@@ -3795,7 +4856,7 @@ local pUnits    pointer (`Unit') vector
 mata:
 mata set matastrict on
 
-`RC' geo_spjoin(`RM' xy, `RC' ID, `RC' PID, `RM' XY, | `RC' PL, `Bool' nodots)
+`RM' geo_spjoin(`RM' xy, `RC' ID, `RC' PID, `RM' XY, | `RC' PL, `Bool' nodots)
 {
     `Int'    i, n
     `IntC'   p, P
@@ -3808,11 +4869,7 @@ mata set matastrict on
         errprintf("{it:XY} must have two columns\n")
         exit(3200)
     }
-    if (cols(XY)!=2) {
-        errprintf("{it:XY} must have two columns\n")
-        exit(3200)
-    }
-    if (!rows(PL)) return(_geo_spjoin(xy, ID, PID, XY, 0, nodots, "(")[,1])
+    if (!rows(PL)) return(_geo_spjoin(xy, ID, PID, XY, 0, nodots, "("))
     if (hasmissing(PL)) pl = &editmissing(PL, 0) // treat missing as 0
     else                pl = &PL
     L  = mm_unique(select(*pl, _mm_uniqrows_tag((ID, PID))))
@@ -3825,7 +4882,7 @@ mata set matastrict on
             sprintf("(pass %g/%g: ", n-i+1, n))
         if (i>1) p = selectindex(!id[,2]) // remaining unmatched points
     }
-    return(id[,1])
+    return(id[,1], editvalue(id[,2],2,0/*reset points inside enclaves*/))
 }
 
 `RM' _geo_spjoin(`RM' xy, `RC' ID, `RC' PID, `RM' XY, `Bool' enclave,
@@ -3866,7 +4923,7 @@ mata set matastrict on
                 // if not enclave: return id of matching unit
                 if (!enclave) return((u[i]->id,1))
                 // if enclave and inside: tag as matched, but do not return ID
-                if (m==1)     return((.,1))
+                if (m==1)     return((.,2))
                 // if enclave and on edge: do not tag, but exit search
                               return((.,0))
             }
@@ -3879,7 +4936,7 @@ end
 
 *! {smcl}
 *! {marker geo_symbol}{bf:symbol()}{asis}
-*! version 1.0.3  16jul2024  Ben Jann
+*! version 1.0.5  01aug2024  Ben Jann
 *!
 *! Returns the coordinates of a selected symbol
 *!
@@ -4065,6 +5122,28 @@ real matrix _geo_symbol_pin2(| real scalar n0, string scalar arg)
     return(xy0 \ xy1)
 }
 
+real matrix _geo_symbol_pin3(| real scalar n0, string scalar arg)
+{
+    real colvector n, r, a, c
+    real matrix    xy
+    
+    if (arg=="") a = 1/3 // default
+    else {
+        a = strtoreal(arg)
+        if (a<0 | a>1) {
+            errprintf("symbol pin3: {it:headsize} must be in [0,1]\n")
+            exit(125)
+        }
+    }
+    if (n0>=.) n = max((4, ceil(a * 100)))
+    else       n = n0
+    c = 2 - a
+    r = rangen(-asin(a/c), pi()+asin(a/c), n+1)
+    xy = a * (cos(r),sin(r))
+    xy[,2] = xy[,2] :+ c
+    return(xy \ (0,0) \ xy[1,] )
+}
+
 real matrix _geo_symbol_line(| real scalar n, string scalar arg)
 {
     pragma unused n
@@ -4119,18 +5198,156 @@ real matrix _geo_symbol_v(| real scalar n, string scalar arg)
 
 real matrix _geo_symbol_arrow(| real scalar n, string scalar arg)
 {
+    real scalar    l, w
+    real rowvector ARG
     pragma unused n
-    pragma unused arg
+    
+    ARG = strtoreal(tokens(arg))
+    if (length(ARG)<2) ARG = ARG, J(1,2-length(ARG),.)
+    l = ARG[1]; w = ARG[2]
+    if (l>=.) l = .5
+    if (w>=.) w = 2/3
+    l = 1 - l*2
+    return((-1,0) \ (1,0) \ (.,.) \ (1,0) \ (l,w) \ (.,.) \ (1,0) \ (l,-w))
+}
 
-    return((-1,0) \ (1,0) \ (.,.) \ (1,0) \ (0,2/3) \ (.,.) \ (1,0) \ (0,-2/3))
+real matrix _geo_symbol_barrow(| real scalar n, string scalar arg)
+{
+    real scalar    l, w
+    real rowvector ARG
+    pragma unused n
+    
+    ARG = strtoreal(tokens(arg))
+    if (length(ARG)<2) ARG = ARG, J(1,2-length(ARG),.)
+    l = ARG[1]; w = ARG[2]
+    if (l>=.) l = .375
+    if (w>=.) w = .5
+    l = 1 - l*2
+    return((-1,0) \ (-l,w) \ (.,.) \ (-1,0) \ (-l,-w) \ (.,.) \
+           (-1,0) \ ( 1,0) \ (.,.) \
+           ( 1,0) \ ( l,w) \ (.,.) \ ( 1,0) \ ( l,-w))
 }
 
 real matrix _geo_symbol_farrow(| real scalar n, string scalar arg)
 {
+    real scalar    l, w, b
+    real rowvector ARG
     pragma unused n
-    pragma unused arg
 
-    return((-1,0) \ (0,0) \ (0,.5) \ (1,0) \ (0,-.5) \ (0,0) \ (-1,0))
+    ARG = strtoreal(tokens(arg))
+    if (length(ARG)<3) ARG = ARG, J(1,3-length(ARG),.)
+    l = ARG[1]; w = ARG[2]; b = ARG[3]
+    if (l>=.) l = .5
+    if (w>=.) w = .5
+    if (b>=.) b = .2
+    l = 1 - l*2
+    return((-1,b) \ (l,b) \ (l,w) \ (1,0) \ (l,-w) \ (l,-b) \ (-1,-b) \ (-1, b))
+}
+
+real matrix _geo_symbol_fbarrow(| real scalar n, string scalar arg)
+{
+    real scalar    l, w, b
+    real rowvector ARG
+    pragma unused n
+
+    ARG = strtoreal(tokens(arg))
+    if (length(ARG)<3) ARG = ARG, J(1,3-length(ARG),.)
+    l = ARG[1]; w = ARG[2]; b = ARG[3]
+    if (l>=.) l = 1/3
+    if (w>=.) w = 1/3
+    if (b>=.) b = 1/8
+    l = 1 - l*2
+    return((-1,0) \ (-l,w) \ (-l,b) \ (l,b) \ (l,w) \ (1,0) \ (l,-w) \ 
+           (l,-b) \ (-l,-b) \ (-l,-w) \ (-1,0))
+}
+
+real matrix _geo_symbol_bar(| real scalar n, string scalar arg)
+{
+    real scalar h
+    pragma unused n
+
+    h = strtoreal(arg)
+    if (h>=.) h = 1/3
+    return((-1,-h) \ (1,-h) \ (1,h) \ (-1,h) \ (-1,-h))
+}
+
+real matrix _geo_symbol_cross(| real scalar n, string scalar arg)
+{
+    real scalar h
+    pragma unused n
+
+    h = strtoreal(arg)
+    if (h>=.) h = 1/3
+    return((-h,-1) \ (h,-1) \ (h,-h) \ (1,-h) \ (1,h) \ (h,h) \ (h,1) \
+            (-h,1) \ (-h,h) \ (-1,h) \ (-1,-h) \ (-h,-h) \ (-h,-1))
+}
+
+real matrix _geo_symbol_asterisk(| real scalar n, string scalar arg)
+{
+    real scalar k, i
+    real matrix p, xy
+    pragma unused n
+    
+    k = trunc(strtoreal(arg))
+    if      (k>=.) k = 6
+    else if (k<2)  k = 2
+    p = rangen(.25, 1.25, k+1) * (2 * pi())
+    p = round((cos(p), sin(p)), 1e-14)
+    xy = J(k*3-1, 2, .)
+    for (;k;k--) {
+        i = (k*3) - 2
+        xy[i,]   = (0,0)
+        xy[i+1,] = p[k,]
+    }
+    return(xy)
+}
+
+real matrix _geo_symbol_fasterisk(| real scalar n, string scalar arg)
+{
+    real scalar    k, w, r
+    real matrix    xy, XY
+    real rowvector ARG
+    pragma unused n
+    
+    ARG = strtoreal(tokens(arg))
+    if (length(ARG)<2) ARG = ARG, J(1,2-length(ARG),.)
+    k = trunc(ARG[1]); w = ARG[2]
+    if      (k>=.) k = 6
+    else if (k<=2) k = 2
+    if (w>=.) w = .2 // should depend on k 
+    if (k==2) return((0-w,1) \ (0-w,-1) \ (0+w,-1) \ (0+w,1) \ (0-w,1))
+    r = 360 / k
+    xy = (0-w,1)\(0-w,0) \ geo_rotate((0+w,1)\(0+w,0), r)
+    xy = xy[1,] \ _geo_symbol_fasterisk_intersect(xy) \ xy[3,]
+    XY = J(0,2,.)
+    for (;k;k--) {
+        XY = XY \ xy
+        _geo_rotate(xy, r)
+    }
+    return(XY \ XY[1,])
+}
+
+real rowvector _geo_symbol_fasterisk_intersect(real matrix xy)
+{
+    real scalar a, b, d
+    
+    a = (xy[1,1] * xy[2,2] - xy[1,2] * xy[2,1])
+    b = (xy[3,1] * xy[4,2] - xy[3,2] * xy[4,1])
+    d = (xy[1,1] - xy[2,1]) * (xy[3,2] - xy[4,2]) -
+        (xy[1,2] - xy[2,2]) * (xy[3,1] - xy[4,1])
+    return(((a * (xy[3,1] - xy[4,1]) - (xy[1,1] - xy[2,1]) * b),
+            (a * (xy[3,2] - xy[4,2]) - (xy[1,2] - xy[2,2]) * b)) / d)
+}
+
+real matrix _geo_symbol_trapezoid(| real scalar n, string scalar arg)
+{
+    real scalar l, h
+    pragma unused n
+
+    l = strtoreal(arg)
+    if (l>=.) l = .5
+    h = .5
+    return((-1,-h) \ (1,-h) \ (l,h) \ (-l,h) \ (-1,-h))
 }
 
 end

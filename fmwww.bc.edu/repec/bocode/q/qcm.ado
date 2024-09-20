@@ -1,4 +1,4 @@
-*! qcm 1.0.0 Guanpeng Yan and Qiang Chen 2023.11.19
+*! qcm 2.0.1 Guanpeng Yan and Qiang Chen 2024.09.13
 
 * cap prog drop qcm
 * cap prog drop qcm_placebo
@@ -19,7 +19,7 @@ program qcm,  eclass sortpreserve
 		[COUnit(numlist min=1 integer sort) ///
 		PREPeriod(numlist min=1 integer sort) ///
 		POSTPeriod(numlist min=1 integer sort) ///
-		NTree(integer 500) ///
+		NTrees(integer 500) ///
 		MTry(numlist > 0 min=1 max=1 integer) ///
 		MAXDepth(numlist > 0 min=1 max=1 integer) ///
 		MINSsize(integer 10) ///
@@ -27,8 +27,6 @@ program qcm,  eclass sortpreserve
 		CILevel(numlist >0 <100 min=1 max=1) ///
 		CIStyle(integer 1) ///
 		QType(numlist >=0 <=11 min=1 max=1 integer) ///
-		seed(integer 1) ///
-		placebo(string) ///
 		fill(string) ///
 		frame(string) ///
 		noIMPortance ///
@@ -41,6 +39,7 @@ program qcm,  eclass sortpreserve
 		di as err `"{bf:moremata} must be installed (use Stata command "{bf:ssc install moremata, replace}")."'
 		exit 198
     }
+	loc seed = 1
 	if "`cilevel'" == "" loc cilevel = 0.95
 	else loc cilevel = `cilevel'/100
 	if "`qtype'" == "" local qtype = 10
@@ -189,14 +188,11 @@ program qcm,  eclass sortpreserve
         mata: qcm_slevelsofsel("`timeVarStr'", "time_post", st_data(., "`timeVar'") :>= `trperiod')
         mata: qcm_slevelsofsel("`timeVarStr'", "time_tr", st_data(., "`timeVar'") :== `trperiod')
 		
-		cap mata: qcm("`varlist'", "`unit_all'", "`unit_tr'", "`time_all'", "`time_tr'", 0, `ntree', "`mtry'", "`maxdepth'" ///
+		mata: qcm("`varlist'", "`unit_all'", "`unit_tr'", "`time_all'", "`time_tr'", 0, `ntrees', "`mtry'", "`maxdepth'" ///
 			, `minlsize', `seed', `minssize', `cilevel', `qtype', "`importance'" == "" ? 1 : 0)
-		if _rc {
-			exit
-		}
 		
 		di _newline "{txt}Parameters of random forest:"
-		mata: qcm_train_summary(`ntree', `mtry', "`maxdepth'", `minlsize', `seed', `minssize')
+		mata: qcm_train_summary(`ntrees', `mtry', "`maxdepth'", `minlsize', `seed', `minssize')
 		
 		di _newline as txt "Fitting results in the pretreatment periods:"
 		mata: qcm_summary(st_sdata(., "`timeVarStr'"), st_data(., "`depvar'·`unit_tr' pred_e·`depvar'·`unit_tr'") ///
@@ -314,15 +310,45 @@ program qcm,  eclass sortpreserve
 			loc pos: list posof "`trperiod'" in temp
 			loc pos = `pos' - 1
 			loc xline: word `pos' of `temp'
-			twoway (tsline `depvar'·`unit_tr') (tsline pred_e·`depvar'·`unit_tr', lpattern(dash)), ///
-				title("Actual and Predicted Outcomes") xline(`xline', lp(dash) lc(cranberry%40)) name(pred, replace) ///
+			mata: st_local("xmin", strofreal(min(st_data(., "`timeVar'")))); 
+			mata: st_local("xmax", strofreal(max(st_data(., "`timeVar'")))); 
+			mata: num = floor(rows(st_data(., "`timeVar'"))/6); num = (num == 0? 1 : num); st_local("xnum", strofreal(num));
+			twoway (line `depvar'·`unit_tr' `timeVar') (line pred_e·`depvar'·`unit_tr' `timeVar', lpattern(dash)), xlabel(`xmin'(`xnum')`xmax') ///
+				title("Actual and Predicted Outcomes") xline(`xline', lp(dot) lc(gs5%40)) name(pred, replace) ///
 				ytitle(`depvar')  legend(order(1 "Actual" 2 "Predicted") ///
 				rows(1) cols(2) position(6)) nodraw
 			if `cistyle' == 1 {
 				twoway (rcap tr_l·`depvar'·`unit_tr' tr_u·`depvar'·`unit_tr' `timeVar' if `timeVar' >= `trperiod', ///
+					lpattern(dash)) ///
+					(connected tr_e·`depvar'·`unit_tr' `timeVar', msymbol(smcircle_hollow) ), xlabel(`xmin'(`xnum')`xmax') ///
+					xline(`xline', lp(dot) lc(gs5%40)) yline(0, lp(dot) lc(gs5%40)) ///
+					title("Treatment Effects") name(eff, replace) ///
+					legend(order(2 "Treatment Effect" 1 "`cilevelp'% Confidence Interval") ///
+					rows(1) position(6)) ytitle("treatment effects on `depvar'") nodraw
+			}
+			else if `cistyle' == 2 {
+				twoway (rarea tr_l·`depvar'·`unit_tr' tr_u·`depvar'·`unit_tr' `timeVar' if `timeVar' >= `trperiod', ///
+					fcolor(gs8%30) lwidth(none)) ///
+					(connected tr_e·`depvar'·`unit_tr' `timeVar', msymbol(smcircle_hollow)), xlabel(`xmin'(`xnum')`xmax') ///
+					xline(`xline', lp(dot) lc(gs5%40)) yline(0, lp(dot) lc(gs5%40)) title("Treatment Effects") name(eff, replace) ///
+					legend(order(2 "Treatment Effect" 1 "`cilevelp'% Confidence Interval") ///
+					rows(1) position(6)) ytitle("treatment effects on `depvar'") nodraw
+			}
+			else if `cistyle' == 3 {
+				twoway (line tr_u·`depvar'·`unit_tr' `timeVar' if `timeVar' >= `trperiod', fcolor(none) lcolor(gs8%50) lp(solid)) ///
+					(line tr_l·`depvar'·`unit_tr' `timeVar' if `timeVar' >= `trperiod', fcolor(none) lcolor(gs8%50) lp(solid)) ///
+					(connected tr_e·`depvar'·`unit_tr' `timeVar',  msymbol(smcircle_hollow) ), xlabel(`xmin'(`xnum')`xmax') ///
+					xline(`xline', lp(dot) lc(gs5%40)) ///
+					yline(0, lp(dot) lc(gs5%40)) title("Treatment Effects") name(eff, replace) ///
+					legend(order(3 "Treatment Effect" 1 "`cilevelp'% Confidence Interval") ///
+					rows(1) position(6)) ytitle("treatment effects on `depvar'") nodraw
+			}
+/*
+			if `cistyle' == 1 {
+				twoway (rcap tr_l·`depvar'·`unit_tr' tr_u·`depvar'·`unit_tr' `timeVar' if `timeVar' >= `trperiod', ///
 					color(navy) lpattern(dash)) ///
 					(connected tr_e·`depvar'·`unit_tr' `timeVar', lcolor(forest_green) msymbol(smcircle_hollow) mcolor(navy)), ///
-					xline(`xline', lp(dash) lc(cranberry%40)) yline(0, lp(dash) lc(cranberry%40)) ///
+					xline(`xline', lp(dot) lc(grey%40)) yline(0, lp(dot) lc(grey%40)) ///
 					title("Treatment Effects") name(eff, replace) ///
 					legend(order(2 "Treatment Effect" 1 "`cilevelp'% Confidence Interval") ///
 					rows(1) position(6)) ytitle("treatment effects on `depvar'") nodraw
@@ -331,20 +357,20 @@ program qcm,  eclass sortpreserve
 				twoway (rarea tr_l·`depvar'·`unit_tr' tr_u·`depvar'·`unit_tr' `timeVar' if `timeVar' >= `trperiod', ///
 					fcolor(gs8%30) lwidth(none)) ///
 					(connected tr_e·`depvar'·`unit_tr' `timeVar', lcolor(forest_green) msymbol(smcircle_hollow) mcolor(navy)), ///
-					xline(`xline', lp(dash) lc(cranberry%40)) yline(0, lp(dash) ///
-					lc(cranberry%40)) title("Treatment Effects") name(eff, replace) ///
+					xline(`xline', lp(dot) lc(grey%40)) yline(0, lp(dot) lc(grey%40)) title("Treatment Effects") name(eff, replace) ///
 					legend(order(2 "Treatment Effect" 1 "`cilevelp'% Confidence Interval") ///
 					rows(1) position(6)) ytitle("treatment effects on `depvar'") nodraw
 			}
 			else if `cistyle' == 3 {
-				twoway (line tr_u·`depvar'·`unit_tr' `timeVar' if `timeVar' >= `trperiod', fcolor(none) lcolor(gs8%50)) ///
-					(line tr_l·`depvar'·`unit_tr' `timeVar' if `timeVar' >= `trperiod', fcolor(none) lcolor(gs8%50)) ///
+				twoway (line tr_u·`depvar'·`unit_tr' `timeVar' if `timeVar' >= `trperiod', fcolor(none) lcolor(gs8%50) lp(solid)) ///
+					(line tr_l·`depvar'·`unit_tr' `timeVar' if `timeVar' >= `trperiod', fcolor(none) lcolor(gs8%50) lp(solid)) ///
 					(connected tr_e·`depvar'·`unit_tr' `timeVar', lcolor(forest_green) msymbol(smcircle_hollow) mcolor(navy)), ///
-					xline(`xline', lp(dash) lc(cranberry%40)) ///
-					yline(0, lp(dash) lc(cranberry%40)) title("Treatment Effects") name(eff, replace) ///
+					xline(`xline', lp(dot) lc(grey%40)) ///
+					yline(0, lp(dot) lc(grey%40)) title("Treatment Effects") name(eff, replace) ///
 					legend(order(3 "Treatment Effect" 1 "`cilevelp'% Confidence Interval") ///
 					rows(1) position(6)) ytitle("treatment effects on `depvar'") nodraw
 			}
+*/
 			local graphlist = "`graphlist' pred eff"
 		}
 	}
@@ -357,7 +383,7 @@ program qcm,  eclass sortpreserve
 		qcm_placebo `varlist', trunit(`trunit') trperiod(`trperiod') panelVar(`panelVar') timeVar(`timeVar') ///
 			panelVarStr(`panelVarStr') unit_all(`unit_all') unit_tr(`unit_tr') unit_ctrl(`unit_ctrl') ///
 			time_tr(`time_tr') time_all(`time_all') cilevelp(`cilevelp') ///
-			ntree(`ntree') mtry("`mtry'") maxdepth("`maxdepth'") minlsize(`minlsize') minssize(`minssize') cilevel(`cilevel') ///
+			ntrees(`ntrees') mtry("`mtry'") maxdepth("`maxdepth'") minlsize(`minlsize') minssize(`minssize') cilevel(`cilevel') ///
 			qtype(`qtype') cistyle(`cistyle') seed(`seed') frame(`frame') show(`show') ///
 			`placebo' `figure'
 		loc graphlist = "`graphlist' `e(graphlist)'"
@@ -388,13 +414,12 @@ program qcm,  eclass sortpreserve
 	ereturn scalar r2 = r2
 	ereturn scalar att = att
 	ereturn local frame "`framename'"
-	ereturn local seed = `seed'
 	mata: st_local("maxdepth", "`maxDepth'" == ""? ".":"`maxdepth'")
-	ereturn local maxdepth "`maxdepth'"
-	ereturn local minlsize = `minlsize'
 	ereturn local minssize = `minssize'
+	ereturn local minlsize = `minlsize'
+	ereturn local maxdepth "`maxdepth'"
 	ereturn local mtry "`mtry'"
-	ereturn local ntree = `ntree'
+	ereturn local ntrees = `ntrees'
 	ereturn local time_post "`time_post'"
 	ereturn local time_pre "`time_pre'"
 	ereturn local time_tr "`time_tr'"
@@ -404,10 +429,11 @@ program qcm,  eclass sortpreserve
 	ereturn local unit_all "`unit_all'"
 	ereturn local predictor "`predvar'"
 	ereturn local response "`outvar'"
+	ereturn local indepvars = strtrim("`indepvars'")
+	ereturn local depvar "`depvar'"
 	ereturn local varlist "`varlist'"
 	ereturn local timevar "`timeVar'"
 	ereturn local panelvar "`panelVar'"
-	capture ereturn matrix pval = pval	
 	cap ereturn matrix imp_V = imp_V
 	cap ereturn matrix imp_U = imp_U
 	cap ereturn matrix imp = imp
@@ -424,7 +450,7 @@ program qcm_placebo, eclass sortpreserve
 	syntax varlist, trunit(numlist) trperiod(numlist) [panelVar(string) timeVar(string) panelVarStr(string) ///
 		unit_all(string) unit_tr(string) unit_ctrl(string) ///
 		time_all(string) time_tr(string) ///
-		ntree(integer 500) ///
+		ntrees(integer 500) ///
 		mtry(numlist > 0 min = 1 max = 1 integer) ///
 		maxdepth(numlist > 0 min = 1 max = 1 integer) ///
 		minssize(integer 10) ///
@@ -465,8 +491,8 @@ program qcm_placebo, eclass sortpreserve
 			foreach unit_placebo in `unit_ctrl'{
 				loc unit_tmp "`unit_placebo'"
 				di as res "`unit_placebo'"  as txt "..." _continue
-				cap mata: qcm("`varlist'", "`unit_all'", "`unit_placebo'", "`time_all'", "`time_tr'", 1, ///
-					`ntree', "`mtry'", "`maxdepth'", `minlsize', `seed', `minssize', `cilevel', `qtype', 0)
+				mata: qcm("`varlist'", "`unit_all'", "`unit_placebo'", "`time_all'", "`time_tr'", 1, ///
+					`ntrees', "`mtry'", "`maxdepth'", `minlsize', `seed', `minssize', `cilevel', `qtype', 0)
 				if _rc {
 						exit
 				}
@@ -572,7 +598,7 @@ program qcm_placebo, eclass sortpreserve
 				loc xline_pbo: word `pos' of `temp'
 				di as res "`time_pbo'" as txt "..." _continue
 				
-				cap mata: qcm("`varlist'", "`unit_all'", "`unit_tr'", "`time_all'", "`time_pbo'", 2, `ntree', "`mtry'" ///
+				mata: qcm("`varlist'", "`unit_all'", "`unit_tr'", "`time_all'", "`time_pbo'", 2, `ntrees', "`mtry'" ///
 					, "`maxdepth'", `minlsize', `seed', `minssize', `cilevel', `qtype', 0)
 				if _rc {
 					exit
@@ -831,6 +857,93 @@ mata:
 			st_matrix("mspe_cut", (MSPE_in, MSPE_out, MSPE_out/MSPE_in, 1))
 		}
 	}
+	struct regTree{
+		pointer (struct regTree scalar) scalar leftTree, rightTree
+		real feature_best, value_best, mse_best
+		real colvector index
+	}
+	void qcm_important(pointer(real matrix) dataPoint, pointer(struct regTree scalar) scalar tree, pointer(real matrix) importance, real scalar numTree){
+		if((*tree).mse_best != .){
+			ys = (*dataPoint)[(*tree).index, 1]
+			(*importance)[numTree,(*tree).feature_best] = sum((ys:-mean(ys)):^2) - (*tree).mse_best
+			qcm_important(dataPoint, (*tree).leftTree, importance, numTree)
+			qcm_important(dataPoint, (*tree).rightTree, importance, numTree)
+		}
+	}
+	void qcm_forcastTree(pointer(real matrix) dataPoint, pointer(struct regTree scalar) scalar tree, pointer(real matrix) xPoint, pointer(real matrix) W, real scalar numTree){
+		if((*tree).mse_best != .){
+			if((*xPoint)[., (*tree).feature_best] <= (*tree).value_best){
+				qcm_forcastTree(dataPoint, (*tree).leftTree, xPoint, W, numTree)
+			}else{
+				qcm_forcastTree(dataPoint, (*tree).rightTree, xPoint, W, numTree)
+			}
+		}else{
+			(*W)[(*tree).index, numTree] = J(rows((*tree).index), 1, 1/rows((*tree).index))
+		}
+	}
+	void qcm_creatTree(pointer(real matrix) dataPoint, pointer(struct regTree scalar) scalar tree, real scalar mTry, real scalar maxDepth, real scalar minLeafSize, real scalar minSamplesSplit, pointer(real matrix) isSORT, pointer(real matrix) dataORDER)
+	{
+		(*tree).mse_best = .
+		if(maxDepth == 0) return
+		N = rows((*tree).index)
+		if(N < minSamplesSplit) return
+		struct regTree scalar leftTree
+		struct regTree scalar rightTree
+		feature_random = (jumble(2::cols((*dataPoint)))[1::mTry, .])'
+		i_best = .
+		j_best = .
+		feature_order = J(N, cols(feature_random), .)
+		index = J(rows((*dataPoint)), 1, 0)
+		index[(*tree).index, 1] = (*tree).index
+		for(i = 1; i <= cols(feature_random); i++){
+			if((*isSORT)[., feature_random[., i]] == 0){
+				(*dataORDER)[., feature_random[., i]] =  order((*dataPoint), feature_random[., i])
+				(*isSORT)[., feature_random[., i]] = 1
+			}
+			index_sort = index[(*dataORDER)[., feature_random[., i]],.]
+			feature_order[., i] = select(index_sort, index_sort)
+			feature_sum = sum((*dataPoint)[(*tree).index, 1])
+			feature_sq_sum = sum(((*dataPoint)[(*tree).index, 1]):^2)
+			left_sum = 0
+			left_sq_sum = 0
+			left_num = 0
+			for(j = minLeafSize; j <= (N - minLeafSize); j++){
+				if((*dataPoint)[feature_order[j, i], feature_random[., i]] == 
+					(*dataPoint)[feature_order[j + 1, i], feature_random[., i]]){
+					continue
+				}
+				value = (*dataPoint)[feature_order[j, i], 1]
+				if(j - left_num == 1){
+					left_sum = left_sum + value
+					left_sq_sum = left_sq_sum + value^2
+				} else {
+					left_sum = left_sum + sum((*dataPoint)[feature_order[(left_num + 1)::j, i], 1])
+					left_sq_sum = left_sq_sum + sum(((*dataPoint)[feature_order[(left_num + 1)::j, i], 1]):^2)
+				}
+				left_num = j
+				mse_all = feature_sq_sum - (left_sum^2)/j - ((feature_sum - left_sum)^2)/(N - j)
+				if((*tree).mse_best == . | mse_all < (*tree).mse_best){
+					(*tree).mse_best = mse_all
+					j_best = j
+					i_best = i
+				}		
+			}
+		}
+		if(j_best != . & i_best != .){
+			(*tree).feature_best =  feature_random[., i_best]
+			(*tree).value_best =  (*dataPoint)[feature_order[j_best, i_best], feature_random[., i_best]]
+			leftIndex = feature_order[1..j_best, i_best]
+			rightIndex = feature_order[(j_best + 1)..N, i_best]
+		}
+		if((*tree).mse_best != .){
+			(*tree).leftTree = &leftTree
+			(*tree).rightTree = &rightTree
+			leftTree.index = leftIndex
+			rightTree.index = rightIndex
+			qcm_creatTree(dataPoint, &leftTree, mTry, maxDepth - 1, minLeafSize, minSamplesSplit, isSORT, dataORDER)
+			qcm_creatTree(dataPoint, &rightTree, mTry, maxDepth - 1, minLeafSize, minSamplesSplit, isSORT, dataORDER)
+		}
+	}
 	void qcm(string scalar varlist, string scalar unit, string scalar unit_tr, string scalar time, string scalar time_tr, real scalar isplacebo, real scalar nTree, string scalar mTry, string scalar maxDepth, real scalar minLeafSize, real scalar seed, real scalar minSamplesSplit, real scalar cilevel, real scalar qtype, real matrix isimp){
 		struct regTree rowvector parent; string matrix vars;
 		unit = tokens(unit)'
@@ -851,7 +964,6 @@ mata:
 		mTry_real = (mTry == "" ? floor((cols(data_train) - 1) / 3) : strtoreal(mTry))
 		mTry_real = min((mTry_real, cols(data_train) - 1))
 		maxDepth = (maxDepth == "" ? .: strtoreal(maxDepth))
-		rseed(seed)
 		isSORT = J(1, cols(data_train), 0)
 		dataORDER = J(rows(data_train), cols(data_train), .)
 		for(i = 1; i <= nTree; i++){
@@ -937,14 +1049,13 @@ mata:
 		}
 	}
 	void qcm_train_summary(real scalar nTree, real scalar mTry, string scalar maxDepth, real scalar minLeafSize, real scalar seed, real scalar minSamplesSplit){
-		printf("{hline 70}\n")
-		printf("{txt} %-60s = {res}%5.0g\n", "Number of trees to grow", nTree);
-		printf("{txt} %-60s = {res}%5.0g\n", "Maximum depth of the trees", (maxDepth == ""?.:strtoreal(maxDepth)));
-		printf("{txt} %-60s = {res}%5.0g\n", "Number of predictors randomly selected at each split", mTry);
-		printf("{txt} %-60s = {res}%5.0g\n", "Minimum number of obs required at each terminal node", minLeafSize);
-		printf("{txt} %-60s = {res}%5.0g\n", "Minimum number of obs required to split an internal node", minSamplesSplit);
-		printf("{txt} %-60s = {res}%5.0g\n", "Seed used by the random number generator", seed);
-		printf("{hline 70}\n")
+		printf("{hline 79}\n")
+		printf("{txt} %-70s ={res}%5.0g\n", "Number of trees to grow", nTree);
+		printf("{txt} %-70s ={res}%5.0g\n", "Maximum depth of the trees", (maxDepth == ""?.:strtoreal(maxDepth)));
+		printf("{txt} %-70s ={res}%5.0g\n", "Minimum number of obs required at each terminal node", minLeafSize);
+		printf("{txt} %-70s ={res}%5.0g\n", "Minimum number of obs required to split an internal node", minSamplesSplit);
+		printf("{txt} %-70s ={res}%5.0g\n", "Number of candidate splitting variables randomly selected at each node", mTry);
+		printf("{hline 79}\n")
 	}
 	void qcm_placebo(string scalar depvar, string scalar unit_tr, string scalar unit_ctrl, string scalar time, string scalar time_tr){
 		time = tokens(time)'
@@ -1070,4 +1181,5 @@ mata:
 	}
 end
 
+* 2.0.1 (2024.09.13) Submit the version of qcm to SJ
 * 1.0.0 (2023.11.19) Submit the initial version of qcm to SSC

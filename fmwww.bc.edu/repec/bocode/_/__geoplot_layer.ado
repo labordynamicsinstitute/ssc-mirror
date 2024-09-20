@@ -1,4 +1,4 @@
-*! version 1.2.3  17jul2024  Ben Jann
+*! version 1.2.7  08sep2024  Ben Jann
 
 /*
     Syntax:
@@ -49,7 +49,7 @@ program __geoplot_layer
     local WGT
     local MLABopts
     local Zopts COLORVar(str)/*
-        */ LEVels(str) cuts(numlist) DISCRete MISsing(str asis) /*
+        */ LEVels(str) cuts(str) DISCRete MISsing(str asis) /*
         */ COLor(passthru) LWidth(passthru) LPattern(passthru)
     local Zel color lwidth lpattern
     local YX Y X // coordinate variable names used in plot data
@@ -108,8 +108,8 @@ program __geoplot_layer
         }
         else local discrete = "`discrete'"!=""
         local hasZ = `"`zvar'"'!=""
-        _parse_levels `levels' // => levels, method, l_wvar
-        local cuts: list uniq cuts
+        _parse_levels `levels' // => levels, method, l_wvar, l_min, l_max
+        _parse_cuts `cuts' // => cuts, cutsismat
         _parse_label `label' // => label, nolabel, format, reverse
         // varia
         if `"`box2'"'!="" local box box
@@ -233,9 +233,10 @@ program __geoplot_layer
             if _rc==1 exit 1
             if _rc { // numeric zvar
                 // determine cuts/levels
-                mata: _z_cuts("`CUTS'", st_local("cuts"), `levels',/*
-                    */ `discrete', "`zvar'", "`method'", "`l_wvar'",/*
-                    */ "`ztouse'") /* fills in CUTS and returns levels */
+                mata: _z_cuts("`CUTS'", st_local("cuts"), `levels', `l_min',/*
+                    */ `l_max', `discrete', "`zvar'", "`method'", "`l_wvar'",/*
+                    */ "`cutsismat'", "`ztouse'") /* fills in CUTS and returns
+                    levels */
                 // categorize zvar
                 qui gen `=cond(`levels'>32740,"long",/*
                     */cond(`levels'>100, "int", "byte"))' `ZVAR' = .
@@ -256,6 +257,10 @@ program __geoplot_layer
                 local zvarstr 1
                 local discrete 1
                 local zfmt %8.0g
+                if "`cutsismat'"!="" {
+                    mata: st_local("cuts",/*
+                        */ invtokens(strofreal(vec(st_matrix("`cuts'"))')))
+                }
                 capt numlist "`cuts'", int min(0) range(>0)
                 if _rc==1 exit 1
                 if _rc {
@@ -661,10 +666,12 @@ program __geoplot_layer
         local labels `"`label'"'
     }
     // mlabi()/mlabz
+    local mlabels
     if `"`mlabi'`mlabz'"'!="" {
         if "`mlabz'"!="" local MLBLS labels
         else             local MLBLS mlabi
         if `hasZ' {
+            local space
             local MLABI
             foreach i of local zindex {
                 if `"`MLABI'"'=="" { // recycle
@@ -672,11 +679,21 @@ program __geoplot_layer
                 }
                 gettoken mlbi MLABI : MLABI
                 qui replace MLAB = `"`mlbi'"' in `n0'/`n1' if Z==`i'
+                local mlabels `"`mlabels'`space'`"`mlbi'"'"'
+                local space " "
             }
         }
         else {
             gettoken mlbi : `MLBLS'
             qui replace MLAB = `"`mlbi'"' in `n0'/`n1'
+            local mlabels `"`"`mlbi'"'"'
+        }
+    }
+    else if `"`mlabel'"'!="" {
+        if `layer'<. {
+            foreach i of local zindex {
+                local mlabels `mlabels' `mlabel'
+            }
         }
     }
     // returns
@@ -685,6 +702,7 @@ program __geoplot_layer
         char LAYER[plottype_`layer'] `plottype'
         char LAYER[glopts_`layer'] `GLOPTS'
         char LAYER[labels_`layer'] `"`labels'"'
+        char LAYER[mlabels_`layer'] `"`mlabels'"'
         char LAYER[nolegend_`layer'] `nolegend'
         char LAYER[hasz_`layer'] `hasZ'
         char LAYER[wmax_`layer'] `wmax2'
@@ -776,6 +794,8 @@ end
 program _parse_levels
     if `"`0'"'=="" {
         c_local levels .
+        c_local l_min .
+        c_local l_max .
         exit
     }
     capt n __parse_levels `0'
@@ -787,6 +807,8 @@ program _parse_levels
     c_local levels `levels'
     c_local method `method'
     c_local l_wvar `l_wvar'
+    c_local l_min `l_min'
+    c_local l_max `l_max'
 end
 
 program __parse_levels
@@ -797,7 +819,8 @@ program __parse_levels
     }
     else local n .
     local methods Quantiles Kmeans //Jenks
-    syntax [, `methods' Weight(varname numeric) ]
+    syntax [, `methods' Weight(varname numeric)/*
+        */ min(numlist max=1) max(numlist max=1) ]
     local methods = strlower("`methods'")
     foreach m of local methods {
         local method `method' ``m''
@@ -812,9 +835,37 @@ program __parse_levels
             exit 198
         }
     }
+    if "`min'"=="" local min .
+    if "`max'"=="" local max .
     c_local levels `n'
     c_local method `method'
     c_local l_wvar `weight'
+    c_local l_min `min'
+    c_local l_max `max'
+end
+
+program _parse_cuts
+    if `"`0'"'=="" exit
+    capt numlist `"`0'"', min(0) missingok
+    if _rc==1 exit 1
+    if !_rc {
+        local 0 `r(numlist)'
+        c_local cuts: list uniq 0
+        exit
+    }
+    if `: list sizeof 0'==1 {
+        capt n confirm matrix `0'
+        if _rc==1 exit 1
+        if _rc {
+            di as err "error in in {bf:cuts()}"
+            exit _rc
+        }
+        c_local cutsismat cutsismat
+        exit
+    }
+    di as err "invalid specification in {bf:cuts()}; must specify "/*
+        */ "{it:numlist} or {it:matname}"
+    exit 198
 end
 
 program _get_plevel
@@ -864,15 +915,25 @@ program _z_colors
     local 0 `", `0'"'
     syntax [, `nm'(str asis) ]
     mata: _z_color_parselastcomma("`nm'") // returns color and 0
-    syntax [, class(passthru) n(passthru) IPolate(passthru) * ]
-    if "`noexpand'"=="" local noexpand noexpand
-    if `"`n'`ipolate'"'=="" local n n(`k')
-    if `"`color'"'=="" {
-        if `discrete' local color st
-        else          local color viridis
+    syntax [, class(passthru) n(passthru) Select(passthru) drop(passthru)/*
+        */ IPolate(passthru) * ]
+    if `"`n'`select'`drop'`ipolate'"'=="" local n n(`k')
+    local options `n' `select' `drop' `ipolate' `options'
+    if `discrete' local default_palette st
+    else          local default_palette viridis
+    local l: list sizeof color
+    if `l'==0 {
+        // use default palette if no palette specified
+        local color `default_palette'
+    }
+    else if `l'==1 {
+        // add default palette if single opacity/intensity specified
+        if inlist(substr(`"`color'"',1,1),"%","*") {
+            local color `"`default_palette'`color'"'
+        }
     }
     if `"`class'"'=="" & `discrete' local class class(categorical)
-    colorpalette `color', nograph `class' `n' `ipolate' `options'
+    colorpalette `color', nograph `class' `options'
     local color `"`r(p)'"'
     local l: list sizeof color
     if `l'==0 {
@@ -972,11 +1033,10 @@ program _label_separate
     gettoken l : 0, quotes qed(hasquotes) parse("= ")
     if `hasquotes' local 0 `"* = `0'"'
     else {
-        // check whether 1st token is integer (possibly including wildcards)
+        // check whether 1st token is numeric (possibly including wildcards)
         local l: subinstr local l "*" "", all
         local l: subinstr local l "?" "", all
-        if `"`l'"'=="" local l 0
-        capt confirm integer number `l'
+        capt numlist `"`l'"', min(0) max(1) missingok
         if _rc==1 exit 1
         if _rc local 0 `"* = `"`0'"'"'
     }
@@ -1111,8 +1171,9 @@ transmorphic vector _vecrecycle(real scalar k, transmorphic vector x)
 }
 
 void _z_cuts(string scalar CUTS, string scalar cuts, real scalar k,
-    real scalar discrete, string scalar zvar, string scalar method,
-    string scalar wvar, string scalar touse)
+    real scalar min, real scalar max, real scalar discrete, string scalar zvar,
+    string scalar method, string scalar wvar, string scalar cutsismat,
+    string scalar touse)
 {
     real scalar    lb, ub
     real rowvector minmax
@@ -1120,9 +1181,13 @@ void _z_cuts(string scalar CUTS, string scalar cuts, real scalar k,
     
     // CASE 1: cuts() specified
     if (cuts!="") {
-        C = strtoreal(tokens(cuts)')
+        if (cutsismat!="") C = vec(st_matrix(cuts))
+        else               C = strtoreal(tokens(cuts)')
         k = length(C)
-        if (!discrete) k = k - 1
+        if (!discrete) {
+            k = k - 1
+            _sort(C,1)
+        }
         st_matrix(CUTS, C')
         st_local("levels", strofreal(k))
         return
@@ -1149,8 +1214,10 @@ void _z_cuts(string scalar CUTS, string scalar cuts, real scalar k,
     if (k>=.) k = 5
     // SPECIAL CASE 2: no variance
     lb = minmax[1]; ub = minmax[2]
+    if (min<lb)         lb = min
+    if (max<. & max>ub) ub = max
     if (lb==ub) {
-        st_matrix(CUTS, minmax)
+        st_matrix(CUTS, (lb, ub))
         st_local("levels", "1")
         return
     }
@@ -1235,7 +1302,7 @@ void _z_categorize(string scalar cuts, string scalar nobs, string scalar nmis,
             if (n) T[p] = J(n,1,i)
         }
     }
-    p = selectindex(Z:>=.)
+    p = selectindex(Z:>=. :& T:>=.)
     m = length(p)
     if (m) {
         T[p] = J(m,1,0) // set missings to 0

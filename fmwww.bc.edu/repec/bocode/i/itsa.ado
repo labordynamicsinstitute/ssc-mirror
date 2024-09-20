@@ -23,7 +23,7 @@
 *! 1.0.0 Ariel Linden 12Feb2014
 *! 0.0.9 Ariel Linden 01Jan2014
 
-program define itsa, sort
+program define itsa,  rclass sort
 version 11.0
 
 	/* obtain settings */
@@ -239,6 +239,10 @@ version 11.0
 		tsset
 		if "`prais'" != "" {
 			prais `dvar' `rhs' `xvar' if `touse' , `options'
+			/* create matrix of r(table) to ensure it is available */
+			matrix table =r(table)
+			return matrix table = table 					
+			
 			local z_t t
 			local z_t_p P>|t|	
 		}
@@ -247,7 +251,11 @@ version 11.0
 			qui glm2 `dvar' `rhs' `xvar'  if `touse' [`weight' `exp'], force nodisplay `options'
 			local vfac =  `e(N)'  /  `e(df)'
 			* rerun it again, now with adjustment for autocorrelation
-			glm2 `dvar' `rhs' `xvar'  if `touse' [`weight' `exp'], force vce(hac nwest `lag') vfactor(`vfac') `options'		
+			glm2 `dvar' `rhs' `xvar'  if `touse' [`weight' `exp'], force vce(hac nwest `lag') vfactor(`vfac') `options'	
+			/* create matrix of r(table) to ensure it is available */
+			matrix table =r(table)
+			return matrix table = table 					
+			
 			local z_t z			
 			local z_t_p P>|z|
 		}
@@ -523,6 +531,10 @@ version 11.0
 		tsset
 		if "`prais'" != "" {
 			prais `dvar' `rhs' `xvar' if `touse' & `pvar'==`treatid' , `options'
+			/* create matrix of r(table) to ensure it is available */
+			matrix table =r(table)
+			return matrix table = table 					
+			
 			local z_t t
 			local z_t_p P>|t|			
 		}
@@ -532,6 +544,10 @@ version 11.0
 			local vfac =  `e(N)'  /  `e(df)'
 			* rerun it again, now with adjustment for autocorrelation
 			glm2 `dvar' `rhs' `xvar' if `touse' & `pvar'==`treatid' [`weight' `exp'], force vce(hac nwest `lag') vfactor(`vfac') `options'	
+			/* create matrix of r(table) to ensure it is available */
+			matrix table =r(table)
+			return matrix table = table 			
+			
 			local z_t z
 			local z_t_p P>|z|				
 		}
@@ -817,6 +833,10 @@ version 11.0
 		tsset
 		if "`prais'" != "" {
 			prais `dvar' `rhs' `xvar' if `touse' `if2' , `options'
+			/* create matrix of r(table) to ensure it is available for -itsamatch- */
+			matrix table =r(table)
+			return matrix table = table 
+			
 			local z_t t
 			local z_t_p P>|t|				
 		}
@@ -825,7 +845,12 @@ version 11.0
 			qui glm2 `dvar' `rhs' `xvar' if `touse' `if2' [`weight' `exp'], force nodisplay `options'
 			local vfac =  `e(N)'  /  `e(df)'
 			* rerun it again, now with adjustment for autocorrelation
-			glm2 `dvar' `rhs' `xvar' if `touse' `if2' [`weight' `exp'], force vce(hac nwest `lag') vfactor(`vfac') `options'	
+			glm2 `dvar' `rhs' `xvar' if `touse' `if2' [`weight' `exp'], force vce(hac nwest `lag') vfactor(`vfac') `options'
+			
+			/* create matrix of r(table) to ensure it is available for -itsamatch- */
+			matrix table =r(table)
+			return matrix table = table 
+			
 			local z_t z
 			local z_t_p P>|z|			
 		}

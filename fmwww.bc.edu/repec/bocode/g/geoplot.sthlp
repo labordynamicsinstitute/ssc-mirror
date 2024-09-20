@@ -1,5 +1,5 @@
 {smcl}
-{* 17jul2024}{...}
+{* 08sep2024}{...}
 {vieweralsosee "geoframe" "help geoframe"}{...}
 {vieweralsosee "colorpalette" "help colorpalette"}{...}
 {vieweralsosee "[G-2] graph" "help graph"}{...}
@@ -227,9 +227,11 @@ or
 {synopt :{help geoplot##twopts:{it:twoway_options}}}twoway options, other than {cmd:by()}
 
 {syntab :Data}
-{synopt :{helpb geoplot##frame:frame({it:spec})}}store ploted data in new frame
+{synopt :{helpb geoplot##frame:frame({it:spec})}}store plotted data in new frame
     {p_end}
-{synopt :{helpb nograph}}do not generate a graph
+{synopt :{helpb geoplot##nograph:nograph}}do not generate a graph
+    {p_end}
+{synopt :{helpb geoplot##noisily:{ul:nois}ily}}display graph command
     {p_end}
 {synoptline}
 
@@ -567,27 +569,30 @@ or
 {dlgtab:single-coordinate symbols}
 
 {p 8 15 2}
-    {cmdab:sym:bol} {it:frame} [[{cmd:i.}]{help geoplot##zvar:{it:zvar}}] {ifin} {weight}
+    {cmdab:sym:bol} {it:frame} [{cmd:(}{it:shape}{cmd:)}] [[{cmd:i.}]{help geoplot##zvar:{it:zvar}}] {ifin} {weight}
     [{cmd:,}
     {it:options} ]
 
 {pstd}
     where {it:frame} is the frame containing the positions of
-    the symbols (see {helpb geoframe}), {help geoplot##zvar:{it:zvar}} is an optional
+    the symbols (see {helpb geoframe}), {it:shape} defines the shape of the symbols
+    (see below), {help geoplot##zvar:{it:zvar}} is an optional
     variable to determine styling, and {it:weight}, specified as
     {cmd:[}{cmdab:w:eight}{cmd:=}{it:exp}{cmd:]} or
     {cmd:[}{cmdab:iw:eight}{cmd:=}{it:exp}{cmd:]}, scales the symbols by the
     absolute (and normalized) values of {it:exp}. {it:options} are as follows.
 
 {phang}
-    {opt sh:ape(spec)} selects or defines the shape of the symbols. {it:shape} may be
+    {opt sh:ape(shape)} is an alternative to specifying argument
+    {cmd:(}{it:shape}{cmd:)}; if both are specified, option {cmd:shape()} takes
+    precedence. {it:shape} may be as follows.
 
 {p2colset 9 25 27 2}{...}
-{p2col:{cmdab:c:ircle}}circle (or oval)
+{p2col:{cmdab:c:ircle}}circle; this is the default
     {p_end}
 {p2col:{cmdab:t:riangle}}triangle
     {p_end}
-{p2col:{cmdab:s:quare}}square (or rectangle)
+{p2col:{cmdab:s:quare}}square
     {p_end}
 {p2col:{cmdab:p:entagon}}pentagon
     {p_end}
@@ -597,25 +602,54 @@ or
     {p_end}
 {p2col:{cmdab:o:ctagon}}octagon
     {p_end}
-{p2col:{cmdab:a:rc} [{it:angle}]}section of circle; {it:angle} in [-360,360]
+{p2col:{cmdab:a:rc} [{it:angle}]}section of circle; specify
+    option {cmd:line} (see below) to prevent closing the arc;
+    {it:angle} in [-360,360] specifies the size of the segment
+    in degrees; default is 180 (half circle);
     {p_end}
-{p2col:{cmdab:sl:ice} [{it:angle}]}slice of circle; {it:angle} in [-360,360]
+{p2col:{cmdab:sl:ice} [{it:angle}]}slice of circle; {it:angle} in [-360,360] as for
+    {cmd:arc}
     {p_end}
 {p2col:{cmdab:l:ine}}horizontal line
     {p_end}
 {p2col:{cmd:pipe}}vertical line
     {p_end}
-{p2col:{cmdab:pl:us}}upright cross
+{p2col:{cmdab:pl:us}}crossed lines, upright 
     {p_end}
-{p2col:{cmd:x}}diagonal cross
+{p2col:{cmd:x}}crossed lines, diagonal
+    {p_end}
+{p2col:{cmd:bar} [{it:w}]}horizontal bar; {it:w} specifies the
+    width (thickness) of the bar; default is one third
+    {p_end}
+{p2col:{cmdab:cr:oss} [{it:w}]}upright cross; {it:w} specifies the
+    width (thickness) of the arms; default is one third
     {p_end}
 {p2col:{cmdab:di:amond}}diamond
     {p_end}
-{p2col:{cmd:v}}V symbol
+{p2col:{cmdab:tra:pezoid} [{it:l}]}(isosceles) trapezoid; {it:l}
+    specifies the length of the upper parallel; default is .5
     {p_end}
-{p2col:{cmdab:arr:ow}}arrow with open head
+{p2col:{cmd:v}}V symbol (line)
     {p_end}
-{p2col:{cmdab:farr:ow}}arrow with closed head
+{p2col:{cmdab:ast:erisk} [{it:k}]}asterisk (line) with {it:k} arms; default is 6
+    {p_end}
+{p2col:{cmdab:fast:erisk} [{it:k} {it:w}]}asterisk (area) with {it:k} arms of with
+    (thickness) {it:w}; default is 6 for {it:k} and .2 for {it:w}
+    {p_end}
+{p2col:{cmdab:arr:ow} [{it:l} {it:w}]}arrow with open head; {it:l} specifies the
+    length and {it:w} the width of the arrowhead; defaults are 0.5 for {it:l}
+    and two thirds for {it:w}
+    {p_end}
+{p2col:{cmdab:barr:ow} [{it:l} {it:w}]}{cmd:arrow} with two heads;
+    defaults are .375 for {it:l} and 0.5 for {it:w}
+    {p_end}
+{p2col:{cmdab:farr:ow} [{it:l} {it:w} {it:b}]}arrow with closed head; {it:l}
+    specifies the length and {it:w} the width of the arrowhead,
+    {it:b} the with of the shaft; defaults are 0.5
+    for {it:l} and {it:w}, and 0.2 for {it:b}
+    {p_end}
+{p2col:{cmdab:fbarr:ow} [{it:l} {it:w} {it:b}]}{cmd:farrow} with two heads; defaults are one third
+    for {it:l} and {it:w}, and .125 for {it:b}
     {p_end}
 {p2col:{cmdab:star}}5-pointed star
     {p_end}
@@ -625,9 +659,13 @@ or
     {p_end}
 {p2col:{cmdab:hexagr:am}}hexagram (6-pointed star with crossing lines)
     {p_end}
-{p2col:{cmdab:pin} [{it:headsize}]}pin (needle); {it:headsize} in [0,1]
+{p2col:{cmdab:pin} [{it:headsize}]}pin (needle); {it:headsize} in [0,1] specifies
+    the size of the head; default is one third
     {p_end}
-{p2col:{cmdab:pin2} [{it:headsize}]}alternative pin; {it:headsize} in [0,1]
+{p2col:{cmdab:pin2} [{it:headsize}]}alternative pin; {it:headsize} in [0,1] specifies
+    the size of the head; default is 0.6
+    {p_end}
+{p2col:{cmdab:pin3} [{it:headsize}]}{cmd:pin2} without hole and default one third for {it:headsize}
     {p_end}
 {p2col:{it:{help numlist}}}manual shape coordinates
     {p_end}
@@ -635,15 +673,10 @@ or
     {p_end}
 {p2col:{it:name} [{it:arg}]}mata function {cmd:_geo_symbol_}{it:name}{cmd:()} returning shape coordinates
     {p_end}
-
-{pmore}
-    The default is {cmd:circle}. For {cmd:arc} and
-    {cmd:slice}, argument {it:angle} in [-360,360] specifies the size of the
-    segment in degrees; default is {cmd:180} (half circle). In case of
-    {cmd:arc} you may want to specify option {cmd:line} (see below) to prevent
-    connecting the first and the last point. For {cmd:pin} and {cmd:pin2}, argument
-    {it:headsize} in [0,1] specifies the size of the head; default is one third for
-    {cmd:pin} and 0.6 for {cmd:pin2}.
+{p2col:{cmd:"}{help graph_text:{it:text}}{cmd:"}}print the specified text rather
+    than a geometric shape; {it:text} may contain Unicode characters and SMCL
+    tags; weights are not allowed with {cmd:shape("}{it:text}{cmd:")}
+    {p_end}
 
 {pmore}
     Use {opt shape(numlist)} or {opt shape(matname)} to
@@ -728,7 +761,13 @@ or
 
 {phang}
     {opt ratio(#)} adjusts the ratio between the height and the width of the symbols. The default
-    is {cmd:ratio(1)}. For example, type {cmd:ratio(2)} to double the height.
+    is {cmd:ratio(1)}. For example, type {cmd:ratio(2)} to double the height. {cmd:ratio()}
+    has no effect in case of {cmd:shape("}{it:text}{cmd:")}.
+
+{phang}
+    {opt slant(#)} slants the symbols in proportion to {it:#} (to the right if {it:#}>0,
+    to the left if {it:#}<0). The default is {cmd:slant(0)} (no slant). {cmd:slant()}
+    has no effect in case of {cmd:shape("}{it:text}{cmd:")}.
 
 {phang}
     {opt ang:le(angle)} rotates the symbols by {it:angle} degrees (counterclockwise). Global
@@ -742,10 +781,15 @@ or
     the unit length of the specified coordinates. Type {opt size(exp)} to specify
     an absolute size (i.e. in units of the underlying
     map). Alternatively, specify {cmd:size(*}{it:exp}{cmd:)} to multiply the default
-    size by {it:exp}. The default size is set to 3% of the minimum of the horizontal
+    size by {it:exp}. The default size is set to 1.5% of the minimum of the horizontal
     and vertical size of the underlying map (as it exists at the point when the
-    symbols are added, including the positions of the symbols; the smallest possible
-    default size is 1).
+    symbols are added, including the positions of the symbols).
+
+{pmore}
+    The size of the plotted symbols may be inaccurate in case of {cmd:shape("}{it:text}{cmd:")}
+    if the size of the overall graph is not equal to the size of the underlying
+    map (at the point when the symbols are added). Use global option
+    {helpb geoplot##tight:tight} to adjust the graph size to the size of the map.
 
 {phang}
     {cmdab:off:set(}{it:offset} [{it:angle}]{cmd:)} offsets the positions of the
@@ -761,21 +805,22 @@ or
     symbols depending on the values of {help geoplot##zvar:{it:zvar}}. Specify
     {cmd:color(}{help colorpalette##colorlist:{it:colorspec}}{cmd:)} or
     {cmd:fcolor(}{help colorpalette##colorlist:{it:colorspec}}{cmd:)} to set a
-    single fill color for all symbols.
+    single fill color for all symbols. {cmd:line} has no effect in case of
+    {cmd:shape("}{it:text}{cmd:")}.
+
+{phang}
+    {it:{help geoplot##zopts:zvar_options}}, {cmd:wmax()}, {cmd:select()}, {cmd:ecolor()}, {cmd:box()},
+    {opt feature()}, and {opt coordinates()} are options as described for layer type
+    {helpb geoplot##area:area}.
+
+{phang}
+    {it:{help marker_label_options}} to add marker labels.
 
 {phang}
     {it:{help area_options}} or {it:{help line_options}}, depending on whether
     option {cmd:line} has been specified, are regular graph options to affect
     the look of the symbols. Color options support {it:colorspec} as described in
     {helpb colorpalette##colorlist:colorpalette}.
-
-{phang}
-    {it:{help marker_label_options}} to add marker labels.
-
-{phang}
-    {it:{help geoplot##zopts:zvar_options}}, {cmd:wmax()}, {cmd:select()}, {cmd:ecolor()}, {cmd:box()},
-    {opt feature()}, and {opt coordinates()} are options as described for layer type
-    {helpb geoplot##area:area}.
 
 {marker pie}{...}
 {dlgtab:pie charts}
@@ -1073,7 +1118,7 @@ or
 {dlgtab:symbol with immediate arguments}
 
 {p 8 15 2}
-    {cmd:symboli} {it:immediate_values} [{cmd:,} {it:options} ]
+    {cmd:symboli} [{cmd:(}{help geoplot##symbol:{it:shape}}{cmd:)}] {it:immediate_values} [{cmd:,} {it:options} ]
 
 {pstd}
     where {it:immediate_values} is one or more of
@@ -1099,7 +1144,8 @@ or
     are created if multiple {cmd:"}{it:text}{cmd:"} elements are specified.
 
 {phang}
-    Rendering options as described for layertype {helpb geoplot##symbol:symbol}.
+    Further options as described for layertype {helpb geoplot##symbol:symbol}. Note
+    that all symbols will have the same size in case of {cmd:shape("}{it:text}{cmd:")}.
 
 {marker pcspike}{...}
 {dlgtab:paired-coordinate spikes, arrows, or markers}
@@ -1231,10 +1277,15 @@ or
 
 {marker levels}{...}
 {phang}
-    {cmd:levels(}[{it:#}][{cmd:,} {it:method} {opth w:eight(varname)}]{cmd:)} specifies the number of
-    levels to be formed by {help geoplot##zvar:{it:zvar}}. By default, a regular grid
-    (equidistant cuts) of 5 intervals from the observed minimum to the observed
-    maximum of {help geoplot##zvar:{it:zvar}} will be used (first interval closed, remaining intervals
+    {cmd:levels(}[{it:#}][{cmd:,} {it:method} {opth w:eight(varname)}
+    {opt min(#)} {opt max(#)}]{cmd:)} specifies the number of
+    levels to be formed by {help geoplot##zvar:{it:zvar}}. Option
+    {cmd:levels()} has no effect if {cmd:i.}{it:zvar} or
+    {helpb geoplot##discrete:discrete} is specified, or if {it:zvar} is a string variable.
+
+{pmore}
+    By default, a regular grid (equidistant cuts) of 5 intervals from the observed minimum to the observed
+    maximum of {help geoplot##zvar:{it:zvar}} will be applied (first interval closed, remaining intervals
     left-open). Specify {opt levels(#)} to create {it:#} intervals. Specify suboption {it:method}
     to use a non-regular grid, where {it:method} can be one of the following.
 
@@ -1246,19 +1297,28 @@ or
 
 {pmore}
     The number of resulting levels may be less than {it:#} with these methods, depending on the
-    distribution of {help geoplot##zvar:{it:zvar}}. In case of {cmdab:quantile}, weights to be taken
-    into account when computing the quantiles can be specified in suboption {cmd:weight()}. Option
-    {cmd:levels()} has no effect if {cmd:i.}{it:zvar} or
-    {helpb geoplot##discrete:discrete} is specified, or if {it:zvar} is a string variable.
+    distribution of {help geoplot##zvar:{it:zvar}}. In case of {cmdab:quantile}, specify 
+    suboption {cmd:weight()} to take weights into account when computing the quantiles.
+
+{pmore}
+    Specify suboptions {cmd:min()} and {cmd:max()} to impose custom values for
+    the minimum and the maximum of the range of intervals formed by
+    {cmd:levels()}. If the observed minimum (maximum) of {help geoplot##zvar:{it:zvar}}
+    is larger (smaller) than the specified value, the specified
+    value will be used as the the minimum (maximum).
 
 {marker cuts}{...}
 {phang}
     {opth cuts(numlist)} is an alternative to {cmd:levels()} and
     provides custom breaks for the levels to be formed by
-    {help geoplot##zvar:{it:zvar}}. For continuous {help geoplot##zvar:{it:zvar}},
+    {help geoplot##zvar:{it:zvar}}. Missing values are allowed in
+    {it:numlist}.
+
+{pmore}
+    For continuous {help geoplot##zvar:{it:zvar}},
     specify {it:#}+1 breaks to form {it:#} intervals (first interval closed, remaining
     intervals left-open). Observations with values below the first break or above
-    the last break will be ignored.
+    the last break will be ignored. 
 
 {pmore}
     If {cmd:i.}{it:zvar} or {helpb geoplot##discrete:discrete}
@@ -1268,6 +1328,11 @@ or
     is similar if {it:zvar} is a string variable, except that the
     values in {it:numlist} are interpreted as indices of alphabetically sorted
     values.
+
+{pmore}
+    You may also type {opt cuts(matname)}, where {it:matname} is
+    the name of a {helpb matrix} containing the values of the breaks. {cmd:cuts()}
+    takes precedence over {cmd:levels()}.
 
 {marker colorvar}{...}
 {phang}
@@ -1631,7 +1696,10 @@ or
 {p2colset 17 26 28 2}{...}
 {p2col: {it:#}}include the legend keys of layer {it:#}
     {p_end}
-{p2col: {cmd:.}}add a gap
+{p2col: {it:{help numlist}}}shorthand notation to include
+    several layers, one after the other
+    {p_end}
+{p2col: {cmd:.}}add a gap between layers
     {p_end}
 {p2col: {cmd:|}}start a new column (or a new row)
     {p_end}
@@ -1640,8 +1708,7 @@ or
     {p_end}
 
 {pmore2}
-    Series of {it:#} elements can be specified using shorthand notation as described
-    in {it:{help numlist}}. {opt laye:rs()} can be used as a synonym for {cmd:layout()}.
+    {opt laye:rs()} can be used as a synonym for {cmd:layout()}.
 
 {phang2}
     {opt bot:tom} aligns the legend keys at the bottom (rightmost) if there are multiple
@@ -1692,8 +1759,18 @@ or
 {pmore2}
     where {it:el} is one of
 
-{p2colset 17 26 28 2}{...}
-{p2col: {it:layers}}include the legend keys of the specified layers
+{p2colset 17 32 34 2}{...}
+{p2col: {it:#} [{it:label}]}include the legend keys of layer {it:#},
+    optionally with custom labels
+    {p_end}
+{p2col: {it:{help numlist}}}shorthand notation to include
+    several layers, one after the other
+    {p_end}
+{p2col: {it:#} {cmd:&} {it:#} [{it:label}]}include legend keys with composite
+    symbols from two layers (i.e., symbols from two layers printed on top of each
+    other), optionally with custom labels (more than two layers can be combined
+    by typing {it:#} {cmd:&} {it:#} {cmd:&} {it:#} ...); default
+    labels will be taken from the last layer
     {p_end}
 {p2col: {cmd:.}}add a gap between layers
     {p_end}
@@ -1704,18 +1781,17 @@ or
     {p_end}
 
 {pmore2}
-    and {it:layers} is a single {it:#} to include the keys of layer {it:#}, a
-    {it:{help numlist}} to include the keys from multiple layers (one after
-    the other), or
-
-                {it:#1} {cmd:&} {it:#2} [ {cmd:&} {it:#3} ... ]
+    The syntax of argument {it:label} is {cmd:"}{it:text}{cmd:"}
+    [{cmd:"}{it:text}{cmd:"} {it:...}]. If {help geoplot##zvar:{it:zvar}} has
+    been applied in a layer, the specified {cmd:"}{it:text}{cmd:"} elements
+    will be assigned to the legend keys one by one. If {help geoplot##zvar:{it:zvar}}
+    has not been applied (such that the layer has only a single legend key),
+    specifying multiple {cmd:"}{it:text}{cmd:"} elements will create a
+    multiline label. If argument {it:label} is omitted, the label(s) from
+    option {helpb geoplot##label:label()} within the layer will be used.
 
 {pmore2}
-    to include legend keys with composite symbols from two or more
-    layers (i.e., symbols from multiple layers printed on top of each
-    other; labels will be determined in such as way that for
-    each key the last non-empty label is printed). {opt laye:rs()}
-    can be used as a synonym for {cmd:layout()}.
+    {opt laye:rs()} can be used as a synonym for {cmd:layout()}.
 
 {phang2}
     {opt bot:tom} aligns the legend keys at the bottom if there are multiple
@@ -1736,15 +1812,25 @@ or
     described in {helpb colorpalette##colorlist:colorpalette}.
 
 {phang2}
-    {opt symy:size(#)} and {opt symx:size(#)} specify the height and width of the
-    space used for the keys' symbols, in percent
-    of the map's {help geoplot##refdim:reference size}. Defaults are
-    {cmd:symysize(3)} and {cmd:symxsize(3)}.
+    {opt symsi:ze(#)} specifies the height and width of the
+    space used for the keys' symbols, in percent of the map's
+    {help geoplot##refdim:reference size}. Default is
+    {cmd:symsize(3)}. Use options {opt symy:size(#)} and {opt symx:size(#)}
+    to set the height and width individually.
 
 {phang2}
-    {opt syms:cale(#)} specifies the relative size of symbols from layertype
-    {helpb geoplot##symbol:symbol}, in proportion to the height set by
-    {cmd:symysize()}. Default is {cmd:symscale(0.8)}.
+    {cmdab:symsc:ale(}[{it:#}][{cmd:,} {cmdab:c:ommon}]{cmd:)} specifies the
+    size of symbols from layertype {helpb geoplot##symbol:symbol} in the
+    legend keys, as a proportion of the minimum of the height and width of the
+    available space for legend symbols. Default is {cmd:symscale(0.8)}, which
+    means that at most 80% of the available space will be consumed.
+
+{pmore2}
+    Suboption {cmd:common} causes the relevant rescaling factor to be computed
+    jointly across all keys containing elements from
+    {helpb geoplot##symbol:symbol} layers, such that relative symbol sizes
+    will be preserved across keys. The default is to rescale each key
+    individually, preserving relative symbol sizes only within key.
 
 {phang2}
     {opt rowg:ap(#)} specifies the vertical gap between legend keys, in percent
@@ -1862,7 +1948,7 @@ or
     labels.
 
 {phang2}
-    {cmd:reverse}, {cmd:position()}, {cmd:box()}, {cmd:symysize()},
+    {cmd:reverse}, {cmd:position()}, {cmd:box()}, {cmd:symsize()}, {cmd:symysize()},
     {cmd:symxsize()}, {cmd:rowgap()}, {cmd:keygap()}, {cmd:textfirst},
     {cmd:textwidth()}, {cmd:talign()}, {cmd:tsize()}, {cmd:tcolor()},
     {cmd:tangle()}, {cmd:lineskip()}, {cmd:headskip()}, {cmd:halign()},
@@ -1870,7 +1956,7 @@ or
     {cmd:title()}, {cmd:margin()}, {cmd:xmargin()}, and {cmd:ymargin()} as
     described for option {helpb geoplot##glegend:glegend()}, with the following
     differences: default for {cmd:position()} is {cmd:sw}; default for
-    {cmd:symysize()} and {cmd:symxsize()} is {cmd:2}; default for
+    {cmd:symsize()} is {cmd:2}; default for
     {cmd:rowgap()} is {cmd:1}; {cmd:headskip()} only has a single argument
     specifying the extra gap after the subtitle.
 
@@ -2380,6 +2466,10 @@ or
     {cmd:nograph} if you are only interested in obtaining the compiled data
     using option {helpb geoplot##frame:frame()} and do not want to waste
     computer time on rendering the graph.
+
+{marker noisily}{...}
+{phang}
+    {opt noisily} displays the compiled graph command.
 
 
 {marker examples}{...}
