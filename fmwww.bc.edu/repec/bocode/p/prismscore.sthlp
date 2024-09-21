@@ -1,6 +1,10 @@
 {smcl}
-{* *! version 1.2.1 1 Mar 2023}{...}
+{* *! version 1.3 11 Sep 2024}{...}
 {viewerdialog "prismscore" "dialog prismscore"}{...}
+{vieweralsosee "" "--"}{...}
+{vieweralsosee "pccmtoolkit" "help pccmtoolkit"}{...}
+{vieweralsosee "pim3" "help pim3"}{...}
+{vieweralsosee "pelod2" "help pelod2"}{...}
 {viewerjumpto "Syntax" "./prismscore##syntax"}{...}
 {viewerjumpto "Syntax Details" "./prismscore##syntaxd"}{...}
 {viewerjumpto "Description" "./prismscore##description"}{...}
@@ -421,21 +425,28 @@ The following commands should be helpful:
 Please cite this command as:
 
 {pstd}
-Azamfirei, Razvan; Mennie, Colleen; Fackler, James; Kudchadkar, Sapna R. Development of a Stata Command for Pediatric Risk of Mortality Calculation. Pediatric Critical Care Medicine 24(3):p e162-e163, March 2023. | DOI: {browse "https://doi.org/10.1097/PCC.0000000000003149":10.1097/PCC.0000000000003149}
+Azamfirei R, Mennie C, Fackler J, Kudchadkar SR. Development of a Stata Command for Pediatric Risk of Mortality Calculation. Ped Crit Care. 2023;24(3):e162-e163. | DOI: {browse "https://doi.org/10.1097/PCC.0000000000003149":10.1097/PCC.0000000000003149}
 
-{title:Author}
+{title:Authors}
 {p}
 
-Razvan Azamfirei
-Email: {browse "mailto:stata@azamfirei.com":stata@azamfirei.com}
+{pstd}Razvan Azamfirei | Email: {browse "mailto:stata@azamfirei.com":stata@azamfirei.com}{p_end}
+{pstd}Colleen Mennie{p_end}
+{pstd}James Fackler{p_end}
+{pstd}Sapna R. Kudchadkar{p_end}
 
 {marker License}{...}
 {title:License}
-{p}{hi:Copyright 2022 Razvan Azamfirei}
-
+{pstd}Copyright 2023 Razvan Azamfirei{p_end}
 {pstd}Licensed under the Apache License, Version 2.0 (the"License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: {p_end}
 
 {pstd}{browse "https://www.apache.org/licenses/LICENSE-2.0":http://www.apache.org/licenses/LICENSE-2.0}{p_end}
 
 {pstd}Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.{p_end}
 {pstd} See the License for the specific language governing permissions and limitations under the License. {p_end}
+
+{title:Also see}
+
+{psee}
+{helpb pim3}, {helpb pelod2}, {helpb pccmtoolkit}
+{p_end}

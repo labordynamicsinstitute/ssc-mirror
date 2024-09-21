@@ -1,0 +1,217 @@
+/*
+  pelod2.dlg
+*/
+
+VERSION 12
+        INCLUDE                 _std_mlarge
+        POSITION                .       .       480     540
+        DIALOG          main,           tabtitle("Main")                             ///
+                                label("pelod2 - Calculate the PELOD-2 Score")
+        BEGIN
+        GROUPBOX        main            20      10      440     80,                  ///
+                                label("PELOD-2")
+        TEXT            tx_pelod        40      +20     150     .,                   ///
+                                label("PELOD-2 Score Variable:")
+        EDIT            ed_pelod        40      +20     150     .,                   ///
+                                error("PELOD-2 Score Variable")
+        TEXT            tx_rawsc        220     30      230     .,                   ///
+                                label("Raw PELOD-2 Score Variable (optional):")
+        EDIT            ed_rawsc        220     +20     150     .,                   ///
+                                error("Raw PELOD-2 Score Variable")
+*------------------------------------------------------------------------------*
+        GROUPBOX        gb_age          20      100     440     80,                  ///
+                                label("Age - Coded Age or both DoB and DoA")
+        TEXT            tx_age          40      120     120     .,                   ///
+                                label("Coded Age:")
+        VARNAME         vn_age          40      +20     120     .,                   ///
+                                error("Coded Age")
+        TEXT            tx_dob          180     120     120     .,                   ///
+                                label("Date of Birth:")
+        VARNAME         vn_dob          180     +20     120     .,                   ///
+                                error("Date of Birth")
+        TEXT            tx_doa          320     120     120     .,                   ///
+                                label("Date of Admission:")
+        VARNAME         vn_doa          320     +20     120     .,                   ///
+                                error("Date of Admission")
+*------------------------------------------------------------------------------*
+        GROUPBOX        gb_neuro        20      190     290     80,                  ///
+                                label("Neurologic")
+        TEXT            tx_pup          40      210     120     .,                   ///
+                                label("Pupils:")
+        VARNAME         vn_pup          40      +20     120     .,                   ///
+                                error("Pupils")
+        TEXT            tx_gcs          180     210     120     .,                   ///
+                                label("GCS:")
+        VARNAME         vn_gcs          180     +20     120     .,                   ///
+                                error("GCS")
+*------------------------------------------------------------------------------*
+        GROUPBOX        gb_card         20      280     290     80,                  ///
+                                label("Cardiovascular")
+        TEXT            tx_map          40      300     120     .,                   ///
+                                label("MAP:")
+        VARNAME         vn_map          40      +20     120     .,                   ///
+                                error("MAP")
+        TEXT            tx_lactate      180     300     120     .,                   ///
+                                label("Lactate:")
+        VARNAME         vn_lactate      180     +20     120     .,                   ///
+                                error("Lactate")
+*------------------------------------------------------------------------------*
+        GROUPBOX        gb_renal        310     190     150     80,                  ///
+                                label("Renal")
+        TEXT            tx_creatinine   330     +20     120     .,                   ///
+                                label("Creatinine:")
+        VARNAME         vn_creatinine   330     +20     120     .,                   ///
+                                error("Creatinine")
+*------------------------------------------------------------------------------*
+        GROUPBOX        gb_respiratory  20      370     290     80,                  ///
+                                label("Respiratory")
+        TEXT            tx_pco2         40      390     120     .,                   ///
+                                label("PCO2:")
+        VARNAME         vn_pco2         40      +20     120     .,                   ///
+                                error("PCO2")
+        TEXT            tx_mv           180     390     120     .,                   ///
+                                label("Mechanical Ventilation")
+        VARNAME         vn_mv           180     +20     120     .,                   ///
+                                error("Mechanical Ventilation")
+        GROUPBOX        gb_pf           20      450     440     80
+        TEXT            tx_pao2         40      470     120     .,                   ///
+                                label("PaO2:")
+        VARNAME         vn_pao2         40      +20     120     .,                   ///
+                                error("PaO2")
+        TEXT            tx_fio2         180     470     120     .,                   ///
+                                label("FiO2:")
+        VARNAME         vn_fio2         180     +20     120     .,                   ///
+                                error("FiO2")
+        TEXT            tx_pfr          320     470     120     .,                   ///
+                                label("P/F Ratio:")
+        VARNAME         vn_pfr          320     +20     120     .,                   ///
+                                error("P/F Ratio")
+*------------------------------------------------------------------------------*
+        GROUPBOX        gb_heme         310     280     150     170,                 ///
+                                label("Hematology")
+        TEXT            tx_wbc          330     300     120     .,                   ///
+                                label("WBC Count:")
+        VARNAME         vn_wbc          330     +20     120     .,                   ///
+                                error("WBC")
+        TEXT            tx_plt          330     390     120     .,                   ///
+                                label("Platelet Count:")
+        VARNAME         vn_plt          330     +20     120     .,                   ///
+                                error("Platelet")
+*------------------------------------------------------------------------------*
+END
+
+********************************************************************************
+
+DIALOG options, label("pelod2 Options") tabtitle("Options")
+BEGIN
+*------------------------------------------------------------------------------*
+        GROUPBOX        gb_wbc          20      10      140     70,                  ///
+                                label("WBC Units")
+        RADIO           rb_wbc_1        30      +20     120     .,                   ///
+                                first label("cells / mm3")
+        RADIO           rb_wbc_2        30      +20     120     .,                   ///
+                                last label("1000 cells / mm3") option(wbcunit(1000))
+*------------------------------------------------------------------------------*
+        GROUPBOX        gb_plt          170     10      140     70,                  ///
+                                label("Platelet Units")
+        RADIO           rb_plt_1        +10     +20     120     .,                   ///
+                                first label("cells / mm3")
+        RADIO           rb_plt_2        @       +20     120     .,                   ///
+                                last label("1000 cells / mm3") option(pltunit(1000))
+*------------------------------------------------------------------------------*
+        GROUPBOX        gb_si           320     10      140     70,                  ///
+                                label("Chemistry Lab Units")
+        RADIO           rb_si_1         +10     +20     120     .,                   ///
+                                first label("Imperial")
+        RADIO           rb_si_2         @       +20     120     .,                   ///
+                                last label("SI") option(si)
+*------------------------------------------------------------------------------*
+        GROUPBOX        gb_opt          20      90      440     200,                 ///
+                                label("Options")
+        CHECKBOX        ck_trac         30      +20     120     .,                   ///
+                                label("Trace")  option(trace)
+        CHECKBOX        ck_imp          30      +30     220     .,                   ///
+                                label("No Imputation")  option(noimputation)
+        CHECKBOX        ck_val          30      +30     220     .,                   ///
+                                label("No Validation")  option(novalidation)
+*-----------------------------------------------------------------------------*
+END
+
+********************************************************************************
+
+OK      ok,     label("OK")
+CANCEL  cncel,  label("Cancel")
+SUBMIT  sbmit,  label("Submit")
+HELP    hlp,    view("help pelod2")
+RESET   rest
+COPY    cpy
+
+********************************************************************************
+
+INCLUDE ifin
+
+PROGRAM command
+BEGIN
+        require main.ed_pelod
+        require main.vn_map
+        require main.vn_lactate
+        require main.vn_pup
+        require main.vn_gcs
+        require main.vn_creatinine
+        require main.vn_pco2
+        require main.vn_mv
+        require main.vn_wbc
+        require main.vn_plt
+        if !main.vn_dob.isvarname() | !main.vn_doa.isvarname() {
+        require main.vn_age
+        }
+        if !main.vn_pao2.isvarname() | !main.vn_fio2.isvarname() {
+        require main.vn_pfr
+        }
+        if !main.vn_pfr.isvarname(){
+        require main.vn_pao2
+        require main.vn_fio2
+        }
+        if !main.vn_age.isvarname(){
+        require main.vn_dob
+        require main.vn_doa
+        }
+        put "pelod2 " main.ed_pelod
+        INCLUDE _ifin_pr
+        put ", "
+        if !main.vn_age.isdefault(){
+        put "age(" main.vn_age ") "
+        }
+        if !main.vn_dob.isdefault(){
+        put "dob(" main.vn_dob ") "
+        }
+        if !main.vn_doa.isdefault(){
+        put "doa(" main.vn_doa ") "
+        }
+        if !main.ed_rawsc.isdefault(){
+        put "rawscore(" main.ed_rawsc ") "
+        }
+        put "map(" main.vn_map ") "
+        put "lactate(" main.vn_lactate ") "
+        put "gcs(" main.vn_gcs ") "
+        put "pupils(" main.vn_pup ") "
+        put "creatinine(" main.vn_creatinine ") "
+        put "pco2(" main.vn_pco2 ") "
+        if !main.vn_pao2.isdefault(){
+        put "pao2(" main.vn_pao2 ") "
+        }
+        if !main.vn_fio2.isdefault(){
+        put "fio2(" main.vn_fio2 ") "
+        }
+        if !main.vn_pfr.isdefault(){
+        put "pfratio(" main.vn_pfr ") "
+        }
+        put "wbc(" main.vn_wbc ") "
+        put "plt(" main.vn_plt ") "
+        put " "/on options.rb_wbc_2
+        put " "/on options.rb_plt_2
+        put " "/on options.rb_si_2
+        put " "/on options.ck_trac
+        put " "/on options.ck_imp
+        put " "/on options.ck_val
+END

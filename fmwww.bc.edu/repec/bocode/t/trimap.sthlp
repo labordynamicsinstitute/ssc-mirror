@@ -1,24 +1,24 @@
 {smcl}
-{* 28Aug2024}{...}
+{* 12Sep2024}{...}
 {hi:help trimap}{...}
-{right:{browse "https://github.com/asjadnaqvi/stata-trimap":trimap v1.0 beta (GitHub)}}
+{right:{browse "https://github.com/asjadnaqvi/stata-trimap":trimap v1.1 (GitHub)}}
 
 {hline}
 
-{title:ternary}: A Stata package for plotting three variables on a map. 
+{title:ternary}: A Stata package for tri-variate maps. 
 
 {p 4 4 2}
-The command is still {it:beta} and lacks full set of features and checks. The command is a wrapper for {stata help geoplot:geoplot} and {stata help ternary:ternary}.
+The command is a wrapper for {stata help geoplot:geoplot} and {stata help ternary:ternary}.
 All {stata help ternary:ternary} customization options can be used to generate the legend. 
 
 {marker syntax}{title:Syntax}
 
 {p 8 15 2}
 {cmd:trimap} {it:varL varR varB} {ifin}, 
-                {cmd:[} {cmd:frame}({it:frame name}) {cmd:cuts}({it:num}) {cmd:geo}({it:str}) {cmd:geopost}({it:str})  
+                {cmd:[} {cmd:frame}({it:frame name}) {cmd:cuts}({it:num}) {cmdab:norm:alize}({it:1}|{it:100}) {cmd:geo}({it:layers}) {cmd:geopost}({it:options})  
                   {cmd:zoom} {cmd:fill} {cmd:points} {cmd:lines} {cmd:labels} {cmd:colorL}({it:str}) {cmd:colorR}({it:str}) {cmd:colorB}({it:str})
                   {cmdab:lw:idth}({it:str}) {cmd:msize}({it:str}) {cmd:malpha}({it:num}) {cmdab:mc:olor}({it:str}) {cmdab:mlc:olor}({it:str}) {cmdab:mlw:idth}({it:str}) 
-                  {cmdab:leglw:idth}({it:str}) {cmdab:leglc:olor}({it:str})
+                  {cmdab:leglw:idth}({it:str}) {cmdab:leglc:olor}({it:str}) {cmdab:mlab:el}({it:var}) {cmdab:mlabs:ize}({it:str}) {cmdab:mlabc:olor}({it:str})  {cmdab:mlabpos:ition}({it:str})  
                   {cmd:xscale}({it:num}) {cmd:yscale}({it:num}) *                                  
                 {cmd:]}
 
@@ -33,20 +33,21 @@ The options are described as follows:
 
 {p2coldent : {opt frame(str)}}Define the frame in which the primary data exists. If no option is specified, then the current active frame is used.{p_end}
 
+{p2coldent : {opt cuts(num)}}Total number of evenly-spaced segments in the triangle. Default is {opt cuts(5)}.{p_end}
+
+{p2coldent : {opt zoom}}Zoom into the data based on the data min/max extents. Use this option if the data points are clustered in a part of the triangle.{p_end}
+
+{p2coldent : {opt norm:alize(1|100)}}Normalize the data on a 1 ({opt norm(1)}) or a 100 ({opt norm(100)}) scale using the row totals of the {opt varlist}. 
+If this is not specified, the program will auto-detect the normalization level.{p_end}
+
 {p2coldent : {opt lc:olor(str)}}Line color of map area outline. Default is {opt lcolor(white)}.{p_end}
 
 {p2coldent : {opt lw:idth(str)}}Line width of map area outline. Default is {opt lwidth(0.05)}.{p_end}
 
-{p2coldent : {opt geo(str)}}Define additional spatial layers that are passed onto the {stata help geoplot:geoplot} command.{p_end}
+{p2coldent : {opt geo(layers)}}Define additional spatial layers that are passed on to the {stata help geoplot:geoplot} command.{p_end}
 
-{p2coldent : {opt geopost(str)}}Define post comma options in the {stata help geoplot:geoplot} command which includes additional layers, compass, scalebar, etc.{p_end}
+{p2coldent : {opt geopost(options)}}Define the post comma options in {stata help geoplot:geoplot} such as compass, scalebar, zooms, etc.{p_end}
 
-{p2coldent : {opt cuts(num)}}Total number of evenly-spaced segments in the triangle. Default is {opt cuts(5)}.{p_end}
-
-{p2coldent : {opt zoom(num)}}Zoom into the data based on the data extent of the bottom layer. This option will be enhanced in later releases. Use this option if 
-the data points are bunched in very few triangles. Rather than increasing the cuts to show more variation, {opt zoom} rescales the axes while keeping the cuts the same.{p_end}
-
-{p2coldent : {opt lcolor(str)}}Outline colors of filled areas.{p_end}
 
 {p 4 4 2}{it:{ul:Colors}}
 
@@ -88,6 +89,23 @@ as {it:O(n)=n^2}. So avoid going over 10 cuts which in any case renders the info
 
 {p2coldent : {opt mlw:idth(str)}}Marker outline width. Default is {opt mlwidth(0.1)}.{p_end}
 
+
+{p 4 4 2}{it:{ul:Legend marker labels}}
+
+{p2coldent : {opt mlab:el(var)}}Define the label variable.{p_end}
+
+{p2coldent : {opt mlabs:ize(str)}}Size of marker labels.{p_end}
+
+{p2coldent : {opt mlabc:olor(str)}}Color of marker labels.{p_end}
+
+{p2coldent : {opt mlabpos:ition(str)}}Position of marker labels.{p_end}
+
+
+{p2coldent : {opt xscale(num)}}Scale of the legend x-axis (width). The default if {opt xscale(50)}. Increasing or decreasing this number will shrink or enlarge the legend respectively.{p_end}
+
+{p2coldent : {opt yscale(num)}}Scale of the legend y-axis (height). The default if {opt yscale(100)}. Increasing or decreasing this number will shrink or enlarge the legend respectively.
+Ideally do not use this option and modify {opt xscale()} if required.{p_end}
+
 {p2coldent : {opt *}}All other twoway options not elsewhere specified.{p_end}
 
 {synoptline}
@@ -114,8 +132,8 @@ See {browse "https://github.com/asjadnaqvi/stata-trimap":GitHub}.
 
 {title:Package details}
 
-Version      : {bf:trimap} v1.0 beta
-This release : 28 Aug 2024
+Version      : {bf:trimap} v1.1
+This release : 12 Sep 2024
 First release: 28 Aug 2024
 Repository   : {browse "https://github.com/asjadnaqvi/stata-trimap":GitHub}
 Keywords     : Stata, graph, ternary, triplot, trimap, tri-variate map

@@ -41,6 +41,7 @@ p pbeta module to generate probability plot for data compared with fitted beta d
 p pbreg module to fit the Preece and Baines (1978) family of growth curves and age, height, and velocity at peak height velocity
 p pca2 module to apply Principal Component Analisys (PCA) to standard and GMM-style instrumental variables
 p pcacoefsave module to save results of PCA to new dataset
+p pccmtoolkit module to calculate pediatric risk of mortality scores
 p pcdid module to perform principal components difference-in-differences
 p pcdsearch module to extract code lists from primary care databases
 p pchipolate module for piecewise cubic Hermite interpolation

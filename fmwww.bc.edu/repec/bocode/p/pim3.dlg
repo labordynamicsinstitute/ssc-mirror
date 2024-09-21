@@ -1,0 +1,152 @@
+/*
+  pim3.dlg
+*/
+
+VERSION 12
+        INCLUDE                 _std_mlarge
+        POSITION                .       .       480     540
+        DIALOG          main,           tabtitle("Main")                     ///
+                                label("pim3 - Calculate the PIM3 Score")
+        BEGIN
+        GROUPBOX        main            20      10      440     80,          ///
+                                label("PIM3")
+        TEXT            tx_pim3         40      +20     150     .,           ///
+                                label("PIM3 Score Variable:")
+        EDIT            ed_pim3         40      +20     150     .,           ///
+                                error("PIM3 Score Variable")
+*------------------------------------------------------------------------------*
+        GROUPBOX        gb_some         20      100     440     200,         ///
+                                label("Variables")
+        TEXT            tx_pupils       40      120     120     .,           ///
+                                label("Pupils:")
+        VARNAME         vn_pupils       40      +20     120     .,           ///
+                                error("Pupils")
+        TEXT            tx_sbp          180     120     120     .,           ///
+                                label("Systolic BP:")
+        VARNAME         vn_sbp          180     +20     120     .,           ///
+                                error("Systolic BP")
+        TEXT            tx_baseexcess   320     120     120     .,           ///
+                                label("Base Excess:")
+        VARNAME         vn_baseexcess   320     +20     120     .,           ///
+                                error("Base Excess")
+*------------------------------------------------------------------------------*
+        TEXT            tx_mv           40      180     130     .,           ///
+                                label("Mechanical Ventilation:")
+        VARNAME         vn_mv           40      +20     120     .,           ///
+                                error("Mechanical Ventilation")
+        TEXT            tx_pao2         180     180     120     .,           ///
+                                label("PaO2:")
+        VARNAME         vn_pao2         180     +20     120     .,           ///
+                                error("PaO2")                                
+        TEXT            tx_fio2         320     180     120     .,           ///
+                                label("FiO2:")
+        VARNAME         vn_fio2         320     +20     120     .,           ///
+                                error("FiO2")
+*------------------------------------------------------------------------------*
+        TEXT            tx_elective     40      240     120     .,           ///
+                                label("Elective Admission:")
+        VARNAME         vn_elective     40      +20     120     .,           ///
+                                error("Elective Admission")
+        TEXT            tx_procedure    180     240     120     .,           ///
+                                label("Procedure:")
+        VARNAME         vn_procedure    180     +20     120     .,           ///
+                                error("Procedure")
+
+        GROUPBOX        gb_other        20      320     440     140,           ///
+                                label("Diagnosis Risk - Low, High and Very High Risk or Risk Category")
+        TEXT            tx_rl           40      340     120     .,           ///
+                                label("Low Risk:")
+        VARNAME         vn_rl           40      +20     120     .,           ///
+                                error("Low Risk")
+        TEXT            rx_rh           180     340     120     .,           ///
+                                label("High Risk:")
+        VARNAME         vn_rh           180     +20     120     .,           ///
+                                error("High Risk")
+        TEXT            tx_rvh          320     340     120     .,           ///
+                                label("Very High Risk:")
+        VARNAME         vn_rvh          320     +20     120     .,           ///
+                                error("Very High Risk")
+        TEXT            tx_risk         180     400     120     .,           ///
+                                label("Risk Category:")
+        VARNAME         vn_risk         180     +20     120     .,           ///
+                                error("Risk Category")
+                            
+END
+
+********************************************************************************
+
+DIALOG options, label("pim3 Options") tabtitle("Options")
+BEGIN
+*------------------------------------------------------------------------------*
+        GROUPBOX        gb_opt          20      10      440     120,         ///
+                                label("Options")
+        CHECKBOX        ck_trace        30      +20     120     .,           ///
+                                label("Trace")  option(trace)
+        CHECKBOX        ck_imp          30      +30     220     .,           ///
+                                label("No Imputation")  option(noimputation)
+        CHECKBOX        ck_val          30      +30     220     .,           ///
+                                label("No Validation")  option(novalidation)
+*-----------------------------------------------------------------------------*
+END
+
+********************************************************************************
+
+OK      ok,     label("OK")
+CANCEL  cncel,  label("Cancel")
+SUBMIT  sbmit,  label("Submit")
+HELP    hlp,    view("help pim3")
+RESET   rest
+COPY    cpy
+
+********************************************************************************
+
+INCLUDE ifin
+
+PROGRAM command
+BEGIN
+        require main.ed_pim3
+        require main.vn_pupils
+        require main.vn_sbp
+        require main.vn_baseexcess
+        require main.vn_fio2
+        require main.vn_pao2
+        require main.vn_elective
+        require main.vn_mv
+        require main.vn_procedure
+        if !main.vn_rl.isvarname() | !main.vn_rh.isvarname() | !main.vn_rvh.isvarname() {
+            require main.vn_risk
+        }
+        if !main.vn_risk.isvarname() {
+            require main.vn_rl
+            require main.vn_rh
+            require main.vn_rvh
+        }
+        put "pim3 " main.ed_pim3
+        INCLUDE _ifin_pr
+        put ", "
+        put "pupils(" main.vn_pupils ") "
+        put "sbp(" main.vn_sbp ") "
+        put "baseexcess(" main.vn_baseexcess ") "
+        put "fio2(" main.vn_fio2 ") "
+        put "pao2(" main.vn_pao2 ") "
+        put "elective(" main.vn_elective ") "
+        put "mv(" main.vn_mv ") "
+        put "procedure(" main.vn_procedure ") "
+        if !main.vn_risk.isdefault(){
+            put "risk(" main.vn_risk ") "
+        }
+        if main.vn_risk.isdefault(){        
+            if !main.vn_rl.isdefault(){
+                put "lowrisk(" main.vn_rl ") "
+            }
+            if !main.vn_rh.isdefault(){
+                put "highrisk(" main.vn_rh ") "
+            }
+            if !main.vn_rvh.isdefault(){
+                put "veryhighrisk(" main.vn_rvh ") "
+            }
+        }
+        put " "/on options.ck_trace
+        put " "/on options.ck_imp
+        put " "/on options.ck_val
+END

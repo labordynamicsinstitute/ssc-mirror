@@ -1,23 +1,21 @@
 {smcl}
-{* 28Aug2024}{...}
+{* 12Sep2024}{...}
 {hi:help ternary}{...}
-{right:{browse "https://github.com/asjadnaqvi/stata-ternary":ternary v1.0 beta (GitHub)}}
+{right:{browse "https://github.com/asjadnaqvi/stata-ternary":ternary v1.1 (GitHub)}}
 
 {hline}
 
-{title:ternary}: A Stata package for plotting three variables in a triangle. 
+{title:ternary}: A Stata package for tri-variate plots. 
 
-{p 4 4 2}
-The command is currently {it:beta} and is actively being updated. 
-Layers are auto detected to either add up to 1 (fractions) or a 100 (percentages). If neither of the conditions is true, then please normalize the data points before running the command.
-Nick Cox's {stata help triplot:triplot} (Cox 2009) provided inspiration for this package.
 
 {marker syntax}{title:Syntax}
 
 {p 8 15 2}
 {cmd:ternary} {it:varL varR varB} {ifin}, 
-                {cmd:[} {cmd:cuts}({it:num}) {cmd:zoom} {cmd:fill} {cmd:points} {cmd:lines} {cmd:labels} {cmd:colorL}({it:str}) {cmd:colorR}({it:str}) {cmd:colorB}({it:str})
-                  {cmdab:lw:idth}({it:str}) {cmdab:msym:bol}({it:str}) {cmd:msize}({it:str}) {cmdab:mc:olor}({it:str}) {cmdab:mlc:olor}({it:str}) {cmdab:mlw:idth}({it:str}) {cmdab:labc:olor}({it:str}) {cmdab:ticks:ize}({it:str}) *                                  
+                {cmd:[} {cmd:cuts}({it:num}) {cmd:zoom} {cmdab:norm:alize}({it:1}|{it:100}) {cmd:fill} {cmd:points} {cmd:lines} {cmd:labels} {cmd:colorL}({it:str}) {cmd:colorR}({it:str}) {cmd:colorB}({it:str})
+                  {cmdab:lw:idth}({it:str}) {cmdab:msym:bol}({it:str}) {cmd:msize}({it:str}) {cmdab:mc:olor}({it:str}) {cmdab:mlc:olor}({it:str}) {cmdab:mlw:idth}({it:str}) {cmdab:labc:olor}({it:str}) {cmdab:ticks:ize}({it:str}) 
+				  {cmdab:mlab:el}({it:var}) {cmdab:mlabs:ize}({it:str}) {cmdab:mlabc:olor}({it:str})  {cmdab:mlabpos:ition}({it:str})  
+				  *                                  
                 {cmd:]}
 
 {p 4 4 2}
@@ -31,8 +29,10 @@ The options are described as follows:
 
 {p2coldent : {opt cuts(num)}}Total number of evenly-spaced segments in the triangle. Default is {opt cuts(5)}.{p_end}
 
-{p2coldent : {opt zoom(num)}}Zoom into the data based on the data extent of the bottom layer. This option will be enhanced further in later releases. Use this option if 
-the data points are bunched in very few triangles. Rather than increasing the cuts to show more variation, {opt zoom} rescales the axes while keeping the cuts the same.{p_end}
+{p2coldent : {opt zoom}}Zoom into the data based on the data min/max extents. Use this option if the data points are clustered in a part of the triangle.{p_end}
+
+{p2coldent : {opt norm:alize(1|100)}}Normalize the data on a 1 ({opt norm(1)}) or a 100 ({opt norm(100)}) scale using the row totals of the {opt varlist}. 
+If this is not specified, the program will auto-detect the normalization level.{p_end}
 
 
 {p 4 4 2}{it:{ul:Colors}}
@@ -49,15 +49,15 @@ Point markers and outcomes can also be customized. See below.{p_end}
 
 {p2coldent : {opt colorL(str)}, {opt colorR(str)}, {opt colorB(str)}}User either a named color recognized by {stata help colorpalette:colorpalette} or use a {it:hex} code.
 Defaults are {opt colorL(#00E0DF)}, {opt colorR(#FF6CFF)}, and {opt colorB(#DCB600)}. These colors represent the maximum values for each axes.
-The convex combinations of all the in-between colors are auto generated. Please note that the number of triangles = {it:cuts^2}, hence the program slows down exponentially.
-as {it:O(n)=n^2}. So avoid going over 10 cuts which in any case renders the information meaningless as colors become indistinguishable. Here lower numbers are better.{p_end}
+The convex combinations of all the in-between colors are auto generated. Please note that the number of triangles = {it:cuts^2}, hence the program slows down exponentially ({it:O(n)=n^2} complexity).
+So avoid going over 10 cuts which in any case renders the information meaningless as colors become indistinguishable. Here lower numbers are better.{p_end}
 
 
-{p 4 4 2}{it:{ul:Markers and lines}}
+{p 4 4 2}{it:{ul:Markers and triangle grids}}
 
 {p2coldent : {opt lw:idth(str)}}Line width. Default is {opt lwidth(0.15)}.{p_end}
 
-{p2coldent : {opt lc:olor(str)}}Line color. Default is {opt lcolor(gs8)}. If {opt fill} is used then it defaults to {lcolor(white)}.{p_end}
+{p2coldent : {opt lc:olor(str)}}Line color. Default is {opt lcolor(gs8)}. If {opt fill} is used then it defaults to {opt lc(white)}.{p_end}
 
 {p2coldent : {opt labc:olor(str)}}Label color. Default is {opt lcolor(black)}. Also affects tick colors.{p_end}
 
@@ -74,6 +74,18 @@ as {it:O(n)=n^2}. So avoid going over 10 cuts which in any case renders the info
 {p2coldent : {opt mlc:olor(str)}}Marker outline color. Default is {opt mlcolor(white)}.{p_end}
 
 {p2coldent : {opt mlw:idth(str)}}Marker outline width. Default is {opt mlwidth(0.1)}.{p_end}
+
+
+{p 4 4 2}{it:{ul:Marker labels}}
+
+{p2coldent : {opt mlab:el(var)}}Define the label variable.{p_end}
+
+{p2coldent : {opt mlabs:ize(str)}}Size of marker labels.{p_end}
+
+{p2coldent : {opt mlabc:olor(str)}}Color of marker labels.{p_end}
+
+{p2coldent : {opt mlabpos:ition(str)}}Position of marker labels.{p_end}
+
 
 {p2coldent : {opt *}}All other twoway options not elsewhere specified.{p_end}
 
@@ -99,8 +111,8 @@ See {browse "https://github.com/asjadnaqvi/stata-ternary":GitHub}.
 
 {title:Package details}
 
-Version      : {bf:ternary} v1.0 beta
-This release : 28 Aug 2024
+Version      : {bf:ternary} v1.1
+This release : 12 Sep 2024
 First release: 28 Aug 2024
 Repository   : {browse "https://github.com/asjadnaqvi/stata-ternary":GitHub}
 Keywords     : Stata, graph, ternary, triplot
@@ -116,18 +128,23 @@ Twitter/X    : {browse "https://x.com/AsjadNaqvi":@AsjadNaqvi}
 Please submit bugs, errors, feature requests on {browse "https://github.com/asjadnaqvi/stata-ternary/issues":GitHub} by opening a new issue.
 
 
+{title:Acknowledgements}
+
+Nick Cox's {stata help triplot:triplot} (Cox 2009) provided the inspiration for this package.
+
+
 {title:Citation guidelines}
 
 Suggested citation guidlines for this package:
 
-Naqvi, A. (2024). Stata package "ternary" version 1.0. Release date 28 August 2024. https://github.com/asjadnaqvi/stata-ternary.
+Naqvi, A. (2024). Stata package "ternary" version 1.1. Release date 12 September 2024. https://github.com/asjadnaqvi/stata-ternary.
 
 @software{ternary,
    author = {Naqvi, Asjad},
    title = {Stata package ``ternary''},
    url = {https://github.com/asjadnaqvi/stata-ternary},
-   version = {1.0},
-   date = {2024-08-28}
+   version = {1.1},
+   date = {2024-09-12}
 }
 
 

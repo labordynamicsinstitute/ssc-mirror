@@ -1,0 +1,39 @@
+d 'PCCMTOOLKIT': module to calculate pediatric risk of mortality scores
+d
+d  pccmtoolkit is a collection of commands for calculating various
+d pediatric critical care scores. The toolkit includes
+d implementations for PELOD-2, PIM3, PRISM III and PRISM IV scores. d
+d KW: prism
+d KW: pelod
+d KW: plm
+d KW: mortality risk
+d KW: outcome
+d KW: pediatric
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20240920
+d
+d Author: Razvan Azamfirei,  University of Pennsylvania
+d Support: email stata@@azamfirei.com
+d
+d Author:   Colleen Mennie, University of Pennsylvania
+d Support: email NA
+d
+d Author:  James Fackler, University of Pennsylvania
+d Support: email NA
+d
+d Author:  Sapna R. Kudchadkar, University of Pennsylvania
+d Support: email NA
+d
+f pccmtoolkit.ado
+f pccmtoolkit.sthlp
+f pelod2.ado
+f pelod2.dlg
+f pelod2.sthlp
+f plm3.ado
+f plm3.dlg
+f plm3.sthlp
+f prismscore.ado
+f prismscore.dlg
+f prismscore.sthlp

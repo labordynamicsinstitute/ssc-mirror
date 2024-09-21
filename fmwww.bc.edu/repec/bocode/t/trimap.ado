@@ -1,13 +1,13 @@
-*! trimap v1.0 (28 Aug 2024)
+*! trimap v1.0 (12 Sep 2024)
 *! Asjad Naqvi (asjadnaqvi@gmail.com)
 
 
-* v1.0 (28 Aug 2024) : Beta release
+* v1.0 (28 Sep 2024) : Beta release
 
 
 program trimap, sortpreserve  
 	
-	version 18 
+	version 15 
 	
 	syntax varlist(min=3 max=3 numeric) [if] [in]  ///
 		[ , frame(string) cuts(real 5) showlabel LColor(string) LWidth(string) format(str)  ] ///
@@ -15,6 +15,7 @@ program trimap, sortpreserve
 		[ LEGLColor(string) LEGLwidth(string) ] ///
 		[ colorR(string) colorL(string) colorB(string)  ] ///
 		[ fill points lines labels geo(string) geopost(string) 	 ]	///
+		[ MLABel(varlist max=1) MLABSize(string) MLABColor(string) MLABPOSition(string) NORMalize(string) ] ///
 		[ zoom xscale(real 50) yscale(real 100) * ]
 	
 	
@@ -64,41 +65,64 @@ preserve
 	
 	egen _check = rowtotal(_R _L _B)
 	
-	summ _check, meanonly
-	
-	if round(`r(max)') == 1 {
-		noisily display in yellow "Normalization of 1 assumed."
+	if "`normalize'" == "1" {
+		replace _R = _R / _check		
+		replace _L = _L / _check
+		replace _B = _B / _check
 		local normlvl = 1
+		
 	}
-	else if round(`r(max)') == 100 {
-		noisily display in yellow "Normalization of 100 assumed."
+	else if "`normalize'" == "100"  { // default
+		replace _R = (_R / _check) * 100
+		replace _L = (_L / _check) * 100
+		replace _B = (_B / _check) * 100		
 		local normlvl = 100
+		
 	}
 	else {
-		noisily display in red "Variables do not add up to 1 or 100."
-		exit
+		summ _check, meanonly
+		
+		if round(`r(max)') == 1 {
+			noisily display in yellow "Normalization of 1 assumed."
+			local normlvl = 1
+		}
+		else if round(`r(max)') == 100 {
+			noisily display in yellow "Normalization of 100 assumed."
+			local normlvl = 100
+		}
+		else {
+			noisily display in red "Variables do not add up to 1 or 100. Either normalize the variables or use option {ul:norm(1)} or {ul:norm(100)}."
+			exit
+		}
+		
+		
+		replace _L = _L / `normlvl'
+		replace _R = _R / `normlvl'
+		replace _B = _B / `normlvl'
+		
 	}
 	
-	if "`format'"  == "" {
+	drop _check
+	
+	if "`format'" == "" {
 		if `normlvl' == 1 	local format  %5.2f 
 		if `normlvl' == 100 local format  %6.0f 
 	} 	
 	
-	replace _L = _L / `normlvl'
-	replace _R = _R / `normlvl'
-	replace _B = _B / `normlvl'	
+
 	
+	local mymax = 1
+	local mymin = 0
 	
 	if "`zoom'" != "" {
-		
-		// determine the variable with the highest min
 		local mymin = 0
 		
 		local i = 1
 		foreach x in _R _L _B {
 			summ `x', meanonly
+			
 			if `mymin' < `r(min)' {
-				local mymin = (floor(`r(min)' * `cuts') / `cuts')
+				local mymin = (floor(`r(min)' * 100) / 100)
 				local myvar `x'
 			}
 			
@@ -106,17 +130,29 @@ preserve
 		}
 		
 		// normalize
-		
-		replace `myvar' = (`myvar' - `mymin') / (1 - `mymin')
-		
 		local others "_R _L _B" 
 		local remove "`myvar'"
+		
+		local mymax = 1
 		
 		local others : list others - remove
 		
 		foreach x of local others {
-			replace `x' = `x' / (1 - `mymin')
+			summ `x', meanonly
+			
+			if `mymax' > `r(min)' {
+				local mymax = (floor(`r(min)' * 100) / 100)
+			}
 		}
+		
+		local mymax = 1 - `mymax'
+		
+		foreach x of local others {
+			replace `x' = (`x' - (1 - `mymax')) / (`mymax' - `mymin') 
+		}
+
+		replace `myvar' = (`myvar' - `mymin' ) / (`mymax' - `mymin') 
+				
 	}	
 	
 	
@@ -272,12 +308,15 @@ restore
 		
 		if "`points'" == "" & "`fill'" =="" local points points
 		
-		ternary `varlist', cuts(`cuts') mc(`mcolor') malpha(`malpha') msize(`msize') `fill' `zoom' `points' `lines' `labels' colorB(`colorB') colorR(`colorR') colorL(`colorL') ///
+		ternary `varlist', cuts(`cuts') mcolor(`mcolor') malpha(`malpha') msize(`msize') `fill' `zoom' `points' `lines' `labels' colorB(`colorB') colorR(`colorR') colorL(`colorL') ///
 		fxsize(`xscale') fysize(`yscale') lcolor(`leglcolor') lwidth(`leglwidth') msymbol(`msymbol') ticksize(`ticksize') mlcolor(`mlcolor') mlwidth(`mlwidth') labcolor(`labcolor')  ///
+		mlabel(`mlabel') mlabcolor(`mlabcolor') mlabsize(`mlabsize') mlabpos(`mlabposition') normalize(`normalize') format(`format') ///
 		name(_legend, replace) nodraw
 		
 	restore		
 	
+	
+	*** put the graphs together
 	
 	graph combine _map _legend, imargin(zero) `options'
 	
