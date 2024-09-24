@@ -1,12 +1,14 @@
 d 'CATPLOT': module for plots of frequencies, fractions or percents of categorical data
 d
-d catplot shows frequencies (or optionally fractions or percents)
-d of the categories of one, two or three categorical variables. The
-d first named variable is innermost on the display; that is, its
-d categories vary fastest. catplot is a wrapper for graph hbar 
-d (default) or graph bar or graph dot. The files catplot_old.* are
-d files for the original 2003 version of catplot: to use fix the
-d names by removing "_old". 
+d	 catplot shows frequencies (or optionally fractions or
+d percents)	 of the categories of one, two or three categorical
+d variables. The      first named variable is innermost on the
+d display; that is, its      categories vary fastest. catplot is a
+d wrapper for graph hbar      (default) or graph bar or graph dot.
+d The files catplot_old.* are	   files for the original 2003
+d version of catplot: to use fix the	  names by removing "_old".
+d The files catplot2010.* are files	 for the 2010 version of
+d catplot. 
 d
 d KW: graphics
 d KW: categorical data
@@ -15,14 +17,15 @@ d KW: dot charts
 d
 d Requires: Stata version 8.0
 d
+d Distribution-Date: 20240923
 d
 d Author: Nicholas J. Cox, Durham University
-d Support: email  N.J.Cox@@durham.ac.uk
-d
-d Distribution-Date: 20101221
+d Support: email N.J.Cox@@durham.ac.uk
 d
 f catplot.ado
-f catplot.hlp
+f catplot.sthlp
 f catplot_old.ado
 f catplot_old.hlp
+f catplot2010.ado
+f catplot2010.hlp
 f ../t/titanic.dta
