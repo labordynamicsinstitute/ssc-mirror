@@ -10845,6 +10845,7 @@ fmwww.bc.edu/repec/bocode/f/ferry_dataset.dta
 fmwww.bc.edu/repec/bocode/f/fre.pkg
 fmwww.bc.edu/repec/bocode/f/fastmicd.ado
 fmwww.bc.edu/repec/bocode/f/fitint.ado
+fmwww.bc.edu/repec/bocode/f/framed_bar.pkg
 fmwww.bc.edu/repec/bocode/f/fulltab.hlp
 fmwww.bc.edu/repec/bocode/f/fake_data_for_testjfe.dta
 fmwww.bc.edu/repec/bocode/f/factortest.pkg
@@ -10976,6 +10977,7 @@ fmwww.bc.edu/repec/bocode/f/frameappend.sthlp
 fmwww.bc.edu/repec/bocode/f/funnelcompar.ado
 fmwww.bc.edu/repec/bocode/f/finn.sthlp
 fmwww.bc.edu/repec/bocode/f/fiskfit.ado
+fmwww.bc.edu/repec/bocode/f/framed_bar.sthlp
 fmwww.bc.edu/repec/bocode/f/fmm.hlp
 fmwww.bc.edu/repec/bocode/f/findregex.sthlp
 fmwww.bc.edu/repec/bocode/f/forest.ado
@@ -11209,6 +11211,7 @@ fmwww.bc.edu/repec/bocode/f/fmm_postestimation.sthlp
 fmwww.bc.edu/repec/bocode/f/fitint.pkg
 fmwww.bc.edu/repec/bocode/f/find_denom.pkg
 fmwww.bc.edu/repec/bocode/f/flexmat.pkg
+fmwww.bc.edu/repec/bocode/f/framed_bar.ado
 fmwww.bc.edu/repec/bocode/f/fridit.ado
 fmwww.bc.edu/repec/bocode/f/frm_reset.sthlp
 fmwww.bc.edu/repec/bocode/f/f_symrv.ado

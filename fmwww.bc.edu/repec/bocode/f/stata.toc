@@ -92,6 +92,7 @@ p fractileplot module for smoothing with respect to distribution function predic
 p fragility module to compute the fragility index and quotient
 p fragtextab module to fragmentize LaTeX tables exported by collect suite of commands
 p frameappend module to append frames
+p framed_bar module for framed bar charts  
 p framingham module for calculating the Framingham 10-year Cardiovascular Disease Risk Prediction
 p framingham30 module to calculate 30-year risk of cardiovascular disease 
 p frapply module to nondestructively apply command(s) to a frame

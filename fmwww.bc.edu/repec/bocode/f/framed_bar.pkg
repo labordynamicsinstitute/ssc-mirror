@@ -1,0 +1,34 @@
+d 'FRAMED_BAR': module for framed bar charts  
+d
+d  framed_bar draws framed bar charts showing summary statistics
+d for one or more numeric variables. Frames comparing bars with
+d limiting values can work to simplify, by making an obvious
+d complement tacit rather than explicit, and to clarify, by making
+d near extremes evident. It is best explained statistically by a
+d leading application. Suppose we have a binary variable coded 0 or
+d 1. This command can produce a bar chart showing the proportion of
+d successes within a frame of height or length 1. The empty space
+d corresponds to the proportion of failures. Equivalently, such a
+d bar chart plots the mean or means of one or more sets of binary
+d values, as a mean of such a (0, 1) variable is just the
+d proportion of successes. Any single summary statistic offered by
+d collapse may be chosen rather than means. Annotation by default
+d shows the statistics (say means) concerned as a numeric text
+d display. Annotation may be shown optionally of sample sizes as a
+d numeric text display. Values shown may on the fly be replaced
+d according to a specified calculation. 
+d
+d KW: graphics
+d KW: indicator variables
+d KW: summary statistics
+d KW: bar charts
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20240923
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f framed_bar.ado
+f framed_bar.sthlp
