@@ -1,159 +1,133 @@
 *! version 1.0.2  16sep2005
 program define _freduse2
 
-	version 9.0 
+	version 9.0
 
 	syntax using/ , 		///
 		[			///
 		clear			///
 		]
-		
+
+	if ("`clear'" != "") {
+            `clear'
+         }
+
 	tempname fh
 
 	file open `fh' using `"`using'"', read
 
-	local j     = 1 
-	local done  = 0
-	local notes = 0
-	local note2 = 0
-	local c     = 0
+	*---------------------------------------------------------------------------------
+	* Get rid of the header and get to the data table
+	*---------------------------------------------------------------------------------
 
-	while `done' < 1 {
+	* First look for the end of the header
+	local line = ""
+	while (`"`line'"' != "</header>") {
+		* read a line
 		file read `fh' line
-			
-		hlineparse , line(`"`line'"') notes(`notes')
+		local line = trim(`"`line'"')
+	}
 
-		local done   = r(done)
-		local notes  = r(notes)
+	* Then look for the opening of the first table
+	while (!regexm(`"`line'"', ".*<table.*")) {
+		* read a line
+		file read `fh' line
+		local line = trim(`"`line'"')
+	}
 
-		if "`r(vname)'" != "" {
-			local vname "`r(vname)'"
-		}
-		
-		if `done'==0 & `notes' == 0 {
-			local ++c
-			local cat`c'  `"`r(cat)'"'
-			local desc`c' `"`r(desc)'"'
-		}
-		else {
-			if `done'==0 & `notes' != 0 {
-				if `note2' > 0 {
-					local notesv `"`notesv' `r(desc)'"'
-				}	
-				else {
-					local notesv `"`notesv'`r(desc)'"'
-					local ++note2
-				}
+	*---------------------------------------------------------------------------------
+	* Parse the first table
+	*---------------------------------------------------------------------------------
+
+	* Indicator to keep track of the number of characteristics
+	local c = 0
+
+	* While loop looking for the end of the first table
+	local line = ""
+	while (`"`line'"' != "</table>") {
+		* read a line
+		file read `fh' line
+		local line = trim(`"`line'"')
+
+		* if it matches tr, parse it
+		if (`"`line'"' == "<tr>") {
+			* read in full tr (while </tr> not found yet read in)
+			local tr `line'
+			while (`"`line'"' != "</tr>") {
+				file read `fh' line
+				local line = trim(`"`line'"')
+				local tr `tr' `line'
+			}
+			* parse characteristic name and data
+			assert regexm(`"`tr'"', ".*<th.*>(.*)<\/th>.*<td>(.*)<\/td>.*")
+			* store info
+			if (regexs(1) == "Series ID") local vname = regexs(2)
+			else if (regexs(1) == "Title") local vlab = regexs(2)
+			else {
+				local ++c
+				local cat`c' = subinstr(regexs(1), " ", "_", .)
+				local desc`c' = regexs(2)
 			}
 		}
 
-		local ++j
+		* otherwise repeat
 	}
-	local ++j
 
-
-	file close `fh'
-
-	infix `j' first str10 date 1-10 double `vname' 11-80 using	///
-		`"`using'"' , `clear'
-
-	qui gen daten = date(date,"ymd")
-	format %td daten
-
-	forvalues i = 1/`c' {
+	* Set up the variables and store the characteristics
+	qui set obs 0
+	gen strL date = ""
+	gen double `vname' = 0.0
+	label var `vname' `"`vlab'"'
+	foreach i of numlist 1/`c' {
 		char define `vname'[`cat`i''] `"`desc`i''"'
 	}
 
-	if `"`notesv'"' != "" {
-		char define `vname'[Notes] `"`notesv'"'
+	*---------------------------------------------------------------------------------
+	* Parse the second table
+	*---------------------------------------------------------------------------------
+
+	* Outer while loop looking for end of table
+	local line = ""
+	while (`"`line'"' != "</table>") {
+		* Read in line
+		file read `fh' line
+		local line = trim(`"`line'"')
+
+		* If thead, read in full and then continue outer while loop
+		if (`"`line'"' == "<thead>") {
+			while (`"`line'"' != "</thead>") {
+				file read `fh' line
+				local line = trim(`"`line'"')
+			}
+			continue
+		}
+
+		* If tr, read in full, parse date and datapoint
+		if (`"`line'"' == "<tr>") {
+			* read in full tr (while </tr> not found yet read in)
+			local tr `line'
+			while (`"`line'"' != "</tr>") {
+				file read `fh' line
+				local line = trim(`"`line'"')
+				local tr `tr' `line'
+			}
+			* parse date and datapoint
+			assert regexm(`"`tr'"', ".*<th.*>(.*)<\/th>.*<td.*>(.*)<\/td>.*")
+			* add a datapoint with insobs, set values with replace ... in L
+			qui insobs 1
+			qui replace date = regexs(1) in L
+			qui replace `vname' = real(regexs(2)) in L
+		}
+
+		* Otherwise repeat
 	}
 
-	local vlab : char `vname'[Title]
-	label variable `vname' `"`vlab'"'
+	* Create a stata-formatted date
+	qui gen daten = date(date,"YMD")
+	format %td daten
 	label variable date "fed string date"
 	label variable daten "numeric (daily) date"
+	qui compress
+
+	file close `fh'
 end
-
-program define hlineparse , rclass
-	
-	syntax , 					///
-		[					///
-		line(string) 				///
-		notes(integer 0)			///
-		]
-
-	if `"`line'"' == "" {
-		ret scalar done = 1 
-		exit
-	}
-
-
-	if `"`line'"' != "" & `notes' > 0  {
-
-		local line = trim(`"`line'"')	
-		
-		ret local desc `"`line'"'	
-		ret scalar done  = 0
-		ret scalar notes = 1
-		exit
-	}
-
-	gettoken cat desc: line , parse(":")
-	gettoken tmp desc: desc , parse(":")
-
-	local desc = trim(`"`desc'"')	
-	local cat : subinstr local cat " " "_", all
-
-	if `"`cat'"' == "" & `"`desc'"' == "" {
-		ret scalar done = 1
-		exit
-	}
-
-	if `"`cat'"' == "Title" | `"`cat'"' == "Source"  	///
-			| `"`cat'"' == "Release" 		///
-			| `"`cat'"' == "Seasonal_Adjustment" 	///
-			| `"`cat'"' == "Frequency" 		///
-			| `"`cat'"' == "Units" 			///
-			| `"`cat'"' == "Date_Range" 		///
-			| `"`cat'"' == "Last_Updated" 	{
-		ret local cat  `"`cat'"'	
-		ret local desc `"`desc'"'	
-		ret scalar done = 0
-		ret scalar notes = 0
-		exit
-	}
-
-	if `"`cat'"' == "Series_ID" {
-		ret local cat  `"`cat'"'	
-		ret local desc `"`desc'"'	
-		ret scalar done = 0
-		ret scalar notes = 0
-		capture noi confirm name `desc'
-		
-		if _rc {
-			di as err "Series ID specifies invalid name"
-			exit 498
-		}
-		ret local vname  `"`desc'"'
-		exit
-	}
-
-	if `"`cat'"' == "Notes" {
-		ret local cat  `"`cat'"'	
-		ret local desc `"`desc'"'	
-		ret scalar done = 0
-		ret scalar notes = 1
-		exit
-	}
-
-
-//	ERROR IF here
-
-	di as error "header entry of unknown type encountered"
-	di as error `"      unknown header type  = `cat'"'
-	di as error `"   value of unknown header = `desc'"'
-
-	exit 498
-
-end
-

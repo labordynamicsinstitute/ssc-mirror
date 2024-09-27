@@ -13,10 +13,13 @@ d KW: FRED
 d
 d Requires: Stata version 9.1
 d
-d Distribution-Date: 20150708
+d Distribution-Date: 20240926
 d
-d Author: David M. Drukker, StataCorp LP
-d Support: email ddrukker@@stata.com
+d Author:  John Coglianese,  Federal Reserve Board
+d Support: email  john.m.coglianese@@frb.gov
+d
+d Author:  Jacob Williams, Federal Reserve Board
+d Support: email jacob.m.williams@@frb.gov
 d
 f freduse.ado
 f freduse.hlp

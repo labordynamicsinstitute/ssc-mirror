@@ -46,6 +46,12 @@ This routine updates David Drukker's very useful {cmd:freduse} routine, publishe
 6(3) and updated in 15(3). Recent changes to the underlying text format used by FRED caused
 the freduse routine to fail. Despite Stata's built-in {cmd:import fred} capability, it is useful to
 have a simple way of accessing FRED data without needing an API key.
+
+{pstd} 
+As of 26 September 2024, Federal Reserve Board authors have revised Drukker's original routine,
+so that the version of {cmd:freduse} on the SSC Archive works again. {cmd:fredusex} displays the variables' characteristics
+in the results window; {cmd:char list} will do the same in {cmd:freduse}. {cmd:fredusex} creates 
+a new .dta file, while {cmd:freduse} requires that existing data are cleared.
  
 {pstd}
 The names of the FRED series are not case sensitive. They will be changed to upper case,

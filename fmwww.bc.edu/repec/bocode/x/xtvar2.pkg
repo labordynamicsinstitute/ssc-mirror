@@ -1,0 +1,36 @@
+d 'XTVAR2': module to compute panel vector autoregression 
+d
+d  xtvar2 is a copy of our xtvar command, designed for
+d compatibility with Stata 18.5 (or higher). Our original xtvar
+d command is no longer usable due to a conflict with a newly
+d introduced command in Stata 18.5. xtvar2 estimates a panel vector
+d autoregression, using a least squares dummy variable estimator.
+d The estimator fits a multivariate panel regression of each
+d dependent variable on lags of itself and on lags of all the other
+d dependent variables. The program also produces Forecast Error
+d Variance Decompositions and Impulse Response Functions. For
+d inference, bootstrap and Monte-Carlo methods are implemented. 
+d
+d KW: panel data
+d KW: vector autoregression
+d KW: VAR
+d KW: bootstrap
+d KW: Monte Carlo
+d KW: FEVD
+d KW: IRF
+d
+d Requires: Stata version 12 
+d
+d Distribution-Date: 20240926
+d
+d Author: Tobias Cagala , Friedrich-Alexander University of Erlangen-Nuremberg
+d Support: email tobias.cagala@@fau.de 
+d
+d Author: Ulrich Glogowsky, Friedrich-Alexander University of Erlangen-Nuremberg
+d Support: email ulrich.glogowsky@@fau.de
+d
+f xtvar2.ado
+f xtvar2.sthlp
+f xtvar2_example.do
+f xtvar2.dta
+f xtvar2_readme.pdf

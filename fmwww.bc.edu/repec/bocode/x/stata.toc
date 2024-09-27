@@ -144,6 +144,7 @@ p xttest3 module to compute Modified Wald statistic for groupwise heteroskedasti
 p xttrans2 module to compute tables of transition probabilities 
 p xtusreg module to estimate dynamic panel models under irregular time spacing
 p xtvar module to compute panel vector autoregression 
+p xtvar2 module to compute panel vector autoregression 
 p xtvc module to compute confidence intervals for the variance component of random-intercept linear models
 p xtwest module for testing for cointegration in heterogeneous panels
 p xvalols module to crossvalidate an OLS regression

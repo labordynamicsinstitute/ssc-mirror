@@ -2,7 +2,7 @@
 // On 08Jul2015 changed http to https per change made by St. Louis Fed.
 program define _fredweb
 
-	version 9.0 
+	version 9.0
 
 	syntax anything(name=slist id="series list") , 		///
 		[						///
@@ -35,11 +35,11 @@ program define _FredWeb
 
 	tempfile current
 
-	local fbase "https://research.stlouisfed.org/fred2/series"
-	capture noi copy `fbase'/`sname'/downloaddata/`sname'.txt `fname'
+	local fbase "https://fred.stlouisfed.org/data"
+	capture noi copy `fbase'/`sname' `fname'
 	if _rc {
 		di as err "{p 2 4 2}cannot copy `sname' from " ///
-			"`fbase'/`sname'/downloaddata/`sname'.txt" 
+			"`fbase'/`sname'"
 		exit 498
 	}
 
@@ -55,19 +55,19 @@ program define _FredWeb
 		gettoken sname slist:slist , quotes
 		mata: _fredcleanname("sname", 0)
 
-		capture noi copy `fbase'/`sname'/downloaddata/`sname'.txt /// 
+		capture noi copy `fbase'/`sname' ///
 			`fname' , replace
 		if _rc {
 			di as err `"{p 2 4 2}cannot copy `sname' from "' ///
-				`"`fbase'/`sname'/downloaddata/`sname'.txt"' 
+				`"`fbase'/`sname'"'
 			exit 498
 		}
 
 
 		_freduse2 using `fname', clear
-	
+
 		sort daten
-			
+
 		merge daten using `"`current'"'
 		qui drop _merge
 		sort daten
